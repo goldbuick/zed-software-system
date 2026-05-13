@@ -105,14 +105,13 @@ function handleboardrunnertick(
     boundarydidreset.clear()
   }
 
-  // bail if we're not assigned to a board
-  if (!assignedboard) {
-    assignedboundaries = []
-    return
-  }
-
   // always update the boundaries
   assignedboundaries = boundaries
+
+  // bail if we're not assigned to a board
+  if (!assignedboard) {
+    return
+  }
 
   // so we need to desync the boundaries to
   for (const id of assignedboundaries) {
@@ -121,20 +120,26 @@ function handleboardrunnertick(
     }
     // ensure they are current
     readworkerboundarypipe(id).forcedesync()
-    device.reply(message, 'desync', id)
     // track that we've desynced this boundary
     boundarydidreset.add(id)
+    // signal desync to vm
+    device.reply(message, 'desync', id)
   }
 
   // ack the tick so we don't get blocked
   vmboardrunnerack(device, assignedplayer)
 
   // validate the boundaries are in sync and the board codepage is valid
-  const anydesynced = boundaries.some((boundary) => {
-    return readworkerboundarypipe(boundary).isdesynced()
+  const anydesynced = assignedboundaries.some((id) => {
+    return readworkerboundarypipe(id).isdesynced()
   })
+  if (anydesynced) {
+    return
+  }
+
+  // validate the board codepage is valid
   const maybeboard = memoryboundaryget<CODE_PAGE_RUNTIME>(assignedboard)
-  if (anydesynced || !ispresent(maybeboard?.board)) {
+  if (!ispresent(maybeboard?.board)) {
     return
   }
 

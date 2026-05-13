@@ -8,7 +8,6 @@ import {
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
-import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
 import {
   DIVIDER,
   zsstexttape,
@@ -290,9 +289,6 @@ function registerhyperlinksforelementsetvalue(
       }
       break
   }
-
-  // push jsonpipe changes
-  boardrunnerpushupdates(SOFTWARE)
 }
 
 function registerhyperlinksforelement(
@@ -670,8 +666,6 @@ export function memoryinspectcommand(path: string, player: string) {
       break
     case 'empty':
       memorysafedeleteelement(board, element, mainbook.timestamp)
-      // push jsonpipe changes
-      boardrunnerpushupdates(SOFTWARE)
       break
     case 'code':
       doasync(SOFTWARE, player, async () => {

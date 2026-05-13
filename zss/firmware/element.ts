@@ -736,17 +736,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     // notfound
     return [false, value]
   },
-  everytick(chip) {
-    // are we player? and is our health number zero or below
-    if (READ_CONTEXT.elementisplayer) {
-      const health = chip.get('health')
-      if (isnumber(health) && health <= 0) {
-        // halt program
-        chip.endofprogram()
-        // signal outcome
-        vmlogout(SOFTWARE, READ_CONTEXT.elementid, true)
-      }
-    }
+  everytick() {
     // handle walk movement
     if (
       !READ_CONTEXT.element?.removed &&
@@ -765,6 +755,18 @@ export const ELEMENT_FIRMWARE = createfirmware({
           y: READ_CONTEXT.element.y + READ_CONTEXT.element.stepy,
         },
       )
+    }
+  },
+  aftertick(chip) {
+    // are we player? and is our health number zero or below
+    if (READ_CONTEXT.elementisplayer) {
+      const health = chip.get('health')
+      if (isnumber(health) && health <= 0) {
+        // halt program
+        chip.endofprogram()
+        // signal outcome
+        vmlogout(SOFTWARE, READ_CONTEXT.elementid, true)
+      }
     }
   },
 })

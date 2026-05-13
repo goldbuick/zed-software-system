@@ -1,12 +1,6 @@
 import JSZip, { JSZipObject } from 'jszip'
 import mime from 'mime/lite'
-import {
-  apierror,
-  apilog,
-  vmloader,
-  vmlogout,
-  vmreadzipfilelist,
-} from 'zss/device/api'
+import { apierror, apilog, vmloader, vmreadzipfilelist } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
@@ -182,9 +176,6 @@ export async function parsezipfilelist(player: string) {
       await waitfor(2000)
     }
   }
-  // re-login after import
-  await waitfor(2000)
-  vmlogout(SOFTWARE, player, false)
 }
 
 export async function parsebinaryfile(
