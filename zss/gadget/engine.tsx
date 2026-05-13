@@ -25,12 +25,14 @@ import {
 import { TapeComponent } from 'zss/screens/tape/component'
 
 import { Scanlines } from './fx/scanlines'
+import { useMedia } from './media'
 import { TapeToastConnected } from './toast'
 import { UserFocus } from './userinput'
 import { UserScreen } from './userscreen'
 import { TapeViewImage } from './viewimage'
 
 export function Engine() {
+  const { mood } = useMedia()
   const { viewport } = useThree()
   const { width: viewwidth, height: viewheight } = viewport.getCurrentViewport()
   const crtref = useRef<any>(null)
@@ -115,6 +117,8 @@ export function Engine() {
     })
   }, [islowrez, islandscape, showtouchcontrols, usemobiletextcapture])
 
+  const vignettdarkness = mood.includes('dark') ? 0.66 : 0.44
+
   return (
     <>
       <OrthographicCamera
@@ -140,7 +144,7 @@ export function Engine() {
           {shouldcrt && (
             <>
               {scanlines && <Scanlines />}
-              <Vignette offset={0.001} darkness={0.55} />
+              <Vignette offset={0.001} darkness={vignettdarkness} />
               <CRTShape
                 ref={crtref}
                 viewheight={viewheight}
