@@ -84,15 +84,29 @@ function readworkerboundarypipe(boundary: string): BOUNDARY_JSONPIPE {
 }
 
 function boardrunnerpushupdates(device: DEVICE) {
-  // ensure the boundaries are in sync
+  // build a (boundaryid -> flagsetname) reverse map for the current main book
+  // so we can identify flag boundaries and surface their flagset name.
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const flagboundarytoname = new Map<string, string>()
+  if (ispresent(mainbook)) {
+    const names = Object.keys(mainbook.flags)
+    for (let i = 0; i < names.length; ++i) {
+      const name = names[i]
+      const boundaryid = mainbook.flags[name]
+      if (boundaryid) {
+        flagboundarytoname.set(boundaryid, name)
+      }
+    }
+  }
+
   for (const id of assignedboundaries) {
     const pipe = readworkerboundarypipe(id)
     const doc = memoryboundaryget<BOUNDARY_DOC>(id) ?? {}
     const patch = pipe.emitdiff(doc)
-    if (patch.length > 0) {
-      vmboardrunnerpatch(device, assignedplayer, patch, id)
-      // console.info(`$$$ PUSH ${id} ${patch.length}`)
+    if (patch.length === 0) {
+      continue
     }
+    vmboardrunnerpatch(device, assignedplayer, patch, id)
   }
 }
 

@@ -2,7 +2,7 @@ import type { DEVICE } from 'zss/device'
 import { boardrunnerpaint, boardrunnerpatch } from 'zss/device/api'
 import type { JSON_PIPE_HANDLE, Operation } from 'zss/feature/jsonpipe/observe'
 import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
-import { ispresent } from 'zss/mapping/types'
+import { deepcopy, ispresent } from 'zss/mapping/types'
 import { memoryboundaryget, memoryboundaryset } from 'zss/memory/boundaries'
 import { memorycollectboundaryidsforboard } from 'zss/memory/boundaryrouting'
 import { memoryrootshouldemitpath } from 'zss/memory/jsonpipefilter'
@@ -42,6 +42,7 @@ export function boardrunnerboundarypatch(
   const doc = pipe.applyremote(root, operations)
   // ignore bad patch
   if (!ispresent(doc)) {
+    // maybe log here too ?
     pipe.cleardesync()
     // push reset to the boardrunner boundary
     boardrunnerpaint(vm, player, root, boundary)
@@ -49,6 +50,22 @@ export function boardrunnerboundarypatch(
   }
   // update boundary
   memoryboundaryset(boundary, doc)
+  // log when flagsets are update
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (ispresent(mainbook)) {
+    const flagsetnames = Object.keys(mainbook.flags)
+    for (let i = 0; i < flagsetnames.length; ++i) {
+      const name = flagsetnames[i]
+      if (mainbook.flags[name] === boundary) {
+        console.info(
+          `${self.name} $$$ BR PATCH ${name}`,
+          boundary,
+          deepcopy(doc),
+        )
+        break
+      }
+    }
+  }
 }
 
 export function boardrunnerboundarysync(vm: DEVICE) {
