@@ -25,6 +25,19 @@ export function emptygadgetstate(): GADGET_STATE {
   })
 }
 
+export function ismaybeblankgadgetstate(state: MAYBE<GADGET_STATE>): boolean {
+  if (!ispresent(state)) {
+    return true
+  }
+  return (
+    !state.id &&
+    !state.board &&
+    (state.layers?.length ?? 0) === 0 &&
+    (state.scroll?.length ?? 0) === 0 &&
+    (state.sidebar?.length ?? 0) === 0
+  )
+}
+
 /** Max board ids kept for exit previews; oldest insertion evicted first. */
 export const LAYERCACHE_MAX_ENTRIES = 64
 
