@@ -75,6 +75,7 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
         case 'register':
         case 'boardrunner':
         case 'gadgetclient':
+        case 'perfreport':
           return true
       }
       switch (route.path) {

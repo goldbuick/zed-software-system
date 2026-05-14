@@ -7,7 +7,7 @@ import {
   UnsignedByteType,
   Vector2,
 } from 'three'
-import { RUNTIME } from 'zss/config'
+import { PERF_TILE_SUBIMAGE, RUNTIME } from 'zss/config'
 import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/feature/bytes'
 import { CHARSET } from 'zss/feature/charset'
 import { PALETTE } from 'zss/feature/palette'
@@ -16,6 +16,7 @@ import { palettetothreecolors } from 'zss/gadget/data/palettethree'
 import { CHARS_PER_ROW } from 'zss/gadget/data/types'
 import { noiseutilshader } from 'zss/gadget/fx/util'
 import { MAYBE } from 'zss/mapping/types'
+import { recordtiletextureupload } from 'zss/perf/renderupdatestats'
 import { COLOR } from 'zss/words/types'
 
 import { cloneMaterial, interval, time } from './anim'
@@ -57,19 +58,64 @@ export function updateTilemapDataTexture(
   tchar: TILE_CHARS,
   tcolor: TILE_COLORS,
   tbg: TILE_COLORS,
+  dirtycells?: Iterable<number>,
 ) {
   const size = width * height * 4
+  const data = texture.image.data
+  const cells = width * height
   const UNICODE_SENTINEL = 255
+
+  if (PERF_TILE_SUBIMAGE && dirtycells) {
+    // partial CPU fill: only write the dirty cells.
+    let touched = 0
+    let mint = cells
+    let maxt = -1
+    for (const t of dirtycells) {
+      if (t < 0 || t >= cells) {
+        continue
+      }
+      const num = celltorendervalue(tchar[t] ?? 0)
+      const isunicode = num > 255
+      const i = t * 4
+      data[i] = isunicode ? 0 : num % CHARS_PER_ROW
+      data[i + 1] = isunicode ? 0 : Math.floor(num / CHARS_PER_ROW)
+      data[i + 2] = isunicode ? UNICODE_SENTINEL : (tcolor[t] ?? 16)
+      data[i + 3] = tbg[t] ?? 16
+      touched += 1
+      if (t < mint) {
+        mint = t
+      }
+      if (t > maxt) {
+        maxt = t
+      }
+    }
+    if (touched > 0 && maxt >= 0) {
+      // hint three.js that only a contiguous range needs reupload; the
+      // renderer can use texSubImage2D when supported.
+      const startbyte = mint * 4
+      const countbytes = (maxt - mint + 1) * 4
+      try {
+        ;(texture as any).addUpdateRange?.(startbyte, countbytes)
+      } catch {
+        // ignore - texture range API may be unavailable
+      }
+      texture.needsUpdate = true
+      recordtiletextureupload(countbytes)
+    }
+    return texture
+  }
+
   for (let i = 0, t = 0; i < size; ++t) {
     const num = celltorendervalue(tchar[t] ?? 0)
     const isunicode = num > 255
     // x, y, color, bg (sentinel color 255 = unicode cell, bg only)
-    texture.image.data[i++] = isunicode ? 0 : num % CHARS_PER_ROW
-    texture.image.data[i++] = isunicode ? 0 : Math.floor(num / CHARS_PER_ROW)
-    texture.image.data[i++] = isunicode ? UNICODE_SENTINEL : (tcolor[t] ?? 16)
-    texture.image.data[i++] = tbg[t] ?? 16
+    data[i++] = isunicode ? 0 : num % CHARS_PER_ROW
+    data[i++] = isunicode ? 0 : Math.floor(num / CHARS_PER_ROW)
+    data[i++] = isunicode ? UNICODE_SENTINEL : (tcolor[t] ?? 16)
+    data[i++] = tbg[t] ?? 16
   }
   texture.needsUpdate = true
+  recordtiletextureupload(size)
   return texture
 }
 

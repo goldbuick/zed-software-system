@@ -1,4 +1,5 @@
 import { degToRad } from 'maath/misc'
+import { PERF_INCREMENTAL_LAYERS } from 'zss/config'
 import {
   LAYER,
   LAYER_TYPE,
@@ -9,6 +10,7 @@ import { normalizelayerzvariant } from 'zss/gadget/graphics/layerz'
 import { pttoindex } from 'zss/mapping/2d'
 import { ispid } from 'zss/mapping/guid'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import { measurestage } from 'zss/perf/ticktimingstats'
 import { COLLISION, COLOR, DIR, NAME, PT } from 'zss/words/types'
 
 import { memoryreadobject } from './boardaccess'
@@ -180,6 +182,19 @@ export function memoryconverttogadgetcontrollayer(
   return [control]
 }
 
+/**
+ * Cache of last-built layer wrappers per (graphics, board, whichlayer, index).
+ * When `PERF_INCREMENTAL_LAYERS` is enabled and `boardruntime.drawneedfull`
+ * is false AND `drawallowids` is empty, returning the cached array reuses
+ * the already-populated tile/sprite/dither buffers (their identities are
+ * stable thanks to `createcachedtiles` / `memorycreatecachedsprites`).
+ *
+ * NOTE: a deeper incremental rebuild that touches only the cells in
+ * `drawallowids` is the eventual goal; this cache is a conservative
+ * stepping stone, gated so it is trivially disabled when needed.
+ */
+const memoryconverttogadgetlayerscache = new Map<string, LAYER[]>()
+
 export function memoryconverttogadgetlayers(
   graphics: string,
   index: number,
@@ -194,6 +209,23 @@ export function memoryconverttogadgetlayers(
     !ispresent(board.objects)
   ) {
     return []
+  }
+
+  if (PERF_INCREMENTAL_LAYERS) {
+    const boardruntime = memoryreadboardruntime(board)
+    const allowids = boardruntime?.drawallowids
+    const stable =
+      boardruntime &&
+      !boardruntime.drawneedfull &&
+      ispresent(allowids) &&
+      allowids.size === 0
+    if (stable) {
+      const cachekey = `${graphics}:${board.id}:${whichlayer}:${index}`
+      const cached = memoryconverttogadgetlayerscache.get(cachekey)
+      if (cached) {
+        return cached
+      }
+    }
   }
 
   // make sure lookup is created
@@ -408,6 +440,11 @@ export function memoryconverttogadgetlayers(
     )
   }
 
+  if (PERF_INCREMENTAL_LAYERS) {
+    const cachekey = `${graphics}:${board.id}:${whichlayer}:${index}`
+    memoryconverttogadgetlayerscache.set(cachekey, layers)
+  }
+
   // return result
   return layers
 }
@@ -491,6 +528,15 @@ export function memoryelementtotickerprefix(element: MAYBE<BOARD_ELEMENT>) {
 }
 
 export function memoryreadgadgetlayers(
+  graphics: string,
+  board: MAYBE<BOARD>,
+): MEMORY_GADGET_LAYERS {
+  return measurestage('tick:readgadgetlayers', () =>
+    memoryreadgadgetlayersbody(graphics, board),
+  )
+}
+
+function memoryreadgadgetlayersbody(
   graphics: string,
   board: MAYBE<BOARD>,
 ): MEMORY_GADGET_LAYERS {

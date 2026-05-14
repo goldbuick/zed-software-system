@@ -34,6 +34,12 @@ type TilesProps = {
   clippingplanes?: Plane[]
   /** Omit from raycasting (e.g. inspector pts overlay above the pick plane). */
   skipraycast?: boolean
+  /**
+   * Optional content-change counter. When the tile arrays are mutated in
+   * place (so identity doesn't change), bump this version to trigger the
+   * data-texture upload effect without slicing/cloning the arrays.
+   */
+  tilesversion?: number
 }
 
 export function Tiles({
@@ -46,6 +52,7 @@ export function Tiles({
   fliptexture = true,
   clippingplanes,
   skipraycast = false,
+  tilesversion = 0,
 }: TilesProps) {
   const mediapalette = useMedia((state) => state.palettedata)
   const mediacharset = useMedia((state) => state.charsetdata)
@@ -77,7 +84,16 @@ export function Tiles({
       color,
       bg,
     )
-  }, [material.uniforms.data.value, width, height, char, color, bg, label])
+  }, [
+    material.uniforms.data.value,
+    width,
+    height,
+    char,
+    color,
+    bg,
+    label,
+    tilesversion,
+  ])
 
   // create / config material
   useEffect(() => {

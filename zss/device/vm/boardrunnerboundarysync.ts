@@ -8,6 +8,7 @@ import { memorycollectboundaryidsforboard } from 'zss/memory/boundaryrouting'
 import { memoryrootshouldemitpath } from 'zss/memory/jsonpipefilter'
 import { memoryreadbookbysoftware } from 'zss/memory/session'
 import { CODE_PAGE_RUNTIME, MEMORY_LABEL } from 'zss/memory/types'
+import { measurestage, recordemitdiff } from 'zss/perf/ticktimingstats'
 
 import { boardrunners } from './state'
 
@@ -51,6 +52,10 @@ export function boardrunnerboundarypatch(
 }
 
 export function boardrunnerboundarysync(vm: DEVICE) {
+  measurestage('vm:boundarysync', () => boardrunnerboundarysyncbody(vm))
+}
+
+function boardrunnerboundarysyncbody(vm: DEVICE) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
@@ -80,6 +85,7 @@ export function boardrunnerboundarysync(vm: DEVICE) {
           `${self.name} $$$ BOUNDARY ${id} sync ${patch.length}`,
           patch,
         )
+        recordemitdiff('vm:boundarysync', patch.length, 1, 1)
         boardrunnerpatch(vm, player, patch, id)
       }
     }

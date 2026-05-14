@@ -2,6 +2,7 @@
  * Incremental `:drawdisplay`: fingerprints, cell dirtiness with 8-neighbor expansion,
  * and next-tick allow-lists. Non-local draw logic must call `memoryinvalidatedraw`.
  */
+import { PERF_SPATIAL_INDEX } from 'zss/config'
 import { compile } from 'zss/lang/generator'
 import { indextox, indextoy, pttoindex } from 'zss/mapping/2d'
 import { createsid } from 'zss/mapping/guid'
@@ -188,25 +189,65 @@ export function memoryupdatedrawdirty(board: MAYBE<BOARD>, timestamp: number) {
   const expanded = expandneighborcells(seedcells)
   const allowids = new Set<string>()
 
-  for (const idx of expanded) {
-    const terrain = board.terrain[idx]
-    if (ispresent(terrain)) {
-      const code = elementdrawcode(terrain)
-      if (code && memorycodehasdrawdisplay(code)) {
-        allowids.add(memoryelementdrawreadid(terrain))
-      }
-    }
-    const cx = indextox(idx, BOARD_WIDTH)
-    const cy = indextoy(idx, BOARD_WIDTH)
+  if (PERF_SPATIAL_INDEX) {
+    // build a cell-index -> active drawable object ids once, then look up
+    // per expanded cell in O(1) instead of scanning all objects per cell.
+    const cellindex = new Map<number, BOARD_ELEMENT[]>()
     for (let j = 0; j < allobjects.length; ++j) {
       const object = allobjects[j]
       if (!ispresent(object.id) || !isactiveobject(object, timestamp)) {
         continue
       }
-      if ((object.x ?? 0) === cx && (object.y ?? 0) === cy) {
-        const code = elementdrawcode(object)
+      const code = elementdrawcode(object)
+      if (!code || !memorycodehasdrawdisplay(code)) {
+        continue
+      }
+      const ox = object.x ?? 0
+      const oy = object.y ?? 0
+      const idx = pttoindex({ x: ox, y: oy }, BOARD_WIDTH)
+      const list = cellindex.get(idx)
+      if (list) {
+        list.push(object)
+      } else {
+        cellindex.set(idx, [object])
+      }
+    }
+    for (const idx of expanded) {
+      const terrain = board.terrain[idx]
+      if (ispresent(terrain)) {
+        const code = elementdrawcode(terrain)
         if (code && memorycodehasdrawdisplay(code)) {
-          allowids.add(memoryelementdrawreadid(object))
+          allowids.add(memoryelementdrawreadid(terrain))
+        }
+      }
+      const cellobjects = cellindex.get(idx)
+      if (cellobjects) {
+        for (let j = 0; j < cellobjects.length; ++j) {
+          allowids.add(memoryelementdrawreadid(cellobjects[j]))
+        }
+      }
+    }
+  } else {
+    for (const idx of expanded) {
+      const terrain = board.terrain[idx]
+      if (ispresent(terrain)) {
+        const code = elementdrawcode(terrain)
+        if (code && memorycodehasdrawdisplay(code)) {
+          allowids.add(memoryelementdrawreadid(terrain))
+        }
+      }
+      const cx = indextox(idx, BOARD_WIDTH)
+      const cy = indextoy(idx, BOARD_WIDTH)
+      for (let j = 0; j < allobjects.length; ++j) {
+        const object = allobjects[j]
+        if (!ispresent(object.id) || !isactiveobject(object, timestamp)) {
+          continue
+        }
+        if ((object.x ?? 0) === cx && (object.y ?? 0) === cy) {
+          const code = elementdrawcode(object)
+          if (code && memorycodehasdrawdisplay(code)) {
+            allowids.add(memoryelementdrawreadid(object))
+          }
         }
       }
     }

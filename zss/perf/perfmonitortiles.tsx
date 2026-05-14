@@ -13,6 +13,8 @@ import {
 } from 'zss/perf/ivsbroadcaststats'
 import { readjsonpipeapplyremotestats } from 'zss/perf/jsonpipeapplystats'
 import { readpeerwiretotals } from 'zss/perf/peerwire'
+import { readrenderupdatestats } from 'zss/perf/renderupdatestats'
+import { readtickstats } from 'zss/perf/ticktimingstats'
 import {
   BKG_PTRN,
   BKG_PTRN_ALT,
@@ -29,7 +31,7 @@ const PERF_PLATE_BG = COLOR.DKPURPLE
 const PERF_FRAME_FG = COLOR.PURPLE
 
 const PANEL_W = 38
-const PANEL_H = 16
+const PANEL_H = 22
 const REFRESH_MS = 320
 /** Rolling window for peer byte volume (past minute). */
 const PEER_VOLUME_WINDOW_MS = 60_000
@@ -136,6 +138,21 @@ function PerfMonitorDraw({ glRef }: PerfMonitorDrawProps) {
   const peerWireHistory = useRef<PeerWireSnapshot[]>([])
   const chatPrev = useRef({ total: 0, t: 0 })
   const jsonpipePrev = useRef({ total: 0, t: 0 })
+  const tickPrev = useRef<{
+    t: number
+    stages: Record<string, { ms: number; calls: number }>
+    fanout: Record<
+      string,
+      { ops: number; recipients: number; calls: number; emits: number }
+    >
+  }>({ t: 0, stages: {}, fanout: {} })
+  const renderPrev = useRef({
+    t: 0,
+    tileuploadcalls: 0,
+    tileuploadbytes: 0,
+    spriteeffectruns: 0,
+    tilerenderruns: 0,
+  })
 
   useEffect(() => {
     const tick = () => {
@@ -353,6 +370,137 @@ function PerfMonitorDraw({ glRef }: PerfMonitorDrawProps) {
       setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
       tokenizeandwritetextformat(
         `$yellow jsonpipe ops $white${jsonpipeRate.toFixed(1)}/s$yellow total=$white${jsonpipe.total}`,
+        context,
+        true,
+      )
+
+      // tick stage timings (ms per second, calls per second)
+      const tick = readtickstats()
+      const tprev = tickPrev.current
+      let tickdt = 0
+      if (tprev.t > 0) {
+        tickdt = (now - tprev.t) / 1000
+      }
+      function stagerate(name: string): { ms: number; calls: number } {
+        const cur = tick.stages[name] ?? { ms: 0, calls: 0 }
+        const prv = tprev.stages[name] ?? { ms: 0, calls: 0 }
+        if (tickdt <= 0.04) {
+          return { ms: 0, calls: 0 }
+        }
+        return {
+          ms: (cur.ms - prv.ms) / tickdt,
+          calls: (cur.calls - prv.calls) / tickdt,
+        }
+      }
+      function fanoutrate(name: string): {
+        ops: number
+        recipients: number
+        emits: number
+      } {
+        const cur = tick.fanout[name] ?? {
+          ops: 0,
+          recipients: 0,
+          calls: 0,
+          emits: 0,
+        }
+        const prv = tprev.fanout[name] ?? {
+          ops: 0,
+          recipients: 0,
+          calls: 0,
+          emits: 0,
+        }
+        if (tickdt <= 0.04) {
+          return { ops: 0, recipients: 0, emits: 0 }
+        }
+        return {
+          ops: (cur.ops - prv.ops) / tickdt,
+          recipients: (cur.recipients - prv.recipients) / tickdt,
+          emits: (cur.emits - prv.emits) / tickdt,
+        }
+      }
+
+      const tgadget = stagerate('vm:gadgetsync')
+      const tboards = stagerate('tick:boards')
+      const tdraw = stagerate('tick:drawdirty')
+      const treadlayers = stagerate('tick:readgadgetlayers')
+
+      setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
+      tokenizeandwritetextformat(
+        `$yellow tick gsync $white${tgadget.ms.toFixed(1)}ms/s$yellow brd $white${tboards.ms.toFixed(1)}ms/s`,
+        context,
+        true,
+      )
+      setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
+      tokenizeandwritetextformat(
+        `$yellow tick drw $white${tdraw.ms.toFixed(1)}ms/s$yellow lyr $white${treadlayers.ms.toFixed(1)}ms/s`,
+        context,
+        true,
+      )
+
+      const fmem = fanoutrate('vm:memorysync')
+      const fgad = fanoutrate('vm:gadgetsync')
+      setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
+      tokenizeandwritetextformat(
+        `$yellow emit mem $white${fmem.ops.toFixed(0)}op/s$yellow x$white${fmem.emits.toFixed(0)}`,
+        context,
+        true,
+      )
+      setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
+      tokenizeandwritetextformat(
+        `$yellow emit gad $white${fgad.ops.toFixed(0)}op/s$yellow x$white${fgad.emits.toFixed(0)}`,
+        context,
+        true,
+      )
+
+      tickPrev.current = {
+        t: now,
+        stages: tick.stages,
+        fanout: tick.fanout,
+      }
+
+      // render-side counters
+      const rstats = readrenderupdatestats()
+      const rprev = renderPrev.current
+      let renderdt = 0
+      if (rprev.t > 0) {
+        renderdt = (now - rprev.t) / 1000
+      }
+      let tileupRate = 0
+      let tilebRate = 0
+      let spriteRate = 0
+      let tilerendRate = 0
+      if (renderdt > 0.04) {
+        tileupRate = (rstats.tileuploadcalls - rprev.tileuploadcalls) / renderdt
+        tilebRate = (rstats.tileuploadbytes - rprev.tileuploadbytes) / renderdt
+        spriteRate =
+          (rstats.spriteeffectruns - rprev.spriteeffectruns) / renderdt
+        tilerendRate = (rstats.tilerenderruns - rprev.tilerenderruns) / renderdt
+      }
+      renderPrev.current = {
+        t: now,
+        tileuploadcalls: rstats.tileuploadcalls,
+        tileuploadbytes: rstats.tileuploadbytes,
+        spriteeffectruns: rstats.spriteeffectruns,
+        tilerenderruns: rstats.tilerenderruns,
+      }
+
+      setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
+      tokenizeandwritetextformat(
+        `$yellow tile up $white${tileupRate.toFixed(1)}/s$yellow $white${fmtRate(tilebRate)}`,
+        context,
+        true,
+      )
+      setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
+      tokenizeandwritetextformat(
+        `$yellow tile r $white${tilerendRate.toFixed(1)}/s$yellow spr $white${spriteRate.toFixed(1)}/s`,
+        context,
+        true,
+      )
+
+      // gl detail
+      setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
+      tokenizeandwritetextformat(
+        `$yellow gl calls$white${gl.calls}$yellow tri$white${gl.triangles}$yellow tex$white${gl.textures}`,
         context,
         true,
       )

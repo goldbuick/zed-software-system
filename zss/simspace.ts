@@ -7,6 +7,7 @@ import { started } from './device/vm'
 // these are all back-end devices that operate within the web worker
 import './device/clock'
 import './device/modem'
+import './perf/perfreport'
 
 const { forward } = createforward((message) => {
   if (shouldforwardservertoclient(message)) {

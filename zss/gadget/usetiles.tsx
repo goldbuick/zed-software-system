@@ -1,7 +1,7 @@
 import { useContext } from 'react'
 import type { Plane } from 'three'
 import { TILE_DATA, TilesContext } from 'zss/gadget/tiles'
-import { perfmeasure } from 'zss/perf/ui'
+import { recordtilerenderrun } from 'zss/perf/renderupdatestats'
 import { StoreApi, useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -31,23 +31,20 @@ export function TilesRender({
   skipraycast,
 }: TilesRenderProps) {
   const store = useContext(TilesContext)
-  const [char, color, bg] = useStore(
+  const [char, color, bg, render] = useStore(
     store,
     useShallow((state) => [state.char, state.color, state.bg, state.render]),
   )
-  const sliced = perfmeasure(`tiles:slice:${label}`, () => ({
-    char: char.slice(),
-    color: color.slice(),
-    bg: bg.slice(),
-  }))
+  recordtilerenderrun()
   return (
     width > 0 &&
     height > 0 && (
       <Tiles
         label={label}
-        char={sliced.char}
-        color={sliced.color}
-        bg={sliced.bg}
+        char={char}
+        color={color}
+        bg={bg}
+        tilesversion={render}
         width={width}
         height={height}
         clippingplanes={clippingplanes}

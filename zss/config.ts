@@ -22,6 +22,37 @@ const RAYCAST_DEBUG_PICKSHEET = zssjsonbool('ZSS_DEBUG_RAYCAST_PICKSHEET')
 /** Flat ortho: assert board fills frustum on cropped axes (see `flatcameradevassertboardinortho`). */
 const FLAT_CAMERA_ORTHO_ASSERT = zssjsonbool('ZSS_DEBUG_FLAT_CAMERA_ORTHO')
 
+/**
+ * Phase 3 perf flags - default ON for safe algorithmic swaps; OFF for changes
+ * that alter behavior surface area. See zss/perf/README.md.
+ */
+function zssjsonboolwithdefault(key: string, defaultvalue: boolean): boolean {
+  const raw = process.env[key]
+  if (raw === undefined || raw === '') {
+    return defaultvalue
+  }
+  try {
+    return !!JSON.parse(raw)
+  } catch {
+    return defaultvalue
+  }
+}
+/** Spatial-index lookup in memoryupdatedrawdirty allowids construction. */
+const PERF_SPATIAL_INDEX = zssjsonboolwithdefault(
+  'ZSS_PERF_SPATIAL_INDEX',
+  true,
+)
+/** Incremental gadget layer rebuild tied to drawallowids (experimental). */
+const PERF_INCREMENTAL_LAYERS = zssjsonboolwithdefault(
+  'ZSS_PERF_INCREMENTAL_LAYERS',
+  false,
+)
+/** Partial tile texture uploads via texSubImage2D dirty rows. */
+const PERF_TILE_SUBIMAGE = zssjsonboolwithdefault(
+  'ZSS_PERF_TILE_SUBIMAGE',
+  false,
+)
+
 // runtime config
 export const RUNTIME = {
   // adjust time spent on code
@@ -49,4 +80,7 @@ export {
   RAYCAST_DEBUG_DOT,
   RAYCAST_DEBUG_PICKSHEET,
   FLAT_CAMERA_ORTHO_ASSERT,
+  PERF_SPATIAL_INDEX,
+  PERF_INCREMENTAL_LAYERS,
+  PERF_TILE_SUBIMAGE,
 }

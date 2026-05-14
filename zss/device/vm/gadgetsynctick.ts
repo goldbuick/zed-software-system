@@ -29,6 +29,8 @@ import {
 } from 'zss/memory/session'
 import { memoryreadsynth } from 'zss/memory/synthstate'
 import { MEMORY_LABEL } from 'zss/memory/types'
+import { measurestage, recordemitdiff } from 'zss/perf/ticktimingstats'
+import { perfmeasure } from 'zss/perf/ui'
 
 gadgetstateprovider((player) => {
   if (ispid(player)) {
@@ -58,6 +60,12 @@ function readgadgetjsonpipe(player: string) {
 }
 
 export function gadgetsynctick(vm: DEVICE) {
+  perfmeasure('vm:gadgetsynctick:body', () => {
+    measurestage('vm:gadgetsynctick', () => gadgetsynctickbody(vm))
+  })
+}
+
+function gadgetsynctickbody(vm: DEVICE) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
@@ -72,12 +80,6 @@ export function gadgetsynctick(vm: DEVICE) {
     return
   }
 
-  // for (const pid of [...gadgetjsonpipes.keys()]) {
-  //   if (!activelist.includes(pid)) {
-  //     gadgetjsonpipes.delete(pid)
-  //   }
-  // }
-
   for (let i = 0; i < activelist.length; ++i) {
     const player = activelist[i]
     const board = memoryreadplayerboard(player)
@@ -87,7 +89,9 @@ export function gadgetsynctick(vm: DEVICE) {
     if (ispresent(board)) {
       const graphics = memoryreadgraphics(player, board)
       const mode = normalizelayerzvariant(graphics.graphics)
-      const layerstore = memoryreadbookgadgetlayersforboard(mainbook, board.id)
+      const layerstore = measurestage('vm:gadgetsync:readlayers', () =>
+        memoryreadbookgadgetlayersforboard(mainbook, board.id),
+      )
       gadgetlayers = layerstore[mode]
     }
 
@@ -108,7 +112,11 @@ export function gadgetsynctick(vm: DEVICE) {
       gadget.exitsw = gadgetlayers.exitsw
       gadget.over = gadgetlayers.over
       gadget.under = gadgetlayers.under
-      gadget.layers = [...gadgetlayers.layers, ...control]
+      gadget.layers = buildgadgetlayersarray(
+        player,
+        gadgetlayers.layers,
+        control,
+      )
       gadget.tickers = gadgetlayers.tickers
       gadget.boardname = board?.name?.trim() ?? ''
     } else {
@@ -132,11 +140,40 @@ export function gadgetsynctick(vm: DEVICE) {
 
     gadget.synthstate = memoryreadsynth(boardid)
 
-    const patch = pipe.emitdiff(gadget)
+    const patch = measurestage('vm:gadgetsync:emitdiff', () =>
+      pipe.emitdiff(gadget),
+    )
     if (patch.length) {
+      recordemitdiff('vm:gadgetsync', patch.length, 1, 1)
       gadgetclientpatch(vm, player, patch)
     }
   }
+}
+
+// reuse the joined array per-player to avoid per-tick spread when neither
+// the layers reference nor the control reference changed.
+type GADGET_LAYERS_CACHE_ENTRY = {
+  layers: unknown[]
+  control: unknown[]
+  joined: unknown[]
+}
+const gadgetlayersjoincache = new Map<string, GADGET_LAYERS_CACHE_ENTRY>()
+function buildgadgetlayersarray(
+  player: string,
+  layers: any[],
+  control: any[],
+): any[] {
+  const cached = gadgetlayersjoincache.get(player)
+  if (
+    cached?.layers === layers &&
+    cached.control === control &&
+    cached.joined.length === layers.length + control.length
+  ) {
+    return cached.joined as any[]
+  }
+  const joined = [...layers, ...control]
+  gadgetlayersjoincache.set(player, { layers, control, joined })
+  return joined
 }
 
 export function handlegadgetdesync(vm: DEVICE, message: MESSAGE): void {

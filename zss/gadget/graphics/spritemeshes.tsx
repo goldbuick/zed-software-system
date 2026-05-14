@@ -17,6 +17,7 @@ import {
 import { useMedia } from 'zss/gadget/media'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_SIZE } from 'zss/memory/types'
+import { recordspriteeffectrun } from 'zss/perf/renderupdatestats'
 
 type SpritesProps = {
   sprites: SPRITE[]
@@ -168,8 +169,9 @@ export function SpriteMeshes({
         visible.needsUpdate = true
       }
     }
-    buffer.computeBoundingBox()
-    buffer.computeBoundingSphere()
+    recordspriteeffectrun()
+    // frustumCulled is false on the <points>, so a precise bounding
+    // box/sphere is unnecessary; recomputing every effect is pure overhead.
   }, [
     buffer,
     sprites,

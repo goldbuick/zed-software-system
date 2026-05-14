@@ -5,6 +5,7 @@ import {
 
 import './device/modem'
 import './device/boardrunner'
+import './perf/perfreport'
 
 const { forward } = createforward((message) => {
   if (shouldforwardboardrunnertoclient()) {
