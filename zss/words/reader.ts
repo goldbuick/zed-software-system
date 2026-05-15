@@ -70,7 +70,7 @@ type ARG_TYPE_VALUES<T extends ARG_TYPES> = {
 
 function didexpect(msg: string, value: any, words: WORD[]) {
   console.info(
-    `${self.name} $$$ MEMORY STATE on crash`,
+    `${self.name} MEMORY STATE ON CRASH`,
     deepcopy(
       memoryexportbookasjson(memoryreadbookbysoftware(MEMORY_LABEL.MAIN)),
     ),

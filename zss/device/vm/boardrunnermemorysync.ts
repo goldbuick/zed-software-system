@@ -19,7 +19,7 @@ const boardrunnermemorypipe = createjsonpipe<MEMORY_ROOT>(
   memoryrootshouldemitpath,
 )
 
-export function boardrunnermemorysync(vm: DEVICE, showlog = false) {
+export function boardrunnermemorysync(vm: DEVICE) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
@@ -47,9 +47,6 @@ export function boardrunnermemorysync(vm: DEVICE, showlog = false) {
     }
     boardrunnerpatch(vm, player, patch)
     emits += 1
-    if (showlog) {
-      console.info(`${self.name} $$$ MEM sync`, player, patch.length, patch)
-    }
   }
   recordemitdiff('vm:memorysync', patch.length, recipients.size, emits)
 }

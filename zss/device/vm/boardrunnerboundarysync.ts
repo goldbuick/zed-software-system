@@ -42,6 +42,7 @@ export function boardrunnerboundarypatch(
   const doc = pipe.applyremote(root, operations)
   // ignore bad patch
   if (!ispresent(doc)) {
+    console.info(`${self.name} $$$ BAD PATCH\n${boundary}`)
     // maybe log here too ?
     pipe.cleardesync()
     // push reset to the boardrunner boundary
@@ -50,22 +51,6 @@ export function boardrunnerboundarypatch(
   }
   // update boundary
   memoryboundaryset(boundary, doc)
-  // log when flagsets are update
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  if (ispresent(mainbook)) {
-    const flagsetnames = Object.keys(mainbook.flags)
-    for (let i = 0; i < flagsetnames.length; ++i) {
-      const name = flagsetnames[i]
-      if (mainbook.flags[name] === boundary) {
-        console.info(
-          `${self.name} $$$ BR PATCH ${name}`,
-          boundary,
-          deepcopy(doc),
-        )
-        break
-      }
-    }
-  }
 }
 
 export function boardrunnerboundarysync(vm: DEVICE) {
@@ -98,10 +83,6 @@ function boardrunnerboundarysyncbody(vm: DEVICE) {
       const pipe = readboundarypipe(id, doc)
       const patch = pipe.emitdiff(doc)
       if (patch.length > 0) {
-        console.info(
-          `${self.name} $$$ BOUNDARY ${id} sync ${patch.length}`,
-          patch,
-        )
         recordemitdiff('vm:boundarysync', patch.length, 1, 1)
         boardrunnerpatch(vm, player, patch, id)
       }

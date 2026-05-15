@@ -82,12 +82,12 @@ export function memoryclearbookflags(book: MAYBE<BOOK>, id: string) {
   }
   // track when we nuke a flagset
   const bid = book.flags[id]
-  const isactive = ispresent(bid)
-  const content = memoryboundaryget(bid)
-  console.info(
-    `${self.name} $$$ CLEAR BOOK FLAG ${id} -> ${bid} active: ${isactive} content:`,
-    content,
-  )
+  // const isactive = ispresent(bid)
+  // const content = memoryboundaryget(bid)
+  // console.info(
+  //   `${self.name} $$$ CLEAR BOOK FLAG ${id} -> ${bid} active: ${isactive} content:`,
+  //   content,
+  // )
   // nuke it
   delete book.flags[id]
   memoryboundarydelete(bid)
@@ -388,6 +388,7 @@ export function memoryreadbookflags(book: MAYBE<BOOK>, id: string): any {
   const stub = {}
   const boundary = book.flags[id]
   if (!ispresent(boundary)) {
+    console.info('### alloc book flag', id)
     book.flags[id] = memoryboundaryalloc(stub)
     return stub
   }
@@ -399,6 +400,7 @@ export function memoryreadbookflags(book: MAYBE<BOOK>, id: string): any {
   }
 
   // create stub if not present
+  console.info('### alloc book flag', id)
   book.flags[id] = memoryboundaryalloc(stub)
   return stub
 }

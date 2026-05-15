@@ -6,24 +6,23 @@ import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
 import { gadgetstateprovider, initstate } from 'zss/gadget/data/api'
 import { GADGET_STATE, INPUT } from 'zss/gadget/data/types'
 import { normalizelayerzvariant } from 'zss/gadget/graphics/layerz'
-import { createchipid, creategadgetid, ispid } from 'zss/mapping/guid'
+import { creategadgetid, ispid } from 'zss/mapping/guid'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadplayersonboard } from 'zss/memory/boardaccess'
 import {
-  memoryclearbookflags,
   memoryreadbookflag,
   memorywritebookflag,
 } from 'zss/memory/bookoperations'
-import {
-  memoryboundarydelete,
-  memoryboundaryget,
-  memoryboundaryset,
-} from 'zss/memory/boundaries'
-import { memoryhasflags, memoryreadflags } from 'zss/memory/flags'
+import { memoryboundaryget, memoryboundaryset } from 'zss/memory/boundaries'
+import { memorycollectboundaryidsforboardchips } from 'zss/memory/boundaryrouting'
+import { memoryreadflags } from 'zss/memory/flags'
 import { memoryreadbookgadgetlayersforboard } from 'zss/memory/gadgetlayersflags'
 import { memorysendtoboards } from 'zss/memory/gamesend'
 import { memoryrootshouldemitpath } from 'zss/memory/jsonpipefilter'
-import { memoryreadbookplayerboards } from 'zss/memory/playermanagement'
+import {
+  memorylogoutplayer,
+  memoryreadbookplayerboards,
+} from 'zss/memory/playermanagement'
 import {
   memoryreadgadgetlayers,
   memoryreadgraphics,
@@ -83,9 +82,22 @@ function readworkerboundarypipe(boundary: string): BOUNDARY_JSONPIPE {
   return boundarysyncpipes.get(boundary)!
 }
 
+function boardrunnerack(boards: BOARD[]) {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+
+  const boundaryacklist = new Set<string>()
+  for (const board of boards) {
+    const boundaryids = memorycollectboundaryidsforboardchips(mainbook, board)
+    for (const id of boundaryids) {
+      boundaryacklist.add(id)
+    }
+  }
+
+  // ack the tick so we don't get blocked
+  vmboardrunnerack(boardrunner, assignedplayer, Array.from(boundaryacklist))
+}
+
 function boardrunnerpushupdates(device: DEVICE) {
-  // build a (boundaryid -> flagsetname) reverse map for the current main book
-  // so we can identify flag boundaries and surface their flagset name.
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const flagboundarytoname = new Map<string, string>()
   if (ispresent(mainbook)) {
@@ -110,7 +122,7 @@ function boardrunnerpushupdates(device: DEVICE) {
   }
 }
 
-let firsttick = true
+let firsttick = 0
 function handleboardrunnertick(
   message: MESSAGE,
   board: string,
@@ -123,7 +135,10 @@ function handleboardrunnertick(
     assignedboard = board
     // boundarydidreset is cleared
     boundarydidreset.clear()
-    firsttick = true
+    firsttick = 0
+    console.info(
+      `${self.name} $$$ BOARD ASSIGNED\n${assignedplayer} -> ${assignedboard}`,
+    )
   }
 
   // always update the boundaries
@@ -142,33 +157,41 @@ function handleboardrunnertick(
     boardrunner.reply(message, 'desync', id)
   }
 
-  // ack the tick so we don't get blocked
-  vmboardrunnerack(boardrunner, assignedplayer)
+  // always update the mainbook timestamp
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (ispresent(mainbook)) {
+    mainbook.timestamp = timestamp
+  }
 
   // validate the boundaries are in sync and the board codepage is valid
-  const anydesynced = assignedboundaries.some((id) => {
-    const isdesynced = readworkerboundarypipe(id).isdesynced()
-    if (isdesynced) {
-      console.info(`${self.name} $$$ DESYNCED ${assignedplayer} -> ${id}`)
-    }
-    return isdesynced
-  })
+  const anydesynced = assignedboundaries.find((id) =>
+    readworkerboundarypipe(id).isdesynced(),
+  )
   if (anydesynced) {
-    console.info(`${self.name} $$$ WAITING FOR ${assignedplayer}`)
+    firsttick = 0
+    console.info(
+      `${self.name} $$$ WAITING FOR\n${assignedplayer} -> ${anydesynced}`,
+    )
+    // ack the tick so we don't get blocked
+    boardrunnerack([])
     return
   }
 
   // validate the board codepage is valid
   const maybeboard = memoryboundaryget<CODE_PAGE_RUNTIME>(assignedboard)
   if (!ispresent(maybeboard?.board)) {
+    // ack the tick so we don't get blocked
+    boardrunnerack([])
     return
   }
 
-  if (firsttick) {
-    firsttick = false
-    console.info(
-      `${self.name} $$$ TICKING ${assignedplayer} -> ${assignedboard}`,
-    )
+  if (firsttick < 50) {
+    if (firsttick % 10 === 0) {
+      console.info(
+        `${self.name} $$$ TICKING\n${assignedplayer} -> ${assignedboard}`,
+      )
+    }
+    ++firsttick
   }
 
   // tick boards we're in-charge of
@@ -176,7 +199,6 @@ function handleboardrunnertick(
   memorytickmain(timestamp, updateboards, memoryreadhalt())
 
   // render the gadget layers for the updated boards
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   for (let b = 0; b < updateboards.length; ++b) {
     const boarddata = updateboards[b]
     const didrender: Record<string, boolean> = {}
@@ -197,6 +219,9 @@ function handleboardrunnertick(
       store[mode] = memoryreadgadgetlayers(mode, boarddata)
     }
   }
+
+  // ack the tick so we don't get blocked
+  boardrunnerack(updateboards)
 
   // ensure the boundaries are in sync
   boardrunnerpushupdates(boardrunner)
@@ -244,11 +269,7 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
         const anydesynced = assignedboundaries.some((id) => {
           return readworkerboundarypipe(id).isdesynced()
         })
-        if (
-          anydesynced ||
-          !memoryhasflags(message.player) ||
-          !playersonassignedboard.has(message.player)
-        ) {
+        if (anydesynced || !playersonassignedboard.has(message.player)) {
           return
         }
 
@@ -267,18 +288,13 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
       }
       break
     case 'idle':
-      console.info(`${self.name} $$$ IDLE ${assignedplayer}`)
+      console.info(`${self.name} $$$ IDLE\n${assignedplayer}`)
       handleboardrunneridle()
       break
     case 'linkdead':
       if (isstring(message.data)) {
-        const { player } = message
-        const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-        // nuke it
-        console.info(`${self.name} $$$ LINKDEAD ${player}`)
-        memoryclearbookflags(mainbook, player)
-        memoryclearbookflags(mainbook, createchipid(player))
-        memoryclearbookflags(mainbook, creategadgetid(player))
+        memorylogoutplayer(message.data, false)
+        console.info(`${self.name} $$$ LINKDEAD\n${message.data}`)
       }
       break
     case 'tick':
