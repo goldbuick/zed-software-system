@@ -280,13 +280,16 @@ export function registersetmyplayerid(id: string) {
 // timeout for TOAST
 let toasttimer: any
 
+// timeout for HEAVY STATUS badge
+let heavystatustimer: any
+
 export function registerreadplayer() {
   return myplayerid
 }
 
 export const register = createdevice(
   'register',
-  ['ready', 'second', 'sessionreset', 'log', 'chat', 'toast'],
+  ['ready', 'second', 'sessionreset', 'log', 'chat', 'toast', 'heavystatus'],
   function (message) {
     if (!register.session(message)) {
       return
@@ -297,6 +300,7 @@ export const register = createdevice(
       case 'ready':
       case 'chat':
       case 'toast':
+      case 'heavystatus':
       case 'second':
       case 'sessionreset':
         // console.info(message)
@@ -911,6 +915,18 @@ export const register = createdevice(
           const holdratio = Math.max(message.data.length * 150, 3000)
           const hold = Math.min(holdratio, 14000)
           toasttimer = setTimeout(() => useTape.setState({ toast: '' }), hold)
+        }
+        break
+      case 'heavystatus':
+        if (isstring(message.data)) {
+          clearTimeout(heavystatustimer)
+          useTape.setState({ heavystatus: message.data })
+          if (message.data) {
+            heavystatustimer = setTimeout(
+              () => useTape.setState({ heavystatus: '' }),
+              2000,
+            )
+          }
         }
         break
       case 'terminal:full':

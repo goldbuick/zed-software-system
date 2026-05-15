@@ -26,6 +26,7 @@ import { TapeComponent } from 'zss/screens/tape/component'
 
 import { Scanlines } from './fx/scanlines'
 import { useMedia } from './media'
+import { HeavyStatusBadgeConnected } from './heavystatus'
 import { TapeToastConnected } from './toast'
 import { UserFocus } from './userinput'
 import { UserScreen } from './userscreen'
@@ -134,6 +135,7 @@ export function Engine() {
             <ScreenUILayout />
             <TapeComponent />
             <TapeToastConnected />
+            <HeavyStatusBadgeConnected />
             <TapeViewImage />
             <ScreenUIScrollLayer />
           </ScreenUIScrollProvider>

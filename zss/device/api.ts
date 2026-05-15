@@ -79,6 +79,14 @@ export function apitoast(device: DEVICELIKE, player: string, toast: string) {
   device.emit(player, 'toast', toast)
 }
 
+export function apiheavystatus(
+  device: DEVICELIKE,
+  player: string,
+  status: string,
+) {
+  device.emit(player, 'heavystatus', status)
+}
+
 export function gadgetclientbonk(device: DEVICELIKE, player: string) {
   device.emit(player, 'gadgetclient:bonk', undefined)
 }

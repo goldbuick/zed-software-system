@@ -1,4 +1,4 @@
-import { apitoast } from 'zss/device/api'
+import { apiheavystatus } from 'zss/device/api'
 import type { DEVICELIKE } from 'zss/device/api'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
@@ -37,7 +37,7 @@ async function ensurepiper(
       key,
       (async () => {
         try {
-          apitoast(device, player, 'piper loading...')
+          apiheavystatus(device, player, 'tts load')
           const p = await PiperTTS.from_pretrained(baseurl, jsonurl)
           pipertts = p
           loadedpiperkey = key
@@ -60,7 +60,7 @@ async function ensuresupertonic(
   }
   supertonicloadpromise ??= (async () => {
     try {
-      apitoast(device, player, 'supertonic loading...')
+      apiheavystatus(device, player, 'tts load')
       const t = await SupertonicTTS.from_pretrained()
       supertonictts = t
       return t
@@ -126,7 +126,7 @@ export async function requestaudiobytes(
         if (!ispresent(supertonictts) || !supertonictts.pipeline) {
           return undefined
         }
-        apitoast(device, player, 'supertonic working...')
+        apiheavystatus(device, player, 'tts work')
         let timeoutid: ReturnType<typeof setTimeout> | null = null
         const cleartimeout = () => {
           if (timeoutid != null) {
@@ -147,12 +147,12 @@ export async function requestaudiobytes(
             )
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             for await (const _ of stream) {
-              apitoast(device, player, 'supertonic reading...')
+              apiheavystatus(device, player, 'tts read')
             }
             const rawaudio = supertonictts?.merge_audio()
             supertonictts?.clearAudio()
             if (ispresent(rawaudio)) {
-              apitoast(device, player, 'supertonic done...')
+              apiheavystatus(device, player, 'tts done')
               return convertarraybytes(rawaudio)
             }
             return undefined
@@ -181,7 +181,7 @@ export async function requestaudiobytes(
         if (!ispresent(pipertts)) {
           return undefined
         }
-        apitoast(device, player, `${engine} working...`)
+        apiheavystatus(device, player, 'tts work')
         let timeoutid: ReturnType<typeof setTimeout> | null = null
         const cleartimeout = () => {
           if (timeoutid != null) {
@@ -199,11 +199,11 @@ export async function requestaudiobytes(
             })
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             for await (const _ of stream) {
-              apitoast(device, player, `${engine} reading...`)
+              apiheavystatus(device, player, 'tts read')
             }
             const rawaudio = pipertts?.merge_audio()
             pipertts?.clearAudio()
-            apitoast(device, player, `${engine} done...`)
+            apiheavystatus(device, player, 'tts done')
             return ispresent(rawaudio) ? convertarraybytes(rawaudio) : undefined
           } finally {
             cleartimeout()

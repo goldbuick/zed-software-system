@@ -126,6 +126,7 @@ export const useTape = create<{
   quickterminal: boolean
   autocompleteindex: number
   toast: string
+  heavystatus: string
   terminal: {
     open: boolean
     logs: string[]
@@ -149,6 +150,7 @@ export const useTape = create<{
   quickterminal: false,
   autocompleteindex: 0,
   toast: '',
+  heavystatus: '',
   terminal: {
     open: true,
     logs: [],
@@ -169,6 +171,7 @@ export const useTape = create<{
       perfmonitor: false,
       quickterminal: false,
       toast: '',
+      heavystatus: '',
       terminal: {
         open: true,
         logs: [],

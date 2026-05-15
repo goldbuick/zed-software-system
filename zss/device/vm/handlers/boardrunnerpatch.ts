@@ -8,6 +8,7 @@ export function handleboardrunnerpatch(vm: DEVICE, message: MESSAGE): void {
   if (!isarray(message.data)) {
     return
   }
+  // we need to afford board runners to patch MAIN MEMORY
   const [patch, boundary] = message.data as [Operation[], string | undefined]
   if (boundary) {
     boardrunnerboundarypatch(vm, message.player, boundary, patch)

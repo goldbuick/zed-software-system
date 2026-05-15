@@ -2,7 +2,8 @@ import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import {
   apierror,
-  apitoast,
+  apiheavystatus,
+  apilog,
   heavymodelstop,
   registeragentdootoff,
   registeragentdooton,
@@ -69,7 +70,8 @@ export function heavyrunagentstart(heavydev: DEVICE, message: MESSAGE): void {
   agentnames[id] = agentname
   registeragentdooton(heavydev, requestplayer, id)
   persistrostertostorage(heavydev, requestplayer)
-  apitoast(heavydev, requestplayer, `agent ${agentname} (${id}) started`)
+  apiheavystatus(heavydev, requestplayer, `agent + ${agentname}`)
+  apilog(heavydev, requestplayer, `agent ${agentname} (${id}) started`)
   writeagentlistto(heavydev, requestplayer)
 }
 
@@ -100,7 +102,8 @@ function stopagentbyid(
   delete agents[agentid]
   delete agentnames[agentid]
   persistrostertostorage(heavydev, requestplayer)
-  apitoast(heavydev, requestplayer, `agent ${agentid} stopped`)
+  apiheavystatus(heavydev, requestplayer, `agent - ${agentid}`)
+  apilog(heavydev, requestplayer, `agent ${agentid} stopped`)
   writeagentlistto(heavydev, requestplayer)
   return true
 }
@@ -123,7 +126,8 @@ export function heavyrunagentname(heavydev: DEVICE, message: MESSAGE): void {
   }
   agentnames[agentid] = newname
   persistrostertostorage(heavydev, message.player)
-  apitoast(heavydev, message.player, `agent ${agentid} renamed to ${newname}`)
+  apiheavystatus(heavydev, message.player, `agent ~ ${newname}`)
+  apilog(heavydev, message.player, `agent ${agentid} renamed to ${newname}`)
 }
 
 /** `#set user` from firmware: update heavy roster only when `agentid` is a running agent. */
@@ -168,6 +172,7 @@ export function heavyrunrestoreagents(
     count += 1
   }
   if (count > 0) {
-    apitoast(heavydev, requestplayer, `Restored ${count} agent(s)`)
+    apiheavystatus(heavydev, requestplayer, `agent restore ${count}`)
+    apilog(heavydev, requestplayer, `Restored ${count} agent(s)`)
   }
 }

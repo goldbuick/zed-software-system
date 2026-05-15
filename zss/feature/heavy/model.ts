@@ -96,6 +96,11 @@ const PARSE_CONFIG: PARSE_OPTIONS = {
 const TOAST_THROTTLE_MS = 50
 const PROGRESS_THROTTLE_MS = 100
 
+function basename(filepath: string): string {
+  const slash = filepath.lastIndexOf('/')
+  return slash >= 0 ? filepath.slice(slash + 1) : filepath
+}
+
 function throttle(
   fn: (message: string) => void,
   intervalms: number,
@@ -157,22 +162,22 @@ async function loadclassifiermodel(
   classifiermodelpromise = (async () => {
     const lastprogress: Record<string, number> = {}
 
-    onworking(`${CLASSIFIER_MODEL_ID} loading ...`)
+    onworking(`llm load`)
     const onworkingprogress = throttle(onworking, PROGRESS_THROTTLE_MS)
     function progress_callback(info: ProgressInfo) {
       switch (info.status) {
         case 'initiate':
-          onworking(`[${CLASSIFIER_MODEL_ID}] ${info.file} loading ...`)
+          onworking(`llm dl ${basename(info.file)}`)
           break
         case 'download':
-          onworking(`[${CLASSIFIER_MODEL_ID}] ${info.file} downloading ...`)
+          onworking(`llm dl ${basename(info.file)}`)
           break
         case 'progress': {
           const index = `${info.name}-${info.file}`
           const progress = Math.round(info.progress)
           if (progress !== lastprogress[index]) {
             lastprogress[index] = progress
-            onworkingprogress(`[${info.name}] ${info.file} ${progress}% ...`)
+            onworkingprogress(`llm dl ${progress}%`)
           }
           break
         }
@@ -283,22 +288,22 @@ async function loadsharedmodel(
     disposegemmaifloaded()
     const lastprogress: Record<string, number> = {}
 
-    onworking(`${modelid} loading ...`)
+    onworking(`llm load`)
     const onworkingprogress = throttle(onworking, PROGRESS_THROTTLE_MS)
     function progress_callback(info: ProgressInfo) {
       switch (info.status) {
         case 'initiate':
-          onworking(`[${modelid}] ${info.file} loading ...`)
+          onworking(`llm dl ${basename(info.file)}`)
           break
         case 'download':
-          onworking(`[${modelid}] ${info.file} downloading ...`)
+          onworking(`llm dl ${basename(info.file)}`)
           break
         case 'progress': {
           const index = `${info.name}-${info.file}`
           const progress = Math.round(info.progress)
           if (progress !== lastprogress[index]) {
             lastprogress[index] = progress
-            onworkingprogress(`[${info.name}] ${info.file} ${progress}% ...`)
+            onworkingprogress(`llm dl ${progress}%`)
           }
           break
         }
@@ -379,22 +384,22 @@ async function loadsharedgemma4model(
     disposecausalifloaded()
     const lastprogress: Record<string, number> = {}
 
-    onworking(`${modelid} loading ...`)
+    onworking(`llm load`)
     const onworkingprogress = throttle(onworking, PROGRESS_THROTTLE_MS)
     function progress_callback(info: ProgressInfo) {
       switch (info.status) {
         case 'initiate':
-          onworking(`[${modelid}] ${info.file} loading ...`)
+          onworking(`llm dl ${basename(info.file)}`)
           break
         case 'download':
-          onworking(`[${modelid}] ${info.file} downloading ...`)
+          onworking(`llm dl ${basename(info.file)}`)
           break
         case 'progress': {
           const index = `${info.name}-${info.file}`
           const progress = Math.round(info.progress)
           if (progress !== lastprogress[index]) {
             lastprogress[index] = progress
-            onworkingprogress(`[${info.name}] ${info.file} ${progress}% ...`)
+            onworkingprogress(`llm dl ${progress}%`)
           }
           break
         }
@@ -536,11 +541,11 @@ export async function modelgenerate(
     skip_prompt: true,
     skip_special_tokens: true,
     callback_function() {
-      onworkingthrottled(`working ...`)
+      onworkingthrottled(`llm work`)
     },
   })
 
-  onworking(`thinking ...`)
+  onworking(`llm think`)
   const { sequences } = (await model.generate({
     ...input,
     streamer,
@@ -613,11 +618,11 @@ export async function modelgenerategemma4(
     skip_prompt: true,
     skip_special_tokens: true,
     callback_function() {
-      onworkingthrottled(`working ...`)
+      onworkingthrottled(`llm work`)
     },
   })
 
-  onworking(`thinking ...`)
+  onworking(`llm think`)
   const { sequences } = (await model.generate({
     ...input,
     streamer,
@@ -651,7 +656,7 @@ export async function modelclassify(
 
   const input = applychattemplate(tokenizer, messages)
 
-  onworking(`classifying ...`)
+  onworking(`llm classify`)
   const { sequences } = (await model.generate({
     ...input,
     do_sample: false,
