@@ -94,6 +94,7 @@ Core virtual machine operations for managing game state, memory, code execution,
 ### Boardrunner Acks
 - `vmboardrunnerack(device, player)` - Boardrunner ack of a `boardrunner:tick`; refreshes ack budget
 - `vmboardrunnerpatch(device, player, patch, boundary?)` - Boardrunner sends a boundary jsonpipe patch back to authoritative memory
+- `vmboardrunnerpaint(device, player, doc, boundary)` - Boardrunner sends a full boundary document to authoritative memory (sim jsonpipe reset for that id)
 
 ### Content & Discovery
 - `vmzztsearch(device, player, field, text)` - Search Museum of ZZT
@@ -266,6 +267,7 @@ Per-board chip simulation that runs inside the **boardrunner worker**. The sim V
 ### Boardrunner → VM
 - `vmboardrunnerack(device, player)` - Ack a `boardrunner:tick`
 - `vmboardrunnerpatch(device, player, patch, boundary?)` - Send a boundary jsonpipe patch back to authoritative memory
+- `vmboardrunnerpaint(device, player, doc, boundary)` - Send a full boundary document to authoritative memory (sim resets jsonpipe for that boundary)
 - `vmplayermovetoboard(device, player, targetplayer, board, dest)` - Ask the sim VM to relocate a player
 
 ---

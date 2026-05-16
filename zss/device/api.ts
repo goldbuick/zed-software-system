@@ -333,6 +333,16 @@ export function vmboardrunnerpatch(
   device.emit(player, 'vm:boardrunnerpatch', [patch, boundary])
 }
 
+/** Full boundary document from runner → sim (boundary id required). */
+export function vmboardrunnerpaint(
+  device: DEVICELIKE,
+  player: string,
+  doc: any,
+  boundary: string,
+) {
+  device.emit(player, 'vm:boardrunnerpaint', [doc, boundary])
+}
+
 export function vmplayermovetoboard(
   device: DEVICELIKE,
   player: string,

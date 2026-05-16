@@ -7,7 +7,7 @@ import { gadgetstateprovider, initstate } from 'zss/gadget/data/api'
 import { GADGET_STATE, INPUT } from 'zss/gadget/data/types'
 import { normalizelayerzvariant } from 'zss/gadget/graphics/layerz'
 import { creategadgetid, ispid } from 'zss/mapping/guid'
-import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
+import { MAYBE, deepcopy, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadplayersonboard } from 'zss/memory/boardaccess'
 import {
   memoryreadbookflag,
@@ -36,7 +36,7 @@ import {
 import { BOARD, CODE_PAGE_RUNTIME, MEMORY_LABEL } from 'zss/memory/types'
 import { NAME } from 'zss/words/types'
 
-import { vmboardrunnerack, vmboardrunnerpatch } from './api'
+import { vmboardrunnerack, vmboardrunnerpaint, vmboardrunnerpatch } from './api'
 
 gadgetstateprovider((player) => {
   if (ispid(player)) {
@@ -87,8 +87,20 @@ function boardrunnerpushupdates(device: DEVICE) {
     vmboardrunnerpatch(device, assignedplayer, memorypatch)
   }
 
+  const boundaryset = new Set(assignedboundaries)
+  for (const key of boundarysyncpipes.keys()) {
+    if (!boundaryset.has(key)) {
+      boundarysyncpipes.delete(key)
+    }
+  }
+
   // add the BOUNDARY patch calls here
   for (const id of assignedboundaries) {
+    const pipenew = !boundarysyncpipes.has(id)
+    if (pipenew) {
+      const paintdoc = deepcopy(memoryboundaryget<BOUNDARY_DOC>(id) ?? {})
+      vmboardrunnerpaint(device, assignedplayer, paintdoc, id)
+    }
     const pipe = readworkerboundarypipe(id)
     const doc = memoryboundaryget<BOUNDARY_DOC>(id) ?? {}
     const patch = pipe.emitdiff(doc)

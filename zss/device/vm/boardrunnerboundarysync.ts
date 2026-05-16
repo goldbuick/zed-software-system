@@ -16,6 +16,11 @@ type BOUNDARY_DOC = Record<string, any>
 type BOUNDARY_JSONPIPE = JSON_PIPE_HANDLE<BOUNDARY_DOC>
 const boundaryjsonpipes = new Map<string, BOUNDARY_JSONPIPE>()
 
+/** Drop sim-side jsonpipe for a boundary so the next sync rebuilds shadow from memory. */
+export function boardrunnerboundarypipeforget(id: string) {
+  boundaryjsonpipes.delete(id)
+}
+
 function readboundarypipe(id: string, boundary: BOUNDARY_DOC) {
   if (!boundaryjsonpipes.has(id)) {
     const pipe = createjsonpipe<BOUNDARY_DOC>(

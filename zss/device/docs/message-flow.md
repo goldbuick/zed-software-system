@@ -179,6 +179,7 @@ flowchart TB
 | userinput | boardrunner  | `boardrunner:input`         | Keyboard/gamepad input for the runner      |
 | sidebar / scroll | vm + boardrunner | `vm:CHIP:LABEL`        | Hyperlink / hotkey / runit / scroll panel item; the same `vm:*` message is delivered to both the sim VM (for `refscroll` / `batch` / `makeit` / `bookmarkscroll` / etc. handlers) and the boardrunner (which strips the `vm:` prefix and hands it to `memorymessagechip` so the originating chip receives the label) |
 | boardrunner | vm         | `vm:boardrunnerack`         | Tick acknowledged; refresh runner budget   |
+| boardrunner | vm         | `vm:boardrunnerpaint`       | Full boundary doc from runner → sim (pipe shadow reset) |
 | boardrunner | vm         | `vm:boardrunnerpatch`       | Boundary diff back to authoritative memory |
 | boardrunner | vm         | `vm:playermovetoboard`      | Boardrunner asks for player teleport       |
 | agents    | vm           | `vm:doot`                   | Agent keepalive                            |

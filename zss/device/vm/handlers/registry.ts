@@ -13,6 +13,7 @@ import {
 } from './auth'
 import { handleboardrunnerack } from './boardrunnerack'
 import { handleboardrunnerdesync } from './boardrunnerdesync'
+import { handleboardrunnerpaint } from './boardrunnerpaint'
 import { handleboardrunnerpatch } from './boardrunnerpatch'
 import { handlebookmarkscroll } from './bookmarkscroll'
 import { handlebooks } from './books'
@@ -77,6 +78,7 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   halt: handlehalt,
   ticktock: handleticktock,
   boardrunnerack: handleboardrunnerack,
+  boardrunnerpaint: handleboardrunnerpaint,
   boardrunnerpatch: handleboardrunnerpatch,
   playermovetoboard: handleplayermovetoboard,
   desync: handleboardrunnerdesync,
