@@ -52,30 +52,3 @@ export function memorycollectboundaryidsforboard(
 
   return Array.from(out)
 }
-
-export function memorycollectboundaryidsforboardchips(
-  book: MAYBE<BOOK>,
-  board: MAYBE<BOARD>,
-): string[] {
-  if (!ispresent(board)) {
-    return []
-  }
-
-  // scan objects for chip  boundaries
-  const out = new Set<string>()
-  const objects = Object.values(board.objects)
-  for (const element of objects) {
-    // skip if removed or no id is set
-    if (!element.id || element.removed) {
-      continue
-    }
-    // add chip boundary
-    const id = createchipid(element.id)
-    const boundary = book?.flags[id]
-    if (ispresent(boundary)) {
-      out.add(id)
-    }
-  }
-
-  return Array.from(out)
-}

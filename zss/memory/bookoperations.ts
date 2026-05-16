@@ -376,23 +376,14 @@ export function memoryreadbookflags(book: MAYBE<BOOK>, id: string): any {
     return {}
   }
 
-  // create stub if not present
-  const stub = {}
-  const boundary = book.flags[id]
-  if (!ispresent(boundary)) {
-    console.info('### alloc book flag', id)
-    book.flags[id] = memoryboundaryalloc(stub)
-    return stub
-  }
-
   // read boundary
-  const flags = memoryboundaryget<BOOK_FLAGS>(boundary)
+  const flags = memoryboundaryget<BOOK_FLAGS>(book.flags[id])
   if (ispresent(flags)) {
     return flags
   }
 
   // create stub if not present
-  console.info('### alloc book flag', id)
+  const stub = {}
   book.flags[id] = memoryboundaryalloc(stub)
   return stub
 }

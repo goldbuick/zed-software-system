@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import { boardrunnerpaint, boardrunnerpatch } from 'zss/device/api'
+import { boardrunnerpatch } from 'zss/device/api'
 import { Operation, createjsonpipe } from 'zss/feature/jsonpipe/observe'
 import { ispresent } from 'zss/mapping/types'
 import { memoryrootshouldemitpath } from 'zss/memory/jsonpipefilter'
@@ -47,26 +47,18 @@ function boardrunneremitpatch(
   )
 }
 
-export function boardrunnermemorypatch(
-  vm: DEVICE,
-  player: string,
-  operations: Operation[],
-) {
+export function boardrunnermemorypatch(operations: Operation[]) {
   const root = memoryreadroot()
   const doc = boardrunnermemorypipe.applyremote(memoryreadroot(), operations)
   // ignore bad patch
   if (!ispresent(doc)) {
-    // maybe log here too ?
-    console.info(`${self.name} $$$ MEM BAD PATCH\nMEM`)
+    console.error(`${self.name} $$$ MEM BAD PATCH\nMEM`, operations)
     boardrunnermemorypipe.cleardesync()
-    // push reset to the boardrunner boundary
-    boardrunnerpaint(vm, player, root)
-    return
+    return false
   }
   // update memory
   Object.assign(root, doc)
-  // emit patch to other board runners
-  boardrunneremitpatch(vm, operations, player)
+  return true
 }
 
 export function boardrunnermemorysync(vm: DEVICE) {

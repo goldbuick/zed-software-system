@@ -978,9 +978,8 @@ export function zztparseworld(
   }
 }
 
-export async function parsebrd(player: string, content: Uint8Array) {
+export function parsebrd(player: string, content: Uint8Array) {
   workstatus(SOFTWARE, player, 'parse brd')
-  await new Promise((r) => requestAnimationFrame(r))
   const contentbook = memoryreadfirstcontentbook()
   if (!ispresent(contentbook)) {
     apitoast(SOFTWARE, player, 'no content book to import into')
@@ -1014,9 +1013,8 @@ export async function parsebrd(player: string, content: Uint8Array) {
   )
 }
 
-export async function parsezzt(player: string, content: Uint8Array) {
+export function parsezzt(player: string, content: Uint8Array) {
   workstatus(SOFTWARE, player, 'parse zzt')
-  await new Promise((r) => requestAnimationFrame(r))
   const reader = createreader(content)
   const header = readworldheaderzzt(reader)
   if (!header || reader.haserror()) {
@@ -1051,9 +1049,8 @@ export async function parsezzt(player: string, content: Uint8Array) {
   apitoast(SOFTWARE, player, `imported zzt file into ${book.name} book`)
 }
 
-export async function parseszt(player: string, content: Uint8Array) {
+export function parseszt(player: string, content: Uint8Array) {
   workstatus(SOFTWARE, player, 'parse szt')
-  await new Promise((r) => requestAnimationFrame(r))
   const reader = createreader(content)
   const header = readworldheaderszzt(reader)
   if (!header || reader.haserror()) {

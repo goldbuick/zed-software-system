@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import { boardrunnerpaint, boardrunnerpatch } from 'zss/device/api'
+import { boardrunnerpatch } from 'zss/device/api'
 import type { JSON_PIPE_HANDLE, Operation } from 'zss/feature/jsonpipe/observe'
 import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
 import { ispresent } from 'zss/mapping/types'
@@ -28,8 +28,6 @@ function readboundarypipe(id: string, boundary: BOUNDARY_DOC) {
 }
 
 export function boardrunnerboundarypatch(
-  vm: DEVICE,
-  player: string,
   boundary: string,
   operations: Operation[],
 ) {
@@ -42,15 +40,13 @@ export function boardrunnerboundarypatch(
   const doc = pipe.applyremote(root, operations)
   // ignore bad patch
   if (!ispresent(doc)) {
-    // maybe log here too ?
-    console.info(`${self.name} $$$ BAD PATCH\n${boundary}`)
+    console.error(`${self.name} $$$ BAD PATCH\n${boundary}`, operations)
     pipe.cleardesync()
-    // push reset to the boardrunner boundary
-    boardrunnerpaint(vm, player, root, boundary)
-    return
+    return false
   }
   // update boundary
   memoryboundaryset(boundary, doc)
+  return true
 }
 
 export function boardrunnerboundarysync(vm: DEVICE) {

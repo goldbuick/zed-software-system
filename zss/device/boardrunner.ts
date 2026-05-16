@@ -7,7 +7,13 @@ import { gadgetstateprovider, initstate } from 'zss/gadget/data/api'
 import { GADGET_STATE, INPUT } from 'zss/gadget/data/types'
 import { normalizelayerzvariant } from 'zss/gadget/graphics/layerz'
 import { creategadgetid, ispid } from 'zss/mapping/guid'
-import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
+import {
+  MAYBE,
+  deepcopy,
+  isarray,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
 import { memoryreadplayersonboard } from 'zss/memory/boardaccess'
 import {
   memoryreadbookflag,
@@ -157,8 +163,8 @@ function handleboardrunnertick(
   }
 
   // validate the board codepage is valid
-  const maybeboard = memoryboundaryget<CODE_PAGE_RUNTIME>(assignedboard)
-  if (!ispresent(maybeboard?.board)) {
+  const runtime = memoryboundaryget<CODE_PAGE_RUNTIME>(assignedboard)
+  if (!ispresent(runtime?.board)) {
     return
   }
 
@@ -172,7 +178,7 @@ function handleboardrunnertick(
   }
 
   // tick boards we're in-charge of
-  const updateboards: BOARD[] = [maybeboard.board]
+  const updateboards: BOARD[] = [runtime.board]
   memorytickmain(timestamp, updateboards, memoryreadhalt())
 
   // render the gadget layers for the updated boards
@@ -254,6 +260,10 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
         if (input !== INPUT.NONE) {
           flags.inputqueue.push([input, mods])
         }
+        console.info(
+          `${self.name} $$$ INPUT\n${message.player}`,
+          deepcopy(flags.inputqueue),
+        )
 
         // ensure the boundaries are in sync
         boardrunnerpushupdates(boardrunner)
@@ -265,8 +275,8 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
       break
     case 'linkdead':
       if (isstring(message.data)) {
-        // memorylogoutplayer(message.data, false)
         console.info(`${self.name} $$$ LINKDEAD\n${message.data}`)
+        memorylogoutplayer(message.data, false)
       }
       break
     case 'tick':

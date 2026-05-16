@@ -722,11 +722,8 @@ export const register = createdevice(
         break
       case 'screenshot':
         workstatus(register, message.player, 'export png')
-        apilog(register, message.player, 'screenshot start')
-        doasync(register, message.player, async function () {
-          await capturecurrentboardtopng()
-          apilog(register, message.player, 'screenshot saved')
-        })
+        capturecurrentboardtopng()
+        apilog(register, message.player, 'screenshot saved')
         break
       case 'nuke':
         agentdootids.clear()
