@@ -14,6 +14,7 @@ import {
   memorywritebookflag,
 } from 'zss/memory/bookoperations'
 import { memoryboundaryget, memoryboundaryset } from 'zss/memory/boundaries'
+import { memorycollectboundaryidsforboard } from 'zss/memory/boundaryrouting'
 import { memoryreadflags } from 'zss/memory/flags'
 import { memoryreadbookgadgetlayersforboard } from 'zss/memory/gadgetlayersflags'
 import { memorysendtoboards } from 'zss/memory/gamesend'
@@ -33,7 +34,7 @@ import {
   memoryreadhalt,
   memoryreadroot,
 } from 'zss/memory/session'
-import { BOARD, CODE_PAGE_RUNTIME, MEMORY_LABEL } from 'zss/memory/types'
+import { BOARD, BOOK, CODE_PAGE_RUNTIME, MEMORY_LABEL } from 'zss/memory/types'
 import { NAME } from 'zss/words/types'
 
 import { vmboardrunnerack, vmboardrunnerpatch } from './api'
@@ -80,15 +81,31 @@ function readworkerboundarypipe(boundary: string): BOUNDARY_JSONPIPE {
   return boundarysyncpipes.get(boundary)!
 }
 
-function boardrunnerpushupdates(device: DEVICE) {
-  // note that is where we need to check if we've added flagsets
-  // and these flagsets need to be paint'd to the vm
+function boardrunnerpushupdates(device: DEVICE, updateboards: BOARD[]) {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return
+  }
+
+  // collect the current boundaries
+  const currentboundaries = new Set<string>()
+  for (const board of updateboards) {
+    const ids = memorycollectboundaryidsforboard(mainbook, board)
+    for (const id of ids) {
+      currentboundaries.add(id)
+    }
+  }
+
+  // TODO, compare and find new boundaries to paint
 
   // add the MEM patch calls here
   const memorypatch = memorysyncpipe.emitdiff(memoryreadroot())
   if (memorypatch.length > 0) {
     vmboardrunnerpatch(device, assignedplayer, memorypatch)
   }
+
+  // should we make a pass where we look at the new set of boundaries
+  // and see if we need to paint any flagsets to the vm?
 
   const boundaryset = new Set(assignedboundaries)
   for (const key of boundarysyncpipes.keys()) {
@@ -199,7 +216,7 @@ function handleboardrunnertick(
   }
 
   // ensure the boundaries are in sync
-  boardrunnerpushupdates(boardrunner)
+  boardrunnerpushupdates(boardrunner, updateboards)
 }
 
 function handleboardrunneridle() {
@@ -236,6 +253,12 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
       break
     case 'input':
       if (isarray(message.data)) {
+        // validate the board codepage is valid
+        const runtime = memoryboundaryget<CODE_PAGE_RUNTIME>(assignedboard)
+        if (!ispresent(runtime?.board)) {
+          return
+        }
+
         // validate pipes are not desynced
         const anydesynced = assignedboundaries.some((id) => {
           return readworkerboundarypipe(id).isdesynced()
@@ -253,14 +276,10 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
         if (input !== INPUT.NONE) {
           flags.inputqueue.push([input, mods])
         }
-        // console.info(
-        //   `${self.name} $$$ INPUT\n${message.player}`,
-        //   deepcopy(flags.inputqueue),
-        // )
-        // firsttick = 0
 
         // ensure the boundaries are in sync
-        boardrunnerpushupdates(boardrunner)
+        const updateboards: BOARD[] = [runtime.board]
+        boardrunnerpushupdates(boardrunner, updateboards)
       }
       break
     case 'idle':
