@@ -52,6 +52,16 @@ const PERF_TILE_SUBIMAGE = zssjsonboolwithdefault(
   'ZSS_PERF_TILE_SUBIMAGE',
   false,
 )
+/**
+ * Hybrid direct join->runner peer channel. When ON, joins open a direct
+ * DataConnection to the elected boardrunner of their current board and route
+ * boardrunner:input over it (host fallback retained). When OFF, all traffic
+ * continues to flow through the host hub-and-spoke bridge.
+ */
+const FEATURE_DIRECT_RUNNER = zssjsonboolwithdefault(
+  'ZSS_FEATURE_DIRECT_RUNNER',
+  false,
+)
 
 // runtime config
 export const RUNTIME = {
@@ -83,4 +93,5 @@ export {
   PERF_SPATIAL_INDEX,
   PERF_INCREMENTAL_LAYERS,
   PERF_TILE_SUBIMAGE,
+  FEATURE_DIRECT_RUNNER,
 }

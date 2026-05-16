@@ -24,6 +24,9 @@ export type MESSAGE = {
   sender: string
   target: string
   data?: any
+  // when true, the message was delivered on a direct (peer-to-peer) channel
+  // and must NOT be re-forwarded onto the host hub-and-spoke peer bridge
+  direct?: boolean
 }
 
 export function ismessage(value: any): value is MESSAGE {
