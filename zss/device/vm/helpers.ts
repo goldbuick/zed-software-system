@@ -1,4 +1,10 @@
-import { DEVICELIKE, registerforkmem, registersavemem } from 'zss/device/api'
+import {
+  DEVICELIKE,
+  apilog,
+  registerforkmem,
+  registersavemem,
+  workstatus,
+} from 'zss/device/api'
 import { MOSTLY_ZZT_META, museumofzztscreenshoturl } from 'zss/feature/url'
 import { zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
@@ -18,9 +24,12 @@ export async function savestate(vm: DEVICELIKE, autosave?: boolean) {
   const books = memoryreadbooklist()
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (books.length && ispresent(mainbook)) {
+    const operator = memoryreadoperator()
+    workstatus(vm, operator, 'save zip')
     const compressed = await memorycompressbooks(books)
     const historylabel = `${autosave ? 'autosave ' : ''}${new Date().toISOString()} ${mainbook.name} ${compressed.length} chars`
-    registersavemem(vm, memoryreadoperator(), historylabel, compressed, books)
+    registersavemem(vm, operator, historylabel, compressed, books)
+    apilog(vm, operator, 'save zip ok')
   }
 }
 
@@ -28,8 +37,11 @@ export async function forkstate(vm: DEVICELIKE, transfer: string) {
   const books = memoryreadbooklist()
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (books.length && ispresent(mainbook)) {
+    const operator = memoryreadoperator()
+    workstatus(vm, operator, 'save zip')
     const content = await memorycompressbooks(books)
-    registerforkmem(vm, memoryreadoperator(), content, transfer)
+    registerforkmem(vm, operator, content, transfer)
+    apilog(vm, operator, 'save zip ok')
   }
 }
 

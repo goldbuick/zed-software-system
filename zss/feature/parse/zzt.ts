@@ -13,7 +13,7 @@
  */
 
 import { objectKeys } from 'ts-extras'
-import { apitoast } from 'zss/device/api'
+import { apitoast, workstatus } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { indextox, indextoy } from 'zss/mapping/2d'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
@@ -978,7 +978,9 @@ export function zztparseworld(
   }
 }
 
-export function parsebrd(player: string, content: Uint8Array) {
+export async function parsebrd(player: string, content: Uint8Array) {
+  workstatus(SOFTWARE, player, 'parse brd')
+  await new Promise((r) => requestAnimationFrame(r))
   const contentbook = memoryreadfirstcontentbook()
   if (!ispresent(contentbook)) {
     apitoast(SOFTWARE, player, 'no content book to import into')
@@ -1012,7 +1014,9 @@ export function parsebrd(player: string, content: Uint8Array) {
   )
 }
 
-export function parsezzt(player: string, content: Uint8Array) {
+export async function parsezzt(player: string, content: Uint8Array) {
+  workstatus(SOFTWARE, player, 'parse zzt')
+  await new Promise((r) => requestAnimationFrame(r))
   const reader = createreader(content)
   const header = readworldheaderzzt(reader)
   if (!header || reader.haserror()) {
@@ -1047,7 +1051,9 @@ export function parsezzt(player: string, content: Uint8Array) {
   apitoast(SOFTWARE, player, `imported zzt file into ${book.name} book`)
 }
 
-export function parseszt(player: string, content: Uint8Array) {
+export async function parseszt(player: string, content: Uint8Array) {
+  workstatus(SOFTWARE, player, 'parse szt')
+  await new Promise((r) => requestAnimationFrame(r))
   const reader = createreader(content)
   const header = readworldheaderszzt(reader)
   if (!header || reader.haserror()) {

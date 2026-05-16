@@ -16,7 +16,7 @@
  */
 
 import { Midi } from '@tonejs/midi'
-import { apilog, apitoast } from 'zss/device/api'
+import { apilog, apitoast, workstatus } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { midiplaysnippetsbymeasure } from 'zss/feature/parse/midiplay'
 import { write, writecopyit } from 'zss/feature/writeui'
@@ -35,6 +35,7 @@ function escapestring(value: string): string {
 }
 
 export async function parsemidi(player: string, file: File) {
+  workstatus(SOFTWARE, player, 'parse midi')
   apilog(SOFTWARE, player, 'parsemidi', file.name)
   const contentbook = memoryreadfirstcontentbook()
   if (!ispresent(contentbook)) {

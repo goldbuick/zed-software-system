@@ -24,7 +24,13 @@ import {
 } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
-import { apierror, apilog, synthaudioenabled, vmloader } from './api'
+import {
+  apierror,
+  apilog,
+  synthaudioenabled,
+  vmloader,
+  workstatus,
+} from './api'
 import { registerreadplayer } from './register'
 
 type CustomNavigator = {
@@ -83,6 +89,7 @@ export function enableaudio() {
 
   // synth setup
   locked = true
+  workstatus(synthdevice, registerreadplayer(), 'audio init')
   apilog(synthdevice, registerreadplayer(), 'enabling audio…')
 
   // we want a config to reduce cpu load
@@ -128,6 +135,7 @@ export function enableaudio() {
             'using sample rate',
             getContext().sampleRate,
           )
+          apilog(synthdevice, registerreadplayer(), 'audio ready')
         })
       }
     })

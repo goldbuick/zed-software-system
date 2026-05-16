@@ -4,7 +4,7 @@ import {
   getMany as idbgetmany,
   update as idbupdate,
 } from 'idb-keyval'
-import { apierror, apilog, vmbooks } from 'zss/device/api'
+import { apierror, apilog, vmbooks, workstatus } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { isclimode } from 'zss/feature/detect'
 import { doasync } from 'zss/mapping/func'
@@ -184,6 +184,10 @@ export async function storagewritecontent(
   compressed: string,
   books: BOOK[],
 ) {
+  const isautosave = label.includes('autosave')
+  if (!isautosave) {
+    workstatus(SOFTWARE, player, 'save hash')
+  }
   if (
     isclimode() &&
     typeof (globalThis as any).__nodeStorageWriteContent === 'function'
@@ -284,7 +288,10 @@ export async function storagesharecontent(player: string) {
   currenturlhash = urlcontent
   location.hash = out
   // gen global shorturl
+  workstatus(SOFTWARE, player, 'share url')
+  apilog(SOFTWARE, player, 'share start')
   const url = await shorturl(location.href)
+  apilog(SOFTWARE, player, 'share url ok')
   writecopyit(SOFTWARE, player, url, url)
 }
 

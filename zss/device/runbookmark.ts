@@ -1,4 +1,10 @@
-import { type DEVICELIKE, apitoast, vmpage } from 'zss/device/api'
+import {
+  type DEVICELIKE,
+  apilog,
+  apitoast,
+  vmpage,
+  workstatus,
+} from 'zss/device/api'
 import { readbookmarksfromstorage } from 'zss/feature/bookmarks'
 import { waitfor } from 'zss/mapping/tick'
 
@@ -26,11 +32,9 @@ export async function runbookmarkcopytogame(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { code, stats, ...content } = entry.codepage
   // create new codepage
-  apitoast(
-    device,
-    player,
-    `copying to main $green@${entry.type} ${entry.title}`,
-  )
+  workstatus(device, player, 'paste page')
+  apilog(device, player, `pasting bookmark @${entry.type} ${entry.title}`)
   await waitfor(1000)
   vmpage(device, player, { code, ...content })
+  apilog(device, player, 'page pasted')
 }

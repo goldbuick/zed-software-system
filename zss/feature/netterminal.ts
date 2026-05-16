@@ -1,5 +1,12 @@
 import Peer, { DataConnection } from 'peerjs'
-import { MESSAGE, apierror, apilog, vmsearch, vmtopic } from 'zss/device/api'
+import {
+  MESSAGE,
+  apierror,
+  apilog,
+  vmsearch,
+  vmtopic,
+  workstatus,
+} from 'zss/device/api'
 import {
   createforward,
   shouldforwardclienttoboardrunner,
@@ -299,6 +306,7 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
     networkpeer = new Peer(peerid, peerserveroptions())
     registernetterminalunload()
 
+    workstatus(SOFTWARE, player, 'peer dial')
     apilog(SOFTWARE, player, `netterminal for ${peerid}`)
 
     signalhandshaketimer = setTimeout(() => {
@@ -321,6 +329,7 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
       netterminalclearreconnecttimers()
       signalretryattempt = 0
       apilog(SOFTWARE, player, `connected to netterminal`)
+      apilog(SOFTWARE, player, 'peer connected')
       if (topicpeerid !== peerid) {
         if (!joinoutsignalconnectdone) {
           joinoutsignalconnectdone = true

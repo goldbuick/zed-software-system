@@ -100,6 +100,7 @@ import {
   vmpullvarresult,
   vmtapeeditorclose,
   vmzsswords,
+  workstatus,
 } from './api'
 import { runbookmarkcopytogame, runbookmarkurlnavigate } from './runbookmark'
 
@@ -132,8 +133,15 @@ function writesession(key: string, value: MAYBE<string>) {
 }
 
 async function writewikilink() {
-  const markdowntext = await fetchwiki('cli')
-  terminalwritemarkdownlines(myplayerid, markdowntext)
+  workstatus(register, myplayerid, 'wiki fetch')
+  apilog(register, myplayerid, 'wiki fetch start')
+  try {
+    const markdowntext = await fetchwiki('cli')
+    apilog(register, myplayerid, 'wiki fetch ok')
+    terminalwritemarkdownlines(myplayerid, markdowntext)
+  } catch (err: any) {
+    apilog(register, myplayerid, 'wiki fetch err', err?.message ?? err)
+  }
 }
 
 async function writehelphint() {
@@ -358,6 +366,7 @@ export const register = createdevice(
         break
       case 'loginready':
         doasync(register, message.player, async () => {
+          workstatus(register, myplayerid, 'login sync')
           const storage = await storagereadvars()
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { [ZSS_BOOKMARKS_KEY]: _bookmarks, ...storageforlogin } =
@@ -370,6 +379,7 @@ export const register = createdevice(
             token,
           })
           vmzsswords(register, myplayerid)
+          apilog(register, myplayerid, 'login synced')
         })
         break
       case 'acklogin':
@@ -650,21 +660,21 @@ export const register = createdevice(
         if (isarray(message.data)) {
           const [data, filename] = message.data as [any, string]
           try {
-            const datablob = new Blob(
-              [
-                JSON.stringify(
-                  {
-                    exported: filename,
-                    data,
-                  },
-                  null,
-                  2,
-                ),
-              ],
+            const payload = JSON.stringify(
               {
-                type: 'application/json;charset=utf-8',
+                exported: filename,
+                data,
               },
+              null,
+              2,
             )
+            const islarge = payload.length > 64 * 1024
+            if (islarge) {
+              workstatus(register, message.player, 'export json')
+            }
+            const datablob = new Blob([payload], {
+              type: 'application/json;charset=utf-8',
+            })
             const dataurl = URL.createObjectURL(datablob)
             // trigger download of file
             const anchor = document.createElement('a')
@@ -674,6 +684,9 @@ export const register = createdevice(
             anchor.click()
             // This is required
             URL.revokeObjectURL(dataurl)
+            if (islarge) {
+              apilog(register, message.player, 'export json ok')
+            }
           } catch (err) {
             console.error(err)
           }
@@ -708,7 +721,12 @@ export const register = createdevice(
         })
         break
       case 'screenshot':
-        capturecurrentboardtopng()
+        workstatus(register, message.player, 'export png')
+        apilog(register, message.player, 'screenshot start')
+        doasync(register, message.player, async function () {
+          await capturecurrentboardtopng()
+          apilog(register, message.player, 'screenshot saved')
+        })
         break
       case 'nuke':
         agentdootids.clear()
@@ -776,8 +794,10 @@ export const register = createdevice(
                     message.player,
                     zsstextline(`publishing ${name}`),
                   )
+                  workstatus(register, message.player, 'itch zip')
                   // save zipfile
                   await itchiopublish(name, content)
+                  apilog(register, message.player, 'itch zip saved')
                   write(
                     register,
                     message.player,

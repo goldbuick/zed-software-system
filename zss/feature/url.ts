@@ -1,3 +1,6 @@
+import { apilog, workstatus } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
+
 import { parsewebfile } from './parse/file'
 
 // bytes api
@@ -101,11 +104,14 @@ export async function museumofzztdownload(
   player: string,
   content: string,
 ): Promise<void> {
+  workstatus(SOFTWARE, player, 'zzt fetch')
+  apilog(SOFTWARE, player, 'museum fetch start')
   const target = `${MUSEUMOFZZT_URL_BASE}/zgames/${content}`
   const response = await fetch(brickproxiedurl(target))
   const zipdata = await response.arrayBuffer()
   const file = new File([zipdata], content)
   parsewebfile(player, file)
+  apilog(SOFTWARE, player, 'museum fetch ok')
 }
 
 // bbs api

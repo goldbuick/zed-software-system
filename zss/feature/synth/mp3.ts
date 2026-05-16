@@ -1,5 +1,6 @@
 import { Mp3Encoder } from '@breezystack/lamejs'
 import { ToneAudioBuffer } from 'tone'
+import { workstatus } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { write } from 'zss/feature/writeui'
@@ -24,10 +25,14 @@ export async function converttomp3(
 
   const mp3Data = []
 
+  workstatus(SOFTWARE, player, 'mp3 encode')
+
   // Process the audio in chunks
   for (let i = 0; i < numSamples; i += sampleBlockSize) {
     if (mp3Data.length % 64 === 0) {
       write(SOFTWARE, player, `encoding chunk (${i}/${numSamples})`)
+      const pct = Math.round((i / Math.max(1, numSamples)) * 100)
+      workstatus(SOFTWARE, player, `mp3 ${pct}%`)
     }
 
     // Convert float32 to int16 - lamejs expects separate left and right buffers

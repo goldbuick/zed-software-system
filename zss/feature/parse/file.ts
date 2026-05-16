@@ -1,6 +1,12 @@
 import JSZip, { JSZipObject } from 'jszip'
 import mime from 'mime/lite'
-import { apierror, apilog, vmloader, vmreadzipfilelist } from 'zss/device/api'
+import {
+  apierror,
+  apilog,
+  vmloader,
+  vmreadzipfilelist,
+  workstatus,
+} from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
@@ -124,6 +130,7 @@ let zipfilemarks: Record<string, boolean> = {}
 
 export async function parsezipfile(player: string, file: File) {
   try {
+    workstatus(SOFTWARE, player, 'unzip file')
     apilog(SOFTWARE, player, 'parsezipfile', file.name)
     const arraybuffer = await file.arrayBuffer()
     const ziplib = new JSZip()
@@ -142,6 +149,7 @@ export async function parsezipfile(player: string, file: File) {
       zipfilelist.push(zipfile)
     }
     // signal scroll to open
+    apilog(SOFTWARE, player, 'unzip done')
     vmreadzipfilelist(SOFTWARE, player)
   } catch (err: any) {
     apierror(SOFTWARE, player, 'crash', err.message)
