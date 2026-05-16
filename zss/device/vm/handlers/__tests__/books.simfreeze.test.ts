@@ -14,6 +14,7 @@ jest.mock('zss/device/api', () => ({
   apilog: jest.fn(),
   registerloginready: jest.fn(),
   apierror: jest.fn(),
+  workstatus: jest.fn(),
 }))
 
 const minimalbook = {

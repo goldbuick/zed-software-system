@@ -18,7 +18,7 @@ jest.mock('zss/device/vm/boardrunnermemorysync', () => ({
   boardrunnermemorysync: jest.fn(),
 }))
 jest.mock('zss/device/vm/boardrunnerboundarysync', () => ({
-  boardrunnerboundarymemorysync: jest.fn(),
+  boardrunnerboundarysync: jest.fn(),
 }))
 jest.mock('zss/device/vm/gadgetsynctick', () => ({
   gadgetsynctick: jest.fn(),

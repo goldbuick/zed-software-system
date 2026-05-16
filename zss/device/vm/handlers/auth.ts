@@ -47,12 +47,12 @@ export function handlelogout(vm: DEVICE, message: MESSAGE): void {
   const currentboard = memoryreadplayerboard(message.player)
 
   // signal the boardrunner that the player is dead
-  if (ispresent(currentboard)) {
-    const runner = boardrunners[currentboard.id]
-    if (ispresent(runner)) {
-      boardrunnerlinkdead(vm, runner, message.player)
-    }
-  }
+  // if (ispresent(currentboard)) {
+  //   const runner = boardrunners[currentboard.id]
+  //   if (ispresent(runner)) {
+  //     boardrunnerlinkdead(vm, runner, message.player)
+  //   }
+  // }
 
   // clear player state
   vmclearscroll(vm, message.player)
@@ -70,9 +70,9 @@ export function handlelogout(vm: DEVICE, message: MESSAGE): void {
   delete lastinputtime[message.player]
 
   // ensure the board we left has a runner set
-  if (ispresent(currentboard) && !boardrunnerassignmentvalid(currentboard.id)) {
-    boardrunnerelect(currentboard.id)
-  }
+  // if (ispresent(currentboard) && !boardrunnerassignmentvalid(currentboard.id)) {
+  //   boardrunnerelect(currentboard.id)
+  // }
 
   // push jsonpipe changes
   boardrunnerpushupdates(vm)
@@ -131,13 +131,13 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
     tracking[message.player] = 0
     lastinputtime[message.player] = Date.now()
     // ensure the board has a runner set
-    const currentboard = memoryreadplayerboard(message.player)
-    if (
-      ispresent(currentboard) &&
-      !boardrunnerassignmentvalid(currentboard.id)
-    ) {
-      boardrunnerelect(currentboard.id)
-    }
+    // const currentboard = memoryreadplayerboard(message.player)
+    // if (
+    //   ispresent(currentboard) &&
+    //   !boardrunnerassignmentvalid(currentboard.id)
+    // ) {
+    //   boardrunnerelect(currentboard.id)
+    // }
     // signal success
     apilog(vm, memoryreadoperator(), `login from ${message.player}`)
     vm.replynext(message, 'acklogin', true)

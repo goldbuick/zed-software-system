@@ -22,23 +22,25 @@ export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
   const currentboard = memoryreadplayerboard(targetplayer)
   // attempt to move the player to the destination board
   if (memorymoveplayertoboard(mainbook, targetplayer, board, dest)) {
-    // elect a new runner for the prior board
-    if (
-      ispresent(currentboard) &&
-      !boardrunnerassignmentvalid(currentboard.id)
-    ) {
-      // elect a new runner for the prior board
-      // its possible the prior board has no runners eligible
-      boardrunnerelect(currentboard.id)
-    }
-    // check dest board to see if there's a valid runner
-    if (boardrunnerassignmentvalid(board)) {
-      // send a message to the target player's runner that it is idle now
-      boardrunneridle(vm, targetplayer)
-    } else {
-      // switch assignment directly to the target player
-      boardrunnerassign(board, targetplayer)
-    }
+    // send a message to the target player's runner that it is idle now
+    boardrunneridle(vm, targetplayer)
+    // // elect a new runner for the prior board
+    // if (
+    //   ispresent(currentboard) &&
+    //   !boardrunnerassignmentvalid(currentboard.id)
+    // ) {
+    //   // elect a new runner for the prior board
+    //   // its possible the prior board has no runners eligible
+    //   boardrunnerelect(currentboard.id)
+    // }
+    // // check dest board to see if there's a valid runner
+    // if (boardrunnerassignmentvalid(board)) {
+    //   // send a message to the target player's runner that it is idle now
+    //   boardrunneridle(vm, targetplayer)
+    // } else {
+    //   // switch assignment directly to the target player
+    //   boardrunnerassign(board, targetplayer)
+    // }
   } else {
     // send a thud message back to the board runner
     boardrunnerthud(vm, message.player, targetplayer)

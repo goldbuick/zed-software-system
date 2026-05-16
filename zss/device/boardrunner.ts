@@ -7,13 +7,7 @@ import { gadgetstateprovider, initstate } from 'zss/gadget/data/api'
 import { GADGET_STATE, INPUT } from 'zss/gadget/data/types'
 import { normalizelayerzvariant } from 'zss/gadget/graphics/layerz'
 import { creategadgetid, ispid } from 'zss/mapping/guid'
-import {
-  MAYBE,
-  deepcopy,
-  isarray,
-  ispresent,
-  isstring,
-} from 'zss/mapping/types'
+import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadplayersonboard } from 'zss/memory/boardaccess'
 import {
   memoryreadbookflag,
