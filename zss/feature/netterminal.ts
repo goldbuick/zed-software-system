@@ -130,10 +130,11 @@ function sendpeer(dataconnection: DataConnection, message: MESSAGE): void {
   void dataconnection.send(wire)
 }
 
-// dual-channel transport: every peer pair holds a 'stable' (reliable) and a
-// 'fast' (unreliable) DataConnection. v1 routes all traffic on 'stable'; the
-// 'fast' channel is opened, kept healthy, and reachable here but no forward
-// predicate selects it yet (see plan: hybrid_direct_runner_peer).
+// dual-channel transport: host <-> join peer pairs hold a 'stable' (reliable)
+// and a 'fast' (unreliable) DataConnection. direct join <-> runner pairs hold
+// a single 'stable' DataConnection only. v1 routes all traffic on 'stable';
+// the 'fast' channel is opened on host<->join, kept healthy, and reachable
+// here but no forward predicate selects it yet (see plan: hybrid_direct_runner_peer).
 type PEER_CHANNEL = 'stable' | 'fast'
 type PEER_BRIDGE_ROLE = 'host' | 'join' | 'runner'
 
@@ -350,12 +351,16 @@ function openpair(
   if (ispresent(stable)) {
     handledataconnection(stable, role)
   }
-  const fast = networkpeer.connect(targetpeerid, {
-    label: 'fast',
-    reliable: false,
-  })
-  if (ispresent(fast)) {
-    handledataconnection(fast, role)
+  // only host <-> join pairs get the fast (unreliable) channel; direct
+  // join <-> runner pairs are stable-only.
+  if (role !== 'runner') {
+    const fast = networkpeer.connect(targetpeerid, {
+      label: 'fast',
+      reliable: false,
+    })
+    if (ispresent(fast)) {
+      handledataconnection(fast, role)
+    }
   }
   return pair
 }

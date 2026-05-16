@@ -206,8 +206,6 @@ function handleboardrunneridle() {
   assignedboard = ''
   // boundarydidreset is cleared
   boundarydidreset.clear()
-  // clear the boundary sync pipes
-  boundarysyncpipes.clear()
 }
 
 const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
@@ -267,7 +265,7 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
       break
     case 'linkdead':
       if (isstring(message.data)) {
-        memorylogoutplayer(message.data, false)
+        // memorylogoutplayer(message.data, false)
         console.info(`${self.name} $$$ LINKDEAD\n${message.data}`)
       }
       break
