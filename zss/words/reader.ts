@@ -7,7 +7,7 @@ import {
 } from 'zss/mapping/types'
 import { memoryevaldir } from 'zss/memory/boarddirection'
 import { memoryexportbookasjson } from 'zss/memory/bookoperations'
-import { memoryreadbookbysoftware, memoryreadroot } from 'zss/memory/session'
+import { memoryreadbookbysoftware } from 'zss/memory/session'
 import { BOARD, BOARD_ELEMENT, BOOK, MEMORY_LABEL } from 'zss/memory/types'
 
 import {

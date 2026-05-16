@@ -14,7 +14,6 @@ import {
   memorywritebookflag,
 } from 'zss/memory/bookoperations'
 import { memoryboundaryget, memoryboundaryset } from 'zss/memory/boundaries'
-import { memorycollectboundaryidsforboardchips } from 'zss/memory/boundaryrouting'
 import { memoryreadflags } from 'zss/memory/flags'
 import { memoryreadbookgadgetlayersforboard } from 'zss/memory/gadgetlayersflags'
 import { memorysendtoboards } from 'zss/memory/gamesend'
@@ -82,35 +81,14 @@ function readworkerboundarypipe(boundary: string): BOUNDARY_JSONPIPE {
   return boundarysyncpipes.get(boundary)!
 }
 
-function boardrunnerack(boards: BOARD[]) {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-
-  const boundaryacklist = new Set<string>()
-  for (const board of boards) {
-    const boundaryids = memorycollectboundaryidsforboardchips(mainbook, board)
-    for (const id of boundaryids) {
-      boundaryacklist.add(id)
-    }
-  }
-
-  // ack the tick so we don't get blocked
-  vmboardrunnerack(boardrunner, assignedplayer, Array.from(boundaryacklist))
-}
-
 function boardrunnerpushupdates(device: DEVICE) {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const flagboundarytoname = new Map<string, string>()
-  if (ispresent(mainbook)) {
-    const names = Object.keys(mainbook.flags)
-    for (let i = 0; i < names.length; ++i) {
-      const name = names[i]
-      const boundaryid = mainbook.flags[name]
-      if (boundaryid) {
-        flagboundarytoname.set(boundaryid, name)
-      }
-    }
+  // add the MEM patch calls here
+  const memorypatch = memorysyncpipe.emitdiff(memoryreadroot())
+  if (memorypatch.length > 0) {
+    vmboardrunnerpatch(device, assignedplayer, memorypatch)
   }
 
+  // add the BOUNDARY patch calls here
   for (const id of assignedboundaries) {
     const pipe = readworkerboundarypipe(id)
     const doc = memoryboundaryget<BOUNDARY_DOC>(id) ?? {}
@@ -157,6 +135,9 @@ function handleboardrunnertick(
     boardrunner.reply(message, 'desync', id)
   }
 
+  // ack the tick so we don't get blocked
+  vmboardrunnerack(boardrunner, assignedplayer)
+
   // always update the mainbook timestamp
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (ispresent(mainbook)) {
@@ -172,16 +153,12 @@ function handleboardrunnertick(
     console.info(
       `${self.name} $$$ WAITING FOR\n${assignedplayer} -> ${anydesynced}`,
     )
-    // ack the tick so we don't get blocked
-    boardrunnerack([])
     return
   }
 
   // validate the board codepage is valid
   const maybeboard = memoryboundaryget<CODE_PAGE_RUNTIME>(assignedboard)
   if (!ispresent(maybeboard?.board)) {
-    // ack the tick so we don't get blocked
-    boardrunnerack([])
     return
   }
 
@@ -219,9 +196,6 @@ function handleboardrunnertick(
       store[mode] = memoryreadgadgetlayers(mode, boarddata)
     }
   }
-
-  // ack the tick so we don't get blocked
-  boardrunnerack(updateboards)
 
   // ensure the boundaries are in sync
   boardrunnerpushupdates(boardrunner)

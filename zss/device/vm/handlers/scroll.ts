@@ -18,7 +18,7 @@ export function handleclearscroll(vm: DEVICE, message: MESSAGE): void {
     for (let i = 0; i < objids.length; ++i) {
       memoryunlockscroll(objids[i], message.player)
     }
-    // boardrunnerpushupdates(vm)
+    boardrunnerpushupdates(vm)
   }
 }
 

@@ -2,7 +2,6 @@ import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import {
   apilog,
-  boardrunneridle,
   boardrunnerlinkdead,
   registerinspector,
   registerloginready,
@@ -27,7 +26,6 @@ import {
   memoryreadplayeractive,
   memoryreadplayerboard,
 } from 'zss/memory/playermanagement'
-import { memoryhaltchip } from 'zss/memory/runtime'
 import {
   memoryisoperator,
   memoryreadbookbysoftware,

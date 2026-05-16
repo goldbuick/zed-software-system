@@ -3,10 +3,6 @@ import { TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { memoryreadplayersonboard } from 'zss/memory/boardaccess'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
-import { memoryreadbookflags } from 'zss/memory/bookoperations'
-import { memorycollectboundaryidsforboard } from 'zss/memory/boundaryrouting'
-import { memoryreadbookbysoftware } from 'zss/memory/session'
-import { MEMORY_LABEL } from 'zss/memory/types'
 
 import { boardrunneracks, boardrunnerblocked, boardrunners } from './state'
 
@@ -71,16 +67,6 @@ export function boardrunnerbudgetdec(runner: string): boolean {
   return false
 }
 
-export function boardrunnerbudgetack(runner: string, flagsets: string[]) {
+export function boardrunnerbudgetack(runner: string) {
   boardrunneracks[runner] = TICK_BUDGET
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  if (!ispresent(mainbook)) {
-    return
-  }
-  // this will create flagsets on demand
-  // for (const id of flagsets) {
-  //   if (!ispresent(mainbook.flags[id])) {
-  //     memoryreadbookflags(mainbook, id)
-  //   }
-  // }
 }

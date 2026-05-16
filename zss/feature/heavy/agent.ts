@@ -1,5 +1,5 @@
 import { createdevice } from 'zss/device'
-import { apiheavystatus, apilog, vmlogin } from 'zss/device/api'
+import { apilog, vmlogin, workstatus } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createpid } from 'zss/mapping/guid'
 import { isboolean } from 'zss/mapping/types'
@@ -14,7 +14,7 @@ export function createagent(agentname: string, existingid?: string) {
       switch (message.target) {
         case 'acklogin':
           if (isboolean(message.data)) {
-            apiheavystatus(
+            workstatus(
               device,
               message.player,
               message.data ? 'login ok' : 'login err',

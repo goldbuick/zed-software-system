@@ -16,14 +16,14 @@ const SPINNER_HZ = 6
 const BADGE_FG = COLOR.YELLOW
 const BADGE_BG = COLOR.DKBLUE
 
-type HeavyStatusBadgeProps = {
-  heavystatus: string
+type WorkStatusBadgeProps = {
+  workstatus: string
 }
 
-/** Subscribes to tape heavystatus so only this subtree re-renders on status change. */
-export function HeavyStatusBadgeConnected() {
-  const heavystatus = useTape((state) => state.heavystatus)
-  return <HeavyStatusBadge heavystatus={heavystatus} />
+/** Subscribes to tape workstatus so only this subtree re-renders on status change. */
+export function WorkStatusBadgeConnected() {
+  const workstatus = useTape((state) => state.workstatus)
+  return <WorkStatusBadge workstatus={workstatus} />
 }
 
 function truncate(text: string, max: number): string {
@@ -36,7 +36,7 @@ function truncate(text: string, max: number): string {
   return `${text.slice(0, max - 3)}...`
 }
 
-export function HeavyStatusBadge({ heavystatus }: HeavyStatusBadgeProps) {
+export function WorkStatusBadge({ workstatus }: WorkStatusBadgeProps) {
   const screensize = useScreenSize()
   const groupref = useRef<Group>(null)
   const spinneraccum = useRef(0)
@@ -53,13 +53,11 @@ export function HeavyStatusBadge({ heavystatus }: HeavyStatusBadgeProps) {
       state.changed()
       return
     }
-    // spinner glyph in col 0
     writetile(state, BADGE_W, BADGE_H, 0, 0, {
       char: SPINNER[spin] ?? 0,
       color: BADGE_FG,
       bg: BADGE_BG,
     })
-    // 18 chars of detail starting at col 2
     const detail = truncate(status, BADGE_W - 2)
     for (let i = 0; i < detail.length; ++i) {
       writetile(state, BADGE_W, BADGE_H, 2 + i, 0, {
@@ -72,14 +70,14 @@ export function HeavyStatusBadge({ heavystatus }: HeavyStatusBadgeProps) {
   }
 
   useEffect(() => {
-    drawbadge(spinnerindex.current, heavystatus)
-    lastdrawnstatus.current = heavystatus
+    drawbadge(spinnerindex.current, workstatus)
+    lastdrawnstatus.current = workstatus
     lastdrawnspin.current = spinnerindex.current
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [heavystatus])
+  }, [workstatus])
 
   useFrame((_, delta) => {
-    if (!heavystatus) {
+    if (!workstatus) {
       return
     }
     spinneraccum.current += delta * SPINNER_HZ
@@ -88,7 +86,7 @@ export function HeavyStatusBadge({ heavystatus }: HeavyStatusBadgeProps) {
       spinnerindex.current = (spinnerindex.current + 1) % SPINNER.length
     }
     if (spinnerindex.current !== lastdrawnspin.current) {
-      drawbadge(spinnerindex.current, heavystatus)
+      drawbadge(spinnerindex.current, workstatus)
       lastdrawnspin.current = spinnerindex.current
     }
   })
@@ -96,7 +94,7 @@ export function HeavyStatusBadge({ heavystatus }: HeavyStatusBadgeProps) {
   if (screensize.cols < BADGE_W + 2 || screensize.rows < 4) {
     return null
   }
-  if (!heavystatus) {
+  if (!workstatus) {
     return null
   }
 
@@ -105,7 +103,7 @@ export function HeavyStatusBadge({ heavystatus }: HeavyStatusBadgeProps) {
   return (
     <group ref={groupref} position={[x, y, 999]}>
       <TilesData store={store}>
-        <TilesRender label="heavystatus" width={BADGE_W} height={BADGE_H} />
+        <TilesRender label="workstatus" width={BADGE_W} height={BADGE_H} />
       </TilesData>
     </group>
   )

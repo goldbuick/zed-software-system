@@ -1,12 +1,11 @@
 import type { DEVICE } from 'zss/device'
-import { boardrunnerpatch } from 'zss/device/api'
-import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
+import { boardrunnerpaint, boardrunnerpatch } from 'zss/device/api'
+import { Operation, createjsonpipe } from 'zss/feature/jsonpipe/observe'
 import { ispresent } from 'zss/mapping/types'
 import { memoryrootshouldemitpath } from 'zss/memory/jsonpipefilter'
 import {
   type MEMORY_ROOT,
   memoryreadbookbysoftware,
-  memoryreadoperator,
   memoryreadroot,
 } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
@@ -19,34 +18,62 @@ const boardrunnermemorypipe = createjsonpipe<MEMORY_ROOT>(
   memoryrootshouldemitpath,
 )
 
-export function boardrunnermemorysync(vm: DEVICE) {
+function boardrunneremitpatch(
+  vm: DEVICE,
+  operations: Operation[],
+  skipplayer: string,
+  boundary?: string,
+) {
+  if (operations.length === 0) {
+    return
+  }
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
   }
-  const patch = measurestage('vm:memorysync:emitdiff', () =>
-    boardrunnermemorypipe.emitdiff(memoryreadroot()),
+  let emits = 0
+  const runners = Object.values(boardrunners)
+  for (const player of mainbook.activelist) {
+    if (runners.includes(player) && player !== skipplayer) {
+      emits += 1
+      boardrunnerpatch(vm, player, operations, boundary)
+    }
+  }
+  recordemitdiff(
+    'vm:memorysync',
+    operations.length,
+    mainbook.activelist.length,
+    emits,
   )
-  if (patch.length === 0) {
+}
+
+export function boardrunnermemorypatch(
+  vm: DEVICE,
+  player: string,
+  operations: Operation[],
+) {
+  const root = memoryreadroot()
+  const doc = boardrunnermemorypipe.applyremote(memoryreadroot(), operations)
+  // ignore bad patch
+  if (!ispresent(doc)) {
+    // maybe log here too ?
+    console.info(`${self.name} $$$ MEM BAD PATCH\nMEM`)
+    boardrunnermemorypipe.cleardesync()
+    // push reset to the boardrunner boundary
+    boardrunnerpaint(vm, player, root)
     return
   }
-  // narrow recipients to players actually assigned to a runner board.
-  // operator is always included so the UI on main stays in sync.
-  const recipients = new Set<string>([memoryreadoperator()])
-  const runnerplayers = Object.values(boardrunners)
-  for (let i = 0; i < runnerplayers.length; ++i) {
-    const player = runnerplayers[i]
-    if (player) {
-      recipients.add(player)
-    }
-  }
-  let emits = 0
-  for (const player of recipients) {
-    if (!player) {
-      continue
-    }
-    boardrunnerpatch(vm, player, patch)
-    emits += 1
-  }
-  recordemitdiff('vm:memorysync', patch.length, recipients.size, emits)
+  // update memory
+  Object.assign(root, doc)
+  // emit patch to other board runners
+  boardrunneremitpatch(vm, operations, player)
+}
+
+export function boardrunnermemorysync(vm: DEVICE) {
+  const root = memoryreadroot()
+  const operations = measurestage('vm:boardrunnermemorysync', () =>
+    boardrunnermemorypipe.emitdiff(root),
+  )
+  // emit patch to all board runners
+  boardrunneremitpatch(vm, operations, '')
 }

@@ -42,7 +42,7 @@ import { resolvestoragepullmessage } from 'zss/feature/storagepull'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
 import { perfmeasure } from 'zss/perf/ui'
 
-import { apierror, apiheavystatus, apilog, vmlastinputtouch } from './api'
+import { apierror, apilog, vmlastinputtouch, workstatus } from './api'
 
 const MAX_REPROMPT = 5
 const activeagents = new Set<string>()
@@ -93,7 +93,7 @@ function splitresponse(text: string): string[] {
 
 function createonworking(player: string) {
   return (msg: string) => {
-    apiheavystatus(heavy, player, msg)
+    workstatus(heavy, player, msg)
   }
 }
 
@@ -357,7 +357,7 @@ const heavy = createdevice('heavy', [], (message) => {
           if (!isstring(prompt) || !isstring(agentid) || !isstring(agentname)) {
             return
           }
-          apiheavystatus(heavy, message.player, 'llm think')
+          workstatus(heavy, message.player, 'llm think')
           await classifythenmaybeagentprompt(
             message.player,
             prompt,
@@ -399,7 +399,7 @@ const heavy = createdevice('heavy', [], (message) => {
         enqueueheavyjob(heavy, message.player, () => {
           applyheavylmpreset(applied)
           if (toast) {
-            apiheavystatus(heavy, message.player, `llm ${applied}`)
+            workstatus(heavy, message.player, `llm ${applied}`)
             apilog(heavy, message.player, `heavy llm: ${applied}`)
           }
           return Promise.resolve()

@@ -79,12 +79,8 @@ export function apitoast(device: DEVICELIKE, player: string, toast: string) {
   device.emit(player, 'toast', toast)
 }
 
-export function apiheavystatus(
-  device: DEVICELIKE,
-  player: string,
-  status: string,
-) {
-  device.emit(player, 'heavystatus', status)
+export function workstatus(device: DEVICELIKE, player: string, status: string) {
+  device.emit(player, 'workstatus', status)
 }
 
 export function gadgetclientbonk(device: DEVICELIKE, player: string) {
@@ -321,12 +317,8 @@ export function heavymodelstop(
   device.emit(player, 'heavy:modelstop', agentid)
 }
 
-export function vmboardrunnerack(
-  device: DEVICELIKE,
-  player: string,
-  flagsets: string[],
-) {
-  device.emit(player, 'vm:boardrunnerack', flagsets)
+export function vmboardrunnerack(device: DEVICELIKE, player: string) {
+  device.emit(player, 'vm:boardrunnerack')
 }
 
 export function vmboardrunnerpatch(

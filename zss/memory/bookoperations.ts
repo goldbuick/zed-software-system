@@ -8,7 +8,6 @@ import {
   memoryboundaryalloc,
   memoryboundarydelete,
   memoryboundaryget,
-  memoryboundaryset,
 } from './boundaries'
 import {
   memorycodepagetypetostring,
@@ -80,17 +79,10 @@ export function memoryclearbookflags(book: MAYBE<BOOK>, id: string) {
   if (!ispresent(book)) {
     return
   }
-  // track when we nuke a flagset
-  const bid = book.flags[id]
-  // const isactive = ispresent(bid)
-  // const content = memoryboundaryget(bid)
-  // console.info(
-  //   `${self.name} $$$ CLEAR BOOK FLAG ${id} -> ${bid} active: ${isactive} content:`,
-  //   content,
-  // )
   // nuke it
-  delete book.flags[id]
+  const bid = book.flags[id]
   memoryboundarydelete(bid)
+  delete book.flags[id]
 }
 
 export function memoryreadelementdisplay(

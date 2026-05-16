@@ -42,8 +42,8 @@ export function boardrunnerboundarypatch(
   const doc = pipe.applyremote(root, operations)
   // ignore bad patch
   if (!ispresent(doc)) {
-    console.info(`${self.name} $$$ BAD PATCH\n${boundary}`)
     // maybe log here too ?
+    console.info(`${self.name} $$$ BAD PATCH\n${boundary}`)
     pipe.cleardesync()
     // push reset to the boardrunner boundary
     boardrunnerpaint(vm, player, root, boundary)
