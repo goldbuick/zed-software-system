@@ -30,6 +30,5 @@ export function handleboardrunnerpatch(vm: DEVICE, message: MESSAGE): void {
     // }
   }
   // NOTE: we keep getting multiple books when saving??
-  // consider books: Record<string, BOOK> id => BOOK
-  // with pages: Record<string, PAGE> id => PAGE
+  // consider pages: Record<string, PAGE> id => PAGE ??
 }
