@@ -33,7 +33,7 @@ export function boardrunnerboundarypatch(
 ) {
   const root = memoryboundaryget<BOUNDARY_DOC>(boundary) ?? {}
   if (!ispresent(root)) {
-    return
+    return false
   }
   // read boundary pipe
   const pipe = readboundarypipe(boundary, root)

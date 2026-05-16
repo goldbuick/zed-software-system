@@ -75,7 +75,6 @@ const memorysyncpipe = createjsonpipe<MEMORY_ROOT>(
 type BOUNDARY_DOC = Record<string, any>
 type BOUNDARY_JSONPIPE = JSON_PIPE_HANDLE<BOUNDARY_DOC>
 
-const boundarydidreset = new Set<string>()
 const boundarysyncpipes = new Map<string, BOUNDARY_JSONPIPE>()
 
 function readworkerboundarypipe(boundary: string): BOUNDARY_JSONPIPE {
@@ -113,32 +112,24 @@ function handleboardrunnertick(
   timestamp: number,
   boundaries: string[],
 ) {
+  // always update the boundaries
+  assignedboundaries = boundaries
+
   // track the board we're assigned to
   if (assignedboard !== board) {
     // we're assigned to a new board
     assignedboard = board
-    // boundarydidreset is cleared
-    boundarydidreset.clear()
+    // so we need to desync the boundaries to
+    for (const id of assignedboundaries) {
+      // ensure they are current
+      readworkerboundarypipe(id).forcedesync()
+      // signal desync to vm
+      boardrunner.reply(message, 'desync', id)
+    }
     firsttick = 0
     console.info(
       `${self.name} $$$ BOARD ASSIGNED\n${assignedplayer} -> ${assignedboard}`,
     )
-  }
-
-  // always update the boundaries
-  assignedboundaries = boundaries
-
-  // so we need to desync the boundaries to
-  for (const id of assignedboundaries) {
-    if (boundarydidreset.has(id)) {
-      continue
-    }
-    // ensure they are current
-    readworkerboundarypipe(id).forcedesync()
-    // track that we've desynced this boundary
-    boundarydidreset.add(id)
-    // signal desync to vm
-    boardrunner.reply(message, 'desync', id)
   }
 
   // ack the tick so we don't get blocked
@@ -210,8 +201,6 @@ function handleboardrunnertick(
 function handleboardrunneridle() {
   // blank out the assigned board
   assignedboard = ''
-  // boundarydidreset is cleared
-  boundarydidreset.clear()
 }
 
 const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
@@ -260,10 +249,11 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
         if (input !== INPUT.NONE) {
           flags.inputqueue.push([input, mods])
         }
-        console.info(
-          `${self.name} $$$ INPUT\n${message.player}`,
-          deepcopy(flags.inputqueue),
-        )
+        // console.info(
+        //   `${self.name} $$$ INPUT\n${message.player}`,
+        //   deepcopy(flags.inputqueue),
+        // )
+        // firsttick = 0
 
         // ensure the boundaries are in sync
         boardrunnerpushupdates(boardrunner)
