@@ -261,10 +261,10 @@ Display commands `toast` and `ticker` are registered on **ELEMENT_FIRMWARE** in 
 | `chat` | Start/stop chat channel |
 | `broadcast` | Start/stop stream broadcast |
 
-#### BBS (Bulletin Board System)
+#### ZNS (namespace string sharing)
 | Command | Description |
 |---------|-------------|
-| `bbs` | BBS operations (login, list, publish, delete, restart) |
+| `zns` | ZNS operations (login, list, publish, delete, restart) |
 
 ---
 
@@ -412,7 +412,7 @@ Enumeration of firmware driver types:
 
 - **Audio**: ~40 commands (TTS, playback, synthesis, effects)
 - **Board Operations**: ~15 commands (placement, manipulation, transformation)
-- **CLI/System**: ~30 commands (book/page management, export, multiplayer, BBS)
+- **CLI/System**: ~30 commands (book/page management, export, multiplayer, ZNS)
 - **Element Operations**: ~20 commands (movement, state, lifecycle)
 - **Display/UI**: 2 commands (toast, ticker)
 - **Network**: 2 commands (fetch variants)

@@ -5,19 +5,25 @@ import {
   formatlookfortext,
 } from 'zss/feature/heavy/formatstate'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
-import { bbsdelete, bbslist, bbslogin, bbslogincode } from 'zss/feature/url'
+import {
+  znsdelete,
+  znslist,
+  znslogin,
+  znslogincode,
+} from 'zss/feature/url'
 import { write, writeopenit } from 'zss/feature/writeui'
 import { zsstextline, zsstexttape } from 'zss/feature/zsstextui'
 import { FIRMWARE } from 'zss/firmware'
 import { doasync } from 'zss/mapping/func'
+import { isarray } from 'zss/mapping/types'
 import { isemail } from 'zss/mapping/validate'
 import { memoryreadboardstatequery } from 'zss/memory/boardstatequery'
 import { memoryreadlookstatequery } from 'zss/memory/lookstatequery'
 import { READ_CONTEXT, readargs, readargsuntilend } from 'zss/words/reader'
 import { ARG_TYPE, NAME } from 'zss/words/types'
 
-let bbscode = ''
-let bbsemail = ''
+let znstoken = ''
+let znsemail = ''
 
 export function registermisccommands(fw: FIRMWARE): FIRMWARE {
   return fw
@@ -48,33 +54,33 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
       return 0
     })
     .command(
-      'bbs',
+      'zns',
       [ARG_TYPE.ANY, 'login/publish actions'],
       (_, words) => {
         const [action, ii] = readargs(words, 0, [ARG_TYPE.ANY])
         switch (NAME(action)) {
           default:
-            if (!bbsemail) {
-              const [maybeemail, maybetag] = readargs(words, 0, [
+            if (!znsemail) {
+              const [maybeemail, maybenamespace] = readargs(words, 0, [
                 ARG_TYPE.NAME,
                 ARG_TYPE.NAME,
               ])
-              if (isemail(maybeemail) && maybetag) {
+              if (isemail(maybeemail) && maybenamespace) {
                 doasync(SOFTWARE, READ_CONTEXT.elementfocus, async () => {
                   write(
                     SOFTWARE,
                     READ_CONTEXT.elementfocus,
                     zsstextline(
-                      `starting login with $green${maybeemail} ${maybetag}`,
+                      `starting login with $green${maybeemail} ${maybenamespace}`,
                     ),
                   )
-                  const result = await bbslogin(maybeemail, maybetag)
+                  const result = await znslogin(maybeemail, maybenamespace)
                   if (result.success) {
-                    bbsemail = maybeemail
+                    znsemail = maybeemail
                     write(
                       SOFTWARE,
                       READ_CONTEXT.elementfocus,
-                      zsstextline(`check your email for #bbs <code>`),
+                      zsstextline(`check your email for #zns <code>`),
                     )
                   }
                 })
@@ -82,23 +88,25 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
                 write(
                   SOFTWARE,
                   READ_CONTEXT.elementfocus,
-                  zsstextline(`please login with $green#bbs <email> <tag>`),
+                  zsstextline(
+                    `please login with $green#zns <email> <namespace>`,
+                  ),
                 )
               }
-            } else if (!bbscode) {
+            } else if (!znstoken) {
               doasync(SOFTWARE, READ_CONTEXT.elementfocus, async () => {
                 write(
                   SOFTWARE,
                   READ_CONTEXT.elementfocus,
                   zsstextline(`confirming login with $green${action}`),
                 )
-                const result = await bbslogincode(bbsemail, action)
-                if (result.success) {
-                  bbscode = `${action}`
+                const result = await znslogincode(znsemail, action)
+                if (result.success && result.token) {
+                  znstoken = `${result.token}`
                   write(
                     SOFTWARE,
                     READ_CONTEXT.elementfocus,
-                    zsstextline(`$green${bbsemail} has been logged in`),
+                    zsstextline(`$green${znsemail} has been logged in`),
                   )
                 }
               })
@@ -107,30 +115,32 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
                 SOFTWARE,
                 READ_CONTEXT.elementfocus,
                 zsstextline(
-                  `you are already logged in, use #bbs restart to login again`,
+                  `you are already logged in, use #zns restart to login again`,
                 ),
               )
             }
             break
           case 'restart':
-            bbsemail = ''
-            bbscode = ''
+            znsemail = ''
+            znstoken = ''
             terminalwritelines(
               SOFTWARE,
               READ_CONTEXT.elementfocus,
               zsstexttape(
-                zsstextline(`bbs restarted`),
-                zsstextline(`please login with $green#bbs <email> <tag>`),
+                zsstextline(`zns restarted`),
+                zsstextline(
+                  `please login with $green#zns <email> <namespace>`,
+                ),
               ),
             )
             break
           case 'list':
-            if (!bbsemail || !bbscode) {
+            if (!znsemail || !znstoken) {
               write(
                 SOFTWARE,
                 READ_CONTEXT.elementfocus,
                 zsstextline(
-                  `please login with $green#bbs <email> <tag>$blue first`,
+                  `please login with $green#zns <email> <namespace>$blue first`,
                 ),
               )
             } else {
@@ -138,22 +148,26 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
                 write(
                   SOFTWARE,
                   READ_CONTEXT.elementfocus,
-                  zsstextline(`listing files`),
+                  zsstextline(`listing keys`),
                 )
-                const result = await bbslist(bbsemail, bbscode)
-                if (result.success) {
+                const result = await znslist(znsemail, znstoken)
+                if (result.success && isarray(result.list)) {
                   for (let i = 0; i < result.list.length; ++i) {
-                    const { metadata } = result.list[i]
+                    const row = result.list[i]
+                    const url =
+                      row.key === 'peer'
+                        ? `https://zed.cafe/join/#${row.value}`
+                        : `https://bytes.zed.cafe/${row.value}`
                     writeopenit(
                       SOFTWARE,
                       READ_CONTEXT.elementfocus,
-                      metadata.url,
-                      metadata.filename,
+                      url,
+                      row.key,
                     )
                     terminalwritelines(
                       SOFTWARE,
                       READ_CONTEXT.elementfocus,
-                      metadata.tags,
+                      JSON.stringify(row),
                     )
                   }
                 }
@@ -162,12 +176,12 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
             break
           case 'pub':
           case 'publish':
-            if (!bbsemail || !bbscode) {
+            if (!znsemail || !znstoken) {
               write(
                 SOFTWARE,
                 READ_CONTEXT.elementfocus,
                 zsstextline(
-                  `please login with $green#bbs <email> <tag>$blue first`,
+                  `please login with $green#zns <email> <namespace>$blue first`,
                 ),
               )
             } else {
@@ -176,9 +190,9 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
               vmpublish(
                 SOFTWARE,
                 READ_CONTEXT.elementfocus,
-                'bbs',
-                bbsemail,
-                bbscode,
+                'zns',
+                znsemail,
+                znstoken,
                 filename,
                 ...tags,
               )
@@ -186,12 +200,12 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
             break
           case 'del':
           case 'delete':
-            if (!bbsemail || !bbscode) {
+            if (!znsemail || !znstoken) {
               write(
                 SOFTWARE,
                 READ_CONTEXT.elementfocus,
                 zsstextline(
-                  `please login with $green#bbs <email> <tag>$blue first`,
+                  `please login with $green#zns <email> <namespace>$blue first`,
                 ),
               )
             } else {
@@ -202,7 +216,7 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
                   READ_CONTEXT.elementfocus,
                   zsstextline(`deleting ${filename}`),
                 )
-                const result = await bbsdelete(bbsemail, bbscode, filename)
+                const result = await znsdelete(znsemail, znstoken, filename)
                 if (result.success) {
                   write(
                     SOFTWARE,

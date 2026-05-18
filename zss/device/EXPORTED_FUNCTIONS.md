@@ -140,7 +140,7 @@ Functions for managing the register device, which handles UI state, terminal, ed
 ### Memory Operations
 - `registersavemem(device, player, historylabel, compressedbooks, books)` - Save memory state
 - `registerforkmem(device, player, books, transfer)` - Fork memory to new window
-- `registerpublishmem(device, player, books, ...args)` - Publish memory (itch.io, BBS, etc.)
+- `registerpublishmem(device, player, books, ...args)` - Publish memory (itch.io, ZNS, etc.)
 
 ### Developer Tools
 - `registerdev(device, player)` - Enable dev mode

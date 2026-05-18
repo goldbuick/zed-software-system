@@ -114,77 +114,75 @@ export async function museumofzztdownload(
   apilog(SOFTWARE, player, 'museum fetch ok')
 }
 
-// bbs api
+// zns api (https://zns.zed.cafe)
 
-export async function bbslogin(email: string, tag: string) {
-  const formData = new FormData()
-  formData.append('email', email)
-  formData.append('tag', tag)
-  const request = new Request('https://bbs.zed.cafe/api/login', {
+export async function znslogin(email: string, namespace: string) {
+  const formdata = new FormData()
+  formdata.append('email', email)
+  formdata.append('namespace', namespace)
+  const request = new Request('https://zns.zed.cafe/api/login', {
     method: 'POST',
-    body: formData,
+    body: formdata,
   })
   const response = await fetch(request)
   const result = await response.json()
   return result
 }
 
-export async function bbslogincode(email: string, code: string) {
-  const formData = new FormData()
-  formData.append('email', email)
-  formData.append('code', code)
-  const request = new Request('https://bbs.zed.cafe/api/code', {
+export async function znslogincode(email: string, code: string) {
+  const formdata = new FormData()
+  formdata.append('email', email)
+  formdata.append('code', code)
+  const request = new Request('https://zns.zed.cafe/api/code', {
     method: 'POST',
-    body: formData,
+    body: formdata,
   })
   const response = await fetch(request)
   const result = await response.json()
   return result
 }
 
-export async function bbslist(email: string, code: string) {
-  const formData = new FormData()
-  formData.append('email', email)
-  formData.append('code', code)
-  const request = new Request('https://bbs.zed.cafe/api/list', {
+export async function znslist(email: string, token: string) {
+  const formdata = new FormData()
+  formdata.append('email', email)
+  formdata.append('token', token)
+  const request = new Request('https://zns.zed.cafe/api/list', {
     method: 'POST',
-    body: formData,
+    body: formdata,
   })
   const response = await fetch(request)
   const result = await response.json()
   return result
 }
 
-export async function bbspublish(
+export async function znsset(
   email: string,
-  code: string,
-  filename: string,
-  url: string,
-  tags: string[],
+  token: string,
+  key: string,
+  value: string,
 ) {
-  const formData = new FormData()
-  formData.append('email', email)
-  formData.append('code', code)
-  formData.append('filename', filename)
-  formData.append('url', url)
-  formData.append('tags', tags.join(','))
-  const request = new Request('https://bbs.zed.cafe/api/publish', {
+  const formdata = new FormData()
+  formdata.append('email', email)
+  formdata.append('token', token)
+  formdata.append('key', key)
+  formdata.append('value', value)
+  const request = new Request('https://zns.zed.cafe/api/set', {
     method: 'POST',
-    body: formData,
+    body: formdata,
   })
   const response = await fetch(request)
   const result = await response.json()
   return result
 }
 
-export async function bbsdelete(email: string, code: string, filename: string) {
-  const formData = new FormData()
-  formData.append('email', email)
-  formData.append('code', code)
-  formData.append('filename', filename)
-  const request = new Request('https://bbs.zed.cafe/api/delete', {
+export async function znsdelete(email: string, token: string, key: string) {
+  const formdata = new FormData()
+  formdata.append('email', email)
+  formdata.append('token', token)
+  formdata.append('key', key)
+  const request = new Request('https://zns.zed.cafe/api/delete', {
     method: 'POST',
-    body: formData,
+    body: formdata,
   })
   const response = await fetch(request)
   const result = await response.json()

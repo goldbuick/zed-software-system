@@ -56,7 +56,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `userinput` | Inject player input (`up` / `down` / `left` / `right` / `ok` / `cancel` / `shoot*`…) |
 | `pilot` | Walk player toward coordinates (`#pilot x y`) or `#pilot stop` |
 | `screenshot` | Screenshot for capture |
-| `bbs` | Login/publish actions |
+| `zns` | Login/publish actions |
 
 ---
 

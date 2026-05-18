@@ -32,7 +32,7 @@ Feature modules are **stateless utilities** and **domain logic** that:
 | [rom.md](rom.md) | ROM/help content and scroll display |
 | [writeui.md](writeui.md) | zsstextui layout + writeui terminal sinks |
 | [bytes.md](bytes.md) | Palette and charset loading from bytes |
-| [url.md](url.md) | URL shortening, BBS, Museum of ZZT |
+| [url.md](url.md) | URL shortening, ZNS, Museum of ZZT |
 | [storage.md](storage.md) | IndexedDB config, history, content |
 | [palette.md](palette.md) | Default color palette |
 | [charset.md](charset.md) | Default character set |

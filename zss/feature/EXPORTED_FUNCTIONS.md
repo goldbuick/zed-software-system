@@ -213,7 +213,7 @@ Audio synthesis system with support for multiple sound sources, effects, and pla
 
 **File:** `url.ts`
 
-Functions for interacting with external services (Bytes, Bridge, BBS).
+Functions for interacting with external services (Bytes, Bridge, ZNS).
 
 ### URL Shortening
 - `shorturl(url)` - Create short URL via bytes.zed.cafe service
@@ -228,12 +228,12 @@ Functions for interacting with external services (Bytes, Bridge, BBS).
 ### Types
 - `MOSTLY_ZZT_META` - Type for ZZT file metadata
 
-### BBS Integration
-- `bbslogin(email, tag)` - Login to BBS with email and tag
-- `bbslogincode(email, code)` - Login to BBS with email and code
-- `bbslist(email, code)` - List BBS posts
-- `bbspublish(email, code, filename, url, tags)` - Publish to BBS
-- `bbsdelete(email, code, filename)` - Delete from BBS
+### ZNS (namespace string sharing)
+- `znslogin(email, namespace)` - Start ZNS email OTP login
+- `znslogincode(email, code)` - Confirm OTP; response includes `token`
+- `znslist(email, token)` - List namespace key/value pairs
+- `znsset(email, token, key, value)` - Set pair (peer id at key `peer`, else bytes hash)
+- `znsdelete(email, token, key)` - Delete a pair key
 
 ---
 

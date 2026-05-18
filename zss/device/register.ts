@@ -40,7 +40,7 @@ import {
   storagewritevar,
 } from 'zss/feature/storage'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
-import { bbspublish, isjoin, shorturl } from 'zss/feature/url'
+import { isjoin, shorturl, znsset } from 'zss/feature/url'
 import { write } from 'zss/feature/writeui'
 import {
   zssheaderlines,
@@ -805,13 +805,12 @@ export const register = createdevice(
                 }
                 break
               }
-              case 'bbs': {
-                // publish info
-                const [, , bbsemail, bbscode, filename, ...tags] = message.data
+              case 'zns': {
+                const [, , znsemail, znstoken, filename] = message.data
                 if (
                   isstring(content) &&
-                  isstring(bbsemail) &&
-                  isstring(bbscode) &&
+                  isstring(znsemail) &&
+                  isstring(znstoken) &&
                   isstring(filename)
                 ) {
                   write(
@@ -820,19 +819,19 @@ export const register = createdevice(
                     zsstextline(`publishing ${filename}`),
                   )
                   const url = await shorturl(`${location.origin}/#${content}`)
-                  const result = await bbspublish(
-                    bbsemail,
-                    bbscode,
-                    filename,
-                    url,
-                    tags,
-                  )
+                  let hash = url
+                  try {
+                    hash = new URL(url).pathname.replace(/^\//, '').split('/')[0]
+                  } catch {
+                    // keep full string; worker may still normalize
+                  }
+                  const result = await znsset(znsemail, znstoken, filename, hash)
                   if (result.success) {
                     write(
                       register,
                       message.player,
                       zsstextline(
-                        `$green${filename} has been published to bbs`,
+                        `$green${filename} has been published to zns`,
                       ),
                     )
                   }

@@ -34,7 +34,7 @@ import {
   memoryreadhalt,
   memoryreadroot,
 } from 'zss/memory/session'
-import { BOARD, BOOK, CODE_PAGE_RUNTIME, MEMORY_LABEL } from 'zss/memory/types'
+import { BOARD, CODE_PAGE_RUNTIME, MEMORY_LABEL } from 'zss/memory/types'
 import { NAME } from 'zss/words/types'
 
 import { vmboardrunnerack, vmboardrunnerpatch } from './api'
@@ -97,6 +97,10 @@ function boardrunnerpushupdates(device: DEVICE, updateboards: BOARD[]) {
   }
 
   // TODO, compare and find new boundaries to paint
+  const activeboundaries = new Set(assignedboundaries)
+  for (const id of currentboundaries) {
+    activeboundaries.add(id)
+  }
 
   // add the MEM patch calls here
   const memorypatch = memorysyncpipe.emitdiff(memoryreadroot())

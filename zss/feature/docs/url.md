@@ -1,6 +1,6 @@
 # url.ts
 
-**Purpose**: URL shortening, join-mode detection, Museum of ZZT integration, BBS login/publish.
+**Purpose**: URL shortening, join-mode detection, Museum of ZZT integration, ZNS login/publish.
 
 ## Exports
 
@@ -12,14 +12,14 @@
 | `museumofzztrandom` | — | Get random file from Museum of ZZT |
 | `museumofzztscreenshoturl` | `content` | Screenshot URL for content |
 | `museumofzztdownload` | `player`, `content` | Download ZZT file |
-| `bbslogin` | `email`, `tag` | Login to BBS |
-| `bbslogincode` | `email`, `code` | Login with code |
-| `bbslist` | `email`, `code` | List BBS posts |
-| `bbspublish` | `email`, `code`, `filename`, `url`, `tags` | Publish to BBS |
-| `bbsdelete` | `email`, `code`, `filename` | Delete from BBS |
+| `znslogin` | `email`, `namespace` | Start ZNS OTP login |
+| `znslogincode` | `email`, `code` | Confirm OTP (returns `token`) |
+| `znslist` | `email`, `token` | List keys/values |
+| `znsset` | `email`, `token`, `key`, `value` | Set pair (`peer` = PeerJS id, else bytes hash) |
+| `znsdelete` | `email`, `token`, `key` | Delete pair |
 
 ## Consumed By
 
-- `zss/device/register.ts` — shorturl, isjoin
-- `zss/device/vm.ts` — isjoin, museum/bbs
+- `zss/device/register.ts` — shorturl, isjoin, znsset
+- `zss/device/vm.ts` — isjoin, museum
 - `zss/gadget/engine.tsx` — isjoin

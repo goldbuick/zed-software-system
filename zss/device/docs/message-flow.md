@@ -194,7 +194,7 @@ flowchart TB
 | gadgetclient | (none)                          | gadgetclient:*                   | Receives paint/patch from sim VM      |
 | boardrunner  | vm                              | boardrunner:*, vm:*              | Per-board chip sim on a dedicated worker; subscribes to `vm` topic so `vm:CHIP:LABEL` messages from sidebar / scrolls also reach `memorymessagechip` here |
 | heavy        | (none)                          | heavy:*                          | TTS, LLM (lazy-loaded)                |
-| bridge       | (none)                          | bridge:*                         | Multiplayer / BBS                     |
+| bridge       | (none)                          | bridge:*                         | Multiplayer / ZNS                     |
 | modem        | second                          | modem:*                          | CRDT sync, presence                   |
 | synth        | (none)                          | synth:*                          | Audio playback                        |
 | userinput    | (none)                          | userinput:*                      | Input up/down from UI                 |
