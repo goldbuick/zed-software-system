@@ -1,7 +1,7 @@
 import type { DEVICE } from 'zss/device'
 import { boardrunnerpatch } from 'zss/device/api'
 import { Operation, createjsonpipe } from 'zss/feature/jsonpipe/observe'
-import { ispresent } from 'zss/mapping/types'
+import { deepcopy, ispresent } from 'zss/mapping/types'
 import { memoryrootshouldemitpath } from 'zss/memory/jsonpipefilter'
 import {
   type MEMORY_ROOT,
@@ -48,16 +48,18 @@ function boardrunneremitpatch(
 }
 
 export function boardrunnermemorypatch(operations: Operation[]) {
+  console.error(`${self.name} $$$ MEM PATCH\n`, operations)
   const root = memoryreadroot()
   const doc = boardrunnermemorypipe.applyremote(memoryreadroot(), operations)
   // ignore bad patch
   if (!ispresent(doc)) {
-    console.error(`${self.name} $$$ MEM BAD PATCH\nMEM`, operations)
     boardrunnermemorypipe.cleardesync()
+    console.error(`MEM`, deepcopy(root))
     return false
   }
-  // update memory
+  // keep root memory reference and apply props to root
   Object.assign(root, doc)
+  console.info(`MEM`, deepcopy(root))
   return true
 }
 

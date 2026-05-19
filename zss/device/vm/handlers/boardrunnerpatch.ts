@@ -25,6 +25,3 @@ export function handleboardrunnerpatch(_vm: DEVICE, message: MESSAGE): void {
     // bad patch, send a reset — boardrunnerpaint recovery deferred
   }
 }
-
-// NOTE: we keep getting multiple books when saving??
-// consider pages: Record<string, PAGE> id => PAGE ??
