@@ -5,12 +5,7 @@ import {
   formatlookfortext,
 } from 'zss/feature/heavy/formatstate'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
-import {
-  znsdelete,
-  znslist,
-  znslogin,
-  znslogincode,
-} from 'zss/feature/url'
+import { znsdelete, znslist, znslogin, znslogincode } from 'zss/feature/url'
 import { write, writeopenit } from 'zss/feature/writeui'
 import { zsstextline, zsstexttape } from 'zss/feature/zsstextui'
 import { FIRMWARE } from 'zss/firmware'
@@ -128,9 +123,7 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
               READ_CONTEXT.elementfocus,
               zsstexttape(
                 zsstextline(`zns restarted`),
-                zsstextline(
-                  `please login with $green#zns <email> <namespace>`,
-                ),
+                zsstextline(`please login with $green#zns <email> <namespace>`),
               ),
             )
             break

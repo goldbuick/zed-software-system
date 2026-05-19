@@ -1,7 +1,7 @@
 import type { DEVICE } from 'zss/device'
 import { boardrunnerpatch } from 'zss/device/api'
 import { Operation, createjsonpipe } from 'zss/feature/jsonpipe/observe'
-import { deepcopy, ispresent } from 'zss/mapping/types'
+import { ispresent } from 'zss/mapping/types'
 import { memoryrootshouldemitpath } from 'zss/memory/jsonpipefilter'
 import {
   type MEMORY_ROOT,

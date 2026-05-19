@@ -1,9 +1,6 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
-import {
-  memoryboundariesclear,
-  memoryboundaryget,
-} from 'zss/memory/boundaries'
+import { memoryboundariesclear, memoryboundaryget } from 'zss/memory/boundaries'
 
 import { handleboardrunnerpaint } from '../boardrunnerpaint'
 

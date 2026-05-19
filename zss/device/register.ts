@@ -821,11 +821,18 @@ export const register = createdevice(
                   const url = await shorturl(`${location.origin}/#${content}`)
                   let hash = url
                   try {
-                    hash = new URL(url).pathname.replace(/^\//, '').split('/')[0]
+                    hash = new URL(url).pathname
+                      .replace(/^\//, '')
+                      .split('/')[0]
                   } catch {
                     // keep full string; worker may still normalize
                   }
-                  const result = await znsset(znsemail, znstoken, filename, hash)
+                  const result = await znsset(
+                    znsemail,
+                    znstoken,
+                    filename,
+                    hash,
+                  )
                   if (result.success) {
                     write(
                       register,
