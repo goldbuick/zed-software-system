@@ -109,12 +109,6 @@ function handleboardrunnertick(
   timestamp: number,
   boundaries: string[],
 ) {
-  // always update the boundaries
-  assignedboundaries.clear()
-  for (const id of boundaries) {
-    assignedboundaries.add(id)
-  }
-
   // track the board we're assigned to
   if (assignedboard !== board) {
     console.info(
@@ -122,14 +116,24 @@ function handleboardrunnertick(
     )
     // we're assigned to a new board
     assignedboard = board
-    // so we need to desync the boundaries to
-    for (const id of assignedboundaries) {
-      // ensure they are current
-      readworkerboundarypipe(id).forcedesync()
-      // signal desync to vm
-      boardrunner.reply(message, 'desync', id)
-    }
+    // clear boundary assignments
+    assignedboundaries.clear()
+    // signal logging change
     firsttick = 0
+  }
+
+  // track assigned boundaries
+  for (const id of boundaries) {
+    if (assignedboundaries.has(id)) {
+      // already assigned
+      continue
+    }
+    // track the boundary
+    assignedboundaries.add(id)
+    // ensure they are current
+    readworkerboundarypipe(id).forcedesync()
+    // signal desync to vm
+    boardrunner.reply(message, 'desync', id)
   }
 
   // ack the tick so we don't get blocked
@@ -191,9 +195,6 @@ function handleboardrunnertick(
     }
   }
 
-  // ensure the boundaries are in sync
-  boardrunnerpushupdates(boardrunner)
-
   // collect the current boundaries
   for (const board of updateboards) {
     const ids = memorycollectboundaryidsforboard(mainbook, board)
@@ -209,6 +210,9 @@ function handleboardrunnertick(
       }
     }
   }
+
+  // ensure the boundaries are in sync
+  boardrunnerpushupdates(boardrunner)
 }
 
 function handleboardrunneridle() {
