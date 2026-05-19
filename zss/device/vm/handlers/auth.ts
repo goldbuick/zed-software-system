@@ -2,13 +2,18 @@ import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import {
   apilog,
+  boardrunnerlinkdead,
   registerinspector,
   registerloginready,
   vmclearscroll,
 } from 'zss/device/api'
+import {
+  boardrunnerassignmentvalid,
+  boardrunnerelect,
+} from 'zss/device/vm/boardrunnermanagement'
 import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
-import { lastinputtime, tracking } from 'zss/device/vm/state'
-import { deepcopy, isstring } from 'zss/mapping/types'
+import { boardrunners, lastinputtime, tracking } from 'zss/device/vm/state'
+import { deepcopy, ispresent, isstring } from 'zss/mapping/types'
 import { memoryexportbookasjson } from 'zss/memory/bookoperations'
 import {
   memoryistokenbanned,
@@ -19,6 +24,7 @@ import {
   memoryloginplayer,
   memorylogoutplayer,
   memoryreadplayeractive,
+  memoryreadplayerboard,
 } from 'zss/memory/playermanagement'
 import {
   memoryisoperator,
@@ -38,6 +44,13 @@ export function handlesearch(vm: DEVICE, message: MESSAGE): void {
 export function handlelogout(vm: DEVICE, message: MESSAGE): void {
   // remove player from the game state
   // (boardrunner linkdead / re-elect on logout — see commented block in git history)
+  const currentboard = memoryreadplayerboard(message.player)
+  if (ispresent(currentboard)) {
+    const runner = boardrunners[currentboard.id]
+    if (runner) {
+      boardrunnerlinkdead(vm, runner, message.player)
+    }
+  }
 
   // clear player state
   vmclearscroll(vm, message.player)
@@ -111,13 +124,13 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
     tracking[message.player] = 0
     lastinputtime[message.player] = Date.now()
     // ensure the board has a runner set
-    // const currentboard = memoryreadplayerboard(message.player)
-    // if (
-    //   ispresent(currentboard) &&
-    //   !boardrunnerassignmentvalid(currentboard.id)
-    // ) {
-    //   boardrunnerelect(currentboard.id)
-    // }
+    const currentboard = memoryreadplayerboard(message.player)
+    if (
+      ispresent(currentboard) &&
+      !boardrunnerassignmentvalid(currentboard.id)
+    ) {
+      boardrunnerelect(currentboard.id)
+    }
     // signal success
     apilog(vm, memoryreadoperator(), `login from ${message.player}`)
     vm.replynext(message, 'acklogin', true)
