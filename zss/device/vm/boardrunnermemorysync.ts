@@ -18,8 +18,8 @@ const boardrunnermemorypipe = createjsonpipe<MEMORY_ROOT>(
   memoryrootshouldemitpath,
 )
 
-function boardrunneremitpatch(
-  vm: DEVICE,
+export function boardrunneremitpatch(
+  device: DEVICE,
   operations: Operation[],
   skipplayer: string,
   boundary?: string,
@@ -36,7 +36,7 @@ function boardrunneremitpatch(
   for (const player of mainbook.activelist) {
     if (runners.includes(player) && player !== skipplayer) {
       emits += 1
-      boardrunnerpatch(vm, player, operations, boundary)
+      boardrunnerpatch(device, player, operations, boundary)
     }
   }
   recordemitdiff(
@@ -48,18 +48,15 @@ function boardrunneremitpatch(
 }
 
 export function boardrunnermemorypatch(operations: Operation[]) {
-  console.error(`${self.name} $$$ MEM PATCH\n`, operations)
   const root = memoryreadroot()
   const doc = boardrunnermemorypipe.applyremote(memoryreadroot(), operations)
   // ignore bad patch
   if (!ispresent(doc)) {
     boardrunnermemorypipe.cleardesync()
-    console.error(`MEM`, deepcopy(root))
     return false
   }
   // keep root memory reference and apply props to root
   Object.assign(root, doc)
-  console.info(`MEM`, deepcopy(root))
   return true
 }
 

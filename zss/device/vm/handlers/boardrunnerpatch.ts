@@ -1,11 +1,14 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { boardrunnerboundarypatch } from 'zss/device/vm/boardrunnerboundarysync'
-import { boardrunnermemorypatch } from 'zss/device/vm/boardrunnermemorysync'
+import {
+  boardrunneremitpatch,
+  boardrunnermemorypatch,
+} from 'zss/device/vm/boardrunnermemorysync'
 import type { Operation } from 'zss/feature/jsonpipe/observe'
 import { isarray } from 'zss/mapping/types'
 
-export function handleboardrunnerpatch(_vm: DEVICE, message: MESSAGE): void {
+export function handleboardrunnerpatch(vm: DEVICE, message: MESSAGE): void {
   if (!isarray(message.data)) {
     return
   }
@@ -19,7 +22,7 @@ export function handleboardrunnerpatch(_vm: DEVICE, message: MESSAGE): void {
       // bad patch, send a reset — boardrunnerpaint recovery deferred
     } else {
       // emit patch to other board runners
-      boardrunnermemorypatch(operations)
+      boardrunneremitpatch(vm, operations, message.player)
     }
   } else if (!boardrunnerboundarypatch(boundary, operations)) {
     // bad patch, send a reset — boardrunnerpaint recovery deferred
