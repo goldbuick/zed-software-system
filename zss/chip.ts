@@ -607,7 +607,7 @@ export function createchip(
       // update execution frequency
       const pulse = isnumber(flags.ps) ? flags.ps : 0
       const activecycle = pulse % cycle === 0
-      flags.ps = pulse + 1
+      flags.ps = (pulse + 1) % cycle
 
       // execution frequency
       if (activecycle === false) {

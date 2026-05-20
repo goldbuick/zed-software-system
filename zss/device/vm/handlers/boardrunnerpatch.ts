@@ -17,14 +17,14 @@ export function handleboardrunnerpatch(vm: DEVICE, message: MESSAGE): void {
     Operation[],
     string | undefined,
   ]
-  if (!boundary) {
-    if (!boardrunnermemorypatch(operations)) {
+  if (boundary) {
+    if (!boardrunnerboundarypatch(boundary, operations)) {
       // bad patch, send a reset — boardrunnerpaint recovery deferred
-    } else {
-      // emit patch to other board runners
-      boardrunneremitpatch(vm, operations, message.player)
     }
-  } else if (!boardrunnerboundarypatch(boundary, operations)) {
+  } else if (!boardrunnermemorypatch(operations)) {
     // bad patch, send a reset — boardrunnerpaint recovery deferred
+  } else {
+    // emit patch to other board runners
+    boardrunneremitpatch(vm, operations, message.player)
   }
 }

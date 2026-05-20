@@ -1,4 +1,4 @@
-import { MAYBE, isstring } from 'zss/mapping/types'
+import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 
 import {
   memoryboundaryalloc,
@@ -58,9 +58,10 @@ export function memorydeleteboardruntime(board: MAYBE<BOARD>): void {
 export function memoryensureboardelementruntime(
   element: BOARD_ELEMENT,
 ): BOARD_ELEMENT_RUNTIME {
-  element.runtime ??= memoryboundaryalloc(createboardelementruntime())
-  const runtime = memoryboundaryget<BOARD_ELEMENT_RUNTIME>(element.runtime)
-  if (runtime) {
+  const runtime = memoryboundaryget<BOARD_ELEMENT_RUNTIME>(
+    element.runtime ?? '',
+  )
+  if (ispresent(runtime)) {
     return runtime
   }
   const nextruntime = createboardelementruntime()

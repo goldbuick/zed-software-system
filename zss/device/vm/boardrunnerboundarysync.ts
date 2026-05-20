@@ -2,7 +2,7 @@ import type { DEVICE } from 'zss/device'
 import { boardrunnerpatch } from 'zss/device/api'
 import type { JSON_PIPE_HANDLE, Operation } from 'zss/feature/jsonpipe/observe'
 import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
-import { deepcopy, ispresent } from 'zss/mapping/types'
+import { ispresent } from 'zss/mapping/types'
 import { memoryboundaryget, memoryboundaryset } from 'zss/memory/boundaries'
 import { memorycollectboundaryidsforboard } from 'zss/memory/boundaryrouting'
 import { memoryrootshouldemitpath } from 'zss/memory/jsonpipefilter'
@@ -46,11 +46,6 @@ export function boardrunnerboundarypatch(
   const doc = pipe.applyremote(root, operations)
   // ignore bad patch
   if (!ispresent(doc)) {
-    console.error(
-      `${self.name} $$$ BAD PATCH\n${boundary}`,
-      operations,
-      deepcopy(root),
-    )
     pipe.cleardesync()
     return false
   }

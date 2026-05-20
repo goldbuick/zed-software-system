@@ -1,9 +1,8 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
+import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
 import { memoryrepeatclilast, memoryruncli } from 'zss/memory/runtime'
 import { perfmeasure } from 'zss/perf/ui'
-
-import { boardrunnerpushupdates } from '../boardrunnerpushupdates'
 
 export function handlecli(vm: DEVICE, message: MESSAGE): void {
   perfmeasure('vm:cli', () => {

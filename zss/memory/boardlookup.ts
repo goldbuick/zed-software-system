@@ -131,8 +131,9 @@ export function memoryinitboardlookup(board: MAYBE<BOARD>) {
       ispresent(object.id) &&
       !ispresent(object.removed)
     ) {
-      // add category
+      // add category and kinddata
       memoryensureboardelementruntime(object).category = CATEGORY.ISOBJECT
+      memoryreadelementkind(object)
 
       // update lookup
       if (memoryreadelementstat(object, 'collision') !== COLLISION.ISGHOST) {
@@ -165,10 +166,13 @@ export function memoryinitboardlookup(board: MAYBE<BOARD>) {
       // add coords
       terrain.x = x
       terrain.y = y
+
+      // add category and kinddata
       memoryensureboardelementruntime(terrain).category = CATEGORY.ISTERRAIN
+      memoryreadelementkind(terrain)
 
       // update named lookup
-      const display = memoryreadelementdisplay(memoryreadelementkind(terrain))
+      const display = memoryreadelementdisplay(terrain)
       if (!named[display.name]) {
         named[display.name] = new Set<string>()
       }
