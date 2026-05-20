@@ -72,6 +72,16 @@ describe('memoryreadrootsync jsonpipe parity', () => {
     expect(memoryrootshouldemitpath('/operator')).toBe(true)
   })
 
+  it('memoryrootshouldemitpath skips terrain-only props on board terrain', () => {
+    expect(memoryrootshouldemitpath('/terrain/0/id')).toBe(false)
+    expect(memoryrootshouldemitpath('/terrain/42/x')).toBe(false)
+    expect(memoryrootshouldemitpath('/terrain/1/code')).toBe(false)
+    expect(memoryrootshouldemitpath('/terrain/id')).toBe(false)
+    expect(memoryrootshouldemitpath('/terrain/0/char')).toBe(true)
+    expect(memoryrootshouldemitpath('/objects/o1/id')).toBe(true)
+    expect(memoryrootshouldemitpath('/objects/o1/x')).toBe(true)
+  })
+
   it('chains two ticks', () => {
     const r0 = makeroot({ session: 's0' })
     const r1 = makeroot({ session: 's1' })

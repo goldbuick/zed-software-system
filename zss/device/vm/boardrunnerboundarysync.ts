@@ -51,6 +51,11 @@ export function boardrunnerboundarypatch(
   }
   // update boundary
   memoryboundaryset(boundary, doc)
+  // console.info(
+  //   `${self.name} $$$ BOARDRUNNERBOUNDARYPATCH\n${boundary}`,
+  //   operations.length,
+  //   operations,
+  // )
   return true
 }
 
