@@ -16,17 +16,19 @@ import { MEMORY_LABEL } from 'zss/memory/types'
 import type { PT } from 'zss/words/types'
 
 export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
-  const [targetplayer, board, dest] = message.data as [string, string, PT]
+  const [targetplayer, targetboard, targetpt] = message.data as [
+    string,
+    string,
+    PT,
+  ]
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const currentboard = memoryreadplayerboard(targetplayer)
-  if (!ispresent(currentboard)) {
-    return
-  }
 
   // attempt to move the player to the destination board
-  if (memorymoveplayertoboard(mainbook, targetplayer, board, dest)) {
-    // send a message to the target player's runner that it is idle now
-    boardrunneridle(vm, targetplayer)
+  if (
+    ispresent(currentboard) &&
+    memorymoveplayertoboard(mainbook, targetplayer, targetboard, targetpt)
+  ) {
     // elect a new runner for the prior board
     if (!boardrunnerassignmentvalid(currentboard.id)) {
       // elect a new runner for the prior board
@@ -34,12 +36,12 @@ export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
       boardrunnerelect(currentboard.id)
     }
     // check dest board to see if there's a valid runner
-    if (boardrunnerassignmentvalid(board)) {
+    if (boardrunnerassignmentvalid(targetboard)) {
       // send a message to the target player's runner that it is idle now
       boardrunneridle(vm, targetplayer)
     } else {
       // switch assignment directly to the target player
-      boardrunnerassign(board, targetplayer)
+      boardrunnerassign(targetboard, targetplayer)
     }
   } else {
     // send a thud message back to the board runner
