@@ -8,7 +8,7 @@ import {
 } from 'zss/device/api'
 import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
 import { lastinputtime, tracking } from 'zss/device/vm/state'
-import { deepcopy, isstring } from 'zss/mapping/types'
+import { deepcopy, ispresent, isstring } from 'zss/mapping/types'
 import { memoryexportbookasjson } from 'zss/memory/bookoperations'
 import {
   memoryistokenbanned,
@@ -19,6 +19,7 @@ import {
   memoryloginplayer,
   memorylogoutplayer,
   memoryreadplayeractive,
+  memoryreadplayerboard,
 } from 'zss/memory/playermanagement'
 import {
   memoryisoperator,
@@ -29,6 +30,11 @@ import {
 import { BOOK_FLAGS, MEMORY_LABEL } from 'zss/memory/types'
 import { memoryreadconfig, memorysetconfig } from 'zss/memory/utilities'
 
+import {
+  boardrunnerassignmentvalid,
+  boardrunnerelect,
+} from '../boardrunnermanagement'
+
 export function handlesearch(vm: DEVICE, message: MESSAGE): void {
   if (!memoryreadplayeractive(message.player)) {
     registerloginready(vm, message.player)
@@ -36,6 +42,9 @@ export function handlesearch(vm: DEVICE, message: MESSAGE): void {
 }
 
 export function handlelogout(vm: DEVICE, message: MESSAGE): void {
+  // grab the current board to validate runner assignment
+  const currentboard = memoryreadplayerboard(message.player)
+
   // clear player state
   vmclearscroll(vm, message.player)
   memorylogoutplayer(message.player, !!message.data)
@@ -50,6 +59,11 @@ export function handlelogout(vm: DEVICE, message: MESSAGE): void {
   // clear tracking state
   delete tracking[message.player]
   delete lastinputtime[message.player]
+
+  // elect a new runner for the current board if necessary
+  if (ispresent(currentboard) && !boardrunnerassignmentvalid(currentboard.id)) {
+    boardrunnerelect(currentboard.id)
+  }
 
   // signal logout
   apilog(vm, memoryreadoperator(), `player ${message.player} logout`)
@@ -107,6 +121,16 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
     // start tracking
     tracking[message.player] = 0
     lastinputtime[message.player] = Date.now()
+
+    // elect a new runner for the login board if necessary
+    const currentboard = memoryreadplayerboard(message.player)
+    if (
+      ispresent(currentboard) &&
+      !boardrunnerassignmentvalid(currentboard.id)
+    ) {
+      boardrunnerelect(currentboard.id)
+    }
+
     // signal success
     apilog(vm, memoryreadoperator(), `login from ${message.player}`)
     vm.replynext(message, 'acklogin', true)
