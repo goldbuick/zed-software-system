@@ -257,7 +257,7 @@ Per-player gadget state synchronization. The previous `gadgetserver` device has 
 Per-board chip simulation that runs inside the **boardrunner worker**. The sim VM elects one player per active board to be its runner ([`vm/boardrunnermanagement.ts`](vm/boardrunnermanagement.ts)) and streams the data the runner needs.
 
 ### VM → Boardrunner
-- `boardrunnerstart(device, player)` - Set the runner's assigned player (one-shot)
+- `boardrunnerstart(device, player)` - One-shot `boardrunner:start`; worker sets `MEMORY.boardrunner`. Elected board id is `MEMORY.assignedboard` (from `boardrunner:tick`, cleared on `idle`).
 - `boardrunnertick(device, player, board, timestamp, boundaries)` - Drive one tick on the runner for `board` with the listed boundary ids
 - `boardrunnerpaint(device, player, doc, boundary?)` - Full jsonpipe sync of memory (no `boundary`) or a single boundary slice
 - `boardrunnerpatch(device, player, patch, boundary?)` - jsonpipe patch of memory or a single boundary slice

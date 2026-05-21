@@ -14,10 +14,7 @@ import { ispresent } from 'zss/mapping/types'
 import { memorycollecttickboundaries } from 'zss/memory/boardwait'
 import { memoryreadbookplayerboards } from 'zss/memory/playermanagement'
 import { memorytickloaders } from 'zss/memory/runtime'
-import {
-  memoryreadbookbysoftware,
-  memoryreadsimfreeze,
-} from 'zss/memory/session'
+import { memoryreadbookbysoftware, memoryreadfrozen } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
 import { perfmeasure } from 'zss/perf/ui'
 
@@ -28,7 +25,7 @@ import { pilottick } from './pilot'
 export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
   void _message
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  if (!ispresent(mainbook) || memoryreadsimfreeze()) {
+  if (!ispresent(mainbook) || memoryreadfrozen()) {
     return
   }
   perfmeasure('vm:pilottick', () => {

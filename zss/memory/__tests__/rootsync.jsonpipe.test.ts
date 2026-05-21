@@ -10,7 +10,9 @@ function makeroot(partial: Partial<MEMORY_ROOT> = {}): MEMORY_ROOT {
     topic: '',
     session: 'sess',
     operator: 'op',
-    simfreeze: false,
+    boardrunner: '',
+    assignedboard: '',
+    frozen: false,
     software: { main: 'mainbook', temp: '' },
     books: {},
     loaders: {},
@@ -70,6 +72,8 @@ describe('memoryreadrootsync jsonpipe parity', () => {
     expect(memoryrootshouldemitpath('/runtime')).toBe(false)
     expect(memoryrootshouldemitpath('/books/b1/runtime')).toBe(false)
     expect(memoryrootshouldemitpath('/operator')).toBe(true)
+    expect(memoryrootshouldemitpath('/boardrunner')).toBe(false)
+    expect(memoryrootshouldemitpath('/assignedboard')).toBe(false)
   })
 
   it('memoryrootshouldemitpath skips terrain-only props on board terrain', () => {

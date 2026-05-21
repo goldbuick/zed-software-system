@@ -30,9 +30,13 @@ import {
 import { memorymessagechip, memorytickmain } from 'zss/memory/runtime'
 import {
   type MEMORY_ROOT,
+  memoryreadassignedboard,
+  memoryreadboardrunner,
   memoryreadbookbysoftware,
   memoryreadhalt,
   memoryreadroot,
+  memorywriteassignedboard,
+  memorywriteboardrunner,
 } from 'zss/memory/session'
 import { BOARD, CODE_PAGE_RUNTIME, MEMORY_LABEL } from 'zss/memory/types'
 import { NAME } from 'zss/words/types'
@@ -57,8 +61,6 @@ gadgetstateprovider((player) => {
   return initstate()
 })
 
-let assignedplayer = ''
-let assignedboard = ''
 const assignedboundaries = new Set<string>()
 const playersonassignedboard = new Set<string>()
 
@@ -82,10 +84,11 @@ function readworkerboundarypipe(boundary: string): BOUNDARY_JSONPIPE {
 }
 
 function boardrunnerpushupdates(device: DEVICE) {
+  const runner = memoryreadboardrunner()
   // add the MEM patch calls here
   const memorypatch = memorysyncpipe.emitdiff(memoryreadroot())
   if (memorypatch.length > 0) {
-    vmboardrunnerpatch(device, assignedplayer, memorypatch)
+    vmboardrunnerpatch(device, runner, memorypatch)
   }
 
   // add the BOUNDARY patch calls here
@@ -95,7 +98,7 @@ function boardrunnerpushupdates(device: DEVICE) {
     if (ispresent(doc)) {
       const patch = pipe.emitdiff(doc)
       if (patch.length > 0) {
-        vmboardrunnerpatch(device, assignedplayer, patch, id)
+        vmboardrunnerpatch(device, runner, patch, id)
       }
     }
   }
@@ -109,13 +112,15 @@ function handleboardrunnertick(
   timestamp: number,
   boundaries: string[],
 ) {
+  const runner = memoryreadboardrunner()
+  const priorboard = memoryreadassignedboard()
   // track the board we're assigned to
-  if (assignedboard !== board) {
+  if (priorboard !== board) {
     console.info(
-      `${self.name} $$$ BOARD ASSIGNED\n${assignedplayer}: ${assignedboard} -> ${board}`,
+      `${self.name} $$$ BOARD ASSIGNED\n${runner}: ${priorboard} -> ${board}`,
     )
     // we're assigned to a new board
-    assignedboard = board
+    memorywriteassignedboard(board)
     // clear boundary assignments
     assignedboundaries.clear()
     // signal logging change
@@ -137,7 +142,7 @@ function handleboardrunnertick(
   }
 
   // ack the tick so we don't get blocked
-  vmboardrunnerack(boardrunner, assignedplayer)
+  vmboardrunnerack(boardrunner, runner)
 
   // always update the mainbook timestamp
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
@@ -149,12 +154,13 @@ function handleboardrunnertick(
   for (const id of assignedboundaries.values()) {
     if (readworkerboundarypipe(id).isdesynced()) {
       firsttick = 0
-      console.info(`${self.name} $$$ WAITING FOR\n${assignedplayer} -> ${id}`)
+      console.info(`${self.name} $$$ WAITING FOR\n${runner} -> ${id}`)
       return
     }
   }
 
   // validate the board codepage is valid
+  const assignedboard = memoryreadassignedboard()
   const runtime = memoryboundaryget<CODE_PAGE_RUNTIME>(assignedboard)
   if (!ispresent(runtime?.board)) {
     return
@@ -163,7 +169,7 @@ function handleboardrunnertick(
   if (firsttick < 50) {
     if (firsttick % 10 === 0) {
       console.info(
-        `${self.name} $$$ TICKING\n${assignedplayer} -> ${assignedboard}`,
+        `${self.name} $$$ TICKING\n${runner} -> ${assignedboard}`,
       )
     }
     ++firsttick
@@ -205,7 +211,7 @@ function handleboardrunnertick(
         // send paint
         const doc = memoryboundaryget(id)
         if (ispresent(doc)) {
-          vmboardrunnerpaint(device, assignedplayer, doc, id)
+          vmboardrunnerpaint(device, runner, doc, id)
         }
       }
     }
@@ -216,8 +222,7 @@ function handleboardrunnertick(
 }
 
 function handleboardrunneridle() {
-  // blank out the assigned board
-  assignedboard = ''
+  memorywriteassignedboard('')
 }
 
 const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
@@ -233,7 +238,7 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
     case 'paint':
     case 'patch':
     case 'linkdead':
-      if (message.player !== assignedplayer) {
+      if (message.player !== memoryreadboardrunner()) {
         return
       }
       break
@@ -243,8 +248,8 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
 
   switch (message.target) {
     case 'start':
-      if (!assignedplayer) {
-        assignedplayer = message.player
+      if (!memoryreadboardrunner()) {
+        memorywriteboardrunner(message.player)
       }
       break
     case 'input':
@@ -255,7 +260,9 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
         }
 
         // validate the assignedboard codepage is valid
-        const runtime = memoryboundaryget<CODE_PAGE_RUNTIME>(assignedboard)
+        const runtime = memoryboundaryget<CODE_PAGE_RUNTIME>(
+          memoryreadassignedboard(),
+        )
         if (!ispresent(runtime?.board)) {
           return
         }
@@ -282,7 +289,7 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
       }
       break
     case 'idle':
-      console.info(`${self.name} $$$ IDLE\n${assignedplayer}`)
+      console.info(`${self.name} $$$ IDLE\n${memoryreadboardrunner()}`)
       handleboardrunneridle()
       break
     case 'linkdead':

@@ -11,6 +11,8 @@ The MEMORY singleton plus its book/loader/operator/topic accessors.
 - **memoryreadroot()** / **MEMORY_ROOT** (type) - Reads the live MEMORY object (used by jsonpipe sync to the boardrunner)
 - **memoryreadsession()** - Returns the session ID
 - **memoryreadoperator()**, **memoryisoperator(player)**, **memorywriteoperator(operator)** - Operator player accessors
+- **memoryreadboardrunner()**, **memorywriteboardrunner(player)** - Boardrunner worker client player id (worker-local; omitted from jsonpipe root sync)
+- **memoryreadassignedboard()**, **memorywriteassignedboard(board)** - Elected board codepage id on the boardrunner worker (worker-local; omitted from jsonpipe root sync)
 - **memoryreadtopic()**, **memorywritetopic(topic)** - Multiplayer topic accessors
 - **memoryreadhalt()**, **memorywritehalt(halt)** - Dev/halt mode accessors
 - **memoryreadsimfreeze()**, **memorywritesimfreeze(frozen)** - Sim freeze gate (skips the VM tick when true)

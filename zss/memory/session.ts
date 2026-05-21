@@ -12,10 +12,12 @@ import { BOOK, MEMORY_LABEL } from './types'
 
 const MEMORY = {
   halt: false,
+  frozen: false,
   topic: '',
-  session: createsid(),
   operator: '',
-  simfreeze: false,
+  boardrunner: '',
+  assignedboard: '',
+  session: createsid(),
   software: { main: '', temp: '' },
   books: {} as Record<string, BOOK>,
   loaders: {} as Record<string, string>,
@@ -45,6 +47,22 @@ export function memorywriteoperator(operator: string) {
   MEMORY.operator = operator
 }
 
+export function memoryreadboardrunner() {
+  return MEMORY.boardrunner
+}
+
+export function memorywriteboardrunner(player: string) {
+  MEMORY.boardrunner = player
+}
+
+export function memoryreadassignedboard() {
+  return MEMORY.assignedboard
+}
+
+export function memorywriteassignedboard(board: string) {
+  MEMORY.assignedboard = board
+}
+
 export function memoryreadtopic() {
   return MEMORY.topic
 }
@@ -61,12 +79,12 @@ export function memoryreadhalt() {
   return MEMORY.halt
 }
 
-export function memorywritesimfreeze(frozen: boolean) {
-  MEMORY.simfreeze = frozen
+export function memorywritefrozen(frozen: boolean) {
+  MEMORY.frozen = frozen
 }
 
-export function memoryreadsimfreeze() {
-  return MEMORY.simfreeze
+export function memoryreadfrozen() {
+  return MEMORY.frozen
 }
 
 export function memoryreadbooklist(): BOOK[] {

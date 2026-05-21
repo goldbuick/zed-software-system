@@ -37,7 +37,7 @@ describe('handlebooks sim freeze', () => {
   beforeEach(() => {
     jest.useFakeTimers()
     session.memorywriteoperator(player)
-    session.memorywritesimfreeze(false)
+    session.memorywritefrozen(false)
     tracking[player] = 99
     resolver = undefined
     jest.mocked(memorydecompressbooks).mockImplementation(
@@ -53,7 +53,7 @@ describe('handlebooks sim freeze', () => {
     jest.useRealTimers()
     jest.restoreAllMocks()
     jest.mocked(memorydecompressbooks).mockReset()
-    session.memorywritesimfreeze(false)
+    session.memorywritefrozen(false)
     delete tracking[player]
   })
 
@@ -70,7 +70,7 @@ describe('handlebooks sim freeze', () => {
     handlebooks(vm, message)
 
     await flushmicrotasks()
-    expect(session.memoryreadsimfreeze()).toBe(true)
+    expect(session.memoryreadfrozen()).toBe(true)
     expect(tracking[player]).toBe(0)
 
     expect(resolver).toBeDefined()
@@ -79,7 +79,7 @@ describe('handlebooks sim freeze', () => {
     await flushmicrotasks()
     await flushmicrotasks()
 
-    expect(session.memoryreadsimfreeze()).toBe(false)
+    expect(session.memoryreadfrozen()).toBe(false)
     expect(registerloginready).toHaveBeenCalledWith(vm, player)
     expect(apilog).toHaveBeenCalled()
     expect(session.memoryresetbooks).toHaveBeenCalledWith([minimalbook])
@@ -108,7 +108,7 @@ describe('handlebooks sim freeze', () => {
       await flushmicrotasks()
       await flushmicrotasks()
 
-      expect(session.memoryreadsimfreeze()).toBe(false)
+      expect(session.memoryreadfrozen()).toBe(false)
     } finally {
       consoleerror.mockRestore()
     }

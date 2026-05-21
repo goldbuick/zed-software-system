@@ -7,7 +7,7 @@ import { isarray, isstring } from 'zss/mapping/types'
 import {
   memoryreadoperator,
   memoryresetbooks,
-  memorywritesimfreeze,
+  memorywritefrozen,
 } from 'zss/memory/session'
 import type { BOOK } from 'zss/memory/types'
 import { memorydecompressbooks } from 'zss/memory/utilities'
@@ -18,7 +18,7 @@ export function handlebooks(vm: DEVICE, message: MESSAGE): void {
     return
   }
   doasync(vm, message.player, async () => {
-    memorywritesimfreeze(true)
+    memorywritefrozen(true)
     const trackingkeys = Object.keys(tracking)
     for (let i = 0; i < trackingkeys.length; ++i) {
       tracking[trackingkeys[i]] = 0
@@ -40,7 +40,7 @@ export function handlebooks(vm: DEVICE, message: MESSAGE): void {
       apilog(vm, message.player, `books loaded`)
       registerloginready(vm, message.player)
     } finally {
-      memorywritesimfreeze(false)
+      memorywritefrozen(false)
     }
   })
 }

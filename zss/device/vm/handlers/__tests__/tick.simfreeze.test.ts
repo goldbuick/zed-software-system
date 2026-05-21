@@ -38,7 +38,7 @@ describe('handletick sim freeze', () => {
   const msg = {} as MESSAGE
 
   afterEach(() => {
-    session.memorywritesimfreeze(false)
+    session.memorywritefrozen(false)
     jest.mocked(memorytickloaders).mockClear()
     jest.mocked(pilottick).mockClear()
     jest.restoreAllMocks()
@@ -48,7 +48,7 @@ describe('handletick sim freeze', () => {
     jest
       .spyOn(session, 'memoryreadbookbysoftware')
       .mockReturnValue(stubmainbook)
-    session.memorywritesimfreeze(true)
+    session.memorywritefrozen(true)
     handleticktock(vm, msg)
 
     expect(pilottick).not.toHaveBeenCalled()
@@ -59,7 +59,7 @@ describe('handletick sim freeze', () => {
     jest
       .spyOn(session, 'memoryreadbookbysoftware')
       .mockReturnValue(stubmainbook)
-    session.memorywritesimfreeze(false)
+    session.memorywritefrozen(false)
 
     handleticktock(vm, msg)
 
