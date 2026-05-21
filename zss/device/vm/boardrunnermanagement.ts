@@ -22,14 +22,15 @@ export function boardrunnertrackaccess(board: string, accessboard: string) {
   if (!board || !accessboard) {
     return
   }
-  const list = boardrunneraccess[board] ?? []
-  if (!list.includes(accessboard)) {
-    boardrunneraccess[board] = [...list, accessboard]
+  boardrunneraccess[board] ??= []
+  if (!boardrunneraccess[board].includes(accessboard)) {
+    boardrunneraccess[board].push(accessboard)
   }
 }
 
 export function boardrunneraccessfor(board: string): string[] {
-  return [board, ...(boardrunneraccess[board] ?? [])]
+  const list = boardrunneraccess[board] ?? []
+  return [board, ...list]
 }
 
 export function boardrunnereligibleforboard(board: string): string[] {

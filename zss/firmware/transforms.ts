@@ -149,10 +149,7 @@ export const TRANSFORM_FIRMWARE = createfirmware()
         chip.set('didfail', 1)
         return 0
       }
-      if (
-        sourceboard.id !== READ_CONTEXT.board.id &&
-        firmwarewaitforboard(sourceboard.id)
-      ) {
+      if (firmwarewaitforboard(sourceboard.id)) {
         return 1
       }
       const filter = readfilter(words, ii)
@@ -198,10 +195,7 @@ export const TRANSFORM_FIRMWARE = createfirmware()
         chip.set('didfail', 1)
         return 0
       }
-      if (
-        sourceboard.id !== READ_CONTEXT.board.id &&
-        firmwarewaitforboard(sourceboard.id)
-      ) {
+      if (firmwarewaitforboard(sourceboard.id)) {
         return 1
       }
       const filter = readfilter(words, ii)
@@ -238,7 +232,7 @@ export const TRANSFORM_FIRMWARE = createfirmware()
 
       // read board by eval dir
       const board = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
-      if (ispresent(board) && ispresent(READ_CONTEXT.board)) {
+      if (firmwarewaitforboard(board?.id)) {
         return 1
       }
 

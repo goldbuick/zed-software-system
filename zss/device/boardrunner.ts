@@ -9,6 +9,7 @@ import { normalizelayerzvariant } from 'zss/gadget/graphics/layerz'
 import { creategadgetid, ispid } from 'zss/mapping/guid'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadplayersonboard } from 'zss/memory/boardaccess'
+import { memoryreadoverboard, memoryreadunderboard } from 'zss/memory/boards'
 import {
   memoryreadbookflag,
   memorywritebookflag,
@@ -41,7 +42,12 @@ import {
 import { BOARD, CODE_PAGE_RUNTIME, MEMORY_LABEL } from 'zss/memory/types'
 import { NAME } from 'zss/words/types'
 
-import { vmboardrunnerack, vmboardrunnerpaint, vmboardrunnerpatch } from './api'
+import {
+  vmboardrunneraccess,
+  vmboardrunnerack,
+  vmboardrunnerpaint,
+  vmboardrunnerpatch,
+} from './api'
 
 gadgetstateprovider((player) => {
   if (ispid(player)) {
@@ -114,6 +120,7 @@ function handleboardrunnertick(
 ) {
   const runner = memoryreadboardrunner()
   const priorboard = memoryreadassignedboard()
+
   // track the board we're assigned to
   if (priorboard !== board) {
     console.info(
@@ -161,47 +168,40 @@ function handleboardrunnertick(
 
   // validate the board codepage is valid
   const assignedboard = memoryreadassignedboard()
-  const runtime = memoryboundaryget<CODE_PAGE_RUNTIME>(assignedboard)
-  if (!ispresent(runtime?.board)) {
+  const boundary = memoryboundaryget<BOUNDARY_DOC>(assignedboard)
+  const maybeboard: MAYBE<BOARD> = boundary?.board
+  if (!ispresent(maybeboard)) {
+    return
+  }
+
+  const maybeunderboard = memoryreadunderboard(maybeboard)
+  const maybeoverboard = memoryreadoverboard(maybeboard)
+
+  // validate that we have this boundary
+  const visualboards: BOARD[] = [maybeunderboard, maybeoverboard]
+    .filter(ispresent)
+    .filter((board) => !assignedboundaries.has(board.id))
+  if (visualboards.length > 0) {
+    for (const board of visualboards) {
+      vmboardrunneraccess(device, runner, board.id)
+    }
     return
   }
 
   if (firsttick < 50) {
     if (firsttick % 10 === 0) {
-      console.info(
-        `${self.name} $$$ TICKING\n${runner} -> ${assignedboard}`,
-      )
+      console.info(`${self.name} $$$ TICKING\n${runner} -> ${assignedboard}`)
     }
     ++firsttick
   }
 
+  // we update the main board and the over board
+  const updateboards: BOARD[] = [maybeboard, maybeoverboard].filter(ispresent)
+
   // tick boards we're in-charge of
-  const updateboards: BOARD[] = [runtime.board]
   memorytickmain(timestamp, updateboards, memoryreadhalt())
 
-  // render the gadget layers for the updated boards
-  for (let b = 0; b < updateboards.length; ++b) {
-    const boarddata = updateboards[b]
-    const didrender: Record<string, boolean> = {}
-    const players = memoryreadplayersonboard(boarddata)
-    const store = memoryreadbookgadgetlayersforboard(mainbook, boarddata.id)
-    // render the gadget layers for the players on the board
-    playersonassignedboard.clear()
-    for (let p = 0; p < players.length; ++p) {
-      // track the players on the assigned board
-      playersonassignedboard.add(players[p])
-      // render the gadget layers for the player
-      const graphics = memoryreadgraphics(players[p], boarddata)
-      const mode = normalizelayerzvariant(graphics.graphics)
-      if (ispresent(didrender[mode])) {
-        continue
-      }
-      didrender[mode] = true
-      store[mode] = memoryreadgadgetlayers(mode, boarddata)
-    }
-  }
-
-  // collect the current boundaries
+  // handle when we create chip / board boundaries
   for (const board of updateboards) {
     const ids = memorycollectboundaryidsforboard(mainbook, board)
     for (const id of ids) {
@@ -214,6 +214,38 @@ function handleboardrunnertick(
           vmboardrunnerpaint(device, runner, doc, id)
         }
       }
+    }
+  }
+
+  // handle tracking active players on the board
+  playersonassignedboard.clear()
+  const boardplayers = memoryreadplayersonboard(maybeboard)
+  for (let p = 0; p < boardplayers.length; ++p) {
+    // track the players on the assigned board
+    playersonassignedboard.add(boardplayers[p])
+  }
+
+  // render the gadget layers for the updated boards
+  const visibleboards: BOARD[] = [
+    maybeboard,
+    maybeoverboard,
+    maybeunderboard,
+  ].filter(ispresent)
+  for (let b = 0; b < visibleboards.length; ++b) {
+    const boarddata = visibleboards[b]
+    const didrender: Record<string, boolean> = {}
+    const players = memoryreadplayersonboard(boarddata)
+    const store = memoryreadbookgadgetlayersforboard(mainbook, boarddata.id)
+    // render the gadget layers for the players on the board
+    for (let p = 0; p < players.length; ++p) {
+      // render the gadget layers for the player
+      const graphics = memoryreadgraphics(players[p], boarddata)
+      const mode = normalizelayerzvariant(graphics.graphics)
+      if (ispresent(didrender[mode])) {
+        continue
+      }
+      didrender[mode] = true
+      store[mode] = memoryreadgadgetlayers(mode, boarddata)
     }
   }
 

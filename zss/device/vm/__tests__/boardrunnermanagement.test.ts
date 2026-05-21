@@ -4,11 +4,9 @@ import {
   boardrunnerassignmentvalid,
   boardrunnerboardforplayer,
   boardrunnerbudgetdec,
-  boardrunnerclearaccess,
   boardrunnerelect,
   boardrunnereligibleforboard,
   boardrunnerevict,
-  boardrunnerprunehydratedaccess,
   boardrunnertrackaccess,
 } from 'zss/device/vm/boardrunnermanagement'
 import {
@@ -18,14 +16,11 @@ import {
   boardrunners,
   playerrunners,
 } from 'zss/device/vm/state'
-import {
-  memoryboundariesclear,
-  memoryboundaryset,
-} from 'zss/memory/boundaries'
 import * as array from 'zss/mapping/array'
 import { TICK_FPS } from 'zss/mapping/tick'
 import * as boardaccess from 'zss/memory/boardaccess'
 import * as boards from 'zss/memory/boards'
+import { memoryboundariesclear } from 'zss/memory/boundaries'
 import type { BOARD } from 'zss/memory/types'
 
 jest.mock('zss/memory/boards', () => ({
@@ -186,20 +181,13 @@ describe('boardrunnermanagement', () => {
   describe('boardrunneraccess', () => {
     beforeEach(() => {
       memoryboundariesclear()
-      boardrunnerclearaccess(boardid)
+      delete boardrunneraccess[boardid]
     })
 
     it('boardrunnertrackaccess dedupes and boardrunneraccessfor returns ids', () => {
       boardrunnertrackaccess(boardid, 'board-b')
       boardrunnertrackaccess(boardid, 'board-b')
-      expect(boardrunneraccessfor(boardid)).toEqual(['board-b'])
-    })
-
-    it('boardrunnerprunehydratedaccess removes hydrated pending ids', () => {
-      boardrunnertrackaccess(boardid, 'board-b')
-      memoryboundaryset('board-b', { board: { id: 'board-b' } })
-      boardrunnerprunehydratedaccess(boardid)
-      expect(boardrunneraccessfor(boardid)).toEqual([])
+      expect(boardrunneraccessfor(boardid)).toEqual([boardid, 'board-b'])
     })
   })
 

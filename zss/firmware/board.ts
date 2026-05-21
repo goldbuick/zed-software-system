@@ -8,13 +8,7 @@ import { firmwarewaitforboard } from 'zss/firmware/boardwaitsync'
 import { celltorendervalue } from 'zss/gadget/display/cellvalue'
 import { createsid, ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
-import {
-  MAYBE,
-  deepcopy,
-  isnumber,
-  ispresent,
-  isstring,
-} from 'zss/mapping/types'
+import { deepcopy, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import {
   memoryreadelement,
   memoryreadobject,
@@ -50,7 +44,6 @@ import {
   memorylistboardptsbyempty,
 } from 'zss/memory/spatialqueries'
 import {
-  BOARD,
   BOARD_HEIGHT,
   BOARD_WIDTH,
   CODE_PAGE_TYPE,
@@ -79,10 +72,6 @@ import {
   PT,
   WORD,
 } from 'zss/words/types'
-
-function crossboardwait(board: MAYBE<BOARD>): 0 | 1 {
-  return firmwarewaitforboard(board?.id ?? '')
-}
 
 function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
   // invalid data
@@ -134,7 +123,7 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
 
   // read board by eval dir
   const board = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
-  if (crossboardwait(board)) {
+  if (firmwarewaitforboard(board?.id)) {
     return 1
   }
 
@@ -249,7 +238,7 @@ function commandput(chip: CHIP, words: WORD[], id?: string, arg?: WORD): 0 | 1 {
 
   // read board by eval dir
   const board = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
-  if (crossboardwait(board)) {
+  if (firmwarewaitforboard(board?.id)) {
     return 1
   }
 
@@ -337,10 +326,10 @@ function commanddupe(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
   // read board by eval dir
   const dirboard = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
   const dupedirboard = memoryreadboardbyevaldir(dupedir, READ_CONTEXT.board)
-  if (crossboardwait(dirboard)) {
+  if (firmwarewaitforboard(dirboard?.id)) {
     return 1
   }
-  if (crossboardwait(dupedirboard)) {
+  if (firmwarewaitforboard(dupedirboard?.id)) {
     return 1
   }
 
@@ -433,7 +422,7 @@ export const BOARD_FIRMWARE = createfirmware()
       if (isstring(maybesource)) {
         const sourceboard = memoryreadboardbyaddress(maybesource)
         if (ispresent(sourceboard)) {
-          if (crossboardwait(sourceboard)) {
+          if (firmwarewaitforboard(sourceboard?.id)) {
             return 1
           }
           boardcopy(sourceboard.id, createdboard.id, p1, p2, targetset)
@@ -660,7 +649,7 @@ export const BOARD_FIRMWARE = createfirmware()
   .command(
     'shove',
     [ARG_TYPE.DIR, ARG_TYPE.DIR, 'target object in direction'],
-    (chip, words) => {
+    (_, words) => {
       if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
         return 0
       }
@@ -670,7 +659,7 @@ export const BOARD_FIRMWARE = createfirmware()
         targetdir,
         READ_CONTEXT.board,
       )
-      if (crossboardwait(targetboard)) {
+      if (firmwarewaitforboard(targetboard?.id)) {
         return 1
       }
       const maybetarget = memoryreadelement(targetboard, targetdir.destpt)
@@ -698,7 +687,7 @@ export const BOARD_FIRMWARE = createfirmware()
   .command(
     'push',
     [ARG_TYPE.DIR, ARG_TYPE.DIR, 'target object in direction ONLY if pushable'],
-    (chip, words) => {
+    (_, words) => {
       if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
         return 0
       }
@@ -708,7 +697,7 @@ export const BOARD_FIRMWARE = createfirmware()
         targetdir,
         READ_CONTEXT.board,
       )
-      if (crossboardwait(targetboard)) {
+      if (firmwarewaitforboard(targetboard?.id)) {
         return 1
       }
       const maybetarget = memoryreadelement(targetboard, targetdir.destpt)
@@ -778,7 +767,7 @@ export const BOARD_FIRMWARE = createfirmware()
 
       // read board by eval dir
       const board = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
-      if (crossboardwait(board)) {
+      if (firmwarewaitforboard(board?.id)) {
         return 1
       }
 

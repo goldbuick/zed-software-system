@@ -1,20 +1,18 @@
 import {
-  memoryboundariesclear,
-  memoryboundaryset,
-} from 'zss/memory/boundaries'
-import {
   memorycollecttickboundaries,
   memoryisboardready,
 } from 'zss/memory/boardwait'
+import { memoryboundariesclear, memoryboundaryset } from 'zss/memory/boundaries'
 import type { BOARD, BOOK, CODE_PAGE_RUNTIME } from 'zss/memory/types'
 
 describe('boardwait', () => {
   const book = { flags: {} } as BOOK
   const boarda: BOARD = {
     id: 'board-a',
+    name: 'board-a',
     terrain: [],
     objects: {},
-  } as BOARD
+  }
 
   beforeEach(() => {
     memoryboundariesclear()
@@ -30,11 +28,17 @@ describe('boardwait', () => {
     expect(memoryisboardready('board-a')).toBe(true)
   })
 
-  it('memorycollecttickboundaries always includes listed codepage ids', () => {
+  it('memorycollecttickboundaries collects boundary ids only for hydrated boards', () => {
+    const boardb: BOARD = {
+      id: 'board-b',
+      name: 'board-b',
+      terrain: [],
+      objects: {},
+    }
     memoryboundaryset('board-a', {} as CODE_PAGE_RUNTIME)
-    memoryboundaryset('board-b', {} as CODE_PAGE_RUNTIME)
+    memoryboundaryset('board-b', { board: boardb } as CODE_PAGE_RUNTIME)
     const ids = memorycollecttickboundaries(book, ['board-a', 'board-b'])
-    expect(ids).toContain('board-a')
+    expect(ids).not.toContain('board-a')
     expect(ids).toContain('board-b')
   })
 })

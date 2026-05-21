@@ -861,12 +861,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
 
         // read board by eval dir
         const board = memoryreadboardbyevaldir(dest, READ_CONTEXT.board)
-        if (
-          ispresent(board) &&
-          ispresent(READ_CONTEXT.board) &&
-          board.id !== READ_CONTEXT.board.id &&
-          firmwarewaitforboard(board.id)
-        ) {
+        if (firmwarewaitforboard(board?.id)) {
           return 1
         }
 
@@ -914,12 +909,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
 
         // read board by eval dir
         const board = memoryreadboardbyevaldir(dest, READ_CONTEXT.board)
-        if (
-          ispresent(board) &&
-          ispresent(READ_CONTEXT.board) &&
-          board.id !== READ_CONTEXT.board.id &&
-          firmwarewaitforboard(board.id)
-        ) {
+        if (firmwarewaitforboard(board?.id)) {
           return 1
         }
 
