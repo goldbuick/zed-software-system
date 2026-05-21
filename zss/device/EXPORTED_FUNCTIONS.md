@@ -93,6 +93,7 @@ Core virtual machine operations for managing game state, memory, code execution,
 
 ### Boardrunner Acks
 - `vmboardrunnerack(device, player)` - Boardrunner ack of a `boardrunner:tick`; refreshes ack budget
+- `vmboardrunneraccess(device, player, boardid)` - Runner (or firmware on worker) asks sim VM to track `boardid` for the elected board until the board codepage runtime is hydrated; tick/boundary sync include extra ids
 - `vmboardrunnerpatch(device, player, patch, boundary?)` - Boardrunner sends a boundary jsonpipe patch back to authoritative memory
 - `vmboardrunnerpaint(device, player, doc, boundary)` - Boardrunner sends a full boundary document to authoritative memory (sim jsonpipe reset for that id)
 
@@ -266,6 +267,7 @@ Per-board chip simulation that runs inside the **boardrunner worker**. The sim V
 
 ### Boardrunner → VM
 - `vmboardrunnerack(device, player)` - Ack a `boardrunner:tick`
+- `vmboardrunneraccess(device, player, boardid)` - Register a board codepage id for tick/boundary hydration
 - `vmboardrunnerpatch(device, player, patch, boundary?)` - Send a boundary jsonpipe patch back to authoritative memory
 - `vmboardrunnerpaint(device, player, doc, boundary)` - Send a full boundary document to authoritative memory (sim resets jsonpipe for that boundary)
 - `vmplayermovetoboard(device, player, targetplayer, board, dest)` - Ask the sim VM to relocate a player

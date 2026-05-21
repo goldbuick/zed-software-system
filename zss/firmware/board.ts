@@ -4,10 +4,17 @@ import { vmplayermovetoboard } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { boardcopy, mapelementcopy } from 'zss/feature/boardcopy'
 import { createfirmware } from 'zss/firmware'
+import { firmwarewaitforboard } from 'zss/firmware/boardwaitsync'
 import { celltorendervalue } from 'zss/gadget/display/cellvalue'
 import { createsid, ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
-import { deepcopy, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import {
+  MAYBE,
+  deepcopy,
+  isnumber,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
 import {
   memoryreadelement,
   memoryreadobject,
@@ -43,6 +50,7 @@ import {
   memorylistboardptsbyempty,
 } from 'zss/memory/spatialqueries'
 import {
+  BOARD,
   BOARD_HEIGHT,
   BOARD_WIDTH,
   CODE_PAGE_TYPE,
@@ -71,6 +79,16 @@ import {
   PT,
   WORD,
 } from 'zss/words/types'
+
+function crossboardwait(chip: CHIP, board: MAYBE<BOARD>): 0 | 1 {
+  if (!ispresent(board) || !ispresent(READ_CONTEXT.board)) {
+    return 0
+  }
+  if (board.id === READ_CONTEXT.board.id) {
+    return 0
+  }
+  return firmwarewaitforboard(chip, board.id)
+}
 
 function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
   // invalid data
@@ -122,6 +140,9 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
 
   // read board by eval dir
   const board = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
+  if (crossboardwait(chip, board)) {
+    return 1
+  }
 
   // write new element
   const bulletkind = kind ?? ['bullet']
@@ -234,6 +255,9 @@ function commandput(chip: CHIP, words: WORD[], id?: string, arg?: WORD): 0 | 1 {
 
   // read board by eval dir
   const board = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
+  if (crossboardwait(chip, board)) {
+    return 1
+  }
 
   // get kind we're putting
   const [kindname] = kind
@@ -319,6 +343,12 @@ function commanddupe(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
   // read board by eval dir
   const dirboard = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
   const dupedirboard = memoryreadboardbyevaldir(dupedir, READ_CONTEXT.board)
+  if (crossboardwait(chip, dirboard)) {
+    return 1
+  }
+  if (crossboardwait(chip, dupedirboard)) {
+    return 1
+  }
 
   const maybetarget = memoryreadelement(dirboard, dir.destpt)
   if (ispresent(maybetarget) && ispresent(maybetarget.kind)) {
@@ -409,6 +439,9 @@ export const BOARD_FIRMWARE = createfirmware()
       if (isstring(maybesource)) {
         const sourceboard = memoryreadboardbyaddress(maybesource)
         if (ispresent(sourceboard)) {
+          if (crossboardwait(chip, sourceboard)) {
+            return 1
+          }
           boardcopy(sourceboard.id, createdboard.id, p1, p2, targetset)
           // make sure to copy board stats as well
           createdboard.isdark = sourceboard.isdark
@@ -468,7 +501,7 @@ export const BOARD_FIRMWARE = createfirmware()
       ARG_TYPE.MAYBE_NUMBER,
       'player to board by name or address with optional x, y',
     ],
-    (_, words) => {
+    (chip, words) => {
       if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
         return 0
       }
@@ -483,6 +516,10 @@ export const BOARD_FIRMWARE = createfirmware()
       const targetboard = memoryreadboardbyaddress(stat)
       if (!ispresent(targetboard)) {
         return 0
+      }
+
+      if (firmwarewaitforboard(chip, targetboard.id)) {
+        return 1
       }
 
       // init board kinds
@@ -629,7 +666,7 @@ export const BOARD_FIRMWARE = createfirmware()
   .command(
     'shove',
     [ARG_TYPE.DIR, ARG_TYPE.DIR, 'target object in direction'],
-    (_, words) => {
+    (chip, words) => {
       if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
         return 0
       }
@@ -639,6 +676,9 @@ export const BOARD_FIRMWARE = createfirmware()
         targetdir,
         READ_CONTEXT.board,
       )
+      if (crossboardwait(chip, targetboard)) {
+        return 1
+      }
       const maybetarget = memoryreadelement(targetboard, targetdir.destpt)
       if (memoryboardelementisobject(maybetarget)) {
         // temp override context
@@ -664,7 +704,7 @@ export const BOARD_FIRMWARE = createfirmware()
   .command(
     'push',
     [ARG_TYPE.DIR, ARG_TYPE.DIR, 'target object in direction ONLY if pushable'],
-    (_, words) => {
+    (chip, words) => {
       if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
         return 0
       }
@@ -674,6 +714,9 @@ export const BOARD_FIRMWARE = createfirmware()
         targetdir,
         READ_CONTEXT.board,
       )
+      if (crossboardwait(chip, targetboard)) {
+        return 1
+      }
       const maybetarget = memoryreadelement(targetboard, targetdir.destpt)
       if (
         memoryboardelementisobject(maybetarget) &&
@@ -741,6 +784,9 @@ export const BOARD_FIRMWARE = createfirmware()
 
       // read board by eval dir
       const board = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
+      if (crossboardwait(chip, board)) {
+        return 1
+      }
 
       const [textwords] = readargsuntilend(words, ii, ARG_TYPE.NUMBER_OR_NAME)
       const text = textwords.join(' ')

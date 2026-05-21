@@ -4,9 +4,33 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 import { memoryreadplayersonboard } from 'zss/memory/boardaccess'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
 
-import { boardrunneracks, boardrunnerblocked, boardrunners } from './state'
+import {
+  boardrunneraccess,
+  boardrunneracks,
+  boardrunnerblocked,
+  boardrunners,
+  playerrunners,
+} from './state'
 
 const TICK_BUDGET = Math.round(TICK_FPS * 2)
+
+export function boardrunnerboardforplayer(player: string): MAYBE<string> {
+  return playerrunners[player]
+}
+
+export function boardrunnertrackaccess(board: string, accessboard: string) {
+  if (!board || !accessboard) {
+    return
+  }
+  const list = boardrunneraccess[board] ?? []
+  if (!list.includes(accessboard)) {
+    boardrunneraccess[board] = [...list, accessboard]
+  }
+}
+
+export function boardrunneraccessfor(board: string): string[] {
+  return [board, ...(boardrunneraccess[board] ?? [])]
+}
 
 export function boardrunnereligibleforboard(board: string): string[] {
   const maybeboard = memoryreadboardbyaddress(board)
@@ -15,7 +39,6 @@ export function boardrunnereligibleforboard(board: string): string[] {
 }
 
 export function boardrunnerassignmentvalid(board: string): boolean {
-  // console.info('VM => boardrunnerassignmentvalid', board)
   const runner = boardrunners[board]
   const maybeboard = memoryreadboardbyaddress(board)
   if (!ispresent(runner) || !ispresent(maybeboard)) {
@@ -38,8 +61,10 @@ export function boardrunnerevict(board: string): void {
   }
   const runner = boardrunners[board]
   delete boardrunners[board]
+  if (playerrunners[runner] === board) {
+    delete playerrunners[runner]
+  }
   delete boardrunneracks[runner]
-  // console.info('### evict', runner, board)
 }
 
 export function boardrunnerelect(board: string): MAYBE<string> {
@@ -53,7 +78,16 @@ export function boardrunnerelect(board: string): MAYBE<string> {
 }
 
 export function boardrunnerassign(board: string, runner: string) {
+  const oldrunner = boardrunners[board]
+  if (ispresent(oldrunner) && oldrunner !== runner) {
+    delete playerrunners[oldrunner]
+  }
+  const oldboard = playerrunners[runner]
+  if (oldboard && oldboard !== board) {
+    delete boardrunners[oldboard]
+  }
   boardrunners[board] = runner
+  playerrunners[runner] = board
   boardrunneracks[runner] = TICK_BUDGET
   boardrunnerblocked[runner] = false
 }

@@ -9,6 +9,7 @@ import { boardremix } from 'zss/feature/boardremix'
 import { boardrevert, boardsnapshot } from 'zss/feature/boardsnapshot'
 import { boardweave } from 'zss/feature/boardweave'
 import { createfirmware } from 'zss/firmware'
+import { firmwarewaitforboard } from 'zss/firmware/boardwaitsync'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadboardbyevaldir } from 'zss/memory/boards'
 import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
@@ -148,6 +149,12 @@ export const TRANSFORM_FIRMWARE = createfirmware()
         chip.set('didfail', 1)
         return 0
       }
+      if (
+        sourceboard.id !== READ_CONTEXT.board.id &&
+        firmwarewaitforboard(chip, sourceboard.id)
+      ) {
+        return 1
+      }
       const filter = readfilter(words, ii)
       chip.set(
         'didfail',
@@ -191,6 +198,12 @@ export const TRANSFORM_FIRMWARE = createfirmware()
         chip.set('didfail', 1)
         return 0
       }
+      if (
+        sourceboard.id !== READ_CONTEXT.board.id &&
+        firmwarewaitforboard(chip, sourceboard.id)
+      ) {
+        return 1
+      }
       const filter = readfilter(words, ii)
       chip.set(
         'didfail',
@@ -225,6 +238,9 @@ export const TRANSFORM_FIRMWARE = createfirmware()
 
       // read board by eval dir
       const board = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
+      if (ispresent(board) && ispresent(READ_CONTEXT.board)) {
+        return 1
+      }
 
       const filter = readfilter(words, ii)
       chip.set(

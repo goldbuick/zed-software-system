@@ -120,7 +120,7 @@ Authoritative diagrams: [`zss/device/docs/message-flow.md`](device/docs/message-
 
 ## VM and handlers (game / OS logic)
 
-[`zss/device/vm.ts`](device/vm.ts) creates the `vm` device (topics `ticktock`, `second`). Each message is dispatched via [`zss/device/vm/handlers/registry.ts`](device/vm/handlers/registry.ts) by `message.target` (e.g. `operator`, `cli`, `input`, `loader`, `books`, `ticktock`, …). Shared mutable VM state lives in [`zss/device/vm/state.ts`](device/vm/state.ts) (including the **boardrunner election** maps: `boardrunners` board → player, `boardrunneracks` ack budget, `boardrunnerblocked`).
+[`zss/device/vm.ts`](device/vm.ts) creates the `vm` device (topics `ticktock`, `second`). Each message is dispatched via [`zss/device/vm/handlers/registry.ts`](device/vm/handlers/registry.ts) by `message.target` (e.g. `operator`, `cli`, `input`, `loader`, `books`, `ticktock`, …). Shared mutable VM state lives in [`zss/device/vm/state.ts`](device/vm/state.ts) (including the **boardrunner election** maps: `boardrunners` board → player, `playerrunners` player → board, `boardrunneracks` ack budget, `boardrunnerblocked`).
 
 Each [`ticktock`](device/vm/handlers/ticktock.ts) the VM:
 

@@ -1,6 +1,7 @@
 import type { DEVICE } from 'zss/device'
 import { type MESSAGE, boardrunnertick } from 'zss/device/api'
 import {
+  boardrunneraccessfor,
   boardrunnerassignmentvalid,
   boardrunnerblock,
   boardrunnerbudgetdec,
@@ -10,15 +11,14 @@ import {
 import { gadgetsynctick } from 'zss/device/vm/gadgetsynctick'
 import { boardrunners } from 'zss/device/vm/state'
 import { ispresent } from 'zss/mapping/types'
-import { memoryboundaryget } from 'zss/memory/boundaries'
-import { memorycollectboundaryidsforboard } from 'zss/memory/boundaryrouting'
+import { memorycollecttickboundaries } from 'zss/memory/boardwait'
 import { memoryreadbookplayerboards } from 'zss/memory/playermanagement'
 import { memorytickloaders } from 'zss/memory/runtime'
 import {
   memoryreadbookbysoftware,
   memoryreadsimfreeze,
 } from 'zss/memory/session'
-import { CODE_PAGE_RUNTIME, MEMORY_LABEL } from 'zss/memory/types'
+import { MEMORY_LABEL } from 'zss/memory/types'
 import { perfmeasure } from 'zss/perf/ui'
 
 import { boardrunnerpushupdates } from '../boardrunnerpushupdates'
@@ -76,14 +76,10 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
     for (let i = 0; i < ids.length; ++i) {
       const board = ids[i]
       const player = boardrunners[board]
-      // code page data shortcut
-      const mayberuntime = memoryboundaryget<CODE_PAGE_RUNTIME>(board)
-      // read board data to scan for boundary ids
-      const boardboundaries = memorycollectboundaryidsforboard(
+      const boardboundaries = memorycollecttickboundaries(
         mainbook,
-        mayberuntime?.board,
+        boardrunneraccessfor(board),
       )
-      // send tick to the boardrunner
       boardrunnertick(vm, player, board, mainbook.timestamp, boardboundaries)
     }
   })

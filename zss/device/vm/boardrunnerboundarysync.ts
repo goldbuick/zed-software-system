@@ -1,13 +1,14 @@
 import type { DEVICE } from 'zss/device'
 import { boardrunnerpatch } from 'zss/device/api'
+import { boardrunneraccessfor } from 'zss/device/vm/boardrunnermanagement'
 import type { JSON_PIPE_HANDLE, Operation } from 'zss/feature/jsonpipe/observe'
 import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
 import { ispresent } from 'zss/mapping/types'
+import { memorycollecttickboundaries } from 'zss/memory/boardwait'
 import { memoryboundaryget, memoryboundaryset } from 'zss/memory/boundaries'
-import { memorycollectboundaryidsforboard } from 'zss/memory/boundaryrouting'
 import { memoryrootshouldemitpath } from 'zss/memory/jsonpipefilter'
 import { memoryreadbookbysoftware } from 'zss/memory/session'
-import { CODE_PAGE_RUNTIME, MEMORY_LABEL } from 'zss/memory/types'
+import { MEMORY_LABEL } from 'zss/memory/types'
 import { measurestage, recordemitdiff } from 'zss/perf/ticktimingstats'
 
 import { boardrunners } from './state'
@@ -73,17 +74,10 @@ function boardrunnerboundarysyncbody(vm: DEVICE) {
   for (let i = 0; i < ids.length; ++i) {
     const board = ids[i]
     const player = boardrunners[board]
-    // bail if board runtime not found
-    const mayberuntime = memoryboundaryget<CODE_PAGE_RUNTIME>(board)
-    if (!ispresent(mayberuntime?.board)) {
-      continue
-    }
-    // read board data to scan for boundary ids
-    const boardboundaries = memorycollectboundaryidsforboard(
+    const boardboundaries = memorycollecttickboundaries(
       mainbook,
-      mayberuntime.board,
+      boardrunneraccessfor(board),
     )
-    // process boundaries
     for (const id of boardboundaries) {
       const doc = memoryboundaryget(id) ?? {}
       const pipe = readboundarypipe(id, doc)

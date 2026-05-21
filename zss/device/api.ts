@@ -324,6 +324,14 @@ export function vmboardrunnerack(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:boardrunnerack')
 }
 
+export function vmboardrunneraccess(
+  device: DEVICELIKE,
+  player: string,
+  access: string,
+) {
+  device.emit(player, 'vm:boardrunneraccess', access)
+}
+
 export function vmboardrunnerpatch(
   device: DEVICELIKE,
   player: string,

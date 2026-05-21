@@ -275,7 +275,7 @@ Display commands `toast` and `ticker` are registered on **ELEMENT_FIRMWARE** in 
 | Command | Description |
 |---------|-------------|
 | `build` | Create new board (optionally from source) and write ID to stat |
-| `goto` | Teleport player to board by stat name |
+| `goto` | Teleport player to board by stat name (waits for target board hydration on boardrunner) |
 
 #### Element Placement
 | Command | Description |

@@ -45,6 +45,13 @@ Boundary store: opaque jsonpipe slices keyed by id (board, codepage runtime, chi
 
 - **memorycollectboundaryidsforboard(book, board)** - Returns the set of boundary ids that must be jsonpiped to a board's runner each tick (board id + synth/layers/tracking flags + each object's chip/player/gadget ids)
 
+## boardwait.ts
+
+Boardrunner hydration helpers: detect hydrated `CODE_PAGE_RUNTIME.board` and collect tick boundary ids from a board codepage list (pending access ids live in `zss/device/vm/state.ts` as `boardrunneraccess`).
+
+- **memoryisboardruntimehydrated(boardid)**, **memoryboardidforwait(board, fallbackid?)**
+- **memorycollecttickboundaries(book, boards)** - Union of listed codepage ids and each hydrated board's `memorycollectboundaryidsforboard` result
+
 ## jsonpipefilter.ts
 
 - **memoryrootshouldemitpath(path)** - Symmetric `shouldemitpath` predicate used by every memory jsonpipe (drops runtime-only paths like `lookup` / `named`)

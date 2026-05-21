@@ -7,6 +7,9 @@
 - `zss/chip` — CHIP type
 - `zss/feature/boardcopy` — boardcopy, mapelementcopy
 - `zss/memory/*` — board/element ops, movement, spatial queries, etc.
+- `zss/memory/boardwait.ts` — hydration checks and `memorycollecttickboundaries` for boardrunner ticks
+- `zss/device/vm/state.ts` — `boardrunneraccess` pending board codepage ids per elected board
+- `zss/firmware/boardwaitsync.ts` — `firmwarewaitforboard` (signals sim VM via `vmboardrunneraccess` when a command must wait for boundary hydration)
 - `zss/words/*` — argument parsing, kind/color/dir parsing, text formatting
 
 ## Command Categories
@@ -16,7 +19,9 @@
 | Command | Args | Description |
 |---------|------|-------------|
 | `build` | `stat` [, `source`] | Create new board (optionally clone from source); write ID to stat. When building border boards, links exit stats back to current board |
-| `goto` | `stat` [, x, y] | Teleport player to board by stat; optional x,y or uses board start/kind-matched element |
+| `goto` | `stat` [, x, y] | Teleport player to board by stat; optional x,y or uses board start/kind-matched element. Waits (returns 1 next tick) until the target board codepage runtime is hydrated on the boardrunner worker. |
+
+Cross-board commands (`build` with a source, `put`/`shoot`/`dupe`/`write`/`shove`/`push` with over/under dirs, etc.) automatically wait one tick at a time until the other board’s runtime is synced from the sim VM.
 
 ### Element Placement
 
