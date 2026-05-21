@@ -151,7 +151,7 @@ export const TRANSFORM_FIRMWARE = createfirmware()
       }
       if (
         sourceboard.id !== READ_CONTEXT.board.id &&
-        firmwarewaitforboard(chip, sourceboard.id)
+        firmwarewaitforboard(sourceboard.id)
       ) {
         return 1
       }
@@ -200,7 +200,7 @@ export const TRANSFORM_FIRMWARE = createfirmware()
       }
       if (
         sourceboard.id !== READ_CONTEXT.board.id &&
-        firmwarewaitforboard(chip, sourceboard.id)
+        firmwarewaitforboard(sourceboard.id)
       ) {
         return 1
       }

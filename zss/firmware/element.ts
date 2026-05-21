@@ -865,7 +865,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
           ispresent(board) &&
           ispresent(READ_CONTEXT.board) &&
           board.id !== READ_CONTEXT.board.id &&
-          firmwarewaitforboard(chip, board.id)
+          firmwarewaitforboard(board.id)
         ) {
           return 1
         }
@@ -918,7 +918,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
           ispresent(board) &&
           ispresent(READ_CONTEXT.board) &&
           board.id !== READ_CONTEXT.board.id &&
-          firmwarewaitforboard(chip, board.id)
+          firmwarewaitforboard(board.id)
         ) {
           return 1
         }

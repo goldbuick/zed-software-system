@@ -80,14 +80,14 @@ import {
   WORD,
 } from 'zss/words/types'
 
-function crossboardwait(chip: CHIP, board: MAYBE<BOARD>): 0 | 1 {
-  if (!ispresent(board) || !ispresent(READ_CONTEXT.board)) {
+function crossboardwait(board: MAYBE<BOARD>): 0 | 1 {
+  if (!ispresent(board)) {
+    return 1
+  }
+  if (board.id === READ_CONTEXT.board?.id) {
     return 0
   }
-  if (board.id === READ_CONTEXT.board.id) {
-    return 0
-  }
-  return firmwarewaitforboard(chip, board.id)
+  return firmwarewaitforboard(board.id)
 }
 
 function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
@@ -501,7 +501,7 @@ export const BOARD_FIRMWARE = createfirmware()
       ARG_TYPE.MAYBE_NUMBER,
       'player to board by name or address with optional x, y',
     ],
-    (chip, words) => {
+    (_, words) => {
       if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
         return 0
       }
@@ -518,7 +518,7 @@ export const BOARD_FIRMWARE = createfirmware()
         return 0
       }
 
-      if (firmwarewaitforboard(chip, targetboard.id)) {
+      if (firmwarewaitforboard(targetboard.id)) {
         return 1
       }
 
