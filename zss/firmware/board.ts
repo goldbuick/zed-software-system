@@ -81,13 +81,7 @@ import {
 } from 'zss/words/types'
 
 function crossboardwait(board: MAYBE<BOARD>): 0 | 1 {
-  if (!ispresent(board)) {
-    return 1
-  }
-  if (board.id === READ_CONTEXT.board?.id) {
-    return 0
-  }
-  return firmwarewaitforboard(board.id)
+  return firmwarewaitforboard(board?.id ?? '')
 }
 
 function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
@@ -140,7 +134,7 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
 
   // read board by eval dir
   const board = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
-  if (crossboardwait(chip, board)) {
+  if (crossboardwait(board)) {
     return 1
   }
 
@@ -255,7 +249,7 @@ function commandput(chip: CHIP, words: WORD[], id?: string, arg?: WORD): 0 | 1 {
 
   // read board by eval dir
   const board = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
-  if (crossboardwait(chip, board)) {
+  if (crossboardwait(board)) {
     return 1
   }
 
@@ -343,10 +337,10 @@ function commanddupe(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
   // read board by eval dir
   const dirboard = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
   const dupedirboard = memoryreadboardbyevaldir(dupedir, READ_CONTEXT.board)
-  if (crossboardwait(chip, dirboard)) {
+  if (crossboardwait(dirboard)) {
     return 1
   }
-  if (crossboardwait(chip, dupedirboard)) {
+  if (crossboardwait(dupedirboard)) {
     return 1
   }
 
@@ -439,7 +433,7 @@ export const BOARD_FIRMWARE = createfirmware()
       if (isstring(maybesource)) {
         const sourceboard = memoryreadboardbyaddress(maybesource)
         if (ispresent(sourceboard)) {
-          if (crossboardwait(chip, sourceboard)) {
+          if (crossboardwait(sourceboard)) {
             return 1
           }
           boardcopy(sourceboard.id, createdboard.id, p1, p2, targetset)
@@ -676,7 +670,7 @@ export const BOARD_FIRMWARE = createfirmware()
         targetdir,
         READ_CONTEXT.board,
       )
-      if (crossboardwait(chip, targetboard)) {
+      if (crossboardwait(targetboard)) {
         return 1
       }
       const maybetarget = memoryreadelement(targetboard, targetdir.destpt)
@@ -714,7 +708,7 @@ export const BOARD_FIRMWARE = createfirmware()
         targetdir,
         READ_CONTEXT.board,
       )
-      if (crossboardwait(chip, targetboard)) {
+      if (crossboardwait(targetboard)) {
         return 1
       }
       const maybetarget = memoryreadelement(targetboard, targetdir.destpt)
@@ -784,7 +778,7 @@ export const BOARD_FIRMWARE = createfirmware()
 
       // read board by eval dir
       const board = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
-      if (crossboardwait(chip, board)) {
+      if (crossboardwait(board)) {
         return 1
       }
 
