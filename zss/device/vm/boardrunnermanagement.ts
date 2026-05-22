@@ -9,13 +9,17 @@ import {
   boardrunneracks,
   boardrunnerblocked,
   boardrunners,
-  playerrunners,
 } from './state'
 
 const TICK_BUDGET = Math.round(TICK_FPS * 2)
 
-export function boardrunnerboardforplayer(player: string): MAYBE<string> {
-  return playerrunners[player]
+function boardforrunner(runner: string): MAYBE<string> {
+  for (const board of Object.keys(boardrunners)) {
+    if (boardrunners[board] === runner) {
+      return board
+    }
+  }
+  return undefined
 }
 
 export function boardrunnertrackaccess(board: string, accessboard: string) {
@@ -62,9 +66,6 @@ export function boardrunnerevict(board: string): void {
   }
   const runner = boardrunners[board]
   delete boardrunners[board]
-  if (playerrunners[runner] === board) {
-    delete playerrunners[runner]
-  }
   delete boardrunneracks[runner]
 }
 
@@ -81,14 +82,13 @@ export function boardrunnerelect(board: string): MAYBE<string> {
 export function boardrunnerassign(board: string, runner: string) {
   const oldrunner = boardrunners[board]
   if (ispresent(oldrunner) && oldrunner !== runner) {
-    delete playerrunners[oldrunner]
+    delete boardrunneracks[oldrunner]
   }
-  const oldboard = playerrunners[runner]
+  const oldboard = boardforrunner(runner)
   if (oldboard && oldboard !== board) {
     delete boardrunners[oldboard]
   }
   boardrunners[board] = runner
-  playerrunners[runner] = board
   boardrunneracks[runner] = TICK_BUDGET
   boardrunnerblocked[runner] = false
 }

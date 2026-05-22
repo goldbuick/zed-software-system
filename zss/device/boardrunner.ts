@@ -14,7 +14,11 @@ import {
   memoryreadbookflag,
   memorywritebookflag,
 } from 'zss/memory/bookoperations'
-import { memoryboundaryget, memoryboundaryset } from 'zss/memory/boundaries'
+import {
+  memoryboundariesclear,
+  memoryboundaryget,
+  memoryboundaryset,
+} from 'zss/memory/boundaries'
 import { memorycollectboundaryidsforboard } from 'zss/memory/boundaryrouting'
 import { memoryreadflags } from 'zss/memory/flags'
 import { memoryreadbookgadgetlayersforboard } from 'zss/memory/gadgetlayersflags'
@@ -39,6 +43,7 @@ import {
   memoryreadroot,
   memorywriteassignedboard,
   memorywriteboardrunner,
+  memorywriteoperator,
 } from 'zss/memory/session'
 import { BOARD, CODE_PAGE_RUNTIME, MEMORY_LABEL } from 'zss/memory/types'
 import { NAME } from 'zss/words/types'
@@ -71,6 +76,7 @@ gadgetstateprovider((player) => {
 const assignedboundaries = new Set<string>()
 const playersonassignedboard = new Set<string>()
 
+let memorysyncaccess = 0
 const memorysyncpipe = createjsonpipe<MEMORY_ROOT>(
   memoryreadroot(),
   memoryrootshouldemitpath,
@@ -96,6 +102,7 @@ function waitformemory() {
 
 function boardrunnerpushupdates(device: DEVICE) {
   const runner = memoryreadboardrunner()
+
   // add the MEM patch calls here
   if (waitformemory()) {
     const memorypatch = memorysyncpipe.emitdiff(memoryreadroot())
@@ -175,7 +182,12 @@ function handleboardrunnertick(
 
   if (waitformemory()) {
     firsttick = 0
-    console.info(`${self.name} $$$ WAITING FOR MEMORY\n${runner}`)
+    // request a memory sync
+    if (memorysyncaccess % 8 === 0) {
+      console.info(`${self.name} $$$ WAITING FOR MEMORY\n${runner}`)
+      boardrunner.reply(message, 'desync')
+    }
+    ++memorysyncaccess
     return
   }
 
@@ -267,7 +279,13 @@ function handleboardrunnertick(
 }
 
 function handleboardrunneridle() {
+  // force a memory reset
+  memorysyncaccess = 0
+  memorywriteoperator('')
   memorywriteassignedboard('')
+  // reset the boardrunner boundaries
+  memoryboundariesclear()
+  assignedboundaries.clear()
 }
 
 const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
@@ -284,6 +302,9 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
     case 'patch':
     case 'linkdead':
       if (message.player !== memoryreadboardrunner()) {
+        console.info(
+          `${self.name} $$$ NOT MY TURN\n${message.player} -> ${memoryreadboardrunner()}`,
+        )
         return
       }
       break
@@ -295,6 +316,7 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
     case 'start':
       if (!memoryreadboardrunner()) {
         memorywriteboardrunner(message.player)
+        console.info(`${self.name} $$$ START\n${memoryreadboardrunner()}`)
       }
       break
     case 'input':

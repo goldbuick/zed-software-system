@@ -15,12 +15,15 @@ const MEMORY = {
   frozen: false,
   topic: '',
   operator: '',
-  boardrunner: '',
-  assignedboard: '',
   session: createsid(),
   software: { main: '', temp: '' },
   books: {} as Record<string, BOOK>,
   loaders: {} as Record<string, string>,
+}
+
+const MEMORY_RUNNER = {
+  boardrunner: '',
+  assignedboard: '',
 }
 
 export function memoryreadloaders() {
@@ -48,19 +51,19 @@ export function memorywriteoperator(operator: string) {
 }
 
 export function memoryreadboardrunner() {
-  return MEMORY.boardrunner
+  return MEMORY_RUNNER.boardrunner
 }
 
 export function memorywriteboardrunner(player: string) {
-  MEMORY.boardrunner = player
+  MEMORY_RUNNER.boardrunner = player
 }
 
 export function memoryreadassignedboard() {
-  return MEMORY.assignedboard
+  return MEMORY_RUNNER.assignedboard
 }
 
 export function memorywriteassignedboard(board: string) {
-  MEMORY.assignedboard = board
+  MEMORY_RUNNER.assignedboard = board
 }
 
 export function memoryreadtopic() {
