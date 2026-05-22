@@ -183,7 +183,7 @@ function handleboardrunnertick(
     .filter((board) => !assignedboundaries.has(board.id))
   if (visualboards.length > 0) {
     for (const board of visualboards) {
-      vmboardrunneraccess(device, runner, board.id)
+      vmboardrunneraccess(device, runner, assignedboard, board.id)
     }
     return
   }
