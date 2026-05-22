@@ -236,6 +236,7 @@ function handleboardrunnertick(
         // send paint
         const doc = memoryboundaryget(id)
         if (ispresent(doc)) {
+          console.info(`${self.name} $$$ PAINTING\n${runner} -> ${id}`, doc)
           vmboardrunnerpaint(device, runner, doc, id)
         }
       }
@@ -302,9 +303,6 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
     case 'patch':
     case 'linkdead':
       if (message.player !== memoryreadboardrunner()) {
-        console.info(
-          `${self.name} $$$ NOT MY TURN\n${message.player} -> ${memoryreadboardrunner()}`,
-        )
         return
       }
       break
@@ -322,7 +320,7 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
     case 'input':
       if (isarray(message.data)) {
         // validate the player is on the assigned board
-        if (!playersonassignedboard.has(message.player) || waitformemory()) {
+        if (waitformemory() || !playersonassignedboard.has(message.player)) {
           return
         }
 

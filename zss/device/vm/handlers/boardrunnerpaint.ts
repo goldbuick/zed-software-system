@@ -12,5 +12,9 @@ export function handleboardrunnerpaint(_vm: DEVICE, message: MESSAGE): void {
   if (!boundary || !isstring(boundary)) {
     return
   }
+  console.info(
+    `${self.name} $$$ PAINTING\n${message.player} -> ${boundary}`,
+    doc,
+  )
   boardrunnerboundarypaint(boundary, doc)
 }
