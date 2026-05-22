@@ -35,6 +35,7 @@ import {
   memoryreadboardrunner,
   memoryreadbookbysoftware,
   memoryreadhalt,
+  memoryreadoperator,
   memoryreadroot,
   memorywriteassignedboard,
   memorywriteboardrunner,
@@ -89,12 +90,18 @@ function readworkerboundarypipe(boundary: string): BOUNDARY_JSONPIPE {
   return boundarysyncpipes.get(boundary)!
 }
 
+function waitformemory() {
+  return memoryreadoperator() === ''
+}
+
 function boardrunnerpushupdates(device: DEVICE) {
   const runner = memoryreadboardrunner()
   // add the MEM patch calls here
-  const memorypatch = memorysyncpipe.emitdiff(memoryreadroot())
-  if (memorypatch.length > 0) {
-    vmboardrunnerpatch(device, runner, memorypatch)
+  if (waitformemory()) {
+    const memorypatch = memorysyncpipe.emitdiff(memoryreadroot())
+    if (memorypatch.length > 0) {
+      vmboardrunnerpatch(device, runner, memorypatch)
+    }
   }
 
   // add the BOUNDARY patch calls here
@@ -164,6 +171,12 @@ function handleboardrunnertick(
       console.info(`${self.name} $$$ WAITING FOR\n${runner} -> ${id}`)
       return
     }
+  }
+
+  if (waitformemory()) {
+    firsttick = 0
+    console.info(`${self.name} $$$ WAITING FOR MEMORY\n${runner}`)
+    return
   }
 
   // validate the board codepage is valid
@@ -287,7 +300,7 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
     case 'input':
       if (isarray(message.data)) {
         // validate the player is on the assigned board
-        if (!playersonassignedboard.has(message.player)) {
+        if (!playersonassignedboard.has(message.player) || waitformemory()) {
           return
         }
 

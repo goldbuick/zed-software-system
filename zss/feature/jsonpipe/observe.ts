@@ -50,19 +50,11 @@ export function createjsonpipe<T extends object | unknown[]>(
 
   return {
     emitdiff(root: T) {
-      const operations = compare(shadow, root)
+      const operations = filterpatch(compare(shadow, root), shouldemitpath)
       if (operations.length > 0) {
-        // apply the diff in place to the shadow rather than deepcopy(root),
-        // which avoids the deepcopy allocation each time we emit a patch.
-        try {
-          applyPatch(shadow, operations, false, true)
-        } catch {
-          // fall back to deepcopy if applyPatch fails for any reason; this
-          // keeps the shadow in sync at the cost of one allocation.
-          shadow = deepcopy(root)
-        }
+        shadow = deepcopy(root)
       }
-      return filterpatch(operations, shouldemitpath)
+      return operations
     },
 
     isdesynced() {
