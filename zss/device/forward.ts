@@ -33,11 +33,6 @@ export function createforward(handler: (message: MESSAGE) => void) {
 
 // outbound message server -> client
 export function shouldforwardonpeerserver(message: MESSAGE): boolean {
-  // direct-tagged messages travelled on a direct peer channel and must
-  // never leak onto the host hub-and-spoke bridge in either direction
-  if (message.direct === true) {
-    return false
-  }
   switch (message.target) {
     case 'ready':
     case 'ticktock':
@@ -50,9 +45,6 @@ export function shouldforwardonpeerserver(message: MESSAGE): boolean {
 
 // outbound message client -> server
 export function shouldforwardonpeerclient(message: MESSAGE): boolean {
-  if (message.direct === true) {
-    return false
-  }
   switch (message.target) {
     case 'ready':
     case 'second':
@@ -178,27 +170,4 @@ export function shouldforwardclienttoboardrunner(message: MESSAGE): boolean {
 // create boardrunner -> client forward
 export function shouldforwardboardrunnertoclient(): boolean {
   return true
-}
-
-// direct join -> runner peer messages (subset of shouldforwardclienttoboardrunner).
-// only this narrow set is eligible to bypass the host hop on the direct channel.
-// v1 routes only boardrunner:input through this; chip:* will follow in phase 2.
-export function shouldforwardclienttodirectrunner(message: MESSAGE): boolean {
-  switch (message.target) {
-    case 'second':
-    case 'ready':
-      return true
-  }
-  const route = parsetarget(message.target)
-  if (route.target === 'boardrunner' && route.path === 'input') {
-    return true
-  }
-  return false
-}
-
-// inbound direct-peer message (we are the runner) -> boardrunner worker
-export function shouldforwardincomingdirecttoboardrunner(
-  message: MESSAGE,
-): boolean {
-  return shouldforwardclienttodirectrunner(message)
 }

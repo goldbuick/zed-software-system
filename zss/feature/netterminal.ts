@@ -1,6 +1,4 @@
 import Peer, { DataConnection } from 'peerjs'
-import { FEATURE_DIRECT_RUNNER } from 'zss/config'
-import { createdevice, createmessage, parsetarget } from 'zss/device'
 import {
   MESSAGE,
   apierror,
@@ -13,7 +11,6 @@ import {
   createforward,
   shouldforwardclienttoboardrunner,
   shouldforwardclienttoserver,
-  shouldforwardincomingdirecttoboardrunner,
   shouldforwardonpeerclient,
   shouldforwardonpeerserver,
   shouldforwardservertoclient,
@@ -27,10 +24,9 @@ import {
 } from 'zss/feature/peerzstdwire'
 import { storagereadnetid, storagewritenetid } from 'zss/feature/storage'
 import { ensurezstdwasm } from 'zss/feature/zstdwasm'
-import { hub } from 'zss/hub'
 import { doasync } from 'zss/mapping/func'
 import { createinfohash } from 'zss/mapping/guid'
-import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
+import { MAYBE, ispresent } from 'zss/mapping/types'
 import { recordpeerwirereceived, recordpeerwiresent } from 'zss/perf/peerwire'
 
 async function readpeerid(): Promise<string | undefined> {
@@ -130,19 +126,12 @@ function sendpeer(dataconnection: DataConnection, message: MESSAGE): void {
   void dataconnection.send(wire)
 }
 
-// dual-channel transport: host <-> join peer pairs hold a 'stable' (reliable)
-// and a 'fast' (unreliable) DataConnection. direct join <-> runner pairs hold
-// a single 'stable' DataConnection only. v1 routes all traffic on 'stable';
-// the 'fast' channel is opened on host<->join, kept healthy, and reachable
-// here but no forward predicate selects it yet (see plan: hybrid_direct_runner_peer).
-type PEER_CHANNEL = 'stable' | 'fast'
-type PEER_BRIDGE_ROLE = 'host' | 'join' | 'runner'
+type PEER_BRIDGE_ROLE = 'host' | 'join'
 
 type PEER_PAIR = {
   peerid: string
   role: PEER_BRIDGE_ROLE
-  stable?: DataConnection
-  fast?: DataConnection
+  connection?: DataConnection
   bridge?: ReturnType<typeof createforward>
   bridgeready: boolean
 }
@@ -158,27 +147,13 @@ function pairgetorcreate(peerid: string, role: PEER_BRIDGE_ROLE): PEER_PAIR {
   return pair
 }
 
-function pairsendpeer(
-  pair: PEER_PAIR,
-  message: MESSAGE,
-  channel: PEER_CHANNEL = 'stable',
-): boolean {
-  const primary = pair[channel]
-  if (ispresent(primary) && primary.open) {
-    sendpeer(primary, message)
-    return true
-  }
-  // fall back to the other channel if the requested one isn't open
-  const fallback = channel === 'stable' ? pair.fast : pair.stable
-  if (ispresent(fallback) && fallback.open) {
-    sendpeer(fallback, message)
+function pairsendpeer(pair: PEER_PAIR, message: MESSAGE): boolean {
+  const connection = pair.connection
+  if (ispresent(connection) && connection.open) {
+    sendpeer(connection, message)
     return true
   }
   return false
-}
-
-function dataconnectionchannel(dataconnection: DataConnection): PEER_CHANNEL {
-  return dataconnection.label === 'fast' ? 'fast' : 'stable'
 }
 
 function handledataconnection(
@@ -187,23 +162,18 @@ function handledataconnection(
 ) {
   const player = registerreadplayer()
   const remotepeerid = dataconnection.peer
-  const channel = dataconnectionchannel(dataconnection)
 
   let role: PEER_BRIDGE_ROLE
   if (ispresent(knownrole)) {
     role = knownrole
   } else if (ishost()) {
     role = 'host'
-  } else if (remotepeerid === subscribetopic) {
-    role = 'join'
   } else {
-    // we are not host and the remote isn't the host topic - this is another
-    // join contacting us as a direct runner peer
-    role = 'runner'
+    role = 'join'
   }
 
   const pair = pairgetorcreate(remotepeerid, role)
-  pair[channel] = dataconnection
+  pair.connection = dataconnection
 
   function ensurebridge() {
     if (pair.bridgeready) {
@@ -217,7 +187,7 @@ function handledataconnection(
             return
           }
           if (shouldforwardservertoclient(message)) {
-            pairsendpeer(pair, message, 'stable')
+            pairsendpeer(pair, message)
           }
         })
         break
@@ -230,22 +200,11 @@ function handledataconnection(
             shouldforwardclienttoserver(message) ||
             shouldforwardclienttoboardrunner(message)
           ) {
-            pairsendpeer(pair, message, 'stable')
+            pairsendpeer(pair, message)
           }
         })
         // signal ready to login
         vmsearch(SOFTWARE, player)
-        break
-      case 'runner':
-        // we are the runner; inbound direct-peer messages are tagged with
-        // direct=true on receive (below) and injected into the local hub so
-        // the boardrunner worker bridge can pick them up. outbound on this
-        // pair is unused in v1: the runner replies to the host via the
-        // existing join-to-host bridge using shouldforwardclienttoserver.
-        pair.bridge = createforward(() => {
-          // intentionally noop: runner side does not push outbound messages
-          // onto the direct channel in v1.
-        })
         break
     }
   }
@@ -258,7 +217,7 @@ function handledataconnection(
     apilog(
       SOFTWARE,
       player,
-      `connection ${remotepeerid} ${channel} open (${pair.role})`,
+      `connection ${remotepeerid} open (${pair.role})`,
     )
     ensurebridge()
   }
@@ -268,10 +227,10 @@ function handledataconnection(
   })
 
   dataconnection.on('close', () => {
-    if (pair[channel] === dataconnection) {
-      pair[channel] = undefined
+    if (pair.connection === dataconnection) {
+      pair.connection = undefined
     }
-    if (!ispresent(pair.stable) && !ispresent(pair.fast)) {
+    if (!ispresent(pair.connection)) {
       pair.bridge?.disconnect()
       peerpairs.delete(remotepeerid)
       if (ispresent(networkpeer)) {
@@ -301,16 +260,6 @@ function handledataconnection(
           ...message,
           session: SOFTWARE.session(),
         }
-        if (pair.role === 'runner') {
-          // we are the runner; only the narrow direct-runner allow-list
-          // is permitted to enter our hub via this channel, and we tag it
-          // direct so the local join-to-host bridge refuses to echo it
-          // back upstream (defense in depth in forward.ts).
-          if (!shouldforwardincomingdirecttoboardrunner(incoming)) {
-            return
-          }
-          incoming.direct = true
-        }
         pair.bridge?.forward(incoming)
       } catch (err) {
         apilog(
@@ -328,7 +277,7 @@ function handledataconnection(
       SOFTWARE,
       player,
       `netterminal`,
-      `dataconnection ${remotepeerid} ${channel} - ${JSON.stringify(err)}`,
+      `dataconnection ${remotepeerid} - ${JSON.stringify(err)}`,
     )
   })
 
@@ -344,134 +293,14 @@ function openpair(
   }
   // pre-create pair so role is settled before any 'open' event fires
   const pair = pairgetorcreate(targetpeerid, role)
-  const stable = networkpeer.connect(targetpeerid, {
+  const connection = networkpeer.connect(targetpeerid, {
     label: 'stable',
     reliable: true,
   })
-  if (ispresent(stable)) {
-    handledataconnection(stable, role)
-  }
-  // only host <-> join pairs get the fast (unreliable) channel; direct
-  // join <-> runner pairs are stable-only.
-  if (role !== 'runner') {
-    const fast = networkpeer.connect(targetpeerid, {
-      label: 'fast',
-      reliable: false,
-    })
-    if (ispresent(fast)) {
-      handledataconnection(fast, role)
-    }
+  if (ispresent(connection)) {
+    handledataconnection(connection, role)
   }
   return pair
-}
-
-// --- direct join->runner channel discovery & send -------------------------
-//
-// every peer receives all boardrunner:tick broadcasts via shouldforwardservertoclient.
-// we sniff them on the local hub to maintain (board -> runner player) and to
-// opportunistically open direct channels to remote runners.
-const boardtorunner = new Map<string, string>()
-let directrunnertracker: MAYBE<ReturnType<typeof createdevice>>
-
-function startdirectrunnertracker() {
-  if (ispresent(directrunnertracker)) {
-    return
-  }
-  directrunnertracker = createdevice(
-    'directrunnertracker',
-    ['boardrunner'],
-    (message) => {
-      const route = parsetarget(message.target)
-      if (route.target !== 'boardrunner') {
-        return
-      }
-      if (route.path !== 'tick' || !isarray(message.data)) {
-        return
-      }
-      const [board] = message.data as [unknown]
-      if (!isstring(board)) {
-        return
-      }
-      const runner = message.player
-      const prev = boardtorunner.get(board)
-      if (prev !== runner) {
-        boardtorunner.set(board, runner)
-      }
-      ensurerunnerchannelfor(runner)
-    },
-  )
-}
-
-function stopdirectrunnertracker() {
-  directrunnertracker?.disconnect()
-  directrunnertracker = undefined
-  boardtorunner.clear()
-}
-
-function ensurerunnerchannelfor(runnerplayer: string) {
-  if (!FEATURE_DIRECT_RUNNER) {
-    return
-  }
-  if (!ispresent(networkpeer)) {
-    return
-  }
-  if (ishost()) {
-    // host already has a direct host->runner DataConnection via hostbridge
-    return
-  }
-  const ourplayer = registerreadplayer()
-  if (runnerplayer === ourplayer) {
-    // we are the runner; nothing to dial
-    return
-  }
-  const peerid = netterminaltopic(runnerplayer)
-  if (peerpairs.has(peerid)) {
-    return
-  }
-  apilog(SOFTWARE, ourplayer, `direct runner dial ${runnerplayer} (${peerid})`)
-  openpair(peerid, 'runner')
-}
-
-/**
- * v1 dual-send for boardrunner:input. Builds one MESSAGE so the host path
- * and the direct-channel path share an id (cross-bridge syncids dedup
- * ensures the runner worker processes the input once). Falls back to the
- * existing host-only path when the feature flag is off or no direct
- * runner channel is open.
- */
-export function netterminalsendboardrunnerinput(
-  player: string,
-  input: number,
-  mods: number,
-): boolean {
-  // build once so direct + host paths share a message id
-  const msg = createmessage(
-    SOFTWARE.session(),
-    player,
-    'directinput',
-    'boardrunner:input',
-    [input, mods],
-  )
-  // local hub fan-out (continues through joinbridge -> host)
-  hub.invoke(msg)
-  if (!FEATURE_DIRECT_RUNNER || !ispresent(networkpeer) || ishost()) {
-    return false
-  }
-  // direct broadcast to all open runner channels with the direct flag.
-  // wrong-runner workers reject via playersonassignedboard; cross-bridge
-  // dedup (createforward syncids) keeps the right runner from processing
-  // the input twice when the host copy also arrives.
-  let sentdirect = false
-  for (const pair of peerpairs.values()) {
-    if (pair.role !== 'runner') {
-      continue
-    }
-    const directcopy: MESSAGE = { ...msg, direct: true }
-    if (pairsendpeer(pair, directcopy, 'stable')) {
-      sentdirect = true
-    }
-  }
-  return sentdirect
 }
 
 function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
@@ -504,14 +333,13 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
     }
     networkpeer.destroy()
     networkpeer = undefined
-    // tear down all peer pairs and the runner tracker; PeerJS destroy will
-    // also fire close events on each DataConnection, but we drop the local
-    // bookkeeping eagerly so reconnects don't dial through stale records.
+    // tear down all peer pairs; PeerJS destroy will also fire close events
+    // on each DataConnection, but we drop the local bookkeeping eagerly so
+    // reconnects don't dial through stale records.
     for (const pair of peerpairs.values()) {
       pair.bridge?.disconnect()
     }
     peerpairs.clear()
-    stopdirectrunnertracker()
   }
 
   function requestfullsignalingrestart(reason: string) {
@@ -594,9 +422,6 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
       } else {
         apilog(SOFTWARE, player, `hosting topic ${subscribetopic}`)
       }
-      // start sniffing boardrunner:tick to maintain (board -> runner) and
-      // open direct runner channels when FEATURE_DIRECT_RUNNER is on
-      startdirectrunnertracker()
     })
 
     networkpeer.on('connection', handledataconnection)

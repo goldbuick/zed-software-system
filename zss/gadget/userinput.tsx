@@ -8,6 +8,7 @@ import { objectKeys } from 'ts-extras'
 import { createdevice } from 'zss/device'
 import {
   apilog,
+  boardrunnerinput,
   registerbookmarkclirun,
   vmcli,
   vmdoot,
@@ -16,7 +17,6 @@ import {
 } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import { netterminalsendboardrunnerinput } from 'zss/feature/netterminal'
 import { useTape } from 'zss/gadget/data/state'
 import {
   INPUT,
@@ -195,11 +195,7 @@ function userinputinvoke(index: number, input: INPUT, mods: UserInputMods) {
       if (mods.shift) {
         bits |= INPUT_SHIFT
       }
-      // dual-send: builds one MESSAGE delivered to local hub (host path) and
-      // optionally broadcast on direct join->runner channels under
-      // FEATURE_DIRECT_RUNNER. cross-bridge syncids dedup keeps the runner
-      // worker from processing input twice.
-      netterminalsendboardrunnerinput(player, input, bits)
+      boardrunnerinput(SOFTWARE, player, input, bits)
     }
   })
 }
