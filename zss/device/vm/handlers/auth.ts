@@ -2,14 +2,14 @@ import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import {
   apilog,
+  boardrunnerlinkdead,
   registerinspector,
   registerloginready,
   vmclearscroll,
 } from 'zss/device/api'
 import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
-import { lastinputtime, tracking } from 'zss/device/vm/state'
-import { deepcopy, ispresent, isstring } from 'zss/mapping/types'
-import { memoryexportbookasjson } from 'zss/memory/bookoperations'
+import { boardrunners, lastinputtime, tracking } from 'zss/device/vm/state'
+import { ispresent, isstring } from 'zss/mapping/types'
 import {
   memoryistokenbanned,
   memorysetcommandpermissions,
@@ -23,11 +23,10 @@ import {
 } from 'zss/memory/playermanagement'
 import {
   memoryisoperator,
-  memoryreadbookbysoftware,
   memoryreadoperator,
   memorywritehalt,
 } from 'zss/memory/session'
-import { BOOK_FLAGS, MEMORY_LABEL } from 'zss/memory/types'
+import { BOOK_FLAGS } from 'zss/memory/types'
 import { memoryreadconfig, memorysetconfig } from 'zss/memory/utilities'
 
 import {
@@ -49,20 +48,24 @@ export function handlelogout(vm: DEVICE, message: MESSAGE): void {
   vmclearscroll(vm, message.player)
   memorylogoutplayer(message.player, !!message.data)
 
-  console.info(
-    'MEMORY STATE on logout',
-    deepcopy(
-      memoryexportbookasjson(memoryreadbookbysoftware(MEMORY_LABEL.MAIN)),
-    ),
-  )
+  // push jsonpipe changes
+  boardrunnerpushupdates(vm)
 
   // clear tracking state
   delete tracking[message.player]
   delete lastinputtime[message.player]
 
-  // elect a new runner for the current board if necessary
-  if (ispresent(currentboard) && !boardrunnerassignmentvalid(currentboard.id)) {
-    boardrunnerelect(currentboard.id)
+  // if we're on a board
+  if (ispresent(currentboard)) {
+    // elect a new runner for the current board if necessary
+    if (!boardrunnerassignmentvalid(currentboard.id)) {
+      boardrunnerelect(currentboard.id)
+    }
+    // send link dead message to the runner
+    const runner = boardrunners[currentboard.id]
+    if (ispresent(runner)) {
+      boardrunnerlinkdead(vm, runner, message.player)
+    }
   }
 
   // signal logout

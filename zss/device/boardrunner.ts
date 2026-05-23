@@ -53,6 +53,7 @@ import {
   vmboardrunnerack,
   vmboardrunnerpaint,
   vmboardrunnerpatch,
+  workstatus,
 } from './api'
 
 gadgetstateprovider((player) => {
@@ -100,15 +101,13 @@ function waitformemory() {
   return memoryreadoperator() === ''
 }
 
-function boardrunnerpushupdates(device: DEVICE) {
+function boardrunnerpushupdates() {
   const runner = memoryreadboardrunner()
 
   // add the MEM patch calls here
-  if (waitformemory()) {
-    const memorypatch = memorysyncpipe.emitdiff(memoryreadroot())
-    if (memorypatch.length > 0) {
-      vmboardrunnerpatch(device, runner, memorypatch)
-    }
+  const memorypatch = memorysyncpipe.emitdiff(memoryreadroot())
+  if (memorypatch.length > 0) {
+    vmboardrunnerpatch(boardrunner, runner, memorypatch)
   }
 
   // add the BOUNDARY patch calls here
@@ -118,7 +117,7 @@ function boardrunnerpushupdates(device: DEVICE) {
     if (ispresent(doc)) {
       const patch = pipe.emitdiff(doc)
       if (patch.length > 0) {
-        vmboardrunnerpatch(device, runner, patch, id)
+        vmboardrunnerpatch(boardrunner, runner, patch, id)
       }
     }
   }
@@ -137,9 +136,7 @@ function handleboardrunnertick(
 
   // track the board we're assigned to
   if (priorboard !== board) {
-    console.info(
-      `${self.name} $$$ BOARD ASSIGNED\n${runner}: ${priorboard} -> ${board}`,
-    )
+    workstatus(device, runner, `HOST: ${board}`)
     // we're assigned to a new board
     memorywriteassignedboard(board)
     // clear boundary assignments
@@ -171,24 +168,22 @@ function handleboardrunnertick(
     mainbook.timestamp = timestamp
   }
 
-  // validate the boundaries are in sync and the board codepage is valid
-  for (const id of assignedboundaries.values()) {
-    if (readworkerboundarypipe(id).isdesynced()) {
-      firsttick = 0
-      console.info(`${self.name} $$$ WAITING FOR\n${runner} -> ${id}`)
-      return
-    }
-  }
-
+  // request a memory sync as needed
   if (waitformemory()) {
     firsttick = 0
-    // request a memory sync
     if (memorysyncaccess % 8 === 0) {
-      console.info(`${self.name} $$$ WAITING FOR MEMORY\n${runner}`)
       boardrunner.reply(message, 'desync')
     }
     ++memorysyncaccess
     return
+  }
+
+  // validate the boundaries are in sync and the board codepage is valid
+  for (const id of assignedboundaries.values()) {
+    if (readworkerboundarypipe(id).isdesynced()) {
+      firsttick = 0
+      return
+    }
   }
 
   // validate the board codepage is valid
@@ -236,7 +231,6 @@ function handleboardrunnertick(
         // send paint
         const doc = memoryboundaryget(id)
         if (ispresent(doc)) {
-          console.info(`${self.name} $$$ PAINTING\n${runner} -> ${id}`, doc)
           vmboardrunnerpaint(device, runner, doc, id)
         }
       }
@@ -276,10 +270,12 @@ function handleboardrunnertick(
   }
 
   // ensure the boundaries are in sync
-  boardrunnerpushupdates(boardrunner)
+  boardrunnerpushupdates()
 }
 
 function handleboardrunneridle() {
+  // signal idle state
+  workstatus(boardrunner, memoryreadboardrunner(), `IDLE`)
   // force a memory reset
   memorysyncaccess = 0
   memorywriteoperator('')
@@ -314,7 +310,6 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
     case 'start':
       if (!memoryreadboardrunner()) {
         memorywriteboardrunner(message.player)
-        console.info(`${self.name} $$$ START\n${memoryreadboardrunner()}`)
       }
       break
     case 'input':
@@ -350,16 +345,14 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
         }
 
         // ensure the boundaries are in sync
-        boardrunnerpushupdates(boardrunner)
+        boardrunnerpushupdates()
       }
       break
     case 'idle':
-      console.info(`${self.name} $$$ IDLE\n${memoryreadboardrunner()}`)
       handleboardrunneridle()
       break
     case 'linkdead':
       if (isstring(message.data)) {
-        console.info(`${self.name} $$$ LINKDEAD\n${message.data}`)
         memorylogoutplayer(message.data, false)
       }
       break

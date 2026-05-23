@@ -255,6 +255,7 @@ function handledataconnection(
       }
       recordpeerwirereceived(bytes.byteLength)
       try {
+        await ensurezstdwasm()
         const message = decodepeerwire(bytes)
         const incoming: MESSAGE = {
           ...message,
