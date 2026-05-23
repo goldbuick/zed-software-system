@@ -186,7 +186,7 @@ export async function storagewritecontent(
 ) {
   const isautosave = label.includes('autosave')
   if (!isautosave) {
-    workstatus(SOFTWARE, player, 'save hash')
+    workstatus(SOFTWARE, player, 'save url')
   }
   if (
     isclimode() &&
@@ -289,9 +289,7 @@ export async function storagesharecontent(player: string) {
   location.hash = out
   // gen global shorturl
   workstatus(SOFTWARE, player, 'share url')
-  apilog(SOFTWARE, player, 'share start')
   const url = await shorturl(location.href)
-  apilog(SOFTWARE, player, 'share url ok')
   writecopyit(SOFTWARE, player, url, url)
 }
 

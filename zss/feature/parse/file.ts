@@ -130,8 +130,7 @@ let zipfilemarks: Record<string, boolean> = {}
 
 export async function parsezipfile(player: string, file: File) {
   try {
-    workstatus(SOFTWARE, player, 'unzip file')
-    apilog(SOFTWARE, player, 'parsezipfile', file.name)
+    workstatus(SOFTWARE, player, 'parse zip')
     const arraybuffer = await file.arrayBuffer()
     const ziplib = new JSZip()
     const zip = await ziplib.loadAsync(arraybuffer)

@@ -2,7 +2,6 @@ import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import {
   apierror,
-  apilog,
   heavymodelstop,
   registeragentdootoff,
   registeragentdooton,
@@ -70,8 +69,6 @@ export function heavyrunagentstart(heavydev: DEVICE, message: MESSAGE): void {
   agentnames[id] = agentname
   registeragentdooton(heavydev, requestplayer, id)
   persistrostertostorage(heavydev, requestplayer)
-  workstatus(heavydev, requestplayer, `agent + ${agentname}`)
-  apilog(heavydev, requestplayer, `agent ${agentname} (${id}) started`)
   writeagentlistto(heavydev, requestplayer)
 }
 
@@ -102,8 +99,7 @@ function stopagentbyid(
   delete agents[agentid]
   delete agentnames[agentid]
   persistrostertostorage(heavydev, requestplayer)
-  workstatus(heavydev, requestplayer, `agent - ${agentid}`)
-  apilog(heavydev, requestplayer, `agent ${agentid} stopped`)
+  workstatus(heavydev, requestplayer, `$REDagent stop ${agentid}`)
   writeagentlistto(heavydev, requestplayer)
   return true
 }
@@ -126,8 +122,7 @@ export function heavyrunagentname(heavydev: DEVICE, message: MESSAGE): void {
   }
   agentnames[agentid] = newname
   persistrostertostorage(heavydev, message.player)
-  workstatus(heavydev, message.player, `agent ~ ${newname}`)
-  apilog(heavydev, message.player, `agent ${agentid} renamed to ${newname}`)
+  workstatus(heavydev, message.player, `rename ${newname}`)
 }
 
 /** `#set user` from firmware: update heavy roster only when `agentid` is a running agent. */
@@ -172,7 +167,6 @@ export function heavyrunrestoreagents(
     count += 1
   }
   if (count > 0) {
-    workstatus(heavydev, requestplayer, `agent restore ${count}`)
-    apilog(heavydev, requestplayer, `Restored ${count} agent(s)`)
+    workstatus(heavydev, requestplayer, `$GREENagent start ${count}`)
   }
 }

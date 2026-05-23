@@ -17,7 +17,7 @@ export function createagent(agentname: string, existingid?: string) {
             workstatus(
               device,
               message.player,
-              message.data ? 'login ok' : 'login err',
+              message.data ? 'agent online' : 'agent err',
             )
             apilog(
               device,

@@ -101,8 +101,12 @@ export function chipmessage(
   device.emit(player, `chip:${chip}:${target}`, data)
 }
 
-export function boardrunneridle(device: DEVICELIKE, player: string) {
-  device.emit(player, 'boardrunner:idle')
+export function boardrunneridle(
+  device: DEVICELIKE,
+  player: string,
+  idleonboard: string,
+) {
+  device.emit(player, 'boardrunner:idle', idleonboard)
 }
 
 export function boardrunnerlinkdead(

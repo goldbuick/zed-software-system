@@ -214,11 +214,7 @@ function handledataconnection(
       return
     }
     await ensurezstdwasm()
-    apilog(
-      SOFTWARE,
-      player,
-      `connection ${remotepeerid} open (${pair.role})`,
-    )
+    apilog(SOFTWARE, player, `connection ${remotepeerid} open (${pair.role})`)
     ensurebridge()
   }
 
@@ -391,7 +387,6 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
     registernetterminalunload()
 
     workstatus(SOFTWARE, player, 'peer dial')
-    apilog(SOFTWARE, player, `netterminal for ${peerid}`)
 
     signalhandshaketimer = setTimeout(() => {
       signalhandshaketimer = undefined

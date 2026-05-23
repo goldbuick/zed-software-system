@@ -1,6 +1,6 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
-import { apilog, registerloginready, workstatus } from 'zss/device/api'
+import { registerloginready, workstatus } from 'zss/device/api'
 import { tracking } from 'zss/device/vm/state'
 import { doasync } from 'zss/mapping/func'
 import { isarray, isstring } from 'zss/mapping/types'
@@ -34,10 +34,7 @@ export function handlebooks(vm: DEVICE, message: MESSAGE): void {
           books = decompressed
         }
       }
-      const booknames = books.map((item) => item.name)
-      apilog(vm, message.player, `loading ${booknames.join(', ')}`)
       memoryresetbooks(books)
-      apilog(vm, message.player, `books loaded`)
       registerloginready(vm, message.player)
     } finally {
       memorywritefrozen(false)

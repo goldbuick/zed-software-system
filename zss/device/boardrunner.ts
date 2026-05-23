@@ -136,7 +136,7 @@ function handleboardrunnertick(
 
   // track the board we're assigned to
   if (priorboard !== board) {
-    workstatus(device, runner, `HOST: ${board}`)
+    workstatus(device, runner, `$greenRUN$26${board}`)
     // we're assigned to a new board
     memorywriteassignedboard(board)
     // clear boundary assignments
@@ -273,9 +273,10 @@ function handleboardrunnertick(
   boardrunnerpushupdates()
 }
 
-function handleboardrunneridle() {
+function handleboardrunneridle(idleonboard: string) {
+  const runner = memoryreadboardrunner()
   // signal idle state
-  workstatus(boardrunner, memoryreadboardrunner(), `IDLE`)
+  workstatus(boardrunner, runner, `$redIDLE$26${idleonboard}`)
   // force a memory reset
   memorysyncaccess = 0
   memorywriteoperator('')
@@ -349,7 +350,9 @@ const boardrunner = createdevice('boardrunner', ['chip'], (message) => {
       }
       break
     case 'idle':
-      handleboardrunneridle()
+      if (isstring(message.data)) {
+        handleboardrunneridle(message.data)
+      }
       break
     case 'linkdead':
       if (isstring(message.data)) {

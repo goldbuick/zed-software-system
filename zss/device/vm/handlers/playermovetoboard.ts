@@ -38,7 +38,7 @@ export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
     // check dest board to see if there's a valid runner
     if (boardrunnerassignmentvalid(targetboard)) {
       // send a message to the target player's runner that it is idle now
-      boardrunneridle(vm, targetplayer)
+      boardrunneridle(vm, targetplayer, targetboard)
     } else {
       // switch assignment directly to the target player
       boardrunnerassign(targetboard, targetplayer)

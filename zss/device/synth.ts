@@ -90,7 +90,6 @@ export function enableaudio() {
   // synth setup
   locked = true
   workstatus(synthdevice, registerreadplayer(), 'audio init')
-  apilog(synthdevice, registerreadplayer(), 'enabling audio…')
 
   // we want a config to reduce cpu load
   const MakeAudioContext = getContext().rawContext.constructor

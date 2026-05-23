@@ -134,13 +134,11 @@ function writesession(key: string, value: MAYBE<string>) {
 
 async function writewikilink() {
   workstatus(register, myplayerid, 'wiki fetch')
-  apilog(register, myplayerid, 'wiki fetch start')
   try {
     const markdowntext = await fetchwiki('cli')
-    apilog(register, myplayerid, 'wiki fetch ok')
     terminalwritemarkdownlines(myplayerid, markdowntext)
   } catch (err: any) {
-    apilog(register, myplayerid, 'wiki fetch err', err?.message ?? err)
+    apierror(register, myplayerid, 'wiki', err?.message ?? err)
   }
 }
 
@@ -366,7 +364,6 @@ export const register = createdevice(
         break
       case 'loginready':
         doasync(register, message.player, async () => {
-          workstatus(register, myplayerid, 'login sync')
           const storage = await storagereadvars()
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { [ZSS_BOOKMARKS_KEY]: _bookmarks, ...storageforlogin } =
@@ -379,7 +376,6 @@ export const register = createdevice(
             token,
           })
           vmzsswords(register, myplayerid)
-          apilog(register, myplayerid, 'login synced')
         })
         break
       case 'acklogin':
@@ -684,11 +680,13 @@ export const register = createdevice(
             anchor.click()
             // This is required
             URL.revokeObjectURL(dataurl)
-            if (islarge) {
-              apilog(register, message.player, 'export json ok')
-            }
-          } catch (err) {
-            console.error(err)
+          } catch (err: any) {
+            apierror(
+              register,
+              message.player,
+              'downloadjsonfile',
+              err?.message ?? err,
+            )
           }
         }
         break
@@ -723,7 +721,6 @@ export const register = createdevice(
       case 'screenshot':
         workstatus(register, message.player, 'export png')
         capturecurrentboardtopng()
-        apilog(register, message.player, 'screenshot saved')
         break
       case 'nuke':
         agentdootids.clear()
@@ -791,10 +788,9 @@ export const register = createdevice(
                     message.player,
                     zsstextline(`publishing ${name}`),
                   )
-                  workstatus(register, message.player, 'itch zip')
+                  workstatus(register, message.player, 'itchiopublish zip')
                   // save zipfile
                   await itchiopublish(name, content)
-                  apilog(register, message.player, 'itch zip saved')
                   write(
                     register,
                     message.player,

@@ -1,6 +1,5 @@
 import {
   DEVICELIKE,
-  apilog,
   registerforkmem,
   registersavemem,
   workstatus,
@@ -25,11 +24,10 @@ export async function savestate(vm: DEVICELIKE, autosave?: boolean) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (books.length && ispresent(mainbook)) {
     const operator = memoryreadoperator()
-    workstatus(vm, operator, 'save zip')
+    workstatus(vm, operator, 'compress url')
     const compressed = await memorycompressbooks(books)
     const historylabel = `${autosave ? 'autosave ' : ''}${new Date().toISOString()} ${mainbook.name} ${compressed.length} chars`
     registersavemem(vm, operator, historylabel, compressed, books)
-    apilog(vm, operator, 'save zip ok')
   }
 }
 
@@ -38,10 +36,9 @@ export async function forkstate(vm: DEVICELIKE, transfer: string) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (books.length && ispresent(mainbook)) {
     const operator = memoryreadoperator()
-    workstatus(vm, operator, 'save zip')
+    workstatus(vm, operator, 'compress url')
     const content = await memorycompressbooks(books)
     registerforkmem(vm, operator, content, transfer)
-    apilog(vm, operator, 'save zip ok')
   }
 }
 
