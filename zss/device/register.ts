@@ -306,8 +306,8 @@ export const register = createdevice(
       case 'ready':
       case 'chat':
       case 'toast':
-      case 'workstatus':
       case 'second':
+      case 'workstatus':
       case 'sessionreset':
         // console.info(message)
         break

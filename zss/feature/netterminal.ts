@@ -126,87 +126,35 @@ function sendpeer(dataconnection: DataConnection, message: MESSAGE): void {
   void dataconnection.send(wire)
 }
 
-type PEER_BRIDGE_ROLE = 'host' | 'join'
-
-type PEER_PAIR = {
-  peerid: string
-  role: PEER_BRIDGE_ROLE
-  connection?: DataConnection
-  bridge?: ReturnType<typeof createforward>
-  bridgeready: boolean
-}
-
-const peerpairs = new Map<string, PEER_PAIR>()
-
-function pairgetorcreate(peerid: string, role: PEER_BRIDGE_ROLE): PEER_PAIR {
-  let pair = peerpairs.get(peerid)
-  if (!ispresent(pair)) {
-    pair = { peerid, role, bridgeready: false }
-    peerpairs.set(peerid, pair)
-  }
-  return pair
-}
-
-function pairsendpeer(pair: PEER_PAIR, message: MESSAGE): boolean {
-  const connection = pair.connection
-  if (ispresent(connection) && connection.open) {
-    sendpeer(connection, message)
-    return true
-  }
-  return false
-}
-
-function handledataconnection(
-  dataconnection: DataConnection,
-  knownrole?: PEER_BRIDGE_ROLE,
-) {
+function handledataconnection(dataconnection: DataConnection) {
   const player = registerreadplayer()
-  const remotepeerid = dataconnection.peer
+  let topicbridge: MAYBE<ReturnType<typeof createforward>>
 
-  let role: PEER_BRIDGE_ROLE
-  if (ispresent(knownrole)) {
-    role = knownrole
-  } else if (ishost()) {
-    role = 'host'
-  } else {
-    role = 'join'
+  function hostbridge() {
+    topicbridge = createforward((message) => {
+      if (!ispresent(networkpeer) || !shouldforwardonpeerserver(message)) {
+        return
+      }
+      if (shouldforwardservertoclient(message)) {
+        sendpeer(dataconnection, message)
+      }
+    })
   }
 
-  const pair = pairgetorcreate(remotepeerid, role)
-  pair.connection = dataconnection
-
-  function ensurebridge() {
-    if (pair.bridgeready) {
-      return
-    }
-    pair.bridgeready = true
-    switch (pair.role) {
-      case 'host':
-        pair.bridge = createforward((message) => {
-          if (!ispresent(networkpeer) || !shouldforwardonpeerserver(message)) {
-            return
-          }
-          if (shouldforwardservertoclient(message)) {
-            pairsendpeer(pair, message)
-          }
-        })
-        break
-      case 'join':
-        pair.bridge = createforward((message) => {
-          if (!ispresent(networkpeer) || !shouldforwardonpeerclient(message)) {
-            return
-          }
-          if (
-            shouldforwardclienttoserver(message) ||
-            shouldforwardclienttoboardrunner(message)
-          ) {
-            pairsendpeer(pair, message)
-          }
-        })
-        // signal ready to login
-        vmsearch(SOFTWARE, player)
-        break
-    }
+  function joinbridge() {
+    topicbridge = createforward((message) => {
+      if (!ispresent(networkpeer) || !shouldforwardonpeerclient(message)) {
+        return
+      }
+      if (
+        shouldforwardclienttoserver(message) ||
+        shouldforwardclienttoboardrunner(message)
+      ) {
+        sendpeer(dataconnection, message)
+      }
+    })
+    // signal ready to login
+    vmsearch(SOFTWARE, player)
   }
 
   async function runopen() {
@@ -214,8 +162,12 @@ function handledataconnection(
       return
     }
     await ensurezstdwasm()
-    apilog(SOFTWARE, player, `connection ${remotepeerid} open (${pair.role})`)
-    ensurebridge()
+    apilog(SOFTWARE, player, `connection ${dataconnection.peer} open`)
+    if (ishost()) {
+      hostbridge()
+    } else {
+      joinbridge()
+    }
   }
 
   dataconnection.on('open', () => {
@@ -223,15 +175,9 @@ function handledataconnection(
   })
 
   dataconnection.on('close', () => {
-    if (pair.connection === dataconnection) {
-      pair.connection = undefined
-    }
-    if (!ispresent(pair.connection)) {
-      pair.bridge?.disconnect()
-      peerpairs.delete(remotepeerid)
-      if (ispresent(networkpeer)) {
-        apilog(SOFTWARE, player, `disconnection from ${remotepeerid}`)
-      }
+    topicbridge?.disconnect()
+    if (ispresent(networkpeer)) {
+      apilog(SOFTWARE, player, `disconnection from ${dataconnection.peer}`)
     }
   })
 
@@ -257,7 +203,7 @@ function handledataconnection(
           ...message,
           session: SOFTWARE.session(),
         }
-        pair.bridge?.forward(incoming)
+        topicbridge?.forward(incoming)
       } catch (err) {
         apilog(
           SOFTWARE,
@@ -274,30 +220,11 @@ function handledataconnection(
       SOFTWARE,
       player,
       `netterminal`,
-      `dataconnection ${remotepeerid} - ${JSON.stringify(err)}`,
+      `dataconnection ${dataconnection.peer} - ${JSON.stringify(err)}`,
     )
   })
 
   void runopen()
-}
-
-function openpair(
-  targetpeerid: string,
-  role: PEER_BRIDGE_ROLE,
-): MAYBE<PEER_PAIR> {
-  if (!ispresent(networkpeer)) {
-    return undefined
-  }
-  // pre-create pair so role is settled before any 'open' event fires
-  const pair = pairgetorcreate(targetpeerid, role)
-  const connection = networkpeer.connect(targetpeerid, {
-    label: 'stable',
-    reliable: true,
-  })
-  if (ispresent(connection)) {
-    handledataconnection(connection, role)
-  }
-  return pair
 }
 
 function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
@@ -330,13 +257,6 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
     }
     networkpeer.destroy()
     networkpeer = undefined
-    // tear down all peer pairs; PeerJS destroy will also fire close events
-    // on each DataConnection, but we drop the local bookkeeping eagerly so
-    // reconnects don't dial through stale records.
-    for (const pair of peerpairs.values()) {
-      pair.bridge?.disconnect()
-    }
-    peerpairs.clear()
   }
 
   function requestfullsignalingrestart(reason: string) {
@@ -413,7 +333,12 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
         if (!joinoutsignalconnectdone) {
           joinoutsignalconnectdone = true
           apilog(SOFTWARE, player, `joining topic ${subscribetopic}`)
-          openpair(topicpeerid, 'join')
+          const maybedataconnection = networkpeer?.connect(topicpeerid, {
+            reliable: true,
+          })
+          if (ispresent(maybedataconnection)) {
+            handledataconnection(maybedataconnection)
+          }
         }
       } else {
         apilog(SOFTWARE, player, `hosting topic ${subscribetopic}`)

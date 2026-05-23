@@ -99,7 +99,7 @@ function stopagentbyid(
   delete agents[agentid]
   delete agentnames[agentid]
   persistrostertostorage(heavydev, requestplayer)
-  workstatus(heavydev, requestplayer, `$REDagent stop ${agentid}`)
+  workstatus(heavydev, requestplayer, `agent stop ${agentid}`)
   writeagentlistto(heavydev, requestplayer)
   return true
 }
@@ -167,6 +167,6 @@ export function heavyrunrestoreagents(
     count += 1
   }
   if (count > 0) {
-    workstatus(heavydev, requestplayer, `$GREENagent start ${count}`)
+    workstatus(heavydev, requestplayer, `agent start ${count}`)
   }
 }

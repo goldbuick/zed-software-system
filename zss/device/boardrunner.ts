@@ -136,7 +136,7 @@ function handleboardrunnertick(
 
   // track the board we're assigned to
   if (priorboard !== board) {
-    workstatus(device, runner, `$greenRUN$26${board}`)
+    workstatus(device, runner, `run ${board}`)
     // we're assigned to a new board
     memorywriteassignedboard(board)
     // clear boundary assignments
@@ -276,7 +276,7 @@ function handleboardrunnertick(
 function handleboardrunneridle(idleonboard: string) {
   const runner = memoryreadboardrunner()
   // signal idle state
-  workstatus(boardrunner, runner, `$redIDLE$26${idleonboard}`)
+  workstatus(boardrunner, runner, `idle ${idleonboard}`)
   // force a memory reset
   memorysyncaccess = 0
   memorywriteoperator('')
