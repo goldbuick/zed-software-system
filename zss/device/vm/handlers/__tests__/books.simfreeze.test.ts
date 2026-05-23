@@ -1,5 +1,5 @@
 import { DEVICE } from 'zss/device'
-import { MESSAGE, apilog, registerloginready } from 'zss/device/api'
+import { MESSAGE, registerloginready, workstatus } from 'zss/device/api'
 import { handlebooks } from 'zss/device/vm/handlers/books'
 import { tracking } from 'zss/device/vm/state'
 import * as session from 'zss/memory/session'
@@ -81,7 +81,7 @@ describe('handlebooks sim freeze', () => {
 
     expect(session.memoryreadfrozen()).toBe(false)
     expect(registerloginready).toHaveBeenCalledWith(vm, player)
-    expect(apilog).toHaveBeenCalled()
+    expect(workstatus).toHaveBeenCalledWith(vm, player, 'load books')
     expect(session.memoryresetbooks).toHaveBeenCalledWith([minimalbook])
   })
 

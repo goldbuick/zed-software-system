@@ -10,8 +10,6 @@ function makeroot(partial: Partial<MEMORY_ROOT> = {}): MEMORY_ROOT {
     topic: '',
     session: 'sess',
     operator: 'op',
-    boardrunner: '',
-    assignedboard: '',
     frozen: false,
     software: { main: 'mainbook', temp: '' },
     books: {},
