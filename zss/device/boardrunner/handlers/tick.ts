@@ -152,28 +152,20 @@ export function handletick(device: DEVICE, message: MESSAGE): void {
     playersonassignedboard.add(boardplayers[p])
   }
 
-  // build the gadget layers for the boards we are in charge of DISPLAYING
-  const visibleboards: BOARD[] = [
-    maybeboard,
-    maybeoverboard,
-    maybeunderboard,
-  ].filter(ispresent)
-  for (let b = 0; b < visibleboards.length; ++b) {
-    const boarddata = visibleboards[b]
-    const didrender: Record<string, boolean> = {}
-    // read the players on the board
-    const players = memoryreadplayersonboard(boarddata)
-    // read the gadget layers for the board
-    const store = memoryreadbookgadgetlayersforboard(mainbook, boarddata.id)
-    for (let p = 0; p < players.length; ++p) {
-      // read the graphics for the player
-      const { graphics } = memoryreadgraphics(players[p], boarddata)
-      const mode = normalizelayerzvariant(graphics)
-      // if we haven't rendered this mode yet, render it
-      if (!ispresent(didrender[mode])) {
-        didrender[mode] = true
-        store[mode] = memoryreadgadgetlayers(mode, boarddata)
-      }
+  // build the gadget layers for the board we are in charge of DISPLAYING
+  const didrender: Record<string, boolean> = {}
+  // read the players on the board
+  const players = memoryreadplayersonboard(maybeboard)
+  // read the gadget layers for the board
+  const store = memoryreadbookgadgetlayersforboard(mainbook, maybeboard.id)
+  for (let p = 0; p < players.length; ++p) {
+    // read the graphics for the player
+    const { graphics } = memoryreadgraphics(players[p], maybeboard)
+    const mode = normalizelayerzvariant(graphics)
+    // if we haven't rendered this mode yet, render it
+    if (!ispresent(didrender[mode])) {
+      didrender[mode] = true
+      store[mode] = memoryreadgadgetlayers(mode, maybeboard)
     }
   }
 
