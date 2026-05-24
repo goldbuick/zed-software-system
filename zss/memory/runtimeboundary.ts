@@ -53,6 +53,7 @@ export function memorydeleteboardruntime(board: MAYBE<BOARD>): void {
     return
   }
   memoryboundarydelete(board.runtime)
+  board.runtime = ''
 }
 
 export function memoryensureboardelementruntime(
@@ -93,6 +94,7 @@ export function memorydeleteboardelementruntime(
     return
   }
   memoryboundarydelete(element.runtime)
+  element.runtime = ''
 }
 
 export function memorycopyboardelementruntime(
@@ -103,16 +105,4 @@ export function memorycopyboardelementruntime(
   if (ispresent(srcruntime)) {
     memorywriteboardelementruntime(dest, deepcopy(srcruntime))
   }
-}
-
-export function memorycloneboardelement(
-  src: BOARD_ELEMENT,
-  patch?: Partial<BOARD_ELEMENT>,
-): BOARD_ELEMENT {
-  const cloned = deepcopy({ ...src, ...patch, runtime: '' })
-  memorycopyboardelementruntime(cloned, src)
-  if (!cloned.runtime) {
-    memoryensureboardelementruntime(cloned)
-  }
-  return cloned
 }

@@ -1,5 +1,5 @@
 import { indextopt, pttoindex } from 'zss/mapping/2d'
-import { ispresent } from 'zss/mapping/types'
+import { deepcopy, ispresent } from 'zss/mapping/types'
 import { memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryboardelementisobject } from 'zss/memory/boardelement'
 import { memorycreateboard, memoryreadgroup } from 'zss/memory/boardlifecycle'
@@ -11,10 +11,7 @@ import {
   memoryreadelementstat,
 } from 'zss/memory/boards'
 import { memoryptwithinboard } from 'zss/memory/boardtransitions'
-import {
-  memorycloneboardelement,
-  memoryreadboardruntime,
-} from 'zss/memory/runtimeboundary'
+import { memoryreadboardruntime } from 'zss/memory/runtimeboundary'
 import { memorycheckcollision } from 'zss/memory/spatialqueries'
 import { type BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
@@ -394,7 +391,8 @@ export function boardweavegroup(
     const from: PT = { x: fromelement.x ?? -1, y: fromelement.y ?? -1 }
     const dest: PT = { x: from.x + delta.x, y: from.y + delta.y }
     const destidx = pttoindex(dest, BOARD_WIDTH)
-    const moved = memorycloneboardelement(fromelement, {
+    const moved = deepcopy({
+      ...fromelement,
       x: dest.x,
       y: dest.y,
     })
@@ -422,7 +420,8 @@ export function boardweavegroup(
       const vacpt = indextopt(vacidx, BOARD_WIDTH)
       const srcterrain = oldterrain[incidx]
       if (ispresent(srcterrain)) {
-        newterrain[vacidx] = memorycloneboardelement(srcterrain, {
+        newterrain[vacidx] = deepcopy({
+          ...srcterrain,
           x: vacpt.x,
           y: vacpt.y,
         })
