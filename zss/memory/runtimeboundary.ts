@@ -1,4 +1,4 @@
-import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
+import { MAYBE, deepcopy, ispresent, isstring } from 'zss/mapping/types'
 
 import {
   memoryboundaryalloc,
@@ -93,4 +93,26 @@ export function memorydeleteboardelementruntime(
     return
   }
   memoryboundarydelete(element.runtime)
+}
+
+export function memorycopyboardelementruntime(
+  dest: BOARD_ELEMENT,
+  src: BOARD_ELEMENT,
+): void {
+  const srcruntime = memoryreadboardelementruntime(src)
+  if (ispresent(srcruntime)) {
+    memorywriteboardelementruntime(dest, deepcopy(srcruntime))
+  }
+}
+
+export function memorycloneboardelement(
+  src: BOARD_ELEMENT,
+  patch?: Partial<BOARD_ELEMENT>,
+): BOARD_ELEMENT {
+  const cloned = deepcopy({ ...src, ...patch, runtime: '' })
+  memorycopyboardelementruntime(cloned, src)
+  if (!cloned.runtime) {
+    memoryensureboardelementruntime(cloned)
+  }
+  return cloned
 }

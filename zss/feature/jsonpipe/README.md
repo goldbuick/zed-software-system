@@ -51,14 +51,14 @@ The default filter for `MEMORY`-shaped pipes is [`memoryrootshouldemitpath`](../
 ## Discipline
 
 - **One pipe per slice.** Memory ships through one `MEMORY_ROOT` pipe; each [boundary id](../../memory/boundaryrouting.ts) ships through its own pipe; each per-player gadget snapshot ships through its own pipe.
-- **Don't interleave** other mutations between `applyPatch` and storing the result — every consumer in this repo follows that pattern (see [`device/boardrunner.ts`](../../device/boardrunner.ts), [`device/gadgetclient.ts`](../../device/gadgetclient.ts)).
+- **Don't interleave** other mutations between `applyPatch` and storing the result — every consumer in this repo follows that pattern (see [`device/boardrunner/`](../../device/boardrunner/) sync/state modules and [`device/gadgetclient.ts`](../../device/gadgetclient.ts)).
 - A non-empty `emitdiff(root)` mutates the internal shadow, so back-to-back calls without sending the patch will lose the delta. Producers always wrap the call as `const patch = pipe.emitdiff(root); if (patch.length) send(patch)`.
 
 ## How the boardrunner uses it
 
 Two real consumers in production today, both visible in [`zss/device/vm/handlers/ticktock.ts`](../../device/vm/handlers/ticktock.ts):
 
-1. **Memory + boundary stream → boardrunner** — Each sim tick, [`boardrunnermemorysync`](../../device/vm/boardrunnermemorysync.ts) emits a `MEMORY_ROOT` diff to every player in the active list, and [`boardrunnerboundarysync`](../../device/vm/boardrunnerboundarysync.ts) walks the boundary ids returned by [`memorycollectboundaryidsforboard`](../../memory/boundaryrouting.ts) and emits a per-boundary diff to that board's elected runner. The runner ([`zss/device/boardrunner.ts`](../../device/boardrunner.ts)) keeps a `BOUNDARY_JSONPIPE` per boundary id so it can `applyfullsync` (`boardrunner:paint`) and `applyremote` (`boardrunner:patch`) and replies with `vm:boardrunnerack` / `vm:boardrunnerpatch` when boundaries change locally.
+1. **Memory + boundary stream → boardrunner** — Each sim tick, [`boardrunnermemorysync`](../../device/vm/boardrunnermemorysync.ts) emits a `MEMORY_ROOT` diff to every player in the active list, and [`boardrunnerboundarysync`](../../device/vm/boardrunnerboundarysync.ts) walks the boundary ids returned by [`memorycollectboundaryidsforboard`](../../memory/boundaryrouting.ts) and emits a per-boundary diff to that board's elected runner. The runner ([`zss/device/boardrunner.ts`](../../device/boardrunner.ts) entry, handlers under [`boardrunner/`](../../device/boardrunner/handlers/)) keeps a `BOUNDARY_JSONPIPE` per boundary id so it can `applyfullsync` (`boardrunner:paint`) and `applyremote` (`boardrunner:patch`) and replies with `vm:boardrunnerack` / `vm:boardrunnerpatch` when boundaries change locally.
 2. **Gadget projection → gadgetclient** — [`gadgetsynctick`](../../device/vm/gadgetsynctick.ts) keeps a per-player `JSON_PIPE_HANDLE<GADGET_STATE>` and emits `gadgetclient:patch` each tick. Bad patches reply `vm:gadgetdesync`, which paints a fresh snapshot.
 
 Failure mode: when a remote `applyremote` returns `undefined`, the consumer is **desynced** and the producer must re-`paint` the affected slice (memory root, boundary id, or per-player gadget).

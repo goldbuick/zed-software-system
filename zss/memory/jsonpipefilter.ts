@@ -1,6 +1,5 @@
-/** Path has a JSON pointer segment `stats`, `loaders`, `runtime`, or `timestamp` (omit from wire). */
-const EMIT_SKIP_SEGMENT =
-  /(?:^|\/)(?:stats|loaders|runtime|timestamp|boardrunner|assignedboard)(?:\/|$)/
+/** Path has a JSON pointer segment `stats`, `loaders`, or `timestamp` (omit from wire). */
+const EMIT_SKIP_SEGMENT = /(?:^|\/)(?:stats|loaders|timestamp)(?:\/|$)/
 
 /** Terrain element props omitted from wire (see `memoryexportboardelement` terrain branch). */
 const TERRAIN_EMIT_SKIP_PROP =

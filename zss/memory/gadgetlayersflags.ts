@@ -12,7 +12,7 @@ import type { BOOK } from './types'
 
 export function memoryreadbookgadgetlayersforboard(
   book: MAYBE<BOOK>,
-  boardid: string,
+  board: string,
 ): Record<string, MEMORY_GADGET_LAYERS> {
-  return memoryreadbookflags(book, createlayersid(boardid))
+  return memoryreadbookflags(book, createlayersid(board))
 }

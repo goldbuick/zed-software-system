@@ -185,7 +185,7 @@ Codepage parse / runtime.
 Per-board / per-element transient runtime state stored in the boundary map.
 
 - **memoryensureboardruntime(board)**, **memoryreadboardruntime(board)**, **memorywriteboardruntime(...)**, **memorydeleteboardruntime(board)**
-- **memoryensureboardelementruntime(...)**, **memoryreadboardelementruntime(...)**, **memorywriteboardelementruntime(...)**, **memorydeleteboardelementruntime(...)**
+- **memoryensureboardelementruntime(...)**, **memoryreadboardelementruntime(...)**, **memorywriteboardelementruntime(...)**, **memorydeleteboardelementruntime(...)**, **memorycopyboardelementruntime(...)**, **memorycloneboardelement(...)**
 
 ## boardoperations.ts
 

@@ -16,7 +16,7 @@
 |----------|------|-------------|
 | `boardcopy` | `source`, `target`, `p1`, `p2`, `targetset` | Copy board region from source to target; targetset: `'all'`, `'object'`, `'terrain'`, or group name |
 | `boardcopygroup` | `source`, `target`, `p1`, `self`, `targetgroup` | Copy elements by group with collision handling |
-| `mapelementcopy` | `maybenew`, `from` | Copy element properties from one element to another |
+| `mapelementcopy` | `maybenew`, `from` | Copy element surface stats from one element to another, then clone runtime payload onto `maybenew` via `memorycopyboardelementruntime` (distinct boundary id from source) |
 
 ## Internal Helpers
 

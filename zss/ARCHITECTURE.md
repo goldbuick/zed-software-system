@@ -62,7 +62,7 @@ Boot flow:
 
 [`zss/simspace.ts`](simspace.ts) runs **inside the sim worker**: imports `clock` and `modem`, wires `createforward` so messages that must reach the browser UI are `postMessage`’d out, then calls `started()` from [`zss/device/vm.ts`](device/vm.ts) which dispatches per-tick handlers (including the per-player gadget projection in [`gadgetsynctick`](device/vm/gadgetsynctick.ts)).
 
-[`zss/boardrunnerspace.ts`](boardrunnerspace.ts) runs **inside the boardrunner worker**: imports [`device/boardrunner`](device/boardrunner.ts), which receives jsonpipe paint/patch slices of memory ("boundaries") for the board it has been elected to run, executes [`memorytickmain`](memory/runtime.ts) for that board, and emits boundary patches back to the sim VM.
+[`zss/boardrunnerspace.ts`](boardrunnerspace.ts) runs **inside the boardrunner worker**: imports [`device/boardrunner`](device/boardrunner.ts) (thin entry; logic in [`device/boardrunner/`](device/boardrunner/)), which receives jsonpipe paint/patch slices of memory ("boundaries") for the board it has been elected to run, executes [`memorytickmain`](memory/runtime.ts) for that board, and emits boundary patches back to the sim VM.
 
 [`zss/userspace.ts`](userspace.ts) registers **main-thread** devices: `gadgetclient`, `modem`, `bridge`, `register`, `synth`.
 

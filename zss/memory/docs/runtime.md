@@ -4,7 +4,7 @@
 
 The same `memorytickmain` runs in two places:
 
-- The **sim VM** uses it indirectly (via [`boardrunner.ts`](../../device/boardrunner.ts) when the boardrunner worker calls back through this module after receiving a `boardrunner:tick`); the sim VM itself only runs `memorytickloaders` directly.
+- The **sim VM** uses it indirectly (via [`boardrunner.ts`](../../device/boardrunner.ts) / [`boardrunner/tick.ts`](../../device/boardrunner/tick.ts) when the boardrunner worker calls back through this module after receiving a `boardrunner:tick`); the sim VM itself only runs `memorytickloaders` directly.
 - The **boardrunner worker** calls `memorytickmain(timestamp, [board], halt)` for the single board it has been elected to run, after the sim VM has streamed the board / boundary jsonpipe deltas.
 
 ## Dependencies

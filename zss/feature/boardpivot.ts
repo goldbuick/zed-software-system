@@ -5,7 +5,7 @@ import {
   pivotposmodi,
 } from 'zss/feature/boardpivotmath'
 import { indextopt, pttoindex } from 'zss/mapping/2d'
-import { deepcopy, ispresent } from 'zss/mapping/types'
+import { ispresent } from 'zss/mapping/types'
 import { memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryboardelementisobject } from 'zss/memory/boardelement'
 import {
@@ -21,7 +21,10 @@ import {
   memoryreadelementstat,
 } from 'zss/memory/boards'
 import { memoryptwithinboard } from 'zss/memory/boardtransitions'
-import { memoryreadboardruntime } from 'zss/memory/runtimeboundary'
+import {
+  memorycloneboardelement,
+  memoryreadboardruntime,
+} from 'zss/memory/runtimeboundary'
 import { memorycheckcollision } from 'zss/memory/spatialqueries'
 import {
   type BOARD,
@@ -434,8 +437,7 @@ export function boardpivotgroup(
     const from: PT = { x: fromelement.x ?? -1, y: fromelement.y ?? -1 }
     const dest = pivotcellmishin(from.x, from.y, w, h, theta, cx, cy, disc)
     const destidx = pttoindex(dest, BOARD_WIDTH)
-    const moved = deepcopy({
-      ...fromelement,
+    const moved = memorycloneboardelement(fromelement, {
       x: dest.x,
       y: dest.y,
     })
@@ -463,8 +465,7 @@ export function boardpivotgroup(
       const vacpt = indextopt(vacidx, BOARD_WIDTH)
       const srcterrain = oldterrain[incidx]
       if (ispresent(srcterrain)) {
-        newterrain[vacidx] = deepcopy({
-          ...srcterrain,
+        newterrain[vacidx] = memorycloneboardelement(srcterrain, {
           x: vacpt.x,
           y: vacpt.y,
         })
