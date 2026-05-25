@@ -1,11 +1,19 @@
-import { WASM_DRUM_BUS_GAIN } from './wasmlevels'
+import {
+  WASM_DRUM_CLAP_DRY,
+  WASM_DRUM_CLAP_WET,
+  WASM_DRUM_TICK_TRIM,
+  WASM_DRUM_TWEET_TRIM,
+  WASM_DRUM_VOICE_GAINS,
+} from './wasmlevels'
 
 /** Phase 2: Tone.js kit port — see zss/feature/synth/drums/*.ts */
 export const WASM_DRUM_PLAY_CODE = `
 var DRUM_COUNT = 10;
+var DRUM_SAB_STRIKES = 10;
 var DRUM_SR = 48000;
-var DRUM_BUS_GAIN = ${WASM_DRUM_BUS_GAIN};
+var DRUM_VOICE_GAINS = [${WASM_DRUM_VOICE_GAINS.join(', ')}];
 var drumtriggers = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+var DRUM_DURATIONS = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 var drumprev = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 var drumremain = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 var drumhpprev = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
@@ -62,7 +70,13 @@ function ensuredrums() {
 }
 
 function drumlength(i) {
-  return DRUM_LENGTHS[i] || DRUM_SNARE_LEN;
+  var fixed = DRUM_LENGTHS[i] || DRUM_SNARE_LEN;
+  var dursec = DRUM_DURATIONS[i] || 0;
+  if (dursec <= 0) {
+    return fixed;
+  }
+  var pattern = drumsamp(dursec);
+  return Math.max(fixed, pattern);
 }
 
 function drumfilterzero() {
@@ -109,10 +123,13 @@ function readdrumsab() {
   if (!raw && qref.engine) {
     raw = qref.engine.zssDrumSab;
   }
-  if (!raw || typeof raw.length !== 'number' || raw.length < DRUM_COUNT) {
+  if (!raw || typeof raw.length !== 'number' || raw.length < DRUM_SAB_STRIKES) {
     return;
   }
   for (var i = 0; i < DRUM_COUNT; i++) {
+    if (raw.length >= DRUM_SAB_STRIKES * 2) {
+      DRUM_DURATIONS[i] = raw[DRUM_SAB_STRIKES + i];
+    }
     drumtriggers[i] = Math.round(raw[i]);
     if (drumtriggers[i] > drumprev[i]) {
       drumprev[i] = drumtriggers[i];
@@ -421,7 +438,7 @@ function drumtick() {
   var raw = drumnoise.noise() * amp;
   var n = drumhipass(0, raw, 8000);
   n = drumeq3(0, n, DRUM_EQ_TICK_LOW, DRUM_EQ_TICK_MID, DRUM_EQ_TICK_HIGH);
-  return n * 1.22 * 0.22;
+  return n * ${WASM_DRUM_TICK_TRIM} * DRUM_VOICE_GAINS[0];
 }
 
 function drumtweet() {
@@ -436,7 +453,7 @@ function drumtweet() {
   var raw = drumnoise.noise() * amp;
   var n = drumhipass(1, raw, 6000);
   n = drumeq3(1, n, DRUM_EQ_TWEET_LOW, DRUM_EQ_TWEET_MID, DRUM_EQ_TWEET_HIGH);
-  return n * 1.1 * 0.2;
+  return n * ${WASM_DRUM_TWEET_TRIM} * DRUM_VOICE_GAINS[1];
 }
 
 function drumcowbell() {
@@ -452,7 +469,7 @@ function drumcowbell() {
   sig = sig * 0.35 * amp;
   sig = drumdistort(sig, 0.08);
   sig = drumbandpass(2, sig, DRUM_COWBELL_BP);
-  return sig * 0.42;
+  return sig * DRUM_VOICE_GAINS[2];
 }
 
 function drumclap() {
@@ -468,7 +485,7 @@ function drumclap() {
   var n = drumhipass(3, raw, 800);
   n = drumeq3(3, n, DRUM_EQ_CLAP_LOW, DRUM_EQ_CLAP_MID, DRUM_EQ_CLAP_HIGH);
   var dry = raw * 0.35;
-  return (n * 1.1 + dry) * 0.28;
+  return (n * ${WASM_DRUM_CLAP_WET} + dry * ${WASM_DRUM_CLAP_DRY}) * DRUM_VOICE_GAINS[3];
 }
 
 function drumsnare(hi) {
@@ -487,7 +504,7 @@ function drumsnare(hi) {
   var nraw = drumnoise.noise() * noiseamp;
   var n = drumhipass(idx, nraw, 10000);
   var mix = body + n * (hi ? 0.333 : 0.25);
-  return drumdistort(mix, hi ? 0.666 : 0.876) * 0.28;
+  return drumdistort(mix, hi ? 0.666 : 0.876) * DRUM_VOICE_GAINS[idx];
 }
 
 function drumwoodblock(hi) {
@@ -510,7 +527,7 @@ function drumwoodblock(hi) {
   var donk = drumoscB[idx].sinewave(donkhz);
   var sig = (clack + donk) * amp;
   sig = drumbandpass(idx, sig, DRUM_WOOD_BP);
-  return sig * 0.24;
+  return sig * DRUM_VOICE_GAINS[idx];
 }
 
 function drumtom() {
@@ -529,7 +546,7 @@ function drumtom() {
   var hz2 = expramp(age, ramp, DRUM_C5, DRUM_C0);
   var body = drumoscA[7].saw(hz) + drumoscB[7].triangle(hz2) * 0.5;
   var n = drumnoise.noise() * namp * 0.12;
-  return (body * amp + n) * 0.26;
+  return (body * amp + n) * DRUM_VOICE_GAINS[7];
 }
 
 function drumbass() {
@@ -546,7 +563,7 @@ function drumbass() {
   var oct = drumoscB[9].sinewave(hz * 2) * 0.42;
   var sub = drumoscA[9].sinewave(hz * 0.5) * 0.55;
   var body = fund + oct + sub;
-  return drumdistort(body, 0.22) * amp * 0.78;
+  return drumdistort(body, 0.22) * amp * DRUM_VOICE_GAINS[9];
 }
 
 function drumsout() {
@@ -566,6 +583,6 @@ function drumsout() {
   sum += safedrum(drumtom);
   sum += safedrum(function() { return drumwoodblock(false); });
   sum += safedrum(drumbass);
-  return sum * DRUM_BUS_GAIN;
+  return sum;
 }
 `

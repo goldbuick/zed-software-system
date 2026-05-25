@@ -11,13 +11,14 @@ Same as Phase 1 — `ZSS_WASM_SYNTH=true` in `cafe/.env.local`.
 | Feature | Status |
 |---------|--------|
 | Drum digits `0`–`9` in `#play` | Yes |
-| Kick/clap sidechain duck | Yes — `voicegain` duck on drums `3` and `9` |
-| Main compressor + volume | Yes — matches Tone main compressor (−28 dB, 4:1) |
+| Kick/clap sidechain duck | Yes — WASM voice duck on drums `3` and `9` (drums unscaled in mono mix) |
+| Main compressor + volume | Yes — WASM soft-knee (−28 dB, 4:1) + `zss_master` SAB |
 | Drum bus gain | Yes — `volumetodb(100) + 10` (+15 dB) |
+| Razzle layer | Yes — Maximilian delay + chorus + hiss in `play()` |
+| Pattern drum durations | Yes — SAB durations + Tone-fixed tick/tweet/bass |
 | Boot drum warm-up | Yes — muted pass fires all 10 drums once |
-| `#playvolume` via Web Audio gain | Yes |
-| Razzle/chorus/hiss tape layer | No — Phase 3+ |
-| Full sidechain worklet | No — simplified duck |
+| `#playvolume` | Yes — via `zss_master` SAB |
+| Web Audio FX on synth path | No — single `worklet → destination` bridge |
 
 ## Drum map
 
@@ -46,10 +47,9 @@ Same as Phase 1 — `ZSS_WASM_SYNTH=true` in `cafe/.env.local`.
 ```text
 #play digit
   → maxisynth scheduledrum()
-  → maxi.send('zss_drums', triggerCounters)
-  → WASM drumsout() mixed with voices
-
-worklet → voicegain → compressor → mainvolume → destination
+  → zss_drums SAB (strike counters)
+  → WASM play(): voices + drums → duck → trim → compressor → razzle → volume
+  → worklet → destination
 ```
 
 ## Files
@@ -57,8 +57,10 @@ worklet → voicegain → compressor → mainvolume → destination
 | Path | Role |
 |------|------|
 | `zss/feature/synth/wasm/drumplaycode.ts` | Maximilian drum DSP |
-| `zss/feature/synth/wasm/wasmmasterchain.ts` | Compressor + volume |
-| `zss/feature/synth/wasm/wasmlevels.ts` | Drum bus gain constants |
+| `zss/feature/synth/wasm/wasmmasterplaycode.ts` | Duck + compressor + volume in WASM |
+| `zss/feature/synth/wasm/wasmrazzleplaycode.ts` | Razzle delay/chorus/hiss in WASM |
+| `zss/feature/synth/wasm/wasmmasterchain.ts` | Worklet → destination wiring only |
+| `zss/feature/synth/wasm/wasmlevels.ts` | Drum bus + per-drum gains |
 | `zss/feature/synth/wasm/warmwasmdrums.ts` | Boot warm-up pass |
 | `zss/feature/synth/wasm/maxisynth.ts` | Drum scheduler |
 
@@ -66,4 +68,3 @@ worklet → voicegain → compressor → mainvolume → destination
 
 1. FX buses — `#echo`, `#reverb`, autofilter, etc.
 2. `#bgplayvolume` through master chain
-3. Razzle/chorus/hiss layer (optional polish)

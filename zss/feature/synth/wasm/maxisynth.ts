@@ -23,7 +23,7 @@ const WASM_VOICE_COUNT = 4
 const WASM_VOICES_SAB = 'zss_voices'
 const WASM_DRUMS_SAB = 'zss_drums'
 const WASM_DRUM_COUNT = 10
-const WASM_SIDECHAIN_DRUMS = new Set([3, 9])
+const WASM_DRUM_SAB_LEN = WASM_DRUM_COUNT * 2
 const WASM_VOICE_STRIDE = 6
 const WASM_VOICE_BLOCK = WASM_VOICE_COUNT * WASM_VOICE_STRIDE
 
@@ -88,17 +88,29 @@ export function initwasmvoicesab(maxi: MaxiEngine) {
   pushwasmsabvalues(maxi, WASM_VOICES_SAB, sab)
 }
 
+function drumdurationfor(drumid: number, notationdur: number): number {
+  if (drumid === 0) {
+    return tonenotationseconds('16n')
+  }
+  if (drumid === 1) {
+    return tonenotationseconds('8n')
+  }
+  if (drumid === 9) {
+    return tonenotationseconds('8n')
+  }
+  return notationdur
+}
+
 export function initwasmdrumsab(maxi: MaxiEngine, strikes?: number[]) {
   pushwasmsabvalues(
     maxi,
     WASM_DRUMS_SAB,
-    strikes ?? new Array(WASM_DRUM_COUNT).fill(0),
+    strikes ?? new Array(WASM_DRUM_SAB_LEN).fill(0),
   )
 }
 
 export type WASM_SYNTH_HOOKS = {
   setplayvolume?: (volume: number) => void
-  ducksidechain?: (drumid: number) => void
 }
 
 export function createwasmsynth(
@@ -110,6 +122,7 @@ export function createwasmsynth(
 
   let voicestate = new Array(WASM_VOICE_BLOCK).fill(0)
   let drumstrikes = new Array(WASM_DRUM_COUNT).fill(0)
+  let drumdursec = new Array(WASM_DRUM_COUNT).fill(0)
   let voicecfg = defaultwasmvoicestate()
   let pacertime = -1
   let bgplayindex = SYNTH_SFX_RESET
@@ -145,15 +158,16 @@ export function createwasmsynth(
   }
 
   function pushdrumstate() {
-    pushwasmsabvalues(maxi, WASM_DRUMS_SAB, drumstrikes)
+    pushwasmsabvalues(maxi, WASM_DRUMS_SAB, [
+      ...drumstrikes,
+      ...drumdursec,
+    ])
   }
 
-  function firedrum(drumid: number) {
+  function firedrum(drumid: number, dursec = 0) {
+    drumdursec[drumid] = dursec
     drumstrikes[drumid]++
     pushdrumstate()
-    if (WASM_SIDECHAIN_DRUMS.has(drumid)) {
-      hooks.ducksidechain?.(drumid)
-    }
   }
 
   function warmdrums() {
@@ -163,18 +177,18 @@ export function createwasmsynth(
     pushdrumstate()
   }
 
-  function scheduledrum(when: number, drumid: number) {
+  function scheduledrum(when: number, drumid: number, dursec: number) {
     if (drumid < 0 || drumid >= WASM_DRUM_COUNT) {
       return
     }
     const now = maxi.audioContext.currentTime
     const startms = Math.max(0, (when - now) * 1000)
     if (startms <= 2) {
-      firedrum(drumid)
+      firedrum(drumid, dursec)
       return
     }
     armtimeout(() => {
-      firedrum(drumid)
+      firedrum(drumid, dursec)
     }, startms)
   }
 
@@ -218,7 +232,11 @@ export function createwasmsynth(
       const [, notation, note] = value
       if (isnumber(note)) {
         if (note >= 0 && note <= 9) {
-          scheduledrum(time, note)
+          scheduledrum(
+            time,
+            note,
+            drumdurationfor(note, tonenotationseconds(notation)),
+          )
         }
         continue
       }

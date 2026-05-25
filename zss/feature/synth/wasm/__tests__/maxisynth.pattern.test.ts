@@ -35,6 +35,7 @@ describe('wasm drum pattern', () => {
     const pushes = sends.zss_drums ?? []
     const peak = new Array(10).fill(0)
     for (const row of pushes) {
+      expect(row.length).toBeGreaterThanOrEqual(20)
       for (let i = 0; i < 10; i++) {
         peak[i] = Math.max(peak[i], row[i] ?? 0)
       }

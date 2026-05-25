@@ -6,6 +6,7 @@ import {
   parseplay,
 } from 'zss/feature/synth/playnotation'
 import { canonicalvoicefxgroupindex } from 'zss/feature/synth/voicefxgroup'
+import { createsynthdefaultvoices } from 'zss/feature/synth/synthdefaults'
 import { SYNTH_STATE } from 'zss/gadget/data/types'
 import { createsynthid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
@@ -31,7 +32,7 @@ export function issynthplayimmediate() {
 }
 
 const SYNTH_STATE_DEFAULT: SYNTH_STATE = {
-  voices: {},
+  voices: createsynthdefaultvoices(),
   voicefx: {},
 }
 
@@ -117,6 +118,7 @@ export function memorymergesynthvoice(
   const cache = readsynthcacheinternal(board)
   if (NAME(config) === 'restart') {
     clearvoicesandvoicefx(cache)
+    Object.assign(cache.voices, createsynthdefaultvoices())
     return
   }
   if (!ispresent(cache.voices[idx])) {

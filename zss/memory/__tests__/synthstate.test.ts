@@ -23,8 +23,25 @@ describe('synthstate flag layout', () => {
     memoryreadsynth(boardid)
 
     const flags = memoryreadbookflags(book, createsynthid(boardid))
-    expect(flags.voices).toEqual({})
+    expect(flags.voices).toEqual({
+      '0': { square: '' },
+      '1': { square: '' },
+      '2': { square: '' },
+      '3': { square: '' },
+    })
     expect(flags.voicefx).toEqual({})
+  })
+
+  it('restart restores square default voices', () => {
+    const book = memorycreatebook([])
+    book.name = 'main'
+    memoryresetbooks([book])
+
+    const boardid = 'bd-restart'
+    memorymergesynthvoice(boardid, 0, 'sine', '')
+    memorymergesynthvoice(boardid, 0, 'restart', '')
+    const state = memoryreadsynth(boardid)
+    expect(state?.voices['0']).toEqual({ square: '' })
   })
 
   it('persists merge voice mutations through flag-backed objects', () => {
@@ -36,7 +53,12 @@ describe('synthstate flag layout', () => {
     memorymergesynthvoice(boardid, 0, 'freq', 440)
 
     const flags = memoryreadbookflags(book, createsynthid(boardid))
-    expect(flags.voices).toEqual({ '0': { freq: 440 } })
+    expect(flags.voices).toEqual({
+      '0': { square: '', freq: 440 },
+      '1': { square: '' },
+      '2': { square: '' },
+      '3': { square: '' },
+    })
 
     const again = memoryreadsynth(boardid)
     expect(again?.voices['0']?.freq).toBe(440)

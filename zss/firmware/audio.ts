@@ -15,6 +15,7 @@ import {
   synthvoicefx,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { SYNTH_DEFAULT_WAVE } from 'zss/feature/synth/synthdefaults'
 import { write } from 'zss/feature/writeui'
 import { createfirmware } from 'zss/firmware'
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'
@@ -329,12 +330,13 @@ export const AUDIO_FIRMWARE = createfirmware()
   })
   .command('synth', ['all 4 channels of #play synth voices'], (_, words) => {
     // multi-voice changes only apply to #play
+    const voicewords = words.length === 0 ? [SYNTH_DEFAULT_WAVE] : words
     for (let i = 0; i < 4; ++i) {
       handlesynthvoice(
         READ_CONTEXT.elementfocus,
         READ_CONTEXT.board?.id ?? '',
         i,
-        words,
+        voicewords,
       )
     }
     return 0

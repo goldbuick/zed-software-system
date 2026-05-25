@@ -1,5 +1,6 @@
 import { WASM_DRUM_PLAY_CODE } from './drumplaycode'
 import { WASM_ENV_CODE } from './wasmenv'
+import { WASM_MASTER_PLAY_CODE } from './wasmmasterplaycode'
 import { WASM_NOISE_SETUP_CODE } from './noisewave'
 
 /** Phase 1 voices + Phase 2 drums through Maximilian WASM worklet. */
@@ -7,6 +8,7 @@ export const WASM_SYNTH_VOICE_PLAY_CODE = `
 ${WASM_ENV_CODE}
 ${WASM_NOISE_SETUP_CODE}
 ${WASM_DRUM_PLAY_CODE}
+${WASM_MASTER_PLAY_CODE}
 
 var VOICE_COUNT = 4;
 var C4_HZ = 261.63;
@@ -263,13 +265,12 @@ function readvoicessab() {
 function play() {
   readvoicessab();
 
-  var sum = 0;
+  var voices = 0;
   for (var i = 0; i < VOICE_COUNT; i++) {
-    sum += voiceout(i);
+    voices += voiceout(i);
   }
-  sum += safedrumsout();
-  var out = sum * 0.35;
-  return [out, out];
+  var drums = safedrumsout();
+  return masterout(voices, drums);
 }
 
 function safedrumsout() {

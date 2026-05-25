@@ -3,9 +3,6 @@ import { MAYBE } from 'zss/mapping/types'
 import { ensuremaximiliancoep } from './coopcoep'
 import { pushwasmsabvalues } from './sabpush'
 import {
-  duckwasmsidechain,
-  rememberwasmplayvolume,
-  setwasmplayvolume,
   wirewasmmasterchain,
   type WASM_MASTER_CHAIN,
 } from './wasmmasterchain'
@@ -39,6 +36,7 @@ function builddspcode(usercode: string) {
       if (engine) {
         q.zssVoiceSab = engine.zssVoiceSab;
         q.zssDrumSab = engine.zssDrumSab;
+        q.zssMasterSab = engine.zssMasterSab;
       }
       var sig = q.play(inputs);
       if (Array.isArray(sig)) {
@@ -95,6 +93,8 @@ let broadcastdestination: MAYBE<MediaStreamAudioDestinationNode>
 let broadcasttap: MAYBE<GainNode>
 let wasmmaster: MAYBE<WASM_MASTER_CHAIN>
 
+const WASM_MASTER_SAB = 'zss_master'
+
 function wirewasmoutput(maxi: MaxiEngine) {
   maxi.audioWorkletNode.disconnect()
   wasmmaster = wirewasmmasterchain(maxi.audioContext, maxi.audioWorkletNode)
@@ -118,13 +118,11 @@ function loadscript(src: string): Promise<void> {
 }
 
 function wirebroadcasttap(maxi: MaxiEngine) {
-  if (!wasmmaster) {
-    return
-  }
   broadcastdestination ??= maxi.audioContext.createMediaStreamDestination()
   broadcasttap?.disconnect()
   broadcasttap = maxi.audioContext.createGain()
-  wasmmaster.mainvolume.connect(broadcasttap)
+  broadcasttap.gain.value = 1
+  maxi.audioWorkletNode.connect(broadcasttap)
   broadcasttap.connect(broadcastdestination)
 }
 
@@ -214,6 +212,7 @@ function waitforwasmdspready(maxi: MaxiEngine, timeoutms = 3000): Promise<void> 
 async function startmaximiliandsp(maxi: MaxiEngine, usercode: string) {
   await resumeaudiocontext(maxi)
   wirewasmoutput(maxi)
+  initwasmmastersab(maxi, 80)
   const ready = waitforwasmdspready(maxi)
   maxi.eval(builddspcode(usercode))
   await ready
@@ -288,17 +287,14 @@ export function getmaxiengine(): MAYBE<MaxiEngine> {
 
 export { pushwasmsabvalues } from './sabpush'
 
-export function setwasmsynthplayvolume(volume: number) {
-  rememberwasmplayvolume(volume)
-  if (wasmmaster) {
-    setwasmplayvolume(wasmmaster, volume)
-  }
+export function initwasmmastersab(maxi: MaxiEngine, playvolume = 80) {
+  pushwasmsabvalues(maxi, WASM_MASTER_SAB, [playvolume])
 }
 
-export function duckwasmsynthsidechain(drumid: number) {
+export function setwasmsynthplayvolume(volume: number) {
   const maxi = maxiengine
-  if (maxi && wasmmaster) {
-    duckwasmsidechain(wasmmaster, maxi.audioContext, drumid)
+  if (maxi) {
+    pushwasmsabvalues(maxi, WASM_MASTER_SAB, [volume])
   }
 }
 
