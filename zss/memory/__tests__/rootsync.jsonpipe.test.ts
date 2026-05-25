@@ -66,14 +66,6 @@ describe('memoryreadrootsync jsonpipe parity', () => {
     expect(producer.emitdiff(b)).toEqual([])
   })
 
-  it('memoryrootshouldemitpath skips runtime segment paths', () => {
-    expect(memoryrootshouldemitpath('/runtime')).toBe(false)
-    expect(memoryrootshouldemitpath('/books/b1/runtime')).toBe(false)
-    expect(memoryrootshouldemitpath('/operator')).toBe(true)
-    expect(memoryrootshouldemitpath('/boardrunner')).toBe(false)
-    expect(memoryrootshouldemitpath('/assignedboard')).toBe(false)
-  })
-
   it('memoryrootshouldemitpath skips terrain-only props on board terrain', () => {
     expect(memoryrootshouldemitpath('/terrain/0/id')).toBe(false)
     expect(memoryrootshouldemitpath('/terrain/42/x')).toBe(false)

@@ -1,23 +1,28 @@
+/* eslint-disable react-refresh/only-export-components */
 import { useState } from 'react'
 import { createRoot } from 'react-dom/client'
 
 import { computedaglayout } from './daglayout'
 import {
-  DIAGRAM_LAYERS,
+  type Audience,
   DIAGRAMS,
+  DIAGRAM_LAYERS,
+  type DiagramConfig,
+  type DiagramLayer,
   FEATURE_DOMAINS,
   GLOSSARY,
   GLOSSARY_CATEGORIES,
   TAB_LABELS,
-  type Audience,
-  type DiagramConfig,
-  type DiagramLayer,
   type Tab,
 } from './data'
 
 function audiencepill(audience: Audience) {
   const tone =
-    audience === 'Dev' ? 'pill-info' : audience === 'Creator' ? 'pill-success' : 'pill-neutral'
+    audience === 'Dev'
+      ? 'pill-info'
+      : audience === 'Creator'
+        ? 'pill-success'
+        : 'pill-neutral'
   return <span className={`pill ${tone}`}>{audience}</span>
 }
 
@@ -59,7 +64,14 @@ function DiagramSvg({
         aria-label="System architecture diagram"
       >
         <defs>
-          <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+          <marker
+            id="arrowhead"
+            markerWidth="8"
+            markerHeight="6"
+            refX="7"
+            refY="3"
+            orient="auto"
+          >
             <polygon points="0 0, 8 3, 0 6" fill="var(--stroke-primary)" />
           </marker>
         </defs>
@@ -83,7 +95,11 @@ function DiagramSvg({
             y1={edge.sourceY}
             x2={edge.targetX}
             y2={edge.targetY}
-            stroke={edge.isBackEdge ? 'var(--stroke-secondary)' : 'var(--stroke-primary)'}
+            stroke={
+              edge.isBackEdge
+                ? 'var(--stroke-secondary)'
+                : 'var(--stroke-primary)'
+            }
             strokeWidth={1.5}
             strokeDasharray={edge.isBackEdge ? '4 3' : undefined}
             markerEnd="url(#arrowhead)"
@@ -91,7 +107,9 @@ function DiagramSvg({
         ))}
         {layout.nodes.map((pos) => {
           const node = nodemap.get(pos.id)
-          if (!node) return null
+          if (!node) {
+            return null
+          }
           const selected = selectedid === pos.id
           return (
             <g
@@ -145,8 +163,8 @@ function SystemMapView() {
   return (
     <div className="stack stack-gap-16">
       <p className="text-secondary">
-        Click any node for details. Switch layers to see product stack, worker topology, tick loop, or
-        script pipeline.
+        Click any node for details. Switch layers to see product stack, worker
+        topology, tick loop, or script pipeline.
       </p>
       <div className="row row-gap-8">
         {DIAGRAM_LAYERS.map((item) => (
@@ -163,7 +181,11 @@ function SystemMapView() {
           </button>
         ))}
       </div>
-      <DiagramSvg config={config} selectedid={selectedid} onselect={setselectedid} />
+      <DiagramSvg
+        config={config}
+        selectedid={selectedid}
+        onselect={setselectedid}
+      />
       {selected && (
         <div className="callout callout-info stack stack-gap-8">
           <div className="row row-gap-8">
@@ -190,10 +212,18 @@ function GlossaryView() {
 
   const query = search.toLowerCase().trim()
   const filtered = GLOSSARY.filter((entry) => {
-    if (category !== 'All' && entry.category !== category) return false
-    if (audfilter === 'dev' && entry.audience === 'Creator') return false
-    if (audfilter === 'creator' && entry.audience === 'Dev') return false
-    if (!query) return true
+    if (category !== 'All' && entry.category !== category) {
+      return false
+    }
+    if (audfilter === 'dev' && entry.audience === 'Creator') {
+      return false
+    }
+    if (audfilter === 'creator' && entry.audience === 'Dev') {
+      return false
+    }
+    if (!query) {
+      return true
+    }
     return (
       entry.term.toLowerCase().includes(query) ||
       entry.definition.toLowerCase().includes(query) ||
@@ -265,41 +295,56 @@ function GlossaryView() {
                   <button
                     type="button"
                     className="btn btn-ghost"
-                    onClick={() => setexpanded(expanded === entry.term ? null : entry.term)}
+                    onClick={() =>
+                      setexpanded(expanded === entry.term ? null : entry.term)
+                    }
                   >
                     {entry.term}
                   </button>
                 </td>
                 <td>{entry.category}</td>
                 <td>{audiencepill(entry.audience)}</td>
-                <td>{truncate(entry.definition, expanded === entry.term ? 500 : 80)}</td>
+                <td>
+                  {truncate(
+                    entry.definition,
+                    expanded === entry.term ? 500 : 80,
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      {expanded && (() => {
-        const entry = GLOSSARY.find((item) => item.term === expanded)
-        if (!entry) return null
-        return (
-          <div className="callout callout-neutral stack stack-gap-8">
-            <h3>{entry.term}</h3>
-            <p>{entry.definition}</p>
-            <p className="text-small text-secondary">Related: {entry.related}</p>
-            {entry.path && (
-              <p className="text-small text-tertiary">
-                Source: <code>{entry.path}</code>
+      {expanded &&
+        (() => {
+          const entry = GLOSSARY.find((item) => item.term === expanded)
+          if (!entry) {
+            return null
+          }
+          return (
+            <div className="callout callout-neutral stack stack-gap-8">
+              <h3>{entry.term}</h3>
+              <p>{entry.definition}</p>
+              <p className="text-small text-secondary">
+                Related: {entry.related}
               </p>
-            )}
-          </div>
-        )
-      })()}
+              {entry.path && (
+                <p className="text-small text-tertiary">
+                  Source: <code>{entry.path}</code>
+                </p>
+              )}
+            </div>
+          )
+        })()}
     </div>
   )
 }
 
 function FeaturesView() {
-  const totalfeatures = FEATURE_DOMAINS.reduce((count, domain) => count + domain.features.length, 0)
+  const totalfeatures = FEATURE_DOMAINS.reduce(
+    (count, domain) => count + domain.features.length,
+    0,
+  )
 
   return (
     <div className="stack stack-gap-20">
@@ -358,8 +403,8 @@ function FeaturesView() {
         </details>
       ))}
       <p className="text-small text-tertiary">
-        {totalfeatures} feature rows across {FEATURE_DOMAINS.length} domains. Sources:
-        COMMANDS_SUMMARY.md, zss/**/docs/.
+        {totalfeatures} feature rows across {FEATURE_DOMAINS.length} domains.
+        Sources: COMMANDS_SUMMARY.md, zss/**/docs/.
       </p>
     </div>
   )
@@ -373,8 +418,8 @@ function SystemOverview() {
       <header className="overview-header">
         <h1>ZED Cafe / ZSS System Reference</h1>
         <p>
-          Architecture diagrams, glossary, and feature inventory for the Zed Software System —
-          ZZT-inspired fantasy terminal engine.
+          Architecture diagrams, glossary, and feature inventory for the Zed
+          Software System — ZZT-inspired fantasy terminal engine.
         </p>
       </header>
 

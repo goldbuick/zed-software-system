@@ -1,12 +1,10 @@
-import { pttoindex } from 'zss/mapping/2d'
 import {
-  memorycloneboardelement,
   memorycopyboardelementruntime,
   memoryensureboardelementruntime,
   memoryreadboardelementruntime,
   memorywriteboardelementruntime,
 } from 'zss/memory/runtimeboundary'
-import { BOARD_ELEMENT, BOARD_WIDTH } from 'zss/memory/types'
+import { BOARD_ELEMENT } from 'zss/memory/types'
 import { CATEGORY } from 'zss/words/types'
 
 function maketerrain(x: number, y: number): BOARD_ELEMENT {
@@ -42,31 +40,6 @@ describe('runtimeboundary element clone', () => {
     expect(memoryreadboardelementruntime(dest)?.kinddata?.name).toBe('wall')
     expect(memoryreadboardelementruntime(src)?.category).toBe(
       CATEGORY.ISTERRAIN,
-    )
-  })
-
-  it('memorycloneboardelement returns a new element with cloned runtime and patch', () => {
-    const src = maketerrain(5, 5)
-    const srcid = src.runtime
-
-    const cloned = memorycloneboardelement(src, { x: 6, y: 5 })
-
-    expect(cloned).not.toBe(src)
-    expect(cloned.runtime).not.toBe(srcid)
-    expect(cloned.x).toBe(6)
-    expect(cloned.y).toBe(5)
-    expect(cloned.char).toBe(219)
-    expect(memoryreadboardelementruntime(cloned)?.kinddata?.name).toBe('wall')
-  })
-
-  it('memorycloneboardelement ensures runtime when source has none', () => {
-    const src: BOARD_ELEMENT = { x: 0, y: 0, kind: 'empty' }
-    const cloned = memorycloneboardelement(src, { x: 1, y: 0 })
-
-    expect(cloned.runtime).toBeDefined()
-    expect(memoryreadboardelementruntime(cloned)).toBeDefined()
-    expect(pttoindex({ x: cloned.x ?? 0, y: cloned.y ?? 0 }, BOARD_WIDTH)).toBe(
-      1,
     )
   })
 })

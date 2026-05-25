@@ -44,10 +44,7 @@ export type DAGLayoutResult = {
   nodes: NodeLayout[]
 }
 
-function detectbackedges(
-  nodeids: string[],
-  edges: DAGEdge[],
-): Set<string> {
+function detectbackedges(nodeids: string[], edges: DAGEdge[]): Set<string> {
   const adj = new Map<string, string[]>()
   for (const id of nodeids) {
     adj.set(id, [])
@@ -81,7 +78,10 @@ function detectbackedges(
   return backedges
 }
 
-function computeranks(nodeids: string[], dagedges: DAGEdge[]): Map<string, number> {
+function computeranks(
+  nodeids: string[],
+  dagedges: DAGEdge[],
+): Map<string, number> {
   const rank = new Map<string, number>()
   for (const nodeid of nodeids) {
     rank.set(nodeid, 0)
@@ -184,7 +184,9 @@ export function computedaglayout(options: DAGLayoutOptions): DAGLayoutResult {
   let maxy = padding
   for (const nodeid of nodeids) {
     const p = pos.get(nodeid)
-    if (!p) continue
+    if (!p) {
+      continue
+    }
     maxx = Math.max(maxx, p.x + nodewidth + padding)
     maxy = Math.max(maxy, p.y + nodeheight + padding)
   }

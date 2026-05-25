@@ -92,7 +92,7 @@ describe('state', () => {
       char: [0, 0, 0, 0],
       color: [0, 0, 0, 0],
       bg: [0, 0, 0, 0],
-      stats: [0, 0, 0, 0],
+      props: [0, 0, 0, 0],
     }
     const spriteswithmixed: LAYER_SPRITES = {
       id: 'sp:test',
