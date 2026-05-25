@@ -38,7 +38,7 @@ function releaselayerbackingarrays(layer: LAYER) {
     releaseboardsizearray(layer.char)
     releaseboardsizearray(layer.color)
     releaseboardsizearray(layer.bg)
-    releaseboardsizearray(layer.stats)
+    releaseboardsizearray(layer.props)
     return
   }
   if (layer.type === LAYER_TYPE.DITHER) {
@@ -94,7 +94,7 @@ function createtileswithpooledbuffers(
     char: acquireboardsizearray(0),
     color: acquireboardsizearray(0),
     bg: acquireboardsizearray(bg),
-    stats: acquireboardsizearray(0),
+    props: acquireboardsizearray(0),
   }
 }
 

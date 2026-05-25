@@ -54,25 +54,25 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
       tilelayer.char,
       tilelayer.color,
       tilelayer.bg,
-      tilelayer.stats,
+      tilelayer.props,
     )
     const walls = filterlayer2walls(
       tilelayer.char,
       tilelayer.color,
       tilelayer.bg,
-      tilelayer.stats,
+      tilelayer.props,
     )
     const water = filterlayer2water(
       tilelayer.char,
       tilelayer.color,
       tilelayer.bg,
-      tilelayer.stats,
+      tilelayer.props,
     )
     const ground = filterlayer2flooredge(
       tilelayer.char,
       tilelayer.color,
       tilelayer.bg,
-      tilelayer.stats,
+      tilelayer.props,
     )
     const wallscap = {
       char: walls.char.map((c) => (c !== 0 ? 220 : 0)),

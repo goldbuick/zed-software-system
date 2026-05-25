@@ -288,7 +288,7 @@ export function memoryconverttogadgetlayers(
     tiles.char[i] = char
     tiles.color[i] = display.color
     tiles.bg[i] = display.bg
-    tiles.stats[i] = collision
+    tiles.props[i] = collision
   }
 
   const boardobjects = Object.values(board.objects ?? {})

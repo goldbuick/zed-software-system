@@ -112,6 +112,14 @@ export default defineConfig(({ mode }) => {
   return {
     root,
     envPrefix: envprefix,
+    build: {
+      rollupOptions: {
+        input: {
+          index: path.join(apppath, 'index.html'),
+          sys: path.join(apppath, 'sys/index.html'),
+        },
+      },
+    },
     plugins: [
       devjavascriptmimetypedev(),
       react(),
