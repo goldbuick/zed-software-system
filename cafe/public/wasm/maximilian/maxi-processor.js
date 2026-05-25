@@ -36796,6 +36796,8 @@ class MaxiProcessor extends AudioWorkletProcessor {
               this.zssMasterSab = next;
             } else if (id === "zss_fx") {
               this.zssFxSab = next;
+            } else if (id === "zss_voicecfg") {
+              this.zssVoiceCfgSab = next;
             }
             if (!inputSABs[id]) {
               inputSABs[id] = {

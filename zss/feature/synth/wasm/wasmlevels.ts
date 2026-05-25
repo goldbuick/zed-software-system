@@ -1,6 +1,21 @@
 /** Per-voice output trim in masterout (drums use DRUM_BUS_GAIN separately). */
 export const WASM_VOICE_OUT_GAIN = 1.0
 
+/** BeepBox chip noise — ZSS trim after expression * noiseBaseExpression (0.19). */
+export const NOISE_BASE_EXPRESSION = 0.19
+
+/** ~square peak for retro (expression 0.25): 1 / (0.25 * 0.19) ≈ 21. */
+export const WASM_NOISE_VOICE_GAIN = 21
+
+/** Soft chip types (white/hollow) lose level via pitch-relative smoothing. */
+export const WASM_NOISE_SOFT_GAIN = 3.0
+
+/** Legacy metallic table peaks ~22; LFSR types peak at ±1. */
+export const WASM_NOISE_METALLIC_NORM = 1 / 22
+
+/** Sine RMS is ~3 dB below square at the same peak; match square loudness. */
+export const WASM_SINE_VOICE_GAIN = Math.SQRT2
+
 /** Per-drum voice gains after DSP (index = #play digit). */
 export const WASM_DRUM_VOICE_GAINS = [
   0.24, // 0 tick

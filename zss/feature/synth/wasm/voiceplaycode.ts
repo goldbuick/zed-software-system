@@ -1,21 +1,29 @@
 import { WASM_DRUM_PLAY_CODE } from './drumplaycode'
 import { WASM_FX_PLAY_CODE } from './wasmfxplaycode'
 import { WASM_ENV_CODE } from './wasmenv'
+import { WASM_SINE_VOICE_GAIN } from './wasmlevels'
 import { WASM_MASTER_PLAY_CODE } from './wasmmasterplaycode'
-import { WASM_NOISE_SETUP_CODE } from './noisewave'
+import { WASM_NOISE_PLAY_CODE } from './noiseplaycode'
+import { NOISE_SAMPLE_COUNT, WASM_NOISE_SETUP_CODE } from './noisewave'
+import {
+  WASM_VOICE_CFG_STRIDE,
+} from './wasmvoicecfgsab'
 
 /** Phase 1 voices + Phase 2 drums + Phase 3 FX through Maximilian WASM worklet. */
 export const WASM_SYNTH_VOICE_PLAY_CODE = `
 ${WASM_ENV_CODE}
-${WASM_NOISE_SETUP_CODE}
-${WASM_DRUM_PLAY_CODE}
-${WASM_FX_PLAY_CODE}
-${WASM_MASTER_PLAY_CODE}
 
 var VOICE_COUNT = 8;
 var PLAY_VOICE_COUNT = 4;
 var VOICE_STRIDE = 6;
+var VOICE_CFG_STRIDE = ${WASM_VOICE_CFG_STRIDE};
 var C4_HZ = 261.63;
+
+${WASM_NOISE_SETUP_CODE}
+${WASM_NOISE_PLAY_CODE}
+${WASM_DRUM_PLAY_CODE}
+${WASM_FX_PLAY_CODE}
+${WASM_MASTER_PLAY_CODE}
 
 var synthoscs = [];
 var synthmods = [];
@@ -44,6 +52,12 @@ var noisephase = [];
 var noiseprev = [];
 var gateprev = [];
 var dootpitch = [];
+var playfreqs = [];
+var voicecfgattack = [];
+var voicecfgdecay = [];
+var voicecfgsustain = [];
+var voicecfgrelease = [];
+var voicecfgport = [];
 
 for (var vi = 0; vi < VOICE_COUNT; vi++) {
   freqs.push(440);
@@ -54,8 +68,17 @@ for (var vi = 0; vi < VOICE_COUNT; vi++) {
   osctypes.push(0);
   noisephase.push(0);
   noiseprev.push(0);
+  noisesample.push(0);
+  noiserng.push((${NOISE_SAMPLE_COUNT} + vi * 7919) >>> 0);
+  noisenotecount.push(0);
   gateprev.push(0);
   dootpitch.push(1);
+  playfreqs.push(440);
+  voicecfgattack.push(0.01);
+  voicecfgdecay.push(0.05);
+  voicecfgsustain.push(0.6);
+  voicecfgrelease.push(0.08);
+  voicecfgport.push(0);
 
   synthoscs.push(new Maximilian.maxiOsc());
   synthmods.push(new Maximilian.maxiOsc());
@@ -91,28 +114,6 @@ for (var vi = 0; vi < VOICE_COUNT; vi++) {
   algoenvs.push(voicealgoenvs);
 }
 
-function noiseforvoice(noisetype) {
-  if (noisetype === 1) { return noiseready(1); }
-  if (noisetype === 2) { return noiseready(2); }
-  if (noisetype === 3) { return noiseready(3); }
-  return noiseready(4);
-}
-
-function readnoise(i, buf, freq, gate) {
-  if (gate && !noiseprev[i]) {
-    noisephase[i] = 0;
-  }
-  noiseprev[i] = gate;
-  if (!gate) {
-    return 0;
-  }
-  var rate = freq > 0 ? freq / C4_HZ : 1;
-  var idx = Math.floor(noisephase[i]) % buf.length;
-  var sample = buf[idx];
-  noisephase[i] += rate;
-  return sample;
-}
-
 function detunedhz(i, freq) {
   var hz = freq > 0 ? freq : 440;
   var cents = detunes[i] || 0;
@@ -120,6 +121,81 @@ function detunedhz(i, freq) {
     cents += playvibratocents(i);
   }
   return hz * Math.pow(2, cents / 1200);
+}
+
+function glidefreq(i) {
+  var target = freqs[i] > 0 ? freqs[i] : 440;
+  var type = types[i];
+  var port = voicecfgport[i] || 0;
+  if ((type !== 0 && type !== 7) || port <= 0) {
+    playfreqs[i] = target;
+    return target;
+  }
+  var sr = typeof sampleRate !== 'undefined' ? sampleRate : 44100;
+  var rate = 1 / Math.max(1, port * sr);
+  playfreqs[i] += (target - playfreqs[i]) * rate;
+  return playfreqs[i];
+}
+
+function applyvoiceenvelope(i, attack, decay, sustain, release) {
+  var atk = attack * 1000;
+  var dec = decay * 1000;
+  var rel = release * 1000;
+  var type = types[i];
+  if (type === 5) {
+    bellenvs[i].setparams(atk, dec, sustain, rel);
+    return;
+  }
+  if (type === 6) {
+    dootenvs[i].setparams(atk, dec, sustain, rel);
+    return;
+  }
+  if (type === 7) {
+    var envs4 = algoenvs[i];
+    for (var oi = 0; oi < 4; oi++) {
+      envs4[oi].setparams(atk, dec, sustain, rel);
+    }
+    return;
+  }
+  envs[i].setparams(atk, dec, sustain, rel);
+}
+
+function readvoicecfgsab() {
+  var raw = qref.zssVoiceCfgSab;
+  if (!raw && qref.engine) {
+    raw = qref.engine.zssVoiceCfgSab;
+  }
+  if (!raw || typeof raw.length !== 'number' || raw.length < VOICE_COUNT * VOICE_CFG_STRIDE) {
+    return;
+  }
+  for (var i = 0; i < VOICE_COUNT; i++) {
+    var base = i * VOICE_CFG_STRIDE;
+    var atk = raw[base];
+    var dec = raw[base + 1];
+    var sus = raw[base + 2];
+    var rel = raw[base + 3];
+    var port = raw[base + 4];
+    if (
+      voicecfgattack[i] !== atk ||
+      voicecfgdecay[i] !== dec ||
+      voicecfgsustain[i] !== sus ||
+      voicecfgrelease[i] !== rel
+    ) {
+      voicecfgattack[i] = atk;
+      voicecfgdecay[i] = dec;
+      voicecfgsustain[i] = sus;
+      voicecfgrelease[i] = rel;
+      applyvoiceenvelope(i, atk, dec, sus, rel);
+    }
+    voicecfgport[i] = port;
+  }
+}
+
+function synthwavegain(osc) {
+  if (osc === 1 || osc === 10 || osc === 20 || osc === 30) {
+    return ${WASM_SINE_VOICE_GAIN};
+  }
+  return 1;
 }
 
 function synthsource(i, freq, gate) {
@@ -161,20 +237,11 @@ function synthsource(i, freq, gate) {
     sig = (o.saw(hz) + o.saw(hz * 1.004) + o.saw(hz * 0.996)) / 3;
   } else { sig = o.square(hz); }
 
-  return sig;
+  return sig * synthwavegain(osc);
 }
 
 function synthvoice(i, freq, gate) {
-  return synthsource(i, freq, gate) * envs[i].adsr(1, gate);
-}
-
-function noisevoice(i, noisetype, freq, gate) {
-  var buf = noiseforvoice(noisetype);
-  var raw = readnoise(i, buf, freq, gate);
-  var envout = envs[i].adsr(1, gate);
-  var shaped = filtlow[i].lores(raw, 440, 0.3);
-  shaped = filthigh[i].hipass(shaped, 440);
-  return shaped * envout * 0.02;
+  return synthsource(i, glidefreq(i), gate) * envs[i].adsr(1, gate);
 }
 
 function bellsvoice(i, freq, gate) {
@@ -209,7 +276,7 @@ function dootvoice(i, freq, gate) {
 }
 
 function algovoice(i, freq, gate, algo) {
-  var hz = freq > 0 ? freq : 440;
+  var hz = glidefreq(i);
   var h1 = 2, h2 = 2, h3 = 2;
   var mi1 = 1, mi2 = 1, mi3 = 1;
   var ops = algooscs[i];
@@ -261,7 +328,9 @@ function voiceout(i) {
   var algo = algos[i];
 
   if (type === 0) { return synthvoice(i, freq, gate); }
-  if (type >= 1 && type <= 4) { return noisevoice(i, type, freq, gate); }
+  if ((type >= 1 && type <= 4) || type === 8 || type === 9) {
+    return noisevoice(i, type, freq, gate);
+  }
   if (type === 5) { return bellsvoice(i, freq, gate); }
   if (type === 6) { return dootvoice(i, freq, gate); }
   if (type === 7) { return algovoice(i, freq, gate, algo); }
@@ -289,6 +358,7 @@ function readvoicessab() {
 
 function play() {
   readvoicessab();
+  readvoicecfgsab();
   updateplayvibratodepth();
   playbuswahenv = 0;
   bgbuswahenv = 0;

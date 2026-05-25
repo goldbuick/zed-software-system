@@ -36,6 +36,7 @@ function builddspcode(usercode: string) {
       var engine = q.engine;
       if (engine) {
         q.zssVoiceSab = engine.zssVoiceSab;
+        q.zssVoiceCfgSab = engine.zssVoiceCfgSab;
         q.zssDrumSab = engine.zssDrumSab;
         q.zssMasterSab = engine.zssMasterSab;
         q.zssFxSab = engine.zssFxSab;

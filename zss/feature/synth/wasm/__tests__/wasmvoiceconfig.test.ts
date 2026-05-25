@@ -7,6 +7,7 @@ import {
   defaultwasmvoicestate,
   wasmvoicestatetosab,
 } from '../wasmvoiceconfig'
+import { wasmvoicecfgtosab } from '../wasmvoicecfgsab'
 
 describe('wasmosctype', () => {
   it('parses basic waves', () => {
@@ -45,6 +46,14 @@ describe('wasmvoiceconfig', () => {
     expect(voices[2].algo).toBe(3)
   })
 
+  it('maps noise and hollow chip types', () => {
+    const voices = defaultwasmvoicestate()
+    expect(applywasmvoiceconfig(voices, 0, 'noise', '')).toBe(true)
+    expect(voices[0].type).toBe(SOURCE_TYPE.WHITE_NOISE)
+    expect(applywasmvoiceconfig(voices, 1, 'hollow', '')).toBe(true)
+    expect(voices[1].type).toBe(SOURCE_TYPE.HOLLOW_NOISE)
+  })
+
   it('restart resets all voices to SYNTH square', () => {
     const voices = defaultwasmvoicestate()
     applywasmvoiceconfig(voices, 0, 'bells', '')
@@ -66,6 +75,71 @@ describe('wasmvoiceconfig', () => {
     expect(merged[7]).toBe(1)
     expect(merged[8]).toBe(SOURCE_TYPE.SYNTH)
     expect(merged[11]).toBe(WASM_OSC_TYPE.SINE)
+  })
+
+  it('maps envelope and portamento into voice cfg sab', () => {
+    const voices = defaultwasmvoicestate()
+    expect(
+      applywasmvoiceconfig(voices, 0, 'envelope', [0.02, 0.1, 0.4, 0.2]),
+    ).toBe(true)
+    expect(voices[0].envelope).toEqual({
+      attack: 0.02,
+      decay: 0.1,
+      sustain: 0.4,
+      release: 0.2,
+    })
+    expect(applywasmvoiceconfig(voices, 0, 'portamento', 0.25)).toBe(true)
+    expect(voices[0].portamento).toBe(0.25)
+
+    const sab = wasmvoicecfgtosab(voices)
+    expect(sab[0]).toBe(0.02)
+    expect(sab[1]).toBe(0.1)
+    expect(sab[2]).toBe(0.4)
+    expect(sab[3]).toBe(0.2)
+    expect(sab[4]).toBe(0.25)
+  })
+
+  it('portamento applies only to synth and algo voices', () => {
+    const voices = defaultwasmvoicestate()
+    applywasmvoiceconfig(voices, 0, 'retro', '')
+    expect(applywasmvoiceconfig(voices, 0, 'portamento', 0.5)).toBe(false)
+    applywasmvoiceconfig(voices, 1, 'algo2', '')
+    expect(applywasmvoiceconfig(voices, 1, 'port', 0.3)).toBe(true)
+    expect(voices[1].portamento).toBe(0.3)
+  })
+
+  it('type changes preserve envelope and portamento', () => {
+    const voices = defaultwasmvoicestate()
+    applywasmvoiceconfig(voices, 0, 'envelope', [0.5, 0.5, 0.5, 0.5])
+    applywasmvoiceconfig(voices, 0, 'portamento', 0.1)
+    applywasmvoiceconfig(voices, 0, 'bells', '')
+    expect(voices[0].envelope.sustain).toBe(0.5)
+    expect(voices[0].portamento).toBe(0.1)
+    expect(voices[0].type).toBe(SOURCE_TYPE.BELLS)
+  })
+
+  it('initwasmvoicesab seeds voice cfg sab defaults', () => {
+    const sends: Record<string, number[]> = {}
+    const maxi = {
+      send: () => {},
+      audioWorkletNode: {
+        port: {
+          postMessage: (msg: {
+            channelID?: string
+            data?: number[]
+          }) => {
+            if (msg.channelID && msg.data) {
+              sends[msg.channelID] = msg.data.slice()
+            }
+          },
+        },
+      },
+    }
+    initwasmvoicesab(maxi as any)
+    expect(sends.zss_voicecfg).toHaveLength(40)
+    expect(sends.zss_voicecfg?.[0]).toBe(0.01)
+    expect(sends.zss_voicecfg?.[2]).toBe(0.6)
+    expect(sends.zss_voicecfg?.[4]).toBe(0)
   })
 
   it('initwasmvoicesab seeds SYNTH square defaults on sab', () => {

@@ -52,6 +52,12 @@ function zssenv(attackms, decayms, sustain, releasems) {
 
       return input * this.level;
     },
+    setparams: function(attackms, decayms, sustain, releasems) {
+      this.attackms = attackms;
+      this.decayms = decayms;
+      this.sustain = sustain;
+      this.releasems = releasems;
+    },
   };
 }
 `

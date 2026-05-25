@@ -14,17 +14,34 @@ Factory for creating sound sources. Defines all available synth types and their 
 | `BELLS` | FMSynth + MetalSynth sparkle |
 | `DOOT` | MembraneSynth (drum-like) |
 | `ALGO_SYNTH` | Custom 4-operator FM synth |
+| `HOLLOW_NOISE` | BeepBox hollow chip noise (WASM only) |
+| `WHITE_NOISE` | BeepBox white chip noise — `#synth noise` (WASM only) |
 
-## Noise Generation
+## BeepBox chip noise mapping (WASM)
 
-Noise sources use a deterministic LFSR-style algorithm (not crypto-grade PRNG):
+WASM noise voices use [BeepBox](https://github.com/johnnesky/beepbox) `chipNoises` wave tables (32768 samples) and `noiseSynth` playback (pitch-relative smoothing + expression gain). Tone path still uses the legacy 131072-sample Sampler tables until a follow-up.
+
+| `#synth` | BeepBox index | Generation |
+|----------|---------------|------------|
+| `retro` | 0 | LFSR `1<<14` |
+| `noise` | 1 | Fixed-seed PRNG (BeepBox white) |
+| `clang` | 2 | LFSR `2<<14` |
+| `buzz` | 3 | LFSR `10<<2` |
+| `hollow` | 4 | FFT-designed hollow spectrum |
+| `metallic` | *(none — ZSS legacy)* | LFSR `15<<2`, fixed `(bit)*4*7.5-8` amplitude |
+
+`#synth noise` and `#synth hollow` require `ZSS_WASM_SYNTH=true`; Tone path returns an error.
+
+## Noise Generation (Tone path — legacy)
+
+Tone noise sources still use a deterministic LFSR-style algorithm:
 
 - **Buffer size:** 131072 samples
 - **Feedback taps** vary by type:
   - `RETRO_NOISE`: 1<<14
   - `CLANG_NOISE`: 2<<14
   - `BUZZ_NOISE`: 10<<2
-  - `METALLIC_NOISE`: 15<<2 (with amplitude variation)
+  - `METALLIC_NOISE`: 15<<2 (with random amplitude variation)
 
 METALLIC_NOISE uses additional amplitude scaling for a brighter character.
 

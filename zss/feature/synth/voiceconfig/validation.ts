@@ -26,6 +26,8 @@ export function validatesynthtype(
       case 'buzz':
       case 'clang':
       case 'metallic':
+      case 'noise':
+      case 'hollow':
       case 'bells':
       case 'doot':
       case 'algo0':

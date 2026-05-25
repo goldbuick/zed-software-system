@@ -93,6 +93,22 @@ export function synthvoiceconfig(
               case 'metallic':
                 synth.changesource(index, SOURCE_TYPE.METALLIC_NOISE, 0)
                 break
+              case 'noise':
+                apierror(
+                  SOFTWARE,
+                  player,
+                  `synth`,
+                  `noise voice requires WASM synth (ZSS_WASM_SYNTH=true)`,
+                )
+                break
+              case 'hollow':
+                apierror(
+                  SOFTWARE,
+                  player,
+                  `synth`,
+                  `hollow noise requires WASM synth (ZSS_WASM_SYNTH=true)`,
+                )
+                break
               case 'bells':
                 synth.changesource(index, SOURCE_TYPE.BELLS, 0)
                 break

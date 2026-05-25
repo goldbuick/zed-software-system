@@ -126,8 +126,9 @@ function fxautowahbus(x, group) {
     return 0;
   }
   var resonant = low * (1 - sm) + high * sm;
-  var boost = 10 + sens * 12;
-  return resonant * boost;
+  var boost = 16 + sens * 18;
+  var wahout = x + resonant * boost;
+  return wahout - x;
 }
 
 function fxsecstosamples(sec) {
@@ -308,18 +309,31 @@ function fxreverb(x, group) {
   return Math.tanh(wet * 1.6);
 }
 
+function tonedistort(x, amt) {
+  var k = amt * 100;
+  var deg = 0.01745329252;
+  var ax = x < 0 ? -x : x;
+  if (ax < 0.001) {
+    return 0;
+  }
+  var sign = x < 0 ? -1 : 1;
+  return sign * ((3 + k) * ax * 20 * deg) / (Math.PI + k * ax);
+}
+
 function fxdistort(x, group) {
   var amt = fxparam(5);
   if (amt <= 0) {
-    amt = 0.55;
+    amt = 0.4;
   }
-  var k = 1 + amt * 22;
-  return Math.tanh(x * k) / Math.tanh(k);
+  return tonedistort(x, amt);
 }
 
 function fxdistortwet(x, group) {
-  var out = fxdistort(x, group);
-  return out - x;
+  var amt = fxparam(5);
+  if (amt <= 0) {
+    amt = 0.4;
+  }
+  return tonedistort(x * 3, amt);
 }
 
 function fxautofilterfx(x, group) {

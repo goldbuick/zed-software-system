@@ -63,7 +63,7 @@ function defaultfxparams(): number[] {
     2.5,
     0.01,
     32,
-    0.55,
+    0.4,
     3,
     0.5,
     0.02,

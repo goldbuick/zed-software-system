@@ -10,7 +10,6 @@ import { SOURCE_TYPE } from 'zss/feature/synth/source'
 import type { SYNTH_STATE } from 'zss/gadget/data/types'
 import { randominteger } from 'zss/mapping/number'
 import { isnumber, isstring } from 'zss/mapping/types'
-import type { SYNTH_STATE } from 'zss/gadget/data/types'
 
 import type { MaxiEngine } from './maximilian'
 import { pushwasmsabvalues } from './sabpush'
@@ -31,6 +30,10 @@ import {
   type WASM_VOICE_STATE,
   wasmvoicestatetosab,
 } from './wasmvoiceconfig'
+import {
+  initwasmvoicecfgsab,
+  pushwasmvoicecfgsab,
+} from './wasmvoicecfgsab'
 
 const WASM_VOICE_COUNT = SYNTH_VOICE_COUNT
 const WASM_VOICES_SAB = 'zss_voices'
@@ -92,13 +95,15 @@ function patternendtime(
 }
 
 export function initwasmvoicesab(maxi: MaxiEngine) {
+  const voicecfg = defaultwasmvoicestate()
   const playstate = new Array(WASM_VOICE_BLOCK).fill(0)
   const sab = wasmvoicestatetosab(
-    defaultwasmvoicestate(),
+    voicecfg,
     playstate,
     WASM_VOICE_STRIDE,
   )
   pushwasmsabvalues(maxi, WASM_VOICES_SAB, sab)
+  initwasmvoicecfgsab(maxi, voicecfg)
 }
 
 export { initwasmfxsab } from './wasmfxstate'
@@ -155,6 +160,7 @@ export function createwasmsynth(
   function pushvoicestate() {
     voicestate = wasmvoicestatetosab(voicecfg, voicestate, WASM_VOICE_STRIDE)
     pushwasmsabvalues(maxi, WASM_VOICES_SAB, voicestate)
+    pushwasmvoicecfgsab(maxi, voicecfg)
   }
 
   function clearschedules() {
