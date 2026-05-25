@@ -12,12 +12,11 @@ export type WASM_VOICE_STATE = {
 }
 
 export function defaultwasmvoicestate(): WASM_VOICE_STATE[] {
-  return [
-    { type: SOURCE_TYPE.SYNTH, algo: 0, osc: WASM_OSC_TYPE.SQUARE },
-    { type: SOURCE_TYPE.SYNTH, algo: 0, osc: WASM_OSC_TYPE.SQUARE },
-    { type: SOURCE_TYPE.SYNTH, algo: 0, osc: WASM_OSC_TYPE.SQUARE },
-    { type: SOURCE_TYPE.SYNTH, algo: 0, osc: WASM_OSC_TYPE.SQUARE },
-  ]
+  return Array.from({ length: 8 }, () => ({
+    type: SOURCE_TYPE.SYNTH,
+    algo: 0,
+    osc: WASM_OSC_TYPE.SQUARE,
+  }))
 }
 
 function parsesourcetype(config: string): WASM_VOICE_STATE | undefined {

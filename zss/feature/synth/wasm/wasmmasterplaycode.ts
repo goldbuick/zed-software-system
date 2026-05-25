@@ -48,6 +48,33 @@ var duckattackstep = 0;
 var duckreleasestep = 0;
 var duckdrumprev = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 var compenv = 0;
+var mastervolprev = 80;
+
+function readmastervolraw() {
+  var raw = qref.zssMasterSab;
+  if (!raw && qref.engine) {
+    raw = qref.engine.zssMasterSab;
+  }
+  if (raw && typeof raw.length === 'number' && raw.length >= 1) {
+    return raw[0];
+  }
+  return 80;
+}
+
+function readbgplayvolraw() {
+  var raw = qref.zssMasterSab;
+  if (!raw && qref.engine) {
+    raw = qref.engine.zssMasterSab;
+  }
+  if (raw && typeof raw.length === 'number' && raw.length >= 2) {
+    return raw[1];
+  }
+  return 100;
+}
+
+function ismastermuted() {
+  return readmastervolraw() <= 0.001;
+}
 
 function startduck(floor, holdsec, releasesec) {
   duckfloor = floor;
@@ -82,6 +109,9 @@ function tickduck() {
 }
 
 function checkducktriggers() {
+  if (ismastermuted()) {
+    return;
+  }
   var raw = qref.zssDrumSab;
   if (!raw && qref.engine) {
     raw = qref.engine.zssDrumSab;
@@ -116,29 +146,43 @@ function applycompressor(x) {
 }
 
 function readmastervolume() {
-  var raw = qref.zssMasterSab;
-  if (!raw && qref.engine) {
-    raw = qref.engine.zssMasterSab;
-  }
-  var vol = 80;
-  if (raw && typeof raw.length === 'number' && raw.length >= 1) {
-    vol = raw[0];
-  }
+  var vol = readmastervolraw();
   if (vol <= 0.001) {
-    vol = 0.001;
+    return 0;
   }
+  if (mastervolprev <= 0.001 && vol > 0.001) {
+    compenv = 0;
+    voiceduckgain = 1;
+    duckphase = 'idle';
+  }
+  mastervolprev = vol;
   var db = 20 * Math.log10(vol * 0.25) - 35 + MASTER_TRIM_DB + MASTER_MAKEUP_DB;
   return Math.pow(10, db / 20);
 }
 
-function masterout(voices, drums) {
+function readbgplayvolume() {
+  var vol = readbgplayvolraw();
+  if (vol <= 0.001) {
+    return 0;
+  }
+  var db = 20 * Math.log10(vol) - 35;
+  return Math.pow(10, db / 20);
+}
+
+function masterout(playvoices, bgvoices, drums) {
   checkducktriggers();
   tickduck();
-  var v = voices * voiceduckgain * MASTER_VOICE_GAIN * MASTER_PLAY_TRIM;
+  var volgain = readmastervolume();
+  var bggain = readbgplayvolume();
+  var v = playvoices * voiceduckgain * MASTER_VOICE_GAIN * MASTER_PLAY_TRIM;
+  var bg = bgvoices * MASTER_VOICE_GAIN * bggain;
   var d = drums * MASTER_DRUM_GAIN;
-  var dry = v + d;
+  if (volgain <= 0) {
+    return 0;
+  }
+  var dry = v + bg + d;
   var comp = applycompressor(dry);
   var razz = applyrazzle(comp);
-  return razz * readmastervolume();
+  return razz * volgain;
 }
 `

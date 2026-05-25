@@ -1,17 +1,30 @@
 import { Note } from 'tonal'
 import {
-  SYNTH_SFX_RESET,
   invokeplay,
   parseplay,
+  SYNTH_SFX_RESET,
   tonenotationseconds,
 } from 'zss/feature/synth/playnotation'
+import { SYNTH_VOICE_COUNT } from 'zss/feature/synth/synthdefaults'
 import { SOURCE_TYPE } from 'zss/feature/synth/source'
+import type { SYNTH_STATE } from 'zss/gadget/data/types'
 import { randominteger } from 'zss/mapping/number'
 import { isnumber, isstring } from 'zss/mapping/types'
+import type { SYNTH_STATE } from 'zss/gadget/data/types'
 
 import type { MaxiEngine } from './maximilian'
 import { pushwasmsabvalues } from './sabpush'
 import { resolveplaystarttime } from './playstart'
+import {
+  applywasmfxconfig,
+  defaultwasmfxsab,
+  initwasmfxsab,
+  pushwasmfxsab,
+  replaywasmfxfromstate,
+  WASM_FX_PARAM_IDX,
+  WASM_FX_PARAM_OFFSET,
+} from './wasmfxstate'
+import { canonicalvoicefxgroupindex } from '../voicefxgroup'
 import {
   applywasmvoiceconfig,
   defaultwasmvoicestate,
@@ -19,7 +32,7 @@ import {
   wasmvoicestatetosab,
 } from './wasmvoiceconfig'
 
-const WASM_VOICE_COUNT = 4
+const WASM_VOICE_COUNT = SYNTH_VOICE_COUNT
 const WASM_VOICES_SAB = 'zss_voices'
 const WASM_DRUMS_SAB = 'zss_drums'
 const WASM_DRUM_COUNT = 10
@@ -88,6 +101,8 @@ export function initwasmvoicesab(maxi: MaxiEngine) {
   pushwasmsabvalues(maxi, WASM_VOICES_SAB, sab)
 }
 
+export { initwasmfxsab } from './wasmfxstate'
+
 function drumdurationfor(drumid: number, notationdur: number): number {
   if (drumid === 0) {
     return tonenotationseconds('16n')
@@ -111,6 +126,7 @@ export function initwasmdrumsab(maxi: MaxiEngine, strikes?: number[]) {
 
 export type WASM_SYNTH_HOOKS = {
   setplayvolume?: (volume: number) => void
+  setbgplayvolume?: (volume: number) => void
 }
 
 export function createwasmsynth(
@@ -118,9 +134,11 @@ export function createwasmsynth(
   hooks: WASM_SYNTH_HOOKS = {},
 ) {
   initwasmvoicesab(maxi)
+  initwasmfxsab(maxi)
   initwasmdrumsab(maxi)
 
   let voicestate = new Array(WASM_VOICE_BLOCK).fill(0)
+  let fxsab = defaultwasmfxsab()
   let drumstrikes = new Array(WASM_DRUM_COUNT).fill(0)
   let drumdursec = new Array(WASM_DRUM_COUNT).fill(0)
   let voicecfg = defaultwasmvoicestate()
@@ -129,6 +147,10 @@ export function createwasmsynth(
   let playvolume = 80
   let bgplayvolume = 100
   const timeouts = new Set<ReturnType<typeof setTimeout>>()
+
+  function pushfxstate() {
+    pushwasmfxsab(maxi, fxsab)
+  }
 
   function pushvoicestate() {
     voicestate = wasmvoicestatetosab(voicecfg, voicestate, WASM_VOICE_STRIDE)
@@ -192,12 +214,57 @@ export function createwasmsynth(
     }, startms)
   }
 
+  function setvibratoparams(depth: number, freq: number) {
+    fxsab[WASM_FX_PARAM_OFFSET + WASM_FX_PARAM_IDX.VIBRATO_DEPTH] = depth
+    fxsab[WASM_FX_PARAM_OFFSET + WASM_FX_PARAM_IDX.VIBRATO_FREQ] = freq
+    pushfxstate()
+  }
+
+  function schedulevibratodepth(when: number, durationsec: number) {
+    const peakdepth = Math.min(1, durationsec / 1.2)
+    const freqhigh = 1 + peakdepth * 4
+    const rampreset = Math.min(0.35, durationsec * 0.48)
+    const attackportion = Math.min(durationsec * 0.35, 0.35, durationsec * 0.48)
+    const tend = when + durationsec
+    const trelease = Math.max(when + rampreset, tend - rampreset)
+    const tpeak = Math.min(when + attackportion, trelease)
+    const now = maxi.audioContext.currentTime
+
+    armtimeout(
+      () => {
+        setvibratoparams(0, 1)
+      },
+      Math.max(0, (when - now) * 1000),
+    )
+    armtimeout(
+      () => {
+        setvibratoparams(peakdepth, freqhigh)
+      },
+      Math.max(0, (tpeak - now) * 1000),
+    )
+    armtimeout(
+      () => {
+        setvibratoparams(peakdepth, freqhigh)
+      },
+      Math.max(0, (trelease - now) * 1000),
+    )
+    armtimeout(
+      () => {
+        setvibratoparams(0, 1)
+      },
+      Math.max(0, (tend - now) * 1000),
+    )
+  }
+
   function schedulenote(
     chan: number,
     when: number,
     pitch: string,
     durationsec: number,
   ) {
+    if (chan < 0 || chan >= WASM_VOICE_COUNT) {
+      return
+    }
     const now = maxi.audioContext.currentTime
     const startms = Math.max(0, (when - now) * 1000)
     const endms = startms + durationsec * 1000
@@ -212,6 +279,8 @@ export function createwasmsynth(
       voicestate[base + 4] = detune
       pushvoicestate()
     }, startms)
+
+    schedulevibratodepth(when, durationsec)
 
     armtimeout(() => {
       voicestate[base + 1] = 0
@@ -284,12 +353,33 @@ export function createwasmsynth(
     hooks.setplayvolume?.(volume)
   }
 
-  function setbgplayvolume(_volume: number) {
-    bgplayvolume = _volume
+  function setbgplayvolume(volume: number) {
+    bgplayvolume = volume
+    hooks.setbgplayvolume?.(volume)
   }
 
   function setttsvolume(_volume: number) {
     // tts path uses playwasmaudiobuffer gain in maximilian.ts
+  }
+
+  function applyvoicefx(
+    index: number,
+    fxname: string,
+    config: number | string,
+    value: number | string,
+  ) {
+    const group = canonicalvoicefxgroupindex(index)
+    if (applywasmfxconfig(fxsab, group, fxname, config, value)) {
+      pushfxstate()
+    }
+  }
+
+  function replayvoicefx(voicefx: SYNTH_STATE['voicefx']) {
+    if (Object.keys(voicefx).length === 0) {
+      return
+    }
+    replaywasmfxfromstate(fxsab, voicefx)
+    pushfxstate()
   }
 
   function setvoiceconfig(
@@ -313,7 +403,9 @@ export function createwasmsynth(
 
   function resyncsabs() {
     initwasmvoicesab(maxi)
+    fxsab = defaultwasmfxsab()
     pushvoicestate()
+    pushfxstate()
     pushdrumstate()
   }
 
@@ -329,6 +421,8 @@ export function createwasmsynth(
     setbgplayvolume,
     setttsvolume,
     setvoiceconfig,
+    applyvoicefx,
+    replayvoicefx,
     applyreset,
     getvoicecfg,
     resyncsabs,

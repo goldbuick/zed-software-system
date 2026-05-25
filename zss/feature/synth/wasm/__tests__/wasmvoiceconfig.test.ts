@@ -86,10 +86,11 @@ describe('wasmvoiceconfig', () => {
       },
     }
     initwasmvoicesab(maxi as any)
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 8; i++) {
       const base = i * 6
       expect(sends.zss_voices?.[base + 2]).toBe(SOURCE_TYPE.SYNTH)
       expect(sends.zss_voices?.[base + 5]).toBe(WASM_OSC_TYPE.SQUARE)
     }
+    expect(sends.zss_voices).toHaveLength(48)
   })
 })

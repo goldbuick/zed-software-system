@@ -1,4 +1,4 @@
-import { getmaxiengine, getmaximaudiocontext } from './maximilian'
+import { getmaxiengine, getmaximaudiocontext, setwasmsynthplayvolume } from './maximilian'
 import type { WASM_SYNTH } from './maxisynth'
 
 /** Parity with Tone `warmdrums` in audiochain.ts. */
@@ -15,13 +15,14 @@ export function schedulewarmwasmdrums(synth: WASM_SYNTH) {
     return
   }
 
-  maxi.setGain(0)
+  const saved = synth.getplayvolume()
+  setwasmsynthplayvolume(0)
 
   setTimeout(() => {
     synth.warmdrums()
   }, WARM_DRUM_DELTA_MS)
 
   setTimeout(() => {
-    maxi.setGain(1)
+    setwasmsynthplayvolume(saved)
   }, WARM_DRUM_DELTA_MS + WARM_DRUM_TAIL_MS)
 }

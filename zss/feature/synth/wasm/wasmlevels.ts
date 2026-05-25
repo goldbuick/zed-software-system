@@ -1,5 +1,5 @@
-/** Per-voice output trim (drums use DRUM_BUS_GAIN on their own channel). */
-export const WASM_VOICE_OUT_GAIN = 0.5
+/** Per-voice output trim in masterout (drums use DRUM_BUS_GAIN separately). */
+export const WASM_VOICE_OUT_GAIN = 1.0
 
 /** Per-drum voice gains after DSP (index = #play digit). */
 export const WASM_DRUM_VOICE_GAINS = [
@@ -36,8 +36,8 @@ export const WASM_PLAY_BUS_GAIN = Math.pow(10, WASM_PLAY_BUS_DB / 20)
 /** Trim after main compressor + razzle in WASM master chain. */
 export const WASM_MASTER_TRIM_DB = 0
 
-/** Makeup for Tone sidechain/compressor headroom not fully modeled in WASM duck. */
-export const WASM_MASTER_MAKEUP_DB = 12
+/** Tone sidechain makeup (+24 dB) minus headroom; calibrates #vol 80 without cranking to 500. */
+export const WASM_MASTER_MAKEUP_DB = 22
 
 /** Razzle wet send — Tone vibrato wet is 0.1; keep modulation subtle. */
 export const WASM_RAZZLE_WET_MIX = 0.1

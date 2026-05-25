@@ -9,6 +9,7 @@ import {
 import { WASM_SAB_VOICE_PLAY_CODE } from './sabvoiceplay'
 import { WASM_SPIKE_PLAY_CODE } from './spikeplay'
 import { WASM_SYNTH_VOICE_PLAY_CODE } from './voiceplaycode'
+import { initwasmfxsab } from './wasmfxstate'
 
 const MAXIMILIAN_BASE = '/wasm/maximilian'
 
@@ -37,6 +38,7 @@ function builddspcode(usercode: string) {
         q.zssVoiceSab = engine.zssVoiceSab;
         q.zssDrumSab = engine.zssDrumSab;
         q.zssMasterSab = engine.zssMasterSab;
+        q.zssFxSab = engine.zssFxSab;
       }
       var sig = q.play(inputs);
       if (Array.isArray(sig)) {
@@ -92,6 +94,16 @@ let maxiengine: MAYBE<MaxiEngine>
 let broadcastdestination: MAYBE<MediaStreamAudioDestinationNode>
 let broadcasttap: MAYBE<GainNode>
 let wasmmaster: MAYBE<WASM_MASTER_CHAIN>
+
+let wasmplayvolume = 80
+let wasmbgplayvolume = 100
+
+function pushwasmmastervolumes() {
+  const maxi = maxiengine
+  if (maxi) {
+    pushwasmsabvalues(maxi, WASM_MASTER_SAB, [wasmplayvolume, wasmbgplayvolume])
+  }
+}
 
 const WASM_MASTER_SAB = 'zss_master'
 
@@ -213,6 +225,7 @@ async function startmaximiliandsp(maxi: MaxiEngine, usercode: string) {
   await resumeaudiocontext(maxi)
   wirewasmoutput(maxi)
   initwasmmastersab(maxi, 80)
+  initwasmfxsab(maxi)
   const ready = waitforwasmdspready(maxi)
   maxi.eval(builddspcode(usercode))
   await ready
@@ -287,15 +300,24 @@ export function getmaxiengine(): MAYBE<MaxiEngine> {
 
 export { pushwasmsabvalues } from './sabpush'
 
-export function initwasmmastersab(maxi: MaxiEngine, playvolume = 80) {
-  pushwasmsabvalues(maxi, WASM_MASTER_SAB, [playvolume])
+export function initwasmmastersab(
+  maxi: MaxiEngine,
+  playvolume = 80,
+  bgplayvolume = 100,
+) {
+  wasmplayvolume = playvolume
+  wasmbgplayvolume = bgplayvolume
+  pushwasmsabvalues(maxi, WASM_MASTER_SAB, [wasmplayvolume, wasmbgplayvolume])
 }
 
 export function setwasmsynthplayvolume(volume: number) {
-  const maxi = maxiengine
-  if (maxi) {
-    pushwasmsabvalues(maxi, WASM_MASTER_SAB, [volume])
-  }
+  wasmplayvolume = volume
+  pushwasmmastervolumes()
+}
+
+export function setwasmsynthbgplayvolume(volume: number) {
+  wasmbgplayvolume = volume
+  pushwasmmastervolumes()
 }
 
 export function getwasmmasterchain(): MAYBE<WASM_MASTER_CHAIN> {

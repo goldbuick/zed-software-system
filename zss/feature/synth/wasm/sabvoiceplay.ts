@@ -4,7 +4,7 @@ import { WASM_DRUM_PLAY_CODE } from './drumplaycode'
 export const WASM_SAB_VOICE_PLAY_CODE = `
 ${WASM_DRUM_PLAY_CODE}
 
-var VOICE_COUNT = 4;
+var VOICE_COUNT = 8;
 var oscs = [];
 var voicesready = false;
 
@@ -30,7 +30,7 @@ function play() {
   ensurevoices();
   var raw = readsabvoices();
   var sum = 0;
-  if (raw && typeof raw.length === 'number' && raw.length >= 24) {
+  if (raw && typeof raw.length === 'number' && raw.length >= 48) {
     for (var i = 0; i < VOICE_COUNT; i++) {
       var base = i * 6;
       if (raw[base + 1] <= 0.5) {

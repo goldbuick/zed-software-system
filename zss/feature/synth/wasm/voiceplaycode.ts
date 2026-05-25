@@ -1,16 +1,20 @@
 import { WASM_DRUM_PLAY_CODE } from './drumplaycode'
+import { WASM_FX_PLAY_CODE } from './wasmfxplaycode'
 import { WASM_ENV_CODE } from './wasmenv'
 import { WASM_MASTER_PLAY_CODE } from './wasmmasterplaycode'
 import { WASM_NOISE_SETUP_CODE } from './noisewave'
 
-/** Phase 1 voices + Phase 2 drums through Maximilian WASM worklet. */
+/** Phase 1 voices + Phase 2 drums + Phase 3 FX through Maximilian WASM worklet. */
 export const WASM_SYNTH_VOICE_PLAY_CODE = `
 ${WASM_ENV_CODE}
 ${WASM_NOISE_SETUP_CODE}
 ${WASM_DRUM_PLAY_CODE}
+${WASM_FX_PLAY_CODE}
 ${WASM_MASTER_PLAY_CODE}
 
-var VOICE_COUNT = 4;
+var VOICE_COUNT = 8;
+var PLAY_VOICE_COUNT = 4;
+var VOICE_STRIDE = 6;
 var C4_HZ = 261.63;
 
 var synthoscs = [];
@@ -29,19 +33,30 @@ var algoenvs = [];
 var filtlow = [];
 var filthigh = [];
 
-var freqs = [440, 440, 440, 440];
-var gates = [0, 0, 0, 0];
-var types = [0, 0, 0, 0];
-var algos = [0, 0, 0, 0];
-var detunes = [0, 0, 0, 0];
-var osctypes = [0, 0, 0, 0];
+var freqs = [];
+var gates = [];
+var types = [];
+var algos = [];
+var detunes = [];
+var osctypes = [];
 
-var noisephase = [0, 0, 0, 0];
-var noiseprev = [0, 0, 0, 0];
-var gateprev = [0, 0, 0, 0];
-var dootpitch = [1, 1, 1, 1];
+var noisephase = [];
+var noiseprev = [];
+var gateprev = [];
+var dootpitch = [];
 
 for (var vi = 0; vi < VOICE_COUNT; vi++) {
+  freqs.push(440);
+  gates.push(0);
+  types.push(0);
+  algos.push(0);
+  detunes.push(0);
+  osctypes.push(0);
+  noisephase.push(0);
+  noiseprev.push(0);
+  gateprev.push(0);
+  dootpitch.push(1);
+
   synthoscs.push(new Maximilian.maxiOsc());
   synthmods.push(new Maximilian.maxiOsc());
   bellmods.push(new Maximilian.maxiOsc());
@@ -101,10 +116,13 @@ function readnoise(i, buf, freq, gate) {
 function detunedhz(i, freq) {
   var hz = freq > 0 ? freq : 440;
   var cents = detunes[i] || 0;
+  if (gates[i]) {
+    cents += playvibratocents(i);
+  }
   return hz * Math.pow(2, cents / 1200);
 }
 
-function synthvoice(i, freq, gate) {
+function synthsource(i, freq, gate) {
   var hz = detunedhz(i, freq);
   var osc = osctypes[i] || 0;
   var o = synthoscs[i];
@@ -143,7 +161,11 @@ function synthvoice(i, freq, gate) {
     sig = (o.saw(hz) + o.saw(hz * 1.004) + o.saw(hz * 0.996)) / 3;
   } else { sig = o.square(hz); }
 
-  return sig * envs[i].adsr(1, gate);
+  return sig;
+}
+
+function synthvoice(i, freq, gate) {
+  return synthsource(i, freq, gate) * envs[i].adsr(1, gate);
 }
 
 function noisevoice(i, noisetype, freq, gate) {
@@ -248,11 +270,14 @@ function voiceout(i) {
 
 function readvoicessab() {
   var raw = qref.zssVoiceSab;
-  if (!raw || typeof raw.length !== 'number' || raw.length < 24) {
+  if (!raw && qref.engine) {
+    raw = qref.engine.zssVoiceSab;
+  }
+  if (!raw || typeof raw.length !== 'number' || raw.length < VOICE_COUNT * VOICE_STRIDE) {
     return;
   }
   for (var i = 0; i < VOICE_COUNT; i++) {
-    var base = i * 6;
+    var base = i * VOICE_STRIDE;
     freqs[i] = raw[base];
     gates[i] = raw[base + 1] > 0.5 ? 1 : 0;
     types[i] = Math.round(raw[base + 2]);
@@ -264,13 +289,30 @@ function readvoicessab() {
 
 function play() {
   readvoicessab();
+  updateplayvibratodepth();
+  playbuswahenv = 0;
+  bgbuswahenv = 0;
 
-  var voices = 0;
+  var playvoices = 0;
+  var bgvoices = 0;
   for (var i = 0; i < VOICE_COUNT; i++) {
-    voices += voiceout(i);
+    var out = voiceout(i);
+    var lvl = voicelevelat(i);
+    if (i >= PLAY_VOICE_COUNT) {
+      bgvoices += out;
+      if (lvl > bgbuswahenv) {
+        bgbuswahenv = lvl;
+      }
+    } else {
+      playvoices += out;
+      if (lvl > playbuswahenv) {
+        playbuswahenv = lvl;
+      }
+    }
   }
   var drums = safedrumsout();
-  return masterout(voices, drums);
+  var mixed = applyfxchain(playvoices, bgvoices);
+  return masterout(mixed[0], mixed[1], drums);
 }
 
 function safedrumsout() {

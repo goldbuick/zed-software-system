@@ -5,6 +5,7 @@ export {
   createwasmsynth,
   initwasmdrumsab,
   initwasmvoicesab,
+  initwasmfxsab,
   type WASM_SYNTH,
 } from './maxisynth'
 export {
@@ -18,6 +19,7 @@ export {
   playwasmaudiobuffer,
   pushwasmsabvalues,
   setwasmsynthplayvolume,
+  setwasmsynthbgplayvolume,
   setwasmsynthttsvolume,
   spikesynthwasm,
   unlockmaximaudiocontext,

@@ -355,6 +355,7 @@ const synthdevice = createdevice('synth', [], (message) => {
                 }
               }
             }
+            wasmsynth.replayvoicefx(synthstate.voicefx)
           }
         }
         break
@@ -367,6 +368,18 @@ const synthdevice = createdevice('synth', [], (message) => {
             number | string | number[],
           ]
           wasmsynth.setvoiceconfig(index, config, value)
+        }
+        break
+      case 'voicefx':
+        if (isarray(message.data) && wasmsynth) {
+          const [, synthindex, fxname, config, value] = message.data as [
+            string,
+            number,
+            FXNAME,
+            number | string,
+            number | string,
+          ]
+          wasmsynth.applyvoicefx(synthindex, fxname, config, value)
         }
         break
     }
