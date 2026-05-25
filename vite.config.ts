@@ -73,6 +73,9 @@ export default defineConfig(({ mode }) => {
   const nohttps = !!JSON.parse(process.env.ZSS_NO_HTTPS ?? 'false')
   const hmronly = !!JSON.parse(process.env.ZSS_HMR_ONLY ?? 'false')
   const useanalyzer = !!JSON.parse(process.env.ZSS_ANALYZER ?? 'false')
+  const usewasmsynth =
+    process.env.ZSS_WASM_SYNTH === 'true' ||
+    process.env.ZSS_WASM_SPIKE === 'true'
   const devHost = process.env.ZSS_DEV_HOST?.trim()
   const mkcertHosts = ['localhost', ...(devHost ? [devHost] : [])]
 
@@ -136,6 +139,12 @@ export default defineConfig(({ mode }) => {
     define: {
       ...zssdefine,
       'import.meta.env.ZSS_E2E': JSON.stringify(process.env.ZSS_E2E ?? ''),
+      'import.meta.env.ZSS_WASM_SYNTH': JSON.stringify(
+        process.env.ZSS_WASM_SYNTH ?? 'false',
+      ),
+      'import.meta.env.ZSS_WASM_SPIKE': JSON.stringify(
+        process.env.ZSS_WASM_SPIKE ?? 'false',
+      ),
     },
     resolve: {
       alias: {
@@ -148,6 +157,14 @@ export default defineConfig(({ mode }) => {
       esbuildOptions: {
         target: 'es2020',
       },
+    },
+    server: {
+      headers: usewasmsynth
+        ? {
+            'Cross-Origin-Opener-Policy': 'same-origin',
+            'Cross-Origin-Embedder-Policy': 'require-corp',
+          }
+        : undefined,
     },
   }
 })

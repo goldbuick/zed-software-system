@@ -19,6 +19,17 @@ import { MEMORY_LABEL } from './types'
 const SYNTH_VOICES_KEY = 'voices'
 const SYNTH_VOICEFX_KEY = 'voicefx'
 
+/** WASM synth schedules notes in JS; play should not wait for board tick dispatch. */
+let synthplayimmediate = false
+
+export function setsynthplayimmediate(immediate: boolean) {
+  synthplayimmediate = immediate
+}
+
+export function issynthplayimmediate() {
+  return synthplayimmediate
+}
+
 const SYNTH_STATE_DEFAULT: SYNTH_STATE = {
   voices: {},
   voicefx: {},
@@ -208,4 +219,7 @@ export function memoryqueuesynthplay(board: string, play: string) {
 
   const queue = readsynthplayinternal(board)
   queue.push([play, endtime])
+  if (synthplayimmediate) {
+    synthplay(SOFTWARE, '', board, play)
+  }
 }

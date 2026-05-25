@@ -1,6 +1,17 @@
 import { Context, getContext, getTransport, setContext, start } from 'tone'
 import { createdevice } from 'zss/device'
 import { AUDIO_SYNTH, createsynth, setupsynth } from 'zss/feature/synth'
+import {
+  bootwasmsynth,
+  getwasmbroadcastdestination,
+  iswasmspikeenabled,
+  iswasmsynthenabled,
+  playwasmaudiobuffer,
+  setwasmsynthttsvolume,
+  spikesynthwasm,
+  unlockmaximaudiocontext,
+  type WASM_SYNTH,
+} from 'zss/feature/synth/wasm'
 import { synthvoiceconfig } from 'zss/feature/synth/voiceconfig'
 import { FXNAME, synthvoicefxconfig } from 'zss/feature/synth/voicefx'
 import {
@@ -32,6 +43,7 @@ import {
   workstatus,
 } from './api'
 import { registerreadplayer } from './register'
+import { setsynthplayimmediate } from 'zss/memory/synthstate'
 
 type CustomNavigator = {
   audioSession?: {
@@ -91,7 +103,43 @@ export function enableaudio() {
   locked = true
   workstatus(synthdevice, registerreadplayer(), 'audio init')
 
-  // we want a config to reduce cpu load
+  if (iswasmsynthenabled()) {
+    unlockmaximaudiocontext()
+    setsynthplayimmediate(true)
+    locked = true
+    workstatus(synthdevice, registerreadplayer(), 'audio init')
+    const startwasm = iswasmspikeenabled()
+      ? spikesynthwasm
+      : bootwasmsynth
+    void startwasm()
+      .then((result) => {
+        if (!iswasmspikeenabled() && result) {
+          wasmsynth = result
+        }
+        locked = false
+        enabled = true
+        synthaudioenabled(synthdevice, registerreadplayer())
+        apilog(
+          synthdevice,
+          registerreadplayer(),
+          iswasmspikeenabled()
+            ? 'wasm maximilian audio ready (phase 0 spike)'
+            : 'wasm maximilian synth ready (phase 1 voices)',
+        )
+      })
+      .catch((err: unknown) => {
+        locked = false
+        apierror(
+          synthdevice,
+          registerreadplayer(),
+          'audio',
+          err instanceof Error ? err.message : String(err),
+        )
+      })
+    return
+  }
+
+  // tone.js synth setup
   const MakeAudioContext = getContext().rawContext.constructor
   setContext(
     new Context({
@@ -145,8 +193,12 @@ export function enableaudio() {
 }
 
 let synth: MAYBE<AUDIO_SYNTH>
+let wasmsynth: MAYBE<WASM_SYNTH>
 
 export function synthbroadcastdestination(): MAYBE<MediaStreamAudioDestinationNode> {
+  if (iswasmsynthenabled()) {
+    return getwasmbroadcastdestination()
+  }
   return synth?.broadcastdestination
 }
 
@@ -156,17 +208,176 @@ const synthdevice = createdevice('synth', [], (message) => {
   }
 
   // validate synth state
-  if (enabled && !ispresent(synth)) {
+  if (enabled && !ispresent(synth) && !iswasmsynthenabled()) {
     getTransport().bpm.value = DEFAULT_BPM
     synth = createsynth()
     getTransport().start(0)
   }
+
+  const currentboard = useGadgetClient.getState().gadget.board
+  const player = registerreadplayer()
+
+  if (iswasmsynthenabled() && !ispresent(synth)) {
+    if (!enabled) {
+      return
+    }
+    switch (message.target) {
+      case 'audioenabled':
+        if (message.player !== player) {
+          return
+        }
+        apilog(synthdevice, message.player, 'audio is enabled!')
+        doasync(synthdevice, message.player, async () => {
+          await waitfor(2000)
+          vmloader(
+            synthdevice,
+            message.player,
+            undefined,
+            'text',
+            'audio:enabled',
+            '',
+          )
+        })
+        break
+      case 'playvolume':
+        if (isarray(message.data) && wasmsynth) {
+          const [, volume] = message.data as [string, number]
+          if (isnumber(volume)) {
+            wasmsynth.setplayvolume(volume)
+          }
+        }
+        break
+      case 'bgplayvolume':
+        if (isarray(message.data) && wasmsynth) {
+          const [, volume] = message.data as [string, number]
+          if (isnumber(volume)) {
+            wasmsynth.setbgplayvolume(volume)
+          }
+        }
+        break
+      case 'play':
+        if (isarray(message.data) && wasmsynth) {
+          const [board, buffer] = message.data as [string, string]
+          if (board === '' || board === currentboard) {
+            if (buffer.trim() === '') {
+              wasmsynth.stopplay()
+            } else {
+              wasmsynth.addplay(buffer)
+            }
+          }
+        }
+        break
+      case 'bgplay':
+        if (isarray(message.data) && wasmsynth) {
+          const [board, buffer, quantize] = message.data as [
+            string,
+            string,
+            string,
+          ]
+          if (board === '' || board === currentboard) {
+            wasmsynth.addbgplay(buffer, quantize)
+          }
+        }
+        break
+      case 'ttsvolume':
+        if (isarray(message.data)) {
+          const [, volume] = message.data as [string, number]
+          if (isnumber(volume)) {
+            setwasmsynthttsvolume(volume)
+          }
+        }
+        break
+      case 'audiobuffer':
+        if (isarray(message.data)) {
+          const [, audiobuffer] = message.data as [string, AudioBuffer]
+          if (ispresent(audiobuffer)) {
+            playwasmaudiobuffer(audiobuffer)
+          }
+        }
+        break
+      case 'tts':
+        doasync(synthdevice, message.player, async () => {
+          if (isarray(message.data)) {
+            const [board, voice, phrase] = message.data as [string, any, string]
+            if (
+              phrase.trim() !== '' &&
+              (board === '' || board === currentboard)
+            ) {
+              await ttsplay(message.player, board, voice, phrase)
+            }
+          }
+        })
+        break
+      case 'ttsinfo':
+        doasync(synthdevice, message.player, async () => {
+          if (isarray(message.data)) {
+            const [, info] = message.data as [string, string]
+            const data = await ttsinfo(message.player, info)
+            if (isarray(data)) {
+              for (let i = 0; i < data.length; i++) {
+                write(synthdevice, message.player, `$WHITE${data[i]}`)
+              }
+            }
+          }
+        })
+        break
+      case 'ttsengine':
+        if (isarray(message.data)) {
+          const [, engine, apikey] = message.data as [string, any, string]
+          selectttsengine(engine, apikey)
+        }
+        break
+      case 'ttsclearqueue':
+        ttsclearqueue()
+        break
+      case 'ttsqueue':
+        if (isarray(message.data)) {
+          const [board, voice, phrase] = message.data as [string, any, string]
+          if (phrase.trim() !== '' && (board === '' || board === currentboard)) {
+            ttsqueue(message.player, board, voice, phrase)
+          }
+        }
+        break
+      case 'update':
+        if (isarray(message.data) && wasmsynth) {
+          const [board, synthstate] = message.data as [string, SYNTH_STATE]
+          if (board === '' || board === currentboard) {
+            const idxvoices = Object.keys(synthstate.voices).map(Number)
+            for (let i = 0; i < idxvoices.length; ++i) {
+              const idx = idxvoices[i]
+              const voice = synthstate.voices[idx]
+              const configs = Object.keys(voice)
+              for (let j = 0; j < configs.length; ++j) {
+                const config = configs[j]
+                const value = voice[config]
+                if (NAME(config) !== 'restart') {
+                  wasmsynth.setvoiceconfig(idx, config, value ?? '')
+                }
+              }
+            }
+          }
+        }
+        break
+      case 'voice':
+        if (isarray(message.data) && wasmsynth) {
+          const [, index, config, value] = message.data as [
+            string,
+            number,
+            number | string,
+            number | string | number[],
+          ]
+          wasmsynth.setvoiceconfig(index, config, value)
+        }
+        break
+    }
+    return
+  }
+
   if (!ispresent(synth)) {
     return
   }
 
   // player filter
-  const player = registerreadplayer()
   switch (message.target) {
     case 'audioenabled':
       if (message.player !== player) {
@@ -175,8 +386,6 @@ const synthdevice = createdevice('synth', [], (message) => {
       break
   }
 
-  // use gadget state to current board
-  const currentboard = useGadgetClient.getState().gadget.board
   switch (message.target) {
     case 'audioenabled':
       apilog(synthdevice, message.player, 'audio is enabled!')

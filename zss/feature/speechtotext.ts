@@ -3,10 +3,13 @@ import type {
   ServerMessagePartialResult,
   ServerMessageResult,
 } from 'vosk-browser/dist/interfaces'
+import { iswasmsynthenabled } from 'zss/feature/synth/wasm/flags'
+import { getmaximaudiocontext, unlockmaximaudiocontext } from 'zss/feature/synth/wasm/maximilian'
 import type { MAYBE } from 'zss/mapping/types'
 
 const MODEL_URL = '/models/vosk-model-small-en-us-0.15.tar.gz'
 const AUDIO_BUFFER_SIZE = 4096
+const MIC_LEVEL_CHECK_CHUNKS = 48
 
 let sharedmodel: MAYBE<Model>
 let sharedmodelpromise: MAYBE<Promise<Model>>
@@ -23,7 +26,7 @@ async function loadmodel(onworking: (message: string) => void): Promise<Model> {
 
   sharedmodelpromise = (async () => {
     const { createModel } = await import('vosk-browser')
-    return createModel(MODEL_URL)
+    return createModel(MODEL_URL, 0)
   })().then((model) => {
     sharedmodel = model
     sharedmodelpromise = undefined
@@ -34,6 +37,52 @@ async function loadmodel(onworking: (message: string) => void): Promise<Model> {
   return sharedmodelpromise
 }
 
+async function waitforrunningaudiocontext(
+  audiocontext: AudioContext,
+): Promise<void> {
+  if (audiocontext.state === 'running') {
+    return
+  }
+
+  await new Promise<void>((resolve, reject) => {
+    let settled = false
+    const finish = () => {
+      if (settled) {
+        return
+      }
+      settled = true
+      audiocontext.removeEventListener('statechange', onstate)
+      resolve()
+    }
+    const onstate = () => {
+      if (audiocontext.state === 'running') {
+        finish()
+      }
+    }
+    audiocontext.addEventListener('statechange', onstate)
+    void audiocontext.resume().catch((err: unknown) => {
+      audiocontext.removeEventListener('statechange', onstate)
+      reject(err instanceof Error ? err : new Error(String(err)))
+    })
+    if (audiocontext.state === 'running') {
+      finish()
+    }
+  })
+}
+
+function chunktoaudiobuffer(
+  audiocontext: AudioContext,
+  chunk: Float32Array,
+): AudioBuffer {
+  const buffer = audiocontext.createBuffer(
+    1,
+    chunk.length,
+    audiocontext.sampleRate,
+  )
+  buffer.copyToChannel(chunk, 0)
+  return buffer
+}
+
 export class SpeechToText {
   private onfinalised: (value: string) => void
   private onendevent: () => void
@@ -41,11 +90,15 @@ export class SpeechToText {
   private onworking: (message: string) => void
   private recognizer: MAYBE<KaldiRecognizer>
   private audiocontext: MAYBE<AudioContext>
+  private ownsaudiocontext = false
   private mediastream: MAYBE<MediaStream>
   private sourcenode: MAYBE<MediaStreamAudioSourceNode>
   private processornode: MAYBE<ScriptProcessorNode>
+  private sinknode: MAYBE<MediaStreamAudioDestinationNode>
   private audiobuffer: Float32Array[] = []
   private buffering = true
+  private audiochecks = 0
+  private maxpeak = 0
 
   constructor(
     onfinalised: (value: string) => void,
@@ -65,14 +118,24 @@ export class SpeechToText {
       this.mediastream = await navigator.mediaDevices.getUserMedia({
         video: false,
         audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: true,
           channelCount: 1,
-          sampleRate: 16000,
         },
       })
 
-      this.audiocontext = new AudioContext()
+      const sharedcontext = iswasmsynthenabled()
+        ? getmaximaudiocontext() ?? unlockmaximaudiocontext()
+        : undefined
+      if (sharedcontext) {
+        this.audiocontext = sharedcontext
+        this.ownsaudiocontext = false
+      } else {
+        this.audiocontext = new AudioContext()
+        this.ownsaudiocontext = true
+      }
+      await waitforrunningaudiocontext(this.audiocontext)
       const samplerate = this.audiocontext.sampleRate
 
       this.sourcenode = this.audiocontext.createMediaStreamSource(
@@ -83,26 +146,46 @@ export class SpeechToText {
         1,
         1,
       )
+      this.sinknode = this.audiocontext.createMediaStreamDestination()
 
       // buffer audio chunks while model loads
       this.buffering = true
       this.audiobuffer = []
+      this.audiochecks = 0
+      this.maxpeak = 0
 
       this.processornode.onaudioprocess = (event) => {
+        const data = event.inputBuffer.getChannelData(0)
+        let peak = 0
+        for (let i = 0; i < data.length; ++i) {
+          const level = Math.abs(data[i])
+          if (level > peak) {
+            peak = level
+          }
+        }
+        this.maxpeak = Math.max(this.maxpeak, peak)
+        ++this.audiochecks
+        if (
+          this.audiochecks === MIC_LEVEL_CHECK_CHUNKS &&
+          this.maxpeak < 0.001
+        ) {
+          this.onworking('mic signal very low — check input device')
+        }
+
         if (this.buffering) {
-          const data = event.inputBuffer.getChannelData(0)
           this.audiobuffer.push(new Float32Array(data))
           return
         }
         try {
           this.recognizer?.acceptWaveform(event.inputBuffer)
-        } catch {
-          // recognition may fail transiently
+        } catch (err) {
+          console.error('vosk acceptWaveform failed', err)
         }
       }
 
       this.sourcenode.connect(this.processornode)
-      this.processornode.connect(this.audiocontext.destination)
+      // keep ScriptProcessor alive without routing mic to speakers
+      this.processornode.connect(this.sinknode)
 
       this.onworking('listening, loading speech model ...')
 
@@ -126,9 +209,15 @@ export class SpeechToText {
         }
       })
 
+      this.recognizer.on('error', (message) => {
+        console.error('vosk recognizer error', message)
+      })
+
       // replay buffered audio then switch to live
       for (const chunk of this.audiobuffer) {
-        this.recognizer.acceptWaveformFloat(chunk, samplerate)
+        this.recognizer.acceptWaveform(
+          chunktoaudiobuffer(this.audiocontext, chunk),
+        )
       }
       this.audiobuffer = []
       this.buffering = false
@@ -159,10 +248,15 @@ export class SpeechToText {
       this.sourcenode.disconnect()
       this.sourcenode = undefined
     }
-    if (this.audiocontext) {
-      void this.audiocontext.close()
-      this.audiocontext = undefined
+    if (this.sinknode) {
+      this.sinknode.disconnect()
+      this.sinknode = undefined
     }
+    if (this.audiocontext && this.ownsaudiocontext) {
+      void this.audiocontext.close()
+    }
+    this.audiocontext = undefined
+    this.ownsaudiocontext = false
     if (this.mediastream) {
       for (const track of this.mediastream.getTracks()) {
         track.stop()

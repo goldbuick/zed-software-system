@@ -2,11 +2,19 @@ import { vmloader } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { enableaudio } from 'zss/device/synth'
+import {
+  clearmaximilianserviceworkers,
+  iswasmsynthenabled,
+} from 'zss/feature/synth/wasm'
 import { useDeviceData } from 'zss/gadget/device'
 import { Engine } from 'zss/gadget/engine'
 import { ispresent } from 'zss/mapping/types'
 
 if (typeof window !== 'undefined') {
+  if (import.meta.env.DEV && iswasmsynthenabled()) {
+    void clearmaximilianserviceworkers()
+  }
+
   window.addEventListener(
     'keydown',
     () => {

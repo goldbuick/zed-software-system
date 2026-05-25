@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
 import { modemwritevaluenumber } from 'zss/device/modem'
 import { useWaitForValueNumber } from 'zss/device/modemhooks'
+import { usePanelSharedSync } from 'zss/gadget/data/usepanelsharedsync'
 import { paneladdress } from 'zss/gadget/data/types'
 import { UserInput, UserInputHandler } from 'zss/gadget/userinput'
 import { maptovalue } from 'zss/mapping/value'
@@ -21,6 +22,8 @@ export function PanelSelect({
   setuppanelitem(sidebar, row, context)
 
   const [target, ...pairs] = [maptovalue(args[0], ''), ...args.slice(1)]
+
+  usePanelSharedSync(chip, 'select', target)
 
   const valuelabels: WORD[] = []
   const values: WORD[] = []

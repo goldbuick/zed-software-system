@@ -10,10 +10,17 @@ export function getroot(): string {
   return path.join(__dirname, '..', '..', '..')
 }
 
+/** COOP/COEP headers for Maximilian SharedArrayBuffer (production static server). */
+export const WASM_COEP_HEADERS: Record<string, string> = {
+  'Cross-Origin-Opener-Policy': 'same-origin',
+  'Cross-Origin-Embedder-Policy': 'require-corp',
+}
+
 /** Create static file server for cafe/dist. */
 export function createstaticserver(
   distDir: string,
   port: number,
+  options?: { wasmcoep?: boolean },
 ): Promise<ReturnType<typeof createServer>> {
   return new Promise((resolve) => {
     const server = createServer((req, res) => {
@@ -47,14 +54,17 @@ export function createstaticserver(
         const types: Record<string, string> = {
           '.html': 'text/html',
           '.js': 'application/javascript',
+          '.mjs': 'application/javascript',
           '.css': 'text/css',
           '.json': 'application/json',
           '.ico': 'image/x-icon',
           '.wasm': 'application/wasm',
           '.webmanifest': 'application/manifest+json',
         }
+        const coepheaders = options?.wasmcoep ? WASM_COEP_HEADERS : {}
         res.writeHead(200, {
           'Content-Type': types[ext] || 'application/octet-stream',
+          ...coepheaders,
         })
         res.end(data)
       })

@@ -542,8 +542,7 @@ export function TerminalInput({
       listener?.stoplistening()
       listener = undefined
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [voice2text, quickterminal, player])
 
   return (
     <>

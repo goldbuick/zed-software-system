@@ -133,15 +133,11 @@ export function applyhyperlinksharedmodemsync(
     return
   }
 
-  // halt all other panel shared
-  const allchips = Object.keys(panelshared)
-  for (const c of allchips) {
-    const alltargets = Object.keys(panelshared[c])
-    for (const t of alltargets) {
-      panelshared[c][t]?.()
-      delete panelshared[c][t]
-    }
-  }
+  const chipname = NAME(chip)
+
+  // replace only this chip+target (admin scroll has many select rows)
+  panelshared[chipname]?.[target]?.()
+  delete panelshared[chipname]?.[target]
 
   // observe handler
   function setvalue<T extends number | string>(targ: string, value: T) {
@@ -153,30 +149,36 @@ export function applyhyperlinksharedmodemsync(
     }
   }
 
-  panelshared[chip] ??= {}
+  panelshared[chipname] ??= {}
   const current = getforchip(typ, target) ?? HYPERLINK_WITH_SHARED_DEFAULTS[typ]
 
   // bail if already created
-  if (panelshared[chip][target] !== undefined) {
+  if (panelshared[chipname][target] !== undefined) {
     return
   }
 
-  const address = paneladdress(chip, target)
+  const address = paneladdress(chipname, target)
   if (HYPERLINK_WITH_SHARED_TEXT.has(typ)) {
     if (isstring(current)) {
       modemwriteinitstring(address, current)
     }
-    panelshared[chip][target] = modemobservevaluestring(address, (value) => {
+    panelshared[chipname][target] = modemobservevaluestring(address, (value) => {
       setvalue<string>(target, value)
     })
   } else {
     if (isnumber(current)) {
       modemwriteinitnumber(address, current)
     }
-    panelshared[chip][target] = modemobservevaluenumber(address, (value) => {
+    panelshared[chipname][target] = modemobservevaluenumber(address, (value) => {
       setvalue<number>(target, value)
     })
   }
+}
+
+export function clearpanelsharedsync(chip: string, target: string): void {
+  const chipname = NAME(chip)
+  panelshared[chipname]?.[target]?.()
+  delete panelshared[chipname]?.[target]
 }
 
 export function initstate(): GADGET_STATE {
