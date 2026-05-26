@@ -4,14 +4,13 @@ import { SOFTWARE } from 'zss/device/session'
 import { enableaudio } from 'zss/device/synth'
 import {
   clearmaximilianserviceworkers,
-  iswasmsynthenabled,
-} from 'zss/feature/synth/wasm'
+} from 'zss/feature/synth/backend/wasm'
 import { useDeviceData } from 'zss/gadget/device'
 import { Engine } from 'zss/gadget/engine'
 import { ispresent } from 'zss/mapping/types'
 
 if (typeof window !== 'undefined') {
-  if (import.meta.env.DEV && iswasmsynthenabled()) {
+  if (import.meta.env.DEV) {
     void clearmaximilianserviceworkers()
   }
 

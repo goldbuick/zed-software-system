@@ -4,7 +4,7 @@ Phase 1 is complete. Phase 2 adds drum digits and a master output chain.
 
 ## Enable
 
-Same as Phase 1 — `ZSS_WASM_SYNTH=true` in `cafe/.env.local`.
+WASM synth is always-on (no env flag required).
 
 ## What works (Phase 2)
 
@@ -56,13 +56,13 @@ Same as Phase 1 — `ZSS_WASM_SYNTH=true` in `cafe/.env.local`.
 
 | Path | Role |
 |------|------|
-| `zss/feature/synth/wasm/drumplaycode.ts` | Maximilian drum DSP |
-| `zss/feature/synth/wasm/wasmmasterplaycode.ts` | Duck + compressor + volume in WASM |
-| `zss/feature/synth/wasm/wasmrazzleplaycode.ts` | Razzle delay/chorus/hiss in WASM |
-| `zss/feature/synth/wasm/wasmmasterchain.ts` | Worklet → destination wiring only |
-| `zss/feature/synth/wasm/wasmlevels.ts` | Drum bus + per-drum gains |
-| `zss/feature/synth/wasm/warmwasmdrums.ts` | Boot warm-up pass |
-| `zss/feature/synth/wasm/maxisynth.ts` | Drum scheduler |
+| `zss/feature/synth/backend/wasm/drumplaycode.ts` | Maximilian drum DSP |
+| `zss/feature/synth/backend/wasm/wasmmasterplaycode.ts` | Duck + compressor + volume in WASM |
+| `zss/feature/synth/backend/wasm/wasmrazzleplaycode.ts` | Razzle delay/chorus/hiss in WASM |
+| `zss/feature/synth/backend/wasm/wasmmasterchain.ts` | Worklet → destination wiring only |
+| `zss/feature/synth/backend/wasm/wasmlevels.ts` | Drum bus + per-drum gains |
+| `zss/feature/synth/backend/wasm/warmwasmdrums.ts` | Boot warm-up pass |
+| `zss/feature/synth/backend/wasm/maxisynth.ts` | Drum scheduler |
 
 ## Next (Phase 3)
 

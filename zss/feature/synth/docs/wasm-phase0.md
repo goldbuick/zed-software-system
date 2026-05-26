@@ -2,35 +2,29 @@
 
 Dev spike using [maximilian-js-local](https://github.com/Louismac/maximilian-js-local) vendored under `cafe/public/wasm/maximilian/`.
 
-## Enable
+## Enable spike (optional)
 
 In `cafe/.env.local`:
-
-```
-ZSS_WASM_SYNTH=true
-```
-
-Optional — replay the phase 0 440 Hz saw check:
 
 ```
 ZSS_WASM_SPIKE=true
 ```
 
-Restart dev server. On first user gesture (click/key), audio init loads Maximilian WASM. With only `ZSS_WASM_SYNTH=true`, the worklet runs silently so you can test TTS without the spike.
+Restart dev server. On first user gesture (click/key), audio init loads Maximilian WASM and plays the phase 0 440 Hz saw check. Without the spike flag, the full WASM synth backend boots instead.
 
 ## Files
 
 | Path | Role |
 |------|------|
 | `cafe/public/wasm/maximilian/` | Vendored maximilian-js-local bundle |
-| `zss/feature/synth/wasm/` | `ensuresynthwasm()`, COOP/COEP SW, spike play code |
-| `zss/device/synth.ts` | Branches `enableaudio()` when flag is set |
+| `zss/feature/synth/backend/wasm/` | `ensuresynthwasm()`, COOP/COEP SW, spike play code |
+| `zss/device/synth.ts` | Routes firmware commands to `SynthBackend` |
 
 ## COOP/COEP
 
 SharedArrayBuffer requires cross-origin isolation.
 
-**Local dev (`ZSS_WASM_SYNTH=true`):** Vite sends COOP/COEP headers directly. The service worker is **not** used in dev (it caused reload loops with HMR).
+**Local dev:** Vite sends COOP/COEP headers directly. The service worker is **not** used in dev (it caused reload loops with HMR).
 
 **Production:** set `wasmcoep: true` on the static server, or use the `enable-threads.js` service worker (one guarded reload max).
 
@@ -42,4 +36,4 @@ Verify STT (vosk) and TTS (Piper) still work with COOP/COEP enabled.
 
 ## Broadcast
 
-When WASM mode is active, `synthbroadcastdestination()` returns a tap on the Maximilian `AudioWorkletNode`.
+`synthbroadcastdestination()` returns a tap on the Maximilian `AudioWorkletNode`.

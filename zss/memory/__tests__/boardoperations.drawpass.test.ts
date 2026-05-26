@@ -30,10 +30,6 @@ jest.mock('zss/config', () => ({
   },
 }))
 
-jest.mock('tone', () => ({
-  Time: class TimeMock {},
-}))
-
 jest.mock('zss/lang/generator', () => ({
   compile: (_name: string, code: string) => ({
     labels:

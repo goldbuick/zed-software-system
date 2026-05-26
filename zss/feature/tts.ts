@@ -1,11 +1,9 @@
 import { newQueue } from '@henrygd/queue'
-import { getContext } from 'tone'
 import { createdevice } from 'zss/device'
 import {
   getmaximaudiocontext,
-  iswasmsynthenabled,
   unlockmaximaudiocontext,
-} from 'zss/feature/synth/wasm'
+} from 'zss/feature/synth/backend/wasm'
 import { heavyttsinfo, heavyttsrequest, synthaudiobuffer } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createsid } from 'zss/mapping/guid'
@@ -25,10 +23,7 @@ export function selectttsengine(
 }
 
 function getaudiocontext(): AudioContext {
-  if (iswasmsynthenabled()) {
-    return getmaximaudiocontext() ?? unlockmaximaudiocontext()
-  }
-  return getContext().rawContext as AudioContext
+  return getmaximaudiocontext() ?? unlockmaximaudiocontext()
 }
 
 function convertarraybytes(bytes: ArrayBuffer) {

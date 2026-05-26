@@ -1,37 +1,38 @@
 # Synth Module
 
-Web-based software synthesizer built with Tone.js.
+Web-based software synthesizer with a **front-end** (protocol, state, device routing) and **WASM back-end v1** (Maximilian AudioWorklet + SAB scheduling).
+
+Legacy Tone.js code is preserved under [`archive/tone/`](archive/tone/README.md) for reference only.
 
 ## Documentation
 
-Detailed documentation for each file is in **[docs/](docs/README.md)**.
+Detailed documentation is in **[docs/](docs/README.md)**. WASM phase notes live under `docs/wasm-phase*.md`.
 
 ## Quick Start
 
+Synth audio is initialized by the device layer on first user gesture (`enableaudio()` in `zss/device/synth.ts`). Application code typically sends commands via firmware / `device/api.ts`, not by calling the backend directly.
+
 ```typescript
-import { setupsynth, createsynth } from 'zss/feature/synth'
+import { createsynthbackend } from 'zss/feature/synth'
 
-// One-time setup (registers AudioWorklets)
-await setupsynth()
-
-// Create synth instance
-const synth = createsynth()
-
-// Play notation (e.g. "qC4qD4qE4" = quarter notes C, D, E)
-synth.addplay('qC4qD4qE4')
+const backend = await createsynthbackend()
+backend.addplay('qC4qD4qE4')
 ```
 
 ## Structure
 
-| Area | Description |
-|------|-------------|
-| **Sources** | 8 voices: Synth, noise types, Bells, Doot, AlgoSynth |
-| **FX** | Reverb, echo, autofilter, distortion, vibrato, fcrush, autowah |
-| **Drums** | Tick, tweet, cowbell, clap, snares, toms, woodblocks, bass |
-| **Recording** | Records to MP3 via offline render |
+| Area | Path | Description |
+|------|------|-------------|
+| Front-end | `frontend/` | `SynthBackend` interface, board state sync |
+| Back-end v1 | `backend/wasm/` | Maximilian worklet, voices, drums, FX, recording |
+| Adapter | `backend/wasmsynthadapter.ts` | `SynthBackend` → WASM bridge |
+| Shared | `shared/`, `playnotation.ts`, `synthdefaults.ts`, `voicefxgroup.ts`, `mp3.ts` | Engine-agnostic types and helpers |
+| Archive | `archive/tone/` | Legacy Tone.js stack (do not import) |
 
-## Subfolders
+## Dev flags
 
-- `drums/` — Drum kit implementations
-- `voiceconfig/` — Voice/source configuration API
-- `voicefx/` — Effect configuration API
+| Env | Purpose |
+|-----|---------|
+| `ZSS_WASM_SPIKE=true` | Phase 0 audible WASM spike only (no full synth backend) |
+
+WASM synth is always-on in production builds; COOP/COEP headers are enabled in Vite for SharedArrayBuffer.

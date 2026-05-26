@@ -30,7 +30,7 @@ WASM noise voices use [BeepBox](https://github.com/johnnesky/beepbox) `chipNoise
 | `hollow` | 4 | FFT-designed hollow spectrum |
 | `metallic` | *(none — ZSS legacy)* | LFSR `15<<2`, fixed `(bit)*4*7.5-8` amplitude |
 
-`#synth noise` and `#synth hollow` require `ZSS_WASM_SYNTH=true`; Tone path returns an error.
+`#synth noise` and `#synth hollow` are WASM-only voice types (BeepBox chip noise).
 
 ## Noise Generation (Tone path — legacy)
 

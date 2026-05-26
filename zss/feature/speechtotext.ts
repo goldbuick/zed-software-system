@@ -3,8 +3,7 @@ import type {
   ServerMessagePartialResult,
   ServerMessageResult,
 } from 'vosk-browser/dist/interfaces'
-import { iswasmsynthenabled } from 'zss/feature/synth/wasm/flags'
-import { getmaximaudiocontext, unlockmaximaudiocontext } from 'zss/feature/synth/wasm/maximilian'
+import { getmaximaudiocontext, unlockmaximaudiocontext } from 'zss/feature/synth/backend/wasm/maximilian'
 import type { MAYBE } from 'zss/mapping/types'
 
 const MODEL_URL = '/models/vosk-model-small-en-us-0.15.tar.gz'
@@ -125,16 +124,10 @@ export class SpeechToText {
         },
       })
 
-      const sharedcontext = iswasmsynthenabled()
-        ? getmaximaudiocontext() ?? unlockmaximaudiocontext()
-        : undefined
-      if (sharedcontext) {
-        this.audiocontext = sharedcontext
-        this.ownsaudiocontext = false
-      } else {
-        this.audiocontext = new AudioContext()
-        this.ownsaudiocontext = true
-      }
+      const sharedcontext =
+        getmaximaudiocontext() ?? unlockmaximaudiocontext()
+      this.audiocontext = sharedcontext
+      this.ownsaudiocontext = false
       await waitforrunningaudiocontext(this.audiocontext)
       const samplerate = this.audiocontext.sampleRate
 

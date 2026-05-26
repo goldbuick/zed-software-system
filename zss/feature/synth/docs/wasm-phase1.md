@@ -4,15 +4,7 @@ Phase 0 is complete. Phase 1 ports `#play` voice playback to the Maximilian WASM
 
 ## Enable
 
-In `cafe/.env.local`:
-
-```
-ZSS_WASM_SYNTH=true
-```
-
-Do **not** set `ZSS_WASM_SPIKE=true` unless you are testing the 440 Hz spike — spike mode skips the voice synth.
-
-Restart dev server, enable audio, then:
+WASM synth is always-on. Restart dev server, enable audio, then:
 
 ```text
 #play qqC4qqD4qqE4qqF4
@@ -101,26 +93,26 @@ LFO sine modulates biquad cutoff from `baseFrequency` to `baseFrequency × 2^oct
 
 | Path | Role |
 |------|------|
-| `zss/feature/synth/wasm/voiceplaycode.ts` | Maximilian `play()` DSP |
-| `zss/feature/synth/wasm/noisewave.ts` | BeepBox 32768-sample noise tables |
-| `zss/feature/synth/wasm/noisemeta.ts` | Per-type BeepBox expression / filter params |
-| `zss/feature/synth/wasm/noiseplaycode.ts` | BeepBox `noiseSynth` playback loop |
-| `zss/feature/synth/wasm/wasmvoiceconfig.ts` | `#synth` type → SAB mapping |
-| `zss/feature/synth/wasm/wasmmastersab.ts` | `zss_master` SAB (play, bg, tts volume) |
-| `zss/feature/synth/wasm/wasmmasterplaycode.ts` | Master chain + sidechain duck |
-| `zss/feature/synth/wasm/wasmsidechainplaycode.ts` | Tone-style sidechain follower |
-| `zss/feature/synth/wasm/wasmoscconfigsab.ts` | `#synth` osc tuning → `zss_osccfg` SAB |
-| `zss/feature/synth/wasm/wasmoscconfig.ts` | Osc config apply handlers |
-| `zss/feature/synth/wasm/wasmoscplaycode.ts` | Osc param read helpers |
-| `zss/feature/synth/wasm/wasmalgoconfigsab.ts` | `#synth` algo ops → `zss_algocfg` SAB |
-| `zss/feature/synth/wasm/wasmalgoconfig.ts` | Algo config apply handlers |
-| `zss/feature/synth/wasm/wasmalgoplaycode.ts` | Algo param read helpers |
-| `zss/feature/synth/wasm/wasmvoicecfgsab.ts` | `#synth env` / `port` → `zss_voicecfg` SAB |
-| `zss/feature/synth/wasm/wasmautowah.ts` | Tone AutoWah math helpers |
-| `zss/feature/synth/wasm/wasmautowahplaycode.ts` | AutoWah follower + filter DSP |
-| `zss/feature/synth/wasm/wasmautofilter.ts` | Tone AutoFilter math helpers |
-| `zss/feature/synth/wasm/wasmautofilterplaycode.ts` | AutoFilter LFO + biquad DSP |
-| `zss/feature/synth/wasm/maxisynth.ts` | Scheduler + `createwasmsynth()` |
+| `zss/feature/synth/backend/wasm/voiceplaycode.ts` | Maximilian `play()` DSP |
+| `zss/feature/synth/backend/wasm/noisewave.ts` | BeepBox 32768-sample noise tables |
+| `zss/feature/synth/backend/wasm/noisemeta.ts` | Per-type BeepBox expression / filter params |
+| `zss/feature/synth/backend/wasm/noiseplaycode.ts` | BeepBox `noiseSynth` playback loop |
+| `zss/feature/synth/backend/wasm/wasmvoiceconfig.ts` | `#synth` type → SAB mapping |
+| `zss/feature/synth/backend/wasm/wasmmastersab.ts` | `zss_master` SAB (play, bg, tts volume) |
+| `zss/feature/synth/backend/wasm/wasmmasterplaycode.ts` | Master chain + sidechain duck |
+| `zss/feature/synth/backend/wasm/wasmsidechainplaycode.ts` | Tone-style sidechain follower |
+| `zss/feature/synth/backend/wasm/wasmoscconfigsab.ts` | `#synth` osc tuning → `zss_osccfg` SAB |
+| `zss/feature/synth/backend/wasm/wasmoscconfig.ts` | Osc config apply handlers |
+| `zss/feature/synth/backend/wasm/wasmoscplaycode.ts` | Osc param read helpers |
+| `zss/feature/synth/backend/wasm/wasmalgoconfigsab.ts` | `#synth` algo ops → `zss_algocfg` SAB |
+| `zss/feature/synth/backend/wasm/wasmalgoconfig.ts` | Algo config apply handlers |
+| `zss/feature/synth/backend/wasm/wasmalgoplaycode.ts` | Algo param read helpers |
+| `zss/feature/synth/backend/wasm/wasmvoicecfgsab.ts` | `#synth env` / `port` → `zss_voicecfg` SAB |
+| `zss/feature/synth/backend/wasm/wasmautowah.ts` | AutoWah math helpers |
+| `zss/feature/synth/backend/wasm/wasmautowahplaycode.ts` | AutoWah follower + filter DSP |
+| `zss/feature/synth/backend/wasm/wasmautofilter.ts` | AutoFilter math helpers |
+| `zss/feature/synth/backend/wasm/wasmautofilterplaycode.ts` | AutoFilter LFO + biquad DSP |
+| `zss/feature/synth/backend/wasm/maxisynth.ts` | Scheduler + `createwasmsynth()` |
 | `zss/device/synth.ts` | Routes `#play` + voice config to WASM when flag on |
 
 ## Voice type examples
@@ -161,6 +153,6 @@ Compare against BeepBox chip noise presets with matching names.
 
 ## Next
 
-- **Phase 4 (deferred):** `#synthrecord` / MP3 export on WASM path
+- Phase 4 complete: `#synthrecord` / `#synthflush` on WASM — see [`wasmrecordhandler.ts`](../wasm/wasmrecordhandler.ts)
 
 See [wasm-phase2.md](wasm-phase2.md) for drums and master chain details.

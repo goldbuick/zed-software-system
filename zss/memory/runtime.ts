@@ -41,7 +41,6 @@ import {
   memoryreadoperator,
 } from './session'
 import {
-  issynthplayimmediate,
   memorymergesynthvoice,
   memorymergesynthvoicefx,
   memoryreadsynthplay,
@@ -236,8 +235,8 @@ export function memorytickmain(
         if (queue.length > 0) {
           const [play, endtime] = queue[0]
           const dec = endtime - 1
-          if (play && !issynthplayimmediate()) {
-            // dispatch play
+          if (play) {
+            // dispatch play on board tick (ZZT-style queue)
             synthplay(SOFTWARE, '', board.id, play)
             console.info('play queue', board.id, play)
           }

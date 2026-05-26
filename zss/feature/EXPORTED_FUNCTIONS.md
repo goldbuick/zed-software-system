@@ -156,56 +156,38 @@ Functions for parsing various file formats and converting them to internal repre
 
 ## Audio Synthesis
 
-**Files:** `synth/index.ts`, `synth/fx.ts`, `synth/source.ts`, `synth/drums.ts`, `synth/playnotation.ts`, `synth/voiceconfig.ts`, `synth/voicefx*.ts`, `synth/mp3.ts`, `synth/fcrushworkletnode.ts`, `synth/sidechainworkletnode.ts`
+**Files:** `synth/index.ts`, `synth/frontend/synthbackend.ts`, `synth/backend/wasmsynthadapter.ts`, `synth/backend/wasm/*`, `synth/playnotation.ts`, `synth/synthdefaults.ts`, `synth/voicefxgroup.ts`, `synth/mp3.ts`
 
-Audio synthesis system with support for multiple sound sources, effects, and playback modes.
+WASM back-end v1 with engine-agnostic front-end (`SynthBackend` interface). Legacy Tone.js code is under `synth/archive/tone/`.
 
 ### Initialization
-- `setupsynth()` - Initialize synth audio worklet modules
-- `createsynth()` - Create audio synth instance with all sources, effects, and routing
+- `createsynthbackend()` - Boot WASM synth and return a `SynthBackend` adapter
+- `createwasmsynthadapter(synth)` - Wrap `WASM_SYNTH` as `SynthBackend`
+- `bootwasmsynth()` - Load Maximilian WASM and create synth instance
+- `enableaudio()` (device layer) - User-gesture audio init
 
 ### Types
-- `AUDIO_SYNTH` - Type for synth instance returned by createsynth
+- `SynthBackend` - Back-end interface (play, voices, FX, record, broadcast)
+- `FXNAME` - Voice FX name union
 - `SOURCE_TYPE` - Enum of source types (SYNTH, ALGO_SYNTH, BELLS, RETRO_NOISE, etc.)
-- `SOURCE` - Type for audio source configuration
-- `SYNTH_OP` - Enum of synth operation codes
-- `SYNTH_NOTE` - Type for note values (null | string | number)
-- `SYNTH_NOTE_ON` - Type for note-on events
-- `SYNTH_NOTE_ENTRY` - Type for timed note entries
-- `SYNTH_INVOKE` - Type for synth invocation (operations or play string)
+- `WASM_SYNTH` - WASM synth instance type
+- `SYNTH_INVOKE`, `SYNTH_NOTE_ENTRY`, `SYNTH_NOTE_ON` - Play notation types
 
-### Effects & Processing
-- `createfx()` - Create master FX chain
-- `createfxchannels(index)` - Create FX channels for specific source group
-- `volumetodb(value)` - Convert volume percentage to decibels
-- `FrequencyCrusher` - Audio worklet effect class for frequency crushing
-- `SidechainCompressor` - Audio worklet effect class for sidechain compression
-- `addfcrushmodule()` - Register frequency crusher audio worklet
-- `addsidechainmodule()` - Register sidechain compressor audio worklet
-
-### Voice Configuration
-- `synthvoiceconfig(...)` - Configure synth voice parameters
-- `synthvoicefxconfig(...)` - Configure voice FX parameters
-- `synthvoicefxautofilterconfig(...)` - Configure autofilter effect
-- `synthvoicefxautowahconfig(...)` - Configure autowah effect
-- `synthvoicefxdistortionconfig(...)` - Configure distortion effect
-- `synthvoicefxechoconfig(...)` - Configure echo effect
-- `synthvoicefxfcrushconfig(...)` - Configure frequency crusher effect
-- `synthvoicefxreverbconfig(...)` - Configure reverb effect
-- `synthvoicefxvibratoconfig(...)` - Configure vibrato effect
-
-### Source Creation
-- `createsource(sourcetype, algo)` - Create audio source of specified type and algorithm
-- `AlgoSynth` - Algorithmic synthesis class
-- `createsynthdrums(drumvolume, drumaction)` - Create drum kit with volume controls
+### Board state
+- `applyboardstate(backend, synthstate)` - Sync gadget `SYNTH_STATE` to backend
 
 ### Playback & Notation
-- `invokeplay(idx, starttime, invoke, withendofpattern?)` - Convert synth invocation to timed note entries
+- `invokeplay(...)` - Convert synth invocation to timed note entries
 - `parseplay(play)` - Parse play notation string to synth invocations
-- `converttomp3(audiobuffer)` - Convert audio buffer to MP3 format
+- `converttomp3(audiobuffer)` - Convert `AudioBuffer` to MP3 format
 
 ### Constants
 - `SYNTH_SFX_RESET` - Constant for SFX channel reset index
+- `SYNTH_VOICE_COUNT`, `SYNTH_PLAY_VOICE_COUNT`, `SYNTH_DEFAULT_WAVE` - Voice defaults
+
+### Dev
+- `iswasmspikeenabled()` - Phase 0 audible spike flag (`ZSS_WASM_SPIKE`)
+- `spikesynthwasm()` - Boot spike only (no full backend)
 
 ---
 

@@ -9,7 +9,17 @@ import {
   memoryreadsynthplay,
 } from '../synthstate'
 
+const synthplaymock = jest.fn()
+jest.mock('zss/device/api', () => ({
+  ...jest.requireActual('zss/device/api'),
+  synthplay: (...args: unknown[]) => synthplaymock(...args),
+}))
+
 describe('synthstate flag layout', () => {
+  beforeEach(() => {
+    synthplaymock.mockClear()
+  })
+
   afterEach(() => {
     memoryresetbooks([])
   })
@@ -93,6 +103,31 @@ describe('synthstate flag layout', () => {
     expect(queue.length).toBeGreaterThan(0)
     expect(memoryreadbookflags(book, createsynthid(boardid)).playqueue).toBe(
       queue,
+    )
+  })
+
+  it('queues board play without immediate synthplay dispatch', () => {
+    const book = memorycreatebook([])
+    book.name = 'main'
+    memoryresetbooks([book])
+
+    const boardid = 'bd-tick'
+    memoryqueuesynthplay(boardid, 'c')
+    expect(synthplaymock).not.toHaveBeenCalled()
+    expect(memoryreadsynthplay(boardid)).toEqual([['c', expect.any(Number)]])
+  })
+
+  it('dispatches global play immediately', () => {
+    const book = memorycreatebook([])
+    book.name = 'main'
+    memoryresetbooks([book])
+
+    memoryqueuesynthplay('', 'c')
+    expect(synthplaymock).toHaveBeenCalledWith(
+      expect.anything(),
+      '',
+      '',
+      'c',
     )
   })
 })
