@@ -1,6 +1,8 @@
 import { SOURCE_TYPE } from 'zss/feature/synth/shared/sourcetype'
 
 import { initwasmvoicesab } from '../maxisynth'
+import { wasmsabsnapshot } from '../sabpush'
+import { createmockmaxi } from '../testhelpers/mockmaxi'
 import { defaultwasmalgoconfig } from '../wasmalgoconfigsab'
 import {
   DEFAULT_WASM_OSC_CONFIG,
@@ -210,48 +212,26 @@ describe('wasmvoiceconfig', () => {
   })
 
   it('initwasmvoicesab seeds voice cfg sab defaults', () => {
-    const sends: Record<string, number[]> = {}
-    const maxi = {
-      send: () => {},
-      audioWorkletNode: {
-        port: {
-          postMessage: (msg: { channelID?: string; data?: number[] }) => {
-            if (msg.channelID && msg.data) {
-              sends[msg.channelID] = msg.data.slice()
-            }
-          },
-        },
-      },
-    }
+    const { maxi } = createmockmaxi()
     initwasmvoicesab(maxi as any)
-    expect(sends.zss_voicecfg).toHaveLength(48)
-    expect(sends.zss_voicecfg?.[0]).toBe(0.01)
-    expect(sends.zss_voicecfg?.[1]).toBe(0.01)
-    expect(sends.zss_voicecfg?.[2]).toBe(0.5)
-    expect(sends.zss_voicecfg?.[3]).toBe(0.01)
-    expect(sends.zss_voicecfg?.[5]).toBe(0)
+    const cfg = wasmsabsnapshot('zss_voicecfg')
+    expect(cfg).toHaveLength(48)
+    expect(cfg[0]).toBe(0.01)
+    expect(cfg[1]).toBe(0.01)
+    expect(cfg[2]).toBe(0.5)
+    expect(cfg[3]).toBe(0.01)
+    expect(cfg[5]).toBe(0)
   })
 
   it('initwasmvoicesab seeds SYNTH square defaults on sab', () => {
-    const sends: Record<string, number[]> = {}
-    const maxi = {
-      send: () => {},
-      audioWorkletNode: {
-        port: {
-          postMessage: (msg: { channelID?: string; data?: number[] }) => {
-            if (msg.channelID && msg.data) {
-              sends[msg.channelID] = msg.data.slice()
-            }
-          },
-        },
-      },
-    }
+    const { maxi } = createmockmaxi()
     initwasmvoicesab(maxi as any)
+    const voices = wasmsabsnapshot('zss_voices')
     for (let i = 0; i < 8; i++) {
       const base = i * 6
-      expect(sends.zss_voices?.[base + 2]).toBe(SOURCE_TYPE.SYNTH)
-      expect(sends.zss_voices?.[base + 5]).toBe(WASM_OSC_TYPE.SQUARE)
+      expect(voices[base + 2]).toBe(SOURCE_TYPE.SYNTH)
+      expect(voices[base + 5]).toBe(WASM_OSC_TYPE.SQUARE)
     }
-    expect(sends.zss_voices).toHaveLength(48)
+    expect(voices).toHaveLength(48)
   })
 })

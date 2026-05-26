@@ -36622,6 +36622,67 @@ class MaxiProcessor extends AudioWorkletProcessor {
   };
 
   /**
+   * @param {string} id
+   * @returns {Float64Array|undefined}
+   */
+  getZssSabView = (id) => {
+    if (id === "zss_voices") {
+      return this.zssVoiceSab;
+    }
+    if (id === "zss_drums") {
+      return this.zssDrumSab;
+    }
+    if (id === "zss_master") {
+      return this.zssMasterSab;
+    }
+    if (id === "zss_fx") {
+      return this.zssFxSab;
+    }
+    if (id === "zss_voicecfg") {
+      return this.zssVoiceCfgSab;
+    }
+    if (id === "zss_osccfg") {
+      return this.zssOscCfgSab;
+    }
+    if (id === "zss_algocfg") {
+      return this.zssAlgoCfgSab;
+    }
+    return undefined;
+  };
+
+  /**
+   * @param {string} id
+   * @param {Float64Array} view
+   */
+  assignZssSabChannel = (id, view) => {
+    if (id === "zss_voices") {
+      this.zssVoiceSab = view;
+    } else if (id === "zss_drums") {
+      this.zssDrumSab = view;
+    } else if (id === "zss_master") {
+      this.zssMasterSab = view;
+    } else if (id === "zss_fx") {
+      this.zssFxSab = view;
+    } else if (id === "zss_voicecfg") {
+      this.zssVoiceCfgSab = view;
+    } else if (id === "zss_osccfg") {
+      this.zssOscCfgSab = view;
+    } else if (id === "zss_algocfg") {
+      this.zssAlgoCfgSab = view;
+    }
+    if (!inputSABs[id]) {
+      inputSABs[id] = {
+        rb: null,
+        blocksize: view.length,
+        value: view,
+      };
+    } else {
+      inputSABs[id].value = view;
+      inputSABs[id].blocksize = view.length;
+    }
+  };
+
+  /**
    *
    * @param {*} id
    */
@@ -36785,38 +36846,27 @@ class MaxiProcessor extends AudioWorkletProcessor {
         } else if (event.data.func === "sendbuf") {
           // sample buffer — user created and named in the JS editor
           this.addSampleBuffer(event.data.name, event.data.data);
+        } else if (event.data.zss_sab_register) {
+          const id = event.data.channelID;
+          const sab = event.data.sab;
+          const length = event.data.length;
+          if (id && sab && length > 0) {
+            const view = new Float64Array(sab, 0, length);
+            this.assignZssSabChannel(id, view);
+          }
         } else if (event.data.zss_sab_push) {
           const id = event.data.channelID;
           const payload = event.data.data;
           if (id && payload && payload.length) {
-            const next = new Float64Array(payload.length);
-            for (let i = 0; i < payload.length; i++) {
-              next[i] = payload[i];
-            }
-            if (id === "zss_voices") {
-              this.zssVoiceSab = next;
-            } else if (id === "zss_drums") {
-              this.zssDrumSab = next;
-            } else if (id === "zss_master") {
-              this.zssMasterSab = next;
-            } else if (id === "zss_fx") {
-              this.zssFxSab = next;
-            } else if (id === "zss_voicecfg") {
-              this.zssVoiceCfgSab = next;
-            } else if (id === "zss_osccfg") {
-              this.zssOscCfgSab = next;
-            } else if (id === "zss_algocfg") {
-              this.zssAlgoCfgSab = next;
-            }
-            if (!inputSABs[id]) {
-              inputSABs[id] = {
-                rb: null,
-                blocksize: payload.length,
-                value: next,
-              };
+            const existing = this.getZssSabView(id);
+            if (existing && existing.length === payload.length) {
+              existing.set(payload);
             } else {
-              inputSABs[id].value = next;
-              inputSABs[id].blocksize = payload.length;
+              const next = new Float64Array(payload.length);
+              for (let i = 0; i < payload.length; i++) {
+                next[i] = payload[i];
+              }
+              this.assignZssSabChannel(id, next);
             }
           }
         } else if (event.data.zss_dsp_ready || event.data.zss_dsp_error) {

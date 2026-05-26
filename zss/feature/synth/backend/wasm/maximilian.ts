@@ -342,7 +342,12 @@ export function getmaxiengine(): MAYBE<MaxiEngine> {
   return maxiengine
 }
 
-export { pushwasmsabvalues } from './sabpush'
+export {
+  initwasmsabchannels,
+  pushwasmsabvalues,
+  resetwasmsabregistry,
+  wasmsabsnapshot,
+} from './sabpush'
 
 export function setwasmsynthplayvolume(volume: number) {
   wasmplayvolume = volume

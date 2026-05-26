@@ -1,35 +1,10 @@
 import { createwasmsynth } from '../maxisynth'
+import { createmockmaxi } from '../testhelpers/mockmaxi'
+import { WASM_VOICES_SAB } from '../wasmsabchannels'
 
 describe('wasm bgplay volume', () => {
-  function mockmaxi() {
-    let clock = 0
-    const sends: Record<string, number[]> = {}
-    const maxi = {
-      audioContext: {
-        get currentTime() {
-          return clock
-        },
-      },
-      send: () => {},
-      audioWorkletNode: {
-        port: {
-          postMessage: (msg: { channelID?: string; data?: number[] }) => {
-            if (msg.channelID && msg.data) {
-              sends[msg.channelID] = msg.data.slice()
-            }
-          },
-        },
-      },
-    }
-    function tick(ms: number) {
-      clock += ms / 1000
-      jest.advanceTimersByTime(ms)
-    }
-    return { maxi, sends, tick }
-  }
-
   it('calls bgplay volume hook', () => {
-    const { maxi } = mockmaxi()
+    const { maxi } = createmockmaxi()
     let pushed = -1
     const synth = createwasmsynth(maxi as any, {
       setbgplayvolume: (volume) => {
@@ -44,38 +19,43 @@ describe('wasm bgplay volume', () => {
 
   it('schedules bgplay on channel 4', () => {
     jest.useFakeTimers()
-    const { maxi, sends, tick } = mockmaxi()
+    const { maxi, snapshot } = createmockmaxi()
     const synth = createwasmsynth(maxi as any)
     synth.addbgplay('c', '+0.05')
-    tick(50)
-    expect(sends.zss_voices?.[24]).toBeGreaterThan(0)
-    expect(sends.zss_voices?.[25]).toBe(1)
+    maxi.advance(50)
+    jest.advanceTimersByTime(50)
+    const voices = snapshot(WASM_VOICES_SAB)
+    expect(voices[24]).toBeGreaterThan(0)
+    expect(voices[25]).toBe(1)
     synth.destroy()
     jest.useRealTimers()
   })
 
   it('schedules main play on channel 0', () => {
     jest.useFakeTimers()
-    const { maxi, sends } = mockmaxi()
+    const { maxi, snapshot } = createmockmaxi()
     const synth = createwasmsynth(maxi as any)
     synth.addplay('c')
     jest.advanceTimersByTime(1)
-    expect(sends.zss_voices?.[0]).toBeGreaterThan(0)
-    expect(sends.zss_voices?.[1]).toBe(1)
-    expect(sends.zss_voices?.[24]).toBe(0)
+    const voices = snapshot(WASM_VOICES_SAB)
+    expect(voices[0]).toBeGreaterThan(0)
+    expect(voices[1]).toBe(1)
+    expect(voices[24]).toBe(0)
     synth.destroy()
     jest.useRealTimers()
   })
 
   it('keeps play and bgplay on separate channels', () => {
     jest.useFakeTimers()
-    const { maxi, sends, tick } = mockmaxi()
+    const { maxi, snapshot } = createmockmaxi()
     const synth = createwasmsynth(maxi as any)
     synth.addplay('c')
     synth.addbgplay('e', '+0.05')
-    tick(50)
-    expect(sends.zss_voices?.[1]).toBe(1)
-    expect(sends.zss_voices?.[25]).toBe(1)
+    maxi.advance(50)
+    jest.advanceTimersByTime(50)
+    const voices = snapshot(WASM_VOICES_SAB)
+    expect(voices[1]).toBe(1)
+    expect(voices[25]).toBe(1)
     synth.destroy()
     jest.useRealTimers()
   })

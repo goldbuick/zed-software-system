@@ -53,4 +53,14 @@ describe('wasm fx play code', () => {
     expect(WASM_FX_PLAY_CODE).toContain('if (WASM_PERF_MODE) {')
     expect(WASM_FX_PLAY_CODE).not.toContain('function addfxserialwet')
   })
+
+  it('snapshots fx sends and params at block boundaries', () => {
+    expect(WASM_FX_PLAY_CODE).toContain('function refreshfxsnapshot()')
+    expect(WASM_FX_PLAY_CODE).toContain('function refreshfxderived(group)')
+    expect(WASM_FX_PLAY_CODE).toContain('var fxsends = []')
+    expect(WASM_FX_PLAY_CODE).toContain('var fxparams = []')
+    expect(WASM_FX_PLAY_CODE).toContain('fxechodelaysamples[group]')
+    expect(WASM_FX_PLAY_CODE).toContain('fxreverbfbcache[group]')
+    expect(WASM_FX_PLAY_CODE).not.toContain('function readfxsab')
+  })
 })

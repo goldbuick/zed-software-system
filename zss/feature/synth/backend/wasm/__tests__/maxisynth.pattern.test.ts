@@ -1,29 +1,15 @@
 import { invokeplay, parseplay } from 'zss/feature/synth/playnotation'
 
 import { createwasmsynth } from '../maxisynth'
+import { wasmsabsnapshot } from '../sabpush'
+import { createmockmaxi } from '../testhelpers/mockmaxi'
 
 describe('wasm drum pattern', () => {
   it('schedules all ten drums from 0x1x2xpx4x5x6x7x8x9x', () => {
     jest.useFakeTimers()
-    let clock = 0
-    const sends: Record<string, number[][]> = {}
-    const maxi = {
-      audioContext: {
-        get currentTime() {
-          return clock
-        },
-      },
-      send: () => {},
-      audioWorkletNode: {
-        port: {
-          postMessage: (msg: { channelID?: string; data?: number[] }) => {
-            if (msg.channelID && msg.data) {
-              sends[msg.channelID] ??= []
-              sends[msg.channelID].push(msg.data.slice())
-            }
-          },
-        },
-      },
+    const { maxi } = createmockmaxi()
+    const maxiwithclock = maxi as typeof maxi & {
+      advance: (ms: number) => void
     }
     const synth = createwasmsynth(maxi as any)
     const invoke = parseplay('0x1x2xpx4x5x6x7x8x9x')[0]
@@ -40,17 +26,15 @@ describe('wasm drum pattern', () => {
     ])
 
     synth.addplay('0x1x2xpx4x5x6x7x8x9x')
-    for (let step = 0; step < 50; step++) {
-      clock += 0.1
-      jest.advanceTimersByTime(100)
-    }
-
-    const pushes = sends.zss_drums ?? []
     const peak = new Array(10).fill(0)
-    for (const row of pushes) {
-      expect(row.length).toBeGreaterThanOrEqual(20)
-      for (let i = 0; i < 10; i++) {
-        peak[i] = Math.max(peak[i], row[i] ?? 0)
+    for (let step = 0; step < 50; step++) {
+      maxiwithclock.advance(100)
+      jest.advanceTimersByTime(100)
+      const row = wasmsabsnapshot('zss_drums')
+      if (row.length >= 20) {
+        for (let i = 0; i < 10; i++) {
+          peak[i] = Math.max(peak[i], row[i] ?? 0)
+        }
       }
     }
     expect(peak).toEqual([1, 1, 1, 1, 1, 1, 1, 1, 1, 1])

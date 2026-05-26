@@ -5,42 +5,20 @@ import {
 } from 'zss/feature/synth/playnotation'
 
 import { createwasmsynth } from '../maxisynth'
+import { setwasmsabwritehook } from '../sabpush'
+import { createmockmaxi } from '../testhelpers/mockmaxi'
+import { WASM_VOICES_SAB } from '../wasmsabchannels'
 
 describe('wasm play timing', () => {
-  function mockmaxi() {
-    let clock = 0
-    const sends: Record<string, number[]> = {}
-    const maxi = {
-      audioContext: {
-        get currentTime() {
-          return clock
-        },
-      },
-      send: () => {},
-      audioWorkletNode: {
-        port: {
-          postMessage: (msg: { channelID?: string; data?: number[] }) => {
-            if (msg.channelID && msg.data) {
-              sends[msg.channelID] = msg.data.slice()
-            }
-          },
-        },
-      },
-      advance(ms: number) {
-        clock += ms / 1000
-      },
-    }
-    return { maxi, sends, getclock: () => clock }
-  }
-
   it('starts semicolon voices on the same beat', () => {
     jest.useFakeTimers()
-    const { maxi, sends } = mockmaxi()
+    const { maxi, snapshot } = createmockmaxi()
     const synth = createwasmsynth(maxi as any)
     synth.addplay('c;e')
     jest.advanceTimersByTime(1)
-    expect(sends.zss_voices?.[1]).toBe(1)
-    expect(sends.zss_voices?.[7]).toBe(1)
+    const voices = snapshot(WASM_VOICES_SAB)
+    expect(voices[1]).toBe(1)
+    expect(voices[7]).toBe(1)
     synth.destroy()
     jest.useRealTimers()
   })
@@ -48,26 +26,14 @@ describe('wasm play timing', () => {
   it('staggers consecutive addplay by last pattern time, not extra 8n', () => {
     jest.useFakeTimers()
     const gateat: number[] = []
-    let clock = 0
-    const maxi = {
-      audioContext: {
-        get currentTime() {
-          return clock
-        },
-      },
-      send: () => {},
-      audioWorkletNode: {
-        port: {
-          postMessage: (msg: { channelID?: string; data?: number[] }) => {
-            if (msg.channelID === 'zss_voices' && msg.data?.[1] === 1) {
-              gateat.push(clock)
-            }
-          },
-        },
-      },
-      advance(ms: number) {
-        clock += ms / 1000
-      },
+    const { maxi, getclock } = createmockmaxi()
+    setwasmsabwritehook((channelid, view) => {
+      if (channelid === WASM_VOICES_SAB && view[1] === 1) {
+        gateat.push(getclock())
+      }
+    })
+    const maxiwithclock = maxi as typeof maxi & {
+      advance: (ms: number) => void
     }
     const synth = createwasmsynth(maxi as any)
     const pattern1 = invokeplay(0, 0, parseplay('c')[0], true)
@@ -76,11 +42,11 @@ describe('wasm play timing', () => {
     synth.addplay('c')
     synth.addplay('e')
 
-    maxi.advance(1)
+    maxiwithclock.advance(1)
     jest.advanceTimersByTime(1)
     expect(gateat).toEqual([0])
 
-    maxi.advance(Math.max(0, nextstart * 1000))
+    maxiwithclock.advance(Math.max(0, nextstart * 1000))
     jest.advanceTimersByTime(Math.max(0, nextstart * 1000))
     expect(gateat[0]).toBe(0)
     expect(gateat[1] ?? 0).toBeLessThan(

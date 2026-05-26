@@ -70,6 +70,8 @@ var voicecfgsustain = [];
 var voicecfgrelease = [];
 var voicecfgport = [];
 var voicecfgvolume = [];
+var voicegains = [];
+var detunemuls = [];
 var synthgateprev = [];
 var playsampletick = 0;
 
@@ -94,6 +96,8 @@ for (var vi = 0; vi < VOICE_COUNT; vi++) {
   voicecfgrelease.push(0.01);
   voicecfgport.push(0);
   voicecfgvolume.push(0);
+  voicegains.push(1);
+  detunemuls.push(1);
 
   synthoscs.push(new Maximilian.maxiOsc());
   synthmods.push(new Maximilian.maxiOsc());
@@ -133,11 +137,12 @@ for (var vi = 0; vi < VOICE_COUNT; vi++) {
 
 function detunedhz(i, freq) {
   var hz = freq > 0 ? freq : 440;
-  var cents = detunes[i] || 0;
-  if (gates[i]) {
-    cents += playvibratocents(i);
+  var vib = gates[i] ? playvibratocents(i) : 0;
+  if (vib !== 0) {
+    var cents = (detunes[i] || 0) + vib;
+    return hz * Math.pow(2, cents / 1200);
   }
-  return hz * Math.pow(2, cents / 1200);
+  return hz * (detunemuls[i] || 1);
 }
 
 function glidefreq(i) {
@@ -175,8 +180,7 @@ function applyvoiceenvelope(i, attack, decay, sustain, release) {
 }
 
 function voicevolumegain(i) {
-  var db = voicecfgvolume[i] || 0;
-  return Math.pow(10, db / 20);
+  return voicegains[i] || 1;
 }
 
 function readvoicecfgsab() {
@@ -209,6 +213,7 @@ function readvoicecfgsab() {
     }
     voicecfgport[i] = port;
     voicecfgvolume[i] = vol;
+    voicegains[i] = Math.pow(10, (vol || 0) / 20);
   }
 }
 
@@ -434,7 +439,7 @@ function voiceissilent(i) {
 
 function readsynthcontrolsifdue() {
   if (playsampletick === 0) {
-    fxsabtick = WASM_BLOCK_SIZE;
+    refreshfxsnapshot();
     readvoicessab();
     readvoicecfgsab();
     readosccfgsab();
@@ -450,7 +455,7 @@ function readsynthcontrolsifdue() {
     return;
   }
   playsampletick = 0;
-  fxsabtick = WASM_BLOCK_SIZE;
+  refreshfxsnapshot();
   readvoicessab();
   readvoicecfgsab();
   readosccfgsab();
@@ -494,6 +499,7 @@ function readvoicessab() {
     types[i] = Math.round(raw[base + 2]);
     algos[i] = Math.round(raw[base + 3]);
     detunes[i] = raw[base + 4];
+    detunemuls[i] = Math.pow(2, detunes[i] / 1200);
     osctypes[i] = Math.round(raw[base + 5]);
   }
 }

@@ -9,6 +9,17 @@ export {
   type WASM_SYNTH,
 } from './maxisynth'
 export {
+  initwasmsabchannels,
+  pushwasmsabvalues,
+  resetwasmsabregistry,
+  wasmsabsnapshot,
+} from './sabpush'
+export {
+  WASM_SAB_CHANNELS,
+  WASM_VOICES_SAB,
+  WASM_DRUMS_SAB,
+} from './wasmsabchannels'
+export {
   ensuresynthwasm,
   getmaxiengine,
   getmaximaudiocontext,
@@ -17,7 +28,6 @@ export {
   initsilentwasmsynth,
   initwasmsynthvoices,
   playwasmaudiobuffer,
-  pushwasmsabvalues,
   setwasmsynthplayvolume,
   setwasmsynthbgplayvolume,
   setwasmsynthttsvolume,

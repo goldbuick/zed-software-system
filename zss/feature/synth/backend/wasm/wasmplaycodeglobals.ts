@@ -28,4 +28,5 @@ export const WASM_PLAYCODE_GLOBALS = new Set([
   'Module',
   'Maximilian',
   'WASM_PERF_MODE',
+  'WASM_BLOCK_SIZE',
 ])

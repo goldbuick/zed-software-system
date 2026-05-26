@@ -1,7 +1,7 @@
 /** JS ADSR — vendored maximilian WASM has no maxiEnv export. */
 export const WASM_ENV_CODE = `
 function zssenv(attackms, decayms, sustain, releasems) {
-  return {
+  var env = {
     attackms: attackms,
     decayms: decayms,
     sustain: sustain,
@@ -9,12 +9,17 @@ function zssenv(attackms, decayms, sustain, releasems) {
     level: 0,
     stage: 'idle',
     gateprev: 0,
+    atkinc: 0,
+    decinc: 0,
+    relinc: 0,
+    refreshinc: function() {
+      var sr = typeof sampleRate !== 'undefined' ? sampleRate : 44100;
+      this.atkinc = 1 / Math.max(1, this.attackms * 0.001 * sr);
+      this.decinc = (1 - this.sustain) / Math.max(1, this.decayms * 0.001 * sr);
+      this.relinc = this.sustain / Math.max(1, this.releasems * 0.001 * sr);
+    },
     adsr: function(input, gate) {
       var g = gate > 0.5 ? 1 : 0;
-      var sr = typeof sampleRate !== 'undefined' ? sampleRate : 44100;
-      var atk = 1 / Math.max(1, this.attackms * 0.001 * sr);
-      var dec = (1 - this.sustain) / Math.max(1, this.decayms * 0.001 * sr);
-      var rel = this.sustain / Math.max(1, this.releasems * 0.001 * sr);
 
       if (g && !this.gateprev) {
         this.stage = 'attack';
@@ -24,13 +29,13 @@ function zssenv(attackms, decayms, sustain, releasems) {
       this.gateprev = g;
 
       if (this.stage === 'attack') {
-        this.level += atk;
+        this.level += this.atkinc;
         if (this.level >= 1) {
           this.level = 1;
           this.stage = 'decay';
         }
       } else if (this.stage === 'decay') {
-        this.level -= dec;
+        this.level -= this.decinc;
         if (this.level <= this.sustain) {
           this.level = this.sustain;
           this.stage = g ? 'sustain' : 'release';
@@ -41,7 +46,7 @@ function zssenv(attackms, decayms, sustain, releasems) {
           this.stage = 'release';
         }
       } else if (this.stage === 'release') {
-        this.level -= rel;
+        this.level -= this.relinc;
         if (this.level <= 0) {
           this.level = 0;
           this.stage = 'idle';
@@ -57,7 +62,10 @@ function zssenv(attackms, decayms, sustain, releasems) {
       this.decayms = decayms;
       this.sustain = sustain;
       this.releasems = releasems;
+      this.refreshinc();
     },
   };
+  env.refreshinc();
+  return env;
 }
 `

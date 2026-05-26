@@ -25,7 +25,7 @@ import {
 
 import type { MaxiEngine } from './maximilian'
 import { playpatternendtime } from './playstart'
-import { pushwasmsabvalues } from './sabpush'
+import { initwasmsabchannels, pushwasmsabvalues } from './sabpush'
 import {
   defaultwasmalgoconfig,
   initwasmalgoconfigsab,
@@ -48,6 +48,13 @@ import {
 import { createwasmplayscheduler } from './wasmplayscheduler'
 import type { WASM_RECORD_DEPS } from './wasmrecordhandler'
 import { type WASM_REPLAY_STATE, clonewasmreplaystate } from './wasmreplaystate'
+import {
+  WASM_DRUMS_SAB,
+  WASM_DRUM_COUNT,
+  WASM_DRUM_SAB_LEN,
+  WASM_VOICES_SAB,
+  WASM_VOICE_STRIDE,
+} from './wasmsabchannels'
 import { initwasmvoicecfgsab, pushwasmvoicecfgsab } from './wasmvoicecfgsab'
 import {
   type WASM_VOICE_STATE,
@@ -57,11 +64,6 @@ import {
 } from './wasmvoiceconfig'
 
 const WASM_VOICE_COUNT = SYNTH_VOICE_COUNT
-const WASM_VOICES_SAB = 'zss_voices'
-const WASM_DRUMS_SAB = 'zss_drums'
-const WASM_DRUM_COUNT = 10
-const WASM_DRUM_SAB_LEN = WASM_DRUM_COUNT * 2
-const WASM_VOICE_STRIDE = 6
 const WASM_VOICE_BLOCK = WASM_VOICE_COUNT * WASM_VOICE_STRIDE
 
 function notetofrequency(pitch: string): number {
@@ -93,6 +95,7 @@ function quantizetoseconds(quantize: string): number {
 }
 
 export function initwasmvoicesab(maxi: MaxiEngine) {
+  initwasmsabchannels(maxi)
   const voicecfg = defaultwasmvoicestate()
   const playstate = new Array(WASM_VOICE_BLOCK).fill(0)
   const sab = wasmvoicestatetosab(voicecfg, playstate, WASM_VOICE_STRIDE)
@@ -145,6 +148,7 @@ export function createwasmsynth(
   hooks: WASM_SYNTH_HOOKS = {},
   recordfactory?: WASM_RECORD_FACTORY,
 ) {
+  initwasmsabchannels(maxi)
   initwasmvoicesab(maxi)
   initwasmfxsab(maxi)
   initwasmdrumsab(maxi)
