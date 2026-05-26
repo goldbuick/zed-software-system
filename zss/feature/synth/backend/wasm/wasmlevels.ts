@@ -63,5 +63,8 @@ export const WASM_ALGO_OUT_GAIN = 0.18
 /** FM modindex → carrier Hz scale (calibrated vs Tone FMOscillator). */
 export const WASM_FM_HZ_SCALE = 1
 
+/** Razzle wet send — Tone vibrato wet is 0.1; keep modulation subtle. */
+export const WASM_RAZZLE_WET_MIX = 0.1
+
 /** Tape hiss level — Tone pink noise at about −50 dB. */
 export const WASM_RAZZLE_HISS_GAIN = 0.0005
