@@ -1,8 +1,5 @@
-import {
-  WASM_OSC_CFG_IDX,
-  WASM_OSC_CFG_STRIDE,
-} from './wasmoscconfigsab'
 import { WASM_FM_HZ_SCALE } from './wasmlevels'
+import { WASM_OSC_CFG_IDX, WASM_OSC_CFG_STRIDE } from './wasmoscconfigsab'
 
 /** Per-voice osc tuning from zss_osccfg SAB — Tone SYNTH param parity. */
 export const WASM_OSC_CFG_PLAY_CODE = `

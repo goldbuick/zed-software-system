@@ -10,5 +10,10 @@ export function noiseprngnext(state: number): [number, number] {
 }
 
 export function noisephaseseed(voiceindex: number, notecount: number): number {
-  return (NOISE_WHITE_SEED ^ (voiceindex + 1) * 0x9e3779b9 ^ notecount * 0x85ebca6b) >>> 0
+  return (
+    (NOISE_WHITE_SEED ^
+      ((voiceindex + 1) * 0x9e3779b9) ^
+      (notecount * 0x85ebca6b)) >>>
+    0
+  )
 }

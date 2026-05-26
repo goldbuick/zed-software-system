@@ -1,4 +1,8 @@
-import { invokeplay, parseplay, tonenotationseconds } from 'zss/feature/synth/playnotation'
+import {
+  invokeplay,
+  parseplay,
+  tonenotationseconds,
+} from 'zss/feature/synth/playnotation'
 
 import { playpatternendtime, resolveplaystarttime } from '../playstart'
 

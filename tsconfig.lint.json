@@ -8,5 +8,8 @@
     "vite.config.ts",
     "jest.config.ts",
     "playwright.config.ts",
+  ],
+  "exclude": [
+    "zss/feature/synth/archive"
   ]
 }

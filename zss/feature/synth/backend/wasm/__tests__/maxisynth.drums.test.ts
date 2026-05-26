@@ -10,10 +10,7 @@ describe('wasm drum scheduling', () => {
       send: () => {},
       audioWorkletNode: {
         port: {
-          postMessage: (msg: {
-            channelID?: string
-            data?: number[]
-          }) => {
+          postMessage: (msg: { channelID?: string; data?: number[] }) => {
             if (msg.channelID && msg.data) {
               sends[msg.channelID] = msg.data.slice()
             }

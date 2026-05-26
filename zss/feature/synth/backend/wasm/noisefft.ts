@@ -11,7 +11,10 @@ function countbits(n: number) {
   return Math.round(Math.log(n) / Math.log(2))
 }
 
-function reverseindexbits(array: { length: number; [index: number]: number }, fulllength: number) {
+function reverseindexbits(
+  array: { length: number; [index: number]: number },
+  fulllength: number,
+) {
   const bitcount = countbits(fulllength)
   const finalshift = 32 - bitcount
   for (let i = 0; i < fulllength; i++) {
@@ -29,7 +32,10 @@ function reverseindexbits(array: { length: number; [index: number]: number }, fu
   }
 }
 
-export function inverserealfouriertransform(array: { length: number; [index: number]: number }, fulllength: number) {
+export function inverserealfouriertransform(
+  array: { length: number; [index: number]: number },
+  fulllength: number,
+) {
   const totalpasses = countbits(fulllength)
   if (fulllength < 4) {
     throw new Error('FFT array length must be at least 4.')
@@ -103,7 +109,10 @@ export function inverserealfouriertransform(array: { length: number; [index: num
   reverseindexbits(array, fulllength)
 }
 
-export function scaleelementsbyfactor(array: { length: number; [index: number]: number }, factor: number) {
+export function scaleelementsbyfactor(
+  array: { length: number; [index: number]: number },
+  factor: number,
+) {
   for (let i = 0; i < array.length; i++) {
     array[i] *= factor
   }

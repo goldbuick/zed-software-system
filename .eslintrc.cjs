@@ -186,6 +186,12 @@ module.exports = {
   },
   overrides: [
     {
+      files: ['zss/feature/synth/backend/wasm/**/*.ts'],
+      globals: {
+        sampleRate: 'readonly',
+      },
+    },
+    {
       files: ['zss/simspace.ts', 'zss/heavyspace.ts'],
       rules: {
         'no-restricted-imports': [

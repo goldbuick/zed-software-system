@@ -1,8 +1,5 @@
 import { createwasmsynth } from '../maxisynth'
-import {
-  WASM_FX_SEND_COUNT,
-  WASM_FX_SEND_IDX,
-} from '../wasmfxstate'
+import { WASM_FX_SEND_COUNT, WASM_FX_SEND_IDX } from '../wasmfxstate'
 
 describe('wasm stopplay', () => {
   function mockmaxi() {

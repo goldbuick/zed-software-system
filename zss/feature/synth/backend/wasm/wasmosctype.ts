@@ -1,7 +1,8 @@
 import { NAME } from 'zss/words/types'
 
 /** Matches Tone oscillator config strings validated by `validatesynthtype`. */
-const OSC_WAVE_MATCH = /^(am|fm|fat)*(sine|square|triangle|sawtooth|custom)[0-9]*$/
+const OSC_WAVE_MATCH =
+  /^(am|fm|fat)*(sine|square|triangle|sawtooth|custom)[0-9]*$/
 
 export enum WASM_OSC_TYPE {
   SQUARE = 0,
@@ -90,7 +91,7 @@ export function parsewasmosc(config: string): WASM_OSC_TYPE | undefined {
   if (!OSC_WAVE_MATCH.test(name)) {
     return undefined
   }
-  const match = name.match(/^(am|fm|fat)*(sine|square|triangle|sawtooth|custom)/)
+  const match = /^(am|fm|fat)*(sine|square|triangle|sawtooth|custom)/.exec(name)
   if (!match) {
     return undefined
   }

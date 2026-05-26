@@ -4,9 +4,9 @@ import {
   WASM_AUTOWAH_DEFAULT_GAIN,
   WASM_AUTOWAH_DEFAULT_OCTAVES,
   WASM_AUTOWAH_DEFAULT_SENSITIVITY,
+  autowahfollowerstep,
   autowahinputboost,
   autowahmaxhz,
-  autowahfollowerstep,
   autowahsweephz,
 } from '../wasmautowah'
 

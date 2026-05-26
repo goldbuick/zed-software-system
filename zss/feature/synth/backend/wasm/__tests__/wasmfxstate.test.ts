@@ -18,20 +18,19 @@ describe('wasmfxstate', () => {
     const sab = defaultwasmfxsab()
     expect(sab).toHaveLength(WASM_FX_SAB_LEN)
     expect(WASM_FX_SAB_LEN).toBe(
-      WASM_FX_GROUP_COUNT * WASM_FX_SEND_COUNT +
-        WASM_FX_GROUP_COUNT * 20,
+      WASM_FX_GROUP_COUNT * WASM_FX_SEND_COUNT + WASM_FX_GROUP_COUNT * 20,
     )
     for (let group = 0; group < WASM_FX_GROUP_COUNT; group++) {
       const parambase = wasmfxgroupparambase(group)
-      expect(
-        sab[parambase + WASM_FX_PARAM_IDX.ECHO_DELAY],
-      ).toBeCloseTo(tonenotationseconds('8n'), 4)
+      expect(sab[parambase + WASM_FX_PARAM_IDX.ECHO_DELAY]).toBeCloseTo(
+        tonenotationseconds('8n'),
+        4,
+      )
       expect(sab[parambase + WASM_FX_PARAM_IDX.FC_RATE]).toBe(32)
     }
-    expect(sab[WASM_FX_PARAM_OFFSET + WASM_FX_PARAM_IDX.ECHO_DELAY]).toBeCloseTo(
-      tonenotationseconds('8n'),
-      4,
-    )
+    expect(
+      sab[WASM_FX_PARAM_OFFSET + WASM_FX_PARAM_IDX.ECHO_DELAY],
+    ).toBeCloseTo(tonenotationseconds('8n'), 4)
   })
 
   it('maps echo on to group 0 send only', () => {
@@ -61,14 +60,10 @@ describe('wasmfxstate', () => {
       true,
     )
     expect(applywasmfxconfig(sab, 2, 'autowah', 'octaves', 4)).toBe(true)
-    expect(applywasmfxconfig(sab, 2, 'autowah', 'sensitivity', -20)).toBe(
-      true,
-    )
+    expect(applywasmfxconfig(sab, 2, 'autowah', 'sensitivity', -20)).toBe(true)
     expect(applywasmfxconfig(sab, 2, 'autowah', 'gain', 6)).toBe(true)
     expect(applywasmfxconfig(sab, 2, 'autowah', 'follower', 0.05)).toBe(true)
-    expect(
-      sab[parambase + WASM_FX_PARAM_IDX.AUTOWAH_BASE_FREQ],
-    ).toBe(200)
+    expect(sab[parambase + WASM_FX_PARAM_IDX.AUTOWAH_BASE_FREQ]).toBe(200)
     expect(
       sab[WASM_FX_PARAM_OFFSET + WASM_FX_PARAM_IDX.AUTOWAH_BASE_FREQ],
     ).not.toBe(200)
@@ -81,12 +76,8 @@ describe('wasmfxstate', () => {
       true,
     )
     const parambase = wasmfxgroupparambase(1)
-    expect(
-      sab[parambase + WASM_FX_PARAM_IDX.AUTOFILTER_DEPTH],
-    ).toBe(0.8)
-    expect(
-      sab[parambase + WASM_FX_PARAM_IDX.AUTOFILTER_TYPE],
-    ).toBe(1)
+    expect(sab[parambase + WASM_FX_PARAM_IDX.AUTOFILTER_DEPTH]).toBe(0.8)
+    expect(sab[parambase + WASM_FX_PARAM_IDX.AUTOFILTER_TYPE]).toBe(1)
     expect(
       sab[wasmfxgroupparambase(0) + WASM_FX_PARAM_IDX.AUTOFILTER_DEPTH],
     ).toBe(0.5)
@@ -95,9 +86,7 @@ describe('wasmfxstate', () => {
   it('maps numeric send to linear gain on target bus', () => {
     const sab = defaultwasmfxsab()
     expect(applywasmfxconfig(sab, 3, 'fcrush', 50, '')).toBe(true)
-    expect(
-      sab[3 * WASM_FX_SEND_COUNT + WASM_FX_SEND_IDX.FC],
-    ).toBeGreaterThan(0)
+    expect(sab[3 * WASM_FX_SEND_COUNT + WASM_FX_SEND_IDX.FC]).toBeGreaterThan(0)
     expect(sab[WASM_FX_SEND_IDX.FC]).toBe(0)
   })
 
@@ -105,12 +94,12 @@ describe('wasmfxstate', () => {
     const sab = defaultwasmfxsab()
     expect(applywasmfxconfig(sab, 0, 'echo', 'feedback', 0.5)).toBe(true)
     expect(applywasmfxconfig(sab, 1, 'echo', 'feedback', 0.25)).toBe(true)
-    expect(
-      sab[wasmfxgroupparambase(0) + WASM_FX_PARAM_IDX.ECHO_FEEDBACK],
-    ).toBe(0.5)
-    expect(
-      sab[wasmfxgroupparambase(1) + WASM_FX_PARAM_IDX.ECHO_FEEDBACK],
-    ).toBe(0.25)
+    expect(sab[wasmfxgroupparambase(0) + WASM_FX_PARAM_IDX.ECHO_FEEDBACK]).toBe(
+      0.5,
+    )
+    expect(sab[wasmfxgroupparambase(1) + WASM_FX_PARAM_IDX.ECHO_FEEDBACK]).toBe(
+      0.25,
+    )
   })
 
   it('replays persisted voicefx state on four buses', () => {

@@ -1,20 +1,18 @@
 import { SOURCE_TYPE } from 'zss/feature/synth/shared/sourcetype'
 
-import { DEFAULT_WASM_OSC_CONFIG } from '../wasmoscconfigsab'
-import { WASM_OSC_TYPE, parsemodtype, parsewasmosc } from '../wasmosctype'
 import { initwasmvoicesab } from '../maxisynth'
+import { defaultwasmalgoconfig } from '../wasmalgoconfigsab'
 import {
-  defaultwasmalgoconfig,
-} from '../wasmalgoconfigsab'
-import {
+  DEFAULT_WASM_OSC_CONFIG,
   defaultwasmoscconfig,
 } from '../wasmoscconfigsab'
+import { WASM_OSC_TYPE, parsemodtype, parsewasmosc } from '../wasmosctype'
+import { wasmvoicecfgtosab } from '../wasmvoicecfgsab'
 import {
   applywasmvoiceconfig,
   defaultwasmvoicestate,
   wasmvoicestatetosab,
 } from '../wasmvoiceconfig'
-import { wasmvoicecfgtosab } from '../wasmvoicecfgsab'
 
 function applyvoiceconfig(
   voices: ReturnType<typeof defaultwasmvoicestate>,
@@ -124,9 +122,9 @@ describe('wasmvoiceconfig', () => {
 
   it('maps envelope and portamento into voice cfg sab', () => {
     const voices = defaultwasmvoicestate()
-    expect(
-      applyvoiceconfig(voices, 0, 'envelope', [0.02, 0.1, 0.4, 0.2]),
-    ).toBe(true)
+    expect(applyvoiceconfig(voices, 0, 'envelope', [0.02, 0.1, 0.4, 0.2])).toBe(
+      true,
+    )
     expect(voices[0].envelope).toEqual({
       attack: 0.02,
       decay: 0.1,
@@ -198,9 +196,7 @@ describe('wasmvoiceconfig', () => {
     const osc = defaultwasmoscconfig()
     const algo = defaultwasmalgoconfig()
     applyvoiceconfig(voices, 0, 'algo2', '', osc, algo)
-    expect(applyvoiceconfig(voices, 0, 'harmonicity2', 3, osc, algo)).toBe(
-      true,
-    )
+    expect(applyvoiceconfig(voices, 0, 'harmonicity2', 3, osc, algo)).toBe(true)
     expect(algo[0].harmonicity2).toBe(3)
     expect(
       applyvoiceconfig(voices, 0, 'env3', [0.1, 0.2, 0.3, 0.4], osc, algo),
@@ -219,10 +215,7 @@ describe('wasmvoiceconfig', () => {
       send: () => {},
       audioWorkletNode: {
         port: {
-          postMessage: (msg: {
-            channelID?: string
-            data?: number[]
-          }) => {
+          postMessage: (msg: { channelID?: string; data?: number[] }) => {
             if (msg.channelID && msg.data) {
               sends[msg.channelID] = msg.data.slice()
             }
@@ -245,10 +238,7 @@ describe('wasmvoiceconfig', () => {
       send: () => {},
       audioWorkletNode: {
         port: {
-          postMessage: (msg: {
-            channelID?: string
-            data?: number[]
-          }) => {
+          postMessage: (msg: { channelID?: string; data?: number[] }) => {
             if (msg.channelID && msg.data) {
               sends[msg.channelID] = msg.data.slice()
             }

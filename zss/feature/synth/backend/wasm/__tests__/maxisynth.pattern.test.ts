@@ -29,10 +29,15 @@ describe('wasm drum pattern', () => {
     const invoke = parseplay('0x1x2xpx4x5x6x7x8x9x')[0]
     const pattern = invokeplay(0, 0, invoke, true)
     const drums = pattern
-      .filter(([, value]) => typeof value[2] === 'number' && value[2] >= 0 && value[2] <= 9)
+      .filter(
+        ([, value]) =>
+          typeof value[2] === 'number' && value[2] >= 0 && value[2] <= 9,
+      )
       .map(([time, value]) => [time, value[2]] as const)
 
-    expect(drums.map(([, id]) => id).sort()).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+    expect(drums.map(([, id]) => id).sort()).toEqual([
+      0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+    ])
 
     synth.addplay('0x1x2xpx4x5x6x7x8x9x')
     for (let step = 0; step < 50; step++) {

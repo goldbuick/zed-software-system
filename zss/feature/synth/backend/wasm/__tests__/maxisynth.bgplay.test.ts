@@ -13,10 +13,7 @@ describe('wasm bgplay volume', () => {
       send: () => {},
       audioWorkletNode: {
         port: {
-          postMessage: (msg: {
-            channelID?: string
-            data?: number[]
-          }) => {
+          postMessage: (msg: { channelID?: string; data?: number[] }) => {
             if (msg.channelID && msg.data) {
               sends[msg.channelID] = msg.data.slice()
             }

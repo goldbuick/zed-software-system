@@ -35,6 +35,13 @@ var COMP_RELEASE_COEF = 1 - Math.exp(-1 / (${WASM_COMP_RELEASE_SEC} * MASTER_SR)
 
 var compenv = 0;
 var mastervolprev = 80;
+var cachedmastervolgain = 0;
+var cachedbggain = 0;
+var cachedttsgain = 0;
+var cachedmastervolraw = 80;
+var cachedbgvolraw = 100;
+var cachedttsvolraw = 25;
+var cachedmastermuted = false;
 
 function readmastervolraw() {
   var raw = qref.zssMasterSab;
@@ -70,7 +77,26 @@ function readttsvolraw() {
 }
 
 function ismastermuted() {
-  return readmastervolraw() <= 0.001;
+  return cachedmastermuted;
+}
+
+function refreshmastergains() {
+  var vol = readmastervolraw();
+  var bg = readbgplayvolraw();
+  var tts = readttsvolraw();
+  cachedmastermuted = vol <= 0.001;
+  if (
+    vol !== cachedmastervolraw ||
+    bg !== cachedbgvolraw ||
+    tts !== cachedttsvolraw
+  ) {
+    cachedmastervolraw = vol;
+    cachedbgvolraw = bg;
+    cachedttsvolraw = tts;
+    cachedmastervolgain = cachedmastermuted ? 0 : readmastervolume();
+    cachedbggain = readbgplayvolume();
+    cachedttsgain = readttsvolume();
+  }
 }
 
 function applycompressor(x) {
@@ -123,9 +149,9 @@ function masterout(playvoices, bgvoices, drums, ttstrigger, ttsmix) {
   if (ismastermuted()) {
     return 0;
   }
-  var volgain = readmastervolume();
-  var bggain = readbgplayvolume();
-  var ttsgain = readttsvolume();
+  var volgain = cachedmastervolgain;
+  var bggain = cachedbggain;
+  var ttsgain = cachedttsgain;
   var tts = 0;
   var mixsrc = ttsmix;
   if (typeof mixsrc !== 'number' || mixsrc !== mixsrc) {

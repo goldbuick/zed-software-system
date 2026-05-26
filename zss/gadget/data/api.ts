@@ -162,16 +162,22 @@ export function applyhyperlinksharedmodemsync(
     if (isstring(current)) {
       modemwriteinitstring(address, current)
     }
-    panelshared[chipname][target] = modemobservevaluestring(address, (value) => {
-      setvalue<string>(target, value)
-    })
+    panelshared[chipname][target] = modemobservevaluestring(
+      address,
+      (value) => {
+        setvalue<string>(target, value)
+      },
+    )
   } else {
     if (isnumber(current)) {
       modemwriteinitnumber(address, current)
     }
-    panelshared[chipname][target] = modemobservevaluenumber(address, (value) => {
-      setvalue<number>(target, value)
-    })
+    panelshared[chipname][target] = modemobservevaluenumber(
+      address,
+      (value) => {
+        setvalue<number>(target, value)
+      },
+    )
   }
 }
 

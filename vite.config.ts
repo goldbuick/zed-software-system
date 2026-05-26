@@ -140,6 +140,9 @@ export default defineConfig(({ mode }) => {
       'import.meta.env.ZSS_WASM_SPIKE': JSON.stringify(
         process.env.ZSS_WASM_SPIKE ?? 'false',
       ),
+      'import.meta.env.ZSS_WASM_PERF': JSON.stringify(
+        process.env.ZSS_WASM_PERF ?? '',
+      ),
     },
     resolve: {
       alias: {

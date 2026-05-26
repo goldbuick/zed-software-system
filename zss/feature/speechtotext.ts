@@ -3,7 +3,10 @@ import type {
   ServerMessagePartialResult,
   ServerMessageResult,
 } from 'vosk-browser/dist/interfaces'
-import { getmaximaudiocontext, unlockmaximaudiocontext } from 'zss/feature/synth/backend/wasm/maximilian'
+import {
+  getmaximaudiocontext,
+  unlockmaximaudiocontext,
+} from 'zss/feature/synth/backend/wasm/maximilian'
 import type { MAYBE } from 'zss/mapping/types'
 
 const MODEL_URL = '/models/vosk-model-small-en-us-0.15.tar.gz'
@@ -78,7 +81,7 @@ function chunktoaudiobuffer(
     chunk.length,
     audiocontext.sampleRate,
   )
-  buffer.copyToChannel(chunk, 0)
+  buffer.copyToChannel(new Float32Array(chunk), 0)
   return buffer
 }
 
@@ -124,8 +127,7 @@ export class SpeechToText {
         },
       })
 
-      const sharedcontext =
-        getmaximaudiocontext() ?? unlockmaximaudiocontext()
+      const sharedcontext = getmaximaudiocontext() ?? unlockmaximaudiocontext()
       this.audiocontext = sharedcontext
       this.ownsaudiocontext = false
       await waitforrunningaudiocontext(this.audiocontext)

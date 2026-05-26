@@ -1,4 +1,8 @@
-import { getmaxiengine, getmaximaudiocontext, setwasmsynthplayvolume } from './maximilian'
+import {
+  getmaxiengine,
+  getmaximaudiocontext,
+  setwasmsynthplayvolume,
+} from './maximilian'
 import type { WASM_SYNTH } from './maxisynth'
 
 /** Parity with Tone `warmdrums` in audiochain.ts. */

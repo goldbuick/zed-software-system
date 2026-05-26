@@ -1,57 +1,60 @@
 import { Note } from 'tonal'
 import {
-  invokeplay,
-  parseplay,
-  SYNTH_SFX_RESET,
   type SYNTH_NOTE_ENTRY,
   type SYNTH_NOTE_ON,
+  SYNTH_SFX_RESET,
+  invokeplay,
+  parseplay,
   tonenotationseconds,
 } from 'zss/feature/synth/playnotation'
-import { SYNTH_PLAY_VOICE_COUNT, SYNTH_VOICE_COUNT } from 'zss/feature/synth/synthdefaults'
 import { SOURCE_TYPE } from 'zss/feature/synth/shared/sourcetype'
+import {
+  SYNTH_PLAY_VOICE_COUNT,
+  SYNTH_VOICE_COUNT,
+} from 'zss/feature/synth/synthdefaults'
 import type { SYNTH_STATE } from 'zss/gadget/data/types'
+import { randominteger } from 'zss/mapping/number'
 import { isnumber, isstring } from 'zss/mapping/types'
 
-import type { MaxiEngine } from './maximilian'
-import { pushwasmsabvalues } from './sabpush'
-import { playpatternendtime } from './playstart'
-import type { WASM_RECORD_DEPS } from './wasmrecordhandler'
-import { clonewasmreplaystate, type WASM_REPLAY_STATE } from './wasmreplaystate'
 import type { RECORDING_STATE } from '../../shared/recording'
+import { synthdebugtrace } from '../../synthdebugtrace'
 import {
+  canonicalvoicefxgroupindex,
+  voiceindexfxgroup,
+} from '../../voicefxgroup'
+
+import type { MaxiEngine } from './maximilian'
+import { playpatternendtime } from './playstart'
+import { pushwasmsabvalues } from './sabpush'
+import {
+  defaultwasmalgoconfig,
+  initwasmalgoconfigsab,
+  pushwasmalgoconfigsab,
+} from './wasmalgoconfigsab'
+import {
+  WASM_FX_PARAM_IDX,
   applywasmfxconfig,
   defaultwasmfxsab,
   initwasmfxsab,
   pushwasmfxsab,
   replaywasmfxfromstate,
-  WASM_FX_PARAM_IDX,
   wasmfxgroupparambase,
 } from './wasmfxstate'
-import { synthdebugtrace } from '../../synthdebugtrace'
-import { canonicalvoicefxgroupindex, voiceindexfxgroup } from '../../voicefxgroup'
-import {
-  applywasmvoiceconfig,
-  defaultwasmvoicestate,
-  type WASM_VOICE_STATE,
-  wasmvoicestatetosab,
-} from './wasmvoiceconfig'
-import {
-  defaultwasmalgoconfig,
-  initwasmalgoconfigsab,
-  pushwasmalgoconfigsab,
-  type WASM_ALGO_CONFIG,
-} from './wasmalgoconfigsab'
 import {
   defaultwasmoscconfig,
   initwasmoscconfigsab,
   pushwasmoscconfigsab,
-  type WASM_OSC_CONFIG,
 } from './wasmoscconfigsab'
-import {
-  initwasmvoicecfgsab,
-  pushwasmvoicecfgsab,
-} from './wasmvoicecfgsab'
 import { createwasmplayscheduler } from './wasmplayscheduler'
+import type { WASM_RECORD_DEPS } from './wasmrecordhandler'
+import { type WASM_REPLAY_STATE, clonewasmreplaystate } from './wasmreplaystate'
+import { initwasmvoicecfgsab, pushwasmvoicecfgsab } from './wasmvoicecfgsab'
+import {
+  type WASM_VOICE_STATE,
+  applywasmvoiceconfig,
+  defaultwasmvoicestate,
+  wasmvoicestatetosab,
+} from './wasmvoiceconfig'
 
 const WASM_VOICE_COUNT = SYNTH_VOICE_COUNT
 const WASM_VOICES_SAB = 'zss_voices'
@@ -92,11 +95,7 @@ function quantizetoseconds(quantize: string): number {
 export function initwasmvoicesab(maxi: MaxiEngine) {
   const voicecfg = defaultwasmvoicestate()
   const playstate = new Array(WASM_VOICE_BLOCK).fill(0)
-  const sab = wasmvoicestatetosab(
-    voicecfg,
-    playstate,
-    WASM_VOICE_STRIDE,
-  )
+  const sab = wasmvoicestatetosab(voicecfg, playstate, WASM_VOICE_STRIDE)
   pushwasmsabvalues(maxi, WASM_VOICES_SAB, sab)
   initwasmvoicecfgsab(maxi, voicecfg)
   initwasmoscconfigsab(maxi)
@@ -152,8 +151,8 @@ export function createwasmsynth(
 
   let voicestate = new Array(WASM_VOICE_BLOCK).fill(0)
   let fxsab = defaultwasmfxsab()
-  let drumstrikes = new Array(WASM_DRUM_COUNT).fill(0)
-  let drumdursec = new Array(WASM_DRUM_COUNT).fill(0)
+  const drumstrikes = new Array(WASM_DRUM_COUNT).fill(0)
+  const drumdursec = new Array(WASM_DRUM_COUNT).fill(0)
   let voicecfg = defaultwasmvoicestate()
   let oscconfig = defaultwasmoscconfig()
   let algoconfig = defaultwasmalgoconfig()
@@ -321,21 +320,13 @@ export function createwasmsynth(
       voicestate[base + 4] = 0
     }
     synthdebugtrace('C7 clearschedules gates', {
-      playgates: [
-        voicestate[1],
-        voicestate[7],
-        voicestate[13],
-        voicestate[19],
-      ],
+      playgates: [voicestate[1], voicestate[7], voicestate[13], voicestate[19]],
     })
     pushplayvoicestate()
   }
 
   function pushdrumstate() {
-    pushwasmsabvalues(maxi, WASM_DRUMS_SAB, [
-      ...drumstrikes,
-      ...drumdursec,
-    ])
+    pushwasmsabvalues(maxi, WASM_DRUMS_SAB, [...drumstrikes, ...drumdursec])
   }
 
   function firedrum(drumid: number, dursec = 0) {
@@ -452,16 +443,14 @@ export function createwasmsynth(
     pacercount += invokes.length
     const starttime = pacertime
     for (let i = 0; i < invokes.length && i < SYNTH_PLAY_VOICE_COUNT; ++i) {
-      pacertime = Math.max(
-        pacertime,
-        synthplaystart(i, starttime, invokes[i]),
-      )
+      pacertime = Math.max(pacertime, synthplaystart(i, starttime, invokes[i]))
     }
   }
 
   function addbgplay(buffer: string, quantize: string) {
     const invokes = parseplay(buffer)
-    const starttime = maxi.audioContext.currentTime + quantizetoseconds(quantize)
+    const starttime =
+      maxi.audioContext.currentTime + quantizetoseconds(quantize)
     for (let i = 0; i < invokes.length; ++i) {
       synthplaystart(bgplayindex++, starttime, invokes[i], false)
       if (bgplayindex >= WASM_VOICE_COUNT) {
@@ -514,7 +503,16 @@ export function createwasmsynth(
     value: number | string | number[],
   ) {
     const isrestart = config === 'restart'
-    if (applywasmvoiceconfig(voicecfg, oscconfig, algoconfig, index, config, value)) {
+    if (
+      applywasmvoiceconfig(
+        voicecfg,
+        oscconfig,
+        algoconfig,
+        index,
+        config,
+        value,
+      )
+    ) {
       if (isrestart) {
         fxsab = defaultwasmfxsab()
         pushfxstate()
@@ -552,18 +550,17 @@ export function createwasmsynth(
     recording.recordisrendering = 0
   }
 
-  const recordapi =
-    recordfactory?.(maxi, recording, {
-      clearschedules,
-      applyreplay,
-      synthreplay,
-      setplayvolume,
-      setbgplayvolume,
-      getreplay,
-    }) ?? {
-      synthrecord: () => {},
-      synthflush: defaultrecordflush,
-    }
+  const recordapi = recordfactory?.(maxi, recording, {
+    clearschedules,
+    applyreplay,
+    synthreplay,
+    setplayvolume,
+    setbgplayvolume,
+    getreplay,
+  }) ?? {
+    synthrecord: () => {},
+    synthflush: defaultrecordflush,
+  }
 
   const { synthrecord, synthflush } = recordapi
 

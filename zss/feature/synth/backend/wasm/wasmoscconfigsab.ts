@@ -93,7 +93,10 @@ export function wasmoscconfigtosab(config: WASM_OSC_CONFIG[]): number[] {
   return out
 }
 
-export function initwasmoscconfigsab(maxi: MaxiEngine, config?: WASM_OSC_CONFIG[]) {
+export function initwasmoscconfigsab(
+  maxi: MaxiEngine,
+  config?: WASM_OSC_CONFIG[],
+) {
   pushwasmoscconfigsab(maxi, config ?? defaultwasmoscconfig())
 }
 

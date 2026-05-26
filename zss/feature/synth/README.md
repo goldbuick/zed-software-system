@@ -34,5 +34,6 @@ backend.addplay('qC4qD4qE4')
 | Env | Purpose |
 |-----|---------|
 | `ZSS_WASM_SPIKE=true` | Phase 0 audible WASM spike only (no full synth backend) |
+| `ZSS_WASM_PERF=false` | Full parity-quality DSP (default is lighter perf preset on) |
 
 WASM synth is always-on in production builds; COOP/COEP headers are enabled in Vite for SharedArrayBuffer.

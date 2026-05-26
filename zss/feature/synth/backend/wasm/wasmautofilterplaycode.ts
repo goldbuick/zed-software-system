@@ -10,18 +10,39 @@ import { WASM_FX_GROUP_COUNT, WASM_FX_PARAM_IDX } from './wasmfxstate'
 
 const FX_GROUP_COUNT = WASM_FX_GROUP_COUNT
 
-function fxgroupvars(prefix: string, init: string): string {
-  const lines: string[] = []
-  for (let i = 0; i < FX_GROUP_COUNT; i++) {
-    lines.push(`var ${prefix}${i} = ${init};`)
-  }
-  return lines.join('\n')
+function fxgrouparray(name: string, init: string): string {
+  const items = new Array(FX_GROUP_COUNT).fill(init).join(', ')
+  return `var ${name} = [${items}];`
 }
 
 /** Tone.js AutoFilter — LFO sine modulating biquad cutoff (parallel wet delta). */
 export const WASM_AUTOFILTER_PLAY_CODE = `
-${fxgroupvars('fxautofilterphase', '0')}
-${fxgroupvars('fxautofilterst', 'drumfilterzero()')}
+${fxgrouparray('fxautofilterphase', '0')}
+${fxgrouparray('fxautofilterst', 'drumfilterzero()')}
+var fxautofiltercoef = [];
+var fxautofiltercoefcutoff = [];
+var fxautofiltercoeftick = [];
+var FX_COEF_RECOMPUTE_TICKS = 32;
+var FX_COEF_CUTOFF_EPS = 0.01;
+for (var afg = 0; afg < FX_GROUP_COUNT; afg++) {
+  fxautofiltercoef.push({ b0: 1, b1: 0, b2: 0, a1: 0, a2: 0 });
+  fxautofiltercoefcutoff.push(0);
+  fxautofiltercoeftick.push(0);
+}
+
+function fxautofiltercoefat(group, typename, cutoff, q) {
+  var tick = fxautofiltercoeftick[group] + 1;
+  fxautofiltercoeftick[group] = tick;
+  var prev = fxautofiltercoefcutoff[group];
+  var due = tick >= FX_COEF_RECOMPUTE_TICKS;
+  var changed = prev <= 0 || Math.abs(cutoff - prev) / prev > FX_COEF_CUTOFF_EPS;
+  if (due || changed) {
+    fxautofiltercoeftick[group] = 0;
+    fxautofiltercoefcutoff[group] = cutoff;
+    fxautofiltercoef[group] = drumbiquadcoef(typename, cutoff, q, 0);
+  }
+  return fxautofiltercoef[group];
+}
 
 function autofiltertypenametype(typeid) {
   var id = Math.round(typeid);
@@ -98,7 +119,7 @@ function fxautofilterbus(x, group) {
   if (cutoff < 20) {
     cutoff = 20;
   }
-  var coef = drumbiquadcoef(typename, cutoff, q, 0);
+  var coef = fxautofiltercoefat(group, typename, cutoff, q);
   var filtered = drumbiquadrun(fxautofilterst[group], coef, x);
   if (filtered !== filtered) {
     return 0;

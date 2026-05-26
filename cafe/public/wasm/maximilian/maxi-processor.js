@@ -36379,6 +36379,11 @@ class MaxiProcessor extends AudioWorkletProcessor {
     this.clearBufferMode = this.clearBufferModes.INACTIVE;
     this.clearBufferCount = 10;
 
+    this._blockChannels = 0;
+    this._blockSize = 0;
+    this._multiChannelBlock = null;
+    this._monoFillArray = null;
+
     console.info(`Sample rate: ${sampleRate}`); // moving this to end of ctor for console feedback on successful processor initialisation
   }
 
@@ -36857,16 +36862,25 @@ class MaxiProcessor extends AudioWorkletProcessor {
     this.DACInitialised = true;
   };
 
-  makeBlock(chan, block) {
-    let b = [];
-    for(let i = 0; i < chan; i++) {
-      let ar = [];
-      for(let j = 0; j < block; j ++) {
-        ar.push(0)
+  ensureBlock(channels, blockSize) {
+    if (
+      !this._multiChannelBlock ||
+      this._blockChannels !== channels ||
+      this._blockSize !== blockSize
+    ) {
+      this._blockChannels = channels;
+      this._blockSize = blockSize;
+      this._multiChannelBlock = [];
+      for (let i = 0; i < channels; i++) {
+        this._multiChannelBlock.push(new Array(blockSize).fill(0));
       }
-      b.push(ar)
+      this._monoFillArray = new Array(channels).fill(0);
+    } else {
+      for (let i = 0; i < channels; i++) {
+        this._multiChannelBlock[i].fill(0);
+      }
     }
-    return b;
+    return this._multiChannelBlock;
   }
 
   process(inputs, outputs, parameters)
@@ -36879,9 +36893,9 @@ class MaxiProcessor extends AudioWorkletProcessor {
     {
       this.updateSABInputs();
       let output = outputs[o];
-      let multiChannelSample = new Array(output.length).fill(0);
+      let multiChannelSample = 0;
       //This is a block of audio, [numChannels x blockSize], probably [2 x 128]
-      let multiChannelBlock = this.makeBlock(output.length, output[0].length);
+      let multiChannelBlock = this.ensureBlock(output.length, output[0].length);
       
       let numChans = output.length 
       for (let channel = 0; channel < numChans; channel++)
@@ -36916,7 +36930,10 @@ class MaxiProcessor extends AudioWorkletProcessor {
               //If its not an array, make a array of length numChans
               if(!Array.isArray(multiChannelSample)) 
               {
-                 multiChannelSample = Array(numChans).fill(multiChannelSample)
+                 for (let mc = 0; mc < numChans; mc++) {
+                   this._monoFillArray[mc] = multiChannelSample;
+                 }
+                 multiChannelSample = this._monoFillArray;
               } else if (multiChannelSample.length > numChans) {
                 multiChannelSample = multiChannelSample.slice(0,numChans)
               }

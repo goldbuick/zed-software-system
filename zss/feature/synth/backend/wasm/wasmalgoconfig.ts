@@ -2,8 +2,8 @@ import { isarray, isnumber, isstring } from 'zss/mapping/types'
 
 import {
   DEFAULT_WASM_ALGO_CONFIG,
-  parsealgowaveconfig,
   type WASM_ALGO_CONFIG,
+  parsealgowaveconfig,
 } from './wasmalgoconfigsab'
 
 function applyalgoenv(

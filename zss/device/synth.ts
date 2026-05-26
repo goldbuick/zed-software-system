@@ -1,11 +1,10 @@
 import { createdevice } from 'zss/device'
 import {
-  applyboardstate,
-  createsynthbackend,
   type FXNAME,
   type SynthBackend,
+  applyboardstate,
+  createsynthbackend,
 } from 'zss/feature/synth'
-import { synthdebugtrace } from 'zss/feature/synth/synthdebugtrace'
 import {
   getwasmbroadcastdestination,
   iswasmspikeenabled,
@@ -14,6 +13,7 @@ import {
   spikesynthwasm,
   unlockmaximaudiocontext,
 } from 'zss/feature/synth/backend/wasm'
+import { synthdebugtrace } from 'zss/feature/synth/synthdebugtrace'
 import {
   selectttsengine,
   ttsclearqueue,
@@ -66,7 +66,7 @@ export function enableaudio() {
   void start()
     .then((result) => {
       if (!iswasmspikeenabled() && result) {
-        backend = result as SynthBackend
+        backend = result
       }
       locked = false
       enabled = true
@@ -181,7 +181,11 @@ const synthdevice = createdevice('synth', [], (message) => {
           synthdebugtrace('C5 addplay', { board, currentboard, trimmed })
           backend.addplay(trimmed)
         } else {
-          synthdebugtrace('C4 dropped addplay', { board, currentboard, trimmed })
+          synthdebugtrace('C4 dropped addplay', {
+            board,
+            currentboard,
+            trimmed,
+          })
         }
       }
       break

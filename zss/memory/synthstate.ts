@@ -1,13 +1,13 @@
 import { synthplay } from 'zss/device/api'
-import { synthdebugtrace } from 'zss/feature/synth/synthdebugtrace'
 import { SOFTWARE } from 'zss/device/session'
 import {
   type SYNTH_NOTE_ENTRY,
   invokeplay,
   parseplay,
 } from 'zss/feature/synth/playnotation'
-import { canonicalvoicefxgroupindex } from 'zss/feature/synth/voicefxgroup'
+import { synthdebugtrace } from 'zss/feature/synth/synthdebugtrace'
 import { createsynthdefaultvoices } from 'zss/feature/synth/synthdefaults'
+import { canonicalvoicefxgroupindex } from 'zss/feature/synth/voicefxgroup'
 import { SYNTH_STATE } from 'zss/gadget/data/types'
 import { createsynthid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'

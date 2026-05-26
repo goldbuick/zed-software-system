@@ -13,6 +13,7 @@ describe('wasm replay state', () => {
           osc: 0,
           envelope: { attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.3 },
           portamento: 0,
+          volume: 0,
         },
       ],
       oscconfig: [
@@ -119,10 +120,9 @@ describe('wasm synth recording', () => {
     const times = pattern.map((item) => item[0])
     const mintime = Math.min(...times)
     const maxtime = Math.max(...times)
-    const shifted = pattern.map(([time, value]) => [
-      time - mintime + 0.1,
-      value,
-    ] as const)
+    const shifted = pattern.map(
+      ([time, value]) => [time - mintime + 0.1, value] as const,
+    )
     expect(shifted[0][0]).toBe(0.1)
     expect(maxtime).toBeGreaterThan(mintime)
   })

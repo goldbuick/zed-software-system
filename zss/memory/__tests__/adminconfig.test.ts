@@ -1,10 +1,3 @@
-import {
-  applyhyperlinksharedmodemsync,
-  clearpanelsharedsync,
-  resolvehyperlinksharedbridge,
-} from 'zss/gadget/data/api'
-import { gadgethyperlinkfromzedline } from 'zss/gadget/data/scrollwritelines'
-
 jest.mock('zss/device/modem', () => {
   const observers = new Map<string, (value: unknown) => void>()
   return {
@@ -43,20 +36,22 @@ jest.mock('zss/words/reader', () => ({
   READ_CONTEXT: {
     board: undefined,
     element: undefined,
-    elementfocus: undefined,
+    elementfocus: '',
   },
 }))
 
-// registers admin select bridge
-import 'zss/memory/utilities'
+// registers admin select bridge via zss/memory/utilities side effects
 import { registerstore } from 'zss/device/api'
+import {
+  applyhyperlinksharedmodemsync,
+  clearpanelsharedsync,
+  resolvehyperlinksharedbridge,
+} from 'zss/gadget/data/api'
+import { gadgethyperlinkfromzedline } from 'zss/gadget/data/scrollwritelines'
 import { memoryreadconfig, memorysetconfig } from 'zss/memory/utilities'
 
 const PLAYER = 'pid_test_player'
-const modem = jest.requireMock('zss/device/modem') as {
-  __modemobservers: Map<string, (value: unknown) => void>
-  modemwritevaluenumber: jest.Mock
-}
+const modem = jest.requireMock('zss/device/modem')
 
 describe('admin config persistence', () => {
   beforeEach(() => {
@@ -82,7 +77,7 @@ describe('admin config persistence', () => {
     const cache = {
       board: undefined,
       element: undefined,
-      elementfocus: undefined,
+      elementfocus: '',
     }
     applyhyperlinksharedmodemsync(
       'admin',
@@ -109,7 +104,7 @@ describe('admin config persistence', () => {
     const cache = {
       board: undefined,
       element: undefined,
-      elementfocus: undefined,
+      elementfocus: '',
     }
     const target = `${PLAYER}:voice2text`
     applyhyperlinksharedmodemsync(
@@ -137,7 +132,7 @@ describe('admin config persistence', () => {
     const cache = {
       board: undefined,
       element: undefined,
-      elementfocus: undefined,
+      elementfocus: '',
     }
     const target = `${PLAYER}:voice2text`
     applyhyperlinksharedmodemsync(

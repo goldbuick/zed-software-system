@@ -57,10 +57,14 @@ export function autofiltercutoffhz(
 
 export function autofiltertypename(typeid: number): string {
   const id = Math.round(typeid) as WASM_AUTOFILTER_TYPE_ID
-  return FILTER_TYPE_NAMES[id] ?? FILTER_TYPE_NAMES[WASM_AUTOFILTER_TYPE.LOWPASS]
+  return (
+    FILTER_TYPE_NAMES[id] ?? FILTER_TYPE_NAMES[WASM_AUTOFILTER_TYPE.LOWPASS]
+  )
 }
 
-export function parseautofiltertype(value: string): WASM_AUTOFILTER_TYPE_ID | undefined {
+export function parseautofiltertype(
+  value: string,
+): WASM_AUTOFILTER_TYPE_ID | undefined {
   switch (value) {
     case 'lowpass':
       return WASM_AUTOFILTER_TYPE.LOWPASS

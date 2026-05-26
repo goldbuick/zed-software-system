@@ -52,7 +52,10 @@ export async function ensuremaximiliancoep(): Promise<void> {
       sessionStorage.removeItem(RELOAD_GUARD_KEY)
       coepready = window.crossOriginIsolated
     } catch (err) {
-      console.warn('maximilian COOP/COEP service worker registration failed', err)
+      console.warn(
+        'maximilian COOP/COEP service worker registration failed',
+        err,
+      )
     }
   })()
 

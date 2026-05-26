@@ -1,20 +1,20 @@
 import { invokeplay, parseplay } from '../../playnotation'
 import type { SYNTH_NOTE_ENTRY } from '../../playnotation'
+
 import {
   bootisolatedmaxiengine,
   startisolatedmaximiliandsp,
 } from './maximilian'
 import { createwasmsynth } from './maxisynth'
-import { audiobuffermetrics, type PARITY_AUDIO_METRICS } from './paritymetrics'
+import { type PARITY_AUDIO_METRICS, audiobuffermetrics } from './paritymetrics'
 import type { PARITY_PATCH } from './paritypatches'
 import { WASM_SYNTH_VOICE_PLAY_CODE } from './voiceplaycode'
-import { WASM_DEFAULT_TTS_VOLUME } from './wasmmastersab'
 import { defaultwasmalgoconfig } from './wasmalgoconfigsab'
-import { defaultwasmoscconfig } from './wasmoscconfigsab'
-import { defaultwasmvoicestate } from './wasmvoiceconfig'
 import { defaultwasmfxsab } from './wasmfxstate'
-
+import { WASM_DEFAULT_TTS_VOLUME } from './wasmmastersab'
+import { defaultwasmoscconfig } from './wasmoscconfigsab'
 import type { WASM_REPLAY_STATE } from './wasmreplaystate'
+import { defaultwasmvoicestate } from './wasmvoiceconfig'
 
 const PARITY_SAMPLERATE = 44100
 
@@ -30,7 +30,7 @@ function buildreplay(): WASM_REPLAY_STATE {
 }
 
 function patchentries(notation: string): SYNTH_NOTE_ENTRY[] {
-  const invoke = parseplay(notation)
+  const invoke = parseplay(notation)[0]
   return invokeplay(0, 0, invoke, true)
 }
 

@@ -38,8 +38,8 @@ jest.mock('zss/feature/writeui', () => ({
 
 import { createmessage } from 'zss/device'
 import { setsynthdeviceteststate, synthdevice } from 'zss/device/synth'
-import { useGadgetClient } from 'zss/gadget/data/state'
 import type { SynthBackend } from 'zss/feature/synth/frontend/synthbackend'
+import { useGadgetClient } from 'zss/gadget/data/state'
 
 describe('synth device play routing', () => {
   const SESSION = 'synth-play-test'
@@ -55,10 +55,10 @@ describe('synth device play routing', () => {
   })
 
   function mockbackend() {
-    return {
-      addplay: jest.fn(),
-      stopplay: jest.fn(),
-    } as unknown as SynthBackend
+    const addplay = jest.fn()
+    const stopplay = jest.fn()
+    const backend = { addplay, stopplay } as unknown as SynthBackend
+    return { addplay, stopplay, backend }
   }
 
   function emitplay(board: string, buffer: string) {
@@ -68,7 +68,7 @@ describe('synth device play routing', () => {
   }
 
   it('calls stopplay for empty buffer even when board does not match gadget board', () => {
-    const backend = mockbackend()
+    const { addplay, stopplay, backend } = mockbackend()
     setsynthdeviceteststate({ enabled: true, backend })
     useGadgetClient.setState({
       gadget: { ...useGadgetClient.getState().gadget, board: 'board-a' },
@@ -76,12 +76,12 @@ describe('synth device play routing', () => {
 
     emitplay('board-b', '')
 
-    expect(backend.stopplay).toHaveBeenCalledTimes(1)
-    expect(backend.addplay).not.toHaveBeenCalled()
+    expect(stopplay).toHaveBeenCalledTimes(1)
+    expect(addplay).not.toHaveBeenCalled()
   })
 
   it('calls stopplay for empty buffer on matching board', () => {
-    const backend = mockbackend()
+    const { addplay, stopplay, backend } = mockbackend()
     setsynthdeviceteststate({ enabled: true, backend })
     useGadgetClient.setState({
       gadget: { ...useGadgetClient.getState().gadget, board: 'board-a' },
@@ -89,24 +89,25 @@ describe('synth device play routing', () => {
 
     emitplay('board-a', '   ')
 
-    expect(backend.stopplay).toHaveBeenCalledTimes(1)
-    expect(backend.addplay).not.toHaveBeenCalled()
+    expect(stopplay).toHaveBeenCalledTimes(1)
+    expect(addplay).not.toHaveBeenCalled()
   })
 
   it('calls addplay only when board matches or is global', () => {
-    const backend = mockbackend()
+    const { addplay, stopplay, backend } = mockbackend()
     setsynthdeviceteststate({ enabled: true, backend })
     useGadgetClient.setState({
       gadget: { ...useGadgetClient.getState().gadget, board: 'board-a' },
     })
 
     emitplay('board-b', 'c')
-    expect(backend.addplay).not.toHaveBeenCalled()
+    expect(addplay).not.toHaveBeenCalled()
 
     emitplay('board-a', 'c')
-    expect(backend.addplay).toHaveBeenCalledWith('c')
+    expect(addplay).toHaveBeenCalledWith('c')
 
     emitplay('', 'd')
-    expect(backend.addplay).toHaveBeenCalledWith('d')
+    expect(addplay).toHaveBeenCalledWith('d')
+    expect(stopplay).not.toHaveBeenCalled()
   })
 })

@@ -123,12 +123,7 @@ describe('synthstate flag layout', () => {
     memoryresetbooks([book])
 
     memoryqueuesynthplay('', 'c')
-    expect(synthplaymock).toHaveBeenCalledWith(
-      expect.anything(),
-      '',
-      '',
-      'c',
-    )
+    expect(synthplaymock).toHaveBeenCalledWith(expect.anything(), '', '', 'c')
   })
 
   it('dispatches empty board play immediately to stop', () => {

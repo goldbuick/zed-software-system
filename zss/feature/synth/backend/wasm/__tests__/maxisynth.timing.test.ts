@@ -1,4 +1,8 @@
-import { invokeplay, parseplay, tonenotationseconds } from 'zss/feature/synth/playnotation'
+import {
+  invokeplay,
+  parseplay,
+  tonenotationseconds,
+} from 'zss/feature/synth/playnotation'
 
 import { createwasmsynth } from '../maxisynth'
 
@@ -15,10 +19,7 @@ describe('wasm play timing', () => {
       send: () => {},
       audioWorkletNode: {
         port: {
-          postMessage: (msg: {
-            channelID?: string
-            data?: number[]
-          }) => {
+          postMessage: (msg: { channelID?: string; data?: number[] }) => {
             if (msg.channelID && msg.data) {
               sends[msg.channelID] = msg.data.slice()
             }
@@ -57,10 +58,7 @@ describe('wasm play timing', () => {
       send: () => {},
       audioWorkletNode: {
         port: {
-          postMessage: (msg: {
-            channelID?: string
-            data?: number[]
-          }) => {
+          postMessage: (msg: { channelID?: string; data?: number[] }) => {
             if (msg.channelID === 'zss_voices' && msg.data?.[1] === 1) {
               gateat.push(clock)
             }
@@ -85,7 +83,9 @@ describe('wasm play timing', () => {
     maxi.advance(Math.max(0, nextstart * 1000))
     jest.advanceTimersByTime(Math.max(0, nextstart * 1000))
     expect(gateat[0]).toBe(0)
-    expect(gateat[1] ?? 0).toBeLessThan(nextstart + tonenotationseconds('8n') * 0.5)
+    expect(gateat[1] ?? 0).toBeLessThan(
+      nextstart + tonenotationseconds('8n') * 0.5,
+    )
     expect(Math.abs((gateat[1] ?? 0) - nextstart)).toBeLessThan(0.01)
 
     synth.destroy()

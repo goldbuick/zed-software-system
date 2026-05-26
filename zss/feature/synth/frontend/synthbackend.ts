@@ -18,11 +18,7 @@ export type SynthBackend = {
   setplayvolume(volume: number): void
   setbgplayvolume(volume: number): void
   setttsvolume(volume: number): void
-  setvoiceconfig(
-    index: number,
-    config: string | number,
-    value: unknown,
-  ): void
+  setvoiceconfig(index: number, config: string | number, value: unknown): void
   applyvoicefx(
     index: number,
     fx: string,

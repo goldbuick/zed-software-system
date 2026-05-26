@@ -8,4 +8,5 @@ interface ImportMetaEnv {
   readonly ZSS_DEBUG_FLAT_CAMERA_ORTHO?: string
   readonly ZSS_E2E?: string
   readonly ZSS_WASM_SPIKE?: string
+  readonly ZSS_WASM_PERF?: string
 }

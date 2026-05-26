@@ -1,4 +1,5 @@
 import type { SYNTH_NOTE_ENTRY } from '../../playnotation'
+
 import {
   bootisolatedmaxiengine,
   getmaximaudiocontext,

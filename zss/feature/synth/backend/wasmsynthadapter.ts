@@ -1,4 +1,5 @@
 import type { SynthBackend } from '../frontend/synthbackend'
+
 import { bootwasmsynth } from './wasm/bootwasmsynth'
 import {
   getwasmbroadcastdestination,
@@ -21,12 +22,7 @@ export function createwasmsynthadapter(synth: WASM_SYNTH): SynthBackend {
     setvoiceconfig: (index, config, value) =>
       synth.setvoiceconfig(index, config, value as string | number | number[]),
     applyvoicefx: (index, fx, config, value) =>
-      synth.applyvoicefx(
-        index,
-        fx,
-        config as string | number,
-        value as string | number,
-      ),
+      synth.applyvoicefx(index, fx, config, value as string | number),
     replayvoicefx: (voicefx) => synth.replayvoicefx(voicefx),
     synthrecord: (filename) => synth.synthrecord(filename),
     synthflush: () => synth.synthflush(),

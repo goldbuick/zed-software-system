@@ -9,10 +9,7 @@ export const NOISE_TABLE_LENGTH = NOISE_SAMPLE_COUNT + 1
 
 const METALLIC_AMP_MULT = 7.5
 
-function advance_lfsr(
-  drumbuffer: number,
-  tap: number,
-): [number, number] {
+function advance_lfsr(drumbuffer: number, tap: number): [number, number] {
   const sample = (drumbuffer & 1) * 2.0 - 1.0
   let newbuffer = drumbuffer >> 1
   if (((drumbuffer + newbuffer) & 1) === 1) {
@@ -67,7 +64,9 @@ export function generatemetallicwave(): Float64Array {
   return wave
 }
 
-export function generatewhitewave(seed: number = NOISE_WHITE_SEED): Float64Array {
+export function generatewhitewave(
+  seed: number = NOISE_WHITE_SEED,
+): Float64Array {
   const wave = new Float64Array(NOISE_TABLE_LENGTH)
   let state = seed >>> 0
   for (let i = 0; i < NOISE_SAMPLE_COUNT; i++) {
@@ -91,12 +90,16 @@ function drawnoisespectrum(
   const referenceoctave = 11
   const referenceindex = 1 << referenceoctave
   const lowindex = Math.pow(2, lowoctave) | 0
-  const highindex = Math.min(NOISE_SAMPLE_COUNT >> 1, Math.pow(2, highoctave) | 0)
+  const highindex = Math.min(
+    NOISE_SAMPLE_COUNT >> 1,
+    Math.pow(2, highoctave) | 0,
+  )
 
   for (let i = lowindex; i < highindex; i++) {
     const lerped =
       lowpower +
-      ((highpower - lowpower) * (Math.log2(i) - lowoctave)) / (highoctave - lowoctave)
+      ((highpower - lowpower) * (Math.log2(i) - lowoctave)) /
+        (highoctave - lowoctave)
     let amplitude = Math.pow(2, (lerped - 1) * 7 + 1) * lerped
     amplitude *= Math.pow(i / referenceindex, overallslope)
     amplitude *= retrowave[i]

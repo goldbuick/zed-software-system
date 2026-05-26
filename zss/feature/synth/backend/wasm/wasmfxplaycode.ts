@@ -19,6 +19,9 @@ var FX_SEND_COUNT = ${WASM_FX_SEND_COUNT};
 var FX_PARAM_COUNT = ${WASM_FX_PARAM_COUNT};
 var FX_PARAM_BASE = ${WASM_FX_PARAM_OFFSET};
 var FX_SR = typeof sampleRate !== 'undefined' ? sampleRate : 48000;
+var WASM_BLOCK_SIZE = 128;
+var fxsabtick = 0;
+var fxsabraw = null;
 
 ${fxgrouparray('fxechodelay', 'new Maximilian.maxiDelayline()')}
 ${fxgrouparray('fxechofb', '0')}
@@ -44,12 +47,41 @@ function fxsecstosamples(sec) {
   return Math.max(1, Math.round(sec * FX_SR));
 }
 
+var FX_REV_COMB0_SAMPLES = fxsecstosamples(0.029);
+var FX_REV_COMB1_SAMPLES = fxsecstosamples(0.037);
+var FX_REV_COMB2_SAMPLES = fxsecstosamples(0.053);
+var FX_REV_COMB3_SAMPLES = fxsecstosamples(0.067);
+
 function readfxsab() {
+  fxsabtick++;
+  if (fxsabraw && fxsabtick < WASM_BLOCK_SIZE) {
+    return fxsabraw;
+  }
+  fxsabtick = 0;
   var raw = qref.zssFxSab;
   if (!raw && qref.engine) {
     raw = qref.engine.zssFxSab;
   }
+  fxsabraw = raw;
   return raw;
+}
+
+function fxgrouphasactivesends(group) {
+  for (var si = 0; si < FX_SEND_COUNT; si++) {
+    if (fxsend(group, si) > 0.0001) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function anyplayvibratosend() {
+  for (var g = 0; g < 3; g++) {
+    if (fxsend(g, 4) > 0.0001) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function fxsend(group, idx) {
@@ -76,26 +108,42 @@ function fxparam(group, idx) {
   return raw[i];
 }
 
-function addfxserialwet(sig, group, sendidx, processor, delta) {
-  var send = fxsend(group, sendidx);
-  if (send <= 0) {
+function applyfxgroup(sig, group) {
+  if (!fxgrouphasactivesends(group)) {
     return sig;
   }
-  var wet = processor(sig, group);
-  if (delta) {
-    return sig + send * wet;
-  }
-  return sig + send * (wet - sig);
-}
-
-function applyfxgroup(sig, group) {
+  var s0 = fxsend(group, 0);
+  var s1 = fxsend(group, 1);
+  var s2 = fxsend(group, 2);
+  var s3 = fxsend(group, 3);
+  var s5 = fxsend(group, 5);
+  var s6 = fxsend(group, 6);
+  var skipbiquad = WASM_PERF_MODE && group >= 2;
   var out = sig;
-  out = addfxserialwet(out, group, 0, fxfcrush);
-  out = addfxserialwet(out, group, 1, fxecho);
-  out = addfxserialwet(out, group, 2, fxreverb);
-  out = addfxserialwet(out, group, 3, fxautofilterbus, 1);
-  out = addfxserialwet(out, group, 5, fxdistortwet, 0);
-  out = addfxserialwet(out, group, 6, fxautowahbus, 1);
+  if (s0 > 0) {
+    var wet0 = fxfcrush(out, group);
+    out = out + s0 * (wet0 - out);
+  }
+  if (s1 > 0) {
+    var wet1 = fxecho(out, group);
+    out = out + s1 * (wet1 - out);
+  }
+  if (s2 > 0) {
+    var wet2 = fxreverb(out, group);
+    out = out + s2 * (wet2 - out);
+  }
+  if (s3 > 0 && !skipbiquad) {
+    var wet3 = fxautofilterbus(out, group);
+    out = out + s3 * wet3;
+  }
+  if (s5 > 0) {
+    var wet5 = fxdistortwet(out, group);
+    out = out + s5 * (wet5 - out);
+  }
+  if (s6 > 0 && !skipbiquad) {
+    var wet6 = fxautowahbus(out, group);
+    out = out + s6 * wet6;
+  }
   return out;
 }
 
@@ -168,17 +216,22 @@ function fxreverb(x, group) {
   var regen = fb * 0.42;
   var in0 = src + fxrevcomb0fb[group] * regen;
   var in1 = src + fxrevcomb1fb[group] * regen;
-  var in2 = src + fxrevcomb2fb[group] * regen;
-  var in3 = src + fxrevcomb3fb[group] * regen;
-  var c0 = fxrevcomb0[group].dl(in0, fxsecstosamples(0.029), fb);
-  var c1 = fxrevcomb1[group].dl(in1, fxsecstosamples(0.037), fb);
-  var c2 = fxrevcomb2[group].dl(in2, fxsecstosamples(0.053), fb);
-  var c3 = fxrevcomb3[group].dl(in3, fxsecstosamples(0.067), fb);
+  var c0 = fxrevcomb0[group].dl(in0, FX_REV_COMB0_SAMPLES, fb);
+  var c1 = fxrevcomb1[group].dl(in1, FX_REV_COMB1_SAMPLES, fb);
   fxrevcomb0fb[group] = c0;
   fxrevcomb1fb[group] = c1;
-  fxrevcomb2fb[group] = c2;
-  fxrevcomb3fb[group] = c3;
-  var wet = (c0 + c1 + c2 + c3) * 0.25;
+  var wet;
+  if (WASM_PERF_MODE) {
+    wet = (c0 + c1) * 0.5;
+  } else {
+    var in2 = src + fxrevcomb2fb[group] * regen;
+    var in3 = src + fxrevcomb3fb[group] * regen;
+    var c2 = fxrevcomb2[group].dl(in2, FX_REV_COMB2_SAMPLES, fb);
+    var c3 = fxrevcomb3[group].dl(in3, FX_REV_COMB3_SAMPLES, fb);
+    fxrevcomb2fb[group] = c2;
+    fxrevcomb3fb[group] = c3;
+    wet = (c0 + c1 + c2 + c3) * 0.25;
+  }
   return Math.tanh(wet * 1.6);
 }
 
@@ -220,6 +273,12 @@ function voicefxgroup(voicei) {
 }
 
 function updateplayvibratodepth() {
+  if (!anyplayvibratosend()) {
+    if (fxvibratodepth > 0.0001) {
+      fxvibratodepth += (0 - fxvibratodepth) * 0.001;
+    }
+    return;
+  }
   var sabdepth = 0;
   var active = 0;
   for (var g = 0; g < 3; g++) {

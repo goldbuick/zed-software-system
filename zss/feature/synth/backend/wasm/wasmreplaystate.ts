@@ -11,7 +11,9 @@ export type WASM_REPLAY_STATE = {
   bgplayvolume: number
 }
 
-export function clonewasmreplaystate(state: WASM_REPLAY_STATE): WASM_REPLAY_STATE {
+export function clonewasmreplaystate(
+  state: WASM_REPLAY_STATE,
+): WASM_REPLAY_STATE {
   return {
     voicecfg: state.voicecfg.map((item) => ({
       ...item,

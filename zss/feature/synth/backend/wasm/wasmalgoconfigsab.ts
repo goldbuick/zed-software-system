@@ -2,7 +2,7 @@ import { SYNTH_VOICE_COUNT } from 'zss/feature/synth/synthdefaults'
 
 import type { MaxiEngine } from './maximilian'
 import { pushwasmsabvalues } from './sabpush'
-import { parsewasmosc, WASM_OSC_TYPE } from './wasmosctype'
+import { WASM_OSC_TYPE, parsewasmosc } from './wasmosctype'
 
 export const WASM_ALGO_CFG_SAB = 'zss_algocfg'
 export const WASM_ALGO_CFG_STRIDE = 26

@@ -1,7 +1,4 @@
-import {
-  WASM_ALGO_CFG_IDX,
-  WASM_ALGO_CFG_STRIDE,
-} from './wasmalgoconfigsab'
+import { WASM_ALGO_CFG_IDX, WASM_ALGO_CFG_STRIDE } from './wasmalgoconfigsab'
 
 /** Per-voice algo op config from zss_algocfg SAB — Tone AlgoSynth parity. */
 export const WASM_ALGO_CFG_PLAY_CODE = `

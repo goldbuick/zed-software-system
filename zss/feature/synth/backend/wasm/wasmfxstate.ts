@@ -1,6 +1,6 @@
 import { tonenotationseconds } from 'zss/feature/synth/playnotation'
-import { isnumber, isstring } from 'zss/mapping/types'
 import type { SYNTH_STATE } from 'zss/gadget/data/types'
+import { isnumber, isstring } from 'zss/mapping/types'
 
 import type { MaxiEngine } from './maximilian'
 import { pushwasmsabvalues } from './sabpush'
@@ -10,7 +10,6 @@ import {
   WASM_AUTOFILTER_DEFAULT_FREQUENCY,
   WASM_AUTOFILTER_DEFAULT_OCTAVES,
   WASM_AUTOFILTER_DEFAULT_Q,
-  WASM_AUTOFILTER_TYPE,
   parseautofiltertype,
 } from './wasmautofilter'
 import {
@@ -150,6 +149,7 @@ function normalizefxname(fxname: string): WASM_FX_NAME | undefined {
 function sendindexfor(fxname: WASM_FX_NAME): number {
   switch (fxname) {
     case 'fc':
+    case 'fcrush':
       return WASM_FX_SEND_IDX.FC
     case 'echo':
       return WASM_FX_SEND_IDX.ECHO
@@ -160,6 +160,7 @@ function sendindexfor(fxname: WASM_FX_NAME): number {
     case 'vibrato':
       return WASM_FX_SEND_IDX.VIBRATO
     case 'distortion':
+    case 'distort':
       return WASM_FX_SEND_IDX.DISTORTION
     case 'autowah':
       return WASM_FX_SEND_IDX.AUTOWAH

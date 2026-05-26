@@ -3,9 +3,9 @@ import { createwasmplayscheduler } from '../wasmplayscheduler'
 
 describe('isofflineaudiocontext', () => {
   it('detects OfflineAudioContext by length property', () => {
-    expect(isofflineaudiocontext({ length: 44100 } as BaseAudioContext)).toBe(
-      true,
-    )
+    expect(
+      isofflineaudiocontext({ length: 44100 } as unknown as BaseAudioContext),
+    ).toBe(true)
     expect(
       isofflineaudiocontext({
         state: 'running',
@@ -41,7 +41,9 @@ describe('wasmplayscheduler offline', () => {
 
     expect(runs).toEqual([0])
     expect(suspendmock).toHaveBeenCalledTimes(1)
-    expect(suspendmock).toHaveBeenCalledWith((128 / 48000) * Math.floor(0.5 / (128 / 48000)))
+    expect(suspendmock).toHaveBeenCalledWith(
+      (128 / 48000) * Math.floor(0.5 / (128 / 48000)),
+    )
     expect(resumemock).not.toHaveBeenCalled()
   })
 
@@ -52,7 +54,7 @@ describe('wasmplayscheduler offline', () => {
 
     const offlinectx = {
       currentTime: 0,
-      suspend: jest.fn((_when: number) => ({
+      suspend: jest.fn(() => ({
         then: (fn: () => void) => {
           suspendhandler = fn
           return Promise.resolve()

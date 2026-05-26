@@ -15,8 +15,8 @@ import {
   synthvoicefx,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { SYNTH_DEFAULT_WAVE } from 'zss/feature/synth/synthdefaults'
 import { synthdebugtrace } from 'zss/feature/synth/synthdebugtrace'
+import { SYNTH_DEFAULT_WAVE } from 'zss/feature/synth/synthdefaults'
 import { write } from 'zss/feature/writeui'
 import { createfirmware } from 'zss/firmware'
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'

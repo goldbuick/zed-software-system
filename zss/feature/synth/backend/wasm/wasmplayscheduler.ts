@@ -120,7 +120,7 @@ export function createwasmplayscheduler(maxi: MaxiEngine) {
     for (let i = 0; i < times.length; i++) {
       const when = times[i]
       const runs = bywhen.get(when) ?? []
-      ctx.suspend(when).then(() => {
+      void ctx.suspend(when).then(() => {
         handlerchain = handlerchain.then(async () => {
           for (let j = 0; j < runs.length; j++) {
             runs[j]()

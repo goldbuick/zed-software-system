@@ -600,7 +600,6 @@ function drumsidechainout() {
 }
 
 function drumsout() {
-  readdrumsab();
   drumsidechainsample = 0;
   if (!drumactive()) {
     return 0;

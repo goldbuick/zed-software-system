@@ -542,7 +542,7 @@ export function TerminalInput({
       listener?.stoplistening()
       listener = undefined
     }
-  }, [voice2text, quickterminal, player])
+  }, [voice2text, quickterminal, player, inputstatereplace])
 
   return (
     <>

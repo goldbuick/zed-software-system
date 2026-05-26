@@ -15,9 +15,9 @@ describe('noiseplaycode', () => {
     expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('function noisevoice')
     expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('noiseHollow')
     expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('noiseWhite')
-    expect(WASM_SYNTH_VOICE_PLAY_CODE.indexOf('var VOICE_COUNT = 8')).toBeLessThan(
-      WASM_SYNTH_VOICE_PLAY_CODE.indexOf('function noisevoice'),
-    )
+    expect(
+      WASM_SYNTH_VOICE_PLAY_CODE.indexOf('var VOICE_COUNT = 8'),
+    ).toBeLessThan(WASM_SYNTH_VOICE_PLAY_CODE.indexOf('function noisevoice'))
     expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('noisesample.push(0)')
   })
 })

@@ -3,7 +3,6 @@ import {
   WASM_AUTOWAH_DEFAULT_FOLLOWER,
   WASM_AUTOWAH_DEFAULT_GAIN,
   WASM_AUTOWAH_DEFAULT_OCTAVES,
-  WASM_AUTOWAH_DEFAULT_SENSITIVITY,
   WASM_AUTOWAH_Q,
   WASM_AUTOWAH_SCALE_EXP,
 } from './wasmautowah'
@@ -11,22 +10,47 @@ import { WASM_FX_GROUP_COUNT, WASM_FX_PARAM_IDX } from './wasmfxstate'
 
 const FX_GROUP_COUNT = WASM_FX_GROUP_COUNT
 
-function fxgroupvars(prefix: string, init: string): string {
-  const lines: string[] = []
-  for (let i = 0; i < FX_GROUP_COUNT; i++) {
-    lines.push(`var ${prefix}${i} = ${init};`)
-  }
-  return lines.join('\n')
+function fxgrouparray(name: string, init: string): string {
+  const items = new Array(FX_GROUP_COUNT).fill(init).join(', ')
+  return `var ${name} = [${items}];`
 }
 
 /** Tone.js AutoWah — follower + sweeping bandpass/peaking (parallel wet delta). */
 export const WASM_AUTOWAH_PLAY_CODE = `
 var WASM_AUTOWAH_Q = ${WASM_AUTOWAH_Q};
 var WASM_AUTOWAH_SCALE_EXP = ${WASM_AUTOWAH_SCALE_EXP};
-${fxgroupvars('fxautowahfollower', '0')}
-${fxgroupvars('fxautowahbp0', 'drumfilterzero()')}
-${fxgroupvars('fxautowahbp1', 'drumfilterzero()')}
-${fxgroupvars('fxautowahpeak', 'drumfilterzero()')}
+${fxgrouparray('fxautowahfollower', '0')}
+${fxgrouparray('fxautowahbp0', 'drumfilterzero()')}
+${fxgrouparray('fxautowahbp1', 'drumfilterzero()')}
+${fxgrouparray('fxautowahpeak', 'drumfilterzero()')}
+var fxautowahbpcoef = [];
+var fxautowahpeakcoef = [];
+var fxautowahsweepcache = [];
+var fxautowahcoeftick = [];
+for (var awg = 0; awg < FX_GROUP_COUNT; awg++) {
+  fxautowahbpcoef.push({ b0: 1, b1: 0, b2: 0, a1: 0, a2: 0 });
+  fxautowahpeakcoef.push({ b0: 1, b1: 0, b2: 0, a1: 0, a2: 0 });
+  fxautowahsweepcache.push(0);
+  fxautowahcoeftick.push(0);
+}
+
+function fxautowahcoefsat(group, sweep, gaindb) {
+  var tick = fxautowahcoeftick[group] + 1;
+  fxautowahcoeftick[group] = tick;
+  var prev = fxautowahsweepcache[group];
+  var due = tick >= FX_COEF_RECOMPUTE_TICKS;
+  var changed = prev <= 0 || Math.abs(sweep - prev) / prev > FX_COEF_CUTOFF_EPS;
+  if (due || changed) {
+    fxautowahcoeftick[group] = 0;
+    fxautowahsweepcache[group] = sweep;
+    fxautowahbpcoef[group] = drumbiquadcoef('bandpass', sweep, WASM_AUTOWAH_Q, 0);
+    fxautowahpeakcoef[group] = drumbiquadcoef('peaking', sweep, WASM_AUTOWAH_Q, gaindb);
+  }
+  return {
+    bp: fxautowahbpcoef[group],
+    peak: fxautowahpeakcoef[group],
+  };
+}
 
 function autowahdbtogain(db) {
   return Math.pow(10, db / 20);
@@ -96,8 +120,9 @@ function fxautowahbus(x, group) {
   if (sweep < 20) {
     sweep = 20;
   }
-  var bpcoef = drumbiquadcoef('bandpass', sweep, WASM_AUTOWAH_Q, 0);
-  var peakcoef = drumbiquadcoef('peaking', sweep, WASM_AUTOWAH_Q, gaindb);
+  var coefs = fxautowahcoefsat(group, sweep, gaindb);
+  var bpcoef = coefs.bp;
+  var peakcoef = coefs.peak;
   var band = drumbiquadrun(fxautowahbp0[group], bpcoef, x);
   band = drumbiquadrun(fxautowahbp1[group], bpcoef, band);
   var filtered = drumbiquadrun(fxautowahpeak[group], peakcoef, band);

@@ -2,18 +2,13 @@ import { MAYBE } from 'zss/mapping/types'
 
 import { isofflineaudiocontext } from './audiocontextutil'
 import { ensuremaximiliancoep } from './coopcoep'
-import { pushwasmsabvalues } from './sabpush'
-import {
-  wirewasmmasterchain,
-  type WASM_MASTER_CHAIN,
-} from './wasmmasterchain'
 import { WASM_SPIKE_PLAY_CODE } from './spikeplay'
 import { WASM_SYNTH_VOICE_PLAY_CODE } from './voiceplaycode'
 import { initwasmfxsab } from './wasmfxstate'
+import { type WASM_MASTER_CHAIN, wirewasmmasterchain } from './wasmmasterchain'
 import {
   WASM_DEFAULT_PLAY_VOLUME,
   WASM_DEFAULT_TTS_VOLUME,
-  WASM_MASTER_SAB,
   initwasmmastersab,
   pushwasmmastersab,
 } from './wasmmastersab'
@@ -84,6 +79,7 @@ export type MaxiEngine = {
 
 declare global {
   function initAudioEngine(origin?: string): Promise<MaxiEngine>
+  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- Window augmentation requires interface
   interface Window {
     __ZSS_MAXIM_AUDIO_CONTEXT__?: AudioContext
   }
@@ -231,7 +227,10 @@ async function resumeaudiocontext(maxi: MaxiEngine) {
   }
 }
 
-function waitforwasmdspready(maxi: MaxiEngine, timeoutms = 3000): Promise<void> {
+function waitforwasmdspready(
+  maxi: MaxiEngine,
+  timeoutms = 3000,
+): Promise<void> {
   const port = maxi.audioWorkletNode?.port
   if (!port) {
     return Promise.reject(new Error('wasm worklet port missing'))
@@ -244,7 +243,10 @@ function waitforwasmdspready(maxi: MaxiEngine, timeoutms = 3000): Promise<void> 
     }, timeoutms)
 
     function onmsg(event: MessageEvent) {
-      const data = event.data as { zss_dsp_ready?: number; zss_dsp_error?: string }
+      const data = event.data as {
+        zss_dsp_ready?: number
+        zss_dsp_error?: string
+      }
       if (data?.zss_dsp_ready) {
         clearTimeout(timer)
         port.removeEventListener('message', onmsg)

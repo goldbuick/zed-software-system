@@ -1,7 +1,4 @@
-import {
-  WASM_RAZZLE_HISS_GAIN,
-  WASM_RAZZLE_WET_MIX,
-} from './wasmlevels'
+import { WASM_RAZZLE_HISS_GAIN, WASM_RAZZLE_WET_MIX } from './wasmlevels'
 
 /** Maximilian razzle layer — vibrato delay, chorus delay, modulated hiss. */
 export const WASM_RAZZLE_PLAY_CODE = `
@@ -22,6 +19,9 @@ function applyrazzle(input) {
   var chorused = razzlechorusdelay.dl(vibrato, 0.007 + chorusdepth, 0);
   var effect = chorused - input;
   var out = input + effect * RAZZLE_WET_MIX;
+  if (WASM_PERF_MODE) {
+    return out;
+  }
   var hissmod = 0.35 + 0.65 * (0.5 + 0.5 * razzlehissmod.sinewave(Math.PI * 0.25));
   var hissamp = razzlehiss.noise() * RAZZLE_HISS_GAIN * hissmod;
   return out + hissamp;
