@@ -1,15 +1,16 @@
-import { registerscreenshot, vmpublish } from 'zss/device/api'
 import { parsetarget } from 'zss/device'
+import { registerscreenshot, vmpublish } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import {
   formatboardfortext,
   formatlookfortext,
 } from 'zss/feature/heavy/formatstate'
-import { readnetworkpeerid } from 'zss/feature/netterminal'
+// import { readnetworkpeerid } from 'zss/feature/netterminal'
 import {
   storagereadznsemail,
   storagereadznsnamespace,
   storagereadznssession,
+  storagereadznstoken,
 } from 'zss/feature/storage'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import {
@@ -19,9 +20,9 @@ import {
   znslogin,
   znslogincode,
   znsnormalizepathkey,
-  znsurlforlistrow,
   znspersistlogin,
   znspersistlogout,
+  znsurlforlistrow,
 } from 'zss/feature/url'
 import { write, writeopenit } from 'zss/feature/writeui'
 import { zsstextline, zsstexttape } from 'zss/feature/zsstextui'
@@ -29,14 +30,14 @@ import { FIRMWARE } from 'zss/firmware'
 import { doasync } from 'zss/mapping/func'
 import { isarray, ispresent } from 'zss/mapping/types'
 import { isemail } from 'zss/mapping/validate'
+import { memoryreadboardstatequery } from 'zss/memory/boardstatequery'
+import { memoryreadcodepage } from 'zss/memory/bookoperations'
+import { memoryreadcodepagename } from 'zss/memory/codepageoperations'
+import { memoryreadlookstatequery } from 'zss/memory/lookstatequery'
 import {
   memoryreadbookbyaddress,
   memoryreadfirstbook,
 } from 'zss/memory/session'
-import { memoryreadcodepage } from 'zss/memory/bookoperations'
-import { memoryreadcodepagename } from 'zss/memory/codepageoperations'
-import { memoryreadboardstatequery } from 'zss/memory/boardstatequery'
-import { memoryreadlookstatequery } from 'zss/memory/lookstatequery'
 import { READ_CONTEXT, readargs, readargsuntilend } from 'zss/words/reader'
 import { ARG_TYPE, NAME } from 'zss/words/types'
 
@@ -134,25 +135,20 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
                   )
                   const result = await znslogincode(pendingemail, action)
                   if (result.success && result.token) {
-                    const namespace =
-                      (await storagereadznsnamespace()) ?? ''
-                    await znspersistlogin(
-                      pendingemail,
-                      namespace,
-                      result.token,
-                    )
+                    const namespace = (await storagereadznsnamespace()) ?? ''
+                    await znspersistlogin(pendingemail, namespace, result.token)
                     write(
                       SOFTWARE,
                       READ_CONTEXT.elementfocus,
                       zsstextline(`$green${pendingemail} has been logged in`),
                     )
-                    const peerid = readnetworkpeerid()
-                    if (peerid) {
-                      await znsautopublishpeer(
-                        peerid,
-                        READ_CONTEXT.elementfocus,
-                      )
-                    }
+                    // const peerid = readnetworkpeerid()
+                    // if (peerid) {
+                    //   await znsautopublishpeer(
+                    //     peerid,
+                    //     READ_CONTEXT.elementfocus,
+                    //   )
+                    // }
                   }
                 }
               } else {
@@ -211,12 +207,7 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
                     row.value,
                     kind,
                   )
-                  writeopenit(
-                    SOFTWARE,
-                    READ_CONTEXT.elementfocus,
-                    url,
-                    row.key,
-                  )
+                  writeopenit(SOFTWARE, READ_CONTEXT.elementfocus, url, row.key)
                   terminalwritelines(
                     SOFTWARE,
                     READ_CONTEXT.elementfocus,

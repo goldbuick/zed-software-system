@@ -1,5 +1,5 @@
-import { romread } from 'zss/feature/rom'
 import { ZNS_DOCS_NAMESPACE, fetchznstext } from 'zss/feature/url'
+import { romread } from 'zss/rom'
 
 export async function fetchrefscrolltext(pagepath: string): Promise<string> {
   const rom = romread(`refscroll:${pagepath}`)

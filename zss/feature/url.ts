@@ -188,7 +188,12 @@ export async function znsautopublishpeer(peerid: string, player: string) {
   if (!changed) {
     return
   }
-  const result = await znsset(session.email, session.token, ZNS_PEER_KEY, peerid)
+  const result = await znsset(
+    session.email,
+    session.token,
+    ZNS_PEER_KEY,
+    peerid,
+  )
   if (!result?.success) {
     return
   }

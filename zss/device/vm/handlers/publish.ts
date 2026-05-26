@@ -27,10 +27,7 @@ export function handlepublish(vm: DEVICE, message: MESSAGE): void {
       if (!ispresent(book)) {
         book = memoryreadfirstbook()
       }
-      const codepage = memoryreadcodepage(
-        book,
-        pagepath || lookup,
-      )
+      const codepage = memoryreadcodepage(book, pagepath || lookup)
       if (!ispresent(codepage)) {
         apierror(vm, message.player, 'publish', `codepage not found`)
         return

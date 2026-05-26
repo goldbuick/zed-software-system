@@ -828,9 +828,7 @@ export const register = createdevice(
                     write(
                       register,
                       message.player,
-                      zsstextline(
-                        `$green${filename} code published to zns`,
-                      ),
+                      zsstextline(`$green${filename} code published to zns`),
                     )
                   }
                 }
