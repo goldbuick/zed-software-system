@@ -1,6 +1,10 @@
 import { WASM_DRUM_PLAY_CODE } from './drumplaycode'
+import { WASM_ALGO_CFG_PLAY_CODE } from './wasmalgoplaycode'
+import { WASM_AUTOFILTER_PLAY_CODE } from './wasmautofilterplaycode'
+import { WASM_AUTOWAH_PLAY_CODE } from './wasmautowahplaycode'
 import { WASM_FX_PLAY_CODE } from './wasmfxplaycode'
 import { WASM_ENV_CODE } from './wasmenv'
+import { WASM_OSC_CFG_PLAY_CODE } from './wasmoscplaycode'
 import { WASM_SINE_VOICE_GAIN } from './wasmlevels'
 import { WASM_MASTER_PLAY_CODE } from './wasmmasterplaycode'
 import { WASM_NOISE_PLAY_CODE } from './noiseplaycode'
@@ -21,7 +25,11 @@ var C4_HZ = 261.63;
 
 ${WASM_NOISE_SETUP_CODE}
 ${WASM_NOISE_PLAY_CODE}
+${WASM_OSC_CFG_PLAY_CODE}
+${WASM_ALGO_CFG_PLAY_CODE}
 ${WASM_DRUM_PLAY_CODE}
+${WASM_AUTOFILTER_PLAY_CODE}
+${WASM_AUTOWAH_PLAY_CODE}
 ${WASM_FX_PLAY_CODE}
 ${WASM_MASTER_PLAY_CODE}
 
@@ -151,10 +159,6 @@ function applyvoiceenvelope(i, attack, decay, sustain, release) {
     return;
   }
   if (type === 7) {
-    var envs4 = algoenvs[i];
-    for (var oi = 0; oi < 4; oi++) {
-      envs4[oi].setparams(atk, dec, sustain, rel);
-    }
     return;
   }
   envs[i].setparams(atk, dec, sustain, rel);
@@ -204,37 +208,92 @@ function synthsource(i, freq, gate) {
   var o = synthoscs[i];
   var m = synthmods[i];
   var sig = 0;
+  var width = oscwidth[i] > 0 ? oscwidth[i] : 0.5;
+  var modidx = oscmodindex[i] > 0 ? oscmodindex[i] : 2;
+  var harm = oscharmonicity[i] > 0 ? oscharmonicity[i] : 1;
+  var modhz = hz * (oscmodfreq[i] > 0 ? oscmodfreq[i] : 1);
+  var pcount = oscpartialcount[i] > 0 ? oscpartialcount[i] : 0;
 
-  if (osc === 0) { sig = o.square(hz); }
-  else if (osc === 1) { sig = o.sinewave(hz); }
-  else if (osc === 2) { sig = o.triangle(hz); }
-  else if (osc === 3) { sig = o.saw(hz); }
-  else if (osc === 4) { sig = o.pulse(hz, 0.5); }
-  else if (osc === 5) { sig = o.pulse(hz, 0.2); }
-  else if (osc === 10) { sig = o.sinewave(hz) * (0.5 + 0.5 * m.sinewave(hz * 2)); }
-  else if (osc === 11) { sig = o.square(hz) * (0.5 + 0.5 * m.sinewave(hz * 2)); }
-  else if (osc === 12) { sig = o.triangle(hz) * (0.5 + 0.5 * m.sinewave(hz * 2)); }
-  else if (osc === 13) { sig = o.saw(hz) * (0.5 + 0.5 * m.sinewave(hz * 2)); }
-  else if (osc === 20) {
-    var fmmod = m.sinewave(hz * 2) * 10;
+  if (pcount > 0) {
+    sig = oscpartialsynth(o, hz, pcount, oscpartials[i]);
+  } else if (osc === 0) { sig = oscwavewithphase(o, 0, hz, oscphase[i]); }
+  else if (osc === 1) { sig = oscwavewithphase(o, 1, hz, oscphase[i]); }
+  else if (osc === 2) { sig = oscwavewithphase(o, 2, hz, oscphase[i]); }
+  else if (osc === 3) { sig = oscwavewithphase(o, 3, hz, oscphase[i]); }
+  else if (osc === 4) { sig = o.pulse(hz, width); }
+  else if (osc === 5) { sig = o.pulse(hz, width > 0 ? width : 0.2); }
+  else if (osc === 10) {
+    var moddepth = modenvs[i].adsr(1, gate);
+    var modsig = oscmodwave(m, oscmodtype[i], hz * harm) * moddepth;
+    sig = o.sinewave(hz) * (0.5 + 0.5 * modsig);
+  } else if (osc === 11) {
+    var moddepth = modenvs[i].adsr(1, gate);
+    var modsig = oscmodwave(m, oscmodtype[i], hz * harm) * moddepth;
+    sig = o.square(hz) * (0.5 + 0.5 * modsig);
+  } else if (osc === 12) {
+    var moddepth = modenvs[i].adsr(1, gate);
+    var modsig = oscmodwave(m, oscmodtype[i], hz * harm) * moddepth;
+    sig = o.triangle(hz) * (0.5 + 0.5 * modsig);
+  } else if (osc === 13) {
+    var moddepth = modenvs[i].adsr(1, gate);
+    var modsig = oscmodwave(m, oscmodtype[i], hz * harm) * moddepth;
+    sig = o.saw(hz) * (0.5 + 0.5 * modsig);
+  } else if (osc === 20) {
+    var moddepth = modenvs[i].adsr(1, gate);
+    var fmmod = oscmodwave(m, oscmodtype[i], modhz) * modidx * moddepth * 5;
     sig = o.sinewave(hz + fmmod * 0.05);
   } else if (osc === 21) {
-    var fmmod = m.sinewave(hz * 2) * 10;
+    var moddepth = modenvs[i].adsr(1, gate);
+    var fmmod = oscmodwave(m, oscmodtype[i], modhz) * modidx * moddepth * 5;
     sig = o.square(hz + fmmod * 0.05);
   } else if (osc === 22) {
-    var fmmod = m.sinewave(hz * 2) * 10;
+    var moddepth = modenvs[i].adsr(1, gate);
+    var fmmod = oscmodwave(m, oscmodtype[i], modhz) * modidx * moddepth * 5;
     sig = o.triangle(hz + fmmod * 0.05);
   } else if (osc === 23) {
-    var fmmod = m.sinewave(hz * 2) * 10;
+    var moddepth = modenvs[i].adsr(1, gate);
+    var fmmod = oscmodwave(m, oscmodtype[i], modhz) * modidx * moddepth * 5;
     sig = o.saw(hz + fmmod * 0.05);
   } else if (osc === 30) {
-    sig = (o.sinewave(hz) + o.sinewave(hz * 1.004) + o.sinewave(hz * 0.996)) / 3;
+    var cnt = osccount[i] > 1 ? Math.round(osccount[i]) : 3;
+    var spread = oscspread[i] > 0 ? oscspread[i] : 20;
+    var det = spread / 1200;
+    sig = 0;
+    for (var fi = 0; fi < cnt; fi++) {
+      var mul = 1 + (fi - (cnt - 1) * 0.5) * det;
+      sig += o.sinewave(hz * mul);
+    }
+    sig /= cnt;
   } else if (osc === 31) {
-    sig = (o.square(hz) + o.square(hz * 1.004) + o.square(hz * 0.996)) / 3;
+    var cnt = osccount[i] > 1 ? Math.round(osccount[i]) : 3;
+    var spread = oscspread[i] > 0 ? oscspread[i] : 20;
+    var det = spread / 1200;
+    sig = 0;
+    for (var fi = 0; fi < cnt; fi++) {
+      var mul = 1 + (fi - (cnt - 1) * 0.5) * det;
+      sig += o.square(hz * mul);
+    }
+    sig /= cnt;
   } else if (osc === 32) {
-    sig = (o.triangle(hz) + o.triangle(hz * 1.004) + o.triangle(hz * 0.996)) / 3;
+    var cnt = osccount[i] > 1 ? Math.round(osccount[i]) : 3;
+    var spread = oscspread[i] > 0 ? oscspread[i] : 20;
+    var det = spread / 1200;
+    sig = 0;
+    for (var fi = 0; fi < cnt; fi++) {
+      var mul = 1 + (fi - (cnt - 1) * 0.5) * det;
+      sig += o.triangle(hz * mul);
+    }
+    sig /= cnt;
   } else if (osc === 33) {
-    sig = (o.saw(hz) + o.saw(hz * 1.004) + o.saw(hz * 0.996)) / 3;
+    var cnt = osccount[i] > 1 ? Math.round(osccount[i]) : 3;
+    var spread = oscspread[i] > 0 ? oscspread[i] : 20;
+    var det = spread / 1200;
+    sig = 0;
+    for (var fi = 0; fi < cnt; fi++) {
+      var mul = 1 + (fi - (cnt - 1) * 0.5) * det;
+      sig += o.saw(hz * mul);
+    }
+    sig /= cnt;
   } else { sig = o.square(hz); }
 
   return sig * synthwavegain(osc);
@@ -277,15 +336,20 @@ function dootvoice(i, freq, gate) {
 
 function algovoice(i, freq, gate, algo) {
   var hz = glidefreq(i);
-  var h1 = 2, h2 = 2, h3 = 2;
-  var mi1 = 1, mi2 = 1, mi3 = 1;
+  var h1 = algoh1[i] > 0 ? algoh1[i] : 2;
+  var h2 = algoh2[i] > 0 ? algoh2[i] : 2;
+  var h3 = algoh3[i] > 0 ? algoh3[i] : 2;
+  var mi1 = algomi1[i] > 0 ? algomi1[i] : 1;
+  var mi2 = algomi2[i] > 0 ? algomi2[i] : 1;
+  var mi3 = algomi3[i] > 0 ? algomi3[i] : 1;
+  var types = algoosctype[i];
   var ops = algooscs[i];
   var envs4 = algoenvs[i];
 
-  var raw1 = ops[0].sinewave(hz * h1);
-  var raw2 = ops[1].sinewave(hz * h2);
-  var raw3 = ops[2].sinewave(hz * h3);
-  var raw4 = ops[3].sinewave(hz);
+  var raw1 = algopwave(ops[0], types[0], hz * h1);
+  var raw2 = algopwave(ops[1], types[1], hz * h2);
+  var raw3 = algopwave(ops[2], types[2], hz * h3);
+  var raw4 = algopwave(ops[3], types[3], hz);
 
   var op1 = raw1 * envs4[0].adsr(1, gate);
   var op2 = raw2 * envs4[1].adsr(1, gate);
@@ -356,33 +420,30 @@ function readvoicessab() {
   }
 }
 
-function play() {
+function play(inputsample) {
   readvoicessab();
   readvoicecfgsab();
+  readosccfgsab();
+  readalgocfgsab();
   updateplayvibratodepth();
-  playbuswahenv = 0;
-  bgbuswahenv = 0;
 
   var playvoices = 0;
   var bgvoices = 0;
   for (var i = 0; i < VOICE_COUNT; i++) {
     var out = voiceout(i);
-    var lvl = voicelevelat(i);
     if (i >= PLAY_VOICE_COUNT) {
       bgvoices += out;
-      if (lvl > bgbuswahenv) {
-        bgbuswahenv = lvl;
-      }
     } else {
       playvoices += out;
-      if (lvl > playbuswahenv) {
-        playbuswahenv = lvl;
-      }
     }
   }
   var drums = safedrumsout();
   var mixed = applyfxchain(playvoices, bgvoices);
-  return masterout(mixed[0], mixed[1], drums);
+  var tts = 0;
+  if (typeof inputsample === 'number' && inputsample === inputsample) {
+    tts = inputsample;
+  }
+  return masterout(mixed[0], mixed[1], drums, tts);
 }
 
 function safedrumsout() {

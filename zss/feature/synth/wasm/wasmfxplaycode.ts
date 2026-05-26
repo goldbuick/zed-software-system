@@ -37,99 +37,8 @@ var fxfccounter0 = 0;
 var fxfccounter1 = 0;
 var fxfcsample0 = 0;
 var fxfcsample1 = 0;
-var fxautofilter0 = new Maximilian.maxiFilter();
-var fxautofilter1 = new Maximilian.maxiFilter();
-var fxautofilterlfo = new Maximilian.maxiOsc();
 var fxvibratolfo = new Maximilian.maxiOsc();
 var fxvibratodepth = 0;
-var playbuswahenv = 0;
-var bgbuswahenv = 0;
-var fxautowahbplow0 = drumfilterzero();
-var fxautowahbphigh0 = drumfilterzero();
-var fxautowahbplow1 = drumfilterzero();
-var fxautowahbphigh1 = drumfilterzero();
-var fxautowahsm0 = 0;
-var fxautowahsm1 = 0;
-
-function wahbiquadcoef(freq, q) {
-  var w0 = 6.28318530718 * freq / FX_SR;
-  var cosw0 = Math.cos(w0);
-  var sinw0 = Math.sin(w0);
-  var alpha = sinw0 / (2 * q);
-  var b0 = alpha;
-  var b1 = 0;
-  var b2 = -alpha;
-  var a0 = 1 + alpha;
-  var a1 = -2 * cosw0;
-  var a2 = 1 - alpha;
-  var inv = 1 / a0;
-  return {
-    b0: b0 * inv,
-    b1: b1 * inv,
-    b2: b2 * inv,
-    a1: a1 * inv,
-    a2: a2 * inv
-  };
-}
-
-function voicelevelat(i) {
-  var type = types[i];
-  if (type === 5) {
-    return bellenvs[i].level;
-  }
-  if (type === 6) {
-    return dootenvs[i].level;
-  }
-  if (type === 7) {
-    return algoenvs[i][3].level;
-  }
-  return envs[i].level;
-}
-
-function fxautowahbus(x, group) {
-  if (x !== x) {
-    return 0;
-  }
-  var env = group > 0 ? bgbuswahenv : playbuswahenv;
-  if (env <= 0) {
-    if (group > 0) {
-      fxautowahsm1 = 0;
-    } else {
-      fxautowahsm0 = 0;
-    }
-    return 0;
-  }
-  var sm = group > 0 ? fxautowahsm1 : fxautowahsm0;
-  if (env > sm) {
-    sm += (env - sm) * 0.08;
-  } else {
-    sm += (env - sm) * 0.005;
-  }
-  if (group > 0) {
-    fxautowahsm1 = sm;
-  } else {
-    fxautowahsm0 = sm;
-  }
-  var sens = fxparam(9);
-  if (sens <= 0) {
-    sens = 0.5;
-  }
-  var lowhz = 200 + (1 - sens) * 220;
-  var highhz = 1400 + sens * 3600;
-  var lowcoef = wahbiquadcoef(lowhz, 0.55);
-  var highcoef = wahbiquadcoef(highhz, 0.55);
-  var lowst = group > 0 ? fxautowahbplow1 : fxautowahbplow0;
-  var highst = group > 0 ? fxautowahbphigh1 : fxautowahbphigh0;
-  var low = drumbiquadrun(lowst, lowcoef, x);
-  var high = drumbiquadrun(highst, highcoef, x);
-  if (low !== low || high !== high) {
-    return 0;
-  }
-  var resonant = low * (1 - sm) + high * sm;
-  var boost = 16 + sens * 18;
-  var wahout = x + resonant * boost;
-  return wahout - x;
-}
 
 function fxsecstosamples(sec) {
   if (sec <= 0) {
@@ -170,25 +79,31 @@ function fxparam(idx) {
   return raw[i];
 }
 
-function addfxparallelwetplay(playin, sendidx, processor) {
-  var send = fxsend(0, sendidx);
+function addfxserialwet(sig, group, sendidx, processor) {
+  var send = fxsend(group, sendidx);
   if (send <= 0) {
-    return 0;
+    return sig;
   }
-  return processor(playin, 0) * send;
+  var wet = processor(sig, group);
+  return sig + send * (wet - sig);
 }
 
-function addfxparallelwetbg(bgin, sendidx, processor) {
-  var send = fxsend(1, sendidx);
-  if (send <= 0) {
-    return 0;
-  }
-  return processor(bgin, 1) * send;
-}
-
-function addfxparallelwet(playin, bgin, sendidx, processor) {
-  return addfxparallelwetplay(playin, sendidx, processor)
-    + addfxparallelwetbg(bgin, sendidx, processor);
+function applyfxchain(playin, bgin) {
+  var p = playin;
+  var b = bgin;
+  p = addfxserialwet(p, 0, 0, fxfcrush);
+  b = addfxserialwet(b, 1, 0, fxfcrush);
+  p = addfxserialwet(p, 0, 1, fxecho);
+  b = addfxserialwet(b, 1, 1, fxecho);
+  p = addfxserialwet(p, 0, 2, fxreverb);
+  b = addfxserialwet(b, 1, 2, fxreverb);
+  p = addfxserialwet(p, 0, 3, fxautofilterbus);
+  b = addfxserialwet(b, 1, 3, fxautofilterbus);
+  p = addfxserialwet(p, 0, 5, fxdistortwet);
+  b = addfxserialwet(b, 1, 5, fxdistortwet);
+  p = addfxserialwet(p, 0, 6, fxautowahbus);
+  b = addfxserialwet(b, 1, 6, fxautowahbus);
+  return [p, b];
 }
 
 function fxfcrush(x, group) {
@@ -336,28 +251,6 @@ function fxdistortwet(x, group) {
   return tonedistort(x * 3, amt);
 }
 
-function fxautofilterfx(x, group) {
-  var freq = fxparam(6);
-  if (freq <= 0) {
-    freq = 3;
-  }
-  var depth = fxparam(7);
-  if (depth <= 0) {
-    depth = 0.5;
-  }
-  var lfo = 0.5 + 0.5 * fxautofilterlfo.sinewave(freq);
-  var cutoff = 220 * Math.pow(2, (lfo - 0.5) * depth * 5);
-  if (cutoff < 80) {
-    cutoff = 80;
-  }
-  if (cutoff > 12000) {
-    cutoff = 12000;
-  }
-  var filt = group > 0 ? fxautofilter1 : fxautofilter0;
-  var filtered = filt.lores(x, cutoff, 0.7);
-  return (filtered - x) * 0.5;
-}
-
 function updateplayvibratodepth() {
   var sabdepth = fxparam(10);
   var active = 0;
@@ -405,23 +298,5 @@ function playvibratocents(voicei) {
   }
   var lfo = fxvibratolfo.sinewave(freq);
   return lfo * fxvibratodepth * maxdelay * 3500 * send;
-}
-
-function applyfxchain(playin, bgin) {
-  var wetplay = 0;
-  var wetbg = 0;
-  wetplay += addfxparallelwetplay(playin, 0, fxfcrush);
-  wetbg += addfxparallelwetbg(bgin, 0, fxfcrush);
-  wetplay += addfxparallelwetplay(playin, 1, fxecho);
-  wetbg += addfxparallelwetbg(bgin, 1, fxecho);
-  wetplay += addfxparallelwetplay(playin, 2, fxreverb);
-  wetbg += addfxparallelwetbg(bgin, 2, fxreverb);
-  wetplay += addfxparallelwetplay(playin, 3, fxautofilterfx);
-  wetbg += addfxparallelwetbg(bgin, 3, fxautofilterfx);
-  wetplay += addfxparallelwetplay(playin, 5, fxdistortwet);
-  wetbg += addfxparallelwetbg(bgin, 5, fxdistortwet);
-  wetplay += addfxparallelwetplay(playin, 6, fxautowahbus);
-  wetbg += addfxparallelwetbg(bgin, 6, fxautowahbus);
-  return [playin + wetplay, bgin + wetbg];
 }
 `

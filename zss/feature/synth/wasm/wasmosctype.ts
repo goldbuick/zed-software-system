@@ -102,3 +102,19 @@ export function parsewasmosc(config: string): WASM_OSC_TYPE | undefined {
 export function iswasmosctypeconfig(config: string): boolean {
   return parsewasmosc(config) !== undefined
 }
+
+/** Modulator wave for AM/FM — matches carrier wave ids (0 square, 1 sine, 2 triangle, 3 saw). */
+export function parsemodtype(value: string): number | undefined {
+  switch (NAME(value)) {
+    case 'square':
+      return WASM_OSC_TYPE.SQUARE
+    case 'sine':
+      return WASM_OSC_TYPE.SINE
+    case 'triangle':
+      return WASM_OSC_TYPE.TRIANGLE
+    case 'sawtooth':
+      return WASM_OSC_TYPE.SAWTOOTH
+    default:
+      return undefined
+  }
+}

@@ -6,10 +6,16 @@ import {
   wirewasmmasterchain,
   type WASM_MASTER_CHAIN,
 } from './wasmmasterchain'
-import { WASM_SAB_VOICE_PLAY_CODE } from './sabvoiceplay'
 import { WASM_SPIKE_PLAY_CODE } from './spikeplay'
 import { WASM_SYNTH_VOICE_PLAY_CODE } from './voiceplaycode'
 import { initwasmfxsab } from './wasmfxstate'
+import {
+  WASM_DEFAULT_PLAY_VOLUME,
+  WASM_DEFAULT_TTS_VOLUME,
+  WASM_MASTER_SAB,
+  initwasmmastersab,
+  pushwasmmastersab,
+} from './wasmmastersab'
 
 const MAXIMILIAN_BASE = '/wasm/maximilian'
 
@@ -32,16 +38,18 @@ function builddspcode(usercode: string) {
       q.play = createDSPLoop();
       return q;
     }`,
-    loop: `(q, inputs, mem) => {
+    loop: `(q, inputsample, mem) => {
       var engine = q.engine;
       if (engine) {
         q.zssVoiceSab = engine.zssVoiceSab;
         q.zssVoiceCfgSab = engine.zssVoiceCfgSab;
+        q.zssOscCfgSab = engine.zssOscCfgSab;
+        q.zssAlgoCfgSab = engine.zssAlgoCfgSab;
         q.zssDrumSab = engine.zssDrumSab;
         q.zssMasterSab = engine.zssMasterSab;
         q.zssFxSab = engine.zssFxSab;
       }
-      var sig = q.play(inputs);
+      var sig = q.play(inputsample);
       if (Array.isArray(sig)) {
         for (let i = 0; i < sig.length; i++) {
           this.dacOut(sig[i], i);
@@ -95,18 +103,18 @@ let maxiengine: MAYBE<MaxiEngine>
 let broadcastdestination: MAYBE<MediaStreamAudioDestinationNode>
 let broadcasttap: MAYBE<GainNode>
 let wasmmaster: MAYBE<WASM_MASTER_CHAIN>
+let wasmttssource: MAYBE<AudioBufferSourceNode>
 
-let wasmplayvolume = 80
+let wasmplayvolume = WASM_DEFAULT_PLAY_VOLUME
 let wasmbgplayvolume = 100
+let wasmttsvolume = WASM_DEFAULT_TTS_VOLUME
 
 function pushwasmmastervolumes() {
   const maxi = maxiengine
   if (maxi) {
-    pushwasmsabvalues(maxi, WASM_MASTER_SAB, [wasmplayvolume, wasmbgplayvolume])
+    pushwasmmastersab(maxi, [wasmplayvolume, wasmbgplayvolume, wasmttsvolume])
   }
 }
-
-const WASM_MASTER_SAB = 'zss_master'
 
 function wirewasmoutput(maxi: MaxiEngine) {
   maxi.audioWorkletNode.disconnect()
@@ -164,27 +172,10 @@ export async function ensuresynthwasm(): Promise<MaxiEngine> {
 }
 
 const SILENT_PLAY_CODE = `
-function play() {
+function play(inputsample) {
   return 0;
 }
 `
-
-let wasmttsvolume = 25
-
-/** Matches default `setplayvolume(80)` trim used by TTS gain helper. */
-function volumetodb(value: number) {
-  return 20 * Math.log10(value) - 35
-}
-
-/** Matches default `setplayvolume(80)` → `mainvolume` trim in Tone chain. */
-const WASM_DEFAULT_MAIN_TRIM_DB = volumetodb(80 * 0.25)
-/** Approximate razzle/compressor headroom absent in phase 0 WASM playback. */
-const WASM_TTS_CHAIN_TRIM_DB = -20
-
-function wasmttsgainvalue(): number {
-  const db = wasmttsvolume + WASM_DEFAULT_MAIN_TRIM_DB + WASM_TTS_CHAIN_TRIM_DB
-  return Math.pow(10, db / 20)
-}
 
 async function resumeaudiocontext(maxi: MaxiEngine) {
   const ctx = maxi.audioContext
@@ -225,7 +216,7 @@ function waitforwasmdspready(maxi: MaxiEngine, timeoutms = 3000): Promise<void> 
 async function startmaximiliandsp(maxi: MaxiEngine, usercode: string) {
   await resumeaudiocontext(maxi)
   wirewasmoutput(maxi)
-  initwasmmastersab(maxi, 80)
+  initwasmmastersab(maxi, wasmplayvolume, wasmbgplayvolume, wasmttsvolume)
   initwasmfxsab(maxi)
   const ready = waitforwasmdspready(maxi)
   maxi.eval(builddspcode(usercode))
@@ -268,6 +259,7 @@ export function getmaximaudiocontext(): MAYBE<AudioContext> {
 
 export function setwasmsynthttsvolume(volume: number) {
   wasmttsvolume = volume
+  pushwasmmastervolumes()
 }
 
 export function playwasmaudiobuffer(audiobuffer: AudioBuffer) {
@@ -275,24 +267,26 @@ export function playwasmaudiobuffer(audiobuffer: AudioBuffer) {
   if (!maxi) {
     return
   }
+  try {
+    wasmttssource?.stop()
+  } catch {
+    // prior TTS may have ended
+  }
+  wasmttssource = undefined
+
   const ctx = maxi.audioContext
+  const worklet = maxi.audioWorkletNode
   const source = ctx.createBufferSource()
   source.buffer = audiobuffer
   const gain = ctx.createGain()
-  const ttsgain = wasmttsgainvalue()
-  gain.gain.value = ttsgain
+  gain.gain.value = 1
   gain.channelCount = 1
   gain.channelCountMode = 'explicit'
   gain.channelInterpretation = 'speakers'
   source.connect(gain)
-  gain.connect(ctx.destination)
-  if (broadcastdestination) {
-    const tap = ctx.createGain()
-    tap.gain.value = ttsgain
-    source.connect(tap)
-    tap.connect(broadcastdestination)
-  }
+  gain.connect(worklet, 0, 0)
   source.start(0)
+  wasmttssource = source
 }
 
 export function getmaxiengine(): MAYBE<MaxiEngine> {
@@ -300,16 +294,6 @@ export function getmaxiengine(): MAYBE<MaxiEngine> {
 }
 
 export { pushwasmsabvalues } from './sabpush'
-
-export function initwasmmastersab(
-  maxi: MaxiEngine,
-  playvolume = 80,
-  bgplayvolume = 100,
-) {
-  wasmplayvolume = playvolume
-  wasmbgplayvolume = bgplayvolume
-  pushwasmsabvalues(maxi, WASM_MASTER_SAB, [wasmplayvolume, wasmbgplayvolume])
-}
 
 export function setwasmsynthplayvolume(volume: number) {
   wasmplayvolume = volume
@@ -328,3 +312,5 @@ export function getwasmmasterchain(): MAYBE<WASM_MASTER_CHAIN> {
 export function getwasmbroadcastdestination(): MAYBE<MediaStreamAudioDestinationNode> {
   return broadcastdestination
 }
+
+export { initwasmmastersab } from './wasmmastersab'

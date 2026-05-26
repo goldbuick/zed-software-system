@@ -31,6 +31,18 @@ import {
   wasmvoicestatetosab,
 } from './wasmvoiceconfig'
 import {
+  defaultwasmalgoconfig,
+  initwasmalgoconfigsab,
+  pushwasmalgoconfigsab,
+  type WASM_ALGO_CONFIG,
+} from './wasmalgoconfigsab'
+import {
+  defaultwasmoscconfig,
+  initwasmoscconfigsab,
+  pushwasmoscconfigsab,
+  type WASM_OSC_CONFIG,
+} from './wasmoscconfigsab'
+import {
   initwasmvoicecfgsab,
   pushwasmvoicecfgsab,
 } from './wasmvoicecfgsab'
@@ -104,6 +116,8 @@ export function initwasmvoicesab(maxi: MaxiEngine) {
   )
   pushwasmsabvalues(maxi, WASM_VOICES_SAB, sab)
   initwasmvoicecfgsab(maxi, voicecfg)
+  initwasmoscconfigsab(maxi)
+  initwasmalgoconfigsab(maxi)
 }
 
 export { initwasmfxsab } from './wasmfxstate'
@@ -132,6 +146,7 @@ export function initwasmdrumsab(maxi: MaxiEngine, strikes?: number[]) {
 export type WASM_SYNTH_HOOKS = {
   setplayvolume?: (volume: number) => void
   setbgplayvolume?: (volume: number) => void
+  setttsvolume?: (volume: number) => void
 }
 
 export function createwasmsynth(
@@ -147,6 +162,8 @@ export function createwasmsynth(
   let drumstrikes = new Array(WASM_DRUM_COUNT).fill(0)
   let drumdursec = new Array(WASM_DRUM_COUNT).fill(0)
   let voicecfg = defaultwasmvoicestate()
+  let oscconfig = defaultwasmoscconfig()
+  let algoconfig = defaultwasmalgoconfig()
   let pacertime = -1
   let bgplayindex = SYNTH_SFX_RESET
   let playvolume = 80
@@ -161,6 +178,8 @@ export function createwasmsynth(
     voicestate = wasmvoicestatetosab(voicecfg, voicestate, WASM_VOICE_STRIDE)
     pushwasmsabvalues(maxi, WASM_VOICES_SAB, voicestate)
     pushwasmvoicecfgsab(maxi, voicecfg)
+    pushwasmoscconfigsab(maxi, oscconfig)
+    pushwasmalgoconfigsab(maxi, algoconfig)
   }
 
   function clearschedules() {
@@ -364,8 +383,8 @@ export function createwasmsynth(
     hooks.setbgplayvolume?.(volume)
   }
 
-  function setttsvolume(_volume: number) {
-    // tts path uses playwasmaudiobuffer gain in maximilian.ts
+  function setttsvolume(volume: number) {
+    hooks.setttsvolume?.(volume)
   }
 
   function applyvoicefx(
@@ -393,13 +412,15 @@ export function createwasmsynth(
     config: number | string,
     value: number | string | number[],
   ) {
-    if (applywasmvoiceconfig(voicecfg, index, config, value)) {
+    if (applywasmvoiceconfig(voicecfg, oscconfig, algoconfig, index, config, value)) {
       pushvoicestate()
     }
   }
 
   function applyreset() {
     voicecfg = defaultwasmvoicestate()
+    oscconfig = defaultwasmoscconfig()
+    algoconfig = defaultwasmalgoconfig()
     pushvoicestate()
   }
 

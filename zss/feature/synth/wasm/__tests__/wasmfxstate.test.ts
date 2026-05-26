@@ -25,6 +25,39 @@ describe('wasmfxstate', () => {
     ).toBe(0.02)
     expect(sab[WASM_FX_PARAM_OFFSET + WASM_FX_PARAM_IDX.VIBRATO_DEPTH]).toBe(0)
     expect(sab[WASM_FX_PARAM_OFFSET + WASM_FX_PARAM_IDX.VIBRATO_FREQ]).toBe(5)
+    expect(
+      sab[WASM_FX_PARAM_OFFSET + WASM_FX_PARAM_IDX.AUTOWAH_SENS],
+    ).toBe(0)
+    expect(
+      sab[WASM_FX_PARAM_OFFSET + WASM_FX_PARAM_IDX.AUTOWAH_BASE_FREQ],
+    ).toBe(100)
+    expect(
+      sab[WASM_FX_PARAM_OFFSET + WASM_FX_PARAM_IDX.AUTOWAH_OCTAVES],
+    ).toBe(6)
+    expect(
+      sab[WASM_FX_PARAM_OFFSET + WASM_FX_PARAM_IDX.AUTOWAH_GAIN],
+    ).toBe(2)
+    expect(
+      sab[WASM_FX_PARAM_OFFSET + WASM_FX_PARAM_IDX.AUTOWAH_FOLLOWER],
+    ).toBe(0.2)
+    expect(
+      sab[WASM_FX_PARAM_OFFSET + WASM_FX_PARAM_IDX.AUTOFILTER_FREQ],
+    ).toBe(3)
+    expect(
+      sab[WASM_FX_PARAM_OFFSET + WASM_FX_PARAM_IDX.AUTOFILTER_DEPTH],
+    ).toBe(0.5)
+    expect(
+      sab[WASM_FX_PARAM_OFFSET + WASM_FX_PARAM_IDX.AUTOFILTER_BASE_FREQ],
+    ).toBe(200)
+    expect(
+      sab[WASM_FX_PARAM_OFFSET + WASM_FX_PARAM_IDX.AUTOFILTER_OCTAVES],
+    ).toBe(5)
+    expect(
+      sab[WASM_FX_PARAM_OFFSET + WASM_FX_PARAM_IDX.AUTOFILTER_Q],
+    ).toBe(1)
+    expect(
+      sab[WASM_FX_PARAM_OFFSET + WASM_FX_PARAM_IDX.AUTOFILTER_TYPE],
+    ).toBe(0)
   })
 
   it('maps echo on to group 0 send', () => {
@@ -45,26 +78,72 @@ describe('wasmfxstate', () => {
     expect(sab[WASM_FX_SEND_IDX.AUTOFILTER]).toBeGreaterThan(0)
     expect(sab[WASM_FX_SEND_IDX.AUTOWAH]).toBeGreaterThan(0)
     expect(sab[WASM_FX_SEND_IDX.DISTORTION]).toBeGreaterThan(0)
-    expect(sab[WASM_FX_SEND_IDX.AUTOWAH]).toBeGreaterThan(
-      sab[WASM_FX_SEND_IDX.FC],
-    )
-    expect(sab[WASM_FX_SEND_IDX.DISTORTION]).toBe(
+    expect(sab[WASM_FX_SEND_IDX.AUTOWAH]).toBe(sab[WASM_FX_SEND_IDX.FC])
+    expect(sab[WASM_FX_SEND_IDX.DISTORTION]).toBeGreaterThan(
       sab[WASM_FX_SEND_IDX.AUTOWAH],
     )
+  })
+
+  it('maps all autowah params to sab slots', () => {
+    const sab = defaultwasmfxsab()
+    expect(applywasmfxconfig(sab, 0, 'autowah', 'basefrequency', 200)).toBe(
+      true,
+    )
+    expect(applywasmfxconfig(sab, 0, 'autowah', 'octaves', 4)).toBe(true)
+    expect(applywasmfxconfig(sab, 0, 'autowah', 'sensitivity', -20)).toBe(
+      true,
+    )
+    expect(applywasmfxconfig(sab, 0, 'autowah', 'gain', 6)).toBe(true)
+    expect(applywasmfxconfig(sab, 0, 'autowah', 'follower', 0.05)).toBe(true)
+    expect(
+      sab[WASM_FX_PARAM_OFFSET + WASM_FX_PARAM_IDX.AUTOWAH_BASE_FREQ],
+    ).toBe(200)
+    expect(
+      sab[WASM_FX_PARAM_OFFSET + WASM_FX_PARAM_IDX.AUTOWAH_OCTAVES],
+    ).toBe(4)
+    expect(
+      sab[WASM_FX_PARAM_OFFSET + WASM_FX_PARAM_IDX.AUTOWAH_SENS],
+    ).toBe(-20)
+    expect(
+      sab[WASM_FX_PARAM_OFFSET + WASM_FX_PARAM_IDX.AUTOWAH_GAIN],
+    ).toBe(6)
+    expect(
+      sab[WASM_FX_PARAM_OFFSET + WASM_FX_PARAM_IDX.AUTOWAH_FOLLOWER],
+    ).toBe(0.05)
   })
 
   it('updates autofilter and autowah params', () => {
     const sab = defaultwasmfxsab()
     expect(applywasmfxconfig(sab, 0, 'autofilter', 'depth', 0.8)).toBe(true)
-    expect(applywasmfxconfig(sab, 0, 'autowah', 'sensitivity', 0.7)).toBe(
+    expect(applywasmfxconfig(sab, 0, 'autofilter', 'basefrequency', 300)).toBe(
+      true,
+    )
+    expect(applywasmfxconfig(sab, 0, 'autofilter', 'octaves', 4)).toBe(true)
+    expect(applywasmfxconfig(sab, 0, 'autofilter', 'q', 2)).toBe(true)
+    expect(applywasmfxconfig(sab, 0, 'autofilter', 'type', 'highpass')).toBe(
+      true,
+    )
+    expect(applywasmfxconfig(sab, 0, 'autowah', 'sensitivity', -20)).toBe(
       true,
     )
     expect(
       sab[WASM_FX_PARAM_OFFSET + WASM_FX_PARAM_IDX.AUTOFILTER_DEPTH],
     ).toBe(0.8)
     expect(
+      sab[WASM_FX_PARAM_OFFSET + WASM_FX_PARAM_IDX.AUTOFILTER_BASE_FREQ],
+    ).toBe(300)
+    expect(
+      sab[WASM_FX_PARAM_OFFSET + WASM_FX_PARAM_IDX.AUTOFILTER_OCTAVES],
+    ).toBe(4)
+    expect(
+      sab[WASM_FX_PARAM_OFFSET + WASM_FX_PARAM_IDX.AUTOFILTER_Q],
+    ).toBe(2)
+    expect(
+      sab[WASM_FX_PARAM_OFFSET + WASM_FX_PARAM_IDX.AUTOFILTER_TYPE],
+    ).toBe(1)
+    expect(
       sab[WASM_FX_PARAM_OFFSET + WASM_FX_PARAM_IDX.AUTOWAH_SENS],
-    ).toBe(0.7)
+    ).toBe(-20)
   })
 
   it('maps numeric send to linear gain', () => {

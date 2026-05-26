@@ -275,6 +275,34 @@ function drumbiquadcoef(type, freq, q, gaindb) {
     a0 = 1 + alpha;
     a1 = -2 * cosw0;
     a2 = 1 - alpha;
+  } else if (type === 'lowpass') {
+    b0 = (1 - cosw0) * 0.5;
+    b1 = 1 - cosw0;
+    b2 = (1 - cosw0) * 0.5;
+    a0 = 1 + alpha;
+    a1 = -2 * cosw0;
+    a2 = 1 - alpha;
+  } else if (type === 'highpass') {
+    b0 = (1 + cosw0) * 0.5;
+    b1 = -(1 + cosw0);
+    b2 = (1 + cosw0) * 0.5;
+    a0 = 1 + alpha;
+    a1 = -2 * cosw0;
+    a2 = 1 - alpha;
+  } else if (type === 'notch') {
+    b0 = 1;
+    b1 = -2 * cosw0;
+    b2 = 1;
+    a0 = 1 + alpha;
+    a1 = -2 * cosw0;
+    a2 = 1 - alpha;
+  } else if (type === 'allpass') {
+    b0 = 1 - alpha;
+    b1 = -2 * cosw0;
+    b2 = 1 + alpha;
+    a0 = 1 + alpha;
+    a1 = -2 * cosw0;
+    a2 = 1 - alpha;
   }
   var inv = 1 / a0;
   return {

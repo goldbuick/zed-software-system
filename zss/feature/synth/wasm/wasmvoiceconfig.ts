@@ -3,6 +3,10 @@ import { validatesynthtype } from 'zss/feature/synth/voiceconfig/validation'
 import { isarray, isnumber, isstring } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
+import { applywasmalgoconfig, resetwasmalgoconfig } from './wasmalgoconfig'
+import type { WASM_ALGO_CONFIG } from './wasmalgoconfigsab'
+import { applywasmoscconfig, resetwasmoscconfig } from './wasmoscconfig'
+import type { WASM_OSC_CONFIG } from './wasmoscconfigsab'
 import { WASM_OSC_TYPE, parsewasmosc } from './wasmosctype'
 import {
   DEFAULT_WASM_ENVELOPE,
@@ -102,6 +106,8 @@ function parsesourcetype(
 
 export function applywasmvoiceconfig(
   voicestate: WASM_VOICE_STATE[],
+  oscconfig: WASM_OSC_CONFIG[],
+  algoconfig: WASM_ALGO_CONFIG[],
   index: number,
   config: number | string,
   value: number | string | number[],
@@ -112,6 +118,8 @@ export function applywasmvoiceconfig(
 
   if (config === 'restart') {
     voicestate.splice(0, voicestate.length, ...defaultwasmvoicestate())
+    resetwasmoscconfig(oscconfig)
+    resetwasmalgoconfig(algoconfig)
     return true
   }
 
@@ -146,6 +154,19 @@ export function applywasmvoiceconfig(
       return false
   }
 
+  if (isstring(config)) {
+    if (voicestate[index].type === SOURCE_TYPE.ALGO_SYNTH) {
+      if (applywasmalgoconfig(algoconfig, index, config, value)) {
+        return true
+      }
+    }
+    if (voicestate[index].type === SOURCE_TYPE.SYNTH) {
+      if (applywasmoscconfig(oscconfig, index, config, value)) {
+        return true
+      }
+    }
+  }
+
   if (isstring(config) && validatesynthtype(config, value)) {
     const source = parsesourcetype(config, voicestate[index])
     if (source) {
@@ -160,6 +181,9 @@ export function applywasmvoiceconfig(
         type: SOURCE_TYPE.SYNTH,
         algo: 0,
         osc,
+      }
+      if (isarray(value) || isnumber(value)) {
+        applywasmoscconfig(oscconfig, index, config, value)
       }
       return true
     }

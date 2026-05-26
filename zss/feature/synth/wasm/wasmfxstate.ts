@@ -4,6 +4,22 @@ import type { SYNTH_STATE } from 'zss/gadget/data/types'
 
 import type { MaxiEngine } from './maximilian'
 import { pushwasmsabvalues } from './sabpush'
+import {
+  WASM_AUTOFILTER_DEFAULT_BASE_FREQ,
+  WASM_AUTOFILTER_DEFAULT_DEPTH,
+  WASM_AUTOFILTER_DEFAULT_FREQUENCY,
+  WASM_AUTOFILTER_DEFAULT_OCTAVES,
+  WASM_AUTOFILTER_DEFAULT_Q,
+  WASM_AUTOFILTER_TYPE,
+  parseautofiltertype,
+} from './wasmautofilter'
+import {
+  WASM_AUTOWAH_DEFAULT_BASE_FREQ,
+  WASM_AUTOWAH_DEFAULT_FOLLOWER,
+  WASM_AUTOWAH_DEFAULT_GAIN,
+  WASM_AUTOWAH_DEFAULT_OCTAVES,
+  WASM_AUTOWAH_DEFAULT_SENSITIVITY,
+} from './wasmautowah'
 
 function volumetodb(value: number) {
   return 20 * Math.log10(value) - 35
@@ -11,7 +27,7 @@ function volumetodb(value: number) {
 
 export const WASM_FX_SAB = 'zss_fx'
 export const WASM_FX_SEND_COUNT = 7
-export const WASM_FX_PARAM_COUNT = 12
+export const WASM_FX_PARAM_COUNT = 20
 export const WASM_FX_SAB_LEN = WASM_FX_SEND_COUNT * 2 + WASM_FX_PARAM_COUNT
 
 export const WASM_FX_SEND_IDX = {
@@ -39,6 +55,14 @@ export const WASM_FX_PARAM_IDX = {
   AUTOWAH_SENS: 9,
   VIBRATO_DEPTH: 10,
   VIBRATO_FREQ: 11,
+  AUTOWAH_BASE_FREQ: 12,
+  AUTOWAH_OCTAVES: 13,
+  AUTOWAH_GAIN: 14,
+  AUTOWAH_FOLLOWER: 15,
+  AUTOFILTER_BASE_FREQ: 16,
+  AUTOFILTER_OCTAVES: 17,
+  AUTOFILTER_Q: 18,
+  AUTOFILTER_TYPE: 19,
 } as const
 
 export type WASM_FX_NAME =
@@ -64,12 +88,20 @@ function defaultfxparams(): number[] {
     0.01,
     32,
     0.4,
-    3,
-    0.5,
+    WASM_AUTOFILTER_DEFAULT_FREQUENCY,
+    WASM_AUTOFILTER_DEFAULT_DEPTH,
     0.02,
-    0.5,
+    WASM_AUTOWAH_DEFAULT_SENSITIVITY,
     0,
     5,
+    WASM_AUTOWAH_DEFAULT_BASE_FREQ,
+    WASM_AUTOWAH_DEFAULT_OCTAVES,
+    WASM_AUTOWAH_DEFAULT_GAIN,
+    WASM_AUTOWAH_DEFAULT_FOLLOWER,
+    WASM_AUTOFILTER_DEFAULT_BASE_FREQ,
+    WASM_AUTOFILTER_DEFAULT_OCTAVES,
+    WASM_AUTOFILTER_DEFAULT_Q,
+    0,
   ]
 }
 
@@ -155,12 +187,7 @@ export function applywasmfxconfig(
 
   if (config === 'on') {
     const level =
-      fx === 'vibrato' ||
-      fx === 'autofilter' ||
-      fx === 'autowah' ||
-      fx === 'distortion'
-        ? 50
-        : 18
+      fx === 'vibrato' || fx === 'autofilter' || fx === 'distortion' ? 50 : 18
     sab[sendbase + sendidx] = sendlineargain(level)
     return true
   }
@@ -220,6 +247,25 @@ export function applywasmfxconfig(
         sab[parambase + WASM_FX_PARAM_IDX.AUTOFILTER_DEPTH] = value
         return true
       }
+      if (config === 'basefrequency' && isnumber(value)) {
+        sab[parambase + WASM_FX_PARAM_IDX.AUTOFILTER_BASE_FREQ] = value
+        return true
+      }
+      if (config === 'octaves' && isnumber(value)) {
+        sab[parambase + WASM_FX_PARAM_IDX.AUTOFILTER_OCTAVES] = value
+        return true
+      }
+      if (config === 'q' && isnumber(value)) {
+        sab[parambase + WASM_FX_PARAM_IDX.AUTOFILTER_Q] = value
+        return true
+      }
+      if (config === 'type' && isstring(value)) {
+        const typeid = parseautofiltertype(value)
+        if (typeid !== undefined) {
+          sab[parambase + WASM_FX_PARAM_IDX.AUTOFILTER_TYPE] = typeid
+          return true
+        }
+      }
       break
     case 'vibrato':
       if (config === 'maxdelay' && isnumber(value)) {
@@ -236,8 +282,24 @@ export function applywasmfxconfig(
       }
       break
     case 'autowah':
+      if (config === 'basefrequency' && isnumber(value)) {
+        sab[parambase + WASM_FX_PARAM_IDX.AUTOWAH_BASE_FREQ] = value
+        return true
+      }
+      if (config === 'octaves' && isnumber(value)) {
+        sab[parambase + WASM_FX_PARAM_IDX.AUTOWAH_OCTAVES] = value
+        return true
+      }
       if (config === 'sensitivity' && isnumber(value)) {
         sab[parambase + WASM_FX_PARAM_IDX.AUTOWAH_SENS] = value
+        return true
+      }
+      if (config === 'gain' && isnumber(value)) {
+        sab[parambase + WASM_FX_PARAM_IDX.AUTOWAH_GAIN] = value
+        return true
+      }
+      if (config === 'follower' && isnumber(value)) {
+        sab[parambase + WASM_FX_PARAM_IDX.AUTOWAH_FOLLOWER] = value
         return true
       }
       break
