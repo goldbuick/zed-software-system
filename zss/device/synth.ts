@@ -5,6 +5,7 @@ import {
   type FXNAME,
   type SynthBackend,
 } from 'zss/feature/synth'
+import { synthdebugtrace } from 'zss/feature/synth/synthdebugtrace'
 import {
   getwasmbroadcastdestination,
   iswasmspikeenabled,
@@ -101,6 +102,19 @@ export function synthbroadcastdestination(): MAYBE<MediaStreamAudioDestinationNo
   return backend?.broadcastdestination() ?? getwasmbroadcastdestination()
 }
 
+/** Test hook — set synth device routing state without audio boot. */
+export function setsynthdeviceteststate(opts: {
+  enabled?: boolean
+  backend?: SynthBackend
+}) {
+  if (opts.enabled !== undefined) {
+    enabled = opts.enabled
+  }
+  if (opts.backend !== undefined) {
+    backend = opts.backend
+  }
+}
+
 const synthdevice = createdevice('synth', [], (message) => {
   if (!synthdevice.session(message)) {
     return
@@ -159,12 +173,15 @@ const synthdevice = createdevice('synth', [], (message) => {
     case 'play':
       if (isarray(message.data) && backend) {
         const [board, buffer] = message.data as [string, string]
-        if (board === '' || board === currentboard) {
-          if (buffer.trim() === '') {
-            backend.stopplay()
-          } else {
-            backend.addplay(buffer)
-          }
+        const trimmed = buffer.trim()
+        if (trimmed === '') {
+          synthdebugtrace('C5 stopplay', { board, currentboard, trimmed })
+          backend.stopplay()
+        } else if (board === '' || board === currentboard) {
+          synthdebugtrace('C5 addplay', { board, currentboard, trimmed })
+          backend.addplay(trimmed)
+        } else {
+          synthdebugtrace('C4 dropped addplay', { board, currentboard, trimmed })
         }
       }
       break

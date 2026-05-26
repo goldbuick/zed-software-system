@@ -1,3 +1,4 @@
+import { isofflineaudiocontext } from './audiocontextutil'
 import type { MaxiEngine } from './maximilian'
 
 type SCHEDULED_ITEM = {
@@ -6,10 +7,11 @@ type SCHEDULED_ITEM = {
   run: () => void
 }
 
-function isofflinecontext(
-  ctx: BaseAudioContext,
-): ctx is OfflineAudioContext {
-  return 'length' in ctx
+const OFFLINE_RENDER_QUANTUM = 128
+
+function offlinesuspendtime(ctx: OfflineAudioContext, when: number): number {
+  const quantum = OFFLINE_RENDER_QUANTUM / ctx.sampleRate
+  return Math.floor(when / quantum) * quantum
 }
 
 function sortscheduled(a: SCHEDULED_ITEM, b: SCHEDULED_ITEM) {
@@ -86,7 +88,7 @@ export function createwasmplayscheduler(maxi: MaxiEngine) {
   /** Register OfflineAudioContext suspend hooks before startRendering(). */
   function armofflinerender() {
     const ctx = maxi.audioContext
-    if (!isofflinecontext(ctx)) {
+    if (!isofflineaudiocontext(ctx)) {
       throw new Error('armofflinerender requires OfflineAudioContext')
     }
 
@@ -102,9 +104,10 @@ export function createwasmplayscheduler(maxi: MaxiEngine) {
         due.push(item)
         continue
       }
-      const runs = bywhen.get(item.when) ?? []
+      const frame = offlinesuspendtime(ctx, item.when)
+      const runs = bywhen.get(frame) ?? []
       runs.push(item.run)
-      bywhen.set(item.when, runs)
+      bywhen.set(frame, runs)
     }
 
     due.sort(sortscheduled)
@@ -113,14 +116,18 @@ export function createwasmplayscheduler(maxi: MaxiEngine) {
     }
 
     const times = [...bywhen.keys()].sort((a, b) => a - b)
+    let handlerchain: Promise<void> = Promise.resolve()
     for (let i = 0; i < times.length; i++) {
       const when = times[i]
       const runs = bywhen.get(when) ?? []
       ctx.suspend(when).then(() => {
-        for (let j = 0; j < runs.length; j++) {
-          runs[j]()
-        }
-        return ctx.resume()
+        handlerchain = handlerchain.then(async () => {
+          for (let j = 0; j < runs.length; j++) {
+            runs[j]()
+          }
+          await ctx.resume()
+        })
+        return handlerchain
       })
     }
   }

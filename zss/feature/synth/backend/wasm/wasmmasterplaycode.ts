@@ -119,7 +119,7 @@ function readttsvolume() {
   return vol / 100;
 }
 
-function masterout(playvoices, bgvoices, drums, ttssample) {
+function masterout(playvoices, bgvoices, drums, ttstrigger, ttsmix) {
   if (ismastermuted()) {
     return 0;
   }
@@ -127,11 +127,23 @@ function masterout(playvoices, bgvoices, drums, ttssample) {
   var bggain = readbgplayvolume();
   var ttsgain = readttsvolume();
   var tts = 0;
-  if (typeof ttssample === 'number' && ttssample === ttssample) {
-    tts = ttssample * ttsgain;
+  var mixsrc = ttsmix;
+  if (typeof mixsrc !== 'number' || mixsrc !== mixsrc) {
+    mixsrc = ttstrigger;
+  }
+  if (typeof mixsrc === 'number' && mixsrc === mixsrc) {
+    tts = mixsrc * ttsgain;
+  }
+  var trigsrc = ttstrigger;
+  if (typeof trigsrc !== 'number' || trigsrc !== trigsrc) {
+    trigsrc = mixsrc;
+  }
+  var ttssidechain = 0;
+  if (typeof trigsrc === 'number' && trigsrc === trigsrc) {
+    ttssidechain = trigsrc * ttsgain;
   }
   var bg = bgvoices * MASTER_VOICE_GAIN * bggain;
-  sidechaintriggersample(bg, tts);
+  sidechaintriggersample(bg, ttssidechain, drumsidechainout());
   var duck = sidechaingain();
   var playbus = playvoices * duck * MASTER_VOICE_GAIN * MASTER_PLAY_TRIM;
   var d = drums * MASTER_DRUM_GAIN;

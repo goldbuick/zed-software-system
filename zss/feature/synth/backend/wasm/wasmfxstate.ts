@@ -26,9 +26,12 @@ function volumetodb(value: number) {
 }
 
 export const WASM_FX_SAB = 'zss_fx'
+export const WASM_FX_GROUP_COUNT = 4
 export const WASM_FX_SEND_COUNT = 7
 export const WASM_FX_PARAM_COUNT = 20
-export const WASM_FX_SAB_LEN = WASM_FX_SEND_COUNT * 2 + WASM_FX_PARAM_COUNT
+export const WASM_FX_SAB_LEN =
+  WASM_FX_GROUP_COUNT * WASM_FX_SEND_COUNT +
+  WASM_FX_GROUP_COUNT * WASM_FX_PARAM_COUNT
 
 export const WASM_FX_SEND_IDX = {
   FC: 0,
@@ -40,7 +43,11 @@ export const WASM_FX_SEND_IDX = {
   AUTOWAH: 6,
 } as const
 
-export const WASM_FX_PARAM_OFFSET = WASM_FX_SEND_COUNT * 2
+export const WASM_FX_PARAM_OFFSET = WASM_FX_GROUP_COUNT * WASM_FX_SEND_COUNT
+
+export function wasmfxgroupparambase(group: number): number {
+  return WASM_FX_PARAM_OFFSET + group * WASM_FX_PARAM_COUNT
+}
 
 export const WASM_FX_PARAM_IDX = {
   ECHO_DELAY: 0,
@@ -108,8 +115,11 @@ function defaultfxparams(): number[] {
 export function defaultwasmfxsab(): number[] {
   const sab = new Array(WASM_FX_SAB_LEN).fill(0)
   const params = defaultfxparams()
-  for (let i = 0; i < params.length; i++) {
-    sab[WASM_FX_PARAM_OFFSET + i] = params[i]
+  for (let group = 0; group < WASM_FX_GROUP_COUNT; group++) {
+    const parambase = wasmfxgroupparambase(group)
+    for (let i = 0; i < params.length; i++) {
+      sab[parambase + i] = params[i]
+    }
   }
   return sab
 }
@@ -175,7 +185,7 @@ export function applywasmfxconfig(
   config: number | string,
   value: number | string,
 ): boolean {
-  if (group < 0 || group > 1) {
+  if (group < 0 || group >= WASM_FX_GROUP_COUNT) {
     return false
   }
   const fx = normalizefxname(fxname)
@@ -200,7 +210,7 @@ export function applywasmfxconfig(
     return true
   }
 
-  const parambase = WASM_FX_PARAM_OFFSET
+  const parambase = wasmfxgroupparambase(group)
   if (!isstring(config)) {
     return false
   }
@@ -317,7 +327,7 @@ export function replaywasmfxfromstate(
   for (let g = 0; g < groupkeys.length; g++) {
     const groupkey = groupkeys[g]
     const groupidx = Number(groupkey)
-    if (groupidx !== 0 && groupidx !== 1) {
+    if (groupidx < 0 || groupidx >= WASM_FX_GROUP_COUNT) {
       continue
     }
     const fxmap = voicefx[groupkey]

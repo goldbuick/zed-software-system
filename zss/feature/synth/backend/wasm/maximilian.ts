@@ -1,5 +1,6 @@
 import { MAYBE } from 'zss/mapping/types'
 
+import { isofflineaudiocontext } from './audiocontextutil'
 import { ensuremaximiliancoep } from './coopcoep'
 import { pushwasmsabvalues } from './sabpush'
 import {
@@ -188,7 +189,7 @@ export async function startisolatedmaximiliandsp(
   initwasmmastersab(maxi, playvolume, bgplayvolume, ttsvolume)
   initwasmfxsab(maxi)
   const ready = waitforwasmdspready(maxi)
-  maxi.eval(builddspcode(usercode))
+  maxi.eval(builddspcode(usercode), false)
   await ready
   maxi.unHush()
   maxi.setGain(1)
@@ -222,6 +223,9 @@ function play(inputsample) {
 
 async function resumeaudiocontext(maxi: MaxiEngine) {
   const ctx = maxi.audioContext
+  if (isofflineaudiocontext(ctx)) {
+    return
+  }
   if (ctx.state === 'suspended') {
     await ctx.resume()
   }

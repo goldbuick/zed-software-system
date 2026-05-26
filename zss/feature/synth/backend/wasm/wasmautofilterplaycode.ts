@@ -6,14 +6,22 @@ import {
   WASM_AUTOFILTER_DEFAULT_Q,
   WASM_AUTOFILTER_TYPE,
 } from './wasmautofilter'
-import { WASM_FX_PARAM_IDX } from './wasmfxstate'
+import { WASM_FX_GROUP_COUNT, WASM_FX_PARAM_IDX } from './wasmfxstate'
+
+const FX_GROUP_COUNT = WASM_FX_GROUP_COUNT
+
+function fxgroupvars(prefix: string, init: string): string {
+  const lines: string[] = []
+  for (let i = 0; i < FX_GROUP_COUNT; i++) {
+    lines.push(`var ${prefix}${i} = ${init};`)
+  }
+  return lines.join('\n')
+}
 
 /** Tone.js AutoFilter — LFO sine modulating biquad cutoff (parallel wet delta). */
 export const WASM_AUTOFILTER_PLAY_CODE = `
-var fxautofilterphase0 = 0;
-var fxautofilterphase1 = 0;
-var fxautofilterst0 = drumfilterzero();
-var fxautofilterst1 = drumfilterzero();
+${fxgroupvars('fxautofilterphase', '0')}
+${fxgroupvars('fxautofilterst', 'drumfilterzero()')}
 
 function autofiltertypenametype(typeid) {
   var id = Math.round(typeid);
@@ -59,44 +67,39 @@ function fxautofilterbus(x, group) {
   if (x !== x) {
     return 0;
   }
-  var freq = fxparam(${WASM_FX_PARAM_IDX.AUTOFILTER_FREQ});
+  var freq = fxparam(group, ${WASM_FX_PARAM_IDX.AUTOFILTER_FREQ});
   if (freq <= 0) {
     freq = ${WASM_AUTOFILTER_DEFAULT_FREQUENCY};
   }
-  var depth = fxparam(${WASM_FX_PARAM_IDX.AUTOFILTER_DEPTH});
+  var depth = fxparam(group, ${WASM_FX_PARAM_IDX.AUTOFILTER_DEPTH});
   if (depth <= 0) {
     depth = ${WASM_AUTOFILTER_DEFAULT_DEPTH};
   }
-  var basefreq = fxparam(${WASM_FX_PARAM_IDX.AUTOFILTER_BASE_FREQ});
+  var basefreq = fxparam(group, ${WASM_FX_PARAM_IDX.AUTOFILTER_BASE_FREQ});
   if (basefreq <= 0) {
     basefreq = ${WASM_AUTOFILTER_DEFAULT_BASE_FREQ};
   }
-  var octaves = fxparam(${WASM_FX_PARAM_IDX.AUTOFILTER_OCTAVES});
+  var octaves = fxparam(group, ${WASM_FX_PARAM_IDX.AUTOFILTER_OCTAVES});
   if (octaves <= 0) {
     octaves = ${WASM_AUTOFILTER_DEFAULT_OCTAVES};
   }
-  var q = fxparam(${WASM_FX_PARAM_IDX.AUTOFILTER_Q});
+  var q = fxparam(group, ${WASM_FX_PARAM_IDX.AUTOFILTER_Q});
   if (q <= 0) {
     q = ${WASM_AUTOFILTER_DEFAULT_Q};
   }
-  var typeid = fxparam(${WASM_FX_PARAM_IDX.AUTOFILTER_TYPE});
+  var typeid = fxparam(group, ${WASM_FX_PARAM_IDX.AUTOFILTER_TYPE});
   var typename = autofiltertypenametype(typeid);
 
-  var phase = group > 0 ? fxautofilterphase1 : fxautofilterphase0;
+  var phase = fxautofilterphase[group];
   var lfo = Math.sin(phase);
-  if (group > 0) {
-    fxautofilterphase1 = autofilterlfophase(phase, freq);
-  } else {
-    fxautofilterphase0 = autofilterlfophase(phase, freq);
-  }
+  fxautofilterphase[group] = autofilterlfophase(phase, freq);
 
   var cutoff = autofiltercutoffhz(lfo, basefreq, octaves, depth);
   if (cutoff < 20) {
     cutoff = 20;
   }
   var coef = drumbiquadcoef(typename, cutoff, q, 0);
-  var st = group > 0 ? fxautofilterst1 : fxautofilterst0;
-  var filtered = drumbiquadrun(st, coef, x);
+  var filtered = drumbiquadrun(fxautofilterst[group], coef, x);
   if (filtered !== filtered) {
     return 0;
   }

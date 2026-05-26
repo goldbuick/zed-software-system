@@ -25,9 +25,10 @@ import {
   pushwasmfxsab,
   replaywasmfxfromstate,
   WASM_FX_PARAM_IDX,
-  WASM_FX_PARAM_OFFSET,
+  wasmfxgroupparambase,
 } from './wasmfxstate'
-import { canonicalvoicefxgroupindex } from '../../voicefxgroup'
+import { synthdebugtrace } from '../../synthdebugtrace'
+import { canonicalvoicefxgroupindex, voiceindexfxgroup } from '../../voicefxgroup'
 import {
   applywasmvoiceconfig,
   defaultwasmvoicestate,
@@ -319,6 +320,14 @@ export function createwasmsynth(
       voicestate[base + 1] = 0
       voicestate[base + 4] = 0
     }
+    synthdebugtrace('C7 clearschedules gates', {
+      playgates: [
+        voicestate[1],
+        voicestate[7],
+        voicestate[13],
+        voicestate[19],
+      ],
+    })
     pushplayvoicestate()
   }
 
@@ -351,13 +360,19 @@ export function createwasmsynth(
     })
   }
 
-  function setvibratoparams(depth: number, freq: number) {
-    fxsab[WASM_FX_PARAM_OFFSET + WASM_FX_PARAM_IDX.VIBRATO_DEPTH] = depth
-    fxsab[WASM_FX_PARAM_OFFSET + WASM_FX_PARAM_IDX.VIBRATO_FREQ] = freq
+  function setvibratoparams(group: number, depth: number, freq: number) {
+    const parambase = wasmfxgroupparambase(group)
+    fxsab[parambase + WASM_FX_PARAM_IDX.VIBRATO_DEPTH] = depth
+    fxsab[parambase + WASM_FX_PARAM_IDX.VIBRATO_FREQ] = freq
     pushfxstate()
   }
 
-  function schedulevibratodepth(when: number, durationsec: number) {
+  function schedulevibratodepth(
+    chan: number,
+    when: number,
+    durationsec: number,
+  ) {
+    const group = voiceindexfxgroup(chan)
     const peakdepth = Math.min(1, durationsec / 1.2)
     const freqhigh = 1 + peakdepth * 4
     const rampreset = Math.min(0.35, durationsec * 0.48)
@@ -367,16 +382,16 @@ export function createwasmsynth(
     const tpeak = Math.min(when + attackportion, trelease)
 
     scheduler.schedule(when, () => {
-      setvibratoparams(0, 1)
+      setvibratoparams(group, 0, 1)
     })
     scheduler.schedule(tpeak, () => {
-      setvibratoparams(peakdepth, freqhigh)
+      setvibratoparams(group, peakdepth, freqhigh)
     })
     scheduler.schedule(trelease, () => {
-      setvibratoparams(peakdepth, freqhigh)
+      setvibratoparams(group, peakdepth, freqhigh)
     })
     scheduler.schedule(tend, () => {
-      setvibratoparams(0, 1)
+      setvibratoparams(group, 0, 1)
     })
   }
 
@@ -402,7 +417,7 @@ export function createwasmsynth(
       pushplayvoicestate()
     })
 
-    schedulevibratodepth(when, durationsec)
+    schedulevibratodepth(chan, when, durationsec)
 
     scheduler.schedule(endwhen, () => {
       voicestate[base + 1] = 0
@@ -456,6 +471,7 @@ export function createwasmsynth(
   }
 
   function stopplay() {
+    synthdebugtrace('C6 stopplay')
     clearschedules()
     pacertime = -1
     pacercount = 0
@@ -488,10 +504,7 @@ export function createwasmsynth(
   }
 
   function replayvoicefx(voicefx: SYNTH_STATE['voicefx']) {
-    if (Object.keys(voicefx).length === 0) {
-      return
-    }
-    replaywasmfxfromstate(fxsab, voicefx)
+    replaywasmfxfromstate(fxsab, voicefx ?? {})
     pushfxstate()
   }
 
@@ -500,7 +513,12 @@ export function createwasmsynth(
     config: number | string,
     value: number | string | number[],
   ) {
+    const isrestart = config === 'restart'
     if (applywasmvoiceconfig(voicecfg, oscconfig, algoconfig, index, config, value)) {
+      if (isrestart) {
+        fxsab = defaultwasmfxsab()
+        pushfxstate()
+      }
       pushvoicestate()
     }
   }

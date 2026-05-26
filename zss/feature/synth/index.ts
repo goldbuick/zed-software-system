@@ -21,5 +21,5 @@ export {
   SYNTH_PLAY_VOICE_COUNT,
   SYNTH_VOICE_COUNT,
 } from './synthdefaults'
-export { canonicalvoicefxgroupindex } from './voicefxgroup'
+export { canonicalvoicefxgroupindex, voiceindexfxgroup } from './voicefxgroup'
 export { converttomp3 } from './mp3'

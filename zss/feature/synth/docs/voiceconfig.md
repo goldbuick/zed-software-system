@@ -1,6 +1,6 @@
 # Voice Config Module
 
-Handles voice/source configuration from external API (e.g. device commands).
+Handles voice/source configuration from external API (e.g. device commands). For the full voice-type catalog (WASM vs Tone), see [voice-types-reference.md](voice-types-reference.md).
 
 ## Entry Point
 

@@ -130,4 +130,22 @@ describe('synthstate flag layout', () => {
       'c',
     )
   })
+
+  it('dispatches empty board play immediately to stop', () => {
+    const book = memorycreatebook([])
+    book.name = 'main'
+    memoryresetbooks([book])
+
+    memoryqueuesynthplay('bd-stop', 'c')
+    expect(synthplaymock).not.toHaveBeenCalled()
+
+    memoryqueuesynthplay('bd-stop', '')
+    expect(synthplaymock).toHaveBeenCalledWith(
+      expect.anything(),
+      '',
+      'bd-stop',
+      '',
+    )
+    expect(memoryreadsynthplay('bd-stop')).toEqual([])
+  })
 })

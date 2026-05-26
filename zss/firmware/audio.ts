@@ -16,6 +16,7 @@ import {
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { SYNTH_DEFAULT_WAVE } from 'zss/feature/synth/synthdefaults'
+import { synthdebugtrace } from 'zss/feature/synth/synthdebugtrace'
 import { write } from 'zss/feature/writeui'
 import { createfirmware } from 'zss/firmware'
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'
@@ -81,6 +82,17 @@ function handlesynthvoicefx(
   ])
   synthvoicefx(SOFTWARE, player, board, idx, fx, maybeconfig, maybevalue)
   memorymergesynthvoicefx(board, idx, fx, maybeconfig, maybevalue)
+}
+
+function handlesynthplayvoicefx(
+  player: string,
+  board: string,
+  fx: string,
+  words: WORD[],
+) {
+  for (let group = 0; group < 2; group++) {
+    handlesynthvoicefx(player, board, group, fx, words)
+  }
 }
 
 const isfx = [
@@ -286,10 +298,10 @@ export const AUDIO_FIRMWARE = createfirmware()
     return 0
   })
   .command('play', [ARG_TYPE.MAYBE_NAME, 'music notes'], (chip, words) => {
-    memoryqueuesynthplay(
-      READ_CONTEXT.board?.id ?? '',
-      handleplaystr(chip, words),
-    )
+    const board = READ_CONTEXT.board?.id ?? ''
+    const buffer = handleplaystr(chip, words)
+    synthdebugtrace('C1 play firmware', { board, buffer })
+    memoryqueuesynthplay(board, buffer)
     return 0
   })
   .command(
@@ -362,10 +374,9 @@ export const AUDIO_FIRMWARE = createfirmware()
       'echo effect to all 4 channels of #play',
     ],
     (_, words) => {
-      handlesynthvoicefx(
+      handlesynthplayvoicefx(
         READ_CONTEXT.elementfocus,
         READ_CONTEXT.board?.id ?? '',
-        0,
         'echo',
         words,
       )
@@ -380,10 +391,9 @@ export const AUDIO_FIRMWARE = createfirmware()
       'frequency crush to all 4 channels of #play',
     ],
     (_, words) => {
-      handlesynthvoicefx(
+      handlesynthplayvoicefx(
         READ_CONTEXT.elementfocus,
         READ_CONTEXT.board?.id ?? '',
-        0,
         'fc',
         words,
       )
@@ -398,10 +408,9 @@ export const AUDIO_FIRMWARE = createfirmware()
       'autofilter to all 4 channels of #play',
     ],
     (_, words) => {
-      handlesynthvoicefx(
+      handlesynthplayvoicefx(
         READ_CONTEXT.elementfocus,
         READ_CONTEXT.board?.id ?? '',
-        0,
         'autofilter',
         words,
       )
@@ -416,10 +425,9 @@ export const AUDIO_FIRMWARE = createfirmware()
       'reverb to all 4 channels of #play',
     ],
     (_, words) => {
-      handlesynthvoicefx(
+      handlesynthplayvoicefx(
         READ_CONTEXT.elementfocus,
         READ_CONTEXT.board?.id ?? '',
-        0,
         'reverb',
         words,
       )
@@ -434,10 +442,9 @@ export const AUDIO_FIRMWARE = createfirmware()
       'distortion to all 4 channels of #play',
     ],
     (_, words) => {
-      handlesynthvoicefx(
+      handlesynthplayvoicefx(
         READ_CONTEXT.elementfocus,
         READ_CONTEXT.board?.id ?? '',
-        0,
         'distort',
         words,
       )
@@ -452,10 +459,9 @@ export const AUDIO_FIRMWARE = createfirmware()
       'vibrato to all 4 channels of #play',
     ],
     (_, words) => {
-      handlesynthvoicefx(
+      handlesynthplayvoicefx(
         READ_CONTEXT.elementfocus,
         READ_CONTEXT.board?.id ?? '',
-        0,
         'vibrato',
         words,
       )
@@ -470,10 +476,9 @@ export const AUDIO_FIRMWARE = createfirmware()
       'autowah to all 4 channels of #play',
     ],
     (_, words) => {
-      handlesynthvoicefx(
+      handlesynthplayvoicefx(
         READ_CONTEXT.elementfocus,
         READ_CONTEXT.board?.id ?? '',
-        0,
         'autowah',
         words,
       )
@@ -507,7 +512,7 @@ AUDIO_FIRMWARE.command('synth5', [AUDIO_CMD_DESC.synth5], (_, words) => {
 // handle synth fx configurations
 for (let i = 0; i < 4; ++i) {
   const idx = i + 1
-  const group = i < 2 ? 0 : 1
+  const group = i
   AUDIO_FIRMWARE.command(
     `echo${idx}`,
     [

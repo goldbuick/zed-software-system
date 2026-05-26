@@ -427,23 +427,29 @@ function play(inputsample) {
   readalgocfgsab();
   updateplayvibratodepth();
 
-  var playvoices = 0;
+  var play0 = 0;
+  var play1 = 0;
   var bgvoices = 0;
   for (var i = 0; i < VOICE_COUNT; i++) {
     var out = voiceout(i);
-    if (i >= PLAY_VOICE_COUNT) {
-      bgvoices += out;
+    if (i < 2) {
+      play0 += out;
+    } else if (i < PLAY_VOICE_COUNT) {
+      play1 += out;
     } else {
-      playvoices += out;
+      bgvoices += out;
     }
   }
   var drums = safedrumsout();
-  var mixed = applyfxchain(playvoices, bgvoices);
-  var tts = 0;
+  var play0fx = applyfxgroup(play0, 0);
+  var play1fx = applyfxgroup(play1, 1);
+  var bgfx = applyfxgroup(bgvoices, 2);
+  var ttsraw = 0;
   if (typeof inputsample === 'number' && inputsample === inputsample) {
-    tts = inputsample;
+    ttsraw = inputsample;
   }
-  return masterout(mixed[0], mixed[1], drums, tts);
+  var ttsfx = applyfxgroup(ttsraw, 3);
+  return masterout(play0fx + play1fx, bgfx, drums, ttsraw, ttsfx);
 }
 
 function safedrumsout() {

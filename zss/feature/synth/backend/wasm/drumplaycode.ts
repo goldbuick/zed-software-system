@@ -24,6 +24,7 @@ var drumsready = false;
 var drumnoise = null;
 var drumoscA = [];
 var drumoscB = [];
+var drumsidechainsample = 0;
 
 var DRUM_C4 = 261.63;
 var DRUM_C5 = 523.25;
@@ -594,23 +595,35 @@ function drumbass() {
   return drumdistort(body, 0.22) * amp * DRUM_VOICE_GAINS[9];
 }
 
+function drumsidechainout() {
+  return drumsidechainsample;
+}
+
 function drumsout() {
   readdrumsab();
+  drumsidechainsample = 0;
   if (!drumactive()) {
     return 0;
   }
   ensuredrums();
   var sum = 0;
+  var sc = 0;
+  var s;
   sum += safedrum(drumtick);
   sum += safedrum(drumtweet);
   sum += safedrum(drumcowbell);
-  sum += safedrum(drumclap);
+  s = safedrum(drumclap);
+  sum += s;
+  sc += s;
   sum += safedrum(function() { return drumsnare(true); });
   sum += safedrum(function() { return drumwoodblock(true); });
   sum += safedrum(function() { return drumsnare(false); });
   sum += safedrum(drumtom);
   sum += safedrum(function() { return drumwoodblock(false); });
-  sum += safedrum(drumbass);
+  s = safedrum(drumbass);
+  sum += s;
+  sc += s;
+  drumsidechainsample = sc;
   return sum;
 }
 `

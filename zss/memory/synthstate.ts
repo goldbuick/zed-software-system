@@ -1,4 +1,5 @@
 import { synthplay } from 'zss/device/api'
+import { synthdebugtrace } from 'zss/feature/synth/synthdebugtrace'
 import { SOFTWARE } from 'zss/device/session'
 import {
   type SYNTH_NOTE_ENTRY,
@@ -61,6 +62,31 @@ function memorymigratelegacyvoicefx(cache: SYNTH_STATE) {
   cache.voicefx = next
 }
 
+function memorymigratefourbusvoicefx(cache: SYNTH_STATE) {
+  const vf = cache.voicefx
+  if (!ispresent(vf) || typeof vf !== 'object') {
+    return
+  }
+  if (ispresent(vf['2']) || ispresent(vf['3'])) {
+    return
+  }
+  const playbus = vf['0']
+  const bgttsbus = vf['1']
+  if (!playbus && !bgttsbus) {
+    return
+  }
+  const next: SYNTH_STATE['voicefx'] = {}
+  if (playbus) {
+    next['0'] = deepcopy(playbus)
+    next['1'] = deepcopy(playbus)
+  }
+  if (bgttsbus) {
+    next['2'] = deepcopy(bgttsbus)
+    next['3'] = deepcopy(bgttsbus)
+  }
+  cache.voicefx = next
+}
+
 function readsynthcacheinternal(board: string): SYNTH_STATE {
   const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const owner = createsynthid(board)
@@ -80,6 +106,7 @@ function readsynthcacheinternal(board: string): SYNTH_STATE {
   }
   const cache: SYNTH_STATE = { voices, voicefx }
   memorymigratelegacyvoicefx(cache)
+  memorymigratefourbusvoicefx(cache)
   return cache
 }
 
@@ -196,6 +223,7 @@ export function memoryqueuesynthplay(board: string, play: string) {
   if (play === '') {
     const queue = readsynthplayinternal(board)
     queue.length = 0
+    synthdebugtrace('C2 empty play dispatch', { board })
     synthplay(SOFTWARE, '', board, '')
     return
   }

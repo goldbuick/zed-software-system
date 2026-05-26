@@ -16,6 +16,8 @@ Legacy Tone.js documentation below describes the **archived** stack under `archi
 | [wasm-phase0.md](wasm-phase0.md) | COOP/COEP, spike boot |
 | [wasm-phase1.md](wasm-phase1.md) | Voices, master chain |
 | [wasm-phase2.md](wasm-phase2.md) | Drums |
+| [voice-types-reference.md](voice-types-reference.md) | All voice types, params, WASM vs Tone defaults |
+| [fx-types-reference.md](fx-types-reference.md) | All FX types, params, WASM vs Tone defaults |
 
 ## Quick Links (archived Tone.js)
 

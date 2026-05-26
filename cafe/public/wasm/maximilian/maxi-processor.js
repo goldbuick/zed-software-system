@@ -36897,7 +36897,8 @@ class MaxiProcessor extends AudioWorkletProcessor {
             //Go through signal functions
             for (const key in this.signalFunctions) {
               var sig = 0;
-              var thisInput = inputs[0][0] ? inputs[0][channel][o] : null
+              var thisInput =
+                inputs[0] && inputs[0][0] ? inputs[0][0][s] : null
               try {
                sig = this.signalFunctions[key](this._q[0], thisInput)
               } catch(err) {
