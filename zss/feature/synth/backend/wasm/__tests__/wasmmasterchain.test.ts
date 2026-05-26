@@ -22,7 +22,7 @@ describe('wasmmasterplaycode', () => {
     expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('drumbiquadcoef(\'peaking\'')
     expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('function tonedistort')
     expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('function fxdistortwet')
-    expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('fxechodelay0')
+    expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('fxechodelay[group].dl')
     expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('Math.tanh(x * k) / Math.tanh(k)')
     expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('fxrevcomb3')
     expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('function fxecho')

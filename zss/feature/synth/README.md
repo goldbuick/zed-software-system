@@ -6,7 +6,7 @@ Legacy Tone.js code is preserved under [`archive/tone/`](archive/tone/README.md)
 
 ## Documentation
 
-Detailed documentation is in **[docs/](docs/README.md)**. WASM phase notes live under `docs/wasm-phase*.md`.
+Detailed documentation is in **[docs/](docs/README.md)**. WASM runtime code lives under `backend/wasm/`.
 
 ## Quick Start
 

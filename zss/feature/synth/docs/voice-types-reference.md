@@ -38,9 +38,9 @@ Config path: `#synth` → [audio.ts](../../firmware/audio.ts) `handlesynthvoice`
 | Param | Aliases | Value | Tone default | WASM default | Notes |
 |-------|---------|-------|--------------|--------------|-------|
 | `restart` | — | — | Full `applyreset()` | Resets all 8 voices + osc + algo + FX SAB | Tone: [source.ts](../archive/tone/source.ts); WASM: [maxisynth.ts](../backend/wasm/maxisynth.ts) |
-| `vol` / `volume` | — | number (dB) | **Tone**: instrument volume from `get()` snapshot | **Not implemented** | Firmware accepts numeric first arg; WASM ignores |
+| `vol` / `volume` | — | number (dB) | **Tone**: instrument volume from `get()` snapshot | **`0` dB** | All 10 WASM voice types via `zss_voicecfg` slot 5 |
 | `port` / `portamento` | — | number (seconds) | **Tone**: `0` (Monophonic) | `0` | Only `SYNTH` + `ALGO_SYNTH`; error on retro in Tone |
-| `env` / `envelope` | — | `[a, d, s, r]` | See per-type below | `0.01, 0.05, 0.6, 0.08` (**ZSS**) | WASM: [wasmvoicecfgsab.ts](../backend/wasm/wasmvoicecfgsab.ts) |
+| `env` / `envelope` | — | `[a, d, s, r]` | See per-type below | `0.01, 0.01, 0.5, 0.01` (**Tone ZSS reset**) | WASM: [wasmvoicecfgsab.ts](../backend/wasm/wasmvoicecfgsab.ts) |
 
 **Boot / `#synth` no-args / memory default wave:** `square` (**ZSS**, [synthdefaults.ts](../synthdefaults.ts)) on both backends.
 
@@ -72,27 +72,26 @@ Selecting any validated wave name switches voice to `SYNTH`. Names validated by 
 |----------|-----------------|--------------|--------------------------------|
 | **All SYNTH** | `env` / `envelope`, `port` / `portamento` | env above; port `0` | Tone reset env `0.01/0.01/0.5/0.01`; port `0` |
 | **sine/square/triangle/sawtooth/custom** | `phase` | `0` | **Tone** Oscillator: `0` |
-| **pulse** | `width` | `0.5` | **Tone** PulseOscillator: `0.2` |
+| **pulse** | `width` | `0.2` | **Tone** PulseOscillator: `0.2` |
 | **pwm** | `modfreq`, `modulationfrequency` | `1` | **Tone** PWMOscillator: `1` Hz (range 0.1–5) |
-| **am\*** | `harmonicity`, `modtype`/`modulationtype`, `modenv`/`modulationenvelope` | harm `1`, modtype `sine` (id 1), modenv `0.01/0.01/1/0.5` | **Tone** AMOscillator: harm `1`, modtype `square` |
-| **fm\*** | `harmonicity`, `modindex`, `modtype`, `modenv` | harm `1`, modindex `2`, modtype `sine`, modenv `0.01/0.01/1/0.5` | **Tone** FMOscillator: harm `1`, modindex `2`, modtype `square` |
-| **fat\*** | `count`, `phase`, `spread` | count `3`, phase `0`, spread `20` | **Tone** FatOscillator: count `3`, spread `20`, type `sawtooth` |
+| **am\*** | `harmonicity`, `modtype`/`modulationtype`, `modenv`/`modulationenvelope` | harm `1`, modtype `square`, modenv `0.01/0.01/1/0.5` | **Tone** AMOscillator: harm `1`, modtype `square` |
+| **fm\*** | `harmonicity`, `modindex`, `modtype`, `modenv` | harm `1`, modindex `2`, modtype `square`, modenv `0.01/0.01/1/0.5` | **Tone** FMOscillator: harm `1`, modindex `2`, modtype `square` |
+| **fat\*** | `count`, `phase`, `spread` | count `3`, phase `0`, spread `20` | **Tone** FatOscillator class default: count `3`, spread `20`, type `sawtooth`; **`fatsine` stacks sines** (OmniOscillator suffix) |
 | **Partials** | array value or trailing numbers | partialcount `0`, 8 zeros | **Tone**: partials `[]`, partialCount `0` |
 
 WASM osc defaults: [wasmoscconfigsab.ts](../backend/wasm/wasmoscconfigsab.ts) `DEFAULT_WASM_OSC_CONFIG`.
 
-**WASM play-code fallbacks** (when SAB value is 0): width `0.5` (pwm uses `0.2` if width 0), modindex `2`, harmonicity `1`, fat count `3`, spread `20` ([voiceplaycode.ts](../backend/wasm/voiceplaycode.ts)).
+**WASM play-code fallbacks** (when SAB value is 0): width `0.2`, modindex `2`, harmonicity `1`, fat count `3`, spread `20` ([voiceplaycode.ts](../backend/wasm/voiceplaycode.ts)).
 
 ### WASM vs Tone — SYNTH summary
 
 | Aspect | Tone | WASM |
 |--------|------|------|
 | Default boot wave | `square` (ZSS reset) | `square` |
-| Default envelope | `0.01/0.01/0.5/0.01` after reset | `0.01/0.05/0.6/0.08` |
-| Pulse width default | `0.2` (Tone lib) | `0.5` config; play fallback `0.2` for pwm |
-| FM modindex default | `2` (FMOscillator) | `2` |
-| FM modtype default | `square` | `sine` |
-| Per-voice volume | Supported (`vol`) | Ignored |
+| Default envelope | `0.01/0.01/0.5/0.01` after reset | `0.01/0.01/0.5/0.01` |
+| Pulse width default | `0.2` (Tone lib) | `0.2` |
+| FM modtype default | `square` | `square` |
+| Per-voice volume | Supported (`vol`) | Supported (`vol` / `volume`, all types) |
 | Partial waves | Tone OmniOscillator | Same command surface |
 
 ---
@@ -130,7 +129,7 @@ LFSR tap differences per type are in `generatenoisesynth()` (not user-configurab
 | `hollow` | 96 | 1.0 | true | 1.5 |
 | `noise` | 69 | 8.0 | true | 1.0 |
 
-Default envelope: same WASM global `0.01/0.05/0.6/0.08`.
+Default envelope: same WASM global `0.01/0.01/0.5/0.01`.
 
 ---
 
@@ -231,9 +230,9 @@ Algo:       harmonicity | harmonicity1-3 | modindex | modindex1-3
 |-------|-----------------|---------------|
 | Voice types | 8 creatable; `noise`/`hollow` error | All 10 types |
 | `#synth` no args | Applies `square` wave only | Same; full reset is `#synth restart` |
-| Default envelope | `0.01/0.01/0.5/0.01` on reset | `0.01/0.05/0.6/0.08` |
-| Per-voice volume | Yes | No |
-| Algo voice envelope | Per-operator + outer | Per-operator only |
+| Default envelope | `0.01/0.01/0.5/0.01` on reset | `0.01/0.01/0.5/0.01` |
+| Per-voice volume | Yes | Yes (all 10 types) |
+| Algo voice envelope | Per-operator + outer | Per-operator + outer (`algooutenvs`) |
 | Config storage | Tone instrument state | SAB arrays pushed to worklet |
 
 ---

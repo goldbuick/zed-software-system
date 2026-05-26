@@ -5,7 +5,7 @@ import { WASM_AUTOWAH_PLAY_CODE } from './wasmautowahplaycode'
 import { WASM_FX_PLAY_CODE } from './wasmfxplaycode'
 import { WASM_ENV_CODE } from './wasmenv'
 import { WASM_OSC_CFG_PLAY_CODE } from './wasmoscplaycode'
-import { WASM_SINE_VOICE_GAIN } from './wasmlevels'
+import { WASM_SINE_VOICE_GAIN, WASM_ALGO_OP_GAIN, WASM_ALGO_OUT_GAIN } from './wasmlevels'
 import { WASM_MASTER_PLAY_CODE } from './wasmmasterplaycode'
 import { WASM_NOISE_PLAY_CODE } from './noiseplaycode'
 import { NOISE_SAMPLE_COUNT, WASM_NOISE_SETUP_CODE } from './noisewave'
@@ -46,6 +46,7 @@ var sparkleenvs = [];
 var dootenvs = [];
 var algooscs = [];
 var algoenvs = [];
+var algooutenvs = [];
 var filtlow = [];
 var filthigh = [];
 
@@ -66,6 +67,8 @@ var voicecfgdecay = [];
 var voicecfgsustain = [];
 var voicecfgrelease = [];
 var voicecfgport = [];
+var voicecfgvolume = [];
+var synthgateprev = [];
 
 for (var vi = 0; vi < VOICE_COUNT; vi++) {
   freqs.push(440);
@@ -83,10 +86,11 @@ for (var vi = 0; vi < VOICE_COUNT; vi++) {
   dootpitch.push(1);
   playfreqs.push(440);
   voicecfgattack.push(0.01);
-  voicecfgdecay.push(0.05);
-  voicecfgsustain.push(0.6);
-  voicecfgrelease.push(0.08);
+  voicecfgdecay.push(0.01);
+  voicecfgsustain.push(0.5);
+  voicecfgrelease.push(0.01);
   voicecfgport.push(0);
+  voicecfgvolume.push(0);
 
   synthoscs.push(new Maximilian.maxiOsc());
   synthmods.push(new Maximilian.maxiOsc());
@@ -96,7 +100,9 @@ for (var vi = 0; vi < VOICE_COUNT; vi++) {
   sparklecars.push(new Maximilian.maxiOsc());
   dootoscs.push(new Maximilian.maxiOsc());
 
-  var env = zssenv(10, 50, 0.6, 80);
+  synthgateprev.push(0);
+
+  var env = zssenv(10, 10, 0.5, 10);
   envs.push(env);
 
   var bellenv = zssenv(10, 3000, 0.3, 6000);
@@ -107,6 +113,9 @@ for (var vi = 0; vi < VOICE_COUNT; vi++) {
 
   var dootenvelope = zssenv(1, 400, 0.01, 1400);
   dootenvs.push(dootenvelope);
+
+  var algooutenv = zssenv(10, 10, 0.5, 10);
+  algooutenvs.push(algooutenv);
 
   filtlow.push(new Maximilian.maxiFilter());
   filthigh.push(new Maximilian.maxiFilter());
@@ -159,9 +168,15 @@ function applyvoiceenvelope(i, attack, decay, sustain, release) {
     return;
   }
   if (type === 7) {
+    algooutenvs[i].setparams(atk, dec, sustain, rel);
     return;
   }
   envs[i].setparams(atk, dec, sustain, rel);
+}
+
+function voicevolumegain(i) {
+  var db = voicecfgvolume[i] || 0;
+  return Math.pow(10, db / 20);
 }
 
 function readvoicecfgsab() {
@@ -179,6 +194,7 @@ function readvoicecfgsab() {
     var sus = raw[base + 2];
     var rel = raw[base + 3];
     var port = raw[base + 4];
+    var vol = raw[base + 5];
     if (
       voicecfgattack[i] !== atk ||
       voicecfgdecay[i] !== dec ||
@@ -192,6 +208,7 @@ function readvoicecfgsab() {
       applyvoiceenvelope(i, atk, dec, sus, rel);
     }
     voicecfgport[i] = port;
+    voicecfgvolume[i] = vol;
   }
 }
 
@@ -208,7 +225,7 @@ function synthsource(i, freq, gate) {
   var o = synthoscs[i];
   var m = synthmods[i];
   var sig = 0;
-  var width = oscwidth[i] > 0 ? oscwidth[i] : 0.5;
+  var width = oscwidth[i] > 0 ? oscwidth[i] : 0.2;
   var modidx = oscmodindex[i] > 0 ? oscmodindex[i] : 2;
   var harm = oscharmonicity[i] > 0 ? oscharmonicity[i] : 1;
   var modhz = hz * (oscmodfreq[i] > 0 ? oscmodfreq[i] : 1);
@@ -216,10 +233,10 @@ function synthsource(i, freq, gate) {
 
   if (pcount > 0) {
     sig = oscpartialsynth(o, hz, pcount, oscpartials[i]);
-  } else if (osc === 0) { sig = oscwavewithphase(o, 0, hz, oscphase[i]); }
-  else if (osc === 1) { sig = oscwavewithphase(o, 1, hz, oscphase[i]); }
-  else if (osc === 2) { sig = oscwavewithphase(o, 2, hz, oscphase[i]); }
-  else if (osc === 3) { sig = oscwavewithphase(o, 3, hz, oscphase[i]); }
+  } else if (osc === 0) { sig = oscwavewithphase(o, 0, hz, oscphase[i], i); }
+  else if (osc === 1) { sig = oscwavewithphase(o, 1, hz, oscphase[i], i); }
+  else if (osc === 2) { sig = oscwavewithphase(o, 2, hz, oscphase[i], i); }
+  else if (osc === 3) { sig = oscwavewithphase(o, 3, hz, oscphase[i], i); }
   else if (osc === 4) { sig = o.pulse(hz, width); }
   else if (osc === 5) { sig = o.pulse(hz, width > 0 ? width : 0.2); }
   else if (osc === 10) {
@@ -240,20 +257,16 @@ function synthsource(i, freq, gate) {
     sig = o.saw(hz) * (0.5 + 0.5 * modsig);
   } else if (osc === 20) {
     var moddepth = modenvs[i].adsr(1, gate);
-    var fmmod = oscmodwave(m, oscmodtype[i], modhz) * modidx * moddepth * 5;
-    sig = o.sinewave(hz + fmmod * 0.05);
+    sig = fmcarriersample(o, m, oscmodtype[i], hz, modhz, modidx, moddepth, 1);
   } else if (osc === 21) {
     var moddepth = modenvs[i].adsr(1, gate);
-    var fmmod = oscmodwave(m, oscmodtype[i], modhz) * modidx * moddepth * 5;
-    sig = o.square(hz + fmmod * 0.05);
+    sig = fmcarriersample(o, m, oscmodtype[i], hz, modhz, modidx, moddepth, 0);
   } else if (osc === 22) {
     var moddepth = modenvs[i].adsr(1, gate);
-    var fmmod = oscmodwave(m, oscmodtype[i], modhz) * modidx * moddepth * 5;
-    sig = o.triangle(hz + fmmod * 0.05);
+    sig = fmcarriersample(o, m, oscmodtype[i], hz, modhz, modidx, moddepth, 2);
   } else if (osc === 23) {
     var moddepth = modenvs[i].adsr(1, gate);
-    var fmmod = oscmodwave(m, oscmodtype[i], modhz) * modidx * moddepth * 5;
-    sig = o.saw(hz + fmmod * 0.05);
+    sig = fmcarriersample(o, m, oscmodtype[i], hz, modhz, modidx, moddepth, 3);
   } else if (osc === 30) {
     var cnt = osccount[i] > 1 ? Math.round(osccount[i]) : 3;
     var spread = oscspread[i] > 0 ? oscspread[i] : 20;
@@ -300,6 +313,10 @@ function synthsource(i, freq, gate) {
 }
 
 function synthvoice(i, freq, gate) {
+  if (gate && !synthgateprev[i]) {
+    voicephasestep[i] = 0;
+  }
+  synthgateprev[i] = gate;
   return synthsource(i, glidefreq(i), gate) * envs[i].adsr(1, gate);
 }
 
@@ -345,11 +362,12 @@ function algovoice(i, freq, gate, algo) {
   var types = algoosctype[i];
   var ops = algooscs[i];
   var envs4 = algoenvs[i];
+  var opgain = ${WASM_ALGO_OP_GAIN};
 
-  var raw1 = algopwave(ops[0], types[0], hz * h1);
-  var raw2 = algopwave(ops[1], types[1], hz * h2);
-  var raw3 = algopwave(ops[2], types[2], hz * h3);
-  var raw4 = algopwave(ops[3], types[3], hz);
+  var raw1 = algopwave(ops[0], types[0], hz * h1) * opgain;
+  var raw2 = algopwave(ops[1], types[1], hz * h2) * opgain;
+  var raw3 = algopwave(ops[2], types[2], hz * h3) * opgain;
+  var raw4 = algopwave(ops[3], types[3], hz) * opgain;
 
   var op1 = raw1 * envs4[0].adsr(1, gate);
   var op2 = raw2 * envs4[1].adsr(1, gate);
@@ -377,12 +395,12 @@ function algovoice(i, freq, gate, algo) {
   }
 
   var out = op4;
-  if (algo === 4) { out = (op2 + op4) * 0.5; }
-  else if (algo === 5) { out = (op2 + op3 + op4) / 3; }
+  if (algo === 4) { out = op2 + op4; }
+  else if (algo === 5) { out = op2 + op3 + op4; }
   else if (algo === 6) { out = op2; }
-  else if (algo === 7) { out = (op1 + op2 + op3 + op4) * 0.25; }
+  else if (algo === 7) { out = op1 + op2 + op3 + op4; }
 
-  return out * 0.35;
+  return out * algooutenvs[i].adsr(1, gate) * ${WASM_ALGO_OUT_GAIN};
 }
 
 function voiceout(i) {
@@ -390,15 +408,18 @@ function voiceout(i) {
   var gate = gates[i];
   var type = types[i];
   var algo = algos[i];
+  var out = 0;
 
-  if (type === 0) { return synthvoice(i, freq, gate); }
-  if ((type >= 1 && type <= 4) || type === 8 || type === 9) {
-    return noisevoice(i, type, freq, gate);
+  if (type === 0) { out = synthvoice(i, freq, gate); }
+  else if ((type >= 1 && type <= 4) || type === 8 || type === 9) {
+    out = noisevoice(i, type, freq, gate);
   }
-  if (type === 5) { return bellsvoice(i, freq, gate); }
-  if (type === 6) { return dootvoice(i, freq, gate); }
-  if (type === 7) { return algovoice(i, freq, gate, algo); }
-  return synthvoice(i, freq, gate);
+  else if (type === 5) { out = bellsvoice(i, freq, gate); }
+  else if (type === 6) { out = dootvoice(i, freq, gate); }
+  else if (type === 7) { out = algovoice(i, freq, gate, algo); }
+  else { out = synthvoice(i, freq, gate); }
+
+  return out * voicevolumegain(i);
 }
 
 function readvoicessab() {

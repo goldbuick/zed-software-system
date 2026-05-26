@@ -54,8 +54,14 @@ export const WASM_MASTER_TRIM_DB = 0
 /** Tone sidechain makeup (+24 dB) minus headroom; calibrates #vol 80 without cranking to 500. */
 export const WASM_MASTER_MAKEUP_DB = 22
 
-/** Razzle wet send — Tone vibrato wet is 0.1; keep modulation subtle. */
-export const WASM_RAZZLE_WET_MIX = 0.1
+/** Tone AlgoSynth per-operator volume (−10 dB). */
+export const WASM_ALGO_OP_GAIN = Math.pow(10, -10 / 20)
+
+/** Final algo bus trim — preserves legacy WASM loudness after parallel routing fix. */
+export const WASM_ALGO_OUT_GAIN = 0.18
+
+/** FM modindex → carrier Hz scale (calibrated vs Tone FMOscillator). */
+export const WASM_FM_HZ_SCALE = 1
 
 /** Tape hiss level — Tone pink noise at about −50 dB. */
 export const WASM_RAZZLE_HISS_GAIN = 0.0005

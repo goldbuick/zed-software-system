@@ -2,10 +2,12 @@ import {
   WASM_OSC_CFG_IDX,
   WASM_OSC_CFG_STRIDE,
 } from './wasmoscconfigsab'
+import { WASM_FM_HZ_SCALE } from './wasmlevels'
 
 /** Per-voice osc tuning from zss_osccfg SAB — Tone SYNTH param parity. */
 export const WASM_OSC_CFG_PLAY_CODE = `
 var OSC_CFG_STRIDE = ${WASM_OSC_CFG_STRIDE};
+var WASM_FM_HZ_SCALE = ${WASM_FM_HZ_SCALE};
 var oscphase = [];
 var oscwidth = [];
 var oscmodfreq = [];
@@ -25,10 +27,11 @@ var oscmodenvprevattack = [];
 var oscmodenvprevdecay = [];
 var oscmodenvprevsustain = [];
 var oscmodenvprevrelease = [];
+var voicephasestep = [];
 
 for (var oi = 0; oi < VOICE_COUNT; oi++) {
   oscphase.push(0);
-  oscwidth.push(0.5);
+  oscwidth.push(0.2);
   oscmodfreq.push(1);
   oscharmonicity.push(1);
   oscmodindex.push(2);
@@ -40,12 +43,13 @@ for (var oi = 0; oi < VOICE_COUNT; oi++) {
   oscmodenvdecay.push(0.01);
   oscmodenvsustain.push(1);
   oscmodenvrelease.push(0.08);
-  oscmodtype.push(1);
+  oscmodtype.push(0);
   modenvs.push(zssenv(10, 10, 1000, 500));
   oscmodenvprevattack.push(0);
   oscmodenvprevdecay.push(0);
   oscmodenvprevsustain.push(0);
   oscmodenvprevrelease.push(0);
+  voicephasestep.push(0);
 }
 
 function readosccfgsab() {
@@ -111,13 +115,41 @@ function oscbasicwave(oscobj, typeid, hz) {
   return oscobj.square(hz);
 }
 
-function oscwavewithphase(oscobj, typeid, hz, phase) {
-  if (phase === 0) {
+function oscwavefromphase(typeid, phase01) {
+  var p = phase01 - Math.floor(phase01);
+  if (typeid === 1) {
+    return Math.sin(p * 6.28318530718);
+  }
+  if (typeid === 2) {
+    var tri = p < 0.5 ? p * 4 - 1 : 3 - p * 4;
+    return tri;
+  }
+  if (typeid === 3) {
+    return p * 2 - 1;
+  }
+  return p < 0.5 ? 1 : -1;
+}
+
+function oscwavewithphase(oscobj, typeid, hz, phase, vi) {
+  if (phase === 0 && voicephasestep[vi] === 0) {
     return oscbasicwave(oscobj, typeid, hz);
   }
-  var ph = phase * 6.28318530718;
-  if (typeid === 1) { return Math.sin(ph + hz * 0.0001); }
+  var sr = typeof sampleRate !== 'undefined' ? sampleRate : 44100;
+  voicephasestep[vi] += hz / sr;
+  var p = voicephasestep[vi] + phase;
+  if (typeid === 0 || typeid === 1 || typeid === 2 || typeid === 3) {
+    return oscwavefromphase(typeid, p);
+  }
   return oscbasicwave(oscobj, typeid, hz);
+}
+
+function fmcarriersample(carrier, modulator, modtypeid, hz, modhz, modidx, moddepth, carriertype) {
+  var mod = oscmodwave(modulator, modtypeid, modhz) * modidx * moddepth;
+  var fmhertz = hz + mod * hz * WASM_FM_HZ_SCALE;
+  if (carriertype === 1) { return carrier.sinewave(fmhertz); }
+  if (carriertype === 2) { return carrier.triangle(fmhertz); }
+  if (carriertype === 3) { return carrier.saw(fmhertz); }
+  return carrier.square(fmhertz);
 }
 
 function oscpartialsynth(oscobj, hz, count, partials) {

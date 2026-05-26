@@ -47,7 +47,7 @@ export type WASM_OSC_CONFIG = {
 
 export const DEFAULT_WASM_OSC_CONFIG: WASM_OSC_CONFIG = {
   phase: 0,
-  width: 0.5,
+  width: 0.2,
   modfreq: 1,
   harmonicity: 1,
   modindex: 2,
@@ -56,7 +56,7 @@ export const DEFAULT_WASM_OSC_CONFIG: WASM_OSC_CONFIG = {
   partialcount: 0,
   partials: [0, 0, 0, 0, 0, 0, 0, 0],
   modenv: { attack: 0.01, decay: 0.01, sustain: 1, release: 0.5 },
-  modtype: 1,
+  modtype: 0,
 }
 
 export function defaultwasmoscconfig(): WASM_OSC_CONFIG[] {

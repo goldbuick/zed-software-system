@@ -1,5 +1,6 @@
 import { SOURCE_TYPE } from 'zss/feature/synth/shared/sourcetype'
 
+import { DEFAULT_WASM_OSC_CONFIG } from '../wasmoscconfigsab'
 import { WASM_OSC_TYPE, parsemodtype, parsewasmosc } from '../wasmosctype'
 import { initwasmvoicesab } from '../maxisynth'
 import {
@@ -32,6 +33,11 @@ describe('wasmosctype', () => {
     expect(parsewasmosc('square')).toBe(WASM_OSC_TYPE.SQUARE)
     expect(parsewasmosc('fmsquare')).toBe(WASM_OSC_TYPE.FM_SQUARE)
     expect(parsemodtype('triangle')).toBe(WASM_OSC_TYPE.TRIANGLE)
+  })
+
+  it('defaults modtype to square for Tone AM/FM parity', () => {
+    expect(DEFAULT_WASM_OSC_CONFIG.modtype).toBe(WASM_OSC_TYPE.SQUARE)
+    expect(DEFAULT_WASM_OSC_CONFIG.width).toBe(0.2)
   })
 })
 
@@ -95,6 +101,27 @@ describe('wasmvoiceconfig', () => {
     expect(merged[11]).toBe(WASM_OSC_TYPE.SINE)
   })
 
+  it('maps per-voice volume for all voice types', () => {
+    const voices = defaultwasmvoicestate()
+    expect(applyvoiceconfig(voices, 0, 'volume', -6)).toBe(true)
+    expect(voices[0].volume).toBe(-6)
+    applyvoiceconfig(voices, 1, 'noise', '')
+    expect(applyvoiceconfig(voices, 1, 'vol', 3)).toBe(true)
+    expect(voices[1].volume).toBe(3)
+  })
+
+  it('restart resets envelope to Tone ZSS defaults', () => {
+    const voices = defaultwasmvoicestate()
+    applyvoiceconfig(voices, 0, 'envelope', [0.5, 0.5, 0.5, 0.5])
+    applyvoiceconfig(voices, 0, 'restart', '')
+    expect(voices[0].envelope).toEqual({
+      attack: 0.01,
+      decay: 0.01,
+      sustain: 0.5,
+      release: 0.01,
+    })
+  })
+
   it('maps envelope and portamento into voice cfg sab', () => {
     const voices = defaultwasmvoicestate()
     expect(
@@ -115,6 +142,7 @@ describe('wasmvoiceconfig', () => {
     expect(sab[2]).toBe(0.4)
     expect(sab[3]).toBe(0.2)
     expect(sab[4]).toBe(0.25)
+    expect(sab[5]).toBe(0)
   })
 
   it('portamento applies only to synth and algo voices', () => {
@@ -203,10 +231,12 @@ describe('wasmvoiceconfig', () => {
       },
     }
     initwasmvoicesab(maxi as any)
-    expect(sends.zss_voicecfg).toHaveLength(40)
+    expect(sends.zss_voicecfg).toHaveLength(48)
     expect(sends.zss_voicecfg?.[0]).toBe(0.01)
-    expect(sends.zss_voicecfg?.[2]).toBe(0.6)
-    expect(sends.zss_voicecfg?.[4]).toBe(0)
+    expect(sends.zss_voicecfg?.[1]).toBe(0.01)
+    expect(sends.zss_voicecfg?.[2]).toBe(0.5)
+    expect(sends.zss_voicecfg?.[3]).toBe(0.01)
+    expect(sends.zss_voicecfg?.[5]).toBe(0)
   })
 
   it('initwasmvoicesab seeds SYNTH square defaults on sab', () => {

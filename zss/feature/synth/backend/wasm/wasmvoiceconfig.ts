@@ -10,6 +10,7 @@ import type { WASM_OSC_CONFIG } from './wasmoscconfigsab'
 import { WASM_OSC_TYPE, parsewasmosc } from './wasmosctype'
 import {
   DEFAULT_WASM_ENVELOPE,
+  DEFAULT_WASM_VOICE_VOLUME_DB,
   type WASM_VOICE_ENVELOPE,
 } from './wasmvoicecfgsab'
 
@@ -21,6 +22,7 @@ export type WASM_VOICE_STATE = {
   osc: WASM_OSC_TYPE
   envelope: WASM_VOICE_ENVELOPE
   portamento: number
+  volume: number
 }
 
 function defaultvoice(): WASM_VOICE_STATE {
@@ -30,6 +32,7 @@ function defaultvoice(): WASM_VOICE_STATE {
     osc: WASM_OSC_TYPE.SQUARE,
     envelope: { ...DEFAULT_WASM_ENVELOPE },
     portamento: 0,
+    volume: DEFAULT_WASM_VOICE_VOLUME_DB,
   }
 }
 
@@ -124,6 +127,13 @@ export function applywasmvoiceconfig(
   }
 
   switch (config) {
+    case 'vol':
+    case 'volume':
+      if (isnumber(value)) {
+        voicestate[index].volume = value
+        return true
+      }
+      return false
     case 'env':
     case 'envelope':
       if (isarray(value) && value.length >= 4) {

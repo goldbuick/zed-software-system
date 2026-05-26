@@ -47,6 +47,7 @@
     "aws:ec2:docker-run": "sh scripts/aws-ec2-docker-run.sh",
     "do:droplet:docker-run": "sh scripts/digitalocean-docker-run.sh",
     "docs:links": "git ls-files '*.md' | xargs -n1 ./node_modules/.bin/markdown-link-check -q -c .markdown-link-check.json",
+    "regen:parity-fixtures": "npx tsx scripts/regen-synth-parity-fixtures.mts",
     "postinstall": "patch-package"
   },
   "devDependencies": {
@@ -126,6 +127,7 @@
     "source-map": "^0.7.4",
     "three": "^0.176.0",
     "tonal": "^6.4.1",
+    "tone": "^15.1.22",
     "ts-extras": "^0.13.0",
     "ts-jest": "^29.1.3",
     "ts-node": "^10.9.2",
