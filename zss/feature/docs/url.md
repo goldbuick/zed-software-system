@@ -15,7 +15,10 @@
 | `znslogin` | `email`, `namespace` | Start ZNS OTP login |
 | `znslogincode` | `email`, `code` | Confirm OTP (returns `token`) |
 | `znslist` | `email`, `token` | List keys/values |
-| `znsset` | `email`, `token`, `key`, `value` | Set pair (`peer` = PeerJS id, else bytes hash) |
+| `znsset` | `email`, `token`, `key`, `value` | Set pair: `peer` key, bytes hash, or text (auto-detect) |
+| `fetchznstext` | `namespace`, `key` | GET `https://{namespace}.zns.zed.cafe/{key}` markdown body |
+| `znsautopublishpeer` | `peerid`, `player` | Publish peer id to ZNS `peer` key when logged in |
+| `znspersistlogin` / `znspersistlogout` | — | IDB session for ZNS |
 | `znsdelete` | `email`, `token`, `key` | Delete pair |
 
 ## Consumed By

@@ -14,7 +14,7 @@ import {
   runterminalbookmarkclibyid,
 } from 'zss/feature/bookmarks'
 import { isclimode } from 'zss/feature/detect'
-import { fetchwiki } from 'zss/feature/fetchwiki'
+import { fetchrefscrolltext } from 'zss/feature/fetchrefscrolltext'
 import { getfingerprint } from 'zss/feature/fingerprint'
 import {
   AGENTS_ROSTER_STORAGE_KEY,
@@ -132,13 +132,17 @@ function writesession(key: string, value: MAYBE<string>) {
   }
 }
 
-async function writewikilink() {
-  workstatus(register, myplayerid, 'wiki fetch')
+async function writeclilink() {
+  workstatus(register, myplayerid, 'cli help')
   try {
-    const markdowntext = await fetchwiki('cli')
-    terminalwritemarkdownlines(myplayerid, markdowntext)
+    const markdowntext = await fetchrefscrolltext('cliscroll')
+    if (markdowntext.trim()) {
+      terminalwritemarkdownlines(myplayerid, markdowntext)
+    } else {
+      apierror(register, myplayerid, 'help', 'cli doc not found')
+    }
   } catch (err: any) {
-    apierror(register, myplayerid, 'wiki', err?.message ?? err)
+    apierror(register, myplayerid, 'help', err?.message ?? err)
   }
 }
 
@@ -243,7 +247,7 @@ function terminalinclayout(inc: boolean) {
 async function loadmem(books: string | BOOK[]) {
   if (!books || books.length === 0) {
     apierror(register, myplayerid, 'content', 'no content found')
-    await writewikilink()
+    await writeclilink()
     vmzsswords(register, myplayerid)
     registerterminalfull(register, myplayerid)
     await writehelphint()
@@ -407,7 +411,7 @@ export const register = createdevice(
           })
         } else {
           doasync(register, message.player, async () => {
-            await writewikilink()
+            await writeclilink()
             writepages()
             // full open on login fail
             registerterminalfull(register, myplayerid)
@@ -798,6 +802,37 @@ export const register = createdevice(
                       `$green${name} has been exported for upload to itch.io`,
                     ),
                   )
+                }
+                break
+              }
+              case 'zns-text': {
+                const [, , znsemail, znstoken, filename] = message.data
+                if (
+                  isstring(content) &&
+                  isstring(znsemail) &&
+                  isstring(znstoken) &&
+                  isstring(filename)
+                ) {
+                  write(
+                    register,
+                    message.player,
+                    zsstextline(`publishing code to ${filename}`),
+                  )
+                  const result = await znsset(
+                    znsemail,
+                    znstoken,
+                    filename,
+                    content,
+                  )
+                  if (result.success) {
+                    write(
+                      register,
+                      message.player,
+                      zsstextline(
+                        `$green${filename} code published to zns`,
+                      ),
+                    )
+                  }
                 }
                 break
               }

@@ -1,6 +1,9 @@
 /**
  * ZNS: email + OTP login, namespace claim, long-lived token, KV pairs.
- * Public: *.zns.zed.cafe/{key} -> 302 to bytes (hash) or zed join (peer id at /peer).
+ * Public *.zns.zed.cafe/{key}:
+ *   peer  -> 302 zed join
+ *   bytes -> 302 bytes.zed.cafe/{hash}
+ *   text  -> 200 text/markdown body
  */
 
 const ZNS_PEER_KEY = 'peer'
@@ -24,6 +27,14 @@ const PEER_ID_RE = /^[a-zA-Z0-9_-]{4,256}$/
 
 const NS_RE = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/
 const PATH_KEY_RE = /^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?$/
+
+const TEXT_MAX_BYTES = 512 * 1024
+
+const tenantcorsheaders = {
+  'Access-Control-Allow-Headers': '*',
+  'Access-Control-Allow-Methods': 'GET, HEAD',
+  'Access-Control-Allow-Origin': '*',
+}
 
 function flatstr(value) {
   return (value ?? '').toString().trim().toLowerCase()
@@ -114,6 +125,32 @@ function normalizebytesvalue(raw) {
     return s
   }
   return null
+}
+
+function validatetextvalue(raw) {
+  const s = String(raw ?? '')
+  if (!s.trim()) {
+    return null
+  }
+  const bytes = new TextEncoder().encode(s)
+  if (bytes.length > TEXT_MAX_BYTES) {
+    return null
+  }
+  return s
+}
+
+function resolvepairkind(pathkey, stored, metadata) {
+  const kind = metadata?.kind
+  if (kind === 'peer' || kind === 'bytes' || kind === 'text') {
+    return kind
+  }
+  if (pathkey === ZNS_PEER_KEY) {
+    return 'peer'
+  }
+  if (typeof stored === 'string' && BYTES_HASH_RE.test(stored)) {
+    return 'bytes'
+  }
+  return 'text'
 }
 
 async function sendznscodeemail(apikey, email, code) {
@@ -302,15 +339,25 @@ async function handleset(request, env) {
     })
   } else {
     const hash = normalizebytesvalue(rawvalue)
-    if (!hash) {
-      return new Response(JSON.stringify({ message: 'invalid bytes hash' }), {
-        status: 400,
-        headers: corsheaders,
+    if (hash) {
+      await env.zns.put(pairstoragekey(namespace, pathkey), hash, {
+        metadata: { kind: 'bytes', updatedAt: Date.now() },
+      })
+    } else {
+      const text = validatetextvalue(rawvalue)
+      if (!text) {
+        return new Response(
+          JSON.stringify({ message: 'invalid bytes hash or text content' }),
+          {
+            status: 400,
+            headers: corsheaders,
+          },
+        )
+      }
+      await env.zns.put(pairstoragekey(namespace, pathkey), text, {
+        metadata: { kind: 'text', updatedAt: Date.now() },
       })
     }
-    await env.zns.put(pairstoragekey(namespace, pathkey), hash, {
-      metadata: { kind: 'bytes', updatedAt: Date.now() },
-    })
   }
   return new Response(JSON.stringify({ success: true }), {
     status: 200,
@@ -401,8 +448,20 @@ async function handletenantread(request, env, namespace) {
   if (stored == null || stored === '') {
     return new Response('not found', { status: 404 })
   }
+  const kind = resolvepairkind(pathkey, stored, row?.metadata)
+  if (kind === 'text') {
+    const headers = {
+      ...tenantcorsheaders,
+      'Content-Type': 'text/markdown; charset=utf-8',
+      'Cache-Control': 'public, max-age=60',
+    }
+    if (request.method === 'HEAD') {
+      return new Response(null, { status: 200, headers })
+    }
+    return new Response(stored, { status: 200, headers })
+  }
   let location
-  if (pathkey === ZNS_PEER_KEY) {
+  if (kind === 'peer') {
     location = `${joinorigin(env)}/join/#${stored}`
   } else {
     location = `${bytesorigin(env)}/${stored}`

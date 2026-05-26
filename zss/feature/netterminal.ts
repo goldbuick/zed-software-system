@@ -23,6 +23,7 @@ import {
   netmsgtounit8,
 } from 'zss/feature/peerzstdwire'
 import { storagereadnetid, storagewritenetid } from 'zss/feature/storage'
+import { znsautopublishpeer } from 'zss/feature/url'
 import { ensurezstdwasm } from 'zss/feature/zstdwasm'
 import { doasync } from 'zss/mapping/func'
 import { createinfohash } from 'zss/mapping/guid'
@@ -47,6 +48,13 @@ export function readsubscribetopic() {
 }
 
 let networkpeer: MAYBE<Peer>
+
+export function readnetworkpeerid(): string | undefined {
+  if (ispresent(networkpeer) && networkpeer.open && networkpeer.id) {
+    return networkpeer.id
+  }
+  return undefined
+}
 
 const SIGNAL_HANDSHAKE_TIMEOUT_MS = 20_000
 const SIGNAL_RETRY_BASE_MS = 1_000
@@ -342,6 +350,12 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
         }
       } else {
         apilog(SOFTWARE, player, `hosting topic ${subscribetopic}`)
+      }
+      const peerid = networkpeer?.id
+      if (peerid) {
+        doasync(SOFTWARE, player, async () => {
+          await znsautopublishpeer(peerid, player)
+        })
       }
     })
 

@@ -41,8 +41,8 @@ jest.mock('zss/gadget/data/scrollwritelines', () => ({
   scrolllinkescapefrag: (s: string) => s.replaceAll(';', '$59'),
 }))
 
-jest.mock('zss/feature/fetchwiki', () => ({
-  fetchwiki: jest.fn(() => Promise.resolve('')),
+jest.mock('zss/feature/fetchrefscrolltext', () => ({
+  fetchrefscrolltext: jest.fn(() => Promise.resolve('')),
 }))
 
 jest.mock('zss/gadget/data/api', () => ({

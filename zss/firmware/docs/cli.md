@@ -88,7 +88,7 @@ Firmware command signatures stay short. Longer inline help for autocomplete hint
 
 | Command | Args | Description |
 |---------|------|-------------|
-| `zns` | … | Login flow: `#zns <email> <namespace>`, then `#zns <code>`. Subcommands: `restart`, `list`, `pub`/`publish`, `del`/`delete` |
+| `zns` | … | Login: `#zns <email> <namespace>`, then `#zns <code>`. Subcommands: `restart`, `list`, `publish bytes <key>`, `publish code <codepage>`, `del`/`delete`. Peer id auto-published to key `peer`. |
 
 ### Agent
 

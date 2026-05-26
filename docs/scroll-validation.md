@@ -25,7 +25,7 @@ Do once per release or before a scroll-affecting merge:
 
 1. **Help / refscroll:** Open #help or meta menu; confirm refscroll menu renders.
 2. **Sub-scrolls:** From refscroll, open object list, terrain list, char, color, and bg sub-scrolls; confirm each opens without errors.
-3. **ROM + wiki:** Open one ROM-backed refscroll page and one wiki-backed page (if online).
+3. **ROM + ZNS docs:** Open one ROM-backed refscroll page; open a path only on `docs.zns.zed.cafe` (after seed) or confirm “doc not found” when missing.
 4. **Bookmarks:** Open terminal and editor bookmark scrolls; exercise a hotkey link and a delete link.
 5. **Zip import:** Upload a small zip with ASCII names, one entry with a **space in the filename**, and (if possible) **`;` in the name**. Toggle YES on at least one file, use **import selected**, and note that import triggers delayed logout (see `parsezipfilelist` in `zss/feature/parse/file.ts`).
 

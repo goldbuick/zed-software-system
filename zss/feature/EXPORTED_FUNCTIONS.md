@@ -269,7 +269,7 @@ Functions for exporting and publishing content.
 
 ## Utilities
 
-**Files:** `keyboard.ts`, `speechtotext.ts`, `fetchwiki.ts`, `storage.ts`
+**Files:** `keyboard.ts`, `speechtotext.ts`, `fetchrefscrolltext.ts`, `storage.ts`
 
 Various utility functions for browser APIs and external services.
 
@@ -281,8 +281,9 @@ Various utility functions for browser APIs and external services.
   - `startListening()` - Start speech recognition
   - `stopListening()` - Stop speech recognition
 
-### Wiki
-- `fetchwiki(pagepath)` - Fetch markdown content from GitHub wiki
+### Refscroll / ZNS docs
+- `fetchrefscrolltext(pagepath)` - ROM `refscroll:*` then `docs.zns.zed.cafe` text
+- `fetchznstext(namespace, key)` - Public ZNS markdown GET
 
 ### Storage
 - `storagereadconfigdefault(name)` - Read default configuration value for a setting

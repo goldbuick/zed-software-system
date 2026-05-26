@@ -10,10 +10,14 @@ import {
 import { SOFTWARE } from 'zss/device/session'
 import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
 import { lastinputtime } from 'zss/device/vm/state'
-import { fetchwiki } from 'zss/feature/fetchwiki'
+import { fetchrefscrolltext } from 'zss/feature/fetchrefscrolltext'
 import { parsezipfilelist } from 'zss/feature/parse/file'
 import { scrollwritemarkdownlines } from 'zss/feature/parse/markdownscroll'
-import { zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
+import {
+  zsstextline,
+  zsstexttape,
+  zsszedlinkline,
+} from 'zss/feature/zsstextui'
 import { gadgetstate } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { doasync } from 'zss/mapping/func'
@@ -163,8 +167,20 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
                 'loading $7$7$7',
                 'refscroll',
               )
-              const markdowntext = await fetchwiki(path)
-              scrollwritemarkdownlines(message.player, markdowntext, path)
+              const markdowntext = await fetchrefscrolltext(path)
+              if (!markdowntext.trim()) {
+                scrollwritelines(
+                  message.player,
+                  path,
+                  zsstexttape(
+                    zsstextline(`$red doc not found`),
+                    zsstextline(`$white${path}`),
+                  ),
+                  'refscroll',
+                )
+              } else {
+                scrollwritemarkdownlines(message.player, markdowntext, path)
+              }
             } else {
               scrollwritemarkdownlines(message.player, content, path)
             }

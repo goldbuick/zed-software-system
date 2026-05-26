@@ -1,5 +1,6 @@
 import humanid from 'human-id'
 import {
+  del as idbdel,
   get as idbget,
   getMany as idbgetmany,
   update as idbupdate,
@@ -251,6 +252,48 @@ export async function storagereadnetid(): Promise<string | undefined> {
 
 export async function storagewritenetid(netid: string) {
   return writeidb('netid', () => netid)
+}
+
+export async function storagereadznsemail(): Promise<string | undefined> {
+  return readidb<string>('znsemail')
+}
+
+export async function storagewriteznsemail(email: string) {
+  return writeidb('znsemail', () => email)
+}
+
+export async function storagereadznstoken(): Promise<string | undefined> {
+  return readidb<string>('znstoken')
+}
+
+export async function storagewritznstoken(token: string) {
+  return writeidb('znstoken', () => token)
+}
+
+export async function storagereadznsnamespace(): Promise<string | undefined> {
+  return readidb<string>('znsnamespace')
+}
+
+export async function storagewriteznsnamespace(namespace: string) {
+  return writeidb('znsnamespace', () => namespace)
+}
+
+export async function storagereadznssession(): Promise<
+  { email: string; token: string; namespace: string } | undefined
+> {
+  const email = await storagereadznsemail()
+  const token = await storagereadznstoken()
+  const namespace = await storagereadznsnamespace()
+  if (!email || !token || !namespace) {
+    return undefined
+  }
+  return { email, token, namespace }
+}
+
+export async function storagewriteznsclear() {
+  await idbdel('znsemail')
+  await idbdel('znstoken')
+  await idbdel('znsnamespace')
 }
 
 let currenturlhash = ''

@@ -56,6 +56,7 @@ write user text input into a flagorstat
 copies given content into the clipboard
 
 - !openit url; Label
+- !openit zns slug; ZNS docs scroll (ROM or docs.zns.zed.cafe)
 
 opens the given url in a new browser tab
 

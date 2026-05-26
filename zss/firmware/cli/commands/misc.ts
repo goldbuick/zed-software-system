@@ -1,24 +1,60 @@
 import { registerscreenshot, vmpublish } from 'zss/device/api'
+import { parsetarget } from 'zss/device'
 import { SOFTWARE } from 'zss/device/session'
 import {
   formatboardfortext,
   formatlookfortext,
 } from 'zss/feature/heavy/formatstate'
+import { readnetworkpeerid } from 'zss/feature/netterminal'
+import {
+  storagereadznsemail,
+  storagereadznsnamespace,
+  storagereadznssession,
+} from 'zss/feature/storage'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
-import { znsdelete, znslist, znslogin, znslogincode } from 'zss/feature/url'
+import {
+  znsautopublishpeer,
+  znsdelete,
+  znslist,
+  znslogin,
+  znslogincode,
+  znsnormalizepathkey,
+  znsurlforlistrow,
+  znspersistlogin,
+  znspersistlogout,
+} from 'zss/feature/url'
 import { write, writeopenit } from 'zss/feature/writeui'
 import { zsstextline, zsstexttape } from 'zss/feature/zsstextui'
 import { FIRMWARE } from 'zss/firmware'
 import { doasync } from 'zss/mapping/func'
-import { isarray } from 'zss/mapping/types'
+import { isarray, ispresent } from 'zss/mapping/types'
 import { isemail } from 'zss/mapping/validate'
+import {
+  memoryreadbookbyaddress,
+  memoryreadfirstbook,
+} from 'zss/memory/session'
+import { memoryreadcodepage } from 'zss/memory/bookoperations'
+import { memoryreadcodepagename } from 'zss/memory/codepageoperations'
 import { memoryreadboardstatequery } from 'zss/memory/boardstatequery'
 import { memoryreadlookstatequery } from 'zss/memory/lookstatequery'
 import { READ_CONTEXT, readargs, readargsuntilend } from 'zss/words/reader'
 import { ARG_TYPE, NAME } from 'zss/words/types'
 
-let znstoken = ''
-let znsemail = ''
+async function znsensureloggedin(): Promise<
+  { email: string; token: string; namespace: string } | undefined
+> {
+  const session = await storagereadznssession()
+  if (session) {
+    return session
+  }
+  const email = await storagereadznsemail()
+  const token = await storagereadznstoken()
+  const namespace = await storagereadznsnamespace()
+  if (email && token && namespace) {
+    return { email, token, namespace }
+  }
+  return undefined
+}
 
 export function registermisccommands(fw: FIRMWARE): FIRMWARE {
   return fw
@@ -54,177 +90,271 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
       (_, words) => {
         const [action, ii] = readargs(words, 0, [ARG_TYPE.ANY])
         switch (NAME(action)) {
-          default:
-            if (!znsemail) {
-              const [maybeemail, maybenamespace] = readargs(words, 0, [
-                ARG_TYPE.NAME,
-                ARG_TYPE.NAME,
-              ])
-              if (isemail(maybeemail) && maybenamespace) {
-                doasync(SOFTWARE, READ_CONTEXT.elementfocus, async () => {
-                  write(
-                    SOFTWARE,
-                    READ_CONTEXT.elementfocus,
-                    zsstextline(
-                      `starting login with $green${maybeemail} ${maybenamespace}`,
-                    ),
-                  )
-                  const result = await znslogin(maybeemail, maybenamespace)
-                  if (result.success) {
-                    znsemail = maybeemail
+          default: {
+            doasync(SOFTWARE, READ_CONTEXT.elementfocus, async () => {
+              const session = await znsensureloggedin()
+              if (!session?.token) {
+                const pendingemail = await storagereadznsemail()
+                if (!pendingemail) {
+                  const [maybeemail, maybenamespace] = readargs(words, 0, [
+                    ARG_TYPE.NAME,
+                    ARG_TYPE.NAME,
+                  ])
+                  if (isemail(maybeemail) && maybenamespace) {
                     write(
                       SOFTWARE,
                       READ_CONTEXT.elementfocus,
-                      zsstextline(`check your email for #zns <code>`),
+                      zsstextline(
+                        `starting login with $green${maybeemail} ${maybenamespace}`,
+                      ),
+                    )
+                    const result = await znslogin(maybeemail, maybenamespace)
+                    if (result.success) {
+                      await znspersistlogin(maybeemail, maybenamespace)
+                      write(
+                        SOFTWARE,
+                        READ_CONTEXT.elementfocus,
+                        zsstextline(`check your email for #zns <code>`),
+                      )
+                    }
+                  } else {
+                    write(
+                      SOFTWARE,
+                      READ_CONTEXT.elementfocus,
+                      zsstextline(
+                        `please login with $green#zns <email> <namespace>`,
+                      ),
                     )
                   }
-                })
+                } else {
+                  write(
+                    SOFTWARE,
+                    READ_CONTEXT.elementfocus,
+                    zsstextline(`confirming login with $green${action}`),
+                  )
+                  const result = await znslogincode(pendingemail, action)
+                  if (result.success && result.token) {
+                    const namespace =
+                      (await storagereadznsnamespace()) ?? ''
+                    await znspersistlogin(
+                      pendingemail,
+                      namespace,
+                      result.token,
+                    )
+                    write(
+                      SOFTWARE,
+                      READ_CONTEXT.elementfocus,
+                      zsstextline(`$green${pendingemail} has been logged in`),
+                    )
+                    const peerid = readnetworkpeerid()
+                    if (peerid) {
+                      await znsautopublishpeer(
+                        peerid,
+                        READ_CONTEXT.elementfocus,
+                      )
+                    }
+                  }
+                }
               } else {
                 write(
                   SOFTWARE,
                   READ_CONTEXT.elementfocus,
                   zsstextline(
-                    `please login with $green#zns <email> <namespace>`,
+                    `you are already logged in, use #zns restart to login again`,
                   ),
                 )
               }
-            } else if (!znstoken) {
-              doasync(SOFTWARE, READ_CONTEXT.elementfocus, async () => {
-                write(
-                  SOFTWARE,
-                  READ_CONTEXT.elementfocus,
-                  zsstextline(`confirming login with $green${action}`),
-                )
-                const result = await znslogincode(znsemail, action)
-                if (result.success && result.token) {
-                  znstoken = `${result.token}`
-                  write(
-                    SOFTWARE,
-                    READ_CONTEXT.elementfocus,
-                    zsstextline(`$green${znsemail} has been logged in`),
-                  )
-                }
-              })
-            } else {
-              write(
+            })
+            break
+          }
+          case 'restart':
+            doasync(SOFTWARE, READ_CONTEXT.elementfocus, async () => {
+              await znspersistlogout()
+              terminalwritelines(
                 SOFTWARE,
                 READ_CONTEXT.elementfocus,
-                zsstextline(
-                  `you are already logged in, use #zns restart to login again`,
+                zsstexttape(
+                  zsstextline(`zns restarted`),
+                  zsstextline(
+                    `please login with $green#zns <email> <namespace>`,
+                  ),
                 ),
               )
-            }
-            break
-          case 'restart':
-            znsemail = ''
-            znstoken = ''
-            terminalwritelines(
-              SOFTWARE,
-              READ_CONTEXT.elementfocus,
-              zsstexttape(
-                zsstextline(`zns restarted`),
-                zsstextline(`please login with $green#zns <email> <namespace>`),
-              ),
-            )
+            })
             break
           case 'list':
-            if (!znsemail || !znstoken) {
-              write(
-                SOFTWARE,
-                READ_CONTEXT.elementfocus,
-                zsstextline(
-                  `please login with $green#zns <email> <namespace>$blue first`,
-                ),
-              )
-            } else {
-              doasync(SOFTWARE, READ_CONTEXT.elementfocus, async () => {
+            doasync(SOFTWARE, READ_CONTEXT.elementfocus, async () => {
+              const session = await znsensureloggedin()
+              if (!session) {
                 write(
                   SOFTWARE,
                   READ_CONTEXT.elementfocus,
-                  zsstextline(`listing keys`),
+                  zsstextline(
+                    `please login with $green#zns <email> <namespace>$blue first`,
+                  ),
                 )
-                const result = await znslist(znsemail, znstoken)
-                if (result.success && isarray(result.list)) {
-                  for (let i = 0; i < result.list.length; ++i) {
-                    const row = result.list[i]
-                    const url =
-                      row.key === 'peer'
-                        ? `https://zed.cafe/join/#${row.value}`
-                        : `https://bytes.zed.cafe/${row.value}`
-                    writeopenit(
-                      SOFTWARE,
-                      READ_CONTEXT.elementfocus,
-                      url,
-                      row.key,
-                    )
-                    terminalwritelines(
-                      SOFTWARE,
-                      READ_CONTEXT.elementfocus,
-                      JSON.stringify(row),
-                    )
-                  }
+                return
+              }
+              write(
+                SOFTWARE,
+                READ_CONTEXT.elementfocus,
+                zsstextline(`listing keys`),
+              )
+              const result = await znslist(session.email, session.token)
+              if (result.success && isarray(result.list)) {
+                for (let i = 0; i < result.list.length; ++i) {
+                  const row = result.list[i]
+                  const kind = row.metadata?.kind as string | undefined
+                  const url = znsurlforlistrow(
+                    session.namespace,
+                    row.key,
+                    row.value,
+                    kind,
+                  )
+                  writeopenit(
+                    SOFTWARE,
+                    READ_CONTEXT.elementfocus,
+                    url,
+                    row.key,
+                  )
+                  terminalwritelines(
+                    SOFTWARE,
+                    READ_CONTEXT.elementfocus,
+                    JSON.stringify(row),
+                  )
                 }
-              })
-            }
+              }
+            })
             break
           case 'pub':
-          case 'publish':
-            if (!znsemail || !znstoken) {
-              write(
-                SOFTWARE,
-                READ_CONTEXT.elementfocus,
-                zsstextline(
-                  `please login with $green#zns <email> <namespace>$blue first`,
-                ),
-              )
-            } else {
-              const [filename, iii] = readargs(words, ii, [ARG_TYPE.NAME])
-              const [tags] = readargsuntilend(words, iii, ARG_TYPE.NAME)
-              vmpublish(
-                SOFTWARE,
-                READ_CONTEXT.elementfocus,
-                'zns',
-                znsemail,
-                znstoken,
-                filename,
-                ...tags,
-              )
-            }
-            break
-          case 'del':
-          case 'delete':
-            if (!znsemail || !znstoken) {
-              write(
-                SOFTWARE,
-                READ_CONTEXT.elementfocus,
-                zsstextline(
-                  `please login with $green#zns <email> <namespace>$blue first`,
-                ),
-              )
-            } else {
-              const [filename] = readargs(words, ii, [ARG_TYPE.NAME])
-              doasync(SOFTWARE, READ_CONTEXT.elementfocus, async () => {
+          case 'publish': {
+            const [mode, iii] = readargs(words, ii, [ARG_TYPE.NAME])
+            const modename = NAME(mode)
+            doasync(SOFTWARE, READ_CONTEXT.elementfocus, async () => {
+              const session = await znsensureloggedin()
+              if (!session) {
                 write(
                   SOFTWARE,
                   READ_CONTEXT.elementfocus,
-                  zsstextline(`deleting ${filename}`),
+                  zsstextline(
+                    `please login with $green#zns <email> <namespace>$blue first`,
+                  ),
                 )
-                const result = await znsdelete(znsemail, znstoken, filename)
-                if (result.success) {
+                return
+              }
+              if (modename === 'bytes') {
+                const [filename, iiii] = readargs(words, iii, [ARG_TYPE.NAME])
+                const [tags] = readargsuntilend(words, iiii, ARG_TYPE.NAME)
+                vmpublish(
+                  SOFTWARE,
+                  READ_CONTEXT.elementfocus,
+                  'zns',
+                  session.email,
+                  session.token,
+                  filename,
+                  ...tags,
+                )
+              } else if (modename === 'code') {
+                const [address] = readargs(words, iii, [ARG_TYPE.NAME])
+                const { target, path } = parsetarget(address)
+                let book = memoryreadbookbyaddress(target)
+                if (!ispresent(book)) {
+                  book = memoryreadfirstbook()
+                }
+                const codepage = memoryreadcodepage(book, path || address)
+                if (!ispresent(codepage)) {
                   write(
                     SOFTWARE,
                     READ_CONTEXT.elementfocus,
-                    zsstextline(`$red${filename} has been deleted`),
+                    zsstextline(`$red codepage not found: ${address}`),
                   )
+                  return
                 }
-              })
-            }
+                const znskey = znsnormalizepathkey(
+                  memoryreadcodepagename(codepage),
+                )
+                if (!znskey) {
+                  write(
+                    SOFTWARE,
+                    READ_CONTEXT.elementfocus,
+                    zsstextline(`$red invalid zns key for codepage`),
+                  )
+                  return
+                }
+                vmpublish(
+                  SOFTWARE,
+                  READ_CONTEXT.elementfocus,
+                  'zns-text',
+                  session.email,
+                  session.token,
+                  znskey,
+                  target,
+                  path,
+                )
+              } else {
+                write(
+                  SOFTWARE,
+                  READ_CONTEXT.elementfocus,
+                  zsstexttape(
+                    zsstextline(
+                      `use $green#zns publish bytes <key>$blue or $green#zns publish code <codepage>`,
+                    ),
+                  ),
+                )
+              }
+            })
+            break
+          }
+          case 'del':
+          case 'delete':
+            doasync(SOFTWARE, READ_CONTEXT.elementfocus, async () => {
+              const session = await znsensureloggedin()
+              if (!session) {
+                write(
+                  SOFTWARE,
+                  READ_CONTEXT.elementfocus,
+                  zsstextline(
+                    `please login with $green#zns <email> <namespace>$blue first`,
+                  ),
+                )
+                return
+              }
+              const [filename] = readargs(words, ii, [ARG_TYPE.NAME])
+              write(
+                SOFTWARE,
+                READ_CONTEXT.elementfocus,
+                zsstextline(`deleting ${filename}`),
+              )
+              const result = await znsdelete(
+                session.email,
+                session.token,
+                filename,
+              )
+              if (result.success) {
+                write(
+                  SOFTWARE,
+                  READ_CONTEXT.elementfocus,
+                  zsstextline(`$red${filename} has been deleted`),
+                )
+              }
+            })
             break
         }
         return 0
       },
       {
-        byposition: [['restart', 'list', 'pub', 'publish', 'del', 'delete']],
+        byposition: [
+          [
+            'restart',
+            'list',
+            'pub',
+            'publish',
+            'bytes',
+            'code',
+            'del',
+            'delete',
+          ],
+        ],
       },
     )
 }

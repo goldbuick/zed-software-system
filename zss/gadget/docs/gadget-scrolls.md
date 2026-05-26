@@ -6,7 +6,7 @@ The right-hand **scroll** panel shows a titled list (`scrollname` + `scroll` row
 
 **Ways content is built:**
 
-1. **Markdown** via [`parsemarkdownforscroll`](../../feature/parse/markdownscroll.ts) (marked → ZeText sink → [`scrollwritelines`](../data/scrollwritelines.ts)). Optional `chip` argument (default `refscroll`) is forwarded to `scrollwritelines`. Used for bundled `refscroll:*` `.md` help prose, wiki fallback, and other CommonMark bodies in [`handledefault`](../../device/vm/handlers/default.ts).
+1. **Markdown** via [`parsemarkdownforscroll`](../../feature/parse/markdownscroll.ts) (marked → ZeText sink → [`scrollwritelines`](../data/scrollwritelines.ts)). Optional `chip` argument (default `refscroll`) is forwarded to `scrollwritelines`. Used for bundled `refscroll:*` `.md` help prose, ZNS `docs` fallback, and other CommonMark bodies in [`handledefault`](../../device/vm/handlers/default.ts).
 2. **Zed line blocks** via [`scrollwritelines`](../data/scrollwritelines.ts): plain lines become strings; lines with `!` and a first raw `;` become hyperlinks (`!command args;$label`). Used for built-in menus (e.g. `refscroll:menu`, zip picker, object/terrain lists).
 3. Call [`scrollwritelines`](../data/scrollwritelines.ts) directly when you already have a string of tape lines (same `!` / zsstext rules); default link chip is `refscroll` unless overridden. Prefer composing that string with [`zsstextui`](../../feature/zsstextui.ts) (`zsszedlinkline`, `zsszedlinklinechip`, `zsstexttape`, headers/tables) rather than hand-rolling `!payload;label` rows.
 4. Queue lines with [`gadgettext` / `gadgethyperlink`](../data/api.ts), then assign `shared.scroll = gadgetcheckqueue(player)` (and usually set `scrollname`). Still used where panels mix imperative steps, **shared** hyperlink state (`get`/`set`), or firmware-driven queues (see admin / element scroll lock). Inspect menus use [`scrollwritelines`](../data/scrollwritelines.ts) plus [`registerhyperlinksharedbridge`](../data/api.ts) where shared widgets need `get`/`set`.
@@ -74,9 +74,9 @@ The bottom **tape** parses lines as `!{prefix}!{command…;$label}` (see [`Termi
 
 Full wiring diagram and Q&A: [scroll-vs-terminal-hyperlinks.md](./scroll-vs-terminal-hyperlinks.md).
 
-### Wiki fallback for `refscroll:<path>`
+### ZNS fallback for `refscroll:<path>`
 
-If `romread('refscroll:' + path)` is missing, the UI briefly shows title `$7$7$7 please wait` and loading text, then [`fetchwiki`](../../feature/fetchwiki.ts) + [`parsemarkdownforscroll`](../../feature/parse/markdownscroll.ts) fill the panel. The title becomes the **`path`** string (wiki slug).
+If `romread('refscroll:' + path)` is missing, the UI briefly shows title `$7$7$7 please wait` and loading text, then [`fetchrefscrolltext`](../../feature/fetchrefscrolltext.ts) (ROM → `docs.zns.zed.cafe`) + [`parsemarkdownforscroll`](../../feature/parse/markdownscroll.ts) fill the panel, or an in-scroll “doc not found” error if both miss.
 
 ---
 
@@ -115,9 +115,9 @@ Special paths (not necessarily ROM filenames) in [`handledefault`](../../device/
 | `colorscroll` | `colors` | Same. |
 | `bgscroll` | `bgs` | Same. |
 | `notescalesscroll` | `notescalesscroll` | ROM [`notescalesscroll.md`](../../rom/refscroll/notescalesscroll.md); drill-down `notescales_*`; `parsemarkdownforscroll`; chip `refscroll` (default). |
-| *(any other)* | `path` | Bundled `.md` or wiki; see below. |
+| *(any other)* | `path` | Bundled `.md` or ZNS docs; see below. |
 
-**Default branch:** `romread('refscroll:' + path)`. If content exists: `parsemarkdownforscroll` on the markdown string. If not: wiki fetch + `parsemarkdownforscroll`. Final `scrollname` is `path` once content is ready.
+**Default branch:** `romread('refscroll:' + path)`. If content exists: `parsemarkdownforscroll` on the markdown string. If not: [`fetchrefscrolltext`](../../feature/fetchrefscrolltext.ts) + `parsemarkdownforscroll`, or error scroll. Final `scrollname` is `path` once content is ready.
 
 ---
 
@@ -170,8 +170,8 @@ flowchart LR
   bookmarkscroll --> apply
   editorbm --> apply
   readzip --> apply
-  refpath --> romwiki[romread_or_fetchwiki_md]
-  romwiki --> mdscroll
+  refpath --> romzns[romread_or_fetchrefscrolltext]
+  romzns --> mdscroll
 ```
 
 ---
