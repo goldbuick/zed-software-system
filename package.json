@@ -49,6 +49,7 @@
     "do:droplet:docker-run": "sh scripts/digitalocean-docker-run.sh",
     "docs:links": "git ls-files '*.md' | xargs -n1 ./node_modules/.bin/markdown-link-check -q -c .markdown-link-check.json",
     "regen:parity-fixtures": "npx tsx scripts/regen-synth-parity-fixtures.mts",
+    "bench:wasm-synth": "ZSS_WASM_BENCH=1 npx tsx zss/feature/synth/backend/wasm/wasmperfbench.ts",
     "postinstall": "patch-package"
   },
   "devDependencies": {

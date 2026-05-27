@@ -320,27 +320,45 @@ function updateplayvibratodepth() {
     }
     return;
   }
-  var sabdepth = 0;
-  var active = 0;
+  var t = playtimesec();
+  var target = 0;
   for (var g = 0; g < 3; g++) {
     if (fxsends[g][4] <= 0) {
       continue;
     }
-    var depth = fxparams[g][10];
-    if (depth > sabdepth) {
-      sabdepth = depth;
-    }
     var start = g < 2 ? g * 2 : PLAY_VOICE_COUNT;
     var end = g < 2 ? start + 2 : VOICE_COUNT;
+    var gated = 0;
     for (var i = start; i < end; i++) {
       if (gates[i]) {
-        active = 1;
+        gated = 1;
+        break;
       }
     }
+    if (!gated) {
+      continue;
+    }
+    var depth = vibratodepthat(g, t);
+    if (depth > target) {
+      target = depth;
+    }
   }
-  var target = 0;
-  if (active > 0) {
-    target = sabdepth > 0.0001 ? sabdepth : 0.5;
+  if (target <= 0.0001) {
+    var sabdepth = 0;
+    for (var g2 = 0; g2 < 3; g2++) {
+      if (fxsends[g2][4] <= 0) {
+        continue;
+      }
+      var depth2 = fxparams[g2][10];
+      if (depth2 > sabdepth) {
+        sabdepth = depth2;
+      }
+    }
+    if (sabdepth > 0.0001) {
+      target = sabdepth;
+    } else {
+      target = 0.5;
+    }
   }
   if (target > fxvibratodepth) {
     fxvibratodepth += (target - fxvibratodepth) * 0.004;
@@ -358,7 +376,10 @@ function playvibratocents(voicei) {
   if (fxvibratodepth <= 0.0001) {
     return 0;
   }
-  var freq = fxparams[group][11];
+  var freq = vibratofreqat(group, playtimesec());
+  if (freq <= 0) {
+    freq = fxparams[group][11];
+  }
   if (freq <= 0) {
     freq = 5;
   }

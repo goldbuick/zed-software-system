@@ -23,7 +23,7 @@ export const WASM_OSC_CFG_SAB_LEN = SYNTH_VOICE_COUNT * WASM_OSC_CFG_STRIDE
 export const WASM_ALGO_CFG_SAB_LEN = SYNTH_VOICE_COUNT * WASM_ALGO_CFG_STRIDE
 
 export const WASM_SAB_SEQ = 'zss_sab_seq'
-export const WASM_SAB_SEQ_LEN = 8
+export const WASM_SAB_SEQ_LEN = 9
 
 export const WASM_SAB_SEQ_IDX = {
   VOICES: 0,
@@ -33,7 +33,14 @@ export const WASM_SAB_SEQ_IDX = {
   VOICE_CFG: 4,
   OSC_CFG: 5,
   ALGO_CFG: 6,
+  VIBRATO: 7,
 } as const
+
+export const WASM_VIBRATO_SAB = 'zss_vibrato'
+export const WASM_VIBRATO_GROUP_COUNT = 3
+export const WASM_VIBRATO_STRIDE = 4
+export const WASM_VIBRATO_SAB_LEN =
+  1 + WASM_VIBRATO_GROUP_COUNT * WASM_VIBRATO_STRIDE
 
 /** Map data-channel id → seq slot (used by sabpush after each write). */
 export const WASM_SAB_SEQ_CHANNEL_TO_IDX: Record<string, number> = {
@@ -44,6 +51,7 @@ export const WASM_SAB_SEQ_CHANNEL_TO_IDX: Record<string, number> = {
   zss_voicecfg: WASM_SAB_SEQ_IDX.VOICE_CFG,
   zss_osccfg: WASM_SAB_SEQ_IDX.OSC_CFG,
   zss_algocfg: WASM_SAB_SEQ_IDX.ALGO_CFG,
+  [WASM_VIBRATO_SAB]: WASM_SAB_SEQ_IDX.VIBRATO,
 }
 
 export type WASM_SAB_CHANNEL = {
@@ -60,4 +68,5 @@ export const WASM_SAB_CHANNELS: WASM_SAB_CHANNEL[] = [
   { id: 'zss_voicecfg', len: WASM_VOICE_CFG_SAB_LEN },
   { id: 'zss_osccfg', len: WASM_OSC_CFG_SAB_LEN },
   { id: 'zss_algocfg', len: WASM_ALGO_CFG_SAB_LEN },
+  { id: WASM_VIBRATO_SAB, len: WASM_VIBRATO_SAB_LEN },
 ]

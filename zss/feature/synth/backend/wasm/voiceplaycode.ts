@@ -14,6 +14,7 @@ import {
 import { WASM_MASTER_PLAY_CODE } from './wasmmasterplaycode'
 import { WASM_OSC_CFG_PLAY_CODE } from './wasmoscplaycode'
 import { WASM_PERF_BOOTSTRAP } from './wasmperfplaycode'
+import { WASM_VIBRATO_PLAY_CODE } from './wasmvibratoplaycode'
 import { WASM_SAB_SEQ_PLAY_CODE } from './wasmplaysabseq'
 import { WASM_VOICE_CFG_STRIDE } from './wasmvoicecfgsab'
 
@@ -36,6 +37,7 @@ ${WASM_DRUM_PLAY_CODE}
 ${WASM_AUTOFILTER_PLAY_CODE}
 ${WASM_AUTOWAH_PLAY_CODE}
 ${WASM_FX_PLAY_CODE}
+${WASM_VIBRATO_PLAY_CODE}
 ${WASM_MASTER_PLAY_CODE}
 ${WASM_SAB_SEQ_PLAY_CODE}
 
@@ -80,6 +82,8 @@ var voicegains = [];
 var detunemuls = [];
 var synthgateprev = [];
 var playsampletick = 0;
+var activevoicemask = 0;
+var playsampleclock = 0;
 
 for (var vi = 0; vi < VOICE_COUNT; vi++) {
   freqs.push(440);
@@ -262,11 +266,7 @@ function synthwavegain(osc) {
 }
 
 function fatosccount(i) {
-  var cnt = osccount[i] > 1 ? Math.round(osccount[i]) : 3;
-  if (WASM_PERF_MODE && cnt > 2) {
-    cnt = 2;
-  }
-  return cnt;
+  return osccount[i] > 1 ? Math.round(osccount[i]) : 3;
 }
 
 function synthsource(i, freq, gate) {
@@ -499,6 +499,9 @@ function readsynthcontrolblock() {
   if (sabseqchanged(SAB_SEQ_ALGO_CFG)) {
     readalgocfgsab();
   }
+  if (sabseqchanged(SAB_SEQ_VIBRATO)) {
+    readvibratosab();
+  }
   if (fxchanged || anyplayvibratosend()) {
     updateplayvibratodepth();
   }
@@ -537,6 +540,18 @@ function voiceout(i) {
   return out * voicevolumegain(i);
 }
 
+function touchactivevoicemask(i) {
+  if (gates[i]) {
+    activevoicemask |= 1 << i;
+    return;
+  }
+  if (voiceissilent(i)) {
+    activevoicemask &= ~(1 << i);
+  } else {
+    activevoicemask |= 1 << i;
+  }
+}
+
 function readvoicessab() {
   var raw = qref.zssVoiceSab;
   if (!raw && qref.engine) {
@@ -554,20 +569,28 @@ function readvoicessab() {
     detunes[i] = raw[base + 4];
     detunemuls[i] = Math.pow(2, detunes[i] / 1200);
     osctypes[i] = Math.round(raw[base + 5]);
+    if (gates[i]) {
+      activevoicemask |= 1 << i;
+    }
   }
 }
 
 function play(inputsample) {
   readsynthcontrolsifdue();
+  playsampleclock++;
 
   var play0 = 0;
   var play1 = 0;
   var bgvoices = 0;
   for (var i = 0; i < VOICE_COUNT; i++) {
-    var out = 0;
-    if (!voiceissilent(i)) {
-      out = voiceout(i);
+    if (!(activevoicemask & (1 << i))) {
+      continue;
     }
+    touchactivevoicemask(i);
+    if (!(activevoicemask & (1 << i))) {
+      continue;
+    }
+    var out = voiceout(i);
     if (i < 2) {
       play0 += out;
     } else if (i < PLAY_VOICE_COUNT) {

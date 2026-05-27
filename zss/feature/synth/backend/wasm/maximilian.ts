@@ -44,6 +44,7 @@ function builddspcode(usercode: string) {
         q.zssDrumSab = engine.zssDrumSab;
         q.zssMasterSab = engine.zssMasterSab;
         q.zssFxSab = engine.zssFxSab;
+        q.zssVibratoSab = engine.zssVibratoSab;
         q.zssSabSeq = engine.zssSabSeq;
       }
       var sig = q.play(inputsample);

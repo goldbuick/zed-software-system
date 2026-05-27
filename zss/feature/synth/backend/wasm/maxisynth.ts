@@ -34,13 +34,11 @@ import {
   pushwasmalgoconfigsab,
 } from './wasmalgoconfigsab'
 import {
-  WASM_FX_PARAM_IDX,
   applywasmfxconfig,
   defaultwasmfxsab,
   initwasmfxsab,
   pushwasmfxsab,
   replaywasmfxfromstate,
-  wasmfxgroupparambase,
 } from './wasmfxstate'
 import {
   defaultwasmoscconfig,
@@ -57,6 +55,11 @@ import {
   WASM_VOICES_SAB,
   WASM_VOICE_STRIDE,
 } from './wasmsabchannels'
+import {
+  defaultwasmvibratosab,
+  initwasmvibratosab,
+  pushwasmvibratogroup,
+} from './wasmvibratosab'
 import { initwasmvoicecfgsab, pushwasmvoicecfgsab } from './wasmvoicecfgsab'
 import {
   type WASM_VOICE_STATE,
@@ -130,6 +133,7 @@ export function createwasmsynth(
   initwasmsabchannels(maxi)
   initwasmvoicesab(maxi)
   initwasmfxsab(maxi)
+  initwasmvibratosab(maxi, maxi.audioContext.currentTime)
   initwasmdrumsab(maxi)
 
   let voicestate = new Array(WASM_VOICE_BLOCK).fill(0)
@@ -139,6 +143,7 @@ export function createwasmsynth(
   let voicecfg = defaultwasmvoicestate()
   let oscconfig = defaultwasmoscconfig()
   let algoconfig = defaultwasmalgoconfig()
+  let vibratosab = defaultwasmvibratosab(maxi.audioContext.currentTime)
   let pacertime = -1
   let pacercount = 0
   let bgplayindex = SYNTH_SFX_RESET
@@ -346,39 +351,22 @@ export function createwasmsynth(
     })
   }
 
-  function setvibratoparams(group: number, depth: number, freq: number) {
-    const parambase = wasmfxgroupparambase(group)
-    fxsab[parambase + WASM_FX_PARAM_IDX.VIBRATO_DEPTH] = depth
-    fxsab[parambase + WASM_FX_PARAM_IDX.VIBRATO_FREQ] = freq
-    pushfxstate()
-  }
-
-  function schedulevibratodepth(
-    chan: number,
+  function schedulevibratoworklet(
+    group: number,
     when: number,
     durationsec: number,
   ) {
-    const group = voiceindexfxgroup(chan)
     const peakdepth = Math.min(1, durationsec / 1.2)
     const freqhigh = 1 + peakdepth * 4
-    const rampreset = Math.min(0.35, durationsec * 0.48)
-    const attackportion = Math.min(durationsec * 0.35, 0.35, durationsec * 0.48)
-    const tend = when + durationsec
-    const trelease = Math.max(when + rampreset, tend - rampreset)
-    const tpeak = Math.min(when + attackportion, trelease)
-
-    scheduler.schedule(when, () => {
-      setvibratoparams(group, 0, 1)
-    })
-    scheduler.schedule(tpeak, () => {
-      setvibratoparams(group, peakdepth, freqhigh)
-    })
-    scheduler.schedule(trelease, () => {
-      setvibratoparams(group, peakdepth, freqhigh)
-    })
-    scheduler.schedule(tend, () => {
-      setvibratoparams(group, 0, 1)
-    })
+    pushwasmvibratogroup(
+      maxi,
+      vibratosab,
+      group,
+      when,
+      when + durationsec,
+      peakdepth,
+      freqhigh,
+    )
   }
 
   function schedulenote(
@@ -401,9 +389,8 @@ export function createwasmsynth(
       voicestate[base + 1] = 1
       voicestate[base + 4] = detune
       pushplayvoicestate()
+      schedulevibratoworklet(voiceindexfxgroup(chan), when, durationsec)
     })
-
-    schedulevibratodepth(chan, when, durationsec)
 
     scheduler.schedule(endwhen, () => {
       voicestate[base + 1] = 0

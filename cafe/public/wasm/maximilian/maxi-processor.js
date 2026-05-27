@@ -36647,6 +36647,9 @@ class MaxiProcessor extends AudioWorkletProcessor {
     if (id === "zss_algocfg") {
       return this.zssAlgoCfgSab;
     }
+    if (id === "zss_vibrato") {
+      return this.zssVibratoSab;
+    }
     return undefined;
   };
 
@@ -36669,6 +36672,8 @@ class MaxiProcessor extends AudioWorkletProcessor {
       this.zssOscCfgSab = view;
     } else if (id === "zss_algocfg") {
       this.zssAlgoCfgSab = view;
+    } else if (id === "zss_vibrato") {
+      this.zssVibratoSab = view;
     } else if (id === "zss_sab_seq") {
       this.zssSabSeq = view;
     }
