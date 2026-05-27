@@ -22,6 +22,30 @@ export const WASM_VOICE_CFG_SAB_LEN = SYNTH_VOICE_COUNT * WASM_VOICE_CFG_STRIDE
 export const WASM_OSC_CFG_SAB_LEN = SYNTH_VOICE_COUNT * WASM_OSC_CFG_STRIDE
 export const WASM_ALGO_CFG_SAB_LEN = SYNTH_VOICE_COUNT * WASM_ALGO_CFG_STRIDE
 
+export const WASM_SAB_SEQ = 'zss_sab_seq'
+export const WASM_SAB_SEQ_LEN = 8
+
+export const WASM_SAB_SEQ_IDX = {
+  VOICES: 0,
+  DRUMS: 1,
+  MASTER: 2,
+  FX: 3,
+  VOICE_CFG: 4,
+  OSC_CFG: 5,
+  ALGO_CFG: 6,
+} as const
+
+/** Map data-channel id → seq slot (used by sabpush after each write). */
+export const WASM_SAB_SEQ_CHANNEL_TO_IDX: Record<string, number> = {
+  [WASM_VOICES_SAB]: WASM_SAB_SEQ_IDX.VOICES,
+  [WASM_DRUMS_SAB]: WASM_SAB_SEQ_IDX.DRUMS,
+  zss_master: WASM_SAB_SEQ_IDX.MASTER,
+  zss_fx: WASM_SAB_SEQ_IDX.FX,
+  zss_voicecfg: WASM_SAB_SEQ_IDX.VOICE_CFG,
+  zss_osccfg: WASM_SAB_SEQ_IDX.OSC_CFG,
+  zss_algocfg: WASM_SAB_SEQ_IDX.ALGO_CFG,
+}
+
 export type WASM_SAB_CHANNEL = {
   id: string
   len: number

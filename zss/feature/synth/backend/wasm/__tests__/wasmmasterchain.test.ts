@@ -23,6 +23,8 @@ describe('wasmmasterplaycode', () => {
     expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('function autowahsweephz')
     expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain("drumbiquadcoef('peaking'")
     expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('DRUM_CLAP_HP')
+    expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('DRUM_TICK_HP')
+    expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('DRUM_TWEET_HP')
     expect(WASM_SYNTH_VOICE_PLAY_CODE).not.toContain('WASM_DRUM_CLAP_DRY')
     expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('function tonedistort')
     expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('function fxdistortwet')
@@ -65,9 +67,13 @@ describe('wasmmasterplaycode', () => {
     expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain(
       'function readsynthcontrolsifdue',
     )
+    expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('function readsynthcontrolblock')
+    expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('function sabseqchanged')
+    expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('function refreshfxsends')
+    expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('function refreshfxparams')
+    expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('function refreshfxsnapshot')
     expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('function voiceissilent')
     expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('function fatosccount')
-    expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('function refreshfxsnapshot')
     expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('var voicegains = []')
     expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('var detunemuls = []')
     expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('refreshinc')

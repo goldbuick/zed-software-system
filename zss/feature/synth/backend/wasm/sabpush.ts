@@ -1,4 +1,9 @@
 import type { MaxiEngine } from './maximilian'
+import {
+  bumpsabseq,
+  registerseqchannel,
+  resetsabseqregistry,
+} from './sabseq'
 import { WASM_SAB_CHANNELS } from './wasmsabchannels'
 
 const registry = new Map<string, Float64Array>()
@@ -54,6 +59,7 @@ export function initwasmsabchannels(maxi: MaxiEngine) {
     ensurechannel(ch.id, ch.len)
     registerchannel(maxi, ch.id)
   }
+  registerseqchannel(maxi)
 }
 
 /** Push voice/drum/FX state into the worklet via zero-copy SharedArrayBuffer views. */
@@ -76,6 +82,7 @@ export function pushwasmsabvalues(
   const view = ensurechannel(channelid, data.length)
   assignview(view, data)
   registerchannel(maxi, channelid)
+  bumpsabseq(channelid)
   writehook?.(channelid, view)
 }
 
@@ -93,6 +100,7 @@ export function resetwasmsabregistry() {
   registry.clear()
   registered.clear()
   writehook = undefined
+  resetsabseqregistry()
 }
 
 /** Observe SAB writes in tests (zero-copy path has no postMessage payload). */

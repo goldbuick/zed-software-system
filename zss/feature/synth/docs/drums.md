@@ -36,7 +36,7 @@ Synthesized drum kit. Each file provides one or more drum sounds with trigger fu
 - Connects to both `drumvolume` and `drumaction` (sidechain)
 
 ### hihat.ts
-- **NoiseSynth** through highpass filter (8kHz tick, 6kHz open)
+- **NoiseSynth** through biquad highpass filter (8kHz tick, 6kHz open; -12 dB/oct, Tone parity)
 - EQ3 for tone shaping
 - Short envelope for tick, longer for tweet
 

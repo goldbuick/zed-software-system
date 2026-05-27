@@ -5,6 +5,7 @@ import {
   SYNTH_SFX_RESET,
   invokeplay,
   parseplay,
+  resolvebgplayonstart,
   tonenotationseconds,
 } from 'zss/feature/synth/playnotation'
 import { SOURCE_TYPE } from 'zss/feature/synth/shared/sourcetype'
@@ -26,6 +27,7 @@ import {
 import type { MaxiEngine } from './maximilian'
 import { playpatternendtime } from './playstart'
 import { initwasmsabchannels, pushwasmsabvalues } from './sabpush'
+import { resetsabseq } from './sabseq'
 import {
   defaultwasmalgoconfig,
   initwasmalgoconfigsab,
@@ -69,29 +71,6 @@ const WASM_VOICE_BLOCK = WASM_VOICE_COUNT * WASM_VOICE_STRIDE
 function notetofrequency(pitch: string): number {
   const freq = Note.freq(pitch)
   return isnumber(freq) && freq > 0 ? freq : 440
-}
-
-function quantizetoseconds(quantize: string): number {
-  const trimmed = quantize.trim()
-  if (trimmed === '') {
-    return 0.05
-  }
-  if (trimmed.startsWith('+')) {
-    const tail = trimmed.slice(1).trim()
-    if (tail === '') {
-      return 0.05
-    }
-    try {
-      return tonenotationseconds(tail)
-    } catch {
-      return 0.05
-    }
-  }
-  try {
-    return tonenotationseconds(trimmed)
-  } catch {
-    return 0.05
-  }
 }
 
 export function initwasmvoicesab(maxi: MaxiEngine) {
@@ -165,6 +144,7 @@ export function createwasmsynth(
   let bgplayindex = SYNTH_SFX_RESET
   let playvolume = 80
   let bgplayvolume = 100
+  let beatgridepoch = maxi.audioContext.currentTime
   const recording: RECORDING_STATE = {
     recordedticks: [],
     recordlastpercent: 0,
@@ -181,11 +161,23 @@ export function createwasmsynth(
     pushwasmsabvalues(maxi, WASM_VOICES_SAB, voicestate)
   }
 
-  function pushvoicestate() {
-    pushplayvoicestate()
+  function pushcoldvoiceconfig() {
     pushwasmvoicecfgsab(maxi, voicecfg)
     pushwasmoscconfigsab(maxi, oscconfig)
     pushwasmalgoconfigsab(maxi, algoconfig)
+  }
+
+  function pushvoicestate() {
+    pushplayvoicestate()
+    pushcoldvoiceconfig()
+  }
+
+  function pushallstate() {
+    resetsabseq()
+    pushplayvoicestate()
+    pushcoldvoiceconfig()
+    pushfxstate()
+    pushdrumstate()
   }
 
   let rendertickhook: ((time: number) => void) | undefined
@@ -291,8 +283,7 @@ export function createwasmsynth(
       env4: { ...item.env4 },
     }))
     fxsab = state.fxsab.slice()
-    pushvoicestate()
-    pushfxstate()
+    pushallstate()
   }
 
   function synthreplay(
@@ -453,8 +444,11 @@ export function createwasmsynth(
 
   function addbgplay(buffer: string, quantize: string) {
     const invokes = parseplay(buffer)
+    const now = maxi.audioContext.currentTime
     const starttime =
-      maxi.audioContext.currentTime + quantizetoseconds(quantize)
+      quantize === ''
+        ? now + 0.05
+        : resolvebgplayonstart(now, beatgridepoch, quantize)
     for (let i = 0; i < invokes.length; ++i) {
       synthplaystart(bgplayindex++, starttime, invokes[i], false)
       if (bgplayindex >= WASM_VOICE_COUNT) {
@@ -521,7 +515,7 @@ export function createwasmsynth(
         fxsab = defaultwasmfxsab()
         pushfxstate()
       }
-      pushvoicestate()
+      pushcoldvoiceconfig()
     }
   }
 
@@ -529,7 +523,7 @@ export function createwasmsynth(
     voicecfg = defaultwasmvoicestate()
     oscconfig = defaultwasmoscconfig()
     algoconfig = defaultwasmalgoconfig()
-    pushvoicestate()
+    pushcoldvoiceconfig()
   }
 
   function getvoicecfg(): WASM_VOICE_STATE[] {
@@ -539,7 +533,7 @@ export function createwasmsynth(
   function resyncsabs() {
     initwasmvoicesab(maxi)
     fxsab = defaultwasmfxsab()
-    pushvoicestate()
+    resetsabseq()
     pushfxstate()
     pushdrumstate()
   }

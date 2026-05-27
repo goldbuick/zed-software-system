@@ -195,6 +195,45 @@ export function durationseconds(duration: number): number {
   return (duration * 60) / (16 * DEFAULT_BPM)
 }
 
+/**
+ * Next subdivision boundary after `now` on a grid anchored at `epoch`.
+ * Mirrors Tone `Transport.nextSubdivision` (waits a full subdiv when on boundary).
+ */
+export function nextsubdivisionseconds(
+  now: number,
+  epoch: number,
+  subdivsec: number,
+): number {
+  if (subdivsec <= 0) {
+    throw new Error('subdivsec must be positive')
+  }
+  const pos = now - epoch
+  const rem = pos % subdivsec
+  const wait = rem === 0 ? subdivsec : subdivsec - rem
+  return now + wait
+}
+
+/**
+ * Absolute AudioContext time for `#bgplayon*` (`@16n`, `@1m`, …) only.
+ * Plain `#bgplay` uses `now + 0.05` in maxisynth instead.
+ */
+export function resolvebgplayonstart(
+  now: number,
+  epoch: number,
+  quantize: string,
+): number {
+  const trimmed = quantize.trim()
+  if (!trimmed.startsWith('@')) {
+    throw new Error(`bgplayon quantize must use @ notation: ${quantize}`)
+  }
+  const tail = trimmed.slice(1).trim()
+  if (tail === '') {
+    throw new Error(`bgplayon quantize missing subdivision: ${quantize}`)
+  }
+  const subdivsec = tonenotationseconds(tail)
+  return nextsubdivisionseconds(now, epoch, subdivsec)
+}
+
 export function invokeplay(
   synth: number,
   starttime: number,

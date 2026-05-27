@@ -36669,6 +36669,8 @@ class MaxiProcessor extends AudioWorkletProcessor {
       this.zssOscCfgSab = view;
     } else if (id === "zss_algocfg") {
       this.zssAlgoCfgSab = view;
+    } else if (id === "zss_sab_seq") {
+      this.zssSabSeq = view;
     }
     if (!inputSABs[id]) {
       inputSABs[id] = {
@@ -36851,8 +36853,13 @@ class MaxiProcessor extends AudioWorkletProcessor {
           const sab = event.data.sab;
           const length = event.data.length;
           if (id && sab && length > 0) {
-            const view = new Float64Array(sab, 0, length);
-            this.assignZssSabChannel(id, view);
+            if (id === "zss_sab_seq" || event.data.sabkind === "int32") {
+              const view = new Int32Array(sab, 0, length);
+              this.zssSabSeq = view;
+            } else {
+              const view = new Float64Array(sab, 0, length);
+              this.assignZssSabChannel(id, view);
+            }
           }
         } else if (event.data.zss_sab_push) {
           const id = event.data.channelID;

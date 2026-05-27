@@ -337,6 +337,8 @@ var DRUM_EQ_CLAP_LOW = drumbiquadcoef('lowshelf', DRUM_EQ_LOW_HZ, 0.707, -10);
 var DRUM_EQ_CLAP_MID = drumbiquadcoef('peaking', DRUM_EQ_MID_HZ, 1, 10);
 var DRUM_EQ_CLAP_HIGH = drumbiquadcoef('highshelf', DRUM_EQ_HIGH_HZ, 0.707, -1);
 var DRUM_CLAP_HP = drumbiquadcoef('highpass', 800, 0.707, 0);
+var DRUM_TICK_HP = drumbiquadcoef('highpass', 8000, 0.707, 0);
+var DRUM_TWEET_HP = drumbiquadcoef('highpass', 6000, 0.707, 0);
 var DRUM_COWBELL_BP = drumbiquadcoef('bandpass', 350, 1, 0);
 var DRUM_WOOD_BP = drumbiquadcoef('bandpass', 256, 0.17, 0);
 
@@ -464,7 +466,7 @@ function drumtick() {
     return 0;
   }
   var raw = drumnoise.noise() * amp;
-  var n = drumhipass(0, raw, 8000);
+  var n = drumbiquadrun(drumbpstatefor(0), DRUM_TICK_HP, raw);
   n = drumeq3(0, n, DRUM_EQ_TICK_LOW, DRUM_EQ_TICK_MID, DRUM_EQ_TICK_HIGH);
   return n * ${WASM_DRUM_TICK_TRIM} * DRUM_VOICE_GAINS[0];
 }
@@ -479,7 +481,7 @@ function drumtweet() {
     return 0;
   }
   var raw = drumnoise.noise() * amp;
-  var n = drumhipass(1, raw, 6000);
+  var n = drumbiquadrun(drumbpstatefor(1), DRUM_TWEET_HP, raw);
   n = drumeq3(1, n, DRUM_EQ_TWEET_LOW, DRUM_EQ_TWEET_MID, DRUM_EQ_TWEET_HIGH);
   return n * ${WASM_DRUM_TWEET_TRIM} * DRUM_VOICE_GAINS[1];
 }

@@ -23,6 +23,7 @@ export const WASM_PLAYCODE_GLOBALS = new Set([
   'Float64Array',
   'Float32Array',
   'Int32Array',
+  'Atomics',
   'sampleRate',
   'qref',
   'Module',

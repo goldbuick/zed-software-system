@@ -109,7 +109,7 @@ function refreshfxderived(group) {
   fxdistortamtcache[group] = amt <= 0 ? 0.4 : amt;
 }
 
-function refreshfxsnapshot() {
+function refreshfxsends() {
   var raw = qref.zssFxSab;
   if (!raw && qref.engine) {
     raw = qref.engine.zssFxSab;
@@ -123,12 +123,29 @@ function refreshfxsnapshot() {
       var sval = sbase < raw.length ? raw[sbase] : 0;
       fxsends[g][s] = sval > 0 ? sval : 0;
     }
+  }
+}
+
+function refreshfxparams() {
+  var raw = qref.zssFxSab;
+  if (!raw && qref.engine) {
+    raw = qref.engine.zssFxSab;
+  }
+  if (!raw || typeof raw.length !== 'number') {
+    return;
+  }
+  for (var g = 0; g < FX_GROUP_COUNT; g++) {
     for (var p = 0; p < FX_PARAM_COUNT; p++) {
       var pidx = FX_PARAM_BASE + g * FX_PARAM_COUNT + p;
       fxparams[g][p] = pidx < raw.length ? raw[pidx] : 0;
     }
     refreshfxderived(g);
   }
+}
+
+function refreshfxsnapshot() {
+  refreshfxsends();
+  refreshfxparams();
 }
 
 function fxgrouphasactivesends(group) {

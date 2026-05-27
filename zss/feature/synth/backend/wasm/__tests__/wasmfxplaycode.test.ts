@@ -56,6 +56,8 @@ describe('wasm fx play code', () => {
 
   it('snapshots fx sends and params at block boundaries', () => {
     expect(WASM_FX_PLAY_CODE).toContain('function refreshfxsnapshot()')
+    expect(WASM_FX_PLAY_CODE).toContain('function refreshfxsends()')
+    expect(WASM_FX_PLAY_CODE).toContain('function refreshfxparams()')
     expect(WASM_FX_PLAY_CODE).toContain('function refreshfxderived(group)')
     expect(WASM_FX_PLAY_CODE).toContain('var fxsends = []')
     expect(WASM_FX_PLAY_CODE).toContain('var fxparams = []')

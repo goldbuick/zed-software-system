@@ -14,6 +14,7 @@ import {
 import { WASM_MASTER_PLAY_CODE } from './wasmmasterplaycode'
 import { WASM_OSC_CFG_PLAY_CODE } from './wasmoscplaycode'
 import { WASM_PERF_BOOTSTRAP } from './wasmperfplaycode'
+import { WASM_SAB_SEQ_PLAY_CODE } from './wasmplaysabseq'
 import { WASM_VOICE_CFG_STRIDE } from './wasmvoicecfgsab'
 
 /** Phase 1 voices + Phase 2 drums + Phase 3 FX through Maximilian WASM worklet. */
@@ -36,6 +37,7 @@ ${WASM_AUTOFILTER_PLAY_CODE}
 ${WASM_AUTOWAH_PLAY_CODE}
 ${WASM_FX_PLAY_CODE}
 ${WASM_MASTER_PLAY_CODE}
+${WASM_SAB_SEQ_PLAY_CODE}
 
 var synthoscs = [];
 var synthmods = [];
@@ -472,16 +474,39 @@ function voiceissilent(i) {
   return voiceenvlevel(i) < 0.00005;
 }
 
+function readsynthcontrolblock() {
+  var fxchanged = false;
+  if (sabseqchanged(SAB_SEQ_VOICES)) {
+    readvoicessab();
+  }
+  if (sabseqchanged(SAB_SEQ_DRUMS)) {
+    readdrumsab();
+  }
+  if (sabseqchanged(SAB_SEQ_FX)) {
+    refreshfxsends();
+    refreshfxparams();
+    fxchanged = true;
+  }
+  if (sabseqchanged(SAB_SEQ_MASTER)) {
+    refreshmastergains();
+  }
+  if (sabseqchanged(SAB_SEQ_VOICE_CFG)) {
+    readvoicecfgsab();
+  }
+  if (sabseqchanged(SAB_SEQ_OSC_CFG)) {
+    readosccfgsab();
+  }
+  if (sabseqchanged(SAB_SEQ_ALGO_CFG)) {
+    readalgocfgsab();
+  }
+  if (fxchanged || anyplayvibratosend()) {
+    updateplayvibratodepth();
+  }
+}
+
 function readsynthcontrolsifdue() {
   if (playsampletick === 0) {
-    refreshfxsnapshot();
-    readvoicessab();
-    readvoicecfgsab();
-    readosccfgsab();
-    readalgocfgsab();
-    readdrumsab();
-    refreshmastergains();
-    updateplayvibratodepth();
+    readsynthcontrolblock();
     playsampletick = 1;
     return;
   }
@@ -490,14 +515,7 @@ function readsynthcontrolsifdue() {
     return;
   }
   playsampletick = 0;
-  refreshfxsnapshot();
-  readvoicessab();
-  readvoicecfgsab();
-  readosccfgsab();
-  readalgocfgsab();
-  readdrumsab();
-  refreshmastergains();
-  updateplayvibratodepth();
+  readsynthcontrolblock();
 }
 
 function voiceout(i) {

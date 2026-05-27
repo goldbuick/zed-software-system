@@ -3,7 +3,9 @@ import { DEFAULT_BPM } from 'zss/mapping/tick'
 import {
   durationnotation,
   durationseconds,
+  nextsubdivisionseconds,
   parsetimeseconds,
+  resolvebgplayonstart,
   tonenotationcandidates,
   tonenotationseconds,
 } from '../playnotation'
@@ -62,5 +64,30 @@ describe('playnotation duration helpers', () => {
       12,
     )
     expect(parsetimeseconds('not-a-time')).toBeUndefined()
+  })
+
+  it('nextsubdivisionseconds waits a full subdiv when on boundary', () => {
+    const subdiv = tonenotationseconds('16n')
+    expect(nextsubdivisionseconds(0, 0, subdiv)).toBeCloseTo(subdiv, 12)
+    expect(nextsubdivisionseconds(subdiv, 0, subdiv)).toBeCloseTo(
+      subdiv * 2,
+      12,
+    )
+  })
+
+  it('nextsubdivisionseconds snaps mid-subdiv to next boundary', () => {
+    const subdiv = tonenotationseconds('16n')
+    const now = subdiv * 0.25
+    expect(nextsubdivisionseconds(now, 0, subdiv)).toBeCloseTo(subdiv, 12)
+  })
+
+  it('resolvebgplayonstart accepts @ subdivisions only', () => {
+    const subdiv16 = tonenotationseconds('16n')
+    const measure = tonenotationseconds('1m')
+    expect(resolvebgplayonstart(0, 0, '@16n')).toBeCloseTo(subdiv16, 12)
+    expect(resolvebgplayonstart(0, 0, '@1m')).toBeCloseTo(measure, 12)
+    expect(() => resolvebgplayonstart(0, 0, '')).toThrow(/@ notation/)
+    expect(() => resolvebgplayonstart(0, 0, '+8n')).toThrow(/@ notation/)
+    expect(() => resolvebgplayonstart(0, 0, '8n')).toThrow(/@ notation/)
   })
 })

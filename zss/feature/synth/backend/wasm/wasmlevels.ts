@@ -18,8 +18,8 @@ export const WASM_SINE_VOICE_GAIN = Math.SQRT2
 
 /** Per-drum voice gains after DSP (index = #play digit). */
 export const WASM_DRUM_VOICE_GAINS = [
-  0.24, // 0 tick
-  0.22, // 1 tweet
+  0.26, // 0 tick
+  0.24, // 1 tweet
   0.4, // 2 cowbell
   0.35, // 3 clap
   0.3, // 4 hi snare
@@ -30,9 +30,9 @@ export const WASM_DRUM_VOICE_GAINS = [
   0.67, // 9 bass
 ]
 
-/** HP/noise trim applied before per-drum gain on tick/tweet. */
-export const WASM_DRUM_TICK_TRIM = 1.22
-export const WASM_DRUM_TWEET_TRIM = 1.1
+/** HP/noise trim applied before per-drum gain on tick/tweet (biquad HP is steeper than 1-pole). */
+export const WASM_DRUM_TICK_TRIM = 1.35
+export const WASM_DRUM_TWEET_TRIM = 1.25
 
 function volumetodb(value: number) {
   return 20 * Math.log10(value) - 35
