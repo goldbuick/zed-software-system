@@ -33,11 +33,20 @@ export function isjoin() {
   return location.href.includes(`/join/`)
 }
 
-// brick proxy: museum API + images use BRICK_BASE/?brick=<full upstream https URL>
+// brick proxy: museum API + images use BRICK_BASE/?brick=<base64url upstream URL>
 
 export const BRICK_BASE = 'https://brick.zed.cafe'
 
-/** Load remote http(s) images via brick `?brick=`; brick decodes with decodeURIComponent once. */
+function base64urlencode(text: string): string {
+  const bytes = new TextEncoder().encode(text)
+  let binary = ''
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i])
+  }
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+/** Load remote http(s) images via brick `?brick=`; brick decodes base64url (legacy percent-encoded URL fallback). */
 export function brickproxiedurl(url: string): string {
   const trimmed = url.trim()
   if (!trimmed) {
@@ -66,7 +75,7 @@ export function brickproxiedurl(url: string): string {
   if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
     return trimmed
   }
-  return `${BRICK_BASE}/?brick=${encodeURIComponent(absolute)}`
+  return `${BRICK_BASE}/?brick=${base64urlencode(absolute)}`
 }
 
 /** Upstream Museum of ZZT HTTP URLs; clients reach them only via {@link brickproxiedurl}. */

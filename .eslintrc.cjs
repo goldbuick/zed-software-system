@@ -186,6 +186,19 @@ module.exports = {
   },
   overrides: [
     {
+      files: ['infra/**/*.js', 'infra/**/*.mjs'],
+      env: {
+        browser: false,
+        node: true,
+      },
+      rules: {
+        '@typescript-eslint/require-await': 'off',
+        '@typescript-eslint/no-unused-vars': 'off',
+        '@typescript-eslint/prefer-optional-chain': 'off',
+        '@typescript-eslint/prefer-nullish-coalescing': 'off',
+      },
+    },
+    {
       files: ['zss/feature/synth/backend/wasm/**/*.ts'],
       globals: {
         sampleRate: 'readonly',

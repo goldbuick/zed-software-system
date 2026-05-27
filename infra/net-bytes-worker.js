@@ -1,3 +1,5 @@
+/** Short-link service for zed.cafe share URLs. API reference: infra/README.md#bytes-net-bytes-workerjs */
+
 const corsheaders = {
   'Access-Control-Allow-Headers': '*', // What headers are allowed. * is wildcard. Instead of using '*', you can specify a list of specific headers that are allowed, such as: Access-Control-Allow-Headers: X-Requested-With, Content-Type, Accept, Authorization.
   'Access-Control-Allow-Methods': 'GET, POST', // Allowed methods. Others could be PUT, DELETE etc.

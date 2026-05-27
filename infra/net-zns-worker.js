@@ -1,9 +1,6 @@
 /**
  * ZNS: email + OTP login, namespace claim, long-lived token, KV pairs.
- * Public *.zns.zed.cafe/{key}:
- *   peer  -> 302 zed join
- *   bytes -> 302 bytes.zed.cafe/{hash}
- *   text  -> 200 text/markdown body
+ * API reference: infra/README.md#zns-net-zns-workerjs
  */
 
 const ZNS_PEER_KEY = 'peer'
@@ -200,22 +197,30 @@ async function handlelogin(request, env) {
   const email = flatstr(formdata.get('email'))
   const namespace = flatstr(formdata.get('namespace'))
   if (!email || !validatenamespace(namespace)) {
-    return new Response(JSON.stringify({ message: 'invalid email or namespace' }), {
-      status: 400,
-      headers: corsheaders,
-    })
+    return new Response(
+      JSON.stringify({ message: 'invalid email or namespace' }),
+      {
+        status: 400,
+        headers: corsheaders,
+      },
+    )
   }
   const nskey = nsstoragekey(namespace)
   const nsentry = await env.zns.getWithMetadata(nskey)
   if (nsentry.metadata?.email && nsentry.metadata.email !== email) {
     return new Response(
-      JSON.stringify({ message: `namespace ${namespace} is in use by another account` }),
+      JSON.stringify({
+        message: `namespace ${namespace} is in use by another account`,
+      }),
       { status: 403, headers: corsheaders },
     )
   }
   const ukey = userstoragekey(email)
   const userentry = await env.zns.getWithMetadata(ukey)
-  if (userentry?.metadata?.namespace && userentry.metadata.namespace !== namespace) {
+  if (
+    userentry?.metadata?.namespace &&
+    userentry.metadata.namespace !== namespace
+  ) {
     return new Response(
       JSON.stringify({ message: `incorrect namespace for ${email}` }),
       { status: 403, headers: corsheaders },
@@ -235,10 +240,13 @@ async function handlelogin(request, env) {
   try {
     await sendznscodeemail(env.RESEND_API_KEY, email, code)
   } catch (err) {
-    return new Response(JSON.stringify({ message: String(err?.message ?? err) }), {
-      status: 502,
-      headers: corsheaders,
-    })
+    return new Response(
+      JSON.stringify({ message: String(err?.message ?? err) }),
+      {
+        status: 502,
+        headers: corsheaders,
+      },
+    )
   }
   return new Response(JSON.stringify({ success: true }), {
     status: 200,
@@ -266,10 +274,13 @@ async function handlecode(request, env) {
   }
   const namespace = userentry.metadata.namespace
   if (!validatenamespace(namespace)) {
-    return new Response(JSON.stringify({ message: 'invalid namespace on account' }), {
-      status: 400,
-      headers: corsheaders,
-    })
+    return new Response(
+      JSON.stringify({ message: 'invalid namespace on account' }),
+      {
+        status: 400,
+        headers: corsheaders,
+      },
+    )
   }
   const nskey = nsstoragekey(namespace)
   const nsentry = await env.zns.getWithMetadata(nskey)
@@ -386,7 +397,9 @@ async function handlelist(request, env) {
       headers: corsheaders,
     })
   }
-  const rows = await Promise.all(names.map((name) => env.zns.getWithMetadata(name)))
+  const rows = await Promise.all(
+    names.map((name) => env.zns.getWithMetadata(name)),
+  )
   const list = []
   for (let i = 0; i < names.length; i++) {
     const name = names[i]

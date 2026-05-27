@@ -2,6 +2,8 @@
 
 **Purpose**: URL shortening, join-mode detection, Museum of ZZT integration, ZNS login/publish.
 
+Worker HTTP APIs: [`infra/README.md`](../../../infra/README.md).
+
 ## Exports
 
 | Function | Args | Description |

@@ -45,7 +45,7 @@ export const WASM_PLAY_BUS_DB = volumetodb(10)
 export const WASM_PLAY_BUS_GAIN = Math.pow(10, WASM_PLAY_BUS_DB / 20)
 
 /** Trim after main compressor + razzle in WASM master chain. */
-export const WASM_MASTER_TRIM_DB = 0
+export const WASM_MASTER_TRIM_DB = -2
 
 /** Tone sidechain makeup (+24 dB) minus headroom; calibrates #vol 80 without cranking to 500. */
 export const WASM_MASTER_MAKEUP_DB = 22
