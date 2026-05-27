@@ -195,9 +195,14 @@ Init envelope → **0.001/0.4/0.01/1.4** s, pitch decay `× 0.9993`/sample while
 
 algorithm via `algoN` name; harmonicity1/2/3 `2`; modindex1/2/3 `1`; osc1–4 `sine`; env1–4 `0.01/0.01/1/0.5`; operator volume `-10` dB.
 
-### Critical WASM vs Tone difference
+### Voice-level `env` vs per-operator `env1`–`env4`
 
-Voice-level `env` / `envelope` is **ignored** on WASM for algo voices — use `env1`–`env4`.
+| Backend | Voice-level `env` / `envelope` | Per-operator `env1`–`env4` |
+|---------|--------------------------------|----------------------------|
+| WASM | Drives **`algooutenvs`** (outer bus ADSR after operator mix) | Per-op envelopes in play code |
+| Tone | Drives **`AlgoSynth.envelope`** (outer bus ADSR after operator mix) | `envelope1`–`envelope4` on operators |
+
+Use **`env1`–`env4`** for per-operator shaping; use voice-level **`env`** for an outer mix envelope on both backends.
 
 ---
 

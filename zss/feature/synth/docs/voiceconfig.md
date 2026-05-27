@@ -18,7 +18,7 @@ Handles voice/source configuration from external API (e.g. device commands). For
 |--------|-------|-------------|
 | `restart` | — | Applies full synth reset |
 | `vol` / `volume` | number | Source volume |
-| `port` / `portamento` | number | Portamento (SYNTH, ALGO_SYNTH only) |
+| `port` / `portamento` | number (seconds) | Portamento (SYNTH, ALGO_SYNTH only) |
 | `env` / `envelope` | [a,d,s,r] | ADSR envelope |
 
 ## Source Type Changes

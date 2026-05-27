@@ -1,5 +1,6 @@
-import { invokeplay, parseplay } from '../../playnotation'
+import { invokeplay, parseplay, tonenotationseconds } from '../../playnotation'
 import type { SYNTH_NOTE_ENTRY } from '../../playnotation'
+import { isstring } from 'zss/mapping/types'
 
 import {
   bootisolatedmaxiengine,
@@ -17,6 +18,26 @@ import type { WASM_REPLAY_STATE } from './wasmreplaystate'
 import { defaultwasmvoicestate } from './wasmvoiceconfig'
 
 const PARITY_SAMPLERATE = 44100
+const PARITY_REPLAY_OFFSET_SEC = 0.05
+
+function parityrenderlengthsec(
+  patch: PARITY_PATCH,
+  ticks: SYNTH_NOTE_ENTRY[],
+): number {
+  let latest = patch.durationsec
+  for (let i = 0; i < ticks.length; i++) {
+    const [time, value] = ticks[i]
+    const [, notation] = value
+    let eventend = time + PARITY_REPLAY_OFFSET_SEC
+    if (isstring(notation)) {
+      eventend += tonenotationseconds(notation)
+    }
+    if (eventend > latest) {
+      latest = eventend
+    }
+  }
+  return Math.max(latest + 0.15, patch.durationsec + 1.0)
+}
 
 function buildreplay(): WASM_REPLAY_STATE {
   return {
@@ -41,7 +62,9 @@ export async function renderwasmparitypatch(
     throw new Error('OfflineAudioContext not available')
   }
 
-  const length = Math.max(1, Math.ceil(patch.durationsec * PARITY_SAMPLERATE))
+  const ticks = patchentries(patch.notation)
+  const rendersec = parityrenderlengthsec(patch, ticks)
+  const length = Math.max(1, Math.ceil(rendersec * PARITY_SAMPLERATE))
   const offlinectx = new OfflineAudioContext(1, length, PARITY_SAMPLERATE)
   const maxi = await bootisolatedmaxiengine(offlinectx)
   await startisolatedmaximiliandsp(
@@ -59,7 +82,6 @@ export async function renderwasmparitypatch(
   synth.setplayvolume(80)
   synth.setbgplayvolume(100)
 
-  const ticks = patchentries(patch.notation)
   const maxtime = patch.durationsec
   synth.synthreplay(ticks, maxtime)
   synth.prepareofflinerender()

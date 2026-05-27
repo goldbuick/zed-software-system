@@ -36,6 +36,7 @@ export type AlgoSynthOptions = {
   envelope2: Omit<EnvelopeOptions, keyof ToneAudioNodeOptions>
   envelope3: Omit<EnvelopeOptions, keyof ToneAudioNodeOptions>
   envelope4: Omit<EnvelopeOptions, keyof ToneAudioNodeOptions>
+  envelope: Omit<EnvelopeOptions, keyof ToneAudioNodeOptions>
 } & Omit<SynthOptions, 'oscillator' | 'envelope'>
 
 export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
@@ -48,6 +49,11 @@ export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
   protected _operator2: Synth
   protected _operator3: Synth
   protected _operator4: Synth
+
+  /**
+   * Operator mix bus and outer output envelope (WASM algooutenvs parity).
+   */
+  protected _outbus: Gain
 
   /**
    * The node where the modulation happens
@@ -71,6 +77,11 @@ export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
   readonly envelope2: AmplitudeEnvelope
   readonly envelope3: AmplitudeEnvelope
   readonly envelope4: AmplitudeEnvelope
+
+  /**
+   * Outer mix envelope — driven by voice-level `#synth env`.
+   */
+  readonly envelope: AmplitudeEnvelope
 
   /**
    * The frequency control
@@ -147,6 +158,19 @@ export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
     })
     this.oscillator4 = this._operator4.oscillator
     this.envelope4 = this._operator4.envelope
+
+    this._outbus = new Gain({
+      context: this.context,
+      gain: 0,
+    })
+    this.envelope = new AmplitudeEnvelope({
+      context: this.context,
+      attack: options.envelope.attack,
+      decay: options.envelope.decay,
+      sustain: options.envelope.sustain,
+      release: options.envelope.release,
+    })
+    this._outbus.chain(this.envelope, this.output)
 
     this.frequency = new Signal({
       context: this.context,
@@ -299,23 +323,23 @@ export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
       case 1:
       case 2:
       case 3:
-        this._operator4.connect(this.output)
+        this._operator4.connect(this._outbus)
         break
       case 4:
-        this._operator2.connect(this.output)
-        this._operator4.connect(this.output)
+        this._operator2.connect(this._outbus)
+        this._operator4.connect(this._outbus)
         break
       case 5:
       case 6:
-        this._operator2.connect(this.output)
-        this._operator3.connect(this.output)
-        this._operator4.connect(this.output)
+        this._operator2.connect(this._outbus)
+        this._operator3.connect(this._outbus)
+        this._operator4.connect(this._outbus)
         break
       case 7:
-        this._operator1.connect(this.output)
-        this._operator2.connect(this.output)
-        this._operator3.connect(this.output)
-        this._operator4.connect(this.output)
+        this._operator1.connect(this._outbus)
+        this._operator2.connect(this._outbus)
+        this._operator3.connect(this._outbus)
+        this._operator4.connect(this._outbus)
         break
     }
 
@@ -334,6 +358,7 @@ export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
       'envelope2',
       'envelope3',
       'envelope4',
+      'envelope',
       'frequency',
       'detune',
     ])
@@ -436,6 +461,18 @@ export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
           release: 0.5,
         },
       ),
+      envelope: Object.assign(
+        omitFromObject(
+          Envelope.getDefaults(),
+          Object.keys(ToneAudioNode.getDefaults()),
+        ),
+        {
+          attack: 0.01,
+          decay: 0.01,
+          sustain: 0.5,
+          release: 0.01,
+        },
+      ),
     })
   }
 
@@ -443,6 +480,7 @@ export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
    * Trigger the attack portion of the note
    */
   protected _triggerEnvelopeAttack(time: Unit.Seconds, velocity: number): void {
+    this.envelope.triggerAttack(time, velocity)
     // @ts-expect-error yes
     this._operator1._triggerEnvelopeAttack(time, velocity)
     // @ts-expect-error yes
@@ -457,6 +495,7 @@ export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
    * Trigger the release portion of the note
    */
   protected _triggerEnvelopeRelease(time: Unit.Seconds) {
+    this.envelope.triggerRelease(time)
     // @ts-expect-error yes
     this._operator1._triggerEnvelopeRelease(time)
     // @ts-expect-error yes
@@ -470,11 +509,13 @@ export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
 
   getLevelAtTime(time: Unit.Time): Unit.NormalRange {
     time = this.toSeconds(time)
-    return this.envelope4.getValueAtTime(time)
+    return this.envelope.getValueAtTime(time)
   }
 
   dispose(): this {
     super.dispose()
+    this.envelope.dispose()
+    this._outbus.dispose()
     this.harmonicity1.dispose()
     this.harmonicity2.dispose()
     this.harmonicity3.dispose()

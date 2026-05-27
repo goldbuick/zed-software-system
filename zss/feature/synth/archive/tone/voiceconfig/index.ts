@@ -11,7 +11,7 @@ import {
 } from 'zss/mapping/types'
 
 import { handlealgosynthconfig } from './algosynth'
-import { validatesynthtype } from './validation'
+import { validatesynthtype } from 'zss/feature/synth/voiceconfig/validation'
 
 export function synthvoiceconfig(
   player: string,

@@ -33,6 +33,8 @@ describe('wasmmasterplaycode', () => {
     expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('var PLAY_VOICE_COUNT = 4')
     expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('function readvoicecfgsab')
     expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('function glidefreq')
+    expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('Math.round(port * sr)')
+    expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('Math.pow(end / start, progress)')
     expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('setparams')
     expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('function readosccfgsab')
     expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('function readalgocfgsab')

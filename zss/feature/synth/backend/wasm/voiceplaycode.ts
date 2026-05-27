@@ -64,6 +64,10 @@ var noiseprev = [];
 var gateprev = [];
 var dootpitch = [];
 var playfreqs = [];
+var glidestart = [];
+var glidetarget = [];
+var glidetotal = [];
+var glideremain = [];
 var voicecfgattack = [];
 var voicecfgdecay = [];
 var voicecfgsustain = [];
@@ -90,6 +94,10 @@ for (var vi = 0; vi < VOICE_COUNT; vi++) {
   gateprev.push(0);
   dootpitch.push(1);
   playfreqs.push(440);
+  glidestart.push(440);
+  glidetarget.push(440);
+  glidetotal.push(0);
+  glideremain.push(0);
   voicecfgattack.push(0.01);
   voicecfgdecay.push(0.01);
   voicecfgsustain.push(0.5);
@@ -148,14 +156,41 @@ function detunedhz(i, freq) {
 function glidefreq(i) {
   var target = freqs[i] > 0 ? freqs[i] : 440;
   var type = types[i];
-  var port = voicecfgport[i] || 0;
+  var port = voicecfgport[i] > 0 ? voicecfgport[i] : 0;
   if ((type !== 0 && type !== 7) || port <= 0) {
     playfreqs[i] = target;
+    glidetarget[i] = target;
+    glideremain[i] = 0;
     return target;
   }
   var sr = typeof sampleRate !== 'undefined' ? sampleRate : 44100;
-  var rate = 1 / Math.max(1, port * sr);
-  playfreqs[i] += (target - playfreqs[i]) * rate;
+  if (target !== glidetarget[i]) {
+    var level = voiceenvlevel(i);
+    if (gates[i] && level > 0.05 && playfreqs[i] > 0) {
+      glidestart[i] = playfreqs[i];
+      glidetarget[i] = target;
+      glidetotal[i] = Math.max(1, Math.round(port * sr));
+      glideremain[i] = glidetotal[i];
+    } else {
+      playfreqs[i] = target;
+      glidetarget[i] = target;
+      glideremain[i] = 0;
+    }
+  }
+  if (glideremain[i] > 0) {
+    var progress = 1 - glideremain[i] / glidetotal[i];
+    var start = glidestart[i];
+    var end = glidetarget[i];
+    if (start > 0 && end > 0) {
+      playfreqs[i] = start * Math.pow(end / start, progress);
+    } else {
+      playfreqs[i] = start + (end - start) * progress;
+    }
+    glideremain[i]--;
+    if (glideremain[i] <= 0) {
+      playfreqs[i] = end;
+    }
+  }
   return playfreqs[i];
 }
 
