@@ -26,7 +26,7 @@ export function handlesecond(vm: DEVICE, message: MESSAGE): void {
       for (let i = 0; i < players.length; ++i) {
         const player = players[i]
         if (tracking[player] >= SECOND_TIMEOUT) {
-          vmlogout(vm, player, false)
+          vmlogout(vm, player)
         }
       }
     }

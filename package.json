@@ -10,7 +10,7 @@
     "src/stub-book.json"
   ],
   "scripts": {
-    "sloc": "npx sloc -e .js zss",
+    "sloc": "npx sloc -e .js -e '__tests__|\\.test\\.(ts|tsx)$' zss",
     "test": "yarn jest --verbose",
     "test:e2e": "playwright test",
     "test:e2e:gadget-scroll": "PLAYWRIGHT_INCLUDE_GADGET_E2E=1 playwright test e2e/gadget-inspect-scroll.spec.ts",

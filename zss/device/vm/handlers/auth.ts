@@ -46,7 +46,7 @@ export function handlelogout(vm: DEVICE, message: MESSAGE): void {
 
   // clear player state
   vmclearscroll(vm, message.player)
-  memorylogoutplayer(message.player, !!message.data)
+  memorylogoutplayer(message.player)
 
   // push jsonpipe changes
   boardrunnerpushupdates(vm)
@@ -57,15 +57,14 @@ export function handlelogout(vm: DEVICE, message: MESSAGE): void {
 
   // if we're on a board
   if (ispresent(currentboard)) {
+    const priorelectionrunner = boardrunners[currentboard.id]
     // elect a new runner for the current board if necessary
     if (!boardrunnerassignmentvalid(currentboard.id)) {
       boardrunnerelect(currentboard.id)
     }
-    // send link dead message to the runner
-    const runner = boardrunners[currentboard.id]
-    if (ispresent(runner)) {
-      boardrunnerlinkdead(vm, runner, message.player)
-    }
+    // notify the boardrunner worker that held this board (may differ after election)
+    const notifyrunner = priorelectionrunner ?? message.player
+    boardrunnerlinkdead(vm, notifyrunner, message.player)
   }
 
   // signal logout

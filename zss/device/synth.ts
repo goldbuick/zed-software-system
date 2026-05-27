@@ -71,13 +71,7 @@ export function enableaudio() {
       locked = false
       enabled = true
       synthaudioenabled(synthdevice, registerreadplayer())
-      apilog(
-        synthdevice,
-        registerreadplayer(),
-        iswasmspikeenabled()
-          ? 'wasm maximilian audio ready (phase 0 spike)'
-          : 'wasm maximilian synth ready',
-      )
+      apilog(synthdevice, registerreadplayer(), 'audio is ready')
       try {
         const customnavigator = navigator as CustomNavigator
         if (ispresent(customnavigator.audioSession)) {

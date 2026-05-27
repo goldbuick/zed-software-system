@@ -256,7 +256,7 @@ const loadSampleToArray = (audioContext, sampleObjectName, url, audioWorkletNode
           }
         },
         function (buffer) { // errorCallback
-          console.log("Error decoding source!");
+          console.error("Error decoding source!");
           reject();
         }
       );
@@ -269,9 +269,6 @@ const loadSampleToArray = (audioContext, sampleObjectName, url, audioWorkletNode
       // throw new Error("Lazy loading should have been performed (contents set) in createLazyFile, but it was not. Lazy loading only works in web workers.
       // Use --embed-file or --preload-file in emcc on the main thread.");
       var request = new XMLHttpRequest();
-      request.addEventListener("load", () =>
-        console.info(`loading sample '${sampleObjectName}'`)
-      );
       request.open("GET", url, true);
       request.responseType = "arraybuffer";
       request.onload = function () {
@@ -289,7 +286,7 @@ const loadSampleToArray = (audioContext, sampleObjectName, url, audioWorkletNode
             }
           },
           function (buffer) {
-            console.log("Error decoding source!");
+            console.error("Error decoding source!");
             reject();
           }
         );
@@ -611,7 +608,6 @@ class Engine {
 					console.error("Error pushing SharedBuffer to engine");
 				}
 			} else if (e.name && e.data) {
-				console.log("sending new buffer");
 				this.audioWorkletNode.port.postMessage({
 					func: "sendbuf",
 					name: e.name,
@@ -700,8 +696,6 @@ class Engine {
           return analyserFrameId;
         };
 
-				console.info("Created analyser");
-
         analyserPollingLoop();
 
 			// Other if AudioContext is NOT created yet (after app load, before splashScreen click)
@@ -766,7 +760,6 @@ class Engine {
         }
 
         isWorkletProcessorLoaded = await this.loadWorkletProcessorCode();
-				console.log("Processor loaded");
       }
       catch(err){
         return false;
@@ -842,7 +835,6 @@ class Engine {
 		if (this.audioWorkletNode !== undefined && gain >= 0 && gain <= 1) {
 			const gainParam = this.audioWorkletNode.parameters.get("gain");
 			gainParam.value = gain;
-			console.log(gainParam.value); // DEBUG
 			return true;
 		} else return false;
 	}
@@ -851,7 +843,6 @@ class Engine {
 		if (this.audioWorkletNode !== undefined) {
 			const gainParam = this.audioWorkletNode.parameters.get("gain");
 			gainParam.value += 0.05;
-			console.info(gainParam.value); // DEBUG
 			return gainParam.value;
 		} else throw new Error("error increasing sound level");
 	}
@@ -860,7 +851,6 @@ class Engine {
 		if (this.audioWorkletNode !== undefined) {
 			const gainParam = this.audioWorkletNode.parameters.get("gain");
 			gainParam.value -= 0.05;
-			console.info(gainParam.value); // DEBUG
 			return gainParam.value;
 		} else throw new Error("error decreasing sound level");
 	}
@@ -887,8 +877,6 @@ class Engine {
 
 	eval(dspFunction, doResume = true) {
 		if (this.audioWorkletNode && this.audioWorkletNode.port) {
-      console.log("this.audioContext.state",this.audioContext.state);
-      console.log("doResume",doResume);
       if(doResume) {
         if (this.audioContext.state === "suspended") {
           this.audioContext.resume();
@@ -914,8 +902,6 @@ class Engine {
 	asyncPostToProcessor(event) {
 		if (event && this.audioWorkletNode && this.audioWorkletNode.port) {
 			// Receive notification from 'model-output-data' topic
-			console.log("DEBUG:AudioEngine:onMessagingEventHandler:");
-			console.log(event);
 			this.audioWorkletNode.port.postMessage(event);
 		} else throw new Error("Error async posting to processor");
 	}
@@ -1007,14 +993,7 @@ class Engine {
 	async loadWorkletProcessorCode() {
 		if (this.audioContext !== undefined) {
 			try {
-				await this.audioContext.audioWorklet.addModule(this.audioWorkletUrl)
-					.then(
-						console.info(
-							"running %csema-engine v0.1.0",
-							"font-weight: bold; color: #ffb7c5"
-							// "font-weight: bold; background: #000; color: #bada55"
-						)
-				);
+				await this.audioContext.audioWorklet.addModule(this.audioWorkletUrl);
 			} catch (err) {
 				console.error(
 					"ERROR:Engine:loadWorkletProcessorCode: AudioWorklet not supported in this browser: ",
@@ -1063,10 +1042,7 @@ class Engine {
 					console.error(`Engine processor error detected`, e);
 
 				// Subscribe state changes in the audio worklet processor
-				this.audioWorkletNode.onprocessorstatechange = (e) =>
-					console.info(
-						`Engine processor state change: ` + audioWorkletNode.processorState
-					);
+				this.audioWorkletNode.onprocessorstatechange = (e) => {};
 
 				// Subscribe errors from the processor port
 				this.audioWorkletNode.port.onmessageerror = (e) =>
@@ -4311,13 +4287,11 @@ class Learner {
 				this.worker.postMessage({ url });
 
 				this.worker.onerror = e => {
-					console.log("onError");
           reject(e);
         };
 
 				this.worker.onmessage = e => {
 					result = e.data.init;
-					console.info("running Learner");
 					resolve(result);
 					// this.worker.onmessage = this.onMessageHandler;
 					this.worker.onmessage = this.onMessageHandler.bind(this);
@@ -4400,7 +4374,6 @@ class Learner {
 
     } else if (m.data !== undefined && m.data.length !== 0) {
 			// res(m.data);
-			console.log(m.data);
 		}
 		// clearTimeout(timeout);
 	};

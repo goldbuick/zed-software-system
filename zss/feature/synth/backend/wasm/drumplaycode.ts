@@ -4,7 +4,7 @@ import {
   WASM_DRUM_VOICE_GAINS,
 } from './wasmlevels'
 
-/** Phase 2: Tone.js kit port — see zss/feature/synth/drums/*.ts */
+/** Tone.js kit port — woodblock: archive/tone/drums/woodblock.ts (split clack/donk ADSR). */
 export const WASM_DRUM_PLAY_CODE = `
 var DRUM_COUNT = 10;
 var DRUM_SAB_STRIKES = 10;
@@ -75,6 +75,9 @@ function drumlength(i) {
     return fixed;
   }
   var pattern = drumsamp(dursec);
+  if (i === 5 || i === 8) {
+    return Math.min(fixed, pattern + drumsamp(0.08));
+  }
   return Math.max(fixed, pattern);
 }
 
@@ -411,7 +414,17 @@ function snarenoiseenv(age) {
   return expexp(age - atk, drumsamp(drumnotelen(32)));
 }
 
-function woodenv(age) {
+function woodclackenv(age) {
+  return adsr(
+    age,
+    drumsamp(0.001),
+    drumsamp(0.001),
+    0.001,
+    drumsamp(0.08)
+  );
+}
+
+function wooddonkenv(age) {
   return adsr(
     age,
     drumsamp(0.001),
@@ -542,8 +555,9 @@ function drumwoodblock(hi) {
   if (age < 0) {
     return 0;
   }
-  var amp = woodenv(age);
-  if (amp <= 0) {
+  var clackamp = woodclackenv(age);
+  var donkamp = wooddonkenv(age);
+  if (clackamp <= 0 && donkamp <= 0) {
     return 0;
   }
   var clackend = hi ? 1000 : 100;
@@ -554,7 +568,7 @@ function drumwoodblock(hi) {
   var donkhz = expramp(age, drumsamp(drumnotelen(256)), donkstart, donkend);
   var clack = drumoscA[idx].saw(clackhz);
   var donk = drumoscB[idx].sinewave(donkhz);
-  var sig = (clack + donk) * amp;
+  var sig = clack * clackamp + donk * donkamp;
   sig = drumbandpass(idx, sig, DRUM_WOOD_BP);
   return sig * DRUM_VOICE_GAINS[idx];
 }

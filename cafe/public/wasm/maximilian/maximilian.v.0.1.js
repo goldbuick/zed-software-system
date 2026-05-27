@@ -44,7 +44,6 @@ var initAudioEngine = (origin = document.location.origin+"/libs")=>{
           }
 
           maxi.addEventListener('onSharedBuffer', (e) => {
-            console.log("onSharedBuffer", e)
             let ringbuf = new RingBuffer.default(e.sab, Float64Array);
             maxi.sharedArrayBuffers[e.channelID] = {
               sab: e.sab,
@@ -84,7 +83,6 @@ var initAudioEngine = (origin = document.location.origin+"/libs")=>{
             if(maxi.sharedArrayBuffers[id] === undefined) {
               inputBufferIds.push(id)
               maxi.createSharedBuffer(id, "ML", data.length);
-              console.log(maxi.sharedArrayBuffers)
             }
             maxi.pushDataToSharedBuffer(id, data);
           }
@@ -99,7 +97,6 @@ var initAudioEngine = (origin = document.location.origin+"/libs")=>{
             else
             {
               //Else try url
-              console.log("try url")
               function isValidURL(url) {
                 try {
                   new URL(url);
@@ -112,13 +109,11 @@ var initAudioEngine = (origin = document.location.origin+"/libs")=>{
                 let response = await fetch(location);
                 if (response.ok) {
                   let text = await response.text();
-                  console.log("executing http code")
                   return text
                 }
               }
               else {
                 //Else use string literal
-                console.log("executing literal code")
                 return location
               }
             }
@@ -126,7 +121,6 @@ var initAudioEngine = (origin = document.location.origin+"/libs")=>{
 
           maxi.setAudioCode = async (location,name)=>{
             const executeCode = (name, userCode)=> {
-              console.log(name, typeof(userCode), userCode)
               userCode = userCode.replace(/Maximilian/g, "Module");
               //Mimic site adds in some stuff for consoles, causes errors, remove it
               userCode = userCode.replace(/parent.postMessage\(\[\"console\".*\"\*\"\)/g, "");

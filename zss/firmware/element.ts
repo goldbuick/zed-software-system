@@ -766,7 +766,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
         // halt program
         chip.endofprogram()
         // signal outcome
-        vmlogout(SOFTWARE, READ_CONTEXT.elementid, true)
+        vmlogout(SOFTWARE, READ_CONTEXT.elementid)
       }
     }
   },

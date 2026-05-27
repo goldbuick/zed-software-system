@@ -959,12 +959,8 @@ export function vmlocal(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:local')
 }
 
-export function vmlogout(
-  device: DEVICELIKE,
-  player: string,
-  isendgame: boolean,
-) {
-  device.emit(player, 'vm:logout', isendgame)
+export function vmlogout(device: DEVICELIKE, player: string) {
+  device.emit(player, 'vm:logout')
 }
 
 export function vmdoot(device: DEVICELIKE, player: string) {

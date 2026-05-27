@@ -301,7 +301,7 @@ export function memoryloginplayer(
   return false
 }
 
-export function memorylogoutplayer(player: string, isendgame: boolean) {
+export function memorylogoutplayer(player: string) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
@@ -325,14 +325,12 @@ export function memorylogoutplayer(player: string, isendgame: boolean) {
 
     // capture carry-over values
     const saveflags: Record<string, any> = {}
-    if (isendgame) {
-      // we track deaths & highscore
-      saveflags.deaths = maptonumber(flags.deaths, 0) + 1
-      saveflags.highscore = Math.max(
-        maptonumber(flags.score, 0),
-        maptonumber(flags.highscore, 0),
-      )
-    }
+    // we track deaths & highscore
+    saveflags.deaths = maptonumber(flags.deaths, 0) + 1
+    saveflags.highscore = Math.max(
+      maptonumber(flags.score, 0),
+      maptonumber(flags.highscore, 0),
+    )
 
     // clear from active list
     memorywritebookplayerboard(mainbook, remove, '')
@@ -348,10 +346,8 @@ export function memorylogoutplayer(player: string, isendgame: boolean) {
     memoryclearbookflags(mainbook, remove)
 
     // set carry-over values
-    if (isendgame) {
-      const newflags = memoryreadbookflags(mainbook, remove)
-      Object.assign(newflags, saveflags)
-    }
+    const newflags = memoryreadbookflags(mainbook, remove)
+    Object.assign(newflags, saveflags)
   }
 }
 

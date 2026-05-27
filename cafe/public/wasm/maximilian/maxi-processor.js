@@ -14,6 +14,15 @@
 // can continue to use Module afterwards as well.
 var Module = typeof Maximilian != 'undefined' ? Maximilian : {};
 
+;(function () {
+  const logerror = console.error.bind(console);
+  console.log = function () {};
+  console.info = function () {};
+  console.warn = function () {};
+  console.error = logerror;
+  Module.print = function () {};
+})();
+
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
 
@@ -36788,7 +36797,7 @@ class MaxiProcessor extends AudioWorkletProcessor {
              console.log(ret)
              this.setupFunctions[key] = newEval
            } catch (err) {
-             console.log("error in code, caught and not updating", err)
+             console.error("error in code, caught and not updating", err)
            }
         }
         else if(key.toLowerCase().includes("signal"))
@@ -36805,10 +36814,10 @@ class MaxiProcessor extends AudioWorkletProcessor {
              if(ret !== undefined) {
                this.signalFunctions[key] = newEval
              } else {
-               console.log("error in code, signal function doesnt return a value")
+               console.error("error in code, signal function doesnt return a value")
              }
            } catch (err) {
-             console.log("error in code, caught and not updating", err)
+             console.error("error in code, caught and not updating", err)
            }
            console.log(this.signalFunctions[key])
         }  
@@ -36823,7 +36832,7 @@ class MaxiProcessor extends AudioWorkletProcessor {
       this.clearBufferMode = this.clearBufferModes.CLEARING_BUFFER;
       this.clearBufferCount = 3;
     } catch (err) {
-      console.log(err);
+      console.error(err);
     }
   };
 
@@ -36831,7 +36840,7 @@ class MaxiProcessor extends AudioWorkletProcessor {
     try {
       this.clearBufferMode = this.clearBufferModes.INACTIVE;
     } catch (err) {
-      console.log(err);
+      console.error(err);
     }
   };
 
@@ -36978,7 +36987,7 @@ class MaxiProcessor extends AudioWorkletProcessor {
               try {
                sig = this.signalFunctions[key](this._q[0], thisInput)
               } catch(err) {
-                console.log("error in signal function in process loop",err)
+                console.error("error in signal function in process loop", err)
               }
               if (this.clearBufferMode == this.clearBufferModes.CLEARING_BUFFER) {
                 this.clearBufferCount--;

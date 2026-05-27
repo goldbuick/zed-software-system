@@ -46,7 +46,7 @@ export function registerstatecommands(fw: FIRMWARE): FIRMWARE {
       },
     )
     .command('endgame', ['health to 0'], () => {
-      vmlogout(SOFTWARE, READ_CONTEXT.elementfocus, false)
+      vmlogout(SOFTWARE, READ_CONTEXT.elementfocus)
       return 0
     })
     .command(

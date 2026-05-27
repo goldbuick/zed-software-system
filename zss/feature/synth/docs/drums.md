@@ -57,3 +57,4 @@ Synthesized drum kit. Each file provides one or more drum sounds with trigger fu
 ### woodblock.ts
 - Clack (saw) + donk (sine) through bandpass 256Hz
 - Different frequency targets for hi vs low
+- **WASM** (`drumplaycode.ts`): split clack/donk ADSR (clack decay 0.001s, donk decay 0.1s), summed before filter; voice length shortens to pattern duration + release for indices 5/8
