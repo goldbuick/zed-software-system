@@ -102,6 +102,24 @@ describe('wasmfxstate', () => {
     )
   })
 
+  it('accepts echo delaytime as seconds or notation', () => {
+    const sab = defaultwasmfxsab()
+    const parambase = wasmfxgroupparambase(0)
+    expect(applywasmfxconfig(sab, 0, 'echo', 'delaytime', 1)).toBe(true)
+    expect(sab[parambase + WASM_FX_PARAM_IDX.ECHO_DELAY]).toBe(1)
+    expect(applywasmfxconfig(sab, 0, 'echo', 'delaytime', '8n')).toBe(true)
+    expect(sab[parambase + WASM_FX_PARAM_IDX.ECHO_DELAY]).toBeCloseTo(
+      tonenotationseconds('8n'),
+      4,
+    )
+    expect(applywasmfxconfig(sab, 0, 'echo', 'delaytime', '128n')).toBe(true)
+    expect(sab[parambase + WASM_FX_PARAM_IDX.ECHO_DELAY]).toBeCloseTo(
+      tonenotationseconds('128n'),
+      4,
+    )
+    expect(applywasmfxconfig(sab, 0, 'echo', 'delaytime', 'bad')).toBe(false)
+  })
+
   it('replays persisted voicefx state on four buses', () => {
     const sab = defaultwasmfxsab()
     replaywasmfxfromstate(sab, {

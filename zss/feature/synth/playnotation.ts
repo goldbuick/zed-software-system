@@ -152,6 +152,21 @@ export function tonenotationseconds(notation: string): number {
   return notationtoseconds(notation, DEFAULT_BPM, DEFAULT_TIME_SIGNATURE)
 }
 
+/** Seconds from a numeric value or Tone notation string; `undefined` when invalid. */
+export function parsetimeseconds(value: number | string): number | undefined {
+  if (isnumber(value)) {
+    return value
+  }
+  if (isstring(value)) {
+    try {
+      return tonenotationseconds(value.trim())
+    } catch {
+      return undefined
+    }
+  }
+  return undefined
+}
+
 /**
  * Closest notation string for `{ '64n': duration }`, matching Tone `Time.toNotation()`.
  */

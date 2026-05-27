@@ -21,29 +21,27 @@ export const WASM_DRUM_VOICE_GAINS = [
   0.24, // 0 tick
   0.22, // 1 tweet
   0.4, // 2 cowbell
-  0.26, // 3 clap
+  0.35, // 3 clap
   0.3, // 4 hi snare
   0.26, // 5 hi wood
   0.3, // 6 low snare
   0.28, // 7 tom
   0.26, // 8 low wood
-  0.7, // 9 bass
+  0.67, // 9 bass
 ]
 
 /** HP/noise trim applied before per-drum gain on tick/tweet. */
 export const WASM_DRUM_TICK_TRIM = 1.22
 export const WASM_DRUM_TWEET_TRIM = 1.1
-export const WASM_DRUM_CLAP_DRY = 0.35
-export const WASM_DRUM_CLAP_WET = 1.1
 
 function volumetodb(value: number) {
   return 20 * Math.log10(value) - 35
 }
 
-export const WASM_DRUM_BUS_DB = volumetodb(70)
+export const WASM_DRUM_BUS_DB = volumetodb(100)
 export const WASM_DRUM_BUS_GAIN = Math.pow(10, WASM_DRUM_BUS_DB / 20)
 
-export const WASM_PLAY_BUS_DB = volumetodb(20)
+export const WASM_PLAY_BUS_DB = volumetodb(10)
 export const WASM_PLAY_BUS_GAIN = Math.pow(10, WASM_PLAY_BUS_DB / 20)
 
 /** Trim after main compressor + razzle in WASM master chain. */

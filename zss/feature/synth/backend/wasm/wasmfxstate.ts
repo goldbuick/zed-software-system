@@ -1,4 +1,7 @@
-import { tonenotationseconds } from 'zss/feature/synth/playnotation'
+import {
+  parsetimeseconds,
+  tonenotationseconds,
+} from 'zss/feature/synth/playnotation'
 import type { SYNTH_STATE } from 'zss/gadget/data/types'
 import { isnumber, isstring } from 'zss/mapping/types'
 
@@ -218,9 +221,12 @@ export function applywasmfxconfig(
 
   switch (fx) {
     case 'echo':
-      if (config === 'delaytime' && isnumber(value)) {
-        sab[parambase + WASM_FX_PARAM_IDX.ECHO_DELAY] = value
-        return true
+      if (config === 'delaytime') {
+        const delaysec = parsetimeseconds(value)
+        if (delaysec !== undefined) {
+          sab[parambase + WASM_FX_PARAM_IDX.ECHO_DELAY] = delaysec
+          return true
+        }
       }
       if (config === 'feedback' && isnumber(value)) {
         sab[parambase + WASM_FX_PARAM_IDX.ECHO_FEEDBACK] = value

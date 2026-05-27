@@ -1,6 +1,4 @@
 import {
-  WASM_DRUM_CLAP_DRY,
-  WASM_DRUM_CLAP_WET,
   WASM_DRUM_TICK_TRIM,
   WASM_DRUM_TWEET_TRIM,
   WASM_DRUM_VOICE_GAINS,
@@ -338,6 +336,7 @@ var DRUM_EQ_TWEET_HIGH = drumbiquadcoef('highshelf', DRUM_EQ_HIGH_HZ, 0.707, 8);
 var DRUM_EQ_CLAP_LOW = drumbiquadcoef('lowshelf', DRUM_EQ_LOW_HZ, 0.707, -10);
 var DRUM_EQ_CLAP_MID = drumbiquadcoef('peaking', DRUM_EQ_MID_HZ, 1, 10);
 var DRUM_EQ_CLAP_HIGH = drumbiquadcoef('highshelf', DRUM_EQ_HIGH_HZ, 0.707, -1);
+var DRUM_CLAP_HP = drumbiquadcoef('highpass', 800, 0.707, 0);
 var DRUM_COWBELL_BP = drumbiquadcoef('bandpass', 350, 1, 0);
 var DRUM_WOOD_BP = drumbiquadcoef('bandpass', 256, 0.17, 0);
 
@@ -511,10 +510,9 @@ function drumclap() {
     return 0;
   }
   var raw = drumnoise.noise() * amp;
-  var n = drumhipass(3, raw, 800);
+  var n = drumbiquadrun(drumbpstatefor(3), DRUM_CLAP_HP, raw);
   n = drumeq3(3, n, DRUM_EQ_CLAP_LOW, DRUM_EQ_CLAP_MID, DRUM_EQ_CLAP_HIGH);
-  var dry = raw * 0.35;
-  return (n * ${WASM_DRUM_CLAP_WET} + dry * ${WASM_DRUM_CLAP_DRY}) * DRUM_VOICE_GAINS[3];
+  return n * DRUM_VOICE_GAINS[3];
 }
 
 function drumsnare(hi) {

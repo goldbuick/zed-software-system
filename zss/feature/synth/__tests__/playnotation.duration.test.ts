@@ -3,6 +3,7 @@ import { DEFAULT_BPM } from 'zss/mapping/tick'
 import {
   durationnotation,
   durationseconds,
+  parsetimeseconds,
   tonenotationcandidates,
   tonenotationseconds,
 } from '../playnotation'
@@ -51,5 +52,15 @@ describe('playnotation duration helpers', () => {
         expect(ei).toBeGreaterThan(en - EPS)
       }
     }
+  })
+
+  it('parsetimeseconds treats numbers as seconds and strings as notation', () => {
+    expect(parsetimeseconds(1)).toBe(1)
+    expect(parsetimeseconds('8n')).toBeCloseTo(tonenotationseconds('8n'), 12)
+    expect(parsetimeseconds('128n')).toBeCloseTo(
+      tonenotationseconds('128n'),
+      12,
+    )
+    expect(parsetimeseconds('not-a-time')).toBeUndefined()
   })
 })

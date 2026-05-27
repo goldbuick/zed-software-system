@@ -48,7 +48,7 @@ Synthesized drum kit. Each file provides one or more drum sounds with trigger fu
 
 ### percussion.ts
 - **Cowbell:** PolySynth (square) at 800+540 Hz, bandpass 350Hz
-- **Clap:** NoiseSynth, highpass 800Hz, EQ3
+- **Clap:** NoiseSynth, biquad highpass 800Hz (-12 dB/oct), EQ3 (WASM matches Tone chain; no dry blend)
 
 ### tom.ts
 - Saw + triangle + noise
