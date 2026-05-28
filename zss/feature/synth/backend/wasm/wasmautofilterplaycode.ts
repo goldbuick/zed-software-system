@@ -24,7 +24,7 @@ var fxautofiltercoefcutoff = [];
 var fxautofiltercoeftick = [];
 var FX_COEF_RECOMPUTE_TICKS = 32;
 var FX_COEF_CUTOFF_EPS = 0.01;
-for (var afg = 0; afg < FX_GROUP_COUNT; afg++) {
+for (var afg = 0; afg < ${FX_GROUP_COUNT}; afg++) {
   fxautofiltercoef.push({ b0: 1, b1: 0, b2: 0, a1: 0, a2: 0 });
   fxautofiltercoefcutoff.push(0);
   fxautofiltercoeftick.push(0);

@@ -91,7 +91,7 @@ let unlockedcontext: MAYBE<AudioContext>
 
 /** Call synchronously from a user-gesture handler before any await. */
 export function unlockmaximaudiocontext(): AudioContext {
-  unlockedcontext ??= new AudioContext({ latencyHint: 'playback' })
+  unlockedcontext ??= new AudioContext()
   void unlockedcontext.resume()
   return unlockedcontext
 }

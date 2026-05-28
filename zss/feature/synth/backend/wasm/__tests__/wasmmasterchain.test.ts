@@ -84,6 +84,15 @@ describe('wasmmasterplaycode', () => {
     expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('this.atkinc')
     expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('function fxautofiltercoefat')
     expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('function fxautowahcoefsat')
+    expect(WASM_SYNTH_VOICE_PLAY_CODE).toMatch(
+      /for \(var afg = 0; afg < 4; afg\+\+\)/,
+    )
+    expect(WASM_SYNTH_VOICE_PLAY_CODE).toMatch(
+      /for \(var awg = 0; awg < 4; awg\+\+\)/,
+    )
+    expect(
+      WASM_SYNTH_VOICE_PLAY_CODE.indexOf('for (var afg = 0; afg < 4; afg++)'),
+    ).toBeLessThan(WASM_SYNTH_VOICE_PLAY_CODE.indexOf('var FX_GROUP_COUNT ='))
     expect(WASM_MASTER_PLAY_CODE).toContain('function refreshmastergains')
     expect(WASM_SYNTH_VOICE_PLAY_CODE).not.toContain('filtlow.push')
   })

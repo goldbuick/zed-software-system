@@ -221,6 +221,9 @@ function drumhipass(i, input, cutoff) {
 }
 
 function drumbiquadrun(st, c, x) {
+  if (!c) {
+    return x;
+  }
   var y = c.b0 * x + c.b1 * st.x1 + c.b2 * st.x2 - c.a1 * st.y1 - c.a2 * st.y2;
   st.x2 = st.x1;
   st.x1 = x;

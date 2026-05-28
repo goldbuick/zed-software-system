@@ -27,7 +27,7 @@ var fxautowahbpcoef = [];
 var fxautowahpeakcoef = [];
 var fxautowahsweepcache = [];
 var fxautowahcoeftick = [];
-for (var awg = 0; awg < FX_GROUP_COUNT; awg++) {
+for (var awg = 0; awg < ${FX_GROUP_COUNT}; awg++) {
   fxautowahbpcoef.push({ b0: 1, b1: 0, b2: 0, a1: 0, a2: 0 });
   fxautowahpeakcoef.push({ b0: 1, b1: 0, b2: 0, a1: 0, a2: 0 });
   fxautowahsweepcache.push(0);
