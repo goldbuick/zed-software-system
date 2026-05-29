@@ -38,6 +38,11 @@ export function validatesynthtype(
       case 'algo5':
       case 'algo6':
       case 'algo7':
+      case 'string':
+      case 'pluck':
+      case 'karplus':
+      case 'modal':
+      case 'mallet':
         return true
       default:
         return SYNTH_VARIANTS.test(type)

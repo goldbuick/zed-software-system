@@ -24,7 +24,7 @@ flowchart LR
 - **DaisySP** (opt-in): monolithic [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp), loaded by [`daisyengine.ts`](../backend/daisy/daisyengine.ts)
 - **Tone** (archived): [`archive/tone/`](../archive/tone/) — parity ground truth for Maximilian; Daisy voice/FX still Tone-gated, drums use Daisy-native fixtures
 
-**DaisySP runtime usage:** `Oscillator`, `Adsr`, and (Daisy drums) `HiHat`, `AnalogSnareDrum`, `AnalogBassDrum`, `SyntheticBassDrum`. Other modules are linked in [`build-daisy.sh`](../backend/daisy/native/build-daisy.sh) but voice/FX/master DSP remains custom C++ for Tone/Maximilian parity.
+**DaisySP runtime usage:** `Oscillator`, `Adsr`, `Decimator`, `Overdrive`, `Autowah`, `Svf`, `Phasor`, `DelayLine`, `Chorus`, `WhiteNoise`, `Limiter`, `DcBlock`, `StringVoice`, `ModalVoice`, and (Daisy drums) `AnalogSnareDrum`, `AnalogBassDrum`, `SyntheticBassDrum`. Custom C++ remains for reverb, noise voices, bells/doot/algo, sidechain duck, and main compressor.
 
 ---
 
@@ -44,6 +44,8 @@ Enum: [`shared/sourcetype.ts`](../shared/sourcetype.ts). Dispatch: [`voiceplayco
 | `bells` | `BELLS` | FM stack + sparkle osc | 4× `Oscillator` + 2× `Adsr` | `FMSynth` + `MetalSynth` | FM (manual, not `Fm2`) | `voiceplaycode.ts` `bellsvoice()` |
 | `doot` | `DOOT` | sine + pitch-decay loop | `Oscillator` + `Adsr` | `MembraneSynth` | Drum / physical (Membrane-like) | `voiceplaycode.ts` `dootvoice()` |
 | `algo0`–`algo7` | `ALGO_SYNTH` | 4× osc + 5× ADSR, 8 routings | 4× `Oscillator` + 5× `Adsr` | custom `AlgoSynth` | FM (4-op routing) | `wasmalgoplaycode.ts`, [algosynth.md](algosynth.md) |
+| `string`/`pluck`/`karplus` | `STRING_VOICE` | — (Daisy-only) | `StringVoice` | — | Physical modeling | cpp `processvoice()` |
+| `modal`/`mallet` | `MODAL_VOICE` | — (Daisy-only) | `ModalVoice` | — | Physical modeling | cpp `processvoice()` |
 
 **SYNTH sub-modes** ([`wasmosctype.ts`](../backend/wasm/wasmosctype.ts)): basic waves, pulse/PWM, AM, FM, fat.
 
@@ -53,15 +55,15 @@ Enum: [`shared/sourcetype.ts`](../shared/sourcetype.ts). Dispatch: [`voiceplayco
 
 Serial wet chain (Maxi + Daisy): **fc → echo → reverb → autofilter → distortion → autowah**. Vibrato is pitch-mod, not in wet chain. See [fx-types-reference.md](fx-types-reference.md).
 
-| ZSS FX | Aliases | Maximilian | DaisySP WASM | Tone | DaisySP analogue | Key files |
-|--------|---------|------------|--------------|------|------------------|-----------|
-| `fc` | `fcrush` | Sample-and-hold `fxfcrush()` | Custom `fxfcrush()` | `FrequencyCrusher` worklet | Decimate (custom, not `Decimator`) | `wasmfxplaycode.ts`, cpp |
-| `echo` | — | `maxiDelayline` | Ring buffer delay | `FeedbackDelay` | No dedicated delay class | `wasmfxplaycode.ts` |
-| `reverb` | — | 4-comb + predelay | Same topology | `Reverb` (convolution) | Custom comb | `wasmfxplaycode.ts` |
-| `autofilter` | — | LFO + biquad | LFO (`Oscillator`) + biquad | `AutoFilter` | Filters (custom biquad) | `wasmautofilterplaycode.ts` |
-| `vibrato` | — | Pitch cents `playvibratocents()` | Same + `fxvibratolfo` | Wet `Vibrato` in chain | LFO via `Oscillator` | `wasmvibratoplaycode.ts` |
-| `distortion` | `distort` | `tonedistort()` | Same formula | `Distortion` | Overdrive (custom waveshaper) | `wasmfxplaycode.ts` |
-| `autowah` | — | Envelope follower + peaking | Custom `fxautowahbus()` | `AutoWah` | AutoWah (linked, unused) | `wasmautowahplaycode.ts` |
+| ZSS FX | Aliases | Maximilian | DaisySP WASM | Tone | DaisySP module | Swap status | Key files |
+|--------|---------|------------|--------------|------|----------------|-------------|-----------|
+| `fc` | `fcrush` | Sample-and-hold `fxfcrush()` | `Decimator` | `FrequencyCrusher` worklet | `Decimator` | **Swapped** | `wasmfxplaycode.ts`, cpp |
+| `echo` | — | `maxiDelayline` | `DelayLine` | `FeedbackDelay` | `DelayLine` | **Swapped** | `wasmfxplaycode.ts` |
+| `reverb` | — | 4-comb + predelay | Same topology | `Reverb` (convolution) | Custom comb | Keep custom | `wasmfxplaycode.ts` |
+| `autofilter` | — | LFO + biquad | `Svf` + `Phasor` | `AutoFilter` | `Svf`, `Phasor` | **Swapped** | `wasmautofilterplaycode.ts` |
+| `vibrato` | — | Pitch cents `playvibratocents()` | Same + `fxvibratolfo` | Wet `Vibrato` in chain | `Oscillator` (LFO) | Keep custom | `wasmvibratoplaycode.ts` |
+| `distortion` | `distort` | `tonedistort()` | `Overdrive` | `Distortion` | `Overdrive` | **Swapped** | `wasmfxplaycode.ts` |
+| `autowah` | — | Envelope follower + peaking | `Autowah` | `AutoWah` | `Autowah` | **Swapped** | `wasmautowahplaycode.ts` |
 
 **Bus layout:** 4 groups via [`voicefxgroup.ts`](../voicefxgroup.ts). SAB: [`wasmfxstate.ts`](../backend/wasm/wasmfxstate.ts).
 
@@ -69,12 +71,14 @@ Serial wet chain (Maxi + Daisy): **fc → echo → reverb → autofilter → dis
 
 ## Table 3 — Master chain (not voice FX)
 
-| Processor | Role | Maximilian | DaisySP WASM | Tone | DaisySP analogue | Key files |
-|-----------|------|------------|--------------|------|------------------|-----------|
-| Sidechain duck | Duck `#play` when bg/TTS/drums hit | Power-domain detector; clap+bass tap | Same; TTS not in trigger | `SidechainCompressor` worklet | Dynamics (custom) | `wasmsidechainplaycode.ts` |
-| Main compressor | Bus dynamics | -28 dB / 4:1 / 3 ms / 150 ms | Same | `Tone.Compressor` | Custom (no limiter) | `wasmmasterplaycode.ts` |
-| Razzle | Master character | `maxiDelayline` + `maxiOsc` | Delay + `Oscillator` LFOs | `Vibrato` + `Chorus` + noise | Chorus (linked, unused) | `wasmrazzleplaycode.ts` |
-| Master trim | Level staging | -2 dB trim + 22 dB makeup | Same | Tone graph gains | — | [`wasmlevels.ts`](../backend/wasm/wasmlevels.ts) |
+| Processor | Role | Maximilian | DaisySP WASM | Tone | DaisySP module | Swap status | Key files |
+|-----------|------|------------|--------------|------|----------------|-------------|-----------|
+| Sidechain duck | Duck `#play` when bg/TTS/drums hit | Power-domain detector; clap+bass tap | Same; TTS not in trigger | `SidechainCompressor` worklet | Custom | Keep custom | `wasmsidechainplaycode.ts` |
+| Main compressor | Bus dynamics | -28 dB / 4:1 / 3 ms / 150 ms | Same | `Tone.Compressor` | Custom | Keep custom | `wasmmasterplaycode.ts` |
+| Razzle | Master character | `maxiDelayline` + `maxiOsc` | Manual vibrato delay + `Chorus` + hiss | `Vibrato` + `Chorus` + noise | `Chorus` (partial) | **Partial swap** | `wasmrazzleplaycode.ts` |
+| Output safety | Peak control | — | `Limiter` | — | `Limiter` | **Swapped** | cpp `applymasterlimit()` |
+| DC block | Master out | — | `DcBlock` | — | `DcBlock` | **Swapped** | cpp `zss_process()` |
+| Master trim | Level staging | -2 dB trim + 22 dB makeup | Same | Tone graph gains | — | — | [`wasmlevels.ts`](../backend/wasm/wasmlevels.ts) |
 
 **Sidechain params (code):** threshold -42 dB, ratio **5:1**, attack 5 ms, release 60 ms, mix 0.75, makeup +24 dB; bg/TTS send -12 dB, drum send -28 dB.
 
@@ -85,8 +89,9 @@ flowchart LR
   mix["+ bgplay + TTS + drums"]
   comp["main compressor"]
   razz["razzle"]
+  lim["limiter + dcblock"]
   out["master vol → output"]
-  play --> duck --> mix --> comp --> razz --> out
+  play --> duck --> mix --> comp --> razz --> lim --> out
   bg["bgplay"] --> scTrigger["sidechain trigger"]
   tts["TTS"] --> scTrigger
   drums["drums clap+bass tap"] --> scTrigger
@@ -102,18 +107,18 @@ flowchart LR
 
 **Daisy backend:** [DaisySP Drums](https://github.com/electro-smith/DaisySP/tree/master/Source/Drums/) where classes exist; unmatched IDs stay custom. **Maximilian** keeps Tone-parity kit in [`drumplaycode.ts`](../backend/wasm/drumplaycode.ts).
 
-| ID | Drum | Maximilian | DaisySP WASM | Tone | DaisySP class | Key files |
-|----|------|------------|--------------|------|---------------|-----------|
-| 0 | Tick | Noise + hipass | `HiHat` closed preset | `NoiseSynth` + filter | `HiHat` | `drumplaycode.ts`, cpp `drumsout()` |
-| 1 | Tweet | longer noise hat | `HiHat` open preset | same | `HiHat` | same |
-| 2 | Cowbell | dual square + bandpass | Custom | `PolySynth` | — | `drumcowbell()` |
-| 3 | Clap | noise + EQ chain | Custom | `NoiseSynth` + EQ | — | `drumclap()`; sidechain tap |
-| 4 | Hi snare | osc + noise + distort | `AnalogSnareDrum` | same | `AnalogSnareDrum` | same |
-| 5 | Hi woodblock | clack + donk | Custom | bandpass stack | — | `drumwoodblock(true)` |
-| 6 | Low snare | lower freq snare | `AnalogSnareDrum` darker preset | same | `AnalogSnareDrum` | same |
-| 7 | Low tom | pitch glide tom | `SyntheticBassDrum` tom substitute | saw/tri/noise glide | `SyntheticBassDrum` | same |
-| 8 | Low woodblock | lower woodblock | Custom | same | — | `drumwoodblock(false)` |
-| 9 | Bass | membrane-style kick | `AnalogBassDrum` | `MembraneSynth` | `AnalogBassDrum` | same; sidechain tap |
+| ID | Drum | Maximilian | DaisySP WASM | Tone | DaisySP class | Swap status | Key files |
+|----|------|------------|--------------|------|---------------|-------------|-----------|
+| 0 | Tick | Noise + hipass | Custom noise + EQ | `NoiseSynth` + filter | — | **Keep custom** | `drumplaycode.ts`, cpp `drumtick()` |
+| 1 | Tweet | longer noise hat | Custom noise + EQ | same | — | **Keep custom** | cpp `drumtweet()` |
+| 2 | Cowbell | dual square + bandpass | Custom | `PolySynth` | — | Keep custom | `drumcowbell()` |
+| 3 | Clap | noise + EQ chain | `WhiteNoise` + EQ | `NoiseSynth` + EQ | `WhiteNoise` (source) | **Partial swap** | `drumclap()`; sidechain tap |
+| 4 | Hi snare | osc + noise + distort | `AnalogSnareDrum` | same | `AnalogSnareDrum` | Migrated | same |
+| 5 | Hi woodblock | clack + donk | Custom | bandpass stack | — | Keep custom | `drumwoodblock(true)` |
+| 6 | Low snare | lower freq snare | `AnalogSnareDrum` darker preset | same | `AnalogSnareDrum` | Migrated | same |
+| 7 | Low tom | pitch glide tom | `SyntheticBassDrum` tom substitute | saw/tri/noise glide | `SyntheticBassDrum` | Migrated | same |
+| 8 | Low woodblock | lower woodblock | Custom | same | — | Keep custom | `drumwoodblock(false)` |
+| 9 | Bass | membrane-style kick | `AnalogBassDrum` | `MembraneSynth` | `AnalogBassDrum` | Migrated | same; sidechain tap |
 
 **Parity:** Maximilian drums vs Tone. Daisy drums vs Daisy-native fixtures (not Tone).
 
@@ -123,14 +128,19 @@ flowchart LR
 
 | DaisySP category | Used in ZSS runtime | Notes |
 |------------------|---------------------|-------|
-| `Oscillator` | Yes | Voices, FX LFOs, razzle, custom drums |
+| `Oscillator` | Yes | Voices, FX LFOs, razzle vibrato/hiss, custom drums |
 | `Adsr` | Yes | Gated voices/algo |
-| `HiHat`, `AnalogSnareDrum`, `AnalogBassDrum`, `SyntheticBassDrum` | Yes | Daisy backend drums |
+| `Decimator`, `Overdrive`, `Autowah`, `Svf`, `Phasor` | Yes | Voice FX (Tier 1–2 swaps) |
+| `DelayLine` | Yes | Echo FX |
+| `Chorus` | Yes | Razzle chorus half |
+| `WhiteNoise` | Yes | Drum noise source (tick/tweet/clap paths via `drumnoise()`) |
+| `Limiter`, `DcBlock` | Yes | Master output chain |
+| `StringVoice`, `ModalVoice` | Yes | New `#synth` families (Daisy-only) |
+| `AnalogSnareDrum`, `AnalogBassDrum`, `SyntheticBassDrum` | Yes | Daisy backend drums |
+| `HiHat` | No | Reverted — tick/tweet kept custom |
 | `SyntheticSnareDrum` | No | Fallback if AnalogSnare presets insufficient |
-| `Decimator`, `Overdrive`, `AutoWah`, `Chorus`, etc. | No | Custom FX |
-| `CrossFade`, `Limiter`, LGPL `Compressor` | No | Custom dynamics |
-| `KarplusString`, `ModalVoice`, `Fm2`, etc. | No | Phase 2 voice candidates |
-| `Whitenoise`, `ClockedNoise` | No | Custom LFSR/PRNG for noise voices |
+| LGPL `Compressor` | No | Custom main compressor retained |
+| `KarplusString`, `Fm2`, `Drip`, etc. | No | Future candidates |
 
 ---
 
@@ -138,44 +148,44 @@ flowchart LR
 
 **Feasibility:** Easy = refactor · Medium = param mapping · Hard = breaks Tone gate · N/A = no module
 
-### Voice FX (not migrating in Phase 1)
+### Voice FX
 
-| ZSS custom | DaisySP candidate | Feasibility | Notes |
-|------------|-------------------|-------------|-------|
-| `fxfcrush()` | `SampleRateReducer` | Medium | `Decimator` adds bitcrush ZSS lacks |
-| `fxecho()` | `DelayLine` | Easy | Refactor only |
-| `fxreverb()` | — | N/A | No reverb in DaisySP MIT |
-| `fxautofilterbus()` | `Svf` + `Phasor` | Medium | 8 biquad types vs SVF modes |
-| `tonedistort()` | `Overdrive` | Hard | Different curve |
-| `fxautowahbus()` | `Autowah` | Hard | Different param model |
-| Vibrato pitch cents | `PitchShifter` | Hard | Source pitch mod, not wet delay |
+| ZSS custom | DaisySP candidate | Feasibility | Swap status | Notes |
+|------------|-------------------|-------------|-------------|-------|
+| `fxfcrush()` | `Decimator` | Medium | **Done** | Rate reduction only; no bitcrush |
+| `fxecho()` | `DelayLine` | Easy | **Done** | Ring buffer removed |
+| `fxreverb()` | — | N/A | Keep custom | No reverb in DaisySP MIT |
+| `fxautofilterbus()` | `Svf` + `Phasor` | Medium | **Done** | Bandpass sweep |
+| `tonedistort()` | `Overdrive` | Hard | **Done** | Different curve (accepted) |
+| `fxautowahbus()` | `Autowah` | Hard | **Done** | Different param model (accepted) |
+| Vibrato pitch cents | `PitchShifter` | Hard | Keep custom | Source pitch mod, not wet delay |
 
-### Master chain (Phase 2)
+### Master chain
 
-| ZSS custom | DaisySP candidate | Feasibility |
-|------------|-------------------|-------------|
-| Sidechain + compressor | LGPL `Compressor` | Medium |
-| Razzle chorus | `Chorus` | Medium |
-| Output safety | `Limiter` | Easy |
+| ZSS custom | DaisySP candidate | Feasibility | Swap status |
+|------------|-------------------|-------------|-------------|
+| Sidechain + compressor | LGPL `Compressor` | Medium | Keep custom |
+| Razzle chorus | `Chorus` | Medium | **Done** (vibrato/hiss manual) |
+| Output safety | `Limiter` | Easy | **Done** |
+| DC offset | `DcBlock` | Easy | **Done** |
 
-### Drums — migrated (Phase 1)
+### Drums
 
-| ZSS drum | DaisySP class | Status |
-|----------|---------------|--------|
-| 0–1 Tick/Tweet | `HiHat` | Migrated |
+| ZSS drum | DaisySP class | Swap status |
+|----------|---------------|-------------|
+| 0–1 Tick/Tweet | — | **Keep custom** (HiHat reverted) |
 | 4, 6 Snares | `AnalogSnareDrum` | Migrated |
 | 9 Bass | `AnalogBassDrum` | Migrated |
 | 7 Tom | `SyntheticBassDrum` | Migrated |
-| 2, 3, 5, 8 | — | Custom |
+| 3 Clap noise source | `WhiteNoise` | **Done** (EQ chain kept) |
+| 2, 5, 8 | — | Keep custom |
 
-### Build gaps (future swaps)
+### Build gaps (future)
 
 | Module | Source | Enables |
 |--------|--------|---------|
-| `SampleRateReducer` | `Effects/sampleratereducer.cpp` | Better `fc` |
-| `WhiteNoise` | `Noise/whitenoise.cpp` | Custom drum noise |
-| `Limiter` | `Dynamics/limiter.cpp` | Brickwall |
-| `Compressor` | DaisySP-LGPL | Sidechain + main |
+| LGPL `Compressor` | DaisySP-LGPL | Sidechain + main dynamics |
+| `Drip` | `PhysicalModeling/drip.cpp` | New `#synth drip` family |
 
 ---
 
@@ -194,65 +204,62 @@ flowchart LR
 
 ---
 
-## Summary A — Planned DaisySP migrations
+## Summary A — DaisySP migrations
 
-### Phase 1 (implemented)
+### Phase 1 — drums (prior)
 
 | Category | ZSS feature | DaisySP module | Status |
 |----------|-------------|----------------|--------|
-| Drums | Tick (0), Tweet (1) | `HiHat` | Migrated |
+| Drums | Tick (0), Tweet (1) | — | **Keep custom** (HiHat reverted) |
 | Drums | Hi snare (4), Low snare (6) | `AnalogSnareDrum` | Migrated |
 | Drums | Bass (9) | `AnalogBassDrum` | Migrated |
 | Drums | Low tom (7) | `SyntheticBassDrum` | Migrated (tom substitute) |
-| Drums | Cowbell, clap, woodblocks (2,3,5,8) | — | Keep custom |
-| Voices | All 10 `SOURCE_TYPE` families | `Oscillator`, `Adsr` | Already in use |
+| Drums | Cowbell, woodblocks (2,5,8) | — | Keep custom |
+| Voices | Core 10 `SOURCE_TYPE` families | `Oscillator`, `Adsr` | Already in use |
 
-### Phase 2 (documented, not yet implemented)
+### Phase 2 — FX + master (implemented)
 
-| Category | ZSS feature | DaisySP module | Notes |
-|----------|-------------|----------------|-------|
-| FX | Echo buffers | `DelayLine` | Refactor only |
-| FX | Razzle chorus | `Chorus` | Partial swap |
-| Master | Sidechain + compressor | `Compressor` (LGPL) | Needs `USE_DAISYSP_LGPL` |
-| Master | Output safety | `Limiter` | Add to build |
-| Drums | Custom drum noise | `WhiteNoise` | Custom slots only |
-| Utility | Master out | `DcBlock` | Optional |
+| Category | ZSS feature | DaisySP module | Status |
+|----------|-------------|----------------|--------|
+| FX | Echo | `DelayLine` | **Done** |
+| FX | FC crush | `Decimator` | **Done** |
+| FX | Autofilter | `Svf` + `Phasor` | **Done** |
+| FX | Distortion | `Overdrive` | **Done** |
+| FX | Autowah | `Autowah` | **Done** |
+| Master | Razzle chorus | `Chorus` | **Done** (partial) |
+| Master | Output safety | `Limiter` | **Done** |
+| Master | DC block | `DcBlock` | **Done** |
+| Drums | Clap/tick/tweet noise | `WhiteNoise` | **Done** (EQ kept) |
 
-**Not migrating:** reverb, `#fcrush`, autowah, distortion, noise voices, bells, doot, algo synth.
+**Not migrating:** reverb, noise voices, bells, doot, algo synth, sidechain duck, main compressor (LGPL).
 
 ---
 
-## Summary B — Proposed new voice types (Physical Modeling)
+## Summary B — New voice types (Physical Modeling)
 
-Phase 2 — new `#synth` families beyond current 10 `SOURCE_TYPE` values. Daisy-only at first.
-
-| Proposed `#synth` name | DaisySP class | Sound character | Build deps to add |
-|------------------------|---------------|-----------------|-------------------|
-| `string`, `pluck`, `karplus` | [`StringVoice`](../backend/daisy/native/DaisySP/Source/PhysicalModeling/stringvoice.h) | Karplus-Strong plucked/bowed | `stringvoice.cpp`, `dust.cpp`, `onepole.cpp` |
-| `modal`, `mallet` | [`ModalVoice`](../backend/daisy/native/DaisySP/Source/PhysicalModeling/modalvoice.h) | Mallet on resonant body | `modalvoice.cpp`, `resonator.cpp`, `dust.cpp` |
-| `drip` | [`Drip`](../backend/daisy/native/DaisySP/Source/PhysicalModeling/drip.h) | Water-drop SFX | `drip.cpp` |
-
-Lower-level: [`String`](../backend/daisy/native/DaisySP/Source/PhysicalModeling/KarplusString.h) (already linked), [`Resonator`](../backend/daisy/native/DaisySP/Source/PhysicalModeling/resonator.h).
-
-**Suggested params:** StringVoice/ModalVoice — `structure`, `brightness`, `damping`, `accent`, plus `env`/`vol`. Drip — trigger on gate edge.
+| Proposed `#synth` name | DaisySP class | Status | Build deps |
+|------------------------|---------------|--------|--------------|
+| `string`, `pluck`, `karplus` | `StringVoice` | **Done** (Daisy-only) | `stringvoice.cpp`, `resonator.cpp` |
+| `modal`, `mallet` | `ModalVoice` | **Done** (Daisy-only) | `modalvoice.cpp`, `resonator.cpp` |
+| `drip` | `Drip` | Not started | `drip.cpp` |
 
 ```mermaid
 flowchart TB
-  subgraph phase1 [Phase 1 migrate]
-    drums["Drums: HiHat Snare Bass SynthBD"]
-    osc["Voices: Oscillator + Adsr"]
+  subgraph phase1 [Phase 1 drums]
+    snare["Snare Bass Tom"]
+    custom["Tick Tweet Cowbell Woodblock"]
   end
-  subgraph phase2 [Phase 2 new voices]
-    sv["StringVoice → pluck/string"]
-    mv["ModalVoice → modal/mallet"]
-    dr["Drip → drip"]
+  subgraph phase2 [Phase 2 FX master]
+    fx["DelayLine Decimator Overdrive Autowah Svf"]
+    master["Chorus Limiter DcBlock"]
   end
-  subgraph phase2fx [Phase 2 optional FX]
-    dl["DelayLine Chorus Compressor"]
+  subgraph phase2voices [Phase 2 new voices]
+    sv["StringVoice"]
+    mv["ModalVoice"]
   end
   phase1 --> doc["implementation-matrix.md"]
   phase2 --> doc
-  phase2fx --> doc
+  phase2voices --> doc
 ```
 
-Recommendation: **StringVoice** + **ModalVoice** highest value for follow-up; **Drip** is niche SFX.
+Recommendation: **Drip** remains a niche follow-up; core simplify-first swaps are complete.

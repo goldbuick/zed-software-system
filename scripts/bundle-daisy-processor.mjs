@@ -20,6 +20,11 @@ const glue = fs
   .readFileSync(gluepath, 'utf8')
   .replace(/export default ZssDaisy;?\s*$/, '')
   .replaceAll('import.meta.url', '""')
+  .replace(
+    /return new URL\("zss_daisy\.wasm",""\)\.href/,
+    'throw new Error("wasmBinary required in worklet")',
+  )
+  .replace('var wasmExports=createWasm()', 'var wasmExports;createWasm()')
 const worklet = fs.readFileSync(workletpath, 'utf8')
 
 const bundled = `/**

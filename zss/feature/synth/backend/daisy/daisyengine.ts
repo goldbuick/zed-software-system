@@ -27,6 +27,7 @@ let daisyready = false
 let daisybroadcastdestination: MAYBE<MediaStreamAudioDestinationNode>
 let daisybroadcasttap: MAYBE<GainNode>
 let daisyttssource: MAYBE<AudioBufferSourceNode>
+let daisykeepalive: MAYBE<ConstantSourceNode>
 
 let daisyplayvolume = WASM_DEFAULT_PLAY_VOLUME
 let daisybgplayvolume = 100
@@ -60,6 +61,43 @@ function audiocontext(maxi: DaisyEngine): AudioContext {
   return asaudiocontext(maxi.audioContext)
 }
 
+function waitforaudiorunning(ctx: AudioContext) {
+  if (ctx.state === 'running') {
+    return Promise.resolve()
+  }
+  return new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      ctx.removeEventListener('statechange', onstatechange)
+      reject(
+        new Error(
+          `audio context not running (${ctx.state}) — interact with the page to unlock audio`,
+        ),
+      )
+    }, 3000)
+
+    function onstatechange() {
+      if (ctx.state === 'running') {
+        clearTimeout(timer)
+        ctx.removeEventListener('statechange', onstatechange)
+        resolve()
+      }
+    }
+
+    ctx.addEventListener('statechange', onstatechange)
+    void ctx.resume().catch((err: unknown) => {
+      clearTimeout(timer)
+      ctx.removeEventListener('statechange', onstatechange)
+      reject(err instanceof Error ? err : new Error(String(err)))
+    })
+  })
+}
+
+function waitfornextframe() {
+  return new Promise<void>((resolve) => {
+    requestAnimationFrame(() => resolve())
+  })
+}
+
 function waitfordaisyready(
   worklet: AudioWorkletNode,
   timeoutms = 8000,
@@ -70,21 +108,18 @@ function waitfordaisyready(
 
     function cleanup() {
       clearTimeout(timer)
-      port.removeEventListener('message', onmsg)
+      port.onmessage = null
       port.onmessageerror = null
     }
 
     const timer = setTimeout(() => {
-      // #region agent log
-      fetch('http://127.0.0.1:7799/ingest/cd0f7a39-d6ec-46e6-844e-03e2070cbab0',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'5cd315'},body:JSON.stringify({sessionId:'5cd315',location:'daisyengine.ts:waitfordaisyready',message:'boot timeout',data:{laststage,timeoutms,ctxstate:(worklet.context as AudioContext).state},timestamp:Date.now(),hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
       cleanup()
       reject(
         new Error(`daisy wasm dsp boot timed out (last stage: ${laststage})`),
       )
     }, timeoutms)
 
-    function onmsg(event: MessageEvent) {
+    port.onmessage = (event: MessageEvent) => {
       const data = event.data as {
         zss_dsp_ready?: number
         zss_dsp_error?: string
@@ -92,9 +127,6 @@ function waitfordaisyready(
       }
       if (data?.zss_dsp_stage) {
         laststage = data.zss_dsp_stage
-        // #region agent log
-        fetch('http://127.0.0.1:7799/ingest/cd0f7a39-d6ec-46e6-844e-03e2070cbab0',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'5cd315'},body:JSON.stringify({sessionId:'5cd315',location:'daisyengine.ts:onmsg',message:'worklet stage',data:{stage:data.zss_dsp_stage},timestamp:Date.now(),hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
         if (import.meta.env.DEV) {
           console.warn('[daisy boot]', data.zss_dsp_stage)
         }
@@ -113,7 +145,6 @@ function waitfordaisyready(
       cleanup()
       reject(new Error('daisy worklet port message error'))
     }
-    port.addEventListener('message', onmsg)
   })
 }
 
@@ -125,61 +156,67 @@ async function resumecontext(ctx: BaseAudioContext) {
   if (live.state === 'suspended') {
     await live.resume()
   }
+  await waitforaudiorunning(live)
+}
+
+function wireworkletkeepalive(ctx: AudioContext, worklet: AudioWorkletNode) {
+  daisykeepalive?.stop()
+  daisykeepalive?.disconnect()
+  const keepalive = ctx.createConstantSource()
+  keepalive.offset.value = 0
+  keepalive.connect(worklet, 0, 0)
+  keepalive.start()
+  daisykeepalive = keepalive
 }
 
 async function bootdaisyoncontext(ctx: BaseAudioContext): Promise<DaisyEngine> {
-  // #region agent log
-  fetch('http://127.0.0.1:7799/ingest/cd0f7a39-d6ec-46e6-844e-03e2070cbab0',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'5cd315'},body:JSON.stringify({sessionId:'5cd315',location:'daisyengine.ts:bootdaisyoncontext',message:'boot start',data:{ctxstate:asaudiocontext(ctx).state,crossOriginIsolated:typeof window!=='undefined'&&window.crossOriginIsolated,userAgent:typeof navigator!=='undefined'?navigator.userAgent.slice(0,80):''},timestamp:Date.now(),hypothesisId:'C'})}).catch(()=>{});
-  // #endregion
   await ensuremaximiliancoep()
   const wasmurl = daisyasseturl('zss_daisy.wasm')
   const processorurl = daisyasseturl('daisy-processor.js')
   await ctx.audioWorklet.addModule(processorurl)
-  // #region agent log
-  fetch('http://127.0.0.1:7799/ingest/cd0f7a39-d6ec-46e6-844e-03e2070cbab0',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'5cd315'},body:JSON.stringify({sessionId:'5cd315',location:'daisyengine.ts:bootdaisyoncontext',message:'addModule ok',data:{processorurl},timestamp:Date.now(),hypothesisId:'D'})}).catch(()=>{});
-  // #endregion
+
   const wasmresponse = await fetch(wasmurl)
   if (!wasmresponse.ok) {
     throw new Error(`failed to fetch ${wasmurl}`)
   }
   const wasmbytes = await wasmresponse.arrayBuffer()
   await WebAssembly.compile(wasmbytes)
-  // #region agent log
-  fetch('http://127.0.0.1:7799/ingest/cd0f7a39-d6ec-46e6-844e-03e2070cbab0',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'5cd315'},body:JSON.stringify({sessionId:'5cd315',location:'daisyengine.ts:bootdaisyoncontext',message:'wasm compiled',data:{wasmbytes:wasmbytes.byteLength,wasmurl},timestamp:Date.now(),hypothesisId:'E'})}).catch(()=>{});
-  // #endregion
 
-  const wasmcopy = wasmbytes.slice(0)
+  await resumecontext(ctx)
+
   const worklet = new AudioWorkletNode(ctx, 'zss-daisy-processor', {
     numberOfInputs: 1,
     numberOfOutputs: 1,
     outputChannelCount: [1],
-    processorOptions: { wasmbytes: wasmcopy },
   })
   worklet.channelCount = 1
   worklet.channelCountMode = 'explicit'
   worklet.channelInterpretation = 'speakers'
 
-  const ready = waitfordaisyready(worklet)
-  worklet.onprocessorerror = (event) => {
-    // #region agent log
-    fetch('http://127.0.0.1:7799/ingest/cd0f7a39-d6ec-46e6-844e-03e2070cbab0',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'5cd315'},body:JSON.stringify({sessionId:'5cd315',location:'daisyengine.ts:processorerror',message:'worklet processor error',data:{detail:String(event)},timestamp:Date.now(),hypothesisId:'J',runId:'post-fix'})}).catch(()=>{});
-    // #endregion
-  }
-
-  await resumecontext(ctx)
-  // #region agent log
-  fetch('http://127.0.0.1:7799/ingest/cd0f7a39-d6ec-46e6-844e-03e2070cbab0',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'5cd315'},body:JSON.stringify({sessionId:'5cd315',location:'daisyengine.ts:bootdaisyoncontext',message:'after resume',data:{ctxstate:asaudiocontext(ctx).state},timestamp:Date.now(),hypothesisId:'C'})}).catch(()=>{});
-  // #endregion
   if (!isofflineaudiocontext(ctx)) {
-    wirewasmmasterchain(asaudiocontext(ctx), worklet)
+    const live = asaudiocontext(ctx)
+    wirewasmmasterchain(live, worklet)
+    wireworkletkeepalive(live, worklet)
   } else {
     worklet.connect(ctx.destination)
   }
 
-  // #region agent log
-  fetch('http://127.0.0.1:7799/ingest/cd0f7a39-d6ec-46e6-844e-03e2070cbab0',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'5cd315'},body:JSON.stringify({sessionId:'5cd315',location:'daisyengine.ts:bootdaisyoncontext',message:'posting zss_boot fallback',data:{wasmbytes:wasmcopy.byteLength},timestamp:Date.now(),hypothesisId:'B',runId:'post-fix'})}).catch(()=>{});
-  // #endregion
-  worklet.port.postMessage({ zss_boot: 1, wasmbytes: wasmcopy.slice(0) })
+  let rejectprocessor: (err: Error) => void
+  const processorfail = new Promise<void>((_, reject) => {
+    rejectprocessor = reject
+  })
+  worklet.onprocessorerror = () => {
+    rejectprocessor(new Error('daisy worklet processor error'))
+  }
+
+  await waitfornextframe()
+
+  const bootbytes = wasmbytes.slice(0)
+  const ready = Promise.race([
+    waitfordaisyready(worklet),
+    processorfail,
+  ])
+  worklet.port.postMessage({ zss_boot: 1, wasmbytes: bootbytes }, [bootbytes])
   await ready
 
   const engine: DaisyEngine = {

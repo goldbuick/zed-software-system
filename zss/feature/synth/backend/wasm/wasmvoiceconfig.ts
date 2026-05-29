@@ -102,6 +102,13 @@ function parsesourcetype(
       return { ...current, type: SOURCE_TYPE.ALGO_SYNTH, algo: 6 }
     case 'algo7':
       return { ...current, type: SOURCE_TYPE.ALGO_SYNTH, algo: 7 }
+    case 'string':
+    case 'pluck':
+    case 'karplus':
+      return { ...current, type: SOURCE_TYPE.STRING_VOICE, algo: 0 }
+    case 'modal':
+    case 'mallet':
+      return { ...current, type: SOURCE_TYPE.MODAL_VOICE, algo: 0 }
     default:
       return undefined
   }

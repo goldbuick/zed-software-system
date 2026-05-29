@@ -85,6 +85,8 @@ enum VoiceType
   kAlgoSynth     = 7,
   kHollowNoise   = 8,
   kWhiteNoise    = 9,
+  kStringVoice   = 10,
+  kModalVoice    = 11,
 };
 
 enum FxSend
@@ -561,6 +563,10 @@ struct ZssVoice
   float      bellprev_a = -1.f, dootprev_a = -1.f, algoprev_a = -1.f;
   float      algoenvprev_a[4] = {-1.f, -1.f, -1.f, -1.f};
   float      lastenv = 0.f;
+  StringVoice stringvoice;
+  ModalVoice  modalvoice;
+  bool        stringgateprev = false;
+  bool        modalgateprev = false;
 };
 
 struct ZssDrumState
@@ -573,29 +579,22 @@ struct ZssDrumState
 
 struct ZssFxGroup
 {
-  int   fc_counter = 0;
-  float fc_sample = 0.f;
-  float echo_buf[kEchoBufLen];
-  int   echo_pos = 0;
-  float echo_fb = 0.f;
-  int   echo_delay = 1;
-  float echo_feedback = 0.f;
-  float rev_predelay_buf[kRevPredelayLen];
-  int   rev_predelay_pos = 0;
-  float rev_predelay_fb = 0.f;
-  int   rev_predelay_samples = 0;
+  Decimator                      decimator;
+  Overdrive                      overdrive;
+  Autowah                        autowah;
+  Svf                            autofilter_svf;
+  Phasor                         autofilter_phasor;
+  DelayLine<float, kEchoBufLen>  echo_line;
+  int                            echo_delay = 1;
+  float                          echo_feedback = 0.f;
+  float                          rev_predelay_buf[kRevPredelayLen];
+  int                            rev_predelay_pos = 0;
+  float                          rev_predelay_fb = 0.f;
+  int                            rev_predelay_samples = 0;
   float rev_comb0[2600], rev_comb1[3300], rev_comb2[4700], rev_comb3[6000];
   int   rev_pos0 = 0, rev_pos1 = 0, rev_pos2 = 0, rev_pos3 = 0;
   float rev_fb0 = 0.f, rev_fb1 = 0.f, rev_fb2 = 0.f, rev_fb3 = 0.f;
   float rev_fb = 0.58f;
-  float autofilter_phase = 0.f;
-  BiquadState autofilter_st;
-  BiquadCoef  autofilter_coef;
-  float       autofilter_cutoff = 0.f;
-  float       autowah_follower = 0.f;
-  BiquadState autowah_bp0, autowah_bp1, autowah_peak;
-  BiquadCoef  autowah_bp_coef, autowah_peak_coef;
-  float       autowah_sweep = 0.f;
 };
 
 struct ZssEngine
@@ -603,14 +602,11 @@ struct ZssEngine
   float        sample_rate = 44100.f;
   ZssVoice     voices[kVoiceCount];
   ZssDrumState drums[kDrumCount];
-  HiHat<>              hat_tick;
-  HiHat<>              hat_tweet;
   AnalogSnareDrum        snare_hi;
   AnalogSnareDrum        snare_lo;
   AnalogBassDrum         bass_drum;
   SyntheticBassDrum      tom_drum;
   ZssFxGroup   fx[kFxGroups];
-  Oscillator   drumnoise;
   Oscillator   drumoscA[kDrumCount], drumoscB[kDrumCount];
   float        drumsidechain = 0.f;
   float        comp_env = 0.f;
@@ -618,10 +614,14 @@ struct ZssEngine
   float        sc_prevgaindb = 0.f;
   float        sc_gainlinear = 1.f;
   float        fxvibrato_depth = 0.f;
+  WhiteNoise   drum_whitenoise;
   Oscillator   fxvibratolfo;
-  Oscillator   razzlevibratolfo, razzlechoruslfo, razzlehissmod;
-  float        razzle_vib_buf[512], razzle_ch_buf[512];
-  int          razzle_vib_pos = 0, razzle_ch_pos = 0;
+  Oscillator   razzlevibratolfo, razzlehissmod;
+  Chorus       razzle_chorus;
+  Limiter      master_limiter;
+  DcBlock      master_dcblock;
+  float        razzle_vib_buf[512];
+  int          razzle_vib_pos = 0;
   int          sampleclock = 0;
   float        cached_mastervol = 0.f, cached_bggain = 0.f;
   float        cached_masterraw = 80.f, cached_bgraw = 100.f;
@@ -1420,10 +1420,7 @@ float drumhipass(int idx, float input, float cutoff)
 
 float drumnoise()
 {
-  g_engine.drumnoise.SetFreq(1000.f);
-  g_engine.drumnoise.SetWaveform(Oscillator::WAVE_SQUARE);
-  g_engine.drumnoise.SetAmp(1.f);
-  return (static_cast<float>(rand()) / 2147483647.f) * 2.f - 1.f;
+  return g_engine.drum_whitenoise.Process();
 }
 
 float drumoscwave(Oscillator& o, int wave, float hz)
@@ -1488,8 +1485,6 @@ void retriggerdrum(int i, float dursec)
   }
   switch(i)
   {
-  case 0: g_engine.hat_tick.Trig(); break;
-  case 1: g_engine.hat_tweet.Trig(); break;
   case 4: g_engine.snare_hi.Trig(); break;
   case 6: g_engine.snare_lo.Trig(); break;
   case 7: g_engine.tom_drum.Trig(); break;
@@ -1528,20 +1523,58 @@ float drumbandpass(int i, float input, const BiquadCoef& coef)
 
 float drumtick()
 {
-  if(drumadvance(0) < 0)
+  int age = drumadvance(0);
+  if(age < 0)
   {
     return 0.f;
   }
-  return g_engine.hat_tick.Process(false) * kDrumTickTrim * kDrumGains[0];
+  float sr = g_engine.sample_rate;
+  float amp = drumadsr(age, drumsamp(0.001f), drumsamp(0.05f), 0.001f, drumsamp(0.05f));
+  if(amp <= 0.f)
+  {
+    return 0.f;
+  }
+  static BiquadCoef hp, lo, mid, hi;
+  static bool       init = false;
+  if(!init)
+  {
+    hp  = biquadcoef("highpass", 8000.f, 0.707f, 0.f, sr);
+    lo  = biquadcoef("lowshelf", 400.f, 0.707f, -6.f, sr);
+    mid = biquadcoef("peaking", 1000.f, 1.f, 6.f, sr);
+    hi  = biquadcoef("highshelf", 2500.f, 0.707f, 10.f, sr);
+    init = true;
+  }
+  float n = biquadrun(g_engine.drums[0].bp, hp, drumnoise() * amp);
+  n       = drumeq3(0, n, lo, mid, hi);
+  return n * kDrumTickTrim * kDrumGains[0];
 }
 
 float drumtweet()
 {
-  if(drumadvance(1) < 0)
+  int age = drumadvance(1);
+  if(age < 0)
   {
     return 0.f;
   }
-  return g_engine.hat_tweet.Process(false) * kDrumTweetTrim * kDrumGains[1];
+  float sr = g_engine.sample_rate;
+  float amp = drumadsr(age, drumsamp(0.001f), drumsamp(0.16f), 0.06f, drumsamp(0.18f));
+  if(amp <= 0.f)
+  {
+    return 0.f;
+  }
+  static BiquadCoef hp, lo, mid, hi;
+  static bool       init = false;
+  if(!init)
+  {
+    hp  = biquadcoef("highpass", 6000.f, 0.707f, 0.f, sr);
+    lo  = biquadcoef("lowshelf", 400.f, 0.707f, -6.f, sr);
+    mid = biquadcoef("peaking", 1000.f, 1.f, 3.f, sr);
+    hi  = biquadcoef("highshelf", 2500.f, 0.707f, 8.f, sr);
+    init = true;
+  }
+  float n = biquadrun(g_engine.drums[1].bp, hp, drumnoise() * amp);
+  n       = drumeq3(1, n, lo, mid, hi);
+  return n * kDrumTweetTrim * kDrumGains[1];
 }
 
 float drumcowbell()
@@ -1712,6 +1745,7 @@ void refreshfxderived(int group)
     fx.echo_delay = kEchoBufLen - 1;
   }
   fx.echo_feedback = clampf(fxparam(group, kFxEchoFeedback), 0.f, 0.95f);
+  fx.echo_line.SetDelay(static_cast<float>(fx.echo_delay));
   float decay = fxparam(group, kFxReverbDecay);
   if(decay <= 0.05f)
   {
@@ -1731,19 +1765,6 @@ void refreshfxderived(int group)
   }
 }
 
-float tonedistort(float x, float amt)
-{
-  float k   = amt * 100.f;
-  float deg = 0.01745329252f;
-  float ax  = std::fabs(x);
-  if(ax < 0.001f)
-  {
-    return 0.f;
-  }
-  float sign = x < 0.f ? -1.f : 1.f;
-  return sign * ((3.f + k) * ax * 20.f * deg) / (kPi + k * ax);
-}
-
 float fxfcrush(float x, int group)
 {
   ZssFxGroup& fx = g_engine.fx[group];
@@ -1752,25 +1773,19 @@ float fxfcrush(float x, int group)
   {
     rate = 1;
   }
-  ++fx.fc_counter;
-  if(fx.fc_counter >= rate)
-  {
-    fx.fc_counter = 0;
-    fx.fc_sample  = x;
-  }
-  return fx.fc_sample;
+  fx.decimator.SetDownsampleFactor(static_cast<float>(rate));
+  fx.decimator.SetBitcrushFactor(0.f);
+  fx.decimator.SetSmoothCrushing(true);
+  return fx.decimator.Process(x);
 }
 
 float fxecho(float x, int group)
 {
-  ZssFxGroup& fx = g_engine.fx[group];
-  float       input = x + fx.echo_fb * fx.echo_feedback;
-  int         pos   = fx.echo_pos;
-  float       wet   = fx.echo_buf[pos];
-  fx.echo_buf[pos]  = input;
-  fx.echo_pos       = (pos + 1) % fx.echo_delay;
-  fx.echo_fb        = wet;
-  return wet;
+  ZssFxGroup& fx      = g_engine.fx[group];
+  float       delayed = fx.echo_line.Read();
+  float       input   = x + delayed * fx.echo_feedback;
+  fx.echo_line.Write(input);
+  return delayed;
 }
 
 float fxreverbinput(float x, int group)
@@ -1848,72 +1863,36 @@ float fxautofilterbus(float x, int group)
   {
     q = 1.f;
   }
-  float lfo = std::sin(fx.autofilter_phase);
-  fx.autofilter_phase += kTwoPi * freq / g_engine.sample_rate;
-  if(fx.autofilter_phase >= kTwoPi)
-  {
-    fx.autofilter_phase -= kTwoPi;
-  }
-  float maxhz = base * std::pow(2.f, oct);
+  fx.autofilter_phasor.SetFreq(freq);
+  float lfo      = fx.autofilter_phasor.Process();
+  float maxhz    = base * std::pow(2.f, oct);
   if(maxhz > g_engine.sample_rate * 0.5f)
   {
     maxhz = g_engine.sample_rate * 0.5f;
   }
-  float unipolar = (lfo * depth + 1.f) * 0.5f;
+  float unipolar = lfo * depth + (1.f - depth) * 0.5f;
   float cutoff   = base + (maxhz - base) * unipolar;
   if(cutoff < 20.f)
   {
     cutoff = 20.f;
   }
-  if(std::fabs(cutoff - fx.autofilter_cutoff) > 1.f)
-  {
-    fx.autofilter_cutoff = cutoff;
-    fx.autofilter_coef   = biquadcoef("lowpass", cutoff, q, 0.f, g_engine.sample_rate);
-  }
-  float filtered = biquadrun(fx.autofilter_st, fx.autofilter_coef, x);
-  return filtered - x;
+  fx.autofilter_svf.SetFreq(cutoff);
+  fx.autofilter_svf.SetRes(clampf(q / 10.f, 0.01f, 1.f));
+  fx.autofilter_svf.Process(x);
+  return fx.autofilter_svf.Band() - x;
 }
 
 float fxautowahbus(float x, int group)
 {
   ZssFxGroup& fx = g_engine.fx[group];
-  float base = fxparam(group, kFxAutowahBase);
-  if(base <= 0.f)
-  {
-    base = 200.f;
-  }
-  float oct = fxparam(group, kFxAutowahOct);
-  if(oct <= 0.f)
-  {
-    oct = 4.f;
-  }
-  float sens = fxparam(group, kFxAutowahSens);
-  float gaindb = fxparam(group, kFxAutowahGain);
-  float followersec = fxparam(group, kFxAutowahFollow);
-  if(followersec <= 0.f)
-  {
-    followersec = 0.05f;
-  }
-  float alpha = 1.f - std::exp(-kTwoPi / (followersec * g_engine.sample_rate));
-  float boost = sens > 0.f ? 1.f / dbtoamp(sens) : 1.f;
-  float target = std::fabs(x * boost);
-  fx.autowah_follower += (target - fx.autowah_follower) * alpha;
-  float maxhz = base * std::pow(2.f, oct);
-  float sweep = base + (maxhz - base) * std::pow(fx.autowah_follower, 0.5f);
-  if(sweep < 20.f)
-  {
-    sweep = 20.f;
-  }
-  if(std::fabs(sweep - fx.autowah_sweep) > 1.f)
-  {
-    fx.autowah_sweep      = sweep;
-    fx.autowah_bp_coef    = biquadcoef("bandpass", sweep, 1.f, 0.f, g_engine.sample_rate);
-    fx.autowah_peak_coef  = biquadcoef("peaking", sweep, 1.f, gaindb, g_engine.sample_rate);
-  }
-  float band = biquadrun(fx.autowah_bp0, fx.autowah_bp_coef, x);
-  band       = biquadrun(fx.autowah_bp1, fx.autowah_bp_coef, band);
-  float filtered = biquadrun(fx.autowah_peak, fx.autowah_peak_coef, band);
-  return filtered - x;
+  float       sens = fxparam(group, kFxAutowahSens);
+  float       gaindb = fxparam(group, kFxAutowahGain);
+  float       wah = sens > 0.f ? clampf(sens / 48.f, 0.05f, 1.f) : 0.35f;
+  fx.autowah.SetWah(wah);
+  fx.autowah.SetLevel(clampf(std::pow(10.f, gaindb / 20.f), 0.01f, 1.f));
+  fx.autowah.SetDryWet(100.f);
+  float wet = fx.autowah.Process(x);
+  return wet - x;
 }
 
 bool fxgrouphasactivesends(int group)
@@ -2028,7 +2007,8 @@ float applyfxgroup(float sig, int group)
     {
       amt = 0.4f;
     }
-    float wet5 = tonedistort(out * 3.f, amt);
+    g_engine.fx[group].overdrive.SetDrive(clampf(amt, 0.f, 1.f));
+    float wet5 = g_engine.fx[group].overdrive.Process(out * 3.f);
     out        = out + s5 * (wet5 - out);
   }
   if(s6 > 0.f)
@@ -2147,6 +2127,13 @@ float razzledelay(float* buf, int& pos, int len, float in, float delaysec)
   return out;
 }
 
+float applymasterlimit(float x)
+{
+  float buf = x;
+  g_engine.master_limiter.ProcessBlock(&buf, 1, 1.f);
+  return buf;
+}
+
 float applyrazzle(float input)
 {
   g_engine.razzlevibratolfo.SetFreq(0.125f);
@@ -2157,13 +2144,8 @@ float applyrazzle(float input)
                              0.005f + vibratodepth);
   float vibrato = input + (vibtap - input) * kRazzleVibratoWet;
 
-  g_engine.razzlechoruslfo.SetFreq(0.01f);
-  g_engine.razzlechoruslfo.SetWaveform(Oscillator::WAVE_POLYBLEP_SAW);
-  g_engine.razzlechoruslfo.SetAmp(1.f);
-  float chorusdepth = g_engine.razzlechoruslfo.Process() * 0.0035f;
-  float chtap = razzledelay(g_engine.razzle_ch_buf, g_engine.razzle_ch_pos, 512, vibrato,
-                            0.007f + chorusdepth);
-  float out = vibrato + (chtap - vibrato) * kRazzleChorusWet;
+  float chorused = g_engine.razzle_chorus.Process(vibrato);
+  float out      = vibrato + (chorused - vibrato) * kRazzleChorusWet;
 
   g_engine.razzlehissmod.SetFreq(0.25f * kPi);
   g_engine.razzlehissmod.SetWaveform(Oscillator::WAVE_SIN);
@@ -2239,24 +2221,20 @@ void initvoice(ZssVoice& v, float sr)
   v.modenv.SetSustainLevel(1.f);
   v.modenv.SetTime(ADSR_SEG_RELEASE, 0.08f);
   v.noiserng = (0x6d2b79f5u + 7919u) >> 0;
+  v.stringvoice.Init(sr);
+  v.stringvoice.SetStructure(0.5f);
+  v.stringvoice.SetBrightness(0.5f);
+  v.stringvoice.SetDamping(0.5f);
+  v.stringvoice.SetAccent(0.8f);
+  v.modalvoice.Init(sr);
+  v.modalvoice.SetStructure(0.5f);
+  v.modalvoice.SetBrightness(0.5f);
+  v.modalvoice.SetDamping(0.5f);
+  v.modalvoice.SetAccent(0.8f);
 }
 
 void initdaisydrums(float sr)
 {
-  g_engine.hat_tick.Init(sr);
-  g_engine.hat_tick.SetFreq(3000.f);
-  g_engine.hat_tick.SetDecay(0.15f);
-  g_engine.hat_tick.SetTone(0.8f);
-  g_engine.hat_tick.SetNoisiness(0.9f);
-  g_engine.hat_tick.SetAccent(0.8f);
-
-  g_engine.hat_tweet.Init(sr);
-  g_engine.hat_tweet.SetFreq(2500.f);
-  g_engine.hat_tweet.SetDecay(0.5f);
-  g_engine.hat_tweet.SetTone(0.6f);
-  g_engine.hat_tweet.SetNoisiness(0.7f);
-  g_engine.hat_tweet.SetAccent(0.8f);
-
   g_engine.snare_hi.Init(sr);
   g_engine.snare_hi.SetFreq(180.f);
   g_engine.snare_hi.SetDecay(0.4f);
@@ -2293,7 +2271,7 @@ void initengine(float sr)
   {
     initvoice(g_engine.voices[i], sr);
   }
-  g_engine.drumnoise.Init(sr);
+  g_engine.drum_whitenoise.Init();
   initdaisydrums(sr);
   for(int d = 0; d < kDrumCount; ++d)
   {
@@ -2302,20 +2280,30 @@ void initengine(float sr)
   }
   for(int f = 0; f < kFxGroups; ++f)
   {
-    std::memset(g_engine.fx[f].echo_buf, 0, sizeof(g_engine.fx[f].echo_buf));
-    std::memset(g_engine.fx[f].rev_predelay_buf, 0, sizeof(g_engine.fx[f].rev_predelay_buf));
-    std::memset(g_engine.fx[f].rev_comb0, 0, sizeof(g_engine.fx[f].rev_comb0));
-    std::memset(g_engine.fx[f].rev_comb1, 0, sizeof(g_engine.fx[f].rev_comb1));
-    std::memset(g_engine.fx[f].rev_comb2, 0, sizeof(g_engine.fx[f].rev_comb2));
-    std::memset(g_engine.fx[f].rev_comb3, 0, sizeof(g_engine.fx[f].rev_comb3));
+    ZssFxGroup& fx = g_engine.fx[f];
+    fx.decimator.Init();
+    fx.overdrive.Init();
+    fx.autowah.Init(sr);
+    fx.autofilter_svf.Init(sr);
+    fx.autofilter_phasor.Init(sr);
+    fx.echo_line.Init();
+    std::memset(fx.rev_predelay_buf, 0, sizeof(fx.rev_predelay_buf));
+    std::memset(fx.rev_comb0, 0, sizeof(fx.rev_comb0));
+    std::memset(fx.rev_comb1, 0, sizeof(fx.rev_comb1));
+    std::memset(fx.rev_comb2, 0, sizeof(fx.rev_comb2));
+    std::memset(fx.rev_comb3, 0, sizeof(fx.rev_comb3));
     refreshfxderived(f);
   }
   g_engine.fxvibratolfo.Init(sr);
   g_engine.razzlevibratolfo.Init(sr);
-  g_engine.razzlechoruslfo.Init(sr);
+  g_engine.razzle_chorus.Init(sr);
+  g_engine.razzle_chorus.SetLfoFreq(0.01f);
+  g_engine.razzle_chorus.SetLfoDepth(0.35f);
+  g_engine.razzle_chorus.SetDelayMs(7.f);
   g_engine.razzlehissmod.Init(sr);
+  g_engine.master_limiter.Init();
+  g_engine.master_dcblock.Init(sr);
   std::memset(g_engine.razzle_vib_buf, 0, sizeof(g_engine.razzle_vib_buf));
-  std::memset(g_engine.razzle_ch_buf, 0, sizeof(g_engine.razzle_ch_buf));
   g_engine.ready = true;
 }
 
@@ -2379,6 +2367,28 @@ float processvoice(int vi, float vstart[kVibratoGroups], float vend[kVibratoGrou
   {
     out       = algovoice(v, vi, freq, gate, algo, vfreq);
     v.lastenv = std::fabs(out);
+  }
+  else if(type == kStringVoice)
+  {
+    float hz     = freq > 0.f ? freq : 440.f;
+    bool  trigger = gate && !v.stringgateprev;
+    v.stringgateprev = gate;
+    v.stringvoice.SetFreq(hz);
+    v.stringvoice.SetSustain(gate);
+    out       = v.stringvoice.Process(trigger) * dbtoamp(vol_db);
+    v.lastenv = std::fabs(out);
+    return out;
+  }
+  else if(type == kModalVoice)
+  {
+    float hz     = freq > 0.f ? freq : 440.f;
+    bool  trigger = gate && !v.modalgateprev;
+    v.modalgateprev = gate;
+    v.modalvoice.SetFreq(hz);
+    v.modalvoice.SetSustain(gate);
+    out       = v.modalvoice.Process(trigger) * dbtoamp(vol_db);
+    v.lastenv = std::fabs(out);
+    return out;
   }
   else
   {
@@ -2487,7 +2497,10 @@ void zss_process(float* out, int frames)
 
     float comp  = applycompressor(dry);
     float razz  = applyrazzle(comp);
-    float final = g_engine.cached_mastervol > 0.f ? razz * g_engine.cached_mastervol : 0.f;
+    float limited = applymasterlimit(razz);
+    float final = g_engine.cached_mastervol > 0.f
+                      ? g_engine.master_dcblock.Process(limited * g_engine.cached_mastervol)
+                      : 0.f;
     out[f]      = clampf(final, -1.f, 1.f);
   }
 }

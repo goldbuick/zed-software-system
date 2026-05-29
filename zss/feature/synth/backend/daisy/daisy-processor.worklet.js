@@ -73,35 +73,19 @@ class DaisyProcessor extends AudioWorkletProcessor {
     const optbytes = options?.processorOptions?.wasmbytes
     if (optbytes) {
       this.pendingwasmbytes = optbytes
-      // #region agent log
-      this.port.postMessage({
-        zss_dsp_stage: 'processor_options_wasm',
-        zss_debug: { bytelen: optbytes.byteLength ?? 0 },
-      })
-      // #endregion
+      postdspstage(this.port, 'processor_options_wasm')
     }
     this.port.onmessage = (event) => this.onmessage(event)
-    // #region agent log
-    this.port.postMessage({ zss_dsp_stage: 'constructor' })
-    // #endregion
+    postdspstage(this.port, 'constructor')
   }
 
   bootwasm(wasmbytes) {
-    // #region agent log
-    this.port.postMessage({
-      zss_dsp_stage: 'bootwasm_enter',
-      zss_debug: {
-        bootstarted: this.bootstarted,
-        hasbytes: !!wasmbytes,
-        bytelen: wasmbytes?.byteLength ?? 0,
-      },
-    })
-    // #endregion
     if (this.bootstarted) {
       return
     }
     this.bootstarted = true
     this.eminitstartframe = currentFrame
+    postdspstage(this.port, 'bootwasm_enter')
 
     if (!wasmbytes) {
       this.port.postMessage({
@@ -184,18 +168,8 @@ class DaisyProcessor extends AudioWorkletProcessor {
 
   onmessage(event) {
     const data = event.data
-    // #region agent log
     if (data?.zss_boot) {
-      this.port.postMessage({
-        zss_dsp_stage: 'onmessage_zss_boot',
-        zss_debug: {
-          hasbytes: !!data.wasmbytes,
-          bytelen: data.wasmbytes?.byteLength ?? 0,
-        },
-      })
-    }
-    // #endregion
-    if (data?.zss_boot) {
+      postdspstage(this.port, 'onmessage_zss_boot')
       const wasmbytes = data.wasmbytes ?? this.pendingwasmbytes
       this.pendingwasmbytes = wasmbytes
       this.bootwasm(wasmbytes)
@@ -241,9 +215,7 @@ class DaisyProcessor extends AudioWorkletProcessor {
   process(inputs, outputs) {
     this.checkeminitdeadline()
     if (!this.bootstarted && this.pendingwasmbytes) {
-      // #region agent log
-      this.port.postMessage({ zss_dsp_stage: 'process_boot' })
-      // #endregion
+      postdspstage(this.port, 'process_boot')
       this.bootwasm(this.pendingwasmbytes)
     }
     if (!this.ready || !this.wasm || !this.controlview) {
