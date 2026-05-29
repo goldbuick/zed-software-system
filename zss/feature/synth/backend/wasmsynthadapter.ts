@@ -1,6 +1,5 @@
 import type { SynthBackend } from '../frontend/synthbackend'
 
-import { bootwasmsynth } from './wasm/bootwasmsynth'
 import {
   getwasmbroadcastdestination,
   playwasmaudiobuffer,
@@ -31,9 +30,4 @@ export function createwasmsynthadapter(synth: WASM_SYNTH): SynthBackend {
     warmdrums: () => synth.warmdrums(),
     destroy: () => synth.destroy(),
   }
-}
-
-export async function createsynthbackend(): Promise<SynthBackend> {
-  const synth = await bootwasmsynth()
-  return createwasmsynthadapter(synth)
 }

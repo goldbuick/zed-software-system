@@ -1,5 +1,5 @@
 export { ensuremaximiliancoep, clearmaximilianserviceworkers } from './coopcoep'
-export { iswasmspikeenabled } from './flags'
+export { iswasmspikeenabled, iswasmperfmode } from './flags'
 export { bootwasmsynth } from './bootwasmsynth'
 export {
   createwasmsynth,
@@ -33,5 +33,6 @@ export {
   setwasmsynthttsvolume,
   spikesynthwasm,
   unlockmaximaudiocontext,
+  getunlockedaudiocontext,
   type MaxiEngine,
 } from './maximilian'

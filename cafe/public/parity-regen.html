@@ -10,21 +10,27 @@
       import { renderwasmparitypatch } from '/zss/feature/synth/backend/wasm/wasmparityrender.ts'
       import { WASM_PARITY_PATCHES } from '/zss/feature/synth/backend/wasm/paritypatches.ts'
 
-      const params = new URLSearchParams(window.location.search)
-      const patchid = params.get('patch')
-      const out = {}
-      if (patchid) {
-        const patch = WASM_PARITY_PATCHES.find((item) => item.id === patchid)
-        if (!patch) {
-          throw new Error(`unknown patch ${patchid}`)
-        }
-        out[patch.id] = await renderwasmparitypatch(patch)
-      } else {
-        for (const patch of WASM_PARITY_PATCHES) {
+      const outel = document.getElementById('out')
+      try {
+        const params = new URLSearchParams(window.location.search)
+        const patchid = params.get('patch')
+        const out = {}
+        if (patchid) {
+          const patch = WASM_PARITY_PATCHES.find((item) => item.id === patchid)
+          if (!patch) {
+            throw new Error(`unknown patch ${patchid}`)
+          }
           out[patch.id] = await renderwasmparitypatch(patch)
+        } else {
+          for (const patch of WASM_PARITY_PATCHES) {
+            out[patch.id] = await renderwasmparitypatch(patch)
+          }
         }
+        outel.textContent = JSON.stringify(out)
+      } catch (err) {
+        outel.textContent = `error: ${err?.message ?? err}`
+        throw err
       }
-      document.getElementById('out').textContent = JSON.stringify(out)
     </script>
   </body>
 </html>

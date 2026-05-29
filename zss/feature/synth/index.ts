@@ -1,7 +1,4 @@
-export {
-  createsynthbackend,
-  createwasmsynthadapter,
-} from './backend/wasmsynthadapter'
+export { createsynthbackend, createwasmsynthadapter } from './backend/synthbackendfactory'
 export type { SynthBackend, FXNAME } from './frontend/synthbackend'
 export { applyboardstate } from './frontend/applyboardstate'
 export { SOURCE_TYPE } from './shared/sourcetype'

@@ -8,16 +8,16 @@
  * Usage:
  *   yarn regen:parity-fixtures
  */
-import http from 'node:http'
 import { readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { chromium } from '@playwright/test'
-import { createServer as createViteServer } from 'vite'
 
 import { WASM_PARITY_PATCHES } from '../zss/feature/synth/backend/wasm/paritypatches.ts'
 import type { PARITY_AUDIO_METRICS } from '../zss/feature/synth/backend/wasm/paritymetrics.ts'
+
+import { startparityvite } from './parity-vite-server.ts'
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url))
 const PROJECT = path.join(ROOT, '..')
@@ -42,38 +42,7 @@ function loadexisting(): Record<string, PARITY_AUDIO_METRICS> {
 }
 
 async function startregenserver() {
-  const vite = await createViteServer({
-    root: PROJECT,
-    publicDir: path.join(PROJECT, 'cafe/public'),
-    resolve: {
-      alias: {
-        zss: path.join(PROJECT, 'zss'),
-        cafe: path.join(PROJECT, 'cafe'),
-      },
-    },
-    server: {
-      middlewareMode: true,
-      headers: {
-        'Cross-Origin-Opener-Policy': 'same-origin',
-        'Cross-Origin-Embedder-Policy': 'require-corp',
-      },
-    },
-    appType: 'spa',
-  })
-
-  const server = http.createServer((req, res) => {
-    vite.middlewares.handle(req, res, () => {
-      res.statusCode = 404
-      res.end('not found')
-    })
-  })
-
-  await new Promise<void>((resolve, reject) => {
-    server.once('error', reject)
-    server.listen(REGEN_PORT, '127.0.0.1', resolve)
-  })
-
-  return { server, vite }
+  return startparityvite(PROJECT, REGEN_PORT)
 }
 
 async function renderpatchmetrics(

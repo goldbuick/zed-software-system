@@ -4,6 +4,8 @@ import path from 'node:path'
 import type { PARITY_AUDIO_METRICS } from '../paritymetrics'
 import { metricswithin } from '../paritymetrics'
 import {
+  DRUM_PARITY_PATCHES,
+  FX_PARITY_PATCHES,
   WASM_PARITY_PATCHES,
   WASM_PARITY_PEAK_DB_TOL,
   WASM_PARITY_RMS_DB_TOL,
@@ -26,6 +28,11 @@ describe('wasm parity fixtures manifest', () => {
     for (const patch of WASM_PARITY_PATCHES) {
       expect(fixtures.patches[patch.id]).toBeDefined()
     }
+  })
+
+  it('lists drum and fx parity patch ids for future fixtures', () => {
+    expect(DRUM_PARITY_PATCHES.length).toBe(10)
+    expect(FX_PARITY_PATCHES.length).toBe(7)
   })
 })
 

@@ -96,6 +96,10 @@ export function unlockmaximaudiocontext(): AudioContext {
   return unlockedcontext
 }
 
+export function getunlockedaudiocontext(): MAYBE<AudioContext> {
+  return unlockedcontext
+}
+
 let synthwasminflight: MAYBE<Promise<MaxiEngine>>
 let synthwasmready = false
 let maxiengine: MAYBE<MaxiEngine>

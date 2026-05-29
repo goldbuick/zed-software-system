@@ -62,7 +62,9 @@ export function enableaudio() {
   workstatus(synthdevice, registerreadplayer(), 'audio init')
   unlockmaximaudiocontext()
 
-  const start = iswasmspikeenabled() ? spikesynthwasm : createsynthbackend
+  const start = iswasmspikeenabled()
+    ? spikesynthwasm
+    : createsynthbackend
   void start()
     .then((result) => {
       if (!iswasmspikeenabled() && result) {

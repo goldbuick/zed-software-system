@@ -1,5 +1,5 @@
 import { isofflineaudiocontext } from './audiocontextutil'
-import type { MaxiEngine } from './maximilian'
+type AUDIOCTX_ENGINE = { audioContext: BaseAudioContext }
 
 type SCHEDULED_ITEM = {
   when: number
@@ -22,8 +22,10 @@ function sortscheduled(a: SCHEDULED_ITEM, b: SCHEDULED_ITEM) {
 }
 
 /** Schedule callbacks on AudioContext time (not wall-clock setTimeout). */
-export function createwasmplayscheduler(maxi: MaxiEngine) {
+export function createwasmplayscheduler(engine: AUDIOCTX_ENGINE) {
   let items: SCHEDULED_ITEM[] = []
+  let samplerenderqueue: SCHEDULED_ITEM[] = []
+  let samplerenderidx = 0
   let orderseq = 0
   let timer: ReturnType<typeof setTimeout> | undefined
 
@@ -37,7 +39,7 @@ export function createwasmplayscheduler(maxi: MaxiEngine) {
 
   function pump() {
     timer = undefined
-    const now = maxi.audioContext.currentTime
+    const now = engine.audioContext.currentTime
     const due: SCHEDULED_ITEM[] = []
     const pending: SCHEDULED_ITEM[] = []
     for (let i = 0; i < items.length; i++) {
@@ -64,7 +66,7 @@ export function createwasmplayscheduler(maxi: MaxiEngine) {
     if (items.length === 0) {
       return
     }
-    const now = maxi.audioContext.currentTime
+    const now = engine.audioContext.currentTime
     let nextwhen = items[0].when
     for (let i = 1; i < items.length; i++) {
       if (items[i].when < nextwhen) {
@@ -77,7 +79,7 @@ export function createwasmplayscheduler(maxi: MaxiEngine) {
 
   function schedule(when: number, run: () => void) {
     items.push({ when, order: orderseq++, run })
-    const now = maxi.audioContext.currentTime
+    const now = engine.audioContext.currentTime
     if (when <= now) {
       pump()
       return
@@ -85,9 +87,40 @@ export function createwasmplayscheduler(maxi: MaxiEngine) {
     arm()
   }
 
+  function pumpat(time: number) {
+    while (
+      samplerenderidx < samplerenderqueue.length &&
+      samplerenderqueue[samplerenderidx].when <= time
+    ) {
+      samplerenderqueue[samplerenderidx].run()
+      samplerenderidx++
+    }
+  }
+
+  /** Queue scheduled callbacks for sample-accurate offline processor render. */
+  function armsamplerender() {
+    samplerenderqueue = [...items].sort(sortscheduled)
+    items = []
+    samplerenderidx = 0
+    pumpat(0)
+  }
+
+  function runsamplerender(
+    totalframes: number,
+    samplerate: number,
+    perframe?: () => void,
+  ) {
+    for (let f = 0; f <= totalframes; f++) {
+      pumpat(f / samplerate)
+      perframe?.()
+    }
+    samplerenderqueue = []
+    samplerenderidx = 0
+  }
+
   /** Register OfflineAudioContext suspend hooks before startRendering(). */
   function armofflinerender() {
-    const ctx = maxi.audioContext
+    const ctx = engine.audioContext
     if (!isofflineaudiocontext(ctx)) {
       throw new Error('armofflinerender requires OfflineAudioContext')
     }
@@ -132,5 +165,13 @@ export function createwasmplayscheduler(maxi: MaxiEngine) {
     }
   }
 
-  return { schedule, clear, pump, armofflinerender }
+  return {
+    schedule,
+    clear,
+    pump,
+    armofflinerender,
+    armsamplerender,
+    runsamplerender,
+    pumpat,
+  }
 }

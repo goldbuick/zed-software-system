@@ -25,7 +25,7 @@ backend.addplay('qC4qD4qE4')
 |------|------|-------------|
 | Front-end | `frontend/` | `SynthBackend` interface, board state sync |
 | Back-end v1 | `backend/wasm/` | Maximilian worklet, voices, drums, FX, recording |
-| Adapter | `backend/wasmsynthadapter.ts` | `SynthBackend` → WASM bridge |
+| Adapter | `backend/synthbackendfactory.ts` | `SynthBackend` → Maximilian WASM bridge |
 | Shared | `shared/`, `playnotation.ts`, `synthdefaults.ts`, `voicefxgroup.ts`, `mp3.ts` | Engine-agnostic types and helpers |
 | Archive | `archive/tone/` | Legacy Tone.js stack (do not import) |
 
@@ -35,5 +35,6 @@ backend.addplay('qC4qD4qE4')
 |-----|---------|
 | `ZSS_WASM_SPIKE=true` | Phase 0 audible WASM spike only (no full synth backend) |
 | `ZSS_WASM_PERF=false` | Full parity-quality DSP (default is lighter perf preset on) |
+| `ZSS_PARITY_RENDER=1` | Run offline parity render tests (manual gate) |
 
 WASM synth is always-on in production builds; COOP/COEP headers are enabled in Vite for SharedArrayBuffer.
