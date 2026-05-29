@@ -1,4 +1,4 @@
-import type { MaxiEngine } from './maximilian'
+import type { SabEngine } from '../shared/sabengine'
 import {
   WASM_SAB_SEQ,
   WASM_SAB_SEQ_LEN,
@@ -27,7 +27,7 @@ export function ensureseqchannel(): Int32Array | undefined {
 }
 
 /** Register the seq SAB with the worklet (Int32, not Float64). */
-export function registerseqchannel(maxi: MaxiEngine) {
+export function registerseqchannel(maxi: SabEngine) {
   if (!maxi.audioWorkletNode?.port || seqregistered || !canusezerosab()) {
     return
   }

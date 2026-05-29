@@ -1,6 +1,6 @@
 import { SYNTH_VOICE_COUNT } from 'zss/feature/synth/synthdefaults'
 
-import type { MaxiEngine } from './maximilian'
+import type { SabEngine } from '../shared/sabengine'
 import { pushwasmsabvalues } from './sabpush'
 import type { WASM_VOICE_STATE } from './wasmvoiceconfig'
 
@@ -41,14 +41,14 @@ export function wasmvoicecfgtosab(voicestate: WASM_VOICE_STATE[]): number[] {
 }
 
 export function initwasmvoicecfgsab(
-  maxi: MaxiEngine,
+  maxi: SabEngine,
   voicestate: WASM_VOICE_STATE[],
 ) {
   pushwasmvoicecfgsab(maxi, voicestate)
 }
 
 export function pushwasmvoicecfgsab(
-  maxi: MaxiEngine,
+  maxi: SabEngine,
   voicestate: WASM_VOICE_STATE[],
 ) {
   pushwasmsabvalues(maxi, WASM_VOICE_CFG_SAB, wasmvoicecfgtosab(voicestate))

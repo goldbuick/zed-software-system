@@ -1,6 +1,6 @@
 import { SYNTH_VOICE_COUNT } from 'zss/feature/synth/synthdefaults'
 
-import type { MaxiEngine } from './maximilian'
+import type { SabEngine } from '../shared/sabengine'
 import { pushwasmsabvalues } from './sabpush'
 
 export const WASM_OSC_CFG_SAB = 'zss_osccfg'
@@ -94,14 +94,14 @@ export function wasmoscconfigtosab(config: WASM_OSC_CONFIG[]): number[] {
 }
 
 export function initwasmoscconfigsab(
-  maxi: MaxiEngine,
+  maxi: SabEngine,
   config?: WASM_OSC_CONFIG[],
 ) {
   pushwasmoscconfigsab(maxi, config ?? defaultwasmoscconfig())
 }
 
 export function pushwasmoscconfigsab(
-  maxi: MaxiEngine,
+  maxi: SabEngine,
   config: WASM_OSC_CONFIG[],
 ) {
   pushwasmsabvalues(maxi, WASM_OSC_CFG_SAB, wasmoscconfigtosab(config))

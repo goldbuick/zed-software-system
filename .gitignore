@@ -32,6 +32,9 @@ oclif.manifest.json
 # vosk speech recognition models (large binaries)
 cafe/public/models/
 
+# local Emscripten SDK (yarn build:daisy)
+.emsdk/
+
 # Playwright
 test-results/
 playwright-report/

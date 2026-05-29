@@ -1,4 +1,4 @@
-import type { MaxiEngine } from './maximilian'
+import type { SabEngine } from '../shared/sabengine'
 import {
   bumpsabseq,
   registerseqchannel,
@@ -21,7 +21,7 @@ function assignview(view: Float64Array, data: number[]) {
   }
 }
 
-function registerchannel(maxi: MaxiEngine, channelid: string) {
+function registerchannel(maxi: SabEngine, channelid: string) {
   if (!maxi.audioWorkletNode?.port || registered.has(channelid)) {
     return
   }
@@ -50,7 +50,7 @@ function ensurechannel(channelid: string, length: number): Float64Array {
 }
 
 /** Pre-register all synth SAB channels with the worklet (call before first push). */
-export function initwasmsabchannels(maxi: MaxiEngine) {
+export function initwasmsabchannels(maxi: SabEngine) {
   if (!canusezerosab()) {
     return
   }
@@ -64,7 +64,7 @@ export function initwasmsabchannels(maxi: MaxiEngine) {
 
 /** Push voice/drum/FX state into the worklet via zero-copy SharedArrayBuffer views. */
 export function pushwasmsabvalues(
-  maxi: MaxiEngine,
+  maxi: SabEngine,
   channelid: string,
   data: number[],
 ) {

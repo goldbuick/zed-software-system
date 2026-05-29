@@ -5,7 +5,7 @@ import {
 import type { SYNTH_STATE } from 'zss/gadget/data/types'
 import { isnumber, isstring } from 'zss/mapping/types'
 
-import type { MaxiEngine } from './maximilian'
+import type { SabEngine } from '../shared/sabengine'
 import { pushwasmsabvalues } from './sabpush'
 import {
   WASM_AUTOFILTER_DEFAULT_BASE_FREQ,
@@ -174,11 +174,11 @@ function groupsendbase(group: number): number {
   return group * WASM_FX_SEND_COUNT
 }
 
-export function initwasmfxsab(maxi: MaxiEngine) {
+export function initwasmfxsab(maxi: SabEngine) {
   pushwasmsabvalues(maxi, WASM_FX_SAB, defaultwasmfxsab())
 }
 
-export function pushwasmfxsab(maxi: MaxiEngine, sab: number[]) {
+export function pushwasmfxsab(maxi: SabEngine, sab: number[]) {
   pushwasmsabvalues(maxi, WASM_FX_SAB, sab)
 }
 

@@ -1,4 +1,4 @@
-import type { MaxiEngine } from './maximilian'
+import type { SabEngine } from '../shared/sabengine'
 import { pushwasmsabvalues } from './sabpush'
 
 export const WASM_MASTER_SAB = 'zss_master'
@@ -22,12 +22,12 @@ export function defaultwasmmastersab(): number[] {
   ]
 }
 
-export function pushwasmmastersab(maxi: MaxiEngine, sab: number[]) {
+export function pushwasmmastersab(maxi: SabEngine, sab: number[]) {
   pushwasmsabvalues(maxi, WASM_MASTER_SAB, sab)
 }
 
 export function initwasmmastersab(
-  maxi: MaxiEngine,
+  maxi: SabEngine,
   playvolume = WASM_DEFAULT_PLAY_VOLUME,
   bgplayvolume = WASM_DEFAULT_BGPLAY_VOLUME,
   ttsvolume = WASM_DEFAULT_TTS_VOLUME,

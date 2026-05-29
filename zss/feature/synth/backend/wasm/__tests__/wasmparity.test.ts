@@ -41,15 +41,19 @@ const CAN_RENDER_PARITY =
   typeof document !== 'undefined' &&
   process.env.ZSS_PARITY_RENDER === '1'
 
+const USE_DAISY_PARITY = process.env.ZSS_DAISY_PARITY === '1'
+
 ;(CAN_RENDER_PARITY ? describe : describe.skip)(
-  'wasm parity offline renders',
+  USE_DAISY_PARITY ? 'daisy parity offline renders' : 'wasm parity offline renders',
   () => {
     it('matches committed tone reference metrics within tolerance', async () => {
-      const { renderwasmparitypatch } = await import('../wasmparityrender')
+      const render = USE_DAISY_PARITY
+        ? (await import('../../daisy/daisyparityrender')).renderdaisyparitypatch
+        : (await import('../wasmparityrender')).renderwasmparitypatch
       const fixtures = loadfixtures()
       for (const patch of WASM_PARITY_PATCHES) {
         const expected = fixtures.patches[patch.id]
-        const actual = await renderwasmparitypatch(patch)
+        const actual = await render(patch)
         expect(
           metricswithin(
             actual,

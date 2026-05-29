@@ -1,3 +1,4 @@
+import type { SabEngine } from '../shared/sabengine'
 import { resetwasmsabregistry, wasmsabsnapshot } from '../sabpush'
 
 export function createmockmaxi() {
@@ -18,7 +19,7 @@ export function createmockmaxi() {
     advance(ms: number) {
       clock += ms / 1000
     },
-  }
+  } as SabEngine & { advance(ms: number): void }
   return {
     maxi,
     getclock: () => clock,

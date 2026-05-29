@@ -1,4 +1,4 @@
-import type { MaxiEngine } from './maximilian'
+import type { SabEngine } from '../shared/sabengine'
 import { pushwasmsabvalues } from './sabpush'
 import {
   WASM_VIBRATO_GROUP_COUNT,
@@ -11,11 +11,11 @@ export function defaultwasmvibratosab(timeepoch = 0): number[] {
   return new Array(WASM_VIBRATO_SAB_LEN).fill(0).map((_, i) => (i === 0 ? timeepoch : 0))
 }
 
-export function initwasmvibratosab(maxi: MaxiEngine, timeepoch: number) {
+export function initwasmvibratosab(maxi: SabEngine, timeepoch: number) {
   pushwasmsabvalues(maxi, WASM_VIBRATO_SAB, defaultwasmvibratosab(timeepoch))
 }
 
-export function pushwasmvibratosab(maxi: MaxiEngine, sab: number[]) {
+export function pushwasmvibratosab(maxi: SabEngine, sab: number[]) {
   pushwasmsabvalues(maxi, WASM_VIBRATO_SAB, sab)
 }
 
@@ -24,7 +24,7 @@ export function wasmgroupvibratobase(group: number): number {
 }
 
 export function pushwasmvibratogroup(
-  maxi: MaxiEngine,
+  maxi: SabEngine,
   sab: number[],
   group: number,
   startsec: number,
