@@ -12,8 +12,8 @@ import pkg from './package.json'
 
 /**
  * Firefox refuses module scripts when Content-Type is missing (""). Some dev
- * responses for `/@fs/.../.vite/deps/*.js` can end up without a MIME; set it
- * before the response is sent.
+ * responses for `/@fs/.../.vite/deps/*.js` and `/wasm/daisy/*.js` worklets can
+ * end up without a MIME; set it before the response is sent.
  */
 function devjavascriptmimetypedev(): Plugin {
   return {
@@ -26,7 +26,8 @@ function devjavascriptmimetypedev(): Plugin {
           const needstype =
             req.method === 'GET' &&
             (url.includes('/node_modules/.vite/deps') ||
-              url.includes('/@fs/')) &&
+              url.includes('/@fs/') ||
+              url.includes('/wasm/daisy/')) &&
             /\.js(\?|#|$)/.test(url)
           if (!needstype) {
             return next()

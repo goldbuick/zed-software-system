@@ -62,6 +62,8 @@ function waitfordaisyready(
 ): Promise<void> {
   const port = worklet.port
   return new Promise((resolve, reject) => {
+    let laststage = 'none'
+
     function cleanup() {
       clearTimeout(timer)
       port.removeEventListener('message', onmsg)
@@ -70,13 +72,23 @@ function waitfordaisyready(
 
     const timer = setTimeout(() => {
       cleanup()
-      reject(new Error('daisy wasm dsp boot timed out'))
+      reject(
+        new Error(`daisy wasm dsp boot timed out (last stage: ${laststage})`),
+      )
     }, timeoutms)
 
     function onmsg(event: MessageEvent) {
       const data = event.data as {
         zss_dsp_ready?: number
         zss_dsp_error?: string
+        zss_dsp_stage?: string
+      }
+      if (data?.zss_dsp_stage) {
+        laststage = data.zss_dsp_stage
+        if (import.meta.env.DEV) {
+          console.warn('[daisy boot]', data.zss_dsp_stage)
+        }
+        return
       }
       if (data?.zss_dsp_ready) {
         cleanup()

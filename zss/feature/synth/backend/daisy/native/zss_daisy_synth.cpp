@@ -61,9 +61,9 @@ constexpr float kMetallicAmp   = 7.5f;
 constexpr float kDrumTickTrim  = 1.35f;
 constexpr float kDrumTweetTrim = 1.25f;
 constexpr float kVoiceOutGain  = 1.f;
-// Tone audiochain.ts: playvolume = volumetodb(20), drumvolume = volumetodb(100) + 10
+// Tone audiochain.ts: playvolume = volumetodb(20), drumvolume = volumetodb(50)
 constexpr float kPlayBusGain    = 0.3548133892336194f;
-constexpr float kDrumBusGain    = 5.623413251903491f;
+constexpr float kDrumBusGain    = 0.8891397050194613f;
 constexpr float kMasterTrimDb   = -3.f;
 constexpr float kMasterMakeupDb = 22.f;
 constexpr float kRazzleVibratoWet = 0.1f;

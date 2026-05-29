@@ -53,6 +53,12 @@ const DAISY_SAB_CHANNEL_LEN = {
   zss_vibrato: DAISY_VIBRATO_LEN,
 }
 
+const DAISY_EM_INIT_TIMEOUT_MS = 5000
+
+function postdspstage(port, stage) {
+  port.postMessage({ zss_dsp_stage: stage })
+}
+
 class DaisyProcessor extends AudioWorkletProcessor {
   constructor() {
     super()
@@ -88,8 +94,13 @@ class DaisyProcessor extends AudioWorkletProcessor {
       port.postMessage({ zss_dsp_error: String(err) })
       return
     }
+    postdspstage(port, 'module_compiled')
+
+    const wasmbin =
+      wasmbytes instanceof ArrayBuffer ? new Uint8Array(wasmbytes) : wasmbytes
 
     const modcfg = {
+      wasmBinary: wasmbin,
       instantiateWasm: (imports, receiveinstance) => {
         try {
           const instance = new WebAssembly.Instance(wasmmodule, imports)
@@ -101,6 +112,7 @@ class DaisyProcessor extends AudioWorkletProcessor {
       },
       onRuntimeInitialized() {
         try {
+          postdspstage(port, 'runtime_init')
           const ptr = modcfg._zss_control_ptr()
           const len = modcfg._zss_control_len()
           const base = ptr >> 3
@@ -109,6 +121,7 @@ class DaisyProcessor extends AudioWorkletProcessor {
           processor.outptr = modcfg._malloc(128 * 4)
           processor.wasm = modcfg
           processor.ready = true
+          postdspstage(port, 'ready')
           port.postMessage({ zss_dsp_ready: 1 })
         } catch (err) {
           port.postMessage({ zss_dsp_error: String(err) })
@@ -116,9 +129,27 @@ class DaisyProcessor extends AudioWorkletProcessor {
       },
     }
 
-    createZssDaisy(modcfg).catch((err) => {
-      port.postMessage({ zss_dsp_error: String(err) })
-    })
+    postdspstage(port, 'emscripten_start')
+    let inittimer = setTimeout(() => {
+      if (!processor.ready) {
+        port.postMessage({
+          zss_dsp_error: 'daisy emscripten init timed out',
+        })
+      }
+    }, DAISY_EM_INIT_TIMEOUT_MS)
+
+    createZssDaisy(modcfg)
+      .then(() => {
+        clearTimeout(inittimer)
+        inittimer = 0
+      })
+      .catch((err) => {
+        if (inittimer) {
+          clearTimeout(inittimer)
+          inittimer = 0
+        }
+        port.postMessage({ zss_dsp_error: String(err) })
+      })
   }
 
   onmessage(event) {
