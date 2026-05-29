@@ -15,6 +15,7 @@ Legacy Tone.js documentation below describes the **archived** stack under `archi
 | [record & mp3](record-and-mp3.md) | Recording to MP3 (WASM path) |
 | [voice-types-reference.md](voice-types-reference.md) | All voice types, params, WASM vs Tone defaults |
 | [fx-types-reference.md](fx-types-reference.md) | All FX types, params, WASM vs Tone defaults |
+| [implementation-matrix.md](implementation-matrix.md) | Voice/FX/drum/master map (Maxi vs Daisy vs Tone vs DaisySP) |
 
 ## Quick Links (archived Tone.js)
 

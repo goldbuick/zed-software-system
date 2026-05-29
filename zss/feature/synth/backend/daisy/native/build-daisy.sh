@@ -125,6 +125,9 @@ emcc \
 sed -i.bak 's/var wasmExports=createWasm()/var wasmExports;createWasm()/g' "$OUT_DIR/zss_daisy.js"
 rm -f "$OUT_DIR/zss_daisy.js.bak"
 
+node "$REPO_ROOT/scripts/bundle-daisy-processor.mjs"
+
 echo "✓ Build successful"
 echo "  $OUT_DIR/zss_daisy.js"
 echo "  $OUT_DIR/zss_daisy.wasm"
+echo "  $OUT_DIR/daisy-processor.js (bundled classic worklet)"

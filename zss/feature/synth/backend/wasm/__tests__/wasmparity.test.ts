@@ -18,15 +18,35 @@ type PARITY_FIXTURE_FILE = {
 }
 
 const USE_TONE_REFERENCE = process.env.ZSS_TONE_REFERENCE === '1'
+const USE_DAISY_PARITY = process.env.ZSS_DAISY_PARITY === '1'
 const FIXTURE_PATH = path.join(
   __dirname,
   '../__fixtures__',
   USE_TONE_REFERENCE ? 'parity-metrics-tone.json' : 'parity-metrics.json',
 )
+const DAISY_DRUM_FIXTURE_PATH = path.join(
+  __dirname,
+  '../__fixtures__/parity-metrics-daisy.json',
+)
 
 function loadfixtures(): PARITY_FIXTURE_FILE {
   const raw = readFileSync(FIXTURE_PATH, 'utf8')
   return JSON.parse(raw) as PARITY_FIXTURE_FILE
+}
+
+function loaddaisydrumfixtures(): PARITY_FIXTURE_FILE {
+  const raw = readFileSync(DAISY_DRUM_FIXTURE_PATH, 'utf8')
+  return JSON.parse(raw) as PARITY_FIXTURE_FILE
+}
+
+function expectedmetrics(
+  patchid: string,
+  voicefixtures: PARITY_FIXTURE_FILE,
+): PARITY_AUDIO_METRICS | undefined {
+  if (USE_DAISY_PARITY && patchid.startsWith('drum')) {
+    return loaddaisydrumfixtures().patches[patchid]
+  }
+  return voicefixtures.patches[patchid]
 }
 
 function loadlegacyfixtures(): PARITY_FIXTURE_FILE {
@@ -49,14 +69,19 @@ describe('wasm parity fixtures manifest', () => {
     expect(DRUM_PARITY_PATCHES.length).toBe(10)
     expect(FX_PARITY_PATCHES.length).toBe(7)
   })
+
+  it('includes every drum patch id in daisy fixtures', () => {
+    const fixtures = loaddaisydrumfixtures()
+    for (const patch of DRUM_PARITY_PATCHES) {
+      expect(fixtures.patches[patch.id]).toBeDefined()
+    }
+  })
 })
 
 const CAN_RENDER_PARITY =
   typeof OfflineAudioContext !== 'undefined' &&
   typeof document !== 'undefined' &&
   process.env.ZSS_PARITY_RENDER === '1'
-
-const USE_DAISY_PARITY = process.env.ZSS_DAISY_PARITY === '1'
 
 async function loadrenderer() {
   if (USE_DAISY_PARITY) {
@@ -97,7 +122,7 @@ async function loadrenderer() {
         ) {
           return
         }
-        const expected = fixtures.patches[patchid]
+        const expected = expectedmetrics(patchid, fixtures)
         if (!expected) {
           failures.push(`${patchid} | missing fixture`)
           return

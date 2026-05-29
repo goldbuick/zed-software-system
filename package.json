@@ -50,8 +50,10 @@
     "docs:links": "git ls-files '*.md' | xargs -n1 ./node_modules/.bin/markdown-link-check -q -c .markdown-link-check.json",
     "regen:parity-fixtures": "npx tsx scripts/regen-synth-parity-fixtures.ts",
     "regen:parity-fixtures:tone": "npx tsx scripts/regen-synth-parity-fixtures.ts --tone",
+    "regen:parity-fixtures:daisy-drums": "npx tsx scripts/regen-daisy-drum-parity-fixtures.ts",
     "bench:wasm-synth": "ZSS_WASM_BENCH=1 npx tsx zss/feature/synth/backend/wasm/wasmperfbench.ts",
     "build:daisy": "sh zss/feature/synth/backend/daisy/native/build-daisy.sh",
+    "bundle:daisy-processor": "node scripts/bundle-daisy-processor.mjs",
     "bench:daisy-synth": "ZSS_DAISY_BENCH=1 npx tsx zss/feature/synth/backend/daisy/daisyperfbench.ts",
     "postinstall": "patch-package"
   },

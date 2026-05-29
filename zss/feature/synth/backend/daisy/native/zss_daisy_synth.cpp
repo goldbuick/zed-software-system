@@ -603,6 +603,12 @@ struct ZssEngine
   float        sample_rate = 44100.f;
   ZssVoice     voices[kVoiceCount];
   ZssDrumState drums[kDrumCount];
+  HiHat<>              hat_tick;
+  HiHat<>              hat_tweet;
+  AnalogSnareDrum        snare_hi;
+  AnalogSnareDrum        snare_lo;
+  AnalogBassDrum         bass_drum;
+  SyntheticBassDrum      tom_drum;
   ZssFxGroup   fx[kFxGroups];
   Oscillator   drumnoise;
   Oscillator   drumoscA[kDrumCount], drumoscB[kDrumCount];
@@ -1480,6 +1486,16 @@ void retriggerdrum(int i, float dursec)
   {
     biquadreset(d.eq[q]);
   }
+  switch(i)
+  {
+  case 0: g_engine.hat_tick.Trig(); break;
+  case 1: g_engine.hat_tweet.Trig(); break;
+  case 4: g_engine.snare_hi.Trig(); break;
+  case 6: g_engine.snare_lo.Trig(); break;
+  case 7: g_engine.tom_drum.Trig(); break;
+  case 9: g_engine.bass_drum.Trig(); break;
+  default: break;
+  }
 }
 
 int drumadvance(int i)
@@ -1512,58 +1528,20 @@ float drumbandpass(int i, float input, const BiquadCoef& coef)
 
 float drumtick()
 {
-  int age = drumadvance(0);
-  if(age < 0)
+  if(drumadvance(0) < 0)
   {
     return 0.f;
   }
-  float sr = g_engine.sample_rate;
-  float amp = drumadsr(age, drumsamp(0.001f), drumsamp(0.05f), 0.001f, drumsamp(0.05f));
-  if(amp <= 0.f)
-  {
-    return 0.f;
-  }
-  static BiquadCoef hp, lo, mid, hi;
-  static bool       init = false;
-  if(!init)
-  {
-    hp  = biquadcoef("highpass", 8000.f, 0.707f, 0.f, sr);
-    lo  = biquadcoef("lowshelf", 400.f, 0.707f, -6.f, sr);
-    mid = biquadcoef("peaking", 1000.f, 1.f, 6.f, sr);
-    hi  = biquadcoef("highshelf", 2500.f, 0.707f, 10.f, sr);
-    init = true;
-  }
-  float n = biquadrun(g_engine.drums[0].bp, hp, drumnoise() * amp);
-  n       = drumeq3(0, n, lo, mid, hi);
-  return n * kDrumTickTrim * kDrumGains[0];
+  return g_engine.hat_tick.Process(false) * kDrumTickTrim * kDrumGains[0];
 }
 
 float drumtweet()
 {
-  int age = drumadvance(1);
-  if(age < 0)
+  if(drumadvance(1) < 0)
   {
     return 0.f;
   }
-  float sr = g_engine.sample_rate;
-  float amp = drumadsr(age, drumsamp(0.001f), drumsamp(0.16f), 0.06f, drumsamp(0.18f));
-  if(amp <= 0.f)
-  {
-    return 0.f;
-  }
-  static BiquadCoef hp, lo, mid, hi;
-  static bool       init = false;
-  if(!init)
-  {
-    hp  = biquadcoef("highpass", 6000.f, 0.707f, 0.f, sr);
-    lo  = biquadcoef("lowshelf", 400.f, 0.707f, -6.f, sr);
-    mid = biquadcoef("peaking", 1000.f, 1.f, 3.f, sr);
-    hi  = biquadcoef("highshelf", 2500.f, 0.707f, 8.f, sr);
-    init = true;
-  }
-  float n = biquadrun(g_engine.drums[1].bp, hp, drumnoise() * amp);
-  n       = drumeq3(1, n, lo, mid, hi);
-  return n * kDrumTweetTrim * kDrumGains[1];
+  return g_engine.hat_tweet.Process(false) * kDrumTweetTrim * kDrumGains[1];
 }
 
 float drumcowbell()
@@ -1641,25 +1619,12 @@ float snarepitch(bool hi, int age)
 float drumsnare(bool hi)
 {
   int idx = hi ? 4 : 6;
-  int age = drumadvance(idx);
-  if(age < 0)
+  if(drumadvance(idx) < 0)
   {
     return 0.f;
   }
-  int   dec = drumsamp(0.1f);
-  float oscamp = age >= dec ? 0.f : 1.f - static_cast<float>(age) / dec;
-  int   atk = drumsamp(0.01f);
-  float noiseamp = age < atk ? static_cast<float>(age) / atk
-                             : drumexpexp(age - atk, drumsamp(drumnotelen(32)));
-  if(oscamp <= 0.f && noiseamp <= 0.f)
-  {
-    return 0.f;
-  }
-  float hz   = snarepitch(hi, age);
-  float body = drumoscwave(g_engine.drumoscA[idx], 2, hz) * oscamp;
-  float n    = drumhipass(idx, drumnoise() * noiseamp, 10000.f);
-  float mix  = body + n * (hi ? 0.333f : 0.25f);
-  return drumdistort(mix, hi ? 0.666f : 0.876f) * kDrumGains[idx];
+  float s = hi ? g_engine.snare_hi.Process(false) : g_engine.snare_lo.Process(false);
+  return s * kDrumGains[idx];
 }
 
 float drumwoodblock(bool hi)
@@ -1695,46 +1660,20 @@ float drumwoodblock(bool hi)
 
 float drumtom()
 {
-  int age = drumadvance(7);
-  if(age < 0)
+  if(drumadvance(7) < 0)
   {
     return 0.f;
   }
-  float amp  = drumadsr(age, drumsamp(0.01f), drumsamp(0.1f), 0.001f, drumsamp(0.1f));
-  int   atk  = drumsamp(0.01f);
-  float namp = age < atk ? static_cast<float>(age) / atk
-                         : drumexpexp(age - atk, drumsamp(drumnotelen(32)));
-  if(amp <= 0.f && namp <= 0.f)
-  {
-    return 0.f;
-  }
-  int   margin = drumsamp(drumnotelen(256));
-  int   len    = drumlength(7, readctrl(off_drums() + kDrumCount + 7));
-  int   ramp   = std::max(1, len - margin);
-  float hz     = drumexpramp(age, ramp, 261.63f, 16.35f);
-  float hz2    = drumexpramp(age, ramp, 523.25f, 16.35f);
-  float body   = drumoscwave(g_engine.drumoscA[7], 3, hz)
-               + drumoscwave(g_engine.drumoscB[7], 2, hz2) * 0.5f;
-  return (body * amp + drumnoise() * namp * 0.12f) * kDrumGains[7];
+  return g_engine.tom_drum.Process(false) * kDrumGains[7];
 }
 
 float drumbass()
 {
-  int age = drumadvance(9);
-  if(age < 0)
+  if(drumadvance(9) < 0)
   {
     return 0.f;
   }
-  float amp = drumadsr(age, drumsamp(0.001f), drumsamp(0.35f), 0.08f, drumsamp(drumnotelen(8)));
-  if(amp <= 0.f)
-  {
-    return 0.f;
-  }
-  float hz = 26.5f * std::pow(0.01f, static_cast<float>(age) / drumsamp(0.125f));
-  float fund = drumoscwave(g_engine.drumoscA[9], 1, hz);
-  float oct  = drumoscwave(g_engine.drumoscB[9], 1, hz * 2.f) * 0.42f;
-  float sub  = drumoscwave(g_engine.drumoscA[9], 1, hz * 0.5f) * 0.55f;
-  return drumdistort(fund + oct + sub, 0.22f) * amp * kDrumGains[9];
+  return g_engine.bass_drum.Process(false) * kDrumGains[9];
 }
 
 float drumsout()
@@ -2302,6 +2241,50 @@ void initvoice(ZssVoice& v, float sr)
   v.noiserng = (0x6d2b79f5u + 7919u) >> 0;
 }
 
+void initdaisydrums(float sr)
+{
+  g_engine.hat_tick.Init(sr);
+  g_engine.hat_tick.SetFreq(3000.f);
+  g_engine.hat_tick.SetDecay(0.15f);
+  g_engine.hat_tick.SetTone(0.8f);
+  g_engine.hat_tick.SetNoisiness(0.9f);
+  g_engine.hat_tick.SetAccent(0.8f);
+
+  g_engine.hat_tweet.Init(sr);
+  g_engine.hat_tweet.SetFreq(2500.f);
+  g_engine.hat_tweet.SetDecay(0.5f);
+  g_engine.hat_tweet.SetTone(0.6f);
+  g_engine.hat_tweet.SetNoisiness(0.7f);
+  g_engine.hat_tweet.SetAccent(0.8f);
+
+  g_engine.snare_hi.Init(sr);
+  g_engine.snare_hi.SetFreq(180.f);
+  g_engine.snare_hi.SetDecay(0.4f);
+  g_engine.snare_hi.SetTone(0.7f);
+  g_engine.snare_hi.SetSnappy(0.6f);
+  g_engine.snare_hi.SetAccent(0.8f);
+
+  g_engine.snare_lo.Init(sr);
+  g_engine.snare_lo.SetFreq(120.f);
+  g_engine.snare_lo.SetDecay(0.55f);
+  g_engine.snare_lo.SetTone(0.4f);
+  g_engine.snare_lo.SetSnappy(0.5f);
+  g_engine.snare_lo.SetAccent(0.8f);
+
+  g_engine.tom_drum.Init(sr);
+  g_engine.tom_drum.SetFreq(90.f);
+  g_engine.tom_drum.SetDecay(0.35f);
+  g_engine.tom_drum.SetTone(0.5f);
+  g_engine.tom_drum.SetFmEnvelopeAmount(0.6f);
+  g_engine.tom_drum.SetAccent(0.8f);
+
+  g_engine.bass_drum.Init(sr);
+  g_engine.bass_drum.SetFreq(50.f);
+  g_engine.bass_drum.SetDecay(0.5f);
+  g_engine.bass_drum.SetTone(0.4f);
+  g_engine.bass_drum.SetAccent(0.9f);
+}
+
 void initengine(float sr)
 {
   g_engine.sample_rate = sr;
@@ -2311,6 +2294,7 @@ void initengine(float sr)
     initvoice(g_engine.voices[i], sr);
   }
   g_engine.drumnoise.Init(sr);
+  initdaisydrums(sr);
   for(int d = 0; d < kDrumCount; ++d)
   {
     g_engine.drumoscA[d].Init(sr);

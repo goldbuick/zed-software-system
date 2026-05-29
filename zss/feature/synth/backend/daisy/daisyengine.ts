@@ -48,6 +48,10 @@ function wirebroadcasttap(maxi: DaisyEngine) {
 
 function wireoutput(maxi: DaisyEngine) {
   maxi.audioWorkletNode.disconnect()
+  if (isofflineaudiocontext(maxi.audioContext)) {
+    maxi.audioWorkletNode.connect(maxi.audioContext.destination)
+    return
+  }
   wirewasmmasterchain(audiocontext(maxi), maxi.audioWorkletNode)
   wirebroadcasttap(maxi)
 }
@@ -71,6 +75,9 @@ function waitfordaisyready(
     }
 
     const timer = setTimeout(() => {
+      // #region agent log
+      fetch('http://127.0.0.1:7799/ingest/cd0f7a39-d6ec-46e6-844e-03e2070cbab0',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'5cd315'},body:JSON.stringify({sessionId:'5cd315',location:'daisyengine.ts:waitfordaisyready',message:'boot timeout',data:{laststage,timeoutms,ctxstate:(worklet.context as AudioContext).state},timestamp:Date.now(),hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
       cleanup()
       reject(
         new Error(`daisy wasm dsp boot timed out (last stage: ${laststage})`),
@@ -85,6 +92,9 @@ function waitfordaisyready(
       }
       if (data?.zss_dsp_stage) {
         laststage = data.zss_dsp_stage
+        // #region agent log
+        fetch('http://127.0.0.1:7799/ingest/cd0f7a39-d6ec-46e6-844e-03e2070cbab0',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'5cd315'},body:JSON.stringify({sessionId:'5cd315',location:'daisyengine.ts:onmsg',message:'worklet stage',data:{stage:data.zss_dsp_stage},timestamp:Date.now(),hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
         if (import.meta.env.DEV) {
           console.warn('[daisy boot]', data.zss_dsp_stage)
         }
@@ -118,37 +128,58 @@ async function resumecontext(ctx: BaseAudioContext) {
 }
 
 async function bootdaisyoncontext(ctx: BaseAudioContext): Promise<DaisyEngine> {
+  // #region agent log
+  fetch('http://127.0.0.1:7799/ingest/cd0f7a39-d6ec-46e6-844e-03e2070cbab0',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'5cd315'},body:JSON.stringify({sessionId:'5cd315',location:'daisyengine.ts:bootdaisyoncontext',message:'boot start',data:{ctxstate:asaudiocontext(ctx).state,crossOriginIsolated:typeof window!=='undefined'&&window.crossOriginIsolated,userAgent:typeof navigator!=='undefined'?navigator.userAgent.slice(0,80):''},timestamp:Date.now(),hypothesisId:'C'})}).catch(()=>{});
+  // #endregion
   await ensuremaximiliancoep()
   const wasmurl = daisyasseturl('zss_daisy.wasm')
   const processorurl = daisyasseturl('daisy-processor.js')
-  await ctx.audioWorklet.addModule(processorurl, {
-    type: 'module',
-  } as WorkletOptions)
+  await ctx.audioWorklet.addModule(processorurl)
+  // #region agent log
+  fetch('http://127.0.0.1:7799/ingest/cd0f7a39-d6ec-46e6-844e-03e2070cbab0',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'5cd315'},body:JSON.stringify({sessionId:'5cd315',location:'daisyengine.ts:bootdaisyoncontext',message:'addModule ok',data:{processorurl},timestamp:Date.now(),hypothesisId:'D'})}).catch(()=>{});
+  // #endregion
   const wasmresponse = await fetch(wasmurl)
   if (!wasmresponse.ok) {
     throw new Error(`failed to fetch ${wasmurl}`)
   }
   const wasmbytes = await wasmresponse.arrayBuffer()
   await WebAssembly.compile(wasmbytes)
+  // #region agent log
+  fetch('http://127.0.0.1:7799/ingest/cd0f7a39-d6ec-46e6-844e-03e2070cbab0',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'5cd315'},body:JSON.stringify({sessionId:'5cd315',location:'daisyengine.ts:bootdaisyoncontext',message:'wasm compiled',data:{wasmbytes:wasmbytes.byteLength,wasmurl},timestamp:Date.now(),hypothesisId:'E'})}).catch(()=>{});
+  // #endregion
 
+  const wasmcopy = wasmbytes.slice(0)
   const worklet = new AudioWorkletNode(ctx, 'zss-daisy-processor', {
     numberOfInputs: 1,
     numberOfOutputs: 1,
     outputChannelCount: [1],
+    processorOptions: { wasmbytes: wasmcopy },
   })
   worklet.channelCount = 1
   worklet.channelCountMode = 'explicit'
   worklet.channelInterpretation = 'speakers'
 
+  const ready = waitfordaisyready(worklet)
+  worklet.onprocessorerror = (event) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7799/ingest/cd0f7a39-d6ec-46e6-844e-03e2070cbab0',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'5cd315'},body:JSON.stringify({sessionId:'5cd315',location:'daisyengine.ts:processorerror',message:'worklet processor error',data:{detail:String(event)},timestamp:Date.now(),hypothesisId:'J',runId:'post-fix'})}).catch(()=>{});
+    // #endregion
+  }
+
   await resumecontext(ctx)
+  // #region agent log
+  fetch('http://127.0.0.1:7799/ingest/cd0f7a39-d6ec-46e6-844e-03e2070cbab0',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'5cd315'},body:JSON.stringify({sessionId:'5cd315',location:'daisyengine.ts:bootdaisyoncontext',message:'after resume',data:{ctxstate:asaudiocontext(ctx).state},timestamp:Date.now(),hypothesisId:'C'})}).catch(()=>{});
+  // #endregion
   if (!isofflineaudiocontext(ctx)) {
     wirewasmmasterchain(asaudiocontext(ctx), worklet)
   } else {
     worklet.connect(ctx.destination)
   }
 
-  const ready = waitfordaisyready(worklet)
-  worklet.port.postMessage({ zss_boot: 1, wasmbytes })
+  // #region agent log
+  fetch('http://127.0.0.1:7799/ingest/cd0f7a39-d6ec-46e6-844e-03e2070cbab0',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'5cd315'},body:JSON.stringify({sessionId:'5cd315',location:'daisyengine.ts:bootdaisyoncontext',message:'posting zss_boot fallback',data:{wasmbytes:wasmcopy.byteLength},timestamp:Date.now(),hypothesisId:'B',runId:'post-fix'})}).catch(()=>{});
+  // #endregion
+  worklet.port.postMessage({ zss_boot: 1, wasmbytes: wasmcopy.slice(0) })
   await ready
 
   const engine: DaisyEngine = {
