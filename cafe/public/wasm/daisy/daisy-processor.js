@@ -54,14 +54,14 @@ const DAISY_SAB_CHANNEL_LEN = {
 }
 
 class DaisyProcessor extends AudioWorkletProcessor {
-  constructor(options) {
+  constructor() {
     super()
     this.sabviews = []
     this.controlview = null
     this.outptr = 0
     this.ready = false
     this.bootstarted = false
-    this.pendingwasmbytes = options.processorOptions?.wasmbytes ?? null
+    this.pendingwasmbytes = null
     this.port.onmessage = (event) => this.onmessage(event)
   }
 
@@ -73,7 +73,7 @@ class DaisyProcessor extends AudioWorkletProcessor {
 
     if (!wasmbytes) {
       this.port.postMessage({
-        zss_dsp_error: 'missing processorOptions.wasmbytes',
+        zss_dsp_error: 'missing wasm bytes for daisy boot',
       })
       return
     }
@@ -121,6 +121,12 @@ class DaisyProcessor extends AudioWorkletProcessor {
 
   onmessage(event) {
     const data = event.data
+    if (data?.zss_boot) {
+      const wasmbytes = data.wasmbytes ?? this.pendingwasmbytes
+      this.pendingwasmbytes = wasmbytes
+      this.bootwasm(wasmbytes)
+      return
+    }
     if (data?.zss_sab_register && data.channelID && data.sab && data.length) {
       const offset = DAISY_SAB_CHANNEL_OFFSET[data.channelID]
       const expected = DAISY_SAB_CHANNEL_LEN[data.channelID]
@@ -159,15 +165,8 @@ class DaisyProcessor extends AudioWorkletProcessor {
   }
 
   process(inputs, outputs) {
-    if (!this.bootstarted) {
-      if (!this.pendingwasmbytes) {
-        this.bootstarted = true
-        this.port.postMessage({
-          zss_dsp_error: 'missing processorOptions.wasmbytes',
-        })
-      } else {
-        this.bootwasm(this.pendingwasmbytes)
-      }
+    if (!this.bootstarted && this.pendingwasmbytes) {
+      this.bootwasm(this.pendingwasmbytes)
     }
     if (!this.ready || !this.wasm || !this.controlview) {
       return true

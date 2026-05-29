@@ -62,8 +62,14 @@ function waitfordaisyready(
 ): Promise<void> {
   const port = worklet.port
   return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => {
+    function cleanup() {
+      clearTimeout(timer)
       port.removeEventListener('message', onmsg)
+      port.onmessageerror = null
+    }
+
+    const timer = setTimeout(() => {
+      cleanup()
       reject(new Error('daisy wasm dsp boot timed out'))
     }, timeoutms)
 
@@ -73,16 +79,18 @@ function waitfordaisyready(
         zss_dsp_error?: string
       }
       if (data?.zss_dsp_ready) {
-        clearTimeout(timer)
-        port.removeEventListener('message', onmsg)
+        cleanup()
         resolve()
       } else if (data?.zss_dsp_error) {
-        clearTimeout(timer)
-        port.removeEventListener('message', onmsg)
+        cleanup()
         reject(new Error(data.zss_dsp_error))
       }
     }
 
+    port.onmessageerror = () => {
+      cleanup()
+      reject(new Error('daisy worklet port message error'))
+    }
     port.addEventListener('message', onmsg)
   })
 }
@@ -105,20 +113,30 @@ async function bootdaisyoncontext(ctx: BaseAudioContext): Promise<DaisyEngine> {
     type: 'module',
   })
   const wasmresponse = await fetch(wasmurl)
+  if (!wasmresponse.ok) {
+    throw new Error(`failed to fetch ${wasmurl}`)
+  }
   const wasmbytes = await wasmresponse.arrayBuffer()
   await WebAssembly.compile(wasmbytes)
+
   const worklet = new AudioWorkletNode(ctx, 'zss-daisy-processor', {
     numberOfInputs: 1,
     numberOfOutputs: 1,
     outputChannelCount: [1],
-    processorOptions: { wasmbytes },
   })
   worklet.channelCount = 1
   worklet.channelCountMode = 'explicit'
   worklet.channelInterpretation = 'speakers'
 
-  const ready = waitfordaisyready(worklet)
   await resumecontext(ctx)
+  if (!isofflineaudiocontext(ctx)) {
+    wirewasmmasterchain(asaudiocontext(ctx), worklet)
+  } else {
+    worklet.connect(ctx.destination)
+  }
+
+  const ready = waitfordaisyready(worklet)
+  worklet.port.postMessage({ zss_boot: 1, wasmbytes })
   await ready
 
   const engine: DaisyEngine = {
@@ -143,12 +161,17 @@ export async function ensuredaisysynthwasm(): Promise<DaisyEngine> {
   }
 
   daisyloadinflight ??= (async () => {
-    const ctx = getunlockedaudiocontext() ?? new AudioContext()
-    await resumecontext(ctx)
-    const engine = await bootdaisyoncontext(ctx)
-    daisyengine = engine
-    daisyready = true
-    return engine
+    try {
+      const ctx = getunlockedaudiocontext() ?? new AudioContext()
+      await resumecontext(ctx)
+      const engine = await bootdaisyoncontext(ctx)
+      daisyengine = engine
+      daisyready = true
+      return engine
+    } catch (err) {
+      daisyloadinflight = undefined
+      throw err
+    }
   })()
 
   return daisyloadinflight
