@@ -111,7 +111,7 @@ async function bootdaisyoncontext(ctx: BaseAudioContext): Promise<DaisyEngine> {
   const processorurl = daisyasseturl('daisy-processor.js')
   await ctx.audioWorklet.addModule(processorurl, {
     type: 'module',
-  })
+  } as WorkletOptions)
   const wasmresponse = await fetch(wasmurl)
   if (!wasmresponse.ok) {
     throw new Error(`failed to fetch ${wasmurl}`)

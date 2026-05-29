@@ -1,10 +1,5 @@
 /// <reference types="vite/client" />
 
-/** DOM lib omits module worklet option; daisy-processor.js is an ES module. */
-interface WorkletOptions {
-  type?: 'classic' | 'module'
-}
-
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- Vite env augmentation uses interface merging
 interface ImportMetaEnv {
   readonly ZSS_DEBUG_PERF_UI: string
