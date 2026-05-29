@@ -2,35 +2,50 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
 import type { PARITY_AUDIO_METRICS } from '../paritymetrics'
-import { metricswithin } from '../paritymetrics'
+import { formatmetricsdelta, metricswithin } from '../paritymetrics'
 import {
   DRUM_PARITY_PATCHES,
   FX_PARITY_PATCHES,
   WASM_PARITY_PATCHES,
-  WASM_PARITY_PEAK_DB_TOL,
-  WASM_PARITY_RMS_DB_TOL,
 } from '../paritypatches'
+import {
+  TONE_PARITY_EXCLUDED,
+  paritytolerancesfor,
+} from '../paritytolerances'
 
 type PARITY_FIXTURE_FILE = {
   patches: Record<string, PARITY_AUDIO_METRICS>
 }
 
-const FIXTURE_PATH = path.join(__dirname, '../__fixtures__/parity-metrics.json')
+const USE_TONE_REFERENCE = process.env.ZSS_TONE_REFERENCE === '1'
+const FIXTURE_PATH = path.join(
+  __dirname,
+  '../__fixtures__',
+  USE_TONE_REFERENCE ? 'parity-metrics-tone.json' : 'parity-metrics.json',
+)
 
 function loadfixtures(): PARITY_FIXTURE_FILE {
   const raw = readFileSync(FIXTURE_PATH, 'utf8')
   return JSON.parse(raw) as PARITY_FIXTURE_FILE
 }
 
+function loadlegacyfixtures(): PARITY_FIXTURE_FILE {
+  const raw = readFileSync(
+    path.join(__dirname, '../__fixtures__/parity-metrics.json'),
+    'utf8',
+  )
+  return JSON.parse(raw) as PARITY_FIXTURE_FILE
+}
+
 describe('wasm parity fixtures manifest', () => {
-  it('includes every broad patch id', () => {
-    const fixtures = loadfixtures()
+  it('includes every voice patch id in wasm fixtures', () => {
+    const fixtures = loadlegacyfixtures()
     for (const patch of WASM_PARITY_PATCHES) {
       expect(fixtures.patches[patch.id]).toBeDefined()
     }
   })
 
-  it('lists drum and fx parity patch ids for future fixtures', () => {
+  it('lists drum and fx parity patch ids', () => {
     expect(DRUM_PARITY_PATCHES.length).toBe(10)
     expect(FX_PARITY_PATCHES.length).toBe(7)
   })
@@ -43,27 +58,82 @@ const CAN_RENDER_PARITY =
 
 const USE_DAISY_PARITY = process.env.ZSS_DAISY_PARITY === '1'
 
+async function loadrenderer() {
+  if (USE_DAISY_PARITY) {
+    const mod = await import('../../daisy/daisyparityrender')
+    return {
+      voice: mod.renderdaisyparitypatch,
+      drum: mod.renderdaisyparitydrumpatch,
+      fx: mod.renderdaisyparityfxpatch,
+    }
+  }
+  const mod = await import('../wasmparityrender')
+  return {
+    voice: mod.renderwasmparitypatch,
+    drum: async () => {
+      throw new Error('wasm drum parity render not implemented')
+    },
+    fx: async () => {
+      throw new Error('wasm fx parity render not implemented')
+    },
+  }
+}
+
 ;(CAN_RENDER_PARITY ? describe : describe.skip)(
   USE_DAISY_PARITY ? 'daisy parity offline renders' : 'wasm parity offline renders',
   () => {
-    it('matches committed tone reference metrics within tolerance', async () => {
-      const render = USE_DAISY_PARITY
-        ? (await import('../../daisy/daisyparityrender')).renderdaisyparitypatch
-        : (await import('../wasmparityrender')).renderwasmparitypatch
+    it('matches committed reference metrics within tolerance', async () => {
+      const render = await loadrenderer()
       const fixtures = loadfixtures()
-      for (const patch of WASM_PARITY_PATCHES) {
-        const expected = fixtures.patches[patch.id]
-        const actual = await render(patch)
-        expect(
-          metricswithin(
+      const failures: string[] = []
+
+      async function checkpatch(
+        patchid: string,
+        renderfn: () => Promise<PARITY_AUDIO_METRICS>,
+      ) {
+        if (
+          USE_TONE_REFERENCE &&
+          (TONE_PARITY_EXCLUDED as readonly string[]).includes(patchid)
+        ) {
+          return
+        }
+        const expected = fixtures.patches[patchid]
+        if (!expected) {
+          failures.push(`${patchid} | missing fixture`)
+          return
+        }
+        const actual = await renderfn()
+        const tol = paritytolerancesfor(patchid)
+        if (
+          !metricswithin(
             actual,
             expected,
-            WASM_PARITY_RMS_DB_TOL,
-            WASM_PARITY_PEAK_DB_TOL,
-          ),
-        ).toBe(true)
+            tol.rmsdbtol,
+            tol.peakdbtol,
+            tol.centroidhztol,
+            tol.bandratiotol,
+          )
+        ) {
+          failures.push(formatmetricsdelta(patchid, actual, expected))
+        }
       }
-    }, 120000)
+
+      for (const patch of WASM_PARITY_PATCHES) {
+        await checkpatch(patch.id, () => render.voice(patch))
+      }
+      if (USE_DAISY_PARITY) {
+        for (const patch of DRUM_PARITY_PATCHES) {
+          await checkpatch(patch.id, () => render.drum(patch))
+        }
+        for (const patch of FX_PARITY_PATCHES) {
+          await checkpatch(patch.id, () => render.fx(patch))
+        }
+      }
+
+      if (failures.length > 0) {
+        throw new Error(failures.join('\n'))
+      }
+    }, 240000)
   },
 )
 

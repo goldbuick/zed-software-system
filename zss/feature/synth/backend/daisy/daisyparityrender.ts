@@ -7,10 +7,17 @@ import {
   startisolateddaisydsp,
 } from './daisyengine'
 import { createdaisysynth } from './daisysynth'
-import { type PARITY_AUDIO_METRICS, audiobuffermetrics } from '../wasm/paritymetrics'
-import type { PARITY_PATCH } from '../wasm/paritypatches'
+import {
+  type PARITY_AUDIO_METRICS,
+  audiobuffermetrics,
+} from '../wasm/paritymetrics'
+import type {
+  DRUM_PARITY_PATCH,
+  FX_PARITY_PATCH,
+  PARITY_PATCH,
+} from '../wasm/paritypatches'
 import { defaultwasmalgoconfig } from '../wasm/wasmalgoconfigsab'
-import { defaultwasmfxsab } from '../wasm/wasmfxstate'
+import { applywasmfxconfig, defaultwasmfxsab } from '../wasm/wasmfxstate'
 import { WASM_DEFAULT_TTS_VOLUME } from '../wasm/wasmmastersab'
 import { defaultwasmoscconfig } from '../wasm/wasmoscconfigsab'
 import type { WASM_REPLAY_STATE } from '../wasm/wasmreplaystate'
@@ -20,10 +27,10 @@ const PARITY_SAMPLERATE = 44100
 const PARITY_REPLAY_OFFSET_SEC = 0.05
 
 function parityrenderlengthsec(
-  patch: PARITY_PATCH,
+  durationsec: number,
   ticks: SYNTH_NOTE_ENTRY[],
 ): number {
-  let latest = patch.durationsec
+  let latest = durationsec
   for (let i = 0; i < ticks.length; i++) {
     const [time, value] = ticks[i]
     const [, notation] = value
@@ -35,7 +42,7 @@ function parityrenderlengthsec(
       latest = eventend
     }
   }
-  return Math.max(latest + 0.15, patch.durationsec + 1.0)
+  return Math.max(latest + 0.15, durationsec + 1.0)
 }
 
 function buildreplay(): WASM_REPLAY_STATE {
@@ -54,15 +61,14 @@ function patchentries(notation: string): SYNTH_NOTE_ENTRY[] {
   return invokeplay(0, 0, invoke, true)
 }
 
-export async function renderdaisyparitypatch(
-  patch: PARITY_PATCH,
+async function renderdaisyoffline(
+  rendersec: number,
+  setup: (synth: ReturnType<typeof createdaisysynth>) => void,
 ): Promise<PARITY_AUDIO_METRICS> {
   if (typeof OfflineAudioContext === 'undefined') {
     throw new Error('OfflineAudioContext not available')
   }
 
-  const ticks = patchentries(patch.notation)
-  const rendersec = parityrenderlengthsec(patch, ticks)
   const length = Math.max(1, Math.ceil(rendersec * PARITY_SAMPLERATE))
   const offlinectx = new OfflineAudioContext(1, length, PARITY_SAMPLERATE)
   const engine = await bootisolateddaisyengine(offlinectx)
@@ -71,10 +77,54 @@ export async function renderdaisyparitypatch(
   const synth = createdaisysynth(engine)
   const replay = buildreplay()
   synth.applyreplay(replay)
-  synth.synthreplay(ticks, rendersec)
+  setup(synth)
   synth.prepareofflinerender()
 
   const buffer = await offlinectx.startRendering()
   synth.destroy()
   return audiobuffermetrics(buffer)
+}
+
+export async function renderdaisyparitypatch(
+  patch: PARITY_PATCH,
+): Promise<PARITY_AUDIO_METRICS> {
+  const ticks = patchentries(patch.notation)
+  const rendersec = parityrenderlengthsec(patch.durationsec, ticks)
+  return renderdaisyoffline(rendersec, (synth) => {
+    synth.setvoiceconfig(patch.voiceindex, patch.voiceconfig, '')
+    synth.setplayvolume(80)
+    synth.setbgplayvolume(100)
+    synth.synthreplay(ticks, patch.durationsec)
+  })
+}
+
+export async function renderdaisyparitydrumpatch(
+  patch: DRUM_PARITY_PATCH,
+): Promise<PARITY_AUDIO_METRICS> {
+  const ticks = patchentries(patch.notation)
+  const rendersec = parityrenderlengthsec(patch.durationsec, ticks)
+  return renderdaisyoffline(rendersec, (synth) => {
+    synth.setplayvolume(80)
+    synth.setbgplayvolume(100)
+    synth.synthreplay(ticks, patch.durationsec)
+  })
+}
+
+export async function renderdaisyparityfxpatch(
+  patch: FX_PARITY_PATCH,
+): Promise<PARITY_AUDIO_METRICS> {
+  const ticks = patchentries(patch.notation)
+  const rendersec = parityrenderlengthsec(patch.durationsec, ticks)
+  const fxsab = defaultwasmfxsab()
+  applywasmfxconfig(fxsab, patch.voiceindex, patch.fx, patch.fxconfig, patch.fxvalue)
+  return renderdaisyoffline(rendersec, (synth) => {
+    synth.setvoiceconfig(patch.voiceindex, patch.voiceconfig, '')
+    synth.applyreplay({
+      ...buildreplay(),
+      fxsab,
+    })
+    synth.setplayvolume(80)
+    synth.setbgplayvolume(100)
+    synth.synthreplay(ticks, patch.durationsec)
+  })
 }

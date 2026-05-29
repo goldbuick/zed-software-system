@@ -1,31 +1,27 @@
-#!/usr/bin/env npx tsx
-/**
- * Regenerate WASM parity reference metrics (committed fixtures).
- *
- * Renders each patch via WASM offline audio in headless Chromium, then writes
- * `zss/feature/synth/backend/wasm/__fixtures__/parity-metrics.json`.
- *
- * Usage:
- *   yarn regen:parity-fixtures
- */
 import { readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { chromium } from '@playwright/test'
 
-import { WASM_PARITY_PATCHES } from '../zss/feature/synth/backend/wasm/paritypatches.ts'
+import {
+  DRUM_PARITY_PATCHES,
+  FX_PARITY_PATCHES,
+  WASM_PARITY_PATCHES,
+} from '../zss/feature/synth/backend/wasm/paritypatches.ts'
 import type { PARITY_AUDIO_METRICS } from '../zss/feature/synth/backend/wasm/paritymetrics.ts'
 
 import { startparityvite } from './parity-vite-server.ts'
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url))
 const PROJECT = path.join(ROOT, '..')
+const USE_TONE = process.argv.includes('--tone')
 const OUT = path.join(
   PROJECT,
-  'zss/feature/synth/backend/wasm/__fixtures__/parity-metrics.json',
+  'zss/feature/synth/backend/wasm/__fixtures__',
+  USE_TONE ? 'parity-metrics-tone.json' : 'parity-metrics.json',
 )
-const REGEN_PORT = 9876
+const REGEN_PORT = USE_TONE ? 9877 : 9876
 
 function metricsusable(metrics: PARITY_AUDIO_METRICS): boolean {
   return metrics.rmsdb > -119
@@ -34,27 +30,36 @@ function metricsusable(metrics: PARITY_AUDIO_METRICS): boolean {
 function loadexisting(): Record<string, PARITY_AUDIO_METRICS> {
   try {
     const raw = readFileSync(OUT, 'utf8')
-    const parsed = JSON.parse(raw) as { patches: Record<string, PARITY_AUDIO_METRICS> }
+    const parsed = JSON.parse(raw) as {
+      patches: Record<string, PARITY_AUDIO_METRICS>
+    }
     return parsed.patches ?? {}
   } catch {
     return {}
   }
 }
 
-async function startregenserver() {
-  return startparityvite(PROJECT, REGEN_PORT)
-}
-
 async function renderpatchmetrics(
   page: import('@playwright/test').Page,
   patchid: string,
+  kind: 'voice' | 'drum' | 'fx',
 ): Promise<PARITY_AUDIO_METRICS> {
-  const url = `http://127.0.0.1:${REGEN_PORT}/parity-regen.html?patch=${encodeURIComponent(patchid)}`
+  const params = new URLSearchParams({
+    patch: patchid,
+    kind,
+  })
+  if (USE_TONE) {
+    params.set('backend', 'tone')
+  }
+  const url = `http://127.0.0.1:${REGEN_PORT}/parity-regen.html?${params.toString()}`
   await page.goto(url, { waitUntil: 'networkidle', timeout: 180000 })
-  await page.waitForFunction(() => {
-    const el = document.getElementById('out')
-    return el && el.textContent && !el.textContent.startsWith('rendering')
-  }, { timeout: 180000 })
+  await page.waitForFunction(
+    () => {
+      const el = document.getElementById('out')
+      return el && el.textContent && !el.textContent.startsWith('rendering')
+    },
+    { timeout: 180000 },
+  )
   const body = await page.locator('#out').textContent()
   if (!body) {
     throw new Error(`empty parity regen response for ${patchid}`)
@@ -67,8 +72,8 @@ async function renderpatchmetrics(
   return metrics
 }
 
-async function renderwasmpatches(): Promise<Record<string, PARITY_AUDIO_METRICS>> {
-  const { server, vite } = await startregenserver()
+async function renderallpatches(): Promise<Record<string, PARITY_AUDIO_METRICS>> {
+  const { server, vite } = await startparityvite(PROJECT, REGEN_PORT)
   const browser = await chromium.launch()
   const out: Record<string, PARITY_AUDIO_METRICS> = {}
   try {
@@ -82,7 +87,13 @@ async function renderwasmpatches(): Promise<Record<string, PARITY_AUDIO_METRICS>
       console.error('pageerror:', err.message)
     })
     for (const patch of WASM_PARITY_PATCHES) {
-      out[patch.id] = await renderpatchmetrics(page, patch.id)
+      out[patch.id] = await renderpatchmetrics(page, patch.id, 'voice')
+    }
+    for (const patch of DRUM_PARITY_PATCHES) {
+      out[patch.id] = await renderpatchmetrics(page, patch.id, 'drum')
+    }
+    for (const patch of FX_PARITY_PATCHES) {
+      out[patch.id] = await renderpatchmetrics(page, patch.id, 'fx')
     }
     return out
   } finally {
@@ -95,23 +106,28 @@ async function renderwasmpatches(): Promise<Record<string, PARITY_AUDIO_METRICS>
 async function main() {
   const existing = loadexisting()
   const patches: Record<string, PARITY_AUDIO_METRICS> = { ...existing }
-  const rendered = await renderwasmpatches()
-  for (const patch of WASM_PARITY_PATCHES) {
-    const metrics = rendered[patch.id]
+  const rendered = await renderallpatches()
+  const allids = [
+    ...WASM_PARITY_PATCHES.map((p) => p.id),
+    ...DRUM_PARITY_PATCHES.map((p) => p.id),
+    ...FX_PARITY_PATCHES.map((p) => p.id),
+  ]
+  for (const patchid of allids) {
+    const metrics = rendered[patchid]
     if (!metrics) {
-      console.warn(`skip ${patch.id} — wasm render missing`)
+      console.warn(`skip ${patchid} — render missing`)
       continue
     }
     if (!metricsusable(metrics)) {
-      if (existing[patch.id]) {
-        console.warn(`keep ${patch.id} — wasm render silent`)
+      if (existing[patchid]) {
+        console.warn(`keep ${patchid} — render silent`)
         continue
       }
-      console.warn(`skip ${patch.id} — wasm render silent and no existing fixture`)
+      console.warn(`skip ${patchid} — render silent and no existing fixture`)
       continue
     }
-    patches[patch.id] = metrics
-    console.log(`wasm ${patch.id}`, metrics)
+    patches[patchid] = metrics
+    console.log(`${USE_TONE ? 'tone' : 'wasm'} ${patchid}`, metrics)
   }
   if (Object.keys(patches).length === 0) {
     console.error('No patches rendered — ensure playwright chromium is installed.')

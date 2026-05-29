@@ -79,6 +79,7 @@ class DaisyProcessor extends AudioWorkletProcessor {
     }
 
     const port = this.port
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const processor = this
     let wasmmodule
     try {
@@ -102,7 +103,8 @@ class DaisyProcessor extends AudioWorkletProcessor {
         try {
           const ptr = modcfg._zss_control_ptr()
           const len = modcfg._zss_control_len()
-          processor.controlview = new Float64Array(modcfg.HEAPF64.buffer, ptr, len)
+          const base = ptr >> 3
+          processor.controlview = modcfg.HEAPF64.subarray(base, base + len)
           modcfg._zss_init(sampleRate)
           processor.outptr = modcfg._malloc(128 * 4)
           processor.wasm = modcfg

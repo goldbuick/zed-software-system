@@ -291,3 +291,6 @@ export const FX_PARITY_PATCHES: FX_PARITY_PATCH[] = [
 
 export const WASM_PARITY_RMS_DB_TOL = 1
 export const WASM_PARITY_PEAK_DB_TOL = 2
+
+/** Re-export for Tone gate documentation. */
+export { TONE_PARITY_EXCLUDED } from './paritytolerances'

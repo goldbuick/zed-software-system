@@ -1,12 +1,34 @@
 # DaisySP backend cutover gate
 
-DaisySP runs in parallel with Maximilian behind `ZSS_DAISY_SYNTH=true`. **Maximilian remains the default** until all criteria below pass under manual `ZSS_PARITY_RENDER=1` / `ZSS_DAISY_PARITY=1` runs.
+DaisySP runs in parallel with Maximilian behind `ZSS_DAISY_SYNTH=true`. **Maximilian remains the default** until all criteria below pass under manual parity runs.
+
+## Reference target
+
+Parity gates use **archived Tone.js** as ground truth (`parity-metrics-tone.json`), not Maximilian self-fixtures. Regenerate Tone reference after any Tone archive change:
+
+```bash
+yarn regen:parity-fixtures:tone
+```
+
+Maximilian fixtures (`parity-metrics.json`) remain for WASM self-check only:
+
+```bash
+yarn regen:parity-fixtures
+```
+
+### Tone-excluded patches
+
+These have no Tone implementation — excluded from Tone gate count (23/25 voice patches):
+
+- `noise-c4`, `hollow-c4` (WASM-only voices)
+
+Retro/buzz/clang/metallic Daisy targets **Tone LFSR** behavior; Maximilian uses BeepBox tables and may diverge on spectral checks.
 
 ## Cutover criteria
 
-1. Voice parity: 22/22 `WASM_PARITY_PATCHES` pass (±1 dB RMS, ±2 dB peak vs Tone fixtures)
-2. Drum parity: 10/10 `DRUM_PARITY_PATCHES` pass
-3. FX parity: 7/7 `FX_PARITY_PATCHES` pass
+1. Voice parity: 23/25 Tone-backed `WASM_PARITY_PATCHES` pass (±1 dB RMS, ±2 dB peak, spectral tolerances per patch profile)
+2. Drum parity: 10/10 `DRUM_PARITY_PATCHES` pass vs Tone fixtures
+3. FX parity: 7/7 `FX_PARITY_PATCHES` pass vs Tone fixtures
 4. Master parity: play/bgplay/tts mix fixtures pass
 5. Record parity: offline render matches Tone fixture expectations
 6. E2E smoke: `#play`, `#bgplay`, `#synth`, FX commands, TTS, `synthrecord`
@@ -29,18 +51,23 @@ Rebuild and commit `cafe/public/wasm/daisy/*` after any C++ change. `yarn build:
 ## Manual parity
 
 ```bash
+# WASM vs committed WASM fixtures
 ZSS_PARITY_RENDER=1 yarn test wasmparity
-ZSS_PARITY_RENDER=1 ZSS_DAISY_PARITY=1 yarn test wasmparity
+
+# Daisy vs Tone reference (primary gate)
+ZSS_PARITY_RENDER=1 ZSS_DAISY_PARITY=1 ZSS_TONE_REFERENCE=1 yarn test wasmparity
 ```
 
 Parity tests are **not** run in CI.
+
+Metrics include RMS, peak, spectral centroid, and 3-band energy ratios (`paritymetrics.ts`).
 
 ## Architecture notes
 
 - WASM build pattern from [WasmPatcher](https://github.com/jaffco/WasmPatcher) (Emscripten + DaisySP submodule)
 - Dedicated `daisy-processor.js` AudioWorklet (not Maximilian eval)
 - SAB channels synced into WASM control buffer each audio block
-- Hard voices use DaisySP modules only (no Maximilian play-code port)
+- C++ graph reads `zss_osccfg`, `zss_algocfg`, `zss_vibrato`; Tone-faithful voices, drums, FX, master
 
 ## Bundle size (2026-05-29)
 

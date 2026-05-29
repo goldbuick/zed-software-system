@@ -115,6 +115,7 @@ emcc \
   -s EXPORTED_RUNTIME_METHODS='["cwrap","getValue","setValue","HEAPF64","HEAPF32"]' \
   -s ALLOW_MEMORY_GROWTH=0 \
   -s INITIAL_MEMORY=67108864 \
+  -s STACK_SIZE=8388608 \
   -s NO_EXIT_RUNTIME=1 \
   -s ASSERTIONS=0 \
   -s ENVIRONMENT='web,worker' \

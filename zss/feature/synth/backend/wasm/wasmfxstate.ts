@@ -1,3 +1,4 @@
+import type { SabEngine } from 'zss/feature/synth/backend/shared/sabengine'
 import {
   parsetimeseconds,
   tonenotationseconds,
@@ -5,7 +6,6 @@ import {
 import type { SYNTH_STATE } from 'zss/gadget/data/types'
 import { isnumber, isstring } from 'zss/mapping/types'
 
-import type { SabEngine } from '../shared/sabengine'
 import { pushwasmsabvalues } from './sabpush'
 import {
   WASM_AUTOFILTER_DEFAULT_BASE_FREQ,
