@@ -10,11 +10,19 @@ import type { WASM_OSC_CONFIG } from './wasmoscconfigsab'
 import { WASM_OSC_TYPE, parsewasmosc } from './wasmosctype'
 import {
   DEFAULT_WASM_ENVELOPE,
+  DEFAULT_WASM_PLUCK,
+  DEFAULT_WASM_STRING_ENSEMBLE,
   DEFAULT_WASM_VOICE_VOLUME_DB,
+  type WASM_PLUCK_PARAMS,
+  type WASM_STRING_ENSEMBLE_PARAMS,
   type WASM_VOICE_ENVELOPE,
 } from './wasmvoicecfgsab'
 
-export type { WASM_VOICE_ENVELOPE } from './wasmvoicecfgsab'
+export type {
+  WASM_VOICE_ENVELOPE,
+  WASM_PLUCK_PARAMS,
+  WASM_STRING_ENSEMBLE_PARAMS,
+} from './wasmvoicecfgsab'
 
 export type WASM_VOICE_STATE = {
   type: SOURCE_TYPE
@@ -23,6 +31,16 @@ export type WASM_VOICE_STATE = {
   envelope: WASM_VOICE_ENVELOPE
   portamento: number
   volume: number
+  pluck: WASM_PLUCK_PARAMS
+  stringensemble: WASM_STRING_ENSEMBLE_PARAMS
+}
+
+function defaultpluck(): WASM_PLUCK_PARAMS {
+  return { ...DEFAULT_WASM_PLUCK }
+}
+
+function defaultstringensemble(): WASM_STRING_ENSEMBLE_PARAMS {
+  return { ...DEFAULT_WASM_STRING_ENSEMBLE }
 }
 
 function defaultvoice(): WASM_VOICE_STATE {
@@ -33,11 +51,78 @@ function defaultvoice(): WASM_VOICE_STATE {
     envelope: { ...DEFAULT_WASM_ENVELOPE },
     portamento: 0,
     volume: DEFAULT_WASM_VOICE_VOLUME_DB,
+    pluck: defaultpluck(),
+    stringensemble: defaultstringensemble(),
   }
 }
 
 export function defaultwasmvoicestate(): WASM_VOICE_STATE[] {
   return Array.from({ length: 8 }, () => defaultvoice())
+}
+
+function ispluckparamkey(key: string): boolean {
+  return (
+    key === 'structure' ||
+    key === 'brightness' ||
+    key === 'damping' ||
+    key === 'accent'
+  )
+}
+
+function isstringensembleparamkey(key: string): boolean {
+  return key === 'detune' || key === 'pwm' || key === 'vib' || key === 'filter'
+}
+
+function applywasmpluckconfig(
+  voice: WASM_VOICE_STATE,
+  key: string,
+  value: number | string | number[],
+): boolean {
+  if (!isnumber(value)) {
+    return false
+  }
+  switch (key) {
+    case 'structure':
+      voice.pluck.structure = value
+      return true
+    case 'brightness':
+      voice.pluck.brightness = value
+      return true
+    case 'damping':
+      voice.pluck.damping = value
+      return true
+    case 'accent':
+      voice.pluck.accent = value
+      return true
+    default:
+      return false
+  }
+}
+
+function applywasmstringensembleconfig(
+  voice: WASM_VOICE_STATE,
+  key: string,
+  value: number | string | number[],
+): boolean {
+  if (!isnumber(value)) {
+    return false
+  }
+  switch (key) {
+    case 'detune':
+      voice.stringensemble.detune = value
+      return true
+    case 'pwm':
+      voice.stringensemble.pwm = value
+      return true
+    case 'vib':
+      voice.stringensemble.vib = value
+      return true
+    case 'filter':
+      voice.stringensemble.filter = value
+      return true
+    default:
+      return false
+  }
 }
 
 function parsesourcetype(
@@ -103,10 +188,20 @@ function parsesourcetype(
     case 'algo7':
       return { ...current, type: SOURCE_TYPE.ALGO_SYNTH, algo: 7 }
     case 'string':
-      return { ...current, type: SOURCE_TYPE.STRING_VOICE, algo: 0 }
+      return {
+        ...current,
+        type: SOURCE_TYPE.STRING_VOICE,
+        algo: 0,
+        stringensemble: defaultstringensemble(),
+        envelope: { attack: 0.6, decay: 0.15, sustain: 0.88, release: 1.0 },
+      }
     case 'pluck':
-    case 'karplus':
-      return { ...current, type: SOURCE_TYPE.STRING_VOICE, algo: 1 }
+      return {
+        ...current,
+        type: SOURCE_TYPE.STRING_VOICE,
+        algo: 1,
+        pluck: defaultpluck(),
+      }
     case 'drip':
       return { ...current, type: SOURCE_TYPE.DRIP_VOICE, algo: 0 }
     default:
@@ -172,12 +267,27 @@ export function applywasmvoiceconfig(
   }
 
   if (isstring(config)) {
-    if (voicestate[index].type === SOURCE_TYPE.ALGO_SYNTH) {
+    if (ispluckparamkey(config)) {
+      const voice = voicestate[index]
+      if (voice.type === SOURCE_TYPE.STRING_VOICE && voice.algo === 1) {
+        return applywasmpluckconfig(voice, config, value)
+      }
+      return false
+    }
+    if (isstringensembleparamkey(config)) {
+      const voice = voicestate[index]
+      if (voice.type === SOURCE_TYPE.STRING_VOICE && voice.algo === 0) {
+        return applywasmstringensembleconfig(voice, config, value)
+      }
+      return false
+    }
+    const voice = voicestate[index]
+    if (voice.type === SOURCE_TYPE.ALGO_SYNTH) {
       if (applywasmalgoconfig(algoconfig, index, config, value)) {
         return true
       }
     }
-    if (voicestate[index].type === SOURCE_TYPE.SYNTH) {
+    if (voice.type === SOURCE_TYPE.SYNTH) {
       if (applywasmoscconfig(oscconfig, index, config, value)) {
         return true
       }

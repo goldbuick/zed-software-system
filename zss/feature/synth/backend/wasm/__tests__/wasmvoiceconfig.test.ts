@@ -70,20 +70,35 @@ describe('wasmvoiceconfig', () => {
     expect(voices[2].algo).toBe(3)
   })
 
-  it('maps string pluck karplus and drip voice types', () => {
+  it('maps string pluck and drip voice types', () => {
     const voices = defaultwasmvoicestate()
     expect(applyvoiceconfig(voices, 0, 'string', '')).toBe(true)
     expect(voices[0].type).toBe(SOURCE_TYPE.STRING_VOICE)
     expect(voices[0].algo).toBe(0)
+    expect(voices[0].envelope).toEqual({
+      attack: 0.6,
+      decay: 0.15,
+      sustain: 0.88,
+      release: 1.0,
+    })
+    expect(voices[0].stringensemble).toEqual({
+      detune: 0.25,
+      pwm: 0.2,
+      vib: 0.35,
+      filter: 0.5,
+    })
     expect(applyvoiceconfig(voices, 1, 'pluck', '')).toBe(true)
     expect(voices[1].type).toBe(SOURCE_TYPE.STRING_VOICE)
     expect(voices[1].algo).toBe(1)
-    expect(applyvoiceconfig(voices, 2, 'karplus', '')).toBe(true)
-    expect(voices[2].type).toBe(SOURCE_TYPE.STRING_VOICE)
-    expect(voices[2].algo).toBe(1)
-    expect(applyvoiceconfig(voices, 3, 'drip', '')).toBe(true)
-    expect(voices[3].type).toBe(SOURCE_TYPE.DRIP_VOICE)
-    expect(voices[3].algo).toBe(0)
+    expect(voices[1].pluck).toEqual({
+      structure: 0.14,
+      brightness: 0.22,
+      damping: 0.68,
+      accent: 0.48,
+    })
+    expect(applyvoiceconfig(voices, 2, 'drip', '')).toBe(true)
+    expect(voices[2].type).toBe(SOURCE_TYPE.DRIP_VOICE)
+    expect(voices[2].algo).toBe(0)
   })
 
   it('maps noise and hollow chip types', () => {
@@ -180,6 +195,78 @@ describe('wasmvoiceconfig', () => {
     expect(voices[0].type).toBe(SOURCE_TYPE.BELLS)
   })
 
+  it('maps string ensemble params on string voice only', () => {
+    const voices = defaultwasmvoicestate()
+    applyvoiceconfig(voices, 0, 'string', '')
+    expect(applyvoiceconfig(voices, 0, 'detune', 0.3)).toBe(true)
+    expect(applyvoiceconfig(voices, 0, 'pwm', 0.4)).toBe(true)
+    expect(applyvoiceconfig(voices, 0, 'vib', 0.5)).toBe(true)
+    expect(applyvoiceconfig(voices, 0, 'filter', 0.6)).toBe(true)
+    expect(voices[0].stringensemble).toEqual({
+      detune: 0.3,
+      pwm: 0.4,
+      vib: 0.5,
+      filter: 0.6,
+    })
+
+    applyvoiceconfig(voices, 1, 'pluck', '')
+    expect(applyvoiceconfig(voices, 1, 'detune', 0.3)).toBe(false)
+    applyvoiceconfig(voices, 2, 'square', '')
+    expect(applyvoiceconfig(voices, 2, 'pwm', 0.4)).toBe(false)
+  })
+
+  it('maps string ensemble params into voice cfg sab slots 6-9', () => {
+    const voices = defaultwasmvoicestate()
+    applyvoiceconfig(voices, 0, 'string', '')
+    applyvoiceconfig(voices, 0, 'detune', 0.3)
+    applyvoiceconfig(voices, 0, 'pwm', 0.4)
+    applyvoiceconfig(voices, 0, 'vib', 0.5)
+    applyvoiceconfig(voices, 0, 'filter', 0.6)
+
+    const sab = wasmvoicecfgtosab(voices)
+    expect(sab[6]).toBe(0.3)
+    expect(sab[7]).toBe(0.4)
+    expect(sab[8]).toBe(0.5)
+    expect(sab[9]).toBe(0.6)
+  })
+
+  it('maps pluck timbre params on pluck voice only', () => {
+    const voices = defaultwasmvoicestate()
+    applyvoiceconfig(voices, 0, 'pluck', '')
+    expect(applyvoiceconfig(voices, 0, 'structure', 0.2)).toBe(true)
+    expect(voices[0].pluck.structure).toBe(0.2)
+    expect(applyvoiceconfig(voices, 0, 'brightness', 0.3)).toBe(true)
+    expect(applyvoiceconfig(voices, 0, 'damping', 0.5)).toBe(true)
+    expect(applyvoiceconfig(voices, 0, 'accent', 0.6)).toBe(true)
+    expect(voices[0].pluck).toEqual({
+      structure: 0.2,
+      brightness: 0.3,
+      damping: 0.5,
+      accent: 0.6,
+    })
+
+    applyvoiceconfig(voices, 1, 'square', '')
+    expect(applyvoiceconfig(voices, 1, 'structure', 0.2)).toBe(false)
+    applyvoiceconfig(voices, 2, 'string', '')
+    expect(applyvoiceconfig(voices, 2, 'structure', 0.2)).toBe(false)
+    expect(applyvoiceconfig(voices, 2, 'detune', 0.2)).toBe(true)
+  })
+
+  it('maps pluck params into voice cfg sab slots 6-9', () => {
+    const voices = defaultwasmvoicestate()
+    applyvoiceconfig(voices, 0, 'pluck', '')
+    applyvoiceconfig(voices, 0, 'structure', 0.2)
+    applyvoiceconfig(voices, 0, 'brightness', 0.3)
+    applyvoiceconfig(voices, 0, 'damping', 0.5)
+    applyvoiceconfig(voices, 0, 'accent', 0.6)
+
+    const sab = wasmvoicecfgtosab(voices)
+    expect(sab[6]).toBe(0.2)
+    expect(sab[7]).toBe(0.3)
+    expect(sab[8]).toBe(0.5)
+    expect(sab[9]).toBe(0.6)
+  })
+
   it('maps modindex on synth voices', () => {
     const voices = defaultwasmvoicestate()
     const osc = defaultwasmoscconfig()
@@ -231,12 +318,16 @@ describe('wasmvoiceconfig', () => {
     const { maxi } = createmockmaxi()
     initwasmvoicesab(maxi as any)
     const cfg = wasmsabsnapshot('zss_voicecfg')
-    expect(cfg).toHaveLength(48)
+    expect(cfg).toHaveLength(80)
     expect(cfg[0]).toBe(0.01)
     expect(cfg[1]).toBe(0.01)
     expect(cfg[2]).toBe(0.5)
     expect(cfg[3]).toBe(0.01)
     expect(cfg[5]).toBe(0)
+    expect(cfg[6]).toBe(0.14)
+    expect(cfg[7]).toBe(0.22)
+    expect(cfg[8]).toBe(0.68)
+    expect(cfg[9]).toBe(0.48)
   })
 
   it('initwasmvoicesab seeds SYNTH square defaults on sab', () => {

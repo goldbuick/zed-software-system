@@ -24,7 +24,7 @@ flowchart LR
 - **Maximilian** (`ZSS_MAXI_SYNTH=true`): generated play code in `backend/wasm/*playcode.ts`, injected via [`maximilian.ts`](../backend/wasm/maximilian.ts)
 - **Tone** (archived): [`archive/tone/`](../archive/tone/) — parity ground truth for Maximilian; Daisy voice/FX still Tone-gated, drums use Daisy-native fixtures
 
-**DaisySP runtime usage:** `Oscillator`, `Adsr`, `Decimator`, `Overdrive`, `Svf`, `Phasor`, `DelayLine`, `Chorus`, `WhiteNoise`, `Limiter`, `DcBlock`, `OnePole`, `Autowah`, `StringVoice` (`#synth string` bowed + `#synth pluck`), `ModalVoice` (bells), `Drip`, and (Daisy drums) `AnalogBassDrum`, `SyntheticBassDrum`. **DaisySP-LGPL:** `ReverbSc` for `#reverb`; `Compressor` for main bus (sidechain duck uses custom envelope; TTS in dry/sidechain path). Custom C++ remains for sidechain duck, noise voices, doot/algo, drum EQ biquads.
+**DaisySP runtime usage:** `Oscillator`, `Adsr`, `Decimator`, `Overdrive`, `Svf`, `Phasor`, `DelayLine`, `Chorus`, `WhiteNoise`, `Limiter`, `DcBlock`, `OnePole`, `Autowah`, `StringVoice` (`#synth pluck` strike), `ModalVoice` (bells), `Drip`, and (Daisy drums) `AnalogBassDrum`, `SyntheticBassDrum`. **`#synth string`** uses custom SOS ensemble DSP (saws + `Svf`/`OnePole`), not `StringVoice`. **DaisySP-LGPL:** `ReverbSc` for `#reverb`; `Compressor` for main bus (sidechain duck uses custom envelope; TTS in dry/sidechain path). Custom C++ remains for sidechain duck, noise voices, doot/algo, drum EQ biquads.
 
 ---
 
@@ -44,8 +44,8 @@ Enum: [`shared/sourcetype.ts`](../shared/sourcetype.ts). Dispatch: [`voiceplayco
 | `bells` | `BELLS` | FM stack + sparkle osc | `ModalVoice` + sparkle FM | `FMSynth` + `MetalSynth` | Physical modeling + FM sparkle | cpp `processvoice()` |
 | `doot` | `DOOT` | sine + pitch-decay loop | `Oscillator` + `Adsr` | `MembraneSynth` | Drum / physical (Membrane-like) | `voiceplaycode.ts` `dootvoice()` |
 | `algo0`–`algo7` | `ALGO_SYNTH` | 4× osc + 5× ADSR, 8 routings | 4× `Oscillator` + 5× `Adsr` | custom `AlgoSynth` | FM (4-op routing) | `wasmalgoplaycode.ts`, [algosynth.md](algosynth.md) |
-| `string` | `STRING_VOICE` (algo 0) | — (Daisy-only) | `StringVoice` + `SetSustain(gate)` | — | Physical modeling (bowed) | cpp `processvoice()` |
-| `pluck`/`karplus` | `STRING_VOICE` (algo 1) | — (Daisy-only) | `StringVoice` strike | — | Physical modeling | cpp `processvoice()` |
+| `string` | `STRING_VOICE` (algo 0) | — (Daisy-only) | SOS ensemble (`stringmachinevoice`) | — | Subtractive string-machine | cpp `stringmachinevoice()` |
+| `pluck` | `STRING_VOICE` (algo 1) | — (Daisy-only) | `StringVoice` strike | — | Physical modeling | cpp `processvoice()` |
 | `drip` | `DRIP_VOICE` | — (Daisy-only) | `Drip` | — | Physical modeling | cpp `processvoice()` |
 
 **SYNTH sub-modes** ([`wasmosctype.ts`](../backend/wasm/wasmosctype.ts)): basic waves, pulse/PWM, AM, FM, fat.
@@ -136,7 +136,7 @@ flowchart LR
 | `Chorus` | Yes | Razzle chorus half |
 | `WhiteNoise` | Yes | Drum noise source (tick/tweet/clap paths via `drumnoise()`) |
 | `Limiter`, `DcBlock` | Yes | Master output chain |
-| `StringVoice` (`string` bow + `pluck`) | Yes | `#synth string` uses `SetSustain(gate)`; `#synth pluck` strike mode |
+| `StringVoice` (`pluck` only) | Yes | `#synth pluck` strike mode; `#synth string` uses custom ensemble DSP |
 | `AnalogBassDrum`, `SyntheticBassDrum` | Yes | Daisy backend drums (bass + tom) |
 | `ReverbSc` (LGPL) | Yes | Daisy backend `#reverb` only |
 | `Compressor` (LGPL) | Yes | Daisy main bus only |
@@ -241,8 +241,8 @@ flowchart LR
 
 | Proposed `#synth` name | DaisySP class | Status | Build deps |
 |------------------------|---------------|--------|--------------|
-| `string` | `StringVoice` + `SetSustain` | **Done** (Daisy-only, algo 0 bowed) | `stringvoice.cpp`, `resonator.cpp`, `KarplusString.cpp` (internal) |
-| `pluck`, `karplus` | `StringVoice` | **Done** (Daisy-only, algo 1) | same |
+| `string` | SOS ensemble (saws + Svf) | **Done** (Daisy-only, algo 0) | `detune`/`pwm`/`vib`/`filter` via SAB slots 6–9 |
+| `pluck` | `StringVoice` | **Done** (Daisy-only, algo 1) | `structure`/`brightness`/`damping`/`accent` via SAB |
 | `bells` | `ModalVoice` + sparkle FM | **Done** (Daisy `BELLS` slot) | `modalvoice.cpp`, `resonator.cpp` |
 | `drip` | `Drip` | **Done** (Daisy-only) | `drip.cpp` |
 

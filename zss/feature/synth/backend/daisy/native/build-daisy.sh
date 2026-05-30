@@ -120,7 +120,7 @@ emcc \
 sed -i.bak 's/var wasmExports=createWasm()/var wasmExports;createWasm()/g' "$OUT_DIR/zss_daisy.js"
 rm -f "$OUT_DIR/zss_daisy.js.bak"
 
-node "$REPO_ROOT/scripts/bundle-daisy-processor.mjs"
+(cd "$REPO_ROOT" && yarn bundle:daisy-processor)
 
 echo "✓ Build successful"
 echo "  $OUT_DIR/zss_daisy.js"

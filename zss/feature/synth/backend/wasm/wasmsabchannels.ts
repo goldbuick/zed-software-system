@@ -1,7 +1,7 @@
 import { SYNTH_VOICE_COUNT } from 'zss/feature/synth/synthdefaults'
 
-/** Strides must match wasm*configsab.ts and wasmfxstate.ts (no imports — breaks sabpush cycle). */
-const WASM_VOICE_CFG_STRIDE = 6
+/** Strides must match daisycontrol.ts, zss_daisy_synth.cpp, and wasm*configsab.ts (no imports — breaks sabpush cycle). */
+const WASM_VOICE_CFG_STRIDE = 10
 const WASM_OSC_CFG_STRIDE = 21
 const WASM_ALGO_CFG_STRIDE = 26
 const WASM_FX_GROUP_COUNT = 4

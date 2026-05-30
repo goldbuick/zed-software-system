@@ -40,7 +40,6 @@ export function validatesynthtype(
       case 'algo7':
       case 'string':
       case 'pluck':
-      case 'karplus':
       case 'drip':
         return true
       default:

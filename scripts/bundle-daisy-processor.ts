@@ -1,11 +1,13 @@
-#!/usr/bin/env node
+#!/usr/bin/env npx tsx
 /**
  * Bundle Emscripten glue + DaisyProcessor into a classic AudioWorklet script.
- * Firefox needs addModule(url) without { type: 'module' } (see maximilian).
+ * Injects SAB layout from daisycontrol.ts so worklet offsets stay aligned with C++.
  */
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+
+import { formatdaisyworkletsablayout } from '../zss/feature/synth/backend/daisy/daisycontrol'
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
 const outdir = path.join(root, 'cafe/public/wasm/daisy')
@@ -16,6 +18,21 @@ const workletpath = path.join(
 )
 const outpath = path.join(outdir, 'daisy-processor.js')
 
+const layoutstart = '// @generated-start daisy-sab-layout'
+const layoutend = '// @generated-end daisy-sab-layout'
+const layoutblock = `${layoutstart}\n${formatdaisyworkletsablayout()}${layoutend}`
+
+function injectworkletsablayout(source: string): string {
+  const start = source.indexOf(layoutstart)
+  const end = source.indexOf(layoutend)
+  if (start < 0 || end < 0 || end <= start) {
+    throw new Error('daisy-processor.worklet.js missing daisy-sab-layout markers')
+  }
+  const before = source.slice(0, start)
+  const after = source.slice(end + layoutend.length)
+  return `${before}${layoutblock}${after}`
+}
+
 const glue = fs
   .readFileSync(gluepath, 'utf8')
   .replace(/export default ZssDaisy;?\s*$/, '')
@@ -25,7 +42,12 @@ const glue = fs
     'throw new Error("wasmBinary required in worklet")',
   )
   .replace('var wasmExports=createWasm()', 'var wasmExports;createWasm()')
-const worklet = fs.readFileSync(workletpath, 'utf8')
+
+const workletraw = fs.readFileSync(workletpath, 'utf8')
+const worklet = injectworkletsablayout(workletraw)
+if (worklet !== workletraw) {
+  fs.writeFileSync(workletpath, worklet)
+}
 
 const bundled = `/**
  * GENERATED — do not edit. Run \`yarn bundle:daisy-processor\`.

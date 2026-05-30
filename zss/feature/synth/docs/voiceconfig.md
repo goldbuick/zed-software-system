@@ -32,6 +32,31 @@ Handles voice/source configuration from external API (e.g. device commands). For
 | `bells` | BELLS |
 | `doot` | DOOT |
 | `algo0` - `algo7` | ALGO_SYNTH (algorithm 0-7) |
+| `string` | STRING_VOICE (algo 0, WASM only) |
+| `pluck` | STRING_VOICE (algo 1, WASM only) |
+| `drip` | DRIP_VOICE (WASM only) |
+
+## Pluck Configs (wasmvoiceconfig.ts, WASM only)
+
+| Config | Value | Description |
+|--------|-------|-------------|
+| `structure` | number (0–1) | StringVoice bridge/dispersion |
+| `brightness` | number (0–1) | Excitation brightness |
+| `damping` | number (0–1) | String damping |
+| `accent` | number (0–1) | Strike accent |
+
+Applies only when voice is `#synth pluck`. Defaults: `0.14`, `0.22`, `0.68`, `0.48`.
+
+## String ensemble configs (wasmvoiceconfig.ts, WASM only, `#synth string`)
+
+| Config | Value | Description |
+|--------|-------|-------------|
+| `detune` | number (0–1) | VCO spread (0–8¢) |
+| `pwm` | number (0–1) | OSC2 square-LFO FM depth |
+| `vib` | number (0–1) | VCO1 vibrato depth (0–8¢) |
+| `filter` | number (0–1) | LP cutoff scale + filter envelope |
+
+Applies only when voice is `#synth string` (algo 0). Defaults: `0.25`, `0.2`, `0.35`, `0.5`. See [voice-types-reference.md](voice-types-reference.md) §5.
 
 ## Oscillator Types (SYNTH)
 

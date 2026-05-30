@@ -3,55 +3,28 @@
  * (no ES module imports; Firefox-compatible like maximilian maxi-processor.js).
  */
 
-const DAISY_VOICES_LEN = 48
-const DAISY_DRUMS_LEN = 20
-const DAISY_MASTER_LEN = 3
-const DAISY_FX_LEN = 108
-const DAISY_VOICE_CFG_LEN = 48
-const DAISY_OSC_CFG_LEN = 168
-const DAISY_ALGO_CFG_LEN = 208
-const DAISY_VIBRATO_LEN = 13
-
+// @generated-start daisy-sab-layout
 const DAISY_SAB_CHANNEL_OFFSET = {
-  zss_voices: 0,
-  zss_drums: DAISY_VOICES_LEN,
-  zss_master: DAISY_VOICES_LEN + DAISY_DRUMS_LEN,
-  zss_fx: DAISY_VOICES_LEN + DAISY_DRUMS_LEN + DAISY_MASTER_LEN,
-  zss_voicecfg:
-    DAISY_VOICES_LEN + DAISY_DRUMS_LEN + DAISY_MASTER_LEN + DAISY_FX_LEN,
-  zss_osccfg:
-    DAISY_VOICES_LEN +
-    DAISY_DRUMS_LEN +
-    DAISY_MASTER_LEN +
-    DAISY_FX_LEN +
-    DAISY_VOICE_CFG_LEN,
-  zss_algocfg:
-    DAISY_VOICES_LEN +
-    DAISY_DRUMS_LEN +
-    DAISY_MASTER_LEN +
-    DAISY_FX_LEN +
-    DAISY_VOICE_CFG_LEN +
-    DAISY_OSC_CFG_LEN,
-  zss_vibrato:
-    DAISY_VOICES_LEN +
-    DAISY_DRUMS_LEN +
-    DAISY_MASTER_LEN +
-    DAISY_FX_LEN +
-    DAISY_VOICE_CFG_LEN +
-    DAISY_OSC_CFG_LEN +
-    DAISY_ALGO_CFG_LEN,
+  "zss_voices": 0,
+  "zss_drums": 48,
+  "zss_master": 68,
+  "zss_fx": 71,
+  "zss_voicecfg": 179,
+  "zss_osccfg": 259,
+  "zss_algocfg": 427,
+  "zss_vibrato": 635
 }
-
 const DAISY_SAB_CHANNEL_LEN = {
-  zss_voices: DAISY_VOICES_LEN,
-  zss_drums: DAISY_DRUMS_LEN,
-  zss_master: DAISY_MASTER_LEN,
-  zss_fx: DAISY_FX_LEN,
-  zss_voicecfg: DAISY_VOICE_CFG_LEN,
-  zss_osccfg: DAISY_OSC_CFG_LEN,
-  zss_algocfg: DAISY_ALGO_CFG_LEN,
-  zss_vibrato: DAISY_VIBRATO_LEN,
+  "zss_voices": 48,
+  "zss_drums": 20,
+  "zss_master": 3,
+  "zss_fx": 108,
+  "zss_voicecfg": 80,
+  "zss_osccfg": 168,
+  "zss_algocfg": 208,
+  "zss_vibrato": 13
 }
+// @generated-end daisy-sab-layout
 
 const DAISY_EM_INIT_TIMEOUT_SEC = 5
 

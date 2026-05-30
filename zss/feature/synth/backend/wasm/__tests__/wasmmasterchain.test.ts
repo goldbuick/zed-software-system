@@ -58,7 +58,8 @@ describe('wasmmasterplaycode', () => {
     expect(WASM_MASTER_PLAY_CODE).toContain('function masterout')
     expect(WASM_MASTER_PLAY_CODE).toContain('function applycompressor')
     expect(WASM_MASTER_PLAY_CODE).toContain('function applyrazzle')
-    expect(WASM_MASTER_PLAY_CODE).toContain('RAZZLE_WET_MIX')
+    expect(WASM_MASTER_PLAY_CODE).toContain('RAZZLE_CHORUS_WET')
+    expect(WASM_MASTER_PLAY_CODE).toContain('RAZZLE_VIBRATO_WET')
     expect(WASM_MASTER_PLAY_CODE).toContain('RAZZLE_HISS_GAIN')
     expect(WASM_SYNTH_VOICE_PLAY_CODE).toMatch(
       /if \(WASM_PERF_MODE\) \{\s*return out;/,

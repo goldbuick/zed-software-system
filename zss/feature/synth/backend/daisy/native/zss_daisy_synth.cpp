@@ -1,5 +1,5 @@
 /**
- * ZSS monolithic DaisySP synth — reads control layout matching wasmsabchannels.ts.
+ * ZSS monolithic DaisySP synth — control layout: wasmsabchannels.ts / daisycontrol.ts.
  */
 #ifdef __arm__
 #undef __arm__
@@ -13,7 +13,6 @@
 
 #include "daisysp.h"
 #include "reverbsc.h"
-#include "compressor.h"
 
 using namespace daisysp;
 
@@ -26,7 +25,7 @@ constexpr int   kDrumCount        = 10;
 constexpr int   kFxGroups         = 4;
 constexpr int   kFxSendCount      = 7;
 constexpr int   kFxParamCount     = 20;
-constexpr int   kVoiceCfgStride   = 6;
+constexpr int   kVoiceCfgStride   = 10; // 0–5 env/port/vol; 6–9 pluck or string ensemble
 constexpr int   kOscCfgStride     = 21;
 constexpr int   kAlgoCfgStride    = 26;
 constexpr int   kVibratoGroups    = 3;
@@ -61,8 +60,19 @@ constexpr float kNoiseBaseExpr = 0.19f;
 constexpr float kNoiseSoftGain = 3.f;
 constexpr float kMetallicNorm  = 1.f / 22.f;
 constexpr float kMetallicAmp   = 7.5f;
-// StringVoice output trim; structure < 0.24 keeps curved-bridge (wood/string) timbre.
-constexpr float kStringVoiceGain = 0.38f;
+// `#synth string` = SOS string-machine (detuned saws + PWM FM); pluck = StringVoice.
+constexpr float kStringMachineGain     = 0.42f;
+constexpr float kStringPluckGain       = 0.38f;
+constexpr float kStringDefaultDetune   = 2.f;
+constexpr float kStringDefaultPwm      = 0.2f;
+constexpr float kStringDefaultVib      = 2.5f;
+constexpr float kStringDefaultFilter   = 0.5f;
+constexpr float kStringMaxDetuneCents  = 8.f;
+constexpr float kStringMaxVibCents     = 8.f;
+constexpr float kStringSubOctaveMix    = 0.1f;
+constexpr float kStringBodyLowMix      = 0.18f;
+constexpr float kStringBodyHiMix       = 0.1f;
+constexpr float kStringBowNoiseMix     = 0.03f;
 constexpr float kDrumTickTrim  = 1.35f;
 constexpr float kDrumTweetTrim = 1.25f;
 constexpr float kVoiceOutGain  = 1.f;
@@ -74,6 +84,10 @@ constexpr float kMasterMakeupDb = 22.f;
 constexpr float kRazzleVibratoWet = 0.1f;
 constexpr float kRazzleChorusWet  = 0.5f;
 constexpr float kRazzleHissGain   = 0.0001f;
+constexpr float kMasterCompThresholdDb = -28.f;
+constexpr float kMasterCompRatio       = 4.f;
+constexpr float kMasterCompAttackSec   = 0.003f;
+constexpr float kMasterCompReleaseSec  = 0.15f;
 // ReverbSc internal gain is 0.35; match prior comb+tanh level in the wet chain.
 constexpr float kReverbOutGain    = 1.55f;
 constexpr float kScMix            = 0.75f;
@@ -575,9 +589,16 @@ struct ZssVoice
   float      algoenvprev_a[4] = {-1.f, -1.f, -1.f, -1.f};
   float      lastenv = 0.f;
   StringVoice stringvoice;
+  Svf           stringlp;
+  Svf           stringbodylo;
+  Svf           stringbodyhi;
+  OnePole       stringbowhp;
+  Oscillator    stringviblfo;
+  Oscillator    stringpwmlfo;
   ModalVoice    modalvoice;
   Drip          drip;
   int           stringvoicepreset = -1;
+  float         pluckprev[4]      = {-1.f, -1.f, -1.f, -1.f};
   bool          stringgateprev = false;
   bool          bellgateprev   = false;
   bool          dripgateprev   = false;
@@ -620,7 +641,6 @@ struct ZssEngine
   ZssFxGroup   fx[kFxGroups];
   Oscillator   drumoscA[kDrumCount], drumoscB[kDrumCount];
   float        drumsidechain = 0.f;
-  Compressor   master_comp;
   float        sc_prevlevel = 1e-6f;
   float        sc_prevgaindb = 0.f;
   float        sc_gainlinear = 1.f;
@@ -633,6 +653,9 @@ struct ZssEngine
   DcBlock      master_dcblock;
   float        razzle_vib_buf[512];
   int          razzle_vib_pos = 0;
+  float        comp_env = 0.f;
+  float        comp_attack_coef = 0.f;
+  float        comp_release_coef = 0.f;
   int          sampleclock = 0;
   float        cached_mastervol = 0.f, cached_bggain = 0.f;
   float        cached_ttsgain = 0.f;
@@ -1010,6 +1033,12 @@ float oscbasicwave(Oscillator& o, int wavetype, float hz)
       break;
   }
   return o.Process();
+}
+
+float stringbownoisesample(ZssVoice& v)
+{
+  v.noiserng = v.noiserng * 1664525u + 1013904223u;
+  return static_cast<float>((v.noiserng >> 8) & 0xffffff) / 8388608.f - 1.f;
 }
 
 float oscmodwave(Oscillator& o, int modwave, float hz)
@@ -2095,15 +2124,13 @@ bool bgplayactive()
   return false;
 }
 
-void initmastercompressors(float sr)
+void initmasterchain(float sr)
 {
-  g_engine.master_comp.Init(sr);
-  g_engine.master_comp.SetThreshold(-24.f);
-  g_engine.master_comp.SetRatio(3.f);
-  g_engine.master_comp.SetAttack(0.003f);
-  g_engine.master_comp.SetRelease(0.15f);
-  g_engine.master_comp.AutoMakeup(false);
-  g_engine.master_comp.SetMakeup(0.f);
+  g_engine.comp_env = 0.f;
+  g_engine.comp_attack_coef =
+      1.f - std::exp(-1.f / (kMasterCompAttackSec * sr));
+  g_engine.comp_release_coef =
+      1.f - std::exp(-1.f / (kMasterCompReleaseSec * sr));
 }
 
 float sidechainkey(float bg, float tts, float drumtap)
@@ -2208,15 +2235,33 @@ float applymasterlimit(float x)
   return buf;
 }
 
+float applymastercompressor(float x)
+{
+  const float thresh =
+      std::pow(10.f, kMasterCompThresholdDb / 20.f);
+  float       ax   = std::fabs(x);
+  float       coef = (ax > g_engine.comp_env) ? g_engine.comp_attack_coef
+                                              : g_engine.comp_release_coef;
+  g_engine.comp_env += (ax - g_engine.comp_env) * coef;
+  if(g_engine.comp_env <= thresh)
+  {
+    return x;
+  }
+  float dbover  = 20.f * std::log10(g_engine.comp_env / thresh);
+  float reduced = dbover - dbover / kMasterCompRatio;
+  float gain    = std::pow(10.f, -reduced / 20.f);
+  return x * gain;
+}
+
 float applyrazzle(float input)
 {
   g_engine.razzlevibratolfo.SetFreq(0.125f);
   g_engine.razzlevibratolfo.SetWaveform(Oscillator::WAVE_SQUARE);
   g_engine.razzlevibratolfo.SetAmp(1.f);
   float vibratodepth = g_engine.razzlevibratolfo.Process() * 0.0015f;
-  float vibtap = razzledelay(g_engine.razzle_vib_buf, g_engine.razzle_vib_pos, 512, input,
-                             0.005f + vibratodepth);
-  float vibrato = input + (vibtap - input) * kRazzleVibratoWet;
+  float vibtap       = razzledelay(g_engine.razzle_vib_buf, g_engine.razzle_vib_pos, 512,
+                                   input, 0.005f + vibratodepth);
+  float vibrato      = input + (vibtap - input) * kRazzleVibratoWet;
 
   float chorused = g_engine.razzle_chorus.Process(vibrato);
   float out      = vibrato + (chorused - vibrato) * kRazzleChorusWet;
@@ -2238,7 +2283,7 @@ float readmastervolume()
   }
   if(g_engine.mastervolprev <= 0.001f && vol > 0.001f)
   {
-    initmastercompressors(g_engine.sample_rate);
+    initmasterchain(g_engine.sample_rate);
     g_engine.sc_prevgaindb = 0.f;
     g_engine.sc_gainlinear = 1.f;
     g_engine.sc_prevlevel  = 1e-6f;
@@ -2258,6 +2303,49 @@ float readbgplayvolume()
   return std::pow(10.f, (20.f * std::log10(vol) - 35.f) / 20.f);
 }
 
+void applypluckparams(ZssVoice& v, int cfg)
+{
+  const float structure  = readctrl(cfg + 6);
+  const float brightness = readctrl(cfg + 7);
+  const float damping    = readctrl(cfg + 8);
+  const float accent     = readctrl(cfg + 9);
+  if(structure != v.pluckprev[0])
+  {
+    v.stringvoice.SetStructure(structure);
+    v.pluckprev[0] = structure;
+  }
+  if(brightness != v.pluckprev[1])
+  {
+    v.stringvoice.SetBrightness(brightness);
+    v.pluckprev[1] = brightness;
+  }
+  if(damping != v.pluckprev[2])
+  {
+    v.stringvoice.SetDamping(damping);
+    v.pluckprev[2] = damping;
+  }
+  if(accent != v.pluckprev[3])
+  {
+    v.stringvoice.SetAccent(accent);
+    v.pluckprev[3] = accent;
+  }
+}
+
+void applystringensembleparams(ZssVoice& v, int cfg, float& detunecents,
+                               float& pwmdepth, float& vibcents, float& filterscale)
+{
+  const float detraw = readctrl(cfg + 6);
+  const float pwmraw = readctrl(cfg + 7);
+  const float vibraw = readctrl(cfg + 8);
+  const float filtraw = readctrl(cfg + 9);
+  detunecents = detraw > 0.f ? clampf(detraw, 0.f, 1.f) * kStringMaxDetuneCents
+                             : kStringDefaultDetune;
+  pwmdepth = pwmraw > 0.f ? clampf(pwmraw, 0.f, 1.f) : kStringDefaultPwm;
+  vibcents = vibraw > 0.f ? clampf(vibraw, 0.f, 1.f) * kStringMaxVibCents
+                          : kStringDefaultVib;
+  filterscale = filtraw > 0.f ? clampf(filtraw, 0.f, 1.f) : kStringDefaultFilter;
+}
+
 void applystringvoicepreset(ZssVoice& v, int algo)
 {
   if(v.stringvoicepreset == algo)
@@ -2265,22 +2353,67 @@ void applystringvoicepreset(ZssVoice& v, int algo)
     return;
   }
   v.stringvoicepreset = algo;
-  if(algo == 0)
+  if(algo == 1)
   {
-    // Bowed violin: curved bridge, low dust/brightness, moderate accent.
-    v.stringvoice.SetStructure(0.18f);
-    v.stringvoice.SetBrightness(0.12f);
-    v.stringvoice.SetDamping(0.78f);
-    v.stringvoice.SetAccent(0.42f);
+    v.pluckprev[0] = v.pluckprev[1] = v.pluckprev[2] = v.pluckprev[3] = -1.f;
   }
-  else
+}
+
+float stringmachinevoice(ZssVoice& v, float hz, float envout, float detunecents,
+                         float pwmdepth, float vibcents, float filterscale)
+{
+  v.stringviblfo.SetFreq(4.8f);
+  v.stringviblfo.SetWaveform(Oscillator::WAVE_TRI);
+  v.stringviblfo.SetAmp(1.f);
+  const float viblfo = v.stringviblfo.Process() * (vibcents / 1200.f);
+
+  v.stringpwmlfo.SetFreq(0.75f);
+  v.stringpwmlfo.SetWaveform(Oscillator::WAVE_SQUARE);
+  v.stringpwmlfo.SetAmp(1.f);
+  const float pwmfm = v.stringpwmlfo.Process() * pwmdepth * 0.004f;
+
+  const float detmul = std::pow(2.f, detunecents / 1200.f);
+  const float hz1    = hz * (1.f + viblfo);
+  const float hz2    = hz * detmul * (1.f + pwmfm);
+
+  const float vco1 = oscbasicwave(v.synthosc, 3, hz1);
+  const float vco2 = oscbasicwave(v.synthmod, 3, hz2);
+  float       sig  = (vco1 + vco2) * 0.5f;
+  sig += oscbasicwave(v.algoops[0], 3, hz * 0.5f) * kStringSubOctaveMix;
+  sig /= (1.f + kStringSubOctaveMix);
+
+  const float kf       = std::pow(clampf(hz / 440.f, 0.25f, 4.f), 0.38f);
+  const float basecut  = 520.f + kf * 2100.f;
+  const float filtenv  = envout * 600.f * filterscale;
+  const float cutoff   = clampf((basecut + filtenv) * (0.75f + filterscale * 0.5f),
+                                400.f, g_engine.sample_rate * 0.33f);
+  v.stringlp.SetFreq(cutoff);
+  v.stringlp.SetRes(0.12f);
+  v.stringlp.SetDrive(1.f);
+  v.stringlp.Process(sig);
+  float out = v.stringlp.Low();
+
+  v.stringbodylo.SetFreq(450.f);
+  v.stringbodylo.SetRes(0.35f);
+  v.stringbodylo.Process(sig);
+  out += v.stringbodylo.Band() * kStringBodyLowMix;
+
+  v.stringbodyhi.SetFreq(3000.f);
+  v.stringbodyhi.SetRes(0.2f);
+  v.stringbodyhi.Process(sig);
+  out += v.stringbodyhi.Band() * kStringBodyHiMix;
+
+  const float nois = stringbownoisesample(v);
+  v.stringbowhp.SetFilterMode(OnePole::FILTER_MODE_HIGH_PASS);
+  float hpnorm = 1200.f / g_engine.sample_rate;
+  if(hpnorm > 0.497f)
   {
-    // Pluck: curved bridge (not dispersion), softer strike than Daisy defaults.
-    v.stringvoice.SetStructure(0.14f);
-    v.stringvoice.SetBrightness(0.22f);
-    v.stringvoice.SetDamping(0.68f);
-    v.stringvoice.SetAccent(0.48f);
+    hpnorm = 0.497f;
   }
+  v.stringbowhp.SetFrequency(hpnorm);
+  out += v.stringbowhp.Process(nois) * envout * kStringBowNoiseMix;
+
+  return out;
 }
 
 void initvoice(ZssVoice& v, float sr)
@@ -2315,6 +2448,13 @@ void initvoice(ZssVoice& v, float sr)
   v.noiserng = (0x6d2b79f5u + 7919u) >> 0;
   v.stringvoice.Init(sr);
   v.stringvoicepreset = -1;
+  v.stringlp.Init(sr);
+  v.stringbodylo.Init(sr);
+  v.stringbodyhi.Init(sr);
+  v.stringbowhp.Init();
+  v.stringbowhp.SetFilterMode(OnePole::FILTER_MODE_HIGH_PASS);
+  v.stringviblfo.Init(sr);
+  v.stringpwmlfo.Init(sr);
   v.drip.Init(sr, 0.01f);
   v.modalvoice.Init(sr);
   v.modalvoice.SetStructure(0.5f);
@@ -2349,7 +2489,7 @@ void initengine(float sr)
   }
   g_engine.drum_whitenoise.Init();
   initdaisydrums(sr);
-  initmastercompressors(sr);
+  initmasterchain(sr);
   for(int d = 0; d < kDrumCount; ++d)
   {
     g_engine.drumoscA[d].Init(sr);
@@ -2372,11 +2512,11 @@ void initengine(float sr)
   }
   g_engine.fxvibratolfo.Init(sr);
   g_engine.razzlevibratolfo.Init(sr);
+  g_engine.razzlehissmod.Init(sr);
   g_engine.razzle_chorus.Init(sr);
   g_engine.razzle_chorus.SetLfoFreq(0.01f);
   g_engine.razzle_chorus.SetLfoDepth(0.35f);
   g_engine.razzle_chorus.SetDelayMs(7.f);
-  g_engine.razzlehissmod.Init(sr);
   g_engine.master_limiter.Init();
   g_engine.master_dcblock.Init(sr);
   std::memset(g_engine.razzle_vib_buf, 0, sizeof(g_engine.razzle_vib_buf));
@@ -2469,27 +2609,27 @@ float processvoice(int vi, float vstart[kVibratoGroups], float vend[kVibratoGrou
     bool  trigger = gate && !v.stringgateprev;
     v.stringgateprev = gate;
     applystringvoicepreset(v, algo == 0 ? 0 : 1);
-    v.stringvoice.SetFreq(hz);
     if(algo == 0)
     {
-      if(trigger)
-      {
-        v.stringvoice.Reset();
-        v.stringvoice.Process(true);
-      }
-      v.stringvoice.SetSustain(gate);
-      out = v.stringvoice.Process(false);
+      float envout = v.env.Process(gate);
+      float detunecents, pwmdepth, vibcents, filterscale;
+      applystringensembleparams(v, cfg, detunecents, pwmdepth, vibcents, filterscale);
+      out = stringmachinevoice(v, hz, envout, detunecents, pwmdepth, vibcents,
+                               filterscale)
+            * envout;
+      out *= dbtoamp(vol_db) * kStringMachineGain;
+      v.lastenv = envout;
+      return out;
     }
-    else
+    applypluckparams(v, cfg);
+    v.stringvoice.SetFreq(hz);
+    v.stringvoice.SetSustain(false);
+    if(trigger)
     {
-      v.stringvoice.SetSustain(false);
-      if(trigger)
-      {
-        v.stringvoice.Reset();
-      }
-      out = v.stringvoice.Process(trigger);
+      v.stringvoice.Reset();
     }
-    out *= dbtoamp(vol_db) * kStringVoiceGain;
+    out = v.stringvoice.Process(trigger);
+    out *= dbtoamp(vol_db) * kStringPluckGain;
     v.lastenv = std::fabs(out);
     return out;
   }
@@ -2622,7 +2762,7 @@ void zss_process(float* out, int frames, const float* tts_in)
     float drumbus = drums * kDrumBusGain;
     float dry     = playbus + bgbus + drumbus + ttssample;
 
-    float comp  = g_engine.master_comp.Process(dry);
+    float comp  = applymastercompressor(dry);
     float razz  = applyrazzle(comp);
     float limited = applymasterlimit(razz);
     float final = g_engine.cached_mastervol > 0.f

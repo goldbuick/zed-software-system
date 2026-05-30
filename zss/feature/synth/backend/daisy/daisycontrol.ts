@@ -1,11 +1,12 @@
-/** Control buffer layout — must match zss_daisy_synth.cpp offsets. */
+/** Control buffer layout — must match zss_daisy_synth.cpp offsets and wasmsabchannels.ts. */
 export const DAISY_VOICE_COUNT = 8
 export const DAISY_VOICE_STRIDE = 6
 export const DAISY_DRUM_COUNT = 10
 export const DAISY_FX_GROUP_COUNT = 4
 export const DAISY_FX_SEND_COUNT = 7
 export const DAISY_FX_PARAM_COUNT = 20
-export const DAISY_VOICE_CFG_STRIDE = 6
+/** Voice cfg slots 0–5: ADSR, portamento, volume; 6–9: pluck or string ensemble params. */
+export const DAISY_VOICE_CFG_STRIDE = 10
 export const DAISY_OSC_CFG_STRIDE = 21
 export const DAISY_ALGO_CFG_STRIDE = 26
 export const DAISY_VIBRATO_STRIDE = 4
@@ -71,4 +72,11 @@ export const DAISY_SAB_CHANNEL_LEN: Record<string, number> = {
   zss_osccfg: DAISY_OSC_CFG_LEN,
   zss_algocfg: DAISY_ALGO_CFG_LEN,
   zss_vibrato: DAISY_VIBRATO_LEN,
+}
+
+/** Worklet SAB maps — injected by scripts/bundle-daisy-processor.ts (do not hand-edit). */
+export function formatdaisyworkletsablayout(): string {
+  return `const DAISY_SAB_CHANNEL_OFFSET = ${JSON.stringify(DAISY_SAB_CHANNEL_OFFSET, null, 2)}
+const DAISY_SAB_CHANNEL_LEN = ${JSON.stringify(DAISY_SAB_CHANNEL_LEN, null, 2)}
+`
 }

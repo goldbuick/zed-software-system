@@ -1,4 +1,8 @@
-import { WASM_RAZZLE_HISS_GAIN, WASM_RAZZLE_WET_MIX } from './wasmlevels'
+import {
+  WASM_RAZZLE_CHORUS_WET,
+  WASM_RAZZLE_HISS_GAIN,
+  WASM_RAZZLE_VIBRATO_WET,
+} from './wasmlevels'
 
 /** Maximilian razzle layer — vibrato delay, chorus delay, modulated hiss. */
 export const WASM_RAZZLE_PLAY_CODE = `
@@ -9,16 +13,17 @@ var razzlechoruslfo = new Maximilian.maxiOsc();
 var razzlehiss = new Maximilian.maxiOsc();
 var razzlehissmod = new Maximilian.maxiOsc();
 
-var RAZZLE_WET_MIX = ${WASM_RAZZLE_WET_MIX};
+var RAZZLE_VIBRATO_WET = ${WASM_RAZZLE_VIBRATO_WET};
+var RAZZLE_CHORUS_WET = ${WASM_RAZZLE_CHORUS_WET};
 var RAZZLE_HISS_GAIN = ${WASM_RAZZLE_HISS_GAIN};
 
 function applyrazzle(input) {
   var vibratodepth = razzlevibratolfo.square(0.125) * 0.0015;
-  var vibrato = razzlevibratodelay.dl(input, 0.005 + vibratodepth, 0);
+  var vibtap = razzlevibratodelay.dl(input, 0.005 + vibratodepth, 0);
+  var vibrato = input + (vibtap - input) * RAZZLE_VIBRATO_WET;
   var chorusdepth = razzlechoruslfo.saw(0.01) * 0.0035;
-  var chorused = razzlechorusdelay.dl(vibrato, 0.007 + chorusdepth, 0);
-  var effect = chorused - input;
-  var out = input + effect * RAZZLE_WET_MIX;
+  var chortap = razzlechorusdelay.dl(vibrato, 0.007 + chorusdepth, 0);
+  var out = vibrato + (chortap - vibrato) * RAZZLE_CHORUS_WET;
   if (WASM_PERF_MODE) {
     return out;
   }

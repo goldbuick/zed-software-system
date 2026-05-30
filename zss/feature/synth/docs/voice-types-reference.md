@@ -30,8 +30,8 @@ Config path: `#synth` → [audio.ts](../../firmware/audio.ts) `handlesynthvoice`
 | `algo0`–`algo7` | `ALGO_SYNTH` | Yes | Yes |
 | `hollow` | `HOLLOW_NOISE` | **Error** (WASM-only message) | Yes |
 | `noise` | `WHITE_NOISE` | **Error** (WASM-only message) | Yes |
-| `string` | `STRING_VOICE` (algo 0) | — | Daisy WASM only (`StringVoice`, bowed / violin via `SetSustain`) |
-| `pluck` / `karplus` | `STRING_VOICE` (algo 1) | — | Daisy WASM only (`StringVoice`, pluck strike) |
+| `string` | `STRING_VOICE` (algo 0) | — | Daisy WASM only (SOS string-machine: detuned saws, OSC2 PWM FM, body peaks) |
+| `pluck` | `STRING_VOICE` (algo 1) | — | Daisy WASM only (`StringVoice`, pluck strike) |
 | `drip` | `DRIP_VOICE` | — | Daisy WASM only (`Drip`, gate-edge trigger) |
 
 ---
@@ -211,6 +211,51 @@ Use **`env1`–`env4`** for per-operator shaping; use voice-level **`env`** for 
 
 ---
 
+## 5. `string` (`STRING_VOICE` algo 0)
+
+Daisy WASM only. SOS Synth Secrets string-machine pad (not sampled orchestra): two detuned polyBLEP saws, triangle vibrato on VCO1, square-LFO pitch mod on VCO2 (PWM emulation), key-follow LP with filter envelope, violin-body peaks, light bow noise.
+
+### User-configurable
+
+| Param | Value | WASM default | Notes |
+|-------|-------|--------------|-------|
+| `string` | — | — | voice type selection |
+| `vol` / `volume` | number (dB) | `0` | effective |
+| `env` / `envelope` | `[a, d, s, r]` | `0.6 / 0.15 / 0.88 / 1.0` | trapezoid VCA |
+| `detune` | 0–1 | `0.25` | string only; maps to 0–8¢ VCO spread |
+| `pwm` | 0–1 | `0.2` | OSC2 square-LFO FM depth (PWM emulation) |
+| `vib` | 0–1 | `0.35` | VCO1 vibrato depth (0–8¢); prefer this **or** `#synth vibrato` FX, not both |
+| `filter` | 0–1 | `0.5` | LP cutoff scale + filter-envelope amount |
+
+`port` / `portamento` is stored but **not applied** on the string path.
+
+Recommended FX: `#synth reverb` (~0.35–0.5); vintage units often used external chorus—optional.
+
+Selecting `#synth string` resets ensemble timbre params to the defaults above.
+
+---
+
+## 6. `pluck` (`STRING_VOICE` algo 1)
+
+Daisy WASM only. Gate-edge strike via DaisySP `StringVoice`; no Tone backend.
+
+### User-configurable
+
+| Param | Value | WASM default | Notes |
+|-------|-------|--------------|-------|
+| `pluck` | — | — | voice type selection |
+| `vol` / `volume` | number (dB) | `0` | effective |
+| `structure` | 0–1 | `0.14` | pluck only; rejected on other voice types |
+| `brightness` | 0–1 | `0.22` | pluck only |
+| `damping` | 0–1 | `0.68` | pluck only |
+| `accent` | 0–1 | `0.48` | pluck only |
+
+`env` / `envelope` and `port` / `portamento` are stored but **not used** by the pluck audio path (strike is gate-edge triggered, no ADSR multiply).
+
+Selecting `#synth pluck` resets timbre params to the defaults above.
+
+---
+
 ## Command quick reference
 
 ```
@@ -218,6 +263,7 @@ Global:     restart | vol/volume | port/portamento | env/envelope
 
 Sources:    retro | buzz | clang | metallic | bells | doot
             algo0 … algo7
+            string | pluck | drip     (WASM only; Tone errors)
             noise | hollow          (WASM only; Tone errors)
 
 Osc types:  sine | square | triangle | sawtooth | custom | pwm | pulse
@@ -230,6 +276,9 @@ Osc params: phase | width | modfreq/modulationfrequency
 
 Algo:       harmonicity | harmonicity1-3 | modindex | modindex1-3
             osc1-osc4 | env1-4 | envelope1-4
+
+Pluck:      structure | brightness | damping | accent   (pluck voice only)
+String:     detune | pwm | vib | filter                 (string voice only)
 ```
 
 ---

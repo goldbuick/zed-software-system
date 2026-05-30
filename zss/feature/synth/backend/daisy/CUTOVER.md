@@ -61,6 +61,8 @@ yarn build:daisy   # requires Emscripten (source emsdk_env.sh)
 
 Rebuild and commit `cafe/public/wasm/daisy/*` after any C++ change. `yarn build:daisy` is **manual only** — not wired into default `yarn build`.
 
+`yarn bundle:daisy-processor` injects SAB offsets from `daisycontrol.ts` into the worklet (must match `kVoiceCfgStride` in `zss_daisy_synth.cpp`).
+
 ## Manual parity
 
 ```bash
