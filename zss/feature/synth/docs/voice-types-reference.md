@@ -16,7 +16,7 @@ Config path: `#synth` → [audio.ts](../../firmware/audio.ts) `handlesynthvoice`
 
 ---
 
-## 10 internal voice families (`SOURCE_TYPE`)
+## 12 internal voice families (`SOURCE_TYPE`)
 
 | `#synth` name | Enum | Tone backend | WASM backend |
 |---------------|------|--------------|--------------|
@@ -30,6 +30,9 @@ Config path: `#synth` → [audio.ts](../../firmware/audio.ts) `handlesynthvoice`
 | `algo0`–`algo7` | `ALGO_SYNTH` | Yes | Yes |
 | `hollow` | `HOLLOW_NOISE` | **Error** (WASM-only message) | Yes |
 | `noise` | `WHITE_NOISE` | **Error** (WASM-only message) | Yes |
+| `string` | `STRING_VOICE` (algo 0) | — | Daisy WASM only (`StringVoice`, bowed / violin via `SetSustain`) |
+| `pluck` / `karplus` | `STRING_VOICE` (algo 1) | — | Daisy WASM only (`StringVoice`, pluck strike) |
+| `drip` | `DRIP_VOICE` | — | Daisy WASM only (`Drip`, gate-edge trigger) |
 
 ---
 
@@ -153,6 +156,8 @@ Default envelope: same WASM global `0.01/0.01/0.5/0.01`.
 ### WASM hardcoded in play code ([voiceplaycode.ts](../backend/wasm/voiceplaycode.ts))
 
 Bell FM: harm `1.5`, modindex `30`, envelope init → **0.01/3/0.3/6** s. Sparkle: harm `5.1`, modindex `32`, envelope → **0.001/1.4/0/0.321** s. Output `× 0.35`.
+
+**DaisySP WASM:** body is `ModalVoice`; sparkle uses the same fixed FM stack and mix (`× 0.15`) as WASM play code.
 
 `#synth env` overrides bell carrier envelope only; sparkle envelope is **WASM-play fixed**.
 

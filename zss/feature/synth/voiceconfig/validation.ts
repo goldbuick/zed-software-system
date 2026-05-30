@@ -41,8 +41,7 @@ export function validatesynthtype(
       case 'string':
       case 'pluck':
       case 'karplus':
-      case 'modal':
-      case 'mallet':
+      case 'drip':
         return true
       default:
         return SYNTH_VARIANTS.test(type)

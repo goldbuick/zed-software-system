@@ -1,6 +1,6 @@
-# DaisySP backend cutover gate
+# DaisySP backend cutover
 
-DaisySP runs in parallel with Maximilian behind `ZSS_DAISY_SYNTH=true`. **Maximilian remains the default** until all criteria below pass under manual parity runs.
+**DaisySP is the default synth backend.** Maximilian remains available via `ZSS_MAXI_SYNTH=true` (or `ZSS_DAISY_SYNTH=false`).
 
 ## Reference target
 
@@ -31,7 +31,13 @@ These have no Tone implementation — excluded from Tone gate count (23/25 voice
 
 Retro/buzz/clang/metallic Daisy targets **Tone LFSR** behavior; Maximilian uses BeepBox tables and may diverge on spectral checks.
 
-## Cutover criteria
+## Cutover (done)
+
+Default flipped in `synthbackendfactory.ts`: Daisy unless `ZSS_MAXI_SYNTH=true`. Maximilian is never removed.
+
+## Parity gate reference
+
+Manual parity criteria used before cutover:
 
 1. Voice parity: 23/25 Tone-backed `WASM_PARITY_PATCHES` pass (±1 dB RMS, ±2 dB peak, spectral tolerances per patch profile)
 2. Drum parity: 10/10 `DRUM_PARITY_PATCHES` pass vs **Daisy-native fixtures** (`parity-metrics-daisy.json`). Maximilian drums still gate against Tone when using `parity-metrics-tone.json`.
@@ -44,8 +50,8 @@ Retro/buzz/clang/metallic Daisy targets **Tone LFSR** behavior; Maximilian uses 
 
 ## After cutover
 
-1. Flip default in `synthbackendfactory.ts` (Daisy unless `ZSS_MAXI_SYNTH=true`)
-2. **Maximilian is never removed** — permanent escape hatch via `ZSS_MAXI_SYNTH=true`
+- Default: DaisySP (`createsynthbackend()` → `bootdaisysynth()`)
+- Escape hatch: `ZSS_MAXI_SYNTH=true` or `ZSS_DAISY_SYNTH=false`
 
 ## Build
 

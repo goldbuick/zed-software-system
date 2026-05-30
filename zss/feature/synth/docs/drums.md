@@ -33,8 +33,8 @@ Synthesized drum kit. Each file provides one or more drum sounds with trigger fu
 
 | Backend | Drum implementation |
 |---------|---------------------|
-| **Maximilian WASM** (default) | Tone-parity custom DSP in [`drumplaycode.ts`](../backend/wasm/drumplaycode.ts) |
-| **DaisySP WASM** (`ZSS_DAISY_SYNTH`) | [DaisySP Drums](https://github.com/electro-smith/DaisySP/tree/master/Source/Drums/) for IDs 0, 1, 4, 6, 7, 9; custom C++ for cowbell, clap, woodblocks |
+| **DaisySP WASM** (default) | DaisySP `AnalogBassDrum` (ID 9), `SyntheticBassDrum` (ID 7); custom C++ for tick, tweet, snares, cowbell, clap, woodblocks |
+| **Maximilian WASM** (`ZSS_MAXI_SYNTH=true`) | Tone-parity custom DSP in [`drumplaycode.ts`](../backend/wasm/drumplaycode.ts) |
 
 See [implementation-matrix.md](implementation-matrix.md) Table 4.
 

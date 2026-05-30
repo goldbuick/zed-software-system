@@ -145,7 +145,7 @@ export default defineConfig(({ mode }) => {
         process.env.ZSS_WASM_PERF ?? '',
       ),
       'import.meta.env.ZSS_DAISY_SYNTH': JSON.stringify(
-        process.env.ZSS_DAISY_SYNTH ?? 'false',
+        process.env.ZSS_DAISY_SYNTH ?? 'true',
       ),
       'import.meta.env.ZSS_MAXI_SYNTH': JSON.stringify(
         process.env.ZSS_MAXI_SYNTH ?? 'false',

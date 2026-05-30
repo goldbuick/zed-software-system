@@ -70,6 +70,22 @@ describe('wasmvoiceconfig', () => {
     expect(voices[2].algo).toBe(3)
   })
 
+  it('maps string pluck karplus and drip voice types', () => {
+    const voices = defaultwasmvoicestate()
+    expect(applyvoiceconfig(voices, 0, 'string', '')).toBe(true)
+    expect(voices[0].type).toBe(SOURCE_TYPE.STRING_VOICE)
+    expect(voices[0].algo).toBe(0)
+    expect(applyvoiceconfig(voices, 1, 'pluck', '')).toBe(true)
+    expect(voices[1].type).toBe(SOURCE_TYPE.STRING_VOICE)
+    expect(voices[1].algo).toBe(1)
+    expect(applyvoiceconfig(voices, 2, 'karplus', '')).toBe(true)
+    expect(voices[2].type).toBe(SOURCE_TYPE.STRING_VOICE)
+    expect(voices[2].algo).toBe(1)
+    expect(applyvoiceconfig(voices, 3, 'drip', '')).toBe(true)
+    expect(voices[3].type).toBe(SOURCE_TYPE.DRIP_VOICE)
+    expect(voices[3].algo).toBe(0)
+  })
+
   it('maps noise and hollow chip types', () => {
     const voices = defaultwasmvoicestate()
     expect(applyvoiceconfig(voices, 0, 'noise', '')).toBe(true)

@@ -12,6 +12,8 @@
 #include <cstdlib>
 
 #include "daisysp.h"
+#include "reverbsc.h"
+#include "compressor.h"
 
 using namespace daisysp;
 
@@ -54,21 +56,30 @@ constexpr float kFmHzScale     = 1.f;
 constexpr float kAlgoOpGain    = 0.31622776601683794f;
 constexpr float kAlgoOutGain   = 0.18f;
 constexpr float kNoiseVoiceGain = 21.f;
+constexpr float kLfsrVoiceBoost = 2.5f;
 constexpr float kNoiseBaseExpr = 0.19f;
 constexpr float kNoiseSoftGain = 3.f;
 constexpr float kMetallicNorm  = 1.f / 22.f;
 constexpr float kMetallicAmp   = 7.5f;
+// StringVoice output trim; structure < 0.24 keeps curved-bridge (wood/string) timbre.
+constexpr float kStringVoiceGain = 0.38f;
 constexpr float kDrumTickTrim  = 1.35f;
 constexpr float kDrumTweetTrim = 1.25f;
 constexpr float kVoiceOutGain  = 1.f;
-// Tone audiochain.ts: playvolume = volumetodb(20), drumvolume = volumetodb(50)
+// Tone drumvolume is volumetodb(100)+10 (+15 dB); monolithic Daisy path lands ~+7 dB
 constexpr float kPlayBusGain    = 0.3548133892336194f;
-constexpr float kDrumBusGain    = 0.8891397050194613f;
+constexpr float kDrumBusGain    = 2.23606797749979f;
 constexpr float kMasterTrimDb   = -3.f;
 constexpr float kMasterMakeupDb = 22.f;
 constexpr float kRazzleVibratoWet = 0.1f;
 constexpr float kRazzleChorusWet  = 0.5f;
 constexpr float kRazzleHissGain   = 0.0001f;
+// ReverbSc internal gain is 0.35; match prior comb+tanh level in the wet chain.
+constexpr float kReverbOutGain    = 1.55f;
+constexpr float kScMix            = 0.75f;
+constexpr float kScTriggerFloor   = 1e-5f;
+constexpr float kAutowahDefaultOct  = 6.f;
+constexpr float kAutowahDefaultGain = 2.f;
 
 constexpr float kDrumGains[kDrumCount] = {0.26f, 0.24f, 0.4f,  0.35f, 0.3f,
                                           0.26f, 0.3f,  0.28f, 0.26f, 0.67f};
@@ -86,7 +97,7 @@ enum VoiceType
   kHollowNoise   = 8,
   kWhiteNoise    = 9,
   kStringVoice   = 10,
-  kModalVoice    = 11,
+  kDripVoice     = 11,
 };
 
 enum FxSend
@@ -543,10 +554,10 @@ struct AlgoCfg
 
 struct ZssVoice
 {
-  Oscillator synthosc, synthmod;
-  Oscillator bellmod, bellcar, sparklemod, sparklecar, dootosc;
+  Oscillator synthosc, synthmod, dootosc;
+  Oscillator sparklemod, sparklecar;
   Oscillator algoops[4];
-  Adsr       env, bellenv, sparkleenv, dootenv, algooutenv;
+  Adsr       env, dootenv, sparkleenv, algooutenv;
   Adsr       algoenvs[4];
   Adsr       modenv;
   float      playfreq = 440.f;
@@ -560,20 +571,23 @@ struct ZssVoice
   int        modenvprev_a = -1;
   float      modenvprev_d = -1.f, modenvprev_s = -1.f, modenvprev_r = -1.f;
   float      envprev_a = -1.f, envprev_d = -1.f, envprev_s = -1.f, envprev_r = -1.f;
-  float      bellprev_a = -1.f, dootprev_a = -1.f, algoprev_a = -1.f;
+  float      dootprev_a = -1.f, algoprev_a = -1.f;
   float      algoenvprev_a[4] = {-1.f, -1.f, -1.f, -1.f};
   float      lastenv = 0.f;
   StringVoice stringvoice;
-  ModalVoice  modalvoice;
-  bool        stringgateprev = false;
-  bool        modalgateprev = false;
+  ModalVoice    modalvoice;
+  Drip          drip;
+  int           stringvoicepreset = -1;
+  bool          stringgateprev = false;
+  bool          bellgateprev   = false;
+  bool          dripgateprev   = false;
 };
 
 struct ZssDrumState
 {
   int        remain = 0;
   uint32_t   prev_strike = 0;
-  float      hpprev = 0.f, hpstate = 0.f;
+  OnePole    hp;
   BiquadState eq[3], bp;
 };
 
@@ -581,20 +595,19 @@ struct ZssFxGroup
 {
   Decimator                      decimator;
   Overdrive                      overdrive;
-  Autowah                        autowah;
   Svf                            autofilter_svf;
   Phasor                         autofilter_phasor;
   DelayLine<float, kEchoBufLen>  echo_line;
   int                            echo_delay = 1;
   float                          echo_feedback = 0.f;
+  ReverbSc                       reverb;
+  float                          rev_feedback = 0.85f;
+  float                          rev_lpfreq = 12000.f;
   float                          rev_predelay_buf[kRevPredelayLen];
   int                            rev_predelay_pos = 0;
   float                          rev_predelay_fb = 0.f;
   int                            rev_predelay_samples = 0;
-  float rev_comb0[2600], rev_comb1[3300], rev_comb2[4700], rev_comb3[6000];
-  int   rev_pos0 = 0, rev_pos1 = 0, rev_pos2 = 0, rev_pos3 = 0;
-  float rev_fb0 = 0.f, rev_fb1 = 0.f, rev_fb2 = 0.f, rev_fb3 = 0.f;
-  float rev_fb = 0.58f;
+  Autowah                        autowah;
 };
 
 struct ZssEngine
@@ -602,14 +615,12 @@ struct ZssEngine
   float        sample_rate = 44100.f;
   ZssVoice     voices[kVoiceCount];
   ZssDrumState drums[kDrumCount];
-  AnalogSnareDrum        snare_hi;
-  AnalogSnareDrum        snare_lo;
   AnalogBassDrum         bass_drum;
   SyntheticBassDrum      tom_drum;
   ZssFxGroup   fx[kFxGroups];
   Oscillator   drumoscA[kDrumCount], drumoscB[kDrumCount];
   float        drumsidechain = 0.f;
-  float        comp_env = 0.f;
+  Compressor   master_comp;
   float        sc_prevlevel = 1e-6f;
   float        sc_prevgaindb = 0.f;
   float        sc_gainlinear = 1.f;
@@ -624,7 +635,8 @@ struct ZssEngine
   int          razzle_vib_pos = 0;
   int          sampleclock = 0;
   float        cached_mastervol = 0.f, cached_bggain = 0.f;
-  float        cached_masterraw = 80.f, cached_bgraw = 100.f;
+  float        cached_ttsgain = 0.f;
+  float        cached_masterraw = 80.f, cached_bgraw = 100.f, cached_ttsraw = 25.f;
   float        mastervolprev = 80.f;
   bool         ready = false;
 };
@@ -918,18 +930,6 @@ float glidefreq(ZssVoice& v, int vi, float target, int type, float port)
 
 void applyvoiceenv(ZssVoice& v, int type, float a, float d, float s, float r)
 {
-  if(type == kBells)
-  {
-    if(v.bellprev_a != a)
-    {
-      v.bellenv.SetTime(ADSR_SEG_ATTACK, std::max(0.001f, a));
-      v.bellenv.SetTime(ADSR_SEG_DECAY, std::max(0.001f, d));
-      v.bellenv.SetSustainLevel(clampf(s, 0.f, 1.f));
-      v.bellenv.SetTime(ADSR_SEG_RELEASE, std::max(0.001f, r));
-      v.bellprev_a = a;
-    }
-    return;
-  }
   if(type == kDoot)
   {
     if(v.dootprev_a != a)
@@ -1153,31 +1153,6 @@ float synthsource(ZssVoice& v, int vi, float freq, bool gate, float detune,
   return sig * synthwavegain(osctype);
 }
 
-float bellsvoice(ZssVoice& v, int vi, float freq, bool gate, float detune,
-                 float vfreq[kVibratoGroups])
-{
-  float hz = detunedhz(vi, freq, detune, vfreq);
-  v.bellmod.SetFreq(hz * 1.5f);
-  v.bellmod.SetWaveform(Oscillator::WAVE_SQUARE);
-  v.bellmod.SetAmp(1.f);
-  float mod = v.bellmod.Process() * 30.f;
-  v.bellcar.SetFreq(hz + mod * 0.01f);
-  v.bellcar.SetWaveform(Oscillator::WAVE_SIN);
-  v.bellcar.SetAmp(1.f);
-  float sig = v.bellcar.Process() * v.bellenv.Process(gate);
-
-  float sparkhz = hz * 4.f;
-  v.sparklemod.SetFreq(sparkhz * 5.1f);
-  v.sparklemod.SetWaveform(Oscillator::WAVE_SIN);
-  v.sparklemod.SetAmp(1.f);
-  float sparkmod = v.sparklemod.Process() * 32.f;
-  v.sparklecar.SetFreq(sparkhz + sparkmod * 0.002f);
-  v.sparklecar.SetWaveform(Oscillator::WAVE_SIN);
-  v.sparklecar.SetAmp(1.f);
-  sig += v.sparklecar.Process() * v.sparkleenv.Process(gate) * 0.15f;
-  return sig * 0.35f;
-}
-
 float dootvoice(ZssVoice& v, float freq, bool gate)
 {
   if(gate && !v.gateprev)
@@ -1344,7 +1319,8 @@ float noisevoice(ZssVoice& v, int vi, int noisetype, float freq, bool gate,
     }
   }
   float gain = pitchmul * meta.expression * kNoiseBaseExpr * kNoiseVoiceGain;
-  return v.noisesample * gain * soft * envout;
+  float lfsrboost = meta.issoft ? 1.f : kLfsrVoiceBoost;
+  return v.noisesample * gain * soft * envout * lfsrboost;
 }
 
 int drumsamp(float sec)
@@ -1408,14 +1384,14 @@ float drumdistort(float x, float amt)
 
 float drumhipass(int idx, float input, float cutoff)
 {
-  ZssDrumState& d = g_engine.drums[idx];
-  float         rc  = 1.f / (kTwoPi * cutoff);
-  float         dt  = 1.f / g_engine.sample_rate;
-  float         alpha = rc / (rc + dt);
-  float         hp    = alpha * (d.hpstate + input - d.hpprev);
-  d.hpprev            = input;
-  d.hpstate           = hp;
-  return hp;
+  OnePole& hp = g_engine.drums[idx].hp;
+  float    norm = cutoff / g_engine.sample_rate;
+  if(norm > 0.497f)
+  {
+    norm = 0.497f;
+  }
+  hp.SetFrequency(norm);
+  return hp.Process(input);
 }
 
 float drumnoise()
@@ -1477,7 +1453,7 @@ void retriggerdrum(int i, float dursec)
 {
   ZssDrumState& d = g_engine.drums[i];
   d.remain        = drumlength(i, dursec);
-  d.hpprev = d.hpstate = 0.f;
+  d.hp.Reset();
   biquadreset(d.bp);
   for(int q = 0; q < 3; ++q)
   {
@@ -1485,8 +1461,6 @@ void retriggerdrum(int i, float dursec)
   }
   switch(i)
   {
-  case 4: g_engine.snare_hi.Trig(); break;
-  case 6: g_engine.snare_lo.Trig(); break;
   case 7: g_engine.tom_drum.Trig(); break;
   case 9: g_engine.bass_drum.Trig(); break;
   default: break;
@@ -1649,15 +1623,45 @@ float snarepitch(bool hi, int age)
   return end;
 }
 
-float drumsnare(bool hi)
+float snareoscenv(int age)
 {
-  int idx = hi ? 4 : 6;
-  if(drumadvance(idx) < 0)
+  int dec = drumsamp(0.1f);
+  if(age >= dec)
   {
     return 0.f;
   }
-  float s = hi ? g_engine.snare_hi.Process(false) : g_engine.snare_lo.Process(false);
-  return s * kDrumGains[idx];
+  return 1.f - static_cast<float>(age) / dec;
+}
+
+float snarenoiseenv(int age)
+{
+  int atk = drumsamp(0.01f);
+  if(age < atk)
+  {
+    return static_cast<float>(age) / atk;
+  }
+  return drumexpexp(age - atk, drumsamp(drumnotelen(32)));
+}
+
+float drumsnare(bool hi)
+{
+  int idx = hi ? 4 : 6;
+  int age = drumadvance(idx);
+  if(age < 0)
+  {
+    return 0.f;
+  }
+  float oscamp   = snareoscenv(age);
+  float noiseamp = snarenoiseenv(age);
+  if(oscamp <= 0.f && noiseamp <= 0.f)
+  {
+    return 0.f;
+  }
+  float hz   = snarepitch(hi, age);
+  float body = drumoscwave(g_engine.drumoscA[idx], 2, hz) * oscamp;
+  float n    = drumhipass(idx, drumnoise() * noiseamp, 10000.f);
+  float mix  = body + n * (hi ? 0.333f : 0.25f);
+  return drumdistort(mix, hi ? 0.666f : 0.876f) * kDrumGains[idx];
 }
 
 float drumwoodblock(bool hi)
@@ -1731,6 +1735,19 @@ float drumsout()
   return sum;
 }
 
+float reverbdecaytofeedback(float decay)
+{
+  decay = clampf(decay, 0.2f, 12.f);
+  float fb = 0.55f + (1.f - std::exp(-decay / 4.5f)) * 0.38f;
+  return clampf(fb, 0.5f, 0.95f);
+}
+
+float reverbdecaytolpfreq(float decay)
+{
+  decay = clampf(decay, 0.2f, 12.f);
+  return clampf(20000.f - decay * 900.f, 3500.f, 18000.f);
+}
+
 void refreshfxderived(int group)
 {
   ZssFxGroup& fx = g_engine.fx[group];
@@ -1752,11 +1769,10 @@ void refreshfxderived(int group)
     decay = 2.5f;
   }
   decay = clampf(decay, 0.2f, 12.f);
-  fx.rev_fb = 0.58f + (1.f - std::exp(-decay / 5.5f)) * 0.14f;
-  if(fx.rev_fb > 0.72f)
-  {
-    fx.rev_fb = 0.72f;
-  }
+  fx.rev_feedback = reverbdecaytofeedback(decay);
+  fx.rev_lpfreq   = reverbdecaytolpfreq(decay);
+  fx.reverb.SetFeedback(fx.rev_feedback);
+  fx.reverb.SetLpFreq(fx.rev_lpfreq);
   float pd = fxparam(group, kFxReverbPredelay);
   fx.rev_predelay_samples = pd <= 0.0001f ? 0 : std::max(1, static_cast<int>(pd * g_engine.sample_rate + 0.5f));
   if(fx.rev_predelay_samples >= kRevPredelayLen)
@@ -1774,7 +1790,8 @@ float fxfcrush(float x, int group)
     rate = 1;
   }
   fx.decimator.SetDownsampleFactor(static_cast<float>(rate));
-  fx.decimator.SetBitcrushFactor(0.f);
+  float crush = clampf((static_cast<float>(rate) - 1.f) / 31.f, 0.f, 1.f);
+  fx.decimator.SetBitcrushFactor(crush);
   fx.decimator.SetSmoothCrushing(true);
   return fx.decimator.Process(x);
 }
@@ -1784,6 +1801,7 @@ float fxecho(float x, int group)
   ZssFxGroup& fx      = g_engine.fx[group];
   float       delayed = fx.echo_line.Read();
   float       input   = x + delayed * fx.echo_feedback;
+  input               = std::tanh(input);
   fx.echo_line.Write(input);
   return delayed;
 }
@@ -1803,36 +1821,15 @@ float fxreverbinput(float x, int group)
   return pdout;
 }
 
-float fxcomb(float* buf, int& pos, int len, float in, float fb)
-{
-  float c  = buf[pos];
-  buf[pos] = in + c * fb;
-  pos      = (pos + 1) % len;
-  return c;
-}
-
 float fxreverb(float x, int group)
 {
   ZssFxGroup& fx  = g_engine.fx[group];
   float       src = fxreverbinput(x, group);
-  float       regen = fx.rev_fb * 0.42f;
-  int         l0 = static_cast<int>(0.029f * g_engine.sample_rate);
-  int         l1 = static_cast<int>(0.037f * g_engine.sample_rate);
-  int         l2 = static_cast<int>(0.053f * g_engine.sample_rate);
-  int         l3 = static_cast<int>(0.067f * g_engine.sample_rate);
-  if(l0 < 1) l0 = 1;
-  if(l1 < 1) l1 = 1;
-  if(l2 < 1) l2 = 1;
-  if(l3 < 1) l3 = 1;
-  float c0 = fxcomb(fx.rev_comb0, fx.rev_pos0, l0, src + fx.rev_fb0 * regen, fx.rev_fb);
-  float c1 = fxcomb(fx.rev_comb1, fx.rev_pos1, l1, src + fx.rev_fb1 * regen, fx.rev_fb);
-  float c2 = fxcomb(fx.rev_comb2, fx.rev_pos2, l2, src + fx.rev_fb2 * regen, fx.rev_fb);
-  float c3 = fxcomb(fx.rev_comb3, fx.rev_pos3, l3, src + fx.rev_fb3 * regen, fx.rev_fb);
-  fx.rev_fb0 = c0;
-  fx.rev_fb1 = c1;
-  fx.rev_fb2 = c2;
-  fx.rev_fb3 = c3;
-  return std::tanh((c0 + c1 + c2 + c3) * 0.25f * 1.6f);
+  float       wetl = 0.f;
+  float       wetr = 0.f;
+  fx.reverb.Process(src, src, &wetl, &wetr);
+  float wet = (wetl + wetr) * 0.5f * kReverbOutGain;
+  return std::tanh(wet);
 }
 
 float fxautofilterbus(float x, int group)
@@ -1882,17 +1879,80 @@ float fxautofilterbus(float x, int group)
   return fx.autofilter_svf.Band() - x;
 }
 
+float autowahinputboost(float sensitivitydb)
+{
+  float gain = std::pow(10.f, sensitivitydb / 20.f);
+  if(gain <= 0.f)
+  {
+    return 1.f;
+  }
+  return 1.f / gain;
+}
+
 float fxautowahbus(float x, int group)
 {
+  if(!std::isfinite(x))
+  {
+    return 0.f;
+  }
   ZssFxGroup& fx = g_engine.fx[group];
-  float       sens = fxparam(group, kFxAutowahSens);
-  float       gaindb = fxparam(group, kFxAutowahGain);
-  float       wah = sens > 0.f ? clampf(sens / 48.f, 0.05f, 1.f) : 0.35f;
-  fx.autowah.SetWah(wah);
-  fx.autowah.SetLevel(clampf(std::pow(10.f, gaindb / 20.f), 0.01f, 1.f));
+  float       octaves = fxparam(group, kFxAutowahOct);
+  if(octaves <= 0.f)
+  {
+    octaves = kAutowahDefaultOct;
+  }
+  float sensitivity = fxparam(group, kFxAutowahSens);
+  float gaindb      = fxparam(group, kFxAutowahGain);
+  if(gaindb <= 0.f && gaindb != 0.f)
+  {
+    gaindb = kAutowahDefaultGain;
+  }
+
+  float input = x * autowahinputboost(sensitivity);
+  fx.autowah.SetWah(clampf(octaves / 6.f, 0.f, 1.f));
+  fx.autowah.SetLevel(clampf(dbtoamp(gaindb) / 4.f, 0.f, 1.f));
   fx.autowah.SetDryWet(100.f);
-  float wet = fx.autowah.Process(x);
+  float wet = fx.autowah.Process(input);
+  if(!std::isfinite(wet))
+  {
+    return 0.f;
+  }
   return wet - x;
+}
+
+float fxsoftclip(float x)
+{
+  return std::tanh(x);
+}
+
+int fxactiveendcount(float s0, float s1, float s2, float s3, float s5, float s6)
+{
+  int count = 0;
+  if(s0 > 0.f)
+  {
+    ++count;
+  }
+  if(s1 > 0.f)
+  {
+    ++count;
+  }
+  if(s2 > 0.f)
+  {
+    ++count;
+  }
+  if(s3 > 0.f)
+  {
+    ++count;
+  }
+  if(s5 > 0.f)
+  {
+    ++count;
+  }
+  if(s6 > 0.f)
+  {
+    ++count;
+  }
+  return count;
 }
 
 bool fxgrouphasactivesends(int group)
@@ -2015,7 +2075,65 @@ float applyfxgroup(float sig, int group)
   {
     out += s6 * fxautowahbus(out, group);
   }
-  return clampf(out, -1.f, 1.f);
+  int active = fxactiveendcount(s0, s1, s2, s3, s5, s6);
+  if(active >= 2)
+  {
+    out *= 1.f / std::sqrt(static_cast<float>(active));
+  }
+  return fxsoftclip(out);
+}
+
+bool bgplayactive()
+{
+  for(int i = kPlayVoiceCount; i < kVoiceCount; ++i)
+  {
+    if(readctrl(off_voices() + i * kVoiceStride + 1) > 0.5f)
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+void initmastercompressors(float sr)
+{
+  g_engine.master_comp.Init(sr);
+  g_engine.master_comp.SetThreshold(-24.f);
+  g_engine.master_comp.SetRatio(3.f);
+  g_engine.master_comp.SetAttack(0.003f);
+  g_engine.master_comp.SetRelease(0.15f);
+  g_engine.master_comp.AutoMakeup(false);
+  g_engine.master_comp.SetMakeup(0.f);
+}
+
+float sidechainkey(float bg, float tts, float drumtap)
+{
+  const float sc_send_trim = dbtoamp(-12.f);
+  const float sc_drum_trim = dbtoamp(-28.f);
+  float       trigger      = 0.f;
+  if(bgplayactive())
+  {
+    float bgabs = std::fabs(bg);
+    if(bgabs * sc_send_trim > trigger)
+    {
+      trigger = bgabs * sc_send_trim;
+    }
+  }
+  float ttabs = std::fabs(tts);
+  if(ttabs * sc_send_trim > trigger)
+  {
+    trigger = ttabs * sc_send_trim;
+  }
+  float drabs = std::fabs(drumtap);
+  if(drabs * sc_drum_trim > trigger)
+  {
+    trigger = drabs * sc_drum_trim;
+  }
+  if(trigger < kScTriggerFloor)
+  {
+    trigger = 0.f;
+  }
+  return trigger;
 }
 
 void sidechainupdate(float signal)
@@ -2052,61 +2170,17 @@ void sidechainupdate(float signal)
 
 float sidechaingain()
 {
-  return 1.f + (g_engine.sc_gainlinear - 1.f) * 0.75f;
+  return 1.f + (g_engine.sc_gainlinear - 1.f) * kScMix;
 }
 
-bool bgplayactive()
+float readttsvolume()
 {
-  for(int i = kPlayVoiceCount; i < kVoiceCount; ++i)
+  float vol = readctrl(off_master() + 2);
+  if(vol <= 0.001f)
   {
-    if(readctrl(off_voices() + i * kVoiceStride + 1) > 0.5f)
-    {
-      return true;
-    }
+    return 0.f;
   }
-  return false;
-}
-
-void sidechaintriggersample(float bgsignal, float drumsignal)
-{
-  const float sc_send_trim = dbtoamp(-12.f);
-  const float sc_drum_trim = dbtoamp(-28.f);
-  float       trigger      = 0.f;
-  if(bgplayactive())
-  {
-    float bg = std::fabs(bgsignal);
-    if(bg * sc_send_trim > trigger)
-    {
-      trigger = bg * sc_send_trim;
-    }
-  }
-  float dr = std::fabs(drumsignal);
-  if(dr * sc_drum_trim > trigger)
-  {
-    trigger = dr * sc_drum_trim;
-  }
-  if(trigger < 1e-5f)
-  {
-    trigger = 0.f;
-  }
-  sidechainupdate(trigger);
-}
-
-float applycompressor(float x)
-{
-  const float thresh = std::pow(10.f, -28.f / 20.f);
-  const float attack = 1.f - std::exp(-1.f / (0.003f * g_engine.sample_rate));
-  const float release = 1.f - std::exp(-1.f / (0.15f * g_engine.sample_rate));
-  float       ax      = std::fabs(x);
-  float       coef    = ax > g_engine.comp_env ? attack : release;
-  g_engine.comp_env += (ax - g_engine.comp_env) * coef;
-  if(g_engine.comp_env <= thresh)
-  {
-    return x;
-  }
-  float dbover  = 20.f * std::log10(g_engine.comp_env / thresh);
-  float reduced = dbover - dbover / 4.f;
-  return x * std::pow(10.f, -reduced / 20.f);
+  return vol / 100.f;
 }
 
 float razzledelay(float* buf, int& pos, int len, float in, float delaysec)
@@ -2164,10 +2238,10 @@ float readmastervolume()
   }
   if(g_engine.mastervolprev <= 0.001f && vol > 0.001f)
   {
-    g_engine.comp_env = 0.f;
+    initmastercompressors(g_engine.sample_rate);
     g_engine.sc_prevgaindb = 0.f;
     g_engine.sc_gainlinear = 1.f;
-    g_engine.sc_prevlevel = 1e-6f;
+    g_engine.sc_prevlevel  = 1e-6f;
   }
   g_engine.mastervolprev = vol;
   float db = 20.f * std::log10(vol * 0.25f) - 35.f + kMasterTrimDb + kMasterMakeupDb;
@@ -2184,12 +2258,35 @@ float readbgplayvolume()
   return std::pow(10.f, (20.f * std::log10(vol) - 35.f) / 20.f);
 }
 
+void applystringvoicepreset(ZssVoice& v, int algo)
+{
+  if(v.stringvoicepreset == algo)
+  {
+    return;
+  }
+  v.stringvoicepreset = algo;
+  if(algo == 0)
+  {
+    // Bowed violin: curved bridge, low dust/brightness, moderate accent.
+    v.stringvoice.SetStructure(0.18f);
+    v.stringvoice.SetBrightness(0.12f);
+    v.stringvoice.SetDamping(0.78f);
+    v.stringvoice.SetAccent(0.42f);
+  }
+  else
+  {
+    // Pluck: curved bridge (not dispersion), softer strike than Daisy defaults.
+    v.stringvoice.SetStructure(0.14f);
+    v.stringvoice.SetBrightness(0.22f);
+    v.stringvoice.SetDamping(0.68f);
+    v.stringvoice.SetAccent(0.48f);
+  }
+}
+
 void initvoice(ZssVoice& v, float sr)
 {
   v.synthosc.Init(sr);
   v.synthmod.Init(sr);
-  v.bellmod.Init(sr);
-  v.bellcar.Init(sr);
   v.sparklemod.Init(sr);
   v.sparklecar.Init(sr);
   v.dootosc.Init(sr);
@@ -2199,21 +2296,16 @@ void initvoice(ZssVoice& v, float sr)
     v.algoenvs[o].Init(sr);
   }
   v.env.Init(sr);
-  v.bellenv.Init(sr);
-  v.bellenv.SetTime(ADSR_SEG_ATTACK, 0.01f);
-  v.bellenv.SetTime(ADSR_SEG_DECAY, 3.f);
-  v.bellenv.SetSustainLevel(0.3f);
-  v.bellenv.SetTime(ADSR_SEG_RELEASE, 6.f);
-  v.sparkleenv.Init(sr);
-  v.sparkleenv.SetTime(ADSR_SEG_ATTACK, 0.001f);
-  v.sparkleenv.SetTime(ADSR_SEG_DECAY, 1.4f);
-  v.sparkleenv.SetSustainLevel(0.f);
-  v.sparkleenv.SetTime(ADSR_SEG_RELEASE, 0.321f);
   v.dootenv.Init(sr);
   v.dootenv.SetTime(ADSR_SEG_ATTACK, 0.001f);
   v.dootenv.SetTime(ADSR_SEG_DECAY, 0.4f);
   v.dootenv.SetSustainLevel(0.01f);
   v.dootenv.SetTime(ADSR_SEG_RELEASE, 1.4f);
+  v.sparkleenv.Init(sr);
+  v.sparkleenv.SetTime(ADSR_SEG_ATTACK, 0.001f);
+  v.sparkleenv.SetTime(ADSR_SEG_DECAY, 1.4f);
+  v.sparkleenv.SetSustainLevel(0.f);
+  v.sparkleenv.SetTime(ADSR_SEG_RELEASE, 0.321f);
   v.algooutenv.Init(sr);
   v.modenv.Init(sr);
   v.modenv.SetTime(ADSR_SEG_ATTACK, 0.01f);
@@ -2222,10 +2314,8 @@ void initvoice(ZssVoice& v, float sr)
   v.modenv.SetTime(ADSR_SEG_RELEASE, 0.08f);
   v.noiserng = (0x6d2b79f5u + 7919u) >> 0;
   v.stringvoice.Init(sr);
-  v.stringvoice.SetStructure(0.5f);
-  v.stringvoice.SetBrightness(0.5f);
-  v.stringvoice.SetDamping(0.5f);
-  v.stringvoice.SetAccent(0.8f);
+  v.stringvoicepreset = -1;
+  v.drip.Init(sr, 0.01f);
   v.modalvoice.Init(sr);
   v.modalvoice.SetStructure(0.5f);
   v.modalvoice.SetBrightness(0.5f);
@@ -2235,20 +2325,6 @@ void initvoice(ZssVoice& v, float sr)
 
 void initdaisydrums(float sr)
 {
-  g_engine.snare_hi.Init(sr);
-  g_engine.snare_hi.SetFreq(180.f);
-  g_engine.snare_hi.SetDecay(0.4f);
-  g_engine.snare_hi.SetTone(0.7f);
-  g_engine.snare_hi.SetSnappy(0.6f);
-  g_engine.snare_hi.SetAccent(0.8f);
-
-  g_engine.snare_lo.Init(sr);
-  g_engine.snare_lo.SetFreq(120.f);
-  g_engine.snare_lo.SetDecay(0.55f);
-  g_engine.snare_lo.SetTone(0.4f);
-  g_engine.snare_lo.SetSnappy(0.5f);
-  g_engine.snare_lo.SetAccent(0.8f);
-
   g_engine.tom_drum.Init(sr);
   g_engine.tom_drum.SetFreq(90.f);
   g_engine.tom_drum.SetDecay(0.35f);
@@ -2273,10 +2349,13 @@ void initengine(float sr)
   }
   g_engine.drum_whitenoise.Init();
   initdaisydrums(sr);
+  initmastercompressors(sr);
   for(int d = 0; d < kDrumCount; ++d)
   {
     g_engine.drumoscA[d].Init(sr);
     g_engine.drumoscB[d].Init(sr);
+    g_engine.drums[d].hp.Init();
+    g_engine.drums[d].hp.SetFilterMode(OnePole::FILTER_MODE_HIGH_PASS);
   }
   for(int f = 0; f < kFxGroups; ++f)
   {
@@ -2287,11 +2366,8 @@ void initengine(float sr)
     fx.autofilter_svf.Init(sr);
     fx.autofilter_phasor.Init(sr);
     fx.echo_line.Init();
+    fx.reverb.Init(sr);
     std::memset(fx.rev_predelay_buf, 0, sizeof(fx.rev_predelay_buf));
-    std::memset(fx.rev_comb0, 0, sizeof(fx.rev_comb0));
-    std::memset(fx.rev_comb1, 0, sizeof(fx.rev_comb1));
-    std::memset(fx.rev_comb2, 0, sizeof(fx.rev_comb2));
-    std::memset(fx.rev_comb3, 0, sizeof(fx.rev_comb3));
     refreshfxderived(f);
   }
   g_engine.fxvibratolfo.Init(sr);
@@ -2355,8 +2431,27 @@ float processvoice(int vi, float vstart[kVibratoGroups], float vend[kVibratoGrou
   }
   else if(type == kBells)
   {
-    out       = bellsvoice(v, vi, freq, gate, detune, vfreq);
-    v.lastenv = std::fabs(out);
+    float hz      = detunedhz(vi, freq, detune, vfreq);
+    if(hz <= 0.f)
+    {
+      hz = 440.f;
+    }
+    bool trigger = gate && !v.bellgateprev;
+    v.bellgateprev = gate;
+    v.modalvoice.SetFreq(hz);
+    v.modalvoice.SetSustain(gate);
+    float body    = v.modalvoice.Process(trigger);
+    float sparkhz = hz * 4.f;
+    v.sparklemod.SetFreq(sparkhz * 5.1f);
+    v.sparklemod.SetWaveform(Oscillator::WAVE_SIN);
+    v.sparklemod.SetAmp(1.f);
+    float sparkmod = v.sparklemod.Process() * 32.f;
+    v.sparklecar.SetFreq(sparkhz + sparkmod * 0.002f);
+    v.sparklecar.SetWaveform(Oscillator::WAVE_SIN);
+    v.sparklecar.SetAmp(1.f);
+    float sparkle = v.sparklecar.Process() * v.sparkleenv.Process(gate);
+    out           = (body + sparkle * 0.15f) * 0.35f;
+    v.lastenv     = std::fabs(out);
   }
   else if(type == kDoot)
   {
@@ -2370,24 +2465,40 @@ float processvoice(int vi, float vstart[kVibratoGroups], float vend[kVibratoGrou
   }
   else if(type == kStringVoice)
   {
-    float hz     = freq > 0.f ? freq : 440.f;
+    float hz      = detunedhz(vi, freq > 0.f ? freq : 440.f, detune, vfreq);
     bool  trigger = gate && !v.stringgateprev;
     v.stringgateprev = gate;
+    applystringvoicepreset(v, algo == 0 ? 0 : 1);
     v.stringvoice.SetFreq(hz);
-    v.stringvoice.SetSustain(gate);
-    out       = v.stringvoice.Process(trigger) * dbtoamp(vol_db);
+    if(algo == 0)
+    {
+      if(trigger)
+      {
+        v.stringvoice.Reset();
+        v.stringvoice.Process(true);
+      }
+      v.stringvoice.SetSustain(gate);
+      out = v.stringvoice.Process(false);
+    }
+    else
+    {
+      v.stringvoice.SetSustain(false);
+      if(trigger)
+      {
+        v.stringvoice.Reset();
+      }
+      out = v.stringvoice.Process(trigger);
+    }
+    out *= dbtoamp(vol_db) * kStringVoiceGain;
     v.lastenv = std::fabs(out);
     return out;
   }
-  else if(type == kModalVoice)
+  else if(type == kDripVoice)
   {
-    float hz     = freq > 0.f ? freq : 440.f;
-    bool  trigger = gate && !v.modalgateprev;
-    v.modalgateprev = gate;
-    v.modalvoice.SetFreq(hz);
-    v.modalvoice.SetSustain(gate);
-    out       = v.modalvoice.Process(trigger) * dbtoamp(vol_db);
-    v.lastenv = std::fabs(out);
+    bool trigger = gate && !v.dripgateprev;
+    v.dripgateprev = gate;
+    out            = v.drip.Process(trigger) * dbtoamp(vol_db);
+    v.lastenv      = std::fabs(out);
     return out;
   }
   else
@@ -2413,8 +2524,10 @@ void zss_init(float sample_rate)
   initengine(sample_rate > 0.f ? sample_rate : 44100.f);
   g_engine.cached_mastervol = readmastervolume();
   g_engine.cached_bggain    = readbgplayvolume();
+  g_engine.cached_ttsgain   = readttsvolume();
   g_engine.cached_masterraw = 80.f;
   g_engine.cached_bgraw     = 100.f;
+  g_engine.cached_ttsraw    = 25.f;
 }
 
 double* zss_control_ptr()
@@ -2427,7 +2540,7 @@ int zss_control_len()
   return kControlLen;
 }
 
-void zss_process(float* out, int frames)
+void zss_process(float* out, int frames, const float* tts_in)
 {
   if(!g_engine.ready)
   {
@@ -2442,12 +2555,18 @@ void zss_process(float* out, int frames)
 
   float masterraw = readctrl(off_master());
   float bgraw     = readctrl(off_master() + 1);
+  float ttsraw    = readctrl(off_master() + 2);
   if(masterraw != g_engine.cached_masterraw || bgraw != g_engine.cached_bgraw)
   {
     g_engine.cached_masterraw = masterraw;
     g_engine.cached_bgraw     = bgraw;
     g_engine.cached_mastervol = masterraw <= 0.001f ? 0.f : readmastervolume();
     g_engine.cached_bggain    = readbgplayvolume();
+  }
+  if(ttsraw != g_engine.cached_ttsraw)
+  {
+    g_engine.cached_ttsraw  = ttsraw;
+    g_engine.cached_ttsgain = readttsvolume();
   }
 
   for(int f = 0; f < frames; ++f)
@@ -2487,20 +2606,32 @@ void zss_process(float* out, int frames)
     float playfx = applyfxgroup(play0, 0) + applyfxgroup(play1, 1);
     float bgfx   = applyfxgroup(bg, 2);
 
-    sidechaintriggersample(bg * kVoiceOutGain * g_engine.cached_bggain, drums);
+    float ttssample = 0.f;
+    if(tts_in != nullptr && g_engine.cached_ttsgain > 0.f)
+    {
+      ttssample = tts_in[f] * g_engine.cached_ttsgain;
+    }
+
+    float key = sidechainkey(bg * kVoiceOutGain * g_engine.cached_bggain, ttssample,
+                             g_engine.drumsidechain);
+    sidechainupdate(key);
     float duck = sidechaingain();
 
     float playbus = playfx * duck * kVoiceOutGain * kPlayBusGain;
     float bgbus   = bgfx * kVoiceOutGain * kPlayBusGain * g_engine.cached_bggain;
     float drumbus = drums * kDrumBusGain;
-    float dry     = playbus + bgbus + drumbus;
+    float dry     = playbus + bgbus + drumbus + ttssample;
 
-    float comp  = applycompressor(dry);
+    float comp  = g_engine.master_comp.Process(dry);
     float razz  = applyrazzle(comp);
     float limited = applymasterlimit(razz);
     float final = g_engine.cached_mastervol > 0.f
                       ? g_engine.master_dcblock.Process(limited * g_engine.cached_mastervol)
                       : 0.f;
+    if(!std::isfinite(final))
+    {
+      final = 0.f;
+    }
     out[f]      = clampf(final, -1.f, 1.f);
   }
 }

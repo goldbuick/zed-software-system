@@ -62,6 +62,7 @@ function noisevoice(i, noisetype, freq, gate) {
   }
 
   var gain = pitchmul * meta.expression * NOISE_BASE_EXPRESSION * WASM_NOISE_VOICE_GAIN;
-  return noisesample[i] * gain * softgain * envout;
+  var lfsrboost = meta.issoft ? 1 : WASM_LFSR_VOICE_BOOST;
+  return noisesample[i] * gain * softgain * envout * lfsrboost;
 }
 `

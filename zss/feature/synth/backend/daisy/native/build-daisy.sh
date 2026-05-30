@@ -6,6 +6,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../../../../.." && pwd)"
 DAISY_SRC="$SCRIPT_DIR/DaisySP/Source"
+DAISY_LGPL_SRC="$SCRIPT_DIR/DaisySP-LGPL/Source"
 WRAPPER_SRC="$SCRIPT_DIR/zss_daisy_synth.cpp"
 OUT_DIR="$REPO_ROOT/cafe/public/wasm/daisy"
 
@@ -47,38 +48,26 @@ echo "  Source: $DAISY_SRC"
 echo "  Output: $OUT_DIR"
 
 DAISY_CPPS=(
-  "$DAISY_SRC/Control/adenv.cpp"
   "$DAISY_SRC/Control/adsr.cpp"
   "$DAISY_SRC/Control/phasor.cpp"
   "$DAISY_SRC/Drums/analogbassdrum.cpp"
-  "$DAISY_SRC/Drums/analogsnaredrum.cpp"
   "$DAISY_SRC/Drums/synthbassdrum.cpp"
-  "$DAISY_SRC/Drums/synthsnaredrum.cpp"
   "$DAISY_SRC/Dynamics/crossfade.cpp"
   "$DAISY_SRC/Dynamics/limiter.cpp"
   "$DAISY_SRC/Effects/autowah.cpp"
   "$DAISY_SRC/Effects/chorus.cpp"
   "$DAISY_SRC/Effects/decimator.cpp"
-  "$DAISY_SRC/Effects/flanger.cpp"
   "$DAISY_SRC/Effects/overdrive.cpp"
-  "$DAISY_SRC/Effects/phaser.cpp"
-  "$DAISY_SRC/Effects/tremolo.cpp"
-  "$DAISY_SRC/Effects/wavefolder.cpp"
-  "$DAISY_SRC/Filters/ladder.cpp"
   "$DAISY_SRC/Filters/svf.cpp"
-  "$DAISY_SRC/Filters/soap.cpp"
-  "$DAISY_SRC/Noise/clockednoise.cpp"
   "$DAISY_SRC/PhysicalModeling/KarplusString.cpp"
+  "$DAISY_SRC/PhysicalModeling/drip.cpp"
   "$DAISY_SRC/PhysicalModeling/modalvoice.cpp"
   "$DAISY_SRC/PhysicalModeling/resonator.cpp"
   "$DAISY_SRC/PhysicalModeling/stringvoice.cpp"
-  "$DAISY_SRC/Synthesis/fm2.cpp"
-  "$DAISY_SRC/Synthesis/formantosc.cpp"
   "$DAISY_SRC/Synthesis/oscillator.cpp"
-  "$DAISY_SRC/Synthesis/variablesawosc.cpp"
-  "$DAISY_SRC/Synthesis/variableshapeosc.cpp"
-  "$DAISY_SRC/Synthesis/zoscillator.cpp"
   "$DAISY_SRC/Utility/dcblock.cpp"
+  "$DAISY_LGPL_SRC/Effects/reverbsc.cpp"
+  "$DAISY_LGPL_SRC/Dynamics/compressor.cpp"
 )
 
 EXPORTED_FUNS=(
@@ -107,6 +96,9 @@ emcc \
   -I "$DAISY_SRC/PhysicalModeling" \
   -I "$DAISY_SRC/Synthesis" \
   -I "$DAISY_SRC/Utility" \
+  -I "$DAISY_LGPL_SRC" \
+  -I "$DAISY_LGPL_SRC/Effects" \
+  -I "$DAISY_LGPL_SRC/Dynamics" \
   -fno-exceptions \
   "$WRAPPER_SRC" \
   "${DAISY_CPPS[@]}" \

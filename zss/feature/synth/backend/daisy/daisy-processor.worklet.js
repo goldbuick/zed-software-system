@@ -65,6 +65,7 @@ class DaisyProcessor extends AudioWorkletProcessor {
     this.sabviews = []
     this.controlview = null
     this.outptr = 0
+    this.ttsptr = 0
     this.ready = false
     this.bootstarted = false
     this.pendingwasmbytes = null
@@ -130,6 +131,7 @@ class DaisyProcessor extends AudioWorkletProcessor {
           processor.controlview = modcfg.HEAPF64.subarray(base, base + len)
           modcfg._zss_init(sampleRate)
           processor.outptr = modcfg._malloc(128 * 4)
+          processor.ttsptr = modcfg._malloc(128 * 4)
           processor.wasm = modcfg
           processor.ready = true
           processor.eminitstartframe = null
@@ -227,22 +229,23 @@ class DaisyProcessor extends AudioWorkletProcessor {
     }
     this.synccontrol()
     const tts = inputs[0]?.[0]
-    if (tts && tts.length > 0) {
-      const ttsgain =
-        this.controlview[DAISY_SAB_CHANNEL_OFFSET.zss_master + 2] / 100
-      for (let i = 0; i < output.length; i++) {
-        output[i] = tts[i] * ttsgain
-      }
-    } else {
-      for (let i = 0; i < output.length; i++) {
-        output[i] = 0
-      }
-    }
-    this.wasm._zss_process(this.outptr, output.length)
     const heap = this.wasm.HEAPF32
+    let ttsptr = 0
+    if (tts && tts.length > 0 && this.ttsptr) {
+      const ttsbase = this.ttsptr >> 2
+      const n = Math.min(tts.length, output.length)
+      for (let i = 0; i < n; i++) {
+        heap[ttsbase + i] = tts[i]
+      }
+      for (let i = n; i < output.length; i++) {
+        heap[ttsbase + i] = 0
+      }
+      ttsptr = this.ttsptr
+    }
+    this.wasm._zss_process(this.outptr, output.length, ttsptr)
     const base = this.outptr >> 2
     for (let i = 0; i < output.length; i++) {
-      output[i] += heap[base + i]
+      output[i] = heap[base + i]
     }
     return true
   }

@@ -142,6 +142,8 @@ WASM: custom 4-comb topology (not Tone convolution).
 
 Tone: all buses share one `FXCHAIN.autowah` — param changes affect every bus.
 
+**Daisy WASM:** uses `daisysp::Autowah` (soundpipe). `octaves` → `SetWah`, `gain` → `SetLevel`, `sensitivity` → input pre-gain. `basefrequency` and `follower` are no-ops on Daisy (Maximilian keeps full Tone-style biquad follower).
+
 ---
 
 ## WASM SAB param slots (per group)

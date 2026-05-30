@@ -7,6 +7,9 @@ export const NOISE_BASE_EXPRESSION = 0.19
 /** ~square peak for retro (expression 0.25): 1 / (0.25 * 0.19) ≈ 21. */
 export const WASM_NOISE_VOICE_GAIN = 21
 
+/** LFSR chip voices (retro/buzz/clang/metallic) — play-bus balance trim. */
+export const WASM_LFSR_VOICE_BOOST = 2.5
+
 /** Soft chip types (white/hollow) lose level via pitch-relative smoothing. */
 export const WASM_NOISE_SOFT_GAIN = 3.0
 

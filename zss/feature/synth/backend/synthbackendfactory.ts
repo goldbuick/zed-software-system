@@ -7,13 +7,10 @@ import { bootwasmsynth } from './wasm/bootwasmsynth'
 import { createwasmsynthadapter } from './wasmsynthadapter'
 
 export async function createsynthbackend(): Promise<SynthBackend> {
-  if (ismaxisynthenabled()) {
+  if (ismaxisynthenabled() || !isdaisysynthenabled()) {
     return createwasmsynthadapter(await bootwasmsynth())
   }
-  if (isdaisysynthenabled()) {
-    return createdaisysynthadapter(await bootdaisysynth())
-  }
-  return createwasmsynthadapter(await bootwasmsynth())
+  return createdaisysynthadapter(await bootdaisysynth())
 }
 
 export { createwasmsynthadapter } from './wasmsynthadapter'

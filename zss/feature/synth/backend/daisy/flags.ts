@@ -1,6 +1,9 @@
-/** Opt in with `ZSS_DAISY_SYNTH=true`. */
+/** Default on; opt out with `ZSS_DAISY_SYNTH=false`. Overridden when `ZSS_MAXI_SYNTH=true`. */
 export function isdaisysynthenabled(): boolean {
-  return import.meta.env.ZSS_DAISY_SYNTH === 'true'
+  if (ismaxisynthenabled()) {
+    return false
+  }
+  return import.meta.env.ZSS_DAISY_SYNTH !== 'false'
 }
 
 /** Force Maximilian with `ZSS_MAXI_SYNTH=true`. */
