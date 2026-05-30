@@ -14,6 +14,7 @@ import {
 } from '../wasm/wasmmastersab'
 
 import { daisyasseturl } from './daisypaths'
+import { DAISY_BUILD_ID } from './daisybuildid'
 
 function asaudiocontext(ctx: BaseAudioContext): AudioContext {
   return ctx as AudioContext
@@ -32,6 +33,34 @@ let daisykeepalive: MAYBE<ConstantSourceNode>
 let daisyplayvolume = WASM_DEFAULT_PLAY_VOLUME
 let daisybgplayvolume = 100
 let daisyttsvolume = WASM_DEFAULT_TTS_VOLUME
+let daisybootedbuildid = ''
+
+function teardowndaisyengine() {
+  try {
+    daisykeepalive?.stop()
+    daisykeepalive?.disconnect()
+  } catch {
+    //
+  }
+  daisykeepalive = undefined
+  try {
+    daisyttssource?.stop()
+  } catch {
+    //
+  }
+  daisyttssource = undefined
+  if (daisyengine) {
+    try {
+      daisyengine.audioWorkletNode.disconnect()
+    } catch {
+      //
+    }
+  }
+  daisyengine = undefined
+  daisyready = false
+  daisyloadinflight = undefined
+  daisybootedbuildid = ''
+}
 
 function pushdaisymastervolumes(maxi: DaisyEngine) {
   pushwasmmastersab(maxi, [daisyplayvolume, daisybgplayvolume, daisyttsvolume])
@@ -124,6 +153,7 @@ function waitfordaisyready(
         zss_dsp_ready?: number
         zss_dsp_error?: string
         zss_dsp_stage?: string
+        zss_razzle_tag?: number
       }
       if (data?.zss_dsp_stage) {
         laststage = data.zss_dsp_stage
@@ -133,6 +163,18 @@ function waitfordaisyready(
         return
       }
       if (data?.zss_dsp_ready) {
+        if (import.meta.env.DEV) {
+          console.warn('[daisy boot]', {
+            buildid: DAISY_BUILD_ID,
+            razzletag: data.zss_razzle_tag,
+            expect: 'razzletag === 2',
+          })
+          if (data.zss_razzle_tag !== 2) {
+            console.error(
+              '[daisy boot] stale wasm — run yarn build:daisy then hard refresh',
+            )
+          }
+        }
         cleanup()
         resolve()
       } else if (data?.zss_dsp_error) {
@@ -173,9 +215,12 @@ async function bootdaisyoncontext(ctx: BaseAudioContext): Promise<DaisyEngine> {
   await ensuremaximiliancoep()
   const wasmurl = daisyasseturl('zss_daisy.wasm')
   const processorurl = daisyasseturl('daisy-processor.js')
+  if (import.meta.env.DEV) {
+    console.warn('[daisy boot] fetching', { wasmurl, processorurl, buildid: DAISY_BUILD_ID })
+  }
   await ctx.audioWorklet.addModule(processorurl)
 
-  const wasmresponse = await fetch(wasmurl)
+  const wasmresponse = await fetch(wasmurl, { cache: 'no-store' })
   if (!wasmresponse.ok) {
     throw new Error(`failed to fetch ${wasmurl}`)
   }
@@ -226,6 +271,7 @@ async function bootdaisyoncontext(ctx: BaseAudioContext): Promise<DaisyEngine> {
   wireoutput(engine)
   initwasmmastersab(engine, daisyplayvolume, daisybgplayvolume, daisyttsvolume)
   initwasmfxsab(engine)
+  daisybootedbuildid = DAISY_BUILD_ID
   return engine
 }
 
@@ -236,8 +282,11 @@ export async function bootisolateddaisyengine(
 }
 
 export async function ensuredaisysynthwasm(): Promise<DaisyEngine> {
-  if (daisyengine && daisyready) {
+  if (daisyengine && daisyready && daisybootedbuildid === DAISY_BUILD_ID) {
     return daisyengine
+  }
+  if (daisyengine && daisybootedbuildid !== DAISY_BUILD_ID) {
+    teardowndaisyengine()
   }
 
   daisyloadinflight ??= (async () => {

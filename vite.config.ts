@@ -156,6 +156,9 @@ export default defineConfig(({ mode }) => {
       'import.meta.env.ZSS_DAISY_PARITY': JSON.stringify(
         process.env.ZSS_DAISY_PARITY ?? '',
       ),
+      'import.meta.env.ZSS_COMMIT_HASH': JSON.stringify(
+        process.env.ZSS_COMMIT_HASH ?? '',
+      ),
     },
     resolve: {
       alias: {

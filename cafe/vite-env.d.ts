@@ -13,4 +13,5 @@ interface ImportMetaEnv {
   readonly ZSS_MAXI_SYNTH?: string
   readonly ZSS_DAISY_PERF?: string
   readonly ZSS_DAISY_PARITY?: string
+  readonly ZSS_COMMIT_HASH?: string
 }

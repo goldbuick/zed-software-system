@@ -75,6 +75,7 @@ EXPORTED_FUNS=(
   "_zss_control_ptr"
   "_zss_control_len"
   "_zss_process"
+  "_zss_razzle_tag"
   "_malloc"
   "_free"
 )

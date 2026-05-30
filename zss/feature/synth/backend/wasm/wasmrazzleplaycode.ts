@@ -1,4 +1,5 @@
 import {
+  WASM_RAZZLE_CHORUS_DEPTH_SEC,
   WASM_RAZZLE_CHORUS_WET,
   WASM_RAZZLE_HISS_GAIN,
   WASM_RAZZLE_VIBRATO_WET,
@@ -21,14 +22,14 @@ function applyrazzle(input) {
   var vibratodepth = razzlevibratolfo.square(0.125) * 0.0015;
   var vibtap = razzlevibratodelay.dl(input, 0.005 + vibratodepth, 0);
   var vibrato = input + (vibtap - input) * RAZZLE_VIBRATO_WET;
-  var chorusdepth = razzlechoruslfo.saw(0.01) * 0.0035;
-  var chortap = razzlechorusdelay.dl(vibrato, 0.007 + chorusdepth, 0);
+  var chorusdepth = razzlechoruslfo.saw(0.01) * ${WASM_RAZZLE_CHORUS_DEPTH_SEC};
+  var hissmod = 0.35 + 0.65 * (0.5 + 0.5 * razzlehissmod.sinewave(Math.PI * 0.25));
+  var hissamp = razzlehiss.noise() * RAZZLE_HISS_GAIN * hissmod;
+  var chortap = razzlechorusdelay.dl(vibrato + hissamp, 0.007 + chorusdepth, 0);
   var out = vibrato + (chortap - vibrato) * RAZZLE_CHORUS_WET;
   if (WASM_PERF_MODE) {
     return out;
   }
-  var hissmod = 0.35 + 0.65 * (0.5 + 0.5 * razzlehissmod.sinewave(Math.PI * 0.25));
-  var hissamp = razzlehiss.noise() * RAZZLE_HISS_GAIN * hissmod;
-  return out + hissamp;
+  return out;
 }
 `

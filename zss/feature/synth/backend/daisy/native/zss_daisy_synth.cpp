@@ -81,9 +81,11 @@ constexpr float kPlayBusGain    = 0.3548133892336194f;
 constexpr float kDrumBusGain    = 2.23606797749979f;
 constexpr float kMasterTrimDb   = -3.f;
 constexpr float kMasterMakeupDb = 22.f;
-constexpr float kRazzleVibratoWet = 0.1f;
-constexpr float kRazzleChorusWet  = 0.5f;
-constexpr float kRazzleHissGain   = 0.0001f;
+constexpr float kRazzleVibratoWet      = 0.1f;
+constexpr float kRazzleChorusWet       = 0.4f;
+constexpr float kRazzleHissGain        = 0.0035f;
+constexpr float kRazzleChorusBaseSec   = 0.007f;
+constexpr float kRazzleChorusDepthSec  = 0.007f;
 constexpr float kMasterCompThresholdDb = -28.f;
 constexpr float kMasterCompRatio       = 4.f;
 constexpr float kMasterCompAttackSec   = 0.003f;
@@ -647,12 +649,13 @@ struct ZssEngine
   float        fxvibrato_depth = 0.f;
   WhiteNoise   drum_whitenoise;
   Oscillator   fxvibratolfo;
-  Oscillator   razzlevibratolfo, razzlehissmod;
-  Chorus       razzle_chorus;
-  Limiter      master_limiter;
+  Oscillator   razzlevibratolfo, razzlechoruslfo, razzlehissmod;
+  WhiteNoise   razzlehiss;
   DcBlock      master_dcblock;
   float        razzle_vib_buf[512];
+  float        razzle_chorus_buf[512];
   int          razzle_vib_pos = 0;
+  int          razzle_chorus_pos = 0;
   float        comp_env = 0.f;
   float        comp_attack_coef = 0.f;
   float        comp_release_coef = 0.f;
@@ -2133,6 +2136,27 @@ void initmasterchain(float sr)
       1.f - std::exp(-1.f / (kMasterCompReleaseSec * sr));
 }
 
+void initrazzlechain(float sr)
+{
+  g_engine.razzlevibratolfo.Init(sr);
+  g_engine.razzlevibratolfo.SetFreq(0.125f);
+  g_engine.razzlevibratolfo.SetWaveform(Oscillator::WAVE_SQUARE);
+  g_engine.razzlevibratolfo.SetAmp(1.f);
+  g_engine.razzlechoruslfo.Init(sr);
+  g_engine.razzlechoruslfo.SetFreq(0.01f);
+  g_engine.razzlechoruslfo.SetWaveform(Oscillator::WAVE_SAW);
+  g_engine.razzlechoruslfo.SetAmp(1.f);
+  g_engine.razzlehissmod.Init(sr);
+  g_engine.razzlehissmod.SetFreq(0.25f * kPi);
+  g_engine.razzlehissmod.SetWaveform(Oscillator::WAVE_SIN);
+  g_engine.razzlehissmod.SetAmp(1.f);
+  g_engine.razzlehiss.Init();
+  g_engine.razzle_vib_pos = 0;
+  g_engine.razzle_chorus_pos = 0;
+  std::memset(g_engine.razzle_vib_buf, 0, sizeof(g_engine.razzle_vib_buf));
+  std::memset(g_engine.razzle_chorus_buf, 0, sizeof(g_engine.razzle_chorus_buf));
+}
+
 float sidechainkey(float bg, float tts, float drumtap)
 {
   const float sc_send_trim = dbtoamp(-12.f);
@@ -2228,13 +2252,6 @@ float razzledelay(float* buf, int& pos, int len, float in, float delaysec)
   return out;
 }
 
-float applymasterlimit(float x)
-{
-  float buf = x;
-  g_engine.master_limiter.ProcessBlock(&buf, 1, 1.f);
-  return buf;
-}
-
 float applymastercompressor(float x)
 {
   const float thresh =
@@ -2255,23 +2272,19 @@ float applymastercompressor(float x)
 
 float applyrazzle(float input)
 {
-  g_engine.razzlevibratolfo.SetFreq(0.125f);
-  g_engine.razzlevibratolfo.SetWaveform(Oscillator::WAVE_SQUARE);
-  g_engine.razzlevibratolfo.SetAmp(1.f);
   float vibratodepth = g_engine.razzlevibratolfo.Process() * 0.0015f;
   float vibtap       = razzledelay(g_engine.razzle_vib_buf, g_engine.razzle_vib_pos, 512,
                                    input, 0.005f + vibratodepth);
   float vibrato      = input + (vibtap - input) * kRazzleVibratoWet;
 
-  float chorused = g_engine.razzle_chorus.Process(vibrato);
-  float out      = vibrato + (chorused - vibrato) * kRazzleChorusWet;
+  float chorusdepth = g_engine.razzlechoruslfo.Process() * kRazzleChorusDepthSec;
+  float hissmod     = 0.35f + 0.65f * (0.5f + 0.5f * g_engine.razzlehissmod.Process());
+  float hissamp     = g_engine.razzlehiss.Process() * kRazzleHissGain * hissmod;
 
-  g_engine.razzlehissmod.SetFreq(0.25f * kPi);
-  g_engine.razzlehissmod.SetWaveform(Oscillator::WAVE_SIN);
-  g_engine.razzlehissmod.SetAmp(1.f);
-  float hissmod = 0.35f + 0.65f * (0.5f + 0.5f * g_engine.razzlehissmod.Process());
-  float rnd = (static_cast<float>(rand()) / 2147483647.f) * 2.f - 1.f;
-  return out + rnd * kRazzleHissGain * hissmod;
+  // Tone: modulated tape hiss feeds the chorus input (always-on bed, even when dry=0).
+  float chortap = razzledelay(g_engine.razzle_chorus_buf, g_engine.razzle_chorus_pos, 512,
+                              vibrato + hissamp, kRazzleChorusBaseSec + chorusdepth);
+  return vibrato + (chortap - vibrato) * kRazzleChorusWet;
 }
 
 float readmastervolume()
@@ -2490,6 +2503,7 @@ void initengine(float sr)
   g_engine.drum_whitenoise.Init();
   initdaisydrums(sr);
   initmasterchain(sr);
+  initrazzlechain(sr);
   for(int d = 0; d < kDrumCount; ++d)
   {
     g_engine.drumoscA[d].Init(sr);
@@ -2511,15 +2525,7 @@ void initengine(float sr)
     refreshfxderived(f);
   }
   g_engine.fxvibratolfo.Init(sr);
-  g_engine.razzlevibratolfo.Init(sr);
-  g_engine.razzlehissmod.Init(sr);
-  g_engine.razzle_chorus.Init(sr);
-  g_engine.razzle_chorus.SetLfoFreq(0.01f);
-  g_engine.razzle_chorus.SetLfoDepth(0.35f);
-  g_engine.razzle_chorus.SetDelayMs(7.f);
-  g_engine.master_limiter.Init();
   g_engine.master_dcblock.Init(sr);
-  std::memset(g_engine.razzle_vib_buf, 0, sizeof(g_engine.razzle_vib_buf));
   g_engine.ready = true;
 }
 
@@ -2680,6 +2686,12 @@ int zss_control_len()
   return kControlLen;
 }
 
+/** 2 = manual delay-line razzle (post–DaisySP Chorus). */
+float zss_razzle_tag()
+{
+  return 2.f;
+}
+
 void zss_process(float* out, int frames, const float* tts_in)
 {
   if(!g_engine.ready)
@@ -2764,9 +2776,9 @@ void zss_process(float* out, int frames, const float* tts_in)
 
     float comp  = applymastercompressor(dry);
     float razz  = applyrazzle(comp);
-    float limited = applymasterlimit(razz);
     float final = g_engine.cached_mastervol > 0.f
-                      ? g_engine.master_dcblock.Process(limited * g_engine.cached_mastervol)
+                      ? g_engine.master_dcblock.Process(
+                            clampf(razz * g_engine.cached_mastervol, -1.f, 1.f))
                       : 0.f;
     if(!std::isfinite(final))
     {

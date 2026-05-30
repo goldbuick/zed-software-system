@@ -109,7 +109,11 @@ class DaisyProcessor extends AudioWorkletProcessor {
           processor.ready = true
           processor.eminitstartframe = null
           postdspstage(port, 'ready')
-          port.postMessage({ zss_dsp_ready: 1 })
+          const razzletag =
+            typeof modcfg._zss_razzle_tag === 'function'
+              ? modcfg._zss_razzle_tag()
+              : 0
+          port.postMessage({ zss_dsp_ready: 1, zss_razzle_tag: razzletag })
         } catch (err) {
           port.postMessage({ zss_dsp_error: String(err) })
         }

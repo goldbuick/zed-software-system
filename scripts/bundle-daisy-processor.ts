@@ -59,3 +59,16 @@ ${worklet}
 
 fs.writeFileSync(outpath, bundled)
 console.log(`✓ ${outpath} (${bundled.length} bytes)`)
+
+const buildidpath = path.join(
+  root,
+  'zss/feature/synth/backend/daisy/daisybuildid.ts',
+)
+const buildid = String(Math.floor(Date.now() / 1000))
+fs.writeFileSync(
+  buildidpath,
+  `/** Bumped by \`yarn build:daisy\` — busts browser cache when wasm changes on same commit. */
+export const DAISY_BUILD_ID = '${buildid}'
+`,
+)
+console.log(`✓ ${buildidpath} (${buildid})`)
