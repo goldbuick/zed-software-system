@@ -14,6 +14,7 @@ import {
 import type {
   DRUM_PARITY_PATCH,
   FX_PARITY_PATCH,
+  MASTER_DYNAMICS_PARITY_PATCH,
   PARITY_PATCH,
 } from '../wasm/paritypatches'
 import { defaultwasmalgoconfig } from '../wasm/wasmalgoconfigsab'
@@ -25,6 +26,8 @@ import { defaultwasmvoicestate } from '../wasm/wasmvoiceconfig'
 
 const PARITY_SAMPLERATE = 44100
 const PARITY_REPLAY_OFFSET_SEC = 0.05
+/** Master-dynamics patches only — slightly hotter play bus for offline Tone parity (runtime stays at 80). */
+const MASTER_PARITY_PLAY_VOLUME = 110
 
 function parityrenderlengthsec(
   durationsec: number,
@@ -126,5 +129,20 @@ export async function renderdaisyparityfxpatch(
     synth.setplayvolume(80)
     synth.setbgplayvolume(100)
     synth.synthreplay(ticks, patch.durationsec)
+  })
+}
+
+export async function renderdaisyparitymasterpatch(
+  patch: MASTER_DYNAMICS_PARITY_PATCH,
+): Promise<PARITY_AUDIO_METRICS> {
+  const rendersec = parityrenderlengthsec(patch.durationsec, patch.ticks)
+  return renderdaisyoffline(rendersec, (synth) => {
+    synth.setvoiceconfig(0, patch.voiceconfig, '')
+    for (let vi = 4; vi < 8; vi++) {
+      synth.setvoiceconfig(vi, patch.voiceconfig, '')
+    }
+    synth.setplayvolume(MASTER_PARITY_PLAY_VOLUME)
+    synth.setbgplayvolume(110)
+    synth.synthreplay(patch.ticks, rendersec)
   })
 }

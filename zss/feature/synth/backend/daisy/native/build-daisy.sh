@@ -66,7 +66,6 @@ DAISY_CPPS=(
   "$DAISY_SRC/PhysicalModeling/stringvoice.cpp"
   "$DAISY_SRC/Synthesis/oscillator.cpp"
   "$DAISY_SRC/Utility/dcblock.cpp"
-  "$DAISY_LGPL_SRC/Effects/reverbsc.cpp"
   "$DAISY_LGPL_SRC/Dynamics/compressor.cpp"
 )
 
@@ -76,6 +75,9 @@ EXPORTED_FUNS=(
   "_zss_control_len"
   "_zss_process"
   "_zss_razzle_tag"
+  "_zss_debug_comp_gr_db"
+  "_zss_debug_duck_gain"
+  "_zss_debug_dry_peak"
   "_malloc"
   "_free"
 )

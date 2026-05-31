@@ -5,14 +5,7 @@ import {
   applyboardstate,
   createsynthbackend,
 } from 'zss/feature/synth'
-import {
-  getwasmbroadcastdestination,
-  iswasmspikeenabled,
-  playwasmaudiobuffer,
-  setwasmsynthttsvolume,
-  spikesynthwasm,
-  unlockmaximaudiocontext,
-} from 'zss/feature/synth/backend/wasm'
+import { unlockaudiocontext } from 'zss/feature/synth/backend/wasm'
 import { synthdebugtrace } from 'zss/feature/synth/synthdebugtrace'
 import {
   selectttsengine,
@@ -60,16 +53,11 @@ export function enableaudio() {
 
   locked = true
   workstatus(synthdevice, registerreadplayer(), 'audio init')
-  unlockmaximaudiocontext()
+  unlockaudiocontext()
 
-  const start = iswasmspikeenabled()
-    ? spikesynthwasm
-    : createsynthbackend
-  void start()
+  void createsynthbackend()
     .then((result) => {
-      if (!iswasmspikeenabled() && result) {
-        backend = result
-      }
+      backend = result
       locked = false
       enabled = true
       synthaudioenabled(synthdevice, registerreadplayer())
@@ -95,7 +83,7 @@ export function enableaudio() {
 }
 
 export function synthbroadcastdestination(): MAYBE<MediaStreamAudioDestinationNode> {
-  return backend?.broadcastdestination() ?? getwasmbroadcastdestination()
+  return backend?.broadcastdestination()
 }
 
 /** Test hook — set synth device routing state without audio boot. */
@@ -162,7 +150,6 @@ const synthdevice = createdevice('synth', [], (message) => {
         const [, volume] = message.data as [string, number]
         if (isnumber(volume)) {
           backend?.setttsvolume(volume)
-          setwasmsynthttsvolume(volume)
         }
       }
       break
@@ -200,12 +187,8 @@ const synthdevice = createdevice('synth', [], (message) => {
     case 'audiobuffer':
       if (isarray(message.data)) {
         const [, audiobuffer] = message.data as [string, AudioBuffer]
-        if (ispresent(audiobuffer)) {
-          if (backend) {
-            backend.playaudiobuffer(audiobuffer)
-          } else {
-            playwasmaudiobuffer(audiobuffer)
-          }
+        if (ispresent(audiobuffer) && backend) {
+          backend.playaudiobuffer(audiobuffer)
         }
       }
       break

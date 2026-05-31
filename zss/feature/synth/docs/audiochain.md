@@ -23,15 +23,19 @@ hiss (pink noise) ───────┘
 ### Sidechain Compressor
 
 - **Threshold:** -42 dB
-- **Ratio:** 4:1
-- **Sidechain sources:** `altaction` (TTS + bgplay), `drumaction` (drums)
-- **Purpose:** Ducks main playback when TTS or drums are active
+- **Ratio:** 5:1
+- **Attack / release:** 5 ms / 60 ms
+- **Mix / makeup:** 0.75 / +24 dB
+- **Sidechain sources:** `altaction` (TTS + bgplay @ -12 dB), `drumaction` (clap+bass @ -28 dB)
+- **Purpose:** Ducks `#play` when bg/TTS/drums hit (not bg/TTS/drum buses themselves)
 
 ### Main Compressor
 
 - **Threshold:** -28 dB
 - **Ratio:** 4:1
-- **Purpose:** Overall dynamics control
+- **Attack / release:** 3 ms / 150 ms
+- **Knee:** 30 dB (Tone default; Daisy matches in `zss_daisy_synth.cpp`)
+- **Purpose:** Detect + apply on full post-sidechain mix (play ducked + bg + TTS + drums)
 
 ### Razzle Chain
 

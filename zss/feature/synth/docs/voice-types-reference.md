@@ -40,7 +40,7 @@ Config path: `#synth` → [audio.ts](../../firmware/audio.ts) `handlesynthvoice`
 
 | Param | Aliases | Value | Tone default | WASM default | Notes |
 |-------|---------|-------|--------------|--------------|-------|
-| `restart` | — | — | Full `applyreset()` | Resets all 8 voices + osc + algo + FX SAB | Tone: [source.ts](../archive/tone/source.ts); WASM: [maxisynth.ts](../backend/wasm/maxisynth.ts) |
+| `restart` | — | — | Full `applyreset()` | Resets all 8 voices + osc + algo + FX SAB | Tone: [source.ts](../archive/tone/source.ts); Daisy: [daisysynth.ts](../backend/daisy/daisysynth.ts) |
 | `vol` / `volume` | — | number (dB) | **Tone**: instrument volume from `get()` snapshot | **`0` dB** | All 10 WASM voice types via `zss_voicecfg` slot 5 |
 | `port` / `portamento` | — | number (seconds) | **Tone**: `0` (Monophonic) | `0` | Only `SYNTH` + `ALGO_SYNTH`; error on retro in Tone |
 | `env` / `envelope` | — | `[a, d, s, r]` | See per-type below | `0.01, 0.01, 0.5, 0.01` (**Tone ZSS reset**) | WASM: [wasmvoicecfgsab.ts](../backend/wasm/wasmvoicecfgsab.ts) |
@@ -84,7 +84,7 @@ Selecting any validated wave name switches voice to `SYNTH`. Names validated by 
 
 WASM osc defaults: [wasmoscconfigsab.ts](../backend/wasm/wasmoscconfigsab.ts) `DEFAULT_WASM_OSC_CONFIG`.
 
-**WASM play-code fallbacks** (when SAB value is 0): width `0.2`, modindex `2`, harmonicity `1`, fat count `3`, spread `20` ([voiceplaycode.ts](../backend/wasm/voiceplaycode.ts)).
+**Daisy C++ fallbacks** (when SAB value is 0): width `0.2`, modindex `2`, harmonicity `1`, fat count `3`, spread `20` (see [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp)). Archived Maxi play-code: [`archive/maxi/voiceplaycode.ts`](../archive/maxi/voiceplaycode.ts).
 
 ### WASM vs Tone — SYNTH summary
 
@@ -303,6 +303,6 @@ String:     detune | pwm | vib | filter                 (string voice only)
 | Command parsing | [firmware/audio.ts](../../firmware/audio.ts) |
 | Type validation | [voiceconfig/validation.ts](../voiceconfig/validation.ts) |
 | WASM voice routing | [wasmvoiceconfig.ts](../backend/wasm/wasmvoiceconfig.ts) |
-| WASM play behavior | [voiceplaycode.ts](../backend/wasm/voiceplaycode.ts) |
+| WASM play behavior | [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp) (archived: [`archive/maxi/voiceplaycode.ts`](../archive/maxi/voiceplaycode.ts)) |
 | Tone voice config | [archive/tone/voiceconfig/index.ts](../archive/tone/voiceconfig/index.ts) |
 | Tone source creation | [archive/tone/source.ts](../archive/tone/source.ts) |

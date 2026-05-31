@@ -1,8 +1,8 @@
 import { SOURCE_TYPE } from 'zss/feature/synth/shared/sourcetype'
 
-import { initwasmvoicesab } from '../maxisynth'
+import { initwasmvoicesab } from '../wasminitsab'
 import { wasmsabsnapshot } from '../sabpush'
-import { createmockmaxi } from '../testhelpers/mockmaxi'
+import { createmocksabengine } from '../testhelpers/mocksab'
 import { defaultwasmalgoconfig } from '../wasmalgoconfigsab'
 import {
   DEFAULT_WASM_OSC_CONFIG,
@@ -315,8 +315,8 @@ describe('wasmvoiceconfig', () => {
   })
 
   it('initwasmvoicesab seeds voice cfg sab defaults', () => {
-    const { maxi } = createmockmaxi()
-    initwasmvoicesab(maxi as any)
+    const { engine } = createmocksabengine()
+    initwasmvoicesab(engine)
     const cfg = wasmsabsnapshot('zss_voicecfg')
     expect(cfg).toHaveLength(80)
     expect(cfg[0]).toBe(0.01)
@@ -331,8 +331,8 @@ describe('wasmvoiceconfig', () => {
   })
 
   it('initwasmvoicesab seeds SYNTH square defaults on sab', () => {
-    const { maxi } = createmockmaxi()
-    initwasmvoicesab(maxi as any)
+    const { engine } = createmocksabengine()
+    initwasmvoicesab(engine)
     const voices = wasmsabsnapshot('zss_voices')
     for (let i = 0; i < 8; i++) {
       const base = i * 6

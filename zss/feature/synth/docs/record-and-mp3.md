@@ -1,18 +1,20 @@
 # Recording & MP3 export
 
-## Active path — WASM (`backend/wasm/wasmrecordhandler.ts` + `wasmofflinerender.ts`)
+## Active path — Daisy (`backend/daisy/daisyrecordhandler.ts` + `daisyofflinerender.ts`)
 
-`#synthrecord` on the WASM backend:
+`#synthrecord` on the Daisy backend:
 
 1. Captures tick events during live playback (`RECORDING_STATE` in `shared/recording.ts`)
 2. Snapshots voice/FX state via `wasmreplaystate.ts`
-3. Boots an isolated Maximilian engine on `OfflineAudioContext`
-4. Replays ticks with `OfflineAudioContext.suspend()` hooks for sample-accurate SAB updates
+3. Boots an isolated Daisy engine on `OfflineAudioContext`
+4. Replays ticks with offline render hooks for sample-accurate SAB updates
 5. Renders via `startRendering()` (faster than real time; live synth unaffected)
 6. Converts rendered `AudioBuffer` to MP3 via `converttomp3()`
 7. Triggers download
 
 If `OfflineAudioContext` or offline worklet boot fails, `#synthrecord` surfaces an error (no real-time fallback).
+
+Archived Maximilian path: [`archive/maxi/wasmrecordhandler.ts`](../archive/maxi/wasmrecordhandler.ts).
 
 ---
 

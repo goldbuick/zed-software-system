@@ -1,13 +1,9 @@
-export { ensuremaximiliancoep, clearmaximilianserviceworkers } from './coopcoep'
-export { iswasmspikeenabled, iswasmperfmode } from './flags'
-export { bootwasmsynth } from './bootwasmsynth'
+export { ensurewasmcoep, clearwasmcoepserviceworkers } from './coopcoep'
 export {
-  createwasmsynth,
-  initwasmdrumsab,
-  initwasmvoicesab,
-  initwasmfxsab,
-  type WASM_SYNTH,
-} from './maxisynth'
+  getliveaudiocontext,
+  getunlockedaudiocontext,
+  unlockaudiocontext,
+} from './audiocontextunlock'
 export {
   initwasmsabchannels,
   pushwasmsabvalues,
@@ -19,20 +15,4 @@ export {
   WASM_VOICES_SAB,
   WASM_DRUMS_SAB,
 } from './wasmsabchannels'
-export {
-  ensuresynthwasm,
-  getmaxiengine,
-  getmaximaudiocontext,
-  getwasmbroadcastdestination,
-  getwasmmasterchain,
-  initsilentwasmsynth,
-  initwasmsynthvoices,
-  playwasmaudiobuffer,
-  setwasmsynthplayvolume,
-  setwasmsynthbgplayvolume,
-  setwasmsynthttsvolume,
-  spikesynthwasm,
-  unlockmaximaudiocontext,
-  getunlockedaudiocontext,
-  type MaxiEngine,
-} from './maximilian'
+export { initwasmvoicesab, initwasmdrumsab } from './wasminitsab'

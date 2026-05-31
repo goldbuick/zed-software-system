@@ -3,21 +3,28 @@
 The synth is a web-based software synthesizer. **Active runtime** uses a front-end / back-end split:
 
 - **Front-end** — firmware commands, `device/synth.ts` routing, `memory/synthstate.ts`, gadget `SYNTH_STATE`, play notation parsing. No audio engine imports.
-- **Back-end v1** — WASM only: Maximilian worklet, SAB voice/drum/FX scheduling, MP3 export.
+- **Back-end** — DaisySP WASM worklet (`backend/daisy/`), SAB voice/drum/FX scheduling (`backend/wasm/`), MP3 export.
 
-Legacy Tone.js documentation below describes the **archived** stack under `archive/tone/`. See [`../README.md`](../README.md) for the current layout.
+Legacy Tone.js and Maximilian documentation paths refer to **archived** stacks under `archive/tone/` and `archive/maxi/`. See [`../README.md`](../README.md) for the current layout.
 
 ## Quick Links (active)
 
 | Topic | File |
 | ----- | ---- |
 | [playnotation.ts](playnotation.md) | Text notation parser |
-| [record & mp3](record-and-mp3.md) | Recording to MP3 (WASM path) |
-| [voice-types-reference.md](voice-types-reference.md) | All voice types, params, WASM vs Tone defaults |
-| [fx-types-reference.md](fx-types-reference.md) | All FX types, params, WASM vs Tone defaults |
-| [implementation-matrix.md](implementation-matrix.md) | Voice/FX/drum/master map (Maxi vs Daisy vs Tone vs DaisySP) |
+| [record & mp3](record-and-mp3.md) | Recording to MP3 (Daisy path) |
+| [voice-types-reference.md](voice-types-reference.md) | All voice types, params, Daisy vs Tone defaults |
+| [fx-types-reference.md](fx-types-reference.md) | All FX types, params, Daisy vs Tone defaults |
+| [implementation-matrix.md](implementation-matrix.md) | Voice/FX/drum/master map (Daisy vs archived Maxi/Tone) |
 
-## Quick Links (archived Tone.js)
+## Quick Links (archived)
+
+| Topic | File |
+| ----- | ---- |
+| [archive/tone/](../archive/tone/README.md) | Tone.js stack |
+| [archive/maxi/](../archive/maxi/README.md) | Maximilian WASM stack |
+
+## Quick Links (archived Tone.js detail)
 
 | Topic | File |
 | ----- | ---- |

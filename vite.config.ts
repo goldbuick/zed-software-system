@@ -138,18 +138,6 @@ export default defineConfig(({ mode }) => {
     define: {
       ...zssdefine,
       'import.meta.env.ZSS_E2E': JSON.stringify(process.env.ZSS_E2E ?? ''),
-      'import.meta.env.ZSS_WASM_SPIKE': JSON.stringify(
-        process.env.ZSS_WASM_SPIKE ?? 'false',
-      ),
-      'import.meta.env.ZSS_WASM_PERF': JSON.stringify(
-        process.env.ZSS_WASM_PERF ?? '',
-      ),
-      'import.meta.env.ZSS_DAISY_SYNTH': JSON.stringify(
-        process.env.ZSS_DAISY_SYNTH ?? 'true',
-      ),
-      'import.meta.env.ZSS_MAXI_SYNTH': JSON.stringify(
-        process.env.ZSS_MAXI_SYNTH ?? 'false',
-      ),
       'import.meta.env.ZSS_DAISY_PERF': JSON.stringify(
         process.env.ZSS_DAISY_PERF ?? '',
       ),

@@ -29,12 +29,12 @@ Synthesized drum kit. Each file provides one or more drum sounds with trigger fu
 | 8 | Low woodblock | `lowwoodblocktrigger` |
 | 9 | Bass | `basstrigger` |
 
-## Backend split (Daisy vs Maximilian)
+## Backend split (Daisy vs archived Maximilian)
 
 | Backend | Drum implementation |
 |---------|---------------------|
-| **DaisySP WASM** (default) | DaisySP `AnalogBassDrum` (ID 9), `SyntheticBassDrum` (ID 7); custom C++ for tick, tweet, snares, cowbell, clap, woodblocks |
-| **Maximilian WASM** (`ZSS_MAXI_SYNTH=true`) | Tone-parity custom DSP in [`drumplaycode.ts`](../backend/wasm/drumplaycode.ts) |
+| **DaisySP WASM** (active) | DaisySP `AnalogBassDrum` (ID 9), `SyntheticBassDrum` (ID 7); custom C++ for tick, tweet, snares, cowbell, clap, woodblocks |
+| **Maximilian WASM** (archived) | Tone-parity custom DSP in [`archive/maxi/drumplaycode.ts`](../archive/maxi/drumplaycode.ts) |
 
 See [implementation-matrix.md](implementation-matrix.md) Table 4.
 

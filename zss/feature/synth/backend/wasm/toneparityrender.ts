@@ -12,6 +12,7 @@ import { synthvoicefxconfig } from '../../archive/tone/voicefx/index'
 import type {
   DRUM_PARITY_PATCH,
   FX_PARITY_PATCH,
+  MASTER_DYNAMICS_PARITY_PATCH,
   PARITY_PATCH,
 } from './paritypatches'
 import {
@@ -131,6 +132,27 @@ export async function rendertoneparityfxpatch(
       patch.fxvalue,
     )
     synth.synthreplay(ticks, patch.durationsec)
+  })
+
+  return audiobuffermetrics(buffer)
+}
+
+export async function rendertoneparitymasterpatch(
+  patch: MASTER_DYNAMICS_PARITY_PATCH,
+): Promise<PARITY_AUDIO_METRICS> {
+  if (typeof OfflineAudioContext === 'undefined') {
+    throw new Error('OfflineAudioContext not available')
+  }
+
+  const rendersec = parityrenderlengthsec(patch.durationsec, patch.ticks)
+  const buffer = await rendertoneoffline(rendersec, (synth) => {
+    synth.setplayvolume(80)
+    synth.setbgplayvolume(100)
+    synthvoiceconfig('', synth, 0, patch.voiceconfig, '')
+    for (let vi = 4; vi < 8; vi++) {
+      synthvoiceconfig('', synth, vi, patch.voiceconfig, '')
+    }
+    synth.synthreplay(patch.ticks, patch.durationsec)
   })
 
   return audiobuffermetrics(buffer)

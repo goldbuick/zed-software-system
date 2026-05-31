@@ -1,6 +1,6 @@
 # Archived Tone.js synth stack
 
-Archived May 2026. Replaced by WASM backend v1 under `zss/feature/synth/backend/wasm/`.
+Archived May 2026. Replaced by DaisySP backend under `zss/feature/synth/backend/daisy/`.
 
 Do not import from active code. This tree is kept for reference during the Tone.js removal migration.
 
@@ -14,7 +14,7 @@ Do not import from active code. This tree is kept for reference during the Tone.
 
 | Archived | Replacement |
 |----------|-------------|
-| `createsynth()` / Tone Transport | `backend/wasm/maxisynth.ts` + `wasmplayscheduler.ts` |
+| `createsynth()` / Tone Transport | `backend/daisy/daisysynth.ts` + `backend/wasm/wasmplayscheduler.ts` |
 | `source.ts` voice types | `shared/sourcetype.ts` |
-| `recordhandler.ts` | `backend/wasm/wasmrecordhandler.ts` |
+| `recordhandler.ts` | `backend/daisy/daisyrecordhandler.ts` |
 | `voiceconfig/` / `voicefx/` | `backend/wasm/wasmvoiceconfig.ts` / `wasmfxstate.ts` |

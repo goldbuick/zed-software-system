@@ -1,6 +1,6 @@
 # Synth implementation matrix
 
-Cross-reference for how ZSS implements voices, FX, drums, and master-chain processing across **DaisySP WASM** (default), **Maximilian WASM** (`ZSS_MAXI_SYNTH=true`), and archived **Tone.js**.
+Cross-reference for how ZSS implements voices, FX, drums, and master-chain processing across **DaisySP WASM** (active), archived **Maximilian WASM**, and archived **Tone.js**.
 
 Deep param/default catalogs: [voice-types-reference.md](voice-types-reference.md), [fx-types-reference.md](fx-types-reference.md), [audiochain.md](audiochain.md), [drums.md](drums.md), [CUTOVER.md](../backend/daisy/CUTOVER.md).
 
@@ -10,29 +10,28 @@ Deep param/default catalogs: [voice-types-reference.md](voice-types-reference.md
 flowchart LR
   synthCmd["#synth / #play / FX cmds"]
   sab["SharedArrayBuffer control"]
-  daisy["DaisySP WASM default"]
-  maxi["Maximilian WASM ZSS_MAXI_SYNTH"]
+  daisy["DaisySP WASM active"]
+  maxi["Maximilian archive/maxi"]
   tone["Tone.js archive/tone"]
   synthCmd --> sab
-  sab --> maxi
   sab --> daisy
-  tone -.->|"parity reference only"| maxi
   tone -.->|"parity reference only"| daisy
+  maxi -.->|"archived May 2026"| tone
 ```
 
-- **DaisySP** (default): monolithic C++ in [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp), [`daisyengine.ts`](../backend/daisy/daisyengine.ts)
-- **Maximilian** (`ZSS_MAXI_SYNTH=true`): generated play code in `backend/wasm/*playcode.ts`, injected via [`maximilian.ts`](../backend/wasm/maximilian.ts)
-- **Tone** (archived): [`archive/tone/`](../archive/tone/) — parity ground truth for Maximilian; Daisy voice/FX still Tone-gated, drums use Daisy-native fixtures
+- **DaisySP** (active): monolithic C++ in [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp), [`daisyengine.ts`](../backend/daisy/daisyengine.ts)
+- **Maximilian** (archived): [`archive/maxi/`](../archive/maxi/) — generated play code, no longer selectable at runtime
+- **Tone** (archived): [`archive/tone/`](../archive/tone/) — parity ground truth; Daisy voice/FX Tone-gated, drums use Daisy-native fixtures
 
-**DaisySP runtime usage:** `Oscillator`, `Adsr`, `Decimator`, `Overdrive`, `Svf`, `Phasor`, `DelayLine`, `Chorus`, `WhiteNoise`, `Limiter`, `DcBlock`, `OnePole`, `Autowah`, `StringVoice` (`#synth pluck` strike), `ModalVoice` (bells), `Drip`, and (Daisy drums) `AnalogBassDrum`, `SyntheticBassDrum`. **`#synth string`** uses custom SOS ensemble DSP (saws + `Svf`/`OnePole`), not `StringVoice`. **DaisySP-LGPL:** `ReverbSc` for `#reverb`; `Compressor` for main bus (sidechain duck uses custom envelope; TTS in dry/sidechain path). Custom C++ remains for sidechain duck, noise voices, doot/algo, drum EQ biquads.
+**DaisySP runtime usage:** `Oscillator`, `Adsr`, `Decimator`, `Overdrive`, `Svf`, `Phasor`, `DelayLine`, `Chorus`, `WhiteNoise`, `DcBlock`, `OnePole`, `Autowah`, `StringVoice` (`#synth pluck` strike), `ModalVoice` (bells), `Drip`, and (Daisy drums) `AnalogBassDrum`, `SyntheticBassDrum`. **`#synth string`** uses custom SOS ensemble DSP (saws + `Svf`/`OnePole`). **Main compressor:** custom full-mix envelope + 30 dB knee (not DaisySP-LGPL `Compressor`). **Sidechain duck:** custom power-domain envelope (ported from Tone worklet). **`#reverb`** uses custom 4-comb + predelay (same topology as WASM/Maxi, Tone.js practical match). Custom C++ remains for sidechain duck, main comp, noise voices, doot/algo, drum EQ biquads, reverb combs.
 
 ---
 
 ## Table 1 — Voice types (`SOURCE_TYPE`)
 
-Enum: [`shared/sourcetype.ts`](../shared/sourcetype.ts). Dispatch: [`voiceplaycode.ts`](../backend/wasm/voiceplaycode.ts) / `VoiceType` in cpp.
+Enum: [`shared/sourcetype.ts`](../shared/sourcetype.ts). Dispatch: `VoiceType` in [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp) (archived Maxi: [`archive/maxi/voiceplaycode.ts`](../archive/maxi/voiceplaycode.ts)).
 
-| ZSS name | Enum | Maximilian | DaisySP WASM | Tone (archived) | Closest [DaisySP feature](https://github.com/electro-smith/DaisySP#-features) | Key files |
+| ZSS name | Enum | Maxi (archived) | DaisySP WASM | Tone (archived) | Closest [DaisySP feature](https://github.com/electro-smith/DaisySP#-features) | Key files |
 |----------|------|------------|--------------|-----------------|-------------------------------------------------------------------------------|-----------|
 | `sine`/`square`/…/`fat*` | `SYNTH` | `maxiOsc` + hand-rolled ADSR; AM/FM/PWM/fat | `Oscillator` + `Adsr` | `Tone.Synth` + `OmniOscillator` | Subtractive / FM (`Oscillator`, `Adsr`) | `wasmoscplaycode.ts`, `wasmosctype.ts`, cpp `synthsource()` |
 | `retro` | `RETRO_NOISE` | LFSR table resample + ADSR | Custom LFSR tables + ADSR | `Sampler` + shelf filters | Noise (custom, not `Whitenoise`) | `noiseplaycode.ts`, `noisewave.ts` |
@@ -60,7 +59,7 @@ Serial wet chain (Maxi + Daisy): **fc → echo → reverb → autofilter → dis
 |--------|---------|------------|--------------|------|----------------|-------------|-----------|
 | `fc` | `fcrush` | Sample-and-hold `fxfcrush()` | `Decimator` | `FrequencyCrusher` worklet | `Decimator` | **Swapped** | `wasmfxplaycode.ts`, cpp |
 | `echo` | — | `maxiDelayline` | `DelayLine` | `FeedbackDelay` | `DelayLine` | **Swapped** | `wasmfxplaycode.ts` |
-| `reverb` | — | 4-comb + predelay | `ReverbSc` (LGPL FDN) | `Reverb` (convolution) | `ReverbSc` (LGPL) | **Done** (Daisy only) | `wasmfxplaycode.ts`, `reverbsc.cpp` |
+| `reverb` | — | 4-comb + predelay | 4-comb + predelay (custom) | `Reverb` (convolution) | — | **Done** | `wasmfxplaycode.ts`, `zss_daisy_synth.cpp` |
 | `autofilter` | — | LFO + biquad | `Svf` + `Phasor` | `AutoFilter` | `Svf`, `Phasor` | **Swapped** | `wasmautofilterplaycode.ts` |
 | `vibrato` | — | Pitch cents `playvibratocents()` | Same + `fxvibratolfo` | Wet `Vibrato` in chain | `Oscillator` (LFO) | Keep custom | `wasmvibratoplaycode.ts` |
 | `distortion` | `distort` | `tonedistort()` | `Overdrive` | `Distortion` | `Overdrive` | **Swapped** | `wasmfxplaycode.ts` |
@@ -75,11 +74,11 @@ Serial wet chain (Maxi + Daisy): **fc → echo → reverb → autofilter → dis
 | Processor | Role | Maximilian | DaisySP WASM | Tone | DaisySP module | Swap status | Key files |
 |-----------|------|------------|--------------|------|----------------|-------------|-----------|
 | Sidechain duck | Duck `#play` when bg/TTS/drums hit | Power-domain detector; clap+bass tap | Custom envelope + TTS key | `SidechainCompressor` worklet | Custom | Keep custom | `wasmsidechainplaycode.ts` |
-| Main compressor | Bus dynamics | -28 dB / 4:1 / 3 ms / 150 ms | `Compressor` (-24 dB / 3:1) | `Tone.Compressor` | Custom | **Done** (Daisy) | `wasmmasterplaycode.ts` |
+| Main compressor | Bus dynamics | -28 dB / 4:1 / 3 ms / 150 ms | Custom envelope (WASM) | `Tone.Compressor` knee 30 dB | Custom 30 dB knee + full-mix detect | **Done** (Daisy) | `zss_daisy_synth.cpp`, `wasmmasterplaycode.ts` |
 | Razzle | Master character | `maxiDelayline` + `maxiOsc` | Manual vibrato delay + `Chorus` + hiss | `Vibrato` + `Chorus` + noise | `Chorus` (partial) | **Partial swap** | `wasmrazzleplaycode.ts` |
-| Output safety | Peak control | — | `Limiter` | — | `Limiter` | **Swapped** | cpp `applymasterlimit()` |
+| Output safety | Peak control | — | `Limiter` | — | Peak ceiling ~−2.9 dBFS (`0.71`) | **Done** (Daisy) | cpp `masterpeaklimit()` |
 | DC block | Master out | — | `DcBlock` | — | `DcBlock` | **Swapped** | cpp `zss_process()` |
-| Master trim | Level staging | -2 dB trim + 22 dB makeup | Same | Tone graph gains | — | — | [`wasmlevels.ts`](../backend/wasm/wasmlevels.ts) |
+| Master trim | Level staging | -2 dB trim + 22 dB makeup | Same | Tone graph gains | -2 dB + **23.06 dB** makeup, drum bus **×1.35** play | — | [`wasmlevels.ts`](../backend/wasm/wasmlevels.ts), [`masterdynamicsacceptance.ts`](../backend/daisy/masterdynamicsacceptance.ts) |
 
 **Sidechain params (code):** threshold -42 dB, ratio **5:1**, attack 5 ms, release 60 ms, mix 0.75, makeup +24 dB; bg/TTS send -12 dB, drum send -28 dB.
 
@@ -138,7 +137,6 @@ flowchart LR
 | `Limiter`, `DcBlock` | Yes | Master output chain |
 | `StringVoice` (`pluck` only) | Yes | `#synth pluck` strike mode; `#synth string` uses custom ensemble DSP |
 | `AnalogBassDrum`, `SyntheticBassDrum` | Yes | Daisy backend drums (bass + tom) |
-| `ReverbSc` (LGPL) | Yes | Daisy backend `#reverb` only |
 | `Compressor` (LGPL) | Yes | Daisy main bus only |
 | `HiHat` | No | Reverted — tick/tweet kept custom |
 | `SyntheticSnareDrum` | No | Fallback if AnalogSnare presets insufficient |
@@ -156,7 +154,7 @@ flowchart LR
 |------------|-------------------|-------------|-------------|-------|
 | `fxfcrush()` | `Decimator` | Medium | **Done** | Rate reduction only; no bitcrush |
 | `fxecho()` | `DelayLine` | Easy | **Done** | Ring buffer removed |
-| `fxreverb()` | `ReverbSc` | Medium | **Done** (Daisy) | Maxi keeps 4-comb; Daisy uses LGPL FDN |
+| `fxreverb()` | 4-comb + predelay | Low | **Done** | Same topology WASM + Daisy; Tone uses convolution |
 | `fxautofilterbus()` | `Svf` + `Phasor` | Medium | **Done** | Bandpass sweep |
 | `tonedistort()` | `Overdrive` | Hard | **Done** | Different curve (accepted) |
 | `fxautowahbus()` | `Autowah` | Hard | **Done** (Daisy) | Heuristic map: octaves→SetWah, gain→SetLevel, sensitivity→input boost |
@@ -166,7 +164,7 @@ flowchart LR
 
 | ZSS custom | DaisySP candidate | Feasibility | Swap status |
 |------------|-------------------|-------------|-------------|
-| Sidechain + compressor | LGPL `Compressor` | Medium | Partial | Main bus only; sidechain custom |
+| Sidechain + compressor | Custom envelope | — | Partial | Daisy: full-mix detect + 30 dB knee; sidechain matches Tone worklet |
 | Razzle chorus | `Chorus` | Medium | **Done** (vibrato/hiss manual) |
 | Output safety | `Limiter` | Easy | **Done** |
 | DC offset | `DcBlock` | Easy | **Done** |
@@ -186,7 +184,6 @@ flowchart LR
 
 | Module | Source | Enables |
 |--------|--------|---------|
-| LGPL `ReverbSc` | DaisySP-LGPL | Daisy `#reverb` (linked) |
 | LGPL `Compressor` | DaisySP-LGPL | Daisy main bus dynamics (linked) |
 
 ---
@@ -195,10 +192,11 @@ flowchart LR
 
 | Topic | Path |
 |-------|------|
-| Voice types | [`shared/sourcetype.ts`](../shared/sourcetype.ts), [`voiceplaycode.ts`](../backend/wasm/voiceplaycode.ts) |
-| WASM FX | [`wasmfxplaycode.ts`](../backend/wasm/wasmfxplaycode.ts), [`wasmfxstate.ts`](../backend/wasm/wasmfxstate.ts) |
-| WASM master | [`wasmmasterplaycode.ts`](../backend/wasm/wasmmasterplaycode.ts), [`wasmsidechainplaycode.ts`](../backend/wasm/wasmsidechainplaycode.ts) |
-| WASM drums | [`drumplaycode.ts`](../backend/wasm/drumplaycode.ts) |
+| Voice types | [`shared/sourcetype.ts`](../shared/sourcetype.ts), [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp) |
+| Archived Maxi voices | [`archive/maxi/voiceplaycode.ts`](../archive/maxi/voiceplaycode.ts) |
+| Daisy FX | C++ FX modules in [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp), [`wasmfxstate.ts`](../backend/wasm/wasmfxstate.ts) |
+| Daisy master | C++ master chain in [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp) |
+| Archived Maxi drums | [`archive/maxi/drumplaycode.ts`](../archive/maxi/drumplaycode.ts) |
 | Daisy DSP | [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp) |
 | Daisy build | [`build-daisy.sh`](../backend/daisy/native/build-daisy.sh) |
 | Backend factory | [`synthbackendfactory.ts`](../backend/synthbackendfactory.ts) |

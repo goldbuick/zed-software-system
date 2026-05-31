@@ -3,8 +3,8 @@ import { createdevice } from 'zss/device'
 import { heavyttsinfo, heavyttsrequest, synthaudiobuffer } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import {
-  getmaximaudiocontext,
-  unlockmaximaudiocontext,
+  getliveaudiocontext,
+  unlockaudiocontext,
 } from 'zss/feature/synth/backend/wasm'
 import { createsid } from 'zss/mapping/guid'
 import { waitfor } from 'zss/mapping/tick'
@@ -23,7 +23,7 @@ export function selectttsengine(
 }
 
 function getaudiocontext(): AudioContext {
-  return getmaximaudiocontext() ?? unlockmaximaudiocontext()
+  return getliveaudiocontext() ?? unlockaudiocontext()
 }
 
 function convertarraybytes(bytes: ArrayBuffer) {

@@ -4,9 +4,9 @@ import type {
   ServerMessageResult,
 } from 'vosk-browser/dist/interfaces'
 import {
-  getmaximaudiocontext,
-  unlockmaximaudiocontext,
-} from 'zss/feature/synth/backend/wasm/maximilian'
+  getliveaudiocontext,
+  unlockaudiocontext,
+} from 'zss/feature/synth/backend/wasm/audiocontextunlock'
 import type { MAYBE } from 'zss/mapping/types'
 
 const MODEL_URL = '/models/vosk-model-small-en-us-0.15.tar.gz'
@@ -127,7 +127,7 @@ export class SpeechToText {
         },
       })
 
-      const sharedcontext = getmaximaudiocontext() ?? unlockmaximaudiocontext()
+      const sharedcontext = getliveaudiocontext() ?? unlockaudiocontext()
       this.audiocontext = sharedcontext
       this.ownsaudiocontext = false
       await waitforrunningaudiocontext(this.audiocontext)

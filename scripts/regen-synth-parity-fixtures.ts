@@ -7,6 +7,7 @@ import { chromium } from '@playwright/test'
 import {
   DRUM_PARITY_PATCHES,
   FX_PARITY_PATCHES,
+  MASTER_DYNAMICS_PARITY_PATCHES,
   WASM_PARITY_PATCHES,
 } from '../zss/feature/synth/backend/wasm/paritypatches.ts'
 import type { PARITY_AUDIO_METRICS } from '../zss/feature/synth/backend/wasm/paritymetrics.ts'
@@ -42,7 +43,7 @@ function loadexisting(): Record<string, PARITY_AUDIO_METRICS> {
 async function renderpatchmetrics(
   page: import('@playwright/test').Page,
   patchid: string,
-  kind: 'voice' | 'drum' | 'fx',
+  kind: 'voice' | 'drum' | 'fx' | 'master',
 ): Promise<PARITY_AUDIO_METRICS> {
   const params = new URLSearchParams({
     patch: patchid,
@@ -95,6 +96,9 @@ async function renderallpatches(): Promise<Record<string, PARITY_AUDIO_METRICS>>
     for (const patch of FX_PARITY_PATCHES) {
       out[patch.id] = await renderpatchmetrics(page, patch.id, 'fx')
     }
+    for (const patch of MASTER_DYNAMICS_PARITY_PATCHES) {
+      out[patch.id] = await renderpatchmetrics(page, patch.id, 'master')
+    }
     return out
   } finally {
     await browser.close()
@@ -111,6 +115,7 @@ async function main() {
     ...WASM_PARITY_PATCHES.map((p) => p.id),
     ...DRUM_PARITY_PATCHES.map((p) => p.id),
     ...FX_PARITY_PATCHES.map((p) => p.id),
+    ...MASTER_DYNAMICS_PARITY_PATCHES.map((p) => p.id),
   ]
   for (const patchid of allids) {
     const metrics = rendered[patchid]

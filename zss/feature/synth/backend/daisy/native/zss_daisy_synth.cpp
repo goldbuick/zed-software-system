@@ -12,7 +12,6 @@
 #include <cstdlib>
 
 #include "daisysp.h"
-#include "reverbsc.h"
 
 using namespace daisysp;
 
@@ -46,7 +45,7 @@ constexpr int kNoiseLfsrCount  = 131072;
 constexpr int kNoiseSoftCount  = 32768;
 constexpr int kNoiseSoftMask   = kNoiseSoftCount - 1;
 constexpr int kEchoBufLen      = 88200;
-constexpr int kRevPredelayLen  = 4410;
+constexpr int kRevCombMaxLen   = 4096;
 
 constexpr float kPi            = 3.14159265358979323846f;
 constexpr float kTwoPi         = 6.28318530718f;
@@ -76,22 +75,27 @@ constexpr float kStringBowNoiseMix     = 0.03f;
 constexpr float kDrumTickTrim  = 1.35f;
 constexpr float kDrumTweetTrim = 1.25f;
 constexpr float kVoiceOutGain  = 1.f;
-// Tone drumvolume is volumetodb(100)+10 (+15 dB); monolithic Daisy path lands ~+7 dB
 constexpr float kPlayBusGain    = 0.3548133892336194f;
-constexpr float kDrumBusGain    = 2.23606797749979f;
-constexpr float kMasterTrimDb   = -3.f;
+// Runtime staging: WASM makeup + content-tuned drum bus (parity patches use same chain; see masterdynamicsacceptance.ts).
+constexpr float kDrumBusGain    = kPlayBusGain * 1.35f;
+constexpr float kMasterTrimDb   = -2.f;
 constexpr float kMasterMakeupDb = 22.f;
+constexpr float kScMakeupDb           = 24.f;
+constexpr float kScAttackSec          = 0.005f;
+constexpr float kScReleaseSec         = 0.10f;
+constexpr float kSidechainDuckSmoothSec = 0.005f;
 constexpr float kRazzleVibratoWet      = 0.1f;
-constexpr float kRazzleChorusWet       = 0.4f;
+constexpr float kRazzleChorusWet       = 0.5f;
 constexpr float kRazzleHissGain        = 0.0035f;
 constexpr float kRazzleChorusBaseSec   = 0.007f;
 constexpr float kRazzleChorusDepthSec  = 0.007f;
 constexpr float kMasterCompThresholdDb = -28.f;
 constexpr float kMasterCompRatio       = 4.f;
+constexpr float kMasterCompKneeDb      = 30.f;
 constexpr float kMasterCompAttackSec   = 0.003f;
 constexpr float kMasterCompReleaseSec  = 0.15f;
-// ReverbSc internal gain is 0.35; match prior comb+tanh level in the wet chain.
-constexpr float kReverbOutGain    = 1.55f;
+// Reverb wet trim matches wasmfxplaycode.ts `Math.tanh(wet * 1.6)`.
+constexpr float kReverbWetGain = 1.6f;
 constexpr float kScMix            = 0.75f;
 constexpr float kScTriggerFloor   = 1e-5f;
 constexpr float kAutowahDefaultOct  = 6.f;
@@ -606,6 +610,32 @@ struct ZssVoice
   bool          dripgateprev   = false;
 };
 
+struct MaxiCombLine
+{
+  float buf[kRevCombMaxLen] = {};
+  int   pos                 = 0;
+  int   len                 = 1;
+
+  void setlen(int samples)
+  {
+    len = std::max(1, std::min(kRevCombMaxLen, samples));
+    pos = 0;
+    std::memset(buf, 0, sizeof(buf));
+  }
+
+  float dl(float input, float fb)
+  {
+    if(pos >= len)
+    {
+      pos = 0;
+    }
+    const float out  = buf[pos];
+    buf[pos]         = input * fb * 0.5f + buf[pos] * fb;
+    pos              = pos + 1;
+    return out;
+  }
+};
+
 struct ZssDrumState
 {
   int        remain = 0;
@@ -623,13 +653,12 @@ struct ZssFxGroup
   DelayLine<float, kEchoBufLen>  echo_line;
   int                            echo_delay = 1;
   float                          echo_feedback = 0.f;
-  ReverbSc                       reverb;
-  float                          rev_feedback = 0.85f;
-  float                          rev_lpfreq = 12000.f;
-  float                          rev_predelay_buf[kRevPredelayLen];
-  int                            rev_predelay_pos = 0;
-  float                          rev_predelay_fb = 0.f;
-  int                            rev_predelay_samples = 0;
+  MaxiCombLine                   rev_predelay_line;
+  MaxiCombLine                   rev_comb[4];
+  float                          rev_comb_out[4]   = {};
+  float                          rev_predelay_fb     = 0.f;
+  int                            rev_predelay_len    = 0;
+  float                          rev_feedback        = 0.58f;
   Autowah                        autowah;
 };
 
@@ -657,8 +686,13 @@ struct ZssEngine
   int          razzle_vib_pos = 0;
   int          razzle_chorus_pos = 0;
   float        comp_env = 0.f;
+  float        comp_gr_db = 0.f;
+  float        debug_duck_gain = 1.f;
+  float        debug_dry_peak = 0.f;
   float        comp_attack_coef = 0.f;
   float        comp_release_coef = 0.f;
+  float        duck_smooth = 1.f;
+  float        duck_smooth_coef = 0.f;
   int          sampleclock = 0;
   float        cached_mastervol = 0.f, cached_bggain = 0.f;
   float        cached_ttsgain = 0.f;
@@ -1769,15 +1803,30 @@ float drumsout()
 
 float reverbdecaytofeedback(float decay)
 {
+  if(decay <= 0.05f)
+  {
+    decay = 2.5f;
+  }
   decay = clampf(decay, 0.2f, 12.f);
-  float fb = 0.55f + (1.f - std::exp(-decay / 4.5f)) * 0.38f;
-  return clampf(fb, 0.5f, 0.95f);
+  float fb = 0.58f + (1.f - std::exp(-decay / 5.5f)) * 0.14f;
+  return std::min(fb, 0.72f);
 }
 
-float reverbdecaytolpfreq(float decay)
+int revcomblen(float sec)
 {
-  decay = clampf(decay, 0.2f, 12.f);
-  return clampf(20000.f - decay * 900.f, 3500.f, 18000.f);
+  return std::max(1, static_cast<int>(sec * g_engine.sample_rate + 0.5f));
+}
+
+void initreverbcombs(ZssFxGroup& fx)
+{
+  fx.rev_comb[0].setlen(revcomblen(0.029f));
+  fx.rev_comb[1].setlen(revcomblen(0.037f));
+  fx.rev_comb[2].setlen(revcomblen(0.053f));
+  fx.rev_comb[3].setlen(revcomblen(0.067f));
+  fx.rev_comb_out[0] = fx.rev_comb_out[1] = fx.rev_comb_out[2] = fx.rev_comb_out[3] = 0.f;
+  fx.rev_predelay_fb   = 0.f;
+  fx.rev_predelay_len  = 0;
+  fx.rev_predelay_line.setlen(1);
 }
 
 void refreshfxderived(int group)
@@ -1796,20 +1845,21 @@ void refreshfxderived(int group)
   fx.echo_feedback = clampf(fxparam(group, kFxEchoFeedback), 0.f, 0.95f);
   fx.echo_line.SetDelay(static_cast<float>(fx.echo_delay));
   float decay = fxparam(group, kFxReverbDecay);
-  if(decay <= 0.05f)
-  {
-    decay = 2.5f;
-  }
-  decay = clampf(decay, 0.2f, 12.f);
   fx.rev_feedback = reverbdecaytofeedback(decay);
-  fx.rev_lpfreq   = reverbdecaytolpfreq(decay);
-  fx.reverb.SetFeedback(fx.rev_feedback);
-  fx.reverb.SetLpFreq(fx.rev_lpfreq);
   float pd = fxparam(group, kFxReverbPredelay);
-  fx.rev_predelay_samples = pd <= 0.0001f ? 0 : std::max(1, static_cast<int>(pd * g_engine.sample_rate + 0.5f));
-  if(fx.rev_predelay_samples >= kRevPredelayLen)
+  int   pdlen = pd <= 0.0001f ? 0 : std::max(1, static_cast<int>(pd * g_engine.sample_rate + 0.5f));
+  if(pdlen != fx.rev_predelay_len)
   {
-    fx.rev_predelay_samples = kRevPredelayLen - 1;
+    fx.rev_predelay_len = pdlen;
+    if(pdlen <= 0)
+    {
+      fx.rev_predelay_line.setlen(1);
+    }
+    else
+    {
+      fx.rev_predelay_line.setlen(pdlen);
+    }
+    fx.rev_predelay_fb = 0.f;
   }
 }
 
@@ -1841,27 +1891,36 @@ float fxecho(float x, int group)
 float fxreverbinput(float x, int group)
 {
   ZssFxGroup& fx = g_engine.fx[group];
-  if(fx.rev_predelay_samples <= 0)
+  if(fx.rev_predelay_len <= 0)
   {
     return x;
   }
-  int   pos = fx.rev_predelay_pos % kRevPredelayLen;
-  float pdout = fx.rev_predelay_buf[pos];
-  fx.rev_predelay_buf[pos] = x + fx.rev_predelay_fb * 0.35f;
-  fx.rev_predelay_pos      = (pos + 1) % fx.rev_predelay_samples;
-  fx.rev_predelay_fb       = pdout;
+  const float pdin  = x + fx.rev_predelay_fb * 0.35f;
+  const float pdout = fx.rev_predelay_line.dl(pdin, 0.35f);
+  fx.rev_predelay_fb = pdout;
   return pdout;
 }
 
 float fxreverb(float x, int group)
 {
-  ZssFxGroup& fx  = g_engine.fx[group];
-  float       src = fxreverbinput(x, group);
-  float       wetl = 0.f;
-  float       wetr = 0.f;
-  fx.reverb.Process(src, src, &wetl, &wetr);
-  float wet = (wetl + wetr) * 0.5f * kReverbOutGain;
-  return std::tanh(wet);
+  ZssFxGroup& fx    = g_engine.fx[group];
+  const float src   = fxreverbinput(x, group);
+  const float fb    = fx.rev_feedback;
+  const float regen = fb * 0.42f;
+  const float in0   = src + fx.rev_comb_out[0] * regen;
+  const float in1   = src + fx.rev_comb_out[1] * regen;
+  const float in2   = src + fx.rev_comb_out[2] * regen;
+  const float in3   = src + fx.rev_comb_out[3] * regen;
+  const float c0    = fx.rev_comb[0].dl(in0, fb);
+  const float c1    = fx.rev_comb[1].dl(in1, fb);
+  const float c2    = fx.rev_comb[2].dl(in2, fb);
+  const float c3    = fx.rev_comb[3].dl(in3, fb);
+  fx.rev_comb_out[0] = c0;
+  fx.rev_comb_out[1] = c1;
+  fx.rev_comb_out[2] = c2;
+  fx.rev_comb_out[3] = c3;
+  const float wet   = (c0 + c1 + c2 + c3) * 0.25f;
+  return std::tanh(wet * kReverbWetGain);
 }
 
 float fxautofilterbus(float x, int group)
@@ -2127,6 +2186,14 @@ bool bgplayactive()
   return false;
 }
 
+void resetsidechainstate()
+{
+  g_engine.sc_prevgaindb  = 0.f;
+  g_engine.sc_prevlevel     = 1e-6f;
+  g_engine.sc_gainlinear    = std::pow(10.f, kScMakeupDb / 20.f);
+  g_engine.duck_smooth    = 1.f + (g_engine.sc_gainlinear - 1.f) * kScMix;
+}
+
 void initmasterchain(float sr)
 {
   g_engine.comp_env = 0.f;
@@ -2134,6 +2201,9 @@ void initmasterchain(float sr)
       1.f - std::exp(-1.f / (kMasterCompAttackSec * sr));
   g_engine.comp_release_coef =
       1.f - std::exp(-1.f / (kMasterCompReleaseSec * sr));
+  g_engine.duck_smooth_coef =
+      1.f - std::exp(-1.f / (kSidechainDuckSmoothSec * sr));
+  resetsidechainstate();
 }
 
 void initrazzlechain(float sr)
@@ -2190,11 +2260,10 @@ float sidechainkey(float bg, float tts, float drumtap)
 void sidechainupdate(float signal)
 {
   float s = std::fabs(signal);
-  const float sc_attack = 1.f - std::exp(-1.f / (0.005f * g_engine.sample_rate));
-  const float sc_release = 1.f - std::exp(-1.f / (0.06f * g_engine.sample_rate));
-  g_engine.sc_prevlevel = (s > g_engine.sc_prevlevel ? sc_attack : sc_release)
-                          * g_engine.sc_prevlevel
-                          + (1.f - (s > g_engine.sc_prevlevel ? sc_attack : sc_release)) * s * s;
+  const float sc_attack = 1.f - std::exp(-1.f / (kScAttackSec * g_engine.sample_rate));
+  const float sc_release = 1.f - std::exp(-1.f / (kScReleaseSec * g_engine.sample_rate));
+  // Tone/Maxi: power envelope always smoothed with attack coef (not amp vs power compare).
+  g_engine.sc_prevlevel += (s * s - g_engine.sc_prevlevel) * sc_attack;
   if(g_engine.sc_prevlevel < 1e-6f)
   {
     g_engine.sc_prevlevel = 1e-6f;
@@ -2216,7 +2285,7 @@ void sidechainupdate(float signal)
     gaindb = g_engine.sc_prevgaindb + (gaindb - g_engine.sc_prevgaindb) * sc_release;
   }
   g_engine.sc_prevgaindb = gaindb;
-  g_engine.sc_gainlinear = std::pow(10.f, (gaindb + 24.f) / 20.f);
+  g_engine.sc_gainlinear = std::pow(10.f, (gaindb + kScMakeupDb) / 20.f);
 }
 
 float sidechaingain()
@@ -2252,7 +2321,26 @@ float razzledelay(float* buf, int& pos, int len, float in, float delaysec)
   return out;
 }
 
-float applymastercompressor(float x)
+float compressorskneedb(float dbover, float ratio, float kneedb)
+{
+  if(dbover <= 0.f)
+  {
+    return 0.f;
+  }
+  if(kneedb <= 0.f)
+  {
+    return dbover - dbover / ratio;
+  }
+  const float halfknee = kneedb * 0.5f;
+  if(dbover < halfknee)
+  {
+    const float x = dbover + halfknee;
+    return x * x / (2.f * kneedb) * (1.f / ratio - 1.f);
+  }
+  return dbover - dbover / ratio;
+}
+
+float mastercompressorgain(float x)
 {
   const float thresh =
       std::pow(10.f, kMasterCompThresholdDb / 20.f);
@@ -2262,12 +2350,19 @@ float applymastercompressor(float x)
   g_engine.comp_env += (ax - g_engine.comp_env) * coef;
   if(g_engine.comp_env <= thresh)
   {
-    return x;
+    g_engine.comp_gr_db = 0.f;
+    return 1.f;
   }
   float dbover  = 20.f * std::log10(g_engine.comp_env / thresh);
-  float reduced = dbover - dbover / kMasterCompRatio;
+  float reduced = compressorskneedb(dbover, kMasterCompRatio, kMasterCompKneeDb);
   float gain    = std::pow(10.f, -reduced / 20.f);
-  return x * gain;
+  g_engine.comp_gr_db = 20.f * std::log10(gain);
+  return gain;
+}
+
+float applymastercompressor(float x)
+{
+  return x * mastercompressorgain(x);
 }
 
 float applyrazzle(float input)
@@ -2297,9 +2392,6 @@ float readmastervolume()
   if(g_engine.mastervolprev <= 0.001f && vol > 0.001f)
   {
     initmasterchain(g_engine.sample_rate);
-    g_engine.sc_prevgaindb = 0.f;
-    g_engine.sc_gainlinear = 1.f;
-    g_engine.sc_prevlevel  = 1e-6f;
   }
   g_engine.mastervolprev = vol;
   float db = 20.f * std::log10(vol * 0.25f) - 35.f + kMasterTrimDb + kMasterMakeupDb;
@@ -2520,8 +2612,7 @@ void initengine(float sr)
     fx.autofilter_svf.Init(sr);
     fx.autofilter_phasor.Init(sr);
     fx.echo_line.Init();
-    fx.reverb.Init(sr);
-    std::memset(fx.rev_predelay_buf, 0, sizeof(fx.rev_predelay_buf));
+    initreverbcombs(fx);
     refreshfxderived(f);
   }
   g_engine.fxvibratolfo.Init(sr);
@@ -2692,6 +2783,21 @@ float zss_razzle_tag()
   return 2.f;
 }
 
+float zss_debug_comp_gr_db()
+{
+  return g_engine.comp_gr_db;
+}
+
+float zss_debug_duck_gain()
+{
+  return g_engine.debug_duck_gain;
+}
+
+float zss_debug_dry_peak()
+{
+  return g_engine.debug_dry_peak;
+}
+
 void zss_process(float* out, int frames, const float* tts_in)
 {
   if(!g_engine.ready)
@@ -2767,18 +2873,24 @@ void zss_process(float* out, int frames, const float* tts_in)
     float key = sidechainkey(bg * kVoiceOutGain * g_engine.cached_bggain, ttssample,
                              g_engine.drumsidechain);
     sidechainupdate(key);
-    float duck = sidechaingain();
+    float ducktarget = sidechaingain();
+    g_engine.duck_smooth +=
+        (ducktarget - g_engine.duck_smooth) * g_engine.duck_smooth_coef;
+    g_engine.debug_duck_gain = ducktarget;
 
-    float playbus = playfx * duck * kVoiceOutGain * kPlayBusGain;
-    float bgbus   = bgfx * kVoiceOutGain * kPlayBusGain * g_engine.cached_bggain;
+    float playbus = playfx * g_engine.duck_smooth * kVoiceOutGain * kPlayBusGain;
+    float bgbus   = bgfx * kVoiceOutGain * g_engine.cached_bggain;
     float drumbus = drums * kDrumBusGain;
-    float dry     = playbus + bgbus + drumbus + ttssample;
+    float melodic = playbus + bgbus + ttssample;
+    float dry     = melodic + drumbus;
+    g_engine.debug_dry_peak = std::fabs(dry);
 
-    float comp  = applymastercompressor(dry);
+    float compgain = mastercompressorgain(dry);
+    float comp     = dry * compgain;
     float razz  = applyrazzle(comp);
+    float x = razz * g_engine.cached_mastervol;
     float final = g_engine.cached_mastervol > 0.f
-                      ? g_engine.master_dcblock.Process(
-                            clampf(razz * g_engine.cached_mastervol, -1.f, 1.f))
+                      ? g_engine.master_dcblock.Process(clampf(x, -1.f, 1.f))
                       : 0.f;
     if(!std::isfinite(final))
     {

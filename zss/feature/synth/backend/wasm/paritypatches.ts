@@ -1,4 +1,7 @@
 /** Canonical parity patches — broad set vs archived Tone reference. */
+import type { SYNTH_NOTE_ENTRY } from '../../playnotation'
+import { tonenotationseconds } from '../../playnotation'
+
 export type PARITY_PATCH = {
   id: string
   voiceindex: number
@@ -291,6 +294,76 @@ export const FX_PARITY_PATCHES: FX_PARITY_PATCH[] = [
 
 export const WASM_PARITY_RMS_DB_TOL = 1
 export const WASM_PARITY_PEAK_DB_TOL = 2
+
+export type MASTER_DYNAMICS_PARITY_PATCH = {
+  id: string
+  voiceconfig: string
+  durationsec: number
+  ticks: SYNTH_NOTE_ENTRY[]
+}
+
+function fastarpticks(durationsec: number, withdrums = false): SYNTH_NOTE_ENTRY[] {
+  const notes = ['C4', 'D4', 'E4', 'G4']
+  const step = tonenotationseconds('8n')
+  const ticks: SYNTH_NOTE_ENTRY[] = []
+  let t = 0
+  let idx = 0
+  while(t < durationsec - step * 0.5)
+  {
+    ticks.push([t, [0, '8n', notes[idx % notes.length]]])
+    if(withdrums && idx % 2 === 0)
+    {
+      ticks.push([t, [0, '8n', 9]])
+    }
+    t += step
+    idx += 1
+  }
+  return ticks
+}
+
+/** Master chain (sidechain + compressor) — Tone offline reference via regen:parity-fixtures:tone */
+export const MASTER_DYNAMICS_PARITY_PATCHES: MASTER_DYNAMICS_PARITY_PATCH[] = [
+  {
+    id: 'master-duck-bg',
+    voiceconfig: 'square',
+    durationsec: 2.5,
+    ticks: [
+      [0, [0, '2n', 'C4']],
+      [0.75, [4, '4n', 'C5']],
+    ],
+  },
+  {
+    id: 'master-duck-drums',
+    voiceconfig: 'square',
+    durationsec: 2.5,
+    ticks: [
+      [0, [0, '2n', 'C4']],
+      [0.6, [0, '8n', 3]],
+      [1.2, [0, '8n', 9]],
+    ],
+  },
+  {
+    id: 'master-comp-sustain',
+    voiceconfig: 'square',
+    durationsec: 2.5,
+    ticks: fastarpticks(2.5, false),
+  },
+  {
+    id: 'master-comp-drums',
+    voiceconfig: 'square',
+    durationsec: 2.5,
+    ticks: fastarpticks(2.5, true),
+  },
+  {
+    id: 'master-full-mix',
+    voiceconfig: 'square',
+    durationsec: 3,
+    ticks: [
+      ...fastarpticks(3, true),
+      [1, [4, '4n', 'E4']],
+    ],
+  },
+]
 
 /** Re-export for Tone gate documentation. */
 export { TONE_PARITY_EXCLUDED } from './paritytolerances'

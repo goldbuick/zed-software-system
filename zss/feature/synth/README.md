@@ -1,12 +1,12 @@
 # Synth Module
 
-Web-based software synthesizer with a **front-end** (protocol, state, device routing) and **WASM backends** (DaisySP default; Maximilian via `ZSS_MAXI_SYNTH=true`).
+Web-based software synthesizer with a **front-end** (protocol, state, device routing) and **DaisySP WASM backend**.
 
-Legacy Tone.js code is preserved under [`archive/tone/`](archive/tone/README.md) for reference only.
+Legacy backends are preserved under [`archive/tone/`](archive/tone/README.md) and [`archive/maxi/`](archive/maxi/README.md) for reference only.
 
 ## Documentation
 
-Detailed documentation is in **[docs/](docs/README.md)**. WASM runtime code lives under `backend/wasm/` (Maximilian) and `backend/daisy/` (DaisySP).
+Detailed documentation is in **[docs/](docs/README.md)**. Active runtime: `backend/daisy/` (DSP) + `backend/wasm/` (shared SAB, scheduler, voice/FX config).
 
 ## Quick Start
 
@@ -24,21 +24,19 @@ backend.addplay('qC4qD4qE4')
 | Area | Path | Description |
 |------|------|-------------|
 | Front-end | `frontend/` | `SynthBackend` interface, board state sync |
-| Back-end v1 | `backend/wasm/` | Maximilian worklet (`ZSS_MAXI_SYNTH=true`), voices, drums, FX, recording |
-| Back-end v2 | `backend/daisy/` | DaisySP worklet (default), same SAB + scheduler |
-| Adapter | `backend/synthbackendfactory.ts` | `SynthBackend` → Daisy or Maximilian |
+| Back-end | `backend/daisy/` | DaisySP worklet (default), voices, drums, FX, recording |
+| Shared WASM | `backend/wasm/` | SAB channels, play scheduler, voice/FX config, parity helpers |
+| Adapter | `backend/synthbackendfactory.ts` | `SynthBackend` → DaisySP |
 | Shared | `shared/`, `playnotation.ts`, `synthdefaults.ts`, `voicefxgroup.ts`, `mp3.ts` | Engine-agnostic types and helpers |
-| Archive | `archive/tone/` | Legacy Tone.js stack (do not import) |
+| Archive | `archive/tone/`, `archive/maxi/` | Legacy Tone.js and Maximilian stacks (do not import) |
 
 ## Dev flags
 
 | Env | Purpose |
 |-----|---------|
-| `ZSS_WASM_SPIKE=true` | Phase 0 audible WASM spike only (no full synth backend) |
-| `ZSS_WASM_PERF=false` | Full parity-quality Maximilian DSP (default is lighter perf preset on) |
-| `ZSS_MAXI_SYNTH=true` | Force Maximilian WASM backend (escape hatch) |
-| `ZSS_DAISY_SYNTH=false` | Opt out of DaisySP default (falls back to Maximilian) |
-| `ZSS_DAISY_PARITY=1` | With `ZSS_PARITY_RENDER=1`, run parity against Daisy offline renderer |
+| `ZSS_DAISY_PERF=false` | Full-quality Daisy DSP (default is lighter perf preset on) |
+| `ZSS_DAISY_PARITY=1` | With `ZSS_PARITY_RENDER=1`, run Daisy offline parity renders |
 | `ZSS_PARITY_RENDER=1` | Run offline parity render tests (manual gate, not CI) |
+| `ZSS_TONE_REFERENCE=1` | Compare Daisy voice/FX renders against Tone fixtures |
 
-WASM synth is always-on in production builds; COOP/COEP headers are enabled in Vite for SharedArrayBuffer.
+COOP/COEP headers are enabled in Vite for SharedArrayBuffer.

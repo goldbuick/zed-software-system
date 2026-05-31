@@ -2,8 +2,6 @@ export { bootdaisysynth } from './bootdaisysynth'
 export { createdaisysynthadapter } from './daisysynthadapter'
 export { ensuredaisysynthwasm, getdaisyengine } from './daisyengine'
 export {
-  isdaisysynthenabled,
-  ismaxisynthenabled,
   isdaisyparityenabled,
   isdaisyperfmode,
 } from './flags'

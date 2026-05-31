@@ -1,9 +1,9 @@
 import { MAYBE } from 'zss/mapping/types'
 
 import type { SabEngine } from '../shared/sabengine'
+import { getunlockedaudiocontext, setliveaudiocontext } from '../wasm/audiocontextunlock'
 import { isofflineaudiocontext } from '../wasm/audiocontextutil'
-import { ensuremaximiliancoep } from '../wasm/coopcoep'
-import { getunlockedaudiocontext } from '../wasm/maximilian'
+import { ensurewasmcoep } from '../wasm/coopcoep'
 import { initwasmfxsab } from '../wasm/wasmfxstate'
 import { wirewasmmasterchain } from '../wasm/wasmmasterchain'
 import {
@@ -211,8 +211,26 @@ function wireworkletkeepalive(ctx: AudioContext, worklet: AudioWorkletNode) {
   daisykeepalive = keepalive
 }
 
+function wiredevmeters(worklet: AudioWorkletNode) {
+  if (!import.meta.env.DEV) {
+    return
+  }
+  worklet.port.onmessage = (event: MessageEvent) => {
+    const data = event.data as {
+      zss_dsp_meter?: {
+        compgrdb: number
+        duck: number
+        drypeak: number
+      }
+    }
+    if (data?.zss_dsp_meter) {
+      console.warn('[daisy meter]', data.zss_dsp_meter)
+    }
+  }
+}
+
 async function bootdaisyoncontext(ctx: BaseAudioContext): Promise<DaisyEngine> {
-  await ensuremaximiliancoep()
+  await ensurewasmcoep()
   const wasmurl = daisyasseturl('zss_daisy.wasm')
   const processorurl = daisyasseturl('daisy-processor.js')
   if (import.meta.env.DEV) {
@@ -263,6 +281,7 @@ async function bootdaisyoncontext(ctx: BaseAudioContext): Promise<DaisyEngine> {
   ])
   worklet.port.postMessage({ zss_boot: 1, wasmbytes: bootbytes }, [bootbytes])
   await ready
+  wiredevmeters(worklet)
 
   const engine: DaisyEngine = {
     audioContext: ctx,
@@ -295,6 +314,7 @@ export async function ensuredaisysynthwasm(): Promise<DaisyEngine> {
       await resumecontext(ctx)
       const engine = await bootdaisyoncontext(ctx)
       daisyengine = engine
+      setliveaudiocontext(asaudiocontext(engine.audioContext))
       daisyready = true
       return engine
     } catch (err) {

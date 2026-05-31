@@ -30,6 +30,9 @@ const NOISE: PARITY_TOLERANCE_PROFILE = {
 }
 
 export function paritytolerancesfor(patchid: string): PARITY_TOLERANCE_PROFILE {
+  if (patchid.startsWith('master-')) {
+    return TIGHT
+  }
   if (patchid.startsWith('drum')) {
     return LOOSE
   }

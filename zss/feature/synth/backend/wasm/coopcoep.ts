@@ -1,10 +1,10 @@
-const SW_URL = '/wasm/maximilian/enable-threads.js'
-const RELOAD_GUARD_KEY = 'zss_maxim_coep_reload'
+const SW_URL = '/wasm/coep/enable-threads.js'
+const RELOAD_GUARD_KEY = 'zss_wasm_coep_reload'
 
 let coepinflight: Promise<void> | undefined
 let coepready = false
 
-export async function clearmaximilianserviceworkers() {
+export async function clearwasmcoepserviceworkers() {
   if (!('serviceWorker' in navigator)) {
     return
   }
@@ -16,8 +16,8 @@ export async function clearmaximilianserviceworkers() {
   )
 }
 
-/** Register maximilian-js-local COOP/COEP service worker for SharedArrayBuffer. */
-export async function ensuremaximiliancoep(): Promise<void> {
+/** Register COOP/COEP service worker for SharedArrayBuffer. */
+export async function ensurewasmcoep(): Promise<void> {
   if (typeof window === 'undefined') {
     return
   }
@@ -31,7 +31,7 @@ export async function ensuremaximiliancoep(): Promise<void> {
 
   // Local dev uses Vite COOP/COEP headers — the SW reload loop breaks HMR.
   if (import.meta.env.DEV) {
-    await clearmaximilianserviceworkers()
+    await clearwasmcoepserviceworkers()
     return
   }
 
@@ -52,10 +52,7 @@ export async function ensuremaximiliancoep(): Promise<void> {
       sessionStorage.removeItem(RELOAD_GUARD_KEY)
       coepready = window.crossOriginIsolated
     } catch (err) {
-      console.warn(
-        'maximilian COOP/COEP service worker registration failed',
-        err,
-      )
+      console.warn('WASM COOP/COEP service worker registration failed', err)
     }
   })()
 

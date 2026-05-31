@@ -8,7 +8,7 @@ import {
   pushwasmvibratogroup,
   wasmgroupvibratobase,
 } from '../wasmvibratosab'
-import { createmockmaxi } from '../testhelpers/mockmaxi'
+import { createmocksabengine } from '../testhelpers/mocksab'
 
 describe('wasmvibratosab', () => {
   it('uses epoch plus per-group stride layout', () => {
@@ -22,9 +22,9 @@ describe('wasmvibratosab', () => {
   })
 
   it('pushes group schedule to vibrato sab', () => {
-    const { maxi } = createmockmaxi()
+    const { engine } = createmocksabengine()
     const sab = defaultwasmvibratosab(0)
-    pushwasmvibratogroup(maxi, sab, 0, 1, 2, 0.5, 5)
+    pushwasmvibratogroup(engine, sab, 0, 1, 2, 0.5, 5)
     const base = wasmgroupvibratobase(0)
     expect(sab[base]).toBe(1)
     expect(sab[base + 1]).toBe(2)

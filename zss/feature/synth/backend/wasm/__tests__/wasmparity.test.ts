@@ -6,6 +6,7 @@ import { formatmetricsdelta, metricswithin } from '../paritymetrics'
 import {
   DRUM_PARITY_PATCHES,
   FX_PARITY_PATCHES,
+  MASTER_DYNAMICS_PARITY_PATCHES,
   WASM_PARITY_PATCHES,
 } from '../paritypatches'
 import {
@@ -21,8 +22,7 @@ const USE_TONE_REFERENCE = process.env.ZSS_TONE_REFERENCE === '1'
 const USE_DAISY_PARITY = process.env.ZSS_DAISY_PARITY === '1'
 const FIXTURE_PATH = path.join(
   __dirname,
-  '../__fixtures__',
-  USE_TONE_REFERENCE ? 'parity-metrics-tone.json' : 'parity-metrics.json',
+  '../__fixtures__/parity-metrics-tone.json',
 )
 const DAISY_DRUM_FIXTURE_PATH = path.join(
   __dirname,
@@ -49,25 +49,21 @@ function expectedmetrics(
   return voicefixtures.patches[patchid]
 }
 
-function loadlegacyfixtures(): PARITY_FIXTURE_FILE {
-  const raw = readFileSync(
-    path.join(__dirname, '../__fixtures__/parity-metrics.json'),
-    'utf8',
-  )
-  return JSON.parse(raw) as PARITY_FIXTURE_FILE
-}
-
 describe('wasm parity fixtures manifest', () => {
-  it('includes every voice patch id in wasm fixtures', () => {
-    const fixtures = loadlegacyfixtures()
+  it('includes every tone-backed voice patch id in tone fixtures', () => {
+    const fixtures = loadfixtures()
     for (const patch of WASM_PARITY_PATCHES) {
+      if ((TONE_PARITY_EXCLUDED as readonly string[]).includes(patch.id)) {
+        continue
+      }
       expect(fixtures.patches[patch.id]).toBeDefined()
     }
   })
 
-  it('lists drum and fx parity patch ids', () => {
+  it('lists drum, fx, and master dynamics parity patch ids', () => {
     expect(DRUM_PARITY_PATCHES.length).toBe(10)
     expect(FX_PARITY_PATCHES.length).toBe(7)
+    expect(MASTER_DYNAMICS_PARITY_PATCHES.length).toBe(5)
   })
 
   it('includes every drum patch id in daisy fixtures', () => {
@@ -81,31 +77,21 @@ describe('wasm parity fixtures manifest', () => {
 const CAN_RENDER_PARITY =
   typeof OfflineAudioContext !== 'undefined' &&
   typeof document !== 'undefined' &&
-  process.env.ZSS_PARITY_RENDER === '1'
+  process.env.ZSS_PARITY_RENDER === '1' &&
+  USE_DAISY_PARITY
 
 async function loadrenderer() {
-  if (USE_DAISY_PARITY) {
-    const mod = await import('../../daisy/daisyparityrender')
-    return {
-      voice: mod.renderdaisyparitypatch,
-      drum: mod.renderdaisyparitydrumpatch,
-      fx: mod.renderdaisyparityfxpatch,
-    }
-  }
-  const mod = await import('../wasmparityrender')
+  const mod = await import('../../daisy/daisyparityrender')
   return {
-    voice: mod.renderwasmparitypatch,
-    drum: async () => {
-      throw new Error('wasm drum parity render not implemented')
-    },
-    fx: async () => {
-      throw new Error('wasm fx parity render not implemented')
-    },
+    voice: mod.renderdaisyparitypatch,
+    drum: mod.renderdaisyparitydrumpatch,
+    fx: mod.renderdaisyparityfxpatch,
+    master: mod.renderdaisyparitymasterpatch,
   }
 }
 
 ;(CAN_RENDER_PARITY ? describe : describe.skip)(
-  USE_DAISY_PARITY ? 'daisy parity offline renders' : 'wasm parity offline renders',
+  'daisy parity offline renders',
   () => {
     it('matches committed reference metrics within tolerance', async () => {
       const render = await loadrenderer()
@@ -146,13 +132,14 @@ async function loadrenderer() {
       for (const patch of WASM_PARITY_PATCHES) {
         await checkpatch(patch.id, () => render.voice(patch))
       }
-      if (USE_DAISY_PARITY) {
-        for (const patch of DRUM_PARITY_PATCHES) {
-          await checkpatch(patch.id, () => render.drum(patch))
-        }
-        for (const patch of FX_PARITY_PATCHES) {
-          await checkpatch(patch.id, () => render.fx(patch))
-        }
+      for (const patch of DRUM_PARITY_PATCHES) {
+        await checkpatch(patch.id, () => render.drum(patch))
+      }
+      for (const patch of FX_PARITY_PATCHES) {
+        await checkpatch(patch.id, () => render.fx(patch))
+      }
+      for (const patch of MASTER_DYNAMICS_PARITY_PATCHES) {
+        await checkpatch(patch.id, () => render.master(patch))
       }
 
       if (failures.length > 0) {
@@ -161,12 +148,3 @@ async function loadrenderer() {
     }, 240000)
   },
 )
-
-describe('wasm parity play code', () => {
-  it('includes FM helper and per-voice volume gain', async () => {
-    const { WASM_SYNTH_VOICE_PLAY_CODE } = await import('../voiceplaycode')
-    expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('function fmcarriersample')
-    expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('function voicevolumegain')
-    expect(WASM_SYNTH_VOICE_PLAY_CODE).toContain('voicecfgvolume')
-  })
-})

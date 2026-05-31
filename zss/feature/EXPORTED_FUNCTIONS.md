@@ -156,21 +156,20 @@ Functions for parsing various file formats and converting them to internal repre
 
 ## Audio Synthesis
 
-**Files:** `synth/index.ts`, `synth/frontend/synthbackend.ts`, `synth/backend/wasmsynthadapter.ts`, `synth/backend/wasm/*`, `synth/playnotation.ts`, `synth/synthdefaults.ts`, `synth/voicefxgroup.ts`, `synth/mp3.ts`
+**Files:** `synth/index.ts`, `synth/frontend/synthbackend.ts`, `synth/backend/daisy/*`, `synth/backend/wasm/*`, `synth/playnotation.ts`, `synth/synthdefaults.ts`, `synth/voicefxgroup.ts`, `synth/mp3.ts`
 
-WASM back-end v1 with engine-agnostic front-end (`SynthBackend` interface). Legacy Tone.js code is under `synth/archive/tone/`.
+DaisySP WASM backend with engine-agnostic front-end (`SynthBackend` interface). Legacy Tone.js and Maximilian code are under `synth/archive/`.
 
 ### Initialization
-- `createsynthbackend()` - Boot WASM synth and return a `SynthBackend` adapter
-- `createwasmsynthadapter(synth)` - Wrap `WASM_SYNTH` as `SynthBackend`
-- `bootwasmsynth()` - Load Maximilian WASM and create synth instance
+- `createsynthbackend()` - Boot DaisySP synth and return a `SynthBackend` adapter
+- `bootdaisysynth()` - Load Daisy WASM and create synth instance
 - `enableaudio()` (device layer) - User-gesture audio init
 
 ### Types
 - `SynthBackend` - Back-end interface (play, voices, FX, record, broadcast)
 - `FXNAME` - Voice FX name union
 - `SOURCE_TYPE` - Enum of source types (SYNTH, ALGO_SYNTH, BELLS, RETRO_NOISE, etc.)
-- `WASM_SYNTH` - WASM synth instance type
+- `DAISY_SYNTH` - Daisy synth instance type
 - `SYNTH_INVOKE`, `SYNTH_NOTE_ENTRY`, `SYNTH_NOTE_ON` - Play notation types
 
 ### Board state
@@ -185,9 +184,9 @@ WASM back-end v1 with engine-agnostic front-end (`SynthBackend` interface). Lega
 - `SYNTH_SFX_RESET` - Constant for SFX channel reset index
 - `SYNTH_VOICE_COUNT`, `SYNTH_PLAY_VOICE_COUNT`, `SYNTH_DEFAULT_WAVE` - Voice defaults
 
-### Dev
-- `iswasmspikeenabled()` - Phase 0 audible spike flag (`ZSS_WASM_SPIKE`)
-- `spikesynthwasm()` - Boot spike only (no full backend)
+### Shared WASM helpers
+- `unlockaudiocontext()` - Create/resume shared `AudioContext` on user gesture
+- `ensurewasmcoep()` - Register COOP/COEP service worker for SharedArrayBuffer
 
 ---
 

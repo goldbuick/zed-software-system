@@ -1,11 +1,11 @@
-import { createwasmsynth } from '../maxisynth'
 import {
   resetwasmsabregistry,
   setwasmsabwritehook,
   wasmsabsnapshot,
 } from '../sabpush'
 import { sabseqsnapshot } from '../sabseq'
-import { createmockmaxi } from '../testhelpers/mockmaxi'
+import { createmocksabengine } from '../testhelpers/mocksab'
+import { createminsabsynth } from '../testhelpers/minsabsynth'
 import { WASM_DRUMS_SAB, WASM_SAB_SEQ_IDX, WASM_VOICES_SAB } from '../wasmsabchannels'
 
 describe('sabpush zero-copy', () => {
@@ -15,14 +15,14 @@ describe('sabpush zero-copy', () => {
 
   it('registers shared buffers once and reuses views on push', () => {
     const messages: unknown[] = []
-    const { maxi } = createmockmaxi()
-    const port = maxi.audioWorkletNode.port as {
+    const { engine } = createmocksabengine()
+    const port = engine.audioWorkletNode.port as {
       postMessage: (msg: unknown) => void
     }
     port.postMessage = (msg: unknown) => {
       messages.push(msg)
     }
-    const synth = createwasmsynth(maxi as any)
+    const synth = createminsabsynth(engine)
     synth.addplay('c')
     const registers = messages.filter(
       (msg) =>
@@ -45,12 +45,12 @@ describe('sabpush zero-copy', () => {
   })
 
   it('exposes write hook for tests without postMessage payloads', () => {
-    const { maxi, snapshot } = createmockmaxi()
+    const { engine, snapshot } = createmocksabengine()
     const seen: string[] = []
     setwasmsabwritehook((channelid) => {
       seen.push(channelid)
     })
-    const synth = createwasmsynth(maxi as any)
+    const synth = createminsabsynth(engine)
     synth.addplay('0')
     expect(seen).toContain(WASM_DRUMS_SAB)
     expect(snapshot(WASM_DRUMS_SAB)[0]).toBe(1)
@@ -58,8 +58,8 @@ describe('sabpush zero-copy', () => {
   })
 
   it('bumps voices seq on play without osc cfg seq change', () => {
-    const { maxi } = createmockmaxi()
-    const synth = createwasmsynth(maxi as any)
+    const { engine } = createmocksabengine()
+    const synth = createminsabsynth(engine)
     synth.addplay('c')
     const seq = sabseqsnapshot()
     expect(seq[WASM_SAB_SEQ_IDX.VOICES]).toBeGreaterThan(0)
@@ -74,14 +74,14 @@ describe('sabpush zero-copy', () => {
 
   it('registers zss_sab_seq as int32 channel', () => {
     const messages: unknown[] = []
-    const { maxi } = createmockmaxi()
-    const port = maxi.audioWorkletNode.port as {
+    const { engine } = createmocksabengine()
+    const port = engine.audioWorkletNode.port as {
       postMessage: (msg: unknown) => void
     }
     port.postMessage = (msg: unknown) => {
       messages.push(msg)
     }
-    const synth = createwasmsynth(maxi as any)
+    const synth = createminsabsynth(engine)
     const seqregister = messages.find(
       (msg) =>
         typeof msg === 'object' &&

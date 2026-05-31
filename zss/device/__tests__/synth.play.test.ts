@@ -4,12 +4,7 @@ jest.mock('zss/feature/synth', () => ({
 }))
 
 jest.mock('zss/feature/synth/backend/wasm', () => ({
-  getwasmbroadcastdestination: jest.fn(),
-  iswasmspikeenabled: jest.fn(() => false),
-  playwasmaudiobuffer: jest.fn(),
-  setwasmsynthttsvolume: jest.fn(),
-  spikesynthwasm: jest.fn(),
-  unlockmaximaudiocontext: jest.fn(),
+  unlockaudiocontext: jest.fn(),
 }))
 
 jest.mock('zss/feature/tts', () => ({
