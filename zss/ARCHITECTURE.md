@@ -4,6 +4,8 @@
 
 From the [root README](../README.md): a **ZZT-inspired, web-based fantasy terminal**—a creative-coding / game environment where boards, elements, and scripts feel like a retro terminal world. The repo is a **TypeScript monolith**: UI in [`cafe/`](../cafe/), engine in [`zss/`](.), CLI in [`src/`](../src/).
 
+**Planned (design only, not implemented):** port game sim and script execution to **`zss_runtime.wasm`** (C++ bytecode VM + firmware). See [docs/wasm-sim-port.md](../docs/wasm-sim-port.md) and [docs/multiplayer-wasm-architecture.md](../docs/multiplayer-wasm-architecture.md).
+
 ---
 
 ## Repository layout
@@ -100,6 +102,8 @@ flowchart LR
 ```
 
 CLI / headless mode ([`cafe/index.tsx`](../cafe/index.tsx) `bootheadless`) skips Canvas and calls `createplatform(..., true)` so Playwright drives the same stack without WebGL.
+
+**Planned worker layout:** one **wasm worker** (sim + synth coordinator + `zss_runtime`) and one **heavy** worker; retire sim, boardrunner, and stub workers. Multiplayer stays PeerJS on main; host MAIN book memory authoritative. Details: [docs/multiplayer-wasm-architecture.md](../docs/multiplayer-wasm-architecture.md).
 
 ---
 
@@ -203,3 +207,5 @@ Scattered under [`zss/feature/`](feature/): storage (idb), TTS/STT, URL/multipla
 ## Mental model (one paragraph)
 
 **ZSS** keeps **game and engine state in memory**, runs **script as compiled code on chips** with **firmware** defining the command vocabulary, and uses a **session-scoped message hub** so the **VM (sim worker)**, the **boardrunner worker** (per-board chip ticks), the **heavy worker** (LLM / TTS), and the **React UI (main)** stay loosely coupled: UI sends `vm:*` messages, the VM mutates memory and elects a player on each active board to be its **boardrunner** (jsonpipe-synced board + boundary slices), each tick the VM also projects the per-player gadget state into **`gadgetclient:patch`** messages, and the **gadgetclient** store feeds the Three.js terminal aesthetic.
+
+**Planned:** same hub pattern, but sim ticks and firmware run inside **`zss_runtime.wasm`** in a single wasm worker; PeerJS carries **`vm:memorypatch`** (renamed from boardrunner patch targets) from host to joins. See [docs/wasm-sim-port.md](../docs/wasm-sim-port.md).
