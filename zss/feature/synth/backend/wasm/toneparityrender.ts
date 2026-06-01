@@ -9,6 +9,9 @@ import type { SYNTH_NOTE_ENTRY } from '../../playnotation'
 import { isstring } from 'zss/mapping/types'
 
 import { synthvoicefxconfig } from '../../archive/tone/voicefx/index'
+import type { LEVEL_STABILITY_SCENARIO } from '../daisy/levelstabilityscenarios.ts'
+import { estimatesequencedurationsec } from '../daisy/scalecrewsong.ts'
+import { SYNTH_PLAY_VOICE_COUNT } from '../../synthdefaults.ts'
 import type {
   DRUM_PARITY_PATCH,
   FX_PARITY_PATCH,
@@ -156,4 +159,61 @@ export async function rendertoneparitymasterpatch(
   })
 
   return audiobuffermetrics(buffer)
+}
+
+function applytonelevelvoiceconfigs(
+  synth: ReturnType<typeof createsynth>,
+  scenario: LEVEL_STABILITY_SCENARIO,
+) {
+  if (scenario.voiceconfigs) {
+    for (let ch = 0; ch < SYNTH_PLAY_VOICE_COUNT; ch++) {
+      for (const [config, value] of scenario.voiceconfigs) {
+        synthvoiceconfig('', synth, ch, config, value)
+      }
+    }
+    return
+  }
+  if (scenario.voiceconfig) {
+    synthvoiceconfig('', synth, 0, scenario.voiceconfig, '')
+  }
+}
+
+/** Offline Tone render for level-stability / env-parity scenarios. */
+export async function rendertonelevelscenario(
+  scenario: LEVEL_STABILITY_SCENARIO,
+): Promise<AudioBuffer> {
+  if (typeof OfflineAudioContext === 'undefined') {
+    throw new Error('OfflineAudioContext not available')
+  }
+
+  let rendersec = scenario.durationsec ?? 3
+  if (scenario.playsequence) {
+    rendersec = Math.max(
+      estimatesequencedurationsec(scenario.playsequence),
+      rendersec,
+    )
+  } else if (scenario.ticks) {
+    rendersec = parityrenderlengthsec(rendersec, scenario.ticks)
+  } else if (scenario.notation) {
+    const ticks = patchentries(scenario.notation)
+    rendersec = parityrenderlengthsec(rendersec, ticks)
+  }
+
+  const buffer = await rendertoneoffline(rendersec, (synth) => {
+    synth.setplayvolume(80)
+    synth.setbgplayvolume(100)
+    applytonelevelvoiceconfigs(synth, scenario)
+
+    if (scenario.playsequence) {
+      for (let i = 0; i < scenario.playsequence.length; i++) {
+        synth.addplay(scenario.playsequence[i])
+      }
+      return
+    }
+
+    const ticks = scenario.ticks ?? patchentries(scenario.notation ?? 'hC4')
+    synth.synthreplay(ticks, rendersec)
+  })
+
+  return buffer
 }

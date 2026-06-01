@@ -75,9 +75,6 @@ EXPORTED_FUNS=(
   "_zss_control_len"
   "_zss_process"
   "_zss_razzle_tag"
-  "_zss_debug_comp_gr_db"
-  "_zss_debug_duck_gain"
-  "_zss_debug_dry_peak"
   "_malloc"
   "_free"
 )

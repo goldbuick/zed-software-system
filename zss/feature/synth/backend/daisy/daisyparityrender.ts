@@ -26,8 +26,6 @@ import { defaultwasmvoicestate } from '../wasm/wasmvoiceconfig'
 
 const PARITY_SAMPLERATE = 44100
 const PARITY_REPLAY_OFFSET_SEC = 0.05
-/** Master-dynamics patches only — slightly hotter play bus for offline Tone parity (runtime stays at 80). */
-const MASTER_PARITY_PLAY_VOLUME = 110
 
 function parityrenderlengthsec(
   durationsec: number,
@@ -141,8 +139,8 @@ export async function renderdaisyparitymasterpatch(
     for (let vi = 4; vi < 8; vi++) {
       synth.setvoiceconfig(vi, patch.voiceconfig, '')
     }
-    synth.setplayvolume(MASTER_PARITY_PLAY_VOLUME)
-    synth.setbgplayvolume(110)
+    synth.setplayvolume(80)
+    synth.setbgplayvolume(100)
     synth.synthreplay(patch.ticks, rendersec)
   })
 }

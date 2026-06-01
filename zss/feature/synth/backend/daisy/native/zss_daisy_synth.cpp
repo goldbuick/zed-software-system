@@ -74,9 +74,10 @@ constexpr float kStringBodyHiMix       = 0.1f;
 constexpr float kStringBowNoiseMix     = 0.03f;
 constexpr float kDrumTickTrim  = 1.35f;
 constexpr float kDrumTweetTrim = 1.25f;
+
 constexpr float kVoiceOutGain  = 1.f;
 constexpr float kPlayBusGain    = 0.3548133892336194f;
-// Runtime staging: WASM makeup + content-tuned drum bus (parity patches use same chain; see masterdynamicsacceptance.ts).
+// Runtime staging: WASM makeup + content-tuned drum bus (parity patches use same chain).
 constexpr float kDrumBusGain    = kPlayBusGain * 1.35f;
 constexpr float kMasterTrimDb   = -2.f;
 constexpr float kMasterMakeupDb = 22.f;
@@ -572,14 +573,130 @@ struct AlgoCfg
   float env_a[4], env_d[4], env_s[4], env_r[4];
 };
 
+/** Linear ADSR matching archived zssenv + Tone triggerAttack reset on note-on. */
+struct ZssLinearEnv
+{
+  float attack_sec  = 0.01f;
+  float decay_sec   = 0.01f;
+  float sustain     = 0.5f;
+  float release_sec = 0.01f;
+  float level       = 0.f;
+  float sample_rate = 44100.f;
+  float atkinc      = 0.f;
+  float decinc      = 0.f;
+  float relinc      = 0.f;
+  bool  gateprev    = false;
+
+  enum Stage
+  {
+    Idle = 0,
+    Attack,
+    Decay,
+    Sustain,
+    Release
+  };
+  Stage stage = Idle;
+
+  void refreshinc()
+  {
+    atkinc = 1.f / std::max(1.f, attack_sec * sample_rate);
+    decinc = (1.f - sustain) / std::max(1.f, decay_sec * sample_rate);
+    relinc = sustain / std::max(1.f, release_sec * sample_rate);
+  }
+
+  void init(float sr)
+  {
+    sample_rate = sr;
+    setparams(0.01f, 0.01f, 0.5f, 0.01f);
+    reset();
+  }
+
+  void reset()
+  {
+    level    = 0.f;
+    stage    = Idle;
+    gateprev = false;
+  }
+
+  void setparams(float a, float d, float s, float r)
+  {
+    attack_sec  = std::max(0.001f, a);
+    decay_sec   = std::max(0.001f, d);
+    sustain     = clampf(s, 0.f, 1.f);
+    release_sec = std::max(0.001f, r);
+    refreshinc();
+  }
+
+  float process(bool gate)
+  {
+    const bool g = gate;
+    if(g && !gateprev)
+    {
+      stage = Attack;
+      level = 0.f;
+    }
+    else if(!g && gateprev)
+    {
+      stage = Release;
+    }
+    gateprev = g;
+
+    switch(stage)
+    {
+      case Attack:
+        level += atkinc;
+        if(level >= 1.f)
+        {
+          level = 1.f;
+          stage = Decay;
+        }
+        break;
+      case Decay:
+        level -= decinc;
+        if(level <= sustain)
+        {
+          level = sustain;
+          stage = g ? Sustain : Release;
+        }
+        break;
+      case Sustain:
+        level = sustain;
+        if(!g)
+        {
+          stage = Release;
+        }
+        break;
+      case Release:
+        level -= relinc;
+        if(level <= 0.f)
+        {
+          level = 0.f;
+          stage = Idle;
+        }
+        break;
+      case Idle:
+      default:
+        level = 0.f;
+        if(g)
+        {
+          stage = Attack;
+          level = 0.f;
+        }
+        break;
+    }
+    return level;
+  }
+};
+
 struct ZssVoice
 {
   Oscillator synthosc, synthmod, dootosc;
   Oscillator sparklemod, sparklecar;
   Oscillator algoops[4];
-  Adsr       env, dootenv, sparkleenv, algooutenv;
+  ZssLinearEnv voiceenv;
+  ZssLinearEnv modenv;
+  Adsr       dootenv, sparkleenv, algooutenv;
   Adsr       algoenvs[4];
-  Adsr       modenv;
   float      playfreq = 440.f;
   float      glidestart = 440.f, glidetarget = 440.f;
   int        glidetotal = 0, glideremain = 0;
@@ -588,11 +705,15 @@ struct ZssVoice
   float      dootpitch = 1.f;
   float      noisephase = 0.f, noisesample = 0.f;
   uint32_t   noiserng = 0;
-  int        modenvprev_a = -1;
-  float      modenvprev_d = -1.f, modenvprev_s = -1.f, modenvprev_r = -1.f;
+  float modenvprev_a = -1.f;
+  float modenvprev_d = -1.f, modenvprev_s = -1.f, modenvprev_r = -1.f;
   float      envprev_a = -1.f, envprev_d = -1.f, envprev_s = -1.f, envprev_r = -1.f;
-  float      dootprev_a = -1.f, algoprev_a = -1.f;
+  float      dootprev_a = -1.f, dootprev_d = -1.f, dootprev_s = -1.f, dootprev_r = -1.f;
+  float      algoprev_a = -1.f, algoprev_d = -1.f, algoprev_s = -1.f, algoprev_r = -1.f;
   float      algoenvprev_a[4] = {-1.f, -1.f, -1.f, -1.f};
+  float      algoenvprev_d[4] = {-1.f, -1.f, -1.f, -1.f};
+  float      algoenvprev_s[4] = {-1.f, -1.f, -1.f, -1.f};
+  float      algoenvprev_r[4] = {-1.f, -1.f, -1.f, -1.f};
   float      lastenv = 0.f;
   StringVoice stringvoice;
   Svf           stringlp;
@@ -992,34 +1113,37 @@ void applyvoiceenv(ZssVoice& v, int type, float a, float d, float s, float r)
 {
   if(type == kDoot)
   {
-    if(v.dootprev_a != a)
+    if(v.dootprev_a != a || v.dootprev_d != d || v.dootprev_s != s || v.dootprev_r != r)
     {
       v.dootenv.SetTime(ADSR_SEG_ATTACK, std::max(0.001f, a));
       v.dootenv.SetTime(ADSR_SEG_DECAY, std::max(0.001f, d));
       v.dootenv.SetSustainLevel(clampf(s, 0.f, 1.f));
       v.dootenv.SetTime(ADSR_SEG_RELEASE, std::max(0.001f, r));
       v.dootprev_a = a;
+      v.dootprev_d = d;
+      v.dootprev_s = s;
+      v.dootprev_r = r;
     }
     return;
   }
   if(type == kAlgoSynth)
   {
-    if(v.algoprev_a != a)
+    if(v.algoprev_a != a || v.algoprev_d != d || v.algoprev_s != s || v.algoprev_r != r)
     {
       v.algooutenv.SetTime(ADSR_SEG_ATTACK, std::max(0.001f, a));
       v.algooutenv.SetTime(ADSR_SEG_DECAY, std::max(0.001f, d));
       v.algooutenv.SetSustainLevel(clampf(s, 0.f, 1.f));
       v.algooutenv.SetTime(ADSR_SEG_RELEASE, std::max(0.001f, r));
       v.algoprev_a = a;
+      v.algoprev_d = d;
+      v.algoprev_s = s;
+      v.algoprev_r = r;
     }
     return;
   }
   if(v.envprev_a != a || v.envprev_d != d || v.envprev_s != s || v.envprev_r != r)
   {
-    v.env.SetTime(ADSR_SEG_ATTACK, std::max(0.001f, a));
-    v.env.SetTime(ADSR_SEG_DECAY, std::max(0.001f, d));
-    v.env.SetSustainLevel(clampf(s, 0.f, 1.f));
-    v.env.SetTime(ADSR_SEG_RELEASE, std::max(0.001f, r));
+    v.voiceenv.setparams(a, d, s, r);
     v.envprev_a = a;
     v.envprev_d = d;
     v.envprev_s = s;
@@ -1149,15 +1273,14 @@ float synthsource(ZssVoice& v, int vi, float freq, bool gate, float detune,
   int    pcount = static_cast<int>(cfg.partialcount > 0.f ? cfg.partialcount : 0.f);
   float  sig    = 0.f;
 
-  if(static_cast<int>(cfg.modenv_a * 1000) != v.modenvprev_a
-     || cfg.modenv_d != v.modenvprev_d)
+  if(v.modenvprev_a != cfg.modenv_a || v.modenvprev_d != cfg.modenv_d
+     || v.modenvprev_s != cfg.modenv_s || v.modenvprev_r != cfg.modenv_r)
   {
-    v.modenv.SetTime(ADSR_SEG_ATTACK, std::max(0.001f, cfg.modenv_a));
-    v.modenv.SetTime(ADSR_SEG_DECAY, std::max(0.001f, cfg.modenv_d));
-    v.modenv.SetSustainLevel(clampf(cfg.modenv_s, 0.f, 1.f));
-    v.modenv.SetTime(ADSR_SEG_RELEASE, std::max(0.001f, cfg.modenv_r));
-    v.modenvprev_a = static_cast<int>(cfg.modenv_a * 1000);
+    v.modenv.setparams(cfg.modenv_a, cfg.modenv_d, cfg.modenv_s, cfg.modenv_r);
+    v.modenvprev_a = cfg.modenv_a;
     v.modenvprev_d = cfg.modenv_d;
+    v.modenvprev_s = cfg.modenv_s;
+    v.modenvprev_r = cfg.modenv_r;
   }
 
   if(pcount > 0)
@@ -1182,14 +1305,14 @@ float synthsource(ZssVoice& v, int vi, float freq, bool gate, float detune,
   }
   else if(osctype >= 10 && osctype <= 13)
   {
-    float moddepth = v.modenv.Process(gate);
+    float moddepth = v.modenv.process(gate);
     float modsig   = oscmodwave(v.synthmod, cfg.modtype, hz * harm) * moddepth;
     int   cartype  = osctype - 10;
     sig            = oscbasicwave(v.synthosc, cartype, hz) * (0.5f + 0.5f * modsig);
   }
   else if(osctype >= 20 && osctype <= 23)
   {
-    float moddepth = v.modenv.Process(gate);
+    float moddepth = v.modenv.process(gate);
     int   cartype  = osctype == 20 ? 1 : (osctype == 21 ? 0 : (osctype == 22 ? 2 : 3));
     sig = fmcarriersample(v.synthosc, v.synthmod, cfg.modtype, hz, modhz, modidx,
                           moddepth, cartype);
@@ -1261,13 +1384,17 @@ float algovoice(ZssVoice& v, int vi, float freq, bool gate, int algo, float vfre
 
   for(int oi = 0; oi < 4; ++oi)
   {
-    if(v.algoenvprev_a[oi] != cfg.env_a[oi])
+    if(v.algoenvprev_a[oi] != cfg.env_a[oi] || v.algoenvprev_d[oi] != cfg.env_d[oi]
+       || v.algoenvprev_s[oi] != cfg.env_s[oi] || v.algoenvprev_r[oi] != cfg.env_r[oi])
     {
       v.algoenvs[oi].SetTime(ADSR_SEG_ATTACK, std::max(0.001f, cfg.env_a[oi]));
       v.algoenvs[oi].SetTime(ADSR_SEG_DECAY, std::max(0.001f, cfg.env_d[oi]));
       v.algoenvs[oi].SetSustainLevel(clampf(cfg.env_s[oi], 0.f, 1.f));
       v.algoenvs[oi].SetTime(ADSR_SEG_RELEASE, std::max(0.001f, cfg.env_r[oi]));
       v.algoenvprev_a[oi] = cfg.env_a[oi];
+      v.algoenvprev_d[oi] = cfg.env_d[oi];
+      v.algoenvprev_s[oi] = cfg.env_s[oi];
+      v.algoenvprev_r[oi] = cfg.env_r[oi];
     }
   }
 
@@ -1994,10 +2121,6 @@ float fxautowahbus(float x, int group)
   }
   float sensitivity = fxparam(group, kFxAutowahSens);
   float gaindb      = fxparam(group, kFxAutowahGain);
-  if(gaindb <= 0.f && gaindb != 0.f)
-  {
-    gaindb = kAutowahDefaultGain;
-  }
 
   float input = x * autowahinputboost(sensitivity);
   fx.autowah.SetWah(clampf(octaves / 6.f, 0.f, 1.f));
@@ -2189,8 +2312,8 @@ bool bgplayactive()
 void resetsidechainstate()
 {
   g_engine.sc_prevgaindb  = 0.f;
-  g_engine.sc_prevlevel     = 1e-6f;
-  g_engine.sc_gainlinear    = std::pow(10.f, kScMakeupDb / 20.f);
+  g_engine.sc_prevlevel   = 1e-6f;
+  g_engine.sc_gainlinear  = std::pow(10.f, kScMakeupDb / 20.f);
   g_engine.duck_smooth    = 1.f + (g_engine.sc_gainlinear - 1.f) * kScMix;
 }
 
@@ -2358,11 +2481,6 @@ float mastercompressorgain(float x)
   float gain    = std::pow(10.f, -reduced / 20.f);
   g_engine.comp_gr_db = 20.f * std::log10(gain);
   return gain;
-}
-
-float applymastercompressor(float x)
-{
-  return x * mastercompressorgain(x);
 }
 
 float applyrazzle(float input)
@@ -2533,7 +2651,7 @@ void initvoice(ZssVoice& v, float sr)
     v.algoops[o].Init(sr);
     v.algoenvs[o].Init(sr);
   }
-  v.env.Init(sr);
+  v.voiceenv.init(sr);
   v.dootenv.Init(sr);
   v.dootenv.SetTime(ADSR_SEG_ATTACK, 0.001f);
   v.dootenv.SetTime(ADSR_SEG_DECAY, 0.4f);
@@ -2545,11 +2663,8 @@ void initvoice(ZssVoice& v, float sr)
   v.sparkleenv.SetSustainLevel(0.f);
   v.sparkleenv.SetTime(ADSR_SEG_RELEASE, 0.321f);
   v.algooutenv.Init(sr);
-  v.modenv.Init(sr);
-  v.modenv.SetTime(ADSR_SEG_ATTACK, 0.01f);
-  v.modenv.SetTime(ADSR_SEG_DECAY, 0.01f);
-  v.modenv.SetSustainLevel(1.f);
-  v.modenv.SetTime(ADSR_SEG_RELEASE, 0.08f);
+  v.modenv.init(sr);
+  v.modenv.setparams(0.01f, 0.01f, 1.f, 0.5f);
   v.noiserng = (0x6d2b79f5u + 7919u) >> 0;
   v.stringvoice.Init(sr);
   v.stringvoicepreset = -1;
@@ -2650,19 +2765,19 @@ float processvoice(int vi, float vstart[kVibratoGroups], float vend[kVibratoGrou
     }
     v.synthgateprev = gate;
     float hz     = glidefreq(v, vi, freq > 0.f ? freq : 440.f, kSynth, port);
-    float envout = v.env.Process(gate);
+    float envout = v.voiceenv.process(gate);
     v.lastenv    = envout;
     out          = synthsource(v, vi, hz, gate, detune, osctype, vfreq) * envout;
   }
   else if(type >= kRetroNoise && type <= kMetallicNoise)
   {
-    float envout = v.env.Process(gate);
+    float envout = v.voiceenv.process(gate);
     v.lastenv    = envout;
     out          = noisevoice(v, vi, type, freq, gate, envout);
   }
   else if(type == kHollowNoise || type == kWhiteNoise)
   {
-    float envout = v.env.Process(gate);
+    float envout = v.voiceenv.process(gate);
     v.lastenv    = envout;
     out          = noisevoice(v, vi, type, freq, gate, envout);
   }
@@ -2708,7 +2823,7 @@ float processvoice(int vi, float vstart[kVibratoGroups], float vend[kVibratoGrou
     applystringvoicepreset(v, algo == 0 ? 0 : 1);
     if(algo == 0)
     {
-      float envout = v.env.Process(gate);
+      float envout = v.voiceenv.process(gate);
       float detunecents, pwmdepth, vibcents, filterscale;
       applystringensembleparams(v, cfg, detunecents, pwmdepth, vibcents, filterscale);
       out = stringmachinevoice(v, hz, envout, detunecents, pwmdepth, vibcents,
@@ -2740,7 +2855,7 @@ float processvoice(int vi, float vstart[kVibratoGroups], float vend[kVibratoGrou
   }
   else
   {
-    float envout = v.env.Process(gate);
+    float envout = v.voiceenv.process(gate);
     v.lastenv    = envout;
     out          = synthsource(v, vi, freq, gate, detune, osctype, vfreq) * envout;
   }
@@ -2781,21 +2896,6 @@ int zss_control_len()
 float zss_razzle_tag()
 {
   return 2.f;
-}
-
-float zss_debug_comp_gr_db()
-{
-  return g_engine.comp_gr_db;
-}
-
-float zss_debug_duck_gain()
-{
-  return g_engine.debug_duck_gain;
-}
-
-float zss_debug_dry_peak()
-{
-  return g_engine.debug_dry_peak;
 }
 
 void zss_process(float* out, int frames, const float* tts_in)
@@ -2887,8 +2987,8 @@ void zss_process(float* out, int frames, const float* tts_in)
 
     float compgain = mastercompressorgain(dry);
     float comp     = dry * compgain;
-    float razz  = applyrazzle(comp);
-    float x = razz * g_engine.cached_mastervol;
+    float razz     = applyrazzle(comp);
+    float x       = razz * g_engine.cached_mastervol;
     float final = g_engine.cached_mastervol > 0.f
                       ? g_engine.master_dcblock.Process(clampf(x, -1.f, 1.f))
                       : 0.f;

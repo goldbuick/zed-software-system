@@ -37,7 +37,6 @@
         )
         outel.textContent = JSON.stringify({
           metrics: result.metrics,
-          compressormetrics: result.compressormetrics,
         })
       } catch (err) {
         outel.textContent = `error: ${err?.message ?? err}`

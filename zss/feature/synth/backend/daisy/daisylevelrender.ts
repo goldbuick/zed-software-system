@@ -3,18 +3,12 @@ import type { SYNTH_NOTE_ENTRY } from '../../playnotation'
 import { SYNTH_PLAY_VOICE_COUNT, SYNTH_VOICE_COUNT } from '../../synthdefaults'
 import { isstring } from 'zss/mapping/types'
 
-import type { DaisyEngine } from './daisyengine'
 import {
   bootisolateddaisyengine,
   startisolateddaisydsp,
 } from './daisyengine'
 import { createdaisysynth } from './daisysynth'
 import type { LEVEL_STABILITY_SCENARIO } from './levelstabilityscenarios'
-import {
-  analyzecompressormeters,
-  type COMPRESSOR_METER_SAMPLE,
-  type COMPRESSOR_METER_STATS,
-} from '../wasm/compressormetrics'
 import {
   analyzelevelstability,
   comparelevelstability,
@@ -37,17 +31,14 @@ export type LEVEL_STABILITY_RENDER = {
   samples: Float32Array
   samplerate: number
   rendersec: number
-  compressormetrics?: COMPRESSOR_METER_STATS
 }
 
 export type LEVEL_STABILITY_SCENARIO_RESULT = {
   metrics: LEVEL_STABILITY_METRICS
-  compressormetrics?: COMPRESSOR_METER_STATS
 }
 
 export type LEVEL_STABILITY_SUITE_RESULT = {
   metrics: Record<string, LEVEL_STABILITY_METRICS>
-  compressormetrics: Record<string, COMPRESSOR_METER_STATS | undefined>
   diagnosis: string[]
 }
 
@@ -138,32 +129,6 @@ function monobuffer(buffer: AudioBuffer): Float32Array {
   return mono
 }
 
-function wiremetercapture(engine: DaisyEngine): {
-  read: () => COMPRESSOR_METER_SAMPLE[]
-  dispose: () => void
-} {
-  const samples: COMPRESSOR_METER_SAMPLE[] = []
-  const worklet = engine.audioWorkletNode
-  const prior = worklet.port.onmessage
-  const handler = (event: MessageEvent) => {
-    if (typeof prior === 'function') {
-      prior.call(worklet.port, event)
-    }
-    const meter = (event.data as { zss_dsp_meter?: COMPRESSOR_METER_SAMPLE })
-      ?.zss_dsp_meter
-    if (meter) {
-      samples.push(meter)
-    }
-  }
-  worklet.port.onmessage = handler
-  return {
-    read: () => samples.slice(),
-    dispose: () => {
-      worklet.port.onmessage = prior
-    },
-  }
-}
-
 function estimatesequencefromplays(plays: string[]): number {
   let pacertime = 0
   for (let p = 0; p < plays.length; p++) {
@@ -200,7 +165,6 @@ export async function renderdaisylevelscenario(
   const engine = await bootisolateddaisyengine(offlinectx)
   await startisolateddaisydsp(engine, 80, 100, WASM_DEFAULT_TTS_VOLUME)
 
-  const meters = scenario.compressormeters ? wiremetercapture(engine) : undefined
   const synth = createdaisysynth(engine)
   synth.applyreplay(buildreplay(scenario))
   applyscenariovoiceconfigs(synth, scenario)
@@ -220,16 +184,11 @@ export async function renderdaisylevelscenario(
 
   const buffer = await offlinectx.startRendering()
   synth.destroy()
-  const compressormetrics = meters
-    ? analyzecompressormeters(meters.read())
-    : undefined
-  meters?.dispose()
 
   return {
     samples: monobuffer(buffer),
     samplerate: buffer.sampleRate,
     rendersec,
-    compressormetrics,
   }
 }
 
@@ -240,7 +199,6 @@ export async function renderdaisylevelmetrics(
   const render = await renderdaisylevelscenario(scenario)
   return {
     metrics: analyzelevelstability(render.samples, render.samplerate, windowms),
-    compressormetrics: render.compressormetrics,
   }
 }
 
@@ -250,16 +208,12 @@ export async function runlevelstabilitysuite(
   windowms = 46,
 ): Promise<LEVEL_STABILITY_SUITE_RESULT> {
   const metrics: Record<string, LEVEL_STABILITY_METRICS> = {}
-  const compressormetrics: Record<string, COMPRESSOR_METER_STATS | undefined> =
-    {}
   for (const scenario of scenarios) {
     const result = await renderdaisylevelmetrics(scenario, windowms)
     metrics[scenario.id] = result.metrics
-    compressormetrics[scenario.id] = result.compressormetrics
   }
   return {
     metrics,
-    compressormetrics,
     diagnosis: diagnoselevelstability(metrics, comparepairs),
   }
 }

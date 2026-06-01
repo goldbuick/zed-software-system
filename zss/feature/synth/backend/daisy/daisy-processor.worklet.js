@@ -44,7 +44,6 @@ class DaisyProcessor extends AudioWorkletProcessor {
     this.pendingwasmbytes = null
     this.eminitstartframe = null
     this.eminiterrposted = false
-    this.metersamples = 0
     const optbytes = options?.processorOptions?.wasmbytes
     if (optbytes) {
       this.pendingwasmbytes = optbytes
@@ -224,19 +223,6 @@ class DaisyProcessor extends AudioWorkletProcessor {
     const base = this.outptr >> 2
     for (let i = 0; i < output.length; i++) {
       output[i] = heap[base + i]
-    }
-    if (typeof this.wasm._zss_debug_comp_gr_db === 'function') {
-      this.metersamples += output.length
-      if (this.metersamples >= sampleRate) {
-        this.metersamples = 0
-        this.port.postMessage({
-          zss_dsp_meter: {
-            compgrdb: this.wasm._zss_debug_comp_gr_db(),
-            duck: this.wasm._zss_debug_duck_gain(),
-            drypeak: this.wasm._zss_debug_dry_peak(),
-          },
-        })
-      }
     }
     return true
   }

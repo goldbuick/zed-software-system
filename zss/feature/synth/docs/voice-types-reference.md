@@ -43,7 +43,7 @@ Config path: `#synth` → [audio.ts](../../firmware/audio.ts) `handlesynthvoice`
 | `restart` | — | — | Full `applyreset()` | Resets all 8 voices + osc + algo + FX SAB | Tone: [source.ts](../archive/tone/source.ts); Daisy: [daisysynth.ts](../backend/daisy/daisysynth.ts) |
 | `vol` / `volume` | — | number (dB) | **Tone**: instrument volume from `get()` snapshot | **`0` dB** | All 10 WASM voice types via `zss_voicecfg` slot 5 |
 | `port` / `portamento` | — | number (seconds) | **Tone**: `0` (Monophonic) | `0` | Only `SYNTH` + `ALGO_SYNTH`; error on retro in Tone |
-| `env` / `envelope` | — | `[a, d, s, r]` | See per-type below | `0.01, 0.01, 0.5, 0.01` (**Tone ZSS reset**) | WASM: [wasmvoicecfgsab.ts](../backend/wasm/wasmvoicecfgsab.ts) |
+| `env` / `envelope` | — | `[a, d, s, r]` seconds + sustain 0–1 | See per-type below | `0.01, 0.01, 0.5, 0.01` (**Tone ZSS reset**) | SAB → [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp) **`ZssLinearEnv`** (linear ramps, note-on reset to 0, Tone `triggerAttack` parity). Archived Maxi used `zssenv` (ms) in play code. |
 
 **Boot / `#synth` no-args / memory default wave:** `square` (**ZSS**, [synthdefaults.ts](../synthdefaults.ts)) on both backends.
 
@@ -73,7 +73,7 @@ Selecting any validated wave name switches voice to `SYNTH`. Names validated by 
 
 | Osc kind | `#synth` params | WASM default | Tone default (when applicable) |
 |----------|-----------------|--------------|--------------------------------|
-| **All SYNTH** | `env` / `envelope`, `port` / `portamento` | env above; port `0` | Tone reset env `0.01/0.01/0.5/0.01`; port `0` |
+| **All SYNTH** | `env` / `envelope`, `port` / `portamento` | env above; port `0` | Tone reset env `0.01/0.01/0.5/0.01`; port `0` | Daisy: linear **`ZssLinearEnv`** on voice bus; AM/FM **`modenv`** uses same helper |
 | **sine/square/triangle/sawtooth/custom** | `phase` | `0` | **Tone** Oscillator: `0` |
 | **pulse** | `width` | `0.2` | **Tone** PulseOscillator: `0.2` |
 | **pwm** | `modfreq`, `modulationfrequency` | `1` | **Tone** PWMOscillator: `1` Hz (range 0.1–5) |

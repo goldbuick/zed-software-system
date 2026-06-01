@@ -23,7 +23,7 @@ flowchart LR
 - **Maximilian** (archived): [`archive/maxi/`](../archive/maxi/) — generated play code, no longer selectable at runtime
 - **Tone** (archived): [`archive/tone/`](../archive/tone/) — parity ground truth; Daisy voice/FX Tone-gated, drums use Daisy-native fixtures
 
-**DaisySP runtime usage:** `Oscillator`, `Adsr`, `Decimator`, `Overdrive`, `Svf`, `Phasor`, `DelayLine`, `Chorus`, `WhiteNoise`, `DcBlock`, `OnePole`, `Autowah`, `StringVoice` (`#synth pluck` strike), `ModalVoice` (bells), `Drip`, and (Daisy drums) `AnalogBassDrum`, `SyntheticBassDrum`. **`#synth string`** uses custom SOS ensemble DSP (saws + `Svf`/`OnePole`). **Main compressor:** custom full-mix envelope + 30 dB knee (not DaisySP-LGPL `Compressor`). **Sidechain duck:** custom power-domain envelope (ported from Tone worklet). **`#reverb`** uses custom 4-comb + predelay (same topology as WASM/Maxi, Tone.js practical match). Custom C++ remains for sidechain duck, main comp, noise voices, doot/algo, drum EQ biquads, reverb combs.
+**DaisySP runtime usage:** `Oscillator`, `Adsr` (doot/sparkle/algo operators only), `Decimator`, `Overdrive`, `Svf`, `Phasor`, `DelayLine`, `Chorus`, `WhiteNoise`, `DcBlock`, `OnePole`, `Autowah`, `StringVoice` (`#synth pluck` strike), `ModalVoice` (bells), `Drip`, and (Daisy drums) `AnalogBassDrum`, `SyntheticBassDrum`. **`#synth env`** on play voices uses custom **`ZssLinearEnv`** (linear ADSR, note-on reset, Tone parity) — not DaisySP `Adsr`. **`#synth string`** uses custom SOS ensemble DSP (saws + `Svf`/`OnePole`). **Main compressor:** removed (Daisy). **Sidechain duck:** custom power-domain envelope (ported from Tone worklet); **disabled on Daisy runtime** (`kSidechainDuckEnabled = false`). **`#reverb`** uses custom 4-comb + predelay (same topology as WASM/Maxi, Tone.js practical match). Custom C++ remains for sidechain duck code (bypassed at runtime), noise voices, doot/algo, drum EQ biquads, reverb combs.
 
 ---
 
@@ -33,7 +33,7 @@ Enum: [`shared/sourcetype.ts`](../shared/sourcetype.ts). Dispatch: `VoiceType` i
 
 | ZSS name | Enum | Maxi (archived) | DaisySP WASM | Tone (archived) | Closest [DaisySP feature](https://github.com/electro-smith/DaisySP#-features) | Key files |
 |----------|------|------------|--------------|-----------------|-------------------------------------------------------------------------------|-----------|
-| `sine`/`square`/…/`fat*` | `SYNTH` | `maxiOsc` + hand-rolled ADSR; AM/FM/PWM/fat | `Oscillator` + `Adsr` | `Tone.Synth` + `OmniOscillator` | Subtractive / FM (`Oscillator`, `Adsr`) | `wasmoscplaycode.ts`, `wasmosctype.ts`, cpp `synthsource()` |
+| `sine`/`square`/…/`fat*` | `SYNTH` | `maxiOsc` + hand-rolled ADSR; AM/FM/PWM/fat | `ZssLinearEnv` + `Oscillator` | `Tone.Synth` + `OmniOscillator` | Subtractive / FM (`Oscillator`, linear env) | `wasmoscplaycode.ts`, `wasmosctype.ts`, cpp `synthsource()` |
 | `retro` | `RETRO_NOISE` | LFSR table resample + ADSR | Custom LFSR tables + ADSR | `Sampler` + shelf filters | Noise (custom, not `Whitenoise`) | `noiseplaycode.ts`, `noisewave.ts` |
 | `buzz` | `BUZZ_NOISE` | same (different LFSR tap) | same | same | Noise | `noisemeta.ts` |
 | `clang` | `CLANG_NOISE` | same | same | same | Noise | same |
@@ -73,25 +73,24 @@ Serial wet chain (Maxi + Daisy): **fc → echo → reverb → autofilter → dis
 
 | Processor | Role | Maximilian | DaisySP WASM | Tone | DaisySP module | Swap status | Key files |
 |-----------|------|------------|--------------|------|----------------|-------------|-----------|
-| Sidechain duck | Duck `#play` when bg/TTS/drums hit | Power-domain detector; clap+bass tap | Custom envelope + TTS key | `SidechainCompressor` worklet | Custom | Keep custom | `wasmsidechainplaycode.ts` |
-| Main compressor | Bus dynamics | -28 dB / 4:1 / 3 ms / 150 ms | Custom envelope (WASM) | `Tone.Compressor` knee 30 dB | Custom 30 dB knee + full-mix detect | **Done** (Daisy) | `zss_daisy_synth.cpp`, `wasmmasterplaycode.ts` |
+| Sidechain duck | Duck `#play` when bg/TTS/drums hit | Power-domain detector; clap+bass tap | Custom envelope + TTS key | `SidechainCompressor` worklet | Custom | **Disabled** (Daisy) | `wasmsidechainplaycode.ts` |
+| Main compressor | Bus dynamics | -28 dB / 4:1 / 3 ms / 150 ms | Custom envelope (WASM) | `Tone.Compressor` knee 30 dB | **Removed** (Daisy) | — | `wasmmasterplaycode.ts` |
 | Razzle | Master character | `maxiDelayline` + `maxiOsc` | Manual vibrato delay + `Chorus` + hiss | `Vibrato` + `Chorus` + noise | `Chorus` (partial) | **Partial swap** | `wasmrazzleplaycode.ts` |
-| Output safety | Peak control | — | `Limiter` | — | Peak ceiling ~−2.9 dBFS (`0.71`) | **Done** (Daisy) | cpp `masterpeaklimit()` |
+| Output safety | Peak control | — | `Limiter` | — | Final clamp | **Done** (Daisy) | cpp `zss_process()` |
 | DC block | Master out | — | `DcBlock` | — | `DcBlock` | **Swapped** | cpp `zss_process()` |
-| Master trim | Level staging | -2 dB trim + 22 dB makeup | Same | Tone graph gains | -2 dB + **23.06 dB** makeup, drum bus **×1.35** play | — | [`wasmlevels.ts`](../backend/wasm/wasmlevels.ts), [`masterdynamicsacceptance.ts`](../backend/daisy/masterdynamicsacceptance.ts) |
+| Master trim | Level staging | -2 dB trim + 22 dB makeup | Same | Tone graph gains | **-10 dB trim**, 0 makeup (no comp); play **Tone volumetodb(20)**; drum **play × 1.35** | — | [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp) |
 
-**Sidechain params (code):** threshold -42 dB, ratio **5:1**, attack 5 ms, release 60 ms, mix 0.75, makeup +24 dB; bg/TTS send -12 dB, drum send -28 dB.
+**Sidechain params (Daisy):** **duck disabled** (`kSidechainDuckEnabled = false`); play bus keeps idle makeup (+24 dB × mix 0.75). WASM/Tone: threshold -42 dB, ratio 5:1, attack 5 ms, release 100 ms, mix 0.75, makeup +24 dB; bg/TTS send -12 dB, drum send -28 dB.
 
 ```mermaid
 flowchart LR
   play["play bus + voice FX"]
   duck["sidechain gain"]
   mix["+ bgplay + TTS + drums"]
-  comp["main compressor"]
   razz["razzle"]
-  lim["limiter + dcblock"]
+  lim["clamp + dcblock"]
   out["master vol → output"]
-  play --> duck --> mix --> comp --> razz --> lim --> out
+  play --> duck --> mix --> razz --> lim --> out
   bg["bgplay"] --> scTrigger["sidechain trigger"]
   tts["TTS"] --> scTrigger
   drums["drums clap+bass tap"] --> scTrigger

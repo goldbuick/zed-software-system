@@ -53,7 +53,11 @@
     "bundle:daisy-processor": "tsx scripts/bundle-daisy-processor.ts",
     "bench:daisy-synth": "ZSS_DAISY_BENCH=1 npx tsx zss/feature/synth/backend/daisy/daisyperfbench.ts",
     "test:level-stability": "npx tsx scripts/run-level-stability.ts",
-    "test:master-dynamics-parity": "npx tsx scripts/run-master-dynamics-parity.ts",
+    "render:level-issue-song": "npx tsx scripts/run-song-offline-render.ts",
+    "render:level-issue-song:tone": "npx tsx scripts/run-song-offline-render-tone.ts",
+    "test:level-issue-song-compare": "npx tsx scripts/run-level-issue-song-compare.ts",
+    "render:level-issue-voices": "npx tsx scripts/run-voice-isolation-render.ts",
+    "test:env-parity": "npx tsx scripts/run-env-parity.ts",
     "postinstall": "patch-package"
   },
   "devDependencies": {

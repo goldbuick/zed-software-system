@@ -33,8 +33,6 @@ export type LEVEL_STABILITY_SCENARIO = {
   voiceconfig?: string
   voiceconfigs?: LEVEL_STABILITY_VOICE_CONFIG[]
   fx?: LEVEL_STABILITY_FX[]
-  /** Capture master compressor debug meters during render */
-  compressormeters?: boolean
 }
 
 const ARPEGGIO_NOTES = ['C4', 'D4', 'E4', 'G4', 'C5', 'G4', 'E4', 'D4']
@@ -70,7 +68,6 @@ function scalecrewscenario(
   id: string,
   description: string,
   plays: string[],
-  compressormeters = true,
 ): LEVEL_STABILITY_SCENARIO {
   return {
     id,
@@ -79,7 +76,6 @@ function scalecrewscenario(
     durationsec: estimatesequencedurationsec(plays),
     voiceconfigs: SCALE_CREW_VOICE_CONFIGS,
     fx: SCALE_CREW_FX,
-    compressormeters,
   }
 }
 
@@ -87,7 +83,7 @@ const scalecrewclimax = buildscalecrewsequencewithmelody('climax')
 const scalecrewintro = buildscalecrewsequencewithmelody('intro')
 const scalecrewfull = buildscalecrewsequencewithmelody('full')
 
-/** Scenarios for level instability + compressor diagnosis. */
+/** Scenarios for offline level stability diagnosis. */
 export const LEVEL_STABILITY_SCENARIOS: LEVEL_STABILITY_SCENARIO[] = [
   {
     id: 'amsaw-sustain-dry',
@@ -166,14 +162,6 @@ export const LEVEL_STABILITY_SCENARIOS: LEVEL_STABILITY_SCENARIO[] = [
     ],
     durationsec: 2.5,
     voiceconfig: 'square',
-    compressormeters: true,
-  },
-  {
-    id: 'comp-drums-only',
-    description: 'Drum hits only — full-mix compressor detector isolation',
-    notation: '4n9 4n9 4n9 4n9',
-    durationsec: 2,
-    compressormeters: true,
   },
 ]
 
@@ -195,15 +183,6 @@ export const LEVEL_STABILITY_MIN_FX_PEAKRANGE_INCREASE_DB = 4
 
 /** Minimum rms-range increase (dB) reverb sustain must show vs dry. */
 export const LEVEL_STABILITY_MIN_REVERB_RMSRANGE_INCREASE_DB = 3
-
-/** Max steady peak-range increase (dB) when drums added to SCALE CREW climax. */
-export { SCALE_CREW_MAX_STEADY_PEAK_DELTA_DB } from './masterdynamicsacceptance'
-export { SCALE_CREW_MAX_OVERALL_PEAK_GAP_DB } from './masterdynamicsacceptance'
-export { SCALE_CREW_MAX_MIX_RMS_DELTA_DB } from './masterdynamicsacceptance'
-export { SCALE_CREW_MIN_COMP_GR_RANGE_DB } from './masterdynamicsacceptance'
-export { SCALE_CREW_MAX_COMP_GR_RANGE_DB } from './masterdynamicsacceptance'
-export { SCALE_CREW_MAX_OUTPUT_PEAK_DB } from './masterdynamicsacceptance'
-export { SCALE_CREW_DUCK_MIN_DB } from './masterdynamicsacceptance'
 
 export const SCALE_CREW_SCENARIO_IDS = LEVEL_STABILITY_SCENARIOS.filter((item) =>
   item.id.startsWith('scalecrew-'),

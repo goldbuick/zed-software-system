@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>song offline render</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 1.5rem;
+        max-width: 52rem;
+      }
+      pre {
+        white-space: pre-wrap;
+        background: #111;
+        color: #ddd;
+        padding: 1rem;
+        border-radius: 6px;
+      }
+      a.button {
+        display: inline-block;
+        margin: 0.5rem 0.5rem 0.5rem 0;
+        padding: 0.5rem 0.75rem;
+        background: #2a5;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 4px;
+      }
+      a.button.secondary {
+        background: #456;
+      }
+      a.button.disabled {
+        pointer-events: none;
+        opacity: 0.4;
+      }
+      .hint {
+        color: #666;
+        font-size: 0.9rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Daisy offline song render</h1>
+    <p id="status">loading…</p>
+    <p class="hint" id="hint"></p>
+    <p>
+      <a id="download" class="button disabled" href="#">download WAV</a>
+      <a id="liverender" class="button secondary" href="?live=1">re-render live (~3 min)</a>
+    </p>
+    <audio id="player" controls style="width: 100%; margin: 0.5rem 0"></audio>
+    <pre id="report"></pre>
+    <script type="module">
+      const SONG_ID = 'level-issue-song'
+      const RENDER_BASE = `/renders/${SONG_ID}`
+      const params = new URLSearchParams(window.location.search)
+      const liverender = params.get('live') === '1'
+
+      const statusel = document.getElementById('status')
+      const hintel = document.getElementById('hint')
+      const reportel = document.getElementById('report')
+      const downloadel = document.getElementById('download')
+      const playerel = document.getElementById('player')
+      const liverenderel = document.getElementById('liverender')
+
+      function enablewav(wavurl) {
+        downloadel.href = wavurl
+        downloadel.download = `${SONG_ID}.wav`
+        downloadel.classList.remove('disabled')
+        playerel.src = wavurl
+      }
+
+      async function loadprerendered() {
+        const wavurl = `${RENDER_BASE}.wav`
+        const txturl = `${RENDER_BASE}.txt`
+        const jsonurl = `${RENDER_BASE}.json`
+
+        const wavhead = await fetch(wavurl, { method: 'HEAD' })
+        if (!wavhead.ok) {
+          return false
+        }
+
+        enablewav(wavurl)
+
+        const txtres = await fetch(txturl)
+        if (txtres.ok) {
+          reportel.textContent = await txtres.text()
+        } else {
+          const jsonres = await fetch(jsonurl)
+          if (jsonres.ok) {
+            const data = await jsonres.json()
+            reportel.textContent = JSON.stringify(
+              {
+                meta: data.meta,
+                metrics: {
+                  peakrangeDb: data.metrics.peakrangeDb,
+                  overallpeakdb: data.metrics.overallpeakdb,
+                  overallrmsdb: data.metrics.overallrmsdb,
+                },
+                loudestwindows: data.loudestwindows,
+              },
+              null,
+              2,
+            )
+          }
+        }
+
+        statusel.textContent = 'pre-rendered WAV ready'
+        hintel.textContent =
+          'Instant playback from cafe/public/renders/. Run yarn render:level-issue-song to regenerate.'
+        return true
+      }
+
+      async function renderlive() {
+        const { renderdaisysongpayload } = await import(
+          '/zss/feature/synth/backend/daisy/daisysongrender.ts'
+        )
+        const { levelissuescenario } = await import(
+          '/zss/feature/synth/backend/daisy/levelissuesong.ts'
+        )
+
+        const scenario = levelissuescenario()
+        statusel.textContent = `live rendering ${scenario.id} (~${Math.round(scenario.durationsec ?? 0)} s audio, ~3 min)…`
+        hintel.textContent = 'Do not close this tab.'
+        liverenderel.classList.add('disabled')
+
+        const payload = await renderdaisysongpayload(scenario)
+        reportel.textContent = payload.report
+
+        const binary = atob(payload.wavbase64)
+        const bytes = new Uint8Array(binary.length)
+        for (let i = 0; i < binary.length; i++) {
+          bytes[i] = binary.charCodeAt(i)
+        }
+        const blob = new Blob([bytes], { type: 'audio/wav' })
+        const url = URL.createObjectURL(blob)
+        enablewav(url)
+
+        statusel.textContent = `live render done — ${payload.meta.rendersec.toFixed(2)} s, peak ${payload.metrics.overallpeakdb.toFixed(1)} dBFS`
+        hintel.textContent = 'In-memory only; run yarn render:level-issue-song to save files.'
+        window.__songrenderpayload = payload
+      }
+
+      try {
+        if (liverender) {
+          await renderlive()
+        } else {
+          const ok = await loadprerendered()
+          if (!ok) {
+            statusel.textContent = 'no pre-render found — starting live render…'
+            await renderlive()
+          }
+        }
+      } catch (err) {
+        statusel.textContent = `error: ${err?.message ?? err}`
+        hintel.textContent =
+          'If WASM failed to load, try yarn render:level-issue-song from the terminal instead.'
+        throw err
+      }
+    </script>
+  </body>
+</html>

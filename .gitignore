@@ -32,6 +32,12 @@ oclif.manifest.json
 # vosk speech recognition models (large binaries)
 cafe/public/models/
 
+# offline song renders (regenerate with yarn render:level-issue-song)
+cafe/public/renders/*.wav
+cafe/public/renders/*.json
+cafe/public/renders/*.txt
+cafe/public/renders/env-parity/
+
 # local Emscripten SDK (yarn build:daisy)
 .emsdk/
 
