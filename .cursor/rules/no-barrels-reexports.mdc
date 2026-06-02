@@ -1,0 +1,44 @@
+---
+description: Ban barrel files and re-exports; import from defining modules only
+globs: **/*.ts,**/*.tsx
+alwaysApply: true
+---
+
+# No barrels or re-exports
+
+Do not add or extend barrel files or re-exports. Import symbols from the module where they are defined.
+
+## Prohibited
+
+- **Re-export syntax** in any file:
+  - `export { ... } from '...'`
+  - `export * from '...'`
+  - `export type { ... } from '...'`
+- **Barrel files**: modules whose main job is forwarding exports (often `index.ts` / `index.tsx` that only re-export from siblings or subtrees).
+- **Re-exporting through a facade** to shorten import paths or hide internal layout.
+
+## Required instead
+
+Import directly from the defining file:
+
+```typescript
+// ❌ BAD — barrel / re-export
+export { createsynthbackend } from './backend/synthbackendfactory'
+import { createsynthbackend } from 'zss/feature/synth'
+
+// ✅ GOOD — direct import
+import { createsynthbackend } from 'zss/feature/synth/backend/synthbackendfactory'
+```
+
+When a symbol must be public, export it once from its implementation file and import that path everywhere.
+
+## When editing existing code
+
+- Do **not** add new entries to existing barrel files.
+- Do **not** create new `index.ts` aggregation modules.
+- In changed files, replace barrel/re-export imports with direct imports when practical.
+- If removing a barrel, update call sites to the defining modules; do not replace one barrel with another.
+
+## Exceptions
+
+None for new or modified code. Legacy barrels may remain until touched; never grow them.
