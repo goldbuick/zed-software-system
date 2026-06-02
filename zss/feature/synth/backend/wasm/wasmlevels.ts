@@ -47,6 +47,12 @@ export const WASM_DRUM_BUS_GAIN = Math.pow(10, WASM_DRUM_BUS_DB / 20)
 export const WASM_PLAY_BUS_DB = volumetodb(32)
 export const WASM_PLAY_BUS_GAIN = Math.pow(10, WASM_PLAY_BUS_DB / 20)
 
+/** Daisy master comp: detector 3/150 ms; applied gain slew 8/100 ms (zss_daisy_synth.cpp). */
+export const WASM_MASTER_COMP_GAIN_ATTACK_SEC = 0.008
+export const WASM_MASTER_COMP_GAIN_RELEASE_SEC = 0.1
+/** Post-GR makeup on comp path before razzle (kMasterCompMakeupDb). */
+export const WASM_MASTER_COMP_MAKEUP_DB = 4
+
 /** Trim after main compressor + razzle in WASM master chain. */
 export const WASM_MASTER_TRIM_DB = -2
 

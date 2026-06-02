@@ -75,11 +75,11 @@ constexpr float kStringBowNoiseMix    = 0.03f;
 constexpr float kDrumTickTrim  = 1.35f;
 constexpr float kDrumTweetTrim = 1.25f;
 
-constexpr float kMasterTrimDb   = -2.f;
+constexpr float kMasterTrimDb   = -8.f;
 constexpr float kVoiceOutGain   = 1.f;
-constexpr float kPlayBusGain    = 0.5f;
-constexpr float kDrumBusGain    = kPlayBusGain + 1.5f;
-constexpr float kMasterMakeupDb = -kMasterTrimDb + 6.f;
+constexpr float kPlayBusGain    = 0.1f;
+constexpr float kDrumBusGain    = kPlayBusGain + 2.0f;
+constexpr float kMasterMakeupDb = -kMasterTrimDb + 1.f;
 constexpr float kScMakeupDb           = 24.f;
 constexpr float kScAttackSec          = 0.005f;
 constexpr float kScReleaseSec         = 0.10f;
@@ -92,8 +92,13 @@ constexpr float kRazzleChorusDepthSec  = 0.007f;
 constexpr float kMasterCompThresholdDb = -28.f;
 constexpr float kMasterCompRatio       = 4.f;
 constexpr float kMasterCompKneeDb      = 30.f;
-constexpr float kMasterCompAttackSec   = 0.003f;
-constexpr float kMasterCompReleaseSec  = 0.15f;
+constexpr float kMasterCompAttackSec        = 0.003f;
+constexpr float kMasterCompReleaseSec       = 0.15f;
+constexpr float kMasterCompGainAttackSec    = 0.008f;
+constexpr float kMasterCompGainReleaseSec   = 0.1f;
+constexpr float kMasterCompSilencePeak      = 1e-4f;
+constexpr float kMasterCompSilenceDecaySec  = 0.012f;
+constexpr float kMasterCompMakeupDb         = 4.f;
 
 // FX configs
 // Reverb wet trim matches wasmfxplaycode.ts `Math.tanh(wet * 1.6)`.
@@ -816,11 +821,15 @@ struct ZssEngine
   int          razzle_vib_pos = 0;
   int          razzle_chorus_pos = 0;
   float        comp_env = 0.f;
+  float        comp_gain_smooth = 1.f;
   float        comp_gr_db = 0.f;
   float        debug_duck_gain = 1.f;
   float        debug_dry_peak = 0.f;
   float        comp_attack_coef = 0.f;
   float        comp_release_coef = 0.f;
+  float        comp_gain_attack_coef = 0.f;
+  float        comp_gain_release_coef = 0.f;
+  float        comp_silence_decay_coef = 0.f;
   float        fx_return_attack_coef  = 0.f;
   float        fx_return_release_coef = 0.f;
   float        duck_smooth = 1.f;
@@ -2270,11 +2279,18 @@ void resetsidechainstate()
 
 void initmasterchain(float sr)
 {
-  g_engine.comp_env = 0.f;
+  g_engine.comp_env           = 0.f;
+  g_engine.comp_gain_smooth = 1.f;
   g_engine.comp_attack_coef =
       1.f - std::exp(-1.f / (kMasterCompAttackSec * sr));
   g_engine.comp_release_coef =
       1.f - std::exp(-1.f / (kMasterCompReleaseSec * sr));
+  g_engine.comp_gain_attack_coef =
+      1.f - std::exp(-1.f / (kMasterCompGainAttackSec * sr));
+  g_engine.comp_gain_release_coef =
+      1.f - std::exp(-1.f / (kMasterCompGainReleaseSec * sr));
+  g_engine.comp_silence_decay_coef =
+      1.f - std::exp(-1.f / (kMasterCompSilenceDecaySec * sr));
   g_engine.duck_smooth_coef =
       1.f - std::exp(-1.f / (kSidechainDuckSmoothSec * sr));
   resetsidechainstate();
@@ -2414,24 +2430,64 @@ float compressorskneedb(float dbover, float ratio, float kneedb)
   return dbover - dbover / ratio;
 }
 
-float mastercompressorgain(float x)
+void mastercompdetect(float x)
+{
+  float ax = std::fabs(x);
+  if(ax < kMasterCompSilencePeak)
+  {
+    g_engine.comp_env +=
+        (0.f - g_engine.comp_env) * g_engine.comp_silence_decay_coef;
+    return;
+  }
+  float coef = (ax > g_engine.comp_env) ? g_engine.comp_attack_coef
+                                        : g_engine.comp_release_coef;
+  g_engine.comp_env += (ax - g_engine.comp_env) * coef;
+}
+
+float mastercomptargetgain()
 {
   const float thresh =
       std::pow(10.f, kMasterCompThresholdDb / 20.f);
-  float       ax   = std::fabs(x);
-  float       coef = (ax > g_engine.comp_env) ? g_engine.comp_attack_coef
-                                              : g_engine.comp_release_coef;
-  g_engine.comp_env += (ax - g_engine.comp_env) * coef;
-  if(g_engine.comp_env <= thresh)
+  if(g_engine.comp_env <= thresh * 0.25f)
   {
-    g_engine.comp_gr_db = 0.f;
     return 1.f;
   }
-  float dbover  = 20.f * std::log10(g_engine.comp_env / thresh);
+  float dbover = 20.f * std::log10(g_engine.comp_env / thresh);
+  if(dbover < 0.f)
+  {
+    dbover = 0.f;
+  }
   float reduced = compressorskneedb(dbover, kMasterCompRatio, kMasterCompKneeDb);
-  float gain    = std::pow(10.f, -reduced / 20.f);
-  g_engine.comp_gr_db = 20.f * std::log10(gain);
-  return gain;
+  return std::pow(10.f, -reduced / 20.f);
+}
+
+float mastercompressorgain(float x)
+{
+  mastercompdetect(x);
+  float target = mastercomptargetgain();
+  if(std::fabs(x) < kMasterCompSilencePeak)
+  {
+    target = 1.f;
+  }
+  float gcoef = (target < g_engine.comp_gain_smooth)
+                    ? g_engine.comp_gain_attack_coef
+                    : g_engine.comp_gain_release_coef;
+  if(std::fabs(x) < kMasterCompSilencePeak)
+  {
+    gcoef = g_engine.comp_silence_decay_coef;
+  }
+  g_engine.comp_gain_smooth +=
+      (target - g_engine.comp_gain_smooth) * gcoef;
+  if(g_engine.comp_gain_smooth < 1e-6f)
+  {
+    g_engine.comp_gain_smooth = 1e-6f;
+  }
+  if(g_engine.comp_gain_smooth > 1.f)
+  {
+    g_engine.comp_gain_smooth = 1.f;
+  }
+  g_engine.comp_gr_db = 20.f * std::log10(g_engine.comp_gain_smooth);
+  return g_engine.comp_gain_smooth;
 }
 
 float applyrazzle(float input)
@@ -2938,17 +2994,15 @@ void zss_process(float* out, int frames, const float* tts_in)
     g_engine.debug_dry_peak = std::fabs(dry);
 
     float compgain = mastercompressorgain(dry);
-    float comp     = dry * compgain;
+    float comp     = dry * compgain * dbtoamp(kMasterCompMakeupDb);
     float razz     = applyrazzle(comp);
-    float x       = razz * g_engine.cached_mastervol;
-    float final = g_engine.cached_mastervol > 0.f
-                      ? g_engine.master_dcblock.Process(clampf(x, -1.f, 1.f))
-                      : 0.f;
+    float x        = razz * g_engine.cached_mastervol;
+    float final    = g_engine.master_dcblock.Process(clampf(x, -1.f, 1.f));
     if(!std::isfinite(final))
     {
       final = 0.f;
     }
-    out[f]      = clampf(final, -1.f, 1.f);
+    out[f] = clampf(final, -1.f, 1.f);
   }
 }
 
