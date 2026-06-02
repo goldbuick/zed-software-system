@@ -80,7 +80,7 @@ Serial wet chain (Maxi + Daisy): **fc → echo → reverb → autofilter → dis
 | DC block | Master out | — | `DcBlock` | — | `DcBlock` | **Swapped** | cpp `zss_process()` |
 | Master trim | Level staging | -2 dB trim + 22 dB makeup | Same | Tone graph gains | **-10 dB trim**, 0 makeup (no comp); play **Tone volumetodb(20)**; drum **play × 1.35** | — | [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp) |
 
-**Sidechain params (Daisy):** threshold −42 dB (power domain), ratio 5:1, attack 5 ms, release 100 ms, mix 0.75, makeup +24 dB; bg/TTS send −12 dB, drum send −28 dB.
+**Sidechain params (Daisy):** threshold −42 dB (power domain), ratio 5:1, attack 5 ms, release 60 ms, mix 0.75, makeup +24 dB; bg/TTS send −12 dB, drum send −28 dB. Gain applied directly to play bus (Tone worklet parity; no extra duck slew).
 
 **FX bus gain (Daisy):** per-send linear gain from [`wasmfxstate.ts`](../backend/wasm/wasmfxstate.ts) (`on` → 18 or 50 for autofilter/distort/vibrato). Parallel **`wet_sum`** compressed before `dry + wet_sum`. Offline matrix: `yarn test:level-stability --filter fxmatrix`.
 
