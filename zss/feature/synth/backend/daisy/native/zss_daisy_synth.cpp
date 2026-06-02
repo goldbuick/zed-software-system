@@ -60,25 +60,25 @@ constexpr float kNoiseSoftGain = 3.f;
 constexpr float kMetallicNorm  = 1.f / 22.f;
 constexpr float kMetallicAmp   = 7.5f;
 // `#synth string` = SOS string-machine (detuned saws + PWM FM); pluck = StringVoice.
-constexpr float kStringMachineGain     = 0.42f;
-constexpr float kStringPluckGain       = 0.38f;
-constexpr float kStringDefaultDetune   = 2.f;
-constexpr float kStringDefaultPwm      = 0.2f;
-constexpr float kStringDefaultVib      = 2.5f;
-constexpr float kStringDefaultFilter   = 0.5f;
-constexpr float kStringMaxDetuneCents  = 8.f;
-constexpr float kStringMaxVibCents     = 8.f;
-constexpr float kStringSubOctaveMix    = 0.1f;
-constexpr float kStringBodyLowMix      = 0.18f;
-constexpr float kStringBodyHiMix       = 0.1f;
-constexpr float kStringBowNoiseMix     = 0.03f;
+constexpr float kStringMachineGain    = 0.42f;
+constexpr float kStringPluckGain      = 0.38f;
+constexpr float kStringDefaultDetune  = 2.f;
+constexpr float kStringDefaultPwm     = 0.2f;
+constexpr float kStringDefaultVib     = 2.5f;
+constexpr float kStringDefaultFilter  = 0.5f;
+constexpr float kStringMaxDetuneCents = 8.f;
+constexpr float kStringMaxVibCents    = 8.f;
+constexpr float kStringSubOctaveMix   = 0.1f;
+constexpr float kStringBodyLowMix     = 0.18f;
+constexpr float kStringBodyHiMix      = 0.1f;
+constexpr float kStringBowNoiseMix    = 0.03f;
 constexpr float kDrumTickTrim  = 1.35f;
 constexpr float kDrumTweetTrim = 1.25f;
 
-constexpr float kVoiceOutGain  = 1.f;
-constexpr float kPlayBusGain    = 0.3548133892336194f;
-constexpr float kDrumBusGain    = kPlayBusGain; // * 1.35f;
 constexpr float kMasterTrimDb   = -2.f;
+constexpr float kVoiceOutGain   = 1.f;
+constexpr float kPlayBusGain    = 0.5f; 
+constexpr float kDrumBusGain    = 0.5f; 
 constexpr float kMasterMakeupDb = 0.f;
 constexpr float kScMakeupDb           = 24.f;
 constexpr float kScAttackSec          = 0.005f;
@@ -94,8 +94,16 @@ constexpr float kMasterCompRatio       = 4.f;
 constexpr float kMasterCompKneeDb      = 30.f;
 constexpr float kMasterCompAttackSec   = 0.003f;
 constexpr float kMasterCompReleaseSec  = 0.15f;
+
+// FX configs
 // Reverb wet trim matches wasmfxplaycode.ts `Math.tanh(wet * 1.6)`.
 constexpr float kReverbWetGain = 1.6f;
+// Parallel FX return: compressor on wet_sum only (see docs/parallel-fx-bus.md).
+constexpr float kFxReturnCompThresholdDb = -20.f;
+constexpr float kFxReturnCompRatio       = 3.f;
+constexpr float kFxReturnCompKneeDb      = 6.f;
+constexpr float kFxReturnCompAttackSec   = 0.002f;
+constexpr float kFxReturnCompReleaseSec  = 0.08f;
 constexpr float kScMix            = 0.75f;
 constexpr float kScTriggerFloor   = 1e-5f;
 constexpr float kAutowahDefaultOct  = 6.f;
@@ -780,6 +788,7 @@ struct ZssFxGroup
   int                            rev_predelay_len    = 0;
   float                          rev_feedback        = 0.58f;
   Autowah                        autowah;
+  float                          return_comp_env = 0.f;
 };
 
 struct ZssEngine
@@ -811,6 +820,8 @@ struct ZssEngine
   float        debug_dry_peak = 0.f;
   float        comp_attack_coef = 0.f;
   float        comp_release_coef = 0.f;
+  float        fx_return_attack_coef  = 0.f;
+  float        fx_return_release_coef = 0.f;
   float        duck_smooth = 1.f;
   float        duck_smooth_coef = 0.f;
   int          sampleclock = 0;
@@ -2133,41 +2144,6 @@ float fxautowahbus(float x, int group)
   return wet - x;
 }
 
-float fxsoftclip(float x)
-{
-  return std::tanh(x);
-}
-
-int fxactiveendcount(float s0, float s1, float s2, float s3, float s5, float s6)
-{
-  int count = 0;
-  if(s0 > 0.f)
-  {
-    ++count;
-  }
-  if(s1 > 0.f)
-  {
-    ++count;
-  }
-  if(s2 > 0.f)
-  {
-    ++count;
-  }
-  if(s3 > 0.f)
-  {
-    ++count;
-  }
-  if(s5 > 0.f)
-  {
-    ++count;
-  }
-  if(s6 > 0.f)
-  {
-    ++count;
-  }
-  return count;
-}
-
 bool fxgrouphasactivesends(int group)
 {
   for(int s = 0; s < kFxSendCount; ++s)
@@ -2180,63 +2156,41 @@ bool fxgrouphasactivesends(int group)
   return false;
 }
 
-void fxnormalizeends(float& s0, float& s1, float& s2, float& s3, float& s5,
-                     float& s6)
+float compressorskneedb(float dbover, float ratio, float kneedb);
+
+void initfxreturnchain(float sr)
 {
-  float sum = 0.f;
-  if(s0 > 0.f)
+  g_engine.fx_return_attack_coef =
+      1.f - std::exp(-1.f / (kFxReturnCompAttackSec * sr));
+  g_engine.fx_return_release_coef =
+      1.f - std::exp(-1.f / (kFxReturnCompReleaseSec * sr));
+  for(int f = 0; f < kFxGroups; ++f)
   {
-    sum += s0;
+    g_engine.fx[f].return_comp_env = 0.f;
   }
-  if(s1 > 0.f)
+}
+
+float fxreturncompress(float wet_sum, int group)
+{
+  if(wet_sum == 0.f)
   {
-    sum += s1;
+    return 0.f;
   }
-  if(s2 > 0.f)
+  ZssFxGroup& fx = g_engine.fx[group];
+  float       ax = std::fabs(wet_sum);
+  float coef = (ax > fx.return_comp_env) ? g_engine.fx_return_attack_coef
+                                         : g_engine.fx_return_release_coef;
+  fx.return_comp_env += (ax - fx.return_comp_env) * coef;
+  const float thresh =
+      std::pow(10.f, kFxReturnCompThresholdDb / 20.f);
+  if(fx.return_comp_env <= thresh)
   {
-    sum += s2;
+    return wet_sum;
   }
-  if(s3 > 0.f)
-  {
-    sum += s3;
-  }
-  if(s5 > 0.f)
-  {
-    sum += s5;
-  }
-  if(s6 > 0.f)
-  {
-    sum += s6;
-  }
-  if(sum <= 1.f)
-  {
-    return;
-  }
-  const float scale = 1.f / sum;
-  if(s0 > 0.f)
-  {
-    s0 *= scale;
-  }
-  if(s1 > 0.f)
-  {
-    s1 *= scale;
-  }
-  if(s2 > 0.f)
-  {
-    s2 *= scale;
-  }
-  if(s3 > 0.f)
-  {
-    s3 *= scale;
-  }
-  if(s5 > 0.f)
-  {
-    s5 *= scale;
-  }
-  if(s6 > 0.f)
-  {
-    s6 *= scale;
-  }
+  float dbover  = 20.f * std::log10(fx.return_comp_env / thresh);
+  float reduced = compressorskneedb(dbover, kFxReturnCompRatio, kFxReturnCompKneeDb);
+  float gain    = std::pow(10.f, -reduced / 20.f);
+  return wet_sum * gain;
 }
 
 float applyfxgroup(float sig, int group)
@@ -2246,54 +2200,50 @@ float applyfxgroup(float sig, int group)
     return sig;
   }
   refreshfxderived(group);
-  float s0 = fxsendval(group, kFxFc);
-  float s1 = fxsendval(group, kFxEcho);
-  float s2 = fxsendval(group, kFxReverb);
-  float s3 = fxsendval(group, kFxAutofilter);
-  float s5 = fxsendval(group, kFxDistort);
-  float s6 = fxsendval(group, kFxAutowah);
-  fxnormalizeends(s0, s1, s2, s3, s5, s6);
-  float out = sig;
+  const float dry = sig;
+  float       s0  = fxsendval(group, kFxFc);
+  float       s1  = fxsendval(group, kFxEcho);
+  float       s2  = fxsendval(group, kFxReverb);
+  float       s3  = fxsendval(group, kFxAutofilter);
+  float       s5  = fxsendval(group, kFxDistort);
+  float       s6  = fxsendval(group, kFxAutowah);
+  float       wet_sum = 0.f;
   if(s0 > 0.f)
   {
-    float wet0 = fxfcrush(out, group);
-    out        = out + s0 * (wet0 - out);
+    float wet0 = fxfcrush(dry, group);
+    wet_sum += s0 * (wet0 - dry);
   }
   if(s1 > 0.f)
   {
-    float wet1 = fxecho(out, group);
-    out        = out + s1 * (wet1 - out);
+    float wet1 = fxecho(dry, group);
+    wet_sum += s1 * (wet1 - dry);
   }
   if(s2 > 0.f)
   {
-    float wet2 = fxreverb(out, group);
-    out        = out + s2 * (wet2 - out);
+    float wet2 = fxreverb(dry, group);
+    wet_sum += s2 * (wet2 - dry);
   }
   if(s3 > 0.f)
   {
-    out += s3 * fxautofilterbus(out, group);
+    wet_sum += s3 * fxautofilterbus(dry, group);
   }
   if(s5 > 0.f)
   {
-    float amt  = fxparam(group, kFxDistortion);
+    float amt = fxparam(group, kFxDistortion);
     if(amt <= 0.f)
     {
       amt = 0.4f;
     }
     g_engine.fx[group].overdrive.SetDrive(clampf(amt, 0.f, 1.f));
-    float wet5 = g_engine.fx[group].overdrive.Process(out * 3.f);
-    out        = out + s5 * (wet5 - out);
+    float wet5 = g_engine.fx[group].overdrive.Process(dry * 3.f);
+    wet_sum += s5 * (wet5 - dry);
   }
   if(s6 > 0.f)
   {
-    out += s6 * fxautowahbus(out, group);
+    wet_sum += s6 * fxautowahbus(dry, group);
   }
-  int active = fxactiveendcount(s0, s1, s2, s3, s5, s6);
-  if(active >= 2)
-  {
-    out *= 1.f / std::sqrt(static_cast<float>(active));
-  }
-  return fxsoftclip(out);
+  wet_sum = fxreturncompress(wet_sum, group);
+  return dry + wet_sum;
 }
 
 bool bgplayactive()
@@ -2709,6 +2659,7 @@ void initengine(float sr)
   g_engine.drum_whitenoise.Init();
   initdaisydrums(sr);
   initmasterchain(sr);
+  initfxreturnchain(sr);
   initrazzlechain(sr);
   for(int d = 0; d < kDrumCount; ++d)
   {

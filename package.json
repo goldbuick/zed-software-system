@@ -53,6 +53,7 @@
     "bundle:daisy-processor": "tsx scripts/bundle-daisy-processor.ts",
     "bench:daisy-synth": "ZSS_DAISY_BENCH=1 npx tsx zss/feature/synth/backend/daisy/daisyperfbench.ts",
     "test:level-stability": "npx tsx scripts/run-level-stability.ts",
+    "test:level-stability:fxmatrix": "npx tsx scripts/run-level-stability.ts --filter fxmatrix",
     "render:level-issue-song": "npx tsx scripts/run-song-offline-render.ts",
     "render:level-issue-song:tone": "npx tsx scripts/run-song-offline-render-tone.ts",
     "test:level-issue-song-compare": "npx tsx scripts/run-level-issue-song-compare.ts",

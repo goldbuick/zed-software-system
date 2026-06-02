@@ -62,7 +62,20 @@ Default send at boot: **0** (all FX off).
 
 Bare `#echo`, `#reverb`, etc. → groups **0 and 1** only. `#echo1`…`#echo4` → single group.
 
-**WASM serial chain** ([wasmfxplaycode.ts](../backend/wasm/wasmfxplaycode.ts)): fc → echo → reverb → autofilter → distortion → autowah (vibrato skipped — pitch only).
+**Daisy parallel sends** ([`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp) `applyfxgroup()`): each FX taps the **same dry** sample; `out = dry + compress(Σ sendᵢ·Δᵢ)`. No order between FX types. Vibrato is pitch-only (not in the wet sum). Spec: [parallel-fx-bus.md](parallel-fx-bus.md).
+
+Archived Maxi used a **serial hybrid** chain ([wasmfxplaycode.ts](../archive/maxi/wasmfxplaycode.ts)); archived Tone used **parallel** `chain()` per effect.
+
+### Multi-FX gain (Daisy)
+
+| Layer | Control |
+|-------|---------|
+| Send level | SAB slot per FX (`#reverb on` → ~−21 dB linear; numeric 0–100 → `volumetodb`) |
+| Per-algorithm | e.g. reverb `tanh(wet × 1.6)`, echo feedback clamp, distortion `Overdrive` with ×3 drive |
+| Return bus | Light **compressor on `wet_sum` only** (−20 dB thresh, 3:1, 2 ms / 80 ms) — dry stays full |
+| Master | Sidechain → compressor → razzle (unchanged) |
+
+Regression harness: [`fxlevelscenarios.ts`](../backend/daisy/fxlevelscenarios.ts), `yarn test:level-stability --filter fxmatrix`.
 
 ---
 

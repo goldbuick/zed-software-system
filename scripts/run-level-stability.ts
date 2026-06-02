@@ -22,6 +22,10 @@ import {
 } from '../zss/feature/synth/backend/wasm/levelstabilitymetrics.ts'
 import { formatmixbalanceline } from '../zss/feature/synth/backend/wasm/compressormetrics.ts'
 import {
+  FX_MATRIX_COMPARE_BASELINE,
+  FX_MATRIX_PEAK_DELTA_MAX_DB,
+} from '../zss/feature/synth/backend/daisy/fxlevelscenarios'
+import {
   LEVEL_STABILITY_COMPARE_PAIRS,
   LEVEL_STABILITY_MIX_BALANCE_PAIRS,
   LEVEL_STABILITY_MIN_FX_PEAKRANGE_INCREASE_DB,
@@ -185,6 +189,34 @@ function assertevidence(
   return failures
 }
 
+function assertfxmatrix(
+  metrics: Record<string, LEVEL_STABILITY_METRICS>,
+): string[] {
+  const failures: string[] = []
+  const base = metrics[FX_MATRIX_COMPARE_BASELINE]
+  if (!base) {
+    failures.push(`missing baseline ${FX_MATRIX_COMPARE_BASELINE}`)
+    return failures
+  }
+  for (const [id, cand] of Object.entries(metrics)) {
+    if (!id.startsWith('fxmatrix-') || id === FX_MATRIX_COMPARE_BASELINE) {
+      continue
+    }
+    const peakdelta = cand.overallpeakdb - base.overallpeakdb
+    if (peakdelta > FX_MATRIX_PEAK_DELTA_MAX_DB) {
+      failures.push(
+        `${id}: peak ${cand.overallpeakdb.toFixed(1)} dBFS is ${peakdelta.toFixed(1)} dB above dry (max ${FX_MATRIX_PEAK_DELTA_MAX_DB} dB)`,
+      )
+    }
+    if (cand.overallpeakdb > -0.5) {
+      failures.push(
+        `${id}: peak ${cand.overallpeakdb.toFixed(1)} dBFS exceeds -0.5 dBFS`,
+      )
+    }
+  }
+  return failures
+}
+
 async function main() {
   const { strict, scenarioid, filter, comparea, compareb } = parseargs()
 
@@ -247,6 +279,22 @@ async function main() {
     } else if (strict) {
       console.log('')
       console.log('Strict evidence thresholds passed.')
+    }
+  }
+
+  if (runfilter === 'fxmatrix' || runfilter === 'all') {
+    const fxfailures = assertfxmatrix(payload.metrics)
+    if (fxfailures.length > 0) {
+      console.log('')
+      console.log('FX matrix gates failed:')
+      for (const line of fxfailures) {
+        console.log(`  - ${line}`)
+      }
+      process.exit(1)
+    }
+    if (runfilter === 'fxmatrix') {
+      console.log('')
+      console.log('FX matrix gates passed.')
     }
   }
 }

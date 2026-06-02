@@ -62,6 +62,10 @@ export const WASM_ALGO_OUT_GAIN = 0.18
 /** FM modindex → carrier Hz scale (calibrated vs Tone FMOscillator). */
 export const WASM_FM_HZ_SCALE = 1
 
+/** Daisy parallel FX return compressor (wet_sum only; zss_daisy_synth.cpp / parallel-fx-bus.md). */
+export const WASM_FX_RETURN_COMP_THRESHOLD_DB = -20
+export const WASM_FX_RETURN_COMP_RATIO = 3
+
 /** Razzle wet sends — Tone is 0.1 / 0.5; trimmed slightly. Daisy: kRazzle* in cpp. */
 export const WASM_RAZZLE_VIBRATO_WET = 0.1
 export const WASM_RAZZLE_CHORUS_WET = 0.4

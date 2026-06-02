@@ -39,4 +39,6 @@ backend.addplay('qC4qD4qE4')
 | `ZSS_PARITY_RENDER=1` | Run offline parity render tests (manual gate, not CI) |
 | `ZSS_TONE_REFERENCE=1` | Compare Daisy voice/FX renders against Tone fixtures |
 
+**FX bus:** parallel sends + return-bus compressor in `zss_daisy_synth.cpp`. Spec: [parallel-fx-bus.md](docs/parallel-fx-bus.md). Offline matrix: `yarn test:level-stability:fxmatrix`.
+
 COOP/COEP headers are enabled in Vite for SharedArrayBuffer.

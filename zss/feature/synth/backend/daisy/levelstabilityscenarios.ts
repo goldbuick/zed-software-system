@@ -1,6 +1,19 @@
 import type { SYNTH_NOTE_ENTRY } from '../../playnotation'
 import { tonenotationseconds } from '../../playnotation'
 
+import { FX_MATRIX_SCENARIOS } from './fxlevelscenarios'
+import type {
+  LEVEL_STABILITY_FX,
+  LEVEL_STABILITY_SCENARIO,
+  LEVEL_STABILITY_VOICE_CONFIG,
+} from './levelstabilitytypes'
+
+export type {
+  LEVEL_STABILITY_FX,
+  LEVEL_STABILITY_SCENARIO,
+  LEVEL_STABILITY_VOICE_CONFIG,
+} from './levelstabilitytypes'
+
 import {
   buildscalecrewsequence,
   buildscalecrewsequencewithmelody,
@@ -8,32 +21,6 @@ import {
   SCALE_CREW_FX,
   SCALE_CREW_VOICE_CONFIGS,
 } from './scalecrewsong'
-
-export type LEVEL_STABILITY_FX = {
-  fx: string
-  config: string | number
-  value?: string | number
-  group?: number
-}
-
-export type LEVEL_STABILITY_VOICE_CONFIG = [
-  string,
-  string | number | number[],
-]
-
-export type LEVEL_STABILITY_SCENARIO = {
-  id: string
-  description: string
-  /** ZSS play notation; ignored when `ticks` or `playsequence` is set */
-  notation?: string
-  ticks?: SYNTH_NOTE_ENTRY[]
-  /** Full #play sequence (addplay order), like a live board song */
-  playsequence?: string[]
-  durationsec?: number
-  voiceconfig?: string
-  voiceconfigs?: LEVEL_STABILITY_VOICE_CONFIG[]
-  fx?: LEVEL_STABILITY_FX[]
-}
 
 const ARPEGGIO_NOTES = ['C4', 'D4', 'E4', 'G4', 'C5', 'G4', 'E4', 'D4']
 
@@ -163,6 +150,7 @@ export const LEVEL_STABILITY_SCENARIOS: LEVEL_STABILITY_SCENARIO[] = [
     durationsec: 2.5,
     voiceconfig: 'square',
   },
+  ...FX_MATRIX_SCENARIOS,
 ]
 
 export const LEVEL_STABILITY_COMPARE_PAIRS: Array<[string, string]> = [
@@ -203,6 +191,9 @@ export function filterlevelstabilityscenarios(filter: string): LEVEL_STABILITY_S
   }
   if (filter === 'simple') {
     return LEVEL_STABILITY_SCENARIOS.filter((item) => item.id.startsWith('amsaw-'))
+  }
+  if (filter === 'fxmatrix') {
+    return LEVEL_STABILITY_SCENARIOS.filter((item) => item.id.startsWith('fxmatrix-'))
   }
   const one = findlevelstabilityscenario(filter)
   return one ? [one] : []
