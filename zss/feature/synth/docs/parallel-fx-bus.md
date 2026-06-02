@@ -40,8 +40,9 @@ Applied to **`wet_sum` only** (dry punch preserved).
 
 | Constant | Value |
 |----------|--------|
-| Threshold | −20 dBFS (envelope) |
-| Ratio | 3:1 |
+| Wet trim | 0.55 linear (before compressor) |
+| Threshold | −24 dBFS (envelope) |
+| Ratio | 4:1 |
 | Knee | 6 dB |
 | Attack | 2 ms |
 | Release | 80 ms |

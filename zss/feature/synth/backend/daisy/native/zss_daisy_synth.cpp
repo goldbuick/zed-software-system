@@ -77,9 +77,9 @@ constexpr float kDrumTweetTrim = 1.25f;
 
 constexpr float kMasterTrimDb   = -2.f;
 constexpr float kVoiceOutGain   = 1.f;
-constexpr float kPlayBusGain    = 0.5f; 
-constexpr float kDrumBusGain    = 0.5f; 
-constexpr float kMasterMakeupDb = 0.f;
+constexpr float kPlayBusGain    = 0.5f;
+constexpr float kDrumBusGain    = kPlayBusGain + 1.5f;
+constexpr float kMasterMakeupDb = -kMasterTrimDb + 6.f;
 constexpr float kScMakeupDb           = 24.f;
 constexpr float kScAttackSec          = 0.005f;
 constexpr float kScReleaseSec         = 0.10f;
@@ -99,11 +99,12 @@ constexpr float kMasterCompReleaseSec  = 0.15f;
 // Reverb wet trim matches wasmfxplaycode.ts `Math.tanh(wet * 1.6)`.
 constexpr float kReverbWetGain = 1.6f;
 // Parallel FX return: compressor on wet_sum only (see docs/parallel-fx-bus.md).
-constexpr float kFxReturnCompThresholdDb = -20.f;
-constexpr float kFxReturnCompRatio       = 3.f;
+constexpr float kFxReturnCompThresholdDb = -24.f;
+constexpr float kFxReturnCompRatio       = 4.f;
 constexpr float kFxReturnCompKneeDb      = 6.f;
 constexpr float kFxReturnCompAttackSec   = 0.002f;
 constexpr float kFxReturnCompReleaseSec  = 0.08f;
+constexpr float kFxReturnWetTrim       = 0.55f;
 constexpr float kScMix            = 0.75f;
 constexpr float kScTriggerFloor   = 1e-5f;
 constexpr float kAutowahDefaultOct  = 6.f;
@@ -2242,6 +2243,7 @@ float applyfxgroup(float sig, int group)
   {
     wet_sum += s6 * fxautowahbus(dry, group);
   }
+  wet_sum *= kFxReturnWetTrim;
   wet_sum = fxreturncompress(wet_sum, group);
   return dry + wet_sum;
 }

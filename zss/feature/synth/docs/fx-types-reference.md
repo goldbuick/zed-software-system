@@ -72,7 +72,7 @@ Archived Maxi used a **serial hybrid** chain ([wasmfxplaycode.ts](../archive/max
 |-------|---------|
 | Send level | SAB slot per FX (`#reverb on` → ~−21 dB linear; numeric 0–100 → `volumetodb`) |
 | Per-algorithm | e.g. reverb `tanh(wet × 1.6)`, echo feedback clamp, distortion `Overdrive` with ×3 drive |
-| Return bus | Light **compressor on `wet_sum` only** (−20 dB thresh, 3:1, 2 ms / 80 ms) — dry stays full |
+| Return bus | **`wet_sum` × 0.55** then compressor (−24 dB thresh, 4:1, 2 ms / 80 ms) — dry stays full |
 | Master | Sidechain → compressor → razzle (unchanged) |
 
 Regression harness: [`fxlevelscenarios.ts`](../backend/daisy/fxlevelscenarios.ts), `yarn test:level-stability --filter fxmatrix`.
