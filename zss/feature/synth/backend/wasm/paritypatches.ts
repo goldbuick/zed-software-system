@@ -302,17 +302,18 @@ export type MASTER_DYNAMICS_PARITY_PATCH = {
   ticks: SYNTH_NOTE_ENTRY[]
 }
 
-function fastarpticks(durationsec: number, withdrums = false): SYNTH_NOTE_ENTRY[] {
+function fastarpticks(
+  durationsec: number,
+  withdrums = false,
+): SYNTH_NOTE_ENTRY[] {
   const notes = ['C4', 'D4', 'E4', 'G4']
   const step = tonenotationseconds('8n')
   const ticks: SYNTH_NOTE_ENTRY[] = []
   let t = 0
   let idx = 0
-  while(t < durationsec - step * 0.5)
-  {
+  while (t < durationsec - step * 0.5) {
     ticks.push([t, [0, '8n', notes[idx % notes.length]]])
-    if(withdrums && idx % 2 === 0)
-    {
+    if (withdrums && idx % 2 === 0) {
       ticks.push([t, [0, '8n', 9]])
     }
     t += step
@@ -358,10 +359,7 @@ export const MASTER_DYNAMICS_PARITY_PATCHES: MASTER_DYNAMICS_PARITY_PATCH[] = [
     id: 'master-full-mix',
     voiceconfig: 'square',
     durationsec: 3,
-    ticks: [
-      ...fastarpticks(3, true),
-      [1, [4, '4n', 'E4']],
-    ],
+    ticks: [...fastarpticks(3, true), [1, [4, '4n', 'E4']]],
   },
 ]
 

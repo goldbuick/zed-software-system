@@ -1,6 +1,6 @@
 import {
-  getdaisyengine,
   getdaisyaudiocontext,
+  getdaisyengine,
   setdaisysynthplayvolume,
 } from './daisyengine'
 import type { DAISY_SYNTH } from './daisysynth'

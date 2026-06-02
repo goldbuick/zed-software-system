@@ -49,7 +49,10 @@ function percentile(values: number[], p: number): number {
     return 0
   }
   const sorted = [...values].sort((a, b) => a - b)
-  const idx = Math.min(sorted.length - 1, Math.max(0, Math.floor(p * sorted.length)))
+  const idx = Math.min(
+    sorted.length - 1,
+    Math.max(0, Math.floor(p * sorted.length)),
+  )
   return sorted[idx]
 }
 
@@ -60,7 +63,10 @@ export function comparesongmetrics(
   tone: LEVEL_STABILITY_METRICS,
   durationsec: number,
 ): SONG_COMPARE_RESULT {
-  const windowcount = Math.min(daisy.windowpeaksDb.length, tone.windowpeaksDb.length)
+  const windowcount = Math.min(
+    daisy.windowpeaksDb.length,
+    tone.windowpeaksDb.length,
+  )
   const windowdeltas: number[] = []
   for (let i = 0; i < windowcount; i++) {
     windowdeltas.push(daisy.windowpeaksDb[i] - tone.windowpeaksDb[i])

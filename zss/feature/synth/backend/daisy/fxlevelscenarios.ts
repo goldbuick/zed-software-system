@@ -1,7 +1,10 @@
 import type { SYNTH_NOTE_ENTRY } from '../../playnotation'
 import { tonenotationseconds } from '../../playnotation'
 
-import type { LEVEL_STABILITY_FX, LEVEL_STABILITY_SCENARIO } from './levelstabilitytypes'
+import type {
+  LEVEL_STABILITY_FX,
+  LEVEL_STABILITY_SCENARIO,
+} from './levelstabilitytypes'
 
 const ARPEGGIO_NOTES = ['C4', 'D4', 'E4', 'G4', 'C5', 'G4', 'E4', 'D4']
 
@@ -21,7 +24,10 @@ function buildarpeggioticks(durationsec: number): SYNTH_NOTE_ENTRY[] {
 const FX_VOICE = 'amsawtooth'
 const FX_DURATION_SEC = 3
 
-function fxon(name: string, extra: LEVEL_STABILITY_FX[] = []): LEVEL_STABILITY_FX[] {
+function fxon(
+  name: string,
+  extra: LEVEL_STABILITY_FX[] = [],
+): LEVEL_STABILITY_FX[] {
   return [{ fx: name, config: 'on', value: '' }, ...extra]
 }
 
@@ -77,11 +83,15 @@ export const FX_MATRIX_SCENARIOS: LEVEL_STABILITY_SCENARIO[] = [
     ...fxon('autofilter'),
     ...fxon('reverb', [{ fx: 'reverb', config: 'decay', value: 0.5 }]),
   ]),
-  arpeggioscenario('fxmatrix-heavy-echo-reverb-distort', 'echo + reverb + distortion', [
-    ...fxon('echo'),
-    ...fxon('reverb', [{ fx: 'reverb', config: 'decay', value: 0.5 }]),
-    ...fxon('distortion'),
-  ]),
+  arpeggioscenario(
+    'fxmatrix-heavy-echo-reverb-distort',
+    'echo + reverb + distortion',
+    [
+      ...fxon('echo'),
+      ...fxon('reverb', [{ fx: 'reverb', config: 'decay', value: 0.5 }]),
+      ...fxon('distortion'),
+    ],
+  ),
   arpeggioscenario('fxmatrix-heavy-fc-echo-reverb', 'fcrush + echo + reverb', [
     ...fxon('fcrush', [{ fx: 'fcrush', config: 'rate', value: 12 }]),
     ...fxon('echo'),

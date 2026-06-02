@@ -1,28 +1,26 @@
+import { isstring } from 'zss/mapping/types'
+
 import { invokeplay, parseplay, tonenotationseconds } from '../../playnotation'
 import type { SYNTH_NOTE_ENTRY } from '../../playnotation'
 import { SYNTH_PLAY_VOICE_COUNT, SYNTH_VOICE_COUNT } from '../../synthdefaults'
-import { isstring } from 'zss/mapping/types'
-
 import {
-  bootisolateddaisyengine,
-  startisolateddaisydsp,
-} from './daisyengine'
-import { createdaisysynth } from './daisysynth'
-import type { LEVEL_STABILITY_SCENARIO } from './levelstabilityscenarios'
-import {
+  type LEVEL_STABILITY_METRICS,
   analyzelevelstability,
   comparelevelstability,
   diagnoselevelstability,
   formatlevelstabilityline,
-  type LEVEL_STABILITY_METRICS,
 } from '../wasm/levelstabilitymetrics'
+import { playpatternendtime } from '../wasm/playstart'
 import { defaultwasmalgoconfig } from '../wasm/wasmalgoconfigsab'
 import { applywasmfxconfig, defaultwasmfxsab } from '../wasm/wasmfxstate'
 import { WASM_DEFAULT_TTS_VOLUME } from '../wasm/wasmmastersab'
 import { defaultwasmoscconfig } from '../wasm/wasmoscconfigsab'
-import { playpatternendtime } from '../wasm/playstart'
 import type { WASM_REPLAY_STATE } from '../wasm/wasmreplaystate'
 import { defaultwasmvoicestate } from '../wasm/wasmvoiceconfig'
+
+import { bootisolateddaisyengine, startisolateddaisydsp } from './daisyengine'
+import { createdaisysynth } from './daisysynth'
+import type { LEVEL_STABILITY_SCENARIO } from './levelstabilityscenarios'
 
 const RENDER_SAMPLERATE = 44100
 const PARITY_REPLAY_OFFSET_SEC = 0.05
@@ -64,13 +62,7 @@ function parityrenderlengthsec(
 function buildreplay(scenario: LEVEL_STABILITY_SCENARIO): WASM_REPLAY_STATE {
   const fxsab = defaultwasmfxsab()
   for (const fx of scenario.fx ?? []) {
-    applywasmfxconfig(
-      fxsab,
-      fx.group ?? 0,
-      fx.fx,
-      fx.config,
-      fx.value ?? '',
-    )
+    applywasmfxconfig(fxsab, fx.group ?? 0, fx.fx, fx.config, fx.value ?? '')
     if (fx.group === undefined) {
       applywasmfxconfig(fxsab, 1, fx.fx, fx.config, fx.value ?? '')
     }
@@ -110,7 +102,9 @@ function scenarioticks(scenario: LEVEL_STABILITY_SCENARIO): SYNTH_NOTE_ENTRY[] {
     return scenario.ticks
   }
   if (!scenario.notation) {
-    throw new Error(`scenario ${scenario.id} needs notation, ticks, or playsequence`)
+    throw new Error(
+      `scenario ${scenario.id} needs notation, ticks, or playsequence`,
+    )
   }
   const invoke = parseplay(scenario.notation)[0]
   return invokeplay(0, 0, invoke, true)
@@ -204,7 +198,7 @@ export async function renderdaisylevelmetrics(
 
 export async function runlevelstabilitysuite(
   scenarios: LEVEL_STABILITY_SCENARIO[],
-  comparepairs: Array<[string, string]>,
+  comparepairs: [string, string][],
   windowms = 46,
 ): Promise<LEVEL_STABILITY_SUITE_RESULT> {
   const metrics: Record<string, LEVEL_STABILITY_METRICS> = {}

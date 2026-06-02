@@ -7,9 +7,9 @@ import { converttomp3 } from '../../mp3'
 import type { SYNTH_NOTE_ENTRY } from '../../playnotation'
 import type { RECORDING_STATE } from '../../shared/recording'
 import type { SabEngine } from '../shared/sabengine'
+import type { WASM_REPLAY_STATE } from '../wasm/wasmreplaystate'
 
 import { renderdaisyrecord } from './daisyofflinerender'
-import type { WASM_REPLAY_STATE } from '../wasm/wasmreplaystate'
 
 export type DAISY_RECORD_DEPS = {
   clearschedules: () => void
@@ -77,7 +77,9 @@ export function createdaisyrecordhandler(
         anchor.href = URL.createObjectURL(
           new Blob([mp3data as BlobPart], { type: 'audio/mp3' }),
         )
-        anchor.download = filename.endsWith('.mp3') ? filename : `${filename}.mp3`
+        anchor.download = filename.endsWith('.mp3')
+          ? filename
+          : `${filename}.mp3`
         anchor.click()
         URL.revokeObjectURL(anchor.href)
         write(SOFTWARE, player, 'export complete')

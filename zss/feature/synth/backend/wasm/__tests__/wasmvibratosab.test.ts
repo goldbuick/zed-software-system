@@ -1,3 +1,4 @@
+import { createmocksabengine } from '../testhelpers/mocksab'
 import {
   WASM_VIBRATO_GROUP_COUNT,
   WASM_VIBRATO_SAB_LEN,
@@ -8,7 +9,6 @@ import {
   pushwasmvibratogroup,
   wasmgroupvibratobase,
 } from '../wasmvibratosab'
-import { createmocksabengine } from '../testhelpers/mocksab'
 
 describe('wasmvibratosab', () => {
   it('uses epoch plus per-group stride layout', () => {

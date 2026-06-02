@@ -60,7 +60,9 @@ export function formatcompressormeterline(
   return [
     id.padEnd(28),
     `grΔ ${stats.compgrrangeDb.toFixed(1)} dB`.padEnd(17),
-    `drypk ${stats.drypeakmin.toFixed(3)}–${stats.drypeakmax.toFixed(3)}`.padEnd(22),
+    `drypk ${stats.drypeakmin.toFixed(3)}–${stats.drypeakmax.toFixed(3)}`.padEnd(
+      22,
+    ),
     `duck ${stats.duckmin.toFixed(1)}–${stats.duckmax.toFixed(1)}`.padEnd(18),
     `n=${stats.samples}`,
   ].join(' ')

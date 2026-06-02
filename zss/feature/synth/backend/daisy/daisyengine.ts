@@ -1,7 +1,10 @@
 import { MAYBE } from 'zss/mapping/types'
 
 import type { SabEngine } from '../shared/sabengine'
-import { getunlockedaudiocontext, setliveaudiocontext } from '../wasm/audiocontextunlock'
+import {
+  getunlockedaudiocontext,
+  setliveaudiocontext,
+} from '../wasm/audiocontextunlock'
 import { isofflineaudiocontext } from '../wasm/audiocontextutil'
 import { ensurewasmcoep } from '../wasm/coopcoep'
 import { initwasmfxsab } from '../wasm/wasmfxstate'
@@ -13,8 +16,8 @@ import {
   pushwasmmastersab,
 } from '../wasm/wasmmastersab'
 
-import { daisyasseturl } from './daisypaths'
 import { DAISY_BUILD_ID } from './daisybuildid'
+import { daisyasseturl } from './daisypaths'
 
 function asaudiocontext(ctx: BaseAudioContext): AudioContext {
   return ctx as AudioContext
@@ -234,7 +237,11 @@ async function bootdaisyoncontext(ctx: BaseAudioContext): Promise<DaisyEngine> {
   const wasmurl = daisyasseturl('zss_daisy.wasm')
   const processorurl = daisyasseturl('daisy-processor.js')
   if (import.meta.env.DEV) {
-    console.warn('[daisy boot] fetching', { wasmurl, processorurl, buildid: DAISY_BUILD_ID })
+    console.warn('[daisy boot] fetching', {
+      wasmurl,
+      processorurl,
+      buildid: DAISY_BUILD_ID,
+    })
   }
   await ctx.audioWorklet.addModule(processorurl)
 
@@ -275,10 +282,7 @@ async function bootdaisyoncontext(ctx: BaseAudioContext): Promise<DaisyEngine> {
   await waitfornextframe()
 
   const bootbytes = wasmbytes.slice(0)
-  const ready = Promise.race([
-    waitfordaisyready(worklet),
-    processorfail,
-  ])
+  const ready = Promise.race([waitfordaisyready(worklet), processorfail])
   worklet.port.postMessage({ zss_boot: 1, wasmbytes: bootbytes }, [bootbytes])
   await ready
   wiredevmeters(worklet)

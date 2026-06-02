@@ -12,10 +12,7 @@ import {
   WASM_VOICE_STRIDE,
 } from './wasmsabchannels'
 import { initwasmvoicecfgsab } from './wasmvoicecfgsab'
-import {
-  defaultwasmvoicestate,
-  wasmvoicestatetosab,
-} from './wasmvoiceconfig'
+import { defaultwasmvoicestate, wasmvoicestatetosab } from './wasmvoiceconfig'
 
 export function initwasmvoicesab(engine: SabEngine) {
   initwasmsabchannels(engine)

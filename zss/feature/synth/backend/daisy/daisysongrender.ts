@@ -1,19 +1,19 @@
 import {
+  type LEVEL_STABILITY_METRICS,
   analyzelevelstability,
   formatlevelstabilityline,
-  type LEVEL_STABILITY_METRICS,
 } from '../wasm/levelstabilitymetrics.ts'
 
 import {
-  renderdaisylevelscenario,
   type LEVEL_STABILITY_RENDER,
+  renderdaisylevelscenario,
 } from './daisylevelrender.ts'
 import type { LEVEL_STABILITY_SCENARIO } from './levelstabilityscenarios.ts'
 
 export type SONG_RENDER_RESULT = {
   render: LEVEL_STABILITY_RENDER
   metrics: LEVEL_STABILITY_METRICS
-  loudestwindows: Array<{ index: number; timesec: number; peakdb: number }>
+  loudestwindows: { index: number; timesec: number; peakdb: number }[]
 }
 
 export type SONG_RENDER_PAYLOAD = {
@@ -25,14 +25,14 @@ export type SONG_RENDER_PAYLOAD = {
   }
   metrics: LEVEL_STABILITY_METRICS
   report: string
-  loudestwindows: Array<{ index: number; timesec: number; peakdb: number }>
+  loudestwindows: { index: number; timesec: number; peakdb: number }[]
   wavbase64: string
 }
 
 function loudestwindows(
   metrics: LEVEL_STABILITY_METRICS,
   topn = 12,
-): Array<{ index: number; timesec: number; peakdb: number }> {
+): { index: number; timesec: number; peakdb: number }[] {
   const rows = metrics.windowpeaksDb.map((peakdb, index) => ({
     index,
     timesec: (index * metrics.windowms) / 1000,
@@ -42,7 +42,10 @@ function loudestwindows(
   return rows.slice(0, topn)
 }
 
-export function encodewavmono16(samples: Float32Array, samplerate: number): ArrayBuffer {
+export function encodewavmono16(
+  samples: Float32Array,
+  samplerate: number,
+): ArrayBuffer {
   const bytespersample = 2
   const datasize = samples.length * bytespersample
   const buffer = new ArrayBuffer(44 + datasize)
@@ -71,7 +74,11 @@ export function encodewavmono16(samples: Float32Array, samplerate: number): Arra
   let offset = 44
   for (let i = 0; i < samples.length; i++) {
     const clamped = Math.max(-1, Math.min(1, samples[i]))
-    view.setInt16(offset, clamped < 0 ? clamped * 0x8000 : clamped * 0x7fff, true)
+    view.setInt16(
+      offset,
+      clamped < 0 ? clamped * 0x8000 : clamped * 0x7fff,
+      true,
+    )
     offset += 2
   }
   return buffer
@@ -93,7 +100,11 @@ export async function renderdaisysongscenario(
   windowms = 46,
 ): Promise<SONG_RENDER_RESULT> {
   const render = await renderdaisylevelscenario(scenario)
-  const metrics = analyzelevelstability(render.samples, render.samplerate, windowms)
+  const metrics = analyzelevelstability(
+    render.samples,
+    render.samplerate,
+    windowms,
+  )
   return {
     render,
     metrics,

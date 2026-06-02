@@ -1,4 +1,6 @@
 import type { SYNTH_NOTE_ENTRY } from '../../playnotation'
+import { WASM_DEFAULT_TTS_VOLUME } from '../wasm/wasmmastersab'
+import type { WASM_REPLAY_STATE } from '../wasm/wasmreplaystate'
 
 import {
   bootisolateddaisyengine,
@@ -6,8 +8,6 @@ import {
   startisolateddaisydsp,
 } from './daisyengine'
 import { createdaisysynth } from './daisysynth'
-import { WASM_DEFAULT_TTS_VOLUME } from '../wasm/wasmmastersab'
-import type { WASM_REPLAY_STATE } from '../wasm/wasmreplaystate'
 
 export async function renderdaisyrecord(
   replay: WASM_REPLAY_STATE,

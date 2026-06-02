@@ -23,12 +23,9 @@ import {
   canonicalvoicefxgroupindex,
   voiceindexfxgroup,
 } from '../../voicefxgroup'
-
 import type { SabEngine } from '../shared/sabengine'
-import {
-  initwasmsabchannels,
-  pushwasmsabvalues,
-} from '../wasm/sabpush'
+import { playpatternendtime } from '../wasm/playstart'
+import { initwasmsabchannels, pushwasmsabvalues } from '../wasm/sabpush'
 import { resetsabseq } from '../wasm/sabseq'
 import {
   defaultwasmalgoconfig,
@@ -48,8 +45,10 @@ import {
   pushwasmoscconfigsab,
 } from '../wasm/wasmoscconfigsab'
 import { createwasmplayscheduler } from '../wasm/wasmplayscheduler'
-import type { DAISY_RECORD_DEPS } from './daisyrecordhandler'
-import { type WASM_REPLAY_STATE, clonewasmreplaystate } from '../wasm/wasmreplaystate'
+import {
+  type WASM_REPLAY_STATE,
+  clonewasmreplaystate,
+} from '../wasm/wasmreplaystate'
 import {
   WASM_DRUMS_SAB,
   WASM_DRUM_COUNT,
@@ -62,14 +61,18 @@ import {
   initwasmvibratosab,
   pushwasmvibratogroup,
 } from '../wasm/wasmvibratosab'
-import { initwasmvoicecfgsab, pushwasmvoicecfgsab } from '../wasm/wasmvoicecfgsab'
+import {
+  initwasmvoicecfgsab,
+  pushwasmvoicecfgsab,
+} from '../wasm/wasmvoicecfgsab'
 import {
   type WASM_VOICE_STATE,
   applywasmvoiceconfig,
   defaultwasmvoicestate,
   wasmvoicestatetosab,
 } from '../wasm/wasmvoiceconfig'
-import { playpatternendtime } from '../wasm/playstart'
+
+import type { DAISY_RECORD_DEPS } from './daisyrecordhandler'
 
 const WASM_VOICE_COUNT = SYNTH_VOICE_COUNT
 const WASM_VOICE_BLOCK = WASM_VOICE_COUNT * WASM_VOICE_STRIDE
@@ -146,13 +149,13 @@ export function createdaisysynth(
   let voicecfg = defaultwasmvoicestate()
   let oscconfig = defaultwasmoscconfig()
   let algoconfig = defaultwasmalgoconfig()
-  let vibratosab = defaultwasmvibratosab(maxi.audioContext.currentTime)
+  const vibratosab = defaultwasmvibratosab(maxi.audioContext.currentTime)
   let pacertime = -1
   let pacercount = 0
   let bgplayindex = SYNTH_SFX_RESET
   let playvolume = 80
   let bgplayvolume = 100
-  let beatgridepoch = maxi.audioContext.currentTime
+  const beatgridepoch = maxi.audioContext.currentTime
   const recording: RECORDING_STATE = {
     recordedticks: [],
     recordlastpercent: 0,

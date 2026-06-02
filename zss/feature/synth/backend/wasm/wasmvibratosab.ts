@@ -1,4 +1,5 @@
 import type { SabEngine } from '../shared/sabengine'
+
 import { pushwasmsabvalues } from './sabpush'
 import {
   WASM_VIBRATO_GROUP_COUNT,
@@ -8,7 +9,9 @@ import {
 } from './wasmsabchannels'
 
 export function defaultwasmvibratosab(timeepoch = 0): number[] {
-  return new Array(WASM_VIBRATO_SAB_LEN).fill(0).map((_, i) => (i === 0 ? timeepoch : 0))
+  return new Array(WASM_VIBRATO_SAB_LEN)
+    .fill(0)
+    .map((_, i) => (i === 0 ? timeepoch : 0))
 }
 
 export function initwasmvibratosab(maxi: SabEngine, timeepoch: number) {

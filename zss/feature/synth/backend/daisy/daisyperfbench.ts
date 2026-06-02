@@ -1,4 +1,10 @@
 import type { SYNTH_NOTE_ENTRY } from '../../playnotation'
+import { defaultwasmalgoconfig } from '../wasm/wasmalgoconfigsab'
+import { applywasmfxconfig, defaultwasmfxsab } from '../wasm/wasmfxstate'
+import { WASM_DEFAULT_TTS_VOLUME } from '../wasm/wasmmastersab'
+import { defaultwasmoscconfig } from '../wasm/wasmoscconfigsab'
+import type { WASM_REPLAY_STATE } from '../wasm/wasmreplaystate'
+import { defaultwasmvoicestate } from '../wasm/wasmvoiceconfig'
 
 import {
   bootisolateddaisyengine,
@@ -6,12 +12,6 @@ import {
   startisolateddaisydsp,
 } from './daisyengine'
 import { createdaisysynth } from './daisysynth'
-import { defaultwasmalgoconfig } from '../wasm/wasmalgoconfigsab'
-import { applywasmfxconfig, defaultwasmfxsab } from '../wasm/wasmfxstate'
-import { WASM_DEFAULT_TTS_VOLUME } from '../wasm/wasmmastersab'
-import type { WASM_REPLAY_STATE } from '../wasm/wasmreplaystate'
-import { defaultwasmoscconfig } from '../wasm/wasmoscconfigsab'
-import { defaultwasmvoicestate } from '../wasm/wasmvoiceconfig'
 
 const DEFAULT_RENDER_SEC = 2
 const DEFAULT_SAMPLERATE = 44100

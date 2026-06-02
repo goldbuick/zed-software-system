@@ -9,10 +9,7 @@ import {
   MASTER_DYNAMICS_PARITY_PATCHES,
   WASM_PARITY_PATCHES,
 } from '../paritypatches'
-import {
-  TONE_PARITY_EXCLUDED,
-  paritytolerancesfor,
-} from '../paritytolerances'
+import { TONE_PARITY_EXCLUDED, paritytolerancesfor } from '../paritytolerances'
 
 type PARITY_FIXTURE_FILE = {
   patches: Record<string, PARITY_AUDIO_METRICS>

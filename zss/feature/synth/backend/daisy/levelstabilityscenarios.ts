@@ -7,20 +7,19 @@ import type {
   LEVEL_STABILITY_SCENARIO,
   LEVEL_STABILITY_VOICE_CONFIG,
 } from './levelstabilitytypes'
+import {
+  SCALE_CREW_FX,
+  SCALE_CREW_VOICE_CONFIGS,
+  buildscalecrewsequence,
+  buildscalecrewsequencewithmelody,
+  estimatesequencedurationsec,
+} from './scalecrewsong'
 
 export type {
   LEVEL_STABILITY_FX,
   LEVEL_STABILITY_SCENARIO,
   LEVEL_STABILITY_VOICE_CONFIG,
 } from './levelstabilitytypes'
-
-import {
-  buildscalecrewsequence,
-  buildscalecrewsequencewithmelody,
-  estimatesequencedurationsec,
-  SCALE_CREW_FX,
-  SCALE_CREW_VOICE_CONFIGS,
-} from './scalecrewsong'
 
 const ARPEGGIO_NOTES = ['C4', 'D4', 'E4', 'G4', 'C5', 'G4', 'E4', 'D4']
 
@@ -37,7 +36,9 @@ export function buildarpeggioticks(durationsec: number): SYNTH_NOTE_ENTRY[] {
   return ticks
 }
 
-export function buildarpeggiodrumticks(durationsec: number): SYNTH_NOTE_ENTRY[] {
+export function buildarpeggiodrumticks(
+  durationsec: number,
+): SYNTH_NOTE_ENTRY[] {
   const ticks: SYNTH_NOTE_ENTRY[] = []
   const step = tonenotationseconds('8n')
   let t = 0
@@ -153,7 +154,7 @@ export const LEVEL_STABILITY_SCENARIOS: LEVEL_STABILITY_SCENARIO[] = [
   ...FX_MATRIX_SCENARIOS,
 ]
 
-export const LEVEL_STABILITY_COMPARE_PAIRS: Array<[string, string]> = [
+export const LEVEL_STABILITY_COMPARE_PAIRS: [string, string][] = [
   ['amsaw-sustain-dry', 'amsaw-sustain-reverb'],
   ['amsaw-arpeggio-dry', 'amsaw-arpeggio-fxstack'],
   ['scalecrew-intro-melody', 'scalecrew-intro-full'],
@@ -161,7 +162,7 @@ export const LEVEL_STABILITY_COMPARE_PAIRS: Array<[string, string]> = [
   ['scalecrew-full-song-melody', 'scalecrew-full-song'],
 ]
 
-export const LEVEL_STABILITY_MIX_BALANCE_PAIRS: Array<[string, string]> = [
+export const LEVEL_STABILITY_MIX_BALANCE_PAIRS: [string, string][] = [
   ['scalecrew-climax-melody', 'scalecrew-climax-full'],
   ['scalecrew-full-song-melody', 'scalecrew-full-song'],
 ]
@@ -172,8 +173,8 @@ export const LEVEL_STABILITY_MIN_FX_PEAKRANGE_INCREASE_DB = 4
 /** Minimum rms-range increase (dB) reverb sustain must show vs dry. */
 export const LEVEL_STABILITY_MIN_REVERB_RMSRANGE_INCREASE_DB = 3
 
-export const SCALE_CREW_SCENARIO_IDS = LEVEL_STABILITY_SCENARIOS.filter((item) =>
-  item.id.startsWith('scalecrew-'),
+export const SCALE_CREW_SCENARIO_IDS = LEVEL_STABILITY_SCENARIOS.filter(
+  (item) => item.id.startsWith('scalecrew-'),
 ).map((item) => item.id)
 
 export function findlevelstabilityscenario(
@@ -182,18 +183,26 @@ export function findlevelstabilityscenario(
   return LEVEL_STABILITY_SCENARIOS.find((item) => item.id === id)
 }
 
-export function filterlevelstabilityscenarios(filter: string): LEVEL_STABILITY_SCENARIO[] {
+export function filterlevelstabilityscenarios(
+  filter: string,
+): LEVEL_STABILITY_SCENARIO[] {
   if (filter === 'all') {
     return LEVEL_STABILITY_SCENARIOS
   }
   if (filter === 'scalecrew') {
-    return LEVEL_STABILITY_SCENARIOS.filter((item) => item.id.startsWith('scalecrew-'))
+    return LEVEL_STABILITY_SCENARIOS.filter((item) =>
+      item.id.startsWith('scalecrew-'),
+    )
   }
   if (filter === 'simple') {
-    return LEVEL_STABILITY_SCENARIOS.filter((item) => item.id.startsWith('amsaw-'))
+    return LEVEL_STABILITY_SCENARIOS.filter((item) =>
+      item.id.startsWith('amsaw-'),
+    )
   }
   if (filter === 'fxmatrix') {
-    return LEVEL_STABILITY_SCENARIOS.filter((item) => item.id.startsWith('fxmatrix-'))
+    return LEVEL_STABILITY_SCENARIOS.filter((item) =>
+      item.id.startsWith('fxmatrix-'),
+    )
   }
   const one = findlevelstabilityscenario(filter)
   return one ? [one] : []

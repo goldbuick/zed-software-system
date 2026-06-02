@@ -1,28 +1,28 @@
 import { Offline } from 'tone'
-
-import { createsynth } from '../../archive/tone/index'
-import { addfcrushmodule } from '../../archive/tone/fcrushworkletnode'
-import { addsidechainmodule } from '../../archive/tone/sidechainworkletnode'
-import { synthvoiceconfig } from '../../archive/tone/voiceconfig/index'
-import { invokeplay, parseplay, tonenotationseconds } from '../../playnotation'
-import type { SYNTH_NOTE_ENTRY } from '../../playnotation'
 import { isstring } from 'zss/mapping/types'
 
+import { addfcrushmodule } from '../../archive/tone/fcrushworkletnode'
+import { createsynth } from '../../archive/tone/index'
+import { addsidechainmodule } from '../../archive/tone/sidechainworkletnode'
+import { synthvoiceconfig } from '../../archive/tone/voiceconfig/index'
 import { synthvoicefxconfig } from '../../archive/tone/voicefx/index'
+import { invokeplay, parseplay, tonenotationseconds } from '../../playnotation'
+import type { SYNTH_NOTE_ENTRY } from '../../playnotation'
+import { SYNTH_PLAY_VOICE_COUNT } from '../../synthdefaults.ts'
 import type { LEVEL_STABILITY_SCENARIO } from '../daisy/levelstabilityscenarios.ts'
 import { estimatesequencedurationsec } from '../daisy/scalecrewsong.ts'
-import { SYNTH_PLAY_VOICE_COUNT } from '../../synthdefaults.ts'
+
+import {
+  type PARITY_AUDIO_METRICS,
+  audiobuffermetrics,
+  silentparitymetrics,
+} from './paritymetrics'
 import type {
   DRUM_PARITY_PATCH,
   FX_PARITY_PATCH,
   MASTER_DYNAMICS_PARITY_PATCH,
   PARITY_PATCH,
 } from './paritypatches'
-import {
-  type PARITY_AUDIO_METRICS,
-  audiobuffermetrics,
-  silentparitymetrics,
-} from './paritymetrics'
 import { TONE_PARITY_EXCLUDED } from './paritytolerances'
 
 const PARITY_SAMPLERATE = 44100
@@ -52,7 +52,9 @@ function patchentries(notation: string): SYNTH_NOTE_ENTRY[] {
   return invokeplay(0, 0, invoke, true)
 }
 
-function toneaudiobuffer(buffer: Awaited<ReturnType<typeof Offline>>): AudioBuffer {
+function toneaudiobuffer(
+  buffer: Awaited<ReturnType<typeof Offline>>,
+): AudioBuffer {
   const native = typeof buffer.get === 'function' ? buffer.get() : buffer
   return native as AudioBuffer
 }

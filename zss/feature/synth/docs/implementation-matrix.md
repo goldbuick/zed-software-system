@@ -23,7 +23,7 @@ flowchart LR
 - **Maximilian** (archived): [`archive/maxi/`](../archive/maxi/) — generated play code, no longer selectable at runtime
 - **Tone** (archived): [`archive/tone/`](../archive/tone/) — parity ground truth; Daisy voice/FX Tone-gated, drums use Daisy-native fixtures
 
-**DaisySP runtime usage:** `Oscillator`, `Adsr` (doot/sparkle/algo operators only), `Decimator`, `Overdrive`, `Svf`, `Phasor`, `DelayLine`, `Chorus`, `WhiteNoise`, `DcBlock`, `OnePole`, `Autowah`, `StringVoice` (`#synth pluck` strike), `ModalVoice` (bells), `Drip`, and (Daisy drums) `AnalogBassDrum`, `SyntheticBassDrum`. **`#synth env`** on play voices uses custom **`ZssLinearEnv`** (linear ADSR, note-on reset, Tone parity) — not DaisySP `Adsr`. **`#synth string`** uses custom SOS ensemble DSP (saws + `Svf`/`OnePole`). **Voice FX bus:** **parallel sends** in `applyfxgroup()` (each FX from same dry; DAW additive mix); return-bus **compressor on wet sum** ([parallel-fx-bus.md](parallel-fx-bus.md)). **Main bus compressor:** custom knee in `mastercompressorgain()`. **Sidechain duck:** custom power-domain envelope on play bus (active). **`#reverb`** uses custom 4-comb + predelay + `tanh(wet × 1.6)` (Maxi match).
+**DaisySP runtime usage:** `Oscillator`, `Adsr` (doot/sparkle/algo operators only), `Decimator`, `Overdrive`, `Svf`, `Phasor`, `DelayLine`, `Chorus`, `WhiteNoise`, `DcBlock`, `OnePole`, `Autowah`, `StringVoice` (`#synth pluck` strike), `ModalVoice` (bells), `Drip`, and (Daisy drums) `AnalogBassDrum`, `SyntheticBassDrum`. **`#synth env`** on play voices uses custom **`ZssLinearEnv`** (linear ADSR, note-on reset, Tone parity) — not DaisySP `Adsr`. **`#synth string`** uses custom SOS ensemble DSP (saws + `Svf`/`OnePole`). **Voice FX bus:** **parallel sends** in `applyfxgroup()` (each FX from same dry; DAW additive mix); return-bus **compressor on wet sum** ([parallel-fx-bus.md](parallel-fx-bus.md)). **Main bus compressor:** Tone-shaped knee in `mastercompressor()` (single 3/150 ms envelope). **Sidechain duck:** custom power-domain envelope on play bus (active). **`#reverb`** uses custom 4-comb + predelay + `tanh(wet × 1.6)` (Maxi match).
 
 ---
 
@@ -74,7 +74,7 @@ Serial wet chain (Maxi + Daisy): **fc → echo → reverb → autofilter → dis
 | Processor | Role | Maximilian | DaisySP WASM | Tone | DaisySP module | Swap status | Key files |
 |-----------|------|------------|--------------|------|----------------|-------------|-----------|
 | Sidechain duck | Duck `#play` when bg/TTS/drums hit | Power-domain detector; clap+bass tap | Custom envelope + TTS key | `SidechainCompressor` worklet | Custom | **Active** (Daisy) | `wasmsidechainplaycode.ts`, cpp |
-| Main compressor | Bus dynamics | -28 dB / 4:1 / 3 ms / 150 ms | Custom knee compressor | `Tone.Compressor` knee 30 dB | Custom | **Active** (Daisy) | cpp `mastercompressorgain()` |
+| Main compressor | Bus dynamics | -28 dB / 4:1 / 3 ms / 150 ms | Custom knee compressor | `Tone.Compressor` knee 30 dB | Custom | **Active** (Daisy) | cpp `mastercompressor()` |
 | Razzle | Master character | `maxiDelayline` + `maxiOsc` | Manual vibrato delay + `Chorus` + hiss | `Vibrato` + `Chorus` + noise | `Chorus` (partial) | **Partial swap** | `wasmrazzleplaycode.ts` |
 | Output safety | Peak control | — | `Limiter` | — | Final clamp | **Done** (Daisy) | cpp `zss_process()` |
 | DC block | Master out | — | `DcBlock` | — | `DcBlock` | **Swapped** | cpp `zss_process()` |

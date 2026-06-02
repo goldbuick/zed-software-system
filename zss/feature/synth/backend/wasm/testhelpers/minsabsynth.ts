@@ -9,30 +9,24 @@ import {
   SYNTH_PLAY_VOICE_COUNT,
   SYNTH_VOICE_COUNT,
 } from 'zss/feature/synth/synthdefaults'
+import { voiceindexfxgroup } from 'zss/feature/synth/voicefxgroup'
 import { randominteger } from 'zss/mapping/number'
 import { isnumber, isstring } from 'zss/mapping/types'
 
 import type { SabEngine } from '../../shared/sabengine'
 import { playpatternendtime } from '../playstart'
 import { initwasmsabchannels, pushwasmsabvalues } from '../sabpush'
-import { initwasmvoicesab } from '../wasminitsab'
 import {
   defaultwasmalgoconfig,
   pushwasmalgoconfigsab,
 } from '../wasmalgoconfigsab'
-import {
-  defaultwasmfxsab,
-  initwasmfxsab,
-  pushwasmfxsab,
-} from '../wasmfxstate'
-import {
-  defaultwasmoscconfig,
-  pushwasmoscconfigsab,
-} from '../wasmoscconfigsab'
+import { defaultwasmfxsab, initwasmfxsab, pushwasmfxsab } from '../wasmfxstate'
+import { initwasmvoicesab } from '../wasminitsab'
+import { defaultwasmoscconfig, pushwasmoscconfigsab } from '../wasmoscconfigsab'
 import { createwasmplayscheduler } from '../wasmplayscheduler'
 import {
-  WASM_DRUM_COUNT,
   WASM_DRUMS_SAB,
+  WASM_DRUM_COUNT,
   WASM_VOICES_SAB,
   WASM_VOICE_STRIDE,
 } from '../wasmsabchannels'
@@ -41,13 +35,12 @@ import {
   initwasmvibratosab,
   pushwasmvibratogroup,
 } from '../wasmvibratosab'
+import { pushwasmvoicecfgsab } from '../wasmvoicecfgsab'
 import {
   applywasmvoiceconfig,
   defaultwasmvoicestate,
   wasmvoicestatetosab,
 } from '../wasmvoiceconfig'
-import { pushwasmvoicecfgsab } from '../wasmvoicecfgsab'
-import { voiceindexfxgroup } from 'zss/feature/synth/voicefxgroup'
 
 const WASM_VOICE_BLOCK = SYNTH_VOICE_COUNT * WASM_VOICE_STRIDE
 
@@ -64,10 +57,10 @@ export function createminsabsynth(engine: SabEngine) {
   initwasmvibratosab(engine, engine.audioContext.currentTime)
 
   let voicestate = new Array(WASM_VOICE_BLOCK).fill(0)
-  let voicecfg = defaultwasmvoicestate()
-  let oscconfig = defaultwasmoscconfig()
-  let algoconfig = defaultwasmalgoconfig()
-  let fxsab = defaultwasmfxsab()
+  const voicecfg = defaultwasmvoicestate()
+  const oscconfig = defaultwasmoscconfig()
+  const algoconfig = defaultwasmalgoconfig()
+  const fxsab = defaultwasmfxsab()
   const vibratosab = defaultwasmvibratosab(engine.audioContext.currentTime)
   const drumstrikes = new Array(WASM_DRUM_COUNT).fill(0)
   const drumdursec = new Array(WASM_DRUM_COUNT).fill(0)

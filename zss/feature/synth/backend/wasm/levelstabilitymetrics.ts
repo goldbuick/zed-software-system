@@ -44,7 +44,11 @@ function lineartodb(value: number): number {
   return value > 0 ? 20 * Math.log10(value) : SILENT_DB
 }
 
-function windowstats(samples: Float32Array, start: number, end: number): LEVEL_WINDOW_STATS {
+function windowstats(
+  samples: Float32Array,
+  start: number,
+  end: number,
+): LEVEL_WINDOW_STATS {
   let sumsq = 0
   let peak = 0
   const count = end - start
@@ -59,7 +63,8 @@ function windowstats(samples: Float32Array, start: number, end: number): LEVEL_W
   const rms = count > 0 ? Math.sqrt(sumsq / count) : 0
   const peakdb = lineartodb(peak)
   const rmsdb = lineartodb(rms)
-  const crestdb = peakdb > SILENT_DB + 1 && rmsdb > SILENT_DB + 1 ? peakdb - rmsdb : 0
+  const crestdb =
+    peakdb > SILENT_DB + 1 && rmsdb > SILENT_DB + 1 ? peakdb - rmsdb : 0
   return { peakdb, rmsdb, crestdb }
 }
 
@@ -206,7 +211,10 @@ function sparkvalue(db: number, min: number, max: number): string {
     return SPARK_CHARS[0]
   }
   const t = (db - min) / (max - min)
-  const idx = Math.max(0, Math.min(SPARK_CHARS.length - 1, Math.round(t * (SPARK_CHARS.length - 1))))
+  const idx = Math.max(
+    0,
+    Math.min(SPARK_CHARS.length - 1, Math.round(t * (SPARK_CHARS.length - 1))),
+  )
   return SPARK_CHARS[idx]
 }
 
@@ -266,7 +274,7 @@ export function formatwindowcompareplot(
 
 export function diagnoselevelstability(
   results: Record<string, LEVEL_STABILITY_METRICS>,
-  pairs: Array<[string, string]>,
+  pairs: [string, string][],
 ): string[] {
   const lines: string[] = []
   for (const [baseid, candid] of pairs) {

@@ -8,7 +8,9 @@ import {
 describe('scalecrewsong', () => {
   it('strips drum-only leading invoke for melody-only renders', () => {
     expect(scalecrewmelodyonlyplay('s460xpx0x6x0x;--qcxb!x;')).toBe('--qcxb!x;')
-    expect(scalecrewmelodyonlyplay('0;cxdxexfxgxaxb!x+cx')).toBe('cxdxexfxgxaxb!x+cx')
+    expect(scalecrewmelodyonlyplay('0;cxdxexfxgxaxb!x+cx')).toBe(
+      'cxdxexfxgxaxb!x+cx',
+    )
     expect(scalecrewmelodyonlyplay('cxdxexfx')).toBe('cxdxexfx')
   })
 

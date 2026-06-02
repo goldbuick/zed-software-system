@@ -1,8 +1,9 @@
 import type { SabEngine } from '../shared/sabengine'
+
 import {
   WASM_SAB_SEQ,
-  WASM_SAB_SEQ_LEN,
   WASM_SAB_SEQ_CHANNEL_TO_IDX,
+  WASM_SAB_SEQ_LEN,
 } from './wasmsabchannels'
 
 let seqview: Int32Array | undefined

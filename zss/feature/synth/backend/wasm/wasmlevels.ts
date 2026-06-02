@@ -41,22 +41,23 @@ function volumetodb(value: number) {
   return 20 * Math.log10(value) - 35
 }
 
-export const WASM_DRUM_BUS_DB = volumetodb(32)
+/** Tone drumvolume: volumetodb(100) + 10 dB (Daisy kDrumBusGain). */
+export const WASM_DRUM_BUS_DB = volumetodb(100) + 10
 export const WASM_DRUM_BUS_GAIN = Math.pow(10, WASM_DRUM_BUS_DB / 20)
 
-export const WASM_PLAY_BUS_DB = volumetodb(32)
+/** Tone playvolume: volumetodb(20) (Daisy kPlayBusGain). */
+export const WASM_PLAY_BUS_DB = volumetodb(20)
 export const WASM_PLAY_BUS_GAIN = Math.pow(10, WASM_PLAY_BUS_DB / 20)
 
-/** Daisy master comp: detector 3/150 ms; applied gain slew 8/100 ms (zss_daisy_synth.cpp). */
+/** Maxi WASM master comp (Daisy uses Tone-shaped knee comp in zss_daisy_synth.cpp). */
 export const WASM_MASTER_COMP_GAIN_ATTACK_SEC = 0.008
 export const WASM_MASTER_COMP_GAIN_RELEASE_SEC = 0.1
-/** Post-GR makeup on comp path before razzle (kMasterCompMakeupDb). */
-export const WASM_MASTER_COMP_MAKEUP_DB = 4
+export const WASM_MASTER_COMP_MAKEUP_DB = 0
 
-/** Trim after main compressor + razzle in WASM master chain. */
+/** Maxi WASM only. */
 export const WASM_MASTER_TRIM_DB = -2
 
-/** Tone sidechain makeup (+24 dB) minus headroom; calibrates #vol 80 without cranking to 500. */
+/** Maxi WASM only. */
 export const WASM_MASTER_MAKEUP_DB = 22
 
 /** Tone AlgoSynth per-operator volume (−10 dB). */

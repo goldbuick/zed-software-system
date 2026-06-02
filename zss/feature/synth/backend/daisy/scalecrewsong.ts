@@ -1,15 +1,12 @@
 import { invokeplay, parseplay } from '../../playnotation'
 import { SYNTH_PLAY_VOICE_COUNT } from '../../synthdefaults'
+import { playpatternendtime } from '../wasm/playstart'
 
 import type { LEVEL_STABILITY_FX } from './levelstabilityscenarios'
-import { playpatternendtime } from '../wasm/playstart'
 
 export type SCALE_CREW_SECTION = 'intro' | 'climax' | 'full'
 
-export type LEVEL_STABILITY_VOICE_CONFIG = [
-  string,
-  string | number | number[],
-]
+export type LEVEL_STABILITY_VOICE_CONFIG = [string, string | number | number[]]
 
 /** Voice + FX from the SCALE CREW board patch. */
 export const SCALE_CREW_VOICE_CONFIGS: LEVEL_STABILITY_VOICE_CONFIG[] = [
@@ -74,9 +71,7 @@ const SCALE_CREW_DENSE_D = [
   's9x0xpx0x8x8x;--qfxex;',
 ]
 
-const SCALE_CREW_OUTRO = [
-  's460xpx0x6x0xxxxxxxxxpxpxpx;--qcxb!xaxhgc;',
-]
+const SCALE_CREW_OUTRO = ['s460xpx0x6x0xxxxxxxxxpxpxpx;--qcxb!xaxhgc;']
 
 function repeatblock(block: string[], count: number): string[] {
   const out: string[] = []
@@ -146,9 +141,10 @@ export function estimatesequencedurationsec(plays: string[]): number {
   return pacertime + 1.5
 }
 
-export function buildscalecrewsequencewithmelody(
-  section: SCALE_CREW_SECTION,
-): { full: string[]; melody: string[] } {
+export function buildscalecrewsequencewithmelody(section: SCALE_CREW_SECTION): {
+  full: string[]
+  melody: string[]
+} {
   const full = buildscalecrewsequence(section)
   return {
     full,

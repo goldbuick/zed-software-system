@@ -23,7 +23,8 @@ describe('brickproxiedurl', () => {
   })
 
   it('round-trips absolute http(s) urls through base64url', () => {
-    const upstream = 'https://museumofzzt.com/api/v1/search/files/?offset=0&title=foo'
+    const upstream =
+      'https://museumofzzt.com/api/v1/search/files/?offset=0&title=foo'
     const proxied = brickproxiedurl(upstream)
     const parsed = new URL(proxied)
     expect(parsed.origin).toBe(BRICK_BASE)

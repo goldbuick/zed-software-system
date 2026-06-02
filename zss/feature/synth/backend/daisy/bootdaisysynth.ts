@@ -7,9 +7,9 @@ import {
   setdaisysynthplayvolume,
   setdaisysynthttsvolume,
 } from './daisyengine'
+import { createdaisyrecordhandler } from './daisyrecordhandler'
 import { type DAISY_SYNTH, createdaisysynth } from './daisysynth'
 import { schedulewarmdaisydrums } from './warmdaisydrums'
-import { createdaisyrecordhandler } from './daisyrecordhandler'
 
 export async function bootdaisysynth(): Promise<DAISY_SYNTH> {
   const engine = await ensuredaisysynthwasm()

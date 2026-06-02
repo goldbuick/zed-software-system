@@ -1,13 +1,15 @@
+import { SYNTH_PLAY_VOICE_COUNT } from '../../synthdefaults'
+
 import type { LEVEL_STABILITY_SCENARIO } from './levelstabilityscenarios'
 import { estimatesequencedurationsec } from './scalecrewsong'
-import { SYNTH_PLAY_VOICE_COUNT } from '../../synthdefaults'
 
 export const LEVEL_ISSUE_SONG_ID = 'level-issue-song'
 
-export const LEVEL_ISSUE_VOICE_CONFIGS: LEVEL_STABILITY_SCENARIO['voiceconfigs'] = [
-  ['amsawtooth', ''],
-  ['env', [0.03, 0.2, 0.03, 0.1]],
-]
+export const LEVEL_ISSUE_VOICE_CONFIGS: LEVEL_STABILITY_SCENARIO['voiceconfigs'] =
+  [
+    ['amsawtooth', ''],
+    ['env', [0.03, 0.2, 0.03, 0.1]],
+  ]
 
 function repeatblock(lines: string[], count: number): string[] {
   const out: string[] = []
@@ -69,9 +71,7 @@ export function isolateplayvoice(play: string, voiceindex: number): string {
   while (parts.length < SYNTH_PLAY_VOICE_COUNT) {
     parts.push('')
   }
-  return parts
-    .map((part, idx) => (idx === voiceindex ? part : ''))
-    .join(';')
+  return parts.map((part, idx) => (idx === voiceindex ? part : '')).join(';')
 }
 
 export function filterplaysequencevoice(
@@ -120,8 +120,13 @@ export function levelissuevoicerolesummary() {
   return { playlinecount: playsequence.length, roles }
 }
 
-export function levelissuevoicescenario(voiceindex: number): LEVEL_STABILITY_SCENARIO {
-  const playsequence = filterplaysequencevoice(buildlevelissueplaysequence(), voiceindex)
+export function levelissuevoicescenario(
+  voiceindex: number,
+): LEVEL_STABILITY_SCENARIO {
+  const playsequence = filterplaysequencevoice(
+    buildlevelissueplaysequence(),
+    voiceindex,
+  )
   return {
     id: `${LEVEL_ISSUE_SONG_ID}-voice-${voiceindex}`,
     description: `Level-issue repro — voice ${voiceindex} only`,

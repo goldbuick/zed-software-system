@@ -1,12 +1,7 @@
-import { invokeplay, parseplay, tonenotationseconds } from '../../playnotation'
-import type { SYNTH_NOTE_ENTRY } from '../../playnotation'
 import { isstring } from 'zss/mapping/types'
 
-import {
-  bootisolateddaisyengine,
-  startisolateddaisydsp,
-} from './daisyengine'
-import { createdaisysynth } from './daisysynth'
+import type { SYNTH_NOTE_ENTRY } from '../../playnotation'
+import { invokeplay, parseplay, tonenotationseconds } from '../../playnotation'
 import {
   type PARITY_AUDIO_METRICS,
   audiobuffermetrics,
@@ -23,6 +18,9 @@ import { WASM_DEFAULT_TTS_VOLUME } from '../wasm/wasmmastersab'
 import { defaultwasmoscconfig } from '../wasm/wasmoscconfigsab'
 import type { WASM_REPLAY_STATE } from '../wasm/wasmreplaystate'
 import { defaultwasmvoicestate } from '../wasm/wasmvoiceconfig'
+
+import { bootisolateddaisyengine, startisolateddaisydsp } from './daisyengine'
+import { createdaisysynth } from './daisysynth'
 
 const PARITY_SAMPLERATE = 44100
 const PARITY_REPLAY_OFFSET_SEC = 0.05
@@ -117,7 +115,13 @@ export async function renderdaisyparityfxpatch(
   const ticks = patchentries(patch.notation)
   const rendersec = parityrenderlengthsec(patch.durationsec, ticks)
   const fxsab = defaultwasmfxsab()
-  applywasmfxconfig(fxsab, patch.voiceindex, patch.fx, patch.fxconfig, patch.fxvalue)
+  applywasmfxconfig(
+    fxsab,
+    patch.voiceindex,
+    patch.fx,
+    patch.fxconfig,
+    patch.fxvalue,
+  )
   return renderdaisyoffline(rendersec, (synth) => {
     synth.setvoiceconfig(patch.voiceindex, patch.voiceconfig, '')
     synth.applyreplay({

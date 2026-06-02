@@ -1,10 +1,4 @@
 import {
-  DAISY_CONTROL_LEN,
-  DAISY_SAB_CHANNEL_LEN,
-  DAISY_SAB_CHANNEL_OFFSET,
-  formatdaisyworkletsablayout,
-} from '../daisycontrol'
-import {
   WASM_ALGO_CFG_SAB_LEN,
   WASM_OSC_CFG_SAB_LEN,
   WASM_SAB_CHANNELS,
@@ -12,6 +6,12 @@ import {
   WASM_VOICE_CFG_SAB_LEN,
   WASM_VOICE_SAB_LEN,
 } from '../../wasm/wasmsabchannels'
+import {
+  DAISY_CONTROL_LEN,
+  DAISY_SAB_CHANNEL_LEN,
+  DAISY_SAB_CHANNEL_OFFSET,
+  formatdaisyworkletsablayout,
+} from '../daisycontrol'
 
 describe('daisycontrol layout', () => {
   it('matches wasm sab channel lengths', () => {

@@ -1,9 +1,6 @@
 import type { SabEngine } from '../shared/sabengine'
-import {
-  bumpsabseq,
-  registerseqchannel,
-  resetsabseqregistry,
-} from './sabseq'
+
+import { bumpsabseq, registerseqchannel, resetsabseqregistry } from './sabseq'
 import { WASM_SAB_CHANNELS } from './wasmsabchannels'
 
 const registry = new Map<string, Float64Array>()

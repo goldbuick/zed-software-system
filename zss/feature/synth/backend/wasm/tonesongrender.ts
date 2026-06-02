@@ -1,17 +1,16 @@
 import {
-  analyzelevelstability,
-  formatlevelstabilityline,
-  type LEVEL_STABILITY_METRICS,
-} from './levelstabilitymetrics.ts'
-
-import type { LEVEL_STABILITY_SCENARIO } from '../daisy/levelstabilityscenarios.ts'
-import {
-  arraybuffertobase64,
-  encodewavmono16,
   type SONG_RENDER_PAYLOAD,
   type SONG_RENDER_RESULT,
+  arraybuffertobase64,
+  encodewavmono16,
 } from '../daisy/daisysongrender.ts'
+import type { LEVEL_STABILITY_SCENARIO } from '../daisy/levelstabilityscenarios.ts'
 
+import {
+  type LEVEL_STABILITY_METRICS,
+  analyzelevelstability,
+  formatlevelstabilityline,
+} from './levelstabilitymetrics.ts'
 import { rendertonelevelscenario } from './toneparityrender.ts'
 
 function monobuffer(buffer: AudioBuffer): Float32Array {
@@ -30,7 +29,7 @@ function monobuffer(buffer: AudioBuffer): Float32Array {
 function loudestwindows(
   metrics: LEVEL_STABILITY_METRICS,
   topn = 12,
-): Array<{ index: number; timesec: number; peakdb: number }> {
+): { index: number; timesec: number; peakdb: number }[] {
   const rows = metrics.windowpeaksDb.map((peakdb, index) => ({
     index,
     timesec: (index * metrics.windowms) / 1000,
@@ -47,7 +46,11 @@ export async function rendertonesongscenario(
   const tonebuffer = await rendertonelevelscenario(scenario)
   const samples = monobuffer(tonebuffer)
   const rendersec = samples.length / tonebuffer.sampleRate
-  const metrics = analyzelevelstability(samples, tonebuffer.sampleRate, windowms)
+  const metrics = analyzelevelstability(
+    samples,
+    tonebuffer.sampleRate,
+    windowms,
+  )
   return {
     render: {
       samples,

@@ -4,9 +4,13 @@ import {
   wasmsabsnapshot,
 } from '../sabpush'
 import { sabseqsnapshot } from '../sabseq'
-import { createmocksabengine } from '../testhelpers/mocksab'
 import { createminsabsynth } from '../testhelpers/minsabsynth'
-import { WASM_DRUMS_SAB, WASM_SAB_SEQ_IDX, WASM_VOICES_SAB } from '../wasmsabchannels'
+import { createmocksabengine } from '../testhelpers/mocksab'
+import {
+  WASM_DRUMS_SAB,
+  WASM_SAB_SEQ_IDX,
+  WASM_VOICES_SAB,
+} from '../wasmsabchannels'
 
 describe('sabpush zero-copy', () => {
   afterEach(() => {

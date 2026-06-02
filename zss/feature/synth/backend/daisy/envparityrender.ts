@@ -1,11 +1,11 @@
 import {
-  analyzelevelstability,
   type LEVEL_STABILITY_METRICS,
+  analyzelevelstability,
 } from '../wasm/levelstabilitymetrics.ts'
 import { rendertonelevelscenario } from '../wasm/toneparityrender.ts'
 
-import { encodewavmono16 } from './daisysongrender.ts'
 import { renderdaisylevelscenario } from './daisylevelrender.ts'
+import { encodewavmono16 } from './daisysongrender.ts'
 import type { LEVEL_STABILITY_SCENARIO } from './levelstabilityscenarios.ts'
 
 export type ENV_PARITY_RESULT = {
@@ -79,11 +79,21 @@ export function formatenvparityreport(
 export async function runenvparityscenario(
   scenario: LEVEL_STABILITY_SCENARIO,
   windowms = 46,
-): Promise<ENV_PARITY_RESULT & { daisywav: ArrayBuffer; tonewav: ArrayBuffer; rendersec: number }> {
+): Promise<
+  ENV_PARITY_RESULT & {
+    daisywav: ArrayBuffer
+    tonewav: ArrayBuffer
+    rendersec: number
+  }
+> {
   const daisyrender = await renderdaisylevelscenario(scenario)
   const tonebuffer = await rendertonelevelscenario(scenario)
 
-  const daisy = analyzelevelstability(daisyrender.samples, daisyrender.samplerate, windowms)
+  const daisy = analyzelevelstability(
+    daisyrender.samples,
+    daisyrender.samplerate,
+    windowms,
+  )
   const tonemono = monobuffer(tonebuffer)
   const tone = analyzelevelstability(tonemono, tonebuffer.sampleRate, windowms)
 

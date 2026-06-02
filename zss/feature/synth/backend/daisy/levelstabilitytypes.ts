@@ -7,10 +7,7 @@ export type LEVEL_STABILITY_FX = {
   group?: number
 }
 
-export type LEVEL_STABILITY_VOICE_CONFIG = [
-  string,
-  string | number | number[],
-]
+export type LEVEL_STABILITY_VOICE_CONFIG = [string, string | number | number[]]
 
 export type LEVEL_STABILITY_SCENARIO = {
   id: string
