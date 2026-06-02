@@ -77,10 +77,9 @@ constexpr float kDrumTweetTrim = 1.25f;
 
 constexpr float kVoiceOutGain  = 1.f;
 constexpr float kPlayBusGain    = 0.3548133892336194f;
-// Runtime staging: WASM makeup + content-tuned drum bus (parity patches use same chain).
-constexpr float kDrumBusGain    = kPlayBusGain * 1.35f;
+constexpr float kDrumBusGain    = kPlayBusGain; // * 1.35f;
 constexpr float kMasterTrimDb   = -2.f;
-constexpr float kMasterMakeupDb = 22.f;
+constexpr float kMasterMakeupDb = 0.f;
 constexpr float kScMakeupDb           = 24.f;
 constexpr float kScAttackSec          = 0.005f;
 constexpr float kScReleaseSec         = 0.10f;
