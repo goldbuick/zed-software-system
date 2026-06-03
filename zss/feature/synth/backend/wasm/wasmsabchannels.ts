@@ -7,7 +7,7 @@ const WASM_ALGO_CFG_STRIDE = 26
 const WASM_FX_GROUP_COUNT = 4
 const WASM_FX_SEND_COUNT = 7
 const WASM_FX_PARAM_COUNT = 20
-const WASM_MASTER_SAB_LEN = 3
+const WASM_MASTER_SAB_LEN = 4
 
 export const WASM_VOICES_SAB = 'zss_voices'
 export const WASM_DRUMS_SAB = 'zss_drums'

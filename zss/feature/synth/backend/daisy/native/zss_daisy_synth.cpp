@@ -32,7 +32,7 @@ constexpr int   kVibratoStride    = 4;
 
 constexpr int kVoicesLen    = kVoiceCount * kVoiceStride;
 constexpr int kDrumsLen     = kDrumCount * 2;
-constexpr int kMasterLen    = 3;
+constexpr int kMasterLen    = 4;
 constexpr int kFxLen        = kFxGroups * kFxSendCount + kFxGroups * kFxParamCount;
 constexpr int kVoiceCfgLen  = kVoiceCount * kVoiceCfgStride;
 constexpr int kOscCfgLen    = kVoiceCount * kOscCfgStride;
@@ -77,8 +77,8 @@ constexpr float kDrumTweetTrim = 1.25f;
 
 constexpr float kVoiceOutGain = 1.f;
 // Tone playvolume: volumetodb(20); drumvolume: volumetodb(100) + 10 dB.
-constexpr float kPlayBusGain = 0.355425f;
-constexpr float kDrumBusGain = 5.623413f;
+constexpr float kPlayBusGain = 0.21f; // 0.355425f;
+constexpr float kDrumBusGain = 0.36f; // 5.623413f;
 constexpr float kScMakeupDb  = 24.f;
 constexpr float kScAttackSec = 0.005f;
 constexpr float kScReleaseSec = 0.06f;
@@ -92,6 +92,12 @@ constexpr float kMasterCompRatio       = 4.f;
 constexpr float kMasterCompKneeDb      = 30.f;
 constexpr float kMasterCompAttackSec  = 0.003f;
 constexpr float kMasterCompReleaseSec = 0.15f;
+constexpr float kMasterCompGainAttackSec  = 0.008f;
+constexpr float kMasterCompGainReleaseSec = 0.1f;
+constexpr float kMasterCompMix            = 0.55f;
+constexpr float kMasterCompSilenceFloor   = 1e-4f;
+constexpr float kMasterCompSilenceDecay     = 0.9995f;
+constexpr float kSynthNoteOnFadeSec   = 0.005f;
 
 // FX configs
 // Reverb wet trim matches wasmfxplaycode.ts `Math.tanh(wet * 1.6)`.
@@ -707,6 +713,7 @@ struct ZssVoice
   float      glidestart = 440.f, glidetarget = 440.f;
   int        glidetotal = 0, glideremain = 0;
   float      voicephasestep = 0.f;
+  float      noteonfade     = 1.f;
   bool       synthgateprev = false, gateprev = false, noiseprev = false;
   float      dootpitch = 1.f;
   float      noisephase = 0.f, noisesample = 0.f;
@@ -815,6 +822,9 @@ struct ZssEngine
   int          razzle_chorus_pos = 0;
   float        comp_env = 0.f;
   float        comp_gr_db = 0.f;
+  float        comp_gain_smooth = 1.f;
+  float        comp_gain_attack_coef = 0.f;
+  float        comp_gain_release_coef = 0.f;
   float        debug_duck_gain = 1.f;
   float        debug_dry_peak = 0.f;
   float        comp_attack_coef = 0.f;
@@ -1193,11 +1203,11 @@ float oscbasicwave(Oscillator& o, int wavetype, float hz)
       break;
     case 4:
     case 5:
-      o.SetWaveform(Oscillator::WAVE_SQUARE);
+      o.SetWaveform(Oscillator::WAVE_POLYBLEP_SQUARE);
       o.SetPw(wavetype == 5 ? 0.2f : 0.5f);
       break;
     default:
-      o.SetWaveform(Oscillator::WAVE_SQUARE);
+      o.SetWaveform(Oscillator::WAVE_POLYBLEP_SQUARE);
       break;
   }
   return o.Process();
@@ -2254,10 +2264,15 @@ void resetsidechainstate()
 void initmasterchain(float sr)
 {
   g_engine.comp_env = 0.f;
+  g_engine.comp_gain_smooth = 1.f;
   g_engine.comp_attack_coef =
       1.f - std::exp(-1.f / (kMasterCompAttackSec * sr));
   g_engine.comp_release_coef =
       1.f - std::exp(-1.f / (kMasterCompReleaseSec * sr));
+  g_engine.comp_gain_attack_coef =
+      1.f - std::exp(-1.f / (kMasterCompGainAttackSec * sr));
+  g_engine.comp_gain_release_coef =
+      1.f - std::exp(-1.f / (kMasterCompGainReleaseSec * sr));
   resetsidechainstate();
 }
 
@@ -2380,27 +2395,53 @@ float compressorskneedb(float dbover, float ratio, float kneedb)
   return dbover - dbover / ratio;
 }
 
-float mastercompressor(float x)
+float mastercomptargetgain()
 {
-  float ax = std::fabs(x);
-  float coef = (ax > g_engine.comp_env) ? g_engine.comp_attack_coef
-                                        : g_engine.comp_release_coef;
-  g_engine.comp_env += (ax - g_engine.comp_env) * coef;
   const float thresh = std::pow(10.f, kMasterCompThresholdDb / 20.f);
-  if(g_engine.comp_env <= thresh)
-  {
-    g_engine.comp_gr_db = 0.f;
-    return x;
-  }
-  float dbover = 20.f * std::log10(g_engine.comp_env / thresh);
+  float       dbover = 20.f * std::log10(g_engine.comp_env / thresh);
   if(dbover < 0.f)
   {
     dbover = 0.f;
   }
   float reduced = compressorskneedb(dbover, kMasterCompRatio, kMasterCompKneeDb);
-  float gain    = std::pow(10.f, -reduced / 20.f);
-  g_engine.comp_gr_db = 20.f * std::log10(gain);
-  return x * gain;
+  return std::pow(10.f, -reduced / 20.f);
+}
+
+void mastercompdetect(float ax)
+{
+  if(ax < kMasterCompSilenceFloor)
+  {
+    g_engine.comp_env *= kMasterCompSilenceDecay;
+    if(g_engine.comp_env < 1e-8f)
+    {
+      g_engine.comp_env = 0.f;
+    }
+    return;
+  }
+  float coef = (ax > g_engine.comp_env) ? g_engine.comp_attack_coef
+                                        : g_engine.comp_release_coef;
+  g_engine.comp_env += (ax - g_engine.comp_env) * coef;
+}
+
+float mastercompressor(float x)
+{
+  if(readctrl(off_master() + 3) > 0.5f)
+  {
+    g_engine.comp_gr_db = 0.f;
+    return x;
+  }
+  mastercompdetect(std::fabs(x));
+  float target = mastercomptargetgain();
+  float gcoef  = (target < g_engine.comp_gain_smooth)
+                     ? g_engine.comp_gain_attack_coef
+                     : g_engine.comp_gain_release_coef;
+  g_engine.comp_gain_smooth +=
+      (target - g_engine.comp_gain_smooth) * gcoef;
+  const float applied =
+      (1.f - kMasterCompMix) + kMasterCompMix * g_engine.comp_gain_smooth;
+  const float grlinear = std::max(applied, 1e-6f);
+  g_engine.comp_gr_db = 20.f * std::log10(grlinear);
+  return x * applied;
 }
 
 float applyrazzle(float input)
@@ -2683,12 +2724,27 @@ float processvoice(int vi, float vstart[kVibratoGroups], float vend[kVibratoGrou
     if(gate && !v.synthgateprev)
     {
       v.voicephasestep = 0.f;
+      v.synthosc.Reset(0.f);
+      v.noteonfade     = 0.f;
     }
     v.synthgateprev = gate;
     float hz     = glidefreq(v, vi, freq > 0.f ? freq : 440.f, kSynth, port);
     float envout = v.voiceenv.process(gate);
     v.lastenv    = envout;
     out          = synthsource(v, vi, hz, gate, detune, osctype, vfreq) * envout;
+    if(gate)
+    {
+      const float fadeinc = 1.f / std::max(1.f, kSynthNoteOnFadeSec * g_engine.sample_rate);
+      if(v.noteonfade < 1.f)
+      {
+        v.noteonfade = std::min(1.f, v.noteonfade + fadeinc);
+      }
+      out *= v.noteonfade;
+    }
+    else
+    {
+      v.noteonfade = 0.f;
+    }
   }
   else if(type >= kRetroNoise && type <= kMetallicNoise)
   {
@@ -2794,6 +2850,7 @@ void zss_init(float sample_rate)
   g_control[off_master()]     = 80.0;
   g_control[off_master() + 1] = 100.0;
   g_control[off_master() + 2] = 25.0;
+  g_control[off_master() + 3] = 0.0;
   initengine(sample_rate > 0.f ? sample_rate : 44100.f);
   g_engine.cached_mastervol = readmastervolume();
   g_engine.cached_bggain    = readbgplayvolume();

@@ -66,7 +66,12 @@ function teardowndaisyengine() {
 }
 
 function pushdaisymastervolumes(maxi: DaisyEngine) {
-  pushwasmmastersab(maxi, [daisyplayvolume, daisybgplayvolume, daisyttsvolume])
+  pushwasmmastersab(maxi, [
+    daisyplayvolume,
+    daisybgplayvolume,
+    daisyttsvolume,
+    0,
+  ])
 }
 
 function wirebroadcasttap(maxi: DaisyEngine) {

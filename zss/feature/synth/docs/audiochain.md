@@ -37,11 +37,14 @@ hiss (pink noise) ───────┘
 
 - **Threshold:** -28 dB
 - **Ratio:** 4:1
-- **Attack / release:** 3 ms / 150 ms (peak envelope)
-- **Knee:** 30 dB (Tone `Compressor`; Daisy `compressorskneedb` in `mastercompressor()`)
+- **Attack / release:** 3 ms / 150 ms (peak envelope detector)
+- **Applied gain slew:** 8 ms attack / 100 ms release (`comp_gain_smooth`, separate from detector)
+- **Parallel mix:** 55% wet compressed / 45% dry (`kMasterCompMix`) — limits level loss vs full wet GR
+- **Knee:** 30 dB (Tone `Compressor`; Daisy `compressorskneedb` in `mastercomptargetgain()`)
+- **Silence guard:** When `|dry|` is below ~-80 dBFS, `comp_env` fast-decays so gain returns to unity before the next note
 - **Purpose:** Dynamics on full post-sidechain mix (ducked play + bg + TTS + drums)
-- **Tone:** `Tone.Compressor` after `razzlegain`
-- **Daisy:** `mastercompressor()` — single envelope path, no post-GR makeup or silence guard (Tone parity)
+- **Tone:** `Tone.Compressor` after `razzlegain` — internal gain smoothing on applied GR
+- **Daisy:** `mastercompressor()` — detector (`comp_env`) + smoothed multiplier (`comp_gain_smooth`); SAB slot 3 bypasses for A/B renders
 
 ### Razzle Chain
 

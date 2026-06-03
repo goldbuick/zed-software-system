@@ -49,3 +49,19 @@ export async function startparityvite(projectroot: string, port = PARITY_SERVER_
 
   return { server, vite, port }
 }
+
+export async function stopparityvite(handle: {
+  server: import('node:http').Server
+  vite: Awaited<ReturnType<typeof createViteServer>>
+}) {
+  await new Promise<void>((resolve, reject) => {
+    handle.server.close((err) => {
+      if (err) {
+        reject(err)
+        return
+      }
+      resolve()
+    })
+  })
+  await handle.vite.close()
+}

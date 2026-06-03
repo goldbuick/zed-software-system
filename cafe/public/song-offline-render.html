@@ -39,27 +39,62 @@
     </style>
   </head>
   <body>
-    <h1>Daisy offline song render</h1>
+    <h1 id="title">Daisy offline song render</h1>
     <p id="status">loading…</p>
     <p class="hint" id="hint"></p>
     <p>
       <a id="download" class="button disabled" href="#">download WAV</a>
-      <a id="liverender" class="button secondary" href="?live=1">re-render live (~3 min)</a>
+      <a id="liverender" class="button secondary" href="#">re-render live</a>
     </p>
     <audio id="player" controls style="width: 100%; margin: 0.5rem 0"></audio>
     <pre id="report"></pre>
     <script type="module">
-      const SONG_ID = 'level-issue-song'
-      const RENDER_BASE = `/renders/${SONG_ID}`
       const params = new URLSearchParams(window.location.search)
+      const scenarioparam = params.get('scenario') ?? 'level-issue'
       const liverender = params.get('live') === '1'
 
+      const SCENARIOS = {
+        'level-issue': {
+          id: 'level-issue-song',
+          title: 'Level issue song',
+          yarnhint: 'yarn render:level-issue-song',
+          liverenderlabel: 're-render live (~3 min)',
+          loadscenario: async () => {
+            const { levelissuescenario } = await import(
+              '/zss/feature/synth/backend/daisy/levelissuesong.ts'
+            )
+            return levelissuescenario()
+          },
+        },
+        notepop: {
+          id: 'notepop-qcxdxexfx',
+          title: 'Note pop repro (#play qcxdxexfx)',
+          yarnhint: 'yarn render:notepop',
+          liverenderlabel: 're-render live (~30 s)',
+          loadscenario: async () => {
+            const { notepopscenario } = await import(
+              '/zss/feature/synth/backend/daisy/notepopscenario.ts'
+            )
+            return notepopscenario()
+          },
+        },
+      }
+
+      const config = SCENARIOS[scenarioparam] ?? SCENARIOS['level-issue']
+      const SONG_ID = config.id
+      const RENDER_BASE = `/renders/${SONG_ID}`
+
+      const titleel = document.getElementById('title')
       const statusel = document.getElementById('status')
       const hintel = document.getElementById('hint')
       const reportel = document.getElementById('report')
       const downloadel = document.getElementById('download')
       const playerel = document.getElementById('player')
       const liverenderel = document.getElementById('liverender')
+
+      titleel.textContent = config.title
+      liverenderel.textContent = config.liverenderlabel
+      liverenderel.href = `?scenario=${scenarioparam}&live=1`
 
       function enablewav(wavurl) {
         downloadel.href = wavurl
@@ -104,8 +139,7 @@
         }
 
         statusel.textContent = 'pre-rendered WAV ready'
-        hintel.textContent =
-          'Instant playback from cafe/public/renders/. Run yarn render:level-issue-song to regenerate.'
+        hintel.textContent = `Instant playback from cafe/public/renders/. Run ${config.yarnhint} to regenerate.`
         return true
       }
 
@@ -113,12 +147,9 @@
         const { renderdaisysongpayload } = await import(
           '/zss/feature/synth/backend/daisy/daisysongrender.ts'
         )
-        const { levelissuescenario } = await import(
-          '/zss/feature/synth/backend/daisy/levelissuesong.ts'
-        )
 
-        const scenario = levelissuescenario()
-        statusel.textContent = `live rendering ${scenario.id} (~${Math.round(scenario.durationsec ?? 0)} s audio, ~3 min)…`
+        const scenario = await config.loadscenario()
+        statusel.textContent = `live rendering ${scenario.id} (~${Math.round(scenario.durationsec ?? 0)} s audio)…`
         hintel.textContent = 'Do not close this tab.'
         liverenderel.classList.add('disabled')
 
@@ -135,7 +166,7 @@
         enablewav(url)
 
         statusel.textContent = `live render done — ${payload.meta.rendersec.toFixed(2)} s, peak ${payload.metrics.overallpeakdb.toFixed(1)} dBFS`
-        hintel.textContent = 'In-memory only; run yarn render:level-issue-song to save files.'
+        hintel.textContent = `In-memory only; run ${config.yarnhint} to save files.`
         window.__songrenderpayload = payload
       }
 
@@ -151,8 +182,7 @@
         }
       } catch (err) {
         statusel.textContent = `error: ${err?.message ?? err}`
-        hintel.textContent =
-          'If WASM failed to load, try yarn render:level-issue-song from the terminal instead.'
+        hintel.textContent = `If WASM failed to load, try ${config.yarnhint} from the terminal instead.`
         throw err
       }
     </script>
