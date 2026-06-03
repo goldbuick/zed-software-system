@@ -2907,7 +2907,7 @@ void zss_process(float* out, int frames, const float* tts_in)
     float comp = mastercompressor(dry);
     float razz     = applyrazzle(comp);
     float x        = razz * g_engine.cached_mastervol;
-    float final    = g_engine.master_dcblock.Process(clampf(x, -1.f, 1.f));
+    float final    = g_engine.master_dcblock.Process(x);
     if(!std::isfinite(final))
     {
       final = 0.f;
