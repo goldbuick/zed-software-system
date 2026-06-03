@@ -14,7 +14,7 @@ import { chromium } from '@playwright/test'
 import { ENV_PARITY_SCENARIOS } from '../zss/feature/synth/backend/daisy/envparityscenario.ts'
 import type { ENV_PARITY_RESULT } from '../zss/feature/synth/backend/daisy/envparityrender.ts'
 
-import { startparityvite } from './parity-vite-server.ts'
+import { startparityvite, stopparityvite } from './parity-vite-server.ts'
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url))
 const PROJECT = path.join(ROOT, '..')
@@ -23,13 +23,19 @@ const OUTDIR = path.join(PROJECT, 'cafe/public/renders/env-parity')
 
 const PEAK_TOLERANCE_DB = 6
 const RMS_TOLERANCE_DB = 6
+const RETRIGGER_SCENARIO_ID = 'env-parity-amsaw-8n'
+const GATED_SCENARIO_IDS = new Set(
+  ENV_PARITY_SCENARIOS.map((scenario) => scenario.id),
+)
 
 function assertparity(payload: {
   id: string
   daisy: { overallpeakdb: number; overallrmsdb: number }
   tone: { overallpeakdb: number; overallrmsdb: number }
+  spread: { delta: number }
+  timelinesmatch?: boolean
 }): string | undefined {
-  if (payload.id !== 'env-parity-amsaw-8n') {
+  if (!GATED_SCENARIO_IDS.has(payload.id)) {
     return undefined
   }
   const peakdelta = Math.abs(payload.daisy.overallpeakdb - payload.tone.overallpeakdb)
@@ -37,8 +43,14 @@ function assertparity(payload: {
   if (peakdelta > PEAK_TOLERANCE_DB) {
     return `peak delta ${peakdelta.toFixed(1)} dB exceeds ${PEAK_TOLERANCE_DB} dB`
   }
-  if (rmsdelta > RMS_TOLERANCE_DB) {
+  if (payload.id !== 'env-parity-amsaw' && rmsdelta > RMS_TOLERANCE_DB) {
     return `RMS delta ${rmsdelta.toFixed(1)} dB exceeds ${RMS_TOLERANCE_DB} dB`
+  }
+  if (
+    payload.id === RETRIGGER_SCENARIO_ID &&
+    payload.timelinesmatch === false
+  ) {
+    return `peak timeline ASCII mismatch (want Tone shape e.g. ===##==##==##=---)`
   }
   return undefined
 }
@@ -46,7 +58,7 @@ function assertparity(payload: {
 async function main() {
   fs.mkdirSync(OUTDIR, { recursive: true })
 
-  const { server } = await startparityvite(PROJECT, PORT)
+  const parity = await startparityvite(PROJECT, PORT)
   const browser = await chromium.launch()
   const results: ENV_PARITY_RESULT[] = []
   let failed = false
@@ -61,7 +73,10 @@ async function main() {
       })
       const payload = await page.evaluate(
         async ({ scenarioid, windowms }) => {
-          const { runenvparityscenario } = await import(
+          const {
+            runenvparityscenario,
+            envparitytimelinesmatchsamples,
+          } = await import(
             '/zss/feature/synth/backend/daisy/envparityrender.ts'
           )
           const { arraybuffertobase64 } = await import(
@@ -78,6 +93,17 @@ async function main() {
               : envparityscenario()
 
           const result = await runenvparityscenario(scenario, windowms)
+          const timelinesmatch =
+            scenarioid === 'env-parity-amsaw-8n'
+              ? envparitytimelinesmatchsamples(
+                  result.daisysamples,
+                  result.daisysamplerate,
+                  result.tonemono,
+                  result.tonesamplerate,
+                  result.rendersec,
+                  windowms,
+                )
+              : true
           return {
             id: result.id,
             daisy: result.daisy,
@@ -85,6 +111,7 @@ async function main() {
             spread: result.spread,
             report: result.report,
             rendersec: result.rendersec,
+            timelinesmatch,
             daisywavbase64: arraybuffertobase64(result.daisywav),
             tonewavbase64: arraybuffertobase64(result.tonewav),
           }
@@ -127,9 +154,11 @@ async function main() {
         {
           results,
           gates: {
-            scenario: 'env-parity-amsaw-8n',
+            scenarios: [...GATED_SCENARIO_IDS],
             peaktolerancedb: PEAK_TOLERANCE_DB,
             rmstolerancedb: RMS_TOLERANCE_DB,
+            retriggertimeline: `exact ASCII match required for ${RETRIGGER_SCENARIO_ID}`,
+            spread: 'reported in report only',
           },
         },
         null,
@@ -138,7 +167,7 @@ async function main() {
     )
   } finally {
     await browser.close()
-    server.close()
+    await stopparityvite(parity)
   }
 
   if (failed) {

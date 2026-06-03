@@ -40,7 +40,7 @@ struct AlgoCfg
   float env_a[4], env_d[4], env_s[4], env_r[4];
 };
 
-/** Linear ADSR — archived zssenv + Tone triggerAttack reset on note-on */
+/** Tone-shaped play envelope: linear attack, exponential decay/release (AmplitudeEnvelope defaults). */
 struct ZssLinearEnv
 {
   float attack_sec  = 0.01f;
@@ -50,8 +50,8 @@ struct ZssLinearEnv
   float level       = 0.f;
   float sample_rate = 44100.f;
   float atkinc      = 0.f;
-  float decinc      = 0.f;
-  float relinc      = 0.f;
+  float deccoef     = 0.f;
+  float relcoef     = 0.f;
   bool  gateprev    = false;
 
   enum Stage
@@ -64,11 +64,17 @@ struct ZssLinearEnv
   };
   Stage stage = Idle;
 
+  static float onepolecoef(float sec, float sr)
+  {
+    const float tau = std::max(1.f, sec * sr);
+    return 1.f - std::exp(-1.f / tau);
+  }
+
   void refreshinc()
   {
-    atkinc = 1.f / std::max(1.f, attack_sec * sample_rate);
-    decinc = (1.f - sustain) / std::max(1.f, decay_sec * sample_rate);
-    relinc = sustain / std::max(1.f, release_sec * sample_rate);
+    atkinc    = 1.f / std::max(1.f, attack_sec * sample_rate);
+    deccoef   = onepolecoef(decay_sec, sample_rate);
+    relcoef   = onepolecoef(release_sec, sample_rate);
   }
 
   void init(float sr)
@@ -92,6 +98,13 @@ struct ZssLinearEnv
     sustain     = clampf(s, 0.f, 1.f);
     release_sec = std::max(0.001f, r);
     refreshinc();
+  }
+
+  /** Restart attack while gate stays high (Tone triggerAttackRelease legato). */
+  void retrigger()
+  {
+    stage = Attack;
+    level = 0.f;
   }
 
   float process(bool gate)
@@ -119,8 +132,8 @@ struct ZssLinearEnv
         }
         break;
       case Decay:
-        level -= decinc;
-        if(level <= sustain)
+        level += (sustain - level) * deccoef;
+        if(level <= sustain + 1e-5f)
         {
           level = sustain;
           stage = g ? Sustain : Release;
@@ -134,8 +147,8 @@ struct ZssLinearEnv
         }
         break;
       case Release:
-        level -= relinc;
-        if(level <= 0.f)
+        level += (0.f - level) * relcoef;
+        if(level <= 1e-5f)
         {
           level = 0.f;
           stage = Idle;
@@ -171,6 +184,8 @@ struct ZssVoice
   float      voicephasestep = 0.f;
   float      noteonfade     = 1.f;
   bool       synthgateprev = false, gateprev = false, noiseprev = false;
+  float      synthschedhz  = 0.f;
+  float      synthstriketag = 0.f;
   float      dootpitch = 1.f;
   float      noisephase = 0.f, noisesample = 0.f;
   uint32_t   noiserng = 0;

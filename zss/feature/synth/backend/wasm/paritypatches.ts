@@ -1,14 +1,38 @@
 /** Canonical parity patches — broad set vs archived Tone reference. */
 import type { SYNTH_NOTE_ENTRY } from '../../playnotation'
 import { tonenotationseconds } from '../../playnotation'
+import type { LEVEL_STABILITY_VOICE_CONFIG } from '../daisy/levelstabilitytypes'
+import { ENV_PARITY_VOICE_CONFIGS } from '../daisy/envparityscenario'
 
 export type PARITY_PATCH = {
   id: string
   voiceindex: number
   voiceconfig: string
+  /** When set, applied to all play channels (overrides single voiceconfig setup). */
+  voiceconfigs?: LEVEL_STABILITY_VOICE_CONFIG[]
   notation: string
   durationsec: number
 }
+
+/** `#synth env` on amsaw — ZssLinearEnv vs Tone.Synth envelope (LOOSE wasmparity). */
+export const ENVELOPE_ADSR_PARITY_PATCHES: PARITY_PATCH[] = [
+  {
+    id: 'env-adsr-sustain',
+    voiceindex: 0,
+    voiceconfig: 'amsawtooth',
+    voiceconfigs: ENV_PARITY_VOICE_CONFIGS,
+    notation: '+hc',
+    durationsec: 2.5,
+  },
+  {
+    id: 'env-adsr-retrigger',
+    voiceindex: 0,
+    voiceconfig: 'amsawtooth',
+    voiceconfigs: ENV_PARITY_VOICE_CONFIGS,
+    notation: '+icdeg',
+    durationsec: 2.5,
+  },
+]
 
 export const WASM_PARITY_PATCHES: PARITY_PATCH[] = [
   {

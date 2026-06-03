@@ -247,10 +247,12 @@ float synthsource(ZssVoice &v, int vi, float freq, bool gate, float detune,
     sig = v.synthosc.Process();
   } else if (osctype >= 10 && osctype <= 13) // #synth am*
   {
-    float moddepth = v.modenv.process(gate);
-    float modsig = oscmodwave(v.synthmod, cfg.modtype, hz * harm) * moddepth;
-    int cartype = osctype - 10;
-    sig = oscbasicwave(v.synthosc, cartype, hz, 1.f) * (0.5f + 0.5f * modsig);
+    float modamp  = v.modenv.process(gate);
+    float modwave = oscmodwave(v.synthmod, cfg.modtype, hz * harm);
+    int   cartype = osctype - 10;
+    // Tone AMOscillator: AudioToGain(mod) → 0.5 carrier when mod crosses 0.
+    sig = oscbasicwave(v.synthosc, cartype, hz, 1.f)
+          * (0.5f + 0.5f * modwave * modamp);
   } else if (osctype >= 20 && osctype <= 23) // #synth fm*
   {
     float moddepth = v.modenv.process(gate);

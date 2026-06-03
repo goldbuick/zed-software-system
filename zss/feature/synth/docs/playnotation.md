@@ -35,7 +35,8 @@ Parses text-based notation and converts it to scheduled note events.
 ## Parse Format
 
 - Multiple voices separated by `;`
-- Example: `"qC4qD4qE4;qG4qA4"` — Two voices, first plays C-D-E, second plays G-A
+- Example: `"#play +qcdef;wx"` — voice 0 quarter notes C4–F4, voice 1 whole rest + drum pattern
+- **Do not** embed Tone pitch literals (`C4`) in play strings; digit `4` is hi snare. Use `+qcde` (octave `+`, duration `q`, notes `cde`).
 
 ## invokeplay()
 

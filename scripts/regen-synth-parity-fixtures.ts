@@ -6,6 +6,7 @@ import { chromium } from '@playwright/test'
 
 import {
   DRUM_PARITY_PATCHES,
+  ENVELOPE_ADSR_PARITY_PATCHES,
   FX_PARITY_PATCHES,
   MAIN_DYNAMICS_PARITY_PATCHES,
   WASM_PARITY_PATCHES,
@@ -90,6 +91,9 @@ async function renderallpatches(): Promise<Record<string, PARITY_AUDIO_METRICS>>
     for (const patch of WASM_PARITY_PATCHES) {
       out[patch.id] = await renderpatchmetrics(page, patch.id, 'voice')
     }
+    for (const patch of ENVELOPE_ADSR_PARITY_PATCHES) {
+      out[patch.id] = await renderpatchmetrics(page, patch.id, 'voice')
+    }
     for (const patch of DRUM_PARITY_PATCHES) {
       out[patch.id] = await renderpatchmetrics(page, patch.id, 'drum')
     }
@@ -113,6 +117,7 @@ async function main() {
   const rendered = await renderallpatches()
   const allids = [
     ...WASM_PARITY_PATCHES.map((p) => p.id),
+    ...ENVELOPE_ADSR_PARITY_PATCHES.map((p) => p.id),
     ...DRUM_PARITY_PATCHES.map((p) => p.id),
     ...FX_PARITY_PATCHES.map((p) => p.id),
     ...MAIN_DYNAMICS_PARITY_PATCHES.map((p) => p.id),

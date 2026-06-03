@@ -74,8 +74,8 @@ constexpr float kDrumTickTrim = 1.35f;
 constexpr float kDrumTweetTrim = 1.25f;
 
 constexpr float kVoiceOutGain = 1.f;
-/** Tone playvolume: volumetodb(20); drumvolume: volumetodb(100) + 10 dB */
-constexpr float kPlayBusGain = 0.1f;
+/** Tone playvolume 80 → volumetodb(20); AM + retrigger peaks (~0.5 vs 0.355) */
+constexpr float kPlayBusGain = 0.5f;
 constexpr float kDrumBusGain = 0.167f;
 
 constexpr float kScMakeupDb = 24.f;
@@ -98,7 +98,7 @@ constexpr float kMainCompGainReleaseSec = 0.1f;
 constexpr float kMainCompMix = 0.55f;
 constexpr float kMainCompSilenceFloor = 1e-4f;
 constexpr float kMainCompSilenceDecay = 0.9995f;
-constexpr float kSynthNoteOnFadeSec = 0.001f;
+constexpr float kSynthNoteOnFadeSec = 0.f;
 
 /** Post-gain after ReverbSc (internal kOutputGain 0.35 in reverbsc.cpp) */
 constexpr float kReverbPostGain = 1.5f;

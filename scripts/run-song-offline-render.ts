@@ -21,7 +21,7 @@ import { chromium } from '@playwright/test'
 import type { SONG_RENDER_PAYLOAD } from '../zss/feature/synth/backend/daisy/daisysongrender.ts'
 import { levelissuescenario, levelissuesongmeta } from '../zss/feature/synth/backend/daisy/levelissuesong.ts'
 
-import { startparityvite } from './parity-vite-server.ts'
+import { startparityvite, stopparityvite } from './parity-vite-server.ts'
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url))
 const PROJECT = path.join(ROOT, '..')
@@ -34,7 +34,7 @@ async function main() {
   const meta = levelissuesongmeta()
   console.log('Song meta:', JSON.stringify(meta, null, 2))
 
-  const { server } = await startparityvite(PROJECT, PORT)
+  const parity = await startparityvite(PROJECT, PORT)
   const browser = await chromium.launch()
   try {
     const page = await browser.newPage()
@@ -86,7 +86,7 @@ async function main() {
     console.log(`Browser: https://localhost:7777/song-offline-render.html`)
   } finally {
     await browser.close()
-    server.close()
+    await stopparityvite(parity)
   }
 }
 

@@ -5,6 +5,7 @@ import type { PARITY_AUDIO_METRICS } from '../paritymetrics'
 import { formatmetricsdelta, metricswithin } from '../paritymetrics'
 import {
   DRUM_PARITY_PATCHES,
+  ENVELOPE_ADSR_PARITY_PATCHES,
   FX_PARITY_PATCHES,
   MAIN_DYNAMICS_PARITY_PATCHES,
   WASM_PARITY_PATCHES,
@@ -66,6 +67,13 @@ describe('wasm parity fixtures manifest', () => {
   it('includes every drum patch id in daisy fixtures', () => {
     const fixtures = loaddaisydrumfixtures()
     for (const patch of DRUM_PARITY_PATCHES) {
+      expect(fixtures.patches[patch.id]).toBeDefined()
+    }
+  })
+
+  it('includes every envelope ADSR patch id in tone fixtures', () => {
+    const fixtures = loadfixtures()
+    for (const patch of ENVELOPE_ADSR_PARITY_PATCHES) {
       expect(fixtures.patches[patch.id]).toBeDefined()
     }
   })
@@ -137,6 +145,9 @@ async function loadrenderer() {
       }
       for (const patch of MAIN_DYNAMICS_PARITY_PATCHES) {
         await checkpatch(patch.id, () => render.main(patch))
+      }
+      for (const patch of ENVELOPE_ADSR_PARITY_PATCHES) {
+        await checkpatch(patch.id, () => render.voice(patch))
       }
 
       if (failures.length > 0) {

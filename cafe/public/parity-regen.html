@@ -7,7 +7,7 @@
   <body>
     <pre id="out">rendering…</pre>
     <script type="module">
-      import { renderwasmparitypatch } from '/zss/feature/synth/backend/wasm/wasmparityrender.ts'
+      import { renderwasmparitypatch } from '/zss/feature/synth/archive/maxi/wasmparityrender.ts'
       import { renderdaisyparitypatch } from '/zss/feature/synth/backend/daisy/daisyparityrender.ts'
       import {
         renderdaisyparitydrumpatch,
@@ -22,6 +22,7 @@
       } from '/zss/feature/synth/backend/wasm/toneparityrender.ts'
       import {
         DRUM_PARITY_PATCHES,
+        ENVELOPE_ADSR_PARITY_PATCHES,
         FX_PARITY_PATCHES,
         MAIN_DYNAMICS_PARITY_PATCHES,
         WASM_PARITY_PATCHES,
@@ -34,6 +35,13 @@
         const kind = params.get('kind') || 'voice'
         const backend = params.get('backend') || 'wasm'
         const out = {}
+
+        function findvoicepatch(id) {
+          return (
+            WASM_PARITY_PATCHES.find((item) => item.id === id) ??
+            ENVELOPE_ADSR_PARITY_PATCHES.find((item) => item.id === id)
+          )
+        }
 
         async function renderpatch(id, patchkind) {
           if (backend === 'tone') {
@@ -52,7 +60,7 @@
               if (!patch) throw new Error(`unknown main patch ${id}`)
               return rendertoneparitymainpatch(patch)
             }
-            const patch = WASM_PARITY_PATCHES.find((item) => item.id === id)
+            const patch = findvoicepatch(id)
             if (!patch) throw new Error(`unknown voice patch ${id}`)
             return rendertoneparitypatch(patch)
           }
@@ -72,7 +80,7 @@
               if (!patch) throw new Error(`unknown main patch ${id}`)
               return renderdaisyparitymainpatch(patch)
             }
-            const patch = WASM_PARITY_PATCHES.find((item) => item.id === id)
+            const patch = findvoicepatch(id)
             if (!patch) throw new Error(`unknown voice patch ${id}`)
             return renderdaisyparitypatch(patch)
           }
@@ -82,7 +90,7 @@
           if (patchkind === 'fx') {
             throw new Error('wasm fx regen not implemented')
           }
-          const patch = WASM_PARITY_PATCHES.find((item) => item.id === id)
+          const patch = findvoicepatch(id)
           if (!patch) throw new Error(`unknown patch ${id}`)
           return renderwasmparitypatch(patch)
         }

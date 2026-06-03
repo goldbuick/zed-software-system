@@ -131,18 +131,41 @@ float processvoice(int vi, float vstart[kVibratoGroups], float vend[kVibratoGrou
 
   if(type == kSynth)
   {
-    if(gate && !v.synthgateprev)
+    const float notefreq  = freq > 0.f ? freq : 440.f;
+    const float striketag = detune;
+    const bool  rising    = gate && !v.synthgateprev;
+    const bool  notestrike =
+      gate && striketag > 0.5f && striketag != v.synthstriketag;
+    if(rising)
     {
       v.voicephasestep = 0.f;
       v.synthosc.Reset(0.f);
-      v.noteonfade     = 0.f;
+      v.synthmod.Reset(0.f);
+    }
+    else if(notestrike)
+    {
+      v.synthmod.Reset(0.f);
+    }
+    if(rising || notestrike)
+    {
+      v.voiceenv.retrigger();
+      v.modenv.retrigger();
+      v.noteonfade = 0.f;
+    }
+    if(gate && striketag > 0.5f)
+    {
+      v.synthstriketag = striketag;
+    }
+    if(gate)
+    {
+      v.synthschedhz = notefreq;
     }
     v.synthgateprev = gate;
-    float hz     = glidefreq(v, vi, freq > 0.f ? freq : 440.f, kSynth, port);
+    float hz     = glidefreq(v, vi, notefreq, kSynth, port);
     float envout = v.voiceenv.process(gate);
     v.lastenv    = envout;
     out          = synthsource(v, vi, hz, gate, detune, osctype, vfreq) * envout;
-    if(gate)
+    if(gate && kSynthNoteOnFadeSec > 0.f)
     {
       const float fadeinc = 1.f / std::max(1.f, kSynthNoteOnFadeSec * g_engine.sample_rate);
       if(v.noteonfade < 1.f)

@@ -17,7 +17,7 @@ import {
 } from '../zss/feature/synth/backend/daisy/levelissuesong.ts'
 import type { LEVEL_STABILITY_METRICS } from '../zss/feature/synth/backend/wasm/levelstabilitymetrics.ts'
 
-import { startparityvite } from './parity-vite-server.ts'
+import { startparityvite, stopparityvite } from './parity-vite-server.ts'
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url))
 const PROJECT = path.join(ROOT, '..')
@@ -80,7 +80,7 @@ async function main() {
     ...([0, 1, 2, 3] as const).map((v) => levelissuevoicescenario(v)),
   ]
 
-  const { server } = await startparityvite(PROJECT, PORT)
+  const parity = await startparityvite(PROJECT, PORT)
   const browser = await chromium.launch()
   const results: Array<{
     id: string
@@ -155,7 +155,7 @@ async function main() {
     }
   } finally {
     await browser.close()
-    server.close()
+    await stopparityvite(parity)
   }
 
   const lines = [

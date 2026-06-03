@@ -6,6 +6,7 @@ export const ENV_PARITY_SCENARIO_ID = 'env-parity-amsaw'
 export const ENV_PARITY_VOICE_CONFIGS: LEVEL_STABILITY_SCENARIO['voiceconfigs'] =
   [
     ['amsawtooth', ''],
+    ['modenv', [0.03, 0.2, 0.03, 0.1]],
     ['env', [0.03, 0.2, 0.03, 0.1]],
   ]
 
@@ -14,7 +15,7 @@ export function envparityscenario(): LEVEL_STABILITY_SCENARIO {
     id: ENV_PARITY_SCENARIO_ID,
     description:
       'amsaw + env 0.03/0.2/0.03/0.1 half note (Tone parity fixture)',
-    notation: 'hC4',
+    notation: '+hc',
     durationsec: 2.5,
     voiceconfigs: ENV_PARITY_VOICE_CONFIGS,
   }
@@ -25,7 +26,7 @@ export function envparityretriggerscenario(): LEVEL_STABILITY_SCENARIO {
   return {
     id: 'env-parity-amsaw-8n',
     description: 'amsaw + env 0.03/0.2/0.03/0.1 repeated 8th notes',
-    notation: 'iC4iD4iE4iG4',
+    notation: '+icdeg',
     durationsec: 2.5,
     voiceconfigs: ENV_PARITY_VOICE_CONFIGS,
   }

@@ -23,6 +23,7 @@ import type {
   MAIN_DYNAMICS_PARITY_PATCH,
   PARITY_PATCH,
 } from './paritypatches'
+import { applytoneparityvoiceconfigs } from './paritypatchvoice'
 import { TONE_PARITY_EXCLUDED } from './paritytolerances'
 
 const PARITY_SAMPLERATE = 44100
@@ -89,7 +90,7 @@ export async function rendertoneparitypatch(
   const buffer = await rendertoneoffline(rendersec, (synth) => {
     synth.setplayvolume(80)
     synth.setbgplayvolume(100)
-    synthvoiceconfig('', synth, patch.voiceindex, patch.voiceconfig, '')
+    applytoneparityvoiceconfigs(synth, patch)
     synth.synthreplay(ticks, patch.durationsec)
   })
 
@@ -213,7 +214,7 @@ export async function rendertonelevelscenario(
       return
     }
 
-    const ticks = scenario.ticks ?? patchentries(scenario.notation ?? 'hC4')
+    const ticks = scenario.ticks ?? patchentries(scenario.notation ?? '+hc')
     synth.synthreplay(ticks, rendersec)
   })
 

@@ -18,6 +18,7 @@ import { WASM_DEFAULT_TTS_VOLUME } from '../wasm/wasmmainsab'
 import { defaultwasmoscconfig } from '../wasm/wasmoscconfigsab'
 import type { WASM_REPLAY_STATE } from '../wasm/wasmreplaystate'
 import { defaultwasmvoicestate } from '../wasm/wasmvoiceconfig'
+import { applydaisyparityvoiceconfigs } from '../wasm/paritypatchvoice'
 
 import { bootisolateddaisyengine, startisolateddaisydsp } from './daisyengine'
 import { createdaisysynth } from './daisysynth'
@@ -90,7 +91,7 @@ export async function renderdaisyparitypatch(
   const ticks = patchentries(patch.notation)
   const rendersec = parityrenderlengthsec(patch.durationsec, ticks)
   return renderdaisyoffline(rendersec, (synth) => {
-    synth.setvoiceconfig(patch.voiceindex, patch.voiceconfig, '')
+    applydaisyparityvoiceconfigs(synth, patch)
     synth.setplayvolume(80)
     synth.setbgplayvolume(100)
     synth.synthreplay(ticks, patch.durationsec)

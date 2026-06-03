@@ -44,6 +44,7 @@ import {
   initwasmoscconfigsab,
   pushwasmoscconfigsab,
 } from '../wasm/wasmoscconfigsab'
+import { isofflineaudiocontext } from '../wasm/audiocontextutil'
 import { createwasmplayscheduler } from '../wasm/wasmplayscheduler'
 import {
   type WASM_REPLAY_STATE,
@@ -162,6 +163,7 @@ export function createdaisysynth(
     recordisrendering: 0,
   }
   const scheduler = createwasmplayscheduler(maxi)
+  const notestrikebychan = new Map<number, number>()
 
   function pushfxstate() {
     pushwasmfxsab(maxi, fxsab)
@@ -308,7 +310,9 @@ export function createdaisysynth(
     clearschedules()
     pacertime = -1
     pacercount = 0
-    const replayoffset = maxi.audioContext.currentTime + 0.05
+    const replayoffset = isofflineaudiocontext(maxi.audioContext)
+      ? maxi.audioContext.currentTime
+      : maxi.audioContext.currentTime + 0.05
     for (let p = 0; p < pattern.length; ++p) {
       const [time, value] = pattern[p]
       const [chan, notation, note] = value
@@ -318,6 +322,7 @@ export function createdaisysynth(
 
   function clearschedules() {
     scheduler.clear()
+    notestrikebychan.clear()
     pacercount = 0
     for (let i = 0; i < WASM_VOICE_COUNT; i++) {
       const base = i * WASM_VOICE_STRIDE
@@ -390,10 +395,15 @@ export function createdaisysynth(
     const detune =
       voicecfg[chan]?.type === SOURCE_TYPE.BELLS ? randominteger(-3, 3) : 0
 
+    const strike = (notestrikebychan.get(chan) ?? 0) + 1
+    notestrikebychan.set(chan, strike)
+    const strikedetune =
+      voicecfg[chan]?.type === SOURCE_TYPE.BELLS ? detune : strike
+
     scheduler.schedule(when, () => {
       voicestate[base] = freq
       voicestate[base + 1] = 1
-      voicestate[base + 4] = detune
+      voicestate[base + 4] = strikedetune
       pushplayvoicestate()
       schedulevibratoworklet(voiceindexfxgroup(chan), when, durationsec)
     })
