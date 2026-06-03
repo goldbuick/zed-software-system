@@ -7,7 +7,20 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../../../../.." && pwd)"
 DAISY_SRC="$SCRIPT_DIR/DaisySP/Source"
 DAISY_LGPL_SRC="$SCRIPT_DIR/DaisySP-LGPL/Source"
+ZSS_DIR="$SCRIPT_DIR/zss"
 WRAPPER_SRC="$SCRIPT_DIR/zss_daisy_synth.cpp"
+ZSS_CPPS=(
+  "$ZSS_DIR/zss_math.cpp"
+  "$ZSS_DIR/zss_control.cpp"
+  "$ZSS_DIR/zss_noise.cpp"
+  "$ZSS_DIR/zss_vibrato.cpp"
+  "$ZSS_DIR/zss_osc.cpp"
+  "$ZSS_DIR/zss_voice.cpp"
+  "$ZSS_DIR/zss_drums.cpp"
+  "$ZSS_DIR/zss_fx.cpp"
+  "$ZSS_DIR/zss_main.cpp"
+  "$ZSS_DIR/zss_engine.cpp"
+)
 OUT_DIR="$REPO_ROOT/cafe/public/wasm/daisy"
 
 mkdir -p "$OUT_DIR"
@@ -67,6 +80,7 @@ DAISY_CPPS=(
   "$DAISY_SRC/Synthesis/oscillator.cpp"
   "$DAISY_SRC/Utility/dcblock.cpp"
   "$DAISY_LGPL_SRC/Dynamics/compressor.cpp"
+  "$DAISY_LGPL_SRC/Effects/reverbsc.cpp"
 )
 
 EXPORTED_FUNS=(
@@ -99,8 +113,10 @@ emcc \
   -I "$DAISY_LGPL_SRC" \
   -I "$DAISY_LGPL_SRC/Effects" \
   -I "$DAISY_LGPL_SRC/Dynamics" \
+  -I "$SCRIPT_DIR" \
   -fno-exceptions \
   "$WRAPPER_SRC" \
+  "${ZSS_CPPS[@]}" \
   "${DAISY_CPPS[@]}" \
   -s WASM=1 \
   -s MODULARIZE=1 \

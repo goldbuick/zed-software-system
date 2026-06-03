@@ -1,4 +1,4 @@
-/** Windowed loudness stats for diagnosing master-bus / FX level swings. */
+/** Windowed loudness stats for diagnosing main-bus / FX level swings. */
 
 const SILENT_DB = -120
 const SILENCE_PEAK_DB = -60

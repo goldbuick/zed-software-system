@@ -38,7 +38,7 @@ const HOST_URL = `http://127.0.0.1:${PORT}/offline-render-host.html`
 
 type RENDER_PASS = {
   suffix: string
-  mastercompbypass: boolean
+  maincompbypass: boolean
 }
 
 function parsepasses(): RENDER_PASS[] {
@@ -46,19 +46,19 @@ function parsepasses(): RENDER_PASS[] {
   const nocomp = process.argv.includes('--no-comp')
   if (ab) {
     return [
-      { suffix: '-comp-on', mastercompbypass: false },
-      { suffix: '-comp-off', mastercompbypass: true },
+      { suffix: '-comp-on', maincompbypass: false },
+      { suffix: '-comp-off', maincompbypass: true },
     ]
   }
   if (nocomp) {
-    return [{ suffix: '-comp-off', mastercompbypass: true }]
+    return [{ suffix: '-comp-off', maincompbypass: true }]
   }
-  return [{ suffix: '', mastercompbypass: false }]
+  return [{ suffix: '', maincompbypass: false }]
 }
 
 async function renderpass(
   page: import('@playwright/test').Page,
-  mastercompbypass: boolean,
+  maincompbypass: boolean,
 ): Promise<SONG_RENDER_PAYLOAD> {
   return page.evaluate(async (bypass) => {
     const { renderdaisysongpayload } = await import(
@@ -69,13 +69,13 @@ async function renderpass(
     )
     const scenario = {
       ...notepopscenario(),
-      mastercompbypass: bypass,
+      maincompbypass: bypass,
     }
     console.warn('[notepop] booting daisy wasm…')
     const payload = await renderdaisysongpayload(scenario)
     console.warn('[notepop] render complete, encoding wav…')
     return payload
-  }, mastercompbypass)
+  }, maincompbypass)
 }
 
 async function main() {
@@ -105,9 +105,9 @@ async function main() {
 
       await passpage.goto(HOST_URL, { waitUntil: 'domcontentloaded' })
       console.log(
-        `Rendering notepop${pass.suffix || ''} (comp ${pass.mastercompbypass ? 'OFF' : 'ON'})…`,
+        `Rendering notepop${pass.suffix || ''} (comp ${pass.maincompbypass ? 'OFF' : 'ON'})…`,
       )
-      const payload = await renderpass(passpage, pass.mastercompbypass)
+      const payload = await renderpass(passpage, pass.maincompbypass)
       await passpage.close()
       const typed = payload as SONG_RENDER_PAYLOAD
       const basename = `${typed.meta.scenarioid}${pass.suffix}`
@@ -122,7 +122,7 @@ async function main() {
           {
             meta: typed.meta,
             notepopmeta: meta,
-            mastercompbypass: pass.mastercompbypass,
+            maincompbypass: pass.maincompbypass,
             metrics: typed.metrics,
             loudestwindows: typed.loudestwindows,
           },

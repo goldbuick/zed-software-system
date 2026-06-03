@@ -20,5 +20,5 @@ export type LEVEL_STABILITY_SCENARIO = {
   voiceconfigs?: LEVEL_STABILITY_VOICE_CONFIG[]
   fx?: LEVEL_STABILITY_FX[]
   /** When true, bypass main bus compressor (offline A/B). */
-  mastercompbypass?: boolean
+  maincompbypass?: boolean
 }

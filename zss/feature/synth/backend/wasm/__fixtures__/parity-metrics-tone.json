@@ -400,7 +400,7 @@
       "bandmid": 0.36407214592293763,
       "bandhigh": 0.2677704352709316
     },
-    "master-duck-bg": {
+    "main-duck-bg": {
       "rmsdb": -17.06829330447595,
       "peakdb": -4.4597470210305215,
       "length": 168000,
@@ -410,7 +410,7 @@
       "bandmid": 0.3984275988861873,
       "bandhigh": 0.26541403675047254
     },
-    "master-duck-drums": {
+    "main-duck-drums": {
       "rmsdb": -18.14689145589713,
       "peakdb": -5.392018966826279,
       "length": 168000,
@@ -420,7 +420,7 @@
       "bandmid": 0.3985352124627281,
       "bandhigh": 0.2654721928058545
     },
-    "master-comp-sustain": {
+    "main-comp-sustain": {
       "rmsdb": -12.82834255963307,
       "peakdb": -6.356332578698801,
       "length": 168000,
@@ -430,7 +430,7 @@
       "bandmid": 0.3984381594418941,
       "bandhigh": 0.26545896542613223
     },
-    "master-comp-drums": {
+    "main-comp-drums": {
       "rmsdb": -13.95687821798268,
       "peakdb": -3.9927304034940185,
       "length": 168000,
@@ -440,7 +440,7 @@
       "bandmid": 0.09283574271633573,
       "bandhigh": 0.046978490901808743
     },
-    "master-full-mix": {
+    "main-full-mix": {
       "rmsdb": -12.07135982415269,
       "peakdb": -2.0903719573532786,
       "length": 192000,

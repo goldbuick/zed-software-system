@@ -64,6 +64,7 @@
     "test:level-issue-song-compare": "npx tsx scripts/run-level-issue-song-compare.ts",
     "test:level-stability": "npx tsx scripts/run-level-stability.ts",
     "test:level-stability:fxmatrix": "npx tsx scripts/run-level-stability.ts --filter fxmatrix",
+    "test:fx-bus-metrics": "npx tsx scripts/run-fx-bus-metrics.ts",
     "vm:docker-run": "sh scripts/vm-zss-docker-run.sh"
   },
   "devDependencies": {

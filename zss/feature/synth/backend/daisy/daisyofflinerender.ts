@@ -1,5 +1,5 @@
 import type { SYNTH_NOTE_ENTRY } from '../../playnotation'
-import { WASM_DEFAULT_TTS_VOLUME } from '../wasm/wasmmastersab'
+import { WASM_DEFAULT_TTS_VOLUME } from '../wasm/wasmmainsab'
 import type { WASM_REPLAY_STATE } from '../wasm/wasmreplaystate'
 
 import {

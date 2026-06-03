@@ -13,7 +13,7 @@ import {
 import { playpatternendtime } from '../wasm/playstart'
 import { defaultwasmalgoconfig } from '../wasm/wasmalgoconfigsab'
 import { applywasmfxconfig, defaultwasmfxsab } from '../wasm/wasmfxstate'
-import { WASM_DEFAULT_TTS_VOLUME, pushwasmmastersab } from '../wasm/wasmmastersab'
+import { WASM_DEFAULT_TTS_VOLUME, pushwasmmainsab } from '../wasm/wasmmainsab'
 import { defaultwasmoscconfig } from '../wasm/wasmoscconfigsab'
 import type { WASM_REPLAY_STATE } from '../wasm/wasmreplaystate'
 import { defaultwasmvoicestate } from '../wasm/wasmvoiceconfig'
@@ -164,8 +164,8 @@ export async function renderdaisylevelscenario(
   applyscenariovoiceconfigs(synth, scenario)
   synth.setplayvolume(80)
   synth.setbgplayvolume(100)
-  if (scenario.mastercompbypass) {
-    pushwasmmastersab(engine, [80, 100, WASM_DEFAULT_TTS_VOLUME, 1])
+  if (scenario.maincompbypass) {
+    pushwasmmainsab(engine, [80, 100, WASM_DEFAULT_TTS_VOLUME, 1])
   }
 
   if (scenario.playsequence) {

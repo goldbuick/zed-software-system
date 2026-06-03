@@ -20,7 +20,7 @@ import {
 import type {
   DRUM_PARITY_PATCH,
   FX_PARITY_PATCH,
-  MASTER_DYNAMICS_PARITY_PATCH,
+  MAIN_DYNAMICS_PARITY_PATCH,
   PARITY_PATCH,
 } from './paritypatches'
 import { TONE_PARITY_EXCLUDED } from './paritytolerances'
@@ -142,8 +142,8 @@ export async function rendertoneparityfxpatch(
   return audiobuffermetrics(buffer)
 }
 
-export async function rendertoneparitymasterpatch(
-  patch: MASTER_DYNAMICS_PARITY_PATCH,
+export async function rendertoneparitymainpatch(
+  patch: MAIN_DYNAMICS_PARITY_PATCH,
 ): Promise<PARITY_AUDIO_METRICS> {
   if (typeof OfflineAudioContext === 'undefined') {
     throw new Error('OfflineAudioContext not available')

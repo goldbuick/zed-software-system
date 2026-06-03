@@ -10,15 +10,15 @@ import { isofflineaudiocontext } from '../../backend/wasm/audiocontextutil'
 import { ensurewasmcoep } from '../../backend/wasm/coopcoep'
 import { initwasmfxsab } from '../../backend/wasm/wasmfxstate'
 import {
-  type WASM_MASTER_CHAIN,
-  wirewasmmasterchain,
-} from '../../backend/wasm/wasmmasterchain'
+  type WASM_MAIN_CHAIN,
+  wirewasmmainchain,
+} from '../../backend/wasm/wasmmainchain'
 import {
   WASM_DEFAULT_PLAY_VOLUME,
   WASM_DEFAULT_TTS_VOLUME,
-  initwasmmastersab,
-  pushwasmmastersab,
-} from '../../backend/wasm/wasmmastersab'
+  initwasmmainsab,
+  pushwasmmainsab,
+} from '../../backend/wasm/wasmmainsab'
 import { WASM_SPIKE_PLAY_CODE } from './spikeplay'
 import { WASM_SYNTH_VOICE_PLAY_CODE } from './voiceplaycode'
 
@@ -97,23 +97,23 @@ let synthwasmready = false
 let maxiengine: MAYBE<MaxiEngine>
 let broadcastdestination: MAYBE<MediaStreamAudioDestinationNode>
 let broadcasttap: MAYBE<GainNode>
-let wasmmaster: MAYBE<WASM_MASTER_CHAIN>
+let wasmmain: MAYBE<WASM_MAIN_CHAIN>
 let wasmttssource: MAYBE<AudioBufferSourceNode>
 
 let wasmplayvolume = WASM_DEFAULT_PLAY_VOLUME
 let wasmbgplayvolume = 100
 let wasmttsvolume = WASM_DEFAULT_TTS_VOLUME
 
-function pushwasmmastervolumes() {
+function pushwasmmainvolumes() {
   const maxi = maxiengine
   if (maxi) {
-    pushwasmmastersab(maxi, [wasmplayvolume, wasmbgplayvolume, wasmttsvolume])
+    pushwasmmainsab(maxi, [wasmplayvolume, wasmbgplayvolume, wasmttsvolume])
   }
 }
 
 function wirewasmoutput(maxi: MaxiEngine) {
   maxi.audioWorkletNode.disconnect()
-  wasmmaster = wirewasmmasterchain(maxi.audioContext, maxi.audioWorkletNode)
+  wasmmain = wirewasmmainchain(maxi.audioContext, maxi.audioWorkletNode)
   wirebroadcasttap(maxi)
 }
 
@@ -179,8 +179,8 @@ export async function startisolatedmaximiliandsp(
 ) {
   await resumeaudiocontext(maxi)
   maxi.audioWorkletNode.disconnect()
-  wirewasmmasterchain(maxi.audioContext, maxi.audioWorkletNode)
-  initwasmmastersab(maxi, playvolume, bgplayvolume, ttsvolume)
+  wirewasmmainchain(maxi.audioContext, maxi.audioWorkletNode)
+  initwasmmainsab(maxi, playvolume, bgplayvolume, ttsvolume)
   initwasmfxsab(maxi)
   const ready = waitforwasmdspready(maxi)
   maxi.eval(builddspcode(usercode), false)
@@ -265,7 +265,7 @@ function waitforwasmdspready(
 async function startmaximiliandsp(maxi: MaxiEngine, usercode: string) {
   await resumeaudiocontext(maxi)
   wirewasmoutput(maxi)
-  initwasmmastersab(maxi, wasmplayvolume, wasmbgplayvolume, wasmttsvolume)
+  initwasmmainsab(maxi, wasmplayvolume, wasmbgplayvolume, wasmttsvolume)
   initwasmfxsab(maxi)
   const ready = waitforwasmdspready(maxi)
   maxi.eval(builddspcode(usercode))
@@ -310,7 +310,7 @@ export { unlockaudiocontext as unlockmaximaudiocontext } from '../../backend/was
 
 export function setwasmsynthttsvolume(volume: number) {
   wasmttsvolume = volume
-  pushwasmmastervolumes()
+  pushwasmmainvolumes()
 }
 
 export function playwasmaudiobuffer(audiobuffer: AudioBuffer) {
@@ -353,16 +353,16 @@ export {
 
 export function setwasmsynthplayvolume(volume: number) {
   wasmplayvolume = volume
-  pushwasmmastervolumes()
+  pushwasmmainvolumes()
 }
 
 export function setwasmsynthbgplayvolume(volume: number) {
   wasmbgplayvolume = volume
-  pushwasmmastervolumes()
+  pushwasmmainvolumes()
 }
 
-export function getwasmmasterchain(): MAYBE<WASM_MASTER_CHAIN> {
-  return wasmmaster
+export function getwasmmainchain(): MAYBE<WASM_MAIN_CHAIN> {
+  return wasmmain
 }
 
 /** Restore worklet → destination wiring after temporary capture tap. */
@@ -377,4 +377,4 @@ export function getwasmbroadcastdestination(): MAYBE<MediaStreamAudioDestination
   return broadcastdestination
 }
 
-export { initwasmmastersab } from '../../backend/wasm/wasmmastersab'
+export { initwasmmainsab } from '../../backend/wasm/wasmmainsab'

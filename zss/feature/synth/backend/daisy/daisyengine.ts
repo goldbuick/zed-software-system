@@ -8,13 +8,13 @@ import {
 import { isofflineaudiocontext } from '../wasm/audiocontextutil'
 import { ensurewasmcoep } from '../wasm/coopcoep'
 import { initwasmfxsab } from '../wasm/wasmfxstate'
-import { wirewasmmasterchain } from '../wasm/wasmmasterchain'
+import { wirewasmmainchain } from '../wasm/wasmmainchain'
 import {
   WASM_DEFAULT_PLAY_VOLUME,
   WASM_DEFAULT_TTS_VOLUME,
-  initwasmmastersab,
-  pushwasmmastersab,
-} from '../wasm/wasmmastersab'
+  initwasmmainsab,
+  pushwasmmainsab,
+} from '../wasm/wasmmainsab'
 
 import { DAISY_BUILD_ID } from './daisybuildid'
 import { daisyasseturl } from './daisypaths'
@@ -65,8 +65,8 @@ function teardowndaisyengine() {
   daisybootedbuildid = ''
 }
 
-function pushdaisymastervolumes(maxi: DaisyEngine) {
-  pushwasmmastersab(maxi, [
+function pushdaisymainvolumes(maxi: DaisyEngine) {
+  pushwasmmainsab(maxi, [
     daisyplayvolume,
     daisybgplayvolume,
     daisyttsvolume,
@@ -90,7 +90,7 @@ function wireoutput(maxi: DaisyEngine) {
     maxi.audioWorkletNode.connect(maxi.audioContext.destination)
     return
   }
-  wirewasmmasterchain(audiocontext(maxi), maxi.audioWorkletNode)
+  wirewasmmainchain(audiocontext(maxi), maxi.audioWorkletNode)
   wirebroadcasttap(maxi)
 }
 
@@ -270,7 +270,7 @@ async function bootdaisyoncontext(ctx: BaseAudioContext): Promise<DaisyEngine> {
 
   if (!isofflineaudiocontext(ctx)) {
     const live = asaudiocontext(ctx)
-    wirewasmmasterchain(live, worklet)
+    wirewasmmainchain(live, worklet)
     wireworkletkeepalive(live, worklet)
   } else {
     worklet.connect(ctx.destination)
@@ -297,7 +297,7 @@ async function bootdaisyoncontext(ctx: BaseAudioContext): Promise<DaisyEngine> {
     audioWorkletNode: worklet,
   }
   wireoutput(engine)
-  initwasmmastersab(engine, daisyplayvolume, daisybgplayvolume, daisyttsvolume)
+  initwasmmainsab(engine, daisyplayvolume, daisybgplayvolume, daisyttsvolume)
   initwasmfxsab(engine)
   daisybootedbuildid = DAISY_BUILD_ID
   return engine
@@ -344,7 +344,7 @@ export async function startisolateddaisydsp(
   daisyplayvolume = playvolume
   daisybgplayvolume = bgplayvolume
   daisyttsvolume = ttsvolume
-  initwasmmastersab(engine, playvolume, bgplayvolume, ttsvolume)
+  initwasmmainsab(engine, playvolume, bgplayvolume, ttsvolume)
   initwasmfxsab(engine)
 }
 
@@ -364,7 +364,7 @@ export function setdaisysynthplayvolume(volume: number) {
   daisyplayvolume = volume
   const engine = daisyengine
   if (engine) {
-    pushdaisymastervolumes(engine)
+    pushdaisymainvolumes(engine)
   }
 }
 
@@ -372,7 +372,7 @@ export function setdaisysynthbgplayvolume(volume: number) {
   daisybgplayvolume = volume
   const engine = daisyengine
   if (engine) {
-    pushdaisymastervolumes(engine)
+    pushdaisymainvolumes(engine)
   }
 }
 
@@ -380,7 +380,7 @@ export function setdaisysynthttsvolume(volume: number) {
   daisyttsvolume = volume
   const engine = daisyengine
   if (engine) {
-    pushdaisymastervolumes(engine)
+    pushdaisymainvolumes(engine)
   }
 }
 
@@ -429,4 +429,4 @@ export {
   wasmsabsnapshot,
 } from '../wasm/sabpush'
 
-export { initwasmmastersab } from '../wasm/wasmmastersab'
+export { initwasmmainsab } from '../wasm/wasmmainsab'

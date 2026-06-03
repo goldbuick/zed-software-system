@@ -7,7 +7,7 @@
 const DAISY_SAB_CHANNEL_OFFSET = {
   "zss_voices": 0,
   "zss_drums": 48,
-  "zss_master": 68,
+  "zss_main": 68,
   "zss_fx": 72,
   "zss_voicecfg": 180,
   "zss_osccfg": 260,
@@ -17,7 +17,7 @@ const DAISY_SAB_CHANNEL_OFFSET = {
 const DAISY_SAB_CHANNEL_LEN = {
   "zss_voices": 48,
   "zss_drums": 20,
-  "zss_master": 4,
+  "zss_main": 4,
   "zss_fx": 108,
   "zss_voicecfg": 80,
   "zss_osccfg": 168,

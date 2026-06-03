@@ -1,4 +1,4 @@
-/** Per-voice output trim in masterout (drums use DRUM_BUS_GAIN separately). */
+/** Per-voice output trim in mainout (drums use DRUM_BUS_GAIN separately). */
 export const WASM_VOICE_OUT_GAIN = 1.0
 
 /** BeepBox chip noise — ZSS trim after expression * noiseBaseExpression (0.19). */
@@ -49,16 +49,16 @@ export const WASM_DRUM_BUS_GAIN = Math.pow(10, WASM_DRUM_BUS_DB / 20)
 export const WASM_PLAY_BUS_DB = volumetodb(20)
 export const WASM_PLAY_BUS_GAIN = Math.pow(10, WASM_PLAY_BUS_DB / 20)
 
-/** Maxi WASM master comp (Daisy uses Tone-shaped knee comp in zss_daisy_synth.cpp). */
-export const WASM_MASTER_COMP_GAIN_ATTACK_SEC = 0.008
-export const WASM_MASTER_COMP_GAIN_RELEASE_SEC = 0.1
-export const WASM_MASTER_COMP_MAKEUP_DB = 0
+/** Maxi WASM main bus comp (Daisy uses Tone-shaped knee comp in zss_daisy_synth.cpp). */
+export const WASM_MAIN_COMP_GAIN_ATTACK_SEC = 0.008
+export const WASM_MAIN_COMP_GAIN_RELEASE_SEC = 0.1
+export const WASM_MAIN_COMP_MAKEUP_DB = 0
 
 /** Maxi WASM only. */
-export const WASM_MASTER_TRIM_DB = -2
+export const WASM_MAIN_TRIM_DB = -2
 
 /** Maxi WASM only. */
-export const WASM_MASTER_MAKEUP_DB = 22
+export const WASM_MAIN_MAKEUP_DB = 22
 
 /** Tone AlgoSynth per-operator volume (−10 dB). */
 export const WASM_ALGO_OP_GAIN = Math.pow(10, -10 / 20)
@@ -70,7 +70,8 @@ export const WASM_ALGO_OUT_GAIN = 0.18
 export const WASM_FM_HZ_SCALE = 1
 
 /** Daisy parallel FX return (wet_sum trim + compressor; parallel-fx-bus.md). */
-export const WASM_FX_RETURN_WET_TRIM = 0.55
+/** Wet return bus gain before return compressor (kFxReturnWetTrim in cpp). */
+export const WASM_FX_RETURN_WET_TRIM = 1.4
 export const WASM_FX_RETURN_COMP_THRESHOLD_DB = -24
 export const WASM_FX_RETURN_COMP_RATIO = 4
 

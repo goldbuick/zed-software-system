@@ -200,9 +200,7 @@ export function applywasmfxconfig(
   const sendidx = sendindexfor(fx)
 
   if (config === 'on') {
-    const level =
-      fx === 'vibrato' || fx === 'autofilter' || fx === 'distortion' ? 50 : 18
-    sab[sendbase + sendidx] = sendlineargain(level)
+    sab[sendbase + sendidx] = sendlineargain(50)
     return true
   }
   if (config === 'off') {

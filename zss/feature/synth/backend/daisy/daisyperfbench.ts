@@ -1,7 +1,7 @@
 import type { SYNTH_NOTE_ENTRY } from '../../playnotation'
 import { defaultwasmalgoconfig } from '../wasm/wasmalgoconfigsab'
 import { applywasmfxconfig, defaultwasmfxsab } from '../wasm/wasmfxstate'
-import { WASM_DEFAULT_TTS_VOLUME } from '../wasm/wasmmastersab'
+import { WASM_DEFAULT_TTS_VOLUME } from '../wasm/wasmmainsab'
 import { defaultwasmoscconfig } from '../wasm/wasmoscconfigsab'
 import type { WASM_REPLAY_STATE } from '../wasm/wasmreplaystate'
 import { defaultwasmvoicestate } from '../wasm/wasmvoiceconfig'

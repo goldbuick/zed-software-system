@@ -1,5 +1,5 @@
 /**
- * Watch zss_daisy_synth.cpp and rerun build → render A/B → gates on save.
+ * Watch native Daisy synth sources and rerun build → render A/B → gates on save.
  *
  * Usage:
  *   yarn loop:notepop
@@ -12,10 +12,29 @@ import { fileURLToPath } from 'node:url'
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url))
 const PROJECT = path.join(ROOT, '..')
-const CPPSRC = path.join(
+const NATIVEDIR = path.join(
   PROJECT,
-  'zss/feature/synth/backend/daisy/native/zss_daisy_synth.cpp',
+  'zss/feature/synth/backend/daisy/native',
 )
+
+function daisynativemtime(): number {
+  let max = 0
+  function walk(dir: string) {
+    for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (ent.name === 'DaisySP' || ent.name === 'DaisySP-LGPL') {
+        continue
+      }
+      const p = path.join(dir, ent.name)
+      if (ent.isDirectory()) {
+        walk(p)
+      } else if (/\.(cpp|h)$/.test(ent.name)) {
+        max = Math.max(max, fs.statSync(p).mtimeMs)
+      }
+    }
+  }
+  walk(NATIVEDIR)
+  return max
+}
 
 const POLL_MS = 2000
 const DEBOUNCE_MS = 1000
@@ -41,10 +60,10 @@ function runfull(): boolean {
 }
 
 async function main() {
-  let lastmtime = fs.statSync(CPPSRC).mtimeMs
+  let lastmtime = daisynativemtime()
   let pending: ReturnType<typeof setTimeout> | undefined
 
-  console.log(`Watching ${CPPSRC}`)
+  console.log(`Watching ${NATIVEDIR} (*.cpp / *.h, excluding DaisySP vendored trees)`)
   console.log(
     skipbuild
       ? 'Pipeline: render:notepop:ab → test:notepop'
@@ -53,7 +72,7 @@ async function main() {
 
   for (;;) {
     await new Promise((resolve) => setTimeout(resolve, POLL_MS))
-    const mtime = fs.statSync(CPPSRC).mtimeMs
+    const mtime = daisynativemtime()
     if (mtime === lastmtime) {
       continue
     }
@@ -62,7 +81,7 @@ async function main() {
       clearTimeout(pending)
     }
     pending = setTimeout(() => {
-      console.log('\n▶ zss_daisy_synth.cpp changed — running pipeline…')
+      console.log('\n▶ Daisy native synth changed — running pipeline…')
       const pass = runfull()
       if (pass) {
         console.log('NOTEPOP_LOOP_PASS')

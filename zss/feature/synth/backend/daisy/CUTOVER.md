@@ -74,7 +74,7 @@ Metrics include RMS, peak, spectral centroid, and 3-band energy ratios (`paritym
 
 | Artifact | Size |
 |----------|------|
-| `cafe/public/wasm/daisy/zss_daisy.wasm` | ~34 KB |
+| `cafe/public/wasm/daisy/zss_daisy.wasm` | ~75 KB (4× ReverbSc delay storage) |
 | `cafe/public/wasm/daisy/zss_daisy.js` | ~12 KB |
 | `cafe/public/wasm/daisy/daisy-processor.js` | ~5 KB |
 

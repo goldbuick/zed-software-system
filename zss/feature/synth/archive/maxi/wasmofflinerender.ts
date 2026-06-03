@@ -7,7 +7,7 @@ import {
 } from './maximilian'
 import { createwasmsynth } from './maxisynth'
 import { WASM_SYNTH_VOICE_PLAY_CODE } from './voiceplaycode'
-import { WASM_DEFAULT_TTS_VOLUME } from '../../backend/wasm/wasmmastersab'
+import { WASM_DEFAULT_TTS_VOLUME } from '../../backend/wasm/wasmmainsab'
 import type { WASM_REPLAY_STATE } from '../../backend/wasm/wasmreplaystate'
 
 export async function renderwasmrecord(

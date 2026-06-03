@@ -2,13 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>master dynamics parity</title>
+    <title>main dynamics parity</title>
   </head>
   <body>
     <pre id="out">rendering…</pre>
     <script type="module">
-      import { renderdaisyparitymasterpatch } from '/zss/feature/synth/backend/daisy/daisyparityrender.ts'
-      import { MASTER_DYNAMICS_PARITY_PATCHES } from '/zss/feature/synth/backend/wasm/paritypatches.ts'
+      import { renderdaisyparitymainpatch } from '/zss/feature/synth/backend/daisy/daisyparityrender.ts'
+      import { MAIN_DYNAMICS_PARITY_PATCHES } from '/zss/feature/synth/backend/wasm/paritypatches.ts'
 
       const outel = document.getElementById('out')
 
@@ -18,12 +18,12 @@
         if (!patchid) {
           throw new Error('missing patch query param')
         }
-        const patch = MASTER_DYNAMICS_PARITY_PATCHES.find((item) => item.id === patchid)
+        const patch = MAIN_DYNAMICS_PARITY_PATCHES.find((item) => item.id === patchid)
         if (!patch) {
-          throw new Error(`unknown master patch ${patchid}`)
+          throw new Error(`unknown main patch ${patchid}`)
         }
         outel.textContent = `rendering ${patchid}…`
-        const metrics = await renderdaisyparitymasterpatch(patch)
+        const metrics = await renderdaisyparitymainpatch(patch)
         outel.textContent = JSON.stringify({ [patchid]: metrics })
       } catch (err) {
         outel.textContent = `error: ${err?.message ?? err}`

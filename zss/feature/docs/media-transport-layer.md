@@ -9,7 +9,7 @@
 | PeerJS terminal (hub-and-spoke, `createforward`) | [netterminal.md](netterminal.md), [`zss/feature/netterminal.ts`](../netterminal.ts) |
 | Which messages cross PeerJS vs worker bridge | [`zss/device/docs/devices-and-messaging.md`](../../device/docs/devices-and-messaging.md) |
 | Web broadcast capture sources (canvas + synth) and IVS ingest | [web-broadcast-livekit.md](../../../docs/web-broadcast-livekit.md), [`zss/device/bridge.ts`](../../device/bridge.ts) (`bridge:streamstart` / `bridge:streamstop`) |
-| Broadcast audio tap | [`synthbroadcastdestination()`](../../device/synth.ts) in [`zss/device/synth.ts`](../../device/synth.ts); WASM master chain in [`zss/feature/synth/backend/wasm/wasmmasterchain.ts`](../synth/backend/wasm/wasmmasterchain.ts) |
+| Broadcast audio tap | [`synthbroadcastdestination()`](../../device/synth.ts) in [`zss/device/synth.ts`](../../device/synth.ts); WASM main bus in [`zss/feature/synth/backend/wasm/wasmmainchain.ts`](../synth/backend/wasm/wasmmainchain.ts) |
 | Feature exports index | [`zss/feature/EXPORTED_FUNCTIONS.md`](../EXPORTED_FUNCTIONS.md) |
 
 ---

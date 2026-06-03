@@ -1,6 +1,6 @@
 # Voice FX types, config params, and WASM vs Tone defaults
 
-Reference catalog for all ZSS voice FX (`#echo`, `#reverb`, `#fcrush`, etc.). **Not in scope:** master-chain FX (sidechain, compressor, razzle).
+Reference catalog for all ZSS voice FX (`#echo`, `#reverb`, `#fcrush`, etc.). **Not in scope:** main-bus FX (sidechain, compressor, razzle).
 
 See also: [voice-types-reference.md](voice-types-reference.md), [voicefx.md](voicefx.md).
 
@@ -12,7 +12,7 @@ See also: [voice-types-reference.md](voice-types-reference.md), [voicefx.md](voi
 |------------|--------|-------------------|-----------|
 | `fc`, `fcrush` | Frequency crusher | Custom `FrequencyCrusher` worklet | Sample-and-hold `fxfcrush()` |
 | `echo` | Delay + feedback | `FeedbackDelay` | `maxiDelayline` `fxecho()` |
-| `reverb` | Convolution reverb | `Reverb` | 4-comb + predelay `fxreverb()` |
+| `reverb` | Convolution reverb | `Reverb` | DaisySP-LGPL `ReverbSc` + predelay `fxreverb()` |
 | `autofilter` | LFO filter sweep | `AutoFilter` | LFO + biquad `fxautofilterbus()` |
 | `vibrato` | Pitch wobble | `Vibrato` (wet in FX chain) | Pitch cents `playvibratocents()` — **not serial wet** |
 | `distort`, `distortion` | Waveshaper | `Distortion` | `tonedistort()` / `fxdistortwet()` |
@@ -36,7 +36,7 @@ Aliases: `fcrush`→`fc`, `distort`→`distortion`.
 |----|-----------|-----------|
 | `vibrato`, `autofilter` | **50** | **50** |
 | `distortion` | **18** | **50** |
-| `echo`, `reverb`, `fc`, `autowah` | **18** | **18** |
+| `echo`, `reverb`, `fc`, `autowah` | **18** | **50** |
 
 Default send at boot: **0** (all FX off).
 
@@ -71,9 +71,9 @@ Archived Maxi used a **serial hybrid** chain ([wasmfxplaycode.ts](../archive/max
 | Layer | Control |
 |-------|---------|
 | Send level | SAB slot per FX (`#reverb on` → ~−21 dB linear; numeric 0–100 → `volumetodb`) |
-| Per-algorithm | e.g. reverb `tanh(wet × 1.6)`, echo feedback clamp, distortion `Overdrive` with ×3 drive |
-| Return bus | **`wet_sum` × 0.55** then compressor (−24 dB thresh, 4:1, 2 ms / 80 ms) — dry stays full |
-| Master | Sidechain → compressor → razzle (unchanged) |
+| Per-algorithm | e.g. reverb `tanh(wet × 1.6)` post-ReverbSc, echo feedback clamp, distortion `Overdrive` with ×3 drive |
+| Return bus | **`wet_sum` × 1.4** then compressor (−24 dB thresh, 4:1, 2 ms / 80 ms) — dry stays full; echo/reverb use send×wet ([parallel-fx-bus.md](parallel-fx-bus.md)) |
+| Main bus | Sidechain → compressor → razzle (unchanged) |
 
 Regression harness: [`fxlevelscenarios.ts`](../backend/daisy/fxlevelscenarios.ts), `yarn test:level-stability --filter fxmatrix`.
 
@@ -108,7 +108,7 @@ WASM fallbacks: delay ≤ 0.0001 → **0.22 s**; feedback clamped **0–0.95**.
 | `predelay` | **0.01** | **0.01** |
 | send `on` | 18 | 18 |
 
-WASM: custom 4-comb topology (not Tone convolution).
+WASM/Daisy: **ReverbSc** (8 modulated delay lines, stereo internal, mono sum); predelay via `MaxiCombLine` before `Process()`. `decay` → `SetFeedback(0.75..0.98)`.
 
 ### 4. `autofilter`
 

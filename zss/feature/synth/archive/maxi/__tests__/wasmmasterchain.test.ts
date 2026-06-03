@@ -1,5 +1,5 @@
 import { WASM_SYNTH_VOICE_PLAY_CODE } from '../voiceplaycode'
-import { wirewasmmasterchain } from '../../../backend/wasm/wasmmasterchain'
+import { wirewasmmainchain } from '../../../backend/wasm/wasmmainchain'
 import { WASM_MASTER_PLAY_CODE } from '../wasmmasterplaycode'
 
 describe('wasmmasterplaycode', () => {
@@ -116,7 +116,7 @@ describe('wasmmasterchain', () => {
         connects.push(args)
       },
     }
-    const chain = wirewasmmasterchain(ctx as any, worklet as any)
+    const chain = wirewasmmainchain(ctx as any, worklet as any)
     expect(chain.wired).toBe(true)
     expect(worklet.channelCount).toBe(1)
     expect(connects).toEqual([[destination]])

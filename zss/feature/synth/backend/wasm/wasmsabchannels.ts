@@ -7,7 +7,7 @@ const WASM_ALGO_CFG_STRIDE = 26
 const WASM_FX_GROUP_COUNT = 4
 const WASM_FX_SEND_COUNT = 7
 const WASM_FX_PARAM_COUNT = 20
-const WASM_MASTER_SAB_LEN = 4
+const WASM_MAIN_SAB_LEN = 4
 
 export const WASM_VOICES_SAB = 'zss_voices'
 export const WASM_DRUMS_SAB = 'zss_drums'
@@ -28,7 +28,7 @@ export const WASM_SAB_SEQ_LEN = 9
 export const WASM_SAB_SEQ_IDX = {
   VOICES: 0,
   DRUMS: 1,
-  MASTER: 2,
+  MAIN: 2,
   FX: 3,
   VOICE_CFG: 4,
   OSC_CFG: 5,
@@ -46,7 +46,7 @@ export const WASM_VIBRATO_SAB_LEN =
 export const WASM_SAB_SEQ_CHANNEL_TO_IDX: Record<string, number> = {
   [WASM_VOICES_SAB]: WASM_SAB_SEQ_IDX.VOICES,
   [WASM_DRUMS_SAB]: WASM_SAB_SEQ_IDX.DRUMS,
-  zss_master: WASM_SAB_SEQ_IDX.MASTER,
+  zss_main: WASM_SAB_SEQ_IDX.MAIN,
   zss_fx: WASM_SAB_SEQ_IDX.FX,
   zss_voicecfg: WASM_SAB_SEQ_IDX.VOICE_CFG,
   zss_osccfg: WASM_SAB_SEQ_IDX.OSC_CFG,
@@ -63,7 +63,7 @@ export type WASM_SAB_CHANNEL = {
 export const WASM_SAB_CHANNELS: WASM_SAB_CHANNEL[] = [
   { id: WASM_VOICES_SAB, len: WASM_VOICE_SAB_LEN },
   { id: WASM_DRUMS_SAB, len: WASM_DRUM_SAB_LEN },
-  { id: 'zss_master', len: WASM_MASTER_SAB_LEN },
+  { id: 'zss_main', len: WASM_MAIN_SAB_LEN },
   { id: 'zss_fx', len: WASM_FX_SAB_LEN },
   { id: 'zss_voicecfg', len: WASM_VOICE_CFG_SAB_LEN },
   { id: 'zss_osccfg', len: WASM_OSC_CFG_SAB_LEN },

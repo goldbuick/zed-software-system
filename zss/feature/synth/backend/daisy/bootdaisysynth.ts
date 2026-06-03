@@ -2,7 +2,7 @@ import { SYNTH_DEFAULT_WAVE, SYNTH_VOICE_COUNT } from '../../synthdefaults'
 
 import {
   ensuredaisysynthwasm,
-  initwasmmastersab,
+  initwasmmainsab,
   setdaisysynthbgplayvolume,
   setdaisysynthplayvolume,
   setdaisysynthttsvolume,
@@ -13,7 +13,7 @@ import { schedulewarmdaisydrums } from './warmdaisydrums'
 
 export async function bootdaisysynth(): Promise<DAISY_SYNTH> {
   const engine = await ensuredaisysynthwasm()
-  initwasmmastersab(engine)
+  initwasmmainsab(engine)
   const synth = createdaisysynth(
     engine,
     {

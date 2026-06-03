@@ -9,12 +9,12 @@ import {
 import type {
   DRUM_PARITY_PATCH,
   FX_PARITY_PATCH,
-  MASTER_DYNAMICS_PARITY_PATCH,
+  MAIN_DYNAMICS_PARITY_PATCH,
   PARITY_PATCH,
 } from '../wasm/paritypatches'
 import { defaultwasmalgoconfig } from '../wasm/wasmalgoconfigsab'
 import { applywasmfxconfig, defaultwasmfxsab } from '../wasm/wasmfxstate'
-import { WASM_DEFAULT_TTS_VOLUME } from '../wasm/wasmmastersab'
+import { WASM_DEFAULT_TTS_VOLUME } from '../wasm/wasmmainsab'
 import { defaultwasmoscconfig } from '../wasm/wasmoscconfigsab'
 import type { WASM_REPLAY_STATE } from '../wasm/wasmreplaystate'
 import { defaultwasmvoicestate } from '../wasm/wasmvoiceconfig'
@@ -134,8 +134,8 @@ export async function renderdaisyparityfxpatch(
   })
 }
 
-export async function renderdaisyparitymasterpatch(
-  patch: MASTER_DYNAMICS_PARITY_PATCH,
+export async function renderdaisyparitymainpatch(
+  patch: MAIN_DYNAMICS_PARITY_PATCH,
 ): Promise<PARITY_AUDIO_METRICS> {
   const rendersec = parityrenderlengthsec(patch.durationsec, patch.ticks)
   return renderdaisyoffline(rendersec, (synth) => {

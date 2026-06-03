@@ -110,3 +110,9 @@ export const FX_MATRIX_SCENARIOS: LEVEL_STABILITY_SCENARIO[] = [
 export const FX_MATRIX_COMPARE_BASELINE = 'fxmatrix-dry'
 
 export const FX_MATRIX_PEAK_DELTA_MAX_DB = 6
+
+/** Solo #fx on: peak must stay within this many dB of dry (effect still present in mix). */
+export const FX_MATRIX_MIN_SOLO_PEAK_VS_DRY_DB = -4
+
+/** Distortion solo must raise peak at least this much vs dry. */
+export const FX_MATRIX_MIN_SOLO_DISTORT_PEAK_LIFT_DB = 4

@@ -1,12 +1,12 @@
-export type WASM_MASTER_CHAIN = {
+export type WASM_MAIN_CHAIN = {
   wired: boolean
 }
 
 /** Single bridge: worklet → destination. All FX live in WASM play(). */
-export function wirewasmmasterchain(
+export function wirewasmmainchain(
   ctx: AudioContext,
   worklet: AudioWorkletNode,
-): WASM_MASTER_CHAIN {
+): WASM_MAIN_CHAIN {
   worklet.disconnect()
   worklet.channelCount = 1
   worklet.channelCountMode = 'explicit'

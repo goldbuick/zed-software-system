@@ -6,7 +6,7 @@ import { formatmetricsdelta, metricswithin } from '../paritymetrics'
 import {
   DRUM_PARITY_PATCHES,
   FX_PARITY_PATCHES,
-  MASTER_DYNAMICS_PARITY_PATCHES,
+  MAIN_DYNAMICS_PARITY_PATCHES,
   WASM_PARITY_PATCHES,
 } from '../paritypatches'
 import { TONE_PARITY_EXCLUDED, paritytolerancesfor } from '../paritytolerances'
@@ -57,10 +57,10 @@ describe('wasm parity fixtures manifest', () => {
     }
   })
 
-  it('lists drum, fx, and master dynamics parity patch ids', () => {
+  it('lists drum, fx, and main dynamics parity patch ids', () => {
     expect(DRUM_PARITY_PATCHES.length).toBe(10)
     expect(FX_PARITY_PATCHES.length).toBe(7)
-    expect(MASTER_DYNAMICS_PARITY_PATCHES.length).toBe(5)
+    expect(MAIN_DYNAMICS_PARITY_PATCHES.length).toBe(5)
   })
 
   it('includes every drum patch id in daisy fixtures', () => {
@@ -83,7 +83,7 @@ async function loadrenderer() {
     voice: mod.renderdaisyparitypatch,
     drum: mod.renderdaisyparitydrumpatch,
     fx: mod.renderdaisyparityfxpatch,
-    master: mod.renderdaisyparitymasterpatch,
+    main: mod.renderdaisyparitymainpatch,
   }
 }
 
@@ -135,8 +135,8 @@ async function loadrenderer() {
       for (const patch of FX_PARITY_PATCHES) {
         await checkpatch(patch.id, () => render.fx(patch))
       }
-      for (const patch of MASTER_DYNAMICS_PARITY_PATCHES) {
-        await checkpatch(patch.id, () => render.master(patch))
+      for (const patch of MAIN_DYNAMICS_PARITY_PATCHES) {
+        await checkpatch(patch.id, () => render.main(patch))
       }
 
       if (failures.length > 0) {

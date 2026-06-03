@@ -40,11 +40,11 @@ hiss (pink noise) ───────┘
 - **Attack / release:** 3 ms / 150 ms (peak envelope detector)
 - **Applied gain slew:** 8 ms attack / 100 ms release (`comp_gain_smooth`, separate from detector)
 - **Parallel mix:** 55% wet compressed / 45% dry (`kMasterCompMix`) — limits level loss vs full wet GR
-- **Knee:** 30 dB (Tone `Compressor`; Daisy `compressorskneedb` in `mastercomptargetgain()`)
+- **Knee:** 30 dB (Tone `Compressor`; Daisy `compressorskneedb` in `maincomptargetgain()`)
 - **Silence guard:** When `|dry|` is below ~-80 dBFS, `comp_env` fast-decays so gain returns to unity before the next note
 - **Purpose:** Dynamics on full post-sidechain mix (ducked play + bg + TTS + drums)
 - **Tone:** `Tone.Compressor` after `razzlegain` — internal gain smoothing on applied GR
-- **Daisy:** `mastercompressor()` — detector (`comp_env`) + smoothed multiplier (`comp_gain_smooth`); SAB slot 3 bypasses for A/B renders
+- **Daisy:** `maincompressor()` — detector (`comp_env`) + smoothed multiplier (`comp_gain_smooth`); SAB slot 3 bypasses for A/B renders
 
 ### Razzle Chain
 
@@ -58,7 +58,7 @@ hiss (pink noise) ───────┘
 |-----|------|-------|
 | Play into sidechain | `volumetodb(20)` | `kPlayBusGain` |
 | Drums | `volumetodb(100) + 10` dB | `kDrumBusGain` |
-| Master fader | `volumetodb(vol × 0.25)` on `mainvolume` | `readmastervolume()` |
+| Main fader | `volumetodb(vol × 0.25)` on `mainvolume` | `readmainvolume()` |
 
 ### Broadcast Destination
 

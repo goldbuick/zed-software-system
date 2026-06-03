@@ -295,7 +295,7 @@ export const FX_PARITY_PATCHES: FX_PARITY_PATCH[] = [
 export const WASM_PARITY_RMS_DB_TOL = 1
 export const WASM_PARITY_PEAK_DB_TOL = 2
 
-export type MASTER_DYNAMICS_PARITY_PATCH = {
+export type MAIN_DYNAMICS_PARITY_PATCH = {
   id: string
   voiceconfig: string
   durationsec: number
@@ -322,10 +322,10 @@ function fastarpticks(
   return ticks
 }
 
-/** Master chain (sidechain + compressor) — Tone offline reference via regen:parity-fixtures:tone */
-export const MASTER_DYNAMICS_PARITY_PATCHES: MASTER_DYNAMICS_PARITY_PATCH[] = [
+/** Main bus (sidechain + compressor) — Tone offline reference via regen:parity-fixtures:tone */
+export const MAIN_DYNAMICS_PARITY_PATCHES: MAIN_DYNAMICS_PARITY_PATCH[] = [
   {
-    id: 'master-duck-bg',
+    id: 'main-duck-bg',
     voiceconfig: 'square',
     durationsec: 2.5,
     ticks: [
@@ -334,7 +334,7 @@ export const MASTER_DYNAMICS_PARITY_PATCHES: MASTER_DYNAMICS_PARITY_PATCH[] = [
     ],
   },
   {
-    id: 'master-duck-drums',
+    id: 'main-duck-drums',
     voiceconfig: 'square',
     durationsec: 2.5,
     ticks: [
@@ -344,19 +344,19 @@ export const MASTER_DYNAMICS_PARITY_PATCHES: MASTER_DYNAMICS_PARITY_PATCH[] = [
     ],
   },
   {
-    id: 'master-comp-sustain',
+    id: 'main-comp-sustain',
     voiceconfig: 'square',
     durationsec: 2.5,
     ticks: fastarpticks(2.5, false),
   },
   {
-    id: 'master-comp-drums',
+    id: 'main-comp-drums',
     voiceconfig: 'square',
     durationsec: 2.5,
     ticks: fastarpticks(2.5, true),
   },
   {
-    id: 'master-full-mix',
+    id: 'main-full-mix',
     voiceconfig: 'square',
     durationsec: 3,
     ticks: [...fastarpticks(3, true), [1, [4, '4n', 'E4']]],

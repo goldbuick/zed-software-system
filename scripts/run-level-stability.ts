@@ -22,7 +22,14 @@ import {
 } from '../zss/feature/synth/backend/wasm/levelstabilitymetrics.ts'
 import { formatmixbalanceline } from '../zss/feature/synth/backend/wasm/compressormetrics.ts'
 import {
+  computefxbusmetrics,
+  formatfxbusmetricsline,
+  isfxbussoloscenario,
+} from '../zss/feature/synth/backend/daisy/fxbusmetrics'
+import {
   FX_MATRIX_COMPARE_BASELINE,
+  FX_MATRIX_MIN_SOLO_DISTORT_PEAK_LIFT_DB,
+  FX_MATRIX_MIN_SOLO_PEAK_VS_DRY_DB,
   FX_MATRIX_PEAK_DELTA_MAX_DB,
 } from '../zss/feature/synth/backend/daisy/fxlevelscenarios'
 import {
@@ -217,6 +224,57 @@ function assertfxmatrix(
   return failures
 }
 
+function assertfxaudibility(
+  metrics: Record<string, LEVEL_STABILITY_METRICS>,
+): string[] {
+  const failures: string[] = []
+  const base = metrics[FX_MATRIX_COMPARE_BASELINE]
+  if (!base) {
+    return failures
+  }
+  for (const [id, cand] of Object.entries(metrics)) {
+    if (!isfxbussoloscenario(id)) {
+      continue
+    }
+    const peakdelta = cand.overallpeakdb - base.overallpeakdb
+    if (id === 'fxmatrix-distort') {
+      if (peakdelta < FX_MATRIX_MIN_SOLO_DISTORT_PEAK_LIFT_DB) {
+        failures.push(
+          `${id}: peak lift ${peakdelta.toFixed(1)} dB vs dry (min +${FX_MATRIX_MIN_SOLO_DISTORT_PEAK_LIFT_DB} dB)`,
+        )
+      }
+    } else if (peakdelta < FX_MATRIX_MIN_SOLO_PEAK_VS_DRY_DB) {
+      failures.push(
+        `${id}: peak ${cand.overallpeakdb.toFixed(1)} dBFS is ${peakdelta.toFixed(1)} dB vs dry (min ${FX_MATRIX_MIN_SOLO_PEAK_VS_DRY_DB} dB)`,
+      )
+    }
+  }
+  return failures
+}
+
+function formatfxbusreport(
+  metrics: Record<string, LEVEL_STABILITY_METRICS>,
+): string {
+  const base = metrics[FX_MATRIX_COMPARE_BASELINE]
+  if (!base) {
+    return ''
+  }
+  const lines: string[] = [
+    '',
+    'FX bus wet lift (orthogonal estimate vs fxmatrix-dry):',
+  ]
+  for (const id of Object.keys(metrics).sort()) {
+    if (!isfxbussoloscenario(id)) {
+      continue
+    }
+    const cand = metrics[id]
+    if (cand) {
+      lines.push(`  ${formatfxbusmetricsline(computefxbusmetrics(id, cand, base))}`)
+    }
+  }
+  return lines.join('\n')
+}
+
 async function main() {
   const { strict, scenarioid, filter, comparea, compareb } = parseargs()
 
@@ -283,7 +341,11 @@ async function main() {
   }
 
   if (runfilter === 'fxmatrix' || runfilter === 'all') {
-    const fxfailures = assertfxmatrix(payload.metrics)
+    console.log(formatfxbusreport(payload.metrics))
+    const fxfailures = [
+      ...assertfxmatrix(payload.metrics),
+      ...assertfxaudibility(payload.metrics),
+    ]
     if (fxfailures.length > 0) {
       console.log('')
       console.log('FX matrix gates failed:')
@@ -294,7 +356,7 @@ async function main() {
     }
     if (runfilter === 'fxmatrix') {
       console.log('')
-      console.log('FX matrix gates passed.')
+      console.log('FX matrix gates passed (peak caps + solo audibility).')
     }
   }
 }
