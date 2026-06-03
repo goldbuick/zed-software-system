@@ -43,7 +43,7 @@ constexpr int kRevCombMaxLen = 4096;
 constexpr float kPi = 3.14159265358979323846f;
 constexpr float kTwoPi = 6.28318530718f;
 constexpr float kSineVoiceGain = 1.42f;
-constexpr float kOscModWaveGain = 0.2f;
+constexpr float kOscModWaveGain = 0.1f;
 constexpr float kAmVoiceGain = 1.f;
 constexpr float kFmVoiceGain = 1.f;
 constexpr float kFatVoiceGain = 1.f;
@@ -101,7 +101,7 @@ constexpr float kMainCompSilenceDecay = 0.9995f;
 constexpr float kSynthNoteOnFadeSec = 0.001f;
 
 /** Post-gain after ReverbSc (internal kOutputGain 0.35 in reverbsc.cpp) */
-constexpr float kReverbPostGain = 3.f;
+constexpr float kReverbPostGain = 1.5f;
 constexpr float kReverbScLpHz = 10000.f;
 /** Parallel FX return bus — see docs/parallel-fx-bus.md */
 constexpr float kFxReturnCompThresholdDb = -24.f;
