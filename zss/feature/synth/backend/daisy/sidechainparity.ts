@@ -2,12 +2,12 @@ import {
   analyzelevelstability,
   type LEVEL_STABILITY_METRICS,
 } from '../wasm/levelstabilitymetrics.ts'
-
-const SILENCE_PEAK_DB = -60
 import {
   audiopowermetrics,
   type PARITY_AUDIO_METRICS,
 } from '../wasm/paritymetrics.ts'
+
+const SILENCE_PEAK_DB = -60
 
 /** Bg stab onset in duck-bg-stab / main-duck-bg. */
 export const SIDECHAIN_STAB_TIME_SEC = 0.75
@@ -139,10 +139,9 @@ export function evalsidechainparitygate(
 ): SIDECHAIN_PARITY_GATE_RESULT {
   const reasons: string[] = []
 
-  const onduck = Math.max(result.duckon.duckdepthdb, result.abduckdepthdb)
-  if (onduck < minduck) {
+  if (result.duckon.duckdepthdb < minduck) {
     reasons.push(
-      `sidechain ON duck ${onduck.toFixed(1)} dB < ${minduck} dB (single ${result.duckon.duckdepthdb.toFixed(1)}, A/B ${result.abduckdepthdb.toFixed(1)}; pre ${result.duckon.prepeakdb.toFixed(1)} → post ${result.duckon.postpeakdb.toFixed(1)} dBFS)`,
+      `sidechain ON duck ${result.duckon.duckdepthdb.toFixed(1)} dB < ${minduck} dB (pre ${result.duckon.prepeakdb.toFixed(1)} → post ${result.duckon.postpeakdb.toFixed(1)} dBFS; A/B advisory ${result.abduckdepthdb.toFixed(1)} dB)`,
     )
   }
   if (result.duckoff.duckdepthdb > maxbypassduck) {
@@ -168,7 +167,7 @@ export function formatsidechainparityreport(
     'Sidechain parity: duck-bg-stab',
     `stab @ ${SIDECHAIN_STAB_TIME_SEC}s`,
     '',
-    `A/B duck ${gate.result.abduckdepthdb.toFixed(1)} dB (post-stab sustain OFF − ON)`,
+    `A/B duck ${gate.result.abduckdepthdb.toFixed(1)} dB (advisory — post-stab OFF − ON)`,
     `SC ON:  duck ${duckon.duckdepthdb.toFixed(1)} dB (pre ${duckon.prepeakdb.toFixed(1)} → post ${duckon.postpeakdb.toFixed(1)} dBFS)`,
     `SC OFF: duck ${duckoff.duckdepthdb.toFixed(1)} dB (pre ${duckoff.prepeakdb.toFixed(1)} → post ${duckoff.postpeakdb.toFixed(1)} dBFS)`,
   ]
@@ -188,25 +187,4 @@ export function metricsfromsamples(
   samplerate: number,
 ): PARITY_AUDIO_METRICS {
   return audiopowermetrics(samples, samplerate)
-}
-
-export function duckmetricsfromlevel(
-  metrics: LEVEL_STABILITY_METRICS,
-  stabtime = SIDECHAIN_STAB_TIME_SEC,
-): SIDECHAIN_DUCK_METRICS {
-  const preend = stabtime - 0.08
-  const poststart = stabtime + 0.12
-  const postend = stabtime + 1.2
-  const pre = collectwindowpeaks(metrics, 0.12, preend)
-  const post = collectwindowpeaks(metrics, poststart, postend)
-  const prepeakdb = median(pre)
-  const postpeakdb = median(post)
-  const duckdepthdb =
-    pre.length > 0 && post.length > 0 ? prepeakdb - postpeakdb : 0
-  return {
-    duckdepthdb,
-    prepeakdb,
-    postpeakdb,
-    stabtime,
-  }
 }

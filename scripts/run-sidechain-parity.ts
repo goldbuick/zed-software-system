@@ -21,6 +21,12 @@ import {
 } from '../zss/feature/synth/backend/daisy/sidechainparity.ts'
 import { SIDECHAIN_SCENARIO_ID } from '../zss/feature/synth/backend/daisy/sidechainscenario.ts'
 
+import { decodewav } from './parity-wav.ts'
+import {
+  PLAYWRIGHT_SCENARIO_TIMEOUT_MS,
+  PARITY_RENDER_SCRIPT_TIMEOUT_MS,
+  withscripttimeout,
+} from './parity-timeouts.ts'
 import {
   startparityvite,
   stopparityvite,
@@ -36,20 +42,6 @@ const TONE_FIXTURE = path.join(
   PROJECT,
   'zss/feature/synth/backend/wasm/__fixtures__/parity-metrics-tone.json',
 )
-
-function decodewav(base64: string): { samples: Float32Array; samplerate: number } {
-  const binary = Buffer.from(base64, 'base64')
-  const view = new DataView(binary.buffer, binary.byteOffset, binary.byteLength)
-  const samplerate = view.getUint32(24, true)
-  const samplecount = view.getUint32(40, true) / 2
-  const samples = new Float32Array(samplecount)
-  let offset = 44
-  for (let i = 0; i < samplecount; i++) {
-    samples[i] = view.getInt16(offset, true) / 0x8000
-    offset += 2
-  }
-  return { samples, samplerate }
-}
 
 async function renderdaisypass(
   page: import('@playwright/test').Page,
@@ -124,7 +116,7 @@ async function main() {
 
   try {
     const page = await browser.newPage()
-    page.setDefaultTimeout(600_000)
+    page.setDefaultTimeout(PLAYWRIGHT_SCENARIO_TIMEOUT_MS)
     page.on('console', (msg) => {
       const text = msg.text()
       if (text.startsWith('[sidechain') || text.startsWith('[daisy')) {
@@ -180,7 +172,11 @@ async function main() {
   }
 }
 
-main().catch((err) => {
+withscripttimeout(
+  'render:sidechain-parity',
+  PARITY_RENDER_SCRIPT_TIMEOUT_MS,
+  main,
+).catch((err) => {
   console.error(err)
   process.exit(1)
 })

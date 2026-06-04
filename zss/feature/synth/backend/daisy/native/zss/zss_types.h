@@ -73,8 +73,8 @@ struct ZssLinearEnv
   void refreshinc()
   {
     atkinc    = 1.f / std::max(1.f, attack_sec * sample_rate);
-    deccoef   = onepolecoef(decay_sec, sample_rate);
-    relcoef   = onepolecoef(release_sec, sample_rate);
+    deccoef   = onepolecoef(decay_sec * kEnvDecayTauScale, sample_rate);
+    relcoef   = onepolecoef(release_sec * kEnvReleaseTauScale, sample_rate);
   }
 
   void init(float sr)

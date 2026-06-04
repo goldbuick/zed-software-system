@@ -76,9 +76,8 @@ function score(result: SIDECHAIN_PARITY_RESULT): number {
     return 0
   }
   let err = 0
-  const onduck = Math.max(result.duckon.duckdepthdb, result.abduckdepthdb)
-  if (onduck < 4) {
-    err += (4 - onduck) * 2
+  if (result.duckon.duckdepthdb < 4) {
+    err += (4 - result.duckon.duckdepthdb) * 2
   }
   if (result.duckoff.duckdepthdb > 2) {
     err += (result.duckoff.duckdepthdb - 2) * 3

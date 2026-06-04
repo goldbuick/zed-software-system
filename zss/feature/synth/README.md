@@ -14,40 +14,59 @@ Synth audio is initialized by the device layer on first user gesture (`enableaud
 
 ```typescript
 import { createsynthbackend } from 'zss/feature/synth'
-
 const backend = await createsynthbackend()
 backend.addplay('qC4qD4qE4')
 ```
 
-## Structure
+## Pre-release regression (local)
 
-| Area | Path | Description |
-|------|------|-------------|
-| Front-end | `frontend/` | `SynthBackend` interface, board state sync |
-| Back-end | `backend/daisy/` | DaisySP worklet (default), voices, drums, FX, recording |
-| Shared WASM | `backend/wasm/` | SAB channels, play scheduler, voice/FX config, parity helpers |
-| Adapter | `backend/synthbackendfactory.ts` | `SynthBackend` → DaisySP |
-| Shared | `shared/`, `playnotation.ts`, `synthdefaults.ts`, `voicefxgroup.ts`, `mp3.ts` | Engine-agnostic types and helpers |
-| Archive | `archive/tone/`, `archive/maxi/` | Legacy Tone.js and Maximilian stacks (do not import) |
+After editing `backend/daisy/native/`, run:
+
+```bash
+yarn test:daisy-regression
+```
+
+This runs Jest (`backend/daisy/__tests__`, `adsrenvcurve`) then critical Playwright `:full` gates (pitch, play/drum, sidechain, synth env, notepop, short env). **CI** ([`.github/workflows/on-pr-check.yml`](../../../.github/workflows/on-pr-check.yml)) runs `yarn test` (Jest) only.
+
+## Parity gates (offline)
+
+| Script | Coverage |
+|--------|----------|
+| `yarn test:adsr-parity` | Short amsaw ADSR + Jest `ZssLinearEnv` |
+| `yarn test:synth-env-parity:full` | Long-release `#synth env` (square + fmsquare repro) |
+| `yarn test:play-drum-balance:full` | Play vs drum stem balance |
+| `yarn test:sidechain-parity:full` | Sidechain on/off duck |
+| `yarn test:pitch-stability:full` | Strike/detune / pitch drift |
+| `yarn test:notepop:full` | Note-pop A/B |
+
+Carrier `#synth env` is **wave-agnostic** (`ZssLinearEnv` on all SYNTH voices). FM/AM: pin `#synth modenv` when comparing timbre only.
+
+## Native watch loops
+
+`yarn loop:<suite>` watches `backend/daisy/native/` and runs build → render → gate.
+
+- `play-drum`, `sidechain`, `synth-env`, `notepop`, `pitch`
+- `--skip-build`, `--calibrate-only`, `--calibrate-on-fail` (opt-in calibrator; slow)
+
+Implementation: [`scripts/run-daisy-parity-loop.ts`](../../../scripts/run-daisy-parity-loop.ts).
+
+## Calibrators (dev-only)
+
+Grid-search scripts rewrite [`zss_config.h`](backend/daisy/native/zss/zss_config.h). **Do not run in CI**; each step can take many minutes.
+
+- `yarn calibrate:play-drum-balance`
+- `yarn calibrate:sidechain-parity`
+- `yarn calibrate:synth-env-parity`
 
 ## Dev flags
 
-| Env | Purpose |
-|-----|---------|
-| `ZSS_DAISY_PERF=false` | Full-quality Daisy DSP (default is lighter perf preset on) |
-| `ZSS_DAISY_PARITY=1` | With `ZSS_PARITY_RENDER=1`, run Daisy offline parity renders |
-| `ZSS_DAISY_NO_SIDECHAIN=1` | Bypass play-bus sidechain duck (`yarn dev:no-sc` or `?no_sc=1`) |
+| Env / script | Purpose |
+|--------------|---------|
+| `ZSS_DAISY_PERF=false` | Full-quality Daisy DSP |
+| `ZSS_DAISY_NO_SIDECHAIN=1` | Bypass play-bus sidechain (`yarn dev:no-sc`, `?no_sc=1`) |
 | `ZSS_DAISY_NO_MAIN_COMP=1` | Bypass main bus compressor (`?no_comp=1`) |
-| `yarn test:pitch-stability:full` | Offline 16×C4 pitch drift gate (strike/detune regression) |
-| `yarn test:play-drum-balance:full` | Play vs drum stem balance gate (drums ~3 dB hotter) |
-| `yarn loop:play-drum` | Watch native → build/render/gate; auto-calibrate on fail |
-| `yarn calibrate:play-drum-balance` | Grid-search `kDrumBusGain` / `kPlayBusGain` in `zss_config.h` |
-| `yarn test:sidechain-parity:full` | Duck-bg-stab: SC on/off depth + optional Tone `main-duck-bg` peak |
-| `yarn loop:sidechain` | Watch native → parity gate; auto-calibrate `kScMix` / `kScMakeupDb` on fail |
-| `yarn calibrate:sidechain-parity` | Grid-search sidechain duck params in `zss_config.h` |
-| `ZSS_PARITY_RENDER=1` | Run offline parity render tests (manual gate, not CI) |
-| `ZSS_TONE_REFERENCE=1` | Compare Daisy voice/FX renders against Tone fixtures |
+| `ZSS_PARITY_RENDER=1` | Offline parity renders (manual) |
 
-**FX bus:** parallel sends + return-bus compressor in `zss_daisy_synth.cpp`. Spec: [parallel-fx-bus.md](docs/parallel-fx-bus.md). Offline matrix: `yarn test:level-stability:fxmatrix`.
+**FX bus:** [parallel-fx-bus.md](docs/parallel-fx-bus.md). Offline matrix: `yarn test:level-stability:fxmatrix`.
 
 COOP/COEP headers are enabled in Vite for SharedArrayBuffer.

@@ -14,11 +14,17 @@ import { chromium } from '@playwright/test'
 import { ENV_PARITY_SCENARIOS } from '../zss/feature/synth/backend/daisy/envparityscenario.ts'
 import type { ENV_PARITY_RESULT } from '../zss/feature/synth/backend/daisy/envparityrender.ts'
 
+import {
+  PLAYWRIGHT_SCENARIO_TIMEOUT_MS,
+  PARITY_RENDER_SCRIPT_TIMEOUT_MS,
+  withscripttimeout,
+} from './parity-timeouts.ts'
 import { startparityvite, stopparityvite } from './parity-vite-server.ts'
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url))
 const PROJECT = path.join(ROOT, '..')
 const PORT = 9886
+const HOST_URL = `http://127.0.0.1:${PORT}/offline-render-host.html`
 const OUTDIR = path.join(PROJECT, 'cafe/public/renders/env-parity')
 
 const PEAK_TOLERANCE_DB = 6
@@ -55,11 +61,11 @@ function assertparity(payload: {
   return undefined
 }
 
-async function main() {
+async function runenvparity() {
   fs.mkdirSync(OUTDIR, { recursive: true })
 
   const parity = await startparityvite(PROJECT, PORT)
-  const browser = await chromium.launch()
+  const browser = await chromium.launch({ timeout: 60_000 })
   const results: ENV_PARITY_RESULT[] = []
   let failed = false
 
@@ -67,9 +73,10 @@ async function main() {
     for (const scenario of ENV_PARITY_SCENARIOS) {
       console.log(`Rendering env parity: ${scenario.id}…`)
       const page = await browser.newPage()
-      page.setDefaultTimeout(120_000)
-      await page.goto(`http://127.0.0.1:${PORT}/level-stability.html`, {
+      page.setDefaultTimeout(PLAYWRIGHT_SCENARIO_TIMEOUT_MS)
+      await page.goto(HOST_URL, {
         waitUntil: 'domcontentloaded',
+        timeout: PLAYWRIGHT_SCENARIO_TIMEOUT_MS,
       })
       const payload = await page.evaluate(
         async ({ scenarioid, windowms }) => {
@@ -175,7 +182,9 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error(err)
-  process.exit(1)
-})
+withscripttimeout('test:env-parity', PARITY_RENDER_SCRIPT_TIMEOUT_MS, runenvparity).catch(
+  (err) => {
+    console.error(err)
+    process.exit(1)
+  },
+)

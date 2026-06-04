@@ -136,9 +136,10 @@ export function evalpitchstabilitygate(
   if (metrics.notecount < 2) {
     reasons.push('need at least 2 notes')
   }
-  if (metrics.maxcentdrift > maxcentdrift) {
+  const driftcent = Math.round(metrics.maxcentdrift * 100) / 100
+  if (driftcent > maxcentdrift) {
     reasons.push(
-      `maxcentdrift ${metrics.maxcentdrift.toFixed(2)} > ${maxcentdrift}`,
+      `maxcentdrift ${driftcent.toFixed(2)} > ${maxcentdrift}`,
     )
   }
   if (metrics.strikedriftrate > PITCH_STABILITY_MAX_STRIKE_DRIFT_RATE) {

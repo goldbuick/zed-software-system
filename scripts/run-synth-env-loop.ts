@@ -1,4 +1,4 @@
-/** Delegates to run-daisy-parity-loop.ts — prefer `yarn loop:play-drum`. */
+/** Delegates to run-daisy-parity-loop.ts — prefer `yarn loop:synth-env`. */
 import { spawnSync } from 'node:child_process'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -12,7 +12,7 @@ const result = spawnSync(
     'tsx',
     path.join(root, 'run-daisy-parity-loop.ts'),
     '--suite',
-    'play-drum',
+    'synth-env',
     ...extra,
   ],
   { stdio: 'inherit', cwd: path.join(root, '..') },
