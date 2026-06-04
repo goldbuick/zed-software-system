@@ -8,7 +8,12 @@ import {
   vmclearscroll,
 } from 'zss/device/api'
 import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
-import { boardrunners, lastinputtime, tracking } from 'zss/device/vm/state'
+import {
+  boardrunnerblocked,
+  boardrunners,
+  lastinputtime,
+  tracking,
+} from 'zss/device/vm/state'
 import { ispresent, isstring } from 'zss/mapping/types'
 import {
   memoryistokenbanned,
@@ -41,35 +46,29 @@ export function handlesearch(vm: DEVICE, message: MESSAGE): void {
 }
 
 export function handlelogout(vm: DEVICE, message: MESSAGE): void {
-  // grab the current board to validate runner assignment
+  // grab the current board the player is on
   const currentboard = memoryreadplayerboard(message.player)
+  if (!ispresent(currentboard)) {
+    return
+  }
 
-  // clear player state
-  vmclearscroll(vm, message.player)
-  memorylogoutplayer(message.player)
+  // grab the current boardrunner the player is on
+  const priorelectionrunner = boardrunners[currentboard.id]
 
-  // push jsonpipe changes
-  boardrunnerpushupdates(vm)
+  // notify the boardrunner worker that this is linkdead
+  boardrunnerlinkdead(vm, priorelectionrunner, message.player)
+
+  // prevent logout player from being elected as a runner
+  boardrunnerblocked[message.player] = true
 
   // clear tracking state
   delete tracking[message.player]
   delete lastinputtime[message.player]
 
-  // if we're on a board
-  if (ispresent(currentboard)) {
-    const priorelectionrunner = boardrunners[currentboard.id]
-    // elect a new runner for the current board if necessary
-    if (!boardrunnerassignmentvalid(currentboard.id)) {
-      boardrunnerelect(currentboard.id)
-    }
-    // notify the boardrunner worker that held this board (may differ after election)
-    const notifyrunner = priorelectionrunner ?? message.player
-    boardrunnerlinkdead(vm, notifyrunner, message.player)
+  // grab the current board to validate runner assignment
+  if (boardrunnerassignmentvalid(currentboard.id)) {
+    boardrunnerelect(currentboard.id)
   }
-
-  // signal logout
-  apilog(vm, memoryreadoperator(), `player ${message.player} logout`)
-  registerloginready(vm, message.player)
 
   // push jsonpipe changes
   boardrunnerpushupdates(vm)
