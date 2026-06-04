@@ -9,5 +9,7 @@ interface ImportMetaEnv {
   readonly ZSS_E2E?: string
   readonly ZSS_DAISY_PERF?: string
   readonly ZSS_DAISY_PARITY?: string
+  readonly ZSS_DAISY_NO_SIDECHAIN?: string
+  readonly ZSS_DAISY_NO_MAIN_COMP?: string
   readonly ZSS_COMMIT_HASH?: string
 }

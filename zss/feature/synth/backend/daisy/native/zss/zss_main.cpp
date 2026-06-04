@@ -158,7 +158,7 @@ void maincompdetect(float ax) {
 }
 
 float maincompressor(float x) {
-  if (readctrl(off_main() + 3) > 0.5f) {
+  if (readctrl(off_main() + kMainCompBypassIdx) > 0.5f) {
     g_engine.comp_gr_db = 0.f;
     return x;
   }

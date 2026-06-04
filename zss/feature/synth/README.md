@@ -36,6 +36,8 @@ backend.addplay('qC4qD4qE4')
 |-----|---------|
 | `ZSS_DAISY_PERF=false` | Full-quality Daisy DSP (default is lighter perf preset on) |
 | `ZSS_DAISY_PARITY=1` | With `ZSS_PARITY_RENDER=1`, run Daisy offline parity renders |
+| `ZSS_DAISY_NO_SIDECHAIN=1` | Bypass play-bus sidechain duck (`yarn dev:no-sc` or `?no_sc=1`) |
+| `ZSS_DAISY_NO_MAIN_COMP=1` | Bypass main bus compressor (`?no_comp=1`) |
 | `ZSS_PARITY_RENDER=1` | Run offline parity render tests (manual gate, not CI) |
 | `ZSS_TONE_REFERENCE=1` | Compare Daisy voice/FX renders against Tone fixtures |
 

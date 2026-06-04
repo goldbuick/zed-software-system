@@ -16,6 +16,7 @@ import {
   pushwasmmainsab,
 } from '../wasm/wasmmainsab'
 
+import { isdaisymaincompbypass, isdaisysidechainbypass } from './flags'
 import { DAISY_BUILD_ID } from './daisybuildid'
 import { daisyasseturl } from './daisypaths'
 
@@ -65,13 +66,35 @@ function teardowndaisyengine() {
   daisybootedbuildid = ''
 }
 
+function daisymainbussabtail(): [number, number] {
+  return [
+    isdaisymaincompbypass() ? 1 : 0,
+    isdaisysidechainbypass() ? 1 : 0,
+  ]
+}
+
 function pushdaisymainvolumes(maxi: DaisyEngine) {
+  const [compbypass, scbypass] = daisymainbussabtail()
   pushwasmmainsab(maxi, [
     daisyplayvolume,
     daisybgplayvolume,
     daisyttsvolume,
-    0,
+    compbypass,
+    scbypass,
   ])
+}
+
+function logdaisybypassflagsonce() {
+  const comp = isdaisymaincompbypass()
+  const sc = isdaisysidechainbypass()
+  if (!comp && !sc) {
+    return
+  }
+  console.warn(
+    '[daisy] main bus bypass:',
+    comp ? 'compressor OFF' : 'compressor on',
+    sc ? 'sidechain OFF' : 'sidechain on',
+  )
 }
 
 function wirebroadcasttap(maxi: DaisyEngine) {
@@ -297,7 +320,16 @@ async function bootdaisyoncontext(ctx: BaseAudioContext): Promise<DaisyEngine> {
     audioWorkletNode: worklet,
   }
   wireoutput(engine)
-  initwasmmainsab(engine, daisyplayvolume, daisybgplayvolume, daisyttsvolume)
+  const [compbypass, scbypass] = daisymainbussabtail()
+  logdaisybypassflagsonce()
+  initwasmmainsab(
+    engine,
+    daisyplayvolume,
+    daisybgplayvolume,
+    daisyttsvolume,
+    compbypass,
+    scbypass,
+  )
   initwasmfxsab(engine)
   daisybootedbuildid = DAISY_BUILD_ID
   return engine
@@ -344,7 +376,15 @@ export async function startisolateddaisydsp(
   daisyplayvolume = playvolume
   daisybgplayvolume = bgplayvolume
   daisyttsvolume = ttsvolume
-  initwasmmainsab(engine, playvolume, bgplayvolume, ttsvolume)
+  const [compbypass, scbypass] = daisymainbussabtail()
+  initwasmmainsab(
+    engine,
+    playvolume,
+    bgplayvolume,
+    ttsvolume,
+    compbypass,
+    scbypass,
+  )
   initwasmfxsab(engine)
 }
 

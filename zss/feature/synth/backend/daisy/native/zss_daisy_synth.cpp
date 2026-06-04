@@ -21,6 +21,8 @@ using zss_daisy::g_control;
 using zss_daisy::g_engine;
 using zss_daisy::initengine;
 using zss_daisy::kControlLen;
+using zss_daisy::kMainCompBypassIdx;
+using zss_daisy::kMainScBypassIdx;
 using zss_daisy::off_main;
 using zss_daisy::processvoice;
 using zss_daisy::readbgplayvolume;
@@ -37,7 +39,8 @@ void zss_init(float sample_rate)
   g_control[off_main()]     = 80.0;
   g_control[off_main() + 1] = 100.0;
   g_control[off_main() + 2] = 25.0;
-  g_control[off_main() + 3] = 0.0;
+  g_control[off_main() + kMainCompBypassIdx] = 0.0;
+  g_control[off_main() + kMainScBypassIdx]   = 0.0;
   initengine(sample_rate > 0.f ? sample_rate : 44100.f);
   g_engine.cached_mainvol = readmainvolume();
   g_engine.cached_bggain    = readbgplayvolume();
@@ -141,6 +144,9 @@ void zss_process(float* out, int frames, const float* tts_in)
                              g_engine.drumsidechain);
     sidechainupdate(key);
     float duck = sidechaingain();
+    if (readctrl(off_main() + kMainScBypassIdx) > 0.5f) {
+      duck = 1.f;
+    }
     g_engine.debug_duck_gain = duck;
 
     float playbus = playfx * duck * kVoiceOutGain * kPlayBusGain;

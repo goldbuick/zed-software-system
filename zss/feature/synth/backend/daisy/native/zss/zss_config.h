@@ -24,7 +24,10 @@ constexpr int kVibratoStride = 4;
 
 constexpr int kVoicesLen = kVoiceCount * kVoiceStride;
 constexpr int kDrumsLen = kDrumCount * 2;
-constexpr int kMainLen = 4;
+constexpr int kMainLen = 5;
+/** zss_main SAB indices (match wasmmainsab.ts WASM_MAIN_IDX). */
+constexpr int kMainCompBypassIdx = 3;
+constexpr int kMainScBypassIdx = 4;
 constexpr int kFxLen = kFxGroups * kFxSendCount + kFxGroups * kFxParamCount;
 constexpr int kVoiceCfgLen = kVoiceCount * kVoiceCfgStride;
 constexpr int kOscCfgLen = kVoiceCount * kOscCfgStride;

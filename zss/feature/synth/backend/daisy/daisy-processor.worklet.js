@@ -8,16 +8,16 @@ const DAISY_SAB_CHANNEL_OFFSET = {
   "zss_voices": 0,
   "zss_drums": 48,
   "zss_main": 68,
-  "zss_fx": 72,
-  "zss_voicecfg": 180,
-  "zss_osccfg": 260,
-  "zss_algocfg": 428,
-  "zss_vibrato": 636
+  "zss_fx": 73,
+  "zss_voicecfg": 181,
+  "zss_osccfg": 261,
+  "zss_algocfg": 429,
+  "zss_vibrato": 637
 }
 const DAISY_SAB_CHANNEL_LEN = {
   "zss_voices": 48,
   "zss_drums": 20,
-  "zss_main": 4,
+  "zss_main": 5,
   "zss_fx": 108,
   "zss_voicecfg": 80,
   "zss_osccfg": 168,

@@ -77,6 +77,22 @@ function buildreplay(scenario: LEVEL_STABILITY_SCENARIO): WASM_REPLAY_STATE {
   }
 }
 
+function applyscenariomainbussab(
+  engine: Awaited<ReturnType<typeof bootisolateddaisyengine>>,
+  scenario: LEVEL_STABILITY_SCENARIO,
+) {
+  if (!scenario.maincompbypass && !scenario.sidechainbypass) {
+    return
+  }
+  pushwasmmainsab(engine, [
+    80,
+    100,
+    WASM_DEFAULT_TTS_VOLUME,
+    scenario.maincompbypass ? 1 : 0,
+    scenario.sidechainbypass ? 1 : 0,
+  ])
+}
+
 function applyscenariovoiceconfigs(
   synth: ReturnType<typeof createdaisysynth>,
   scenario: LEVEL_STABILITY_SCENARIO,
@@ -164,9 +180,7 @@ export async function renderdaisylevelscenario(
   applyscenariovoiceconfigs(synth, scenario)
   synth.setplayvolume(80)
   synth.setbgplayvolume(100)
-  if (scenario.maincompbypass) {
-    pushwasmmainsab(engine, [80, 100, WASM_DEFAULT_TTS_VOLUME, 1])
-  }
+  applyscenariomainbussab(engine, scenario)
 
   if (scenario.playsequence) {
     for (let i = 0; i < scenario.playsequence.length; i++) {

@@ -1,5 +1,6 @@
 import { SYNTH_DEFAULT_WAVE, SYNTH_VOICE_COUNT } from '../../synthdefaults'
 
+import { isdaisymaincompbypass, isdaisysidechainbypass } from './flags'
 import {
   ensuredaisysynthwasm,
   initwasmmainsab,
@@ -7,13 +8,25 @@ import {
   setdaisysynthplayvolume,
   setdaisysynthttsvolume,
 } from './daisyengine'
+import {
+  WASM_DEFAULT_BGPLAY_VOLUME,
+  WASM_DEFAULT_PLAY_VOLUME,
+  WASM_DEFAULT_TTS_VOLUME,
+} from '../wasm/wasmmainsab'
 import { createdaisyrecordhandler } from './daisyrecordhandler'
 import { type DAISY_SYNTH, createdaisysynth } from './daisysynth'
 import { schedulewarmdaisydrums } from './warmdaisydrums'
 
 export async function bootdaisysynth(): Promise<DAISY_SYNTH> {
   const engine = await ensuredaisysynthwasm()
-  initwasmmainsab(engine)
+  initwasmmainsab(
+    engine,
+    WASM_DEFAULT_PLAY_VOLUME,
+    WASM_DEFAULT_BGPLAY_VOLUME,
+    WASM_DEFAULT_TTS_VOLUME,
+    isdaisymaincompbypass() ? 1 : 0,
+    isdaisysidechainbypass() ? 1 : 0,
+  )
   const synth = createdaisysynth(
     engine,
     {

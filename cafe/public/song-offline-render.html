@@ -78,6 +78,18 @@
             return notepopscenario()
           },
         },
+        sidechain: {
+          id: 'duck-bg-stab',
+          title: 'Sidechain duck A/B (sustain + bg stab)',
+          yarnhint: 'yarn render:sidechain:ab',
+          liverenderlabel: 're-render live (~15 s)',
+          loadscenario: async () => {
+            const { sidechainabscenario } = await import(
+              '/zss/feature/synth/backend/daisy/sidechainscenario.ts'
+            )
+            return sidechainabscenario()
+          },
+        },
       }
 
       const config = SCENARIOS[scenarioparam] ?? SCENARIOS['level-issue']

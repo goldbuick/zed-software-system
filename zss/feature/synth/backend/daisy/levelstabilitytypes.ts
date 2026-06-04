@@ -21,4 +21,6 @@ export type LEVEL_STABILITY_SCENARIO = {
   fx?: LEVEL_STABILITY_FX[]
   /** When true, bypass main bus compressor (offline A/B). */
   maincompbypass?: boolean
+  /** When true, bypass play-bus sidechain duck (offline A/B). */
+  sidechainbypass?: boolean
 }
