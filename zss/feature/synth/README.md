@@ -38,6 +38,13 @@ backend.addplay('qC4qD4qE4')
 | `ZSS_DAISY_PARITY=1` | With `ZSS_PARITY_RENDER=1`, run Daisy offline parity renders |
 | `ZSS_DAISY_NO_SIDECHAIN=1` | Bypass play-bus sidechain duck (`yarn dev:no-sc` or `?no_sc=1`) |
 | `ZSS_DAISY_NO_MAIN_COMP=1` | Bypass main bus compressor (`?no_comp=1`) |
+| `yarn test:pitch-stability:full` | Offline 16×C4 pitch drift gate (strike/detune regression) |
+| `yarn test:play-drum-balance:full` | Play vs drum stem balance gate (drums ~3 dB hotter) |
+| `yarn loop:play-drum` | Watch native → build/render/gate; auto-calibrate on fail |
+| `yarn calibrate:play-drum-balance` | Grid-search `kDrumBusGain` / `kPlayBusGain` in `zss_config.h` |
+| `yarn test:sidechain-parity:full` | Duck-bg-stab: SC on/off depth + optional Tone `main-duck-bg` peak |
+| `yarn loop:sidechain` | Watch native → parity gate; auto-calibrate `kScMix` / `kScMakeupDb` on fail |
+| `yarn calibrate:sidechain-parity` | Grid-search sidechain duck params in `zss_config.h` |
 | `ZSS_PARITY_RENDER=1` | Run offline parity render tests (manual gate, not CI) |
 | `ZSS_TONE_REFERENCE=1` | Compare Daisy voice/FX renders against Tone fixtures |
 

@@ -77,9 +77,9 @@ constexpr float kDrumTickTrim = 1.35f;
 constexpr float kDrumTweetTrim = 1.25f;
 
 constexpr float kVoiceOutGain = 1.f;
-/** Tone playvolume 80 → volumetodb(20); AM + retrigger peaks (~0.5 vs 0.355) */
-constexpr float kPlayBusGain = 0.5f;
-constexpr float kDrumBusGain = 0.167f;
+/** Calibrated: yarn calibrate:play-drum-balance (drums ~3 dB above single square C4). */
+constexpr float kPlayBusGain = 0.300f;
+constexpr float kDrumBusGain = 2.440f;
 
 constexpr float kScMakeupDb = 24.f;
 constexpr float kScAttackSec = 0.005f;

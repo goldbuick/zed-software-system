@@ -164,7 +164,7 @@ float processvoice(int vi, float vstart[kVibratoGroups], float vend[kVibratoGrou
     float hz     = glidefreq(v, vi, notefreq, kSynth, port);
     float envout = v.voiceenv.process(gate);
     v.lastenv    = envout;
-    out          = synthsource(v, vi, hz, gate, detune, osctype, vfreq) * envout;
+    out          = synthsource(v, vi, hz, gate, 0.f, osctype, vfreq) * envout;
     if(gate && kSynthNoteOnFadeSec > 0.f)
     {
       const float fadeinc = 1.f / std::max(1.f, kSynthNoteOnFadeSec * g_engine.sample_rate);
@@ -227,7 +227,7 @@ float processvoice(int vi, float vstart[kVibratoGroups], float vend[kVibratoGrou
   }
   else if(type == kStringVoice)
   {
-    float hz      = detunedhz(vi, freq > 0.f ? freq : 440.f, detune, vfreq);
+    float hz      = detunedhz(vi, freq > 0.f ? freq : 440.f, 0.f, vfreq);
     bool  trigger = gate && !v.stringgateprev;
     v.stringgateprev = gate;
     applystringvoicepreset(v, algo == 0 ? 0 : 1);
@@ -267,7 +267,7 @@ float processvoice(int vi, float vstart[kVibratoGroups], float vend[kVibratoGrou
   {
     float envout = v.voiceenv.process(gate);
     v.lastenv    = envout;
-    out          = synthsource(v, vi, freq, gate, detune, osctype, vfreq) * envout;
+    out          = synthsource(v, vi, freq, gate, 0.f, osctype, vfreq) * envout;
   }
 
   return out * dbtoamp(vol_db);

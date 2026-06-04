@@ -57,7 +57,7 @@ hiss (pink noise) ───────┘
 | Bus | Tone | Daisy |
 |-----|------|-------|
 | Play into sidechain | `volumetodb(20)` | `kPlayBusGain` |
-| Drums | `volumetodb(100) + 10` dB | `kDrumBusGain` |
+| Drums | `volumetodb(100) + 10` dB | `kDrumBusGain` (calibrate: `yarn calibrate:play-drum-balance`) |
 | Main fader | `volumetodb(vol × 0.25)` on `mainvolume` | `readmainvolume()` |
 
 ### Broadcast Destination
