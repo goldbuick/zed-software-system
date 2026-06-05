@@ -18,9 +18,9 @@ import {
   pushwasmmainsab,
 } from '../wasm/wasmmainsab'
 
-import { isdaisymaincompbypass, isdaisysidechainbypass } from './flags'
 import { DAISY_BUILD_ID } from './daisybuildid'
 import { daisyasseturl } from './daisypaths'
+import { isdaisymaincompbypass, isdaisysidechainbypass } from './flags'
 
 function asaudiocontext(ctx: BaseAudioContext): AudioContext {
   return ctx as AudioContext
@@ -69,10 +69,7 @@ function teardowndaisyengine() {
 }
 
 function daisymainbussabtail(): [number, number] {
-  return [
-    isdaisymaincompbypass() ? 1 : 0,
-    isdaisysidechainbypass() ? 1 : 0,
-  ]
+  return [isdaisymaincompbypass() ? 1 : 0, isdaisysidechainbypass() ? 1 : 0]
 }
 
 function pushdaisymainvolumes(maxi: DaisyEngine) {
@@ -322,7 +319,7 @@ export async function ensuredaisysynthwasm(): Promise<DaisyEngine> {
   return daisyloadinflight
 }
 
-export async function startisolateddaisydsp(
+export function startisolateddaisydsp(
   engine: DaisyEngine,
   playvolume: number,
   bgplayvolume: number,

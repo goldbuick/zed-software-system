@@ -55,7 +55,13 @@ export async function ensurewasmcoep(): Promise<void> {
       sessionStorage.removeItem(RELOAD_GUARD_KEY)
       coepready = window.crossOriginIsolated
     } catch (err) {
-      apierror(SOFTWARE, '', 'wasm', 'COOP/COEP service worker registration failed', err)
+      apierror(
+        SOFTWARE,
+        '',
+        'wasm',
+        'COOP/COEP service worker registration failed',
+        err,
+      )
     }
   })()
 

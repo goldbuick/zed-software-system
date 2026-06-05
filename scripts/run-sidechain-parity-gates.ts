@@ -9,9 +9,9 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import {
+  type SIDECHAIN_PARITY_RESULT,
   evalsidechainparitygate,
   formatsidechainparityreport,
-  type SIDECHAIN_PARITY_RESULT,
 } from '../zss/feature/synth/backend/daisy/sidechainparity.ts'
 import { SIDECHAIN_SCENARIO_ID } from '../zss/feature/synth/backend/daisy/sidechainscenario.ts'
 

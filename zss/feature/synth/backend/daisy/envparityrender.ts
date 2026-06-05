@@ -113,11 +113,7 @@ export function envparitytimelinesmatch(
     durationsec,
     daisy.windowms,
   )
-  const toneline = timelinascii(
-    tone.windowpeaksDb,
-    durationsec,
-    tone.windowms,
-  )
+  const toneline = timelinascii(tone.windowpeaksDb, durationsec, tone.windowms)
   return daisyline === toneline
 }
 
@@ -173,7 +169,7 @@ export function envparitytimelinesmatchsamples(
 /** Scale each Daisy analysis window so its peak dBFS matches Tone (timeline gate only). */
 export function gainmatchdaisywindowstotone(
   daisy: Float32Array,
-  tone: Float32Array,
+  _tone: Float32Array,
   samplerate: number,
   tonewindowpeaksdb: number[],
   windowms: number,
@@ -181,11 +177,14 @@ export function gainmatchdaisywindowstotone(
   const windowsize = Math.max(64, Math.round((samplerate * windowms) / 1000))
   const out = daisy.slice()
   let winidx = 0
-  for (let start = 0; start < out.length && winidx < tonewindowpeaksdb.length; start += windowsize) {
+  for (
+    let start = 0;
+    start < out.length && winidx < tonewindowpeaksdb.length;
+    start += windowsize
+  ) {
     const end = Math.min(out.length, start + windowsize)
     const targetdb = tonewindowpeaksdb[winidx]
-    const targetamp =
-      targetdb > -60 ? Math.pow(10, targetdb / 20) : 0
+    const targetamp = targetdb > -60 ? Math.pow(10, targetdb / 20) : 0
     let peak = 0
     for (let i = start; i < end; i++) {
       const abs = out[i] < 0 ? -out[i] : out[i]
@@ -256,7 +255,11 @@ export async function runenvparityscenario(
       tone.windowpeaksDb,
       windowms,
     )
-    chartdaisy = analyzelevelstability(matched, daisyrender.samplerate, windowms)
+    chartdaisy = analyzelevelstability(
+      matched,
+      daisyrender.samplerate,
+      windowms,
+    )
   }
   result.report = formatenvparityreport(
     scenario,

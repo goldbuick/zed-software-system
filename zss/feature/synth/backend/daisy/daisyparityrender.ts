@@ -12,13 +12,13 @@ import type {
   MAIN_DYNAMICS_PARITY_PATCH,
   PARITY_PATCH,
 } from '../wasm/paritypatches'
+import { applydaisyparityvoiceconfigs } from '../wasm/paritypatchvoice'
 import { defaultwasmalgoconfig } from '../wasm/wasmalgoconfigsab'
 import { applywasmfxconfig, defaultwasmfxsab } from '../wasm/wasmfxstate'
 import { WASM_DEFAULT_TTS_VOLUME } from '../wasm/wasmmainsab'
 import { defaultwasmoscconfig } from '../wasm/wasmoscconfigsab'
 import type { WASM_REPLAY_STATE } from '../wasm/wasmreplaystate'
 import { defaultwasmvoicestate } from '../wasm/wasmvoiceconfig'
-import { applydaisyparityvoiceconfigs } from '../wasm/paritypatchvoice'
 
 import { bootisolateddaisyengine, startisolateddaisydsp } from './daisyengine'
 import { createdaisysynth } from './daisysynth'
@@ -72,7 +72,7 @@ async function renderdaisyoffline(
   const length = Math.max(1, Math.ceil(rendersec * PARITY_SAMPLERATE))
   const offlinectx = new OfflineAudioContext(1, length, PARITY_SAMPLERATE)
   const engine = await bootisolateddaisyengine(offlinectx)
-  await startisolateddaisydsp(engine, 80, 100, WASM_DEFAULT_TTS_VOLUME)
+  startisolateddaisydsp(engine, 80, 100, WASM_DEFAULT_TTS_VOLUME)
 
   const synth = createdaisysynth(engine)
   const replay = buildreplay()

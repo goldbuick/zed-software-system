@@ -17,7 +17,9 @@ describe('handlesearch', () => {
   })
 
   it('signals loginready when player is not active', () => {
-    jest.spyOn(playermanagement, 'memoryreadplayeractive').mockReturnValue(false)
+    jest
+      .spyOn(playermanagement, 'memoryreadplayeractive')
+      .mockReturnValue(false)
 
     const message: MESSAGE = {
       session: '',

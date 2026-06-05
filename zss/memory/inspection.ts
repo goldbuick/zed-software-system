@@ -694,7 +694,13 @@ export function memoryinspectcommand(path: string, player: string) {
       })
       break
     default:
-      apierror(SOFTWARE, memoryreadoperator(), 'inspect', 'unknown inspect', inspect)
+      apierror(
+        SOFTWARE,
+        memoryreadoperator(),
+        'inspect',
+        'unknown inspect',
+        inspect,
+      )
       break
   }
 }

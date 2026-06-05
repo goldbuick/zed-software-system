@@ -4,8 +4,8 @@ import { fileURLToPath } from 'node:url'
 
 import { chromium } from '@playwright/test'
 
-import { DRUM_PARITY_PATCHES } from '../zss/feature/synth/backend/wasm/paritypatches.ts'
 import type { PARITY_AUDIO_METRICS } from '../zss/feature/synth/backend/wasm/paritymetrics.ts'
+import { DRUM_PARITY_PATCHES } from '../zss/feature/synth/backend/wasm/paritypatches.ts'
 
 import { startparityvite } from './parity-vite-server.ts'
 

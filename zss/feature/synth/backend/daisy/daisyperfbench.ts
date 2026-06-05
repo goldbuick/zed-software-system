@@ -65,7 +65,7 @@ export async function rundaisyperfbench(
 
   const wallstart = performance.now()
   const engine = await bootisolateddaisyengine(offlinectx)
-  await startisolateddaisydsp(engine, 80, 100, WASM_DEFAULT_TTS_VOLUME)
+  startisolateddaisydsp(engine, 80, 100, WASM_DEFAULT_TTS_VOLUME)
   const synth = createdaisysynth(engine)
   synth.applyreplay(buildworstcasereplay())
   synth.synthreplay(buildworstcaseticks(rendersec), rendersec)

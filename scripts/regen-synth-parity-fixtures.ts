@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 
 import { chromium } from '@playwright/test'
 
+import type { PARITY_AUDIO_METRICS } from '../zss/feature/synth/backend/wasm/paritymetrics.ts'
 import {
   DRUM_PARITY_PATCHES,
   ENVELOPE_ADSR_PARITY_PATCHES,
@@ -11,7 +12,6 @@ import {
   MAIN_DYNAMICS_PARITY_PATCHES,
   WASM_PARITY_PATCHES,
 } from '../zss/feature/synth/backend/wasm/paritypatches.ts'
-import type { PARITY_AUDIO_METRICS } from '../zss/feature/synth/backend/wasm/paritymetrics.ts'
 
 import { startparityvite } from './parity-vite-server.ts'
 
@@ -74,7 +74,9 @@ async function renderpatchmetrics(
   return metrics
 }
 
-async function renderallpatches(): Promise<Record<string, PARITY_AUDIO_METRICS>> {
+async function renderallpatches(): Promise<
+  Record<string, PARITY_AUDIO_METRICS>
+> {
   const { server, vite } = await startparityvite(PROJECT, REGEN_PORT)
   const browser = await chromium.launch()
   const out: Record<string, PARITY_AUDIO_METRICS> = {}
@@ -140,7 +142,9 @@ async function main() {
     console.log(`${USE_TONE ? 'tone' : 'wasm'} ${patchid}`, metrics)
   }
   if (Object.keys(patches).length === 0) {
-    console.error('No patches rendered — ensure playwright chromium is installed.')
+    console.error(
+      'No patches rendered — ensure playwright chromium is installed.',
+    )
     process.exit(1)
   }
   writeFileSync(OUT, `${JSON.stringify({ patches }, null, 2)}\n`)

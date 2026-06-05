@@ -152,7 +152,11 @@ async function main() {
   const cfg = SUITE_CONFIG[suite]
 
   if (calibrateonly) {
-    const pass = runpipeline(suite, { skipbuild, calibrateonly, calibrateonfail })
+    const pass = runpipeline(suite, {
+      skipbuild,
+      calibrateonly,
+      calibrateonfail,
+    })
     console.log(pass ? 'DAISY_LOOP_PASS' : 'DAISY_LOOP_FAIL')
     process.exit(pass ? 0 : 1)
   }
@@ -180,7 +184,11 @@ async function main() {
     }
     pending = setTimeout(() => {
       console.log(`\n▶ Native changed — ${cfg.label} pipeline…`)
-      const pass = runpipeline(suite, { skipbuild, calibrateonly, calibrateonfail })
+      const pass = runpipeline(suite, {
+        skipbuild,
+        calibrateonly,
+        calibrateonfail,
+      })
       console.log(pass ? 'DAISY_LOOP_PASS' : 'DAISY_LOOP_FAIL')
     }, DAISY_WATCH_DEBOUNCE_MS)
   }

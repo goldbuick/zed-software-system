@@ -16,8 +16,8 @@ import { chromium } from '@playwright/test'
 
 import {
   analyzepitchstability,
-  formatpitchstabilityreport,
   evalpitchstabilitygate,
+  formatpitchstabilityreport,
 } from '../zss/feature/synth/backend/daisy/pitchstability.ts'
 import {
   PITCH_STABILITY_EXPECTED_PITCH,
@@ -26,10 +26,7 @@ import {
   pitchstabilityscenario,
 } from '../zss/feature/synth/backend/daisy/pitchstabilityscenario.ts'
 
-import {
-  startparityvite,
-  stopparityvite,
-} from './parity-vite-server.ts'
+import { startparityvite, stopparityvite } from './parity-vite-server.ts'
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url))
 const PROJECT = path.join(ROOT, '..')
@@ -52,23 +49,17 @@ async function renderpass(
   page: import('@playwright/test').Page,
 ): Promise<{ samples: Float32Array; samplerate: number; report: string }> {
   return page.evaluate(async () => {
-    const { renderdaisysongpayload } = await import(
-      '/zss/feature/synth/backend/daisy/daisysongrender.ts'
-    )
-    const { pitchstabilityscenario } = await import(
-      '/zss/feature/synth/backend/daisy/pitchstabilityscenario.ts'
-    )
+    const { renderdaisysongpayload } =
+      await import('/zss/feature/synth/backend/daisy/daisysongrender.ts')
+    const { pitchstabilityscenario } =
+      await import('/zss/feature/synth/backend/daisy/pitchstabilityscenario.ts')
     const {
       analyzepitchstability,
       evalpitchstabilitygate,
       formatpitchstabilityreport,
-    } = await import(
-      '/zss/feature/synth/backend/daisy/pitchstability.ts'
-    )
+    } = await import('/zss/feature/synth/backend/daisy/pitchstability.ts')
     const { pitchstabilityattacktimes, PITCH_STABILITY_EXPECTED_PITCH } =
-      await import(
-        '/zss/feature/synth/backend/daisy/pitchstabilityscenario.ts'
-      )
+      await import('/zss/feature/synth/backend/daisy/pitchstabilityscenario.ts')
 
     console.warn('[pitch-stability] booting daisy wasm…')
     const scenario = pitchstabilityscenario()
@@ -160,8 +151,7 @@ async function main() {
         attacks,
         PITCH_STABILITY_EXPECTED_PITCH,
       )
-    const gate =
-      evaluated.gate ?? evalpitchstabilitygate(pitchmetrics)
+    const gate = evaluated.gate ?? evalpitchstabilitygate(pitchmetrics)
 
     const buffer = Buffer.alloc(44 + evaluated.samples.length * 2)
     const view = new DataView(buffer.buffer)

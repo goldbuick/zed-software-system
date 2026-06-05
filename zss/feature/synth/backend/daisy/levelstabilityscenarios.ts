@@ -2,15 +2,10 @@ import type { SYNTH_NOTE_ENTRY } from '../../playnotation'
 import { tonenotationseconds } from '../../playnotation'
 
 import { FX_MATRIX_SCENARIOS } from './fxlevelscenarios'
-import type {
-  LEVEL_STABILITY_FX,
-  LEVEL_STABILITY_SCENARIO,
-  LEVEL_STABILITY_VOICE_CONFIG,
-} from './levelstabilitytypes'
+import type { LEVEL_STABILITY_SCENARIO } from './levelstabilitytypes'
 import {
   SCALE_CREW_FX,
   SCALE_CREW_VOICE_CONFIGS,
-  buildscalecrewsequence,
   buildscalecrewsequencewithmelody,
   estimatesequencedurationsec,
 } from './scalecrewsong'

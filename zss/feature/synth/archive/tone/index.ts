@@ -64,7 +64,10 @@ export function createsynth() {
   function applyreplay(source: any[], fxchain: any, fx: any[]) {
     source.forEach((item, index) => {
       changesource(index, item.type, item.algo)
-      SOURCE[index].setreplay(item)
+      const voice = SOURCE[index]
+      if (ispresent(voice)) {
+        voice.setreplay(item)
+      }
     })
     FXCHAIN.setreplay(fxchain)
     const fxreplay = FX.length === 2 && fx.length === 4 ? [fx[0]!, fx[2]!] : fx
@@ -152,6 +155,9 @@ export function createsynth() {
 
   function applyreset() {
     SOURCE.forEach((item, index) => {
+      if (!ispresent(item)) {
+        return
+      }
       const algo =
         item.source.type === SOURCE_TYPE.ALGO_SYNTH ? item.source.algo : 0
       changesource(index, SOURCE_TYPE.SYNTH, algo)
@@ -165,7 +171,11 @@ export function createsynth() {
   }
 
   function destroy() {
-    SOURCE.forEach((item) => item.destroy())
+    SOURCE.forEach((item) => {
+      if (ispresent(item)) {
+        item.destroy()
+      }
+    })
     FX.forEach((item) => item.destroy())
     FXCHAIN.destroy()
     chain.mainvolume.dispose()

@@ -24,7 +24,7 @@ export async function renderdaisyrecord(
   const offlinectx = new OfflineAudioContext(2, length, samplerate)
 
   const engine = await bootisolateddaisyengine(offlinectx)
-  await startisolateddaisydsp(
+  startisolateddaisydsp(
     engine,
     replay.playvolume,
     replay.bgplayvolume,

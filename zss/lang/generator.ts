@@ -2,6 +2,7 @@
 import { CstNode, IToken } from 'chevrotain'
 import { SourceMapGenerator } from 'source-map'
 import { CHIP } from 'zss/chip'
+
 import { compileast } from './ast'
 import { LANG_ERROR } from './lexer'
 import { transformast } from './transformer'

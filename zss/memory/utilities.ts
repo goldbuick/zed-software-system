@@ -26,7 +26,6 @@ import {
 } from './bookoperations'
 import { memoryreadflags } from './flags'
 import { memoryreadplayerboard } from './playermanagement'
-import { trimformatobject, trimmemoryexport } from './trimexport'
 import {
   memoryisoperator,
   memoryreadbookbysoftware,
@@ -34,6 +33,7 @@ import {
   memoryreadtopic,
   memorywritehalt,
 } from './session'
+import { trimformatobject, trimmemoryexport } from './trimexport'
 import { BOOK, FIXED_DATE, MEMORY_LABEL } from './types'
 
 // In-memory config (register sends at login; utilities render/emit only)

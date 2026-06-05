@@ -11,12 +11,12 @@ import { fileURLToPath } from 'node:url'
 
 import { chromium } from '@playwright/test'
 
-import { ENV_PARITY_SCENARIOS } from '../zss/feature/synth/backend/daisy/envparityscenario.ts'
 import type { ENV_PARITY_RESULT } from '../zss/feature/synth/backend/daisy/envparityrender.ts'
+import { ENV_PARITY_SCENARIOS } from '../zss/feature/synth/backend/daisy/envparityscenario.ts'
 
 import {
-  PLAYWRIGHT_SCENARIO_TIMEOUT_MS,
   PARITY_RENDER_SCRIPT_TIMEOUT_MS,
+  PLAYWRIGHT_SCENARIO_TIMEOUT_MS,
   withscripttimeout,
 } from './parity-timeouts.ts'
 import { startparityvite, stopparityvite } from './parity-vite-server.ts'
@@ -44,8 +44,12 @@ function assertparity(payload: {
   if (!GATED_SCENARIO_IDS.has(payload.id)) {
     return undefined
   }
-  const peakdelta = Math.abs(payload.daisy.overallpeakdb - payload.tone.overallpeakdb)
-  const rmsdelta = Math.abs(payload.daisy.overallrmsdb - payload.tone.overallrmsdb)
+  const peakdelta = Math.abs(
+    payload.daisy.overallpeakdb - payload.tone.overallpeakdb,
+  )
+  const rmsdelta = Math.abs(
+    payload.daisy.overallrmsdb - payload.tone.overallrmsdb,
+  )
   if (peakdelta > PEAK_TOLERANCE_DB) {
     return `peak delta ${peakdelta.toFixed(1)} dB exceeds ${PEAK_TOLERANCE_DB} dB`
   }
@@ -80,19 +84,12 @@ async function runenvparity() {
       })
       const payload = await page.evaluate(
         async ({ scenarioid, windowms }) => {
-          const {
-            runenvparityscenario,
-            envparitytimelinesmatchsamples,
-          } = await import(
-            '/zss/feature/synth/backend/daisy/envparityrender.ts'
-          )
-          const { arraybuffertobase64 } = await import(
-            '/zss/feature/synth/backend/daisy/daisysongrender.ts'
-          )
-          const {
-            envparityscenario,
-            envparityretriggerscenario,
-          } = await import('/zss/feature/synth/backend/daisy/envparityscenario.ts')
+          const { runenvparityscenario, envparitytimelinesmatchsamples } =
+            await import('/zss/feature/synth/backend/daisy/envparityrender.ts')
+          const { arraybuffertobase64 } =
+            await import('/zss/feature/synth/backend/daisy/daisysongrender.ts')
+          const { envparityscenario, envparityretriggerscenario } =
+            await import('/zss/feature/synth/backend/daisy/envparityscenario.ts')
 
           const scenario =
             scenarioid === 'env-parity-amsaw-8n'
@@ -182,9 +179,11 @@ async function runenvparity() {
   }
 }
 
-withscripttimeout('test:env-parity', PARITY_RENDER_SCRIPT_TIMEOUT_MS, runenvparity).catch(
-  (err) => {
-    console.error(err)
-    process.exit(1)
-  },
-)
+withscripttimeout(
+  'test:env-parity',
+  PARITY_RENDER_SCRIPT_TIMEOUT_MS,
+  runenvparity,
+).catch((err) => {
+  console.error(err)
+  process.exit(1)
+})

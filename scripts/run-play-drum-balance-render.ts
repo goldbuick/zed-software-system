@@ -21,10 +21,7 @@ import {
   playdrumbalanceplayscenario,
 } from '../zss/feature/synth/backend/daisy/playdrumbalancescenario.ts'
 
-import {
-  startparityvite,
-  stopparityvite,
-} from './parity-vite-server.ts'
+import { startparityvite, stopparityvite } from './parity-vite-server.ts'
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url))
 const PROJECT = path.join(ROOT, '..')
@@ -68,15 +65,10 @@ async function renderstem(
   stem: 'play' | 'drum',
 ): Promise<{ samples: Float32Array; samplerate: number; meta: object }> {
   return page.evaluate(async (which) => {
-    const { renderdaisysongpayload } = await import(
-      '/zss/feature/synth/backend/daisy/daisysongrender.ts'
-    )
-    const {
-      playdrumbalanceplayscenario,
-      playdrumbalancedrumscenario,
-    } = await import(
-      '/zss/feature/synth/backend/daisy/playdrumbalancescenario.ts'
-    )
+    const { renderdaisysongpayload } =
+      await import('/zss/feature/synth/backend/daisy/daisysongrender.ts')
+    const { playdrumbalanceplayscenario, playdrumbalancedrumscenario } =
+      await import('/zss/feature/synth/backend/daisy/playdrumbalancescenario.ts')
     const scenario =
       which === 'play'
         ? playdrumbalanceplayscenario()

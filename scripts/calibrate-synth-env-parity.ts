@@ -11,8 +11,8 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import {
-  evalsynthenvparitygate,
   type SYNTH_ENV_PARITY_RESULT,
+  evalsynthenvparitygate,
 } from '../zss/feature/synth/backend/daisy/synthenvparitygate.ts'
 import {
   SYNTH_ENV_PARITY_REQUIRED_IDS,
@@ -45,8 +45,8 @@ type ENVPARAMS = {
 
 function readparams(): ENVPARAMS {
   const text = fs.readFileSync(CONFIG_PATH, 'utf8')
-  const decaymatch = text.match(/kEnvDecayTauScale\s*=\s*([\d.]+)f/)
-  const releasematch = text.match(/kEnvReleaseTauScale\s*=\s*([\d.]+)f/)
+  const decaymatch = /kEnvDecayTauScale\s*=\s*([\d.]+)f/.exec(text)
+  const releasematch = /kEnvReleaseTauScale\s*=\s*([\d.]+)f/.exec(text)
   return {
     decayscale: decaymatch ? parseFloat(decaymatch[1]) : 1,
     releasescale: releasematch ? parseFloat(releasematch[1]) : 1,
@@ -74,7 +74,11 @@ function builddaisy() {
   })
 }
 
-function measurerequired(): { pass: boolean; err: number; results: SYNTH_ENV_PARITY_RESULT[] } {
+function measurerequired(): {
+  pass: boolean
+  err: number
+  results: SYNTH_ENV_PARITY_RESULT[]
+} {
   execSync('yarn render:synth-env-parity', {
     cwd: PROJECT,
     stdio: 'inherit',
@@ -127,7 +131,9 @@ async function main() {
         writeparams(params)
         builddaisy()
       }
-      const { pass, err } = dryrun ? { pass: false, err: 999 } : measurerequired()
+      const { pass, err } = dryrun
+        ? { pass: false, err: 999 }
+        : measurerequired()
       console.log(`  err=${err.toFixed(0)} ${pass ? 'PASS' : ''}`)
       if (err < best.err) {
         best = { params, err, pass }
@@ -157,9 +163,11 @@ async function main() {
   }
 }
 
-withscripttimeout('calibrate:synth-env-parity', CALIBRATE_SCRIPT_TIMEOUT_MS, main).catch(
-  (err) => {
-    console.error(err)
-    process.exit(1)
-  },
-)
+withscripttimeout(
+  'calibrate:synth-env-parity',
+  CALIBRATE_SCRIPT_TIMEOUT_MS,
+  main,
+).catch((err) => {
+  console.error(err)
+  process.exit(1)
+})

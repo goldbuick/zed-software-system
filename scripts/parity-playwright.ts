@@ -25,7 +25,9 @@ export async function startparityvitehost(
   return startparityvite(projectroot, port)
 }
 
-export async function launchparitybrowser(timeoutms = 60_000): Promise<Browser> {
+export async function launchparitybrowser(
+  timeoutms = 60_000,
+): Promise<Browser> {
   return chromium.launch({ timeout: timeoutms })
 }
 

@@ -67,7 +67,13 @@ export async function memoryinspectremixcommand(path: string, player: string) {
       break
     }
     default:
-      apierror(SOFTWARE, memoryreadoperator(), 'inspect', 'unknown remix', remix)
+      apierror(
+        SOFTWARE,
+        memoryreadoperator(),
+        'inspect',
+        'unknown remix',
+        remix,
+      )
       break
   }
 }

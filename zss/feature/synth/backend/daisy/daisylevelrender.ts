@@ -173,7 +173,7 @@ export async function renderdaisylevelscenario(
   const offlinectx = new OfflineAudioContext(1, length, RENDER_SAMPLERATE)
 
   const engine = await bootisolateddaisyengine(offlinectx)
-  await startisolateddaisydsp(engine, 80, 100, WASM_DEFAULT_TTS_VOLUME)
+  startisolateddaisydsp(engine, 80, 100, WASM_DEFAULT_TTS_VOLUME)
 
   const synth = createdaisysynth(engine)
   synth.applyreplay(buildreplay(scenario))

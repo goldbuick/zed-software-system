@@ -173,10 +173,7 @@ function ispianoparamkey(key: string): boolean {
 
 function istimpaniparamkey(key: string): boolean {
   return (
-    key === 'tension' ||
-    key === 'decay' ||
-    key === 'tone' ||
-    key === 'strike'
+    key === 'tension' || key === 'decay' || key === 'tone' || key === 'strike'
   )
 }
 
@@ -186,19 +183,13 @@ function isbowedparamkey(key: string): boolean {
 
 function isguitarparamkey(key: string): boolean {
   return (
-    key === 'pick' ||
-    key === 'body' ||
-    key === 'damping' ||
-    key === 'position'
+    key === 'pick' || key === 'body' || key === 'damping' || key === 'position'
   )
 }
 
 function isorganparamkey(key: string): boolean {
   return (
-    key === 'drawbar' ||
-    key === 'click' ||
-    key === 'leak' ||
-    key === 'bright'
+    key === 'drawbar' || key === 'click' || key === 'leak' || key === 'bright'
   )
 }
 

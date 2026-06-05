@@ -11,9 +11,9 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import {
-  evalplaydrumbalancegate,
-  PLAY_DRUM_TARGET_DRUM_MINUS_PLAY_DB,
   type PLAY_DRUM_BALANCE_METRICS,
+  PLAY_DRUM_TARGET_DRUM_MINUS_PLAY_DB,
+  evalplaydrumbalancegate,
 } from '../zss/feature/synth/backend/daisy/playdrumbalance.ts'
 import { PLAY_DRUM_BALANCE_SCENARIO_ID } from '../zss/feature/synth/backend/daisy/playdrumbalancescenario.ts'
 
@@ -38,8 +38,8 @@ type GAINS = {
 
 function readgains(): GAINS {
   const text = fs.readFileSync(CONFIG_PATH, 'utf8')
-  const playmatch = text.match(/kPlayBusGain\s*=\s*([\d.]+)f/)
-  const drummatch = text.match(/kDrumBusGain\s*=\s*([\d.]+)f/)
+  const playmatch = /kPlayBusGain\s*=\s*([\d.]+)f/.exec(text)
+  const drummatch = /kDrumBusGain\s*=\s*([\d.]+)f/.exec(text)
   return {
     playbus: playmatch ? parseFloat(playmatch[1]) : 0.5,
     drumbus: drummatch ? parseFloat(drummatch[1]) : 0.167,

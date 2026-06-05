@@ -14,14 +14,6 @@ import { fileURLToPath } from 'node:url'
 import { chromium } from '@playwright/test'
 
 import {
-  comparelevelstability,
-  diagnoselevelstability,
-  formatlevelstabilityline,
-  formatwindowcompareplot,
-  type LEVEL_STABILITY_METRICS,
-} from '../zss/feature/synth/backend/wasm/levelstabilitymetrics.ts'
-import { formatmixbalanceline } from '../zss/feature/synth/backend/wasm/compressormetrics.ts'
-import {
   computefxbusmetrics,
   formatfxbusmetricsline,
   isfxbussoloscenario,
@@ -34,12 +26,20 @@ import {
 } from '../zss/feature/synth/backend/daisy/fxlevelscenarios'
 import {
   LEVEL_STABILITY_COMPARE_PAIRS,
-  LEVEL_STABILITY_MIX_BALANCE_PAIRS,
   LEVEL_STABILITY_MIN_FX_PEAKRANGE_INCREASE_DB,
   LEVEL_STABILITY_MIN_REVERB_RMSRANGE_INCREASE_DB,
+  LEVEL_STABILITY_MIX_BALANCE_PAIRS,
   LEVEL_STABILITY_SCENARIOS,
   filterlevelstabilityscenarios,
 } from '../zss/feature/synth/backend/daisy/levelstabilityscenarios.ts'
+import { formatmixbalanceline } from '../zss/feature/synth/backend/wasm/compressormetrics.ts'
+import {
+  type LEVEL_STABILITY_METRICS,
+  comparelevelstability,
+  diagnoselevelstability,
+  formatlevelstabilityline,
+  formatwindowcompareplot,
+} from '../zss/feature/synth/backend/wasm/levelstabilitymetrics.ts'
 
 import { startparityvite } from './parity-vite-server.ts'
 
@@ -57,7 +57,9 @@ function parseargs() {
   const filteridx = process.argv.indexOf('--filter')
   const compareidx = process.argv.indexOf('--compare')
   const scenarioid =
-    scenidx >= 0 && process.argv[scenidx + 1] ? process.argv[scenidx + 1] : 'all'
+    scenidx >= 0 && process.argv[scenidx + 1]
+      ? process.argv[scenidx + 1]
+      : 'all'
   const filter =
     filteridx >= 0 && process.argv[filteridx + 1]
       ? process.argv[filteridx + 1]
@@ -91,7 +93,10 @@ function formatreport(
     }
   }
   lines.push('', 'Comparisons (candidate vs baseline):')
-  for (const line of diagnoselevelstability(metrics, LEVEL_STABILITY_COMPARE_PAIRS)) {
+  for (const line of diagnoselevelstability(
+    metrics,
+    LEVEL_STABILITY_COMPARE_PAIRS,
+  )) {
     lines.push(`  ${line}`)
   }
   lines.push('', 'Mix balance (full vs melody-only overall rms):')
@@ -178,7 +183,8 @@ function assertevidence(
     const delta = comparelevelstability(base, cand)
     if (
       candid.includes('reverb') &&
-      delta.steadyrmsrangeDeltaDb < LEVEL_STABILITY_MIN_REVERB_RMSRANGE_INCREASE_DB
+      delta.steadyrmsrangeDeltaDb <
+        LEVEL_STABILITY_MIN_REVERB_RMSRANGE_INCREASE_DB
     ) {
       failures.push(
         `${candid} vs ${baseid}: steady rms +${delta.steadyrmsrangeDeltaDb.toFixed(1)} dB (expected >= ${LEVEL_STABILITY_MIN_REVERB_RMSRANGE_INCREASE_DB} dB)`,
@@ -186,7 +192,8 @@ function assertevidence(
     }
     if (
       (candid.includes('fxstack') || candid.includes('reverb')) &&
-      delta.steadypeakrangeDeltaDb < LEVEL_STABILITY_MIN_FX_PEAKRANGE_INCREASE_DB
+      delta.steadypeakrangeDeltaDb <
+        LEVEL_STABILITY_MIN_FX_PEAKRANGE_INCREASE_DB
     ) {
       failures.push(
         `${candid} vs ${baseid}: steady peak +${delta.steadypeakrangeDeltaDb.toFixed(1)} dB (expected >= ${LEVEL_STABILITY_MIN_FX_PEAKRANGE_INCREASE_DB} dB)`,
@@ -269,7 +276,9 @@ function formatfxbusreport(
     }
     const cand = metrics[id]
     if (cand) {
-      lines.push(`  ${formatfxbusmetricsline(computefxbusmetrics(id, cand, base))}`)
+      lines.push(
+        `  ${formatfxbusmetricsline(computefxbusmetrics(id, cand, base))}`,
+      )
     }
   }
   return lines.join('\n')
@@ -280,7 +289,10 @@ async function main() {
 
   if (comparea && compareb) {
     console.log(`Comparing ${comparea} vs ${compareb}…`)
-    const { server, vite } = await startparityvite(PROJECT, LEVEL_STABILITY_PORT)
+    const { server, vite } = await startparityvite(
+      PROJECT,
+      LEVEL_STABILITY_PORT,
+    )
     const browser = await chromium.launch()
     try {
       const page = await browser.newPage()
@@ -326,7 +338,9 @@ async function main() {
     if (failures.length > 0) {
       console.log('')
       console.log(
-        strict ? 'ASSERTION FAILURES:' : 'Simple-scenario thresholds not met (informational):',
+        strict
+          ? 'ASSERTION FAILURES:'
+          : 'Simple-scenario thresholds not met (informational):',
       )
       for (const line of failures) {
         console.log(`  - ${line}`)

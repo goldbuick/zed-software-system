@@ -11,8 +11,8 @@ import { chromium } from '@playwright/test'
 
 import {
   LEVEL_ISSUE_SONG_ID,
-  levelissuevoicerolesummary,
   levelissuescenario,
+  levelissuevoicerolesummary,
   levelissuevoicescenario,
 } from '../zss/feature/synth/backend/daisy/levelissuesong.ts'
 import type { LEVEL_STABILITY_METRICS } from '../zss/feature/synth/backend/wasm/levelstabilitymetrics.ts'
@@ -28,11 +28,17 @@ const WINDOWMS = 46
 function peakbands(metrics: LEVEL_STABILITY_METRICS) {
   const bands = { hash: 0, eq: 0, dash: 0, dot: 0, space: 0 }
   for (const db of metrics.windowpeaksDb) {
-    if (db > -10) bands.hash++
-    else if (db > -20) bands.eq++
-    else if (db > -35) bands.dash++
-    else if (db > -50) bands.dot++
-    else bands.space++
+    if (db > -10) {
+      bands.hash++
+    } else if (db > -20) {
+      bands.eq++
+    } else if (db > -35) {
+      bands.dash++
+    } else if (db > -50) {
+      bands.dot++
+    } else {
+      bands.space++
+    }
   }
   const n = metrics.windowpeaksDb.length
   const sorted = [...metrics.windowpeaksDb].sort((a, b) => a - b)
@@ -55,12 +61,19 @@ function timelinascii(
       Math.floor((t0 * 1000) / WINDOWMS),
       Math.ceil((t1 * 1000) / WINDOWMS),
     )
-    if (slice.length === 0) continue
+    if (slice.length === 0) {
+      continue
+    }
     const maxp = Math.max(...slice)
-    if (maxp > -10) timeline[c] = '#'
-    else if (maxp > -20) timeline[c] = '='
-    else if (maxp > -35) timeline[c] = '-'
-    else if (maxp > -50) timeline[c] = '.'
+    if (maxp > -10) {
+      timeline[c] = '#'
+    } else if (maxp > -20) {
+      timeline[c] = '='
+    } else if (maxp > -35) {
+      timeline[c] = '-'
+    } else if (maxp > -50) {
+      timeline[c] = '.'
+    }
   }
   return timeline.join('')
 }
@@ -82,7 +95,7 @@ async function main() {
 
   const parity = await startparityvite(PROJECT, PORT)
   const browser = await chromium.launch()
-  const results: Array<{
+  const results: {
     id: string
     overallpeakdb: number
     p10: number
@@ -92,7 +105,7 @@ async function main() {
     bands: ReturnType<typeof peakbands>['bands']
     timeline: string
     durationsec: number
-  }> = []
+  }[] = []
 
   try {
     const page = await browser.newPage()
@@ -104,16 +117,12 @@ async function main() {
       console.log(`Rendering ${scenario.id}…`)
       const payload = await page.evaluate(
         async ({ scenarioid, windowms }) => {
-          const { renderdaisylevelscenario } = await import(
-            '/zss/feature/synth/backend/daisy/daisylevelrender.ts'
-          )
-          const {
-            levelissuescenario,
-            levelissuevoicescenario,
-          } = await import('/zss/feature/synth/backend/daisy/levelissuesong.ts')
-          const { analyzelevelstability } = await import(
-            '/zss/feature/synth/backend/wasm/levelstabilitymetrics.ts'
-          )
+          const { renderdaisylevelscenario } =
+            await import('/zss/feature/synth/backend/daisy/daisylevelrender.ts')
+          const { levelissuescenario, levelissuevoicescenario } =
+            await import('/zss/feature/synth/backend/daisy/levelissuesong.ts')
+          const { analyzelevelstability } =
+            await import('/zss/feature/synth/backend/wasm/levelstabilitymetrics.ts')
 
           let scenario
           if (scenarioid === 'level-issue-song') {
@@ -123,7 +132,11 @@ async function main() {
             scenario = levelissuevoicescenario(v)
           }
           const render = await renderdaisylevelscenario(scenario)
-          const metrics = analyzelevelstability(render.samples, render.samplerate, windowms)
+          const metrics = analyzelevelstability(
+            render.samples,
+            render.samplerate,
+            windowms,
+          )
           return {
             id: scenario.id,
             rendersec: render.rendersec,
@@ -173,15 +186,27 @@ async function main() {
   ]
 
   for (const row of results) {
-    const pcteq = ((100 * row.bands.eq) / (row.bands.eq + row.bands.dash + row.bands.dot + row.bands.hash + row.bands.space)).toFixed(0)
-    lines.push(`${row.id.padEnd(28)} pk ${row.overallpeakdb.toFixed(1).padStart(6)}  spread ${row.spread.toFixed(1).padStart(5)}  = ${pcteq}%`)
+    const pcteq = (
+      (100 * row.bands.eq) /
+      (row.bands.eq +
+        row.bands.dash +
+        row.bands.dot +
+        row.bands.hash +
+        row.bands.space)
+    ).toFixed(0)
+    lines.push(
+      `${row.id.padEnd(28)} pk ${row.overallpeakdb.toFixed(1).padStart(6)}  spread ${row.spread.toFixed(1).padStart(5)}  = ${pcteq}%`,
+    )
     lines.push(`  ${row.timeline}`)
     lines.push('')
   }
 
   const report = lines.join('\n')
   fs.writeFileSync(path.join(OUTDIR, 'report.txt'), report)
-  fs.writeFileSync(path.join(OUTDIR, 'report.json'), JSON.stringify({ roles, results }, null, 2))
+  fs.writeFileSync(
+    path.join(OUTDIR, 'report.json'),
+    JSON.stringify({ roles, results }, null, 2),
+  )
   console.log('')
   console.log(report)
   console.log(`Report: ${OUTDIR}/report.txt`)

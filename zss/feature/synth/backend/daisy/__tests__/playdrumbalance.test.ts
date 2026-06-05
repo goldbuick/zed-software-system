@@ -1,8 +1,8 @@
 import {
-  evalplaydrumbalancegate,
   PLAY_DRUM_BALANCE_MAX_DB,
   PLAY_DRUM_BALANCE_MIN_DB,
   PLAY_DRUM_TARGET_DRUM_MINUS_PLAY_DB,
+  evalplaydrumbalancegate,
 } from '../playdrumbalance'
 
 describe('playdrumbalance', () => {

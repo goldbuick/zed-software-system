@@ -28,9 +28,7 @@ function urlflagon(name: string): boolean {
 
 /** Play-bus sidechain duck bypass (live dev: env or `?no_sc=1`). */
 export function isdaisysidechainbypass(): boolean {
-  return (
-    envflagon(import.meta.env.ZSS_DAISY_NO_SIDECHAIN) || urlflagon('no_sc')
-  )
+  return envflagon(import.meta.env.ZSS_DAISY_NO_SIDECHAIN) || urlflagon('no_sc')
 }
 
 /** Main bus compressor bypass (live dev: env or `?no_comp=1`). */

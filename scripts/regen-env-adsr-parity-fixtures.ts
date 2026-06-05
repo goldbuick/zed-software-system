@@ -7,8 +7,8 @@ import { fileURLToPath } from 'node:url'
 
 import { chromium } from '@playwright/test'
 
-import { ENVELOPE_ADSR_PARITY_PATCHES } from '../zss/feature/synth/backend/wasm/paritypatches.ts'
 import type { PARITY_AUDIO_METRICS } from '../zss/feature/synth/backend/wasm/paritymetrics.ts'
+import { ENVELOPE_ADSR_PARITY_PATCHES } from '../zss/feature/synth/backend/wasm/paritypatches.ts'
 
 import { startparityvite, stopparityvite } from './parity-vite-server.ts'
 

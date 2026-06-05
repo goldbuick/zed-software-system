@@ -1,10 +1,10 @@
 import { tonenotationseconds } from '../../playnotation'
 
-import { paritydurationwithrelease } from './parityduration.ts'
 import type {
   LEVEL_STABILITY_SCENARIO,
   LEVEL_STABILITY_VOICE_CONFIG,
 } from './levelstabilitytypes.ts'
+import { paritydurationwithrelease } from './parityduration.ts'
 
 /** User-reported repro + long-release matrix (seconds). */
 export const SYNTH_ENV_PARITY_ADSR = [0.05, 0.1, 0.1, 10] as const

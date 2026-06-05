@@ -17,7 +17,10 @@ export function decodewav(base64: string): {
   return { samples, samplerate }
 }
 
-export function encodewavbase64(samples: Float32Array, samplerate: number): string {
+export function encodewavbase64(
+  samples: Float32Array,
+  samplerate: number,
+): string {
   const buffer = new ArrayBuffer(44 + samples.length * 2)
   const view = new DataView(buffer)
   const writeascii = (offset: number, text: string) => {

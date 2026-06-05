@@ -1,6 +1,6 @@
 import {
-  analyzelevelstability,
   type LEVEL_STABILITY_METRICS,
+  analyzelevelstability,
 } from '../wasm/levelstabilitymetrics.ts'
 
 import { SYNTH_ENV_PARITY_REQUIRED_IDS } from './synthenvparityscenario.ts'
@@ -161,12 +161,11 @@ export function evalsynthenvparitygate(
   const required = SYNTH_ENV_PARITY_REQUIRED_IDS.has(result.metrics.id)
   const { sustainmediandb, checkpoints, timelinesmatch } = result.metrics
 
-  const isfm = result.metrics.id.includes('fmsquare') || result.metrics.id.includes('fm-')
+  const isfm =
+    result.metrics.id.includes('fmsquare') || result.metrics.id.includes('fm-')
   const effectivesustaintol = isfm ? SYNTH_ENV_FM_SUSTAIN_TOL_DB : sustaintol
 
-  const sustaindelta = Math.abs(
-    sustainmediandb.daisy - sustainmediandb.tone,
-  )
+  const sustaindelta = Math.abs(sustainmediandb.daisy - sustainmediandb.tone)
   if (sustaindelta > effectivesustaintol) {
     reasons.push(
       `sustain median delta ${sustaindelta.toFixed(1)} dB > ${effectivesustaintol} dB (Daisy ${sustainmediandb.daisy.toFixed(1)} vs Tone ${sustainmediandb.tone.toFixed(1)} dBFS)`,
@@ -184,7 +183,10 @@ export function evalsynthenvparitygate(
         `release @+${cp.secafternoteoff}s peak delta ${peakdelta.toFixed(1)} dB > ${checkpointtol} dB (Daisy ${cp.daisypeakdb.toFixed(1)} vs Tone ${cp.tonepeakdb.toFixed(1)} dBFS)`,
       )
     }
-    if (cp.tonepeakdb > SILENCE_PEAK_DB + 5 && cp.daisypeakdb < SILENCE_PEAK_DB + 5) {
+    if (
+      cp.tonepeakdb > SILENCE_PEAK_DB + 5 &&
+      cp.daisypeakdb < SILENCE_PEAK_DB + 5
+    ) {
       reasons.push(
         `release @+${cp.secafternoteoff}s Daisy silent (${cp.daisypeakdb.toFixed(1)} dBFS) while Tone ${cp.tonepeakdb.toFixed(1)} dBFS — render truncated?`,
       )

@@ -5,9 +5,10 @@ import { ENV_PARITY_ADSR_SEC } from './adsrenvcurve'
 export async function rendertoneenvelopeoffline(
   gatesec: number,
   totalsec: number,
-  samplerate = 44100,
+  _samplerate = 44100,
 ): Promise<Float32Array> {
-  const buffer = await Offline(async ({ transport }) => {
+  void _samplerate
+  const buffer = await Offline(({ transport }) => {
     const synth = new Synth({
       oscillator: { type: 'sine' },
       envelope: { ...ENV_PARITY_ADSR_SEC },
@@ -17,7 +18,9 @@ export async function rendertoneenvelopeoffline(
   }, totalsec)
 
   const native =
-    typeof buffer.get === 'function' ? buffer.get() : (buffer as AudioBuffer)
-  const audiobuffer = native as AudioBuffer
+    typeof buffer.get === 'function'
+      ? buffer.get()
+      : (buffer as unknown as AudioBuffer)
+  const audiobuffer = native!
   return audiobuffer.getChannelData(0).slice()
 }

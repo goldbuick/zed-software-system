@@ -16,14 +16,11 @@ import {
 import { SYNTH_ENV_PARITY_SCENARIOS } from '../zss/feature/synth/backend/daisy/synthenvparityscenario.ts'
 
 import {
-  PLAYWRIGHT_SCENARIO_TIMEOUT_MS,
   PARITY_RENDER_SCRIPT_TIMEOUT_MS,
+  PLAYWRIGHT_SCENARIO_TIMEOUT_MS,
   withscripttimeout,
 } from './parity-timeouts.ts'
-import {
-  startparityvite,
-  stopparityvite,
-} from './parity-vite-server.ts'
+import { startparityvite, stopparityvite } from './parity-vite-server.ts'
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url))
 const PROJECT = path.join(ROOT, '..')
@@ -54,20 +51,18 @@ async function runrenders() {
 
       const payload = await page.evaluate(
         async ({ scenarioid, windowms }) => {
-          const { runenvparityscenario } = await import(
-            '/zss/feature/synth/backend/daisy/envparityrender.ts'
-          )
-          const { arraybuffertobase64 } = await import(
-            '/zss/feature/synth/backend/daisy/daisysongrender.ts'
-          )
-          const { SYNTH_ENV_PARITY_SCENARIOS } = await import(
-            '/zss/feature/synth/backend/daisy/synthenvparityscenario.ts'
-          )
-          const { analyzesynthenvparity } = await import(
-            '/zss/feature/synth/backend/daisy/synthenvparity.ts'
-          )
+          const { runenvparityscenario } =
+            await import('/zss/feature/synth/backend/daisy/envparityrender.ts')
+          const { arraybuffertobase64 } =
+            await import('/zss/feature/synth/backend/daisy/daisysongrender.ts')
+          const { SYNTH_ENV_PARITY_SCENARIOS } =
+            await import('/zss/feature/synth/backend/daisy/synthenvparityscenario.ts')
+          const { analyzesynthenvparity } =
+            await import('/zss/feature/synth/backend/daisy/synthenvparity.ts')
 
-          const scenario = SYNTH_ENV_PARITY_SCENARIOS.find((s) => s.id === scenarioid)
+          const scenario = SYNTH_ENV_PARITY_SCENARIOS.find(
+            (s) => s.id === scenarioid,
+          )
           if (!scenario) {
             throw new Error(`unknown scenario ${scenarioid}`)
           }
@@ -134,9 +129,11 @@ async function runrenders() {
   }
 }
 
-withscripttimeout('render:synth-env-parity', PARITY_RENDER_SCRIPT_TIMEOUT_MS, runrenders).catch(
-  (err) => {
-    console.error(err)
-    process.exit(1)
-  },
-)
+withscripttimeout(
+  'render:synth-env-parity',
+  PARITY_RENDER_SCRIPT_TIMEOUT_MS,
+  runrenders,
+).catch((err) => {
+  console.error(err)
+  process.exit(1)
+})

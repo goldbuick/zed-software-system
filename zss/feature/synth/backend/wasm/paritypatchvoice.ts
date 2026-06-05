@@ -1,7 +1,8 @@
-import { SYNTH_PLAY_VOICE_COUNT } from '../../synthdefaults'
-import { synthvoiceconfig } from '../../archive/tone/voiceconfig/index'
 import type { createsynth } from '../../archive/tone/index'
+import { synthvoiceconfig } from '../../archive/tone/voiceconfig/index'
+import { SYNTH_PLAY_VOICE_COUNT } from '../../synthdefaults'
 import type { createdaisysynth } from '../daisy/daisysynth'
+
 import type { PARITY_PATCH } from './paritypatches'
 
 export function applydaisyparityvoiceconfigs(

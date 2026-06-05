@@ -1,7 +1,10 @@
 import { tonenotationseconds } from '../../playnotation'
 
-import { paritydurationwithrelease, releasesecfromvoiceconfigs } from './parityduration.ts'
 import type { LEVEL_STABILITY_SCENARIO } from './levelstabilitytypes.ts'
+import {
+  paritydurationwithrelease,
+  releasesecfromvoiceconfigs,
+} from './parityduration.ts'
 
 export const ENV_PARITY_SCENARIO_ID = 'env-parity-amsaw'
 
@@ -34,7 +37,11 @@ export function envparityretriggerscenario(): LEVEL_STABILITY_SCENARIO {
     id: 'env-parity-amsaw-8n',
     description: 'amsaw + env 0.03/0.2/0.03/0.1 repeated 8th notes',
     notation: '+icdeg',
-    durationsec: paritydurationwithrelease(ENV_PARITY_GATE_SEC * 4, release, 1.5),
+    durationsec: paritydurationwithrelease(
+      ENV_PARITY_GATE_SEC * 4,
+      release,
+      1.5,
+    ),
     voiceconfigs: ENV_PARITY_VOICE_CONFIGS,
   }
 }

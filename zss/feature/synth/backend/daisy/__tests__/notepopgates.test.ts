@@ -1,10 +1,5 @@
-import {
-  NOTEPOP_GATE_MIN_PEAK_DB,
-  NOTEPOP_GATE_NOTEON_SPIKE_MAX_DB,
-  evalnotepopgates,
-  notepoppopwindowindex,
-} from '../notepopgates'
 import type { LEVEL_STABILITY_METRICS } from '../../wasm/levelstabilitymetrics'
+import { evalnotepopgates, notepoppopwindowindex } from '../notepopgates'
 
 const META = {
   gateboundariessec: [0, 0.441, 0.882, 1.324, 1.765, 2.206, 2.647, 3.088],
@@ -55,9 +50,9 @@ describe('notepopgates', () => {
       META,
     )
     expect(report.pass).toBe(false)
-    expect(report.failures.some((line) => line.startsWith('render_sanity'))).toBe(
-      true,
-    )
+    expect(
+      report.failures.some((line) => line.startsWith('render_sanity')),
+    ).toBe(true)
   })
 
   it('fails pre-fix comp-on pop spikes hotter than comp-off', () => {

@@ -24,6 +24,7 @@ import {
   voiceindexfxgroup,
 } from '../../voicefxgroup'
 import type { SabEngine } from '../shared/sabengine'
+import { isofflineaudiocontext } from '../wasm/audiocontextutil'
 import { playpatternendtime } from '../wasm/playstart'
 import { initwasmsabchannels, pushwasmsabvalues } from '../wasm/sabpush'
 import { resetsabseq } from '../wasm/sabseq'
@@ -44,7 +45,6 @@ import {
   initwasmoscconfigsab,
   pushwasmoscconfigsab,
 } from '../wasm/wasmoscconfigsab'
-import { isofflineaudiocontext } from '../wasm/audiocontextutil'
 import { createwasmplayscheduler } from '../wasm/wasmplayscheduler'
 import {
   type WASM_REPLAY_STATE,
@@ -404,11 +404,7 @@ export function createdaisysynth(
       voicetype === SOURCE_TYPE.BOWED_VOICE ||
       voicetype === SOURCE_TYPE.GUITAR_VOICE
     const strikedetune =
-      voicetype === SOURCE_TYPE.BELLS
-        ? detune
-        : velocitytypes
-          ? 0.75
-          : strike
+      voicetype === SOURCE_TYPE.BELLS ? detune : velocitytypes ? 0.75 : strike
 
     scheduler.schedule(when, () => {
       voicestate[base] = freq

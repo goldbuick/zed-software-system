@@ -9,8 +9,6 @@ import { LANG_DEV } from 'zss/config'
 
 import * as lexer from './lexer'
 
-let incIndent = 0
-
 class ScriptParser extends CstParser {
   constructor() {
     super(lexer.allTokens, {
@@ -23,7 +21,11 @@ class ScriptParser extends CstParser {
     this.performSelfAnalysis()
   }
 
-  PEEK(_name: string, _match: boolean, ..._tokens: IToken[]) {}
+  PEEK(name: string, match: boolean, ...tokens: IToken[]) {
+    void name
+    void match
+    void tokens
+  }
 
   RULED<F extends () => void>(
     name: string,
@@ -33,9 +35,7 @@ class ScriptParser extends CstParser {
     return this.RULE(
       name,
       () => {
-        incIndent++
         implementation()
-        incIndent--
       },
       config,
     )
@@ -816,4 +816,3 @@ class ScriptParser extends CstParser {
 }
 
 export const parser = new ScriptParser()
-

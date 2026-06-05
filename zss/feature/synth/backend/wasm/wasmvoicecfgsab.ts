@@ -198,14 +198,7 @@ export function wasmvoicecfgtosab(voicestate: WASM_VOICE_STATE[]): number[] {
       }
       case SOURCE_TYPE.PIANO_VOICE: {
         const p = voice.piano
-        writetimbreslots(
-          out,
-          base,
-          p.spread,
-          p.hammer,
-          p.brightness,
-          p.damping,
-        )
+        writetimbreslots(out, base, p.spread, p.hammer, p.brightness, p.damping)
         break
       }
       case SOURCE_TYPE.TIMPANI_VOICE: {

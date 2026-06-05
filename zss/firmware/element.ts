@@ -1,7 +1,6 @@
 import { CHIP } from 'zss/chip'
 import {
   apitoast,
-  boardrunnerlinkdead,
   heavyagentsyncuserdisplay,
   registerstore,
   vmlogout,
@@ -43,7 +42,7 @@ import { memoryreadflags } from 'zss/memory/flags'
 import { memorysendtolog } from 'zss/memory/gamesend'
 import { memoryhaltchip, memoryruncodepage } from 'zss/memory/runtime'
 import { memoryensureboardruntime } from 'zss/memory/runtimeboundary'
-import { memoryreadboardrunner, memoryreadoperator } from 'zss/memory/session'
+import { memoryreadoperator } from 'zss/memory/session'
 import {
   memoryfindplayerforelement,
   memorylistboardnamedelements,

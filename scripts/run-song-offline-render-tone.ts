@@ -16,7 +16,10 @@ import { fileURLToPath } from 'node:url'
 import { chromium } from '@playwright/test'
 
 import type { SONG_RENDER_PAYLOAD } from '../zss/feature/synth/backend/daisy/daisysongrender.ts'
-import { levelissuescenario, levelissuesongmeta } from '../zss/feature/synth/backend/daisy/levelissuesong.ts'
+import {
+  levelissuescenario,
+  levelissuesongmeta,
+} from '../zss/feature/synth/backend/daisy/levelissuesong.ts'
 
 import { startparityvite, stopparityvite } from './parity-vite-server.ts'
 
@@ -42,12 +45,10 @@ async function main() {
     })
 
     const payload = await page.evaluate(async () => {
-      const { rendertonesongpayload } = await import(
-        '/zss/feature/synth/backend/wasm/tonesongrender.ts'
-      )
-      const { levelissuescenario } = await import(
-        '/zss/feature/synth/backend/daisy/levelissuesong.ts'
-      )
+      const { rendertonesongpayload } =
+        await import('/zss/feature/synth/backend/wasm/tonesongrender.ts')
+      const { levelissuescenario } =
+        await import('/zss/feature/synth/backend/daisy/levelissuesong.ts')
       return rendertonesongpayload(levelissuescenario())
     })
 
@@ -80,7 +81,9 @@ async function main() {
     console.log(`TXT:  ${txtpath}`)
     console.log('')
     console.log(`Listen: afplay ${wavpath}`)
-    console.log(`Compare Daisy: afplay ${path.join(OUTDIR, 'level-issue-song.wav')}`)
+    console.log(
+      `Compare Daisy: afplay ${path.join(OUTDIR, 'level-issue-song.wav')}`,
+    )
   } finally {
     await browser.close()
     await stopparityvite(parity)

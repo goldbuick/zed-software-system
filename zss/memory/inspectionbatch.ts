@@ -18,7 +18,6 @@ import {
 } from './boardlifecycle'
 import { memoryreadelementdisplay } from './bookoperations'
 import { memoryensuresoftwarebook } from './books'
-import { memoryreadoperator } from './session'
 import {
   memoryinspectbgarea,
   memoryinspectchararea,
@@ -29,6 +28,7 @@ import {
 import { memoryinspectstyle, memoryinspectstylemenu } from './inspectionstyle'
 import { memoryreadplayerboard } from './playermanagement'
 import { memoryreadboardelementruntime } from './runtimeboundary'
+import { memoryreadoperator } from './session'
 import { BOARD, BOARD_ELEMENT, MEMORY_LABEL } from './types'
 
 // COPY & PASTE buffers
@@ -216,7 +216,13 @@ export async function memoryinspectbatchcommand(path: string, player: string) {
       })
       break
     default:
-      apierror(SOFTWARE, memoryreadoperator(), 'inspect', 'unknown batch', batch)
+      apierror(
+        SOFTWARE,
+        memoryreadoperator(),
+        'inspect',
+        'unknown batch',
+        batch,
+      )
       break
   }
 }

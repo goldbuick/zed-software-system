@@ -25,10 +25,7 @@ import {
   notepopscenario,
 } from '../zss/feature/synth/backend/daisy/notepopscenario.ts'
 
-import {
-  startparityvite,
-  stopparityvite,
-} from './parity-vite-server.ts'
+import { startparityvite, stopparityvite } from './parity-vite-server.ts'
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url))
 const PROJECT = path.join(ROOT, '..')
@@ -61,12 +58,10 @@ async function renderpass(
   maincompbypass: boolean,
 ): Promise<SONG_RENDER_PAYLOAD> {
   return page.evaluate(async (bypass) => {
-    const { renderdaisysongpayload } = await import(
-      '/zss/feature/synth/backend/daisy/daisysongrender.ts'
-    )
-    const { notepopscenario } = await import(
-      '/zss/feature/synth/backend/daisy/notepopscenario.ts'
-    )
+    const { renderdaisysongpayload } =
+      await import('/zss/feature/synth/backend/daisy/daisysongrender.ts')
+    const { notepopscenario } =
+      await import('/zss/feature/synth/backend/daisy/notepopscenario.ts')
     const scenario = {
       ...notepopscenario(),
       maincompbypass: bypass,
@@ -109,7 +104,7 @@ async function main() {
       )
       const payload = await renderpass(passpage, pass.maincompbypass)
       await passpage.close()
-      const typed = payload as SONG_RENDER_PAYLOAD
+      const typed = payload
       const basename = `${typed.meta.scenarioid}${pass.suffix}`
       const wavpath = path.join(OUTDIR, `${basename}.wav`)
       const jsonpath = path.join(OUTDIR, `${basename}.json`)

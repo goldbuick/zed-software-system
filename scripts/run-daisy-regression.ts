@@ -71,7 +71,11 @@ async function main() {
 
   for (const suite of PLAYWRIGHT_FULL) {
     reports.push(
-      runstep(suite.name, suite.cmd, EXEC_RENDER_PARITY_TIMEOUT_MS + EXEC_GATE_TIMEOUT_MS),
+      runstep(
+        suite.name,
+        suite.cmd,
+        EXEC_RENDER_PARITY_TIMEOUT_MS + EXEC_GATE_TIMEOUT_MS,
+      ),
     )
     if (!reports[reports.length - 1].pass) {
       printsummary(reports)
@@ -96,7 +100,9 @@ async function main() {
 function printsummary(reports: STEPREPORT[]) {
   console.log('\n── Daisy regression summary ──')
   for (const r of reports) {
-    console.log(`  ${r.pass ? 'PASS' : 'FAIL'}  ${r.name}${r.detail ? ` — ${r.detail}` : ''}`)
+    console.log(
+      `  ${r.pass ? 'PASS' : 'FAIL'}  ${r.name}${r.detail ? ` — ${r.detail}` : ''}`,
+    )
   }
 }
 

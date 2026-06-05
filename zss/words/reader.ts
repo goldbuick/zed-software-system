@@ -1,11 +1,6 @@
 import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import {
-  MAYBE,
-  isnumber,
-  ispresent,
-  isstring,
-} from 'zss/mapping/types'
+import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { memoryevaldir } from 'zss/memory/boarddirection'
 import { memoryreadoperator } from 'zss/memory/session'
 import { BOARD, BOARD_ELEMENT, BOOK } from 'zss/memory/types'

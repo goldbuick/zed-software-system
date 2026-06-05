@@ -19,7 +19,10 @@ import { fileURLToPath } from 'node:url'
 import { chromium } from '@playwright/test'
 
 import type { SONG_RENDER_PAYLOAD } from '../zss/feature/synth/backend/daisy/daisysongrender.ts'
-import { levelissuescenario, levelissuesongmeta } from '../zss/feature/synth/backend/daisy/levelissuesong.ts'
+import {
+  levelissuescenario,
+  levelissuesongmeta,
+} from '../zss/feature/synth/backend/daisy/levelissuesong.ts'
 
 import { startparityvite, stopparityvite } from './parity-vite-server.ts'
 
@@ -45,12 +48,10 @@ async function main() {
     })
 
     const payload = await page.evaluate(async () => {
-      const { renderdaisysongpayload } = await import(
-        '/zss/feature/synth/backend/daisy/daisysongrender.ts'
-      )
-      const { levelissuescenario } = await import(
-        '/zss/feature/synth/backend/daisy/levelissuesong.ts'
-      )
+      const { renderdaisysongpayload } =
+        await import('/zss/feature/synth/backend/daisy/daisysongrender.ts')
+      const { levelissuescenario } =
+        await import('/zss/feature/synth/backend/daisy/levelissuesong.ts')
       return renderdaisysongpayload(levelissuescenario())
     })
 

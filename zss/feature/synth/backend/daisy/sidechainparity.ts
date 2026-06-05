@@ -1,10 +1,10 @@
 import {
-  analyzelevelstability,
   type LEVEL_STABILITY_METRICS,
+  analyzelevelstability,
 } from '../wasm/levelstabilitymetrics.ts'
 import {
-  audiopowermetrics,
   type PARITY_AUDIO_METRICS,
+  audiopowermetrics,
 } from '../wasm/paritymetrics.ts'
 
 const SILENCE_PEAK_DB = -60
@@ -118,7 +118,13 @@ export function analyzeduckdepthpair(
 ): number {
   const poststart = stabtime + 0.12
   const postend = stabtime + 1.2
-  const onpost = sustainpeakmedian(onsamples, samplerate, poststart, postend, windowms)
+  const onpost = sustainpeakmedian(
+    onsamples,
+    samplerate,
+    poststart,
+    postend,
+    windowms,
+  )
   const offpost = sustainpeakmedian(
     offsamples,
     samplerate,

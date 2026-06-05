@@ -34,8 +34,13 @@ describe('daisycontrol layout', () => {
   })
 
   it('worklet sab layout uses expected voicecfg and osccfg offsets', () => {
-    expect(DAISY_SAB_CHANNEL_LEN.zss_voicecfg).toBe(80)
-    expect(DAISY_SAB_CHANNEL_OFFSET.zss_osccfg).toBe(261)
-    expect(formatdaisyworkletsablayout()).toContain('"zss_voicecfg": 80')
+    expect(DAISY_SAB_CHANNEL_LEN.zss_voicecfg).toBe(WASM_VOICE_CFG_SAB_LEN)
+    expect(DAISY_SAB_CHANNEL_OFFSET.zss_osccfg).toBe(
+      DAISY_SAB_CHANNEL_OFFSET.zss_voicecfg +
+        DAISY_SAB_CHANNEL_LEN.zss_voicecfg,
+    )
+    expect(formatdaisyworkletsablayout()).toContain(
+      `"zss_voicecfg": ${WASM_VOICE_CFG_SAB_LEN}`,
+    )
   })
 })

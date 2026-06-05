@@ -1,7 +1,7 @@
 import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { AUDIO_SYNTH } from 'zss/feature/synth'
-import { SOURCE_TYPE } from 'zss/feature/synth/shared/sourcetype'
+import { SOURCE_TYPE } from '../source'
 import {
   MAYBE,
   isarray,

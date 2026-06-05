@@ -109,10 +109,7 @@ export class ZssLinearEnv {
   }
 
   /** Unit-gain envelope for an explicit gate timeline. */
-  rendergate(
-    gatesamplecount: number,
-    totalsamples: number,
-  ): Float32Array {
+  rendergate(gatesamplecount: number, totalsamples: number): Float32Array {
     const out = new Float32Array(totalsamples)
     for (let i = 0; i < totalsamples; i++) {
       out[i] = this.process(i < gatesamplecount)

@@ -1,3 +1,8 @@
+jest.mock('zss/feature/synth/backend/wasm/coopcoep', () => ({
+  ensurewasmcoep: jest.fn().mockResolvedValue(undefined),
+  clearwasmcoepserviceworkers: jest.fn().mockResolvedValue(undefined),
+}))
+
 import { runwasmperfbench } from '../wasmperfbench'
 
 const CAN_BENCH =

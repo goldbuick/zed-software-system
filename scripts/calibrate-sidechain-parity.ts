@@ -11,8 +11,8 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import {
-  evalsidechainparitygate,
   type SIDECHAIN_PARITY_RESULT,
+  evalsidechainparitygate,
 } from '../zss/feature/synth/backend/daisy/sidechainparity.ts'
 import { SIDECHAIN_SCENARIO_ID } from '../zss/feature/synth/backend/daisy/sidechainscenario.ts'
 
@@ -37,8 +37,8 @@ type SCPARAMS = {
 
 function readparams(): SCPARAMS {
   const text = fs.readFileSync(CONFIG_PATH, 'utf8')
-  const mixmatch = text.match(/kScMix\s*=\s*([\d.]+)f/)
-  const makeupmatch = text.match(/kScMakeupDb\s*=\s*([\d.]+)f/)
+  const mixmatch = /kScMix\s*=\s*([\d.]+)f/.exec(text)
+  const makeupmatch = /kScMakeupDb\s*=\s*([\d.]+)f/.exec(text)
   return {
     mix: mixmatch ? parseFloat(mixmatch[1]) : 0.75,
     makeupdb: makeupmatch ? parseFloat(makeupmatch[1]) : 24,
@@ -90,12 +90,18 @@ async function main() {
   const original = readparams()
   console.log('Original sidechain params:', original)
 
-  let best = { params: original, result: null as SIDECHAIN_PARITY_RESULT | null, err: 999 }
+  let best = {
+    params: original,
+    result: null as SIDECHAIN_PARITY_RESULT | null,
+    err: 999,
+  }
 
   for (let makeupdb = 18; makeupdb <= 30.1; makeupdb += 2) {
     for (let mix = 0.55; mix <= 1.001; mix += 0.05) {
       const params = { mix, makeupdb }
-      console.log(`\n▶ kScMix=${mix.toFixed(2)} kScMakeupDb=${makeupdb.toFixed(0)}`)
+      console.log(
+        `\n▶ kScMix=${mix.toFixed(2)} kScMakeupDb=${makeupdb.toFixed(0)}`,
+      )
       if (!dryrun) {
         writeparams(params)
         builddaisy()

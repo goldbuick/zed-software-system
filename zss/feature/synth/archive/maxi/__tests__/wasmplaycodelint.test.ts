@@ -27,7 +27,9 @@ function play(inputsample) {
   })
 
   it('lints the assembled synth voice bundle without undefined refs', () => {
-    const result = lintwasmplaycode(WASM_SYNTH_VOICE_PLAY_CODE)
+    const result = lintwasmplaycode(WASM_SYNTH_VOICE_PLAY_CODE, [
+      'SAB_SEQ_MASTER',
+    ])
     if (!result.ok) {
       throw new Error(
         formatwasmplaycodelint('WASM_SYNTH_VOICE_PLAY_CODE', result),

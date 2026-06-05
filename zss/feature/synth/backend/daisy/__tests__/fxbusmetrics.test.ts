@@ -1,9 +1,9 @@
+import type { LEVEL_STABILITY_METRICS } from '../../wasm/levelstabilitymetrics'
 import {
   computefxbusmetrics,
   estimatewetfrommix,
   isfxbussoloscenario,
 } from '../fxbusmetrics'
-import type { LEVEL_STABILITY_METRICS } from '../../wasm/levelstabilitymetrics'
 
 function stubmetrics(overallrmsdb: number): LEVEL_STABILITY_METRICS {
   return {

@@ -47,7 +47,7 @@ export function createrecordhandler(
         offlineticks.push([time - mintime + 0.1, value])
       }
 
-      const sourcereplay = SOURCE.map((item) => item.getreplay())
+      const sourcereplay = SOURCE.map((item) => item!.getreplay())
       const fxchainreplay = FXCHAIN.getreplay()
       const fxreplay = FX.map((item) => item.getreplay())
       let audio: MAYBE<ReturnType<SYNTH_FACTORY>>
@@ -69,7 +69,11 @@ export function createrecordhandler(
       }, duration)
         .then((buffer) => {
           write(SOFTWARE, player, 'rendering complete, exporting mp3')
-          const mp3Data = converttomp3(buffer)
+          const native =
+            typeof buffer.get === 'function'
+              ? buffer.get()
+              : (buffer as unknown as AudioBuffer)
+          const mp3Data = converttomp3(native!)
           return mp3Data
         })
         .then((mp3Data) => {

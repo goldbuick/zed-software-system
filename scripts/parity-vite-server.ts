@@ -9,7 +9,10 @@ import { nodePolyfills } from 'vite-plugin-node-polyfills'
 
 export const PARITY_SERVER_PORT = 9877
 
-export async function startparityvite(projectroot: string, port = PARITY_SERVER_PORT) {
+export async function startparityvite(
+  projectroot: string,
+  port = PARITY_SERVER_PORT,
+) {
   const vite = await createViteServer({
     configFile: false,
     root: projectroot,

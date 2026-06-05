@@ -17,7 +17,11 @@ export function releasesecfromvoiceconfigs(
     return 0.01
   }
   for (const [key, value] of voiceconfigs) {
-    if ((key === 'env' || key === 'envelope') && Array.isArray(value) && value.length >= 4) {
+    if (
+      (key === 'env' || key === 'envelope') &&
+      Array.isArray(value) &&
+      value.length >= 4
+    ) {
       const release = value[3]
       if (typeof release === 'number') {
         return release

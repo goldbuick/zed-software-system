@@ -1,7 +1,7 @@
 import { DEVICE } from 'zss/device'
 import { MESSAGE } from 'zss/device/api'
-import { handlelogin } from 'zss/device/vm/handlers/auth'
 import { handlegadgetdesync } from 'zss/device/vm/gadgetsynctick'
+import { handlelogin } from 'zss/device/vm/handlers/auth'
 import * as playermanagement from 'zss/memory/playermanagement'
 
 jest.mock('zss/device/api', () => ({
@@ -78,7 +78,9 @@ describe('handlelogin gadget paint', () => {
   })
 
   it('does not force gadget paint on first login', () => {
-    jest.spyOn(playermanagement, 'memoryreadplayeractive').mockReturnValue(false)
+    jest
+      .spyOn(playermanagement, 'memoryreadplayeractive')
+      .mockReturnValue(false)
     jest.spyOn(playermanagement, 'memoryloginplayer').mockReturnValue(true)
     jest
       .spyOn(playermanagement, 'memoryreadplayerboard')

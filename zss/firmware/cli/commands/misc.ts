@@ -14,7 +14,6 @@ import {
 } from 'zss/feature/storage'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import {
-  znsautopublishpeer,
   znsdelete,
   znslist,
   znslogin,

@@ -1,5 +1,4 @@
 import { Note } from 'tonal'
-
 import { isnumber } from 'zss/mapping/types'
 
 /** Loose peak spread (square harmonics confuse Goertzel). */
@@ -60,7 +59,11 @@ export function estimatefundamentalhz(
 ): number {
   let besthz = expectedhz
   let bestmag = 0
-  for (let cents = -scanrangecents; cents <= scanrangecents; cents += scancentsstep) {
+  for (
+    let cents = -scanrangecents;
+    cents <= scanrangecents;
+    cents += scancentsstep
+  ) {
     const hz = expectedhz * Math.pow(2, cents / 1200)
     const mag = goertzelmag(samples, samplerate, hz)
     if (mag > bestmag) {
@@ -138,9 +141,7 @@ export function evalpitchstabilitygate(
   }
   const driftcent = Math.round(metrics.maxcentdrift * 100) / 100
   if (driftcent > maxcentdrift) {
-    reasons.push(
-      `maxcentdrift ${driftcent.toFixed(2)} > ${maxcentdrift}`,
-    )
+    reasons.push(`maxcentdrift ${driftcent.toFixed(2)} > ${maxcentdrift}`)
   }
   if (metrics.strikedriftrate > PITCH_STABILITY_MAX_STRIKE_DRIFT_RATE) {
     reasons.push(

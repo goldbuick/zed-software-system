@@ -65,7 +65,6 @@ export function createminsabsynth(engine: SabEngine) {
   const drumstrikes = new Array(WASM_DRUM_COUNT).fill(0)
   const drumdursec = new Array(WASM_DRUM_COUNT).fill(0)
   let pacertime = -1
-  let pacercount = 0
   const scheduler = createwasmplayscheduler(engine)
 
   function pushplayvoicestate() {
@@ -173,7 +172,6 @@ export function createminsabsynth(engine: SabEngine) {
       if (pacertime === -1) {
         pacertime = now
       }
-      pacercount += invokes.length
       const starttime = pacertime
       for (let i = 0; i < invokes.length && i < SYNTH_PLAY_VOICE_COUNT; ++i) {
         pacertime = Math.max(

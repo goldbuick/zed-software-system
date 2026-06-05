@@ -9,9 +9,9 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import {
+  type NOTEPOP_RENDER_METRICS,
   evalnotepopgates,
   formatnotepopgatereport,
-  type NOTEPOP_RENDER_METRICS,
 } from '../zss/feature/synth/backend/daisy/notepopgates.ts'
 import {
   NOTEPOP_SCENARIO_ID,
@@ -27,10 +27,7 @@ type NOTEPOP_JSON = NOTEPOP_RENDER_METRICS & {
 }
 
 function loadmetrics(suffix: string): NOTEPOP_JSON {
-  const jsonpath = path.join(
-    OUTDIR,
-    `${NOTEPOP_SCENARIO_ID}${suffix}.json`,
-  )
+  const jsonpath = path.join(OUTDIR, `${NOTEPOP_SCENARIO_ID}${suffix}.json`)
   if (!fs.existsSync(jsonpath)) {
     throw new Error(`missing render JSON: ${jsonpath}`)
   }

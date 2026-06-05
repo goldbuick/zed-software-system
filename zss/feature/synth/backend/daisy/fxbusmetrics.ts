@@ -40,9 +40,7 @@ export function estimatewetfrommix(
   const wetlin = Math.sqrt(wetsq)
   const estimatedwetrmsdb = lineartodb(wetlin)
   const wetdryratioDb =
-    drylin > 1e-8 && wetlin > 1e-8
-      ? lineartodb(wetlin / drylin)
-      : SILENT_DB
+    drylin > 1e-8 && wetlin > 1e-8 ? lineartodb(wetlin / drylin) : SILENT_DB
   return { estimatedwetrmsdb, wetdryratioDb }
 }
 

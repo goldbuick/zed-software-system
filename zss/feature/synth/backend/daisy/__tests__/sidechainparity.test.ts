@@ -1,7 +1,7 @@
 import {
-  evalsidechainparitygate,
   SIDECHAIN_MAX_BYPASS_DUCK_DB,
   SIDECHAIN_MIN_DUCK_DEPTH_DB,
+  evalsidechainparitygate,
 } from '../sidechainparity'
 
 describe('sidechainparity', () => {
@@ -27,7 +27,12 @@ describe('sidechainparity', () => {
   it('fails when bypass still ducks heavily', () => {
     const gate = evalsidechainparitygate({
       duckon: { duckdepthdb: 6, prepeakdb: -3, postpeakdb: -9, stabtime: 0.75 },
-      duckoff: { duckdepthdb: 5, prepeakdb: -3, postpeakdb: -8, stabtime: 0.75 },
+      duckoff: {
+        duckdepthdb: 5,
+        prepeakdb: -3,
+        postpeakdb: -8,
+        stabtime: 0.75,
+      },
       abduckdepthdb: 1,
     })
     expect(gate.pass).toBe(false)
@@ -36,7 +41,12 @@ describe('sidechainparity', () => {
   it('fails when SC on does not duck enough', () => {
     const gate = evalsidechainparitygate({
       duckon: { duckdepthdb: 1, prepeakdb: -5, postpeakdb: -6, stabtime: 0.75 },
-      duckoff: { duckdepthdb: 0, prepeakdb: -5, postpeakdb: -5, stabtime: 0.75 },
+      duckoff: {
+        duckdepthdb: 0,
+        prepeakdb: -5,
+        postpeakdb: -5,
+        stabtime: 0.75,
+      },
       abduckdepthdb: 1,
     })
     expect(gate.pass).toBe(false)

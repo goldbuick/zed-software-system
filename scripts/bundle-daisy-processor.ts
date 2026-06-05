@@ -26,7 +26,9 @@ function injectworkletsablayout(source: string): string {
   const start = source.indexOf(layoutstart)
   const end = source.indexOf(layoutend)
   if (start < 0 || end < 0 || end <= start) {
-    throw new Error('daisy-processor.worklet.js missing daisy-sab-layout markers')
+    throw new Error(
+      'daisy-processor.worklet.js missing daisy-sab-layout markers',
+    )
   }
   const before = source.slice(0, start)
   const after = source.slice(end + layoutend.length)

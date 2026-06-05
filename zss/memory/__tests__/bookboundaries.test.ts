@@ -26,8 +26,8 @@ import {
   memoryexportcodepage,
   memoryreadcodepageruntime,
 } from 'zss/memory/codepageoperations'
-import { BOOK, BOOK_KEYS } from 'zss/memory/types'
 import { trimformatobject, trimmemoryexport } from 'zss/memory/trimexport'
+import { BOOK, BOOK_KEYS } from 'zss/memory/types'
 
 import { memoryresetbooks } from '../session'
 

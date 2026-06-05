@@ -10,7 +10,9 @@ export const PITCH_STABILITY_NOTE_COUNT = 16
 export const PITCH_STABILITY_EXPECTED_PITCH = 'C4'
 
 /** Attack times for each 8n (used by pitch analysis). */
-export function pitchstabilityattacktimes(notecount = PITCH_STABILITY_NOTE_COUNT): number[] {
+export function pitchstabilityattacktimes(
+  notecount = PITCH_STABILITY_NOTE_COUNT,
+): number[] {
   const step = tonenotationseconds('8n')
   const times: number[] = []
   for (let i = 0; i < notecount; i++) {

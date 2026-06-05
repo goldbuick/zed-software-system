@@ -72,7 +72,16 @@ describe('trimexport', () => {
 
   describe('trimformatobject', () => {
     it('omits pairs with undefined or empty object values', () => {
-      const formatted = ['a', 1, 'b', {}, 'c', undefined, 'd', 2] as FORMAT_OBJECT
+      const formatted = [
+        'a',
+        1,
+        'b',
+        {},
+        'c',
+        undefined,
+        'd',
+        2,
+      ] as unknown as FORMAT_OBJECT
       expect(trimformatobject(formatted)).toEqual(['a', 1, 'd', 2])
     })
 
@@ -88,9 +97,19 @@ describe('trimexport', () => {
     })
 
     it('recurses into nested FORMAT_OBJECT values', () => {
-      const nested = ['x', {}, 'y', 3] as FORMAT_OBJECT
-      const formatted = ['meta', nested, 'id', 'abc'] as FORMAT_OBJECT
-      expect(trimformatobject(formatted)).toEqual(['meta', ['y', 3], 'id', 'abc'])
+      const nested = ['x', {}, 'y', 3] as unknown as FORMAT_OBJECT
+      const formatted = [
+        'meta',
+        nested,
+        'id',
+        'abc',
+      ] as unknown as FORMAT_OBJECT
+      expect(trimformatobject(formatted)).toEqual([
+        'meta',
+        ['y', 3],
+        'id',
+        'abc',
+      ])
     })
   })
 

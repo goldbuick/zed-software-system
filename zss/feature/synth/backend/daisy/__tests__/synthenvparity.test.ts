@@ -1,13 +1,13 @@
 import { ZssLinearEnv } from '../../wasm/adsrenvcurve'
 import {
+  SYNTH_ENV_RELEASE_CHECKPOINTS_SEC,
+  SYNTH_ENV_SUSTAIN_TOL_DB,
+  evalsynthenvparitygate,
+} from '../synthenvparitygate'
+import {
   SYNTH_ENV_PARITY_ADSR,
   SYNTH_ENV_PARITY_GATE_SEC,
 } from '../synthenvparityscenario'
-import {
-  evalsynthenvparitygate,
-  SYNTH_ENV_RELEASE_CHECKPOINTS_SEC,
-  SYNTH_ENV_SUSTAIN_TOL_DB,
-} from '../synthenvparitygate'
 
 const SAMPLERATE = 44100
 

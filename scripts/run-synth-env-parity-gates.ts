@@ -8,9 +8,9 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import {
+  type SYNTH_ENV_PARITY_RESULT,
   evalsynthenvparitygate,
   formatsynthenvparityreport,
-  type SYNTH_ENV_PARITY_RESULT,
 } from '../zss/feature/synth/backend/daisy/synthenvparitygate.ts'
 import {
   SYNTH_ENV_PARITY_REQUIRED_IDS,
@@ -45,21 +45,29 @@ async function rungates() {
 
     if (!gate.pass && gate.required) {
       failed = true
-      console.error(`FAIL (required) ${scenario.id}: ${gate.reasons.join('; ')}`)
+      console.error(
+        `FAIL (required) ${scenario.id}: ${gate.reasons.join('; ')}`,
+      )
     } else if (!gate.pass) {
       console.warn(`WARN (advisory) ${scenario.id}: ${gate.reasons.join('; ')}`)
     }
   }
 
   console.log(lines.join('\n'))
-  console.log(`Required scenarios: ${[...SYNTH_ENV_PARITY_REQUIRED_IDS].join(', ')}`)
+  console.log(
+    `Required scenarios: ${[...SYNTH_ENV_PARITY_REQUIRED_IDS].join(', ')}`,
+  )
 
   if (failed) {
     process.exit(1)
   }
 }
 
-withscripttimeout('test:synth-env-parity', EXEC_GATE_TIMEOUT_MS, rungates).catch((err) => {
+withscripttimeout(
+  'test:synth-env-parity',
+  EXEC_GATE_TIMEOUT_MS,
+  rungates,
+).catch((err) => {
   console.error(err)
   process.exit(1)
 })

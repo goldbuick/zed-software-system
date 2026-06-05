@@ -11,33 +11,33 @@ import { fileURLToPath } from 'node:url'
 import { chromium } from '@playwright/test'
 
 import {
+  SIDECHAIN_PARITY_PATCH_ID,
+  type SIDECHAIN_PARITY_RESULT,
   analyzeduckdepth,
   analyzeduckdepthpair,
   evalsidechainparitygate,
   formatsidechainparityreport,
   metricsfromsamples,
-  SIDECHAIN_PARITY_PATCH_ID,
-  type SIDECHAIN_PARITY_RESULT,
 } from '../zss/feature/synth/backend/daisy/sidechainparity.ts'
 import { SIDECHAIN_SCENARIO_ID } from '../zss/feature/synth/backend/daisy/sidechainscenario.ts'
 
-import { decodewav } from './parity-wav.ts'
 import {
-  PLAYWRIGHT_SCENARIO_TIMEOUT_MS,
   PARITY_RENDER_SCRIPT_TIMEOUT_MS,
+  PLAYWRIGHT_SCENARIO_TIMEOUT_MS,
   withscripttimeout,
 } from './parity-timeouts.ts'
-import {
-  startparityvite,
-  stopparityvite,
-} from './parity-vite-server.ts'
+import { startparityvite, stopparityvite } from './parity-vite-server.ts'
+import { decodewav } from './parity-wav.ts'
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url))
 const PROJECT = path.join(ROOT, '..')
 const PORT = 9886
 const OUTDIR = path.join(PROJECT, 'cafe/public/renders')
 const HOST_URL = `http://127.0.0.1:${PORT}/offline-render-host.html`
-const PARITY_JSON = path.join(OUTDIR, `${SIDECHAIN_SCENARIO_ID}-sidechain-parity.json`)
+const PARITY_JSON = path.join(
+  OUTDIR,
+  `${SIDECHAIN_SCENARIO_ID}-sidechain-parity.json`,
+)
 const TONE_FIXTURE = path.join(
   PROJECT,
   'zss/feature/synth/backend/wasm/__fixtures__/parity-metrics-tone.json',
@@ -48,12 +48,10 @@ async function renderdaisypass(
   sidechainbypass: boolean,
 ): Promise<{ samples: Float32Array; samplerate: number }> {
   return page.evaluate(async (bypass) => {
-    const { renderdaisysongpayload } = await import(
-      '/zss/feature/synth/backend/daisy/daisysongrender.ts'
-    )
-    const { sidechainabscenario } = await import(
-      '/zss/feature/synth/backend/daisy/sidechainscenario.ts'
-    )
+    const { renderdaisysongpayload } =
+      await import('/zss/feature/synth/backend/daisy/daisysongrender.ts')
+    const { sidechainabscenario } =
+      await import('/zss/feature/synth/backend/daisy/sidechainscenario.ts')
     const scenario = { ...sidechainabscenario(), sidechainbypass: bypass }
     const payload = await renderdaisysongpayload(scenario)
     const binary = atob(payload.wavbase64)
@@ -79,15 +77,12 @@ async function rendertonefixture(
 ): Promise<{ peakdb: number; rmsdb: number } | undefined> {
   try {
     return await page.evaluate(async () => {
-      const { rendertonelevelscenario } = await import(
-        '/zss/feature/synth/backend/wasm/toneparityrender.ts'
-      )
-      const { sidechainabscenario } = await import(
-        '/zss/feature/synth/backend/daisy/sidechainscenario.ts'
-      )
-      const { audiobuffermetrics } = await import(
-        '/zss/feature/synth/backend/wasm/paritymetrics.ts'
-      )
+      const { rendertonelevelscenario } =
+        await import('/zss/feature/synth/backend/wasm/toneparityrender.ts')
+      const { sidechainabscenario } =
+        await import('/zss/feature/synth/backend/daisy/sidechainscenario.ts')
+      const { audiobuffermetrics } =
+        await import('/zss/feature/synth/backend/wasm/paritymetrics.ts')
       const buffer = await rendertonelevelscenario(sidechainabscenario())
       const m = audiobuffermetrics(buffer)
       return { peakdb: m.peakdb, rmsdb: m.rmsdb }
@@ -139,7 +134,11 @@ async function main() {
     const result: SIDECHAIN_PARITY_RESULT = {
       duckon: analyzeduckdepth(on.samples, on.samplerate),
       duckoff: analyzeduckdepth(off.samples, off.samplerate),
-      abduckdepthdb: analyzeduckdepthpair(on.samples, off.samples, on.samplerate),
+      abduckdepthdb: analyzeduckdepthpair(
+        on.samples,
+        off.samples,
+        on.samplerate,
+      ),
       daisymetrics: metricsfromsamples(on.samples, on.samplerate),
       tonemetrics: tonemetrics
         ? {
