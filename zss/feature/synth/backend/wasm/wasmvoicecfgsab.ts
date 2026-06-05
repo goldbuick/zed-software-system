@@ -36,6 +36,48 @@ export const DEFAULT_WASM_STRING_ENSEMBLE = {
   filter: 0.5,
 } as const
 
+export const DEFAULT_WASM_WIND = {
+  breath: 0.3,
+  pressure: 0.45,
+  brightness: 0.45,
+  resonance: 0.15,
+} as const
+
+export const DEFAULT_WASM_PIANO = {
+  spread: 0.18,
+  hammer: 0.55,
+  brightness: 0.5,
+  damping: 0.45,
+} as const
+
+export const DEFAULT_WASM_TIMPANI = {
+  tension: 0.5,
+  decay: 0.55,
+  tone: 0.45,
+  strike: 0.6,
+} as const
+
+export const DEFAULT_WASM_BOWED = {
+  bow: 0.24,
+  pressure: 0.5,
+  vib: 0.35,
+  body: 0.55,
+} as const
+
+export const DEFAULT_WASM_GUITAR = {
+  pick: 0.35,
+  body: 0.38,
+  damping: 0.5,
+  position: 0.45,
+} as const
+
+export const DEFAULT_WASM_ORGAN = {
+  drawbar: 0.7,
+  click: 0.15,
+  leak: 0.2,
+  bright: 0.5,
+} as const
+
 export type WASM_VOICE_ENVELOPE = {
   attack: number
   decay: number
@@ -57,6 +99,62 @@ export type WASM_STRING_ENSEMBLE_PARAMS = {
   filter: number
 }
 
+export type WASM_WIND_PARAMS = {
+  breath: number
+  pressure: number
+  brightness: number
+  resonance: number
+}
+
+export type WASM_PIANO_PARAMS = {
+  spread: number
+  hammer: number
+  brightness: number
+  damping: number
+}
+
+export type WASM_TIMPANI_PARAMS = {
+  tension: number
+  decay: number
+  tone: number
+  strike: number
+}
+
+export type WASM_BOWED_PARAMS = {
+  bow: number
+  pressure: number
+  vib: number
+  body: number
+}
+
+export type WASM_GUITAR_PARAMS = {
+  pick: number
+  body: number
+  damping: number
+  position: number
+}
+
+export type WASM_ORGAN_PARAMS = {
+  drawbar: number
+  click: number
+  leak: number
+  bright: number
+}
+
+function writetimbreslots(
+  out: number[],
+  base: number,
+  p0: number,
+  p1: number,
+  p2: number,
+  p3: number,
+) {
+  out[base + 6] = p0
+  out[base + 7] = p1
+  out[base + 8] = p2
+  out[base + 9] = p3
+}
+
 export function wasmvoicecfgtosab(voicestate: WASM_VOICE_STATE[]): number[] {
   const out = new Array(WASM_VOICE_CFG_BLOCK).fill(0)
   for (let i = 0; i < voicestate.length; i++) {
@@ -69,19 +167,69 @@ export function wasmvoicecfgtosab(voicestate: WASM_VOICE_STATE[]): number[] {
     out[base + 3] = env.release
     out[base + 4] = voice.portamento
     out[base + 5] = voice.volume
-    // SAB slots 6–9: string ensemble (algo 0) or pluck timbre (algo 1); dormant on other types.
-    if (voice.type === SOURCE_TYPE.STRING_VOICE && voice.algo === 0) {
-      const stringens = voice.stringensemble
-      out[base + 6] = stringens.detune
-      out[base + 7] = stringens.pwm
-      out[base + 8] = stringens.vib
-      out[base + 9] = stringens.filter
-    } else {
-      const pluck = voice.pluck
-      out[base + 6] = pluck.structure
-      out[base + 7] = pluck.brightness
-      out[base + 8] = pluck.damping
-      out[base + 9] = pluck.accent
+    switch (voice.type) {
+      case SOURCE_TYPE.STRING_VOICE:
+        if (voice.algo === 0) {
+          const s = voice.stringensemble
+          writetimbreslots(out, base, s.detune, s.pwm, s.vib, s.filter)
+        } else {
+          const p = voice.pluck
+          writetimbreslots(
+            out,
+            base,
+            p.structure,
+            p.brightness,
+            p.damping,
+            p.accent,
+          )
+        }
+        break
+      case SOURCE_TYPE.WIND_VOICE: {
+        const w = voice.wind
+        writetimbreslots(
+          out,
+          base,
+          w.breath,
+          w.pressure,
+          w.brightness,
+          w.resonance,
+        )
+        break
+      }
+      case SOURCE_TYPE.PIANO_VOICE: {
+        const p = voice.piano
+        writetimbreslots(
+          out,
+          base,
+          p.spread,
+          p.hammer,
+          p.brightness,
+          p.damping,
+        )
+        break
+      }
+      case SOURCE_TYPE.TIMPANI_VOICE: {
+        const t = voice.timpani
+        writetimbreslots(out, base, t.tension, t.decay, t.tone, t.strike)
+        break
+      }
+      case SOURCE_TYPE.BOWED_VOICE: {
+        const b = voice.bowed
+        writetimbreslots(out, base, b.bow, b.pressure, b.vib, b.body)
+        break
+      }
+      case SOURCE_TYPE.GUITAR_VOICE: {
+        const g = voice.guitar
+        writetimbreslots(out, base, g.pick, g.body, g.damping, g.position)
+        break
+      }
+      case SOURCE_TYPE.ORGAN_VOICE: {
+        const o = voice.organ
+        writetimbreslots(out, base, o.drawbar, o.click, o.leak, o.bright)
+        break
+      }
+      default:
+        break
     }
   }
   return out

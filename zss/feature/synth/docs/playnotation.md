@@ -31,6 +31,8 @@ Parses text-based notation and converts it to scheduled note events.
 | 7 | Low tom |
 | 8 | Low woodblock |
 | 9 | Bass drum |
+| k | Crash cymbal |
+| r | Ride cymbal |
 
 ## Parse Format
 

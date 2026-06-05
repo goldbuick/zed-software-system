@@ -263,6 +263,52 @@ float processvoice(int vi, float vstart[kVibratoGroups], float vend[kVibratoGrou
     v.lastenv      = std::fabs(out);
     return out;
   }
+  else if(type == kWindVoice)
+  {
+    float hz = freq > 0.f ? freq : 440.f;
+    out      = windvoice(v, hz, gate, algo, cfg);
+    return out * dbtoamp(vol_db);
+  }
+  else if(type == kPianoVoice)
+  {
+    float hz  = freq > 0.f ? freq : 440.f;
+    float vel = detune > 0.f ? detune : 0.75f;
+    out       = pianovoice(v, hz, gate, algo, cfg, vel);
+    return out * dbtoamp(vol_db);
+  }
+  else if(type == kTimpaniVoice)
+  {
+    float hz  = freq > 0.f ? freq : 110.f;
+    float vel = detune > 0.f ? detune : 0.75f;
+    out       = timpanivoice(v, hz, gate, cfg, vel);
+    return out * dbtoamp(vol_db);
+  }
+  else if(type == kBowedVoice)
+  {
+    float hz  = freq > 0.f ? freq : 440.f;
+    float vel = detune > 0.f ? detune : 0.75f;
+    out       = bowedvoice(v, vi, hz, gate, algo, cfg, port, vel);
+    return out * dbtoamp(vol_db);
+  }
+  else if(type == kGuitarVoice)
+  {
+    float hz  = freq > 0.f ? freq : 220.f;
+    float vel = detune > 0.f ? detune : 0.75f;
+    if(v.guitarpreset != algo)
+    {
+      v.guitarpreset = algo;
+      v.guitarprev[0] = v.guitarprev[1] = v.guitarprev[2] = v.guitarprev[3] = -1.f;
+      v.stringvoicepreset = -1;
+    }
+    out = guitarvoice(v, hz, gate, algo, cfg, vel);
+    return out * dbtoamp(vol_db);
+  }
+  else if(type == kOrganVoice)
+  {
+    float hz = freq > 0.f ? freq : 440.f;
+    out      = organvoice(v, hz, gate, algo, cfg);
+    return out * dbtoamp(vol_db);
+  }
   else
   {
     float envout = v.voiceenv.process(gate);

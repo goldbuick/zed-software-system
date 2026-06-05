@@ -19,6 +19,7 @@ ZSS_CPPS=(
   "$ZSS_DIR/zss_drums.cpp"
   "$ZSS_DIR/zss_fx.cpp"
   "$ZSS_DIR/zss_main.cpp"
+  "$ZSS_DIR/zss_sosvoices.cpp"
   "$ZSS_DIR/zss_engine.cpp"
 )
 OUT_DIR="$REPO_ROOT/cafe/public/wasm/daisy"

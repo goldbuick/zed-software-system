@@ -31,6 +31,8 @@ export const WASM_DRUM_VOICE_GAINS = [
   0.28, // 7 tom
   0.26, // 8 low wood
   0.67, // 9 bass
+  0.42, // k crash
+  0.36, // r ride
 ]
 
 /** HP/noise trim applied before per-drum gain on tick/tweet (biquad HP is steeper than 1-pole). */

@@ -74,6 +74,16 @@ void applystringvoicepreset(ZssVoice &v, int algo);
 float stringmachinevoice(ZssVoice &v, float hz, float envout, float detunecents,
                          float pwmdepth, float vibcents, float filterscale);
 
+float windvoice(ZssVoice &v, float hz, bool gate, int algo, int cfg);
+float pianovoice(ZssVoice &v, float hz, bool gate, int algo, int cfg,
+                 float velocity);
+float timpanivoice(ZssVoice &v, float hz, bool gate, int cfg, float velocity);
+float bowedvoice(ZssVoice &v, int vi, float hz, bool gate, int algo, int cfg,
+                 float port, float velocity);
+float guitarvoice(ZssVoice &v, float hz, bool gate, int algo, int cfg,
+                  float velocity);
+float organvoice(ZssVoice &v, float hz, bool gate, int algo, int cfg);
+
 float drumsout();
 void retriggerdrum(int i, float dursec);
 

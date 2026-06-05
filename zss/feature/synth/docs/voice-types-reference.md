@@ -16,7 +16,7 @@ Config path: `#synth` → [audio.ts](../../firmware/audio.ts) `handlesynthvoice`
 
 ---
 
-## 12 internal voice families (`SOURCE_TYPE`)
+## 16 internal voice families (`SOURCE_TYPE`)
 
 | `#synth` name | Enum | Tone backend | WASM backend |
 |---------------|------|--------------|--------------|
@@ -33,6 +33,12 @@ Config path: `#synth` → [audio.ts](../../firmware/audio.ts) `handlesynthvoice`
 | `string` | `STRING_VOICE` (algo 0) | — | Daisy WASM only (SOS string-machine: detuned saws, OSC2 PWM FM, body peaks) |
 | `pluck` | `STRING_VOICE` (algo 1) | — | Daisy WASM only (`StringVoice`, pluck strike) |
 | `drip` | `DRIP_VOICE` | — | Daisy WASM only (`Drip`, gate-edge trigger) |
+| `flute` / `clarinet` / `brass` / `panpipe` | `WIND_VOICE` (algo 0–3) | — | Daisy WASM only (`windvoice`, SOS wind) |
+| `piano` / `epiano` | `PIANO_VOICE` (algo 0–1) | — | Daisy WASM only (`pianovoice`, SOS pianos) |
+| `timpani` | `TIMPANI_VOICE` | — | Daisy WASM only (`timpanivoice`, pitched membrane) |
+| `violin` / `viola` | `BOWED_VOICE` (algo 0–1) | — | Daisy WASM only (`bowedvoice`, bow + formants) |
+| `nylon` / `steel` | `GUITAR_VOICE` (algo 0–1) | — | Daisy WASM only (`guitarvoice`, `StringVoice` + pick) |
+| `tonewheel` / `drawbar` | `ORGAN_VOICE` (algo 0–1) | — | Daisy WASM only (`organvoice`, drawbar stack) |
 
 ---
 
@@ -42,7 +48,7 @@ Config path: `#synth` → [audio.ts](../../firmware/audio.ts) `handlesynthvoice`
 |-------|---------|-------|--------------|--------------|-------|
 | `restart` | — | — | Full `applyreset()` | Resets all 8 voices + osc + algo + FX SAB | Tone: [source.ts](../archive/tone/source.ts); Daisy: [daisysynth.ts](../backend/daisy/daisysynth.ts) |
 | `vol` / `volume` | — | number (dB) | **Tone**: instrument volume from `get()` snapshot | **`0` dB** | All 10 WASM voice types via `zss_voicecfg` slot 5 |
-| `port` / `portamento` | — | number (seconds) | **Tone**: `0` (Monophonic) | `0` | Only `SYNTH` + `ALGO_SYNTH`; error on retro in Tone |
+| `port` / `portamento` | — | number (seconds) | **Tone**: `0` (Monophonic) | `0` | `SYNTH` + `ALGO_SYNTH` + `BOWED_VOICE`; error on retro in Tone |
 | `env` / `envelope` | — | `[a, d, s, r]` seconds + sustain 0–1 | See per-type below | `0.01, 0.01, 0.5, 0.01` (**Tone ZSS reset**) | SAB → [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp) **`ZssLinearEnv`** (linear ramps, note-on reset to 0, Tone `triggerAttack` parity). Archived Maxi used `zssenv` (ms) in play code. |
 
 **Boot / `#synth` no-args / memory default wave:** `square` (**ZSS**, [synthdefaults.ts](../synthdefaults.ts)) on both backends.
@@ -256,6 +262,84 @@ Selecting `#synth pluck` resets timbre params to the defaults above.
 
 ---
 
+## 7. Wind — `flute` / `clarinet` / `brass` / `panpipe` (`WIND_VOICE`)
+
+Daisy WASM only. SOS wind-instruments model: breath noise + LP body filter; algo selects waveform (flute saw+tri, clarinet square, brass saw+pressure brightness, panpipe multi-pipe detune).
+
+| Param | Value | Default |
+|-------|-------|---------|
+| `breath` | 0–1 | `0.3` |
+| `pressure` | 0–1 | `0.45` |
+| `brightness` | 0–1 | `0.45` |
+| `resonance` | 0–1 | `0.15` |
+
+---
+
+## 8. Piano — `piano` / `epiano` (`PIANO_VOICE`)
+
+Daisy WASM only. Tricord body + hammer sparkle; `#play` writes fixed velocity `0.75` to SAB slot `base+4`.
+
+| Param | Value | Default (piano) |
+|-------|-------|-----------------|
+| `spread` | 0–1 | `0.18` |
+| `hammer` | 0–1 | `0.55` |
+| `brightness` | 0–1 | `0.5` |
+| `damping` | 0–1 | `0.45` |
+
+---
+
+## 9. Timpani — `timpani` (`TIMPANI_VOICE`)
+
+Daisy WASM only. Pitched membrane (`doot`-style sine) with pitch bend on decay; not a `#play` drum char.
+
+| Param | Value | Default |
+|-------|-------|---------|
+| `tension` | 0–1 | `0.5` |
+| `decay` | 0–1 | `0.55` |
+| `tone` | 0–1 | `0.45` |
+| `strike` | 0–1 | `0.6` |
+
+---
+
+## 10. Bowed — `violin` / `viola` (`BOWED_VOICE`)
+
+Daisy WASM only. Slow-attack saw + bow noise + body formants + vibrato. **`port` applied.**
+
+| Param | Value | Default |
+|-------|-------|---------|
+| `bow` | 0–1 | `0.24` |
+| `pressure` | 0–1 | `0.5` |
+| `vib` | 0–1 | `0.35` |
+| `body` | 0–1 | `0.55` |
+
+---
+
+## 11. Guitar — `nylon` / `steel` (`GUITAR_VOICE`)
+
+Daisy WASM only. `StringVoice` strike + pick burst + body peak; algo 0 = nylon, 1 = steel.
+
+| Param | Value | Default |
+|-------|-------|---------|
+| `pick` | 0–1 | `0.35` |
+| `body` | 0–1 | `0.38` |
+| `damping` | 0–1 | `0.5` |
+| `position` | 0–1 | `0.45` |
+
+---
+
+## 12. Organ — `tonewheel` / `drawbar` (`ORGAN_VOICE`)
+
+Daisy WASM only. Summed harmonic drawbars + key click on gate rise; `tonewheel` uses fixed registration, `drawbar` uses live `drawbar` param.
+
+| Param | Value | Default |
+|-------|-------|---------|
+| `drawbar` | 0–1 | `0.7` |
+| `click` | 0–1 | `0.15` |
+| `leak` | 0–1 | `0.2` |
+| `bright` | 0–1 | `0.5` |
+
+---
+
 ## Command quick reference
 
 ```
@@ -264,6 +348,10 @@ Global:     restart | vol/volume | port/portamento | env/envelope
 Sources:    retro | buzz | clang | metallic | bells | doot
             algo0 … algo7
             string | pluck | drip     (WASM only; Tone errors)
+            flute | clarinet | brass | panpipe
+            piano | epiano | timpani
+            violin | viola | nylon | steel
+            tonewheel | drawbar
             noise | hollow          (WASM only; Tone errors)
 
 Osc types:  sine | square | triangle | sawtooth | custom | pwm | pulse
@@ -279,6 +367,12 @@ Algo:       harmonicity | harmonicity1-3 | modindex | modindex1-3
 
 Pluck:      structure | brightness | damping | accent   (pluck voice only)
 String:     detune | pwm | vib | filter                 (string voice only)
+Wind:       breath | pressure | brightness | resonance  (wind voices)
+Piano:      spread | hammer | brightness | damping      (piano voices)
+Timpani:    tension | decay | tone | strike            (timpani only)
+Bowed:      bow | pressure | vib | body                (bowed voices)
+Guitar:     pick | body | damping | position            (guitar voices)
+Organ:      drawbar | click | leak | bright             (organ voices)
 ```
 
 ---
@@ -287,7 +381,7 @@ String:     detune | pwm | vib | filter                 (string voice only)
 
 | Topic | Tone (archived) | WASM (active) |
 |-------|-----------------|---------------|
-| Voice types | 8 creatable; `noise`/`hollow` error | All 10 types |
+| Voice types | 8 creatable; `noise`/`hollow` error | All 16 types |
 | `#synth` no args | Applies `square` wave only | Same; full reset is `#synth restart` |
 | Default envelope | `0.01/0.01/0.5/0.01` on reset | `0.01/0.01/0.5/0.01` |
 | `#synth env` shape | Tone exponential `AmplitudeEnvelope` | **`ZssLinearEnv`** (linear ramps; behavioral parity, not sample-identical) |

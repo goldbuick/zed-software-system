@@ -11,7 +11,7 @@ namespace zss_daisy {
 constexpr int kVoiceCount = 8;
 constexpr int kPlayVoiceCount = 4;
 constexpr int kVoiceStride = 6;
-constexpr int kDrumCount = 10;
+constexpr int kDrumCount = 12;
 constexpr int kFxGroups = 4;
 constexpr int kFxSendCount = 7;
 constexpr int kFxParamCount = 20;
@@ -73,6 +73,14 @@ constexpr float kStringSubOctaveMix = 0.1f;
 constexpr float kStringBodyLowMix = 0.18f;
 constexpr float kStringBodyHiMix = 0.1f;
 constexpr float kStringBowNoiseMix = 0.03f;
+
+constexpr float kWindVoiceGain = 0.38f;
+constexpr float kPianoVoiceGain = 0.34f;
+constexpr float kTimpaniVoiceGain = 0.42f;
+constexpr float kBowedVoiceGain = 0.36f;
+constexpr float kGuitarVoiceGain = 0.36f;
+constexpr float kOrganVoiceGain = 0.32f;
+
 constexpr float kDrumTickTrim = 1.35f;
 constexpr float kDrumTweetTrim = 1.25f;
 
@@ -130,8 +138,10 @@ constexpr float kScTriggerFloor = 1e-5f;
 constexpr float kAutowahDefaultOct = 6.f;
 constexpr float kAutowahDefaultGain = 2.f;
 
-constexpr float kDrumGains[kDrumCount] = {0.26f, 0.24f, 0.4f,  0.35f, 0.3f,
-                                          0.26f, 0.3f,  0.28f, 0.26f, 0.67f};
+constexpr float kDrumGains[kDrumCount] = {
+    0.26f, 0.24f, 0.4f,  0.35f, 0.3f,  0.26f, 0.3f,
+    0.28f, 0.26f, 0.67f, 0.42f, 0.36f,
+};
 
 enum VoiceType {
   kSynth = 0,
@@ -146,6 +156,12 @@ enum VoiceType {
   kWhiteNoise = 9,
   kStringVoice = 10,
   kDripVoice = 11,
+  kWindVoice = 12,
+  kPianoVoice = 13,
+  kTimpaniVoice = 14,
+  kBowedVoice = 15,
+  kGuitarVoice = 16,
+  kOrganVoice = 17,
 };
 
 enum FxSend {

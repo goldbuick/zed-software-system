@@ -213,6 +213,15 @@ struct ZssVoice
   bool          stringgateprev = false;
   bool          bellgateprev   = false;
   bool          dripgateprev   = false;
+  bool          pianogateprev  = false;
+  bool          timpanigateprev = false;
+  bool          guitargateprev = false;
+  bool          organgateprev  = false;
+  float         timpanipitch   = 1.f;
+  int           guitarpreset   = -1;
+  float         guitarprev[4]  = {-1.f, -1.f, -1.f, -1.f};
+  float         guitarbodymix  = 0.38f;
+  float         guitarpick     = 0.35f;
 };
 
 /** Schroeder-style comb for reverb predelay */

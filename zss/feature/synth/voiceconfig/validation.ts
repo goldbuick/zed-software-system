@@ -41,6 +41,19 @@ export function validatesynthtype(
       case 'string':
       case 'pluck':
       case 'drip':
+      case 'flute':
+      case 'clarinet':
+      case 'brass':
+      case 'panpipe':
+      case 'piano':
+      case 'epiano':
+      case 'timpani':
+      case 'violin':
+      case 'viola':
+      case 'nylon':
+      case 'steel':
+      case 'tonewheel':
+      case 'drawbar':
         return true
       default:
         return SYNTH_VARIANTS.test(type)

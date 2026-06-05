@@ -1,7 +1,7 @@
 /** Control buffer layout — must match zss_daisy_synth.cpp offsets and wasmsabchannels.ts. */
 export const DAISY_VOICE_COUNT = 8
 export const DAISY_VOICE_STRIDE = 6
-export const DAISY_DRUM_COUNT = 10
+export const DAISY_DRUM_COUNT = 12
 export const DAISY_FX_GROUP_COUNT = 4
 export const DAISY_FX_SEND_COUNT = 7
 export const DAISY_FX_PARAM_COUNT = 20

@@ -397,8 +397,18 @@ export function createdaisysynth(
 
     const strike = (notestrikebychan.get(chan) ?? 0) + 1
     notestrikebychan.set(chan, strike)
+    const voicetype = voicecfg[chan]?.type
+    const velocitytypes =
+      voicetype === SOURCE_TYPE.PIANO_VOICE ||
+      voicetype === SOURCE_TYPE.TIMPANI_VOICE ||
+      voicetype === SOURCE_TYPE.BOWED_VOICE ||
+      voicetype === SOURCE_TYPE.GUITAR_VOICE
     const strikedetune =
-      voicecfg[chan]?.type === SOURCE_TYPE.BELLS ? detune : strike
+      voicetype === SOURCE_TYPE.BELLS
+        ? detune
+        : velocitytypes
+          ? 0.75
+          : strike
 
     scheduler.schedule(when, () => {
       voicestate[base] = freq

@@ -18,7 +18,7 @@ Handles voice/source configuration from external API (e.g. device commands). For
 |--------|-------|-------------|
 | `restart` | — | Applies full synth reset |
 | `vol` / `volume` | number | Source volume |
-| `port` / `portamento` | number (seconds) | Portamento (SYNTH, ALGO_SYNTH only) |
+| `port` / `portamento` | number (seconds) | Portamento (SYNTH, ALGO_SYNTH, BOWED_VOICE) |
 | `env` / `envelope` | [a,d,s,r] | ADSR envelope |
 
 ## Source Type Changes
@@ -35,6 +35,68 @@ Handles voice/source configuration from external API (e.g. device commands). For
 | `string` | STRING_VOICE (algo 0, WASM only) |
 | `pluck` | STRING_VOICE (algo 1, WASM only) |
 | `drip` | DRIP_VOICE (WASM only) |
+| `flute` / `clarinet` / `brass` / `panpipe` | WIND_VOICE (algo 0–3, WASM only) |
+| `piano` / `epiano` | PIANO_VOICE (algo 0–1, WASM only) |
+| `timpani` | TIMPANI_VOICE (WASM only) |
+| `violin` / `viola` | BOWED_VOICE (algo 0–1, WASM only) |
+| `nylon` / `steel` | GUITAR_VOICE (algo 0–1, WASM only) |
+| `tonewheel` / `drawbar` | ORGAN_VOICE (algo 0–1, WASM only) |
+
+## Wind configs (wasmvoiceconfig.ts, WASM only)
+
+| Config | Value | Default |
+|--------|-------|---------|
+| `breath` | 0–1 | `0.3` |
+| `pressure` | 0–1 | `0.45` |
+| `brightness` | 0–1 | `0.45` |
+| `resonance` | 0–1 | `0.15` |
+
+## Piano configs (WASM only)
+
+| Config | Value | Default |
+|--------|-------|---------|
+| `spread` | 0–1 | `0.18` |
+| `hammer` | 0–1 | `0.55` |
+| `brightness` | 0–1 | `0.5` |
+| `damping` | 0–1 | `0.45` |
+
+## Timpani configs (WASM only)
+
+| Config | Value | Default |
+|--------|-------|---------|
+| `tension` | 0–1 | `0.5` |
+| `decay` | 0–1 | `0.55` |
+| `tone` | 0–1 | `0.45` |
+| `strike` | 0–1 | `0.6` |
+
+## Bowed configs (WASM only)
+
+| Config | Value | Default |
+|--------|-------|---------|
+| `bow` | 0–1 | `0.24` |
+| `pressure` | 0–1 | `0.5` |
+| `vib` | 0–1 | `0.35` |
+| `body` | 0–1 | `0.55` |
+
+Portamento applies to bowed voices.
+
+## Guitar configs (WASM only)
+
+| Config | Value | Default |
+|--------|-------|---------|
+| `pick` | 0–1 | `0.35` |
+| `body` | 0–1 | `0.38` |
+| `damping` | 0–1 | `0.5` |
+| `position` | 0–1 | `0.45` |
+
+## Organ configs (WASM only)
+
+| Config | Value | Default |
+|--------|-------|---------|
+| `drawbar` | 0–1 | `0.7` |
+| `click` | 0–1 | `0.15` |
+| `leak` | 0–1 | `0.2` |
+| `bright` | 0–1 | `0.5` |
 
 ## Pluck Configs (wasmvoiceconfig.ts, WASM only)
 

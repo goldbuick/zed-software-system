@@ -46,6 +46,12 @@ Enum: [`shared/sourcetype.ts`](../shared/sourcetype.ts). Dispatch: `VoiceType` i
 | `string` | `STRING_VOICE` (algo 0) | — (Daisy-only) | SOS ensemble (`stringmachinevoice`) | — | Subtractive string-machine | cpp `stringmachinevoice()` |
 | `pluck` | `STRING_VOICE` (algo 1) | — (Daisy-only) | `StringVoice` strike | — | Physical modeling | cpp `processvoice()` |
 | `drip` | `DRIP_VOICE` | — (Daisy-only) | `Drip` | — | Physical modeling | cpp `processvoice()` |
+| `flute`–`panpipe` | `WIND_VOICE` | — | `windvoice()` SOS wind | — | Subtractive + breath noise | cpp `zss_sosvoices.cpp` |
+| `piano`/`epiano` | `PIANO_VOICE` | — | `pianovoice()` | — | FM-ish hammer + LP body | cpp `zss_sosvoices.cpp` |
+| `timpani` | `TIMPANI_VOICE` | — | `timpanivoice()` | — | Membrane / pitched drum | cpp `zss_sosvoices.cpp` |
+| `violin`/`viola` | `BOWED_VOICE` | — | `bowedvoice()` | — | Subtractive bowed | cpp `zss_sosvoices.cpp` |
+| `nylon`/`steel` | `GUITAR_VOICE` | — | `guitarvoice()` + `StringVoice` | — | Physical modeling | cpp `zss_sosvoices.cpp` |
+| `tonewheel`/`drawbar` | `ORGAN_VOICE` | — | `organvoice()` | — | Additive drawbars | cpp `zss_sosvoices.cpp` |
 
 **SYNTH sub-modes** ([`wasmosctype.ts`](../backend/wasm/wasmosctype.ts)): basic waves, pulse/PWM, AM, FM, fat.
 
@@ -104,7 +110,7 @@ flowchart LR
 
 ---
 
-## Table 4 — Drums (10 IDs)
+## Table 4 — Drums (12 IDs)
 
 **Daisy backend:** [DaisySP Drums](https://github.com/electro-smith/DaisySP/tree/master/Source/Drums/) where classes exist; unmatched IDs stay custom. **Maximilian** keeps Tone-parity kit in [`drumplaycode.ts`](../backend/wasm/drumplaycode.ts).
 
@@ -120,6 +126,8 @@ flowchart LR
 | 7 | Low tom | pitch glide tom | `SyntheticBassDrum` tom substitute | saw/tri/noise glide | `SyntheticBassDrum` | Migrated | same |
 | 8 | Low woodblock | lower woodblock | Custom | same | — | Keep custom | `drumwoodblock(false)` |
 | 9 | Bass | membrane-style kick | `AnalogBassDrum` | `MembraneSynth` | `AnalogBassDrum` | Migrated | same; sidechain tap |
+| 10 | Crash | — | Custom modal cymbal (`drumcrash`) | — | — | **New** | cpp `zss_drums.cpp` |
+| 11 | Ride | — | Custom modal cymbal + ping (`drumride`) | — | — | **New** | cpp `zss_drums.cpp` |
 
 **Parity:** Maximilian drums vs Tone. Daisy drums vs Daisy-native fixtures (not Tone).
 

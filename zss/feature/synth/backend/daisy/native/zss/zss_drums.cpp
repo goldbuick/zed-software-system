@@ -123,6 +123,8 @@ int drumlength(int i, float dursec)
       0.01f + 0.1f + 0.08f,
       0.001f + 0.1f + 0.08f,
       0.001f + 0.35f + drumnotelen(8),
+      0.001f + 0.08f + 2.4f,
+      0.001f + 0.06f + 3.2f,
   };
   int fixed = drumsamp(kFixedSec[i]);
   if(dursec <= 0.f)
@@ -401,6 +403,73 @@ float drumbass()
   return g_engine.bass_drum.Process(false) * kDrumGains[9];
 }
 
+float drumcymbalmodal(int idx, int age, int len, const float ratios[6],
+                        const float decays[6])
+{
+  float sr = g_engine.sample_rate;
+  float t    = static_cast<float>(age) / std::max(1, len);
+  float env  = std::pow(0.001f, t);
+  float burst = drumadsr(age, drumsamp(0.001f), drumsamp(0.04f), 0.001f,
+                         drumsamp(0.06f));
+  float n = drumnoise() * burst * 0.85f;
+  float sig = n;
+  for(int m = 0; m < 6; ++m)
+  {
+    static BiquadCoef modes[12][6];
+    static bool       init = false;
+    if(!init)
+    {
+      for(int d = 0; d < 12; ++d)
+      {
+        float base = d == 10 ? 420.f : 380.f;
+        for(int k = 0; k < 6; ++k)
+        {
+          float hz = base * ratios[k];
+          modes[d][k] = biquadcoef("bandpass", hz, 8.f + k * 1.5f, 0.f, sr);
+        }
+      }
+      init = true;
+    }
+    float modeenv = env * decays[m];
+    sig += drumbandpass(idx, n * modeenv, modes[idx][m]) * (0.18f + m * 0.04f);
+  }
+  return sig;
+}
+
+float drumcrash()
+{
+  int age = drumadvance(10);
+  if(age < 0)
+  {
+    return 0.f;
+  }
+  int   len = drumlength(10, readctrl(off_drums() + kDrumCount + 10));
+  const float ratios[] = {1.f, 1.37f, 1.71f, 2.13f, 2.67f, 3.31f};
+  const float decays[] = {1.f, 0.92f, 0.84f, 0.76f, 0.68f, 0.6f};
+  return drumcymbalmodal(10, age, len, ratios, decays) * kDrumGains[10];
+}
+
+float drumride()
+{
+  int age = drumadvance(11);
+  if(age < 0)
+  {
+    return 0.f;
+  }
+  int   len = drumlength(11, readctrl(off_drums() + kDrumCount + 11));
+  const float ratios[] = {1.f, 1.29f, 1.58f, 1.91f, 2.24f, 2.58f};
+  const float decays[] = {1.f, 0.95f, 0.9f, 0.85f, 0.8f, 0.75f};
+  float sig = drumcymbalmodal(11, age, len, ratios, decays);
+  if(age < drumsamp(0.12f))
+  {
+    float ping = drumoscwave(g_engine.drumoscA[11], 1, 520.f)
+                 * drumadsr(age, drumsamp(0.001f), drumsamp(0.08f), 0.001f,
+                            drumsamp(0.04f));
+    sig += ping * 0.35f;
+  }
+  return sig * kDrumGains[11];
+}
+
 float drumsout()
 {
   g_engine.drumsidechain = 0.f;
@@ -419,6 +488,8 @@ float drumsout()
   s = drumbass();
   sum += s;
   sc += s;
+  sum += drumcrash();
+  sum += drumride();
   g_engine.drumsidechain = sc;
   return sum;
 }

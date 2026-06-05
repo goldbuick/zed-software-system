@@ -36,6 +36,8 @@ export enum SYNTH_OP {
   DRUM_LOW_SNARE,
   DRUM_LOW_WOODBLOCK,
   DRUM_BASS,
+  DRUM_CRASH,
+  DRUM_RIDE,
 }
 
 const CHAR_OP_MAP = {
@@ -85,6 +87,8 @@ const CHAR_OP_MAP = {
   ['7']: SYNTH_OP.DRUM_LOW_TOM,
   ['8']: SYNTH_OP.DRUM_LOW_WOODBLOCK,
   ['9']: SYNTH_OP.DRUM_BASS,
+  ['k']: SYNTH_OP.DRUM_CRASH,
+  ['r']: SYNTH_OP.DRUM_RIDE,
 }
 
 export type SYNTH_NOTE = null | string | number
@@ -384,6 +388,12 @@ export function invokeplay(
           break
         case SYNTH_OP.DRUM_BASS:
           note = 9
+          break
+        case SYNTH_OP.DRUM_CRASH:
+          note = 10
+          break
+        case SYNTH_OP.DRUM_RIDE:
+          note = 11
           break
       }
     }

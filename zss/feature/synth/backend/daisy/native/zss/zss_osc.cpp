@@ -14,7 +14,8 @@ namespace zss_daisy {
 float voiceenvlevel(ZssVoice &v, int type) { return v.lastenv; }
 
 float glidefreq(ZssVoice &v, int vi, float target, int type, float port) {
-  if ((type != kSynth && type != kAlgoSynth) || port <= 0.f) {
+  if ((type != kSynth && type != kAlgoSynth && type != kBowedVoice) ||
+      port <= 0.f) {
     v.playfreq = target;
     v.glidetarget = target;
     v.glideremain = 0;

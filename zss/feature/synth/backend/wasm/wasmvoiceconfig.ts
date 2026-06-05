@@ -9,19 +9,37 @@ import { applywasmoscconfig, resetwasmoscconfig } from './wasmoscconfig'
 import type { WASM_OSC_CONFIG } from './wasmoscconfigsab'
 import { WASM_OSC_TYPE, parsewasmosc } from './wasmosctype'
 import {
+  DEFAULT_WASM_BOWED,
   DEFAULT_WASM_ENVELOPE,
+  DEFAULT_WASM_GUITAR,
+  DEFAULT_WASM_ORGAN,
+  DEFAULT_WASM_PIANO,
   DEFAULT_WASM_PLUCK,
   DEFAULT_WASM_STRING_ENSEMBLE,
+  DEFAULT_WASM_TIMPANI,
   DEFAULT_WASM_VOICE_VOLUME_DB,
+  DEFAULT_WASM_WIND,
+  type WASM_BOWED_PARAMS,
+  type WASM_GUITAR_PARAMS,
+  type WASM_ORGAN_PARAMS,
+  type WASM_PIANO_PARAMS,
   type WASM_PLUCK_PARAMS,
   type WASM_STRING_ENSEMBLE_PARAMS,
+  type WASM_TIMPANI_PARAMS,
   type WASM_VOICE_ENVELOPE,
+  type WASM_WIND_PARAMS,
 } from './wasmvoicecfgsab'
 
 export type {
   WASM_VOICE_ENVELOPE,
   WASM_PLUCK_PARAMS,
   WASM_STRING_ENSEMBLE_PARAMS,
+  WASM_WIND_PARAMS,
+  WASM_PIANO_PARAMS,
+  WASM_TIMPANI_PARAMS,
+  WASM_BOWED_PARAMS,
+  WASM_GUITAR_PARAMS,
+  WASM_ORGAN_PARAMS,
 } from './wasmvoicecfgsab'
 
 export type WASM_VOICE_STATE = {
@@ -33,6 +51,12 @@ export type WASM_VOICE_STATE = {
   volume: number
   pluck: WASM_PLUCK_PARAMS
   stringensemble: WASM_STRING_ENSEMBLE_PARAMS
+  wind: WASM_WIND_PARAMS
+  piano: WASM_PIANO_PARAMS
+  timpani: WASM_TIMPANI_PARAMS
+  bowed: WASM_BOWED_PARAMS
+  guitar: WASM_GUITAR_PARAMS
+  organ: WASM_ORGAN_PARAMS
 }
 
 function defaultpluck(): WASM_PLUCK_PARAMS {
@@ -41,6 +65,30 @@ function defaultpluck(): WASM_PLUCK_PARAMS {
 
 function defaultstringensemble(): WASM_STRING_ENSEMBLE_PARAMS {
   return { ...DEFAULT_WASM_STRING_ENSEMBLE }
+}
+
+function defaultwind(): WASM_WIND_PARAMS {
+  return { ...DEFAULT_WASM_WIND }
+}
+
+function defaultpiano(): WASM_PIANO_PARAMS {
+  return { ...DEFAULT_WASM_PIANO }
+}
+
+function defaulttimpani(): WASM_TIMPANI_PARAMS {
+  return { ...DEFAULT_WASM_TIMPANI }
+}
+
+function defaultbowed(): WASM_BOWED_PARAMS {
+  return { ...DEFAULT_WASM_BOWED }
+}
+
+function defaultguitar(): WASM_GUITAR_PARAMS {
+  return { ...DEFAULT_WASM_GUITAR }
+}
+
+function defaultorgan(): WASM_ORGAN_PARAMS {
+  return { ...DEFAULT_WASM_ORGAN }
 }
 
 function defaultvoice(): WASM_VOICE_STATE {
@@ -53,11 +101,43 @@ function defaultvoice(): WASM_VOICE_STATE {
     volume: DEFAULT_WASM_VOICE_VOLUME_DB,
     pluck: defaultpluck(),
     stringensemble: defaultstringensemble(),
+    wind: defaultwind(),
+    piano: defaultpiano(),
+    timpani: defaulttimpani(),
+    bowed: defaultbowed(),
+    guitar: defaultguitar(),
+    organ: defaultorgan(),
   }
 }
 
 export function defaultwasmvoicestate(): WASM_VOICE_STATE[] {
   return Array.from({ length: 8 }, () => defaultvoice())
+}
+
+function winddefaults(algo: number): WASM_WIND_PARAMS {
+  if (algo === 1) {
+    return { breath: 0.25, pressure: 0.35, brightness: 0.3, resonance: 0.2 }
+  }
+  if (algo === 2) {
+    return { breath: 0.15, pressure: 0.65, brightness: 0.55, resonance: 0.35 }
+  }
+  if (algo === 3) {
+    return { breath: 0.4, pressure: 0.25, brightness: 0.35, resonance: 0.08 }
+  }
+  return { breath: 0.35, pressure: 0.4, brightness: 0.45, resonance: 0.1 }
+}
+
+function windenvelope(algo: number): WASM_VOICE_ENVELOPE {
+  if (algo === 1) {
+    return { attack: 0.08, decay: 0.18, sustain: 0.8, release: 0.7 }
+  }
+  if (algo === 2) {
+    return { attack: 0.04, decay: 0.12, sustain: 0.75, release: 0.5 }
+  }
+  if (algo === 3) {
+    return { attack: 0.1, decay: 0.2, sustain: 0.85, release: 0.75 }
+  }
+  return { attack: 0.12, decay: 0.2, sustain: 0.85, release: 0.8 }
 }
 
 function ispluckparamkey(key: string): boolean {
@@ -71,6 +151,70 @@ function ispluckparamkey(key: string): boolean {
 
 function isstringensembleparamkey(key: string): boolean {
   return key === 'detune' || key === 'pwm' || key === 'vib' || key === 'filter'
+}
+
+function iswindparamkey(key: string): boolean {
+  return (
+    key === 'breath' ||
+    key === 'pressure' ||
+    key === 'brightness' ||
+    key === 'resonance'
+  )
+}
+
+function ispianoparamkey(key: string): boolean {
+  return (
+    key === 'spread' ||
+    key === 'hammer' ||
+    key === 'brightness' ||
+    key === 'damping'
+  )
+}
+
+function istimpaniparamkey(key: string): boolean {
+  return (
+    key === 'tension' ||
+    key === 'decay' ||
+    key === 'tone' ||
+    key === 'strike'
+  )
+}
+
+function isbowedparamkey(key: string): boolean {
+  return key === 'bow' || key === 'pressure' || key === 'vib' || key === 'body'
+}
+
+function isguitarparamkey(key: string): boolean {
+  return (
+    key === 'pick' ||
+    key === 'body' ||
+    key === 'damping' ||
+    key === 'position'
+  )
+}
+
+function isorganparamkey(key: string): boolean {
+  return (
+    key === 'drawbar' ||
+    key === 'click' ||
+    key === 'leak' ||
+    key === 'bright'
+  )
+}
+
+function applynumericparam(
+  target: Record<string, number>,
+  key: string,
+  value: number | string | number[],
+): boolean {
+  if (!isnumber(value)) {
+    return false
+  }
+  if (key in target) {
+    target[key] = value
+    return true
+  }
+  return false
 }
 
 function applywasmpluckconfig(
@@ -204,6 +348,108 @@ function parsesourcetype(
       }
     case 'drip':
       return { ...current, type: SOURCE_TYPE.DRIP_VOICE, algo: 0 }
+    case 'flute':
+      return {
+        ...current,
+        type: SOURCE_TYPE.WIND_VOICE,
+        algo: 0,
+        wind: winddefaults(0),
+        envelope: windenvelope(0),
+      }
+    case 'clarinet':
+      return {
+        ...current,
+        type: SOURCE_TYPE.WIND_VOICE,
+        algo: 1,
+        wind: winddefaults(1),
+        envelope: windenvelope(1),
+      }
+    case 'brass':
+      return {
+        ...current,
+        type: SOURCE_TYPE.WIND_VOICE,
+        algo: 2,
+        wind: winddefaults(2),
+        envelope: windenvelope(2),
+      }
+    case 'panpipe':
+      return {
+        ...current,
+        type: SOURCE_TYPE.WIND_VOICE,
+        algo: 3,
+        wind: winddefaults(3),
+        envelope: windenvelope(3),
+      }
+    case 'piano':
+      return {
+        ...current,
+        type: SOURCE_TYPE.PIANO_VOICE,
+        algo: 0,
+        piano: defaultpiano(),
+        envelope: { attack: 0.001, decay: 1.8, sustain: 0.25, release: 1.2 },
+      }
+    case 'epiano':
+      return {
+        ...current,
+        type: SOURCE_TYPE.PIANO_VOICE,
+        algo: 1,
+        piano: { spread: 0.12, hammer: 0.25, brightness: 0.65, damping: 0.6 },
+        envelope: { attack: 0.002, decay: 0.9, sustain: 0.15, release: 0.6 },
+      }
+    case 'timpani':
+      return {
+        ...current,
+        type: SOURCE_TYPE.TIMPANI_VOICE,
+        algo: 0,
+        timpani: defaulttimpani(),
+        envelope: { attack: 0.002, decay: 0.8, sustain: 0.05, release: 0.4 },
+      }
+    case 'violin':
+      return {
+        ...current,
+        type: SOURCE_TYPE.BOWED_VOICE,
+        algo: 0,
+        bowed: { bow: 0.2, pressure: 0.5, vib: 0.4, body: 0.55 },
+        envelope: { attack: 0.2, decay: 0.25, sustain: 0.9, release: 0.6 },
+      }
+    case 'viola':
+      return {
+        ...current,
+        type: SOURCE_TYPE.BOWED_VOICE,
+        algo: 1,
+        bowed: { bow: 0.28, pressure: 0.45, vib: 0.3, body: 0.65 },
+        envelope: { attack: 0.28, decay: 0.3, sustain: 0.88, release: 0.7 },
+      }
+    case 'nylon':
+      return {
+        ...current,
+        type: SOURCE_TYPE.GUITAR_VOICE,
+        algo: 0,
+        guitar: { pick: 0.25, body: 0.4, damping: 0.55, position: 0.35 },
+      }
+    case 'steel':
+      return {
+        ...current,
+        type: SOURCE_TYPE.GUITAR_VOICE,
+        algo: 1,
+        guitar: { pick: 0.5, body: 0.35, damping: 0.45, position: 0.6 },
+      }
+    case 'tonewheel':
+      return {
+        ...current,
+        type: SOURCE_TYPE.ORGAN_VOICE,
+        algo: 0,
+        organ: defaultorgan(),
+        envelope: { attack: 0.001, decay: 0.01, sustain: 1, release: 0.05 },
+      }
+    case 'drawbar':
+      return {
+        ...current,
+        type: SOURCE_TYPE.ORGAN_VOICE,
+        algo: 1,
+        organ: defaultorgan(),
+        envelope: { attack: 0.001, decay: 0.01, sustain: 1, release: 0.05 },
+      }
     default:
       return undefined
   }
@@ -257,7 +503,8 @@ export function applywasmvoiceconfig(
         const voice = voicestate[index]
         if (
           voice.type === SOURCE_TYPE.SYNTH ||
-          voice.type === SOURCE_TYPE.ALGO_SYNTH
+          voice.type === SOURCE_TYPE.ALGO_SYNTH ||
+          voice.type === SOURCE_TYPE.BOWED_VOICE
         ) {
           voice.portamento = value
           return true
@@ -267,21 +514,57 @@ export function applywasmvoiceconfig(
   }
 
   if (isstring(config)) {
+    const voice = voicestate[index]
     if (ispluckparamkey(config)) {
-      const voice = voicestate[index]
       if (voice.type === SOURCE_TYPE.STRING_VOICE && voice.algo === 1) {
         return applywasmpluckconfig(voice, config, value)
       }
       return false
     }
     if (isstringensembleparamkey(config)) {
-      const voice = voicestate[index]
       if (voice.type === SOURCE_TYPE.STRING_VOICE && voice.algo === 0) {
         return applywasmstringensembleconfig(voice, config, value)
       }
       return false
     }
-    const voice = voicestate[index]
+    if (iswindparamkey(config)) {
+      if (voice.type === SOURCE_TYPE.WIND_VOICE) {
+        return applynumericparam(voice.wind, config, value)
+      }
+      return false
+    }
+    if (ispianoparamkey(config)) {
+      if (voice.type === SOURCE_TYPE.PIANO_VOICE) {
+        return applynumericparam(voice.piano, config, value)
+      }
+      return false
+    }
+    if (istimpaniparamkey(config)) {
+      if (voice.type === SOURCE_TYPE.TIMPANI_VOICE) {
+        return applynumericparam(voice.timpani, config, value)
+      }
+      return false
+    }
+    if (isbowedparamkey(config)) {
+      if (voice.type === SOURCE_TYPE.BOWED_VOICE) {
+        return applynumericparam(voice.bowed, config, value)
+      }
+      return false
+    }
+    if (isguitarparamkey(config)) {
+      if (voice.type === SOURCE_TYPE.GUITAR_VOICE) {
+        return applynumericparam(voice.guitar, config, value)
+      }
+      return false
+    }
+    if (isorganparamkey(config)) {
+      if (voice.type === SOURCE_TYPE.ORGAN_VOICE) {
+        return applynumericparam(voice.organ, config, value)
+      }
+      if (config !== 'drawbar') {
+        return false
+      }
+    }
     if (voice.type === SOURCE_TYPE.ALGO_SYNTH) {
       if (applywasmalgoconfig(algoconfig, index, config, value)) {
         return true

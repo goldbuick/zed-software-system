@@ -176,13 +176,86 @@ describe('wasmvoiceconfig', () => {
     expect(sab[5]).toBe(0)
   })
 
-  it('portamento applies only to synth and algo voices', () => {
+  it('maps SOS synth voice types and algos', () => {
+    const voices = defaultwasmvoicestate()
+    expect(applyvoiceconfig(voices, 0, 'flute', '')).toBe(true)
+    expect(voices[0].type).toBe(SOURCE_TYPE.WIND_VOICE)
+    expect(voices[0].algo).toBe(0)
+    expect(voices[0].wind).toEqual({
+      breath: 0.35,
+      pressure: 0.4,
+      brightness: 0.45,
+      resonance: 0.1,
+    })
+
+    expect(applyvoiceconfig(voices, 1, 'clarinet', '')).toBe(true)
+    expect(voices[1].algo).toBe(1)
+    expect(applyvoiceconfig(voices, 2, 'brass', '')).toBe(true)
+    expect(voices[2].algo).toBe(2)
+    expect(applyvoiceconfig(voices, 3, 'panpipe', '')).toBe(true)
+    expect(voices[3].algo).toBe(3)
+
+    expect(applyvoiceconfig(voices, 0, 'piano', '')).toBe(true)
+    expect(voices[0].type).toBe(SOURCE_TYPE.PIANO_VOICE)
+    expect(voices[0].piano).toEqual({
+      spread: 0.18,
+      hammer: 0.55,
+      brightness: 0.5,
+      damping: 0.45,
+    })
+    expect(applyvoiceconfig(voices, 1, 'epiano', '')).toBe(true)
+    expect(voices[1].algo).toBe(1)
+
+    expect(applyvoiceconfig(voices, 2, 'timpani', '')).toBe(true)
+    expect(voices[2].type).toBe(SOURCE_TYPE.TIMPANI_VOICE)
+    expect(voices[2].timpani).toEqual({
+      tension: 0.5,
+      decay: 0.55,
+      tone: 0.45,
+      strike: 0.6,
+    })
+
+    expect(applyvoiceconfig(voices, 3, 'violin', '')).toBe(true)
+    expect(voices[3].type).toBe(SOURCE_TYPE.BOWED_VOICE)
+    expect(applyvoiceconfig(voices, 0, 'viola', '')).toBe(true)
+    expect(voices[0].algo).toBe(1)
+
+    expect(applyvoiceconfig(voices, 1, 'nylon', '')).toBe(true)
+    expect(voices[1].type).toBe(SOURCE_TYPE.GUITAR_VOICE)
+    expect(applyvoiceconfig(voices, 2, 'steel', '')).toBe(true)
+    expect(voices[2].algo).toBe(1)
+
+    expect(applyvoiceconfig(voices, 3, 'tonewheel', '')).toBe(true)
+    expect(voices[3].type).toBe(SOURCE_TYPE.ORGAN_VOICE)
+    expect(applyvoiceconfig(voices, 0, 'drawbar', '')).toBe(true)
+    expect(voices[0].algo).toBe(1)
+  })
+
+  it('maps SOS timbre params into voice cfg sab slots 6-9', () => {
+    const voices = defaultwasmvoicestate()
+    applyvoiceconfig(voices, 0, 'flute', '')
+    applyvoiceconfig(voices, 0, 'breath', 0.4)
+    applyvoiceconfig(voices, 0, 'pressure', 0.5)
+    const sab = wasmvoicecfgtosab(voices)
+    expect(sab[6]).toBe(0.4)
+    expect(sab[7]).toBe(0.5)
+
+    applyvoiceconfig(voices, 1, 'piano', '')
+    applyvoiceconfig(voices, 1, 'hammer', 0.6)
+    const sab2 = wasmvoicecfgtosab(voices)
+    expect(sab2[17]).toBe(0.6)
+  })
+
+  it('portamento applies to synth, algo, and bowed voices', () => {
     const voices = defaultwasmvoicestate()
     applyvoiceconfig(voices, 0, 'retro', '')
     expect(applyvoiceconfig(voices, 0, 'portamento', 0.5)).toBe(false)
     applyvoiceconfig(voices, 1, 'algo2', '')
     expect(applyvoiceconfig(voices, 1, 'port', 0.3)).toBe(true)
     expect(voices[1].portamento).toBe(0.3)
+    applyvoiceconfig(voices, 2, 'violin', '')
+    expect(applyvoiceconfig(voices, 2, 'portamento', 0.15)).toBe(true)
+    expect(voices[2].portamento).toBe(0.15)
   })
 
   it('type changes preserve envelope and portamento', () => {
@@ -324,10 +397,10 @@ describe('wasmvoiceconfig', () => {
     expect(cfg[2]).toBe(0.5)
     expect(cfg[3]).toBe(0.01)
     expect(cfg[5]).toBe(0)
-    expect(cfg[6]).toBe(0.14)
-    expect(cfg[7]).toBe(0.22)
-    expect(cfg[8]).toBe(0.68)
-    expect(cfg[9]).toBe(0.48)
+    expect(cfg[6]).toBe(0)
+    expect(cfg[7]).toBe(0)
+    expect(cfg[8]).toBe(0)
+    expect(cfg[9]).toBe(0)
   })
 
   it('initwasmvoicesab seeds SYNTH square defaults on sab', () => {

@@ -28,6 +28,8 @@ Synthesized drum kit. Each file provides one or more drum sounds with trigger fu
 | 7 | Low tom | `lowtomtrigger` |
 | 8 | Low woodblock | `lowwoodblocktrigger` |
 | 9 | Bass | `basstrigger` |
+| 10 | Crash | `#play k` |
+| 11 | Ride | `#play r` |
 
 ## Backend split (Daisy vs archived Maximilian)
 
