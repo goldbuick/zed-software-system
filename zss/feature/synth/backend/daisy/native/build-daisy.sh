@@ -78,6 +78,7 @@ DAISY_CPPS=(
   "$DAISY_SRC/PhysicalModeling/modalvoice.cpp"
   "$DAISY_SRC/PhysicalModeling/resonator.cpp"
   "$DAISY_SRC/PhysicalModeling/stringvoice.cpp"
+  "$DAISY_SRC/Synthesis/fm2.cpp"
   "$DAISY_SRC/Synthesis/oscillator.cpp"
   "$DAISY_SRC/Utility/dcblock.cpp"
   "$DAISY_LGPL_SRC/Dynamics/compressor.cpp"

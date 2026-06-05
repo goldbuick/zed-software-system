@@ -222,6 +222,10 @@ struct ZssVoice
   float         guitarprev[4]  = {-1.f, -1.f, -1.f, -1.f};
   float         guitarbodymix  = 0.38f;
   float         guitarpick     = 0.35f;
+  float         sosvibramp     = 0.f;
+  bool          windgateprev   = false;
+  float         organvibphase  = 0.f;
+  Fm2           epfm;
 };
 
 /** Schroeder-style comb for reverb predelay */

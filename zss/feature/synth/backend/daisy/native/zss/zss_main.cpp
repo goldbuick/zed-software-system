@@ -272,29 +272,37 @@ float stringmachinevoice(ZssVoice &v, float hz, float envout, float detunecents,
   v.stringviblfo.SetAmp(1.f);
   const float viblfo = v.stringviblfo.Process() * (vibcents / 1200.f);
 
+  const float pwmmod = std::pow(clampf(pwmdepth, 0.f, 1.f), 0.72f);
   v.stringpwmlfo.SetFreq(0.75f);
   v.stringpwmlfo.SetWaveform(Oscillator::WAVE_SQUARE);
   v.stringpwmlfo.SetAmp(1.f);
-  const float pwmfm = v.stringpwmlfo.Process() * pwmdepth * 0.004f;
+  const float pwmfm = v.stringpwmlfo.Process() * pwmmod * 0.0045f;
+
+  v.sparklemod.SetFreq(0.12f + detunecents * 0.015f);
+  v.sparklemod.SetWaveform(Oscillator::WAVE_SIN);
+  v.sparklemod.SetAmp(1.f);
+  const float ensemble = v.sparklemod.Process() * 0.0018f;
 
   const float detmul = std::pow(2.f, detunecents / 1200.f);
   const float hz1 = hz * (1.f + viblfo);
-  const float hz2 = hz * detmul * (1.f + pwmfm);
+  const float hz2 = hz * detmul * (1.f + pwmfm + ensemble);
 
   const float vco1 = oscbasicwave(v.synthosc, 3, hz1, 1.f);
   const float vco2 = oscbasicwave(v.synthmod, 3, hz2, 1.f);
   float sig = (vco1 + vco2) * 0.5f;
-  sig += oscbasicwave(v.algoops[0], 3, hz * 0.5f, 1.f) * kStringSubOctaveMix;
+  sig += oscbasicwave(v.algoops[0], 3, hz * 0.5f * (1.f - ensemble * 0.3f), 1.f) *
+         kStringSubOctaveMix;
   sig /= (1.f + kStringSubOctaveMix);
 
   const float kf = std::pow(clampf(hz / 440.f, 0.25f, 4.f), 0.38f);
   const float basecut = 520.f + kf * 2100.f;
-  const float filtenv = envout * 600.f * filterscale;
+  const float atkboost = clampf(envout * 2.5f, 0.f, 1.f);
+  const float filtenv = envout * (650.f + atkboost * 450.f) * filterscale;
   const float cutoff =
       clampf((basecut + filtenv) * (0.75f + filterscale * 0.5f), 400.f,
              g_engine.sample_rate * 0.33f);
   v.stringlp.SetFreq(cutoff);
-  v.stringlp.SetRes(0.12f);
+  v.stringlp.SetRes(0.12f + filterscale * 0.08f);
   v.stringlp.SetDrive(1.f);
   v.stringlp.Process(sig);
   float out = v.stringlp.Low();

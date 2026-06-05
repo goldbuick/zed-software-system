@@ -27,6 +27,8 @@ const JEST_PATHS = [
   'zss/feature/synth/backend/wasm/__tests__/adsrenvcurve.test.ts',
 ]
 
+const SOS_VOICE_GATE = 'yarn test:sos-voices'
+
 const PLAYWRIGHT_FULL: { name: string; cmd: string }[] = [
   { name: 'pitch-stability', cmd: 'yarn test:pitch-stability:full' },
   { name: 'play-drum-balance', cmd: 'yarn test:play-drum-balance:full' },
@@ -57,6 +59,14 @@ async function main() {
       `yarn jest ${JEST_PATHS.join(' ')} --verbose`,
       EXEC_GATE_TIMEOUT_MS * 2,
     ),
+  )
+  if (!reports[reports.length - 1].pass) {
+    printsummary(reports)
+    process.exit(1)
+  }
+
+  reports.push(
+    runstep('sos-voices', SOS_VOICE_GATE, EXEC_RENDER_PARITY_TIMEOUT_MS),
   )
   if (!reports[reports.length - 1].pass) {
     printsummary(reports)

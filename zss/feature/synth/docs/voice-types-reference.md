@@ -219,7 +219,7 @@ Use **`env1`–`env4`** for per-operator shaping; use voice-level **`env`** for 
 
 ## 5. `string` (`STRING_VOICE` algo 0)
 
-Daisy WASM only. SOS Synth Secrets string-machine pad (not sampled orchestra): two detuned polyBLEP saws, triangle vibrato on VCO1, square-LFO pitch mod on VCO2 (PWM emulation), key-follow LP with filter envelope, violin-body peaks, light bow noise.
+Daisy WASM only. SOS Synth Secrets string-machine pad (not sampled orchestra): two detuned polyBLEP saws, triangle vibrato on VCO1, square-LFO pitch mod on VCO2 (PWM emulation), slow ensemble detune LFO, key-follow LP with attack-boosted filter envelope, violin-body peaks, light bow noise.
 
 ### User-configurable
 
@@ -264,7 +264,7 @@ Selecting `#synth pluck` resets timbre params to the defaults above.
 
 ## 7. Wind — `flute` / `clarinet` / `brass` / `panpipe` (`WIND_VOICE`)
 
-Daisy WASM only. SOS wind-instruments model: breath noise + LP body filter; algo selects waveform (flute saw+tri, clarinet square, brass saw+pressure brightness, panpipe multi-pipe detune).
+Daisy WASM only. Formant-filtered excitation + breath burst on attack + delayed vibrato; algo selects waveform and formant ratios (flute saw+tri, clarinet square, brass saw with pressure-driven brightness/resonance, panpipe multi-pipe detune with amplitude rolloff).
 
 | Param | Value | Default |
 |-------|-------|---------|
@@ -277,7 +277,7 @@ Daisy WASM only. SOS wind-instruments model: breath noise + LP body filter; algo
 
 ## 8. Piano — `piano` / `epiano` (`PIANO_VOICE`)
 
-Daisy WASM only. Tricord body + hammer sparkle; `#play` writes fixed velocity `0.75` to SAB slot `base+4`.
+Daisy WASM only. Tricord body with stretched keyboard tuning + soundboard resonances + hammer sparkle; `epiano` uses DaisySP `Fm2` tine model. `#play` writes fixed velocity `0.75` to SAB slot `base+4`.
 
 | Param | Value | Default (piano) |
 |-------|-------|-----------------|
@@ -290,7 +290,7 @@ Daisy WASM only. Tricord body + hammer sparkle; `#play` writes fixed velocity `0
 
 ## 9. Timpani — `timpani` (`TIMPANI_VOICE`)
 
-Daisy WASM only. Pitched membrane (`doot`-style sine) with pitch bend on decay; not a `#play` drum char.
+Daisy WASM only. DaisySP `ModalVoice` membrane with pitch scoop on strike; not a `#play` drum char.
 
 | Param | Value | Default |
 |-------|-------|---------|
@@ -303,7 +303,7 @@ Daisy WASM only. Pitched membrane (`doot`-style sine) with pitch bend on decay; 
 
 ## 10. Bowed — `violin` / `viola` (`BOWED_VOICE`)
 
-Daisy WASM only. Slow-attack saw + bow noise + body formants + vibrato. **`port` applied.**
+Daisy WASM only. Saw + bow noise + body formants + **delayed vibrato** (~300 ms after note-on). **`port` applied.**
 
 | Param | Value | Default |
 |-------|-------|---------|
@@ -329,7 +329,7 @@ Daisy WASM only. `StringVoice` strike + pick burst + body peak; algo 0 = nylon, 
 
 ## 12. Organ — `tonewheel` / `drawbar` (`ORGAN_VOICE`)
 
-Daisy WASM only. Summed harmonic drawbars + key click on gate rise; `tonewheel` uses fixed registration, `drawbar` uses live `drawbar` param.
+Daisy WASM only. Summed harmonic drawbars (9-level mapping on `drawbar` algo) + scanner vibrato + key click on gate rise; `tonewheel` uses fixed registration, `drawbar` uses live `drawbar` param. Leslie not modeled — use `#synth vibrato` / `#synth echo` FX.
 
 | Param | Value | Default |
 |-------|-------|---------|

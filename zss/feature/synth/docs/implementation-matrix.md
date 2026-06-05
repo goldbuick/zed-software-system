@@ -46,12 +46,12 @@ Enum: [`shared/sourcetype.ts`](../shared/sourcetype.ts). Dispatch: `VoiceType` i
 | `string` | `STRING_VOICE` (algo 0) | — (Daisy-only) | SOS ensemble (`stringmachinevoice`) | — | Subtractive string-machine | cpp `stringmachinevoice()` |
 | `pluck` | `STRING_VOICE` (algo 1) | — (Daisy-only) | `StringVoice` strike | — | Physical modeling | cpp `processvoice()` |
 | `drip` | `DRIP_VOICE` | — (Daisy-only) | `Drip` | — | Physical modeling | cpp `processvoice()` |
-| `flute`–`panpipe` | `WIND_VOICE` | — | `windvoice()` SOS wind | — | Subtractive + breath noise | cpp `zss_sosvoices.cpp` |
-| `piano`/`epiano` | `PIANO_VOICE` | — | `pianovoice()` | — | FM-ish hammer + LP body | cpp `zss_sosvoices.cpp` |
-| `timpani` | `TIMPANI_VOICE` | — | `timpanivoice()` | — | Membrane / pitched drum | cpp `zss_sosvoices.cpp` |
-| `violin`/`viola` | `BOWED_VOICE` | — | `bowedvoice()` | — | Subtractive bowed | cpp `zss_sosvoices.cpp` |
+| `flute`–`panpipe` | `WIND_VOICE` | — | `windvoice()` formant bank + breath burst | — | Subtractive + formants | cpp `zss_sosvoices.cpp` |
+| `piano`/`epiano` | `PIANO_VOICE` | — | `pianovoice()` + `Fm2` on epiano | — | FM + `Fm2` tine | cpp `zss_sosvoices.cpp` |
+| `timpani` | `TIMPANI_VOICE` | — | `timpanivoice()` `ModalVoice` | — | Physical modeling | cpp `zss_sosvoices.cpp` |
+| `violin`/`viola` | `BOWED_VOICE` | — | `bowedvoice()` delayed vibrato | — | Subtractive bowed | cpp `zss_sosvoices.cpp` |
 | `nylon`/`steel` | `GUITAR_VOICE` | — | `guitarvoice()` + `StringVoice` | — | Physical modeling | cpp `zss_sosvoices.cpp` |
-| `tonewheel`/`drawbar` | `ORGAN_VOICE` | — | `organvoice()` | — | Additive drawbars | cpp `zss_sosvoices.cpp` |
+| `tonewheel`/`drawbar` | `ORGAN_VOICE` | — | `organvoice()` scanner vibrato + drawbars | — | Additive drawbars | cpp `zss_sosvoices.cpp` |
 
 **SYNTH sub-modes** ([`wasmosctype.ts`](../backend/wasm/wasmosctype.ts)): basic waves, pulse/PWM, AM, FM, fat.
 
@@ -138,6 +138,7 @@ flowchart LR
 | DaisySP category | Used in ZSS runtime | Notes |
 |------------------|---------------------|-------|
 | `Oscillator` | Yes | Voices, FX LFOs, razzle vibrato/hiss, custom drums |
+| `Fm2` | Yes | `#synth epiano` (algo 1) tine model |
 | `Adsr` | Yes | Gated voices/algo |
 | `Decimator`, `Overdrive`, `Svf`, `Phasor` | Yes | Voice FX (Tier 1–2 swaps) |
 | `DelayLine` | Yes | Echo FX |
@@ -149,7 +150,7 @@ flowchart LR
 | `Compressor` (LGPL) | Yes | Daisy main bus only |
 | `HiHat` | No | Reverted — tick/tweet kept custom |
 | `SyntheticSnareDrum` | No | Fallback if AnalogSnare presets insufficient |
-| `Fm2`, etc. | No | Future candidates (`KarplusString` / `Drip` wired — see Table 1) |
+| `KarplusString` (direct) | No | Used internally via `StringVoice` |
 
 ---
 
@@ -252,6 +253,8 @@ flowchart LR
 | `pluck` | `StringVoice` | **Done** (Daisy-only, algo 1) | `structure`/`brightness`/`damping`/`accent` via SAB |
 | `bells` | `ModalVoice` + sparkle FM | **Done** (Daisy `BELLS` slot) | `modalvoice.cpp`, `resonator.cpp` |
 | `drip` | `Drip` | **Done** (Daisy-only) | `drip.cpp` |
+| `epiano` | `Fm2` | **Done** (algo 1) | `fm2.cpp` |
+| `timpani` | `ModalVoice` | **Done** | `modalvoice.cpp` |
 
 ```mermaid
 flowchart TB
@@ -272,4 +275,4 @@ flowchart TB
   phase2voices --> doc
 ```
 
-Recommendation: core simplify-first swaps are complete; optional follow-ups include `Fm2`, bitcrush on `Decimator`, and LGPL `Compressor`.
+Recommendation: core simplify-first swaps are complete; optional follow-ups include bitcrush on `Decimator` and LGPL `Compressor` wiring cleanup.

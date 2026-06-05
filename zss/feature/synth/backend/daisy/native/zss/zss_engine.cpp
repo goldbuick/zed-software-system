@@ -52,6 +52,7 @@ void initvoice(ZssVoice& v, float sr)
   v.modalvoice.SetBrightness(0.5f);
   v.modalvoice.SetDamping(0.5f);
   v.modalvoice.SetAccent(0.8f);
+  v.epfm.Init(sr);
 }
 
 void initdaisydrums(float sr)
