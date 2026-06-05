@@ -266,6 +266,9 @@ const DOOT_RATE = 10
 /** Agent player ids: main-thread vm:doot from `second` (on/off via heavy worker messages). */
 const agentdootids = new Set<string>()
 
+/** Keepalive doots only after confirmed login (avoids zombie active sessions on refresh). */
+let loggedin = false
+
 // stable unique id (CLI mode injects via registerSetPlayerId)
 let myplayerid = readsession('PLAYER') ?? createpid()
 writesession('PLAYER', myplayerid)
@@ -350,6 +353,7 @@ export const register = createdevice(
       }
       case 'sessionreset':
         agentdootids.clear()
+        loggedin = false
         break
       case 'ackoperator':
         // reset display
@@ -383,6 +387,7 @@ export const register = createdevice(
         break
       case 'acklogin':
         if (message.data) {
+          loggedin = true
           // hide terminal
           registerterminalclose(register, myplayerid)
           // signal sim loaded
@@ -409,6 +414,7 @@ export const register = createdevice(
             }
           })
         } else {
+          loggedin = false
           doasync(register, message.player, async () => {
             await writeclilink()
             writepages()
@@ -899,10 +905,12 @@ export const register = createdevice(
         ++keepalive
         if (keepalive >= DOOT_RATE) {
           keepalive -= DOOT_RATE
-          vmdoot(register, myplayerid)
-          agentdootids.forEach((agentid) => {
-            vmdoot(register, agentid)
-          })
+          if (loggedin) {
+            vmdoot(register, myplayerid)
+            agentdootids.forEach((agentid) => {
+              vmdoot(register, agentid)
+            })
+          }
         }
         break
       case 'inspector': {
