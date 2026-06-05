@@ -747,7 +747,6 @@ export function createchip(
             }
           }
         }
-        // console.info('zap', deepcopy(flags.lb))
       }
     },
     restore(label) {
@@ -763,7 +762,6 @@ export function createchip(
             }
           }
         }
-        // console.info('restore', deepcopy(flags.lb))
       }
     },
     getcase() {

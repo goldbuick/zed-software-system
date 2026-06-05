@@ -44,7 +44,6 @@ export function handlesearch(vm: DEVICE, message: MESSAGE): void {
 }
 
 export function handlelogout(vm: DEVICE, message: MESSAGE): void {
-  console.info('___#### VM => logout', message.player)
 
   // grab the current board the player is on
   const currentboard = memoryreadplayerboard(message.player)
@@ -88,7 +87,6 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
   } = message.data ?? {}
 
   if (memoryisoperator(message.player)) {
-    console.info('VM => storage', flags)
     memorysetcommandpermissions(
       bannedtokens ?? [],
       rolebytoken ?? {},

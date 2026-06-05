@@ -351,10 +351,10 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
       } else {
         apilog(SOFTWARE, player, `hosting topic ${subscribetopic}`)
       }
-      const peerid = networkpeer?.id
-      if (peerid) {
+      const openpeerid = networkpeer?.id
+      if (openpeerid) {
         doasync(SOFTWARE, player, async () => {
-          await znsautopublishpeer(peerid, player)
+          await znsautopublishpeer(openpeerid, player)
         })
       }
     })

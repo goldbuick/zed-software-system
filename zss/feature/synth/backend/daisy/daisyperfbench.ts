@@ -82,7 +82,5 @@ export async function rundaisyperfbench(
 }
 
 if (process.env.ZSS_DAISY_BENCH === '1') {
-  void rundaisyperfbench().then((result) => {
-    console.info('daisy perf bench', result)
-  })
+  void rundaisyperfbench()
 }

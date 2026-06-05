@@ -238,7 +238,6 @@ export function memorytickmain(
           if (play) {
             // dispatch play on board tick (ZZT-style queue)
             synthplay(SOFTWARE, '', board.id, play)
-            console.info('play queue', board.id, play)
           }
           if (dec > 0) {
             queue[0] = ['', dec]

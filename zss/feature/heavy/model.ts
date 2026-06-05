@@ -503,7 +503,6 @@ export async function modelgenerate(
   systemprompt: string,
   messages: Message[],
   onworking: (message: string) => void,
-  promptlogging = false,
 ): Promise<MODEL_RESULT> {
   const cfg = heavyllmresolvedrow()
   if (cfg.backend !== 'causal_lm') {
@@ -523,18 +522,6 @@ export async function modelgenerate(
   ]
 
   const input = applychattemplate(tokenizer, convo)
-
-  if (promptlogging) {
-    const decoded = tokenizer.batch_decode([input.input_ids], {
-      skip_special_tokens: false,
-    })
-    console.info(
-      '%c[heavy] decoded input:\n%c%s',
-      'color: purple; font-weight: bold',
-      'color: red',
-      decoded.join(''),
-    )
-  }
 
   const onworkingthrottled = throttle(onworking, TOAST_THROTTLE_MS)
   const streamer = new TextStreamer(tokenizer, {
@@ -568,7 +555,6 @@ export async function modelgenerategemma4(
   systemprompt: string,
   messages: (Message & { name?: string })[],
   onworking: (message: string) => void,
-  promptlogging = false,
 ): Promise<MODEL_GENERATE_GEMMA_RESULT> {
   const cfg = heavyllmresolvedrow()
   if (cfg.backend !== 'gemma4') {
@@ -599,15 +585,6 @@ export async function modelgenerategemma4(
       add_generation_prompt: true,
     } as Parameters<typeof processor.apply_chat_template>[1],
   ) as string
-
-  if (promptlogging) {
-    console.info(
-      '%c[heavy] gemma templated prompt:\n%c%s',
-      'color: purple; font-weight: bold',
-      'color: red',
-      promptstring,
-    )
-  }
 
   const input = await processor(promptstring, undefined, undefined, {
     add_special_tokens: false,

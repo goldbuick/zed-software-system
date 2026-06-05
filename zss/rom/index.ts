@@ -8,7 +8,6 @@ export function romread(address: string): MAYBE<string> {
   const withaddress = NAME(
     address.trim().replaceAll('\n', '').replace(/:+$/, ''),
   )
-  // console.info(withaddress)
   const maybecontent = romcontent[withaddress]
   if (ispresent(maybecontent)) {
     return maybecontent

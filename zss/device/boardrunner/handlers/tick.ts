@@ -9,11 +9,9 @@ import {
 import {
   BOUNDARY_DOC,
   assignedboundaries,
-  incfirsttick,
   incmemorysyncaccess,
   memorysyncaccess,
   playersonassignedboard,
-  readfirsttick,
   readworkerboundarypipe,
   resetfirsttick,
 } from 'zss/device/boardrunner/state'
@@ -116,15 +114,6 @@ export function handletick(device: DEVICE, message: MESSAGE): void {
       vmboardrunneraccess(device, runner, assignedboard, b.id)
     }
     return
-  }
-
-  // temp logging to know we are ticking
-  const tickcount = readfirsttick()
-  if (tickcount < 50) {
-    if (tickcount % 10 === 0) {
-      console.info(`${self.name} $$$ TICKING\n${runner} -> ${assignedboard}`)
-    }
-    incfirsttick()
   }
 
   // list of boards that we need to TICK

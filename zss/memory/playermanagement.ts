@@ -55,7 +55,6 @@ export function memorymoveplayertoboard(
   // current board
   const currentboard = memoryreadplayerboard(player)
   if (!ispresent(book) || !ispresent(currentboard)) {
-    console.info('thud', 'no book or current board')
     return false
   }
 
@@ -65,18 +64,15 @@ export function memorymoveplayertoboard(
   // player element
   const element = memoryreadobject(currentboard, player)
   if (!memoryboardelementisobject(element)) {
-    console.info('thud', 'not an object element ')
     return false
   }
   if (!element?.id) {
-    console.info('thud', 'no element id')
     return false
   }
 
   // dest board
   const destboard = memoryreadboardbyaddress(board)
   if (!ispresent(destboard)) {
-    console.info('thud', 'no dest board')
     return false
   }
 
@@ -95,7 +91,6 @@ export function memorymoveplayertoboard(
   if (!ispresent(maybeobject) && !memoryboardelementisobject(maybeobject)) {
     const terraincollision = memoryreadelementstat(maybeobject, 'collision')
     if (memorycheckcollision(COLLISION.ISWALK, terraincollision)) {
-      console.info('thud', 'blocked by terrain')
       return false
     }
   }

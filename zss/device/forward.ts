@@ -36,7 +36,6 @@ export function shouldforwardonpeerserver(message: MESSAGE): boolean {
   switch (message.target) {
     case 'ready':
     case 'ticktock':
-      // console.info('server blocked', message.target)
       return false
   }
   // todo, don't forward player scoped messages to peers that will block them
@@ -49,7 +48,6 @@ export function shouldforwardonpeerclient(message: MESSAGE): boolean {
     case 'ready':
     case 'second':
     case 'ticktock':
-      // console.info('client blocked', message.target)
       return false
   }
   return true

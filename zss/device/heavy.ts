@@ -53,19 +53,10 @@ async function executeclicommands(
   player: string,
   agentid: string,
   commands: string[],
-  promptloggingenabled: boolean,
 ): Promise<void> {
   for (let i = 0; i < commands.length; ++i) {
     if (commands[i].startsWith('#') || commands[i].startsWith('!')) {
       apilog(heavy, player, '$22 command $7', commands[i])
-    }
-    if (promptloggingenabled) {
-      console.info(
-        '%c[heavy] executing command:\n%c%s',
-        'color: purple; font-weight: bold',
-        'color: green',
-        commands[i],
-      )
     }
     await memoryquery(heavy, agentid, {
       type: 'runcli',
@@ -166,10 +157,9 @@ async function runagentprompt(
   agentname: string,
   prompt: string,
   onworking: (msg: string) => void,
-  promptlogging: string,
+  _promptlogging: string,
   intent?: string,
 ) {
-  const promptloggingenabled = promptlogging === 'on'
   activeagents.add(agentid)
   const history: Agenthistorymessage[] = [{ role: 'user', content: prompt }]
   const usegemma =
@@ -189,20 +179,7 @@ async function runagentprompt(
           context,
           intent,
         )
-        const g = await modelgenerategemma4(
-          systemprompt,
-          history,
-          onworking,
-          promptloggingenabled,
-        )
-        if (promptloggingenabled) {
-          console.info(
-            '%c[heavy] generated response (gemma):\n%c%s',
-            'color: purple; font-weight: bold',
-            'color: orange',
-            g.toolcommandlines.length > 0 ? g.raw : g.text,
-          )
-        }
+        const g = await modelgenerategemma4(systemprompt, history, onworking)
 
         if (g.toolcommandlines.length > 0) {
           history.push({ role: 'assistant', content: g.raw })
@@ -213,12 +190,7 @@ async function runagentprompt(
             (line) => line.trim() !== '#continue',
           )
           if (execcommands.length > 0) {
-            await executeclicommands(
-              player,
-              agentid,
-              execcommands,
-              promptloggingenabled,
-            )
+            await executeclicommands(player, agentid, execcommands)
           }
           history.push({
             role: 'tool',
@@ -251,20 +223,7 @@ async function runagentprompt(
         intent,
       )
 
-      result = await modelgenerate(
-        systemprompt,
-        history,
-        onworking,
-        promptloggingenabled,
-      )
-      if (promptloggingenabled) {
-        console.info(
-          '%c[heavy] generated response:\n%c%s',
-          'color: purple; font-weight: bold',
-          'color: orange',
-          result.text,
-        )
-      }
+      result = await modelgenerate(systemprompt, history, onworking)
 
       history.push({ role: 'assistant', content: result.text })
       const commands = splitresponse(result.text)
@@ -277,12 +236,7 @@ async function runagentprompt(
         break
       }
 
-      await executeclicommands(
-        player,
-        agentid,
-        execcommands,
-        promptloggingenabled,
-      )
+      await executeclicommands(player, agentid, execcommands)
 
       const executed = execcommands.join('\n')
       history.push({

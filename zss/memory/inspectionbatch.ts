@@ -1,6 +1,6 @@
 import { get as idbget, update as idbupdate } from 'idb-keyval'
 import { parsetarget } from 'zss/device'
-import { apitoast, registercopy, vmcli } from 'zss/device/api'
+import { apierror, apitoast, registercopy, vmcli } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { DIVIDER, zsstexttape, zsszedlinklinechip } from 'zss/feature/zsstextui'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
@@ -18,6 +18,7 @@ import {
 } from './boardlifecycle'
 import { memoryreadelementdisplay } from './bookoperations'
 import { memoryensuresoftwarebook } from './books'
+import { memoryreadoperator } from './session'
 import {
   memoryinspectbgarea,
   memoryinspectchararea,
@@ -215,7 +216,7 @@ export async function memoryinspectbatchcommand(path: string, player: string) {
       })
       break
     default:
-      console.info('unknown batch', batch)
+      apierror(SOFTWARE, memoryreadoperator(), 'inspect', 'unknown batch', batch)
       break
   }
 }

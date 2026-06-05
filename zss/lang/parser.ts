@@ -4,16 +4,12 @@ import {
   IRuleConfig,
   IToken,
   ParserMethod,
-  Rule,
-  generateCstDts,
 } from 'chevrotain'
-import { LANG_DEV, LANG_TYPES } from 'zss/config'
+import { LANG_DEV } from 'zss/config'
 
 import * as lexer from './lexer'
 
 let incIndent = 0
-const enableTracing = LANG_DEV
-const highlight = ['Command', 'lines']
 
 class ScriptParser extends CstParser {
   constructor() {
@@ -27,37 +23,18 @@ class ScriptParser extends CstParser {
     this.performSelfAnalysis()
   }
 
-  PEEK(name: string, match: boolean, ...tokens: IToken[]) {
-    console.info(
-      name,
-      tokens.map((t) => [t.image, t.tokenType]),
-      match,
-    )
-  }
+  PEEK(_name: string, _match: boolean, ..._tokens: IToken[]) {}
 
   RULED<F extends () => void>(
     name: string,
     implementation: F,
     config?: IRuleConfig<CstNode>,
   ): ParserMethod<Parameters<F>, CstNode> {
-    const bold = highlight.some((check) => name.includes(check))
     return this.RULE(
       name,
       () => {
-        const useIndent = incIndent++
-        const prefix = useIndent.toString().padStart(3)
-        const style = bold ? 'font-weight: bold;' : ''
-        if (enableTracing && !this.RECORDING_PHASE) {
-          const tokens: string[] = [this.LA(1), this.LA(2), this.LA(3)].map(
-            (item) =>
-              `[${item.tokenType.name} ${item.image.replaceAll('\n', '\\n')}]`,
-          )
-          console.info(`${prefix}%c> ${name} ${tokens.join(' ')}`, style)
-        }
+        incIndent++
         implementation()
-        if (enableTracing && !this.RECORDING_PHASE) {
-          console.info(`${prefix}%c< ${name} `, style)
-        }
         incIndent--
       },
       config,
@@ -840,8 +817,3 @@ class ScriptParser extends CstParser {
 
 export const parser = new ScriptParser()
 
-if (LANG_TYPES) {
-  const productions: Record<string, Rule> = parser.getGAstProductions()
-  const dtsstring = generateCstDts(productions)
-  console.info(dtsstring)
-}

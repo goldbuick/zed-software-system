@@ -191,11 +191,9 @@ export async function renderdaisylevelscenario(
     synth.synthreplay(ticks, rendersec)
   }
 
-  console.warn('[daisy render] offline render start')
   synth.prepareofflinerender()
 
   const buffer = await offlinectx.startRendering()
-  console.warn('[daisy render] offline render done')
   synth.destroy()
 
   return {

@@ -488,7 +488,6 @@ const bridge = createdevice('bridge', [], (message) => {
             // @ts-expect-error wow?
             function (activestate: boolean) {
               broadcastlive = activestate
-              console.info({ activestate })
             },
           )
 

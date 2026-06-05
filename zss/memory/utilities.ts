@@ -258,7 +258,6 @@ export async function memorycompressbooks(books: BOOK[]) {
   }
 
   await ensurezstdwasm()
-  console.info('saved', jsonbooks)
 
   const zip = new JSZip()
   for (let i = 0; i < books.length; ++i) {

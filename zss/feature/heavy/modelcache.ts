@@ -1,3 +1,6 @@
+import { apierror } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
+
 const CACHE_NAME = 'zss-heavy-models'
 
 const inflight = new Map<string, Promise<Response>>()
@@ -13,7 +16,7 @@ async function opencache(): Promise<Cache | undefined> {
   try {
     return await caches.open(CACHE_NAME)
   } catch (e) {
-    console.warn('[modelcache] Cache Storage unavailable:', e)
+    apierror(SOFTWARE, '', 'modelcache', 'Cache Storage unavailable:', e)
     return undefined
   }
 }
@@ -30,7 +33,7 @@ async function fetchandstore(
     try {
       await cache.put(request, response.clone())
     } catch (e) {
-      console.warn('[modelcache] cache.put failed:', e)
+      apierror(SOFTWARE, '', 'modelcache', 'cache.put failed:', e)
     }
   }
   return response

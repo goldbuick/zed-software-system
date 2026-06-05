@@ -12,18 +12,11 @@ export function memoryboundaryset(id: string, value: any) {
 }
 
 export function memoryboundarydelete(id: string) {
-  // const value = boundaries.get(id)
-  // console.info(
-  //   `${self.name} $$$ DELETE BOUNDARY ${id} -> [${JSON.stringify(value, null, 2)}]`,
-  // )
   boundaries.delete(id)
 }
 
 export function memoryboundaryalloc(value: any, maybeid?: string): string {
   const id = maybeid && isstring(maybeid) ? maybeid : createsid()
-  // console.info(
-  //   `${self.name} $$$ ALLOC BOUNDARY ${id} -> [${JSON.stringify(value, null, 2)}]`,
-  // )
   boundaries.set(id, value)
   return id
 }

@@ -1,5 +1,5 @@
 import { parsetarget } from 'zss/device'
-import { apitoast } from 'zss/device/api'
+import { apierror, apitoast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { boardremix } from 'zss/feature/boardremix'
 import { DIVIDER, zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
@@ -13,6 +13,7 @@ import { PT } from 'zss/words/types'
 import { memoryreadboardbyaddress } from './boards'
 import { createinspectionconfig } from './inspectionconfig'
 import { memoryreadplayerboard } from './playermanagement'
+import { memoryreadoperator } from './session'
 
 type REMIX_CONFIG = {
   stat: string
@@ -66,7 +67,7 @@ export async function memoryinspectremixcommand(path: string, player: string) {
       break
     }
     default:
-      console.info('unknown remix', remix)
+      apierror(SOFTWARE, memoryreadoperator(), 'inspect', 'unknown remix', remix)
       break
   }
 }

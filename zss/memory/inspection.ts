@@ -1,6 +1,7 @@
 import { objectKeys } from 'ts-extras'
 import { parsetarget } from 'zss/device'
 import {
+  apierror,
   registercopy,
   registereditoropen,
   vmclearscroll,
@@ -65,7 +66,7 @@ import {
   memoryelementtodisplayprefix,
 } from './rendering'
 import { memoryreadboardelementruntime } from './runtimeboundary'
-import { memoryreadbookbysoftware } from './session'
+import { memoryreadbookbysoftware, memoryreadoperator } from './session'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -693,7 +694,7 @@ export function memoryinspectcommand(path: string, player: string) {
       })
       break
     default:
-      console.info('unknown inspect', inspect)
+      apierror(SOFTWARE, memoryreadoperator(), 'inspect', 'unknown inspect', inspect)
       break
   }
 }

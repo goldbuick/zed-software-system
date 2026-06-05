@@ -178,7 +178,6 @@ export function handleloader(vm: DEVICE, message: MESSAGE): void {
     format: ef.format,
   })
   if (memoryreadconfig('loaderlogging') === 'on') {
-    console.info('loader event', eventname, format, arg, content)
     apilog(vm, message.player, `loader event ${eventname} ${format}`)
   }
   switch (format) {

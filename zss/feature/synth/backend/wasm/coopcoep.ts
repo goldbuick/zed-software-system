@@ -1,3 +1,6 @@
+import { apierror } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
+
 const SW_URL = '/wasm/coep/enable-threads.js'
 const RELOAD_GUARD_KEY = 'zss_wasm_coep_reload'
 
@@ -52,7 +55,7 @@ export async function ensurewasmcoep(): Promise<void> {
       sessionStorage.removeItem(RELOAD_GUARD_KEY)
       coepready = window.crossOriginIsolated
     } catch (err) {
-      console.warn('WASM COOP/COEP service worker registration failed', err)
+      apierror(SOFTWARE, '', 'wasm', 'COOP/COEP service worker registration failed', err)
     }
   })()
 

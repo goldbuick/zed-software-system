@@ -1,14 +1,14 @@
+import { apierror } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
 import {
   MAYBE,
-  deepcopy,
   isnumber,
   ispresent,
   isstring,
 } from 'zss/mapping/types'
 import { memoryevaldir } from 'zss/memory/boarddirection'
-import { memoryexportbookasjson } from 'zss/memory/bookoperations'
-import { memoryreadbookbysoftware } from 'zss/memory/session'
-import { BOARD, BOARD_ELEMENT, BOOK, MEMORY_LABEL } from 'zss/memory/types'
+import { memoryreadoperator } from 'zss/memory/session'
+import { BOARD, BOARD_ELEMENT, BOOK } from 'zss/memory/types'
 
 import {
   STR_COLOR,
@@ -69,13 +69,12 @@ type ARG_TYPE_VALUES<T extends ARG_TYPES> = {
 }
 
 function didexpect(msg: string, value: any, words: WORD[]) {
-  console.info(
-    `${self.name} MEMORY STATE ON CRASH`,
-    deepcopy(
-      memoryexportbookasjson(memoryreadbookbysoftware(MEMORY_LABEL.MAIN)),
-    ),
-  )
-  console.info(
+  apierror(
+    SOFTWARE,
+    memoryreadoperator(),
+    'reader',
+    msg,
+    JSON.stringify(value),
     words,
     READ_CONTEXT.element,
     READ_CONTEXT.elementid,

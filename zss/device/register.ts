@@ -313,7 +313,6 @@ export const register = createdevice(
       case 'second':
       case 'workstatus':
       case 'sessionreset':
-        // console.info(message)
         break
       default:
         if (message.player !== myplayerid) {

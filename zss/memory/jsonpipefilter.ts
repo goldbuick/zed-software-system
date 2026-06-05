@@ -7,11 +7,8 @@ const TERRAIN_EMIT_SKIP_PROP =
 
 /** Return false for paths that should not be synced over jsonpipe. */
 export function memoryrootshouldemitpath(path: string): boolean {
-  const pass =
+  return (
     EMIT_SKIP_SEGMENT.test(path) === false &&
     TERRAIN_EMIT_SKIP_PROP.test(path) === false
-  // if (!pass) {
-  //   console.info('memoryrootshouldemitpath', 'skipping', path)
-  // }
-  return pass
+  )
 }

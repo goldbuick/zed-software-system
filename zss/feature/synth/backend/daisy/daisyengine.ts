@@ -1,3 +1,5 @@
+import { apierror } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
 import { MAYBE } from 'zss/mapping/types'
 
 import type { SabEngine } from '../shared/sabengine'
@@ -82,19 +84,6 @@ function pushdaisymainvolumes(maxi: DaisyEngine) {
     compbypass,
     scbypass,
   ])
-}
-
-function logdaisybypassflagsonce() {
-  const comp = isdaisymaincompbypass()
-  const sc = isdaisysidechainbypass()
-  if (!comp && !sc) {
-    return
-  }
-  console.warn(
-    '[daisy] main bus bypass:',
-    comp ? 'compressor OFF' : 'compressor on',
-    sc ? 'sidechain OFF' : 'sidechain on',
-  )
 }
 
 function wirebroadcasttap(maxi: DaisyEngine) {
@@ -188,23 +177,16 @@ function waitfordaisyready(
       }
       if (data?.zss_dsp_stage) {
         laststage = data.zss_dsp_stage
-        if (import.meta.env.DEV) {
-          console.warn('[daisy boot]', data.zss_dsp_stage)
-        }
         return
       }
       if (data?.zss_dsp_ready) {
-        if (import.meta.env.DEV) {
-          console.warn('[daisy boot]', {
-            buildid: DAISY_BUILD_ID,
-            razzletag: data.zss_razzle_tag,
-            expect: 'razzletag === 2',
-          })
-          if (data.zss_razzle_tag !== 2) {
-            console.error(
-              '[daisy boot] stale wasm — run yarn build:daisy then hard refresh',
-            )
-          }
+        if (data.zss_razzle_tag !== 2) {
+          apierror(
+            SOFTWARE,
+            '',
+            'daisy',
+            'stale wasm — run yarn build:daisy then hard refresh',
+          )
         }
         cleanup()
         resolve()
@@ -242,35 +224,10 @@ function wireworkletkeepalive(ctx: AudioContext, worklet: AudioWorkletNode) {
   daisykeepalive = keepalive
 }
 
-function wiredevmeters(worklet: AudioWorkletNode) {
-  if (!import.meta.env.DEV) {
-    return
-  }
-  worklet.port.onmessage = (event: MessageEvent) => {
-    const data = event.data as {
-      zss_dsp_meter?: {
-        compgrdb: number
-        duck: number
-        drypeak: number
-      }
-    }
-    if (data?.zss_dsp_meter) {
-      console.warn('[daisy meter]', data.zss_dsp_meter)
-    }
-  }
-}
-
 async function bootdaisyoncontext(ctx: BaseAudioContext): Promise<DaisyEngine> {
   await ensurewasmcoep()
   const wasmurl = daisyasseturl('zss_daisy.wasm')
   const processorurl = daisyasseturl('daisy-processor.js')
-  if (import.meta.env.DEV) {
-    console.warn('[daisy boot] fetching', {
-      wasmurl,
-      processorurl,
-      buildid: DAISY_BUILD_ID,
-    })
-  }
   await ctx.audioWorklet.addModule(processorurl)
 
   const wasmresponse = await fetch(wasmurl, { cache: 'no-store' })
@@ -313,7 +270,6 @@ async function bootdaisyoncontext(ctx: BaseAudioContext): Promise<DaisyEngine> {
   const ready = Promise.race([waitfordaisyready(worklet), processorfail])
   worklet.port.postMessage({ zss_boot: 1, wasmbytes: bootbytes }, [bootbytes])
   await ready
-  wiredevmeters(worklet)
 
   const engine: DaisyEngine = {
     audioContext: ctx,
@@ -321,7 +277,6 @@ async function bootdaisyoncontext(ctx: BaseAudioContext): Promise<DaisyEngine> {
   }
   wireoutput(engine)
   const [compbypass, scbypass] = daisymainbussabtail()
-  logdaisybypassflagsonce()
   initwasmmainsab(
     engine,
     daisyplayvolume,

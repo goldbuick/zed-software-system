@@ -338,7 +338,6 @@ function emitlistitembody(sink: MarkdownZedSink, item: Tokens.ListItem) {
 export function parsetokenzsstext(sink: MarkdownZedSink, token: Token) {
   switch (token.type) {
     default:
-      console.info('markdownzsstext unknown', token)
       break
     case 'space':
       break
