@@ -22,7 +22,6 @@ import {
 } from 'zss/memory/permissions'
 import {
   memoryloginplayer,
-  memoryreadplayeractive,
   memoryreadplayerboard,
 } from 'zss/memory/playermanagement'
 import {
@@ -110,7 +109,7 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
     memorysetplayertotoken(message.player, token)
   }
 
-  const reattach = memoryreadplayeractive(message.player)
+  // const reattach = memoryreadplayeractive(message.player)
 
   // attempt to login player
   if (memoryloginplayer(message.player, flags as BOOK_FLAGS)) {
@@ -134,9 +133,8 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
     apilog(vm, memoryreadoperator(), `login from ${message.player}`)
     vm.replynext(message, 'acklogin', true)
 
-    if (reattach) {
-      handlegadgetdesync(vm, message)
-    }
+    // always desync the gadget
+    handlegadgetdesync(vm, message)
   } else {
     vm.replynext(message, 'acklogin', false)
   }
