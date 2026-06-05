@@ -768,13 +768,12 @@ export const ELEMENT_FIRMWARE = createfirmware({
         chip.endofprogram()
         // signal outcome
         vmlogout(SOFTWARE, READ_CONTEXT.elementid)
-        // notify the boardrunner that this player has died immediately
-        // don't wait for the message to be processed by vm
-        // so that we don't risk the player being restarted by external messages
-        const boardrunner = memoryreadboardrunner()
-        if (boardrunner) {
-          boardrunnerlinkdead(SOFTWARE, boardrunner, READ_CONTEXT.elementid)
-        }
+        // immediately safedelete the element
+        memorysafedeleteelement(
+          READ_CONTEXT.board,
+          READ_CONTEXT.element,
+          READ_CONTEXT.timestamp,
+        )
       }
     }
   },

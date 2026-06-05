@@ -26,6 +26,7 @@ import {
 } from './bookoperations'
 import { memoryreadflags } from './flags'
 import { memoryreadplayerboard } from './playermanagement'
+import { trimformatobject, trimmemoryexport } from './trimexport'
 import {
   memoryisoperator,
   memoryreadbookbysoftware,
@@ -249,7 +250,9 @@ export function memoryadminmenu(
 }
 
 export async function memorycompressbooks(books: BOOK[]) {
-  const jsonbooks = books.map(memoryexportbookasjson)
+  const jsonbooks = books.map((book) =>
+    trimmemoryexport(memoryexportbookasjson(book)),
+  )
   if (getclimode()) {
     return JSON.stringify(jsonbooks)
   }
@@ -260,7 +263,7 @@ export async function memorycompressbooks(books: BOOK[]) {
   const zip = new JSZip()
   for (let i = 0; i < books.length; ++i) {
     const book = books[i]
-    const exportedbook = memoryexportbook(book)
+    const exportedbook = trimformatobject(memoryexportbook(book))
     if (exportedbook) {
       // convert to bin
       const bin = packformat(exportedbook)

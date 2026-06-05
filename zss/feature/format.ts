@@ -38,7 +38,7 @@ export function formatobject(
       key = mkey
     }
 
-    if (value !== null) {
+    if (value != null) {
       formatted.push(key, value)
     }
   }

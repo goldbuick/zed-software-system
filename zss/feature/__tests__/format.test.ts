@@ -41,6 +41,11 @@ describe('format', () => {
       expect(formatobject(obj, {}, formatmap)).toEqual(['a', 1])
     })
 
+    it('skips keys where value is undefined', () => {
+      const obj = { a: 1, b: undefined }
+      expect(formatobject(obj, {})).toEqual(['a', 1])
+    })
+
     it('returns undefined for absent obj', () => {
       expect(formatobject(undefined, {})).toBeUndefined()
       expect(formatobject(null, {})).toBeUndefined()

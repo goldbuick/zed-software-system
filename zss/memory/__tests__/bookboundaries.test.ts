@@ -8,6 +8,7 @@ import { creategadgetid } from 'zss/mapping/guid'
 import { ispresent } from 'zss/mapping/types'
 import {
   memoryclearbookcodepage,
+  memoryclearbookflags,
   memorycreatebook,
   memoryexportbookasjson,
   memoryimportbook,
@@ -26,6 +27,7 @@ import {
   memoryreadcodepageruntime,
 } from 'zss/memory/codepageoperations'
 import { BOOK, BOOK_KEYS } from 'zss/memory/types'
+import { trimformatobject, trimmemoryexport } from 'zss/memory/trimexport'
 
 import { memoryresetbooks } from '../session'
 
@@ -112,6 +114,36 @@ describe('book opaque boundaries', () => {
     const root = memoryreadbookflags(book, gadgetowner)
     expect(root.x).toBe(42)
     expect(memoryboundaryget(book.flags[gadgetowner])).toBeDefined()
+  })
+
+  it('export trim drops cleared empty flags but keeps carry-over stats', () => {
+    const book = memorycreatebook([])
+    const cleared = creategadgetid('cleared-player')
+    const kept = creategadgetid('kept-player')
+
+    memorywritebookflag(book, cleared, 'score', 10 as any)
+    memoryclearbookflags(book, cleared)
+
+    memorywritebookflag(book, kept, 'deaths', 2 as any)
+    memorywritebookflag(book, kept, 'highscore', 99 as any)
+
+    const trimmedjson = trimmemoryexport(memoryexportbookasjson(book))
+    expect(trimmedjson.flags[cleared]).toBeUndefined()
+    expect(trimmedjson.flags[kept]).toEqual({ deaths: 2, highscore: 99 })
+
+    const trimmedwire = trimformatobject(wirebookforimport(book))
+    expect(ispresent(trimmedwire)).toBe(true)
+    const packed = packformat(trimmedwire!)
+    expect(packed).toBeDefined()
+
+    memoryboundariesclear()
+    const again = memoryimportbook(unpackformat(packed!))
+    expect(ispresent(again)).toBe(true)
+    expect(again!.flags[cleared]).toBeUndefined()
+    expect(memoryreadbookflags(again, kept)).toEqual({
+      deaths: 2,
+      highscore: 99,
+    })
   })
 
   it('frees nested runtime boundaries when freeing a whole book', () => {
