@@ -24,14 +24,15 @@ export function handlelinkdead(device: DEVICE, message: MESSAGE): void {
     return
   }
 
+  memorylogoutplayer(linkdeadplayer)
+
   // clear player state
   vmclearscroll(device, linkdeadplayer)
-  memorylogoutplayer(linkdeadplayer)
+
+  // push jsonpipe changes
+  pushworkerupdates(device)
 
   // signal logout
   apilog(device, linkdeadplayer, `player ${linkdeadplayer} logout`)
   registerloginready(device, linkdeadplayer)
-
-  // push jsonpipe changes
-  pushworkerupdates(device)
 }

@@ -61,7 +61,6 @@ export function enableaudio() {
       locked = false
       enabled = true
       synthaudioenabled(synthdevice, registerreadplayer())
-      apilog(synthdevice, registerreadplayer(), 'audio is ready')
       try {
         const customnavigator = navigator as CustomNavigator
         if (ispresent(customnavigator.audioSession)) {
@@ -116,8 +115,8 @@ const synthdevice = createdevice('synth', [], (message) => {
       if (message.player !== player) {
         return
       }
-      apilog(synthdevice, message.player, 'audio is enabled!')
       doasync(synthdevice, message.player, async () => {
+        apilog(synthdevice, message.player, 'audio is enabled!')
         await waitfor(2000)
         vmloader(
           synthdevice,

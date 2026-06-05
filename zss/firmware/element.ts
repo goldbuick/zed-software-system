@@ -1,6 +1,7 @@
 import { CHIP } from 'zss/chip'
 import {
   apitoast,
+  boardrunnerlinkdead,
   heavyagentsyncuserdisplay,
   registerstore,
   vmlogout,
@@ -42,7 +43,7 @@ import { memoryreadflags } from 'zss/memory/flags'
 import { memorysendtolog } from 'zss/memory/gamesend'
 import { memoryhaltchip, memoryruncodepage } from 'zss/memory/runtime'
 import { memoryensureboardruntime } from 'zss/memory/runtimeboundary'
-import { memoryreadoperator } from 'zss/memory/session'
+import { memoryreadboardrunner, memoryreadoperator } from 'zss/memory/session'
 import {
   memoryfindplayerforelement,
   memorylistboardnamedelements,
@@ -767,6 +768,13 @@ export const ELEMENT_FIRMWARE = createfirmware({
         chip.endofprogram()
         // signal outcome
         vmlogout(SOFTWARE, READ_CONTEXT.elementid)
+        // notify the boardrunner that this player has died immediately
+        // don't wait for the message to be processed by vm
+        // so that we don't risk the player being restarted by external messages
+        const boardrunner = memoryreadboardrunner()
+        if (boardrunner) {
+          boardrunnerlinkdead(SOFTWARE, boardrunner, READ_CONTEXT.elementid)
+        }
       }
     }
   },

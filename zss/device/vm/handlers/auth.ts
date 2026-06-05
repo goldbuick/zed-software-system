@@ -5,7 +5,6 @@ import {
   boardrunnerlinkdead,
   registerinspector,
   registerloginready,
-  vmclearscroll,
 } from 'zss/device/api'
 import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
 import {
@@ -22,7 +21,6 @@ import {
 } from 'zss/memory/permissions'
 import {
   memoryloginplayer,
-  memorylogoutplayer,
   memoryreadplayeractive,
   memoryreadplayerboard,
 } from 'zss/memory/playermanagement'
@@ -46,6 +44,8 @@ export function handlesearch(vm: DEVICE, message: MESSAGE): void {
 }
 
 export function handlelogout(vm: DEVICE, message: MESSAGE): void {
+  console.info('___#### VM => logout', message.player)
+
   // grab the current board the player is on
   const currentboard = memoryreadplayerboard(message.player)
   if (!ispresent(currentboard)) {
@@ -58,20 +58,17 @@ export function handlelogout(vm: DEVICE, message: MESSAGE): void {
   // notify the boardrunner worker that this is linkdead
   boardrunnerlinkdead(vm, priorelectionrunner, message.player)
 
-  // prevent logout player from being elected as a runner
-  boardrunnerblocked[message.player] = true
-
   // clear tracking state
   delete tracking[message.player]
   delete lastinputtime[message.player]
+
+  // prevent logout player from being elected as a runner
+  boardrunnerblocked[message.player] = true
 
   // grab the current board to validate runner assignment
   if (boardrunnerassignmentvalid(currentboard.id)) {
     boardrunnerelect(currentboard.id)
   }
-
-  // push jsonpipe changes
-  boardrunnerpushupdates(vm)
 }
 
 export function handlelogin(vm: DEVICE, message: MESSAGE): void {
@@ -122,6 +119,9 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
     // start tracking
     tracking[message.player] = 0
     lastinputtime[message.player] = Date.now()
+
+    // unblock the player from being elected as a runner
+    delete boardrunnerblocked[message.player]
 
     // elect a new runner for the login board if necessary
     const currentboard = memoryreadplayerboard(message.player)
