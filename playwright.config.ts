@@ -2,11 +2,20 @@ import { defineConfig, devices } from '@playwright/test'
 
 const allbrowsers = process.env.PLAYWRIGHT_ALL_BROWSERS === '1'
 const includegadgete2e = process.env.PLAYWRIGHT_INCLUDE_GADGET_E2E === '1'
+const includejoine2e = process.env.PLAYWRIGHT_INCLUDE_JOIN_E2E === '1'
+
+const testignore: string[] = []
+if (!includegadgete2e) {
+  testignore.push('**/gadget-inspect-scroll.spec.ts')
+}
+if (!includejoine2e) {
+  testignore.push('**/join-boardrunner-move.spec.ts')
+}
 
 export default defineConfig({
   testDir: 'e2e',
-  // Heavy gadget / inspect / scroll tests: opt in with PLAYWRIGHT_INCLUDE_GADGET_E2E=1 or yarn test:e2e:gadget-scroll
-  testIgnore: includegadgete2e ? [] : ['**/gadget-inspect-scroll.spec.ts'],
+  // Gadget scroll: PLAYWRIGHT_INCLUDE_GADGET_E2E=1. Join multiplayer: PLAYWRIGHT_INCLUDE_JOIN_E2E=1.
+  testIgnore: testignore.length ? testignore : [],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,

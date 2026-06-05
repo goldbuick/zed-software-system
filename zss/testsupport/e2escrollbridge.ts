@@ -1,14 +1,26 @@
 import {
   type E2E_LOADER_NOTIFY,
+  boardrunnerinput,
   vmcli,
   vmgadgetscroll,
   vminspect,
 } from 'zss/device/api'
 import { register, registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
+import { readsubscribetopic } from 'zss/feature/netterminal'
+import { INPUT, LAYER_TYPE } from 'zss/gadget/data/types'
 import { panelscrolltolines } from 'zss/gadget/data/panelitemtext'
 import { useGadgetClient, useTape } from 'zss/gadget/data/state'
 import type { PT } from 'zss/words/types'
+
+export type ZssE2eMoveDir = 'left' | 'right' | 'up' | 'down'
+
+const MOVE_INPUT: Record<ZssE2eMoveDir, INPUT> = {
+  left: INPUT.MOVE_LEFT,
+  right: INPUT.MOVE_RIGHT,
+  up: INPUT.MOVE_UP,
+  down: INPUT.MOVE_DOWN,
+}
 
 export type ZssE2eScrollSnapshot = {
   scrollname: string
@@ -28,6 +40,13 @@ export type ZssE2eBridge = {
   runcli: (line: string) => void
   writetestscroll: (name: string, content: string, chip?: string) => void
   runinspect: (p1: PT, p2: PT) => void
+  /** Host `#joincode` topic; empty until netterminal publishes. */
+  getjointopic: () => string
+  /** Tape workstatus badge text (e.g. `run TITLE`). */
+  getworkstatus: () => string
+  /** Local player sprite from gadget layers, if painted. */
+  getplayersprite: () => { x: number; y: number } | undefined
+  sendmoveinput: (dir: ZssE2eMoveDir) => void
 }
 
 export function installe2ebridge(): void {
@@ -96,6 +115,33 @@ export function installe2ebridge(): void {
     },
     runinspect(p1: PT, p2: PT) {
       vminspect(SOFTWARE, registerreadplayer(), p1, p2)
+    },
+    getjointopic() {
+      return readsubscribetopic()
+    },
+    getworkstatus() {
+      return useTape.getState().workstatus
+    },
+    getplayersprite() {
+      const player = registerreadplayer()
+      const layers = useGadgetClient.getState().gadget.layers ?? []
+      for (let i = 0; i < layers.length; ++i) {
+        const layer = layers[i]
+        if (layer.type !== LAYER_TYPE.SPRITES) {
+          continue
+        }
+        const sprites = layer.sprites
+        for (let j = 0; j < sprites.length; ++j) {
+          const sprite = sprites[j]
+          if (sprite.pid === player) {
+            return { x: sprite.x, y: sprite.y }
+          }
+        }
+      }
+      return undefined
+    },
+    sendmoveinput(dir: ZssE2eMoveDir) {
+      boardrunnerinput(SOFTWARE, registerreadplayer(), MOVE_INPUT[dir], 0)
     },
   }
 }

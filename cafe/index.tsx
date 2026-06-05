@@ -64,6 +64,9 @@ async function bootheadless(): Promise<void> {
   g.__onCliInput = (line: string) => {
     vmcli(register, registerreadplayer(), line)
   }
+  if (shoulde2ebridge()) {
+    installe2ebridge()
+  }
   await import('zss/userspace')
   createplatform(isjoin(), true)
   g.__nodeReady?.()
