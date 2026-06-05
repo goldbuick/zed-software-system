@@ -140,7 +140,7 @@ export function createminsabsynth(engine: SabEngine) {
       if (note === -1) {
         return
       }
-      if (note >= 0 && note <= 9) {
+      if (note >= 0 && note < WASM_DRUM_COUNT) {
         scheduledrum(when, note, tonenotationseconds(notation))
       }
       return

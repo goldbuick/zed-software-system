@@ -61,6 +61,23 @@ describe('sabpush zero-copy', () => {
     synth.destroy()
   })
 
+  it('schedules crash and ride drum strikes from k and r', () => {
+    jest.useFakeTimers()
+    const { engine, snapshot } = createmocksabengine()
+    const engineclock = engine as typeof engine & { advance(ms: number): void }
+    const synth = createminsabsynth(engine)
+    synth.addplay('kr')
+    for (let step = 0; step < 20; step++) {
+      engineclock.advance(100)
+      jest.advanceTimersByTime(100)
+    }
+    const drums = snapshot(WASM_DRUMS_SAB)
+    expect(drums[10]).toBe(1)
+    expect(drums[11]).toBe(1)
+    synth.destroy()
+    jest.useRealTimers()
+  })
+
   it('bumps voices seq on play without osc cfg seq change', () => {
     const { engine } = createmocksabengine()
     const synth = createminsabsynth(engine)

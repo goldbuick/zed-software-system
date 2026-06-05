@@ -236,7 +236,7 @@ export function createdaisysynth(
         })
         return
       }
-      if (note >= 0 && note <= 9) {
+      if (note >= 0 && note < WASM_DRUM_COUNT) {
         scheduledrum(
           when,
           note,

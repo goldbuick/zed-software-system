@@ -21,7 +21,6 @@ import {
 } from 'zss/memory/permissions'
 import {
   memoryloginplayer,
-  memoryreadplayeractive,
   memoryreadplayerboard,
 } from 'zss/memory/playermanagement'
 import {
@@ -38,13 +37,10 @@ import {
 } from '../boardrunnermanagement'
 
 export function handlesearch(vm: DEVICE, message: MESSAGE): void {
-  if (!memoryreadplayeractive(message.player)) {
-    registerloginready(vm, message.player)
-  }
+  registerloginready(vm, message.player)
 }
 
 export function handlelogout(vm: DEVICE, message: MESSAGE): void {
-
   // grab the current board the player is on
   const currentboard = memoryreadplayerboard(message.player)
   if (!ispresent(currentboard)) {
