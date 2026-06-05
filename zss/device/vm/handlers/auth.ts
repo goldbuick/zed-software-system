@@ -7,6 +7,7 @@ import {
   registerloginready,
 } from 'zss/device/api'
 import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
+import { handlegadgetdesync } from 'zss/device/vm/gadgetsynctick'
 import {
   boardrunnerblocked,
   boardrunners,
@@ -21,6 +22,7 @@ import {
 } from 'zss/memory/permissions'
 import {
   memoryloginplayer,
+  memoryreadplayeractive,
   memoryreadplayerboard,
 } from 'zss/memory/playermanagement'
 import {
@@ -108,6 +110,8 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
     memorysetplayertotoken(message.player, token)
   }
 
+  const reattach = memoryreadplayeractive(message.player)
+
   // attempt to login player
   if (memoryloginplayer(message.player, flags as BOOK_FLAGS)) {
     // start tracking
@@ -129,6 +133,10 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
     // signal success
     apilog(vm, memoryreadoperator(), `login from ${message.player}`)
     vm.replynext(message, 'acklogin', true)
+
+    if (reattach) {
+      handlegadgetdesync(vm, message)
+    }
   } else {
     vm.replynext(message, 'acklogin', false)
   }
