@@ -35,15 +35,6 @@ export function createplatform(isstub = false, climode = false) {
     ? new stubspace({ name: 'stub' })
     : new simspace({ name: 'sim' })
   platform.postMessage({ target: 'config', data: climode })
-  platform.addEventListener('message', (event) => {
-    const msg = event.data as { target?: string; data?: Record<string, unknown> }
-    if (msg?.target !== 'debug' || !msg.data) {
-      return
-    }
-    // #region agent log
-    fetch('http://127.0.0.1:7474/ingest/f2bfd0d8-5208-447d-9aef-a3f39f2dbf4e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'5cf1ca'},body:JSON.stringify({...msg.data,sessionId:'5cf1ca'})}).catch(()=>{});
-    // #endregion
-  })
 
   // create bridge
   const { forward, disconnect } = createforward((message) => {
