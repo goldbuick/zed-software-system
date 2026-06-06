@@ -256,7 +256,7 @@ class Parser {
     if (check(TokenKind::TEXT)) {
       Token t = advance();
       auto node = make_node(NODE::TEXT);
-      node->value = t.image;
+      node->value = striptextlinequotes(t.image);
       setloc(node.get());
       return wrapnode(makelinenode1(std::move(node)));
     }

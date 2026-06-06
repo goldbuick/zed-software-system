@@ -117,6 +117,17 @@ inline std::string trim(const std::string& s) {
   return s.substr(start, end - start);
 }
 
+inline std::string striptextlinequotes(const std::string& s) {
+  std::string out = trimstart(s);
+  while (!out.empty() && out.front() == '"') {
+    out.erase(out.begin());
+  }
+  while (!out.empty() && out.back() == '"') {
+    out.pop_back();
+  }
+  return out;
+}
+
 }  // namespace zss_lang
 
 #endif

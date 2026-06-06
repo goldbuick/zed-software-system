@@ -47,7 +47,18 @@ export type SharedTextHandle = {
 const SYNC_DOC_GUID = 'zss_modem_sync'
 const SYNC_DOC = new Y.Doc({ guid: SYNC_DOC_GUID })
 const ROOT = SYNC_DOC.getMap('root')
-const AWARENESS = new awarenessProtocol.Awareness(SYNC_DOC)
+
+/** Lazy so tests that only import modem for shared values do not open Awareness timers. */
+let awareness: awarenessProtocol.Awareness | undefined
+let awarenesslistenerswired = false
+
+function getawareness(): awarenessProtocol.Awareness {
+  if (!awareness) {
+    awareness = new awarenessProtocol.Awareness(SYNC_DOC)
+    wireawarenesslisteners()
+  }
+  return awareness
+}
 
 /** One UndoManager per text key; created on first use */
 const undomanagers = new Map<string, { um: Y.UndoManager; text: Y.Text }>()
@@ -248,8 +259,9 @@ export function modemsubscribesyncupdate(handler: () => void): () => void {
 
 /** UI hooks: subscribe to awareness changes (e.g. `modemhooks`). */
 export function modemsubscribeawarenesschange(handler: () => void): () => void {
-  AWARENESS.on('change', handler)
-  return () => AWARENESS.off('change', handler)
+  const instance = getawareness()
+  instance.on('change', handler)
+  return () => instance.off('change', handler)
 }
 
 export function modemroothaskey(key: string): boolean {
@@ -378,7 +390,7 @@ function awarenessstatetopresence(
 /** Get all presence states for a specific codepage */
 export function getpresenceforcodepage(codepageKey: string): PresenceState[] {
   const result: PresenceState[] = []
-  const states = AWARENESS.getStates()
+  const states = getawareness().getStates()
   states.forEach((state: Record<string, unknown> | null, _clientId: number) => {
     const p = awarenessstatetopresence(_clientId, state)
     if (p?.codepagekey === codepageKey) {
@@ -397,12 +409,13 @@ export function modembroadcastpresence(
   name?: string,
   color?: string,
 ) {
-  AWARENESS.setLocalStateField('clientId', clientId)
-  AWARENESS.setLocalStateField('codepageKey', codepageKey)
-  AWARENESS.setLocalStateField('cursor', cursor)
-  AWARENESS.setLocalStateField('select', select ?? null)
-  AWARENESS.setLocalStateField('name', name ?? `User ${clientId.slice(0, 6)}`)
-  AWARENESS.setLocalStateField('color', color ?? '#3b82f6')
+  const instance = getawareness()
+  instance.setLocalStateField('clientId', clientId)
+  instance.setLocalStateField('codepageKey', codepageKey)
+  instance.setLocalStateField('cursor', cursor)
+  instance.setLocalStateField('select', select ?? null)
+  instance.setLocalStateField('name', name ?? `User ${clientId.slice(0, 6)}`)
+  instance.setLocalStateField('color', color ?? '#3b82f6')
 }
 
 // ---------------------------------------------------------------------------
@@ -426,13 +439,17 @@ const modem = createdevice('modem', ['second'], (message) => {
           'joinack',
           arr2hex(Y.encodeStateAsUpdate(SYNC_DOC)),
         )
-        const myclientids = Array.from(AWARENESS.getStates().keys())
+        const instance = awareness
+        if (!instance) {
+          break
+        }
+        const myclientids = Array.from(instance.getStates().keys())
         if (myclientids.length > 0) {
           modem.emit(
             message.sender,
             'modem:awareness',
             arr2hex(
-              awarenessProtocol.encodeAwarenessUpdate(AWARENESS, myclientids),
+              awarenessProtocol.encodeAwarenessUpdate(instance, myclientids),
             ),
           )
         }
@@ -464,7 +481,7 @@ const modem = createdevice('modem', ['second'], (message) => {
       if (message.sender !== modem.id() && ispresent(message.data)) {
         try {
           awarenessProtocol.applyAwarenessUpdate(
-            AWARENESS,
+            getawareness(),
             hex2arr(message.data),
             null,
           )
@@ -485,46 +502,58 @@ SYNC_DOC.on('update', (update: Uint8Array, origin: unknown) => {
   }
 })
 
-AWARENESS.on(
-  'update',
-  ({
-    added,
-    updated,
-    removed,
-  }: {
-    added: number[]
-    updated: number[]
-    removed: number[]
-  }) => {
-    const changed = added.concat(updated).concat(removed)
-    if (changed.length > 0) {
-      modem.emit(
-        '',
-        'modem:awareness',
-        arr2hex(awarenessProtocol.encodeAwarenessUpdate(AWARENESS, changed)),
-      )
-    }
-  },
-)
+function wireawarenesslisteners(): void {
+  if (awarenesslistenerswired || !awareness) {
+    return
+  }
+  awarenesslistenerswired = true
 
-if (typeof window !== 'undefined') {
-  window.addEventListener('beforeunload', () => {
-    awarenessProtocol.removeAwarenessStates(
-      AWARENESS,
-      [SYNC_DOC.clientID],
-      'beforeunload',
-    )
-  })
+  awareness.on(
+    'update',
+    ({
+      added,
+      updated,
+      removed,
+    }: {
+      added: number[]
+      updated: number[]
+      removed: number[]
+    }) => {
+      const changed = added.concat(updated).concat(removed)
+      if (changed.length > 0 && awareness) {
+        modem.emit(
+          '',
+          'modem:awareness',
+          arr2hex(awarenessProtocol.encodeAwarenessUpdate(awareness, changed)),
+        )
+      }
+    },
+  )
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('beforeunload', () => {
+      if (!awareness) {
+        return
+      }
+      awarenessProtocol.removeAwarenessStates(
+        awareness,
+        [SYNC_DOC.clientID],
+        'beforeunload',
+      )
+    })
+  }
 }
 
 /**
  * Teardown for test environments. Destroys the shared Y.Doc and Awareness so
- * Jest workers can exit without open handles. Call in afterAll() in tests that
- * import this module. Only safe to call when the process is about to exit.
+ * Jest workers can exit without open handles. Wired via jest globalTeardown;
+ * may also be called from afterAll() when a suite created Awareness.
  */
 export function destroymodemfortest(): void {
   const doc = SYNC_DOC as Y.Doc & { isDestroyed?: boolean }
   if (!doc.isDestroyed) {
     SYNC_DOC.destroy()
   }
+  awareness = undefined
+  awarenesslistenerswired = false
 }

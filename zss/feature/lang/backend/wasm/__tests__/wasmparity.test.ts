@@ -195,4 +195,21 @@ describe('lang wasm behavioral parity', () => {
     const wasmbytes = compilenativewasm(source)
     expect(wasmbytes.length).toBeGreaterThan(8)
   })
+
+  it('quoted text lines omit syntax marker in sidebar queue', () => {
+    const source = readlocalfixture('quoted_text_lines.zss')
+    const jsbuild = compile('quoted_text_lines', source)
+    expect(jsbuild.errors ?? []).toHaveLength(0)
+    expect(jsbuild.source).toContain("api.text('Simple $9 $9 $9')")
+    expect(jsbuild.source).not.toContain('api.text(\'"Simple')
+
+    const wasmbytes = compilenativewasm(source)
+    const wasmliterals = new TextDecoder('utf-8', { fatal: false }).decode(
+      wasmbytes,
+    )
+    expect(wasmliterals.includes('"Simple $9 $9 $9')).toBe(false)
+    expect(wasmliterals.includes('Simple $9 $9 $9')).toBe(true)
+    expect(wasmliterals.includes('"press $whiteC$yellow to chat')).toBe(false)
+    expect(wasmliterals.includes('press $whiteC$yellow to chat')).toBe(true)
+  })
 })
