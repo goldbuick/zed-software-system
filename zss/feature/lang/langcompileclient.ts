@@ -73,16 +73,7 @@ export function compilewasmscript(name: string, text: string): GeneratorBuild {
       ],
     }
   }
-  const label = `compile-${name}`
-  // eslint-disable-next-line no-console
-  console.time(label)
-  let result
-  try {
-    result = compilezssonmodule(name, text, langmodule)
-  } finally {
-    // eslint-disable-next-line no-console
-    console.timeEnd(label)
-  }
+  const result = compilezssonmodule(name, text, langmodule)
   agentlog(
     'langcompileclient.ts:compilewasmscript',
     'compile result',
@@ -106,10 +97,18 @@ export function compilewasmscript(name: string, text: string): GeneratorBuild {
 }
 
 export function compilescript(name: string, text: string): GeneratorBuild {
-  if (WASM_SCRIPT) {
-    return compilewasmscript(name, text)
+  const label = `compile-${name}`
+  // eslint-disable-next-line no-console
+  console.time(label)
+  try {
+    if (WASM_SCRIPT) {
+      return compilewasmscript(name, text)
+    }
+    return compile(name, text)
+  } finally {
+    // eslint-disable-next-line no-console
+    console.timeEnd(label)
   }
-  return compile(name, text)
 }
 
 void initlangcompile()

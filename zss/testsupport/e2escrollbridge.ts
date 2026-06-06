@@ -1,3 +1,5 @@
+import type { LangCompileBenchReport } from 'zss/feature/lang/langcompilebench'
+import { runlangcompilebench } from 'zss/feature/lang/langcompilebench'
 import {
   type E2E_LOADER_NOTIFY,
   boardrunnerinput,
@@ -47,6 +49,10 @@ export type ZssE2eBridge = {
   /** Local player sprite from gadget layers, if painted. */
   getplayersprite: () => { x: number; y: number } | undefined
   sendmoveinput: (dir: ZssE2eMoveDir) => void
+  runlangcompilebench: (opts?: {
+    iterations?: number
+    warmup?: number
+  }) => Promise<LangCompileBenchReport>
 }
 
 export function installe2ebridge(): void {
@@ -142,6 +148,9 @@ export function installe2ebridge(): void {
     },
     sendmoveinput(dir: ZssE2eMoveDir) {
       boardrunnerinput(SOFTWARE, registerreadplayer(), MOVE_INPUT[dir], 0)
+    },
+    runlangcompilebench(opts) {
+      return runlangcompilebench(opts)
     },
   }
 }

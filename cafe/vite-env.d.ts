@@ -1,5 +1,10 @@
 /// <reference types="vite/client" />
 
+declare module '*.zss?raw' {
+  const content: string
+  export default content
+}
+
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- Vite env augmentation uses interface merging
 interface ImportMetaEnv {
   readonly ZSS_DEBUG_PERF_UI: string

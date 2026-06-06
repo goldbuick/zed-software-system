@@ -1,4 +1,4 @@
-import { GeneratorBuild, compile } from 'zss/feature/lang'
+import { GeneratorBuild } from 'zss/feature/lang'
 import {
   compilescript,
   islangcompileready,
@@ -74,7 +74,7 @@ export function createos() {
         return cached
       }
     }
-    const result = WASM_SCRIPT ? compilescript(name, code) : compile(name, code)
+    const result = compilescript(name, code)
     agentlog(
       'os.ts:build',
       'build result',

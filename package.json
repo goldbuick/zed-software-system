@@ -50,6 +50,7 @@
     "e2e:test:all-browsers": "PLAYWRIGHT_ALL_BROWSERS=1 playwright test",
     "e2e:test:gadget-scroll": "PLAYWRIGHT_INCLUDE_GADGET_E2E=1 playwright test e2e/gadget-inspect-scroll.spec.ts",
     "e2e:test:join-move": "PLAYWRIGHT_INCLUDE_JOIN_E2E=1 playwright test e2e/join-boardrunner-move.spec.ts",
+    "e2e:test:lang-bench": "PLAYWRIGHT_INCLUDE_LANG_BENCH=1 playwright test e2e/lang-compile-bench.spec.ts",
     "e2e:test:ui": "playwright test --ui",
     "env-parity:test": "npx tsx scripts/run-env-parity.ts",
     "fx-bus-metrics:test": "npx tsx scripts/run-fx-bus-metrics.ts",

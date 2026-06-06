@@ -25,12 +25,7 @@ export type GeneratorBuild = {
 }
 
 export function compile(name: string, text: string): GeneratorBuild {
-  const label = `compile-${name}`
-  // eslint-disable-next-line no-console
-  console.time(label)
   const astResult = compileast(text)
-  // eslint-disable-next-line no-console
-  console.timeEnd(label)
 
   if (astResult.errors && astResult.errors.length > 0) {
     return astResult

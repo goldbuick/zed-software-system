@@ -3,6 +3,7 @@ import { defineConfig, devices } from '@playwright/test'
 const allbrowsers = process.env.PLAYWRIGHT_ALL_BROWSERS === '1'
 const includegadgete2e = process.env.PLAYWRIGHT_INCLUDE_GADGET_E2E === '1'
 const includejoine2e = process.env.PLAYWRIGHT_INCLUDE_JOIN_E2E === '1'
+const includelangbenche2e = process.env.PLAYWRIGHT_INCLUDE_LANG_BENCH === '1'
 
 const testignore: string[] = []
 if (!includegadgete2e) {
@@ -11,10 +12,14 @@ if (!includegadgete2e) {
 if (!includejoine2e) {
   testignore.push('**/join-boardrunner-move.spec.ts')
 }
+if (!includelangbenche2e) {
+  testignore.push('**/lang-compile-bench.spec.ts')
+}
 
 export default defineConfig({
   testDir: 'e2e',
   // Gadget scroll: PLAYWRIGHT_INCLUDE_GADGET_E2E=1. Join multiplayer: PLAYWRIGHT_INCLUDE_JOIN_E2E=1.
+  // Lang compile bench: PLAYWRIGHT_INCLUDE_LANG_BENCH=1.
   testIgnore: testignore.length ? testignore : [],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,

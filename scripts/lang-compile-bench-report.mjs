@@ -2,6 +2,9 @@
 /**
  * Side-by-side TS vs Emscripten WASM compile benchmark.
  * Run: yarn lang:bench:compile
+ *
+ * Fixture list: zss/feature/lang/langcompilebenchfixtures.json
+ * (shared with browser e2e via langcompilebench.ts)
  */
 import { execSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
@@ -12,14 +15,19 @@ import { compilezss, createlangmodule } from './lang-wasm.mjs'
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
 const WASMDIR = path.join(ROOT, 'zss/feature/lang/backend/wasm')
+const FIXTUREMANIFEST = path.join(
+  ROOT,
+  'zss/feature/lang/langcompilebenchfixtures.json',
+)
+
+const SOURCE_DIRS = {
+  parity: path.join(WASMDIR, '__fixtures__/parity'),
+  integration: path.join(WASMDIR, '__tests__/fixtures'),
+  book: path.join(WASMDIR, '__tests__/fixtures/coolregionsbow'),
+}
 
 function readzss(tier, id) {
-  const dirs = {
-    parity: path.join(WASMDIR, '__fixtures__/parity'),
-    integration: path.join(WASMDIR, '__tests__/fixtures'),
-    book: path.join(WASMDIR, '__tests__/fixtures/coolregionsbow'),
-  }
-  return readFileSync(path.join(dirs[tier], `${id}.zss`), 'utf8')
+  return readFileSync(path.join(SOURCE_DIRS[tier], `${id}.zss`), 'utf8')
 }
 
 function median(values) {
@@ -56,17 +64,13 @@ function parsetsmedian(output) {
   return map
 }
 
-const cases = [
-  { id: 'drawdisplay', name: 'drawpass', source: readzss('parity', 'drawdisplay') },
-  { id: 'short_go', name: 'short_go', source: readzss('parity', 'short_go') },
-  {
-    id: 'simple_chat_player',
-    name: 'player',
-    source: readzss('integration', 'simple_chat_player'),
-  },
-  { id: 'duplicator', name: 'duplicator', source: readzss('book', 'duplicator') },
-  { id: 'player', name: 'player', source: readzss('book', 'player') },
-]
+const cases = JSON.parse(readFileSync(FIXTUREMANIFEST, 'utf8')).map(
+  (fixture) => ({
+    id: fixture.id,
+    name: fixture.compileName,
+    source: readzss(fixture.tier, fixture.id),
+  }),
+)
 
 const iterations = 50
 const warmup = 5
@@ -113,3 +117,4 @@ console.log('')
 console.log('TS: Chevrotain parse + AST transform + new Function()')
 console.log('WASM: C++ zss_compile via Emscripten (app:wasm:dev path)')
 console.log('Speedup = TS median / WASM median (higher = WASM faster)')
+console.log('Browser e2e: yarn e2e:test:lang-bench')
