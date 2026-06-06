@@ -11,8 +11,11 @@ import {
   firmwaregetcommand,
   firmwareset,
 } from './firmware/runner'
-import { GeneratorBuild, GeneratorFunc } from './lang/generator'
-import { GENERATED_FILENAME } from './lang/transformer'
+import {
+  GENERATED_FILENAME,
+  GeneratorBuild,
+  GeneratorFunc,
+} from 'zss/feature/lang'
 import { createchipid } from './mapping/guid'
 import {
   MAYBE,

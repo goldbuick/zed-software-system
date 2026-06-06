@@ -32,7 +32,7 @@ zss/device/     Infrastructure — API, session, VM, forward, register, clock, �
 zss/firmware/   Command vocabulary — CLI, loader, runtime, board, element, …
 zss/feature/    Feature modules — ROM, parse, heavy (AI), synth, storage, …
 zss/mapping/    Pure utilities — array, string, number, 2d, types, guid, …
-zss/lang/       Script compiler pipeline (lexer → AST → JS for chips)
+zss/feature/lang/       Script compiler (TS backend + native parity target)
 ```
 
 ### Layer dependencies
@@ -152,7 +152,7 @@ Memory APIs are consumed by the chip runtime, firmware (`send`, movement, etc.),
 
 ## Lang → chip → firmware (behavior)
 
-**Lang** ([`zss/lang/docs/README.md`](lang/docs/README.md)): lexer → Chevrotain parser → visitor (CST→AST) → transformer → `new Function('api', code)`. Entry: `compile()` in [`zss/lang/generator.ts`](lang/generator.ts).
+**Lang** ([`zss/feature/lang/docs/README.md`](feature/lang/docs/README.md)): lexer → Chevrotain parser → visitor (CST→AST) → transformer → `new Function('api', code)`. Entry: `compile()` via [`zss/feature/lang`](feature/lang/index.ts).
 
 **Chip** ([`zss/chip.ts`](chip.ts)): per-element **VM** with `get`/`set`, `tick`, generator execution, messaging, and integration with **firmware** via [`zss/firmware/runner.ts`](firmware/runner.ts).
 

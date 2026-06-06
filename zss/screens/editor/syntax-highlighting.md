@@ -9,7 +9,7 @@ Highlighting is **token-driven** and **index-based**: we first write plain text 
 ## Pipeline
 
 1. **Lex and parse**  
-   Full editor text is tokenized and parsed via `compileast()` (`zss/lang/ast`). The result includes a flat `tokens` array (Chevrotain) with `tokenTypeIdx`, `startLine`, `startColumn`, `endColumn`, and `image`.
+   Full editor text is tokenized and parsed via `compileast()` (`zss/feature/lang`). The result includes a flat `tokens` array (Chevrotain) with `tokenTypeIdx`, `startLine`, `startColumn`, `endColumn`, and `image`.
 
 2. **Fold tokens into rows**  
    In `component.tsx`, tokens are assigned to logical lines by `startLine`. Each `EDITOR_CODE_ROW` gets a `tokens` array. Stat tokens get a `payload` indicating whether they are the first stat on the line (for formatting).

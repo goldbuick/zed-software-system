@@ -6,7 +6,7 @@
 
 - [Multiplayer, workers, PeerJS, and WASM](multiplayer-wasm-architecture.md)
 - [ZSS architecture (current)](../zss/ARCHITECTURE.md)
-- [Lang pipeline (today)](../zss/lang/docs/architecture.md)
+- [Lang pipeline (today)](../zss/feature/lang/docs/architecture.md)
 
 ---
 
@@ -66,13 +66,13 @@ Enable with **`ZSS_WASM_SIM=true`** per page load during migration. Default **on
 | Tick orchestration | `zss/device/vm/handlers/ticktock.ts`, `pilot.ts` | **Yes** → `zss_tick` |
 | Board tick | `zss/memory/runtime.ts`, `boardtick.ts` | **Yes** |
 | World model | `zss/memory/types.ts`, `boards.ts`, `boardmovement.ts`, `boundaries.ts`, … | **Yes** |
-| Lang | `zss/lang/*` | Bytecode IR; TS emitter bootstrap; **C++ `zss_compile`** target |
+| Lang | `zss/feature/lang/*` | Bytecode IR; TS emitter bootstrap; **C++ `zss_compile`** target |
 | CHIP / OS | `zss/chip.ts`, `zss/os.ts` | **Yes** |
 | Firmware | `zss/firmware/*` (~150 `#` commands) | **Yes** (all drivers) |
 | Boardrunner worker | `zss/boardrunnerspace.ts`, `device/boardrunner/*` | **Retire**; logic in `zss_tick` |
 | UI / hub | `cafe/`, `zss/gadget/`, `zss/screens/`, `forward`, `bridge` | **Stay TS** |
 
-There is **no bytecode today**; the port introduces a new IR. See [lang architecture](../zss/lang/docs/architecture.md) for the current JS pipeline.
+There is **no bytecode today**; the port introduces a new IR. See [lang architecture](../zss/feature/lang/docs/architecture.md) for the current JS pipeline.
 
 ---
 
@@ -109,7 +109,7 @@ zss/wasmspace.ts          # wasm worker entry (replaces simspace + boardrunnersp
 
 | Phase | Work |
 |-------|------|
-| **1a** | Bytecode spec in `zss/lang/docs/bytecode.md`; TS emitter; tests vs `pipeline.test.ts` |
+| **1a** | Bytecode spec in `zss/feature/lang/docs/bytecode.md`; TS emitter; tests vs `pipeline.test.ts` |
 | **1b** | C++ re2c + RD + emitter; export `zss_compile`; match TS on fixtures |
 | **Runtime** | Wasm worker compiles game scripts; Tape uses **compile RPC** to wasm worker |
 

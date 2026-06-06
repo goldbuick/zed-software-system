@@ -3,7 +3,7 @@
  * and next-tick allow-lists. Non-local draw logic must call `memoryinvalidatedraw`.
  */
 import { PERF_SPATIAL_INDEX } from 'zss/config'
-import { compile } from 'zss/lang/generator'
+import { compile } from 'zss/feature/lang'
 import { indextox, indextoy, pttoindex } from 'zss/mapping/2d'
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'

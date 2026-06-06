@@ -30,7 +30,7 @@ jest.mock('zss/config', () => ({
   },
 }))
 
-jest.mock('zss/lang/generator', () => ({
+jest.mock('zss/feature/lang', () => ({
   compile: (_name: string, code: string) => ({
     labels:
       code.includes(':drawdisplay') || code.includes(':draw')

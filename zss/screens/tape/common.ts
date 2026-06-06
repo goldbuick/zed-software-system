@@ -1,7 +1,6 @@
 import { IToken } from 'chevrotain'
 import { createContext } from 'react'
-import { LANG_ERROR } from 'zss/lang/lexer'
-import { CodeNode } from 'zss/lang/visitor'
+import { CodeNode, type LANG_ERROR } from 'zss/feature/lang'
 import { BG_ACTIVE, FG_SELECTED } from 'zss/screens/tape/colors'
 import { WRITE_TEXT_CONTEXT, textformatreadedges } from 'zss/words/textformat'
 

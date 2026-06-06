@@ -411,7 +411,7 @@ export const DIAGRAMS: Record<DiagramLayer, DiagramConfig> = {
         definition:
           'Lexer → parser → visitor → transformer → new Function(api, code).',
         audience: 'Dev',
-        path: 'zss/lang/generator.ts',
+        path: 'zss/feature/lang/backend/typescript/generator.ts',
       },
       {
         id: 'chip',
@@ -814,7 +814,7 @@ export const GLOSSARY: GlossaryEntry[] = [
     audience: 'Dev',
     definition: 'ZSS script compiler pipeline producing JS for CHIP execution.',
     related: 'compile, CHIP',
-    path: 'zss/lang/generator.ts',
+    path: 'zss/feature/lang/backend/typescript/generator.ts',
   },
   {
     term: 'words',

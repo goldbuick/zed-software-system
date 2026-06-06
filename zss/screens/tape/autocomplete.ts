@@ -3,7 +3,7 @@ import type {
   COMMAND_ARG_AUTOCOMPLETE,
 } from 'zss/firmware'
 import { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
-import * as lexer from 'zss/lang/lexer'
+import { lexer } from 'zss/feature/lang'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { romhintfrommarkdown, romread } from 'zss/rom'
 import {
