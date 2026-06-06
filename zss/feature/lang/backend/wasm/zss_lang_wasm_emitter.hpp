@@ -225,6 +225,10 @@ class WasmEmitter {
 
   void emitcontinue() { emit_.emit_br(static_cast<uint32_t>(nestdepth_)); }
 
+  void emitcontinueifnonzero() {
+    emit_.emit_br_if(static_cast<uint32_t>(nestdepth_));
+  }
+
   void emitifopen() {
     emit_.emit_if(0x40);
     ++nestdepth_;
@@ -486,10 +490,7 @@ class WasmEmitter {
         for (const auto& w : ast->words) emitpushword(w.get());
         emit_.emit_hostcall(WasmModuleBuilder::IMPORT_CALL, HOST_COMMAND);
         if (ast->wait) {
-          emit_.emit_i32_eqz();
-          emitifopen();
-          emitcontinue();
-          emitifclose();
+          emitcontinueifnonzero();
         } else {
           emit_.emit_drop();
         }
@@ -499,10 +500,7 @@ class WasmEmitter {
         trackhost(HOST_COMMAND);
         for (const auto& w : ast->words) emitpushword(w.get());
         emit_.emit_hostcall(WasmModuleBuilder::IMPORT_CALL, HOST_COMMAND);
-        emit_.emit_i32_eqz();
-        emitifopen();
-        emitcontinue();
-        emitifclose();
+        emitcontinueifnonzero();
         break;
       }
       case NODE::IF: {

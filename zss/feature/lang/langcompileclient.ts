@@ -42,7 +42,17 @@ function labelsfromjson(labelsjson: string): GeneratorBuild['labels'] {
 
 export function compilewasmscript(name: string, text: string): GeneratorBuild {
   if (!langmodule) {
-    return compile(name, text)
+    return {
+      errors: [
+        {
+          message: 'lang wasm compiler not loaded',
+          offset: 0,
+          line: 0,
+          column: 0,
+          length: 0,
+        },
+      ],
+    }
   }
   const result = compilezssonmodule(name, text, langmodule)
   if (result.errors.length) {
@@ -58,7 +68,7 @@ export function compilewasmscript(name: string, text: string): GeneratorBuild {
 }
 
 export function compilescript(name: string, text: string): GeneratorBuild {
-  if (WASM_SCRIPT && langmodule) {
+  if (WASM_SCRIPT) {
     return compilewasmscript(name, text)
   }
   return compile(name, text)

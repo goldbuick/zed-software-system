@@ -81,4 +81,35 @@ describe('lang wasm behavioral parity', () => {
 
     expect(wasmchip.isended()).toBe(jschip.isended())
   })
+
+  it('command retry keeps execution cursor on short_go', () => {
+    const source = readfixture('short_go', 'zss')
+    const jsbuild = compile('short_go', source)
+    const wasmbytes = compilenativewasm(source)
+    const wasmbuild = {
+      ...jsbuild,
+      wasmbytes,
+      code: undefined,
+    }
+
+    const jschip = createchip('js-retry', DRIVER_TYPE.RUNTIME, jsbuild)
+    const wasmchip = createchip('wasm-retry', DRIVER_TYPE.RUNTIME, wasmbuild)
+
+    const stubcommand = (chip: typeof jschip) => {
+      chip.command = () => {
+        chip.yield()
+        return 1
+      }
+    }
+    stubcommand(jschip)
+    stubcommand(wasmchip)
+
+    jschip.once()
+    wasmchip.once()
+
+    expect(wasmchip.isended()).toBe(jschip.isended())
+    expect(wasmchip.getcase()).toBe(jschip.getcase())
+    expect(wasmchip.isended()).toBe(false)
+    expect(wasmchip.getcase()).not.toBe(3)
+  })
 })

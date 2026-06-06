@@ -1,6 +1,6 @@
 # Lang Module
 
-ZSS scripting language compiler with a **TypeScript backend** (production) and **native C++ backend** (parity target).
+ZSS scripting language compiler with a **TypeScript backend** (CI parity oracle) and **C++ WASM compiler** under `backend/wasm/`.
 
 ## Layout
 
@@ -8,8 +8,8 @@ ZSS scripting language compiler with a **TypeScript backend** (production) and *
 |------|------|
 | [`index.ts`](index.ts) | Public API — `compile`, `compileast`, `tokenize`, types |
 | [`backend/typescript/`](backend/typescript/) | Chevrotain lexer → parser → AST → JS + source maps |
-| [`backend/native/`](backend/native/) | C++ compiler → `zss_compile` in `zss_lang.wasm` |
-| [`backend/wasm/`](backend/wasm/) | Parity fixtures and tests |
+| [`backend/typescript/`](backend/typescript/) | Chevrotain lexer → parser → AST → JS + source maps (CI parity oracle) |
+| [`backend/wasm/`](backend/wasm/) | C++ compiler → `zss_compile`, parity fixtures, tests |
 | [`docs/`](docs/) | Compiler pipeline documentation |
 
 Legacy path `zss/lang/` was removed; import from `zss/feature/lang`.
@@ -27,9 +27,9 @@ if (result.code) {
 }
 ```
 
-## Parity (native C++)
+## Parity (C++ compiler)
 
-After editing `backend/native/`:
+After editing `backend/wasm/` (C++ sources):
 
 ```bash
 yarn lang-regression:test

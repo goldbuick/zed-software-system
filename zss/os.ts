@@ -1,5 +1,9 @@
 import { GeneratorBuild, compile } from 'zss/feature/lang'
-import { compilescript } from 'zss/feature/lang/langcompileclient'
+import {
+  compilescript,
+  initlangcompile,
+  islangcompileready,
+} from 'zss/feature/lang/langcompileclient'
 import { WASM_SCRIPT } from 'zss/config'
 
 import { CHIP, createchip } from './chip'
@@ -45,11 +49,28 @@ export function createos() {
   const builds: Record<string, GeneratorBuild> = {}
   const chips: Record<string, CHIP | undefined> = {}
   function build(name: string, code: string) {
-    const cache = builds[code]
-    if (cache) {
-      return cache
+    const cached = builds[code]
+    if (cached) {
+      if (
+        WASM_SCRIPT &&
+        islangcompileready() &&
+        !cached.wasmbytes?.length &&
+        !(cached.errors?.length ?? 0)
+      ) {
+        delete builds[code]
+      } else {
+        return cached
+      }
     }
     const result = WASM_SCRIPT ? compilescript(name, code) : compile(name, code)
+    if (
+      WASM_SCRIPT &&
+      islangcompileready() &&
+      !result.wasmbytes?.length &&
+      !(result.errors?.length ?? 0)
+    ) {
+      return result
+    }
     builds[code] = result
     return result
   }

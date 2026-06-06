@@ -21,7 +21,7 @@ The script module owns a **read-only data segment** for string literals. Dynamic
 
 ## `HOST_*` dispatch indices
 
-Stable across all scripts. Defined in [`hostcall.ts`](../hostcall.ts) and [`zss_lang_hostcall.hpp`](../backend/native/zss_lang_hostcall.hpp).
+Stable across all scripts. Defined in [`hostcall.ts`](../hostcall.ts) and [`zss_lang_hostcall.hpp`](../backend/wasm/zss_lang_hostcall.hpp).
 
 | Index | Name | CHIP method | Args (push order) |
 |-------|------|-------------|-------------------|
@@ -107,4 +107,4 @@ List of `HOST_*` indices referenced by the module (for loader validation):
 
 ## Compile result (`zss_compile`)
 
-See [`zss_lang_api.h`](../backend/native/zss_lang_api.h). Primary output is `wasm_bytes` / `wasm_bytes_len`. JS `source` is omitted in production builds.
+See [`zss_lang_api.h`](../backend/wasm/zss_lang_api.h). Primary output is `wasm_bytes` / `wasm_bytes_len`. JS `source` is omitted in production builds.

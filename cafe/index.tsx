@@ -25,6 +25,7 @@ import {
 } from 'three'
 import 'zss/rom/vitepopulate'
 import { RUNTIME } from 'zss/config'
+import { initlangcompile } from 'zss/feature/lang/langcompileclient'
 import { vmcli } from 'zss/device/api'
 import {
   register,
@@ -55,6 +56,7 @@ function shoulde2ebridge(): boolean {
 }
 
 async function bootheadless(): Promise<void> {
+  await initlangcompile()
   const g = globalThis as any
   const readplayer = g.__nodeStorageReadPlayer
   if (typeof readplayer === 'function') {
@@ -74,6 +76,8 @@ async function bootheadless(): Promise<void> {
 
 // Headless path: no WebGL, no Canvas, no UI — just platform + CLI
 async function main() {
+  await initlangcompile()
+
   if (isclimode()) {
     await bootheadless()
     return

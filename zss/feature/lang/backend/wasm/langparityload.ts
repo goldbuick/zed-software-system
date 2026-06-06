@@ -2,18 +2,18 @@ import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
-const NATIVEDIR = path.join(__dirname, '../native')
+const COMPILERDIR = __dirname
 const FIXTUREDIR = path.join(__dirname, '__fixtures__/parity')
-const PARITYBIN = path.join(NATIVEDIR, 'zss_lang_parity')
-const WCLIBIN = path.join(NATIVEDIR, 'zss_lang_wasm_cli')
+const PARITYBIN = path.join(COMPILERDIR, 'zss_lang_parity')
+const WCLIBIN = path.join(COMPILERDIR, 'zss_lang_wasm_cli')
 const WADIR = path.join(__dirname, '../../../../../cafe/public/wasm/lang')
 
-const NATIVESRC = path.join(NATIVEDIR, 'zss_lang_compile.cpp')
+const COMPILESRC = path.join(COMPILERDIR, 'zss_lang_compile.cpp')
 
 function buildnative(define: string, out: string) {
   execFileSync(
     'g++',
-    ['-std=c++14', '-O2', '-I', NATIVEDIR, define, '-o', out, NATIVESRC],
+    ['-std=c++14', '-O2', '-I', COMPILERDIR, define, '-o', out, COMPILESRC],
     { stdio: 'pipe' },
   )
 }

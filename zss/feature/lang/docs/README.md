@@ -27,7 +27,7 @@ The main entry point is `compile()` in `generator.ts`, which orchestrates the fu
 | [transformer.md](transformer.md) | AST → JavaScript code generation |
 | [visitor.md](visitor.md) | CST → AST visitor and node types |
 | [visitortypes.md](visitortypes.md) | CST node type definitions |
-| [native-module-map.md](native-module-map.md) | C++ native compiler modules (parity target) |
+| [native-module-map.md](native-module-map.md) | C++ compiler modules in `backend/wasm/` |
 
 ## Pipeline Flow
 
