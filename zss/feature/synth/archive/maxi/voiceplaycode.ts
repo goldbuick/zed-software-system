@@ -10,13 +10,13 @@ import {
   WASM_ALGO_OP_GAIN,
   WASM_ALGO_OUT_GAIN,
   WASM_SINE_VOICE_GAIN,
-} from '../../backend/wasm/wasmlevels'
+} from 'zss/feature/synth/backend/wasm/wasmlevels'
 import { WASM_MASTER_PLAY_CODE } from './wasmmasterplaycode'
 import { WASM_OSC_CFG_PLAY_CODE } from './wasmoscplaycode'
 import { WASM_PERF_BOOTSTRAP } from './wasmperfplaycode'
 import { WASM_VIBRATO_PLAY_CODE } from './wasmvibratoplaycode'
-import { WASM_SAB_SEQ_PLAY_CODE } from '../../backend/wasm/wasmplaysabseq'
-import { WASM_VOICE_CFG_STRIDE } from '../../backend/wasm/wasmvoicecfgsab'
+import { WASM_SAB_SEQ_PLAY_CODE } from 'zss/feature/synth/backend/wasm/wasmplaysabseq'
+import { WASM_VOICE_CFG_STRIDE } from 'zss/feature/synth/backend/wasm/wasmvoicecfgsab'
 
 /** Phase 1 voices + Phase 2 drums + Phase 3 FX through Maximilian WASM worklet. */
 export const WASM_SYNTH_VOICE_PLAY_CODE = `

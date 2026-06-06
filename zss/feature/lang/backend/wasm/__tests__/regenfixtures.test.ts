@@ -24,8 +24,8 @@ jest.mock('zss/words/textformat', () => ({
 import { mkdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 
-import { compileast } from '../../typescript/ast'
-import { transformast } from '../../typescript/transformer'
+import { compileast } from 'zss/feature/lang/backend/typescript/ast'
+import { transformast } from 'zss/feature/lang/backend/typescript/transformer'
 
 const FIXTUREDIR = path.join(__dirname, '../__fixtures__/parity')
 

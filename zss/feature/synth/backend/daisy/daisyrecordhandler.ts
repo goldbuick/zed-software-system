@@ -1,13 +1,12 @@
 import { apierror } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
+import type { SabEngine } from 'zss/feature/synth/backend/shared/sabengine'
+import type { WASM_REPLAY_STATE } from 'zss/feature/synth/backend/wasm/wasmreplaystate'
+import { converttomp3 } from 'zss/feature/synth/mp3'
+import type { SYNTH_NOTE_ENTRY } from 'zss/feature/synth/playnotation'
+import type { RECORDING_STATE } from 'zss/feature/synth/shared/recording'
 import { write } from 'zss/feature/writeui'
-
-import { converttomp3 } from '../../mp3'
-import type { SYNTH_NOTE_ENTRY } from '../../playnotation'
-import type { RECORDING_STATE } from '../../shared/recording'
-import type { SabEngine } from '../shared/sabengine'
-import type { WASM_REPLAY_STATE } from '../wasm/wasmreplaystate'
 
 import { renderdaisyrecord } from './daisyofflinerender'
 

@@ -1,4 +1,42 @@
 import { Note } from 'tonal'
+import type { SabEngine } from 'zss/feature/synth/backend/shared/sabengine'
+import { playpatternendtime } from 'zss/feature/synth/backend/wasm/playstart'
+import {
+  initwasmsabchannels,
+  pushwasmsabvalues,
+} from 'zss/feature/synth/backend/wasm/sabpush'
+import {
+  defaultwasmalgoconfig,
+  pushwasmalgoconfigsab,
+} from 'zss/feature/synth/backend/wasm/wasmalgoconfigsab'
+import {
+  defaultwasmfxsab,
+  initwasmfxsab,
+  pushwasmfxsab,
+} from 'zss/feature/synth/backend/wasm/wasmfxstate'
+import { initwasmvoicesab } from 'zss/feature/synth/backend/wasm/wasminitsab'
+import {
+  defaultwasmoscconfig,
+  pushwasmoscconfigsab,
+} from 'zss/feature/synth/backend/wasm/wasmoscconfigsab'
+import { createwasmplayscheduler } from 'zss/feature/synth/backend/wasm/wasmplayscheduler'
+import {
+  WASM_DRUMS_SAB,
+  WASM_DRUM_COUNT,
+  WASM_VOICES_SAB,
+  WASM_VOICE_STRIDE,
+} from 'zss/feature/synth/backend/wasm/wasmsabchannels'
+import {
+  defaultwasmvibratosab,
+  initwasmvibratosab,
+  pushwasmvibratogroup,
+} from 'zss/feature/synth/backend/wasm/wasmvibratosab'
+import { pushwasmvoicecfgsab } from 'zss/feature/synth/backend/wasm/wasmvoicecfgsab'
+import {
+  applywasmvoiceconfig,
+  defaultwasmvoicestate,
+  wasmvoicestatetosab,
+} from 'zss/feature/synth/backend/wasm/wasmvoiceconfig'
 import {
   invokeplay,
   parseplay,
@@ -12,35 +50,6 @@ import {
 import { voiceindexfxgroup } from 'zss/feature/synth/voicefxgroup'
 import { randominteger } from 'zss/mapping/number'
 import { isnumber, isstring } from 'zss/mapping/types'
-
-import type { SabEngine } from '../../shared/sabengine'
-import { playpatternendtime } from '../playstart'
-import { initwasmsabchannels, pushwasmsabvalues } from '../sabpush'
-import {
-  defaultwasmalgoconfig,
-  pushwasmalgoconfigsab,
-} from '../wasmalgoconfigsab'
-import { defaultwasmfxsab, initwasmfxsab, pushwasmfxsab } from '../wasmfxstate'
-import { initwasmvoicesab } from '../wasminitsab'
-import { defaultwasmoscconfig, pushwasmoscconfigsab } from '../wasmoscconfigsab'
-import { createwasmplayscheduler } from '../wasmplayscheduler'
-import {
-  WASM_DRUMS_SAB,
-  WASM_DRUM_COUNT,
-  WASM_VOICES_SAB,
-  WASM_VOICE_STRIDE,
-} from '../wasmsabchannels'
-import {
-  defaultwasmvibratosab,
-  initwasmvibratosab,
-  pushwasmvibratogroup,
-} from '../wasmvibratosab'
-import { pushwasmvoicecfgsab } from '../wasmvoicecfgsab'
-import {
-  applywasmvoiceconfig,
-  defaultwasmvoicestate,
-  wasmvoicestatetosab,
-} from '../wasmvoiceconfig'
 
 const WASM_VOICE_BLOCK = SYNTH_VOICE_COUNT * WASM_VOICE_STRIDE
 

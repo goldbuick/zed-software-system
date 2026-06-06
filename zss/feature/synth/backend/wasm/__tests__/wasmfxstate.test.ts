@@ -1,5 +1,3 @@
-import { tonenotationseconds } from 'zss/feature/synth/playnotation'
-
 import {
   WASM_FX_GROUP_COUNT,
   WASM_FX_PARAM_IDX,
@@ -11,7 +9,8 @@ import {
   defaultwasmfxsab,
   replaywasmfxfromstate,
   wasmfxgroupparambase,
-} from '../wasmfxstate'
+} from 'zss/feature/synth/backend/wasm/wasmfxstate'
+import { tonenotationseconds } from 'zss/feature/synth/playnotation'
 
 describe('wasmfxstate', () => {
   it('seeds default chain params for every bus', () => {

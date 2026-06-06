@@ -1,6 +1,8 @@
+import {
+  isnoisevoice,
+  noisemetafor,
+} from 'zss/feature/synth/backend/wasm/noisemeta'
 import { SOURCE_TYPE } from 'zss/feature/synth/shared/sourcetype'
-
-import { isnoisevoice, noisemetafor } from '../noisemeta'
 
 describe('noisemeta', () => {
   it('maps BeepBox chip noise params', () => {

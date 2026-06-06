@@ -1,9 +1,12 @@
-import { SYNTH_DEFAULT_WAVE, SYNTH_VOICE_COUNT } from '../../synthdefaults'
 import {
   WASM_DEFAULT_BGPLAY_VOLUME,
   WASM_DEFAULT_PLAY_VOLUME,
   WASM_DEFAULT_TTS_VOLUME,
-} from '../wasm/wasmmainsab'
+} from 'zss/feature/synth/backend/wasm/wasmmainsab'
+import {
+  SYNTH_DEFAULT_WAVE,
+  SYNTH_VOICE_COUNT,
+} from 'zss/feature/synth/synthdefaults'
 
 import {
   ensuredaisysynthwasm,

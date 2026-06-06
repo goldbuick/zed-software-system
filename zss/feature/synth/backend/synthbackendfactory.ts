@@ -1,4 +1,4 @@
-import type { SynthBackend } from '../frontend/synthbackend'
+import type { SynthBackend } from 'zss/feature/synth/frontend/synthbackend'
 
 import { bootdaisysynth } from './daisy/bootdaisysynth'
 import { createdaisysynthadapter } from './daisy/daisysynthadapter'

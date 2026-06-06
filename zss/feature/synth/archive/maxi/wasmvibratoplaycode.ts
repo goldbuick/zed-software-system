@@ -1,7 +1,7 @@
 import {
   WASM_VIBRATO_GROUP_COUNT,
   WASM_VIBRATO_STRIDE,
-} from '../../backend/wasm/wasmsabchannels'
+} from 'zss/feature/synth/backend/wasm/wasmsabchannels'
 
 /** Worklet-side vibrato note schedule (replaces timed FX depth pushes). */
 export const WASM_VIBRATO_PLAY_CODE = `

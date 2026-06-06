@@ -1,4 +1,4 @@
-import { analyzelevelstability } from '../wasm/levelstabilitymetrics.ts'
+import { analyzelevelstability } from 'zss/feature/synth/backend/wasm/levelstabilitymetrics'
 
 import { envparitytimelinesmatchsamples } from './envparityrender.ts'
 import {

@@ -1,4 +1,4 @@
-import type { LEVEL_STABILITY_METRICS } from '../wasm/levelstabilitymetrics.ts'
+import type { LEVEL_STABILITY_METRICS } from 'zss/feature/synth/backend/wasm/levelstabilitymetrics'
 
 export const NOTEPOP_GATE_MIN_PEAK_DB = -40
 export const NOTEPOP_GATE_LEVEL_PARITY_MAX_DB = 6

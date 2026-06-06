@@ -1,7 +1,7 @@
-import type { createsynth } from '../../archive/tone/index'
-import { synthvoiceconfig } from '../../archive/tone/voiceconfig/index'
-import { SYNTH_PLAY_VOICE_COUNT } from '../../synthdefaults'
-import type { createdaisysynth } from '../daisy/daisysynth'
+import type { createsynth } from 'zss/feature/synth/archive/tone/index'
+import { synthvoiceconfig } from 'zss/feature/synth/archive/tone/voiceconfig/index'
+import type { createdaisysynth } from 'zss/feature/synth/backend/daisy/daisysynth'
+import { SYNTH_PLAY_VOICE_COUNT } from 'zss/feature/synth/synthdefaults'
 
 import type { PARITY_PATCH } from './paritypatches'
 

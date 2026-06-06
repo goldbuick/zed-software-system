@@ -15,12 +15,11 @@ import {
   AGENTS_ROSTER_STORAGE_KEY,
   isvalidagentsroster,
 } from 'zss/feature/heavy/agentsroster'
+import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import { write } from 'zss/feature/writeui'
 import { zssheaderlines } from 'zss/feature/zsstextui'
 import { createshortnameid } from 'zss/mapping/guid'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
-
-import { terminalwritelines } from '../terminalwritelines'
 
 import type { AGENT } from './agent'
 

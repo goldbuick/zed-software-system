@@ -6,15 +6,15 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
-import { tonenotationseconds } from '../../../playnotation'
 import {
   ENV_PARITY_ADSR_SEC,
   ZssLinearEnv,
   defaultenvparityparams,
   renderzssenvparitysignal,
-} from '../adsrenvcurve'
-import type { LEVEL_STABILITY_METRICS } from '../levelstabilitymetrics'
-import { analyzelevelstability } from '../levelstabilitymetrics'
+} from 'zss/feature/synth/backend/wasm/adsrenvcurve'
+import type { LEVEL_STABILITY_METRICS } from 'zss/feature/synth/backend/wasm/levelstabilitymetrics'
+import { analyzelevelstability } from 'zss/feature/synth/backend/wasm/levelstabilitymetrics'
+import { tonenotationseconds } from 'zss/feature/synth/playnotation'
 
 const SAMPLERATE = 44100
 const WINDOW_MS = 46

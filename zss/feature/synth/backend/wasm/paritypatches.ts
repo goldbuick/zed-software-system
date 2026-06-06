@@ -1,8 +1,8 @@
 /** Canonical parity patches — broad set vs archived Tone reference. */
-import type { SYNTH_NOTE_ENTRY } from '../../playnotation'
-import { tonenotationseconds } from '../../playnotation'
-import { ENV_PARITY_VOICE_CONFIGS } from '../daisy/envparityscenario'
-import type { LEVEL_STABILITY_VOICE_CONFIG } from '../daisy/levelstabilitytypes'
+import { ENV_PARITY_VOICE_CONFIGS } from 'zss/feature/synth/backend/daisy/envparityscenario'
+import type { LEVEL_STABILITY_VOICE_CONFIG } from 'zss/feature/synth/backend/daisy/levelstabilitytypes'
+import type { SYNTH_NOTE_ENTRY } from 'zss/feature/synth/playnotation'
+import { tonenotationseconds } from 'zss/feature/synth/playnotation'
 
 export type PARITY_PATCH = {
   id: string

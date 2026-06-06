@@ -1,6 +1,6 @@
-import { WASM_SYNTH_VOICE_PLAY_CODE } from '../voiceplaycode'
-import { wirewasmmainchain } from '../../../backend/wasm/wasmmainchain'
-import { WASM_MASTER_PLAY_CODE } from '../wasmmasterplaycode'
+import { WASM_SYNTH_VOICE_PLAY_CODE } from 'zss/feature/synth/archive/maxi/voiceplaycode'
+import { wirewasmmainchain } from 'zss/feature/synth/backend/wasm/wasmmainchain'
+import { WASM_MASTER_PLAY_CODE } from 'zss/feature/synth/archive/maxi/wasmmasterplaycode'
 
 describe('wasmmasterplaycode', () => {
   it('includes duck, compressor, razzle, and masterout', () => {

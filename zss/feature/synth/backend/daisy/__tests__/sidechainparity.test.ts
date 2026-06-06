@@ -2,7 +2,7 @@ import {
   SIDECHAIN_MAX_BYPASS_DUCK_DB,
   SIDECHAIN_MIN_DUCK_DEPTH_DB,
   evalsidechainparitygate,
-} from '../sidechainparity'
+} from 'zss/feature/synth/backend/daisy/sidechainparity'
 
 describe('sidechainparity', () => {
   it('passes when SC on ducks and SC off does not', () => {

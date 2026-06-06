@@ -4,7 +4,7 @@ import {
   WASM_MAIN_TRIM_DB,
   WASM_PLAY_BUS_GAIN,
   WASM_VOICE_OUT_GAIN,
-} from '../../backend/wasm/wasmlevels'
+} from 'zss/feature/synth/backend/wasm/wasmlevels'
 import { WASM_RAZZLE_PLAY_CODE } from './wasmrazzleplaycode'
 import { WASM_SIDECHAIN_PLAY_CODE } from './wasmsidechainplaycode'
 

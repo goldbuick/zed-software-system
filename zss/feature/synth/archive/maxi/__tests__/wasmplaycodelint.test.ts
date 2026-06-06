@@ -1,6 +1,6 @@
-import { WASM_SPIKE_PLAY_CODE } from '../spikeplay'
-import { WASM_SYNTH_VOICE_PLAY_CODE } from '../voiceplaycode'
-import { formatwasmplaycodelint, lintwasmplaycode } from '../wasmplaycodelint'
+import { WASM_SPIKE_PLAY_CODE } from 'zss/feature/synth/archive/maxi/spikeplay'
+import { WASM_SYNTH_VOICE_PLAY_CODE } from 'zss/feature/synth/archive/maxi/voiceplaycode'
+import { formatwasmplaycodelint, lintwasmplaycode } from 'zss/feature/synth/archive/maxi/wasmplaycodelint'
 
 describe('wasm play code lint', () => {
   it('reports undefined identifiers in broken code', () => {

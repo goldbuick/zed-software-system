@@ -1,5 +1,5 @@
-import { WASM_FX_PLAY_CODE } from '../wasmfxplaycode'
-import { WASM_FX_GROUP_COUNT } from '../../../backend/wasm/wasmfxstate'
+import { WASM_FX_PLAY_CODE } from 'zss/feature/synth/archive/maxi/wasmfxplaycode'
+import { WASM_FX_GROUP_COUNT } from 'zss/feature/synth/backend/wasm/wasmfxstate'
 
 describe('wasm fx play code', () => {
   it('declares per-bus fx state as arrays indexed by group', () => {

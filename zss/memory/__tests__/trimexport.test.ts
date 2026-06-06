@@ -13,16 +13,15 @@ import {
   memoryreadcodepage,
   memorywritebookflag,
 } from 'zss/memory/bookoperations'
+import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {
   memorycreatecodepage,
   memoryexportcodepage,
   memoryreadcodepageruntime,
 } from 'zss/memory/codepageoperations'
+import { memoryresetbooks } from 'zss/memory/session'
 import { trimformatobject, trimmemoryexport } from 'zss/memory/trimexport'
 import { BOOK, BOOK_KEYS } from 'zss/memory/types'
-
-import { memoryboundariesclear } from '../boundaries'
-import { memoryresetbooks } from '../session'
 
 function wiretrimmedbookforimport(book: BOOK): FORMAT_OBJECT {
   const j = trimmemoryexport(memoryexportbookasjson(book)) ?? {}

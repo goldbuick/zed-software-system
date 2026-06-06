@@ -3,7 +3,7 @@ import { SOFTWARE } from 'zss/device/session'
 import { AUDIO_SYNTH } from 'zss/feature/synth'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
-import { canonicalvoicefxgroupindex } from '../voicefxgroup'
+import { canonicalvoicefxgroupindex } from 'zss/feature/synth/archive/tone/voicefxgroup'
 
 export type VoiceFxConfigHandler = (
   fx: any,

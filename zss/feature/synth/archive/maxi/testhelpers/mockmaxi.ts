@@ -1,8 +1,8 @@
-import type { SabEngine } from '../../../backend/shared/sabengine'
+import type { SabEngine } from 'zss/feature/synth/backend/shared/sabengine'
 import {
   resetwasmsabregistry,
   wasmsabsnapshot,
-} from '../../../backend/wasm/sabpush'
+} from 'zss/feature/synth/backend/wasm/sabpush'
 
 export function createmockmaxi() {
   resetwasmsabregistry()

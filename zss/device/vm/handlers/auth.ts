@@ -6,6 +6,10 @@ import {
   registerinspector,
   registerloginready,
 } from 'zss/device/api'
+import {
+  boardrunnerassignmentvalid,
+  boardrunnerelect,
+} from 'zss/device/vm/boardrunnermanagement'
 import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
 import { handlegadgetdesync } from 'zss/device/vm/gadgetsynctick'
 import {
@@ -31,11 +35,6 @@ import {
 } from 'zss/memory/session'
 import { BOOK_FLAGS } from 'zss/memory/types'
 import { memoryreadconfig, memorysetconfig } from 'zss/memory/utilities'
-
-import {
-  boardrunnerassignmentvalid,
-  boardrunnerelect,
-} from '../boardrunnermanagement'
 
 export function handlesearch(vm: DEVICE, message: MESSAGE): void {
   registerloginready(vm, message.player)

@@ -10,7 +10,7 @@ import {
   autofiltermaxhz,
   autofiltersine,
   parseautofiltertype,
-} from '../wasmautofilter'
+} from 'zss/feature/synth/backend/wasm/wasmautofilter'
 
 describe('wasmautofilter', () => {
   it('maps LFO sine and depth to cutoff range like Tone AutoFilter', () => {

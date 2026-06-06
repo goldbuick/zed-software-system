@@ -13,7 +13,7 @@ import {
   generatenoisewave,
   generateretrowave,
   generatewhitewave,
-} from '../noisewave'
+} from 'zss/feature/synth/archive/maxi/noisewave'
 
 function first16(wave: Float64Array) {
   return Array.from(wave.slice(0, 16))

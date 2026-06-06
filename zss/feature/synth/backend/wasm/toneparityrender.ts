@@ -1,16 +1,19 @@
 import { Offline } from 'tone'
+import { addfcrushmodule } from 'zss/feature/synth/archive/tone/fcrushworkletnode'
+import { createsynth } from 'zss/feature/synth/archive/tone/index'
+import { addsidechainmodule } from 'zss/feature/synth/archive/tone/sidechainworkletnode'
+import { synthvoiceconfig } from 'zss/feature/synth/archive/tone/voiceconfig/index'
+import { synthvoicefxconfig } from 'zss/feature/synth/archive/tone/voicefx/index'
+import type { LEVEL_STABILITY_SCENARIO } from 'zss/feature/synth/backend/daisy/levelstabilityscenarios'
+import { estimatesequencedurationsec } from 'zss/feature/synth/backend/daisy/scalecrewsong'
+import {
+  invokeplay,
+  parseplay,
+  tonenotationseconds,
+} from 'zss/feature/synth/playnotation'
+import type { SYNTH_NOTE_ENTRY } from 'zss/feature/synth/playnotation'
+import { SYNTH_PLAY_VOICE_COUNT } from 'zss/feature/synth/synthdefaults'
 import { isstring } from 'zss/mapping/types'
-
-import { addfcrushmodule } from '../../archive/tone/fcrushworkletnode'
-import { createsynth } from '../../archive/tone/index'
-import { addsidechainmodule } from '../../archive/tone/sidechainworkletnode'
-import { synthvoiceconfig } from '../../archive/tone/voiceconfig/index'
-import { synthvoicefxconfig } from '../../archive/tone/voicefx/index'
-import { invokeplay, parseplay, tonenotationseconds } from '../../playnotation'
-import type { SYNTH_NOTE_ENTRY } from '../../playnotation'
-import { SYNTH_PLAY_VOICE_COUNT } from '../../synthdefaults.ts'
-import type { LEVEL_STABILITY_SCENARIO } from '../daisy/levelstabilityscenarios.ts'
-import { estimatesequencedurationsec } from '../daisy/scalecrewsong.ts'
 
 import {
   type PARITY_AUDIO_METRICS,

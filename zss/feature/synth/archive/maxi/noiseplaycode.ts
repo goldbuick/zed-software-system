@@ -1,4 +1,4 @@
-import { WASM_NOISE_META_CODE } from '../../backend/wasm/noisemeta'
+import { WASM_NOISE_META_CODE } from 'zss/feature/synth/backend/wasm/noisemeta'
 
 /** BeepBox chip noiseSynth playback — per-sample in Maximilian play(). */
 export const WASM_NOISE_PLAY_CODE = `

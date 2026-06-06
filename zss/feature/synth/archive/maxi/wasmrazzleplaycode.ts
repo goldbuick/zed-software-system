@@ -3,7 +3,7 @@ import {
   WASM_RAZZLE_CHORUS_WET,
   WASM_RAZZLE_HISS_GAIN,
   WASM_RAZZLE_VIBRATO_WET,
-} from '../../backend/wasm/wasmlevels'
+} from 'zss/feature/synth/backend/wasm/wasmlevels'
 
 /** Maximilian razzle layer — vibrato delay, chorus delay, modulated hiss. */
 export const WASM_RAZZLE_PLAY_CODE = `

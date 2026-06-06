@@ -3,7 +3,7 @@ import {
   comparelevelstability,
   formatlevelstabilityline,
   formatwindowcompareplot,
-} from '../levelstabilitymetrics'
+} from 'zss/feature/synth/backend/wasm/levelstabilitymetrics'
 
 const SAMPLERATE = 44100
 

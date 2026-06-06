@@ -25,7 +25,7 @@ jest.mock('../wasmofflinerender', () => ({
 
 import type { SYNTH_NOTE_ENTRY } from 'zss/feature/synth/playnotation'
 
-import { createwasmrecordhandler } from '../wasmrecordhandler'
+import { createwasmrecordhandler } from 'zss/feature/synth/archive/maxi/wasmrecordhandler'
 
 describe('wasm record handler', () => {
   beforeEach(() => {

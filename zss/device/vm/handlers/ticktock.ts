@@ -8,6 +8,7 @@ import {
   boardrunnerelect,
   boardrunnerevict,
 } from 'zss/device/vm/boardrunnermanagement'
+import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
 import { gadgetsynctick } from 'zss/device/vm/gadgetsynctick'
 import { boardrunners } from 'zss/device/vm/state'
 import { ispresent } from 'zss/mapping/types'
@@ -17,8 +18,6 @@ import { memorytickloaders } from 'zss/memory/runtime'
 import { memoryreadbookbysoftware, memoryreadfrozen } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
 import { perfmeasure } from 'zss/perf/ui'
-
-import { boardrunnerpushupdates } from '../boardrunnerpushupdates'
 
 import { pilottick } from './pilot'
 

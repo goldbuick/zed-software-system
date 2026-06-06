@@ -1,4 +1,4 @@
-import { SYNTH_PLAY_VOICE_COUNT } from '../../synthdefaults'
+import { SYNTH_PLAY_VOICE_COUNT } from 'zss/feature/synth/synthdefaults'
 
 import type { LEVEL_STABILITY_SCENARIO } from './levelstabilityscenarios'
 import { estimatesequencedurationsec } from './scalecrewsong'

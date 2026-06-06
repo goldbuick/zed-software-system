@@ -1,8 +1,8 @@
-import { RUN_ZSS_COMMAND_TOOL_NAME } from '../agenttools'
+import { RUN_ZSS_COMMAND_TOOL_NAME } from 'zss/feature/heavy/llm/agenttools'
 import {
   parsetoolcallsfromassistant,
   validatedzsslinetoolcalls,
-} from '../parsetoolcalls'
+} from 'zss/feature/heavy/llm/parsetoolcalls'
 
 describe('parsetoolcallsfromassistant', () => {
   it('parses bare object', () => {

@@ -1,6 +1,6 @@
-import { createwasmsynth } from '../maxisynth'
-import { createmockmaxi } from '../testhelpers/mockmaxi'
-import { WASM_FX_SEND_COUNT, WASM_FX_SEND_IDX } from '../../../backend/wasm/wasmfxstate'
+import { createwasmsynth } from 'zss/feature/synth/archive/maxi/maxisynth'
+import { createmockmaxi } from 'zss/feature/synth/archive/maxi/testhelpers/mockmaxi'
+import { WASM_FX_SEND_COUNT, WASM_FX_SEND_IDX } from 'zss/feature/synth/backend/wasm/wasmfxstate'
 
 describe('wasm stopplay', () => {
   it('stopplay gates off play voices in zss_voices sab', () => {

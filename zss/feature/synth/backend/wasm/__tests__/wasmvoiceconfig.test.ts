@@ -1,20 +1,23 @@
-import { SOURCE_TYPE } from 'zss/feature/synth/shared/sourcetype'
-
-import { wasmsabsnapshot } from '../sabpush'
-import { createmocksabengine } from '../testhelpers/mocksab'
-import { defaultwasmalgoconfig } from '../wasmalgoconfigsab'
-import { initwasmvoicesab } from '../wasminitsab'
+import { wasmsabsnapshot } from 'zss/feature/synth/backend/wasm/sabpush'
+import { createmocksabengine } from 'zss/feature/synth/backend/wasm/testhelpers/mocksab'
+import { defaultwasmalgoconfig } from 'zss/feature/synth/backend/wasm/wasmalgoconfigsab'
+import { initwasmvoicesab } from 'zss/feature/synth/backend/wasm/wasminitsab'
 import {
   DEFAULT_WASM_OSC_CONFIG,
   defaultwasmoscconfig,
-} from '../wasmoscconfigsab'
-import { WASM_OSC_TYPE, parsemodtype, parsewasmosc } from '../wasmosctype'
-import { wasmvoicecfgtosab } from '../wasmvoicecfgsab'
+} from 'zss/feature/synth/backend/wasm/wasmoscconfigsab'
+import {
+  WASM_OSC_TYPE,
+  parsemodtype,
+  parsewasmosc,
+} from 'zss/feature/synth/backend/wasm/wasmosctype'
+import { wasmvoicecfgtosab } from 'zss/feature/synth/backend/wasm/wasmvoicecfgsab'
 import {
   applywasmvoiceconfig,
   defaultwasmvoicestate,
   wasmvoicestatetosab,
-} from '../wasmvoiceconfig'
+} from 'zss/feature/synth/backend/wasm/wasmvoiceconfig'
+import { SOURCE_TYPE } from 'zss/feature/synth/shared/sourcetype'
 
 function applyvoiceconfig(
   voices: ReturnType<typeof defaultwasmvoicestate>,

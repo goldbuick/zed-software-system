@@ -3,7 +3,7 @@ import {
   evalpitchstabilitygate,
   goertzelmag,
   hztocents,
-} from '../pitchstability'
+} from 'zss/feature/synth/backend/daisy/pitchstability'
 
 function fillsine(
   hz: number,

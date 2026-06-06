@@ -5,20 +5,20 @@ import {
   getunlockedaudiocontext,
   setliveaudiocontext,
   unlockaudiocontext,
-} from '../../backend/wasm/audiocontextunlock'
-import { isofflineaudiocontext } from '../../backend/wasm/audiocontextutil'
-import { ensurewasmcoep } from '../../backend/wasm/coopcoep'
-import { initwasmfxsab } from '../../backend/wasm/wasmfxstate'
+} from 'zss/feature/synth/backend/wasm/audiocontextunlock'
+import { isofflineaudiocontext } from 'zss/feature/synth/backend/wasm/audiocontextutil'
+import { ensurewasmcoep } from 'zss/feature/synth/backend/wasm/coopcoep'
+import { initwasmfxsab } from 'zss/feature/synth/backend/wasm/wasmfxstate'
 import {
   type WASM_MAIN_CHAIN,
   wirewasmmainchain,
-} from '../../backend/wasm/wasmmainchain'
+} from 'zss/feature/synth/backend/wasm/wasmmainchain'
 import {
   WASM_DEFAULT_PLAY_VOLUME,
   WASM_DEFAULT_TTS_VOLUME,
   initwasmmainsab,
   pushwasmmainsab,
-} from '../../backend/wasm/wasmmainsab'
+} from 'zss/feature/synth/backend/wasm/wasmmainsab'
 import { WASM_SPIKE_PLAY_CODE } from './spikeplay'
 import { WASM_SYNTH_VOICE_PLAY_CODE } from './voiceplaycode'
 
@@ -306,7 +306,7 @@ export function getmaximaudiocontext(): MAYBE<AudioContext> {
   return getliveaudiocontext()
 }
 
-export { unlockaudiocontext as unlockmaximaudiocontext } from '../../backend/wasm/audiocontextunlock'
+export { unlockaudiocontext as unlockmaximaudiocontext } from 'zss/feature/synth/backend/wasm/audiocontextunlock'
 
 export function setwasmsynthttsvolume(volume: number) {
   wasmttsvolume = volume
@@ -349,7 +349,7 @@ export {
   pushwasmsabvalues,
   resetwasmsabregistry,
   wasmsabsnapshot,
-} from '../../backend/wasm/sabpush'
+} from 'zss/feature/synth/backend/wasm/sabpush'
 
 export function setwasmsynthplayvolume(volume: number) {
   wasmplayvolume = volume
@@ -377,4 +377,4 @@ export function getwasmbroadcastdestination(): MAYBE<MediaStreamAudioDestination
   return broadcastdestination
 }
 
-export { initwasmmainsab } from '../../backend/wasm/wasmmainsab'
+export { initwasmmainsab } from 'zss/feature/synth/backend/wasm/wasmmainsab'

@@ -4,7 +4,7 @@ import {
   WASM_DRUM_BUS_GAIN,
   WASM_NOISE_VOICE_GAIN,
   WASM_SINE_VOICE_GAIN,
-} from '../wasmlevels'
+} from 'zss/feature/synth/backend/wasm/wasmlevels'
 
 describe('wasmlevels', () => {
   it('matches Tone drumvolume bus gain', () => {

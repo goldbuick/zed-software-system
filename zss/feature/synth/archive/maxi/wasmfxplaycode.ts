@@ -3,7 +3,7 @@ import {
   WASM_FX_PARAM_COUNT,
   WASM_FX_PARAM_OFFSET,
   WASM_FX_SEND_COUNT,
-} from '../../backend/wasm/wasmfxstate'
+} from 'zss/feature/synth/backend/wasm/wasmfxstate'
 
 const FX_GROUP_COUNT = WASM_FX_GROUP_COUNT
 

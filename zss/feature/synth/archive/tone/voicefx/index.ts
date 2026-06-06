@@ -5,7 +5,7 @@ import { AUDIO_SYNTH } from 'zss/feature/synth'
 import { volumetodb } from 'zss/feature/synth/fx'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 
-import { canonicalvoicefxgroupindex } from '../voicefxgroup'
+import { canonicalvoicefxgroupindex } from 'zss/feature/synth/archive/tone/voicefxgroup'
 
 import { synthvoicefxautofilterconfig } from './autofilter'
 import { synthvoicefxautowahconfig } from './autowah'

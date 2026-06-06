@@ -1,4 +1,4 @@
-import type { PARITY_AUDIO_METRICS } from '../wasm/paritymetrics'
+import type { PARITY_AUDIO_METRICS } from 'zss/feature/synth/backend/wasm/paritymetrics'
 
 export type SOS_VOICE_GATE = {
   pass: boolean

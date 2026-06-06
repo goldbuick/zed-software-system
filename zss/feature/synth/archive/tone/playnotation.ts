@@ -1,1 +1,1 @@
-export * from '../../playnotation'
+export * from 'zss/feature/synth/playnotation'

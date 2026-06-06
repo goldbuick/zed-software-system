@@ -2,7 +2,7 @@ import {
   memoryboundariesclear,
   memoryboundaryalloc,
   memoryboundaryget,
-} from '../boundaries'
+} from 'zss/memory/boundaries'
 
 describe('memoryboundaryalloc', () => {
   afterEach(() => {

@@ -1,1 +1,1 @@
-export * from '../../voicefxgroup'
+export * from 'zss/feature/synth/voicefxgroup'

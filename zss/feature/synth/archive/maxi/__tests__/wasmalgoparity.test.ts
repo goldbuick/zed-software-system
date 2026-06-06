@@ -1,5 +1,5 @@
-import { WASM_SYNTH_VOICE_PLAY_CODE } from '../voiceplaycode'
-import { WASM_ALGO_OP_GAIN, WASM_ALGO_OUT_GAIN } from '../../../backend/wasm/wasmlevels'
+import { WASM_SYNTH_VOICE_PLAY_CODE } from 'zss/feature/synth/archive/maxi/voiceplaycode'
+import { WASM_ALGO_OP_GAIN, WASM_ALGO_OUT_GAIN } from 'zss/feature/synth/backend/wasm/wasmlevels'
 
 describe('wasm algovoice parity', () => {
   it('sums algo4 op2 and op4 in parallel (not averaged)', () => {

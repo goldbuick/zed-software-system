@@ -1,9 +1,9 @@
 import { invokeplay, parseplay } from 'zss/feature/synth/playnotation'
 
-import { createwasmsynth } from '../maxisynth'
-import { wasmsabsnapshot } from '../../../backend/wasm/sabpush'
-import { createmockmaxi } from '../testhelpers/mockmaxi'
-import { WASM_DRUM_COUNT } from '../../../backend/wasm/wasmsabchannels'
+import { createwasmsynth } from 'zss/feature/synth/archive/maxi/maxisynth'
+import { wasmsabsnapshot } from 'zss/feature/synth/backend/wasm/sabpush'
+import { createmockmaxi } from 'zss/feature/synth/archive/maxi/testhelpers/mockmaxi'
+import { WASM_DRUM_COUNT } from 'zss/feature/synth/backend/wasm/wasmsabchannels'
 
 describe('wasm drum pattern', () => {
   it('schedules all play drums from 0x1x2xpx4x5x6x7x8x9xkr', () => {

@@ -3,9 +3,8 @@ import {
   MarkdownZedSink,
   parsemarkdownwithzsstextsink,
 } from 'zss/feature/parse/markdownzsstext'
+import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import { zsszedlinkline } from 'zss/feature/zsstextui'
-
-import { terminalwritelines } from '../terminalwritelines'
 
 function createterminalsink(lines: string[]): MarkdownZedSink {
   return {

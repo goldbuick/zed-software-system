@@ -1,24 +1,30 @@
-import { isstring } from 'zss/mapping/types'
-
-import type { SYNTH_NOTE_ENTRY } from '../../playnotation'
-import { invokeplay, parseplay, tonenotationseconds } from '../../playnotation'
 import {
   type PARITY_AUDIO_METRICS,
   audiobuffermetrics,
-} from '../wasm/paritymetrics'
+} from 'zss/feature/synth/backend/wasm/paritymetrics'
 import type {
   DRUM_PARITY_PATCH,
   FX_PARITY_PATCH,
   MAIN_DYNAMICS_PARITY_PATCH,
   PARITY_PATCH,
-} from '../wasm/paritypatches'
-import { applydaisyparityvoiceconfigs } from '../wasm/paritypatchvoice'
-import { defaultwasmalgoconfig } from '../wasm/wasmalgoconfigsab'
-import { applywasmfxconfig, defaultwasmfxsab } from '../wasm/wasmfxstate'
-import { WASM_DEFAULT_TTS_VOLUME } from '../wasm/wasmmainsab'
-import { defaultwasmoscconfig } from '../wasm/wasmoscconfigsab'
-import type { WASM_REPLAY_STATE } from '../wasm/wasmreplaystate'
-import { defaultwasmvoicestate } from '../wasm/wasmvoiceconfig'
+} from 'zss/feature/synth/backend/wasm/paritypatches'
+import { applydaisyparityvoiceconfigs } from 'zss/feature/synth/backend/wasm/paritypatchvoice'
+import { defaultwasmalgoconfig } from 'zss/feature/synth/backend/wasm/wasmalgoconfigsab'
+import {
+  applywasmfxconfig,
+  defaultwasmfxsab,
+} from 'zss/feature/synth/backend/wasm/wasmfxstate'
+import { WASM_DEFAULT_TTS_VOLUME } from 'zss/feature/synth/backend/wasm/wasmmainsab'
+import { defaultwasmoscconfig } from 'zss/feature/synth/backend/wasm/wasmoscconfigsab'
+import type { WASM_REPLAY_STATE } from 'zss/feature/synth/backend/wasm/wasmreplaystate'
+import { defaultwasmvoicestate } from 'zss/feature/synth/backend/wasm/wasmvoiceconfig'
+import type { SYNTH_NOTE_ENTRY } from 'zss/feature/synth/playnotation'
+import {
+  invokeplay,
+  parseplay,
+  tonenotationseconds,
+} from 'zss/feature/synth/playnotation'
+import { isstring } from 'zss/mapping/types'
 
 import { bootisolateddaisyengine, startisolateddaisydsp } from './daisyengine'
 import { createdaisysynth } from './daisysynth'

@@ -6,9 +6,8 @@ import {
 } from 'postprocessing'
 import { forwardRef, useEffect, useMemo } from 'react'
 import { Texture, Uniform, UnsignedByteType } from 'three'
+import { time } from 'zss/gadget/display/anim'
 import { MAYBE, ispresent } from 'zss/mapping/types'
-
-import { time } from '../display/anim'
 
 import { halftonefragshader } from './halftone'
 import { aasteputilshader, blendutilshader, noiseutilshader } from './util'

@@ -17,66 +17,66 @@ import type { SYNTH_STATE } from 'zss/gadget/data/types'
 import { randominteger } from 'zss/mapping/number'
 import { isnumber, isstring } from 'zss/mapping/types'
 
-import type { RECORDING_STATE } from '../../shared/recording'
-import { synthdebugtrace } from '../../synthdebugtrace'
+import type { RECORDING_STATE } from 'zss/feature/synth/shared/recording'
+import { synthdebugtrace } from 'zss/feature/synth/synthdebugtrace'
 import {
   canonicalvoicefxgroupindex,
   voiceindexfxgroup,
-} from '../../voicefxgroup'
+} from 'zss/feature/synth/voicefxgroup'
 
 import type { MaxiEngine } from './maximilian'
-import { playpatternendtime } from '../../backend/wasm/playstart'
-import { initwasmsabchannels, pushwasmsabvalues } from '../../backend/wasm/sabpush'
-import { resetsabseq } from '../../backend/wasm/sabseq'
+import { playpatternendtime } from 'zss/feature/synth/backend/wasm/playstart'
+import { initwasmsabchannels, pushwasmsabvalues } from 'zss/feature/synth/backend/wasm/sabpush'
+import { resetsabseq } from 'zss/feature/synth/backend/wasm/sabseq'
 import {
   initwasmdrumsab,
   initwasmvoicesab,
-} from '../../backend/wasm/wasminitsab'
+} from 'zss/feature/synth/backend/wasm/wasminitsab'
 import {
   defaultwasmalgoconfig,
   initwasmalgoconfigsab,
   pushwasmalgoconfigsab,
-} from '../../backend/wasm/wasmalgoconfigsab'
+} from 'zss/feature/synth/backend/wasm/wasmalgoconfigsab'
 import {
   applywasmfxconfig,
   defaultwasmfxsab,
   initwasmfxsab,
   pushwasmfxsab,
   replaywasmfxfromstate,
-} from '../../backend/wasm/wasmfxstate'
+} from 'zss/feature/synth/backend/wasm/wasmfxstate'
 import {
   defaultwasmoscconfig,
   initwasmoscconfigsab,
   pushwasmoscconfigsab,
-} from '../../backend/wasm/wasmoscconfigsab'
-import { createwasmplayscheduler } from '../../backend/wasm/wasmplayscheduler'
+} from 'zss/feature/synth/backend/wasm/wasmoscconfigsab'
+import { createwasmplayscheduler } from 'zss/feature/synth/backend/wasm/wasmplayscheduler'
 import type { WASM_RECORD_DEPS } from './wasmrecordhandler'
 import {
   type WASM_REPLAY_STATE,
   clonewasmreplaystate,
-} from '../../backend/wasm/wasmreplaystate'
+} from 'zss/feature/synth/backend/wasm/wasmreplaystate'
 import {
   WASM_DRUMS_SAB,
   WASM_DRUM_COUNT,
   WASM_DRUM_SAB_LEN,
   WASM_VOICES_SAB,
   WASM_VOICE_STRIDE,
-} from '../../backend/wasm/wasmsabchannels'
+} from 'zss/feature/synth/backend/wasm/wasmsabchannels'
 import {
   defaultwasmvibratosab,
   initwasmvibratosab,
   pushwasmvibratogroup,
-} from '../../backend/wasm/wasmvibratosab'
+} from 'zss/feature/synth/backend/wasm/wasmvibratosab'
 import {
   initwasmvoicecfgsab,
   pushwasmvoicecfgsab,
-} from '../../backend/wasm/wasmvoicecfgsab'
+} from 'zss/feature/synth/backend/wasm/wasmvoicecfgsab'
 import {
   type WASM_VOICE_STATE,
   applywasmvoiceconfig,
   defaultwasmvoicestate,
   wasmvoicestatetosab,
-} from '../../backend/wasm/wasmvoiceconfig'
+} from 'zss/feature/synth/backend/wasm/wasmvoiceconfig'
 
 const WASM_VOICE_COUNT = SYNTH_VOICE_COUNT
 const WASM_VOICE_BLOCK = WASM_VOICE_COUNT * WASM_VOICE_STRIDE
@@ -86,8 +86,8 @@ function notetofrequency(pitch: string): number {
   return isnumber(freq) && freq > 0 ? freq : 440
 }
 
-export { initwasmfxsab } from '../../backend/wasm/wasmfxstate'
-export { initwasmvoicesab, initwasmdrumsab } from '../../backend/wasm/wasminitsab'
+export { initwasmfxsab } from 'zss/feature/synth/backend/wasm/wasmfxstate'
+export { initwasmvoicesab, initwasmdrumsab } from 'zss/feature/synth/backend/wasm/wasminitsab'
 
 function drumdurationfor(drumid: number, notationdur: number): number {
   if (drumid === 0) {

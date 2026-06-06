@@ -1,4 +1,56 @@
 import { Note } from 'tonal'
+import type { SabEngine } from 'zss/feature/synth/backend/shared/sabengine'
+import { isofflineaudiocontext } from 'zss/feature/synth/backend/wasm/audiocontextutil'
+import { playpatternendtime } from 'zss/feature/synth/backend/wasm/playstart'
+import {
+  initwasmsabchannels,
+  pushwasmsabvalues,
+} from 'zss/feature/synth/backend/wasm/sabpush'
+import { resetsabseq } from 'zss/feature/synth/backend/wasm/sabseq'
+import {
+  defaultwasmalgoconfig,
+  initwasmalgoconfigsab,
+  pushwasmalgoconfigsab,
+} from 'zss/feature/synth/backend/wasm/wasmalgoconfigsab'
+import {
+  applywasmfxconfig,
+  defaultwasmfxsab,
+  initwasmfxsab,
+  pushwasmfxsab,
+  replaywasmfxfromstate,
+} from 'zss/feature/synth/backend/wasm/wasmfxstate'
+import {
+  defaultwasmoscconfig,
+  initwasmoscconfigsab,
+  pushwasmoscconfigsab,
+} from 'zss/feature/synth/backend/wasm/wasmoscconfigsab'
+import { createwasmplayscheduler } from 'zss/feature/synth/backend/wasm/wasmplayscheduler'
+import {
+  type WASM_REPLAY_STATE,
+  clonewasmreplaystate,
+} from 'zss/feature/synth/backend/wasm/wasmreplaystate'
+import {
+  WASM_DRUMS_SAB,
+  WASM_DRUM_COUNT,
+  WASM_DRUM_SAB_LEN,
+  WASM_VOICES_SAB,
+  WASM_VOICE_STRIDE,
+} from 'zss/feature/synth/backend/wasm/wasmsabchannels'
+import {
+  defaultwasmvibratosab,
+  initwasmvibratosab,
+  pushwasmvibratogroup,
+} from 'zss/feature/synth/backend/wasm/wasmvibratosab'
+import {
+  initwasmvoicecfgsab,
+  pushwasmvoicecfgsab,
+} from 'zss/feature/synth/backend/wasm/wasmvoicecfgsab'
+import {
+  type WASM_VOICE_STATE,
+  applywasmvoiceconfig,
+  defaultwasmvoicestate,
+  wasmvoicestatetosab,
+} from 'zss/feature/synth/backend/wasm/wasmvoiceconfig'
 import {
   type SYNTH_NOTE_ENTRY,
   type SYNTH_NOTE_ON,
@@ -8,70 +60,20 @@ import {
   resolvebgplayonstart,
   tonenotationseconds,
 } from 'zss/feature/synth/playnotation'
+import type { RECORDING_STATE } from 'zss/feature/synth/shared/recording'
 import { SOURCE_TYPE } from 'zss/feature/synth/shared/sourcetype'
+import { synthdebugtrace } from 'zss/feature/synth/synthdebugtrace'
 import {
   SYNTH_PLAY_VOICE_COUNT,
   SYNTH_VOICE_COUNT,
 } from 'zss/feature/synth/synthdefaults'
-import type { SYNTH_STATE } from 'zss/gadget/data/types'
-import { randominteger } from 'zss/mapping/number'
-import { isnumber, isstring } from 'zss/mapping/types'
-
-import type { RECORDING_STATE } from '../../shared/recording'
-import { synthdebugtrace } from '../../synthdebugtrace'
 import {
   canonicalvoicefxgroupindex,
   voiceindexfxgroup,
-} from '../../voicefxgroup'
-import type { SabEngine } from '../shared/sabengine'
-import { isofflineaudiocontext } from '../wasm/audiocontextutil'
-import { playpatternendtime } from '../wasm/playstart'
-import { initwasmsabchannels, pushwasmsabvalues } from '../wasm/sabpush'
-import { resetsabseq } from '../wasm/sabseq'
-import {
-  defaultwasmalgoconfig,
-  initwasmalgoconfigsab,
-  pushwasmalgoconfigsab,
-} from '../wasm/wasmalgoconfigsab'
-import {
-  applywasmfxconfig,
-  defaultwasmfxsab,
-  initwasmfxsab,
-  pushwasmfxsab,
-  replaywasmfxfromstate,
-} from '../wasm/wasmfxstate'
-import {
-  defaultwasmoscconfig,
-  initwasmoscconfigsab,
-  pushwasmoscconfigsab,
-} from '../wasm/wasmoscconfigsab'
-import { createwasmplayscheduler } from '../wasm/wasmplayscheduler'
-import {
-  type WASM_REPLAY_STATE,
-  clonewasmreplaystate,
-} from '../wasm/wasmreplaystate'
-import {
-  WASM_DRUMS_SAB,
-  WASM_DRUM_COUNT,
-  WASM_DRUM_SAB_LEN,
-  WASM_VOICES_SAB,
-  WASM_VOICE_STRIDE,
-} from '../wasm/wasmsabchannels'
-import {
-  defaultwasmvibratosab,
-  initwasmvibratosab,
-  pushwasmvibratogroup,
-} from '../wasm/wasmvibratosab'
-import {
-  initwasmvoicecfgsab,
-  pushwasmvoicecfgsab,
-} from '../wasm/wasmvoicecfgsab'
-import {
-  type WASM_VOICE_STATE,
-  applywasmvoiceconfig,
-  defaultwasmvoicestate,
-  wasmvoicestatetosab,
-} from '../wasm/wasmvoiceconfig'
+} from 'zss/feature/synth/voicefxgroup'
+import type { SYNTH_STATE } from 'zss/gadget/data/types'
+import { randominteger } from 'zss/mapping/number'
+import { isnumber, isstring } from 'zss/mapping/types'
 
 import type { DAISY_RECORD_DEPS } from './daisyrecordhandler'
 
@@ -94,7 +96,7 @@ export function initdaisyvoicesab(maxi: SabEngine) {
   initwasmalgoconfigsab(maxi)
 }
 
-export { initwasmfxsab } from '../wasm/wasmfxstate'
+export { initwasmfxsab } from 'zss/feature/synth/backend/wasm/wasmfxstate'
 
 function drumdurationfor(drumid: number, notationdur: number): number {
   if (drumid === 0) {

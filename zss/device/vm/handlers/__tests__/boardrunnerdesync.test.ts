@@ -1,10 +1,9 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import * as api from 'zss/device/api'
+import { handleboardrunnerdesync } from 'zss/device/vm/handlers/boardrunnerdesync'
 import * as boundaries from 'zss/memory/boundaries'
 import * as session from 'zss/memory/session'
-
-import { handleboardrunnerdesync } from '../boardrunnerdesync'
 
 jest.mock('zss/memory/boundaries', () => ({
   memoryboundaryget: jest.fn(),

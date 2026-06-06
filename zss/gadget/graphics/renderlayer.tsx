@@ -6,10 +6,9 @@ import { Fragment, ReactNode, memo, useEffect, useState } from 'react'
 import type { Camera } from 'three'
 import { Texture, Vector2, WebGLRenderTarget } from 'three'
 import { useDeviceData } from 'zss/gadget/device'
+import { useGlitchPulse } from 'zss/gadget/fx/glitchpulse'
 import { EffectComposer } from 'zss/gadget/graphics/effectcomposer'
 import { useMedia } from 'zss/gadget/media'
-
-import { useGlitchPulse } from '../fx/glitchpulse'
 
 import { RenderTexture } from './rendertexture'
 

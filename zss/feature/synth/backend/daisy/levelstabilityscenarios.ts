@@ -1,5 +1,5 @@
-import type { SYNTH_NOTE_ENTRY } from '../../playnotation'
-import { tonenotationseconds } from '../../playnotation'
+import type { SYNTH_NOTE_ENTRY } from 'zss/feature/synth/playnotation'
+import { tonenotationseconds } from 'zss/feature/synth/playnotation'
 
 import { FX_MATRIX_SCENARIOS } from './fxlevelscenarios'
 import type { LEVEL_STABILITY_SCENARIO } from './levelstabilitytypes'

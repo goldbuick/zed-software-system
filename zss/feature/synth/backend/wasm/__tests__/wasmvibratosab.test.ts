@@ -1,14 +1,14 @@
-import { createmocksabengine } from '../testhelpers/mocksab'
+import { createmocksabengine } from 'zss/feature/synth/backend/wasm/testhelpers/mocksab'
 import {
   WASM_VIBRATO_GROUP_COUNT,
   WASM_VIBRATO_SAB_LEN,
   WASM_VIBRATO_STRIDE,
-} from '../wasmsabchannels'
+} from 'zss/feature/synth/backend/wasm/wasmsabchannels'
 import {
   defaultwasmvibratosab,
   pushwasmvibratogroup,
   wasmgroupvibratobase,
-} from '../wasmvibratosab'
+} from 'zss/feature/synth/backend/wasm/wasmvibratosab'
 
 describe('wasmvibratosab', () => {
   it('uses epoch plus per-group stride layout', () => {

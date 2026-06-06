@@ -1,12 +1,11 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
+import { handleboardrunnerpatch } from 'zss/device/vm/handlers/boardrunnerpatch'
 import {
   memoryboundariesclear,
   memoryboundaryalloc,
   memoryboundaryget,
 } from 'zss/memory/boundaries'
-
-import { handleboardrunnerpatch } from '../boardrunnerpatch'
 
 describe('handleboardrunnerpatch', () => {
   beforeEach(() => {

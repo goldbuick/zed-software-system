@@ -3,8 +3,8 @@ import {
   type SONG_RENDER_RESULT,
   arraybuffertobase64,
   encodewavmono16,
-} from '../daisy/daisysongrender.ts'
-import type { LEVEL_STABILITY_SCENARIO } from '../daisy/levelstabilityscenarios.ts'
+} from 'zss/feature/synth/backend/daisy/daisysongrender'
+import type { LEVEL_STABILITY_SCENARIO } from 'zss/feature/synth/backend/daisy/levelstabilityscenarios'
 
 import {
   type LEVEL_STABILITY_METRICS,

@@ -2,7 +2,7 @@ import {
   type LEVEL_STABILITY_METRICS,
   analyzelevelstability,
   formatlevelstabilityline,
-} from '../wasm/levelstabilitymetrics.ts'
+} from 'zss/feature/synth/backend/wasm/levelstabilitymetrics'
 
 import {
   type LEVEL_STABILITY_RENDER,

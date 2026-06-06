@@ -1,6 +1,6 @@
-import type { SYNTH_NOTE_ENTRY } from '../../playnotation'
-import { WASM_DEFAULT_TTS_VOLUME } from '../wasm/wasmmainsab'
-import type { WASM_REPLAY_STATE } from '../wasm/wasmreplaystate'
+import { WASM_DEFAULT_TTS_VOLUME } from 'zss/feature/synth/backend/wasm/wasmmainsab'
+import type { WASM_REPLAY_STATE } from 'zss/feature/synth/backend/wasm/wasmreplaystate'
+import type { SYNTH_NOTE_ENTRY } from 'zss/feature/synth/playnotation'
 
 import {
   bootisolateddaisyengine,

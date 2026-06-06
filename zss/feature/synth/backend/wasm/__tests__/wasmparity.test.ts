@@ -1,16 +1,22 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
-import type { PARITY_AUDIO_METRICS } from '../paritymetrics'
-import { formatmetricsdelta, metricswithin } from '../paritymetrics'
+import type { PARITY_AUDIO_METRICS } from 'zss/feature/synth/backend/wasm/paritymetrics'
+import {
+  formatmetricsdelta,
+  metricswithin,
+} from 'zss/feature/synth/backend/wasm/paritymetrics'
 import {
   DRUM_PARITY_PATCHES,
   ENVELOPE_ADSR_PARITY_PATCHES,
   FX_PARITY_PATCHES,
   MAIN_DYNAMICS_PARITY_PATCHES,
   WASM_PARITY_PATCHES,
-} from '../paritypatches'
-import { TONE_PARITY_EXCLUDED, paritytolerancesfor } from '../paritytolerances'
+} from 'zss/feature/synth/backend/wasm/paritypatches'
+import {
+  TONE_PARITY_EXCLUDED,
+  paritytolerancesfor,
+} from 'zss/feature/synth/backend/wasm/paritytolerances'
 
 type PARITY_FIXTURE_FILE = {
   patches: Record<string, PARITY_AUDIO_METRICS>

@@ -1,22 +1,21 @@
 import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { MAYBE } from 'zss/mapping/types'
-
-import type { SabEngine } from '../shared/sabengine'
+import type { SabEngine } from 'zss/feature/synth/backend/shared/sabengine'
 import {
   getunlockedaudiocontext,
   setliveaudiocontext,
-} from '../wasm/audiocontextunlock'
-import { isofflineaudiocontext } from '../wasm/audiocontextutil'
-import { ensurewasmcoep } from '../wasm/coopcoep'
-import { initwasmfxsab } from '../wasm/wasmfxstate'
-import { wirewasmmainchain } from '../wasm/wasmmainchain'
+} from 'zss/feature/synth/backend/wasm/audiocontextunlock'
+import { isofflineaudiocontext } from 'zss/feature/synth/backend/wasm/audiocontextutil'
+import { ensurewasmcoep } from 'zss/feature/synth/backend/wasm/coopcoep'
+import { initwasmfxsab } from 'zss/feature/synth/backend/wasm/wasmfxstate'
+import { wirewasmmainchain } from 'zss/feature/synth/backend/wasm/wasmmainchain'
 import {
   WASM_DEFAULT_PLAY_VOLUME,
   WASM_DEFAULT_TTS_VOLUME,
   initwasmmainsab,
   pushwasmmainsab,
-} from '../wasm/wasmmainsab'
+} from 'zss/feature/synth/backend/wasm/wasmmainsab'
+import { MAYBE } from 'zss/mapping/types'
 
 import { DAISY_BUILD_ID } from './daisybuildid'
 import { daisyasseturl } from './daisypaths'
@@ -419,6 +418,6 @@ export {
   pushwasmsabvalues,
   resetwasmsabregistry,
   wasmsabsnapshot,
-} from '../wasm/sabpush'
+} from 'zss/feature/synth/backend/wasm/sabpush'
 
-export { initwasmmainsab } from '../wasm/wasmmainsab'
+export { initwasmmainsab } from 'zss/feature/synth/backend/wasm/wasmmainsab'

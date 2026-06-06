@@ -4,13 +4,13 @@ import { SOFTWARE } from 'zss/device/session'
 import { write } from 'zss/feature/writeui'
 import { createnameid } from 'zss/mapping/guid'
 
-import { converttomp3 } from '../../mp3'
-import type { SYNTH_NOTE_ENTRY } from '../../playnotation'
-import type { RECORDING_STATE } from '../../shared/recording'
+import { converttomp3 } from 'zss/feature/synth/mp3'
+import type { SYNTH_NOTE_ENTRY } from 'zss/feature/synth/playnotation'
+import type { RECORDING_STATE } from 'zss/feature/synth/shared/recording'
 
 import type { MaxiEngine } from './maximilian'
 import { renderwasmrecord } from './wasmofflinerender'
-import type { WASM_REPLAY_STATE } from '../../backend/wasm/wasmreplaystate'
+import type { WASM_REPLAY_STATE } from 'zss/feature/synth/backend/wasm/wasmreplaystate'
 
 export type WASM_RECORD_DEPS = {
   clearschedules: () => void

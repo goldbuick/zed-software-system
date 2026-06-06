@@ -1,11 +1,10 @@
-import { COLOR } from 'zss/words/types'
-
 import {
   memoryelementtologprefix,
   memoryelementtotickerprefix,
-} from '../rendering'
-import { memorywriteboardelementruntime } from '../runtimeboundary'
-import { BOARD_ELEMENT } from '../types'
+} from 'zss/memory/rendering'
+import { memorywriteboardelementruntime } from 'zss/memory/runtimeboundary'
+import { BOARD_ELEMENT } from 'zss/memory/types'
+import { COLOR } from 'zss/words/types'
 
 const mockedmemoryreadflags = jest.fn()
 

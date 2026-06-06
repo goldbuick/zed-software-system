@@ -1,4 +1,4 @@
-import { analyzelevelstability } from '../wasm/levelstabilitymetrics.ts'
+import { analyzelevelstability } from 'zss/feature/synth/backend/wasm/levelstabilitymetrics'
 
 /** Target: drums ~3 dB hotter than single #synth voice. */
 export const PLAY_DRUM_TARGET_DRUM_MINUS_PLAY_DB = 3

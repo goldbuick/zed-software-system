@@ -1,4 +1,4 @@
-import type { LEVEL_STABILITY_METRICS } from '../wasm/levelstabilitymetrics.ts'
+import type { LEVEL_STABILITY_METRICS } from 'zss/feature/synth/backend/wasm/levelstabilitymetrics'
 
 export type SONG_COMPARE_RESULT = {
   daisyid: string

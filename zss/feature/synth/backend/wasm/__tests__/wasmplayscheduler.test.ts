@@ -1,5 +1,5 @@
-import { isofflineaudiocontext } from '../audiocontextutil'
-import { createwasmplayscheduler } from '../wasmplayscheduler'
+import { isofflineaudiocontext } from 'zss/feature/synth/backend/wasm/audiocontextutil'
+import { createwasmplayscheduler } from 'zss/feature/synth/backend/wasm/wasmplayscheduler'
 
 describe('isofflineaudiocontext', () => {
   it('detects OfflineAudioContext by length property', () => {

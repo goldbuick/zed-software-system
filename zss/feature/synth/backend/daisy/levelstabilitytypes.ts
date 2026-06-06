@@ -1,4 +1,4 @@
-import type { SYNTH_NOTE_ENTRY } from '../../playnotation'
+import type { SYNTH_NOTE_ENTRY } from 'zss/feature/synth/playnotation'
 
 export type LEVEL_STABILITY_FX = {
   fx: string

@@ -1,4 +1,4 @@
-import { SYNTH_DEFAULT_WAVE, SYNTH_VOICE_COUNT } from '../../synthdefaults'
+import { SYNTH_DEFAULT_WAVE, SYNTH_VOICE_COUNT } from 'zss/feature/synth/synthdefaults'
 
 import {
   ensuresynthwasm,

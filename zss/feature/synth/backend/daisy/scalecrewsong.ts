@@ -1,6 +1,6 @@
-import { invokeplay, parseplay } from '../../playnotation'
-import { SYNTH_PLAY_VOICE_COUNT } from '../../synthdefaults'
-import { playpatternendtime } from '../wasm/playstart'
+import { playpatternendtime } from 'zss/feature/synth/backend/wasm/playstart'
+import { invokeplay, parseplay } from 'zss/feature/synth/playnotation'
+import { SYNTH_PLAY_VOICE_COUNT } from 'zss/feature/synth/synthdefaults'
 
 import type { LEVEL_STABILITY_FX } from './levelstabilityscenarios'
 

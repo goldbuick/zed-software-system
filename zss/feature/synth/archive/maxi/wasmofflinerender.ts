@@ -1,4 +1,4 @@
-import type { SYNTH_NOTE_ENTRY } from '../../playnotation'
+import type { SYNTH_NOTE_ENTRY } from 'zss/feature/synth/playnotation'
 
 import {
   bootisolatedmaxiengine,
@@ -7,8 +7,8 @@ import {
 } from './maximilian'
 import { createwasmsynth } from './maxisynth'
 import { WASM_SYNTH_VOICE_PLAY_CODE } from './voiceplaycode'
-import { WASM_DEFAULT_TTS_VOLUME } from '../../backend/wasm/wasmmainsab'
-import type { WASM_REPLAY_STATE } from '../../backend/wasm/wasmreplaystate'
+import { WASM_DEFAULT_TTS_VOLUME } from 'zss/feature/synth/backend/wasm/wasmmainsab'
+import type { WASM_REPLAY_STATE } from 'zss/feature/synth/backend/wasm/wasmreplaystate'
 
 export async function renderwasmrecord(
   replay: WASM_REPLAY_STATE,

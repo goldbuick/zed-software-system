@@ -1,1 +1,1 @@
-export * from '../../mp3'
+export * from 'zss/feature/synth/mp3'

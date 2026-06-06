@@ -1,17 +1,17 @@
 import {
+  DAISY_CONTROL_LEN,
+  DAISY_SAB_CHANNEL_LEN,
+  DAISY_SAB_CHANNEL_OFFSET,
+  formatdaisyworkletsablayout,
+} from 'zss/feature/synth/backend/daisy/daisycontrol'
+import {
   WASM_ALGO_CFG_SAB_LEN,
   WASM_OSC_CFG_SAB_LEN,
   WASM_SAB_CHANNELS,
   WASM_VIBRATO_SAB_LEN,
   WASM_VOICE_CFG_SAB_LEN,
   WASM_VOICE_SAB_LEN,
-} from '../../wasm/wasmsabchannels'
-import {
-  DAISY_CONTROL_LEN,
-  DAISY_SAB_CHANNEL_LEN,
-  DAISY_SAB_CHANNEL_OFFSET,
-  formatdaisyworkletsablayout,
-} from '../daisycontrol'
+} from 'zss/feature/synth/backend/wasm/wasmsabchannels'
 
 describe('daisycontrol layout', () => {
   it('matches wasm sab channel lengths', () => {

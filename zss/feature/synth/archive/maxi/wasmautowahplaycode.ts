@@ -5,8 +5,8 @@ import {
   WASM_AUTOWAH_DEFAULT_OCTAVES,
   WASM_AUTOWAH_Q,
   WASM_AUTOWAH_SCALE_EXP,
-} from '../../backend/wasm/wasmautowah'
-import { WASM_FX_GROUP_COUNT, WASM_FX_PARAM_IDX } from '../../backend/wasm/wasmfxstate'
+} from 'zss/feature/synth/backend/wasm/wasmautowah'
+import { WASM_FX_GROUP_COUNT, WASM_FX_PARAM_IDX } from 'zss/feature/synth/backend/wasm/wasmfxstate'
 
 const FX_GROUP_COUNT = WASM_FX_GROUP_COUNT
 

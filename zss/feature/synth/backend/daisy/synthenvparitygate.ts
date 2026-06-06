@@ -1,7 +1,7 @@
 import {
   type LEVEL_STABILITY_METRICS,
   analyzelevelstability,
-} from '../wasm/levelstabilitymetrics.ts'
+} from 'zss/feature/synth/backend/wasm/levelstabilitymetrics'
 
 import { SYNTH_ENV_PARITY_REQUIRED_IDS } from './synthenvparityscenario.ts'
 

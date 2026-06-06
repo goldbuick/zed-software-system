@@ -16,7 +16,7 @@ jest.mock('zss/config', () => ({
   FORCE_TOUCH_UI: false,
 }))
 
-import { newline, tokenize } from '../lexer'
+import { newline, tokenize } from 'zss/feature/lang/backend/typescript/lexer'
 
 function trailnewlines(tokens: { tokenType: unknown }[]) {
   let n = 0

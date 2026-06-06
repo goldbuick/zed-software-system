@@ -1,6 +1,5 @@
+import type { SabEngine } from 'zss/feature/synth/backend/shared/sabengine'
 import { SYNTH_VOICE_COUNT } from 'zss/feature/synth/synthdefaults'
-
-import type { SabEngine } from '../shared/sabengine'
 
 import { initwasmsabchannels, pushwasmsabvalues } from './sabpush'
 import { initwasmalgoconfigsab } from './wasmalgoconfigsab'

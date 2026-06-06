@@ -21,7 +21,7 @@ jest.mock('zss/words/textformat', () => ({
   tokenize: () => ({ errors: [{ message: 'mock' }], tokens: [] }),
 }))
 
-import { readfixture } from '../langparityload'
+import { readfixture } from 'zss/feature/lang/backend/wasm/langparityload'
 
 describe('lang compile behavioral parity', () => {
   it('native-produced if_break JS is executable generator source', () => {

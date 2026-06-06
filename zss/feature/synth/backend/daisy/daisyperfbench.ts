@@ -1,10 +1,13 @@
-import type { SYNTH_NOTE_ENTRY } from '../../playnotation'
-import { defaultwasmalgoconfig } from '../wasm/wasmalgoconfigsab'
-import { applywasmfxconfig, defaultwasmfxsab } from '../wasm/wasmfxstate'
-import { WASM_DEFAULT_TTS_VOLUME } from '../wasm/wasmmainsab'
-import { defaultwasmoscconfig } from '../wasm/wasmoscconfigsab'
-import type { WASM_REPLAY_STATE } from '../wasm/wasmreplaystate'
-import { defaultwasmvoicestate } from '../wasm/wasmvoiceconfig'
+import { defaultwasmalgoconfig } from 'zss/feature/synth/backend/wasm/wasmalgoconfigsab'
+import {
+  applywasmfxconfig,
+  defaultwasmfxsab,
+} from 'zss/feature/synth/backend/wasm/wasmfxstate'
+import { WASM_DEFAULT_TTS_VOLUME } from 'zss/feature/synth/backend/wasm/wasmmainsab'
+import { defaultwasmoscconfig } from 'zss/feature/synth/backend/wasm/wasmoscconfigsab'
+import type { WASM_REPLAY_STATE } from 'zss/feature/synth/backend/wasm/wasmreplaystate'
+import { defaultwasmvoicestate } from 'zss/feature/synth/backend/wasm/wasmvoiceconfig'
+import type { SYNTH_NOTE_ENTRY } from 'zss/feature/synth/playnotation'
 
 import {
   bootisolateddaisyengine,

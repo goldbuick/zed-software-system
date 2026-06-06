@@ -1,5 +1,8 @@
-import type { LEVEL_STABILITY_METRICS } from '../../wasm/levelstabilitymetrics'
-import { evalnotepopgates, notepoppopwindowindex } from '../notepopgates'
+import {
+  evalnotepopgates,
+  notepoppopwindowindex,
+} from 'zss/feature/synth/backend/daisy/notepopgates'
+import type { LEVEL_STABILITY_METRICS } from 'zss/feature/synth/backend/wasm/levelstabilitymetrics'
 
 const META = {
   gateboundariessec: [0, 0.441, 0.882, 1.324, 1.765, 2.206, 2.647, 3.088],

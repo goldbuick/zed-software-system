@@ -1,5 +1,8 @@
-import manifest from '../__fixtures__/parity/manifest.json'
-import { readfixture, runnativeparitygate } from '../langparityload'
+import manifest from 'zss/feature/lang/backend/wasm/__fixtures__/parity/manifest.json'
+import {
+  readfixture,
+  runnativeparitygate,
+} from 'zss/feature/lang/backend/wasm/langparityload'
 
 type FIXTURE_MANIFEST = string[]
 

@@ -1,4 +1,7 @@
-import { canonicalvoicefxgroupindex, voiceindexfxgroup } from '../voicefxgroup'
+import {
+  canonicalvoicefxgroupindex,
+  voiceindexfxgroup,
+} from 'zss/feature/synth/voicefxgroup'
 
 describe('voicefxgroup', () => {
   it('maps firmware fx indices to four buses', () => {

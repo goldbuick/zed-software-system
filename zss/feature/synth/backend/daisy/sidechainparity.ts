@@ -1,11 +1,11 @@
 import {
   type LEVEL_STABILITY_METRICS,
   analyzelevelstability,
-} from '../wasm/levelstabilitymetrics.ts'
+} from 'zss/feature/synth/backend/wasm/levelstabilitymetrics'
 import {
   type PARITY_AUDIO_METRICS,
   audiopowermetrics,
-} from '../wasm/paritymetrics.ts'
+} from 'zss/feature/synth/backend/wasm/paritymetrics'
 
 const SILENCE_PEAK_DB = -60
 

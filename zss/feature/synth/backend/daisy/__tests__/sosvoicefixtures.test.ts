@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
-import { SOS_VOICE_PATCHES } from '../sosvoicepatches'
+import { SOS_VOICE_PATCHES } from 'zss/feature/synth/backend/daisy/sosvoicepatches'
 
 type FIXTURE_FILE = {
   patches: Record<string, unknown>

@@ -5,8 +5,8 @@ import {
   WASM_AUTOFILTER_DEFAULT_OCTAVES,
   WASM_AUTOFILTER_DEFAULT_Q,
   WASM_AUTOFILTER_TYPE,
-} from '../../backend/wasm/wasmautofilter'
-import { WASM_FX_GROUP_COUNT, WASM_FX_PARAM_IDX } from '../../backend/wasm/wasmfxstate'
+} from 'zss/feature/synth/backend/wasm/wasmautofilter'
+import { WASM_FX_GROUP_COUNT, WASM_FX_PARAM_IDX } from 'zss/feature/synth/backend/wasm/wasmfxstate'
 
 const FX_GROUP_COUNT = WASM_FX_GROUP_COUNT
 

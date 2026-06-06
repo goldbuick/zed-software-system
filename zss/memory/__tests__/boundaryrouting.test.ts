@@ -5,9 +5,8 @@ import {
   createsynthid,
   createtrackingid,
 } from 'zss/mapping/guid'
-
-import { memorycollectboundaryidsforboard } from '../boundaryrouting'
-import type { BOARD, BOOK } from '../types'
+import { memorycollectboundaryidsforboard } from 'zss/memory/boundaryrouting'
+import type { BOARD, BOOK } from 'zss/memory/types'
 
 describe('memorycollectboundaryidsforboard', () => {
   it('collects synth, layers, and optional tracking flag boundaries when present', () => {

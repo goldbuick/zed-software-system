@@ -21,8 +21,8 @@ jest.mock('zss/words/textformat', () => ({
   tokenize: () => ({ errors: [{ message: 'mock' }], tokens: [] }),
 }))
 
-import { compileast } from '../ast'
-import { transformast } from '../transformer'
+import { compileast } from 'zss/feature/lang/backend/typescript/ast'
+import { transformast } from 'zss/feature/lang/backend/typescript/transformer'
 
 function emit(source: string) {
   const astresult = compileast(source)

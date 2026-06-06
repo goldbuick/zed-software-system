@@ -1,13 +1,15 @@
 import { createsynthid } from 'zss/mapping/guid'
-
-import { memorycreatebook, memoryreadbookflags } from '../bookoperations'
-import { memoryresetbooks } from '../session'
+import {
+  memorycreatebook,
+  memoryreadbookflags,
+} from 'zss/memory/bookoperations'
+import { memoryresetbooks } from 'zss/memory/session'
 import {
   memorymergesynthvoice,
   memoryqueuesynthplay,
   memoryreadsynth,
   memoryreadsynthplay,
-} from '../synthstate'
+} from 'zss/memory/synthstate'
 
 const synthplaymock = jest.fn()
 jest.mock('zss/device/api', () => ({

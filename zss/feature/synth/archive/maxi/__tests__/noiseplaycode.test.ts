@@ -1,5 +1,5 @@
-import { WASM_NOISE_PLAY_CODE } from '../noiseplaycode'
-import { WASM_SYNTH_VOICE_PLAY_CODE } from '../voiceplaycode'
+import { WASM_NOISE_PLAY_CODE } from 'zss/feature/synth/archive/maxi/noiseplaycode'
+import { WASM_SYNTH_VOICE_PLAY_CODE } from 'zss/feature/synth/archive/maxi/voiceplaycode'
 
 describe('noiseplaycode', () => {
   it('ports BeepBox noiseSynth pitch-relative smoothing', () => {

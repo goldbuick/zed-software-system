@@ -4,7 +4,7 @@ import {
   tonenotationseconds,
 } from 'zss/feature/synth/playnotation'
 
-import { playpatternendtime, resolveplaystarttime } from '../../../backend/wasm/playstart'
+import { playpatternendtime, resolveplaystarttime } from 'zss/feature/synth/backend/wasm/playstart'
 
 describe('wasm play start time', () => {
   it('starts at now when pacer is unset', () => {

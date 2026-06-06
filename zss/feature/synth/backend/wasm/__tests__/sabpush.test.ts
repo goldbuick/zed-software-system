@@ -2,15 +2,15 @@ import {
   resetwasmsabregistry,
   setwasmsabwritehook,
   wasmsabsnapshot,
-} from '../sabpush'
-import { sabseqsnapshot } from '../sabseq'
-import { createminsabsynth } from '../testhelpers/minsabsynth'
-import { createmocksabengine } from '../testhelpers/mocksab'
+} from 'zss/feature/synth/backend/wasm/sabpush'
+import { sabseqsnapshot } from 'zss/feature/synth/backend/wasm/sabseq'
+import { createminsabsynth } from 'zss/feature/synth/backend/wasm/testhelpers/minsabsynth'
+import { createmocksabengine } from 'zss/feature/synth/backend/wasm/testhelpers/mocksab'
 import {
   WASM_DRUMS_SAB,
   WASM_SAB_SEQ_IDX,
   WASM_VOICES_SAB,
-} from '../wasmsabchannels'
+} from 'zss/feature/synth/backend/wasm/wasmsabchannels'
 
 describe('sabpush zero-copy', () => {
   afterEach(() => {

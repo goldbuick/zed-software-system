@@ -8,7 +8,7 @@ import {
   autowahinputboost,
   autowahmaxhz,
   autowahsweephz,
-} from '../wasmautowah'
+} from 'zss/feature/synth/backend/wasm/wasmautowah'
 
 describe('wasmautowah', () => {
   it('maps sensitivity dB to input boost like Tone AutoWah', () => {

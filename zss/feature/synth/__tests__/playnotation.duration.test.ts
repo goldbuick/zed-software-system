@@ -1,5 +1,3 @@
-import { DEFAULT_BPM } from 'zss/mapping/tick'
-
 import {
   durationnotation,
   durationseconds,
@@ -8,7 +6,8 @@ import {
   resolvebgplayonstart,
   tonenotationcandidates,
   tonenotationseconds,
-} from '../playnotation'
+} from 'zss/feature/synth/playnotation'
+import { DEFAULT_BPM } from 'zss/mapping/tick'
 
 const EPS = 1e-9
 

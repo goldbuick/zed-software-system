@@ -1,8 +1,8 @@
 import {
   type LEVEL_STABILITY_METRICS,
   analyzelevelstability,
-} from '../wasm/levelstabilitymetrics.ts'
-import { rendertonelevelscenario } from '../wasm/toneparityrender.ts'
+} from 'zss/feature/synth/backend/wasm/levelstabilitymetrics'
+import { rendertonelevelscenario } from 'zss/feature/synth/backend/wasm/toneparityrender'
 
 import { renderdaisylevelscenario } from './daisylevelrender.ts'
 import { encodewavmono16 } from './daisysongrender.ts'

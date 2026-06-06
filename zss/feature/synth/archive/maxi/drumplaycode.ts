@@ -2,7 +2,7 @@ import {
   WASM_DRUM_TICK_TRIM,
   WASM_DRUM_TWEET_TRIM,
   WASM_DRUM_VOICE_GAINS,
-} from '../../backend/wasm/wasmlevels'
+} from 'zss/feature/synth/backend/wasm/wasmlevels'
 
 /** Tone.js kit port — woodblock: archive/tone/drums/woodblock.ts (split clack/donk ADSR). */
 export const WASM_DRUM_PLAY_CODE = `

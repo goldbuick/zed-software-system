@@ -1,5 +1,8 @@
-import type { SabEngine } from '../../shared/sabengine'
-import { resetwasmsabregistry, wasmsabsnapshot } from '../sabpush'
+import type { SabEngine } from 'zss/feature/synth/backend/shared/sabengine'
+import {
+  resetwasmsabregistry,
+  wasmsabsnapshot,
+} from 'zss/feature/synth/backend/wasm/sabpush'
 
 export function createmocksabengine() {
   resetwasmsabregistry()

@@ -1,22 +1,34 @@
-import { isstring } from 'zss/mapping/types'
-
-import { invokeplay, parseplay, tonenotationseconds } from '../../playnotation'
-import type { SYNTH_NOTE_ENTRY } from '../../playnotation'
-import { SYNTH_PLAY_VOICE_COUNT, SYNTH_VOICE_COUNT } from '../../synthdefaults'
 import {
   type LEVEL_STABILITY_METRICS,
   analyzelevelstability,
   comparelevelstability,
   diagnoselevelstability,
   formatlevelstabilityline,
-} from '../wasm/levelstabilitymetrics'
-import { playpatternendtime } from '../wasm/playstart'
-import { defaultwasmalgoconfig } from '../wasm/wasmalgoconfigsab'
-import { applywasmfxconfig, defaultwasmfxsab } from '../wasm/wasmfxstate'
-import { WASM_DEFAULT_TTS_VOLUME, pushwasmmainsab } from '../wasm/wasmmainsab'
-import { defaultwasmoscconfig } from '../wasm/wasmoscconfigsab'
-import type { WASM_REPLAY_STATE } from '../wasm/wasmreplaystate'
-import { defaultwasmvoicestate } from '../wasm/wasmvoiceconfig'
+} from 'zss/feature/synth/backend/wasm/levelstabilitymetrics'
+import { playpatternendtime } from 'zss/feature/synth/backend/wasm/playstart'
+import { defaultwasmalgoconfig } from 'zss/feature/synth/backend/wasm/wasmalgoconfigsab'
+import {
+  applywasmfxconfig,
+  defaultwasmfxsab,
+} from 'zss/feature/synth/backend/wasm/wasmfxstate'
+import {
+  WASM_DEFAULT_TTS_VOLUME,
+  pushwasmmainsab,
+} from 'zss/feature/synth/backend/wasm/wasmmainsab'
+import { defaultwasmoscconfig } from 'zss/feature/synth/backend/wasm/wasmoscconfigsab'
+import type { WASM_REPLAY_STATE } from 'zss/feature/synth/backend/wasm/wasmreplaystate'
+import { defaultwasmvoicestate } from 'zss/feature/synth/backend/wasm/wasmvoiceconfig'
+import {
+  invokeplay,
+  parseplay,
+  tonenotationseconds,
+} from 'zss/feature/synth/playnotation'
+import type { SYNTH_NOTE_ENTRY } from 'zss/feature/synth/playnotation'
+import {
+  SYNTH_PLAY_VOICE_COUNT,
+  SYNTH_VOICE_COUNT,
+} from 'zss/feature/synth/synthdefaults'
+import { isstring } from 'zss/mapping/types'
 
 import { bootisolateddaisyengine, startisolateddaisydsp } from './daisyengine'
 import { createdaisysynth } from './daisysynth'

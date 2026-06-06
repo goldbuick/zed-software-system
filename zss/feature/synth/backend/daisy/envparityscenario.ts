@@ -1,4 +1,4 @@
-import { tonenotationseconds } from '../../playnotation'
+import { tonenotationseconds } from 'zss/feature/synth/playnotation'
 
 import type { LEVEL_STABILITY_SCENARIO } from './levelstabilitytypes.ts'
 import {

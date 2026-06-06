@@ -4,10 +4,10 @@ import {
   tonenotationseconds,
 } from 'zss/feature/synth/playnotation'
 
-import { createwasmsynth } from '../maxisynth'
-import { setwasmsabwritehook } from '../../../backend/wasm/sabpush'
-import { createmockmaxi } from '../testhelpers/mockmaxi'
-import { WASM_VOICES_SAB } from '../../../backend/wasm/wasmsabchannels'
+import { createwasmsynth } from 'zss/feature/synth/archive/maxi/maxisynth'
+import { setwasmsabwritehook } from 'zss/feature/synth/backend/wasm/sabpush'
+import { createmockmaxi } from 'zss/feature/synth/archive/maxi/testhelpers/mockmaxi'
+import { WASM_VOICES_SAB } from 'zss/feature/synth/backend/wasm/wasmsabchannels'
 
 describe('wasm play timing', () => {
   it('starts semicolon voices on the same beat', () => {

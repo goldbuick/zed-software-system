@@ -3,7 +3,7 @@ import {
   PLAY_DRUM_BALANCE_MIN_DB,
   PLAY_DRUM_TARGET_DRUM_MINUS_PLAY_DB,
   evalplaydrumbalancegate,
-} from '../playdrumbalance'
+} from 'zss/feature/synth/backend/daisy/playdrumbalance'
 
 describe('playdrumbalance', () => {
   it('passes when drums are ~3 dB hotter than play', () => {

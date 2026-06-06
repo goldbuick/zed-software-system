@@ -1,7 +1,7 @@
 import { invokeplay, parseplay } from 'zss/feature/synth/playnotation'
 
-import { createwasmsynth } from '../maxisynth'
-import { clonewasmreplaystate } from '../../../backend/wasm/wasmreplaystate'
+import { createwasmsynth } from 'zss/feature/synth/archive/maxi/maxisynth'
+import { clonewasmreplaystate } from 'zss/feature/synth/backend/wasm/wasmreplaystate'
 
 describe('wasm replay state', () => {
   it('deep-clones nested voice and osc fields', () => {

@@ -26,10 +26,9 @@ import {
   memoryexportcodepage,
   memoryreadcodepageruntime,
 } from 'zss/memory/codepageoperations'
+import { memoryresetbooks } from 'zss/memory/session'
 import { trimformatobject, trimmemoryexport } from 'zss/memory/trimexport'
 import { BOOK, BOOK_KEYS } from 'zss/memory/types'
-
-import { memoryresetbooks } from '../session'
 
 /** Test helper: `memoryexportbook` stores pages as plain JSON; `memoryimportbook` needs per-page wire objects. */
 function wirebookforimport(book: BOOK): FORMAT_OBJECT {

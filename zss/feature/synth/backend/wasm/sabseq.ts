@@ -1,4 +1,4 @@
-import type { SabEngine } from '../shared/sabengine'
+import type { SabEngine } from 'zss/feature/synth/backend/shared/sabengine'
 
 import {
   WASM_SAB_SEQ,

@@ -3,7 +3,7 @@ import {
   buildscalecrewsequencewithmelody,
   estimatesequencedurationsec,
   scalecrewmelodyonlyplay,
-} from '../scalecrewsong'
+} from 'zss/feature/synth/backend/daisy/scalecrewsong'
 
 describe('scalecrewsong', () => {
   it('strips drum-only leading invoke for melody-only renders', () => {
