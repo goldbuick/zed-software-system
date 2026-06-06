@@ -17,7 +17,7 @@ yarn jest zss/feature/lang/backend/wasm/__tests__/langcompile.test.ts --no-cover
 echo "▶ build-lang-wasm"
 yarn lang:build
 
-echo "▶ wasm-smoke"
-yarn lang-wasm:test
+echo "▶ wasm-corpus"
+yarn lang-corpus:test
 
 echo "✓ lang regression complete"

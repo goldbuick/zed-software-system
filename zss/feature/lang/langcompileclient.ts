@@ -76,9 +76,13 @@ export function compilewasmscript(name: string, text: string): GeneratorBuild {
   const label = `compile-${name}`
   // eslint-disable-next-line no-console
   console.time(label)
-  const result = compilezssonmodule(name, text, langmodule)
-  // eslint-disable-next-line no-console
-  console.timeEnd(label)
+  let result
+  try {
+    result = compilezssonmodule(name, text, langmodule)
+  } finally {
+    // eslint-disable-next-line no-console
+    console.timeEnd(label)
+  }
   agentlog(
     'langcompileclient.ts:compilewasmscript',
     'compile result',

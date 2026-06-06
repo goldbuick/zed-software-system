@@ -67,7 +67,7 @@ emcc \
   -s EXPORT_NAME='ZssLang' \
   -s EXPORT_ES6=1 \
   -s "EXPORTED_FUNCTIONS=$EXPORT_JSON" \
-  -s EXPORTED_RUNTIME_METHODS='["cwrap","UTF8ToString","getValue","setValue"]' \
+  -s EXPORTED_RUNTIME_METHODS='["cwrap","UTF8ToString","getValue","setValue","HEAPU8"]' \
   -s ALLOW_MEMORY_GROWTH=1 \
   -s INITIAL_MEMORY=16777216 \
   -s STACK_SIZE=8388608 \
@@ -78,6 +78,8 @@ emcc \
 
 # Emscripten assigns createWasm()'s {} return over wasmExports; strip that regression.
 sed -i.bak 's/var wasmExports=createWasm()/var wasmExports;createWasm()/g' "$OUT_DIR/zss_lang.js"
+# Ensure HEAPU8 is reachable from Module after wasm memory init.
+sed -i.bak 's/HEAPU64=new BigUint64Array(b)}function preRun/HEAPU64=new BigUint64Array(b);Module["HEAPU8"]=HEAPU8}function preRun/g' "$OUT_DIR/zss_lang.js"
 rm -f "$OUT_DIR/zss_lang.js.bak"
 
 BUILD_ID=$(date +%s)

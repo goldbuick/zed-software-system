@@ -54,8 +54,15 @@ export function compilezss(name, source, module) {
 
   let wasmbytes = new Uint8Array(0)
   if (wasmptr && wasmlen > 0) {
-    wasmbytes = new Uint8Array(wasmlen)
-    wasmbytes.set(module.HEAPU8.subarray(wasmptr, wasmptr + wasmlen))
+    const heap = module.HEAPU8
+    if (heap) {
+      wasmbytes = new Uint8Array(heap.subarray(wasmptr, wasmptr + wasmlen))
+    } else {
+      wasmbytes = new Uint8Array(wasmlen)
+      for (let i = 0; i < wasmlen; i++) {
+        wasmbytes[i] = module.getValue(wasmptr + i, 'i8') & 0xff
+      }
+    }
   }
 
   const result = {

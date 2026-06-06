@@ -54,6 +54,7 @@
     "env-parity:test": "npx tsx scripts/run-env-parity.ts",
     "fx-bus-metrics:test": "npx tsx scripts/run-fx-bus-metrics.ts",
     "join-move:loop": "npx tsx scripts/run-join-move-loop.ts",
+    "lang-corpus:test": "node scripts/test-lang-corpus.mjs",
     "lang-parity-fixtures:regen": "REGEN_LANG_FIXTURES=1 yarn jest zss/feature/lang/backend/wasm/__tests__/regenfixtures.test.ts --no-coverage",
     "lang-parity:test": "yarn jest zss/feature/lang/backend/wasm/__tests__/wasmparity.test.ts --no-coverage",
     "lang-regression:test": "sh scripts/run-lang-regression.sh",

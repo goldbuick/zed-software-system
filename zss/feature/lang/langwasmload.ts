@@ -18,6 +18,18 @@ export async function createlangmodule() {
 
 type LangModule = Awaited<ReturnType<typeof createlangmodule>>
 
+function readheapbytes(module: LangModule, ptr: number, len: number) {
+  const heap = module.HEAPU8
+  if (heap) {
+    return heap.subarray(ptr, ptr + len)
+  }
+  const bytes = new Uint8Array(len)
+  for (let i = 0; i < len; i++) {
+    bytes[i] = module.getValue(ptr + i, 'i8') & 0xff
+  }
+  return bytes
+}
+
 export function compilezssonmodule(
   name: string,
   source: string,
@@ -71,8 +83,7 @@ export function compilezssonmodule(
 
   let wasmbytes = new Uint8Array(0)
   if (wasmptr && wasmlen > 0) {
-    wasmbytes = new Uint8Array(wasmlen)
-    wasmbytes.set(module.HEAPU8.subarray(wasmptr, wasmptr + wasmlen))
+    wasmbytes = new Uint8Array(readheapbytes(module, wasmptr, wasmlen))
   }
 
   const result = {
