@@ -41,11 +41,21 @@ describe('lang native wasm parity gate', () => {
 
 describe('lang wasm behavioral parity', () => {
   const FIXTURES = [
-    'if_break',
-    'label_goto',
-    'divide',
-    'command',
     'empty',
+    'if_break',
+    'while_break',
+    'repeat_break',
+    'short_go',
+    'short_try',
+    'divide',
+    'paren_multiline',
+    'pick',
+    'comparison_chain',
+    'label_goto',
+    'stat_line',
+    'text_line',
+    'command',
+    'foreach',
   ] as const
 
   it.each(FIXTURES)('%s wasm run matches JS oracle', (id) => {

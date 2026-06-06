@@ -136,31 +136,44 @@ export function createhostimports(
           return 0
         }
         case HOST.OR:
-          return maptoresult(chip.or(...readwords(stack)))
+          pushword(stack, chip.or(...readwords(stack)))
+          return 0
         case HOST.AND:
-          return maptoresult(chip.and(...readwords(stack)))
+          pushword(stack, chip.and(...readwords(stack)))
+          return 0
         case HOST.NOT:
-          return maptoresult(chip.not(...readwords(stack)))
+          pushword(stack, chip.not(...readwords(stack)))
+          return 0
         case HOST.EXPR:
-          return maptoresult(chip.expr(readword(stack)))
+          pushword(stack, chip.expr(readword(stack)))
+          return 0
         case HOST.IS_EQ:
-          return maptoresult(chip.isEq(readword(stack), readword(stack)))
+          pushword(stack, chip.isEq(readword(stack), readword(stack)))
+          return 0
         case HOST.IS_NOT_EQ:
-          return maptoresult(chip.isNotEq(readword(stack), readword(stack)))
+          pushword(stack, chip.isNotEq(readword(stack), readword(stack)))
+          return 0
         case HOST.IS_LESS_THAN:
-          return maptoresult(chip.isLessThan(readword(stack), readword(stack)))
+          pushword(stack, chip.isLessThan(readword(stack), readword(stack)))
+          return 0
         case HOST.IS_GREATER_THAN:
-          return maptoresult(
+          pushword(
+            stack,
             chip.isGreaterThan(readword(stack), readword(stack)),
           )
+          return 0
         case HOST.IS_LESS_THAN_OR_EQ:
-          return maptoresult(
+          pushword(
+            stack,
             chip.isLessThanOrEq(readword(stack), readword(stack)),
           )
+          return 0
         case HOST.IS_GREATER_THAN_OR_EQ:
-          return maptoresult(
+          pushword(
+            stack,
             chip.isGreaterThanOrEq(readword(stack), readword(stack)),
           )
+          return 0
         case HOST.OP_PLUS:
           pushword(stack, chip.opPlus(readword(stack), readword(stack)))
           return 0

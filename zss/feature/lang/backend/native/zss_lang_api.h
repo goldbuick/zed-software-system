@@ -17,7 +17,9 @@ typedef struct ZssLangError {
 } ZssLangError;
 
 typedef struct ZssCompileResult {
+  /** Legacy — unused; TS transformer is the JS oracle for CI only. */
   const char* source;
+  /** Legacy — unused. */
   const char* source_map;
   const char* labels_json;
   const uint8_t* wasm_bytes;

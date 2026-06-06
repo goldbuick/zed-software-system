@@ -7,7 +7,6 @@
 #include "zss_lang_ast.hpp"
 #include "zss_lang_lexer.hpp"
 #include "zss_lang_parser.hpp"
-#include "zss_lang_transformer.hpp"
 #include "zss_lang_util.hpp"
 #include "zss_lang_wasm_emitter.hpp"
 

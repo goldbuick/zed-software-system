@@ -266,6 +266,7 @@ class WasmEmitter {
         break;
       default:
         emitexpr(ast);
+        emit_.emit_drop();
         break;
     }
   }
@@ -424,6 +425,7 @@ class WasmEmitter {
         emit_.emit_br(0);
         emit_.emit_end();
         emit_.emit_i32_const(0);
+        emit_.emit_end();
         emit_.emit_end();
         break;
       }

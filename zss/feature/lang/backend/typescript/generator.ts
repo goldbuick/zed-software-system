@@ -47,6 +47,8 @@ export function compile(name: string, text: string): GeneratorBuild {
 
   const transformResult = transformast(astResult.ast)
 
+  // TS transform + new Function is the CI parity oracle. Production uses
+  // compilescript() → zss_compile wasm_bytes when ZSS_WASM_SCRIPT is enabled.
   if (transformResult.code) {
     try {
       return {
