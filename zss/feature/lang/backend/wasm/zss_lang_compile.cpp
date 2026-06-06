@@ -46,11 +46,9 @@ uint8_t* dupbytes(const std::vector<uint8_t>& bytes) {
   return out;
 }
 
-ZssCompileResult* makeresult() {
-  return new ZssCompileResult{};
-}
+ZssCompileResult* makeresult() { return new ZssCompileResult{}; }
 
-}  // namespace
+} // namespace
 
 extern "C" {
 
@@ -103,7 +101,8 @@ ZssCompileResult* zss_compile(const char* name, const char* source) {
   if (!ast) {
     storage->errors.push_back({0, 0, 0, 0, "no ast output"});
     storage->errmessages.push_back(storage->errors.back().message);
-    storage->errapi.push_back({0, 0, 0, 0, storage->errmessages.back().c_str()});
+    storage->errapi.push_back(
+        {0, 0, 0, 0, storage->errmessages.back().c_str()});
     result->errors = storage->errapi.data();
     result->error_count = 1;
     g_last = storage.release();
@@ -141,7 +140,7 @@ void zss_compile_result_free(ZssCompileResult* result) {
   g_last = nullptr;
 }
 
-}  // extern "C"
+} // extern "C"
 
 #ifdef ZSS_LANG_PARITY_MAIN
 
@@ -163,11 +162,11 @@ int main(int argc, char** argv) {
   }
   std::string dir = argv[1];
   static const char* fixtures[] = {
-      "empty",           "if_break",        "while_break",     "repeat_break",
-      "short_go",        "short_try",       "divide",          "paren_multiline",
-      "pick",            "comparison_chain","label_goto",      "stat_line",
-      "text_line",       "command",         "foreach",         "while_push_by",
-      "duplicate_fork",  "send_dir_label",  "paren_intround",  nullptr};
+      "empty",          "if_break",         "while_break",    "repeat_break",
+      "short_go",       "short_try",        "divide",         "paren_multiline",
+      "pick",           "comparison_chain", "label_goto",     "stat_line",
+      "text_line",      "command",          "foreach",        "while_push_by",
+      "duplicate_fork", "send_dir_label",   "paren_intround", nullptr};
   int pass = 0;
   int fail = 0;
   for (int i = 0; fixtures[i]; ++i) {

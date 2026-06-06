@@ -34,7 +34,7 @@ struct SourceMapping {
 };
 
 class SourceNode {
- public:
+public:
   SourceNode() = default;
 
   SourceNode(int line, int column, const std::string& source)
@@ -72,7 +72,8 @@ class SourceNode {
   SourceNode& operator=(SourceNode&&) = default;
 
   void add(const std::string& chunk) {
-    if (chunk.empty()) return;
+    if (chunk.empty())
+      return;
     SourceChild child;
     child.kind = SourceChild::Kind::STRING;
     child.str = chunk;
@@ -87,7 +88,8 @@ class SourceNode {
   }
 
   void prepend(const std::string& chunk) {
-    if (chunk.empty()) return;
+    if (chunk.empty())
+      return;
     SourceChild child;
     child.kind = SourceChild::Kind::STRING;
     child.str = chunk;
@@ -112,14 +114,15 @@ class SourceNode {
     int last_line = 0;
     int last_col = 0;
 
-    WalkState state{&code, &gen_line, &gen_col, &mappings, &source_active,
-                    &last_source, &last_line, &last_col};
+    WalkState state{&code,          &gen_line,    &gen_col,   &mappings,
+                    &source_active, &last_source, &last_line, &last_col};
 
     walk(*this, Original{}, state);
 
     int codelines = 1;
     for (char c : code) {
-      if (c == '\n') ++codelines;
+      if (c == '\n')
+        ++codelines;
     }
 
     std::ostringstream oss;
@@ -134,7 +137,7 @@ class SourceNode {
     return out;
   }
 
- private:
+private:
   int line_ = 0;
   int column_ = 0;
   std::string source_;
@@ -182,10 +185,11 @@ class SourceNode {
     for (const auto& child : node.children_) {
       if (child.kind == SourceChild::Kind::NODE && child.node) {
         walk(*child.node, ctx, st);
-      } else if (child.kind == SourceChild::Kind::STRING && !child.str.empty()) {
+      } else if (child.kind == SourceChild::Kind::STRING &&
+                 !child.str.empty()) {
         if (ctx.valid) {
-          if (!*st.source_active || *st.last_source != ctx.source || *st.last_line != ctx.line ||
-              *st.last_col != ctx.column) {
+          if (!*st.source_active || *st.last_source != ctx.source ||
+              *st.last_line != ctx.line || *st.last_col != ctx.column) {
             add_mapping(st, ctx);
             *st.last_source = ctx.source;
             *st.last_line = ctx.line;
@@ -223,7 +227,8 @@ class SourceNode {
     do {
       int digit = vlq & 31;
       vlq >>= 5;
-      if (vlq > 0) digit |= 32;
+      if (vlq > 0)
+        digit |= 32;
       static const char* digits =
           "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
       out.push_back(digits[digit]);
@@ -234,7 +239,8 @@ class SourceNode {
     return a.gen_line == b.gen_line && a.gen_col == b.gen_col;
   }
 
-  static std::string serializemappings(const std::vector<SourceMapping>& mappings, int codelines) {
+  static std::string
+  serializemappings(const std::vector<SourceMapping>& mappings, int codelines) {
     std::string result;
     int previous_generated_column = 0;
     int previous_generated_line = 1;
@@ -284,6 +290,6 @@ class SourceNode {
   }
 };
 
-}  // namespace zss_lang
+} // namespace zss_lang
 
 #endif

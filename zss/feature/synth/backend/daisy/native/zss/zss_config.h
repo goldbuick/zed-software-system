@@ -139,8 +139,8 @@ constexpr float kAutowahDefaultOct = 6.f;
 constexpr float kAutowahDefaultGain = 2.f;
 
 constexpr float kDrumGains[kDrumCount] = {
-    0.26f, 0.24f, 0.4f,  0.35f, 0.3f,  0.26f, 0.3f,
-    0.28f, 0.26f, 0.67f, 0.42f, 0.36f,
+    0.26f, 0.24f, 0.4f,  0.35f, 0.3f,  0.26f,
+    0.3f,  0.28f, 0.26f, 0.67f, 0.42f, 0.36f,
 };
 
 enum VoiceType {

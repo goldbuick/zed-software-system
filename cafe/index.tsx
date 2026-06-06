@@ -25,7 +25,6 @@ import {
 } from 'three'
 import 'zss/rom/vitepopulate'
 import { RUNTIME } from 'zss/config'
-import { initlangcompile } from 'zss/feature/lang/langcompileclient'
 import { vmcli } from 'zss/device/api'
 import {
   register,
@@ -33,6 +32,7 @@ import {
   registersetmyplayerid,
 } from 'zss/device/register'
 import { isclimode } from 'zss/feature/detect'
+import { initlangcompile } from 'zss/feature/lang/langcompileclient'
 import { isjoin } from 'zss/feature/url'
 import { forcer3fglresize } from 'zss/gadget/canvasrelayout'
 import { useDeviceData } from 'zss/gadget/device'

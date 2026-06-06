@@ -12,7 +12,8 @@ inline void leb128u32(std::vector<uint8_t>& out, uint32_t value) {
   do {
     uint8_t byte = value & 0x7f;
     value >>= 7;
-    if (value) byte |= 0x80;
+    if (value)
+      byte |= 0x80;
     out.push_back(byte);
   } while (value);
 }
@@ -24,8 +25,10 @@ inline void leb128s32(std::vector<uint8_t>& out, int32_t value) {
     value >>= 7;
     more = !(((value == 0) && ((byte & 0x40) == 0)) ||
              ((value == -1) && ((byte & 0x40) != 0)));
-    if (!more) byte &= 0x7f;
-    else byte |= 0x80;
+    if (!more)
+      byte &= 0x7f;
+    else
+      byte |= 0x80;
     out.push_back(byte);
   }
 }
@@ -40,7 +43,7 @@ inline void f64bytes(std::vector<uint8_t>& out, double value) {
 }
 
 class WasmInstrEmitter {
- public:
+public:
   std::vector<uint8_t> body;
   int local_i32 = 0;
 
@@ -144,7 +147,8 @@ struct WasmModuleBuilder {
 
   uint32_t addstring(const std::string& s) {
     uint32_t ptr = dataoffset;
-    for (unsigned char c : s) data.push_back(c);
+    for (unsigned char c : s)
+      data.push_back(c);
     dataoffset = static_cast<uint32_t>(data.size());
     return ptr;
   }
@@ -170,7 +174,8 @@ struct WasmModuleBuilder {
         leb128u32(types, static_cast<uint32_t>(params.size()));
         types.insert(types.end(), params.begin(), params.end());
         leb128u32(types, ret ? 1u : 0u);
-        if (ret) types.push_back(ret);
+        if (ret)
+          types.push_back(ret);
       };
       functype({0x7f}, 0x7f);
       functype({0x7f}, 0);
@@ -260,6 +265,6 @@ struct WasmModuleBuilder {
   }
 };
 
-}  // namespace zss_lang
+} // namespace zss_lang
 
 #endif

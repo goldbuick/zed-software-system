@@ -47,19 +47,50 @@ enum HostIndex : int {
 };
 
 inline const char* hostmethodname(int index) {
-  static const char* names[] = {
-      "sy",           "getcase",      "nextcase",     "jump",          "if",
-      "command",      "text",         "stat",         "hyperlink",     "or",
-      "and",          "not",          "expr",         "isEq",          "isNotEq",
-      "isLessThan",   "isGreaterThan","isLessThanOrEq","isGreaterThanOrEq",
-      "opPlus",       "opMinus",      "opPower",      "opMultiply",    "opDivide",
-      "opModDivide",  "opFloorDivide","opUniPlus",    "opUniMinus",    "print",
-      "try",          "take",         "give",         "duplicate",     "repeatstart",
-      "repeat",       "foreachstart", "foreach",      "waitfor",       "api"};
-  if (index < 0 || index >= HOST_COUNT) return "unknown";
+  static const char* names[] = {"sy",
+                                "getcase",
+                                "nextcase",
+                                "jump",
+                                "if",
+                                "command",
+                                "text",
+                                "stat",
+                                "hyperlink",
+                                "or",
+                                "and",
+                                "not",
+                                "expr",
+                                "isEq",
+                                "isNotEq",
+                                "isLessThan",
+                                "isGreaterThan",
+                                "isLessThanOrEq",
+                                "isGreaterThanOrEq",
+                                "opPlus",
+                                "opMinus",
+                                "opPower",
+                                "opMultiply",
+                                "opDivide",
+                                "opModDivide",
+                                "opFloorDivide",
+                                "opUniPlus",
+                                "opUniMinus",
+                                "print",
+                                "try",
+                                "take",
+                                "give",
+                                "duplicate",
+                                "repeatstart",
+                                "repeat",
+                                "foreachstart",
+                                "foreach",
+                                "waitfor",
+                                "api"};
+  if (index < 0 || index >= HOST_COUNT)
+    return "unknown";
   return names[index];
 }
 
-}  // namespace zss_lang
+} // namespace zss_lang
 
 #endif

@@ -1,10 +1,10 @@
 import { agentlog } from 'zss/agentlog'
 import { WASM_SCRIPT } from 'zss/config'
-import { initlangcompile } from 'zss/feature/lang/langcompileclient'
 import {
   createforward,
   shouldforwardboardrunnertoclient,
 } from 'zss/device/forward'
+import { initlangcompile } from 'zss/feature/lang/langcompileclient'
 
 import './device/modem'
 import './device/boardrunner'

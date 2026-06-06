@@ -25,17 +25,16 @@ jest.mock('zss/words/textformat', () => ({
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
+import { type CHIP, createchip } from 'zss/chip'
 import { compile } from 'zss/feature/lang'
-import { createchip, type CHIP } from 'zss/chip'
-import { DRIVER_TYPE } from 'zss/firmware/runner'
-import { loadscriptsync } from 'zss/feature/lang/wasmloader'
-import type { WORD } from 'zss/words/types'
-
 import {
   compilenativewasm,
   readfixture,
   runnativeparitygate,
 } from 'zss/feature/lang/backend/wasm/langparityload'
+import { loadscriptsync } from 'zss/feature/lang/wasmloader'
+import { DRIVER_TYPE } from 'zss/firmware/runner'
+import type { WORD } from 'zss/words/types'
 
 const FIXTUREDIR = path.join(__dirname, 'fixtures')
 

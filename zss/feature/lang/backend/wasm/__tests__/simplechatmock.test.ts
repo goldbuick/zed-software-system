@@ -17,11 +17,11 @@ jest.mock('zss/config', () => ({
   WASM_SCRIPT: false,
 }))
 
-import { createchip, type CHIP } from 'zss/chip'
-import { DRIVER_TYPE } from 'zss/firmware/runner'
+import { type CHIP, createchip } from 'zss/chip'
 import { readcorpus } from 'zss/feature/lang/backend/wasm/corpus'
 import { compilenativewasm } from 'zss/feature/lang/backend/wasm/langparityload'
 import { loadscriptsync } from 'zss/feature/lang/wasmloader'
+import { DRIVER_TYPE } from 'zss/firmware/runner'
 import type { WORD } from 'zss/words/types'
 
 describe('simple_chat wasm mock chip', () => {
@@ -35,7 +35,9 @@ describe('simple_chat wasm mock chip', () => {
     let lc = 0
     const chip = {
       sy: () => {
-        if (ys) return true
+        if (ys) {
+          return true
+        }
         if (typeof lc === 'number') {
           return ++lc > 512
         }
@@ -64,9 +66,15 @@ describe('simple_chat wasm mock chip', () => {
       },
       if: (...words: WORD[]) => {
         const [head] = words
-        if (head === 'hint') return 0
-        if (head === 'inputmenu') return 0
-        if (head === 'inputmove') return 0
+        if (head === 'hint') {
+          return 0
+        }
+        if (head === 'inputmenu') {
+          return 0
+        }
+        if (head === 'inputmove') {
+          return 0
+        }
         return 0
       },
       stat: () => 0,

@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        script: ['app:lint', 'app:test']
+        script: ['app:lint', 'app:test', 'native:lint']
     steps:
       - name: checkout
         uses: actions/checkout@v5
@@ -26,7 +26,13 @@ jobs:
       - name: install dependencies
         run: yarn install --frozen-lockfile
 
+      - name: install clang-format
+        if: matrix.script == 'native:lint'
+        run: sudo apt-get update && sudo apt-get install -y clang-format-18
+
       - name: run ${{ matrix.script }}
+        env:
+          CLANG_FORMAT: clang-format-18
         run: yarn ${{ matrix.script }}
 
   e2e:

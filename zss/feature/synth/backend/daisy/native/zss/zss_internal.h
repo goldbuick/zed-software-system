@@ -36,12 +36,12 @@ float fxparam(int group, int param_idx);
 
 void initnoisetables();
 NoiseMeta noisemetafor(int noisetype);
-const float *noiseforvoice(int noisetype);
-uint32_t noiseprngnext(uint32_t state, float *sample);
+const float* noiseforvoice(int noisetype);
+uint32_t noiseprngnext(uint32_t state, float* sample);
 
 OscCfg readosccfg(int vi);
 AlgoCfg readalgocfg(int vi);
-void readvibratosab(float *epoch, float start[kVibratoGroups],
+void readvibratosab(float* epoch, float start[kVibratoGroups],
                     float end[kVibratoGroups], float peak[kVibratoGroups],
                     float freq[kVibratoGroups]);
 
@@ -51,38 +51,38 @@ void updateplayvibratodepth(float vstart[kVibratoGroups],
                             float vend[kVibratoGroups],
                             float vpeak[kVibratoGroups]);
 float detunedhz(int vi, float freq, float detune, float vfreq[kVibratoGroups]);
-float glidefreq(ZssVoice &v, int vi, float target, int type, float port);
-void applyvoiceenv(ZssVoice &v, int type, float a, float d, float s, float r);
+float glidefreq(ZssVoice& v, int vi, float target, int type, float port);
+void applyvoiceenv(ZssVoice& v, int type, float a, float d, float s, float r);
 
-float voiceenvlevel(ZssVoice &v, int type);
-float oscbasicwave(Oscillator &o, int wavetype, float hz, float amp);
-float algopwave(Oscillator &o, int wavetype, float hz);
+float voiceenvlevel(ZssVoice& v, int type);
+float oscbasicwave(Oscillator& o, int wavetype, float hz, float amp);
+float algopwave(Oscillator& o, int wavetype, float hz);
 
-float synthsource(ZssVoice &v, int vi, float freq, bool gate, float detune,
+float synthsource(ZssVoice& v, int vi, float freq, bool gate, float detune,
                   int osctype, float vfreq[kVibratoGroups]);
-float dootvoice(ZssVoice &v, float freq, bool gate);
-float algovoice(ZssVoice &v, int vi, float freq, bool gate, int algo,
+float dootvoice(ZssVoice& v, float freq, bool gate);
+float algovoice(ZssVoice& v, int vi, float freq, bool gate, int algo,
                 float vfreq[kVibratoGroups]);
-float noisevoice(ZssVoice &v, int vi, int noisetype, float freq, bool gate,
+float noisevoice(ZssVoice& v, int vi, int noisetype, float freq, bool gate,
                  float envout);
-float stringbownoisesample(ZssVoice &v);
-void applypluckparams(ZssVoice &v, int cfg);
-void applystringensembleparams(ZssVoice &v, int cfg, float &detunecents,
-                               float &pwmdepth, float &vibcents,
-                               float &filterscale);
-void applystringvoicepreset(ZssVoice &v, int algo);
-float stringmachinevoice(ZssVoice &v, float hz, float envout, float detunecents,
+float stringbownoisesample(ZssVoice& v);
+void applypluckparams(ZssVoice& v, int cfg);
+void applystringensembleparams(ZssVoice& v, int cfg, float& detunecents,
+                               float& pwmdepth, float& vibcents,
+                               float& filterscale);
+void applystringvoicepreset(ZssVoice& v, int algo);
+float stringmachinevoice(ZssVoice& v, float hz, float envout, float detunecents,
                          float pwmdepth, float vibcents, float filterscale);
 
-float windvoice(ZssVoice &v, float hz, bool gate, int algo, int cfg);
-float pianovoice(ZssVoice &v, float hz, bool gate, int algo, int cfg,
+float windvoice(ZssVoice& v, float hz, bool gate, int algo, int cfg);
+float pianovoice(ZssVoice& v, float hz, bool gate, int algo, int cfg,
                  float velocity);
-float timpanivoice(ZssVoice &v, float hz, bool gate, int cfg, float velocity);
-float bowedvoice(ZssVoice &v, int vi, float hz, bool gate, int algo, int cfg,
+float timpanivoice(ZssVoice& v, float hz, bool gate, int cfg, float velocity);
+float bowedvoice(ZssVoice& v, int vi, float hz, bool gate, int algo, int cfg,
                  float port, float velocity);
-float guitarvoice(ZssVoice &v, float hz, bool gate, int algo, int cfg,
+float guitarvoice(ZssVoice& v, float hz, bool gate, int algo, int cfg,
                   float velocity);
-float organvoice(ZssVoice &v, float hz, bool gate, int algo, int cfg);
+float organvoice(ZssVoice& v, float hz, bool gate, int algo, int cfg);
 
 float drumsout();
 void retriggerdrum(int i, float dursec);
@@ -103,7 +103,7 @@ float compressorskneedb(float dbover, float ratio, float kneedb);
 void initmainchain(float sr);
 void initfxreturnchain(float sr);
 void initrazzlechain(float sr);
-void initreverbgroup(ZssFxGroup &fx, float sr);
+void initreverbgroup(ZssFxGroup& fx, float sr);
 
 void initengine(float sr);
 float processvoice(int vi, float vstart[kVibratoGroups],

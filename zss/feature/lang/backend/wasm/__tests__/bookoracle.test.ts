@@ -45,12 +45,16 @@ describe('coolregionsbow lang TS oracle fixtures', () => {
     expect(tsbuild.source?.length ?? 0).toBeGreaterThan(0)
   })
 
-  it.each(manifest)('%s compiles to native wasm', (id) => {
-    const source = readfixture(id)
-    const wasmbytes = compilenativewasm(source)
-    expect(wasmbytes[0]).toBe(0x00)
-    expect(wasmbytes[1]).toBe(0x61)
-    expect(wasmbytes[2]).toBe(0x73)
-    expect(wasmbytes[3]).toBe(0x6d)
-  }, 15000)
+  it.each(manifest)(
+    '%s compiles to native wasm',
+    (id) => {
+      const source = readfixture(id)
+      const wasmbytes = compilenativewasm(source)
+      expect(wasmbytes[0]).toBe(0x00)
+      expect(wasmbytes[1]).toBe(0x61)
+      expect(wasmbytes[2]).toBe(0x73)
+      expect(wasmbytes[3]).toBe(0x6d)
+    },
+    15000,
+  )
 })

@@ -18,7 +18,8 @@ inline std::string writetemplatestring(const std::string& value) {
     if (value[i] == '$' && i + 1 < value.size()) {
       size_t j = i + 1;
       while (j < value.size() &&
-             (std::isalnum(static_cast<unsigned char>(value[j])) || value[j] == '_')) {
+             (std::isalnum(static_cast<unsigned char>(value[j])) ||
+              value[j] == '_')) {
         ++j;
       }
       if (j > i + 1) {
@@ -27,7 +28,8 @@ inline std::string writetemplatestring(const std::string& value) {
         if (lflag == "center") {
           template_body += "$CENTER";
         } else {
-          template_body += "', api.print(api.get('" + escapestring(lflag) + "')), '";
+          template_body +=
+              "', api.print(api.get('" + escapestring(lflag) + "')), '";
         }
         i = j - 1;
         continue;
@@ -38,6 +40,6 @@ inline std::string writetemplatestring(const std::string& value) {
   return "['" + template_body + "'].join('')";
 }
 
-}  // namespace zss_lang
+} // namespace zss_lang
 
 #endif

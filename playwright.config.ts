@@ -16,16 +16,28 @@ if (!includelangbenche2e) {
   testignore.push('**/lang-compile-bench.spec.ts')
 }
 
+/** Default per-test ceiling; specs may raise via test.describe.configure({ timeout }). */
+const DEFAULT_TEST_TIMEOUT_MS = 120_000
+/** Hard stop for the full playwright run (all projects/specs). */
+const GLOBAL_RUN_TIMEOUT_MS = 900_000
+
 export default defineConfig({
   testDir: 'e2e',
   // Gadget scroll: PLAYWRIGHT_INCLUDE_GADGET_E2E=1. Join multiplayer: PLAYWRIGHT_INCLUDE_JOIN_E2E=1.
   // Lang compile bench: PLAYWRIGHT_INCLUDE_LANG_BENCH=1.
   testIgnore: testignore.length ? testignore : [],
+  timeout: DEFAULT_TEST_TIMEOUT_MS,
+  globalTimeout: GLOBAL_RUN_TIMEOUT_MS,
+  expect: {
+    timeout: 30_000,
+  },
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   use: {
     baseURL: 'http://127.0.0.1:7777',
+    actionTimeout: 30_000,
+    navigationTimeout: 60_000,
     launchOptions: {
       args: ['--ignore-gpu-blocklist'],
     },

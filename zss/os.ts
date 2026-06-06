@@ -1,10 +1,10 @@
+import { agentlog } from 'zss/agentlog'
+import { WASM_SCRIPT } from 'zss/config'
 import { GeneratorBuild } from 'zss/feature/lang'
 import {
   compilescript,
   islangcompileready,
 } from 'zss/feature/lang/langcompileclient'
-import { WASM_SCRIPT } from 'zss/config'
-import { agentlog } from 'zss/agentlog'
 
 import { CHIP, createchip } from './chip'
 import { MESSAGE_FUNC, parsetarget } from './device'

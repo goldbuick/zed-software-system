@@ -111,9 +111,13 @@ describe('lang compile benchmark', () => {
       const tsbuild = compile(item.name, item.source)
       expect(tsbuild.errors ?? []).toHaveLength(0)
 
-      const ts = bench(() => {
-        compile(item.name, item.source)
-      }, iterations, warmup)
+      const ts = bench(
+        () => {
+          compile(item.name, item.source)
+        },
+        iterations,
+        warmup,
+      )
 
       rows.push(
         `${item.id.padEnd(idwidth)}  ${String(lines).padStart(5)}   ${formatms(ts.median).padStart(9)}`,
@@ -121,7 +125,9 @@ describe('lang compile benchmark', () => {
     }
 
     rows.push('')
-    rows.push('Run `node scripts/lang-wasm-bench.mjs` for Emscripten WASM timings.')
+    rows.push(
+      'Run `node scripts/lang-wasm-bench.mjs` for Emscripten WASM timings.',
+    )
 
     // eslint-disable-next-line no-console
     console.log('\n' + rows.join('\n') + '\n')

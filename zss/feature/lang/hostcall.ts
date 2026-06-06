@@ -134,16 +134,10 @@ export function createhostimports(
           pushword(stack, chip.isLessThan(readword(stack), readword(stack)))
           return 0
         case HOST.IS_GREATER_THAN:
-          pushword(
-            stack,
-            chip.isGreaterThan(readword(stack), readword(stack)),
-          )
+          pushword(stack, chip.isGreaterThan(readword(stack), readword(stack)))
           return 0
         case HOST.IS_LESS_THAN_OR_EQ:
-          pushword(
-            stack,
-            chip.isLessThanOrEq(readword(stack), readword(stack)),
-          )
+          pushword(stack, chip.isLessThanOrEq(readword(stack), readword(stack)))
           return 0
         case HOST.IS_GREATER_THAN_OR_EQ:
           pushword(

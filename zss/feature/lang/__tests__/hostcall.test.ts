@@ -1,7 +1,6 @@
 import type { CHIP } from 'zss/chip'
-import type { WORD } from 'zss/words/types'
-
 import { HOST, createhostimports } from 'zss/feature/lang/hostcall'
+import type { WORD } from 'zss/words/types'
 
 function pushstring(
   host: ReturnType<typeof createhostimports>['host'],

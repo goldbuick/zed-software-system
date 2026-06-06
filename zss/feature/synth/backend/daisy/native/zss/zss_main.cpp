@@ -104,7 +104,7 @@ float readttsvolume() {
   return vol / 100.f;
 }
 
-float razzledelay(float *buf, int &pos, int len, float in, float delaysec) {
+float razzledelay(float* buf, int& pos, int len, float in, float delaysec) {
   int d = std::max(1, static_cast<int>(delaysec * g_engine.sample_rate));
   if (d >= len) {
     d = len - 1;
@@ -216,7 +216,7 @@ float readbgplayvolume() {
   return std::pow(10.f, (20.f * std::log10(vol) - 35.f) / 20.f);
 }
 
-void applypluckparams(ZssVoice &v, int cfg) {
+void applypluckparams(ZssVoice& v, int cfg) {
   const float structure = readctrl(cfg + 6);
   const float brightness = readctrl(cfg + 7);
   const float damping = readctrl(cfg + 8);
@@ -239,9 +239,9 @@ void applypluckparams(ZssVoice &v, int cfg) {
   }
 }
 
-void applystringensembleparams(ZssVoice &v, int cfg, float &detunecents,
-                               float &pwmdepth, float &vibcents,
-                               float &filterscale) {
+void applystringensembleparams(ZssVoice& v, int cfg, float& detunecents,
+                               float& pwmdepth, float& vibcents,
+                               float& filterscale) {
   const float detraw = readctrl(cfg + 6);
   const float pwmraw = readctrl(cfg + 7);
   const float vibraw = readctrl(cfg + 8);
@@ -255,7 +255,7 @@ void applystringensembleparams(ZssVoice &v, int cfg, float &detunecents,
       filtraw > 0.f ? clampf(filtraw, 0.f, 1.f) : kStringDefaultFilter;
 }
 
-void applystringvoicepreset(ZssVoice &v, int algo) {
+void applystringvoicepreset(ZssVoice& v, int algo) {
   if (v.stringvoicepreset == algo) {
     return;
   }
@@ -265,7 +265,7 @@ void applystringvoicepreset(ZssVoice &v, int algo) {
   }
 }
 
-float stringmachinevoice(ZssVoice &v, float hz, float envout, float detunecents,
+float stringmachinevoice(ZssVoice& v, float hz, float envout, float detunecents,
                          float pwmdepth, float vibcents, float filterscale) {
   v.stringviblfo.SetFreq(4.8f);
   v.stringviblfo.SetWaveform(Oscillator::WAVE_TRI);
@@ -290,8 +290,9 @@ float stringmachinevoice(ZssVoice &v, float hz, float envout, float detunecents,
   const float vco1 = oscbasicwave(v.synthosc, 3, hz1, 1.f);
   const float vco2 = oscbasicwave(v.synthmod, 3, hz2, 1.f);
   float sig = (vco1 + vco2) * 0.5f;
-  sig += oscbasicwave(v.algoops[0], 3, hz * 0.5f * (1.f - ensemble * 0.3f), 1.f) *
-         kStringSubOctaveMix;
+  sig +=
+      oscbasicwave(v.algoops[0], 3, hz * 0.5f * (1.f - ensemble * 0.3f), 1.f) *
+      kStringSubOctaveMix;
   sig /= (1.f + kStringSubOctaveMix);
 
   const float kf = std::pow(clampf(hz / 440.f, 0.25f, 4.f), 0.38f);

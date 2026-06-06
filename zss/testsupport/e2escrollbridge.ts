@@ -1,5 +1,3 @@
-import type { LangCompileBenchReport } from 'zss/feature/lang/langcompilebench'
-import { runlangcompilebench } from 'zss/feature/lang/langcompilebench'
 import {
   type E2E_LOADER_NOTIFY,
   boardrunnerinput,
@@ -9,6 +7,8 @@ import {
 } from 'zss/device/api'
 import { register, registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
+import { runlangcompilebench } from 'zss/feature/lang/langcompilebench'
+import type { LangCompileBenchReport } from 'zss/feature/lang/langcompilebench'
 import { readsubscribetopic } from 'zss/feature/netterminal'
 import { panelscrolltolines } from 'zss/gadget/data/panelitemtext'
 import { useGadgetClient, useTape } from 'zss/gadget/data/state'

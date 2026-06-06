@@ -10,15 +10,13 @@
 namespace zss_daisy {
 
 ZssEngine g_engine;
-void initvoice(ZssVoice& v, float sr)
-{
+void initvoice(ZssVoice& v, float sr) {
   v.synthosc.Init(sr);
   v.synthmod.Init(sr);
   v.sparklemod.Init(sr);
   v.sparklecar.Init(sr);
   v.dootosc.Init(sr);
-  for(int o = 0; o < 4; ++o)
-  {
+  for (int o = 0; o < 4; ++o) {
     v.algoops[o].Init(sr);
     v.algoenvs[o].Init(sr);
   }
@@ -55,8 +53,7 @@ void initvoice(ZssVoice& v, float sr)
   v.epfm.Init(sr);
 }
 
-void initdaisydrums(float sr)
-{
+void initdaisydrums(float sr) {
   g_engine.tom_drum.Init(sr);
   g_engine.tom_drum.SetFreq(90.f);
   g_engine.tom_drum.SetDecay(0.35f);
@@ -71,12 +68,10 @@ void initdaisydrums(float sr)
   g_engine.bass_drum.SetAccent(0.9f);
 }
 
-void initengine(float sr)
-{
+void initengine(float sr) {
   g_engine.sample_rate = sr;
   initnoisetables();
-  for(int i = 0; i < kVoiceCount; ++i)
-  {
+  for (int i = 0; i < kVoiceCount; ++i) {
     initvoice(g_engine.voices[i], sr);
   }
   g_engine.drum_whitenoise.Init();
@@ -84,15 +79,13 @@ void initengine(float sr)
   initmainchain(sr);
   initfxreturnchain(sr);
   initrazzlechain(sr);
-  for(int d = 0; d < kDrumCount; ++d)
-  {
+  for (int d = 0; d < kDrumCount; ++d) {
     g_engine.drumoscA[d].Init(sr);
     g_engine.drumoscB[d].Init(sr);
     g_engine.drums[d].hp.Init();
     g_engine.drums[d].hp.SetFilterMode(OnePole::FILTER_MODE_HIGH_PASS);
   }
-  for(int f = 0; f < kFxGroups; ++f)
-  {
+  for (int f = 0; f < kFxGroups; ++f) {
     ZssFxGroup& fx = g_engine.fx[f];
     fx.decimator.Init();
     fx.overdrive.Init();
@@ -108,18 +101,18 @@ void initengine(float sr)
   g_engine.ready = true;
 }
 
-float processvoice(int vi, float vstart[kVibratoGroups], float vend[kVibratoGroups],
-                   float vpeak[kVibratoGroups], float vfreq[kVibratoGroups])
-{
+float processvoice(int vi, float vstart[kVibratoGroups],
+                   float vend[kVibratoGroups], float vpeak[kVibratoGroups],
+                   float vfreq[kVibratoGroups]) {
   const int base = off_voices() + vi * kVoiceStride;
-  const int cfg  = off_voicecfg() + vi * kVoiceCfgStride;
+  const int cfg = off_voicecfg() + vi * kVoiceCfgStride;
 
-  float freq   = readctrl(base + 0);
-  bool  gate   = readctrl(base + 1) > 0.5f;
-  int   type   = static_cast<int>(readctrl(base + 2));
-  int   algo   = static_cast<int>(readctrl(base + 3));
+  float freq = readctrl(base + 0);
+  bool gate = readctrl(base + 1) > 0.5f;
+  int type = static_cast<int>(readctrl(base + 2));
+  int algo = static_cast<int>(readctrl(base + 3));
   float detune = readctrl(base + 4);
-  int   osctype = static_cast<int>(readctrl(base + 5));
+  int osctype = static_cast<int>(readctrl(base + 5));
 
   float atk = readctrl(cfg + 0), dec = readctrl(cfg + 1);
   float sus = readctrl(cfg + 2), rel = readctrl(cfg + 3);
@@ -128,82 +121,65 @@ float processvoice(int vi, float vstart[kVibratoGroups], float vend[kVibratoGrou
   applyvoiceenv(g_engine.voices[vi], type, atk, dec, sus, rel);
 
   ZssVoice& v = g_engine.voices[vi];
-  float     out = 0.f;
+  float out = 0.f;
 
-  if(type == kSynth)
-  {
-    const float notefreq  = freq > 0.f ? freq : 440.f;
+  if (type == kSynth) {
+    const float notefreq = freq > 0.f ? freq : 440.f;
     const float striketag = detune;
-    const bool  rising    = gate && !v.synthgateprev;
-    const bool  notestrike =
-      gate && striketag > 0.5f && striketag != v.synthstriketag;
-    if(rising)
-    {
+    const bool rising = gate && !v.synthgateprev;
+    const bool notestrike =
+        gate && striketag > 0.5f && striketag != v.synthstriketag;
+    if (rising) {
       v.voicephasestep = 0.f;
       v.synthosc.Reset(0.f);
       v.synthmod.Reset(0.f);
-    }
-    else if(notestrike)
-    {
+    } else if (notestrike) {
       v.synthmod.Reset(0.f);
     }
-    if(rising || notestrike)
-    {
+    if (rising || notestrike) {
       v.voiceenv.retrigger();
       v.modenv.retrigger();
       v.noteonfade = 0.f;
     }
-    if(gate && striketag > 0.5f)
-    {
+    if (gate && striketag > 0.5f) {
       v.synthstriketag = striketag;
     }
-    if(gate)
-    {
+    if (gate) {
       v.synthschedhz = notefreq;
     }
     v.synthgateprev = gate;
-    float hz     = glidefreq(v, vi, notefreq, kSynth, port);
+    float hz = glidefreq(v, vi, notefreq, kSynth, port);
     float envout = v.voiceenv.process(gate);
-    v.lastenv    = envout;
-    out          = synthsource(v, vi, hz, gate, 0.f, osctype, vfreq) * envout;
-    if(gate && kSynthNoteOnFadeSec > 0.f)
-    {
-      const float fadeinc = 1.f / std::max(1.f, kSynthNoteOnFadeSec * g_engine.sample_rate);
-      if(v.noteonfade < 1.f)
-      {
+    v.lastenv = envout;
+    out = synthsource(v, vi, hz, gate, 0.f, osctype, vfreq) * envout;
+    if (gate && kSynthNoteOnFadeSec > 0.f) {
+      const float fadeinc =
+          1.f / std::max(1.f, kSynthNoteOnFadeSec * g_engine.sample_rate);
+      if (v.noteonfade < 1.f) {
         v.noteonfade = std::min(1.f, v.noteonfade + fadeinc);
       }
       out *= v.noteonfade;
-    }
-    else
-    {
+    } else {
       v.noteonfade = 0.f;
     }
-  }
-  else if(type >= kRetroNoise && type <= kMetallicNoise)
-  {
+  } else if (type >= kRetroNoise && type <= kMetallicNoise) {
     float envout = v.voiceenv.process(gate);
-    v.lastenv    = envout;
-    out          = noisevoice(v, vi, type, freq, gate, envout);
-  }
-  else if(type == kHollowNoise || type == kWhiteNoise)
-  {
+    v.lastenv = envout;
+    out = noisevoice(v, vi, type, freq, gate, envout);
+  } else if (type == kHollowNoise || type == kWhiteNoise) {
     float envout = v.voiceenv.process(gate);
-    v.lastenv    = envout;
-    out          = noisevoice(v, vi, type, freq, gate, envout);
-  }
-  else if(type == kBells)
-  {
-    float hz      = detunedhz(vi, freq, detune, vfreq);
-    if(hz <= 0.f)
-    {
+    v.lastenv = envout;
+    out = noisevoice(v, vi, type, freq, gate, envout);
+  } else if (type == kBells) {
+    float hz = detunedhz(vi, freq, detune, vfreq);
+    if (hz <= 0.f) {
       hz = 440.f;
     }
     bool trigger = gate && !v.bellgateprev;
     v.bellgateprev = gate;
     v.modalvoice.SetFreq(hz);
     v.modalvoice.SetSustain(gate);
-    float body    = v.modalvoice.Process(trigger);
+    float body = v.modalvoice.Process(trigger);
     float sparkhz = hz * 4.f;
     v.sparklemod.SetFreq(sparkhz * 5.1f);
     v.sparklemod.SetWaveform(Oscillator::WAVE_SIN);
@@ -213,33 +189,27 @@ float processvoice(int vi, float vstart[kVibratoGroups], float vend[kVibratoGrou
     v.sparklecar.SetWaveform(Oscillator::WAVE_SIN);
     v.sparklecar.SetAmp(1.f);
     float sparkle = v.sparklecar.Process() * v.sparkleenv.Process(gate);
-    out           = (body + sparkle * 0.15f) * 0.35f;
-    v.lastenv     = std::fabs(out);
-  }
-  else if(type == kDoot)
-  {
-    out       = dootvoice(v, freq, gate);
+    out = (body + sparkle * 0.15f) * 0.35f;
     v.lastenv = std::fabs(out);
-  }
-  else if(type == kAlgoSynth)
-  {
-    out       = algovoice(v, vi, freq, gate, algo, vfreq);
+  } else if (type == kDoot) {
+    out = dootvoice(v, freq, gate);
     v.lastenv = std::fabs(out);
-  }
-  else if(type == kStringVoice)
-  {
-    float hz      = detunedhz(vi, freq > 0.f ? freq : 440.f, 0.f, vfreq);
-    bool  trigger = gate && !v.stringgateprev;
+  } else if (type == kAlgoSynth) {
+    out = algovoice(v, vi, freq, gate, algo, vfreq);
+    v.lastenv = std::fabs(out);
+  } else if (type == kStringVoice) {
+    float hz = detunedhz(vi, freq > 0.f ? freq : 440.f, 0.f, vfreq);
+    bool trigger = gate && !v.stringgateprev;
     v.stringgateprev = gate;
     applystringvoicepreset(v, algo == 0 ? 0 : 1);
-    if(algo == 0)
-    {
+    if (algo == 0) {
       float envout = v.voiceenv.process(gate);
       float detunecents, pwmdepth, vibcents, filterscale;
-      applystringensembleparams(v, cfg, detunecents, pwmdepth, vibcents, filterscale);
+      applystringensembleparams(v, cfg, detunecents, pwmdepth, vibcents,
+                                filterscale);
       out = stringmachinevoice(v, hz, envout, detunecents, pwmdepth, vibcents,
-                               filterscale)
-            * envout;
+                               filterscale) *
+            envout;
       out *= dbtoamp(vol_db) * kStringMachineGain;
       v.lastenv = envout;
       return out;
@@ -247,74 +217,57 @@ float processvoice(int vi, float vstart[kVibratoGroups], float vend[kVibratoGrou
     applypluckparams(v, cfg);
     v.stringvoice.SetFreq(hz);
     v.stringvoice.SetSustain(false);
-    if(trigger)
-    {
+    if (trigger) {
       v.stringvoice.Reset();
     }
     out = v.stringvoice.Process(trigger);
     out *= dbtoamp(vol_db) * kStringPluckGain;
     v.lastenv = std::fabs(out);
     return out;
-  }
-  else if(type == kDripVoice)
-  {
+  } else if (type == kDripVoice) {
     bool trigger = gate && !v.dripgateprev;
     v.dripgateprev = gate;
-    out            = v.drip.Process(trigger) * dbtoamp(vol_db);
-    v.lastenv      = std::fabs(out);
+    out = v.drip.Process(trigger) * dbtoamp(vol_db);
+    v.lastenv = std::fabs(out);
     return out;
-  }
-  else if(type == kWindVoice)
-  {
+  } else if (type == kWindVoice) {
     float hz = freq > 0.f ? freq : 440.f;
-    out      = windvoice(v, hz, gate, algo, cfg);
+    out = windvoice(v, hz, gate, algo, cfg);
     return out * dbtoamp(vol_db);
-  }
-  else if(type == kPianoVoice)
-  {
-    float hz  = freq > 0.f ? freq : 440.f;
+  } else if (type == kPianoVoice) {
+    float hz = freq > 0.f ? freq : 440.f;
     float vel = detune > 0.f ? detune : 0.75f;
-    out       = pianovoice(v, hz, gate, algo, cfg, vel);
+    out = pianovoice(v, hz, gate, algo, cfg, vel);
     return out * dbtoamp(vol_db);
-  }
-  else if(type == kTimpaniVoice)
-  {
-    float hz  = freq > 0.f ? freq : 110.f;
+  } else if (type == kTimpaniVoice) {
+    float hz = freq > 0.f ? freq : 110.f;
     float vel = detune > 0.f ? detune : 0.75f;
-    out       = timpanivoice(v, hz, gate, cfg, vel);
+    out = timpanivoice(v, hz, gate, cfg, vel);
     return out * dbtoamp(vol_db);
-  }
-  else if(type == kBowedVoice)
-  {
-    float hz  = freq > 0.f ? freq : 440.f;
+  } else if (type == kBowedVoice) {
+    float hz = freq > 0.f ? freq : 440.f;
     float vel = detune > 0.f ? detune : 0.75f;
-    out       = bowedvoice(v, vi, hz, gate, algo, cfg, port, vel);
+    out = bowedvoice(v, vi, hz, gate, algo, cfg, port, vel);
     return out * dbtoamp(vol_db);
-  }
-  else if(type == kGuitarVoice)
-  {
-    float hz  = freq > 0.f ? freq : 220.f;
+  } else if (type == kGuitarVoice) {
+    float hz = freq > 0.f ? freq : 220.f;
     float vel = detune > 0.f ? detune : 0.75f;
-    if(v.guitarpreset != algo)
-    {
+    if (v.guitarpreset != algo) {
       v.guitarpreset = algo;
-      v.guitarprev[0] = v.guitarprev[1] = v.guitarprev[2] = v.guitarprev[3] = -1.f;
+      v.guitarprev[0] = v.guitarprev[1] = v.guitarprev[2] = v.guitarprev[3] =
+          -1.f;
       v.stringvoicepreset = -1;
     }
     out = guitarvoice(v, hz, gate, algo, cfg, vel);
     return out * dbtoamp(vol_db);
-  }
-  else if(type == kOrganVoice)
-  {
+  } else if (type == kOrganVoice) {
     float hz = freq > 0.f ? freq : 440.f;
-    out      = organvoice(v, hz, gate, algo, cfg);
+    out = organvoice(v, hz, gate, algo, cfg);
     return out * dbtoamp(vol_db);
-  }
-  else
-  {
+  } else {
     float envout = v.voiceenv.process(gate);
-    v.lastenv    = envout;
-    out          = synthsource(v, vi, freq, gate, 0.f, osctype, vfreq) * envout;
+    v.lastenv = envout;
+    out = synthsource(v, vi, freq, gate, 0.f, osctype, vfreq) * envout;
   }
 
   return out * dbtoamp(vol_db);

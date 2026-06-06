@@ -6,8 +6,8 @@ import {
   GeneratorFunc,
 } from 'zss/feature/lang'
 import {
-  loadscriptsync,
   type WasmScriptInstance,
+  loadscriptsync,
 } from 'zss/feature/lang/wasmloader'
 
 import { RUNTIME } from './config'
@@ -509,7 +509,7 @@ export function createchip(
   }
 
   // ref to generator instance
-  // eslint-disable-next-line prefer-const
+
   let logic: MAYBE<GeneratorFunc>
   let wasmscript: MAYBE<WasmScriptInstance>
 

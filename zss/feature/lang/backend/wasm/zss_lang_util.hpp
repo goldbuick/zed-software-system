@@ -25,11 +25,13 @@ inline std::string namestr(const std::string& name) {
     out.push_back(static_cast<char>(std::tolower(c)));
   }
   size_t start = 0;
-  while (start < out.size() && std::isspace(static_cast<unsigned char>(out[start]))) {
+  while (start < out.size() &&
+         std::isspace(static_cast<unsigned char>(out[start]))) {
     ++start;
   }
   size_t end = out.size();
-  while (end > start && std::isspace(static_cast<unsigned char>(out[end - 1]))) {
+  while (end > start &&
+         std::isspace(static_cast<unsigned char>(out[end - 1]))) {
     --end;
   }
   return out.substr(start, end - start);
@@ -107,7 +109,8 @@ inline std::string trimstart(const std::string& s) {
 
 inline std::string trim(const std::string& s) {
   size_t start = 0;
-  while (start < s.size() && std::isspace(static_cast<unsigned char>(s[start]))) {
+  while (start < s.size() &&
+         std::isspace(static_cast<unsigned char>(s[start]))) {
     ++start;
   }
   size_t end = s.size();
@@ -128,6 +131,6 @@ inline std::string striptextlinequotes(const std::string& s) {
   return out;
 }
 
-}  // namespace zss_lang
+} // namespace zss_lang
 
 #endif

@@ -13,9 +13,14 @@ type BookData = {
 
 function fixtureid(code: string, index: number) {
   const head = code.split('\n')[0] ?? ''
-  const statmatch = head.match(/^@\w+\s+(\w+)/) ?? head.match(/^@(\w+)/)
+  const statmatch = /^@\w+\s+(\w+)/.exec(head) ?? /^@(\w+)/.exec(head)
   const raw = statmatch?.[1] ?? `page${index}`
-  return raw.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || `page${index}`
+  return (
+    raw
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_|_$/g, '') || `page${index}`
+  )
 }
 
 function collectcodes(book: BookData) {
@@ -56,7 +61,11 @@ function main() {
 
   const manifest: string[] = []
   for (const entry of entries) {
-    writeFileSync(path.join(outdir, `${entry.id}.zss`), `${entry.code}\n`, 'utf8')
+    writeFileSync(
+      path.join(outdir, `${entry.id}.zss`),
+      `${entry.code}\n`,
+      'utf8',
+    )
     manifest.push(entry.id)
   }
   manifest.sort()

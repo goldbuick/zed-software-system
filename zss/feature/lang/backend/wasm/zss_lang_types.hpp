@@ -85,6 +85,6 @@ struct LangError {
   std::string message;
 };
 
-}  // namespace zss_lang
+} // namespace zss_lang
 
 #endif

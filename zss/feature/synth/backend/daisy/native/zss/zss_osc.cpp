@@ -11,9 +11,9 @@ namespace zss_daisy {
 
 // --- Synthesis: Daisy Oscillator waves, FM, partials, main synthsource() ---
 
-float voiceenvlevel(ZssVoice &v, int type) { return v.lastenv; }
+float voiceenvlevel(ZssVoice& v, int type) { return v.lastenv; }
 
-float glidefreq(ZssVoice &v, int vi, float target, int type, float port) {
+float glidefreq(ZssVoice& v, int vi, float target, int type, float port) {
   if ((type != kSynth && type != kAlgoSynth && type != kBowedVoice) ||
       port <= 0.f) {
     v.playfreq = target;
@@ -52,7 +52,7 @@ float glidefreq(ZssVoice &v, int vi, float target, int type, float port) {
   return v.playfreq;
 }
 
-void applyvoiceenv(ZssVoice &v, int type, float a, float d, float s, float r) {
+void applyvoiceenv(ZssVoice& v, int type, float a, float d, float s, float r) {
   if (type == kDoot) {
     if (v.dootprev_a != a || v.dootprev_d != d || v.dootprev_s != s ||
         v.dootprev_r != r) {
@@ -105,7 +105,7 @@ float oscwavefromphase(int wavetype, float phase01) {
   return p < 0.5f ? 1.f : -1.f;
 }
 
-float oscbasicwave(Oscillator &o, int wavetype, float hz, float amp) {
+float oscbasicwave(Oscillator& o, int wavetype, float hz, float amp) {
   o.SetFreq(hz);
   o.SetAmp(amp);
   switch (wavetype) {
@@ -130,17 +130,17 @@ float oscbasicwave(Oscillator &o, int wavetype, float hz, float amp) {
   return o.Process();
 }
 
-float stringbownoisesample(ZssVoice &v) {
+float stringbownoisesample(ZssVoice& v) {
   v.noiserng = v.noiserng * 1664525u + 1013904223u;
   return static_cast<float>((v.noiserng >> 8) & 0xffffff) / 8388608.f - 1.f;
 }
 
-float oscmodwave(Oscillator &o, int modwave, float hz) {
+float oscmodwave(Oscillator& o, int modwave, float hz) {
   return oscbasicwave(o, modwave, hz, kOscModWaveGain);
 }
 
-float oscwavewithphase(Oscillator &o, int wavetype, float hz, float phase,
-                       ZssVoice &v) {
+float oscwavewithphase(Oscillator& o, int wavetype, float hz, float phase,
+                       ZssVoice& v) {
   if (phase == 0.f && v.voicephasestep == 0.f) {
     return oscbasicwave(o, wavetype, hz, 1.f);
   }
@@ -152,7 +152,7 @@ float oscwavewithphase(Oscillator &o, int wavetype, float hz, float phase,
   return oscbasicwave(o, wavetype, hz, 1.f);
 }
 
-float fmcarriersample(Oscillator &carrier, Oscillator &modulator, int modtype,
+float fmcarriersample(Oscillator& carrier, Oscillator& modulator, int modtype,
                       float hz, float modhz, float modidx, float moddepth,
                       int carriertype) {
   float mod = oscmodwave(modulator, modtype, modhz) * modidx * moddepth;
@@ -160,8 +160,8 @@ float fmcarriersample(Oscillator &carrier, Oscillator &modulator, int modtype,
   return oscbasicwave(carrier, carriertype, fmh, kOscModWaveGain);
 }
 
-float oscpartialsynth(Oscillator &o, float hz, int count,
-                      const float *partials) {
+float oscpartialsynth(Oscillator& o, float hz, int count,
+                      const float* partials) {
   int n = count > 0 ? std::min(8, count) : 0;
   if (n <= 0) {
     return oscbasicwave(o, 1, hz, 1.f);
@@ -209,7 +209,7 @@ float synthwavegain(int osc) {
 //  20–23 fm*sine|square|triangle|sawtooth
 //  30–33 fat*sine|square|triangle|sawtooth
 // partials override when zss_osccfg partialcount > 0 (#synth customN + array).
-float synthsource(ZssVoice &v, int vi, float freq, bool gate, float detune,
+float synthsource(ZssVoice& v, int vi, float freq, bool gate, float detune,
                   int osctype, float vfreq[kVibratoGroups]) {
   OscCfg cfg = readosccfg(vi);
   float hz = detunedhz(vi, freq, detune, vfreq);
@@ -248,12 +248,12 @@ float synthsource(ZssVoice &v, int vi, float freq, bool gate, float detune,
     sig = v.synthosc.Process();
   } else if (osctype >= 10 && osctype <= 13) // #synth am*
   {
-    float modamp  = v.modenv.process(gate);
+    float modamp = v.modenv.process(gate);
     float modwave = oscmodwave(v.synthmod, cfg.modtype, hz * harm);
-    int   cartype = osctype - 10;
+    int cartype = osctype - 10;
     // Tone AMOscillator: AudioToGain(mod) → 0.5 carrier when mod crosses 0.
-    sig = oscbasicwave(v.synthosc, cartype, hz, 1.f)
-          * (0.5f + 0.5f * modwave * modamp);
+    sig = oscbasicwave(v.synthosc, cartype, hz, 1.f) *
+          (0.5f + 0.5f * modwave * modamp);
   } else if (osctype >= 20 && osctype <= 23) // #synth fm*
   {
     float moddepth = v.modenv.process(gate);
@@ -284,7 +284,7 @@ float synthsource(ZssVoice &v, int vi, float freq, bool gate, float detune,
   return sig * synthwavegain(osctype);
 }
 
-float dootvoice(ZssVoice &v, float freq, bool gate) {
+float dootvoice(ZssVoice& v, float freq, bool gate) {
   if (gate && !v.gateprev) {
     v.dootpitch = 1.f;
   }
@@ -303,7 +303,7 @@ float dootvoice(ZssVoice &v, float freq, bool gate) {
   return v.dootosc.Process() * v.dootenv.Process(gate) * 0.6f;
 }
 
-float algopwave(Oscillator &o, int wavetype, float hz) {
+float algopwave(Oscillator& o, int wavetype, float hz) {
   return oscbasicwave(o, wavetype, hz, 1.f);
 }
 } // namespace zss_daisy

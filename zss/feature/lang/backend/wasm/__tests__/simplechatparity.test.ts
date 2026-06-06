@@ -17,14 +17,14 @@ jest.mock('zss/config', () => ({
   WASM_SCRIPT: false,
 }))
 
-import { compile } from 'zss/feature/lang'
 import { createchip } from 'zss/chip'
-import { DRIVER_TYPE } from 'zss/firmware/runner'
+import { compile } from 'zss/feature/lang'
 import { readcorpus } from 'zss/feature/lang/backend/wasm/corpus'
 import {
   compilecppfromdisk,
   wasmartifactspresent,
 } from 'zss/feature/lang/backend/wasm/langparityload'
+import { DRIVER_TYPE } from 'zss/firmware/runner'
 
 function labelsfromjson(labelsjson: string) {
   if (!labelsjson.trim()) {

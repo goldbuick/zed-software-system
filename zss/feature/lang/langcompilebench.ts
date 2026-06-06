@@ -4,11 +4,11 @@ import {
   createlangmodule,
 } from 'zss/feature/lang/langwasmload'
 
+import drawdisplaysource from './backend/wasm/__fixtures__/parity/drawdisplay.zss?raw'
+import shortgosource from './backend/wasm/__fixtures__/parity/short_go.zss?raw'
 import duplicatorsource from './backend/wasm/__tests__/fixtures/coolregionsbow/duplicator.zss?raw'
 import playersource from './backend/wasm/__tests__/fixtures/coolregionsbow/player.zss?raw'
 import simplechatplayersource from './backend/wasm/__tests__/fixtures/simple_chat_player.zss?raw'
-import drawdisplaysource from './backend/wasm/__fixtures__/parity/drawdisplay.zss?raw'
-import shortgosource from './backend/wasm/__fixtures__/parity/short_go.zss?raw'
 import benchfixtures from './langcompilebenchfixtures.json'
 
 export type CompileBenchStats = {
@@ -65,10 +65,7 @@ function median(values: number[]) {
 
 function p95(values: number[]) {
   const sorted = [...values].sort((a, b) => a - b)
-  const index = Math.min(
-    sorted.length - 1,
-    Math.ceil(sorted.length * 0.95) - 1,
-  )
+  const index = Math.min(sorted.length - 1, Math.ceil(sorted.length * 0.95) - 1)
   return sorted[Math.max(0, index)]
 }
 
@@ -152,13 +149,21 @@ export async function runlangcompilebench(
       )
     }
 
-    const ts = benchstats(() => {
-      compile(name, source)
-    }, iterations, warmup)
+    const ts = benchstats(
+      () => {
+        compile(name, source)
+      },
+      iterations,
+      warmup,
+    )
 
-    const wasm = benchstats(() => {
-      compilezssonmodule(name, source, wasmmodule)
-    }, iterations, warmup)
+    const wasm = benchstats(
+      () => {
+        compilezssonmodule(name, source, wasmmodule)
+      },
+      iterations,
+      warmup,
+    )
 
     rows.push({
       id: fixture.id,

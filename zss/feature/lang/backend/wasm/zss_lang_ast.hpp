@@ -49,13 +49,14 @@ struct CodeNode {
   double number_value = 0.0;
 };
 
-inline std::unique_ptr<CodeNode> make_node(NODE type, Location loc = Location()) {
+inline std::unique_ptr<CodeNode> make_node(NODE type,
+                                           Location loc = Location()) {
   auto node = std::make_unique<CodeNode>();
   node->type = type;
   node->loc = std::move(loc);
   return node;
 }
 
-}  // namespace zss_lang
+} // namespace zss_lang
 
 #endif

@@ -30,7 +30,8 @@ typedef struct ZssCompileResult {
   int error_count;
 } ZssCompileResult;
 
-/** Compile ZSS source to WASM module bytes + labels + debug map. Caller frees with zss_compile_result_free. */
+/** Compile ZSS source to WASM module bytes + labels + debug map. Caller frees
+ * with zss_compile_result_free. */
 ZssCompileResult* zss_compile(const char* name, const char* source);
 
 void zss_compile_result_free(ZssCompileResult* result);

@@ -13,7 +13,7 @@
 namespace zss_lang {
 
 class Parser {
- public:
+public:
   explicit Parser(std::vector<Token> tokens) : tokens_(std::move(tokens)) {}
 
   std::unique_ptr<CodeNode> parseprogram() {
@@ -35,7 +35,7 @@ class Parser {
     return program;
   }
 
- private:
+private:
   std::vector<Token> tokens_;
   size_t index_ = 0;
   int unique_ = 0;
@@ -46,7 +46,8 @@ class Parser {
   std::vector<Location> scopedlocstack_;
 
   void pushscopedloc(const Location& loc) {
-    if (hasscopedloc_) scopedlocstack_.push_back(scopedloc_);
+    if (hasscopedloc_)
+      scopedlocstack_.push_back(scopedloc_);
     scopedloc_ = loc;
     hasscopedloc_ = true;
   }
@@ -61,7 +62,8 @@ class Parser {
   }
 
   void applyruleloc(CodeNode* node) const {
-    if (!node || !hasscopedloc_) return;
+    if (!node || !hasscopedloc_)
+      return;
     node->loc = scopedloc_;
   }
 
@@ -82,12 +84,14 @@ class Parser {
   Token lasttoken_;
 
   void setloc(CodeNode* node) {
-    if (!node) return;
+    if (!node)
+      return;
     node->loc = lasttoken_.loc;
   }
 
   Token advance() {
-    if (atend()) return peek();
+    if (atend())
+      return peek();
     lasttoken_ = tokens_[index_++];
     return lasttoken_;
   }
@@ -113,15 +117,17 @@ class Parser {
     return s;
   }
 
-  std::unique_ptr<CodeNode> makelabelnode(const std::string& name, bool active) {
+  std::unique_ptr<CodeNode> makelabelnode(const std::string& name,
+                                          bool active) {
     auto node = make_node(NODE::LABEL);
     node->name = name;
     node->active = active;
     return node;
   }
 
-  std::unique_ptr<CodeNode> makelinenode(std::vector<std::unique_ptr<CodeNode>> stmts,
-                                         const Location* loc = nullptr) {
+  std::unique_ptr<CodeNode>
+  makelinenode(std::vector<std::unique_ptr<CodeNode>> stmts,
+               const Location* loc = nullptr) {
     auto line = make_node(NODE::LINE);
     line->stmts = std::move(stmts);
     if (loc) {
@@ -132,14 +138,16 @@ class Parser {
     return line;
   }
 
-  std::unique_ptr<CodeNode> makelinenode1(std::unique_ptr<CodeNode> stmt, const Location* loc = nullptr) {
+  std::unique_ptr<CodeNode> makelinenode1(std::unique_ptr<CodeNode> stmt,
+                                          const Location* loc = nullptr) {
     std::vector<std::unique_ptr<CodeNode>> stmts;
     stmts.push_back(std::move(stmt));
     return makelinenode(std::move(stmts), loc);
   }
 
-  std::unique_ptr<CodeNode> makeapinode(const Location& loc, const std::string& method,
-                                        std::vector<std::unique_ptr<CodeNode>> words) {
+  std::unique_ptr<CodeNode>
+  makeapinode(const Location& loc, const std::string& method,
+              std::vector<std::unique_ptr<CodeNode>> words) {
     auto api = make_node(NODE::API);
     api->method = method;
     api->words = std::move(words);
@@ -147,9 +155,10 @@ class Parser {
     return makelinenode1(std::move(api), &loc);
   }
 
-  std::unique_ptr<CodeNode> makelogicnode(const std::string& method, const std::string& skip,
-                                          std::vector<std::unique_ptr<CodeNode>> words,
-                                          const Location* loc = nullptr) {
+  std::unique_ptr<CodeNode>
+  makelogicnode(const std::string& method, const std::string& skip,
+                std::vector<std::unique_ptr<CodeNode>> words,
+                const Location* loc = nullptr) {
     auto node = make_node(NODE::IF_CHECK);
     node->method = method;
     node->skip = skip;
@@ -159,11 +168,14 @@ class Parser {
     } else {
       applyruleloc(node.get());
     }
-    const Location* useloc = loc ? loc : (hasscopedloc_ ? &scopedloc_ : nullptr);
+    const Location* useloc =
+        loc ? loc : (hasscopedloc_ ? &scopedloc_ : nullptr);
     return makelinenode1(std::move(node), useloc);
   }
 
-  std::unique_ptr<CodeNode> createmarknode(const Location& loc, const std::string& id, const std::string& comment) {
+  std::unique_ptr<CodeNode> createmarknode(const Location& loc,
+                                           const std::string& id,
+                                           const std::string& comment) {
     auto node = make_node(NODE::MARK);
     node->id = id;
     node->comment = comment;
@@ -171,7 +183,9 @@ class Parser {
     return makelinenode1(std::move(node), &loc);
   }
 
-  std::unique_ptr<CodeNode> creategotonode(const Location& loc, const std::string& id, const std::string& comment) {
+  std::unique_ptr<CodeNode> creategotonode(const Location& loc,
+                                           const std::string& id,
+                                           const std::string& comment) {
     auto node = make_node(NODE::GOTO);
     node->id = id;
     node->comment = comment;
@@ -209,7 +223,8 @@ class Parser {
     return node;
   }
 
-  std::unique_ptr<CodeNode> createexprondemand(std::vector<std::unique_ptr<CodeNode>> nodes) {
+  std::unique_ptr<CodeNode>
+  createexprondemand(std::vector<std::unique_ptr<CodeNode>> nodes) {
     if (nodes.size() == 1) {
       return std::move(nodes[0]);
     }
@@ -218,7 +233,8 @@ class Parser {
     return node;
   }
 
-  std::vector<std::unique_ptr<CodeNode>> wrapnode(std::unique_ptr<CodeNode> node) {
+  std::vector<std::unique_ptr<CodeNode>>
+  wrapnode(std::unique_ptr<CodeNode> node) {
     std::vector<std::unique_ptr<CodeNode>> out;
     out.push_back(std::move(node));
     return out;
@@ -239,7 +255,8 @@ class Parser {
     if (check(TokenKind::LABEL)) {
       Token t = advance();
       std::string name = tokenstr(t);
-      if (!name.empty() && name[0] == ':') name = trim(name.substr(1));
+      if (!name.empty() && name[0] == ':')
+        name = trim(name.substr(1));
       auto label = makelabelnode(name, true);
       label->loc = t.loc;
       return wrapnode(makelinenode1(std::move(label), &t.loc));
@@ -247,7 +264,8 @@ class Parser {
     if (check(TokenKind::STAT)) {
       Token t = advance();
       std::string val = tokenstr(t);
-      if (!val.empty() && val[0] == '@') val = val.substr(1);
+      if (!val.empty() && val[0] == '@')
+        val = val.substr(1);
       auto node = make_node(NODE::STAT);
       node->value = val;
       node->loc = t.loc;
@@ -263,7 +281,8 @@ class Parser {
     if (check(TokenKind::COMMENT)) {
       Token t = advance();
       std::string val = tokenstr(t);
-      if (!val.empty() && val[0] == '\'') val = trim(val.substr(1));
+      if (!val.empty() && val[0] == '\'')
+        val = trim(val.substr(1));
       auto label = makelabelnode(val, false);
       label->loc = t.loc;
       return wrapnode(makelinenode1(std::move(label), &t.loc));
@@ -272,9 +291,11 @@ class Parser {
       Token h = advance();
       Token ht = advance();
       std::string link = tokenstr(h);
-      if (!link.empty() && link[0] == '!') link = link.substr(1);
+      if (!link.empty() && link[0] == '!')
+        link = link.substr(1);
       std::string text = tokenstr(ht);
-      if (!text.empty() && text[0] == ';') text = text.substr(1);
+      if (!text.empty() && text[0] == ';')
+        text = text.substr(1);
       auto node = make_node(NODE::HYPERLINK);
       node->link = link;
       node->text = text;
@@ -326,7 +347,7 @@ class Parser {
   }
 
   std::vector<std::unique_ptr<CodeNode>> parsestmtcommand() {
-    Token hash = advance();  // #
+    Token hash = advance(); // #
     hasfirststmtloc_ = true;
     firststmtloc_ = hash.loc;
     if (isstructured()) {
@@ -354,7 +375,8 @@ class Parser {
            k == TokenKind::COMMAND_CONTINUE;
   }
 
-  std::vector<std::unique_ptr<CodeNode>> single(std::unique_ptr<CodeNode> node) {
+  std::vector<std::unique_ptr<CodeNode>>
+  single(std::unique_ptr<CodeNode> node) {
     std::vector<std::unique_ptr<CodeNode>> v;
     v.push_back(std::move(node));
     return v;
@@ -376,11 +398,16 @@ class Parser {
 
   std::vector<std::unique_ptr<CodeNode>> parsestructured() {
     TokenKind k = peek().kind;
-    if (k == TokenKind::COMMAND_IF) return wrapnode(parsecommandif());
-    if (k == TokenKind::COMMAND_WHILE) return wrapnode(parsecommandwhile());
-    if (k == TokenKind::COMMAND_REPEAT) return wrapnode(parsecommandrepeat());
-    if (k == TokenKind::COMMAND_WAITFOR) return wrapnode(parsecommandwaitfor());
-    if (k == TokenKind::COMMAND_FOREACH) return wrapnode(parsecommandforeach());
+    if (k == TokenKind::COMMAND_IF)
+      return wrapnode(parsecommandif());
+    if (k == TokenKind::COMMAND_WHILE)
+      return wrapnode(parsecommandwhile());
+    if (k == TokenKind::COMMAND_REPEAT)
+      return wrapnode(parsecommandrepeat());
+    if (k == TokenKind::COMMAND_WAITFOR)
+      return wrapnode(parsecommandwaitfor());
+    if (k == TokenKind::COMMAND_FOREACH)
+      return wrapnode(parsecommandforeach());
     if (k == TokenKind::COMMAND_BREAK) {
       auto br = parsebreaknode();
       return wrapnode(makelinenode(single(std::move(br))));
@@ -393,10 +420,11 @@ class Parser {
   }
 
   std::vector<std::unique_ptr<CodeNode>> parseshortgo() {
-    Token slash = advance();  // /
+    Token slash = advance(); // /
     Location loc = slash.loc;
     std::vector<std::unique_ptr<CodeNode>> words;
-    if (check(TokenKind::STRINGLITERAL) || check(TokenKind::STRINGLITERALDOUBLE)) {
+    if (check(TokenKind::STRINGLITERAL) ||
+        check(TokenKind::STRINGLITERALDOUBLE)) {
       words.push_back(parsestringtoken());
     } else {
       words = parsedir();
@@ -409,10 +437,11 @@ class Parser {
   }
 
   std::vector<std::unique_ptr<CodeNode>> parseshorttry() {
-    Token query = advance();  // ?
+    Token query = advance(); // ?
     Location loc = query.loc;
     std::vector<std::unique_ptr<CodeNode>> words;
-    if (check(TokenKind::STRINGLITERAL) || check(TokenKind::STRINGLITERALDOUBLE)) {
+    if (check(TokenKind::STRINGLITERAL) ||
+        check(TokenKind::STRINGLITERALDOUBLE)) {
       words.push_back(parsestringtoken());
     } else {
       words = parsedir();
@@ -430,12 +459,14 @@ class Parser {
     pushscopedloc(ifloc);
     auto checkwords = parsewords();
     popscopedloc();
-    auto checkline = makelogicnode(namestr(tokenstr(iftok)), "", std::move(checkwords), &ifloc);
+    auto checkline = makelogicnode(namestr(tokenstr(iftok)), "",
+                                   std::move(checkwords), &ifloc);
     auto block = parsecommandifblock();
     auto node = make_node(NODE::IF);
     node->loc = ifloc;
     node->check = std::move(checkline);
-    if (block) node->block = std::move(block);
+    if (block)
+      node->block = std::move(block);
     return node;
   }
 
@@ -443,7 +474,8 @@ class Parser {
     auto inlinestmts = parseinline();
     for (auto& item : inlinestmts) {
       if (item->type == NODE::LINE && item->stmts.size() == 1 &&
-          (item->stmts[0]->type == NODE::BREAK || item->stmts[0]->type == NODE::CONTINUE)) {
+          (item->stmts[0]->type == NODE::BREAK ||
+           item->stmts[0]->type == NODE::CONTINUE)) {
         dest.push_back(std::move(item->stmts[0]));
       } else {
         dest.push_back(std::move(item));
@@ -469,7 +501,8 @@ class Parser {
       advance();
       while (!atend() && !isifblockend()) {
         auto ln = parseline();
-        for (auto& l : ln) block->lines.push_back(std::move(l));
+        for (auto& l : ln)
+          block->lines.push_back(std::move(l));
       }
     }
 
@@ -483,33 +516,41 @@ class Parser {
       block->altlines.push_back(parsecommandelse());
     }
     block->altlines.push_back(createmarknode(blockloc, done, "end of if"));
-    while (check(TokenKind::NEWLINE)) advance();
-    if (check(TokenKind::COMMAND)) advance();
-    if (check(TokenKind::COMMAND_DONE)) advance();
+    while (check(TokenKind::NEWLINE))
+      advance();
+    if (check(TokenKind::COMMAND))
+      advance();
+    if (check(TokenKind::COMMAND_DONE))
+      advance();
     return block;
   }
 
   bool iselseifkeyword(TokenKind kind, const std::string& image) const {
-    if (kind == TokenKind::COMMAND_IF) return true;
-    if (kind != TokenKind::WORD) return false;
+    if (kind == TokenKind::COMMAND_IF)
+      return true;
+    if (kind != TokenKind::WORD)
+      return false;
     std::string w = namestr(image);
-    return w == "if" || w == "try" || w == "take" || w == "give" || w == "duplicate";
+    return w == "if" || w == "try" || w == "take" || w == "give" ||
+           w == "duplicate";
   }
 
   bool iscommandelseifhead() const {
-    if (!check(TokenKind::COMMAND) || peek(1).kind != TokenKind::COMMAND_ELSE) return false;
+    if (!check(TokenKind::COMMAND) || peek(1).kind != TokenKind::COMMAND_ELSE)
+      return false;
     return iselseifkeyword(peek(2).kind, peek(2).image);
   }
 
   std::string elseifmethodfromtoken(const Token& tok) const {
-    if (tok.kind == TokenKind::COMMAND_IF) return namestr(tok.image);
+    if (tok.kind == TokenKind::COMMAND_IF)
+      return namestr(tok.image);
     return namestr(tok.image);
   }
 
   std::unique_ptr<CodeNode> parsecommandelseif() {
-    advance();  // #
-    advance();  // else
-    Token cmdtok = advance();  // if | try | take | give | duplicate
+    advance();                // #
+    advance();                // else
+    Token cmdtok = advance(); // if | try | take | give | duplicate
     Location loc = cmdtok.loc;
     pushscopedloc(loc);
     auto words = parsewords();
@@ -519,12 +560,14 @@ class Parser {
     auto node = make_node(NODE::ELSE_IF);
     node->done = done;
     node->loc = loc;
-    auto logic = makelogicnode(elseifmethodfromtoken(cmdtok), skip, std::move(words), &loc);
+    auto logic = makelogicnode(elseifmethodfromtoken(cmdtok), skip,
+                               std::move(words), &loc);
     node->lines.push_back(std::move(logic));
     Location blockloc = isinlinestart() ? curloc() : loc;
     if (isinlinestart() || check(TokenKind::COMMAND_DO)) {
       auto fork = parsecommandfork();
-      for (auto& l : fork) node->lines.push_back(std::move(l));
+      for (auto& l : fork)
+        node->lines.push_back(std::move(l));
     }
     node->lines.push_back(creategotonode(blockloc, done, "end of if"));
     node->lines.push_back(createmarknode(blockloc, skip, "skip"));
@@ -532,11 +575,11 @@ class Parser {
   }
 
   std::unique_ptr<CodeNode> parsecommandelse() {
-    advance();  // #
-    advance();  // else
+    advance(); // #
+    advance(); // else
     auto node = make_node(NODE::ELSE);
-    if (!check(TokenKind::NEWLINE) && !check(TokenKind::COMMAND_DONE) && !atend() &&
-        !check(TokenKind::COMMAND_DO)) {
+    if (!check(TokenKind::NEWLINE) && !check(TokenKind::COMMAND_DONE) &&
+        !atend() && !check(TokenKind::COMMAND_DO)) {
       auto words = parsewords();
       if (!words.empty()) {
         auto cmd = make_node(NODE::COMMAND);
@@ -546,13 +589,15 @@ class Parser {
     }
     if (isinlinestart() || check(TokenKind::COMMAND_DO)) {
       auto fork = parsecommandfork();
-      for (auto& l : fork) node->lines.push_back(std::move(l));
+      for (auto& l : fork)
+        node->lines.push_back(std::move(l));
     }
     return node;
   }
 
   std::vector<std::unique_ptr<CodeNode>> parsecommandfork() {
-    if (isinlinestart()) return parseinline();
+    if (isinlinestart())
+      return parseinline();
     if (check(TokenKind::COMMAND_DO)) {
       advance();
       std::vector<std::unique_ptr<CodeNode>> lines;
@@ -562,7 +607,8 @@ class Parser {
           continue;
         }
         auto ln = parseline();
-        for (auto& l : ln) lines.push_back(std::move(l));
+        for (auto& l : ln)
+          lines.push_back(std::move(l));
       }
       return lines;
     }
@@ -574,21 +620,26 @@ class Parser {
       auto lines = parseinline();
       auto wrapper = make_node(NODE::LINE);
       for (auto& l : lines) {
-        for (auto& s : l->stmts) wrapper->stmts.push_back(std::move(s));
+        for (auto& s : l->stmts)
+          wrapper->stmts.push_back(std::move(s));
       }
       return wrapper;
     }
     if (check(TokenKind::COMMAND_DO)) {
       advance();
       auto block = make_node(NODE::LINE);
-      while (!atend() && !(check(TokenKind::COMMAND) && peek(1).kind == TokenKind::COMMAND_DONE)) {
+      while (!atend() && !(check(TokenKind::COMMAND) &&
+                           peek(1).kind == TokenKind::COMMAND_DONE)) {
         auto ln = parseline();
         for (auto& l : ln) {
-          for (auto& s : l->stmts) block->stmts.push_back(std::move(s));
+          for (auto& s : l->stmts)
+            block->stmts.push_back(std::move(s));
         }
       }
-      if (check(TokenKind::COMMAND)) advance();
-      if (check(TokenKind::COMMAND_DONE)) advance();
+      if (check(TokenKind::COMMAND))
+        advance();
+      if (check(TokenKind::COMMAND_DONE))
+        advance();
       return block;
     }
     return make_node(NODE::LINE);
@@ -601,12 +652,16 @@ class Parser {
     }
     if (check(TokenKind::COMMAND_DO)) {
       advance();
-      while (!atend() && !(check(TokenKind::COMMAND) && peek(1).kind == TokenKind::COMMAND_DONE)) {
+      while (!atend() && !(check(TokenKind::COMMAND) &&
+                           peek(1).kind == TokenKind::COMMAND_DONE)) {
         auto ln = parseline();
-        for (auto& l : ln) dest.push_back(std::move(l));
+        for (auto& l : ln)
+          dest.push_back(std::move(l));
       }
-      if (check(TokenKind::COMMAND)) advance();
-      if (check(TokenKind::COMMAND_DONE)) advance();
+      if (check(TokenKind::COMMAND))
+        advance();
+      if (check(TokenKind::COMMAND_DONE))
+        advance();
     }
   }
 
@@ -642,14 +697,16 @@ class Parser {
     auto index = createcountnode(loc);
     std::vector<std::unique_ptr<CodeNode>> args;
     args.push_back(std::move(index));
-    for (auto& w : words) args.push_back(std::move(w));
+    for (auto& w : words)
+      args.push_back(std::move(w));
     auto node = make_node(NODE::REPEAT);
     node->loop = loop;
     node->done = done;
     node->loc = loc;
     node->lines.push_back(makeapinode(loc, "repeatstart", clone_nodes(args)));
     node->lines.push_back(createmarknode(loc, loop, "start of repeat"));
-    node->lines.push_back(makelogicnode("repeat", done, clone_nodes(args), &loc));
+    node->lines.push_back(
+        makelogicnode("repeat", done, clone_nodes(args), &loc));
     appendblocklines(node->lines);
     node->lines.push_back(creategotonode(loc, loop, "loop of repeat"));
     node->lines.push_back(createmarknode(loc, done, "end of repeat"));
@@ -667,14 +724,16 @@ class Parser {
     auto index = createcountnode(loc);
     std::vector<std::unique_ptr<CodeNode>> args;
     args.push_back(std::move(index));
-    for (auto& w : words) args.push_back(std::move(w));
+    for (auto& w : words)
+      args.push_back(std::move(w));
     auto node = make_node(NODE::FOREACH);
     node->loop = loop;
     node->done = done;
     node->loc = loc;
     node->lines.push_back(makeapinode(loc, "foreachstart", clone_nodes(args)));
     node->lines.push_back(createmarknode(loc, loop, "start of foreach"));
-    node->lines.push_back(makelogicnode("foreach", done, clone_nodes(args), &loc));
+    node->lines.push_back(
+        makelogicnode("foreach", done, clone_nodes(args), &loc));
     appendblocklines(node->lines);
     node->lines.push_back(creategotonode(loc, loop, "loop of foreach"));
     node->lines.push_back(createmarknode(loc, done, "end of foreach"));
@@ -692,15 +751,18 @@ class Parser {
     node->loop = loop;
     node->loc = loc;
     node->lines.push_back(createmarknode(loc, loop, "start of waitfor"));
-    node->lines.push_back(makelogicnode("waitfor", loop, std::move(words), &loc));
+    node->lines.push_back(
+        makelogicnode("waitfor", loop, std::move(words), &loc));
     appendblocklines(node->lines);
     return node;
   }
 
-  std::vector<std::unique_ptr<CodeNode>> clone_nodes(const std::vector<std::unique_ptr<CodeNode>>& src) {
+  std::vector<std::unique_ptr<CodeNode>>
+  clone_nodes(const std::vector<std::unique_ptr<CodeNode>>& src) {
     std::vector<std::unique_ptr<CodeNode>> out;
     for (const auto& n : src) {
-      if (n) out.push_back(clone_node(n.get()));
+      if (n)
+        out.push_back(clone_node(n.get()));
     }
     return out;
   }
@@ -719,8 +781,9 @@ class Parser {
 
   bool isinlinestart() const {
     TokenKind k = peek().kind;
-    return k == TokenKind::STAT || k == TokenKind::TEXT || k == TokenKind::COMMENT ||
-           k == TokenKind::HYPERLINK || k == TokenKind::COMMAND || k == TokenKind::DIVIDE ||
+    return k == TokenKind::STAT || k == TokenKind::TEXT ||
+           k == TokenKind::COMMENT || k == TokenKind::HYPERLINK ||
+           k == TokenKind::COMMAND || k == TokenKind::DIVIDE ||
            k == TokenKind::QUERY || isstructured();
   }
 
@@ -737,19 +800,24 @@ class Parser {
       }
       if (isstructured()) {
         auto nodes = parsestructured();
-        for (auto& n : nodes) result.push_back(std::move(n));
+        for (auto& n : nodes)
+          result.push_back(std::move(n));
         continue;
       }
       auto stmts = parsestmt();
-      for (auto& s : stmts) result.push_back(std::move(s));
+      for (auto& s : stmts)
+        result.push_back(std::move(s));
     }
     return result;
   }
 
   bool iswordstop() const {
-    if (atend() || check(TokenKind::NEWLINE)) return true;
-    if (check(TokenKind::COMMAND_DO)) return true;
-    if (check(TokenKind::COMMAND) && peek(1).kind == TokenKind::COMMAND_DONE) return true;
+    if (atend() || check(TokenKind::NEWLINE))
+      return true;
+    if (check(TokenKind::COMMAND_DO))
+      return true;
+    if (check(TokenKind::COMMAND) && peek(1).kind == TokenKind::COMMAND_DONE)
+      return true;
     TokenKind k = peek().kind;
     return k == TokenKind::COMMAND_BREAK || k == TokenKind::COMMAND_CONTINUE ||
            k == TokenKind::COMMAND_ELSE || k == TokenKind::COMMAND_DONE;
@@ -761,7 +829,8 @@ class Parser {
       size_t before = index_;
       auto multi = trytokenexprmulti();
       if (!multi.empty()) {
-        for (auto& n : multi) result.push_back(std::move(n));
+        for (auto& n : multi)
+          result.push_back(std::move(n));
       } else {
         result.push_back(parseexpr());
       }
@@ -773,14 +842,16 @@ class Parser {
   }
 
   std::vector<std::unique_ptr<CodeNode>> trytokenexprmulti() {
-    if (!check(TokenKind::WORD)) return {};
+    if (!check(TokenKind::WORD))
+      return {};
     std::string w = namestr(peek().image);
     if (w == "pick" || w == "min" || w == "max") {
       advance();
       std::vector<std::unique_ptr<CodeNode>> nodes;
       nodes.push_back(createstringnode(w));
       while (!atend() && !check(TokenKind::NEWLINE) && !iscompop(peek().kind) &&
-             !check(TokenKind::OR) && !check(TokenKind::AND) && !check(TokenKind::RPAREN)) {
+             !check(TokenKind::OR) && !check(TokenKind::AND) &&
+             !check(TokenKind::RPAREN)) {
         nodes.push_back(parsesimpletoken());
       }
       return nodes;
@@ -795,10 +866,12 @@ class Parser {
       advance();
       rhsitems.push_back(parseandtest());
     }
-    if (rhsitems.empty()) return lhs;
+    if (rhsitems.empty())
+      return lhs;
     auto node = make_node(NODE::OR);
     node->items.push_back(std::move(lhs));
-    for (auto& r : rhsitems) node->items.push_back(std::move(r));
+    for (auto& r : rhsitems)
+      node->items.push_back(std::move(r));
     return node;
   }
 
@@ -809,10 +882,12 @@ class Parser {
       advance();
       rhsitems.push_back(parsenottest());
     }
-    if (rhsitems.empty()) return lhs;
+    if (rhsitems.empty())
+      return lhs;
     auto node = make_node(NODE::AND);
     node->items.push_back(std::move(lhs));
-    for (auto& r : rhsitems) node->items.push_back(std::move(r));
+    for (auto& r : rhsitems)
+      node->items.push_back(std::move(r));
     return node;
   }
 
@@ -829,8 +904,9 @@ class Parser {
   std::unique_ptr<CodeNode> parsecomparison() { return parsecomparisonchain(); }
 
   bool iscompop(TokenKind k) const {
-    return k == TokenKind::ISEQ || k == TokenKind::ISNOTEQ || k == TokenKind::ISLESSTHAN ||
-           k == TokenKind::ISGREATERTHAN || k == TokenKind::ISLESSTHANOREQUAL ||
+    return k == TokenKind::ISEQ || k == TokenKind::ISNOTEQ ||
+           k == TokenKind::ISLESSTHAN || k == TokenKind::ISGREATERTHAN ||
+           k == TokenKind::ISLESSTHANOREQUAL ||
            k == TokenKind::ISGREATERTHANOREQUAL;
   }
 
@@ -838,20 +914,34 @@ class Parser {
     Token t = advance();
     auto node = make_node(NODE::COMPARE_ITEM);
     switch (t.kind) {
-      case TokenKind::ISEQ: node->compare_method = COMPARE::IS_EQ; break;
-      case TokenKind::ISNOTEQ: node->compare_method = COMPARE::IS_NOT_EQ; break;
-      case TokenKind::ISLESSTHAN: node->compare_method = COMPARE::IS_LESS_THAN; break;
-      case TokenKind::ISGREATERTHAN: node->compare_method = COMPARE::IS_GREATER_THAN; break;
-      case TokenKind::ISLESSTHANOREQUAL: node->compare_method = COMPARE::IS_LESS_THAN_OR_EQ; break;
-      case TokenKind::ISGREATERTHANOREQUAL: node->compare_method = COMPARE::IS_GREATER_THAN_OR_EQ; break;
-      default: break;
+    case TokenKind::ISEQ:
+      node->compare_method = COMPARE::IS_EQ;
+      break;
+    case TokenKind::ISNOTEQ:
+      node->compare_method = COMPARE::IS_NOT_EQ;
+      break;
+    case TokenKind::ISLESSTHAN:
+      node->compare_method = COMPARE::IS_LESS_THAN;
+      break;
+    case TokenKind::ISGREATERTHAN:
+      node->compare_method = COMPARE::IS_GREATER_THAN;
+      break;
+    case TokenKind::ISLESSTHANOREQUAL:
+      node->compare_method = COMPARE::IS_LESS_THAN_OR_EQ;
+      break;
+    case TokenKind::ISGREATERTHANOREQUAL:
+      node->compare_method = COMPARE::IS_GREATER_THAN_OR_EQ;
+      break;
+    default:
+      break;
     }
     return node;
   }
 
   std::unique_ptr<CodeNode> parsecomparisonchain() {
     auto lhsnode = parsearithexpr();
-    if (!iscompop(peek().kind)) return lhsnode;
+    if (!iscompop(peek().kind))
+      return lhsnode;
     Location comploc = lhsnode ? lhsnode->loc : curloc();
     std::vector<std::unique_ptr<CodeNode>> comparenodes;
     while (iscompop(peek().kind)) {
@@ -879,17 +969,20 @@ class Parser {
   }
 
   std::unique_ptr<CodeNode> parsearithexpr() {
-    if (auto tok = trytokenexpr()) return tok;
+    if (auto tok = trytokenexpr())
+      return tok;
     auto term = parseterm();
     std::vector<std::unique_ptr<CodeNode>> items;
     while (check(TokenKind::PLUS) || check(TokenKind::MINUS)) {
       Token t = advance();
       auto item = make_node(NODE::OPERATOR_ITEM);
-      item->operator_kind = t.kind == TokenKind::PLUS ? OPERATOR::PLUS : OPERATOR::MINUS;
+      item->operator_kind =
+          t.kind == TokenKind::PLUS ? OPERATOR::PLUS : OPERATOR::MINUS;
       item->rhs = parseterm();
       items.push_back(std::move(item));
     }
-    if (items.empty()) return term;
+    if (items.empty())
+      return term;
     auto node = make_node(NODE::OPERATOR);
     node->lhs = std::move(term);
     node->items = std::move(items);
@@ -899,16 +992,25 @@ class Parser {
   std::unique_ptr<CodeNode> parseterm() {
     auto factor = parsefactor();
     std::vector<std::unique_ptr<CodeNode>> items;
-    while (check(TokenKind::MULTIPLY) || check(TokenKind::DIVIDE) || check(TokenKind::MODDIVIDE) ||
-           check(TokenKind::FLOORDIVIDE)) {
+    while (check(TokenKind::MULTIPLY) || check(TokenKind::DIVIDE) ||
+           check(TokenKind::MODDIVIDE) || check(TokenKind::FLOORDIVIDE)) {
       Token t = advance();
       auto item = make_node(NODE::OPERATOR_ITEM);
       switch (t.kind) {
-        case TokenKind::MULTIPLY: item->operator_kind = OPERATOR::MULTIPLY; break;
-        case TokenKind::DIVIDE: item->operator_kind = OPERATOR::DIVIDE; break;
-        case TokenKind::MODDIVIDE: item->operator_kind = OPERATOR::MOD_DIVIDE; break;
-        case TokenKind::FLOORDIVIDE: item->operator_kind = OPERATOR::FLOOR_DIVIDE; break;
-        default: break;
+      case TokenKind::MULTIPLY:
+        item->operator_kind = OPERATOR::MULTIPLY;
+        break;
+      case TokenKind::DIVIDE:
+        item->operator_kind = OPERATOR::DIVIDE;
+        break;
+      case TokenKind::MODDIVIDE:
+        item->operator_kind = OPERATOR::MOD_DIVIDE;
+        break;
+      case TokenKind::FLOORDIVIDE:
+        item->operator_kind = OPERATOR::FLOOR_DIVIDE;
+        break;
+      default:
+        break;
       }
       size_t before = index_;
       item->rhs = parsefactor();
@@ -917,7 +1019,8 @@ class Parser {
       }
       items.push_back(std::move(item));
     }
-    if (items.empty()) return factor;
+    if (items.empty())
+      return factor;
     auto node = make_node(NODE::OPERATOR);
     node->lhs = std::move(factor);
     node->items = std::move(items);
@@ -928,7 +1031,8 @@ class Parser {
     if (check(TokenKind::PLUS) || check(TokenKind::MINUS)) {
       Token t = advance();
       auto item = make_node(NODE::OPERATOR_ITEM);
-      item->operator_kind = t.kind == TokenKind::PLUS ? OPERATOR::UNI_PLUS : OPERATOR::UNI_MINUS;
+      item->operator_kind =
+          t.kind == TokenKind::PLUS ? OPERATOR::UNI_PLUS : OPERATOR::UNI_MINUS;
       item->rhs = parsefactor();
       auto node = make_node(NODE::OPERATOR);
       node->items.push_back(std::move(item));
@@ -973,7 +1077,8 @@ class Parser {
         auto dirnodes = parsedir();
         std::vector<std::unique_ptr<CodeNode>> nodes;
         nodes.push_back(std::move(result));
-        for (auto& d : dirnodes) nodes.push_back(std::move(d));
+        for (auto& d : dirnodes)
+          nodes.push_back(std::move(d));
         return createexprondemand(std::move(nodes));
       }
       if (w == "abs" || w == "intceil" || w == "intfloor" || w == "intround") {
@@ -1000,8 +1105,9 @@ class Parser {
         auto result = createstringnode(namestr(tokenstr(t)));
         std::vector<std::unique_ptr<CodeNode>> nodes;
         nodes.push_back(std::move(result));
-        while (!atend() && !check(TokenKind::NEWLINE) && !iscompop(peek().kind) &&
-               !check(TokenKind::OR) && !check(TokenKind::AND) && !check(TokenKind::RPAREN)) {
+        while (!atend() && !check(TokenKind::NEWLINE) &&
+               !iscompop(peek().kind) && !check(TokenKind::OR) &&
+               !check(TokenKind::AND) && !check(TokenKind::RPAREN)) {
           nodes.push_back(parsesimpletoken());
         }
         return createexprondemand(std::move(nodes));
@@ -1012,8 +1118,9 @@ class Parser {
         std::vector<std::unique_ptr<CodeNode>> nodes;
         nodes.push_back(std::move(result));
         nodes.push_back(parsesimpletoken());
-        while (!atend() && !check(TokenKind::NEWLINE) && !iscompop(peek().kind) &&
-               !check(TokenKind::OR) && !check(TokenKind::AND) && !check(TokenKind::RPAREN)) {
+        while (!atend() && !check(TokenKind::NEWLINE) &&
+               !iscompop(peek().kind) && !check(TokenKind::OR) &&
+               !check(TokenKind::AND) && !check(TokenKind::RPAREN)) {
           nodes.push_back(parsesimpletoken());
         }
         return createexprondemand(std::move(nodes));
@@ -1045,9 +1152,11 @@ class Parser {
   std::unique_ptr<CodeNode> parseexprany(const std::string& name) {
     std::vector<std::unique_ptr<CodeNode>> nodes;
     nodes.push_back(createstringnode(name));
-    if (check(TokenKind::WORD) || check(TokenKind::STRINGLITERAL) || check(TokenKind::STRINGLITERALDOUBLE)) {
+    if (check(TokenKind::WORD) || check(TokenKind::STRINGLITERAL) ||
+        check(TokenKind::STRINGLITERALDOUBLE)) {
       auto dirnodes = parsedir();
-      for (auto& d : dirnodes) nodes.push_back(std::move(d));
+      for (auto& d : dirnodes)
+        nodes.push_back(std::move(d));
       if (check(TokenKind::WORD) && iscolor(namestr(peek().image))) {
         nodes.push_back(createstringnode(colormap(tokenstr(advance()))));
       }
@@ -1072,44 +1181,56 @@ class Parser {
   }
 
   std::unique_ptr<CodeNode> parsesimpletoken() {
-    if (check(TokenKind::STRINGLITERALDOUBLE)) return createtemplatenode(tokenstr(advance()));
-    if (check(TokenKind::STRINGLITERAL)) return createstringnode(tokenstr(advance()));
+    if (check(TokenKind::STRINGLITERALDOUBLE))
+      return createtemplatenode(tokenstr(advance()));
+    if (check(TokenKind::STRINGLITERAL))
+      return createstringnode(tokenstr(advance()));
     if (check(TokenKind::NUMBERLITERAL)) {
       Token t = advance();
       return createnumbernode(std::stod(tokenstr(t)));
     }
-    if (check(TokenKind::WORD)) return createstringnode(colormap(tokenstr(advance())));
+    if (check(TokenKind::WORD))
+      return createstringnode(colormap(tokenstr(advance())));
     return createstringnode("");
   }
 
   std::string colormap(const std::string& word) {
     std::string w = namestr(word);
-    if (w == "bldkblue") return "blblue";
+    if (w == "bldkblue")
+      return "blblue";
     return w;
   }
 
   std::unique_ptr<CodeNode> parsetoken() {
-    if (auto expr = trytokenexpr()) return expr;
+    if (auto expr = trytokenexpr())
+      return expr;
     if (check(TokenKind::LPAREN)) {
       advance();
       auto e = parseexpr();
-      if (check(TokenKind::RPAREN)) advance();
+      if (check(TokenKind::RPAREN))
+        advance();
       return e;
     }
     if (check(TokenKind::NUMBERLITERAL)) {
       Token t = advance();
       return createnumbernode(std::stod(tokenstr(t)));
     }
-    if (check(TokenKind::STRINGLITERALDOUBLE)) return createtemplatenode(tokenstr(advance()));
-    if (check(TokenKind::STRINGLITERAL)) return createstringnode(tokenstr(advance()));
+    if (check(TokenKind::STRINGLITERALDOUBLE))
+      return createtemplatenode(tokenstr(advance()));
+    if (check(TokenKind::STRINGLITERAL))
+      return createstringnode(tokenstr(advance()));
     if (check(TokenKind::STOP)) {
       Token t = advance();
       return createstringnode(tokenstr(t));
     }
-    if (check(TokenKind::LABEL)) return createstringnode(tokenstr(advance()));
-    if (check(TokenKind::COMMAND_PLAY)) return parsecommandplay();
-    if (check(TokenKind::COMMAND_TOAST)) return parsecommandtoast();
-    if (check(TokenKind::COMMAND_TICKER)) return parsecommandticker();
+    if (check(TokenKind::LABEL))
+      return createstringnode(tokenstr(advance()));
+    if (check(TokenKind::COMMAND_PLAY))
+      return parsecommandplay();
+    if (check(TokenKind::COMMAND_TOAST))
+      return parsecommandtoast();
+    if (check(TokenKind::COMMAND_TICKER))
+      return parsecommandticker();
     if (check(TokenKind::WORD)) {
       auto dirnodes = parsedir();
       if (dirnodes.size() == 1) {
@@ -1132,7 +1253,8 @@ class Parser {
     std::string playstr = trim(tokenstr(t));
     size_t sp = playstr.find(' ');
     std::string cmd = sp == std::string::npos ? playstr : playstr.substr(0, sp);
-    std::string rest = sp == std::string::npos ? "" : trim(playstr.substr(sp + 1));
+    std::string rest =
+        sp == std::string::npos ? "" : trim(playstr.substr(sp + 1));
     std::vector<std::unique_ptr<CodeNode>> nodes;
     nodes.push_back(createstringnode(namestr(cmd)));
     nodes.push_back(createstringnode(rest));
@@ -1165,8 +1287,9 @@ class Parser {
     std::vector<std::unique_ptr<CodeNode>> values;
     while (check(TokenKind::WORD)) {
       std::string w = namestr(peek().image);
-      if (w == "cw" || w == "ccw" || w == "opp" || w == "rndp" || w == "over" || w == "under" ||
-          w == "ground" || w == "elements" || w == "within" || w == "awayby") {
+      if (w == "cw" || w == "ccw" || w == "opp" || w == "rndp" || w == "over" ||
+          w == "under" || w == "ground" || w == "elements" || w == "within" ||
+          w == "awayby") {
         values.push_back(createstringnode(w));
         advance();
         if (w == "within" || w == "awayby") {
@@ -1179,9 +1302,11 @@ class Parser {
     if (check(TokenKind::WORD)) {
       std::string w = namestr(peek().image);
       static const char* dirs[] = {
-          "idle", "up", "down", "left", "right", "by", "at", "away", "toward", "flow", "seek",
-          "rndns", "rndne", "rnd", "find", "flee", "to", "select", "flood", "beam",
-          "i", "u", "north", "n", "d", "south", "s", "l", "west", "w", "r", "east", "e", nullptr};
+          "idle", "up",     "down", "left",   "right", "by",    "at",
+          "away", "toward", "flow", "seek",   "rndns", "rndne", "rnd",
+          "find", "flee",   "to",   "select", "flood", "beam",  "i",
+          "u",    "north",  "n",    "d",      "south", "s",     "l",
+          "west", "w",      "r",    "east",   "e",     nullptr};
       for (int i = 0; dirs[i]; ++i) {
         if (w == dirs[i]) {
           if (w == "by" || w == "at" || w == "away" || w == "toward") {
@@ -1195,10 +1320,14 @@ class Parser {
             advance();
             values.push_back(createstringnode(w));
             if (check(TokenKind::NUMBERLITERAL)) {
-              values.push_back(createnumbernode(std::stod(tokenstr(advance()))));
+              values.push_back(
+                  createnumbernode(std::stod(tokenstr(advance()))));
             } else {
-              if (check(TokenKind::WORD)) values.push_back(createstringnode(colormap(tokenstr(advance()))));
-              if (check(TokenKind::STRINGLITERAL) || check(TokenKind::STRINGLITERALDOUBLE))
+              if (check(TokenKind::WORD))
+                values.push_back(
+                    createstringnode(colormap(tokenstr(advance()))));
+              if (check(TokenKind::STRINGLITERAL) ||
+                  check(TokenKind::STRINGLITERALDOUBLE))
                 values.push_back(parsestringtoken());
             }
             return values;
@@ -1208,8 +1337,10 @@ class Parser {
             values.push_back(createstringnode("to"));
             auto d1 = parsedir();
             auto d2 = parsedir();
-            for (auto& d : d1) values.push_back(std::move(d));
-            for (auto& d : d2) values.push_back(std::move(d));
+            for (auto& d : d1)
+              values.push_back(std::move(d));
+            for (auto& d : d2)
+              values.push_back(std::move(d));
             return values;
           }
           if (w == "select") {
@@ -1225,7 +1356,8 @@ class Parser {
             advance();
             values.push_back(createstringnode("flood"));
             auto d = parsedir();
-            for (auto& x : d) values.push_back(std::move(x));
+            for (auto& x : d)
+              values.push_back(std::move(x));
             return values;
           }
           if (w == "beam") {
@@ -1233,7 +1365,8 @@ class Parser {
             values.push_back(createstringnode("beam"));
             values.push_back(parsesimpletoken());
             auto d = parsedir();
-            for (auto& x : d) values.push_back(std::move(x));
+            for (auto& x : d)
+              values.push_back(std::move(x));
             return values;
           }
           advance();
@@ -1248,7 +1381,8 @@ class Parser {
   bool iscolor(const std::string& w) const {
     static const char* colors[] = {"black", "red", "blue", "green", nullptr};
     for (int i = 0; colors[i]; ++i) {
-      if (w == colors[i]) return true;
+      if (w == colors[i])
+        return true;
     }
     return w.find("on") == 0 || w.find("bl") == 0 || w.find("dk") == 0;
   }
@@ -1259,6 +1393,6 @@ inline std::unique_ptr<CodeNode> parseast(const std::vector<Token>& tokens) {
   return parser.parseprogram();
 }
 
-}  // namespace zss_lang
+} // namespace zss_lang
 
 #endif

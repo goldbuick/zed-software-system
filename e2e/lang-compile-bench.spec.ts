@@ -16,7 +16,9 @@ const WASM_TS_RATIO: Record<string, number> = {
 test.describe('lang compile benchmark', () => {
   test.describe.configure({ timeout: 300_000 })
 
-  test('TS vs WASM compile medians in same browser session', async ({ page }) => {
+  test('TS vs WASM compile medians in same browser session', async ({
+    page,
+  }) => {
     await page.goto('/?ZSS_E2E=1')
     await expect(page.locator('#frame')).toBeVisible()
     await page.waitForFunction(

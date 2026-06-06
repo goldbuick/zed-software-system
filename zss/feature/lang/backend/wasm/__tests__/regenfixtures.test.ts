@@ -45,9 +45,20 @@ const FIXTURES: { id: string; source: string }[] = [
   { id: 'text_line', source: 'hello world\n' },
   { id: 'command', source: '#die\n' },
   { id: 'foreach', source: '#foreach x in a b\nbreak\n' },
-  { id: 'while_push_by', source: '#while p1 not eq 8 do\n#if p1 is 0 push by -1 1 up\n#give p1\n#done\n' },
-  { id: 'duplicate_fork', source: '#if 1 do\n#duplicate by 1 0 by 0 0 do\n#bgplay a\n#else do\n#bgplay b\n#done\n#done\n' },
-  { id: 'send_dir_label', source: '#send n calcdisplay\n:calcdisplay\n#if any n line give p1 1\n' },
+  {
+    id: 'while_push_by',
+    source:
+      '#while p1 not eq 8 do\n#if p1 is 0 push by -1 1 up\n#give p1\n#done\n',
+  },
+  {
+    id: 'duplicate_fork',
+    source:
+      '#if 1 do\n#duplicate by 1 0 by 0 0 do\n#bgplay a\n#else do\n#bgplay b\n#done\n#done\n',
+  },
+  {
+    id: 'send_dir_label',
+    source: '#send n calcdisplay\n:calcdisplay\n#if any n line give p1 1\n',
+  },
   { id: 'paren_intround', source: '#set p1 (intround p1) % 4\n' },
 ]
 

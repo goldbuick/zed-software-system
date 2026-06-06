@@ -1,8 +1,13 @@
 import type { Config } from 'jest'
 
+/** Per-test and hook ceiling so suites cannot hang without failing. */
+const TEST_TIMEOUT_MS = 120_000
+
 const config: Config = {
   preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'node',
+  testTimeout: TEST_TIMEOUT_MS,
+  setupFilesAfterEnv: ['<rootDir>/zss/testing/jesttimeoutsetup.ts'],
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
   moduleNameMapper: {
     '^zss/perf/ui$': '<rootDir>/zss/__mocks__/perfui.ts',

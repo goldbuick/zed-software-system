@@ -1,11 +1,8 @@
-import { WASM_SCRIPT } from 'zss/config'
 import { agentlog } from 'zss/agentlog'
+import { WASM_SCRIPT } from 'zss/config'
 
-import { compile, type GeneratorBuild } from './backend/typescript/generator'
-import {
-  compilezssonmodule,
-  createlangmodule,
-} from './langwasmload'
+import { type GeneratorBuild, compile } from './backend/typescript/generator'
+import { compilezssonmodule, createlangmodule } from './langwasmload'
 
 let langmodule: Awaited<ReturnType<typeof createlangmodule>> | null = null
 let langinit: Promise<void> | null = null
