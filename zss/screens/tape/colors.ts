@@ -1,6 +1,6 @@
 import type { IToken } from 'chevrotain'
-import type { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import { lexer } from 'zss/feature/lang'
+import type { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import { codeunitoffsettocellindex } from 'zss/mapping/grapheme'
 import { isarray, ispresent } from 'zss/mapping/types'
 import { statformat } from 'zss/words/stats'

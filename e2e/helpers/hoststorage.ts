@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/require-await */
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -34,7 +35,10 @@ function writejsonfile(filepath: string, data: unknown): void {
 }
 
 /** CLI-style Node storage hooks for headless host tabs in Playwright. */
-export async function exposehoststorage(page: Page, datadir: string): Promise<void> {
+export async function exposehoststorage(
+  page: Page,
+  datadir: string,
+): Promise<void> {
   fs.mkdirSync(datadir, { recursive: true })
   const stubbook = readjsonfile<unknown[]>(STUB_BOOK_PATH, [])
   const configpath = path.join(datadir, 'config.json')
@@ -70,7 +74,13 @@ export async function exposehoststorage(page: Page, datadir: string): Promise<vo
 
   await page.exposeFunction(
     '__nodeStorageWriteContent',
-    async (player: string, _label: string, _longcontent: string, _compressed: string, books: unknown[]) => {
+    async (
+      player: string,
+      _label: string,
+      _longcontent: string,
+      _compressed: string,
+      books: unknown[],
+    ) => {
       writejsonfile(path.join(datadir, `${player}.json`), books)
     },
   )
@@ -80,11 +90,14 @@ export async function exposehoststorage(page: Page, datadir: string): Promise<vo
     return config[`config_${name}`] || (name === 'crt' ? 'on' : 'off')
   })
 
-  await page.exposeFunction('__nodeStorageWriteConfig', async (name: string, value: string) => {
-    const config = readjsonfile<Record<string, string>>(configpath, {})
-    config[`config_${name}`] = value
-    writejsonfile(configpath, config)
-  })
+  await page.exposeFunction(
+    '__nodeStorageWriteConfig',
+    async (name: string, value: string) => {
+      const config = readjsonfile<Record<string, string>>(configpath, {})
+      config[`config_${name}`] = value
+      writejsonfile(configpath, config)
+    },
+  )
 
   await page.exposeFunction('__nodeStorageReadConfigAll', async () => {
     const config = readjsonfile<Record<string, string>>(configpath, {})
@@ -92,7 +105,10 @@ export async function exposehoststorage(page: Page, datadir: string): Promise<vo
       const keyname = key.replace('config_', '')
       const value = config[key]
       const normalized = value && value !== 'off' ? 'on' : 'off'
-      return [keyname, value ? normalized : keyname === 'crt' ? 'on' : 'off'] as [string, string]
+      return [
+        keyname,
+        value ? normalized : keyname === 'crt' ? 'on' : 'off',
+      ] as [string, string]
     })
   })
 
@@ -100,18 +116,26 @@ export async function exposehoststorage(page: Page, datadir: string): Promise<vo
     readjsonfile<Record<string, unknown>>(varspath, {}),
   )
 
-  await page.exposeFunction('__nodeStorageWriteVar', async (name: string, value: unknown) => {
-    const vars = readjsonfile<Record<string, unknown>>(varspath, {})
-    vars[name] = value
-    writejsonfile(varspath, vars)
-  })
+  await page.exposeFunction(
+    '__nodeStorageWriteVar',
+    async (name: string, value: unknown) => {
+      const vars = readjsonfile<Record<string, unknown>>(varspath, {})
+      vars[name] = value
+      writejsonfile(varspath, vars)
+    },
+  )
 
   await page.exposeFunction('__nodeStorageReadHistoryBuffer', async () => {
-    const data = readjsonfile<{ buffer?: unknown[] }>(historypath, { buffer: [] })
+    const data = readjsonfile<{ buffer?: unknown[] }>(historypath, {
+      buffer: [],
+    })
     return Array.isArray(data.buffer) ? data.buffer : []
   })
 
-  await page.exposeFunction('__nodeStorageWriteHistoryBuffer', async (buf: unknown[]) => {
-    writejsonfile(historypath, { buffer: buf })
-  })
+  await page.exposeFunction(
+    '__nodeStorageWriteHistoryBuffer',
+    async (buf: unknown[]) => {
+      writejsonfile(historypath, { buffer: buf })
+    },
+  )
 }

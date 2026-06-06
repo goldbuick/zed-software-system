@@ -2,8 +2,8 @@
  * Grid-search kDrumBusGain / kPlayBusGain for play-drum balance gate.
  *
  * Usage:
- *   yarn calibrate:play-drum-balance
- *   yarn calibrate:play-drum-balance --dry-run
+ *   yarn play-drum-balance:calibrate
+ *   yarn play-drum-balance:calibrate --dry-run
  */
 import { execSync } from 'node:child_process'
 import fs from 'node:fs'
@@ -60,11 +60,11 @@ function writegains(gains: GAINS) {
 }
 
 function builddaisy() {
-  execSync('yarn build:daisy', { cwd: PROJECT, stdio: 'inherit' })
+  execSync('yarn daisy:build', { cwd: PROJECT, stdio: 'inherit' })
 }
 
 function renderandmeasure(): PLAY_DRUM_BALANCE_METRICS {
-  execSync('yarn render:play-drum-balance', { cwd: PROJECT, stdio: 'inherit' })
+  execSync('yarn play-drum-balance:render', { cwd: PROJECT, stdio: 'inherit' })
   const data = JSON.parse(fs.readFileSync(BALANCE_JSON, 'utf8')) as {
     balance: PLAY_DRUM_BALANCE_METRICS
   }
@@ -151,7 +151,7 @@ async function main() {
     writegains(best.gains)
     builddaisy()
     console.log('Wrote best gains to zss_config.h and rebuilt.')
-    execSync('yarn test:play-drum-balance', { cwd: PROJECT, stdio: 'inherit' })
+    execSync('yarn play-drum-balance:test', { cwd: PROJECT, stdio: 'inherit' })
   } else {
     writegains(original)
     console.log('Dry run — restored original gains in file.')

@@ -72,10 +72,10 @@ If a container named `zss` already exists: `docker rm -f zss` before `docker run
 
 From the repo, after Docker is on the Droplet:
 
-- **On the Droplet:** `DO_RUN_LOCAL=1 yarn do:droplet:docker-run`
-- **From your laptop:** `DO_DROPLET_HOST=DROPLET_IP DO_DROPLET_SSH_KEY=/path/to/key yarn do:droplet:docker-run`
+- **On the Droplet:** `DO_RUN_LOCAL=1 yarn deploy:droplet:docker-run`
+- **From your laptop:** `DO_DROPLET_HOST=DROPLET_IP DO_DROPLET_SSH_KEY=/path/to/key yarn deploy:droplet:docker-run`
 
-The shared implementation is [`scripts/vm-zss-docker-run.sh`](../scripts/vm-zss-docker-run.sh) (also `yarn vm:docker-run`).
+The shared implementation is [`scripts/vm-zss-docker-run.sh`](../scripts/vm-zss-docker-run.sh) (also `yarn deploy:vm:docker-run`).
 
 **Why `--network host`:** On Linux, the app binds directly to the host port; you do not need `-p 4175:4175`. The cloud firewall must still allow **4175**.
 
@@ -96,4 +96,4 @@ The app’s **PeerJS signaling** targets **`terminal.zed.cafe` on port 443**, no
 
 ## Local build alternative
 
-From the repo: `yarn docker:build` produces `zss:local`. Push to a registry DigitalOcean can pull from, or `docker save` / `docker load` on the Droplet, then use that image name in `docker run`.
+From the repo: `yarn deploy:docker:build` produces `zss:local`. Push to a registry DigitalOcean can pull from, or `docker save` / `docker load` on the Droplet, then use that image name in `docker run`.

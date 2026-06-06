@@ -34,4 +34,4 @@ Spec: [parallel-fx-bus.md](../../../docs/parallel-fx-bus.md), [audiochain.md](..
 
 ## Build
 
-From repo root: `yarn build:daisy` (runs `native/build-daisy.sh`, compiles all `zss/*.cpp` + `zss_daisy_synth.cpp`).
+From repo root: `yarn daisy:build` (runs `native/build-daisy.sh`, compiles all `zss/*.cpp` + `zss_daisy_synth.cpp`).

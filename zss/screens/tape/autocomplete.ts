@@ -1,9 +1,9 @@
+import { lexer } from 'zss/feature/lang'
 import type {
   COMMAND_ARGS_SIGNATURE,
   COMMAND_ARG_AUTOCOMPLETE,
 } from 'zss/firmware'
 import { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
-import { lexer } from 'zss/feature/lang'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { romhintfrommarkdown, romread } from 'zss/rom'
 import {

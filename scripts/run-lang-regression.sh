@@ -9,15 +9,15 @@ echo "▶ typescript-compiler"
 yarn jest zss/feature/lang/backend/typescript/__tests__/ --no-coverage
 
 echo "▶ native-parity"
-yarn test:lang-parity
+yarn lang-parity:test
 
 echo "▶ behavioral"
 yarn jest zss/feature/lang/backend/wasm/__tests__/langcompile.test.ts --no-coverage
 
 echo "▶ build-lang-wasm"
-yarn build:lang
+yarn lang:build
 
 echo "▶ wasm-smoke"
-yarn test:lang-wasm
+yarn lang-wasm:test
 
 echo "✓ lang regression complete"

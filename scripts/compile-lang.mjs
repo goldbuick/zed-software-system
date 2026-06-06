@@ -3,11 +3,11 @@
  * Compile a .zss file with the C++ lang compiler (zss_lang.wasm) and print JS to stdout.
  *
  * Usage:
- *   yarn compile:lang path/to/script.zss
- *   yarn compile:lang -- path/to/script.zss
- *   cat script.zss | yarn compile:lang -
+ *   yarn lang:compile path/to/script.zss
+ *   yarn lang:compile -- path/to/script.zss
+ *   cat script.zss | yarn lang:compile -
  *
- * Requires: yarn build:lang (once)
+ * Requires: yarn lang:build (once)
  */
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
@@ -20,7 +20,7 @@ import {
 
 function usage() {
   process.stderr.write(
-    'usage: yarn compile:lang <file.zss|->\n  compile ZSS source to JS (stdout) via zss_lang.wasm\n',
+    'usage: yarn lang:compile <file.zss|->\n  compile ZSS source to JS (stdout) via zss_lang.wasm\n',
   )
 }
 
@@ -33,7 +33,7 @@ async function main() {
 
   if (wasmartifactsmissing()) {
     process.stderr.write(
-      'error: zss_lang.wasm not found — run yarn build:lang first\n',
+      'error: zss_lang.wasm not found — run yarn lang:build first\n',
     )
     process.exit(1)
   }

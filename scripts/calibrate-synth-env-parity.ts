@@ -2,8 +2,8 @@
  * Grid-search kEnvDecayTauScale / kEnvReleaseTauScale for synth env parity.
  *
  * Usage:
- *   yarn calibrate:synth-env-parity
- *   yarn calibrate:synth-env-parity --dry-run
+ *   yarn synth-env-parity:calibrate
+ *   yarn synth-env-parity:calibrate --dry-run
  */
 import { execSync } from 'node:child_process'
 import fs from 'node:fs'
@@ -67,7 +67,7 @@ function writeparams(params: ENVPARAMS) {
 }
 
 function builddaisy() {
-  execSync('yarn build:daisy', {
+  execSync('yarn daisy:build', {
     cwd: PROJECT,
     stdio: 'inherit',
     timeout: EXEC_BUILD_DAISY_TIMEOUT_MS,
@@ -79,7 +79,7 @@ function measurerequired(): {
   err: number
   results: SYNTH_ENV_PARITY_RESULT[]
 } {
-  execSync('yarn render:synth-env-parity', {
+  execSync('yarn synth-env-parity:render', {
     cwd: PROJECT,
     stdio: 'inherit',
     timeout: EXEC_RENDER_PARITY_TIMEOUT_MS,
@@ -153,7 +153,7 @@ async function main() {
   if (!dryrun) {
     writeparams(best.params)
     builddaisy()
-    execSync('yarn test:synth-env-parity', {
+    execSync('yarn synth-env-parity:test', {
       cwd: PROJECT,
       stdio: 'inherit',
       timeout: EXEC_GATE_TIMEOUT_MS,
@@ -164,7 +164,7 @@ async function main() {
 }
 
 withscripttimeout(
-  'calibrate:synth-env-parity',
+  'synth-env-parity:calibrate',
   CALIBRATE_SCRIPT_TIMEOUT_MS,
   main,
 ).catch((err) => {

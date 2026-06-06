@@ -7,26 +7,26 @@ Recorded after DaisySP fidelity improvements (Phase A/B).
 Run worst-case load (8 held notes + FX + drums):
 
 ```bash
-yarn bench:daisy-synth
+yarn daisy:bench:synth
 ```
 
 Target: `realtimefactor >= 1.0` on dev hardware for worst-case load.
 
 WASM size after Phase B (`fm2.cpp`): ~79 KB (`zss_daisy.wasm`, 2026-06-05).
 
-Regression: `yarn test:sos-voices` (12 SOS instrument patches vs `__fixtures__/sos-voice-fixtures.json`).
+Regression: `yarn sos-voices:test` (12 SOS instrument patches vs `__fixtures__/sos-voice-fixtures.json`).
 
 Regenerate after intentional voice DSP changes:
 
 ```bash
-yarn build:daisy
-yarn regen:sos-voice-fixtures
+yarn daisy:build
+yarn sos-voice-fixtures:regen
 ```
 
 Gate locally:
 
 ```bash
-yarn test:sos-voices:full
+yarn sos-voices:test:full
 ```
 
 ## Patch list

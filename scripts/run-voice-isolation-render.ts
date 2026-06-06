@@ -1,7 +1,7 @@
 /**
  * Per-voice offline renders for level-issue song → compare peak behavior by lane.
  *
- * Usage: yarn render:level-issue-voices
+ * Usage: yarn level-issue-voices:render
  */
 import fs from 'node:fs'
 import path from 'node:path'

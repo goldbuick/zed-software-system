@@ -2,11 +2,11 @@
  * Offline Daisy level-stability harness (Playwright + Vite, mirrors parity regen).
  *
  * Usage:
- *   yarn test:level-stability
- *   yarn test:level-stability --strict
- *   yarn test:level-stability --filter scalecrew
- *   yarn test:level-stability --scenario scalecrew-climax-full
- *   yarn test:level-stability --compare scalecrew-climax-melody scalecrew-climax-full
+ *   yarn level-stability:test
+ *   yarn level-stability:test --strict
+ *   yarn level-stability:test --filter scalecrew
+ *   yarn level-stability:test --scenario scalecrew-climax-full
+ *   yarn level-stability:test --compare scalecrew-climax-melody scalecrew-climax-full
  */
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'

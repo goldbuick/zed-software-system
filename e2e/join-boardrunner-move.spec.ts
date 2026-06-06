@@ -12,7 +12,9 @@ import {
 test.describe('join boardrunner movement', () => {
   test.describe.configure({ timeout: 300_000 })
 
-  test('host publishes topic; join player moves on own board', async ({ page: host }) => {
+  test('host publishes topic; join player moves on own board', async ({
+    page: host,
+  }) => {
     const datadir = makedatadir('zss-join-host-')
     const topic = await bootstraphostpage(host, datadir)
 
@@ -29,7 +31,9 @@ test.describe('join boardrunner movement', () => {
         async () => {
           const after = await join.evaluate(() => {
             const w = window as Window & {
-              __zss_e2e?: { getplayersprite: () => { x: number; y: number } | undefined }
+              __zss_e2e?: {
+                getplayersprite: () => { x: number; y: number } | undefined
+              }
             }
             return w.__zss_e2e?.getplayersprite()
           })
@@ -40,7 +44,9 @@ test.describe('join boardrunner movement', () => {
       .toBeGreaterThan(before.x)
 
     const afterstatus = await join.evaluate(() => {
-      const w = window as Window & { __zss_e2e?: { getworkstatus: () => string } }
+      const w = window as Window & {
+        __zss_e2e?: { getworkstatus: () => string }
+      }
       return w.__zss_e2e?.getworkstatus() ?? ''
     })
     expect(afterstatus).toMatch(/^run /)

@@ -2,7 +2,7 @@
  * Watch Daisy native → build → parity render → gate; optional calibrate on fail.
  *
  * Usage:
- *   yarn loop:play-drum
+ *   yarn play-drum:loop
  *   npx tsx scripts/run-daisy-parity-loop.ts --suite sidechain
  *   npx tsx scripts/run-daisy-parity-loop.ts --suite synth-env --calibrate-on-fail
  */
@@ -39,32 +39,32 @@ const SUITE_CONFIG: Record<
 > = {
   'play-drum': {
     label: 'play/drum balance',
-    render: 'yarn render:play-drum-balance',
-    test: 'yarn test:play-drum-balance',
-    calibrate: 'yarn calibrate:play-drum-balance',
+    render: 'yarn play-drum-balance:render',
+    test: 'yarn play-drum-balance:test',
+    calibrate: 'yarn play-drum-balance:calibrate',
   },
   sidechain: {
     label: 'sidechain',
-    render: 'yarn render:sidechain-parity',
-    test: 'yarn test:sidechain-parity',
-    calibrate: 'yarn calibrate:sidechain-parity',
+    render: 'yarn sidechain-parity:render',
+    test: 'yarn sidechain-parity:test',
+    calibrate: 'yarn sidechain-parity:calibrate',
   },
   'synth-env': {
     label: 'synth env',
-    render: 'yarn render:synth-env-parity',
-    test: 'yarn test:synth-env-parity',
-    calibrate: 'yarn calibrate:synth-env-parity',
+    render: 'yarn synth-env-parity:render',
+    test: 'yarn synth-env-parity:test',
+    calibrate: 'yarn synth-env-parity:calibrate',
   },
   notepop: {
     label: 'notepop',
-    render: 'yarn render:notepop:ab',
-    test: 'yarn test:notepop',
+    render: 'yarn notepop:render:ab',
+    test: 'yarn notepop:test',
     calibrate: '',
   },
   pitch: {
     label: 'pitch stability',
-    render: 'yarn render:pitch-stability',
-    test: 'yarn test:pitch-stability',
+    render: 'yarn pitch-stability:render',
+    test: 'yarn pitch-stability:test',
     calibrate: '',
   },
 }
@@ -104,7 +104,7 @@ function runpipeline(
       return true
     }
     if (!opts.skipbuild) {
-      execSync('yarn build:daisy', {
+      execSync('yarn daisy:build', {
         cwd: PROJECT,
         stdio: 'inherit',
         timeout: EXEC_BUILD_DAISY_TIMEOUT_MS,

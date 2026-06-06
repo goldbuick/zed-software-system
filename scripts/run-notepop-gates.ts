@@ -2,7 +2,7 @@
  * Objective pass/fail gates for notepop comp-on vs comp-off renders.
  *
  * Usage:
- *   yarn test:notepop
+ *   yarn notepop:test
  */
 import fs from 'node:fs'
 import path from 'node:path'

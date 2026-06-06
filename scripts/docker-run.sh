@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-echo "docker:run — published image (ellium12/zed-software-system)"
+echo "deploy:docker:run — published image (ellium12/zed-software-system)"
 echo ""
 echo "This runs the equivalent of:"
 echo ""

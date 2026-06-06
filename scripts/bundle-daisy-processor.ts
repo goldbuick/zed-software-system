@@ -52,7 +52,7 @@ if (worklet !== workletraw) {
 }
 
 const bundled = `/**
- * GENERATED — do not edit. Run \`yarn bundle:daisy-processor\`.
+ * GENERATED — do not edit. Run \`yarn daisy:bundle:processor\`.
  * Classic AudioWorklet bundle (Emscripten glue + DaisyProcessor).
  */
 ${glue}
@@ -69,7 +69,7 @@ const buildidpath = path.join(
 const buildid = String(Math.floor(Date.now() / 1000))
 fs.writeFileSync(
   buildidpath,
-  `/** Bumped by \`yarn build:daisy\` — busts browser cache when wasm changes on same commit. */
+  `/** Bumped by \`yarn daisy:build\` — busts browser cache when wasm changes on same commit. */
 export const DAISY_BUILD_ID = '${buildid}'
 `,
 )

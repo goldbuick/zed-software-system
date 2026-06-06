@@ -11,10 +11,10 @@ import {
   formatobject,
   unformatobject,
 } from 'zss/feature/format'
+import { stat, tokenize } from 'zss/feature/lang'
 import { PALETTE } from 'zss/feature/palette'
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import { FILE_BYTES_PER_COLOR } from 'zss/gadget/data/types'
-import { stat, tokenize } from 'zss/feature/lang'
 import { createsid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import {

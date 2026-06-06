@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Smoke test: load zss_lang.wasm and compile empty fixture.
- * Run via: yarn test:lang-wasm
+ * Run via: yarn lang-wasm:test
  */
 import { readFileSync } from 'node:fs'
 import path from 'node:path'

@@ -4,7 +4,12 @@ export {
   type GeneratorFunc,
 } from './backend/typescript/generator'
 export { compileast } from './backend/typescript/ast'
-export { tokenize, stat, newline, type LANG_ERROR } from './backend/typescript/lexer'
+export {
+  tokenize,
+  stat,
+  newline,
+  type LANG_ERROR,
+} from './backend/typescript/lexer'
 export * as lexer from './backend/typescript/lexer'
 export {
   transformast,
@@ -13,10 +18,5 @@ export {
   type GenContext,
   type GenContextAndCode,
 } from './backend/typescript/transformer'
-export {
-  CodeNode,
-  NODE,
-  COMPARE,
-  OPERATOR,
-  LITERAL,
-} from './backend/typescript/visitor'
+export type { CodeNode } from './backend/typescript/visitor'
+export { NODE, COMPARE, OPERATOR, LITERAL } from './backend/typescript/visitor'

@@ -2,8 +2,8 @@
  * Repeatedly run the host+join movement Playwright repro.
  *
  * Usage:
- *   yarn loop:join-move
- *   yarn loop:join-move -- --max 5
+ *   yarn join-move:loop
+ *   yarn join-move:loop -- --max 5
  */
 import { spawnSync } from 'node:child_process'
 import path from 'node:path'
@@ -24,7 +24,7 @@ function runonce(): number {
     ...process.env,
     PLAYWRIGHT_INCLUDE_JOIN_E2E: '1',
   }
-  const result = spawnSync('yarn', ['test:e2e:join-move'], {
+  const result = spawnSync('yarn', ['e2e:test:join-move'], {
     stdio: 'inherit',
     cwd: PROJECT,
     env,

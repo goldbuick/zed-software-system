@@ -218,7 +218,7 @@ export type DRUM_PARITY_PATCH = {
   durationsec: number
 }
 
-/** One patch per drum id (0–9) — fixtures generated via regen:parity-fixtures. */
+/** One patch per drum id (0–9) — fixtures generated via parity-fixtures:regen. */
 export const DRUM_PARITY_PATCHES: DRUM_PARITY_PATCH[] = [
   { id: 'drum0-tick', notation: 'q0', durationsec: 0.25 },
   { id: 'drum1-tweet', notation: 'q1', durationsec: 0.25 },
@@ -346,7 +346,7 @@ function fastarpticks(
   return ticks
 }
 
-/** Main bus (sidechain + compressor) — Tone offline reference via regen:parity-fixtures:tone */
+/** Main bus (sidechain + compressor) — Tone offline reference via parity-fixtures:regen:tone */
 export const MAIN_DYNAMICS_PARITY_PATCHES: MAIN_DYNAMICS_PARITY_PATCH[] = [
   {
     id: 'main-duck-bg',

@@ -2,15 +2,15 @@
  * Offline render of the note-pop repro → WAV + metrics report.
  *
  * Usage:
- *   yarn render:notepop
- *   yarn render:notepop --no-comp
- *   yarn render:notepop:ab
+ *   yarn notepop:render
+ *   yarn notepop:render --no-comp
+ *   yarn notepop:render:ab
  *
  * Outputs:
  *   cafe/public/renders/notepop-qcxdxexfx.wav (default)
  *   cafe/public/renders/notepop-qcxdxexfx-comp-on.* / -comp-off.* (--ab)
  *
- * Browser preview (yarn dev):
+ * Browser preview (yarn app:dev):
  *   https://localhost:7777/song-offline-render.html?scenario=notepop
  */
 import fs from 'node:fs'

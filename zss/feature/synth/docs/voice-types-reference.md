@@ -385,7 +385,7 @@ Organ:      drawbar | click | leak | bright             (organ voices)
 | `#synth` no args | Applies `square` wave only | Same; full reset is `#synth restart` |
 | Default envelope | `0.01/0.01/0.5/0.01` on reset | `0.01/0.01/0.5/0.01` |
 | `#synth env` shape | Tone exponential `AmplitudeEnvelope` | **`ZssLinearEnv`** (linear ramps; behavioral parity, not sample-identical) |
-| ADSR parity tests | — | `yarn test:adsr-parity` (short amsaw); `yarn test:synth-env-parity:full` (long release, square + FM repro). Offline renders must span **gate + release** (see `paritydurationwithrelease`). FM/AM: pin `#synth modenv` when comparing timbre; carrier `#synth env` is wave-agnostic. |
+| ADSR parity tests | — | `yarn adsr-parity:test` (short amsaw); `yarn synth-env-parity:test:full` (long release, square + FM repro). Offline renders must span **gate + release** (see `paritydurationwithrelease`). FM/AM: pin `#synth modenv` when comparing timbre; carrier `#synth env` is wave-agnostic. |
 | Per-voice volume | Yes | Yes (all 10 types) |
 | Algo voice envelope | Per-operator + outer | Per-operator + outer (`algooutenvs`) |
 | Config storage | Tone instrument state | SAB arrays pushed to worklet |

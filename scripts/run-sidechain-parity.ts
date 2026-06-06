@@ -2,7 +2,7 @@
  * Offline sidechain parity: SC on/off duck depth + optional Tone compare.
  *
  * Usage:
- *   yarn render:sidechain-parity
+ *   yarn sidechain-parity:render
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -172,7 +172,7 @@ async function main() {
 }
 
 withscripttimeout(
-  'render:sidechain-parity',
+  'sidechain-parity:render',
   PARITY_RENDER_SCRIPT_TIMEOUT_MS,
   main,
 ).catch((err) => {

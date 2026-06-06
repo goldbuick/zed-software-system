@@ -1,7 +1,7 @@
 /**
  * Tone vs Daisy synth env parity (long release, multi-wave).
  *
- * Usage: yarn render:synth-env-parity
+ * Usage: yarn synth-env-parity:render
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -130,7 +130,7 @@ async function runrenders() {
 }
 
 withscripttimeout(
-  'render:synth-env-parity',
+  'synth-env-parity:render',
   PARITY_RENDER_SCRIPT_TIMEOUT_MS,
   runrenders,
 ).catch((err) => {

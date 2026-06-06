@@ -1,7 +1,7 @@
 /**
  * ZssLinearEnv port tests + committed Tone sustain reference fixture.
  * Linear vs exponential envelopes differ in sustain level (~10+ dB); full
- * Tone-vs-Daisy gates live in `yarn test:env-parity` (amsaw + env config).
+ * Tone-vs-Daisy gates live in `yarn env-parity:test` (amsaw + env config).
  */
 import { readFileSync } from 'node:fs'
 import path from 'node:path'

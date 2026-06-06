@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        script: [lint, test]
+        script: ['app:lint', 'app:test']
     steps:
       - name: checkout
         uses: actions/checkout@v5
@@ -50,4 +50,4 @@ jobs:
         run: npx playwright install --with-deps chromium firefox webkit
 
       - name: run e2e tests
-        run: yarn test:e2e
+        run: yarn e2e:test

@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
-import { expect, type Page } from '@playwright/test'
+import { type Page, expect } from '@playwright/test'
 
 import type { ZssE2eBridge } from '../../zss/testsupport/e2escrollbridge'
 
@@ -17,7 +17,8 @@ export function makedatadir(prefix: string): string {
 export async function waitfore2ebridge(page: Page): Promise<void> {
   await page.waitForFunction(
     () =>
-      typeof (window as WindowWithE2e).__zss_e2e?.getscrollsnapshot === 'function',
+      typeof (window as WindowWithE2e).__zss_e2e?.getscrollsnapshot ===
+      'function',
     undefined,
     { timeout: 120_000 },
   )
@@ -33,7 +34,10 @@ export async function dismissmuteoverlay(page: Page): Promise<void> {
   }
 }
 
-export async function bootstraphostpage(page: Page, datadir: string): Promise<string> {
+export async function bootstraphostpage(
+  page: Page,
+  datadir: string,
+): Promise<string> {
   await exposehoststorage(page, datadir)
   await page.goto('/?ZSS_E2E=1')
   // Host tab is CLI/headless (no #frame); join tab uses full UI.
@@ -41,7 +45,9 @@ export async function bootstraphostpage(page: Page, datadir: string): Promise<st
   await expect
     .poll(
       async () =>
-        page.evaluate(() => (window as WindowWithE2e).__zss_e2e!.hassimloaddone()),
+        page.evaluate(() =>
+          (window as WindowWithE2e).__zss_e2e!.hassimloaddone(),
+        ),
       { timeout: 180_000, intervals: [250, 500, 1000, 2000] },
     )
     .toBe(true)
@@ -60,7 +66,10 @@ export async function bootstraphostpage(page: Page, datadir: string): Promise<st
   return topic
 }
 
-export async function bootstrapjoinpage(page: Page, topic: string): Promise<void> {
+export async function bootstrapjoinpage(
+  page: Page,
+  topic: string,
+): Promise<void> {
   await page.goto(`/join/#${topic}?ZSS_E2E=1`)
   await expect(page.locator('#frame')).toBeVisible({ timeout: 120_000 })
   await waitfore2ebridge(page)
@@ -93,7 +102,9 @@ export async function waitjoinboardrunnerrun(page: Page): Promise<string> {
   return workstatus
 }
 
-export async function waitplayersprite(page: Page): Promise<{ x: number; y: number }> {
+export async function waitplayersprite(
+  page: Page,
+): Promise<{ x: number; y: number }> {
   let sprite: { x: number; y: number } | undefined
   await expect
     .poll(
@@ -115,12 +126,9 @@ export async function attemptjoinmove(
   count: number,
 ): Promise<void> {
   for (let i = 0; i < count; ++i) {
-    await page.evaluate(
-      (direction) => {
-        ;(window as WindowWithE2e).__zss_e2e!.sendmoveinput(direction)
-      },
-      dir,
-    )
+    await page.evaluate((direction) => {
+      ;(window as WindowWithE2e).__zss_e2e!.sendmoveinput(direction)
+    }, dir)
     await page.waitForTimeout(200)
   }
 }

@@ -73,10 +73,10 @@ If a container named `zss` already exists: `docker rm -f zss` before `docker run
 
 From the repo, after Docker is on the instance:
 
-- **On the instance:** `AWS_RUN_LOCAL=1 yarn aws:ec2:docker-run`
-- **From your laptop:** `AWS_EC2_HOST=EC2_PUBLIC_IP AWS_EC2_SSH_KEY=/path/to/key.pem yarn aws:ec2:docker-run`
+- **On the instance:** `AWS_RUN_LOCAL=1 yarn deploy:aws-ec2:docker-run`
+- **From your laptop:** `AWS_EC2_HOST=EC2_PUBLIC_IP AWS_EC2_SSH_KEY=/path/to/key.pem yarn deploy:aws-ec2:docker-run`
 
-The shared implementation is [`scripts/vm-zss-docker-run.sh`](../scripts/vm-zss-docker-run.sh) (also `yarn vm:docker-run`).
+The shared implementation is [`scripts/vm-zss-docker-run.sh`](../scripts/vm-zss-docker-run.sh) (also `yarn deploy:vm:docker-run`).
 
 **Why `--network host`:** On Linux, the process listens on the host’s port directly, so you do not use `-p 4175:4175`. You still must allow **4175** in the security group.
 
@@ -97,4 +97,4 @@ The app loads in the browser; **PeerJS signaling** in this codebase uses **`term
 
 ## Local build alternative
 
-To run an image you built yourself: `yarn docker:build` produces `zss:local`; tag and push to a registry, or `docker load` on the instance, then substitute that image name in the `docker run` command above.
+To run an image you built yourself: `yarn deploy:docker:build` produces `zss:local`; tag and push to a registry, or `docker load` on the instance, then substitute that image name in the `docker run` command above.

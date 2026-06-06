@@ -1,7 +1,7 @@
 /**
  * FX bus wet-lift report via Playwright offline render (needs OfflineAudioContext).
  *
- *   yarn test:fx-bus-metrics
+ *   yarn fx-bus-metrics:test
  */
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'

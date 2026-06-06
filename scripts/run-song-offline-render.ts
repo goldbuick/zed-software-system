@@ -2,14 +2,14 @@
  * Offline render of the user level-issue song → WAV + metrics report.
  *
  * Usage:
- *   yarn render:level-issue-song
+ *   yarn level-issue-song:render
  *
  * Outputs:
  *   cafe/public/renders/level-issue-song.wav
  *   cafe/public/renders/level-issue-song.json
  *   cafe/public/renders/level-issue-song.txt
  *
- * Browser preview (yarn dev):
+ * Browser preview (yarn app:dev):
  *   https://localhost:7777/song-offline-render.html
  */
 import fs from 'node:fs'

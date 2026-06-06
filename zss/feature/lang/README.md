@@ -32,19 +32,19 @@ if (result.code) {
 After editing `backend/native/`:
 
 ```bash
-yarn test:lang-regression
+yarn lang-regression:test
 ```
 
 Regenerate golden fixtures from the TS oracle:
 
 ```bash
-yarn regen:lang-parity-fixtures
+yarn lang-parity-fixtures:regen
 ```
 
 Build WASM artifact:
 
 ```bash
-yarn build:lang
+yarn lang:build
 ```
 
 Output: `cafe/public/wasm/lang/zss_lang.{js,wasm}`
@@ -52,8 +52,8 @@ Output: `cafe/public/wasm/lang/zss_lang.{js,wasm}`
 Compile a `.zss` file to JS (stdout, C++ backend):
 
 ```bash
-yarn compile:lang path/to/script.zss
-cat script.zss | yarn compile:lang -
+yarn lang:compile path/to/script.zss
+cat script.zss | yarn lang:compile -
 ```
 
 ## Phase status

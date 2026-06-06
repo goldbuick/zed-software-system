@@ -2,7 +2,7 @@
  * Evidence-based Daisy vs Tone compare for level-issue song renders.
  *
  * Usage:
- *   yarn test:level-issue-song-compare
+ *   yarn level-issue-song-compare:test
  *
  * Requires:
  *   cafe/public/renders/level-issue-song.json
@@ -34,8 +34,8 @@ async function main() {
 
   if (!fs.existsSync(daisypath) || !fs.existsSync(tonepath)) {
     console.error('Missing render JSON. Run:')
-    console.error('  yarn render:level-issue-song')
-    console.error('  yarn render:level-issue-song:tone')
+    console.error('  yarn level-issue-song:render')
+    console.error('  yarn level-issue-song:render:tone')
     process.exit(1)
   }
 

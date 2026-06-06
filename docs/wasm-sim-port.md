@@ -87,7 +87,7 @@ zss/sim/native/
 zss/sim/
   wasm-bridge.ts          # load runtime; FFI for vm + synth
   hostevents.ts           # browser CLI host event IDs (planned)
-cafe/public/wasm/runtime/ # committed artifacts (yarn build:runtime)
+cafe/public/wasm/runtime/ # committed artifacts (yarn app:build:runtime)
 zss/wasmspace.ts          # wasm worker entry (replaces simspace + boardrunnerspace)
 ```
 

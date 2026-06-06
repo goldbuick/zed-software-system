@@ -179,7 +179,7 @@ export async function runApp(flags: RunAppFlags): Promise<void> {
     addLog(`Using Vite dev server at ${baseUrl}`)
   } else {
     if (!fs.existsSync(distDir)) {
-      console.error('cafe/dist not found. Run: yarn build')
+      console.error('cafe/dist not found. Run: yarn app:build')
       process.exit(1)
     }
     await createstaticserver(distDir, port)

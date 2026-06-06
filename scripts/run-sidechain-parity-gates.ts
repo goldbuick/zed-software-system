@@ -2,7 +2,7 @@
  * Pass/fail gate for sidechain parity render.
  *
  * Usage:
- *   yarn test:sidechain-parity
+ *   yarn sidechain-parity:test
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -26,7 +26,7 @@ const JSONPATH = path.join(
 function main() {
   if (!fs.existsSync(JSONPATH)) {
     console.error(`missing ${JSONPATH}`)
-    console.error('run: yarn render:sidechain-parity')
+    console.error('run: yarn sidechain-parity:render')
     process.exit(1)
   }
   const data = JSON.parse(fs.readFileSync(JSONPATH, 'utf8')) as {

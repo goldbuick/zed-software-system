@@ -182,7 +182,7 @@ function waitfordaisyready(
             SOFTWARE,
             '',
             'daisy',
-            'stale wasm — run yarn build:daisy then hard refresh',
+            'stale wasm — run yarn daisy:build then hard refresh',
           )
         }
         cleanup()

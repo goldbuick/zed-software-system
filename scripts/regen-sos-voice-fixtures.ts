@@ -4,8 +4,8 @@ import { fileURLToPath } from 'node:url'
 
 import { chromium } from '@playwright/test'
 
-import type { PARITY_AUDIO_METRICS } from '../zss/feature/synth/backend/wasm/paritymetrics.ts'
 import { SOS_VOICE_PATCHES } from '../zss/feature/synth/backend/daisy/sosvoicepatches.ts'
+import type { PARITY_AUDIO_METRICS } from '../zss/feature/synth/backend/wasm/paritymetrics.ts'
 
 import { startparityvite, stopparityvite } from './parity-vite-server.ts'
 

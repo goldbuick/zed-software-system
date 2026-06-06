@@ -22,7 +22,7 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Build Linux CLI tarball
-        run: yarn build:cli:linux
+        run: yarn cli:build:linux
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3

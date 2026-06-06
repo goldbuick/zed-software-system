@@ -57,7 +57,7 @@
         'level-issue': {
           id: 'level-issue-song',
           title: 'Level issue song',
-          yarnhint: 'yarn render:level-issue-song',
+          yarnhint: 'yarn level-issue-song:render',
           liverenderlabel: 're-render live (~3 min)',
           loadscenario: async () => {
             const { levelissuescenario } = await import(
@@ -69,7 +69,7 @@
         notepop: {
           id: 'notepop-qcxdxexfx',
           title: 'Note pop repro (#play qcxdxexfx)',
-          yarnhint: 'yarn render:notepop',
+          yarnhint: 'yarn notepop:render',
           liverenderlabel: 're-render live (~30 s)',
           loadscenario: async () => {
             const { notepopscenario } = await import(
@@ -81,7 +81,7 @@
         sidechain: {
           id: 'duck-bg-stab',
           title: 'Sidechain duck A/B (sustain + bg stab)',
-          yarnhint: 'yarn render:sidechain:ab',
+          yarnhint: 'yarn sidechain:render:ab',
           liverenderlabel: 're-render live (~15 s)',
           loadscenario: async () => {
             const { sidechainabscenario } = await import(

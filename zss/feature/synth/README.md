@@ -23,27 +23,27 @@ backend.addplay('qC4qD4qE4')
 After editing `backend/daisy/native/`, run:
 
 ```bash
-yarn test:daisy-regression
+yarn daisy-regression:test
 ```
 
-This runs Jest (`backend/daisy/__tests__`, `adsrenvcurve`) then critical Playwright `:full` gates (pitch, play/drum, sidechain, synth env, notepop, short env). **CI** ([`.github/workflows/on-pr-check.yml`](../../../.github/workflows/on-pr-check.yml)) runs `yarn test` (Jest) only.
+This runs Jest (`backend/daisy/__tests__`, `adsrenvcurve`) then critical Playwright `:full` gates (pitch, play/drum, sidechain, synth env, notepop, short env). **CI** ([`.github/workflows/on-pr-check.yml`](../../../.github/workflows/on-pr-check.yml)) runs `yarn app:test` (Jest) only.
 
 ## Parity gates (offline)
 
 | Script | Coverage |
 |--------|----------|
-| `yarn test:adsr-parity` | Short amsaw ADSR + Jest `ZssLinearEnv` |
-| `yarn test:synth-env-parity:full` | Long-release `#synth env` (square + fmsquare repro) |
-| `yarn test:play-drum-balance:full` | Play vs drum stem balance |
-| `yarn test:sidechain-parity:full` | Sidechain on/off duck |
-| `yarn test:pitch-stability:full` | Strike/detune / pitch drift |
-| `yarn test:notepop:full` | Note-pop A/B |
+| `yarn adsr-parity:test` | Short amsaw ADSR + Jest `ZssLinearEnv` |
+| `yarn synth-env-parity:test:full` | Long-release `#synth env` (square + fmsquare repro) |
+| `yarn play-drum-balance:test:full` | Play vs drum stem balance |
+| `yarn sidechain-parity:test:full` | Sidechain on/off duck |
+| `yarn pitch-stability:test:full` | Strike/detune / pitch drift |
+| `yarn notepop:test:full` | Note-pop A/B |
 
 Carrier `#synth env` is **wave-agnostic** (`ZssLinearEnv` on all SYNTH voices). FM/AM: pin `#synth modenv` when comparing timbre only.
 
 ## Native watch loops
 
-`yarn loop:<suite>` watches `backend/daisy/native/` and runs build → render → gate.
+`yarn <suite>:loop` watches `backend/daisy/native/` and runs build → render → gate.
 
 - `play-drum`, `sidechain`, `synth-env`, `notepop`, `pitch`
 - `--skip-build`, `--calibrate-only`, `--calibrate-on-fail` (opt-in calibrator; slow)
@@ -54,19 +54,19 @@ Implementation: [`scripts/run-daisy-parity-loop.ts`](../../../scripts/run-daisy-
 
 Grid-search scripts rewrite [`zss_config.h`](backend/daisy/native/zss/zss_config.h). **Do not run in CI**; each step can take many minutes.
 
-- `yarn calibrate:play-drum-balance`
-- `yarn calibrate:sidechain-parity`
-- `yarn calibrate:synth-env-parity`
+- `yarn play-drum-balance:calibrate`
+- `yarn sidechain-parity:calibrate`
+- `yarn synth-env-parity:calibrate`
 
 ## Dev flags
 
 | Env / script | Purpose |
 |--------------|---------|
 | `ZSS_DAISY_PERF=false` | Full-quality Daisy DSP |
-| `ZSS_DAISY_NO_SIDECHAIN=1` | Bypass play-bus sidechain (`yarn dev:no-sc`, `?no_sc=1`) |
+| `ZSS_DAISY_NO_SIDECHAIN=1` | Bypass play-bus sidechain (`yarn app:dev:no-sc`, `?no_sc=1`) |
 | `ZSS_DAISY_NO_MAIN_COMP=1` | Bypass main bus compressor (`?no_comp=1`) |
 | `ZSS_PARITY_RENDER=1` | Offline parity renders (manual) |
 
-**FX bus:** [parallel-fx-bus.md](docs/parallel-fx-bus.md). Offline matrix: `yarn test:level-stability:fxmatrix`.
+**FX bus:** [parallel-fx-bus.md](docs/parallel-fx-bus.md). Offline matrix: `yarn level-stability:test:fxmatrix`.
 
 COOP/COEP headers are enabled in Vite for SharedArrayBuffer.

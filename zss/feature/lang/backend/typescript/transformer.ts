@@ -3,9 +3,9 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 import { MaybeFlag, tokenize } from 'zss/words/textformat'
 import { NAME } from 'zss/words/types'
 
-import { COMPARE, CodeNode, LITERAL, NODE, OPERATOR } from './visitor'
+import { COMPARE, type CodeNode, LITERAL, NODE, OPERATOR } from './visitor'
 
-type GenContext = {
+export type GenContext = {
   labels: Record<string, number[]>
   internal: number
   lineindex: number

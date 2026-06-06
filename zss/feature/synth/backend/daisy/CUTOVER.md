@@ -7,14 +7,14 @@
 Parity gates use **archived Tone.js** as ground truth (`parity-metrics-tone.json`). Regenerate Tone reference after any Tone archive change:
 
 ```bash
-yarn regen:parity-fixtures:tone
+yarn parity-fixtures:regen:tone
 ```
 
 Daisy drum fixtures (after DaisySP drum migration or preset changes):
 
 ```bash
-yarn build:daisy
-yarn regen:parity-fixtures:daisy-drums
+yarn daisy:build
+yarn parity-fixtures:regen:daisy-drums
 ```
 
 ### Tone-excluded patches
@@ -37,23 +37,23 @@ Manual parity criteria:
 4. Master parity: play/bgplay/tts mix fixtures pass
 5. Record parity: offline render matches Tone fixture expectations
 6. E2E smoke: `#play`, `#bgplay`, `#synth`, FX commands, TTS, `synthrecord`
-7. Bench: `yarn bench:daisy-synth`
+7. Bench: `yarn daisy:bench:synth`
 
 ## Build
 
 ```bash
-yarn build:daisy   # requires Emscripten (source emsdk_env.sh)
+yarn daisy:build   # requires Emscripten (source emsdk_env.sh)
 ```
 
-Rebuild and commit `cafe/public/wasm/daisy/*` after any C++ change. `yarn build:daisy` is **manual only** — not wired into default `yarn build`.
+Rebuild and commit `cafe/public/wasm/daisy/*` after any C++ change. `yarn daisy:build` is **manual only** — not wired into default `yarn app:build`.
 
-`yarn bundle:daisy-processor` injects SAB offsets from `daisycontrol.ts` into the worklet (must match `kVoiceCfgStride` in `zss_daisy_synth.cpp`).
+`yarn daisy:bundle:processor` injects SAB offsets from `daisycontrol.ts` into the worklet (must match `kVoiceCfgStride` in `zss_daisy_synth.cpp`).
 
 ## Manual parity
 
 ```bash
 # Daisy vs Tone reference (primary gate)
-ZSS_PARITY_RENDER=1 ZSS_DAISY_PARITY=1 ZSS_TONE_REFERENCE=1 yarn test wasmparity
+ZSS_PARITY_RENDER=1 ZSS_DAISY_PARITY=1 ZSS_TONE_REFERENCE=1 yarn app:test wasmparity
 ```
 
 Drum patches compare against `parity-metrics-daisy.json`; voice/FX use Tone reference with `ZSS_TONE_REFERENCE=1`.

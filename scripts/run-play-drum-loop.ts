@@ -1,4 +1,4 @@
-/** Delegates to run-daisy-parity-loop.ts — prefer `yarn loop:play-drum`. */
+/** Delegates to run-daisy-parity-loop.ts — prefer `yarn play-drum:loop`. */
 import { spawnSync } from 'node:child_process'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'

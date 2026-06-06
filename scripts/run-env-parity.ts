@@ -1,7 +1,7 @@
 /**
  * Tone vs Daisy env parity offline renders.
  *
- * Usage: yarn test:env-parity
+ * Usage: yarn env-parity:test
  *
  * Outputs: cafe/public/renders/env-parity/
  */
@@ -180,7 +180,7 @@ async function runenvparity() {
 }
 
 withscripttimeout(
-  'test:env-parity',
+  'env-parity:test',
   PARITY_RENDER_SCRIPT_TIMEOUT_MS,
   runenvparity,
 ).catch((err) => {

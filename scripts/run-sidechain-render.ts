@@ -2,15 +2,15 @@
  * Offline A/B render for play-bus sidechain duck (duck-bg-stab scenario).
  *
  * Usage:
- *   yarn render:sidechain
- *   yarn render:sidechain --no-sc
- *   yarn render:sidechain:ab
+ *   yarn sidechain:render
+ *   yarn sidechain:render --no-sc
+ *   yarn sidechain:render:ab
  *
  * Outputs:
  *   cafe/public/renders/duck-bg-stab.wav (default, sidechain ON)
  *   cafe/public/renders/duck-bg-stab-sc-on.* / -sc-off.* (--ab)
  *
- * Browser preview (yarn dev):
+ * Browser preview (yarn app:dev):
  *   https://localhost:7777/song-offline-render.html?scenario=sidechain
  */
 import fs from 'node:fs'

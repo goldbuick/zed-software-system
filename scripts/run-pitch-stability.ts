@@ -2,7 +2,7 @@
  * Offline render for pitch-stability scenario → WAV + pitch metrics JSON.
  *
  * Usage:
- *   yarn render:pitch-stability
+ *   yarn pitch-stability:render
  *
  * Outputs:
  *   cafe/public/renders/pitch-stability-c4-8n.wav

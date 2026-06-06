@@ -31,7 +31,7 @@ hiss (pink noise) ───────┘
 - **Sidechain sources:** `altaction` (TTS + bgplay @ -12 dB), `drumaction` (clap+bass @ -28 dB)
 - **Purpose:** Ducks `#play` when bg/TTS/drums hit (not bg/TTS/drum buses themselves)
 - **Tone:** `SidechainCompressor` AudioWorklet — input 0 = play, input 1 = summed key bus
-- **Daisy:** `sidechainkey()` sums trimmed bg/TTS/drum tap; `sidechaingain()` on play bus only (`zss_daisy_synth.cpp`); SAB slot 4 bypasses duck for offline A/B (`yarn render:sidechain:ab`) or live dev (`ZSS_DAISY_NO_SIDECHAIN=1`, `?no_sc=1`)
+- **Daisy:** `sidechainkey()` sums trimmed bg/TTS/drum tap; `sidechaingain()` on play bus only (`zss_daisy_synth.cpp`); SAB slot 4 bypasses duck for offline A/B (`yarn sidechain:render:ab`) or live dev (`ZSS_DAISY_NO_SIDECHAIN=1`, `?no_sc=1`)
 
 ### Main Compressor
 
@@ -44,7 +44,7 @@ hiss (pink noise) ───────┘
 - **Silence guard:** When `|dry|` is below ~-80 dBFS, `comp_env` fast-decays so gain returns to unity before the next note
 - **Purpose:** Dynamics on full post-sidechain mix (ducked play + bg + TTS + drums)
 - **Tone:** `Tone.Compressor` after `razzlegain` — internal gain smoothing on applied GR
-- **Daisy:** `maincompressor()` — detector (`comp_env`) + smoothed multiplier (`comp_gain_smooth`); SAB slot 3 bypasses for A/B renders (`yarn render:notepop:ab`)
+- **Daisy:** `maincompressor()` — detector (`comp_env`) + smoothed multiplier (`comp_gain_smooth`); SAB slot 3 bypasses for A/B renders (`yarn notepop:render:ab`)
 
 ### Razzle Chain
 
@@ -57,7 +57,7 @@ hiss (pink noise) ───────┘
 | Bus | Tone | Daisy |
 |-----|------|-------|
 | Play into sidechain | `volumetodb(20)` | `kPlayBusGain` |
-| Drums | `volumetodb(100) + 10` dB | `kDrumBusGain` (calibrate: `yarn calibrate:play-drum-balance`) |
+| Drums | `volumetodb(100) + 10` dB | `kDrumBusGain` (calibrate: `yarn play-drum-balance:calibrate`) |
 | Main fader | `volumetodb(vol × 0.25)` on `mainvolume` | `readmainvolume()` |
 
 ### Broadcast Destination

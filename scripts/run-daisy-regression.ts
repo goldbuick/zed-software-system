@@ -3,8 +3,8 @@
  * Not run in CI (see on-pr-check.yml). Use before merging native DSP changes.
  *
  * Usage:
- *   yarn test:daisy-regression
- *   yarn test:daisy-regression --skip-playwright
+ *   yarn daisy-regression:test
+ *   yarn daisy-regression:test --skip-playwright
  */
 import { execSync } from 'node:child_process'
 import path from 'node:path'
@@ -27,14 +27,14 @@ const JEST_PATHS = [
   'zss/feature/synth/backend/wasm/__tests__/adsrenvcurve.test.ts',
 ]
 
-const SOS_VOICE_GATE = 'yarn test:sos-voices'
+const SOS_VOICE_GATE = 'yarn sos-voices:test'
 
 const PLAYWRIGHT_FULL: { name: string; cmd: string }[] = [
-  { name: 'pitch-stability', cmd: 'yarn test:pitch-stability:full' },
-  { name: 'play-drum-balance', cmd: 'yarn test:play-drum-balance:full' },
-  { name: 'sidechain-parity', cmd: 'yarn test:sidechain-parity:full' },
-  { name: 'synth-env-parity', cmd: 'yarn test:synth-env-parity:full' },
-  { name: 'notepop', cmd: 'yarn test:notepop:full' },
+  { name: 'pitch-stability', cmd: 'yarn pitch-stability:test:full' },
+  { name: 'play-drum-balance', cmd: 'yarn play-drum-balance:test:full' },
+  { name: 'sidechain-parity', cmd: 'yarn sidechain-parity:test:full' },
+  { name: 'synth-env-parity', cmd: 'yarn synth-env-parity:test:full' },
+  { name: 'notepop', cmd: 'yarn notepop:test:full' },
 ]
 
 type STEPREPORT = { name: string; pass: boolean; detail?: string }
@@ -96,7 +96,7 @@ async function main() {
   reports.push(
     runstep(
       'adsr-parity',
-      'yarn test:adsr-parity',
+      'yarn adsr-parity:test',
       PARITY_RENDER_SCRIPT_TIMEOUT_MS,
     ),
   )
@@ -117,7 +117,7 @@ function printsummary(reports: STEPREPORT[]) {
 }
 
 withscripttimeout(
-  'test:daisy-regression',
+  'daisy-regression:test',
   PARITY_RENDER_SCRIPT_TIMEOUT_MS * 6,
   main,
 ).catch((err) => {

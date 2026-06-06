@@ -2,7 +2,7 @@
  * Offline render of the user level-issue song via archived Tone.js → WAV + metrics.
  *
  * Usage:
- *   yarn render:level-issue-song:tone
+ *   yarn level-issue-song:render:tone
  *
  * Outputs:
  *   cafe/public/renders/level-issue-song-tone.wav

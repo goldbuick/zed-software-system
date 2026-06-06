@@ -2,8 +2,8 @@
  * Grid-search kScMix / kScMakeupDb for sidechain duck depth + bypass gate.
  *
  * Usage:
- *   yarn calibrate:sidechain-parity
- *   yarn calibrate:sidechain-parity --dry-run
+ *   yarn sidechain-parity:calibrate
+ *   yarn sidechain-parity:calibrate --dry-run
  */
 import { execSync } from 'node:child_process'
 import fs from 'node:fs'
@@ -59,11 +59,11 @@ function writeparams(params: SCPARAMS) {
 }
 
 function builddaisy() {
-  execSync('yarn build:daisy', { cwd: PROJECT, stdio: 'inherit' })
+  execSync('yarn daisy:build', { cwd: PROJECT, stdio: 'inherit' })
 }
 
 function measure(): SIDECHAIN_PARITY_RESULT {
-  execSync('yarn render:sidechain-parity', { cwd: PROJECT, stdio: 'inherit' })
+  execSync('yarn sidechain-parity:render', { cwd: PROJECT, stdio: 'inherit' })
   const data = JSON.parse(fs.readFileSync(PARITY_JSON, 'utf8')) as {
     result: SIDECHAIN_PARITY_RESULT
   }
@@ -146,7 +146,7 @@ async function main() {
   if (!dryrun && best.result) {
     writeparams(best.params)
     builddaisy()
-    execSync('yarn test:sidechain-parity', { cwd: PROJECT, stdio: 'inherit' })
+    execSync('yarn sidechain-parity:test', { cwd: PROJECT, stdio: 'inherit' })
   } else {
     writeparams(original)
   }

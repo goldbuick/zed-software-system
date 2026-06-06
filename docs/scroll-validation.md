@@ -17,7 +17,7 @@ Related implementation:
 - `zss/device/vm/handlers/default.ts` — `refscroll:*`, `zipfilelist:*`
 - `zss/device/vm/handlers/scroll.ts` — `handlerefscroll` (`refscroll:menu`)
 
-Run: `yarn test` (or the paths above).
+Run: `yarn app:test` (or the paths above).
 
 ## Tier 1 — manual checklist (smoke before release)
 

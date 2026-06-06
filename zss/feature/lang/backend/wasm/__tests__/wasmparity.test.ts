@@ -1,5 +1,4 @@
 import manifest from '../__fixtures__/parity/manifest.json'
-
 import { readfixture, runnativeparitygate } from '../langparityload'
 
 type FIXTURE_MANIFEST = string[]

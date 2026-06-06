@@ -63,9 +63,9 @@ Sidechain duck → master compressor → razzle → volume — unchanged downstr
 
 ## Regression
 
-`yarn test:level-stability --filter fxmatrix`:
+`yarn level-stability:test --filter fxmatrix`:
 
 - Peak vs `fxmatrix-dry` (≤6 dB), peak ≤ −0.5 dBFS
 - Solo FX audibility: peak within 4 dB of dry (distortion ≥ +4 dB hotter); diagnostic wet-lift report in [`fxbusmetrics.ts`](../backend/daisy/fxbusmetrics.ts)
 
-`yarn test:fx-bus-metrics` — offline wet-lift decomposition report (no Playwright).
+`yarn fx-bus-metrics:test` — offline wet-lift decomposition report (no Playwright).

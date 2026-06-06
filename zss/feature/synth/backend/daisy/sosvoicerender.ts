@@ -5,7 +5,7 @@ import {
   audiobuffermetrics,
 } from '../wasm/paritymetrics'
 import { defaultwasmalgoconfig } from '../wasm/wasmalgoconfigsab'
-import { applywasmfxconfig, defaultwasmfxsab } from '../wasm/wasmfxstate'
+import { defaultwasmfxsab } from '../wasm/wasmfxstate'
 import { WASM_DEFAULT_TTS_VOLUME } from '../wasm/wasmmainsab'
 import { defaultwasmoscconfig } from '../wasm/wasmoscconfigsab'
 import type { WASM_REPLAY_STATE } from '../wasm/wasmreplaystate'

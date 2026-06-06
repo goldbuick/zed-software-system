@@ -1,7 +1,7 @@
 /**
  * Pass/fail gate for synth env parity renders.
  *
- * Usage: yarn test:synth-env-parity
+ * Usage: yarn synth-env-parity:test
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -31,7 +31,7 @@ async function rungates() {
     const jsonpath = path.join(OUTDIR, `${scenario.id}.json`)
     if (!fs.existsSync(jsonpath)) {
       console.error(`missing ${jsonpath}`)
-      console.error('run: yarn render:synth-env-parity')
+      console.error('run: yarn synth-env-parity:render')
       process.exit(1)
     }
     const data = JSON.parse(fs.readFileSync(jsonpath, 'utf8')) as {
@@ -64,7 +64,7 @@ async function rungates() {
 }
 
 withscripttimeout(
-  'test:synth-env-parity',
+  'synth-env-parity:test',
   EXEC_GATE_TIMEOUT_MS,
   rungates,
 ).catch((err) => {

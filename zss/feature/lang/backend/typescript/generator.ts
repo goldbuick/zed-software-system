@@ -6,7 +6,7 @@ import { CHIP } from 'zss/chip'
 import { compileast } from './ast'
 import { LANG_ERROR } from './lexer'
 import { transformast } from './transformer'
-import { CodeNode } from './visitor'
+import type { CodeNode } from './visitor'
 
 export type GeneratorFunc = (api: CHIP) => 0 | 1
 

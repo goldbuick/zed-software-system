@@ -1,4 +1,4 @@
-/** Delegates to run-daisy-parity-loop.ts — prefer `yarn loop:notepop`. */
+/** Delegates to run-daisy-parity-loop.ts — prefer `yarn notepop:loop`. */
 import { spawnSync } from 'node:child_process'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'

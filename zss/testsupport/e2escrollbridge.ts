@@ -8,9 +8,9 @@ import {
 import { register, registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { readsubscribetopic } from 'zss/feature/netterminal'
-import { INPUT, LAYER_TYPE } from 'zss/gadget/data/types'
 import { panelscrolltolines } from 'zss/gadget/data/panelitemtext'
 import { useGadgetClient, useTape } from 'zss/gadget/data/state'
+import { INPUT, LAYER_TYPE } from 'zss/gadget/data/types'
 import type { PT } from 'zss/words/types'
 
 export type ZssE2eMoveDir = 'left' | 'right' | 'up' | 'down'

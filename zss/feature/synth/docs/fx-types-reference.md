@@ -75,7 +75,7 @@ Archived Maxi used a **serial hybrid** chain ([wasmfxplaycode.ts](../archive/max
 | Return bus | **`wet_sum` × 1.4** then compressor (−24 dB thresh, 4:1, 2 ms / 80 ms) — dry stays full; echo/reverb use send×wet ([parallel-fx-bus.md](parallel-fx-bus.md)) |
 | Main bus | Sidechain → compressor → razzle (unchanged) |
 
-Regression harness: [`fxlevelscenarios.ts`](../backend/daisy/fxlevelscenarios.ts), `yarn test:level-stability --filter fxmatrix`.
+Regression harness: [`fxlevelscenarios.ts`](../backend/daisy/fxlevelscenarios.ts), `yarn level-stability:test --filter fxmatrix`.
 
 ---
 

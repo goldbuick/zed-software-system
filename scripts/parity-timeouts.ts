@@ -6,13 +6,13 @@ export const PLAYWRIGHT_SCENARIO_TIMEOUT_MS = 180_000
 /** Whole-script ceiling for multi-scenario render drivers. */
 export const PARITY_RENDER_SCRIPT_TIMEOUT_MS = 600_000
 
-/** `yarn build:daisy` subprocess. */
+/** `yarn daisy:build` subprocess. */
 export const EXEC_BUILD_DAISY_TIMEOUT_MS = 120_000
 
-/** Single render driver (`render:synth-env-parity`, etc.). */
+/** Single render driver (`synth-env-parity:render`, etc.). */
 export const EXEC_RENDER_PARITY_TIMEOUT_MS = 600_000
 
-/** Gate-only scripts (`test:synth-env-parity`). */
+/** Gate-only scripts (`synth-env-parity:test`). */
 export const EXEC_GATE_TIMEOUT_MS = 60_000
 
 /** One calibrator grid step (build + render + read JSON). */

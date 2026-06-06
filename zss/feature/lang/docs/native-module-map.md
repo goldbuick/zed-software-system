@@ -20,7 +20,7 @@ C++ reimplementation of the ZSS script compiler under `backend/native/zss/`.
 From repo root:
 
 ```bash
-yarn build:lang
+yarn lang:build
 ```
 
 Output: `cafe/public/wasm/lang/zss_lang.{js,wasm}`

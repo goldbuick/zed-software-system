@@ -2,7 +2,7 @@
  * Pass/fail gate for pitch-stability offline render.
  *
  * Usage:
- *   yarn test:pitch-stability
+ *   yarn pitch-stability:test
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -31,7 +31,7 @@ type PITCH_JSON = {
 function main() {
   if (!fs.existsSync(JSONPATH)) {
     console.error(`missing render JSON: ${JSONPATH}`)
-    console.error('run: yarn render:pitch-stability')
+    console.error('run: yarn pitch-stability:render')
     process.exit(1)
   }
 

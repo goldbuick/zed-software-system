@@ -3,7 +3,7 @@ import { isarray } from 'zss/mapping/types'
 
 import { LANG_ERROR, tokenize } from './lexer'
 import { parser } from './parser'
-import { CodeNode, visitor } from './visitor'
+import { type CodeNode, visitor } from './visitor'
 
 type OffsetRange = {
   start: number

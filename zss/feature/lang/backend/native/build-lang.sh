@@ -36,7 +36,7 @@ ensureemscripten() {
   echo "error: emcc not found — install Emscripten and retry:" >&2
   echo "  git clone https://github.com/emscripten-core/emsdk.git .emsdk" >&2
   echo "  cd .emsdk && ./emsdk install latest && ./emsdk activate latest" >&2
-  echo "  source .emsdk/emsdk_env.sh && yarn build:lang" >&2
+  echo "  source .emsdk/emsdk_env.sh && yarn lang:build" >&2
   return 1
 }
 
@@ -82,7 +82,7 @@ rm -f "$OUT_DIR/zss_lang.js.bak"
 
 BUILD_ID=$(date +%s)
 cat > "$BUILDID_FILE" <<EOF
-/** Bumped by \`yarn build:lang\` — busts browser cache when wasm changes on same commit. */
+/** Bumped by \`yarn lang:build\` — busts browser cache when wasm changes on same commit. */
 export const LANG_BUILD_ID = '${BUILD_ID}'
 EOF
 

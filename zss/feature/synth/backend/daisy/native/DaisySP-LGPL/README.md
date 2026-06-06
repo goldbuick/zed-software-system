@@ -16,7 +16,7 @@ Full license text: [`LICENSE`](LICENSE).
 To rebuild the Daisy WASM synth with a modified LGPL module:
 
 1. Edit files under `Source/Effects/` or `Source/Dynamics/` (or replace them).
-2. From repo root: `yarn build:daisy` (requires Emscripten on PATH).
+2. From repo root: `yarn daisy:build` (requires Emscripten on PATH).
 3. Output: `cafe/public/wasm/daisy/zss_daisy.js` and `zss_daisy.wasm`.
 
 Upstream also provides [`gather_lgpl.sh`](https://github.com/electro-smith/DaisySP-LGPL/tree/main/distribution/gather_lgpl.sh) for standalone LGPL distribution bundles.

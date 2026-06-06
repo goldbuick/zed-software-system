@@ -2,7 +2,7 @@
  * Offline play vs drum balance stems → WAV + JSON.
  *
  * Usage:
- *   yarn render:play-drum-balance
+ *   yarn play-drum-balance:render
  */
 import fs from 'node:fs'
 import path from 'node:path'

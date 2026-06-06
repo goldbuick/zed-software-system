@@ -2,7 +2,7 @@
  * Pass/fail gate for play vs drum balance render.
  *
  * Usage:
- *   yarn test:play-drum-balance
+ *   yarn play-drum-balance:test
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -30,7 +30,7 @@ type BALANCE_JSON = {
 function main() {
   if (!fs.existsSync(JSONPATH)) {
     console.error(`missing render JSON: ${JSONPATH}`)
-    console.error('run: yarn render:play-drum-balance')
+    console.error('run: yarn play-drum-balance:render')
     process.exit(1)
   }
 

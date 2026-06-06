@@ -1,4 +1,9 @@
 import ErrorStackParser from 'error-stack-parser'
+import {
+  GENERATED_FILENAME,
+  GeneratorBuild,
+  GeneratorFunc,
+} from 'zss/feature/lang'
 
 import { RUNTIME } from './config'
 import { MESSAGE, apierror, chipmessage } from './device/api'
@@ -11,11 +16,6 @@ import {
   firmwaregetcommand,
   firmwareset,
 } from './firmware/runner'
-import {
-  GENERATED_FILENAME,
-  GeneratorBuild,
-  GeneratorFunc,
-} from 'zss/feature/lang'
 import { createchipid } from './mapping/guid'
 import {
   MAYBE,

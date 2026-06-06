@@ -87,12 +87,12 @@ constexpr float kDrumTweetTrim = 1.25f;
 constexpr float kVoiceOutGain = 1.f;
 
 /*
- * Parity-tuned constants — change only with yarn calibrate:* or intentional
- * re-tune, then yarn test:daisy-regression (local; CI runs Jest only).
+ * Parity-tuned constants — change only with yarn *:calibrate or intentional
+ * re-tune, then yarn daisy-regression:test (local; CI runs Jest only).
  *
- *   kEnvDecayTauScale / kEnvReleaseTauScale  → yarn test:synth-env-parity:full
- *   kPlayBusGain / kDrumBusGain             → yarn test:play-drum-balance:full
- *   kScMix (+ kScMakeupDb below)            → yarn test:sidechain-parity:full
+ *   kEnvDecayTauScale / kEnvReleaseTauScale  → yarn synth-env-parity:test:full
+ *   kPlayBusGain / kDrumBusGain             → yarn play-drum-balance:test:full
+ *   kScMix (+ kScMakeupDb below)            → yarn sidechain-parity:test:full
  */
 constexpr float kEnvDecayTauScale = 0.700f;
 constexpr float kEnvReleaseTauScale = 0.060f;
@@ -132,7 +132,7 @@ constexpr float kFxReturnCompKneeDb = 6.f;
 constexpr float kFxReturnCompAttackSec = 0.002f;
 constexpr float kFxReturnCompReleaseSec = 0.08f;
 constexpr float kFxReturnWetTrim = 1.4f;
-/** Sidechain duck depth — yarn test:sidechain-parity:full */
+/** Sidechain duck depth — yarn sidechain-parity:test:full */
 constexpr float kScMix = 0.75f;
 constexpr float kScTriggerFloor = 1e-5f;
 constexpr float kAutowahDefaultOct = 6.f;
