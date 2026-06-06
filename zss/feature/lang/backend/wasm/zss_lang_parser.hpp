@@ -476,8 +476,7 @@ class Parser {
     block->lines.push_back(creategotonode(blockloc, done, "end of if"));
     block->lines.push_back(createmarknode(blockloc, skip, "alt logic"));
 
-    while (check(TokenKind::COMMAND) && peek(1).kind == TokenKind::COMMAND_ELSE &&
-           peek(2).kind == TokenKind::COMMAND_IF) {
+    while (iscommandelseifhead()) {
       block->altlines.push_back(parsecommandelseif());
     }
     if (check(TokenKind::COMMAND) && peek(1).kind == TokenKind::COMMAND_ELSE) {
@@ -490,11 +489,28 @@ class Parser {
     return block;
   }
 
+  bool iselseifkeyword(TokenKind kind, const std::string& image) const {
+    if (kind == TokenKind::COMMAND_IF) return true;
+    if (kind != TokenKind::WORD) return false;
+    std::string w = namestr(image);
+    return w == "if" || w == "try" || w == "take" || w == "give" || w == "duplicate";
+  }
+
+  bool iscommandelseifhead() const {
+    if (!check(TokenKind::COMMAND) || peek(1).kind != TokenKind::COMMAND_ELSE) return false;
+    return iselseifkeyword(peek(2).kind, peek(2).image);
+  }
+
+  std::string elseifmethodfromtoken(const Token& tok) const {
+    if (tok.kind == TokenKind::COMMAND_IF) return namestr(tok.image);
+    return namestr(tok.image);
+  }
+
   std::unique_ptr<CodeNode> parsecommandelseif() {
     advance();  // #
     advance();  // else
-    Token iftok = advance();  // if
-    Location loc = iftok.loc;
+    Token cmdtok = advance();  // if | try | take | give | duplicate
+    Location loc = cmdtok.loc;
     pushscopedloc(loc);
     auto words = parsewords();
     popscopedloc();
@@ -503,7 +519,7 @@ class Parser {
     auto node = make_node(NODE::ELSE_IF);
     node->done = done;
     node->loc = loc;
-    auto logic = makelogicnode("if", skip, std::move(words), &loc);
+    auto logic = makelogicnode(elseifmethodfromtoken(cmdtok), skip, std::move(words), &loc);
     node->lines.push_back(std::move(logic));
     Location blockloc = isinlinestart() ? curloc() : loc;
     if (isinlinestart() || check(TokenKind::COMMAND_DO)) {
@@ -519,11 +535,14 @@ class Parser {
     advance();  // #
     advance();  // else
     auto node = make_node(NODE::ELSE);
-    if (!check(TokenKind::NEWLINE) && !check(TokenKind::COMMAND_DONE) && !atend()) {
+    if (!check(TokenKind::NEWLINE) && !check(TokenKind::COMMAND_DONE) && !atend() &&
+        !check(TokenKind::COMMAND_DO)) {
       auto words = parsewords();
-      auto cmd = make_node(NODE::COMMAND);
-      cmd->words = std::move(words);
-      node->lines.push_back(makelinenode1(std::move(cmd)));
+      if (!words.empty()) {
+        auto cmd = make_node(NODE::COMMAND);
+        cmd->words = std::move(words);
+        node->lines.push_back(makelinenode1(std::move(cmd)));
+      }
     }
     if (isinlinestart() || check(TokenKind::COMMAND_DO)) {
       auto fork = parsecommandfork();

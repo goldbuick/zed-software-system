@@ -1,0 +1,2 @@
+#if key0 set keylist keylist + "$black$12"
+#if key9 set keylist keylist + "$blue$12"

@@ -1,0 +1,21 @@
+ #else set torchmeter torchmeter + "$176"
+ #done
+ #if wick > 100 do
+  #set torchmeter torchmeter + "$177"
+ #else set torchmeter torchmeter + "$176"
+ #done
+ #if wick > 150 do
+  #set torchmeter torchmeter + "$177"
+ #else set torchmeter torchmeter + "$176"
+ #done
+ #if wick > 200 do
+  #set torchmeter torchmeter + "$177"
+ #else set torchmeter torchmeter + "$176"
+ #done
+#done
+"$torchmeter
+" $cyan$4 $yellow   Gems:$gems
+" $yellow    Score:$score
+' make keys section of sidebar
+#set keylist " $white$12 $yellow   Keys:"
+#done

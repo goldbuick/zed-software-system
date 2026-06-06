@@ -1,0 +1,17 @@
+#if inputmenu do
+ #set hint 1 - hint
+ #idle
+#else if inputmove and inputshift do
+ #if not reload do
+  #give reload 3
+  #take ammo do
+   #ticker You don't have any ammo!
+  #else do
+   #shoot inputmove
+  #done
+ #done
+ #idle
+#else if inputmove do
+ ?inputmove
+#else idle
+#done

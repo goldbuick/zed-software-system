@@ -33,7 +33,28 @@ import {
   parityids,
   readcorpus,
 } from 'zss/feature/lang/backend/wasm/corpus'
-import { compilenativewasm } from 'zss/feature/lang/backend/wasm/langparityload'
+import { compilenativewasm, compilecppfromdisk } from 'zss/feature/lang/backend/wasm/langparityload'
+
+function labelsfromjson(labelsjson: string) {
+  if (!labelsjson.trim()) {
+    return {}
+  }
+  try {
+    return JSON.parse(labelsjson) as Record<string, number[]>
+  } catch {
+    return {}
+  }
+}
+
+function wasmbuildfromcpp(source: string, name: string) {
+  const cpp = compilecppfromdisk(name, source)
+  return {
+    errors: cpp.errors,
+    wasmbytes: cpp.wasmbytes,
+    labels: labelsfromjson(cpp.labelsjson),
+    code: undefined,
+  }
+}
 
 describe('lang corpus manifests', () => {
   it('lists parity micro-fixtures', () => {
@@ -97,8 +118,7 @@ describe('lang corpus behavioral parity (native wasm vs TS oracle)', () => {
     const source = readcorpus('integration', 'simple_chat_player')
     const jsbuild = compile('player', source)
     expect(jsbuild.errors ?? []).toHaveLength(0)
-    const wasmbytes = compilenativewasm(source)
-    const wasmbuild = { ...jsbuild, wasmbytes, code: undefined }
+    const wasmbuild = wasmbuildfromcpp(source, 'player')
     const jschip = createchip('js-chat', DRIVER_TYPE.RUNTIME, jsbuild)
     const wasmchip = createchip('wasm-chat', DRIVER_TYPE.RUNTIME, wasmbuild)
     jschip.once()

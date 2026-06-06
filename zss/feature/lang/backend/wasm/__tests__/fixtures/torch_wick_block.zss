@@ -1,0 +1,24 @@
+#set torchmeter " $brown$157 $yellowTorches:$torches"
+#if torches < 10 do
+ #set torchmeter torchmeter + "  "
+#else if torches < 100 do
+ #set torchmeter torchmeter + " "
+#done
+#if wick > 0 do
+ #if wick > 50 do
+  #set torchmeter torchmeter + "$177"
+ #else set torchmeter torchmeter + "$176"
+ #done
+ #if wick > 100 do
+  #set torchmeter torchmeter + "$177"
+ #else set torchmeter torchmeter + "$176"
+ #done
+ #if wick > 150 do
+  #set torchmeter torchmeter + "$177"
+ #else set torchmeter torchmeter + "$176"
+ #done
+ #if wick > 200 do
+  #set torchmeter torchmeter + "$177"
+ #else set torchmeter torchmeter + "$176"
+ #done
+#done

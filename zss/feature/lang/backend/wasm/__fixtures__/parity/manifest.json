@@ -16,6 +16,7 @@
   "foreach",
   "while_push_by",
   "duplicate_fork",
+  "drawdisplay",
   "send_dir_label",
   "paren_intround"
 ]

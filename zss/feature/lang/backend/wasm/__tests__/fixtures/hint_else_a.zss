@@ -1,0 +1,36 @@
+:think
+#if hint do
+"press $whiteC$yellow to chat 
+"press $white#$yellow for cli
+" 
+"from the cli to
+"set name
+"$white#set user <name>
+" 
+"toggle built-in 
+"gadget on or off
+"$white#gadget
+"with gadget users
+"can edit the board
+"
+"$black$ondkcyan Ctrl+O 
+"$ondkblue $whiteOpen the net
+"
+"$black$ondkcyan $24$25$26$27 $ondkblue $whiteMove
+"$black$onltgrey Tab $ondkblue $whiteToggle
+"$ondkblue $whitePlayer Stats
+"
+#else do
+" $white$2 $yellow Health:$health
+" $cyan$132 $yellow   Ammo:$ammo
+' torch info
+#set torchmeter " $brown$157 $yellowTorches:$torches"
+#if torches < 10 do
+ #set torchmeter torchmeter + "  "
+#else if torches < 100 do
+ #set torchmeter torchmeter + " "
+#done
+#if wick > 0 do
+ #if wick > 50 do
+  #set torchmeter torchmeter + "$177"
+#done

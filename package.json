@@ -59,6 +59,7 @@
     "lang-parity:test": "yarn jest zss/feature/lang/backend/wasm/__tests__/wasmparity.test.ts --no-coverage",
     "lang-regression:test": "sh scripts/run-lang-regression.sh",
     "lang-wasm:test": "node scripts/test-lang-wasm.mjs",
+    "lang:bench:compile": "node scripts/lang-compile-bench-report.mjs",
     "lang:build": "sh zss/feature/lang/backend/wasm/build-lang.sh",
     "lang:compile": "node scripts/compile-lang.mjs",
     "level-issue-song-compare:test": "npx tsx scripts/run-level-issue-song-compare.ts",

@@ -1,0 +1,53 @@
+{
+  "restart": [
+    1
+  ],
+  "setup flags": [
+    -8
+  ],
+  "think": [
+    31
+  ],
+  "sidebar code": [
+    -32
+  ],
+  "torch info": [
+    -61
+  ],
+  "make keys section of sidebar": [
+    -103
+  ],
+  "hotkeys and input info": [
+    -114
+  ],
+  "update code": [
+    -134
+  ],
+  "display code": [
+    -161
+  ],
+  "timing code": [
+    -185
+  ],
+  "loop it": [
+    -197
+  ],
+  "shot": [
+    199
+  ],
+  "lighttorch": [
+    209
+  ],
+  "soundon": [
+    226
+  ],
+  "soundoff": [
+    230
+  ],
+  "turnleft": [
+    234
+  ],
+  "turnright": [
+    237
+  ]
+}

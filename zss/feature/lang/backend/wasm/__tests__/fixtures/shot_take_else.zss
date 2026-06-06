@@ -1,0 +1,8 @@
+:shot
+#take health 10 do
+ #ticker You died!
+ #endgame
+#else do
+ #ticker Ouch!
+ #think
+#done

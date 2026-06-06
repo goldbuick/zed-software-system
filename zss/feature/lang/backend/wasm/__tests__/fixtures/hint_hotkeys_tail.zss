@@ -1,0 +1,15 @@
+#if hint do
+"hint branch
+#else do
+!lighttorch hk t;Torch
+#if mute do
+!soundon hk b;Be loud
+#else do
+!soundoff hk b;Be quiet
+#done
+"
+#if graphics is fpv do
+!turnleft hk q;Turn Left
+!turnright hk e;Turn Right
+#done
+#done

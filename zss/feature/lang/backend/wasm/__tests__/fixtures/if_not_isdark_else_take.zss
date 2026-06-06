@@ -1,0 +1,4 @@
+#if not isdark do
+#else take x do
+#noop
+#done

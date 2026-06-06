@@ -1,0 +1,4 @@
+#if graphics is fpv do
+!turnleft hk q;Turn Left
+!turnright hk e;Turn Right
+#done
