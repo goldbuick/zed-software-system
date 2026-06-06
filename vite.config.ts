@@ -91,6 +91,7 @@ export default defineConfig(({ mode }) => {
     'ZSS_DEBUG_RAYCAST_DOT',
     'ZSS_DEBUG_RAYCAST_PICKSHEET',
     'ZSS_DEBUG_FLAT_CAMERA_ORTHO',
+    'ZSS_WASM_SCRIPT',
     'ZSS_BRANCH_NAME',
     'ZSS_BRANCH_VERSION',
     'ZSS_COMMIT_MESSAGE',

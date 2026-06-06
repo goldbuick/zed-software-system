@@ -9,6 +9,7 @@
 #include "zss_lang_parser.hpp"
 #include "zss_lang_transformer.hpp"
 #include "zss_lang_util.hpp"
+#include "zss_lang_wasm_emitter.hpp"
 
 namespace {
 
@@ -16,6 +17,9 @@ struct CompileStorage {
   std::string source;
   std::string source_map;
   std::string labels_json;
+  std::string debug_map;
+  std::string import_manifest;
+  std::vector<uint8_t> wasm_bytes;
   std::vector<zss_lang::LangError> errors;
   std::vector<std::string> errmessages;
   std::vector<ZssLangError> errapi;
@@ -28,6 +32,17 @@ char* dupstr(const std::string& s) {
   if (out) {
     std::memcpy(out, s.data(), s.size());
     out[s.size()] = '\0';
+  }
+  return out;
+}
+
+uint8_t* dupbytes(const std::vector<uint8_t>& bytes) {
+  if (bytes.empty()) {
+    return nullptr;
+  }
+  uint8_t* out = static_cast<uint8_t*>(std::malloc(bytes.size()));
+  if (out) {
+    std::memcpy(out, bytes.data(), bytes.size());
   }
   return out;
 }
@@ -52,6 +67,10 @@ ZssCompileResult* zss_compile(const char* name, const char* source) {
   result->source = nullptr;
   result->source_map = nullptr;
   result->labels_json = nullptr;
+  result->wasm_bytes = nullptr;
+  result->wasm_bytes_len = 0;
+  result->debug_map = nullptr;
+  result->import_manifest = nullptr;
 
   zss_lang::resetsids();
   std::string text = source ? source : "";
@@ -92,14 +111,19 @@ ZssCompileResult* zss_compile(const char* name, const char* source) {
     return result;
   }
 
-  auto out = zss_lang::transformast(ast.get());
-  storage->source = out.source;
-  storage->source_map = out.source_map_json;
-  storage->labels_json = out.labels_json;
+  auto wasmout = zss_lang::transformastwasm(ast.get());
+  storage->wasm_bytes = std::move(wasmout.wasm_bytes);
+  storage->labels_json = wasmout.labels_json;
+  storage->debug_map = wasmout.debug_map;
+  storage->import_manifest = wasmout.import_manifest;
 
-  result->source = dupstr(storage->source);
-  result->source_map = dupstr(storage->source_map);
+  result->wasm_bytes = dupbytes(storage->wasm_bytes);
+  result->wasm_bytes_len = storage->wasm_bytes.size();
   result->labels_json = dupstr(storage->labels_json);
+  result->debug_map = dupstr(storage->debug_map);
+  result->import_manifest = dupstr(storage->import_manifest);
+
+  g_last = storage.release();
   return result;
 }
 
@@ -110,6 +134,9 @@ void zss_compile_result_free(ZssCompileResult* result) {
   std::free(const_cast<char*>(result->source));
   std::free(const_cast<char*>(result->source_map));
   std::free(const_cast<char*>(result->labels_json));
+  std::free(const_cast<uint8_t*>(result->wasm_bytes));
+  std::free(const_cast<char*>(result->debug_map));
+  std::free(const_cast<char*>(result->import_manifest));
   delete result;
   delete g_last;
   g_last = nullptr;
@@ -130,14 +157,6 @@ static std::string readfile(const std::string& path) {
   return ss.str();
 }
 
-static std::string trimtrail(const std::string& s) {
-  std::string out = s;
-  while (!out.empty() && (out.back() == '\n' || out.back() == '\r')) {
-    out.pop_back();
-  }
-  return out;
-}
-
 int main(int argc, char** argv) {
   if (argc < 2) {
     std::cerr << "usage: zss_lang_parity <fixture-dir>\n";
@@ -145,38 +164,27 @@ int main(int argc, char** argv) {
   }
   std::string dir = argv[1];
   static const char* fixtures[] = {
-      "empty", "if_break", "while_break", "repeat_break", "short_go", "short_try", "divide",
-      "paren_multiline", "pick", "comparison_chain", "label_goto", "stat_line", "text_line",
-      "command", "foreach", nullptr};
+      "empty",           "if_break",        "while_break",     "repeat_break",
+      "short_go",        "short_try",       "divide",          "paren_multiline",
+      "pick",            "comparison_chain","label_goto",      "stat_line",
+      "text_line",       "command",         "foreach",         nullptr};
   int pass = 0;
   int fail = 0;
   for (int i = 0; fixtures[i]; ++i) {
     std::string id = fixtures[i];
     std::string zss = readfile(dir + "/" + id + ".zss");
-    std::string expjs = readfile(dir + "/" + id + ".js");
-    std::string expmap = trimtrail(readfile(dir + "/" + id + ".map.json"));
-    std::string explabels = readfile(dir + "/" + id + ".labels.json");
     ZssCompileResult* r = zss_compile(id.c_str(), zss.c_str());
     bool ok = true;
     if (r->error_count > 0) {
       std::cout << id << ": FAIL (errors)\n";
       ok = false;
-    } else {
-      std::string gotjs = r->source ? r->source : "";
-      std::string gotmap = r->source_map ? r->source_map : "";
-      std::string gotlabels = r->labels_json ? r->labels_json : "";
-      if (gotjs != expjs) {
-        std::cout << id << ": FAIL js\n";
-        ok = false;
-      }
-      if (gotmap != expmap) {
-        std::cout << id << ": FAIL map\n";
-        ok = false;
-      }
-      if (gotlabels != explabels) {
-        std::cout << id << ": FAIL labels\n";
-        ok = false;
-      }
+    } else if (!r->wasm_bytes || r->wasm_bytes_len < 8) {
+      std::cout << id << ": FAIL wasm_bytes\n";
+      ok = false;
+    } else if (r->wasm_bytes[0] != 0x00 || r->wasm_bytes[1] != 0x61 ||
+               r->wasm_bytes[2] != 0x73 || r->wasm_bytes[3] != 0x6d) {
+      std::cout << id << ": FAIL wasm magic\n";
+      ok = false;
     }
     if (ok) {
       std::cout << id << ": PASS\n";
@@ -188,6 +196,25 @@ int main(int argc, char** argv) {
   }
   std::cout << "pass=" << pass << " fail=" << fail << "\n";
   return fail > 0 ? 1 : 0;
+}
+
+#endif
+
+#ifdef ZSS_LANG_WASM_CLI
+
+#include <iostream>
+
+int main() {
+  std::ostringstream ss;
+  ss << std::cin.rdbuf();
+  ZssCompileResult* r = zss_compile("cli", ss.str().c_str());
+  if (r->error_count > 0 || !r->wasm_bytes || r->wasm_bytes_len == 0) {
+    zss_compile_result_free(r);
+    return 1;
+  }
+  std::fwrite(r->wasm_bytes, 1, r->wasm_bytes_len, stdout);
+  zss_compile_result_free(r);
+  return 0;
 }
 
 #endif

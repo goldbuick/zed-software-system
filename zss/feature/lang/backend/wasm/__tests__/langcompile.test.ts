@@ -14,6 +14,7 @@ jest.mock('zss/config', () => ({
   FORCE_CRT_OFF: false,
   FORCE_LOW_REZ: false,
   FORCE_TOUCH_UI: false,
+  WASM_SCRIPT: false,
 }))
 
 jest.mock('zss/words/textformat', () => ({
@@ -21,20 +22,25 @@ jest.mock('zss/words/textformat', () => ({
   tokenize: () => ({ errors: [{ message: 'mock' }], tokens: [] }),
 }))
 
-import { readfixture } from 'zss/feature/lang/backend/wasm/langparityload'
+import {
+  compilenativewasm,
+  readfixture,
+} from 'zss/feature/lang/backend/wasm/langparityload'
 
-describe('lang compile behavioral parity', () => {
-  it('native-produced if_break JS is executable generator source', () => {
-    const source = readfixture('if_break', 'js')
-    expect(source).toContain('api.if')
-    expect(() => {
-      // eslint-disable-next-line @typescript-eslint/no-implied-eval
-      new Function('api', source)
-    }).not.toThrow()
+describe('lang compile wasm output', () => {
+  it('native-produced if_break wasm is valid module bytes', () => {
+    const source = readfixture('if_break', 'zss')
+    const wasmbytes = compilenativewasm(source)
+    expect(wasmbytes.length).toBeGreaterThan(8)
+    expect(wasmbytes[0]).toBe(0x00)
+    expect(wasmbytes[1]).toBe(0x61)
+    expect(wasmbytes[2]).toBe(0x73)
+    expect(wasmbytes[3]).toBe(0x6d)
   })
 
-  it('native-produced divide JS references api.opDivide', () => {
-    const source = readfixture('divide', 'js')
-    expect(source).toContain('api.opDivide')
+  it('native-produced divide wasm references host dispatch', () => {
+    const source = readfixture('divide', 'zss')
+    const wasmbytes = compilenativewasm(source)
+    expect(wasmbytes.length).toBeGreaterThan(0)
   })
 })

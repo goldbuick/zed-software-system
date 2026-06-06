@@ -4,6 +4,10 @@ import {
   GeneratorBuild,
   GeneratorFunc,
 } from 'zss/feature/lang'
+import {
+  loadscriptsync,
+  type WasmScriptInstance,
+} from 'zss/feature/lang/wasmloader'
 
 import { RUNTIME } from './config'
 import { MESSAGE, apierror, chipmessage } from './device/api'
@@ -504,6 +508,7 @@ export function createchip(
   // ref to generator instance
   // eslint-disable-next-line prefer-const
   let logic: MAYBE<GeneratorFunc>
+  let wasmscript: MAYBE<WasmScriptInstance>
 
   // create labels
   const labels = deepcopy(Object.entries(build.labels ?? {}))
@@ -597,7 +602,11 @@ export function createchip(
 
       // invoke logic impl
       try {
-        if (!logic?.(chip)) {
+        if (wasmscript) {
+          if (!wasmscript.run()) {
+            flags.es = 1
+          }
+        } else if (!logic?.(chip)) {
           flags.es = 1
         }
       } catch (err: any) {
@@ -1209,8 +1218,11 @@ export function createchip(
     },
   }
 
-  // track built function
-  logic = build.code
+  if (build.wasmbytes && build.wasmbytes.length > 0) {
+    wasmscript = loadscriptsync(build.wasmbytes, chip)
+  } else {
+    logic = build.code
+  }
 
   return chip
 }

@@ -5,28 +5,39 @@ import path from 'node:path'
 const NATIVEDIR = path.join(__dirname, '../native')
 const FIXTUREDIR = path.join(__dirname, '__fixtures__/parity')
 const PARITYBIN = path.join(NATIVEDIR, 'zss_lang_parity')
+const WCLIBIN = path.join(NATIVEDIR, 'zss_lang_wasm_cli')
 const WADIR = path.join(__dirname, '../../../../../cafe/public/wasm/lang')
 
-export function ensurenativeparitybinary(): void {
+const NATIVESRC = path.join(NATIVEDIR, 'zss_lang_compile.cpp')
+
+function buildnative(define: string, out: string) {
   execFileSync(
     'g++',
-    [
-      '-std=c++14',
-      '-O2',
-      '-I',
-      NATIVEDIR,
-      '-DZSS_LANG_PARITY_MAIN',
-      '-o',
-      PARITYBIN,
-      path.join(NATIVEDIR, 'zss_lang_compile.cpp'),
-    ],
+    ['-std=c++14', '-O2', '-I', NATIVEDIR, define, '-o', out, NATIVESRC],
     { stdio: 'pipe' },
   )
+}
+
+export function ensurenativeparitybinary(): void {
+  buildnative('-DZSS_LANG_PARITY_MAIN', PARITYBIN)
+}
+
+export function ensurenativewasmcli(): void {
+  buildnative('-DZSS_LANG_WASM_CLI', WCLIBIN)
 }
 
 export function runnativeparitygate(): string {
   ensurenativeparitybinary()
   return execFileSync(PARITYBIN, [FIXTUREDIR], { encoding: 'utf8' })
+}
+
+export function compilenativewasm(source: string): Uint8Array {
+  ensurenativewasmcli()
+  const buf = execFileSync(WCLIBIN, [], {
+    input: source,
+    maxBuffer: 10 * 1024 * 1024,
+  })
+  return new Uint8Array(buf)
 }
 
 export function readfixture(id: string, ext: string): string {

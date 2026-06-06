@@ -1,4 +1,6 @@
 import { GeneratorBuild, compile } from 'zss/feature/lang'
+import { compilescript } from 'zss/feature/lang/langcompileclient'
+import { WASM_SCRIPT } from 'zss/config'
 
 import { CHIP, createchip } from './chip'
 import { MESSAGE_FUNC, parsetarget } from './device'
@@ -47,7 +49,7 @@ export function createos() {
     if (cache) {
       return cache
     }
-    const result = compile(name, code)
+    const result = WASM_SCRIPT ? compilescript(name, code) : compile(name, code)
     builds[code] = result
     return result
   }

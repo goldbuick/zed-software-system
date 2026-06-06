@@ -120,9 +120,8 @@ function gadgetsynctickbody(vm: DEVICE) {
       gadget.tickers = gadgetlayers.tickers
       gadget.boardname = board?.name?.trim() ?? ''
     } else {
-      gadget.id = ''
-      gadget.board = ''
-      gadget.boardname = ''
+      gadget.id = 'void'
+      gadget.board = 'void'
       gadget.exiteast = ''
       gadget.exitwest = ''
       gadget.exitnorth = ''
@@ -136,6 +135,7 @@ function gadgetsynctickbody(vm: DEVICE) {
       gadget.layers = []
       gadget.tickers = []
       gadget.sidebar = []
+      gadget.boardname = 'void'
     }
 
     gadget.synthstate = memoryreadsynth(boardid)

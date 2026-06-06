@@ -1,30 +1,25 @@
-/**
- * Shared loader for cafe/public/wasm/lang (C++ zss_compile).
- */
-import { readFileSync } from 'node:fs'
-import path from 'node:path'
-import { fileURLToPath, pathToFileURL } from 'node:url'
-
-const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
-const WADIR = path.join(ROOT, 'cafe/public/wasm/lang')
+const WADIR = '/wasm/lang/'
 
 export async function createlangmodule() {
-  const jspath = pathToFileURL(path.join(WADIR, 'zss_lang.js')).href
-  const wasmpath = path.join(WADIR, 'zss_lang.wasm')
-  const wasmbinary = readFileSync(wasmpath)
-  const factory = (await import(jspath)).default
+  const factory = (
+    await import(/* @vite-ignore */ `${WADIR}zss_lang.js`)
+  ).default
+  const wasmBinary = await fetch(`${WADIR}zss_lang.wasm`).then((response) =>
+    response.arrayBuffer(),
+  )
   return factory({
-    wasmBinary: wasmbinary,
-    locateFile: (file) => pathToFileURL(path.join(WADIR, file)).href,
+    wasmBinary,
+    locateFile: (file: string) => `${WADIR}${file}`,
   })
 }
 
-/**
- * @param {string} name
- * @param {string} source
- * @param {Awaited<ReturnType<typeof createlangmodule>>} module
- */
-export function compilezss(name, source, module) {
+type LangModule = Awaited<ReturnType<typeof createlangmodule>>
+
+export function compilezssonmodule(
+  name: string,
+  source: string,
+  module: LangModule,
+) {
   const compilefn = module.cwrap('zss_compile', 'number', ['string', 'string'])
   const freefn = module.cwrap('zss_compile_result_free', null, ['number'])
 
@@ -68,14 +63,4 @@ export function compilezss(name, source, module) {
 
   freefn(ptr)
   return result
-}
-
-export function wasmartifactsmissing() {
-  try {
-    readFileSync(path.join(WADIR, 'zss_lang.wasm'))
-    readFileSync(path.join(WADIR, 'zss_lang.js'))
-    return false
-  } catch {
-    return true
-  }
 }

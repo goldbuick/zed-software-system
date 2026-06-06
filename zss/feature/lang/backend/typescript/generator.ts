@@ -19,6 +19,9 @@ export type GeneratorBuild = {
   map?: SourceMapGenerator
   code?: GeneratorFunc
   source?: string
+  wasmbytes?: Uint8Array
+  debugmap?: string
+  importmanifest?: string
 }
 
 export function compile(name: string, text: string): GeneratorBuild {

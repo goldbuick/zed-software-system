@@ -11,15 +11,20 @@ import { memoryunlockscroll } from 'zss/memory/runtime'
 import { romread } from 'zss/rom'
 
 export function handleclearscroll(vm: DEVICE, message: MESSAGE): void {
+  // clear the scroll on the player
   gadgetclearscroll(message.player)
+
+  // unlock the scrolls on the board if the player is on a board
   const maybeboard = memoryreadplayerboard(message.player)
   if (ispresent(maybeboard)) {
     const objids = Object.keys(maybeboard.objects)
     for (let i = 0; i < objids.length; ++i) {
       memoryunlockscroll(objids[i], message.player)
     }
-    boardrunnerpushupdates(vm)
   }
+
+  // push updates to the boardrunner
+  boardrunnerpushupdates(vm)
 }
 
 export function handlemakeitscroll(_vm: DEVICE, message: MESSAGE): void {

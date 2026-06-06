@@ -33,9 +33,6 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
   perfmeasure('vm:memorytickloaders', () => {
     memorytickloaders()
   })
-  perfmeasure('vm:gadgetsynctick', () => {
-    gadgetsynctick(vm)
-  })
   // boardrunner management
   perfmeasure('vm:boardrunner', () => {
     const activeboards = memoryreadbookplayerboards(mainbook)
@@ -78,5 +75,8 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
       )
       boardrunnertick(vm, player, board, mainbook.timestamp, boardboundaries)
     }
+  })
+  perfmeasure('vm:gadgetsynctick', () => {
+    gadgetsynctick(vm)
   })
 }
