@@ -1,0 +1,14 @@
+@forest
+@isitem
+@notbreakable
+@cycle 1
+@char 176
+@color black
+@bg dkgreen
+#end
+:touch
+#bgplay ta
+#give forestnote do
+ A path is cleared through the forest.
+#done
+#die

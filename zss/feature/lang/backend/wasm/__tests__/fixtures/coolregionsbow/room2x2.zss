@@ -1,0 +1,4 @@
+@board room2x2
+@exitwest room1x2
+@exitnorth room2x1
+@isdark

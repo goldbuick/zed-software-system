@@ -1,0 +1,31 @@
+@duplicator
+@char 250
+@cycle 2
+@p2 range S F;Duplication rate?
+@shootx number -1 1
+@shooty number -1 1
+:think
+#if p1 below or eq 4 do
+ #give p1
+ #if p1 is 1 char 250
+ #if p1 is 2 char 249
+ #if p1 is 3 char 248
+ #if p1 is 4 char 111
+ #if p1 is 5 char 79
+#else do
+ #char 250
+ #clear p1
+ #if shootx or shooty do
+  #set p4 (-shootx)
+  #set p5 (-shooty)
+  #shove by p4 p5 by p4 p5
+  #duplicate by shootx shooty by p4 p5 do
+   #bgplay --g#f#
+  #else do
+   #bgplay scdefg
+  #done
+ #done
+#done
+#cycle (9 - p2) * 3
+#idle
+#think

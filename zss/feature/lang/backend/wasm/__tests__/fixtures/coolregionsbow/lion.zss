@@ -1,0 +1,20 @@
+@lion
+@ispushable
+@cycle 2
+@char 234
+@color 14
+@p1 range;Intelligence?
+:think
+#if p1 below random 10 do
+ ?rnd
+#else do
+ ?seek
+#done
+:thud
+#if any at senderx sendery player do
+ #shoot at senderx sendery
+#done
+#idle
+#think
+:shot
+#die

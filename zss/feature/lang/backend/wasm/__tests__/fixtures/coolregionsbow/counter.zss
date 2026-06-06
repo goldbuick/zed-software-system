@@ -1,0 +1,24 @@
+@counter
+@cycle 2
+@char 47
+:think
+#set p1 currenttick / cycle
+#set p1 (intround p1) % 4
+#if p1 is 0 char 92
+#if p1 is 1 char 196
+#if p1 is 2 char 47
+#if p1 is 3 char 179
+#set p1 0
+#while p1 not eq 8 do
+ #if p1 is 0 push by -1  0 down
+ #if p1 is 1 push by -1 -1 down
+ #if p1 is 2 push by  0 -1 left
+ #if p1 is 3 push by  1 -1 left
+ #if p1 is 4 push by  1  0 up
+ #if p1 is 5 push by  1  1 up
+ #if p1 is 6 push by  0  1 right
+ #if p1 is 7 push by -1  1 right
+ #give p1
+#done
+#idle
+#think

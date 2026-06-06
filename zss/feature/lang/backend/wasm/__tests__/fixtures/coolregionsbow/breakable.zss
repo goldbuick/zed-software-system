@@ -1,0 +1,4 @@
+@terrain breakable
+@issolid
+@isbreakable
+@char 177

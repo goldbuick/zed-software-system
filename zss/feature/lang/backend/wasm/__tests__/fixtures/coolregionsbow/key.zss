@@ -1,0 +1,25 @@
+@key
+@cycle 1
+@isitem
+@ispushable
+@char 12
+#end
+:touch
+#set p1 "#$%@!"
+#if color is 9 set p1 blue
+#if color is 10 set p1 green
+#if color is 11 set p1 cyan
+#if color is 12 set p1 red
+#if color is 13 set p1 purple
+#if color is 14 set p1 yellow
+#if color is 15 set p1 white
+#if "key$color" do
+ You already have a $p1 key!
+ #bgplay sc-c
+ #end
+#else do
+ You now have the $p1 key.
+ #set "key$color"
+ #bgplay t+cegcegceg+sc
+ #die 
+#done

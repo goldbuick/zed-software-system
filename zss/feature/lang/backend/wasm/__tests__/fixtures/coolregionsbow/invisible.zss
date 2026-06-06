@@ -1,0 +1,9 @@
+@invisible
+@cycle 1
+@char 32
+#end
+:touch
+#give invisiblenote do 
+ You are blocked by an invisible wall.
+#done
+#become normal

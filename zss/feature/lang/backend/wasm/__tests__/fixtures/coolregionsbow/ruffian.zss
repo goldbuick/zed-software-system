@@ -1,0 +1,36 @@
+@ruffian
+@ispushable
+@cycle 1
+@char 5
+@color 13
+@p1 range;Intelligence?
+@p2 range;Resting time?
+:think
+#if stepx is 0 and stepy is 0 do
+ #if p2 + 8 below or eq random 17 do
+  #if random 9 below or eq p1 do
+   #walk seek
+  #else do
+   #walk rnd
+  #done
+ #done
+#else do
+ #if aligned and random 9 below or eq p1 do
+  #walk seek
+  #idle
+ #done
+ #if p2 + 8 below or eq random 17 do
+  #walk idle
+ #done
+#done
+#idle
+#think
+:thud
+#walk idle
+#if any at senderx sendery player do
+ #shoot at senderx sendery
+#done
+#idle
+#think
+:shot
+#die

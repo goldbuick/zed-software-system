@@ -26,8 +26,10 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
 import { compile } from 'zss/feature/lang'
-import { createchip } from 'zss/chip'
+import { createchip, type CHIP } from 'zss/chip'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
+import { loadscriptsync } from 'zss/feature/lang/wasmloader'
+import type { WORD } from 'zss/words/types'
 
 import {
   compilenativewasm,
@@ -65,6 +67,10 @@ describe('lang wasm behavioral parity', () => {
     'text_line',
     'command',
     'foreach',
+    'while_push_by',
+    'duplicate_fork',
+    'send_dir_label',
+    'paren_intround',
   ] as const
 
   it.each(FIXTURES)('%s wasm run matches JS oracle', (id) => {
@@ -212,4 +218,61 @@ describe('lang wasm behavioral parity', () => {
     expect(wasmliterals.includes('"press $whiteC$yellow to chat')).toBe(false)
     expect(wasmliterals.includes('press $whiteC$yellow to chat')).toBe(true)
   })
+
+  it('flicker lantern sets light via pick with mixed command args', () => {
+    const source = readlocalfixture('flicker_lantern.zss')
+    expect(compilenativewasm(source).length).toBeGreaterThan(8)
+
+    const minimal = '#set light pick 5 7 11 12\n'
+    const wasmbytes = compilenativewasm(minimal)
+    const invoked: WORD[][] = []
+    let ec = 1
+    const chip = {
+      sy: () => false,
+      getcase: () => ec,
+      nextcase: () => {
+        ec++
+      },
+      jump: (line: number) => {
+        ec = line
+      },
+      command(...words: WORD[]) {
+        invoked.push(words)
+        return 0
+      },
+    } as unknown as CHIP
+
+    loadscriptsync(wasmbytes, chip).run()
+
+    expect(invoked).toEqual([['set', 'light', 'pick', 5, 7, 11, 12]])
+  })
+
+  const BOOKFIXTUREDIR = path.join(__dirname, 'fixtures/coolregionsbow')
+
+  function readbookfixture(id: string) {
+    return readFileSync(path.join(BOOKFIXTUREDIR, `${id}.zss`), 'utf8')
+  }
+
+  it.each(['clockwise', 'counter', 'duplicator', 'line'] as const)(
+    'coolregionsbow %s wasm run matches JS oracle',
+    (id) => {
+      const source = readbookfixture(id)
+      const jsbuild = compile(id, source)
+      const wasmbytes = compilenativewasm(source)
+      const wasmbuild = {
+        ...jsbuild,
+        wasmbytes,
+        code: undefined,
+      }
+
+      const jschip = createchip(`js-${id}`, DRIVER_TYPE.RUNTIME, jsbuild)
+      const wasmchip = createchip(`wasm-${id}`, DRIVER_TYPE.RUNTIME, wasmbuild)
+
+      jschip.once()
+      wasmchip.once()
+
+      expect(wasmchip.isended()).toBe(jschip.isended())
+      expect(wasmchip.getcase()).toBe(jschip.getcase())
+    },
+  )
 })

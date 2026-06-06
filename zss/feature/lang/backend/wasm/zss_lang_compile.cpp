@@ -166,7 +166,8 @@ int main(int argc, char** argv) {
       "empty",           "if_break",        "while_break",     "repeat_break",
       "short_go",        "short_try",       "divide",          "paren_multiline",
       "pick",            "comparison_chain","label_goto",      "stat_line",
-      "text_line",       "command",         "foreach",         nullptr};
+      "text_line",       "command",         "foreach",         "while_push_by",
+      "duplicate_fork",  "send_dir_label",  "paren_intround",  nullptr};
   int pass = 0;
   int fail = 0;
   for (int i = 0; fixtures[i]; ++i) {

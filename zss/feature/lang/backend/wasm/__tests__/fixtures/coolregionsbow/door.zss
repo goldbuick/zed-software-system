@@ -1,0 +1,24 @@
+@door
+@isitem
+@char 10
+@displaycolor white
+#set displaybg color % 8
+#end
+:touch
+#set p1 "#$$%@!"
+#if color is 9 set p1 blue
+#if color is 10 set p1 green
+#if color is 11 set p1 cyan
+#if color is 12 set p1 red
+#if color is 13 set p1 purple
+#if color is 14 set p1 yellow
+#if color is 15 set p1 white
+#if "key$color" do
+ The $p1 door is now open.
+ #clear "key$color"
+ #bgplay tcgbcgb+ic
+ #die
+#else do
+ The $p1 door is locked!
+ #bgplay t--gc
+#done

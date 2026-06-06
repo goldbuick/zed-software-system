@@ -1,0 +1,42 @@
+@blinkwall
+@cycle 1
+@char 206
+@p1 range;starting time
+@p2 range;period
+@shootx number -1 1
+@shooty number -1 1
+:think 
+#if p3 is 0 do
+ #set p3 p1 + 1
+#else if p3 is 1 do
+ ' either clear or shoot
+ #if shooty is 0 do
+  #set p4 blinkew
+ #else do
+  #set p4 blinkns
+ #done
+ #set p5 thisx + shootx
+ #set p6 thisy + shooty
+ #set p7 p5
+ #set p8 p6
+ ' clear blink walls
+ #while any at p5 p6 "$color" "$p4" do
+  #put at p5 p6 empty
+  #give p5 shootx
+  #give p6 shooty
+ #done 
+ ' write blink walls
+ #if p5 is p7 and p6 is p8 do
+  #while not blocked at p5 p6 do
+   #put at p5 p6 "$color" "$p4"
+   #give p5 shootx
+   #give p6 shooty
+  #done
+  #send at p5 p6 shot
+ #done
+ #set p3 p2 * 2 + 1
+#else do
+ #take p3
+#done
+#idle
+#think

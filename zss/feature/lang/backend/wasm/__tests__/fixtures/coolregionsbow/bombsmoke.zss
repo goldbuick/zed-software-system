@@ -1,0 +1,9 @@
+@bombsmoke
+@isghost
+@cycle 1
+@char 176
+@color white
+@bg onclear
+#char pick 176 177 178
+#color pick dkgrey yellow red ltgrey
+#die

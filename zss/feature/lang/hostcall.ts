@@ -46,43 +46,20 @@ export const HOST = {
 
 export type HostIndex = (typeof HOST)[keyof typeof HOST]
 
-type ArgStack = {
-  i32: number[]
-  f64: number[]
-  str: string[]
-}
+type ArgStack = WORD[]
 
 function readword(stack: ArgStack): WORD {
-  if (stack.i32.length) {
-    return stack.i32.shift() as WORD
-  }
-  if (stack.f64.length) {
-    return stack.f64.shift() as WORD
-  }
-  if (stack.str.length) {
-    return stack.str.shift() as WORD
-  }
-  return 0
+  return stack.shift() ?? 0
 }
 
 function readwords(stack: ArgStack): WORD[] {
-  const words: WORD[] = []
-  while (stack.i32.length || stack.f64.length || stack.str.length) {
-    words.push(readword(stack))
-  }
+  const words = [...stack]
+  stack.length = 0
   return words
 }
 
 function pushword(stack: ArgStack, value: WORD) {
-  if (typeof value === 'number') {
-    if (Number.isInteger(value)) {
-      stack.i32.push(value)
-    } else {
-      stack.f64.push(value)
-    }
-    return
-  }
-  stack.str.push(`${value ?? ''}`)
+  stack.push(value)
 }
 
 /** Build WASM import object backed by a CHIP instance. */
@@ -90,22 +67,22 @@ export function createhostimports(
   chip: CHIP,
   memref?: { current: WebAssembly.Memory | null },
 ) {
-  const stack: ArgStack = { i32: [], f64: [], str: [] }
+  const stack: ArgStack = []
 
   const host = {
     push_i32(value: number) {
-      stack.i32.push(value | 0)
+      stack.push(value | 0)
     },
     push_f64(value: number) {
-      stack.f64.push(value)
+      stack.push(value)
     },
     push_str(ptr: number, len: number) {
       const memory = memref?.current
       if (memory) {
         const view = new Uint8Array(memory.buffer, ptr, len)
-        stack.str.push(new TextDecoder().decode(view))
+        stack.push(new TextDecoder().decode(view))
       } else {
-        stack.str.push('')
+        stack.push('')
       }
     },
     call(index: number): number {
@@ -145,7 +122,7 @@ export function createhostimports(
           pushword(stack, chip.not(...readwords(stack)))
           return 0
         case HOST.EXPR:
-          pushword(stack, chip.expr(readword(stack)))
+          pushword(stack, chip.expr(...readwords(stack)))
           return 0
         case HOST.IS_EQ:
           pushword(stack, chip.isEq(readword(stack), readword(stack)))

@@ -1,0 +1,16 @@
+@gem
+@cycle 1
+@isitem
+@ispushable
+@isbreakable
+@char 4
+#end
+:touch
+#give gemnote do
+ Gems give you Health!
+#done
+#give gems
+#give health
+#give score 10
+#bgplay t+c-gec
+#die

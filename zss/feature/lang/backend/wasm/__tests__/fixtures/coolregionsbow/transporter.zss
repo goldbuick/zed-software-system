@@ -1,0 +1,39 @@
+@transporter
+@cycle 2
+@char 197
+@shootx number -1 1
+@shooty number -1 1
+:think
+#set p2 currenttick / cycle
+#set p2 intround p2 
+#if shootx not eq 0 do
+ #set p1 shootx * 2 + 3
+ #give p1 p2 % 4
+ #if p1 is 0 char 40
+ #if p1 is 1 char 60
+ #if p1 is 2 char 40
+ #if p1 is 3 char 179
+ #if p1 is 4 char 41
+ #if p1 is 5 char 62
+ #if p1 is 6 char 41
+ #if p1 is 7 char 179 
+#else if shooty not eq 0 do
+ #set p1 shooty * 2 + 3
+ #give p1 p2 % 4
+ #if p1 is 0 char 94
+ #if p1 is 1 char 126
+ #if p1 is 2 char 94
+ #if p1 is 3 char 45
+ #if p1 is 4 char 118
+ #if p1 is 5 char 95
+ #if p1 is 6 char 118
+ #if p1 is 7 char 45 
+#else do
+ #char 197
+#done
+#idle
+#think
+:bump
+:touch
+#transport senderid
+#think

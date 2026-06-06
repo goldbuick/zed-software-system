@@ -1,0 +1,40 @@
+@bear
+@ispushable
+@cycle 3
+@char 153
+@color 6
+@p1 range
+@light 4
+:think
+#set p2 playerx - thisx
+#set p3 playery - thisy
+#if not p2 is 0 do
+ #if abs p3 below or eq 8 - p1 do
+  #if p2 below 0 do
+   ?left
+  #else do
+   ?right
+  #done
+  #think
+ #done
+#done
+#if abs p2 below or eq 8 - p1 do
+ #if p3 below 0 do
+  ?up
+ #else do
+  ?down
+ #done
+#else do
+ #idle
+#done
+#think
+:thud
+#if any at senderx sendery player do
+ #shoot at senderx sendery
+#else if any at senderx sendery breakable do
+ #shoot at senderx sendery
+#done
+#idle
+#think
+:shot
+#die

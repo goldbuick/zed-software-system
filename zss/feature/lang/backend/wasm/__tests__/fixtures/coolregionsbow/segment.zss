@@ -1,0 +1,13 @@
+@segment
+@char 79
+@cycle 2
+@isbreakable
+:think
+?rnd
+#think
+:touch
+#shoot seek
+#think
+:shot
+:bombed
+#die

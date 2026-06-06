@@ -1,0 +1,38 @@
+@bomb
+@ispushable
+@char 11
+@cycle 12
+#set item
+:think
+#if p1 above 0 do
+ #take p1
+ #if p1 is 0 do
+  Ka-Boom!
+  #bgplay t+++c-c-c-c-c-c
+  #put within 5 i bombsmoke
+  #send within 5 i bombed
+  #die
+ #else do
+  #if p1 % 2 is 0 do
+   #bgplay t5
+  #else do
+   #bgplay t8
+  #done
+ #done
+#done
+#if p1 below 1 do
+ #char 11
+#else do
+ #char 48 + p1
+#done
+#idle
+#think
+:shot
+:touch
+:bombed
+#lock
+#clear item
+#set p1 9
+#bgplay tcf+cf+c
+Bomb activated!
+#think

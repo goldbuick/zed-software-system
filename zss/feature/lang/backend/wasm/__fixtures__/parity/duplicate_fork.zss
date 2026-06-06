@@ -1,0 +1,7 @@
+#if 1 do
+#duplicate by 1 0 by 0 0 do
+#bgplay a
+#else do
+#bgplay b
+#done
+#done

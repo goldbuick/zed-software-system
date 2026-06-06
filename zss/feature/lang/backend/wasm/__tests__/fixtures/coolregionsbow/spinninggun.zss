@@ -1,0 +1,35 @@
+@spinninggun
+@cycle 2
+@char 24
+@p1 range;intelligence
+@p2 range;firing rate
+@p3 select bullet 0 star 1;firing type?
+:think
+#set p4 currenttick % 8
+#if p4 is 0 or p4 is 1 do
+ #char 24
+#else if p4 is 2 or p4 is 3 do
+ #char 26
+#else if p4 is 4 or p4 is 5 do
+ #char 25
+#else do
+ #char 27
+#done
+#if random 20 below p2 do
+ #if p3 is 0 do
+  #set p5 bullet
+ #else do
+  #set p5 star
+ #done
+ #if random 9 below or eq p1 do
+  #if abs thisx - playerx below or eq 2 do
+   #if not blocked seek shoot seek "$p5"
+  #else if abs thisy - playery below or eq 2 do
+   #shoot not blocked seek shoot seek "$p5"
+  #done
+ #else do
+  #shoot rnd "$p5"
+ #done
+#done
+#idle
+#think

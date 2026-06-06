@@ -1,0 +1,15 @@
+@energizer
+@isitem
+@char 127
+@color 5
+#end
+:touch
+#play s.-cd#e 
+#repeat 5 play s.-f+f-fd#c+c-d#e
+#play s.-c-a#gf#fd#c
+#give energized 128
+#give energizednote do
+ Energizer - You are invincible
+#done
+#all:energize
+#die

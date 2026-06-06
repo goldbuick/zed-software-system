@@ -1,0 +1,25 @@
+@bullet
+@isbreakable
+@cycle 1
+@char 248
+:think
+#if blocked flow do
+ #if any cw flow ricochet do
+  #walk ccw flow
+  #bgplay t9
+ #else if any ccw flow ricochet do
+  #walk cw flow
+  #bgplay t9
+ #else if any flow ricochet do
+  #set p1 (-stepx)
+  #set p2 (-stepy)
+  #walk by p1 p2
+  #bgplay t9
+ #done
+#done
+#idle
+#think
+:thud
+:shot
+#bgplay --c
+#die

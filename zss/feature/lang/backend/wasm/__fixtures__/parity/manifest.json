@@ -13,5 +13,9 @@
   "stat_line",
   "text_line",
   "command",
-  "foreach"
+  "foreach",
+  "while_push_by",
+  "duplicate_fork",
+  "send_dir_label",
+  "paren_intround"
 ]

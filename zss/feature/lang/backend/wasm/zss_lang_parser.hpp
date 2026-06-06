@@ -739,11 +739,15 @@ class Parser {
   std::vector<std::unique_ptr<CodeNode>> parsewords() {
     std::vector<std::unique_ptr<CodeNode>> result;
     while (!iswordstop()) {
+      size_t before = index_;
       auto multi = trytokenexprmulti();
       if (!multi.empty()) {
         for (auto& n : multi) result.push_back(std::move(n));
       } else {
         result.push_back(parseexpr());
+      }
+      if (index_ == before && !atend()) {
+        advance();
       }
     }
     return result;
@@ -887,7 +891,11 @@ class Parser {
         case TokenKind::FLOORDIVIDE: item->operator_kind = OPERATOR::FLOOR_DIVIDE; break;
         default: break;
       }
+      size_t before = index_;
       item->rhs = parsefactor();
+      if (index_ == before && !atend()) {
+        advance();
+      }
       items.push_back(std::move(item));
     }
     if (items.empty()) return factor;
@@ -1021,6 +1029,13 @@ class Parser {
     if (check(TokenKind::WORD) || check(TokenKind::STRINGLITERAL) || check(TokenKind::STRINGLITERALDOUBLE)) {
       auto dirnodes = parsedir();
       for (auto& d : dirnodes) nodes.push_back(std::move(d));
+      if (check(TokenKind::WORD) && iscolor(namestr(peek().image))) {
+        nodes.push_back(createstringnode(colormap(tokenstr(advance()))));
+      }
+      if (check(TokenKind::WORD) || check(TokenKind::STRINGLITERAL) ||
+          check(TokenKind::STRINGLITERALDOUBLE)) {
+        nodes.push_back(parsesimpletoken());
+      }
     }
     return createexprondemand(std::move(nodes));
   }
@@ -1086,6 +1101,9 @@ class Parser {
         return createstringnode(colormap(tokenstr(t)));
       }
       return createexprondemand(std::move(dirnodes));
+    }
+    if (!atend()) {
+      advance();
     }
     return createstringnode("");
   }
