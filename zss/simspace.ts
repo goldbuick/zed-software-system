@@ -1,5 +1,7 @@
 import 'zss/rom/vitepopulate'
+import { agentlog } from 'zss/agentlog'
 import { setclimode } from 'zss/feature/detect'
+import { initlangcompile } from 'zss/feature/lang/langcompileclient'
 
 import { createforward, shouldforwardservertoclient } from './device/forward'
 import { started } from './device/vm'
@@ -26,5 +28,22 @@ onmessage = function handleMessage(
   forward(event.data)
 }
 
-// begin simspace
-setTimeout(started, 100)
+// begin simspace — chips compile in this worker; await lang compiler before VM tick
+initlangcompile()
+  .then(() => {
+    agentlog(
+      'simspace.ts:started',
+      'worker lang init done, starting vm',
+      { runId: 'post-fix' },
+      'G',
+    )
+    started()
+  })
+  .catch((err) => {
+    agentlog(
+      'simspace.ts:started',
+      'worker lang init failed',
+      { error: String(err), runId: 'post-fix' },
+      'G',
+    )
+  })

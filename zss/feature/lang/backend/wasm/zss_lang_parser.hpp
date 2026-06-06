@@ -295,12 +295,49 @@ class Parser {
     return std::vector<std::unique_ptr<CodeNode>>();
   }
 
+  bool isifblockend() const {
+    return check(TokenKind::COMMAND) &&
+           (peek(1).kind == TokenKind::COMMAND_DONE ||
+            peek(1).kind == TokenKind::COMMAND_ELSE);
+  }
+
+  // End of #else if … do { … } fork bodies (matches TS command_fork backtrack).
+  // Keeps #else do … #done take/try forks inside the parent fork.
+  bool iscommandforkend() const {
+    if (atend()) {
+      return true;
+    }
+    if (!check(TokenKind::COMMAND)) {
+      return false;
+    }
+    if (peek(1).kind == TokenKind::COMMAND_DONE) {
+      return true;
+    }
+    if (peek(1).kind != TokenKind::COMMAND_ELSE) {
+      return false;
+    }
+    if (peek(2).kind == TokenKind::COMMAND_IF) {
+      return true;
+    }
+    if (peek(2).kind == TokenKind::COMMAND_DO) {
+      return false;
+    }
+    return true;
+  }
+
   std::vector<std::unique_ptr<CodeNode>> parsestmtcommand() {
     Token hash = advance();  // #
     hasfirststmtloc_ = true;
     firststmtloc_ = hash.loc;
     if (isstructured()) {
       return parsestructured();
+    }
+    if (check(TokenKind::COMMAND_DONE)) {
+      advance();
+      return std::vector<std::unique_ptr<CodeNode>>();
+    }
+    if (check(TokenKind::COMMAND_ELSE)) {
+      advance();
     }
     auto words = parsewords();
     auto node = make_node(NODE::COMMAND);
@@ -430,13 +467,10 @@ class Parser {
       appendinlinetoblock(block->lines);
     } else if (check(TokenKind::COMMAND_DO)) {
       advance();
-      while (!atend() && !check(TokenKind::COMMAND) && !check(TokenKind::NEWLINE)) {
+      while (!atend() && !isifblockend()) {
         auto ln = parseline();
         for (auto& l : ln) block->lines.push_back(std::move(l));
       }
-      while (check(TokenKind::NEWLINE)) advance();
-      if (check(TokenKind::COMMAND)) advance();
-      if (check(TokenKind::COMMAND_DONE)) advance();
     }
 
     block->lines.push_back(creategotonode(blockloc, done, "end of if"));
@@ -450,6 +484,9 @@ class Parser {
       block->altlines.push_back(parsecommandelse());
     }
     block->altlines.push_back(createmarknode(blockloc, done, "end of if"));
+    while (check(TokenKind::NEWLINE)) advance();
+    if (check(TokenKind::COMMAND)) advance();
+    if (check(TokenKind::COMMAND_DONE)) advance();
     return block;
   }
 
@@ -500,7 +537,11 @@ class Parser {
     if (check(TokenKind::COMMAND_DO)) {
       advance();
       std::vector<std::unique_ptr<CodeNode>> lines;
-      while (!atend() && !check(TokenKind::COMMAND) && !check(TokenKind::NEWLINE)) {
+      while (!atend() && !iscommandforkend()) {
+        if (check(TokenKind::COMMAND_DO)) {
+          advance();
+          continue;
+        }
         auto ln = parseline();
         for (auto& l : ln) lines.push_back(std::move(l));
       }
@@ -1037,7 +1078,13 @@ class Parser {
     if (check(TokenKind::COMMAND_TICKER)) return parsecommandticker();
     if (check(TokenKind::WORD)) {
       auto dirnodes = parsedir();
-      if (dirnodes.size() == 1) return std::move(dirnodes[0]);
+      if (dirnodes.size() == 1) {
+        return std::move(dirnodes[0]);
+      }
+      if (dirnodes.empty()) {
+        Token t = advance();
+        return createstringnode(colormap(tokenstr(t)));
+      }
       return createexprondemand(std::move(dirnodes));
     }
     return createstringnode("");

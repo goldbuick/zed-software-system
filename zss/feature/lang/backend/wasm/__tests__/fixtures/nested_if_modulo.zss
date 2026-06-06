@@ -1,0 +1,12 @@
+#if energized above 0 do
+ #if char is 2 do
+  #char 1
+ #else do
+  #char 2
+ #done
+ #if currenttick % 2 is 1 do
+  #color white
+ #else do
+  #color currenttick % 7 + 8
+ #done
+#done

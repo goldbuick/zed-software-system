@@ -16,6 +16,7 @@
     "app:build:strict": "tsc && vite build",
     "app:clear": "rimraf tmp && rimraf dist && rimraf cafe/dist && rimraf node_modules/.vite",
     "app:dev": "yarn && yarn vosk-model:ensure && yarn vite:dev",
+    "app:wasm:dev": "ZSS_WASM_SCRIPT=true yarn app:dev",
     "app:dev:no-sc": "ZSS_DAISY_NO_SIDECHAIN=1 yarn app:dev",
     "app:lint": "depcruise zss/simspace.ts zss/heavyspace.ts zss/boardrunnerspace.ts --validate --config .dependency-cruiser.cjs && eslint . --ext ts,tsx --fix --report-unused-disable-directives --max-warnings 0 && tsc --noEmit",
     "app:preview": "vite preview --host 0.0.0.0 --port 7777",

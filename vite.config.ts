@@ -58,7 +58,9 @@ export default defineConfig(({ mode }) => {
   const apppath = path.join(process.cwd(), root)
 
   // Load app-level env vars to node-level env vars.
+  const loadedenv = loadEnv(mode, apppath, envprefix)
   process.env = {
+    ...loadedenv,
     ...process.env,
     ZSS_BRANCH_NAME: execSync('git rev-parse --abbrev-ref HEAD')
       .toString()
@@ -68,7 +70,6 @@ export default defineConfig(({ mode }) => {
     ZSS_COMMIT_MESSAGE: execSync('git show -s --format=%s')
       .toString()
       .trimEnd(),
-    ...loadEnv(mode, apppath, envprefix),
   }
 
   const nohttps = !!JSON.parse(process.env.ZSS_NO_HTTPS ?? 'false')

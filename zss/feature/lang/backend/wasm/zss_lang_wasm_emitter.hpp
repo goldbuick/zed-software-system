@@ -56,6 +56,7 @@ class WasmEmitter {
   std::set<int> hostsused_;
   std::map<int, std::pair<int, int>> caselines_;
   int nestdepth_ = 0;
+  int switch_nestdepth_ = 0;
 
   static const int LOCAL_CASE = 0;
 
@@ -227,6 +228,10 @@ class WasmEmitter {
 
   void emitcontinueifnonzero() {
     emit_.emit_br_if(static_cast<uint32_t>(nestdepth_));
+  }
+
+  void emitbreakfromswitch() {
+    emit_.emit_br(static_cast<uint32_t>(nestdepth_ - switch_nestdepth_));
   }
 
   void emitifopen() {
@@ -418,6 +423,7 @@ class WasmEmitter {
         emit_.emit_local_set(LOCAL_CASE);
         emit_.emit_block();
         ++nestdepth_;
+        switch_nestdepth_ = nestdepth_;
         for (auto& line : ast->lines) emitwasmnode(line.get());
         emit_.emit_i32_const(0);
         emit_.emit_return();
@@ -439,6 +445,7 @@ class WasmEmitter {
         emit_.emit_i32_eq();
         emitifopen();
         for (auto& s : ast->stmts) emitwasmnode(s.get());
+        emitbreakfromswitch();
         emitifclose();
         break;
       }

@@ -1,10 +1,10 @@
 import { GeneratorBuild, compile } from 'zss/feature/lang'
 import {
   compilescript,
-  initlangcompile,
   islangcompileready,
 } from 'zss/feature/lang/langcompileclient'
 import { WASM_SCRIPT } from 'zss/config'
+import { agentlog } from 'zss/agentlog'
 
 import { CHIP, createchip } from './chip'
 import { MESSAGE_FUNC, parsetarget } from './device'
@@ -51,18 +51,44 @@ export function createos() {
   function build(name: string, code: string) {
     const cached = builds[code]
     if (cached) {
-      if (
+      const stalecompile =
         WASM_SCRIPT &&
         islangcompileready() &&
-        !cached.wasmbytes?.length &&
-        !(cached.errors?.length ?? 0)
-      ) {
+        (!cached.wasmbytes?.length ||
+          cached.errors?.some(
+            (err) => err.message === 'lang wasm compiler not loaded',
+          ))
+      if (stalecompile) {
         delete builds[code]
       } else {
+        agentlog(
+          'os.ts:build',
+          'build cache hit',
+          {
+            name,
+            wasmbytes: cached.wasmbytes?.length ?? 0,
+            errors: cached.errors?.map((e) => e.message) ?? [],
+          },
+          'C',
+        )
         return cached
       }
     }
     const result = WASM_SCRIPT ? compilescript(name, code) : compile(name, code)
+    agentlog(
+      'os.ts:build',
+      'build result',
+      {
+        name,
+        cached: !!cached,
+        wasmscript: WASM_SCRIPT,
+        ready: islangcompileready(),
+        wasmbytes: result.wasmbytes?.length ?? 0,
+        errors: result.errors?.map((e) => e.message) ?? [],
+        hascode: !!result.code,
+      },
+      'C',
+    )
     if (
       WASM_SCRIPT &&
       islangcompileready() &&
@@ -122,6 +148,20 @@ export function createos() {
         // create chip from build
         chip = chips[id] = createchip(id, driver, result)
 
+        agentlog(
+          'os.ts:boot',
+          'chip boot',
+          {
+            id,
+            name,
+            wasmbytes: result.wasmbytes?.length ?? 0,
+            errors: result.errors?.map((e) => e.message) ?? [],
+            isended: chip.isended(),
+            getcase: chip.getcase(),
+          },
+          'F',
+        )
+
         // bail on errors
         if (result.errors?.length) {
           const [primary] = result.errors
@@ -172,6 +212,7 @@ export function createos() {
 
           const preamble = primary.message.split('\n').slice(0, 4).join(' ')
           apierror(SOFTWARE, memoryreadoperator(), 'build', preamble)
+          delete chips[id]
           return undefined
         }
       }

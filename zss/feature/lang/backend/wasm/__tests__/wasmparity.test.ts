@@ -22,6 +22,9 @@ jest.mock('zss/words/textformat', () => ({
   tokenize: () => ({ errors: [{ message: 'mock' }], tokens: [] }),
 }))
 
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
+
 import { compile } from 'zss/feature/lang'
 import { createchip } from 'zss/chip'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
@@ -31,6 +34,12 @@ import {
   readfixture,
   runnativeparitygate,
 } from 'zss/feature/lang/backend/wasm/langparityload'
+
+const FIXTUREDIR = path.join(__dirname, 'fixtures')
+
+function readlocalfixture(name: string) {
+  return readFileSync(path.join(FIXTUREDIR, name), 'utf8')
+}
 
 describe('lang native wasm parity gate', () => {
   it('native compiler emits wasm magic for all fixtures', () => {
@@ -82,6 +91,58 @@ describe('lang wasm behavioral parity', () => {
     expect(wasmchip.isended()).toBe(jschip.isended())
   })
 
+  it('switch break runs all cases before end on stat_line', () => {
+    const source = readfixture('stat_line', 'zss')
+    const jsbuild = compile('stat_line', source)
+    const wasmbytes = compilenativewasm(source)
+    const wasmbuild = {
+      ...jsbuild,
+      wasmbytes,
+      code: undefined,
+    }
+
+    const jschip = createchip('js-stat', DRIVER_TYPE.RUNTIME, jsbuild)
+    const wasmchip = createchip('wasm-stat', DRIVER_TYPE.RUNTIME, wasmbuild)
+
+    jschip.once()
+    wasmchip.once()
+
+    expect(wasmchip.isended()).toBe(jschip.isended())
+    expect(wasmchip.getcase()).toBe(jschip.getcase())
+  })
+
+  it('stub player think loop matches JS oracle', () => {
+    const source = `@player
+@char 2
+@color blue
+@cycle 1
+:think
+"
+"Stub World
+#if inputmove do ?inputmove
+#else idle
+#done
+#think
+`
+    const jsbuild = compile('player', source)
+    const wasmbytes = compilenativewasm(source)
+    expect(wasmbytes.length).toBeGreaterThan(8)
+    const wasmbuild = {
+      ...jsbuild,
+      wasmbytes,
+      code: undefined,
+    }
+
+    const jschip = createchip('js-player', DRIVER_TYPE.RUNTIME, jsbuild)
+    const wasmchip = createchip('wasm-player', DRIVER_TYPE.RUNTIME, wasmbuild)
+
+    jschip.once()
+    wasmchip.once()
+
+    expect(wasmchip.isended()).toBe(jschip.isended())
+    expect(wasmchip.getcase()).toBe(jschip.getcase())
+  })
+
   it('command retry keeps execution cursor on short_go', () => {
     const source = readfixture('short_go', 'zss')
     const jsbuild = compile('short_go', source)
@@ -111,5 +172,27 @@ describe('lang wasm behavioral parity', () => {
     expect(wasmchip.getcase()).toBe(jschip.getcase())
     expect(wasmchip.isended()).toBe(false)
     expect(wasmchip.getcase()).not.toBe(3)
+  })
+
+  it('compiles simple chat player script to wasm', () => {
+    const source = readlocalfixture('simple_chat_player.zss')
+    const wasmbytes = compilenativewasm(source)
+    expect(wasmbytes[0]).toBe(0x00)
+    expect(wasmbytes[1]).toBe(0x61)
+    expect(wasmbytes[2]).toBe(0x73)
+    expect(wasmbytes[3]).toBe(0x6d)
+    expect(wasmbytes.length).toBeGreaterThan(1000)
+  })
+
+  it('compiles nested elseif chain to wasm', () => {
+    const source = readlocalfixture('elseif_chain_nested.zss')
+    const wasmbytes = compilenativewasm(source)
+    expect(wasmbytes.length).toBeGreaterThan(8)
+  })
+
+  it('compiles take/else inside if/elseif to wasm', () => {
+    const source = readlocalfixture('take_else_in_elseif.zss')
+    const wasmbytes = compilenativewasm(source)
+    expect(wasmbytes.length).toBeGreaterThan(8)
   })
 })

@@ -1,15 +1,18 @@
+import { LANG_BUILD_ID } from 'zss/feature/lang/backend/wasm/langbuildid'
+
 const WADIR = '/wasm/lang/'
+const WAQS = `v=${LANG_BUILD_ID}`
 
 export async function createlangmodule() {
   const factory = (
-    await import(/* @vite-ignore */ `${WADIR}zss_lang.js`)
+    await import(/* @vite-ignore */ `${WADIR}zss_lang.js?${WAQS}`)
   ).default
-  const wasmBinary = await fetch(`${WADIR}zss_lang.wasm`).then((response) =>
-    response.arrayBuffer(),
+  const wasmBinary = await fetch(`${WADIR}zss_lang.wasm?${WAQS}`).then(
+    (response) => response.arrayBuffer(),
   )
   return factory({
     wasmBinary,
-    locateFile: (file: string) => `${WADIR}${file}`,
+    locateFile: (file: string) => `${WADIR}${file}?${WAQS}`,
   })
 }
 
@@ -23,7 +26,26 @@ export function compilezssonmodule(
   const compilefn = module.cwrap('zss_compile', 'number', ['string', 'string'])
   const freefn = module.cwrap('zss_compile_result_free', null, ['number'])
 
-  const ptr = compilefn(name, source)
+  let ptr = 0
+  try {
+    ptr = compilefn(name, source)
+  } catch (err) {
+    return {
+      wasmbytes: new Uint8Array(0),
+      labelsjson: '',
+      debugmap: '',
+      importmanifest: '',
+      errors: [
+        {
+          offset: 0,
+          line: 0,
+          column: 0,
+          length: 0,
+          message: `wasm compiler aborted: ${String(err)}`,
+        },
+      ],
+    }
+  }
   const labelsptr = module.getValue(ptr + 8, 'i32')
   const wasmptr = module.getValue(ptr + 12, 'i32')
   const wasmlen = module.getValue(ptr + 16, 'i32')

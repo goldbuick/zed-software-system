@@ -1,3 +1,6 @@
+import { agentlog } from 'zss/agentlog'
+import { WASM_SCRIPT } from 'zss/config'
+import { initlangcompile } from 'zss/feature/lang/langcompileclient'
 import {
   createforward,
   shouldforwardboardrunnertoclient,
@@ -13,6 +16,15 @@ const { forward } = createforward((message) => {
   }
 })
 
+const langready = initlangcompile().then(() => {
+  agentlog(
+    'boardrunnerspace.ts:started',
+    'worker lang init done',
+    { wasmscript: WASM_SCRIPT, runId: 'post-fix2' },
+    'H',
+  )
+})
+
 onmessage = function handleMessage(event) {
-  forward(event.data)
+  void langready.then(() => forward(event.data))
 }

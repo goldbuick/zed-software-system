@@ -1,4 +1,5 @@
 import ErrorStackParser from 'error-stack-parser'
+import { agentlog } from 'zss/agentlog'
 import {
   GENERATED_FILENAME,
   GeneratorBuild,
@@ -493,6 +494,8 @@ function maptoresult(value: WORD): WORD {
  * @param build - The compiled generator build containing code and labels
  * @returns A fully configured CHIP instance ready for execution
  */
+const debugoncecounts: Record<string, number> = {}
+
 export function createchip(
   id: string,
   driver: DRIVER_TYPE,
@@ -603,7 +606,24 @@ export function createchip(
       // invoke logic impl
       try {
         if (wasmscript) {
-          if (!wasmscript.run()) {
+          const runresult = wasmscript.run()
+          const oncecount = debugoncecounts[id] ?? 0
+          if (oncecount < 2) {
+            debugoncecounts[id] = oncecount + 1
+            agentlog(
+              'chip.ts:once',
+              'wasm run',
+              {
+                id,
+                runresult,
+                getcase: chip.getcase(),
+                esbefore: flags.es,
+                oncecount,
+              },
+              'E',
+            )
+          }
+          if (!runresult) {
             flags.es = 1
           }
         } else if (!logic?.(chip)) {
@@ -1220,8 +1240,25 @@ export function createchip(
 
   if (build.wasmbytes && build.wasmbytes.length > 0) {
     wasmscript = loadscriptsync(build.wasmbytes, chip)
+    agentlog(
+      'chip.ts:createchip',
+      'wasm script loaded',
+      { id, wasmbytes: build.wasmbytes.length, inites: initfags.es },
+      'D',
+    )
   } else {
     logic = build.code
+    agentlog(
+      'chip.ts:createchip',
+      'js logic path',
+      {
+        id,
+        hascode: !!build.code,
+        errors: build.errors?.length ?? 0,
+        inites: initfags.es,
+      },
+      'D',
+    )
   }
 
   return chip

@@ -1,0 +1,9 @@
+#if not isdark do
+ #ticker a
+#else if light do
+ #ticker b
+#else take torches do
+ #ticker c
+#else do
+ #set light 9
+#done

@@ -1,4 +1,5 @@
 import { WASM_SCRIPT } from 'zss/config'
+import { agentlog } from 'zss/agentlog'
 
 import { compile, type GeneratorBuild } from './backend/typescript/generator'
 import {
@@ -17,8 +18,20 @@ export function initlangcompile() {
     langinit = createlangmodule()
       .then((mod) => {
         langmodule = mod
+        agentlog(
+          'langcompileclient.ts:init',
+          'lang module ready',
+          { wasmscript: WASM_SCRIPT },
+          'B',
+        )
       })
-      .catch(() => {
+      .catch((err) => {
+        agentlog(
+          'langcompileclient.ts:init',
+          'lang module init failed',
+          { error: String(err) },
+          'B',
+        )
         langinit = null
       })
   }
@@ -42,6 +55,12 @@ function labelsfromjson(labelsjson: string): GeneratorBuild['labels'] {
 
 export function compilewasmscript(name: string, text: string): GeneratorBuild {
   if (!langmodule) {
+    agentlog(
+      'langcompileclient.ts:compilewasmscript',
+      'compile without lang module',
+      { name, ready: islangcompileready() },
+      'A',
+    )
     return {
       errors: [
         {
@@ -55,6 +74,16 @@ export function compilewasmscript(name: string, text: string): GeneratorBuild {
     }
   }
   const result = compilezssonmodule(name, text, langmodule)
+  agentlog(
+    'langcompileclient.ts:compilewasmscript',
+    'compile result',
+    {
+      name,
+      wasmbytes: result.wasmbytes.length,
+      errors: result.errors.map((e) => e.message),
+    },
+    'A',
+  )
   if (result.errors.length) {
     return { errors: result.errors }
   }
