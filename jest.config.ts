@@ -44,7 +44,11 @@ const config: Config = {
     'node_modules/(?!(nanoid|nanoid-dictionary|human-id|alea|ts-extras|fast-json-patch|react-fast-compare|uqr|maath|@react-three|three|mime|uint8-util|@tonejs/midi|midi-file|chevrotain|lodash-es|@chevrotain|marked)/)',
   ],
   globalTeardown: '<rootDir>/zss/testing/jestglobalteardown.cjs',
-  testPathIgnorePatterns: ['<rootDir>/e2e/'],
+  testPathIgnorePatterns: [
+    '<rootDir>/e2e/',
+    '<rootDir>/zss/memory/wasm/__tests__/wasmparity.test.ts',
+    '<rootDir>/zss/memory/wasm/regenfixtures.test.ts',
+  ],
   testMatch: [
     '**/__tests__/**/*.ts',
     '**/__tests__/**/*.tsx',

@@ -14,9 +14,9 @@
       "args": {
         "json": [
           0,
-          "sid_6jOD3dNEr4C3",
+          "sid_8_F8RefFvzCQ",
           1,
-          "rareslothsstudy",
+          "metaltimeswatch",
           2,
           0,
           3,
@@ -43,8 +43,8 @@
       "expect": {
         "mode": "json",
         "json": {
-          "id": "sid_6jOD3dNEr4C3",
-          "name": "rareslothsstudy",
+          "id": "sid_8_F8RefFvzCQ",
+          "name": "metaltimeswatch",
           "timestamp": 0,
           "activelist": [],
           "pages": [],

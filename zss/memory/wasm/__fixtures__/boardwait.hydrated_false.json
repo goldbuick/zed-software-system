@@ -1,0 +1,34 @@
+{
+  "name": "boardwait.hydrated_false",
+  "initial": {},
+  "steps": [
+    {
+      "op": "boundaries_clear",
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "boundary_alloc",
+      "args": {
+        "id": "board-a",
+        "value": {}
+      },
+      "expect": {
+        "mode": "string",
+        "string": "board-a"
+      }
+    },
+    {
+      "op": "board_runtime_hydrated",
+      "args": {
+        "board_id": "board-a"
+      },
+      "expect": {
+        "mode": "json",
+        "json": false
+      }
+    }
+  ]
+}

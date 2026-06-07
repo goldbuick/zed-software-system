@@ -1,0 +1,49 @@
+{
+  "name": "synth.voices_default",
+  "initial": {},
+  "steps": [
+    {
+      "op": "synth_setup_session",
+      "args": {
+        "session": {
+          "mainbook": {
+            "id": "bk",
+            "name": "main",
+            "timestamp": 0,
+            "activelist": [],
+            "pages": [],
+            "flags": {}
+          },
+          "synthflags": {}
+        }
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "synth_read_voices",
+      "args": {
+        "boardid": "bd-test"
+      },
+      "expect": {
+        "mode": "json",
+        "json": {
+          "0": {
+            "square": ""
+          },
+          "1": {
+            "square": ""
+          },
+          "2": {
+            "square": ""
+          },
+          "3": {
+            "square": ""
+          }
+        }
+      }
+    }
+  ]
+}

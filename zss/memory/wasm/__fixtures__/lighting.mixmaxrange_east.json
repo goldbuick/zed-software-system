@@ -1,0 +1,26 @@
+{
+  "name": "lighting.mixmaxrange_east",
+  "initial": {},
+  "steps": [
+    {
+      "op": "lighting_mixmaxrange",
+      "args": {
+        "from": {
+          "x": 0,
+          "y": 0
+        },
+        "dest": {
+          "x": 1,
+          "y": 0
+        }
+      },
+      "expect": {
+        "mode": "json",
+        "json": [
+          -86,
+          86
+        ]
+      }
+    }
+  ]
+}

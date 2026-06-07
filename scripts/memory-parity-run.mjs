@@ -93,6 +93,29 @@ async function runwasm() {
         }
         continue
       }
+      if (expect.mode === 'approx_json') {
+        const epsilon = expect.epsilon ?? 0.01
+        for (const key of Object.keys(expect.json)) {
+          const a = actual[key]
+          const e = expect.json[key]
+          if (typeof a === 'number' && typeof e === 'number') {
+            if (Math.abs(a - e) > epsilon) {
+              ok = false
+              break
+            }
+          } else if (!isDeepStrictEqual(a, e)) {
+            ok = false
+            break
+          }
+        }
+        if (!ok) {
+          console.log(`${name} step ${i} (${step.op}): FAIL`)
+          console.log(' expected:', JSON.stringify(expect.json))
+          console.log(' actual:', JSON.stringify(actual))
+          break
+        }
+        continue
+      }
       if (!isDeepStrictEqual(actual, expect.json)) {
         console.log(`${name} step ${i} (${step.op}): FAIL`)
         console.log(' expected:', JSON.stringify(expect.json))

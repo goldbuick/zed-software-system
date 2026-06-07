@@ -1,0 +1,72 @@
+{
+  "name": "permissions.hydrate_lockdown",
+  "initial": {},
+  "steps": [
+    {
+      "op": "permission_reset",
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_set_command_permissions",
+      "args": {
+        "bannedtokens": [],
+        "rolebytoken": {},
+        "permissionconfig": "lockdown",
+        "permissionoverrideaddbyrole": {},
+        "permissionoverrideremovebyrole": {}
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_read_config",
+      "expect": {
+        "mode": "string",
+        "string": "lockdown"
+      }
+    },
+    {
+      "op": "permission_read_allowlist",
+      "expect": {
+        "mode": "json",
+        "json": {
+          "admin": [
+            "bridge",
+            "build",
+            "coder",
+            "explore",
+            "moderation",
+            "persist",
+            "roles",
+            "speaker"
+          ],
+          "mod": [
+            "bridge",
+            "coder",
+            "explore",
+            "moderation",
+            "persist",
+            "speaker"
+          ],
+          "player": []
+        }
+      }
+    },
+    {
+      "op": "permission_role_has_family",
+      "args": {
+        "role": "mod",
+        "family": "persist"
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    }
+  ]
+}

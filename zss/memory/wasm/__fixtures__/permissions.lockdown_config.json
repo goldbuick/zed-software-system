@@ -1,0 +1,57 @@
+{
+  "name": "permissions.lockdown_config",
+  "initial": {},
+  "steps": [
+    {
+      "op": "permission_reset",
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_apply_config",
+      "args": {
+        "config": "lockdown"
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_read_config",
+      "expect": {
+        "mode": "string",
+        "string": "lockdown"
+      }
+    },
+    {
+      "op": "permission_read_allowlist",
+      "expect": {
+        "mode": "json",
+        "json": {
+          "admin": [
+            "bridge",
+            "build",
+            "coder",
+            "explore",
+            "moderation",
+            "persist",
+            "roles",
+            "speaker"
+          ],
+          "mod": [
+            "bridge",
+            "coder",
+            "explore",
+            "moderation",
+            "persist",
+            "speaker"
+          ],
+          "player": []
+        }
+      }
+    }
+  ]
+}

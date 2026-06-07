@@ -1,0 +1,63 @@
+{
+  "name": "permissions.serialize",
+  "initial": {},
+  "steps": [
+    {
+      "op": "permission_reset",
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_serialize",
+      "expect": {
+        "mode": "json",
+        "json": {
+          "rolebytoken": {},
+          "bannedtokens": [],
+          "permissionconfig": "creative",
+          "allowlistbyrole": {
+            "admin": [
+              "bridge",
+              "build",
+              "coder",
+              "explore",
+              "moderation",
+              "persist",
+              "roles",
+              "speaker"
+            ],
+            "mod": [
+              "bridge",
+              "build",
+              "coder",
+              "explore",
+              "moderation",
+              "persist",
+              "speaker"
+            ],
+            "player": [
+              "build",
+              "coder",
+              "explore",
+              "persist",
+              "speaker"
+            ]
+          },
+          "allowlistbyrolecustom": {},
+          "permissionoverrideaddbyrole": {
+            "admin": [],
+            "mod": [],
+            "player": []
+          },
+          "permissionoverrideremovebyrole": {
+            "admin": [],
+            "mod": [],
+            "player": []
+          }
+        }
+      }
+    }
+  ]
+}

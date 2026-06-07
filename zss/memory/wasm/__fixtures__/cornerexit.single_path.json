@@ -1,0 +1,37 @@
+{
+  "name": "cornerexit.single_path",
+  "initial": {},
+  "steps": [
+    {
+      "op": "corner_exit_resolve",
+      "args": {
+        "board": {
+          "id": "cur",
+          "exitnorth": "n",
+          "exiteast": "e"
+        },
+        "addrmap": {
+          "n": {
+            "id": "north",
+            "exiteast": "addr-ne"
+          },
+          "e": {
+            "id": "east"
+          },
+          "addr-ne": {
+            "id": "only-ne"
+          }
+        }
+      },
+      "expect": {
+        "mode": "json",
+        "json": {
+          "exitne": "only-ne",
+          "exitnw": "",
+          "exitse": "",
+          "exitsw": ""
+        }
+      }
+    }
+  ]
+}

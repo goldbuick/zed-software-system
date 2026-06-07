@@ -1,0 +1,30 @@
+{
+  "name": "trimformatobject.omit_empty",
+  "initial": {},
+  "steps": [
+    {
+      "op": "trim_format_object",
+      "args": {
+        "json": [
+          "a",
+          1,
+          "b",
+          {},
+          "c",
+          null,
+          "d",
+          2
+        ]
+      },
+      "expect": {
+        "mode": "json",
+        "json": [
+          "a",
+          1,
+          "d",
+          2
+        ]
+      }
+    }
+  ]
+}

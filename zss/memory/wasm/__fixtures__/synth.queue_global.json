@@ -1,0 +1,41 @@
+{
+  "name": "synth.queue_global",
+  "initial": {},
+  "steps": [
+    {
+      "op": "synth_setup_session",
+      "args": {
+        "session": {
+          "mainbook": {
+            "id": "bk",
+            "name": "main",
+            "timestamp": 0,
+            "activelist": [],
+            "pages": [],
+            "flags": {}
+          },
+          "synthflags": {}
+        }
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "synth_queue_play",
+      "args": {
+        "boardid": "",
+        "play": "c"
+      },
+      "expect": {
+        "mode": "json",
+        "json": {
+          "queued": false,
+          "synthplay_fired": true,
+          "play": "c"
+        }
+      }
+    }
+  ]
+}

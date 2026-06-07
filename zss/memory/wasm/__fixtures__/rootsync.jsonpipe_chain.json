@@ -1,0 +1,61 @@
+{
+  "name": "rootsync.jsonpipe_chain",
+  "initial": {},
+  "steps": [
+    {
+      "op": "root_jsonpipe_chain",
+      "args": {
+        "base": {
+          "halt": false,
+          "frozen": false,
+          "topic": "",
+          "operator": "",
+          "session": "s0",
+          "software": {
+            "main": "",
+            "temp": ""
+          },
+          "books": {},
+          "loaders": {}
+        },
+        "patches": [
+          [
+            {
+              "op": "replace",
+              "path": "/session",
+              "value": "s1"
+            }
+          ],
+          [
+            {
+              "op": "replace",
+              "path": "/session",
+              "value": "s2"
+            },
+            {
+              "op": "replace",
+              "path": "/halt",
+              "value": true
+            }
+          ]
+        ]
+      },
+      "expect": {
+        "mode": "json",
+        "json": {
+          "halt": true,
+          "frozen": false,
+          "topic": "",
+          "operator": "",
+          "session": "s2",
+          "software": {
+            "main": "",
+            "temp": ""
+          },
+          "books": {},
+          "loaders": {}
+        }
+      }
+    }
+  ]
+}

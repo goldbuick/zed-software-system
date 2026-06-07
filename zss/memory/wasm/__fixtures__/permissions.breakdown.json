@@ -1,0 +1,96 @@
+{
+  "name": "permissions.breakdown",
+  "initial": {},
+  "steps": [
+    {
+      "op": "permission_reset",
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_apply_config",
+      "args": {
+        "config": "lockdown"
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_allow_command",
+      "args": {
+        "role": "player",
+        "command": "risk"
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_read_breakdown",
+      "expect": {
+        "mode": "json",
+        "json": {
+          "admin": {
+            "effective": [
+              "bridge",
+              "build",
+              "coder",
+              "explore",
+              "moderation",
+              "persist",
+              "roles",
+              "speaker"
+            ],
+            "frombase": [
+              "bridge",
+              "build",
+              "coder",
+              "explore",
+              "moderation",
+              "persist",
+              "roles",
+              "speaker"
+            ],
+            "overridegrant": [],
+            "overridedeny": []
+          },
+          "mod": {
+            "effective": [
+              "bridge",
+              "coder",
+              "explore",
+              "moderation",
+              "persist",
+              "speaker"
+            ],
+            "frombase": [
+              "bridge",
+              "coder",
+              "explore",
+              "moderation",
+              "persist",
+              "speaker"
+            ],
+            "overridegrant": [],
+            "overridedeny": []
+          },
+          "player": {
+            "effective": [
+              "risk"
+            ],
+            "frombase": [],
+            "overridegrant": [
+              "risk"
+            ],
+            "overridedeny": []
+          }
+        }
+      }
+    }
+  ]
+}

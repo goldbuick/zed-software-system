@@ -1,0 +1,26 @@
+{
+  "name": "lighting.mixmaxrange_vertical",
+  "initial": {},
+  "steps": [
+    {
+      "op": "lighting_mixmaxrange",
+      "args": {
+        "from": {
+          "x": 10,
+          "y": 10
+        },
+        "dest": {
+          "x": 10,
+          "y": 11
+        }
+      },
+      "expect": {
+        "mode": "json",
+        "json": [
+          28,
+          152
+        ]
+      }
+    }
+  ]
+}

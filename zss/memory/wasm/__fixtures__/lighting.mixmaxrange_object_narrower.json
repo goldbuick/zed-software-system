@@ -1,0 +1,48 @@
+{
+  "name": "lighting.mixmaxrange_object_narrower",
+  "initial": {},
+  "steps": [
+    {
+      "op": "lighting_mixmaxrange",
+      "args": {
+        "from": {
+          "x": 0,
+          "y": 0
+        },
+        "dest": {
+          "x": 3,
+          "y": 0
+        },
+        "kind": "terrain"
+      },
+      "expect": {
+        "mode": "json",
+        "json": [
+          -32,
+          32
+        ]
+      }
+    },
+    {
+      "op": "lighting_mixmaxrange",
+      "args": {
+        "from": {
+          "x": 0,
+          "y": 0
+        },
+        "dest": {
+          "x": 3,
+          "y": 0
+        },
+        "kind": "object"
+      },
+      "expect": {
+        "mode": "json",
+        "json": [
+          -17,
+          17
+        ]
+      }
+    }
+  ]
+}

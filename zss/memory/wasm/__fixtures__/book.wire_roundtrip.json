@@ -14,9 +14,9 @@
       "args": {
         "json": [
           0,
-          "sid_fgo.JAbIjS1E",
+          "sid_VoYh4owSz5H.",
           1,
-          "chubbybanksprove",
+          "twentyexpertslike",
           2,
           0,
           3,
@@ -25,7 +25,7 @@
           [
             [
               0,
-              "sid_VlJJBo74TMQJ",
+              "sid_Aj8biQLcSGDh",
               1,
               "@board snapjson\n@exitnorth roomn\n",
               2,
@@ -53,13 +53,13 @@
       "expect": {
         "mode": "json",
         "json": {
-          "id": "sid_fgo.JAbIjS1E",
-          "name": "chubbybanksprove",
+          "id": "sid_VoYh4owSz5H.",
+          "name": "twentyexpertslike",
           "timestamp": 0,
           "activelist": [],
           "pages": [
             {
-              "id": "sid_VlJJBo74TMQJ",
+              "id": "sid_Aj8biQLcSGDh",
               "code": "@board snapjson\n@exitnorth roomn\n",
               "board": {
                 "terrain": [],
@@ -73,7 +73,7 @@
     {
       "op": "codepage_runtime_field",
       "args": {
-        "pageid": "sid_VlJJBo74TMQJ",
+        "pageid": "sid_Aj8biQLcSGDh",
         "field": "exitnorth"
       },
       "expect": {

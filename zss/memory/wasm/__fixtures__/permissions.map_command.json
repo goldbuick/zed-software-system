@@ -1,0 +1,63 @@
+{
+  "name": "permissions.map_command",
+  "initial": {},
+  "steps": [
+    {
+      "op": "permission_reset",
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_map_command",
+      "args": {
+        "command": "access"
+      },
+      "expect": {
+        "mode": "string",
+        "string": "risk"
+      }
+    },
+    {
+      "op": "permission_map_command",
+      "args": {
+        "command": "pageexport"
+      },
+      "expect": {
+        "mode": "string",
+        "string": "risk"
+      }
+    },
+    {
+      "op": "permission_map_command",
+      "args": {
+        "command": "synth1"
+      },
+      "expect": {
+        "mode": "string",
+        "string": "speaker"
+      }
+    },
+    {
+      "op": "permission_map_command",
+      "args": {
+        "command": "run"
+      },
+      "expect": {
+        "mode": "string",
+        "string": "coder"
+      }
+    },
+    {
+      "op": "permission_map_command",
+      "args": {
+        "command": "build"
+      },
+      "expect": {
+        "mode": "string",
+        "string": "build"
+      }
+    }
+  ]
+}

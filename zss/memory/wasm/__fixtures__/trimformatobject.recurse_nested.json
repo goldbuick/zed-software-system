@@ -1,0 +1,34 @@
+{
+  "name": "trimformatobject.recurse_nested",
+  "initial": {},
+  "steps": [
+    {
+      "op": "trim_format_object",
+      "args": {
+        "json": [
+          "meta",
+          [
+            "x",
+            {},
+            "y",
+            3
+          ],
+          "id",
+          "abc"
+        ]
+      },
+      "expect": {
+        "mode": "json",
+        "json": [
+          "meta",
+          [
+            "y",
+            3
+          ],
+          "id",
+          "abc"
+        ]
+      }
+    }
+  ]
+}

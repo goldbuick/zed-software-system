@@ -1,0 +1,181 @@
+{
+  "name": "book.free_nested_runtimes",
+  "initial": {},
+  "steps": [
+    {
+      "op": "boundaries_clear",
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "boundary_alloc",
+      "args": {
+        "id": "sid_GfJLAY49Ex1M",
+        "value": {
+          "marker": "sid_GfJLAY49Ex1M"
+        }
+      },
+      "expect": {
+        "mode": "string",
+        "string": "sid_GfJLAY49Ex1M"
+      }
+    },
+    {
+      "op": "boundary_alloc",
+      "args": {
+        "id": "board-runtime",
+        "value": {
+          "marker": "board-runtime"
+        }
+      },
+      "expect": {
+        "mode": "string",
+        "string": "board-runtime"
+      }
+    },
+    {
+      "op": "boundary_alloc",
+      "args": {
+        "id": "terrain-runtime",
+        "value": {
+          "marker": "terrain-runtime"
+        }
+      },
+      "expect": {
+        "mode": "string",
+        "string": "terrain-runtime"
+      }
+    },
+    {
+      "op": "boundary_alloc",
+      "args": {
+        "id": "object-runtime",
+        "value": {
+          "marker": "object-runtime"
+        }
+      },
+      "expect": {
+        "mode": "string",
+        "string": "object-runtime"
+      }
+    },
+    {
+      "op": "boundary_alloc",
+      "args": {
+        "id": "page-object-runtime",
+        "value": {
+          "marker": "page-object-runtime"
+        }
+      },
+      "expect": {
+        "mode": "string",
+        "string": "page-object-runtime"
+      }
+    },
+    {
+      "op": "boundary_alloc",
+      "args": {
+        "id": "page-terrain-runtime",
+        "value": {
+          "marker": "page-terrain-runtime"
+        }
+      },
+      "expect": {
+        "mode": "string",
+        "string": "page-terrain-runtime"
+      }
+    },
+    {
+      "op": "free_book",
+      "args": {
+        "book": {
+          "id": "sid_KhFo6t37FI4n",
+          "name": "busybreadswalk",
+          "timestamp": 0,
+          "activelist": [],
+          "pages": [
+            {
+              "id": "sid_GfJLAY49Ex1M",
+              "code": "@board testboard\n"
+            }
+          ],
+          "flags": {}
+        },
+        "runtime_ids": [
+          "sid_GfJLAY49Ex1M",
+          "board-runtime",
+          "terrain-runtime",
+          "object-runtime",
+          "page-object-runtime",
+          "page-terrain-runtime"
+        ]
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "boundary_get",
+      "args": {
+        "id": "sid_GfJLAY49Ex1M"
+      },
+      "expect": {
+        "mode": "json",
+        "json": {}
+      }
+    },
+    {
+      "op": "boundary_get",
+      "args": {
+        "id": "board-runtime"
+      },
+      "expect": {
+        "mode": "json",
+        "json": {}
+      }
+    },
+    {
+      "op": "boundary_get",
+      "args": {
+        "id": "terrain-runtime"
+      },
+      "expect": {
+        "mode": "json",
+        "json": {}
+      }
+    },
+    {
+      "op": "boundary_get",
+      "args": {
+        "id": "object-runtime"
+      },
+      "expect": {
+        "mode": "json",
+        "json": {}
+      }
+    },
+    {
+      "op": "boundary_get",
+      "args": {
+        "id": "page-object-runtime"
+      },
+      "expect": {
+        "mode": "json",
+        "json": {}
+      }
+    },
+    {
+      "op": "boundary_get",
+      "args": {
+        "id": "page-terrain-runtime"
+      },
+      "expect": {
+        "mode": "json",
+        "json": {}
+      }
+    }
+  ]
+}

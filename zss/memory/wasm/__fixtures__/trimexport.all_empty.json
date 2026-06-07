@@ -1,0 +1,21 @@
+{
+  "name": "trimexport.all_empty",
+  "initial": {},
+  "steps": [
+    {
+      "op": "trim_export",
+      "args": {
+        "json": {
+          "a": {},
+          "b": {
+            "c": {}
+          }
+        }
+      },
+      "expect": {
+        "mode": "json",
+        "json": null
+      }
+    }
+  ]
+}

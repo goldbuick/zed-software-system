@@ -52,6 +52,7 @@ void zss_memory_free_string(char* s) { std::free(s); }
 
 #ifdef ZSS_MEMORY_PARITY_MAIN
 
+#include <cmath>
 #include <dirent.h>
 
 #include <fstream>
@@ -65,8 +66,35 @@ static std::string readfile(const std::string& path) {
   return ss.str();
 }
 
+static bool approxjsonmatches(const json& actual, const json& expected,
+                              double epsilon) {
+  if (!actual.is_object() || !expected.is_object()) {
+    return false;
+  }
+  for (auto it = expected.begin(); it != expected.end(); ++it) {
+    if (!actual.contains(it.key())) {
+      return false;
+    }
+    const json& a = actual[it.key()];
+    const json& e = it.value();
+    if (a.is_number() && e.is_number()) {
+      if (std::abs(a.get<double>() - e.get<double>()) > epsilon) {
+        return false;
+      }
+      continue;
+    }
+    if (a != e) {
+      return false;
+    }
+  }
+  return true;
+}
+
 static bool jsonmatches(const json& actual, const json& expected,
-                        const std::string& mode) {
+                        const std::string& mode, double epsilon = 0.0) {
+  if (mode == "approx_json") {
+    return approxjsonmatches(actual, expected, epsilon);
+  }
   if (mode == "string") {
     return actual.is_string() && expected.is_string() &&
            actual.get<std::string>() == expected.get<std::string>();
@@ -113,6 +141,7 @@ static bool runfixture(const std::string& path) {
     }
     const json expect = step.at("expect");
     const std::string mode = expect.value("mode", "json");
+    const double epsilon = expect.value("epsilon", 0.01);
     json expected;
     if (mode == "string") {
       expected = expect.at("string");
@@ -121,10 +150,15 @@ static bool runfixture(const std::string& path) {
     } else {
       expected = expect.at("json");
     }
-    if (!jsonmatches(actual, expected, mode)) {
+    if (!jsonmatches(actual, expected, mode, epsilon)) {
       std::cout << fixture.value("name", path) << " step " << i << " (" << op
-                << "): FAIL\n  expected: " << expected.dump() << "\n  actual: "
-                << actual.dump() << "\n";
+                << "): FAIL\n";
+      if (actual.is_array() && actual.size() > 32) {
+        std::cout << "  (large array output omitted)\n";
+      } else {
+        std::cout << "  expected: " << expected.dump() << "\n  actual: "
+                  << actual.dump() << "\n";
+      }
       return false;
     }
   }

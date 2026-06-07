@@ -1,0 +1,97 @@
+{
+  "name": "book.clear_codepage_runtimes",
+  "initial": {},
+  "steps": [
+    {
+      "op": "boundaries_clear",
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "boundary_alloc",
+      "args": {
+        "id": "sid_q4rogalg1rVb",
+        "value": {
+          "marker": "sid_q4rogalg1rVb"
+        }
+      },
+      "expect": {
+        "mode": "string",
+        "string": "sid_q4rogalg1rVb"
+      }
+    },
+    {
+      "op": "boundary_alloc",
+      "args": {
+        "id": "board-runtime-clear",
+        "value": {
+          "marker": "board-runtime-clear"
+        }
+      },
+      "expect": {
+        "mode": "string",
+        "string": "board-runtime-clear"
+      }
+    },
+    {
+      "op": "boundary_alloc",
+      "args": {
+        "id": "object-runtime-clear",
+        "value": {
+          "marker": "object-runtime-clear"
+        }
+      },
+      "expect": {
+        "mode": "string",
+        "string": "object-runtime-clear"
+      }
+    },
+    {
+      "op": "clear_codepage",
+      "args": {
+        "pageid": "sid_q4rogalg1rVb",
+        "runtime_ids": [
+          "sid_q4rogalg1rVb",
+          "board-runtime-clear",
+          "object-runtime-clear"
+        ]
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "boundary_get",
+      "args": {
+        "id": "sid_q4rogalg1rVb"
+      },
+      "expect": {
+        "mode": "json",
+        "json": {}
+      }
+    },
+    {
+      "op": "boundary_get",
+      "args": {
+        "id": "board-runtime-clear"
+      },
+      "expect": {
+        "mode": "json",
+        "json": {}
+      }
+    },
+    {
+      "op": "boundary_get",
+      "args": {
+        "id": "object-runtime-clear"
+      },
+      "expect": {
+        "mode": "json",
+        "json": {}
+      }
+    }
+  ]
+}

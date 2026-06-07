@@ -1,0 +1,41 @@
+{
+  "name": "boardwait.hydrated_true",
+  "initial": {},
+  "steps": [
+    {
+      "op": "boundaries_clear",
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "boundary_alloc",
+      "args": {
+        "id": "board-a",
+        "value": {
+          "board": {
+            "id": "board-a",
+            "name": "board-a",
+            "terrain": [],
+            "objects": {}
+          }
+        }
+      },
+      "expect": {
+        "mode": "string",
+        "string": "board-a"
+      }
+    },
+    {
+      "op": "board_runtime_hydrated",
+      "args": {
+        "board_id": "board-a"
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    }
+  ]
+}

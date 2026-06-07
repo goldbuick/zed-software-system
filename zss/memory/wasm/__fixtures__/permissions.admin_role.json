@@ -1,0 +1,88 @@
+{
+  "name": "permissions.admin_role",
+  "initial": {},
+  "steps": [
+    {
+      "op": "permission_reset",
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_set_player_token",
+      "args": {
+        "player": "player1",
+        "token": "token-admin"
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_set_role_for_token",
+      "args": {
+        "token": "token-admin",
+        "role": "admin"
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_can_run",
+      "args": {
+        "player": "player1",
+        "command": "nuke"
+      },
+      "expect": {
+        "mode": "json",
+        "json": {
+          "allowed": false,
+          "deny_reason": "(deny)"
+        }
+      }
+    },
+    {
+      "op": "permission_can_run",
+      "args": {
+        "player": "player1",
+        "command": "allow"
+      },
+      "expect": {
+        "mode": "json",
+        "json": {
+          "allowed": true,
+          "deny_reason": ""
+        }
+      }
+    },
+    {
+      "op": "permission_role_has_family",
+      "args": {
+        "role": "admin",
+        "family": "roles"
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_can_run",
+      "args": {
+        "player": "player1",
+        "command": "book"
+      },
+      "expect": {
+        "mode": "json",
+        "json": {
+          "allowed": true,
+          "deny_reason": ""
+        }
+      }
+    }
+  ]
+}

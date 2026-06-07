@@ -1,0 +1,68 @@
+{
+  "name": "permissions.restore_creative",
+  "initial": {},
+  "steps": [
+    {
+      "op": "permission_reset",
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_set_command_permissions",
+      "args": {
+        "bannedtokens": [],
+        "rolebytoken": {},
+        "permissionconfig": "creative",
+        "allowlistbyrole": {
+          "admin": [
+            "bridge",
+            "build",
+            "coder",
+            "explore",
+            "moderation",
+            "persist",
+            "roles",
+            "speaker"
+          ],
+          "mod": [
+            "moderation",
+            "bridge",
+            "explore",
+            "coder",
+            "build",
+            "persist",
+            "speaker"
+          ],
+          "player": [
+            "speaker"
+          ]
+        },
+        "allowlistbyrolecustom": {}
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_read_config",
+      "expect": {
+        "mode": "string",
+        "string": "creative"
+      }
+    },
+    {
+      "op": "permission_role_has_family",
+      "args": {
+        "role": "player",
+        "family": "speaker"
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    }
+  ]
+}

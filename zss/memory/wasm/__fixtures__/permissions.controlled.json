@@ -1,0 +1,93 @@
+{
+  "name": "permissions.controlled",
+  "initial": {},
+  "steps": [
+    {
+      "op": "permission_reset",
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_is_controlled",
+      "args": {
+        "command": "allow"
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_is_controlled",
+      "args": {
+        "command": "access"
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_is_controlled",
+      "args": {
+        "command": "run"
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_is_controlled",
+      "args": {
+        "command": "build"
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_is_controlled",
+      "args": {
+        "command": "pageexport"
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_is_controlled",
+      "args": {
+        "command": "synth1"
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_is_controlled",
+      "args": {
+        "command": "shortsend"
+      },
+      "expect": {
+        "mode": "json",
+        "json": false
+      }
+    },
+    {
+      "op": "permission_is_controlled",
+      "args": {
+        "command": "unknown"
+      },
+      "expect": {
+        "mode": "json",
+        "json": false
+      }
+    }
+  ]
+}

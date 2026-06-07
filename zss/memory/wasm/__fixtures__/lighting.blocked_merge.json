@@ -1,0 +1,54 @@
+{
+  "name": "lighting.blocked_merge",
+  "initial": {},
+  "steps": [
+    {
+      "op": "lighting_addrange_blocked",
+      "args": {
+        "initial": [],
+        "range": [
+          0,
+          45,
+          1
+        ]
+      },
+      "expect": {
+        "mode": "json",
+        "json": [
+          [
+            0,
+            45,
+            1
+          ]
+        ]
+      }
+    },
+    {
+      "op": "lighting_addrange_blocked",
+      "args": {
+        "initial": [
+          [
+            0,
+            45,
+            1
+          ]
+        ],
+        "range": [
+          30,
+          60,
+          1
+        ]
+      },
+      "expect": {
+        "mode": "json",
+        "json": [
+          [
+            0,
+            60,
+            1
+          ]
+        ]
+      }
+    }
+  ]
+}

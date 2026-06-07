@@ -1,0 +1,36 @@
+{
+  "name": "synth.playqueue_init",
+  "initial": {},
+  "steps": [
+    {
+      "op": "synth_setup_session",
+      "args": {
+        "session": {
+          "mainbook": {
+            "id": "bk",
+            "name": "main",
+            "timestamp": 0,
+            "activelist": [],
+            "pages": [],
+            "flags": {}
+          },
+          "synthflags": {}
+        }
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "synth_read_playqueue",
+      "args": {
+        "boardid": "bd-play"
+      },
+      "expect": {
+        "mode": "json",
+        "json": []
+      }
+    }
+  ]
+}

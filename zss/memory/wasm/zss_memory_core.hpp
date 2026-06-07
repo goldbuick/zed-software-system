@@ -8,11 +8,18 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <set>
 #include <sstream>
 #include <string>
 #include <vector>
 
 #include "third_party/json.hpp"
+#include "zss_memory_boardlighting.hpp"
+#include "zss_memory_boardtick.hpp"
+#include "zss_memory_cornerexits.hpp"
+#include "zss_memory_permissions.hpp"
+#include "zss_memory_rendering.hpp"
+#include "zss_memory_synthstate.hpp"
 
 namespace zss_memory {
 
@@ -26,6 +33,9 @@ struct Session {
   json elementdest;
   std::string elementsrcruntime;
   std::string elementdestruntime;
+  std::string boardrunner;
+  std::string assignedboard;
+  json synthsession = json::object();
   int sidcounter = 0;
 };
 
@@ -35,6 +45,7 @@ inline Session& session() {
 }
 
 inline void reset() {
+  permissionreset();
   session() = Session{};
   session().root = json{
       {"halt", false},
@@ -441,7 +452,10 @@ inline json runop(const std::string& op, const json& args) {
   }
   if (op == "boundary_get") {
     const std::string id = args.value("id", "");
-    return s.boundaries.value(id, json());
+    if (s.boundaries.contains(id)) {
+      return s.boundaries[id];
+    }
+    return json::object();
   }
   if (op == "boundary_alloc_and_get") {
     json value = args.value("value", json::object());
@@ -508,26 +522,245 @@ inline json runop(const std::string& op, const json& args) {
   if (op == "collect_boundary_ids") {
     json book = args["book"];
     json board = args["board"];
-    std::vector<std::string> ids;
+    std::set<std::string> idset;
     if (board.contains("id")) {
-      ids.push_back(board["id"].get<std::string>());
+      idset.insert(board["id"].get<std::string>());
     }
     const std::string boardid = board.value("id", "");
     const char* suffixes[] = {"_synth", "_layers", "_tracking", nullptr};
-    if (book.contains("flags") && book["flags"].is_object()) {
-      for (int i = 0; suffixes[i]; ++i) {
-        const std::string key = boardid + suffixes[i];
-        if (book["flags"].contains(key)) {
-          ids.push_back(book["flags"][key].get<std::string>());
+    auto maybeaddflag = [&](const std::string& key) {
+      if (book.contains("flags") && book["flags"].is_object() &&
+          book["flags"].contains(key)) {
+        idset.insert(book["flags"][key].get<std::string>());
+      }
+    };
+    for (int i = 0; suffixes[i]; ++i) {
+      maybeaddflag(boardid + suffixes[i]);
+    }
+    if (board.contains("objects") && board["objects"].is_object()) {
+      for (auto it = board["objects"].begin(); it != board["objects"].end(); ++it) {
+        const json& element = it.value();
+        if (!element.is_object()) {
+          continue;
+        }
+        if (!element.contains("id") || element.value("removed", false)) {
+          continue;
+        }
+        const std::string eid = element["id"].get<std::string>();
+        maybeaddflag(eid + "_chip");
+        if (eid.size() > 4 && eid.compare(0, 4, "pid_") == 0) {
+          maybeaddflag(eid);
+          maybeaddflag(eid + "_gadget");
         }
       }
     }
-    std::sort(ids.begin(), ids.end());
     json out = json::array();
-    for (const auto& id : ids) {
+    for (const auto& id : idset) {
       out.push_back(id);
     }
+    std::sort(out.begin(), out.end(),
+              [](const json& a, const json& b) {
+                return a.get<std::string>() < b.get<std::string>();
+              });
     return out;
+  }
+  if (op == "session_frozen_get") {
+    return s.root.value("frozen", false);
+  }
+  if (op == "session_frozen_set") {
+    s.root["frozen"] = args["value"];
+    return true;
+  }
+  if (op == "session_boardrunner_get") {
+    return s.boardrunner;
+  }
+  if (op == "session_boardrunner_set") {
+    s.boardrunner = args["value"].get<std::string>();
+    return true;
+  }
+  if (op == "session_assignedboard_get") {
+    return s.assignedboard;
+  }
+  if (op == "session_assignedboard_set") {
+    s.assignedboard = args["value"].get<std::string>();
+    return true;
+  }
+  if (op == "board_runtime_hydrated") {
+    const std::string id = args["board_id"].get<std::string>();
+    if (!s.boundaries.contains(id)) {
+      return false;
+    }
+    const json& rt = s.boundaries[id];
+    return rt.contains("board") && rt["board"].is_object();
+  }
+  if (op == "collect_tick_boundaries") {
+    json book = args["book"];
+    json boards = args["boards"];
+    std::set<std::string> out;
+    if (!boards.is_array()) {
+      return json::array();
+    }
+    for (const auto& bid : boards) {
+      const std::string id = bid.get<std::string>();
+      if (!s.boundaries.contains(id)) {
+        continue;
+      }
+      const json& rt = s.boundaries[id];
+      if (!rt.contains("board") || !rt["board"].is_object()) {
+        continue;
+      }
+      json subargs = json{{"book", book}, {"board", rt["board"]}};
+      json ids = runop("collect_boundary_ids", subargs);
+      if (ids.is_array()) {
+        for (const auto& x : ids) {
+          out.insert(x.get<std::string>());
+        }
+      }
+    }
+    json arr = json::array();
+    for (const auto& id : out) {
+      arr.push_back(id);
+    }
+    return arr;
+  }
+  if (op == "free_book") {
+    json book = args["book"];
+    if (book.contains("pages") && book["pages"].is_array()) {
+      for (const auto& page : book["pages"]) {
+        if (page.contains("id")) {
+          s.boundaries.erase(page["id"].get<std::string>());
+        }
+      }
+    }
+    if (book.contains("flags") && book["flags"].is_object()) {
+      for (auto it = book["flags"].begin(); it != book["flags"].end(); ++it) {
+        s.boundaries.erase(it.value().get<std::string>());
+      }
+    }
+    if (args.contains("runtime_ids") && args["runtime_ids"].is_array()) {
+      for (const auto& rid : args["runtime_ids"]) {
+        s.boundaries.erase(rid.get<std::string>());
+      }
+    }
+    return true;
+  }
+  if (op == "clear_codepage") {
+    const std::string pageid = args["pageid"].get<std::string>();
+    s.boundaries.erase(pageid);
+    if (args.contains("runtime_ids") && args["runtime_ids"].is_array()) {
+      for (const auto& rid : args["runtime_ids"]) {
+        s.boundaries.erase(rid.get<std::string>());
+      }
+    }
+    return true;
+  }
+  if (op == "trim_format_object") {
+    return trimformatobject(args["json"]);
+  }
+  if (op == "corner_exit_resolve") {
+    return cornerexitresolve(args);
+  }
+  if (op == "permission_reset") {
+    permissionreset();
+    return true;
+  }
+  if (op == "permission_set_operator") {
+    permissionstate().operatorid = args["operator"].get<std::string>();
+    return true;
+  }
+  if (op == "permission_map_command") {
+    return permissionmapcommand(args["command"].get<std::string>());
+  }
+  if (op == "permission_is_controlled") {
+    return permissioniscontrolled(args["command"].get<std::string>());
+  }
+  if (op == "permission_can_run") {
+    return permissioncanruncommand(args);
+  }
+  if (op == "permission_set_player_token") {
+    permissionstate().playertotoken[args["player"].get<std::string>()] =
+        args["token"];
+    return true;
+  }
+  if (op == "permission_set_role_for_token") {
+    permissionstate().rolebytoken[args["token"].get<std::string>()] =
+        args["role"];
+    return true;
+  }
+  if (op == "permission_apply_config") {
+    permissionapplyconfig(args["config"].get<std::string>());
+    return true;
+  }
+  if (op == "permission_set_command_permissions") {
+    permissionsetcommandpermissions(args);
+    return true;
+  }
+  if (op == "permission_allow_command") {
+    return permissionallowcommand(args);
+  }
+  if (op == "permission_revoke_command") {
+    return permissionrevokecommand(args);
+  }
+  if (op == "permission_read_allowlist") {
+    return permissionreadallowlistbyrole();
+  }
+  if (op == "permission_read_config") {
+    return permissionstate().permissionconfig;
+  }
+  if (op == "permission_role_has_family") {
+    return permissionrolehasfamily(args);
+  }
+  if (op == "permission_serialize") {
+    return permissionserialize();
+  }
+  if (op == "permission_read_breakdown") {
+    return permissionreadbreakdown();
+  }
+  if (op == "synth_setup_session") {
+    s.synthsession = args.value("session", json::object());
+    return true;
+  }
+  if (op == "synth_read_voices") {
+    return synthreadvoices(s.synthsession, args["boardid"].get<std::string>());
+  }
+  if (op == "synth_merge_voice") {
+    return synthmergevoice(s.synthsession, args["boardid"].get<std::string>(),
+                           args["idx"].get<int>(), args["config"].get<std::string>(),
+                           args["value"]);
+  }
+  if (op == "synth_read_playqueue") {
+    return synthreadplayqueue(s.synthsession, args["boardid"].get<std::string>());
+  }
+  if (op == "synth_queue_play") {
+    return synthqueueplay(s.synthsession, args["boardid"].get<std::string>(),
+                            args["play"].get<std::string>());
+  }
+  if (op == "tick_board") {
+    return tickboard(args);
+  }
+  if (op == "update_draw_dirty") {
+    return updatedrawdirty(args);
+  }
+  if (op == "element_ticker_prefix") {
+    return elementtickerprefix(args);
+  }
+  if (op == "element_log_prefix") {
+    return elementlogprefix(args);
+  }
+  if (op == "root_jsonpipe_chain") {
+    json replica = args["base"];
+    if (args.contains("patches") && args["patches"].is_array()) {
+      for (const auto& patch : args["patches"]) {
+        replica = jsonpieroundtrip(replica, patch);
+      }
+    }
+    return replica;
+  }
+  {
+    json lighting = lightingrunop(op, args);
+    if (!lighting.is_null()) {
+      return lighting;
+    }
   }
   if (op == "element_runtime_setup") {
     s.elementsrc = args["src"];
