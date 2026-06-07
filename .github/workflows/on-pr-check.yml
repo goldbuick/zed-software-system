@@ -35,8 +35,31 @@ jobs:
           CLANG_FORMAT: clang-format-18
         run: yarn ${{ matrix.script }}
 
-  e2e:
+  docs-and-lang:
     timeout-minutes: 20
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v5
+        with:
+          set-safe-directory: true
+
+      - name: setup node
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+
+      - name: install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: check doc links
+        run: yarn docs:check-links
+
+      - name: lang regression
+        run: yarn lang-regression:test
+
+  e2e:
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     steps:
       - name: checkout
@@ -56,4 +79,4 @@ jobs:
         run: npx playwright install --with-deps chromium firefox webkit
 
       - name: run e2e tests
-        run: yarn e2e:test
+        run: PLAYWRIGHT_INCLUDE_GADGET_E2E=1 PLAYWRIGHT_INCLUDE_JOIN_E2E=1 yarn e2e:test

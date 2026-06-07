@@ -350,7 +350,7 @@ export type CHIP = {
    * @param value - The expression to evaluate
    * @returns The evaluated value
    */
-  expr: (value: WORD) => WORD
+  expr: (...words: WORD[]) => WORD
 
   /**
    * Equality comparison. Uses deep equality for objects.

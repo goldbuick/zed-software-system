@@ -1,0 +1,38 @@
+{
+  "name": "boundaries.alloc_optional_id",
+  "initial": {},
+  "steps": [
+    {
+      "op": "boundaries_clear",
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "boundary_alloc",
+      "args": {
+        "value": {
+          "x": 1
+        },
+        "id": "mykey"
+      },
+      "expect": {
+        "mode": "string",
+        "string": "mykey"
+      }
+    },
+    {
+      "op": "boundary_get",
+      "args": {
+        "id": "mykey"
+      },
+      "expect": {
+        "mode": "json",
+        "json": {
+          "x": 1
+        }
+      }
+    }
+  ]
+}

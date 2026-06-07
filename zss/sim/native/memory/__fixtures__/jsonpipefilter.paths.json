@@ -1,0 +1,96 @@
+{
+  "name": "jsonpipefilter.paths",
+  "initial": {},
+  "steps": [
+    {
+      "op": "path_should_emit",
+      "args": {
+        "path": "/terrain/0/id"
+      },
+      "expect": {
+        "mode": "bool",
+        "value": false
+      }
+    },
+    {
+      "op": "path_should_emit",
+      "args": {
+        "path": "/terrain/42/x"
+      },
+      "expect": {
+        "mode": "bool",
+        "value": false
+      }
+    },
+    {
+      "op": "path_should_emit",
+      "args": {
+        "path": "/terrain/1/code"
+      },
+      "expect": {
+        "mode": "bool",
+        "value": false
+      }
+    },
+    {
+      "op": "path_should_emit",
+      "args": {
+        "path": "/terrain/id"
+      },
+      "expect": {
+        "mode": "bool",
+        "value": false
+      }
+    },
+    {
+      "op": "path_should_emit",
+      "args": {
+        "path": "/terrain/0/char"
+      },
+      "expect": {
+        "mode": "bool",
+        "value": true
+      }
+    },
+    {
+      "op": "path_should_emit",
+      "args": {
+        "path": "/objects/o1/id"
+      },
+      "expect": {
+        "mode": "bool",
+        "value": true
+      }
+    },
+    {
+      "op": "path_should_emit",
+      "args": {
+        "path": "/objects/o1/x"
+      },
+      "expect": {
+        "mode": "bool",
+        "value": true
+      }
+    },
+    {
+      "op": "path_should_emit",
+      "args": {
+        "path": "/books/b1/timestamp"
+      },
+      "expect": {
+        "mode": "bool",
+        "value": false
+      }
+    },
+    {
+      "op": "path_should_emit",
+      "args": {
+        "path": "/loaders/l1"
+      },
+      "expect": {
+        "mode": "bool",
+        "value": false
+      }
+    }
+  ]
+}

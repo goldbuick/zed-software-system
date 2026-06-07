@@ -1,0 +1,21 @@
+{
+  "name": "trimexport.remove_empty_object",
+  "initial": {},
+  "steps": [
+    {
+      "op": "trim_export",
+      "args": {
+        "json": {
+          "a": {},
+          "b": 1
+        }
+      },
+      "expect": {
+        "mode": "json",
+        "json": {
+          "b": 1
+        }
+      }
+    }
+  ]
+}

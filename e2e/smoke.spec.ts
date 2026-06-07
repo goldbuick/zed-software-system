@@ -5,4 +5,5 @@ test.describe.configure({ timeout: 120_000 })
 test('smoke loads canvas frame', async ({ page }) => {
   await page.goto('/')
   await expect(page.locator('#frame')).toBeVisible()
+  await expect(page.locator('#gadget')).toBeVisible()
 })

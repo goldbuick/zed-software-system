@@ -42,6 +42,7 @@ export const HOST = {
   FOREACH: 36,
   WAITFOR: 37,
   API: 38,
+  TEMPLATE: 39,
 } as const
 
 export type HostIndex = (typeof HOST)[keyof typeof HOST]
@@ -49,7 +50,11 @@ export type HostIndex = (typeof HOST)[keyof typeof HOST]
 type ArgStack = WORD[]
 
 function readword(stack: ArgStack): WORD {
-  return stack.shift() ?? 0
+  const value = stack.shift()
+  if (value === undefined) {
+    throw new Error('wasm host arg stack underflow')
+  }
+  return value
 }
 
 function readwords(stack: ArgStack): WORD[] {
@@ -107,11 +112,9 @@ export function createhostimports(
         case HOST.STAT:
           chip.stat(...readwords(stack))
           return 0
-        case HOST.HYPERLINK: {
-          const text = readword(stack)
-          chip.hyperlink(text, ...readwords(stack))
+        case HOST.HYPERLINK:
+          chip.hyperlink(...readwords(stack))
           return 0
-        }
         case HOST.OR:
           pushword(stack, chip.or(...readwords(stack)))
           return 0
@@ -173,7 +176,7 @@ export function createhostimports(
           pushword(stack, chip.opUniMinus(readword(stack)))
           return 0
         case HOST.PRINT:
-          pushword(stack, chip.print(`${readword(stack)}`))
+          pushword(stack, chip.print(String(readword(stack))))
           return 0
         case HOST.TRY:
           return chip.try(...readwords(stack)) ? 1 : 0
@@ -201,16 +204,27 @@ export function createhostimports(
             : 0
         case HOST.WAITFOR:
           return chip.waitfor(...readwords(stack)) ? 1 : 0
+        case HOST.TEMPLATE: {
+          const value = stack.pop()
+          if (value === undefined) {
+            throw new Error('wasm host arg stack underflow')
+          }
+          pushword(stack, chip.template([String(value)]))
+          return 0
+        }
         case HOST.API: {
-          const method = `${readword(stack)}`
+          const method = String(readword(stack))
           const words = readwords(stack)
-          const fn = (chip as Record<string, (...args: WORD[]) => unknown>)[
-            method
-          ]
+          const fn = (
+            chip as unknown as Record<string, (...args: WORD[]) => unknown>
+          )[method]
           if (typeof fn === 'function') {
             const result = fn.apply(chip, words)
             if (typeof result === 'number') {
               return result ? 1 : 0
+            }
+            if (result !== undefined) {
+              pushword(stack, result as WORD)
             }
           }
           return 0

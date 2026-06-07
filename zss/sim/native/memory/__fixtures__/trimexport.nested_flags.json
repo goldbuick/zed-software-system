@@ -1,0 +1,25 @@
+{
+  "name": "trimexport.nested_flags",
+  "initial": {},
+  "steps": [
+    {
+      "op": "trim_export",
+      "args": {
+        "json": {
+          "p1": {},
+          "p2": {
+            "deaths": 2
+          }
+        }
+      },
+      "expect": {
+        "mode": "json",
+        "json": {
+          "p2": {
+            "deaths": 2
+          }
+        }
+      }
+    }
+  ]
+}

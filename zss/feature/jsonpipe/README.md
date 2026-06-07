@@ -62,3 +62,13 @@ Two real consumers in production today, both visible in [`zss/device/vm/handlers
 2. **Gadget projection → gadgetclient** — [`gadgetsynctick`](../../device/vm/gadgetsynctick.ts) keeps a per-player `JSON_PIPE_HANDLE<GADGET_STATE>` and emits `gadgetclient:patch` each tick. Bad patches reply `vm:gadgetdesync`, which paints a fresh snapshot.
 
 Failure mode: when a remote `applyremote` returns `undefined`, the consumer is **desynced** and the producer must re-`paint` the affected slice (memory root, boundary id, or per-player gadget).
+
+## Performance note (tick budget)
+
+Each `emitdiff(root)` runs `fast-json-patch` **`compare(shadow, root)`** over the full document for that slice. On every sim tick the VM may call this for:
+
+- one **MEMORY_ROOT** diff (fan-out to all elected boardrunners),
+- one diff **per active boundary id** per elected board,
+- one **GADGET_STATE** diff **per player** in the active list.
+
+Worst-case op count scales with document size and number of changed paths, not with a fixed cap. Monitor `vm:boardrunnermemorysync`, `vm:boundarysync`, and `vm:gadgetsync:emitdiff` in the perf overlay when boards or player counts grow.

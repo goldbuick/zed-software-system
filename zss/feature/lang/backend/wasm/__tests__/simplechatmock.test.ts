@@ -17,18 +17,17 @@ jest.mock('zss/config', () => ({
   WASM_SCRIPT: false,
 }))
 
-import { type CHIP, createchip } from 'zss/chip'
+import { type CHIP } from 'zss/chip'
 import { readcorpus } from 'zss/feature/lang/backend/wasm/corpus'
-import { compilenativewasm } from 'zss/feature/lang/backend/wasm/langparityload'
+import { compilenativewasmfortest } from 'zss/feature/lang/backend/wasm/testhelpers/nativewasmtestutil'
 import { loadscriptsync } from 'zss/feature/lang/wasmloader'
-import { DRIVER_TYPE } from 'zss/firmware/runner'
 import type { WORD } from 'zss/words/types'
 
 describe('simple_chat wasm mock chip', () => {
   const source = readcorpus('integration', 'simple_chat_player')
 
   function runmock() {
-    const wasmbytes = compilenativewasm(source)
+    const wasmbytes = compilenativewasmfortest(source)
     const texts: string[] = []
     let ec = 1
     let ys = 0
@@ -54,7 +53,7 @@ describe('simple_chat wasm mock chip', () => {
         ys = 1
       },
       text: (value: WORD) => {
-        texts.push(`${value}`)
+        texts.push(String(value))
         return 0
       },
       command: (...words: WORD[]) => {

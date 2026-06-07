@@ -235,7 +235,7 @@ flowchart LR
 | `compileast` | [ast.md](ast.md) |
 | JS emission | [transformer.md](transformer.md) |
 | `compile` / `GeneratorBuild` | [generator.md](generator.md) |
-| Export catalog | [../backend/typescript/EXPORTED_FUNCTIONS.md](../backend/typescript/EXPORTED_FUNCTIONS.md) |
+| Export catalog | [../EXPORTED_FUNCTIONS.md](../EXPORTED_FUNCTIONS.md) |
 
 ## See also
 

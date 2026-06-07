@@ -1,6 +1,6 @@
 # WASM C++ port: game sim and execution
 
-**Status:** design / planning (not implemented). This document captures the agreed approach for porting ZSS game simulation and script execution from TypeScript to a linked Emscripten C++ module.
+**Status:** partial — **lang WASM** (compile + per-script run) and **Daisy synth WASM** are shipped; **full sim `zss_runtime.wasm`** remains design/planning.
 
 **Related:**
 
@@ -14,7 +14,7 @@
 
 | Area | Today | Target |
 |------|-------|--------|
-| Script execution | Chevrotain → JS string → `new Function('api', code)` | ZSS **bytecode** + C++ interpreter |
+| Script execution | Chevrotain → JS string → `new Function('api', code)` **or** lang WASM (`ZSS_WASM_SCRIPT`) | ZSS **bytecode** + C++ interpreter in **`zss_runtime.wasm`** |
 | Sim / memory / firmware | TypeScript in sim + boardrunner workers | **`zss_runtime.wasm`** (C++) in one **wasm worker** |
 | Synth DSP | `zss_daisy.wasm` in AudioWorklet | Same **runtime** binary; `_zss_process` on AudioWorklet |
 | Workers per tab | main + sim + boardrunner + heavy | main + **wasm** + **heavy** |

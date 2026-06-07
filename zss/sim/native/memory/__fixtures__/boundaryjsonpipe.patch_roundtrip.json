@@ -1,0 +1,29 @@
+{
+  "name": "boundaryjsonpipe.patch_roundtrip",
+  "initial": {},
+  "steps": [
+    {
+      "op": "jsonpipe_roundtrip",
+      "args": {
+        "base": {
+          "code": "a",
+          "n": 1
+        },
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/n",
+            "value": 2
+          }
+        ]
+      },
+      "expect": {
+        "mode": "json",
+        "json": {
+          "code": "a",
+          "n": 2
+        }
+      }
+    }
+  ]
+}

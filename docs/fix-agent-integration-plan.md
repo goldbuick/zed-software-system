@@ -128,8 +128,8 @@ On worker teardown:
 |-----------|----------|
 | Human boardrunner | [`boardrunnerspace`](../zss/boardrunnerspace.ts), `register:ready` |
 | Per-agent runtime | `agentspace` worker per agent |
-| TTS | [`ttsspace`](../zss/ttsspace.ts) — lazy start via `ensurettsworker()` |
-| STT | [`sttspace`](../zss/sttspace.ts) — lazy start via `ensuresttworker()` |
+| TTS | `zss/ttsspace.ts` (planned) — lazy start via `ensurettsworker()` |
+| STT | `zss/sttspace.ts` (planned) — lazy start via `ensuresttworker()` |
 | LLM presets | Applied per agentworker; `#agent model` broadcasts preset to all running agent workers |
 | Roster persistence | IDB via register/main; restore spawns workers |
 | Human doot | `register` `second` → `vmdoot(human)` |
@@ -184,8 +184,8 @@ Replace [`shouldforwardclienttoheavy`](../zss/device/forward.ts) with `shouldfor
 **Goal:** `#agent start` spawns one agentspace worker; that worker runs boards and LLM for that agent.
 
 1. **New files**
-   - [`zss/agentspace.ts`](../zss/agentspace.ts)
-   - [`zss/device/agentworker.ts`](../zss/device/agentworker.ts) — absorb from [`heavy.ts`](../zss/device/heavy.ts): `modelprompt`, `modelstop`, `pilotnotify`, `queryresult`, `llmpreset`, `executeclicommands`, per-worker job queue
+   - `zss/agentspace.ts` (planned)
+   - `zss/device/agentworker.ts` (planned) — absorb from [`heavy.ts`](../zss/device/heavy.ts): `modelprompt`, `modelstop`, `pilotnotify`, `queryresult`, `llmpreset`, `executeclicommands`, per-worker job queue
    - Slim main-thread coordinator for roster list UI + IDB persist (from [`agentlifecycle.ts`](../zss/feature/heavy/agentlifecycle.ts))
 
 2. **[`zss/platform.ts`](../zss/platform.ts)**
@@ -211,8 +211,8 @@ Replace [`shouldforwardclienttoheavy`](../zss/device/forward.ts) with `shouldfor
 **Goal:** Zero references to heavyspace in the running app.
 
 1. **New on-demand workers**
-   - [`zss/ttsspace.ts`](../zss/ttsspace.ts) + [`zss/device/ttsworker.ts`](../zss/device/ttsworker.ts) — move TTS handlers from [`heavy.ts`](../zss/device/heavy.ts)
-   - [`zss/sttspace.ts`](../zss/sttspace.ts) + [`zss/device/sttworker.ts`](../zss/device/sttworker.ts) — migrate [`speechtotext.ts`](../zss/feature/speechtotext.ts) off main thread
+   - `zss/ttsspace.ts` + `zss/device/ttsworker.ts` (planned) — move TTS handlers from [`heavy.ts`](../zss/device/heavy.ts)
+   - `zss/sttspace.ts` + `zss/device/sttworker.ts` (planned) — migrate [`speechtotext.ts`](../zss/feature/speechtotext.ts) off main thread
    - [`platform.ts`](../zss/platform.ts): `ensurettsworker()` / `ensuresttworker()` — **not** called from `createplatform`; invoked from outbound route before `postMessage`
 
 2. **Delete**

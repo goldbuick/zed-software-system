@@ -4,7 +4,9 @@
 
 From the [root README](../README.md): a **ZZT-inspired, web-based fantasy terminal**—a creative-coding / game environment where boards, elements, and scripts feel like a retro terminal world. The repo is a **TypeScript monolith**: UI in [`cafe/`](../cafe/), engine in [`zss/`](.), CLI in [`src/`](../src/).
 
-**Planned (design only, not implemented):** port game sim and script execution to **`zss_runtime.wasm`** (C++ bytecode VM + firmware). See [docs/wasm-sim-port.md](../docs/wasm-sim-port.md) and [docs/multiplayer-wasm-architecture.md](../docs/multiplayer-wasm-architecture.md).
+**Shipped today:** per-script **lang WASM** (`ZSS_WASM_SCRIPT`, compile + run in browser/worker) and **Daisy synth WASM** in the AudioWorklet. See [`zss/feature/lang/`](feature/lang/) and [`zss/feature/synth/`](feature/synth/).
+
+**Planned (design only):** port the **full game sim** and firmware execution to **`zss_runtime.wasm`** (C++ bytecode VM). Lang WASM covers script compile/run; full sim WASM is a separate migration. See [docs/wasm-sim-port.md](../docs/wasm-sim-port.md) and [docs/multiplayer-wasm-architecture.md](../docs/multiplayer-wasm-architecture.md).
 
 ---
 

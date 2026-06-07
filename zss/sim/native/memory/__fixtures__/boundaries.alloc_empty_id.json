@@ -1,0 +1,31 @@
+{
+  "name": "boundaries.alloc_empty_id",
+  "initial": {},
+  "steps": [
+    {
+      "op": "boundaries_clear",
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "boundary_alloc_and_get",
+      "args": {
+        "value": {
+          "z": 3
+        },
+        "id": ""
+      },
+      "expect": {
+        "mode": "json",
+        "json": {
+          "id_nonempty": true,
+          "value": {
+            "z": 3
+          }
+        }
+      }
+    }
+  ]
+}

@@ -295,6 +295,9 @@ private:
           emit_.emit_push_f64(WasmModuleBuilder::IMPORT_PUSH_F64,
                               ast->number_value);
         }
+      } else if (ast->literal_kind == LITERAL::TEMPLATE ||
+                 ast->value.find('$') != std::string::npos) {
+        emittemplatepush(ast->value);
       } else {
         emitstring(ast->value);
       }
@@ -311,6 +314,16 @@ private:
     emit_.emit_push_str(WasmModuleBuilder::IMPORT_PUSH_STR,
                         static_cast<int32_t>(ptr),
                         static_cast<int32_t>(value.size()));
+  }
+
+  void emittemplatepush(const std::string& value) {
+    if (value.find('$') == std::string::npos) {
+      emitstring(value);
+      return;
+    }
+    trackhost(HOST_TEMPLATE);
+    emitstring(value);
+    emit_.emit_hostcall(WasmModuleBuilder::IMPORT_CALL, HOST_TEMPLATE);
   }
 
   int methodhost(const std::string& method) {
@@ -545,7 +558,7 @@ private:
       break;
     case NODE::TEXT: {
       trackhost(HOST_TEXT);
-      emitstring(ast->value);
+      emittemplatepush(ast->value);
       emit_.emit_hostcall(WasmModuleBuilder::IMPORT_CALL, HOST_TEXT);
       emit_.emit_drop();
       break;
@@ -569,7 +582,7 @@ private:
     }
     case NODE::HYPERLINK: {
       trackhost(HOST_HYPERLINK);
-      emitstring(ast->text);
+      emittemplatepush(ast->text);
       std::istringstream iss(ast->link);
       std::string part;
       while (iss >> part)

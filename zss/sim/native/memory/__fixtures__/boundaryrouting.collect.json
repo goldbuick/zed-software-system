@@ -1,0 +1,38 @@
+{
+  "name": "boundaryrouting.collect",
+  "initial": {},
+  "steps": [
+    {
+      "op": "collect_boundary_ids",
+      "args": {
+        "book": {
+          "id": "bk",
+          "name": "main",
+          "timestamp": 0,
+          "activelist": [],
+          "pages": [],
+          "flags": {
+            "bd1_synth": "s1",
+            "bd1_layers": "l1",
+            "bd1_tracking": "t1"
+          }
+        },
+        "board": {
+          "id": "bd1",
+          "name": "b",
+          "terrain": [],
+          "objects": {}
+        }
+      },
+      "expect": {
+        "mode": "json",
+        "json": [
+          "bd1",
+          "l1",
+          "s1",
+          "t1"
+        ]
+      }
+    }
+  ]
+}

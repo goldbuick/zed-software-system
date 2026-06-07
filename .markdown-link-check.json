@@ -1,8 +1,8 @@
 {
   "ignorePatterns": [
-    { "pattern": "^https?://" },
-    { "pattern": "^mailto:" },
-    { "pattern": "^ftp://" }
+    { "pattern": "^(?!https?://)" },
+    { "pattern": "^https://localhost" },
+    { "pattern": "^http://localhost" }
   ],
   "aliveStatusCodes": [200, 206, 403]
 }

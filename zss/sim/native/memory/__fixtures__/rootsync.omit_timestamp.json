@@ -1,0 +1,67 @@
+{
+  "name": "rootsync.omit_timestamp",
+  "initial": {
+    "root": {
+      "halt": false,
+      "frozen": false,
+      "topic": "",
+      "operator": "",
+      "session": "s",
+      "software": {
+        "main": "",
+        "temp": ""
+      },
+      "books": {
+        "b1": {
+          "id": "b1",
+          "name": "main",
+          "timestamp": 1,
+          "activelist": [],
+          "pages": [],
+          "flags": {}
+        }
+      },
+      "loaders": {}
+    }
+  },
+  "steps": [
+    {
+      "op": "root_import",
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "root_wire_diff_empty",
+      "args": {
+        "root": {
+          "halt": false,
+          "frozen": false,
+          "topic": "",
+          "operator": "",
+          "session": "s",
+          "software": {
+            "main": "",
+            "temp": ""
+          },
+          "books": {
+            "b1": {
+              "id": "b1",
+              "name": "main",
+              "timestamp": 999,
+              "activelist": [],
+              "pages": [],
+              "flags": {}
+            }
+          },
+          "loaders": {}
+        }
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    }
+  ]
+}

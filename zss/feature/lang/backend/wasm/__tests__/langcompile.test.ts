@@ -22,15 +22,13 @@ jest.mock('zss/words/textformat', () => ({
   tokenize: () => ({ errors: [{ message: 'mock' }], tokens: [] }),
 }))
 
-import {
-  compilenativewasm,
-  readfixture,
-} from 'zss/feature/lang/backend/wasm/langparityload'
+import { readfixture } from 'zss/feature/lang/backend/wasm/langparityload'
+import { compilenativewasmfortest } from 'zss/feature/lang/backend/wasm/testhelpers/nativewasmtestutil'
 
 describe('lang compile wasm output', () => {
   it('native-produced if_break wasm is valid module bytes', () => {
     const source = readfixture('if_break', 'zss')
-    const wasmbytes = compilenativewasm(source)
+    const wasmbytes = compilenativewasmfortest(source)
     expect(wasmbytes.length).toBeGreaterThan(8)
     expect(wasmbytes[0]).toBe(0x00)
     expect(wasmbytes[1]).toBe(0x61)
@@ -40,7 +38,7 @@ describe('lang compile wasm output', () => {
 
   it('native-produced divide wasm references host dispatch', () => {
     const source = readfixture('divide', 'zss')
-    const wasmbytes = compilenativewasm(source)
+    const wasmbytes = compilenativewasmfortest(source)
     expect(wasmbytes.length).toBeGreaterThan(0)
   })
 })

@@ -243,8 +243,8 @@ Play-wide:    echo, reverb, fcrush, autofilter, distort, vibrato, autowah
 | Topic | Path |
 |-------|------|
 | WASM SAB + config | [wasmfxstate.ts](../backend/wasm/wasmfxstate.ts) |
-| WASM DSP chain | [wasmfxplaycode.ts](../backend/wasm/wasmfxplaycode.ts) |
+| WASM DSP chain | [wasmfxplaycode.ts](../archive/maxi/wasmfxplaycode.ts) |
 | Bus mapping | [voicefxgroup.ts](../voicefxgroup.ts) |
-| Firmware commands | [firmware/audio.ts](../../firmware/audio.ts) |
+| Firmware commands | [firmware/audio.ts](../../../firmware/audio.ts) |
 | Tone FX chain | [archive/tone/fx.ts](../archive/tone/fx.ts) |
 | Tone voicefx dispatch | [archive/tone/voicefx/index.ts](../archive/tone/voicefx/index.ts) |

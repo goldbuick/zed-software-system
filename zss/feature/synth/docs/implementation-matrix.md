@@ -112,7 +112,7 @@ flowchart LR
 
 ## Table 4 — Drums (12 IDs)
 
-**Daisy backend:** [DaisySP Drums](https://github.com/electro-smith/DaisySP/tree/master/Source/Drums/) where classes exist; unmatched IDs stay custom. **Maximilian** keeps Tone-parity kit in [`drumplaycode.ts`](../backend/wasm/drumplaycode.ts).
+**Daisy backend:** [DaisySP Drums](https://github.com/electro-smith/DaisySP/tree/master/Source/Drums/) where classes exist; unmatched IDs stay custom. **Maximilian** keeps Tone-parity kit in [`archive/maxi/drumplaycode.ts`](../archive/maxi/drumplaycode.ts).
 
 | ID | Drum | Maximilian | DaisySP WASM | Tone | DaisySP class | Swap status | Key files |
 |----|------|------------|--------------|------|---------------|-------------|-----------|
@@ -210,7 +210,7 @@ flowchart LR
 | Daisy DSP | [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp) |
 | Daisy build | [`build-daisy.sh`](../backend/daisy/native/build-daisy.sh) |
 | Backend factory | [`synthbackendfactory.ts`](../backend/synthbackendfactory.ts) |
-| Firmware | [`firmware/audio.ts`](../../firmware/audio.ts) |
+| Firmware | [`firmware/audio.ts`](../../../firmware/audio.ts) |
 
 ---
 

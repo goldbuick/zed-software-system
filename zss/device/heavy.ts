@@ -8,6 +8,7 @@ import {
   heavyrunrestoreagents,
   heavyrunsyncuserdisplay,
 } from 'zss/feature/heavy/agentlifecycle'
+import { runagentpromptloop } from 'zss/feature/heavy/agentprompt'
 import {
   formatagentinfofortext,
   formatboardfortext,
@@ -15,24 +16,10 @@ import {
 } from 'zss/feature/heavy/formatstate'
 import { enqueueheavyjob } from 'zss/feature/heavy/heavyjobqueue'
 import {
-  type HEAVY_LLM_PRESET,
-  heavyllmpresetbackend,
-  normalizeheavylmpreset,
-} from 'zss/feature/heavy/heavyllmpreset'
-import { RUN_ZSS_COMMAND_TOOL_NAME } from 'zss/feature/heavy/llm/agenttools'
-import type { MODEL_RESULT } from 'zss/feature/heavy/model'
-import {
-  applyheavylmpreset,
   destroysharedmodel,
-  getheavylmeffectivepreset,
   modelclassify,
-  modelgenerate,
   modelgenerategemma4,
 } from 'zss/feature/heavy/model'
-import {
-  buildsystemprompt,
-  buildsystempromptgemma,
-} from 'zss/feature/heavy/prompt'
 import { requestaudiobytes, requestinfo } from 'zss/feature/heavy/tts'
 import {
   query as memoryquery,
@@ -44,10 +31,7 @@ import { perfmeasure } from 'zss/perf/ui'
 
 import { apierror, apilog, vmlastinputtouch, workstatus } from './api'
 
-const MAX_REPROMPT = 5
 const activeagents = new Set<string>()
-
-type Agenthistorymessage = Message & { name?: string }
 
 async function executeclicommands(
   player: string,
@@ -63,23 +47,6 @@ async function executeclicommands(
       command: commands[i],
     })
   }
-}
-
-function splitresponse(text: string): string[] {
-  const lines = text.split('\n')
-  const commands: string[] = []
-  for (let i = 0; i < lines.length; ++i) {
-    const line = lines[i].trim()
-    if (line.startsWith('[') && line.endsWith(']')) {
-      continue
-    }
-    if (line.startsWith('#') || line.startsWith('!')) {
-      commands.push(line)
-    } else if (line) {
-      commands.push(`"${line}`)
-    }
-  }
-  return commands
 }
 
 function createonworking(player: string) {
@@ -161,93 +128,14 @@ async function runagentprompt(
   intent?: string,
 ) {
   activeagents.add(agentid)
-  const history: Agenthistorymessage[] = [{ role: 'user', content: prompt }]
-  const usegemma =
-    heavyllmpresetbackend(getheavylmeffectivepreset()) === 'gemma4'
-
   apilog(heavy, player, '$21 input $7', prompt)
 
   try {
-    let result!: MODEL_RESULT
-    for (let iteration = 0; iteration < MAX_REPROMPT; ++iteration) {
-      const { context, agentinfo } = await queryboardstate(agentid, agentname)
-
-      if (usegemma) {
-        const systemprompt = buildsystempromptgemma(
-          agentname,
-          agentinfo,
-          context,
-          intent,
-        )
-        const g = await modelgenerategemma4(systemprompt, history, onworking)
-
-        if (g.toolcommandlines.length > 0) {
-          history.push({ role: 'assistant', content: g.raw })
-          const hascontinue = g.toolcommandlines.some(
-            (line) => line.trim() === '#continue',
-          )
-          const execcommands = g.toolcommandlines.filter(
-            (line) => line.trim() !== '#continue',
-          )
-          if (execcommands.length > 0) {
-            await executeclicommands(player, agentid, execcommands)
-          }
-          history.push({
-            role: 'tool',
-            name: RUN_ZSS_COMMAND_TOOL_NAME,
-            content: JSON.stringify({
-              ok: true,
-              executed:
-                execcommands.length > 0
-                  ? execcommands.join('\n')
-                  : '(#continue)',
-            }),
-          })
-          if (!hascontinue) {
-            break
-          }
-          continue
-        }
-
-        history.push({
-          role: 'assistant',
-          content: g.text || g.raw,
-        })
-        break
-      }
-
-      const systemprompt = buildsystemprompt(
-        agentname,
-        agentinfo,
-        context,
-        intent,
-      )
-
-      result = await modelgenerate(systemprompt, history, onworking)
-
-      history.push({ role: 'assistant', content: result.text })
-      const commands = splitresponse(result.text)
-      const hascontinue = commands.some((line) => line.trim() === '#continue')
-      const execcommands = commands.filter(
-        (line) => line.trim() !== '#continue',
-      )
-
-      if (execcommands.length === 0 && !hascontinue) {
-        break
-      }
-
-      await executeclicommands(player, agentid, execcommands)
-
-      const executed = execcommands.join('\n')
-      history.push({
-        role: 'user',
-        content: `[EXECUTED]\n${executed}\n[/EXECUTED]\n`,
-      })
-
-      if (!hascontinue) {
-        break
-      }
-    }
+    await runagentpromptloop(player, agentid, agentname, prompt, onworking, {
+      queryboardstate,
+      modelgenerategemma4,
+      executeclicommands,
+    }, intent)
   } finally {
     vmlastinputtouch(heavy, player, agentid)
   }
@@ -331,35 +219,8 @@ const heavy = createdevice('heavy', [], (message) => {
           }
         }
         break
-      case 'llmpreset': {
-        let preset: HEAVY_LLM_PRESET | undefined
-        let showtoast = true
-        if (isstring(message.data)) {
-          preset = normalizeheavylmpreset(message.data)
-        } else if (isarray(message.data) && message.data.length >= 1) {
-          const raw = message.data[0]
-          if (isstring(raw)) {
-            preset = normalizeheavylmpreset(raw)
-          }
-          if (message.data[1] === false) {
-            showtoast = false
-          }
-        }
-        if (!preset) {
-          break
-        }
-        const applied = preset
-        const toast = showtoast
-        enqueueheavyjob(heavy, message.player, () => {
-          applyheavylmpreset(applied)
-          if (toast) {
-            workstatus(heavy, message.player, `llm ${applied}`)
-            apilog(heavy, message.player, `heavy llm: ${applied}`)
-          }
-          return Promise.resolve()
-        })
+      case 'llmpreset':
         break
-      }
       case 'pilotnotify':
         break
       case 'queryresult':

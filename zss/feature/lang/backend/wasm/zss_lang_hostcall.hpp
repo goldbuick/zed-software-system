@@ -43,7 +43,8 @@ enum HostIndex : int {
   HOST_FOREACH = 36,
   HOST_WAITFOR = 37,
   HOST_API = 38,
-  HOST_COUNT = 39
+  HOST_TEMPLATE = 39,
+  HOST_COUNT = 40
 };
 
 inline const char* hostmethodname(int index) {
@@ -85,7 +86,8 @@ inline const char* hostmethodname(int index) {
                                 "foreachstart",
                                 "foreach",
                                 "waitfor",
-                                "api"};
+                                "api",
+                                "template"};
   if (index < 0 || index >= HOST_COUNT)
     return "unknown";
   return names[index];

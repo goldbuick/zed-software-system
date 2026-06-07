@@ -12,7 +12,7 @@ See also: [fx-types-reference.md](fx-types-reference.md), [voiceconfig.md](voice
 | `#synth1`–`#synth4` | 0–3 individually | Per play voice |
 | `#synth5 …` | 4–7 | `#bgplay` voices |
 
-Config path: `#synth` → [audio.ts](../../firmware/audio.ts) `handlesynthvoice` → `synthvoice` → backend `setvoiceconfig` → WASM [wasmvoiceconfig.ts](../backend/wasm/wasmvoiceconfig.ts) or Tone [voiceconfig/index.ts](../archive/tone/voiceconfig/index.ts).
+Config path: `#synth` → [audio.ts](../../../firmware/audio.ts) `handlesynthvoice` → `synthvoice` → backend `setvoiceconfig` → WASM [wasmvoiceconfig.ts](../backend/wasm/wasmvoiceconfig.ts) or Tone [voiceconfig/index.ts](../archive/tone/voiceconfig/index.ts).
 
 ---
 
@@ -159,7 +159,7 @@ Default envelope: same WASM global `0.01/0.01/0.5/0.01`.
 
 **Tone FMSynth library baseline:** ModulationSynth defaults — harmonicity `3`, modulationIndex `10`.
 
-### WASM hardcoded in play code ([voiceplaycode.ts](../backend/wasm/voiceplaycode.ts))
+### WASM hardcoded in play code ([voiceplaycode.ts](../archive/maxi/voiceplaycode.ts))
 
 Bell FM: harm `1.5`, modindex `30`, envelope init → **0.01/3/0.3/6** s. Sparkle: harm `5.1`, modindex `32`, envelope → **0.001/1.4/0/0.321** s. Output `× 0.35`.
 
@@ -396,7 +396,7 @@ Organ:      drawbar | click | leak | bright             (organ voices)
 
 | Topic | Path |
 |-------|------|
-| Command parsing | [firmware/audio.ts](../../firmware/audio.ts) |
+| Command parsing | [firmware/audio.ts](../../../firmware/audio.ts) |
 | Type validation | [voiceconfig/validation.ts](../voiceconfig/validation.ts) |
 | WASM voice routing | [wasmvoiceconfig.ts](../backend/wasm/wasmvoiceconfig.ts) |
 | WASM play behavior | [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp) (archived: [`archive/maxi/voiceplaycode.ts`](../archive/maxi/voiceplaycode.ts)) |

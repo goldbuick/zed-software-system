@@ -1,0 +1,74 @@
+{
+  "name": "book.flags_trim",
+  "initial": {},
+  "steps": [
+    {
+      "op": "boundaries_clear",
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "book_import_wire",
+      "args": {
+        "json": [
+          0,
+          "sid_6jOD3dNEr4C3",
+          1,
+          "rareslothsstudy",
+          2,
+          0,
+          3,
+          [],
+          4,
+          [],
+          5,
+          {
+            "cleared-player_gadget": {},
+            "kept-player_gadget": {
+              "deaths": 2,
+              "highscore": 99
+            }
+          }
+        ]
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "book_export_trimmed_json",
+      "expect": {
+        "mode": "json",
+        "json": {
+          "id": "sid_6jOD3dNEr4C3",
+          "name": "rareslothsstudy",
+          "timestamp": 0,
+          "activelist": [],
+          "pages": [],
+          "flags": {
+            "kept-player_gadget": {
+              "deaths": 2,
+              "highscore": 99
+            }
+          }
+        }
+      }
+    },
+    {
+      "op": "book_read_flags",
+      "args": {
+        "owner": "kept-player_gadget"
+      },
+      "expect": {
+        "mode": "json",
+        "json": {
+          "deaths": 2,
+          "highscore": 99
+        }
+      }
+    }
+  ]
+}

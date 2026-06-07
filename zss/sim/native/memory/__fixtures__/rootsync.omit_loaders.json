@@ -1,0 +1,51 @@
+{
+  "name": "rootsync.omit_loaders",
+  "initial": {
+    "root": {
+      "halt": false,
+      "frozen": false,
+      "topic": "",
+      "operator": "",
+      "session": "s",
+      "software": {
+        "main": "",
+        "temp": ""
+      },
+      "books": {},
+      "loaders": {}
+    }
+  },
+  "steps": [
+    {
+      "op": "root_import",
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "root_wire_diff_empty",
+      "args": {
+        "root": {
+          "halt": false,
+          "frozen": false,
+          "topic": "",
+          "operator": "",
+          "session": "s",
+          "software": {
+            "main": "",
+            "temp": ""
+          },
+          "books": {},
+          "loaders": {
+            "l1": "code"
+          }
+        }
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    }
+  ]
+}

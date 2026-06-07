@@ -28,10 +28,12 @@ import path from 'node:path'
 import { type CHIP, createchip } from 'zss/chip'
 import { compile } from 'zss/feature/lang'
 import {
-  compilenativewasm,
   readfixture,
-  runnativeparitygate,
 } from 'zss/feature/lang/backend/wasm/langparityload'
+import {
+  compilenativewasmfortest,
+  runnativeparitygatefortest,
+} from 'zss/feature/lang/backend/wasm/testhelpers/nativewasmtestutil'
 import { loadscriptsync } from 'zss/feature/lang/wasmloader'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
 import type { WORD } from 'zss/words/types'
@@ -44,7 +46,7 @@ function readlocalfixture(name: string) {
 
 describe('lang native wasm parity gate', () => {
   it('native compiler emits wasm magic for all fixtures', () => {
-    const output = runnativeparitygate()
+    const output = runnativeparitygatefortest()
     expect(output).toContain('fail=0')
   })
 })
@@ -75,7 +77,7 @@ describe('lang wasm behavioral parity', () => {
   it.each(FIXTURES)('%s wasm run matches JS oracle', (id) => {
     const source = readfixture(id, 'zss')
     const jsbuild = compile(id, source)
-    const wasmbytes = compilenativewasm(source)
+    const wasmbytes = compilenativewasmfortest(source)
 
     expect(wasmbytes[0]).toBe(0x00)
     expect(wasmbytes[1]).toBe(0x61)
@@ -99,7 +101,7 @@ describe('lang wasm behavioral parity', () => {
   it('switch break runs all cases before end on stat_line', () => {
     const source = readfixture('stat_line', 'zss')
     const jsbuild = compile('stat_line', source)
-    const wasmbytes = compilenativewasm(source)
+    const wasmbytes = compilenativewasmfortest(source)
     const wasmbuild = {
       ...jsbuild,
       wasmbytes,
@@ -130,7 +132,7 @@ describe('lang wasm behavioral parity', () => {
 #think
 `
     const jsbuild = compile('player', source)
-    const wasmbytes = compilenativewasm(source)
+    const wasmbytes = compilenativewasmfortest(source)
     expect(wasmbytes.length).toBeGreaterThan(8)
     const wasmbuild = {
       ...jsbuild,
@@ -151,7 +153,7 @@ describe('lang wasm behavioral parity', () => {
   it('command retry keeps execution cursor on short_go', () => {
     const source = readfixture('short_go', 'zss')
     const jsbuild = compile('short_go', source)
-    const wasmbytes = compilenativewasm(source)
+    const wasmbytes = compilenativewasmfortest(source)
     const wasmbuild = {
       ...jsbuild,
       wasmbytes,
@@ -181,7 +183,7 @@ describe('lang wasm behavioral parity', () => {
 
   it('compiles simple chat player script to wasm', () => {
     const source = readlocalfixture('simple_chat_player.zss')
-    const wasmbytes = compilenativewasm(source)
+    const wasmbytes = compilenativewasmfortest(source)
     expect(wasmbytes[0]).toBe(0x00)
     expect(wasmbytes[1]).toBe(0x61)
     expect(wasmbytes[2]).toBe(0x73)
@@ -191,13 +193,13 @@ describe('lang wasm behavioral parity', () => {
 
   it('compiles nested elseif chain to wasm', () => {
     const source = readlocalfixture('elseif_chain_nested.zss')
-    const wasmbytes = compilenativewasm(source)
+    const wasmbytes = compilenativewasmfortest(source)
     expect(wasmbytes.length).toBeGreaterThan(8)
   })
 
   it('compiles take/else inside if/elseif to wasm', () => {
     const source = readlocalfixture('take_else_in_elseif.zss')
-    const wasmbytes = compilenativewasm(source)
+    const wasmbytes = compilenativewasmfortest(source)
     expect(wasmbytes.length).toBeGreaterThan(8)
   })
 
@@ -208,7 +210,7 @@ describe('lang wasm behavioral parity', () => {
     expect(jsbuild.source).toContain("api.text('Simple $9 $9 $9')")
     expect(jsbuild.source).not.toContain('api.text(\'"Simple')
 
-    const wasmbytes = compilenativewasm(source)
+    const wasmbytes = compilenativewasmfortest(source)
     const wasmliterals = new TextDecoder('utf-8', { fatal: false }).decode(
       wasmbytes,
     )
@@ -220,10 +222,10 @@ describe('lang wasm behavioral parity', () => {
 
   it('flicker lantern sets light via pick with mixed command args', () => {
     const source = readlocalfixture('flicker_lantern.zss')
-    expect(compilenativewasm(source).length).toBeGreaterThan(8)
+    expect(compilenativewasmfortest(source).length).toBeGreaterThan(8)
 
     const minimal = '#set light pick 5 7 11 12\n'
-    const wasmbytes = compilenativewasm(minimal)
+    const wasmbytes = compilenativewasmfortest(minimal)
     const invoked: WORD[][] = []
     let ec = 1
     const chip = {
@@ -257,7 +259,7 @@ describe('lang wasm behavioral parity', () => {
     (id) => {
       const source = readbookfixture(id)
       const jsbuild = compile(id, source)
-      const wasmbytes = compilenativewasm(source)
+      const wasmbytes = compilenativewasmfortest(source)
       const wasmbuild = {
         ...jsbuild,
         wasmbytes,

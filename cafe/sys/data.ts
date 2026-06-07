@@ -1571,7 +1571,7 @@ export const FEATURE_DOMAINS: FeatureDomain[] = [
       [
         'Model presets',
         'Dev',
-        'llama, tiny, gemma presets for heavy worker.',
+        'Gemma 4 E2B in-browser agent LLM for heavy worker.',
         'heavy:llmpreset',
       ],
       [

@@ -1,0 +1,85 @@
+{
+  "name": "book.wire_roundtrip",
+  "initial": {},
+  "steps": [
+    {
+      "op": "boundaries_clear",
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "book_import_wire",
+      "args": {
+        "json": [
+          0,
+          "sid_fgo.JAbIjS1E",
+          1,
+          "chubbybanksprove",
+          2,
+          0,
+          3,
+          [],
+          4,
+          [
+            [
+              0,
+              "sid_VlJJBo74TMQJ",
+              1,
+              "@board snapjson\n@exitnorth roomn\n",
+              2,
+              [
+                0,
+                [],
+                1,
+                [],
+                5,
+                "roomn"
+              ]
+            ]
+          ],
+          5,
+          {}
+        ]
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "book_export_trimmed_json",
+      "expect": {
+        "mode": "json",
+        "json": {
+          "id": "sid_fgo.JAbIjS1E",
+          "name": "chubbybanksprove",
+          "timestamp": 0,
+          "activelist": [],
+          "pages": [
+            {
+              "id": "sid_VlJJBo74TMQJ",
+              "code": "@board snapjson\n@exitnorth roomn\n",
+              "board": {
+                "terrain": [],
+                "exitnorth": "roomn"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "op": "codepage_runtime_field",
+      "args": {
+        "pageid": "sid_VlJJBo74TMQJ",
+        "field": "exitnorth"
+      },
+      "expect": {
+        "mode": "json",
+        "json": "roomn"
+      }
+    }
+  ]
+}

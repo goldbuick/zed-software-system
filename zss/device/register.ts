@@ -22,7 +22,6 @@ import {
 } from 'zss/feature/heavy/agentsroster'
 import {
   HEAVY_LLM_STORAGE_KEY,
-  normalizeheavylmpreset,
 } from 'zss/feature/heavy/heavyllmpreset'
 import { itchiopublish } from 'zss/feature/itchiopublish'
 import { withclipboard } from 'zss/feature/keyboard'
@@ -402,13 +401,8 @@ export const register = createdevice(
             if (isvalidagentsroster(raw)) {
               heavyrestoreagents(register, myplayerid, raw)
             }
-            const llmraw = vars[HEAVY_LLM_STORAGE_KEY]
-            const llmpresetstored =
-              typeof llmraw === 'string'
-                ? normalizeheavylmpreset(llmraw)
-                : undefined
-            if (llmpresetstored) {
-              heavyllmpreset(register, myplayerid, llmpresetstored, {
+            if (typeof vars[HEAVY_LLM_STORAGE_KEY] === 'string') {
+              heavyllmpreset(register, myplayerid, 'gemma', {
                 toast: false,
               })
             }

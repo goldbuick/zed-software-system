@@ -34,8 +34,8 @@ import {
 } from 'zss/feature/lang/backend/wasm/corpus'
 import {
   compilecppfromdisk,
-  compilenativewasm,
 } from 'zss/feature/lang/backend/wasm/langparityload'
+import { compilenativewasmfortest } from 'zss/feature/lang/backend/wasm/testhelpers/nativewasmtestutil'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
 
 function labelsfromjson(labelsjson: string) {
@@ -87,14 +87,14 @@ describe('lang corpus manifests', () => {
 
 describe('lang corpus native wasm compile', () => {
   it.each(parityids())('parity %s compiles to wasm', (id) => {
-    const wasmbytes = compilenativewasm(readcorpus('parity', id))
+    const wasmbytes = compilenativewasmfortest(readcorpus('parity', id))
     expect(iswasmmagic(wasmbytes)).toBe(true)
   })
 
   it.each(integrationids())(
     'integration %s compiles to wasm',
     (id) => {
-      const wasmbytes = compilenativewasm(readcorpus('integration', id))
+      const wasmbytes = compilenativewasmfortest(readcorpus('integration', id))
       expect(iswasmmagic(wasmbytes)).toBe(true)
     },
     15000,
@@ -103,7 +103,7 @@ describe('lang corpus native wasm compile', () => {
   it.each(bookids())(
     'book %s compiles to wasm',
     (id) => {
-      const wasmbytes = compilenativewasm(readcorpus('book', id))
+      const wasmbytes = compilenativewasmfortest(readcorpus('book', id))
       expect(iswasmmagic(wasmbytes)).toBe(true)
     },
     15000,
@@ -116,7 +116,7 @@ describe('lang corpus behavioral parity (native wasm vs TS oracle)', () => {
   it.each(PARITY_BEHAVIOR)('parity %s wasm run matches JS', (id) => {
     const source = readcorpus('parity', id)
     const jsbuild = compile(id, source)
-    const wasmbytes = compilenativewasm(source)
+    const wasmbytes = compilenativewasmfortest(source)
     const wasmbuild = { ...jsbuild, wasmbytes, code: undefined }
     const jschip = createchip(`js-${id}`, DRIVER_TYPE.RUNTIME, jsbuild)
     const wasmchip = createchip(`wasm-${id}`, DRIVER_TYPE.RUNTIME, wasmbuild)
@@ -143,7 +143,7 @@ describe('lang corpus behavioral parity (native wasm vs TS oracle)', () => {
   it.each(BOOK_BEHAVIOR)('book %s wasm run matches JS', (id) => {
     const source = readcorpus('book', id)
     const jsbuild = compile(id, source)
-    const wasmbytes = compilenativewasm(source)
+    const wasmbytes = compilenativewasmfortest(source)
     const wasmbuild = { ...jsbuild, wasmbytes, code: undefined }
     const jschip = createchip(`js-${id}`, DRIVER_TYPE.RUNTIME, jsbuild)
     const wasmchip = createchip(`wasm-${id}`, DRIVER_TYPE.RUNTIME, wasmbuild)

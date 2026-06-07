@@ -1,0 +1,69 @@
+{
+  "name": "rootsync.wire_export",
+  "initial": {
+    "root": {
+      "halt": false,
+      "frozen": false,
+      "topic": "",
+      "operator": "p1",
+      "session": "sess",
+      "software": {
+        "main": "",
+        "temp": ""
+      },
+      "books": {},
+      "loaders": {}
+    }
+  },
+  "steps": [
+    {
+      "op": "root_import",
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "root_replace",
+      "args": {
+        "root": {
+          "halt": false,
+          "frozen": false,
+          "topic": "t1",
+          "operator": "p2",
+          "session": "sess",
+          "software": {
+            "main": "",
+            "temp": ""
+          },
+          "books": {},
+          "loaders": {}
+        }
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "export_root",
+      "args": {
+        "mode": "root_wire"
+      },
+      "expect": {
+        "mode": "json",
+        "json": {
+          "halt": false,
+          "frozen": false,
+          "topic": "t1",
+          "operator": "p2",
+          "session": "sess",
+          "software": {
+            "main": "",
+            "temp": ""
+          }
+        }
+      }
+    }
+  ]
+}

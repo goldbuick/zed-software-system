@@ -24,7 +24,7 @@ export type GeneratorBuild = {
   importmanifest?: string
 }
 
-export function compile(name: string, text: string): GeneratorBuild {
+export function compile(_name: string, text: string): GeneratorBuild {
   const astResult = compileast(text)
 
   if (astResult.errors && astResult.errors.length > 0) {

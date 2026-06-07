@@ -91,10 +91,6 @@ function formatms(ms: number) {
   return ms < 1 ? `${(ms * 1000).toFixed(0)} µs` : `${ms.toFixed(3)} ms`
 }
 
-function formatkb(bytes: number) {
-  return `${(bytes / 1024).toFixed(1)} KB`
-}
-
 function formattable(rows: LangCompileBenchRow[], moduleloadms: number) {
   const idwidth = Math.max(...rows.map((row) => row.id.length))
   const lines = [

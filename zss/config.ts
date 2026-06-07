@@ -1,17 +1,7 @@
 import { CHAR_HEIGHT, CHAR_WIDTH } from './gadget/data/types'
 
 function zssjsonbool(key: string): boolean {
-  let raw = process.env[key]
-  if (
-    typeof import.meta !== 'undefined' &&
-    import.meta.env &&
-    key in import.meta.env
-  ) {
-    const meta = import.meta.env[key as keyof ImportMetaEnv]
-    if (meta !== undefined && meta !== '') {
-      raw = meta
-    }
-  }
+  const raw = process.env[key]
   return !!JSON.parse(raw ?? 'false')
 }
 

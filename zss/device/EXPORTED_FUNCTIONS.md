@@ -91,6 +91,20 @@ Core virtual machine operations for managing game state, memory, code execution,
 - `vmplayermovetoboard(device, player, targetplayer, board, dest)` - Boardrunner asks the sim VM to relocate a player
 - `vmgadgetdesync(device, player)` - Ask the sim VM to repaint this player's gadget state
 
+### VM sync (handlers / tick)
+- `gadgetsynctick(vm)` - Per-tick gadget projection; emits `gadgetclient:patch` when jsonpipe diff is non-empty ([`vm/gadgetsynctick.ts`](vm/gadgetsynctick.ts))
+- `handlegadgetdesync(vm, message)` - Full gadget paint after desync ([`vm/gadgetsynctick.ts`](vm/gadgetsynctick.ts))
+- `boardrunnermemorysync(vm)` - Emit memory-root jsonpipe diff to elected boardrunners ([`vm/boardrunnermemorysync.ts`](vm/boardrunnermemorysync.ts))
+- `boardrunneremitpatch(device, operations, skipplayer, boundary?)` - Fan-out memory/boundary patch to runners
+- `boardrunnermemorypatch(operations)` - Apply remote memory patch on sim worker
+- `boardrunnerboundarysync(vm)` - Emit per-boundary jsonpipe diffs to runners ([`vm/boardrunnerboundarysync.ts`](vm/boardrunnerboundarysync.ts))
+- `boardrunnerboundarypaint(boundary, doc)` - Full boundary sync + store in memory
+- `boardrunnerboundarypatch(boundary, operations)` - Apply remote boundary patch
+- `handleclearscroll(vm, message)` - Clear player scroll + unlock board objects ([`vm/handlers/scroll.ts`](vm/handlers/scroll.ts))
+- `handlemakeitscroll(vm, message)` - Open make-it scroll
+- `handlerefscroll(vm, message)` - ROM refscroll menu
+- `handlegadgetscroll(vm, message)` - Generic gadget scroll from payload
+
 ### Boardrunner Acks
 - `vmboardrunnerack(device, player)` - Boardrunner ack of a `boardrunner:tick`; refreshes ack budget
 - `vmboardrunneraccess(device, player, boardid)` - Runner (or firmware on worker) asks sim VM to track `boardid` for the elected board until the board codepage runtime is hydrated; tick/boundary sync include extra ids

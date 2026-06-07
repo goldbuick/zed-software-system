@@ -2,6 +2,8 @@
 
 **Status:** design / planning (target architecture). Describes **host + two join players** with devices per tab, messages over **PeerJS**, and how **`zss_runtime.wasm`** fits in.
 
+**Current production topology (TypeScript):** main + sim worker + **boardrunner worker** + heavy worker; gadget paint/patch from [`gadgetsynctick`](../zss/device/vm/gadgetsynctick.ts) inside the sim VM tick. Authoritative messaging diagram: [`zss/device/docs/devices-and-messaging.md`](../zss/device/docs/devices-and-messaging.md).
+
 **Parent plan:** [wasm-sim-port.md](wasm-sim-port.md)
 
 **Code today:** [`zss/feature/netterminal.ts`](../zss/feature/netterminal.ts), [`zss/device/forward.ts`](../zss/device/forward.ts), [`zss/feature/peerzstdwire.ts`](../zss/feature/peerzstdwire.ts)
@@ -79,7 +81,7 @@ Signaling server: `terminal.zed.cafe:443` (see `peerserveroptions()` in `netterm
 
 ## Devices per player (target)
 
-Each tab has **three hubs** ([`hub.ts`](../zss/hub.ts) per realm). WASM is **not** a hub device — [`wasm-bridge`](../zss/sim/wasm-bridge.ts) (planned) loads **`zss_runtime.wasm`**.
+Each tab has **three hubs** ([`hub.ts`](../zss/hub.ts) per realm). WASM is **not** a hub device — planned [`wasm-bridge`](../docs/wasm-sim-port.md) loads **`zss_runtime.wasm`**.
 
 | Realm | TS hub devices | WASM / audio |
 |-------|----------------|--------------|

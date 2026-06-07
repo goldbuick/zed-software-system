@@ -11,27 +11,25 @@ export function initlangcompile() {
   if (!WASM_SCRIPT) {
     return Promise.resolve()
   }
-  if (!langinit) {
-    langinit = createlangmodule()
-      .then((mod) => {
-        langmodule = mod
-        agentlog(
-          'langcompileclient.ts:init',
-          'lang module ready',
-          { wasmscript: WASM_SCRIPT },
-          'B',
-        )
-      })
-      .catch((err) => {
-        agentlog(
-          'langcompileclient.ts:init',
-          'lang module init failed',
-          { error: String(err) },
-          'B',
-        )
-        langinit = null
-      })
-  }
+  langinit ??= createlangmodule()
+    .then((mod) => {
+      langmodule = mod
+      agentlog(
+        'langcompileclient.ts:init',
+        'lang module ready',
+        { wasmscript: WASM_SCRIPT },
+        'B',
+      )
+    })
+    .catch((err) => {
+      agentlog(
+        'langcompileclient.ts:init',
+        'lang module init failed',
+        { error: String(err) },
+        'B',
+      )
+      langinit = null
+    })
   return langinit
 }
 

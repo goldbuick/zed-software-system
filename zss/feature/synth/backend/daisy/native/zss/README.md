@@ -30,7 +30,7 @@ voices → play0/play1/bg buses
        → main bus compressor → razzle → DC block → out
 ```
 
-Spec: [parallel-fx-bus.md](../../../docs/parallel-fx-bus.md), [audiochain.md](../../../docs/audiochain.md).
+Spec: [parallel-fx-bus.md](../../../../docs/parallel-fx-bus.md), [audiochain.md](../../../../docs/audiochain.md).
 
 ## Build
 

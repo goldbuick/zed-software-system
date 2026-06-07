@@ -1,0 +1,53 @@
+{
+  "name": "runtimeboundary.clone",
+  "initial": {},
+  "steps": [
+    {
+      "op": "boundaries_clear",
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "element_runtime_setup",
+      "args": {
+        "src": {
+          "x": 1,
+          "y": 2,
+          "kind": "wall",
+          "char": 219
+        },
+        "dest": {
+          "x": 3,
+          "y": 4,
+          "kind": "wall"
+        },
+        "runtime": {
+          "category": 0,
+          "kinddata": {
+            "id": "wall",
+            "name": "wall"
+          }
+        }
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "copy_element_runtime",
+      "args": {},
+      "expect": {
+        "mode": "json",
+        "json": {
+          "dest_runtime_not_src": true,
+          "dest_category": 0,
+          "dest_kinddata_name": "wall",
+          "src_category": 0
+        }
+      }
+    }
+  ]
+}

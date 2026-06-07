@@ -56,6 +56,18 @@ const config: Config = {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'mjs'],
   collectCoverageFrom: ['zss/**/*.{ts,tsx}'],
   coveragePathIgnorePatterns: ['/node_modules/', '/__mocks__/', '/__tests__/'],
+  coverageThreshold: {
+    global: {
+      branches: 0,
+      functions: 0,
+      lines: 0,
+      statements: 0,
+    },
+    './zss/device/vm/gadgetsynctick.ts': { lines: 70, functions: 70 },
+    './zss/device/vm/handlers/scroll.ts': { lines: 60 },
+    './zss/device/vm/handlers/ticktock.ts': { lines: 50 },
+    './zss/device/boardrunner/handlers/linkdead.ts': { lines: 70 },
+  },
 }
 
 export default config

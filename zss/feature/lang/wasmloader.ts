@@ -14,7 +14,7 @@ export function loadscriptsync(
 ): WasmScriptInstance {
   const memref: { current: WebAssembly.Memory | null } = { current: null }
   const imports = createhostimports(chip, memref)
-  const module = new WebAssembly.Module(bytes)
+  const module = new WebAssembly.Module(bytes as BufferSource)
   const instance = new WebAssembly.Instance(module, imports)
   memref.current = instance.exports.memory as WebAssembly.Memory
   const runexport = instance.exports.run as (() => number) | undefined
@@ -28,9 +28,9 @@ export function loadscriptsync(
   return { instance, run }
 }
 
-export async function loadscript(
+export function loadscript(
   bytes: Uint8Array,
   chip: CHIP,
 ): Promise<WasmScriptInstance> {
-  return loadscriptsync(bytes, chip)
+  return Promise.resolve(loadscriptsync(bytes, chip))
 }

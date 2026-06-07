@@ -26,7 +26,7 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
 import { compile } from 'zss/feature/lang'
-import { compilenativewasm } from 'zss/feature/lang/backend/wasm/langparityload'
+import { compilenativewasmfortest } from 'zss/feature/lang/backend/wasm/testhelpers/nativewasmtestutil'
 
 const FIXTUREDIR = path.join(__dirname, 'fixtures/coolregionsbow')
 const manifest = JSON.parse(
@@ -49,7 +49,7 @@ describe('coolregionsbow lang TS oracle fixtures', () => {
     '%s compiles to native wasm',
     (id) => {
       const source = readfixture(id)
-      const wasmbytes = compilenativewasm(source)
+      const wasmbytes = compilenativewasmfortest(source)
       expect(wasmbytes[0]).toBe(0x00)
       expect(wasmbytes[1]).toBe(0x61)
       expect(wasmbytes[2]).toBe(0x73)

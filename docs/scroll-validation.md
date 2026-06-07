@@ -10,12 +10,13 @@ Tier 1 scrolls are covered by Jest (see below). Tier 2 is manual only.
 | Quoted zip `select` row shape | `zss/gadget/data/__tests__/scrollwritelines.test.ts` (`zipfilelist quoted select target…`) |
 | Refscroll submenus (`char` / `color` / `bg`, admin, object/terrain lists) | `zss/device/vm/handlers/__tests__/default.handlers.tier1.test.ts` |
 | ROM `refscroll:menu` → `handlerefscroll` | `zss/device/vm/handlers/__tests__/scroll.refscroll.test.ts` |
+| Clear / make-it / gadget scroll handlers | `zss/device/vm/handlers/__tests__/scroll.handlers.test.ts` |
 
 Related implementation:
 
 - `zss/device/vm/handlers/zipfile.ts` — zip picker scroll
 - `zss/device/vm/handlers/default.ts` — `refscroll:*`, `zipfilelist:*`
-- `zss/device/vm/handlers/scroll.ts` — `handlerefscroll` (`refscroll:menu`)
+- `zss/device/vm/handlers/scroll.ts` — `handlerefscroll`, `handleclearscroll`, `handlemakeitscroll`, `handlegadgetscroll`
 
 Run: `yarn app:test` (or the paths above).
 

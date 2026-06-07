@@ -77,7 +77,7 @@ describe('handlelogin gadget paint', () => {
     expect(vm.replynext).toHaveBeenCalledWith(message, 'acklogin', true)
   })
 
-  it('does not force gadget paint on first login', () => {
+  it('forces gadget paint on first login', () => {
     jest
       .spyOn(playermanagement, 'memoryreadplayeractive')
       .mockReturnValue(false)
@@ -88,7 +88,7 @@ describe('handlelogin gadget paint', () => {
 
     handlelogin(vm, message)
 
-    expect(handlegadgetdesync).not.toHaveBeenCalled()
+    expect(handlegadgetdesync).toHaveBeenCalledWith(vm, message)
     expect(vm.replynext).toHaveBeenCalledWith(message, 'acklogin', true)
   })
 })

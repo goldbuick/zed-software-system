@@ -5,7 +5,7 @@ This walkthrough runs the published image [`ellium12/zed-software-system`](https
 ## Prerequisites
 
 - DigitalOcean account.
-- SSH key [added to your account](https://docs.digitalocean.com/products/droplets/how-to/add-ssh-keys-to-droplets/).
+- SSH key [added to your account](https://docs.digitalocean.com/products/droplets/how-to/add-ssh-keys/).
 
 ## 1. Create a Droplet
 
@@ -85,7 +85,7 @@ Use a **Load Balancer** with a certificate, **Spaces** + CDN, or a reverse proxy
 
 ## 6. Backups
 
-- **Automated backups:** Enable [weekly Droplet backups](https://docs.digitalocean.com/products/droplets/how-to/enable-backups/) (paid add-on) for whole-disk recovery points.
+- **Automated backups:** Enable [weekly Droplet backups](https://docs.digitalocean.com/products/backups/how-to/enable/) (paid add-on) for whole-disk recovery points.
 - **Snapshots:** Take [on-demand snapshots](https://docs.digitalocean.com/products/snapshots/) before upgrades or risky changes.
 
 Backups and snapshots are billed per [current pricing](https://www.digitalocean.com/pricing).
