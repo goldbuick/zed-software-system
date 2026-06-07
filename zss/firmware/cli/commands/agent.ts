@@ -7,10 +7,7 @@ import {
 import { SOFTWARE } from 'zss/device/session'
 import { HEAVY_LLM_PRESETS } from 'zss/feature/heavy/heavyllmpreset'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
-import {
-  zssheaderlines,
-  zsstexttape,
-} from 'zss/feature/zsstextui'
+import { zssheaderlines, zsstexttape } from 'zss/feature/zsstextui'
 import { FIRMWARE } from 'zss/firmware'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'

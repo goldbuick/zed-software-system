@@ -35,7 +35,10 @@ export function agentlog(
       'postMessage' in globalThis &&
       typeof importScripts === 'function'
     ) {
-      ;(globalThis as unknown as Worker).postMessage({ target: 'debug', data: payload })
+      ;(globalThis as unknown as Worker).postMessage({
+        target: 'debug',
+        data: payload,
+      })
     }
   } catch {
     /* ignore */

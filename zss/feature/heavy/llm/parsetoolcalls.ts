@@ -42,8 +42,7 @@ export function extractgemmanativetoolcalls(raw: string): ParsedToolCall[] {
     const name = match[1]
     const argsbody = match[2]
     const argmap: Record<string, unknown> = {}
-    const argpattern =
-      /(\w+):(?:<\|"\|>(.*?)<\|"\|>|([^,}]*))/gs
+    const argpattern = /(\w+):(?:<\|"\|>(.*?)<\|"\|>|([^,}]*))/gs
     let argmatch = argpattern.exec(argsbody)
     while (argmatch !== null) {
       const key = argmatch[1]

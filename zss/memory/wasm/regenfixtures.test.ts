@@ -34,20 +34,18 @@ import { FORMAT_OBJECT, formatobject } from 'zss/feature/format'
 import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
 import { creategadgetid } from 'zss/mapping/guid'
 import { deepcopy, ispresent } from 'zss/mapping/types'
-import { memoryrootshouldemitpath } from 'zss/memory/jsonpipefilter'
-import {
-  memoryboundariesclear,
-} from 'zss/memory/boundaries'
 import {
   memoryclearbookflags,
   memorycreatebook,
   memoryexportbookasjson,
   memorywritebookflag,
 } from 'zss/memory/bookoperations'
+import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {
   memorycreatecodepage,
   memoryexportcodepage,
 } from 'zss/memory/codepageoperations'
+import { memoryrootshouldemitpath } from 'zss/memory/jsonpipefilter'
 import type { MEMORY_ROOT } from 'zss/memory/session'
 import { memoryresetbooks } from 'zss/memory/session'
 import { trimmemoryexport } from 'zss/memory/trimexport'
@@ -278,12 +276,12 @@ function regenall() {
     ],
   })
 
-  const bookmeta = {
+  const bookmeta: BOOK = {
     id: 'b1',
     name: 'main',
     timestamp: 1,
-    activelist: [] as string[],
-    pages: [] as unknown[],
+    activelist: [],
+    pages: [],
     flags: {},
   }
   writfixture('rootsync.omit_timestamp', {
@@ -449,7 +447,9 @@ function regenall() {
     ],
   })
 
-  const count = readdirSync(FIXTUREDIR).filter((f) => f.endsWith('.json')).length
+  const count = readdirSync(FIXTUREDIR).filter((f) =>
+    f.endsWith('.json'),
+  ).length
   return count
 }
 

@@ -28,7 +28,17 @@ const SRC = path.join(MEMORYDIR, 'zss_memory.cpp')
 function ensurenativeparitybinary() {
   execFileSync(
     'g++',
-    ['-std=c++14', '-O2', '-I', MEMORYDIR, '-DJSON_NOEXCEPTION', '-DZSS_MEMORY_PARITY_MAIN', '-o', PARITYBIN, SRC],
+    [
+      '-std=c++14',
+      '-O2',
+      '-I',
+      MEMORYDIR,
+      '-DJSON_NOEXCEPTION',
+      '-DZSS_MEMORY_PARITY_MAIN',
+      '-o',
+      PARITYBIN,
+      SRC,
+    ],
     { stdio: 'pipe' },
   )
 }

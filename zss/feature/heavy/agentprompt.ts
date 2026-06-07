@@ -1,7 +1,7 @@
 import type { Message } from '@huggingface/transformers'
-import { buildagentsystemprompt } from 'zss/feature/heavy/prompt'
 import { RUN_ZSS_COMMAND_TOOL_NAME } from 'zss/feature/heavy/llm/agenttools'
 import type { MODEL_GENERATE_GEMMA_RESULT } from 'zss/feature/heavy/model'
+import { buildagentsystemprompt } from 'zss/feature/heavy/prompt'
 
 export const MAX_AGENT_REPROMPT = 5
 
@@ -41,7 +41,10 @@ export async function runagentpromptloop(
   const history: Agenthistorymessage[] = [{ role: 'user', content: prompt }]
 
   for (let iteration = 0; iteration < MAX_AGENT_REPROMPT; ++iteration) {
-    const { context, agentinfo } = await deps.queryboardstate(agentid, agentname)
+    const { context, agentinfo } = await deps.queryboardstate(
+      agentid,
+      agentname,
+    )
     const systemprompt = buildagentsystemprompt(
       agentname,
       agentinfo,

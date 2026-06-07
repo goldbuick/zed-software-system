@@ -36,7 +36,7 @@ export function destroymainheavylm() {
 }
 
 /** No-op: only Gemma 4 E2B is supported. */
-export function applyheavylmpreset(_preset: 'gemma') {
+export function applyheavylmpreset() {
   loadedmaintag = undefined
   heavyllmloadepoch++
   destroymainheavylm()
@@ -394,7 +394,7 @@ export async function modelgenerategemma4(
     do_sample: false,
     max_new_tokens: MAX_NEW_TOKENS,
     return_dict_in_generate: true,
-  } as any)) as any
+  })) as any
 
   const values = sequences.slice(null, [input.input_ids.dims[1], null])
 

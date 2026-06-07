@@ -1,8 +1,8 @@
-import { RUN_ZSS_COMMAND_TOOL_NAME } from 'zss/feature/heavy/llm/agenttools'
 import {
-  runagentpromptloop,
   type Agentpromptdeps,
+  runagentpromptloop,
 } from 'zss/feature/heavy/agentprompt'
+import { RUN_ZSS_COMMAND_TOOL_NAME } from 'zss/feature/heavy/llm/agenttools'
 import type { MODEL_GENERATE_GEMMA_RESULT } from 'zss/feature/heavy/model'
 
 const BOARD_FIXTURE = {
@@ -10,9 +10,7 @@ const BOARD_FIXTURE = {
   agentinfo: 'You are helper (id: agent1). Position (3,3).',
 }
 
-function mockdeps(
-  generations: MODEL_GENERATE_GEMMA_RESULT[],
-): {
+function mockdeps(generations: MODEL_GENERATE_GEMMA_RESULT[]): {
   deps: Agentpromptdeps
   executed: string[][]
   generatecalls: number
@@ -20,17 +18,18 @@ function mockdeps(
   let gencall = 0
   const executed: string[][] = []
   const deps: Agentpromptdeps = {
-    queryboardstate: async () => BOARD_FIXTURE,
-    modelgenerategemma4: async () => {
+    queryboardstate: () => Promise.resolve(BOARD_FIXTURE),
+    modelgenerategemma4: () => {
       const result = generations[gencall]
       gencall++
       if (result === undefined) {
-        throw new Error('unexpected modelgenerategemma4 call')
+        return Promise.reject(new Error('unexpected modelgenerategemma4 call'))
       }
-      return result
+      return Promise.resolve(result)
     },
-    executeclicommands: async (_player, _agentid, commands) => {
+    executeclicommands: (_player, _agentid, commands) => {
       executed.push([...commands])
+      return Promise.resolve()
     },
   }
   return {
@@ -126,20 +125,24 @@ describe('runagentpromptloop', () => {
     let gencall = 0
     const historylengths: number[] = []
     const deps: Agentpromptdeps = {
-      queryboardstate: async () => BOARD_FIXTURE,
-      modelgenerategemma4: async (_sys, history) => {
+      queryboardstate: () => Promise.resolve(BOARD_FIXTURE),
+      modelgenerategemma4: (_sys, history) => {
         historylengths.push(history.length)
         if (gencall === 0) {
           gencall++
-          return {
+          return Promise.resolve({
             raw: 'c1',
             text: '',
             toolcommandlines: ['#continue'],
-          }
+          })
         }
-        return { raw: 'done', text: 'ok', toolcommandlines: [] }
+        return Promise.resolve({
+          raw: 'done',
+          text: 'ok',
+          toolcommandlines: [],
+        })
       },
-      executeclicommands: async () => {},
+      executeclicommands: () => Promise.resolve(),
     }
     await runagentpromptloop(
       'player1',
@@ -168,6 +171,8 @@ describe('runagentpromptloop', () => {
     )
     const tool = history.find((m) => m.role === 'tool')
     expect(tool?.name).toBe(RUN_ZSS_COMMAND_TOOL_NAME)
-    expect(JSON.parse(String(tool?.content)).executed).toBe('#query')
+    const toolcontent = tool?.content
+    expect(typeof toolcontent).toBe('string')
+    expect(JSON.parse(toolcontent as string).executed).toBe('#query')
   })
 })

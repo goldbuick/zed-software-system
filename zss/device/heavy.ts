@@ -131,11 +131,19 @@ async function runagentprompt(
   apilog(heavy, player, '$21 input $7', prompt)
 
   try {
-    await runagentpromptloop(player, agentid, agentname, prompt, onworking, {
-      queryboardstate,
-      modelgenerategemma4,
-      executeclicommands,
-    }, intent)
+    await runagentpromptloop(
+      player,
+      agentid,
+      agentname,
+      prompt,
+      onworking,
+      {
+        queryboardstate,
+        modelgenerategemma4,
+        executeclicommands,
+      },
+      intent,
+    )
   } finally {
     vmlastinputtouch(heavy, player, agentid)
   }

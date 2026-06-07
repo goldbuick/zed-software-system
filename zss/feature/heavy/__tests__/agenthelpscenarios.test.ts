@@ -1,8 +1,8 @@
-import { RUN_ZSS_COMMAND_TOOL_NAME } from 'zss/feature/heavy/llm/agenttools'
 import {
-  runagentpromptloop,
   type Agentpromptdeps,
+  runagentpromptloop,
 } from 'zss/feature/heavy/agentprompt'
+import { RUN_ZSS_COMMAND_TOOL_NAME } from 'zss/feature/heavy/llm/agenttools'
 import type { MODEL_GENERATE_GEMMA_RESULT } from 'zss/feature/heavy/model'
 
 const HELPER_BOARD = {
@@ -15,23 +15,25 @@ const HELPER_BOARD = {
   agentinfo: 'You are guide (id: ag001). Position (10,10). Board: dungeon.',
 }
 
-function scenariodeps(
-  generations: MODEL_GENERATE_GEMMA_RESULT[],
-): { deps: Agentpromptdeps; executed: string[][] } {
+function scenariodeps(generations: MODEL_GENERATE_GEMMA_RESULT[]): {
+  deps: Agentpromptdeps
+  executed: string[][]
+} {
   let gencall = 0
   const executed: string[][] = []
   const deps: Agentpromptdeps = {
-    queryboardstate: async () => HELPER_BOARD,
-    modelgenerategemma4: async () => {
+    queryboardstate: () => Promise.resolve(HELPER_BOARD),
+    modelgenerategemma4: () => {
       const result = generations[gencall]
       gencall++
       if (result === undefined) {
-        throw new Error('unexpected generation')
+        return Promise.reject(new Error('unexpected generation'))
       }
-      return result
+      return Promise.resolve(result)
     },
-    executeclicommands: async (_p, _a, commands) => {
+    executeclicommands: (_p, _a, commands) => {
       executed.push([...commands])
+      return Promise.resolve()
     },
   }
   return { deps, executed }

@@ -32,9 +32,7 @@ import {
   parityids,
   readcorpus,
 } from 'zss/feature/lang/backend/wasm/corpus'
-import {
-  compilecppfromdisk,
-} from 'zss/feature/lang/backend/wasm/langparityload'
+import { compilecppfromdisk } from 'zss/feature/lang/backend/wasm/langparityload'
 import { compilenativewasmfortest } from 'zss/feature/lang/backend/wasm/testhelpers/nativewasmtestutil'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
 

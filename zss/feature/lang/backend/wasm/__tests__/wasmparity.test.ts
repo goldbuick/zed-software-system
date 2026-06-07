@@ -27,9 +27,7 @@ import path from 'node:path'
 
 import { type CHIP, createchip } from 'zss/chip'
 import { compile } from 'zss/feature/lang'
-import {
-  readfixture,
-} from 'zss/feature/lang/backend/wasm/langparityload'
+import { readfixture } from 'zss/feature/lang/backend/wasm/langparityload'
 import {
   compilenativewasmfortest,
   runnativeparitygatefortest,

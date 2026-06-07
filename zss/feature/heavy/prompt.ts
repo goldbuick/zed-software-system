@@ -1,5 +1,3 @@
-import { AGENT_ZSS_COMMANDS } from 'zss/feature/heavy/formatstate'
-
 const INTENT_HINTS: Record<string, string> = {
   movement:
     'HINT: The player likely wants movement. Call run_zss_command with #userinput, #pilot, or #goto.',
