@@ -10,7 +10,7 @@ import { isDeepStrictEqual } from 'node:util'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
-const MEMORYDIR = path.join(ROOT, 'zss/sim/native/memory')
+const MEMORYDIR = path.join(ROOT, 'zss/memory/wasm')
 const FIXTUREDIR = path.join(MEMORYDIR, '__fixtures__')
 const PARITYBIN = path.join(MEMORYDIR, 'zss_memory_parity')
 const WASMDIR = path.join(ROOT, 'cafe/public/wasm/memory')
