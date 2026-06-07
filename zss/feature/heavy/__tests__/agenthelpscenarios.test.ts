@@ -42,7 +42,12 @@ function scenariodeps(generations: MODEL_GENERATE_GEMMA_RESULT[]): {
 describe('agent help scenarios', () => {
   it('greeting: speech only, no cli commands', async () => {
     const { deps, executed } = scenariodeps([
-      { raw: '', text: 'Hello! How can I help?', toolcommandlines: [] },
+      {
+        raw: '',
+        text: 'Hello! How can I help?',
+        toolcommandlines: [],
+        scripttoolcalls: [],
+      },
     ])
     await runagentpromptloop(
       'human1',
@@ -58,7 +63,12 @@ describe('agent help scenarios', () => {
 
   it('move request: executes #userinput up', async () => {
     const { deps, executed } = scenariodeps([
-      { raw: 't', text: '', toolcommandlines: ['#userinput up'] },
+      {
+        raw: 't',
+        text: '',
+        toolcommandlines: ['#userinput up'],
+        scripttoolcalls: [],
+      },
     ])
     await runagentpromptloop(
       'human1',
@@ -74,7 +84,7 @@ describe('agent help scenarios', () => {
 
   it('board question: executes #query', async () => {
     const { deps, executed } = scenariodeps([
-      { raw: 't', text: '', toolcommandlines: ['#query'] },
+      { raw: 't', text: '', toolcommandlines: ['#query'], scripttoolcalls: [] },
     ])
     await runagentpromptloop(
       'human1',
@@ -90,7 +100,7 @@ describe('agent help scenarios', () => {
 
   it('ui question: executes #look', async () => {
     const { deps, executed } = scenariodeps([
-      { raw: 't', text: '', toolcommandlines: ['#look'] },
+      { raw: 't', text: '', toolcommandlines: ['#look'], scripttoolcalls: [] },
     ])
     await runagentpromptloop(
       'human1',
@@ -110,11 +120,13 @@ describe('agent help scenarios', () => {
         raw: 't1',
         text: '',
         toolcommandlines: ['#pilot 15 8', '#continue'],
+        scripttoolcalls: [],
       },
       {
         raw: 't2',
         text: '',
         toolcommandlines: ['#userinput up'],
+        scripttoolcalls: [],
       },
     ])
     await runagentpromptloop(
@@ -132,7 +144,12 @@ describe('agent help scenarios', () => {
   it('native gemma tool output parses to cli for movement', async () => {
     const native = `<|tool_call>call:${RUN_ZSS_COMMAND_TOOL_NAME}{line:<|"|>#userinput up<|"|>}<tool_call|>`
     const { deps, executed } = scenariodeps([
-      { raw: native, text: '', toolcommandlines: ['#userinput up'] },
+      {
+        raw: native,
+        text: '',
+        toolcommandlines: ['#userinput up'],
+        scripttoolcalls: [],
+      },
     ])
     await runagentpromptloop(
       'human1',

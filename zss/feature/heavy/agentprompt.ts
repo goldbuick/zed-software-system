@@ -1,5 +1,9 @@
 import type { Message } from '@huggingface/transformers'
-import { RUN_ZSS_COMMAND_TOOL_NAME } from 'zss/feature/heavy/llm/agenttools'
+import type { ParsedScriptToolCall } from 'zss/feature/heavy/llm/scripttool'
+import {
+  RUN_ZSS_COMMAND_TOOL_NAME,
+  WRITE_ZSS_SCRIPT_TOOL_NAME,
+} from 'zss/feature/heavy/llm/toolnames'
 import type { MODEL_GENERATE_GEMMA_RESULT } from 'zss/feature/heavy/model'
 import { buildagentsystemprompt } from 'zss/feature/heavy/prompt'
 
@@ -10,6 +14,14 @@ export type Agenthistorymessage = Message & { name?: string }
 export type Agentpromptboardstate = {
   context: string
   agentinfo: string
+}
+
+export type Scripttoolresult = {
+  ok: boolean
+  page_id?: string
+  error?: string
+  errors?: { line: number; column: number; message: string }[]
+  labels?: Record<string, number[]>
 }
 
 export type Agentpromptdeps = {
@@ -27,6 +39,11 @@ export type Agentpromptdeps = {
     agentid: string,
     commands: string[],
   ) => Promise<void>
+  executescripttoolcalls?: (
+    player: string,
+    agentid: string,
+    calls: ParsedScriptToolCall[],
+  ) => Promise<Scripttoolresult[]>
 }
 
 export async function runagentpromptloop(
@@ -53,30 +70,76 @@ export async function runagentpromptloop(
     )
     const g = await deps.modelgenerategemma4(systemprompt, history, onworking)
 
-    if (g.toolcommandlines.length > 0) {
+    const hasscript = g.scripttoolcalls.length > 0
+    const hascli = g.toolcommandlines.length > 0
+    if (hasscript || hascli) {
       history.push({ role: 'assistant', content: g.raw })
-      const hascontinue = g.toolcommandlines.some(
-        (line) => line.trim() === '#continue',
-      )
-      const execcommands = g.toolcommandlines.filter(
-        (line) => line.trim() !== '#continue',
-      )
-      if (execcommands.length > 0) {
-        await deps.executeclicommands(player, agentid, execcommands)
+
+      let scriptcompilefailed = false
+      if (hasscript) {
+        if (!deps.executescripttoolcalls) {
+          history.push({
+            role: 'tool',
+            name: WRITE_ZSS_SCRIPT_TOOL_NAME,
+            content: JSON.stringify({
+              ok: false,
+              error: 'script_tool_unavailable',
+            }),
+          })
+          scriptcompilefailed = true
+        } else {
+          const scriptresults = await deps.executescripttoolcalls(
+            player,
+            agentid,
+            g.scripttoolcalls,
+          )
+          for (let i = 0; i < scriptresults.length; ++i) {
+            history.push({
+              role: 'tool',
+              name: WRITE_ZSS_SCRIPT_TOOL_NAME,
+              content: JSON.stringify(scriptresults[i]),
+            })
+            if (
+              !scriptresults[i].ok &&
+              (scriptresults[i].error === 'compile_failed' ||
+                scriptresults[i].errors?.length)
+            ) {
+              scriptcompilefailed = true
+            }
+          }
+        }
       }
-      history.push({
-        role: 'tool',
-        name: RUN_ZSS_COMMAND_TOOL_NAME,
-        content: JSON.stringify({
-          ok: true,
-          executed:
-            execcommands.length > 0 ? execcommands.join('\n') : '(#continue)',
-        }),
-      })
-      if (!hascontinue) {
-        break
+
+      if (scriptcompilefailed) {
+        continue
       }
-      continue
+
+      if (hascli) {
+        const hascontinue = g.toolcommandlines.some(
+          (line) => line.trim() === '#continue',
+        )
+        const execcommands = g.toolcommandlines.filter(
+          (line) => line.trim() !== '#continue',
+        )
+        if (execcommands.length > 0) {
+          await deps.executeclicommands(player, agentid, execcommands)
+        }
+        history.push({
+          role: 'tool',
+          name: RUN_ZSS_COMMAND_TOOL_NAME,
+          content: JSON.stringify({
+            ok: true,
+            executed:
+              execcommands.length > 0 ? execcommands.join('\n') : '(#continue)',
+          }),
+        })
+        if (!hascontinue) {
+          break
+        }
+        continue
+      }
+
+      break
     }
 
     history.push({

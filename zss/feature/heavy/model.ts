@@ -17,6 +17,8 @@ import {
   parsetoolcallsfromassistant,
   validatedzsslinetoolcalls,
 } from 'zss/feature/heavy/llm/parsetoolcalls'
+import type { ParsedScriptToolCall } from 'zss/feature/heavy/llm/scripttool'
+import { validatedscripttoolcalls } from 'zss/feature/heavy/llm/scripttool'
 import type { PARSE_OPTIONS } from 'zss/feature/heavy/llm/types'
 
 const MAX_NEW_TOKENS = 768
@@ -87,6 +89,7 @@ export type MODEL_GENERATE_GEMMA_RESULT = {
   raw: string
   text: string
   toolcommandlines: string[]
+  scripttoolcalls: ParsedScriptToolCall[]
 }
 
 type TOKENIZERISH = (
@@ -403,14 +406,14 @@ export async function modelgenerategemma4(
   })
 
   const raw = decoded.join('').trim()
-  const toolcommandlines = validatedzsslinetoolcalls(
-    parsetoolcallsfromassistant(raw),
-  )
-  if (toolcommandlines.length > 0) {
-    return { raw, text: '', toolcommandlines }
+  const parsedcalls = parsetoolcallsfromassistant(raw)
+  const toolcommandlines = validatedzsslinetoolcalls(parsedcalls)
+  const scripttoolcalls = validatedscripttoolcalls(parsedcalls)
+  if (toolcommandlines.length > 0 || scripttoolcalls.length > 0) {
+    return { raw, text: '', toolcommandlines, scripttoolcalls }
   }
   const cleaned = llmparseresult(raw, PARSE_CONFIG)
-  return { raw, text: cleaned.text, toolcommandlines: [] }
+  return { raw, text: cleaned.text, toolcommandlines: [], scripttoolcalls: [] }
 }
 
 export async function modelclassify(

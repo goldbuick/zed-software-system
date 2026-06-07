@@ -1,4 +1,10 @@
-import { RUN_ZSS_COMMAND_TOOL_NAME } from './agenttools'
+import {
+  type ParsedScriptToolCall,
+  validatedscripttoolcalls,
+} from './scripttool'
+import { RUN_ZSS_COMMAND_TOOL_NAME } from './toolnames'
+
+export type { ParsedScriptToolCall }
 
 export type ParsedToolCall = {
   name: string
@@ -185,3 +191,5 @@ export function validatedzsslinetoolcalls(calls: ParsedToolCall[]): string[] {
   }
   return lines
 }
+
+export { validatedscripttoolcalls }

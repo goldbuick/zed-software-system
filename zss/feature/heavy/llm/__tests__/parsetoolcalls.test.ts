@@ -1,9 +1,13 @@
-import { RUN_ZSS_COMMAND_TOOL_NAME } from 'zss/feature/heavy/llm/agenttools'
 import {
   extractgemmanativetoolcalls,
   parsetoolcallsfromassistant,
+  validatedscripttoolcalls,
   validatedzsslinetoolcalls,
 } from 'zss/feature/heavy/llm/parsetoolcalls'
+import {
+  RUN_ZSS_COMMAND_TOOL_NAME,
+  WRITE_ZSS_SCRIPT_TOOL_NAME,
+} from 'zss/feature/heavy/llm/toolnames'
 
 describe('extractgemmanativetoolcalls', () => {
   it('parses native run_zss_command with quoted line', () => {
@@ -34,6 +38,14 @@ describe('extractgemmanativetoolcalls', () => {
     expect(calls).toHaveLength(2)
     expect(calls[0].arguments.line).toBe('#query')
     expect(calls[1].arguments.line).toBe('#look')
+  })
+
+  it('parses native write_zss_script', () => {
+    const raw = `<|tool_call>call:${WRITE_ZSS_SCRIPT_TOOL_NAME}{page_id:<|"|>fish1<|"|>,snippet:<|"|>#if any red fish ?n<|"|>,mode:<|"|>append<|"|>}<tool_call|>`
+    const calls = extractgemmanativetoolcalls(raw)
+    expect(calls).toHaveLength(1)
+    expect(calls[0].name).toBe(WRITE_ZSS_SCRIPT_TOOL_NAME)
+    expect(calls[0].arguments.snippet).toBe('#if any red fish ?n')
   })
 })
 
@@ -111,5 +123,33 @@ describe('validatedzsslinetoolcalls', () => {
       },
     ])
     expect(lines).toEqual(['#query', '#look'])
+  })
+})
+
+describe('validatedscripttoolcalls', () => {
+  it('keeps write_zss_script with page_id and snippet', () => {
+    const calls = validatedscripttoolcalls([
+      {
+        name: WRITE_ZSS_SCRIPT_TOOL_NAME,
+        arguments: {
+          page_id: 'fish1',
+          snippet: '#if any red fish ?n\n',
+          mode: 'append',
+        },
+      },
+    ])
+    expect(calls).toHaveLength(1)
+    expect(calls[0].page_id).toBe('fish1')
+    expect(calls[0].mode).toBe('append')
+  })
+
+  it('defaults mode to append', () => {
+    const calls = validatedscripttoolcalls([
+      {
+        name: WRITE_ZSS_SCRIPT_TOOL_NAME,
+        arguments: { page_id: 'x', snippet: '#die\n' },
+      },
+    ])
+    expect(calls[0].mode).toBe('append')
   })
 })

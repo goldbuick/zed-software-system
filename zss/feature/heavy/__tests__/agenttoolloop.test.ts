@@ -44,7 +44,12 @@ function mockdeps(generations: MODEL_GENERATE_GEMMA_RESULT[]): {
 describe('runagentpromptloop', () => {
   it('executes single tool call and exits', async () => {
     const { deps, executed } = mockdeps([
-      { raw: '{"tool":1}', text: '', toolcommandlines: ['#userinput up'] },
+      {
+        raw: '{"tool":1}',
+        text: '',
+        toolcommandlines: ['#userinput up'],
+        scripttoolcalls: [],
+      },
     ])
     const history = await runagentpromptloop(
       'player1',
@@ -66,8 +71,14 @@ describe('runagentpromptloop', () => {
         raw: 'call1',
         text: '',
         toolcommandlines: ['#pilot 10 5', '#continue'],
+        scripttoolcalls: [],
       },
-      { raw: 'speech', text: 'Arrived.', toolcommandlines: [] },
+      {
+        raw: 'speech',
+        text: 'Arrived.',
+        toolcommandlines: [],
+        scripttoolcalls: [],
+      },
     ])
     await runagentpromptloop(
       'player1',
@@ -83,7 +94,7 @@ describe('runagentpromptloop', () => {
 
   it('speech-only reply does not execute cli', async () => {
     const { deps, executed } = mockdeps([
-      { raw: '', text: 'Hello!', toolcommandlines: [] },
+      { raw: '', text: 'Hello!', toolcommandlines: [], scripttoolcalls: [] },
     ])
     const history = await runagentpromptloop(
       'player1',
@@ -107,6 +118,7 @@ describe('runagentpromptloop', () => {
         raw: 'multi',
         text: '',
         toolcommandlines: ['#userinput up', '#userinput up'],
+        scripttoolcalls: [],
       },
     ])
     await runagentpromptloop(
@@ -134,12 +146,14 @@ describe('runagentpromptloop', () => {
             raw: 'c1',
             text: '',
             toolcommandlines: ['#continue'],
+            scripttoolcalls: [],
           })
         }
         return Promise.resolve({
           raw: 'done',
           text: 'ok',
           toolcommandlines: [],
+          scripttoolcalls: [],
         })
       },
       executeclicommands: () => Promise.resolve(),
@@ -158,7 +172,7 @@ describe('runagentpromptloop', () => {
 
   it('tool message uses run_zss_command name', async () => {
     const { deps } = mockdeps([
-      { raw: 'x', text: '', toolcommandlines: ['#query'] },
+      { raw: 'x', text: '', toolcommandlines: ['#query'], scripttoolcalls: [] },
     ])
     const history = await runagentpromptloop(
       'player1',

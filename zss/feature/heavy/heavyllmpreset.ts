@@ -18,7 +18,12 @@ export type HEAVY_LLM_ROW = {
 
 export const HEAVY_LLM_PRESETS: Record<HEAVY_LLM_PRESET, HEAVY_LLM_ROW> = {
   gemma: {
-    modelid: 'onnx-community/gemma-4-E2B-it-ONNX',
+    modelid:
+      typeof process !== 'undefined' &&
+      typeof process.env?.ZSS_HEAVY_LLM_GEMMA_MODEL_ID === 'string' &&
+      process.env.ZSS_HEAVY_LLM_GEMMA_MODEL_ID.trim() !== ''
+        ? process.env.ZSS_HEAVY_LLM_GEMMA_MODEL_ID.trim()
+        : 'onnx-community/gemma-4-E2B-it-ONNX',
     dtype: 'q4f16',
     contexttokens: 131072,
     backend: 'gemma4',

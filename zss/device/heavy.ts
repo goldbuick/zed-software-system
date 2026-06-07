@@ -9,12 +9,14 @@ import {
   heavyrunsyncuserdisplay,
 } from 'zss/feature/heavy/agentlifecycle'
 import { runagentpromptloop } from 'zss/feature/heavy/agentprompt'
+import type { Scripttoolresult } from 'zss/feature/heavy/agentprompt'
 import {
   formatagentinfofortext,
   formatboardfortext,
   stripzsstextcodesforllm,
 } from 'zss/feature/heavy/formatstate'
 import { enqueueheavyjob } from 'zss/feature/heavy/heavyjobqueue'
+import type { ParsedScriptToolCall } from 'zss/feature/heavy/llm/scripttool'
 import {
   destroysharedmodel,
   modelclassify,
@@ -32,6 +34,55 @@ import { perfmeasure } from 'zss/perf/ui'
 import { apierror, apilog, vmlastinputtouch, workstatus } from './api'
 
 const activeagents = new Set<string>()
+
+async function executescripttoolcalls(
+  player: string,
+  agentid: string,
+  calls: ParsedScriptToolCall[],
+): Promise<Scripttoolresult[]> {
+  const results: Scripttoolresult[] = []
+  for (let i = 0; i < calls.length; ++i) {
+    const call = calls[i]
+    try {
+      const compiled = (await memoryquery(heavy, agentid, {
+        type: 'writescript',
+        page_id: call.page_id,
+        snippet: call.snippet,
+        mode: call.mode,
+        compile_only: true,
+      })) as Scripttoolresult
+      if (!compiled.ok) {
+        results.push({
+          ok: false,
+          page_id: call.page_id,
+          error: 'compile_failed',
+          errors: compiled.errors,
+        })
+        continue
+      }
+      const applied = (await memoryquery(heavy, agentid, {
+        type: 'writescript',
+        page_id: call.page_id,
+        snippet: call.snippet,
+        mode: call.mode,
+      })) as Scripttoolresult
+      if (applied.ok) {
+        apilog(heavy, player, '$22 script $7', `${call.page_id} ${call.mode}`)
+      }
+      results.push({
+        ...applied,
+        labels: compiled.labels,
+      })
+    } catch (err) {
+      results.push({
+        ok: false,
+        page_id: call.page_id,
+        error: err instanceof Error ? err.message : 'unknown_error',
+      })
+    }
+  }
+  return results
+}
 
 async function executeclicommands(
   player: string,
@@ -73,11 +124,11 @@ async function classifythenmaybeagentprompt(
     {
       role: 'system',
       content:
-        'You are a message classifier. Answer with exactly one word: movement, action, question, chat, or none.',
+        'You are a message classifier. Answer with exactly one word: movement, action, question, chat, authoring, or none.',
     },
     {
       role: 'user',
-      content: `${nearestcontext}Is the following message directed at or relevant to the ai agent named "${agentname}" (id: ${agentid})? If not, answer "none". Otherwise classify the intent as: movement (go, walk, follow, come here, directions), action (shoot, create, change, interact), question (asking about something), or chat (conversation).\nMessage: "${messagetext}"\nAnswer:`,
+      content: `${nearestcontext}Is the following message directed at or relevant to the ai agent named "${agentname}" (id: ${agentid})? If not, answer "none". Otherwise classify the intent as: movement (go, walk, follow, come here, directions), action (shoot, create, change, interact), question (asking about something), chat (conversation), authoring (write or edit ZSS script, codepage, handler, #if logic).\nMessage: "${messagetext}"\nAnswer:`,
     },
   ]
 
@@ -141,6 +192,7 @@ async function runagentprompt(
         queryboardstate,
         modelgenerategemma4,
         executeclicommands,
+        executescripttoolcalls,
       },
       intent,
     )

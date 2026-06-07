@@ -39,9 +39,10 @@ jest.mock('zss/memory/flags', () => ({
 }))
 
 jest.mock('zss/memory/session', () => {
-  const actual = jest.requireActual<typeof import('zss/memory/session')>(
-    'zss/memory/session',
-  )
+  const actual =
+    jest.requireActual<typeof import('zss/memory/session')>(
+      'zss/memory/session',
+    )
   return {
     ...actual,
     memoryreadoperator: jest.fn(() => 'operator'),
@@ -51,9 +52,9 @@ jest.mock('zss/memory/session', () => {
 import { mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 
-import { CHAR_HEIGHT, CHAR_WIDTH } from 'zss/gadget/data/types'
 import { FORMAT_OBJECT, formatobject } from 'zss/feature/format'
 import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
+import { CHAR_HEIGHT, CHAR_WIDTH } from 'zss/gadget/data/types'
 import {
   createchipid,
   creategadgetid,
@@ -62,6 +63,13 @@ import {
   createtrackingid,
 } from 'zss/mapping/guid'
 import { deepcopy, ispresent } from 'zss/mapping/types'
+import { memorycodehasdrawdisplay } from 'zss/memory/boarddrawdirty'
+import {
+  memoryboardlightingapplyobject,
+  memoryboardlightingmarkplayer,
+} from 'zss/memory/boardlighting'
+import { memoryreadelementkind } from 'zss/memory/boards'
+import { memorytickboard } from 'zss/memory/boardtick'
 import {
   memoryclearbookflags,
   memorycreatebook,
@@ -73,13 +81,6 @@ import {
   memoryboundaryalloc,
   memoryboundaryget,
 } from 'zss/memory/boundaries'
-import {
-  memoryboardlightingapplyobject,
-  memoryboardlightingmarkplayer,
-} from 'zss/memory/boardlighting'
-import { memorycodehasdrawdisplay } from 'zss/memory/boarddrawdirty'
-import { memoryreadelementkind } from 'zss/memory/boards'
-import { memorytickboard } from 'zss/memory/boardtick'
 import {
   memorycreatecodepage,
   memoryexportcodepage,
@@ -108,9 +109,7 @@ import {
   memoryelementtologprefix,
   memoryelementtotickerprefix,
 } from 'zss/memory/rendering'
-import {
-  memorywriteboardelementruntime,
-} from 'zss/memory/runtimeboundary'
+import { memorywriteboardelementruntime } from 'zss/memory/runtimeboundary'
 import type { MEMORY_ROOT } from 'zss/memory/session'
 import { memoryresetbooks } from 'zss/memory/session'
 import {
@@ -512,9 +511,7 @@ function maketickobject(
   return object
 }
 
-function baseprefixelement(
-  over: Partial<BOARD_ELEMENT> = {},
-): BOARD_ELEMENT {
+function baseprefixelement(over: Partial<BOARD_ELEMENT> = {}): BOARD_ELEMENT {
   const element: BOARD_ELEMENT = {
     id: 'oid',
     kind: 'chest',
@@ -1067,11 +1064,23 @@ function regenall() {
     name: 'session.frozen_toggle',
     initial: {},
     steps: [
-      { op: 'session_frozen_set', args: { value: false }, expect: { mode: 'json', json: true } },
+      {
+        op: 'session_frozen_set',
+        args: { value: false },
+        expect: { mode: 'json', json: true },
+      },
       { op: 'session_frozen_get', expect: { mode: 'json', json: false } },
-      { op: 'session_frozen_set', args: { value: true }, expect: { mode: 'json', json: true } },
+      {
+        op: 'session_frozen_set',
+        args: { value: true },
+        expect: { mode: 'json', json: true },
+      },
       { op: 'session_frozen_get', expect: { mode: 'json', json: true } },
-      { op: 'session_frozen_set', args: { value: false }, expect: { mode: 'json', json: true } },
+      {
+        op: 'session_frozen_set',
+        args: { value: false },
+        expect: { mode: 'json', json: true },
+      },
       { op: 'session_frozen_get', expect: { mode: 'json', json: false } },
     ],
   })
@@ -1080,9 +1089,20 @@ function regenall() {
     name: 'session.boardrunner_roundtrip',
     initial: {},
     steps: [
-      { op: 'session_boardrunner_set', args: { value: 'p1' }, expect: { mode: 'json', json: true } },
-      { op: 'session_boardrunner_get', expect: { mode: 'string', string: 'p1' } },
-      { op: 'session_boardrunner_set', args: { value: '' }, expect: { mode: 'json', json: true } },
+      {
+        op: 'session_boardrunner_set',
+        args: { value: 'p1' },
+        expect: { mode: 'json', json: true },
+      },
+      {
+        op: 'session_boardrunner_get',
+        expect: { mode: 'string', string: 'p1' },
+      },
+      {
+        op: 'session_boardrunner_set',
+        args: { value: '' },
+        expect: { mode: 'json', json: true },
+      },
     ],
   })
 
@@ -1090,9 +1110,20 @@ function regenall() {
     name: 'session.assignedboard_roundtrip',
     initial: {},
     steps: [
-      { op: 'session_assignedboard_set', args: { value: 'board-a' }, expect: { mode: 'json', json: true } },
-      { op: 'session_assignedboard_get', expect: { mode: 'string', string: 'board-a' } },
-      { op: 'session_assignedboard_set', args: { value: '' }, expect: { mode: 'json', json: true } },
+      {
+        op: 'session_assignedboard_set',
+        args: { value: 'board-a' },
+        expect: { mode: 'json', json: true },
+      },
+      {
+        op: 'session_assignedboard_get',
+        expect: { mode: 'string', string: 'board-a' },
+      },
+      {
+        op: 'session_assignedboard_set',
+        args: { value: '' },
+        expect: { mode: 'json', json: true },
+      },
     ],
   })
 
@@ -1101,8 +1132,16 @@ function regenall() {
     initial: {},
     steps: [
       { op: 'boundaries_clear', expect: { mode: 'json', json: true } },
-      { op: 'boundary_alloc', args: { id: 'board-a', value: {} }, expect: { mode: 'string', string: 'board-a' } },
-      { op: 'board_runtime_hydrated', args: { board_id: 'board-a' }, expect: { mode: 'json', json: false } },
+      {
+        op: 'boundary_alloc',
+        args: { id: 'board-a', value: {} },
+        expect: { mode: 'string', string: 'board-a' },
+      },
+      {
+        op: 'board_runtime_hydrated',
+        args: { board_id: 'board-a' },
+        expect: { mode: 'json', json: false },
+      },
     ],
   })
 
@@ -1121,7 +1160,11 @@ function regenall() {
         },
         expect: { mode: 'string', string: 'board-a' },
       },
-      { op: 'board_runtime_hydrated', args: { board_id: 'board-a' }, expect: { mode: 'json', json: true } },
+      {
+        op: 'board_runtime_hydrated',
+        args: { board_id: 'board-a' },
+        expect: { mode: 'json', json: true },
+      },
     ],
   })
 
@@ -1130,7 +1173,11 @@ function regenall() {
     initial: {},
     steps: [
       { op: 'boundaries_clear', expect: { mode: 'json', json: true } },
-      { op: 'boundary_alloc', args: { id: 'board-a', value: {} }, expect: { mode: 'string', string: 'board-a' } },
+      {
+        op: 'boundary_alloc',
+        args: { id: 'board-a', value: {} },
+        expect: { mode: 'string', string: 'board-a' },
+      },
       {
         op: 'boundary_alloc',
         args: {
@@ -1292,7 +1339,10 @@ function regenall() {
           includedraw: true,
           elements: drawelementfromboard(drawboard),
         },
-        expect: { mode: 'json', json: maptickrun(memorytickboard(drawboard, 1)) },
+        expect: {
+          mode: 'json',
+          json: maptickrun(memorytickboard(drawboard, 1)),
+        },
       },
     ],
   })
@@ -1467,7 +1517,12 @@ function regenall() {
       {
         op: 'element_ticker_prefix',
         args: prefixargs(baseprefixelement({ id: undefined })),
-        expect: { mode: 'string', string: memoryelementtotickerprefix(baseprefixelement({ id: undefined })) },
+        expect: {
+          mode: 'string',
+          string: memoryelementtotickerprefix(
+            baseprefixelement({ id: undefined }),
+          ),
+        },
       },
     ],
   })
@@ -1481,7 +1536,9 @@ function regenall() {
         args: prefixargs(baseprefixelement({ displayname: 'Shown' })),
         expect: {
           mode: 'string',
-          string: memoryelementtotickerprefix(baseprefixelement({ displayname: 'Shown' })),
+          string: memoryelementtotickerprefix(
+            baseprefixelement({ displayname: 'Shown' }),
+          ),
         },
       },
     ],
@@ -1498,7 +1555,11 @@ function regenall() {
     steps: [
       {
         op: 'element_ticker_prefix',
-        args: prefixargs(kindel, {}, { id: 'chest', name: 'chest', displayname: 'FromKind' }),
+        args: prefixargs(
+          kindel,
+          {},
+          { id: 'chest', name: 'chest', displayname: 'FromKind' },
+        ),
         expect: { mode: 'string', string: memoryelementtotickerprefix(kindel) },
       },
     ],
@@ -1511,13 +1572,19 @@ function regenall() {
       {
         op: 'element_ticker_prefix',
         args: prefixargs(baseprefixelement()),
-        expect: { mode: 'string', string: memoryelementtotickerprefix(baseprefixelement()) },
+        expect: {
+          mode: 'string',
+          string: memoryelementtotickerprefix(baseprefixelement()),
+        },
       },
     ],
   })
 
   mockedmemoryreadflags.mockReturnValue({ user: 'Pat' })
-  const playerel = baseprefixelement({ kind: 'player', displayname: 'ignored for player' })
+  const playerel = baseprefixelement({
+    kind: 'player',
+    displayname: 'ignored for player',
+  })
 
   writfixture('elementprefix.player_user', {
     name: 'elementprefix.player_user',
@@ -1526,7 +1593,10 @@ function regenall() {
       {
         op: 'element_ticker_prefix',
         args: prefixargs(playerel, { user: 'Pat' }),
-        expect: { mode: 'string', string: memoryelementtotickerprefix(playerel) },
+        expect: {
+          mode: 'string',
+          string: memoryelementtotickerprefix(playerel),
+        },
       },
       {
         op: 'element_log_prefix',
@@ -1546,12 +1616,18 @@ function regenall() {
       {
         op: 'element_ticker_prefix',
         args: prefixargs(tickeronly),
-        expect: { mode: 'string', string: memoryelementtotickerprefix(tickeronly) },
+        expect: {
+          mode: 'string',
+          string: memoryelementtotickerprefix(tickeronly),
+        },
       },
       {
         op: 'element_log_prefix',
         args: prefixargs(tickeronly),
-        expect: { mode: 'string', string: memoryelementtologprefix(tickeronly) },
+        expect: {
+          mode: 'string',
+          string: memoryelementtologprefix(tickeronly),
+        },
       },
     ],
   })
@@ -1570,7 +1646,10 @@ function regenall() {
             'addr-ne': { id: 'target-ne' },
           },
         },
-        expect: { mode: 'json', json: { exitne: 'target-ne', exitnw: '', exitse: '', exitsw: '' } },
+        expect: {
+          mode: 'json',
+          json: { exitne: 'target-ne', exitnw: '', exitse: '', exitsw: '' },
+        },
       },
     ],
   })
@@ -1589,7 +1668,10 @@ function regenall() {
             'addr-ne': { id: 'only-ne' },
           },
         },
-        expect: { mode: 'json', json: { exitne: 'only-ne', exitnw: '', exitse: '', exitsw: '' } },
+        expect: {
+          mode: 'json',
+          json: { exitne: 'only-ne', exitnw: '', exitse: '', exitsw: '' },
+        },
       },
     ],
   })
@@ -1611,7 +1693,12 @@ function regenall() {
         },
         expect: {
           mode: 'json',
-          json: { exitne: CORNER_EXIT_DISPUTED, exitnw: '', exitse: '', exitsw: '' },
+          json: {
+            exitne: CORNER_EXIT_DISPUTED,
+            exitnw: '',
+            exitse: '',
+            exitsw: '',
+          },
         },
       },
     ],
@@ -1627,7 +1714,10 @@ function regenall() {
           board: { id: 'cur', exitnorth: 'n', exiteast: 'e' },
           addrmap: { n: { id: 'north' }, e: { id: 'east' } },
         },
-        expect: { mode: 'json', json: { exitne: '', exitnw: '', exitse: '', exitsw: '' } },
+        expect: {
+          mode: 'json',
+          json: { exitne: '', exitnw: '', exitse: '', exitsw: '' },
+        },
       },
     ],
   })
@@ -1637,14 +1727,46 @@ function regenall() {
     initial: {},
     steps: [
       { op: 'permission_reset', expect: { mode: 'json', json: true } },
-      { op: 'permission_is_controlled', args: { command: 'allow' }, expect: { mode: 'json', json: true } },
-      { op: 'permission_is_controlled', args: { command: 'access' }, expect: { mode: 'json', json: true } },
-      { op: 'permission_is_controlled', args: { command: 'run' }, expect: { mode: 'json', json: true } },
-      { op: 'permission_is_controlled', args: { command: 'build' }, expect: { mode: 'json', json: true } },
-      { op: 'permission_is_controlled', args: { command: 'pageexport' }, expect: { mode: 'json', json: true } },
-      { op: 'permission_is_controlled', args: { command: 'synth1' }, expect: { mode: 'json', json: true } },
-      { op: 'permission_is_controlled', args: { command: 'shortsend' }, expect: { mode: 'json', json: false } },
-      { op: 'permission_is_controlled', args: { command: 'unknown' }, expect: { mode: 'json', json: false } },
+      {
+        op: 'permission_is_controlled',
+        args: { command: 'allow' },
+        expect: { mode: 'json', json: true },
+      },
+      {
+        op: 'permission_is_controlled',
+        args: { command: 'access' },
+        expect: { mode: 'json', json: true },
+      },
+      {
+        op: 'permission_is_controlled',
+        args: { command: 'run' },
+        expect: { mode: 'json', json: true },
+      },
+      {
+        op: 'permission_is_controlled',
+        args: { command: 'build' },
+        expect: { mode: 'json', json: true },
+      },
+      {
+        op: 'permission_is_controlled',
+        args: { command: 'pageexport' },
+        expect: { mode: 'json', json: true },
+      },
+      {
+        op: 'permission_is_controlled',
+        args: { command: 'synth1' },
+        expect: { mode: 'json', json: true },
+      },
+      {
+        op: 'permission_is_controlled',
+        args: { command: 'shortsend' },
+        expect: { mode: 'json', json: false },
+      },
+      {
+        op: 'permission_is_controlled',
+        args: { command: 'unknown' },
+        expect: { mode: 'json', json: false },
+      },
     ],
   })
 
@@ -1653,11 +1775,31 @@ function regenall() {
     initial: {},
     steps: [
       { op: 'permission_reset', expect: { mode: 'json', json: true } },
-      { op: 'permission_map_command', args: { command: 'access' }, expect: { mode: 'string', string: 'risk' } },
-      { op: 'permission_map_command', args: { command: 'pageexport' }, expect: { mode: 'string', string: 'risk' } },
-      { op: 'permission_map_command', args: { command: 'synth1' }, expect: { mode: 'string', string: 'speaker' } },
-      { op: 'permission_map_command', args: { command: 'run' }, expect: { mode: 'string', string: 'coder' } },
-      { op: 'permission_map_command', args: { command: 'build' }, expect: { mode: 'string', string: 'build' } },
+      {
+        op: 'permission_map_command',
+        args: { command: 'access' },
+        expect: { mode: 'string', string: 'risk' },
+      },
+      {
+        op: 'permission_map_command',
+        args: { command: 'pageexport' },
+        expect: { mode: 'string', string: 'risk' },
+      },
+      {
+        op: 'permission_map_command',
+        args: { command: 'synth1' },
+        expect: { mode: 'string', string: 'speaker' },
+      },
+      {
+        op: 'permission_map_command',
+        args: { command: 'run' },
+        expect: { mode: 'string', string: 'coder' },
+      },
+      {
+        op: 'permission_map_command',
+        args: { command: 'build' },
+        expect: { mode: 'string', string: 'build' },
+      },
     ],
   })
 
@@ -1667,16 +1809,26 @@ function regenall() {
     initial: {},
     steps: [
       { op: 'permission_reset', expect: { mode: 'json', json: true } },
-      { op: 'permission_set_operator', args: { operator: 'operator' }, expect: { mode: 'json', json: true } },
+      {
+        op: 'permission_set_operator',
+        args: { operator: 'operator' },
+        expect: { mode: 'json', json: true },
+      },
       {
         op: 'permission_can_run',
         args: { player: 'operator', command: 'nuke' },
-        expect: { mode: 'json', json: permissioncanrunexpect('operator', 'nuke') },
+        expect: {
+          mode: 'json',
+          json: permissioncanrunexpect('operator', 'nuke'),
+        },
       },
       {
         op: 'permission_can_run',
         args: { player: 'operator', command: 'allow' },
-        expect: { mode: 'json', json: permissioncanrunexpect('operator', 'allow') },
+        expect: {
+          mode: 'json',
+          json: permissioncanrunexpect('operator', 'allow'),
+        },
       },
     ],
   })
@@ -1690,7 +1842,10 @@ function regenall() {
       {
         op: 'permission_can_run',
         args: { player: 'player1', command: 'toast' },
-        expect: { mode: 'json', json: permissioncanrunexpect('player1', 'toast') },
+        expect: {
+          mode: 'json',
+          json: permissioncanrunexpect('player1', 'toast'),
+        },
       },
     ],
   })
@@ -1703,12 +1858,23 @@ function regenall() {
     initial: {},
     steps: [
       { op: 'permission_reset', expect: { mode: 'json', json: true } },
-      { op: 'permission_set_player_token', args: { player: 'player1', token: 'token-a' }, expect: { mode: 'json', json: true } },
-      { op: 'permission_set_role_for_token', args: { token: 'token-a', role: 'player' }, expect: { mode: 'json', json: true } },
+      {
+        op: 'permission_set_player_token',
+        args: { player: 'player1', token: 'token-a' },
+        expect: { mode: 'json', json: true },
+      },
+      {
+        op: 'permission_set_role_for_token',
+        args: { token: 'token-a', role: 'player' },
+        expect: { mode: 'json', json: true },
+      },
       {
         op: 'permission_can_run',
         args: { player: 'player1', command: 'toast' },
-        expect: { mode: 'json', json: permissioncanrunexpect('player1', 'toast') },
+        expect: {
+          mode: 'json',
+          json: permissioncanrunexpect('player1', 'toast'),
+        },
       },
     ],
   })
@@ -1718,12 +1884,23 @@ function regenall() {
     initial: {},
     steps: [
       { op: 'permission_reset', expect: { mode: 'json', json: true } },
-      { op: 'permission_set_player_token', args: { player: 'player1', token: 'token-a' }, expect: { mode: 'json', json: true } },
-      { op: 'permission_set_role_for_token', args: { token: 'token-a', role: 'player' }, expect: { mode: 'json', json: true } },
+      {
+        op: 'permission_set_player_token',
+        args: { player: 'player1', token: 'token-a' },
+        expect: { mode: 'json', json: true },
+      },
+      {
+        op: 'permission_set_role_for_token',
+        args: { token: 'token-a', role: 'player' },
+        expect: { mode: 'json', json: true },
+      },
       {
         op: 'permission_can_run',
         args: { player: 'player1', command: 'allow' },
-        expect: { mode: 'json', json: permissioncanrunexpect('player1', 'allow') },
+        expect: {
+          mode: 'json',
+          json: permissioncanrunexpect('player1', 'allow'),
+        },
       },
     ],
   })
@@ -1736,23 +1913,44 @@ function regenall() {
     initial: {},
     steps: [
       { op: 'permission_reset', expect: { mode: 'json', json: true } },
-      { op: 'permission_set_player_token', args: { player: 'player1', token: 'token-admin' }, expect: { mode: 'json', json: true } },
-      { op: 'permission_set_role_for_token', args: { token: 'token-admin', role: 'admin' }, expect: { mode: 'json', json: true } },
+      {
+        op: 'permission_set_player_token',
+        args: { player: 'player1', token: 'token-admin' },
+        expect: { mode: 'json', json: true },
+      },
+      {
+        op: 'permission_set_role_for_token',
+        args: { token: 'token-admin', role: 'admin' },
+        expect: { mode: 'json', json: true },
+      },
       {
         op: 'permission_can_run',
         args: { player: 'player1', command: 'nuke' },
-        expect: { mode: 'json', json: permissioncanrunexpect('player1', 'nuke') },
+        expect: {
+          mode: 'json',
+          json: permissioncanrunexpect('player1', 'nuke'),
+        },
       },
       {
         op: 'permission_can_run',
         args: { player: 'player1', command: 'allow' },
-        expect: { mode: 'json', json: permissioncanrunexpect('player1', 'allow') },
+        expect: {
+          mode: 'json',
+          json: permissioncanrunexpect('player1', 'allow'),
+        },
       },
-      { op: 'permission_role_has_family', args: { role: 'admin', family: 'roles' }, expect: { mode: 'json', json: true } },
+      {
+        op: 'permission_role_has_family',
+        args: { role: 'admin', family: 'roles' },
+        expect: { mode: 'json', json: true },
+      },
       {
         op: 'permission_can_run',
         args: { player: 'player1', command: 'book' },
-        expect: { mode: 'json', json: permissioncanrunexpect('player1', 'book') },
+        expect: {
+          mode: 'json',
+          json: permissioncanrunexpect('player1', 'book'),
+        },
       },
     ],
   })
@@ -1763,9 +1961,26 @@ function regenall() {
     initial: {},
     steps: [
       { op: 'permission_reset', expect: { mode: 'json', json: true } },
-      { op: 'permission_apply_config', args: { config: 'lockdown' }, expect: { mode: 'json', json: true } },
-      { op: 'permission_read_config', expect: { mode: 'string', string: 'lockdown' } },
-      { op: 'permission_read_allowlist', expect: { mode: 'json', json: { admin: sortedrolefamilies('admin'), mod: sortedrolefamilies('mod'), player: sortedrolefamilies('player') } } },
+      {
+        op: 'permission_apply_config',
+        args: { config: 'lockdown' },
+        expect: { mode: 'json', json: true },
+      },
+      {
+        op: 'permission_read_config',
+        expect: { mode: 'string', string: 'lockdown' },
+      },
+      {
+        op: 'permission_read_allowlist',
+        expect: {
+          mode: 'json',
+          json: {
+            admin: sortedrolefamilies('admin'),
+            mod: sortedrolefamilies('mod'),
+            player: sortedrolefamilies('player'),
+          },
+        },
+      },
     ],
   })
   memoryapplypermissionconfig('creative')
@@ -1775,11 +1990,31 @@ function regenall() {
     initial: {},
     steps: [
       { op: 'permission_reset', expect: { mode: 'json', json: true } },
-      { op: 'permission_apply_config', args: { config: 'creative' }, expect: { mode: 'json', json: true } },
-      { op: 'permission_role_has_family', args: { role: 'player', family: 'build' }, expect: { mode: 'json', json: true } },
-      { op: 'permission_role_has_family', args: { role: 'player', family: 'explore' }, expect: { mode: 'json', json: true } },
-      { op: 'permission_role_has_family', args: { role: 'player', family: 'persist' }, expect: { mode: 'json', json: true } },
-      { op: 'permission_role_has_family', args: { role: 'player', family: 'bridge' }, expect: { mode: 'json', json: false } },
+      {
+        op: 'permission_apply_config',
+        args: { config: 'creative' },
+        expect: { mode: 'json', json: true },
+      },
+      {
+        op: 'permission_role_has_family',
+        args: { role: 'player', family: 'build' },
+        expect: { mode: 'json', json: true },
+      },
+      {
+        op: 'permission_role_has_family',
+        args: { role: 'player', family: 'explore' },
+        expect: { mode: 'json', json: true },
+      },
+      {
+        op: 'permission_role_has_family',
+        args: { role: 'player', family: 'persist' },
+        expect: { mode: 'json', json: true },
+      },
+      {
+        op: 'permission_role_has_family',
+        args: { role: 'player', family: 'bridge' },
+        expect: { mode: 'json', json: false },
+      },
     ],
   })
 
@@ -1800,9 +2035,26 @@ function regenall() {
         },
         expect: { mode: 'json', json: true },
       },
-      { op: 'permission_read_config', expect: { mode: 'string', string: 'lockdown' } },
-      { op: 'permission_read_allowlist', expect: { mode: 'json', json: { admin: sortedrolefamilies('admin'), mod: sortedrolefamilies('mod'), player: [] } } },
-      { op: 'permission_role_has_family', args: { role: 'mod', family: 'persist' }, expect: { mode: 'json', json: true } },
+      {
+        op: 'permission_read_config',
+        expect: { mode: 'string', string: 'lockdown' },
+      },
+      {
+        op: 'permission_read_allowlist',
+        expect: {
+          mode: 'json',
+          json: {
+            admin: sortedrolefamilies('admin'),
+            mod: sortedrolefamilies('mod'),
+            player: [],
+          },
+        },
+      },
+      {
+        op: 'permission_role_has_family',
+        args: { role: 'mod', family: 'persist' },
+        expect: { mode: 'json', json: true },
+      },
     ],
   })
 
@@ -1822,8 +2074,15 @@ function regenall() {
         },
         expect: { mode: 'json', json: true },
       },
-      { op: 'permission_read_config', expect: { mode: 'string', string: 'lockdown' } },
-      { op: 'permission_role_has_family', args: { role: 'player', family: 'speaker' }, expect: { mode: 'json', json: true } },
+      {
+        op: 'permission_read_config',
+        expect: { mode: 'string', string: 'lockdown' },
+      },
+      {
+        op: 'permission_role_has_family',
+        args: { role: 'player', family: 'speaker' },
+        expect: { mode: 'json', json: true },
+      },
     ],
   })
 
@@ -1832,12 +2091,35 @@ function regenall() {
     initial: {},
     steps: [
       { op: 'permission_reset', expect: { mode: 'json', json: true } },
-      { op: 'permission_apply_config', args: { config: 'creative' }, expect: { mode: 'json', json: true } },
-      { op: 'permission_allow_command', args: { role: 'player', command: 'roles' }, expect: { mode: 'json', json: true } },
-      { op: 'permission_role_has_family', args: { role: 'player', family: 'roles' }, expect: { mode: 'json', json: true } },
-      { op: 'permission_apply_config', args: { config: 'lockdown' }, expect: { mode: 'json', json: true } },
-      { op: 'permission_role_has_family', args: { role: 'player', family: 'roles' }, expect: { mode: 'json', json: true } },
-      { op: 'permission_read_config', expect: { mode: 'string', string: 'lockdown' } },
+      {
+        op: 'permission_apply_config',
+        args: { config: 'creative' },
+        expect: { mode: 'json', json: true },
+      },
+      {
+        op: 'permission_allow_command',
+        args: { role: 'player', command: 'roles' },
+        expect: { mode: 'json', json: true },
+      },
+      {
+        op: 'permission_role_has_family',
+        args: { role: 'player', family: 'roles' },
+        expect: { mode: 'json', json: true },
+      },
+      {
+        op: 'permission_apply_config',
+        args: { config: 'lockdown' },
+        expect: { mode: 'json', json: true },
+      },
+      {
+        op: 'permission_role_has_family',
+        args: { role: 'player', family: 'roles' },
+        expect: { mode: 'json', json: true },
+      },
+      {
+        op: 'permission_read_config',
+        expect: { mode: 'string', string: 'lockdown' },
+      },
     ],
   })
 
@@ -1846,11 +2128,31 @@ function regenall() {
     initial: {},
     steps: [
       { op: 'permission_reset', expect: { mode: 'json', json: true } },
-      { op: 'permission_apply_config', args: { config: 'creative' }, expect: { mode: 'json', json: true } },
-      { op: 'permission_allow_command', args: { role: 'player', command: 'roles' }, expect: { mode: 'json', json: true } },
-      { op: 'permission_role_has_family', args: { role: 'player', family: 'roles' }, expect: { mode: 'json', json: true } },
-      { op: 'permission_revoke_command', args: { role: 'player', command: 'build' }, expect: { mode: 'json', json: true } },
-      { op: 'permission_role_has_family', args: { role: 'player', family: 'build' }, expect: { mode: 'json', json: false } },
+      {
+        op: 'permission_apply_config',
+        args: { config: 'creative' },
+        expect: { mode: 'json', json: true },
+      },
+      {
+        op: 'permission_allow_command',
+        args: { role: 'player', command: 'roles' },
+        expect: { mode: 'json', json: true },
+      },
+      {
+        op: 'permission_role_has_family',
+        args: { role: 'player', family: 'roles' },
+        expect: { mode: 'json', json: true },
+      },
+      {
+        op: 'permission_revoke_command',
+        args: { role: 'player', command: 'build' },
+        expect: { mode: 'json', json: true },
+      },
+      {
+        op: 'permission_role_has_family',
+        args: { role: 'player', family: 'build' },
+        expect: { mode: 'json', json: false },
+      },
     ],
   })
 
@@ -1860,7 +2162,9 @@ function regenall() {
     initial: {},
     steps: [
       { op: 'permission_reset', expect: { mode: 'json', json: true } },
-      { op: 'permission_serialize', expect: { mode: 'json', json: memoryserializepermissions() },
+      {
+        op: 'permission_serialize',
+        expect: { mode: 'json', json: memoryserializepermissions() },
       },
     ],
   })
@@ -1873,9 +2177,20 @@ function regenall() {
     initial: {},
     steps: [
       { op: 'permission_reset', expect: { mode: 'json', json: true } },
-      { op: 'permission_apply_config', args: { config: 'lockdown' }, expect: { mode: 'json', json: true } },
-      { op: 'permission_allow_command', args: { role: 'player', command: 'risk' }, expect: { mode: 'json', json: true } },
-      { op: 'permission_serialize', expect: { mode: 'json', json: serialized } },
+      {
+        op: 'permission_apply_config',
+        args: { config: 'lockdown' },
+        expect: { mode: 'json', json: true },
+      },
+      {
+        op: 'permission_allow_command',
+        args: { role: 'player', command: 'risk' },
+        expect: { mode: 'json', json: true },
+      },
+      {
+        op: 'permission_serialize',
+        expect: { mode: 'json', json: serialized },
+      },
       {
         op: 'permission_set_command_permissions',
         args: {
@@ -1883,12 +2198,20 @@ function regenall() {
           rolebytoken: serialized.rolebytoken,
           permissionconfig: serialized.permissionconfig,
           permissionoverrideaddbyrole: serialized.permissionoverrideaddbyrole,
-          permissionoverrideremovebyrole: serialized.permissionoverrideremovebyrole,
+          permissionoverrideremovebyrole:
+            serialized.permissionoverrideremovebyrole,
         },
         expect: { mode: 'json', json: true },
       },
-      { op: 'permission_read_config', expect: { mode: 'string', string: 'lockdown' } },
-      { op: 'permission_role_has_family', args: { role: 'player', family: 'risk' }, expect: { mode: 'json', json: true } },
+      {
+        op: 'permission_read_config',
+        expect: { mode: 'string', string: 'lockdown' },
+      },
+      {
+        op: 'permission_role_has_family',
+        args: { role: 'player', family: 'risk' },
+        expect: { mode: 'json', json: true },
+      },
     ],
   })
 
@@ -1899,7 +2222,9 @@ function regenall() {
     admin: {
       effective: Array.from(permbreakdown.admin?.effective ?? []).sort(),
       frombase: Array.from(permbreakdown.admin?.frombase ?? []).sort(),
-      overridegrant: Array.from(permbreakdown.admin?.overridegrant ?? []).sort(),
+      overridegrant: Array.from(
+        permbreakdown.admin?.overridegrant ?? [],
+      ).sort(),
       overridedeny: Array.from(permbreakdown.admin?.overridedeny ?? []).sort(),
     },
     mod: {
@@ -1911,7 +2236,9 @@ function regenall() {
     player: {
       effective: Array.from(permbreakdown.player?.effective ?? []).sort(),
       frombase: Array.from(permbreakdown.player?.frombase ?? []).sort(),
-      overridegrant: Array.from(permbreakdown.player?.overridegrant ?? []).sort(),
+      overridegrant: Array.from(
+        permbreakdown.player?.overridegrant ?? [],
+      ).sort(),
       overridedeny: Array.from(permbreakdown.player?.overridedeny ?? []).sort(),
     },
   }
@@ -1920,8 +2247,16 @@ function regenall() {
     initial: {},
     steps: [
       { op: 'permission_reset', expect: { mode: 'json', json: true } },
-      { op: 'permission_apply_config', args: { config: 'lockdown' }, expect: { mode: 'json', json: true } },
-      { op: 'permission_allow_command', args: { role: 'player', command: 'risk' }, expect: { mode: 'json', json: true } },
+      {
+        op: 'permission_apply_config',
+        args: { config: 'lockdown' },
+        expect: { mode: 'json', json: true },
+      },
+      {
+        op: 'permission_allow_command',
+        args: { role: 'player', command: 'risk' },
+        expect: { mode: 'json', json: true },
+      },
       {
         op: 'permission_read_breakdown',
         expect: { mode: 'json', json: breakdownjson },
@@ -1949,8 +2284,15 @@ function regenall() {
         },
         expect: { mode: 'json', json: true },
       },
-      { op: 'permission_read_config', expect: { mode: 'string', string: 'creative' } },
-      { op: 'permission_role_has_family', args: { role: 'player', family: 'speaker' }, expect: { mode: 'json', json: true } },
+      {
+        op: 'permission_read_config',
+        expect: { mode: 'string', string: 'creative' },
+      },
+      {
+        op: 'permission_role_has_family',
+        args: { role: 'player', family: 'speaker' },
+        expect: { mode: 'json', json: true },
+      },
     ],
   })
 
@@ -1959,13 +2301,22 @@ function regenall() {
     name: 'synth.voices_default',
     initial: {},
     steps: [
-      { op: 'synth_setup_session', args: { session: synthsession }, expect: { mode: 'json', json: true } },
+      {
+        op: 'synth_setup_session',
+        args: { session: synthsession },
+        expect: { mode: 'json', json: true },
+      },
       {
         op: 'synth_read_voices',
         args: { boardid: 'bd-test' },
         expect: {
           mode: 'json',
-          json: { '0': { square: '' }, '1': { square: '' }, '2': { square: '' }, '3': { square: '' } },
+          json: {
+            '0': { square: '' },
+            '1': { square: '' },
+            '2': { square: '' },
+            '3': { square: '' },
+          },
         },
       },
     ],
@@ -1975,13 +2326,33 @@ function regenall() {
     name: 'synth.merge_restart',
     initial: {},
     steps: [
-      { op: 'synth_setup_session', args: { session: synthsessionjson() }, expect: { mode: 'json', json: true } },
-      { op: 'synth_merge_voice', args: { boardid: 'bd-restart', idx: 0, config: 'sine', value: '' }, expect: { mode: 'json', json: true } },
-      { op: 'synth_merge_voice', args: { boardid: 'bd-restart', idx: 0, config: 'restart', value: '' }, expect: { mode: 'json', json: true } },
+      {
+        op: 'synth_setup_session',
+        args: { session: synthsessionjson() },
+        expect: { mode: 'json', json: true },
+      },
+      {
+        op: 'synth_merge_voice',
+        args: { boardid: 'bd-restart', idx: 0, config: 'sine', value: '' },
+        expect: { mode: 'json', json: true },
+      },
+      {
+        op: 'synth_merge_voice',
+        args: { boardid: 'bd-restart', idx: 0, config: 'restart', value: '' },
+        expect: { mode: 'json', json: true },
+      },
       {
         op: 'synth_read_voices',
         args: { boardid: 'bd-restart' },
-        expect: { mode: 'json', json: { '0': { square: '' }, '1': { square: '' }, '2': { square: '' }, '3': { square: '' } } },
+        expect: {
+          mode: 'json',
+          json: {
+            '0': { square: '' },
+            '1': { square: '' },
+            '2': { square: '' },
+            '3': { square: '' },
+          },
+        },
       },
     ],
   })
@@ -1997,8 +2368,16 @@ function regenall() {
     name: 'synth.merge_persist',
     initial: {},
     steps: [
-      { op: 'synth_setup_session', args: { session: synthsessionjson() }, expect: { mode: 'json', json: true } },
-      { op: 'synth_merge_voice', args: { boardid: 'bd-merge', idx: 0, config: 'freq', value: 440 }, expect: { mode: 'json', json: true } },
+      {
+        op: 'synth_setup_session',
+        args: { session: synthsessionjson() },
+        expect: { mode: 'json', json: true },
+      },
+      {
+        op: 'synth_merge_voice',
+        args: { boardid: 'bd-merge', idx: 0, config: 'freq', value: 440 },
+        expect: { mode: 'json', json: true },
+      },
       {
         op: 'synth_read_voices',
         args: { boardid: 'bd-merge' },
@@ -2011,8 +2390,16 @@ function regenall() {
     name: 'synth.playqueue_init',
     initial: {},
     steps: [
-      { op: 'synth_setup_session', args: { session: synthsessionjson() }, expect: { mode: 'json', json: true } },
-      { op: 'synth_read_playqueue', args: { boardid: 'bd-play' }, expect: { mode: 'json', json: [] } },
+      {
+        op: 'synth_setup_session',
+        args: { session: synthsessionjson() },
+        expect: { mode: 'json', json: true },
+      },
+      {
+        op: 'synth_read_playqueue',
+        args: { boardid: 'bd-play' },
+        expect: { mode: 'json', json: [] },
+      },
     ],
   })
 
@@ -2020,13 +2407,24 @@ function regenall() {
     name: 'synth.queue_board',
     initial: {},
     steps: [
-      { op: 'synth_setup_session', args: { session: synthsessionjson() }, expect: { mode: 'json', json: true } },
+      {
+        op: 'synth_setup_session',
+        args: { session: synthsessionjson() },
+        expect: { mode: 'json', json: true },
+      },
       {
         op: 'synth_queue_play',
         args: { boardid: 'bd-queue', play: 'c' },
-        expect: { mode: 'json', json: { queued: true, synthplay_fired: false, play: 'c' } },
+        expect: {
+          mode: 'json',
+          json: { queued: true, synthplay_fired: false, play: 'c' },
+        },
       },
-      { op: 'synth_read_playqueue', args: { boardid: 'bd-queue' }, expect: { mode: 'json', json: [['c', 4]] } },
+      {
+        op: 'synth_read_playqueue',
+        args: { boardid: 'bd-queue' },
+        expect: { mode: 'json', json: [['c', 4]] },
+      },
     ],
   })
 
@@ -2034,11 +2432,18 @@ function regenall() {
     name: 'synth.queue_global',
     initial: {},
     steps: [
-      { op: 'synth_setup_session', args: { session: synthsessionjson() }, expect: { mode: 'json', json: true } },
+      {
+        op: 'synth_setup_session',
+        args: { session: synthsessionjson() },
+        expect: { mode: 'json', json: true },
+      },
       {
         op: 'synth_queue_play',
         args: { boardid: '', play: 'c' },
-        expect: { mode: 'json', json: { queued: false, synthplay_fired: true, play: 'c' } },
+        expect: {
+          mode: 'json',
+          json: { queued: false, synthplay_fired: true, play: 'c' },
+        },
       },
     ],
   })
@@ -2047,18 +2452,32 @@ function regenall() {
     name: 'synth.queue_stop',
     initial: {},
     steps: [
-      { op: 'synth_setup_session', args: { session: synthsessionjson() }, expect: { mode: 'json', json: true } },
+      {
+        op: 'synth_setup_session',
+        args: { session: synthsessionjson() },
+        expect: { mode: 'json', json: true },
+      },
       {
         op: 'synth_queue_play',
         args: { boardid: 'bd-stop', play: 'c' },
-        expect: { mode: 'json', json: { queued: true, synthplay_fired: false, play: 'c' } },
+        expect: {
+          mode: 'json',
+          json: { queued: true, synthplay_fired: false, play: 'c' },
+        },
       },
       {
         op: 'synth_queue_play',
         args: { boardid: 'bd-stop', play: '' },
-        expect: { mode: 'json', json: { queued: false, synthplay_fired: true, play: '' } },
+        expect: {
+          mode: 'json',
+          json: { queued: false, synthplay_fired: true, play: '' },
+        },
       },
-      { op: 'synth_read_playqueue', args: { boardid: 'bd-stop' }, expect: { mode: 'json', json: [] } },
+      {
+        op: 'synth_read_playqueue',
+        args: { boardid: 'bd-stop' },
+        expect: { mode: 'json', json: [] },
+      },
     ],
   })
 
@@ -2084,7 +2503,10 @@ function regenall() {
       {
         op: 'lighting_mixmaxrange',
         args: { from: { x: 0, y: 0 }, dest: { x: 1, y: 0 } },
-        expect: { mode: 'json', json: lightingmixmaxrange({ x: 0, y: 0 }, { x: 1, y: 0 }) },
+        expect: {
+          mode: 'json',
+          json: lightingmixmaxrange({ x: 0, y: 0 }, { x: 1, y: 0 }),
+        },
       },
     ],
   })
@@ -2096,13 +2518,24 @@ function regenall() {
       {
         op: 'lighting_mixmaxrange',
         args: { from: { x: 10, y: 10 }, dest: { x: 10, y: 11 } },
-        expect: { mode: 'json', json: lightingmixmaxrange({ x: 10, y: 10 }, { x: 10, y: 11 }) },
+        expect: {
+          mode: 'json',
+          json: lightingmixmaxrange({ x: 10, y: 10 }, { x: 10, y: 11 }),
+        },
       },
     ],
   })
 
-  const terrainspan = lightingmixmaxrange({ x: 0, y: 0 }, { x: 3, y: 0 }, 'terrain')
-  const objectspan = lightingmixmaxrange({ x: 0, y: 0 }, { x: 3, y: 0 }, 'object')
+  const terrainspan = lightingmixmaxrange(
+    { x: 0, y: 0 },
+    { x: 3, y: 0 },
+    'terrain',
+  )
+  const objectspan = lightingmixmaxrange(
+    { x: 0, y: 0 },
+    { x: 3, y: 0 },
+    'object',
+  )
   const terrainwidth =
     terrainspan[0] <= terrainspan[1]
       ? terrainspan[1] - terrainspan[0]
@@ -2180,11 +2613,15 @@ function regenall() {
   })
 
   const markalphas = new Array<number>(BOARD_SIZE).fill(1)
-  memoryboardlightingmarkplayer(
-    emptyterrainboard(),
-    markalphas,
-    { id: 'sprite:test', x: 12, y: 7, char: 0, color: 0, bg: 0, stat: 0 },
-  )
+  memoryboardlightingmarkplayer(emptyterrainboard(), markalphas, {
+    id: 'sprite:test',
+    x: 12,
+    y: 7,
+    char: 0,
+    color: 0,
+    bg: 0,
+    stat: 0,
+  })
   const marksx = 12
   const marksy = 7
   const markindices: number[] = []
@@ -2527,7 +2964,15 @@ function regenall() {
     corridorboard,
     corridoralphas,
     {},
-    { id: 'sprite:test', x: x1 - 2, y: corridor_y, char: 0, color: 0, bg: 0, stat: 0 },
+    {
+      id: 'sprite:test',
+      x: x1 - 2,
+      y: corridor_y,
+      char: 0,
+      color: 0,
+      bg: 0,
+      stat: 0,
+    },
     10,
   )
   writfixture('boardlighting.corridor_leak', {
