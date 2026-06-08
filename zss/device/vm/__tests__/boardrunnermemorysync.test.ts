@@ -16,6 +16,10 @@ jest.mock('zss/memory/session', () => ({
   memoryreadroot: jest.fn(),
 }))
 
+jest.mock('zss/testsupport/hostmemorytrace', () => ({
+  tracehostmemorypatch: jest.fn(),
+}))
+
 import type { DEVICE } from 'zss/device'
 import { boardrunnerpatch } from 'zss/device/api'
 import { boardrunneremitpatch } from 'zss/device/vm/boardrunnermemorysync'

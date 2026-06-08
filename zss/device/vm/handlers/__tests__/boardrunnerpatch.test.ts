@@ -1,3 +1,13 @@
+jest.mock('zss/testsupport/hostmemorytrace', () => ({
+  ishostmemorytraceenabled: jest.fn(() => false),
+  tracehostmemory: jest.fn(),
+  tracehostmemorypatch: jest.fn(),
+}))
+
+jest.mock('zss/device/vm/gadgetsynctick', () => ({
+  gadgetsynctick: jest.fn(),
+}))
+
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { encodepatchwire } from 'zss/feature/jsonpipe/wire'

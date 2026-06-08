@@ -10,6 +10,11 @@ jest.mock('zss/gadget/fx/glitchpulse', () => ({
   setglitchpulse: jest.fn(),
 }))
 
+jest.mock('zss/testsupport/hostmemorytrace', () => ({
+  ishostmemorytraceenabled: jest.fn(() => false),
+  tracehostmemory: jest.fn(),
+}))
+
 const mocksetstate = jest.fn()
 const mockreply = jest.fn()
 

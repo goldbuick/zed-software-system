@@ -1,8 +1,4 @@
-import {
-  formatJsonPointer,
-  type Path,
-  toPath,
-} from '@jsonjoy.com/json-pointer/lib/util'
+import { formatJsonPointer, type Path } from '@jsonjoy.com/json-pointer/lib/util'
 import { decode as decodecompact } from 'json-joy/lib/json-patch/codec/compact/decode'
 import { encode as encodecompact } from 'json-joy/lib/json-patch/codec/compact/encode'
 import type { CompactOp } from 'json-joy/lib/json-patch/codec/compact/types'

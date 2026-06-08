@@ -28,6 +28,12 @@ jest.mock('zss/memory/boundaries', () => ({
   memoryboundaryset: jest.fn(),
 }))
 
+jest.mock('zss/testsupport/hostmemorytrace', () => ({
+  ishostmemorytraceenabled: jest.fn(() => false),
+  tracehostmemory: jest.fn(),
+  tracehostmemorypatch: jest.fn(),
+}))
+
 import type { DEVICE } from 'zss/device'
 import { boardrunnerpatch } from 'zss/device/api'
 import {
