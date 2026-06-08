@@ -40,6 +40,10 @@ import { bootstrapmobiletextcapture } from 'zss/gadget/mobiletextcapture'
 import { makeeven } from 'zss/mapping/number'
 import { createplatform } from 'zss/platform'
 import { installe2ebridge } from 'zss/testsupport/e2escrollbridge'
+import {
+  ishostmemorytraceenabledfromconfig,
+  sethostmemtraceenabled,
+} from 'zss/testsupport/hostmemorytrace'
 import type { StoreApi } from 'zustand/vanilla'
 
 import { App } from './app'
@@ -69,6 +73,9 @@ async function bootheadless(): Promise<void> {
   if (shoulde2ebridge()) {
     installe2ebridge()
   }
+  if (ishostmemorytraceenabledfromconfig()) {
+    sethostmemtraceenabled(true)
+  }
   await import('zss/userspace')
   createplatform(isjoin(), true)
   g.__nodeReady?.()
@@ -87,6 +94,12 @@ async function main() {
 
   if (shoulde2ebridge()) {
     installe2ebridge()
+  }
+  if (ishostmemorytraceenabledfromconfig()) {
+    sethostmemtraceenabled(true)
+    console.info(
+      '[zss] host memory trace ON (ZSS_HOST_MEM_TRACE) — logs → .cursor/debug-9bae57.log',
+    )
   }
 
   extend({

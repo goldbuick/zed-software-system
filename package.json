@@ -51,6 +51,7 @@
     "deploy:vm:docker-run": "sh scripts/vm-zss-docker-run.sh",
     "docs:check-links": "node scripts/check-doc-links.mjs",
     "e2e:install": "playwright install chromium firefox webkit",
+    "e2e:manual:join-charedit": "PLAYWRIGHT_INCLUDE_JOIN_E2E=1 PLAYWRIGHT_MANUAL_JOIN_CHAREDIT=1 playwright test e2e/join-charedit-manual.spec.ts --headed --debug",
     "e2e:test": "playwright test",
     "e2e:test:all-browsers": "PLAYWRIGHT_ALL_BROWSERS=1 playwright test",
     "e2e:test:gadget-scroll": "PLAYWRIGHT_INCLUDE_GADGET_E2E=1 playwright test e2e/gadget-inspect-scroll.spec.ts",
@@ -60,6 +61,7 @@
     "e2e:test:ui": "playwright test --ui",
     "env-parity:test": "npx tsx scripts/run-env-parity.ts",
     "fx-bus-metrics:test": "npx tsx scripts/run-fx-bus-metrics.ts",
+    "host-memory:repro:build": "npx tsx scripts/build-host-memory-repro.ts",
     "join-move:loop": "npx tsx scripts/run-join-move-loop.ts",
     "lang-corpus:test": "node scripts/test-lang-corpus.mjs",
     "lang-parity-fixtures:regen": "REGEN_LANG_FIXTURES=1 yarn jest zss/feature/lang/backend/wasm/__tests__/regenfixtures.test.ts --no-coverage",
@@ -227,6 +229,7 @@
     "fuse.js": "^7.1.0",
     "ink": "^6.8.0",
     "ink-text-input": "^6.0.0",
+    "json-joy": "^18.28.0",
     "playwright": "^1.49.0",
     "vosk-browser": "^0.0.8"
   },

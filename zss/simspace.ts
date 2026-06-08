@@ -1,6 +1,11 @@
 import 'zss/rom/vitepopulate'
 import { agentlog } from 'zss/agentlog'
 import { setclimode } from 'zss/feature/detect'
+import {
+  ishostmemorytraceenabled,
+  sethostmemtraceenabled,
+  tracehostmemory,
+} from 'zss/testsupport/hostmemorytrace'
 import { initlangcompile } from 'zss/feature/lang/langcompileclient'
 
 import { createforward, shouldforwardservertoclient } from './device/forward'
@@ -22,7 +27,18 @@ onmessage = function handleMessage(
 ) {
   const msg = event.data
   if (msg?.target === 'config') {
-    setclimode(!!msg?.data)
+    const cfg = msg?.data
+    if (cfg && typeof cfg === 'object') {
+      setclimode(!!cfg.climode)
+      sethostmemtraceenabled(!!cfg.hostmemtrace)
+      if (ishostmemorytraceenabled()) {
+        tracehostmemory('trace:worker:enabled', 'H0', '', undefined, {
+          worker: 'sim',
+        })
+      }
+    } else {
+      setclimode(!!cfg)
+    }
     return
   }
   forward(event.data)

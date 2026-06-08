@@ -10,6 +10,10 @@ import type { GADGET_STATE } from 'zss/gadget/data/types'
 import { setcrtcurveamp } from 'zss/gadget/fx/crtanim'
 import { setglitchpulse } from 'zss/gadget/fx/glitchpulse'
 import { deepcopy, ispresent } from 'zss/mapping/types'
+import {
+  ishostmemorytraceenabled,
+  tracehostmemory,
+} from 'zss/testsupport/hostmemorytrace'
 
 import { registerreadplayer } from './register'
 
@@ -87,6 +91,13 @@ const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
           }
         }
         // signal desync
+        // #region agent log
+        if (ishostmemorytraceenabled()) {
+          tracehostmemory('gadget:desync', 'H5', registerreadplayer(), undefined, {
+            target: message.target,
+          })
+        }
+        // #endregion
         gadgetclientdevice.reply(message, 'desync')
         return state
       })

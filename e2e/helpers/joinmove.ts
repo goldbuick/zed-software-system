@@ -37,9 +37,11 @@ export async function dismissmuteoverlay(page: Page): Promise<void> {
 export async function bootstraphostpage(
   page: Page,
   datadir: string,
+  opts?: { hostmemtrace?: boolean },
 ): Promise<string> {
   await exposehoststorage(page, datadir)
-  await page.goto('/?ZSS_E2E=1')
+  const traceqs = opts?.hostmemtrace ? '&ZSS_HOST_MEM_TRACE=1' : ''
+  await page.goto(`/?ZSS_E2E=1${traceqs}`)
   // Host tab is CLI/headless (no #frame); join tab uses full UI.
   await waitfore2ebridge(page)
   await expect
@@ -69,8 +71,10 @@ export async function bootstraphostpage(
 export async function bootstrapjoinpage(
   page: Page,
   topic: string,
+  opts?: { hostmemtrace?: boolean },
 ): Promise<void> {
-  await page.goto(`/join/?ZSS_E2E=1#${topic}`)
+  const traceqs = opts?.hostmemtrace ? '&ZSS_HOST_MEM_TRACE=1' : ''
+  await page.goto(`/join/?ZSS_E2E=1${traceqs}#${topic}`)
   await expect(page.locator('#frame')).toBeVisible({ timeout: 120_000 })
   await waitfore2ebridge(page)
   await dismissmuteoverlay(page)

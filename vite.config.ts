@@ -169,6 +169,9 @@ export default defineConfig(({ mode }) => {
     define: {
       ...zssdefine,
       'import.meta.env.ZSS_E2E': JSON.stringify(process.env.ZSS_E2E ?? ''),
+      'import.meta.env.ZSS_HOST_MEM_TRACE': JSON.stringify(
+        process.env.ZSS_HOST_MEM_TRACE ?? '',
+      ),
       'import.meta.env.ZSS_DAISY_PERF': JSON.stringify(
         process.env.ZSS_DAISY_PERF ?? '',
       ),

@@ -12,6 +12,8 @@ import { MAYBE, ispresent } from './mapping/types'
 import simspace from './simspace??worker'
 import stubspace from './stubspace??worker'
 
+import { ishostmemorytraceenabled } from 'zss/testsupport/hostmemorytrace'
+
 let heavy: MAYBE<Worker>
 let boardrunner: MAYBE<Worker>
 let platform: MAYBE<Worker>
@@ -34,7 +36,10 @@ export function createplatform(isstub = false, climode = false) {
   platform = isstub
     ? new stubspace({ name: 'stub' })
     : new simspace({ name: 'sim' })
-  platform.postMessage({ target: 'config', data: climode })
+  platform.postMessage({
+    target: 'config',
+    data: { climode, hostmemtrace: ishostmemorytraceenabled() },
+  })
 
   // create bridge
   const { forward, disconnect } = createforward((message) => {

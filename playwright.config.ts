@@ -12,6 +12,14 @@ if (!includegadgete2e) {
 if (!includejoine2e) {
   testignore.push('**/join-boardrunner-move.spec.ts')
   testignore.push('**/join-gadget-charedit.spec.ts')
+  testignore.push('**/join-charedit-manual.spec.ts')
+  testignore.push('**/host-memory-repro-from-log.spec.ts')
+}
+if (!process.env.PLAYWRIGHT_MANUAL_JOIN_CHAREDIT) {
+  testignore.push('**/join-charedit-manual.spec.ts')
+}
+if (!process.env.PLAYWRIGHT_HOST_MEMORY_REPRO) {
+  testignore.push('**/host-memory-repro-from-log.spec.ts')
 }
 if (!includelangbenche2e) {
   testignore.push('**/lang-compile-bench.spec.ts')
