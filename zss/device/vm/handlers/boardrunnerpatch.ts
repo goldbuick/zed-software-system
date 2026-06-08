@@ -5,24 +5,9 @@ import {
   boardrunneremitpatch,
   boardrunnermemorypatch,
 } from 'zss/device/vm/boardrunnermemorysync'
-import { gadgetsynctick } from 'zss/device/vm/gadgetsynctick'
 import type { Operation } from 'zss/feature/jsonpipe/observe'
 import { decodepatchwire } from 'zss/feature/jsonpipe/wire'
 import { isarray } from 'zss/mapping/types'
-import {
-  ishostmemorytraceenabled,
-  tracehostmemory,
-} from 'zss/testsupport/hostmemorytrace'
-
-function isflatcharpatch(operations: Operation[]): boolean {
-  for (let i = 0; i < operations.length; ++i) {
-    const path = String((operations[i] as { path?: string }).path ?? '')
-    if (path.includes('/flat/layers') && path.includes('/char')) {
-      return true
-    }
-  }
-  return false
-}
 
 export function handleboardrunnerpatch(vm: DEVICE, message: MESSAGE): void {
   if (!isarray(message.data)) {
@@ -32,20 +17,8 @@ export function handleboardrunnerpatch(vm: DEVICE, message: MESSAGE): void {
   const [patchwire, boundary] = message.data as [unknown, string | undefined]
   const operations = decodepatchwire(patchwire) as Operation[]
   if (boundary) {
-    const applied = boardrunnerboundarypatch(boundary, operations)
-    if (!applied) {
+    if (!boardrunnerboundarypatch(boundary, operations)) {
       // bad patch, send a reset — boardrunnerpaint recovery deferred
-    } else if (isflatcharpatch(operations)) {
-      // #region agent log
-      if (ishostmemorytraceenabled()) {
-        tracehostmemory('host:gadget:resync', 'H17', '', undefined, {
-          source: 'flatcharpatch',
-          boundary,
-          opcount: operations.length,
-        })
-      }
-      // #endregion
-      gadgetsynctick(vm)
     }
   } else if (!boardrunnermemorypatch(operations)) {
     // bad patch, send a reset — boardrunnerpaint recovery deferred

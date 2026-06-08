@@ -59,7 +59,6 @@ import {
   tracehostmemory,
   tracehostbatchchars,
 } from 'zss/testsupport/hostmemorytrace'
-import { memorynotifyboardsync } from './boardsyncnotify'
 import { memoryensuresoftwarebook } from './books'
 import {
   memoryreadcodepagename,
@@ -309,7 +308,6 @@ function registerhyperlinksforelementsetvalue(
           if (ispresent(editedboard)) {
             memoryensureboardruntime(editedboard).drawneedfull = true
           }
-          memorynotifyboardsync()
           // #region agent log
           if (ishostmemorytraceenabled() && typ === 'charedit') {
             const pts = elementhyperlinkcontext.elementsbypoints
