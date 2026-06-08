@@ -5,7 +5,7 @@ import {
   memorysyncpipe,
   readworkerboundarypipe,
 } from 'zss/device/boardrunner/state'
-import type { Operation } from 'zss/feature/jsonpipe/observe'
+import { decodepatchwire } from 'zss/feature/jsonpipe/wire'
 import { isarray, ispresent } from 'zss/mapping/types'
 import { memoryboundaryget, memoryboundaryset } from 'zss/memory/boundaries'
 import { memoryreadroot } from 'zss/memory/session'
@@ -14,7 +14,8 @@ export function handlepatch(device: DEVICE, message: MESSAGE): void {
   if (!isarray(message.data)) {
     return
   }
-  const [patch, id] = message.data as [Operation[], string]
+  const [patchwire, id] = message.data as [unknown, string]
+  const patch = decodepatchwire(patchwire)
   if (id) {
     const boundrypipe = readworkerboundarypipe(id)
     if (boundrypipe.isdesynced()) {

@@ -34,6 +34,7 @@ jest.mock('zss/gadget/data/state', () => ({
 
 import type { MESSAGE } from 'zss/device/api'
 import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
+import { encodepatchwire } from 'zss/feature/jsonpipe/wire'
 
 let gadgethandler: (message: MESSAGE) => void
 
@@ -79,7 +80,7 @@ describe('gadgetclient paint/patch apply', () => {
     gadgethandler({
       player: 'p1',
       target: 'patch',
-      data: patch,
+      data: encodepatchwire(patch),
     } as MESSAGE)
     expect(mocksetstate).toHaveBeenCalled()
   })

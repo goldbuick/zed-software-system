@@ -1,6 +1,6 @@
-# jsonpipe v1
+# jsonpipe
 
-Plain JSON sync with the **same mechanic** the sim VM uses to feed the [`gadgetclient`](../../device/gadgetclient.ts) ([`gadgetsynctick`](../../device/vm/gadgetsynctick.ts) → `gadgetclient:paint` / `patch`): ship a full snapshot once, then RFC 6902 **patch** streams. Jsonpipe uses different in-code names on purpose:
+Plain JSON sync with the **same mechanic** the sim VM uses to feed the [`gadgetclient`](../../device/gadgetclient.ts) ([`gadgetsynctick`](../../device/vm/gadgetsynctick.ts) → `gadgetclient:paint` / `patch`): ship a full snapshot once, then patch streams. Jsonpipe uses different in-code names on purpose:
 
 | Gadget wire (vm → gadgetclient) | Jsonpipe handle |
 |--------|----------|
@@ -9,12 +9,40 @@ Plain JSON sync with the **same mechanic** the sim VM uses to feed the [`gadgetc
 
 Implementation uses **fast-json-patch** [`compare` / `applyPatch`](https://github.com/Starcounter-Jack/JSON-Patch) against an internal **shadow copy** of the latest sync, so deltas come from the shadow vs the live object you pass in.
 
+## Wire format (v2)
+
+Device messages (`gadgetclient:patch`, `boardrunner:patch`, `vm:boardrunnerpatch`) ship **jsonpipe v2** envelopes, not verbose RFC 6902 objects. Encoding/decoding lives in [`wire.ts`](wire.ts):
+
+- **`encodepatchwire(ops)`** — called in [`device/api.ts`](../../device/api.ts) patch emit helpers.
+- **`decodepatchwire(data)`** — called in patch receive handlers before `applyremote`.
+
+```json
+{
+  "v": 2,
+  "pfx": ["/books/main/.../terrain/"],
+  "ops": [[2, [0, "42/char"], 177]]
+}
+```
+
+| Layer | Role |
+|-------|------|
+| **`pfx`** | Shared JSON pointer prefixes; op paths use `[prefixIndex, suffix]` instead of repeating long strings |
+| **`ops`** | [json-joy](https://jsonjoy.com/libs/json-joy-js/json-patch) **compact** tuples (`2` = replace) |
+
+Internally, pipes still use RFC 6902 `Operation[]` with **fast-json-patch** `compare` / `applyPatch`. Only the device wire is compact.
+
+**Breaking change:** verbose `{ op, path, value }` arrays are no longer accepted on the wire. All clients must upgrade together.
+
+**License:** `json-joy` is **AGPL-3.0-only**.
+
 ## Files
 
 | File | Role |
 |------|------|
 | [`observe.ts`](observe.ts) | `filterpatch`, `createjsonpipe`, `JSON_PIPE_HANDLE<T>`, `Operation` |
+| [`wire.ts`](wire.ts) | `encodepatchwire`, `decodepatchwire`, `PATCH_WIRE_V2` |
 | [`__tests__/jsonpipe.test.ts`](__tests__/jsonpipe.test.ts) | Unit tests |
+| [`__tests__/wire.test.ts`](__tests__/wire.test.ts) | Wire codec tests |
 
 ## API
 

@@ -6,6 +6,7 @@ import type { BRIDGE_CHAT_START_OBJECT } from 'zss/device/bridge/chattypes'
 import type { AGENTS_ROSTER } from 'zss/feature/heavy/agentsroster'
 import type { HEAVY_LLM_PRESET } from 'zss/feature/heavy/heavyllmpreset'
 import type { Operation } from 'zss/feature/jsonpipe/observe'
+import { encodepatchwire } from 'zss/feature/jsonpipe/wire'
 import { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { BOOK } from 'zss/memory/types'
@@ -164,7 +165,7 @@ export function boardrunnerpatch(
   patch: Operation[],
   boundary?: string,
 ) {
-  device.emit(player, 'boardrunner:patch', [patch, boundary])
+  device.emit(player, 'boardrunner:patch', [encodepatchwire(patch), boundary])
 }
 
 export function bridgestreamstart(
@@ -252,7 +253,7 @@ export function gadgetclientpatch(
   player: string,
   patch: Operation[],
 ) {
-  device.emit(player, 'gadgetclient:patch', patch)
+  device.emit(player, 'gadgetclient:patch', encodepatchwire(patch))
 }
 
 export function vmgadgetdesync(device: DEVICELIKE, player: string) {
@@ -340,7 +341,7 @@ export function vmboardrunnerpatch(
   patch: Operation[],
   boundary?: string,
 ) {
-  device.emit(player, 'vm:boardrunnerpatch', [patch, boundary])
+  device.emit(player, 'vm:boardrunnerpatch', [encodepatchwire(patch), boundary])
 }
 
 /** Full boundary document from runner → sim (boundary id required). */

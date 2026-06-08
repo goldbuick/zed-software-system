@@ -1,5 +1,6 @@
 import { createdevice } from 'zss/device'
 import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
+import { decodepatchwire } from 'zss/feature/jsonpipe/wire'
 import {
   applylayercacheupdate,
   emptygadgetstate,
@@ -70,7 +71,10 @@ const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
       }
       useGadgetClient.setState((state) => {
         // always patch against the fallback state
-        const gadget = gadgetjsonpipe.applyremote(fallback, message.data)
+        const gadget = gadgetjsonpipe.applyremote(
+          fallback,
+          decodepatchwire(message.data),
+        )
         if (ispresent(gadget)) {
           // always update the fallback state
           fallback = deepcopy(gadget)

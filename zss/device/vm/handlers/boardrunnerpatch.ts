@@ -7,6 +7,7 @@ import {
 } from 'zss/device/vm/boardrunnermemorysync'
 import { gadgetsynctick } from 'zss/device/vm/gadgetsynctick'
 import type { Operation } from 'zss/feature/jsonpipe/observe'
+import { decodepatchwire } from 'zss/feature/jsonpipe/wire'
 import { isarray } from 'zss/mapping/types'
 import {
   ishostmemorytraceenabled,
@@ -28,10 +29,8 @@ export function handleboardrunnerpatch(vm: DEVICE, message: MESSAGE): void {
     return
   }
   // we need to afford board runners to patch MAIN MEMORY
-  const [operations, boundary] = message.data as [
-    Operation[],
-    string | undefined,
-  ]
+  const [patchwire, boundary] = message.data as [unknown, string | undefined]
+  const operations = decodepatchwire(patchwire) as Operation[]
   if (boundary) {
     const applied = boardrunnerboundarypatch(boundary, operations)
     if (!applied) {
