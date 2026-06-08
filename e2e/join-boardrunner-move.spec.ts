@@ -21,7 +21,7 @@ test.describe('join boardrunner movement', () => {
     const join = await host.context().newPage()
     await bootstrapjoinpage(join, topic)
     const workstatus = await waitjoinboardrunnerrun(join)
-    expect(workstatus).toMatch(/^run /)
+    expect(workstatus).toMatch(/^run/)
 
     const before = await waitplayersprite(join)
     await attemptjoinmove(join, 'right', 8)

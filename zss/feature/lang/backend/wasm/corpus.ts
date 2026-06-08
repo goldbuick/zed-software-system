@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
+export { COOLREGIONSBOW_BOOK_JSON_PATH } from 'zss/testsupport/coolregionsbowbook'
+
 const WASMDIR = __dirname
 
 export type CorpusTier = 'parity' | 'integration' | 'book'

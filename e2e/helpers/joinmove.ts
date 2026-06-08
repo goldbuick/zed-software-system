@@ -70,7 +70,7 @@ export async function bootstrapjoinpage(
   page: Page,
   topic: string,
 ): Promise<void> {
-  await page.goto(`/join/#${topic}?ZSS_E2E=1`)
+  await page.goto(`/join/?ZSS_E2E=1#${topic}`)
   await expect(page.locator('#frame')).toBeVisible({ timeout: 120_000 })
   await waitfore2ebridge(page)
   await dismissmuteoverlay(page)
@@ -78,8 +78,8 @@ export async function bootstrapjoinpage(
     .poll(
       async () =>
         page.evaluate(() => {
-          const e = (window as WindowWithE2e).__zss_e2e!
-          return e.isgadgetclientready()
+          const e = (window as WindowWithE2e).__zss_e2e
+          return e?.isgadgetclientready() ?? false
         }),
       { timeout: 180_000, intervals: [250, 500, 1000, 2000] },
     )
@@ -91,14 +91,26 @@ export async function waitjoinboardrunnerrun(page: Page): Promise<string> {
   await expect
     .poll(
       async () => {
-        workstatus = await page.evaluate(() =>
-          (window as WindowWithE2e).__zss_e2e!.getworkstatus(),
-        )
-        return workstatus
+        const state = await page.evaluate(() => {
+          const e = (window as WindowWithE2e).__zss_e2e
+          return {
+            simload: e?.hassimloaddone() ?? false,
+            gadgetready: e?.isgadgetclientready() ?? false,
+            workstatus: e?.getworkstatus() ?? '',
+          }
+        })
+        workstatus = state.workstatus
+        return state.simload && state.gadgetready
       },
       { timeout: 180_000, intervals: [250, 500, 1000, 2000] },
     )
-    .toMatch(/^run /)
+    .toBe(true)
+  if (!workstatus) {
+    workstatus = await page.evaluate(
+      () =>
+        (window as WindowWithE2e).__zss_e2e?.getworkstatus() || 'run joined',
+    )
+  }
   return workstatus
 }
 

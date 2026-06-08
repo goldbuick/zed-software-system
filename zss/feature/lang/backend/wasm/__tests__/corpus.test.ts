@@ -32,6 +32,7 @@ import {
   parityids,
   readcorpus,
 } from 'zss/feature/lang/backend/wasm/corpus'
+import { readcoolregionsbowbookexport } from 'zss/testsupport/coolregionsbowbook'
 import { compilecppfromdisk } from 'zss/feature/lang/backend/wasm/langparityload'
 import { compilenativewasmfortest } from 'zss/feature/lang/backend/wasm/testhelpers/nativewasmtestutil'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
@@ -73,6 +74,10 @@ describe('lang corpus manifests', () => {
     expect(bookids()).toContain('player')
     expect(bookids()).toContain('clockwise')
     expect(bookids().length).toBeGreaterThanOrEqual(50)
+  })
+
+  it('book corpus shares sim fixture json path', () => {
+    expect(readcoolregionsbowbookexport().data.name).toBe('coolregionsbow')
   })
 
   it('every manifest entry has a .zss file', () => {

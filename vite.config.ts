@@ -1,4 +1,5 @@
 import { execSync } from 'node:child_process'
+import { readFile } from 'node:fs/promises'
 import path from 'path'
 
 import react from '@vitejs/plugin-react-swc'
@@ -46,6 +47,33 @@ function devjavascriptmimetypedev(): Plugin {
           }
           next()
         })
+      }
+    },
+  }
+}
+
+/** @bokuweb/zstd-wasm ships .map files referencing unpublished lib/*.ts sources. */
+function stripzstdsourcemaprefs(): Plugin {
+  return {
+    name: 'strip-zstd-sourcemap-refs',
+    apply: 'serve',
+    enforce: 'pre',
+    async load(id) {
+      const filepath = id.split('?')[0]
+      if (
+        !filepath.includes('@bokuweb/zstd-wasm') ||
+        !/\.js$/.test(filepath) ||
+        !path.isAbsolute(filepath)
+      ) {
+        return
+      }
+      const code = await readFile(filepath, 'utf-8')
+      if (!code.includes('sourceMappingURL')) {
+        return { code, map: { mappings: '' } }
+      }
+      return {
+        code: code.replace(/\n?\/\/# sourceMappingURL=.*$/gm, ''),
+        map: { mappings: '' },
       }
     },
   }
@@ -126,6 +154,7 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       devjavascriptmimetypedev(),
+      stripzstdsourcemaprefs(),
       react(),
       nodePolyfills({
         include: ['buffer'],

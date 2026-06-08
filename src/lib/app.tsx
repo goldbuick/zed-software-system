@@ -255,8 +255,10 @@ export async function runApp(flags: RunAppFlags): Promise<void> {
     return playerId
   })
 
-  const stubBookPath = path.join(root, 'src', 'stub-book.json')
-  const stubBookData = readJsonFile<unknown[]>(stubBookPath, [])
+  const { readcoolregionsbowbooks } = await import(
+    '../../zss/testsupport/coolregionsbowbook.js'
+  )
+  const stubBookData = readcoolregionsbowbooks()
 
   await page.exposeFunction('__nodeStorageReadContent', (player: string) => {
     const contentPath = path.join(dataDir, `${player}.json`)

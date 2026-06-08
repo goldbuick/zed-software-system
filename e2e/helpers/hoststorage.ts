@@ -4,9 +4,9 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import type { Page } from '@playwright/test'
+import { readcoolregionsbowbooks } from '../../zss/testsupport/coolregionsbowbook'
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '../..')
-const STUB_BOOK_PATH = path.join(ROOT, 'src/stub-book.json')
 
 function createpid(): string {
   const numbers = '0123456789'
@@ -40,7 +40,7 @@ export async function exposehoststorage(
   datadir: string,
 ): Promise<void> {
   fs.mkdirSync(datadir, { recursive: true })
-  const stubbook = readjsonfile<unknown[]>(STUB_BOOK_PATH, [])
+  const stubbook = readcoolregionsbowbooks()
   const configpath = path.join(datadir, 'config.json')
   const varspath = path.join(datadir, 'vars.json')
   const historypath = path.join(datadir, 'history.json')

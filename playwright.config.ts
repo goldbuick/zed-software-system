@@ -11,6 +11,7 @@ if (!includegadgete2e) {
 }
 if (!includejoine2e) {
   testignore.push('**/join-boardrunner-move.spec.ts')
+  testignore.push('**/join-gadget-charedit.spec.ts')
 }
 if (!includelangbenche2e) {
   testignore.push('**/lang-compile-bench.spec.ts')
@@ -39,7 +40,13 @@ export default defineConfig({
     actionTimeout: 30_000,
     navigationTimeout: 60_000,
     launchOptions: {
-      args: ['--ignore-gpu-blocklist'],
+      // Headless Chromium has no GPU WebGL by default; join UI needs Engine (R3F).
+      args: [
+        '--ignore-gpu-blocklist',
+        '--use-gl=angle',
+        '--use-angle=swiftshader',
+        '--enable-unsafe-swiftshader',
+      ],
     },
   },
   // Default: Chromium only (faster local/CI). Set PLAYWRIGHT_ALL_BROWSERS=1 for firefox + webkit.
