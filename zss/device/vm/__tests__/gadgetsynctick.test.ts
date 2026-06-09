@@ -13,6 +13,7 @@ jest.mock('zss/memory/session', () => ({
 }))
 
 jest.mock('zss/memory/playermanagement', () => ({
+  memoryreadplayeractive: jest.fn(() => true),
   memoryreadplayerboard: jest.fn(),
 }))
 
@@ -72,7 +73,10 @@ import { gadgetclientpatch } from 'zss/device/api'
 import { gadgetstate } from 'zss/gadget/data/api'
 import { gadgetsynctick } from 'zss/device/vm/gadgetsynctick'
 import { memoryreadbookgadgetlayersforboard } from 'zss/memory/gadgetlayersflags'
-import { memoryreadplayerboard } from 'zss/memory/playermanagement'
+import {
+  memoryreadplayeractive,
+  memoryreadplayerboard,
+} from 'zss/memory/playermanagement'
 import { memoryconverttogadgetcontrollayer } from 'zss/memory/rendering'
 import {
   memoryreadbookbysoftware,
@@ -83,7 +87,7 @@ import type { BOOK } from 'zss/memory/types'
 const stubgadgetlayers = {
   id: 'board-1',
   board: 'board-1',
-  exiteast: '',
+  exiteast: 'east-exit',
   exitwest: '',
   exitnorth: '',
   exitsouth: '',
@@ -114,6 +118,8 @@ function createstubgadget() {
     layers: [] as unknown[],
     tickers: [] as string[],
     sidebar: [] as unknown[],
+    scrollname: '',
+    scroll: [] as unknown[],
     boardname: '',
     synthstate: {},
   }
@@ -137,6 +143,7 @@ describe('gadgetsynctick', () => {
     jest.mocked(gadgetstate).mockReturnValue(stubgadget)
     jest.mocked(memoryreadbookbysoftware).mockReturnValue(stubbook)
     jest.mocked(memoryreadoperator).mockReturnValue('p1')
+    jest.mocked(memoryreadplayeractive).mockReturnValue(true)
     jest.mocked(memoryreadplayerboard).mockReturnValue({
       id: 'board-1',
       name: 'Test Board',
@@ -181,11 +188,17 @@ describe('gadgetsynctick', () => {
     expect(stubgadget.layers).toEqual(['layer-a', 'control'])
     expect(stubgadget.tickers).toEqual(['ticker-a'])
     expect(stubgadget.sidebar).toEqual(['sidebar-a'])
+    expect(stubgadget.id).toBe('board-1')
+    expect(stubgadget.board).toBe('board-1')
+    expect(stubgadget.boardname).toBe('Test Board')
 
     jest.mocked(memoryreadbookgadgetlayersforboard).mockReturnValue({})
     gadgetsynctick(vm)
 
-    expect(stubgadget.id).toBe('void')
+    expect(stubgadget.id).toBe('board-1')
+    expect(stubgadget.board).toBe('board-1')
+    expect(stubgadget.boardname).toBe('Test Board')
+    expect(stubgadget.exiteast).toBe('east-exit')
     expect(stubgadget.over).toEqual(['over-a'])
     expect(stubgadget.under).toEqual(['under-a'])
     expect(stubgadget.layers).toEqual(['layer-a', 'control'])
@@ -205,12 +218,65 @@ describe('gadgetsynctick', () => {
 
     gadgetsynctick(vm)
 
-    expect(stubgadget.id).toBe('void')
+    expect(stubgadget.id).toBe('')
+    expect(stubgadget.board).toBe('')
     expect(stubgadget.over).toEqual([])
     expect(stubgadget.under).toEqual([])
     expect(stubgadget.layers).toEqual([])
     expect(stubgadget.tickers).toEqual([])
     expect(stubgadget.sidebar).toEqual([])
     expect(memoryconverttogadgetcontrollayer).not.toHaveBeenCalled()
+  })
+
+  it('emits void state when player is inactive and layers are missing', () => {
+    jest.mocked(memoryreadoperator).mockReturnValue('p-inactive')
+    jest.mocked(memoryreadbookbysoftware).mockReturnValue({
+      ...stubbook,
+      activelist: ['p-inactive'],
+    })
+    jest.mocked(memoryreadbookgadgetlayersforboard).mockReturnValue({})
+
+    stubgadget.scrollname = 'old-scroll'
+    stubgadget.scroll = ['scroll-a']
+
+    jest.mocked(memoryreadplayeractive).mockReturnValue(false)
+    gadgetsynctick(vm)
+
+    expect(stubgadget.id).toBe('void')
+    expect(stubgadget.board).toBe('void')
+    expect(stubgadget.boardname).toBe('void')
+    expect(stubgadget.layers).toEqual([])
+    expect(stubgadget.over).toEqual([])
+    expect(stubgadget.under).toEqual([])
+    expect(stubgadget.tickers).toEqual([])
+    expect(stubgadget.sidebar).toEqual([])
+    expect(stubgadget.scrollname).toBe('old-scroll')
+    expect(stubgadget.scroll).toEqual(['scroll-a'])
+    expect(gadgetclientpatch).toHaveBeenCalled()
+
+    jest.mocked(memoryreadplayeractive).mockReturnValue(true)
+    gadgetsynctick(vm)
+
+    expect(stubgadget.id).toBe('')
+    expect(stubgadget.layers).toEqual([])
+  })
+
+  it('preserves scroll and exit fields in fallback', () => {
+    stubgadget.scrollname = 'my-scroll'
+    stubgadget.scroll = ['scroll-line']
+    jest.mocked(memoryconverttogadgetcontrollayer).mockClear()
+
+    gadgetsynctick(vm)
+    expect(stubgadget.exiteast).toBe('east-exit')
+    expect(stubgadget.scrollname).toBe('my-scroll')
+    expect(stubgadget.scroll).toEqual(['scroll-line'])
+
+    jest.mocked(memoryreadbookgadgetlayersforboard).mockReturnValue({})
+    gadgetsynctick(vm)
+
+    expect(stubgadget.exiteast).toBe('east-exit')
+    expect(stubgadget.scrollname).toBe('my-scroll')
+    expect(stubgadget.scroll).toEqual(['scroll-line'])
+    expect(memoryconverttogadgetcontrollayer).toHaveBeenCalledTimes(1)
   })
 })
