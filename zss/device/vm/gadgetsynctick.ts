@@ -8,7 +8,7 @@ import {
   gadgetstateprovider,
   initstate,
 } from 'zss/gadget/data/api'
-import type { GADGET_STATE } from 'zss/gadget/data/types'
+import type { GADGET_STATE, LAYER, PANEL_ITEM } from 'zss/gadget/data/types'
 import { normalizelayerzvariant } from 'zss/gadget/graphics/layerz'
 import { creategadgetid, ispid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
@@ -49,6 +49,42 @@ gadgetstateprovider((player) => {
   }
   return initstate()
 })
+
+// reuse the joined array per-player to avoid per-tick spread when neither
+// the layers reference nor the control reference changed.
+type GADGET_LAYERS_CACHE_ENTRY = {
+  layers: unknown[]
+  control: unknown[]
+  joined: unknown[]
+}
+
+type GADGET_VOID_FALLBACK = {
+  over: LAYER[]
+  under: LAYER[]
+  layers: LAYER[]
+  tickers: string[]
+  sidebar: PANEL_ITEM[]
+}
+
+const gadgetvoidfallbackcache = new Map<string, GADGET_VOID_FALLBACK>()
+const gadgetlayersjoincache = new Map<string, GADGET_LAYERS_CACHE_ENTRY>()
+function buildgadgetlayersarray(
+  player: string,
+  layers: any[],
+  control: any[],
+): any[] {
+  const cached = gadgetlayersjoincache.get(player)
+  if (
+    cached?.layers === layers &&
+    cached.control === control &&
+    cached.joined.length === layers.length + control.length
+  ) {
+    return cached.joined as any[]
+  }
+  const joined = [...layers, ...control]
+  gadgetlayersjoincache.set(player, { layers, control, joined })
+  return joined
+}
 
 const gadgetjsonpipes = new Map<string, JSON_PIPE_HANDLE<GADGET_STATE>>()
 function readgadgetjsonpipe(player: string) {
@@ -119,7 +155,17 @@ function gadgetsynctickbody(vm: DEVICE) {
       )
       gadget.tickers = gadgetlayers.tickers
       gadget.boardname = board?.name?.trim() ?? ''
+      if (control.length) {
+        gadgetvoidfallbackcache.set(player, {
+          over: gadgetlayers.over,
+          under: gadgetlayers.under,
+          layers: gadget.layers,
+          tickers: gadget.tickers,
+          sidebar: gadget.sidebar ?? [],
+        })
+      }
     } else {
+      const fallback = gadgetvoidfallbackcache.get(player)
       gadget.id = 'void'
       gadget.board = 'void'
       gadget.exiteast = ''
@@ -130,11 +176,11 @@ function gadgetsynctickbody(vm: DEVICE) {
       gadget.exitnw = ''
       gadget.exitse = ''
       gadget.exitsw = ''
-      gadget.over = []
-      gadget.under = []
-      gadget.layers = []
-      gadget.tickers = []
-      gadget.sidebar = []
+      gadget.over = fallback?.over ?? []
+      gadget.under = fallback?.under ?? []
+      gadget.layers = fallback?.layers ?? []
+      gadget.tickers = fallback?.tickers ?? []
+      gadget.sidebar = fallback?.sidebar ?? []
       gadget.boardname = 'void'
     }
 
@@ -148,32 +194,6 @@ function gadgetsynctickbody(vm: DEVICE) {
       gadgetclientpatch(vm, player, patch)
     }
   }
-}
-
-// reuse the joined array per-player to avoid per-tick spread when neither
-// the layers reference nor the control reference changed.
-type GADGET_LAYERS_CACHE_ENTRY = {
-  layers: unknown[]
-  control: unknown[]
-  joined: unknown[]
-}
-const gadgetlayersjoincache = new Map<string, GADGET_LAYERS_CACHE_ENTRY>()
-function buildgadgetlayersarray(
-  player: string,
-  layers: any[],
-  control: any[],
-): any[] {
-  const cached = gadgetlayersjoincache.get(player)
-  if (
-    cached?.layers === layers &&
-    cached.control === control &&
-    cached.joined.length === layers.length + control.length
-  ) {
-    return cached.joined as any[]
-  }
-  const joined = [...layers, ...control]
-  gadgetlayersjoincache.set(player, { layers, control, joined })
-  return joined
 }
 
 export function handlegadgetdesync(vm: DEVICE, message: MESSAGE): void {
