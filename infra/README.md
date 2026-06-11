@@ -41,7 +41,7 @@ Start OTP login and reserve a namespace for the email.
 | `email` | yes | Lowercased/trimmed |
 | `namespace` | yes | `[a-z0-9-]`, 1–63 chars; reserved: `www`, `api`, `mail`, `ftp` |
 
-**200** `{ "success": true }` — OTP emailed.
+**200** `{ "success": true }` — OTP emailed (styled HTML + plain-text `#zns {code}` body, and `{JOIN_ORIGIN}/?zns-code={code}&zns-email={email}&zns-namespace={namespace}` deep link for cross-device finish).
 
 **403** namespace owned by another account, or email already bound to a different namespace.
 

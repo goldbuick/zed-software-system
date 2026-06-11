@@ -1,5 +1,6 @@
 import { workstatus } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { clearqueryparams } from 'zss/feature/deeplink'
 import {
   storagereadznssession,
   storagewriteznsclear,
@@ -138,6 +139,65 @@ export const ZNS_TENANT_SUFFIX = 'at.zed.cafe'
 export const ZNS_DOCS_NAMESPACE = 'docs'
 export const ZNS_PEER_KEY = 'peer'
 export const ZNS_BYTES_KEY_TARGET = 'znsbyteskey'
+export const ZNS_LOGIN_CODE_PARAM = 'zns-code'
+export const ZNS_LOGIN_EMAIL_PARAM = 'zns-email'
+export const ZNS_LOGIN_NAMESPACE_PARAM = 'zns-namespace'
+
+const ZNS_LOGIN_CODE_RE = /^[1-9]{6}$/
+const ZNS_LOGIN_NAMESPACE_RE = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/
+
+export type ZNS_LOGIN_URL_PARAMS = {
+  code: string
+  email?: string
+  namespace?: string
+}
+
+function readznsloginsearchparams(): URLSearchParams | undefined {
+  try {
+    return new URLSearchParams(location.search)
+  } catch {
+    return undefined
+  }
+}
+
+export function readznsloginparamsfromurl(): ZNS_LOGIN_URL_PARAMS | undefined {
+  const search = readznsloginsearchparams()
+  if (!search) {
+    return undefined
+  }
+  const code = search.get(ZNS_LOGIN_CODE_PARAM)?.trim()
+  if (!code || !ZNS_LOGIN_CODE_RE.test(code)) {
+    return undefined
+  }
+  const emailraw = search.get(ZNS_LOGIN_EMAIL_PARAM)?.trim().toLowerCase()
+  const namespaceraw = znsnormalizenamespace(
+    search.get(ZNS_LOGIN_NAMESPACE_PARAM) ?? '',
+  )
+  const params: ZNS_LOGIN_URL_PARAMS = { code }
+  if (emailraw?.includes('@')) {
+    params.email = emailraw
+  }
+  if (namespaceraw && ZNS_LOGIN_NAMESPACE_RE.test(namespaceraw)) {
+    params.namespace = namespaceraw
+  }
+  return params
+}
+
+export function readznslogincodefromurl(): string | undefined {
+  return readznsloginparamsfromurl()?.code
+}
+
+export function clearznsloginparamsfromurl(): void {
+  clearqueryparams([
+    ZNS_LOGIN_CODE_PARAM,
+    ZNS_LOGIN_EMAIL_PARAM,
+    ZNS_LOGIN_NAMESPACE_PARAM,
+  ])
+}
+
+export function clearznslogincodefromurl(): void {
+  clearznsloginparamsfromurl()
+}
 
 export function znskeyispeer(key: string, kind?: string) {
   return key === ZNS_PEER_KEY || kind === 'peer'

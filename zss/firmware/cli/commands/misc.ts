@@ -1,5 +1,6 @@
 import { registerscreenshot } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { rundeeplinks } from 'zss/feature/deeplink'
 import {
   formatboardfortext,
   formatlookfortext,
@@ -22,6 +23,7 @@ import { FIRMWARE } from 'zss/firmware'
 import {
   showznsloginguide,
   showznsmenu,
+  znsreadsession,
   znsrequiresession,
   znsrunimportcode,
   znsrunpublish,
@@ -67,7 +69,14 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
       (_, words) => {
         if (words.length === 0) {
           doasync(SOFTWARE, READ_CONTEXT.elementfocus, async () => {
-            await showznsmenu(READ_CONTEXT.elementfocus)
+            if (
+              !(await rundeeplinks({
+                player: READ_CONTEXT.elementfocus,
+                surface: 'cli',
+              }))
+            ) {
+              await showznsmenu(READ_CONTEXT.elementfocus)
+            }
           })
           return 0
         }
@@ -75,7 +84,15 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
         switch (NAME(action)) {
           default: {
             doasync(SOFTWARE, READ_CONTEXT.elementfocus, async () => {
-              const session = await znsrequiresession(READ_CONTEXT.elementfocus)
+              if (
+                await rundeeplinks({
+                  player: READ_CONTEXT.elementfocus,
+                  surface: 'cli',
+                })
+              ) {
+                return
+              }
+              const session = await znsreadsession()
               if (!session?.token) {
                 const pendingemail = await storagereadznsemail()
                 if (!pendingemail) {
@@ -119,11 +136,7 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
                   if (result.success && result.token) {
                     const namespace = (await storagereadznsnamespace()) ?? ''
                     await znspersistlogin(pendingemail, namespace, result.token)
-                    write(
-                      SOFTWARE,
-                      READ_CONTEXT.elementfocus,
-                      zsstextline(`$green${pendingemail} has been logged in`),
-                    )
+                    await showznsmenu(READ_CONTEXT.elementfocus)
                   }
                 }
               } else {

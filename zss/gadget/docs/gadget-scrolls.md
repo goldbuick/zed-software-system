@@ -76,7 +76,7 @@ Full wiring diagram and Q&A: [scroll-vs-terminal-hyperlinks.md](./scroll-vs-term
 
 ### ZNS fallback for `refscroll:<path>`
 
-If `romread('refscroll:' + path)` is missing, the UI briefly shows title `$7$7$7 please wait` and loading text, then [`fetchrefscrolltext`](../../feature/fetchrefscrolltext.ts) (ROM → `docs.zns.zed.cafe`) + [`parsemarkdownforscroll`](../../feature/parse/markdownscroll.ts) fill the panel, or an in-scroll “doc not found” error if both miss.
+If `romread('refscroll:' + path)` is missing, the UI briefly shows title `$7$7$7 please wait` and loading text, then [`fetchrefscrolltext`](../../feature/fetchrefscrolltext.ts) (ROM → `docs.at.zed.cafe`) + [`parsemarkdownforscroll`](../../feature/parse/markdownscroll.ts) fill the panel, or an in-scroll “doc not found” error if both miss.
 
 ---
 

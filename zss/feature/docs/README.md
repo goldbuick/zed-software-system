@@ -38,7 +38,7 @@ Feature modules are **stateless utilities** and **domain logic** that:
 | [charset.md](charset.md) | Default character set |
 | [keyboard.md](keyboard.md) | Clipboard, keyboard utilities |
 | [speechtotext.md](speechtotext.md) | Speech recognition |
-| [fetchrefscrolltext](../fetchrefscrolltext.ts) | ROM then `docs.zns` refscroll text |
+| [fetchrefscrolltext](../fetchrefscrolltext.ts) | ROM then `docs.at.zed.cafe` refscroll text |
 | [itchiopublish.md](itchiopublish.md) | itch.io publishing |
 | [synth/docs](../synth/docs/README.md) | Audio synthesis (full docs) |
 

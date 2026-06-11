@@ -2,6 +2,7 @@ import { parsetarget } from 'zss/device'
 import { apitoast, vmpublish } from 'zss/device/api'
 import { modemreadtextsync } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
+import { rundeeplinks } from 'zss/feature/deeplink'
 import {
   storagereadznsemail,
   storagereadznsnamespace,
@@ -16,7 +17,9 @@ import {
   znskeylinkcommand,
   znskeyopenlabel,
   znslist,
+  znslogincode,
   znsnormalizepathkey,
+  znspersistlogin,
 } from 'zss/feature/url'
 import { write } from 'zss/feature/writeui'
 import {
@@ -48,7 +51,7 @@ import { ARG_TYPE, NAME, WORD } from 'zss/words/types'
 
 type ZNS_SESSION = { email: string; token: string; namespace: string }
 
-async function znsensureloggedin(): Promise<ZNS_SESSION | undefined> {
+export async function znsreadsession(): Promise<ZNS_SESSION | undefined> {
   const session = await storagereadznssession()
   if (session) {
     return session
@@ -159,7 +162,10 @@ async function znsmenukeyrows(session: ZNS_SESSION): Promise<string[]> {
 }
 
 export async function showznsmenu(player: string) {
-  const session = await znsensureloggedin()
+  if (await rundeeplinks({ player, surface: 'menu' })) {
+    return
+  }
+  const session = await znsreadsession()
   if (!session?.token) {
     const pendingemail = await storagereadznsemail()
     if (pendingemail) {
@@ -319,8 +325,25 @@ export async function znsrunimportcode(
   apitoast(SOFTWARE, player, `imported $green${name} from zns [code] ${key}`)
 }
 
+export async function znsconfirmotpfromdeeplink(
+  player: string,
+  email: string,
+  code: string,
+  namespace: string,
+) {
+  write(SOFTWARE, player, zsstextline(`confirming login with $green${code}`))
+  const result = await znslogincode(email, code)
+  if (result.success && result.token) {
+    await znspersistlogin(email, namespace, result.token)
+    await showznsmenu(player)
+    return true
+  }
+  write(SOFTWARE, player, zsstextline(`$red zns login failed`))
+  return false
+}
+
 export async function znsrequiresession(player: string) {
-  const session = await znsensureloggedin()
+  const session = await znsreadsession()
   if (!session) {
     write(
       SOFTWARE,

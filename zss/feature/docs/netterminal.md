@@ -29,4 +29,4 @@
 - Peer ID stored in IndexedDB (`netid`)
 - Host creates Peer, subscribes to topic; joins create DataConnection to host
 - `createforward` bridges messages between device and peer; filters by `shouldforwardservertoclient`, `shouldnotforwardonpeerserver`
-- On `peer` `open`, if ZNS session is in IDB, [`znsautopublishpeer`](../url.ts) updates `https://{namespace}.zns.zed.cafe/peer`
+- On `peer` `open`, if ZNS session is in IDB, [`znsautopublishpeer`](../url.ts) updates `https://{namespace}.at.zed.cafe/peer`

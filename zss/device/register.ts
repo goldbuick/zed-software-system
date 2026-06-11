@@ -13,6 +13,7 @@ import {
   removebookmarkbyid,
   runterminalbookmarkclibyid,
 } from 'zss/feature/bookmarks'
+import { initdeeplinks, rundeeplinks } from 'zss/feature/deeplink'
 import { isclimode } from 'zss/feature/detect'
 import { fetchrefscrolltext } from 'zss/feature/fetchrefscrolltext'
 import { getfingerprint } from 'zss/feature/fingerprint'
@@ -269,6 +270,7 @@ let loggedin = false
 // stable unique id (CLI mode injects via registerSetPlayerId)
 let myplayerid = readsession('PLAYER') ?? createpid()
 writesession('PLAYER', myplayerid)
+initdeeplinks()
 
 async function syncterminalbookmarkpins() {
   const blob = await readbookmarksfromstorage()
@@ -345,6 +347,15 @@ export const register = createdevice(
           await waitfor(256)
           apilog(register, myplayerid, `myplayerid ${myplayerid}`)
           vmoperator(register, myplayerid)
+          if (!isclimode()) {
+            await waitfor(512)
+            await rundeeplinks({
+              player: myplayerid,
+              surface: 'boot',
+              openterminal: true,
+              device: register,
+            })
+          }
         })
         break
       }
@@ -389,6 +400,16 @@ export const register = createdevice(
           registerterminalclose(register, myplayerid)
           // signal sim loaded
           vmloader(register, message.player, undefined, 'text', 'sim:load', '')
+          if (!isclimode()) {
+            doasync(register, myplayerid, async () => {
+              await rundeeplinks({
+                player: myplayerid,
+                surface: 'boot',
+                openterminal: true,
+                device: register,
+              })
+            })
+          }
           // CLI mode: start multiplayer after confirmed login (player is on board)
           if (isclimode()) {
             vmcli(register, myplayerid, '#joincode')
