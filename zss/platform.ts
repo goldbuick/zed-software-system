@@ -1,21 +1,61 @@
 import boardrunnerspace from './boardrunnerspace??worker'
 import { MESSAGE, sessionreset } from './device/api'
+import { createmessage } from './device'
 import {
   createforward,
   shouldforwardclienttoboardrunner,
   shouldforwardclienttoheavy,
   shouldforwardclienttoserver,
+  shouldforwardclienttostt,
+  shouldforwardclienttotts,
 } from './device/forward'
 import { SOFTWARE } from './device/session'
 import heavyspace from './heavyspace??worker'
 import { MAYBE, ispresent } from './mapping/types'
 import simspace from './simspace??worker'
+import sttspace from './sttspace??worker'
 import stubspace from './stubspace??worker'
+import ttsspace from './ttsspace??worker'
 
 let heavy: MAYBE<Worker>
 let boardrunner: MAYBE<Worker>
 let platform: MAYBE<Worker>
+let stt: MAYBE<Worker>
+let tts: MAYBE<Worker>
 let platformhalt: MAYBE<() => void>
+let sttmessagehandler: MAYBE<(event: MessageEvent<any>) => void>
+let ttsmessagehandler: MAYBE<(event: MessageEvent<any>) => void>
+
+function postreadytoworker(worker: Worker) {
+  const session = SOFTWARE.session()
+  if (session) {
+    worker.postMessage(createmessage(session, '', 'platform', 'ready', undefined))
+  }
+}
+
+export function ensuresttworker(): Worker | undefined {
+  if (ispresent(stt)) {
+    return stt
+  }
+  stt = new sttspace({ name: 'stt' })
+  if (sttmessagehandler) {
+    stt.addEventListener('message', sttmessagehandler)
+  }
+  postreadytoworker(stt)
+  return stt
+}
+
+export function ensurettsworker(): Worker | undefined {
+  if (ispresent(tts)) {
+    return tts
+  }
+  tts = new ttsspace({ name: 'tts' })
+  if (ttsmessagehandler) {
+    tts.addEventListener('message', ttsmessagehandler)
+  }
+  postreadytoworker(tts)
+  return tts
+}
 
 export function createplatform(isstub = false, climode = false) {
   if (ispresent(platform)) {
@@ -50,6 +90,12 @@ export function createplatform(isstub = false, climode = false) {
     if (shouldforwardclienttoserver(message) && ispresent(platform)) {
       platform.postMessage(message)
     }
+    if (shouldforwardclienttostt(message)) {
+      ensuresttworker()?.postMessage(message)
+    }
+    if (shouldforwardclienttotts(message)) {
+      ensurettsworker()?.postMessage(message)
+    }
   })
 
   // handle messages from heavy
@@ -60,6 +106,12 @@ export function createplatform(isstub = false, climode = false) {
     }
     if (shouldforwardclienttoserver(message) && ispresent(platform)) {
       platform.postMessage(message)
+    }
+    if (shouldforwardclienttostt(message) && ispresent(stt)) {
+      stt.postMessage(message)
+    }
+    if (shouldforwardclienttotts(message) && ispresent(tts)) {
+      tts.postMessage(message)
     }
     return forward(message)
   }
@@ -74,6 +126,12 @@ export function createplatform(isstub = false, climode = false) {
     if (shouldforwardclienttoserver(message) && ispresent(platform)) {
       platform.postMessage(message)
     }
+    if (shouldforwardclienttostt(message) && ispresent(stt)) {
+      stt.postMessage(message)
+    }
+    if (shouldforwardclienttotts(message) && ispresent(tts)) {
+      tts.postMessage(message)
+    }
     return forward(message)
   }
   boardrunner.addEventListener('message', boardrunnermessages)
@@ -87,9 +145,51 @@ export function createplatform(isstub = false, climode = false) {
     if (shouldforwardclienttoboardrunner(message) && ispresent(boardrunner)) {
       boardrunner.postMessage(message)
     }
+    if (shouldforwardclienttostt(message) && ispresent(stt)) {
+      stt.postMessage(message)
+    }
+    if (shouldforwardclienttotts(message) && ispresent(tts)) {
+      tts.postMessage(message)
+    }
     return forward(message)
   }
   platform.addEventListener('message', platformmessages)
+
+  function sttmessages(event: MessageEvent<any>) {
+    const message = event.data as MESSAGE
+    if (shouldforwardclienttoheavy(message) && ispresent(heavy)) {
+      heavy.postMessage(message)
+    }
+    if (shouldforwardclienttoboardrunner(message) && ispresent(boardrunner)) {
+      boardrunner.postMessage(message)
+    }
+    if (shouldforwardclienttoserver(message) && ispresent(platform)) {
+      platform.postMessage(message)
+    }
+    if (shouldforwardclienttotts(message) && ispresent(tts)) {
+      tts.postMessage(message)
+    }
+    return forward(message)
+  }
+  sttmessagehandler = sttmessages
+
+  function ttsmessages(event: MessageEvent<any>) {
+    const message = event.data as MESSAGE
+    if (shouldforwardclienttoheavy(message) && ispresent(heavy)) {
+      heavy.postMessage(message)
+    }
+    if (shouldforwardclienttoboardrunner(message) && ispresent(boardrunner)) {
+      boardrunner.postMessage(message)
+    }
+    if (shouldforwardclienttoserver(message) && ispresent(platform)) {
+      platform.postMessage(message)
+    }
+    if (shouldforwardclienttostt(message) && ispresent(stt)) {
+      stt.postMessage(message)
+    }
+    return forward(message)
+  }
+  ttsmessagehandler = ttsmessages
 
   platformhalt = () => {
     disconnect()
@@ -108,6 +208,18 @@ export function createplatform(isstub = false, climode = false) {
       platform.terminate()
     }
     platform = undefined
+    if (ispresent(stt)) {
+      stt.removeEventListener('message', sttmessages)
+      stt.terminate()
+    }
+    stt = undefined
+    sttmessagehandler = undefined
+    if (ispresent(tts)) {
+      tts.removeEventListener('message', ttsmessages)
+      tts.terminate()
+    }
+    tts = undefined
+    ttsmessagehandler = undefined
   }
 }
 

@@ -35,6 +35,11 @@ flowchart TB
         Agent["agent_* (second)"]
     end
 
+    subgraph TTS["On-demand TTS"]
+        Synth["synth (main)"]
+        TTSDev["tts (ttsspace)"]
+    end
+
     Clock -->|ticktock| invoke
     Clock -->|second| invoke
     VM -->|ready| invoke
@@ -47,7 +52,8 @@ flowchart TB
 
     Register -->|vm:operator, vm:login, vm:loader...| VM2
     VM2 -->|replynext ackoperator, acklogin...| Register
-    VM2 -->|heavy:ttsinfo, heavy:modelprompt| HeavyDev
+    VM2 -->|heavy:modelprompt| HeavyDev
+    Synth -->|tts:info, tts:request| TTSDev
 
     VM2 -->|gadgetclient:paint/patch| GadgetClient
     GadgetClient -->|reply vm:gadgetdesync| VM2
@@ -166,8 +172,8 @@ flowchart TB
 | vm        | register     | `register:ackoperator`      | Operator set ack                           |
 | vm        | register     | `register:loginready`       | Login result / logout ack                  |
 | vm        | register     | `register:acklogin`         | Login success/failure                      |
-| vm        | heavy        | `heavy:ttsinfo`             | TTS info request                           |
-| vm        | heavy        | `heavy:ttsrequest`          | TTS audio request                          |
+| synth     | tts          | `tts:info`                  | TTS info request (lazy ttsspace)           |
+| synth     | tts          | `tts:request`               | TTS audio request (lazy ttsspace)          |
 | vm        | heavy        | `heavy:modelprompt`         | Serialized classify then optional full agent LLM |
 | vm        | gadgetclient | `gadgetclient:paint`        | Full gadget snapshot for one player        |
 | vm        | gadgetclient | `gadgetclient:patch`        | Per-player jsonpipe patch                  |

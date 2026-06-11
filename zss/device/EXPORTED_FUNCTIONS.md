@@ -206,8 +206,8 @@ Functions for audio synthesis, playback, TTS, and voice configuration.
 - `synthttsinfo(device, player, board, info)` - Send TTS info string to synth
 
 ### Heavy (TTS worker)
-- `heavyttsinfo(device, player, engine, info)` - Send TTS info to heavy worker
-- `heavyttsrequest(device, player, engine, config, voice, phrase)` - Request TTS from heavy worker
+- `ttsinfo(device, player, engine, info)` - Send TTS info to ttsspace worker
+- `ttsrequest(device, player, engine, config, voice, phrase)` - Request TTS from ttsspace worker
 ### Voice Configuration
 - `synthvoice(device, player, board, idx, config, value)` - Configure synth voice
 - `synthvoicefx(device, player, board, idx, fx, config, value)` - Configure voice effects

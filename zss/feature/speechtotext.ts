@@ -1,43 +1,15 @@
-import type { KaldiRecognizer, Model } from 'vosk-browser'
-import type {
-  ServerMessagePartialResult,
-  ServerMessageResult,
-} from 'vosk-browser/dist/interfaces'
+import { sttensure, stttranscribe } from 'zss/feature/stt/sttclient'
 import {
   getliveaudiocontext,
   unlockaudiocontext,
 } from 'zss/feature/synth/backend/wasm/audiocontextunlock'
 import type { MAYBE } from 'zss/mapping/types'
 
-const MODEL_URL = '/models/vosk-model-small-en-us-0.15.tar.gz'
 const AUDIO_BUFFER_SIZE = 4096
 const MIC_LEVEL_CHECK_CHUNKS = 48
-
-let sharedmodel: MAYBE<Model>
-let sharedmodelpromise: MAYBE<Promise<Model>>
-
-async function loadmodel(onworking: (message: string) => void): Promise<Model> {
-  if (sharedmodel) {
-    return sharedmodel
-  }
-  if (sharedmodelpromise) {
-    return sharedmodelpromise
-  }
-
-  onworking('speech model loading ...')
-
-  sharedmodelpromise = (async () => {
-    const { createModel } = await import('vosk-browser')
-    return createModel(MODEL_URL, 0)
-  })().then((model) => {
-    sharedmodel = model
-    sharedmodelpromise = undefined
-    onworking('speech model ready')
-    return model
-  })
-
-  return sharedmodelpromise
-}
+const SPEECH_RMS_THRESHOLD = 0.008
+const PAUSE_MS = 750
+const MIN_UTTERANCE_MS = 250
 
 async function waitforrunningaudiocontext(
   audiocontext: AudioContext,
@@ -72,45 +44,55 @@ async function waitforrunningaudiocontext(
   })
 }
 
-function chunktoaudiobuffer(
-  audiocontext: AudioContext,
-  chunk: Float32Array,
-): AudioBuffer {
-  const buffer = audiocontext.createBuffer(
-    1,
-    chunk.length,
-    audiocontext.sampleRate,
-  )
-  buffer.copyToChannel(new Float32Array(chunk), 0)
-  return buffer
+function concatchunks(chunks: Float32Array[]): Float32Array {
+  let total = 0
+  for (let i = 0; i < chunks.length; ++i) {
+    total += chunks[i].length
+  }
+  const merged = new Float32Array(total)
+  let offset = 0
+  for (let i = 0; i < chunks.length; ++i) {
+    merged.set(chunks[i], offset)
+    offset += chunks[i].length
+  }
+  return merged
+}
+
+function readchunkrms(data: Float32Array): number {
+  let sum = 0
+  for (let i = 0; i < data.length; ++i) {
+    const sample = data[i]
+    sum += sample * sample
+  }
+  return Math.sqrt(sum / Math.max(1, data.length))
 }
 
 export class SpeechToText {
   private onfinalised: (value: string) => void
   private onendevent: () => void
-  private onanythingsaid: MAYBE<(value: string) => void>
   private onworking: (message: string) => void
-  private recognizer: MAYBE<KaldiRecognizer>
   private audiocontext: MAYBE<AudioContext>
   private ownsaudiocontext = false
   private mediastream: MAYBE<MediaStream>
   private sourcenode: MAYBE<MediaStreamAudioSourceNode>
   private processornode: MAYBE<ScriptProcessorNode>
   private sinknode: MAYBE<MediaStreamAudioDestinationNode>
-  private audiobuffer: Float32Array[] = []
-  private buffering = true
+  private active = false
+  private inspeech = false
+  private utterance: Float32Array[] = []
+  private utterancestarted = 0
+  private lastspeech = 0
   private audiochecks = 0
   private maxpeak = 0
+  private transcribing = false
 
   constructor(
     onfinalised: (value: string) => void,
     onendevent: () => void,
-    onanythingsaid?: (value: string) => void,
     onworking?: (message: string) => void,
   ) {
     this.onfinalised = onfinalised
     this.onendevent = onendevent
-    this.onanythingsaid = onanythingsaid
     this.onworking = onworking ?? (() => {})
   }
 
@@ -143,17 +125,22 @@ export class SpeechToText {
       )
       this.sinknode = this.audiocontext.createMediaStreamDestination()
 
-      // buffer audio chunks while model loads
-      this.buffering = true
-      this.audiobuffer = []
+      this.active = true
+      this.inspeech = false
+      this.utterance = []
       this.audiochecks = 0
       this.maxpeak = 0
+      this.transcribing = false
 
       this.processornode.onaudioprocess = (event) => {
+        if (!this.active) {
+          return
+        }
         const data = event.inputBuffer.getChannelData(0)
+        const chunk = new Float32Array(data)
         let peak = 0
-        for (let i = 0; i < data.length; ++i) {
-          const level = Math.abs(data[i])
+        for (let i = 0; i < chunk.length; ++i) {
+          const level = Math.abs(chunk[i])
           if (level > peak) {
             peak = level
           }
@@ -167,59 +154,43 @@ export class SpeechToText {
           this.onworking('mic signal very low — check input device')
         }
 
-        if (this.buffering) {
-          this.audiobuffer.push(new Float32Array(data))
-          return
+        const now = performance.now()
+        const rms = readchunkrms(chunk)
+        if (rms >= SPEECH_RMS_THRESHOLD) {
+          if (!this.inspeech) {
+            this.inspeech = true
+            this.utterancestarted = now
+            this.utterance = []
+            this.onworking('listening ...')
+          }
+          this.lastspeech = now
         }
-        try {
-          this.recognizer?.acceptWaveform(event.inputBuffer)
-        } catch (err) {
-          console.error('vosk acceptWaveform failed', err)
+
+        if (this.inspeech) {
+          this.utterance.push(chunk)
+          const silentfor = now - this.lastspeech
+          const utterancems = now - this.utterancestarted
+          if (
+            silentfor >= PAUSE_MS &&
+            utterancems >= MIN_UTTERANCE_MS &&
+            !this.transcribing
+          ) {
+            this.inspeech = false
+            const samples = concatchunks(this.utterance)
+            this.utterance = []
+            void this.transcribeutterance(samples, samplerate)
+          }
         }
       }
 
       this.sourcenode.connect(this.processornode)
-      // keep ScriptProcessor alive without routing mic to speakers
       this.processornode.connect(this.sinknode)
 
-      this.onworking('listening, loading speech model ...')
-
-      // load model while mic is already capturing
-      const model = await loadmodel(this.onworking)
-      this.recognizer = new model.KaldiRecognizer(samplerate)
-
-      this.recognizer.on('result', (message) => {
-        const msg = message as ServerMessageResult
-        const text = msg.result?.text ?? ''
-        if (text.length > 0) {
-          this.onfinalised(text)
-        }
-      })
-
-      this.recognizer.on('partialresult', (message) => {
-        const msg = message as ServerMessagePartialResult
-        const partial = msg.result?.partial ?? ''
-        if (partial.length > 0 && this.onanythingsaid) {
-          this.onanythingsaid(partial)
-        }
-      })
-
-      this.recognizer.on('error', (message) => {
-        console.error('vosk recognizer error', message)
-      })
-
-      // replay buffered audio then switch to live
-      for (const chunk of this.audiobuffer) {
-        this.recognizer.acceptWaveform(
-          chunktoaudiobuffer(this.audiocontext, chunk),
-        )
-      }
-      this.audiobuffer = []
-      this.buffering = false
-
-      this.onworking('listening ...')
+      this.onworking('loading speech model ...')
+      await sttensure(this.onworking)
+      this.onworking('speak, then pause ...')
     } catch (err) {
-      console.error('vosk speech recognition failed to start', err)
+      console.error('speech recognition failed to start', err)
       this.onworking('speech recognition failed')
       this.cleanup()
       this.onendevent()
@@ -231,9 +202,35 @@ export class SpeechToText {
     this.onendevent()
   }
 
+  private async transcribeutterance(samples: Float32Array, samplerate: number) {
+    if (samples.length === 0) {
+      return
+    }
+    this.transcribing = true
+    try {
+      this.onworking('transcribing ...')
+      const text = await stttranscribe(samples, samplerate, this.onworking)
+      if (text.length > 0) {
+        this.onfinalised(text)
+      } else {
+        this.onworking('no speech recognized')
+      }
+    } catch (err) {
+      console.error('speech transcribe failed', err)
+      this.onworking('speech transcribe failed')
+    } finally {
+      this.transcribing = false
+      if (this.active) {
+        this.onworking('speak, then pause ...')
+      }
+    }
+  }
+
   private cleanup() {
-    this.buffering = false
-    this.audiobuffer = []
+    this.active = false
+    this.inspeech = false
+    this.utterance = []
+    this.transcribing = false
     if (this.processornode) {
       this.processornode.onaudioprocess = null
       this.processornode.disconnect()
@@ -257,10 +254,6 @@ export class SpeechToText {
         track.stop()
       }
       this.mediastream = undefined
-    }
-    if (this.recognizer) {
-      this.recognizer.remove()
-      this.recognizer = undefined
     }
   }
 }

@@ -516,10 +516,6 @@ export function TerminalInput({
 
     function onendevent() {}
 
-    function onanythingsaid(value: string) {
-      inputstatereplace(`${inputstart}${value}`)
-    }
-
     function onworking(message: string) {
       apitoast(SOFTWARE, player, message)
     }
@@ -527,7 +523,6 @@ export function TerminalInput({
     const speechlistener = new SpeechToText(
       onfinalised,
       onendevent,
-      onanythingsaid,
       onworking,
     )
     listener = speechlistener

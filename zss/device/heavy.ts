@@ -22,7 +22,6 @@ import {
   modelclassify,
   modelgenerategemma4,
 } from 'zss/feature/heavy/model'
-import { requestaudiobytes, requestinfo } from 'zss/feature/heavy/tts'
 import {
   query as memoryquery,
   resolvemessage as memoryqueryresolvemessage,
@@ -207,43 +206,6 @@ const heavy = createdevice('heavy', [], (message) => {
   }
   perfmeasure(`heavy:${message.target}`, () => {
     switch (message.target) {
-      case 'ttsinfo':
-        enqueueheavyjob(heavy, message.player, async () => {
-          if (isarray(message.data)) {
-            const [engine, info] = message.data as [
-              engine: 'piper' | 'supertonic',
-              info: string,
-            ]
-            const data = await requestinfo(heavy, message.player, engine, info)
-            heavy.reply(message, 'heavy:ttsinfo', ispresent(data) ? data : [])
-          }
-        })
-        break
-      case 'ttsrequest':
-        enqueueheavyjob(heavy, message.player, async () => {
-          if (isarray(message.data)) {
-            const [engine, config, voice, phrase] = message.data as [
-              engine: 'piper' | 'supertonic',
-              config: string,
-              voice: string,
-              phrase: string,
-            ]
-            const audiobytes = await requestaudiobytes(
-              heavy,
-              message.player,
-              engine,
-              config,
-              voice,
-              phrase,
-            )
-            heavy.reply(
-              message,
-              'heavy:ttsrequest',
-              ispresent(audiobytes) ? audiobytes : undefined,
-            )
-          }
-        })
-        break
       case 'modelprompt':
         enqueueheavyjob(heavy, message.player, async () => {
           if (!isarray(message.data) || message.data.length < 7) {

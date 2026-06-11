@@ -1,6 +1,6 @@
 # Fix agent integration
 
-**Status:** planning (not yet implemented)
+**Status:** partial — **ttsspace** and **sttspace** on-demand workers implemented; **agentspace** and heavy retirement still open
 
 ## End state (completion criterion)
 
@@ -14,7 +14,7 @@
 | **boardrunnerspace** | `createplatform` | Human operator boardrunner only |
 | **agentspace** | `#agent start` / roster restore | One per running agent (boardrunner + LLM + lifecycle) |
 | **ttsspace** | **On demand** — first `tts:info` / `tts:request` | Piper / Supertonic inference |
-| **sttspace** | **On demand** — first mic / `stt:*` session | Vosk speech-to-text |
+| **sttspace** | **On demand** — first mic / `stt:*` session | Moonshine ONNX STT (transformers.js) |
 | ~~**heavyspace**~~ | never | **Deleted** |
 
 **`createplatform` boot list:** sim + boardrunnerspace only. No heavy, no tts, no stt, no agents until requested.
@@ -210,10 +210,10 @@ Replace [`shouldforwardclienttoheavy`](../zss/device/forward.ts) with `shouldfor
 
 **Goal:** Zero references to heavyspace in the running app.
 
-1. **New on-demand workers**
-   - `zss/ttsspace.ts` + `zss/device/ttsworker.ts` (planned) — move TTS handlers from [`heavy.ts`](../zss/device/heavy.ts)
-   - `zss/sttspace.ts` + `zss/device/sttworker.ts` (planned) — migrate [`speechtotext.ts`](../zss/feature/speechtotext.ts) off main thread
-   - [`platform.ts`](../zss/platform.ts): `ensurettsworker()` / `ensuresttworker()` — **not** called from `createplatform`; invoked from outbound route before `postMessage`
+1. **On-demand workers** (TTS + STT done; agentspace still planned)
+   - `zss/ttsspace.ts` + `zss/device/ttsworker.ts` — **implemented**; TTS handlers moved from [`heavy.ts`](../zss/device/heavy.ts)
+   - `zss/sttspace.ts` + `zss/device/sttworker.ts` — **implemented**
+   - [`platform.ts`](../zss/platform.ts): `ensurettsworker()` / `ensuresttworker()` — lazy spawn on first message, not from `createplatform`
 
 2. **Delete**
    - [`zss/heavyspace.ts`](../zss/heavyspace.ts)

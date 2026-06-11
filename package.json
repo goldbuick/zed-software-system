@@ -14,13 +14,13 @@
     "app:analyze": "NODE_OPTIONS=--max-old-space-size=8192 ZSS_ANALYZER=1 yarn app:build",
     "app:audit:deadcode": "knip --include files,exports,dependencies --no-exit-code",
     "app:audit:export-catalogs": "node scripts/audit-export-catalogs.mjs",
-    "app:build": "yarn vosk-model:ensure && vite build",
+    "app:build": "vite build",
     "app:build:strict": "tsc && vite build",
     "app:clear": "rimraf tmp && rimraf dist && rimraf cafe/dist && rimraf node_modules/.vite",
-    "app:dev": "yarn && yarn vosk-model:ensure && yarn vite:dev",
+    "app:dev": "yarn && yarn vite:dev",
     "app:wasm:dev": "ZSS_WASM_SCRIPT=true yarn lang:build && yarn app:dev",
     "app:dev:no-sc": "ZSS_DAISY_NO_SIDECHAIN=1 yarn app:dev",
-    "app:lint": "depcruise zss/simspace.ts zss/heavyspace.ts zss/boardrunnerspace.ts --validate --config .dependency-cruiser.cjs && eslint . --ext ts,tsx --fix --report-unused-disable-directives --max-warnings 0 && tsc --noEmit",
+    "app:lint": "depcruise zss/simspace.ts zss/heavyspace.ts zss/boardrunnerspace.ts zss/sttspace.ts --validate --config .dependency-cruiser.cjs && eslint . --ext ts,tsx --fix --report-unused-disable-directives --max-warnings 0 && tsc --noEmit",
     "app:preview": "vite preview --host 0.0.0.0 --port 7777",
     "app:sloc": "npx sloc -e .js -e '__tests__|\\.test\\.(ts|tsx)$' zss",
     "app:test": "yarn jest --verbose",
@@ -128,8 +128,7 @@
     "synth-env-parity:test": "npx tsx scripts/run-synth-env-parity-gates.ts",
     "synth-env-parity:test:full": "yarn daisy:build && yarn synth-env-parity:render && yarn synth-env-parity:test",
     "synth-env:loop": "npx tsx scripts/run-synth-env-loop.ts",
-    "vite:dev": "vite --host 0.0.0.0 --port 7777",
-    "vosk-model:ensure": "test -f cafe/public/models/vosk-model-small-en-us-0.15.tar.gz || (mkdir -p cafe/public/models && curl -L -o cafe/public/models/vosk-model-small-en-us-0.15.tar.gz https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.tar.gz)"
+    "vite:dev": "vite --host 0.0.0.0 --port 7777"
   },
   "devDependencies": {
     "@bokuweb/zstd-wasm": "^0.0.27",
@@ -235,8 +234,7 @@
     "ink": "^6.8.0",
     "ink-text-input": "^6.0.0",
     "json-joy": "^18.28.0",
-    "playwright": "^1.49.0",
-    "vosk-browser": "^0.0.8"
+    "playwright": "^1.49.0"
   },
   "bin": {
     "zss": "./bin/run.js"

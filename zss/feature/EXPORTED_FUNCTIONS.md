@@ -276,7 +276,7 @@ Various utility functions for browser APIs and external services.
 - `withclipboard()` - Get browser Clipboard API instance
 
 ### Speech Recognition
-- `SpeechToText` - Class for browser speech recognition with callbacks for final text, interim results, and end events
+- `SpeechToText` - Class for browser speech recognition (sttspace worker); final text after speech pause, optional status toasts
   - `startListening()` - Start speech recognition
   - `stopListening()` - Stop speech recognition
 
