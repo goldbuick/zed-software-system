@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>wanix host</title>
+</head>
+<body>
+  <wanix-system wasm="/wanix/wanix.wasm">
+    <wanix-bind dst="." src="#ramfs"></wanix-bind>
+    <wanix-bind type="archive" dst="bundle" src="/wanix/wasi-minimal.bundle.tgz"></wanix-bind>
+  </wanix-system>
+  <script type="module" src="/wanix/wanix.min.js"></script>
+  <script type="module">
+    const origin = location.origin
+    const sys = document.querySelector('wanix-system')
+    let root = null
+    let active = false
+
+    function post(type, data = {}) {
+      parent.postMessage({ type, ...data }, origin)
+    }
+
+    function normalizecmd(cmd) {
+      const trimmed = (cmd || '').trim()
+      if (!trimmed) {
+        return ''
+      }
+      if (trimmed.startsWith('#')) {
+        return trimmed
+      }
+      return `#bundle/${trimmed.replace(/^\/+/, '')}`
+    }
+
+    async function pipestdout(stream, online) {
+      const reader = stream.getReader()
+      const decoder = new TextDecoder()
+      let pending = ''
+      try {
+        while (true) {
+          const { value, done } = await reader.read()
+          if (done) {
+            break
+          }
+          pending += decoder.decode(value, { stream: true })
+          let idx = pending.indexOf('\n')
+          while (idx !== -1) {
+            const line = pending.slice(0, idx)
+            pending = pending.slice(idx + 1)
+            if (line.length > 0) {
+              online(line)
+            }
+            idx = pending.indexOf('\n')
+          }
+        }
+        const tail = pending.trimEnd()
+        if (tail.length > 0) {
+          online(tail)
+        }
+      } finally {
+        reader.releaseLock()
+      }
+    }
+
+    async function runtask(cmd) {
+      const taskcmd = normalizecmd(cmd)
+      if (!taskcmd) {
+        throw new Error('empty command')
+      }
+      const tid = (await root.readText('task/new/wasi')).trim()
+      await root.writeFile(`task/${tid}/cmd`, taskcmd)
+      const stdout = await root.openReadable(`task/${tid}/fd/1`)
+      const stderr = await root.openReadable(`task/${tid}/fd/2`)
+      const logline = (line) => post('wanix:log', { line })
+      const readers = [
+        pipestdout(stdout, logline),
+        pipestdout(stderr, logline),
+      ]
+      await root.writeFile(`task/${tid}/ctl`, 'start')
+      await Promise.all(readers)
+      return 0
+    }
+
+    async function boot() {
+      await new Promise((resolve) => {
+        sys.addEventListener('ready', resolve, { once: true })
+      })
+      root = sys.root
+      active = true
+      post('wanix:ready')
+      post('wanix:started')
+    }
+
+    window.addEventListener('message', async (ev) => {
+      if (ev.origin !== origin) {
+        return
+      }
+      const msg = ev.data
+      if (!msg || typeof msg.type !== 'string') {
+        return
+      }
+      try {
+        switch (msg.type) {
+          case 'wanix:status':
+            post('wanix:status', {
+              id: msg.id,
+              active,
+              ready: active && root != null,
+            })
+            break
+          case 'wanix:run': {
+            if (!root) {
+              post('wanix:run:done', { id: msg.id, code: 1, error: 'not ready' })
+              break
+            }
+            const code = await runtask(msg.cmd)
+            post('wanix:run:done', { id: msg.id, code })
+            break
+          }
+          case 'wanix:stop':
+            active = false
+            post('wanix:stopped', { id: msg.id })
+            break
+          default:
+            break
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err)
+        if (msg.type === 'wanix:run') {
+          post('wanix:run:done', { id: msg.id, code: 1, error: message })
+        } else {
+          post('wanix:log', { line: `wanix error: ${message}` })
+        }
+      }
+    })
+
+    boot().catch((err) => {
+      const message = err instanceof Error ? err.message : String(err)
+      post('wanix:log', { line: `wanix boot failed: ${message}` })
+    })
+  </script>
+</body>
+</html>

@@ -409,6 +409,22 @@ export function heavyagentlist(device: DEVICELIKE, player: string) {
   device.emit(player, 'heavy:agentlist')
 }
 
+export function wanixstart(device: DEVICELIKE, player: string) {
+  device.emit(player, 'wanix:start')
+}
+
+export function wanixstop(device: DEVICELIKE, player: string) {
+  device.emit(player, 'wanix:stop')
+}
+
+export function wanixrun(device: DEVICELIKE, player: string, cmd: string) {
+  device.emit(player, 'wanix:run', cmd)
+}
+
+export function wanixstatus(device: DEVICELIKE, player: string) {
+  device.emit(player, 'wanix:status')
+}
+
 export function heavyrestoreagents(
   device: DEVICELIKE,
   player: string,

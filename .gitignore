@@ -35,6 +35,10 @@ content/dist
 # vosk speech recognition models (large binaries)
 cafe/public/models/
 
+# wanix bundle build scratch (regenerate with yarn wanix:ensure)
+scripts/wanix/bundle-src/
+scripts/wanix/hello.wasm
+
 # offline song renders (regenerate with yarn level-issue-song:render)
 cafe/public/renders/*.wav
 cafe/public/renders/*.json

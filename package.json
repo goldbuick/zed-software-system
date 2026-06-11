@@ -133,7 +133,8 @@
     "synth-env-parity:test": "npx tsx scripts/run-synth-env-parity-gates.ts",
     "synth-env-parity:test:full": "yarn daisy:build && yarn synth-env-parity:render && yarn synth-env-parity:test",
     "synth-env:loop": "npx tsx scripts/run-synth-env-loop.ts",
-    "vite:dev": "vite --host 0.0.0.0 --port 7777"
+    "vite:dev": "vite --host 0.0.0.0 --port 7777",
+    "wanix:ensure": "sh scripts/wanix-ensure.sh"
   },
   "devDependencies": {
     "@bokuweb/zstd-wasm": "^0.0.27",
@@ -239,7 +240,8 @@
     "ink": "^6.8.0",
     "ink-text-input": "^6.0.0",
     "json-joy": "^18.28.0",
-    "playwright": "^1.49.0"
+    "playwright": "^1.49.0",
+    "wanix": "0.4.0-alpha8"
   },
   "bin": {
     "zss": "./bin/run.js"

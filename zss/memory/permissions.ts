@@ -76,6 +76,7 @@ export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
 
   access: 'risk',
   agent: 'risk',
+  wanix: 'risk',
   zns: 'risk',
   bookallexport: 'risk',
   bookexport: 'risk',
