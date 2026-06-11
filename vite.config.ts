@@ -135,7 +135,7 @@ export default defineConfig(({ mode }) => {
       return ''
     }
     if (key === 'ZSS_WASM_SCRIPT') {
-      return 'true'
+      return mode === 'production' ? 'false' : 'true'
     }
     return 'false'
   }

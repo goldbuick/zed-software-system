@@ -18,4 +18,4 @@ From the repo root (requires [Yarn](https://yarnpkg.com/) and a current [Node.js
 
 Set `ZSS_DEBUG_PERF_UI=true` in `cafe/.env` (or export it) to enable the in-game perf overlay; see [`zss/perf/README.md`](zss/perf/README.md).
 
-Production build: `yarn app:build` (runs `vite build` after the Vosk model check). Dev and prod both default to **WASM lang**; use `yarn app:tslang:dev` or `ZSS_WASM_SCRIPT=false` for the TS compiler. Per-area docs live under `zss/**/docs/` and `docs/`.
+Production build: `yarn app:build` (runs `vite build` after the Vosk model check). **Dev** defaults to WASM lang; **production** defaults to the TS compiler until WASM lang issues are resolved. Override with `ZSS_WASM_SCRIPT=true yarn app:build` or `ZSS_WASM_SCRIPT=false` for dev. Per-area docs live under `zss/**/docs/` and `docs/`.
