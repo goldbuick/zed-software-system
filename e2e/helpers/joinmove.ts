@@ -108,7 +108,7 @@ export async function waitjoinboardrunnerrun(page: Page): Promise<string> {
   if (!workstatus) {
     workstatus = await page.evaluate(
       () =>
-        (window as WindowWithE2e).__zss_e2e?.getworkstatus() || 'run joined',
+        (window as WindowWithE2e).__zss_e2e?.getworkstatus() ?? 'run joined',
     )
   }
   return workstatus

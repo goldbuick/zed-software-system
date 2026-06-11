@@ -1,7 +1,5 @@
-import {
-  type Path,
-  formatJsonPointer,
-} from '@jsonjoy.com/json-pointer/lib/util'
+import type { Path } from '@jsonjoy.com/json-pointer/lib/types'
+import { formatJsonPointer } from '@jsonjoy.com/json-pointer/lib/util'
 import type { Operation as FastOperation } from 'fast-json-patch'
 import { decode as decodecompact } from 'json-joy/lib/json-patch/codec/compact/decode'
 import { encode as encodecompact } from 'json-joy/lib/json-patch/codec/compact/encode'
@@ -176,19 +174,16 @@ function expandcompactpathrefs(op: CompactOp, pfx: string[]): CompactOp {
     opcode === 'move' ||
     opcode === 'copy'
   ) {
-    expanded[2] = expandpathref(
-      readcompactpathref(expanded[2]),
-      pfx,
-    ) as CompactOp[2]
+    expanded[2] = expandpathref(readcompactpathref(expanded[2]), pfx) as
+      | string
+      | Path
   }
   return expanded
 }
 
 function normalizecompactpaths(op: CompactOp): CompactOp {
   const normalized = [...op] as unknown as CompactOp
-  normalized[1] = compactpathtostring(
-    normalized[1] as string | Path,
-  ) as CompactOp[1]
+  normalized[1] = compactpathtostring(normalized[1]) as CompactOp[1]
   const opcode = normalized[0]
   if (
     opcode === OPCODE.move ||
@@ -196,9 +191,7 @@ function normalizecompactpaths(op: CompactOp): CompactOp {
     opcode === 'move' ||
     opcode === 'copy'
   ) {
-    normalized[2] = compactpathtostring(
-      normalized[2] as string | Path,
-    ) as CompactOp[2]
+    normalized[2] = compactpathtostring(normalized[2]) as string | Path
   }
   return normalized
 }
@@ -206,7 +199,7 @@ function normalizecompactpaths(op: CompactOp): CompactOp {
 function shortencompactpathrefs(op: CompactOp, pfx: string[]): CompactOp {
   const shortened = [...op] as unknown as CompactOp
   shortened[1] = shortenpathref(
-    compactpathtostring(shortened[1] as string | Path),
+    compactpathtostring(shortened[1]),
     pfx,
   ) as unknown as CompactOp[1]
   const opcode = shortened[0]
@@ -216,10 +209,9 @@ function shortencompactpathrefs(op: CompactOp, pfx: string[]): CompactOp {
     opcode === 'move' ||
     opcode === 'copy'
   ) {
-    shortened[2] = shortenpathref(
-      compactpathtostring(shortened[2] as string | Path),
-      pfx,
-    ) as unknown
+    shortened[2] = shortenpathref(compactpathtostring(shortened[2]), pfx) as
+      | string
+      | Path
   }
   return shortened
 }

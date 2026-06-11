@@ -50,10 +50,7 @@ import {
   memoryreadboardbyaddress,
   memoryreadelementstat,
 } from './boards'
-import {
-  memoryreadelementcodepage,
-  memoryreadelementdisplay,
-} from './bookoperations'
+import { memoryreadelementcodepage } from './bookoperations'
 import { memoryensuresoftwarebook } from './books'
 import {
   memoryreadcodepagename,

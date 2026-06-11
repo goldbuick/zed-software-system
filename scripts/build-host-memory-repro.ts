@@ -56,6 +56,16 @@ function parseargs(): string {
   return DEFAULT_LOG
 }
 
+function readstring(value: unknown, fallback: string): string {
+  if (typeof value === 'string') {
+    return value
+  }
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value)
+  }
+  return fallback
+}
+
 function readpt(raw: unknown): Rect | undefined {
   if (!raw || typeof raw !== 'object') {
     return undefined
@@ -75,7 +85,7 @@ function buildsteps(rows: LogRow[]): ReproStep[] {
     const data = row.data ?? {}
 
     if (msg === 'manual:milestone' || msg.startsWith('manual:')) {
-      const name = String(data.name ?? msg)
+      const name = readstring(data.name, msg)
       steps.push({ kind: 'milestone', name, ts })
       continue
     }
@@ -99,7 +109,7 @@ function buildsteps(rows: LogRow[]): ReproStep[] {
     }
 
     if (msg === 'charedit:setvalue') {
-      const field = String(data.name ?? data.field ?? 'char')
+      const field = readstring(data.name ?? data.field, 'char')
       const value = Number(data.value ?? 0)
       const snap = data.snapshot as
         | { rect?: { fingerprint?: string } }
@@ -115,7 +125,7 @@ function buildsteps(rows: LogRow[]): ReproStep[] {
     }
 
     if (msg === 'charedit:setvalue:after') {
-      const field = String(data.field ?? 'char')
+      const field = readstring(data.field, 'char')
       const value = Number(data.value ?? 0)
       const snap = data.snapshot as
         | { rect?: { fingerprint?: string } }
@@ -143,7 +153,7 @@ function buildsteps(rows: LogRow[]): ReproStep[] {
     if (msg === 'host:sim:dead') {
       steps.push({
         kind: 'hostdead',
-        err: String(data.err ?? ''),
+        err: readstring(data.err, ''),
         ts,
       })
     }

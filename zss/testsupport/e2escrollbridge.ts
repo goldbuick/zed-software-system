@@ -18,6 +18,7 @@ import { panelscrolltolines } from 'zss/gadget/data/panelitemtext'
 import { useGadgetClient, useTape, useTerminal } from 'zss/gadget/data/state'
 import { INPUT, LAYER_TYPE, paneladdress } from 'zss/gadget/data/types'
 import { ptstoarea } from 'zss/mapping/2d'
+import type { PT } from 'zss/words/types'
 export type ZssE2eMoveDir = 'left' | 'right' | 'up' | 'down'
 
 const MOVE_INPUT: Record<ZssE2eMoveDir, INPUT> = {

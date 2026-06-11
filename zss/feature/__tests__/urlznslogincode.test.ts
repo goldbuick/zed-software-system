@@ -58,7 +58,11 @@ describe('clearznsloginparamsfromurl', () => {
     Object.defineProperty(globalThis, 'history', {
       configurable: true,
       value: {
-        replaceState(_state: unknown, _title: string, next?: string | URL | null) {
+        replaceState(
+          _state: unknown,
+          _title: string,
+          next?: string | URL | null,
+        ) {
           const raw = String(next ?? href)
           href = raw.startsWith('http')
             ? raw

@@ -5,7 +5,6 @@ import {
   boardrunneremitpatch,
   boardrunnermemorypatch,
 } from 'zss/device/vm/boardrunnermemorysync'
-import type { Operation } from 'zss/feature/jsonpipe/observe'
 import { decodepatchwire } from 'zss/feature/jsonpipe/wire'
 import { isarray } from 'zss/mapping/types'
 

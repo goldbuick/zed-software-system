@@ -35,7 +35,7 @@ jest.mock('zss/feature/lang/langcompileclient', () => ({
 const mockedmemoryreadflags = jest.fn(() => ({}))
 
 jest.mock('zss/memory/flags', () => ({
-  memoryreadflags: (...args: unknown[]) => mockedmemoryreadflags(...args),
+  memoryreadflags: mockedmemoryreadflags,
 }))
 
 jest.mock('zss/memory/session', () => {
@@ -56,7 +56,6 @@ import { FORMAT_OBJECT, formatobject } from 'zss/feature/format'
 import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
 import { CHAR_HEIGHT, CHAR_WIDTH } from 'zss/gadget/data/types'
 import {
-  createchipid,
   creategadgetid,
   createlayersid,
   createsynthid,
@@ -79,7 +78,6 @@ import {
 import {
   memoryboundariesclear,
   memoryboundaryalloc,
-  memoryboundaryget,
 } from 'zss/memory/boundaries'
 import {
   memorycreatecodepage,
@@ -109,16 +107,14 @@ import {
   memoryelementtologprefix,
   memoryelementtotickerprefix,
 } from 'zss/memory/rendering'
-import { memorywriteboardelementruntime } from 'zss/memory/runtimeboundary'
+import {
+  memorywriteboardelementruntime,
+  memorywriteboardruntime,
+} from 'zss/memory/runtimeboundary'
 import type { MEMORY_ROOT } from 'zss/memory/session'
 import { memoryresetbooks } from 'zss/memory/session'
-import {
-  memorymergesynthvoice,
-  memoryqueuesynthplay,
-  memoryreadsynth,
-  memoryreadsynthplay,
-} from 'zss/memory/synthstate'
-import { trimformatobject, trimmemoryexport } from 'zss/memory/trimexport'
+import { memorymergesynthvoice, memoryreadsynth } from 'zss/memory/synthstate'
+import { trimmemoryexport } from 'zss/memory/trimexport'
 import type { BOARD, BOARD_ELEMENT, BOOK } from 'zss/memory/types'
 import {
   BOARD_SIZE,
@@ -1239,7 +1235,7 @@ function regenall() {
       ...freeruntimeids.map((id) => ({
         op: 'boundary_alloc',
         args: { id, value: { marker: id } },
-        expect: { mode: 'string', string: id },
+        expect: { mode: 'string' as const, string: id },
       })),
       {
         op: 'free_book',
@@ -1249,7 +1245,7 @@ function regenall() {
       ...freeruntimeids.map((id) => ({
         op: 'boundary_get',
         args: { id },
-        expect: { mode: 'json', json: {} },
+        expect: { mode: 'json' as const, json: {} },
       })),
     ],
   })
@@ -1269,7 +1265,6 @@ function regenall() {
     },
     object: { id: 'obj2', runtime: clearobjectruntime },
   })
-  const clearbook = memorycreatebook([clearcp])
   const clearids = [clearcp.id, clearboardruntime, clearobjectruntime]
 
   writfixture('book.clear_codepage_runtimes', {
@@ -1280,7 +1275,7 @@ function regenall() {
       ...clearids.map((id) => ({
         op: 'boundary_alloc',
         args: { id, value: { marker: id } },
-        expect: { mode: 'string', string: id },
+        expect: { mode: 'string' as const, string: id },
       })),
       {
         op: 'clear_codepage',
@@ -1290,7 +1285,7 @@ function regenall() {
       ...clearids.map((id) => ({
         op: 'boundary_get',
         args: { id },
-        expect: { mode: 'json', json: {} },
+        expect: { mode: 'json' as const, json: {} },
       })),
     ],
   })
@@ -2788,6 +2783,7 @@ function regenall() {
   }
   const lookup = new Array<string>(BOARD_SIZE).fill('')
   lookup[boardindex(bx, by)] = blockerid
+  memorywriteboardruntime(boardwithobj, { lookup })
   const plainalphas = new Array<number>(BOARD_SIZE).fill(1)
   const withalphas = new Array<number>(BOARD_SIZE).fill(1)
   const lookupsprite = {
@@ -2800,13 +2796,7 @@ function regenall() {
     stat: 0,
   }
   memoryboardlightingapplyobject(boardplain, plainalphas, {}, lookupsprite, 7)
-  memoryboardlightingapplyobject(
-    boardwithobj,
-    withalphas,
-    { lookup },
-    lookupsprite,
-    7,
-  )
+  memoryboardlightingapplyobject(boardwithobj, withalphas, {}, lookupsprite, 7)
   const eastlookup = boardindex(21, 10)
   writfixture('boardlighting.lookup_occlusion', {
     name: 'boardlighting.lookup_occlusion',
@@ -2860,11 +2850,12 @@ function regenall() {
       board.objects[id] = { id, x, y, runtime: '' }
       lookuparr[boardindex(x, y)] = id
     }
+    memorywriteboardruntime(board, { lookup: lookuparr })
     const alphas = new Array<number>(BOARD_SIZE).fill(1)
     memoryboardlightingapplyobject(
       board,
       alphas,
-      { lookup: lookuparr },
+      {},
       { id: 'sprite:test', x: 15, y, char: 0, color: 0, bg: 0, stat: 0 },
       7,
     )

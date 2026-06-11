@@ -1,13 +1,10 @@
 /* eslint-disable @typescript-eslint/require-await */
 import fs from 'node:fs'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 
 import type { Page } from '@playwright/test'
 
 import { readcoolregionsbowbooks } from '../../zss/testsupport/coolregionsbowbook'
-
-const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '../..')
 
 function createpid(): string {
   const numbers = '0123456789'

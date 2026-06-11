@@ -71,9 +71,11 @@ describe('contentbook', () => {
     expect(exportbook.data.pages?.length).toBe(4)
     const errors = validatebookexport(exportbook)
     expect(errors).toEqual([])
-    const titlepage = exportbook.data.pages?.find(
-      (page: { code?: string }) => page.code?.startsWith('@board title'),
+    const titlepage = exportbook.data.pages?.find((page: { code?: string }) =>
+      page.code?.startsWith('@board title'),
     )
-    expect(titlepage?.board?.terrain?.length).toBe(buildborderterrain('solid').length)
+    expect(titlepage?.board?.terrain?.length).toBe(
+      buildborderterrain('solid').length,
+    )
   })
 })

@@ -72,12 +72,14 @@ import type { DEVICE } from 'zss/device'
 import { gadgetclientpatch } from 'zss/device/api'
 import { gadgetsynctick } from 'zss/device/vm/gadgetsynctick'
 import { gadgetstate } from 'zss/gadget/data/api'
+import type { GADGET_STATE, LAYER } from 'zss/gadget/data/types'
 import { memoryreadbookgadgetlayersforboard } from 'zss/memory/gadgetlayersflags'
 import {
   memoryreadplayeractive,
   memoryreadplayerboard,
 } from 'zss/memory/playermanagement'
 import { memoryconverttogadgetcontrollayer } from 'zss/memory/rendering'
+import type { MEMORY_GADGET_LAYERS } from 'zss/memory/rendering'
 import {
   memoryreadbookbysoftware,
   memoryreadoperator,
@@ -99,9 +101,9 @@ const stubgadgetlayers = {
   under: ['under-a'],
   layers: ['layer-a'],
   tickers: ['ticker-a'],
-}
+} as unknown as MEMORY_GADGET_LAYERS
 
-function createstubgadget() {
+function createstubgadget(): GADGET_STATE {
   return {
     id: '',
     board: '',
@@ -113,16 +115,15 @@ function createstubgadget() {
     exitnw: '',
     exitse: '',
     exitsw: '',
-    over: [] as unknown[],
-    under: [] as unknown[],
-    layers: [] as unknown[],
-    tickers: [] as string[],
-    sidebar: [] as unknown[],
+    over: [],
+    under: [],
+    layers: [],
+    tickers: [],
+    sidebar: [],
     scrollname: '',
-    scroll: [] as unknown[],
+    scroll: [],
     boardname: '',
-    synthstate: {},
-  }
+  } as GADGET_STATE
 }
 
 const stubbook: BOOK = {
@@ -153,7 +154,9 @@ describe('gadgetsynctick', () => {
     jest
       .mocked(memoryreadbookgadgetlayersforboard)
       .mockReturnValue({ iso: stubgadgetlayers })
-    jest.mocked(memoryconverttogadgetcontrollayer).mockReturnValue(['control'])
+    jest
+      .mocked(memoryconverttogadgetcontrollayer)
+      .mockReturnValue(['control'] as unknown as LAYER[])
     jest.mocked(gadgetclientpatch).mockClear()
   })
 
