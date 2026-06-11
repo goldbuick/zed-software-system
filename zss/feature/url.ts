@@ -134,6 +134,7 @@ export async function museumofzztdownload(
 // zns api (https://zns.zed.cafe)
 
 export const ZNS_APEX = 'zns.zed.cafe'
+export const ZNS_TENANT_SUFFIX = 'at.zed.cafe'
 export const ZNS_DOCS_NAMESPACE = 'docs'
 export const ZNS_PEER_KEY = 'peer'
 
@@ -143,7 +144,7 @@ const ZNS_PATH_KEY_RE = /^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?$/
 let lastpublishedpeerid = ''
 
 export function znstenanturl(namespace: string, key: string) {
-  return `https://${namespace}.${ZNS_APEX}/${key}`
+  return `https://${namespace}.${ZNS_TENANT_SUFFIX}/${key}`
 }
 
 export function znsnormalizepathkey(name: string): string | undefined {

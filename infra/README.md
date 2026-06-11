@@ -4,7 +4,7 @@ Cloudflare Workers in this folder back public `*.zed.cafe` services used by the 
 
 | Worker | Source | Production host |
 |--------|--------|-----------------|
-| ZNS | `net-zns-worker.js` | `zns.zed.cafe`, `*.{namespace}.zns.zed.cafe` |
+| ZNS | `net-zns-worker.js` | `zns.zed.cafe`, `*.{namespace}.at.zed.cafe` |
 | Bytes | `net-bytes-worker.js` | `bytes.zed.cafe` |
 | Brick | `net-brick-worker.js` | `brick.zed.cafe` |
 
@@ -21,6 +21,7 @@ Email + OTP login, namespace claim, long-lived token, and per-namespace key/valu
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `ZNS_APEX` | `zns.zed.cafe` | Apex hostname for API routes |
+| `ZNS_TENANT_SUFFIX` | `at.zed.cafe` | Hostname suffix for tenant reads (`{namespace}.{suffix}`) |
 | `BYTES_ORIGIN` | `https://bytes.zed.cafe` | Redirect target for bytes pairs |
 | `JOIN_ORIGIN` | `https://zed.cafe` | Redirect target for `peer` pairs |
 | `RESEND_API_KEY` | — | Sends OTP email (`#zns {code}` subject) |
@@ -102,7 +103,7 @@ Delete one key.
 
 **200** `{ "success": true }`
 
-### Tenant reads (`https://{namespace}.zns.zed.cafe/{key}`)
+### Tenant reads (`https://{namespace}.at.zed.cafe/{key}`)
 
 Public `GET` / `HEAD` only. `{key}` is the first path segment (lowercased).
 
@@ -114,7 +115,7 @@ Public `GET` / `HEAD` only. `{key}` is the first path segment (lowercased).
 
 **404** if key missing or invalid.
 
-Example: `docs.zns.zed.cafe/algoscroll` serves seeded refscroll markdown for gadget docs fallback.
+Example: `docs.at.zed.cafe/algoscroll` serves seeded refscroll markdown for gadget docs fallback.
 
 ---
 
@@ -210,21 +211,23 @@ https://brick.zed.cafe/?brick=aHR0cHM6Ly9tdXNldW1vZnp6dC5jb20vYXBpL3YxL3NlYXJjaC
 
 ## Local tooling
 
-- Seed ZNS docs namespace: `ZNS_EMAIL=... ZNS_TOKEN=... node infra/seed-zns-docs.mjs` (writes `zss/rom/refscroll/*.md` to `docs.zns.zed.cafe` via `POST /api/set`).
+- Seed ZNS docs namespace: `ZNS_EMAIL=... ZNS_TOKEN=... node infra/seed-zns-docs.mjs` (writes `zss/rom/refscroll/*.md` to `docs.at.zed.cafe` via `POST /api/set`).
 
 ---
 
 ## Cloudflare deploy (Wrangler)
 
-Wrangler is a dev dependency (`yarn wrangler`). Configs live in this folder:
+Wrangler is a dev dependency (`yarn wrangler`). Configs live in this folder but **all `yarn wrangler` commands must be run from the repo root** with `-c infra/wrangler-*.toml` (running from `infra/` does not work).
 
 | Worker | Config |
 |--------|--------|
-| ZNS | `wrangler-zns.toml` |
-| Bytes | `wrangler-bytes.toml` |
-| Brick | `wrangler-brick.toml` |
+| ZNS | `infra/wrangler-zns.toml` |
+| Bytes | `infra/wrangler-bytes.toml` |
+| Brick | `infra/wrangler-brick.toml` |
 
 ### One-time setup
+
+Run from repo root.
 
 1. Log in (opens browser):
 
@@ -245,13 +248,12 @@ Wrangler is a dev dependency (`yarn wrangler`). Configs live in this folder:
    yarn wrangler kv namespace create kv
    ```
 
-3. Paste each KV `id` into the matching `wrangler-*.toml` (replace `PASTE_KV_NAMESPACE_ID`).
+3. Paste each KV `id` into the matching `infra/wrangler-*.toml` (replace `PASTE_KV_NAMESPACE_ID`).
 
 4. Set the ZNS email secret (Resend API key):
 
    ```bash
-   cd infra
-   yarn wrangler secret put RESEND_API_KEY -c wrangler-zns.toml
+   yarn wrangler secret put RESEND_API_KEY -c infra/wrangler-zns.toml
    ```
 
 ### Deploy
@@ -264,8 +266,10 @@ yarn deploy:cloudflare:bytes
 yarn deploy:cloudflare:brick
 ```
 
-Or from `infra/`:
+Equivalent raw Wrangler commands (also from repo root):
 
 ```bash
-yarn wrangler deploy -c wrangler-zns.toml
+yarn wrangler deploy -c infra/wrangler-zns.toml
+yarn wrangler deploy -c infra/wrangler-bytes.toml
+yarn wrangler deploy -c infra/wrangler-brick.toml
 ```

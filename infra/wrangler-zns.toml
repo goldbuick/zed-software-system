@@ -11,6 +11,7 @@ id = "fa1fba6d812440ff9eaa775bccb75a45"
 
 [vars]
 ZNS_APEX = "zns.zed.cafe"
+ZNS_TENANT_SUFFIX = "at.zed.cafe"
 BYTES_ORIGIN = "https://bytes.zed.cafe"
 JOIN_ORIGIN = "https://zed.cafe"
 
@@ -19,5 +20,5 @@ pattern = "zns.zed.cafe/*"
 zone_name = "zed.cafe"
 
 [[routes]]
-pattern = "*.zns.zed.cafe/*"
+pattern = "*.at.zed.cafe/*"
 zone_name = "zed.cafe"

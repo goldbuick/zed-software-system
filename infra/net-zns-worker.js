@@ -5,6 +5,7 @@
 
 const ZNS_PEER_KEY = 'peer'
 const ZNS_APEX_DEFAULT = 'zns.zed.cafe'
+const ZNS_TENANT_SUFFIX_DEFAULT = 'at.zed.cafe'
 const BYTES_ORIGIN_DEFAULT = 'https://bytes.zed.cafe'
 const JOIN_ORIGIN_DEFAULT = 'https://zed.cafe'
 const RESERVED_NS = new Set(['www', 'api', 'mail', 'ftp'])
@@ -72,6 +73,10 @@ function pairstoragekey(namespace, pathkey) {
 
 function apexhost(env) {
   return env.ZNS_APEX ?? ZNS_APEX_DEFAULT
+}
+
+function tenantsuffix(env) {
+  return env.ZNS_TENANT_SUFFIX ?? ZNS_TENANT_SUFFIX_DEFAULT
 }
 
 function bytesorigin(env) {
@@ -171,11 +176,7 @@ async function sendznscodeemail(apikey, email, code) {
 }
 
 function parsenamespace(hostname, env) {
-  const apex = apexhost(env)
-  if (hostname === apex) {
-    return null
-  }
-  const suffix = `.${apex}`
+  const suffix = `.${tenantsuffix(env)}`
   if (!hostname.endsWith(suffix)) {
     return null
   }
