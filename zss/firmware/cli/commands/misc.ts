@@ -1,60 +1,37 @@
-import { parsetarget } from 'zss/device'
-import { registerscreenshot, vmpublish } from 'zss/device/api'
+import { registerscreenshot } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import {
   formatboardfortext,
   formatlookfortext,
 } from 'zss/feature/heavy/formatstate'
-// import { readnetworkpeerid } from 'zss/feature/netterminal'
 import {
   storagereadznsemail,
   storagereadznsnamespace,
-  storagereadznssession,
-  storagereadznstoken,
 } from 'zss/feature/storage'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import {
   znsdelete,
-  znslist,
   znslogin,
   znslogincode,
-  znsnormalizepathkey,
   znspersistlogin,
   znspersistlogout,
-  znsurlforlistrow,
 } from 'zss/feature/url'
-import { write, writeopenit } from 'zss/feature/writeui'
+import { write } from 'zss/feature/writeui'
 import { zsstextline, zsstexttape } from 'zss/feature/zsstextui'
 import { FIRMWARE } from 'zss/firmware'
+import {
+  showznsloginguide,
+  showznsmenu,
+  znsrequiresession,
+  znsrunimportcode,
+  znsrunpublish,
+} from 'zss/firmware/cli/commands/znsmenu'
 import { doasync } from 'zss/mapping/func'
-import { isarray, ispresent } from 'zss/mapping/types'
 import { isemail } from 'zss/mapping/validate'
 import { memoryreadboardstatequery } from 'zss/memory/boardstatequery'
-import { memoryreadcodepage } from 'zss/memory/bookoperations'
-import { memoryreadcodepagename } from 'zss/memory/codepageoperations'
 import { memoryreadlookstatequery } from 'zss/memory/lookstatequery'
-import {
-  memoryreadbookbyaddress,
-  memoryreadfirstbook,
-} from 'zss/memory/session'
-import { READ_CONTEXT, readargs, readargsuntilend } from 'zss/words/reader'
+import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE, NAME } from 'zss/words/types'
-
-async function znsensureloggedin(): Promise<
-  { email: string; token: string; namespace: string } | undefined
-> {
-  const session = await storagereadznssession()
-  if (session) {
-    return session
-  }
-  const email = await storagereadznsemail()
-  const token = await storagereadznstoken()
-  const namespace = await storagereadznsnamespace()
-  if (email && token && namespace) {
-    return { email, token, namespace }
-  }
-  return undefined
-}
 
 export function registermisccommands(fw: FIRMWARE): FIRMWARE {
   return fw
@@ -86,13 +63,19 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
     })
     .command(
       'zns',
-      [ARG_TYPE.ANY, 'login/publish actions'],
+      [ARG_TYPE.ANY, 'zns menu — login, publish bytes/code, import code'],
       (_, words) => {
+        if (words.length === 0) {
+          doasync(SOFTWARE, READ_CONTEXT.elementfocus, async () => {
+            await showznsmenu(READ_CONTEXT.elementfocus)
+          })
+          return 0
+        }
         const [action, ii] = readargs(words, 0, [ARG_TYPE.ANY])
         switch (NAME(action)) {
           default: {
             doasync(SOFTWARE, READ_CONTEXT.elementfocus, async () => {
-              const session = await znsensureloggedin()
+              const session = await znsrequiresession(READ_CONTEXT.elementfocus)
               if (!session?.token) {
                 const pendingemail = await storagereadznsemail()
                 if (!pendingemail) {
@@ -141,13 +124,6 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
                       READ_CONTEXT.elementfocus,
                       zsstextline(`$green${pendingemail} has been logged in`),
                     )
-                    // const peerid = readnetworkpeerid()
-                    // if (peerid) {
-                    //   await znsautopublishpeer(
-                    //     peerid,
-                    //     READ_CONTEXT.elementfocus,
-                    //   )
-                    // }
                   }
                 }
               } else {
@@ -162,6 +138,9 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
             })
             break
           }
+          case 'login':
+            showznsloginguide(READ_CONTEXT.elementfocus)
+            break
           case 'restart':
             doasync(SOFTWARE, READ_CONTEXT.elementfocus, async () => {
               await znspersistlogout()
@@ -177,136 +156,30 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
               )
             })
             break
-          case 'list':
-            doasync(SOFTWARE, READ_CONTEXT.elementfocus, async () => {
-              const session = await znsensureloggedin()
-              if (!session) {
-                write(
-                  SOFTWARE,
-                  READ_CONTEXT.elementfocus,
-                  zsstextline(
-                    `please login with $green#zns <email> <namespace>$blue first`,
-                  ),
-                )
-                return
-              }
-              write(
-                SOFTWARE,
-                READ_CONTEXT.elementfocus,
-                zsstextline(`listing keys`),
-              )
-              const result = await znslist(session.email, session.token)
-              if (result.success && isarray(result.list)) {
-                for (let i = 0; i < result.list.length; ++i) {
-                  const row = result.list[i]
-                  const kind = row.metadata?.kind as string | undefined
-                  const url = znsurlforlistrow(
-                    session.namespace,
-                    row.key,
-                    row.value,
-                    kind,
-                  )
-                  writeopenit(SOFTWARE, READ_CONTEXT.elementfocus, url, row.key)
-                  terminalwritelines(
-                    SOFTWARE,
-                    READ_CONTEXT.elementfocus,
-                    JSON.stringify(row),
-                  )
-                }
-              }
-            })
-            break
           case 'pub':
-          case 'publish': {
-            const [mode, iii] = readargs(words, ii, [ARG_TYPE.NAME])
-            const modename = NAME(mode)
+          case 'publish':
             doasync(SOFTWARE, READ_CONTEXT.elementfocus, async () => {
-              const session = await znsensureloggedin()
+              const session = await znsrequiresession(READ_CONTEXT.elementfocus)
               if (!session) {
-                write(
-                  SOFTWARE,
-                  READ_CONTEXT.elementfocus,
-                  zsstextline(
-                    `please login with $green#zns <email> <namespace>$blue first`,
-                  ),
-                )
                 return
               }
-              if (modename === 'bytes') {
-                const [filename, iiii] = readargs(words, iii, [ARG_TYPE.NAME])
-                const [tags] = readargsuntilend(words, iiii, ARG_TYPE.NAME)
-                vmpublish(
-                  SOFTWARE,
-                  READ_CONTEXT.elementfocus,
-                  'zns',
-                  session.email,
-                  session.token,
-                  filename,
-                  ...tags,
-                )
-              } else if (modename === 'code') {
-                const [address] = readargs(words, iii, [ARG_TYPE.NAME])
-                const { target, path } = parsetarget(address)
-                let book = memoryreadbookbyaddress(target)
-                if (!ispresent(book)) {
-                  book = memoryreadfirstbook()
-                }
-                const codepage = memoryreadcodepage(book, path || address)
-                if (!ispresent(codepage)) {
-                  write(
-                    SOFTWARE,
-                    READ_CONTEXT.elementfocus,
-                    zsstextline(`$red codepage not found: ${address}`),
-                  )
-                  return
-                }
-                const znskey = znsnormalizepathkey(
-                  memoryreadcodepagename(codepage),
-                )
-                if (!znskey) {
-                  write(
-                    SOFTWARE,
-                    READ_CONTEXT.elementfocus,
-                    zsstextline(`$red invalid zns key for codepage`),
-                  )
-                  return
-                }
-                vmpublish(
-                  SOFTWARE,
-                  READ_CONTEXT.elementfocus,
-                  'zns-text',
-                  session.email,
-                  session.token,
-                  znskey,
-                  target,
-                  path,
-                )
-              } else {
-                write(
-                  SOFTWARE,
-                  READ_CONTEXT.elementfocus,
-                  zsstexttape(
-                    zsstextline(
-                      `use $green#zns publish bytes <key>$blue or $green#zns publish code <codepage>`,
-                    ),
-                  ),
-                )
-              }
+              znsrunpublish(words, ii, session)
             })
             break
-          }
+          case 'import':
+            doasync(SOFTWARE, READ_CONTEXT.elementfocus, async () => {
+              const session = await znsrequiresession(READ_CONTEXT.elementfocus)
+              if (!session) {
+                return
+              }
+              await znsrunimportcode(words, ii, session)
+            })
+            break
           case 'del':
           case 'delete':
             doasync(SOFTWARE, READ_CONTEXT.elementfocus, async () => {
-              const session = await znsensureloggedin()
+              const session = await znsrequiresession(READ_CONTEXT.elementfocus)
               if (!session) {
-                write(
-                  SOFTWARE,
-                  READ_CONTEXT.elementfocus,
-                  zsstextline(
-                    `please login with $green#zns <email> <namespace>$blue first`,
-                  ),
-                )
                 return
               }
               const [filename] = readargs(words, ii, [ARG_TYPE.NAME])
@@ -335,12 +208,14 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
       {
         byposition: [
           [
+            'login',
             'restart',
-            'list',
             'pub',
             'publish',
+            'book',
             'bytes',
             'code',
+            'import',
             'del',
             'delete',
           ],

@@ -489,7 +489,15 @@ async function handletenantread(request, env, namespace) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url)
-    const hostname = url.hostname.toLowerCase()
+    const rawhost = url.hostname
+    const hostname = rawhost.toLowerCase()
+    if (rawhost !== hostname) {
+      const namespace = parsenamespace(hostname, env)
+      if (namespace && validatenamespace(namespace)) {
+        url.hostname = hostname
+        return Response.redirect(url.toString(), 301)
+      }
+    }
     const apex = apexhost(env)
 
     if (hostname === apex) {

@@ -106,7 +106,7 @@ Delete one key.
 
 ### Tenant reads (`https://{namespace}.at.zed.cafe/{key}`)
 
-Public `GET` / `HEAD` only. `{key}` is the first path segment (lowercased).
+Public `GET` / `HEAD` only. `{key}` is the first path segment (lowercased). Mixed-case hosts (e.g. `WiL.at.zed.cafe`) redirect **301** to the lowercase canonical URL (`wil.at.zed.cafe`).
 
 | Kind | Response |
 |------|----------|

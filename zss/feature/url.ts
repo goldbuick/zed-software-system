@@ -137,14 +137,62 @@ export const ZNS_APEX = 'zns.zed.cafe'
 export const ZNS_TENANT_SUFFIX = 'at.zed.cafe'
 export const ZNS_DOCS_NAMESPACE = 'docs'
 export const ZNS_PEER_KEY = 'peer'
+export const ZNS_BYTES_KEY_TARGET = 'znsbyteskey'
+
+export function znskeyispeer(key: string, kind?: string) {
+  return key === ZNS_PEER_KEY || kind === 'peer'
+}
+
+export function znskinddisplay(kind?: string, key?: string) {
+  if (znskeyispeer(key ?? '', kind)) {
+    return 'peer'
+  }
+  if (kind === 'bytes') {
+    return 'bytes'
+  }
+  if (kind === 'text') {
+    return 'code'
+  }
+  return 'bytes'
+}
+
+export function znskeyopenlabel(key: string, value: string, kind?: string) {
+  const display = znskinddisplay(kind, key)
+  if (display === 'bytes') {
+    const short = value.length > 12 ? `${value.slice(0, 8)}…` : value
+    return `$blue[bytes] $white${key} $GRAY— ${short}`
+  }
+  if (display === 'code') {
+    return `$blue[code] $white${key} $GRAY— import`
+  }
+  return `$white${key}`
+}
+
+export function znskeylinkcommand(
+  namespace: string,
+  key: string,
+  value: string,
+  kind?: string,
+) {
+  if (znskinddisplay(kind, key) === 'code') {
+    return `zns import code ${key}`
+  }
+  const url = znsurlforlistrow(namespace, key, value, kind)
+  return `openit ${url}`
+}
 
 const PEER_ID_RE = /^[a-zA-Z0-9_-]{4,256}$/
 const ZNS_PATH_KEY_RE = /^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?$/
 
 let lastpublishedpeerid = ''
 
+export function znsnormalizenamespace(namespace: string) {
+  return (namespace ?? '').toString().trim().toLowerCase()
+}
+
 export function znstenanturl(namespace: string, key: string) {
-  return `https://${namespace}.${ZNS_TENANT_SUFFIX}/${key}`
+  const ns = znsnormalizenamespace(namespace)
+  return `https://${ns}.${ZNS_TENANT_SUFFIX}/${key}`
 }
 
 export function znsnormalizepathkey(name: string): string | undefined {
@@ -221,7 +269,7 @@ export async function znspersistlogin(
   token?: string,
 ) {
   await storagewriteznsemail(email)
-  await storagewriteznsnamespace(namespace)
+  await storagewriteznsnamespace(znsnormalizenamespace(namespace))
   if (token) {
     await storagewritznstoken(token)
   }
@@ -235,7 +283,7 @@ export async function znspersistlogout() {
 export async function znslogin(email: string, namespace: string) {
   const formdata = new FormData()
   formdata.append('email', email)
-  formdata.append('namespace', namespace)
+  formdata.append('namespace', znsnormalizenamespace(namespace))
   const request = new Request(`https://${ZNS_APEX}/api/login`, {
     method: 'POST',
     body: formdata,

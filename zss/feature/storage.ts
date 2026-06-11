@@ -12,7 +12,7 @@ import { doasync } from 'zss/mapping/func'
 import { isarray, ispresent } from 'zss/mapping/types'
 import { BOOK } from 'zss/memory/types'
 
-import { shorturl } from './url'
+import { shorturl, znsnormalizenamespace } from './url'
 import { writecopyit } from './writeui'
 
 // read / write from indexdb
@@ -271,11 +271,15 @@ export async function storagewritznstoken(token: string) {
 }
 
 export async function storagereadznsnamespace(): Promise<string | undefined> {
-  return readidb<string>('znsnamespace')
+  const namespace = await readidb<string>('znsnamespace')
+  if (!namespace) {
+    return undefined
+  }
+  return znsnormalizenamespace(namespace)
 }
 
 export async function storagewriteznsnamespace(namespace: string) {
-  return writeidb('znsnamespace', () => namespace)
+  return writeidb('znsnamespace', () => znsnormalizenamespace(namespace))
 }
 
 export async function storagereadznssession(): Promise<
