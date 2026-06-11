@@ -55,19 +55,19 @@ export function Mode7Layer({
         layer.char,
         layer.color,
         layer.bg,
-        layer.stats,
+        layer.props,
       )
       const walls = filterlayer2walls(
         layer.char,
         layer.color,
         layer.bg,
-        layer.stats,
+        layer.props,
       )
       const water = filterlayer2water(
         layer.char,
         layer.color,
         layer.bg,
-        layer.stats,
+        layer.props,
       )
       return (
         <group key={layer.id} position={[0, 0, z]}>

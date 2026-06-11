@@ -3,63 +3,28 @@ import {
   heavyagentlist,
   heavyagentstart,
   heavyagentstop,
-  heavyllmpreset,
-  registerstore,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import {
-  HEAVY_LLM_PRESETS,
-  HEAVY_LLM_STORAGE_KEY,
-  heavylmpresetids,
-  normalizeheavylmpreset,
-  resolveheavylmpresetfromsources,
-} from 'zss/feature/heavy/heavyllmpreset'
-import { pullstoragevarfrommain } from 'zss/feature/storagepull'
+import { HEAVY_LLM_PRESETS } from 'zss/feature/heavy/heavyllmpreset'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
-import {
-  zssheaderlines,
-  zsstexttape,
-  zsszedlinklines,
-} from 'zss/feature/zsstextui'
+import { zssheaderlines, zsstexttape } from 'zss/feature/zsstextui'
 import { FIRMWARE } from 'zss/firmware'
-import { doasync } from 'zss/mapping/func'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE, NAME } from 'zss/words/types'
 
-function showheavylmpresetmenu(player: string) {
-  doasync(SOFTWARE, player, async () => {
-    const stored = await pullstoragevarfrommain(
-      SOFTWARE,
-      player,
-      HEAVY_LLM_STORAGE_KEY,
-      'vm',
-    )
-    const effective = resolveheavylmpresetfromsources(stored)
-    const ids = heavylmpresetids()
-    const linklines = zsszedlinklines(
-      ids.map((id) => {
-        const row = HEAVY_LLM_PRESETS[id]
-        const cmd = `#agent model ${id}`
-        const iscurrent = id === effective
-        return {
-          command: `runit ${cmd}`,
-          label: iscurrent
-            ? `$green ${id}$white ${row.modelid} $gray(${row.backend}, active)`
-            : `$white ${id} ${row.modelid} $gray(${row.backend})`,
-        }
-      }),
-    )
-    terminalwritelines(
-      SOFTWARE,
-      player,
-      zsstexttape(
-        zssheaderlines('model selection'),
-        `$grayCurrent$white $cyan${effective}$white $7 $grayEnter on a row to switch$white`,
-        linklines,
-      ),
-    )
-  })
+function showagentmodelinfo(player: string) {
+  const row = HEAVY_LLM_PRESETS.gemma
+  terminalwritelines(
+    SOFTWARE,
+    player,
+    zsstexttape(
+      zssheaderlines('agent model'),
+      `$grayAgent LLM$white Gemma 4 E2B (in-browser only)`,
+      `$7 ${row.modelid}`,
+      `$grayWebGPU q4f16 · tool calling via run_zss_command`,
+    ),
+  )
 }
 
 export function registeragentcommands(fw: FIRMWARE): FIRMWARE {
@@ -67,36 +32,19 @@ export function registeragentcommands(fw: FIRMWARE): FIRMWARE {
     'agent',
     [
       ARG_TYPE.MAYBE_NAME,
-      'bare: agents + model picker; start/stop/model AI agents (#agent model = !runit menu)',
+      'bare: agents; start/stop AI agents (Gemma 4 E2B in-browser)',
     ],
     (_, words) => {
       const [action] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
       const player = READ_CONTEXT.elementfocus
       if (!ispresent(action)) {
         heavyagentlist(SOFTWARE, player)
-        showheavylmpresetmenu(player)
+        showagentmodelinfo(player)
         return 0
       }
       switch (NAME(action)) {
         case 'model': {
-          const [maybepreset] = readargs(words, 1, [ARG_TYPE.MAYBE_NAME])
-          const raw = NAME(maybepreset)
-          if (raw === '') {
-            showheavylmpresetmenu(player)
-          } else {
-            const p = normalizeheavylmpreset(raw)
-            if (!p) {
-              apierror(
-                SOFTWARE,
-                player,
-                'agent',
-                '#agent model | llama | tiny | gemma',
-              )
-            } else {
-              registerstore(SOFTWARE, player, HEAVY_LLM_STORAGE_KEY, p)
-              heavyllmpreset(SOFTWARE, player, p)
-            }
-          }
+          showagentmodelinfo(player)
           break
         }
         case 'start': {

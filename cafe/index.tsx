@@ -32,6 +32,7 @@ import {
   registersetmyplayerid,
 } from 'zss/device/register'
 import { isclimode } from 'zss/feature/detect'
+import { initlangcompile } from 'zss/feature/lang/langcompileclient'
 import { isjoin } from 'zss/feature/url'
 import { forcer3fglresize } from 'zss/gadget/canvasrelayout'
 import { useDeviceData } from 'zss/gadget/device'
@@ -55,6 +56,7 @@ function shoulde2ebridge(): boolean {
 }
 
 async function bootheadless(): Promise<void> {
+  await initlangcompile()
   const g = globalThis as any
   const readplayer = g.__nodeStorageReadPlayer
   if (typeof readplayer === 'function') {
@@ -64,6 +66,9 @@ async function bootheadless(): Promise<void> {
   g.__onCliInput = (line: string) => {
     vmcli(register, registerreadplayer(), line)
   }
+  if (shoulde2ebridge()) {
+    installe2ebridge()
+  }
   await import('zss/userspace')
   createplatform(isjoin(), true)
   g.__nodeReady?.()
@@ -71,6 +76,8 @@ async function bootheadless(): Promise<void> {
 
 // Headless path: no WebGL, no Canvas, no UI — just platform + CLI
 async function main() {
+  await initlangcompile()
+
   if (isclimode()) {
     await bootheadless()
     return

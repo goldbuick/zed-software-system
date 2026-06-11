@@ -1,3 +1,5 @@
+import { vmplayermovetoboard } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
 import { ptwithin } from 'zss/mapping/2d'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 import { PT } from 'zss/words/types'
@@ -5,11 +7,9 @@ import { PT } from 'zss/words/types'
 import { memorymoveboardobject } from './boardmovement'
 import { memoryreadboardbyaddress } from './boards'
 import { memoryreadbookflag } from './bookoperations'
-import { memorymoveplayertoboard } from './playermanagement'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH, BOOK } from './types'
 
 export function memoryplayerblockedbyedge(
-  book: MAYBE<BOOK>,
   board: MAYBE<BOARD>,
   element: BOARD_ELEMENT,
   dest: PT,
@@ -18,34 +18,38 @@ export function memoryplayerblockedbyedge(
   if (dest.x < 0) {
     const destboard = memoryreadboardbyaddress(board?.exitwest ?? '')
     if (ispresent(destboard)) {
-      return memorymoveplayertoboard(book, elementid, destboard.id, {
+      vmplayermovetoboard(SOFTWARE, elementid, elementid, destboard.id, {
         x: BOARD_WIDTH - 1,
         y: dest.y,
       })
+      return true
     }
   } else if (dest.x >= BOARD_WIDTH) {
     const destboard = memoryreadboardbyaddress(board?.exiteast ?? '')
     if (ispresent(destboard)) {
-      return memorymoveplayertoboard(book, elementid, destboard.id, {
+      vmplayermovetoboard(SOFTWARE, elementid, elementid, destboard.id, {
         x: 0,
         y: dest.y,
       })
+      return true
     }
   } else if (dest.y < 0) {
     const destboard = memoryreadboardbyaddress(board?.exitnorth ?? '')
     if (ispresent(destboard)) {
-      return memorymoveplayertoboard(book, elementid, destboard.id, {
+      vmplayermovetoboard(SOFTWARE, elementid, elementid, destboard.id, {
         x: dest.x,
         y: BOARD_HEIGHT - 1,
       })
+      return true
     }
   } else if (dest.y >= BOARD_HEIGHT) {
     const destboard = memoryreadboardbyaddress(board?.exitsouth ?? '')
     if (ispresent(destboard)) {
-      return memorymoveplayertoboard(book, elementid, destboard.id, {
+      vmplayermovetoboard(SOFTWARE, elementid, elementid, destboard.id, {
         x: dest.x,
         y: 0,
       })
+      return true
     }
   }
   return false

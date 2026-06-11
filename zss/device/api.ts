@@ -5,6 +5,8 @@ without having to include device code
 import type { BRIDGE_CHAT_START_OBJECT } from 'zss/device/bridge/chattypes'
 import type { AGENTS_ROSTER } from 'zss/feature/heavy/agentsroster'
 import type { HEAVY_LLM_PRESET } from 'zss/feature/heavy/heavyllmpreset'
+import type { Operation } from 'zss/feature/jsonpipe/observe'
+import { encodepatchwire } from 'zss/feature/jsonpipe/wire'
 import { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { BOOK } from 'zss/memory/types'
@@ -55,7 +57,6 @@ export function apilog(device: DEVICELIKE, player: string, ...message: any[]) {
   return true
 }
 
-/** Worker → client hook for Playwright E2E: loader lifecycle (forwarded as `register:e2eloaderevent`). */
 export type E2E_LOADER_NOTIFY = {
   phase: 'start' | 'done'
   eventname: string
@@ -77,6 +78,94 @@ export function apichat(device: DEVICELIKE, board: string, ...message: any[]) {
 
 export function apitoast(device: DEVICELIKE, player: string, toast: string) {
   device.emit(player, 'toast', toast)
+}
+
+export function workstatus(device: DEVICELIKE, player: string, status: string) {
+  device.emit(player, 'workstatus', status)
+}
+
+export function gadgetclientbonk(device: DEVICELIKE, player: string) {
+  device.emit(player, 'gadgetclient:bonk', undefined)
+}
+
+export function gadgetclientzap(device: DEVICELIKE, player: string) {
+  device.emit(player, 'gadgetclient:zap', undefined)
+}
+
+export function chipmessage(
+  device: DEVICELIKE,
+  player: string,
+  chip: string,
+  target: string,
+  data: any[],
+) {
+  device.emit(player, `chip:${chip}:${target}`, data)
+}
+
+export function boardrunneridle(
+  device: DEVICELIKE,
+  player: string,
+  idleonboard: string,
+) {
+  device.emit(player, 'boardrunner:idle', idleonboard)
+}
+
+export function boardrunnerlinkdead(
+  device: DEVICELIKE,
+  player: string,
+  linkdead: string,
+) {
+  device.emit(player, 'boardrunner:linkdead', linkdead)
+}
+
+export function boardrunnerthud(
+  device: DEVICELIKE,
+  player: string,
+  thudplayer: string,
+) {
+  // player in this context is the board runner
+  device.emit(player, 'boardrunner:thud', thudplayer)
+}
+
+export function boardrunnerinput(
+  device: DEVICELIKE,
+  player: string,
+  input: INPUT,
+  mods: number,
+) {
+  device.emit(player, 'boardrunner:input', [input, mods])
+}
+
+export function boardrunnerstart(device: DEVICELIKE, player: string) {
+  device.emit(player, 'boardrunner:start')
+}
+
+export function boardrunnertick(
+  device: DEVICELIKE,
+  player: string,
+  board: string,
+  timestamp: number,
+  boundaries: string[],
+) {
+  device.emit(player, 'boardrunner:tick', [board, timestamp, boundaries])
+}
+
+export function boardrunnerpaint(
+  device: DEVICELIKE,
+  player: string,
+  doc: any,
+  boundary?: string,
+) {
+  device.emit(player, 'boardrunner:paint', [doc, boundary])
+}
+
+export function boardrunnerpatch(
+  device: DEVICELIKE,
+  player: string,
+  patch: Operation[],
+  boundary?: string,
+) {
+  device.emit(player, 'boardrunner:patch', [encodepatchwire(patch), boundary])
 }
 
 export function bridgestreamstart(
@@ -162,29 +251,25 @@ export function gadgetclientpaint(
 export function gadgetclientpatch(
   device: DEVICELIKE,
   player: string,
-  json: any,
+  patch: Operation[],
 ) {
-  device.emit(player, 'gadgetclient:patch', json)
+  device.emit(player, 'gadgetclient:patch', encodepatchwire(patch))
 }
 
-export function gadgetserverdesync(device: DEVICELIKE, player: string) {
-  device.emit(player, 'gadgetserver:desync')
+export function vmgadgetdesync(device: DEVICELIKE, player: string) {
+  device.emit(player, 'vm:gadgetdesync')
 }
 
-export function gadgetserverclearscroll(device: DEVICELIKE, player: string) {
-  device.emit(player, 'gadgetserver:clearscroll')
-}
-
-export function heavyttsinfo(
+export function ttsinfo(
   device: DEVICELIKE,
   player: string,
   engine: 'piper' | 'supertonic',
   info: string,
 ) {
-  device.emit(player, 'heavy:ttsinfo', [engine, info])
+  device.emit(player, 'tts:info', [engine, info])
 }
 
-export function heavyttsrequest(
+export function ttsrequest(
   device: DEVICELIKE,
   player: string,
   engine: 'piper' | 'supertonic',
@@ -192,7 +277,7 @@ export function heavyttsrequest(
   voice: string | number,
   phrase: string,
 ) {
-  device.emit(player, 'heavy:ttsrequest', [engine, config, voice, phrase])
+  device.emit(player, 'tts:request', [engine, config, voice, phrase])
 }
 
 type MODEL_PROMPT_ARGS = {
@@ -237,6 +322,48 @@ export function heavymodelstop(
   device.emit(player, 'heavy:modelstop', agentid)
 }
 
+export function vmboardrunnerack(device: DEVICELIKE, player: string) {
+  device.emit(player, 'vm:boardrunnerack')
+}
+
+export function vmboardrunneraccess(
+  device: DEVICELIKE,
+  player: string,
+  currentboard: string,
+  accessboard: string,
+) {
+  device.emit(player, 'vm:boardrunneraccess', [currentboard, accessboard])
+}
+
+export function vmboardrunnerpatch(
+  device: DEVICELIKE,
+  player: string,
+  patch: Operation[],
+  boundary?: string,
+) {
+  device.emit(player, 'vm:boardrunnerpatch', [encodepatchwire(patch), boundary])
+}
+
+/** Full boundary document from runner → sim (boundary id required). */
+export function vmboardrunnerpaint(
+  device: DEVICELIKE,
+  player: string,
+  doc: any,
+  boundary: string,
+) {
+  device.emit(player, 'vm:boardrunnerpaint', [doc, boundary])
+}
+
+export function vmplayermovetoboard(
+  device: DEVICELIKE,
+  player: string,
+  targetplayer: string,
+  board: string,
+  dest: PT,
+) {
+  device.emit(player, 'vm:playermovetoboard', [targetplayer, board, dest])
+}
+
 export function vmlastinputtouch(
   device: DEVICELIKE,
   player: string,
@@ -261,16 +388,6 @@ export function heavyagentstart(
   device.emit(player, 'heavy:agentstart', agentname)
 }
 
-export function heavyagentname(
-  device: DEVICELIKE,
-  player: string,
-  agentid: string,
-  agentname: string,
-) {
-  device.emit(player, 'heavy:agentname', [agentid, agentname])
-}
-
-/** When `#set user` updates player flags, sync display name to heavy roster if `player` is an agent (no-op for humans). */
 export function heavyagentsyncuserdisplay(
   device: DEVICELIKE,
   player: string,
@@ -300,7 +417,6 @@ export function heavyrestoreagents(
   device.emit(player, 'heavy:restoreagents', roster)
 }
 
-/** Worker applies preset (dispose main generator). Use `{ toast: false }` after login restore. */
 export function heavyllmpreset(
   device: DEVICELIKE,
   player: string,
@@ -311,7 +427,6 @@ export function heavyllmpreset(
   device.emit(player, 'heavy:llmpreset', wantstoast ? preset : [preset, false])
 }
 
-/** Main-thread register: start/stop per-agent vm:doot from client `second` ticks (heavy worker → client). */
 export function registeragentdooton(
   device: DEVICELIKE,
   player: string,
@@ -410,10 +525,6 @@ export function registerdownloadbinaryfile(
     filename,
     mimetype,
   ])
-}
-
-export function registerdev(device: DEVICELIKE, player: string) {
-  device.emit(player, 'register:dev', undefined)
 }
 
 export function registershare(device: DEVICELIKE, player: string) {
@@ -702,23 +813,20 @@ export function vmeditorbookmarkscroll(
   ])
 }
 
-export function vmcodepagesnapshot(
-  device: DEVICELIKE,
-  player: string,
-  book: string,
-  path: string[],
-  edtype: string,
-  edtitle: string,
-) {
-  device.emit(player, 'vm:codepagesnapshot', [book, path, edtype, edtitle])
-}
-
 export function registerinspector(
   device: DEVICELIKE,
   player: string,
   forcevalue: MAYBE<boolean>,
 ) {
   device.emit(player, 'register:inspector', forcevalue)
+}
+
+export function registerperfmonitor(
+  device: DEVICELIKE,
+  player: string,
+  forcevalue: MAYBE<boolean>,
+) {
+  device.emit(player, 'register:perfmonitor', forcevalue)
 }
 
 export function registerfindany(device: DEVICELIKE, player: string, pts: PT[]) {
@@ -743,10 +851,6 @@ export function registerterminalquickopen(
 
 export function registerterminalclose(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:terminal:close')
-}
-
-export function registerterminaltoggle(device: DEVICELIKE, player: string) {
-  device.emit(player, 'register:terminal:toggle')
 }
 
 export function registerterminalinclayout(
@@ -856,25 +960,12 @@ export function vmlocal(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:local')
 }
 
-export function vmlogout(
-  device: DEVICELIKE,
-  player: string,
-  isendgame: boolean,
-) {
-  device.emit(player, 'vm:logout', isendgame)
+export function vmlogout(device: DEVICELIKE, player: string) {
+  device.emit(player, 'vm:logout')
 }
 
 export function vmdoot(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:doot')
-}
-
-export function vminput(
-  device: DEVICELIKE,
-  player: string,
-  input: INPUT,
-  mods: number,
-) {
-  device.emit(player, 'vm:input', [input, mods])
 }
 
 export function vmpilotstart(

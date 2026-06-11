@@ -1,0 +1,27 @@
+{
+  "name": "lighting.blocked_partial",
+  "initial": {},
+  "steps": [
+    {
+      "op": "lighting_addrange_blocked",
+      "args": {
+        "initial": [],
+        "range": [
+          10,
+          80,
+          0.4
+        ]
+      },
+      "expect": {
+        "mode": "json",
+        "json": [
+          [
+            10,
+            80,
+            0.4
+          ]
+        ]
+      }
+    }
+  ]
+}

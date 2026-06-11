@@ -1,34 +1,34 @@
 import {
-  consumeLocalPatchFlag,
-  destroyModemForTest,
-  getSharedTextHandleForTest,
-  getUndoManager,
-  markNextPatchAsLocal,
+  consumelocalpatchflag,
+  destroymodemfortest,
+  getsharedtexthandlefortest,
+  getundomanager,
+  marknextpatchaslocal,
   modemwriteinitstring,
-  registerCursorRestore,
-  setCursorBeforeEdit,
+  registercursorrestore,
+  setcursorbeforeedit,
 } from 'zss/device/modem'
 
 describe('modemUndo', () => {
   afterAll(() => {
-    destroyModemForTest()
+    destroymodemfortest()
   })
-  describe('markNextPatchAsLocal / consumeLocalPatchFlag', () => {
-    it('consumeLocalPatchFlag returns false by default', () => {
-      expect(consumeLocalPatchFlag()).toBe(false)
+  describe('marknextpatchaslocal / consumelocalpatchflag', () => {
+    it('consumelocalpatchflag returns false by default', () => {
+      expect(consumelocalpatchflag()).toBe(false)
     })
 
-    it('consumeLocalPatchFlag returns true once after markNextPatchAsLocal', () => {
-      markNextPatchAsLocal()
-      expect(consumeLocalPatchFlag()).toBe(true)
-      expect(consumeLocalPatchFlag()).toBe(false)
+    it('consumelocalpatchflag returns true once after marknextpatchaslocal', () => {
+      marknextpatchaslocal()
+      expect(consumelocalpatchflag()).toBe(true)
+      expect(consumelocalpatchflag()).toBe(false)
     })
   })
 
   describe('NodeId and SharedTextHandle', () => {
-    it('getSharedTextHandleForTest returns handle with nodeId.key', () => {
+    it('getsharedtexthandlefortest returns handle with nodeId.key', () => {
       modemwriteinitstring('testkey', '')
-      const handle = getSharedTextHandleForTest('testkey')
+      const handle = getsharedtexthandlefortest('testkey')
       expect(handle).toBeDefined()
       expect(handle?.nodeId).toEqual({ key: 'testkey' })
       expect(handle?.toJSON()).toBe('')
@@ -43,17 +43,17 @@ describe('modemUndo', () => {
     })
 
     it('undo reverts insert and restore callback is called with stored cursor', () => {
-      const handle = getSharedTextHandleForTest(codekey)
+      const handle = getsharedtexthandlefortest(codekey)
       expect(handle).toBeDefined()
-      const um = getUndoManager(codekey)
+      const um = getundomanager(codekey)
       expect(um).toBeDefined()
 
       let restored = -1
-      const unsub = registerCursorRestore(codekey, (cursor) => {
+      const unsub = registercursorrestore(codekey, (cursor) => {
         restored = cursor
       })
 
-      setCursorBeforeEdit(codekey, 0)
+      setcursorbeforeedit(codekey, 0)
       handle!.insert(0, 'ab')
       expect(handle!.toJSON()).toBe('ab')
 
@@ -65,14 +65,14 @@ describe('modemUndo', () => {
     })
 
     it('redo re-applies and restore callback is called', () => {
-      const handle = getSharedTextHandleForTest(codekey)
-      const um = getUndoManager(codekey)
+      const handle = getsharedtexthandlefortest(codekey)
+      const um = getundomanager(codekey)
       let restored = -1
-      registerCursorRestore(codekey, (c) => {
+      registercursorrestore(codekey, (c) => {
         restored = c
       })
 
-      setCursorBeforeEdit(codekey, 0)
+      setcursorbeforeedit(codekey, 0)
       handle!.insert(0, 'xy')
       um!.undo()
       expect(handle!.toJSON()).toBe('')

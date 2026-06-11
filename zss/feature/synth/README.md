@@ -1,37 +1,72 @@
 # Synth Module
 
-Web-based software synthesizer built with Tone.js.
+Web-based software synthesizer with a **front-end** (protocol, state, device routing) and **DaisySP WASM backend**.
+
+Legacy backends are preserved under [`archive/tone/`](archive/tone/README.md) and [`archive/maxi/`](archive/maxi/README.md) for reference only.
 
 ## Documentation
 
-Detailed documentation for each file is in **[docs/](docs/README.md)**.
+Detailed documentation is in **[docs/](docs/README.md)**. Active runtime: `backend/daisy/` (DSP) + `backend/wasm/` (shared SAB, scheduler, voice/FX config).
 
 ## Quick Start
 
+Synth audio is initialized by the device layer on first user gesture (`enableaudio()` in `zss/device/synth.ts`). Application code typically sends commands via firmware / `device/api.ts`, not by calling the backend directly.
+
 ```typescript
-import { setupsynth, createsynth } from 'zss/feature/synth'
-
-// One-time setup (registers AudioWorklets)
-await setupsynth()
-
-// Create synth instance
-const synth = createsynth()
-
-// Play notation (e.g. "qC4qD4qE4" = quarter notes C, D, E)
-synth.addplay('qC4qD4qE4')
+import { createsynthbackend } from 'zss/feature/synth'
+const backend = await createsynthbackend()
+backend.addplay('qC4qD4qE4')
 ```
 
-## Structure
+## Pre-release regression (local)
 
-| Area | Description |
-|------|-------------|
-| **Sources** | 8 voices: Synth, noise types, Bells, Doot, AlgoSynth |
-| **FX** | Reverb, echo, autofilter, distortion, vibrato, fcrush, autowah |
-| **Drums** | Tick, tweet, cowbell, clap, snares, toms, woodblocks, bass |
-| **Recording** | Records to MP3 via offline render |
+After editing `backend/daisy/native/`, run:
 
-## Subfolders
+```bash
+yarn daisy-regression:test
+```
 
-- `drums/` — Drum kit implementations
-- `voiceconfig/` — Voice/source configuration API
-- `voicefx/` — Effect configuration API
+This runs Jest (`backend/daisy/__tests__`, `adsrenvcurve`) then critical Playwright `:full` gates (pitch, play/drum, sidechain, synth env, notepop, short env). **CI** ([`.github/workflows/on-pr-check.yml`](../../../.github/workflows/on-pr-check.yml)) runs `yarn app:test` (Jest) only.
+
+## Parity gates (offline)
+
+| Script | Coverage |
+|--------|----------|
+| `yarn adsr-parity:test` | Short amsaw ADSR + Jest `ZssLinearEnv` |
+| `yarn synth-env-parity:test:full` | Long-release `#synth env` (square + fmsquare repro) |
+| `yarn play-drum-balance:test:full` | Play vs drum stem balance |
+| `yarn sidechain-parity:test:full` | Sidechain on/off duck |
+| `yarn pitch-stability:test:full` | Strike/detune / pitch drift |
+| `yarn notepop:test:full` | Note-pop A/B |
+
+Carrier `#synth env` is **wave-agnostic** (`ZssLinearEnv` on all SYNTH voices). FM/AM: pin `#synth modenv` when comparing timbre only.
+
+## Native watch loops
+
+`yarn <suite>:loop` watches `backend/daisy/native/` and runs build → render → gate.
+
+- `play-drum`, `sidechain`, `synth-env`, `notepop`, `pitch`
+- `--skip-build`, `--calibrate-only`, `--calibrate-on-fail` (opt-in calibrator; slow)
+
+Implementation: [`scripts/run-daisy-parity-loop.ts`](../../../scripts/run-daisy-parity-loop.ts).
+
+## Calibrators (dev-only)
+
+Grid-search scripts rewrite [`zss_config.h`](backend/daisy/native/zss/zss_config.h). **Do not run in CI**; each step can take many minutes.
+
+- `yarn play-drum-balance:calibrate`
+- `yarn sidechain-parity:calibrate`
+- `yarn synth-env-parity:calibrate`
+
+## Dev flags
+
+| Env / script | Purpose |
+|--------------|---------|
+| `ZSS_DAISY_PERF=false` | Full-quality Daisy DSP |
+| `ZSS_DAISY_NO_SIDECHAIN=1` | Bypass play-bus sidechain (`yarn app:dev:no-sc`, `?no_sc=1`) |
+| `ZSS_DAISY_NO_MAIN_COMP=1` | Bypass main bus compressor (`?no_comp=1`) |
+| `ZSS_PARITY_RENDER=1` | Offline parity renders (manual) |
+
+**FX bus:** [parallel-fx-bus.md](docs/parallel-fx-bus.md). Offline matrix: `yarn level-stability:test:fxmatrix`.
+
+COOP/COEP headers are enabled in Vite for SharedArrayBuffer.

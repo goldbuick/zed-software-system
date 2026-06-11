@@ -1,4 +1,10 @@
-import { RUN_ZSS_COMMAND_TOOL_NAME } from './agenttools'
+import {
+  type ParsedScriptToolCall,
+  validatedscripttoolcalls,
+} from './scripttool'
+import { RUN_ZSS_COMMAND_TOOL_NAME } from './toolnames'
+
+export type { ParsedScriptToolCall }
 
 export type ParsedToolCall = {
   name: string
@@ -16,6 +22,45 @@ function istoolcallshape(v: unknown): v is ParsedToolCall {
   const name = v.name
   const args = v.arguments
   return typeof name === 'string' && isrecord(args)
+}
+
+function castnativevalue(v: string): unknown {
+  const t = v.trim()
+  if (t === 'true') {
+    return true
+  }
+  if (t === 'false') {
+    return false
+  }
+  const n = Number(t)
+  if (t !== '' && !Number.isNaN(n)) {
+    return n
+  }
+  return t.replace(/^['"]|['"]$/g, '')
+}
+
+/** Parse Gemma 4 native `<|tool_call>call:name{args}<|tool_call|>` blocks. */
+export function extractgemmanativetoolcalls(raw: string): ParsedToolCall[] {
+  const pattern = /<\|tool_call>call:(\w+)\{(.*?)\}<tool_call\|>/gs
+  const out: ParsedToolCall[] = []
+  let match = pattern.exec(raw)
+  while (match !== null) {
+    const name = match[1]
+    const argsbody = match[2]
+    const argmap: Record<string, unknown> = {}
+    const argpattern = /(\w+):(?:<\|"\|>(.*?)<\|"\|>|([^,}]*))/gs
+    let argmatch = argpattern.exec(argsbody)
+    while (argmatch !== null) {
+      const key = argmatch[1]
+      const quoted = argmatch[2]
+      const bare = argmatch[3]
+      argmap[key] = castnativevalue(quoted ?? bare ?? '')
+      argmatch = argpattern.exec(argsbody)
+    }
+    out.push({ name, arguments: argmap })
+    match = pattern.exec(raw)
+  }
+  return out
 }
 
 function jsonfromfencedblock(s: string): string | undefined {
@@ -118,10 +163,13 @@ function normalizedcalls(parsed: unknown): ParsedToolCall[] {
 }
 
 /**
- * Extract Gemma / HF-style tool calls (`name` + `arguments`) from assistant output.
- * Accepts a bare object, an array of calls, or JSON inside markdown fences / trailing text.
+ * Extract tool calls from assistant output: Gemma native tokens first, then JSON.
  */
 export function parsetoolcallsfromassistant(raw: string): ParsedToolCall[] {
+  const native = extractgemmanativetoolcalls(raw)
+  if (native.length > 0) {
+    return native
+  }
   return normalizedcalls(tryparsejsonpayload(raw))
 }
 
@@ -143,3 +191,5 @@ export function validatedzsslinetoolcalls(calls: ParsedToolCall[]): string[] {
   }
   return lines
 }
+
+export { validatedscripttoolcalls }

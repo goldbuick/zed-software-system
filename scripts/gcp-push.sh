@@ -1,5 +1,5 @@
 #!/bin/sh
-# Tag local image zss:local and push to Artifact Registry (run yarn docker:build first).
+# Tag local image zss:local and push to Artifact Registry (run yarn deploy:docker:build first).
 # Usage: GCP_PROJECT_ID=your-project [GCP_REGION=us-central1] [AR_REPO=zss-repo] [GCP_IMAGE_TAG=latest] sh scripts/gcp-push.sh
 set -eu
 
@@ -17,7 +17,7 @@ IMAGE_LOCAL="${GCP_IMAGE_LOCAL:-zss:local}"
 REGISTRY="${REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${REPO}/zss:${TAG}"
 
 if ! docker image inspect "$IMAGE_LOCAL" >/dev/null 2>&1; then
-  echo "Local image $IMAGE_LOCAL not found. Run: yarn docker:build" >&2
+  echo "Local image $IMAGE_LOCAL not found. Run: yarn deploy:docker:build" >&2
   exit 1
 fi
 

@@ -1,0 +1,6 @@
+!lighttorch hk t;Torch
+#if mute do
+!soundon hk b;Be loud
+#else do
+!soundoff hk b;Be quiet
+#done

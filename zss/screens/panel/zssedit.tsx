@@ -9,7 +9,6 @@ import { tokenizeandwritetextformat } from 'zss/words/textformat'
 import {
   PanelItemProps,
   ScrollContext,
-  chiptarget,
   inputcolor,
   setuppanelitem,
 } from './common'
@@ -43,7 +42,7 @@ export function PanelZSSEdit({
 
   const scroll = useContext(ScrollContext)
   const invoke = useCallback(() => {
-    scroll.sendmessage(chiptarget(chip, target), [])
+    scroll.sendmessage(chip, target, [])
   }, [scroll, chip, target])
 
   return (

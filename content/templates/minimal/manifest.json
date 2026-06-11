@@ -1,0 +1,8 @@
+{
+  "name": "minimal",
+  "pages": [
+    "pages/player.object.json",
+    "pages/solid.terrain.json",
+    "pages/title.board.json"
+  ]
+}

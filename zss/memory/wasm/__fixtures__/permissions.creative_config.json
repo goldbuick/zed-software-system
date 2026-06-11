@@ -1,0 +1,67 @@
+{
+  "name": "permissions.creative_config",
+  "initial": {},
+  "steps": [
+    {
+      "op": "permission_reset",
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_apply_config",
+      "args": {
+        "config": "creative"
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_role_has_family",
+      "args": {
+        "role": "player",
+        "family": "build"
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_role_has_family",
+      "args": {
+        "role": "player",
+        "family": "explore"
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_role_has_family",
+      "args": {
+        "role": "player",
+        "family": "persist"
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_role_has_family",
+      "args": {
+        "role": "player",
+        "family": "bridge"
+      },
+      "expect": {
+        "mode": "json",
+        "json": false
+      }
+    }
+  ]
+}

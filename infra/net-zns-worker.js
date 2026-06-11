@@ -1,0 +1,592 @@
+/**
+ * ZNS: email + OTP login, namespace claim, long-lived token, KV pairs.
+ * API reference: infra/README.md#zns-net-zns-workerjs
+ */
+
+const ZNS_PEER_KEY = 'peer'
+const ZNS_APEX_DEFAULT = 'zns.zed.cafe'
+const ZNS_TENANT_SUFFIX_DEFAULT = 'at.zed.cafe'
+const BYTES_ORIGIN_DEFAULT = 'https://bytes.zed.cafe'
+const JOIN_ORIGIN_DEFAULT = 'https://zed.cafe'
+const RESERVED_NS = new Set(['www', 'api', 'mail', 'ftp'])
+
+const corsheaders = {
+  'Access-Control-Allow-Headers': '*',
+  'Access-Control-Allow-Methods': 'GET, POST',
+  'Access-Control-Allow-Origin': '*',
+  'Content-Type': 'application/json',
+}
+
+/** bytes short keys: 4 letter + base36 time slice (see net-bytes-worker.js) */
+const BYTES_HASH_RE = /^[A-Za-z0-9]{8,96}$/
+
+/** PeerJS ids: permissive safe string */
+const PEER_ID_RE = /^[a-zA-Z0-9_-]{4,256}$/
+
+const NS_RE = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/
+const PATH_KEY_RE = /^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?$/
+
+const TEXT_MAX_BYTES = 512 * 1024
+
+const tenantcorsheaders = {
+  'Access-Control-Allow-Headers': '*',
+  'Access-Control-Allow-Methods': 'GET, HEAD',
+  'Access-Control-Allow-Origin': '*',
+}
+
+function flatstr(value) {
+  return (value ?? '').toString().trim().toLowerCase()
+}
+
+function digitrandom() {
+  return 1 + Math.round(Math.random() * 8)
+}
+
+function gentoken() {
+  const bytes = new Uint8Array(32)
+  crypto.getRandomValues(bytes)
+  return [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+function timingstringequal(a, b) {
+  if (a.length !== b.length) {
+    return false
+  }
+  let out = 0
+  for (let i = 0; i < a.length; i++) {
+    out |= a.charCodeAt(i) ^ b.charCodeAt(i)
+  }
+  return out === 0
+}
+
+function userstoragekey(email) {
+  return `user:${email}`
+}
+
+function nsstoragekey(namespace) {
+  return `ns:${namespace}`
+}
+
+function pairstoragekey(namespace, pathkey) {
+  return `pair:${namespace}:${pathkey}`
+}
+
+function apexhost(env) {
+  return env.ZNS_APEX ?? ZNS_APEX_DEFAULT
+}
+
+function tenantsuffix(env) {
+  return env.ZNS_TENANT_SUFFIX ?? ZNS_TENANT_SUFFIX_DEFAULT
+}
+
+function bytesorigin(env) {
+  const o = env.BYTES_ORIGIN ?? BYTES_ORIGIN_DEFAULT
+  return o.replace(/\/+$/, '')
+}
+
+function joinorigin(env) {
+  const o = env.JOIN_ORIGIN ?? JOIN_ORIGIN_DEFAULT
+  return o.replace(/\/+$/, '')
+}
+
+function validatenamespace(ns) {
+  if (!ns || !NS_RE.test(ns) || RESERVED_NS.has(ns)) {
+    return false
+  }
+  return true
+}
+
+function validatepathkey(pathkey) {
+  if (!pathkey || pathkey.includes('/') || !PATH_KEY_RE.test(pathkey)) {
+    return false
+  }
+  return true
+}
+
+function validatepeerid(value) {
+  return typeof value === 'string' && PEER_ID_RE.test(value)
+}
+
+function normalizebytesvalue(raw) {
+  const s = String(raw ?? '').trim()
+  if (!s) {
+    return null
+  }
+  if (/^https:\/\/bytes\.zed\.cafe\//i.test(s)) {
+    try {
+      const u = new URL(s)
+      const seg = u.pathname.replace(/^\//, '').split('/')[0]
+      if (BYTES_HASH_RE.test(seg)) {
+        return seg
+      }
+    } catch {
+      return null
+    }
+  }
+  if (BYTES_HASH_RE.test(s)) {
+    return s
+  }
+  return null
+}
+
+function validatetextvalue(raw) {
+  const s = String(raw ?? '')
+  if (!s.trim()) {
+    return null
+  }
+  const bytes = new TextEncoder().encode(s)
+  if (bytes.length > TEXT_MAX_BYTES) {
+    return null
+  }
+  return s
+}
+
+function resolvepairkind(pathkey, stored, metadata) {
+  const kind = metadata?.kind
+  if (kind === 'peer' || kind === 'bytes' || kind === 'text') {
+    return kind
+  }
+  if (pathkey === ZNS_PEER_KEY) {
+    return 'peer'
+  }
+  if (typeof stored === 'string' && BYTES_HASH_RE.test(stored)) {
+    return 'bytes'
+  }
+  return 'text'
+}
+
+function escapehtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+function buildznscodeemail({ code, email, namespace, joinorigin }) {
+  const command = `#zns ${code}`
+  const query = new URLSearchParams({
+    'zns-code': code,
+    'zns-email': email,
+    'zns-namespace': namespace,
+  })
+  const deeplink = `${joinorigin}/?${query.toString()}`
+  const text = `${command}\n\nPaste into the zed.cafe terminal, or open:\n${deeplink}\n`
+  const ns = escapehtml(namespace)
+  const cmd = escapehtml(command)
+  const link = escapehtml(deeplink)
+  const html = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${cmd}</title>
+</head>
+<body style="margin:0;padding:24px 16px;background:#0f0f14;font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#e8e8ef;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;margin:0 auto;">
+<tr><td style="padding:20px 18px;background:#1a1a22;border:1px solid #404058;border-radius:10px;">
+<p style="margin:0 0 6px;font-size:12px;letter-spacing:0.04em;text-transform:uppercase;color:#787890;">zns login</p>
+<p style="margin:0 0 18px;font-size:16px;line-height:1.4;color:#e8e8ef;">Finish login to <strong style="color:#e8e8ef;">${ns}</strong></p>
+<p style="margin:0 0 12px;font-size:14px;line-height:1.5;color:#a8a8b8;">Copy this command into the zed.cafe terminal:</p>
+<pre style="margin:0 0 20px;padding:14px 16px;background:#242430;border:1px solid #585870;border-radius:6px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:18px;line-height:1.4;color:#5cb87a;text-align:center;user-select:all;-webkit-user-select:all;white-space:pre-wrap;">${cmd}</pre>
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 14px;">
+<tr><td style="border-radius:6px;background:#6c8cff;">
+<a href="${link}" style="display:inline-block;padding:12px 22px;font-size:14px;font-weight:600;color:#ffffff;text-decoration:none;">Open in zed.cafe</a>
+</td></tr>
+</table>
+<p style="margin:0 0 8px;font-size:12px;line-height:1.5;color:#787890;text-align:center;word-break:break-all;">${link}</p>
+<p style="margin:0;font-size:12px;line-height:1.5;color:#787890;">Open on any device — phone, tablet, or desktop. Or copy the command above into the terminal.</p>
+</td></tr>
+</table>
+</body>
+</html>`
+  return { subject: command, html, text }
+}
+
+async function sendznscodeemail(apikey, email, code, namespace, joinorigin) {
+  const { subject, html, text } = buildznscodeemail({
+    code,
+    email,
+    namespace,
+    joinorigin,
+  })
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apikey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: 'login@zns.zed.cafe',
+      to: email,
+      subject,
+      html,
+      text,
+    }),
+  })
+  if (!res.ok) {
+    const body = await res.text()
+    throw new Error(`resend ${res.status}: ${body}`)
+  }
+}
+
+function parsenamespace(hostname, env) {
+  const suffix = `.${tenantsuffix(env)}`
+  if (!hostname.endsWith(suffix)) {
+    return null
+  }
+  const ns = hostname.slice(0, -suffix.length).toLowerCase()
+  if (!ns || ns.includes('.')) {
+    return null
+  }
+  return ns
+}
+
+function publicpathkey(pathname) {
+  const decoded = decodeURIComponent(pathname)
+  const trimmed = decoded.replace(/^\/+/, '').split('/')[0] ?? ''
+  return trimmed ? trimmed.toLowerCase() : ''
+}
+
+async function handlelogin(request, env) {
+  const formdata = await request.formData()
+  const email = flatstr(formdata.get('email'))
+  const namespace = flatstr(formdata.get('namespace'))
+  if (!email || !validatenamespace(namespace)) {
+    return new Response(
+      JSON.stringify({ message: 'invalid email or namespace' }),
+      {
+        status: 400,
+        headers: corsheaders,
+      },
+    )
+  }
+  const nskey = nsstoragekey(namespace)
+  const nsentry = await env.zns.getWithMetadata(nskey)
+  if (nsentry.metadata?.email && nsentry.metadata.email !== email) {
+    return new Response(
+      JSON.stringify({
+        message: `namespace ${namespace} is in use by another account`,
+      }),
+      { status: 403, headers: corsheaders },
+    )
+  }
+  const ukey = userstoragekey(email)
+  const userentry = await env.zns.getWithMetadata(ukey)
+  if (
+    userentry?.metadata?.namespace &&
+    userentry.metadata.namespace !== namespace
+  ) {
+    return new Response(
+      JSON.stringify({ message: `incorrect namespace for ${email}` }),
+      { status: 403, headers: corsheaders },
+    )
+  }
+  const code = [
+    digitrandom(),
+    digitrandom(),
+    digitrandom(),
+    digitrandom(),
+    digitrandom(),
+    digitrandom(),
+  ].join('')
+  await env.zns.put(ukey, '', {
+    metadata: { namespace, code },
+  })
+  try {
+    await sendznscodeemail(
+      env.RESEND_API_KEY,
+      email,
+      code,
+      namespace,
+      joinorigin(env),
+    )
+  } catch (err) {
+    return new Response(
+      JSON.stringify({ message: String(err?.message ?? err) }),
+      {
+        status: 502,
+        headers: corsheaders,
+      },
+    )
+  }
+  return new Response(JSON.stringify({ success: true }), {
+    status: 200,
+    headers: corsheaders,
+  })
+}
+
+async function handlecode(request, env) {
+  const formdata = await request.formData()
+  const email = flatstr(formdata.get('email'))
+  const code = flatstr(formdata.get('code'))
+  const ukey = userstoragekey(email)
+  const userentry = await env.zns.getWithMetadata(ukey)
+  if (!userentry?.metadata?.code) {
+    return new Response(
+      JSON.stringify({ message: `no pending login for ${email}` }),
+      { status: 403, headers: corsheaders },
+    )
+  }
+  if (userentry.metadata.code !== code) {
+    return new Response(
+      JSON.stringify({ message: `incorrect code for ${email}` }),
+      { status: 403, headers: corsheaders },
+    )
+  }
+  const namespace = userentry.metadata.namespace
+  if (!validatenamespace(namespace)) {
+    return new Response(
+      JSON.stringify({ message: 'invalid namespace on account' }),
+      {
+        status: 400,
+        headers: corsheaders,
+      },
+    )
+  }
+  const nskey = nsstoragekey(namespace)
+  const nsentry = await env.zns.getWithMetadata(nskey)
+  if (nsentry.metadata?.email && nsentry.metadata.email !== email) {
+    return new Response(
+      JSON.stringify({
+        message: `namespace ${namespace} is in use by another account; use #zns restart`,
+      }),
+      { status: 403, headers: corsheaders },
+    )
+  }
+  await env.zns.put(nskey, '', { metadata: { email } })
+  const token = gentoken()
+  await env.zns.put(ukey, '', {
+    metadata: { namespace, token },
+  })
+  return new Response(JSON.stringify({ success: true, token }), {
+    status: 200,
+    headers: corsheaders,
+  })
+}
+
+async function verifytokenandnamespace(env, email, token) {
+  const ukey = userstoragekey(email)
+  const userentry = await env.zns.getWithMetadata(ukey)
+  const stored = userentry.metadata?.token ?? ''
+  if (!stored || !timingstringequal(stored, token)) {
+    return { ok: false, message: 'invalid email or token' }
+  }
+  const namespace = userentry.metadata?.namespace
+  if (!namespace || !validatenamespace(namespace)) {
+    return { ok: false, message: 'account has no namespace' }
+  }
+  return { ok: true, namespace }
+}
+
+async function handleset(request, env) {
+  const formdata = await request.formData()
+  const email = flatstr(formdata.get('email'))
+  const token = String(formdata.get('token') ?? '').trim()
+  const pathkey = flatstr(formdata.get('key'))
+  const rawvalue = formdata.get('value')
+  const v = await verifytokenandnamespace(env, email, token)
+  if (!v.ok) {
+    return new Response(JSON.stringify({ message: v.message }), {
+      status: 403,
+      headers: corsheaders,
+    })
+  }
+  if (!validatepathkey(pathkey)) {
+    return new Response(JSON.stringify({ message: 'invalid key' }), {
+      status: 400,
+      headers: corsheaders,
+    })
+  }
+  const { namespace } = v
+  if (pathkey === ZNS_PEER_KEY) {
+    if (!validatepeerid(String(rawvalue ?? '').trim())) {
+      return new Response(JSON.stringify({ message: 'invalid peer id' }), {
+        status: 400,
+        headers: corsheaders,
+      })
+    }
+    const peerid = String(rawvalue).trim()
+    await env.zns.put(pairstoragekey(namespace, pathkey), peerid, {
+      metadata: { kind: 'peer', updatedAt: Date.now() },
+    })
+  } else {
+    const hash = normalizebytesvalue(rawvalue)
+    if (hash) {
+      await env.zns.put(pairstoragekey(namespace, pathkey), hash, {
+        metadata: { kind: 'bytes', updatedAt: Date.now() },
+      })
+    } else {
+      const text = validatetextvalue(rawvalue)
+      if (!text) {
+        return new Response(
+          JSON.stringify({ message: 'invalid bytes hash or text content' }),
+          {
+            status: 400,
+            headers: corsheaders,
+          },
+        )
+      }
+      await env.zns.put(pairstoragekey(namespace, pathkey), text, {
+        metadata: { kind: 'text', updatedAt: Date.now() },
+      })
+    }
+  }
+  return new Response(JSON.stringify({ success: true }), {
+    status: 200,
+    headers: corsheaders,
+  })
+}
+
+async function handlelist(request, env) {
+  const formdata = await request.formData()
+  const email = flatstr(formdata.get('email'))
+  const token = String(formdata.get('token') ?? '').trim()
+  const v = await verifytokenandnamespace(env, email, token)
+  if (!v.ok) {
+    return new Response(JSON.stringify({ message: v.message }), {
+      status: 403,
+      headers: corsheaders,
+    })
+  }
+  const { namespace } = v
+  const prefix = `pair:${namespace}:`
+  const result = await env.zns.list({ prefix })
+  const names = result.keys.map((k) => k.name)
+  if (!names.length) {
+    return new Response(JSON.stringify({ success: true, list: [] }), {
+      status: 200,
+      headers: corsheaders,
+    })
+  }
+  const rows = await Promise.all(
+    names.map((name) => env.zns.getWithMetadata(name)),
+  )
+  const list = []
+  for (let i = 0; i < names.length; i++) {
+    const name = names[i]
+    const row = rows[i]
+    const shortkey = name.slice(prefix.length)
+    list.push({
+      key: shortkey,
+      value: row?.value ?? '',
+      metadata: row?.metadata ?? {},
+    })
+  }
+  return new Response(JSON.stringify({ success: true, list }), {
+    status: 200,
+    headers: corsheaders,
+  })
+}
+
+async function handledelete(request, env) {
+  const formdata = await request.formData()
+  const email = flatstr(formdata.get('email'))
+  const token = String(formdata.get('token') ?? '').trim()
+  const pathkey = flatstr(formdata.get('key'))
+  const v = await verifytokenandnamespace(env, email, token)
+  if (!v.ok) {
+    return new Response(JSON.stringify({ message: v.message }), {
+      status: 403,
+      headers: corsheaders,
+    })
+  }
+  if (!validatepathkey(pathkey)) {
+    return new Response(JSON.stringify({ message: 'invalid key' }), {
+      status: 400,
+      headers: corsheaders,
+    })
+  }
+  const { namespace } = v
+  await env.zns.delete(pairstoragekey(namespace, pathkey))
+  return new Response(JSON.stringify({ success: true }), {
+    status: 200,
+    headers: corsheaders,
+  })
+}
+
+async function handletenantread(request, env, namespace) {
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    return new Response('method not allowed', { status: 405 })
+  }
+  const url = new URL(request.url)
+  const pathkey = publicpathkey(url.pathname)
+  if (!pathkey) {
+    return new Response('not found', { status: 404 })
+  }
+  if (!validatepathkey(pathkey)) {
+    return new Response('not found', { status: 404 })
+  }
+  const pkey = pairstoragekey(namespace, pathkey)
+  const row = await env.zns.getWithMetadata(pkey)
+  const stored = row?.value
+  if (stored == null || stored === '') {
+    return new Response('not found', { status: 404 })
+  }
+  const kind = resolvepairkind(pathkey, stored, row?.metadata)
+  if (kind === 'text') {
+    const headers = {
+      ...tenantcorsheaders,
+      'Content-Type': 'text/markdown; charset=utf-8',
+      'Cache-Control': 'public, max-age=60',
+    }
+    if (request.method === 'HEAD') {
+      return new Response(null, { status: 200, headers })
+    }
+    return new Response(stored, { status: 200, headers })
+  }
+  let location
+  if (kind === 'peer') {
+    location = `${joinorigin(env)}/join/#${stored}`
+  } else {
+    location = `${bytesorigin(env)}/${stored}`
+  }
+  return new Response(null, {
+    status: 302,
+    headers: { Location: location },
+  })
+}
+
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url)
+    const rawhost = url.hostname
+    const hostname = rawhost.toLowerCase()
+    if (rawhost !== hostname) {
+      const namespace = parsenamespace(hostname, env)
+      if (namespace && validatenamespace(namespace)) {
+        url.hostname = hostname
+        return Response.redirect(url.toString(), 301)
+      }
+    }
+    const apex = apexhost(env)
+
+    if (hostname === apex) {
+      const { pathname } = url
+      if (request.method === 'POST') {
+        switch (pathname) {
+          case '/api/login':
+            return handlelogin(request, env)
+          case '/api/code':
+            return handlecode(request, env)
+          case '/api/set':
+            return handleset(request, env)
+          case '/api/list':
+            return handlelist(request, env)
+          case '/api/delete':
+            return handledelete(request, env)
+          default:
+            break
+        }
+      }
+      return new Response('not found', { status: 404, headers: corsheaders })
+    }
+
+    const namespace = parsenamespace(hostname, env)
+    if (namespace && validatenamespace(namespace)) {
+      return handletenantread(request, env, namespace)
+    }
+
+    return new Response('not found', { status: 404 })
+  },
+}

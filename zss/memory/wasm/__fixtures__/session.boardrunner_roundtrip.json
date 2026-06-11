@@ -1,0 +1,33 @@
+{
+  "name": "session.boardrunner_roundtrip",
+  "initial": {},
+  "steps": [
+    {
+      "op": "session_boardrunner_set",
+      "args": {
+        "value": "p1"
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "session_boardrunner_get",
+      "expect": {
+        "mode": "string",
+        "string": "p1"
+      }
+    },
+    {
+      "op": "session_boardrunner_set",
+      "args": {
+        "value": ""
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    }
+  ]
+}

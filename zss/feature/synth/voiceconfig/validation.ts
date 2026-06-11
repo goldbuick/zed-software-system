@@ -26,6 +26,8 @@ export function validatesynthtype(
       case 'buzz':
       case 'clang':
       case 'metallic':
+      case 'noise':
+      case 'hollow':
       case 'bells':
       case 'doot':
       case 'algo0':
@@ -36,6 +38,22 @@ export function validatesynthtype(
       case 'algo5':
       case 'algo6':
       case 'algo7':
+      case 'string':
+      case 'pluck':
+      case 'drip':
+      case 'flute':
+      case 'clarinet':
+      case 'brass':
+      case 'panpipe':
+      case 'piano':
+      case 'epiano':
+      case 'timpani':
+      case 'violin':
+      case 'viola':
+      case 'nylon':
+      case 'steel':
+      case 'tonewheel':
+      case 'drawbar':
         return true
       default:
         return SYNTH_VARIANTS.test(type)

@@ -1,6 +1,6 @@
 # Voice FX Module
 
-Configures per-voice effect sends and shared effect parameters.
+Configures per-voice effect sends and effect parameters. For the full parameter/default catalog (WASM vs Tone), see [fx-types-reference.md](fx-types-reference.md).
 
 ## Entry Point
 
@@ -27,7 +27,7 @@ Configures per-voice effect sends and shared effect parameters.
 
 | config | Effect |
 |--------|--------|
-| `on` | Sets send to 80 (vibrato/autofilter) or 30 (others) |
+| `on` | Sets send to **50** (vibrato/autofilter/distortion on WASM) or **18** (others). Tone: distortion `on` is **18**; WASM distortion `on` is **50**. |
 | `off` | Sets send to 0 |
 | number (0-100) | Sets send level (converted via volumetodb) |
 
@@ -37,8 +37,9 @@ Configures per-voice effect sends and shared effect parameters.
 - `type` — Filter type
 - `q` — Q factor
 - `depth` — Modulation depth
-- `frequency` — Base frequency
+- `frequency` — LFO rate (Hz)
 - `octaves` — Filter range
+- `basefrequency` — Cutoff floor (WASM only)
 
 ### autowah.ts
 - `basefrequency` — Wah center frequency
@@ -64,3 +65,5 @@ Configures per-voice effect sends and shared effect parameters.
 
 ### vibrato.ts
 - `maxdelay` — Maximum delay for vibrato depth
+- `depth` — Modulation depth (WASM only)
+- `frequency` — LFO rate in Hz (WASM only)

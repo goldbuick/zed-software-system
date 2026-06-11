@@ -1,0 +1,27 @@
+[
+  {
+    "id": "drawdisplay",
+    "compileName": "drawpass",
+    "tier": "parity"
+  },
+  {
+    "id": "short_go",
+    "compileName": "short_go",
+    "tier": "parity"
+  },
+  {
+    "id": "simple_chat_player",
+    "compileName": "player",
+    "tier": "integration"
+  },
+  {
+    "id": "duplicator",
+    "compileName": "duplicator",
+    "tier": "book"
+  },
+  {
+    "id": "player",
+    "compileName": "player",
+    "tier": "book"
+  }
+]

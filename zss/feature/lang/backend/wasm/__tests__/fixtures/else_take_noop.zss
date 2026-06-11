@@ -1,0 +1,9 @@
+#if not isdark do
+ #noop
+#else if light do
+ #noop
+#else take torches do
+ #noop
+#else do
+ #noop
+#done

@@ -156,56 +156,37 @@ Functions for parsing various file formats and converting them to internal repre
 
 ## Audio Synthesis
 
-**Files:** `synth/index.ts`, `synth/fx.ts`, `synth/source.ts`, `synth/drums.ts`, `synth/playnotation.ts`, `synth/voiceconfig.ts`, `synth/voicefx*.ts`, `synth/mp3.ts`, `synth/fcrushworkletnode.ts`, `synth/sidechainworkletnode.ts`
+**Files:** `synth/index.ts`, `synth/frontend/synthbackend.ts`, `synth/backend/daisy/*`, `synth/backend/wasm/*`, `synth/playnotation.ts`, `synth/synthdefaults.ts`, `synth/voicefxgroup.ts`, `synth/mp3.ts`
 
-Audio synthesis system with support for multiple sound sources, effects, and playback modes.
+DaisySP WASM backend with engine-agnostic front-end (`SynthBackend` interface). Legacy Tone.js and Maximilian code are under `synth/archive/`.
 
 ### Initialization
-- `setupsynth()` - Initialize synth audio worklet modules
-- `createsynth()` - Create audio synth instance with all sources, effects, and routing
+- `createsynthbackend()` - Boot DaisySP synth and return a `SynthBackend` adapter
+- `bootdaisysynth()` - Load Daisy WASM and create synth instance
+- `enableaudio()` (device layer) - User-gesture audio init
 
 ### Types
-- `AUDIO_SYNTH` - Type for synth instance returned by createsynth
+- `SynthBackend` - Back-end interface (play, voices, FX, record, broadcast)
+- `FXNAME` - Voice FX name union
 - `SOURCE_TYPE` - Enum of source types (SYNTH, ALGO_SYNTH, BELLS, RETRO_NOISE, etc.)
-- `SOURCE` - Type for audio source configuration
-- `SYNTH_OP` - Enum of synth operation codes
-- `SYNTH_NOTE` - Type for note values (null | string | number)
-- `SYNTH_NOTE_ON` - Type for note-on events
-- `SYNTH_NOTE_ENTRY` - Type for timed note entries
-- `SYNTH_INVOKE` - Type for synth invocation (operations or play string)
+- `DAISY_SYNTH` - Daisy synth instance type
+- `SYNTH_INVOKE`, `SYNTH_NOTE_ENTRY`, `SYNTH_NOTE_ON` - Play notation types
 
-### Effects & Processing
-- `createfx()` - Create master FX chain
-- `createfxchannels(index)` - Create FX channels for specific source group
-- `volumetodb(value)` - Convert volume percentage to decibels
-- `FrequencyCrusher` - Audio worklet effect class for frequency crushing
-- `SidechainCompressor` - Audio worklet effect class for sidechain compression
-- `addfcrushmodule()` - Register frequency crusher audio worklet
-- `addsidechainmodule()` - Register sidechain compressor audio worklet
-
-### Voice Configuration
-- `synthvoiceconfig(...)` - Configure synth voice parameters
-- `synthvoicefxconfig(...)` - Configure voice FX parameters
-- `synthvoicefxautofilterconfig(...)` - Configure autofilter effect
-- `synthvoicefxautowahconfig(...)` - Configure autowah effect
-- `synthvoicefxdistortionconfig(...)` - Configure distortion effect
-- `synthvoicefxechoconfig(...)` - Configure echo effect
-- `synthvoicefxfcrushconfig(...)` - Configure frequency crusher effect
-- `synthvoicefxreverbconfig(...)` - Configure reverb effect
-- `synthvoicefxvibratoconfig(...)` - Configure vibrato effect
-
-### Source Creation
-- `createsource(sourcetype, algo)` - Create audio source of specified type and algorithm
-- `AlgoSynth` - Algorithmic synthesis class
-- `createsynthdrums(drumvolume, drumaction)` - Create drum kit with volume controls
+### Board state
+- `applyboardstate(backend, synthstate)` - Sync gadget `SYNTH_STATE` to backend
 
 ### Playback & Notation
-- `invokeplay(idx, starttime, invoke, withendofpattern?)` - Convert synth invocation to timed note entries
+- `invokeplay(...)` - Convert synth invocation to timed note entries
 - `parseplay(play)` - Parse play notation string to synth invocations
-- `converttomp3(audiobuffer)` - Convert audio buffer to MP3 format
+- `converttomp3(audiobuffer)` - Convert `AudioBuffer` to MP3 format
 
 ### Constants
 - `SYNTH_SFX_RESET` - Constant for SFX channel reset index
+- `SYNTH_VOICE_COUNT`, `SYNTH_PLAY_VOICE_COUNT`, `SYNTH_DEFAULT_WAVE` - Voice defaults
+
+### Shared WASM helpers
+- `unlockaudiocontext()` - Create/resume shared `AudioContext` on user gesture
+- `ensurewasmcoep()` - Register COOP/COEP service worker for SharedArrayBuffer
 
 ---
 
@@ -213,7 +194,7 @@ Audio synthesis system with support for multiple sound sources, effects, and pla
 
 **File:** `url.ts`
 
-Functions for interacting with external services (Bytes, Bridge, BBS).
+Functions for interacting with external services (Bytes, Bridge, ZNS).
 
 ### URL Shortening
 - `shorturl(url)` - Create short URL via bytes.zed.cafe service
@@ -228,12 +209,22 @@ Functions for interacting with external services (Bytes, Bridge, BBS).
 ### Types
 - `MOSTLY_ZZT_META` - Type for ZZT file metadata
 
-### BBS Integration
-- `bbslogin(email, tag)` - Login to BBS with email and tag
-- `bbslogincode(email, code)` - Login to BBS with email and code
-- `bbslist(email, code)` - List BBS posts
-- `bbspublish(email, code, filename, url, tags)` - Publish to BBS
-- `bbsdelete(email, code, filename)` - Delete from BBS
+### ZNS (namespace string sharing)
+- `znslogin(email, namespace)` - Start ZNS email OTP login
+- `znslogincode(email, code)` - Confirm OTP; response includes `token`
+- `znslist(email, token)` - List namespace key/value pairs
+- `znsset(email, token, key, value)` - Set pair (peer id at key `peer`, bytes hash, or text)
+- `znsdelete(email, token, key)` - Delete a pair key
+- `fetchznstext(namespace, key)` - GET `https://{namespace}.at.zed.cafe/{key}` markdown
+- `znstenanturl(namespace, key)` - Canonical tenant URL (lowercase host)
+- `znsnormalizenamespace(namespace)` - Trim + lowercase namespace label
+- `znsnormalizepathkey(name)` - Slug for ZNS path keys
+- `znskeyispeer(key, kind?)` - True for reserved peer key
+- `znskinddisplay(kind?, key?)` - Worker kind to menu label (`text` → `code`)
+- `znskeyopenlabel(key, value, kind?)` - `#zns` menu key row label
+- `znskeylinkcommand(namespace, key, value, kind?)` - Menu hyperlink payload
+- `znsautopublishpeer(peerid, player)` - Publish peer id on multiplayer connect
+- `znspersistlogin` / `znspersistlogout` - IDB ZNS session
 
 ---
 
@@ -287,7 +278,7 @@ Functions for exporting and publishing content.
 
 ## Utilities
 
-**Files:** `keyboard.ts`, `speechtotext.ts`, `fetchwiki.ts`, `storage.ts`
+**Files:** `keyboard.ts`, `speechtotext.ts`, `fetchrefscrolltext.ts`, `storage.ts`
 
 Various utility functions for browser APIs and external services.
 
@@ -295,12 +286,13 @@ Various utility functions for browser APIs and external services.
 - `withclipboard()` - Get browser Clipboard API instance
 
 ### Speech Recognition
-- `SpeechToText` - Class for browser speech recognition with callbacks for final text, interim results, and end events
+- `SpeechToText` - Class for browser speech recognition (sttspace worker); final text after speech pause, optional status toasts
   - `startListening()` - Start speech recognition
   - `stopListening()` - Stop speech recognition
 
-### Wiki
-- `fetchwiki(pagepath)` - Fetch markdown content from GitHub wiki
+### Refscroll / ZNS docs
+- `fetchrefscrolltext(pagepath)` - ROM `refscroll:*` then `docs.at.zed.cafe` text
+- `fetchznstext(namespace, key)` - Public ZNS markdown GET (`{namespace}.at.zed.cafe`)
 
 ### Storage
 - `storagereadconfigdefault(name)` - Read default configuration value for a setting

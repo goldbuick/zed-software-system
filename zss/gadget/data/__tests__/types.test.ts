@@ -49,14 +49,14 @@ describe('types', () => {
       expect(tiles.char).toHaveLength(200)
       expect(tiles.color).toHaveLength(200)
       expect(tiles.bg).toHaveLength(200)
-      expect(tiles.stats).toHaveLength(200)
+      expect(tiles.props).toHaveLength(200)
     })
 
     it('should initialize arrays with zeros by default', () => {
       const tiles = createtiles('player1', 0, 5, 5)
       expect(tiles.char.every((v) => v === 0)).toBe(true)
       expect(tiles.color.every((v) => v === 0)).toBe(true)
-      expect(tiles.stats.every((v) => v === 0)).toBe(true)
+      expect(tiles.props.every((v) => v === 0)).toBe(true)
     })
 
     it('should initialize bg array with provided value', () => {

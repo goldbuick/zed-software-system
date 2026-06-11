@@ -7,9 +7,8 @@ import {
   ProgressInfo,
   TextStreamer,
 } from '@huggingface/transformers'
+import { prepareforheavyload } from 'zss/feature/gpu/gpuheavyload'
 import {
-  HEAVY_LLM_DEFAULT_PRESET,
-  type HEAVY_LLM_PRESET,
   HEAVY_LLM_PRESETS,
   type HEAVY_LLM_ROW,
 } from 'zss/feature/heavy/heavyllmpreset'
@@ -19,63 +18,35 @@ import {
   parsetoolcallsfromassistant,
   validatedzsslinetoolcalls,
 } from 'zss/feature/heavy/llm/parsetoolcalls'
-import type { MODEL_RESULT, PARSE_OPTIONS } from 'zss/feature/heavy/llm/types'
+import type { ParsedScriptToolCall } from 'zss/feature/heavy/llm/scripttool'
+import { validatedscripttoolcalls } from 'zss/feature/heavy/llm/scripttool'
+import type { PARSE_OPTIONS } from 'zss/feature/heavy/llm/types'
 
 const MAX_NEW_TOKENS = 768
 const MODEL_DEVICE = 'webgpu'
 
-/** Set from register restore / `#agent model` (worker); when unset, `HEAVY_LLM_DEFAULT_PRESET`. */
-let heavylmregisterpreset: HEAVY_LLM_PRESET | undefined
+const AGENT_MODEL_ROW = HEAVY_LLM_PRESETS.gemma
 
 let loadedmaintag: string | undefined
 
-/** Bumped on preset change so in-flight loads discard stale results. */
+/** Bumped on reload so in-flight loads discard stale results. */
 let heavyllmloadepoch = 0
 
-function resolveheavyllmpresetkey(): HEAVY_LLM_PRESET {
-  if (heavylmregisterpreset !== undefined) {
-    return heavylmregisterpreset
-  }
-  return HEAVY_LLM_DEFAULT_PRESET
+/** Dispose main generator only (keep SmolLM2 classifier). */
+export function destroymainheavylm() {
+  disposegemmaifloaded()
+  loadedmaintag = undefined
 }
 
-function heavyllmresolvedrow(): HEAVY_LLM_ROW {
-  return HEAVY_LLM_PRESETS[resolveheavyllmpresetkey()]
-}
-
-/** Apply preset from persisted register or CLI; disposes main generator for reload. */
-export function applyheavylmpreset(preset: HEAVY_LLM_PRESET) {
-  heavylmregisterpreset = preset
+/** No-op: only Gemma 4 E2B is supported. */
+export function applyheavylmpreset() {
   loadedmaintag = undefined
   heavyllmloadepoch++
   destroymainheavylm()
 }
 
-function disposecausalifloaded() {
-  if (sharedmodel) {
-    void sharedmodel.model.dispose()
-    sharedmodel = undefined
-  }
-  sharedmodelpromise = undefined
-}
-
-function disposegemmaifloaded() {
-  if (sharedgemma4) {
-    void sharedgemma4.model.dispose()
-    sharedgemma4 = undefined
-  }
-  sharedgemma4promise = undefined
-}
-
-/** Dispose main generator only (keep SmolLM2 classifier). */
-export function destroymainheavylm() {
-  disposecausalifloaded()
-  disposegemmaifloaded()
-  loadedmaintag = undefined
-}
-
-export function getheavylmeffectivepreset(): HEAVY_LLM_PRESET {
-  return resolveheavyllmpresetkey()
+export function getheavylmeffectivepreset(): 'gemma' {
+  return 'gemma'
 }
 
 /** Attention / intent classifier: small instruct model (q4 on WebGPU). */
@@ -83,7 +54,7 @@ const CLASSIFIER_MODEL_ID = 'onnx-community/SmolLM2-135M-Instruct-ONNX-MHA'
 const CLASSIFIER_DTYPE = 'q4'
 
 const CHATML_TEMPLATE = `{% for message in messages %}<|im_start|>{{ message.role }}
-{{ message.content }}<|redacted_im_end|>
+{{ message.content }}<|im_end|>
 {% endfor %}{% if add_generation_prompt %}<|im_start|>assistant
 {% endif %}`
 
@@ -95,6 +66,11 @@ const PARSE_CONFIG: PARSE_OPTIONS = {
 /** Minimum ms between progress/toast updates to avoid flooding the main thread. */
 const TOAST_THROTTLE_MS = 50
 const PROGRESS_THROTTLE_MS = 100
+
+function basename(filepath: string): string {
+  const slash = filepath.lastIndexOf('/')
+  return slash >= 0 ? filepath.slice(slash + 1) : filepath
+}
 
 function throttle(
   fn: (message: string) => void,
@@ -110,12 +86,11 @@ function throttle(
   }
 }
 
-export type { MODEL_RESULT } from 'zss/feature/heavy/llm/types'
-
 export type MODEL_GENERATE_GEMMA_RESULT = {
   raw: string
   text: string
   toolcommandlines: string[]
+  scripttoolcalls: ParsedScriptToolCall[]
 }
 
 type TOKENIZERISH = (
@@ -135,69 +110,18 @@ type SHARED_GEMMA4 = {
   >
 }
 
-let sharedmodel: SHARED_MODEL | undefined
-let sharedmodelpromise: Promise<SHARED_MODEL> | undefined
-
 let sharedgemma4: SHARED_GEMMA4 | undefined
 let sharedgemma4promise: Promise<SHARED_GEMMA4> | undefined
 
 let classifiermodel: SHARED_MODEL | undefined
 let classifiermodelpromise: Promise<SHARED_MODEL> | undefined
 
-async function loadclassifiermodel(
-  onworking: (message: string) => void,
-): Promise<SHARED_MODEL> {
-  if (classifiermodel) {
-    return classifiermodel
+function disposegemmaifloaded() {
+  if (sharedgemma4) {
+    void sharedgemma4.model.dispose()
+    sharedgemma4 = undefined
   }
-  if (classifiermodelpromise) {
-    return classifiermodelpromise
-  }
-
-  classifiermodelpromise = (async () => {
-    const lastprogress: Record<string, number> = {}
-
-    onworking(`${CLASSIFIER_MODEL_ID} loading ...`)
-    const onworkingprogress = throttle(onworking, PROGRESS_THROTTLE_MS)
-    function progress_callback(info: ProgressInfo) {
-      switch (info.status) {
-        case 'initiate':
-          onworking(`[${CLASSIFIER_MODEL_ID}] ${info.file} loading ...`)
-          break
-        case 'download':
-          onworking(`[${CLASSIFIER_MODEL_ID}] ${info.file} downloading ...`)
-          break
-        case 'progress': {
-          const index = `${info.name}-${info.file}`
-          const progress = Math.round(info.progress)
-          if (progress !== lastprogress[index]) {
-            lastprogress[index] = progress
-            onworkingprogress(`[${info.name}] ${info.file} ${progress}% ...`)
-          }
-          break
-        }
-      }
-    }
-
-    const tokenizer = await AutoTokenizer.from_pretrained(CLASSIFIER_MODEL_ID, {
-      progress_callback,
-    })
-
-    const model = await AutoModelForCausalLM.from_pretrained(
-      CLASSIFIER_MODEL_ID,
-      {
-        dtype: CLASSIFIER_DTYPE,
-        device: MODEL_DEVICE,
-        progress_callback,
-      },
-    )
-
-    classifiermodel = { tokenizer, model }
-    classifiermodelpromise = undefined
-    return classifiermodel
-  })()
-
-  return classifiermodelpromise
+  sharedgemma4promise = undefined
 }
 
 function mainmodeltag(cfg: HEAVY_LLM_ROW): string {
@@ -244,109 +168,68 @@ function trimhistorygemma(
   return messages.slice(cutoff)
 }
 
-async function loadsharedmodel(
+async function loadclassifiermodel(
   onworking: (message: string) => void,
 ): Promise<SHARED_MODEL> {
-  const cfg = heavyllmresolvedrow()
-  if (cfg.backend !== 'causal_lm') {
-    throw new Error('loadsharedmodel: causal_lm preset only')
+  if (classifiermodel) {
+    return classifiermodel
   }
-  const tag = mainmodeltag(cfg)
-
-  if (sharedmodel && loadedmaintag === tag) {
-    return sharedmodel
+  if (classifiermodelpromise) {
+    return classifiermodelpromise
   }
 
-  if (sharedmodelpromise) {
-    const prev = sharedmodelpromise
-    try {
-      await prev
-    } catch {
-      // stale load aborted
-    } finally {
-      if (sharedmodelpromise === prev) {
-        sharedmodelpromise = undefined
-      }
-    }
-    if (sharedmodel && loadedmaintag === tag) {
-      return sharedmodel
-    }
-  }
+  classifiermodelpromise = (async () => {
+    await prepareforheavyload()
 
-  destroymainheavylm()
-
-  const modelid = cfg.modelid
-  const modeldtype = cfg.dtype
-  const epoch = heavyllmloadepoch
-
-  sharedmodelpromise = (async () => {
-    disposegemmaifloaded()
     const lastprogress: Record<string, number> = {}
 
-    onworking(`${modelid} loading ...`)
+    onworking(`llm load`)
     const onworkingprogress = throttle(onworking, PROGRESS_THROTTLE_MS)
     function progress_callback(info: ProgressInfo) {
       switch (info.status) {
         case 'initiate':
-          onworking(`[${modelid}] ${info.file} loading ...`)
+          onworking(`llm dl ${basename(info.file)}`)
           break
         case 'download':
-          onworking(`[${modelid}] ${info.file} downloading ...`)
+          onworking(`llm dl ${basename(info.file)}`)
           break
         case 'progress': {
           const index = `${info.name}-${info.file}`
           const progress = Math.round(info.progress)
           if (progress !== lastprogress[index]) {
             lastprogress[index] = progress
-            onworkingprogress(`[${info.name}] ${info.file} ${progress}% ...`)
+            onworkingprogress(`llm dl ${progress}%`)
           }
           break
         }
       }
     }
 
-    const tokenizer = await AutoTokenizer.from_pretrained(modelid, {
+    const tokenizer = await AutoTokenizer.from_pretrained(CLASSIFIER_MODEL_ID, {
       progress_callback,
     })
 
-    if (epoch !== heavyllmloadepoch) {
-      throw new Error('heavy llm preset changed during load')
-    }
+    const model = await AutoModelForCausalLM.from_pretrained(
+      CLASSIFIER_MODEL_ID,
+      {
+        dtype: CLASSIFIER_DTYPE,
+        device: MODEL_DEVICE,
+        progress_callback,
+      },
+    )
 
-    const model = await AutoModelForCausalLM.from_pretrained(modelid, {
-      dtype: modeldtype as 'q4f16',
-      device: MODEL_DEVICE,
-      progress_callback,
-    })
-
-    if (epoch !== heavyllmloadepoch) {
-      void model.dispose()
-      throw new Error('heavy llm preset changed during load')
-    }
-
-    const freshcfg = heavyllmresolvedrow()
-    const freshtag = mainmodeltag(freshcfg)
-    if (freshtag !== tag) {
-      void model.dispose()
-      throw new Error('heavy llm preset changed during load')
-    }
-
-    sharedmodel = { tokenizer, model }
-    loadedmaintag = freshtag
-    sharedmodelpromise = undefined
-    return sharedmodel
+    classifiermodel = { tokenizer, model }
+    classifiermodelpromise = undefined
+    return classifiermodel
   })()
 
-  return sharedmodelpromise
+  return classifiermodelpromise
 }
 
 async function loadsharedgemma4model(
   onworking: (message: string) => void,
 ): Promise<SHARED_GEMMA4> {
-  const cfg = heavyllmresolvedrow()
-  if (cfg.backend !== 'gemma4') {
-    throw new Error('loadsharedgemma4model: gemma4 preset only')
-  }
+  const cfg = AGENT_MODEL_ROW
   const tag = mainmodeltag(cfg)
 
   if (sharedgemma4 && loadedmaintag === tag) {
@@ -376,25 +259,26 @@ async function loadsharedgemma4model(
   const epoch = heavyllmloadepoch
 
   sharedgemma4promise = (async () => {
-    disposecausalifloaded()
+    await prepareforheavyload()
+
     const lastprogress: Record<string, number> = {}
 
-    onworking(`${modelid} loading ...`)
+    onworking(`llm load`)
     const onworkingprogress = throttle(onworking, PROGRESS_THROTTLE_MS)
     function progress_callback(info: ProgressInfo) {
       switch (info.status) {
         case 'initiate':
-          onworking(`[${modelid}] ${info.file} loading ...`)
+          onworking(`llm dl ${basename(info.file)}`)
           break
         case 'download':
-          onworking(`[${modelid}] ${info.file} downloading ...`)
+          onworking(`llm dl ${basename(info.file)}`)
           break
         case 'progress': {
           const index = `${info.name}-${info.file}`
           const progress = Math.round(info.progress)
           if (progress !== lastprogress[index]) {
             lastprogress[index] = progress
-            onworkingprogress(`[${info.name}] ${info.file} ${progress}% ...`)
+            onworkingprogress(`llm dl ${progress}%`)
           }
           break
         }
@@ -423,8 +307,7 @@ async function loadsharedgemma4model(
       throw new Error('heavy llm preset changed during load')
     }
 
-    const freshcfg = heavyllmresolvedrow()
-    const freshtag = mainmodeltag(freshcfg)
+    const freshtag = mainmodeltag(AGENT_MODEL_ROW)
     if (freshtag !== tag) {
       void model.dispose()
       throw new Error('heavy llm preset changed during load')
@@ -437,33 +320,6 @@ async function loadsharedgemma4model(
   })()
 
   return sharedgemma4promise
-}
-
-function trimhistory(
-  tokenizer: SHARED_MODEL['tokenizer'],
-  systemprompt: string,
-  messages: Message[],
-  contexttokens: number,
-): Message[] {
-  const systemtokens = counttokens(tokenizer, systemprompt)
-  const budget = contexttokens - MAX_NEW_TOKENS - systemtokens
-  if (budget <= 0) {
-    return []
-  }
-
-  let total = 0
-  let cutoff = 0
-  for (let i = messages.length - 1; i >= 0; --i) {
-    const c = messages[i].content
-    const textchunk = typeof c === 'string' ? c : JSON.stringify(c)
-    const msgtokens = counttokens(tokenizer, textchunk)
-    if (total + msgtokens > budget) {
-      break
-    }
-    total += msgtokens
-    cutoff = i
-  }
-  return messages.slice(cutoff)
 }
 
 function applychattemplate(
@@ -494,81 +350,12 @@ function applychattemplate(
   return input as { input_ids: any; attention_mask?: any }
 }
 
-export async function modelgenerate(
-  systemprompt: string,
-  messages: Message[],
-  onworking: (message: string) => void,
-  promptlogging = false,
-): Promise<MODEL_RESULT> {
-  const cfg = heavyllmresolvedrow()
-  if (cfg.backend !== 'causal_lm') {
-    throw new Error('modelgenerate: use modelgenerategemma4 for gemma preset')
-  }
-  const { tokenizer, model } = await loadsharedmodel(onworking)
-
-  const trimmed = trimhistory(
-    tokenizer,
-    systemprompt,
-    messages,
-    cfg.contexttokens,
-  )
-  const convo: Message[] = [
-    { role: 'system', content: systemprompt },
-    ...trimmed,
-  ]
-
-  const input = applychattemplate(tokenizer, convo)
-
-  if (promptlogging) {
-    const decoded = tokenizer.batch_decode([input.input_ids], {
-      skip_special_tokens: false,
-    })
-    console.info(
-      '%c[heavy] decoded input:\n%c%s',
-      'color: purple; font-weight: bold',
-      'color: red',
-      decoded.join(''),
-    )
-  }
-
-  const onworkingthrottled = throttle(onworking, TOAST_THROTTLE_MS)
-  const streamer = new TextStreamer(tokenizer, {
-    skip_prompt: true,
-    skip_special_tokens: true,
-    callback_function() {
-      onworkingthrottled(`working ...`)
-    },
-  })
-
-  onworking(`thinking ...`)
-  const { sequences } = (await model.generate({
-    ...input,
-    streamer,
-    do_sample: false,
-    max_new_tokens: MAX_NEW_TOKENS,
-    return_dict_in_generate: true,
-  } as any)) as any
-
-  const values = sequences.slice(null, [input.input_ids.dims[1], null])
-
-  const decoded = tokenizer.batch_decode(values, {
-    skip_special_tokens: false,
-  })
-
-  const raw = decoded.join('\n').trim()
-  return llmparseresult(raw, PARSE_CONFIG)
-}
-
 export async function modelgenerategemma4(
   systemprompt: string,
   messages: (Message & { name?: string })[],
   onworking: (message: string) => void,
-  promptlogging = false,
 ): Promise<MODEL_GENERATE_GEMMA_RESULT> {
-  const cfg = heavyllmresolvedrow()
-  if (cfg.backend !== 'gemma4') {
-    throw new Error('modelgenerategemma4: gemma preset only')
-  }
+  const cfg = AGENT_MODEL_ROW
   const { processor, model } = await loadsharedgemma4model(onworking)
   const tokenizer = processor.tokenizer
   if (!tokenizer) {
@@ -595,15 +382,6 @@ export async function modelgenerategemma4(
     } as Parameters<typeof processor.apply_chat_template>[1],
   ) as string
 
-  if (promptlogging) {
-    console.info(
-      '%c[heavy] gemma templated prompt:\n%c%s',
-      'color: purple; font-weight: bold',
-      'color: red',
-      promptstring,
-    )
-  }
-
   const input = await processor(promptstring, undefined, undefined, {
     add_special_tokens: false,
   })
@@ -613,11 +391,11 @@ export async function modelgenerategemma4(
     skip_prompt: true,
     skip_special_tokens: true,
     callback_function() {
-      onworkingthrottled(`working ...`)
+      onworkingthrottled(`llm work`)
     },
   })
 
-  onworking(`thinking ...`)
+  onworking(`llm think`)
   const { sequences } = (await model.generate({
     ...input,
     streamer,
@@ -633,14 +411,14 @@ export async function modelgenerategemma4(
   })
 
   const raw = decoded.join('').trim()
-  const toolcommandlines = validatedzsslinetoolcalls(
-    parsetoolcallsfromassistant(raw),
-  )
-  if (toolcommandlines.length > 0) {
-    return { raw, text: '', toolcommandlines }
+  const parsedcalls = parsetoolcallsfromassistant(raw)
+  const toolcommandlines = validatedzsslinetoolcalls(parsedcalls)
+  const scripttoolcalls = validatedscripttoolcalls(parsedcalls)
+  if (toolcommandlines.length > 0 || scripttoolcalls.length > 0) {
+    return { raw, text: '', toolcommandlines, scripttoolcalls }
   }
   const cleaned = llmparseresult(raw, PARSE_CONFIG)
-  return { raw, text: cleaned.text, toolcommandlines: [] }
+  return { raw, text: cleaned.text, toolcommandlines: [], scripttoolcalls: [] }
 }
 
 export async function modelclassify(
@@ -651,7 +429,7 @@ export async function modelclassify(
 
   const input = applychattemplate(tokenizer, messages)
 
-  onworking(`classifying ...`)
+  onworking(`llm classify`)
   const { sequences } = (await model.generate({
     ...input,
     do_sample: false,

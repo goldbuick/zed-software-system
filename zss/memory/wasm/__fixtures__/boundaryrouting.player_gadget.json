@@ -1,0 +1,44 @@
+{
+  "name": "boundaryrouting.player_gadget",
+  "initial": {},
+  "steps": [
+    {
+      "op": "collect_boundary_ids",
+      "args": {
+        "book": {
+          "id": "bk2",
+          "name": "main",
+          "timestamp": 0,
+          "activelist": [],
+          "pages": [],
+          "flags": {
+            "bd2_synth": "sx",
+            "pid_0000_fixtureplayer": "pf",
+            "pid_0000_fixtureplayer_gadget": "gf"
+          }
+        },
+        "board": {
+          "id": "bd2",
+          "name": "b",
+          "terrain": [],
+          "objects": {
+            "pid_0000_fixtureplayer": {
+              "id": "pid_0000_fixtureplayer",
+              "x": 0,
+              "y": 0
+            }
+          }
+        }
+      },
+      "expect": {
+        "mode": "json",
+        "json": [
+          "bd2",
+          "gf",
+          "pf",
+          "sx"
+        ]
+      }
+    }
+  ]
+}

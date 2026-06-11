@@ -238,13 +238,17 @@ describe('api', () => {
       const chip = `merge_a_${Math.random()}`
       registerterminalhyperlinksharedbridge(chip, 'select', () => 1, noop)
       registerhyperlinksharedbridge(chip, 'select', () => 2, noop)
-      expect(resolvehyperlinksharedbridge(chip, 'select')?.get?.('x')).toBe(2)
+      expect(
+        resolvehyperlinksharedbridge(chip, 'select')?.get?.('select', 'x'),
+      ).toBe(2)
     })
 
     it('falls back to terminal registration', () => {
       const chip = `merge_b_${Math.random()}`
       registerterminalhyperlinksharedbridge(chip, 'select', () => 3, noop)
-      expect(resolvehyperlinksharedbridge(chip, 'select')?.get?.('x')).toBe(3)
+      expect(
+        resolvehyperlinksharedbridge(chip, 'select')?.get?.('select', 'x'),
+      ).toBe(3)
     })
   })
 })

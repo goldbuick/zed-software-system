@@ -3,6 +3,7 @@ import {
   apilog,
   registereditoropen,
   vmcodeaddress,
+  vmplayermovetoboard,
   vmrefscroll,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
@@ -36,7 +37,6 @@ import {
   memoryreadcodepagetype,
   memoryreadcodepagetypeasstring,
 } from 'zss/memory/codepageoperations'
-import { memorymoveplayertoboard } from 'zss/memory/playermanagement'
 import {
   memorycodepagetoprefix,
   memoryelementtodisplayprefix,
@@ -108,8 +108,9 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
         const [stat] = readargs(words, 0, [ARG_TYPE.NAME])
         const target = memoryreadboardbyaddress(stat)
         if (ispresent(target)) {
-          memorymoveplayertoboard(
-            READ_CONTEXT.book,
+          vmplayermovetoboard(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
             READ_CONTEXT.elementfocus,
             target.id,
             {
@@ -117,6 +118,15 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
               y: randominteger(0, BOARD_HEIGHT - 1),
             },
           )
+          // memorymoveplayertoboard(
+          //   READ_CONTEXT.book,
+          //   READ_CONTEXT.elementfocus,
+          //   target.id,
+          //   {
+          //     x: randominteger(0, BOARD_WIDTH - 1),
+          //     y: randominteger(0, BOARD_HEIGHT - 1),
+          //   },
+          // )
         }
         return 0
       },
@@ -556,7 +566,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
           READ_CONTEXT.elementfocus,
           zsstextline(`pages in open ${book.name} book`),
         )
-        book.pages.forEach((page) => {
+        memorylistcodepagessorted(book).forEach((page) => {
           const name = memoryreadcodepagename(page)
           const type = memoryreadcodepagetypeasstring(page)
           const prefix = memorycodepagetoprefix(page)

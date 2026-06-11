@@ -1,16 +1,16 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import {
-  gadgetserverclearscroll,
   registerbookmarkdelete,
   registerbookmarkurlnavigate,
+  vmclearscroll,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { handlebookmarkscrollpanel } from 'zss/device/vm/handlers/bookmarkscroll'
 
 jest.mock('zss/device/api', () => ({
   registerbookmarkdelete: jest.fn(),
-  gadgetserverclearscroll: jest.fn(),
+  vmclearscroll: jest.fn(),
   registerbookmarkurlnavigate: jest.fn(),
   registerbookmarkurlsave: jest.fn(),
 }))
@@ -30,7 +30,7 @@ describe('handlebookmarkscrollpanel', () => {
   beforeEach(() => {
     jest.mocked(registerbookmarkurlnavigate).mockClear()
     jest.mocked(registerbookmarkdelete).mockClear()
-    jest.mocked(gadgetserverclearscroll).mockClear()
+    jest.mocked(vmclearscroll).mockClear()
   })
 
   it('bookmarkurl forwards href via registerbookmarkurlnavigate from message.data[0]', () => {
@@ -80,7 +80,7 @@ describe('handlebookmarkscrollpanel', () => {
     expect(registerbookmarkurlnavigate).not.toHaveBeenCalled()
   })
 
-  it('bookmarkdel calls registerbookmarkdelete and gadgetserverclearscroll from message.data[0]', () => {
+  it('bookmarkdel calls registerbookmarkdelete and vmclearscroll from message.data[0]', () => {
     const message: MESSAGE = {
       session: '',
       player: 'p1',
@@ -91,7 +91,7 @@ describe('handlebookmarkscrollpanel', () => {
     }
     handlebookmarkscrollpanel(vm, message, 'bookmarkdel')
     expect(registerbookmarkdelete).toHaveBeenCalledWith(vm, 'p1', 'abc-id')
-    expect(gadgetserverclearscroll).toHaveBeenCalledWith(SOFTWARE, 'p1')
+    expect(vmclearscroll).toHaveBeenCalledWith(SOFTWARE, 'p1')
   })
 
   it('bookmarkdel uses string data when not an array', () => {
@@ -105,7 +105,7 @@ describe('handlebookmarkscrollpanel', () => {
     }
     handlebookmarkscrollpanel(vm, message, 'bookmarkdel')
     expect(registerbookmarkdelete).toHaveBeenCalledWith(vm, 'p1', 'xyz-id')
-    expect(gadgetserverclearscroll).toHaveBeenCalledWith(SOFTWARE, 'p1')
+    expect(vmclearscroll).toHaveBeenCalledWith(SOFTWARE, 'p1')
   })
 
   it('bookmarkdel no-ops when id missing', () => {
@@ -119,6 +119,6 @@ describe('handlebookmarkscrollpanel', () => {
     }
     handlebookmarkscrollpanel(vm, message, 'bookmarkdel')
     expect(registerbookmarkdelete).not.toHaveBeenCalled()
-    expect(gadgetserverclearscroll).not.toHaveBeenCalled()
+    expect(vmclearscroll).not.toHaveBeenCalled()
   })
 })

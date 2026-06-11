@@ -13,6 +13,7 @@ import {
   lightingmixmaxrange,
   memorylightingaddrangetoblocked,
 } from './lightinggeometry'
+import { memoryreadboardruntime } from './runtimeboundary'
 import { memorycheckcollision } from './spatialqueries'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT } from './types'
 
@@ -88,7 +89,7 @@ function lightingforeachchebyshevingcell(
 
 function lightingappendringocclusions(
   board: BOARD,
-  lookup: BOARD['lookup'],
+  lookup: (string | undefined)[] | undefined,
   sprite: SPRITE,
   radius: number,
   x: number,
@@ -208,7 +209,7 @@ export function memoryboardlightingapplyobject(
     return
   }
 
-  const lookup = board.lookup
+  const lookup = memoryreadboardruntime(board)?.lookup
   const blocked: [number, number, number][] = []
   const ringocclusions: LightingRingOcclusion[] = []
 

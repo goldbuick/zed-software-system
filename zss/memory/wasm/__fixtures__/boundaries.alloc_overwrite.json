@@ -1,0 +1,51 @@
+{
+  "name": "boundaries.alloc_overwrite",
+  "initial": {},
+  "steps": [
+    {
+      "op": "boundaries_clear",
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "boundary_alloc",
+      "args": {
+        "value": {
+          "first": true
+        },
+        "id": "same"
+      },
+      "expect": {
+        "mode": "string",
+        "string": "same"
+      }
+    },
+    {
+      "op": "boundary_alloc",
+      "args": {
+        "value": {
+          "second": true
+        },
+        "id": "same"
+      },
+      "expect": {
+        "mode": "string",
+        "string": "same"
+      }
+    },
+    {
+      "op": "boundary_get",
+      "args": {
+        "id": "same"
+      },
+      "expect": {
+        "mode": "json",
+        "json": {
+          "second": true
+        }
+      }
+    }
+  ]
+}

@@ -11,10 +11,6 @@ export const trackinglastlog: Record<string, number> = {}
 export const lastinputtime: Record<string, number> = {}
 
 let flushtick = 0
-export function getflushtick(): number {
-  return flushtick
-}
-
 export function setflushtick(value: number): void {
   flushtick = value
 }
@@ -25,6 +21,18 @@ export function incflushtick(): number {
 
 export const watching: Record<string, Set<string>> = {}
 export const observers: Record<string, (() => void) | undefined> = {}
+
+/** Board id → elected player id running board tick for that board (Phase A election). */
+export const boardrunners: Record<string, string> = {}
+
+/** Player id → ack budget; decremented each tick, refreshed when worker acks. */
+export const boardrunneracks: Record<string, number> = {}
+
+/** Player id → true if runner was dropped after ack exhaustion. */
+export const boardrunnerblocked: Record<string, boolean> = {}
+
+/** Elected board codepage id → other board codepage ids pending hydration for that assignment. */
+export const boardrunneraccess: Record<string, string[]> = {}
 
 export const STATS_BOARD = [
   'currenttick',

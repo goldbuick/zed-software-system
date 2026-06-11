@@ -21,4 +21,4 @@
 
 - Uses shear transform (alpha = -tan(θ/2), beta = sin(θ)) and per-row/column integer skews (`pivotbuildintegeredges`)
 - Full-board path applies three skew passes; rectangular path copies terrain like rectangular weave (permute sources in rect, clear non-image cells in rect)
-- **Group path terrain:** After placing group tiles at pivoted destinations, terrain on **incoming-only** indices (destinations that are not former group sources) is copied into **vacated** former group cells (sorted by linear index, pairwise), so non-group terrain is not deleted — same idea as `boardweavegroup`
+- **Group path terrain:** After placing group tiles at pivoted destinations via `memorycloneboardelement` (fresh runtime boundary per tile), terrain on **incoming-only** indices (destinations that are not former group sources) is copied into **vacated** former group cells (sorted by linear index, pairwise), so non-group terrain is not deleted — same idea as `boardweavegroup`

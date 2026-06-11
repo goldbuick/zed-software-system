@@ -1,0 +1,18 @@
+@ammo
+@isitem
+@ispushable
+@cycle 1
+@char 132
+@color dkcyan
+#end
+:touch
+#give ammonote do
+ Ammunition 5 shots per container.
+#done
+#give ammo 5
+#bgplay tcc#d
+#die
+:shot
+:bombed
+#clear item
+#die

@@ -38,6 +38,9 @@
     "cafe",
     "src"
   ],
+  "exclude": [
+    "zss/feature/synth/archive"
+  ],
   "references": [
     {
       "path": "./tsconfig.node.json"

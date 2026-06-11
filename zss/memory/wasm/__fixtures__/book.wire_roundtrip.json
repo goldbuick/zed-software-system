@@ -1,0 +1,85 @@
+{
+  "name": "book.wire_roundtrip",
+  "initial": {},
+  "steps": [
+    {
+      "op": "boundaries_clear",
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "book_import_wire",
+      "args": {
+        "json": [
+          0,
+          "sid_VoYh4owSz5H.",
+          1,
+          "twentyexpertslike",
+          2,
+          0,
+          3,
+          [],
+          4,
+          [
+            [
+              0,
+              "sid_Aj8biQLcSGDh",
+              1,
+              "@board snapjson\n@exitnorth roomn\n",
+              2,
+              [
+                0,
+                [],
+                1,
+                [],
+                5,
+                "roomn"
+              ]
+            ]
+          ],
+          5,
+          {}
+        ]
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "book_export_trimmed_json",
+      "expect": {
+        "mode": "json",
+        "json": {
+          "id": "sid_VoYh4owSz5H.",
+          "name": "twentyexpertslike",
+          "timestamp": 0,
+          "activelist": [],
+          "pages": [
+            {
+              "id": "sid_Aj8biQLcSGDh",
+              "code": "@board snapjson\n@exitnorth roomn\n",
+              "board": {
+                "terrain": [],
+                "exitnorth": "roomn"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "op": "codepage_runtime_field",
+      "args": {
+        "pageid": "sid_Aj8biQLcSGDh",
+        "field": "exitnorth"
+      },
+      "expect": {
+        "mode": "json",
+        "json": "roomn"
+      }
+    }
+  ]
+}

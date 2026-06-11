@@ -1,6 +1,6 @@
 # cli.ts
 
-**Purpose**: Defines `CLI_FIRMWARE` — command-line interface commands for system management, book/page operations, export, multiplayer, BBS, and editing tools. Most commands are operator-only.
+**Purpose**: Defines `CLI_FIRMWARE` — command-line interface commands for system management, book/page operations, export, multiplayer, ZNS, and editing tools. Most commands are operator-only.
 
 ## Command help in the editor / terminal
 
@@ -11,7 +11,7 @@ Firmware command signatures stay short. Longer inline help for autocomplete hint
 - `zss/device/api` — API layer (vm*, bridge*, register*, etc.)
 - `zss/device/modem` — modemwriteinitstring
 - `zss/rom` — romparse, romprint, romread
-- `zss/feature/url` — bbslogin, bbslist, bbsdelete, etc.
+- `zss/feature/url` — znslogin, znslist, znsdelete, etc.
 - `zss/feature/zsstextui` — layout lines; `zss/feature/writeui` — write, hyperlinks, QR, copy
 - `zss/memory/*` — book/page/board/codepage operations
 
@@ -84,11 +84,11 @@ Firmware command signatures stay short. Longer inline help for autocomplete hint
 | `chat` | [channel] | Start/stop chat |
 | `broadcast` | [streamkey] | Start/stop stream |
 
-### BBS (Bulletin Board System)
+### ZNS (namespace redirects)
 
 | Command | Args | Description |
 |---------|------|-------------|
-| `bbs` | … | Login flow: `#bbs <email> <tag>`, then `#bbs <code>`. Subcommands: `restart`, `list`, `pub`/`publish`, `del`/`delete` |
+| `zns` | … | Bare `#zns` → menu (login guide, or publish/import when logged in). Login: `#zns <email> <namespace>`, then `#zns <code>`. Subcommands: `login`, `restart`, `publish bytes\|book\|code`, `import code <key>`, `del`/`delete`. Peer auto-published on multiplayer connect. |
 
 ### Agent
 
@@ -98,6 +98,6 @@ Firmware command signatures stay short. Longer inline help for autocomplete hint
 
 ## Internal State
 
-- `bbscode`, `bbsemail` — BBS login state (module-level)
+- `znstoken`, `znsemail` — ZNS login state (module-level)
 - `isoperator` — Checks if player === memoryreadoperator()
 - `vmflushop` — Flushes VM for operator

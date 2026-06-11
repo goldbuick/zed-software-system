@@ -1,23 +1,29 @@
 /**
  * Session state and book storage: MEMORY singleton, operator/topic/halt/loaders, and book map.
- * Other memory modules (books, codepages, etc.) depend on this for MEMORY.books and MEMORY.software.
+ * Other memory modules (books, codepages, etc.) depend on this for `MEMORY.books` / `MEMORY.loaders` and `MEMORY.software`.
  */
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
+import { memoryboundarydelete } from './boundaries'
+import { memoryfreecodepage } from './codepageoperations'
 import { BOOK, MEMORY_LABEL } from './types'
 
 const MEMORY = {
   halt: false,
-  /** True while `vm:books` is async-loading; ticks should not advance sim state. */
-  simfreeze: false,
-  session: createsid(),
-  operator: '',
-  software: { main: '', temp: '' },
-  books: new Map<string, BOOK>(),
-  loaders: new Map<string, string>(),
+  frozen: false,
   topic: '',
+  operator: '',
+  session: createsid(),
+  software: { main: '', temp: '' },
+  books: {} as Record<string, BOOK>,
+  loaders: {} as Record<string, string>,
+}
+
+const MEMORY_RUNNER = {
+  boardrunner: '',
+  assignedboard: '',
 }
 
 export function memoryreadloaders() {
@@ -25,7 +31,7 @@ export function memoryreadloaders() {
 }
 
 export function memorystartloader(id: string, code: string) {
-  MEMORY.loaders.set(id, code)
+  MEMORY.loaders[id] = code
 }
 
 export function memoryreadsession() {
@@ -44,6 +50,22 @@ export function memorywriteoperator(operator: string) {
   MEMORY.operator = operator
 }
 
+export function memoryreadboardrunner() {
+  return MEMORY_RUNNER.boardrunner
+}
+
+export function memorywriteboardrunner(player: string) {
+  MEMORY_RUNNER.boardrunner = player
+}
+
+export function memoryreadassignedboard() {
+  return MEMORY_RUNNER.assignedboard
+}
+
+export function memorywriteassignedboard(board: string) {
+  MEMORY_RUNNER.assignedboard = board
+}
+
 export function memoryreadtopic() {
   return MEMORY.topic
 }
@@ -60,27 +82,27 @@ export function memoryreadhalt() {
   return MEMORY.halt
 }
 
-export function memorywritesimfreeze(frozen: boolean) {
-  MEMORY.simfreeze = frozen
+export function memorywritefrozen(frozen: boolean) {
+  MEMORY.frozen = frozen
 }
 
-export function memoryreadsimfreeze() {
-  return MEMORY.simfreeze
+export function memoryreadfrozen() {
+  return MEMORY.frozen
 }
 
 export function memoryreadbooklist(): BOOK[] {
-  return [...MEMORY.books.values()]
+  return Object.values(MEMORY.books)
 }
 
 export function memoryreadfirstbook(): MAYBE<BOOK> {
-  const [first] = MEMORY.books.values()
-  return first
+  const ids = Object.keys(MEMORY.books)
+  return ids.length > 0 ? MEMORY.books[ids[0]] : undefined
 }
 
 export function memoryreadbookbyaddress(address: string): MAYBE<BOOK> {
   const laddress = NAME(address)
   return (
-    MEMORY.books.get(address) ??
+    MEMORY.books[address] ??
     memoryreadbooklist().find((item) => item.name === laddress)
   )
 }
@@ -101,30 +123,46 @@ export function memoryreadbookbysoftware(
 }
 
 export function memoryresetbooks(books: BOOK[]) {
-  MEMORY.books.clear()
+  MEMORY.books = {}
   books.forEach((book) => {
-    MEMORY.books.set(book.id, book)
+    MEMORY.books[book.id] = book
     if (book.name === 'main') {
       MEMORY.software.main = book.id
     }
   })
   if (!MEMORY.software.main) {
-    const first = MEMORY.books.values().next()
-    if (first.value) {
-      MEMORY.software.main = first.value.id
+    const first = books[0]
+    if (first) {
+      MEMORY.software.main = first.id
     }
   }
 }
 
 export function memorywritebook(book: BOOK) {
-  MEMORY.books.set(book.id, book)
+  MEMORY.books[book.id] = book
   return book.id
+}
+
+export function memoryfreebook(book: MAYBE<BOOK>) {
+  if (!ispresent(book)) {
+    return
+  }
+  for (let i = 0; i < book.pages.length; ++i) {
+    const page = book.pages[i]
+    memoryfreecodepage(page)
+  }
+  book.pages = []
+  const ids = Object.keys(book.flags)
+  for (let i = 0; i < ids.length; ++i) {
+    memoryboundarydelete(book.flags[ids[i]])
+  }
 }
 
 export function memoryclearbook(address: string) {
   const book = memoryreadbookbyaddress(address)
-  if (book) {
-    MEMORY.books.delete(book.id)
+  if (ispresent(book)) {
+    memoryfreebook(book)
+    delete MEMORY.books[book.id]
   }
 }
 
@@ -135,4 +173,10 @@ export function memoryreadfirstcontentbook(): MAYBE<BOOK> {
   return first ?? mainbook
 }
 
-export type SoftwareSlot = keyof typeof MEMORY.software
+export type SOFTWARE_SLOT = keyof typeof MEMORY.software
+
+export type MEMORY_ROOT = typeof MEMORY
+
+export function memoryreadroot(): MEMORY_ROOT {
+  return MEMORY
+}

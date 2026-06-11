@@ -1,0 +1,154 @@
+{
+  "patches": {
+    "square-c4": {
+      "rmsdb": -14.2,
+      "peakdb": -6.1,
+      "length": 22050,
+      "samplerate": 44100
+    },
+    "pulse-c4": {
+      "rmsdb": -14.5,
+      "peakdb": -6.2,
+      "length": 22050,
+      "samplerate": 44100
+    },
+    "amsine-c4": {
+      "rmsdb": -16.8,
+      "peakdb": -9.4,
+      "length": 22050,
+      "samplerate": 44100
+    },
+    "fmsine-c4": {
+      "rmsdb": -15.1,
+      "peakdb": -7.8,
+      "length": 22050,
+      "samplerate": 44100
+    },
+    "fmsquare-c4": {
+      "rmsdb": -14.9,
+      "peakdb": -7.2,
+      "length": 22050,
+      "samplerate": 44100
+    },
+    "fmtriangle-c4": {
+      "rmsdb": -15.4,
+      "peakdb": -8.1,
+      "length": 22050,
+      "samplerate": 44100
+    },
+    "fmsawtooth-c4": {
+      "rmsdb": -14.7,
+      "peakdb": -6.9,
+      "length": 22050,
+      "samplerate": 44100
+    },
+    "fatsawtooth-c4": {
+      "rmsdb": -14.3,
+      "peakdb": -6.5,
+      "length": 22050,
+      "samplerate": 44100
+    },
+    "fatsine-c4": {
+      "rmsdb": -14.4,
+      "peakdb": -6.6,
+      "length": 22050,
+      "samplerate": 44100
+    },
+    "bells-c4": {
+      "rmsdb": -22.5,
+      "peakdb": -14.8,
+      "length": 33075,
+      "samplerate": 44100
+    },
+    "doot-c4": {
+      "rmsdb": -18.2,
+      "peakdb": -10.5,
+      "length": 22050,
+      "samplerate": 44100
+    },
+    "retro-c4": {
+      "rmsdb": -26.8,
+      "peakdb": -17.2,
+      "length": 22050,
+      "samplerate": 44100
+    },
+    "buzz-c4": {
+      "rmsdb": -26.2,
+      "peakdb": -16.8,
+      "length": 22050,
+      "samplerate": 44100
+    },
+    "clang-c4": {
+      "rmsdb": -25.6,
+      "peakdb": -16.2,
+      "length": 22050,
+      "samplerate": 44100
+    },
+    "metallic-c4": {
+      "rmsdb": -25.6,
+      "peakdb": -16.2,
+      "length": 22050,
+      "samplerate": 44100
+    },
+    "noise-c4": {
+      "rmsdb": -22.4,
+      "peakdb": -13.8,
+      "length": 22050,
+      "samplerate": 44100
+    },
+    "hollow-c4": {
+      "rmsdb": -21.8,
+      "peakdb": -13.2,
+      "length": 22050,
+      "samplerate": 44100
+    },
+    "algo0-c4": {
+      "rmsdb": -20.1,
+      "peakdb": -12.3,
+      "length": 22050,
+      "samplerate": 44100
+    },
+    "algo1-c4": {
+      "rmsdb": -20.4,
+      "peakdb": -12.6,
+      "length": 22050,
+      "samplerate": 44100
+    },
+    "algo2-c4": {
+      "rmsdb": -20.2,
+      "peakdb": -12.4,
+      "length": 22050,
+      "samplerate": 44100
+    },
+    "algo3-c4": {
+      "rmsdb": -20.3,
+      "peakdb": -12.5,
+      "length": 22050,
+      "samplerate": 44100
+    },
+    "algo4-c4": {
+      "rmsdb": -19.8,
+      "peakdb": -12,
+      "length": 22050,
+      "samplerate": 44100
+    },
+    "algo5-c4": {
+      "rmsdb": -19.6,
+      "peakdb": -11.8,
+      "length": 22050,
+      "samplerate": 44100
+    },
+    "algo6-c4": {
+      "rmsdb": -21,
+      "peakdb": -13.1,
+      "length": 22050,
+      "samplerate": 44100
+    },
+    "algo7-c4": {
+      "rmsdb": -19.2,
+      "peakdb": -11.5,
+      "length": 22050,
+      "samplerate": 44100
+    }
+  }
+}

@@ -1,0 +1,61 @@
+---
+description: Ban ../ parent imports; use zss/* or cafe/* aliases or ./ same-folder imports
+globs: zss/**/*.ts,zss/**/*.tsx,cafe/**/*.ts,cafe/**/*.tsx
+alwaysApply: true
+---
+
+# No parent-directory imports
+
+In `zss/**` and `cafe/**`, do not import via `../`. Use a path alias or a same-folder / child-folder `./` import only.
+
+Does **not** apply to `scripts/**` or `src/**`.
+
+## Prohibited
+
+- Any import or re-export `from` path containing `../`
+  - `from '../../playnotation'`
+  - `from '../wasm/paritymetrics'`
+
+## Allowed
+
+| Pattern | Example |
+|---------|---------|
+| `zss/*` alias | `from 'zss/feature/synth/playnotation'` |
+| `cafe/*` alias | `from 'cafe/index'` |
+| Same dir / child dir only | `from './daisyengine'`, `from './sosvoicepatches'` |
+
+Path aliases are in [`tsconfig.json`](../../tsconfig.json):
+
+```json
+"paths": {
+  "zss/*": ["./zss/*"],
+  "cafe/*": ["./cafe/*"]
+}
+```
+
+## When editing files
+
+Replace parent imports with the alias to the **defining module** (see [no-barrels-reexports.mdc](no-barrels-reexports.mdc)).
+
+### Example: `zss/feature/synth/backend/daisy/sosvoicerender.ts`
+
+| Current | Replace with |
+|---------|----------------|
+| `'../../playnotation'` | `'zss/feature/synth/playnotation'` |
+| `'../wasm/paritymetrics'` | `'zss/feature/synth/backend/wasm/paritymetrics'` |
+| `'./daisyengine'` | unchanged |
+
+```typescript
+// ✅ GOOD
+import { bootisolateddaisyengine } from './daisyengine'
+import type { SYNTH_NOTE_ENTRY } from 'zss/feature/synth/playnotation'
+import { audiobuffermetrics } from 'zss/feature/synth/backend/wasm/paritymetrics'
+
+// ❌ BAD
+import type { SYNTH_NOTE_ENTRY } from '../../playnotation'
+import { audiobuffermetrics } from '../wasm/paritymetrics'
+```
+
+## Legacy
+
+Do not add new parent-directory imports. All existing `zss/` and `cafe/` imports should use `zss/*`, `cafe/*`, or `./` only.

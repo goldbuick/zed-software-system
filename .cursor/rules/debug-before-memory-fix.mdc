@@ -1,0 +1,39 @@
+---
+description: Require repro + log-pinned diagnosis before multiplayer/memory/sync fixes
+alwaysApply: true
+---
+
+# Debug before memory / sync fixes
+
+Do not change multiplayer, boundary sync, gadget projection, or host/join memory paths until runtime evidence and a repro scenario exist.
+
+## Required before any fix
+
+1. **Repro scenario** — document how to trigger the bug every time:
+   - manual steps (host + join tabs, actions, timing), or
+   - an automated spec / fixture (`e2e/*.spec.ts`, `e2e/fixtures/*`), or
+   - a scripted repro (`yarn host-memory:repro:build` or equivalent).
+2. **Log-pinned diagnosis** — capture runtime evidence and identify **which memory is wrong**:
+   - **host sim** — `memoryboundaryget`, board terrain in main worker
+   - **join boardrunner worker** — worker-local boundary / board state
+   - **main-thread gadget** — `gadgetclient` / zustand projection from paint/patch
+3. **Hypothesis tied to logs** — state what event produces the stale write (e.g. `boundary:patch:ok` on `/flat/layers/0/char/*` with `terrainops:0`) before editing code.
+
+## Prohibited without the above
+
+- Host-side guess mitigations: notify listeners, extra `gadgetsynctick` / `boardrunnerpaint` / `boardrunnerpushupdates` calls after unrelated edits.
+- Skipping or filtering patches (e.g. ignore flat char paths) without logs proving that path is the sole corrupting source.
+- Rebuilding layer caches on the host as a band-aid when join worker cache is the stale emitter.
+- “Likely fixes” or speculative sync wiring with no repro.
+
+## Allowed workflow
+
+1. Add or extend **trace hooks only** (Category A instrumentation).
+2. Run repro; capture log file (e.g. `.cursor/debug-*.log`).
+3. Pin failing memory domain and originating message/patch from logs.
+4. Implement the **smallest fix at the source** identified by logs.
+5. Re-run the same repro; confirm trace shows the stale event is gone.
+
+## When asked to fix host memory corruption
+
+If repro or log evidence is missing, stop and ask for / build the repro first. Do not ship sync changes “to try.”

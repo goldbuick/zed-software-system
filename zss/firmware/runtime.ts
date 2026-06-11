@@ -1,4 +1,9 @@
-import { vmrefscroll } from 'zss/device/api'
+import {
+  apitoast,
+  gadgetclientbonk,
+  gadgetclientzap,
+  vmrefscroll,
+} from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import {
@@ -12,8 +17,17 @@ import {
 import { ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import { memorysendtoelements, memorysendtolog } from 'zss/memory/gamesend'
+import { memoryreadboardelementruntime } from 'zss/memory/runtimeboundary'
 import { READ_CONTEXT, readargsuntilend } from 'zss/words/reader'
 import { parsesend } from 'zss/words/send'
+import {
+  hasbonk,
+  hasticker,
+  hastoast,
+  haszap,
+  stripbonk,
+  stripzap,
+} from 'zss/words/textformat'
 import { ARG_TYPE } from 'zss/words/types'
 
 export const RUNTIME_FIRMWARE = createfirmware({
@@ -51,11 +65,14 @@ export const RUNTIME_FIRMWARE = createfirmware({
         chip.scrolllock(player)
         // element sending a scroll to a player
         const shared = gadgetstate(player)
+        const kinddata = memoryreadboardelementruntime(
+          READ_CONTEXT.element,
+        )?.kinddata
         shared.scrollname =
           READ_CONTEXT.element?.displayname ??
-          READ_CONTEXT.element?.kinddata?.displayname ??
+          kinddata?.displayname ??
           READ_CONTEXT.element?.name ??
-          READ_CONTEXT.element?.kinddata?.name ??
+          kinddata?.name ??
           ''
         shared.scroll = gadgetaddcenterpadding(queue)
       }
@@ -86,7 +103,38 @@ export const RUNTIME_FIRMWARE = createfirmware({
   })
   .command('text', ['text on element or in sidebar'], (_, words) => {
     const [textwords] = readargsuntilend(words, 0, ARG_TYPE.NUMBER_OR_NAME)
-    const text = textwords.join(' ')
+    let text = textwords.join(' ')
+
+    if (hasbonk(text)) {
+      gadgetclientbonk(SOFTWARE, READ_CONTEXT.elementfocus)
+      text = stripbonk(text)
+    }
+    if (haszap(text)) {
+      gadgetclientzap(SOFTWARE, READ_CONTEXT.elementfocus)
+      text = stripzap(text)
+    }
+
+    let diverted = false
+
+    const toasttext = hastoast(text)
+    if (ispresent(toasttext)) {
+      apitoast(SOFTWARE, READ_CONTEXT.elementfocus, toasttext)
+      text = toasttext
+      diverted = true
+    }
+
+    const tickertext = hasticker(text)
+    if (ispresent(tickertext) && ispresent(READ_CONTEXT.element)) {
+      READ_CONTEXT.element.tickertext = tickertext
+      READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
+      memorysendtolog(READ_CONTEXT.board?.id, READ_CONTEXT.element, tickertext)
+      diverted = true
+    }
+
+    if (diverted) {
+      return 0
+    }
+
     gadgettext(READ_CONTEXT.elementid, text)
     return 0
   })
@@ -100,8 +148,10 @@ export const RUNTIME_FIRMWARE = createfirmware({
       chip.id(),
       labelstr,
       wordsstr.split(' '),
-      chip.get,
-      chip.set,
+      (_typ, name) => chip.get(name),
+      (_typ, name, value) => {
+        chip.set(name, value)
+      },
     )
     return 0
   })

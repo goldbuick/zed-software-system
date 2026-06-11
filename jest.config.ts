@@ -1,8 +1,13 @@
 import type { Config } from 'jest'
 
+/** Per-test and hook ceiling so suites cannot hang without failing. */
+const TEST_TIMEOUT_MS = 120_000
+
 const config: Config = {
   preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'node',
+  testTimeout: TEST_TIMEOUT_MS,
+  setupFilesAfterEnv: ['<rootDir>/zss/testing/jesttimeoutsetup.ts'],
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
   moduleNameMapper: {
     '^zss/perf/ui$': '<rootDir>/zss/__mocks__/perfui.ts',
@@ -36,9 +41,14 @@ const config: Config = {
     ],
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(nanoid|nanoid-dictionary|human-id|alea|ts-extras|fast-json-patch|react-fast-compare|uqr|maath|@react-three|three|tone|mime|uint8-util|@tonejs/midi|midi-file|chevrotain|lodash-es|@chevrotain|marked)/)',
+    'node_modules/(?!(nanoid|nanoid-dictionary|human-id|alea|ts-extras|fast-json-patch|react-fast-compare|uqr|maath|@react-three|three|mime|uint8-util|@tonejs/midi|midi-file|chevrotain|lodash-es|@chevrotain|marked|json-joy|@jsonjoy.com)/)',
   ],
-  testPathIgnorePatterns: ['<rootDir>/e2e/'],
+  globalTeardown: '<rootDir>/zss/testing/jestglobalteardown.cjs',
+  testPathIgnorePatterns: [
+    '<rootDir>/e2e/',
+    '<rootDir>/zss/memory/wasm/__tests__/wasmparity.test.ts',
+    '<rootDir>/zss/memory/wasm/regenfixtures.test.ts',
+  ],
   testMatch: [
     '**/__tests__/**/*.ts',
     '**/__tests__/**/*.tsx',
@@ -50,6 +60,18 @@ const config: Config = {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'mjs'],
   collectCoverageFrom: ['zss/**/*.{ts,tsx}'],
   coveragePathIgnorePatterns: ['/node_modules/', '/__mocks__/', '/__tests__/'],
+  coverageThreshold: {
+    global: {
+      branches: 0,
+      functions: 0,
+      lines: 0,
+      statements: 0,
+    },
+    './zss/device/vm/gadgetsynctick.ts': { lines: 70, functions: 70 },
+    './zss/device/vm/handlers/scroll.ts': { lines: 60 },
+    './zss/device/vm/handlers/ticktock.ts': { lines: 50 },
+    './zss/device/boardrunner/handlers/linkdead.ts': { lines: 70 },
+  },
 }
 
 export default config

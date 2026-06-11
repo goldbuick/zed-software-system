@@ -1,0 +1,4 @@
+#while p1 not eq 8 do
+#if p1 is 0 push by -1 1 up
+#give p1
+#done

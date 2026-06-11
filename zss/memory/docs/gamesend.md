@@ -9,8 +9,9 @@
 - `zss/device/session` — SOFTWARE
 - `zss/mapping/*` — guid, 2d, types
 - `zss/words/*` — dir, reader, send, types
+- `./boardaccess` — memoryreadelement
 - `./boardelement` — memoryboardelementisobject
-- `./boardoperations` — memoryreadelement, memorysafedeleteelement
+- `./boardlifecycle` — memorysafedeleteelement
 - `./playermanagement` — memoryreadbookplayerboards
 - `./rendering` — memoryelementtologprefix
 - `./runtime` — memorymessagechip

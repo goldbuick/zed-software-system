@@ -1,12 +1,21 @@
 {
   "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false
+  },
   "include": [
     "zss",
     "cafe",
     "src",
     "e2e",
+    "infra",
+    "scripts",
     "vite.config.ts",
     "jest.config.ts",
-    "playwright.config.ts",
+    "playwright.config.ts"
+  ],
+  "exclude": [
+    "zss/feature/synth/archive"
   ]
 }

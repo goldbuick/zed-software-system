@@ -1,0 +1,536 @@
+import {
+  AmplitudeEnvelope,
+  Envelope,
+  EnvelopeOptions,
+  Gain,
+  Multiply,
+  OmniOscillator,
+  Signal,
+  Synth,
+  SynthOptions,
+  ToneAudioNode,
+  ToneAudioNodeOptions,
+  Unit,
+  optionsFromArguments,
+} from 'tone'
+import { omitFromObject } from 'tone/build/esm/core/util/Defaults'
+import { RecursivePartial, readOnly } from 'tone/build/esm/core/util/Interface'
+import { Monophonic } from 'tone/build/esm/instrument/Monophonic'
+import { OmniOscillatorSynthOptions } from 'tone/build/esm/source/oscillator/OscillatorInterface'
+import { Source } from 'tone/build/esm/source/Source'
+import { MAYBE } from 'zss/mapping/types'
+
+export type AlgoSynthOptions = {
+  algorithm: number
+  harmonicity1: Unit.Positive
+  harmonicity2: Unit.Positive
+  harmonicity3: Unit.Positive
+  modulationindex1: Unit.Positive
+  modulationindex2: Unit.Positive
+  modulationindex3: Unit.Positive
+  oscillator1: OmniOscillatorSynthOptions
+  oscillator2: OmniOscillatorSynthOptions
+  oscillator3: OmniOscillatorSynthOptions
+  oscillator4: OmniOscillatorSynthOptions
+  envelope1: Omit<EnvelopeOptions, keyof ToneAudioNodeOptions>
+  envelope2: Omit<EnvelopeOptions, keyof ToneAudioNodeOptions>
+  envelope3: Omit<EnvelopeOptions, keyof ToneAudioNodeOptions>
+  envelope4: Omit<EnvelopeOptions, keyof ToneAudioNodeOptions>
+  envelope: Omit<EnvelopeOptions, keyof ToneAudioNodeOptions>
+} & Omit<SynthOptions, 'oscillator' | 'envelope'>
+
+export class AlgoSynth extends Monophonic<AlgoSynthOptions> {
+  readonly name: string = 'AlgoSynth'
+
+  /**
+   * Operators for the synth
+   */
+  protected _operator1: Synth
+  protected _operator2: Synth
+  protected _operator3: Synth
+  protected _operator4: Synth
+
+  /**
+   * Operator mix bus and outer output envelope (WASM algooutenvs parity).
+   */
+  protected _outbus: Gain
+
+  /**
+   * The node where the modulation happens
+   */
+  protected _modulation1: MAYBE<Gain>
+  protected _modulation2: MAYBE<Gain>
+  protected _modulation3: MAYBE<Gain>
+
+  /**
+   * The operator oscillator
+   */
+  readonly oscillator1: OmniOscillator<any>
+  readonly oscillator2: OmniOscillator<any>
+  readonly oscillator3: OmniOscillator<any>
+  readonly oscillator4: OmniOscillator<any>
+
+  /**
+   * The operator envelope
+   */
+  readonly envelope1: AmplitudeEnvelope
+  readonly envelope2: AmplitudeEnvelope
+  readonly envelope3: AmplitudeEnvelope
+  readonly envelope4: AmplitudeEnvelope
+
+  /**
+   * Outer mix envelope — driven by voice-level `#synth env`.
+   */
+  readonly envelope: AmplitudeEnvelope
+
+  /**
+   * The frequency control
+   */
+  readonly frequency: Signal<'frequency'>
+
+  /**
+   * The detune in cents
+   */
+  readonly detune: Signal<'cents'>
+
+  /**
+   * The modulation index which essentially the depth or amount of the modulation. It is the
+   * ratio of the frequency of the modulating signal (mf) to the amplitude of the
+   * modulating signal (ma) -- as in ma/mf.
+   */
+  readonly modulationindex1: Multiply
+  readonly modulationindex2: Multiply
+  readonly modulationindex3: Multiply
+
+  /**
+   * Harmonicity is the ratio between the two voices. A harmonicity of
+   * 1 is no change. Harmonicity = 2 means a change of an octave.
+   * @example
+   * const amSynth = new Tone.AMSynth().toDestination();
+   * // pitch the modulator an octave below oscillator
+   * amSynth.harmonicity.value = 0.5;
+   * amSynth.triggerAttackRelease("C5", "4n");
+   */
+  readonly harmonicity1: Multiply
+  readonly harmonicity2: Multiply
+  readonly harmonicity3: Multiply
+
+  constructor(options?: RecursivePartial<AlgoSynthOptions>)
+  constructor() {
+    // eslint-disable-next-line prefer-rest-params
+    const options = optionsFromArguments(AlgoSynth.getDefaults(), arguments)
+    super(options)
+
+    // create operators
+    this._operator1 = new Synth({
+      context: this.context,
+      oscillator: options.oscillator1,
+      envelope: options.envelope1,
+      volume: -10,
+    })
+    this.oscillator1 = this._operator1.oscillator
+    this.envelope1 = this._operator1.envelope
+
+    this._operator2 = new Synth({
+      context: this.context,
+      oscillator: options.oscillator2,
+      envelope: options.envelope2,
+      volume: -10,
+    })
+    this.oscillator2 = this._operator2.oscillator
+    this.envelope2 = this._operator2.envelope
+
+    this._operator3 = new Synth({
+      context: this.context,
+      oscillator: options.oscillator3,
+      envelope: options.envelope3,
+      volume: -10,
+    })
+    this.oscillator3 = this._operator3.oscillator
+    this.envelope3 = this._operator3.envelope
+
+    this._operator4 = new Synth({
+      context: this.context,
+      oscillator: options.oscillator4,
+      envelope: options.envelope4,
+      onsilence: () => this.onsilence(this),
+      volume: -10,
+    })
+    this.oscillator4 = this._operator4.oscillator
+    this.envelope4 = this._operator4.envelope
+
+    this._outbus = new Gain({
+      context: this.context,
+      gain: 0,
+    })
+    this.envelope = new AmplitudeEnvelope({
+      context: this.context,
+      attack: options.envelope.attack,
+      decay: options.envelope.decay,
+      sustain: options.envelope.sustain,
+      release: options.envelope.release,
+    })
+    this._outbus.chain(this.envelope, this.output)
+
+    this.frequency = new Signal({
+      context: this.context,
+      units: 'frequency',
+    })
+    this.detune = new Signal({
+      context: this.context,
+      value: options.detune,
+      units: 'cents',
+    })
+
+    this.harmonicity1 = new Multiply({
+      context: this.context,
+      value: options.harmonicity1,
+      minValue: 0,
+    })
+    this.harmonicity2 = new Multiply({
+      context: this.context,
+      value: options.harmonicity2,
+      minValue: 0,
+    })
+    this.harmonicity3 = new Multiply({
+      context: this.context,
+      value: options.harmonicity3,
+      minValue: 0,
+    })
+
+    this.modulationindex1 = new Multiply({
+      context: this.context,
+      value: options.modulationindex1,
+    })
+    this.modulationindex2 = new Multiply({
+      context: this.context,
+      value: options.modulationindex2,
+    })
+    this.modulationindex3 = new Multiply({
+      context: this.context,
+      value: options.modulationindex3,
+    })
+
+    this._modulation1 = new Gain({
+      context: this.context,
+      gain: 0,
+    })
+    this._modulation2 = new Gain({
+      context: this.context,
+      gain: 0,
+    })
+    this._modulation3 = new Gain({
+      context: this.context,
+      gain: 0,
+    })
+
+    // wire up frequency
+    // first 3 operators get alterted by harmonicity
+    this.frequency.chain(this.harmonicity1, this._operator1.frequency)
+    this.frequency.chain(this.harmonicity2, this._operator2.frequency)
+    this.frequency.chain(this.harmonicity3, this._operator3.frequency)
+    // operator 4 is always a carrier
+    this.frequency.connect(this._operator4.frequency)
+
+    // tweak the gain of the modulators
+    this.frequency.chain(this.modulationindex1, this._modulation1)
+    this.frequency.chain(this.modulationindex2, this._modulation2)
+    this.frequency.chain(this.modulationindex3, this._modulation3)
+
+    // wire up detune
+    this.detune.fan(
+      this._operator1.detune,
+      this._operator2.detune,
+      this._operator3.detune,
+      this._operator4.detune,
+    )
+
+    // wire up modulation
+    switch (options.algorithm) {
+      case 0:
+        // 1
+        this._operator1.connect(this._modulation1.gain)
+        this._modulation1.connect(this._operator2.frequency)
+        // 2
+        this._operator2.connect(this._modulation2.gain)
+        this._modulation2.connect(this._operator3.frequency)
+        // 3
+        this._operator3.connect(this._modulation3.gain)
+        this._modulation3.connect(this._operator4.frequency)
+        break
+      case 1:
+        // 1
+        this._operator1.connect(this._modulation1.gain)
+        this._modulation1.connect(this._operator3.frequency)
+        // 2
+        this._operator2.connect(this._modulation2.gain)
+        this._modulation2.connect(this._operator3.frequency)
+        // 3
+        this._operator3.connect(this._modulation3.gain)
+        this._modulation3.connect(this._operator4.frequency)
+        break
+      case 2:
+        // 1
+        this._operator1.connect(this._modulation1.gain)
+        this._modulation1.connect(this._operator4.frequency)
+        // 2
+        this._operator2.connect(this._modulation2.gain)
+        this._modulation2.connect(this._operator3.frequency)
+        // 3
+        this._operator3.connect(this._modulation3.gain)
+        this._modulation3.connect(this._operator4.frequency)
+        break
+      case 3:
+        // 1
+        this._operator1.connect(this._modulation1.gain)
+        this._modulation1.connect(this._operator4.frequency)
+        // 2
+        this._operator2.connect(this._modulation2.gain)
+        this._modulation2.connect(this._operator4.frequency)
+        // 3
+        this._operator3.connect(this._modulation3.gain)
+        this._modulation3.connect(this._operator4.frequency)
+        break
+      case 4:
+        // 1
+        this._operator1.connect(this._modulation1.gain)
+        this._modulation1.connect(this._operator2.frequency)
+        // 3
+        this._operator3.connect(this._modulation3.gain)
+        this._modulation3.connect(this._operator4.frequency)
+        break
+      case 5:
+        // 1
+        this._operator1.connect(this._modulation1.gain)
+        this._modulation1.connect(this._operator2.frequency)
+        // 2
+        this._operator1.connect(this._modulation2.gain)
+        this._modulation2.connect(this._operator3.frequency)
+        // 3
+        this._operator1.connect(this._modulation3.gain)
+        this._modulation3.connect(this._operator4.frequency)
+        break
+      case 6:
+        // 1
+        this._operator1.connect(this._modulation1.gain)
+        this._modulation1.connect(this._operator2.frequency)
+        break
+    }
+
+    // wire up output
+    switch (options.algorithm) {
+      case 0:
+      case 1:
+      case 2:
+      case 3:
+        this._operator4.connect(this._outbus)
+        break
+      case 4:
+        this._operator2.connect(this._outbus)
+        this._operator4.connect(this._outbus)
+        break
+      case 5:
+      case 6:
+        this._operator2.connect(this._outbus)
+        this._operator3.connect(this._outbus)
+        this._operator4.connect(this._outbus)
+        break
+      case 7:
+        this._operator1.connect(this._outbus)
+        this._operator2.connect(this._outbus)
+        this._operator3.connect(this._outbus)
+        this._operator4.connect(this._outbus)
+        break
+    }
+
+    readOnly(this, [
+      'harmonicity1',
+      'harmonicity2',
+      'harmonicity3',
+      'modulationindex1',
+      'modulationindex2',
+      'modulationindex3',
+      'oscillator1',
+      'oscillator2',
+      'oscillator3',
+      'oscillator4',
+      'envelope1',
+      'envelope2',
+      'envelope3',
+      'envelope4',
+      'envelope',
+      'frequency',
+      'detune',
+    ])
+  }
+
+  static getDefaults(): AlgoSynthOptions {
+    return Object.assign(Monophonic.getDefaults(), {
+      algorithm: 0,
+      harmonicity1: 2,
+      harmonicity2: 2,
+      harmonicity3: 2,
+      modulationindex1: 1,
+      modulationindex2: 1,
+      modulationindex3: 1,
+      oscillator1: Object.assign(
+        omitFromObject(OmniOscillator.getDefaults(), [
+          ...Object.keys(Source.getDefaults()),
+          'frequency',
+          'detune',
+        ]),
+        {
+          type: 'sine',
+        },
+      ) as OmniOscillatorSynthOptions,
+      oscillator2: Object.assign(
+        omitFromObject(OmniOscillator.getDefaults(), [
+          ...Object.keys(Source.getDefaults()),
+          'frequency',
+          'detune',
+        ]),
+        {
+          type: 'sine',
+        },
+      ) as OmniOscillatorSynthOptions,
+      oscillator3: Object.assign(
+        omitFromObject(OmniOscillator.getDefaults(), [
+          ...Object.keys(Source.getDefaults()),
+          'frequency',
+          'detune',
+        ]),
+        {
+          type: 'sine',
+        },
+      ) as OmniOscillatorSynthOptions,
+      oscillator4: Object.assign(
+        omitFromObject(OmniOscillator.getDefaults(), [
+          ...Object.keys(Source.getDefaults()),
+          'frequency',
+          'detune',
+        ]),
+        {
+          type: 'sine',
+        },
+      ) as OmniOscillatorSynthOptions,
+      envelope1: Object.assign(
+        omitFromObject(
+          Envelope.getDefaults(),
+          Object.keys(ToneAudioNode.getDefaults()),
+        ),
+        {
+          attack: 0.01,
+          decay: 0.01,
+          sustain: 1,
+          release: 0.5,
+        },
+      ),
+      envelope2: Object.assign(
+        omitFromObject(
+          Envelope.getDefaults(),
+          Object.keys(ToneAudioNode.getDefaults()),
+        ),
+        {
+          attack: 0.01,
+          decay: 0.01,
+          sustain: 1,
+          release: 0.5,
+        },
+      ),
+      envelope3: Object.assign(
+        omitFromObject(
+          Envelope.getDefaults(),
+          Object.keys(ToneAudioNode.getDefaults()),
+        ),
+        {
+          attack: 0.01,
+          decay: 0.01,
+          sustain: 1,
+          release: 0.5,
+        },
+      ),
+      envelope4: Object.assign(
+        omitFromObject(
+          Envelope.getDefaults(),
+          Object.keys(ToneAudioNode.getDefaults()),
+        ),
+        {
+          attack: 0.01,
+          decay: 0.01,
+          sustain: 1,
+          release: 0.5,
+        },
+      ),
+      envelope: Object.assign(
+        omitFromObject(
+          Envelope.getDefaults(),
+          Object.keys(ToneAudioNode.getDefaults()),
+        ),
+        {
+          attack: 0.01,
+          decay: 0.01,
+          sustain: 0.5,
+          release: 0.01,
+        },
+      ),
+    })
+  }
+
+  /**
+   * Trigger the attack portion of the note
+   */
+  protected _triggerEnvelopeAttack(time: Unit.Seconds, velocity: number): void {
+    this.envelope.triggerAttack(time, velocity)
+    // @ts-expect-error yes
+    this._operator1._triggerEnvelopeAttack(time, velocity)
+    // @ts-expect-error yes
+    this._operator2._triggerEnvelopeAttack(time, velocity)
+    // @ts-expect-error yes
+    this._operator3._triggerEnvelopeAttack(time, velocity)
+    // @ts-expect-error yes
+    this._operator4._triggerEnvelopeAttack(time, velocity)
+  }
+
+  /**
+   * Trigger the release portion of the note
+   */
+  protected _triggerEnvelopeRelease(time: Unit.Seconds) {
+    this.envelope.triggerRelease(time)
+    // @ts-expect-error yes
+    this._operator1._triggerEnvelopeRelease(time)
+    // @ts-expect-error yes
+    this._operator2._triggerEnvelopeRelease(time)
+    // @ts-expect-error yes
+    this._operator3._triggerEnvelopeRelease(time)
+    // @ts-expect-error yes
+    this._operator4._triggerEnvelopeRelease(time)
+    return this
+  }
+
+  getLevelAtTime(time: Unit.Time): Unit.NormalRange {
+    time = this.toSeconds(time)
+    return this.envelope.getValueAtTime(time)
+  }
+
+  dispose(): this {
+    super.dispose()
+    this.envelope.dispose()
+    this._outbus.dispose()
+    this.harmonicity1.dispose()
+    this.harmonicity2.dispose()
+    this.harmonicity3.dispose()
+    this.modulationindex1.dispose()
+    this.modulationindex2.dispose()
+    this.modulationindex3.dispose()
+    this._operator1.dispose()
+    this._operator2.dispose()
+    this._operator3.dispose()
+    this._operator4.dispose()
+    this._modulation1?.dispose()
+    this._modulation2?.dispose()
+    this._modulation3?.dispose()
+    this.frequency.dispose()
+    this.detune.dispose()
+    return this
+  }
+}

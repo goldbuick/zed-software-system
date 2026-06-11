@@ -2,7 +2,6 @@ import { useMemo } from 'react'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { resettiles, useTiles } from 'zss/gadget/tiles'
 import { TilesData, TilesRender } from 'zss/gadget/usetiles'
-import { ispresent } from 'zss/mapping/types'
 import {
   WRITE_TEXT_CONTEXT,
   createwritetextcontext,
@@ -25,19 +24,24 @@ export function ScreenUITickerText({ width, height }: ScreenUITickerTextProps) {
     }
   }, [width, height, store])
 
-  if (ispresent(tickers)) {
+  const withtickers = tickers ?? []
+
+  context.x = 0
+  context.y = height - 1
+  context.disablewrap = true
+
+  const state = store.getState()
+  resettiles(state, 0, COLOR.WHITE, COLOR.ONCLEAR)
+
+  for (let i = 0; i < withtickers.length; ++i) {
+    const line = withtickers[i]
+    tokenizeandwritetextformat(line, context, false)
     context.x = 0
-    context.y = height - 1
-    context.disablewrap = true
-    const state = store.getState()
-    resettiles(state, 0, COLOR.WHITE, COLOR.ONCLEAR)
-    for (let i = 0; i < tickers.length; ++i) {
-      const line = tickers[i]
-      tokenizeandwritetextformat(line, context, false)
-      context.x = 0
-      context.y--
-    }
+    context.y--
   }
+
+  // ensure re-render
+  state.changed()
 
   return (
     <TilesData store={store}>

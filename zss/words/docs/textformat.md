@@ -18,6 +18,12 @@
 |--------|-------------|
 | `tokenize(text, noWhitespace?)` | Tokenizes text; returns lex result |
 | `hascenter(text)` | Returns text without $CENTER or undefined |
+| `hasticker(text)` | Returns trimmed text without $TICKER or undefined |
+| `hastoast(text)` | Returns trimmed text without $TOAST or undefined |
+| `hasbonk(text)` | Boolean test for $BONK directive |
+| `stripbonk(text)` | Returns trimmed text with $BONK removed |
+| `haszap(text)` | Boolean test for $ZAP directive |
+| `stripzap(text)` | Returns trimmed text with $ZAP removed |
 | `createwritetextcontext` | Creates WRITE_TEXT_CONTEXT |
 | `tokenizeandwritetextformat(text, context, shouldreset)` | Tokenize + render |
 | `tokenizeandstriptextformat(text)` | Strip formatting; return plain text |
@@ -43,6 +49,10 @@
 | StringLiteralDouble | `"..."` | Quoted string |
 | MaybeFlag | `$name` | Variable interpolation |
 | Center | `$CENTER` | Centering marker |
+| Ticker | `$TICKER` | Ticker marker |
+| Toast | `$TOAST` | Toast marker |
+| Bonk | `$BONK` | Screen shake (gadget client) |
+| Zap | `$ZAP` | Glitch pulse (gadget client) |
 | MetaKey | `$META` | Platform meta key (cmd/ctrl) |
 | NumberLiteral | `$-?(\d*\.)?\d+…` | Char code (e.g. `$123`) |
 | EscapedDollar | `$$` | Literal $ |
@@ -55,6 +65,6 @@
 
 **WRITE_TEXT_CONTEXT**: cursor (x, y), region (width, height), active/reset pen (WRITE_PEN_CONTEXT), output arrays (char, color, bg), plus disablewrap, measureonly, measuredwidth, writefullwidth, **`padlineright`**, **`panelcarry`**, optional **`panelcarrycolor`** / **`panelcarrybg`**, iseven, changed(). Supports measure-only mode and writefullwidth for line filling.
 
-**`padlineright`** (default `false`): When `true`, each newline pads the row to **`width - 1`** with the **active** pen (text wrap still uses **`active.rightedge`**). The last line is padded the same way. When set, **`writefullwidth`** also fills to **`width - 1`** (still **`writetextreset`** colors for that tail). **`tokenizeandwritetextformat`** / **`writeplaintext`** do **not** run gutter sync; gutter is handled only by **`runpanelpostpass`** in [`guttersync.ts`](zss/screens/panel/guttersync.ts) when **`PANEL_END_PASS_ENABLED`** is **`true`**, after all **`PanelEndPass`** items (remainder fill + one full-height pass: column **`leftedge - 1`** copies fg/bg from **`leftedge`**). When **`PANEL_END_PASS_ENABLED`** is **`false`** (default), there is no remainder fill and no gutter sync. **`syncpanelguttercolumn`** remains exported for ad-hoc row-range copies. **`PanelComponent`** sets **`padlineright: true`** (with **`panelcarry`**).
+**`padlineright`** (default `false`): When `true`, each newline pads the row to **`width - 1`** with the **active** pen (text wrap still uses **`active.rightedge`**). The last line is padded the same way. When set, **`writefullwidth`** also fills to **`width - 1`** (still **`writetextreset`** colors for that tail). **`tokenizeandwritetextformat`** / **`writeplaintext`** do **not** run gutter sync; gutter is handled only by **`runpanelpostpass`** in [`guttersync.ts`](../../screens/panel/guttersync.ts) when **`PANEL_END_PASS_ENABLED`** is **`true`**, after all **`PanelEndPass`** items (remainder fill + one full-height pass: column **`leftedge - 1`** copies fg/bg from **`leftedge`**). When **`PANEL_END_PASS_ENABLED`** is **`false`** (default), there is no remainder fill and no gutter sync. **`syncpanelguttercolumn`** remains exported for ad-hoc row-range copies. **`PanelComponent`** sets **`padlineright: true`** (with **`panelcarry`**).
 
 When **`panelcarry`** is `true`, **`tokenizeandwritetextformat`** applies **`panelcarrycolor`** / **`panelcarrybg`** to the active pen before rendering (if defined), then stores **`active.color`** / **`active.bg`** after **`writetextformat`** (before **`writetextreset`** when `shouldreset` is true). **`PanelComponent`** clears carry when the **`text`** reference changes. Use **`$onclear`** or explicit colors to break the chain.

@@ -1,0 +1,7 @@
+@board title
+@exitnorth room1x0
+@exitsouth room1x2
+@exitwest room0x1
+@exiteast room2x1
+@startx 30
+@starty 11

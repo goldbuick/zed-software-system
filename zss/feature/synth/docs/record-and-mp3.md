@@ -1,8 +1,24 @@
-# recordhandler.ts & mp3.ts
+# Recording & MP3 export
 
-## recordhandler.ts
+## Active path — Daisy (`backend/daisy/daisyrecordhandler.ts` + `daisyofflinerender.ts`)
 
-Handles recording of synth playback to MP3.
+`#synthrecord` on the Daisy backend:
+
+1. Captures tick events during live playback (`RECORDING_STATE` in `shared/recording.ts`)
+2. Snapshots voice/FX state via `wasmreplaystate.ts`
+3. Boots an isolated Daisy engine on `OfflineAudioContext`
+4. Replays ticks with offline render hooks for sample-accurate SAB updates
+5. Renders via `startRendering()` (faster than real time; live synth unaffected)
+6. Converts rendered `AudioBuffer` to MP3 via `converttomp3()`
+7. Triggers download
+
+If `OfflineAudioContext` or offline worklet boot fails, `#synthrecord` surfaces an error (no real-time fallback).
+
+Archived Maximilian path: [`archive/maxi/wasmrecordhandler.ts`](../archive/maxi/wasmrecordhandler.ts).
+
+---
+
+## Archived Tone.js path (`archive/tone/recordhandler.ts`)
 
 ### synthflush()
 
@@ -25,21 +41,17 @@ Clears recording state:
 10. Triggers download via `<a download>`
 11. Destroys temporary synth
 
-**Progress:** Writes to register during: "create synth", "synth waiting for setup", "rendering audio", "rendering complete, exporting mp3", "saving file X.mp3"
-
-**Filename:** Uses `createnameid()` if not provided.
-
 ---
 
 ## mp3.ts
 
-### converttomp3(buffer: ToneAudioBuffer)
+### converttomp3(buffer: AudioBuffer)
 
-Converts Tone.js AudioBuffer to MP3 using lamejs.
+Converts a Web Audio `AudioBuffer` to MP3 using lamejs.
 
 **Process:**
-1. Get mono PCM from channel 0
-2. Create Mp3Encoder(1, sampleRate, 128) — mono, 128 kbps
+1. Read stereo PCM from channels 0/1 (mono duplicates channel 0)
+2. Create Mp3Encoder(2, sampleRate, 128) — stereo, 128 kbps
 3. Process in 1152-sample blocks (lamejs requirement)
 4. Convert float32 → int16 (scale to ±32767)
 5. Encode each block

@@ -1,0 +1,9 @@
+#if 1 do
+ #noop
+#else if 0 do
+ #noop
+#else take x do
+ #noop
+#else do
+ #noop
+#done

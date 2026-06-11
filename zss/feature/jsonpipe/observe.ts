@@ -1,0 +1,114 @@
+import { type Operation, applyPatch, compare } from 'fast-json-patch'
+import { MAYBE, deepcopy } from 'zss/mapping/types'
+import { recordjsonpipeapplyremoteops } from 'zss/perf/jsonpipeapplystats'
+
+export type { Operation }
+
+/** Drop patch ops whose paths fail `shouldemitpath` (and `from` for move/copy). */
+export function filterpatch(
+  ops: Operation[],
+  shouldemitpath: (path: string) => boolean,
+): Operation[] {
+  const out: Operation[] = []
+  for (let i = 0; i < ops.length; ++i) {
+    const op = ops[i]
+    if (!shouldemitpath(op.path)) {
+      continue
+    }
+    if (
+      (op.op === 'move' || op.op === 'copy') &&
+      'from' in op &&
+      typeof op.from === 'string' &&
+      !shouldemitpath(op.from)
+    ) {
+      continue
+    }
+    out.push(op)
+  }
+  return out
+}
+
+export type JSON_PIPE_HANDLE<T> = {
+  emitdiff: (root: T) => Operation[]
+  isdesynced: () => boolean
+  applyremote: (root: T, patch: Operation[]) => MAYBE<T>
+  applyfullsync: (doc: T) => T
+  cleardesync: () => void
+  forcedesync: () => void
+}
+
+/**
+ * Duplex json pipe: local edits → `emitdiff` (generate + filter); remote →
+ * `applyremote` (applyPatch + generate, discard) per jsonpipe v1.
+ */
+export function createjsonpipe<T extends object | unknown[]>(
+  init: T,
+  shouldemitpath: (path: string) => boolean,
+): JSON_PIPE_HANDLE<T> {
+  let desync = false
+  let shadow = deepcopy(init)
+
+  return {
+    emitdiff(root: T) {
+      const operations = filterpatch(compare(shadow, root), shouldemitpath)
+      if (operations.length > 0) {
+        shadow = deepcopy(root)
+      }
+      return operations
+    },
+
+    isdesynced() {
+      return desync
+    },
+
+    applyremote(root: T, patch: Operation[]) {
+      // skip when waiting for a fullsync
+      if (desync) {
+        return undefined
+      }
+      const filtered = filterpatch(patch, shouldemitpath)
+      if (filtered.length === 0) {
+        return root
+      }
+      // measure the number of ops applied
+      recordjsonpipeapplyremoteops(filtered.length)
+      try {
+        //  an RFC 6902 patch array
+        const { newDocument: newroot } = applyPatch(root, filtered, true, false)
+        // apply the patch to the shadow
+        const { newDocument: newshadow } = applyPatch(
+          shadow,
+          filtered,
+          true,
+          false,
+        )
+        // update the shadow
+        shadow = newshadow
+        // return newroot root
+        return newroot
+      } catch (error: any) {
+        void error
+      }
+      // return undefined to indicate desync
+      desync = true
+      return undefined
+    },
+
+    applyfullsync(doc: T) {
+      // flip desync flag for recovery
+      desync = false
+      shadow = deepcopy(doc)
+      // return new root
+      return doc
+    },
+
+    cleardesync() {
+      desync = false
+    },
+
+    forcedesync() {
+      desync = true
+      shadow = {} as T
+    },
+  }
+}

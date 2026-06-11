@@ -1,0 +1,20 @@
+{
+  "name": "trimexport.undefined_keys",
+  "initial": {},
+  "steps": [
+    {
+      "op": "trim_export",
+      "args": {
+        "json": {
+          "b": 1
+        }
+      },
+      "expect": {
+        "mode": "json",
+        "json": {
+          "b": 1
+        }
+      }
+    }
+  ]
+}

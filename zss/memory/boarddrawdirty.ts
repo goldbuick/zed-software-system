@@ -2,7 +2,11 @@
  * Incremental `:drawdisplay`: fingerprints, cell dirtiness with 8-neighbor expansion,
  * and next-tick allow-lists. Non-local draw logic must call `memoryinvalidatedraw`.
  */
-import { compile } from 'zss/lang/generator'
+import { PERF_SPATIAL_INDEX, WASM_SCRIPT } from 'zss/config'
+import {
+  compilescript,
+  islangcompileready,
+} from 'zss/feature/lang/langcompileclient'
 import { indextox, indextoy, pttoindex } from 'zss/mapping/2d'
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
@@ -10,6 +14,7 @@ import { NAME } from 'zss/words/types'
 
 import { memoryreadidorindex } from './boardaccess'
 import { memoryreadelementkind, memoryreadelementstat } from './boards'
+import { memoryensureboardruntime } from './runtimeboundary'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from './types'
 
 const DRAW_LABEL = 'drawdisplay'
@@ -18,12 +23,15 @@ const DRAWHASCACHE: Record<string, boolean> = {}
 export function memorycodehasdrawdisplay(code: string) {
   const drawlabel = NAME(DRAW_LABEL)
   const key = `${drawlabel}:${code}`
-  if (ispresent(DRAWHASCACHE[key])) {
+  const wasmnotready = WASM_SCRIPT && !islangcompileready()
+  if (!wasmnotready && ispresent(DRAWHASCACHE[key])) {
     return DRAWHASCACHE[key]
   }
-  const labels = compile('drawpass', code).labels ?? {}
+  const labels = compilescript('drawpass', code).labels ?? {}
   const result = ispresent(labels[drawlabel])
-  DRAWHASCACHE[key] = result
+  if (!wasmnotready) {
+    DRAWHASCACHE[key] = result
+  }
   return result
 }
 
@@ -69,10 +77,11 @@ export function memoryinvalidatedraw(board: MAYBE<BOARD>) {
   if (!ispresent(board)) {
     return
   }
-  board.drawneedfull = true
-  delete board.drawlastfp
-  delete board.drawlastxy
-  delete board.drawallowids
+  const boardruntime = memoryensureboardruntime(board)
+  boardruntime.drawneedfull = true
+  delete boardruntime.drawlastfp
+  delete boardruntime.drawlastxy
+  delete boardruntime.drawallowids
 }
 
 function expandneighborcells(seed: Set<number>) {
@@ -100,8 +109,9 @@ export function memoryupdatedrawdirty(board: MAYBE<BOARD>, timestamp: number) {
   if (!ispresent(board)) {
     return
   }
-  const oldfp = board.drawlastfp ?? {}
-  const oldxy = board.drawlastxy ?? {}
+  const boardruntime = memoryensureboardruntime(board)
+  const oldfp = boardruntime.drawlastfp ?? {}
+  const oldxy = boardruntime.drawlastxy ?? {}
   const seedcells = new Set<number>()
   const nextfp: Record<string, string> = {}
   const nextxy: Record<string, { x: number; y: number }> = {}
@@ -180,36 +190,76 @@ export function memoryupdatedrawdirty(board: MAYBE<BOARD>, timestamp: number) {
     }
   }
 
-  board.drawneedfull = false
+  boardruntime.drawneedfull = false
 
   const expanded = expandneighborcells(seedcells)
   const allowids = new Set<string>()
 
-  for (const idx of expanded) {
-    const terrain = board.terrain[idx]
-    if (ispresent(terrain)) {
-      const code = elementdrawcode(terrain)
-      if (code && memorycodehasdrawdisplay(code)) {
-        allowids.add(memoryelementdrawreadid(terrain))
-      }
-    }
-    const cx = indextox(idx, BOARD_WIDTH)
-    const cy = indextoy(idx, BOARD_WIDTH)
+  if (PERF_SPATIAL_INDEX) {
+    // build a cell-index -> active drawable object ids once, then look up
+    // per expanded cell in O(1) instead of scanning all objects per cell.
+    const cellindex = new Map<number, BOARD_ELEMENT[]>()
     for (let j = 0; j < allobjects.length; ++j) {
       const object = allobjects[j]
       if (!ispresent(object.id) || !isactiveobject(object, timestamp)) {
         continue
       }
-      if ((object.x ?? 0) === cx && (object.y ?? 0) === cy) {
-        const code = elementdrawcode(object)
+      const code = elementdrawcode(object)
+      if (!code || !memorycodehasdrawdisplay(code)) {
+        continue
+      }
+      const ox = object.x ?? 0
+      const oy = object.y ?? 0
+      const idx = pttoindex({ x: ox, y: oy }, BOARD_WIDTH)
+      const list = cellindex.get(idx)
+      if (list) {
+        list.push(object)
+      } else {
+        cellindex.set(idx, [object])
+      }
+    }
+    for (const idx of expanded) {
+      const terrain = board.terrain[idx]
+      if (ispresent(terrain)) {
+        const code = elementdrawcode(terrain)
         if (code && memorycodehasdrawdisplay(code)) {
-          allowids.add(memoryelementdrawreadid(object))
+          allowids.add(memoryelementdrawreadid(terrain))
+        }
+      }
+      const cellobjects = cellindex.get(idx)
+      if (cellobjects) {
+        for (let j = 0; j < cellobjects.length; ++j) {
+          allowids.add(memoryelementdrawreadid(cellobjects[j]))
+        }
+      }
+    }
+  } else {
+    for (const idx of expanded) {
+      const terrain = board.terrain[idx]
+      if (ispresent(terrain)) {
+        const code = elementdrawcode(terrain)
+        if (code && memorycodehasdrawdisplay(code)) {
+          allowids.add(memoryelementdrawreadid(terrain))
+        }
+      }
+      const cx = indextox(idx, BOARD_WIDTH)
+      const cy = indextoy(idx, BOARD_WIDTH)
+      for (let j = 0; j < allobjects.length; ++j) {
+        const object = allobjects[j]
+        if (!ispresent(object.id) || !isactiveobject(object, timestamp)) {
+          continue
+        }
+        if ((object.x ?? 0) === cx && (object.y ?? 0) === cy) {
+          const code = elementdrawcode(object)
+          if (code && memorycodehasdrawdisplay(code)) {
+            allowids.add(memoryelementdrawreadid(object))
+          }
         }
       }
     }
   }
 
-  board.drawlastfp = nextfp
-  board.drawlastxy = nextxy
-  board.drawallowids = allowids
+  boardruntime.drawlastfp = nextfp
+  boardruntime.drawlastxy = nextxy
+  boardruntime.drawallowids = allowids
 }

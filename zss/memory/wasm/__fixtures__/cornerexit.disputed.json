@@ -1,0 +1,41 @@
+{
+  "name": "cornerexit.disputed",
+  "initial": {},
+  "steps": [
+    {
+      "op": "corner_exit_resolve",
+      "args": {
+        "board": {
+          "id": "cur",
+          "exitnorth": "n",
+          "exiteast": "e"
+        },
+        "addrmap": {
+          "n": {
+            "id": "north",
+            "exiteast": "addr-a"
+          },
+          "e": {
+            "id": "east",
+            "exitnorth": "addr-b"
+          },
+          "addr-a": {
+            "id": "ida"
+          },
+          "addr-b": {
+            "id": "idb"
+          }
+        }
+      },
+      "expect": {
+        "mode": "json",
+        "json": {
+          "exitne": "__corner_exit_disputed__",
+          "exitnw": "",
+          "exitse": "",
+          "exitsw": ""
+        }
+      }
+    }
+  ]
+}

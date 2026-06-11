@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { LAYER, LAYER_TYPE } from 'zss/gadget/data/types'
@@ -41,36 +42,78 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
   const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
 
+  // memoize the per-type filter outputs so we do not rebuild four large
+  // typed arrays + a derived walls cap on every parent commit when the
+  // underlying layer reference is unchanged.
+  const tilelayer = layer?.type === LAYER_TYPE.TILES ? layer : undefined
+  const tilefilters = useMemo(() => {
+    if (!tilelayer) {
+      return undefined
+    }
+    const floor = filterlayer2floor(
+      tilelayer.char,
+      tilelayer.color,
+      tilelayer.bg,
+      tilelayer.props,
+    )
+    const walls = filterlayer2walls(
+      tilelayer.char,
+      tilelayer.color,
+      tilelayer.bg,
+      tilelayer.props,
+    )
+    const water = filterlayer2water(
+      tilelayer.char,
+      tilelayer.color,
+      tilelayer.bg,
+      tilelayer.props,
+    )
+    const ground = filterlayer2flooredge(
+      tilelayer.char,
+      tilelayer.color,
+      tilelayer.bg,
+      tilelayer.props,
+    )
+    const wallscap = {
+      char: walls.char.map((c) => (c !== 0 ? 220 : 0)),
+      color: walls.color.map((c) => (c !== 0 ? COLOR.BLACK : COLOR.ONCLEAR)),
+      bg: walls.bg,
+    }
+    return { floor, walls, water, ground, wallscap }
+  }, [tilelayer])
+
+  const spritelayer = layer?.type === LAYER_TYPE.SPRITES ? layer : undefined
+  const hideplayer = ispresent(layers)
+  const spritefilters = useMemo(() => {
+    if (!spritelayer) {
+      return undefined
+    }
+    const othersprites = spritelayer.sprites.filter(
+      (sprite) =>
+        (sprite.stat as COLLISION) !== COLLISION.ISSWIM &&
+        (!hideplayer || !sprite.pid),
+    )
+    const watersprites = spritelayer.sprites.filter(
+      (sprite) =>
+        (sprite.stat as COLLISION) === COLLISION.ISSWIM &&
+        (!hideplayer || !sprite.pid),
+    )
+    const shadowsprites = othersprites.filter(
+      (sprite) => (sprite.stat as COLLISION) !== COLLISION.ISGHOST,
+    )
+    return { othersprites, watersprites, shadowsprites }
+  }, [spritelayer, hideplayer])
+
   switch (layer?.type) {
     default:
     case LAYER_TYPE.BLANK:
     case LAYER_TYPE.MEDIA:
       return null
     case LAYER_TYPE.TILES: {
-      const floor = filterlayer2floor(
-        layer.char,
-        layer.color,
-        layer.bg,
-        layer.stats,
-      )
-      const walls = filterlayer2walls(
-        layer.char,
-        layer.color,
-        layer.bg,
-        layer.stats,
-      )
-      const water = filterlayer2water(
-        layer.char,
-        layer.color,
-        layer.bg,
-        layer.stats,
-      )
-      const ground = filterlayer2flooredge(
-        layer.char,
-        layer.color,
-        layer.bg,
-        layer.stats,
-      )
+      if (!tilefilters) {
+        return null
+      }
+      const { floor, walls, water, ground, wallscap } = tilefilters
       return (
         <>
           <group key={layer.id} position={[0, 0, z]}>
@@ -102,11 +145,9 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
             )}
             <PillarwMeshes
               width={BOARD_WIDTH}
-              char={walls.char.map((c) => (c !== 0 ? 220 : 0))}
-              color={walls.color.map((c) =>
-                c !== 0 ? COLOR.BLACK : COLOR.ONCLEAR,
-              )}
-              bg={walls.bg}
+              char={wallscap.char}
+              color={wallscap.color}
+              bg={wallscap.bg}
             />
             <group position-z={drawheight}>
               <Tiles
@@ -122,20 +163,10 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
       )
     }
     case LAYER_TYPE.SPRITES: {
-      const hideplayer = ispresent(layers)
-      const othersprites = layer.sprites.filter(
-        (sprite) =>
-          (sprite.stat as COLLISION) !== COLLISION.ISSWIM &&
-          (!hideplayer || !sprite.pid),
-      )
-      const watersprites = layer.sprites.filter(
-        (sprite) =>
-          (sprite.stat as COLLISION) === COLLISION.ISSWIM &&
-          (!hideplayer || !sprite.pid),
-      )
-      const shadowsprites = othersprites.filter(
-        (sprite) => (sprite.stat as COLLISION) !== COLLISION.ISGHOST,
-      )
+      if (!spritefilters) {
+        return null
+      }
+      const { othersprites, watersprites, shadowsprites } = spritefilters
       return (
         <group key={layer.id} position={[0, 0, z]}>
           <ShadowMeshes sprites={shadowsprites} limit={BOARD_SIZE}>

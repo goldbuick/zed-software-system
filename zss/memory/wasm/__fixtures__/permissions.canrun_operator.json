@@ -1,0 +1,51 @@
+{
+  "name": "permissions.canrun_operator",
+  "initial": {},
+  "steps": [
+    {
+      "op": "permission_reset",
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_set_operator",
+      "args": {
+        "operator": "operator"
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_can_run",
+      "args": {
+        "player": "operator",
+        "command": "nuke"
+      },
+      "expect": {
+        "mode": "json",
+        "json": {
+          "allowed": true,
+          "deny_reason": ""
+        }
+      }
+    },
+    {
+      "op": "permission_can_run",
+      "args": {
+        "player": "operator",
+        "command": "allow"
+      },
+      "expect": {
+        "mode": "json",
+        "json": {
+          "allowed": true,
+          "deny_reason": ""
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "name": "trimformatobject.nested_flags",
+  "initial": {},
+  "steps": [
+    {
+      "op": "trim_format_object",
+      "args": {
+        "json": [
+          "flags",
+          {
+            "p1": {},
+            "p2": {
+              "deaths": 2
+            }
+          }
+        ]
+      },
+      "expect": {
+        "mode": "json",
+        "json": [
+          "flags",
+          {
+            "p2": {
+              "deaths": 2
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

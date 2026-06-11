@@ -1,0 +1,40 @@
+---
+description: Ban new subsystems/layers as bug fixes; fix root cause in existing code
+alwaysApply: true
+---
+
+# No new systems to fix bugs
+
+Understand the **root cause** in the existing architecture before changing behavior. Bug fixes belong in the code path that is wrong — not in a new layer on top.
+
+## Required before fixing a bug
+
+1. **Root cause** — explain *why* the bug happens (stale read, wrong emitter, missing invalidation, race), not just *what* looks broken.
+2. **Existing owner** — name the module/function that should own the fix (e.g. join worker tick, boundary pipe emit, charedit write path).
+3. **Smallest in-place change** — prefer correcting logic in that owner over routing around it.
+
+## Prohibited as bug fixes
+
+- New **coordination systems**: notify buses, sync registries, event listeners wired across workers to “refresh” state.
+- New **middleware layers**: wrappers that re-call paint/tick/push after unrelated edits.
+- New **parallel code paths**: skip/filter/rebuild branches added without proof they replace the broken path.
+- New **facade modules** whose main job is papering over a bug elsewhere.
+- “Defense in depth” stacks — multiple speculative mitigations when one root fix is not yet identified.
+
+## Allowed
+
+- **Instrumentation** in existing modules (trace logs, metrics) to find root cause.
+- **Minimal edits** inside the module that emits or stores the bad state.
+- New systems only when the task is a **deliberate feature or refactor**, not a workaround for an undiagnosed bug.
+
+## Examples
+
+```typescript
+// ❌ BAD — new notify system to force host resync after charedit
+memoryregisterboardsyncnotify(() => { boardrunnerpushupdates(); gadgetsynctick() })
+
+// ✅ GOOD — fix join worker so layer cache rebuilds before pushworkerupdates()
+// (in the existing tick handler that already owns push timing)
+```
+
+If root cause is unknown, stop at diagnosis (repro + logs). Do not add architecture to compensate.

@@ -8,10 +8,6 @@ export type AGENTS_ROSTER = {
 
 export const AGENTS_ROSTER_STORAGE_KEY = 'agents_roster'
 
-export function emptyagentsroster(): AGENTS_ROSTER {
-  return { ids: [], names: {} }
-}
-
 export function isvalidagentsroster(value: unknown): value is AGENTS_ROSTER {
   if (!value || typeof value !== 'object') {
     return false

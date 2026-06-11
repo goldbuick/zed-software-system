@@ -1,14 +1,32 @@
 import {
   type E2E_LOADER_NOTIFY,
+  boardrunnerinput,
+  chipmessage,
+  registerinspector,
   vmcli,
   vmgadgetscroll,
   vminspect,
 } from 'zss/device/api'
+import { modemwritevaluenumber } from 'zss/device/modem'
 import { register, registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
+import { runlangcompilebench } from 'zss/feature/lang/langcompilebench'
+import type { LangCompileBenchReport } from 'zss/feature/lang/langcompilebench'
+import { readnetworkpeerid, readsubscribetopic } from 'zss/feature/netterminal'
+import { isjoin } from 'zss/feature/url'
 import { panelscrolltolines } from 'zss/gadget/data/panelitemtext'
-import { useGadgetClient, useTape } from 'zss/gadget/data/state'
+import { useGadgetClient, useTape, useTerminal } from 'zss/gadget/data/state'
+import { INPUT, LAYER_TYPE, paneladdress } from 'zss/gadget/data/types'
+import { ptstoarea } from 'zss/mapping/2d'
 import type { PT } from 'zss/words/types'
+export type ZssE2eMoveDir = 'left' | 'right' | 'up' | 'down'
+
+const MOVE_INPUT: Record<ZssE2eMoveDir, INPUT> = {
+  left: INPUT.MOVE_LEFT,
+  right: INPUT.MOVE_RIGHT,
+  up: INPUT.MOVE_UP,
+  down: INPUT.MOVE_DOWN,
+}
 
 export type ZssE2eScrollSnapshot = {
   scrollname: string
@@ -28,6 +46,38 @@ export type ZssE2eBridge = {
   runcli: (line: string) => void
   writetestscroll: (name: string, content: string, chip?: string) => void
   runinspect: (p1: PT, p2: PT) => void
+  /** Host `#joincode` topic; empty until netterminal publishes. */
+  getjointopic: () => string
+  /** PeerJS id when signaling peer is open; undefined if not connected. */
+  getpeerid: () => string | undefined
+  /** Join URL hash + topic for pipeline debugging. */
+  getjoindiag: () => {
+    hash: string
+    topic: string
+    peerid: string | undefined
+    player: string
+    isjoin: boolean
+  }
+  /** Last N terminal log lines (apilog / apierror). */
+  getrecentlogs: (limit?: number) => string[]
+  /** Tape workstatus badge text (e.g. `run TITLE`). */
+  getworkstatus: () => string
+  /** Local player sprite from gadget layers, if painted. */
+  getplayersprite: () => { x: number; y: number } | undefined
+  sendmoveinput: (dir: ZssE2eMoveDir) => void
+  /** Toggle inspector on this browser tab (join-safe; avoids host-only CLI). */
+  enableinspector: (enabled?: boolean) => void
+  /** `chip:batch:<path>` — opens inspect batch menus on host sim. */
+  sendbatchchip: (path: string, data?: unknown[]) => void
+  /** Write shared panel number (charedit/coloredit/bgedit). */
+  writepanelnumber: (chip: string, target: string, value: number) => void
+  batchchipforrect: (p1: PT, p2: PT) => string
+  /** Sim boot done and gadget snapshot readable. */
+  hostsimalive: () => boolean
+  runlangcompilebench: (opts?: {
+    iterations?: number
+    warmup?: number
+  }) => Promise<LangCompileBenchReport>
 }
 
 export function installe2ebridge(): void {
@@ -56,8 +106,8 @@ export function installe2ebridge(): void {
       }
     },
     isgadgetclientready() {
-      const { gadget, slim } = useGadgetClient.getState()
-      return gadget.id !== '' || (Array.isArray(slim) && slim.length > 0)
+      const { gadget } = useGadgetClient.getState()
+      return gadget.id !== '' || (gadget.layers?.length ?? 0) > 0
     },
     getloaderevents() {
       return [...loaderevents]
@@ -96,6 +146,90 @@ export function installe2ebridge(): void {
     },
     runinspect(p1: PT, p2: PT) {
       vminspect(SOFTWARE, registerreadplayer(), p1, p2)
+    },
+    getjointopic() {
+      return readsubscribetopic()
+    },
+    getpeerid() {
+      return readnetworkpeerid()
+    },
+    getjoindiag() {
+      let hash = ''
+      try {
+        hash = location.hash.slice(1)
+      } catch {
+        hash = ''
+      }
+      return {
+        hash,
+        topic: readsubscribetopic(),
+        peerid: readnetworkpeerid(),
+        player: registerreadplayer(),
+        isjoin: isjoin(),
+      }
+    },
+    getrecentlogs(limit = 40) {
+      const buf = useTerminal.getState().buffer ?? []
+      const start = Math.max(0, buf.length - limit)
+      return buf.slice(start).map((line) => String(line))
+    },
+    getworkstatus() {
+      return useTape.getState().workstatus
+    },
+    getplayersprite() {
+      const player = registerreadplayer()
+      const layers = useGadgetClient.getState().gadget.layers ?? []
+      for (let i = 0; i < layers.length; ++i) {
+        const layer = layers[i]
+        if (layer.type !== LAYER_TYPE.SPRITES) {
+          continue
+        }
+        const sprites = layer.sprites
+        for (let j = 0; j < sprites.length; ++j) {
+          const sprite = sprites[j]
+          if (sprite.pid === player) {
+            return { x: sprite.x, y: sprite.y }
+          }
+        }
+      }
+      return undefined
+    },
+    sendmoveinput(dir: ZssE2eMoveDir) {
+      boardrunnerinput(SOFTWARE, registerreadplayer(), MOVE_INPUT[dir], 0)
+    },
+    enableinspector(enabled = true) {
+      registerinspector(SOFTWARE, registerreadplayer(), enabled)
+    },
+    sendbatchchip(path: string, data: unknown[] = []) {
+      chipmessage(SOFTWARE, registerreadplayer(), 'batch', path, data)
+    },
+    writepanelnumber(chip: string, target: string, value: number) {
+      modemwritevaluenumber(paneladdress(chip, target), value)
+    },
+    batchchipforrect(p1: PT, p2: PT) {
+      return `batch:${ptstoarea(p1, p2)}`
+    },
+    hostsimalive() {
+      try {
+        for (let i = 0; i < loaderevents.length; ++i) {
+          const e = loaderevents[i]
+          if (
+            e.phase === 'done' &&
+            e.eventname === 'sim:load' &&
+            e.format === 'text'
+          ) {
+            const g = useGadgetClient.getState().gadget
+            panelscrolltolines(g.scroll)
+            return true
+          }
+        }
+        return false
+      } catch {
+        return false
+      }
+    },
+    runlangcompilebench(opts) {
+      return runlangcompilebench(opts)
     },
   }
 }

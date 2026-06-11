@@ -73,7 +73,7 @@ export function drawremotecursors(
   }
 
   for (const presence of remotePresence) {
-    if (presence.clientId === player) {
+    if (presence.clientid === player) {
       continue
     }
 

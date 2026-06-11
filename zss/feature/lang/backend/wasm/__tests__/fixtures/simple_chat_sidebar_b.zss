@@ -1,0 +1,63 @@
+@player
+@ispushable
+@cycle 1
+@char 2
+@color white
+@bg blue
+:think
+' torch info
+#set torchmeter " $brown$157 $yellowTorches:$torches"
+#if torches < 10 do
+ #set torchmeter torchmeter + "  "
+#else if torches < 100 do
+ #set torchmeter torchmeter + " "
+#done
+#if wick > 0 do
+ #if wick > 50 do
+  #set torchmeter torchmeter + "$177"
+ #else set torchmeter torchmeter + "$176"
+ #done
+ #if wick > 100 do
+  #set torchmeter torchmeter + "$177"
+ #else set torchmeter torchmeter + "$176"
+ #done
+ #if wick > 150 do
+  #set torchmeter torchmeter + "$177"
+ #else set torchmeter torchmeter + "$176"
+ #done
+ #if wick > 200 do
+  #set torchmeter torchmeter + "$177"
+ #else set torchmeter torchmeter + "$176"
+ #done
+#done
+"$torchmeter
+" $cyan$4 $yellow   Gems:$gems
+" $yellow    Score:$score
+' make keys section of sidebar
+#set keylist " $white$12 $yellow   Keys:"
+#if key0 set keylist keylist + "$black$12"
+#if key9 set keylist keylist + "$blue$12"
+#if key10 set keylist keylist + "$green$12"
+#if key11 set keylist keylist + "$cyan$12"
+#if key12 set keylist keylist + "$red$12"
+#if key13 set keylist keylist + "$purple$12"
+#if key14 set keylist keylist + "$yellow$12"
+#if key15 set keylist keylist + "$white$12"
+"$keylist
+' hotkeys and input info
+"
+!lighttorch hk t;Torch
+#if mute do
+!soundon hk b;Be loud
+#else do
+!soundoff hk b;Be quiet
+#done
+"
+"      $black$ondkcyan $24$25$26$27$ondkblue $whiteMove
+"$black$onltgrey Shift $24$25$26$27$ondkblue $whiteShoot
+"
+#if graphics is fpv do
+!turnleft hk q;Turn Left
+!turnright hk e;Turn Right
+#done
+#done

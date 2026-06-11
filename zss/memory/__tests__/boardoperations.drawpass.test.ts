@@ -1,6 +1,10 @@
 import { memoryupdatedrawdirty } from 'zss/memory/boarddrawdirty'
 import { memorytickboard } from 'zss/memory/boardtick'
 import {
+  memoryreadboardruntime,
+  memorywriteboardelementruntime,
+} from 'zss/memory/runtimeboundary'
+import {
   BOARD,
   BOARD_ELEMENT,
   BOARD_SIZE,
@@ -18,6 +22,7 @@ jest.mock('zss/config', () => ({
   FORCE_CRT_OFF: false,
   FORCE_LOW_REZ: false,
   FORCE_TOUCH_UI: false,
+  WASM_SCRIPT: false,
   RUNTIME: {
     YIELD_AT_COUNT: 512,
     DRAW_CHAR_SCALE: 2,
@@ -26,16 +31,10 @@ jest.mock('zss/config', () => ({
   },
 }))
 
-jest.mock('tone', () => ({
-  Time: class TimeMock {},
-}))
-
-jest.mock('zss/lang/generator', () => ({
-  compile: (_name: string, code: string) => ({
-    labels:
-      code.includes(':drawdisplay') || code.includes(':draw')
-        ? { drawdisplay: [1] }
-        : {},
+jest.mock('zss/feature/lang/langcompileclient', () => ({
+  islangcompileready: () => true,
+  compilescript: (_name: string, code: string) => ({
+    labels: code.includes(':drawdisplay') ? { drawdisplay: [1] } : {},
   }),
 }))
 
@@ -48,16 +47,21 @@ function makeboard(
     name: 'board test',
     objects,
     terrain,
+    runtime: '',
   } as BOARD
 }
 
 function maketerrain(x: number, y: number, code: string): BOARD_ELEMENT {
-  return {
+  const terrain: BOARD_ELEMENT = {
     x,
     y,
     kind: 'terrain_kind',
-    kinddata: { id: 'terrain_kind', code },
+    runtime: '',
   }
+  memorywriteboardelementruntime(terrain, {
+    kinddata: { id: 'terrain_kind', code, runtime: '' },
+  })
+  return terrain
 }
 
 function makeobject(
@@ -65,22 +69,26 @@ function makeobject(
   code: string,
   collision: COLLISION = COLLISION.ISWALK,
 ): BOARD_ELEMENT {
-  return {
+  const object: BOARD_ELEMENT = {
     id,
     x: 1,
     y: 1,
     collision,
     kind: 'object_kind',
-    kinddata: { id: 'object_kind', code },
+    runtime: '',
   }
+  memorywriteboardelementruntime(object, {
+    kinddata: { id: 'object_kind', code, runtime: '' },
+  })
+  return object
 }
 
 describe('memorytickboard draw pass', () => {
-  it('collects terrain and object entries with :draw before tick entries', () => {
+  it('collects terrain and object entries with :drawdisplay before tick entries', () => {
     const terrain = new Array<BOARD_ELEMENT>(BOARD_SIZE)
-    terrain[0] = maketerrain(0, 0, ':draw\n#end')
+    terrain[0] = maketerrain(0, 0, ':drawdisplay\n#end')
 
-    const objectdraw = makeobject('sid_draw', ':draw\n#end')
+    const objectdraw = makeobject('sid_draw', ':drawdisplay\n#end')
     const objecttick = makeobject('sid_tick', ':tick\n#end')
     const board = makeboard(
       {
@@ -137,9 +145,9 @@ describe('memorytickboard draw pass', () => {
 
   it('omits draw pass entries when includedraw is false', () => {
     const terrain = new Array<BOARD_ELEMENT>(BOARD_SIZE)
-    terrain[0] = maketerrain(0, 0, ':draw\n#end')
+    terrain[0] = maketerrain(0, 0, ':drawdisplay\n#end')
 
-    const objectdraw = makeobject('sid_draw', ':draw\n#end')
+    const objectdraw = makeobject('sid_draw', ':drawdisplay\n#end')
     const objecttick = makeobject('sid_tick', ':tick\n#end')
     const board = makeboard(
       {
@@ -164,9 +172,9 @@ describe('memorytickboard draw pass', () => {
 
   it('filters draw pass to ids in drawallowids when provided', () => {
     const terrain = new Array<BOARD_ELEMENT>(BOARD_SIZE)
-    terrain[0] = maketerrain(0, 0, ':draw\n#end')
+    terrain[0] = maketerrain(0, 0, ':drawdisplay\n#end')
 
-    const objectdraw = makeobject('sid_draw', ':draw\n#end')
+    const objectdraw = makeobject('sid_draw', ':drawdisplay\n#end')
     const objecttick = makeobject('sid_tick', ':tick\n#end')
     const board = makeboard(
       {
@@ -186,24 +194,30 @@ describe('memorytickboard draw pass', () => {
   it('memoryupdatedrawdirty vacated cell and neighbors after object moves', () => {
     const terrain = new Array<BOARD_ELEMENT>(BOARD_SIZE)
     const tidx = 5 + 5 * 60
-    terrain[tidx] = maketerrain(5, 5, ':draw\n#end')
+    terrain[tidx] = maketerrain(5, 5, ':drawdisplay\n#end')
 
-    const mover = makeobject('sid_move', ':draw\n#end')
+    const mover = makeobject('sid_move', ':drawdisplay\n#end')
     mover.x = 5
     mover.y = 5
     const board = makeboard({ [mover.id ?? '']: mover }, terrain)
 
     memoryupdatedrawdirty(board, 1)
-    expect((board.drawallowids?.size ?? 0) > 0).toBe(true)
+    expect((memoryreadboardruntime(board)?.drawallowids?.size ?? 0) > 0).toBe(
+      true,
+    )
 
     memoryupdatedrawdirty(board, 2)
-    expect(board.drawallowids?.size ?? 0).toBe(0)
+    expect(memoryreadboardruntime(board)?.drawallowids?.size ?? 0).toBe(0)
 
     mover.x = 6
     mover.y = 6
     memoryupdatedrawdirty(board, 3)
 
-    expect(board.drawallowids?.has(`${tidx}`)).toBe(true)
-    expect(board.drawallowids?.has('sid_move')).toBe(true)
+    expect(memoryreadboardruntime(board)?.drawallowids?.has(`${tidx}`)).toBe(
+      true,
+    )
+    expect(memoryreadboardruntime(board)?.drawallowids?.has('sid_move')).toBe(
+      true,
+    )
   })
 })

@@ -1,4 +1,5 @@
-import { useCallback, useContext } from 'react'
+import { useCallback, useContext, useMemo } from 'react'
+import { parseterminalmodemprefix } from 'zss/gadget/data/api'
 import { UserHotkey, UserInput } from 'zss/gadget/userinput'
 import { useWriteText } from 'zss/gadget/writetext'
 import { maptovalue } from 'zss/mapping/value'
@@ -19,6 +20,7 @@ export function TerminalHotkey({
 }: TapeTerminalItemInputProps) {
   const context = useWriteText()
   const cc = useContext(TapeTerminalContext)
+  const parsed = useMemo(() => parseterminalmodemprefix(prefix), [prefix])
 
   const rawwords = words.map((v) => maptovalue(v, ''))
   const routetarget =
@@ -32,8 +34,12 @@ export function TerminalHotkey({
     if (!routetarget) {
       return
     }
-    cc.sendmessage(routetarget, [shortcut, maybetext, ...data])
-  }, [cc, routetarget, shortcut, maybetext, data])
+    cc.sendmessage(parsed?.chip ?? '', routetarget, [
+      shortcut,
+      maybetext,
+      ...data,
+    ])
+  }, [cc, parsed?.chip, routetarget, shortcut, maybetext, data])
 
   setuplogitem(!!active, 0, y, context)
   const content = `${

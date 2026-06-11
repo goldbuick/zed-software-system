@@ -123,19 +123,6 @@ export function firmwaregetcommandargmeta(
   return undefined
 }
 
-/** Returns the signature's instruction string (last element) for hints. */
-export function firmwarecommandargshint(
-  driver: DRIVER_TYPE,
-  method: string,
-): string {
-  const sig = firmwaregetcommandargs(driver, method)
-  if (!sig?.length) {
-    return ''
-  }
-  const last = sig[sig.length - 1]
-  return typeof last === 'string' ? last.trim() : ''
-}
-
 export function firmwareget(
   driver: DRIVER_TYPE,
   chip: CHIP,

@@ -1,0 +1,14 @@
+@shark
+@isswimming
+@cycle 3
+@char 94
+@color 7
+@p1 range;Intelligence?
+:think
+#if p1 below random 10 do
+ ?rnd
+#else do
+ ?seek
+#done
+#if contact shoot seek
+#think

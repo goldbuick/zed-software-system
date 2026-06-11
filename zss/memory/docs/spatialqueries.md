@@ -9,7 +9,8 @@
 - `zss/words/dir` — ispt
 - `zss/words/kind` — STR_KIND, readstrkind*
 - `zss/words/types` — COLLISION, COLOR, NAME, PT
-- `./boardoperations` — memoryptwithinboard, memoryreadelement, memoryreadterrain
+- `./boardaccess` — memoryreadelement, memoryreadterrain (per-point reads moved out of `boardoperations.ts`)
+- `./boardtransitions` — memoryptwithinboard
 - `./bookoperations` — memoryreadelementdisplay
 - `./types` — BOARD, BOARD_ELEMENT, etc.
 

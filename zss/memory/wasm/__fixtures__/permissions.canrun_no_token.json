@@ -1,0 +1,27 @@
+{
+  "name": "permissions.canrun_no_token",
+  "initial": {},
+  "steps": [
+    {
+      "op": "permission_reset",
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_can_run",
+      "args": {
+        "player": "player1",
+        "command": "toast"
+      },
+      "expect": {
+        "mode": "json",
+        "json": {
+          "allowed": false,
+          "deny_reason": "no token (deny)"
+        }
+      }
+    }
+  ]
+}

@@ -55,6 +55,30 @@ export const Center = createToken({
   start_chars_hint: ['$'],
 })
 
+export const Ticker = createToken({
+  name: 'Ticker',
+  pattern: /\$TICKER/i,
+  start_chars_hint: ['$'],
+})
+
+export const Toast = createToken({
+  name: 'Toast',
+  pattern: /\$TOAST/i,
+  start_chars_hint: ['$'],
+})
+
+export const Bonk = createToken({
+  name: 'Bonk',
+  pattern: /\$BONK/i,
+  start_chars_hint: ['$'],
+})
+
+export const Zap = createToken({
+  name: 'Zap',
+  pattern: /\$ZAP/i,
+  start_chars_hint: ['$'],
+})
+
 export const MetaKey = createToken({
   name: 'MetaKey',
   pattern: /\$META/i,
@@ -92,6 +116,10 @@ export const allTokens = [
   EscapedDollar,
   HyperLinkText,
   Center,
+  Ticker,
+  Toast,
+  Bonk,
+  Zap,
   MetaKey,
   MaybeFlag,
 ]
@@ -112,6 +140,10 @@ const scriptLexerNoWhitespace = new Lexer(
     EscapedDollar,
     HyperLinkText,
     Center,
+    Ticker,
+    Toast,
+    Bonk,
+    Zap,
     MetaKey,
     MaybeFlag,
   ],
@@ -122,12 +154,46 @@ const scriptLexerNoWhitespace = new Lexer(
 )
 
 const CENTER_LINE = /\$CENTER/i
+const TICKER_LINE = /\$TICKER/i
+const TOAST_LINE = /\$TOAST/i
+const BONK_LINE = /\$BONK/i
+const ZAP_LINE = /\$ZAP/i
 
 export function hascenter(text: string): MAYBE<string> {
   if (CENTER_LINE.test(text)) {
     return text.replace(CENTER_LINE, '')
   }
   return undefined
+}
+
+export function hasticker(text: string): MAYBE<string> {
+  if (TICKER_LINE.test(text)) {
+    return text.replace(TICKER_LINE, '').trim()
+  }
+  return undefined
+}
+
+export function hastoast(text: string): MAYBE<string> {
+  if (TOAST_LINE.test(text)) {
+    return text.replace(TOAST_LINE, '').trim()
+  }
+  return undefined
+}
+
+export function hasbonk(text: string): boolean {
+  return BONK_LINE.test(text)
+}
+
+export function stripbonk(text: string): string {
+  return text.replace(BONK_LINE, '').trim()
+}
+
+export function haszap(text: string): boolean {
+  return ZAP_LINE.test(text)
+}
+
+export function stripzap(text: string): string {
+  return text.replace(ZAP_LINE, '').trim()
 }
 
 export function tokenize(text: string, noWhitespace = false) {
@@ -137,7 +203,7 @@ export function tokenize(text: string, noWhitespace = false) {
   return scriptLexer.tokenize(text)
 }
 
-export type WRITE_PEN_CONTEXT = {
+type WRITE_PEN_CONTEXT = {
   color: number
   bg: number
   topedge: number | undefined
@@ -225,20 +291,6 @@ export function createwritetextcontext(
     bg: [],
     changed() {},
   }
-}
-
-export function applywritetextcontext(
-  dest: WRITE_TEXT_CONTEXT,
-  source: WRITE_TEXT_CONTEXT,
-) {
-  dest.x = source.x
-  dest.y = source.y
-  dest.active.color = source.active.color
-  dest.active.bg = source.active.bg
-  dest.padlineright = source.padlineright
-  dest.panelcarry = source.panelcarry
-  dest.panelcarrycolor = source.panelcarrycolor
-  dest.panelcarrybg = source.panelcarrybg
 }
 
 export function writetextreset(context: WRITE_TEXT_CONTEXT) {
@@ -349,6 +401,10 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
         break
       }
 
+      case Zap:
+      case Bonk:
+      case Toast:
+      case Ticker:
       case Center: {
         // skip
         break
@@ -616,19 +672,6 @@ export function writeplaintext(
 
   // yolo
   context.changed()
-}
-
-export function textformatedges(
-  topedge: number,
-  leftedge: number,
-  rightedge: number,
-  bottomedge: number,
-  context: WRITE_TEXT_CONTEXT,
-) {
-  context.active.topedge = topedge
-  context.active.leftedge = leftedge
-  context.active.rightedge = rightedge
-  context.active.bottomedge = bottomedge
 }
 
 export function textformatreadedges(context: WRITE_TEXT_CONTEXT) {

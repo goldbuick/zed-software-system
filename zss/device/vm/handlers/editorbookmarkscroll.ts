@@ -78,7 +78,6 @@ export function handleeditorbookmarkscrollpanel(
       }
       break
     default:
-      console.info('handleeditorbookmarkscrollpanel', path)
       break
   }
 }

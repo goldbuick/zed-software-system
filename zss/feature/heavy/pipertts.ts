@@ -1,4 +1,6 @@
 import { InferenceSession, Tensor, env } from 'onnxruntime-web'
+import { apierror } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
 
 import { cachedfetch } from './modelcache'
 import { phonemize } from './phonemizerparser'
@@ -96,7 +98,7 @@ export class PiperTTS {
         phonemeText = String(phonemes)
       }
     } else {
-      console.warn('Unexpected phonemes format:', phonemes)
+      apierror(SOFTWARE, '', 'piper', 'unexpected phonemes format:', phonemes)
       phonemeText = String(phonemes || text)
     }
 

@@ -6,11 +6,11 @@
 
 - `zss/feature/*` — bytes, charset, format, palette
 - `zss/gadget/data/*` — BITMAP, types
-- `zss/lang/lexer` — stat, tokenize
+- `zss/feature/lang` — stat, tokenize
 - `zss/mapping/*` — guid, number, types, value
 - `zss/words/*` — stats, color, types
 - `./boardelement` — memorycreate*, memoryexport/importboardelement
-- `./boardoperations` — memorycreateboard, memoryexport/importboard
+- `./boardlifecycle` — memorycreateboard, memoryexport/importboard
 
 ## Key Exports
 

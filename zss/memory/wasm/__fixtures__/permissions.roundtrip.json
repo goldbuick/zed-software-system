@@ -1,0 +1,123 @@
+{
+  "name": "permissions.roundtrip",
+  "initial": {},
+  "steps": [
+    {
+      "op": "permission_reset",
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_apply_config",
+      "args": {
+        "config": "lockdown"
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_allow_command",
+      "args": {
+        "role": "player",
+        "command": "risk"
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_serialize",
+      "expect": {
+        "mode": "json",
+        "json": {
+          "rolebytoken": {},
+          "bannedtokens": [],
+          "permissionconfig": "lockdown",
+          "allowlistbyrole": {
+            "admin": [
+              "bridge",
+              "build",
+              "coder",
+              "explore",
+              "moderation",
+              "persist",
+              "roles",
+              "speaker"
+            ],
+            "mod": [
+              "bridge",
+              "coder",
+              "explore",
+              "moderation",
+              "persist",
+              "speaker"
+            ],
+            "player": [
+              "risk"
+            ]
+          },
+          "allowlistbyrolecustom": {},
+          "permissionoverrideaddbyrole": {
+            "admin": [],
+            "mod": [],
+            "player": [
+              "risk"
+            ]
+          },
+          "permissionoverrideremovebyrole": {
+            "admin": [],
+            "mod": [],
+            "player": []
+          }
+        }
+      }
+    },
+    {
+      "op": "permission_set_command_permissions",
+      "args": {
+        "bannedtokens": [],
+        "rolebytoken": {},
+        "permissionconfig": "lockdown",
+        "permissionoverrideaddbyrole": {
+          "admin": [],
+          "mod": [],
+          "player": [
+            "risk"
+          ]
+        },
+        "permissionoverrideremovebyrole": {
+          "admin": [],
+          "mod": [],
+          "player": []
+        }
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_read_config",
+      "expect": {
+        "mode": "string",
+        "string": "lockdown"
+      }
+    },
+    {
+      "op": "permission_role_has_family",
+      "args": {
+        "role": "player",
+        "family": "risk"
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    }
+  ]
+}

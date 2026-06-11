@@ -1,0 +1,15 @@
+name = "net-terminal"
+main = "net-terminal-worker.js"
+compatibility_date = "2026-06-10"
+
+[[durable_objects.bindings]]
+name = "PEER_SERVER"
+class_name = "PeerServer"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["PeerServer"]
+
+[[routes]]
+pattern = "terminal.zed.cafe/*"
+zone_name = "zed.cafe"

@@ -11,6 +11,7 @@ import { PT } from 'zss/words/types'
 
 import {
   memoryexportboardelement,
+  memoryexportboardelementasjson,
   memoryimportboardelement,
 } from './boardelement'
 import {
@@ -19,6 +20,12 @@ import {
 } from './boardlookup'
 import { memoryreadelementstat } from './boards'
 import { memoryreadelementdisplay } from './bookoperations'
+import {
+  memorydeleteboardelementruntime,
+  memoryensureboardelementruntime,
+  memoryensureboardruntime,
+  memoryreadboardruntime,
+} from './runtimeboundary'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -35,6 +42,7 @@ function createempty() {
 
 export function memorydeleteboardobject(board: MAYBE<BOARD>, id: string) {
   if (ispresent(board?.objects[id])) {
+    memorydeleteboardelementruntime(board.objects[id])
     delete board.objects[id]
     return true
   }
@@ -44,31 +52,64 @@ export function memorydeleteboardobject(board: MAYBE<BOARD>, id: string) {
 export function memoryexportboard(board: MAYBE<BOARD>): MAYBE<FORMAT_OBJECT> {
   return formatobject(board, BOARD_KEYS, {
     terrain: (terrain) => terrain.map(memoryexportboardelement),
-    objects: (objects) =>
-      Object.values<BOARD_ELEMENT>(objects)
+    objects: (elements) => {
+      const objects = Object.values<BOARD_ELEMENT>(elements)
         .filter((boardelement) => !boardelement.removed)
-        .map(memoryexportboardelement),
+        .map(memoryexportboardelement)
+      return objects
+    },
     id: FORMAT_SKIP,
     name: FORMAT_SKIP,
-    named: FORMAT_SKIP,
-    lookup: FORMAT_SKIP,
-    codepage: FORMAT_SKIP,
-    distmaps: FORMAT_SKIP,
-    overboard: FORMAT_SKIP,
-    underboard: FORMAT_SKIP,
-    charsetpage: FORMAT_SKIP,
-    palettepage: FORMAT_SKIP,
-    drawlastfp: FORMAT_SKIP,
-    drawlastxy: FORMAT_SKIP,
-    drawallowids: FORMAT_SKIP,
-    drawneedfull: FORMAT_SKIP,
+    runtime: FORMAT_SKIP,
   })
+}
+
+export function memoryexportboardasjson(board: MAYBE<BOARD>): any {
+  if (!ispresent(board)) {
+    return undefined
+  }
+  const objects: Record<string, any> = {}
+  for (const object of Object.values(board.objects ?? {})) {
+    objects[object.id ?? ''] = memoryexportboardelementasjson(object)
+  }
+  return {
+    terrain: board.terrain.map(memoryexportboardelementasjson),
+    objects,
+    // stats
+    isdark: board.isdark,
+    startx: board.startx,
+    starty: board.starty,
+    over: board.over,
+    under: board.under,
+    camera: board.camera,
+    graphics: board.graphics,
+    facing: board.facing,
+    charset: board.charset,
+    palette: board.palette,
+    exitnorth: board.exitnorth,
+    exitsouth: board.exitsouth,
+    exitwest: board.exitwest,
+    exiteast: board.exiteast,
+    timelimit: board.timelimit,
+    restartonzap: board.restartonzap,
+    maxplayershots: board.maxplayershots,
+    b1: board.b1,
+    b2: board.b2,
+    b3: board.b3,
+    b4: board.b4,
+    b5: board.b5,
+    b6: board.b6,
+    b7: board.b7,
+    b8: board.b8,
+    b9: board.b9,
+    b10: board.b10,
+  }
 }
 
 export function memoryimportboard(
   boardentry: MAYBE<FORMAT_OBJECT>,
 ): MAYBE<BOARD> {
-  return unformatobject(boardentry, BOARD_KEYS, {
+  const board = unformatobject<BOARD>(boardentry, BOARD_KEYS, {
     terrain: (terrain) => terrain.map(memoryimportboardelement),
     objects: (elements) => {
       const objects: Record<string, BOARD_ELEMENT> = {}
@@ -81,6 +122,11 @@ export function memoryimportboard(
       return objects
     },
   })
+  if (!ispresent(board)) {
+    return undefined
+  }
+  memoryensureboardruntime(board)
+  return board
 }
 
 export function memorycreateboardobject(
@@ -92,6 +138,8 @@ export function memorycreateboardobject(
   }
   const object = deepcopy(from)
   object.id = object.id ?? createsid()
+  object.runtime = ''
+  memoryensureboardelementruntime(object)
   board.objects[object.id] = object
   return board.objects[object.id]
 }
@@ -190,9 +238,14 @@ export function memorywriteterrain(
     return undefined
   }
   const terrain = deepcopy(from)
+  terrain.runtime = ''
+  memoryensureboardelementruntime(terrain)
   const index = from.x + from.y * BOARD_WIDTH
   board.terrain[index] = terrain
-  delete board.distmaps
+  const boardruntime = memoryreadboardruntime(board)
+  if (ispresent(boardruntime)) {
+    delete boardruntime.distmaps
+  }
   return board.terrain[index]
 }
 
@@ -235,6 +288,8 @@ export function memorycreateboard(fn = noop<BOARD>) {
     objects: {},
     id: '',
     name: '',
+    runtime: '',
   }
+  memoryensureboardruntime(board)
   return fn(board)
 }

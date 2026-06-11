@@ -1,9 +1,10 @@
 import { objectKeys } from 'ts-extras'
 import { parsetarget } from 'zss/device'
 import {
-  gadgetserverclearscroll,
+  apierror,
   registercopy,
   registereditoropen,
+  vmclearscroll,
   vmcodeaddress,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
@@ -15,9 +16,13 @@ import {
   zsszedlinklinechip,
 } from 'zss/feature/zsstextui'
 import { codepagepicksuffix } from 'zss/firmware/cli/utils'
-import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
+import {
+  registerhyperlinksharedbridge,
+  registerhyperlinksharedcleanup,
+  resolvehyperlinksharedbridge,
+} from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
-import { ptstoarea, rectpoints } from 'zss/mapping/2d'
+import { indextopt, ptstoarea, rectpoints } from 'zss/mapping/2d'
 import { range } from 'zss/mapping/array'
 import { doasync } from 'zss/mapping/func'
 import { CYCLE_DEFAULT, waitfor } from 'zss/mapping/tick'
@@ -28,16 +33,23 @@ import {
   ispresent,
   isstring,
 } from 'zss/mapping/types'
-import { CATEGORY, COLLISION, NAME, PT, WORD } from 'zss/words/types'
+import { maptonumber, maptostring } from 'zss/mapping/value'
+import { ispt } from 'zss/words/dir'
+import { CATEGORY, COLLISION, PT, WORD } from 'zss/words/types'
 
 import {
   memoryboardelementindex,
   memoryreadelement,
   memoryreadelementbyidorindex,
+  memoryreadobject,
 } from './boardaccess'
 import { memoryboardelementisobject } from './boardelement'
 import { memorysafedeleteelement, memorywriteterrain } from './boardlifecycle'
-import { memoryinitboard, memoryreadelementstat } from './boards'
+import {
+  memoryinitboard,
+  memoryreadboardbyaddress,
+  memoryreadelementstat,
+} from './boards'
 import { memoryreadelementcodepage } from './bookoperations'
 import { memoryensuresoftwarebook } from './books'
 import {
@@ -53,10 +65,15 @@ import {
   memorycodepagetoprefix,
   memoryelementtodisplayprefix,
 } from './rendering'
+import {
+  memoryensureboardruntime,
+  memoryreadboardelementruntime,
+} from './runtimeboundary'
 import { memoryreadbookbysoftware, memoryreadoperator } from './session'
 import {
   BOARD,
   BOARD_ELEMENT,
+  BOARD_WIDTH,
   CODE_PAGE,
   CODE_PAGE_TYPE,
   MEMORY_LABEL,
@@ -121,6 +138,198 @@ export function memoryinspectloaderlines(p1: PT, p2: PT): string[] {
     )
   }
   return lines
+}
+
+const elementhyperlinktypes = [
+  'rn',
+  'range',
+  'sl',
+  'select',
+  'nm',
+  'number',
+  'tx',
+  'text',
+  'zssedit',
+  'charedit',
+  'coloredit',
+  'bgedit',
+]
+
+type ELEMENT_HYPERLINK_CONTEXT = {
+  board: string
+  elementbyid?: string
+  elementbyindex?: number
+  elementsbypoints?: PT[]
+}
+
+const elementhyperlinkcontext: ELEMENT_HYPERLINK_CONTEXT = {
+  board: '',
+}
+
+function registerhyperlinksforelementgetvalue(typ: string, name: string) {
+  const maybeboard = memoryreadboardbyaddress(elementhyperlinkcontext.board)
+  let element: MAYBE<BOARD_ELEMENT>
+  if (elementhyperlinkcontext.elementbyid) {
+    element = memoryreadobject(maybeboard, elementhyperlinkcontext.elementbyid)
+  } else if (isnumber(elementhyperlinkcontext.elementbyindex)) {
+    const pt = indextopt(elementhyperlinkcontext.elementbyindex, BOARD_WIDTH)
+    element = memoryreadelement(maybeboard, pt)
+  } else if (isarray(elementhyperlinkcontext.elementsbypoints)) {
+    const [first] = elementhyperlinkcontext.elementsbypoints
+    if (ispt(first)) {
+      element = memoryreadelement(maybeboard, first)
+    }
+  }
+  // get falls back to kind data
+  const kind = memoryreadboardelementruntime(element)?.kinddata
+  const maybevalue =
+    element?.[name as keyof BOARD_ELEMENT] ??
+    kind?.[name as keyof BOARD_ELEMENT]
+  switch (typ) {
+    case 'rn':
+    case 'range':
+    case 'sl':
+    case 'select':
+    case 'nm':
+    case 'number':
+    case 'bgedit':
+    case 'charedit':
+    case 'coloredit':
+      switch (name) {
+        case 'group':
+          return isstring(maybevalue)
+            ? parseInt(maybevalue.replace('group', ''))
+            : 0
+        case 'cycle':
+          return maptonumber(maybevalue, CYCLE_DEFAULT)
+        case 'collision':
+          return maptonumber(maybevalue, COLLISION.ISWALK)
+        case 'p1':
+        case 'p2':
+        case 'p3':
+        case 'p4':
+        case 'p5':
+        case 'p6':
+        case 'p7':
+        case 'p8':
+        case 'p9':
+        case 'p10':
+        case 'item':
+        case 'pushable':
+        case 'breakable':
+        default:
+          // update to return stat default value
+          return maptonumber(maybevalue, 0)
+      }
+    case 'tx':
+    case 'text':
+    case 'zssedit':
+      return maptostring(maybevalue)
+  }
+  return 0
+}
+
+function registerhyperlinksforelementsetvalue(
+  typ: string,
+  name: string,
+  value: WORD,
+) {
+  const maybeboard = memoryreadboardbyaddress(elementhyperlinkcontext.board)
+  const elements: MAYBE<BOARD_ELEMENT>[] = []
+  if (elementhyperlinkcontext.elementbyid) {
+    elements.push(
+      memoryreadobject(maybeboard, elementhyperlinkcontext.elementbyid),
+    )
+  } else if (isnumber(elementhyperlinkcontext.elementbyindex)) {
+    const pt = indextopt(elementhyperlinkcontext.elementbyindex, BOARD_WIDTH)
+    elements.push(memoryreadelement(maybeboard, pt))
+  } else if (isarray(elementhyperlinkcontext.elementsbypoints)) {
+    for (const pt of elementhyperlinkcontext.elementsbypoints) {
+      if (ispt(pt)) {
+        elements.push(memoryreadelement(maybeboard, pt))
+      }
+    }
+  }
+  switch (name) {
+    case 'group':
+      if (isnumber(value)) {
+        for (const element of elements) {
+          if (ispresent(element)) {
+            element.group = `group${value}`
+          }
+        }
+      }
+      break
+    default:
+      switch (typ) {
+        case 'rn':
+        case 'range':
+        case 'sl':
+        case 'select':
+        case 'nm':
+        case 'number':
+        case 'bgedit':
+        case 'charedit':
+        case 'coloredit': {
+          const withvalue = maptonumber(value, 0)
+          for (const element of elements) {
+            if (ispresent(element)) {
+              element[name as keyof BOARD_ELEMENT] = withvalue
+            }
+          }
+          const editedboard = memoryreadboardbyaddress(
+            elementhyperlinkcontext.board,
+          )
+          if (ispresent(editedboard)) {
+            memoryensureboardruntime(editedboard).drawneedfull = true
+          }
+          break
+        }
+        case 'tx':
+        case 'text':
+        case 'zssedit': {
+          const withvalue = maptostring(value)
+          for (const element of elements) {
+            if (ispresent(element)) {
+              element[name as keyof BOARD_ELEMENT] = withvalue
+            }
+          }
+          break
+        }
+      }
+      break
+  }
+}
+
+function registerhyperlinksforelement(
+  chip: string,
+  context: ELEMENT_HYPERLINK_CONTEXT,
+) {
+  const keep = Object.keys(context)
+  const validate = Object.keys(elementhyperlinkcontext)
+  // copy new context
+  Object.assign(elementhyperlinkcontext, context)
+  // remove unused keys
+  for (const key of validate) {
+    if (!keep.includes(key)) {
+      delete elementhyperlinkcontext[key as keyof ELEMENT_HYPERLINK_CONTEXT]
+    }
+  }
+  // remove any shared bridges that are no longer needed
+  registerhyperlinksharedcleanup()
+  // register new shared bridges
+  for (const type of elementhyperlinktypes) {
+    const shared = resolvehyperlinksharedbridge(chip, type)
+    if (ispresent(shared)) {
+      continue
+    }
+    registerhyperlinksharedbridge(
+      chip,
+      type,
+      registerhyperlinksforelementgetvalue,
+      registerhyperlinksforelementsetvalue,
+    )
+  }
 }
 
 export async function memoryinspect(player: string, p1: PT, p2: PT) {
@@ -191,31 +400,12 @@ export function memoryinspectarea(
     return
   }
 
-  let group = 0
   const area = ptstoarea(p1, p2)
   const groupchip = `groups:${area}`
-
-  registerhyperlinksharedbridge(
-    groupchip,
-    'select',
-    (target) => {
-      if (target === 'group') {
-        return group
-      }
-      return 0
-    },
-    (name, value) => {
-      if (name === 'group' && isnumber(value)) {
-        group = value
-        rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
-          const el = memoryreadelement(board, pt)
-          if (ispresent(el)) {
-            el[name as keyof BOARD_ELEMENT] = `group${value}`
-          }
-        })
-      }
-    },
-  )
+  registerhyperlinksforelement(groupchip, {
+    board: board.id,
+    elementsbypoints: rectpoints(p1.x, p1.y, p2.x, p2.y),
+  })
 
   const grouptokens = [
     'group',
@@ -320,24 +510,11 @@ export function memoryinspectbgarea(
     return
   }
 
-  let all = 0
   const batchchip = `batch:${ptstoarea(p1, p2)}`
-  registerhyperlinksharedbridge(
-    batchchip,
-    'bgedit',
-    () => all,
-    (field, value) => {
-      if (isnumber(value)) {
-        all = value
-        rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
-          const el = memoryreadelement(board, pt)
-          if (ispresent(el)) {
-            el[field as keyof BOARD_ELEMENT] = value
-          }
-        })
-      }
-    },
-  )
+  registerhyperlinksforelement(batchchip, {
+    board: board.id,
+    elementsbypoints: rectpoints(p1.x, p1.y, p2.x, p2.y),
+  })
 
   const lines = [
     `batch chars: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
@@ -362,26 +539,19 @@ export function memoryinspectchar(
     return
   }
 
-  function get(target: string): WORD {
-    const value =
-      element?.[target as keyof BOARD_ELEMENT] ??
-      element?.kinddata?.[target as keyof BOARD_ELEMENT] ??
-      0
-    return value
-  }
-  function set(field: string, value: WORD) {
-    if (ispresent(element)) {
-      element[field as keyof BOARD_ELEMENT] = value
-    }
-  }
+  const chip = chipfromelement(board, element)
+  registerhyperlinksforelement(chip, {
+    board: board.id,
+    elementbyid: element.id,
+    elementbyindex: memoryboardelementindex(board, element),
+  })
 
   const strcategory =
-    element.category === CATEGORY.ISTERRAIN ? 'terrain' : 'object'
+    memoryreadboardelementruntime(element)?.category === CATEGORY.ISTERRAIN
+      ? 'terrain'
+      : 'object'
   const strname = element.name ?? element.kind ?? 'ERR'
   const strpos = `${element.x ?? -1}, ${element.y ?? -1}`
-  const chip = chipfromelement(board, element)
-
-  registerhyperlinksharedbridge(chip, 'charedit', get, set)
 
   const lines = [
     `${strcategory}: ${strname} ${strpos}`,
@@ -402,24 +572,11 @@ export function memoryinspectchararea(
     return
   }
 
-  let all = 0
   const batchchip = `batch:${ptstoarea(p1, p2)}`
-  registerhyperlinksharedbridge(
-    batchchip,
-    'charedit',
-    () => all,
-    (field, value) => {
-      if (isnumber(value)) {
-        all = value
-        rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
-          const el = memoryreadelement(board, pt)
-          if (ispresent(el)) {
-            el[field as keyof BOARD_ELEMENT] = value
-          }
-        })
-      }
-    },
-  )
+  registerhyperlinksforelement(batchchip, {
+    board: board.id,
+    elementsbypoints: rectpoints(p1.x, p1.y, p2.x, p2.y),
+  })
 
   const lines = [
     `batch chars: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
@@ -444,27 +601,20 @@ export function memoryinspectcolor(
     return
   }
 
-  function get(target: string): WORD {
-    const value =
-      element?.[target as keyof BOARD_ELEMENT] ??
-      element?.kinddata?.[target as keyof BOARD_ELEMENT] ??
-      0
-    return value
-  }
-  function set(field: string, value: WORD) {
-    if (ispresent(element)) {
-      element[field as keyof BOARD_ELEMENT] = value
-    }
-  }
+  const chip = chipfromelement(board, element)
+  registerhyperlinksforelement(chip, {
+    board: board.id,
+    elementbyid: element.id,
+    elementbyindex: memoryboardelementindex(board, element),
+  })
 
   const strcategory =
-    element.category === CATEGORY.ISTERRAIN ? 'terrain' : 'object'
+    memoryreadboardelementruntime(element)?.category === CATEGORY.ISTERRAIN
+      ? 'terrain'
+      : 'object'
   const strname = element.name ?? element.kind ?? 'ERR'
   const strpos = `${element.x ?? -1}, ${element.y ?? -1}`
-  const chip = chipfromelement(board, element)
   const edittype = name === 'bg' ? 'bgedit' : 'coloredit'
-
-  registerhyperlinksharedbridge(chip, edittype, get, set)
 
   const lines = [
     `${strcategory}: ${strname} ${strpos}`,
@@ -485,26 +635,11 @@ export function memoryinspectcolorarea(
     return
   }
 
-  let all = 0
   const batchchip = `batch:${ptstoarea(p1, p2)}`
-  registerhyperlinksharedbridge(
-    batchchip,
-    'coloredit',
-    () => all,
-    (field, value) => {
-      if (isnumber(value)) {
-        all = value
-        for (let y = p1.y; y <= p2.y; ++y) {
-          for (let x = p1.x; x <= p2.x; ++x) {
-            const el = memoryreadelement(board, { x, y })
-            if (ispresent(el)) {
-              el[field as keyof BOARD_ELEMENT] = value
-            }
-          }
-        }
-      }
-    },
-  )
+  registerhyperlinksforelement(batchchip, {
+    board: board.id,
+    elementsbypoints: rectpoints(p1.x, p1.y, p2.x, p2.y),
+  })
 
   const lines = [
     `batch chars: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
@@ -530,11 +665,7 @@ export function memoryinspectcommand(path: string, player: string) {
   }
   switch (inspect.path) {
     case 'copycoords':
-      registercopy(
-        SOFTWARE,
-        memoryreadoperator(),
-        [element.x ?? 0, element.y ?? 0].join(' '),
-      )
+      registercopy(SOFTWARE, player, [element.x ?? 0, element.y ?? 0].join(' '))
       break
     case 'bg':
     case 'color':
@@ -560,7 +691,7 @@ export function memoryinspectcommand(path: string, player: string) {
         )
 
         // close scroll
-        gadgetserverclearscroll(SOFTWARE, player)
+        vmclearscroll(SOFTWARE, player)
 
         // wait a little
         await waitfor(800)
@@ -572,7 +703,13 @@ export function memoryinspectcommand(path: string, player: string) {
       })
       break
     default:
-      console.info('unknown inspect', inspect)
+      apierror(
+        SOFTWARE,
+        memoryreadoperator(),
+        'inspect',
+        'unknown inspect',
+        inspect,
+      )
       break
   }
 }
@@ -590,83 +727,15 @@ export function memoryinspectelement(
     return
   }
 
-  function get(name: string): WORD {
-    const value =
-      element?.[name as keyof BOARD_ELEMENT] ??
-      element?.kinddata?.[name as keyof BOARD_ELEMENT]
-
-    if (name === 'group') {
-      return parseFloat(element.group?.replace('group', '') ?? '0')
-    }
-
-    if (!ispresent(value)) {
-      switch (name) {
-        case 'color':
-          return 15
-        case 'bg':
-          return 0
-        case 'group':
-          return 0
-        case 'cycle':
-          return CYCLE_DEFAULT
-        case 'collision':
-          return COLLISION.ISWALK
-        case 'pushable':
-          return 0
-        case 'breakable':
-          return 0
-      }
-    }
-
-    return value
-  }
-  function set(name: string, value: WORD) {
-    if (ispresent(element)) {
-      if (name === 'group') {
-        element.group = `group${value as number}`
-      } else {
-        element[name as keyof BOARD_ELEMENT] = value
-      }
-    }
-  }
-
   const chip = chipfromelement(board, element)
+  registerhyperlinksforelement(chip, {
+    board: board.id,
+    elementbyid: element.id,
+    elementbyindex: memoryboardelementindex(board, element),
+  })
+
   const stats = memoryreadcodepagestatdefaults(codepage)
   const targets = objectKeys(stats)
-  const stattypes = new Set<string>([
-    'select',
-    'charedit',
-    'coloredit',
-    'bgedit',
-  ])
-  for (let i = 0; i < targets.length; ++i) {
-    const target = targets[i]
-    switch (target) {
-      case 'char':
-      case 'cycle':
-      case 'color':
-      case 'bg':
-      case 'group':
-      case 'collision':
-      case 'pushable':
-      case 'breakable':
-        break
-      default:
-        if (isarray(stats[target])) {
-          const [typ] = stats[target]
-          if (isstring(typ)) {
-            const lowered = NAME(typ)
-            if (lowered && lowered !== 'hk' && lowered !== 'hotkey') {
-              stattypes.add(lowered)
-            }
-          }
-        }
-        break
-    }
-  }
-  for (const typ of stattypes) {
-    registerhyperlinksharedbridge(chip, typ, get, set)
-  }
 
   const lines: string[] = []
   if (isobject) {
@@ -749,19 +818,27 @@ export function memoryinspectelement(
   lines.push(
     zsszedlinkline(
       memoryinspectjoinlinkwords(['char', 'hk', 'a', ' A ', 'next']),
-      `char: ${element.char ?? element.kinddata?.char ?? 1}`,
+      `char: ${
+        element.char ??
+        memoryreadboardelementruntime(element)?.kinddata?.char ??
+        1
+      }`,
     ),
   )
   lines.push(
     zsszedlinkline(
       memoryinspectjoinlinkwords(['color', 'hk', 'c', ' C ', 'next']),
-      `color: ${element.color ?? element.kinddata?.color ?? 15}`,
+      `color: ${
+        element.color ??
+        memoryreadboardelementruntime(element)?.kinddata?.color ??
+        15
+      }`,
     ),
   )
   lines.push(
     zsszedlinkline(
       memoryinspectjoinlinkwords(['bg', 'hk', 'b', ' B ', 'next']),
-      `bg: ${element.bg ?? element.kinddata?.bg ?? 0}`,
+      `bg: ${element.bg ?? memoryreadboardelementruntime(element)?.kinddata?.bg ?? 0}`,
     ),
   )
   lines.push(
@@ -821,7 +898,10 @@ export function memoryinspectempty(
       for (let y = p1.y; y <= p2.y; ++y) {
         for (let x = p1.x; x <= p2.x; ++x) {
           const maybeobject = memoryreadelement(board, { x, y })
-          if (maybeobject?.category === CATEGORY.ISOBJECT) {
+          if (
+            memoryreadboardelementruntime(maybeobject)?.category ===
+            CATEGORY.ISOBJECT
+          ) {
             memorysafedeleteelement(board, maybeobject, mainbook.timestamp)
           }
           memorywriteterrain(board, { x, y })
@@ -833,7 +913,10 @@ export function memoryinspectempty(
       for (let y = p1.y; y <= p2.y; ++y) {
         for (let x = p1.x; x <= p2.x; ++x) {
           const maybeobject = memoryreadelement(board, { x, y }, true)
-          if (maybeobject?.category === CATEGORY.ISOBJECT) {
+          if (
+            memoryreadboardelementruntime(maybeobject)?.category ===
+            CATEGORY.ISOBJECT
+          ) {
             memorysafedeleteelement(board, maybeobject, mainbook.timestamp)
           }
         }

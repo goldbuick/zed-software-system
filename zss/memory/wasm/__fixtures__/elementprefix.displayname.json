@@ -1,0 +1,31 @@
+{
+  "name": "elementprefix.displayname",
+  "initial": {},
+  "steps": [
+    {
+      "op": "element_ticker_prefix",
+      "args": {
+        "element": {
+          "id": "oid",
+          "kind": "chest",
+          "name": "logical",
+          "char": 2,
+          "color": 15,
+          "bg": 0,
+          "runtime": "sid_KWEA73GcW06U",
+          "displayname": "Shown"
+        },
+        "flags": {},
+        "kinddata": {
+          "id": "chest",
+          "name": "chest"
+        },
+        "displayprefix": "$WHITE$ONBLACK$2"
+      },
+      "expect": {
+        "mode": "string",
+        "string": "$WHITE$ONBLACK$2$ONCLEAR$CYAN shown:$WHITE "
+      }
+    }
+  ]
+}

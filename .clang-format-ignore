@@ -1,0 +1,7 @@
+# third-party / toolchain
+**/DaisySP/**
+**/DaisySP-LGPL/**
+**/.emsdk/**
+**/node_modules/**
+**/build/**
+**/dist/**

@@ -1,3 +1,17 @@
+import { workstatus } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
+import { clearqueryparams } from 'zss/feature/deeplink'
+import {
+  storagereadznssession,
+  storagewriteznsclear,
+  storagewriteznsemail,
+  storagewriteznsnamespace,
+  storagewritznstoken,
+} from 'zss/feature/storage'
+import { write } from 'zss/feature/writeui'
+import { zsstextline } from 'zss/feature/zsstextui'
+import { NAME } from 'zss/words/types'
+
 import { parsewebfile } from './parse/file'
 
 // bytes api
@@ -20,11 +34,20 @@ export function isjoin() {
   return location.href.includes(`/join/`)
 }
 
-// brick proxy: museum API + images use BRICK_BASE/?brick=<full upstream https URL>
+// brick proxy: museum API + images use BRICK_BASE/?brick=<base64url upstream URL>
 
 export const BRICK_BASE = 'https://brick.zed.cafe'
 
-/** Load remote http(s) images via brick `?brick=`; brick decodes with decodeURIComponent once. */
+function base64urlencode(text: string): string {
+  const bytes = new TextEncoder().encode(text)
+  let binary = ''
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i])
+  }
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+/** Load remote http(s) images via brick `?brick=`; brick decodes base64url (legacy percent-encoded URL fallback). */
 export function brickproxiedurl(url: string): string {
   const trimmed = url.trim()
   if (!trimmed) {
@@ -53,7 +76,7 @@ export function brickproxiedurl(url: string): string {
   if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
     return trimmed
   }
-  return `${BRICK_BASE}/?brick=${encodeURIComponent(absolute)}`
+  return `${BRICK_BASE}/?brick=${base64urlencode(absolute)}`
 }
 
 /** Upstream Museum of ZZT HTTP URLs; clients reach them only via {@link brickproxiedurl}. */
@@ -101,6 +124,7 @@ export async function museumofzztdownload(
   player: string,
   content: string,
 ): Promise<void> {
+  workstatus(SOFTWARE, player, 'zzt fetch')
   const target = `${MUSEUMOFZZT_URL_BASE}/zgames/${content}`
   const response = await fetch(brickproxiedurl(target))
   const zipdata = await response.arrayBuffer()
@@ -108,77 +132,281 @@ export async function museumofzztdownload(
   parsewebfile(player, file)
 }
 
-// bbs api
+// zns api (https://zns.zed.cafe)
 
-export async function bbslogin(email: string, tag: string) {
-  const formData = new FormData()
-  formData.append('email', email)
-  formData.append('tag', tag)
-  const request = new Request('https://bbs.zed.cafe/api/login', {
-    method: 'POST',
-    body: formData,
-  })
-  const response = await fetch(request)
-  const result = await response.json()
-  return result
+export const ZNS_APEX = 'zns.zed.cafe'
+export const ZNS_TENANT_SUFFIX = 'at.zed.cafe'
+export const ZNS_DOCS_NAMESPACE = 'docs'
+export const ZNS_PEER_KEY = 'peer'
+export const ZNS_BYTES_KEY_TARGET = 'znsbyteskey'
+export const ZNS_LOGIN_CODE_PARAM = 'zns-code'
+export const ZNS_LOGIN_EMAIL_PARAM = 'zns-email'
+export const ZNS_LOGIN_NAMESPACE_PARAM = 'zns-namespace'
+
+const ZNS_LOGIN_CODE_RE = /^[1-9]{6}$/
+const ZNS_LOGIN_NAMESPACE_RE = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/
+
+export type ZNS_LOGIN_URL_PARAMS = {
+  code: string
+  email?: string
+  namespace?: string
 }
 
-export async function bbslogincode(email: string, code: string) {
-  const formData = new FormData()
-  formData.append('email', email)
-  formData.append('code', code)
-  const request = new Request('https://bbs.zed.cafe/api/code', {
-    method: 'POST',
-    body: formData,
-  })
-  const response = await fetch(request)
-  const result = await response.json()
-  return result
+function readznsloginsearchparams(): URLSearchParams | undefined {
+  try {
+    return new URLSearchParams(location.search)
+  } catch {
+    return undefined
+  }
 }
 
-export async function bbslist(email: string, code: string) {
-  const formData = new FormData()
-  formData.append('email', email)
-  formData.append('code', code)
-  const request = new Request('https://bbs.zed.cafe/api/list', {
-    method: 'POST',
-    body: formData,
-  })
-  const response = await fetch(request)
-  const result = await response.json()
-  return result
+export function readznsloginparamsfromurl(): ZNS_LOGIN_URL_PARAMS | undefined {
+  const search = readznsloginsearchparams()
+  if (!search) {
+    return undefined
+  }
+  const code = search.get(ZNS_LOGIN_CODE_PARAM)?.trim()
+  if (!code || !ZNS_LOGIN_CODE_RE.test(code)) {
+    return undefined
+  }
+  const emailraw = search.get(ZNS_LOGIN_EMAIL_PARAM)?.trim().toLowerCase()
+  const namespaceraw = znsnormalizenamespace(
+    search.get(ZNS_LOGIN_NAMESPACE_PARAM) ?? '',
+  )
+  const params: ZNS_LOGIN_URL_PARAMS = { code }
+  if (emailraw?.includes('@')) {
+    params.email = emailraw
+  }
+  if (namespaceraw && ZNS_LOGIN_NAMESPACE_RE.test(namespaceraw)) {
+    params.namespace = namespaceraw
+  }
+  return params
 }
 
-export async function bbspublish(
-  email: string,
-  code: string,
-  filename: string,
-  url: string,
-  tags: string[],
+export function readznslogincodefromurl(): string | undefined {
+  return readznsloginparamsfromurl()?.code
+}
+
+export function clearznsloginparamsfromurl(): void {
+  clearqueryparams([
+    ZNS_LOGIN_CODE_PARAM,
+    ZNS_LOGIN_EMAIL_PARAM,
+    ZNS_LOGIN_NAMESPACE_PARAM,
+  ])
+}
+
+export function clearznslogincodefromurl(): void {
+  clearznsloginparamsfromurl()
+}
+
+export function znskeyispeer(key: string, kind?: string) {
+  return key === ZNS_PEER_KEY || kind === 'peer'
+}
+
+export function znskinddisplay(kind?: string, key?: string) {
+  if (znskeyispeer(key ?? '', kind)) {
+    return 'peer'
+  }
+  if (kind === 'bytes') {
+    return 'bytes'
+  }
+  if (kind === 'text') {
+    return 'code'
+  }
+  return 'bytes'
+}
+
+export function znskeyopenlabel(key: string, value: string, kind?: string) {
+  const display = znskinddisplay(kind, key)
+  if (display === 'bytes') {
+    const short = value.length > 12 ? `${value.slice(0, 8)}…` : value
+    return `$blue[bytes] $white${key} $GRAY— ${short}`
+  }
+  if (display === 'code') {
+    return `$blue[code] $white${key} $GRAY— import`
+  }
+  return `$white${key}`
+}
+
+export function znskeylinkcommand(
+  namespace: string,
+  key: string,
+  value: string,
+  kind?: string,
 ) {
-  const formData = new FormData()
-  formData.append('email', email)
-  formData.append('code', code)
-  formData.append('filename', filename)
-  formData.append('url', url)
-  formData.append('tags', tags.join(','))
-  const request = new Request('https://bbs.zed.cafe/api/publish', {
+  if (znskinddisplay(kind, key) === 'code') {
+    return `zns import code ${key}`
+  }
+  const url = znsurlforlistrow(namespace, key, value, kind)
+  return `openit ${url}`
+}
+
+const PEER_ID_RE = /^[a-zA-Z0-9_-]{4,256}$/
+const ZNS_PATH_KEY_RE = /^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?$/
+
+let lastpublishedpeerid = ''
+
+export function znsnormalizenamespace(namespace: string) {
+  return (namespace ?? '').toString().trim().toLowerCase()
+}
+
+export function znstenanturl(namespace: string, key: string) {
+  const ns = znsnormalizenamespace(namespace)
+  return `https://${ns}.${ZNS_TENANT_SUFFIX}/${key}`
+}
+
+export function znsnormalizepathkey(name: string): string | undefined {
+  let slug = NAME(name)
+    .toLowerCase()
+    .replace(/@/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+  slug = slug.replace(/^-+|-+$/g, '')
+  if (!slug || !ZNS_PATH_KEY_RE.test(slug)) {
+    return undefined
+  }
+  return slug
+}
+
+export function znsurlforlistrow(
+  namespace: string,
+  key: string,
+  value: string,
+  kind?: string,
+) {
+  if (key === ZNS_PEER_KEY || kind === 'peer') {
+    return `https://zed.cafe/join/#${value}`
+  }
+  if (kind === 'text') {
+    return znstenanturl(namespace, key)
+  }
+  return `https://bytes.zed.cafe/${value}`
+}
+
+export async function fetchznstext(
+  namespace: string,
+  key: string,
+): Promise<string> {
+  const url = znstenanturl(namespace, key)
+  const response = await fetch(url)
+  if (!response.ok) {
+    return ''
+  }
+  return response.text()
+}
+
+export async function znsautopublishpeer(peerid: string, player: string) {
+  if (!peerid || !PEER_ID_RE.test(peerid)) {
+    return
+  }
+  const session = await storagereadznssession()
+  if (!session) {
+    return
+  }
+  const changed = peerid !== lastpublishedpeerid
+  if (!changed) {
+    return
+  }
+  const result = await znsset(
+    session.email,
+    session.token,
+    ZNS_PEER_KEY,
+    peerid,
+  )
+  if (!result?.success) {
+    return
+  }
+  lastpublishedpeerid = peerid
+  write(
+    SOFTWARE,
+    player,
+    zsstextline(`$greenpeer id published to zns: ${peerid}`),
+  )
+}
+
+export async function znspersistlogin(
+  email: string,
+  namespace: string,
+  token?: string,
+) {
+  await storagewriteznsemail(email)
+  await storagewriteznsnamespace(znsnormalizenamespace(namespace))
+  if (token) {
+    await storagewritznstoken(token)
+  }
+}
+
+export async function znspersistlogout() {
+  lastpublishedpeerid = ''
+  await storagewriteznsclear()
+}
+
+export async function znslogin(email: string, namespace: string) {
+  const formdata = new FormData()
+  formdata.append('email', email)
+  formdata.append('namespace', znsnormalizenamespace(namespace))
+  const request = new Request(`https://${ZNS_APEX}/api/login`, {
     method: 'POST',
-    body: formData,
+    body: formdata,
   })
   const response = await fetch(request)
   const result = await response.json()
   return result
 }
 
-export async function bbsdelete(email: string, code: string, filename: string) {
-  const formData = new FormData()
-  formData.append('email', email)
-  formData.append('code', code)
-  formData.append('filename', filename)
-  const request = new Request('https://bbs.zed.cafe/api/delete', {
+export async function znslogincode(email: string, code: string) {
+  const formdata = new FormData()
+  formdata.append('email', email)
+  formdata.append('code', code)
+  const request = new Request(`https://${ZNS_APEX}/api/code`, {
     method: 'POST',
-    body: formData,
+    body: formdata,
+  })
+  const response = await fetch(request)
+  const result = await response.json()
+  return result
+}
+
+export async function znslist(email: string, token: string) {
+  const formdata = new FormData()
+  formdata.append('email', email)
+  formdata.append('token', token)
+  const request = new Request(`https://${ZNS_APEX}/api/list`, {
+    method: 'POST',
+    body: formdata,
+  })
+  const response = await fetch(request)
+  const result = await response.json()
+  return result
+}
+
+export async function znsset(
+  email: string,
+  token: string,
+  key: string,
+  value: string,
+) {
+  const formdata = new FormData()
+  formdata.append('email', email)
+  formdata.append('token', token)
+  formdata.append('key', key)
+  formdata.append('value', value)
+  const request = new Request(`https://${ZNS_APEX}/api/set`, {
+    method: 'POST',
+    body: formdata,
+  })
+  const response = await fetch(request)
+  const result = await response.json()
+  return result
+}
+
+export async function znsdelete(email: string, token: string, key: string) {
+  const formdata = new FormData()
+  formdata.append('email', email)
+  formdata.append('token', token)
+  formdata.append('key', key)
+  const request = new Request(`https://${ZNS_APEX}/api/delete`, {
+    method: 'POST',
+    body: formdata,
   })
   const response = await fetch(request)
   const result = await response.json()

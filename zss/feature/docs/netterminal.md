@@ -22,9 +22,11 @@
 | `netterminalhost` | — | Host a new network terminal session; generates/loads peer ID |
 | `netterminaljoin` | `topicpeerid` | Join existing session by peer ID |
 | `netterminalhalt` | — | Disconnect and halt network terminal |
+| `readnetworkpeerid` | — | Current PeerJS id when connected |
 
 ## Flow
 
 - Peer ID stored in IndexedDB (`netid`)
 - Host creates Peer, subscribes to topic; joins create DataConnection to host
 - `createforward` bridges messages between device and peer; filters by `shouldforwardservertoclient`, `shouldnotforwardonpeerserver`
+- On `peer` `open`, if ZNS session is in IDB, [`znsautopublishpeer`](../url.ts) updates `https://{namespace}.at.zed.cafe/peer`

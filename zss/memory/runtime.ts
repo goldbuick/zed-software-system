@@ -2,7 +2,7 @@ import { objectKeys } from 'ts-extras'
 import { MESSAGE, synthplay } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
-import { ispid } from 'zss/mapping/guid'
+import { createchipid, ispid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
 import {
   MAYBE,
@@ -13,24 +13,28 @@ import {
 } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import { createos } from 'zss/os'
+import { measurestage } from 'zss/perf/ticktimingstats'
 import { perfmeasure } from 'zss/perf/ui'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { NAME } from 'zss/words/types'
 
 import { memoryreadobject } from './boardaccess'
 import { memoryupdatedrawdirty } from './boarddrawdirty'
+import { memoryresetboardlookups } from './boardlookup'
 import { memoryinitboard, memoryreadelementstat } from './boards'
 import { memorytickboard } from './boardtick'
 import { memoryreadcodepage } from './bookoperations'
 import { memoryensuresoftwarebook } from './books'
+import { memoryboundarydelete } from './boundaries'
 import { memoryreadcodepagestats } from './codepageoperations'
 import { memorypickcodepagewithtypeandstat } from './codepages'
-import { memoryreadflags } from './flags'
+import { memoryclearflags, memoryreadflags } from './flags'
 import { memoryloaderarg } from './loader'
+import { memoryreadplayerboard } from './playermanagement'
 import {
-  memoryreadbookplayerboards,
-  memoryreadplayerboard,
-} from './playermanagement'
+  memoryreadboardelementruntime,
+  memoryreadboardruntime,
+} from './runtimeboundary'
 import {
   memoryreadbookbysoftware,
   memoryreadloaders,
@@ -52,19 +56,19 @@ import {
 // manages chips
 const os = createos()
 
-export function memorygc() {
-  os.gc()
-}
-
 export function memoryhaltchip(id: string) {
+  // stop chip execution
   os.halt(id)
+  // ensure we clear flags
+  const mem = createchipid(id)
+  memoryclearflags(mem)
 }
 
 export function memoryrestartallchipsandflags() {
   // stop all chips
   const ids = os.ids()
   for (let i = 0; i < ids.length; ++i) {
-    os.halt(ids[i])
+    memoryhaltchip(ids[i])
   }
 
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
@@ -72,13 +76,17 @@ export function memoryrestartallchipsandflags() {
     return
   }
 
-  // drop all flags from mainbook
+  const flagids = Object.keys(mainbook.flags)
+  for (let i = 0; i < flagids.length; ++i) {
+    memoryboundarydelete(mainbook.flags[flagids[i]])
+  }
   mainbook.flags = {}
 }
 
 export function memorymessagechip(message: MESSAGE) {
   os.message(message)
 }
+
 // CLI Operations
 
 export function memoryrepeatclilast(player: string) {
@@ -95,132 +103,156 @@ export function memoryrepeatclilast(player: string) {
 
 const APPLY_SYNTH_RATE = Math.round(1.5 * TICK_FPS)
 
-export function memorytickmain(playeronly = false) {
+export function memorytickloaders() {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
   }
 
   // inc timestamp
-  const timestamp = mainbook.timestamp + 1
+  ++mainbook.timestamp
 
-  perfmeasure('memorytick:loaders', () => {
-    const loaders = memoryreadloaders()
-    loaders.forEach((code, id) => {
-      // cache context
-      const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
+  // run the loaders
+  perfmeasure('memorytick:loaders', () =>
+    measurestage('tick:loaders', () => {
+      const loaders = memoryreadloaders()
+      const loaderids = Object.keys(loaders)
+      for (let li = 0; li < loaderids.length; ++li) {
+        const id = loaderids[li]
+        const code = loaders[id]
+        // cache context
+        const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
 
-      // write context, all blank except for book and timestamp
-      READ_CONTEXT.timestamp = mainbook.timestamp
-      READ_CONTEXT.book = mainbook
-      READ_CONTEXT.board = undefined
-      READ_CONTEXT.element = undefined
-      READ_CONTEXT.elementid = ''
-      READ_CONTEXT.elementisplayer = false
-      READ_CONTEXT.elementfocus = memoryreadoperator()
+        // write context, all blank except for book and timestamp
+        READ_CONTEXT.timestamp = mainbook.timestamp
+        READ_CONTEXT.book = mainbook
+        READ_CONTEXT.board = undefined
+        READ_CONTEXT.element = undefined
+        READ_CONTEXT.elementid = ''
+        READ_CONTEXT.elementisplayer = false
+        READ_CONTEXT.elementfocus = memoryreadoperator()
 
-      // set chip
-      const maybearg = memoryloaderarg(id)
-      if (ispresent(maybearg)) {
-        os.arg(id, maybearg)
-      }
-
-      // run code
-      os.tick(id, DRIVER_TYPE.LOADER, 1, 'loader', code)
-
-      // teardown on ended
-      if (os.isended(id)) {
-        os.halt(id)
-        loaders.delete(id)
-      }
-
-      // restore context
-      objectKeys(OLD_CONTEXT).forEach((key) => {
-        // @ts-expect-error dont bother me
-        READ_CONTEXT[key] = OLD_CONTEXT[key]
-      })
-    })
-  })
-
-  // track tick
-  mainbook.timestamp = timestamp
-  READ_CONTEXT.timestamp = timestamp
-
-  perfmeasure('memorytick:boards', () => {
-    // update boards / build code / run chips
-    const boards = memoryreadbookplayerboards(mainbook)
-    for (let b = 0; b < boards.length; ++b) {
-      const board = boards[b]
-
-      // init kinds
-      memoryinitboard(board)
-      if (timestamp % APPLY_SYNTH_RATE === 0) {
-        memoryapplyboardsynthstats(board)
-      }
-
-      const drawallowforqueue = board.drawneedfull
-        ? undefined
-        : board.drawallowids
-      const rundraw =
-        drawallowforqueue === undefined || drawallowforqueue.size > 0
-      const run = memorytickboard(board, timestamp, rundraw, drawallowforqueue)
-
-      // draw pass
-      if (rundraw) {
-        for (let i = 0; i < run.length; ++i) {
-          const { type, code, object, terrain, pass, label, id } = run[i]
-          if (type !== CODE_PAGE_TYPE.ERROR && pass === 'draw') {
-            memorytickonce(
-              mainbook,
-              board,
-              object ?? terrain,
-              code,
-              id,
-              label ?? '',
-            )
-          }
+        // set chip
+        const maybearg = memoryloaderarg(id)
+        if (ispresent(maybearg)) {
+          os.arg(id, maybearg)
         }
-      }
 
-      // update pass
-      for (let i = 0; i < run.length; ++i) {
-        const { id, type, code, object, pass } = run[i]
-        if (pass === 'draw') {
-          continue
-        }
-        if (type === CODE_PAGE_TYPE.ERROR) {
-          // handle dead code
-          os.halt(id)
-          // in dev, we only run player objects
-        } else if (!playeronly || ispid(object?.id ?? '')) {
-          // handle active code
-          memorytickobject(mainbook, board, object, code)
-        }
-      }
+        // run code
+        os.tick(id, DRIVER_TYPE.LOADER, 1, 'loader', code)
 
-      // process synth play queue
-      const queue = memoryreadsynthplay(board.id)
-      if (queue.length > 0) {
-        const [play, endtime] = queue[0]
-        const dec = endtime - 1
-        if (play) {
-          // dispatch play
-          synthplay(SOFTWARE, '', board.id, play)
-          console.info('play queue', board.id, play)
+        // teardown on ended
+        if (os.isended(id)) {
+          memoryhaltchip(id)
+          delete loaders[id]
         }
-        if (dec > 0) {
-          queue[0] = ['', dec]
-        } else {
-          queue.shift()
-        }
-      }
 
-      memoryupdatedrawdirty(board, timestamp)
-    }
-  })
+        // restore context
+        objectKeys(OLD_CONTEXT).forEach((key) => {
+          // @ts-expect-error dont bother me
+          READ_CONTEXT[key] = OLD_CONTEXT[key]
+        })
+      }
+    }),
+  )
 }
 
-export { memoryinvalidatedraw } from './boarddrawdirty'
+export function memorytickmain(
+  timestamp: number,
+  boards: BOARD[],
+  playeronly = false,
+) {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return
+  }
+
+  // track tick
+  READ_CONTEXT.timestamp = mainbook.timestamp = timestamp
+
+  // run the given boards
+  perfmeasure('memorytick:boards', () =>
+    measurestage('tick:boards', () => {
+      // update boards / build code / run chips
+      // const boards = memoryreadbookplayerboards(mainbook)
+      for (let b = 0; b < boards.length; ++b) {
+        const board = boards[b]
+
+        // init kinds
+        memoryinitboard(board)
+        if (timestamp % APPLY_SYNTH_RATE === 0) {
+          memoryapplyboardsynthstats(board)
+        }
+
+        const boardruntime = memoryreadboardruntime(board)
+        const drawallowforqueue = boardruntime?.drawneedfull
+          ? undefined
+          : boardruntime?.drawallowids
+        const rundraw =
+          drawallowforqueue === undefined || drawallowforqueue.size > 0
+        const run = memorytickboard(
+          board,
+          timestamp,
+          rundraw,
+          drawallowforqueue,
+        )
+
+        // draw pass
+        if (rundraw) {
+          for (let i = 0; i < run.length; ++i) {
+            const { type, code, object, terrain, pass, label, id } = run[i]
+            if (type !== CODE_PAGE_TYPE.ERROR && pass === 'draw') {
+              memorytickonce(
+                mainbook,
+                board,
+                object ?? terrain,
+                code,
+                id,
+                label ?? '',
+              )
+            }
+          }
+        }
+
+        // update pass
+        for (let i = 0; i < run.length; ++i) {
+          const { id, type, code, object, pass } = run[i]
+          if (pass === 'draw') {
+            continue
+          }
+          if (type === CODE_PAGE_TYPE.ERROR) {
+            // handle dead code
+            memoryhaltchip(id)
+            // in dev, we only run player objects
+          } else if (!playeronly || ispid(object?.id ?? '')) {
+            // handle active code
+            memorytickobject(mainbook, board, object, code)
+          }
+        }
+
+        // process synth play queue
+        const queue = memoryreadsynthplay(board.id)
+        if (queue.length > 0) {
+          const [play, endtime] = queue[0]
+          const dec = endtime - 1
+          if (play) {
+            // dispatch play on board tick (ZZT-style queue)
+            synthplay(SOFTWARE, '', board.id, play)
+          }
+          if (dec > 0) {
+            queue[0] = ['', dec]
+          } else {
+            queue.shift()
+          }
+        }
+
+        measurestage('tick:drawdirty', () =>
+          memoryupdatedrawdirty(board, timestamp),
+        )
+      }
+    }),
+  )
+}
 
 export function memorytickobject(
   book: MAYBE<BOOK>,
@@ -253,7 +285,9 @@ export function memorytickobject(
 
   // run chip code
   const id = object.id ?? ''
-  const itemname = NAME(object.name ?? object.kinddata?.name ?? '')
+  const itemname = NAME(
+    object.name ?? memoryreadboardelementruntime(object)?.kinddata?.name ?? '',
+  )
   os.tick(id, DRIVER_TYPE.RUNTIME, cycle, itemname, code)
 
   // clear ticker
@@ -305,7 +339,11 @@ export function memorytickonce(
 
   READ_CONTEXT.usedisplaystats = true
 
-  const itemname = NAME(element.name ?? element.kinddata?.name ?? '')
+  const itemname = NAME(
+    element.name ??
+      memoryreadboardelementruntime(element)?.kinddata?.name ??
+      '',
+  )
   os.once(id, DRIVER_TYPE.RUNTIME, itemname, code, label)
 
   objectKeys(OLD_CONTEXT).forEach((key) => {
@@ -332,6 +370,9 @@ export function memoryruncli(player: string, cli: string, tracking = true) {
   READ_CONTEXT.elementisplayer = true
   READ_CONTEXT.elementfocus = READ_CONTEXT.elementid || player
 
+  // ensure sure the lookup is created for the current board
+  memoryresetboardlookups(READ_CONTEXT.board)
+
   // invoke once
   os.once(id, DRIVER_TYPE.CLI, 'cli', cli, '')
 
@@ -356,7 +397,9 @@ export function memoryruncodepage(address: string, label: string) {
 
   const id = `${address}_run`
   const itemname =
-    READ_CONTEXT.element?.name ?? READ_CONTEXT.element?.kinddata?.name ?? ''
+    READ_CONTEXT.element?.name ??
+    memoryreadboardelementruntime(READ_CONTEXT.element)?.kinddata?.name ??
+    ''
   const itemcode = codepage?.code ?? ''
 
   // set arg to value on chip with id = id

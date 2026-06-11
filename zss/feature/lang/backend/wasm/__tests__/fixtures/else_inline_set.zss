@@ -1,0 +1,4 @@
+#if wick > 50 do
+ #set torchmeter torchmeter + "$177"
+#else set torchmeter torchmeter + "$176"
+#done

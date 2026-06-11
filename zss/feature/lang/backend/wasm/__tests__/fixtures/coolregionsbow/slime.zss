@@ -1,0 +1,20 @@
+@slime
+@cycle 3
+@char 42
+@p2 range;movement speed
+#clear p1
+:think
+#if p1 below p2 do
+ #give p1
+ #idle
+#else do
+ #clear p1
+ #if not blocked up put up "$color" slime 
+ #if not blocked down put down "$color" slime 
+ #if not blocked left put left "$color" slime 
+ #if not blocked right put right "$color" slime 
+ #become breakable
+#done
+#think
+:touch
+#become breakable

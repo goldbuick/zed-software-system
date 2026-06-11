@@ -13,7 +13,7 @@ export default class Run extends Command {
     }),
     dev: Flags.boolean({
       description:
-        'Use existing Vite dev server (e.g. yarn dev) instead of serving cafe/dist',
+        'Use existing Vite dev server (e.g. yarn app:dev) instead of serving cafe/dist',
       default: false,
       env: 'ZSS_DEV',
     }),

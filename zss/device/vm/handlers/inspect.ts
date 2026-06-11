@@ -5,6 +5,7 @@ import { isarray } from 'zss/mapping/types'
 import { memoryinspect } from 'zss/memory/inspection'
 import { memoryfindanymenu } from 'zss/memory/inspectionfind'
 import type { PT } from 'zss/words/types'
+
 export function handleinspect(vm: DEVICE, message: MESSAGE): void {
   doasync(vm, message.player, async () => {
     if (isarray(message.data)) {

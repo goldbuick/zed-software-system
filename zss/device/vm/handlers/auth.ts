@@ -2,12 +2,23 @@ import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import {
   apilog,
+  boardrunnerlinkdead,
   registerinspector,
   registerloginready,
-  vmclearscroll,
 } from 'zss/device/api'
-import { lastinputtime, tracking } from 'zss/device/vm/state'
-import { isstring } from 'zss/mapping/types'
+import {
+  boardrunnerassignmentvalid,
+  boardrunnerelect,
+} from 'zss/device/vm/boardrunnermanagement'
+import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
+import { handlegadgetdesync } from 'zss/device/vm/gadgetsynctick'
+import {
+  boardrunnerblocked,
+  boardrunners,
+  lastinputtime,
+  tracking,
+} from 'zss/device/vm/state'
+import { ispresent, isstring } from 'zss/mapping/types'
 import {
   memoryistokenbanned,
   memorysetcommandpermissions,
@@ -15,30 +26,44 @@ import {
 } from 'zss/memory/permissions'
 import {
   memoryloginplayer,
-  memorylogoutplayer,
-  memoryreadplayeractive,
+  memoryreadplayerboard,
 } from 'zss/memory/playermanagement'
 import {
   memoryisoperator,
   memoryreadoperator,
   memorywritehalt,
 } from 'zss/memory/session'
-import type { BOOK_FLAGS } from 'zss/memory/types'
+import { BOOK_FLAGS } from 'zss/memory/types'
 import { memoryreadconfig, memorysetconfig } from 'zss/memory/utilities'
 
 export function handlesearch(vm: DEVICE, message: MESSAGE): void {
-  if (!memoryreadplayeractive(message.player)) {
-    registerloginready(vm, message.player)
-  }
+  registerloginready(vm, message.player)
 }
 
 export function handlelogout(vm: DEVICE, message: MESSAGE): void {
-  vmclearscroll(vm, message.player)
-  memorylogoutplayer(message.player, !!message.data)
+  // grab the current board the player is on
+  const currentboard = memoryreadplayerboard(message.player)
+  if (!ispresent(currentboard)) {
+    return
+  }
+
+  // grab the current boardrunner the player is on
+  const priorelectionrunner = boardrunners[currentboard.id]
+
+  // notify the boardrunner worker that this is linkdead
+  boardrunnerlinkdead(vm, priorelectionrunner, message.player)
+
+  // clear tracking state
   delete tracking[message.player]
   delete lastinputtime[message.player]
-  apilog(vm, memoryreadoperator(), `player ${message.player} logout`)
-  registerloginready(vm, message.player)
+
+  // prevent logout player from being elected as a runner
+  boardrunnerblocked[message.player] = true
+
+  // grab the current board to validate runner assignment
+  if (boardrunnerassignmentvalid(currentboard.id)) {
+    boardrunnerelect(currentboard.id)
+  }
 }
 
 export function handlelogin(vm: DEVICE, message: MESSAGE): void {
@@ -56,7 +81,6 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
     zss_bookmarks: _zssbookmarks,
     ...flags
   } = message.data ?? {}
-  console.info('VM => storage', flags)
 
   if (memoryisoperator(message.player)) {
     memorysetcommandpermissions(
@@ -75,23 +99,47 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
     }
   }
 
+  // token check
   if (isstring(token)) {
+    if (memoryistokenbanned(token)) {
+      vm.replynext(message, 'acklogin', false)
+      return
+    }
     memorysetplayertotoken(message.player, token)
   }
 
-  if (isstring(token) && memoryistokenbanned(token)) {
-    vm.replynext(message, 'acklogin', false)
-    return
-  }
+  // const reattach = memoryreadplayeractive(message.player)
 
+  // attempt to login player
   if (memoryloginplayer(message.player, flags as BOOK_FLAGS)) {
+    // start tracking
     tracking[message.player] = 0
     lastinputtime[message.player] = Date.now()
+
+    // unblock the player from being elected as a runner
+    delete boardrunnerblocked[message.player]
+
+    // elect a new runner for the login board if necessary
+    const currentboard = memoryreadplayerboard(message.player)
+    if (
+      ispresent(currentboard) &&
+      !boardrunnerassignmentvalid(currentboard.id)
+    ) {
+      boardrunnerelect(currentboard.id)
+    }
+
+    // signal success
     apilog(vm, memoryreadoperator(), `login from ${message.player}`)
     vm.replynext(message, 'acklogin', true)
+
+    // always desync the gadget
+    handlegadgetdesync(vm, message)
   } else {
     vm.replynext(message, 'acklogin', false)
   }
+
+  // push jsonpipe changes
+  boardrunnerpushupdates(vm)
 }
 
 export function handleplayertoken(_vm: DEVICE, message: MESSAGE): void {

@@ -1,0 +1,8 @@
+#if a do
+ #idle
+#else if b do
+ #idle
+#else if c do
+ ?x
+#else idle
+#done

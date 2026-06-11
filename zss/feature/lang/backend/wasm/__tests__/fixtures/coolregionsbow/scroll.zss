@@ -1,0 +1,17 @@
+@scroll
+@cycle 1
+@isitem
+@ispushable
+@char 232
+@color white
+@code zssedit;edit scroll
+' do not edit
+:think
+#give color
+#if color above 15 do
+ #set color 9
+#done
+#think
+:touch
+#bgplay tc-c+d-d+e-e+f-f+g-g
+#die

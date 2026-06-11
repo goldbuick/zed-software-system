@@ -8,7 +8,7 @@ import { isnumber, ispresent } from 'zss/mapping/types'
 /** Presence information for remote users editing codepages */
 export type PresenceState = {
   /** Client/player ID */
-  clientId: string
+  clientid: string
   /** User display name */
   name: string
   /** User color (hex) */
@@ -18,13 +18,13 @@ export type PresenceState = {
   /** Selection start (if selecting) */
   select?: number
   /** Codepage key being edited */
-  codepageKey: string
+  codepagekey: string
   /** Last update timestamp */
-  lastSeen: number
+  lastseen: number
 }
 
 /** Identifies a shared text for undo scope (Yjs: the map key) */
-export type NodeId = {
+export type NODE_ID = {
   key: string
 }
 
@@ -41,13 +41,24 @@ export type SharedTextHandle = {
   splice(index: number, deletecount: number, insert?: string): void
   get length(): number
   /** For undo: which text this handle refers to */
-  readonly nodeId: NodeId
+  readonly nodeId: NODE_ID
 }
 
 const SYNC_DOC_GUID = 'zss_modem_sync'
 const SYNC_DOC = new Y.Doc({ guid: SYNC_DOC_GUID })
 const ROOT = SYNC_DOC.getMap('root')
-const AWARENESS = new awarenessProtocol.Awareness(SYNC_DOC)
+
+/** Lazy so tests that only import modem for shared values do not open Awareness timers. */
+let awareness: awarenessProtocol.Awareness | undefined
+let awarenesslistenerswired = false
+
+function getawareness(): awarenessProtocol.Awareness {
+  if (!awareness) {
+    awareness = new awarenessProtocol.Awareness(SYNC_DOC)
+    wireawarenesslisteners()
+  }
+  return awareness
+}
 
 /** One UndoManager per text key; created on first use */
 const undomanagers = new Map<string, { um: Y.UndoManager; text: Y.Text }>()
@@ -126,8 +137,8 @@ function getorcreateundomanager(key: string): {
   return entry
 }
 
-function createSharedTextHandle(key: string, text: Y.Text): SharedTextHandle {
-  const nodeId: NodeId = { key }
+function createsharedtexthandle(key: string, text: Y.Text): SharedTextHandle {
+  const nodeId: NODE_ID = { key }
   return {
     get nodeId() {
       return nodeId
@@ -170,48 +181,48 @@ export enum MODEM_SHARED_TYPE {
 let joined = false
 
 /** Set before local edit (insert/delete); used so only local edits are tracked for undo. */
-let nextPatchIsLocal = false
-export function markNextPatchAsLocal(): void {
-  nextPatchIsLocal = true
+let nextpatchislocal = false
+export function marknextpatchaslocal(): void {
+  nextpatchislocal = true
 }
 
 /** Consume the local flag; returns true if the next transaction is from a local edit. */
-export function consumeLocalPatchFlag(): boolean {
-  const was = nextPatchIsLocal
-  nextPatchIsLocal = false
+export function consumelocalpatchflag(): boolean {
+  const was = nextpatchislocal
+  nextpatchislocal = false
   return was
 }
 
 /** Call before a local edit so we can store cursor for undo/redo. */
-export function setCursorBeforeEdit(key: string, cursor: number): void {
+export function setcursorbeforeedit(key: string, cursor: number): void {
   cursorbeforeedit.set(key, cursor)
 }
 
 /** Get the UndoManager for a shared text by key. */
-export function getUndoManager(key: string): Y.UndoManager | undefined {
+export function getundomanager(key: string): Y.UndoManager | undefined {
   return getorcreateundomanager(key).um
 }
 
 /** Test-only: get SharedTextHandle for a key if it exists and is text. */
-export function getSharedTextHandleForTest(
+export function getsharedtexthandlefortest(
   key: string,
 ): SharedTextHandle | undefined {
   const val = ROOT.get(key)
   if (val instanceof Y.Text) {
-    return createSharedTextHandle(key, val)
+    return createsharedtexthandle(key, val)
   }
   return undefined
 }
 
 /** Test-only: reset a text key to empty and clear its UndoManager so tests start clean. */
-export function resetKeyForTest(key: string): void {
+export function resetkeyfortest(key: string): void {
   undomanagers.delete(key)
   const text = new Y.Text()
   ROOT.set(key, text)
 }
 
 /** Register a callback to restore cursor after undo/redo for the given key. Returns unregister. */
-export function registerCursorRestore(
+export function registercursorrestore(
   key: string,
   restore: (cursor: number) => void,
 ): () => void {
@@ -225,7 +236,7 @@ export function registerCursorRestore(
 // Value access and subscription
 // ---------------------------------------------------------------------------
 
-function getValueForKey(key: string): unknown {
+function getvalueforkey(key: string): unknown {
   const val = ROOT.get(key)
   if (val === undefined) {
     return undefined
@@ -235,7 +246,7 @@ function getValueForKey(key: string): unknown {
   }
   if (val instanceof Y.Text) {
     getorcreateundomanager(key)
-    return createSharedTextHandle(key, val)
+    return createsharedtexthandle(key, val)
   }
   return undefined
 }
@@ -248,8 +259,9 @@ export function modemsubscribesyncupdate(handler: () => void): () => void {
 
 /** UI hooks: subscribe to awareness changes (e.g. `modemhooks`). */
 export function modemsubscribeawarenesschange(handler: () => void): () => void {
-  AWARENESS.on('change', handler)
-  return () => AWARENESS.off('change', handler)
+  const instance = getawareness()
+  instance.on('change', handler)
+  return () => instance.off('change', handler)
 }
 
 export function modemroothaskey(key: string): boolean {
@@ -257,7 +269,7 @@ export function modemroothaskey(key: string): boolean {
 }
 
 export function modempeekvalueforkey(key: string): unknown {
-  return getValueForKey(key)
+  return getvalueforkey(key)
 }
 
 export function modemwriteinitnumber(key: string, value: number) {
@@ -311,23 +323,12 @@ export function modemreadtextsync(key: string): string {
   return ''
 }
 
-/** If key is bound to Y.Text, return its string (may be empty); else undefined for caller fallback. */
-export function modemreadcodepagetextifpresent(
-  key: string,
-): string | undefined {
-  const existing = ROOT.get(key)
-  if (existing instanceof Y.Text) {
-    return existing.toJSON()
-  }
-  return undefined
-}
-
 function modemobservevalue(
   key: string,
   callback: (value: unknown) => void,
 ): UNOBSERVE_FUNC {
   const handler = () => {
-    const value = getValueForKey(key)
+    const value = getvalueforkey(key)
     if (value !== undefined) {
       callback(value)
     }
@@ -364,7 +365,7 @@ export function modemobservevaluestring(
 // ---------------------------------------------------------------------------
 
 function awarenessstatetopresence(
-  clientIdNum: number,
+  clientidnum: number,
   state: Record<string, unknown> | null,
 ): PresenceState | null {
   if (!state || typeof state !== 'object') {
@@ -376,23 +377,23 @@ function awarenessstatetopresence(
     return null
   }
   return {
-    clientId,
-    name: (state.name as string) ?? `User ${String(clientIdNum).slice(0, 6)}`,
+    clientid: clientId,
+    name: (state.name as string) ?? `User ${String(clientidnum).slice(0, 6)}`,
     color: (state.color as string) ?? '#3b82f6',
     cursor: (state.cursor as number) ?? 0,
     select: state.select as number | undefined,
-    codepageKey,
-    lastSeen: Date.now(),
+    codepagekey: codepageKey,
+    lastseen: Date.now(),
   }
 }
 
 /** Get all presence states for a specific codepage */
 export function getpresenceforcodepage(codepageKey: string): PresenceState[] {
   const result: PresenceState[] = []
-  const states = AWARENESS.getStates()
+  const states = getawareness().getStates()
   states.forEach((state: Record<string, unknown> | null, _clientId: number) => {
     const p = awarenessstatetopresence(_clientId, state)
-    if (p?.codepageKey === codepageKey) {
+    if (p?.codepagekey === codepageKey) {
       result.push(p)
     }
   })
@@ -408,12 +409,13 @@ export function modembroadcastpresence(
   name?: string,
   color?: string,
 ) {
-  AWARENESS.setLocalStateField('clientId', clientId)
-  AWARENESS.setLocalStateField('codepageKey', codepageKey)
-  AWARENESS.setLocalStateField('cursor', cursor)
-  AWARENESS.setLocalStateField('select', select ?? null)
-  AWARENESS.setLocalStateField('name', name ?? `User ${clientId.slice(0, 6)}`)
-  AWARENESS.setLocalStateField('color', color ?? '#3b82f6')
+  const instance = getawareness()
+  instance.setLocalStateField('clientId', clientId)
+  instance.setLocalStateField('codepageKey', codepageKey)
+  instance.setLocalStateField('cursor', cursor)
+  instance.setLocalStateField('select', select ?? null)
+  instance.setLocalStateField('name', name ?? `User ${clientId.slice(0, 6)}`)
+  instance.setLocalStateField('color', color ?? '#3b82f6')
 }
 
 // ---------------------------------------------------------------------------
@@ -437,13 +439,17 @@ const modem = createdevice('modem', ['second'], (message) => {
           'joinack',
           arr2hex(Y.encodeStateAsUpdate(SYNC_DOC)),
         )
-        const myclientids = Array.from(AWARENESS.getStates().keys())
+        const instance = awareness
+        if (!instance) {
+          break
+        }
+        const myclientids = Array.from(instance.getStates().keys())
         if (myclientids.length > 0) {
           modem.emit(
             message.sender,
             'modem:awareness',
             arr2hex(
-              awarenessProtocol.encodeAwarenessUpdate(AWARENESS, myclientids),
+              awarenessProtocol.encodeAwarenessUpdate(instance, myclientids),
             ),
           )
         }
@@ -475,7 +481,7 @@ const modem = createdevice('modem', ['second'], (message) => {
       if (message.sender !== modem.id() && ispresent(message.data)) {
         try {
           awarenessProtocol.applyAwarenessUpdate(
-            AWARENESS,
+            getawareness(),
             hex2arr(message.data),
             null,
           )
@@ -496,46 +502,58 @@ SYNC_DOC.on('update', (update: Uint8Array, origin: unknown) => {
   }
 })
 
-AWARENESS.on(
-  'update',
-  ({
-    added,
-    updated,
-    removed,
-  }: {
-    added: number[]
-    updated: number[]
-    removed: number[]
-  }) => {
-    const changed = added.concat(updated).concat(removed)
-    if (changed.length > 0) {
-      modem.emit(
-        '',
-        'modem:awareness',
-        arr2hex(awarenessProtocol.encodeAwarenessUpdate(AWARENESS, changed)),
-      )
-    }
-  },
-)
+function wireawarenesslisteners(): void {
+  if (awarenesslistenerswired || !awareness) {
+    return
+  }
+  awarenesslistenerswired = true
 
-if (typeof window !== 'undefined') {
-  window.addEventListener('beforeunload', () => {
-    awarenessProtocol.removeAwarenessStates(
-      AWARENESS,
-      [SYNC_DOC.clientID],
-      'beforeunload',
-    )
-  })
+  awareness.on(
+    'update',
+    ({
+      added,
+      updated,
+      removed,
+    }: {
+      added: number[]
+      updated: number[]
+      removed: number[]
+    }) => {
+      const changed = added.concat(updated).concat(removed)
+      if (changed.length > 0 && awareness) {
+        modem.emit(
+          '',
+          'modem:awareness',
+          arr2hex(awarenessProtocol.encodeAwarenessUpdate(awareness, changed)),
+        )
+      }
+    },
+  )
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('beforeunload', () => {
+      if (!awareness) {
+        return
+      }
+      awarenessProtocol.removeAwarenessStates(
+        awareness,
+        [SYNC_DOC.clientID],
+        'beforeunload',
+      )
+    })
+  }
 }
 
 /**
  * Teardown for test environments. Destroys the shared Y.Doc and Awareness so
- * Jest workers can exit without open handles. Call in afterAll() in tests that
- * import this module. Only safe to call when the process is about to exit.
+ * Jest workers can exit without open handles. Wired via jest globalTeardown;
+ * may also be called from afterAll() when a suite created Awareness.
  */
-export function destroyModemForTest(): void {
+export function destroymodemfortest(): void {
   const doc = SYNC_DOC as Y.Doc & { isDestroyed?: boolean }
   if (!doc.isDestroyed) {
     SYNC_DOC.destroy()
   }
+  awareness = undefined
+  awarenesslistenerswired = false
 }

@@ -1,4 +1,11 @@
-import { apilog, vmloader, vmmakeitscroll } from 'zss/device/api'
+import {
+  apilog,
+  apitoast,
+  gadgetclientbonk,
+  gadgetclientzap,
+  vmloader,
+  vmmakeitscroll,
+} from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { FIRMWARE } from 'zss/firmware'
 import { ispresent, isstring } from 'zss/mapping/types'
@@ -8,6 +15,14 @@ import { memoryreadflags } from 'zss/memory/flags'
 import { memorysendtoelements, memorysendtolog } from 'zss/memory/gamesend'
 import { READ_CONTEXT, readargsuntilend } from 'zss/words/reader'
 import { parsesend } from 'zss/words/send'
+import {
+  hasbonk,
+  hasticker,
+  hastoast,
+  haszap,
+  stripbonk,
+  stripzap,
+} from 'zss/words/textformat'
 import { ARG_TYPE, COLOR, type WORD } from 'zss/words/types'
 
 function readscrolltextfromwords(words: WORD[]) {
@@ -51,7 +66,42 @@ export function registersendcommands(fw: FIRMWARE): FIRMWARE {
       return 0
     })
     .command('text', ['text on element or in sidebar'], (_, words) => {
-      const ticker = readscrolltextfromwords(words)
+      let ticker = readscrolltextfromwords(words)
+
+      if (hasbonk(ticker)) {
+        gadgetclientbonk(SOFTWARE, READ_CONTEXT.elementfocus)
+        ticker = stripbonk(ticker)
+      }
+      if (haszap(ticker)) {
+        gadgetclientzap(SOFTWARE, READ_CONTEXT.elementfocus)
+        ticker = stripzap(ticker)
+      }
+
+      let diverted = false
+
+      const toasttext = hastoast(ticker)
+      if (ispresent(toasttext)) {
+        apitoast(SOFTWARE, READ_CONTEXT.elementfocus, toasttext)
+        ticker = toasttext
+        diverted = true
+      }
+
+      const tickertext = hasticker(ticker)
+      if (
+        ispresent(tickertext) &&
+        ispresent(READ_CONTEXT.element) &&
+        READ_CONTEXT.elementisplayer
+      ) {
+        READ_CONTEXT.element.tickertext = tickertext
+        READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
+        memorysendtolog('', READ_CONTEXT.element, tickertext)
+        diverted = true
+      }
+
+      if (diverted) {
+        return 0
+      }
+
       if (ispresent(READ_CONTEXT.element) && READ_CONTEXT.elementisplayer) {
         READ_CONTEXT.element.tickertext = ticker
         READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp

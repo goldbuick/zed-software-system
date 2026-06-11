@@ -9,7 +9,7 @@
 - `zss/mapping/types` — MAYBE, isarray, isnumber, ispresent, isstring
 - `zss/memory` — memoryreadboardbyevaldir
 - `zss/memory/boardmovement` — memorycheckmoveboardobject
-- `zss/memory/boardoperations` — memoryreadelement, memoryreadterrain
+- `zss/memory/boardaccess` — memoryreadelement, memoryreadterrain
 - `zss/memory/bookoperations` — memoryreadelementdisplay
 - `zss/memory/runtime` — memoryruncodepage
 - `zss/memory/spatialqueries` — memoryfindplayerforelement, memorylistboardelementsbycolor, memorylistboardelementsbykind

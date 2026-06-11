@@ -1,0 +1,33 @@
+{
+  "name": "session.assignedboard_roundtrip",
+  "initial": {},
+  "steps": [
+    {
+      "op": "session_assignedboard_set",
+      "args": {
+        "value": "board-a"
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "session_assignedboard_get",
+      "expect": {
+        "mode": "string",
+        "string": "board-a"
+      }
+    },
+    {
+      "op": "session_assignedboard_set",
+      "args": {
+        "value": ""
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    }
+  ]
+}

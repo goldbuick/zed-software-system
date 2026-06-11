@@ -1,106 +1,63 @@
-import { AGENT_ZSS_COMMANDS } from 'zss/feature/heavy/formatstate'
-
 const INTENT_HINTS: Record<string, string> = {
   movement:
-    'HINT: The user likely wants movement. Prefer #userinput, #pilot, or #goto.',
-  action: 'HINT: The user likely wants an action. Prefer a # command.',
+    'HINT: The player likely wants movement. Call run_zss_command with #userinput, #pilot, or #goto.',
+  action:
+    'HINT: The player likely wants a world action. Call run_zss_command with the appropriate # line.',
   question:
-    'HINT: The user may be asking a question. Prefer answering from STATE.',
-  chat: 'HINT: This may be casual conversation.',
+    'HINT: The player may be asking about the board. Prefer #query or #look via run_zss_command before answering from memory.',
+  chat: 'HINT: Casual conversation. Reply with plain text only; do not call tools unless they ask for an action.',
+  authoring:
+    'HINT: The player wants ZSS codepage script. Call write_zss_script with page_id, snippet, and mode — not run_zss_command CLI lines. Snippet uses #if, #while, :labels, ?dir, any.',
 }
+
+const AUTHORING_GRAMMAR = `
+SCRIPT GRAMMAR (codepage only — not CLI):
+- #if / #while / #repeat / #foreach with do … #done blocks or inline body
+- :label names handlers; #go label jumps
+- ?dir short try (non-blocking move); /dir short go (blocking)
+- any color kind — spatial check; any at x y player — target check
+- #set stat expr; #give #take #duplicate; #send dir label
+`.trim()
 
 function intenthint(intent: string): string {
   return INTENT_HINTS[intent] ?? ''
 }
 
-export function buildsystemprompt(
-  agentname: string,
-  agentinfo: string,
-  context?: string,
-  intent?: string,
-): string {
-  const hint = intent ? intenthint(intent) : ''
-  return `Your name is ${agentname}.
-Your state is: ${agentinfo}
-
-WORLD: The board is a 60x25 grid. (0,0) is top-left. x increases right. y increases down.
-Objects marked [player] are other players you can talk to.
-Walking past the board edge takes you to the connected board if an exit exists.
-To leave a board: #pilot to the edge (y=0 for north, y=24 for south, x=0 for west, x=59 for east), then #userinput to step off. #pilot cannot cross edges.
-
-RULES:
-- Reply with plain text speech by default. Only use # commands for physical actions like moving, shooting, or changing the world.
-- For questions, conversation, or greetings just speak. Do NOT output a # command.
-- Be brief. One sentence max.
-- When you DO need a physical action, output its # command on its own line.
-- # command lines MUST start with # at the beginning of the line.
-- NEVER describe an action without including its # command. Saying "I'll move north" without #userinput up does NOTHING.
-- Use #continue as the last line when you need to observe results before acting again.
-
-IMPORTANT!!!
-Never invent info. Use STATE below.
-
-STATE:\n
-${context ?? ''}
-
-COMMANDS:
-${AGENT_ZSS_COMMANDS}
-
-OUTPUT FORMAT:
-- Each line is EITHER a # command OR a short speech sentence. Never both on the same line.
-- If no physical action is needed, reply with speech only. Do NOT force a # command.
-
-Example (speech only):
-My name is ${agentname}!
-
-Example (action + speech):
-#userinput up
-I'm heading north!
-
-Example (repeat 3 times):
-#userinput up
-#userinput up
-#userinput up
-
-Example (leave board north from x=30):
-#pilot 30 0
-#continue
-(after arriving at the edge:)
-#userinput up
-
-Example (multi-step):
-#userinput up
-#continue
-(you will see the updated board and can act again)
-
-${hint ? hint + '\n' : ''}
-
-`.trimEnd()
+function authoringsection(intent?: string): string {
+  if (intent !== 'authoring') {
+    return ''
+  }
+  return `${AUTHORING_GRAMMAR}\n`
 }
 
-/** Gemma 4 + native tools: command details live in the tool schema, not duplicated here. */
-export function buildsystempromptgemma(
+/** Gemma 4 agent system prompt; command details live in the tool schema. */
+export function buildagentsystemprompt(
   agentname: string,
   agentinfo: string,
   context?: string,
   intent?: string,
 ): string {
   const hint = intent ? intenthint(intent) : ''
+  const authoring = authoringsection(intent)
   return `Your name is ${agentname}.
 Your state is: ${agentinfo}
 
+ROLE: You are an AI agent on a shared game board. Help human players — answer chat, move, inspect the board, and take actions they request.
+
 WORLD: The board is a 60x25 grid. (0,0) is top-left. x increases right. y increases down.
-Objects marked [player] are other players you can talk to.
+Objects marked [player] are human or AI players you can talk to.
 Walking past the board edge takes you to the connected board if an exit exists.
 To leave a board: pathfind (#pilot) to the edge (y=0 north, y=24 south, x=0 west, x=59 east), then #userinput to step off. #pilot cannot cross edges.
 
 RULES:
 - For chat, questions, or greetings: reply with plain text only. Do not call tools.
-- For physical actions (move, shoot, place, query board, etc.): call the run_zss_command tool with one CLI line (see tool description). Do not describe an action without calling the tool — narration alone does nothing.
+- When a player asks what is on the board or in the UI, call run_zss_command with #query or #look before guessing.
+- For physical actions (move, shoot, place, etc.): call run_zss_command with one CLI line (see tool description). Do not describe an action without calling the tool — narration alone does nothing.
+- For codepage script edits: call write_zss_script — never paste raw script in chat.
 - Be brief. One short sentence when speaking.
 - Use tool line #continue when you need another turn after seeing updated STATE.
 
-IMPORTANT!!!
+${authoring}IMPORTANT!!!
 Never invent info. Use STATE below.
 
 STATE:
@@ -109,3 +66,6 @@ ${context ?? ''}
 ${hint ? hint + '\n' : ''}
 `.trimEnd()
 }
+
+/** @deprecated Use buildagentsystemprompt */
+export const buildsystempromptgemma = buildagentsystemprompt

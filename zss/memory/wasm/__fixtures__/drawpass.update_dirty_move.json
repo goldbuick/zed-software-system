@@ -1,0 +1,148 @@
+{
+  "name": "drawpass.update_dirty_move",
+  "initial": {},
+  "steps": [
+    {
+      "op": "update_draw_dirty",
+      "args": {
+        "board": {
+          "objects": {
+            "sid_move": {
+              "id": "sid_move",
+              "x": 5,
+              "y": 5,
+              "code": ":drawdisplay",
+              "has_draw": true
+            }
+          }
+        },
+        "timestamp": 1,
+        "runtime": {}
+      },
+      "expect": {
+        "mode": "json",
+        "json": {
+          "drawallowids": [
+            "sid_move"
+          ],
+          "drawlastfp": {
+            "sid_move": "5|5|:drawdisplay"
+          },
+          "drawlastxy": {
+            "sid_move": {
+              "x": 5,
+              "y": 5
+            }
+          },
+          "seed_count": 0
+        }
+      }
+    },
+    {
+      "op": "update_draw_dirty",
+      "args": {
+        "board": {
+          "objects": {
+            "sid_move": {
+              "id": "sid_move",
+              "x": 5,
+              "y": 5,
+              "code": ":drawdisplay",
+              "has_draw": true
+            }
+          }
+        },
+        "timestamp": 2,
+        "runtime": {
+          "drawlastfp": {
+            "sid_move": "5|5|:drawdisplay"
+          },
+          "drawlastxy": {
+            "sid_move": {
+              "x": 5,
+              "y": 5
+            }
+          }
+        }
+      },
+      "expect": {
+        "mode": "json",
+        "json": {
+          "drawallowids": [
+            "sid_move"
+          ],
+          "drawlastfp": {
+            "sid_move": "5|5|:drawdisplay"
+          },
+          "drawlastxy": {
+            "sid_move": {
+              "x": 5,
+              "y": 5
+            }
+          },
+          "seed_count": 0
+        }
+      }
+    },
+    {
+      "op": "update_draw_dirty",
+      "args": {
+        "board": {
+          "objects": {
+            "sid_move": {
+              "id": "sid_move",
+              "x": 6,
+              "y": 6,
+              "code": ":drawdisplay",
+              "has_draw": true
+            }
+          }
+        },
+        "timestamp": 3,
+        "runtime": {
+          "drawlastfp": {
+            "sid_move": "5|5|:drawdisplay"
+          },
+          "drawlastxy": {
+            "sid_move": {
+              "x": 5,
+              "y": 5
+            }
+          }
+        }
+      },
+      "expect": {
+        "mode": "json",
+        "json": {
+          "drawallowids": [
+            "244",
+            "245",
+            "246",
+            "304",
+            "305",
+            "306",
+            "307",
+            "364",
+            "365",
+            "366",
+            "367",
+            "425",
+            "426",
+            "427",
+            "sid_move"
+          ],
+          "drawlastfp": {
+            "sid_move": "6|6|:drawdisplay"
+          },
+          "drawlastxy": {
+            "sid_move": {
+              "x": 6,
+              "y": 6
+            }
+          },
+          "seed_count": 2
+        }
+      }
+    }
+  ]
+}

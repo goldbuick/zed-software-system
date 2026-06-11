@@ -1,0 +1,8 @@
+@passage
+@cycle 1
+@char 240
+@p3 text
+#end
+:touch
+#bgplay tcegc#fg#df#ad#ga#eg#+c
+#goto p3

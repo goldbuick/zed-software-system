@@ -7,6 +7,7 @@ import {
   WRITE_TEXT_CONTEXT,
   createwritetextcontext,
 } from 'zss/words/textformat'
+import type { COLOR } from 'zss/words/types'
 
 import { FG, bgcolor } from './colors'
 
@@ -18,6 +19,9 @@ type TapeLayoutTilesProps = {
   width: number
   height: number
   children: ReactNode
+  /** Override frame / plate colors (e.g. perf monitor panel). */
+  framefg?: COLOR
+  platebg?: COLOR
 }
 
 export function TapeLayoutTiles({
@@ -28,15 +32,18 @@ export function TapeLayoutTiles({
   width,
   height,
   children,
+  framefg,
+  platebg,
 }: TapeLayoutTilesProps) {
-  const BG = bgcolor(quickterminal)
-  const store = useTiles(width, height, 0, FG, BG)
+  const tilefg = framefg ?? FG
+  const tilebg = platebg ?? bgcolor(quickterminal)
+  const store = useTiles(width, height, 0, tilefg, tilebg)
   const context: WRITE_TEXT_CONTEXT = useMemo(() => {
     return {
-      ...createwritetextcontext(width, height, FG, BG),
+      ...createwritetextcontext(width, height, tilefg, tilebg),
       ...store.getState(),
     }
-  }, [BG, width, height, store])
+  }, [tilebg, tilefg, width, height, store])
   return (
     <TilesData store={store}>
       <WriteTextContext.Provider value={context}>

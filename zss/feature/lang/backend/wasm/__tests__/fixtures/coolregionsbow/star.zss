@@ -1,0 +1,19 @@
+@star
+@cycle 1
+@char 83
+@p2 100
+:think
+#give color
+#if color above 15 set color 9
+#set p4 currenttick % 4
+#if p4 is 0 char 179
+#if p4 is 1 char 47
+#if p4 is 2 char 196
+#if p4 is 3 char 92
+#take p2
+#if p2 below or eq 0 do
+ #die
+#else if p2 % 2 is 0 do
+ ?seek
+#done
+#think

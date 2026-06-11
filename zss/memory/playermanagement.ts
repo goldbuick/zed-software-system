@@ -15,15 +15,12 @@ import {
 } from './boardlifecycle'
 import {
   memorydeleteboardobjectnamedlookup,
+  memoryresetboardlookups,
   memorywriteboardnamed,
   memorywriteboardobjectlookup,
 } from './boardlookup'
 import { memorycheckblockedboardobject } from './boardmovement'
-import {
-  memoryinitboard,
-  memoryreadboardbyaddress,
-  memoryreadelementstat,
-} from './boards'
+import { memoryreadboardbyaddress, memoryreadelementstat } from './boards'
 import { memoryupdateboardvisuals } from './boardvisuals'
 import {
   memoryclearbookflags,
@@ -34,6 +31,7 @@ import {
 import { memoryreadcodepagedata } from './codepageoperations'
 import { memorypickcodepagewithtypeandstat } from './codepages'
 import { memoryhaltchip } from './runtime'
+import { memoryreadboardruntime } from './runtimeboundary'
 import { memoryisoperator, memoryreadbookbysoftware } from './session'
 import { memorycheckcollision } from './spatialqueries'
 import {
@@ -60,9 +58,15 @@ export function memorymoveplayertoboard(
     return false
   }
 
+  // ensure sure the lookup is created for the current board
+  memoryresetboardlookups(currentboard)
+
   // player element
   const element = memoryreadobject(currentboard, player)
-  if (!memoryboardelementisobject(element) || !element?.id) {
+  if (!memoryboardelementisobject(element)) {
+    return false
+  }
+  if (!element?.id) {
     return false
   }
 
@@ -73,7 +77,7 @@ export function memorymoveplayertoboard(
   }
 
   // make sure lookup is created
-  memoryinitboard(destboard)
+  memoryresetboardlookups(destboard)
 
   // read target spot
   const maybeobject = memorycheckblockedboardobject(
@@ -140,7 +144,9 @@ export function memoryreadbookplayerboards(book: MAYBE<BOOK>) {
 
       // see if we have an over board
       // it runs first
-      const over = memoryreadboardbyaddress(board.overboard ?? '')
+      const over = memoryreadboardbyaddress(
+        memoryreadboardruntime(board)?.overboard ?? '',
+      )
       if (ispresent(over)) {
         // only add once
         if (!addedids.has(over.id)) {
@@ -290,7 +296,7 @@ export function memoryloginplayer(
   return false
 }
 
-export function memorylogoutplayer(player: string, isendgame: boolean) {
+export function memorylogoutplayer(player: string) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
@@ -299,6 +305,7 @@ export function memorylogoutplayer(player: string, isendgame: boolean) {
   const removelist: string[] = []
   for (let i = 0; i < mainbook.activelist.length; ++i) {
     const mayberemove = mainbook.activelist[i]
+    // this is a hack to ensure we drop local players from the active list
     if (mayberemove.startsWith(player)) {
       removelist.push(mayberemove)
     }
@@ -313,14 +320,12 @@ export function memorylogoutplayer(player: string, isendgame: boolean) {
 
     // capture carry-over values
     const saveflags: Record<string, any> = {}
-    if (isendgame) {
-      // we track deaths & highscore
-      saveflags.deaths = maptonumber(flags.deaths, 0) + 1
-      saveflags.highscore = Math.max(
-        maptonumber(flags.score, 0),
-        maptonumber(flags.highscore, 0),
-      )
-    }
+    // we track deaths & highscore
+    saveflags.deaths = maptonumber(flags.deaths, 0) + 1
+    saveflags.highscore = Math.max(
+      maptonumber(flags.score, 0),
+      maptonumber(flags.highscore, 0),
+    )
 
     // clear from active list
     memorywritebookplayerboard(mainbook, remove, '')
@@ -336,10 +341,8 @@ export function memorylogoutplayer(player: string, isendgame: boolean) {
     memoryclearbookflags(mainbook, remove)
 
     // set carry-over values
-    if (isendgame) {
-      const newflags = memoryreadbookflags(mainbook, remove)
-      Object.assign(newflags, saveflags)
-    }
+    const newflags = memoryreadbookflags(mainbook, remove)
+    Object.assign(newflags, saveflags)
   }
 }
 

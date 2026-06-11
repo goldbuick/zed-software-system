@@ -1,0 +1,148 @@
+import { createsynthid } from 'zss/mapping/guid'
+import {
+  memorycreatebook,
+  memoryreadbookflags,
+} from 'zss/memory/bookoperations'
+import { memoryresetbooks } from 'zss/memory/session'
+import {
+  memorymergesynthvoice,
+  memoryqueuesynthplay,
+  memoryreadsynth,
+  memoryreadsynthplay,
+} from 'zss/memory/synthstate'
+
+const synthplaymock = jest.fn()
+jest.mock('zss/device/api', () => ({
+  ...jest.requireActual('zss/device/api'),
+  synthplay: (...args: unknown[]) => synthplaymock(...args),
+}))
+
+describe('synthstate flag layout', () => {
+  beforeEach(() => {
+    synthplaymock.mockClear()
+  })
+
+  afterEach(() => {
+    memoryresetbooks([])
+  })
+
+  it('stores voices and voicefx under createsynthid(board) after first read', () => {
+    const book = memorycreatebook([])
+    book.name = 'main'
+    memoryresetbooks([book])
+
+    const boardid = 'bd-test'
+    memoryreadsynth(boardid)
+
+    const flags = memoryreadbookflags(book, createsynthid(boardid))
+    expect(flags.voices).toEqual({
+      '0': { square: '' },
+      '1': { square: '' },
+      '2': { square: '' },
+      '3': { square: '' },
+    })
+    expect(flags.voicefx).toEqual({})
+  })
+
+  it('restart restores square default voices', () => {
+    const book = memorycreatebook([])
+    book.name = 'main'
+    memoryresetbooks([book])
+
+    const boardid = 'bd-restart'
+    memorymergesynthvoice(boardid, 0, 'sine', '')
+    memorymergesynthvoice(boardid, 0, 'restart', '')
+    const state = memoryreadsynth(boardid)
+    expect(state?.voices['0']).toEqual({ square: '' })
+  })
+
+  it('persists merge voice mutations through flag-backed objects', () => {
+    const book = memorycreatebook([])
+    book.name = 'main'
+    memoryresetbooks([book])
+
+    const boardid = 'bd-merge'
+    memorymergesynthvoice(boardid, 0, 'freq', 440)
+
+    const flags = memoryreadbookflags(book, createsynthid(boardid))
+    expect(flags.voices).toEqual({
+      '0': { square: '', freq: 440 },
+      '1': { square: '' },
+      '2': { square: '' },
+      '3': { square: '' },
+    })
+
+    const again = memoryreadsynth(boardid)
+    expect(again?.voices['0']?.freq).toBe(440)
+  })
+
+  it('stores play queue under createsynthid(board) after first read', () => {
+    const book = memorycreatebook([])
+    book.name = 'main'
+    memoryresetbooks([book])
+
+    const boardid = 'bd-play'
+    memoryreadsynthplay(boardid)
+
+    const flags = memoryreadbookflags(book, createsynthid(boardid))
+    expect(Array.isArray(flags.playqueue)).toBe(true)
+    expect(flags.playqueue).toEqual([])
+  })
+
+  it('persists play queue mutations on the flag-backed array', () => {
+    const book = memorycreatebook([])
+    book.name = 'main'
+    memoryresetbooks([book])
+
+    const boardid = 'bd-queue'
+    memoryqueuesynthplay(boardid, '')
+
+    const flags = memoryreadbookflags(book, createsynthid(boardid))
+    expect(flags.playqueue).toEqual([])
+
+    memoryqueuesynthplay(boardid, 'c')
+    const queue = memoryreadsynthplay(boardid)
+    expect(queue.length).toBeGreaterThan(0)
+    expect(memoryreadbookflags(book, createsynthid(boardid)).playqueue).toBe(
+      queue,
+    )
+  })
+
+  it('queues board play without immediate synthplay dispatch', () => {
+    const book = memorycreatebook([])
+    book.name = 'main'
+    memoryresetbooks([book])
+
+    const boardid = 'bd-tick'
+    memoryqueuesynthplay(boardid, 'c')
+    expect(synthplaymock).not.toHaveBeenCalled()
+    expect(memoryreadsynthplay(boardid)).toEqual([['c', expect.any(Number)]])
+  })
+
+  it('dispatches global play immediately', () => {
+    const book = memorycreatebook([])
+    book.name = 'main'
+    memoryresetbooks([book])
+
+    memoryqueuesynthplay('', 'c')
+    expect(synthplaymock).toHaveBeenCalledWith(expect.anything(), '', '', 'c')
+  })
+
+  it('dispatches empty board play immediately to stop', () => {
+    const book = memorycreatebook([])
+    book.name = 'main'
+    memoryresetbooks([book])
+
+    memoryqueuesynthplay('bd-stop', 'c')
+    expect(synthplaymock).not.toHaveBeenCalled()
+
+    memoryqueuesynthplay('bd-stop', '')
+    expect(synthplaymock).toHaveBeenCalledWith(
+      expect.anything(),
+      '',
+      'bd-stop',
+      '',
+    )
+    expect(memoryreadsynthplay('bd-stop')).toEqual([])
+  })
+})

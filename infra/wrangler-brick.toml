@@ -1,0 +1,7 @@
+name = "net-brick"
+main = "net-brick-worker.js"
+compatibility_date = "2026-06-10"
+
+[[routes]]
+pattern = "brick.zed.cafe/*"
+zone_name = "zed.cafe"

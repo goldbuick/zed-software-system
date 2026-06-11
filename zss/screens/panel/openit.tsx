@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import { fetchwiki } from 'zss/feature/fetchwiki'
+import { fetchrefscrolltext } from 'zss/feature/fetchrefscrolltext'
 import { terminalwritemarkdownlines } from 'zss/feature/parse/markdownterminal'
 import { UserInput } from 'zss/gadget/userinput'
 import { doasync } from 'zss/mapping/func'
@@ -24,10 +24,12 @@ export function PanelOpenIt({
     const player = registerreadplayer()
     setTimeout(() => {
       switch (openmethod) {
-        case 'wiki':
+        case 'zns':
           doasync(SOFTWARE, player, async () => {
-            const markdowntext = await fetchwiki(content)
-            terminalwritemarkdownlines(player, markdowntext)
+            const markdowntext = await fetchrefscrolltext(content)
+            if (markdowntext.trim()) {
+              terminalwritemarkdownlines(player, markdowntext)
+            }
           })
           break
         case 'inline':

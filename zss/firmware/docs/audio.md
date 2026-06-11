@@ -28,7 +28,7 @@
 |---------|------|-------------|
 | `play` | [buffer] | Play audio buffer (can reference chip variable) |
 | `bgplay` | [buffer] | Play background audio |
-| `bgplayon64n` … `bgplayon1n` | [buffer] | Same as `bgplay` but quantized to note length |
+| `bgplayon64n` … `bgplayon1n` | [buffer] | Same as `bgplay` but snaps to the next `@subdiv` on the synth boot beat grid (136 BPM) |
 | `vol` | `volume` | Set foreground playback volume |
 | `bgvol` | `volume` | Set background playback volume |
 
@@ -71,7 +71,7 @@
 - **`handlesynthvoice`** — Parses voice config (volume, fx name, or partials) and calls `synthvoice`
 - **`handlesynthvoicefx`** — Parses fx config/value and calls `synthvoicefx`
 - **`handleplaystr`** — Resolves play buffer from chip vars; validates it’s not a mapped word (category, collision, color, dir)
-- **`handlebgplay`** — Wraps `synthbgplay` with play string and optional quantize
+- **`handlebgplay`** — Wraps `synthbgplay` with play string; `#bgplayon*` pass `@subdiv` quantize strings
 
 ## Context
 

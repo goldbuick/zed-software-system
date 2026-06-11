@@ -4,8 +4,8 @@ import {
   apierror,
   apilog,
   vmloader,
-  vmlogout,
   vmreadzipfilelist,
+  workstatus,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { waitfor } from 'zss/mapping/tick'
@@ -130,7 +130,7 @@ let zipfilemarks: Record<string, boolean> = {}
 
 export async function parsezipfile(player: string, file: File) {
   try {
-    apilog(SOFTWARE, player, 'parsezipfile', file.name)
+    workstatus(SOFTWARE, player, 'parse zip')
     const arraybuffer = await file.arrayBuffer()
     const ziplib = new JSZip()
     const zip = await ziplib.loadAsync(arraybuffer)
@@ -148,6 +148,7 @@ export async function parsezipfile(player: string, file: File) {
       zipfilelist.push(zipfile)
     }
     // signal scroll to open
+    apilog(SOFTWARE, player, 'unzip done')
     vmreadzipfilelist(SOFTWARE, player)
   } catch (err: any) {
     apierror(SOFTWARE, player, 'crash', err.message)
@@ -182,9 +183,6 @@ export async function parsezipfilelist(player: string) {
       await waitfor(2000)
     }
   }
-  // re-login after import
-  await waitfor(2000)
-  vmlogout(SOFTWARE, player, false)
 }
 
 export async function parsebinaryfile(

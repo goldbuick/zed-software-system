@@ -1,13 +1,16 @@
 import { degToRad } from 'maath/misc'
+import { PERF_INCREMENTAL_LAYERS } from 'zss/config'
 import {
   LAYER,
   LAYER_TYPE,
   VIEWSCALE,
   layersreadmedia,
 } from 'zss/gadget/data/types'
+import { normalizelayerzvariant } from 'zss/gadget/graphics/layerz'
 import { pttoindex } from 'zss/mapping/2d'
 import { ispid } from 'zss/mapping/guid'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import { measurestage } from 'zss/perf/ticktimingstats'
 import { COLLISION, COLOR, DIR, NAME, PT } from 'zss/words/types'
 
 import { memoryreadobject } from './boardaccess'
@@ -41,6 +44,11 @@ import {
   memorycreatecachedsprite,
   memorycreatecachedsprites,
 } from './renderinglayercache'
+import {
+  memoryreadboardelementruntime,
+  memoryreadboardruntime,
+  memorywriteboardelementruntime,
+} from './runtimeboundary'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -121,8 +129,11 @@ export function memorycodepagetoprefix(codepage: MAYBE<CODE_PAGE>) {
     const name = memoryreadcodepagename(codepage)
     const stub: BOARD_ELEMENT = {
       kind: name,
-      kinddata: memoryreadcodepagedata<CODE_PAGE_TYPE.TERRAIN>(codepage),
+      runtime: '',
     }
+    memorywriteboardelementruntime(stub, {
+      kinddata: memoryreadcodepagedata<CODE_PAGE_TYPE.TERRAIN>(codepage),
+    })
     return `${memoryelementtodisplayprefix(stub)}$ONCLEAR$BLUE `
   }
   return ''
@@ -145,20 +156,9 @@ export function memoryconverttogadgetcontrollayer(
   control.focusy = maybeobject.y ?? 0
 
   // player flags, then board flags
-  const { graphics, camera, facing } = readgraphics(player, board)
+  const { graphics, camera, facing } = memoryreadgraphics(player, board)
   if (isstring(graphics)) {
-    const withgraphics = NAME(graphics)
-    switch (graphics) {
-      case 'fpv':
-      case 'iso':
-      case 'flat':
-      case 'mode7':
-        control.graphics = withgraphics
-        break
-      default:
-        control.graphics = 'flat'
-        break
-    }
+    control.graphics = normalizelayerzvariant(graphics)
   }
 
   if (isstring(camera)) {
@@ -182,8 +182,21 @@ export function memoryconverttogadgetcontrollayer(
   return [control]
 }
 
+/**
+ * Cache of last-built layer wrappers per (graphics, board, whichlayer, index).
+ * When `PERF_INCREMENTAL_LAYERS` is enabled and `boardruntime.drawneedfull`
+ * is false AND `drawallowids` is empty, returning the cached array reuses
+ * the already-populated tile/sprite/dither buffers (their identities are
+ * stable thanks to `createcachedtiles` / `memorycreatecachedsprites`).
+ *
+ * NOTE: a deeper incremental rebuild that touches only the cells in
+ * `drawallowids` is the eventual goal; this cache is a conservative
+ * stepping stone, gated so it is trivially disabled when needed.
+ */
+const memoryconverttogadgetlayerscache = new Map<string, LAYER[]>()
+
 export function memoryconverttogadgetlayers(
-  player: string,
+  graphics: string,
   index: number,
   board: MAYBE<BOARD>,
   tickers: string[],
@@ -198,18 +211,35 @@ export function memoryconverttogadgetlayers(
     return []
   }
 
+  if (PERF_INCREMENTAL_LAYERS) {
+    const boardruntime = memoryreadboardruntime(board)
+    const allowids = boardruntime?.drawallowids
+    const stable =
+      boardruntime &&
+      !boardruntime.drawneedfull &&
+      ispresent(allowids) &&
+      allowids.size === 0
+    if (stable) {
+      const cachekey = `${graphics}:${board.id}:${whichlayer}:${index}`
+      const cached = memoryconverttogadgetlayerscache.get(cachekey)
+      if (cached) {
+        return cached
+      }
+    }
+  }
+
   // make sure lookup is created
   memoryinitboard(board)
 
   // update resolve caches
   memoryupdateboardvisuals(board)
 
-  const withgraphics = NAME(readgraphics(player, board).graphics)
+  const withgraphics = normalizelayerzvariant(graphics)
   const layers: LAYER[] = []
 
   let iiii = index
   const boardid = board.id
-  const cacheowner = `${player}:${boardid}`
+  const cacheowner = `${withgraphics}:${boardid}`
   const boardwidth = BOARD_WIDTH
   const boardheight = BOARD_HEIGHT
   const tiles = createcachedtiles(
@@ -258,7 +288,7 @@ export function memoryconverttogadgetlayers(
     tiles.char[i] = char
     tiles.color[i] = display.color
     tiles.bg[i] = display.bg
-    tiles.stats[i] = collision
+    tiles.props[i] = collision
   }
 
   const boardobjects = Object.values(board.objects ?? {})
@@ -356,6 +386,7 @@ export function memoryconverttogadgetlayers(
 
   // layers for display media
   if (whichlayer === DIR.MID) {
+    const boardruntime = memoryreadboardruntime(board)
     // set mood
     layers.push(
       createcachedmedia(
@@ -367,10 +398,10 @@ export function memoryconverttogadgetlayers(
     )
 
     // check for palette
-    if (isstring(board.palettepage)) {
+    if (isstring(boardruntime?.palettepage)) {
       const codepage = memorypickcodepagewithtypeandstat(
         CODE_PAGE_TYPE.PALETTE,
-        board.palettepage,
+        boardruntime.palettepage,
       )
       const palette = memoryreadcodepagedata<CODE_PAGE_TYPE.PALETTE>(codepage)
       if (ispresent(palette?.bits)) {
@@ -379,16 +410,16 @@ export function memoryconverttogadgetlayers(
             cacheowner,
             iiii++,
             'image/palette',
-            cachedmediabits(board.palettepage, palette.bits),
+            cachedmediabits(boardruntime.palettepage, palette.bits),
           ),
         )
       }
     }
     // check for charset
-    if (isstring(board.charsetpage)) {
+    if (isstring(boardruntime?.charsetpage)) {
       const codepage = memorypickcodepagewithtypeandstat(
         CODE_PAGE_TYPE.CHARSET,
-        board.charsetpage,
+        boardruntime.charsetpage,
       )
       const charset = memoryreadcodepagedata<CODE_PAGE_TYPE.CHARSET>(codepage)
       if (ispresent(charset?.bits)) {
@@ -397,7 +428,7 @@ export function memoryconverttogadgetlayers(
             cacheowner,
             iiii++,
             'image/charset',
-            cachedmediabits(board.charsetpage, charset.bits),
+            cachedmediabits(boardruntime.charsetpage, charset.bits),
           ),
         )
       }
@@ -407,6 +438,11 @@ export function memoryconverttogadgetlayers(
     layers.push(
       createcachedmedia(cacheowner, iiii++, 'text/players', pids.join(',')),
     )
+  }
+
+  if (PERF_INCREMENTAL_LAYERS) {
+    const cachekey = `${graphics}:${board.id}:${whichlayer}:${index}`
+    memoryconverttogadgetlayerscache.set(cachekey, layers)
   }
 
   // return result
@@ -430,7 +466,7 @@ export type MEMORY_GADGET_LAYERS = {
   tickers: string[]
 }
 
-function readgraphics(player: string, board: BOARD) {
+export function memoryreadgraphics(player: string, board: BOARD) {
   // player flags, then board flags
   const { graphics, camera, facing } = memoryreadflags(player)
   const withgraphics = graphics ?? board.graphics ?? ''
@@ -477,7 +513,7 @@ export function memoryelementtotickerprefix(element: MAYBE<BOARD_ELEMENT>) {
     withname = isstring(user) ? user : 'player'
   } else {
     memoryreadelementkind(element)
-    const kind = element.kinddata
+    const kind = memoryreadboardelementruntime(element)?.kinddata
     const fromdisplay = element.displayname ?? kind?.displayname
     const trimmed =
       isstring(fromdisplay) && fromdisplay.trim().length > 0
@@ -492,7 +528,16 @@ export function memoryelementtotickerprefix(element: MAYBE<BOARD_ELEMENT>) {
 }
 
 export function memoryreadgadgetlayers(
-  player: string,
+  graphics: string,
+  board: MAYBE<BOARD>,
+): MEMORY_GADGET_LAYERS {
+  return measurestage('tick:readgadgetlayers', () =>
+    memoryreadgadgetlayersbody(graphics, board),
+  )
+}
+
+function memoryreadgadgetlayersbody(
+  graphics: string,
   board: MAYBE<BOARD>,
 ): MEMORY_GADGET_LAYERS {
   const over: LAYER[] = []
@@ -518,8 +563,8 @@ export function memoryreadgadgetlayers(
     }
   }
 
-  // composite id (include player so per-player graphics produce distinct gadget ids)
-  const id4all: string[] = [player, `${board.id}`]
+  // composite id
+  const id4all: string[] = [`${board.id}`]
 
   // read over / under
   const overboard = memoryreadoverboard(board)
@@ -534,12 +579,12 @@ export function memoryreadgadgetlayers(
 
   // compose layers
   under.push(
-    ...memoryconverttogadgetlayers(player, 0, underboard, tickers, DIR.UNDER),
+    ...memoryconverttogadgetlayers(graphics, 0, underboard, tickers, DIR.UNDER),
   )
   const multi = ispresent(overboard)
   layers.push(
     ...memoryconverttogadgetlayers(
-      player,
+      graphics,
       under.length,
       board,
       tickers,
@@ -549,7 +594,7 @@ export function memoryreadgadgetlayers(
   )
   over.push(
     ...memoryconverttogadgetlayers(
-      player,
+      graphics,
       under.length + layers.length,
       overboard,
       tickers,
@@ -588,5 +633,3 @@ export function memoryreadgadgetlayers(
     tickers,
   }
 }
-
-export { memorycreatecachedsprite } from './renderinglayercache'

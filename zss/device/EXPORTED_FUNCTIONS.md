@@ -10,11 +10,12 @@ This document categorizes and summarizes all exported functions from the `device
 3. [Register Device](#register-device)
 4. [Audio & Synthesis](#audio--synthesis)
 5. [Bridge & Networking](#bridge--networking)
-6. [Gadget Client/Server](#gadget-clientserver)
-7. [Message Forwarding](#message-forwarding)
-8. [Modem (Shared State)](#modem-shared-state)
-9. [Session & Lifecycle](#session--lifecycle)
-10. [Types & Utilities](#types--utilities)
+6. [Gadget Client](#gadget-client)
+7. [Boardrunner](#boardrunner)
+8. [Message Forwarding](#message-forwarding)
+9. [Modem (Shared State)](#modem-shared-state)
+10. [Session & Lifecycle](#session--lifecycle)
+11. [Types & Utilities](#types--utilities)
 
 ---
 
@@ -82,6 +83,34 @@ Core virtual machine operations for managing game state, memory, code execution,
 - `vmcodewatch(device, player, book, path)` - Start watching code changes
 - `vmcoderelease(device, player, book, path)` - Stop watching code changes
 
+### Pilot / Input Plumbing
+- `vmpilotstart(device, player, x, y)` - Start pilot at point
+- `vmpilotstop(device, player)` - Stop pilot
+- `vmpullvarresult(device, player, data)` - Forward a queued read-flag result back to the VM
+- `vmlastinputtouch(device, player, targetplayer)` - Refresh "last input" timestamp for a player
+- `vmplayermovetoboard(device, player, targetplayer, board, dest)` - Boardrunner asks the sim VM to relocate a player
+- `vmgadgetdesync(device, player)` - Ask the sim VM to repaint this player's gadget state
+
+### VM sync (handlers / tick)
+- `gadgetsynctick(vm)` - Per-tick gadget projection; emits `gadgetclient:patch` when jsonpipe diff is non-empty ([`vm/gadgetsynctick.ts`](vm/gadgetsynctick.ts))
+- `handlegadgetdesync(vm, message)` - Full gadget paint after desync ([`vm/gadgetsynctick.ts`](vm/gadgetsynctick.ts))
+- `boardrunnermemorysync(vm)` - Emit memory-root jsonpipe diff to elected boardrunners ([`vm/boardrunnermemorysync.ts`](vm/boardrunnermemorysync.ts))
+- `boardrunneremitpatch(device, operations, skipplayer, boundary?)` - Fan-out memory/boundary patch to runners
+- `boardrunnermemorypatch(operations)` - Apply remote memory patch on sim worker
+- `boardrunnerboundarysync(vm)` - Emit per-boundary jsonpipe diffs to runners ([`vm/boardrunnerboundarysync.ts`](vm/boardrunnerboundarysync.ts))
+- `boardrunnerboundarypaint(boundary, doc)` - Full boundary sync + store in memory
+- `boardrunnerboundarypatch(boundary, operations)` - Apply remote boundary patch
+- `handleclearscroll(vm, message)` - Clear player scroll + unlock board objects ([`vm/handlers/scroll.ts`](vm/handlers/scroll.ts))
+- `handlemakeitscroll(vm, message)` - Open make-it scroll
+- `handlerefscroll(vm, message)` - ROM refscroll menu
+- `handlegadgetscroll(vm, message)` - Generic gadget scroll from payload
+
+### Boardrunner Acks
+- `vmboardrunnerack(device, player)` - Boardrunner ack of a `boardrunner:tick`; refreshes ack budget
+- `vmboardrunneraccess(device, player, boardid)` - Runner (or firmware on worker) asks sim VM to track `boardid` for the elected board until the board codepage runtime is hydrated; tick/boundary sync include extra ids
+- `vmboardrunnerpatch(device, player, patch, boundary?)` - Boardrunner sends a boundary jsonpipe patch back to authoritative memory
+- `vmboardrunnerpaint(device, player, doc, boundary)` - Boardrunner sends a full boundary document to authoritative memory (sim jsonpipe reset for that id)
+
 ### Content & Discovery
 - `vmzztsearch(device, player, field, text)` - Search Museum of ZZT
 - `vmzztrandom(device, player)` - Get random ZZT games
@@ -126,7 +155,7 @@ Functions for managing the register device, which handles UI state, terminal, ed
 ### Memory Operations
 - `registersavemem(device, player, historylabel, compressedbooks, books)` - Save memory state
 - `registerforkmem(device, player, books, transfer)` - Fork memory to new window
-- `registerpublishmem(device, player, books, ...args)` - Publish memory (itch.io, BBS, etc.)
+- `registerpublishmem(device, player, books, ...args)` - Publish memory (itch.io, ZNS, etc.)
 
 ### Developer Tools
 - `registerdev(device, player)` - Enable dev mode
@@ -177,8 +206,8 @@ Functions for audio synthesis, playback, TTS, and voice configuration.
 - `synthttsinfo(device, player, board, info)` - Send TTS info string to synth
 
 ### Heavy (TTS worker)
-- `heavyttsinfo(device, player, engine, info)` - Send TTS info to heavy worker
-- `heavyttsrequest(device, player, engine, config, voice, phrase)` - Request TTS from heavy worker
+- `ttsinfo(device, player, engine, info)` - Send TTS info to ttsspace worker
+- `ttsrequest(device, player, engine, config, voice, phrase)` - Request TTS from ttsspace worker
 ### Voice Configuration
 - `synthvoice(device, player, board, idx, config, value)` - Configure synth voice
 - `synthvoicefx(device, player, board, idx, fx, config, value)` - Configure voice effects
@@ -218,19 +247,44 @@ Functions for network operations, streaming, and external service integration.
 
 ---
 
-## Gadget Client/Server
+## Gadget Client
 
-**File:** `gadgetserver.ts`, `gadgetclient.ts` (via api.ts)
+**File:** `gadgetclient.ts` (via api.ts)
 
-Functions for managing gadget (UI) state synchronization between server and client.
+Per-player gadget state synchronization. The previous `gadgetserver` device has been removed; the equivalent paint/patch is produced **inside the sim VM tick** by [`gadgetsynctick`](vm/gadgetsynctick.ts) and dispatched via the helpers below.
 
-### Server Operations
-- `gadgetserverdesync(device, player)` - Force desync and full state refresh
-- `gadgetserverclearscroll(device, player)` - Clear scroll on server
-
-### Client Operations
+### Sim → Client
 - `gadgetclientpaint(device, player, json)` - Paint full gadget state (desync)
-- `gadgetclientpatch(device, player, json)` - Apply incremental patch to gadget state
+- `gadgetclientpatch(device, player, patch)` - Apply jsonpipe (RFC 6902) patch to gadget state
+- `gadgetclientbonk(device, player)` - Emit `gadgetclient:bonk` (CRT curve hit)
+- `gadgetclientzap(device, player)` - Emit `gadgetclient:zap` (glitch pulse hit)
+
+### Client → Sim
+- `vmgadgetdesync(device, player)` - Ask the sim VM to repaint after a bad patch (also called by `register` after `acklogin`)
+
+---
+
+## Boardrunner
+
+**File:** `boardrunner.ts` (via api.ts)
+
+Per-board chip simulation that runs inside the **boardrunner worker**. The sim VM elects one player per active board to be its runner ([`vm/boardrunnermanagement.ts`](vm/boardrunnermanagement.ts)) and streams the data the runner needs.
+
+### VM → Boardrunner
+- `boardrunnerstart(device, player)` - One-shot `boardrunner:start`; worker sets `MEMORY.boardrunner`. Elected board id is `MEMORY.assignedboard` (from `boardrunner:tick`, cleared on `idle`).
+- `boardrunnertick(device, player, board, timestamp, boundaries)` - Drive one tick on the runner for `board` with the listed boundary ids
+- `boardrunnerpaint(device, player, doc, boundary?)` - Full jsonpipe sync of memory (no `boundary`) or a single boundary slice
+- `boardrunnerpatch(device, player, patch, boundary?)` - jsonpipe patch of memory or a single boundary slice
+- `boardrunnerinput(device, player, input, mods)` - Forward keyboard / gamepad input to the runner
+- `boardrunneridle(device, player)` - Tell the previously-assigned runner that it is no longer the runner for that board
+- `boardrunnerthud(device, player, thudplayer)` - Report a failed move back to the runner
+
+### Boardrunner → VM
+- `vmboardrunnerack(device, player)` - Ack a `boardrunner:tick`
+- `vmboardrunneraccess(device, player, boardid)` - Register a board codepage id for tick/boundary hydration
+- `vmboardrunnerpatch(device, player, patch, boundary?)` - Send a boundary jsonpipe patch back to authoritative memory
+- `vmboardrunnerpaint(device, player, doc, boundary)` - Send a full boundary document to authoritative memory (sim resets jsonpipe for that boundary)
+- `vmplayermovetoboard(device, player, targetplayer, board, dest)` - Ask the sim VM to relocate a player
 
 ---
 
@@ -245,11 +299,13 @@ Functions for managing message forwarding between peers, server, client, and hea
 
 ### Forwarding Rules
 - `shouldnotforwardonpeerserver(message)` - Check if message should NOT forward on peer server
-- `shouldforwardservertoclient(message)` - Check if message should forward server→client
+- `shouldforwardservertoclient(message)` - Check if message should forward sim→client (covers `vm`, `heavy`, `boardrunner`, `synth`, `modem`, `bridge`, `register`, `gadgetclient`, plus `log/chat/ticktock/ready/toast/second` topics and `sync/heavy/joinack/acklook/acklogin/ackoperator/ackzsswords/gadgetclient` path suffixes)
 - `shouldnotforwardonpeerclient(message)` - Check if message should NOT forward on peer client
-- `shouldforwardclienttoserver(message)` - Check if message should forward client→server
-- `shouldforwardclienttoheavy(message)` - Check if message should forward client→heavy
+- `shouldforwardclienttoserver(message)` - Check if message should forward client→sim (`vm:*`, `modem:*`, `*sync` / `*desync` / `*joinack`)
+- `shouldforwardclienttoheavy(message)` - Check if message should forward client→heavy (`heavy:*`, `second`, `ready`, `*acklook`)
 - `shouldforwardheavytoclient(message)` - Check if message should forward heavy→client
+- `shouldforwardclienttoboardrunner(message)` - Check if message should forward client→boardrunner (`boardrunner:*`, `vm:*`, `second`, `ready`). `vm:*` is forwarded so chip / scroll / sidebar messages also reach the chip OS running on the boardrunner.
+- `shouldforwardboardrunnertoclient(message)` - Check if message should forward boardrunner→client
 
 ---
 
@@ -283,11 +339,11 @@ Functions for shared state synchronization using Yjs (CRDT) and y-protocols (Awa
 - `modemobservevaluestring(key, callback)` - Observe string value changes
 
 ### Undo / Redo
-- `markNextPatchAsLocal()` - Mark the next edit as local (for undo tracking)
-- `consumeLocalPatchFlag()` - Consume the local-patch flag; returns true if next tx was local
-- `setCursorBeforeEdit(key, cursor)` - Store cursor before edit (for cursor restore on undo/redo)
-- `getUndoManager(key)` - Get Y.UndoManager for the shared text at key
-- `registerCursorRestore(key, restore)` - Register callback to restore cursor after undo/redo. Returns unregister.
+- `marknextpatchaslocal()` - Mark the next edit as local (for undo tracking)
+- `consumelocalpatchflag()` - Consume the local-patch flag; returns true if next tx was local
+- `setcursorbeforeedit(key, cursor)` - Store cursor before edit (for cursor restore on undo/redo)
+- `getundomanager(key)` - Get Y.UndoManager for the shared text at key
+- `registercursorrestore(key, restore)` - Register callback to restore cursor after undo/redo. Returns unregister.
 
 ### Presence (Awareness)
 - `modembroadcastpresence(clientId, codepageKey, cursor, select?, name?, color?)` - Update local awareness state
@@ -323,26 +379,6 @@ Functions for session management and device lifecycle.
 
 ---
 
-## Summary Statistics
-
-- **Total Exported Functions:** ~127
-- **API Functions:** ~80 (messaging helpers)
-- **Device-Specific Functions:** ~47 (direct device operations)
-- **Types & Interfaces:** ~10
-
-### By Category
-1. **API & Messaging:** ~80 functions
-2. **VM Operations:** ~30 functions
-3. **Register Operations:** ~20 functions
-4. **Audio/Synth/Heavy:** ~18 functions
-5. **Bridge/Networking:** ~10 functions
-6. **Modem/Shared State:** ~8 functions
-7. **Gadget:** ~4 functions
-8. **Forwarding:** ~7 functions
-9. **Lifecycle:** ~2 functions
-
----
-
 ## Notes
 
 - Most functions follow the pattern: `device.emit(player, target, data)`
@@ -351,4 +387,3 @@ Functions for session management and device lifecycle.
 - The system uses a message-passing architecture with devices as message handlers
 - Session management ensures messages are scoped to the correct session
 - Player filtering ensures messages are routed to the correct player
-

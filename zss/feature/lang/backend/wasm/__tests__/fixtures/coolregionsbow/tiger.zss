@@ -1,0 +1,35 @@
+@tiger
+@ispushable
+@cycle 2
+@char 227
+@color 11
+@p1 range;intelligence
+@p2 range;firing rate
+@p3 select bullet 0 star 1;firing type?
+:think
+#if (random 10) * 3 below or eq p2 do
+ #set p4 playerx - thisx
+ #set p5 playery - thisy
+ #if abs p4 below or eq 2 or abs p5 below or eq 2 do
+  #if p3 is 0 do
+   #set p6 bullet
+  #else do
+   #set p6 star
+  #done
+ #done
+ #shoot seek "$p6"
+#done
+#if p1 below random 10 do
+ ?rnd
+#else do
+ ?seek
+#done
+#think
+:thud
+#if any at senderx sendery player do
+ #shoot at senderx sendery
+#done
+#idle
+#think
+:shot
+#die

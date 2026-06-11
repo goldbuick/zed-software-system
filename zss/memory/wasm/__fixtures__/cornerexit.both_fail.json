@@ -1,0 +1,33 @@
+{
+  "name": "cornerexit.both_fail",
+  "initial": {},
+  "steps": [
+    {
+      "op": "corner_exit_resolve",
+      "args": {
+        "board": {
+          "id": "cur",
+          "exitnorth": "n",
+          "exiteast": "e"
+        },
+        "addrmap": {
+          "n": {
+            "id": "north"
+          },
+          "e": {
+            "id": "east"
+          }
+        }
+      },
+      "expect": {
+        "mode": "json",
+        "json": {
+          "exitne": "",
+          "exitnw": "",
+          "exitse": "",
+          "exitsw": ""
+        }
+      }
+    }
+  ]
+}

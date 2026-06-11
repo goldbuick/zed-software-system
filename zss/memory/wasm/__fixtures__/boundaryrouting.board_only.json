@@ -1,0 +1,31 @@
+{
+  "name": "boundaryrouting.board_only",
+  "initial": {},
+  "steps": [
+    {
+      "op": "collect_boundary_ids",
+      "args": {
+        "book": {
+          "id": "bk3",
+          "name": "main",
+          "timestamp": 0,
+          "activelist": [],
+          "pages": [],
+          "flags": {}
+        },
+        "board": {
+          "id": "bd3",
+          "name": "b",
+          "terrain": [],
+          "objects": {}
+        }
+      },
+      "expect": {
+        "mode": "json",
+        "json": [
+          "bd3"
+        ]
+      }
+    }
+  ]
+}

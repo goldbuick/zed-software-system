@@ -1,0 +1,13 @@
+@head
+@char 233
+@cycle 2
+@isbreakable
+:think
+?rnd
+#think
+:touch
+#shoot seek
+#think
+:shot
+:bombed
+#die

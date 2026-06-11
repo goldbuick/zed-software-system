@@ -1,5 +1,5 @@
 import { createdevice } from 'zss/device'
-import { apitoast, vmlogin } from 'zss/device/api'
+import { apilog, vmlogin, workstatus } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createpid } from 'zss/mapping/guid'
 import { isboolean } from 'zss/mapping/types'
@@ -14,7 +14,12 @@ export function createagent(agentname: string, existingid?: string) {
       switch (message.target) {
         case 'acklogin':
           if (isboolean(message.data)) {
-            apitoast(
+            workstatus(
+              device,
+              message.player,
+              message.data ? 'agent online' : 'agent err',
+            )
+            apilog(
               device,
               message.player,
               `agent ${pid} login ${message.data ? 'success' : 'failure'}`,

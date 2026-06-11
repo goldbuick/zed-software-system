@@ -119,7 +119,6 @@ export enum CODE_PAGE_KEYS {
   terrain,
   charset,
   palette,
-  eighttrack,
 }
 
 export enum CODE_PAGE_TYPE {
@@ -137,7 +136,6 @@ export enum MEMORY_LABEL {
   TEMP = 'temp',
   TITLE = 'title',
   PLAYER = 'player',
-  GADGETSTORE = 'gadgetstore',
 }
 
 // types
@@ -184,21 +182,7 @@ export type BOARD = {
   // runtime only
   id: string
   name: string
-  named?: Record<string, Set<string | number>>
-  lookup?: MAYBE<string>[]
-  distmaps?: Record<string, number[]>
-  overboard?: string
-  underboard?: string
-  charsetpage?: string
-  palettepage?: string
-  /** post-tick draw fingerprints; keys match `memoryelementdrawreadid` */
-  drawlastfp?: Record<string, string>
-  /** last known cells for objects (ids); used when objects are removed */
-  drawlastxy?: Record<string, { x: number; y: number }>
-  /** ids allowed for `:drawdisplay` next tick; undefined means full draw pass */
-  drawallowids?: Set<string>
-  /** force full draw next tick (e.g. palette swap); cleared after dirty update */
-  drawneedfull?: boolean
+  runtime?: string
 }
 
 export type BOARD_ELEMENT = {
@@ -253,11 +237,10 @@ export type BOARD_ELEMENT = {
   // messages
   sender?: string
   arg?: any
-  // runtime
-  category?: CATEGORY
-  kinddata?: BOARD_ELEMENT
   // cleanup
   removed?: number
+  // runtime only
+  runtime?: string
 }
 
 export type BOARD_ELEMENT_STAT = keyof BOARD_ELEMENT
@@ -265,29 +248,27 @@ export type BOARD_ELEMENT_STAT = keyof BOARD_ELEMENT
 export type BOOK = {
   id: string
   name: string
+  token?: string // unique token
   timestamp: number
   activelist: string[]
-  // content list
-  pages: CODE_PAGE[]
-  // global flags by id
-  flags: Record<string, BOOK_FLAGS>
-  // unique token
-  token?: string
+  pages: CODE_PAGE[] // Ordered code page shells; shells may also be registered at `boundaries[page.id]` for sync.
+  flags: Record<string, string> // Per-owner boundary ids; each owner id maps to a boundary-backed `BOOK_FLAGS` record.
 }
 
 export type BOOK_FLAGS = Record<string, WORD>
 
-export type CODE_PAGE = {
-  // all pages have id & code
-  id: string
-  code: string
-  // content data
+/** Slot payload stored at `boundaries[codepage.id]` (same id as the shell `id`). */
+export type CODE_PAGE_RUNTIME = {
   board?: BOARD
   object?: BOARD_ELEMENT
   terrain?: BOARD_ELEMENT
   charset?: BITMAP
   palette?: BITMAP
-  // common parsed values
+}
+
+export type CODE_PAGE = {
+  id: string
+  code: string
   stats?: CODE_PAGE_STATS
 }
 
@@ -308,3 +289,22 @@ export type CODE_PAGE_TYPE_MAP = {
 }
 
 export type MAYBE_CODE_PAGE = MAYBE<CODE_PAGE>
+
+export type BOARD_RUNTIME = {
+  named?: Record<string, Set<string | number>>
+  lookup?: MAYBE<string>[]
+  distmaps?: Record<string, number[]>
+  overboard?: string
+  underboard?: string
+  charsetpage?: string
+  palettepage?: string
+  drawlastfp?: Record<string, string> // post-tick draw fingerprints; keys match `memoryelementdrawreadid`
+  drawlastxy?: Record<string, { x: number; y: number }> // last known cells for objects (ids); used when objects are removed
+  drawallowids?: Set<string> // ids allowed for `:drawdisplay` next tick; undefined means full draw pass
+  drawneedfull?: boolean // force full draw next tick (e.g. palette swap); cleared after dirty update
+}
+
+export type BOARD_ELEMENT_RUNTIME = {
+  category?: CATEGORY
+  kinddata?: BOARD_ELEMENT
+}

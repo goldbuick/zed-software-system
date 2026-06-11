@@ -57,7 +57,7 @@ export function FPVLayer({
       return null
     case LAYER_TYPE.TILES: {
       const { floor, walls, water, sky, flooredge, skyedge } =
-        splitlayer2fpvtiles(layer.char, layer.color, layer.bg, layer.stats)
+        splitlayer2fpvtiles(layer.char, layer.color, layer.bg, layer.props)
       return (
         <>
           <group key={layer.id} position={[0, 0, z]}>

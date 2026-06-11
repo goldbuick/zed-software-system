@@ -13,6 +13,7 @@ import {
   memoryreadelementstat,
   memorywriteelementfromkind,
 } from 'zss/memory/boards'
+import { memorycopyboardelementruntime } from 'zss/memory/runtimeboundary'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -97,6 +98,7 @@ export function mapelementcopy(
   maybenew.breakable = from.breakable
   maybenew.tickertext = from.tickertext
   maybenew.tickertime = from.tickertime
+  memorycopyboardelementruntime(maybenew, from)
 }
 
 export function boardcopy(

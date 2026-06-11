@@ -1,7 +1,17 @@
 import ErrorStackParser from 'error-stack-parser'
+import { agentlog } from 'zss/agentlog'
+import {
+  GENERATED_FILENAME,
+  GeneratorBuild,
+  GeneratorFunc,
+} from 'zss/feature/lang'
+import {
+  type WasmScriptInstance,
+  loadscriptsync,
+} from 'zss/feature/lang/wasmloader'
 
 import { RUNTIME } from './config'
-import { MESSAGE, apierror } from './device/api'
+import { MESSAGE, apierror, chipmessage } from './device/api'
 import { SOFTWARE } from './device/session'
 import {
   DRIVER_TYPE,
@@ -11,8 +21,7 @@ import {
   firmwaregetcommand,
   firmwareset,
 } from './firmware/runner'
-import { GeneratorBuild, GeneratorFunc } from './lang/generator'
-import { GENERATED_FILENAME } from './lang/transformer'
+import { createchipid } from './mapping/guid'
 import {
   MAYBE,
   deepcopy,
@@ -341,7 +350,7 @@ export type CHIP = {
    * @param value - The expression to evaluate
    * @returns The evaluated value
    */
-  expr: (value: WORD) => WORD
+  expr: (...words: WORD[]) => WORD
 
   /**
    * Equality comparison. Uses deep equality for objects.
@@ -476,24 +485,6 @@ function maptoresult(value: WORD): WORD {
 }
 
 /**
- * Creates a chip memory identifier by appending '_chip' to the given ID.
- * @param id - The base chip identifier
- * @returns The formatted chip memory identifier
- */
-export function createchipid(id: string) {
-  return `${id}_chip`
-}
-
-/**
- * Creates a sender identifier in the format 'vm:<id>'.
- * @param maybeid - Optional sender ID (defaults to empty string)
- * @returns The formatted sender identifier
- */
-export function senderid(maybeid = '') {
-  return `vm:${maybeid ?? ''}`
-}
-
-/**
  * Creates a new chip instance with the given ID, driver, and compiled build.
  * Initializes chip memory, labels, and execution state. Returns a CHIP object
  * with all lifecycle, state management, messaging, and logic APIs.
@@ -503,6 +494,8 @@ export function senderid(maybeid = '') {
  * @param build - The compiled generator build containing code and labels
  * @returns A fully configured CHIP instance ready for execution
  */
+const debugoncecounts: Record<string, number> = {}
+
 export function createchip(
   id: string,
   driver: DRIVER_TYPE,
@@ -510,35 +503,40 @@ export function createchip(
 ) {
   // chip memory
   const mem = createchipid(id)
-  const flags = memoryreadflags(mem)
+
+  function chipflags() {
+    return memoryreadflags(mem)
+  }
 
   // ref to generator instance
-  // eslint-disable-next-line prefer-const
+
   let logic: MAYBE<GeneratorFunc>
+  let wasmscript: MAYBE<WasmScriptInstance>
 
   // create labels
   const labels = deepcopy(Object.entries(build.labels ?? {}))
 
   // init
-  if (!isarray(flags.lb) || flags.lb.length !== labels.length) {
+  const initfags = chipflags()
+  if (!isarray(initfags.lb) || initfags.lb.length !== labels.length) {
     // entry point state
-    flags.lb = labels
+    initfags.lb = labels
     // lock states
-    flags.lk = ''
+    initfags.lk = ''
     // scroll lock, gets cleared when player closes the scroll
-    flags.sk = ''
+    initfags.sk = ''
     // we leave message unset
-    flags.mg = undefined
+    initfags.mg = undefined
     // we track where we are in execution
-    flags.ec = 1
+    initfags.ec = 1
     // prevent infinite loop lockup
-    flags.lc = 0
+    initfags.lc = 0
     // pause until next tick
-    flags.ys = 0
+    initfags.ys = 0
     // execution frequency
-    flags.ps = 0
+    initfags.ps = 0
     // chip is in ended state awaiting any messages
-    flags.es = (build.errors?.length ?? 0) !== 0 ? 1 : 0
+    initfags.es = (build.errors?.length ?? 0) !== 0 ? 1 : 0
   }
 
   /**
@@ -596,6 +594,7 @@ export function createchip(
 
     // lifecycle api
     once() {
+      const flags = chipflags()
       // reset state
       flags.lc = 0
       flags.ys = 0
@@ -606,7 +605,28 @@ export function createchip(
 
       // invoke logic impl
       try {
-        if (!logic?.(chip)) {
+        if (wasmscript) {
+          const runresult = wasmscript.run()
+          const oncecount = debugoncecounts[id] ?? 0
+          if (oncecount < 2) {
+            debugoncecounts[id] = oncecount + 1
+            agentlog(
+              'chip.ts:once',
+              'wasm run',
+              {
+                id,
+                runresult,
+                getcase: chip.getcase(),
+                esbefore: flags.es,
+                oncecount,
+              },
+              'E',
+            )
+          }
+          if (!runresult) {
+            flags.es = 1
+          }
+        } else if (!logic?.(chip)) {
           flags.es = 1
         }
       } catch (err: any) {
@@ -615,10 +635,11 @@ export function createchip(
       }
     },
     tick(cycle) {
+      const flags = chipflags()
       // update execution frequency
       const pulse = isnumber(flags.ps) ? flags.ps : 0
       const activecycle = pulse % cycle === 0
-      flags.ps = pulse + 1
+      flags.ps = (pulse + 1) % cycle
 
       // execution frequency
       if (activecycle === false) {
@@ -639,21 +660,26 @@ export function createchip(
       return shouldtick
     },
     isended() {
+      const flags = chipflags()
       return flags.es === 1
     },
     isfirstpulse() {
+      const flags = chipflags()
       return flags.ps === 1
     },
     shouldtick() {
+      const flags = chipflags()
       return !flags.sk && (flags.es === 0 || chip.hm() !== 0)
     },
     checkcount() {
+      const flags = chipflags()
       if (isnumber(flags.lc)) {
         return ++flags.lc > RUNTIME.YIELD_AT_COUNT
       }
       return true
     },
     haslabel(label) {
+      const flags = chipflags()
       const nlabel = NAME(label)
       if (isarray(flags.lb)) {
         for (let i = 0; i < flags.lb.length; ++i) {
@@ -669,6 +695,7 @@ export function createchip(
       return false
     },
     hm() {
+      const flags = chipflags()
       if (isarray(flags.mg) && isarray(flags.lb)) {
         const [target] = flags.mg as [string] // unpack message
         if (ispresent(target)) {
@@ -685,32 +712,43 @@ export function createchip(
       return 0
     },
     yield() {
+      const flags = chipflags()
       flags.ys = 1
     },
     jump(line) {
+      const flags = chipflags()
       flags.ec = line
     },
     sy() {
+      const flags = chipflags()
       return !!flags.ys || chip.checkcount()
     },
     send(player, chipid, message, data) {
-      SOFTWARE.emit(player, `${senderid(chipid)}:${message}`, data)
+      // need two emits here one for vm: one for boardrunner:
+      // or do we have one prefix that gets forwarded to both?
+      // SOFTWARE.emit(player, `${chipid}:${message}`, data)
+      chipmessage(SOFTWARE, player, chipid, message, data)
     },
     lock(allowed) {
+      const flags = chipflags()
       flags.lk = allowed
     },
     unlock() {
+      const flags = chipflags()
       flags.lk = ''
     },
     scrolllock(player) {
+      const flags = chipflags()
       flags.sk = player
     },
     scrollunlock(player) {
+      const flags = chipflags()
       if (flags.sk === player) {
         flags.sk = ''
       }
     },
     message(incoming) {
+      const flags = chipflags()
       // internal messages while locked are allowed
       if (
         (flags.sk && incoming.player !== flags.sk) ||
@@ -727,6 +765,7 @@ export function createchip(
       }
     },
     zap(label) {
+      const flags = chipflags()
       const nlabel = NAME(label)
       if (isarray(flags.lb)) {
         for (let i = 0; i < flags.lb.length; ++i) {
@@ -740,10 +779,10 @@ export function createchip(
             }
           }
         }
-        // console.info('zap', deepcopy(flags.lb))
       }
     },
     restore(label) {
+      const flags = chipflags()
       const nlabel = NAME(label)
       if (isarray(flags.lb)) {
         for (let i = 0; i < flags.lb.length; ++i) {
@@ -755,10 +794,10 @@ export function createchip(
             }
           }
         }
-        // console.info('restore', deepcopy(flags.lb))
       }
     },
     getcase() {
+      const flags = chipflags()
       // ensure execution cursor
       flags.ec = isnumber(flags.ec) ? flags.ec : 1
 
@@ -805,6 +844,7 @@ export function createchip(
       return flags.ec
     },
     nextcase() {
+      const flags = chipflags()
       // get execution cursor state
       const cursor = isnumber(flags.ec) ? flags.ec : 1
       // inc it
@@ -813,6 +853,7 @@ export function createchip(
       return flags.ec
     },
     endofprogram() {
+      const flags = chipflags()
       chip.yield()
       flags.es = 1
     },
@@ -961,6 +1002,7 @@ export function createchip(
       return chip.command('duplicate', ...words)
     },
     repeatstart(index, ...words) {
+      const flags = chipflags()
       const [value, ii] = readargs(words, 0, [ARG_TYPE.NUMBER])
       const repeatcount = `repeatcount${index}`
       const repeatwords = `repeatwords${index}`
@@ -968,6 +1010,7 @@ export function createchip(
       flags[repeatwords] = ii < words.length ? words.slice(ii) : undefined
     },
     repeat(index) {
+      const flags = chipflags()
       const repeatcount = `repeatcount${index}`
       const repeatwords = `repeatwords${index}`
       if (!isnumber(flags[repeatcount])) {
@@ -1195,8 +1238,28 @@ export function createchip(
     },
   }
 
-  // track built function
-  logic = build.code
+  if (build.wasmbytes && build.wasmbytes.length > 0) {
+    wasmscript = loadscriptsync(build.wasmbytes, chip)
+    agentlog(
+      'chip.ts:createchip',
+      'wasm script loaded',
+      { id, wasmbytes: build.wasmbytes.length, inites: initfags.es },
+      'D',
+    )
+  } else {
+    logic = build.code
+    agentlog(
+      'chip.ts:createchip',
+      'js logic path',
+      {
+        id,
+        hascode: !!build.code,
+        errors: build.errors?.length ?? 0,
+        inites: initfags.es,
+      },
+      'D',
+    )
+  }
 
   return chip
 }

@@ -19,17 +19,7 @@ export function writehyperlink(
   write(device, player, `!${hyperlink};${label}`)
 }
 
-/** Terminal log: `!!runit …;label` after `renderrow` — runs CLI in terminal on activate. */
-export function writerunit(
-  device: DEVICELIKE,
-  player: string,
-  command: string,
-  label: string,
-) {
-  write(device, player, `!runit ${command};${label}`)
-}
-
-export function writeqr(device: DEVICELIKE, player: string, content: string) {
+function writeqr(device: DEVICELIKE, player: string, content: string) {
   const ascii = qrlines(content)
   for (let i = 0; i < ascii.length; i++) {
     write(device, player, ascii[i])

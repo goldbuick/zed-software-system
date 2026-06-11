@@ -1,5 +1,6 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
+import { handlegadgetdesync } from 'zss/device/vm/gadgetsynctick'
 
 import { handleadmin } from './admin'
 import {
@@ -9,6 +10,11 @@ import {
   handleplayertoken,
   handlesearch,
 } from './auth'
+import { handleboardrunneraccess } from './boardrunneraccess'
+import { handleboardrunnerack } from './boardrunnerack'
+import { handleboardrunnerdesync } from './boardrunnerdesync'
+import { handleboardrunnerpaint } from './boardrunnerpaint'
+import { handleboardrunnerpatch } from './boardrunnerpatch'
 import { handlebookmarkscroll } from './bookmarkscroll'
 import { handlebooks } from './books'
 import { handlecli, handleclirepeatlast } from './cli'
@@ -25,6 +31,7 @@ import { handleloader } from './loader'
 import { handleoperator } from './operator'
 import { handlepage } from './page'
 import { handlepilotclear, handlepilotstart, handlepilotstop } from './pilot'
+import { handleplayermovetoboard } from './playermovetoboard'
 import { handlepublish } from './publish'
 import { handlepullvarresult } from './pullvarresult'
 import { handlequery } from './query'
@@ -36,7 +43,7 @@ import {
   handlerefscroll,
 } from './scroll'
 import { handlesecond } from './second'
-import { handletick } from './tick'
+import { handleticktock } from './ticktock'
 import { handletopic } from './topic'
 import { handlereadzipfilelist } from './zipfile'
 import { handlezsswords } from './zsswords'
@@ -67,8 +74,15 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   codewatch: handlecodewatch,
   coderelease: handlecoderelease,
   clearscroll: handleclearscroll,
+  gadgetdesync: handlegadgetdesync,
   halt: handlehalt,
-  ticktock: handletick,
+  ticktock: handleticktock,
+  boardrunnerack: handleboardrunnerack,
+  boardrunneraccess: handleboardrunneraccess,
+  boardrunnerpaint: handleboardrunnerpaint,
+  boardrunnerpatch: handleboardrunnerpatch,
+  playermovetoboard: handleplayermovetoboard,
+  desync: handleboardrunnerdesync,
   second: handlesecond,
   makeitscroll: handlemakeitscroll,
   refscroll: handlerefscroll,

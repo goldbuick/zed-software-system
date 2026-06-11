@@ -1,5 +1,5 @@
 import { DEVICE } from 'zss/device'
-import { MESSAGE, apilog, registerloginready } from 'zss/device/api'
+import { MESSAGE, registerloginready, workstatus } from 'zss/device/api'
 import { handlebooks } from 'zss/device/vm/handlers/books'
 import { tracking } from 'zss/device/vm/state'
 import * as session from 'zss/memory/session'
@@ -14,16 +14,17 @@ jest.mock('zss/device/api', () => ({
   apilog: jest.fn(),
   registerloginready: jest.fn(),
   apierror: jest.fn(),
+  workstatus: jest.fn(),
 }))
 
-const minimalbook: BOOK = {
+const minimalbook = {
   id: 'bid_simfreeze',
   name: 'main',
   timestamp: 0,
   activelist: [],
   pages: [],
   flags: {},
-}
+} as unknown as BOOK
 
 describe('handlebooks sim freeze', () => {
   const vm = {} as DEVICE
@@ -36,7 +37,7 @@ describe('handlebooks sim freeze', () => {
   beforeEach(() => {
     jest.useFakeTimers()
     session.memorywriteoperator(player)
-    session.memorywritesimfreeze(false)
+    session.memorywritefrozen(false)
     tracking[player] = 99
     resolver = undefined
     jest.mocked(memorydecompressbooks).mockImplementation(
@@ -52,7 +53,7 @@ describe('handlebooks sim freeze', () => {
     jest.useRealTimers()
     jest.restoreAllMocks()
     jest.mocked(memorydecompressbooks).mockReset()
-    session.memorywritesimfreeze(false)
+    session.memorywritefrozen(false)
     delete tracking[player]
   })
 
@@ -69,7 +70,7 @@ describe('handlebooks sim freeze', () => {
     handlebooks(vm, message)
 
     await flushmicrotasks()
-    expect(session.memoryreadsimfreeze()).toBe(true)
+    expect(session.memoryreadfrozen()).toBe(true)
     expect(tracking[player]).toBe(0)
 
     expect(resolver).toBeDefined()
@@ -78,9 +79,9 @@ describe('handlebooks sim freeze', () => {
     await flushmicrotasks()
     await flushmicrotasks()
 
-    expect(session.memoryreadsimfreeze()).toBe(false)
+    expect(session.memoryreadfrozen()).toBe(false)
     expect(registerloginready).toHaveBeenCalledWith(vm, player)
-    expect(apilog).toHaveBeenCalled()
+    expect(workstatus).toHaveBeenCalledWith(vm, player, 'load books')
     expect(session.memoryresetbooks).toHaveBeenCalledWith([minimalbook])
   })
 
@@ -107,7 +108,7 @@ describe('handlebooks sim freeze', () => {
       await flushmicrotasks()
       await flushmicrotasks()
 
-      expect(session.memoryreadsimfreeze()).toBe(false)
+      expect(session.memoryreadfrozen()).toBe(false)
     } finally {
       consoleerror.mockRestore()
     }

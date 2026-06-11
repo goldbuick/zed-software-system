@@ -38,7 +38,7 @@ for (let i = 0; i < size; ++i) {
       ? COLOR.DKGRAY
       : COLOR.LTGRAY
   PLACEHOLDER_TILES.bg[i] = COLOR.BLACK
-  PLACEHOLDER_TILES.stats[i] = 0
+  PLACEHOLDER_TILES.props[i] = 0
 }
 
 /** Fog-style placeholder tiles when a linked neighbor has no cache snapshot yet. */
@@ -49,6 +49,6 @@ export function buildundiscoveredexitlayers(dir: EXIT_DIRECTION): LAYER[] {
   tiles.char = PLACEHOLDER_TILES.char
   tiles.color = PLACEHOLDER_TILES.color
   tiles.bg = PLACEHOLDER_TILES.bg
-  tiles.stats = PLACEHOLDER_TILES.stats
+  tiles.props = PLACEHOLDER_TILES.props
   return [tiles]
 }

@@ -1,0 +1,66 @@
+{
+  "name": "synth.queue_stop",
+  "initial": {},
+  "steps": [
+    {
+      "op": "synth_setup_session",
+      "args": {
+        "session": {
+          "mainbook": {
+            "id": "bk",
+            "name": "main",
+            "timestamp": 0,
+            "activelist": [],
+            "pages": [],
+            "flags": {}
+          },
+          "synthflags": {}
+        }
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "synth_queue_play",
+      "args": {
+        "boardid": "bd-stop",
+        "play": "c"
+      },
+      "expect": {
+        "mode": "json",
+        "json": {
+          "queued": true,
+          "synthplay_fired": false,
+          "play": "c"
+        }
+      }
+    },
+    {
+      "op": "synth_queue_play",
+      "args": {
+        "boardid": "bd-stop",
+        "play": ""
+      },
+      "expect": {
+        "mode": "json",
+        "json": {
+          "queued": false,
+          "synthplay_fired": true,
+          "play": ""
+        }
+      }
+    },
+    {
+      "op": "synth_read_playqueue",
+      "args": {
+        "boardid": "bd-stop"
+      },
+      "expect": {
+        "mode": "json",
+        "json": []
+      }
+    }
+  ]
+}

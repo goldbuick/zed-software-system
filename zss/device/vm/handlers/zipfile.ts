@@ -13,8 +13,8 @@ import { NAME } from 'zss/words/types'
 registerhyperlinksharedbridge(
   'zipfilelist',
   'select',
-  (name) => (readzipfilelistitem(name) ? 1 : 0),
-  (name, value) => markzipfilelistitem(name, !!value),
+  (_typ, name) => (readzipfilelistitem(name) ? 1 : 0),
+  (_typ, name, value) => markzipfilelistitem(name, !!value),
 )
 
 // Terminal tape lines that bind the same modem keys as this scroll should use

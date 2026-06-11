@@ -17,7 +17,7 @@ jest.mock('zss/words/reader', () => ({
   },
 }))
 
-import { parseloghyperlink } from '../parseloghyperlink'
+import { parseloghyperlink } from 'zss/screens/terminal/parseloghyperlink'
 
 describe('parseloghyperlink', () => {
   it('splits payload and label on the last semicolon', () => {

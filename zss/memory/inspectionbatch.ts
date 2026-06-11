@@ -1,6 +1,6 @@
 import { get as idbget, update as idbupdate } from 'idb-keyval'
 import { parsetarget } from 'zss/device'
-import { apitoast, registercopy, vmcli } from 'zss/device/api'
+import { apierror, apitoast, registercopy, vmcli } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { DIVIDER, zsstexttape, zsszedlinklinechip } from 'zss/feature/zsstextui'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
@@ -27,6 +27,8 @@ import {
 } from './inspection'
 import { memoryinspectstyle, memoryinspectstylemenu } from './inspectionstyle'
 import { memoryreadplayerboard } from './playermanagement'
+import { memoryreadboardelementruntime } from './runtimeboundary'
+import { memoryreadoperator } from './session'
 import { BOARD, BOARD_ELEMENT, MEMORY_LABEL } from './types'
 
 // COPY & PASTE buffers
@@ -69,7 +71,10 @@ function createboardelementbuffer(
         // visible element only
         flattened.push(under)
       } else {
-        if (maybeobject?.category === CATEGORY.ISOBJECT) {
+        if (
+          memoryreadboardelementruntime(maybeobject)?.category ===
+          CATEGORY.ISOBJECT
+        ) {
           // terrain and object
           terrain.push(deepcopy(memoryreadterrain(board, x, y)))
           objects.push({
@@ -211,7 +216,13 @@ export async function memoryinspectbatchcommand(path: string, player: string) {
       })
       break
     default:
-      console.info('unknown batch', batch)
+      apierror(
+        SOFTWARE,
+        memoryreadoperator(),
+        'inspect',
+        'unknown batch',
+        batch,
+      )
       break
   }
 }
@@ -300,7 +311,10 @@ export async function memoryinspectcut(
       for (let y = p1.y; y <= p2.y; ++y) {
         for (let x = p1.x; x <= p2.x; ++x) {
           const maybeobject = memoryreadelement(board, { x, y })
-          if (maybeobject?.category === CATEGORY.ISOBJECT) {
+          if (
+            memoryreadboardelementruntime(maybeobject)?.category ===
+            CATEGORY.ISOBJECT
+          ) {
             memorysafedeleteelement(board, maybeobject, mainbook.timestamp)
           }
           memorywriteterrain(board, { x, y })
@@ -312,7 +326,10 @@ export async function memoryinspectcut(
       for (let y = p1.y; y <= p2.y; ++y) {
         for (let x = p1.x; x <= p2.x; ++x) {
           const maybeobject = memoryreadelement(board, { x, y })
-          if (maybeobject?.category === CATEGORY.ISOBJECT) {
+          if (
+            memoryreadboardelementruntime(maybeobject)?.category ===
+            CATEGORY.ISOBJECT
+          ) {
             memorysafedeleteelement(board, maybeobject, mainbook.timestamp)
           }
         }

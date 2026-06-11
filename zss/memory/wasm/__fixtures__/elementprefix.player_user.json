@@ -1,0 +1,60 @@
+{
+  "name": "elementprefix.player_user",
+  "initial": {},
+  "steps": [
+    {
+      "op": "element_ticker_prefix",
+      "args": {
+        "element": {
+          "id": "oid",
+          "kind": "player",
+          "name": "logical",
+          "char": 2,
+          "color": 15,
+          "bg": 0,
+          "runtime": "sid_rXXamwa3ugRb",
+          "displayname": "ignored for player"
+        },
+        "flags": {
+          "user": "Pat"
+        },
+        "kinddata": {
+          "id": "chest",
+          "name": "chest"
+        },
+        "displayprefix": "$WHITE$ONBLACK$2"
+      },
+      "expect": {
+        "mode": "string",
+        "string": "$WHITE$ONBLACK$2$ONCLEAR$CYAN Pat:$WHITE "
+      }
+    },
+    {
+      "op": "element_log_prefix",
+      "args": {
+        "element": {
+          "id": "oid",
+          "kind": "player",
+          "name": "logical",
+          "char": 2,
+          "color": 15,
+          "bg": 0,
+          "runtime": "sid_rXXamwa3ugRb",
+          "displayname": "ignored for player"
+        },
+        "flags": {
+          "user": "Pat"
+        },
+        "kinddata": {
+          "id": "chest",
+          "name": "chest"
+        },
+        "displayprefix": "$WHITE$ONBLACK$2"
+      },
+      "expect": {
+        "mode": "string",
+        "string": "$WHITE$ONBLACK$2$ONCLEAR$CYAN Pat:$WHITE "
+      }
+    }
+  ]
+}

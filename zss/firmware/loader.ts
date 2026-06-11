@@ -3,6 +3,9 @@ import {
   JSON_READER,
   TEXT_READER,
   apichat,
+  apitoast,
+  gadgetclientbonk,
+  gadgetclientzap,
   registerinput,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
@@ -14,12 +17,20 @@ import { ispresent } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import { memoryreadobject } from 'zss/memory/boardaccess'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
-import { memorysendtoelements } from 'zss/memory/gamesend'
+import { memorysendtoelements, memorysendtolog } from 'zss/memory/gamesend'
 import { memoryloadercontent, memoryloaderformat } from 'zss/memory/loader'
 import { memoryreadoperator } from 'zss/memory/session'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { parsesend } from 'zss/words/send'
+import {
+  hasbonk,
+  hasticker,
+  hastoast,
+  haszap,
+  stripbonk,
+  stripzap,
+} from 'zss/words/textformat'
 import { ARG_TYPE, NAME } from 'zss/words/types'
 
 import { loaderbinary } from './loader/binary'
@@ -94,7 +105,38 @@ export const LOADER_FIRMWARE = createfirmware({
     return 0
   })
   .command('text', ['text on element or in sidebar'], (_, words) => {
-    const text = words.map(maptostring).join(' ')
+    let text = words.map(maptostring).join(' ')
+
+    if (hasbonk(text)) {
+      gadgetclientbonk(SOFTWARE, READ_CONTEXT.elementfocus)
+      text = stripbonk(text)
+    }
+    if (haszap(text)) {
+      gadgetclientzap(SOFTWARE, READ_CONTEXT.elementfocus)
+      text = stripzap(text)
+    }
+
+    let diverted = false
+
+    const toasttext = hastoast(text)
+    if (ispresent(toasttext)) {
+      apitoast(SOFTWARE, READ_CONTEXT.elementfocus, toasttext)
+      text = toasttext
+      diverted = true
+    }
+
+    const tickertext = hasticker(text)
+    if (ispresent(tickertext) && ispresent(READ_CONTEXT.element)) {
+      READ_CONTEXT.element.tickertext = tickertext
+      READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
+      memorysendtolog(READ_CONTEXT.board?.id, READ_CONTEXT.element, tickertext)
+      diverted = true
+    }
+
+    if (diverted) {
+      return 0
+    }
+
     apichat(SOFTWARE, '', '$GREEN', text)
     return 0
   })

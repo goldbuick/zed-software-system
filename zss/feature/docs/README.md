@@ -25,19 +25,20 @@ Feature modules are **stateless utilities** and **domain logic** that:
 | [boardweave.md](boardweave.md) | Shift/wrap board region |
 | [format.md](format.md) | Object formatting and msgpack serialization |
 | [netterminal.md](netterminal.md) | Peer-to-peer terminal via PeerJS |
+| [media-transport-layer.md](media-transport-layer.md) | PeerJS media transport design (canvas + synth capture, dual-plane fan-out) |
 | [tts.md](tts.md) | Text-to-speech (Edge, Piper, Supertonic) |
 | [heavy.md](heavy.md) | Heavy processing (TTS engines, models, agent) |
 | [parse.md](parse.md) | File parsing (ZIP, ZZT, ANSI, CHR, ZZM, markdown) |
 | [rom.md](rom.md) | ROM/help content and scroll display |
 | [writeui.md](writeui.md) | zsstextui layout + writeui terminal sinks |
 | [bytes.md](bytes.md) | Palette and charset loading from bytes |
-| [url.md](url.md) | URL shortening, BBS, Museum of ZZT |
+| [url.md](url.md) | URL shortening, ZNS, Museum of ZZT |
 | [storage.md](storage.md) | IndexedDB config, history, content |
 | [palette.md](palette.md) | Default color palette |
 | [charset.md](charset.md) | Default character set |
 | [keyboard.md](keyboard.md) | Clipboard, keyboard utilities |
 | [speechtotext.md](speechtotext.md) | Speech recognition |
-| [fetchwiki.md](fetchwiki.md) | GitHub wiki fetch |
+| [fetchrefscrolltext](../fetchrefscrolltext.ts) | ROM then `docs.at.zed.cafe` refscroll text |
 | [itchiopublish.md](itchiopublish.md) | itch.io publishing |
 | [synth/docs](../synth/docs/README.md) | Audio synthesis (full docs) |
 

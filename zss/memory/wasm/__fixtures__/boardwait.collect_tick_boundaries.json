@@ -1,0 +1,60 @@
+{
+  "name": "boardwait.collect_tick_boundaries",
+  "initial": {},
+  "steps": [
+    {
+      "op": "boundaries_clear",
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "boundary_alloc",
+      "args": {
+        "id": "board-a",
+        "value": {}
+      },
+      "expect": {
+        "mode": "string",
+        "string": "board-a"
+      }
+    },
+    {
+      "op": "boundary_alloc",
+      "args": {
+        "id": "board-b",
+        "value": {
+          "board": {
+            "id": "board-b",
+            "name": "board-b",
+            "terrain": [],
+            "objects": {}
+          }
+        }
+      },
+      "expect": {
+        "mode": "string",
+        "string": "board-b"
+      }
+    },
+    {
+      "op": "collect_tick_boundaries",
+      "args": {
+        "book": {
+          "flags": {}
+        },
+        "boards": [
+          "board-a",
+          "board-b"
+        ]
+      },
+      "expect": {
+        "mode": "json",
+        "json": [
+          "board-b"
+        ]
+      }
+    }
+  ]
+}

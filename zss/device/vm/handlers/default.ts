@@ -1,12 +1,19 @@
 import { parsetarget } from 'zss/device'
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
-import { registercopy, vmcli, vmloader } from 'zss/device/api'
+import {
+  registercopy,
+  vmcli,
+  vmloader,
+  vmplayermovetoboard,
+} from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
+import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
 import { lastinputtime } from 'zss/device/vm/state'
-import { fetchwiki } from 'zss/feature/fetchwiki'
+import { fetchrefscrolltext } from 'zss/feature/fetchrefscrolltext'
 import { parsezipfilelist } from 'zss/feature/parse/file'
 import { scrollwritemarkdownlines } from 'zss/feature/parse/markdownscroll'
-import { zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
+import { zsstextline, zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
 import { gadgetstate } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { doasync } from 'zss/mapping/func'
@@ -22,15 +29,11 @@ import type { FINDANY_CONFIG } from 'zss/memory/inspectionfind'
 import { memorymakeitcommand } from 'zss/memory/inspectionmakeit'
 import { memoryinspectremixcommand } from 'zss/memory/inspectionremix'
 import {
-  memorymoveplayertoboard,
   memoryreadbookplayerboards,
   memoryreadplayerboard,
 } from 'zss/memory/playermanagement'
 import { memorymessagechip } from 'zss/memory/runtime'
-import {
-  memoryreadbookbysoftware,
-  memoryreadoperator,
-} from 'zss/memory/session'
+import { memoryreadbookbysoftware } from 'zss/memory/session'
 import { CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
 import { memoryadminmenu } from 'zss/memory/utilities'
 import { romread } from 'zss/rom'
@@ -46,7 +49,7 @@ const MAIN_MENU_BACK_HYPERLINK = zsszedlinkline(
 )
 
 export function handledefault(vm: DEVICE, message: MESSAGE): void {
-  const { target, path } = parsetarget(message.target)
+  const { target, path } = parsetarget(message.target.replace('chip:', ''))
   switch (NAME(target)) {
     case 'adminop': {
       switch (path) {
@@ -63,7 +66,6 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
       break
     }
     case 'admingoto': {
-      const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
       const playerboard = memoryreadplayerboard(path)
       const playerelement = memoryreadobject(playerboard, path)
       if (ispresent(playerboard) && ispresent(playerelement)) {
@@ -71,7 +73,13 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
           x: playerelement.x ?? 0,
           y: playerelement.y ?? 0,
         }
-        memorymoveplayertoboard(mainbook, message.player, playerboard.id, dest)
+        vmplayermovetoboard(
+          SOFTWARE,
+          message.player,
+          message.player,
+          playerboard.id,
+          dest,
+        )
       }
       break
     }
@@ -155,8 +163,20 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
                 'loading $7$7$7',
                 'refscroll',
               )
-              const markdowntext = await fetchwiki(path)
-              scrollwritemarkdownlines(message.player, markdowntext, path)
+              const markdowntext = await fetchrefscrolltext(path)
+              if (!markdowntext.trim()) {
+                scrollwritelines(
+                  message.player,
+                  path,
+                  zsstexttape(
+                    zsstextline(`$red doc not found`),
+                    zsstextline(`$white${path}`),
+                  ),
+                  'refscroll',
+                )
+              } else {
+                scrollwritemarkdownlines(message.player, markdowntext, path)
+              }
             } else {
               scrollwritemarkdownlines(message.player, content, path)
             }
@@ -170,28 +190,27 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
     case 'batch':
       doasync(vm, message.player, async () => {
         await memoryinspectbatchcommand(path, message.player)
+        boardrunnerpushupdates(vm)
       })
       break
     case 'remix':
       doasync(vm, message.player, async () => {
         await memoryinspectremixcommand(path, message.player)
+        boardrunnerpushupdates(vm)
       })
       break
     case 'empty': {
       const empty = parsetarget(path)
       switch (empty.target) {
         case 'copycoords':
-          registercopy(
-            vm,
-            memoryreadoperator(),
-            empty.path.split(',').join(' '),
-          )
+          registercopy(vm, message.player, empty.path.split(',').join(' '))
           break
       }
       break
     }
     case 'inspect':
       memoryinspectcommand(path, message.player)
+      boardrunnerpushupdates(vm)
       break
     case 'gadget':
       if (isarray(message.data)) {
@@ -206,6 +225,7 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
       break
     case 'makeit':
       memorymakeitcommand(path, message.data ?? '', message.player)
+      boardrunnerpushupdates(vm)
       break
     case 'zztbridge':
       handlezztbridge(vm, message)
@@ -222,18 +242,14 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
       handlebookmarkscrollpanel(vm, message, path)
       break
     default: {
-      const invoke = parsetarget(path)
-      if (NAME(invoke.target) === 'self' || !invoke.path) {
-        message.target = message.target.replace('self:', '')
+      // expect that the chip: prefix is already removed from the path
+      if (NAME(target) === 'self' || !path) {
+        message.target = target.replace('self:', '')
         memorymessagechip(message)
       } else {
         const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-        memorysendtoboards(
-          invoke.target,
-          invoke.path,
-          undefined,
-          memoryreadbookplayerboards(mainbook),
-        )
+        const boards = memoryreadbookplayerboards(mainbook)
+        memorysendtoboards(message.player, target, path, boards)
       }
       break
     }

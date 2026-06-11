@@ -1,8 +1,15 @@
 import { newQueue } from '@henrygd/queue'
-import { getContext } from 'tone'
 import { createdevice } from 'zss/device'
-import { heavyttsinfo, heavyttsrequest, synthaudiobuffer } from 'zss/device/api'
+import {
+  ttsinfo as emitttsinfo,
+  ttsrequest as emitttsrequest,
+  synthaudiobuffer,
+} from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import {
+  getliveaudiocontext,
+  unlockaudiocontext,
+} from 'zss/feature/synth/backend/wasm'
 import { createsid } from 'zss/mapping/guid'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
@@ -19,8 +26,12 @@ export function selectttsengine(
   ttsconfig = config
 }
 
+function getaudiocontext(): AudioContext {
+  return getliveaudiocontext() ?? unlockaudiocontext()
+}
+
 function convertarraybytes(bytes: ArrayBuffer) {
-  return getContext().decodeAudioData(bytes)
+  return getaudiocontext().decodeAudioData(bytes)
 }
 
 async function requestaudiobuffer(
@@ -33,14 +44,14 @@ async function requestaudiobuffer(
       createsid(),
       [],
       (message) => {
-        if (message.target === 'heavy:ttsrequest' && message.data) {
+        if (message.target === 'tts:request' && message.data) {
           convertarraybytes(message.data).then(resolve).catch(console.error)
         }
         once.disconnect()
       },
       SOFTWARE.session(),
     )
-    heavyttsrequest(once, player, ttsengine, ttsconfig, voice, input)
+    emitttsrequest(once, player, ttsengine, ttsconfig, voice, input)
   })
 }
 
@@ -50,14 +61,14 @@ export function ttsinfo(player: string, info: string) {
       createsid(),
       [],
       (message) => {
-        if (message.target === 'heavy:ttsinfo' && message.data) {
+        if (message.target === 'tts:info' && message.data) {
           resolve(message.data)
         }
         once.disconnect()
       },
       SOFTWARE.session(),
     )
-    heavyttsinfo(once, player, ttsengine, info)
+    emitttsinfo(once, player, ttsengine, info)
   })
 }
 

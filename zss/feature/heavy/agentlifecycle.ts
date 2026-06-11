@@ -2,12 +2,12 @@ import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import {
   apierror,
-  apitoast,
   heavymodelstop,
   registeragentdootoff,
   registeragentdooton,
   registerstore,
   vmpilotclear,
+  workstatus,
 } from 'zss/device/api'
 import { createagent } from 'zss/feature/heavy/agent'
 import {
@@ -15,12 +15,11 @@ import {
   AGENTS_ROSTER_STORAGE_KEY,
   isvalidagentsroster,
 } from 'zss/feature/heavy/agentsroster'
+import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import { write } from 'zss/feature/writeui'
 import { zssheaderlines } from 'zss/feature/zsstextui'
 import { createshortnameid } from 'zss/mapping/guid'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
-
-import { terminalwritelines } from '../terminalwritelines'
 
 import type { AGENT } from './agent'
 
@@ -69,7 +68,6 @@ export function heavyrunagentstart(heavydev: DEVICE, message: MESSAGE): void {
   agentnames[id] = agentname
   registeragentdooton(heavydev, requestplayer, id)
   persistrostertostorage(heavydev, requestplayer)
-  apitoast(heavydev, requestplayer, `agent ${agentname} (${id}) started`)
   writeagentlistto(heavydev, requestplayer)
 }
 
@@ -100,7 +98,7 @@ function stopagentbyid(
   delete agents[agentid]
   delete agentnames[agentid]
   persistrostertostorage(heavydev, requestplayer)
-  apitoast(heavydev, requestplayer, `agent ${agentid} stopped`)
+  workstatus(heavydev, requestplayer, `agent stop ${agentid}`)
   writeagentlistto(heavydev, requestplayer)
   return true
 }
@@ -123,7 +121,7 @@ export function heavyrunagentname(heavydev: DEVICE, message: MESSAGE): void {
   }
   agentnames[agentid] = newname
   persistrostertostorage(heavydev, message.player)
-  apitoast(heavydev, message.player, `agent ${agentid} renamed to ${newname}`)
+  workstatus(heavydev, message.player, `rename ${newname}`)
 }
 
 /** `#set user` from firmware: update heavy roster only when `agentid` is a running agent. */
@@ -168,6 +166,6 @@ export function heavyrunrestoreagents(
     count += 1
   }
   if (count > 0) {
-    apitoast(heavydev, requestplayer, `Restored ${count} agent(s)`)
+    workstatus(heavydev, requestplayer, `agent start ${count}`)
   }
 }

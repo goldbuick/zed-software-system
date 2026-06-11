@@ -1,0 +1,63 @@
+{
+  "name": "synth.merge_persist",
+  "initial": {},
+  "steps": [
+    {
+      "op": "synth_setup_session",
+      "args": {
+        "session": {
+          "mainbook": {
+            "id": "bk",
+            "name": "main",
+            "timestamp": 0,
+            "activelist": [],
+            "pages": [],
+            "flags": {}
+          },
+          "synthflags": {}
+        }
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "synth_merge_voice",
+      "args": {
+        "boardid": "bd-merge",
+        "idx": 0,
+        "config": "freq",
+        "value": 440
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "synth_read_voices",
+      "args": {
+        "boardid": "bd-merge"
+      },
+      "expect": {
+        "mode": "json",
+        "json": {
+          "0": {
+            "square": "",
+            "freq": 440
+          },
+          "1": {
+            "square": ""
+          },
+          "2": {
+            "square": ""
+          },
+          "3": {
+            "square": ""
+          }
+        }
+      }
+    }
+  ]
+}

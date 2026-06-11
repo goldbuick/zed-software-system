@@ -5,25 +5,12 @@
  * use `stripzsstextcodesforllm` when the same snapshot is sent to an LLM.
  * Formatters accept data blobs from boardstate query; `BOARDSTATE_DATA` is defined in `zss/memory/boardstatequery`.
  */
-import { zsstexttablelines, zsstexttape } from 'zss/feature/zsstextui'
+import { zsstexttablelines } from 'zss/feature/zsstextui'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
-import {
-  MAYBE,
-  isarray,
-  isnumber,
-  ispresent,
-  isstring,
-} from 'zss/mapping/types'
+import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import type { BOARDSTATE_DATA } from 'zss/memory/boardstatequery'
-import { DIR } from 'zss/words/types'
 
 export type { BOARDSTATE_DATA }
-
-/** Data shape returned by codepage memory query. */
-export type CODEPAGE_DATA = { codepage: { id: string; code: string } } | null
-
-/** Data shape returned by pathfind memory query. */
-export type PATHFIND_DATA = { nextpoint: { x: number; y: number } } | null
 
 const AGENT_COLORS =
   'black, dkblue, dkgreen, dkcyan, dkred, dkpurple, dkyellow, ltgray, dkgray, blue, green, cyan, red, purple, yellow, white, onblack, ondkblue, ondkgreen, ondkcyan, ondkred, ondkpurple, ondkyellow, onltgray, ondkgray, onblue, ongreen, oncyan, onred, onpurple, onyellow, onwhite'
@@ -37,7 +24,7 @@ export const AGENT_ZSS_COMMANDS = `
 - \`#put <dir> <color?> <kind>\`: place element in direction, e.g. \`#put n purple solid\`
 - \`#change <color?> <from> <color?> <to>\`: change elements, e.g. \`#change gem red gem\`
 - \`#set user <name>\`: change your display name
-- \`#agent model\`: menu of \`!runit\` rows to switch preset (current row highlighted); \`#agent model llama|tiny\`: switch ONNX preset (persisted in register storage)
+- \`#agent model\`: show the in-browser Gemma 4 E2B agent model info
 - \`#continue\`: request another turn to observe results before acting again
 - \`#query\`: print a text snapshot of the current board (objects, terrain counts, exits, kinds)
 - \`#look\`: print scroll, sidebar, and board tickers (player UI text snapshot)
@@ -50,8 +37,6 @@ export type LOOK_STATE = {
   scroll?: PANEL_ITEM[]
   sidebar?: PANEL_ITEM[]
 }
-
-const MAX_CODEPAGE_LENGTH = 1500
 
 /** Remove zsstext `$name` / `$123` tokens for LLM-safe board snapshots. */
 export function stripzsstextcodesforllm(s: string): string {
@@ -122,21 +107,6 @@ export function formatlookfortext(data: LOOK_STATE): string {
   return parts.join('\n').trimEnd()
 }
 
-function dirtostring(dir: DIR): string {
-  switch (dir) {
-    case DIR.NORTH:
-      return 'north'
-    case DIR.SOUTH:
-      return 'south'
-    case DIR.WEST:
-      return 'west'
-    case DIR.EAST:
-      return 'east'
-    default:
-      return 'idle'
-  }
-}
-
 export function formatboardfortext(
   data: BOARDSTATE_DATA | { error: string },
 ): string {
@@ -200,23 +170,6 @@ export function formatboardfortext(
   return parts.join('\n')
 }
 
-export function formatboardlistfortext(
-  data: BOARDSTATE_DATA | { error: string },
-): string {
-  if ('error' in data && data.error === 'no_board') {
-    return 'You are not on any board.'
-  }
-  const d = data as BOARDSTATE_DATA
-  if (d.exits.length === 0) {
-    return 'Boards you can reach: (none from here)'
-  }
-  const exitrows = d.exits.map((e) => [e.dir, e.label])
-  return zsstexttape(
-    'Boards you can reach:',
-    zsstexttablelines(exitrows, ['dir', 'board']),
-  )
-}
-
 export function formatagentinfofortext(
   data: BOARDSTATE_DATA | { error: string },
   agentid: string,
@@ -232,79 +185,4 @@ export function formatagentinfofortext(
       : '(unknown)'
   const boardlabel = d.board.name || d.board.id
   return `You are ${agentname} (id: ${agentid}), on board "${boardlabel}", at ${pos}.`
-}
-
-export function readcodepagefortext(
-  data: CODEPAGE_DATA | { error: string },
-  name: string,
-  type?: string,
-): string {
-  if (data === null || (typeof data === 'object' && 'error' in data)) {
-    return `No ${type ?? 'object'} codepage found for "${name}".`
-  }
-  const source = data.codepage?.code ?? ''
-  if (!source) {
-    return `Codepage "${name}" exists but has no source code.`
-  }
-  if (source.length > MAX_CODEPAGE_LENGTH) {
-    return source.slice(0, MAX_CODEPAGE_LENGTH) + '\n... (truncated)'
-  }
-  return source
-}
-
-export function formatpathfindfortext(
-  data: PATHFIND_DATA | { error: string },
-  fromx: number,
-  fromy: number,
-  targetx: number,
-  targety: number,
-  flee?: boolean,
-): string {
-  if (data === null) {
-    return flee
-      ? `No path away from (${targetx}, ${targety}).`
-      : `No path to (${targetx}, ${targety}).`
-  }
-  if ('error' in data) {
-    if (data.error === 'no_board') {
-      return 'You are not on any board.'
-    }
-    if (data.error === 'no_self') {
-      return 'Cannot determine your position.'
-    }
-  }
-  if (typeof data !== 'object' || !('nextpoint' in data)) {
-    return flee
-      ? `No path away from (${targetx}, ${targety}).`
-      : `No path to (${targetx}, ${targety}).`
-  }
-  const nextpt = (
-    data as {
-      nextpoint: { x: number; y: number } | null
-    }
-  ).nextpoint
-  if (!nextpt) {
-    return flee
-      ? `No path away from (${targetx}, ${targety}).`
-      : `No path to (${targetx}, ${targety}).`
-  }
-  const dx = nextpt.x - fromx
-  const dy = nextpt.y - fromy
-  let dir: MAYBE<DIR>
-  if (dy < 0) {
-    dir = DIR.NORTH
-  } else if (dy > 0) {
-    dir = DIR.SOUTH
-  } else if (dx < 0) {
-    dir = DIR.WEST
-  } else if (dx > 0) {
-    dir = DIR.EAST
-  }
-
-  if (!ispresent(dir)) {
-    return 'Already at target.'
-  }
-
-  const verb = flee ? 'Flee' : 'Move'
-  return `${verb} ${dirtostring(dir)} to reach (${nextpt.x}, ${nextpt.y}).`
 }

@@ -1,6 +1,5 @@
-import { get as idbget, update as idbupdate } from 'idb-keyval'
 import { parsetarget } from 'zss/device'
-import { apitoast } from 'zss/device/api'
+import { apierror, apitoast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { boardremix } from 'zss/feature/boardremix'
 import { DIVIDER, zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
@@ -12,16 +11,21 @@ import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { PT } from 'zss/words/types'
 
 import { memoryreadboardbyaddress } from './boards'
+import { createinspectionconfig } from './inspectionconfig'
 import { memoryreadplayerboard } from './playermanagement'
+import { memoryreadoperator } from './session'
 
-// Remix operations
 type REMIX_CONFIG = {
   stat: string
   patternsize: number
   mirror: number
 }
 
-// read / write from indexdb
+const remixconfig = createinspectionconfig<REMIX_CONFIG>('remixconfig', {
+  stat: '',
+  patternsize: 2,
+  mirror: 1,
+})
 
 export async function memoryinspectremixcommand(path: string, player: string) {
   const board = memoryreadplayerboard(player)
@@ -38,14 +42,15 @@ export async function memoryinspectremixcommand(path: string, player: string) {
       break
     }
     case 'remixrun': {
-      const sourceboard = memoryreadboardbyaddress(remixconfig.stat)
+      const cfg = remixconfig.read()
+      const sourceboard = memoryreadboardbyaddress(cfg.stat)
       if (ispresent(sourceboard)) {
         if (
           boardremix(
             board.id,
             sourceboard.id,
-            remixconfig.patternsize,
-            remixconfig.mirror,
+            cfg.patternsize,
+            cfg.mirror,
             p1,
             p2,
             'all',
@@ -56,63 +61,68 @@ export async function memoryinspectremixcommand(path: string, player: string) {
           apitoast(SOFTWARE, player, `failed to remix`)
         }
       }
-      await memorywriteremixconfig(() => remixconfig)
+      await remixconfig.save()
       await waitfor(100)
       await memoryinspectremixmenu(player, p1, p2)
       break
     }
     default:
-      console.info('unknown remix', remix)
+      apierror(
+        SOFTWARE,
+        memoryreadoperator(),
+        'inspect',
+        'unknown remix',
+        remix,
+      )
       break
   }
 }
 
+registerhyperlinksharedbridge(
+  'remix',
+  'text',
+  (_typ, target) => {
+    if (target === 'stat') {
+      return remixconfig.read().stat
+    }
+    return ''
+  },
+  (_typ, name, value) => {
+    if (isstring(value) && name === 'stat') {
+      remixconfig.write({ ...remixconfig.read(), stat: value })
+    }
+  },
+)
+
+registerhyperlinksharedbridge(
+  'remix',
+  'number',
+  (_typ, target) => {
+    const cfg = remixconfig.read()
+    if (target === 'patternsize') {
+      return cfg.patternsize
+    }
+    if (target === 'mirror') {
+      return cfg.mirror
+    }
+    return 0
+  },
+  (_typ, name, value) => {
+    if (isnumber(value)) {
+      const cfg = remixconfig.read()
+      if (name === 'patternsize') {
+        remixconfig.write({ ...cfg, patternsize: value })
+      } else if (name === 'mirror') {
+        remixconfig.write({ ...cfg, mirror: value })
+      }
+    }
+  },
+)
+
 export async function memoryinspectremixmenu(player: string, p1: PT, p2: PT) {
-  const config = await memoryreadremixconfig()
-  remixconfig = {
-    ...remixconfig,
-    ...config,
-  }
+  await remixconfig.load()
 
   const area = ptstoarea(p1, p2)
-
-  registerhyperlinksharedbridge(
-    'remix',
-    'text',
-    (target) => {
-      if (target === 'stat') {
-        return remixconfig.stat
-      }
-      return ''
-    },
-    (name, value) => {
-      if (isstring(value) && name === 'stat') {
-        remixconfig.stat = value
-      }
-    },
-  )
-  registerhyperlinksharedbridge(
-    'remix',
-    'number',
-    (target) => {
-      if (target === 'patternsize') {
-        return remixconfig.patternsize
-      }
-      if (target === 'mirror') {
-        return remixconfig.mirror
-      }
-      return 0
-    },
-    (name, value) => {
-      if (isnumber(value)) {
-        if (name === 'patternsize') {
-          remixconfig.patternsize = value
-        } else if (name === 'mirror') {
-          remixconfig.mirror = value
-        }
-      }
-    },
-  )
 
   const lines = [
     `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
@@ -124,22 +134,4 @@ export async function memoryinspectremixmenu(player: string, p1: PT, p2: PT) {
     zsszedlinkline(`remixrun:${area} hk r " R "`, 'run'),
   ]
   scrollwritelines(player, 'remix', zsstexttape(lines), 'remix')
-}
-
-export async function memoryreadremixconfig(): Promise<
-  REMIX_CONFIG | undefined
-> {
-  return idbget('remixconfig')
-}
-
-export async function memorywriteremixconfig(
-  updater: (oldvalue: REMIX_CONFIG | undefined) => REMIX_CONFIG,
-): Promise<void> {
-  return idbupdate('remixconfig', updater)
-}
-
-let remixconfig: REMIX_CONFIG = {
-  stat: '',
-  patternsize: 2,
-  mirror: 1,
 }

@@ -28,6 +28,17 @@ Synthesized drum kit. Each file provides one or more drum sounds with trigger fu
 | 7 | Low tom | `lowtomtrigger` |
 | 8 | Low woodblock | `lowwoodblocktrigger` |
 | 9 | Bass | `basstrigger` |
+| 10 | Crash | `#play k` |
+| 11 | Ride | `#play r` |
+
+## Backend split (Daisy vs archived Maximilian)
+
+| Backend | Drum implementation |
+|---------|---------------------|
+| **DaisySP WASM** (active) | DaisySP `AnalogBassDrum` (ID 9), `SyntheticBassDrum` (ID 7); custom C++ for tick, tweet, snares, cowbell, clap, woodblocks |
+| **Maximilian WASM** (archived) | Tone-parity custom DSP in [`archive/maxi/drumplaycode.ts`](../archive/maxi/drumplaycode.ts) |
+
+See [implementation-matrix.md](implementation-matrix.md) Table 4.
 
 ## Implementation Details
 
@@ -36,7 +47,7 @@ Synthesized drum kit. Each file provides one or more drum sounds with trigger fu
 - Connects to both `drumvolume` and `drumaction` (sidechain)
 
 ### hihat.ts
-- **NoiseSynth** through highpass filter (8kHz tick, 6kHz open)
+- **NoiseSynth** through biquad highpass filter (8kHz tick, 6kHz open; -12 dB/oct, Tone parity)
 - EQ3 for tone shaping
 - Short envelope for tick, longer for tweet
 
@@ -48,7 +59,7 @@ Synthesized drum kit. Each file provides one or more drum sounds with trigger fu
 
 ### percussion.ts
 - **Cowbell:** PolySynth (square) at 800+540 Hz, bandpass 350Hz
-- **Clap:** NoiseSynth, highpass 800Hz, EQ3
+- **Clap:** NoiseSynth, biquad highpass 800Hz (-12 dB/oct), EQ3 (WASM matches Tone chain; no dry blend)
 
 ### tom.ts
 - Saw + triangle + noise
@@ -57,3 +68,4 @@ Synthesized drum kit. Each file provides one or more drum sounds with trigger fu
 ### woodblock.ts
 - Clack (saw) + donk (sine) through bandpass 256Hz
 - Different frequency targets for hi vs low
+- **WASM** (`drumplaycode.ts`): split clack/donk ADSR (clack decay 0.001s, donk decay 0.1s), summed before filter; voice length shortens to pattern duration + release for indices 5/8

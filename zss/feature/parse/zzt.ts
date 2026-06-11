@@ -13,7 +13,7 @@
  */
 
 import { objectKeys } from 'ts-extras'
-import { apitoast } from 'zss/device/api'
+import { apitoast, workstatus } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { indextox, indextoy } from 'zss/mapping/2d'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
@@ -979,6 +979,7 @@ export function zztparseworld(
 }
 
 export function parsebrd(player: string, content: Uint8Array) {
+  workstatus(SOFTWARE, player, 'parse brd')
   const contentbook = memoryreadfirstcontentbook()
   if (!ispresent(contentbook)) {
     apitoast(SOFTWARE, player, 'no content book to import into')
@@ -1013,6 +1014,7 @@ export function parsebrd(player: string, content: Uint8Array) {
 }
 
 export function parsezzt(player: string, content: Uint8Array) {
+  workstatus(SOFTWARE, player, 'parse zzt')
   const reader = createreader(content)
   const header = readworldheaderzzt(reader)
   if (!header || reader.haserror()) {
@@ -1048,6 +1050,7 @@ export function parsezzt(player: string, content: Uint8Array) {
 }
 
 export function parseszt(player: string, content: Uint8Array) {
+  workstatus(SOFTWARE, player, 'parse szt')
   const reader = createreader(content)
   const header = readworldheaderszzt(reader)
   if (!header || reader.haserror()) {

@@ -1,13 +1,22 @@
 import type { LOOK_STATE } from 'zss/feature/heavy/formatstate'
 import { gadgetstate } from 'zss/gadget/data/api'
+import { normalizelayerzvariant } from 'zss/gadget/graphics/layerz'
 import { ispresent } from 'zss/mapping/types'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
-import { memoryreadgadgetlayers } from 'zss/memory/rendering'
+import {
+  memoryreadgadgetlayers,
+  memoryreadgraphics,
+} from 'zss/memory/rendering'
 
 /** Snapshot for `formatlookfortext`: board tickers (from gadget layers) plus gadget scroll/sidebar. */
 export function memoryreadlookstatequery(agentid: string): LOOK_STATE {
   const board = memoryreadplayerboard(agentid)
-  const { tickers } = memoryreadgadgetlayers(agentid, board)
+  const { tickers } = memoryreadgadgetlayers(
+    ispresent(board)
+      ? normalizelayerzvariant(memoryreadgraphics(agentid, board).graphics)
+      : 'flat',
+    board,
+  )
   const gadget = gadgetstate(agentid)
   const scroll = gadget.scroll
   const sidebar = gadget.sidebar

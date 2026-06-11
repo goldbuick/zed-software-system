@@ -13,17 +13,15 @@ import {
   removebookmarkbyid,
   runterminalbookmarkclibyid,
 } from 'zss/feature/bookmarks'
+import { initdeeplinks, rundeeplinks } from 'zss/feature/deeplink'
 import { isclimode } from 'zss/feature/detect'
-import { fetchwiki } from 'zss/feature/fetchwiki'
+import { fetchrefscrolltext } from 'zss/feature/fetchrefscrolltext'
 import { getfingerprint } from 'zss/feature/fingerprint'
 import {
   AGENTS_ROSTER_STORAGE_KEY,
   isvalidagentsroster,
 } from 'zss/feature/heavy/agentsroster'
-import {
-  HEAVY_LLM_STORAGE_KEY,
-  normalizeheavylmpreset,
-} from 'zss/feature/heavy/heavyllmpreset'
+import { HEAVY_LLM_STORAGE_KEY } from 'zss/feature/heavy/heavyllmpreset'
 import { itchiopublish } from 'zss/feature/itchiopublish'
 import { withclipboard } from 'zss/feature/keyboard'
 import { terminalwritemarkdownlines } from 'zss/feature/parse/markdownterminal'
@@ -40,7 +38,7 @@ import {
   storagewritevar,
 } from 'zss/feature/storage'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
-import { bbspublish, isjoin, shorturl } from 'zss/feature/url'
+import { isjoin, shorturl, znsset } from 'zss/feature/url'
 import { write } from 'zss/feature/writeui'
 import {
   zssheaderlines,
@@ -79,8 +77,8 @@ import {
   apierror,
   apilog,
   apitoast,
+  boardrunnerstart,
   bridgejoin,
-  gadgetserverdesync,
   heavyllmpreset,
   heavypullvarresult,
   heavyrestoreagents,
@@ -92,6 +90,7 @@ import {
   vmcli,
   vmdoot,
   vmeditorbookmarkscroll,
+  vmgadgetdesync,
   vmloader,
   vmlogin,
   vmoperator,
@@ -99,6 +98,7 @@ import {
   vmpullvarresult,
   vmtapeeditorclose,
   vmzsswords,
+  workstatus,
 } from './api'
 import { runbookmarkcopytogame, runbookmarkurlnavigate } from './runbookmark'
 
@@ -130,9 +130,18 @@ function writesession(key: string, value: MAYBE<string>) {
   }
 }
 
-async function writewikilink() {
-  const markdowntext = await fetchwiki('cli')
-  terminalwritemarkdownlines(myplayerid, markdowntext)
+async function writeclilink() {
+  workstatus(register, myplayerid, 'cli help')
+  try {
+    const markdowntext = await fetchrefscrolltext('cliscroll')
+    if (markdowntext.trim()) {
+      terminalwritemarkdownlines(myplayerid, markdowntext)
+    } else {
+      apierror(register, myplayerid, 'help', 'cli doc not found')
+    }
+  } catch (err: any) {
+    apierror(register, myplayerid, 'help', err?.message ?? err)
+  }
 }
 
 async function writehelphint() {
@@ -236,7 +245,7 @@ function terminalinclayout(inc: boolean) {
 async function loadmem(books: string | BOOK[]) {
   if (!books || books.length === 0) {
     apierror(register, myplayerid, 'content', 'no content found')
-    await writewikilink()
+    await writeclilink()
     vmzsswords(register, myplayerid)
     registerterminalfull(register, myplayerid)
     await writehelphint()
@@ -255,9 +264,13 @@ const DOOT_RATE = 10
 /** Agent player ids: main-thread vm:doot from `second` (on/off via heavy worker messages). */
 const agentdootids = new Set<string>()
 
+/** Keepalive doots only after confirmed login (avoids zombie active sessions on refresh). */
+let loggedin = false
+
 // stable unique id (CLI mode injects via registerSetPlayerId)
 let myplayerid = readsession('PLAYER') ?? createpid()
 writesession('PLAYER', myplayerid)
+initdeeplinks()
 
 async function syncterminalbookmarkpins() {
   const blob = await readbookmarksfromstorage()
@@ -279,13 +292,16 @@ export function registersetmyplayerid(id: string) {
 // timeout for TOAST
 let toasttimer: any
 
+// timeout for WORK STATUS badge
+let workstatustimer: any
+
 export function registerreadplayer() {
   return myplayerid
 }
 
 export const register = createdevice(
   'register',
-  ['ready', 'second', 'sessionreset', 'log', 'chat', 'toast'],
+  ['ready', 'second', 'sessionreset', 'log', 'chat', 'toast', 'workstatus'],
   function (message) {
     if (!register.session(message)) {
       return
@@ -297,8 +313,8 @@ export const register = createdevice(
       case 'chat':
       case 'toast':
       case 'second':
+      case 'workstatus':
       case 'sessionreset':
-        // console.info(message)
         break
       default:
         if (message.player !== myplayerid) {
@@ -312,6 +328,8 @@ export const register = createdevice(
     switch (message.target) {
       case 'ready': {
         doasync(register, message.player, async () => {
+          // start boardrunner
+          boardrunnerstart(register, myplayerid)
           // setup content watcher
           storagewatchcontent(myplayerid)
           // setup history buffer
@@ -329,15 +347,25 @@ export const register = createdevice(
           await waitfor(256)
           apilog(register, myplayerid, `myplayerid ${myplayerid}`)
           vmoperator(register, myplayerid)
+          if (!isclimode()) {
+            await waitfor(512)
+            await rundeeplinks({
+              player: myplayerid,
+              surface: 'boot',
+              openterminal: true,
+              device: register,
+            })
+          }
         })
         break
       }
       case 'sessionreset':
         agentdootids.clear()
+        loggedin = false
         break
       case 'ackoperator':
         // reset display
-        gadgetserverdesync(register, myplayerid)
+        vmgadgetdesync(register, myplayerid)
         // determine which backend to run
         doasync(register, message.player, async () => {
           const urlcontent = await storagereadcontent(myplayerid)
@@ -367,10 +395,21 @@ export const register = createdevice(
         break
       case 'acklogin':
         if (message.data) {
+          loggedin = true
           // hide terminal
           registerterminalclose(register, myplayerid)
           // signal sim loaded
           vmloader(register, message.player, undefined, 'text', 'sim:load', '')
+          if (!isclimode()) {
+            doasync(register, myplayerid, async () => {
+              await rundeeplinks({
+                player: myplayerid,
+                surface: 'boot',
+                openterminal: true,
+                device: register,
+              })
+            })
+          }
           // CLI mode: start multiplayer after confirmed login (player is on board)
           if (isclimode()) {
             vmcli(register, myplayerid, '#joincode')
@@ -381,20 +420,16 @@ export const register = createdevice(
             if (isvalidagentsroster(raw)) {
               heavyrestoreagents(register, myplayerid, raw)
             }
-            const llmraw = vars[HEAVY_LLM_STORAGE_KEY]
-            const llmpresetstored =
-              typeof llmraw === 'string'
-                ? normalizeheavylmpreset(llmraw)
-                : undefined
-            if (llmpresetstored) {
-              heavyllmpreset(register, myplayerid, llmpresetstored, {
+            if (typeof vars[HEAVY_LLM_STORAGE_KEY] === 'string') {
+              heavyllmpreset(register, myplayerid, 'gemma', {
                 toast: false,
               })
             }
           })
         } else {
+          loggedin = false
           doasync(register, message.player, async () => {
-            await writewikilink()
+            await writeclilink()
             writepages()
             // full open on login fail
             registerterminalfull(register, myplayerid)
@@ -643,21 +678,21 @@ export const register = createdevice(
         if (isarray(message.data)) {
           const [data, filename] = message.data as [any, string]
           try {
-            const datablob = new Blob(
-              [
-                JSON.stringify(
-                  {
-                    exported: filename,
-                    data,
-                  },
-                  null,
-                  2,
-                ),
-              ],
+            const payload = JSON.stringify(
               {
-                type: 'application/json;charset=utf-8',
+                exported: filename,
+                data,
               },
+              null,
+              2,
             )
+            const islarge = payload.length > 64 * 1024
+            if (islarge) {
+              workstatus(register, message.player, 'export json')
+            }
+            const datablob = new Blob([payload], {
+              type: 'application/json;charset=utf-8',
+            })
             const dataurl = URL.createObjectURL(datablob)
             // trigger download of file
             const anchor = document.createElement('a')
@@ -667,8 +702,13 @@ export const register = createdevice(
             anchor.click()
             // This is required
             URL.revokeObjectURL(dataurl)
-          } catch (err) {
-            console.error(err)
+          } catch (err: any) {
+            apierror(
+              register,
+              message.player,
+              'downloadjsonfile',
+              err?.message ?? err,
+            )
           }
         }
         break
@@ -701,6 +741,7 @@ export const register = createdevice(
         })
         break
       case 'screenshot':
+        workstatus(register, message.player, 'export png')
         capturecurrentboardtopng()
         break
       case 'nuke':
@@ -769,6 +810,7 @@ export const register = createdevice(
                     message.player,
                     zsstextline(`publishing ${name}`),
                   )
+                  workstatus(register, message.player, 'itchiopublish zip')
                   // save zipfile
                   await itchiopublish(name, content)
                   write(
@@ -781,13 +823,41 @@ export const register = createdevice(
                 }
                 break
               }
-              case 'bbs': {
-                // publish info
-                const [, , bbsemail, bbscode, filename, ...tags] = message.data
+              case 'zns-text': {
+                const [, , znsemail, znstoken, filename] = message.data
                 if (
                   isstring(content) &&
-                  isstring(bbsemail) &&
-                  isstring(bbscode) &&
+                  isstring(znsemail) &&
+                  isstring(znstoken) &&
+                  isstring(filename)
+                ) {
+                  write(
+                    register,
+                    message.player,
+                    zsstextline(`publishing code to ${filename}`),
+                  )
+                  const result = await znsset(
+                    znsemail,
+                    znstoken,
+                    filename,
+                    content,
+                  )
+                  if (result.success) {
+                    write(
+                      register,
+                      message.player,
+                      zsstextline(`$green${filename} code published to zns`),
+                    )
+                  }
+                }
+                break
+              }
+              case 'zns': {
+                const [, , znsemail, znstoken, filename] = message.data
+                if (
+                  isstring(content) &&
+                  isstring(znsemail) &&
+                  isstring(znstoken) &&
                   isstring(filename)
                 ) {
                   write(
@@ -796,19 +866,26 @@ export const register = createdevice(
                     zsstextline(`publishing ${filename}`),
                   )
                   const url = await shorturl(`${location.origin}/#${content}`)
-                  const result = await bbspublish(
-                    bbsemail,
-                    bbscode,
+                  let hash = url
+                  try {
+                    hash = new URL(url).pathname
+                      .replace(/^\//, '')
+                      .split('/')[0]
+                  } catch {
+                    // keep full string; worker may still normalize
+                  }
+                  const result = await znsset(
+                    znsemail,
+                    znstoken,
                     filename,
-                    url,
-                    tags,
+                    hash,
                   )
                   if (result.success) {
                     write(
                       register,
                       message.player,
                       zsstextline(
-                        `$green${filename} has been published to bbs`,
+                        `$green${filename} has been published to zns`,
                       ),
                     )
                   }
@@ -841,10 +918,12 @@ export const register = createdevice(
         ++keepalive
         if (keepalive >= DOOT_RATE) {
           keepalive -= DOOT_RATE
-          vmdoot(register, myplayerid)
-          agentdootids.forEach((agentid) => {
-            vmdoot(register, agentid)
-          })
+          if (loggedin) {
+            vmdoot(register, myplayerid)
+            agentdootids.forEach((agentid) => {
+              vmdoot(register, agentid)
+            })
+          }
         }
         break
       case 'inspector': {
@@ -866,6 +945,14 @@ export const register = createdevice(
             memorywriteconfig('gadget', gadgetval)
           })
         }
+        break
+      }
+      case 'perfmonitor': {
+        const prevperf = useTape.getState().perfmonitor
+        const enabled = ispresent(message.data) ? !!message.data : !prevperf
+        const line1 = `perf monitor ${enabled ? '$greenon' : '$redoff'}`
+        terminalwritelines(register, message.player, line1)
+        useTape.setState({ perfmonitor: enabled })
         break
       }
       case 'findany':
@@ -900,6 +987,18 @@ export const register = createdevice(
           const holdratio = Math.max(message.data.length * 150, 3000)
           const hold = Math.min(holdratio, 14000)
           toasttimer = setTimeout(() => useTape.setState({ toast: '' }), hold)
+        }
+        break
+      case 'workstatus':
+        if (isstring(message.data)) {
+          clearTimeout(workstatustimer)
+          useTape.setState({ workstatus: message.data })
+          if (message.data) {
+            workstatustimer = setTimeout(
+              () => useTape.setState({ workstatus: '' }),
+              2000,
+            )
+          }
         }
         break
       case 'terminal:full':

@@ -5,16 +5,19 @@ import { useWaitForValueString } from 'zss/device/modemhooks'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import {
+  type CodeNode,
+  NODE,
+  compileast,
+  createlineindexes,
+  lexer,
+} from 'zss/feature/lang'
+import {
   useEditor,
   useEqual,
   useGadgetClient,
   useTape,
 } from 'zss/gadget/data/state'
 import { useWriteText } from 'zss/gadget/writetext'
-import { compileast } from 'zss/lang/ast'
-import * as lexer from 'zss/lang/lexer'
-import { createlineindexes } from 'zss/lang/transformer'
-import { CodeNode, NODE } from 'zss/lang/visitor'
 import { isarray, isnumber, ispresent } from 'zss/mapping/types'
 import { ScrollMarquee } from 'zss/screens/scroll/marquee'
 import { getautocomplete } from 'zss/screens/tape/autocomplete'

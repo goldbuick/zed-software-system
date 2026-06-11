@@ -1,0 +1,10 @@
+{
+  "code": "@board title\n@startx 30\n@starty 11",
+  "board": {
+    "name": "title",
+    "terrain": [],
+    "objects": {},
+    "startx": 30,
+    "starty": 11
+  }
+}

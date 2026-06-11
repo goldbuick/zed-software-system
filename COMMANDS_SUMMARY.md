@@ -56,7 +56,7 @@ This document lists all `.command('name', ...` invocations organized by firmware
 - `jointab` - Join via tab (operator only)
 - `chat` - Start/stop chat channel (operator only)
 - `broadcast` - Start/stop stream broadcast (operator only)
-- `bbs` - BBS login/publish actions (login, list, publish, delete, restart)
+- `zns` - ZNS login/publish actions (login, list, publish, delete, restart)
 
 ---
 

@@ -1,13 +1,15 @@
 import 'zss/rom/vitepopulate'
+import { agentlog } from 'zss/agentlog'
 import { setclimode } from 'zss/feature/detect'
+import { initlangcompile } from 'zss/feature/lang/langcompileclient'
 
 import { createforward, shouldforwardservertoclient } from './device/forward'
 import { started } from './device/vm'
 
 // these are all back-end devices that operate within the web worker
 import './device/clock'
-import './device/gadgetserver'
 import './device/modem'
+import './perf/perfreport'
 
 const { forward } = createforward((message) => {
   if (shouldforwardservertoclient(message)) {
@@ -20,11 +22,33 @@ onmessage = function handleMessage(
 ) {
   const msg = event.data
   if (msg?.target === 'config') {
-    setclimode(!!msg?.data)
+    const cfg = msg?.data
+    if (cfg && typeof cfg === 'object') {
+      setclimode(!!cfg.climode)
+    } else {
+      setclimode(!!cfg)
+    }
     return
   }
   forward(event.data)
 }
 
-// begin simspace
-setTimeout(started, 100)
+// begin simspace — chips compile in this worker; await lang compiler before VM tick
+initlangcompile()
+  .then(() => {
+    agentlog(
+      'simspace.ts:started',
+      'worker lang init done, starting vm',
+      { runId: 'post-fix' },
+      'G',
+    )
+    started()
+  })
+  .catch((err) => {
+    agentlog(
+      'simspace.ts:started',
+      'worker lang init failed',
+      { error: String(err), runId: 'post-fix' },
+      'G',
+    )
+  })

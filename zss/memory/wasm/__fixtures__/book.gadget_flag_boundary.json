@@ -1,0 +1,52 @@
+{
+  "name": "book.gadget_flag_boundary",
+  "initial": {},
+  "steps": [
+    {
+      "op": "boundaries_clear",
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "book_import_wire",
+      "args": {
+        "json": [
+          0,
+          "sid_Ov7KSpkTONKV",
+          1,
+          "hugequeenssee",
+          2,
+          0,
+          3,
+          [],
+          4,
+          [],
+          5,
+          {
+            "testplayer_gadget": {
+              "x": 42
+            }
+          }
+        ]
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "book_read_flags",
+      "args": {
+        "owner": "testplayer_gadget"
+      },
+      "expect": {
+        "mode": "json",
+        "json": {
+          "x": 42
+        }
+      }
+    }
+  ]
+}

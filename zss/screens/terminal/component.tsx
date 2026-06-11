@@ -1,5 +1,5 @@
 import { useLayoutEffect, useMemo, useState } from 'react'
-import { vmcli } from 'zss/device/api'
+import { chipmessage, vmcli } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { storagereadconfig } from 'zss/feature/storage'
@@ -69,13 +69,13 @@ export function TerminalComponent() {
 
   const tapecontextvalue = useMemo(
     () => ({
-      sendmessage(maybetarget: string, data: any[]) {
+      sendmessage(chip: string, maybetarget: string, data: any[]) {
         const [target, message] = totarget(maybetarget)
         if (target === 'self') {
           const input = `#${message} ${data.join(' ')}`
           vmcli(SOFTWARE, player, input)
         } else {
-          SOFTWARE.emit(player, `${target}:${message}`, data)
+          chipmessage(SOFTWARE, player, chip, maybetarget, data)
         }
       },
     }),

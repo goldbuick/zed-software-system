@@ -38,7 +38,7 @@ export function formatobject(
       key = mkey
     }
 
-    if (value !== null) {
+    if (value != null) {
       formatted.push(key, value)
     }
   }
@@ -89,7 +89,6 @@ export function unformatobject<T>(
 export function packformat(entry: FORMAT_OBJECT): MAYBE<Uint8Array> {
   try {
     const data = pack(entry)
-    // console.info('write', data)
     return data
   } catch (err: any) {
     apierror(SOFTWARE, '', 'format', err.message)
@@ -102,7 +101,6 @@ export function unpackformat(
   if (isstring(content)) {
     try {
       const data = JSON.parse(content)
-      // console.info('read', deepcopy(unpacked))
       return data
     } catch (err: any) {
       apierror(SOFTWARE, '', 'format', err.message)

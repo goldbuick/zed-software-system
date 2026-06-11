@@ -1,0 +1,35 @@
+@player
+@ispushable
+@cycle 1
+@char 2
+@color white
+@bg blue
+:think
+' sidebar code
+"Simple $9 $9 $9 
+" $9 $9 $9 Chat v1.14
+"
+#if hint do
+"press $whiteC$yellow to chat 
+"press $white#$yellow for cli
+" 
+"from the cli to
+"set name
+"$white#set user <name>
+" 
+"toggle built-in 
+"gadget on or off
+"$white#gadget
+"with gadget users
+"can edit the board
+"
+"$black$ondkcyan Ctrl+O 
+"$ondkblue $whiteOpen the net
+"
+"$black$ondkcyan $24$25$26$27 $ondkblue $whiteMove
+"$black$onltgrey Tab $ondkblue $whiteToggle
+"$ondkblue $whitePlayer Stats
+"
+#else do
+" $white$2 $yellow Health:$health
+" $cyan$132 $yellow   Ammo:$ammo

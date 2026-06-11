@@ -1,0 +1,53 @@
+{
+  "name": "permissions.migrate_custom",
+  "initial": {},
+  "steps": [
+    {
+      "op": "permission_reset",
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_set_command_permissions",
+      "args": {
+        "bannedtokens": [],
+        "rolebytoken": {},
+        "permissionconfig": "custom",
+        "allowlistbyrole": {
+          "player": [
+            "speaker"
+          ]
+        },
+        "allowlistbyrolecustom": {
+          "player": [
+            "speaker"
+          ]
+        }
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "permission_read_config",
+      "expect": {
+        "mode": "string",
+        "string": "lockdown"
+      }
+    },
+    {
+      "op": "permission_role_has_family",
+      "args": {
+        "role": "player",
+        "family": "speaker"
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    }
+  ]
+}

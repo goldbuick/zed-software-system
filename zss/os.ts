@@ -1,9 +1,16 @@
+import { agentlog } from 'zss/agentlog'
+import { WASM_SCRIPT } from 'zss/config'
+import { GeneratorBuild } from 'zss/feature/lang'
+import {
+  compilescript,
+  islangcompileready,
+} from 'zss/feature/lang/langcompileclient'
+
 import { CHIP, createchip } from './chip'
 import { MESSAGE_FUNC, parsetarget } from './device'
 import { apierror } from './device/api'
 import { SOFTWARE } from './device/session'
 import { DRIVER_TYPE } from './firmware/runner'
-import { GeneratorBuild, compile } from './lang/generator'
 import { createsid } from './mapping/guid'
 import { MAYBE, ispresent, isstring } from './mapping/types'
 import { memoryreadoperator } from './memory/session'
@@ -42,11 +49,54 @@ export function createos() {
   const builds: Record<string, GeneratorBuild> = {}
   const chips: Record<string, CHIP | undefined> = {}
   function build(name: string, code: string) {
-    const cache = builds[code]
-    if (cache) {
-      return cache
+    const cached = builds[code]
+    if (cached) {
+      const stalecompile =
+        WASM_SCRIPT &&
+        islangcompileready() &&
+        (!cached.wasmbytes?.length ||
+          cached.errors?.some(
+            (err) => err.message === 'lang wasm compiler not loaded',
+          ))
+      if (stalecompile) {
+        delete builds[code]
+      } else {
+        agentlog(
+          'os.ts:build',
+          'build cache hit',
+          {
+            name,
+            wasmbytes: cached.wasmbytes?.length ?? 0,
+            errors: cached.errors?.map((e) => e.message) ?? [],
+          },
+          'C',
+        )
+        return cached
+      }
     }
-    const result = compile(name, code)
+    const result = compilescript(name, code)
+    agentlog(
+      'os.ts:build',
+      'build result',
+      {
+        name,
+        cached: !!cached,
+        wasmscript: WASM_SCRIPT,
+        ready: islangcompileready(),
+        wasmbytes: result.wasmbytes?.length ?? 0,
+        errors: result.errors?.map((e) => e.message) ?? [],
+        hascode: !!result.code,
+      },
+      'C',
+    )
+    if (
+      WASM_SCRIPT &&
+      islangcompileready() &&
+      !result.wasmbytes?.length &&
+      !(result.errors?.length ?? 0)
+    ) {
+      return result
+    }
     builds[code] = result
     return result
   }
@@ -98,6 +148,20 @@ export function createos() {
         // create chip from build
         chip = chips[id] = createchip(id, driver, result)
 
+        agentlog(
+          'os.ts:boot',
+          'chip boot',
+          {
+            id,
+            name,
+            wasmbytes: result.wasmbytes?.length ?? 0,
+            errors: result.errors?.map((e) => e.message) ?? [],
+            isended: chip.isended(),
+            getcase: chip.getcase(),
+          },
+          'F',
+        )
+
         // bail on errors
         if (result.errors?.length) {
           const [primary] = result.errors
@@ -148,6 +212,7 @@ export function createos() {
 
           const preamble = primary.message.split('\n').slice(0, 4).join(' ')
           apierror(SOFTWARE, memoryreadoperator(), 'build', preamble)
+          delete chips[id]
           return undefined
         }
       }

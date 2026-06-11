@@ -11,14 +11,11 @@ export const FILE_BYTES_PER_COLOR = 3
 
 export const CHAR_WIDTH = 8
 export const CHAR_HEIGHT = 14
-export const BYTES_PER_CHAR = CHAR_WIDTH * CHAR_HEIGHT
 
 export const CHARS_PER_ROW = 16
 export const CHARS_TOTAL_ROWS = 16
 
 export const PALETTE_COLORS = 16
-
-export const CHAR_YSCALE = CHAR_WIDTH / CHAR_HEIGHT
 
 export type TILES = {
   char: number[]
@@ -59,7 +56,7 @@ export type LAYER_TILES = {
   char: number[]
   color: number[]
   bg: number[]
-  stats: number[]
+  props: number[]
 }
 
 export type LAYER_SPRITES = {
@@ -128,7 +125,7 @@ export function createtiles(
     char: arrayof(size, 0),
     color: arrayof(size, 0),
     bg: arrayof(size, bg),
-    stats: arrayof(size, 0),
+    props: arrayof(size, 0),
   }
 }
 

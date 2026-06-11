@@ -7,6 +7,7 @@ import {
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
+import { firmwarewaitforboard } from 'zss/firmware/boardwaitsync'
 import {
   INPUT,
   INPUT_ALT,
@@ -40,6 +41,7 @@ import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
 import { memoryreadflags } from 'zss/memory/flags'
 import { memorysendtolog } from 'zss/memory/gamesend'
 import { memoryhaltchip, memoryruncodepage } from 'zss/memory/runtime'
+import { memoryensureboardruntime } from 'zss/memory/runtimeboundary'
 import { memoryreadoperator } from 'zss/memory/session'
 import {
   memoryfindplayerforelement,
@@ -234,8 +236,8 @@ function readinput(
   flags.inputcurrent = input
 
   // clear used input
-  flags.inputqueue = flags.inputqueue.filter((item) => {
-    const [check] = item as [INPUT, number]
+  flags.inputqueue = flags.inputqueue.filter((item: [INPUT, number]) => {
+    const [check] = item
     return check !== INPUT.NONE && check !== input
   })
 
@@ -482,10 +484,11 @@ export const ELEMENT_FIRMWARE = createfirmware({
       // uses content slot book
       case 'over':
         if (ispresent(READ_CONTEXT.board)) {
+          const boardruntime = memoryensureboardruntime(READ_CONTEXT.board)
           const valuestr = maptostring(value)
           // reset lookup
           if (READ_CONTEXT.board.over !== valuestr) {
-            READ_CONTEXT.board.overboard = undefined
+            boardruntime.overboard = undefined
           }
           READ_CONTEXT.board.over = valuestr
           return [true, valuestr]
@@ -493,10 +496,11 @@ export const ELEMENT_FIRMWARE = createfirmware({
         break
       case 'under':
         if (ispresent(READ_CONTEXT.board)) {
+          const boardruntime = memoryensureboardruntime(READ_CONTEXT.board)
           const valuestr = maptostring(value)
           // reset lookup
           if (READ_CONTEXT.board.under !== valuestr) {
-            READ_CONTEXT.board.underboard = undefined
+            boardruntime.underboard = undefined
           }
           READ_CONTEXT.board.under = valuestr
           return [true, valuestr]
@@ -504,10 +508,11 @@ export const ELEMENT_FIRMWARE = createfirmware({
         break
       case 'palette':
         if (ispresent(READ_CONTEXT.board)) {
+          const boardruntime = memoryensureboardruntime(READ_CONTEXT.board)
           const valuestr = maptostring(value)
           // reset lookup
           if (READ_CONTEXT.board.palette !== valuestr) {
-            READ_CONTEXT.board.palettepage = undefined
+            boardruntime.palettepage = undefined
           }
           READ_CONTEXT.board.palette = valuestr
           return [true, valuestr]
@@ -515,10 +520,11 @@ export const ELEMENT_FIRMWARE = createfirmware({
         break
       case 'charset':
         if (ispresent(READ_CONTEXT.board)) {
+          const boardruntime = memoryensureboardruntime(READ_CONTEXT.board)
           const valuestr = maptostring(value)
           // reset lookup
           if (READ_CONTEXT.board.charset !== valuestr) {
-            READ_CONTEXT.board.charsetpage = undefined
+            boardruntime.charsetpage = undefined
           }
           READ_CONTEXT.board.charset = valuestr
           return [true, valuestr]
@@ -731,17 +737,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     // notfound
     return [false, value]
   },
-  everytick(chip) {
-    // are we player? and is our health number zero or below
-    if (READ_CONTEXT.elementisplayer) {
-      const health = chip.get('health')
-      if (isnumber(health) && health <= 0) {
-        // halt program
-        chip.endofprogram()
-        // signal outcome
-        vmlogout(SOFTWARE, READ_CONTEXT.elementid, true)
-      }
-    }
+  everytick() {
     // handle walk movement
     if (
       !READ_CONTEXT.element?.removed &&
@@ -760,6 +756,24 @@ export const ELEMENT_FIRMWARE = createfirmware({
           y: READ_CONTEXT.element.y + READ_CONTEXT.element.stepy,
         },
       )
+    }
+  },
+  aftertick(chip) {
+    // are we player? and is our health number zero or below
+    if (READ_CONTEXT.elementisplayer) {
+      const health = chip.get('health')
+      if (isnumber(health) && health <= 0) {
+        // halt program
+        chip.endofprogram()
+        // signal outcome
+        vmlogout(SOFTWARE, READ_CONTEXT.elementid)
+        // immediately safedelete the element
+        memorysafedeleteelement(
+          READ_CONTEXT.board,
+          READ_CONTEXT.element,
+          READ_CONTEXT.timestamp,
+        )
+      }
     }
   },
 })
@@ -853,6 +867,9 @@ export const ELEMENT_FIRMWARE = createfirmware({
 
         // read board by eval dir
         const board = memoryreadboardbyevaldir(dest, READ_CONTEXT.board)
+        if (firmwarewaitforboard(board?.id)) {
+          return 1
+        }
 
         // handle multi-target dirs
         if (dest.targets.length) {
@@ -898,6 +915,9 @@ export const ELEMENT_FIRMWARE = createfirmware({
 
         // read board by eval dir
         const board = memoryreadboardbyevaldir(dest, READ_CONTEXT.board)
+        if (firmwarewaitforboard(board?.id)) {
+          return 1
+        }
 
         // handle multi-target dirs
         if (dest.targets.length) {

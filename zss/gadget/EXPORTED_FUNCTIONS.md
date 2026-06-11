@@ -496,6 +496,9 @@ API for managing gadget state, panels, and hyperlinks.
 
 ### State Management
 - `initstate()` - Creates a new empty gadget state
+- `emptygadgetstate()` - Blank gadget snapshot used as paint/patch fallback ([`data/state.ts`](data/state.ts))
+- `applylayercacheupdate(layercachemap, board, layers)` - LRU layer cache update on gadget patch ([`data/state.ts`](data/state.ts))
+- `ismaybeblankgadgetstate(gadget)` - True when gadget is empty/void (skip flash on patch)
 - `gadgetstateprovider(provider)` - Sets the provider function for gadget state
 - `gadgetstate(element)` - Gets the gadget state for an element/player
 

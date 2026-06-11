@@ -45,10 +45,6 @@ export function memoryloadercontent(id: string): any {
   return LOADER_REFS[id]?.content
 }
 
-export function memoryloaderdone(id: string) {
-  delete LOADER_REFS[id]
-}
-
 export function memoryloaderformat(id: string): MAYBE<string> {
   return LOADER_REFS[id]?.format
 }
@@ -113,8 +109,4 @@ export function memoryloadermatches(
 
   // return matched loaders
   return loaders
-}
-
-export function memoryloaderplayer(id: string): MAYBE<string> {
-  return LOADER_REFS[id]?.player
 }

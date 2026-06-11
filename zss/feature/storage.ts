@@ -1,17 +1,18 @@
 import humanid from 'human-id'
 import {
+  del as idbdel,
   get as idbget,
   getMany as idbgetmany,
   update as idbupdate,
 } from 'idb-keyval'
-import { apierror, apilog, vmbooks } from 'zss/device/api'
+import { apierror, apilog, vmbooks, workstatus } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { isclimode } from 'zss/feature/detect'
 import { doasync } from 'zss/mapping/func'
 import { isarray, ispresent } from 'zss/mapping/types'
 import { BOOK } from 'zss/memory/types'
 
-import { shorturl } from './url'
+import { shorturl, znsnormalizenamespace } from './url'
 import { writecopyit } from './writeui'
 
 // read / write from indexdb
@@ -184,6 +185,10 @@ export async function storagewritecontent(
   compressed: string,
   books: BOOK[],
 ) {
+  const isautosave = label.includes('autosave')
+  if (!isautosave) {
+    workstatus(SOFTWARE, player, 'save url')
+  }
   if (
     isclimode() &&
     typeof (globalThis as any).__nodeStorageWriteContent === 'function'
@@ -249,6 +254,52 @@ export async function storagewritenetid(netid: string) {
   return writeidb('netid', () => netid)
 }
 
+export async function storagereadznsemail(): Promise<string | undefined> {
+  return readidb<string>('znsemail')
+}
+
+export async function storagewriteznsemail(email: string) {
+  return writeidb('znsemail', () => email)
+}
+
+export async function storagereadznstoken(): Promise<string | undefined> {
+  return readidb<string>('znstoken')
+}
+
+export async function storagewritznstoken(token: string) {
+  return writeidb('znstoken', () => token)
+}
+
+export async function storagereadznsnamespace(): Promise<string | undefined> {
+  const namespace = await readidb<string>('znsnamespace')
+  if (!namespace) {
+    return undefined
+  }
+  return znsnormalizenamespace(namespace)
+}
+
+export async function storagewriteznsnamespace(namespace: string) {
+  return writeidb('znsnamespace', () => znsnormalizenamespace(namespace))
+}
+
+export async function storagereadznssession(): Promise<
+  { email: string; token: string; namespace: string } | undefined
+> {
+  const email = await storagereadznsemail()
+  const token = await storagereadznstoken()
+  const namespace = await storagereadznsnamespace()
+  if (!email || !token || !namespace) {
+    return undefined
+  }
+  return { email, token, namespace }
+}
+
+export async function storagewriteznsclear() {
+  await idbdel('znsemail')
+  await idbdel('znstoken')
+  await idbdel('znsnamespace')
+}
+
 let currenturlhash = ''
 export function storagewatchcontent(player: string) {
   if (isclimode()) {
@@ -258,7 +309,6 @@ export function storagewatchcontent(player: string) {
     doasync(SOFTWARE, player, async () => {
       const urlhash = readurlhash(player)
       if (currenturlhash !== urlhash) {
-        console.info('hashchange', urlhash)
         currenturlhash = urlhash
         const urlcontent = await storagereadcontent(player)
         // init vm with content
@@ -284,6 +334,7 @@ export async function storagesharecontent(player: string) {
   currenturlhash = urlcontent
   location.hash = out
   // gen global shorturl
+  workstatus(SOFTWARE, player, 'share url')
   const url = await shorturl(location.href)
   writecopyit(SOFTWARE, player, url, url)
 }

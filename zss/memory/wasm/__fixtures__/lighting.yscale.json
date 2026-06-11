@@ -1,0 +1,20 @@
+{
+  "name": "lighting.yscale",
+  "initial": {},
+  "steps": [
+    {
+      "op": "lighting_yscale",
+      "expect": {
+        "mode": "json",
+        "json": 1.75
+      }
+    },
+    {
+      "op": "lighting_yscale",
+      "expect": {
+        "mode": "json",
+        "json": 1.75
+      }
+    }
+  ]
+}

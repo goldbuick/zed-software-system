@@ -13,9 +13,6 @@ export type FIRMWARE_COMMAND = (chip: CHIP, words: WORD[]) => 0 | 1
 /** One argument signature: zero or more ARG_TYPE (number) followed by a string (e.g. description). */
 export type COMMAND_ARGS_SIGNATURE = [...number[], string]
 
-/** No-arg command: single signature with no ARG_TYPEs and empty description. */
-export const NO_COMMAND_ARGS: COMMAND_ARGS_SIGNATURE = ['']
-
 /**
  * Optional tape autocomplete metadata per `#` command (firmware-adjacent).
  * `whenfirst` covers first-token peek variants; broader `wordsSoFar` dispatch can extend this type later.

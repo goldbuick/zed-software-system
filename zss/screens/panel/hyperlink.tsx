@@ -6,7 +6,6 @@ import { tokenizeandwritetextformat } from 'zss/words/textformat'
 import {
   PanelItemProps,
   ScrollContext,
-  chiptarget,
   inputcolor,
   setuppanelitem,
 } from './common'
@@ -30,7 +29,7 @@ export function PanelHyperlink({
 
   const scroll = useContext(ScrollContext)
   const invoke = useCallback(() => {
-    scroll.sendmessage(chiptarget(chip, target), data)
+    scroll.sendmessage(chip, target, data)
     scroll.sendclose()
   }, [scroll, chip, target, data])
 

@@ -4,7 +4,7 @@ import { useHyperlinkSharedSync } from 'zss/gadget/data/usehyperlinksharedsync'
 import { UserHotkey, UserInput } from 'zss/gadget/userinput'
 import { useWriteText } from 'zss/gadget/writetext'
 import { ispresent } from 'zss/mapping/types'
-import { chiptarget, inputcolor } from 'zss/screens/panel/common'
+import { inputcolor } from 'zss/screens/panel/common'
 import {
   TapeTerminalContext,
   TapeTerminalItemInputProps,
@@ -40,7 +40,7 @@ export function TerminalZSSEdit({
       return
     }
     setTimeout(() => {
-      cc.sendmessage(chiptarget(parsed.chip, parsed.target), [])
+      cc.sendmessage(parsed.chip, parsed.target, [])
     }, 100)
   }, [cc, parsed])
 

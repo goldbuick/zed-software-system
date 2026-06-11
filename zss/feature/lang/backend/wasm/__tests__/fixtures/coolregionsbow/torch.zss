@@ -1,0 +1,15 @@
+@torch
+@cycle 1
+@isitem
+@ispushable
+@light 1
+@char 157
+@color brown
+#end
+:touch
+#give torches
+#bgplay tcase
+#give torchnote do
+Torch - used for lighting in the underground.
+#done
+#die

@@ -1,0 +1,9 @@
+#if inputmenu do
+ #idle
+#else if inputmove and inputshift do
+ #shoot
+ #idle
+#else if inputmove do
+ ?inputmove
+#else idle
+#done

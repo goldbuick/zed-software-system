@@ -56,7 +56,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `userinput` | Inject player input (`up` / `down` / `left` / `right` / `ok` / `cancel` / `shoot*`…) |
 | `pilot` | Walk player toward coordinates (`#pilot x y`) or `#pilot stop` |
 | `screenshot` | Screenshot for capture |
-| `bbs` | Login/publish actions |
+| `zns` | Login/publish actions |
 
 ---
 
@@ -101,8 +101,8 @@ All firmware commands and their descriptions. Commands are available depending o
 | `set` | Variable to value |
 | `become` | Element into specified kind |
 | `bind` | Code from named element |
-| `char` | Character (self or at direction) |
-| `color` | Color (self or at direction) |
+| `char` | Character (self or at direction); cross-board dirs wait for target board hydration |
+| `color` | Color (self or at direction); cross-board dirs wait for target board hydration |
 | `go` | Element in direction |
 | `walk` | Cause element to move in direction each tick |
 | `idle` | Execution until next tick |
@@ -127,7 +127,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | Command | Description |
 |---------|-------------|
 | `build` | Create board and link to stat. Optional source board. |
-| `goto` | Player to board by name or address with optional x, y |
+| `goto` | Player to board by name or address with optional x, y (waits for target board hydration on boardrunner) |
 | `transport` | Element across board with transporter logic |
 | `shove` | Target object in direction |
 | `push` | Target object in direction ONLY if pushable |
@@ -154,9 +154,9 @@ All firmware commands and their descriptions. Commands are available depending o
 |---------|-------------|
 | `snapshot` | Board snapshot |
 | `revert` | Board to snapshot state |
-| `copy` | Region from source to current board |
-| `remix` | From source with pattern size and mirror to current board |
 | `weave` | Board elements in direction |
+| `copy` | Region from source to current board (waits for source board hydration when different from current) |
+| `remix` | From source with pattern size and mirror to current board (same wait behavior as `copy`) |
 | `pivot` | Board elements by degrees |
 
 ---

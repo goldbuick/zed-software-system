@@ -179,7 +179,7 @@ export async function runApp(flags: RunAppFlags): Promise<void> {
     addLog(`Using Vite dev server at ${baseUrl}`)
   } else {
     if (!fs.existsSync(distDir)) {
-      console.error('cafe/dist not found. Run: yarn build')
+      console.error('cafe/dist not found. Run: yarn app:build')
       process.exit(1)
     }
     await createstaticserver(distDir, port)
@@ -255,8 +255,9 @@ export async function runApp(flags: RunAppFlags): Promise<void> {
     return playerId
   })
 
-  const stubBookPath = path.join(root, 'src', 'stub-book.json')
-  const stubBookData = readJsonFile<unknown[]>(stubBookPath, [])
+  const { readcoolregionsbowbooks } =
+    await import('../../zss/testsupport/coolregionsbowbook.js')
+  const stubBookData = readcoolregionsbowbooks()
 
   await page.exposeFunction('__nodeStorageReadContent', (player: string) => {
     const contentPath = path.join(dataDir, `${player}.json`)

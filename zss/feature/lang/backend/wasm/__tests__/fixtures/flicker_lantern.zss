@@ -1,0 +1,8 @@
+@flickerlantern
+@cycle 1
+@char 168
+@color white
+:think
+#set light pick 5 7 11 12
+#idle
+#think

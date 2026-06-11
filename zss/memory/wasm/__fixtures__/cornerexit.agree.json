@@ -1,0 +1,38 @@
+{
+  "name": "cornerexit.agree",
+  "initial": {},
+  "steps": [
+    {
+      "op": "corner_exit_resolve",
+      "args": {
+        "board": {
+          "id": "cur",
+          "exitnorth": "n",
+          "exiteast": "e"
+        },
+        "addrmap": {
+          "n": {
+            "id": "north",
+            "exiteast": "addr-ne"
+          },
+          "e": {
+            "id": "east",
+            "exitnorth": "addr-ne"
+          },
+          "addr-ne": {
+            "id": "target-ne"
+          }
+        }
+      },
+      "expect": {
+        "mode": "json",
+        "json": {
+          "exitne": "target-ne",
+          "exitnw": "",
+          "exitse": "",
+          "exitsw": ""
+        }
+      }
+    }
+  ]
+}

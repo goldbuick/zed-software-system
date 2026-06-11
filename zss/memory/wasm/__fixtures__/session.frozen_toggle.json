@@ -1,0 +1,57 @@
+{
+  "name": "session.frozen_toggle",
+  "initial": {},
+  "steps": [
+    {
+      "op": "session_frozen_set",
+      "args": {
+        "value": false
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "session_frozen_get",
+      "expect": {
+        "mode": "json",
+        "json": false
+      }
+    },
+    {
+      "op": "session_frozen_set",
+      "args": {
+        "value": true
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "session_frozen_get",
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "session_frozen_set",
+      "args": {
+        "value": false
+      },
+      "expect": {
+        "mode": "json",
+        "json": true
+      }
+    },
+    {
+      "op": "session_frozen_get",
+      "expect": {
+        "mode": "json",
+        "json": false
+      }
+    }
+  ]
+}
