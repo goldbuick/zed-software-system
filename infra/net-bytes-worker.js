@@ -156,24 +156,24 @@ async function serveListPage(env) {
 }
 
 async function serveRecentShares(env) {
-	const listResult = await env.kv.list()
-	const shares = listResult.keys
-		.filter(
-			({ metadata }) =>
-				!(metadata && metadata.isjoin) && metadata && metadata.created,
-		)
-		.sort((a, b) => {
-			const acreated = a.metadata ? a.metadata.created || 0 : 0
-			const bcreated = b.metadata ? b.metadata.created || 0 : 0
-			return bcreated - acreated
-		})
-		.slice(0, 5)
-		.map(({ name, metadata }) => ({
-			book: metadata?.book ?? name,
-			bytes: name,
-		}))
-	return new Response(JSON.stringify({ success: true, shares }), {
-		status: 200,
-		headers: { ...corsheaders, 'Content-Type': 'application/json' },
-	})
+  const listResult = await env.kv.list()
+  const shares = listResult.keys
+    .filter(
+      ({ metadata }) =>
+        !(metadata && metadata.isjoin) && metadata && metadata.created,
+    )
+    .sort((a, b) => {
+      const acreated = a.metadata ? a.metadata.created || 0 : 0
+      const bcreated = b.metadata ? b.metadata.created || 0 : 0
+      return bcreated - acreated
+    })
+    .slice(0, 5)
+    .map(({ name, metadata }) => ({
+      book: metadata?.book ?? name,
+      bytes: name,
+    }))
+  return new Response(JSON.stringify({ success: true, shares }), {
+    status: 200,
+    headers: { ...corsheaders, 'Content-Type': 'application/json' },
+  })
 }
