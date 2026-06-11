@@ -16,7 +16,7 @@ Legacy path `zss/lang/` was removed; import from `zss/feature/lang`.
 
 ## Quick Start
 
-Production code uses the TS backend automatically:
+Dev and production builds use WASM lang by default (`ZSS_WASM_SCRIPT`); use `yarn app:tslang:dev` for the TS oracle backend:
 
 ```typescript
 import { compile } from 'zss/feature/lang'

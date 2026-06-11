@@ -53,7 +53,7 @@ const PERF_TILE_SUBIMAGE = zssjsonboolwithdefault(
   false,
 )
 /** Per-script WASM modules instead of new Function() for CHIP logic. */
-const WASM_SCRIPT = zssjsonbool('ZSS_WASM_SCRIPT')
+const WASM_SCRIPT = zssjsonboolwithdefault('ZSS_WASM_SCRIPT', true)
 
 // runtime config
 export const RUNTIME = {

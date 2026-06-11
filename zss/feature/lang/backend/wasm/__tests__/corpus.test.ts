@@ -141,6 +141,15 @@ describe('lang corpus behavioral parity (native wasm vs TS oracle)', () => {
     expect(wasmchip.getcase()).toBe(jschip.getcase())
   }, 15000)
 
+  it('simple_chat_player wasm reaches #clear key0 without reader crash', () => {
+    const source = readcorpus('integration', 'simple_chat_player')
+    const jsbuild = compile('player', source)
+    const wasmbytes = compilenativewasmfortest(source)
+    const wasmbuild = { ...jsbuild, wasmbytes, code: undefined }
+    const wasmchip = createchip('wasm-clear-key0', DRIVER_TYPE.RUNTIME, wasmbuild)
+    expect(() => wasmchip.once()).not.toThrow()
+  }, 15000)
+
   const BOOK_BEHAVIOR = ['clockwise', 'counter', 'duplicator', 'line'] as const
 
   it.each(BOOK_BEHAVIOR)('book %s wasm run matches JS', (id) => {

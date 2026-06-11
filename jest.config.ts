@@ -7,6 +7,8 @@ const config: Config = {
   preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'node',
   testTimeout: TEST_TIMEOUT_MS,
+  /** CI safety net when a worker still has stray handles after suites finish. */
+  forceExit: process.env.CI === 'true',
   setupFilesAfterEnv: ['<rootDir>/zss/testing/jesttimeoutsetup.ts'],
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
   moduleNameMapper: {
