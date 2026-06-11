@@ -1,9 +1,9 @@
 import { newQueue } from '@henrygd/queue'
 import { createdevice } from 'zss/device'
 import {
-  synthaudiobuffer,
   ttsinfo as emitttsinfo,
   ttsrequest as emitttsrequest,
+  synthaudiobuffer,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import {

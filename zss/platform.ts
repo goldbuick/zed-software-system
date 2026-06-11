@@ -1,6 +1,12 @@
+import {
+  bootgpucoordinator,
+  handleplatformgpurequest,
+  setplatformgpuworkers,
+} from 'zss/feature/gpu/gpumain'
+
 import boardrunnerspace from './boardrunnerspace??worker'
-import { MESSAGE, sessionreset } from './device/api'
 import { createmessage } from './device'
+import { MESSAGE, sessionreset } from './device/api'
 import {
   createforward,
   shouldforwardclienttoboardrunner,
@@ -29,7 +35,9 @@ let ttsmessagehandler: MAYBE<(event: MessageEvent<any>) => void>
 function postreadytoworker(worker: Worker) {
   const session = SOFTWARE.session()
   if (session) {
-    worker.postMessage(createmessage(session, '', 'platform', 'ready', undefined))
+    worker.postMessage(
+      createmessage(session, '', 'platform', 'ready', undefined),
+    )
   }
 }
 
@@ -42,6 +50,7 @@ export function ensuresttworker(): Worker | undefined {
     stt.addEventListener('message', sttmessagehandler)
   }
   postreadytoworker(stt)
+  setplatformgpuworkers({ heavy, stt })
   return stt
 }
 
@@ -64,8 +73,11 @@ export function createplatform(isstub = false, climode = false) {
   // reset session
   sessionreset(SOFTWARE)
 
+  void bootgpucoordinator()
+
   // create heavy worker
   heavy = new heavyspace({ name: 'heavy' })
+  setplatformgpuworkers({ heavy, stt })
 
   // create boardrunner worker
   boardrunner = new boardrunnerspace({ name: 'boardrunner' })
@@ -101,6 +113,9 @@ export function createplatform(isstub = false, climode = false) {
   // handle messages from heavy
   function heavymessages(event: MessageEvent<any>) {
     const message = event.data as MESSAGE
+    if (ispresent(heavy) && handleplatformgpurequest(message, heavy)) {
+      return
+    }
     if (shouldforwardclienttoboardrunner(message) && ispresent(boardrunner)) {
       boardrunner.postMessage(message)
     }
@@ -157,6 +172,9 @@ export function createplatform(isstub = false, climode = false) {
 
   function sttmessages(event: MessageEvent<any>) {
     const message = event.data as MESSAGE
+    if (ispresent(stt) && handleplatformgpurequest(message, stt)) {
+      return
+    }
     if (shouldforwardclienttoheavy(message) && ispresent(heavy)) {
       heavy.postMessage(message)
     }

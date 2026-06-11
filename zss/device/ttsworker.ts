@@ -5,10 +5,7 @@ import { isarray, ispresent } from 'zss/mapping/types'
 
 let ttsjobchain: Promise<unknown> = Promise.resolve()
 
-function enqueuettsjob(
-  player: string,
-  job: () => Promise<void>,
-) {
+function enqueuettsjob(player: string, job: () => Promise<void>) {
   ttsjobchain = ttsjobchain
     .then(() => job())
     .catch((error: unknown) => {

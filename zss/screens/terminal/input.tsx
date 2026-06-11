@@ -520,11 +520,7 @@ export function TerminalInput({
       apitoast(SOFTWARE, player, message)
     }
 
-    const speechlistener = new SpeechToText(
-      onfinalised,
-      onendevent,
-      onworking,
-    )
+    const speechlistener = new SpeechToText(onfinalised, onendevent, onworking)
     listener = speechlistener
     void speechlistener.startlistening().then(() => {
       if (cancelled) {

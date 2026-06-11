@@ -105,3 +105,14 @@ export async function transcribeaudio(
       : ((result as { text?: string })?.text ?? '')
   return text.trim()
 }
+
+export async function disposesttengine(): Promise<void> {
+  if (transcriber) {
+    const pipe = transcriber as { dispose?: () => Promise<void> | void }
+    if (pipe.dispose) {
+      await pipe.dispose()
+    }
+    transcriber = undefined
+  }
+  transcriberpromise = undefined
+}

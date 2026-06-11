@@ -1,5 +1,7 @@
 import { Message } from '@huggingface/transformers'
-import { createdevice } from 'zss/device'
+import { createdevice, createmessage } from 'zss/device'
+import { SOFTWARE } from 'zss/device/session'
+import { withworkergpulock } from 'zss/feature/gpu/gpuworkerbridge'
 import {
   heavyrunagentlist,
   heavyrunagentname,
@@ -27,7 +29,7 @@ import {
   resolvemessage as memoryqueryresolvemessage,
 } from 'zss/feature/heavy/vmquery'
 import { resolvestoragepullmessage } from 'zss/feature/storagepull'
-import { isarray, ispresent, isstring } from 'zss/mapping/types'
+import { isarray, isstring } from 'zss/mapping/types'
 import { perfmeasure } from 'zss/perf/ui'
 
 import { apierror, apilog, vmlastinputtouch, workstatus } from './api'
@@ -131,20 +133,27 @@ async function classifythenmaybeagentprompt(
     },
   ]
 
-  const answer = await modelclassify(classifymessages, onworking)
-  const intent = answer.split(/\s+/)[0] ?? ''
-
-  if (intent !== 'none') {
-    await runagentprompt(
-      player,
-      agentid,
-      agentname,
-      messagetext,
-      onworking,
-      promptlogging,
-      intent,
-    )
+  const session = SOFTWARE.session()
+  if (!session) {
+    return
   }
+
+  await withworkergpulock('heavy', session, async () => {
+    const answer = await modelclassify(classifymessages, onworking)
+    const intent = answer.split(/\s+/)[0] ?? ''
+
+    if (intent !== 'none') {
+      await runagentprompt(
+        player,
+        agentid,
+        agentname,
+        messagetext,
+        onworking,
+        promptlogging,
+        intent,
+      )
+    }
+  })
 }
 
 async function queryboardstate(
@@ -241,6 +250,24 @@ const heavy = createdevice('heavy', [], (message) => {
           }
         }
         break
+      case 'disposeifidle': {
+        if (activeagents.size === 0) {
+          destroysharedmodel()
+        }
+        const requestid = (message.data as { requestid?: string })?.requestid
+        if (isstring(requestid)) {
+          self.postMessage(
+            createmessage(
+              message.session,
+              message.player,
+              'heavy',
+              'platform:heavy:disposeifidle',
+              { requestid },
+            ),
+          )
+        }
+        break
+      }
       case 'llmpreset':
         break
       case 'pilotnotify':

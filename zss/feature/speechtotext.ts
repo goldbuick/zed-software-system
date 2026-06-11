@@ -1,4 +1,5 @@
-import { sttensure, stttranscribe } from 'zss/feature/stt/sttclient'
+import { STT_IDLE_DISPOSE_MS } from 'zss/feature/gpu/gpupolicy'
+import { sttdispose, sttensure, stttranscribe } from 'zss/feature/stt/sttclient'
 import {
   getliveaudiocontext,
   unlockaudiocontext,
@@ -85,6 +86,7 @@ export class SpeechToText {
   private audiochecks = 0
   private maxpeak = 0
   private transcribing = false
+  private idledisposetimer: MAYBE<ReturnType<typeof setTimeout>>
 
   constructor(
     onfinalised: (value: string) => void,
@@ -98,6 +100,7 @@ export class SpeechToText {
 
   async startlistening() {
     try {
+      this.cancelidledispose()
       this.onworking('requesting microphone ...')
       this.mediastream = await navigator.mediaDevices.getUserMedia({
         video: false,
@@ -199,7 +202,23 @@ export class SpeechToText {
 
   stoplistening() {
     this.cleanup()
+    this.scheduleidledispose()
     this.onendevent()
+  }
+
+  private cancelidledispose() {
+    if (this.idledisposetimer) {
+      clearTimeout(this.idledisposetimer)
+      this.idledisposetimer = undefined
+    }
+  }
+
+  private scheduleidledispose() {
+    this.cancelidledispose()
+    this.idledisposetimer = setTimeout(() => {
+      this.idledisposetimer = undefined
+      void sttdispose()
+    }, STT_IDLE_DISPOSE_MS)
   }
 
   private async transcribeutterance(samples: Float32Array, samplerate: number) {
@@ -227,6 +246,7 @@ export class SpeechToText {
   }
 
   private cleanup() {
+    this.cancelidledispose()
     this.active = false
     this.inspeech = false
     this.utterance = []
