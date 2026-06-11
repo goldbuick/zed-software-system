@@ -7,7 +7,11 @@ import { isarray, ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import { memoryreadobject } from 'zss/memory/boardaccess'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
-import { memorywritecodepage } from 'zss/memory/bookoperations'
+import {
+  memoryimportbookfromjson,
+  memorywritecodepage,
+} from 'zss/memory/bookoperations'
+import { memoryimportcodepagefromjson } from 'zss/memory/codepageoperations'
 import { memoryreadflags } from 'zss/memory/flags'
 import { memoryloader } from 'zss/memory/loader'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
@@ -26,6 +30,15 @@ function playerisagent(playerid: string): boolean {
 function playerdisplayname(playerid: string): string {
   const s = maptostring(memoryreadflags(playerid).user)
   return s || playerid
+}
+
+function iscodepagejsonfile(eventname: string) {
+  return (
+    /file:.*\..*\.codepage\.json/.test(eventname) ||
+    /file:.*\.(board|object|terrain|charset|palette|loader)\.json/.test(
+      eventname,
+    )
+  )
 }
 
 function boardagentelements(board: BOARD, boardid: string): BOARD_ELEMENT[] {
@@ -189,10 +202,13 @@ export function handleloader(vm: DEVICE, message: MESSAGE): void {
         apilog(vm, message.player, `loading ${eventname}`)
         const json = JSON.parse(content.json)
         if (ispresent(json.data) && isstring(json.exported)) {
-          memorywritebook(json.data)
-          apilog(vm, message.player, `loaded ${json.exported}`)
+          const book = memoryimportbookfromjson(json.data)
+          if (ispresent(book)) {
+            memorywritebook(book)
+            apilog(vm, message.player, `loaded ${json.exported}`)
+          }
         }
-      } else if (/file:.*\..*\.codepage.json/.test(eventname)) {
+      } else if (iscodepagejsonfile(eventname)) {
         apilog(vm, message.player, `loading ${eventname}`)
         const json = JSON.parse(content.json)
         const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
@@ -201,8 +217,11 @@ export function handleloader(vm: DEVICE, message: MESSAGE): void {
           ispresent(json.data) &&
           isstring(json.exported)
         ) {
-          memorywritecodepage(mainbook, json.data)
-          apilog(vm, message.player, `loaded ${json.exported}`)
+          const codepage = memoryimportcodepagefromjson(json.data)
+          if (ispresent(codepage)) {
+            memorywritecodepage(mainbook, codepage)
+            apilog(vm, message.player, `loaded ${json.exported}`)
+          }
         }
       } else {
         memoryloader(arg, format, eventname, content, message.player)

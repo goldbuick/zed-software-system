@@ -58,6 +58,12 @@ jobs:
       - name: lang regression
         run: yarn lang-regression:test
 
+      - name: content book build and validate
+        run: |
+          yarn content:book:build content/templates/minimal
+          yarn content:book:validate content/dist/minimal.book.json
+          yarn content:book:test
+
   e2e:
     timeout-minutes: 30
     runs-on: ubuntu-latest

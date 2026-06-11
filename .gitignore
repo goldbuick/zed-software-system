@@ -26,6 +26,9 @@ oclif.manifest.json
 *.sln
 *.sw?
 
+# content build output
+content/dist
+
 # runtime data
 .zss-data
 

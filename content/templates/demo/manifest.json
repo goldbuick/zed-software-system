@@ -1,0 +1,9 @@
+{
+  "name": "demo",
+  "pages": [
+    "pages/player.object.json",
+    "pages/solid.terrain.json",
+    "pages/gem.object.json",
+    "pages/title.board.json"
+  ]
+}

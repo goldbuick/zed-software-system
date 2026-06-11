@@ -1,0 +1,3 @@
+{
+  "code": "@gem\n@isitem\n@char 4\n@color yellow\n:touch\n#ticker You found a gem!\n#die\n"
+}
