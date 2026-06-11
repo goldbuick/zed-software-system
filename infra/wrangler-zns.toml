@@ -7,7 +7,7 @@ compatibility_date = "2026-06-10"
 # Create new:    yarn wrangler kv namespace create zns
 [[kv_namespaces]]
 binding = "zns"
-id = "ZNS"
+id = "fa1fba6d812440ff9eaa775bccb75a45"
 
 [vars]
 ZNS_APEX = "zns.zed.cafe"
