@@ -125,18 +125,25 @@ export default defineConfig(({ mode }) => {
     'ZSS_BRANCH_VERSION',
     'ZSS_COMMIT_MESSAGE',
   ] as const
+  const zssenvfallback = (key: (typeof zssprocessenvkeys)[number]): string => {
+    if (
+      key === 'ZSS_DEBUG_TRACE_CODE' ||
+      key === 'ZSS_BRANCH_NAME' ||
+      key === 'ZSS_BRANCH_VERSION' ||
+      key === 'ZSS_COMMIT_MESSAGE'
+    ) {
+      return ''
+    }
+    if (key === 'ZSS_WASM_SCRIPT') {
+      return mode === 'production' ? 'false' : 'true'
+    }
+    return 'false'
+  }
   const zssdefine = Object.fromEntries(
     zssprocessenvkeys.map((key) => {
-      const fallback =
-        key === 'ZSS_DEBUG_TRACE_CODE' ||
-        key === 'ZSS_BRANCH_NAME' ||
-        key === 'ZSS_BRANCH_VERSION' ||
-        key === 'ZSS_COMMIT_MESSAGE'
-          ? ''
-          : 'false'
       return [
         `process.env.${key}`,
-        JSON.stringify(process.env[key] ?? fallback),
+        JSON.stringify(process.env[key] ?? zssenvfallback(key)),
       ] as const
     }),
   )
@@ -144,6 +151,9 @@ export default defineConfig(({ mode }) => {
   return {
     root,
     envPrefix: envprefix,
+    worker: {
+      format: 'es',
+    },
     build: {
       rollupOptions: {
         input: {

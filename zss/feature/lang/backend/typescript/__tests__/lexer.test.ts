@@ -16,7 +16,11 @@ jest.mock('zss/config', () => ({
   FORCE_TOUCH_UI: false,
 }))
 
-import { newline, tokenize } from 'zss/feature/lang/backend/typescript/lexer'
+import {
+  newline,
+  stringliteral,
+  tokenize,
+} from 'zss/feature/lang/backend/typescript/lexer'
 
 function trailnewlines(tokens: { tokenType: unknown }[]) {
   let n = 0
@@ -54,5 +58,15 @@ describe('lexer tokenize', () => {
     expect(again.errors.length).toBe(0)
     const texttok = again.tokens.find((t) => t.image.trim() === 'world')
     expect(texttok).toBeDefined()
+  })
+
+  it('keeps alphanumeric stat names as one stringliteral token', () => {
+    const result = tokenize('#clear key0\n')
+    expect(result.errors.length).toBe(0)
+    const names = result.tokens
+      .filter((tok) => tok.tokenType === stringliteral)
+      .map((tok) => tok.image)
+    expect(names).toContain('key0')
+    expect(names).not.toContain('key')
   })
 })

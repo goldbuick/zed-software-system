@@ -1,2 +1,2 @@
 /** Bumped by `yarn lang:build` — busts browser cache when wasm changes on same commit. */
-export const LANG_BUILD_ID = '1781191394'
+export const LANG_BUILD_ID = '1781203548'

@@ -556,6 +556,13 @@ private:
            !std::isspace(c);
   }
 
+  /** Tail of TS stringliteral: [^-"!:;@#/?()\s]* (digits allowed after first char). */
+  bool isstringtailchar(char c) {
+    return c != '"' && c != '!' && c != ':' && c != ';' && c != '@' &&
+           c != '#' && c != '/' && c != '?' && c != '(' && c != ')' &&
+           !std::isspace(c);
+  }
+
   bool matchstringdouble(size_t at) {
     if (at >= source_.size() || source_[at] != '"')
       return false;
@@ -577,8 +584,7 @@ private:
     if (at >= source_.size() || !isstringchar(source_[at]))
       return false;
     size_t i = at + 1;
-    while (i < source_.size() &&
-           (isstringchar(source_[i]) || source_[i] == '-'))
+    while (i < source_.size() && isstringtailchar(source_[i]))
       ++i;
     if (i == at + 1 && at + 1 <= source_.size()) {
       return consume(TokenKind::STRINGLITERAL, at, i);

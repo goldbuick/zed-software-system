@@ -25,14 +25,17 @@ jest.mock('zss/words/textformat', () => ({
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
-import { type CHIP, createchip } from 'zss/chip'
+import { createchip } from 'zss/chip'
 import { compile } from 'zss/feature/lang'
 import { readfixture } from 'zss/feature/lang/backend/wasm/langparityload'
 import {
   compilenativewasmfortest,
   runnativeparitygatefortest,
 } from 'zss/feature/lang/backend/wasm/testhelpers/nativewasmtestutil'
-import { loadscriptsync } from 'zss/feature/lang/wasmloader'
+import {
+  createwasmstubchip,
+  runwasmscriptfortest,
+} from 'zss/feature/lang/backend/wasm/testhelpers/wasmruntestutil'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
 import type { WORD } from 'zss/words/types'
 
@@ -225,23 +228,14 @@ describe('lang wasm behavioral parity', () => {
     const minimal = '#set light pick 5 7 11 12\n'
     const wasmbytes = compilenativewasmfortest(minimal)
     const invoked: WORD[][] = []
-    let ec = 1
-    const chip = {
-      sy: () => false,
-      getcase: () => ec,
-      nextcase: () => {
-        ec++
-      },
-      jump: (line: number) => {
-        ec = line
-      },
+    const chip = createwasmstubchip({
       command(...words: WORD[]) {
         invoked.push(words)
         return 0
       },
-    } as unknown as CHIP
+    })
 
-    loadscriptsync(wasmbytes, chip).run()
+    runwasmscriptfortest(wasmbytes, chip)
 
     expect(invoked).toEqual([['set', 'light', 'pick', 5, 7, 11, 12]])
   })
