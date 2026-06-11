@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test'
 
-import repro from './fixtures/host-memory-repro.json'
 import type { ZssE2eBridge } from '../zss/testsupport/e2escrollbridge'
 
+import repro from './fixtures/host-memory-repro.json'
 import {
   bootstraphostpage,
   bootstrapjoinpage,
@@ -21,10 +21,13 @@ test.describe('host memory repro from log', () => {
   test.describe.configure({ timeout: 300_000 })
 
   test('replay logged join charedit sequence', async ({ page: host }) => {
-    test.skip(!process.env.PLAYWRIGHT_HOST_MEMORY_REPRO, 'Set PLAYWRIGHT_HOST_MEMORY_REPRO=1')
+    test.skip(
+      !process.env.PLAYWRIGHT_HOST_MEMORY_REPRO,
+      'Set PLAYWRIGHT_HOST_MEMORY_REPRO=1',
+    )
 
     const datadir = makedatadir('zss-host-memory-repro-')
-    const topic = await bootstraphostpage(host, datadir, { hostmemtrace: true })
+    const topic = await bootstraphostpage(host, datadir)
 
     const join = await host.context().newPage()
     await bootstrapjoinpage(join, topic)
@@ -73,10 +76,15 @@ test.describe('host memory repro from log', () => {
     await expect
       .poll(
         async () =>
-          join.evaluate(({ chip }) => {
-            const snap = (window as WindowWithE2e).__zss_e2e!.getscrollsnapshot()
-            return snap.lines.some((line) => line.includes(chip))
-          }, { chip: batchchip }),
+          join.evaluate(
+            ({ chip }) => {
+              const snap = (
+                window as WindowWithE2e
+              ).__zss_e2e!.getscrollsnapshot()
+              return snap.lines.some((line) => line.includes(chip))
+            },
+            { chip: batchchip },
+          ),
         { timeout: 60_000 },
       )
       .toBe(true)
@@ -105,7 +113,9 @@ test.describe('host memory repro from log', () => {
 
     const hostdead = repro.steps.some((s) => s.kind === 'hostdead')
     if (hostdead) {
-      console.warn('Source log recorded host:sim:dead — replay expects corruption')
+      console.warn(
+        'Source log recorded host:sim:dead — replay expects corruption',
+      )
     }
   })
 })

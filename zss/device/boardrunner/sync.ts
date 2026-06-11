@@ -10,12 +10,6 @@ import {
 } from 'zss/memory/session'
 
 import {
-  ishostmemorytraceenabled,
-  tracehostmemory,
-} from 'zss/testsupport/hostmemorytrace'
-import type { Operation } from 'zss/feature/jsonpipe/observe'
-
-import {
   type BOUNDARY_DOC,
   assignedboundaries,
   memorysyncpipe,
@@ -26,41 +20,11 @@ export function waitformemory() {
   return memoryreadoperator() === ''
 }
 
-function tracepatchemit(
-  player: string,
-  operations: Operation[],
-  boundary?: string,
-): void {
-  if (!ishostmemorytraceenabled()) {
-    return
-  }
-  const paths = operations
-    .slice(0, 12)
-    .map((op) => String((op as { path?: string }).path ?? ''))
-  const isboundary = !!boundary
-  tracehostmemory(
-    isboundary ? 'join:boundary:emit' : 'join:memory:emit',
-    'H12',
-    player,
-    undefined,
-    {
-      opcount: operations.length,
-      boundary: boundary ?? '',
-      charops: paths.filter((p) => p.includes('/char')).length,
-      terrainops: paths.filter((p) => p.includes('/terrain/')).length,
-      samplepaths: paths,
-    },
-  )
-}
-
 export function pushworkerupdates(device: DEVICE) {
   const runner = memoryreadboardrunner()
 
   const memorypatch = memorysyncpipe.emitdiff(memoryreadroot())
   if (memorypatch.length > 0) {
-    // #region agent log
-    tracepatchemit(memoryreadoperator(), memorypatch, '')
-    // #endregion
     vmboardrunnerpatch(device, runner, memorypatch)
   }
 
@@ -76,9 +40,6 @@ export function pushworkerupdates(device: DEVICE) {
     if (ispresent(doc)) {
       const patch = pipe.emitdiff(doc)
       if (patch.length > 0) {
-        // #region agent log
-        tracepatchemit(memoryreadoperator(), patch, id)
-        // #endregion
         vmboardrunnerpatch(device, runner, patch, id)
       }
     }

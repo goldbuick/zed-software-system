@@ -62,7 +62,7 @@ function stripzstdsourcemaprefs(): Plugin {
       const filepath = id.split('?')[0]
       if (
         !filepath.includes('@bokuweb/zstd-wasm') ||
-        !/\.js$/.test(filepath) ||
+        !filepath.endsWith('.js') ||
         !path.isAbsolute(filepath)
       ) {
         return
@@ -169,9 +169,6 @@ export default defineConfig(({ mode }) => {
     define: {
       ...zssdefine,
       'import.meta.env.ZSS_E2E': JSON.stringify(process.env.ZSS_E2E ?? ''),
-      'import.meta.env.ZSS_HOST_MEM_TRACE': JSON.stringify(
-        process.env.ZSS_HOST_MEM_TRACE ?? '',
-      ),
       'import.meta.env.ZSS_DAISY_PERF': JSON.stringify(
         process.env.ZSS_DAISY_PERF ?? '',
       ),

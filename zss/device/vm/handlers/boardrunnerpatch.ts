@@ -15,7 +15,7 @@ export function handleboardrunnerpatch(vm: DEVICE, message: MESSAGE): void {
   }
   // we need to afford board runners to patch MAIN MEMORY
   const [patchwire, boundary] = message.data as [unknown, string | undefined]
-  const operations = decodepatchwire(patchwire) as Operation[]
+  const operations = decodepatchwire(patchwire)
   if (boundary) {
     if (!boardrunnerboundarypatch(boundary, operations)) {
       // bad patch, send a reset — boardrunnerpaint recovery deferred

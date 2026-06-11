@@ -12,13 +12,10 @@ import {
 type WindowWithE2e = Window & { __zss_e2e?: ZssE2eBridge }
 
 /**
- * Headed manual repro: boots host+join with host memory tracing, then pauses
- * Playwright so you can drive inspect → charedit → move in the join UI.
- *
- * Logs: .cursor/debug-9bae57.log
- * Rebuild steps: yarn host-memory:repro:build
+ * Headed manual repro: boots host+join, then pauses Playwright so you can
+ * drive inspect → charedit → move in the join UI.
  */
-test.describe('join charedit manual host memory trace', () => {
+test.describe('join charedit manual repro', () => {
   test.describe.configure({ timeout: 3_600_000 })
 
   test('pause for manual join charedit repro', async ({ page: host }) => {
@@ -28,25 +25,14 @@ test.describe('join charedit manual host memory trace', () => {
     )
 
     const datadir = makedatadir('zss-join-charedit-manual-')
-    const topic = await bootstraphostpage(host, datadir, { hostmemtrace: true })
-
-    await host.evaluate(() => {
-      ;(window as WindowWithE2e).__zss_e2e!.markhostmemorymilestone(
-        'manual:host-ready',
-        { url: location.href },
-      )
-    })
+    const topic = await bootstraphostpage(host, datadir)
 
     const join = await host.context().newPage()
-    await bootstrapjoinpage(join, topic, { hostmemtrace: true })
+    await bootstrapjoinpage(join, topic)
     await waitjoinboardrunnerrun(join)
 
     await join.evaluate(() => {
-      const e2e = (window as WindowWithE2e).__zss_e2e!
-      e2e.enableinspector(true)
-      e2e.markhostmemorymilestone('manual:join-ready', {
-        url: location.href,
-      })
+      ;(window as WindowWithE2e).__zss_e2e!.enableinspector(true)
     })
 
     await expect
@@ -58,15 +44,6 @@ test.describe('join charedit manual host memory trace', () => {
         { timeout: 30_000 },
       )
       .toBe(true)
-
-    await join.evaluate(() => {
-      ;(window as WindowWithE2e).__zss_e2e!.markhostmemorymilestone(
-        'manual:pause-before-repro',
-        {
-          hint: 'join tab: inspect rect → chars batch → charedit → move; host tab: watch terminal',
-        },
-      )
-    })
 
     await join.pause()
   })

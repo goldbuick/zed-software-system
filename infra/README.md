@@ -211,3 +211,61 @@ https://brick.zed.cafe/?brick=aHR0cHM6Ly9tdXNldW1vZnp6dC5jb20vYXBpL3YxL3NlYXJjaC
 ## Local tooling
 
 - Seed ZNS docs namespace: `ZNS_EMAIL=... ZNS_TOKEN=... node infra/seed-zns-docs.mjs` (writes `zss/rom/refscroll/*.md` to `docs.zns.zed.cafe` via `POST /api/set`).
+
+---
+
+## Cloudflare deploy (Wrangler)
+
+Wrangler is a dev dependency (`yarn wrangler`). Configs live in this folder:
+
+| Worker | Config |
+|--------|--------|
+| ZNS | `wrangler-zns.toml` |
+| Bytes | `wrangler-bytes.toml` |
+| Brick | `wrangler-brick.toml` |
+
+### One-time setup
+
+1. Log in (opens browser):
+
+   ```bash
+   yarn wrangler login
+   ```
+
+2. List KV namespaces and copy the `id` for each worker binding (`zns`, `kv`):
+
+   ```bash
+   yarn wrangler kv namespace list
+   ```
+
+   If a namespace does not exist yet:
+
+   ```bash
+   yarn wrangler kv namespace create zns
+   yarn wrangler kv namespace create kv
+   ```
+
+3. Paste each KV `id` into the matching `wrangler-*.toml` (replace `PASTE_KV_NAMESPACE_ID`).
+
+4. Set the ZNS email secret (Resend API key):
+
+   ```bash
+   cd infra
+   yarn wrangler secret put RESEND_API_KEY -c wrangler-zns.toml
+   ```
+
+### Deploy
+
+From repo root:
+
+```bash
+yarn deploy:cloudflare:zns
+yarn deploy:cloudflare:bytes
+yarn deploy:cloudflare:brick
+```
+
+Or from `infra/`:
+
+```bash
+yarn wrangler deploy -c wrangler-zns.toml
+```

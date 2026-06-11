@@ -37,6 +37,9 @@
     "daisy:lint": "sh scripts/clang-format.sh check daisy",
     "daisy:lint:fix": "sh scripts/clang-format.sh fix daisy",
     "deploy:aws-ec2:docker-run": "sh scripts/aws-ec2-docker-run.sh",
+    "deploy:cloudflare:brick": "wrangler deploy -c infra/wrangler-brick.toml",
+    "deploy:cloudflare:bytes": "wrangler deploy -c infra/wrangler-bytes.toml",
+    "deploy:cloudflare:zns": "wrangler deploy -c infra/wrangler-zns.toml",
     "deploy:docker:build": "yarn cli:build:linux && docker build --no-cache -t zss:local .",
     "deploy:docker:run": "sh scripts/docker-run.sh",
     "deploy:docker:shell": "yarn deploy:docker:build && docker run --rm -it --init zss:local ./start.sh",
@@ -219,6 +222,7 @@
     "vite-plugin-mkcert": "^1.17.8",
     "vite-plugin-node-polyfills": "^0.24.0",
     "wavefunctioncollapse": "^2.1.0",
+    "wrangler": "^4.99.0",
     "y-protocols": "^1.0.7",
     "yjs": "^13.6.29",
     "zustand": "^5.0.1"

@@ -70,8 +70,8 @@ jest.mock('zss/mapping/guid', () => ({
 
 import type { DEVICE } from 'zss/device'
 import { gadgetclientpatch } from 'zss/device/api'
-import { gadgetstate } from 'zss/gadget/data/api'
 import { gadgetsynctick } from 'zss/device/vm/gadgetsynctick'
+import { gadgetstate } from 'zss/gadget/data/api'
 import { memoryreadbookgadgetlayersforboard } from 'zss/memory/gadgetlayersflags'
 import {
   memoryreadplayeractive,

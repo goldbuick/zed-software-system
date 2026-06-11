@@ -2,15 +2,14 @@ import type { Operation } from 'fast-json-patch'
 import {
   decodepatchwire,
   encodepatchwire,
-  ispathref,
   ispatchwirev2,
+  ispathref,
   readpathref,
   verbosepatchsizebytes,
   wirepatchsizebytes,
 } from 'zss/feature/jsonpipe/wire'
 
-const TERRAIN_PREFIX =
-  '/books/main/pages/0/boards/board1/board/terrain/'
+const TERRAIN_PREFIX = '/books/main/pages/0/boards/board1/board/terrain/'
 
 function maketerrainops(count: number, value = 177): Operation[] {
   const ops: Operation[] = []

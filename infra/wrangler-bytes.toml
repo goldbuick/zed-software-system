@@ -1,0 +1,14 @@
+name = "net-bytes"
+main = "net-bytes-worker.js"
+compatibility_date = "2026-06-10"
+
+# KV binding used as env.kv in net-bytes-worker.js
+# List existing: yarn wrangler kv namespace list
+# Create new:    yarn wrangler kv namespace create kv
+[[kv_namespaces]]
+binding = "kv"
+id = "PASTE_KV_NAMESPACE_ID"
+
+[[routes]]
+pattern = "bytes.zed.cafe/*"
+zone_name = "zed.cafe"

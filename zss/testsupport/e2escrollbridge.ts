@@ -18,13 +18,6 @@ import { panelscrolltolines } from 'zss/gadget/data/panelitemtext'
 import { useGadgetClient, useTape, useTerminal } from 'zss/gadget/data/state'
 import { INPUT, LAYER_TYPE, paneladdress } from 'zss/gadget/data/types'
 import { ptstoarea } from 'zss/mapping/2d'
-import type { HOST_MEMORY_TRACE_EVENT } from 'zss/testsupport/hostmemorytrace'
-import {
-  readhostmemorytrace,
-  sethostmemtraceenabled,
-  tracehostmemorymilestone,
-} from 'zss/testsupport/hostmemorytrace'
-
 export type ZssE2eMoveDir = 'left' | 'right' | 'up' | 'down'
 
 const MOVE_INPUT: Record<ZssE2eMoveDir, INPUT> = {
@@ -80,12 +73,6 @@ export type ZssE2eBridge = {
   batchchipforrect: (p1: PT, p2: PT) => string
   /** Sim boot done and gadget snapshot readable. */
   hostsimalive: () => boolean
-  /** Enable host memory trace in this tab (must be set before sim worker boots). */
-  enablehostmemorytrace: () => void
-  /** In-memory trace buffer (sim worker only; empty on join UI main thread). */
-  gethostmemorytrace: () => HOST_MEMORY_TRACE_EVENT[]
-  /** Mark a manual repro step (logged to debug ingest). */
-  markhostmemorymilestone: (name: string, data?: Record<string, unknown>) => void
   runlangcompilebench: (opts?: {
     iterations?: number
     warmup?: number
@@ -236,40 +223,9 @@ export function installe2ebridge(): void {
           }
         }
         return false
-      } catch (err) {
-        // #region agent log
-        fetch(
-          'http://127.0.0.1:7474/ingest/f2bfd0d8-5208-447d-9aef-a3f39f2dbf4e',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Debug-Session-Id': '9bae57',
-            },
-            body: JSON.stringify({
-              sessionId: '9bae57',
-              location: 'zss/testsupport/e2escrollbridge.ts:hostsimalive',
-              message: 'host:sim:dead',
-              hypothesisId: 'H5',
-              data: {
-                err: err instanceof Error ? err.message : String(err),
-              },
-              timestamp: Date.now(),
-            }),
-          },
-        ).catch(() => {})
-        // #endregion
+      } catch {
         return false
       }
-    },
-    enablehostmemorytrace() {
-      sethostmemtraceenabled(true)
-    },
-    gethostmemorytrace() {
-      return readhostmemorytrace()
-    },
-    markhostmemorymilestone(name: string, data?: Record<string, unknown>) {
-      tracehostmemorymilestone(name, data)
     },
     runlangcompilebench(opts) {
       return runlangcompilebench(opts)

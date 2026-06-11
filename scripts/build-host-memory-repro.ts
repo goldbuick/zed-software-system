@@ -28,7 +28,14 @@ type ReproStep =
   | { kind: 'milestone'; name: string; ts: number }
   | { kind: 'inspect'; p1: Rect; p2: Rect; ts: number }
   | { kind: 'batchchars'; p1: Rect; p2: Rect; fingerprint?: string; ts: number }
-  | { kind: 'charedit'; field: string; value: number; before?: string; after?: string; ts: number }
+  | {
+      kind: 'charedit'
+      field: string
+      value: number
+      before?: string
+      after?: string
+      ts: number
+    }
   | { kind: 'memorypatch'; ok: boolean; opcount: number; ts: number }
   | { kind: 'hostdead'; err: string; ts: number }
 
@@ -76,7 +83,9 @@ function buildsteps(rows: LogRow[]): ReproStep[] {
     if (msg === 'batch:chars') {
       const p1 = readpt(data.p1)
       const p2 = readpt(data.p2)
-      const snap = data.snapshot as { rect?: { fingerprint?: string } } | undefined
+      const snap = data.snapshot as
+        | { rect?: { fingerprint?: string } }
+        | undefined
       if (p1 && p2) {
         steps.push({
           kind: 'batchchars',
@@ -92,7 +101,9 @@ function buildsteps(rows: LogRow[]): ReproStep[] {
     if (msg === 'charedit:setvalue') {
       const field = String(data.name ?? data.field ?? 'char')
       const value = Number(data.value ?? 0)
-      const snap = data.snapshot as { rect?: { fingerprint?: string } } | undefined
+      const snap = data.snapshot as
+        | { rect?: { fingerprint?: string } }
+        | undefined
       steps.push({
         kind: 'charedit',
         field,
@@ -106,7 +117,9 @@ function buildsteps(rows: LogRow[]): ReproStep[] {
     if (msg === 'charedit:setvalue:after') {
       const field = String(data.field ?? 'char')
       const value = Number(data.value ?? 0)
-      const snap = data.snapshot as { rect?: { fingerprint?: string } } | undefined
+      const snap = data.snapshot as
+        | { rect?: { fingerprint?: string } }
+        | undefined
       steps.push({
         kind: 'charedit',
         field,
@@ -138,7 +151,9 @@ function buildsteps(rows: LogRow[]): ReproStep[] {
   return steps
 }
 
-function pickinspectrect(steps: ReproStep[]): { p1: Rect; p2: Rect } | undefined {
+function pickinspectrect(
+  steps: ReproStep[],
+): { p1: Rect; p2: Rect } | undefined {
   for (const step of steps) {
     if (step.kind === 'batchchars') {
       return { p1: step.p1, p2: step.p2 }
@@ -189,7 +204,7 @@ test.describe('host memory repro from log', () => {
     test.skip(!process.env.PLAYWRIGHT_HOST_MEMORY_REPRO, 'Set PLAYWRIGHT_HOST_MEMORY_REPRO=1')
 
     const datadir = makedatadir('zss-host-memory-repro-')
-    const topic = await bootstraphostpage(host, datadir, { hostmemtrace: true })
+    const topic = await bootstraphostpage(host, datadir)
 
     const join = await host.context().newPage()
     await bootstrapjoinpage(join, topic)
@@ -289,7 +304,11 @@ function main(): void {
     process.exit(1)
   }
 
-  const lines = fs.readFileSync(logpath, 'utf8').trim().split('\n').filter(Boolean)
+  const lines = fs
+    .readFileSync(logpath, 'utf8')
+    .trim()
+    .split('\n')
+    .filter(Boolean)
   const rows: LogRow[] = []
   for (const line of lines) {
     try {
