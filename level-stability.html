@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>level stability</title>
+  </head>
+  <body>
+    <pre id="out">rendering…</pre>
+    <script type="module">
+      import { runlevelstabilitysuite } from '/zss/feature/synth/backend/daisy/daisylevelrender.ts'
+      import {
+        LEVEL_STABILITY_COMPARE_PAIRS,
+        filterlevelstabilityscenarios,
+      } from '/zss/feature/synth/backend/daisy/levelstabilityscenarios.ts'
+
+      const outel = document.getElementById('out')
+
+      try {
+        const params = new URLSearchParams(window.location.search)
+        const scenarioid = params.get('scenario') ?? 'all'
+        const windowms = Number(params.get('windowms') || '46')
+
+        const scenarios = filterlevelstabilityscenarios(scenarioid)
+        if (scenarios.length === 0) {
+          throw new Error(`unknown scenario ${scenarioid}`)
+        }
+        if (scenarios.length > 1) {
+          throw new Error('render one scenario per page load')
+        }
+        const scenario = scenarios[0]
+
+        outel.textContent = `rendering ${scenario.id}…`
+        const result = await runlevelstabilitysuite(
+          [scenario],
+          LEVEL_STABILITY_COMPARE_PAIRS,
+          windowms,
+        )
+        outel.textContent = JSON.stringify({
+          metrics: result.metrics,
+        })
+      } catch (err) {
+        outel.textContent = `error: ${err?.message ?? err}`
+        throw err
+      }
+    </script>
+  </body>
+</html>

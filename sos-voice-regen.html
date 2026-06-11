@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>sos voice regen</title>
+  </head>
+  <body>
+    <pre id="out">rendering…</pre>
+    <script type="module">
+      import { SOS_VOICE_PATCHES } from '/zss/feature/synth/backend/daisy/sosvoicepatches.ts'
+      import { rendersosvoicepatch } from '/zss/feature/synth/backend/daisy/sosvoicerender.ts'
+
+      const outel = document.getElementById('out')
+      try {
+        const params = new URLSearchParams(window.location.search)
+        const patchid = params.get('patch')
+        const out = {}
+
+        if (patchid) {
+          const patch = SOS_VOICE_PATCHES.find((item) => item.id === patchid)
+          if (!patch) {
+            throw new Error(`unknown sos patch ${patchid}`)
+          }
+          out[patchid] = await rendersosvoicepatch(patch)
+        } else {
+          for (const patch of SOS_VOICE_PATCHES) {
+            out[patch.id] = await rendersosvoicepatch(patch)
+          }
+        }
+        outel.textContent = JSON.stringify(out)
+      } catch (err) {
+        outel.textContent = `error: ${err?.message ?? err}`
+        throw err
+      }
+    </script>
+  </body>
+</html>
