@@ -1,5 +1,7 @@
 import { Message } from '@huggingface/transformers'
-import { createdevice } from 'zss/device'
+import { createdevice, createmessage } from 'zss/device'
+import { SOFTWARE } from 'zss/device/session'
+import { withworkergpulock } from 'zss/feature/gpu/gpuworkerbridge'
 import {
   heavyrunagentlist,
   heavyrunagentname,
@@ -22,13 +24,12 @@ import {
   modelclassify,
   modelgenerategemma4,
 } from 'zss/feature/heavy/model'
-import { requestaudiobytes, requestinfo } from 'zss/feature/heavy/tts'
 import {
   query as memoryquery,
   resolvemessage as memoryqueryresolvemessage,
 } from 'zss/feature/heavy/vmquery'
 import { resolvestoragepullmessage } from 'zss/feature/storagepull'
-import { isarray, ispresent, isstring } from 'zss/mapping/types'
+import { isarray, isstring } from 'zss/mapping/types'
 import { perfmeasure } from 'zss/perf/ui'
 
 import { apierror, apilog, vmlastinputtouch, workstatus } from './api'
@@ -132,20 +133,27 @@ async function classifythenmaybeagentprompt(
     },
   ]
 
-  const answer = await modelclassify(classifymessages, onworking)
-  const intent = answer.split(/\s+/)[0] ?? ''
-
-  if (intent !== 'none') {
-    await runagentprompt(
-      player,
-      agentid,
-      agentname,
-      messagetext,
-      onworking,
-      promptlogging,
-      intent,
-    )
+  const session = SOFTWARE.session()
+  if (!session) {
+    return
   }
+
+  await withworkergpulock('heavy', session, async () => {
+    const answer = await modelclassify(classifymessages, onworking)
+    const intent = answer.split(/\s+/)[0] ?? ''
+
+    if (intent !== 'none') {
+      await runagentprompt(
+        player,
+        agentid,
+        agentname,
+        messagetext,
+        onworking,
+        promptlogging,
+        intent,
+      )
+    }
+  })
 }
 
 async function queryboardstate(
@@ -207,43 +215,6 @@ const heavy = createdevice('heavy', [], (message) => {
   }
   perfmeasure(`heavy:${message.target}`, () => {
     switch (message.target) {
-      case 'ttsinfo':
-        enqueueheavyjob(heavy, message.player, async () => {
-          if (isarray(message.data)) {
-            const [engine, info] = message.data as [
-              engine: 'piper' | 'supertonic',
-              info: string,
-            ]
-            const data = await requestinfo(heavy, message.player, engine, info)
-            heavy.reply(message, 'heavy:ttsinfo', ispresent(data) ? data : [])
-          }
-        })
-        break
-      case 'ttsrequest':
-        enqueueheavyjob(heavy, message.player, async () => {
-          if (isarray(message.data)) {
-            const [engine, config, voice, phrase] = message.data as [
-              engine: 'piper' | 'supertonic',
-              config: string,
-              voice: string,
-              phrase: string,
-            ]
-            const audiobytes = await requestaudiobytes(
-              heavy,
-              message.player,
-              engine,
-              config,
-              voice,
-              phrase,
-            )
-            heavy.reply(
-              message,
-              'heavy:ttsrequest',
-              ispresent(audiobytes) ? audiobytes : undefined,
-            )
-          }
-        })
-        break
       case 'modelprompt':
         enqueueheavyjob(heavy, message.player, async () => {
           if (!isarray(message.data) || message.data.length < 7) {
@@ -279,6 +250,24 @@ const heavy = createdevice('heavy', [], (message) => {
           }
         }
         break
+      case 'disposeifidle': {
+        if (activeagents.size === 0) {
+          destroysharedmodel()
+        }
+        const requestid = (message.data as { requestid?: string })?.requestid
+        if (isstring(requestid)) {
+          self.postMessage(
+            createmessage(
+              message.session,
+              message.player,
+              'heavy',
+              'platform:heavy:disposeifidle',
+              { requestid },
+            ),
+          )
+        }
+        break
+      }
       case 'llmpreset':
         break
       case 'pilotnotify':

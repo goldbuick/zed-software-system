@@ -1,5 +1,6 @@
 import { workstatus } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { clearqueryparams } from 'zss/feature/deeplink'
 import {
   storagereadznssession,
   storagewriteznsclear,
@@ -134,16 +135,124 @@ export async function museumofzztdownload(
 // zns api (https://zns.zed.cafe)
 
 export const ZNS_APEX = 'zns.zed.cafe'
+export const ZNS_TENANT_SUFFIX = 'at.zed.cafe'
 export const ZNS_DOCS_NAMESPACE = 'docs'
 export const ZNS_PEER_KEY = 'peer'
+export const ZNS_BYTES_KEY_TARGET = 'znsbyteskey'
+export const ZNS_LOGIN_CODE_PARAM = 'zns-code'
+export const ZNS_LOGIN_EMAIL_PARAM = 'zns-email'
+export const ZNS_LOGIN_NAMESPACE_PARAM = 'zns-namespace'
+
+const ZNS_LOGIN_CODE_RE = /^[1-9]{6}$/
+const ZNS_LOGIN_NAMESPACE_RE = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/
+
+export type ZNS_LOGIN_URL_PARAMS = {
+  code: string
+  email?: string
+  namespace?: string
+}
+
+function readznsloginsearchparams(): URLSearchParams | undefined {
+  try {
+    return new URLSearchParams(location.search)
+  } catch {
+    return undefined
+  }
+}
+
+export function readznsloginparamsfromurl(): ZNS_LOGIN_URL_PARAMS | undefined {
+  const search = readznsloginsearchparams()
+  if (!search) {
+    return undefined
+  }
+  const code = search.get(ZNS_LOGIN_CODE_PARAM)?.trim()
+  if (!code || !ZNS_LOGIN_CODE_RE.test(code)) {
+    return undefined
+  }
+  const emailraw = search.get(ZNS_LOGIN_EMAIL_PARAM)?.trim().toLowerCase()
+  const namespaceraw = znsnormalizenamespace(
+    search.get(ZNS_LOGIN_NAMESPACE_PARAM) ?? '',
+  )
+  const params: ZNS_LOGIN_URL_PARAMS = { code }
+  if (emailraw?.includes('@')) {
+    params.email = emailraw
+  }
+  if (namespaceraw && ZNS_LOGIN_NAMESPACE_RE.test(namespaceraw)) {
+    params.namespace = namespaceraw
+  }
+  return params
+}
+
+export function readznslogincodefromurl(): string | undefined {
+  return readznsloginparamsfromurl()?.code
+}
+
+export function clearznsloginparamsfromurl(): void {
+  clearqueryparams([
+    ZNS_LOGIN_CODE_PARAM,
+    ZNS_LOGIN_EMAIL_PARAM,
+    ZNS_LOGIN_NAMESPACE_PARAM,
+  ])
+}
+
+export function clearznslogincodefromurl(): void {
+  clearznsloginparamsfromurl()
+}
+
+export function znskeyispeer(key: string, kind?: string) {
+  return key === ZNS_PEER_KEY || kind === 'peer'
+}
+
+export function znskinddisplay(kind?: string, key?: string) {
+  if (znskeyispeer(key ?? '', kind)) {
+    return 'peer'
+  }
+  if (kind === 'bytes') {
+    return 'bytes'
+  }
+  if (kind === 'text') {
+    return 'code'
+  }
+  return 'bytes'
+}
+
+export function znskeyopenlabel(key: string, value: string, kind?: string) {
+  const display = znskinddisplay(kind, key)
+  if (display === 'bytes') {
+    const short = value.length > 12 ? `${value.slice(0, 8)}…` : value
+    return `$blue[bytes] $white${key} $GRAY— ${short}`
+  }
+  if (display === 'code') {
+    return `$blue[code] $white${key} $GRAY— import`
+  }
+  return `$white${key}`
+}
+
+export function znskeylinkcommand(
+  namespace: string,
+  key: string,
+  value: string,
+  kind?: string,
+) {
+  if (znskinddisplay(kind, key) === 'code') {
+    return `zns import code ${key}`
+  }
+  const url = znsurlforlistrow(namespace, key, value, kind)
+  return `openit ${url}`
+}
 
 const PEER_ID_RE = /^[a-zA-Z0-9_-]{4,256}$/
 const ZNS_PATH_KEY_RE = /^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?$/
 
 let lastpublishedpeerid = ''
 
+export function znsnormalizenamespace(namespace: string) {
+  return (namespace ?? '').toString().trim().toLowerCase()
+}
+
 export function znstenanturl(namespace: string, key: string) {
-  return `https://${namespace}.${ZNS_APEX}/${key}`
+  const ns = znsnormalizenamespace(namespace)
+  return `https://${ns}.${ZNS_TENANT_SUFFIX}/${key}`
 }
 
 export function znsnormalizepathkey(name: string): string | undefined {
@@ -220,7 +329,7 @@ export async function znspersistlogin(
   token?: string,
 ) {
   await storagewriteznsemail(email)
-  await storagewriteznsnamespace(namespace)
+  await storagewriteznsnamespace(znsnormalizenamespace(namespace))
   if (token) {
     await storagewritznstoken(token)
   }
@@ -234,7 +343,7 @@ export async function znspersistlogout() {
 export async function znslogin(email: string, namespace: string) {
   const formdata = new FormData()
   formdata.append('email', email)
-  formdata.append('namespace', namespace)
+  formdata.append('namespace', znsnormalizenamespace(namespace))
   const request = new Request(`https://${ZNS_APEX}/api/login`, {
     method: 'POST',
     body: formdata,

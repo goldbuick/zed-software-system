@@ -248,7 +248,7 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
 
   function peerserveroptions() {
     return {
-      debug: 2,
+      debug: import.meta.env.DEV ? 2 : 0,
       host: 'terminal.zed.cafe',
       secure: true,
       port: 443,

@@ -213,8 +213,18 @@ Functions for interacting with external services (Bytes, Bridge, ZNS).
 - `znslogin(email, namespace)` - Start ZNS email OTP login
 - `znslogincode(email, code)` - Confirm OTP; response includes `token`
 - `znslist(email, token)` - List namespace key/value pairs
-- `znsset(email, token, key, value)` - Set pair (peer id at key `peer`, else bytes hash)
+- `znsset(email, token, key, value)` - Set pair (peer id at key `peer`, bytes hash, or text)
 - `znsdelete(email, token, key)` - Delete a pair key
+- `fetchznstext(namespace, key)` - GET `https://{namespace}.at.zed.cafe/{key}` markdown
+- `znstenanturl(namespace, key)` - Canonical tenant URL (lowercase host)
+- `znsnormalizenamespace(namespace)` - Trim + lowercase namespace label
+- `znsnormalizepathkey(name)` - Slug for ZNS path keys
+- `znskeyispeer(key, kind?)` - True for reserved peer key
+- `znskinddisplay(kind?, key?)` - Worker kind to menu label (`text` → `code`)
+- `znskeyopenlabel(key, value, kind?)` - `#zns` menu key row label
+- `znskeylinkcommand(namespace, key, value, kind?)` - Menu hyperlink payload
+- `znsautopublishpeer(peerid, player)` - Publish peer id on multiplayer connect
+- `znspersistlogin` / `znspersistlogout` - IDB ZNS session
 
 ---
 
@@ -276,13 +286,13 @@ Various utility functions for browser APIs and external services.
 - `withclipboard()` - Get browser Clipboard API instance
 
 ### Speech Recognition
-- `SpeechToText` - Class for browser speech recognition with callbacks for final text, interim results, and end events
+- `SpeechToText` - Class for browser speech recognition (sttspace worker); final text after speech pause, optional status toasts
   - `startListening()` - Start speech recognition
   - `stopListening()` - Stop speech recognition
 
 ### Refscroll / ZNS docs
-- `fetchrefscrolltext(pagepath)` - ROM `refscroll:*` then `docs.zns.zed.cafe` text
-- `fetchznstext(namespace, key)` - Public ZNS markdown GET
+- `fetchrefscrolltext(pagepath)` - ROM `refscroll:*` then `docs.at.zed.cafe` text
+- `fetchznstext(namespace, key)` - Public ZNS markdown GET (`{namespace}.at.zed.cafe`)
 
 ### Storage
 - `storagereadconfigdefault(name)` - Read default configuration value for a setting

@@ -260,16 +260,16 @@ export function vmgadgetdesync(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:gadgetdesync')
 }
 
-export function heavyttsinfo(
+export function ttsinfo(
   device: DEVICELIKE,
   player: string,
   engine: 'piper' | 'supertonic',
   info: string,
 ) {
-  device.emit(player, 'heavy:ttsinfo', [engine, info])
+  device.emit(player, 'tts:info', [engine, info])
 }
 
-export function heavyttsrequest(
+export function ttsrequest(
   device: DEVICELIKE,
   player: string,
   engine: 'piper' | 'supertonic',
@@ -277,7 +277,7 @@ export function heavyttsrequest(
   voice: string | number,
   phrase: string,
 ) {
-  device.emit(player, 'heavy:ttsrequest', [engine, config, voice, phrase])
+  device.emit(player, 'tts:request', [engine, config, voice, phrase])
 }
 
 type MODEL_PROMPT_ARGS = {

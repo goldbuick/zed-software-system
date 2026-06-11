@@ -255,9 +255,8 @@ export async function runApp(flags: RunAppFlags): Promise<void> {
     return playerId
   })
 
-  const { readcoolregionsbowbooks } = await import(
-    '../../zss/testsupport/coolregionsbowbook.js'
-  )
+  const { readcoolregionsbowbooks } =
+    await import('../../zss/testsupport/coolregionsbowbook.js')
   const stubBookData = readcoolregionsbowbooks()
 
   await page.exposeFunction('__nodeStorageReadContent', (player: string) => {

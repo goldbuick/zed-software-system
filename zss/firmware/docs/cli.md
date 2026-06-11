@@ -88,7 +88,7 @@ Firmware command signatures stay short. Longer inline help for autocomplete hint
 
 | Command | Args | Description |
 |---------|------|-------------|
-| `zns` | … | Login: `#zns <email> <namespace>`, then `#zns <code>`. Subcommands: `restart`, `list`, `publish bytes <key>`, `publish code <codepage>`, `del`/`delete`. Peer id auto-published to key `peer`. |
+| `zns` | … | Bare `#zns` → menu (login guide, or publish/import when logged in). Login: `#zns <email> <namespace>`, then `#zns <code>`. Subcommands: `login`, `restart`, `publish bytes\|book\|code`, `import code <key>`, `del`/`delete`. Peer auto-published on multiplayer connect. |
 
 ### Agent
 

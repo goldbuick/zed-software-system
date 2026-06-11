@@ -264,7 +264,7 @@ Display commands `toast` and `ticker` are registered on **ELEMENT_FIRMWARE** in 
 #### ZNS (namespace string sharing)
 | Command | Description |
 |---------|-------------|
-| `zns` | ZNS operations (login, list, publish, delete, restart) |
+| `zns` | ZNS menu — login, publish bytes/code, import code, delete, restart |
 
 ---
 

@@ -67,6 +67,7 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
       const route = parsetarget(message.target)
       switch (route.target) {
         case 'heavy':
+        case 'tts':
         case 'synth':
         case 'modem':
         case 'bridge':
@@ -167,5 +168,49 @@ export function shouldforwardclienttoboardrunner(message: MESSAGE): boolean {
 
 // create boardrunner -> client forward
 export function shouldforwardboardrunnertoclient(): boolean {
+  return true
+}
+
+// stt worker messages
+
+// create client -> stt forward
+export function shouldforwardclienttostt(message: MESSAGE): boolean {
+  switch (message.target) {
+    case 'ticktock':
+      return false
+    case 'second':
+    case 'ready':
+      return true
+    default: {
+      const route = parsetarget(message.target)
+      return route.target === 'stt'
+    }
+  }
+}
+
+// create stt -> client forward
+export function shouldforwardstttoclient(): boolean {
+  return true
+}
+
+// tts worker messages
+
+// create client -> tts forward
+export function shouldforwardclienttotts(message: MESSAGE): boolean {
+  switch (message.target) {
+    case 'ticktock':
+      return false
+    case 'second':
+    case 'ready':
+      return true
+    default: {
+      const route = parsetarget(message.target)
+      return route.target === 'tts'
+    }
+  }
+}
+
+// create tts -> client forward
+export function shouldforwardttstoclient(): boolean {
   return true
 }

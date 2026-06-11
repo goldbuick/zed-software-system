@@ -32,10 +32,10 @@ import {
   parityids,
   readcorpus,
 } from 'zss/feature/lang/backend/wasm/corpus'
-import { readcoolregionsbowbookexport } from 'zss/testsupport/coolregionsbowbook'
 import { compilecppfromdisk } from 'zss/feature/lang/backend/wasm/langparityload'
 import { compilenativewasmfortest } from 'zss/feature/lang/backend/wasm/testhelpers/nativewasmtestutil'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
+import { readcoolregionsbowbookexport } from 'zss/testsupport/coolregionsbowbook'
 
 function labelsfromjson(labelsjson: string) {
   if (!labelsjson.trim()) {

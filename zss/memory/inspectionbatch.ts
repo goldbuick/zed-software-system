@@ -10,8 +10,6 @@ import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
 import { CATEGORY, COLOR, PT } from 'zss/words/types'
 
-import { tracehostbatchchars } from 'zss/testsupport/hostmemorytrace'
-
 import { memoryreadelement, memoryreadterrain } from './boardaccess'
 import {
   memorycreateboardobject,
@@ -198,9 +196,6 @@ export async function memoryinspectbatchcommand(path: string, player: string) {
       memoryinspectempty(player, p1, p2, batch.target)
       break
     case 'chars':
-      // #region agent log
-      tracehostbatchchars(player, p1, p2, 'memoryinspectbatchcommand')
-      // #endregion
       memoryinspectchararea(player, p1, p2, 'char')
       break
     case 'colors':

@@ -13,7 +13,7 @@ Do not change multiplayer, boundary sync, gadget projection, or host/join memory
    - manual steps (host + join tabs, actions, timing), or
    - an automated spec / fixture (`e2e/*.spec.ts`, `e2e/fixtures/*`), or
    - a scripted repro (`yarn host-memory:repro:build` or equivalent).
-2. **Log-pinned diagnosis** — enable trace (`ZSS_HOST_MEM_TRACE=true` in `cafe/.env.local`; see `zss/testsupport/hostmemorytrace.ts`) and identify **which memory is wrong**:
+2. **Log-pinned diagnosis** — capture runtime evidence and identify **which memory is wrong**:
    - **host sim** — `memoryboundaryget`, board terrain in main worker
    - **join boardrunner worker** — worker-local boundary / board state
    - **main-thread gadget** — `gadgetclient` / zustand projection from paint/patch

@@ -1,13 +1,7 @@
-jest.mock('zss/testsupport/hostmemorytrace', () => ({
-  ishostmemorytraceenabled: jest.fn(() => false),
-  tracehostmemory: jest.fn(),
-  tracehostmemorypatch: jest.fn(),
-}))
-
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
-import { encodepatchwire } from 'zss/feature/jsonpipe/wire'
 import { handleboardrunnerpatch } from 'zss/device/vm/handlers/boardrunnerpatch'
+import { encodepatchwire } from 'zss/feature/jsonpipe/wire'
 import {
   memoryboundariesclear,
   memoryboundaryalloc,

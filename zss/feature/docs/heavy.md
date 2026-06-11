@@ -1,6 +1,6 @@
 # heavy/
 
-**Purpose**: Heavy processing workloads — TTS engines (Piper, Supertonic), Gemma 4 E2B agent LLM via Transformers.js (WebGPU), and board agents. Runs in a dedicated worker; models load on demand.
+**Purpose**: Heavy processing workloads — Gemma 4 E2B agent LLM via Transformers.js (WebGPU) and board agents. Runs in **heavyspace**; models load on demand. Piper/Supertonic TTS inference moved to on-demand **ttsspace** ([`ttsworker.ts`](../../device/ttsworker.ts)); [`heavy/tts.ts`](tts.ts) remains the shared inference library.
 
 ## Agent LLM
 
@@ -48,6 +48,7 @@ Function-calling reference: [Google Gemma 4 function calling](https://ai.google.
 
 ## Consumed By
 
-- `zss/device/heavy.ts` — Model caller, TTS, agent prompts
+- `zss/device/heavy.ts` — Model caller, agent prompts
+- `zss/device/ttsworker.ts` — Piper/Supertonic inference (`requestinfo`, `requestaudiobytes`)
 - `zss/device/register.ts` — Legacy preset storage migration on login
 - `zss/firmware/cli/commands/agent.ts` — `#agent`

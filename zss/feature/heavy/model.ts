@@ -7,6 +7,7 @@ import {
   ProgressInfo,
   TextStreamer,
 } from '@huggingface/transformers'
+import { prepareforheavyload } from 'zss/feature/gpu/gpuheavyload'
 import {
   HEAVY_LLM_PRESETS,
   type HEAVY_LLM_ROW,
@@ -178,6 +179,8 @@ async function loadclassifiermodel(
   }
 
   classifiermodelpromise = (async () => {
+    await prepareforheavyload()
+
     const lastprogress: Record<string, number> = {}
 
     onworking(`llm load`)
@@ -256,6 +259,8 @@ async function loadsharedgemma4model(
   const epoch = heavyllmloadepoch
 
   sharedgemma4promise = (async () => {
+    await prepareforheavyload()
+
     const lastprogress: Record<string, number> = {}
 
     onworking(`llm load`)

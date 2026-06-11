@@ -10,11 +10,6 @@ import { memoryrootshouldemitpath } from 'zss/memory/jsonpipefilter'
 import { memoryreadbookbysoftware } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
 import { measurestage, recordemitdiff } from 'zss/perf/ticktimingstats'
-import {
-  ishostmemorytraceenabled,
-  tracehostmemory,
-  tracehostmemorypatch,
-} from 'zss/testsupport/hostmemorytrace'
 
 import { boardrunners } from './state'
 
@@ -40,13 +35,6 @@ export function boardrunnerboundarypaint(boundary: string, doc: BOUNDARY_DOC) {
   pipe.applyfullsync(doc)
   // update boundary
   memoryboundaryset(boundary, doc)
-  // #region agent log
-  if (ishostmemorytraceenabled()) {
-    tracehostmemory('host:board:paint:apply', 'H16', '', undefined, {
-      boundary,
-    })
-  }
-  // #endregion
 }
 
 export function boardrunnerboundarypatch(
@@ -60,16 +48,10 @@ export function boardrunnerboundarypatch(
   // ignore bad patch
   if (!ispresent(doc)) {
     pipe.cleardesync()
-    // #region agent log
-    tracehostmemorypatch('', operations.length, false, boundary, operations)
-    // #endregion
     return false
   }
   // update boundary
   memoryboundaryset(boundary, doc)
-  // #region agent log
-  tracehostmemorypatch('', operations.length, true, boundary, operations)
-  // #endregion
   return true
 }
 
@@ -96,20 +78,6 @@ function boardrunnerboundarysyncbody(vm: DEVICE) {
       const pipe = readboundarypipe(id, doc)
       const patch = pipe.emitdiff(doc)
       if (patch.length > 0) {
-        // #region agent log
-        if (ishostmemorytraceenabled()) {
-          const paths = patch
-            .slice(0, 12)
-            .map((op) => String((op as { path?: string }).path ?? ''))
-          tracehostmemory('host:boundary:emit', 'H16', player, undefined, {
-            boundary: id,
-            opcount: patch.length,
-            charops: paths.filter((p) => p.includes('/char')).length,
-            terrainops: paths.filter((p) => p.includes('/terrain/')).length,
-            samplepaths: paths,
-          })
-        }
-        // #endregion
         recordemitdiff('vm:boundarysync', patch.length, 1, 1)
         boardrunnerpatch(vm, player, patch, id)
       }

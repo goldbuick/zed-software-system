@@ -1,12 +1,15 @@
-import { formatJsonPointer, type Path } from '@jsonjoy.com/json-pointer/lib/util'
+import {
+  type Path,
+  formatJsonPointer,
+} from '@jsonjoy.com/json-pointer/lib/util'
+import type { Operation as FastOperation } from 'fast-json-patch'
 import { decode as decodecompact } from 'json-joy/lib/json-patch/codec/compact/decode'
 import { encode as encodecompact } from 'json-joy/lib/json-patch/codec/compact/encode'
 import type { CompactOp } from 'json-joy/lib/json-patch/codec/compact/types'
-import { OPCODE } from 'json-joy/lib/json-patch/constants'
 import { decode as decodejsonops } from 'json-joy/lib/json-patch/codec/json/decode'
 import { encode as encodejsonops } from 'json-joy/lib/json-patch/codec/json/encode'
 import type { Operation } from 'json-joy/lib/json-patch/codec/json/types'
-import type { Operation as FastOperation } from 'fast-json-patch'
+import { OPCODE } from 'json-joy/lib/json-patch/constants'
 import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
 
 const JSONPATCH_OPTIONS = {}
@@ -216,7 +219,7 @@ function shortencompactpathrefs(op: CompactOp, pfx: string[]): CompactOp {
     shortened[2] = shortenpathref(
       compactpathtostring(shortened[2] as string | Path),
       pfx,
-    ) as unknown as CompactOp[2]
+    ) as unknown
   }
   return shortened
 }

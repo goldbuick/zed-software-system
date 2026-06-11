@@ -9,7 +9,6 @@ import {
   memoryreadroot,
 } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
-import { tracehostmemorypatch } from 'zss/testsupport/hostmemorytrace'
 import { measurestage, recordemitdiff } from 'zss/perf/ticktimingstats'
 
 import { boardrunners } from './state'
@@ -54,16 +53,10 @@ export function boardrunnermemorypatch(operations: Operation[]) {
   // ignore bad patch
   if (!ispresent(doc)) {
     boardrunnermemorypipe.cleardesync()
-    // #region agent log
-    tracehostmemorypatch('', operations.length, false, '', operations)
-    // #endregion
     return false
   }
   // keep root memory reference and apply props to root
   Object.assign(root, doc)
-  // #region agent log
-  tracehostmemorypatch('', operations.length, true, '', operations)
-  // #endregion
   return true
 }
 

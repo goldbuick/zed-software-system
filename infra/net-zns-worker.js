@@ -5,6 +5,7 @@
 
 const ZNS_PEER_KEY = 'peer'
 const ZNS_APEX_DEFAULT = 'zns.zed.cafe'
+const ZNS_TENANT_SUFFIX_DEFAULT = 'at.zed.cafe'
 const BYTES_ORIGIN_DEFAULT = 'https://bytes.zed.cafe'
 const JOIN_ORIGIN_DEFAULT = 'https://zed.cafe'
 const RESERVED_NS = new Set(['www', 'api', 'mail', 'ftp'])
@@ -72,6 +73,10 @@ function pairstoragekey(namespace, pathkey) {
 
 function apexhost(env) {
   return env.ZNS_APEX ?? ZNS_APEX_DEFAULT
+}
+
+function tenantsuffix(env) {
+  return env.ZNS_TENANT_SUFFIX ?? ZNS_TENANT_SUFFIX_DEFAULT
 }
 
 function bytesorigin(env) {
@@ -150,7 +155,61 @@ function resolvepairkind(pathkey, stored, metadata) {
   return 'text'
 }
 
-async function sendznscodeemail(apikey, email, code) {
+function escapehtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+function buildznscodeemail({ code, email, namespace, joinorigin }) {
+  const command = `#zns ${code}`
+  const query = new URLSearchParams({
+    'zns-code': code,
+    'zns-email': email,
+    'zns-namespace': namespace,
+  })
+  const deeplink = `${joinorigin}/?${query.toString()}`
+  const text = `${command}\n\nPaste into the zed.cafe terminal, or open:\n${deeplink}\n`
+  const ns = escapehtml(namespace)
+  const cmd = escapehtml(command)
+  const link = escapehtml(deeplink)
+  const html = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${cmd}</title>
+</head>
+<body style="margin:0;padding:24px 16px;background:#0f0f14;font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#e8e8ef;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;margin:0 auto;">
+<tr><td style="padding:20px 18px;background:#1a1a22;border:1px solid #404058;border-radius:10px;">
+<p style="margin:0 0 6px;font-size:12px;letter-spacing:0.04em;text-transform:uppercase;color:#787890;">zns login</p>
+<p style="margin:0 0 18px;font-size:16px;line-height:1.4;color:#e8e8ef;">Finish login to <strong style="color:#e8e8ef;">${ns}</strong></p>
+<p style="margin:0 0 12px;font-size:14px;line-height:1.5;color:#a8a8b8;">Copy this command into the zed.cafe terminal:</p>
+<pre style="margin:0 0 20px;padding:14px 16px;background:#242430;border:1px solid #585870;border-radius:6px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:18px;line-height:1.4;color:#5cb87a;text-align:center;user-select:all;-webkit-user-select:all;white-space:pre-wrap;">${cmd}</pre>
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 14px;">
+<tr><td style="border-radius:6px;background:#6c8cff;">
+<a href="${link}" style="display:inline-block;padding:12px 22px;font-size:14px;font-weight:600;color:#ffffff;text-decoration:none;">Open in zed.cafe</a>
+</td></tr>
+</table>
+<p style="margin:0 0 8px;font-size:12px;line-height:1.5;color:#787890;text-align:center;word-break:break-all;">${link}</p>
+<p style="margin:0;font-size:12px;line-height:1.5;color:#787890;">Open on any device — phone, tablet, or desktop. Or copy the command above into the terminal.</p>
+</td></tr>
+</table>
+</body>
+</html>`
+  return { subject: command, html, text }
+}
+
+async function sendznscodeemail(apikey, email, code, namespace, joinorigin) {
+  const { subject, html, text } = buildznscodeemail({
+    code,
+    email,
+    namespace,
+    joinorigin,
+  })
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
@@ -160,8 +219,9 @@ async function sendznscodeemail(apikey, email, code) {
     body: JSON.stringify({
       from: 'login@zns.zed.cafe',
       to: email,
-      subject: `#zns ${code}`,
-      html: `<p>#zns ${code}</p>`,
+      subject,
+      html,
+      text,
     }),
   })
   if (!res.ok) {
@@ -171,11 +231,7 @@ async function sendznscodeemail(apikey, email, code) {
 }
 
 function parsenamespace(hostname, env) {
-  const apex = apexhost(env)
-  if (hostname === apex) {
-    return null
-  }
-  const suffix = `.${apex}`
+  const suffix = `.${tenantsuffix(env)}`
   if (!hostname.endsWith(suffix)) {
     return null
   }
@@ -238,7 +294,13 @@ async function handlelogin(request, env) {
     metadata: { namespace, code },
   })
   try {
-    await sendznscodeemail(env.RESEND_API_KEY, email, code)
+    await sendznscodeemail(
+      env.RESEND_API_KEY,
+      email,
+      code,
+      namespace,
+      joinorigin(env),
+    )
   } catch (err) {
     return new Response(
       JSON.stringify({ message: String(err?.message ?? err) }),
@@ -488,7 +550,15 @@ async function handletenantread(request, env, namespace) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url)
-    const hostname = url.hostname.toLowerCase()
+    const rawhost = url.hostname
+    const hostname = rawhost.toLowerCase()
+    if (rawhost !== hostname) {
+      const namespace = parsenamespace(hostname, env)
+      if (namespace && validatenamespace(namespace)) {
+        url.hostname = hostname
+        return Response.redirect(url.toString(), 301)
+      }
+    }
     const apex = apexhost(env)
 
     if (hostname === apex) {

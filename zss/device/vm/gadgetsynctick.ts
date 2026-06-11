@@ -11,13 +11,16 @@ import {
 import type { GADGET_STATE, LAYER, PANEL_ITEM } from 'zss/gadget/data/types'
 import { normalizelayerzvariant } from 'zss/gadget/graphics/layerz'
 import { creategadgetid, ispid } from 'zss/mapping/guid'
-import { MAYBE, ispresent } from 'zss/mapping/types'
+import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
 import {
   memoryreadbookflag,
   memorywritebookflag,
 } from 'zss/memory/bookoperations'
 import { memoryreadbookgadgetlayersforboard } from 'zss/memory/gadgetlayersflags'
-import { memoryreadplayerboard } from 'zss/memory/playermanagement'
+import {
+  memoryreadplayeractive,
+  memoryreadplayerboard,
+} from 'zss/memory/playermanagement'
 import {
   MEMORY_GADGET_LAYERS,
   memoryconverttogadgetcontrollayer,
@@ -50,15 +53,18 @@ gadgetstateprovider((player) => {
   return initstate()
 })
 
-// reuse the joined array per-player to avoid per-tick spread when neither
-// the layers reference nor the control reference changed.
-type GADGET_LAYERS_CACHE_ENTRY = {
-  layers: unknown[]
-  control: unknown[]
-  joined: unknown[]
-}
-
 type GADGET_VOID_FALLBACK = {
+  id: string
+  board: string
+  boardname: string
+  exiteast: string
+  exitwest: string
+  exitnorth: string
+  exitsouth: string
+  exitne: string
+  exitnw: string
+  exitse: string
+  exitsw: string
   over: LAYER[]
   under: LAYER[]
   layers: LAYER[]
@@ -67,23 +73,67 @@ type GADGET_VOID_FALLBACK = {
 }
 
 const gadgetvoidfallbackcache = new Map<string, GADGET_VOID_FALLBACK>()
-const gadgetlayersjoincache = new Map<string, GADGET_LAYERS_CACHE_ENTRY>()
-function buildgadgetlayersarray(
-  player: string,
-  layers: any[],
-  control: any[],
-): any[] {
-  const cached = gadgetlayersjoincache.get(player)
-  if (
-    cached?.layers === layers &&
-    cached.control === control &&
-    cached.joined.length === layers.length + control.length
-  ) {
-    return cached.joined as any[]
-  }
-  const joined = [...layers, ...control]
-  gadgetlayersjoincache.set(player, { layers, control, joined })
-  return joined
+
+function applyblankgadget(gadget: GADGET_STATE) {
+  gadget.id = ''
+  gadget.board = ''
+  gadget.boardname = ''
+  gadget.exiteast = ''
+  gadget.exitwest = ''
+  gadget.exitnorth = ''
+  gadget.exitsouth = ''
+  gadget.exitne = ''
+  gadget.exitnw = ''
+  gadget.exitse = ''
+  gadget.exitsw = ''
+  gadget.over = []
+  gadget.under = []
+  gadget.layers = []
+  gadget.tickers = []
+  gadget.sidebar = []
+}
+
+function writegadgetfallbackcache(player: string, gadget: GADGET_STATE) {
+  gadgetvoidfallbackcache.set(player, {
+    id: gadget.id,
+    board: gadget.board,
+    boardname: gadget.boardname,
+    exiteast: gadget.exiteast,
+    exitwest: gadget.exitwest,
+    exitnorth: gadget.exitnorth,
+    exitsouth: gadget.exitsouth,
+    exitne: gadget.exitne,
+    exitnw: gadget.exitnw,
+    exitse: gadget.exitse,
+    exitsw: gadget.exitsw,
+    over: gadget.over ?? [],
+    under: gadget.under ?? [],
+    layers: gadget.layers ?? [],
+    tickers: gadget.tickers ?? [],
+    sidebar: gadget.sidebar ?? [],
+  })
+}
+
+function applygadgetfallback(
+  gadget: GADGET_STATE,
+  fallback: MAYBE<GADGET_VOID_FALLBACK>,
+) {
+  gadget.id = fallback?.id ?? ''
+  gadget.board = fallback?.board ?? ''
+  gadget.boardname = fallback?.boardname ?? ''
+  gadget.exiteast = fallback?.exiteast ?? ''
+  gadget.exitwest = fallback?.exitwest ?? ''
+  gadget.exitnorth = fallback?.exitnorth ?? ''
+  gadget.exitsouth = fallback?.exitsouth ?? ''
+  gadget.exitne = fallback?.exitne ?? ''
+  gadget.exitnw = fallback?.exitnw ?? ''
+  gadget.exitse = fallback?.exitse ?? ''
+  gadget.exitsw = fallback?.exitsw ?? ''
+  gadget.over = fallback?.over ?? []
+  gadget.under = fallback?.under ?? []
+  gadget.layers = fallback?.layers ?? []
+  gadget.tickers = fallback?.tickers ?? []
+  gadget.sidebar = fallback?.sidebar ?? []
 }
 
 const gadgetjsonpipes = new Map<string, JSON_PIPE_HANDLE<GADGET_STATE>>()
@@ -148,40 +198,20 @@ function gadgetsynctickbody(vm: DEVICE) {
       gadget.exitsw = gadgetlayers.exitsw
       gadget.over = gadgetlayers.over
       gadget.under = gadgetlayers.under
-      gadget.layers = buildgadgetlayersarray(
-        player,
-        gadgetlayers.layers,
-        control,
-      )
+      gadget.layers = [...deepcopy(gadgetlayers.layers), ...deepcopy(control)]
       gadget.tickers = gadgetlayers.tickers
       gadget.boardname = board?.name?.trim() ?? ''
-      if (control.length) {
-        gadgetvoidfallbackcache.set(player, {
-          over: gadgetlayers.over,
-          under: gadgetlayers.under,
-          layers: gadget.layers,
-          tickers: gadget.tickers,
-          sidebar: gadget.sidebar ?? [],
-        })
-      }
+      writegadgetfallbackcache(player, gadget)
     } else {
-      const fallback = gadgetvoidfallbackcache.get(player)
-      gadget.id = 'void'
-      gadget.board = 'void'
-      gadget.exiteast = ''
-      gadget.exitwest = ''
-      gadget.exitnorth = ''
-      gadget.exitsouth = ''
-      gadget.exitne = ''
-      gadget.exitnw = ''
-      gadget.exitse = ''
-      gadget.exitsw = ''
-      gadget.over = fallback?.over ?? []
-      gadget.under = fallback?.under ?? []
-      gadget.layers = fallback?.layers ?? []
-      gadget.tickers = fallback?.tickers ?? []
-      gadget.sidebar = fallback?.sidebar ?? []
-      gadget.boardname = 'void'
+      applyblankgadget(gadget)
+      // handle board transitions
+      if (memoryreadplayeractive(player)) {
+        applygadgetfallback(gadget, gadgetvoidfallbackcache.get(player))
+      } else {
+        gadget.id = 'void'
+        gadget.board = 'void'
+        gadget.boardname = 'void'
+      }
     }
 
     gadget.synthstate = memoryreadsynth(boardid)

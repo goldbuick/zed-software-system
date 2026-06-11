@@ -1,0 +1,13 @@
+name = "net-bytes"
+main = "net-bytes-worker.js"
+compatibility_date = "2026-06-10"
+
+# KV binding used as env.kv in net-bytes-worker.js
+# Account title: MEMMY (yarn wrangler kv namespace list)
+[[kv_namespaces]]
+binding = "kv"
+id = "061a2f1566df44cf9590fbdbd546c72f"
+
+[[routes]]
+pattern = "bytes.zed.cafe/*"
+zone_name = "zed.cafe"

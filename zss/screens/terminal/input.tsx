@@ -516,20 +516,11 @@ export function TerminalInput({
 
     function onendevent() {}
 
-    function onanythingsaid(value: string) {
-      inputstatereplace(`${inputstart}${value}`)
-    }
-
     function onworking(message: string) {
       apitoast(SOFTWARE, player, message)
     }
 
-    const speechlistener = new SpeechToText(
-      onfinalised,
-      onendevent,
-      onanythingsaid,
-      onworking,
-    )
+    const speechlistener = new SpeechToText(onfinalised, onendevent, onworking)
     listener = speechlistener
     void speechlistener.startlistening().then(() => {
       if (cancelled) {

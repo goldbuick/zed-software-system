@@ -50,15 +50,10 @@ import {
   memoryreadboardbyaddress,
   memoryreadelementstat,
 } from './boards'
-import { memoryreadelementcodepage } from './bookoperations'
-import { memoryreadelementdisplay } from './bookoperations'
 import {
-  ishostmemorytraceenabled,
-  snaphostrect,
-  tracehostchareditwrite,
-  tracehostmemory,
-  tracehostbatchchars,
-} from 'zss/testsupport/hostmemorytrace'
+  memoryreadelementcodepage,
+  memoryreadelementdisplay,
+} from './bookoperations'
 import { memoryensuresoftwarebook } from './books'
 import {
   memoryreadcodepagename,
@@ -280,59 +275,17 @@ function registerhyperlinksforelementsetvalue(
         case 'charedit':
         case 'coloredit': {
           const withvalue = maptonumber(value, 0)
-          // #region agent log
-          if (ishostmemorytraceenabled() && typ === 'charedit') {
-            const pts = elementhyperlinkcontext.elementsbypoints
-            const p1 = isarray(pts) && ispt(pts[0]) ? pts[0] : undefined
-            const p2 =
-              isarray(pts) && pts.length > 1 && ispt(pts[pts.length - 1])
-                ? pts[pts.length - 1]
-                : p1
-            tracehostchareditwrite(
-              memoryreadoperator(),
-              elementhyperlinkcontext.board,
-              typ,
-              name,
-              withvalue,
-              p1,
-              p2,
-            )
-          }
-          // #endregion
           for (const element of elements) {
             if (ispresent(element)) {
               element[name as keyof BOARD_ELEMENT] = withvalue
             }
           }
-          const editedboard = memoryreadboardbyaddress(elementhyperlinkcontext.board)
+          const editedboard = memoryreadboardbyaddress(
+            elementhyperlinkcontext.board,
+          )
           if (ispresent(editedboard)) {
             memoryensureboardruntime(editedboard).drawneedfull = true
           }
-          // #region agent log
-          if (ishostmemorytraceenabled() && typ === 'charedit') {
-            const pts = elementhyperlinkcontext.elementsbypoints
-            const p1 = isarray(pts) && ispt(pts[0]) ? pts[0] : undefined
-            const p2 =
-              isarray(pts) && pts.length > 1 && ispt(pts[pts.length - 1])
-                ? pts[pts.length - 1]
-                : p1
-            const board = memoryreadboardbyaddress(elementhyperlinkcontext.board)
-            const after =
-              ispresent(board) && ispresent(p1) && ispresent(p2)
-                ? snaphostrect('after-charedit-write', board, p1, p2, {
-                    field: name,
-                    value: withvalue,
-                  })
-                : undefined
-            tracehostmemory(
-              'charedit:setvalue:after',
-              'H3',
-              memoryreadoperator(),
-              after,
-              { field: name, value: withvalue },
-            )
-          }
-          // #endregion
           break
         }
         case 'tx':
@@ -633,9 +586,6 @@ export function memoryinspectchararea(
     DIVIDER,
     zsszedlinkline(`${name} charedit`, 'char'),
   ]
-  // #region agent log
-  tracehostbatchchars(player, p1, p2, 'memoryinspectchararea')
-  // #endregion
   scrollwritelines(player, 'bulk set char', zsstexttape(lines), batchchip)
 }
 
