@@ -39,6 +39,7 @@
     "deploy:aws-ec2:docker-run": "sh scripts/aws-ec2-docker-run.sh",
     "deploy:cloudflare:brick": "wrangler deploy -c infra/wrangler-brick.toml",
     "deploy:cloudflare:bytes": "wrangler deploy -c infra/wrangler-bytes.toml",
+    "deploy:cloudflare:terminal": "wrangler deploy -c infra/wrangler-terminal.toml",
     "deploy:cloudflare:zns": "wrangler deploy -c infra/wrangler-zns.toml",
     "deploy:docker:build": "yarn cli:build:linux && docker build --no-cache -t zss:local .",
     "deploy:docker:run": "sh scripts/docker-run.sh",

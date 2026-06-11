@@ -7,6 +7,7 @@ Cloudflare Workers in this folder back public `*.zed.cafe` services used by the 
 | ZNS | `net-zns-worker.js` | `zns.zed.cafe`, `*.{namespace}.at.zed.cafe` |
 | Bytes | `net-bytes-worker.js` | `bytes.zed.cafe` |
 | Brick | `net-brick-worker.js` | `brick.zed.cafe` |
+| Terminal | `net-terminal-worker.js` | `terminal.zed.cafe` |
 
 Client-side wrappers and constants live in [`zss/feature/url.ts`](../zss/feature/url.ts). See also [`zss/feature/docs/url.md`](../zss/feature/docs/url.md).
 
@@ -209,6 +210,26 @@ https://brick.zed.cafe/?brick=aHR0cHM6Ly9tdXNldW1vZnp6dC5jb20vYXBpL3YxL3NlYXJjaC
 
 ---
 
+## Terminal (`net-terminal-worker.js`)
+
+PeerJS signaling server for multiplayer net terminal. One Durable Object per peer ID relays WebSocket messages between browsers; media/data flows peer-to-peer after handshake.
+
+Client config: [`zss/feature/netterminal.ts`](../zss/feature/netterminal.ts) (`host: terminal.zed.cafe`, default path `/`, key `peerjs`). No KV bindings.
+
+**TURN follow-up:** signaling only. To help peers behind strict NATs, add `config.iceServers` in `peerserveroptions()` when you deploy a TURN server.
+
+### Routes (`https://terminal.zed.cafe`)
+
+| Method | Path | Behavior |
+|--------|------|----------|
+| `GET` | `/peerjs` | **200** PeerJS welcome JSON |
+| `GET` | `/peerjs/id` | **200** plain-text UUID (server-assigned peer id) |
+| `GET` | `/peerjs?key=peerjs&id={id}&token={token}&version={v}` | WebSocket upgrade → peer's Durable Object; **101** with `OPEN` frame |
+
+Cross-peer messages (OFFER, ANSWER, CANDIDATE, etc.) relay DO-to-DO. Same peer id with a different token gets `ID-TAKEN`.
+
+---
+
 ## Local tooling
 
 - Seed ZNS docs namespace: `ZNS_EMAIL=... ZNS_TOKEN=... node infra/seed-zns-docs.mjs` (writes `zss/rom/refscroll/*.md` to `docs.at.zed.cafe` via `POST /api/set`).
@@ -224,6 +245,7 @@ Wrangler is a dev dependency (`yarn wrangler`). Configs live in this folder but 
 | ZNS | `infra/wrangler-zns.toml` |
 | Bytes | `infra/wrangler-bytes.toml` |
 | Brick | `infra/wrangler-brick.toml` |
+| Terminal | `infra/wrangler-terminal.toml` |
 
 ### One-time setup
 
@@ -264,6 +286,7 @@ From repo root:
 yarn deploy:cloudflare:zns
 yarn deploy:cloudflare:bytes
 yarn deploy:cloudflare:brick
+yarn deploy:cloudflare:terminal
 ```
 
 Equivalent raw Wrangler commands (also from repo root):
@@ -272,4 +295,5 @@ Equivalent raw Wrangler commands (also from repo root):
 yarn wrangler deploy -c infra/wrangler-zns.toml
 yarn wrangler deploy -c infra/wrangler-bytes.toml
 yarn wrangler deploy -c infra/wrangler-brick.toml
+yarn wrangler deploy -c infra/wrangler-terminal.toml
 ```
