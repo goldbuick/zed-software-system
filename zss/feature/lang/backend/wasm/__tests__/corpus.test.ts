@@ -146,7 +146,11 @@ describe('lang corpus behavioral parity (native wasm vs TS oracle)', () => {
     const jsbuild = compile('player', source)
     const wasmbytes = compilenativewasmfortest(source)
     const wasmbuild = { ...jsbuild, wasmbytes, code: undefined }
-    const wasmchip = createchip('wasm-clear-key0', DRIVER_TYPE.RUNTIME, wasmbuild)
+    const wasmchip = createchip(
+      'wasm-clear-key0',
+      DRIVER_TYPE.RUNTIME,
+      wasmbuild,
+    )
     expect(() => wasmchip.once()).not.toThrow()
   }, 15000)
 

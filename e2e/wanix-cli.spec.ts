@@ -7,7 +7,9 @@ type WindowWithE2e = Window & { __zss_e2e?: ZssE2eBridge }
 test.describe('wanix CLI integration', () => {
   test.describe.configure({ timeout: 180_000 })
 
-  test('#wanix start → run hello.wasm prints smoke output', async ({ page }) => {
+  test('#wanix start → run hello.wasm prints smoke output', async ({
+    page,
+  }) => {
     await page.goto('/?ZSS_E2E=1')
     await expect(page.locator('#frame')).toBeVisible()
 

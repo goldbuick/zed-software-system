@@ -12,17 +12,17 @@ import { register, registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { runlangcompilebench } from 'zss/feature/lang/langcompilebench'
 import type { LangCompileBenchReport } from 'zss/feature/lang/langcompilebench'
-import {
-  type WANIX_SMOKE_REPORT,
-  readwanixdiag,
-  runwanixsmoke,
-} from 'zss/testsupport/e2e/wanixrepro'
 import { readnetworkpeerid, readsubscribetopic } from 'zss/feature/netterminal'
 import { isjoin } from 'zss/feature/url'
 import { panelscrolltolines } from 'zss/gadget/data/panelitemtext'
 import { useGadgetClient, useTape, useTerminal } from 'zss/gadget/data/state'
 import { INPUT, LAYER_TYPE, paneladdress } from 'zss/gadget/data/types'
 import { ptstoarea } from 'zss/mapping/2d'
+import {
+  type WANIX_SMOKE_REPORT,
+  readwanixdiag,
+  runwanixsmoke,
+} from 'zss/testsupport/e2e/wanixrepro'
 import type { PT } from 'zss/words/types'
 export type ZssE2eMoveDir = 'left' | 'right' | 'up' | 'down'
 

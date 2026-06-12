@@ -28,7 +28,9 @@ function jestdefaultrunbudget(): number | undefined {
   }
   if (raw) {
     const parsed = Number(raw)
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_JEST_RUN_BUDGET
+    return Number.isFinite(parsed) && parsed > 0
+      ? parsed
+      : DEFAULT_JEST_RUN_BUDGET
   }
   return DEFAULT_JEST_RUN_BUDGET
 }
