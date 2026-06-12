@@ -36,7 +36,7 @@ ensureemscripten() {
   echo "error: emcc not found — install Emscripten and retry:" >&2
   echo "  git clone https://github.com/emscripten-core/emsdk.git .emsdk" >&2
   echo "  cd .emsdk && ./emsdk install latest && ./emsdk activate latest" >&2
-  echo "  source .emsdk/emsdk_env.sh && yarn lang:build" >&2
+  echo "  source .emsdk/emsdk_env.sh && yarn task run lang:build" >&2
   return 1
 }
 

@@ -71,7 +71,7 @@ export default defineConfig({
       ]
     : [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
-    command: 'ZSS_NO_HTTPS=1 yarn vite:dev',
+    command: 'ZSS_NO_HTTPS=1 yarn task run app:vite:dev',
     url: 'http://127.0.0.1:7777',
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,

@@ -67,7 +67,7 @@ function writeparams(params: ENVPARAMS) {
 }
 
 function builddaisy() {
-  execSync('yarn daisy:build', {
+  execSync('yarn task run daisy:build', {
     cwd: PROJECT,
     stdio: 'inherit',
     timeout: EXEC_BUILD_DAISY_TIMEOUT_MS,
@@ -79,7 +79,7 @@ function measurerequired(): {
   err: number
   results: SYNTH_ENV_PARITY_RESULT[]
 } {
-  execSync('yarn synth-env-parity:render', {
+  execSync('yarn task run daisy:synth-env:render', {
     cwd: PROJECT,
     stdio: 'inherit',
     timeout: EXEC_RENDER_PARITY_TIMEOUT_MS,
@@ -153,7 +153,7 @@ async function main() {
   if (!dryrun) {
     writeparams(best.params)
     builddaisy()
-    execSync('yarn synth-env-parity:test', {
+    execSync('yarn task run daisy:synth-env:test', {
       cwd: PROJECT,
       stdio: 'inherit',
       timeout: EXEC_GATE_TIMEOUT_MS,

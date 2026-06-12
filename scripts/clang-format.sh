@@ -99,7 +99,7 @@ if [ "$filecount" -eq 0 ]; then
 fi
 
 if [ "$failed" -ne 0 ]; then
-  echo "run 'yarn native:lint:fix' to apply formatting" >&2
+  echo "run 'yarn task run native:lint:fix' to apply formatting" >&2
   exit 1
 fi
 

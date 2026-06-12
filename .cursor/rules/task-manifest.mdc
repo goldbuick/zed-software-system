@@ -1,0 +1,51 @@
+---
+description: Task manifest conventions (citty CLI)
+globs: tasks/**/*,scripts/task-cli.ts,package.json
+alwaysApply: true
+---
+
+# Task manifest
+
+All build, test, deploy, and dev workflows live in `tasks/`. Run them via the citty CLI — not `package.json` scripts.
+
+## Invocation
+
+```bash
+yarn task list
+yarn task run <task-id>
+yarn task explain <task-id>
+yarn task docs              # regenerate docs/tasks.md
+yarn task docs --check      # CI: fail if docs drift
+yarn task app dev           # nested shorthand for run app:dev
+```
+
+`package.json` scripts: `postinstall` and `task` only.
+
+## Task id format
+
+**`subject:verb[:qualifier]`**
+
+| Subject | Example |
+|---------|---------|
+| `app` | `app:dev`, `app:lint`, `app:vite:dev` |
+| `daisy` | `daisy:build`, `daisy:notepop:test:full` |
+| `lang` | `lang:build`, `lang:parity:test` |
+| `deploy` | `deploy:docker:build` |
+| `ci` | `ci:pages:copy-404` |
+
+## Adding a task
+
+1. Add a `TaskDef` in `tasks/groups/<subject>.ts` (use `def()` / `tasksonly()` from `tasks/helpers.ts`).
+2. Composite pipelines: `tasks/pipelines.ts` (`parityfull`, etc.).
+3. Run `yarn task docs` and commit `docs/tasks.md`.
+4. Document in the task `description` field; link narrative context in domain READMEs.
+
+## Composite tasks
+
+- `deps`: other task ids, run in order with env inheritance.
+- `run: { kind: 'tasks' }`: deps only.
+- `run: exec([...])` or `shell('...')`: leaf command after deps.
+
+## Tags
+
+`ci`, `dev`, `deploy`, `slow`, `calibrate` — filter with `yarn task list --tag ci`.

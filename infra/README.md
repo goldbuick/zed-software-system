@@ -41,7 +41,7 @@ Start OTP login and reserve a namespace for the email.
 | `email` | yes | Lowercased/trimmed |
 | `namespace` | yes | `[a-z0-9-]`, 1–63 chars; reserved: `www`, `api`, `mail`, `ftp` |
 
-**200** `{ "success": true }` — OTP emailed (styled HTML + plain-text `#zns {code}` body, and `{JOIN_ORIGIN}/?zns-code={code}&zns-email={email}&zns-namespace={namespace}` deep link for cross-device finish).
+**200** `{ "success": true }` — OTP emailed. Subject: `{code} — finish login to {namespace} on zed.cafe`. Body: 16-color ASCII terminal HTML (ZZT palette from `zss/feature/palette.ts`), plain-text `#zns {code}` + deep link `{JOIN_ORIGIN}/?zns-code={code}&zns-email={email}&zns-namespace={namespace}`. Sender display name: `zed.cafe`.
 
 **403** namespace owned by another account, or email already bound to a different namespace.
 
@@ -283,10 +283,10 @@ Run from repo root.
 From repo root:
 
 ```bash
-yarn deploy:cloudflare:zns
-yarn deploy:cloudflare:bytes
-yarn deploy:cloudflare:brick
-yarn deploy:cloudflare:terminal
+yarn task run deploy:cloudflare:zns
+yarn task run deploy:cloudflare:bytes
+yarn task run deploy:cloudflare:brick
+yarn task run deploy:cloudflare:terminal
 ```
 
 Equivalent raw Wrangler commands (also from repo root):
