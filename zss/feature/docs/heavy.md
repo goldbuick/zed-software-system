@@ -11,7 +11,7 @@ In-browser agents use **Gemma 4 E2B instruct ONNX** only:
 - Context: 131k tokens
 - Intent gate: SmolLM2-135M classifier before full agent generation
 
-**CLI**: `#agent model` shows model info; `#agent start` / `#agent stop` manage agents.
+**CLI**: `#agent model` shows model info; `#agent start` / `#agent stop` manage agents. **One agent per browser tab** — open another tab for additional agents.
 
 Function-calling reference: [Google Gemma 4 function calling](https://ai.google.dev/gemma/docs/capabilities/text/function-calling-gemma4).
 

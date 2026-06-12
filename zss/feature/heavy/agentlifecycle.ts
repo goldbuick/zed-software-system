@@ -13,6 +13,7 @@ import { createagent } from 'zss/feature/heavy/agent'
 import {
   type AGENTS_ROSTER,
   AGENTS_ROSTER_STORAGE_KEY,
+  MAX_ON_DEMAND_AGENTS,
   isvalidagentsroster,
 } from 'zss/feature/heavy/agentsroster'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
@@ -59,8 +60,21 @@ function readagentdisplayname(agentid: string): string {
   return isstring(n) ? n : agentid
 }
 
+function runningagentcount(): number {
+  return Object.keys(agents).length
+}
+
 export function heavyrunagentstart(heavydev: DEVICE, message: MESSAGE): void {
   const requestplayer = message.player
+  if (runningagentcount() >= MAX_ON_DEMAND_AGENTS) {
+    apierror(
+      heavydev,
+      requestplayer,
+      'agent',
+      'only one agent per tab; stop it or open another tab',
+    )
+    return
+  }
   const agentname = isstring(message.data) ? message.data : createshortnameid()
   const agent = createagent(agentname)
   const id = agent.id()
@@ -151,10 +165,15 @@ export function heavyrunrestoreagents(
   if (!isvalidagentsroster(roster)) {
     return
   }
+  if (runningagentcount() >= MAX_ON_DEMAND_AGENTS) {
+    return
+  }
   const requestplayer = message.player
+  const hadextras = roster.ids.length > MAX_ON_DEMAND_AGENTS
+  const restoreids = roster.ids.slice(0, MAX_ON_DEMAND_AGENTS)
   let count = 0
-  for (let i = 0; i < roster.ids.length; ++i) {
-    const id = roster.ids[i]
+  for (let i = 0; i < restoreids.length; ++i) {
+    const id = restoreids[i]
     if (agents[id]) {
       continue
     }
@@ -165,7 +184,18 @@ export function heavyrunrestoreagents(
     registeragentdooton(heavydev, requestplayer, id)
     count += 1
   }
+  if (count > 0 || hadextras) {
+    persistrostertostorage(heavydev, requestplayer)
+  }
   if (count > 0) {
-    workstatus(heavydev, requestplayer, `agent start ${count}`)
+    if (hadextras) {
+      workstatus(
+        heavydev,
+        requestplayer,
+        'agent restore 1 (open another tab for more)',
+      )
+    } else {
+      workstatus(heavydev, requestplayer, `agent start ${count}`)
+    }
   }
 }

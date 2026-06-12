@@ -25,6 +25,7 @@ Shared feature code under [`zss/feature/heavy/`](../zss/feature/heavy/) (models,
 
 | Topic | Choice |
 |-------|--------|
+| **Max agents per tab** | **1** on-demand agent per tab; open another tab for more (`MAX_ON_DEMAND_AGENTS`; future `startagentworker` in `platform.ts` must enforce before spawn) |
 | **LLM memory** | Each agentspace loads its own model on first prompt (RAM scales with agent count) |
 | **Wire names** | Rename now: `agent:*`, `tts:*`, `stt:*` — no `heavy:*` aliases left |
 | **TTS/STT lifecycle** | Stay alive for the session; terminate only on `sessionreset` / `haltplatform` |
