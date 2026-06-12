@@ -7,11 +7,13 @@
 <body>
   <wanix-system wasm="/wanix/wanix.wasm">
     <wanix-bind dst="." src="#ramfs"></wanix-bind>
-    <wanix-bind type="archive" dst="bundle" src="/wanix/wasi-minimal.bundle.tgz"></wanix-bind>
+    <wanix-bind type="file" dst="hello.wasm" src="/wanix/hello.wasm"></wanix-bind>
+    <wanix-bind type="archive" dst="." src="/wanix/wasi-minimal.bundle.tgz"></wanix-bind>
   </wanix-system>
   <script type="module" src="/wanix/wanix.min.js"></script>
   <script type="module">
     const origin = location.origin
+    const OUTPUT_TIMEOUT_MS = 30_000
     const sys = document.querySelector('wanix-system')
     let root = null
     let active = false
@@ -20,15 +22,13 @@
       parent.postMessage({ type, ...data }, origin)
     }
 
-    function normalizecmd(cmd) {
-      const trimmed = (cmd || '').trim()
-      if (!trimmed) {
-        return ''
-      }
-      if (trimmed.startsWith('#')) {
-        return trimmed
-      }
-      return `#bundle/${trimmed.replace(/^\/+/, '')}`
+    function withtimeout(promise, ms, label) {
+      return Promise.race([
+        promise,
+        new Promise((_, reject) => {
+          setTimeout(() => reject(new Error(label)), ms)
+        }),
+      ])
     }
 
     async function pipestdout(stream, online) {
@@ -62,21 +62,20 @@
     }
 
     async function runtask(cmd) {
-      const taskcmd = normalizecmd(cmd)
+      const taskcmd = (cmd || '').trim()
       if (!taskcmd) {
         throw new Error('empty command')
       }
       const tid = (await root.readText('task/new/wasi')).trim()
       await root.writeFile(`task/${tid}/cmd`, taskcmd)
-      const stdout = await root.openReadable(`task/${tid}/fd/1`)
-      const stderr = await root.openReadable(`task/${tid}/fd/2`)
       const logline = (line) => post('wanix:log', { line })
-      const readers = [
-        pipestdout(stdout, logline),
-        pipestdout(stderr, logline),
-      ]
       await root.writeFile(`task/${tid}/ctl`, 'start')
-      await Promise.all(readers)
+      const stdout = await root.openReadable(`task/${tid}/fd/1`)
+      await withtimeout(
+        pipestdout(stdout, logline),
+        OUTPUT_TIMEOUT_MS,
+        'task output timeout',
+      )
       return 0
     }
 

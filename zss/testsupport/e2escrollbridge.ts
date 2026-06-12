@@ -12,6 +12,11 @@ import { register, registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { runlangcompilebench } from 'zss/feature/lang/langcompilebench'
 import type { LangCompileBenchReport } from 'zss/feature/lang/langcompilebench'
+import {
+  type WANIX_SMOKE_REPORT,
+  readwanixdiag,
+  runwanixsmoke,
+} from 'zss/testsupport/e2e/wanixrepro'
 import { readnetworkpeerid, readsubscribetopic } from 'zss/feature/netterminal'
 import { isjoin } from 'zss/feature/url'
 import { panelscrolltolines } from 'zss/gadget/data/panelitemtext'
@@ -78,6 +83,10 @@ export type ZssE2eBridge = {
     iterations?: number
     warmup?: number
   }) => Promise<LangCompileBenchReport>
+  /** #wanix stop → start → run hello.wasm with scrollback evidence. */
+  runwanixsmoke: (deadlinems?: number) => Promise<WANIX_SMOKE_REPORT>
+  /** Iframe mount + wanixiframehost state snapshot. */
+  getwanixdiag: () => ReturnType<typeof readwanixdiag>
 }
 
 export function installe2ebridge(): void {
@@ -230,6 +239,12 @@ export function installe2ebridge(): void {
     },
     runlangcompilebench(opts) {
       return runlangcompilebench(opts)
+    },
+    runwanixsmoke(deadlinems) {
+      return runwanixsmoke(deadlinems)
+    },
+    getwanixdiag() {
+      return readwanixdiag()
     },
   }
 }

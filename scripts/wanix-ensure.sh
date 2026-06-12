@@ -40,6 +40,7 @@ cp "$ROOT/scripts/wanix/hello.wasm" "$BUNDLE_SRC/bundle/hello.wasm"
 
 wanix bundle pack "$BUNDLE_SRC" "$PUBLIC/wasi-minimal.bundle.tgz"
 
+cp "$ROOT/scripts/wanix/hello.wasm" "$PUBLIC/hello.wasm"
 cp "$NPM_DIST/wanix.min.js" "$NPM_DIST/wanix.wasm" "$PUBLIC/"
 
 WANIX_CLI_VERSION="$(wanix 2>&1 | head -1 || true)"

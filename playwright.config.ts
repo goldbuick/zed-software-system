@@ -4,6 +4,7 @@ const allbrowsers = process.env.PLAYWRIGHT_ALL_BROWSERS === '1'
 const includegadgete2e = process.env.PLAYWRIGHT_INCLUDE_GADGET_E2E === '1'
 const includejoine2e = process.env.PLAYWRIGHT_INCLUDE_JOIN_E2E === '1'
 const includelangbenche2e = process.env.PLAYWRIGHT_INCLUDE_LANG_BENCH === '1'
+const includewanixe2e = process.env.PLAYWRIGHT_INCLUDE_WANIX_E2E === '1'
 
 const testignore: string[] = []
 if (!includegadgete2e) {
@@ -23,6 +24,10 @@ if (!process.env.PLAYWRIGHT_HOST_MEMORY_REPRO) {
 }
 if (!includelangbenche2e) {
   testignore.push('**/lang-compile-bench.spec.ts')
+}
+if (!includewanixe2e) {
+  testignore.push('**/wanix-host.spec.ts')
+  testignore.push('**/wanix-cli.spec.ts')
 }
 
 /** Default per-test ceiling; specs may raise via test.describe.configure({ timeout }). */

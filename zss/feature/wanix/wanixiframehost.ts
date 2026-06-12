@@ -1,4 +1,5 @@
 import type { DEVICELIKE } from 'zss/device/api'
+import { normalizewanixcmd } from 'zss/feature/wanix/wanixcmd'
 import {
   wanixiobridgepush,
   wanixiobridgestart,
@@ -217,7 +218,11 @@ export async function runwanixcommand(cmd: string): Promise<number> {
   if (state !== 'ready' || !iframe) {
     throw new Error('wanix not running — use #wanix start')
   }
-  const reply = await postrpc('wanix:run', { cmd })
+  const taskcmd = normalizewanixcmd(cmd)
+  if (!taskcmd) {
+    throw new Error('empty command')
+  }
+  const reply = await postrpc('wanix:run', { cmd: taskcmd })
   if (reply.error) {
     throw new Error(reply.error)
   }

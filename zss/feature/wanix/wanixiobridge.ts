@@ -39,3 +39,11 @@ export function wanixiobridgepush(line: string) {
     flushhandle = setTimeout(flushlogs, LOG_FLUSH_MS)
   }
 }
+
+export function wanixiobridgeflush() {
+  if (flushhandle) {
+    clearTimeout(flushhandle)
+    flushhandle = undefined
+  }
+  flushlogs()
+}

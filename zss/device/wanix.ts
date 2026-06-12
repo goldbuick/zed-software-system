@@ -1,6 +1,7 @@
 import { createdevice } from 'zss/device'
 import { apierror, apilog } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
+import { normalizewanixcmd } from 'zss/feature/wanix/wanixcmd'
 import {
   haltwanixspace,
   iswanixspaceactive,
@@ -9,6 +10,7 @@ import {
   runwanixcommand,
   spawnwanixspace,
 } from 'zss/feature/wanix/wanixiframehost'
+import { wanixiobridgeflush } from 'zss/feature/wanix/wanixiobridge'
 import { doasync } from 'zss/mapping/func'
 import { isstring } from 'zss/mapping/types'
 
@@ -69,9 +71,13 @@ const wanix = createdevice('wanix', [], (message) => {
       }
       doasync(wanix, message.player, async () => {
         try {
+          const taskcmd = normalizewanixcmd(message.data)
+          apilog(wanix, message.player, `wanix run ${taskcmd}`)
           const code = await runwanixcommand(message.data)
+          wanixiobridgeflush()
           apilog(wanix, message.player, `wanix run exit ${code}`)
         } catch (err) {
+          wanixiobridgeflush()
           apierror(
             wanix,
             message.player,
