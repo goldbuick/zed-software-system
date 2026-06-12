@@ -35,9 +35,7 @@ export function wanixiobridgepush(line: string) {
     return
   }
   logbuffer.push(line)
-  if (!flushhandle) {
-    flushhandle = setTimeout(flushlogs, LOG_FLUSH_MS)
-  }
+  flushhandle ??= setTimeout(flushlogs, LOG_FLUSH_MS)
 }
 
 export function wanixiobridgeflush() {

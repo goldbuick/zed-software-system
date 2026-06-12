@@ -163,44 +163,160 @@ function escapehtml(value) {
     .replace(/"/g, '&quot;')
 }
 
+/** zss/feature/palette.ts — ZZT 16-color palette (hex used in login email) */
+const ZSS_PALETTE = {
+  black: '#000000',
+  dkblue: '#00002a',
+  ltgray: '#2a2a2a',
+  blue: '#15153f',
+  green: '#153f15',
+  cyan: '#153f3f',
+  yellow: '#3f3f15',
+  white: '#3f3f3f',
+}
+
+const ZSS_MONO =
+  'ui-monospace,"Cascadia Code","Source Code Pro",Menlo,Consolas,monospace'
+
+const ZNS_EMAIL_INNER_WIDTH = 40
+
+function padterminalline(text, width) {
+  const s = String(text ?? '')
+  if (s.length >= width) {
+    return s.slice(0, width)
+  }
+  return s + ' '.repeat(width - s.length)
+}
+
+function padterminalcenter(text, width) {
+  const s = String(text ?? '')
+  if (s.length >= width) {
+    return s.slice(0, width)
+  }
+  const left = Math.floor((width - s.length) / 2)
+  return (
+    ' '.repeat(left) + s + ' '.repeat(width - s.length - left)
+  )
+}
+
+function wrapterminallines(text, width) {
+  const s = String(text ?? '')
+  if (!s) {
+    return [padterminalline('', width)]
+  }
+  const lines = []
+  for (let i = 0; i < s.length; i += width) {
+    lines.push(padterminalline(s.slice(i, i + width), width))
+  }
+  return lines
+}
+
+function buildznsterminalframe({ namespace, command, deeplink }) {
+  const w = ZNS_EMAIL_INNER_WIDTH
+  const inner = w - 2
+  const top = `╔${'═'.repeat(w + 2)}╗`
+  const header =
+    `║ ${padterminalline('zed.cafe', 19)}${padterminalline('ZNS LOGIN', w - 19)} ║`
+  const rule = `╠${'═'.repeat(w + 2)}╣`
+  const blank = `║ ${padterminalline('', w)} ║`
+  const finish = `║ ${padterminalline(`Finish login to ${namespace}`, w)} ║`
+  const copyhint = `║ ${padterminalline('Copy into the zed.cafe terminal:', w)} ║`
+  const cmdtop = `║  ┌${'─'.repeat(inner)}┐  ║`
+  const cmdline = `║  │${padterminalcenter(command, inner)}│  ║`
+  const cmdbot = `║  └${'─'.repeat(inner)}┘  ║`
+  const openline = `║ ${padterminalline('> Open in zed.cafe', w)} ║`
+  const linklines = wrapterminallines(deeplink, w).map(
+    (line) => `║ ${line} ║`,
+  )
+  const hint1 = `║ ${padterminalline('Open on any device — phone, tablet, or', w)} ║`
+  const hint2 = `║ ${padterminalline('desktop. Or copy the command above.', w)} ║`
+  const bottom = `╚${'═'.repeat(w + 2)}╝`
+  return [
+    top,
+    header,
+    rule,
+    blank,
+    finish,
+    blank,
+    copyhint,
+    blank,
+    cmdtop,
+    cmdline,
+    cmdbot,
+    blank,
+    openline,
+    blank,
+    ...linklines,
+    blank,
+    hint1,
+    hint2,
+    bottom,
+  ].join('\n')
+}
+
 function buildznscodeemail({ code, email, namespace, joinorigin }) {
   const command = `#zns ${code}`
+  const subject = `${code} — finish login to ${namespace} on zed.cafe`
+  const preheader = `Paste ${command} into the terminal or tap Open in zed.cafe`
   const query = new URLSearchParams({
     'zns-code': code,
     'zns-email': email,
     'zns-namespace': namespace,
   })
   const deeplink = `${joinorigin}/?${query.toString()}`
-  const text = `${command}\n\nPaste into the zed.cafe terminal, or open:\n${deeplink}\n`
+  const frame = buildznsterminalframe({
+    namespace,
+    command,
+    deeplink,
+  })
+  const text = `${subject}\n\n${command}\n\nPaste into the zed.cafe terminal, or open:\n${deeplink}\n\n${frame}\n`
+  const p = ZSS_PALETTE
   const ns = escapehtml(namespace)
   const cmd = escapehtml(command)
   const link = escapehtml(deeplink)
+  const subjecthtml = escapehtml(subject)
+  const preheaderhtml = escapehtml(preheader)
+  const w = ZNS_EMAIL_INNER_WIDTH
+  const inner = w - 2
+  const gray = (s) => `<span style="color:${p.ltgray}">${s}</span>`
+  const white = (s) => `<span style="color:${p.white}">${s}</span>`
+  const htmlframe = [
+    gray(`╔${'═'.repeat(w + 2)}╗`),
+    `${gray('║ ')}<span style="color:${p.blue}">zed.cafe</span>${gray(`${' '.repeat(19 - 'zed.cafe'.length)}${padterminalline('ZNS LOGIN', w - 19)} ║`)}`,
+    gray(`╠${'═'.repeat(w + 2)}╣`),
+    gray(`║ ${padterminalline('', w)} ║`),
+    `${gray('║ ')}${white(padterminalline(`Finish login to ${ns}`, w))}${gray(' ║')}`,
+    gray(`║ ${padterminalline('', w)} ║`),
+    `${gray('║ ')}${white(padterminalline('Copy into the zed.cafe terminal:', w))}${gray(' ║')}`,
+    gray(`║ ${padterminalline('', w)} ║`),
+    gray(`║  ┌${'─'.repeat(inner)}┐  ║`),
+    `${gray('║  │')}<span style="color:${p.green};background:${p.black}">${padterminalcenter(cmd, inner)}</span>${gray('│  ║')}`,
+    gray(`║  └${'─'.repeat(inner)}┘  ║`),
+    gray(`║ ${padterminalline('', w)} ║`),
+    `${gray('║  ')}<a href="${link}" style="color:${p.cyan};text-decoration:none">&gt; Open in zed.cafe</a>${gray(`${padterminalline('', w - 18)} ║`)}`,
+    gray(`║ ${padterminalline('', w)} ║`),
+    ...wrapterminallines(deeplink, w).map((line, i) => {
+      const chunk = deeplink.slice(i * w, i * w + w)
+      return `${gray('║ ')}<a href="${link}" style="color:${p.cyan};text-decoration:none">${escapehtml(chunk)}</a>${gray(`${padterminalline('', w - chunk.length)} ║`)}`
+    }),
+    gray(`║ ${padterminalline('', w)} ║`),
+    `${gray('║ ')}<span style="color:${p.yellow}">${padterminalline('Open on any device — phone, tablet, or', w)}</span>${gray(' ║')}`,
+    `${gray('║ ')}<span style="color:${p.yellow}">${padterminalline('desktop. Or copy the command above.', w)}</span>${gray(' ║')}`,
+    gray(`╚${'═'.repeat(w + 2)}╝`),
+  ].join('\n')
   const html = `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${cmd}</title>
+<title>${subjecthtml}</title>
 </head>
-<body style="margin:0;padding:24px 16px;background:#0f0f14;font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#e8e8ef;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;margin:0 auto;">
-<tr><td style="padding:20px 18px;background:#1a1a22;border:1px solid #404058;border-radius:10px;">
-<p style="margin:0 0 6px;font-size:12px;letter-spacing:0.04em;text-transform:uppercase;color:#787890;">zns login</p>
-<p style="margin:0 0 18px;font-size:16px;line-height:1.4;color:#e8e8ef;">Finish login to <strong style="color:#e8e8ef;">${ns}</strong></p>
-<p style="margin:0 0 12px;font-size:14px;line-height:1.5;color:#a8a8b8;">Copy this command into the zed.cafe terminal:</p>
-<pre style="margin:0 0 20px;padding:14px 16px;background:#242430;border:1px solid #585870;border-radius:6px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:18px;line-height:1.4;color:#5cb87a;text-align:center;user-select:all;-webkit-user-select:all;white-space:pre-wrap;">${cmd}</pre>
-<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 14px;">
-<tr><td style="border-radius:6px;background:#6c8cff;">
-<a href="${link}" style="display:inline-block;padding:12px 22px;font-size:14px;font-weight:600;color:#ffffff;text-decoration:none;">Open in zed.cafe</a>
-</td></tr>
-</table>
-<p style="margin:0 0 8px;font-size:12px;line-height:1.5;color:#787890;text-align:center;word-break:break-all;">${link}</p>
-<p style="margin:0;font-size:12px;line-height:1.5;color:#787890;">Open on any device — phone, tablet, or desktop. Or copy the command above into the terminal.</p>
-</td></tr>
-</table>
+<body style="margin:0;padding:16px;background:${p.dkblue};color:${p.white};font-family:${ZSS_MONO};font-size:13px;line-height:1.45;">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">${preheaderhtml}</div>
+<pre style="margin:0 auto;max-width:520px;padding:16px;background:${p.dkblue};white-space:pre-wrap;word-break:break-word;font-family:${ZSS_MONO};font-size:13px;line-height:1.45">${htmlframe}</pre>
 </body>
 </html>`
-  return { subject: command, html, text }
+  return { subject, html, text }
 }
 
 async function sendznscodeemail(apikey, email, code, namespace, joinorigin) {
@@ -217,7 +333,7 @@ async function sendznscodeemail(apikey, email, code, namespace, joinorigin) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: 'login@zns.zed.cafe',
+      from: 'zed.cafe <login@zns.zed.cafe>',
       to: email,
       subject,
       html,

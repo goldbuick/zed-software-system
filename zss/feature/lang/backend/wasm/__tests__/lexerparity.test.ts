@@ -22,12 +22,15 @@ jest.mock('zss/words/textformat', () => ({
   tokenize: () => ({ errors: [{ message: 'mock' }], tokens: [] }),
 }))
 
+import {
+  stringliteral,
+  tokenize,
+} from 'zss/feature/lang/backend/typescript/lexer'
 import { compilenativewasmfortest } from 'zss/feature/lang/backend/wasm/testhelpers/nativewasmtestutil'
 import {
   createwasmstubchip,
   runwasmscriptfortest,
 } from 'zss/feature/lang/backend/wasm/testhelpers/wasmruntestutil'
-import { stringliteral, tokenize } from 'zss/feature/lang/backend/typescript/lexer'
 import type { WORD } from 'zss/words/types'
 
 function stringliteralimages(text: string): string[] {
@@ -68,9 +71,9 @@ describe('C++ wasm lexer parity via COMMAND dispatch', () => {
     expect(invoked).toEqual(
       expect.arrayContaining([['clear', 'key0'], ['die']]),
     )
-    expect(invoked.some((words) => words[0] === 'clear' && words[1] === 0)).toBe(
-      false,
-    )
+    expect(
+      invoked.some((words) => words[0] === 'clear' && words[1] === 0),
+    ).toBe(false)
   })
 
   it.each(['key9', 'key10', 'p1'])('passes %s as one clear arg', (name) => {

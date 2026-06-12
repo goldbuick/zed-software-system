@@ -59,11 +59,11 @@ function writeparams(params: SCPARAMS) {
 }
 
 function builddaisy() {
-  execSync('yarn daisy:build', { cwd: PROJECT, stdio: 'inherit' })
+  execSync('yarn task run daisy:build', { cwd: PROJECT, stdio: 'inherit' })
 }
 
 function measure(): SIDECHAIN_PARITY_RESULT {
-  execSync('yarn sidechain-parity:render', { cwd: PROJECT, stdio: 'inherit' })
+  execSync('yarn task run daisy:sidechain:parity:render', { cwd: PROJECT, stdio: 'inherit' })
   const data = JSON.parse(fs.readFileSync(PARITY_JSON, 'utf8')) as {
     result: SIDECHAIN_PARITY_RESULT
   }
@@ -146,7 +146,7 @@ async function main() {
   if (!dryrun && best.result) {
     writeparams(best.params)
     builddaisy()
-    execSync('yarn sidechain-parity:test', { cwd: PROJECT, stdio: 'inherit' })
+    execSync('yarn task run daisy:sidechain:parity:test', { cwd: PROJECT, stdio: 'inherit' })
   } else {
     writeparams(original)
   }

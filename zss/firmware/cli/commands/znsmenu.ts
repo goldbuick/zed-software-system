@@ -82,9 +82,9 @@ function showznsbytespublishform(player: string) {
     player,
     zsstexttape(
       zsstextline('$WHITEzns publish bytes'),
-      ...zsssectionlines('key'),
-      zsszedlinkline(`${ZNS_BYTES_KEY_TARGET} text`, 'key'),
-      zsszedlinkline('zns publish bytes submit', 'publish bytes'),
+      ...zsssectionlines('Key'),
+      zsszedlinkline(`${ZNS_BYTES_KEY_TARGET} text`, 'Key'),
+      zsszedlinkline('zns publish bytes submit', 'Publish Bytes'),
     ),
   )
 }
@@ -99,7 +99,7 @@ function showznspublishmenu(player: string) {
     player,
     zsstexttape(
       zsstextline('$WHITEzns publish'),
-      ...zsssectionlines('books'),
+      ...zsssectionlines('Books'),
       ...(booklinks.length > 0 ? booklinks : []),
     ),
   )
@@ -116,7 +116,7 @@ function showznspublishbookmenu(player: string, address: string) {
     player,
     zsstexttape(
       zsstextline(`$WHITEzns publish book ${address}`),
-      ...zsssectionlines('pages'),
+      ...zsssectionlines('Pages'),
     ),
   )
   setTimeout(() => {
@@ -177,8 +177,8 @@ export async function showznsmenu(player: string) {
           zsstextline(
             `session: $yellowpending login for $green${pendingemail}`,
           ),
-          ...zsssectionlines('actions'),
-          zsszedlinkline('zns restart', 'restart / cancel'),
+          ...zsssectionlines('Actions'),
+          zsszedlinkline('zns restart', 'Restart / Cancel'),
           zsstextline('$GRAYtype $green#zns <code>$GRAY in cli'),
         ),
       )
@@ -194,11 +194,11 @@ export async function showznsmenu(player: string) {
     zsstexttape(
       zsstextline('$WHITEzns (menu)'),
       zsstextline(`session: $green${session.email} @ ${session.namespace}`),
-      ...zsssectionlines('actions'),
-      zsszedlinkline('zns restart', 'logout'),
-      zsszedlinkline('zns publish bytes', 'publish bytes'),
-      zsszedlinkline('zns publish', 'publish_code'),
-      ...zsssectionlines('keys'),
+      ...zsssectionlines('Actions'),
+      zsszedlinkline('zns restart', 'Logout'),
+      zsszedlinkline('zns publish bytes', 'Publish Bytes'),
+      zsszedlinkline('zns publish', 'Publish Code'),
+      ...zsssectionlines('Keys'),
       ...(keyrows.length > 0 ? keyrows : [zsstextline('$GRAY(none)')]),
     ),
   )
@@ -209,7 +209,7 @@ export function znsrunpublish(
   start: number,
   session: ZNS_SESSION,
 ) {
-  const [mode, iii] = readargs(words, start, [ARG_TYPE.NAME])
+  const [mode, iii] = readargs(words, start, [ARG_TYPE.MAYBE_NAME])
   const modename = NAME(mode)
   const player = READ_CONTEXT.elementfocus
   if (!modename) {
@@ -217,7 +217,7 @@ export function znsrunpublish(
     return
   }
   if (modename === 'book') {
-    const [address] = readargs(words, iii, [ARG_TYPE.NAME])
+    const [address] = readargs(words, iii, [ARG_TYPE.MAYBE_NAME])
     const bookid = NAME(address)
     if (!bookid) {
       showznspublishmenu(player)
@@ -227,7 +227,7 @@ export function znsrunpublish(
     return
   }
   if (modename === 'bytes') {
-    const [filename, iiii] = readargs(words, iii, [ARG_TYPE.NAME])
+    const [filename, iiii] = readargs(words, iii, [ARG_TYPE.MAYBE_NAME])
     let keyname = NAME(filename)
     if (!keyname) {
       showznsbytespublishform(player)
@@ -260,18 +260,23 @@ export function znsrunpublish(
     return
   }
   if (modename === 'code') {
-    const [address] = readargs(words, iii, [ARG_TYPE.NAME])
-    const { target, path } = parsetarget(address)
+    const [address] = readargs(words, iii, [ARG_TYPE.MAYBE_NAME])
+    const codeaddress = NAME(address)
+    if (!codeaddress) {
+      write(SOFTWARE, player, zsstextline(`$red missing codepage address`))
+      return
+    }
+    const { target, path } = parsetarget(codeaddress)
     let book = memoryreadbookbyaddress(target)
     if (!ispresent(book)) {
       book = memoryreadfirstbook()
     }
-    const codepage = memoryreadcodepage(book, path || address)
+    const codepage = memoryreadcodepage(book, path || codeaddress)
     if (!ispresent(codepage)) {
       write(
         SOFTWARE,
         player,
-        zsstextline(`$red codepage not found: ${address}`),
+        zsstextline(`$red codepage not found: ${codeaddress}`),
       )
       return
     }

@@ -42,7 +42,7 @@ function iswasmmagic(bytes) {
 
 async function main() {
   if (wasmartifactsmissing()) {
-    throw new Error('zss_lang.wasm missing — run yarn lang:build first')
+    throw new Error('zss_lang.wasm missing — run yarn task run lang:build first')
   }
 
   const module = await createlangmodule()

@@ -7,25 +7,25 @@ Golden-fixture parity harness for the C++ `zss_memory` port. **Not run in CI** â
 1. **Record fixtures** from TS oracle (after changing memory behavior or adding scenarios):
 
    ```bash
-   yarn memory:parity:regen
+   yarn task run memory:parity:regen
    ```
 
 2. **Validate native + WASM** (requires `g++`; WASM step needs Emscripten `emcc`):
 
    ```bash
-   yarn memory:parity:test
+   yarn task run memory:parity:test
    ```
 
    Native only:
 
    ```bash
-   yarn memory:test:native
+   yarn task run memory:test:native
    ```
 
 3. **Rebuild WASM artifacts** when C++ changes (also run automatically by `memory:parity:test`):
 
    ```bash
-   yarn memory:build
+   yarn task run memory:build
    ```
 
    Outputs: `cafe/public/wasm/memory/zss_memory.{js,wasm}`
@@ -33,7 +33,7 @@ Golden-fixture parity harness for the C++ `zss_memory` port. **Not run in CI** â
 4. **Check fixture coverage** against `zss/memory/__tests__/`:
 
    ```bash
-   yarn memory:parity:check-coverage
+   yarn task run memory:parity:check-coverage
    ```
 
 ## Layout
@@ -52,4 +52,4 @@ Golden-fixture parity harness for the C++ `zss_memory` port. **Not run in CI** â
 1. Add or extend a test in `zss/memory/__tests__/`.
 2. Add a fixture writer in `regenfixtures.test.ts` and register it in `FIXTURE_MANIFEST`.
 3. Implement or extend the matching `run_op` in C++.
-4. Run `yarn memory:parity:regen` then `yarn memory:parity:test`.
+4. Run `yarn task run memory:parity:regen` then `yarn task run memory:parity:test`.

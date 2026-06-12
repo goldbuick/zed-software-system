@@ -39,32 +39,32 @@ const SUITE_CONFIG: Record<
 > = {
   'play-drum': {
     label: 'play/drum balance',
-    render: 'yarn play-drum-balance:render',
-    test: 'yarn play-drum-balance:test',
-    calibrate: 'yarn play-drum-balance:calibrate',
+    render: 'yarn task run daisy:play-drum-balance:render',
+    test: 'yarn task run daisy:play-drum-balance:test',
+    calibrate: 'yarn task run daisy:play-drum-balance:calibrate',
   },
   sidechain: {
     label: 'sidechain',
-    render: 'yarn sidechain-parity:render',
-    test: 'yarn sidechain-parity:test',
-    calibrate: 'yarn sidechain-parity:calibrate',
+    render: 'yarn task run daisy:sidechain:parity:render',
+    test: 'yarn task run daisy:sidechain:parity:test',
+    calibrate: 'yarn task run daisy:sidechain:parity:calibrate',
   },
   'synth-env': {
     label: 'synth env',
-    render: 'yarn synth-env-parity:render',
-    test: 'yarn synth-env-parity:test',
-    calibrate: 'yarn synth-env-parity:calibrate',
+    render: 'yarn task run daisy:synth-env:render',
+    test: 'yarn task run daisy:synth-env:test',
+    calibrate: 'yarn task run daisy:synth-env:calibrate',
   },
   notepop: {
     label: 'notepop',
-    render: 'yarn notepop:render:ab',
-    test: 'yarn notepop:test',
+    render: 'yarn task run daisy:notepop:render:ab',
+    test: 'yarn task run daisy:notepop:test',
     calibrate: '',
   },
   pitch: {
     label: 'pitch stability',
-    render: 'yarn pitch-stability:render',
-    test: 'yarn pitch-stability:test',
+    render: 'yarn task run daisy:pitch-stability:render',
+    test: 'yarn task run daisy:pitch-stability:test',
     calibrate: '',
   },
 }
@@ -104,7 +104,7 @@ function runpipeline(
       return true
     }
     if (!opts.skipbuild) {
-      execSync('yarn daisy:build', {
+      execSync('yarn task run daisy:build', {
         cwd: PROJECT,
         stdio: 'inherit',
         timeout: EXEC_BUILD_DAISY_TIMEOUT_MS,

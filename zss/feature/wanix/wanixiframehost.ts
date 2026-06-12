@@ -119,10 +119,13 @@ function postrpc(type: string, data: Record<string, unknown> = {}) {
   const id = createsid()
   const payload = { type, id, ...data }
   return new Promise<RpcReply>((resolve, reject) => {
-    const timer = setTimeout(() => {
-      pending.delete(id)
-      reject(new Error(`wanix rpc timeout: ${type}`))
-    }, type === 'wanix:run' ? RPC_TIMEOUT_MS : READY_TIMEOUT_MS)
+    const timer = setTimeout(
+      () => {
+        pending.delete(id)
+        reject(new Error(`wanix rpc timeout: ${type}`))
+      },
+      type === 'wanix:run' ? RPC_TIMEOUT_MS : READY_TIMEOUT_MS,
+    )
     pending.set(id, { resolve, reject, timer })
     const win = iframe?.contentWindow
     if (!win) {

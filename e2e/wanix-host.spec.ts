@@ -1,7 +1,5 @@
 import { expect, test } from '@playwright/test'
 
-const ORIGIN = 'http://127.0.0.1:7777'
-
 test.describe('wanix host page (isolated)', () => {
   test.describe.configure({ timeout: 180_000 })
 
@@ -79,10 +77,7 @@ test.describe('wanix host page (isolated)', () => {
             })
           }
         })
-        window.postMessage(
-          { type: 'wanix:run', id, cmd: 'hello.wasm' },
-          origin,
-        )
+        window.postMessage({ type: 'wanix:run', id, cmd: 'hello.wasm' }, origin)
       })
     })
 

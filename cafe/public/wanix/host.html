@@ -22,15 +22,6 @@
       parent.postMessage({ type, ...data }, origin)
     }
 
-    function withtimeout(promise, ms, label) {
-      return Promise.race([
-        promise,
-        new Promise((_, reject) => {
-          setTimeout(() => reject(new Error(label)), ms)
-        }),
-      ])
-    }
-
     async function pipestdout(stream, online) {
       const reader = stream.getReader()
       const decoder = new TextDecoder()
@@ -61,22 +52,49 @@
       }
     }
 
+    async function wiretaskstdio(tid) {
+      const taskpath = `#task/${tid}`
+      const taskroot = sys.openHandle(tid)
+      const termid = (await root.readText('#term/new')).trim()
+      const term = `#term/${termid}`
+      await root.bind(term, `${taskpath}/term`)
+      await taskroot.bind(term, '#task/self/term')
+      const program = `${term}/program`
+      await taskroot.bind(program, `${taskpath}/fd/0`)
+      await taskroot.bind(program, `${taskpath}/fd/1`)
+      await taskroot.bind(program, `${taskpath}/fd/2`)
+      return term
+    }
+
     async function runtask(cmd) {
       const taskcmd = (cmd || '').trim()
       if (!taskcmd) {
         throw new Error('empty command')
       }
-      const tid = (await root.readText('task/new/wasi')).trim()
-      await root.writeFile(`task/${tid}/cmd`, taskcmd)
-      const logline = (line) => post('wanix:log', { line })
-      await root.writeFile(`task/${tid}/ctl`, 'start')
-      const stdout = await root.openReadable(`task/${tid}/fd/1`)
-      await withtimeout(
-        pipestdout(stdout, logline),
-        OUTPUT_TIMEOUT_MS,
-        'task output timeout',
-      )
-      return 0
+      const tid = (await root.readText('#task/new/wasi')).trim()
+      const taskpath = `#task/${tid}`
+      await root.writeFile(`${taskpath}/cmd`, taskcmd)
+      const term = await wiretaskstdio(tid)
+      const logline = (line) => post('wanix:log', { line: line.replace(/\r$/, '') })
+      const datapath = `${term}/data`
+      await root.waitFor(datapath, OUTPUT_TIMEOUT_MS)
+      const stdout = await root.openReadable(datapath)
+      const reading = pipestdout(stdout, logline)
+      await root.writeFile(`${taskpath}/ctl`, 'start')
+      const deadline = Date.now() + OUTPUT_TIMEOUT_MS
+      while (Date.now() < deadline) {
+        try {
+          const exit = (await root.readText(`${taskpath}/exit`)).trim()
+          if (exit !== '') {
+            await Promise.race([reading, new Promise((resolve) => setTimeout(resolve, 250))])
+            return Number(exit) || 0
+          }
+        } catch {
+          // task still running
+        }
+        await new Promise((resolve) => setTimeout(resolve, 50))
+      }
+      throw new Error('task output timeout')
     }
 
     async function boot() {

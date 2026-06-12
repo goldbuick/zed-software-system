@@ -34,9 +34,9 @@ describe('wasm script run budget', () => {
       getcase: () => 1,
       nextcase: () => undefined,
     })
-    expect(() => loadscriptsync(wasmbytes, chip, { runbudget: 64 }).run()).toThrow(
-      /run budget/,
-    )
+    expect(() =>
+      loadscriptsync(wasmbytes, chip, { runbudget: 64 }).run(),
+    ).toThrow(/run budget/)
   })
 
   it('terminates normally under the default jest worker budget', () => {

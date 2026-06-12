@@ -1,4 +1,10 @@
-import { apierror, wanixrun, wanixstart, wanixstatus, wanixstop } from 'zss/device/api'
+import {
+  apierror,
+  wanixrun,
+  wanixstart,
+  wanixstatus,
+  wanixstop,
+} from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import { zssheaderlines, zsstexttape } from 'zss/feature/zsstextui'
@@ -25,10 +31,7 @@ function showwanixhelp(player: string) {
 export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
   return fw.command(
     'wanix',
-    [
-      ARG_TYPE.MAYBE_NAME,
-      'bare: wanixspace; start/stop/run WASI one-shots',
-    ],
+    [ARG_TYPE.MAYBE_NAME, 'bare: wanixspace; start/stop/run WASI one-shots'],
     (_, words) => {
       const [action, ii] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
       const player = READ_CONTEXT.elementfocus

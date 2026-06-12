@@ -1,10 +1,10 @@
 import { vmcli } from 'zss/device/api'
 import { register, registerreadplayer } from 'zss/device/register'
-import { useTerminal } from 'zss/gadget/data/state'
 import {
   iswanixspaceactive,
   readwanixhoststate,
 } from 'zss/feature/wanix/wanixiframehost'
+import { useTerminal } from 'zss/gadget/data/state'
 
 export type WANIX_SMOKE_REPORT = {
   logs: string[]
@@ -34,7 +34,8 @@ function buildreport(logs: string[]): WANIX_SMOKE_REPORT {
     sawruncmd: joined.includes('wanix run hello.wasm'),
     sawhello: joined.includes('Hello from wanix!'),
     sawexit: /wanix run exit \d+/.test(joined),
-    sawerror: joined.includes('wanix>>') || joined.includes('task output timeout'),
+    sawerror:
+      joined.includes('wanix>>') || joined.includes('task output timeout'),
     hoststate: readwanixhoststate(),
     iframepresent: !!frame,
     iframesrc: frame?.src ?? '',
@@ -46,7 +47,9 @@ function sleep(ms: number) {
 }
 
 /** Run #wanix stop → start → run hello.wasm and collect terminal evidence. */
-export async function runwanixsmoke(deadlinems = 90_000): Promise<WANIX_SMOKE_REPORT> {
+export async function runwanixsmoke(
+  deadlinems = 90_000,
+): Promise<WANIX_SMOKE_REPORT> {
   const player = registerreadplayer()
   const logstart = (useTerminal.getState().buffer ?? []).length
 

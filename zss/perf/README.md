@@ -13,7 +13,7 @@ When disabled, helpers are no-ops and the `Profiler` wrapper is not used.
 
 ## Bundle size
 
-`yarn app:analyze` runs a production build with `ZSS_ANALYZER=1` and opens the bundle analyzer (see root [`package.json`](../../package.json)).
+`yarn task run app:analyze` runs a production build with `ZSS_ANALYZER=1` and opens the bundle analyzer (see [docs/tasks.md](../../docs/tasks.md)).
 
 ## Browser tools
 
@@ -26,7 +26,7 @@ When disabled, helpers are no-ops and the `Profiler` wrapper is not used.
 1. Set `ZSS_DEBUG_PERF_UI=true`, restart Vite, reproduce the scenario you care about.
 2. Open Chrome **Performance**, start recording **without** enabling **CPU sampling** / JS profiler if you want traces comparable to production-style overhead.
 3. Use a **clean profile or incognito** so extensions do not add `FunctionCall` noise.
-4. Optional: run a **production** build (`yarn app:build` + `yarn app:preview`) for a second baseline.
+4. Optional: run a **production** build (`yarn task run app:build` + `yarn task run app:preview`) for a second baseline.
 5. After changes, repeat the same steps and compare the **User Timing** `zss:*` rows and frame slices.
 
 ## Jest
