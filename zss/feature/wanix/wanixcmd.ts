@@ -1,4 +1,4 @@
-/** Normalize a #wanix run argument to a Wanix namespace executable path. */
+/** Normalize a wanix run path (bare root-relative executable). */
 export function normalizewanixcmd(cmd: string): string {
   let trimmed = (cmd || '').trim()
   if (
@@ -10,15 +10,5 @@ export function normalizewanixcmd(cmd: string): string {
   if (!trimmed) {
     return ''
   }
-  if (trimmed.startsWith('#')) {
-    return trimmed
-  }
-  if (trimmed.startsWith('bundle/')) {
-    return trimmed
-  }
-  const bare = trimmed.replace(/^\/+/, '')
-  if (bare === 'hello.wasm') {
-    return bare
-  }
-  return `bundle/${bare}`
+  return trimmed.replace(/^\/+/, '')
 }

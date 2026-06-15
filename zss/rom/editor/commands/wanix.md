@@ -1,3 +1,3 @@
 ---
-hint: $DKGRAY#wanix — on-demand WASI sandbox; start, stop, run, status
+hint: $DKGRAYdrop .wasm or .tgz to run; #wanix shows state; #wanix stop halts
 ---

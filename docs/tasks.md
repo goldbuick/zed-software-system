@@ -217,4 +217,4 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 
 | Task | Description | Tags | Deps | Env |
 |------|-------------|------|------|-----|
-| `yarn task run wanix:ensure` | Ensure wanix bundle artifacts are present | — | — | — |
+| `yarn task run wanix:ensure` | Vend wanix browser runtime into cafe/public/wanix | — | — | — |

@@ -11,7 +11,7 @@ const HOST_URL = '/wanix/host.html'
 const READY_TIMEOUT_MS = 120_000
 const RPC_TIMEOUT_MS = 300_000
 
-export type WANIX_HOST_STATE = 'idle' | 'starting' | 'ready' | 'stopping'
+export type WANIX_HOST_STATE = 'idle' | 'starting' | 'ready'
 
 type RpcReply = {
   type: string
@@ -20,7 +20,10 @@ type RpcReply = {
   error?: string
   active?: boolean
   ready?: boolean
+  taskactive?: boolean
+  tid?: string
   line?: string
+  entries?: string[]
 }
 
 let iframe: HTMLIFrameElement | undefined
@@ -34,6 +37,15 @@ const pending = new Map<
     timer: ReturnType<typeof setTimeout>
   }
 >()
+
+const RPC_DONE_TYPES = new Set([
+  'wanix:run:done',
+  'wanix:status',
+  'wanix:put:done',
+  'wanix:halt:done',
+  'wanix:mount-archive:done',
+  'wanix:ls:done',
+])
 
 function originok(origin: string) {
   return typeof window !== 'undefined' && origin === window.location.origin
@@ -84,23 +96,23 @@ function wiremessages() {
           wanixiobridgepush(msg.line)
         }
         break
-      case 'wanix:run:done':
-      case 'wanix:status':
-      case 'wanix:stopped': {
-        const id = msg.id
-        if (!id || !pending.has(id)) {
-          break
-        }
-        const entry = pending.get(id)
-        if (!entry) {
-          break
-        }
-        clearTimeout(entry.timer)
-        pending.delete(id)
-        entry.resolve(msg)
-        break
-      }
       default:
+        if (!RPC_DONE_TYPES.has(msg.type)) {
+          break
+        }
+        {
+          const id = msg.id
+          if (!id || !pending.has(id)) {
+            break
+          }
+          const entry = pending.get(id)
+          if (!entry) {
+            break
+          }
+          clearTimeout(entry.timer)
+          pending.delete(id)
+          entry.resolve(msg)
+        }
         break
     }
   }
@@ -115,17 +127,18 @@ function unwirmessages() {
   messagehandler = undefined
 }
 
-function postrpc(type: string, data: Record<string, unknown> = {}) {
+function postrpc(
+  type: string,
+  data: Record<string, unknown> = {},
+  timeoutms = READY_TIMEOUT_MS,
+) {
   const id = createsid()
   const payload = { type, id, ...data }
   return new Promise<RpcReply>((resolve, reject) => {
-    const timer = setTimeout(
-      () => {
-        pending.delete(id)
-        reject(new Error(`wanix rpc timeout: ${type}`))
-      },
-      type === 'wanix:run' ? RPC_TIMEOUT_MS : READY_TIMEOUT_MS,
-    )
+    const timer = setTimeout(() => {
+      pending.delete(id)
+      reject(new Error(`wanix rpc timeout: ${type}`))
+    }, timeoutms)
     pending.set(id, { resolve, reject, timer })
     const win = iframe?.contentWindow
     if (!win) {
@@ -192,6 +205,15 @@ export async function spawnwanixspace(
   })
 }
 
+export async function ensurewanixsandbox(
+  device: DEVICELIKE,
+  player: string,
+): Promise<void> {
+  if (!iswanixspaceactive()) {
+    await spawnwanixspace(device, player)
+  }
+}
+
 function cleanup() {
   rejectallpending('wanix halted')
   wanixiobridgestop()
@@ -202,40 +224,79 @@ function cleanup() {
   state = 'idle'
 }
 
-export async function haltwanixspace(): Promise<void> {
-  if (!iframe) {
-    state = 'idle'
-    return
-  }
-  state = 'stopping'
-  try {
-    await postrpc('wanix:stop')
-  } catch {
-    // iframe may already be gone
-  }
-  cleanup()
-  unwirmessages()
-}
-
 export async function runwanixcommand(cmd: string): Promise<number> {
   if (state !== 'ready' || !iframe) {
-    throw new Error('wanix not running — use #wanix start')
+    throw new Error('wanix not running — drop a .wasm to start')
   }
   const taskcmd = normalizewanixcmd(cmd)
   if (!taskcmd) {
     throw new Error('empty command')
   }
-  const reply = await postrpc('wanix:run', { cmd: taskcmd })
+  const reply = await postrpc('wanix:run', { cmd: taskcmd }, RPC_TIMEOUT_MS)
   if (reply.error) {
     throw new Error(reply.error)
   }
   return typeof reply.code === 'number' ? reply.code : 0
 }
 
+export async function putwanixfile(name: string, bytes: Uint8Array) {
+  if (state !== 'ready' || !iframe) {
+    throw new Error('wanix not running')
+  }
+  const buffer =
+    bytes.byteOffset === 0 && bytes.byteLength === bytes.buffer.byteLength
+      ? bytes.buffer
+      : bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)
+  const reply = await postrpc('wanix:put', { name, bytes: buffer }, RPC_TIMEOUT_MS)
+  if (reply.error) {
+    throw new Error(reply.error)
+  }
+}
+
+export async function mountwanixarchive(name: string, bytes: Uint8Array) {
+  if (state !== 'ready' || !iframe) {
+    throw new Error('wanix not running')
+  }
+  const buffer =
+    bytes.byteOffset === 0 && bytes.byteLength === bytes.buffer.byteLength
+      ? bytes.buffer
+      : bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)
+  const reply = await postrpc(
+    'wanix:mount-archive',
+    { name, bytes: buffer },
+    RPC_TIMEOUT_MS,
+  )
+  if (reply.error) {
+    throw new Error(reply.error)
+  }
+}
+
+export async function listwanixdir(path: string): Promise<string[]> {
+  if (state !== 'ready' || !iframe) {
+    throw new Error('wanix not running')
+  }
+  const reply = await postrpc('wanix:ls', { path }, RPC_TIMEOUT_MS)
+  if (reply.error) {
+    throw new Error(reply.error)
+  }
+  return Array.isArray(reply.entries) ? reply.entries.map(String) : []
+}
+
+export async function haltwanixtask(): Promise<void> {
+  if (state !== 'ready' || !iframe) {
+    return
+  }
+  const reply = await postrpc('wanix:halt', {}, RPC_TIMEOUT_MS)
+  if (reply.error) {
+    throw new Error(reply.error)
+  }
+}
+
 export async function readwanixstatus(): Promise<{
   active: boolean
   ready: boolean
   state: WANIX_HOST_STATE
+  taskactive?: boolean
 }> {
   if (!iframe || state !== 'ready') {
     return { active: iswanixspaceactive(), ready: false, state }
@@ -245,6 +306,7 @@ export async function readwanixstatus(): Promise<{
     active: !!reply.active,
     ready: !!reply.ready,
     state,
+    taskactive: !!reply.taskactive,
   }
 }
 

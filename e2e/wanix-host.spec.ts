@@ -1,22 +1,22 @@
 import { expect, test } from '@playwright/test'
 
+import { HELLO_WASM_BYTE_LIST } from '../zss/testsupport/wanix/hellowasm'
+
 test.describe('wanix host page (isolated)', () => {
   test.describe.configure({ timeout: 180_000 })
 
-  test('vends hello.wasm and runtime assets', async ({ request }) => {
+  test('vends runtime assets', async ({ request }) => {
     for (const path of [
       '/wanix/host.html',
-      '/wanix/hello.wasm',
       '/wanix/wanix.wasm',
       '/wanix/wanix.min.js',
-      '/wanix/wasi-minimal.bundle.tgz',
     ]) {
       const res = await request.get(path)
       expect(res.ok(), `${path} should be served`).toBeTruthy()
     }
   })
 
-  test('boots wanix-system and runs hello.wasm via postMessage', async ({
+  test('boots wanix-system, puts hello.wasm, and runs via postMessage', async ({
     page,
   }) => {
     await page.goto('/wanix/host.html')
@@ -47,8 +47,39 @@ test.describe('wanix host page (isolated)', () => {
       })
     })
 
-    const result = await page.evaluate(async () => {
+    const result = await page.evaluate(async (wasmbytes) => {
       const origin = location.origin
+      const wasmbuffer = new Uint8Array(wasmbytes).buffer
+
+      const rpc = (type: string, data: Record<string, unknown>, done: string) =>
+        new Promise<{ error?: string }>((resolve) => {
+          const id = `e2e-${type}`
+          const timer = setTimeout(
+            () => resolve({ error: `${type} timeout` }),
+            60_000,
+          )
+          window.addEventListener('message', function onmsg(ev: MessageEvent) {
+            if (ev.origin !== origin) {
+              return
+            }
+            if (ev.data?.type === done && ev.data.id === id) {
+              clearTimeout(timer)
+              window.removeEventListener('message', onmsg)
+              resolve({ error: ev.data.error })
+            }
+          })
+          window.postMessage({ type, id, ...data }, origin)
+        })
+
+      const putreply = await rpc(
+        'wanix:put',
+        { name: 'hello.wasm', bytes: wasmbuffer },
+        'wanix:put:done',
+      )
+      if (putreply.error) {
+        return { code: -1, error: putreply.error, lines: [] }
+      }
+
       return new Promise<{
         code: number
         error?: string
@@ -77,9 +108,12 @@ test.describe('wanix host page (isolated)', () => {
             })
           }
         })
-        window.postMessage({ type: 'wanix:run', id, cmd: 'hello.wasm' }, origin)
+        window.postMessage(
+          { type: 'wanix:run', id, cmd: 'hello.wasm' },
+          origin,
+        )
       })
-    })
+    }, HELLO_WASM_BYTE_LIST)
 
     expect(result.error, JSON.stringify(result, null, 2)).toBeUndefined()
     expect(result.code).toBe(0)

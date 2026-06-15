@@ -46,7 +46,7 @@ export const E2E_TASKS: TaskDef[] = [
     run: exec(['playwright', 'test', 'e2e/lang-compile-bench.spec.ts']),
   }),
   def('e2e:test:wanix', {
-    description: 'Wanix host and CLI e2e',
+    description: 'Wanix host and drop hello.wasm CLI e2e',
     env: { PLAYWRIGHT_INCLUDE_WANIX_E2E: '1' },
     run: exec([
       'playwright',

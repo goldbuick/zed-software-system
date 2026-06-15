@@ -55,7 +55,7 @@ describe('wanixiframehost', () => {
 
   it('rejects run when not ready', async () => {
     await expect(runwanixcommand('hello.wasm')).rejects.toThrow(
-      'wanix not running',
+      'wanix not running — drop a .wasm to start',
     )
   })
 })

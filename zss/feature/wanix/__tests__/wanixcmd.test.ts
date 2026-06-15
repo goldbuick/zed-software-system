@@ -1,12 +1,8 @@
 import { normalizewanixcmd } from 'zss/feature/wanix/wanixcmd'
 
 describe('normalizewanixcmd', () => {
-  it('maps hello.wasm smoke binary to root path', () => {
+  it('passes through bare wasm filename', () => {
     expect(normalizewanixcmd('hello.wasm')).toBe('hello.wasm')
-  })
-
-  it('maps other bare wasm names into bundle/', () => {
-    expect(normalizewanixcmd('other.wasm')).toBe('bundle/other.wasm')
   })
 
   it('strips surrounding double quotes', () => {
@@ -23,6 +19,10 @@ describe('normalizewanixcmd', () => {
 
   it('passes through kernel #bundle paths', () => {
     expect(normalizewanixcmd('#bundle/hello.wasm')).toBe('#bundle/hello.wasm')
+  })
+
+  it('strips leading slashes', () => {
+    expect(normalizewanixcmd('/hello.wasm')).toBe('hello.wasm')
   })
 
   it('returns empty for blank input', () => {

@@ -83,7 +83,7 @@ export type ZssE2eBridge = {
     iterations?: number
     warmup?: number
   }) => Promise<LangCompileBenchReport>
-  /** #wanix stop → start → run hello.wasm with scrollback evidence. */
+  /** Drop hello.wasm (auto-start sandbox) with scrollback evidence. */
   runwanixsmoke: (deadlinems?: number) => Promise<WANIX_SMOKE_REPORT>
   /** Iframe mount + wanixiframehost state snapshot. */
   getwanixdiag: () => ReturnType<typeof readwanixdiag>

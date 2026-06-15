@@ -1,14 +1,15 @@
-import { vmcli } from 'zss/device/api'
-import { register, registerreadplayer } from 'zss/device/register'
+import { registerreadplayer } from 'zss/device/register'
 import {
   iswanixspaceactive,
   readwanixhoststate,
 } from 'zss/feature/wanix/wanixiframehost'
-import { useTerminal } from 'zss/gadget/data/state'
+import { parsewanixwasm } from 'zss/feature/wanix/wanixdrop'
+import { useTape } from 'zss/gadget/data/state'
+import { createhellowasmfile } from 'zss/testsupport/wanix/hellowasm'
 
 export type WANIX_SMOKE_REPORT = {
   logs: string[]
-  sawstarted: boolean
+  sawsandbox: boolean
   sawruncmd: boolean
   sawhello: boolean
   sawexit: boolean
@@ -20,8 +21,12 @@ export type WANIX_SMOKE_REPORT = {
 }
 
 function logslicefrom(start: number): string[] {
-  const buf = useTerminal.getState().buffer ?? []
-  return buf.slice(start).map((line) => String(line))
+  const logs = useTape.getState().terminal.logs ?? []
+  const added = logs.length - start
+  if (added <= 0) {
+    return []
+  }
+  return logs.slice(0, added).map((line) => String(line))
 }
 
 function buildreport(logs: string[]): WANIX_SMOKE_REPORT {
@@ -30,10 +35,10 @@ function buildreport(logs: string[]): WANIX_SMOKE_REPORT {
   const frame = mount?.querySelector('iframe')
   return {
     logs,
-    sawstarted: joined.includes('wanix started'),
+    sawsandbox: iswanixspaceactive(),
     sawruncmd: joined.includes('wanix run hello.wasm'),
     sawhello: joined.includes('Hello from wanix!'),
-    sawexit: /wanix run exit \d+/.test(joined),
+    sawexit: /wanix exit \d+/.test(joined),
     sawerror:
       joined.includes('wanix>>') || joined.includes('task output timeout'),
     hoststate: readwanixhoststate(),
@@ -46,29 +51,28 @@ function sleep(ms: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, ms))
 }
 
-/** Run #wanix stop → start → run hello.wasm and collect terminal evidence. */
+async function drophellowasm(player: string) {
+  await parsewanixwasm(player, createhellowasmfile())
+}
+
+/** Drop hello.wasm (auto-start sandbox) and collect terminal evidence. */
 export async function runwanixsmoke(
   deadlinems = 90_000,
 ): Promise<WANIX_SMOKE_REPORT> {
   const player = registerreadplayer()
-  const logstart = (useTerminal.getState().buffer ?? []).length
+  const logstart = (useTape.getState().terminal.logs ?? []).length
 
-  vmcli(register, player, '#wanix stop')
-  await sleep(300)
-  vmcli(register, player, '#wanix start')
-
-  const started = Date.now()
-  while (Date.now() - started < deadlinems) {
+  try {
+    await drophellowasm(player)
+  } catch (err) {
     const logs = logslicefrom(logstart)
-    const partial = buildreport(logs)
-    if (partial.sawstarted || iswanixspaceactive()) {
-      break
-    }
-    await sleep(250)
+    const report = buildreport(logs)
+    report.errormessage =
+      err instanceof Error ? err.message : String(err)
+    return report
   }
 
-  vmcli(register, player, '#wanix run hello.wasm')
-
+  const started = Date.now()
   while (Date.now() - started < deadlinems) {
     const logs = logslicefrom(logstart)
     const report = buildreport(logs)

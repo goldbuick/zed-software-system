@@ -3,7 +3,7 @@ import type { TaskDef } from '../types'
 
 export const WANIX_TASKS: TaskDef[] = [
   def('wanix:ensure', {
-    description: 'Ensure wanix bundle artifacts are present',
+    description: 'Vend wanix browser runtime into cafe/public/wanix',
     run: shell('sh scripts/wanix-ensure.sh'),
   }),
 ]

@@ -1,67 +1,38 @@
-import {
-  apierror,
-  wanixrun,
-  wanixstart,
-  wanixstatus,
-  wanixstop,
-} from 'zss/device/api'
+import { apierror, wanixkeep, wanixreplace, wanixshow, wanixstop } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { terminalwritelines } from 'zss/feature/terminalwritelines'
-import { zssheaderlines, zsstexttape } from 'zss/feature/zsstextui'
 import { FIRMWARE } from 'zss/firmware'
 import { ispresent } from 'zss/mapping/types'
-import { READ_CONTEXT, readargs, readargsuntilend } from 'zss/words/reader'
+import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE, NAME } from 'zss/words/types'
-
-function showwanixhelp(player: string) {
-  terminalwritelines(
-    SOFTWARE,
-    player,
-    zsstexttape(
-      zssheaderlines('wanix'),
-      '$gray#wanix$white — on-demand WASI sandbox (hidden iframe)',
-      '$7 #wanix start',
-      '$7 #wanix stop',
-      '$7 #wanix run hello.wasm',
-      '$7 #wanix status',
-    ),
-  )
-}
 
 export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
   return fw.command(
     'wanix',
-    [ARG_TYPE.MAYBE_NAME, 'bare: wanixspace; start/stop/run WASI one-shots'],
+    [ARG_TYPE.MAYBE_NAME, 'bare: drop .wasm/.tgz to run; stop halts binary'],
     (_, words) => {
-      const [action, ii] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+      const [action] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
       const player = READ_CONTEXT.elementfocus
       if (!ispresent(action)) {
-        wanixstatus(SOFTWARE, player)
-        showwanixhelp(player)
+        wanixshow(SOFTWARE, player)
         return 0
       }
       switch (NAME(action)) {
-        case 'start':
-          wanixstart(SOFTWARE, player)
-          break
         case 'stop':
           wanixstop(SOFTWARE, player)
           break
-        case 'run': {
-          const [cmdwords] = readargsuntilend(words, ii, ARG_TYPE.NAME)
-          const cmd = cmdwords.join(' ').trim()
-          if (!cmd) {
-            apierror(SOFTWARE, player, 'wanix', '#wanix run <command…>')
-            break
-          }
-          wanixrun(SOFTWARE, player, cmd)
+        case 'replace':
+          wanixreplace(SOFTWARE, player)
           break
-        }
-        case 'status':
-          wanixstatus(SOFTWARE, player)
+        case 'keep':
+          wanixkeep(SOFTWARE, player)
           break
         default:
-          showwanixhelp(player)
+          apierror(
+            SOFTWARE,
+            player,
+            'wanix',
+            'drop a .wasm or .tgz — #wanix or #wanix stop',
+          )
           break
       }
       return 0

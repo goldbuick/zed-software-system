@@ -1,18 +1,19 @@
 import { createdevice } from 'zss/device'
-import { apierror, apilog } from 'zss/device/api'
+import { apierror } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
-import { normalizewanixcmd } from 'zss/feature/wanix/wanixcmd'
 import {
-  haltwanixspace,
-  iswanixspaceactive,
-  readwanixhoststate,
-  readwanixstatus,
-  runwanixcommand,
-  spawnwanixspace,
-} from 'zss/feature/wanix/wanixiframehost'
-import { wanixiobridgeflush } from 'zss/feature/wanix/wanixiobridge'
+  wanixhandlekeep,
+  wanixhandlereplace,
+  wanixhandlestop,
+} from 'zss/feature/wanix/wanixdrop'
+import { iswanixspaceactive, readwanixstatus } from 'zss/feature/wanix/wanixiframehost'
+import {
+  formatwanixstatelines,
+  readwanixpending,
+} from 'zss/feature/wanix/wanixsession'
+import { terminalwritelines } from 'zss/feature/terminalwritelines'
+import { zssheaderlines, zsstexttape } from 'zss/feature/zsstextui'
 import { doasync } from 'zss/mapping/func'
-import { isstring } from 'zss/mapping/types'
 
 const wanix = createdevice('wanix', [], (message) => {
   if (!wanix.session(message)) {
@@ -25,77 +26,41 @@ const wanix = createdevice('wanix', [], (message) => {
   }
 
   switch (message.target) {
-    case 'start':
-      doasync(wanix, message.player, async () => {
-        if (iswanixspaceactive()) {
-          apierror(
-            wanix,
-            message.player,
-            'wanix',
-            'wanix already active — #wanix stop first',
-          )
-          return
-        }
-        try {
-          await spawnwanixspace(wanix, message.player)
-          apilog(wanix, message.player, 'wanix started')
-        } catch (err) {
-          apierror(
-            wanix,
-            message.player,
-            'wanix',
-            err instanceof Error ? err.message : String(err),
-          )
-        }
-      })
-      break
     case 'stop':
       doasync(wanix, message.player, async () => {
-        try {
-          await haltwanixspace()
-          apilog(wanix, message.player, 'wanix stopped')
-        } catch (err) {
-          apierror(
-            wanix,
-            message.player,
-            'wanix',
-            err instanceof Error ? err.message : String(err),
-          )
-        }
+        await wanixhandlestop(wanix, message.player)
       })
       break
-    case 'run':
-      if (!isstring(message.data)) {
-        apierror(wanix, message.player, 'wanix', '#wanix run <command…>')
-        break
-      }
+    case 'replace':
       doasync(wanix, message.player, async () => {
-        try {
-          const taskcmd = normalizewanixcmd(message.data)
-          apilog(wanix, message.player, `wanix run ${taskcmd}`)
-          const code = await runwanixcommand(message.data)
-          wanixiobridgeflush()
-          apilog(wanix, message.player, `wanix run exit ${code}`)
-        } catch (err) {
-          wanixiobridgeflush()
-          apierror(
-            wanix,
-            message.player,
-            'wanix',
-            err instanceof Error ? err.message : String(err),
-          )
-        }
+        await wanixhandlereplace(wanix, message.player)
       })
       break
-    case 'status':
+    case 'keep':
+      wanixhandlekeep(wanix, message.player)
+      break
+    case 'show':
       doasync(wanix, message.player, async () => {
         try {
           const status = await readwanixstatus()
-          apilog(
+          const hostready = status.ready || iswanixspaceactive()
+          terminalwritelines(
             wanix,
             message.player,
-            `wanix ${readwanixhoststate()} active=${status.active} ready=${status.ready}`,
+            zsstexttape(
+              zssheaderlines('wanix'),
+              ...formatwanixstatelines(hostready),
+            ),
           )
+          if (readwanixpending()) {
+            terminalwritelines(
+              wanix,
+              message.player,
+              zsstexttape(
+                '$grayuse the links above to replace or keep the running binary',
+              ),
+            )
+          }
         } catch (err) {
           apierror(
             wanix,

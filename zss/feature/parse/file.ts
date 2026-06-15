@@ -19,6 +19,12 @@ import { parsezzm } from './zzm'
 import { parsebrd, parseszt, parsezzt } from './zzt'
 import { isszztworldbytes, iszztworldbytes } from './zztmagic'
 import { parsezztobj } from './zztobj'
+import {
+  iswanixbundlefile,
+  iswanixwasmfile,
+  parsewanixbundle,
+  parsewanixwasm,
+} from 'zss/feature/wanix/wanixdrop'
 
 export function mimetypeofbytesread(filename: string, filebytes: Uint8Array) {
   const bytes = [...filebytes.slice(0, 4)]
@@ -80,6 +86,14 @@ export function mapfiletype(type: string, file: File | undefined) {
       return 'json'
     case 'application/zip':
       return 'zip'
+    case 'application/gzip':
+    case 'application/x-gzip':
+      if (file && iswanixbundlefile(file.name)) {
+        return 'wantgz'
+      }
+      break
+    case 'application/wasm':
+      return 'wanixwasm'
     case 'application/octet-stream':
       if (/.zzt$/i.test(file.name)) {
         return 'zzt'
@@ -113,6 +127,10 @@ export function mapfiletype(type: string, file: File | undefined) {
         return 'mid'
       } else if (/.pet$/i.test(file.name)) {
         return 'pet'
+      } else if (/.wasm$/i.test(file.name)) {
+        return 'wanixwasm'
+      } else if (iswanixbundlefile(file.name)) {
+        return 'wantgz'
       }
       break
     case 'audio/midi':
@@ -251,6 +269,12 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
           handlebinarykind(player, sniffed, file, bytes)
           return
         }
+        if (iswanixwasmfile(file.name, bytes)) {
+          parsewanixwasm(player, file).catch((err) =>
+            apierror(SOFTWARE, player, 'crash', err.message),
+          )
+          return
+        }
         const guessed = mimetypeofbytesread(file.name, bytes)
         if (guessed && guessed !== 'application/octet-stream') {
           handlefiletype(player, guessed, file)
@@ -339,6 +363,16 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
           parsechr(player, file.name, new Uint8Array(arraybuffer))
         })
         .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
+      break
+    case 'wanixwasm':
+      parsewanixwasm(player, file).catch((err) =>
+        apierror(SOFTWARE, player, 'crash', err.message),
+      )
+      break
+    case 'wantgz':
+      parsewanixbundle(player, file).catch((err) =>
+        apierror(SOFTWARE, player, 'crash', err.message),
+      )
       break
     case 'zzm':
       file
