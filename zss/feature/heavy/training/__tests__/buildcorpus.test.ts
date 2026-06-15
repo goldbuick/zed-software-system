@@ -17,17 +17,16 @@ import {
   NEGATIVE_TRAIN_PAIRS,
   PARITY_USER_PROMPTS,
 } from 'zss/feature/heavy/training/corpusprompts'
+import {
+  LANG_COOLREGIONSBOW_DIR,
+  LANG_PARITY_DIR,
+  LANG_SCRIPTS_DIR,
+  TRAINING_CORPUS_DIR,
+} from 'zss/testsupport/fixturepaths'
 
-const ROOT = path.join(__dirname, '../../../../../')
-const PARITYDIR = path.join(
-  ROOT,
-  'zss/feature/lang/backend/wasm/__fixtures__/parity',
-)
-const FIXTUREDIR = path.join(
-  ROOT,
-  'zss/feature/lang/backend/wasm/__tests__/fixtures',
-)
-const OUTDIR = path.join(__dirname, '../corpus')
+const REPO_ROOT = process.cwd()
+const PARITYDIR = LANG_PARITY_DIR
+const OUTDIR = TRAINING_CORPUS_DIR
 
 function collectzssfiles(dir: string): string[] {
   const out: string[] = []
@@ -48,7 +47,7 @@ function collectzssfiles(dir: string): string[] {
 }
 
 function relsource(file: string): string {
-  return path.relative(ROOT, file).replace(/\\/g, '/')
+  return path.relative(REPO_ROOT, file).replace(/\\/g, '/')
 }
 
 function parityentries(): CorpusEntry[] {
@@ -80,7 +79,10 @@ function parityentries(): CorpusEntry[] {
 }
 
 function fixtureentries(): CorpusEntry[] {
-  const files = collectzssfiles(FIXTUREDIR)
+  const files = [
+    ...collectzssfiles(LANG_SCRIPTS_DIR),
+    ...collectzssfiles(LANG_COOLREGIONSBOW_DIR),
+  ]
   const entries: CorpusEntry[] = []
   for (let i = 0; i < files.length; ++i) {
     const file = files[i]

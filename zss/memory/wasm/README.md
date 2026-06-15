@@ -42,7 +42,7 @@ Golden-fixture parity harness for the C++ `zss_memory` port. **Not run in CI** â
 |------|------|
 | `zss_memory_core.hpp` | Session state, wire import/export, `run_op` dispatcher |
 | `zss_memory_*.hpp` | Modular ports (permissions, lighting, synth, â€¦) |
-| `__fixtures__/*.json` | Frozen TS-oracle scenarios |
+| `fixtures/memory/wasm/*.json` | Frozen TS-oracle scenarios |
 | `regenfixtures.test.ts` | Fixture recorder (`REGEN_MEMORY_FIXTURES=1`) |
 | `__tests__/wasmparity.test.ts` | Native parity gate (local / `memory:parity:test`) |
 | `scripts/memory-parity-run.mjs` | Native + WASM replay runner |

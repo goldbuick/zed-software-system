@@ -9,8 +9,7 @@ import {
   writebookexport,
 } from 'zss/feature/content/contentbook'
 import type { CONTENT_BOOK_EXPORT } from 'zss/feature/content/contentbook'
-
-const ROOT = process.cwd()
+import { CONTENT_DIST_DIR } from 'zss/testsupport/fixturepaths'
 const task = process.env.CONTENT_CLI_TASK ?? ''
 
 function cliarg(): string {
@@ -18,7 +17,7 @@ function cliarg(): string {
   if (!arg) {
     throw new Error('CONTENT_CLI_ARG not set')
   }
-  return path.isAbsolute(arg) ? arg : path.join(ROOT, arg)
+  return path.isAbsolute(arg) ? arg : path.join(process.cwd(), arg)
 }
 
 function cliextra(): string[] {
@@ -51,8 +50,7 @@ if (!task) {
     const { manifestpath, rootdir } = resolvemanifest(manifestarg)
     const exportbook = buildbookfrommanifest(manifestpath, rootdir)
     const outflag = parseoutflag(extra)
-    const bookout =
-      outflag || path.join(ROOT, 'content/dist', exportbook.exported)
+    const bookout = outflag || path.join(CONTENT_DIST_DIR, exportbook.exported)
     writebookexport(exportbook, bookout)
     process.stdout.write(`wrote ${bookout}\n`)
   })

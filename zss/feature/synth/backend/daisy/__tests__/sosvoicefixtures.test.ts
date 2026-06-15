@@ -2,14 +2,15 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
 import { SOS_VOICE_PATCHES } from 'zss/feature/synth/backend/daisy/sosvoicepatches'
+import { SYNTH_DAISY_FIXTURES_DIR } from 'zss/testsupport/fixturepaths'
 
 type FIXTURE_FILE = {
   patches: Record<string, unknown>
 }
 
 const FIXTURE_PATH = path.join(
-  __dirname,
-  '../__fixtures__/sos-voice-fixtures.json',
+  SYNTH_DAISY_FIXTURES_DIR,
+  'sos-voice-fixtures.json',
 )
 
 function loadfixtures(): FIXTURE_FILE {

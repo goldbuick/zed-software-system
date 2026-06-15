@@ -11,7 +11,10 @@ export function taskroot(): string {
   return ROOT
 }
 
-function mergedenv(task: TaskDef, inherited: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+function mergedenv(
+  task: TaskDef,
+  inherited: NodeJS.ProcessEnv,
+): NodeJS.ProcessEnv {
   return { ...inherited, ...task.env }
 }
 

@@ -14,6 +14,7 @@ import {
   playpitchfromscientificname,
   playreststringforticks,
 } from 'zss/feature/parse/midiplay'
+import { PARSE_FIXTURES_DIR } from 'zss/testsupport/fixturepaths'
 
 describe('midiplay helpers', () => {
   it('durationticksToOp maps PPQ-relative lengths', () => {
@@ -237,7 +238,7 @@ describe('midiplaysnippetsbymeasure (fixture .mid)', () => {
   })
 
   it('emits one #play worth of parseplay text per measure (`;` = voices)', () => {
-    const buf = readFileSync(join(__dirname, 'fixtures', 'twomeasures.mid'))
+    const buf = readFileSync(join(PARSE_FIXTURES_DIR, 'twomeasures.mid'))
     const midi = new Midi(new Uint8Array(buf))
     const { snippets, truncatedbynotes } = midiplaysnippetsbymeasure(midi)
     expect(truncatedbynotes).toBe(false)

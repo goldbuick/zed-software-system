@@ -14,10 +14,7 @@ import { startparityvite, stopparityvite } from './parity-vite-server.ts'
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url))
 const PROJECT = path.join(ROOT, '..')
-const OUT = path.join(
-  PROJECT,
-  'zss/feature/synth/backend/wasm/__fixtures__/parity-metrics-tone.json',
-)
+const OUT = path.join(PROJECT, 'fixtures/synth/wasm/parity-metrics-tone.json')
 const PORT = 9878
 
 async function renderpatchmetrics(

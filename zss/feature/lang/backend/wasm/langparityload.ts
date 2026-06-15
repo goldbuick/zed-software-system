@@ -2,10 +2,12 @@ import { execFileSync, spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
+import { LANG_PARITY_DIR } from 'zss/testsupport/fixturepaths'
+
 const COMPILERDIR = __dirname
 const REPROOT = path.join(__dirname, '../../../../../')
 const COMPILEONE = path.join(REPROOT, 'scripts/lang-wasm-compile-one.mjs')
-const FIXTUREDIR = path.join(__dirname, '__fixtures__/parity')
+const FIXTUREDIR = LANG_PARITY_DIR
 const PARITYBIN = path.join(COMPILERDIR, 'zss_lang_parity')
 const WCLIBIN = path.join(COMPILERDIR, 'zss_lang_wasm_cli')
 const WADIR = path.join(__dirname, '../../../../../cafe/public/wasm/lang')

@@ -1,5 +1,9 @@
 import { apilog } from 'zss/device/api'
 import type { DEVICELIKE } from 'zss/device/api'
+import {
+  enablewanixstdinrouting,
+  readwanixbinary,
+} from 'zss/feature/wanix/wanixsession'
 
 const LOG_FLUSH_MS = 32
 const logbuffer: string[] = []
@@ -44,4 +48,16 @@ export function wanixiobridgeflush() {
     flushhandle = undefined
   }
   flushlogs()
+}
+
+export function wanixiobridgenotifystdinneed() {
+  if (!enablewanixstdinrouting() || !bridgedevice) {
+    return
+  }
+  const label = readwanixbinary()?.label ?? 'binary'
+  apilog(
+    bridgedevice,
+    bridgeplayer,
+    `wanix stdin active — typing goes to ${label} (#wanix detach to escape routing)`,
+  )
 }

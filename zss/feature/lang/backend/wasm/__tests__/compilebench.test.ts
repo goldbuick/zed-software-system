@@ -26,10 +26,15 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
 import { compile } from 'zss/feature/lang'
+import {
+  LANG_COOLREGIONSBOW_DIR,
+  LANG_PARITY_DIR,
+  LANG_SCRIPTS_DIR,
+} from 'zss/testsupport/fixturepaths'
 
-const FIXTUREDIR = path.join(__dirname, '..', '__fixtures__/parity')
-const INTEGRATIONDIR = path.join(__dirname, '..', '__tests__/fixtures')
-const BOOKDIR = path.join(__dirname, '..', '__tests__/fixtures/coolregionsbow')
+const FIXTUREDIR = LANG_PARITY_DIR
+const INTEGRATIONDIR = LANG_SCRIPTS_DIR
+const BOOKDIR = LANG_COOLREGIONSBOW_DIR
 
 function readzss(dir: string, id: string) {
   return readFileSync(path.join(dir, `${id}.zss`), 'utf8')

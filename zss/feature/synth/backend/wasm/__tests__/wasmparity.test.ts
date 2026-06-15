@@ -17,6 +17,7 @@ import {
   TONE_PARITY_EXCLUDED,
   paritytolerancesfor,
 } from 'zss/feature/synth/backend/wasm/paritytolerances'
+import { SYNTH_WASM_FIXTURES_DIR } from 'zss/testsupport/fixturepaths'
 
 type PARITY_FIXTURE_FILE = {
   patches: Record<string, PARITY_AUDIO_METRICS>
@@ -25,12 +26,12 @@ type PARITY_FIXTURE_FILE = {
 const USE_TONE_REFERENCE = process.env.ZSS_TONE_REFERENCE === '1'
 const USE_DAISY_PARITY = process.env.ZSS_DAISY_PARITY === '1'
 const FIXTURE_PATH = path.join(
-  __dirname,
-  '../__fixtures__/parity-metrics-tone.json',
+  SYNTH_WASM_FIXTURES_DIR,
+  'parity-metrics-tone.json',
 )
 const DAISY_DRUM_FIXTURE_PATH = path.join(
-  __dirname,
-  '../__fixtures__/parity-metrics-daisy.json',
+  SYNTH_WASM_FIXTURES_DIR,
+  'parity-metrics-daisy.json',
 )
 
 function loadfixtures(): PARITY_FIXTURE_FILE {

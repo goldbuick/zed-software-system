@@ -9,6 +9,9 @@
       "cafe/*": [
         "./cafe/*"
       ],
+      "fixtures/*": [
+        "./fixtures/*"
+      ]
     },
     "lib": [
       "ES2021",
@@ -36,7 +39,8 @@
   "include": [
     "zss",
     "cafe",
-    "src"
+    "cafecli",
+    "fixtures"
   ],
   "exclude": [
     "zss/feature/synth/archive"

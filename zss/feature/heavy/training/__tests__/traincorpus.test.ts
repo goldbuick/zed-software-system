@@ -2,8 +2,9 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
 import { compilefiltersnippet } from 'zss/feature/heavy/training/corpus'
+import { TRAINING_CORPUS_DIR } from 'zss/testsupport/fixturepaths'
 
-const CORPUSDIR = path.join(__dirname, '../corpus')
+const CORPUSDIR = TRAINING_CORPUS_DIR
 
 describe('lang train corpus artifacts', () => {
   it('manifest matches jsonl counts and script compile rate >= 95%', () => {

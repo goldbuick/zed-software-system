@@ -53,7 +53,7 @@ Put terrain tiles inline on the board page (`kind` must match a terrain page nam
 }
 ```
 
-For a full perimeter, repeat for x=0..59, y=0 and y=24, then x=0 and x=59 for y=1..23. See `content/templates/demo/pages/title.board.json`.
+For a full perimeter, repeat for x=0..59, y=0 and y=24, then x=0 and x=59 for y=1..23. See `fixtures/content/templates/demo/pages/title.board.json`.
 
 ## Interactive object
 
@@ -95,4 +95,4 @@ Add more board pages and wire exits via `@exitnorth room2` in `code` (or `"exitn
 }
 ```
 
-Reference fixtures: `zss/feature/lang/backend/wasm/__tests__/fixtures/coolregionsbow/*.zss` for ZSS patterns to embed in `code` strings.
+Reference fixtures: `fixtures/lang/coolregionsbow/*.zss` for ZSS patterns to embed in `code` strings.

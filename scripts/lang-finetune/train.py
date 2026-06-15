@@ -21,7 +21,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments
 from trl import SFTTrainer
 
 ROOT = Path(__file__).resolve().parents[2]
-CORPUS = ROOT / "zss/feature/heavy/training/corpus"
+CORPUS = ROOT / "fixtures/generated/training"
 TRAIN_JSONL = CORPUS / "train.jsonl"
 EVAL_JSONL = CORPUS / "eval.jsonl"
 

@@ -7,13 +7,13 @@ import { fileURLToPath } from 'node:url'
 import { compilezss, createlangmodule } from './lang-wasm.mjs'
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
-const WASMDIR = path.join(ROOT, 'zss/feature/lang/backend/wasm')
+const FIXTURES = path.join(ROOT, 'fixtures')
 
 function readzss(tier, id) {
   const dirs = {
-    parity: path.join(WASMDIR, '__fixtures__/parity'),
-    integration: path.join(WASMDIR, '__tests__/fixtures'),
-    book: path.join(WASMDIR, '__tests__/fixtures/coolregionsbow'),
+    parity: path.join(FIXTURES, 'lang/parity'),
+    integration: path.join(FIXTURES, 'lang/scripts'),
+    book: path.join(FIXTURES, 'lang/coolregionsbow'),
   }
   return readFileSync(path.join(dirs[tier], `${id}.zss`), 'utf8')
 }

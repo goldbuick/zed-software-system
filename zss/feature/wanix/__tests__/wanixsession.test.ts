@@ -1,5 +1,6 @@
 import {
   clearwanixpending,
+  enablewanixstdinrouting,
   formatwanixstatelines,
   iswanixstdinactive,
   readwanixbinary,
@@ -87,10 +88,17 @@ describe('wanixsession', () => {
     expect(readwanixlastexit()).toBeUndefined()
   })
 
-  it('running enables stdin routing by default', () => {
+  it('running starts with stdin routing off until needed', () => {
     setwanixrunning({ label: 'run.wasm', entrycmd: 'run.wasm' })
+    expect(readwanixstdinrouting()).toBe(false)
+    expect(iswanixstdinactive()).toBe(false)
+  })
+
+  it('enablewanixstdinrouting activates once while running', () => {
+    setwanixrunning({ label: 'run.wasm', entrycmd: 'run.wasm' })
+    expect(enablewanixstdinrouting()).toBe(true)
     expect(readwanixstdinrouting()).toBe(true)
-    expect(iswanixstdinactive()).toBe(true)
+    expect(enablewanixstdinrouting()).toBe(false)
   })
 
   it('detach clears routing without stopping phase', () => {
@@ -111,11 +119,11 @@ describe('wanixsession', () => {
     expect(formatwanixstatelines(true).join('\n')).toContain('sandbox warm')
     setwanixrunning({ label: 'run.wasm', entrycmd: 'run.wasm' })
     expect(formatwanixstatelines(true).join('\n')).toContain('running')
-    expect(formatwanixstatelines(true).join('\n')).toContain('stdin on')
-    expect(formatwanixstatelines(true).join('\n')).toContain('#wanix detach')
-    setwanixstdinrouting(false)
     expect(formatwanixstatelines(true).join('\n')).toContain('stdin off')
     expect(formatwanixstatelines(true).join('\n')).toContain('#wanix attach')
+    enablewanixstdinrouting()
+    expect(formatwanixstatelines(true).join('\n')).toContain('stdin on')
+    expect(formatwanixstatelines(true).join('\n')).toContain('#wanix detach')
     setwanixstopped(0)
     expect(formatwanixstatelines(true).join('\n')).toContain('stopped')
     expect(formatwanixstatelines(true).join('\n')).toContain('run.wasm')

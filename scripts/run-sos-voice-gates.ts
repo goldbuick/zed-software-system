@@ -14,7 +14,7 @@ const ROOT = path.dirname(fileURLToPath(import.meta.url))
 const PROJECT = path.join(ROOT, '..')
 const FIXTURE_PATH = path.join(
   PROJECT,
-  'zss/feature/synth/backend/daisy/__fixtures__/sos-voice-fixtures.json',
+  'fixtures/synth/daisy/sos-voice-fixtures.json',
 )
 const REGEN_PORT = 9883
 

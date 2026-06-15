@@ -1,18 +1,18 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import {
-  AGENTS_ROSTER_STORAGE_KEY,
-  type AGENTS_ROSTER,
-} from 'zss/feature/heavy/agentsroster'
-import {
   heavyrunagentstart,
   heavyrunagentstop,
   heavyrunrestoreagents,
 } from 'zss/feature/heavy/agentlifecycle'
+import {
+  type AGENTS_ROSTER,
+  AGENTS_ROSTER_STORAGE_KEY,
+} from 'zss/feature/heavy/agentsroster'
 
 let agentidseq = 0
 
-const mockcreateagent = jest.fn((name: string, existingid?: string) => {
+const mockcreateagent = jest.fn((_name: string, existingid?: string) => {
   const id = existingid ?? `agent${++agentidseq}`
   return {
     id: () => id,
@@ -90,7 +90,7 @@ describe('agentlifecycle', () => {
     mockheavymodelstop.mockClear()
     mockapierror.mockClear()
     mockworkstatus.mockClear()
-    mockcreateagent.mockImplementation((name: string, existingid?: string) => {
+    mockcreateagent.mockImplementation((_name: string, existingid?: string) => {
       const id = existingid ?? `agent${++agentidseq}`
       createdids.push(id)
       return {

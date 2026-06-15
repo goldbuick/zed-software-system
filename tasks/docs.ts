@@ -81,7 +81,9 @@ export function rendertasksdoc(): string {
   ]
 
   for (const group of TASK_GROUPS) {
-    const tasks = (bygroup.get(group) ?? []).sort((a, b) => a.id.localeCompare(b.id))
+    const tasks = (bygroup.get(group) ?? []).sort((a, b) =>
+      a.id.localeCompare(b.id),
+    )
     if (tasks.length === 0) {
       continue
     }

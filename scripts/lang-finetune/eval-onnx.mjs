@@ -8,7 +8,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '../..')
-const EVAL = path.join(ROOT, 'zss/feature/heavy/training/corpus/eval.jsonl')
+const EVAL = path.join(ROOT, 'fixtures/generated/training/eval.jsonl')
 const MODEL_ID =
   process.env.ZSS_HEAVY_LLM_GEMMA_MODEL_ID ??
   process.env.ZSS_HF_ONNX_REPO ??

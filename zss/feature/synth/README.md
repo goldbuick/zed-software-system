@@ -12,6 +12,12 @@ Task index: [docs/tasks.md](../../../docs/tasks.md) (daisy group).
 
 ## Quick Start
 
+After clone, initialize submodules (DaisySP):
+
+```bash
+git submodule update --init --recursive
+```
+
 Synth audio is initialized by the device layer on first user gesture (`enableaudio()` in `zss/device/synth.ts`). Application code typically sends commands via firmware / `device/api.ts`, not by calling the backend directly.
 
 ```typescript

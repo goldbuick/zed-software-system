@@ -33,11 +33,11 @@ ZSS validation corpus (TS oracle vs C++ WASM):
 
 | Tier | Path | Count | Role |
 |------|------|-------|------|
-| **parity** | [`backend/wasm/__fixtures__/parity/`](backend/wasm/__fixtures__/parity/) | 19 | Micro-fixtures + TS golden `.js` / `.labels.json` |
-| **integration** | [`backend/wasm/__tests__/fixtures/`](backend/wasm/__tests__/fixtures/) | 9 | Real board scripts (Simple Chat player, elseif chains, …) |
-| **book** | [`backend/wasm/__tests__/fixtures/coolregionsbow/`](backend/wasm/__tests__/fixtures/coolregionsbow/) | 51 | Full element scripts from coolregionsbow |
+| **parity** | [`fixtures/lang/parity/`](../../../fixtures/lang/parity/) | 19 | Micro-fixtures + TS golden `.js` / `.labels.json` |
+| **integration** | [`fixtures/lang/scripts/`](../../../fixtures/lang/scripts/) | 9 | Real board scripts (Simple Chat player, elseif chains, …) |
+| **book** | [`fixtures/lang/coolregionsbow/`](../../../fixtures/lang/coolregionsbow/) | 51 | Full element scripts from coolregionsbow |
 
-Manifests: `__fixtures__/parity/manifest.json`, `__fixtures__/integration/manifest.json`, `coolregionsbow/manifest.json`.  
+Manifests: `fixtures/lang/parity/manifest.json`, `fixtures/lang/integration/manifest.json`, `fixtures/lang/coolregionsbow/manifest.json`.  
 Loader: [`backend/wasm/corpus.ts`](backend/wasm/corpus.ts).
 
 After editing `backend/wasm/` (C++ sources):

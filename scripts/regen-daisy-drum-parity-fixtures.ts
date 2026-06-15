@@ -11,10 +11,7 @@ import { startparityvite } from './parity-vite-server.ts'
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url))
 const PROJECT = path.join(ROOT, '..')
-const OUT = path.join(
-  PROJECT,
-  'zss/feature/synth/backend/wasm/__fixtures__/parity-metrics-daisy.json',
-)
+const OUT = path.join(PROJECT, 'fixtures/synth/wasm/parity-metrics-daisy.json')
 const REGEN_PORT = 9878
 
 function metricsusable(metrics: PARITY_AUDIO_METRICS): boolean {

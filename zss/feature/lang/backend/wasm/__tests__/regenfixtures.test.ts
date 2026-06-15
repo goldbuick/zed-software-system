@@ -26,8 +26,9 @@ import path from 'node:path'
 
 import { compileast } from 'zss/feature/lang/backend/typescript/ast'
 import { transformast } from 'zss/feature/lang/backend/typescript/transformer'
+import { LANG_PARITY_DIR } from 'zss/testsupport/fixturepaths'
 
-const FIXTUREDIR = path.join(__dirname, '../__fixtures__/parity')
+const FIXTUREDIR = LANG_PARITY_DIR
 
 const FIXTURES: { id: string; source: string }[] = [
   { id: 'empty', source: '' },

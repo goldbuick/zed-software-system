@@ -437,6 +437,16 @@ export function wanixattach(device: DEVICELIKE, player: string) {
   device.emit(player, 'wanix:attach')
 }
 
+export function wanixdrop(
+  device: DEVICELIKE,
+  player: string,
+  label: string,
+  kind: 'wasm' | 'bundle',
+  bytes: Uint8Array,
+) {
+  device.emit(player, 'wanix:drop', { label, kind, bytes })
+}
+
 export function heavyrestoreagents(
   device: DEVICELIKE,
   player: string,

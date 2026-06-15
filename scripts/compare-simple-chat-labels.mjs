@@ -8,7 +8,7 @@ const require = createRequire(import.meta.url)
 const { compile } = require('../zss/feature/lang/index.ts')
 
 const source = readFileSync(
-  '../zss/feature/lang/backend/wasm/__tests__/fixtures/simple_chat_player.zss',
+  '../fixtures/lang/scripts/simple_chat_player.zss',
   'utf8',
 )
 

@@ -22,7 +22,11 @@ export const DAISY_TASKS: TaskDef[] = [
   def('daisy:bench:synth', {
     description: 'Daisy synth micro-benchmark',
     env: { ZSS_DAISY_BENCH: '1' },
-    run: exec(['npx', 'tsx', 'zss/feature/synth/backend/daisy/daisyperfbench.ts']),
+    run: exec([
+      'npx',
+      'tsx',
+      'zss/feature/synth/backend/daisy/daisyperfbench.ts',
+    ]),
   }),
   def('daisy:regression:test', {
     description: 'Jest + critical Playwright parity gates',
@@ -56,7 +60,12 @@ export const DAISY_TASKS: TaskDef[] = [
   }),
   def('daisy:fixtures:regen:tone', {
     description: 'Regenerate synth parity fixtures (tone backend)',
-    run: exec(['npx', 'tsx', 'scripts/regen-synth-parity-fixtures.ts', '--tone']),
+    run: exec([
+      'npx',
+      'tsx',
+      'scripts/regen-synth-parity-fixtures.ts',
+      '--tone',
+    ]),
   }),
   def('daisy:level-issue:song-compare:test', {
     description: 'Compare offline song renders (wasm vs tone)',
@@ -80,7 +89,13 @@ export const DAISY_TASKS: TaskDef[] = [
   }),
   def('daisy:level-stability:test:fxmatrix', {
     description: 'Level stability FX matrix filter',
-    run: exec(['npx', 'tsx', 'scripts/run-level-stability.ts', '--filter', 'fxmatrix']),
+    run: exec([
+      'npx',
+      'tsx',
+      'scripts/run-level-stability.ts',
+      '--filter',
+      'fxmatrix',
+    ]),
   }),
   def('daisy:pitch-stability:render', {
     description: 'Pitch stability offline render',
@@ -143,13 +158,14 @@ export const DAISY_TASKS: TaskDef[] = [
     description: 'SOS voice parity gates',
     run: exec(['npx', 'tsx', 'scripts/run-sos-voice-gates.ts']),
   }),
-  tasksonly('daisy:sos-voices:test:full', 'Regenerate SOS voice fixtures and run gates', [
-    'daisy:build',
-    'daisy:sos-voice:fixtures:regen',
-    'daisy:sos-voices:test',
-  ], {
-    tags: ['slow'],
-  }),
+  tasksonly(
+    'daisy:sos-voices:test:full',
+    'Regenerate SOS voice fixtures and run gates',
+    ['daisy:build', 'daisy:sos-voice:fixtures:regen', 'daisy:sos-voices:test'],
+    {
+      tags: ['slow'],
+    },
+  ),
   def('daisy:synth-env:calibrate', {
     description: 'Calibrate synth env parity (slow, dev-only)',
     tags: ['calibrate', 'slow'],

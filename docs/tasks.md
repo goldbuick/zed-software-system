@@ -169,7 +169,7 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 | `yarn task run e2e:test:join-move` | Join boardrunner move e2e | — | — | `PLAYWRIGHT_INCLUDE_JOIN_E2E=1` |
 | `yarn task run e2e:test:lang-bench` | Lang compile bench e2e | — | — | `PLAYWRIGHT_INCLUDE_LANG_BENCH=1` |
 | `yarn task run e2e:test:ui` | Run Playwright with UI mode | `dev` | — | — |
-| `yarn task run e2e:test:wanix` | Wanix host and CLI e2e | — | — | `PLAYWRIGHT_INCLUDE_WANIX_E2E=1` |
+| `yarn task run e2e:test:wanix` | Wanix host and drop hello.wasm CLI e2e | — | — | `PLAYWRIGHT_INCLUDE_WANIX_E2E=1` |
 
 
 ## lang
@@ -218,3 +218,7 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 | Task | Description | Tags | Deps | Env |
 |------|-------------|------|------|-----|
 | `yarn task run wanix:ensure` | Vend wanix browser runtime into cafe/public/wanix | — | — | — |
+| `yarn task run wanix:stdin:verify` | Build wanix wasm fixtures and run isolated host stdin e2e (fix loop gate) | `ci` | `wanix:wasm:build` | `PLAYWRIGHT_INCLUDE_WANIX_E2E=1` |
+| `yarn task run wanix:wasm:build` | Compile fixtures/wanix/*.wat to .wasm via wabt (yarn install provides wat2wasm) | — | — | — |
+| `yarn task run wanix:wasm:build:all` | Compile wanix example .wat and optional .c sources to .wasm | — | `wanix:wasm:build`, `wanix:wasm:build:c` | — |
+| `yarn task run wanix:wasm:build:c` | Compile fixtures/wanix/*.c to .wasm when wasi-sdk is installed (skips if missing) | — | — | — |

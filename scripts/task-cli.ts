@@ -108,7 +108,10 @@ function subtreecommand(
 
 const RESERVED_SUBCOMMANDS = new Set(['list', 'run', 'explain', 'docs'])
 
-function buildgroupcommands(): Record<string, ReturnType<typeof defineCommand>> {
+function buildgroupcommands(): Record<
+  string,
+  ReturnType<typeof defineCommand>
+> {
   const bygroup = new Map<string, TaskDef[]>()
   for (const group of TASK_GROUPS) {
     bygroup.set(group, [])
@@ -276,4 +279,4 @@ const main = defineCommand({
   },
 })
 
-runMain(main)
+void runMain(main)

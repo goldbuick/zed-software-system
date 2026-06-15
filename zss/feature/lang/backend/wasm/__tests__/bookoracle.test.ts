@@ -27,8 +27,9 @@ import path from 'node:path'
 
 import { compile } from 'zss/feature/lang'
 import { compilenativewasmfortest } from 'zss/feature/lang/backend/wasm/testhelpers/nativewasmtestutil'
+import { LANG_COOLREGIONSBOW_DIR } from 'zss/testsupport/fixturepaths'
 
-const FIXTUREDIR = path.join(__dirname, 'fixtures/coolregionsbow')
+const FIXTUREDIR = LANG_COOLREGIONSBOW_DIR
 const manifest = JSON.parse(
   readFileSync(path.join(FIXTUREDIR, 'manifest.json'), 'utf8'),
 ) as string[]

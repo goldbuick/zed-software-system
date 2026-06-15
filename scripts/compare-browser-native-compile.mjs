@@ -10,7 +10,7 @@ const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
 const source = readFileSync(
   path.join(
     ROOT,
-    'zss/feature/lang/backend/wasm/__tests__/fixtures/simple_chat_player.zss',
+    'fixtures/lang/scripts/simple_chat_player.zss',
   ),
   'utf8',
 )

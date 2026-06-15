@@ -2,7 +2,7 @@
 
 ## What it is
 
-From the [root README](../README.md): a **ZZT-inspired, web-based fantasy terminal**—a creative-coding / game environment where boards, elements, and scripts feel like a retro terminal world. The repo is a **TypeScript monolith**: UI in [`cafe/`](../cafe/), engine in [`zss/`](.), CLI in [`src/`](../src/).
+From the [root README](../README.md): a **ZZT-inspired, web-based fantasy terminal**—a creative-coding / game environment where boards, elements, and scripts feel like a retro terminal world. The repo is a **TypeScript monolith**: UI in [`cafe/`](../cafe/), engine in [`zss/`](.), CLI in [`cafecli/`](../cafecli/).
 
 **Shipped today:** per-script **lang WASM** (`ZSS_WASM_SCRIPT`, compile + run in browser/worker) and **Daisy synth WASM** in the AudioWorklet. See [`zss/feature/lang/`](feature/lang/) and [`zss/feature/synth/`](feature/synth/).
 
@@ -16,7 +16,7 @@ From the [root README](../README.md): a **ZZT-inspired, web-based fantasy termin
 |------|------|
 | [`cafe/`](../cafe/) | Vite root ([`vite.config.ts`](../vite.config.ts)); React + R3F Canvas; aliases `zss` and `cafe` |
 | `zss/` | Engine: devices, VM, memory, firmware, lang, gadget rendering, features |
-| [`src/commands/run.ts`](../src/commands/run.ts) + [`src/lib/app.tsx`](../src/lib/app.tsx) | oclif `zss` CLI: Playwright-hosted app + Ink terminal; static serve or Vite dev |
+| [`cafecli/src/commands/run.ts`](../cafecli/src/commands/run.ts) + [`cafecli/src/lib/app.tsx`](../cafecli/src/lib/app.tsx) | oclif `zss` CLI: Playwright-hosted app + Ink terminal; static serve or Vite dev |
 
 ---
 
@@ -198,7 +198,7 @@ Scattered under [`zss/feature/`](feature/): storage (idb), TTS/STT, URL/multipla
 
 ## CLI packaging
 
-[`package.json`](../package.json): `zss` binary via oclif; `cli:build` compiles `src/` and runs `oclif manifest`. The CLI serves `cafe/dist` or talks to the Vite dev server and injects Node hooks (`__nodeStorageReadPlayer`, `__onCliInput`) for headless operation ([`cafe/index.tsx`](../cafe/index.tsx)).
+[`package.json`](../package.json): `zss` binary via oclif; `cli:build` compiles `cafecli/` and runs `oclif manifest`. The CLI serves `cafe/dist` or talks to the Vite dev server and injects Node hooks (`__nodeStorageReadPlayer`, `__onCliInput`) for headless operation ([`cafe/index.tsx`](../cafe/index.tsx)).
 
 **Production Linux tarball:** `yarn task run cli:build:linux` runs a **production** Vite build (`NODE_ENV=production`), compiles the CLI, installs Playwright’s headless shell for the pack target, then `oclif pack tarballs` (which runs `npm pack` and bundles production `node_modules`).
 

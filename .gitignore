@@ -9,7 +9,9 @@ lerna-debug.log*
 
 node_modules
 tmp
+.tmp
 dist
+cafecli/dist
 dist-bin
 dist-server
 oclif.manifest.json
@@ -27,7 +29,7 @@ oclif.manifest.json
 *.sw?
 
 # content build output
-content/dist
+fixtures/content/dist
 
 # runtime data
 .zss-data
@@ -35,8 +37,8 @@ content/dist
 # vosk speech recognition models (large binaries)
 cafe/public/models/
 
-# wanix smoke wasm scratch (regenerate with wat2wasm scripts/wanix/hello.wat)
-scripts/wanix/hello.wasm
+# wanix smoke wasm scratch (regenerate with yarn task run wanix:wasm:build)
+fixtures/wanix/*.wasm
 
 # offline song renders (regenerate with yarn level-issue-song:render)
 cafe/public/renders/*.wav

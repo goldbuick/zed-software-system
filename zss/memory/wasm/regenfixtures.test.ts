@@ -123,9 +123,10 @@ import {
   CODE_PAGE_TYPE,
   CORNER_EXIT_DISPUTED,
 } from 'zss/memory/types'
+import { MEMORY_WASM_FIXTURES_DIR } from 'zss/testsupport/fixturepaths'
 import { CATEGORY, COLLISION, COLOR } from 'zss/words/types'
 
-const FIXTUREDIR = path.join(__dirname, '__fixtures__')
+const FIXTUREDIR = MEMORY_WASM_FIXTURES_DIR
 
 export const FIXTURE_MANIFEST: Record<string, string[]> = {
   'boundaries.test.ts': [

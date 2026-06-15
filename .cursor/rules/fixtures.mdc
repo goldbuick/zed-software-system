@@ -1,0 +1,49 @@
+---
+description: Test fixture layout — all assets under ./fixtures/, use fixturepaths.ts
+globs: fixtures/**,**/__tests__/**,e2e/**,scripts/**,zss/testsupport/**
+alwaysApply: false
+---
+
+# Fixtures layout
+
+All test fixture **assets** live under repo-root [`fixtures/`](fixtures/). Resolve paths via [`zss/testsupport/fixturepaths.ts`](zss/testsupport/fixturepaths.ts).
+
+## Required
+
+| Domain | Path under `fixtures/` |
+|--------|------------------------|
+| Lang parity | `lang/parity/` + `manifest.json` |
+| Lang integration sources | `lang/scripts/` |
+| Lang integration goldens | `lang/integration/` |
+| Book corpus | `lang/coolregionsbow/` |
+| Memory WASM | `memory/wasm/` |
+| Synth | `synth/wasm/`, `synth/daisy/` |
+| Wanix WASI | `wanix/` (built `.wasm` gitignored) |
+| Book templates | `content/templates/`; build output `content/dist/` |
+| Books (npm) | `books/` |
+| E2e repro | `e2e/` |
+| Generated training | `generated/training/` |
+
+```typescript
+// ✅ GOOD
+import { LANG_PARITY_DIR } from 'zss/testsupport/fixturepaths'
+path.join(LANG_PARITY_DIR, `${id}.zss`)
+
+// ❌ BAD — co-located fixture trees
+path.join(__dirname, '__fixtures__/parity')
+
+// ❌ BAD — legacy paths
+'scripts/wanix/hello.wat'
+'src/fixtures/example-coolregionsbow.book.json'
+```
+
+## Generated vs committed
+
+- Regenerate `fixtures/generated/training/` and `fixtures/e2e/` via existing tasks/scripts.
+- Lang/memory/synth goldens: regen via parity/regen tests — do not hand-edit unless fixing the generator.
+
+## Harness code
+
+Embedded loaders in `zss/testsupport/` (e.g. wanix hex bytes) stay in testsupport; they reference `fixtures/wanix/` sources for regen comments only.
+
+See [`fixtures/README.md`](fixtures/README.md) for regen task ids.

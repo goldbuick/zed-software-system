@@ -20,7 +20,7 @@ const PROJECT = path.join(ROOT, '..')
 const USE_TONE = process.argv.includes('--tone')
 const OUT = path.join(
   PROJECT,
-  'zss/feature/synth/backend/wasm/__fixtures__',
+  'fixtures/synth/wasm',
   USE_TONE ? 'parity-metrics-tone.json' : 'parity-metrics.json',
 )
 const REGEN_PORT = USE_TONE ? 9877 : 9876

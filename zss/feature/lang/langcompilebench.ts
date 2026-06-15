@@ -1,14 +1,14 @@
+import duplicatorsource from 'fixtures/lang/coolregionsbow/duplicator.zss?raw'
+import playersource from 'fixtures/lang/coolregionsbow/player.zss?raw'
+import drawdisplaysource from 'fixtures/lang/parity/drawdisplay.zss?raw'
+import shortgosource from 'fixtures/lang/parity/short_go.zss?raw'
+import simplechatplayersource from 'fixtures/lang/scripts/simple_chat_player.zss?raw'
 import { compile } from 'zss/feature/lang/backend/typescript/generator'
 import {
   compilezssonmodule,
   createlangmodule,
 } from 'zss/feature/lang/langwasmload'
 
-import drawdisplaysource from './backend/wasm/__fixtures__/parity/drawdisplay.zss?raw'
-import shortgosource from './backend/wasm/__fixtures__/parity/short_go.zss?raw'
-import duplicatorsource from './backend/wasm/__tests__/fixtures/coolregionsbow/duplicator.zss?raw'
-import playersource from './backend/wasm/__tests__/fixtures/coolregionsbow/player.zss?raw'
-import simplechatplayersource from './backend/wasm/__tests__/fixtures/simple_chat_player.zss?raw'
 import benchfixtures from './langcompilebenchfixtures.json'
 
 export type CompileBenchStats = {

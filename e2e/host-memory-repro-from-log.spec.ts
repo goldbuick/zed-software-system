@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test'
 
+import repro from '../fixtures/e2e/host-memory-repro.json'
 import type { ZssE2eBridge } from '../zss/testsupport/e2escrollbridge'
 
-import repro from './fixtures/host-memory-repro.json'
 import {
   bootstraphostpage,
   bootstrapjoinpage,

@@ -1,6 +1,7 @@
 import type { DEVICELIKE } from 'zss/device/api'
 import { normalizewanixcmd } from 'zss/feature/wanix/wanixcmd'
 import {
+  wanixiobridgenotifystdinneed,
   wanixiobridgepush,
   wanixiobridgestart,
   wanixiobridgestop,
@@ -96,6 +97,9 @@ function wiremessages() {
         if (typeof msg.line === 'string') {
           wanixiobridgepush(msg.line)
         }
+        break
+      case 'wanix:stdin:wait':
+        wanixiobridgenotifystdinneed()
         break
       default:
         if (!RPC_DONE_TYPES.has(msg.type)) {
@@ -247,8 +251,15 @@ export async function putwanixfile(name: string, bytes: Uint8Array) {
   const buffer =
     bytes.byteOffset === 0 && bytes.byteLength === bytes.buffer.byteLength
       ? bytes.buffer
-      : bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)
-  const reply = await postrpc('wanix:put', { name, bytes: buffer }, RPC_TIMEOUT_MS)
+      : bytes.buffer.slice(
+          bytes.byteOffset,
+          bytes.byteOffset + bytes.byteLength,
+        )
+  const reply = await postrpc(
+    'wanix:put',
+    { name, bytes: buffer },
+    RPC_TIMEOUT_MS,
+  )
   if (reply.error) {
     throw new Error(reply.error)
   }
@@ -261,7 +272,10 @@ export async function mountwanixarchive(name: string, bytes: Uint8Array) {
   const buffer =
     bytes.byteOffset === 0 && bytes.byteLength === bytes.buffer.byteLength
       ? bytes.buffer
-      : bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)
+      : bytes.buffer.slice(
+          bytes.byteOffset,
+          bytes.byteOffset + bytes.byteLength,
+        )
   const reply = await postrpc(
     'wanix:mount-archive',
     { name, bytes: buffer },

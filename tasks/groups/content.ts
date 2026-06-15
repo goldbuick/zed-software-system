@@ -3,7 +3,8 @@ import type { TaskDef } from '../types'
 
 export const CONTENT_TASKS: TaskDef[] = [
   def('content:book:build', {
-    description: 'Build importable book JSON from template path (pass path as extra args)',
+    description:
+      'Build importable book JSON from template path (pass path as extra args)',
     run: exec(['node', 'scripts/content-cli.mjs', 'build']),
   }),
   def('content:book:validate', {

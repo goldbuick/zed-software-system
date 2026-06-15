@@ -63,8 +63,8 @@ jobs:
 
       - name: content book build and validate
         run: |
-          yarn task run content:book:build content/templates/minimal
-          yarn task run content:book:validate content/dist/minimal.book.json
+          yarn task run content:book:build fixtures/content/templates/minimal
+          yarn task run content:book:validate fixtures/content/dist/minimal.book.json
           yarn task run content:book:test
 
   e2e:

@@ -40,7 +40,7 @@ const PARITY_JSON = path.join(
 )
 const TONE_FIXTURE = path.join(
   PROJECT,
-  'zss/feature/synth/backend/wasm/__fixtures__/parity-metrics-tone.json',
+  'fixtures/synth/wasm/parity-metrics-tone.json',
 )
 
 async function renderdaisypass(

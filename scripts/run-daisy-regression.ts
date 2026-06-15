@@ -30,9 +30,18 @@ const JEST_PATHS = [
 const SOS_VOICE_GATE = 'yarn task run daisy:sos-voices:test'
 
 const PLAYWRIGHT_FULL: { name: string; cmd: string }[] = [
-  { name: 'pitch-stability', cmd: 'yarn task run daisy:pitch-stability:test:full' },
-  { name: 'play-drum-balance', cmd: 'yarn task run daisy:play-drum-balance:test:full' },
-  { name: 'sidechain-parity', cmd: 'yarn task run daisy:sidechain:parity:test:full' },
+  {
+    name: 'pitch-stability',
+    cmd: 'yarn task run daisy:pitch-stability:test:full',
+  },
+  {
+    name: 'play-drum-balance',
+    cmd: 'yarn task run daisy:play-drum-balance:test:full',
+  },
+  {
+    name: 'sidechain-parity',
+    cmd: 'yarn task run daisy:sidechain:parity:test:full',
+  },
   { name: 'synth-env-parity', cmd: 'yarn task run daisy:synth-env:test:full' },
   { name: 'notepop', cmd: 'yarn task run daisy:notepop:test:full' },
 ]

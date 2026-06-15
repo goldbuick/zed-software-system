@@ -12,7 +12,7 @@ const ROOT = path.dirname(fileURLToPath(import.meta.url))
 const PROJECT = path.join(ROOT, '..')
 const OUT = path.join(
   PROJECT,
-  'zss/feature/synth/backend/wasm/__fixtures__/adsrenvcurve-tone-metrics.json',
+  'fixtures/synth/wasm/adsrenvcurve-tone-metrics.json',
 )
 const PORT = 9885
 

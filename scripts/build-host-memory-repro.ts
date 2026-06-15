@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url'
 const ROOT = path.dirname(fileURLToPath(import.meta.url))
 const PROJECT = path.join(ROOT, '..')
 const DEFAULT_LOG = path.join(PROJECT, '.cursor/debug-9bae57.log')
-const OUT_JSON = path.join(PROJECT, 'e2e/fixtures/host-memory-repro.json')
+const OUT_JSON = path.join(PROJECT, 'fixtures/e2e/host-memory-repro.json')
 const OUT_SPEC = path.join(PROJECT, 'e2e/host-memory-repro-from-log.spec.ts')
 
 type LogRow = {

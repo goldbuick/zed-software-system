@@ -1,23 +1,50 @@
 import { createdevice } from 'zss/device'
 import { apierror } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
+import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import {
   wanixhandleattach,
   wanixhandledetach,
+  wanixhandledrop,
   wanixhandlekeep,
   wanixhandlereplace,
   wanixhandlestdin,
   wanixhandlestop,
 } from 'zss/feature/wanix/wanixdrop'
-import { iswanixspaceactive, readwanixstatus } from 'zss/feature/wanix/wanixiframehost'
+import {
+  iswanixspaceactive,
+  readwanixstatus,
+} from 'zss/feature/wanix/wanixiframehost'
 import {
   formatwanixstatelines,
   readwanixpending,
 } from 'zss/feature/wanix/wanixsession'
-import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import { zssheaderlines, zsstexttape } from 'zss/feature/zsstextui'
 import { doasync } from 'zss/mapping/func'
-import { isstring } from 'zss/mapping/types'
+import { ispresent, isstring } from 'zss/mapping/types'
+
+type WANIX_DROP_PAYLOAD = {
+  label: string
+  kind: 'wasm' | 'bundle'
+  bytes: Uint8Array
+}
+
+function readwanixdroppayload(data: unknown): WANIX_DROP_PAYLOAD | undefined {
+  if (!ispresent(data) || typeof data !== 'object') {
+    return undefined
+  }
+  const payload = data as WANIX_DROP_PAYLOAD
+  if (!isstring(payload.label) || !payload.label.trim()) {
+    return undefined
+  }
+  if (payload.kind !== 'wasm' && payload.kind !== 'bundle') {
+    return undefined
+  }
+  if (!(payload.bytes instanceof Uint8Array)) {
+    return undefined
+  }
+  return payload
+}
 
 const wanix = createdevice('wanix', [], (message) => {
   if (!wanix.session(message)) {
@@ -57,6 +84,22 @@ const wanix = createdevice('wanix', [], (message) => {
     case 'attach':
       wanixhandleattach(wanix, message.player)
       break
+    case 'drop': {
+      const payload = readwanixdroppayload(message.data)
+      if (!payload) {
+        break
+      }
+      doasync(wanix, message.player, async () => {
+        await wanixhandledrop(
+          wanix,
+          message.player,
+          payload.label,
+          payload.kind,
+          payload.bytes,
+        )
+      })
+      break
+    }
     case 'show':
       doasync(wanix, message.player, async () => {
         try {

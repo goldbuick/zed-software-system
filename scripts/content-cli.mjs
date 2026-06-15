@@ -3,9 +3,9 @@
  * Run content book CLI tasks through jest (memory modules need ts-jest resolution).
  *
  * Usage:
- *   node scripts/content-cli.mjs build content/templates/minimal
- *   node scripts/content-cli.mjs validate content/dist/minimal.book.json
- *   node scripts/content-cli.mjs codepage-validate content/templates/minimal/pages/player.object.json
+ *   node scripts/content-cli.mjs build fixtures/content/templates/minimal
+ *   node scripts/content-cli.mjs validate fixtures/content/dist/minimal.book.json
+ *   node scripts/content-cli.mjs codepage-validate fixtures/content/templates/minimal/pages/player.object.json
  */
 import { spawnSync } from 'node:child_process'
 import path from 'node:path'

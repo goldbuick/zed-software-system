@@ -5,9 +5,23 @@ import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-/** Root directory (project root when running from dist). */
+/** Repo / package root (works from cafecli/src and cafecli/dist). */
 export function getroot(): string {
-  return path.join(__dirname, '..', '..', '..')
+  let dir = __dirname
+  for (let i = 0; i < 8; i++) {
+    if (
+      fs.existsSync(path.join(dir, 'package.json')) &&
+      fs.existsSync(path.join(dir, 'cafe'))
+    ) {
+      return dir
+    }
+    const parent = path.dirname(dir)
+    if (parent === dir) {
+      break
+    }
+    dir = parent
+  }
+  throw new Error('could not find zed-software-system root')
 }
 
 /** COOP/COEP headers for Maximilian SharedArrayBuffer (production static server). */

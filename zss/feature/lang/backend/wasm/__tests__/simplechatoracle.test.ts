@@ -33,8 +33,9 @@ import {
   compilecppfromdisk,
   wasmartifactspresent,
 } from 'zss/feature/lang/backend/wasm/langparityload'
+import { LANG_INTEGRATION_GOLDENS_DIR } from 'zss/testsupport/fixturepaths'
 
-const GOLDENDIR = path.join(__dirname, '../__fixtures__/integration')
+const GOLDENDIR = LANG_INTEGRATION_GOLDENS_DIR
 const hasartifacts = wasmartifactspresent()
 const describeartifacts = hasartifacts ? describe : describe.skip
 

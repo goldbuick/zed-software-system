@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-1. `yarn lang:build-train-corpus` — writes `zss/feature/heavy/training/corpus/{train,eval}.jsonl`
+1. `yarn lang:build-train-corpus` — writes `fixtures/generated/training/{train,eval}.jsonl`
 2. `yarn lang:train-corpus:test` — compile pass rate gate (≥95%)
 3. HuggingFace account + token with write access
 
@@ -27,7 +27,7 @@ yarn lang:finetune:eval
 
 ## HuggingFace Jobs
 
-1. Upload `zss/feature/heavy/training/corpus/train.jsonl` as a dataset or clone repo in job.
+1. Upload `fixtures/generated/training/train.jsonl` as a dataset or clone repo in job.
 2. Use `scripts/lang-finetune/train.py` as job command with GPU hardware.
 3. Export with `export_onnx.py` on a CPU/GPU job.
 4. Publish ONNX to your org; set `ZSS_HEAVY_LLM_GEMMA_MODEL_ID` to replace default `gemma` preset.

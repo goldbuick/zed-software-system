@@ -1,5 +1,7 @@
 import type { DEVICELIKE } from 'zss/device/api'
 import { apierror, apilog } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
+import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import { pickwanixbundleentry } from 'zss/feature/wanix/wanixbundle'
 import {
   ensurewanixsandbox,
@@ -11,6 +13,7 @@ import {
   runwanixcommand,
   sendwanixstdin,
 } from 'zss/feature/wanix/wanixiframehost'
+import { wanixiobridgeflush } from 'zss/feature/wanix/wanixiobridge'
 import {
   clearwanixpending,
   readwanixbinary,
@@ -23,11 +26,8 @@ import {
   setwanixstopped,
   stashwanixpending,
 } from 'zss/feature/wanix/wanixsession'
-import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import { writehyperlink } from 'zss/feature/writeui'
 import { zssheaderlines, zsstexttape } from 'zss/feature/zsstextui'
-import { wanixiobridgeflush } from 'zss/feature/wanix/wanixiobridge'
-import { SOFTWARE } from 'zss/device/session'
 
 export function iswanixwasmfile(name: string, bytes: Uint8Array): boolean {
   if (/\.wasm$/i.test(name)) {
@@ -61,7 +61,12 @@ function showwanixconflictprompt(
       '$whiteDrop another binary — choose:',
     ),
   )
-  writehyperlink(device, player, 'wanix replace', `Replace with ${pendinglabel}`)
+  writehyperlink(
+    device,
+    player,
+    'wanix replace',
+    `Replace with ${pendinglabel}`,
+  )
   writehyperlink(device, player, 'wanix keep', `Keep ${runninglabel}`)
 }
 
@@ -89,11 +94,6 @@ async function launchwanixload(
   }
   setwanixrunning({ label, entrycmd })
   apilog(device, player, `wanix run ${entrycmd}`)
-  apilog(
-    device,
-    player,
-    `wanix stdin active — typing goes to ${label} (#wanix detach to escape routing)`,
-  )
   try {
     const code = await runwanixcommand(entrycmd)
     wanixiobridgeflush()
@@ -116,12 +116,7 @@ export async function wanixhandledrop(
   if (readwanixphase() === 'running') {
     stashwanixpending({ label, kind, bytes })
     const running = readwanixbinary()
-    showwanixconflictprompt(
-      device,
-      player,
-      label,
-      running?.label ?? 'binary',
-    )
+    showwanixconflictprompt(device, player, label, running?.label ?? 'binary')
     return
   }
   try {
@@ -136,10 +131,7 @@ export async function wanixhandledrop(
   }
 }
 
-export async function wanixhandlereplace(
-  device: DEVICELIKE,
-  player: string,
-) {
+export async function wanixhandlereplace(device: DEVICELIKE, player: string) {
   const pending = readwanixpending()
   if (!pending) {
     apierror(device, player, 'wanix', 'no pending binary to replace with')
@@ -180,10 +172,7 @@ export function wanixhandlekeep(device: DEVICELIKE, player: string) {
   apilog(device, player, `wanix kept ${readwanixbinary()?.label ?? 'binary'}`)
 }
 
-export async function wanixhandlestop(
-  device: DEVICELIKE,
-  player: string,
-) {
+export async function wanixhandlestop(device: DEVICELIKE, player: string) {
   const phase = readwanixphase()
   if (phase === 'running') {
     try {

@@ -11,20 +11,40 @@ export const APP_TASKS: TaskDef[] = [
     tags: ['dev'],
     run: exec(['vite', '--host', '0.0.0.0', '--port', '7777']),
   }),
-  tasksonly('app:dev', 'Install deps and start Vite dev server (WASM lang)', ['app:install', 'app:vite:dev'], {
-    tags: ['dev'],
-  }),
-  tasksonly('app:dev:no-sc', 'Dev server with play-bus sidechain bypassed', ['app:dev'], {
-    tags: ['dev'],
-    env: { ZSS_DAISY_NO_SIDECHAIN: '1' },
-  }),
-  tasksonly('app:tslang:dev', 'Dev server using TS compiler for chip scripts', ['app:install', 'app:vite:dev'], {
-    tags: ['dev'],
-    env: { ZSS_WASM_SCRIPT: 'false' },
-  }),
-  tasksonly('app:wasm:dev', 'Rebuild lang WASM then start dev server', ['lang:build', 'app:dev'], {
-    tags: ['dev'],
-  }),
+  tasksonly(
+    'app:dev',
+    'Install deps and start Vite dev server (WASM lang)',
+    ['app:install', 'app:vite:dev'],
+    {
+      tags: ['dev'],
+    },
+  ),
+  tasksonly(
+    'app:dev:no-sc',
+    'Dev server with play-bus sidechain bypassed',
+    ['app:dev'],
+    {
+      tags: ['dev'],
+      env: { ZSS_DAISY_NO_SIDECHAIN: '1' },
+    },
+  ),
+  tasksonly(
+    'app:tslang:dev',
+    'Dev server using TS compiler for chip scripts',
+    ['app:install', 'app:vite:dev'],
+    {
+      tags: ['dev'],
+      env: { ZSS_WASM_SCRIPT: 'false' },
+    },
+  ),
+  tasksonly(
+    'app:wasm:dev',
+    'Rebuild lang WASM then start dev server',
+    ['lang:build', 'app:dev'],
+    {
+      tags: ['dev'],
+    },
+  ),
   def('app:build', {
     description: 'Production Vite build',
     tags: ['ci'],
@@ -44,7 +64,9 @@ export const APP_TASKS: TaskDef[] = [
   }),
   def('app:clear', {
     description: 'Remove build artifacts and Vite cache',
-    run: shell('rimraf tmp && rimraf dist && rimraf cafe/dist && rimraf node_modules/.vite'),
+    run: shell(
+      'rimraf tmp && rimraf dist && rimraf cafecli/dist && rimraf cafe/dist && rimraf node_modules/.vite',
+    ),
   }),
   def('app:preview', {
     description: 'Preview production build on port 7777',
@@ -71,7 +93,12 @@ export const APP_TASKS: TaskDef[] = [
   }),
   def('app:audit:deadcode', {
     description: 'Knip dead-code audit (files, exports, dependencies)',
-    run: exec(['knip', '--include', 'files,exports,dependencies', '--no-exit-code']),
+    run: exec([
+      'knip',
+      '--include',
+      'files,exports,dependencies',
+      '--no-exit-code',
+    ]),
   }),
   def('app:audit:export-catalogs', {
     description: 'Audit export catalogs',
@@ -86,16 +113,21 @@ export const APP_TASKS: TaskDef[] = [
     tags: ['dev'],
     env: { ZSS_NO_HTTPS: '1' },
     run: shell(
-      'npx concurrently -k "yarn task run app:vite:dev" "sleep 8 && ./bin/dev.js --dev"',
+      'npx concurrently -k "yarn task run app:vite:dev" "sleep 8 && ./cafecli/bin/dev.js --dev"',
     ),
   }),
-  tasksonly('app:server:dev', 'CLI build + Vite dev + zss dev server', ['cli:build', 'app:server:dev:run'], {
-    tags: ['dev'],
-  }),
+  tasksonly(
+    'app:server:dev',
+    'CLI build + Vite dev + zss dev server',
+    ['cli:build', 'app:server:dev:run'],
+    {
+      tags: ['dev'],
+    },
+  ),
   def('app:server:run', {
     description: 'Production build, CLI build, run zss server',
     deps: ['app:build', 'cli:build'],
     tags: ['dev'],
-    run: exec(['./bin/dev.js']),
+    run: exec(['./cafecli/bin/dev.js']),
   }),
 ]

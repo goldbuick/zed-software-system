@@ -31,12 +31,14 @@ export const DEPLOY_TASKS: TaskDef[] = [
     description: 'Docker build zss:local (internal)',
     run: shell('docker build --no-cache -t zss:local .'),
   }),
-  tasksonly('deploy:docker:build', 'Build linux CLI and local Docker image', [
-    'cli:build:linux',
-    'deploy:docker:build:image',
-  ], {
-    tags: ['deploy'],
-  }),
+  tasksonly(
+    'deploy:docker:build',
+    'Build linux CLI and local Docker image',
+    ['cli:build:linux', 'deploy:docker:build:image'],
+    {
+      tags: ['deploy'],
+    },
+  ),
   def('deploy:docker:run', {
     description: 'Run local Docker container',
     tags: ['deploy'],
@@ -46,12 +48,14 @@ export const DEPLOY_TASKS: TaskDef[] = [
     description: 'Docker run interactive shell (internal)',
     run: shell('docker run --rm -it --init zss:local ./start.sh'),
   }),
-  tasksonly('deploy:docker:shell', 'Build and open shell in local Docker image', [
-    'deploy:docker:build',
-    'deploy:docker:shell:exec',
-  ], {
-    tags: ['deploy'],
-  }),
+  tasksonly(
+    'deploy:docker:shell',
+    'Build and open shell in local Docker image',
+    ['deploy:docker:build', 'deploy:docker:shell:exec'],
+    {
+      tags: ['deploy'],
+    },
+  ),
   def('deploy:droplet:docker-run', {
     description: 'Run zss on DigitalOcean droplet via Docker',
     tags: ['deploy'],

@@ -15,14 +15,15 @@ import {
 } from 'zss/memory/codepageoperations'
 import { memoryresetbooks } from 'zss/memory/session'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
+import {
+  CONTENT_DEMO_MANIFEST_PATH,
+  CONTENT_MINIMAL_MANIFEST_PATH,
+  CONTENT_TEMPLATES_DIR,
+} from 'zss/testsupport/fixturepaths'
 
-const ROOT = process.cwd()
-const MINIMAL_MANIFEST = path.join(
-  ROOT,
-  'content/templates/minimal/manifest.json',
-)
-const MINIMAL_PAGES = path.join(ROOT, 'content/templates/minimal/pages')
-const DEMO_MANIFEST = path.join(ROOT, 'content/templates/demo/manifest.json')
+const MINIMAL_MANIFEST = CONTENT_MINIMAL_MANIFEST_PATH
+const MINIMAL_PAGES = path.join(CONTENT_TEMPLATES_DIR, 'minimal/pages')
+const DEMO_MANIFEST = CONTENT_DEMO_MANIFEST_PATH
 
 afterEach(() => {
   memoryboundariesclear()

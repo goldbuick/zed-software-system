@@ -48,7 +48,7 @@ function collectcodes(book: BookData) {
 function main() {
   const bookpath =
     process.argv[2] ??
-    path.join(ROOT, 'src/fixtures/example-coolregionsbow.book.json')
+    path.join(ROOT, 'fixtures/books/example-coolregionsbow.book.json')
   const outdir = process.argv[3]
   if (!bookpath || !outdir) {
     console.error(

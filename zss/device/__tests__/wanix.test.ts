@@ -1,6 +1,7 @@
 import { createmessage } from 'zss/device'
 import { hub } from 'zss/hub'
 
+const dropmock = jest.fn()
 const stopmock = jest.fn()
 const replacemock = jest.fn()
 const keepmock = jest.fn()
@@ -16,6 +17,7 @@ jest.mock('zss/device/register', () => ({
 }))
 
 jest.mock('zss/feature/wanix/wanixdrop', () => ({
+  wanixhandledrop: (...args: unknown[]) => dropmock(...args),
   wanixhandlestop: (...args: unknown[]) => stopmock(...args),
   wanixhandlereplace: (...args: unknown[]) => replacemock(...args),
   wanixhandlekeep: (...args: unknown[]) => keepmock(...args),
@@ -54,6 +56,19 @@ describe('wanix device', () => {
       createmessage('sess', 'player1', 'SOFTWARE', `wanix:${target}`, data),
     )
   }
+
+  it('routes drop to wanixhandledrop', async () => {
+    const bytes = new Uint8Array([0, 97, 115, 109])
+    invoke('drop', { label: 'demo.wasm', kind: 'wasm', bytes })
+    await new Promise((r) => setTimeout(r, 0))
+    expect(dropmock).toHaveBeenCalledWith(
+      expect.anything(),
+      'player1',
+      'demo.wasm',
+      'wasm',
+      bytes,
+    )
+  })
 
   it('routes stop to wanixhandlestop', async () => {
     invoke('stop')

@@ -1711,7 +1711,7 @@ export const FEATURE_DOMAINS: FeatureDomain[] = [
         'zss oclif binary',
         'Dev',
         'Run cafe SPA in Playwright with Ink terminal overlay.',
-        'src/commands/run.ts',
+        'cafecli/src/commands/run.ts',
       ],
       [
         'Headless boot',
@@ -1723,7 +1723,7 @@ export const FEATURE_DOMAINS: FeatureDomain[] = [
         'Node storage hooks',
         'Dev',
         'CLI injects __nodeStorageReadPlayer for persistence.',
-        'src/lib/app.tsx',
+        'cafecli/src/lib/app.tsx',
       ],
       [
         'Dev server mode',

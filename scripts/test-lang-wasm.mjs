@@ -11,7 +11,7 @@ import { compilezss, createlangmodule } from './lang-wasm.mjs'
 
 const FIXTUREDIR = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
-  '../zss/feature/lang/backend/wasm/__fixtures__/parity',
+  '../fixtures/lang/parity',
 )
 
 async function main() {

@@ -199,6 +199,7 @@ export default defineConfig(({ mode }) => {
       alias: {
         zss: path.resolve(__dirname, './zss'),
         cafe: path.resolve(__dirname, './cafe'),
+        fixtures: path.resolve(__dirname, './fixtures'),
       },
     },
     optimizeDeps: {

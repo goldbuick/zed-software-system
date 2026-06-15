@@ -1,5 +1,5 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "../tsconfig.json",
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": ".",
@@ -9,5 +9,5 @@
     "module": "ESNext"
   },
   "include": ["src"],
-  "exclude": ["node_modules", "cafe", "dist"]
+  "exclude": ["node_modules", "dist"]
 }

@@ -24,8 +24,9 @@ import { compile } from 'zss/feature/lang'
 import { compileast } from 'zss/feature/lang/backend/typescript/ast'
 import { transformast } from 'zss/feature/lang/backend/typescript/transformer'
 import { compilecppfromdisk } from 'zss/feature/lang/backend/wasm/langparityload'
+import { LANG_SCRIPTS_DIR } from 'zss/testsupport/fixturepaths'
 
-const FIXTUREDIR = path.join(__dirname, 'fixtures')
+const FIXTUREDIR = LANG_SCRIPTS_DIR
 
 function casecount(code: string) {
   return (code.match(/case \d+:/g) ?? []).length

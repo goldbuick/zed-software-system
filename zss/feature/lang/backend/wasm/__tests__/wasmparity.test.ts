@@ -37,9 +37,13 @@ import {
   runwasmscriptfortest,
 } from 'zss/feature/lang/backend/wasm/testhelpers/wasmruntestutil'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
+import {
+  LANG_COOLREGIONSBOW_DIR,
+  LANG_SCRIPTS_DIR,
+} from 'zss/testsupport/fixturepaths'
 import type { WORD } from 'zss/words/types'
 
-const FIXTUREDIR = path.join(__dirname, 'fixtures')
+const FIXTUREDIR = LANG_SCRIPTS_DIR
 
 function readlocalfixture(name: string) {
   return readFileSync(path.join(FIXTUREDIR, name), 'utf8')
@@ -240,7 +244,7 @@ describe('lang wasm behavioral parity', () => {
     expect(invoked).toEqual([['set', 'light', 'pick', 5, 7, 11, 12]])
   })
 
-  const BOOKFIXTUREDIR = path.join(__dirname, 'fixtures/coolregionsbow')
+  const BOOKFIXTUREDIR = LANG_COOLREGIONSBOW_DIR
 
   function readbookfixture(id: string) {
     return readFileSync(path.join(BOOKFIXTUREDIR, `${id}.zss`), 'utf8')

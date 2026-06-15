@@ -11335,6 +11335,11 @@ w3c-xmlserializer@^5.0.0:
   dependencies:
     xml-name-validator "^5.0.0"
 
+wabt@^1.0.36:
+  version "1.0.39"
+  resolved "https://registry.yarnpkg.com/wabt/-/wabt-1.0.39.tgz#dc143035fce69716753255757c1981a4652be7a8"
+  integrity sha512-ba+dRL/75VQQY7RkU/CgriGbkoWAfS8TDyUlJfJhJ8KhtXgMl5dhNvoPNUcQ9IWRhW8u41glMSuZeTvsYq2rRg==
+
 walk-up-path@^4.0.0:
   version "4.0.0"
   resolved "https://registry.npmjs.org/walk-up-path/-/walk-up-path-4.0.0.tgz#590666dcf8146e2d72318164f1f2ac6ef51d4198"

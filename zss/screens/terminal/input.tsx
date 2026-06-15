@@ -15,9 +15,9 @@ import {
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { withclipboard } from 'zss/feature/keyboard'
-import { iswanixstdinactive } from 'zss/feature/wanix/wanixsession'
 import { SpeechToText } from 'zss/feature/speechtotext'
 import { storagewritehistorybuffer } from 'zss/feature/storage'
+import { iswanixstdinactive } from 'zss/feature/wanix/wanixsession'
 import {
   useEqual,
   useGadgetClient,
@@ -183,10 +183,7 @@ export function TerminalInput({
     [pinlines, sessionlogs],
   )
 
-  const wanixstdinactive = useMemo(
-    () => iswanixstdinactive(),
-    [sessionlogs.length],
-  )
+  const wanixstdinactive = iswanixstdinactive()
   const logsrowmaxwidth = context.width - 1
   const logsrowheights = useMemo(
     () =>
@@ -662,7 +659,11 @@ export function TerminalInput({
                 buffer: historybuffer,
               })
               const trimmed = invoke.trim()
-              if (wanixstdinactive && trimmed.length > 0 && !trimmed.startsWith('#')) {
+              if (
+                wanixstdinactive &&
+                trimmed.length > 0 &&
+                !trimmed.startsWith('#')
+              ) {
                 wanixstdin(SOFTWARE, player, invoke)
               } else {
                 vmcli(SOFTWARE, player, invoke)

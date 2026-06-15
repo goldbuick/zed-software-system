@@ -1,5 +1,3 @@
-import { resetwanixsessionfortest, setwanixrunning } from 'zss/feature/wanix/wanixsession'
-
 const ensuremock = jest.fn()
 const putmock = jest.fn()
 const runmock = jest.fn()
@@ -32,6 +30,8 @@ import { wanixhandledrop } from 'zss/feature/wanix/wanixdrop'
 import {
   readwanixpending,
   readwanixphase,
+  resetwanixsessionfortest,
+  setwanixrunning,
 } from 'zss/feature/wanix/wanixsession'
 
 describe('wanixhandledrop', () => {
@@ -55,23 +55,14 @@ describe('wanixhandledrop', () => {
       new Uint8Array([0, 97, 115, 109]),
     )
     expect(ensuremock).toHaveBeenCalled()
-    expect(putmock).toHaveBeenCalledWith(
-      'demo.wasm',
-      expect.any(Uint8Array),
-    )
+    expect(putmock).toHaveBeenCalledWith('demo.wasm', expect.any(Uint8Array))
     expect(runmock).toHaveBeenCalledWith('demo.wasm')
     expect(readwanixphase()).toBe('stopped')
   })
 
   it('stash pending and prompts when running', async () => {
     setwanixrunning({ label: 'run.wasm', entrycmd: 'run.wasm' })
-    await wanixhandledrop(
-      device,
-      player,
-      'next.wasm',
-      'wasm',
-      new Uint8Array(),
-    )
+    await wanixhandledrop(device, player, 'next.wasm', 'wasm', new Uint8Array())
     expect(readwanixpending()?.label).toBe('next.wasm')
     expect(putmock).not.toHaveBeenCalled()
     expect(terminalmock).toHaveBeenCalled()

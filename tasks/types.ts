@@ -15,13 +15,7 @@ export const TASK_GROUPS = [
 
 export type TaskGroup = (typeof TASK_GROUPS)[number]
 
-export const TASK_TAGS = [
-  'ci',
-  'dev',
-  'deploy',
-  'slow',
-  'calibrate',
-] as const
+export const TASK_TAGS = ['ci', 'dev', 'deploy', 'slow', 'calibrate'] as const
 
 export type TaskTag = (typeof TASK_TAGS)[number]
 

@@ -14,16 +14,16 @@ import { fileURLToPath } from 'node:url'
 import { compilezss, createlangmodule } from './lang-wasm.mjs'
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
-const WASMDIR = path.join(ROOT, 'zss/feature/lang/backend/wasm')
+const FIXTURES = path.join(ROOT, 'fixtures')
 const FIXTUREMANIFEST = path.join(
   ROOT,
   'zss/feature/lang/langcompilebenchfixtures.json',
 )
 
 const SOURCE_DIRS = {
-  parity: path.join(WASMDIR, '__fixtures__/parity'),
-  integration: path.join(WASMDIR, '__tests__/fixtures'),
-  book: path.join(WASMDIR, '__tests__/fixtures/coolregionsbow'),
+  parity: path.join(FIXTURES, 'lang/parity'),
+  integration: path.join(FIXTURES, 'lang/scripts'),
+  book: path.join(FIXTURES, 'lang/coolregionsbow'),
 }
 
 function readzss(tier, id) {

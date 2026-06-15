@@ -20,8 +20,10 @@ jest.mock('zss/config', () => ({
 import { execFileSync } from 'node:child_process'
 import path from 'node:path'
 
+import { MEMORY_WASM_FIXTURES_DIR } from 'zss/testsupport/fixturepaths'
+
 const MEMORYDIR = path.join(__dirname, '..')
-const FIXTUREDIR = path.join(MEMORYDIR, '__fixtures__')
+const FIXTUREDIR = MEMORY_WASM_FIXTURES_DIR
 const PARITYBIN = path.join(MEMORYDIR, 'zss_memory_parity')
 const SRC = path.join(MEMORYDIR, 'zss_memory.cpp')
 

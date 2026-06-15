@@ -17,7 +17,11 @@ export function daisynativemtime(): number {
   let max = 0
   function walk(dir: string) {
     for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
-      if (ent.name === 'DaisySP' || ent.name === 'DaisySP-LGPL') {
+      if (
+        ent.name === 'DaisySP' ||
+        ent.name === 'DaisySP-LGPL' ||
+        ent.name === 'submodules'
+      ) {
         continue
       }
       const p = path.join(dir, ent.name)

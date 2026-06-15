@@ -7,10 +7,11 @@
   "include": [
     "zss",
     "cafe",
-    "src",
+    "cafecli",
     "e2e",
     "infra",
     "scripts",
+    "tasks",
     "vite.config.ts",
     "jest.config.ts",
     "playwright.config.ts"

@@ -5,8 +5,8 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../../../../.." && pwd)"
-DAISY_SRC="$SCRIPT_DIR/DaisySP/Source"
-DAISY_LGPL_SRC="$SCRIPT_DIR/DaisySP-LGPL/Source"
+DAISY_SRC="$REPO_ROOT/submodules/DaisySP/Source"
+DAISY_LGPL_SRC="$REPO_ROOT/submodules/DaisySP-LGPL/Source"
 ZSS_DIR="$SCRIPT_DIR/zss"
 WRAPPER_SRC="$SCRIPT_DIR/zss_daisy_synth.cpp"
 ZSS_CPPS=(

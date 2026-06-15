@@ -41,9 +41,7 @@ function buildmap(): Record<string, TaskDef> {
 }
 
 export function gettaskmap(): Record<string, TaskDef> {
-  if (!taskmap) {
-    taskmap = buildmap()
-  }
+  taskmap ??= buildmap()
   return taskmap
 }
 

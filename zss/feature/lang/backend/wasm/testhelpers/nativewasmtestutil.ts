@@ -5,11 +5,12 @@ import {
   ensurenativeparitybinary,
   ensurenativewasmcli,
 } from 'zss/feature/lang/backend/wasm/langparityload'
+import { LANG_PARITY_DIR } from 'zss/testsupport/fixturepaths'
 
 const WASMDIR = path.join(__dirname, '..')
 const WCLIBIN = path.join(WASMDIR, 'zss_lang_wasm_cli')
 const PARITYBIN = path.join(WASMDIR, 'zss_lang_parity')
-const PARITYFIXTUREDIR = path.join(WASMDIR, '__fixtures__/parity')
+const PARITYFIXTUREDIR = LANG_PARITY_DIR
 
 let wasmcliready = false
 const wasmcompilecache = new Map<string, Uint8Array>()

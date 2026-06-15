@@ -1,14 +1,15 @@
 import { wanixstdin } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
+import { parsewanixwasm } from 'zss/feature/wanix/wanixdrop'
 import {
   iswanixspaceactive,
   readwanixhoststate,
 } from 'zss/feature/wanix/wanixiframehost'
-import { parsewanixwasm } from 'zss/feature/wanix/wanixdrop'
 import { iswanixstdinactive } from 'zss/feature/wanix/wanixsession'
 import { useTape } from 'zss/gadget/data/state'
 import { createechostdinwasmfile } from 'zss/testsupport/wanix/echostdin'
+import { createhelloreplwasmfile } from 'zss/testsupport/wanix/helloreplwasm'
 import { createhellowasmfile } from 'zss/testsupport/wanix/hellowasm'
 
 export type WANIX_SMOKE_REPORT = {
@@ -73,8 +74,7 @@ export async function runwanixsmoke(
   } catch (err) {
     const logs = logslicefrom(logstart)
     const report = buildreport(logs)
-    report.errormessage =
-      err instanceof Error ? err.message : String(err)
+    report.errormessage = err instanceof Error ? err.message : String(err)
     return report
   }
 
@@ -136,8 +136,7 @@ export async function runwanixstdinsmoke(
   } catch (err) {
     const logs = logslicefrom(logstart)
     const report = buildreport(logs)
-    report.errormessage =
-      err instanceof Error ? err.message : String(err)
+    report.errormessage = err instanceof Error ? err.message : String(err)
     return report
   }
 
@@ -147,6 +146,64 @@ export async function runwanixstdinsmoke(
     return report
   }
   report.errormessage = `missing echo output — logs:\n${logs.slice(-16).join('\n')}`
+  return report
+}
+
+/** Drop hello-repl.wasm, send two stdin lines while blocking, collect evidence. */
+export async function runwanixreplsmoke(
+  deadlinems = 90_000,
+): Promise<WANIX_SMOKE_REPORT> {
+  const player = registerreadplayer()
+  const logstart = (useTape.getState().terminal.logs ?? []).length
+
+  const droppromise = parsewanixwasm(player, createhelloreplwasmfile())
+
+  const started = Date.now()
+  while (Date.now() - started < deadlinems) {
+    if (iswanixstdinactive()) {
+      break
+    }
+    const logs = logslicefrom(logstart)
+    const report = buildreport(logs)
+    if (report.sawerror) {
+      report.errormessage = 'wanix apierror before stdin active'
+      return report
+    }
+    await sleep(100)
+  }
+
+  if (!iswanixstdinactive()) {
+    const logs = logslicefrom(logstart)
+    const report = buildreport(logs)
+    report.errormessage = 'stdin never became active'
+    return report
+  }
+
+  wanixstdin(SOFTWARE, player, 'alice')
+  await sleep(400)
+  wanixstdin(SOFTWARE, player, 'world')
+  await sleep(200)
+
+  try {
+    await droppromise
+  } catch (err) {
+    const logs = logslicefrom(logstart)
+    const report = buildreport(logs)
+    report.errormessage = err instanceof Error ? err.message : String(err)
+    return report
+  }
+
+  const logs = logslicefrom(logstart)
+  const report = buildreport(logs)
+  const joined = logs.join('\n')
+  if (
+    joined.includes('Hello, alice') &&
+    joined.includes('You said: world') &&
+    report.sawexit
+  ) {
+    return report
+  }
+  report.errormessage = `missing repl output — logs:\n${logs.slice(-20).join('\n')}`
   return report
 }
 

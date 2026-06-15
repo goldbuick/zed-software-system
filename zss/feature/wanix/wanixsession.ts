@@ -50,7 +50,16 @@ export function setwanixrunning(entry: WANIX_BINARY) {
   binary = entry
   pending = null
   lastexit = undefined
+  stdinrouting = false
+}
+
+/** Enable stdin routing when the host detects a blocking read. Returns true on first activation. */
+export function enablewanixstdinrouting(): boolean {
+  if (phase !== 'running' || stdinrouting) {
+    return false
+  }
   stdinrouting = true
+  return true
 }
 
 export function setwanixstopped(exitcode: number) {
@@ -90,8 +99,7 @@ export function formatwanixstatelines(hostready: boolean): string[] {
       `$7 state: $greenrunning $white${binary.label} (${stdinlabel}$white)`,
     )
   } else if (phase === 'stopped' && binary) {
-    const exitlabel =
-      lastexit === undefined ? 'halted' : `exit ${lastexit}`
+    const exitlabel = lastexit === undefined ? 'halted' : `exit ${lastexit}`
     lines.push(`$7 state: $yellowstopped $white${binary.label} (${exitlabel})`)
   } else if (hostready) {
     lines.push('$7 state: $grayidle $white(sandbox warm — drop to run)')
@@ -101,12 +109,18 @@ export function formatwanixstatelines(hostready: boolean): string[] {
   if (pending) {
     lines.push(`$7 pending: $white${pending.label}`)
   }
-  lines.push('$7 #wanix stop$white — halt running binary or clear stopped state')
+  lines.push(
+    '$7 #wanix stop$white — halt running binary or clear stopped state',
+  )
   if (phase === 'running') {
     if (stdinrouting) {
-      lines.push('$7 #wanix detach$white — stop routing stdin (task keeps running)')
+      lines.push(
+        '$7 #wanix detach$white — stop routing stdin (task keeps running)',
+      )
     } else {
-      lines.push('$7 #wanix attach$white — route terminal input to running task')
+      lines.push(
+        '$7 #wanix attach$white — route terminal input to running task',
+      )
     }
   }
   return lines

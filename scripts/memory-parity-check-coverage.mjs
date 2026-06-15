@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url'
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
 const TESTDIR = path.join(ROOT, 'zss/memory/__tests__')
-const FIXTUREDIR = path.join(ROOT, 'zss/memory/wasm/__fixtures__')
+const FIXTUREDIR = path.join(ROOT, 'fixtures/memory/wasm')
 const REGEN = path.join(ROOT, 'zss/memory/wasm/regenfixtures.test.ts')
 const EXCLUDED = new Set(['adminconfig.test.ts'])
 

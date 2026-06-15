@@ -2,15 +2,15 @@ import { pickwanixbundleentry } from 'zss/feature/wanix/wanixbundle'
 
 describe('pickwanixbundleentry', () => {
   it('prefers single wasm in bundle/', () => {
-    expect(
-      pickwanixbundleentry(['README'], ['hello.wasm']),
-    ).toBe('bundle/hello.wasm')
+    expect(pickwanixbundleentry(['README'], ['hello.wasm'])).toBe(
+      'bundle/hello.wasm',
+    )
   })
 
   it('keeps bundle/ prefix when already present', () => {
-    expect(
-      pickwanixbundleentry([], ['bundle/hello.wasm']),
-    ).toBe('bundle/hello.wasm')
+    expect(pickwanixbundleentry([], ['bundle/hello.wasm'])).toBe(
+      'bundle/hello.wasm',
+    )
   })
 
   it('falls back to single root wasm', () => {

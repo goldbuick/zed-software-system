@@ -15,13 +15,14 @@ import {
 import type { LEVEL_STABILITY_METRICS } from 'zss/feature/synth/backend/wasm/levelstabilitymetrics'
 import { analyzelevelstability } from 'zss/feature/synth/backend/wasm/levelstabilitymetrics'
 import { tonenotationseconds } from 'zss/feature/synth/playnotation'
+import { SYNTH_WASM_FIXTURES_DIR } from 'zss/testsupport/fixturepaths'
 
 const SAMPLERATE = 44100
 const WINDOW_MS = 46
 
 const FIXTURE_PATH = path.join(
-  __dirname,
-  '../__fixtures__/adsrenvcurve-tone-metrics.json',
+  SYNTH_WASM_FIXTURES_DIR,
+  'adsrenvcurve-tone-metrics.json',
 )
 
 type ADSR_CURVE_FIXTURE = {

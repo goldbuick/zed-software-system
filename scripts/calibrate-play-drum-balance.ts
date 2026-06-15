@@ -64,7 +64,10 @@ function builddaisy() {
 }
 
 function renderandmeasure(): PLAY_DRUM_BALANCE_METRICS {
-  execSync('yarn task run daisy:play-drum-balance:render', { cwd: PROJECT, stdio: 'inherit' })
+  execSync('yarn task run daisy:play-drum-balance:render', {
+    cwd: PROJECT,
+    stdio: 'inherit',
+  })
   const data = JSON.parse(fs.readFileSync(BALANCE_JSON, 'utf8')) as {
     balance: PLAY_DRUM_BALANCE_METRICS
   }
@@ -151,7 +154,10 @@ async function main() {
     writegains(best.gains)
     builddaisy()
     console.log('Wrote best gains to zss_config.h and rebuilt.')
-    execSync('yarn task run daisy:play-drum-balance:test', { cwd: PROJECT, stdio: 'inherit' })
+    execSync('yarn task run daisy:play-drum-balance:test', {
+      cwd: PROJECT,
+      stdio: 'inherit',
+    })
   } else {
     writegains(original)
     console.log('Dry run — restored original gains in file.')
