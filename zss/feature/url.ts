@@ -143,6 +143,15 @@ export const ZNS_LOGIN_CODE_PARAM = 'zns-code'
 export const ZNS_LOGIN_EMAIL_PARAM = 'zns-email'
 export const ZNS_LOGIN_NAMESPACE_PARAM = 'zns-namespace'
 
+/** Refscroll doc GET only on zed.cafe; local dev uses bundled ROM (avoids console fetch noise). */
+export function znsdocsfetchenabled(): boolean {
+  if (typeof location === 'undefined') {
+    return true
+  }
+  const host = location.hostname.toLowerCase()
+  return host === 'zed.cafe' || host.endsWith('.zed.cafe')
+}
+
 const ZNS_LOGIN_CODE_RE = /^[1-9]{6}$/
 const ZNS_LOGIN_NAMESPACE_RE = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/
 
@@ -287,11 +296,15 @@ export async function fetchznstext(
   key: string,
 ): Promise<string> {
   const url = znstenanturl(namespace, key)
-  const response = await fetch(url)
-  if (!response.ok) {
+  try {
+    const response = await fetch(url)
+    if (!response.ok) {
+      return ''
+    }
+    return response.text()
+  } catch {
     return ''
   }
-  return response.text()
 }
 
 export async function znsautopublishpeer(peerid: string, player: string) {

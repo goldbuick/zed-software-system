@@ -36,7 +36,6 @@ import { memorymessagechip } from 'zss/memory/runtime'
 import { memoryreadbookbysoftware } from 'zss/memory/session'
 import { CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
 import { memoryadminmenu } from 'zss/memory/utilities'
-import { romread } from 'zss/rom'
 import { NAME } from 'zss/words/types'
 
 import { handlebookmarkscrollpanel } from './bookmarkscroll'
@@ -155,30 +154,25 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
         }
         default: {
           doasync(vm, message.player, async () => {
-            const content = romread(`refscroll:${path}`)
-            if (!ispresent(content)) {
+            scrollwritelines(
+              message.player,
+              '$7$7$7 please wait',
+              'loading $7$7$7',
+              'refscroll',
+            )
+            const markdowntext = await fetchrefscrolltext(path)
+            if (!markdowntext.trim()) {
               scrollwritelines(
                 message.player,
-                '$7$7$7 please wait',
-                'loading $7$7$7',
+                path,
+                zsstexttape(
+                  zsstextline(`$red doc not found`),
+                  zsstextline(`$white${path}`),
+                ),
                 'refscroll',
               )
-              const markdowntext = await fetchrefscrolltext(path)
-              if (!markdowntext.trim()) {
-                scrollwritelines(
-                  message.player,
-                  path,
-                  zsstexttape(
-                    zsstextline(`$red doc not found`),
-                    zsstextline(`$white${path}`),
-                  ),
-                  'refscroll',
-                )
-              } else {
-                scrollwritemarkdownlines(message.player, markdowntext, path)
-              }
             } else {
-              scrollwritemarkdownlines(message.player, content, path)
+              scrollwritemarkdownlines(message.player, markdowntext, path)
             }
             const shared = gadgetstate(message.player)
             shared.scrollname = path

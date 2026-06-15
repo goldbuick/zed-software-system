@@ -291,7 +291,7 @@ Various utility functions for browser APIs and external services.
   - `stopListening()` - Stop speech recognition
 
 ### Refscroll / ZNS docs
-- `fetchrefscrolltext(pagepath)` - ROM `refscroll:*` then `docs.at.zed.cafe` text
+- `fetchrefscrolltext(pagepath)` - `docs.at.zed.cafe` text then ROM `refscroll:*` fallback
 - `fetchznstext(namespace, key)` - Public ZNS markdown GET (`{namespace}.at.zed.cafe`)
 
 ### Storage

@@ -1,6 +1,7 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { handledefault } from 'zss/device/vm/handlers/default'
+import { fetchrefscrolltext } from 'zss/feature/fetchrefscrolltext'
 import { parsezipfilelist } from 'zss/feature/parse/file'
 import { scrollwritemarkdownlines } from 'zss/feature/parse/markdownscroll'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
@@ -164,6 +165,7 @@ describe('handledefault refscroll', () => {
   beforeEach(() => {
     jest.mocked(scrollwritelines).mockClear()
     jest.mocked(scrollwritemarkdownlines).mockClear()
+    jest.mocked(fetchrefscrolltext).mockReset().mockResolvedValue('')
     jest.mocked(romread).mockReset()
     jest.mocked(romread).mockReturnValue(undefined)
     jest.mocked(memoryadminmenu).mockClear()
@@ -258,13 +260,10 @@ describe('handledefault refscroll', () => {
     expect(content).toContain('@obj1$ltgrey hint line')
   })
 
-  it('refscroll:notescalesscroll uses parsemarkdownforscroll when ROM exists', async () => {
-    jest.mocked(romread).mockImplementation((addr: string) => {
-      if (addr === 'refscroll:notescalesscroll') {
-        return '$ltgrey intro\n\n[Major](<notescales_major>)\n'
-      }
-      return undefined
-    })
+  it('refscroll:notescalesscroll uses parsemarkdownforscroll when fetch returns content', async () => {
+    jest.mocked(fetchrefscrolltext).mockResolvedValue(
+      '$ltgrey intro\n\n[Major](<notescales_major>)\n',
+    )
     handledefault(vm, {
       session: '',
       player: 'p1',
@@ -275,7 +274,12 @@ describe('handledefault refscroll', () => {
     })
     await Promise.resolve()
     await Promise.resolve()
-    expect(scrollwritelines).not.toHaveBeenCalled()
+    expect(scrollwritelines).toHaveBeenCalledWith(
+      'p1',
+      '$7$7$7 please wait',
+      'loading $7$7$7',
+      'refscroll',
+    )
     expect(scrollwritemarkdownlines).toHaveBeenCalledWith(
       'p1',
       expect.stringContaining('notescales_major'),
@@ -283,13 +287,10 @@ describe('handledefault refscroll', () => {
     )
   })
 
-  it('refscroll:notescales_major uses parsemarkdownforscroll when ROM exists', async () => {
-    jest.mocked(romread).mockImplementation((addr: string) => {
-      if (addr === 'refscroll:notescales_major') {
-        return '!notescalesscroll hk b " B " next;$ltgreyBack\n!istargetless copyit #play cdefgab+c;$greenC major'
-      }
-      return undefined
-    })
+  it('refscroll:notescales_major uses parsemarkdownforscroll when fetch returns content', async () => {
+    jest.mocked(fetchrefscrolltext).mockResolvedValue(
+      '!notescalesscroll hk b " B " next;$ltgreyBack\n!istargetless copyit #play cdefgab+c;$greenC major',
+    )
     handledefault(vm, {
       session: '',
       player: 'p1',
