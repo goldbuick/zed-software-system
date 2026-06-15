@@ -1,5 +1,15 @@
 import { def, exec, shell } from '../helpers'
+import {
+  nodehandler,
+  pythonhandler,
+  shellhandlerwithargs,
+  tsxhandler,
+} from '../implementations/modulehandler'
 import type { TaskDef } from '../types'
+
+const CLANG = 'tasks/implementations/native/clang-format.sh'
+const LANG = 'tasks/implementations/lang'
+const FINETUNE = 'tasks/implementations/lang/finetune'
 
 export const LANG_TASKS: TaskDef[] = [
   def('lang:build', {
@@ -8,19 +18,36 @@ export const LANG_TASKS: TaskDef[] = [
   }),
   def('lang:compile', {
     description: 'Compile ZSS source to JS via wasm (pass file path as args)',
-    run: exec(['node', 'scripts/compile-lang.mjs']),
+    run: nodehandler(`${LANG}/compile-lang.mjs`),
   }),
   def('lang:lint', {
     description: 'clang-format check on lang C++',
-    run: shell('sh scripts/clang-format.sh check lang'),
+    run: shellhandlerwithargs(CLANG, ['check', 'lang']),
   }),
   def('lang:lint:fix', {
     description: 'Apply clang-format to lang C++',
-    run: shell('sh scripts/clang-format.sh fix lang'),
+    run: shellhandlerwithargs(CLANG, ['fix', 'lang']),
   }),
   def('lang:bench:compile', {
     description: 'Lang compile benchmark report',
-    run: exec(['node', 'scripts/lang-compile-bench-report.mjs']),
+    run: nodehandler(`${LANG}/lang-compile-bench-report.mjs`),
+  }),
+  def('lang:bench:wasm', {
+    description: 'Emscripten zss_compile wall time benchmark',
+    run: nodehandler(`${LANG}/lang-wasm-bench.mjs`),
+  }),
+  def('lang:compare:browser-native', {
+    description:
+      'Compare browser vs native lang compile for simple chat player',
+    run: nodehandler(`${LANG}/compare-browser-native-compile.mjs`),
+  }),
+  def('lang:compare:simple-chat-labels', {
+    description: 'Compare simple chat player wasm label maps',
+    run: nodehandler(`${LANG}/compare-simple-chat-labels.mjs`),
+  }),
+  def('lang:book:oracle:extract', {
+    description: 'Extract book JSON into lang integration oracle files',
+    run: tsxhandler(`${LANG}/lang-book-oracle-extract.ts`),
   }),
   def('lang:parity:test', {
     description: 'Native C++ compile parity vs TS oracle',
@@ -44,16 +71,16 @@ export const LANG_TASKS: TaskDef[] = [
   }),
   def('lang:corpus:test', {
     description: 'Browser zss_lang.wasm against full corpus',
-    run: exec(['node', 'scripts/test-lang-corpus.mjs']),
+    run: nodehandler(`${LANG}/test-lang-corpus.mjs`),
   }),
   def('lang:wasm:test', {
     description: 'Lang wasm smoke test (empty fixture)',
-    run: exec(['node', 'scripts/test-lang-wasm.mjs']),
+    run: nodehandler(`${LANG}/test-lang-wasm.mjs`),
   }),
   def('lang:regression:test', {
     description: 'Full lang regression (TS tests, parity, corpus)',
     tags: ['ci'],
-    run: shell('sh scripts/run-lang-regression.sh'),
+    run: shellhandlerwithargs(`${LANG}/run-lang-regression.sh`),
   }),
   def('lang:build-train-corpus', {
     description: 'Jest build training corpus fixture',
@@ -75,14 +102,14 @@ export const LANG_TASKS: TaskDef[] = [
   }),
   def('lang:finetune:train', {
     description: 'Train lang finetune model',
-    run: exec(['python3', 'scripts/lang-finetune/train.py']),
+    run: pythonhandler(`${FINETUNE}/train.py`),
   }),
   def('lang:finetune:export', {
     description: 'Export finetune model to ONNX',
-    run: exec(['python3', 'scripts/lang-finetune/export_onnx.py']),
+    run: pythonhandler(`${FINETUNE}/export_onnx.py`),
   }),
   def('lang:finetune:eval', {
     description: 'Evaluate finetune ONNX model',
-    run: exec(['node', 'scripts/lang-finetune/eval-onnx.mjs']),
+    run: nodehandler(`${FINETUNE}/eval-onnx.mjs`),
   }),
 ]

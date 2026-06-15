@@ -6,14 +6,15 @@
     "zss/simspace.ts",
     "zss/heavyspace.ts",
     "zss/boardrunnerspace.ts",
-    "cafecli/src/commands/run.ts",
+    "tasks/cli.ts",
     "jest.config.ts",
     "playwright.config.ts"
   ],
   "project": [
     "zss/**/*.{ts,tsx}",
     "cafe/**/*.{ts,tsx}",
-    "cafecli/src/**/*.{ts,tsx}"
+    "headless/src/**/*.{ts,tsx}",
+    "tasks/**/*.{ts,tsx,mjs}"
   ],
   "ignoreExportsUsedInFile": true,
   "ignore": [

@@ -4,7 +4,7 @@ import type { TaskDef } from '../types'
 export const CLI_TASKS: TaskDef[] = [
   def('cli:build', {
     description: 'Compile CLI and refresh oclif manifest',
-    run: shell('tsc -p cafecli/tsconfig.json && oclif manifest'),
+    run: shell('tsc -p headless/tsconfig.json && oclif manifest'),
   }),
   def('cli:build:all', {
     description: 'Production app + CLI build and pack tarballs',

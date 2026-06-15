@@ -6,7 +6,7 @@ A ZZT-inspired, web-based fantasy terminal — a creative-coding and game enviro
 
 From the repo root (requires [Yarn](https://yarnpkg.com/) and a current [Node.js](https://nodejs.org/) LTS):
 
-All workflows run through the task CLI. Full index: [docs/tasks.md](docs/tasks.md).
+All workflows run through the task CLI. Full index: [ops/docs/tasks.md](ops/docs/tasks.md).
 
 | Command | What it does |
 |--------|----------------|
@@ -23,4 +23,4 @@ Shorthand: `yarn task app dev` is equivalent to `yarn task run app:dev`.
 
 Set `ZSS_DEBUG_PERF_UI=true` in `cafe/.env` (or export it) to enable the in-game perf overlay; see [`zss/perf/README.md`](zss/perf/README.md).
 
-Production build: `yarn task run app:build`. **Dev** defaults to WASM lang; **production** defaults to the TS compiler until WASM lang issues are resolved. Override with `ZSS_WASM_SCRIPT=true yarn task run app:build` or `ZSS_WASM_SCRIPT=false` for dev. Per-area docs live under `zss/**/docs/` and `docs/`.
+Production build: `yarn task run app:build`. **Dev** defaults to WASM lang; **production** defaults to the TS compiler until WASM lang issues are resolved. Override with `ZSS_WASM_SCRIPT=true yarn task run app:build` or `ZSS_WASM_SCRIPT=false` for dev. Per-area docs live under `zss/**/docs/` and `ops/docs/`.

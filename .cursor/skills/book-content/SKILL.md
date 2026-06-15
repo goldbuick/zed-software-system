@@ -17,17 +17,17 @@ description: >-
 
 ## Workflow
 
-1. Create a folder under `fixtures/content/templates/` with `manifest.json` and `pages/*.json`.
-2. Run `yarn task run content:book:build fixtures/content/templates/<yourbook>`.
-3. Validate: `yarn task run content:book:validate fixtures/content/dist/<name>.book.json`.
-4. Drag `fixtures/content/dist/<name>.book.json` into zed.cafe.
+1. Create a folder under `ops/fixtures/content/templates/` with `manifest.json` and `pages/*.json`.
+2. Run `yarn task run content:book:build ops/fixtures/content/templates/<yourbook>`.
+3. Validate: `yarn task run content:book:validate ops/fixtures/content/dist/<name>.book.json`.
+4. Drag `ops/fixtures/content/dist/<name>.book.json` into zed.cafe.
 
-Validate a single page: `yarn task run content:codepage:validate fixtures/content/templates/.../pages/player.object.json`.
+Validate a single page: `yarn task run content:codepage:validate ops/fixtures/content/templates/.../pages/player.object.json`.
 
 ## Folder layout
 
 ```
-fixtures/content/templates/mygame/
+ops/fixtures/content/templates/mygame/
   manifest.json
   pages/
     player.object.json
@@ -75,7 +75,7 @@ Board size: 60×25 ([`zss/memory/types.ts`](../../../zss/memory/types.ts)).
 - `@board title` with `@startx` / `@starty` → `title.board.json`
 - At least one `@terrain` kind used on the board → e.g. `solid.terrain.json`
 
-Templates: [`fixtures/content/templates/minimal`](../../../fixtures/content/templates/minimal), [`fixtures/content/templates/demo`](../../../fixtures/content/templates/demo).
+Templates: [`ops/fixtures/content/templates/minimal`](../../../ops/fixtures/content/templates/minimal), [`ops/fixtures/content/templates/demo`](../../../ops/fixtures/content/templates/demo).
 
 ## ZSS inside `code`
 
@@ -92,5 +92,5 @@ Templates: [`fixtures/content/templates/minimal`](../../../fixtures/content/temp
 ## Do not
 
 - Hand-write full 72k-line book JSON — copy structure from templates instead
-- Use standalone `.zss` page files in `fixtures/content/` — use JSON codepages
+- Use standalone `.zss` page files in `ops/fixtures/content/` — use JSON codepages
 - Guess `sid_*` ids — omit `id` and let the build script assign them

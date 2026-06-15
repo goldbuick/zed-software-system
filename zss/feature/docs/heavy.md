@@ -1,6 +1,6 @@
 # heavy/
 
-**Purpose**: Heavy processing workloads — Gemma 4 E2B agent LLM via Transformers.js (WebGPU) and board agents. Runs in **heavyspace**; models load on demand. Piper/Supertonic TTS inference moved to on-demand **ttsspace** ([`ttsworker.ts`](../../device/ttsworker.ts)); [`heavy/tts.ts`](tts.ts) remains the shared inference library.
+**Purpose**: Heavy processing workloads — Gemma 4 E2B agent LLM via Transformers.js (WebGPU) and board agents. Runs in **heavyspace**; models load on demand. Piper/Supertonic TTS inference moved to on-demand **ttsspace** ([`ttsworker.ts`](../../device/ttsworker.ts)); [`heavy/tts.ts`](../heavy/tts.ts) remains the shared inference library.
 
 ## Agent LLM
 

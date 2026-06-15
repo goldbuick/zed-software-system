@@ -19,11 +19,19 @@ export const TASK_TAGS = ['ci', 'dev', 'deploy', 'slow', 'calibrate'] as const
 
 export type TaskTag = (typeof TASK_TAGS)[number]
 
+export type TaskContext = {
+  root: string
+  env: NodeJS.ProcessEnv
+  args: string[]
+}
+
+export type TaskHandler = (ctx: TaskContext) => number | Promise<number>
+
 export type TaskRun =
   | { kind: 'tasks' }
   | { kind: 'exec'; argv: string[] }
   | { kind: 'shell'; cmd: string }
-  | { kind: 'script'; file: string; args?: string[] }
+  | { kind: 'handler'; handler: TaskHandler }
 
 export type TaskDef = {
   id: string

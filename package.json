@@ -4,15 +4,15 @@
   "version": "1.8.11",
   "type": "module",
   "files": [
-    "cafecli/bin",
-    "cafecli/dist",
+    "headless/bin",
+    "headless/dist",
     "cafe/dist",
     "dist",
-    "fixtures/books/example-coolregionsbow.book.json"
+    "ops/fixtures/books/example-coolregionsbow.book.json"
   ],
   "scripts": {
     "postinstall": "patch-package",
-    "task": "tsx scripts/task-cli.ts"
+    "task": "tsx tasks/cli.ts"
   },
   "devDependencies": {
     "@bokuweb/zstd-wasm": "^0.0.27",
@@ -124,13 +124,13 @@
     "wanix": "0.4.0-alpha8"
   },
   "bin": {
-    "zss": "./cafecli/bin/run.js"
+    "zss": "./headless/bin/run.js"
   },
   "oclif": {
     "bin": "zss",
     "commands": {
       "strategy": "single",
-      "target": "./cafecli/dist/src/commands/run.js"
+      "target": "./headless/dist/src/commands/run.js"
     },
     "dirname": "zss",
     "topicSeparator": " "

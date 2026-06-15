@@ -1,4 +1,5 @@
 import { def, exec } from '../helpers'
+import { tsxhandler } from '../implementations/modulehandler'
 import type { TaskDef } from '../types'
 
 export const E2E_TASKS: TaskDef[] = [
@@ -24,26 +25,26 @@ export const E2E_TASKS: TaskDef[] = [
   def('e2e:test:gadget-scroll', {
     description: 'Gadget inspect scroll e2e',
     env: { PLAYWRIGHT_INCLUDE_GADGET_E2E: '1' },
-    run: exec(['playwright', 'test', 'e2e/gadget-inspect-scroll.spec.ts']),
+    run: exec(['playwright', 'test', 'ops/e2e/gadget-inspect-scroll.spec.ts']),
   }),
   def('e2e:test:join-gadget-charedit', {
     description: 'Join gadget charedit e2e',
     env: { PLAYWRIGHT_INCLUDE_JOIN_E2E: '1' },
-    run: exec(['playwright', 'test', 'e2e/join-gadget-charedit.spec.ts']),
+    run: exec(['playwright', 'test', 'ops/e2e/join-gadget-charedit.spec.ts']),
   }),
   def('e2e:test:join-move', {
     description: 'Join boardrunner move e2e',
     env: { PLAYWRIGHT_INCLUDE_JOIN_E2E: '1' },
-    run: exec(['playwright', 'test', 'e2e/join-boardrunner-move.spec.ts']),
+    run: exec(['playwright', 'test', 'ops/e2e/join-boardrunner-move.spec.ts']),
   }),
   def('e2e:join-move:loop', {
     description: 'Repeated join-move e2e loop',
-    run: exec(['npx', 'tsx', 'scripts/run-join-move-loop.ts']),
+    run: tsxhandler('tasks/implementations/e2e/run-join-move-loop.ts'),
   }),
   def('e2e:test:lang-bench', {
     description: 'Lang compile bench e2e',
     env: { PLAYWRIGHT_INCLUDE_LANG_BENCH: '1' },
-    run: exec(['playwright', 'test', 'e2e/lang-compile-bench.spec.ts']),
+    run: exec(['playwright', 'test', 'ops/e2e/lang-compile-bench.spec.ts']),
   }),
   def('e2e:test:wanix', {
     description: 'Wanix host and drop hello.wasm CLI e2e',
@@ -51,8 +52,8 @@ export const E2E_TASKS: TaskDef[] = [
     run: exec([
       'playwright',
       'test',
-      'e2e/wanix-host.spec.ts',
-      'e2e/wanix-cli.spec.ts',
+      'ops/e2e/wanix-host.spec.ts',
+      'ops/e2e/wanix-cli.spec.ts',
     ]),
   }),
   def('e2e:manual:join-charedit', {
@@ -64,7 +65,7 @@ export const E2E_TASKS: TaskDef[] = [
     run: exec([
       'playwright',
       'test',
-      'e2e/join-charedit-manual.spec.ts',
+      'ops/e2e/join-charedit-manual.spec.ts',
       '--headed',
       '--debug',
     ]),

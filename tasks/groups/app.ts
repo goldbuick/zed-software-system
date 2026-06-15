@@ -1,4 +1,5 @@
 import { def, exec, shell, tasksonly } from '../helpers'
+import { nodehandler } from '../implementations/modulehandler'
 import type { TaskDef } from '../types'
 
 export const APP_TASKS: TaskDef[] = [
@@ -65,7 +66,7 @@ export const APP_TASKS: TaskDef[] = [
   def('app:clear', {
     description: 'Remove build artifacts and Vite cache',
     run: shell(
-      'rimraf tmp && rimraf dist && rimraf cafecli/dist && rimraf cafe/dist && rimraf node_modules/.vite',
+      'rimraf tmp && rimraf dist && rimraf headless/dist && rimraf cafe/dist && rimraf node_modules/.vite',
     ),
   }),
   def('app:preview', {
@@ -102,7 +103,7 @@ export const APP_TASKS: TaskDef[] = [
   }),
   def('app:audit:export-catalogs', {
     description: 'Audit export catalogs',
-    run: exec(['node', 'scripts/audit-export-catalogs.mjs']),
+    run: nodehandler('tasks/implementations/app/audit-export-catalogs.mjs'),
   }),
   def('app:sloc', {
     description: 'Source lines of code count for zss/',
@@ -113,7 +114,7 @@ export const APP_TASKS: TaskDef[] = [
     tags: ['dev'],
     env: { ZSS_NO_HTTPS: '1' },
     run: shell(
-      'npx concurrently -k "yarn task run app:vite:dev" "sleep 8 && ./cafecli/bin/dev.js --dev"',
+      'npx concurrently -k "yarn task run app:vite:dev" "sleep 8 && ./headless/bin/dev.js --dev"',
     ),
   }),
   tasksonly(
@@ -128,6 +129,6 @@ export const APP_TASKS: TaskDef[] = [
     description: 'Production build, CLI build, run zss server',
     deps: ['app:build', 'cli:build'],
     tags: ['dev'],
-    run: exec(['./cafecli/bin/dev.js']),
+    run: exec(['./headless/bin/dev.js']),
   }),
 ]

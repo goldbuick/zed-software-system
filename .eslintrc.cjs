@@ -186,7 +186,7 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['infra/**/*.js', 'infra/**/*.mjs'],
+      files: ['ops/infra/**/*.js', 'ops/infra/**/*.mjs'],
       env: {
         browser: false,
         node: true,
@@ -199,7 +199,7 @@ module.exports = {
       },
     },
     {
-      files: ['scripts/**/*.ts'],
+      files: ['tasks/**/*.{ts,tsx}'],
       env: {
         browser: false,
         node: true,

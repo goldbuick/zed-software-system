@@ -6,7 +6,10 @@ import { LANG_PARITY_DIR } from 'zss/testsupport/fixturepaths'
 
 const COMPILERDIR = __dirname
 const REPROOT = path.join(__dirname, '../../../../../')
-const COMPILEONE = path.join(REPROOT, 'scripts/lang-wasm-compile-one.mjs')
+const COMPILEONE = path.join(
+  REPROOT,
+  'tasks/lib/lang/lang-wasm-compile-one.mjs',
+)
 const FIXTUREDIR = LANG_PARITY_DIR
 const PARITYBIN = path.join(COMPILERDIR, 'zss_lang_parity')
 const WCLIBIN = path.join(COMPILERDIR, 'zss_lang_wasm_cli')

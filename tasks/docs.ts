@@ -6,7 +6,7 @@ import { taskroot } from './runner'
 import { TASK_GROUPS } from './types'
 import type { TaskDef } from './types'
 
-const DOCS_PATH = path.join(taskroot(), 'docs', 'tasks.md')
+const DOCS_PATH = path.join(taskroot(), 'ops/docs/tasks.md')
 
 function escmd(value: string): string {
   return value.replace(/\|/g, '\\|')

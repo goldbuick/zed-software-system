@@ -1,4 +1,4 @@
-import type { TaskDef, TaskGroup, TaskRun, TaskTag } from './types'
+import type { TaskDef, TaskGroup, TaskHandler, TaskRun, TaskTag } from './types'
 import { TASK_GROUPS } from './types'
 
 export function infergroup(id: string): TaskGroup {
@@ -37,6 +37,10 @@ export function exec(argv: string[]): TaskRun {
 
 export function shell(cmd: string): TaskRun {
   return { kind: 'shell', cmd }
+}
+
+export function handler(fn: TaskHandler): TaskRun {
+  return { kind: 'handler', handler: fn }
 }
 
 export function tasksonly(

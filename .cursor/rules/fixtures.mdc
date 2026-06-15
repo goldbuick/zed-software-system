@@ -1,16 +1,16 @@
 ---
-description: Test fixture layout — all assets under ./fixtures/, use fixturepaths.ts
-globs: fixtures/**,**/__tests__/**,e2e/**,scripts/**,zss/testsupport/**
+description: Test fixture layout — all assets under ./ops/fixtures/, use fixturepaths.ts
+globs: ops/fixtures/**,**/__tests__/**,ops/e2e/**,scripts/**,zss/testsupport/**
 alwaysApply: false
 ---
 
 # Fixtures layout
 
-All test fixture **assets** live under repo-root [`fixtures/`](fixtures/). Resolve paths via [`zss/testsupport/fixturepaths.ts`](zss/testsupport/fixturepaths.ts).
+All test fixture **assets** live under repo-root [`ops/fixtures/`](ops/fixtures/). Resolve paths via [`zss/testsupport/fixturepaths.ts`](zss/testsupport/fixturepaths.ts).
 
 ## Required
 
-| Domain | Path under `fixtures/` |
+| Domain | Path under `ops/fixtures/` |
 |--------|------------------------|
 | Lang parity | `lang/parity/` + `manifest.json` |
 | Lang integration sources | `lang/scripts/` |
@@ -39,11 +39,11 @@ path.join(__dirname, '__fixtures__/parity')
 
 ## Generated vs committed
 
-- Regenerate `fixtures/generated/training/` and `fixtures/e2e/` via existing tasks/scripts.
+- Regenerate `ops/fixtures/generated/training/` and `ops/fixtures/e2e/` via existing tasks/scripts.
 - Lang/memory/synth goldens: regen via parity/regen tests — do not hand-edit unless fixing the generator.
 
 ## Harness code
 
-Embedded loaders in `zss/testsupport/` (e.g. wanix hex bytes) stay in testsupport; they reference `fixtures/wanix/` sources for regen comments only.
+Embedded loaders in `zss/testsupport/` (e.g. wanix hex bytes) stay in testsupport; they reference `ops/fixtures/wanix/` sources for regen comments only.
 
-See [`fixtures/README.md`](fixtures/README.md) for regen task ids.
+See [`ops/fixtures/README.md`](ops/fixtures/README.md) for regen task ids.

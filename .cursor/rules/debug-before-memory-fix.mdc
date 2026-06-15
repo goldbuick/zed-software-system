@@ -11,7 +11,7 @@ Do not change multiplayer, boundary sync, gadget projection, or host/join memory
 
 1. **Repro scenario** — document how to trigger the bug every time:
    - manual steps (host + join tabs, actions, timing), or
-   - an automated spec / fixture (`e2e/*.spec.ts`, `fixtures/e2e/*`), or
+   - an automated spec / fixture (`ops/e2e/*.spec.ts`, `ops/fixtures/e2e/*`), or
    - a scripted repro (`yarn host-memory:repro:build` or equivalent).
 2. **Log-pinned diagnosis** — capture runtime evidence and identify **which memory is wrong**:
    - **host sim** — `memoryboundaryget`, board terrain in main worker

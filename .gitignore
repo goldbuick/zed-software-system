@@ -11,7 +11,7 @@ node_modules
 tmp
 .tmp
 dist
-cafecli/dist
+headless/dist
 dist-bin
 dist-server
 oclif.manifest.json
@@ -29,7 +29,7 @@ oclif.manifest.json
 *.sw?
 
 # content build output
-fixtures/content/dist
+ops/fixtures/content/dist
 
 # runtime data
 .zss-data
@@ -38,7 +38,7 @@ fixtures/content/dist
 cafe/public/models/
 
 # wanix smoke wasm scratch (regenerate with yarn task run wanix:wasm:build)
-fixtures/wanix/*.wasm
+ops/fixtures/wanix/*.wasm
 
 # offline song renders (regenerate with yarn level-issue-song:render)
 cafe/public/renders/*.wav

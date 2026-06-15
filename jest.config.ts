@@ -47,7 +47,7 @@ const config: Config = {
   ],
   globalTeardown: '<rootDir>/zss/testing/jestglobalteardown.cjs',
   testPathIgnorePatterns: [
-    '<rootDir>/e2e/',
+    '<rootDir>/ops/e2e/',
     '<rootDir>/zss/memory/wasm/__tests__/wasmparity.test.ts',
     '<rootDir>/zss/memory/wasm/regenfixtures.test.ts',
   ],

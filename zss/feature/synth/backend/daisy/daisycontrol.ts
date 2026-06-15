@@ -74,7 +74,7 @@ export const DAISY_SAB_CHANNEL_LEN: Record<string, number> = {
   zss_vibrato: DAISY_VIBRATO_LEN,
 }
 
-/** Worklet SAB maps — injected by scripts/bundle-daisy-processor.ts (do not hand-edit). */
+/** Worklet SAB maps — injected by tasks/implementations/daisy/bundle-daisy-processor.ts (do not hand-edit). */
 export function formatdaisyworkletsablayout(): string {
   return `const DAISY_SAB_CHANNEL_OFFSET = ${JSON.stringify(DAISY_SAB_CHANNEL_OFFSET, null, 2)}
 const DAISY_SAB_CHANNEL_LEN = ${JSON.stringify(DAISY_SAB_CHANNEL_LEN, null, 2)}

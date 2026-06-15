@@ -13,7 +13,7 @@ When disabled, helpers are no-ops and the `Profiler` wrapper is not used.
 
 ## Bundle size
 
-`yarn task run app:analyze` runs a production build with `ZSS_ANALYZER=1` and opens the bundle analyzer (see [docs/tasks.md](../../docs/tasks.md)).
+`yarn task run app:analyze` runs a production build with `ZSS_ANALYZER=1` and opens the bundle analyzer (see [ops/docs/tasks.md](../../ops/docs/tasks.md)).
 
 ## Browser tools
 

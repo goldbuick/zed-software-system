@@ -14,7 +14,7 @@ Target: `realtimefactor >= 1.0` on dev hardware for worst-case load.
 
 WASM size after Phase B (`fm2.cpp`): ~79 KB (`zss_daisy.wasm`, 2026-06-05).
 
-Regression: `yarn sos-voices:test` (12 SOS instrument patches vs `fixtures/synth/daisy/sos-voice-fixtures.json`).
+Regression: `yarn sos-voices:test` (12 SOS instrument patches vs `ops/fixtures/synth/daisy/sos-voice-fixtures.json`).
 
 Regenerate after intentional voice DSP changes:
 

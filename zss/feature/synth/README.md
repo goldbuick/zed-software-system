@@ -8,7 +8,7 @@ Legacy backends are preserved under [`archive/tone/`](archive/tone/README.md) an
 
 Detailed documentation is in **[docs/](docs/README.md)**. Active runtime: `backend/daisy/` (DSP) + `backend/wasm/` (shared SAB, scheduler, voice/FX config).
 
-Task index: [docs/tasks.md](../../../docs/tasks.md) (daisy group).
+Task index: [ops/docs/tasks.md](../../../ops/docs/tasks.md) (daisy group).
 
 ## Quick Start
 
@@ -56,7 +56,7 @@ Carrier `#synth env` is **wave-agnostic** (`ZssLinearEnv` on all SYNTH voices). 
 - `play-drum`, `sidechain`, `synth-env`, `notepop`, `pitch`
 - `--skip-build`, `--calibrate-only`, `--calibrate-on-fail` (opt-in calibrator; slow)
 
-Implementation: [`scripts/run-daisy-parity-loop.ts`](../../../scripts/run-daisy-parity-loop.ts).
+Implementation: [`tasks/lib/daisy/parity-loop.ts`](../../../tasks/lib/daisy/parity-loop.ts).
 
 ## Calibrators (dev-only)
 

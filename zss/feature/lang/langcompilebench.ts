@@ -1,8 +1,8 @@
-import duplicatorsource from 'fixtures/lang/coolregionsbow/duplicator.zss?raw'
-import playersource from 'fixtures/lang/coolregionsbow/player.zss?raw'
-import drawdisplaysource from 'fixtures/lang/parity/drawdisplay.zss?raw'
-import shortgosource from 'fixtures/lang/parity/short_go.zss?raw'
-import simplechatplayersource from 'fixtures/lang/scripts/simple_chat_player.zss?raw'
+import duplicatorsource from 'ops/fixtures/lang/coolregionsbow/duplicator.zss?raw'
+import playersource from 'ops/fixtures/lang/coolregionsbow/player.zss?raw'
+import drawdisplaysource from 'ops/fixtures/lang/parity/drawdisplay.zss?raw'
+import shortgosource from 'ops/fixtures/lang/parity/short_go.zss?raw'
+import simplechatplayersource from 'ops/fixtures/lang/scripts/simple_chat_player.zss?raw'
 import { compile } from 'zss/feature/lang/backend/typescript/generator'
 import {
   compilezssonmodule,

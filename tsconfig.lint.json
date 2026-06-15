@@ -7,10 +7,9 @@
   "include": [
     "zss",
     "cafe",
-    "cafecli",
-    "e2e",
-    "infra",
-    "scripts",
+    "headless",
+    "ops/e2e",
+    "ops/infra",
     "tasks",
     "vite.config.ts",
     "jest.config.ts",

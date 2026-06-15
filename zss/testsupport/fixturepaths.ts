@@ -1,7 +1,7 @@
 import path from 'node:path'
 
-/** Repo-root `./fixtures/` — single owner for all test fixture assets. */
-export const FIXTURES_ROOT = path.join(process.cwd(), 'fixtures')
+/** Repo-root `./ops/fixtures/` — single owner for all test fixture assets. */
+export const FIXTURES_ROOT = path.join(process.cwd(), 'ops/fixtures')
 
 export const LANG_PARITY_DIR = path.join(FIXTURES_ROOT, 'lang/parity')
 export const LANG_INTEGRATION_GOLDENS_DIR = path.join(

@@ -21,7 +21,7 @@ ENV ZSS_SERVER_PORT=4175 \
 
 VOLUME ["/data"]
 
-COPY cafecli/start.sh ./
+COPY headless/start.sh ./
 RUN chmod +x start.sh
 
 CMD ["./start.sh"]

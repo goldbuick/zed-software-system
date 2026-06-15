@@ -53,11 +53,11 @@ function runshell(cmd: string, env: NodeJS.ProcessEnv): number {
   return result.status ?? 1
 }
 
-function runbody(
+async function runbody(
   task: TaskDef,
   env: NodeJS.ProcessEnv,
   extraargs: string[],
-): number {
+): Promise<number> {
   const run = task.run
   if (run.kind === 'tasks') {
     return 0
@@ -71,19 +71,21 @@ function runbody(
     }
     return runshell(run.cmd, env)
   }
-  const args = [...(run.args ?? []), ...extraargs]
-  return runexec(['node', run.file, ...args], env)
+  if (run.kind === 'handler') {
+    return run.handler({ root: ROOT, env, args: extraargs })
+  }
+  throw new Error(`unknown task run kind for ${task.id}`)
 }
 
-function runone(
+async function runone(
   id: string,
   inheritedenv: NodeJS.ProcessEnv,
   extraargs: string[],
-): number {
+): Promise<number> {
   const task = gettask(id)
   const env = mergedenv(task, inheritedenv)
   for (const dep of task.deps ?? []) {
-    const code = runone(dep, env, [])
+    const code = await runone(dep, env, [])
     if (code !== 0) {
       return code
     }
@@ -91,11 +93,11 @@ function runone(
   return runbody(task, env, extraargs)
 }
 
-export function runtask(
+export async function runtask(
   id: string,
   extraargs: string[] = [],
   inheritedenv: NodeJS.ProcessEnv = process.env,
-): number {
+): Promise<number> {
   return runone(id, inheritedenv, extraargs)
 }
 

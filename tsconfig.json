@@ -9,8 +9,11 @@
       "cafe/*": [
         "./cafe/*"
       ],
-      "fixtures/*": [
-        "./fixtures/*"
+      "ops/fixtures/*": [
+        "./ops/fixtures/*"
+      ],
+      "tasks/*": [
+        "./tasks/*"
       ]
     },
     "lib": [
@@ -39,8 +42,8 @@
   "include": [
     "zss",
     "cafe",
-    "cafecli",
-    "fixtures"
+    "headless",
+    "ops/fixtures"
   ],
   "exclude": [
     "zss/feature/synth/archive"

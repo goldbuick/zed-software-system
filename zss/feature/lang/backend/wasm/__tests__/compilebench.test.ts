@@ -65,7 +65,7 @@ function formatms(ms: number) {
   return ms < 1 ? `${(ms * 1000).toFixed(0)} µs` : `${ms.toFixed(3)} ms`
 }
 
-/** TS backend only — pair with `node scripts/lang-wasm-bench.mjs` for WASM. */
+/** TS backend only — pair with `yarn task run lang:bench:wasm` for WASM. */
 describe('lang compile benchmark', () => {
   it('benchmark TS compile time', () => {
     jest.spyOn(console, 'time').mockImplementation(() => {})
@@ -131,7 +131,7 @@ describe('lang compile benchmark', () => {
 
     rows.push('')
     rows.push(
-      'Run `node scripts/lang-wasm-bench.mjs` for Emscripten WASM timings.',
+      'Run `yarn task run lang:bench:wasm` for Emscripten WASM timings.',
     )
 
     // eslint-disable-next-line no-console

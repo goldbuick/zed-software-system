@@ -1,14 +1,17 @@
-import { def, shell } from '../helpers'
+import { def } from '../helpers'
+import { shellhandlerwithargs } from '../implementations/modulehandler'
 import type { TaskDef } from '../types'
+
+const CLANG = 'tasks/implementations/native/clang-format.sh'
 
 export const NATIVE_TASKS: TaskDef[] = [
   def('native:lint', {
     description: 'clang-format check on first-party C++ (all targets)',
     tags: ['ci'],
-    run: shell('sh scripts/clang-format.sh check all'),
+    run: shellhandlerwithargs(CLANG, ['check', 'all']),
   }),
   def('native:lint:fix', {
     description: 'Apply clang-format to first-party C++ (all targets)',
-    run: shell('sh scripts/clang-format.sh fix all'),
+    run: shellhandlerwithargs(CLANG, ['fix', 'all']),
   }),
 ]

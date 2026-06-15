@@ -1,4 +1,5 @@
 import { def, exec, shell } from '../helpers'
+import { nodehandler, tsxhandler } from '../implementations/modulehandler'
 import type { TaskDef } from '../types'
 
 export const MEMORY_TASKS: TaskDef[] = [
@@ -8,11 +9,13 @@ export const MEMORY_TASKS: TaskDef[] = [
   }),
   def('memory:parity:test', {
     description: 'Memory wasm parity test suite',
-    run: exec(['node', 'scripts/memory-parity-run.mjs']),
+    run: nodehandler('tasks/implementations/memory/memory-parity-run.mjs'),
   }),
   def('memory:test:native', {
     description: 'Memory parity native-only run',
-    run: exec(['node', 'scripts/memory-parity-run.mjs', '--native-only']),
+    run: nodehandler('tasks/implementations/memory/memory-parity-run.mjs', [
+      '--native-only',
+    ]),
   }),
   def('memory:parity:regen', {
     description: 'Regenerate memory parity fixtures',
@@ -22,16 +25,18 @@ export const MEMORY_TASKS: TaskDef[] = [
       'jest',
       '--runTestsByPath',
       'zss/memory/wasm/regenfixtures.test.ts',
-      '--testPathIgnorePatterns=/e2e/',
+      '--testPathIgnorePatterns=/ops/e2e/',
       '--no-coverage',
     ]),
   }),
   def('memory:parity:check-coverage', {
     description: 'Check memory parity fixture coverage',
-    run: exec(['node', 'scripts/memory-parity-check-coverage.mjs']),
+    run: nodehandler(
+      'tasks/implementations/memory/memory-parity-check-coverage.mjs',
+    ),
   }),
   def('memory:repro:build', {
     description: 'Build host memory corruption repro bundle',
-    run: exec(['npx', 'tsx', 'scripts/build-host-memory-repro.ts']),
+    run: tsxhandler('tasks/implementations/memory/build-host-memory-repro.ts'),
   }),
 ]
