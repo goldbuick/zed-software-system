@@ -2,8 +2,11 @@ import { createdevice } from 'zss/device'
 import { apierror } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import {
+  wanixhandleattach,
+  wanixhandledetach,
   wanixhandlekeep,
   wanixhandlereplace,
+  wanixhandlestdin,
   wanixhandlestop,
 } from 'zss/feature/wanix/wanixdrop'
 import { iswanixspaceactive, readwanixstatus } from 'zss/feature/wanix/wanixiframehost'
@@ -14,6 +17,7 @@ import {
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import { zssheaderlines, zsstexttape } from 'zss/feature/zsstextui'
 import { doasync } from 'zss/mapping/func'
+import { isstring } from 'zss/mapping/types'
 
 const wanix = createdevice('wanix', [], (message) => {
   if (!wanix.session(message)) {
@@ -38,6 +42,20 @@ const wanix = createdevice('wanix', [], (message) => {
       break
     case 'keep':
       wanixhandlekeep(wanix, message.player)
+      break
+    case 'stdin':
+      if (!isstring(message.data)) {
+        break
+      }
+      doasync(wanix, message.player, async () => {
+        await wanixhandlestdin(wanix, message.player, message.data)
+      })
+      break
+    case 'detach':
+      wanixhandledetach(wanix, message.player)
+      break
+    case 'attach':
+      wanixhandleattach(wanix, message.player)
       break
     case 'show':
       doasync(wanix, message.player, async () => {

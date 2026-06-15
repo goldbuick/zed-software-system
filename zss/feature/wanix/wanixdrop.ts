@@ -9,6 +9,7 @@ import {
   mountwanixarchive,
   putwanixfile,
   runwanixcommand,
+  sendwanixstdin,
 } from 'zss/feature/wanix/wanixiframehost'
 import {
   clearwanixpending,
@@ -18,6 +19,7 @@ import {
   setwanixhalted,
   setwanixidle,
   setwanixrunning,
+  setwanixstdinrouting,
   setwanixstopped,
   stashwanixpending,
 } from 'zss/feature/wanix/wanixsession'
@@ -87,6 +89,11 @@ async function launchwanixload(
   }
   setwanixrunning({ label, entrycmd })
   apilog(device, player, `wanix run ${entrycmd}`)
+  apilog(
+    device,
+    player,
+    `wanix stdin active — typing goes to ${label} (#wanix detach to escape routing)`,
+  )
   try {
     const code = await runwanixcommand(entrycmd)
     wanixiobridgeflush()
@@ -213,4 +220,56 @@ export async function parsewanixwasm(player: string, file: File) {
 export async function parsewanixbundle(player: string, file: File) {
   const bytes = new Uint8Array(await file.arrayBuffer())
   await wanixhandledrop(SOFTWARE, player, file.name, 'bundle', bytes)
+}
+
+export async function wanixhandlestdin(
+  device: DEVICELIKE,
+  player: string,
+  line: string,
+) {
+  try {
+    await sendwanixstdin(line)
+  } catch (err) {
+    apierror(
+      device,
+      player,
+      'wanix',
+      err instanceof Error ? err.message : String(err),
+    )
+  }
+}
+
+export function wanixhandledetach(device: DEVICELIKE, player: string) {
+  if (readwanixphase() !== 'running') {
+    apierror(device, player, 'wanix', 'nothing running to detach from')
+    return
+  }
+  if (!readwanixbinary()) {
+    apierror(device, player, 'wanix', 'no active binary')
+    return
+  }
+  setwanixstdinrouting(false)
+  apilog(
+    device,
+    player,
+    `wanix stdin detached — ${readwanixbinary()?.label ?? 'binary'} still running (#wanix attach to resume)`,
+  )
+}
+
+export function wanixhandleattach(device: DEVICELIKE, player: string) {
+  if (readwanixphase() !== 'running') {
+    apierror(device, player, 'wanix', 'nothing running to attach to')
+    return
+  }
+  const active = readwanixbinary()
+  if (!active) {
+    apierror(device, player, 'wanix', 'no active binary')
+    return
+  }
+  setwanixstdinrouting(true)
+  apilog(
+    device,
+    player,
+    `wanix stdin active — typing goes to ${active.label} (#wanix detach to escape routing)`,
+  )
 }

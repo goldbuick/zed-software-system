@@ -1,3 +1,3 @@
 ---
-hint: $DKGRAYdrop .wasm or .tgz to run; #wanix shows state; #wanix stop halts
+hint: $DKGRAYdrop .wasm or .tgz to run; stdin routes while running; #wanix attach/detach
 ---

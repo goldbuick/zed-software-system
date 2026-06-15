@@ -45,6 +45,7 @@ const RPC_DONE_TYPES = new Set([
   'wanix:halt:done',
   'wanix:mount-archive:done',
   'wanix:ls:done',
+  'wanix:stdin:done',
 ])
 
 function originok(origin: string) {
@@ -287,6 +288,16 @@ export async function haltwanixtask(): Promise<void> {
     return
   }
   const reply = await postrpc('wanix:halt', {}, RPC_TIMEOUT_MS)
+  if (reply.error) {
+    throw new Error(reply.error)
+  }
+}
+
+export async function sendwanixstdin(line: string): Promise<void> {
+  if (state !== 'ready' || !iframe) {
+    throw new Error('wanix not running')
+  }
+  const reply = await postrpc('wanix:stdin', { data: line }, RPC_TIMEOUT_MS)
   if (reply.error) {
     throw new Error(reply.error)
   }

@@ -4,6 +4,9 @@ import { hub } from 'zss/hub'
 const stopmock = jest.fn()
 const replacemock = jest.fn()
 const keepmock = jest.fn()
+const stdinmock = jest.fn()
+const detachmock = jest.fn()
+const attachmock = jest.fn()
 const statusmock = jest.fn()
 const activemock = jest.fn(() => false)
 const terminalmock = jest.fn()
@@ -16,6 +19,9 @@ jest.mock('zss/feature/wanix/wanixdrop', () => ({
   wanixhandlestop: (...args: unknown[]) => stopmock(...args),
   wanixhandlereplace: (...args: unknown[]) => replacemock(...args),
   wanixhandlekeep: (...args: unknown[]) => keepmock(...args),
+  wanixhandlestdin: (...args: unknown[]) => stdinmock(...args),
+  wanixhandledetach: (...args: unknown[]) => detachmock(...args),
+  wanixhandleattach: (...args: unknown[]) => attachmock(...args),
 }))
 
 jest.mock('zss/feature/wanix/wanixiframehost', () => ({
@@ -65,6 +71,24 @@ describe('wanix device', () => {
     invoke('keep')
     await new Promise((r) => setTimeout(r, 0))
     expect(keepmock).toHaveBeenCalledTimes(1)
+  })
+
+  it('routes stdin to wanixhandlestdin', async () => {
+    invoke('stdin', 'hello')
+    await new Promise((r) => setTimeout(r, 0))
+    expect(stdinmock).toHaveBeenCalledTimes(1)
+  })
+
+  it('routes detach to wanixhandledetach', async () => {
+    invoke('detach')
+    await new Promise((r) => setTimeout(r, 0))
+    expect(detachmock).toHaveBeenCalledTimes(1)
+  })
+
+  it('routes attach to wanixhandleattach', async () => {
+    invoke('attach')
+    await new Promise((r) => setTimeout(r, 0))
+    expect(attachmock).toHaveBeenCalledTimes(1)
   })
 
   it('show prints session status', async () => {

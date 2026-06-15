@@ -1,4 +1,12 @@
-import { apierror, wanixkeep, wanixreplace, wanixshow, wanixstop } from 'zss/device/api'
+import {
+  apierror,
+  wanixattach,
+  wanixdetach,
+  wanixkeep,
+  wanixreplace,
+  wanixshow,
+  wanixstop,
+} from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { FIRMWARE } from 'zss/firmware'
 import { ispresent } from 'zss/mapping/types'
@@ -26,12 +34,18 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
         case 'keep':
           wanixkeep(SOFTWARE, player)
           break
+        case 'detach':
+          wanixdetach(SOFTWARE, player)
+          break
+        case 'attach':
+          wanixattach(SOFTWARE, player)
+          break
         default:
           apierror(
             SOFTWARE,
             player,
             'wanix',
-            'drop a .wasm or .tgz — #wanix or #wanix stop',
+            'drop a .wasm or .tgz — #wanix, #wanix stop, attach, detach',
           )
           break
       }

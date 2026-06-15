@@ -1,14 +1,17 @@
 import {
   clearwanixpending,
   formatwanixstatelines,
+  iswanixstdinactive,
   readwanixbinary,
   readwanixlastexit,
   readwanixpending,
   readwanixphase,
+  readwanixstdinrouting,
   resetwanixsessionfortest,
   setwanixhalted,
   setwanixidle,
   setwanixrunning,
+  setwanixstdinrouting,
   setwanixstopped,
   stashwanixpending,
 } from 'zss/feature/wanix/wanixsession'
@@ -84,12 +87,35 @@ describe('wanixsession', () => {
     expect(readwanixlastexit()).toBeUndefined()
   })
 
+  it('running enables stdin routing by default', () => {
+    setwanixrunning({ label: 'run.wasm', entrycmd: 'run.wasm' })
+    expect(readwanixstdinrouting()).toBe(true)
+    expect(iswanixstdinactive()).toBe(true)
+  })
+
+  it('detach clears routing without stopping phase', () => {
+    setwanixrunning({ label: 'run.wasm', entrycmd: 'run.wasm' })
+    setwanixstdinrouting(false)
+    expect(readwanixphase()).toBe('running')
+    expect(iswanixstdinactive()).toBe(false)
+  })
+
+  it('halted clears stdin routing', () => {
+    setwanixrunning({ label: 'run.wasm', entrycmd: 'run.wasm' })
+    setwanixhalted()
+    expect(readwanixstdinrouting()).toBe(false)
+  })
+
   it('formatwanixstatelines reflects phase and host readiness', () => {
     expect(formatwanixstatelines(false).join('\n')).toContain('drop to start')
     expect(formatwanixstatelines(true).join('\n')).toContain('sandbox warm')
     setwanixrunning({ label: 'run.wasm', entrycmd: 'run.wasm' })
     expect(formatwanixstatelines(true).join('\n')).toContain('running')
-    expect(formatwanixstatelines(true).join('\n')).toContain('run.wasm')
+    expect(formatwanixstatelines(true).join('\n')).toContain('stdin on')
+    expect(formatwanixstatelines(true).join('\n')).toContain('#wanix detach')
+    setwanixstdinrouting(false)
+    expect(formatwanixstatelines(true).join('\n')).toContain('stdin off')
+    expect(formatwanixstatelines(true).join('\n')).toContain('#wanix attach')
     setwanixstopped(0)
     expect(formatwanixstatelines(true).join('\n')).toContain('stopped')
     expect(formatwanixstatelines(true).join('\n')).toContain('run.wasm')

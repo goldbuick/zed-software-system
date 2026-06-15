@@ -425,6 +425,18 @@ export function wanixkeep(device: DEVICELIKE, player: string) {
   device.emit(player, 'wanix:keep')
 }
 
+export function wanixstdin(device: DEVICELIKE, player: string, line: string) {
+  device.emit(player, 'wanix:stdin', line)
+}
+
+export function wanixdetach(device: DEVICELIKE, player: string) {
+  device.emit(player, 'wanix:detach')
+}
+
+export function wanixattach(device: DEVICELIKE, player: string) {
+  device.emit(player, 'wanix:attach')
+}
+
 export function heavyrestoreagents(
   device: DEVICELIKE,
   player: string,

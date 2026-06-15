@@ -11,11 +11,13 @@
   <script type="module" src="/wanix/wanix.min.js"></script>
   <script type="module">
     const origin = location.origin
-    const OUTPUT_TIMEOUT_MS = 30_000
+    const DATA_WAIT_MS = 30_000
     const sys = document.querySelector('wanix-system')
     let root = null
     let active = false
     let currenttid = null
+    let currentterm = null
+    let stdinwriter = null
 
     function post(type, data = {}) {
       parent.postMessage({ type, ...data }, origin)
@@ -73,6 +75,30 @@
       return term
     }
 
+    async function cleartask() {
+      currenttid = null
+      currentterm = null
+      if (stdinwriter) {
+        try {
+          stdinwriter.releaseLock()
+        } catch {
+          // writer may already be closed
+        }
+        stdinwriter = null
+      }
+    }
+
+    async function getstdinwriter() {
+      if (!currentterm) {
+        throw new Error('no active task term')
+      }
+      if (!stdinwriter) {
+        const writable = await root.openWritable(`${currentterm}/program`)
+        stdinwriter = writable.getWriter()
+      }
+      return stdinwriter
+    }
+
     async function runtask(cmd) {
       const taskcmd = (cmd || '').trim()
       if (!taskcmd) {
@@ -83,19 +109,19 @@
       const taskpath = `#task/${tid}`
       await root.writeFile(`${taskpath}/cmd`, taskcmd)
       const term = await wiretaskstdio(tid)
+      currentterm = term
       const logline = (line) => post('wanix:log', { line: line.replace(/\r$/, '') })
       const datapath = `${term}/data`
-      await root.waitFor(datapath, OUTPUT_TIMEOUT_MS)
+      await root.waitFor(datapath, DATA_WAIT_MS)
       const stdout = await root.openReadable(datapath)
       const reading = pipestdout(stdout, logline)
       await root.writeFile(`${taskpath}/ctl`, 'start')
-      const deadline = Date.now() + OUTPUT_TIMEOUT_MS
-      while (Date.now() < deadline) {
+      while (true) {
         try {
           const exit = (await root.readText(`${taskpath}/exit`)).trim()
           if (exit !== '') {
             await Promise.race([reading, new Promise((resolve) => setTimeout(resolve, 250))])
-            currenttid = null
+            await cleartask()
             return Number(exit) || 0
           }
         } catch {
@@ -103,8 +129,6 @@
         }
         await new Promise((resolve) => setTimeout(resolve, 50))
       }
-      currenttid = null
-      throw new Error('task output timeout')
     }
 
     async function halttask() {
@@ -117,7 +141,7 @@
       } catch {
         // task may already be gone
       }
-      currenttid = null
+      await cleartask()
     }
 
     async function putfile(name, bytes) {
@@ -226,6 +250,17 @@
             post('wanix:run:done', { id: msg.id, code })
             break
           }
+          case 'wanix:stdin': {
+            if (!root || !currentterm) {
+              replyerror('wanix:stdin:done', msg, 'no active task')
+              break
+            }
+            const writer = await getstdinwriter()
+            const line = typeof msg.data === 'string' ? msg.data : ''
+            await writer.write(new TextEncoder().encode(`${line}\n`))
+            replydone('wanix:stdin:done', msg)
+            break
+          }
           default:
             break
         }
@@ -241,6 +276,8 @@
           replyerror('wanix:ls:done', msg, message)
         } else if (msg.type === 'wanix:halt') {
           replyerror('wanix:halt:done', msg, message)
+        } else if (msg.type === 'wanix:stdin') {
+          replyerror('wanix:stdin:done', msg, message)
         } else {
           post('wanix:log', { line: `wanix error: ${message}` })
         }
