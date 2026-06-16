@@ -25,6 +25,11 @@ JOIN_ORIGIN = "https://zed.cafe"
 directory = "./zns-public"
 binding = "ASSETS"
 
+[[rules]]
+type = "CompiledWasm"
+globs = ["**/*.wasm"]
+fallthrough = true
+
 [[routes]]
 pattern = "at.zed.cafe/*"
 zone_name = "zed.cafe"

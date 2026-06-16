@@ -27,6 +27,8 @@
     "@react-three/eslint-plugin": "^0.1.2",
     "@react-three/fiber": "^9.4.0",
     "@react-three/postprocessing": "^3.0.4",
+    "@resvg/resvg-js": "^2.6.2",
+    "@resvg/resvg-wasm": "^2.6.2",
     "@twurple/auth": "^8.0.3",
     "@twurple/chat": "^8.0.3",
     "@types/audioworklet": "^0.0.72",

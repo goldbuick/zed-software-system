@@ -32,7 +32,7 @@ Email + OTP login, namespace claim, long-lived token, and per-namespace key/valu
 
 #### Apex landing (`GET /`)
 
-Public `GET` / `HEAD` on `/` only. Returns a **VGA-styled HTML page** (EGA colors on `#0000AA` dkblue, top-left flow layout) with IBM EGA 8×14 font (`/fonts/IBMEGA8x14.woff`, 28px tight grid).
+Public `GET` / `HEAD` on `/` only. Returns a **VGA-styled HTML page** (EGA colors on `#0000AA` dkblue, top-left flow layout) with IBM EGA 8×14 font (`/fonts/IBMEGA8x14.woff`). **28×28px cells** on wide viewports; **native 14×14px (8×14)** on screens ≤640px so tenant lists fit phone widths. Favicon: `/favicon.ico` (same as `cafe/favicon.ico`, served from `zns-public/`).
 
 | Section | Content |
 |---------|---------|
@@ -42,11 +42,11 @@ Public `GET` / `HEAD` on `/` only. Returns a **VGA-styled HTML page** (EGA color
 
 **200** `text/html; charset=utf-8`, `Cache-Control: public, max-age=3600`, `X-Robots-Tag: noindex`.
 
-Static assets live in [`ops/infra/zns-public/`](zns-public/) (Wrangler `[assets]` binding).
+Static assets live in [`ops/infra/zns-public/`](zns-public/) (Wrangler `[assets]` binding): `favicon.ico` (from `cafe/favicon.ico`), `fonts/IBMEGA8x14.woff`.
 
 **404** for any other apex path (including `GET /api/*`).
 
-OTP login email stays 40-column with the existing ZZT-index email palette.
+OTP login email stays 40-column with the existing ZZT-index email palette, rasterized to PNG for reliable mobile tap targets (`ops/infra/zns-email-card*.js`, Resend inline `cid:zns-card`).
 
 #### API routes
 
@@ -61,7 +61,7 @@ Start OTP login and reserve a namespace for the email.
 | `email` | yes | Lowercased/trimmed |
 | `namespace` | yes | `[a-z0-9-]`, 1–63 chars; reserved: `www`, `api`, `mail`, `ftp` |
 
-**200** `{ "success": true }` — OTP emailed. Subject: `{code} — finish login to {namespace} on zed.cafe`. Body: 16-color ASCII terminal HTML (ZZT palette from `zss/feature/palette.ts`), plain-text `#zns {code}` + deep link `{JOIN_ORIGIN}/?zns-code={code}&zns-email={email}&zns-namespace={namespace}`. Sender display name: `zed.cafe`.
+**200** `{ "success": true }` — OTP emailed. Subject: `{code} — finish login to {namespace} on zed.cafe`. HTML: **clickable PNG terminal card** (`cid:zns-card`, rasterized from the same 40-column layout as before) linking to `{JOIN_ORIGIN}/?zns-code=…`, plus a bulletproof **Open in zed.cafe** button and monospace command line. Plain-text body unchanged: `#zns {code}` + deep link. Preview locally: `yarn task run zns:email:preview`. Sender display name: `zed.cafe`.
 
 **403** namespace owned by another account, or email already bound to a different namespace.
 
