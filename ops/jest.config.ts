@@ -62,6 +62,7 @@ const config: Config = {
     '**/*.spec.tsx',
   ],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'mjs'],
+  coverageDirectory: '<rootDir>/ops/coverage',
   collectCoverageFrom: ['zss/**/*.{ts,tsx}'],
   coveragePathIgnorePatterns: [
     '/node_modules/',

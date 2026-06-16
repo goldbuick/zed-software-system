@@ -42,7 +42,8 @@ export const DEPLOY_TASKS: TaskDef[] = [
     run: exec(['wrangler', 'deploy', '-c', 'ops/infra/wrangler-zns.toml']),
   }),
   def('deploy:cloudflare:zns:verify', {
-    description: 'Deploy zns worker then verify production tenant DNS and HTTPS',
+    description:
+      'Deploy zns worker then verify production tenant DNS and HTTPS',
     tags: ['deploy'],
     deps: ['deploy:cloudflare:zns'],
     run: nodehandler('tasks/implementations/deploy/zns-tenant-verify.mjs'),

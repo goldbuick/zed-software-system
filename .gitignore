@@ -50,6 +50,9 @@ cafe/public/renders/synth-env-parity/
 # local Emscripten SDK (yarn daisy:build)
 .emsdk/
 
+# Jest coverage (yarn task run app:test:coverage)
+ops/coverage/
+
 # Playwright
 test-results/
 playwright-report/
