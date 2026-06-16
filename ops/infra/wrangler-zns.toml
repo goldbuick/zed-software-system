@@ -3,8 +3,9 @@ main = "net-zns-worker.js"
 compatibility_date = "2026-06-10"
 
 # ZNS worker routes (zone zed.cafe):
-#   zns.zed.cafe/*     — apex API + landing
+#   at.zed.cafe/*      — apex API + landing
 #   *.at.zed.cafe/*    — tenant index (GET /) + key reads (GET /{key})
+#   zns.zed.cafe/*     — legacy apex alias (optional; remove when unused)
 # Do NOT add docs.zed.cafe or a flat *.zed.cafe tenant pattern.
 # Tenant URLs are only {namespace}.at.zed.cafe (see zss/feature/url.ts).
 
@@ -16,7 +17,7 @@ binding = "zns"
 id = "fa1fba6d812440ff9eaa775bccb75a45"
 
 [vars]
-ZNS_APEX = "zns.zed.cafe"
+ZNS_APEX = "at.zed.cafe"
 ZNS_TENANT_SUFFIX = "at.zed.cafe"
 BYTES_ORIGIN = "https://bytes.zed.cafe"
 JOIN_ORIGIN = "https://zed.cafe"
@@ -26,9 +27,13 @@ directory = "./zns-public"
 binding = "ASSETS"
 
 [[routes]]
-pattern = "zns.zed.cafe/*"
+pattern = "at.zed.cafe/*"
 zone_name = "zed.cafe"
 
 [[routes]]
 pattern = "*.at.zed.cafe/*"
+zone_name = "zed.cafe"
+
+[[routes]]
+pattern = "zns.zed.cafe/*"
 zone_name = "zed.cafe"

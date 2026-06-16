@@ -4,7 +4,7 @@ Cloudflare Workers in this folder back public `*.zed.cafe` services used by the 
 
 | Worker | Source | Production host |
 |--------|--------|-----------------|
-| ZNS | `net-zns-worker.js` | `zns.zed.cafe`, `*.{namespace}.at.zed.cafe` |
+| ZNS | `net-zns-worker.js` | `at.zed.cafe`, `*.{namespace}.at.zed.cafe` |
 | Bytes | `net-bytes-worker.js` | `bytes.zed.cafe` |
 | Brick | `net-brick-worker.js` | `brick.zed.cafe` |
 | Terminal | `net-terminal-worker.js` | `terminal.zed.cafe` |
@@ -21,18 +21,18 @@ Email + OTP login, namespace claim, long-lived token, and per-namespace key/valu
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `ZNS_APEX` | `zns.zed.cafe` | Apex hostname for API routes |
+| `ZNS_APEX` | `at.zed.cafe` | Apex hostname for API routes (`zns.zed.cafe` still accepted as legacy alias) |
 | `ZNS_TENANT_SUFFIX` | `at.zed.cafe` | Hostname suffix for tenant reads (`{namespace}.{suffix}`) |
 | `BYTES_ORIGIN` | `https://bytes.zed.cafe` | Redirect target for bytes pairs |
 | `JOIN_ORIGIN` | `https://zed.cafe` | Redirect target for `peer` pairs |
 | `RESEND_API_KEY` | — | Sends OTP email (`#zns {code}` subject) |
 | `zns` | — | KV namespace binding |
 
-### Apex API (`https://zns.zed.cafe`)
+### Apex API (`https://at.zed.cafe`)
 
 #### Apex landing (`GET /`)
 
-Public `GET` / `HEAD` on `/` only. Returns a **VGA-styled HTML page** (EGA colors on `#0000AA` dkblue, top-left flow layout) with Perfect DOS VGA 437 font (`/fonts/PerfectDOSVGA437.woff2`).
+Public `GET` / `HEAD` on `/` only. Returns a **VGA-styled HTML page** (EGA colors on `#0000AA` dkblue, top-left flow layout) with IBM EGA 8×14 font (`/fonts/IBMEGA8x14.woff`, 28px tight grid).
 
 | Section | Content |
 |---------|---------|
@@ -288,11 +288,11 @@ Cross-peer messages (OFFER, ANSWER, CANDIDATE, etc.) relay DO-to-DO. Same peer i
 ## Local tooling
 
 - **ZNS worker preview:** `yarn task run zns:landing:dev` (syncs VGA font, then starts wrangler on port 8787).
-  - Apex landing: [http://127.0.0.1:8787/](http://127.0.0.1:8787/) or [http://zns.zed.cafe:8787/](http://zns.zed.cafe:8787/) with hosts below.
+  - Apex landing: [http://127.0.0.1:8787/](http://127.0.0.1:8787/) or [http://at.zed.cafe:8787/](http://at.zed.cafe:8787/) with hosts below.
   - Tenant index: [http://docs.at.zed.cafe:8787/](http://docs.at.zed.cafe:8787/) — KV-published keys only.
   - Tenant scrolls: add to `/etc/hosts`:
     ```
-    127.0.0.1 docs.at.zed.cafe zns.zed.cafe
+    127.0.0.1 at.zed.cafe docs.at.zed.cafe
     ```
     then open paths under `http://docs.at.zed.cafe:8787/{key}` after publishing via `POST /api/set`.
   - Edits to [`net-zns-worker.js`](net-zns-worker.js) hot-reload; refresh the browser.
@@ -306,13 +306,14 @@ Tenant hostnames use the `at.zed.cafe` suffix only (`https://{namespace}.at.zed.
 
 ### One-time DNS (zone `zed.cafe`)
 
-Add a **proxied** wildcard so any `{namespace}.at.zed.cafe` resolves through Cloudflare:
+Add **proxied** records so tenant wildcards and the apex resolve through Cloudflare:
 
 | Type | Name | Content | Proxy |
 |------|------|---------|-------|
+| `AAAA` | `at` | `100::` (dummy) | Proxied |
 | `AAAA` | `*.at` | `100::` (dummy) | Proxied |
 
-In the Cloudflare dashboard the in-zone name is `*.at` (not `*.at.zed.cafe`). That covers `docs.at.zed.cafe`, `wil.at.zed.cafe`, and all other tenant namespaces.
+In the Cloudflare dashboard the in-zone names are `at` and `*.at` (not `*.at.zed.cafe`). The `at` record serves the ZNS apex (`https://at.zed.cafe/`); `*.at` covers `docs.at.zed.cafe`, `wil.at.zed.cafe`, and all other tenant namespaces.
 
 ### One-time TLS
 
@@ -340,7 +341,7 @@ Checks performed by `zns:tenant:verify`:
 
 1. `docs.at.zed.cafe` and `wil.at.zed.cafe` resolve (proves `*.at` wildcard, not a one-off record)
 2. `docs.zed.cafe` does **not** resolve (wrong hostname pattern)
-3. `https://zns.zed.cafe/` → HTTP 200
+3. `https://at.zed.cafe/` → HTTP 200
 4. `https://docs.at.zed.cafe/` → HTTP 200 `text/html`
 5. `https://docs.at.zed.cafe/cliscroll` → HTTP 200 `text/html`
 

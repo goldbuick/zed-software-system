@@ -4,10 +4,28 @@
  */
 
 import { ZNS_VGA_FONT_DATA_URI } from './generated/zns-vga-font.js'
+import {
+  buildznsdotbkgcss,
+  buildznsdotbkgscript,
+  buildznsdotbkgsvgtile,
+  ZNS_DOT_BG,
+  ZNS_DOT_EMAIL_TILE_H,
+  ZNS_DOT_EMAIL_TILE_W,
+} from './zns-dotbkg.js'
+import {
+  measuredrawnwidth,
+  textformatlinehtml,
+  zederrorlinehtml,
+  zedtaperowshtml,
+  zedtapehtml,
+  znsrowhtml,
+} from './zns-zedhtml.js'
 
 const ZNS_PEER_KEY = 'peer'
 const ZNS_DOCS_NAMESPACE = 'docs'
-const ZNS_APEX_DEFAULT = 'zns.zed.cafe'
+const ZNS_APEX_DEFAULT = 'at.zed.cafe'
+/** Legacy apex hostname — still accepted until DNS/routes are removed. */
+const ZNS_APEX_LEGACY = 'zns.zed.cafe'
 const ZNS_TENANT_SUFFIX_DEFAULT = 'at.zed.cafe'
 const BYTES_ORIGIN_DEFAULT = 'https://bytes.zed.cafe'
 const JOIN_ORIGIN_DEFAULT = 'https://zed.cafe'
@@ -78,6 +96,11 @@ function pairstoragekey(namespace, pathkey) {
 
 function apexhost(env) {
   return env.ZNS_APEX ?? ZNS_APEX_DEFAULT
+}
+
+function isapexhost(hostname, env) {
+  const apex = apexhost(env)
+  return hostname === apex || hostname === ZNS_APEX_LEGACY
 }
 
 function tenantsuffix(env) {
@@ -180,17 +203,18 @@ const ZSS_PALETTE = {
   white: '#3f3f3f',
 }
 
-const ZSS_MONO =
-  'ui-monospace,"Cascadia Code","Source Code Pro",Menlo,Consolas,monospace'
+const ZNS_VGA_FONT = "'IBM EGA 8x14'"
+
+/** Native IBM EGA 8×14 cell (int10h webfont em = 14px line height). */
+const ZNS_CELL_W = 8
+const ZNS_CELL_H = 14
+const ZNS_FONT_SIZE = 14
+/** Browser zoom on .zns-vga-root → 16×28 display cells (in-app parity). */
+const ZNS_DISPLAY_SCALE = 2
+const ZNS_DISPLAY_CELL_W = ZNS_CELL_W * ZNS_DISPLAY_SCALE
+const ZNS_DISPLAY_CELL_H = ZNS_CELL_H * ZNS_DISPLAY_SCALE
 
 const ZNS_EMAIL_INNER_WIDTH = 40
-
-const ZNS_VGA_FONT =
-  "'Perfect DOS VGA 437', Fixedsys, Terminal, 'Lucida Console', Consolas, monospace"
-
-const ZNS_VGA_PIXEL = 16
-
-/** Readable EGA colors for browser HTML (not ZZT index-as-hex). */
 const ZNS_VGA_HTML = {
   bg: '#0000AA',
   frame: '#AAAAAA',
@@ -217,10 +241,11 @@ const ZNS_CP437 = {
 
 function padterminalline(text, width) {
   const s = String(text ?? '')
-  if (s.length >= width) {
+  const w = measuredrawnwidth(s)
+  if (w >= width) {
     return s.slice(0, width)
   }
-  return s + ' '.repeat(width - s.length)
+  return s + ' '.repeat(width - w)
 }
 
 function znsframetop(decorinner) {
@@ -264,29 +289,44 @@ function znsartpre(text, extra = '') {
   return `<pre class="zns-vga zns-art${extrahtml}">${escapehtml(text)}</pre>`
 }
 
+/** Parity: zss/gadget/display/anim.ts — interval × 2 seconds per blink cycle. */
+const ZNS_BLINK_CYCLE_S = (120 / 136) * 2
+
 function buildznsvgastylesheet(bg) {
   const v = ZNS_VGA_HTML
   return `@font-face {
-  font-family: 'Perfect DOS VGA 437';
-  src: url('${ZNS_VGA_FONT_DATA_URI}') format('woff2'),
-       url('/fonts/PerfectDOSVGA437.woff2') format('woff2');
+  font-family: 'IBM EGA 8x14';
+  src: url('${ZNS_VGA_FONT_DATA_URI}') format('woff'),
+       url('/fonts/IBMEGA8x14.woff') format('woff');
   font-weight: normal;
   font-style: normal;
   font-display: block;
 }
-html, body { height: 100%; }
+html, body { min-height: 100%; }
 body.zns-page {
   margin: 0;
   padding: 16px;
   background: ${bg};
   color: ${v.text};
   box-sizing: border-box;
+  font-family: ${ZNS_VGA_FONT};
+  font-size: ${ZNS_FONT_SIZE}px;
+  line-height: ${ZNS_CELL_H}px;
+}
+body.zns-page,
+body.zns-page * {
+  font-family: ${ZNS_VGA_FONT};
+}
+.zns-vga-root {
+  zoom: ${ZNS_DISPLAY_SCALE};
+  width: max-content;
+  max-width: 100%;
 }
 .zns-vga {
   margin: 0;
   font-family: ${ZNS_VGA_FONT};
-  font-size: ${ZNS_VGA_PIXEL}px;
-  line-height: 1.35;
+  font-size: ${ZNS_FONT_SIZE}px;
+  line-height: ${ZNS_CELL_H}px;
   letter-spacing: 0;
   font-weight: normal;
   font-style: normal;
@@ -294,18 +334,81 @@ body.zns-page {
   font-variant-ligatures: none;
   font-feature-settings: "kern" 0, "liga" 0, "calt" 0;
   font-synthesis: none;
-  text-rendering: geometricPrecision;
+  text-rendering: auto;
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: none;
+  font-smooth: never;
 }
-.zns-vga p {
-  margin: 0 0 12px;
+.zns-line {
+  margin: 0;
+  padding: 0;
+  height: ${ZNS_CELL_H}px;
+  min-height: ${ZNS_CELL_H}px;
+  line-height: ${ZNS_CELL_H}px;
+  display: block;
+  overflow: hidden;
+  box-sizing: content-box;
+  white-space: pre;
+  word-break: normal;
+  overflow-wrap: normal;
+  tab-size: 8;
+  border: 0;
+  background: transparent;
+  font-family: ${ZNS_VGA_FONT};
+  font-size: ${ZNS_FONT_SIZE}px;
+  color: inherit;
 }
-.zns-vga header {
-  margin: 0 0 12px;
+.zns-line span,
+.zns-line a,
+.zns-line button {
+  font-family: ${ZNS_VGA_FONT};
+  font-size: inherit;
+  line-height: ${ZNS_CELL_H}px;
+  vertical-align: top;
+  padding: 0;
+  margin: 0;
 }
+.zns-cell {
+  display: inline-block;
+  width: 1ch;
+  height: ${ZNS_CELL_H}px;
+  line-height: ${ZNS_CELL_H}px;
+  vertical-align: top;
+  overflow: hidden;
+  padding: 0;
+  margin: 0;
+  box-sizing: content-box;
+}
+@keyframes zns-blink-fg {
+  0%, 50% { color: var(--zns-fg); }
+  50.01%, 100% { color: var(--zns-bg); }
+}
+.zns-cell.zns-blink {
+  animation: zns-blink-fg ${ZNS_BLINK_CYCLE_S}s step-end infinite;
+}
+.zns-link {
+  display: inline;
+  vertical-align: top;
+  font-family: ${ZNS_VGA_FONT};
+  font-size: inherit;
+  line-height: ${ZNS_CELL_H}px;
+  letter-spacing: 0;
+  color: ${v.link};
+  text-decoration: none;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+}
+.zns-link:hover { text-decoration: underline; }
 .zns-art {
   color: ${v.frame};
-  margin: 0 0 12px;
+  margin: 0;
+  padding: 0;
   white-space: pre;
+  line-height: ${ZNS_CELL_H}px;
+  font-size: ${ZNS_FONT_SIZE}px;
+  font-family: ${ZNS_VGA_FONT};
   width: fit-content;
   max-width: 100%;
 }
@@ -313,45 +416,149 @@ body.zns-page {
   color: ${v.command};
   background: ${v.cmdbg};
 }
+.zns-tape {
+  margin: 0;
+}
 .zns-brand { color: ${v.brand}; }
 .zns-text { color: ${v.text}; }
 .zns-muted { color: ${v.muted}; }
 .zns-hint { color: ${v.hint}; }
-.zns-cmd {
-  color: ${v.command};
-  background: ${v.cmdbg};
-  display: inline-block;
-  padding: 0;
-  margin: 0 0 12px;
-}
 .zns-err { color: #ff5555; }
-.zns-link {
-  font: inherit;
+.zns-copy {
+  display: inline;
+  vertical-align: top;
+  font-family: ${ZNS_VGA_FONT};
+  font-size: inherit;
+  line-height: ${ZNS_CELL_H}px;
+  letter-spacing: 0;
   color: ${v.link};
   text-decoration: none;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
 }
-.zns-link:hover { text-decoration: underline; }
+.zns-copy:hover { text-decoration: underline; }
 .zns-vga-scroll {
-  margin-top: 16px;
-  white-space: pre-wrap;
-  word-break: normal;
-  overflow-wrap: anywhere;
-  overflow-y: auto;
-  max-height: 85vh;
-}`
+  margin-top: ${ZNS_CELL_H}px;
+}
+.zns-vga-scroll.zns-grid-on {
+  background-image:
+    linear-gradient(to right, rgba(85, 255, 255, 0.18) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(85, 255, 255, 0.18) 1px, transparent 1px);
+  background-size: ${ZNS_CELL_W}px ${ZNS_CELL_H}px;
+  background-position: 0 0;
+}
+.zns-grid-toggle {
+  margin: 0 0 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: ${v.hint};
+  font-family: ${ZNS_VGA_FONT};
+  font-size: ${ZNS_FONT_SIZE}px;
+  line-height: ${ZNS_CELL_H}px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.zns-grid-probe {
+  margin: 0 0 ${ZNS_CELL_H}px;
+  padding: 0;
+  white-space: pre;
+  font-family: ${ZNS_VGA_FONT};
+  font-size: ${ZNS_FONT_SIZE}px;
+  line-height: ${ZNS_CELL_H}px;
+  color: ${v.muted};
+}
+.zns-grid-probe-ok { color: ${v.command}; }
+.zns-grid-probe-fail { color: #ff5555; }
+${buildznsdotbkgcss()}`
 }
 
 function znslink(href, label) {
   return `<a class="zns-link" href="${escapehtml(href)}">${escapehtml(label)}</a>`
 }
 
-function buildznsvgapage({ title, bodyhtml, scrollbody }) {
+function buildznsvgapage({ title, bodyhtml, scrollbody, gridmode = false }) {
   const v = ZNS_VGA_HTML
   const titlehtml = escapehtml(title)
-  const scroll = scrollbody
-    ? `<div class="zns-vga zns-vga-scroll">${scrollbody}</div>`
+  const showgrid = scrollbody && gridmode
+  const gridon = gridmode === 'on'
+  const gridtoggle = showgrid
+    ? `<button type="button" class="zns-grid-toggle">${gridon ? `hide grid overlay (${ZNS_DISPLAY_CELL_W}×${ZNS_DISPLAY_CELL_H}px)` : `show grid overlay (${ZNS_DISPLAY_CELL_W}×${ZNS_DISPLAY_CELL_H}px)`}</button><pre class="zns-vga zns-grid-probe" aria-live="polite"></pre>`
     : ''
-  const scrollclass = scrollbody ? ' zns-scroll' : ''
+  const scroll = scrollbody
+    ? `<div class="zns-vga-scroll${gridon ? ' zns-grid-on' : ''}">${scrollbody}</div>`
+    : ''
+  const copyscript = `<script>
+document.body.addEventListener('click',function(e){
+  var btn=e.target.closest('.zns-copy');
+  if(!btn)return;
+  var t=btn.getAttribute('data-copy')||'';
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t);}
+});
+</script>`
+  const gridscript = showgrid
+    ? `<script>
+(function(){
+  var CELL_W=${ZNS_DISPLAY_CELL_W},CELL_H=${ZNS_DISPLAY_CELL_H};
+  var btn=document.querySelector('.zns-grid-toggle');
+  var scroll=document.querySelector('.zns-vga-scroll');
+  var banner=document.querySelector('.zns-grid-probe');
+  function runprobe(){
+    var rows=document.querySelectorAll('.zns-line');
+    var bad=[];
+    for(var i=0;i<rows.length;i++){
+      var r=rows[i].getBoundingClientRect();
+      if(Math.abs(r.height-CELL_H)>1){bad.push('row '+i+' height '+Math.round(r.height*10)/10);}
+      if(i>0){
+        var prev=rows[i-1].getBoundingClientRect();
+        var gap=Math.round((r.top-prev.top)*10)/10;
+        if(Math.abs(gap-CELL_H)>1){bad.push('row '+i+' pitch '+gap);}
+      }
+    }
+    var out={rows:rows.length,bad:bad,ok:!bad.length,cell:[CELL_W,CELL_H]};
+    window.__ZNS_GRID_PROBE__=out;
+    if(banner){
+      banner.textContent=out.ok
+        ? 'ZNS grid probe PASS — '+out.rows+' rows at '+CELL_W+'×'+CELL_H+'px'
+        : 'ZNS grid probe FAIL — '+bad.join('; ');
+      banner.className='zns-vga zns-grid-probe '+(out.ok?'zns-grid-probe-ok':'zns-grid-probe-fail');
+    }
+    if(out.ok){console.log('ZNS grid probe PASS',out);}
+    else{console.error('ZNS grid probe FAIL',bad);}
+    return out;
+  }
+  if(btn&&scroll){
+    btn.addEventListener('click',function(){
+      var on=scroll.classList.toggle('zns-grid-on');
+      btn.textContent=(on?'hide':'show')+' grid overlay ('+CELL_W+'×'+CELL_H+'px)';
+      runprobe();
+    });
+  }
+  runprobe();
+})();
+</script>`
+    : `<script>
+(function(){
+  var CELL_H=${ZNS_DISPLAY_CELL_H};
+  var rows=document.querySelectorAll('.zns-line');
+  var bad=[];
+  for(var i=0;i<rows.length;i++){
+    var r=rows[i].getBoundingClientRect();
+    if(Math.abs(r.height-CELL_H)>1){bad.push('row '+i+' height '+r.height);}
+    if(i>0){
+      var prev=rows[i-1].getBoundingClientRect();
+      var gap=Math.round((r.top-prev.top)*10)/10;
+      if(Math.abs(gap-CELL_H)>1){bad.push('row '+i+' pitch '+gap);}
+    }
+  }
+  window.__ZNS_GRID_PROBE__={rows:rows.length,bad:bad,ok:!bad.length};
+  if(bad.length){console.error('ZNS grid probe FAIL',bad);}
+  else{console.log('ZNS grid probe PASS',rows.length,'rows');}
+})();
+</script>`
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -363,9 +570,18 @@ function buildznsvgapage({ title, bodyhtml, scrollbody }) {
 ${buildznsvgastylesheet(v.bg)}
 </style>
 </head>
-<body class="zns-page${scrollclass}">
+<body class="zns-page">
+<div class="zns-dotbkg" aria-hidden="true">
+  <div class="zns-dotbkg-inner"></div>
+</div>
+<div class="zns-vga-root">
 ${bodyhtml}
+${gridtoggle}
 ${scroll}
+</div>
+${copyscript}
+${gridscript}
+${buildznsdotbkgscript()}
 </body>
 </html>`
 }
@@ -481,16 +697,31 @@ function buildznscodeemail({ code, email, namespace, joinorigin }) {
     `${gray('║ ')}<span style="color:${p.yellow}">${padterminalline('desktop. Or copy the command above.', w)}</span>${gray(' ║')}`,
     gray(`╚${'═'.repeat(w + 2)}╝`),
   ].join('\n')
+  const dotbkgtile = buildznsdotbkgsvgtile()
   const html = `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${subjecthtml}</title>
+<style>
+@font-face {
+  font-family: 'IBM EGA 8x14';
+  src: url('${ZNS_VGA_FONT_DATA_URI}') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+body, pre, body *, pre * {
+  font-family: 'IBM EGA 8x14';
+  -webkit-font-smoothing: none;
+  font-smooth: never;
+}
+</style>
 </head>
-<body style="margin:0;padding:16px;background:${p.dkblue};color:${p.white};font-family:${ZSS_MONO};font-size:13px;line-height:1.45;">
+<body style="margin:0;padding:16px;background-color:${ZNS_DOT_BG};background-image:url(${dotbkgtile});background-size:${ZNS_DOT_EMAIL_TILE_W}px ${ZNS_DOT_EMAIL_TILE_H}px;background-repeat:repeat;color:${p.white};font-family:'IBM EGA 8x14';font-size:14px;line-height:14px;">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">${preheaderhtml}</div>
-<pre style="margin:0 auto;max-width:520px;padding:16px;background:${p.dkblue};white-space:pre-wrap;word-break:break-word;font-family:${ZSS_MONO};font-size:13px;line-height:1.45">${htmlframe}</pre>
+<pre style="margin:0 auto;max-width:520px;padding:16px;background:${ZNS_DOT_BG};white-space:pre-wrap;word-break:break-word;font-family:'IBM EGA 8x14';font-size:14px;line-height:14px">${htmlframe}</pre>
 </body>
 </html>`
   return { subject, html, text }
@@ -499,28 +730,36 @@ function buildznscodeemail({ code, email, namespace, joinorigin }) {
 function buildznsapexlanding({ joinorigin, tenantsuffix }) {
   const command = '#zns <email> <namespace>'
   const title = 'ZNS — zed.cafe namespace service'
+  const tagline = 'Namespace publishing for zed.cafe'
   const exampleurl = `https://docs.${tenantsuffix}/algoscroll`
   const publishhint = `Publish to https://you.${tenantsuffix}/key`
   const cmdbox = znscmdbox(command)
   const decorinner = Math.max(
     36,
-    'Namespace publishing for zed.cafe'.length,
+    tagline.length,
     publishhint.length,
     exampleurl.length,
-    '> Open zed.cafe'.length,
     'zed.cafe'.length + 'ZNS'.length + 1,
   )
-  const frameopen = [
+  const frameblock = [
     znsframetop(decorinner),
     znsheaderrow(decorinner, 'zed.cafe', 'ZNS'),
     znsframerule(decorinner),
+    znsframerow(tagline, decorinner),
+    znsframebottom(decorinner),
   ].join('\n')
-  const frameclose = znsframebottom(decorinner)
-
-  const frame = [
-    frameopen,
+  const tapeaftercmd = [
     '',
-    'Namespace publishing for zed.cafe',
+    `!openit inline ${joinorigin};> Open zed.cafe`,
+    '',
+    `$yellow${publishhint}`,
+    '',
+    '$whiteExample:',
+    `!openit inline ${exampleurl};${exampleurl}`,
+    '',
+  ].join('\n')
+  const frame = [
+    frameblock,
     '',
     'Log in from the terminal:',
     cmdbox,
@@ -532,41 +771,19 @@ function buildznsapexlanding({ joinorigin, tenantsuffix }) {
     'Example:',
     exampleurl,
     '',
-    frameclose,
   ].join('\n')
-
   const bodyhtml = `<article class="zns-vga">
-${znsartpre(frameopen)}
-<p class="zns-text">Namespace publishing for zed.cafe</p>
-<p class="zns-text">Log in from the terminal:</p>
+${znsartpre(frameblock)}
+<div class="zns-tape">
+${zedtaperowshtml('$whiteLog in from the terminal:')}
+${znsrowhtml('', '', { raw: true })}
 ${znsartpre(cmdbox, 'zns-cmdbox')}
-<p>${znslink(joinorigin, '> Open zed.cafe')}</p>
-<p class="zns-hint">${escapehtml(publishhint)}</p>
-<p class="zns-text">Example:</p>
-<p>${znslink(exampleurl, exampleurl)}</p>
-${znsartpre(frameclose)}
+${zedtaperowshtml(tapeaftercmd, { tenantbase: '/' })}
+</div>
 </article>`
 
   const html = buildznsvgapage({ title, bodyhtml })
   return { title, frame, html }
-}
-
-function rendertenantmarkdownline(line) {
-  const escaped = escapehtml(line)
-  if (line.startsWith('## ')) {
-    return `<span class="zns-text">${escaped}</span>`
-  }
-  if (line.startsWith('!')) {
-    return `<span class="zns-cmd">${escaped}</span>`
-  }
-  return `<span class="zns-text">${escaped}</span>`
-}
-
-function rendertenantmarkdown(markdown) {
-  return String(markdown ?? '')
-    .split('\n')
-    .map(rendertenantmarkdownline)
-    .join('\n')
 }
 
 function buildznstenantscrollhtml({
@@ -575,6 +792,7 @@ function buildznstenantscrollhtml({
   markdown,
   notfound,
   tenantsuffix: suffix,
+  gridmode = 'toggle',
 }) {
   const tenantsfx = suffix ?? ZNS_TENANT_SUFFIX_DEFAULT
   const host = `${namespace}.${tenantsfx}`
@@ -598,12 +816,13 @@ function buildznstenantscrollhtml({
 ${znsartpre(frameopen)}
 </article>`
   const content = notfound
-    ? `<span class="zns-err">doc not found</span>\n<span class="zns-text">${escapehtml(key)}</span>`
-    : rendertenantmarkdown(markdown)
+    ? zederrorlinehtml('doc not found', key)
+    : zedtapehtml(markdown, { tenantbase: '/' })
   const html = buildznsvgapage({
     title: pagetitle,
     bodyhtml,
     scrollbody: content,
+    gridmode,
   })
   return { title: pagetitle, html }
 }
@@ -633,16 +852,16 @@ function buildznstenantindexhtml({ namespace, tenantsuffix: suffix, entries }) {
   }
   let listhtml = ''
   if (!entries.length) {
-    listhtml = '<p class="zns-muted">no keys published</p>'
+    listhtml = znsrowhtml('no keys published', 'zns-muted')
   } else {
     for (const kind of ZNS_KIND_ORDER) {
       const group = bykind.get(kind) ?? []
       if (!group.length) {
         continue
       }
-      listhtml += `<p class="zns-hint">${escapehtml(kind)}</p>\n`
+      listhtml += `${znsrowhtml(kind, 'zns-hint')}\n`
       for (const entry of group) {
-        listhtml += `<p>${znslink(`/${entry.key}`, entry.key)}</p>\n`
+        listhtml += `${znsrowhtml(znslink(`/${entry.key}`, entry.key), '', { raw: true })}\n`
       }
     }
   }
@@ -687,7 +906,7 @@ async function sendznscodeemail(apikey, email, code, namespace, joinorigin) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: 'zed.cafe <login@zns.zed.cafe>',
+      from: 'zed.cafe <login@at.zed.cafe>',
       to: email,
       subject,
       html,
@@ -985,12 +1204,15 @@ async function readpair(env, namespace, pathkey) {
 }
 
 function tenantscrollresponse(request, env, namespace, pathkey, opts) {
+  const url = new URL(request.url)
+  const gridmode = url.searchParams.get('grid') === '1' ? 'on' : 'toggle'
   const { html } = buildznstenantscrollhtml({
     namespace,
     key: pathkey,
     markdown: opts.markdown,
     notfound: opts.notfound,
     tenantsuffix: tenantsuffix(env),
+    gridmode,
   })
   const headers = {
     ...tenantcorsheaders,
@@ -1142,11 +1364,19 @@ async function handletenantread(request, env, namespace) {
 
 export {
   buildznsapexlanding,
+  buildznscodeemail,
   buildznstenantindexhtml,
   buildznstenantscrollhtml,
   buildznsvgastylesheet,
   buildznsvgapage,
+  padterminalline,
   sorttenantkeys,
+  ZNS_CELL_H,
+  ZNS_CELL_W,
+  ZNS_DISPLAY_CELL_H,
+  ZNS_DISPLAY_CELL_W,
+  ZNS_DISPLAY_SCALE,
+  ZNS_FONT_SIZE,
 }
 
 export default {
@@ -1161,9 +1391,7 @@ export default {
         return Response.redirect(url.toString(), 301)
       }
     }
-    const apex = apexhost(env)
-
-    if (hostname === apex) {
+    if (isapexhost(hostname, env)) {
       const { pathname } = url
       if (request.method === 'POST') {
         switch (pathname) {

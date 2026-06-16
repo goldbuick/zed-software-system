@@ -9,7 +9,7 @@ const CURL_TIMEOUT_S = 30
 
 const TENANT_HOSTS = ['docs.at.zed.cafe', 'wil.at.zed.cafe']
 const WRONG_HOST = 'docs.zed.cafe'
-const ZNS_APEX_URL = 'https://zns.zed.cafe/'
+const ZNS_APEX_URL = 'https://at.zed.cafe/'
 const TENANT_INDEX_URL = 'https://docs.at.zed.cafe/'
 
 const dnsonly = process.argv.includes('--dns-only')

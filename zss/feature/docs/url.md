@@ -34,7 +34,7 @@ Worker HTTP APIs: [`ops/infra/README.md`](../../../ops/infra/README.md).
 | `readznslogincodefromurl` | — | Code only (legacy deep links) |
 | `clearznsloginparamsfromurl` | — | Strip all zns login query params after deep link |
 
-Apex API: `https://zns.zed.cafe` (`ZNS_APEX`). Tenant reads: `https://{namespace}.at.zed.cafe/{key}` (`ZNS_TENANT_SUFFIX`). Constants: `ZNS_DOCS_NAMESPACE`, `ZNS_PEER_KEY`, `ZNS_BYTES_KEY_TARGET`, `ZNS_LOGIN_CODE_PARAM`.
+Apex API: `https://at.zed.cafe` (`ZNS_APEX`). Tenant reads: `https://{namespace}.at.zed.cafe/{key}` (`ZNS_TENANT_SUFFIX`). Constants: `ZNS_DOCS_NAMESPACE`, `ZNS_PEER_KEY`, `ZNS_BYTES_KEY_TARGET`, `ZNS_LOGIN_CODE_PARAM`.
 
 ## Consumed By
 

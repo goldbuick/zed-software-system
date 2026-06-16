@@ -132,9 +132,9 @@ export async function museumofzztdownload(
   parsewebfile(player, file)
 }
 
-// zns api (https://zns.zed.cafe)
+// zns api (https://at.zed.cafe)
 
-export const ZNS_APEX = 'zns.zed.cafe'
+export const ZNS_APEX = 'at.zed.cafe'
 export const ZNS_TENANT_SUFFIX = 'at.zed.cafe'
 export const ZNS_DOCS_NAMESPACE = 'docs'
 

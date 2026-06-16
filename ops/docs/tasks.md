@@ -149,6 +149,7 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 | `yarn task run deploy:gcp:enable-apis` | Enable required GCP APIs | `deploy` | — | — |
 | `yarn task run deploy:gcp:push` | Push zss image to GCP artifact registry | `deploy` | — | — |
 | `yarn task run deploy:vm:docker-run` | Run zss Docker on generic VM | `deploy` | — | — |
+| `yarn task run zns:grid:preview` | Write local CP437 grid calibration HTML (ops/infra/generated/zns-grid-preview.html) | `dev` | `zns:vga:sync` | — |
 | `yarn task run zns:landing:dev` | Local ZNS worker dev server — apex landing at http://127.0.0.1:8787/ | `dev` | `zns:vga:sync` | — |
 | `yarn task run zns:tenant:dns:check` | DNS check for *.at.zed.cafe tenant wildcards in production (dig only) | `deploy`, `ci` | — | — |
 | `yarn task run zns:tenant:smoke` | HTTPS smoke test docs.at.zed.cafe/ tenant index (subset of zns:tenant:verify) | `deploy` | — | — |

@@ -72,6 +72,14 @@ export const DEPLOY_TASKS: TaskDef[] = [
       'code=$(curl -fsS -o /dev/null -w "%{http_code}" https://docs.at.zed.cafe/) && test "$code" = "200"',
     ),
   }),
+  def('zns:grid:preview', {
+    description:
+      'Write local CP437 grid calibration HTML (ops/infra/generated/zns-grid-preview.html)',
+    tags: ['dev'],
+    group: 'deploy',
+    deps: ['zns:vga:sync'],
+    run: nodehandler('tasks/implementations/deploy/zns-grid-preview.mjs'),
+  }),
   def('zns:landing:dev', {
     description:
       'Local ZNS worker dev server — apex landing at http://127.0.0.1:8787/',
