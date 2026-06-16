@@ -21,7 +21,7 @@ Email + OTP login, namespace claim, long-lived token, and per-namespace key/valu
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `ZNS_APEX` | `at.zed.cafe` | Apex hostname for API routes (`zns.zed.cafe` still accepted as legacy alias) |
+| `ZNS_APEX` | `at.zed.cafe` | Apex hostname for API routes |
 | `ZNS_TENANT_SUFFIX` | `at.zed.cafe` | Hostname suffix for tenant reads (`{namespace}.{suffix}`) |
 | `BYTES_ORIGIN` | `https://bytes.zed.cafe` | Redirect target for bytes pairs |
 | `JOIN_ORIGIN` | `https://zed.cafe` | Redirect target for `peer` pairs |

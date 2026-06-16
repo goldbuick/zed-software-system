@@ -22,13 +22,17 @@ function resolvebricktarget(raw) {
     if (decoded.startsWith('http://') || decoded.startsWith('https://')) {
       return decoded
     }
-  } catch {}
+  } catch {
+    // ignore invalid base64url
+  }
   try {
     const legacy = decodeURIComponent(raw)
     if (legacy.startsWith('http://') || legacy.startsWith('https://')) {
       return legacy
     }
-  } catch {}
+  } catch {
+    // ignore invalid URI encoding
+  }
   return null
 }
 

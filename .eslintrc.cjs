@@ -191,11 +191,16 @@ module.exports = {
         browser: false,
         node: true,
       },
+      globals: {
+        WebSocketPair: 'readonly',
+        WebSocketRequestResponsePair: 'readonly',
+      },
       rules: {
         '@typescript-eslint/require-await': 'off',
         '@typescript-eslint/no-unused-vars': 'off',
         '@typescript-eslint/prefer-optional-chain': 'off',
         '@typescript-eslint/prefer-nullish-coalescing': 'off',
+        '@typescript-eslint/prefer-regexp-exec': 'off',
       },
     },
     {

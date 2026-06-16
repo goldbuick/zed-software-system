@@ -5,27 +5,27 @@
 
 import { ZNS_VGA_FONT_DATA_URI } from './generated/zns-vga-font.js'
 import {
-  buildznsdotbkgcss,
-  buildznsdotbkgscript,
-  buildznsdotbkgsvgtile,
   ZNS_DOT_BG,
   ZNS_DOT_EMAIL_TILE_H,
   ZNS_DOT_EMAIL_TILE_W,
+  buildznsdotbkgcss,
+  buildznsdotbkgscript,
+  buildznsdotbkgsvgtile,
 } from './zns-dotbkg.js'
 import {
   measuredrawnwidth,
   textformatlinehtml,
   zederrorlinehtml,
-  zedtaperowshtml,
+  zedopenitznslinkrowhtml,
   zedtapehtml,
+  zedtaperowshtml,
   znsrowhtml,
+  zsssectionlines,
 } from './zns-zedhtml.js'
 
 const ZNS_PEER_KEY = 'peer'
 const ZNS_DOCS_NAMESPACE = 'docs'
 const ZNS_APEX_DEFAULT = 'at.zed.cafe'
-/** Legacy apex hostname — still accepted until DNS/routes are removed. */
-const ZNS_APEX_LEGACY = 'zns.zed.cafe'
 const ZNS_TENANT_SUFFIX_DEFAULT = 'at.zed.cafe'
 const BYTES_ORIGIN_DEFAULT = 'https://bytes.zed.cafe'
 const JOIN_ORIGIN_DEFAULT = 'https://zed.cafe'
@@ -49,7 +49,7 @@ const PATH_KEY_RE = /^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?$/
 
 const TEXT_MAX_BYTES = 512 * 1024
 
-const ZNS_KIND_ORDER = ['bytes', 'peer', 'text']
+const ZNS_KIND_ORDER = ['peer', 'bytes', 'text']
 
 const tenantcorsheaders = {
   'Access-Control-Allow-Headers': '*',
@@ -99,8 +99,7 @@ function apexhost(env) {
 }
 
 function isapexhost(hostname, env) {
-  const apex = apexhost(env)
-  return hostname === apex || hostname === ZNS_APEX_LEGACY
+  return hostname === apexhost(env)
 }
 
 function tenantsuffix(env) {
@@ -269,18 +268,99 @@ function znsheaderrow(decorinner, left, right) {
   return znsframerow(`${left}${' '.repeat(gap)}${right}`, decorinner)
 }
 
-function znscmdbox(command, indent = 2) {
+function znsframebordertape(kind, decorinner) {
+  const span = decorinner + 2
+  const h = ZNS_CP437.H.repeat(span)
+  const chars =
+    kind === 'top'
+      ? `${ZNS_CP437.TL}${h}${ZNS_CP437.TR}`
+      : kind === 'bottom'
+        ? `${ZNS_CP437.BL}${h}${ZNS_CP437.BR}`
+        : `${ZNS_CP437.TLR}${h}${ZNS_CP437.TRR}`
+  return `$cyan${chars}`
+}
+
+function znsframeheadertape(decorinner, left, right, rightcolor = 'yellow') {
+  const gap = Math.max(1, decorinner - left.length - right.length)
+  const pad = ' '.repeat(gap)
+  return `$ltgray${ZNS_CP437.V} $cyan${left}${pad}$${rightcolor}${right} $ltgray${ZNS_CP437.V}`
+}
+
+function znsframebodytape(decorinner, tape) {
+  const padded = padterminalline(tape, decorinner)
+  return `$ltgray${ZNS_CP437.V} ${padded} $ltgray${ZNS_CP437.V}`
+}
+
+function znsframepathtape(decorinner, host, key) {
+  const inner = `$ltgray${host}$white / $yellow${key}`
+  return znsframebodytape(decorinner, inner)
+}
+
+function znsframepathlinkrowhtml(decorinner, host, key, hosthref) {
+  const pathtape = `$ltgray${host}$white / $yellow${key}`
+  const pad = Math.max(0, decorinner - measuredrawnwidth(pathtape))
+  const barleft = textformatlinehtml(`$ltgray${ZNS_CP437.V} `)
+  const hostlinked = `<a class="zns-link" href="${escapehtml(hosthref)}">${textformatlinehtml(`$ltgray${host}`)}</a>`
+  const sep = textformatlinehtml('$white / ')
+  const keypart = textformatlinehtml(`$yellow${key}`)
+  const barright = textformatlinehtml(
+    ` ${' '.repeat(pad)}$ltgray${ZNS_CP437.V}`,
+  )
+  return znsrowhtml(`${barleft}${hostlinked}${sep}${keypart}${barright}`, '', {
+    raw: true,
+  })
+}
+
+/** Colored CP437 frame as strict-grid zns-tape rows (replaces flat zns-art header). */
+function znsframehtml({
+  decorinner,
+  left,
+  right,
+  rightcolor = 'yellow',
+  rows = [],
+}) {
+  const parts = [
+    zedtaperowshtml(znsframebordertape('top', decorinner)),
+    zedtaperowshtml(znsframeheadertape(decorinner, left, right, rightcolor)),
+    zedtaperowshtml(znsframebordertape('rule', decorinner)),
+  ]
+  for (const row of rows) {
+    if (row.host != null && row.key != null) {
+      if (row.hosthref) {
+        parts.push(
+          znsframepathlinkrowhtml(decorinner, row.host, row.key, row.hosthref),
+        )
+      } else {
+        parts.push(
+          zedtaperowshtml(znsframepathtape(decorinner, row.host, row.key)),
+        )
+      }
+      continue
+    }
+    if (typeof row === 'string') {
+      parts.push(zedtaperowshtml(znsframebodytape(decorinner, `$white${row}`)))
+      continue
+    }
+    const color = row.color ?? 'white'
+    parts.push(
+      zedtaperowshtml(znsframebodytape(decorinner, `$${color}${row.text}`)),
+    )
+  }
+  parts.push(zedtaperowshtml(znsframebordertape('bottom', decorinner)))
+  return `<div class="zns-tape zns-frame">${parts.join('')}</div>`
+}
+
+function znscmdbox(command) {
   const pad = 2
   const inner = command.length + pad * 2
-  const prefix = ' '.repeat(indent)
-  const top = `${prefix}${ZNS_CP437.TL}${ZNS_CP437.H.repeat(inner)}${ZNS_CP437.TR}`
+  const top = `${ZNS_CP437.TL}${ZNS_CP437.H.repeat(inner)}${ZNS_CP437.TR}`
   const mid =
-    `${prefix}${ZNS_CP437.V}` +
+    `${ZNS_CP437.V}` +
     ' '.repeat(pad) +
     command +
     ' '.repeat(pad) +
     `${ZNS_CP437.V}`
-  const bottom = `${prefix}${ZNS_CP437.BL}${ZNS_CP437.H.repeat(inner)}${ZNS_CP437.BR}`
+  const bottom = `${ZNS_CP437.BL}${ZNS_CP437.H.repeat(inner)}${ZNS_CP437.BR}`
   return [top, mid, bottom].join('\n')
 }
 
@@ -419,6 +499,9 @@ body.zns-page * {
 .zns-tape {
   margin: 0;
 }
+.zns-frame {
+  margin-bottom: ${ZNS_CELL_H}px;
+}
 .zns-brand { color: ${v.brand}; }
 .zns-text { color: ${v.text}; }
 .zns-muted { color: ${v.muted}; }
@@ -443,36 +526,6 @@ body.zns-page * {
 .zns-vga-scroll {
   margin-top: ${ZNS_CELL_H}px;
 }
-.zns-vga-scroll.zns-grid-on {
-  background-image:
-    linear-gradient(to right, rgba(85, 255, 255, 0.18) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(85, 255, 255, 0.18) 1px, transparent 1px);
-  background-size: ${ZNS_CELL_W}px ${ZNS_CELL_H}px;
-  background-position: 0 0;
-}
-.zns-grid-toggle {
-  margin: 0 0 8px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: ${v.hint};
-  font-family: ${ZNS_VGA_FONT};
-  font-size: ${ZNS_FONT_SIZE}px;
-  line-height: ${ZNS_CELL_H}px;
-  cursor: pointer;
-  text-decoration: underline;
-}
-.zns-grid-probe {
-  margin: 0 0 ${ZNS_CELL_H}px;
-  padding: 0;
-  white-space: pre;
-  font-family: ${ZNS_VGA_FONT};
-  font-size: ${ZNS_FONT_SIZE}px;
-  line-height: ${ZNS_CELL_H}px;
-  color: ${v.muted};
-}
-.zns-grid-probe-ok { color: ${v.command}; }
-.zns-grid-probe-fail { color: #ff5555; }
 ${buildznsdotbkgcss()}`
 }
 
@@ -480,16 +533,11 @@ function znslink(href, label) {
   return `<a class="zns-link" href="${escapehtml(href)}">${escapehtml(label)}</a>`
 }
 
-function buildznsvgapage({ title, bodyhtml, scrollbody, gridmode = false }) {
+function buildznsvgapage({ title, bodyhtml, scrollbody }) {
   const v = ZNS_VGA_HTML
   const titlehtml = escapehtml(title)
-  const showgrid = scrollbody && gridmode
-  const gridon = gridmode === 'on'
-  const gridtoggle = showgrid
-    ? `<button type="button" class="zns-grid-toggle">${gridon ? `hide grid overlay (${ZNS_DISPLAY_CELL_W}×${ZNS_DISPLAY_CELL_H}px)` : `show grid overlay (${ZNS_DISPLAY_CELL_W}×${ZNS_DISPLAY_CELL_H}px)`}</button><pre class="zns-vga zns-grid-probe" aria-live="polite"></pre>`
-    : ''
   const scroll = scrollbody
-    ? `<div class="zns-vga-scroll${gridon ? ' zns-grid-on' : ''}">${scrollbody}</div>`
+    ? `<div class="zns-vga-scroll">${scrollbody}</div>`
     : ''
   const copyscript = `<script>
 document.body.addEventListener('click',function(e){
@@ -498,66 +546,6 @@ document.body.addEventListener('click',function(e){
   var t=btn.getAttribute('data-copy')||'';
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t);}
 });
-</script>`
-  const gridscript = showgrid
-    ? `<script>
-(function(){
-  var CELL_W=${ZNS_DISPLAY_CELL_W},CELL_H=${ZNS_DISPLAY_CELL_H};
-  var btn=document.querySelector('.zns-grid-toggle');
-  var scroll=document.querySelector('.zns-vga-scroll');
-  var banner=document.querySelector('.zns-grid-probe');
-  function runprobe(){
-    var rows=document.querySelectorAll('.zns-line');
-    var bad=[];
-    for(var i=0;i<rows.length;i++){
-      var r=rows[i].getBoundingClientRect();
-      if(Math.abs(r.height-CELL_H)>1){bad.push('row '+i+' height '+Math.round(r.height*10)/10);}
-      if(i>0){
-        var prev=rows[i-1].getBoundingClientRect();
-        var gap=Math.round((r.top-prev.top)*10)/10;
-        if(Math.abs(gap-CELL_H)>1){bad.push('row '+i+' pitch '+gap);}
-      }
-    }
-    var out={rows:rows.length,bad:bad,ok:!bad.length,cell:[CELL_W,CELL_H]};
-    window.__ZNS_GRID_PROBE__=out;
-    if(banner){
-      banner.textContent=out.ok
-        ? 'ZNS grid probe PASS — '+out.rows+' rows at '+CELL_W+'×'+CELL_H+'px'
-        : 'ZNS grid probe FAIL — '+bad.join('; ');
-      banner.className='zns-vga zns-grid-probe '+(out.ok?'zns-grid-probe-ok':'zns-grid-probe-fail');
-    }
-    if(out.ok){console.log('ZNS grid probe PASS',out);}
-    else{console.error('ZNS grid probe FAIL',bad);}
-    return out;
-  }
-  if(btn&&scroll){
-    btn.addEventListener('click',function(){
-      var on=scroll.classList.toggle('zns-grid-on');
-      btn.textContent=(on?'hide':'show')+' grid overlay ('+CELL_W+'×'+CELL_H+'px)';
-      runprobe();
-    });
-  }
-  runprobe();
-})();
-</script>`
-    : `<script>
-(function(){
-  var CELL_H=${ZNS_DISPLAY_CELL_H};
-  var rows=document.querySelectorAll('.zns-line');
-  var bad=[];
-  for(var i=0;i<rows.length;i++){
-    var r=rows[i].getBoundingClientRect();
-    if(Math.abs(r.height-CELL_H)>1){bad.push('row '+i+' height '+r.height);}
-    if(i>0){
-      var prev=rows[i-1].getBoundingClientRect();
-      var gap=Math.round((r.top-prev.top)*10)/10;
-      if(Math.abs(gap-CELL_H)>1){bad.push('row '+i+' pitch '+gap);}
-    }
-  }
-  window.__ZNS_GRID_PROBE__={rows:rows.length,bad:bad,ok:!bad.length};
-  if(bad.length){console.error('ZNS grid probe FAIL',bad);}
-  else{console.log('ZNS grid probe PASS',rows.length,'rows');}
-})();
 </script>`
   return `<!doctype html>
 <html lang="en">
@@ -576,11 +564,9 @@ ${buildznsvgastylesheet(v.bg)}
 </div>
 <div class="zns-vga-root">
 ${bodyhtml}
-${gridtoggle}
 ${scroll}
 </div>
 ${copyscript}
-${gridscript}
 ${buildznsdotbkgscript()}
 </body>
 </html>`
@@ -741,13 +727,12 @@ function buildznsapexlanding({ joinorigin, tenantsuffix }) {
     exampleurl.length,
     'zed.cafe'.length + 'ZNS'.length + 1,
   )
-  const frameblock = [
-    znsframetop(decorinner),
-    znsheaderrow(decorinner, 'zed.cafe', 'ZNS'),
-    znsframerule(decorinner),
-    znsframerow(tagline, decorinner),
-    znsframebottom(decorinner),
-  ].join('\n')
+  const framehtml = znsframehtml({
+    decorinner,
+    left: 'zed.cafe',
+    right: 'ZNS',
+    rows: [{ text: tagline, color: 'green' }],
+  })
   const tapeaftercmd = [
     '',
     `!openit inline ${joinorigin};> Open zed.cafe`,
@@ -759,7 +744,11 @@ function buildznsapexlanding({ joinorigin, tenantsuffix }) {
     '',
   ].join('\n')
   const frame = [
-    frameblock,
+    znsframetop(decorinner),
+    znsheaderrow(decorinner, 'zed.cafe', 'ZNS'),
+    znsframerule(decorinner),
+    znsframerow(tagline, decorinner),
+    znsframebottom(decorinner),
     '',
     'Log in from the terminal:',
     cmdbox,
@@ -773,7 +762,7 @@ function buildznsapexlanding({ joinorigin, tenantsuffix }) {
     '',
   ].join('\n')
   const bodyhtml = `<article class="zns-vga">
-${znsartpre(frameblock)}
+${framehtml}
 <div class="zns-tape">
 ${zedtaperowshtml('$whiteLog in from the terminal:')}
 ${znsrowhtml('', '', { raw: true })}
@@ -792,28 +781,24 @@ function buildznstenantscrollhtml({
   markdown,
   notfound,
   tenantsuffix: suffix,
-  gridmode = 'toggle',
 }) {
   const tenantsfx = suffix ?? ZNS_TENANT_SUFFIX_DEFAULT
   const host = `${namespace}.${tenantsfx}`
   const pathlabel = `${host} / ${key}`
-  const pagetitle = notfound
-    ? `Not found — ${key}`
-    : `${key} — ${host}`
+  const pagetitle = notfound ? `Not found — ${key}` : `${key} — ${host}`
   const decorinner = Math.max(
     32,
     pathlabel.length,
     'zed.cafe'.length + namespace.length + 1,
   )
-  const frameopen = [
-    znsframetop(decorinner),
-    znsheaderrow(decorinner, 'zed.cafe', namespace),
-    znsframerule(decorinner),
-    znsframerow(pathlabel, decorinner),
-    znsframebottom(decorinner),
-  ].join('\n')
+  const framehtml = znsframehtml({
+    decorinner,
+    left: 'zed.cafe',
+    right: namespace,
+    rows: [{ host, key, hosthref: `https://${host}/` }],
+  })
   const bodyhtml = `<article class="zns-vga">
-${znsartpre(frameopen)}
+${framehtml}
 </article>`
   const content = notfound
     ? zederrorlinehtml('doc not found', key)
@@ -822,7 +807,6 @@ ${znsartpre(frameopen)}
     title: pagetitle,
     bodyhtml,
     scrollbody: content,
-    gridmode,
   })
   return { title: pagetitle, html }
 }
@@ -836,13 +820,12 @@ function buildznstenantindexhtml({ namespace, tenantsuffix: suffix, entries }) {
     host.length,
     'zed.cafe'.length + namespace.length + 1,
   )
-  const frameopen = [
-    znsframetop(decorinner),
-    znsheaderrow(decorinner, 'zed.cafe', namespace),
-    znsframerule(decorinner),
-    znsframerow(host, decorinner),
-    znsframebottom(decorinner),
-  ].join('\n')
+  const framehtml = znsframehtml({
+    decorinner,
+    left: 'zed.cafe',
+    right: namespace,
+    rows: [{ text: host, color: 'white' }],
+  })
   const bykind = new Map(ZNS_KIND_ORDER.map((kind) => [kind, []]))
   for (const entry of entries) {
     const bucket = bykind.get(entry.kind)
@@ -851,22 +834,24 @@ function buildznstenantindexhtml({ namespace, tenantsuffix: suffix, entries }) {
     }
   }
   let listhtml = ''
-  if (!entries.length) {
-    listhtml = znsrowhtml('no keys published', 'zns-muted')
-  } else {
-    for (const kind of ZNS_KIND_ORDER) {
-      const group = bykind.get(kind) ?? []
-      if (!group.length) {
-        continue
-      }
-      listhtml += `${znsrowhtml(kind, 'zns-hint')}\n`
-      for (const entry of group) {
-        listhtml += `${znsrowhtml(znslink(`/${entry.key}`, entry.key), '', { raw: true })}\n`
-      }
+  let rows = ''
+  for (const kind of ZNS_KIND_ORDER) {
+    const group = bykind.get(kind) ?? []
+    rows += zedtaperowshtml(zsssectionlines(kind).join('\n'))
+    if (!group.length) {
+      rows += zedtaperowshtml('$dkpurple $GRAY(none)')
+      continue
+    }
+    for (const entry of group) {
+      rows += zedopenitznslinkrowhtml(entry.key, entry.key, {
+        tenantbase: '/',
+        newtab: kind === 'bytes' || kind === 'peer',
+      })
     }
   }
+  listhtml = `<div class="zns-tape">${rows}</div>`
   const bodyhtml = `<article class="zns-vga">
-${znsartpre(frameopen)}
+${framehtml}
 ${listhtml}</article>`
   const html = buildznsvgapage({ title: pagetitle, bodyhtml })
   return { title: pagetitle, html }
@@ -1204,15 +1189,12 @@ async function readpair(env, namespace, pathkey) {
 }
 
 function tenantscrollresponse(request, env, namespace, pathkey, opts) {
-  const url = new URL(request.url)
-  const gridmode = url.searchParams.get('grid') === '1' ? 'on' : 'toggle'
   const { html } = buildznstenantscrollhtml({
     namespace,
     key: pathkey,
     markdown: opts.markdown,
     notfound: opts.notfound,
     tenantsuffix: tenantsuffix(env),
-    gridmode,
   })
   const headers = {
     ...tenantcorsheaders,
@@ -1371,6 +1353,7 @@ export {
   buildznsvgapage,
   padterminalline,
   sorttenantkeys,
+  znsframehtml,
   ZNS_CELL_H,
   ZNS_CELL_W,
   ZNS_DISPLAY_CELL_H,

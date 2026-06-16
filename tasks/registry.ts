@@ -6,6 +6,7 @@ import { DAISY_TASKS } from './groups/daisy'
 import { DEPLOY_TASKS } from './groups/deploy'
 import { DOCS_TASKS } from './groups/docs'
 import { E2E_TASKS } from './groups/e2e'
+import { INFRA_TASKS } from './groups/infra'
 import { LANG_TASKS } from './groups/lang'
 import { MEMORY_TASKS } from './groups/memory'
 import { NATIVE_TASKS } from './groups/native'
@@ -21,6 +22,7 @@ const ALL_TASK_LIST: TaskDef[] = [
   ...DEPLOY_TASKS,
   ...DOCS_TASKS,
   ...E2E_TASKS,
+  ...INFRA_TASKS,
   ...LANG_TASKS,
   ...MEMORY_TASKS,
   ...NATIVE_TASKS,

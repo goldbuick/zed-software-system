@@ -7,6 +7,7 @@ export const TASK_GROUPS = [
   'deploy',
   'docs',
   'e2e',
+  'infra',
   'lang',
   'memory',
   'native',

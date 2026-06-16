@@ -78,7 +78,7 @@ export const APP_TASKS: TaskDef[] = [
     description: 'Dependency-cruiser, ESLint, and tsc --noEmit',
     tags: ['ci'],
     run: shell(
-      'depcruise zss/simspace.ts zss/heavyspace.ts zss/boardrunnerspace.ts zss/sttspace.ts --validate --config ops/depcruise.cjs && eslint . --ext ts,tsx --fix --report-unused-disable-directives --max-warnings 0 && tsc --noEmit',
+      "depcruise zss/simspace.ts zss/heavyspace.ts zss/boardrunnerspace.ts zss/sttspace.ts --validate --config ops/depcruise.cjs && eslint . --ext ts,tsx --fix --report-unused-disable-directives --max-warnings 0 && eslint 'ops/infra/net-*-worker.js' --fix --report-unused-disable-directives --max-warnings 0 && tsc --noEmit",
     ),
   }),
   def('app:test', {

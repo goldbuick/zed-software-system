@@ -74,7 +74,7 @@ export const DEPLOY_TASKS: TaskDef[] = [
   }),
   def('zns:grid:preview', {
     description:
-      'Write local CP437 grid calibration HTML (ops/infra/generated/zns-grid-preview.html)',
+      'Write local CP437 VGA calibration HTML (ops/infra/generated/zns-grid-preview.html)',
     tags: ['dev'],
     group: 'deploy',
     deps: ['zns:vga:sync'],
