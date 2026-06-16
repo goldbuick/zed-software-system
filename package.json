@@ -11,7 +11,7 @@
     "ops/fixtures/books/example-coolregionsbow.book.json"
   ],
   "scripts": {
-    "postinstall": "patch-package",
+    "postinstall": "patch-package --patch-dir ops/patches",
     "task": "tsx tasks/cli.ts"
   },
   "devDependencies": {

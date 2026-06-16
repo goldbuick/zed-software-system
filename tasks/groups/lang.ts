@@ -1,4 +1,4 @@
-import { def, exec, shell } from '../helpers'
+import { def, exec, jestexec, shell } from '../helpers'
 import {
   nodehandler,
   pythonhandler,
@@ -52,22 +52,18 @@ export const LANG_TASKS: TaskDef[] = [
   def('lang:parity:test', {
     description: 'Native C++ compile parity vs TS oracle',
     tags: ['ci'],
-    run: exec([
-      'yarn',
-      'jest',
-      'zss/feature/lang/backend/wasm/__tests__/wasmparity.test.ts',
-      '--no-coverage',
-    ]),
+    run: jestexec(
+      'ops/tests/unit/feature/lang/backend/wasm/__tests__/wasmparity.test.ts',
+      ['--no-coverage'],
+    ),
   }),
   def('lang:parity:fixtures:regen', {
     description: 'Regenerate lang wasm parity fixtures',
     env: { REGEN_LANG_FIXTURES: '1' },
-    run: exec([
-      'yarn',
-      'jest',
-      'zss/feature/lang/backend/wasm/__tests__/regenfixtures.test.ts',
-      '--no-coverage',
-    ]),
+    run: jestexec(
+      'ops/tests/unit/feature/lang/backend/wasm/__tests__/regenfixtures.test.ts',
+      ['--no-coverage'],
+    ),
   }),
   def('lang:corpus:test', {
     description: 'Browser zss_lang.wasm against full corpus',
@@ -84,21 +80,17 @@ export const LANG_TASKS: TaskDef[] = [
   }),
   def('lang:build-train-corpus', {
     description: 'Jest build training corpus fixture',
-    run: exec([
-      'yarn',
-      'jest',
-      'zss/feature/heavy/training/__tests__/buildcorpus.test.ts',
-      '--no-coverage',
-    ]),
+    run: jestexec(
+      'ops/tests/unit/feature/heavy/training/__tests__/buildcorpus.test.ts',
+      ['--no-coverage'],
+    ),
   }),
   def('lang:train-corpus:test', {
     description: 'Jest train corpus tests',
-    run: exec([
-      'yarn',
-      'jest',
-      'zss/feature/heavy/training/__tests__/traincorpus.test.ts',
-      '--no-coverage',
-    ]),
+    run: jestexec(
+      'ops/tests/unit/feature/heavy/training/__tests__/traincorpus.test.ts',
+      ['--no-coverage'],
+    ),
   }),
   def('lang:finetune:train', {
     description: 'Train lang finetune model',

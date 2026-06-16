@@ -51,7 +51,7 @@ Vend the browser wanix kernel into `cafe/public/wanix`:
 yarn task run wanix:ensure
 ```
 
-`yarn install` applies `patches/wanix+0.4.0-alpha8.patch`, which wires WASI stdin to `#task/N/fd/0` (upstream ships `OpenEmptyFile()`). Run `wanix:ensure` after install so `cafe/public/wanix` matches patched `node_modules/wanix`.
+`yarn install` applies `ops/patches/wanix+0.4.0-alpha8.patch`, which wires WASI stdin to `#task/N/fd/0` (upstream ships `OpenEmptyFile()`). Run `wanix:ensure` after install so `cafe/public/wanix` matches patched `node_modules/wanix`.
 
 Upstream source for reading/debugging (WASI worker, term device, workbench host): [`submodules/wanix/`](../../../submodules/wanix/) — see [`submodules/README.md`](../../../submodules/README.md).
 

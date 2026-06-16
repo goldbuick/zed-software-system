@@ -78,7 +78,7 @@ const warmup = 5
 console.log('Lang compile benchmark: TS vs Emscripten WASM\n')
 
 const tsout = execSync(
-  'yarn jest zss/feature/lang/backend/wasm/__tests__/compilebench.test.ts -t benchmark --no-coverage 2>&1',
+  'yarn jest --config ops/jest.config.ts ops/tests/unit/feature/lang/backend/wasm/__tests__/compilebench.test.ts -t benchmark --no-coverage 2>&1',
   { cwd: ROOT, encoding: 'utf8', shell: true },
 )
 const tsmedians = parsetsmedian(tsout)

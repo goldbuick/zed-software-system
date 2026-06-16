@@ -1,5 +1,12 @@
 import { execFileSync, spawnSync } from 'node:child_process'
-import { readFileSync } from 'node:fs'
+import {
+  accessSync,
+  constants,
+  existsSync,
+  readFileSync,
+  renameSync,
+  statSync,
+} from 'node:fs'
 import path from 'node:path'
 
 import { LANG_PARITY_DIR } from 'zss/testsupport/fixturepaths'
@@ -30,7 +37,21 @@ export function ensurenativeparitybinary(): void {
 }
 
 export function ensurenativewasmcli(): void {
-  buildnative('-DZSS_LANG_WASM_CLI', WCLIBIN)
+  // Jest runs many suites in parallel workers; multiple workers may try to (re)build
+  // the same native binary at once. We guard and build atomically to avoid
+  // executing a partially written output file.
+  try {
+    if (existsSync(WCLIBIN) && statSync(WCLIBIN).size > 0) {
+      accessSync(WCLIBIN, constants.X_OK)
+      return
+    }
+  } catch {
+    // fall through to rebuild
+  }
+
+  const tmp = `${WCLIBIN}.tmp.${process.pid}.${Date.now()}`
+  buildnative('-DZSS_LANG_WASM_CLI', tmp)
+  renameSync(tmp, WCLIBIN)
 }
 
 export function runnativeparitygate(): string {

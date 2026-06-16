@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url'
 const ROOT = process.cwd()
 const CLITEST = path.join(
   ROOT,
-  'zss/feature/content/__tests__/contentbook.cli.test.ts',
+  'ops/tests/unit/feature/content/__tests__/contentbook.cli.test.ts',
 )
 
 const task = process.argv[2]
@@ -30,7 +30,7 @@ if (!task || !arg) {
 
 const result = spawnSync(
   process.platform === 'win32' ? 'yarn.cmd' : 'yarn',
-  ['jest', CLITEST, '--no-coverage', '--runTestsByPath'],
+  ['jest', '--config', 'ops/jest.config.ts', CLITEST, '--no-coverage', '--runTestsByPath'],
   {
     cwd: ROOT,
     stdio: 'inherit',

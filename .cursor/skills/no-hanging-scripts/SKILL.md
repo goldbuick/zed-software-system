@@ -71,7 +71,7 @@ runwasmscriptfortest(wasmbytes, chip)
 
 - Override budget: `loadscriptsync(bytes, chip, { runbudget: 512 })`
 - Disable in worker: `ZSS_WASM_RUN_BUDGET=0`
-- Regression test: `zss/feature/lang/backend/wasm/__tests__/wasmrunbudget.test.ts`
+- Regression test: `ops/tests/unit/feature/lang/backend/wasm/__tests__/wasmrunbudget.test.ts`
 
 ## When a command runs too long
 

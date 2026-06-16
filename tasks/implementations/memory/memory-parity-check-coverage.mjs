@@ -8,9 +8,12 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const ROOT = process.cwd()
-const TESTDIR = path.join(ROOT, 'zss/memory/__tests__')
+const TESTDIR = path.join(ROOT, 'ops/tests/unit/memory/__tests__')
 const FIXTUREDIR = path.join(ROOT, 'ops/fixtures/memory/wasm')
-const REGEN = path.join(ROOT, 'zss/memory/wasm/regenfixtures.test.ts')
+const REGEN = path.join(
+  ROOT,
+  'ops/tests/unit/memory/wasm/__tests__/regenfixtures.test.ts',
+)
 const EXCLUDED = new Set(['adminconfig.test.ts'])
 
 function parsemanifest() {

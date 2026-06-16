@@ -35,6 +35,22 @@ export function exec(argv: string[]): TaskRun {
   return { kind: 'exec', argv }
 }
 
+/** Jest config lives under ops/; pass explicit paths and optional extra flags. */
+export function jestexec(
+  paths: string | string[],
+  extra: string[] = [],
+): TaskRun {
+  const targets = typeof paths === 'string' ? [paths] : paths
+  return exec([
+    'yarn',
+    'jest',
+    '--config',
+    'ops/jest.config.ts',
+    ...targets,
+    ...extra,
+  ])
+}
+
 export function shell(cmd: string): TaskRun {
   return { kind: 'shell', cmd }
 }

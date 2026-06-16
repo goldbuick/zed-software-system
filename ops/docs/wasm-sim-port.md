@@ -244,7 +244,7 @@ Browsers support WASM threads with **SharedArrayBuffer** + **COOP/COEP** (alread
 | Browser / wasm worker | Smoke |
 | Playwright 3-tab | Multiplayer optional CI |
 
-Golden pattern: mirror [`wasmparity.test.ts`](../../zss/feature/synth/backend/wasm/__tests__/wasmparity.test.ts) — record once from TS, compare in WASM.
+Golden pattern: mirror [`wasmparity.test.ts`](../tests/unit/feature/synth/backend/wasm/__tests__/wasmparity.test.ts) — record once from TS, compare in WASM.
 
 ---
 

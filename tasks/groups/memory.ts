@@ -1,4 +1,4 @@
-import { def, exec, shell } from '../helpers'
+import { def, exec, jestexec, shell } from '../helpers'
 import { nodehandler, tsxhandler } from '../implementations/modulehandler'
 import type { TaskDef } from '../types'
 
@@ -20,14 +20,14 @@ export const MEMORY_TASKS: TaskDef[] = [
   def('memory:parity:regen', {
     description: 'Regenerate memory parity fixtures',
     env: { REGEN_MEMORY_FIXTURES: '1' },
-    run: exec([
-      'yarn',
-      'jest',
-      '--runTestsByPath',
-      'zss/memory/wasm/regenfixtures.test.ts',
-      '--testPathIgnorePatterns=/ops/e2e/',
-      '--no-coverage',
-    ]),
+    run: jestexec(
+      'ops/tests/unit/memory/wasm/__tests__/regenfixtures.test.ts',
+      [
+        '--runTestsByPath',
+        '--testPathIgnorePatterns=/ops/e2e/',
+        '--no-coverage',
+      ],
+    ),
   }),
   def('memory:parity:check-coverage', {
     description: 'Check memory parity fixture coverage',

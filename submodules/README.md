@@ -24,7 +24,7 @@ git clone --recurse-submodules <repo-url>
 
 ## Wanix runtime vs submodule
 
-The **browser runtime** vendored into `cafe/public/wanix/` comes from the **npm** package (`wanix@0.4.0-alpha8`) via `yarn task run wanix:ensure`, plus `patches/wanix+0.4.0-alpha8.patch` (stdin wiring in embedded WASI worker).
+The **browser runtime** vendored into `cafe/public/wanix/` comes from the **npm** package (`wanix@0.4.0-alpha8`) via `yarn task run wanix:ensure`, plus `ops/patches/wanix+0.4.0-alpha8.patch` (stdin wiring in embedded WASI worker).
 
 Use `submodules/wanix/` to read upstream source (e.g. `wasi/worker/worker.js`, `term/`, workbench host wiring) when debugging or drafting patches — not as the runtime build input.
 

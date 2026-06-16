@@ -54,7 +54,7 @@ module.exports = {
       },
     },
   },
-  ignorePatterns: ['dist', '.eslintrc.cjs'],
+  ignorePatterns: ['dist', '.eslintrc.cjs', 'ops/tests/**'],
   parser: '@typescript-eslint/parser',
   plugins: ['react-refresh'],
   rules: {

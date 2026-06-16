@@ -1,4 +1,4 @@
-import { def, exec, shell, tasksonly } from '../helpers'
+import { def, exec, jestexec, shell, tasksonly } from '../helpers'
 import {
   shellhandlerwithargs,
   tsxhandler,
@@ -48,11 +48,9 @@ export const DAISY_TASKS: TaskDef[] = [
   }),
   def('daisy:adsr-parity:jest', {
     description: 'Jest adsrenvcurve tests (internal)',
-    run: exec([
-      'yarn',
-      'jest',
-      'zss/feature/synth/backend/wasm/__tests__/adsrenvcurve.test.ts',
-    ]),
+    run: jestexec(
+      'ops/tests/unit/feature/synth/backend/wasm/__tests__/adsrenvcurve.test.ts',
+    ),
   }),
   def('daisy:env-parity:test', {
     description: 'Offline env ADSR parity render + gates',

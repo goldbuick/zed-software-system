@@ -42,10 +42,10 @@ expect(() =>
 
 ```bash
 # 1. One file, no coverage
-yarn jest zss/feature/lang/backend/wasm/__tests__/lexerparity.test.ts --no-coverage
+yarn jest ops/tests/unit/feature/lang/backend/wasm/__tests__/lexerparity.test.ts --no-coverage
 
 # 2. After pass, broader
-yarn jest zss/feature/lang/backend/wasm/__tests__/ --no-coverage
+yarn jest ops/tests/unit/feature/lang/backend/wasm/__tests__/ --no-coverage
 
 # 3. Full suite last
 yarn task run app:test

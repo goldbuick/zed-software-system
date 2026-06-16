@@ -5,6 +5,7 @@ const TEST_TIMEOUT_MS = 120_000
 
 const config: Config = {
   rootDir: '..',
+  roots: ['<rootDir>/ops/tests'],
   preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'node',
   testTimeout: TEST_TIMEOUT_MS,
@@ -13,9 +14,9 @@ const config: Config = {
   setupFilesAfterEnv: ['<rootDir>/zss/testing/jesttimeoutsetup.ts'],
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
   moduleNameMapper: {
-    '^zss/perf/ui$': '<rootDir>/zss/__mocks__/perfui.ts',
+    '^zss/perf/ui$': '<rootDir>/ops/tests/mocks/perfui.ts',
     '^zss/(.*)$': '<rootDir>/zss/$1',
-    '^uint8-util$': '<rootDir>/zss/__mocks__/uint8-util.ts',
+    '^uint8-util$': '<rootDir>/ops/tests/mocks/uint8-util.ts',
     '^@chevrotain/utils$':
       '<rootDir>/node_modules/@chevrotain/utils/lib/src/api.js',
     '^@chevrotain/gast$':
@@ -49,8 +50,8 @@ const config: Config = {
   globalTeardown: '<rootDir>/zss/testing/jestglobalteardown.cjs',
   testPathIgnorePatterns: [
     '<rootDir>/ops/e2e/',
-    '<rootDir>/zss/memory/wasm/__tests__/wasmparity.test.ts',
-    '<rootDir>/zss/memory/wasm/regenfixtures.test.ts',
+    '<rootDir>/ops/tests/unit/memory/wasm/__tests__/wasmparity.test.ts',
+    '<rootDir>/ops/tests/unit/memory/wasm/__tests__/regenfixtures.test.ts',
   ],
   testMatch: [
     '**/__tests__/**/*.ts',
@@ -62,7 +63,11 @@ const config: Config = {
   ],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'mjs'],
   collectCoverageFrom: ['zss/**/*.{ts,tsx}'],
-  coveragePathIgnorePatterns: ['/node_modules/', '/__mocks__/', '/__tests__/'],
+  coveragePathIgnorePatterns: [
+    '/node_modules/',
+    '/ops/tests/mocks/',
+    '/__tests__/',
+  ],
   coverageThreshold: {
     global: {
       branches: 0,

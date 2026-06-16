@@ -1,7 +1,7 @@
 #!/bin/sh
 # Vend Wanix browser runtime into cafe/public/wanix/.
 #
-# Prereq: yarn install (wanix npm package + patches/wanix+*.patch via patch-package)
+# Prereq: yarn install (wanix npm package + ops/patches/wanix+*.patch via patch-package)
 
 set -e
 

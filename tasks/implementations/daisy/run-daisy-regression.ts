@@ -23,8 +23,8 @@ const PROJECT = process.cwd()
 const SKIP_PLAYWRIGHT = process.argv.includes('--skip-playwright')
 
 const JEST_PATHS = [
-  'zss/feature/synth/backend/daisy/__tests__',
-  'zss/feature/synth/backend/wasm/__tests__/adsrenvcurve.test.ts',
+  'ops/tests/unit/feature/synth/backend/daisy/__tests__',
+  'ops/tests/unit/feature/synth/backend/wasm/__tests__/adsrenvcurve.test.ts',
 ]
 
 const SOS_VOICE_GATE = 'yarn task run daisy:sos-voices:test'
@@ -65,7 +65,7 @@ async function main() {
   reports.push(
     runstep(
       'jest-daisy',
-      `yarn jest ${JEST_PATHS.join(' ')} --verbose`,
+      `yarn jest --config ops/jest.config.ts ${JEST_PATHS.join(' ')} --verbose`,
       EXEC_GATE_TIMEOUT_MS * 2,
     ),
   )
