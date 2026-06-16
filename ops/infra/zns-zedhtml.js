@@ -7,7 +7,9 @@ import {
   resolveblindex,
   resolvefgindex,
 } from './zns-palette.js'
+import { highlightzsssource } from './zns-zss-syntax.js'
 
+const COLOR_EDGE = '$dkpurple'
 const CHR_BM = '$205'
 
 const DEFAULT_PEN = { fg: 15, bg: null, blink: false }
@@ -141,7 +143,7 @@ function rendertapepart(part) {
   if (part.pen.bg != null) {
     style += `;background-color:${fghex(part.pen.bg)}`
   }
-  const cls = part.pen.blink ? 'zns-cell zns-blink' : 'zns-cell'
+  const cls = part.pen.blink ? 'zns-tape-span zns-blink' : 'zns-tape-span'
   if (part.pen.blink) {
     style += `;--zns-fg:${fg};--zns-bg:${bg ?? fg}`
   }
@@ -156,10 +158,6 @@ export function znsrowhtml(content, classname = '', opts = {}) {
   const inner = opts.raw ? content : escapehtml(content)
   const cls = classname ? ` zns-line ${classname}` : ' zns-line'
   return `<div class="${cls.trim()}">${inner}</div>`
-}
-
-function normalizeznsline(line) {
-  return String(line ?? '').replace(/^\$dkpurple ?/, '$ltgray$blue')
 }
 
 function isopenitlinkline(line) {
@@ -185,14 +183,10 @@ export function zedtaperowshtml(tape, opts = {}) {
       continue
     }
     if (iszedlinkline(trimmed) && !trimmed.startsWith('!@')) {
-      rows.push(
-        `<div class="zns-line">${textformatlinehtml(normalizeznsline(trimmed))}</div>`,
-      )
+      rows.push(`<div class="zns-line">${textformatlinehtml(trimmed)}</div>`)
       continue
     }
-    rows.push(
-      `<div class="zns-line">${textformatlinehtml(normalizeznsline(line))}</div>`,
-    )
+    rows.push(`<div class="zns-line">${textformatlinehtml(line)}</div>`)
   }
   return rows.join('')
 }
@@ -229,7 +223,7 @@ export function zedopenitznslinkrowhtml(label, path, opts = {}) {
   }
   const base = opts.tenantbase ?? ''
   const url = String(href).startsWith('http') ? href : `${base}${href}`
-  const row = `$ltgray$179 $purple$16 $yellowOPENIT $blue${text} `
+  const row = `$purple$16 $yellowOPENIT $white${text} `
   return `<div class="zns-line">${znslinkrowinner(row, url, opts)}</div>`
 }
 
@@ -241,9 +235,9 @@ export function zsssectionlines(kind) {
   const label = String(kind ?? '')
   const width = label.length + 2
   return [
-    `$ltgray ${' '.repeat(label.length)} `,
-    `$ltgray $gray${label} `,
-    `$ltgray${CHR_BM.repeat(width)}`,
+    `${COLOR_EDGE} ${' '.repeat(label.length)} `,
+    `${COLOR_EDGE} $gray${label} `,
+    `${COLOR_EDGE}${CHR_BM.repeat(width)}`,
   ]
 }
 
@@ -265,4 +259,45 @@ export function zedtapehtml(markdown, opts = {}) {
     }
   }
   return `<div class="zns-tape">${zedtaperowshtml(rows.join('\n'), opts)}</div>`
+}
+
+/** Raw ZSS codepage (text-kind tenant scrolls) with editor-style syntax colors. */
+export function zedzsshtml(source, opts = {}) {
+  const tape = highlightzsssource(source)
+  return `<div class="zns-tape">${zedtaperowshtml(tape, opts)}</div>`
+}
+
+/** Route text-kind scrolls: raw ZSS codepages vs markdown+tape scrolls. */
+export function scrollsourceisrawzss(source) {
+  const lines = String(source ?? '').split('\n')
+  let skippedscrolltitle = false
+  for (const line of lines) {
+    const t = line.trim()
+    if (!t) {
+      continue
+    }
+    if (!skippedscrolltitle && /^@\w+$/.test(t)) {
+      skippedscrolltitle = true
+      continue
+    }
+    if (/^@\w/.test(t)) {
+      return true
+    }
+    if (/^\$/.test(t)) {
+      return false
+    }
+    if (/^#+\s/.test(t)) {
+      return false
+    }
+    if (/^\[[^\]]+\]\(/.test(t)) {
+      return false
+    }
+    break
+  }
+  const text = String(source ?? '')
+  const zss = (text.match(/^@\w+/gm) ?? []).length
+  const md =
+    (text.match(/^\[[^\]]+\]\(/gm) ?? []).length +
+    (text.match(/^#+\s/gm) ?? []).length
+  return zss > md && zss > 0
 }

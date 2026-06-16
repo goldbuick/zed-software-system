@@ -31,8 +31,21 @@ const CP437_TO_UNICODE = [
   0x207f, 0x00b2, 0x25a0, 0x00a0,
 ]
 
+/**
+ * ZSS VGA uses CP437 slots 0–31 as visible glyphs; Unicode maps them to
+ * controls (U+0000–U+001F) which Safari/iOS omit → missing-glyph boxes.
+ */
+const ZNS_WEB_GLYPH_OVERRIDES = new Map([
+  [7, 0x2022], // • list marker ($7)
+  [16, 0x25b6], // ▶ OPENIT / hyperlink rows ($16)
+])
+
 export function cp437tochar(code) {
   if (code >= 0 && code <= 255) {
+    const override = ZNS_WEB_GLYPH_OVERRIDES.get(code)
+    if (override != null) {
+      return String.fromCodePoint(override)
+    }
     return String.fromCodePoint(CP437_TO_UNICODE[code])
   }
   return ' '

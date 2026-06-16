@@ -1,5 +1,6 @@
 /** Source of truth: zss/feature/parse/markdownzsstext.ts */
 import { Marked } from 'marked'
+import { highlightzssline } from './zns-zss-syntax.js'
 
 export const MARKDOWN_HR_TBAR_WIDTH = 10
 
@@ -229,7 +230,8 @@ function emitheading(sink, token) {
 function emitcodeblock(sink, token) {
   const lines = token.text.split('\n')
   for (let i = 0; i < lines.length; ++i) {
-    sink.line(`$green$186$white ${escapezedollar(lines[i])}${RESET}`)
+    const raw = escapezedollar(lines[i])
+    sink.line(`$green$186$white ${highlightzssline(raw)}${RESET}`)
   }
   sink.line(' ')
 }

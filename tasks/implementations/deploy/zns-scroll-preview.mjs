@@ -2,7 +2,13 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { zedtapehtml } from '../../../ops/infra/zns-zedhtml.js'
+import {
+  scrollsourceisrawzss,
+  zedtapehtml,
+  zedtaperowshtml,
+  zedzsshtml,
+  zsssectionlines,
+} from '../../../ops/infra/zns-zedhtml.js'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../../..')
 const romdir = join(root, 'zss/rom/refscroll')
@@ -21,8 +27,19 @@ function assertok(condition, message) {
 
 const cliscroll = readfixture('cliscroll.md')
 const helptext = readfixture('helptext.md')
+const passage = readFileSync(
+  join(root, 'ops/fixtures/lang/coolregionsbow/passage.zss'),
+  'utf8',
+).replace(/\r\n/g, '\n')
 const clhtml = zedtapehtml(cliscroll, { tenantbase: '/' })
 const helhtml = zedtapehtml(helptext, { tenantbase: '/' })
+const passagehtml = zedzsshtml(passage, { tenantbase: '/' })
+
+const clwithtitle = `@cliscroll\n${cliscroll}`
+assertok(!scrollsourceisrawzss(clwithtitle), 'cliscroll with @ title is markdown not raw ZSS')
+assertok(!scrollsourceisrawzss(cliscroll), 'cliscroll is markdown not raw ZSS')
+assertok(!scrollsourceisrawzss(helptext), 'helptext is markdown not raw ZSS')
+assertok(scrollsourceisrawzss(passage), 'passage is raw ZSS')
 
 assertok(clhtml.includes('OPENIT'), 'cliscroll should render OPENIT rows')
 assertok(!clhtml.includes('[ZTK'), 'cliscroll should not contain raw markdown links')
@@ -37,6 +54,31 @@ const hcolors = new Set([...helhtml.matchAll(/color:#[0-9a-fA-F]+/gi)].map((m) =
 assertok(hcolors.size >= 3, 'helptext should have multiple syntax colors')
 assertok(!helhtml.includes('$RED'), 'helptext should not show literal $RED')
 assertok(helhtml.includes('foreground color'), 'helptext fixture content present')
+
+const passagecolors = new Set([
+  ...passagehtml.matchAll(/color:#[0-9a-fA-F]+/gi),
+].map((m) => m[0]))
+assertok(passagecolors.size >= 3, 'passage should have ZSS syntax colors')
+assertok(passagehtml.includes('@passage'), 'passage content present')
+assertok(
+  passagehtml.includes('color:#aa00aa'),
+  'passage @ stats should be dkpurple',
+)
+
+const indexrows = [
+  ...zsssectionlines('bytes'),
+  '$purple$16 $yellowOPENIT $whitecoolregionsbow ',
+].join('\n')
+const indexhtml = `<div class="zns-tape">${zedtaperowshtml(indexrows)}</div>`
+assertok(indexhtml.includes('$dkpurple') === false, 'section bar should render not leak tokens')
+assertok(!indexhtml.match(/>\s*\|/), 'OPENIT rows should not have pipe prefix')
+assertok(indexhtml.includes('OPENIT'), 'index-style OPENIT row present')
+assertok(!indexhtml.includes('\u0010'), 'OPENIT marker must not be Unicode control U+0010')
+assertok(indexhtml.includes('\u25b6') || indexhtml.includes('&#9654;'), 'OPENIT row should use ▶ marker')
+assertok(
+  clhtml.includes('color:#ffffff') || clhtml.includes('color:#FFFFFF'),
+  'cliscroll OPENIT label should use white',
+)
 
 mkdirSync(dirname(dest), { recursive: true })
 const html = `<!doctype html>
@@ -53,6 +95,7 @@ section { margin-bottom: 32px; }
 <body>
 <section><h1>cliscroll</h1>${clhtml}</section>
 <section><h1>helptext</h1>${helhtml}</section>
+<section><h1>passage</h1>${passagehtml}</section>
 </body>
 </html>`
 writeFileSync(dest, html)

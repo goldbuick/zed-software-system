@@ -14,16 +14,15 @@ import {
   renderemailcardpngwasm,
 } from './zns-email-card-png-wasm.js'
 import { buildznsemailcardsvg } from './zns-email-card-svg.js'
-import {
-  buildznsdotbkgcss,
-  buildznsdotbkgscript,
-} from './zns-dotbkg.js'
+import { buildznsdotbkgcss } from './zns-dotbkg.js'
 import {
   measuredrawnwidth,
+  scrollsourceisrawzss,
   textformatlinehtml,
   zederrorlinehtml,
   zedopenitznslinkrowhtml,
   zedtapehtml,
+  zedzsshtml,
   zedtaperowshtml,
   znsrowhtml,
   zsssectionlines,
@@ -196,7 +195,7 @@ function escapehtml(value) {
     .replace(/"/g, '&quot;')
 }
 
-const ZNS_VGA_FONT = "'IBM EGA 8x14'"
+const ZNS_VGA_FONT = "'IBM EGA 8x14', ui-monospace, 'Courier New', monospace"
 
 /** Native IBM EGA 8×14 cell (int10h webfont em = 14px line height). */
 const ZNS_CELL_W = 8
@@ -386,7 +385,8 @@ html, body { min-height: 100%; }
 body.zns-page {
   margin: 0;
   padding: 16px;
-  background: ${bg};
+  --zns-dot-w: ${ZNS_CELL_W * ZNS_DISPLAY_SCALE}px;
+  --zns-dot-h: ${ZNS_CELL_H * ZNS_DISPLAY_SCALE}px;
   color: ${v.text};
   box-sizing: border-box;
   font-family: ${ZNS_VGA_FONT};
@@ -403,22 +403,20 @@ body.zns-page * {
   font-size: var(--zns-fs);
   line-height: var(--zns-lh);
   width: max-content;
-  max-width: 100%;
+  max-width: none;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   box-sizing: border-box;
 }
 @media screen and (max-width: ${ZNS_NARROW_MAX_PX}px) {
-  body.zns-page { padding: 8px; }
+  body.zns-page {
+    padding: 8px;
+    --zns-dot-w: ${ZNS_CELL_W}px;
+    --zns-dot-h: ${ZNS_CELL_H}px;
+  }
   .zns-vga-root {
     --zns-fs: ${ZNS_FONT_SIZE}px;
     --zns-lh: ${ZNS_CELL_H}px;
-    width: 100%;
-    max-width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  .zns-line {
-    overflow-x: auto;
-    overflow-y: hidden;
   }
 }
 .zns-vga {
@@ -445,7 +443,7 @@ body.zns-page * {
   min-height: var(--zns-lh);
   line-height: var(--zns-lh);
   display: block;
-  overflow: hidden;
+  overflow: visible;
   box-sizing: content-box;
   white-space: pre;
   word-break: normal;
@@ -467,6 +465,12 @@ body.zns-page * {
   padding: 0;
   margin: 0;
 }
+.zns-tape-span {
+  display: inline;
+  vertical-align: top;
+  padding: 0;
+  margin: 0;
+}
 .zns-cell {
   display: inline-block;
   width: 1ch;
@@ -482,6 +486,7 @@ body.zns-page * {
   0%, 50% { color: var(--zns-fg); }
   50.01%, 100% { color: var(--zns-bg); }
 }
+.zns-tape-span.zns-blink,
 .zns-cell.zns-blink {
   animation: zns-blink-fg ${ZNS_BLINK_CYCLE_S}s step-end infinite;
 }
@@ -492,7 +497,7 @@ body.zns-page * {
   font-size: inherit;
   line-height: var(--zns-lh);
   letter-spacing: 0;
-  color: ${v.link};
+  color: inherit;
   text-decoration: none;
   padding: 0;
   margin: 0;
@@ -579,15 +584,11 @@ ${buildznsvgastylesheet(v.bg)}
 </style>
 </head>
 <body class="zns-page">
-<div class="zns-dotbkg" aria-hidden="true">
-  <div class="zns-dotbkg-inner"></div>
-</div>
 <div class="zns-vga-root">
 ${bodyhtml}
 ${scroll}
 </div>
 ${copyscript}
-${buildznsdotbkgscript()}
 </body>
 </html>`
 }
@@ -680,6 +681,7 @@ function buildznstenantscrollhtml({
   namespace,
   key,
   markdown,
+  zss,
   notfound,
   tenantsuffix: suffix,
 }) {
@@ -703,7 +705,9 @@ ${framehtml}
 </article>`
   const content = notfound
     ? zederrorlinehtml('doc not found', key)
-    : zedtapehtml(markdown, { tenantbase: '/' })
+    : zss
+      ? zedzsshtml(markdown, { tenantbase: '/' })
+      : zedtapehtml(markdown, { tenantbase: '/' })
   const html = buildznsvgapage({
     title: pagetitle,
     bodyhtml,
@@ -740,7 +744,7 @@ function buildznstenantindexhtml({ namespace, tenantsuffix: suffix, entries }) {
     const group = bykind.get(kind) ?? []
     rows += zedtaperowshtml(zsssectionlines(kind).join('\n'))
     if (!group.length) {
-      rows += zedtaperowshtml('$dkpurple $GRAY(none)')
+      rows += zedtaperowshtml('$dkpurple $gray(none)')
       continue
     }
     for (const entry of group) {
@@ -1101,6 +1105,7 @@ function tenantscrollresponse(request, env, namespace, pathkey, opts) {
     namespace,
     key: pathkey,
     markdown: opts.markdown,
+    zss: opts.zss,
     notfound: opts.notfound,
     tenantsuffix: tenantsuffix(env),
   })
@@ -1225,6 +1230,7 @@ async function handletenantread(request, env, namespace) {
     if (kind === 'text') {
       return tenantscrollresponse(request, env, namespace, pathkey, {
         markdown: stored,
+        zss: scrollsourceisrawzss(stored),
         notfound: false,
         status: 200,
       })

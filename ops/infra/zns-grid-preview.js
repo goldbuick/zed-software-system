@@ -4,6 +4,7 @@ import { zedtaperowshtml } from './zns-zedhtml.js'
 
 const ZNS_VGA_FONT = "'IBM EGA 8x14'"
 const ZNS_FONT_SIZE = 14
+const ZNS_CELL_W = 8
 const ZNS_CELL_H = 14
 const ZNS_DISPLAY_SCALE = 2
 const ZNS_NARROW_MAX_PX = 640
@@ -26,7 +27,9 @@ html, body { min-height: 100%; }
 body.zns-page {
   margin: 0;
   padding: 16px;
-  background: #0000AA;
+  --zns-dot-w: ${ZNS_CELL_W * ZNS_DISPLAY_SCALE}px;
+  --zns-dot-h: ${ZNS_CELL_H * ZNS_DISPLAY_SCALE}px;
+  background: transparent;
   color: #FFFFFF;
   box-sizing: border-box;
   font-family: ${ZNS_VGA_FONT};
@@ -43,7 +46,11 @@ body.zns-page {
   box-sizing: border-box;
 }
 @media screen and (max-width: ${ZNS_NARROW_MAX_PX}px) {
-  body.zns-page { padding: 8px; }
+  body.zns-page {
+    padding: 8px;
+    --zns-dot-w: ${ZNS_CELL_W}px;
+    --zns-dot-h: ${ZNS_CELL_H}px;
+  }
   .zns-vga-root {
     --zns-fs: ${ZNS_FONT_SIZE}px;
     --zns-lh: ${ZNS_CELL_H}px;
