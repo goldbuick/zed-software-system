@@ -10,7 +10,7 @@ import {
   memoryreadcodepagename,
   memoryreadcodepagetypeasstring,
 } from 'zss/memory/codepageoperations'
-import { memoryreadcodepagebyid } from 'zss/memory/codepages'
+import { memoryreadcodepagebyaddress } from 'zss/memory/codepages'
 import { memoryeditorbookmarkscroll } from 'zss/memory/editorbookmarkscroll'
 import { NAME } from 'zss/words/types'
 
@@ -43,11 +43,11 @@ export function handleeditorbookmarkscrollpanel(
   switch (NAME(path)) {
     case 'snapshotcurrent':
       if (isarray(message.data)) {
-        const [maybeid, maybeelement] = message.data
+        const [maybeaddress, maybeelement] = message.data
         if (isstring(maybeelement)) {
           // TODO
-        } else if (isstring(maybeid)) {
-          const maybecodepage = memoryreadcodepagebyid(maybeid)
+        } else if (isstring(maybeaddress)) {
+          const maybecodepage = memoryreadcodepagebyaddress(maybeaddress)
           if (ispresent(maybecodepage)) {
             registerbookmarkcodepagesave(
               vm,

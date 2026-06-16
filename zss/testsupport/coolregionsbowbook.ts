@@ -1,15 +1,9 @@
 import { readFileSync } from 'node:fs'
-import path from 'node:path'
 
 import type { BOOK } from 'zss/memory/types'
+import { COOLREGIONSBOW_BOOK_JSON_PATH } from 'zss/testsupport/fixturepaths'
 
-const REPO_ROOT = process.cwd()
-
-/** Shipped coolregionsbow export used by sim e2e, CLI bootstrap, and jest. */
-export const COOLREGIONSBOW_BOOK_JSON_PATH = path.join(
-  REPO_ROOT,
-  'src/fixtures/example-coolregionsbow.book.json',
-)
+export { COOLREGIONSBOW_BOOK_JSON_PATH } from 'zss/testsupport/fixturepaths'
 
 export type COOLREGIONSBOW_BOOK_EXPORT = {
   exported?: string

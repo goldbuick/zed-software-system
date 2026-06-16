@@ -64,7 +64,7 @@ Metrics include RMS, peak, spectral centroid, and 3-band energy ratios (`paritym
 
 ## Architecture notes
 
-- WASM build pattern from [WasmPatcher](https://github.com/jaffco/WasmPatcher) (Emscripten + DaisySP submodule)
+- WASM build pattern from [WasmPatcher](https://github.com/jaffco/WasmPatcher) (Emscripten + DaisySP submodule at `submodules/DaisySP`)
 - Dedicated `daisy-processor.js` AudioWorklet
 - SAB channels synced into WASM control buffer each audio block
 - C++ graph reads `zss_osccfg`, `zss_algocfg`, `zss_vibrato`; Tone-faithful voices, FX, master; **DaisySP drum classes** for tick/tweet/snares/bass/tom (cowbell/clap/woodblocks remain custom)

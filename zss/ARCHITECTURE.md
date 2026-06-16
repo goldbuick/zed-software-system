@@ -2,11 +2,11 @@
 
 ## What it is
 
-From the [root README](../README.md): a **ZZT-inspired, web-based fantasy terminal**—a creative-coding / game environment where boards, elements, and scripts feel like a retro terminal world. The repo is a **TypeScript monolith**: UI in [`cafe/`](../cafe/), engine in [`zss/`](.), CLI in [`src/`](../src/).
+From the [root README](../README.md): a **ZZT-inspired, web-based fantasy terminal**—a creative-coding / game environment where boards, elements, and scripts feel like a retro terminal world. The repo is a **TypeScript monolith**: UI in [`cafe/`](../cafe/), engine in [`zss/`](.), headless CLI in [`headless/`](../headless/).
 
 **Shipped today:** per-script **lang WASM** (`ZSS_WASM_SCRIPT`, compile + run in browser/worker) and **Daisy synth WASM** in the AudioWorklet. See [`zss/feature/lang/`](feature/lang/) and [`zss/feature/synth/`](feature/synth/).
 
-**Planned (design only):** port the **full game sim** and firmware execution to **`zss_runtime.wasm`** (C++ bytecode VM). Lang WASM covers script compile/run; full sim WASM is a separate migration. See [docs/wasm-sim-port.md](../docs/wasm-sim-port.md) and [docs/multiplayer-wasm-architecture.md](../docs/multiplayer-wasm-architecture.md).
+**Planned (design only):** port the **full game sim** and firmware execution to **`zss_runtime.wasm`** (C++ bytecode VM). Lang WASM covers script compile/run; full sim WASM is a separate migration. See [docs/wasm-sim-port.md](../ops/docs/wasm-sim-port.md) and [docs/multiplayer-wasm-architecture.md](../ops/docs/multiplayer-wasm-architecture.md).
 
 ---
 
@@ -16,7 +16,7 @@ From the [root README](../README.md): a **ZZT-inspired, web-based fantasy termin
 |------|------|
 | [`cafe/`](../cafe/) | Vite root ([`vite.config.ts`](../vite.config.ts)); React + R3F Canvas; aliases `zss` and `cafe` |
 | `zss/` | Engine: devices, VM, memory, firmware, lang, gadget rendering, features |
-| [`src/commands/run.ts`](../src/commands/run.ts) + [`src/lib/app.tsx`](../src/lib/app.tsx) | oclif `zss` CLI: Playwright-hosted app + Ink terminal; static serve or Vite dev |
+| [`headless/src/commands/run.ts`](../headless/src/commands/run.ts) + [`headless/src/lib/app.tsx`](../headless/src/lib/app.tsx) | oclif `zss` CLI: Playwright-hosted app + Ink terminal; static serve or Vite dev |
 
 ---
 
@@ -105,7 +105,7 @@ flowchart LR
 
 CLI / headless mode ([`cafe/index.tsx`](../cafe/index.tsx) `bootheadless`) skips Canvas and calls `createplatform(..., true)` so Playwright drives the same stack without WebGL.
 
-**Planned worker layout:** one **wasm worker** (sim + synth coordinator + `zss_runtime`) and one **heavy** worker; retire sim, boardrunner, and stub workers. Multiplayer stays PeerJS on main; host MAIN book memory authoritative. Details: [docs/multiplayer-wasm-architecture.md](../docs/multiplayer-wasm-architecture.md).
+**Planned worker layout:** one **wasm worker** (sim + synth coordinator + `zss_runtime`) and one **heavy** worker; retire sim, boardrunner, and stub workers. Multiplayer stays PeerJS on main; host MAIN book memory authoritative. Details: [docs/multiplayer-wasm-architecture.md](../ops/docs/multiplayer-wasm-architecture.md).
 
 ---
 
@@ -198,11 +198,11 @@ Scattered under [`zss/feature/`](feature/): storage (idb), TTS/STT, URL/multipla
 
 ## CLI packaging
 
-[`package.json`](../package.json): `zss` binary via oclif; `cli:build` compiles `src/` and runs `oclif manifest`. The CLI serves `cafe/dist` or talks to the Vite dev server and injects Node hooks (`__nodeStorageReadPlayer`, `__onCliInput`) for headless operation ([`cafe/index.tsx`](../cafe/index.tsx)).
+[`package.json`](../package.json): `zss` binary via oclif; `cli:build` compiles `headless/` and runs `oclif manifest`. The CLI serves `cafe/dist` or talks to the Vite dev server and injects Node hooks (`__nodeStorageReadPlayer`, `__onCliInput`) for headless operation ([`cafe/index.tsx`](../cafe/index.tsx)).
 
-**Production Linux tarball:** `yarn cli:build:linux` runs a **production** Vite build (`NODE_ENV=production`), compiles the CLI, installs Playwright’s headless shell for the pack target, then `oclif pack tarballs` (which runs `npm pack` and bundles production `node_modules`).
+**Production Linux tarball:** `yarn task run cli:build:linux` runs a **production** Vite build (`NODE_ENV=production`), compiles the CLI, installs Playwright’s headless shell for the pack target, then `oclif pack tarballs` (which runs `npm pack` and bundles production `node_modules`).
 
-**Embedding static content in the shipped CLI:** oclif’s pack step uses **`npm pack`**, which only includes paths listed under [`package.json` `files`](../package.json) (plus a few npm defaults). The built cafe UI must be listed there as **`cafe/dist`** (output of `yarn app:build`). Add other paths the same way if the CLI must ship extra assets; keep large or secret paths out of `files` so they are not published in the tarball.
+**Embedding static content in the shipped CLI:** oclif’s pack step uses **`npm pack`**, which only includes paths listed under [`package.json` `files`](../package.json) (plus a few npm defaults). The built cafe UI must be listed there as **`cafe/dist`** (output of `yarn task run app:build`). Add other paths the same way if the CLI must ship extra assets; keep large or secret paths out of `files` so they are not published in the tarball.
 
 ---
 
@@ -210,4 +210,4 @@ Scattered under [`zss/feature/`](feature/): storage (idb), TTS/STT, URL/multipla
 
 **ZSS** keeps **game and engine state in memory**, runs **script as compiled code on chips** with **firmware** defining the command vocabulary, and uses a **session-scoped message hub** so the **VM (sim worker)**, the **boardrunner worker** (per-board chip ticks), the **heavy worker** (LLM / TTS), and the **React UI (main)** stay loosely coupled: UI sends `vm:*` messages, the VM mutates memory and elects a player on each active board to be its **boardrunner** (jsonpipe-synced board + boundary slices), each tick the VM also projects the per-player gadget state into **`gadgetclient:patch`** messages, and the **gadgetclient** store feeds the Three.js terminal aesthetic.
 
-**Planned:** same hub pattern, but sim ticks and firmware run inside **`zss_runtime.wasm`** in a single wasm worker; PeerJS carries **`vm:memorypatch`** (renamed from boardrunner patch targets) from host to joins. See [docs/wasm-sim-port.md](../docs/wasm-sim-port.md).
+**Planned:** same hub pattern, but sim ticks and firmware run inside **`zss_runtime.wasm`** in a single wasm worker; PeerJS carries **`vm:memorypatch`** (renamed from boardrunner patch targets) from host to joins. See [docs/wasm-sim-port.md](../ops/docs/wasm-sim-port.md).

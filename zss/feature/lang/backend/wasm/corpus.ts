@@ -1,22 +1,28 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
-export { COOLREGIONSBOW_BOOK_JSON_PATH } from 'zss/testsupport/coolregionsbowbook'
-
-const WASMDIR = __dirname
+export { COOLREGIONSBOW_BOOK_JSON_PATH } from 'zss/testsupport/fixturepaths'
+import {
+  LANG_COOLREGIONSBOW_DIR,
+  LANG_COOLREGIONSBOW_MANIFEST_PATH,
+  LANG_INTEGRATION_MANIFEST_PATH,
+  LANG_PARITY_DIR,
+  LANG_PARITY_MANIFEST_PATH,
+  LANG_SCRIPTS_DIR,
+} from 'zss/testsupport/fixturepaths'
 
 export type CorpusTier = 'parity' | 'integration' | 'book'
 
 const MANIFEST_PATHS: Record<CorpusTier, string> = {
-  parity: path.join(WASMDIR, '__fixtures__/parity/manifest.json'),
-  integration: path.join(WASMDIR, '__fixtures__/integration/manifest.json'),
-  book: path.join(WASMDIR, '__tests__/fixtures/coolregionsbow/manifest.json'),
+  parity: LANG_PARITY_MANIFEST_PATH,
+  integration: LANG_INTEGRATION_MANIFEST_PATH,
+  book: LANG_COOLREGIONSBOW_MANIFEST_PATH,
 }
 
 const SOURCE_DIRS: Record<CorpusTier, string> = {
-  parity: path.join(WASMDIR, '__fixtures__/parity'),
-  integration: path.join(WASMDIR, '__tests__/fixtures'),
-  book: path.join(WASMDIR, '__tests__/fixtures/coolregionsbow'),
+  parity: LANG_PARITY_DIR,
+  integration: LANG_SCRIPTS_DIR,
+  book: LANG_COOLREGIONSBOW_DIR,
 }
 
 /** Micro-fixtures with TS golden outputs — lexer/parser/codegen edge cases. */

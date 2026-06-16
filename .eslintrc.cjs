@@ -54,7 +54,7 @@ module.exports = {
       },
     },
   },
-  ignorePatterns: ['dist', '.eslintrc.cjs'],
+  ignorePatterns: ['dist', '.eslintrc.cjs', 'ops/tests/**'],
   parser: '@typescript-eslint/parser',
   plugins: ['react-refresh'],
   rules: {
@@ -186,20 +186,25 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['infra/**/*.js', 'infra/**/*.mjs'],
+      files: ['ops/infra/**/*.js', 'ops/infra/**/*.mjs'],
       env: {
         browser: false,
         node: true,
+      },
+      globals: {
+        WebSocketPair: 'readonly',
+        WebSocketRequestResponsePair: 'readonly',
       },
       rules: {
         '@typescript-eslint/require-await': 'off',
         '@typescript-eslint/no-unused-vars': 'off',
         '@typescript-eslint/prefer-optional-chain': 'off',
         '@typescript-eslint/prefer-nullish-coalescing': 'off',
+        '@typescript-eslint/prefer-regexp-exec': 'off',
       },
     },
     {
-      files: ['scripts/**/*.ts'],
+      files: ['tasks/**/*.{ts,tsx}'],
       env: {
         browser: false,
         node: true,

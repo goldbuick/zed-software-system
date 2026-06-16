@@ -8,6 +8,9 @@ export type AGENTS_ROSTER = {
 
 export const AGENTS_ROSTER_STORAGE_KEY = 'agents_roster'
 
+/** Max running on-demand agents per browser tab; open another tab for more. */
+export const MAX_ON_DEMAND_AGENTS = 1
+
 export function isvalidagentsroster(value: unknown): value is AGENTS_ROSTER {
   if (!value || typeof value !== 'object') {
     return false

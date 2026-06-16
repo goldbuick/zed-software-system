@@ -38,7 +38,7 @@ import {
   storagewritevar,
 } from 'zss/feature/storage'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
-import { isjoin, shorturl, znsset } from 'zss/feature/url'
+import { isjoin, znsset } from 'zss/feature/url'
 import { write } from 'zss/feature/writeui'
 import {
   zssheaderlines,
@@ -71,6 +71,7 @@ import {
 import { BOOK } from 'zss/memory/types'
 import { memorywriteconfig } from 'zss/memory/utilities'
 import { tokenizeandstriptextformat } from 'zss/words/textformat'
+import { NAME } from 'zss/words/types'
 
 import {
   MESSAGE,
@@ -799,94 +800,41 @@ export const register = createdevice(
       case 'publishmem':
         doasync(register, message.player, async () => {
           if (isarray(message.data)) {
-            const [content, method] = message.data
-            switch (method) {
+            const [method] = message.data
+            switch (NAME(method)) {
               case 'itchio': {
                 // publish info
-                const [, , name] = message.data
-                if (isstring(content) && isstring(name)) {
-                  write(
-                    register,
-                    message.player,
-                    zsstextline(`publishing ${name}`),
-                  )
-                  workstatus(register, message.player, 'itchiopublish zip')
+                const [, key, content] = message.data
+                if (isstring(key) && isstring(content)) {
+                  workstatus(register, message.player, `publishing ${key}`)
                   // save zipfile
-                  await itchiopublish(name, content)
+                  await itchiopublish(key, content)
                   write(
                     register,
                     message.player,
                     zsstextline(
-                      `$green${name} has been exported for upload to itch.io`,
+                      `$green${key} has been exported for upload to itch.io`,
                     ),
                   )
                 }
                 break
               }
-              case 'zns-text': {
-                const [, , znsemail, znstoken, filename] = message.data
-                if (
-                  isstring(content) &&
-                  isstring(znsemail) &&
-                  isstring(znstoken) &&
-                  isstring(filename)
-                ) {
-                  write(
-                    register,
-                    message.player,
-                    zsstextline(`publishing code to ${filename}`),
-                  )
-                  const result = await znsset(
-                    znsemail,
-                    znstoken,
-                    filename,
-                    content,
-                  )
-                  if (result.success) {
-                    write(
-                      register,
-                      message.player,
-                      zsstextline(`$green${filename} code published to zns`),
-                    )
-                  }
-                }
-                break
-              }
               case 'zns': {
-                const [, , znsemail, znstoken, filename] = message.data
+                const [, znsemail, znstoken, key, content] = message.data
                 if (
-                  isstring(content) &&
                   isstring(znsemail) &&
                   isstring(znstoken) &&
-                  isstring(filename)
+                  isstring(key) &&
+                  isstring(content)
                 ) {
-                  write(
-                    register,
-                    message.player,
-                    zsstextline(`publishing ${filename}`),
-                  )
-                  const url = await shorturl(`${location.origin}/#${content}`)
-                  let hash = url
-                  try {
-                    hash = new URL(url).pathname
-                      .replace(/^\//, '')
-                      .split('/')[0]
-                  } catch {
-                    // keep full string; worker may still normalize
-                  }
-                  const result = await znsset(
-                    znsemail,
-                    znstoken,
-                    filename,
-                    hash,
-                  )
+                  workstatus(register, message.player, `publishing ${key}`)
+                  // save content to zns
+                  const result = await znsset(znsemail, znstoken, key, content)
                   if (result.success) {
                     write(
                       register,
                       message.player,
-                      zsstextline(
-                        `$green${filename} has been published to zns`,
-                      ),
+                      zsstextline(`$green${key} has been published to zns`),
                     )
                   }
                 }

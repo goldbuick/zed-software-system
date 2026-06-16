@@ -67,6 +67,7 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
       'zns',
       [ARG_TYPE.ANY, 'zns menu — login, publish bytes/code, import code'],
       (_, words) => {
+        // zero args case
         if (words.length === 0) {
           doasync(SOFTWARE, READ_CONTEXT.elementfocus, async () => {
             if (
@@ -80,6 +81,7 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
           })
           return 0
         }
+        // ops
         const [action, ii] = readargs(words, 0, [ARG_TYPE.ANY])
         switch (NAME(action)) {
           default: {
@@ -169,14 +171,15 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
               )
             })
             break
-          case 'pub':
-          case 'publish':
+          case 'book':
+          case 'code':
+          case 'bytes':
             doasync(SOFTWARE, READ_CONTEXT.elementfocus, async () => {
               const session = await znsrequiresession(READ_CONTEXT.elementfocus)
               if (!session) {
                 return
               }
-              znsrunpublish(words, ii, session)
+              znsrunpublish(words, 0, session)
             })
             break
           case 'import':
@@ -223,8 +226,6 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
           [
             'login',
             'restart',
-            'pub',
-            'publish',
             'book',
             'bytes',
             'code',

@@ -9,7 +9,9 @@ lerna-debug.log*
 
 node_modules
 tmp
+.tmp
 dist
+headless/dist
 dist-bin
 dist-server
 oclif.manifest.json
@@ -27,13 +29,16 @@ oclif.manifest.json
 *.sw?
 
 # content build output
-content/dist
+ops/fixtures/content/dist
 
 # runtime data
 .zss-data
 
 # vosk speech recognition models (large binaries)
 cafe/public/models/
+
+# wanix smoke wasm scratch (regenerate with yarn task run wanix:wasm:build)
+ops/fixtures/wanix/*.wasm
 
 # offline song renders (regenerate with yarn level-issue-song:render)
 cafe/public/renders/*.wav
@@ -45,8 +50,14 @@ cafe/public/renders/synth-env-parity/
 # local Emscripten SDK (yarn daisy:build)
 .emsdk/
 
+# Jest coverage (yarn task run app:test:coverage)
+ops/coverage/
+
 # Playwright
 test-results/
 playwright-report/
+
+# stray wrangler cache (deploy configs live in ops/infra/)
+infra/
 
 

@@ -58,7 +58,7 @@ export function memorylistallcodepagewithtype<T extends CODE_PAGE_TYPE>(
   return Object.values(matchedpages)
 }
 
-export function memoryreadcodepagebyid(address: string): MAYBE<CODE_PAGE> {
+export function memoryreadcodepagebyaddress(address: string): MAYBE<CODE_PAGE> {
   const books = memoryreadbooklist()
   for (let i = 0; i < books.length; ++i) {
     const maybecodedpage = memoryreadcodepage(books[i], address)

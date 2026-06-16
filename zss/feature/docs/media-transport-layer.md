@@ -8,7 +8,7 @@
 |-------|----------|
 | PeerJS terminal (hub-and-spoke, `createforward`) | [netterminal.md](netterminal.md), [`zss/feature/netterminal.ts`](../netterminal.ts) |
 | Which messages cross PeerJS vs worker bridge | [`zss/device/docs/devices-and-messaging.md`](../../device/docs/devices-and-messaging.md) |
-| Web broadcast capture sources (canvas + synth) and IVS ingest | [web-broadcast-livekit.md](../../../docs/web-broadcast-livekit.md), [`zss/device/bridge.ts`](../../device/bridge.ts) (`bridge:streamstart` / `bridge:streamstop`) |
+| Web broadcast capture sources (canvas + synth) and IVS ingest | [web-broadcast-livekit.md](../../../ops/docs/web-broadcast-livekit.md), [`zss/device/bridge.ts`](../../device/bridge.ts) (`bridge:streamstart` / `bridge:streamstop`) |
 | Broadcast audio tap | [`synthbroadcastdestination()`](../../device/synth.ts) in [`zss/device/synth.ts`](../../device/synth.ts); WASM main bus in [`zss/feature/synth/backend/wasm/wasmmainchain.ts`](../synth/backend/wasm/wasmmainchain.ts) |
 | Feature exports index | [`zss/feature/EXPORTED_FUNCTIONS.md`](../EXPORTED_FUNCTIONS.md) |
 
@@ -37,7 +37,7 @@
 
 ### Capture intent (align with web broadcast)
 
-ZSS intends to use the **same conceptual capture sources** as today’s in-app **`#broadcast`** path (see [web-broadcast-livekit.md](../../../docs/web-broadcast-livekit.md)):
+ZSS intends to use the **same conceptual capture sources** as today’s in-app **`#broadcast`** path (see [web-broadcast-livekit.md](../../../ops/docs/web-broadcast-livekit.md)):
 
 1. **Video:** the page’s main **`canvas`** element — today attached in [`zss/device/bridge.ts`](../../device/bridge.ts) via `document.querySelector('canvas')` and `addImageSource` on the IVS broadcast client.
 2. **Audio:** the **Web Audio** path exposed as [`synthbroadcastdestination()`](../../device/synth.ts) (`MediaStreamAudioDestinationNode` / `MediaStream`), today passed to `addAudioInputDevice` on the same client.
@@ -58,7 +58,7 @@ Web broadcast currently sends that capture to **Amazon IVS** ingest via `amazon-
 
 - Watch-party UI layout and branding.
 - Changing `#broadcast` CLI or operator flows unless a future ADR ties them together.
-- Deep LiveKit / IVS migration content (link [web-broadcast-livekit.md](../../../docs/web-broadcast-livekit.md) only for “how capture works today”).
+- Deep LiveKit / IVS migration content (link [web-broadcast-livekit.md](../../../ops/docs/web-broadcast-livekit.md) only for “how capture works today”).
 
 ---
 

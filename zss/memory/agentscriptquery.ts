@@ -7,7 +7,7 @@ import {
   memoryreadcodepagename,
   memoryresetcodepagestats,
 } from 'zss/memory/codepageoperations'
-import { memoryreadcodepagebyid } from 'zss/memory/codepages'
+import { memoryreadcodepagebyaddress } from 'zss/memory/codepages'
 import {
   memorycanruncommand,
   memorymapcommandtofamily,
@@ -44,9 +44,9 @@ export function memoryquerycompilescript(
 }
 
 export function memoryquerycodepage(
-  pageid: string,
+  address: string,
 ): CodepageQueryResult | { error: string } {
-  const page = memoryreadcodepagebyid(pageid)
+  const page = memoryreadcodepagebyaddress(address)
   if (!ispresent(page)) {
     return { error: 'codepage_not_found' }
   }
@@ -59,7 +59,7 @@ export function memoryquerycodepage(
 
 export function memoryquerywritescript(
   player: string,
-  pageid: string,
+  address: string,
   snippet: string,
   mode: SCRIPT_PATCH_MODE,
 ): WritescriptQueryResult {
@@ -67,11 +67,11 @@ export function memoryquerywritescript(
     const family = memorymapcommandtofamily('pageopen')
     return { ok: false, error: `permission_denied:${family}` }
   }
-  const page = memoryreadcodepagebyid(pageid)
+  const page = memoryreadcodepagebyaddress(address)
   if (!ispresent(page)) {
     return { ok: false, error: 'codepage_not_found' }
   }
-  const compiled = memoryquerycompilescript(pageid, snippet)
+  const compiled = memoryquerycompilescript(address, snippet)
   if (!compiled.ok) {
     return { ok: false, error: 'compile_failed' }
   }

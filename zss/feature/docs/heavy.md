@@ -1,6 +1,6 @@
 # heavy/
 
-**Purpose**: Heavy processing workloads — Gemma 4 E2B agent LLM via Transformers.js (WebGPU) and board agents. Runs in **heavyspace**; models load on demand. Piper/Supertonic TTS inference moved to on-demand **ttsspace** ([`ttsworker.ts`](../../device/ttsworker.ts)); [`heavy/tts.ts`](tts.ts) remains the shared inference library.
+**Purpose**: Heavy processing workloads — Gemma 4 E2B agent LLM via Transformers.js (WebGPU) and board agents. Runs in **heavyspace**; models load on demand. Piper/Supertonic TTS inference moved to on-demand **ttsspace** ([`ttsworker.ts`](../../device/ttsworker.ts)); [`heavy/tts.ts`](../heavy/tts.ts) remains the shared inference library.
 
 ## Agent LLM
 
@@ -11,7 +11,7 @@ In-browser agents use **Gemma 4 E2B instruct ONNX** only:
 - Context: 131k tokens
 - Intent gate: SmolLM2-135M classifier before full agent generation
 
-**CLI**: `#agent model` shows model info; `#agent start` / `#agent stop` manage agents.
+**CLI**: `#agent model` shows model info; `#agent start` / `#agent stop` manage agents. **One agent per browser tab** — open another tab for additional agents.
 
 Function-calling reference: [Google Gemma 4 function calling](https://ai.google.dev/gemma/docs/capabilities/text/function-calling-gemma4).
 

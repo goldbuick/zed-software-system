@@ -2,7 +2,7 @@
 
 **Purpose**: URL shortening, join-mode detection, Museum of ZZT integration, ZNS login/publish.
 
-Worker HTTP APIs: [`infra/README.md`](../../../infra/README.md).
+Worker HTTP APIs: [`ops/infra/README.md`](../../../ops/infra/README.md).
 
 ## Exports
 
@@ -18,7 +18,7 @@ Worker HTTP APIs: [`infra/README.md`](../../../infra/README.md).
 | `znslogincode` | `email`, `code` | Confirm OTP (returns `token`) |
 | `znslist` | `email`, `token` | List keys/values |
 | `znsset` | `email`, `token`, `key`, `value` | Set pair: `peer` key, bytes hash, or text (auto-detect) |
-| `fetchznstext` | `namespace`, `key` | GET `https://{namespace}.at.zed.cafe/{key}` markdown body |
+| `znsread` | `namespace`, `key` | POST `/api/read` — public JSON `{ key, value, metadata }` |
 | `znstenanturl` | `namespace`, `key` | Build canonical tenant URL (lowercase host) |
 | `znsnormalizenamespace` | `namespace` | Trim + lowercase namespace label |
 | `znsnormalizepathkey` | `name` | Slug for ZNS path keys |
@@ -34,7 +34,7 @@ Worker HTTP APIs: [`infra/README.md`](../../../infra/README.md).
 | `readznslogincodefromurl` | — | Code only (legacy deep links) |
 | `clearznsloginparamsfromurl` | — | Strip all zns login query params after deep link |
 
-Apex API: `https://zns.zed.cafe` (`ZNS_APEX`). Tenant reads: `https://{namespace}.at.zed.cafe/{key}` (`ZNS_TENANT_SUFFIX`). Constants: `ZNS_DOCS_NAMESPACE`, `ZNS_PEER_KEY`, `ZNS_BYTES_KEY_TARGET`, `ZNS_LOGIN_CODE_PARAM`.
+Apex API: `https://at.zed.cafe` (`ZNS_APEX`). Tenant reads: `https://{namespace}.at.zed.cafe/{key}` (`ZNS_TENANT_SUFFIX`). Constants: `ZNS_DOCS_NAMESPACE`, `ZNS_PEER_KEY`, `ZNS_BYTES_KEY_TARGET`, `ZNS_LOGIN_CODE_PARAM`.
 
 ## Consumed By
 

@@ -33,7 +33,7 @@ Parity harness (no Emscripten):
 ```bash
 cd zss/feature/lang/backend/wasm
 g++ -std=c++14 -O2 -I. -DZSS_LANG_PARITY_MAIN -o zss_lang_parity zss_lang_compile.cpp
-./zss_lang_parity __fixtures__/parity
+./zss_lang_parity ops/fixtures/lang/parity
 ```
 
 ## API

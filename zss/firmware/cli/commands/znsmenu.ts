@@ -1,6 +1,4 @@
-import { parsetarget } from 'zss/device'
 import { apitoast, vmpublish } from 'zss/device/api'
-import { modemreadtextsync } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
 import { rundeeplinks } from 'zss/feature/deeplink'
 import {
@@ -11,18 +9,15 @@ import {
 } from 'zss/feature/storage'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import {
-  ZNS_BYTES_KEY_TARGET,
-  fetchznstext,
-  znskeyispeer,
-  znskeylinkcommand,
-  znskeyopenlabel,
   znslist,
   znslogincode,
   znsnormalizepathkey,
   znspersistlogin,
+  znsread,
 } from 'zss/feature/url'
 import { write } from 'zss/feature/writeui'
 import {
+  zssheaderlines,
   zsssectionlines,
   zsstextline,
   zsstexttape,
@@ -31,7 +26,6 @@ import {
 import { isarray, ispresent } from 'zss/mapping/types'
 import {
   memorylistcodepagessorted,
-  memoryreadcodepage,
   memorywritecodepage,
 } from 'zss/memory/bookoperations'
 import {
@@ -39,14 +33,16 @@ import {
   memoryreadcodepagename,
   memoryreadcodepagetypeasstring,
 } from 'zss/memory/codepageoperations'
+import { memoryreadcodepagebyaddress } from 'zss/memory/codepages'
 import { memorycodepagetoprefix } from 'zss/memory/rendering'
 import {
   memoryreadbookbyaddress,
+  memoryreadbookbysoftware,
   memoryreadbooklist,
-  memoryreadfirstbook,
   memoryreadfirstcontentbook,
 } from 'zss/memory/session'
-import { READ_CONTEXT, readargs, readargsuntilend } from 'zss/words/reader'
+import { MEMORY_LABEL } from 'zss/memory/types'
+import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE, NAME, WORD } from 'zss/words/types'
 
 type ZNS_SESSION = { email: string; token: string; namespace: string }
@@ -70,37 +66,8 @@ export function showznsloginguide(player: string) {
     SOFTWARE,
     player,
     zsstexttape(
-      ...zsssectionlines('login'),
+      zsssectionlines('login'),
       zsstextline('type $green#zns <email> <namespace>'),
-    ),
-  )
-}
-
-function showznsbytespublishform(player: string) {
-  terminalwritelines(
-    SOFTWARE,
-    player,
-    zsstexttape(
-      zsstextline('$WHITEzns publish bytes'),
-      ...zsssectionlines('key'),
-      zsszedlinkline(`${ZNS_BYTES_KEY_TARGET} text`, 'key'),
-      zsszedlinkline('zns publish bytes submit', 'publish bytes'),
-    ),
-  )
-}
-
-function showznspublishmenu(player: string) {
-  const list = memoryreadbooklist()
-  const booklinks = list.map((book) =>
-    zsszedlinkline(`zns publish book ${book.id}`, book.name),
-  )
-  terminalwritelines(
-    SOFTWARE,
-    player,
-    zsstexttape(
-      zsstextline('$WHITEzns publish'),
-      ...zsssectionlines('books'),
-      ...(booklinks.length > 0 ? booklinks : []),
     ),
   )
 }
@@ -114,51 +81,28 @@ function showznspublishbookmenu(player: string, address: string) {
   terminalwritelines(
     SOFTWARE,
     player,
-    zsstexttape(
-      zsstextline(`$WHITEzns publish book ${address}`),
-      ...zsssectionlines('pages'),
-    ),
+    zsstexttape(zssheaderlines(book.name), zsssectionlines('Pages')),
   )
-  setTimeout(() => {
-    if (!book.pages.length) {
-      return
-    }
-    const sorted = memorylistcodepagessorted(book)
-    const pagelines = sorted.map((page) => {
-      const name = memoryreadcodepagename(page)
-      const type = memoryreadcodepagetypeasstring(page)
-      const prefix = memorycodepagetoprefix(page)
-      return zsszedlinkline(
-        `zns publish code ${address}:${page.id}`,
-        `$blue[${type}] ${prefix}$white${name}`,
-      )
-    })
-    terminalwritelines(SOFTWARE, player, zsstexttape(...pagelines))
-  }, 1000)
+  //
+  const sorted = memorylistcodepagessorted(book)
+  const pagelines = sorted.map((page) => {
+    const name = memoryreadcodepagename(page)
+    const type = memoryreadcodepagetypeasstring(page)
+    const prefix = memorycodepagetoprefix(page)
+    return zsszedlinkline(
+      `zns code ${page.id}`,
+      `$greenPublish $blue[${type}] ${prefix}$white${name}`,
+    )
+  })
+  terminalwritelines(SOFTWARE, player, zsstexttape(...pagelines))
 }
 
-async function znsmenukeyrows(session: ZNS_SESSION): Promise<string[]> {
-  const result = await znslist(session.email, session.token)
+async function znslistall(email: string, token: string) {
+  const result = await znslist(email, token)
   if (!result.success || !isarray(result.list)) {
     return []
   }
-  const rows: string[] = []
-  for (let i = 0; i < result.list.length; ++i) {
-    const row = result.list[i]
-    const kind = row.metadata?.kind as string | undefined
-    if (znskeyispeer(row.key, kind)) {
-      continue
-    }
-    const label = znskeyopenlabel(row.key, row.value, kind)
-    const command = znskeylinkcommand(
-      session.namespace,
-      row.key,
-      row.value,
-      kind,
-    )
-    rows.push(zsszedlinkline(command, label))
-  }
-  return rows
+  return result.list
 }
 
 export async function showznsmenu(player: string) {
@@ -173,12 +117,12 @@ export async function showznsmenu(player: string) {
         SOFTWARE,
         player,
         zsstexttape(
-          zsstextline('$WHITEzns (menu)'),
+          zssheaderlines('ZNS'),
           zsstextline(
             `session: $yellowpending login for $green${pendingemail}`,
           ),
-          ...zsssectionlines('actions'),
-          zsszedlinkline('zns restart', 'restart / cancel'),
+          zsssectionlines('Actions'),
+          zsszedlinkline('zns restart', 'Restart / Cancel'),
           zsstextline('$GRAYtype $green#zns <code>$GRAY in cli'),
         ),
       )
@@ -187,19 +131,67 @@ export async function showznsmenu(player: string) {
     showznsloginguide(player)
     return
   }
-  const keyrows = await znsmenukeyrows(session)
+
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const list = memoryreadbooklist()
+  const booklinks = list.map((book) =>
+    zsszedlinkline(`zns book ${book.id}`, book.name),
+  )
+
+  const all = await znslistall(session.email, session.token)
+  console.info(all)
+
+  const publishedrows = all
+    .sort((a: any, b: any) => {
+      const { kind: kinda = '' } = a.metadata ?? {}
+      const { kind: kindb = '' } = b.metadata ?? {}
+      if (kinda === kindb) {
+        return a.key.localeCompare(b.key)
+      }
+      return kinda.localeCompare(kindb)
+    })
+    .map((row: any) => {
+      const { kind = '' } = row.metadata ?? {}
+      switch (kind) {
+        case 'text': {
+          return zsszedlinkline(
+            `zns import ${row.key}`,
+            `$greenImport ${row.key}`,
+          )
+        }
+        case 'bytes': {
+          return zsszedlinkline(
+            `openit https://bytes.zed.cafe/${row.value}`,
+            `${row.key}`,
+          )
+        }
+        default: {
+          return []
+        }
+      }
+    })
+
   terminalwritelines(
     SOFTWARE,
     player,
     zsstexttape(
-      zsstextline('$WHITEzns (menu)'),
+      zssheaderlines('ZNS'),
       zsstextline(`session: $green${session.email} @ ${session.namespace}`),
-      ...zsssectionlines('actions'),
-      zsszedlinkline('zns restart', 'logout'),
-      zsszedlinkline('zns publish bytes', 'publish bytes'),
-      zsszedlinkline('zns publish', 'publish_code'),
-      ...zsssectionlines('keys'),
-      ...(keyrows.length > 0 ? keyrows : [zsstextline('$GRAY(none)')]),
+      '$32',
+      zsssectionlines('Actions'),
+      zsszedlinkline('zns restart', 'Logout'),
+      ispresent(mainbook)
+        ? zsszedlinkline(
+            'zns bytes',
+            `$greenPublish $white${mainbook.name} bytes`,
+          )
+        : [],
+      '$32',
+      zsssectionlines('List codepages to publish'),
+      booklinks.length > 0 ? booklinks : [zsstextline('$GRAY(none)')],
+      '$32',
+      zsssectionlines(`Published content`),
+      publishedrows.length > 0 ? publishedrows : [zsstextline('$GRAY(none)')],
     ),
   )
 }
@@ -209,87 +201,78 @@ export function znsrunpublish(
   start: number,
   session: ZNS_SESSION,
 ) {
-  const [mode, iii] = readargs(words, start, [ARG_TYPE.NAME])
-  const modename = NAME(mode)
   const player = READ_CONTEXT.elementfocus
-  if (!modename) {
-    showznspublishmenu(player)
-    return
-  }
-  if (modename === 'book') {
-    const [address] = readargs(words, iii, [ARG_TYPE.NAME])
-    const bookid = NAME(address)
-    if (!bookid) {
-      showznspublishmenu(player)
-      return
+  const [mode, iii] = readargs(words, start, [ARG_TYPE.MAYBE_NAME])
+  const modename = NAME(mode)
+  switch (modename) {
+    case 'book': {
+      const [address] = readargs(words, iii, [ARG_TYPE.MAYBE_NAME])
+      if (!address) {
+        write(SOFTWARE, player, zsstextline(`$red missing book address`))
+        return
+      }
+      showznspublishbookmenu(player, address)
+      break
     }
-    showznspublishbookmenu(player, bookid)
-    return
-  }
-  if (modename === 'bytes') {
-    const [filename, iiii] = readargs(words, iii, [ARG_TYPE.NAME])
-    let keyname = NAME(filename)
-    if (!keyname) {
-      showznsbytespublishform(player)
-      return
-    }
-    if (keyname === 'submit') {
-      keyname = modemreadtextsync(ZNS_BYTES_KEY_TARGET).trim()
-    }
-    const slug = znsnormalizepathkey(keyname)
-    if (!slug) {
-      write(
+    case 'code': {
+      const [address] = readargs(words, iii, [ARG_TYPE.MAYBE_NAME])
+      if (!address) {
+        write(SOFTWARE, player, zsstextline(`$red missing codepage address`))
+        return
+      }
+      const maybecodepage = memoryreadcodepagebyaddress(address)
+      if (!ispresent(maybecodepage)) {
+        write(
+          SOFTWARE,
+          player,
+          zsstextline(`$red codepage not found: ${address}`),
+        )
+        return
+      }
+      const znskey = znsnormalizepathkey(memoryreadcodepagename(maybecodepage))
+      if (!znskey) {
+        write(
+          SOFTWARE,
+          player,
+          zsstextline(`$red invalid zns key for codepage`),
+        )
+        return
+      }
+      vmpublish(
         SOFTWARE,
         player,
-        zsstextline(
-          `$red invalid zns key — use lowercase letters, numbers, hyphens`,
-        ),
+        'zns-code',
+        session.email,
+        session.token,
+        znskey,
+        maybecodepage.code,
       )
-      return
+      break
     }
-    const [tags] = readargsuntilend(words, iiii, ARG_TYPE.NAME)
-    vmpublish(
-      SOFTWARE,
-      player,
-      'zns',
-      session.email,
-      session.token,
-      slug,
-      ...tags,
-    )
-    return
-  }
-  if (modename === 'code') {
-    const [address] = readargs(words, iii, [ARG_TYPE.NAME])
-    const { target, path } = parsetarget(address)
-    let book = memoryreadbookbyaddress(target)
-    if (!ispresent(book)) {
-      book = memoryreadfirstbook()
-    }
-    const codepage = memoryreadcodepage(book, path || address)
-    if (!ispresent(codepage)) {
-      write(
+    case 'bytes': {
+      const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+      if (!ispresent(mainbook)) {
+        write(SOFTWARE, player, zsstextline(`$red main book not found`))
+        return
+      }
+      const znskey = znsnormalizepathkey(mainbook.name)
+      if (!znskey) {
+        write(SOFTWARE, player, zsstextline(`$red invalid zns key for bytes`))
+        return
+      }
+      vmpublish(
         SOFTWARE,
         player,
-        zsstextline(`$red codepage not found: ${address}`),
+        'zns-bytes',
+        session.email,
+        session.token,
+        znskey,
       )
-      return
+      break
     }
-    const znskey = znsnormalizepathkey(memoryreadcodepagename(codepage))
-    if (!znskey) {
-      write(SOFTWARE, player, zsstextline(`$red invalid zns key for codepage`))
+    default:
+      write(SOFTWARE, player, zsstextline(`$red invalid mode: ${modename}`))
       return
-    }
-    vmpublish(
-      SOFTWARE,
-      player,
-      'zns-text',
-      session.email,
-      session.token,
-      znskey,
-      target,
-      path,
-    )
   }
 }
 
@@ -309,7 +292,8 @@ export async function znsrunimportcode(
     write(SOFTWARE, player, zsstextline(`$red missing zns key`))
     return
   }
-  const text = await fetchznstext(session.namespace, key)
+  const row = await znsread(session.namespace, key)
+  const text = row.value ?? ''
   if (!text.trim()) {
     write(SOFTWARE, player, zsstextline(`$red zns code not found: ${key}`))
     return

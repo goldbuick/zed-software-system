@@ -9,6 +9,12 @@
       "cafe/*": [
         "./cafe/*"
       ],
+      "ops/fixtures/*": [
+        "./ops/fixtures/*"
+      ],
+      "tasks/*": [
+        "./tasks/*"
+      ]
     },
     "lib": [
       "ES2021",
@@ -36,7 +42,8 @@
   "include": [
     "zss",
     "cafe",
-    "src"
+    "headless",
+    "ops/fixtures"
   ],
   "exclude": [
     "zss/feature/synth/archive"

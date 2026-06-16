@@ -215,7 +215,7 @@ Functions for interacting with external services (Bytes, Bridge, ZNS).
 - `znslist(email, token)` - List namespace key/value pairs
 - `znsset(email, token, key, value)` - Set pair (peer id at key `peer`, bytes hash, or text)
 - `znsdelete(email, token, key)` - Delete a pair key
-- `fetchznstext(namespace, key)` - GET `https://{namespace}.at.zed.cafe/{key}` markdown
+- `znsread(namespace, key)` - POST `/api/read` public single-key JSON read
 - `znstenanturl(namespace, key)` - Canonical tenant URL (lowercase host)
 - `znsnormalizenamespace(namespace)` - Trim + lowercase namespace label
 - `znsnormalizepathkey(name)` - Slug for ZNS path keys
@@ -291,8 +291,8 @@ Various utility functions for browser APIs and external services.
   - `stopListening()` - Stop speech recognition
 
 ### Refscroll / ZNS docs
-- `fetchrefscrolltext(pagepath)` - ROM `refscroll:*` then `docs.at.zed.cafe` text
-- `fetchznstext(namespace, key)` - Public ZNS markdown GET (`{namespace}.at.zed.cafe`)
+- `fetchrefscrolltext(pagepath)` - ZNS `/api/read` then ROM `refscroll:*` fallback
+- `znsread(namespace, key)` - Public ZNS JSON read via `POST /api/read`
 
 ### Storage
 - `storagereadconfigdefault(name)` - Read default configuration value for a setting

@@ -33,4 +33,4 @@ Do not import from active code. This tree is kept for reference during the Maxim
 
 ## Parity fixtures
 
-Historical Maxi self-check fixtures live in `__fixtures__/parity-metrics.json`. Active parity gates use Tone reference (`parity-metrics-tone.json`) and Daisy drum fixtures (`parity-metrics-daisy.json`) under `backend/wasm/__fixtures__/`.
+Historical Maxi self-check fixtures live in `ops/fixtures/synth/archive/maxi/parity-metrics.json`. Active parity gates use Tone reference (`ops/fixtures/synth/wasm/parity-metrics-tone.json`) and Daisy drum fixtures (`ops/fixtures/synth/wasm/parity-metrics-daisy.json`).

@@ -5,8 +5,8 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../../../../.." && pwd)"
-DAISY_SRC="$SCRIPT_DIR/DaisySP/Source"
-DAISY_LGPL_SRC="$SCRIPT_DIR/DaisySP-LGPL/Source"
+DAISY_SRC="$REPO_ROOT/submodules/DaisySP/Source"
+DAISY_LGPL_SRC="$REPO_ROOT/submodules/DaisySP-LGPL/Source"
 ZSS_DIR="$SCRIPT_DIR/zss"
 WRAPPER_SRC="$SCRIPT_DIR/zss_daisy_synth.cpp"
 ZSS_CPPS=(
@@ -51,7 +51,7 @@ ensureemscripten() {
   echo "error: emcc not found — install Emscripten and retry:" >&2
   echo "  git clone https://github.com/emscripten-core/emsdk.git .emsdk" >&2
   echo "  cd .emsdk && ./emsdk install latest && ./emsdk activate latest" >&2
-  echo "  source .emsdk/emsdk_env.sh && yarn daisy:build" >&2
+  echo "  source .emsdk/emsdk_env.sh && yarn task run daisy:build" >&2
   return 1
 }
 
@@ -138,7 +138,7 @@ emcc \
 sed -i.bak 's/var wasmExports=createWasm()/var wasmExports;createWasm()/g' "$OUT_DIR/zss_daisy.js"
 rm -f "$OUT_DIR/zss_daisy.js.bak"
 
-(cd "$REPO_ROOT" && yarn daisy:bundle:processor)
+(cd "$REPO_ROOT" && yarn task run daisy:bundle:processor)
 
 echo "✓ Build successful"
 echo "  $OUT_DIR/zss_daisy.js"

@@ -409,6 +409,44 @@ export function heavyagentlist(device: DEVICELIKE, player: string) {
   device.emit(player, 'heavy:agentlist')
 }
 
+export function wanixshow(device: DEVICELIKE, player: string) {
+  device.emit(player, 'wanix:show')
+}
+
+export function wanixstop(device: DEVICELIKE, player: string) {
+  device.emit(player, 'wanix:stop')
+}
+
+export function wanixreplace(device: DEVICELIKE, player: string) {
+  device.emit(player, 'wanix:replace')
+}
+
+export function wanixkeep(device: DEVICELIKE, player: string) {
+  device.emit(player, 'wanix:keep')
+}
+
+export function wanixstdin(device: DEVICELIKE, player: string, line: string) {
+  device.emit(player, 'wanix:stdin', line)
+}
+
+export function wanixdetach(device: DEVICELIKE, player: string) {
+  device.emit(player, 'wanix:detach')
+}
+
+export function wanixattach(device: DEVICELIKE, player: string) {
+  device.emit(player, 'wanix:attach')
+}
+
+export function wanixdrop(
+  device: DEVICELIKE,
+  player: string,
+  label: string,
+  kind: 'wasm' | 'bundle',
+  bytes: Uint8Array,
+) {
+  device.emit(player, 'wanix:drop', { label, kind, bytes })
+}
+
 export function heavyrestoreagents(
   device: DEVICELIKE,
   player: string,
@@ -486,10 +524,9 @@ export function registerforkmem(
 export function registerpublishmem(
   device: DEVICELIKE,
   player: string,
-  books: string,
   ...args: string[]
 ) {
-  device.emit(player, 'register:publishmem', [books, ...args])
+  device.emit(player, 'register:publishmem', args)
 }
 
 export function registercopy(

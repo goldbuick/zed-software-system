@@ -74,9 +74,9 @@ The bottom **tape** parses lines as `!{prefix}!{command…;$label}` (see [`Termi
 
 Full wiring diagram and Q&A: [scroll-vs-terminal-hyperlinks.md](./scroll-vs-terminal-hyperlinks.md).
 
-### ZNS fallback for `refscroll:<path>`
+### ZNS docs for `refscroll:<path>`
 
-If `romread('refscroll:' + path)` is missing, the UI briefly shows title `$7$7$7 please wait` and loading text, then [`fetchrefscrolltext`](../../feature/fetchrefscrolltext.ts) (ROM → `docs.at.zed.cafe`) + [`parsemarkdownforscroll`](../../feature/parse/markdownscroll.ts) fill the panel, or an in-scroll “doc not found” error if both miss.
+The UI briefly shows title `$7$7$7 please wait` and loading text, then [`fetchrefscrolltext`](../../feature/fetchrefscrolltext.ts) (`docs.at.zed.cafe` → ROM fallback) + [`parsemarkdownforscroll`](../../feature/parse/markdownscroll.ts) fill the panel, or an in-scroll “doc not found” error if both miss.
 
 ---
 
@@ -117,7 +117,7 @@ Special paths (not necessarily ROM filenames) in [`handledefault`](../../device/
 | `notescalesscroll` | `notescalesscroll` | ROM [`notescalesscroll.md`](../../rom/refscroll/notescalesscroll.md); drill-down `notescales_*`; `parsemarkdownforscroll`; chip `refscroll` (default). |
 | *(any other)* | `path` | Bundled `.md` or ZNS docs; see below. |
 
-**Default branch:** `romread('refscroll:' + path)`. If content exists: `parsemarkdownforscroll` on the markdown string. If not: [`fetchrefscrolltext`](../../feature/fetchrefscrolltext.ts) + `parsemarkdownforscroll`, or error scroll. Final `scrollname` is `path` once content is ready.
+**Default branch:** loading scroll, then [`fetchrefscrolltext`](../../feature/fetchrefscrolltext.ts) (ZNS first, ROM fallback) + `parsemarkdownforscroll`, or error scroll. Final `scrollname` is `path` once content is ready.
 
 ---
 
@@ -170,7 +170,7 @@ flowchart LR
   bookmarkscroll --> apply
   editorbm --> apply
   readzip --> apply
-  refpath --> romzns[romread_or_fetchrefscrolltext]
+  refpath --> romzns[fetchrefscrolltext_zns_then_rom]
   romzns --> mdscroll
 ```
 

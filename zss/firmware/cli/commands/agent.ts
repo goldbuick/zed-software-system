@@ -32,7 +32,7 @@ export function registeragentcommands(fw: FIRMWARE): FIRMWARE {
     'agent',
     [
       ARG_TYPE.MAYBE_NAME,
-      'bare: agents; start/stop AI agents (Gemma 4 E2B in-browser)',
+      'bare: agents; start/stop one AI agent per tab (Gemma 4 E2B in-browser)',
     ],
     (_, words) => {
       const [action] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])

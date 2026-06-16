@@ -1,0 +1,26 @@
+|0123456789|0123456789|0123456789|0123456789|
+00 row index — column ruler above should align vertically
+01 |0123456789|
+02 |0123456789|
+03 nested frames:
+04 ┌────────────────┐
+05 │ ┌────────────┐ │
+06 │ │ inner box  │ │
+07 │ └────────────┘ │
+08 └────────────────┘
+09 shades: ░░▒▒▓▓██
+10 blocks: ████████████████
+11 spaces: a  b  c   d
+12 $green colored line
+13 $yellow second color
+!openit https://example.com;openit link label
+!copyit hello world;copy button
+16 plain tail — 25 rows for overlap check
+17 row seventeen
+18 row eighteen
+19 row nineteen
+20 row twenty
+21 row twenty-one
+22 row twenty-two
+23 row twenty-three
+24 row twenty-four

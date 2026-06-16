@@ -10,12 +10,14 @@ import {
   vmcli,
   vmclirepeatlast,
   vmloader,
+  wanixstdin,
 } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { withclipboard } from 'zss/feature/keyboard'
 import { SpeechToText } from 'zss/feature/speechtotext'
 import { storagewritehistorybuffer } from 'zss/feature/storage'
+import { iswanixstdinactive } from 'zss/feature/wanix/wanixsession'
 import {
   useEqual,
   useGadgetClient,
@@ -180,6 +182,8 @@ export function TerminalInput({
     () => [...pinlines, ...sessionlogs],
     [pinlines, sessionlogs],
   )
+
+  const wanixstdinactive = iswanixstdinactive()
   const logsrowmaxwidth = context.width - 1
   const logsrowheights = useMemo(
     () =>
@@ -331,7 +335,7 @@ export function TerminalInput({
 
   // autocomplete (ZSS words; only when focus on input line)
   const autocomplete = useMemo(() => {
-    if (!inputstateactive) {
+    if (!inputstateactive || wanixstdinactive) {
       return EMPTY_AUTOCOMPLETE
     }
     const linewithnewline = inputstate + '\n'
@@ -351,6 +355,7 @@ export function TerminalInput({
     tapeterminal.xcursor,
     inputlinetokens,
     zsswords,
+    wanixstdinactive,
   ])
 
   function acceptsuggestion() {
@@ -390,6 +395,9 @@ export function TerminalInput({
   const inputline = inputstate.padEnd(edge.width, ' ')
   setuplogitem(false, 0, edge.height - 1, context)
   context.active.color = COLOR.WHITE
+  if (wanixstdinactive) {
+    tokenizeandwritetextformat('$CYANwanix$WHITE ', context, true)
+  }
   writeplaintext(inputline, context, true)
 
   if (!quickterminal) {
@@ -433,6 +441,7 @@ export function TerminalInput({
   // draw autocomplete (above input line when active)
   const autocompleteactive =
     !quickterminal &&
+    !wanixstdinactive &&
     autocompleteindex >= 0 &&
     autocomplete.suggestions.length > 0
   const startx = edge.left
@@ -649,7 +658,16 @@ export function TerminalInput({
                 yselect: undefined,
                 buffer: historybuffer,
               })
-              vmcli(SOFTWARE, player, invoke)
+              const trimmed = invoke.trim()
+              if (
+                wanixstdinactive &&
+                trimmed.length > 0 &&
+                !trimmed.startsWith('#')
+              ) {
+                wanixstdin(SOFTWARE, player, invoke)
+              } else {
+                vmcli(SOFTWARE, player, invoke)
+              }
               if (quickterminal) {
                 registerterminalclose(SOFTWARE, player)
               }

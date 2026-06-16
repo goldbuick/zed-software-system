@@ -42,13 +42,13 @@ expect(() =>
 
 ```bash
 # 1. One file, no coverage
-yarn jest zss/feature/lang/backend/wasm/__tests__/lexerparity.test.ts --no-coverage
+yarn jest ops/tests/unit/feature/lang/backend/wasm/__tests__/lexerparity.test.ts --no-coverage
 
 # 2. After pass, broader
-yarn jest zss/feature/lang/backend/wasm/__tests__/ --no-coverage
+yarn jest ops/tests/unit/feature/lang/backend/wasm/__tests__/ --no-coverage
 
 # 3. Full suite last
-yarn app:test
+yarn task run app:test
 ```
 
 ## Hung background Jest from a prior turn
@@ -62,8 +62,8 @@ kill <pid>
 ## Preview server lifecycle
 
 ```bash
-yarn app:build:strict
-yarn app:preview &          # background
+yarn task run app:build:strict
+yarn task run app:preview &          # background
 sleep 2
 curl -sk -o /dev/null -w "%{http_code}\n" https://127.0.0.1:7777/wasm/lang/zss_lang.wasm
 kill %1                     # or kill <pid>
