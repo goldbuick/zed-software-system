@@ -1,5 +1,8 @@
 import { def, exec, shell, tasksonly } from '../helpers'
-import { shellhandlerwithargs } from '../implementations/modulehandler'
+import {
+  nodehandler,
+  shellhandlerwithargs,
+} from '../implementations/modulehandler'
 import type { TaskDef } from '../types'
 
 const DEPLOY = 'tasks/implementations/deploy'
@@ -25,10 +28,67 @@ export const DEPLOY_TASKS: TaskDef[] = [
     tags: ['deploy'],
     run: exec(['wrangler', 'deploy', '-c', 'ops/infra/wrangler-terminal.toml']),
   }),
+  def('zns:vga:sync', {
+    description:
+      'Generate embedded VGA font module for ZNS worker (ops/infra/generated/zns-vga-font.js)',
+    tags: ['deploy'],
+    group: 'deploy',
+    run: nodehandler('tasks/implementations/deploy/zns-vga-sync.mjs'),
+  }),
   def('deploy:cloudflare:zns', {
     description: 'Deploy zns worker to Cloudflare',
     tags: ['deploy'],
+    deps: ['zns:vga:sync'],
     run: exec(['wrangler', 'deploy', '-c', 'ops/infra/wrangler-zns.toml']),
+  }),
+  def('deploy:cloudflare:zns:verify', {
+    description: 'Deploy zns worker then verify production tenant DNS and HTTPS',
+    tags: ['deploy'],
+    deps: ['deploy:cloudflare:zns'],
+    run: nodehandler('tasks/implementations/deploy/zns-tenant-verify.mjs'),
+  }),
+  def('zns:tenant:dns:check', {
+    description:
+      'DNS check for *.at.zed.cafe tenant wildcards in production (dig only)',
+    tags: ['deploy', 'ci'],
+    group: 'deploy',
+    run: nodehandler('tasks/implementations/deploy/zns-tenant-verify.mjs', [
+      '--dns-only',
+    ]),
+  }),
+  def('zns:tenant:verify', {
+    description:
+      'Full production verify: tenant DNS + HTTPS apex, index, and scroll',
+    tags: ['deploy', 'ci'],
+    group: 'deploy',
+    run: nodehandler('tasks/implementations/deploy/zns-tenant-verify.mjs'),
+  }),
+  def('zns:tenant:smoke', {
+    description:
+      'HTTPS smoke test docs.at.zed.cafe/ tenant index (subset of zns:tenant:verify)',
+    tags: ['deploy'],
+    group: 'deploy',
+    run: shell(
+      'code=$(curl -fsS -o /dev/null -w "%{http_code}" https://docs.at.zed.cafe/) && test "$code" = "200"',
+    ),
+  }),
+  def('zns:landing:dev', {
+    description:
+      'Local ZNS worker dev server — apex landing at http://127.0.0.1:8787/',
+    tags: ['dev'],
+    group: 'deploy',
+    deps: ['zns:vga:sync'],
+    run: exec([
+      'wrangler',
+      'dev',
+      '-c',
+      'ops/infra/wrangler-zns.toml',
+      '--local-protocol=http',
+      '--ip',
+      '127.0.0.1',
+      '--port',
+      '8787',
+    ]),
   }),
   def('deploy:docker:build:image', {
     description: 'Docker build zss:local (internal)',

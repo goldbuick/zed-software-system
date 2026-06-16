@@ -133,7 +133,8 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 | `yarn task run deploy:cloudflare:brick` | Deploy brick worker to Cloudflare | `deploy` | — | — |
 | `yarn task run deploy:cloudflare:bytes` | Deploy bytes worker to Cloudflare | `deploy` | — | — |
 | `yarn task run deploy:cloudflare:terminal` | Deploy terminal worker to Cloudflare | `deploy` | — | — |
-| `yarn task run deploy:cloudflare:zns` | Deploy zns worker to Cloudflare | `deploy` | — | — |
+| `yarn task run deploy:cloudflare:zns` | Deploy zns worker to Cloudflare | `deploy` | `zns:vga:sync` | — |
+| `yarn task run deploy:cloudflare:zns:verify` | Deploy zns worker then verify production tenant DNS and HTTPS | `deploy` | `deploy:cloudflare:zns` | — |
 | `yarn task run deploy:docker:build` | Build linux CLI and local Docker image | `deploy` | `cli:build:linux`, `deploy:docker:build:image` | — |
 | `yarn task run deploy:docker:build:image` | Docker build zss:local (internal) | — | — | — |
 | `yarn task run deploy:docker:run` | Run local Docker container | `deploy` | — | — |
@@ -148,6 +149,11 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 | `yarn task run deploy:gcp:enable-apis` | Enable required GCP APIs | `deploy` | — | — |
 | `yarn task run deploy:gcp:push` | Push zss image to GCP artifact registry | `deploy` | — | — |
 | `yarn task run deploy:vm:docker-run` | Run zss Docker on generic VM | `deploy` | — | — |
+| `yarn task run zns:landing:dev` | Local ZNS worker dev server — apex landing at http://127.0.0.1:8787/ | `dev` | `zns:vga:sync` | — |
+| `yarn task run zns:tenant:dns:check` | DNS check for *.at.zed.cafe tenant wildcards in production (dig only) | `deploy`, `ci` | — | — |
+| `yarn task run zns:tenant:smoke` | HTTPS smoke test docs.at.zed.cafe/ tenant index (subset of zns:tenant:verify) | `deploy` | — | — |
+| `yarn task run zns:tenant:verify` | Full production verify: tenant DNS + HTTPS apex, index, and scroll | `deploy`, `ci` | — | — |
+| `yarn task run zns:vga:sync` | Generate embedded VGA font module for ZNS worker (ops/infra/generated/zns-vga-font.js) | `deploy` | — | — |
 
 
 ## docs

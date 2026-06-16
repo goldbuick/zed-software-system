@@ -2,6 +2,12 @@ name = "net-zns"
 main = "net-zns-worker.js"
 compatibility_date = "2026-06-10"
 
+# ZNS worker routes (zone zed.cafe):
+#   zns.zed.cafe/*     — apex API + landing
+#   *.at.zed.cafe/*    — tenant index (GET /) + key reads (GET /{key})
+# Do NOT add docs.zed.cafe or a flat *.zed.cafe tenant pattern.
+# Tenant URLs are only {namespace}.at.zed.cafe (see zss/feature/url.ts).
+
 # KV binding used as env.zns in net-zns-worker.js
 # List existing: yarn wrangler kv namespace list
 # Create new:    yarn wrangler kv namespace create zns
@@ -14,6 +20,10 @@ ZNS_APEX = "zns.zed.cafe"
 ZNS_TENANT_SUFFIX = "at.zed.cafe"
 BYTES_ORIGIN = "https://bytes.zed.cafe"
 JOIN_ORIGIN = "https://zed.cafe"
+
+[assets]
+directory = "./zns-public"
+binding = "ASSETS"
 
 [[routes]]
 pattern = "zns.zed.cafe/*"

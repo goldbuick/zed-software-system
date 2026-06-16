@@ -30,7 +30,27 @@ Email + OTP login, namespace claim, long-lived token, and per-namespace key/valu
 
 ### Apex API (`https://zns.zed.cafe`)
 
-All routes are `POST` with `multipart/form-data`. Responses are JSON unless noted. CORS allows `GET, POST` from any origin.
+#### Apex landing (`GET /`)
+
+Public `GET` / `HEAD` on `/` only. Returns a **VGA-styled HTML page** (EGA colors on `#0000AA` dkblue, top-left flow layout) with Perfect DOS VGA 437 font (`/fonts/PerfectDOSVGA437.woff2`).
+
+| Section | Content |
+|---------|---------|
+| What it is | Namespace publishing under `{namespace}.at.zed.cafe` |
+| Login | Copy hint `#zns <email> <namespace>`; link to `{JOIN_ORIGIN}` |
+| Example | `https://docs.at.zed.cafe/algoscroll` |
+
+**200** `text/html; charset=utf-8`, `Cache-Control: public, max-age=3600`, `X-Robots-Tag: noindex`.
+
+Static assets live in [`ops/infra/zns-public/`](zns-public/) (Wrangler `[assets]` binding).
+
+**404** for any other apex path (including `GET /api/*`).
+
+OTP login email stays 40-column with the existing ZZT-index email palette.
+
+#### API routes
+
+All API routes are `POST` with `multipart/form-data`. Responses are JSON unless noted. CORS allows `GET, POST` from any origin.
 
 #### `POST /api/login`
 
@@ -119,19 +139,39 @@ Delete one key.
 
 **200** `{ "success": true }`
 
-### Tenant reads (`https://{namespace}.at.zed.cafe/{key}`)
+### Tenant reads (`https://{namespace}.at.zed.cafe`)
 
-Public `GET` / `HEAD` only. `{key}` is the first path segment (lowercased). Mixed-case hosts (e.g. `WiL.at.zed.cafe`) redirect **301** to the lowercase canonical URL (`wil.at.zed.cafe`).
+Public `GET` / `HEAD` only. Mixed-case hosts (e.g. `WiL.at.zed.cafe`) redirect **301** to the lowercase canonical URL (`wil.at.zed.cafe`).
+
+**Do not** configure `docs.zed.cafe` or `{namespace}.zed.cafe` — tenant URLs are only `{namespace}.at.zed.cafe` (see `ZNS_TENANT_SUFFIX` in [`zss/feature/url.ts`](../../zss/feature/url.ts)).
+
+#### Tenant landing (`GET /`)
+
+On every `{namespace}.at.zed.cafe`, `GET /` returns a **VGA HTML key index** (same styling as scroll pages).
+
+1. Lists keys from KV (`pair:{namespace}:*`), grouped by kind: `bytes` → `peer` → `text`, alphabetical within each group.
+2. Each key links to `/{key}` on the same host.
+3. Empty namespace: **200** with “no keys published”.
+
+Tenant content is **KV-published only** — the worker does not bundle refscroll or other built-in markdown.
+
+#### Tenant key read (`GET /{key}`)
+
+`{key}` is the first path segment (lowercased).
 
 | Kind | Response |
 |------|----------|
-| `text` | **200** body as `text/markdown`; `Cache-Control: public, max-age=60` |
+| `text` | **200** VGA HTML scroll (`text/html`); `Cache-Control: public, max-age=60` |
 | `peer` | **302** to `{JOIN_ORIGIN}/join/#{peerId}` |
 | `bytes` | **302** to `{BYTES_ORIGIN}/{hash}` |
 
-**404** if key missing or invalid.
+**404** if key missing or invalid. The `docs` namespace returns an HTML scroll with `doc not found`; other namespaces return plain `not found`.
 
-Example: `docs.at.zed.cafe/algoscroll` serves seeded refscroll markdown for gadget docs fallback.
+Raw stored markdown is available via `POST /api/read` only (unchanged).
+
+Publish docs via `POST /api/set` after login (`#zns <email> <namespace>`). In-app help still loads from client ROM (`zss/rom/refscroll/`); ZNS serves only what is published to KV.
+
+VGA font asset is generated via `yarn task run zns:vga:sync` (runs automatically before `deploy:cloudflare:zns`).
 
 ---
 
@@ -247,7 +287,66 @@ Cross-peer messages (OFFER, ANSWER, CANDIDATE, etc.) relay DO-to-DO. Same peer i
 
 ## Local tooling
 
-- Seed ZNS docs namespace: `ZNS_EMAIL=... ZNS_TOKEN=... node ops/infra/seed-zns-docs.mjs` (writes `zss/rom/refscroll/*.md` to `docs.at.zed.cafe` via `POST /api/set`).
+- **ZNS worker preview:** `yarn task run zns:landing:dev` (syncs VGA font, then starts wrangler on port 8787).
+  - Apex landing: [http://127.0.0.1:8787/](http://127.0.0.1:8787/) or [http://zns.zed.cafe:8787/](http://zns.zed.cafe:8787/) with hosts below.
+  - Tenant index: [http://docs.at.zed.cafe:8787/](http://docs.at.zed.cafe:8787/) — KV-published keys only.
+  - Tenant scrolls: add to `/etc/hosts`:
+    ```
+    127.0.0.1 docs.at.zed.cafe zns.zed.cafe
+    ```
+    then open paths under `http://docs.at.zed.cafe:8787/{key}` after publishing via `POST /api/set`.
+  - Edits to [`net-zns-worker.js`](net-zns-worker.js) hot-reload; refresh the browser.
+- **VGA font sync only:** `yarn task run zns:vga:sync`
+
+---
+
+## Cloudflare DNS + TLS (tenant hosts — production)
+
+Tenant hostnames use the `at.zed.cafe` suffix only (`https://{namespace}.at.zed.cafe/`). **Do not** add DNS or worker routes for `docs.zed.cafe`.
+
+### One-time DNS (zone `zed.cafe`)
+
+Add a **proxied** wildcard so any `{namespace}.at.zed.cafe` resolves through Cloudflare:
+
+| Type | Name | Content | Proxy |
+|------|------|---------|-------|
+| `AAAA` | `*.at` | `100::` (dummy) | Proxied |
+
+In the Cloudflare dashboard the in-zone name is `*.at` (not `*.at.zed.cafe`). That covers `docs.at.zed.cafe`, `wil.at.zed.cafe`, and all other tenant namespaces.
+
+### One-time TLS
+
+Universal SSL for `*.zed.cafe` does **not** cover `foo.at.zed.cafe`. Provision a certificate for `*.at.zed.cafe` via **Total TLS** (SSL/TLS → Edge Certificates) or **Advanced Certificate Manager**.
+
+### Production deploy + verify
+
+Standard ZNS production deploy (worker + verification):
+
+```bash
+yarn task run deploy:cloudflare:zns:verify
+```
+
+This runs `deploy:cloudflare:zns` then `zns:tenant:verify` (DNS + HTTPS).
+
+| Task | Purpose |
+|------|---------|
+| `zns:tenant:dns:check` | Fast DNS-only check (`dig` on `docs.at` and `wil.at`) |
+| `zns:tenant:smoke` | HTTPS-only check on `/` and `/cliscroll` |
+| `zns:tenant:verify` | Full production suite (DNS + apex + tenant index + scroll) |
+
+Verifier script: [`tasks/implementations/deploy/zns-tenant-verify.mjs`](../../tasks/implementations/deploy/zns-tenant-verify.mjs).
+
+Checks performed by `zns:tenant:verify`:
+
+1. `docs.at.zed.cafe` and `wil.at.zed.cafe` resolve (proves `*.at` wildcard, not a one-off record)
+2. `docs.zed.cafe` does **not** resolve (wrong hostname pattern)
+3. `https://zns.zed.cafe/` → HTTP 200
+4. `https://docs.at.zed.cafe/` → HTTP 200 `text/html`
+5. `https://docs.at.zed.cafe/cliscroll` → HTTP 200 `text/html`
+
+If DNS check fails: add proxied `AAAA` `*.at` → `100::` in the `zed.cafe` zone.
+
+If HTTPS fails but DNS passes: enable TLS for `*.at.zed.cafe`.
 
 ---
 
@@ -298,10 +397,22 @@ Run from repo root.
 From repo root:
 
 ```bash
+yarn task run deploy:cloudflare:zns:verify
+```
+
+Deploy workers individually (without verify):
+
+```bash
 yarn task run deploy:cloudflare:zns
 yarn task run deploy:cloudflare:bytes
 yarn task run deploy:cloudflare:brick
 yarn task run deploy:cloudflare:terminal
+```
+
+Post-deploy verification only:
+
+```bash
+yarn task run zns:tenant:verify
 ```
 
 Equivalent raw Wrangler commands (also from repo root):
