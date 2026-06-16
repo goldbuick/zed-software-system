@@ -91,7 +91,7 @@ function showznspublishbookmenu(player: string, address: string) {
     const prefix = memorycodepagetoprefix(page)
     return zsszedlinkline(
       `zns code ${page.id}`,
-      `$greenpublish $blue[${type}] ${prefix}$white${name}`,
+      `$greenPublish $blue[${type}] ${prefix}$white${name}`,
     )
   })
   terminalwritelines(SOFTWARE, player, zsstexttape(...pagelines))
@@ -141,6 +141,36 @@ export async function showznsmenu(player: string) {
   const all = await znslistall(session.email, session.token)
   console.info(all)
 
+  const publishedrows = all
+    .sort((a: any, b: any) => {
+      const { kind: kinda = '' } = a.metadata ?? {}
+      const { kind: kindb = '' } = b.metadata ?? {}
+      if (kinda === kindb) {
+        return a.key.localeCompare(b.key)
+      }
+      return kinda.localeCompare(kindb)
+    })
+    .map((row: any) => {
+      const { kind = '' } = row.metadata ?? {}
+      switch (kind) {
+        case 'text': {
+          return zsszedlinkline(
+            `zns import ${row.key}`,
+            `$greenImport ${row.key}`,
+          )
+        }
+        case 'bytes': {
+          return zsszedlinkline(
+            `openit https://bytes.zed.cafe/${row.value}`,
+            `${row.key}`,
+          )
+        }
+        default: {
+          return []
+        }
+      }
+    })
+
   terminalwritelines(
     SOFTWARE,
     player,
@@ -151,12 +181,17 @@ export async function showznsmenu(player: string) {
       zsssectionlines('Actions'),
       zsszedlinkline('zns restart', 'Logout'),
       ispresent(mainbook)
-        ? zsszedlinkline('zns bytes', `Publish ${mainbook.name} bytes`)
+        ? zsszedlinkline(
+            'zns bytes',
+            `$greenPublish $white${mainbook.name} bytes`,
+          )
         : [],
       '$32',
-      zsssectionlines('Publish Codepages'),
+      zsssectionlines('List codepages to publish'),
       booklinks.length > 0 ? booklinks : [zsstextline('$GRAY(none)')],
       '$32',
+      zsssectionlines(`Published content`),
+      publishedrows.length > 0 ? publishedrows : [zsstextline('$GRAY(none)')],
     ),
   )
 }
