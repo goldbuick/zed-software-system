@@ -32,7 +32,9 @@ export const DEPLOY_TASKS: TaskDef[] = [
   }),
   def('deploy:docker:build:image', {
     description: 'Docker build zss:local (internal)',
-    run: shell('docker build --no-cache -f ops/deploy/Dockerfile -t zss:local .'),
+    run: shell(
+      'docker build --no-cache -f ops/deploy/Dockerfile -t zss:local .',
+    ),
   }),
   tasksonly(
     'deploy:docker:build',

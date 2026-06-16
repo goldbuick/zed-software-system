@@ -318,24 +318,36 @@ export function storagewatchcontent(player: string) {
   })
 }
 
+export async function storageshorturl(player: string) {
+  if (isclimode()) {
+    apierror(SOFTWARE, player, 'storage', '#share not supported in server mode')
+    return ''
+  }
+
+  // unpack short url before sharing
+  const urlcontent = await storagereadcontent(player)
+  if (isarray(urlcontent)) {
+    apierror(SOFTWARE, player, 'storage', '#share not supported in server mode')
+    return ''
+  }
+
+  // share full content
+  const shareurl = new URL(location.href)
+  shareurl.hash = urlcontent
+
+  // gen global shorturl
+  return await shorturl(shareurl.href)
+}
+
 export async function storagesharecontent(player: string) {
   if (isclimode()) {
     apierror(SOFTWARE, player, 'storage', '#share not supported in server mode')
     return
   }
-  // unpack short url before sharing
-  const urlcontent = await storagereadcontent(player)
-  if (isarray(urlcontent)) {
-    apierror(SOFTWARE, player, 'storage', '#share not supported in server mode')
-    return
-  }
-  // share full content
-  const out = `#${urlcontent}`
-  currenturlhash = urlcontent
-  location.hash = out
+
   // gen global shorturl
   workstatus(SOFTWARE, player, 'share url')
-  const url = await shorturl(location.href)
+  const url = await storageshorturl(player)
   writecopyit(SOFTWARE, player, url, url)
 }
 

@@ -137,8 +137,9 @@ export async function museumofzztdownload(
 export const ZNS_APEX = 'zns.zed.cafe'
 export const ZNS_TENANT_SUFFIX = 'at.zed.cafe'
 export const ZNS_DOCS_NAMESPACE = 'docs'
+
 export const ZNS_PEER_KEY = 'peer'
-export const ZNS_BYTES_KEY_TARGET = 'znsbyteskey'
+
 export const ZNS_LOGIN_CODE_PARAM = 'zns-code'
 export const ZNS_LOGIN_EMAIL_PARAM = 'zns-email'
 export const ZNS_LOGIN_NAMESPACE_PARAM = 'zns-namespace'
@@ -208,48 +209,6 @@ export function clearznslogincodefromurl(): void {
   clearznsloginparamsfromurl()
 }
 
-export function znskeyispeer(key: string, kind?: string) {
-  return key === ZNS_PEER_KEY || kind === 'peer'
-}
-
-export function znskinddisplay(kind?: string, key?: string) {
-  if (znskeyispeer(key ?? '', kind)) {
-    return 'peer'
-  }
-  if (kind === 'bytes') {
-    return 'bytes'
-  }
-  if (kind === 'text') {
-    return 'code'
-  }
-  return 'bytes'
-}
-
-export function znskeyopenlabel(key: string, value: string, kind?: string) {
-  const display = znskinddisplay(kind, key)
-  if (display === 'bytes') {
-    const short = value.length > 12 ? `${value.slice(0, 8)}…` : value
-    return `$blue[bytes] $white${key} $GRAY— ${short}`
-  }
-  if (display === 'code') {
-    return `$blue[code] $white${key} $GRAY— import`
-  }
-  return `$white${key}`
-}
-
-export function znskeylinkcommand(
-  namespace: string,
-  key: string,
-  value: string,
-  kind?: string,
-) {
-  if (znskinddisplay(kind, key) === 'code') {
-    return `zns import code ${key}`
-  }
-  const url = znsurlforlistrow(namespace, key, value, kind)
-  return `openit ${url}`
-}
-
 const PEER_ID_RE = /^[a-zA-Z0-9_-]{4,256}$/
 const ZNS_PATH_KEY_RE = /^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?$/
 
@@ -276,20 +235,20 @@ export function znsnormalizepathkey(name: string): string | undefined {
   return slug
 }
 
-export function znsurlforlistrow(
-  namespace: string,
-  key: string,
-  value: string,
-  kind?: string,
-) {
-  if (key === ZNS_PEER_KEY || kind === 'peer') {
-    return `https://zed.cafe/join/#${value}`
-  }
-  if (kind === 'text') {
-    return znstenanturl(namespace, key)
-  }
-  return `https://bytes.zed.cafe/${value}`
-}
+// export function znsurlforlistrow(
+//   namespace: string,
+//   key: string,
+//   value: string,
+//   kind?: string,
+// ) {
+//   if (key === ZNS_PEER_KEY || kind === 'peer') {
+//     return `https://zed.cafe/join/#${value}`
+//   }
+//   if (kind === 'text') {
+//     return znstenanturl(namespace, key)
+//   }
+//   return `https://bytes.zed.cafe/${value}`
+// }
 
 export async function fetchznstext(
   namespace: string,
