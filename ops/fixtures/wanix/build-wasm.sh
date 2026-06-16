@@ -3,7 +3,7 @@
 
 set -e
 
-ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 DIR="$ROOT/ops/fixtures/wanix"
 
 resolve_wat2wasm() {

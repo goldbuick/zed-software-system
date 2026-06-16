@@ -621,6 +621,49 @@ async function handledelete(request, env) {
   })
 }
 
+async function readpair(env, namespace, pathkey) {
+  const row = await env.zns.getWithMetadata(pairstoragekey(namespace, pathkey))
+  const stored = row?.value
+  if (stored == null || stored === '') {
+    return null
+  }
+  return { stored, metadata: row?.metadata ?? {} }
+}
+
+async function handleread(request, env) {
+  const formdata = await request.formData()
+  const namespace = flatstr(formdata.get('namespace'))
+  const pathkey = flatstr(formdata.get('key'))
+  if (!validatenamespace(namespace)) {
+    return new Response(JSON.stringify({ message: 'invalid namespace' }), {
+      status: 400,
+      headers: corsheaders,
+    })
+  }
+  if (!validatepathkey(pathkey)) {
+    return new Response(JSON.stringify({ message: 'invalid key' }), {
+      status: 400,
+      headers: corsheaders,
+    })
+  }
+  const row = await readpair(env, namespace, pathkey)
+  if (!row) {
+    return new Response(JSON.stringify({ message: 'not found' }), {
+      status: 404,
+      headers: corsheaders,
+    })
+  }
+  return new Response(
+    JSON.stringify({
+      success: true,
+      key: pathkey,
+      value: row.stored,
+      metadata: row.metadata,
+    }),
+    { status: 200, headers: corsheaders },
+  )
+}
+
 async function handletenantread(request, env, namespace) {
   if (request.method !== 'GET' && request.method !== 'HEAD') {
     return new Response('method not allowed', { status: 405 })
@@ -633,13 +676,12 @@ async function handletenantread(request, env, namespace) {
   if (!validatepathkey(pathkey)) {
     return new Response('not found', { status: 404 })
   }
-  const pkey = pairstoragekey(namespace, pathkey)
-  const row = await env.zns.getWithMetadata(pkey)
-  const stored = row?.value
-  if (stored == null || stored === '') {
+  const row = await readpair(env, namespace, pathkey)
+  if (!row) {
     return new Response('not found', { status: 404 })
   }
-  const kind = resolvepairkind(pathkey, stored, row?.metadata)
+  const { stored, metadata } = row
+  const kind = resolvepairkind(pathkey, stored, metadata)
   if (kind === 'text') {
     const headers = {
       ...tenantcorsheaders,
@@ -654,8 +696,10 @@ async function handletenantread(request, env, namespace) {
   let location
   if (kind === 'peer') {
     location = `${joinorigin(env)}/join/#${stored}`
-  } else {
+  } else if (kind === 'bytes') {
     location = `${bytesorigin(env)}/${stored}`
+  } else {
+    return new Response('not found', { status: 404 })
   }
   return new Response(null, {
     status: 302,
@@ -689,6 +733,8 @@ export default {
             return handleset(request, env)
           case '/api/list':
             return handlelist(request, env)
+          case '/api/read':
+            return handleread(request, env)
           case '/api/delete':
             return handledelete(request, env)
           default:

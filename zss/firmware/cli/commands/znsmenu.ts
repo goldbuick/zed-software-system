@@ -9,11 +9,11 @@ import {
 } from 'zss/feature/storage'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import {
-  fetchznstext,
   znslist,
   znslogincode,
   znsnormalizepathkey,
   znspersistlogin,
+  znsread,
 } from 'zss/feature/url'
 import { write } from 'zss/feature/writeui'
 import {
@@ -292,7 +292,8 @@ export async function znsrunimportcode(
     write(SOFTWARE, player, zsstextline(`$red missing zns key`))
     return
   }
-  const text = await fetchznstext(session.namespace, key)
+  const row = await znsread(session.namespace, key)
+  const text = row.value ?? ''
   if (!text.trim()) {
     write(SOFTWARE, player, zsstextline(`$red zns code not found: ${key}`))
     return

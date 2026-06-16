@@ -92,6 +92,21 @@ List all keys in the caller's namespace.
 
 **200** `{ "success": true, "list": [{ "key", "value", "metadata" }, ...] }`
 
+#### `POST /api/read`
+
+Public read of one key in any namespace. No authentication.
+
+| Field | Required |
+|-------|----------|
+| `namespace` | yes |
+| `key` | yes |
+
+**200** `{ "success": true, "key", "value", "metadata" }` — raw stored value for all kinds (`text`, `peer`, `bytes`).
+
+**400** invalid namespace or key.
+
+**404** key not found.
+
 #### `POST /api/delete`
 
 Delete one key.

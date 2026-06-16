@@ -18,7 +18,7 @@ Worker HTTP APIs: [`ops/infra/README.md`](../../../ops/infra/README.md).
 | `znslogincode` | `email`, `code` | Confirm OTP (returns `token`) |
 | `znslist` | `email`, `token` | List keys/values |
 | `znsset` | `email`, `token`, `key`, `value` | Set pair: `peer` key, bytes hash, or text (auto-detect) |
-| `fetchznstext` | `namespace`, `key` | GET `https://{namespace}.at.zed.cafe/{key}` markdown body |
+| `znsread` | `namespace`, `key` | POST `/api/read` — public JSON `{ key, value, metadata }` |
 | `znstenanturl` | `namespace`, `key` | Build canonical tenant URL (lowercase host) |
 | `znsnormalizenamespace` | `namespace` | Trim + lowercase namespace label |
 | `znsnormalizepathkey` | `name` | Slug for ZNS path keys |

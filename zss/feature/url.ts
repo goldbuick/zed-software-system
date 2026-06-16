@@ -144,15 +144,6 @@ export const ZNS_LOGIN_CODE_PARAM = 'zns-code'
 export const ZNS_LOGIN_EMAIL_PARAM = 'zns-email'
 export const ZNS_LOGIN_NAMESPACE_PARAM = 'zns-namespace'
 
-/** Refscroll doc GET only on zed.cafe; local dev uses bundled ROM (avoids console fetch noise). */
-export function znsdocsfetchenabled(): boolean {
-  if (typeof location === 'undefined') {
-    return true
-  }
-  const host = location.hostname.toLowerCase()
-  return host === 'zed.cafe' || host.endsWith('.zed.cafe')
-}
-
 const ZNS_LOGIN_CODE_RE = /^[1-9]{6}$/
 const ZNS_LOGIN_NAMESPACE_RE = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/
 
@@ -250,19 +241,33 @@ export function znsnormalizepathkey(name: string): string | undefined {
 //   return `https://bytes.zed.cafe/${value}`
 // }
 
-export async function fetchznstext(
+export type ZNS_READ_RESULT = {
+  success?: boolean
+  key?: string
+  value?: string
+  metadata?: { kind?: string; updatedAt?: number }
+}
+
+export async function znsread(
   namespace: string,
   key: string,
-): Promise<string> {
-  const url = znstenanturl(namespace, key)
+): Promise<ZNS_READ_RESULT> {
+  const formdata = new FormData()
+  formdata.append('namespace', znsnormalizenamespace(namespace))
+  formdata.append('key', key)
   try {
-    const response = await fetch(url)
-    if (!response.ok) {
-      return ''
+    const request = new Request(`https://${ZNS_APEX}/api/read`, {
+      method: 'POST',
+      body: formdata,
+    })
+    const response = await fetch(request)
+    const result = await response.json()
+    if (!response.ok || !result?.success) {
+      return {}
     }
-    return response.text()
+    return result as ZNS_READ_RESULT
   } catch {
-    return ''
+    return {}
   }
 }
 

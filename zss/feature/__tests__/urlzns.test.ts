@@ -1,6 +1,6 @@
 import {
-  fetchznstext,
   znsnormalizenamespace,
+  znsread,
   znstenanturl,
 } from 'zss/feature/url'
 
@@ -16,34 +16,48 @@ describe('znstenanturl', () => {
   })
 })
 
-describe('fetchznstext', () => {
+describe('znsread', () => {
   const originalfetch = global.fetch
 
   afterEach(() => {
     global.fetch = originalfetch
   })
 
-  it('returns empty string when fetch throws', async () => {
+  it('returns empty object when fetch throws', async () => {
     global.fetch = jest.fn(() =>
       Promise.reject(new TypeError('Failed to fetch')),
     ) as typeof fetch
-    await expect(fetchznstext('docs', 'cliscroll')).resolves.toBe('')
+    await expect(znsread('docs', 'cliscroll')).resolves.toEqual({})
   })
 
-  it('returns empty string when response is not ok', async () => {
+  it('returns empty object when response is not ok', async () => {
     global.fetch = jest.fn(() =>
-      Promise.resolve({ ok: false } as Response),
+      Promise.resolve({
+        ok: false,
+        json: () => Promise.resolve({ message: 'not found' }),
+      } as Response),
     ) as typeof fetch
-    await expect(fetchznstext('docs', 'cliscroll')).resolves.toBe('')
+    await expect(znsread('docs', 'cliscroll')).resolves.toEqual({})
   })
 
-  it('returns response text when fetch succeeds', async () => {
+  it('returns row when fetch succeeds', async () => {
     global.fetch = jest.fn(() =>
       Promise.resolve({
         ok: true,
-        text: () => Promise.resolve('# doc'),
+        json: () =>
+          Promise.resolve({
+            success: true,
+            key: 'cliscroll',
+            value: '# doc',
+            metadata: { kind: 'text' },
+          }),
       } as Response),
     ) as typeof fetch
-    await expect(fetchznstext('docs', 'cliscroll')).resolves.toBe('# doc')
+    await expect(znsread('docs', 'cliscroll')).resolves.toEqual({
+      success: true,
+      key: 'cliscroll',
+      value: '# doc',
+      metadata: { kind: 'text' },
+    })
   })
 })
