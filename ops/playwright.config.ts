@@ -36,7 +36,7 @@ const DEFAULT_TEST_TIMEOUT_MS = 120_000
 const GLOBAL_RUN_TIMEOUT_MS = 900_000
 
 export default defineConfig({
-  testDir: 'ops/e2e',
+  testDir: 'e2e',
   // Gadget scroll: PLAYWRIGHT_INCLUDE_GADGET_E2E=1. Join multiplayer: PLAYWRIGHT_INCLUDE_JOIN_E2E=1.
   // Lang compile bench: PLAYWRIGHT_INCLUDE_LANG_BENCH=1.
   testIgnore: testignore.length ? testignore : [],

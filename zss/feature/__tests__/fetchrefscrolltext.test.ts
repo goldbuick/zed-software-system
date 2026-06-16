@@ -1,11 +1,10 @@
 import { fetchrefscrolltext } from 'zss/feature/fetchrefscrolltext'
-import { fetchznstext, znsdocsfetchenabled } from 'zss/feature/url'
+import { fetchznstext } from 'zss/feature/url'
 import { romread } from 'zss/rom'
 
 jest.mock('zss/feature/url', () => ({
   ZNS_DOCS_NAMESPACE: 'docs',
   fetchznstext: jest.fn(() => Promise.resolve('')),
-  znsdocsfetchenabled: jest.fn(() => true),
 }))
 
 jest.mock('zss/rom', () => ({
@@ -15,7 +14,6 @@ jest.mock('zss/rom', () => ({
 describe('fetchrefscrolltext', () => {
   beforeEach(() => {
     jest.mocked(fetchznstext).mockReset().mockResolvedValue('')
-    jest.mocked(znsdocsfetchenabled).mockReset().mockReturnValue(true)
     jest.mocked(romread).mockReset().mockReturnValue(undefined)
   })
 
@@ -53,13 +51,5 @@ describe('fetchrefscrolltext', () => {
     expect(fetchznstext).not.toHaveBeenCalled()
     expect(romread).toHaveBeenCalledWith('refscroll:!!!')
     expect(result).toBe('# rom only')
-  })
-
-  it('skips ZNS fetch when docs fetch is disabled and uses ROM', async () => {
-    jest.mocked(znsdocsfetchenabled).mockReturnValue(false)
-    jest.mocked(romread).mockReturnValue('# rom doc')
-    const result = await fetchrefscrolltext('cliscroll')
-    expect(fetchznstext).not.toHaveBeenCalled()
-    expect(result).toBe('# rom doc')
   })
 })

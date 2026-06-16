@@ -84,7 +84,7 @@ runwasmscriptfortest(wasmbytes, chip)
 ## Jest exit hygiene
 
 - Global teardown clears modem Awareness: `zss/testing/jestglobalteardown.cjs`
-- CI uses `forceExit: true` in `jest.config.ts` when `CI=true`
+- CI uses `forceExit: true` in `ops/jest.config.ts` when `CI=true`
 - Debug stray handles locally: `yarn jest <file> --detectOpenHandles`
 - If tests pass but process won't exit → find `setInterval` / unclosed servers / modem leaks
 

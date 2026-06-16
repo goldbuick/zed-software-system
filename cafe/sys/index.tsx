@@ -404,7 +404,7 @@ function FeaturesView() {
       ))}
       <p className="text-small text-tertiary">
         {totalfeatures} feature rows across {FEATURE_DOMAINS.length} domains.
-        Sources: COMMANDS_SUMMARY.md, zss/**/docs/.
+        Sources: ops/docs/commands-summary.md, zss/**/docs/.
       </p>
     </div>
   )

@@ -4,6 +4,7 @@ import type { Config } from 'jest'
 const TEST_TIMEOUT_MS = 120_000
 
 const config: Config = {
+  rootDir: '..',
   preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'node',
   testTimeout: TEST_TIMEOUT_MS,

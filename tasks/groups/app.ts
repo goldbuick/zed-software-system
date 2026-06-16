@@ -78,18 +78,18 @@ export const APP_TASKS: TaskDef[] = [
     description: 'Dependency-cruiser, ESLint, and tsc --noEmit',
     tags: ['ci'],
     run: shell(
-      'depcruise zss/simspace.ts zss/heavyspace.ts zss/boardrunnerspace.ts zss/sttspace.ts --validate --config .dependency-cruiser.cjs && eslint . --ext ts,tsx --fix --report-unused-disable-directives --max-warnings 0 && tsc --noEmit',
+      'depcruise zss/simspace.ts zss/heavyspace.ts zss/boardrunnerspace.ts zss/sttspace.ts --validate --config ops/depcruise.cjs && eslint . --ext ts,tsx --fix --report-unused-disable-directives --max-warnings 0 && tsc --noEmit',
     ),
   }),
   def('app:test', {
     description: 'Run Jest test suite',
     tags: ['ci'],
-    run: exec(['yarn', 'jest', '--verbose']),
+    run: exec(['yarn', 'jest', '--config', 'ops/jest.config.ts', '--verbose']),
   }),
   def('app:test:coverage', {
     description: 'Jest with coverage on selected VM/gadget modules',
     run: shell(
-      "yarn jest --coverage --collectCoverageFrom='zss/device/vm/gadgetsynctick.ts' --collectCoverageFrom='zss/device/vm/handlers/scroll.ts' --collectCoverageFrom='zss/device/vm/handlers/ticktock.ts' --collectCoverageFrom='zss/device/boardrunner/handlers/linkdead.ts' --collectCoverageFrom='zss/device/gadgetclient.ts'",
+      "yarn jest --config ops/jest.config.ts --coverage --collectCoverageFrom='zss/device/vm/gadgetsynctick.ts' --collectCoverageFrom='zss/device/vm/handlers/scroll.ts' --collectCoverageFrom='zss/device/vm/handlers/ticktock.ts' --collectCoverageFrom='zss/device/boardrunner/handlers/linkdead.ts' --collectCoverageFrom='zss/device/gadgetclient.ts'",
     ),
   }),
   def('app:audit:deadcode', {

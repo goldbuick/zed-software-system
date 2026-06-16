@@ -261,9 +261,9 @@ describe('handledefault refscroll', () => {
   })
 
   it('refscroll:notescalesscroll uses parsemarkdownforscroll when fetch returns content', async () => {
-    jest.mocked(fetchrefscrolltext).mockResolvedValue(
-      '$ltgrey intro\n\n[Major](<notescales_major>)\n',
-    )
+    jest
+      .mocked(fetchrefscrolltext)
+      .mockResolvedValue('$ltgrey intro\n\n[Major](<notescales_major>)\n')
     handledefault(vm, {
       session: '',
       player: 'p1',
@@ -288,9 +288,11 @@ describe('handledefault refscroll', () => {
   })
 
   it('refscroll:notescales_major uses parsemarkdownforscroll when fetch returns content', async () => {
-    jest.mocked(fetchrefscrolltext).mockResolvedValue(
-      '!notescalesscroll hk b " B " next;$ltgreyBack\n!istargetless copyit #play cdefgab+c;$greenC major',
-    )
+    jest
+      .mocked(fetchrefscrolltext)
+      .mockResolvedValue(
+        '!notescalesscroll hk b " B " next;$ltgreyBack\n!istargetless copyit #play cdefgab+c;$greenC major',
+      )
     handledefault(vm, {
       session: '',
       player: 'p1',

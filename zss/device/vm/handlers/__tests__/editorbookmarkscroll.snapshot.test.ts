@@ -9,7 +9,7 @@ import {
   handleeditorbookmarkscrollpanel,
 } from 'zss/device/vm/handlers/editorbookmarkscroll'
 import type { ZssEditorBookmark } from 'zss/feature/bookmarks'
-import { memoryreadcodepagebyid } from 'zss/memory/codepages'
+import { memoryreadcodepagebyaddress } from 'zss/memory/codepages'
 import { memoryeditorbookmarkscroll } from 'zss/memory/editorbookmarkscroll'
 
 jest.mock('zss/device/api', () => {
@@ -146,11 +146,13 @@ describe('handleeditorbookmarkscrollpanel snapshotcurrent', () => {
 
   beforeEach(() => {
     jest.mocked(registerbookmarkcodepagesave).mockClear()
-    jest.mocked(memoryreadcodepagebyid).mockReset()
+    jest.mocked(memoryreadcodepagebyaddress).mockReset()
   })
 
   it('registerbookmarkcodepagesave when first data arg is a codepage id', () => {
-    jest.mocked(memoryreadcodepagebyid).mockReturnValue(fakecodepage as any)
+    jest
+      .mocked(memoryreadcodepagebyaddress)
+      .mockReturnValue(fakecodepage as any)
     handleeditorbookmarkscrollpanel(
       vm,
       { ...base, data: ['cp1'] },
@@ -160,7 +162,7 @@ describe('handleeditorbookmarkscrollpanel snapshotcurrent', () => {
   })
 
   it('no registerbookmarkcodepagesave when codepage missing', () => {
-    jest.mocked(memoryreadcodepagebyid).mockReturnValue(undefined)
+    jest.mocked(memoryreadcodepagebyaddress).mockReturnValue(undefined)
     handleeditorbookmarkscrollpanel(
       vm,
       { ...base, data: ['missing'] },

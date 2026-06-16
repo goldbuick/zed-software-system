@@ -7,8 +7,8 @@
     "zss/heavyspace.ts",
     "zss/boardrunnerspace.ts",
     "tasks/cli.ts",
-    "jest.config.ts",
-    "playwright.config.ts"
+    "ops/jest.config.ts",
+    "ops/playwright.config.ts"
   ],
   "project": [
     "zss/**/*.{ts,tsx}",

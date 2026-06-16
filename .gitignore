@@ -54,4 +54,7 @@ cafe/public/renders/synth-env-parity/
 test-results/
 playwright-report/
 
+# stray wrangler cache (deploy configs live in ops/infra/)
+infra/
+
 

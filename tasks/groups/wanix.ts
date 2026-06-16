@@ -28,6 +28,12 @@ export const WANIX_TASKS: TaskDef[] = [
     tags: ['ci'],
     deps: ['wanix:wasm:build'],
     env: { PLAYWRIGHT_INCLUDE_WANIX_E2E: '1' },
-    run: exec(['playwright', 'test', 'ops/e2e/wanix-host.spec.ts']),
+    run: exec([
+      'playwright',
+      'test',
+      '--config',
+      'ops/playwright.config.ts',
+      'ops/e2e/wanix-host.spec.ts',
+    ]),
   }),
 ]

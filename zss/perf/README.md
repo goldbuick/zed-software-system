@@ -31,4 +31,4 @@ When disabled, helpers are no-ops and the `Profiler` wrapper is not used.
 
 ## Jest
 
-`jest.config.ts` maps `zss/perf/ui` to [`zss/__mocks__/perfui.ts`](../__mocks__/perfui.ts) so Node tests do not load `zss/config` (`import.meta.env` from Vite).
+[`ops/jest.config.ts`](../../ops/jest.config.ts) maps `zss/perf/ui` to [`zss/__mocks__/perfui.ts`](../__mocks__/perfui.ts) so Node tests do not load `zss/config` (`import.meta.env` from Vite).

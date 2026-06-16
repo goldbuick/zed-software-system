@@ -59,7 +59,7 @@ for (const file of files) {
   }
   try {
     execSync(
-      `./node_modules/.bin/markdown-link-check -q -c .markdown-link-check.json "${file}"`,
+      `./node_modules/.bin/markdown-link-check -q -c ops/docs/markdown-link-check.json "${file}"`,
       { cwd: root, stdio: 'pipe' },
     )
   } catch (error) {

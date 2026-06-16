@@ -1,6 +1,5 @@
 import {
   fetchznstext,
-  znsdocsfetchenabled,
   znsnormalizenamespace,
   znstenanturl,
 } from 'zss/feature/url'
@@ -14,36 +13,6 @@ describe('znsnormalizenamespace', () => {
 describe('znstenanturl', () => {
   it('builds lowercase tenant hostnames', () => {
     expect(znstenanturl('WiL', 'home')).toBe('https://wil.at.zed.cafe/home')
-  })
-})
-
-describe('znsdocsfetchenabled', () => {
-  const originalloc = global.location
-
-  afterEach(() => {
-    Object.defineProperty(global, 'location', {
-      value: originalloc,
-      writable: true,
-      configurable: true,
-    })
-  })
-
-  it('returns false on localhost', () => {
-    Object.defineProperty(global, 'location', {
-      value: { hostname: 'localhost' },
-      writable: true,
-      configurable: true,
-    })
-    expect(znsdocsfetchenabled()).toBe(false)
-  })
-
-  it('returns true on zed.cafe', () => {
-    Object.defineProperty(global, 'location', {
-      value: { hostname: 'zed.cafe' },
-      writable: true,
-      configurable: true,
-    })
-    expect(znsdocsfetchenabled()).toBe(true)
   })
 })
 

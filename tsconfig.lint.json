@@ -12,8 +12,8 @@
     "ops/infra",
     "tasks",
     "vite.config.ts",
-    "jest.config.ts",
-    "playwright.config.ts"
+    "ops/jest.config.ts",
+    "ops/playwright.config.ts"
   ],
   "exclude": [
     "zss/feature/synth/archive"
