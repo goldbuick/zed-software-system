@@ -31,8 +31,17 @@ const CP437_TO_UNICODE = [
   0x207f, 0x00b2, 0x25a0, 0x00a0,
 ]
 
-/** int10h IBMEGA8x14.woff — CP437 slots 0–255 at U+F000–U+F0FF. */
-export const ZNS_CP437_PUA_BASE = 0xf000
+/**
+ * CP437 slots 0–31 → web-safe Unicode present in IBMEGA8x14.woff (not U+0000–U+001F
+ * controls, which browsers omit even when the font has a glyph).
+ * Slot 16 uses U+25BA (font glyph 272) for OPENIT rows.
+ */
+const CP437_LOW_WEB = [
+  0x0020, 0x263a, 0x263b, 0x2665, 0x2666, 0x2663, 0x2660, 0x2022, 0x25d8,
+  0x25cb, 0x25d9, 0x2642, 0x2640, 0x266a, 0x266b, 0x263c, 0x25ba, 0x25c4,
+  0x2195, 0x203c, 0x00b6, 0x00a7, 0x25ac, 0x21a8, 0x2191, 0x2193, 0x2192,
+  0x2190, 0x221f, 0x2194, 0x25b2, 0x25bc,
+]
 
 function iswebunsafeunicode(codepoint) {
   return (
@@ -50,11 +59,13 @@ export function cp437towebcodepoint(code) {
   if (code === 0) {
     return 0x20
   }
-  const mapped = CP437_TO_UNICODE[code]
-  if (code <= 31 || iswebunsafeunicode(mapped)) {
-    return ZNS_CP437_PUA_BASE + code
+  if (code <= 31) {
+    return CP437_LOW_WEB[code]
   }
-  return mapped
+  if (code === 127) {
+    return 0x20
+  }
+  return CP437_TO_UNICODE[code]
 }
 
 export function cp437tochar(code) {
@@ -71,6 +82,10 @@ export function validatecp437webchars() {
     const webcp = cp437towebcodepoint(code)
     if (iswebunsafeunicode(webcp)) {
       problems.push({ code, webcp, reason: 'web-unsafe codepoint' })
+      continue
+    }
+    if (webcp >= 0xf000 && webcp <= 0xf0ff) {
+      problems.push({ code, webcp, reason: 'pua not in IBMEGA8x14.woff' })
       continue
     }
     const ch = cp437tochar(code)

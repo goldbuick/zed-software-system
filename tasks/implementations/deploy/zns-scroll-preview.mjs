@@ -77,11 +77,15 @@ assertok(!indexhtml.match(/>\s*\|/), 'OPENIT rows should not have pipe prefix')
 assertok(indexhtml.includes('OPENIT'), 'index-style OPENIT row present')
 assertok(!indexhtml.includes('\u0010'), 'OPENIT marker must not be Unicode control U+0010')
 assertok(
-  indexhtml.includes('\uF010') ||
-    indexhtml.includes('&#61456;') ||
+  indexhtml.includes('\u25ba') ||
+    indexhtml.includes('&#9658;') ||
     indexhtml.includes('\u25b6') ||
     indexhtml.includes('&#9654;'),
-  'OPENIT row should render $16 marker from IBM font',
+  'OPENIT row should render $16 as U+25BA in IBM font',
+)
+assertok(
+  !indexhtml.includes('\uF010') && !indexhtml.includes('&#61456;'),
+  'OPENIT marker must not use PUA U+F010',
 )
 assertok(
   clhtml.includes('color:#ffffff') || clhtml.includes('color:#FFFFFF'),
