@@ -425,8 +425,20 @@ export function wanixkeep(device: DEVICELIKE, player: string) {
   device.emit(player, 'wanix:keep')
 }
 
-export function wanixstdin(device: DEVICELIKE, player: string, line: string) {
-  device.emit(player, 'wanix:stdin', line)
+export function wanixtermwrite(device: DEVICELIKE, player: string, line: string) {
+  device.emit(player, 'wanix:term-write', line)
+}
+
+export function wanixunbindshow(device: DEVICELIKE, player: string) {
+  device.emit(player, 'wanix:unbind-show')
+}
+
+export function wanixunbind(
+  device: DEVICELIKE,
+  player: string,
+  target: string,
+) {
+  device.emit(player, 'wanix:unbind', target)
 }
 
 export function wanixdetach(device: DEVICELIKE, player: string) {

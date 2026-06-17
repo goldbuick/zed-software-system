@@ -7,11 +7,14 @@ import {
   ensurewanixsandbox,
   haltwanixtask,
   iswanixspaceactive,
+  listwanixbinds,
   listwanixdir,
   mountwanixarchive,
   putwanixfile,
   runwanixcommand,
-  sendwanixstdin,
+  sendwanixtermwrite,
+  unmountallwanixbinds,
+  unmountwanixbind,
 } from 'zss/feature/wanix/wanixiframehost'
 import { wanixiobridgeflush } from 'zss/feature/wanix/wanixiobridge'
 import {
@@ -22,7 +25,7 @@ import {
   setwanixhalted,
   setwanixidle,
   setwanixrunning,
-  setwanixstdinrouting,
+  setwanixtermrouting,
   setwanixstopped,
   stashwanixpending,
 } from 'zss/feature/wanix/wanixsession'
@@ -211,13 +214,13 @@ export async function parsewanixbundle(player: string, file: File) {
   await wanixhandledrop(SOFTWARE, player, file.name, 'bundle', bytes)
 }
 
-export async function wanixhandlestdin(
+export async function wanixhandletermwrite(
   device: DEVICELIKE,
   player: string,
   line: string,
 ) {
   try {
-    await sendwanixstdin(line)
+    await sendwanixtermwrite(line)
   } catch (err) {
     apierror(
       device,
@@ -237,11 +240,11 @@ export function wanixhandledetach(device: DEVICELIKE, player: string) {
     apierror(device, player, 'wanix', 'no active binary')
     return
   }
-  setwanixstdinrouting(false)
+  setwanixtermrouting(false)
   apilog(
     device,
     player,
-    `wanix stdin detached — ${readwanixbinary()?.label ?? 'binary'} still running (#wanix attach to resume)`,
+    `wanix term detached — ${readwanixbinary()?.label ?? 'binary'} still running (#wanix attach to resume)`,
   )
 }
 
@@ -255,10 +258,90 @@ export function wanixhandleattach(device: DEVICELIKE, player: string) {
     apierror(device, player, 'wanix', 'no active binary')
     return
   }
-  setwanixstdinrouting(true)
+  setwanixtermrouting(true)
   apilog(
     device,
     player,
-    `wanix stdin active — typing goes to ${active.label} (#wanix detach to escape routing)`,
+    `wanix term attached — typing goes to ${active.label} (#wanix detach to escape routing)`,
   )
+}
+
+export async function wanixhandleunbindshow(
+  device: DEVICELIKE,
+  player: string,
+) {
+  try {
+    await ensurewanixsandbox(device, player)
+    const binds = await listwanixbinds()
+    if (binds.length === 0) {
+      apilog(device, player, 'wanix nothing to unbind')
+      return
+    }
+    terminalwritelines(
+      device,
+      player,
+      zsstexttape(
+        zssheaderlines('wanix unbind'),
+        '$whiteMounted binds:',
+      ),
+    )
+    for (const bind of binds) {
+      terminalwritelines(
+        device,
+        player,
+        zsstexttape(
+          `$white${bind.kind} → ${bind.dst} $7(${bind.label})$white`,
+        ),
+      )
+      writehyperlink(
+        device,
+        player,
+        `wanix unbind ${bind.id}`,
+        `Unmount ${bind.label}`,
+      )
+    }
+    writehyperlink(
+      device,
+      player,
+      'wanix unbind all',
+      `Unmount all (${binds.length} binds)`,
+    )
+  } catch (err) {
+    apierror(
+      device,
+      player,
+      'wanix',
+      err instanceof Error ? err.message : String(err),
+    )
+  }
+}
+
+export async function wanixhandleunbind(
+  device: DEVICELIKE,
+  player: string,
+  target: string,
+) {
+  try {
+    await ensurewanixsandbox(device, player)
+    if (target === 'all') {
+      const removed = await unmountallwanixbinds()
+      if (removed.length === 0) {
+        apilog(device, player, 'wanix nothing to unbind')
+        return
+      }
+      apilog(device, player, `wanix unmounted ${removed.length} binds`)
+      return
+    }
+    const binds = await listwanixbinds()
+    const match = binds.find((bind) => bind.id === target)
+    await unmountwanixbind(target)
+    apilog(device, player, `wanix unmounted ${match?.label ?? target}`)
+  } catch (err) {
+    apierror(
+      device,
+      player,
+      'wanix',
+      err instanceof Error ? err.message : String(err),
+    )
+  }
 }

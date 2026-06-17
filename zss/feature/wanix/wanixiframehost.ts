@@ -1,8 +1,8 @@
 import type { DEVICELIKE } from 'zss/device/api'
 import { normalizewanixcmd } from 'zss/feature/wanix/wanixcmd'
 import {
-  wanixiobridgenotifystdinneed,
   wanixiobridgepush,
+  wanixiobridgepushterm,
   wanixiobridgestart,
   wanixiobridgestop,
 } from 'zss/feature/wanix/wanixiobridge'
@@ -14,6 +14,14 @@ const RPC_TIMEOUT_MS = 300_000
 
 export type WANIX_HOST_STATE = 'idle' | 'starting' | 'ready'
 
+export type WANIX_BIND_ENTRY = {
+  id: string
+  kind: string
+  dst: string
+  label: string
+  removable: boolean
+}
+
 type RpcReply = {
   type: string
   id?: string
@@ -23,8 +31,13 @@ type RpcReply = {
   ready?: boolean
   taskactive?: boolean
   tid?: string
+  termpath?: string
   line?: string
+  chunk?: string
   entries?: string[]
+  binds?: WANIX_BIND_ENTRY[]
+  bindId?: string
+  removed?: string[]
 }
 
 let iframe: HTMLIFrameElement | undefined
@@ -46,7 +59,10 @@ const RPC_DONE_TYPES = new Set([
   'wanix:halt:done',
   'wanix:mount-archive:done',
   'wanix:ls:done',
-  'wanix:stdin:done',
+  'wanix:list-binds',
+  'wanix:unmount:done',
+  'wanix:unmount-all:done',
+  'wanix:term-write:done',
 ])
 
 function originok(origin: string) {
@@ -98,8 +114,10 @@ function wiremessages() {
           wanixiobridgepush(msg.line)
         }
         break
-      case 'wanix:stdin:wait':
-        wanixiobridgenotifystdinneed()
+      case 'wanix:term-out':
+        if (typeof msg.chunk === 'string') {
+          wanixiobridgepushterm(msg.chunk)
+        }
         break
       default:
         if (!RPC_DONE_TYPES.has(msg.type)) {
@@ -284,6 +302,7 @@ export async function mountwanixarchive(name: string, bytes: Uint8Array) {
   if (reply.error) {
     throw new Error(reply.error)
   }
+  return typeof reply.bindId === 'string' ? reply.bindId : undefined
 }
 
 export async function listwanixdir(path: string): Promise<string[]> {
@@ -297,6 +316,38 @@ export async function listwanixdir(path: string): Promise<string[]> {
   return Array.isArray(reply.entries) ? reply.entries.map(String) : []
 }
 
+export async function listwanixbinds(): Promise<WANIX_BIND_ENTRY[]> {
+  if (state !== 'ready' || !iframe) {
+    throw new Error('wanix not running')
+  }
+  const reply = await postrpc('wanix:list-binds', {}, RPC_TIMEOUT_MS)
+  if (reply.error) {
+    throw new Error(reply.error)
+  }
+  return Array.isArray(reply.binds) ? reply.binds : []
+}
+
+export async function unmountwanixbind(bindid: string): Promise<void> {
+  if (state !== 'ready' || !iframe) {
+    throw new Error('wanix not running')
+  }
+  const reply = await postrpc('wanix:unmount', { bindId: bindid }, RPC_TIMEOUT_MS)
+  if (reply.error) {
+    throw new Error(reply.error)
+  }
+}
+
+export async function unmountallwanixbinds(): Promise<string[]> {
+  if (state !== 'ready' || !iframe) {
+    throw new Error('wanix not running')
+  }
+  const reply = await postrpc('wanix:unmount-all', {}, RPC_TIMEOUT_MS)
+  if (reply.error) {
+    throw new Error(reply.error)
+  }
+  return Array.isArray(reply.removed) ? reply.removed.map(String) : []
+}
+
 export async function haltwanixtask(): Promise<void> {
   if (state !== 'ready' || !iframe) {
     return
@@ -307,11 +358,11 @@ export async function haltwanixtask(): Promise<void> {
   }
 }
 
-export async function sendwanixstdin(line: string): Promise<void> {
+export async function sendwanixtermwrite(line: string): Promise<void> {
   if (state !== 'ready' || !iframe) {
     throw new Error('wanix not running')
   }
-  const reply = await postrpc('wanix:stdin', { data: line }, RPC_TIMEOUT_MS)
+  const reply = await postrpc('wanix:term-write', { data: line }, RPC_TIMEOUT_MS)
   if (reply.error) {
     throw new Error(reply.error)
   }
@@ -322,6 +373,7 @@ export async function readwanixstatus(): Promise<{
   ready: boolean
   state: WANIX_HOST_STATE
   taskactive?: boolean
+  binds?: WANIX_BIND_ENTRY[]
 }> {
   if (!iframe || state !== 'ready') {
     return { active: iswanixspaceactive(), ready: false, state }
@@ -332,6 +384,7 @@ export async function readwanixstatus(): Promise<{
     ready: !!reply.ready,
     state,
     taskactive: !!reply.taskactive,
+    binds: Array.isArray(reply.binds) ? reply.binds : undefined,
   }
 }
 

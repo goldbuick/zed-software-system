@@ -1,11 +1,11 @@
 #!/bin/sh
 # Vend Wanix browser runtime into cafe/public/wanix/.
 #
-# Prereq: yarn install (wanix npm package + ops/patches/wanix+*.patch via patch-package)
+# Prereq: yarn install (wanix npm package)
 
 set -e
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 PUBLIC="$ROOT/cafe/public/wanix"
 NPM_DIST="$ROOT/node_modules/wanix/dist"
 

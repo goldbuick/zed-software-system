@@ -6,6 +6,8 @@ import {
   wanixreplace,
   wanixshow,
   wanixstop,
+  wanixunbind,
+  wanixunbindshow,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { FIRMWARE } from 'zss/firmware'
@@ -18,7 +20,10 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
     'wanix',
     [ARG_TYPE.MAYBE_NAME, 'bare: drop .wasm/.tgz to run; stop halts binary'],
     (_, words) => {
-      const [action] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+      const [action, arg] = readargs(words, 0, [
+        ARG_TYPE.MAYBE_NAME,
+        ARG_TYPE.MAYBE_NAME,
+      ])
       const player = READ_CONTEXT.elementfocus
       if (!ispresent(action)) {
         wanixshow(SOFTWARE, player)
@@ -40,12 +45,19 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
         case 'attach':
           wanixattach(SOFTWARE, player)
           break
+        case 'unbind':
+          if (ispresent(arg)) {
+            wanixunbind(SOFTWARE, player, NAME(arg))
+          } else {
+            wanixunbindshow(SOFTWARE, player)
+          }
+          break
         default:
           apierror(
             SOFTWARE,
             player,
             'wanix',
-            'drop a .wasm or .tgz — #wanix, #wanix stop, attach, detach',
+            'drop a .wasm or .tgz — #wanix, #wanix stop, attach, detach, unbind',
           )
           break
       }

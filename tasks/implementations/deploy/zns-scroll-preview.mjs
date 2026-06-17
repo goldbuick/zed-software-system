@@ -28,12 +28,14 @@ function assertok(condition, message) {
 
 const cliscroll = readfixture('cliscroll.md')
 const helptext = readfixture('helptext.md')
+const algoscroll = readfixture('algoscroll.md')
 const passage = readFileSync(
   join(root, 'ops/fixtures/lang/coolregionsbow/passage.zss'),
   'utf8',
 ).replace(/\r\n/g, '\n')
 const clhtml = zedtapehtml(cliscroll, { tenantbase: '/' })
 const helhtml = zedtapehtml(helptext, { tenantbase: '/' })
+const algohtml = zedtapehtml(algoscroll, { tenantbase: '/' })
 const passagehtml = zedzsshtml(passage, { tenantbase: '/' })
 
 const clwithtitle = `@cliscroll\n${cliscroll}`
@@ -92,6 +94,15 @@ assertok(
   'cliscroll OPENIT label should use white',
 )
 
+assertok(algohtml.includes('--&gt; = signal flow') || algohtml.includes('--> = signal flow'), 'algoscroll legend content present')
+assertok(algohtml.includes('algo0'), 'algoscroll algo0 heading present')
+assertok(algohtml.includes('synthscroll'), 'algoscroll back link present')
+assertok(
+  /--&gt; = signal flow[\s\S]*<div class="zns-line"><\/div>[\s\S]*algo0/.test(algohtml) ||
+    /--> = signal flow[\s\S]*<div class="zns-line"><\/div>[\s\S]*algo0/.test(algohtml),
+  'algoscroll should preserve blank row between legend and algo0 sections',
+)
+
 mkdirSync(dirname(dest), { recursive: true })
 const html = `<!doctype html>
 <html lang="en">
@@ -107,6 +118,7 @@ section { margin-bottom: 32px; }
 <body>
 <section><h1>cliscroll</h1>${clhtml}</section>
 <section><h1>helptext</h1>${helhtml}</section>
+<section><h1>algoscroll</h1>${algohtml}</section>
 <section><h1>passage</h1>${passagehtml}</section>
 </body>
 </html>`

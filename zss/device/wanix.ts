@@ -8,8 +8,10 @@ import {
   wanixhandledrop,
   wanixhandlekeep,
   wanixhandlereplace,
-  wanixhandlestdin,
   wanixhandlestop,
+  wanixhandletermwrite,
+  wanixhandleunbind,
+  wanixhandleunbindshow,
 } from 'zss/feature/wanix/wanixdrop'
 import {
   iswanixspaceactive,
@@ -70,12 +72,12 @@ const wanix = createdevice('wanix', [], (message) => {
     case 'keep':
       wanixhandlekeep(wanix, message.player)
       break
-    case 'stdin':
+    case 'term-write':
       if (!isstring(message.data)) {
         break
       }
       doasync(wanix, message.player, async () => {
-        await wanixhandlestdin(wanix, message.player, message.data)
+        await wanixhandletermwrite(wanix, message.player, message.data)
       })
       break
     case 'detach':
@@ -83,6 +85,19 @@ const wanix = createdevice('wanix', [], (message) => {
       break
     case 'attach':
       wanixhandleattach(wanix, message.player)
+      break
+    case 'unbind-show':
+      doasync(wanix, message.player, async () => {
+        await wanixhandleunbindshow(wanix, message.player)
+      })
+      break
+    case 'unbind':
+      if (!isstring(message.data)) {
+        break
+      }
+      doasync(wanix, message.player, async () => {
+        await wanixhandleunbind(wanix, message.player, message.data)
+      })
       break
     case 'drop': {
       const payload = readwanixdroppayload(message.data)

@@ -6,23 +6,26 @@
 </head>
 <body>
   <wanix-system wasm="/wanix/wanix.wasm">
-    <wanix-bind dst="." src="#ramfs"></wanix-bind>
+    <wanix-bind dst="." src="#ramfs" data-wanix-boot="ramfs"></wanix-bind>
   </wanix-system>
   <script type="module" src="/wanix/wanix.min.js"></script>
   <script type="module">
     const origin = location.origin
     const DATA_WAIT_MS = 30_000
-    const STDIN_POLL_MS = 100
-    const STDIN_SILENT_MS = 400
-    const STDIN_AFTER_OUTPUT_MS = 300
+    const TASK_ID = 'run'
     const sys = document.querySelector('wanix-system')
     let root = null
     let active = false
-    let currenttid = null
-    let currentterm = null
-    let currenttermel = null
-    let stdinwriter = null
-    let currentiostate = null
+    let bindseq = 0
+    let termwriter = null
+    let termreading = null
+    let termflush = null
+
+    const registry = {
+      binds: [],
+      task: null,
+      termpath: null,
+    }
 
     function post(type, data = {}) {
       parent.postMessage({ type, ...data }, origin)
@@ -36,17 +39,151 @@
       post(type, { id: msg.id, error })
     }
 
-    function pipestdout(stream, online) {
-      const reader = stream.getReader()
-      const decoder = new TextDecoder()
-      let pending = ''
+    function newbindid() {
+      bindseq += 1
+      return `bind-${bindseq}`
+    }
 
-      const flushpending = () => {
-        if (pending.length > 0) {
-          online(pending)
-          pending = ''
+    function bindmeta(entry) {
+      return {
+        id: entry.id,
+        kind: entry.kind,
+        dst: entry.dst,
+        label: entry.label,
+        removable: entry.removable,
+      }
+    }
+
+    function listbindmeta() {
+      return registry.binds.map(bindmeta)
+    }
+
+    function listremovablebindmeta() {
+      return registry.binds.filter((entry) => entry.removable).map(bindmeta)
+    }
+
+    function readregistry() {
+      return {
+        binds: listbindmeta(),
+        taskactive: registry.task?.rid != null,
+        tid: registry.task?.rid ?? undefined,
+        termpath: registry.termpath,
+      }
+    }
+
+    function registerbootbind(el) {
+      const id = newbindid()
+      registry.binds.push({
+        el,
+        id,
+        kind: 'boot',
+        dst: '.',
+        label: '#ramfs',
+        removable: false,
+      })
+      el.dataset.wanixBindId = id
+    }
+
+    async function addbind(attrs) {
+      const bindel = document.createElement('wanix-bind')
+      for (const [key, value] of Object.entries(attrs)) {
+        if (value != null && key !== 'label') {
+          bindel.setAttribute(key, String(value))
         }
       }
+      const id = newbindid()
+      const entry = {
+        el: bindel,
+        id,
+        kind: attrs.type || 'ns',
+        dst: attrs.dst || '.',
+        label: attrs.label || attrs.dst || id,
+        removable: attrs.removable !== false,
+      }
+      bindel.dataset.wanixBindId = id
+      sys.appendChild(bindel)
+      registry.binds.push(entry)
+      await new Promise((resolve) => setTimeout(resolve, 250))
+      return id
+    }
+
+    function findbind(bindid) {
+      return registry.binds.find((entry) => entry.id === bindid)
+    }
+
+    function removebind(bindid) {
+      const idx = registry.binds.findIndex((entry) => entry.id === bindid)
+      if (idx === -1) {
+        throw new Error(`unknown bind: ${bindid}`)
+      }
+      const entry = registry.binds[idx]
+      if (!entry.removable) {
+        throw new Error(`bind not removable: ${bindid}`)
+      }
+      entry.el.remove()
+      registry.binds.splice(idx, 1)
+      return entry.id
+    }
+
+    function removeallbinds() {
+      const removed = []
+      for (const entry of [...registry.binds]) {
+        if (!entry.removable) {
+          continue
+        }
+        entry.el.remove()
+        removed.push(entry.id)
+        const idx = registry.binds.indexOf(entry)
+        if (idx !== -1) {
+          registry.binds.splice(idx, 1)
+        }
+      }
+      return removed
+    }
+
+    function disconnectterm() {
+      termflush = null
+      termreading = null
+      if (termwriter) {
+        try {
+          termwriter.releaseLock()
+        } catch {
+          // writer may already be closed
+        }
+        termwriter = null
+      }
+      registry.termpath = null
+    }
+
+    async function cleartask() {
+      disconnectterm()
+      if (registry.task) {
+        registry.task.remove()
+        registry.task = null
+      }
+    }
+
+    async function gettermwriter() {
+      if (!termwriter) {
+        throw new Error('no active task term writer')
+      }
+      return termwriter
+    }
+
+    function createtask(cmd) {
+      const task = document.createElement('wanix-task')
+      task.setAttribute('id', TASK_ID)
+      task.setAttribute('type', 'wasi')
+      task.setAttribute('term', '')
+      task.setAttribute('cmd', cmd)
+      sys.appendChild(task)
+      registry.task = task
+      return task
+    }
+
+    function streamtermout(stream) {
+      const reader = stream.getReader()
+      const decoder = new TextDecoder()
 
       const reading = (async () => {
         try {
@@ -55,133 +192,28 @@
             if (done) {
               break
             }
-            pending += decoder.decode(value, { stream: true })
-            let idx = pending.indexOf('\n')
-            while (idx !== -1) {
-              const line = pending.slice(0, idx)
-              pending = pending.slice(idx + 1)
-              if (line.length > 0) {
-                online(line)
-              }
-              idx = pending.indexOf('\n')
+            if (value && value.byteLength > 0) {
+              post('wanix:term-out', { chunk: decoder.decode(value, { stream: true }) })
             }
           }
-          const tail = pending.trimEnd()
-          if (tail.length > 0) {
-            online(tail)
-          }
-          pending = ''
         } finally {
           reader.releaseLock()
         }
       })()
 
-      return { reading, flushpending }
+      return { reading }
     }
 
-    function cleartermel() {
-      if (currenttermel) {
-        try {
-          currenttermel.disconnect()
-        } catch {
-          // term may already be torn down
-        }
-        currenttermel.remove()
-        currenttermel = null
-      }
-    }
-
-    async function wiretaskstdio(tid) {
-      const taskpath = `#task/${tid}`
-      const taskroot = sys.openHandle(tid)
-      await sys._setupNamespace(tid, '', [])
-      await taskroot.bind(taskpath, '#task/self')
-      const termid = (await root.readText('#term/new')).trim()
-      const term = `#term/${termid}`
-      await root.bind(term, `${taskpath}/term`)
-      await taskroot.bind(term, '#task/self/term')
-      const program = `${term}/program`
-      await taskroot.bind(program, `${taskpath}/fd/0`)
-      await taskroot.bind(program, `${taskpath}/fd/1`)
-      await taskroot.bind(program, `${taskpath}/fd/2`)
-      return term
-    }
-
-    async function mounttaskterm(term) {
-      cleartermel()
-      const tel = document.createElement('wanix-term')
-      tel.setAttribute('path', term)
-      tel.style.cssText =
-        'position:fixed;left:-9999px;top:0;width:80px;height:24px;overflow:hidden;opacity:0;pointer-events:none'
-      sys.appendChild(tel)
-      tel.connectedCallback()
-      currenttermel = tel
-      return tel
-    }
-
-    async function connecttaskio(term, logline) {
-      const datapath = `${term}/data`
+    async function connectterm(termpath) {
+      const datapath = `${termpath}/data`
       await root.waitFor(datapath, DATA_WAIT_MS)
-      if (currenttermel) {
-        sys._updateTerminals(currenttermel)
-      }
-      const stdout = await root.openReadable(datapath)
-      const { reading, flushpending } = pipestdout(stdout, logline)
-      const stdinwritable = await root.openWritable(datapath)
-      stdinwriter = stdinwritable.getWriter()
-      return { reading, flushpending }
-    }
-
-    async function cleartask() {
-      currenttid = null
-      currentterm = null
-      currentiostate = null
-      cleartermel()
-      if (stdinwriter) {
-        try {
-          stdinwriter.releaseLock()
-        } catch {
-          // writer may already be closed
-        }
-        stdinwriter = null
-      }
-    }
-
-    async function getstdinwriter() {
-      if (!stdinwriter) {
-        throw new Error('no active task stdin writer')
-      }
-      return stdinwriter
-    }
-
-    async function taskstillrunning(taskpath) {
-      try {
-        const exit = (await root.readText(`${taskpath}/exit`)).trim()
-        return exit === ''
-      } catch {
-        return true
-      }
-    }
-
-    async function watchstdinneed(taskpath, tid, iostate, flushpending) {
-      while (currenttid === tid) {
-        if (!(await taskstillrunning(taskpath))) {
-          return
-        }
-        const elapsed = Date.now() - iostate.waitstarted
-        if (!iostate.stdoutseen && elapsed >= STDIN_SILENT_MS) {
-          flushpending()
-          post('wanix:stdin:wait')
-          iostate.waitstarted = Date.now()
-          iostate.stdoutseen = false
-        } else if (iostate.stdoutseen && elapsed >= STDIN_AFTER_OUTPUT_MS) {
-          flushpending()
-          post('wanix:stdin:wait')
-          iostate.waitstarted = Date.now()
-          iostate.stdoutseen = false
-        }
-        await new Promise((resolve) => setTimeout(resolve, STDIN_POLL_MS))
-      }
+      const readable = await root.openReadable(datapath)
+      const { reading } = streamtermout(readable)
+      termreading = reading
+      const writable = await root.openWritable(datapath)
+      termwriter = writable.getWriter()
+      registry.termpath = termpath
+      return { reading }
     }
 
     async function runtask(cmd) {
@@ -189,30 +221,17 @@
       if (!taskcmd) {
         throw new Error('empty command')
       }
-      const tid = (await root.readText('#task/new/wasi')).trim()
-      currenttid = tid
-      const taskpath = `#task/${tid}`
-      await root.writeFile(`${taskpath}/cmd`, taskcmd)
-      const term = await wiretaskstdio(tid)
-      currentterm = term
-      await mounttaskterm(term)
-      const iostate = {
-        stdoutseen: false,
-        waitstarted: Date.now(),
-      }
-      currentiostate = iostate
-      const logline = (line) => {
-        iostate.stdoutseen = true
-        post('wanix:log', { line: line.replace(/\r$/, '') })
-      }
-      const { reading, flushpending } = await connecttaskio(term, logline)
-      await root.writeFile(`${taskpath}/ctl`, 'start')
-      watchstdinneed(taskpath, tid, iostate, flushpending)
+      await cleartask()
+      const task = createtask(taskcmd)
+      await task.allocate()
+      const taskpath = `#task/${task.rid}`
+      const termpath = `#task/${TASK_ID}/term`
+      const { reading } = await connectterm(termpath)
+      await task.start()
       while (true) {
         try {
           const exit = (await root.readText(`${taskpath}/exit`)).trim()
           if (exit !== '') {
-            flushpending()
             await Promise.race([reading, new Promise((resolve) => setTimeout(resolve, 250))])
             await cleartask()
             return Number(exit) || 0
@@ -225,10 +244,11 @@
     }
 
     async function halttask() {
-      if (!currenttid) {
+      if (!registry.task?.rid) {
+        await cleartask()
         return
       }
-      const taskpath = `#task/${currenttid}`
+      const taskpath = `#task/${registry.task.rid}`
       try {
         await root.writeFile(`${taskpath}/ctl`, 'stop')
       } catch {
@@ -241,15 +261,16 @@
       await root.writeFile(name, bytes)
     }
 
-    async function mountarchive(bytes) {
+    async function mountarchive(bytes, label) {
       const url = URL.createObjectURL(new Blob([bytes], { type: 'application/gzip' }))
       try {
-        const bindel = document.createElement('wanix-bind')
-        bindel.setAttribute('type', 'archive')
-        bindel.setAttribute('dst', '.')
-        bindel.setAttribute('src', url)
-        sys.appendChild(bindel)
-        await new Promise((resolve) => setTimeout(resolve, 250))
+        const bindid = await addbind({
+          type: 'archive',
+          dst: '.',
+          src: url,
+          label: label || 'archive.tgz',
+        })
+        return bindid
       } finally {
         URL.revokeObjectURL(url)
       }
@@ -261,6 +282,10 @@
     }
 
     async function boot() {
+      const bootel = sys.querySelector('wanix-bind[data-wanix-boot]')
+      if (bootel) {
+        registerbootbind(bootel)
+      }
       await new Promise((resolve) => {
         sys.addEventListener('ready', resolve, { once: true })
       })
@@ -284,8 +309,12 @@
             replydone('wanix:status', msg, {
               active,
               ready: active && root != null,
-              taskactive: currenttid != null,
-              tid: currenttid ?? undefined,
+              ...readregistry(),
+            })
+            break
+          case 'wanix:list-binds':
+            replydone('wanix:list-binds', msg, {
+              binds: listremovablebindmeta(),
             })
             break
           case 'wanix:put': {
@@ -312,8 +341,32 @@
               raw instanceof ArrayBuffer
                 ? new Uint8Array(raw)
                 : new Uint8Array(raw)
-            await mountarchive(bytes)
-            replydone('wanix:mount-archive:done', msg)
+            const label = typeof msg.name === 'string' ? msg.name : 'archive.tgz'
+            const bindid = await mountarchive(bytes, label)
+            replydone('wanix:mount-archive:done', msg, { bindId: bindid })
+            break
+          }
+          case 'wanix:unmount': {
+            if (!root) {
+              replyerror('wanix:unmount:done', msg, 'not ready')
+              break
+            }
+            const bindid = typeof msg.bindId === 'string' ? msg.bindId : ''
+            if (!bindid) {
+              replyerror('wanix:unmount:done', msg, 'missing bindId')
+              break
+            }
+            removebind(bindid)
+            replydone('wanix:unmount:done', msg, { bindId: bindid })
+            break
+          }
+          case 'wanix:unmount-all': {
+            if (!root) {
+              replyerror('wanix:unmount-all:done', msg, 'not ready')
+              break
+            }
+            const removed = removeallbinds()
+            replydone('wanix:unmount-all:done', msg, { removed })
             break
           }
           case 'wanix:ls': {
@@ -343,19 +396,15 @@
             post('wanix:run:done', { id: msg.id, code })
             break
           }
-          case 'wanix:stdin': {
-            if (!root || !currentterm) {
-              replyerror('wanix:stdin:done', msg, 'no active task')
+          case 'wanix:term-write': {
+            if (!root || !registry.task?.rid) {
+              replyerror('wanix:term-write:done', msg, 'no active task')
               break
             }
-            const writer = await getstdinwriter()
+            const writer = await gettermwriter()
             const line = typeof msg.data === 'string' ? msg.data : ''
-            await writer.write(new TextEncoder().encode(`${line}\r\n`))
-            if (currentiostate) {
-              currentiostate.stdoutseen = false
-              currentiostate.waitstarted = Date.now()
-            }
-            replydone('wanix:stdin:done', msg)
+            await writer.write(new TextEncoder().encode(`${line}\n`))
+            replydone('wanix:term-write:done', msg)
             break
           }
           default:
@@ -369,12 +418,16 @@
           replyerror('wanix:put:done', msg, message)
         } else if (msg.type === 'wanix:mount-archive') {
           replyerror('wanix:mount-archive:done', msg, message)
+        } else if (msg.type === 'wanix:unmount') {
+          replyerror('wanix:unmount:done', msg, message)
+        } else if (msg.type === 'wanix:unmount-all') {
+          replyerror('wanix:unmount-all:done', msg, message)
         } else if (msg.type === 'wanix:ls') {
           replyerror('wanix:ls:done', msg, message)
         } else if (msg.type === 'wanix:halt') {
           replyerror('wanix:halt:done', msg, message)
-        } else if (msg.type === 'wanix:stdin') {
-          replyerror('wanix:stdin:done', msg, message)
+        } else if (msg.type === 'wanix:term-write') {
+          replyerror('wanix:term-write:done', msg, message)
         } else {
           post('wanix:log', { line: `wanix error: ${message}` })
         }

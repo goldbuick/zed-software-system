@@ -1,25 +1,33 @@
 import { apilog } from 'zss/device/api'
 import type { DEVICELIKE } from 'zss/device/api'
-import {
-  enablewanixstdinrouting,
-  readwanixbinary,
-} from 'zss/feature/wanix/wanixsession'
 
 const LOG_FLUSH_MS = 32
 const logbuffer: string[] = []
+const termbuffer: string[] = []
 let flushhandle: ReturnType<typeof setTimeout> | undefined
 let bridgedevice: DEVICELIKE | undefined
 let bridgeplayer = ''
 
 function flushlogs() {
   flushhandle = undefined
-  if (!bridgedevice || logbuffer.length === 0) {
+  if (!bridgedevice) {
     logbuffer.length = 0
+    termbuffer.length = 0
     return
   }
-  const lines = logbuffer.splice(0, logbuffer.length)
-  for (const line of lines) {
-    apilog(bridgedevice, bridgeplayer, line)
+  if (logbuffer.length > 0) {
+    const lines = logbuffer.splice(0, logbuffer.length)
+    for (const line of lines) {
+      apilog(bridgedevice, bridgeplayer, line)
+    }
+  }
+  if (termbuffer.length > 0) {
+    const chunks = termbuffer.splice(0, termbuffer.length)
+    for (const chunk of chunks) {
+      if (chunk.length > 0) {
+        apilog(bridgedevice, bridgeplayer, chunk)
+      }
+    }
   }
 }
 
@@ -42,22 +50,18 @@ export function wanixiobridgepush(line: string) {
   flushhandle ??= setTimeout(flushlogs, LOG_FLUSH_MS)
 }
 
+export function wanixiobridgepushterm(chunk: string) {
+  if (!bridgedevice || !chunk) {
+    return
+  }
+  termbuffer.push(chunk)
+  flushhandle ??= setTimeout(flushlogs, LOG_FLUSH_MS)
+}
+
 export function wanixiobridgeflush() {
   if (flushhandle) {
     clearTimeout(flushhandle)
     flushhandle = undefined
   }
   flushlogs()
-}
-
-export function wanixiobridgenotifystdinneed() {
-  if (!enablewanixstdinrouting() || !bridgedevice) {
-    return
-  }
-  const label = readwanixbinary()?.label ?? 'binary'
-  apilog(
-    bridgedevice,
-    bridgeplayer,
-    `wanix stdin active — typing goes to ${label} (#wanix detach to escape routing)`,
-  )
 }

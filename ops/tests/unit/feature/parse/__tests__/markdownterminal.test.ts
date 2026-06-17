@@ -82,4 +82,18 @@ describe('terminalwritemarkdownlines', () => {
     expect(body2.length).toBeGreaterThan(0)
     expect(body2.startsWith('\n')).toBe(false)
   })
+
+  it('does not emit a blank line before a heading when the document starts with newlines', () => {
+    terminalwritemarkdownlines('p1', '\n\n# Hello')
+    const [, , body] = terminalwritelinesmock.mock.calls[0]
+    expect(body.length).toBeGreaterThan(0)
+    expect(body.startsWith('\n')).toBe(false)
+    expect(body).toContain('Hello')
+  })
+
+  it('preserves blank lines between markdown blocks', () => {
+    terminalwritemarkdownlines('p1', 'line one\n\nline two')
+    const [, , body] = terminalwritelinesmock.mock.calls[0]
+    expect(body).toContain('line one\n\nline two')
+  })
 })

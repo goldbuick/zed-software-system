@@ -1,46 +1,49 @@
 import { apilog } from 'zss/device/api'
 import {
-  wanixiobridgenotifystdinneed,
+  wanixiobridgeflush,
+  wanixiobridgepush,
+  wanixiobridgepushterm,
   wanixiobridgestart,
   wanixiobridgestop,
 } from 'zss/feature/wanix/wanixiobridge'
-import {
-  readwanixstdinrouting,
-  resetwanixsessionfortest,
-  setwanixrunning,
-} from 'zss/feature/wanix/wanixsession'
 
 jest.mock('zss/device/api', () => ({
   apilog: jest.fn(),
 }))
 
-describe('wanixiobridge stdin need', () => {
+describe('wanixiobridge', () => {
   const device = { emit: jest.fn() }
 
   beforeEach(() => {
     jest.clearAllMocks()
-    resetwanixsessionfortest()
+    jest.useFakeTimers()
     wanixiobridgestop()
   })
 
-  it('enables routing and logs once when stdin is needed', () => {
-    setwanixrunning({ label: 'repl.wasm', entrycmd: 'repl.wasm' })
+  afterEach(() => {
+    jest.useRealTimers()
+  })
+
+  it('buffers and flushes log lines to apilog', () => {
     wanixiobridgestart(device, 'player1')
+    wanixiobridgepush('hello')
+    wanixiobridgepush('world')
+    expect(apilog).not.toHaveBeenCalled()
+    jest.advanceTimersByTime(32)
+    expect(apilog).toHaveBeenCalledTimes(2)
+    expect(apilog).toHaveBeenNthCalledWith(1, device, 'player1', 'hello')
+    expect(apilog).toHaveBeenNthCalledWith(2, device, 'player1', 'world')
+  })
 
-    wanixiobridgenotifystdinneed()
-    wanixiobridgenotifystdinneed()
-
-    expect(readwanixstdinrouting()).toBe(true)
-    expect(apilog).toHaveBeenCalledTimes(1)
+  it('buffers and flushes term chunks to apilog', () => {
+    wanixiobridgestart(device, 'player1')
+    wanixiobridgepushterm('What is your name?')
+    expect(apilog).not.toHaveBeenCalled()
+    jest.advanceTimersByTime(32)
     expect(apilog).toHaveBeenCalledWith(
       device,
       'player1',
-      expect.stringContaining('wanix stdin active'),
-    )
-    expect(apilog).toHaveBeenCalledWith(
-      device,
-      'player1',
-      expect.stringContaining('repl.wasm'),
+      'What is your name?',
     )
   })
 })

@@ -16,15 +16,16 @@ Sources:
 
 | File | Output |
 |------|--------|
-| `hello.wat` | one-shot hello |
-| `echo_stdin.wat` | read one line, echo |
-| `hello-repl.wat` | interactive name + echo prompts |
+| `hello.wat` | one-shot hello (batch stdout) |
+| `hold.wat` | infinite loop (e2e term-write while running) |
 
 Drag the `.wasm` onto a running app (`yarn task app dev`).
 
+Interactive input uses the **ZSS terminal as wanix-term**: `#task/run/term/data` via `wanix:term-write`. Raw WASI `fd_read(0)` is not supported.
+
 ## Optional C build (wasi-sdk)
 
-Readable C versions: `hello.c`, `hello-repl.c`. Compile when [wasi-sdk](https://github.com/WebAssembly/wasi-sdk) is installed:
+Readable C version: `hello.c`. Compile when [wasi-sdk](https://github.com/WebAssembly/wasi-sdk) is installed:
 
 ```bash
 brew install wasi-sdk
@@ -51,13 +52,13 @@ Vend the browser wanix kernel into `cafe/public/wanix`:
 yarn task run wanix:ensure
 ```
 
-`yarn install` applies `ops/patches/wanix+0.4.0-alpha8.patch`, which wires WASI stdin to `#task/N/fd/0` (upstream ships `OpenEmptyFile()`). Run `wanix:ensure` after install so `cafe/public/wanix` matches patched `node_modules/wanix`.
+`yarn install` provides the `wanix` npm package. Run `wanix:ensure` after install so `cafe/public/wanix` matches `node_modules/wanix`.
 
 Upstream source for reading/debugging (WASI worker, term device, workbench host): [`submodules/wanix/`](../../../submodules/wanix/) — see [`submodules/README.md`](../../../submodules/README.md).
 
-## Stdin verify (fix loop)
+## IO verify (fix loop)
 
 ```bash
-yarn task run wanix:stdin:verify   # isolated host e2e
-yarn task run e2e:test:wanix       # host + full-app CLI smoke
+yarn task run wanix:io:verify   # isolated host e2e
+yarn task run e2e:test:wanix    # host + full-app CLI smoke
 ```

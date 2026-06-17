@@ -1,14 +1,11 @@
-/** Defect metrics for wanix stdin — task must block until input is supplied. */
-export const STDIN_BLOCK_MS = 800
-
-export const EMPTY_GREET_PATTERN = /Hello,\s*!/
+/** Helpers for wanix host iframe e2e (term bridge + binds). */
+export const TERM_BLOCK_MS = 800
 
 export type WanixHostRunResult = {
   code: number
   error?: string
-  lines: string[]
-  blocked?: boolean
-  sawemptygreet?: boolean
+  output: string
+  termwritesucceeded?: boolean
 }
 
 export async function waitforwanixhostready(page: {

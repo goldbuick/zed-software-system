@@ -21,9 +21,7 @@ import { ptstoarea } from 'zss/mapping/2d'
 import {
   type WANIX_SMOKE_REPORT,
   readwanixdiag,
-  runwanixreplsmoke,
   runwanixsmoke,
-  runwanixstdinsmoke,
 } from 'zss/testsupport/e2e/wanixrepro'
 import type { PT } from 'zss/words/types'
 export type ZssE2eMoveDir = 'left' | 'right' | 'up' | 'down'
@@ -87,10 +85,6 @@ export type ZssE2eBridge = {
   }) => Promise<LangCompileBenchReport>
   /** Drop hello.wasm (auto-start sandbox) with scrollback evidence. */
   runwanixsmoke: (deadlinems?: number) => Promise<WANIX_SMOKE_REPORT>
-  /** Drop echo_stdin.wasm and send one stdin line. */
-  runwanixstdinsmoke: (deadlinems?: number) => Promise<WANIX_SMOKE_REPORT>
-  /** Drop hello-repl.wasm and send two stdin lines. */
-  runwanixreplsmoke: (deadlinems?: number) => Promise<WANIX_SMOKE_REPORT>
   /** Iframe mount + wanixiframehost state snapshot. */
   getwanixdiag: () => ReturnType<typeof readwanixdiag>
 }
@@ -248,12 +242,6 @@ export function installe2ebridge(): void {
     },
     runwanixsmoke(deadlinems) {
       return runwanixsmoke(deadlinems)
-    },
-    runwanixstdinsmoke(deadlinems) {
-      return runwanixstdinsmoke(deadlinems)
-    },
-    runwanixreplsmoke(deadlinems) {
-      return runwanixreplsmoke(deadlinems)
     },
     getwanixdiag() {
       return readwanixdiag()

@@ -41,7 +41,7 @@ export const DIAGRAM_LAYERS: {
   audience: Audience
 }[] = [
   { id: 'stack', label: 'Product stack', audience: 'Both' },
-  { id: 'realms', label: 'Four JS realms', audience: 'Dev' },
+  { id: 'realms', label: 'Realms & workers', audience: 'Dev' },
   { id: 'tick', label: 'Tick loop', audience: 'Dev' },
   { id: 'script', label: 'Script pipeline', audience: 'Both' },
 ]
@@ -102,7 +102,7 @@ export const DIAGRAMS: Record<DiagramLayer, DiagramConfig> = {
       },
       {
         id: 'register',
-        label: 'Register device',
+        label: 'register device',
         definition:
           'Main-thread UI edge: storage, zustand stores, emits vm:* messages for user actions.',
         audience: 'Dev',
@@ -125,10 +125,18 @@ export const DIAGRAMS: Record<DiagramLayer, DiagramConfig> = {
         path: 'zss/device/boardrunner.ts',
       },
       {
+        id: 'wanix',
+        label: 'Wanix sandbox',
+        definition:
+          'Hidden iframe host for dropped .wasm/.tgz; terminal I/O bridged while a task runs.',
+        audience: 'Dev',
+        path: 'zss/device/wanix.ts',
+      },
+      {
         id: 'heavy',
         label: 'Heavy worker',
         definition:
-          'Off-thread TTS, LLM agents, and expensive browser APIs isolated from sim loop.',
+          'Off-thread LLM agents and expensive browser APIs isolated from the sim loop.',
         audience: 'Dev',
         path: 'zss/device/heavy.ts',
       },
@@ -162,11 +170,13 @@ export const DIAGRAMS: Record<DiagramLayer, DiagramConfig> = {
       { from: 'zedcafe', to: 'editor' },
       { from: 'zedcafe', to: 'inspector' },
       { from: 'zedcafe', to: 'display' },
+      { from: 'zedcafe', to: 'wanix' },
       { from: 'tape', to: 'engine' },
       { from: 'editor', to: 'engine' },
       { from: 'inspector', to: 'engine' },
       { from: 'display', to: 'engine' },
       { from: 'engine', to: 'register' },
+      { from: 'wanix', to: 'register' },
       { from: 'register', to: 'simvm' },
       { from: 'register', to: 'boardrunner' },
       { from: 'register', to: 'heavy' },
@@ -185,7 +195,7 @@ export const DIAGRAMS: Record<DiagramLayer, DiagramConfig> = {
         id: 'mregister',
         label: 'register',
         definition:
-          'UI edge device on main thread: terminal, editor, storage, vm calls.',
+          'UI edge on main thread: terminal, editor, storage, vm calls, workstatus.',
         audience: 'Dev',
         path: 'zss/device/register.ts',
       },
@@ -210,6 +220,14 @@ export const DIAGRAMS: Record<DiagramLayer, DiagramConfig> = {
         definition: 'Tone.js audio device: play, voices, FX, TTS playback.',
         audience: 'Dev',
         path: 'zss/device/synth.ts',
+      },
+      {
+        id: 'mwanix',
+        label: 'wanix',
+        definition:
+          'Main-thread Wanix host: iframe sandbox, drop handling, terminal I/O bridge.',
+        audience: 'Dev',
+        path: 'zss/device/wanix.ts',
       },
       {
         id: 'mmodem',
@@ -283,9 +301,25 @@ export const DIAGRAMS: Record<DiagramLayer, DiagramConfig> = {
         id: 'hheavy',
         label: 'heavy',
         definition:
-          'TTS, LLM model prompts, agent start/stop in isolated worker.',
+          'Gemma LLM inference and agent lifecycle in an isolated worker.',
         audience: 'Dev',
         path: 'zss/device/heavy.ts',
+      },
+      {
+        id: 'htts',
+        label: 'tts (lazy)',
+        definition:
+          'On-demand Piper/Supertonic TTS inference; spawned on first tts:* message.',
+        audience: 'Dev',
+        path: 'zss/device/ttsworker.ts',
+      },
+      {
+        id: 'hstt',
+        label: 'stt (lazy)',
+        definition:
+          'On-demand Moonshine speech-to-text; spawned on first stt:* message.',
+        audience: 'Dev',
+        path: 'zss/device/sttworker.ts',
       },
     ],
     edges: [
@@ -293,11 +327,14 @@ export const DIAGRAMS: Record<DiagramLayer, DiagramConfig> = {
       { from: 'mforward', to: 'shub' },
       { from: 'mforward', to: 'brunner' },
       { from: 'mforward', to: 'hheavy' },
+      { from: 'mforward', to: 'htts' },
+      { from: 'mforward', to: 'hstt' },
       { from: 'shub', to: 'svm' },
       { from: 'shub', to: 'sclock' },
       { from: 'svm', to: 'brunner' },
       { from: 'mregister', to: 'mhub' },
       { from: 'mgadget', to: 'mhub' },
+      { from: 'mwanix', to: 'mhub' },
     ],
   },
   tick: {
@@ -1002,17 +1039,44 @@ export const GLOSSARY: GlossaryEntry[] = [
     category: 'Integrations',
     audience: 'Both',
     definition:
-      'Worker device for TTS, LLM inference, and ONNX/transformers off hot path.',
-    related: 'agent, TTS',
+      'Worker device for LLM inference, board agents, and ONNX/transformers off the sim hot path.',
+    related: 'agent, ttsspace',
     path: 'zss/device/heavy.ts',
+  },
+  {
+    term: 'wanix',
+    category: 'Integrations',
+    audience: 'Both',
+    definition:
+      'In-browser WASM sandbox: drop .wasm/.tgz on the terminal, run tasks, route terminal I/O while active (#wanix).',
+    related: 'register, terminal',
+    path: 'zss/feature/wanix/wanixsession.ts',
+  },
+  {
+    term: 'ttsspace',
+    category: 'Integrations',
+    audience: 'Dev',
+    definition:
+      'Lazy-spawned TTS worker for Piper/Supertonic inference; main synth plays returned audio.',
+    related: 'TTS, heavy',
+    path: 'zss/device/ttsworker.ts',
+  },
+  {
+    term: 'sttspace',
+    category: 'Integrations',
+    audience: 'Dev',
+    definition:
+      'Lazy-spawned STT worker for Moonshine speech recognition; mic capture stays on main thread.',
+    related: 'speech-to-text, terminal',
+    path: 'zss/device/sttworker.ts',
   },
   {
     term: 'TTS',
     category: 'Integrations',
     audience: 'Creator',
     definition:
-      'Text-to-speech via Edge, Piper, or Supertonic engines (#tts, #ttsengine).',
-    related: 'heavy, audio',
+      'Text-to-speech via Edge (main), Piper, or Supertonic (ttsspace worker) (#tts, #ttsengine).',
+    related: 'ttsspace, audio',
     path: 'zss/feature/docs/tts.md',
   },
   {
@@ -1088,7 +1152,7 @@ export const GLOSSARY: GlossaryEntry[] = [
     category: 'Runtime',
     audience: 'Dev',
     definition:
-      'Main-thread edge translating UI events into vm:* hub messages.',
+      'Main-thread edge translating UI events into vm:* hub messages; handles workstatus and sessionreset.',
     related: 'SOFTWARE, tape',
     path: 'zss/device/register.ts',
   },
@@ -1210,6 +1274,12 @@ export const FEATURE_DOMAINS: FeatureDomain[] = [
         'Both',
         'Capture display screenshot (operator).',
         '#screenshot',
+      ],
+      [
+        '#wanix',
+        'Creator',
+        'Run dropped .wasm/.tgz in Wanix sandbox; attach, detach, stop, unbind.',
+        '#wanix',
       ],
     ],
   },
@@ -1559,6 +1629,36 @@ export const FEATURE_DOMAINS: FeatureDomain[] = [
     ],
   },
   {
+    title: 'Wanix & WASM sandbox',
+    color: 'gray',
+    features: [
+      [
+        '#wanix',
+        'Creator',
+        'Show status, stop/replace/keep pending drop, attach/detach terminal routing.',
+        '#wanix',
+      ],
+      [
+        'Terminal drop',
+        'Creator',
+        'Drag .wasm or .tgz onto tape to mount and run in hidden iframe host.',
+        'zss/feature/wanix/wanixdrop.ts',
+      ],
+      [
+        'Terminal I/O bridge',
+        'Dev',
+        'While running, terminal input routes to Wanix task stdin; output via apilog.',
+        'zss/feature/wanix/wanixiobridge.ts',
+      ],
+      [
+        'Bind mounts',
+        'Creator',
+        'Attach/detach/unbind 9P bind entries between guest and host paths.',
+        '#wanix attach',
+      ],
+    ],
+  },
+  {
     title: 'AI & heavy worker',
     color: 'purple',
     features: [
@@ -1577,7 +1677,7 @@ export const FEATURE_DOMAINS: FeatureDomain[] = [
       [
         'TTS engines',
         'Creator',
-        'Edge, Piper, Supertonic off main thread.',
+        'Edge on main; Piper/Supertonic in lazy ttsspace worker.',
         'zss/feature/docs/tts.md',
       ],
       [
@@ -1589,7 +1689,7 @@ export const FEATURE_DOMAINS: FeatureDomain[] = [
       [
         'Speech-to-text',
         'Creator',
-        'Vosk model for voice input (bundled).',
+        'Moonshine ONNX in lazy sttspace worker; mic on main thread.',
         'zss/feature/docs/speechtotext.md',
       ],
     ],

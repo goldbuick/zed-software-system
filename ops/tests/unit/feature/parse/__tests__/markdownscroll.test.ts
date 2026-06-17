@@ -1,4 +1,8 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
 import { scrollwritemarkdownlines } from 'zss/feature/parse/markdownscroll'
+import { parsemarkdownwithzsstextsink } from 'zss/feature/parse/markdownzsstext'
 import {
   gadgetstate,
   gadgetstateprovider,
@@ -36,6 +40,20 @@ jest.mock('zss/words/reader', () => ({
 jest.mock('zss/mapping/value', () => ({
   maptostring: jest.fn((value: unknown) => String(value)),
 }))
+
+const romdir = join(__dirname, '../../../../../../zss/rom/refscroll')
+
+function parsemarkdownlines(content: string): string[] {
+  const lines: string[] = []
+  parsemarkdownwithzsstextsink(
+    {
+      line: (s) => lines.push(s),
+      hyperlink: (command, label) => lines.push(`!${command};${label}`),
+    },
+    content,
+  )
+  return lines
+}
 
 describe('parsemarkdownforscroll', () => {
   const playerstates: Record<string, GADGET_STATE> = {}
@@ -116,6 +134,26 @@ describe('parsemarkdownforscroll', () => {
     const sc2 = gadgetstate('p1').scroll ?? []
     expect(sc2.length).toBeGreaterThan(0)
     expect(sc2[0]).not.toBe('')
+  })
+
+  it('does not emit a blank row before a heading when the document starts with newlines', () => {
+    const lines = parsemarkdownlines('\n\n# Hello')
+    expect(lines.length).toBeGreaterThan(0)
+    expect(lines[0]).not.toBe('')
+    expect(lines.some((line) => line.includes('Hello'))).toBe(true)
+  })
+
+  it('preserves blank rows between markdown blocks (algoscroll)', () => {
+    const md = readFileSync(join(romdir, 'algoscroll.md'), 'utf8')
+    const lines = parsemarkdownlines(md)
+    const flowidx = lines.findIndex((line) => line.includes('--> = signal flow'))
+    const algoidx = lines.findIndex((line) => line.includes('algo0'))
+    const synthidx = lines.findIndex((line) => line.startsWith('!synthscroll'))
+    expect(flowidx).toBeGreaterThanOrEqual(0)
+    expect(algoidx).toBeGreaterThan(flowidx)
+    expect(synthidx).toBeGreaterThan(algoidx)
+    expect(lines[flowidx + 1]).toBe('')
+    expect(lines[synthidx - 1]).toBe('')
   })
 
   it('keeps later standalone !tape rows after a standalone !openit line (single parse)', () => {

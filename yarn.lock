@@ -11435,9 +11435,9 @@ walker@^1.0.8:
   dependencies:
     makeerror "1.0.12"
 
-wanix@0.4.0-alpha8:
+wanix@^0.4.0-alpha8:
   version "0.4.0-alpha8"
-  resolved "https://registry.yarnpkg.com/wanix/-/wanix-0.4.0-alpha8.tgz#3e43a12c8e8e5a82d215163adc972402da34b830"
+  resolved "https://registry.npmjs.org/wanix/-/wanix-0.4.0-alpha8.tgz#3e43a12c8e8e5a82d215163adc972402da34b830"
   integrity sha512-L9Z3SOBsKegwRl3/bK3PcI0MhVqHF87NSpSDRUxWLAVaJCXJwVXKaIbGhS6HAAcxYi0X5RMXb+mXdNJQp0UrBQ==
   dependencies:
     "@bjorn3/browser_wasi_shim" "^0.4.1"

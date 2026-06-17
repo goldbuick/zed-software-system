@@ -5,9 +5,11 @@ const dropmock = jest.fn()
 const stopmock = jest.fn()
 const replacemock = jest.fn()
 const keepmock = jest.fn()
-const stdinmock = jest.fn()
+const termwritemock = jest.fn()
 const detachmock = jest.fn()
 const attachmock = jest.fn()
+const unbindshowmock = jest.fn()
+const unbindmock = jest.fn()
 const statusmock = jest.fn()
 const activemock = jest.fn(() => false)
 const terminalmock = jest.fn()
@@ -21,9 +23,11 @@ jest.mock('zss/feature/wanix/wanixdrop', () => ({
   wanixhandlestop: (...args: unknown[]) => stopmock(...args),
   wanixhandlereplace: (...args: unknown[]) => replacemock(...args),
   wanixhandlekeep: (...args: unknown[]) => keepmock(...args),
-  wanixhandlestdin: (...args: unknown[]) => stdinmock(...args),
+  wanixhandletermwrite: (...args: unknown[]) => termwritemock(...args),
   wanixhandledetach: (...args: unknown[]) => detachmock(...args),
   wanixhandleattach: (...args: unknown[]) => attachmock(...args),
+  wanixhandleunbindshow: (...args: unknown[]) => unbindshowmock(...args),
+  wanixhandleunbind: (...args: unknown[]) => unbindmock(...args),
 }))
 
 jest.mock('zss/feature/wanix/wanixiframehost', () => ({
@@ -88,10 +92,10 @@ describe('wanix device', () => {
     expect(keepmock).toHaveBeenCalledTimes(1)
   })
 
-  it('routes stdin to wanixhandlestdin', async () => {
-    invoke('stdin', 'hello')
+  it('routes term-write to wanixhandletermwrite', async () => {
+    invoke('term-write', 'hello')
     await new Promise((r) => setTimeout(r, 0))
-    expect(stdinmock).toHaveBeenCalledTimes(1)
+    expect(termwritemock).toHaveBeenCalledTimes(1)
   })
 
   it('routes detach to wanixhandledetach', async () => {
@@ -104,6 +108,22 @@ describe('wanix device', () => {
     invoke('attach')
     await new Promise((r) => setTimeout(r, 0))
     expect(attachmock).toHaveBeenCalledTimes(1)
+  })
+
+  it('routes unbind-show to wanixhandleunbindshow', async () => {
+    invoke('unbind-show')
+    await new Promise((r) => setTimeout(r, 0))
+    expect(unbindshowmock).toHaveBeenCalledTimes(1)
+  })
+
+  it('routes unbind to wanixhandleunbind', async () => {
+    invoke('unbind', 'bind-1')
+    await new Promise((r) => setTimeout(r, 0))
+    expect(unbindmock).toHaveBeenCalledWith(
+      expect.anything(),
+      'player1',
+      'bind-1',
+    )
   })
 
   it('show prints session status', async () => {

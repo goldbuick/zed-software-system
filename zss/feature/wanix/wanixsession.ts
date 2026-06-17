@@ -15,7 +15,7 @@ let phase: WANIX_PHASE = 'idle'
 let binary: WANIX_BINARY | null = null
 let pending: WANIX_PENDING | null = null
 let lastexit: number | undefined
-let stdinrouting = false
+let termrouting = false
 
 export function readwanixphase(): WANIX_PHASE {
   return phase
@@ -33,16 +33,16 @@ export function readwanixlastexit(): number | undefined {
   return lastexit
 }
 
-export function readwanixstdinrouting(): boolean {
-  return stdinrouting
+export function readwanixtermrouting(): boolean {
+  return termrouting
 }
 
-export function iswanixstdinactive(): boolean {
-  return phase === 'running' && stdinrouting
+export function iswanixtermactive(): boolean {
+  return phase === 'running' && termrouting
 }
 
-export function setwanixstdinrouting(on: boolean) {
-  stdinrouting = on
+export function setwanixtermrouting(on: boolean) {
+  termrouting = on
 }
 
 export function setwanixrunning(entry: WANIX_BINARY) {
@@ -50,28 +50,19 @@ export function setwanixrunning(entry: WANIX_BINARY) {
   binary = entry
   pending = null
   lastexit = undefined
-  stdinrouting = false
-}
-
-/** Enable stdin routing when the host detects a blocking read. Returns true on first activation. */
-export function enablewanixstdinrouting(): boolean {
-  if (phase !== 'running' || stdinrouting) {
-    return false
-  }
-  stdinrouting = true
-  return true
+  termrouting = true
 }
 
 export function setwanixstopped(exitcode: number) {
   phase = 'stopped'
   lastexit = exitcode
-  stdinrouting = false
+  termrouting = false
 }
 
 export function setwanixhalted() {
   phase = 'stopped'
   lastexit = undefined
-  stdinrouting = false
+  termrouting = false
 }
 
 export function setwanixidle() {
@@ -79,7 +70,7 @@ export function setwanixidle() {
   binary = null
   pending = null
   lastexit = undefined
-  stdinrouting = false
+  termrouting = false
 }
 
 export function stashwanixpending(entry: WANIX_PENDING) {
@@ -94,9 +85,9 @@ export function formatwanixstatelines(hostready: boolean): string[] {
   const lines: string[] = []
   lines.push('$graywanix$white — drop a .wasm or .tgz bundle to run it')
   if (phase === 'running' && binary) {
-    const stdinlabel = stdinrouting ? '$cyanstdin on' : '$yellowstdin off'
+    const termlabel = termrouting ? '$cyanterm attached' : '$yellowterm detached'
     lines.push(
-      `$7 state: $greenrunning $white${binary.label} (${stdinlabel}$white)`,
+      `$7 state: $greenrunning $white${binary.label} (${termlabel}$white)`,
     )
   } else if (phase === 'stopped' && binary) {
     const exitlabel = lastexit === undefined ? 'halted' : `exit ${lastexit}`
@@ -112,10 +103,11 @@ export function formatwanixstatelines(hostready: boolean): string[] {
   lines.push(
     '$7 #wanix stop$white — halt running binary or clear stopped state',
   )
+  lines.push('$7 #wanix unbind$white — list and remove mounted archives')
   if (phase === 'running') {
-    if (stdinrouting) {
+    if (termrouting) {
       lines.push(
-        '$7 #wanix detach$white — stop routing stdin (task keeps running)',
+        '$7 #wanix detach$white — stop routing terminal input (task keeps running)',
       )
     } else {
       lines.push(
@@ -132,5 +124,5 @@ export function resetwanixsessionfortest() {
   binary = null
   pending = null
   lastexit = undefined
-  stdinrouting = false
+  termrouting = false
 }

@@ -22,9 +22,9 @@ export const WANIX_TASKS: TaskDef[] = [
     'Compile wanix example .wat and optional .c sources to .wasm',
     ['wanix:wasm:build', 'wanix:wasm:build:c'],
   ),
-  def('wanix:stdin:verify', {
+  def('wanix:io:verify', {
     description:
-      'Build wanix wasm fixtures and run isolated host stdin e2e (fix loop gate)',
+      'Build wanix wasm fixtures and run isolated host term/io e2e (fix loop gate)',
     tags: ['ci'],
     deps: ['wanix:wasm:build'],
     env: { PLAYWRIGHT_INCLUDE_WANIX_E2E: '1' },
