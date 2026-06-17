@@ -47,6 +47,14 @@ describe('contentbook', () => {
     expect(memoryreadcodepagename(cp)).toBe('solid')
   })
 
+  it('imports scroll page json from code', () => {
+    const cp = codepagefromjson({
+      code: '@scroll notes\nhello',
+    })
+    expect(memoryreadcodepagetype(cp)).toBe(CODE_PAGE_TYPE.SCROLL)
+    expect(memoryreadcodepagename(cp)).toBe('notes')
+  })
+
   it('validates minimal template pages', () => {
     const files = [
       'player.object.json',

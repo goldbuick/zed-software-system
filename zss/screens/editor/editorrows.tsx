@@ -52,6 +52,7 @@ export function EditorRows({
     })),
   )
   const quickterminal = useTape((state) => state.quickterminal)
+  const isscrollpage = useTape((state) => state.editor.type === 'scroll')
 
   const withrows: EDITOR_CODE_ROW[] = useMemo(() => {
     if (rows.length) {
@@ -154,15 +155,17 @@ export function EditorRows({
     clippedapplybgtoindexes(index, edge.right, 46, 46, COLOR.DKCYAN, context)
 
     // apply token colors (line = code part; prefix = line number + space)
-    applycodetokencolors(
-      xoffset,
-      index,
-      edge.right,
-      row.tokens ?? [],
-      context,
-      text,
-      prefixcells,
-    )
+    if (!isscrollpage) {
+      applycodetokencolors(
+        xoffset,
+        index,
+        edge.right,
+        row.tokens ?? [],
+        context,
+        text,
+        prefixcells,
+      )
+    }
 
     // render selection (maybestart/maybeend are offsets within code; add prefixcells for line-relative columns; xoffset includes -4 layout shift so subtract 4 so selection aligns)
     if (hasselection && row.start <= ii2 && row.end >= ii1) {

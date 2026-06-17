@@ -658,6 +658,14 @@ export const GLOSSARY: GlossaryEntry[] = [
     related: 'LOADER driver, parse',
   },
   {
+    term: 'scroll page',
+    category: 'Codepage types',
+    audience: 'Creator',
+    definition:
+      'CODE_PAGE_TYPE.SCROLL — plain-text notes page (`@scroll <name>`). No ZSS execution; ZNS renders markdown and $ zsstext colors.',
+    related: 'refscroll, zns',
+  },
+  {
     term: 'hub',
     category: 'Runtime',
     audience: 'Dev',

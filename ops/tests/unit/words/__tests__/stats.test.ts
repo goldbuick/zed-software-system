@@ -18,10 +18,24 @@ describe('stats', () => {
         })
       })
 
-      it('returns OBJECT for object type', () => {
+      it('returns OBJECT for object type alone', () => {
         expect(statformat('', ['object'], true)).toEqual({
           type: STAT_TYPE.OBJECT,
-          values: [],
+          values: ['object'],
+        })
+      })
+
+      it('returns OBJECT for loader type alone', () => {
+        expect(statformat('', ['loader'], true)).toEqual({
+          type: STAT_TYPE.OBJECT,
+          values: ['loader'],
+        })
+      })
+
+      it('returns OBJECT for board type alone', () => {
+        expect(statformat('', ['board'], true)).toEqual({
+          type: STAT_TYPE.OBJECT,
+          values: ['board'],
         })
       })
 
@@ -32,17 +46,31 @@ describe('stats', () => {
         })
       })
 
-      it('returns CHARSET for charset type', () => {
+      it('returns OBJECT for charset type alone', () => {
         expect(statformat('', ['charset'], true)).toEqual({
-          type: STAT_TYPE.CHARSET,
-          values: [],
+          type: STAT_TYPE.OBJECT,
+          values: ['charset'],
         })
       })
 
-      it('returns PALETTE for palette type', () => {
+      it('returns OBJECT for palette type alone', () => {
         expect(statformat('', ['palette'], true)).toEqual({
-          type: STAT_TYPE.PALETTE,
-          values: [],
+          type: STAT_TYPE.OBJECT,
+          values: ['palette'],
+        })
+      })
+
+      it('returns OBJECT for scroll type alone', () => {
+        expect(statformat('', ['scroll'], true)).toEqual({
+          type: STAT_TYPE.OBJECT,
+          values: ['scroll'],
+        })
+      })
+
+      it('returns SCROLL for scroll type with name', () => {
+        expect(statformat('', ['scroll', 'notes'], true)).toEqual({
+          type: STAT_TYPE.SCROLL,
+          values: ['notes'],
         })
       })
 
@@ -141,6 +169,7 @@ describe('stats', () => {
       expect(stattypestring(STAT_TYPE.TERRAIN)).toBe('terrain')
       expect(stattypestring(STAT_TYPE.CHARSET)).toBe('charset')
       expect(stattypestring(STAT_TYPE.PALETTE)).toBe('palette')
+      expect(stattypestring(STAT_TYPE.SCROLL)).toBe('scroll')
       expect(stattypestring(STAT_TYPE.CONST)).toBe('const')
       expect(stattypestring(STAT_TYPE.RANGE)).toBe('range')
       expect(stattypestring(STAT_TYPE.SELECT)).toBe('select')

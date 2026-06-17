@@ -52,6 +52,9 @@ function makecodepagedesc(type: CODE_PAGE_TYPE, out: string[]) {
     case CODE_PAGE_TYPE.CHARSET:
       out.push('$greencharset - custom ascii font')
       break
+    case CODE_PAGE_TYPE.SCROLL:
+      out.push('$greenscroll - plain text notes (markdown in zns)')
+      break
   }
 }
 
@@ -201,6 +204,15 @@ export function memorymakeitcommand(
           openeditor(codepage, didcreate)
           break
         }
+        case stattypestring(STAT_TYPE.SCROLL): {
+          const [codepage, didcreate] = memoryensuresoftwarecodepage(
+            MEMORY_LABEL.MAIN,
+            name,
+            CODE_PAGE_TYPE.SCROLL,
+          )
+          openeditor(codepage, didcreate)
+          break
+        }
       }
       break
     }
@@ -233,6 +245,9 @@ export function memorymakeitscroll(makeit: string, player: string) {
         break
       case STAT_TYPE.CHARSET:
         makecodepagedesc(CODE_PAGE_TYPE.CHARSET, out)
+        break
+      case STAT_TYPE.SCROLL:
+        makecodepagedesc(CODE_PAGE_TYPE.SCROLL, out)
         break
     }
     const tn = makeitlinktoken(typename)
@@ -286,6 +301,14 @@ export function memorymakeitscroll(makeit: string, player: string) {
           ),
         )
         break
+      case STAT_TYPE.SCROLL:
+        out.push(
+          zsszedlinkline(
+            `create hk s "" "" ${tn} ${nm}`,
+            `create$CYAN @scroll ${name}`,
+          ),
+        )
+        break
     }
     out.push('')
   }
@@ -298,7 +321,8 @@ export function memorymakeitscroll(makeit: string, player: string) {
       case STAT_TYPE.BOARD:
       case STAT_TYPE.TERRAIN:
       case STAT_TYPE.CHARSET:
-      case STAT_TYPE.PALETTE: {
+      case STAT_TYPE.PALETTE:
+      case STAT_TYPE.SCROLL: {
         const value = statname.values.join(' ')
         createmakecodepage(statname.type, value, scrolllines)
         break
@@ -319,6 +343,7 @@ export function memorymakeitscroll(makeit: string, player: string) {
                 createmakecodepage(STAT_TYPE.LOADER, value, scrolllines)
                 createmakecodepage(STAT_TYPE.PALETTE, value, scrolllines)
                 createmakecodepage(STAT_TYPE.CHARSET, value, scrolllines)
+                createmakecodepage(STAT_TYPE.SCROLL, value, scrolllines)
               }
               scrolllines.push('$purple  if you typed in @char 12 or similar')
               scrolllines.push('$purple  try using #set <stat> <value> instead')

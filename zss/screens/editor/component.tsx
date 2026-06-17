@@ -39,6 +39,7 @@ export function EditorComponent() {
   const zsswords = useGadgetClient(useEqual((state) => state.zsswords))
   const [editor] = useTape(useShallow((state) => [state.editor]))
   const autocompleteindex = useTape((state) => state.autocompleteindex)
+  const isscrollpage = editor.type === 'scroll'
 
   const tapeeditor = useEditor(
     useShallow((state) => ({
@@ -64,6 +65,9 @@ export function EditorComponent() {
   // tokenize, parse, and fold into rows (only re-run when text changes)
   const rows = useMemo(() => {
     const rows = splitcoderows(strvalue)
+    if (isscrollpage) {
+      return rows
+    }
     const parsed = compileast(strvalue)
 
     // fold tokens into lines
@@ -173,7 +177,7 @@ export function EditorComponent() {
     }
 
     return rows
-  }, [strvalue, zsswords])
+  }, [strvalue, zsswords, isscrollpage])
 
   // cursor placement
   const ycursor = findcursorinrows(tapeeditor.cursor, rows)

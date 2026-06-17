@@ -1,5 +1,12 @@
 import { NAME, STAT_TYPE } from './types'
 
+function codetypestat(type: STAT_TYPE, words: string[], values: string[]) {
+  if (values.length > 0) {
+    return { type, values }
+  }
+  return { type: STAT_TYPE.OBJECT, values: words }
+}
+
 export function statformat(label: string, words: string[], first = true) {
   if (first) {
     const [maybetype, ...values] = words
@@ -11,35 +18,19 @@ export function statformat(label: string, words: string[], first = true) {
           values: words,
         }
       case 'loader':
-        return {
-          type: STAT_TYPE.LOADER,
-          values,
-        }
+        return codetypestat(STAT_TYPE.LOADER, words, values)
       case 'board':
-        return {
-          type: STAT_TYPE.BOARD,
-          values,
-        }
+        return codetypestat(STAT_TYPE.BOARD, words, values)
       case 'object':
-        return {
-          type: STAT_TYPE.OBJECT,
-          values,
-        }
+        return codetypestat(STAT_TYPE.OBJECT, words, values)
       case 'terrain':
-        return {
-          type: STAT_TYPE.TERRAIN,
-          values,
-        }
+        return codetypestat(STAT_TYPE.TERRAIN, words, values)
       case 'charset':
-        return {
-          type: STAT_TYPE.CHARSET,
-          values,
-        }
+        return codetypestat(STAT_TYPE.CHARSET, words, values)
       case 'palette':
-        return {
-          type: STAT_TYPE.PALETTE,
-          values,
-        }
+        return codetypestat(STAT_TYPE.PALETTE, words, values)
+      case 'scroll':
+        return codetypestat(STAT_TYPE.SCROLL, words, values)
     }
   } else {
     const [target, maybetype, ...maybevalues] = words
@@ -134,6 +125,8 @@ export function stattypestring(type: STAT_TYPE) {
       return 'charset'
     case STAT_TYPE.PALETTE:
       return 'palette'
+    case STAT_TYPE.SCROLL:
+      return 'scroll'
     case STAT_TYPE.CONST:
       return 'const'
     case STAT_TYPE.RANGE:

@@ -610,6 +610,7 @@ export function applycodetokencolors(
           case STAT_TYPE.TERRAIN:
           case STAT_TYPE.CHARSET:
           case STAT_TYPE.PALETTE:
+          case STAT_TYPE.SCROLL:
             clippedapplycolortoindexes(
               yoffset,
               rightedge,
