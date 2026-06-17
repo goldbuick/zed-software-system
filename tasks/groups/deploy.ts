@@ -75,8 +75,8 @@ export const DEPLOY_TASKS: TaskDef[] = [
   }),
   def('zns:email:preview', {
     description:
-      'Write ZNS login email preview PNG + HTML (ops/infra/generated/zns-email-preview.{png,html})',
-    tags: ['dev'],
+      'Write ZNS login email preview PNG + HTML + assert tenant VGA palette parity (ops/infra/generated/zns-email-preview.{png,html})',
+    tags: ['dev', 'ci'],
     group: 'deploy',
     deps: ['zns:vga:sync'],
     run: nodehandler('tasks/implementations/deploy/zns-email-preview.mjs'),

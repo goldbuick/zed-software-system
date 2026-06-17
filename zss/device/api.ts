@@ -1042,6 +1042,10 @@ export function vmreadzipfilelist(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:readzipfilelist')
 }
 
+export function vmreadimageimport(device: DEVICELIKE, player: string) {
+  device.emit(player, 'vm:readimageimport')
+}
+
 export function vminspect(device: DEVICELIKE, player: string, p1: PT, p2: PT) {
   device.emit(player, 'vm:inspect', [p1, p2])
 }

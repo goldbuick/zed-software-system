@@ -45,6 +45,7 @@ import {
 import { handlesecond } from './second'
 import { handleticktock } from './ticktock'
 import { handletopic } from './topic'
+import { handlereadimageimport } from './imageimport'
 import { handlereadzipfilelist } from './zipfile'
 import { handlezsswords } from './zsswords'
 import { handlezztrandom, handlezztsearch } from './zzt'
@@ -88,6 +89,7 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   refscroll: handlerefscroll,
   gadgetscroll: handlegadgetscroll,
   readzipfilelist: handlereadzipfilelist,
+  readimageimport: handlereadimageimport,
   fork: handlefork,
   zztsearch: handlezztsearch,
   zztrandom: handlezztrandom,

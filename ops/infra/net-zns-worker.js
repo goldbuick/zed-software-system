@@ -10,7 +10,7 @@ import {
 } from './zns-email-card.js'
 import {
   pngbytestobase64,
-  readfontbytesfromdatauri,
+  reademailcardfontbytes,
   renderemailcardpngwasm,
 } from './zns-email-card-png-wasm.js'
 import { buildznsemailcardsvg } from './zns-email-card-svg.js'
@@ -595,7 +595,7 @@ ${copyscript}
 
 async function buildznscodeemail({ code, email, namespace, joinorigin }) {
   const meta = buildznscodemeta({ code, email, namespace, joinorigin })
-  const fontbytes = readfontbytesfromdatauri(ZNS_VGA_FONT_DATA_URI)
+  const fontbytes = reademailcardfontbytes()
   const svg = buildznsemailcardsvg(
     {
       namespace: meta.namespace,

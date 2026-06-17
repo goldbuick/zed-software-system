@@ -28,6 +28,15 @@ export function buildznsdotbkgimageuri() {
   return `url("data:image/svg+xml,${encodeURIComponent(buildznsdotcheckerboardsvg())}")`
 }
 
+/** Checkerboard dot tile for email SVG (matches web 2×2 cell pattern). */
+export function buildznsdotbkgemailpattern() {
+  return `<pattern id="zns-dot-pattern" width="${ZNS_DOT_CHECKER_W}" height="${ZNS_DOT_CHECKER_H}" patternUnits="userSpaceOnUse">
+  <rect width="100%" height="100%" fill="${ZNS_DOT_BG}"/>
+  <circle cx="1" cy="1" r="1" fill="${ZNS_DOT_FG}" opacity="0.85"/>
+  <circle cx="9" cy="15" r="0.85" fill="${ZNS_DOT_FG}" opacity="0.85"/>
+</pattern>`
+}
+
 export function buildznsdotbkgsvgpattern() {
   return `<pattern id="zns-dot-pattern" width="${ZNS_DOT_EMAIL_TILE_W}" height="${ZNS_DOT_EMAIL_TILE_H}" patternUnits="userSpaceOnUse">
   <rect width="100%" height="100%" fill="${ZNS_DOT_BG}"/>

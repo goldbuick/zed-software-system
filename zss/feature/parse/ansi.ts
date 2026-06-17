@@ -1,27 +1,12 @@
 import getSimilarColor, { IDefaultColor } from 'get-similar-color/dist'
-import { apitoast } from 'zss/device/api'
-import { SOFTWARE } from 'zss/device/session'
 import { loadpalettefrombytes } from 'zss/feature/bytes'
 import { PALETTE } from 'zss/feature/palette'
 import { convertpalettetocolors } from 'zss/gadget/data/palette'
-import { createnameid } from 'zss/mapping/guid'
-import { MAYBE, ispresent } from 'zss/mapping/types'
-import { memorywriteterrain } from 'zss/memory/boardlifecycle'
-import { memoryptwithinboard } from 'zss/memory/boardtransitions'
-import { memorywritecodepage } from 'zss/memory/bookoperations'
-import {
-  memorycreatecodepage,
-  memoryreadcodepagedata,
-} from 'zss/memory/codepageoperations'
+import { ispresent } from 'zss/mapping/types'
 import { memoryreadfirstcontentbook } from 'zss/memory/session'
-import {
-  BOARD,
-  BOARD_HEIGHT,
-  BOARD_WIDTH,
-  CODE_PAGE_TYPE,
-} from 'zss/memory/types'
 
 import { renderbytes } from './ansilove'
+import { importscreentopatchwork } from './patchworkimport'
 
 export function parseansi(
   player: string,
@@ -37,7 +22,6 @@ export function parseansi(
   renderbytes(
     content,
     (screendata, sauce) => {
-      // create a new board codepage
       const title = sauce?.title ?? ''
       const author = sauce?.author ?? ''
 
@@ -75,63 +59,22 @@ export function parseansi(
         }
       }
 
-      // build a patchwork of connected boards to cover the area needed to render the ansi
       const patchworkname = `${title || filename}${author ? ` by ${author}` : ''}`
-      const boardxcount = Math.ceil(screendata.width / BOARD_WIDTH)
-      const boardycount = Math.ceil(screendata.height / BOARD_HEIGHT)
-
-      const boards: MAYBE<BOARD>[] = []
-      for (let i = 0; i < boardxcount * boardycount; ++i) {
-        boards.push(undefined)
-      }
-
-      let sx = 0
-      let sy = 0
-      const id = createnameid()
+      const screen: [number, number, number][] = []
       for (let i = 0; i < screendata.screen.length; ++i) {
-        const x = sx % BOARD_WIDTH
-        const y = sy % BOARD_HEIGHT
-        const bx = Math.floor(sx / BOARD_WIDTH)
-        const by = Math.floor(sy / BOARD_HEIGHT)
-        const bi = bx + by * boardxcount
-
-        // get target board
-        let board = boards[bi]
-        if (!ispresent(board)) {
-          const stats: string[] = [
-            `@${id}_${bx}_${by}`,
-            `@exitnorth ${id}_${bx}_${by - 1}`,
-            `@exitsouth ${id}_${bx}_${by + 1}`,
-            `@exitwest ${id}_${bx - 1}_${by}`,
-            `@exiteast ${id}_${bx + 1}_${by}`,
-          ]
-          const numeral = `${bi}`.padStart(3, '0')
-          const code = `@board ${patchworkname} ${numeral}\n${stats.join('\n')}\n`
-          const codepage = memorycreatecodepage(code, {})
-          memorywritecodepage(contentbook, codepage)
-          // get board data from codepage
-          boards[bi] = board =
-            memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(codepage)
-        }
-
-        if (ispresent(board) && memoryptwithinboard({ x, y })) {
-          const [char, fromcolor, frombg] = screendata.screen[i]
-          const color = colormap.get(fromcolor) ?? 0
-          const bg = colormap.get(frombg) ?? 0
-          memorywriteterrain(board, { x, y, kind: 'fake', char, color, bg })
-        }
-
-        ++sx
-        if (sx >= screendata.width) {
-          sx = 0
-          ++sy
-        }
+        const [char, fromcolor, frombg] = screendata.screen[i]
+        const color = colormap.get(fromcolor) ?? 0
+        const bg = colormap.get(frombg) ?? 0
+        screen.push([char, color, bg])
       }
 
-      apitoast(
-        SOFTWARE,
+      importscreentopatchwork(
         player,
-        `imported ansi file ${patchworkname} into ${contentbook.name} book`,
+        patchworkname,
+        screendata.width,
+        screendata.height,
+        screen,
+        'ansi file',
       )
     },
     { filetype, imagedata: 1 },

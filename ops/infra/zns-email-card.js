@@ -1,14 +1,44 @@
-/** zss/feature/palette.ts — ZZT 16-color palette (hex used in login email) */
-export const ZSS_PALETTE = {
-  black: '#000000',
-  dkblue: '#00002a',
-  ltgray: '#2a2a2a',
-  blue: '#15153f',
-  green: '#153f15',
-  cyan: '#153f3f',
-  yellow: '#3f3f15',
-  white: '#3f3f3f',
+/**
+ * Login email card colors — same scaled ZZT palette as tenant pages (zns-palette.js).
+ * Do not define a separate unscaled palette here.
+ */
+import {
+  fghex,
+  resolvebgindex,
+  resolvefgindex,
+} from './zns-palette.js'
+
+/** Mirrors net-zns-worker ZNS_VGA_HTML tape tokens. */
+export function buildznsemailpalette() {
+  return {
+    black: fghex(resolvefgindex('black')),
+    dkblue: fghex(resolvebgindex('ondkblue')),
+    ltgray: fghex(resolvefgindex('ltgray')),
+    blue: fghex(resolvefgindex('blue')),
+    green: fghex(resolvefgindex('green')),
+    cyan: fghex(resolvefgindex('cyan')),
+    yellow: fghex(resolvefgindex('yellow')),
+    white: fghex(resolvefgindex('white')),
+    purple: fghex(resolvefgindex('purple')),
+  }
 }
+
+/** @deprecated use buildznsemailpalette() — kept for preview imports */
+export const ZSS_PALETTE = buildznsemailpalette()
+
+/** CP437 light box drawing — same as net-zns-worker ZNS_CP437 / at.zed.cafe frame. */
+const ZNS_CP437 = {
+  TL: '\u250c',
+  TR: '\u2510',
+  BL: '\u2514',
+  BR: '\u2518',
+  H: '\u2500',
+  V: '\u2502',
+  TLR: '\u251c',
+  TRR: '\u2524',
+}
+
+const OPENIT_ARROW = '\u25ba'
 
 export const ZNS_EMAIL_INNER_WIDTH = 40
 export const ZNS_EMAIL_FONT_SIZE = 14
@@ -45,88 +75,152 @@ export function wrapterminallines(text, width) {
   return lines
 }
 
-export function buildznsterminalframe({ namespace, command, deeplink }) {
-  const w = ZNS_EMAIL_INNER_WIDTH
-  const inner = w - 2
-  const top = `╔${'═'.repeat(w + 2)}╗`
-  const header = `║ ${padterminalline('zed.cafe', 19)}${padterminalline('ZNS LOGIN', w - 19)} ║`
-  const rule = `╠${'═'.repeat(w + 2)}╣`
-  const blank = `║ ${padterminalline('', w)} ║`
-  const finish = `║ ${padterminalline(`Finish login to ${namespace}`, w)} ║`
-  const copyhint = `║ ${padterminalline('Copy into the zed.cafe terminal:', w)} ║`
-  const cmdtop = `║  ┌${'─'.repeat(inner)}┐  ║`
-  const cmdline = `║  │${padterminalcenter(command, inner)}│  ║`
-  const cmdbot = `║  └${'─'.repeat(inner)}┘  ║`
-  const openline = `║ ${padterminalline('> Open in zed.cafe', w)} ║`
-  const linklines = wrapterminallines(deeplink, w).map((line) => `║ ${line} ║`)
-  const hint1 = `║ ${padterminalline('Open on any device — phone, tablet, or', w)} ║`
-  const hint2 = `║ ${padterminalline('desktop. Or copy the command above.', w)} ║`
-  const bottom = `╚${'═'.repeat(w + 2)}╝`
-  return [
-    top,
-    header,
-    rule,
-    blank,
-    finish,
-    blank,
-    copyhint,
-    blank,
-    cmdtop,
-    cmdline,
-    cmdbot,
-    blank,
-    openline,
-    blank,
-    ...linklines,
-    blank,
-    hint1,
-    hint2,
-    bottom,
-  ].join('\n')
+function znsemaildecorinner({ namespace, command }) {
+  const tagline = `Finish login to ${namespace}`
+  const cmdinner = command.length + 4
+  return Math.max(
+    36,
+    tagline.length,
+    'Log in from the terminal:'.length,
+    cmdinner,
+    'zed.cafe'.length + 'ZNS'.length + 1,
+  )
 }
 
-/** Colored line segments for SVG / PNG rasterization. */
-export function buildznsemailcardsegments({ namespace, command, deeplink }) {
-  const p = ZSS_PALETTE
-  const w = ZNS_EMAIL_INNER_WIDTH
-  const inner = w - 2
-  const gray = (text) => [{ text, fill: p.ltgray }]
-  const white = (text) => [{ text, fill: p.white }]
-  const linklines = wrapterminallines(deeplink, w)
+function znsemailcmdboxlines(command) {
+  const pad = 2
+  const inner = command.length + pad * 2
+  return {
+    top: `${ZNS_CP437.TL}${ZNS_CP437.H.repeat(inner)}${ZNS_CP437.TR}`,
+    mid:
+      `${ZNS_CP437.V}` +
+      ' '.repeat(pad) +
+      command +
+      ' '.repeat(pad) +
+      `${ZNS_CP437.V}`,
+    bottom: `${ZNS_CP437.BL}${ZNS_CP437.H.repeat(inner)}${ZNS_CP437.BR}`,
+  }
+}
+
+function cyancrule(text, p) {
+  return [{ text, fill: p.cyan }]
+}
+
+function blankline(p) {
+  return [{ text: ' ', fill: p.ltgray }]
+}
+
+function whiteline(text, p) {
+  return [{ text, fill: p.white }]
+}
+
+function greenline(text, p) {
+  return [{ text, fill: p.green }]
+}
+
+function znsemailframerow(content, decorinner, p, color = p.ltgray) {
   return [
-    gray(`╔${'═'.repeat(w + 2)}╗`),
-    [
-      { text: '║ ', fill: p.ltgray },
-      { text: 'zed.cafe', fill: p.blue },
-      { text: `${' '.repeat(19 - 'zed.cafe'.length)}${padterminalline('ZNS LOGIN', w - 19)} ║`, fill: p.ltgray },
-    ],
-    gray(`╠${'═'.repeat(w + 2)}╣`),
-    gray(`║ ${padterminalline('', w)} ║`),
-    [
-      { text: '║ ', fill: p.ltgray },
-      { text: padterminalline(`Finish login to ${namespace}`, w), fill: p.white },
-      { text: ' ║', fill: p.ltgray },
-    ],
-    gray(`║ ${padterminalline('', w)} ║`),
-    [{ text: '║ ', fill: p.ltgray }, { text: padterminalline('Copy into the zed.cafe terminal:', w), fill: p.white }, { text: ' ║', fill: p.ltgray }],
-    gray(`║ ${padterminalline('', w)} ║`),
-    gray(`║  ┌${'─'.repeat(inner)}┐  ║`),
-    [{ text: '║  │', fill: p.ltgray }, { text: padterminalcenter(command, inner), fill: p.green, background: p.black }, { text: '│  ║', fill: p.ltgray }],
-    gray(`║  └${'─'.repeat(inner)}┘  ║`),
-    gray(`║ ${padterminalline('', w)} ║`),
-    [{ text: '║  ', fill: p.ltgray }, { text: '> Open in zed.cafe', fill: p.cyan }, { text: padterminalline('', w - 18), fill: p.ltgray }, { text: '║', fill: p.ltgray }],
-    gray(`║ ${padterminalline('', w)} ║`),
-    ...linklines.map((line) => [
-      { text: '║ ', fill: p.ltgray },
-      { text: line.trimEnd(), fill: p.cyan },
-      { text: padterminalline('', w - line.trimEnd().length), fill: p.ltgray },
-      { text: '║', fill: p.ltgray },
-    ]),
-    gray(`║ ${padterminalline('', w)} ║`),
-    [{ text: '║ ', fill: p.ltgray }, { text: padterminalline('Open on any device — phone, tablet, or', w), fill: p.yellow }, { text: ' ║', fill: p.ltgray }],
-    [{ text: '║ ', fill: p.ltgray }, { text: padterminalline('desktop. Or copy the command above.', w), fill: p.yellow }, { text: ' ║', fill: p.ltgray }],
-    gray(`╚${'═'.repeat(w + 2)}╝`),
+    { text: `${ZNS_CP437.V} `, fill: p.ltgray },
+    { text: padterminalline(content, decorinner), fill: color },
+    { text: ` ${ZNS_CP437.V}`, fill: p.ltgray },
   ]
+}
+
+function znsemailheaderrow(decorinner, p) {
+  const gap = Math.max(1, decorinner - 'zed.cafe'.length - 'ZNS'.length)
+  return [
+    { text: `${ZNS_CP437.V} `, fill: p.ltgray },
+    { text: 'zed.cafe', fill: p.cyan },
+    { text: ' '.repeat(gap), fill: p.ltgray },
+    { text: 'ZNS', fill: p.yellow },
+    { text: ` ${ZNS_CP437.V}`, fill: p.ltgray },
+  ]
+}
+
+function znsemailopenitrow(label, p) {
+  return [
+    { text: `${OPENIT_ARROW} `, fill: p.purple },
+    { text: 'OPENIT ', fill: p.yellow },
+    { text: label, fill: p.white },
+  ]
+}
+
+function znsemailopenitdeeplink(deeplink, width, p) {
+  const prefixlen = OPENIT_ARROW.length + 1 + 'OPENIT '.length
+  const lines = wrapterminallines(deeplink, Math.max(8, width - prefixlen))
+  const rows = [
+    [
+      { text: `${OPENIT_ARROW} `, fill: p.purple },
+      { text: 'OPENIT ', fill: p.yellow },
+      { text: lines[0].trimEnd(), fill: p.white },
+    ],
+  ]
+  const indent = ' '.repeat(prefixlen)
+  for (let i = 1; i < lines.length; i++) {
+    rows.push(whiteline(`${indent}${lines[i].trimEnd()}`, p))
+  }
+  return rows
+}
+
+/** Colored line segments for SVG / PNG rasterization (at.zed.cafe apex layout). */
+export function buildznsemailcardsegments({ namespace, command, deeplink }) {
+  const p = buildznsemailpalette()
+  const decorinner = znsemaildecorinner({ namespace, command })
+  const tagline = `Finish login to ${namespace}`
+  const cmdbox = znsemailcmdboxlines(command)
+  const openitlabel = '> Open zed.cafe'
+  return [
+    cyancrule(
+      `${ZNS_CP437.TL}${ZNS_CP437.H.repeat(decorinner + 2)}${ZNS_CP437.TR}`,
+      p,
+    ),
+    znsemailheaderrow(decorinner, p),
+    cyancrule(
+      `${ZNS_CP437.TLR}${ZNS_CP437.H.repeat(decorinner + 2)}${ZNS_CP437.TRR}`,
+      p,
+    ),
+    znsemailframerow(tagline, decorinner, p, p.green),
+    cyancrule(
+      `${ZNS_CP437.BL}${ZNS_CP437.H.repeat(decorinner + 2)}${ZNS_CP437.BR}`,
+      p,
+    ),
+    blankline(p),
+    whiteline('Log in from the terminal:', p),
+    blankline(p),
+    greenline(cmdbox.top, p),
+    [{ text: cmdbox.mid, fill: p.green, background: p.black }],
+    greenline(cmdbox.bottom, p),
+    blankline(p),
+    znsemailopenitrow(openitlabel, p),
+    blankline(p),
+    ...znsemailopenitdeeplink(deeplink, decorinner + 4, p),
+  ]
+}
+
+export function buildznsterminalframe({ namespace, command, deeplink }) {
+  const decorinner = znsemaildecorinner({ namespace, command })
+  const tagline = `Finish login to ${namespace}`
+  const cmdbox = znsemailcmdboxlines(command)
+  const gap = Math.max(1, decorinner - 'zed.cafe'.length - 'ZNS'.length)
+  const frame = [
+    `${ZNS_CP437.TL}${ZNS_CP437.H.repeat(decorinner + 2)}${ZNS_CP437.TR}`,
+    `${ZNS_CP437.V} zed.cafe${' '.repeat(gap)}ZNS ${ZNS_CP437.V}`,
+    `${ZNS_CP437.TLR}${ZNS_CP437.H.repeat(decorinner + 2)}${ZNS_CP437.TRR}`,
+    `${ZNS_CP437.V} ${padterminalline(tagline, decorinner)} ${ZNS_CP437.V}`,
+    `${ZNS_CP437.BL}${ZNS_CP437.H.repeat(decorinner + 2)}${ZNS_CP437.BR}`,
+    '',
+    'Log in from the terminal:',
+    '',
+    cmdbox.top,
+    cmdbox.mid,
+    cmdbox.bottom,
+    '',
+    `${OPENIT_ARROW} OPENIT > Open zed.cafe`,
+    '',
+    `${OPENIT_ARROW} OPENIT ${deeplink}`,
+    '',
+  ].join('\n')
+  return frame
 }
 
 export function buildznscodemeta({ code, email, namespace, joinorigin }) {
@@ -153,7 +247,7 @@ export function escapehtml(value) {
 }
 
 export function buildznscodeemailhtml({ subject, preheader, deeplink, command }) {
-  const p = ZSS_PALETTE
+  const p = buildznsemailpalette()
   const subjecthtml = escapehtml(subject)
   const preheaderhtml = escapehtml(preheader)
   const link = escapehtml(deeplink)
@@ -175,7 +269,7 @@ export function buildznscodeemailhtml({ subject, preheader, deeplink, command })
 </a>
 </td></tr>
 <tr><td align="center" style="padding:0 0 12px 0;">
-<a href="${link}" style="display:inline-block;background:${p.cyan};color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;text-decoration:none;padding:12px 24px;border-radius:4px;">Open in zed.cafe</a>
+<a href="${link}" style="display:inline-block;background:${p.dkblue};color:${p.white};font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;text-decoration:none;padding:12px 24px;border-radius:4px;">Open in zed.cafe</a>
 </td></tr>
 <tr><td align="center" style="padding:0;font-family:Courier New,Courier,monospace;font-size:13px;color:#444;">
 Or paste in terminal: ${cmd}

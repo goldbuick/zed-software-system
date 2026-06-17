@@ -3,10 +3,10 @@ import {
   ZNS_EMAIL_FONT_SIZE,
   ZNS_EMAIL_LINE_HEIGHT,
   ZNS_EMAIL_PAD,
-  ZSS_PALETTE,
+  buildznsemailpalette,
   buildznsemailcardsegments,
 } from './zns-email-card.js'
-import { ZNS_DOT_BG, buildznsdotbkgsvgpattern } from './zns-dotbkg.js'
+import { ZNS_DOT_BG, buildznsdotbkgemailpattern } from './zns-dotbkg.js'
 
 const ZNS_CELL_W = 8
 
@@ -50,7 +50,7 @@ export function buildznsemailcardsvg({ namespace, command, deeplink }, fontdatau
     ? `@font-face{font-family:'IBM EGA 8x14';src:url('${fontdatauri}') format('woff');font-weight:normal;font-style:normal;}`
     : ''
   const fontfamily = fontdatauri ? 'IBM EGA 8x14' : 'Courier New'
-  const pattern = buildznsdotbkgsvgpattern()
+  const pattern = buildznsdotbkgemailpattern()
   let y = ZNS_EMAIL_PAD + ZNS_EMAIL_LINE_HEIGHT
   const lines = []
   for (const parts of segments) {
@@ -76,6 +76,7 @@ export function buildznsemailcardpreviewhtml(meta, fontdatauri) {
     fontdatauri,
   )
   const link = meta.deeplink.replace(/"/g, '&quot;')
+  const p = buildznsemailpalette()
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>${meta.subject}</title>
 <style>body{margin:0;padding:24px;background:#f4f4f4;font-family:Arial,sans-serif}</style>
@@ -85,7 +86,7 @@ export function buildznsemailcardpreviewhtml(meta, fontdatauri) {
 <a href="${link}" style="display:inline-block;text-decoration:none">
 ${svg}
 </a>
-<p style="margin-top:16px"><a href="${link}" style="display:inline-block;background:${ZSS_PALETTE.cyan};color:#fff;padding:12px 24px;text-decoration:none;font-weight:bold">Open in zed.cafe</a></p>
+<p style="margin-top:16px"><a href="${link}" style="display:inline-block;background:${p.dkblue};color:${p.white};padding:12px 24px;text-decoration:none;font-weight:bold">Open in zed.cafe</a></p>
 <p style="font-family:monospace;font-size:13px">Or paste: ${meta.command}</p>
 </body></html>`
 }
