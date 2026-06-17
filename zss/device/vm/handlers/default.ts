@@ -40,6 +40,7 @@ import { NAME } from 'zss/words/types'
 
 import { handlebookmarkscrollpanel } from './bookmarkscroll'
 import { handleeditorbookmarkscrollpanel } from './editorbookmarkscroll'
+import { handleimageimport } from './imageimport'
 import { handlezztbridge } from './zzt'
 
 const MAIN_MENU_BACK_HYPERLINK = zsszedlinkline(
@@ -227,6 +228,11 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
     case 'zipfilelist':
       doasync(vm, message.player, async () => {
         await parsezipfilelist(message.player)
+      })
+      break
+    case 'imageimport':
+      doasync(vm, message.player, async () => {
+        await handleimageimport(vm, message, path)
       })
       break
     case 'editorbookmarkscroll':

@@ -149,8 +149,10 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 | `yarn task run deploy:gcp:enable-apis` | Enable required GCP APIs | `deploy` | — | — |
 | `yarn task run deploy:gcp:push` | Push zss image to GCP artifact registry | `deploy` | — | — |
 | `yarn task run deploy:vm:docker-run` | Run zss Docker on generic VM | `deploy` | — | — |
-| `yarn task run zns:grid:preview` | Write local CP437 VGA calibration HTML (ops/infra/generated/zns-grid-preview.html) | `dev` | `zns:vga:sync` | — |
+| `yarn task run zns:email:preview` | Write ZNS login email preview PNG + HTML + assert tenant VGA palette parity (ops/infra/generated/zns-email-preview.{png,html}) | `dev`, `ci` | `zns:vga:sync` | — |
+| `yarn task run zns:grid:preview` | Write CP437 0–255 VGA calibration HTML + assert web-safe glyph mapping (ops/infra/generated/zns-grid-preview.html) | `dev`, `ci` | `zns:vga:sync` | — |
 | `yarn task run zns:landing:dev` | Local ZNS worker dev server — apex landing at http://127.0.0.1:8787/ | `dev` | `zns:vga:sync` | — |
+| `yarn task run zns:scroll:preview` | Write scroll tape HTML preview + assert cliscroll/helptext rendering (ops/infra/generated/zns-scroll-preview.html) | `dev`, `ci` | — | — |
 | `yarn task run zns:tenant:dns:check` | DNS check for *.at.zed.cafe tenant wildcards in production (dig only) | `deploy`, `ci` | — | — |
 | `yarn task run zns:tenant:smoke` | HTTPS smoke test docs.at.zed.cafe/ tenant index (subset of zns:tenant:verify) | `deploy` | — | — |
 | `yarn task run zns:tenant:verify` | Full production verify: tenant DNS + HTTPS apex, index, and scroll | `deploy`, `ci` | — | — |

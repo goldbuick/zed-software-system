@@ -57,7 +57,10 @@ ops/coverage/
 test-results/
 playwright-report/
 
-# stray wrangler cache (deploy configs live in ops/infra/)
-infra/
+# stray wrangler cache at repo root (deploy configs live in ops/infra/)
+/infra/
+
+# ZNS generated previews (yarn task run zns:email:preview / zns:grid:preview)
+ops/infra/generated/
 
 

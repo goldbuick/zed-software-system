@@ -24,6 +24,7 @@ import { handleeditorbookmarkscroll } from './editorbookmarkscroll'
 import { handleflush } from './flush'
 import { handlefork } from './fork'
 import { handlehalt } from './halt'
+import { handlereadimageimport } from './imageimport'
 import { handleinput } from './input'
 import { handlefindany, handleinspect } from './inspect'
 import { handlelastinputtouch } from './lastinputtouch'
@@ -88,6 +89,7 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   refscroll: handlerefscroll,
   gadgetscroll: handlegadgetscroll,
   readzipfilelist: handlereadzipfilelist,
+  readimageimport: handlereadimageimport,
   fork: handlefork,
   zztsearch: handlezztsearch,
   zztrandom: handlezztrandom,

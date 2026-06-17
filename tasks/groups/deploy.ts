@@ -73,13 +73,28 @@ export const DEPLOY_TASKS: TaskDef[] = [
       'code=$(curl -fsS -o /dev/null -w "%{http_code}" https://docs.at.zed.cafe/) && test "$code" = "200"',
     ),
   }),
+  def('zns:email:preview', {
+    description:
+      'Write ZNS login email preview PNG + HTML + assert tenant VGA palette parity (ops/infra/generated/zns-email-preview.{png,html})',
+    tags: ['dev', 'ci'],
+    group: 'deploy',
+    deps: ['zns:vga:sync'],
+    run: nodehandler('tasks/implementations/deploy/zns-email-preview.mjs'),
+  }),
   def('zns:grid:preview', {
     description:
-      'Write local CP437 VGA calibration HTML (ops/infra/generated/zns-grid-preview.html)',
-    tags: ['dev'],
+      'Write CP437 0–255 VGA calibration HTML + assert web-safe glyph mapping (ops/infra/generated/zns-grid-preview.html)',
+    tags: ['dev', 'ci'],
     group: 'deploy',
     deps: ['zns:vga:sync'],
     run: nodehandler('tasks/implementations/deploy/zns-grid-preview.mjs'),
+  }),
+  def('zns:scroll:preview', {
+    description:
+      'Write scroll tape HTML preview + assert cliscroll/helptext rendering (ops/infra/generated/zns-scroll-preview.html)',
+    tags: ['dev', 'ci'],
+    group: 'deploy',
+    run: nodehandler('tasks/implementations/deploy/zns-scroll-preview.mjs'),
   }),
   def('zns:landing:dev', {
     description:

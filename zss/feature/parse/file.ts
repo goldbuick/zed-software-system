@@ -15,6 +15,7 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import { parseansi } from './ansi'
 import { parsechr } from './chr'
+import { stageimageimport } from './image'
 import { parsemidi } from './midi'
 import { parsepetscii } from './petscii'
 import { parsezzm } from './zzm'
@@ -127,8 +128,24 @@ export function mapfiletype(type: string, file: File | undefined) {
         return 'wanixwasm'
       } else if (iswanixbundlefile(file.name)) {
         return 'wantgz'
+      } else if (/.png$/i.test(file.name)) {
+        return 'png'
+      } else if (/.jpe?g$/i.test(file.name)) {
+        return 'jpeg'
+      } else if (/.gif$/i.test(file.name)) {
+        return 'gif'
+      } else if (/.webp$/i.test(file.name)) {
+        return 'webp'
       }
       break
+    case 'image/png':
+      return 'png'
+    case 'image/jpeg':
+      return 'jpeg'
+    case 'image/gif':
+      return 'gif'
+    case 'image/webp':
+      return 'webp'
     case 'audio/midi':
     case 'audio/mid':
     case 'audio/x-midi':
@@ -259,6 +276,38 @@ function forwardwanixdrop(player: string, file: File, kind: 'wasm' | 'bundle') {
         err instanceof Error ? err.message : String(err),
       ),
     )
+}
+
+function imagemimetype(kind: string, file: File): string {
+  if (file.type.startsWith('image/')) {
+    return file.type
+  }
+  switch (kind) {
+    case 'png':
+      return 'image/png'
+    case 'jpeg':
+      return 'image/jpeg'
+    case 'gif':
+      return 'image/gif'
+    case 'webp':
+      return 'image/webp'
+    default:
+      return file.type || 'application/octet-stream'
+  }
+}
+
+function stageimagefile(player: string, kind: string, file: File) {
+  void file
+    .arrayBuffer()
+    .then((arraybuffer) => {
+      void stageimageimport(
+        player,
+        file.name,
+        imagemimetype(kind, file),
+        new Uint8Array(arraybuffer),
+      ).catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
+    })
+    .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
 }
 
 function handlefiletype(player: string, type: string, file: File | undefined) {
@@ -423,6 +472,12 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
           parseansi(player, file.name, filetype, new Uint8Array(arraybuffer))
         })
         .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
+      break
+    case 'png':
+    case 'jpeg':
+    case 'gif':
+    case 'webp':
+      stageimagefile(player, filetype, file)
       break
     default:
       if (!type) {

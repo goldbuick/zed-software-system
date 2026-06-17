@@ -4,21 +4,23 @@
  */
 
 import { ZNS_VGA_FONT_DATA_URI } from './generated/zns-vga-font.js'
+import { buildznsdotbkgcss } from './zns-dotbkg.js'
 import {
-  ZNS_DOT_BG,
-  ZNS_DOT_EMAIL_TILE_H,
-  ZNS_DOT_EMAIL_TILE_W,
-  buildznsdotbkgcss,
-  buildznsdotbkgscript,
-  buildznsdotbkgsvgtile,
-} from './zns-dotbkg.js'
+  pngbytestobase64,
+  reademailcardfontbytes,
+  renderemailcardpngwasm,
+} from './zns-email-card-png-wasm.js'
+import { buildznsemailcardsvg } from './zns-email-card-svg.js'
+import { buildznscodeemailhtml, buildznscodemeta } from './zns-email-card.js'
 import {
   measuredrawnwidth,
+  scrollsourceisrawzss,
   textformatlinehtml,
   zederrorlinehtml,
   zedopenitznslinkrowhtml,
   zedtapehtml,
   zedtaperowshtml,
+  zedzsshtml,
   znsrowhtml,
   zsssectionlines,
 } from './zns-zedhtml.js'
@@ -190,30 +192,20 @@ function escapehtml(value) {
     .replace(/"/g, '&quot;')
 }
 
-/** zss/feature/palette.ts — ZZT 16-color palette (hex used in login email) */
-const ZSS_PALETTE = {
-  black: '#000000',
-  dkblue: '#00002a',
-  ltgray: '#2a2a2a',
-  blue: '#15153f',
-  green: '#153f15',
-  cyan: '#153f3f',
-  yellow: '#3f3f15',
-  white: '#3f3f3f',
-}
-
-const ZNS_VGA_FONT = "'IBM EGA 8x14'"
+const ZNS_VGA_FONT = "'IBM EGA 8x14', ui-monospace, 'Courier New', monospace"
 
 /** Native IBM EGA 8×14 cell (int10h webfont em = 14px line height). */
 const ZNS_CELL_W = 8
 const ZNS_CELL_H = 14
 const ZNS_FONT_SIZE = 14
-/** Browser zoom on .zns-vga-root → 16×28 display cells (in-app parity). */
+/** 2× display cells (in-app parity) on wide viewports. Narrow screens use native 8×14 (14px). */
 const ZNS_DISPLAY_SCALE = 2
+const ZNS_NARROW_MAX_PX = 640
+const ZNS_DISPLAY_FONT_SIZE = ZNS_FONT_SIZE * ZNS_DISPLAY_SCALE
+const ZNS_DISPLAY_LINE_HEIGHT = ZNS_CELL_H * ZNS_DISPLAY_SCALE
 const ZNS_DISPLAY_CELL_W = ZNS_CELL_W * ZNS_DISPLAY_SCALE
 const ZNS_DISPLAY_CELL_H = ZNS_CELL_H * ZNS_DISPLAY_SCALE
 
-const ZNS_EMAIL_INNER_WIDTH = 40
 const ZNS_VGA_HTML = {
   bg: '#0000AA',
   frame: '#AAAAAA',
@@ -382,11 +374,16 @@ function buildznsvgastylesheet(bg) {
   font-style: normal;
   font-display: block;
 }
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
 html, body { min-height: 100%; }
 body.zns-page {
   margin: 0;
   padding: 16px;
-  background: ${bg};
+  --zns-dot-w: ${ZNS_CELL_W * ZNS_DISPLAY_SCALE}px;
+  --zns-dot-h: ${ZNS_CELL_H * ZNS_DISPLAY_SCALE}px;
   color: ${v.text};
   box-sizing: border-box;
   font-family: ${ZNS_VGA_FONT};
@@ -398,15 +395,32 @@ body.zns-page * {
   font-family: ${ZNS_VGA_FONT};
 }
 .zns-vga-root {
-  zoom: ${ZNS_DISPLAY_SCALE};
+  --zns-fs: ${ZNS_DISPLAY_FONT_SIZE}px;
+  --zns-lh: ${ZNS_DISPLAY_LINE_HEIGHT}px;
+  font-size: var(--zns-fs);
+  line-height: var(--zns-lh);
   width: max-content;
-  max-width: 100%;
+  max-width: none;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
+}
+@media screen and (max-width: ${ZNS_NARROW_MAX_PX}px) {
+  body.zns-page {
+    padding: 8px;
+    --zns-dot-w: ${ZNS_CELL_W}px;
+    --zns-dot-h: ${ZNS_CELL_H}px;
+  }
+  .zns-vga-root {
+    --zns-fs: ${ZNS_FONT_SIZE}px;
+    --zns-lh: ${ZNS_CELL_H}px;
+  }
 }
 .zns-vga {
   margin: 0;
   font-family: ${ZNS_VGA_FONT};
-  font-size: ${ZNS_FONT_SIZE}px;
-  line-height: ${ZNS_CELL_H}px;
+  font-size: inherit;
+  line-height: inherit;
   letter-spacing: 0;
   font-weight: normal;
   font-style: normal;
@@ -422,11 +436,11 @@ body.zns-page * {
 .zns-line {
   margin: 0;
   padding: 0;
-  height: ${ZNS_CELL_H}px;
-  min-height: ${ZNS_CELL_H}px;
-  line-height: ${ZNS_CELL_H}px;
+  height: var(--zns-lh);
+  min-height: var(--zns-lh);
+  line-height: var(--zns-lh);
   display: block;
-  overflow: hidden;
+  overflow: visible;
   box-sizing: content-box;
   white-space: pre;
   word-break: normal;
@@ -435,7 +449,7 @@ body.zns-page * {
   border: 0;
   background: transparent;
   font-family: ${ZNS_VGA_FONT};
-  font-size: ${ZNS_FONT_SIZE}px;
+  font-size: inherit;
   color: inherit;
 }
 .zns-line span,
@@ -443,7 +457,13 @@ body.zns-page * {
 .zns-line button {
   font-family: ${ZNS_VGA_FONT};
   font-size: inherit;
-  line-height: ${ZNS_CELL_H}px;
+  line-height: var(--zns-lh);
+  vertical-align: top;
+  padding: 0;
+  margin: 0;
+}
+.zns-tape-span {
+  display: inline;
   vertical-align: top;
   padding: 0;
   margin: 0;
@@ -451,8 +471,8 @@ body.zns-page * {
 .zns-cell {
   display: inline-block;
   width: 1ch;
-  height: ${ZNS_CELL_H}px;
-  line-height: ${ZNS_CELL_H}px;
+  height: var(--zns-lh);
+  line-height: var(--zns-lh);
   vertical-align: top;
   overflow: hidden;
   padding: 0;
@@ -463,6 +483,7 @@ body.zns-page * {
   0%, 50% { color: var(--zns-fg); }
   50.01%, 100% { color: var(--zns-bg); }
 }
+.zns-tape-span.zns-blink,
 .zns-cell.zns-blink {
   animation: zns-blink-fg ${ZNS_BLINK_CYCLE_S}s step-end infinite;
 }
@@ -471,9 +492,9 @@ body.zns-page * {
   vertical-align: top;
   font-family: ${ZNS_VGA_FONT};
   font-size: inherit;
-  line-height: ${ZNS_CELL_H}px;
+  line-height: var(--zns-lh);
   letter-spacing: 0;
-  color: ${v.link};
+  color: inherit;
   text-decoration: none;
   padding: 0;
   margin: 0;
@@ -486,8 +507,8 @@ body.zns-page * {
   margin: 0;
   padding: 0;
   white-space: pre;
-  line-height: ${ZNS_CELL_H}px;
-  font-size: ${ZNS_FONT_SIZE}px;
+  line-height: var(--zns-lh);
+  font-size: inherit;
   font-family: ${ZNS_VGA_FONT};
   width: fit-content;
   max-width: 100%;
@@ -500,7 +521,7 @@ body.zns-page * {
   margin: 0;
 }
 .zns-frame {
-  margin-bottom: ${ZNS_CELL_H}px;
+  margin-bottom: var(--zns-lh);
 }
 .zns-brand { color: ${v.brand}; }
 .zns-text { color: ${v.text}; }
@@ -512,7 +533,7 @@ body.zns-page * {
   vertical-align: top;
   font-family: ${ZNS_VGA_FONT};
   font-size: inherit;
-  line-height: ${ZNS_CELL_H}px;
+  line-height: var(--zns-lh);
   letter-spacing: 0;
   color: ${v.link};
   text-decoration: none;
@@ -524,7 +545,7 @@ body.zns-page * {
 }
 .zns-copy:hover { text-decoration: underline; }
 .zns-vga-scroll {
-  margin-top: ${ZNS_CELL_H}px;
+  margin-top: var(--zns-lh);
 }
 ${buildznsdotbkgcss()}`
 }
@@ -553,164 +574,42 @@ document.body.addEventListener('click',function(e){
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
 <title>${titlehtml}</title>
 <style>
 ${buildznsvgastylesheet(v.bg)}
 </style>
 </head>
 <body class="zns-page">
-<div class="zns-dotbkg" aria-hidden="true">
-  <div class="zns-dotbkg-inner"></div>
-</div>
 <div class="zns-vga-root">
 ${bodyhtml}
 ${scroll}
 </div>
 ${copyscript}
-${buildznsdotbkgscript()}
 </body>
 </html>`
 }
 
-function padterminalcenter(text, width) {
-  const s = String(text ?? '')
-  if (s.length >= width) {
-    return s.slice(0, width)
-  }
-  const left = Math.floor((width - s.length) / 2)
-  return ' '.repeat(left) + s + ' '.repeat(width - s.length - left)
-}
-
-function wrapterminallines(text, width) {
-  const s = String(text ?? '')
-  if (!s) {
-    return [padterminalline('', width)]
-  }
-  const lines = []
-  for (let i = 0; i < s.length; i += width) {
-    lines.push(padterminalline(s.slice(i, i + width), width))
-  }
-  return lines
-}
-
-function buildznsterminalframe({ namespace, command, deeplink }) {
-  const w = ZNS_EMAIL_INNER_WIDTH
-  const inner = w - 2
-  const top = `╔${'═'.repeat(w + 2)}╗`
-  const header = `║ ${padterminalline('zed.cafe', 19)}${padterminalline('ZNS LOGIN', w - 19)} ║`
-  const rule = `╠${'═'.repeat(w + 2)}╣`
-  const blank = `║ ${padterminalline('', w)} ║`
-  const finish = `║ ${padterminalline(`Finish login to ${namespace}`, w)} ║`
-  const copyhint = `║ ${padterminalline('Copy into the zed.cafe terminal:', w)} ║`
-  const cmdtop = `║  ┌${'─'.repeat(inner)}┐  ║`
-  const cmdline = `║  │${padterminalcenter(command, inner)}│  ║`
-  const cmdbot = `║  └${'─'.repeat(inner)}┘  ║`
-  const openline = `║ ${padterminalline('> Open in zed.cafe', w)} ║`
-  const linklines = wrapterminallines(deeplink, w).map((line) => `║ ${line} ║`)
-  const hint1 = `║ ${padterminalline('Open on any device — phone, tablet, or', w)} ║`
-  const hint2 = `║ ${padterminalline('desktop. Or copy the command above.', w)} ║`
-  const bottom = `╚${'═'.repeat(w + 2)}╝`
-  return [
-    top,
-    header,
-    rule,
-    blank,
-    finish,
-    blank,
-    copyhint,
-    blank,
-    cmdtop,
-    cmdline,
-    cmdbot,
-    blank,
-    openline,
-    blank,
-    ...linklines,
-    blank,
-    hint1,
-    hint2,
-    bottom,
-  ].join('\n')
-}
-
-function buildznscodeemail({ code, email, namespace, joinorigin }) {
-  const command = `#zns ${code}`
-  const subject = `${code} — finish login to ${namespace} on zed.cafe`
-  const preheader = `Paste ${command} into the terminal or tap Open in zed.cafe`
-  const query = new URLSearchParams({
-    'zns-code': code,
-    'zns-email': email,
-    'zns-namespace': namespace,
+async function buildznscodeemail({ code, email, namespace, joinorigin }) {
+  const meta = buildznscodemeta({ code, email, namespace, joinorigin })
+  const fontbytes = reademailcardfontbytes()
+  const svg = buildznsemailcardsvg(
+    {
+      namespace: meta.namespace,
+      command: meta.command,
+      deeplink: meta.deeplink,
+    },
+    ZNS_VGA_FONT_DATA_URI,
+  )
+  const pngbytes = await renderemailcardpngwasm(svg, fontbytes)
+  const pngb64 = pngbytestobase64(pngbytes)
+  const html = buildznscodeemailhtml({
+    subject: meta.subject,
+    preheader: meta.preheader,
+    deeplink: meta.deeplink,
+    command: meta.command,
   })
-  const deeplink = `${joinorigin}/?${query.toString()}`
-  const frame = buildznsterminalframe({
-    namespace,
-    command,
-    deeplink,
-  })
-  const text = `${subject}\n\n${command}\n\nPaste into the zed.cafe terminal, or open:\n${deeplink}\n\n${frame}\n`
-  const p = ZSS_PALETTE
-  const ns = escapehtml(namespace)
-  const cmd = escapehtml(command)
-  const link = escapehtml(deeplink)
-  const subjecthtml = escapehtml(subject)
-  const preheaderhtml = escapehtml(preheader)
-  const w = ZNS_EMAIL_INNER_WIDTH
-  const inner = w - 2
-  const gray = (s) => `<span style="color:${p.ltgray}">${s}</span>`
-  const white = (s) => `<span style="color:${p.white}">${s}</span>`
-  const htmlframe = [
-    gray(`╔${'═'.repeat(w + 2)}╗`),
-    `${gray('║ ')}<span style="color:${p.blue}">zed.cafe</span>${gray(`${' '.repeat(19 - 'zed.cafe'.length)}${padterminalline('ZNS LOGIN', w - 19)} ║`)}`,
-    gray(`╠${'═'.repeat(w + 2)}╣`),
-    gray(`║ ${padterminalline('', w)} ║`),
-    `${gray('║ ')}${white(padterminalline(`Finish login to ${ns}`, w))}${gray(' ║')}`,
-    gray(`║ ${padterminalline('', w)} ║`),
-    `${gray('║ ')}${white(padterminalline('Copy into the zed.cafe terminal:', w))}${gray(' ║')}`,
-    gray(`║ ${padterminalline('', w)} ║`),
-    gray(`║  ┌${'─'.repeat(inner)}┐  ║`),
-    `${gray('║  │')}<span style="color:${p.green};background:${p.black}">${padterminalcenter(cmd, inner)}</span>${gray('│  ║')}`,
-    gray(`║  └${'─'.repeat(inner)}┘  ║`),
-    gray(`║ ${padterminalline('', w)} ║`),
-    `${gray('║  ')}<a href="${link}" style="color:${p.cyan};text-decoration:none">&gt; Open in zed.cafe</a>${gray(`${padterminalline('', w - 18)} ║`)}`,
-    gray(`║ ${padterminalline('', w)} ║`),
-    ...wrapterminallines(deeplink, w).map((line, i) => {
-      const chunk = deeplink.slice(i * w, i * w + w)
-      return `${gray('║ ')}<a href="${link}" style="color:${p.cyan};text-decoration:none">${escapehtml(chunk)}</a>${gray(`${padterminalline('', w - chunk.length)} ║`)}`
-    }),
-    gray(`║ ${padterminalline('', w)} ║`),
-    `${gray('║ ')}<span style="color:${p.yellow}">${padterminalline('Open on any device — phone, tablet, or', w)}</span>${gray(' ║')}`,
-    `${gray('║ ')}<span style="color:${p.yellow}">${padterminalline('desktop. Or copy the command above.', w)}</span>${gray(' ║')}`,
-    gray(`╚${'═'.repeat(w + 2)}╝`),
-  ].join('\n')
-  const dotbkgtile = buildznsdotbkgsvgtile()
-  const html = `<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${subjecthtml}</title>
-<style>
-@font-face {
-  font-family: 'IBM EGA 8x14';
-  src: url('${ZNS_VGA_FONT_DATA_URI}') format('woff');
-  font-weight: normal;
-  font-style: normal;
-  font-display: block;
-}
-body, pre, body *, pre * {
-  font-family: 'IBM EGA 8x14';
-  -webkit-font-smoothing: none;
-  font-smooth: never;
-}
-</style>
-</head>
-<body style="margin:0;padding:16px;background-color:${ZNS_DOT_BG};background-image:url(${dotbkgtile});background-size:${ZNS_DOT_EMAIL_TILE_W}px ${ZNS_DOT_EMAIL_TILE_H}px;background-repeat:repeat;color:${p.white};font-family:'IBM EGA 8x14';font-size:14px;line-height:14px;">
-<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">${preheaderhtml}</div>
-<pre style="margin:0 auto;max-width:520px;padding:16px;background:${ZNS_DOT_BG};white-space:pre-wrap;word-break:break-word;font-family:'IBM EGA 8x14';font-size:14px;line-height:14px">${htmlframe}</pre>
-</body>
-</html>`
-  return { subject, html, text }
+  return { subject: meta.subject, html, text: meta.text, pngb64 }
 }
 
 function buildznsapexlanding({ joinorigin, tenantsuffix }) {
@@ -779,6 +678,7 @@ function buildznstenantscrollhtml({
   namespace,
   key,
   markdown,
+  zss,
   notfound,
   tenantsuffix: suffix,
 }) {
@@ -802,7 +702,9 @@ ${framehtml}
 </article>`
   const content = notfound
     ? zederrorlinehtml('doc not found', key)
-    : zedtapehtml(markdown, { tenantbase: '/' })
+    : zss
+      ? zedzsshtml(markdown, { tenantbase: '/' })
+      : zedtapehtml(markdown, { tenantbase: '/' })
   const html = buildznsvgapage({
     title: pagetitle,
     bodyhtml,
@@ -839,7 +741,7 @@ function buildznstenantindexhtml({ namespace, tenantsuffix: suffix, entries }) {
     const group = bykind.get(kind) ?? []
     rows += zedtaperowshtml(zsssectionlines(kind).join('\n'))
     if (!group.length) {
-      rows += zedtaperowshtml('$dkpurple $GRAY(none)')
+      rows += zedtaperowshtml('$dkpurple $gray(none)')
       continue
     }
     for (const entry of group) {
@@ -878,7 +780,7 @@ function handleapexlanding(request, env) {
 }
 
 async function sendznscodeemail(apikey, email, code, namespace, joinorigin) {
-  const { subject, html, text } = buildznscodeemail({
+  const { subject, html, text, pngb64 } = await buildznscodeemail({
     code,
     email,
     namespace,
@@ -896,6 +798,13 @@ async function sendznscodeemail(apikey, email, code, namespace, joinorigin) {
       subject,
       html,
       text,
+      attachments: [
+        {
+          filename: 'zns-login.png',
+          content: pngb64,
+          content_id: 'zns-card',
+        },
+      ],
     }),
   })
   if (!res.ok) {
@@ -1193,6 +1102,7 @@ function tenantscrollresponse(request, env, namespace, pathkey, opts) {
     namespace,
     key: pathkey,
     markdown: opts.markdown,
+    zss: opts.zss,
     notfound: opts.notfound,
     tenantsuffix: tenantsuffix(env),
   })
@@ -1317,6 +1227,7 @@ async function handletenantread(request, env, namespace) {
     if (kind === 'text') {
       return tenantscrollresponse(request, env, namespace, pathkey, {
         markdown: stored,
+        zss: scrollsourceisrawzss(stored),
         notfound: false,
         status: 200,
       })
@@ -1365,6 +1276,12 @@ export {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url)
+    if ((request.method === 'GET' || request.method === 'HEAD') && env.ASSETS) {
+      const asset = await env.ASSETS.fetch(request)
+      if (asset.status !== 404) {
+        return asset
+      }
+    }
     const rawhost = url.hostname
     const hostname = rawhost.toLowerCase()
     if (rawhost !== hostname) {
