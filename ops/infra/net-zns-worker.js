@@ -4,17 +4,14 @@
  */
 
 import { ZNS_VGA_FONT_DATA_URI } from './generated/zns-vga-font.js'
-import {
-  buildznscodemeta,
-  buildznscodeemailhtml,
-} from './zns-email-card.js'
+import { buildznsdotbkgcss } from './zns-dotbkg.js'
 import {
   pngbytestobase64,
   reademailcardfontbytes,
   renderemailcardpngwasm,
 } from './zns-email-card-png-wasm.js'
 import { buildznsemailcardsvg } from './zns-email-card-svg.js'
-import { buildznsdotbkgcss } from './zns-dotbkg.js'
+import { buildznscodeemailhtml, buildznscodemeta } from './zns-email-card.js'
 import {
   measuredrawnwidth,
   scrollsourceisrawzss,
@@ -22,8 +19,8 @@ import {
   zederrorlinehtml,
   zedopenitznslinkrowhtml,
   zedtapehtml,
-  zedzsshtml,
   zedtaperowshtml,
+  zedzsshtml,
   znsrowhtml,
   zsssectionlines,
 } from './zns-zedhtml.js'
@@ -1279,10 +1276,7 @@ export {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url)
-    if (
-      (request.method === 'GET' || request.method === 'HEAD') &&
-      env.ASSETS
-    ) {
+    if ((request.method === 'GET' || request.method === 'HEAD') && env.ASSETS) {
       const asset = await env.ASSETS.fetch(request)
       if (asset.status !== 404) {
         return asset

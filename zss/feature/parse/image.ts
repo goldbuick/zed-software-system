@@ -58,7 +58,10 @@ export function cellcolsrows(
   }
 }
 
-export function boardcountforcells(cols: number, rows: number): {
+export function boardcountforcells(
+  cols: number,
+  rows: number,
+): {
   boardx: number
   boardy: number
 } {
@@ -108,20 +111,12 @@ export function buildpalettehelpers(): {
   return { colorlist, palettergb }
 }
 
-function nearestpaletteindex(
-  rgb: RGB,
-  colorlist: IDefaultColor[],
-): number {
+function nearestpaletteindex(rgb: RGB, colorlist: IDefaultColor[]): number {
   const match = getSimilarColor({ targetColor: rgb, colorArray: colorlist })
   return parseFloat(match?.name ?? '0')
 }
 
-function darkerpaletteindex(
-  fg: number,
-  rgb: RGB,
-  colorlist: IDefaultColor[],
-  palettergb: RGB[],
-): number {
+function darkerpaletteindex(fg: number, rgb: RGB, palettergb: RGB[]): number {
   const fglum = relativeluminance(palettergb[fg] ?? rgb)
   let best = 0
   let bestdist = Infinity
@@ -186,7 +181,7 @@ function shadeblockglyph(
   palettergb: RGB[],
 ): [number, number, number] {
   const fg = nearestpaletteindex(avg, colorlist)
-  const bg = darkerpaletteindex(fg, avg, colorlist, palettergb)
+  const bg = darkerpaletteindex(fg, avg, palettergb)
   const avglum = relativeluminance(avg)
   const fglum = relativeluminance(palettergb[fg] ?? avg)
   const bglum = relativeluminance(palettergb[bg] ?? avg)
@@ -346,7 +341,7 @@ function pickhalfblock(
           h,
           leftfgrgb,
           leftbgrgb,
-          (px, _py) => px < midx,
+          (px) => px < midx,
         ),
       })
       candidates.push({
@@ -362,7 +357,7 @@ function pickhalfblock(
           h,
           rightfgrgb,
           rightbgrgb,
-          (px, _py) => px >= midx,
+          (px) => px >= midx,
         ),
       })
     }
@@ -394,7 +389,8 @@ function shadefallbackerror(
   const [char, fg, bg] = glyph
   const fgrgb = palettergb[fg] ?? { r: 0, g: 0, b: 0 }
   const bgrgb = palettergb[bg] ?? { r: 0, g: 0, b: 0 }
-  const level = SHADE_LEVELS[SHADE_CHARS.indexOf(char as (typeof SHADE_CHARS)[number])] ?? 1
+  const level =
+    SHADE_LEVELS[SHADE_CHARS.indexOf(char as (typeof SHADE_CHARS)[number])] ?? 1
   let error = 0
   const x1 = Math.min(x0 + w, imagewidth)
   const y1 = y0 + h
@@ -565,14 +561,7 @@ export async function parseimage(
     }
 
     const patchworkname = titlename(filename)
-    importscreentopatchwork(
-      player,
-      patchworkname,
-      cols,
-      rows,
-      screen,
-      'image',
-    )
+    importscreentopatchwork(player, patchworkname, cols, rows, screen, 'image')
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err)
     apierror(SOFTWARE, player, 'parsewebfile', message)

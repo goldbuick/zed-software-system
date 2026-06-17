@@ -38,8 +38,9 @@ import { CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
 import { memoryadminmenu } from 'zss/memory/utilities'
 import { NAME } from 'zss/words/types'
 
-import { handleimageimport } from './imageimport'
+import { handlebookmarkscrollpanel } from './bookmarkscroll'
 import { handleeditorbookmarkscrollpanel } from './editorbookmarkscroll'
+import { handleimageimport } from './imageimport'
 import { handlezztbridge } from './zzt'
 
 const MAIN_MENU_BACK_HYPERLINK = zsszedlinkline(

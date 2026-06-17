@@ -48,9 +48,7 @@ export function handlereadimageimport(_vm: DEVICE, message: MESSAGE): void {
         ),
       )
     } else {
-      lines.push(
-        `$dkgray ${pct}% — ${cols}×${rows} cells (too large)`,
-      )
+      lines.push(`$dkgray ${pct}% — ${cols}×${rows} cells (too large)`)
     }
   }
 

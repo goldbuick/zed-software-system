@@ -14,8 +14,8 @@ import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import { parseansi } from './ansi'
-import { stageimageimport } from './image'
 import { parsechr } from './chr'
+import { stageimageimport } from './image'
 import { parsemidi } from './midi'
 import { parsepetscii } from './petscii'
 import { parsezzm } from './zzm'
@@ -297,15 +297,15 @@ function imagemimetype(kind: string, file: File): string {
 }
 
 function stageimagefile(player: string, kind: string, file: File) {
-  file
+  void file
     .arrayBuffer()
     .then((arraybuffer) => {
-      stageimageimport(
+      void stageimageimport(
         player,
         file.name,
         imagemimetype(kind, file),
         new Uint8Array(arraybuffer),
-      )
+      ).catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
     })
     .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
 }
