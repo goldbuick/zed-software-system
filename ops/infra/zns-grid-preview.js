@@ -1,3 +1,4 @@
+import { buildcp437charttape } from './zns-cp437.js'
 import { ZNS_VGA_FONT_DATA_URI } from './generated/zns-vga-font.js'
 import { buildznsdotbkgcss } from './zns-dotbkg.js'
 import { zedtaperowshtml } from './zns-zedhtml.js'
@@ -29,7 +30,6 @@ body.zns-page {
   padding: 16px;
   --zns-dot-w: ${ZNS_CELL_W * ZNS_DISPLAY_SCALE}px;
   --zns-dot-h: ${ZNS_CELL_H * ZNS_DISPLAY_SCALE}px;
-  background: transparent;
   color: #FFFFFF;
   box-sizing: border-box;
   font-family: ${ZNS_VGA_FONT};
@@ -82,6 +82,7 @@ ${buildznsdotbkgcss()}`
 export function buildznsgridpreviewhtml({ calibrationtape, fidelitytape }) {
   const cal = zedtaperowshtml(calibrationtape)
   const fid = zedtaperowshtml(fidelitytape)
+  const ascii = zedtaperowshtml(buildcp437charttape())
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -92,8 +93,11 @@ export function buildznsgridpreviewhtml({ calibrationtape, fidelitytape }) {
 <style>${buildstyles()}</style>
 </head>
 <body class="zns-page">
-<div class="zns-dotbkg" aria-hidden="true"><div class="zns-dotbkg-inner"></div></div>
 <div class="zns-vga-root">
+<section class="zns-panel">
+<h1 style="font-size:inherit;font-weight:normal;margin:0 0 var(--zns-lh)">CP437 0–255</h1>
+<div class="zns-tape">${ascii}</div>
+</section>
 <section class="zns-panel">
 <h1 style="font-size:inherit;font-weight:normal;margin:0 0 var(--zns-lh)">Calibration tape</h1>
 <div class="zns-tape">${cal}</div>

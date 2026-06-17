@@ -31,22 +31,76 @@ const CP437_TO_UNICODE = [
   0x207f, 0x00b2, 0x25a0, 0x00a0,
 ]
 
-/**
- * ZSS VGA uses CP437 slots 0–31 as visible glyphs; Unicode maps them to
- * controls (U+0000–U+001F) which Safari/iOS omit → missing-glyph boxes.
- */
-const ZNS_WEB_GLYPH_OVERRIDES = new Map([
-  [7, 0x2022], // • list marker ($7)
-  [16, 0x25b6], // ▶ OPENIT / hyperlink rows ($16)
-])
+/** int10h IBMEGA8x14.woff — CP437 slots 0–255 at U+F000–U+F0FF. */
+export const ZNS_CP437_PUA_BASE = 0xf000
+
+function iswebunsafeunicode(codepoint) {
+  return (
+    (codepoint >= 0x00 && codepoint <= 0x1f) ||
+    codepoint === 0x7f ||
+    codepoint === 0xfeff
+  )
+}
+
+/** Map CP437 byte → web-safe Unicode codepoint for IBM EGA 8×14. */
+export function cp437towebcodepoint(code) {
+  if (code < 0 || code > 255) {
+    return 0x20
+  }
+  if (code === 0) {
+    return 0x20
+  }
+  const mapped = CP437_TO_UNICODE[code]
+  if (code <= 31 || iswebunsafeunicode(mapped)) {
+    return ZNS_CP437_PUA_BASE + code
+  }
+  return mapped
+}
 
 export function cp437tochar(code) {
   if (code >= 0 && code <= 255) {
-    const override = ZNS_WEB_GLYPH_OVERRIDES.get(code)
-    if (override != null) {
-      return String.fromCodePoint(override)
-    }
-    return String.fromCodePoint(CP437_TO_UNICODE[code])
+    return String.fromCodePoint(cp437towebcodepoint(code))
   }
   return ' '
+}
+
+/** Validate all CP437 0–255 emit web-safe codepoints (no C0/DEL controls). */
+export function validatecp437webchars() {
+  const problems = []
+  for (let code = 0; code < 256; code++) {
+    const webcp = cp437towebcodepoint(code)
+    if (iswebunsafeunicode(webcp)) {
+      problems.push({ code, webcp, reason: 'web-unsafe codepoint' })
+      continue
+    }
+    const ch = cp437tochar(code)
+    const actual = ch.codePointAt(0)
+    if (actual !== webcp) {
+      problems.push({ code, webcp, actual, reason: 'char/codepoint mismatch' })
+    }
+    if ([...ch].length !== 1) {
+      problems.push({ code, reason: 'multi-scalar output' })
+    }
+  }
+  return problems
+}
+
+/** Tape rows: 16 codes per row with index labels (for grid preview). */
+export function buildcp437charttape() {
+  const rows = []
+  rows.push('$yellowCP437 chart — $0 through $255 ($$ escapes literal dollar)')
+  rows.push('')
+  for (let base = 0; base < 256; base += 16) {
+    const labels = []
+    const chars = []
+    for (let offset = 0; offset < 16; offset++) {
+      const code = base + offset
+      labels.push(String(code).padStart(3, '0'))
+      chars.push(`$${code} `)
+    }
+    rows.push(`$dkpurple${labels.join(' ')} `)
+    rows.push(`$white${chars.join('')}`)
+    rows.push('')
+  }
+  return rows.join('\n')
 }

@@ -9,6 +9,7 @@ import {
   zedzsshtml,
   zsssectionlines,
 } from '../../../ops/infra/zns-zedhtml.js'
+import { validatecp437webchars } from '../../../ops/infra/zns-cp437.js'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../../..')
 const romdir = join(root, 'zss/rom/refscroll')
@@ -40,6 +41,7 @@ assertok(!scrollsourceisrawzss(clwithtitle), 'cliscroll with @ title is markdown
 assertok(!scrollsourceisrawzss(cliscroll), 'cliscroll is markdown not raw ZSS')
 assertok(!scrollsourceisrawzss(helptext), 'helptext is markdown not raw ZSS')
 assertok(scrollsourceisrawzss(passage), 'passage is raw ZSS')
+assertok(validatecp437webchars().length === 0, 'all cp437 0-255 must be web-safe')
 
 assertok(clhtml.includes('OPENIT'), 'cliscroll should render OPENIT rows')
 assertok(!clhtml.includes('[ZTK'), 'cliscroll should not contain raw markdown links')
@@ -74,7 +76,13 @@ assertok(indexhtml.includes('$dkpurple') === false, 'section bar should render n
 assertok(!indexhtml.match(/>\s*\|/), 'OPENIT rows should not have pipe prefix')
 assertok(indexhtml.includes('OPENIT'), 'index-style OPENIT row present')
 assertok(!indexhtml.includes('\u0010'), 'OPENIT marker must not be Unicode control U+0010')
-assertok(indexhtml.includes('\u25b6') || indexhtml.includes('&#9654;'), 'OPENIT row should use ▶ marker')
+assertok(
+  indexhtml.includes('\uF010') ||
+    indexhtml.includes('&#61456;') ||
+    indexhtml.includes('\u25b6') ||
+    indexhtml.includes('&#9654;'),
+  'OPENIT row should render $16 marker from IBM font',
+)
 assertok(
   clhtml.includes('color:#ffffff') || clhtml.includes('color:#FFFFFF'),
   'cliscroll OPENIT label should use white',

@@ -12,11 +12,20 @@ export const ZNS_DOT_FG = fghex(resolvefgindex('blue'))
 export const ZNS_DOT_EMAIL_TILE_W = 8
 export const ZNS_DOT_EMAIL_TILE_H = 8
 
-function checkerboardgridimage() {
-  return [
-    `radial-gradient(circle at 1px 1px, ${ZNS_DOT_FG} 1px, transparent 1px)`,
-    `radial-gradient(circle at 9px 15px, ${ZNS_DOT_FG} 0.85px, transparent 1px)`,
-  ].join(',')
+/** Native 2×2 cell tile (16×28) before CSS scale vars. */
+const ZNS_DOT_CHECKER_W = 16
+const ZNS_DOT_CHECKER_H = 28
+
+function buildznsdotcheckerboardsvg() {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${ZNS_DOT_CHECKER_W}" height="${ZNS_DOT_CHECKER_H}" viewBox="0 0 ${ZNS_DOT_CHECKER_W} ${ZNS_DOT_CHECKER_H}">
+<rect width="100%" height="100%" fill="${ZNS_DOT_BG}"/>
+<circle cx="1" cy="1" r="1" fill="${ZNS_DOT_FG}" opacity="0.85"/>
+<circle cx="9" cy="15" r="0.85" fill="${ZNS_DOT_FG}" opacity="0.85"/>
+</svg>`
+}
+
+export function buildznsdotbkgimageuri() {
+  return `url("data:image/svg+xml,${encodeURIComponent(buildznsdotcheckerboardsvg())}")`
 }
 
 export function buildznsdotbkgsvgpattern() {
@@ -32,15 +41,14 @@ export function buildznsdotbkgsvgtile() {
 }
 
 /**
- * Dot grid on body.zns-page (scrolls with content; not position:fixed).
+ * Dot grid on body.zns-page (scrolls with content; SVG scales at 2× desktop).
  * CSS vars --zns-dot-w / --zns-dot-h = one cell (8×14 native, 16×28 at 2×).
- * Pattern tile = 2×2 cells for TapeBackPlate checkerboard parity.
  */
 export function buildznsdotbkgcss() {
-  const grid = checkerboardgridimage()
+  const image = buildznsdotbkgimageuri()
   return `body.zns-page{
   background-color:${ZNS_DOT_BG};
-  background-image:${grid};
+  background-image:${image};
   background-size:calc(var(--zns-dot-w, 8px) * 2) calc(var(--zns-dot-h, 14px) * 2);
   background-position:0 0;
   background-repeat:repeat;

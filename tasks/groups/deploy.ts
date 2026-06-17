@@ -83,8 +83,8 @@ export const DEPLOY_TASKS: TaskDef[] = [
   }),
   def('zns:grid:preview', {
     description:
-      'Write local CP437 VGA calibration HTML (ops/infra/generated/zns-grid-preview.html)',
-    tags: ['dev'],
+      'Write CP437 0–255 VGA calibration HTML + assert web-safe glyph mapping (ops/infra/generated/zns-grid-preview.html)',
+    tags: ['dev', 'ci'],
     group: 'deploy',
     deps: ['zns:vga:sync'],
     run: nodehandler('tasks/implementations/deploy/zns-grid-preview.mjs'),
