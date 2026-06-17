@@ -11,7 +11,7 @@ const config: Config = {
   testTimeout: TEST_TIMEOUT_MS,
   /** CI safety net when a worker still has stray handles after suites finish. */
   forceExit: process.env.CI === 'true',
-  setupFilesAfterEnv: ['<rootDir>/zss/testing/jesttimeoutsetup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/zss/testsupport/jesttimeoutsetup.ts'],
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
   moduleNameMapper: {
     '^zss/perf/ui$': '<rootDir>/ops/tests/mocks/perfui.ts',
@@ -47,7 +47,7 @@ const config: Config = {
   transformIgnorePatterns: [
     'node_modules/(?!(nanoid|nanoid-dictionary|human-id|alea|ts-extras|fast-json-patch|react-fast-compare|uqr|maath|@react-three|three|mime|uint8-util|@tonejs/midi|midi-file|chevrotain|lodash-es|@chevrotain|marked|json-joy|@jsonjoy.com)/)',
   ],
-  globalTeardown: '<rootDir>/zss/testing/jestglobalteardown.cjs',
+  globalTeardown: '<rootDir>/zss/testsupport/jestglobalteardown.cjs',
   testPathIgnorePatterns: [
     '<rootDir>/ops/e2e/',
     '<rootDir>/ops/tests/unit/memory/wasm/__tests__/wasmparity.test.ts',

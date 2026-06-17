@@ -221,6 +221,10 @@ export async function wanixhandletermwrite(
 ) {
   try {
     await sendwanixtermwrite(line)
+    apilog(device, player, line)
+    if (line.trim() === 'ping') {
+      apilog(device, player, 'pong')
+    }
   } catch (err) {
     apierror(
       device,

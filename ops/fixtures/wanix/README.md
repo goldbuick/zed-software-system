@@ -18,10 +18,33 @@ Sources:
 |------|--------|
 | `hello.wat` | one-shot hello (batch stdout) |
 | `hold.wat` | infinite loop (e2e term-write while running) |
+| `termbridge.wat` | **ZSS wanix-term bridge demo** — banner on stdout, then hold |
 
 Drag the `.wasm` onto a running app (`yarn task app dev`).
 
-Interactive input uses the **ZSS terminal as wanix-term**: `#task/run/term/data` via `wanix:term-write`. Raw WASI `fd_read(0)` is not supported.
+## ZSS wanix-term bridge (`termbridge.wasm`)
+
+Upstream Wanix uses `<wanix-term>` bound to `#task/…/term`. In ZSS the **tape terminal** is that bridge while a task runs (`wanix term attached`).
+
+| Direction | Path |
+|-----------|------|
+| Task → scrollback | guest `fd_write(1)` → `wanix:term-out` → terminal logs |
+| Scrollback → task | cyan `wanix` prompt → `wanix:term-write` → `#task/run/term/data` |
+| Line echo + smoke reply | ZSS bridge (`wanixhandletermwrite`) echoes your line to scrollback; `ping` → `pong` |
+
+`termbridge.wasm` is the fixture for this flow: it prints a banner (proves **term-out**), stays running (keeps term routing), and accepts lines you type (proves **term-write**). It uses only `fd_write` — not WASI `fd_read(0)`.
+
+Submitted lines and the `ping`/`pong` reply come from the **ZSS bridge** (local line discipline), not from the wasm guest.
+
+### Manual test
+
+1. `yarn task run wanix:ensure` then `yarn task app dev`
+2. Drag `ops/fixtures/wanix/termbridge.wasm` onto the app
+3. Confirm scrollback shows `wanix term bridge ready` and the input line shows the cyan **wanix** prefix
+4. Type `ping` and press Enter — scrollback should show `ping` then `pong`
+5. `#wanix stop` halts the task
+
+Raw WASI `fd_read(0)` is not the integration surface; do not patch Wanix for `fd/0`. See `.cursor/rules/wanix-term-bridge.mdc`.
 
 ## Optional C build (wasi-sdk)
 

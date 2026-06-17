@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test'
 
 import { HELLO_WASM_BYTE_LIST } from '../../zss/testsupport/wanix/hellowasm'
 import { HOLD_WASM_BYTE_LIST } from '../../zss/testsupport/wanix/holdwasm'
+import { TERM_BRIDGE_WASM_BYTE_LIST } from '../../zss/testsupport/wanix/termbridgewasm'
 
 import {
   TERM_BLOCK_MS,
@@ -197,6 +198,22 @@ test.describe('wanix host page (isolated)', () => {
     )
 
     expect(result.error, JSON.stringify(result, null, 2)).toBeUndefined()
+    expect(result.termwritesucceeded, 'term-write should succeed').toBe(true)
+  })
+
+  test('termbridge.wasm prints via term-out and accepts wanix:term-write', async ({
+    page,
+  }) => {
+    const result = await runhostwasm(
+      page,
+      TERM_BRIDGE_WASM_BYTE_LIST,
+      'termbridge.wasm',
+      'termbridge.wasm',
+      { blockms: TERM_BLOCK_MS, termline: 'ping', haltafter: true },
+    )
+
+    expect(result.error, JSON.stringify(result, null, 2)).toBeUndefined()
+    expect(result.output).toContain('wanix term bridge ready')
     expect(result.termwritesucceeded, 'term-write should succeed').toBe(true)
   })
 })
