@@ -37,9 +37,9 @@ function buildreport(logs: string[]): WANIX_SMOKE_REPORT {
   return {
     logs,
     sawsandbox: iswanixspaceactive(),
-    sawruncmd: joined.includes('wanix run hello.wasm'),
+    sawruncmd: /wanix run hello-wasm/.test(joined),
     sawhello: joined.includes('Hello from wanix!'),
-    sawexit: /wanix exit \d+/.test(joined),
+    sawexit: /wanix exit hello-wasm \d+/.test(joined),
     sawtermattached: joined.includes('wanix term attached'),
     sawerror:
       joined.includes('wanix>>') || joined.includes('task output timeout'),

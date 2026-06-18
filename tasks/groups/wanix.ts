@@ -34,6 +34,23 @@ export const WANIX_TASKS: TaskDef[] = [
       '--config',
       'ops/playwright.config.ts',
       'ops/e2e/wanix-host.spec.ts',
+      '--grep-invert',
+      'wanix vm boot',
+    ]),
+  }),
+  def('wanix:vm:verify', {
+    description:
+      'Run gated wanix vm-prep + vm-run host e2e (large CDN downloads; slow)',
+    tags: ['slow'],
+    env: { PLAYWRIGHT_INCLUDE_WANIX_VM_E2E: '1' },
+    run: exec([
+      'playwright',
+      'test',
+      '--config',
+      'ops/playwright.config.ts',
+      'ops/e2e/wanix-host.spec.ts',
+      '--grep',
+      'wanix vm boot',
     ]),
   }),
 ]

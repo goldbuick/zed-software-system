@@ -2,35 +2,79 @@ import type { DEVICELIKE } from 'zss/device/api'
 import { apierror, apilog } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
+import { uniquewanixtaskid } from 'zss/feature/wanix/wanixcmd'
 import { pickwanixbundleentry } from 'zss/feature/wanix/wanixbundle'
 import {
+  attachwanixtarget,
   ensurewanixsandbox,
   haltwanixtask,
+  haltwanixvm,
   iswanixspaceactive,
   listwanixbinds,
   listwanixdir,
   mountwanixarchive,
+  prepwanixvm,
   putwanixfile,
-  runwanixcommand,
+  setwanixtaskexithandler,
+  setwanixvmexithandler,
+  spawnwanixtask,
+  spawnwanixvm,
   sendwanixtermwrite,
   unmountallwanixbinds,
   unmountwanixbind,
 } from 'zss/feature/wanix/wanixiframehost'
-import { wanixiobridgeflush } from 'zss/feature/wanix/wanixiobridge'
 import {
-  clearwanixpending,
-  readwanixbinary,
-  readwanixpending,
-  readwanixphase,
-  setwanixhalted,
-  setwanixidle,
-  setwanixrunning,
+  haswanixcompute,
+  haswanixtasks,
+  haswanixvms,
+  iswanixtermactive,
+  iswanixtermraw,
+  readwanixattached,
+  readwanixattachedkind,
+  readwanixtask,
+  readwanixtasks,
+  readwanixvm,
+  readwanixvms,
+  registertask,
+  registervm,
+  removetask,
+  removevm,
+  setwanixattached,
   setwanixtermrouting,
-  setwanixstopped,
-  stashwanixpending,
+  type WANIX_ATTACH_KIND,
 } from 'zss/feature/wanix/wanixsession'
-import { writehyperlink } from 'zss/feature/writeui'
-import { zssheaderlines, zsstexttape } from 'zss/feature/zsstextui'
+import {
+  DEFAULT_WANIX_VM_ID,
+  DEFAULT_WANIX_VM_MEM,
+} from 'zss/feature/wanix/wanixvmassets'
+import {
+  zssheaderlines,
+  zsssectionlines,
+  zsstextline,
+  zsstexttape,
+  zsszedlinkline,
+} from 'zss/feature/zsstextui'
+
+let exitdevice: DEVICELIKE | undefined
+let exitplayer = ''
+
+function ensuretaskexithandler() {
+  setwanixtaskexithandler((taskid, code) => {
+    removetask(taskid)
+    if (exitdevice && exitplayer) {
+      apilog(exitdevice, exitplayer, `wanix exit ${taskid} ${code}`)
+    }
+  })
+}
+
+function ensurevmexithandler() {
+  setwanixvmexithandler((vmid, code) => {
+    removevm(vmid)
+    if (exitdevice && exitplayer) {
+      apilog(exitdevice, exitplayer, `wanix vm exit ${vmid} ${code}`)
+    }
+  })
+}
 
 export function iswanixwasmfile(name: string, bytes: Uint8Array): boolean {
   if (/\.wasm$/i.test(name)) {
@@ -49,30 +93,6 @@ export function iswanixbundlefile(name: string): boolean {
   return /\.tgz$/i.test(name) || /\.tar\.gz$/i.test(name)
 }
 
-function showwanixconflictprompt(
-  device: DEVICELIKE,
-  player: string,
-  pendinglabel: string,
-  runninglabel: string,
-) {
-  terminalwritelines(
-    device,
-    player,
-    zsstexttape(
-      zssheaderlines('wanix'),
-      `$yellow${runninglabel} is running`,
-      '$whiteDrop another binary — choose:',
-    ),
-  )
-  writehyperlink(
-    device,
-    player,
-    'wanix replace',
-    `Replace with ${pendinglabel}`,
-  )
-  writehyperlink(device, player, 'wanix keep', `Keep ${runninglabel}`)
-}
-
 async function launchwanixload(
   device: DEVICELIKE,
   player: string,
@@ -81,32 +101,42 @@ async function launchwanixload(
   bytes: Uint8Array,
 ) {
   await ensurewanixsandbox(device, player)
+  exitdevice = device
+  exitplayer = player
+  ensuretaskexithandler()
+
+  const taskid = uniquewanixtaskid(
+    label,
+    readwanixtasks().map((task) => task.id),
+  )
   let entrycmd = label
   if (kind === 'wasm') {
     await putwanixfile(label, bytes)
   } else {
-    await mountwanixarchive(label, bytes)
+    const bundleprefix = `bundle-${taskid}`
+    await mountwanixarchive(label, bytes, bundleprefix)
     const rootentries = await listwanixdir('.')
     let bundleentries: string[] | null = null
     try {
-      bundleentries = await listwanixdir('bundle')
+      bundleentries = await listwanixdir(bundleprefix)
     } catch {
       bundleentries = null
     }
-    entrycmd = pickwanixbundleentry(rootentries, bundleentries)
+    entrycmd = pickwanixbundleentry(
+      rootentries,
+      bundleentries,
+      bundleprefix,
+    )
   }
-  setwanixrunning({ label, entrycmd })
-  apilog(device, player, `wanix run ${entrycmd}`)
-  try {
-    const code = await runwanixcommand(entrycmd)
-    wanixiobridgeflush()
-    setwanixstopped(code)
-    apilog(device, player, `wanix exit ${code}`)
-  } catch (err) {
-    wanixiobridgeflush()
-    setwanixhalted()
-    throw err
-  }
+
+  const { taskid: spawnedid } = await spawnwanixtask(entrycmd, {
+    taskid,
+    attach: true,
+    wait: false,
+  })
+  registertask({ id: spawnedid, label, entrycmd })
+  setwanixattached('task', spawnedid)
+  apilog(device, player, `wanix run ${spawnedid} ${entrycmd}`)
 }
 
 export async function wanixhandledrop(
@@ -116,12 +146,6 @@ export async function wanixhandledrop(
   kind: 'wasm' | 'bundle',
   bytes: Uint8Array,
 ) {
-  if (readwanixphase() === 'running') {
-    stashwanixpending({ label, kind, bytes })
-    const running = readwanixbinary()
-    showwanixconflictprompt(device, player, label, running?.label ?? 'binary')
-    return
-  }
   try {
     await launchwanixload(device, player, label, kind, bytes)
   } catch (err) {
@@ -134,27 +158,32 @@ export async function wanixhandledrop(
   }
 }
 
-export async function wanixhandlereplace(device: DEVICELIKE, player: string) {
-  const pending = readwanixpending()
-  if (!pending) {
-    apierror(device, player, 'wanix', 'no pending binary to replace with')
-    return
-  }
-  if (readwanixphase() !== 'running') {
-    apierror(device, player, 'wanix', 'nothing running to replace')
-    return
-  }
-  clearwanixpending()
+export async function wanixhandlevmstart(
+  device: DEVICELIKE,
+  player: string,
+  vmid?: string,
+) {
   try {
-    await haltwanixtask()
-    setwanixhalted()
-    await launchwanixload(
-      device,
-      player,
-      pending.label,
-      pending.kind,
-      pending.bytes,
-    )
+    await ensurewanixsandbox(device, player)
+    exitdevice = device
+    exitplayer = player
+    ensurevmexithandler()
+    apilog(device, player, 'wanix vm prep: fetching linux + v86 archives...')
+    await prepwanixvm()
+    const requested = vmid ?? DEFAULT_WANIX_VM_ID
+    const { vmid: spawnedid } = await spawnwanixvm({
+      vmid: requested,
+      mem: DEFAULT_WANIX_VM_MEM,
+      attach: true,
+      wait: false,
+    })
+    registervm({
+      id: spawnedid,
+      label: spawnedid,
+      mem: DEFAULT_WANIX_VM_MEM,
+    })
+    setwanixattached('vm', spawnedid)
+    apilog(device, player, `wanix vm boot ${spawnedid}`)
   } catch (err) {
     apierror(
       device,
@@ -165,43 +194,168 @@ export async function wanixhandlereplace(device: DEVICELIKE, player: string) {
   }
 }
 
-export function wanixhandlekeep(device: DEVICELIKE, player: string) {
-  const pending = readwanixpending()
-  if (!pending) {
-    apierror(device, player, 'wanix', 'no pending binary')
-    return
-  }
-  clearwanixpending()
-  apilog(device, player, `wanix kept ${readwanixbinary()?.label ?? 'binary'}`)
-}
-
-export async function wanixhandlestop(device: DEVICELIKE, player: string) {
-  const phase = readwanixphase()
-  if (phase === 'running') {
-    try {
-      await haltwanixtask()
-      setwanixhalted()
-      apilog(device, player, 'wanix halted')
-    } catch (err) {
-      apierror(
-        device,
-        player,
-        'wanix',
-        err instanceof Error ? err.message : String(err),
+export async function wanixhandleshownenu(
+  device: DEVICELIKE,
+  player: string,
+) {
+  try {
+    if (iswanixspaceactive()) {
+      await ensurewanixsandbox(device, player)
+    }
+    const tasks = readwanixtasks()
+    const vms = readwanixvms()
+    const attached = readwanixattached()
+    const attachedkind = readwanixattachedkind()
+    const binds = iswanixspaceactive() ? await listwanixbinds() : []
+    const parts: (string | string[])[] = [
+      zssheaderlines('wanix'),
+      zsstextline('drop a .wasm or .tgz to run'),
+      zsssectionlines('Tasks'),
+    ]
+    if (tasks.length === 0) {
+      parts.push(zsstextline('$grayno tasks running'))
+    } else {
+      for (const task of tasks) {
+        const isattached =
+          attachedkind === 'task' && attached === task.id
+        const attachlabel = isattached
+          ? `Attach ${task.label} $cyanattached`
+          : `Attach ${task.label}`
+        parts.push(zsszedlinkline(`wanix attach ${task.id}`, attachlabel))
+        parts.push(zsszedlinkline(`wanix stop ${task.id}`, `Stop ${task.label}`))
+      }
+      parts.push(
+        zsszedlinkline('wanix stop', `Stop all (${tasks.length} tasks)`),
       )
     }
-    return
+    parts.push(zsssectionlines('VMs'))
+    if (vms.length === 0) {
+      parts.push(zsszedlinkline('wanix vm', 'Boot Linux in v86'))
+    } else {
+      for (const vm of vms) {
+        const isattached = attachedkind === 'vm' && attached === vm.id
+        const attachlabel = isattached
+          ? `Attach ${vm.label} $cyanattached`
+          : `Attach ${vm.label}`
+        parts.push(zsszedlinkline(`wanix attach ${vm.id}`, attachlabel))
+        parts.push(
+          zsszedlinkline(`wanix vm stop ${vm.id}`, `Stop ${vm.label}`),
+        )
+      }
+      parts.push(
+        zsszedlinkline(
+          'wanix vm stop',
+          `Stop all (${vms.length} vms)`,
+        ),
+      )
+    }
+    parts.push(zsssectionlines('Binds'))
+    if (binds.length === 0) {
+      parts.push(zsstextline('$grayno mounts'))
+    } else {
+      for (const bind of binds) {
+        parts.push(
+          zsszedlinkline(
+            `wanix unbind ${bind.id}`,
+            `Unmount ${bind.label}`,
+          ),
+        )
+      }
+      parts.push(
+        zsszedlinkline(
+          'wanix unbind all',
+          `Unmount all (${binds.length} binds)`,
+        ),
+      )
+    }
+    if (iswanixtermactive()) {
+      parts.push(
+        zsstextline('#wanix detach — stop routing terminal input'),
+      )
+    }
+    terminalwritelines(device, player, zsstexttape(...parts))
+  } catch (err) {
+    apierror(
+      device,
+      player,
+      'wanix',
+      err instanceof Error ? err.message : String(err),
+    )
   }
-  if (phase === 'stopped') {
-    setwanixidle()
-    apilog(device, player, 'wanix cleared')
-    return
+}
+
+export async function wanixhandlestop(
+  device: DEVICELIKE,
+  player: string,
+  taskid?: string,
+) {
+  try {
+    if (!haswanixtasks() && !iswanixspaceactive()) {
+      apilog(device, player, 'wanix idle')
+      return
+    }
+    await ensurewanixsandbox(device, player)
+    if (taskid) {
+      await haltwanixtask(taskid)
+      removetask(taskid)
+      apilog(device, player, `wanix halted ${taskid}`)
+      return
+    }
+    const running = readwanixtasks()
+    if (running.length === 0) {
+      apilog(device, player, 'wanix idle (sandbox warm)')
+      return
+    }
+    await haltwanixtask()
+    for (const task of running) {
+      removetask(task.id)
+    }
+    apilog(device, player, `wanix halted ${running.length} tasks`)
+  } catch (err) {
+    apierror(
+      device,
+      player,
+      'wanix',
+      err instanceof Error ? err.message : String(err),
+    )
   }
-  if (iswanixspaceactive()) {
-    apilog(device, player, 'wanix idle (sandbox warm)')
-    return
+}
+
+export async function wanixhandlevmstop(
+  device: DEVICELIKE,
+  player: string,
+  vmid?: string,
+) {
+  try {
+    if (!haswanixvms() && !iswanixspaceactive()) {
+      apilog(device, player, 'wanix vm idle')
+      return
+    }
+    await ensurewanixsandbox(device, player)
+    if (vmid) {
+      await haltwanixvm(vmid)
+      removevm(vmid)
+      apilog(device, player, `wanix vm halted ${vmid}`)
+      return
+    }
+    const running = readwanixvms()
+    if (running.length === 0) {
+      apilog(device, player, 'wanix vm idle')
+      return
+    }
+    await haltwanixvm()
+    for (const vm of running) {
+      removevm(vm.id)
+    }
+    apilog(device, player, `wanix vm halted ${running.length} vms`)
+  } catch (err) {
+    apierror(
+      device,
+      player,
+      'wanix',
+      err instanceof Error ? err.message : String(err),
+    )
   }
-  apilog(device, player, 'wanix idle')
 }
 
 export async function parsewanixwasm(player: string, file: File) {
@@ -220,10 +374,13 @@ export async function wanixhandletermwrite(
   line: string,
 ) {
   try {
-    await sendwanixtermwrite(line)
-    apilog(device, player, line)
-    if (line.trim() === 'ping') {
-      apilog(device, player, 'pong')
+    const raw = iswanixtermraw()
+    await sendwanixtermwrite(line, { raw })
+    if (!raw) {
+      apilog(device, player, line)
+      if (line.trim() === 'ping') {
+        apilog(device, player, 'pong')
+      }
     }
   } catch (err) {
     apierror(
@@ -235,80 +392,90 @@ export async function wanixhandletermwrite(
   }
 }
 
+function readattachlabel(kind: WANIX_ATTACH_KIND, id: string) {
+  if (kind === 'vm') {
+    return readwanixvm(id)?.label ?? id
+  }
+  return readwanixtask(id)?.label ?? id
+}
+
 export function wanixhandledetach(device: DEVICELIKE, player: string) {
-  if (readwanixphase() !== 'running') {
+  if (!haswanixcompute()) {
     apierror(device, player, 'wanix', 'nothing running to detach from')
     return
   }
-  if (!readwanixbinary()) {
-    apierror(device, player, 'wanix', 'no active binary')
-    return
-  }
+  const attached = readwanixattached()
+  const attachedkind = readwanixattachedkind()
+  const label =
+    attached && attachedkind
+      ? readattachlabel(attachedkind, attached)
+      : 'task'
   setwanixtermrouting(false)
   apilog(
     device,
     player,
-    `wanix term detached — ${readwanixbinary()?.label ?? 'binary'} still running (#wanix attach to resume)`,
+    `wanix term detached — ${label} still running (#wanix attach to resume)`,
   )
 }
 
-export function wanixhandleattach(device: DEVICELIKE, player: string) {
-  if (readwanixphase() !== 'running') {
-    apierror(device, player, 'wanix', 'nothing running to attach to')
-    return
-  }
-  const active = readwanixbinary()
-  if (!active) {
-    apierror(device, player, 'wanix', 'no active binary')
-    return
-  }
-  setwanixtermrouting(true)
-  apilog(
-    device,
-    player,
-    `wanix term attached — typing goes to ${active.label} (#wanix detach to escape routing)`,
-  )
-}
-
-export async function wanixhandleunbindshow(
+export async function wanixhandleattach(
   device: DEVICELIKE,
   player: string,
+  targetid?: string,
 ) {
   try {
-    await ensurewanixsandbox(device, player)
-    const binds = await listwanixbinds()
-    if (binds.length === 0) {
-      apilog(device, player, 'wanix nothing to unbind')
+    if (!haswanixcompute()) {
+      apierror(device, player, 'wanix', 'nothing running to attach to')
       return
     }
-    terminalwritelines(
-      device,
-      player,
-      zsstexttape(
-        zssheaderlines('wanix unbind'),
-        '$whiteMounted binds:',
-      ),
-    )
-    for (const bind of binds) {
-      terminalwritelines(
+    await ensurewanixsandbox(device, player)
+    const tasks = readwanixtasks()
+    const vms = readwanixvms()
+    let kind: WANIX_ATTACH_KIND | undefined
+    let target = targetid
+    if (target) {
+      if (readwanixvm(target)) {
+        kind = 'vm'
+      } else if (readwanixtask(target)) {
+        kind = 'task'
+      } else {
+        apierror(device, player, 'wanix', `unknown target: ${target}`)
+        return
+      }
+    } else if (tasks.length + vms.length === 1) {
+      if (vms.length === 1) {
+        kind = 'vm'
+        target = vms[0]?.id
+      } else {
+        kind = 'task'
+        target = tasks[0]?.id
+      }
+    } else {
+      apierror(
         device,
         player,
-        zsstexttape(
-          `$white${bind.kind} → ${bind.dst} $7(${bind.label})$white`,
-        ),
+        'wanix',
+        'multiple targets running — use #wanix attach <id>',
       )
-      writehyperlink(
-        device,
-        player,
-        `wanix unbind ${bind.id}`,
-        `Unmount ${bind.label}`,
-      )
+      return
     }
-    writehyperlink(
+    if (!target || !kind) {
+      return
+    }
+    if (
+      readwanixattached() === target &&
+      readwanixattachedkind() === kind &&
+      iswanixtermactive()
+    ) {
+      return
+    }
+    await attachwanixtarget(kind, target)
+    const label = readattachlabel(kind, target)
+    const prompt = kind === 'vm' ? 'wanix-vm' : 'wanix'
+    apilog(
       device,
       player,
-      'wanix unbind all',
-      `Unmount all (${binds.length} binds)`,
+      `wanix term attached — typing goes to ${label} (${prompt} prompt, #wanix detach to escape routing)`,
     )
   } catch (err) {
     apierror(

@@ -17,7 +17,7 @@ import { SOFTWARE } from 'zss/device/session'
 import { withclipboard } from 'zss/feature/keyboard'
 import { SpeechToText } from 'zss/feature/speechtotext'
 import { storagewritehistorybuffer } from 'zss/feature/storage'
-import { iswanixtermactive } from 'zss/feature/wanix/wanixsession'
+import { iswanixtermactive, iswanixtermraw } from 'zss/feature/wanix/wanixsession'
 import {
   useEqual,
   useGadgetClient,
@@ -184,6 +184,7 @@ export function TerminalInput({
   )
 
   const wanixtermactive = iswanixtermactive()
+  const wanixtermraw = iswanixtermraw()
   const logsrowmaxwidth = context.width - 1
   const logsrowheights = useMemo(
     () =>
@@ -396,7 +397,11 @@ export function TerminalInput({
   setuplogitem(false, 0, edge.height - 1, context)
   context.active.color = COLOR.WHITE
   if (wanixtermactive) {
-    tokenizeandwritetextformat('$CYANwanix$WHITE ', context, true)
+    tokenizeandwritetextformat(
+      wanixtermraw ? '$CYANwanix-vm$WHITE ' : '$CYANwanix$WHITE ',
+      context,
+      true,
+    )
   }
   writeplaintext(inputline, context, true)
 

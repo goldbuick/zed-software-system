@@ -100,7 +100,7 @@ async function runhostwasm(
           }
         })
         window.postMessage(
-          { type: 'wanix:run', id: runid, cmd: runcmd },
+          { type: 'wanix:run', id: runid, cmd: runcmd, wait: true },
           origin,
         )
       })
@@ -215,5 +215,303 @@ test.describe('wanix host page (isolated)', () => {
     expect(result.error, JSON.stringify(result, null, 2)).toBeUndefined()
     expect(result.output).toContain('wanix term bridge ready')
     expect(result.termwritesucceeded, 'term-write should succeed').toBe(true)
+  })
+
+  test('runs hello.wasm in parallel while hold.wasm keeps running', async ({
+    page,
+  }) => {
+    await waitforwanixhostready(page)
+    const result = await page.evaluate(
+      async ({ hellobytes, holdbytes }) => {
+        const origin = location.origin
+        const rpc = (
+          type: string,
+          data: Record<string, unknown>,
+          done: string,
+          rpcid: string,
+        ) =>
+          new Promise<{ error?: string; taskId?: string; code?: number }>(
+            (resolve) => {
+              const timer = setTimeout(
+                () => resolve({ error: `${type} timeout` }),
+                60_000,
+              )
+              window.addEventListener('message', function onmsg(ev: MessageEvent) {
+                if (ev.origin !== origin) {
+                  return
+                }
+                if (ev.data?.type === done && ev.data.id === rpcid) {
+                  clearTimeout(timer)
+                  window.removeEventListener('message', onmsg)
+                  resolve({
+                    error: ev.data.error,
+                    taskId: ev.data.taskId,
+                    code: ev.data.code,
+                  })
+                }
+              })
+              window.postMessage({ type, id: rpcid, ...data }, origin)
+            },
+          )
+
+        for (const [name, bytes] of [
+          ['hold.wasm', holdbytes],
+          ['hello.wasm', hellobytes],
+        ] as const) {
+          const put = await rpc(
+            'wanix:put',
+            { name, bytes: new Uint8Array(bytes).buffer },
+            'wanix:put:done',
+            `e2e-put-${name}`,
+          )
+          if (put.error) {
+            return { error: put.error }
+          }
+        }
+
+        const holdstart = await rpc(
+          'wanix:run',
+          { cmd: 'hold.wasm', wait: false },
+          'wanix:run:started',
+          'e2e-hold-start',
+        )
+        if (holdstart.error || !holdstart.taskId) {
+          return { error: holdstart.error ?? 'hold start missing taskId' }
+        }
+
+        let output = ''
+        const hellopromise = new Promise<{ code: number; error?: string }>(
+          (resolve) => {
+            const timer = setTimeout(
+              () => resolve({ code: -1, error: 'hello timeout' }),
+              60_000,
+            )
+            window.addEventListener('message', function onmsg(ev: MessageEvent) {
+              if (ev.origin !== origin) {
+                return
+              }
+              if (ev.data?.type === 'wanix:term-out' && ev.data.chunk) {
+                output += String(ev.data.chunk)
+              }
+              if (
+                ev.data?.type === 'wanix:run:done' &&
+                ev.data.id === 'e2e-hello-run'
+              ) {
+                clearTimeout(timer)
+                window.removeEventListener('message', onmsg)
+                resolve({
+                  code: typeof ev.data.code === 'number' ? ev.data.code : 1,
+                  error: ev.data.error,
+                })
+              }
+            })
+            window.postMessage(
+              {
+                type: 'wanix:run',
+                id: 'e2e-hello-run',
+                cmd: 'hello.wasm',
+                wait: true,
+              },
+              origin,
+            )
+          },
+        )
+
+        const helloresult = await hellopromise
+        if (helloresult.error) {
+          return { error: helloresult.error, output }
+        }
+        if (helloresult.code !== 0) {
+          return { error: `hello exit ${helloresult.code}`, output }
+        }
+        if (!output.includes('Hello from wanix!')) {
+          return { error: 'missing hello output', output }
+        }
+
+        const attach = await rpc(
+          'wanix:attach',
+          { taskId: holdstart.taskId },
+          'wanix:attach:done',
+          'e2e-hold-attach',
+        )
+        if (attach.error) {
+          return { error: attach.error, output }
+        }
+
+        const term = await rpc(
+          'wanix:term-write',
+          { data: 'hello' },
+          'wanix:term-write:done',
+          'e2e-hold-term',
+        )
+        if (term.error) {
+          return { error: term.error, output }
+        }
+
+        const halt = await rpc(
+          'wanix:halt',
+          { taskId: holdstart.taskId },
+          'wanix:halt:done',
+          'e2e-hold-halt',
+        )
+        if (halt.error) {
+          return { error: halt.error, output }
+        }
+
+        return { code: 0, output, holdtaskid: holdstart.taskId }
+      },
+      {
+        hellobytes: HELLO_WASM_BYTE_LIST,
+        holdbytes: HOLD_WASM_BYTE_LIST,
+      },
+    )
+
+    expect(result.error, JSON.stringify(result, null, 2)).toBeUndefined()
+    expect(result.code).toBe(0)
+  })
+})
+
+const includevme2e = process.env.PLAYWRIGHT_INCLUDE_WANIX_VM_E2E === '1'
+
+test.describe('wanix vm boot (gated)', () => {
+  test.skip(!includevme2e, 'set PLAYWRIGHT_INCLUDE_WANIX_VM_E2E=1')
+
+  test.describe.configure({ timeout: 600_000 })
+
+  test('vm-prep and vm-run emit serial console output', async ({ page }) => {
+    const urls = {
+      linux: 'https://cdn.jsdelivr.net/npm/wanix-extras@0.4.0-rc1/dist/wanix-linux.tgz',
+      v86: 'https://cdn.jsdelivr.net/npm/wanix-extras@0.4.0-rc1/dist/v86.tgz',
+    }
+    await waitforwanixhostready(page)
+    const result = await page.evaluate(async (asseturls) => {
+      const origin = location.origin
+      const rpc = (
+        type: string,
+        data: Record<string, unknown>,
+        done: string,
+        rpcid: string,
+        timeoutms: number,
+      ) =>
+        new Promise<{
+          error?: string
+          vmId?: string
+          entries?: string[]
+        }>((resolve) => {
+          const timer = setTimeout(
+            () => resolve({ error: `${type} timeout` }),
+            timeoutms,
+          )
+          window.addEventListener('message', function onmsg(ev: MessageEvent) {
+            if (ev.origin !== origin) {
+              return
+            }
+            if (ev.data?.type === done && ev.data.id === rpcid) {
+              clearTimeout(timer)
+              window.removeEventListener('message', onmsg)
+              resolve({
+                error: ev.data.error,
+                vmId: ev.data.vmId,
+                entries: Array.isArray(ev.data.entries)
+                  ? ev.data.entries.map(String)
+                  : undefined,
+              })
+            }
+          })
+          window.postMessage({ type, id: rpcid, ...data }, origin)
+        })
+
+      const prep = await rpc(
+        'wanix:vm-prep',
+        { urls: asseturls },
+        'wanix:vm-prep:done',
+        'e2e-vm-prep',
+        600_000,
+      )
+      if (prep.error) {
+        return { error: prep.error, output: '' }
+      }
+
+      const driverls = await rpc(
+        'wanix:ls',
+        { path: '#vm/v86' },
+        'wanix:ls:done',
+        'e2e-vm-v86-ls',
+        60_000,
+      )
+      if (driverls.error) {
+        return { error: driverls.error, output: '' }
+      }
+      if (!driverls.entries?.includes('v86-vm.wasm')) {
+        return {
+          error: `missing v86-vm.wasm after prep (entries: ${driverls.entries?.join(', ') ?? 'none'})`,
+          output: '',
+        }
+      }
+
+      let output = ''
+      const runid = 'e2e-vm-run'
+      const runstart = await rpc(
+        'wanix:vm-run',
+        { vmId: 'linux-vm', wait: false, attach: true },
+        'wanix:vm-run:started',
+        runid,
+        600_000,
+      )
+      if (runstart.error || !runstart.vmId) {
+        return {
+          error: runstart.error ?? 'vm run missing vmId',
+          output,
+        }
+      }
+
+      const serial = await new Promise<{ ok: boolean; output: string }>(
+        (resolve) => {
+          const deadline = Date.now() + 180_000
+          const timer = setInterval(() => {
+            if (Date.now() >= deadline) {
+              clearInterval(timer)
+              window.removeEventListener('message', onmsg)
+              resolve({ ok: output.length > 0, output })
+            }
+          }, 500)
+          function onmsg(ev: MessageEvent) {
+            if (ev.origin !== origin) {
+              return
+            }
+            if (ev.data?.type === 'wanix:term-out' && ev.data.chunk) {
+              output += String(ev.data.chunk)
+            }
+            if (ev.data?.type === 'wanix:log' && ev.data.line) {
+              output += `${String(ev.data.line)}\n`
+            }
+            if (output.length > 0) {
+              clearInterval(timer)
+              window.removeEventListener('message', onmsg)
+              resolve({ ok: true, output })
+            }
+          }
+          window.addEventListener('message', onmsg)
+        },
+      )
+
+      await rpc(
+        'wanix:vm-halt',
+        { vmId: runstart.vmId },
+        'wanix:vm-halt:done',
+        'e2e-vm-halt',
+        60_000,
+      )
+
+      return {
+        vmId: runstart.vmId,
+        serialok: serial.ok,
+        output: serial.output,
+      }
+    }, urls)
+
+    expect(result.error, JSON.stringify(result, null, 2)).toBeUndefined()
+    expect(result.serialok, 'expected serial term-out from vm').toBe(true)
+    expect(result.output?.length ?? 0).toBeGreaterThan(0)
   })
 })

@@ -1,27 +1,17 @@
 import { createdevice } from 'zss/device'
 import { apierror } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
-import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import {
   wanixhandleattach,
   wanixhandledetach,
   wanixhandledrop,
-  wanixhandlekeep,
-  wanixhandlereplace,
+  wanixhandleshownenu,
   wanixhandlestop,
   wanixhandletermwrite,
   wanixhandleunbind,
-  wanixhandleunbindshow,
+  wanixhandlevmstart,
+  wanixhandlevmstop,
 } from 'zss/feature/wanix/wanixdrop'
-import {
-  iswanixspaceactive,
-  readwanixstatus,
-} from 'zss/feature/wanix/wanixiframehost'
-import {
-  formatwanixstatelines,
-  readwanixpending,
-} from 'zss/feature/wanix/wanixsession'
-import { zssheaderlines, zsstexttape } from 'zss/feature/zsstextui'
 import { doasync } from 'zss/mapping/func'
 import { ispresent, isstring } from 'zss/mapping/types'
 
@@ -61,16 +51,21 @@ const wanix = createdevice('wanix', [], (message) => {
   switch (message.target) {
     case 'stop':
       doasync(wanix, message.player, async () => {
-        await wanixhandlestop(wanix, message.player)
+        const taskid = isstring(message.data) ? message.data : undefined
+        await wanixhandlestop(wanix, message.player, taskid)
       })
       break
-    case 'replace':
+    case 'vm-start':
       doasync(wanix, message.player, async () => {
-        await wanixhandlereplace(wanix, message.player)
+        const vmid = isstring(message.data) ? message.data : undefined
+        await wanixhandlevmstart(wanix, message.player, vmid)
       })
       break
-    case 'keep':
-      wanixhandlekeep(wanix, message.player)
+    case 'vm-stop':
+      doasync(wanix, message.player, async () => {
+        const vmid = isstring(message.data) ? message.data : undefined
+        await wanixhandlevmstop(wanix, message.player, vmid)
+      })
       break
     case 'term-write':
       if (!isstring(message.data)) {
@@ -84,11 +79,15 @@ const wanix = createdevice('wanix', [], (message) => {
       wanixhandledetach(wanix, message.player)
       break
     case 'attach':
-      wanixhandleattach(wanix, message.player)
+      doasync(wanix, message.player, async () => {
+        const taskid = isstring(message.data) ? message.data : undefined
+        await wanixhandleattach(wanix, message.player, taskid)
+      })
       break
     case 'unbind-show':
+    case 'show':
       doasync(wanix, message.player, async () => {
-        await wanixhandleunbindshow(wanix, message.player)
+        await wanixhandleshownenu(wanix, message.player)
       })
       break
     case 'unbind':
@@ -115,38 +114,6 @@ const wanix = createdevice('wanix', [], (message) => {
       })
       break
     }
-    case 'show':
-      doasync(wanix, message.player, async () => {
-        try {
-          const status = await readwanixstatus()
-          const hostready = status.ready || iswanixspaceactive()
-          terminalwritelines(
-            wanix,
-            message.player,
-            zsstexttape(
-              zssheaderlines('wanix'),
-              ...formatwanixstatelines(hostready),
-            ),
-          )
-          if (readwanixpending()) {
-            terminalwritelines(
-              wanix,
-              message.player,
-              zsstexttape(
-                '$grayuse the links above to replace or keep the running binary',
-              ),
-            )
-          }
-        } catch (err) {
-          apierror(
-            wanix,
-            message.player,
-            'wanix',
-            err instanceof Error ? err.message : String(err),
-          )
-        }
-      })
-      break
     default:
       break
   }

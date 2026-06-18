@@ -20,7 +20,7 @@ Sources:
 | `hold.wat` | infinite loop (e2e term-write while running) |
 | `termbridge.wat` | **ZSS wanix-term bridge demo** — banner on stdout, then hold |
 
-Drag the `.wasm` onto a running app (`yarn task app dev`).
+Drag the `.wasm` onto a running app (`yarn task app dev`). Multiple drops run in parallel; use `#wanix` to attach, stop, or unmount.
 
 ## ZSS wanix-term bridge (`termbridge.wasm`)
 
@@ -78,6 +78,25 @@ yarn task run wanix:ensure
 `yarn install` provides the `wanix` npm package. Run `wanix:ensure` after install so `cafe/public/wanix` matches `node_modules/wanix`.
 
 Upstream source for reading/debugging (WASI worker, term device, workbench host): [`submodules/wanix/`](../../../submodules/wanix/) — see [`submodules/README.md`](../../../submodules/README.md).
+
+## Linux VM (v86 serial console)
+
+Boot Alpine Linux in v86 from the `#wanix` menu or CLI:
+
+```bash
+#wanix vm
+#wanix vm stop [id]
+```
+
+On first boot the host lazily fetches pinned `wanix-extras@0.4.0-rc1` archives (`wanix-linux.tgz` at `.`, `v86.tgz` at `#vm/v86`) from jsDelivr. Boot takes tens of seconds; progress lines appear in scrollback during `wanix:vm-prep`.
+
+While a VM is attached, the terminal shows a cyan **`wanix-vm`** prompt and sends **raw serial** lines on Enter (no bridge echo/ping). WASI tasks and one VM can run in parallel; a new VM auto-attaches and steals terminal I/O.
+
+Gated host e2e (large downloads, 3+ minutes):
+
+```bash
+PLAYWRIGHT_INCLUDE_WANIX_VM_E2E=1 yarn task run wanix:vm:verify
+```
 
 ## IO verify (fix loop)
 

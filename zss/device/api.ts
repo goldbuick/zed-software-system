@@ -413,24 +413,32 @@ export function wanixshow(device: DEVICELIKE, player: string) {
   device.emit(player, 'wanix:show')
 }
 
-export function wanixstop(device: DEVICELIKE, player: string) {
-  device.emit(player, 'wanix:stop')
+export function wanixvmstart(
+  device: DEVICELIKE,
+  player: string,
+  vmid?: string,
+) {
+  device.emit(player, 'wanix:vm-start', vmid)
 }
 
-export function wanixreplace(device: DEVICELIKE, player: string) {
-  device.emit(player, 'wanix:replace')
+export function wanixvmstop(
+  device: DEVICELIKE,
+  player: string,
+  vmid?: string,
+) {
+  device.emit(player, 'wanix:vm-stop', vmid)
 }
 
-export function wanixkeep(device: DEVICELIKE, player: string) {
-  device.emit(player, 'wanix:keep')
+export function wanixstop(
+  device: DEVICELIKE,
+  player: string,
+  taskid?: string,
+) {
+  device.emit(player, 'wanix:stop', taskid)
 }
 
 export function wanixtermwrite(device: DEVICELIKE, player: string, line: string) {
   device.emit(player, 'wanix:term-write', line)
-}
-
-export function wanixunbindshow(device: DEVICELIKE, player: string) {
-  device.emit(player, 'wanix:unbind-show')
 }
 
 export function wanixunbind(
@@ -445,8 +453,12 @@ export function wanixdetach(device: DEVICELIKE, player: string) {
   device.emit(player, 'wanix:detach')
 }
 
-export function wanixattach(device: DEVICELIKE, player: string) {
-  device.emit(player, 'wanix:attach')
+export function wanixattach(
+  device: DEVICELIKE,
+  player: string,
+  taskid?: string,
+) {
+  device.emit(player, 'wanix:attach', taskid)
 }
 
 export function wanixdrop(

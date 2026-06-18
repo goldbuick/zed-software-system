@@ -1,4 +1,4 @@
-import { normalizewanixcmd } from 'zss/feature/wanix/wanixcmd'
+import { makewanixtaskid, normalizewanixcmd, uniquewanixtaskid } from 'zss/feature/wanix/wanixcmd'
 
 describe('normalizewanixcmd', () => {
   it('passes through bare wasm filename', () => {
@@ -28,5 +28,17 @@ describe('normalizewanixcmd', () => {
   it('returns empty for blank input', () => {
     expect(normalizewanixcmd('')).toBe('')
     expect(normalizewanixcmd('   ')).toBe('')
+  })
+})
+
+describe('makewanixtaskid', () => {
+  it('sanitizes labels', () => {
+    expect(makewanixtaskid('hello.wasm')).toBe('hello-wasm')
+  })
+})
+
+describe('uniquewanixtaskid', () => {
+  it('suffixes on collision', () => {
+    expect(uniquewanixtaskid('hello.wasm', ['hello-wasm'])).toBe('hello-wasm-2')
   })
 })

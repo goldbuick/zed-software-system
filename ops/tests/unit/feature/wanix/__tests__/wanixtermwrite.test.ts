@@ -3,12 +3,20 @@ const mockapilog = jest.fn()
 const mockapierror = jest.fn()
 
 jest.mock('zss/feature/wanix/wanixiframehost', () => ({
-  sendwanixtermwrite: (...args) => mocktermwrite(...args),
+  sendwanixtermwrite: (...args: unknown[]) => mocktermwrite(...args),
 }))
 
+jest.mock('zss/feature/wanix/wanixsession', () => {
+  const actual = jest.requireActual('zss/feature/wanix/wanixsession')
+  return {
+    ...actual,
+    iswanixtermraw: jest.fn(() => false),
+  }
+})
+
 jest.mock('zss/device/api', () => ({
-  apierror: (...args) => mockapierror(...args),
-  apilog: (...args) => mockapilog(...args),
+  apierror: (...args: unknown[]) => mockapierror(...args),
+  apilog: (...args: unknown[]) => mockapilog(...args),
 }))
 
 import { wanixhandletermwrite } from 'zss/feature/wanix/wanixdrop'
@@ -25,7 +33,7 @@ describe('wanixhandletermwrite', () => {
   it('echoes line to scrollback after successful term-write', async () => {
     await wanixhandletermwrite(device, player, 'hello')
 
-    expect(mocktermwrite).toHaveBeenCalledWith('hello')
+    expect(mocktermwrite).toHaveBeenCalledWith('hello', { raw: false })
     expect(mockapilog).toHaveBeenCalledWith(device, player, 'hello')
     expect(mockapierror).not.toHaveBeenCalled()
   })

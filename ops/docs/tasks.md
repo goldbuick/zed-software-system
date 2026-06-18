@@ -241,6 +241,7 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 |------|-------------|------|------|-----|
 | `yarn task run wanix:ensure` | Vend wanix browser runtime into cafe/public/wanix | — | — | — |
 | `yarn task run wanix:io:verify` | Build wanix wasm fixtures and run isolated host term/io e2e (fix loop gate) | `ci` | `wanix:wasm:build` | `PLAYWRIGHT_INCLUDE_WANIX_E2E=1` |
+| `yarn task run wanix:vm:verify` | Run gated wanix vm-prep + vm-run host e2e (large CDN downloads; slow) | `slow` | — | `PLAYWRIGHT_INCLUDE_WANIX_VM_E2E=1` |
 | `yarn task run wanix:wasm:build` | Compile ops/fixtures/wanix/*.wat to .wasm via wabt (yarn install provides wat2wasm) | — | — | — |
 | `yarn task run wanix:wasm:build:all` | Compile wanix example .wat and optional .c sources to .wasm | — | `wanix:wasm:build`, `wanix:wasm:build:c` | — |
 | `yarn task run wanix:wasm:build:c` | Compile ops/fixtures/wanix/*.c to .wasm when wasi-sdk is installed (skips if missing) | — | — | — |

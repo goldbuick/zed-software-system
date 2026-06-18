@@ -13,11 +13,12 @@ Raw WASI **`fd_read(0)` / `fd/0` stdin is not the integration surface** and must
 
 | Direction | Owner |
 |-----------|--------|
-| User input → task | `zss/screens/terminal/input.tsx` → `wanixtermwrite` → `zss/feature/wanix/wanixdrop.ts` (`sendwanixtermwrite`) → `zss/feature/wanix/wanixiframehost.ts` → `cafe/public/wanix/host.html` (`wanix:term-write` → `#task/run/term/data`) |
-| Task output → scrollback | `wanix:term-out` → `wanixiobridgepushterm` in `zss/feature/wanix/wanixiobridge.ts` |
-| Routing on/off | `zss/feature/wanix/wanixsession.ts` (`iswanixtermactive`, attach/detach) |
+| User input → WASI task | `zss/screens/terminal/input.tsx` → `wanixtermwrite` → `wanixdrop` (`sendwanixtermwrite`) → `wanixiframehost` → `host.html` (`wanix:term-write` → `#task/<id>/term/data`, line + `\n`) |
+| User input → VM serial | Same bridge with **raw** mode: line submit on Enter → `wanix:term-write` with `{ raw: true }` → `#vm/<id>/term/data` (bytes + `\r\n`, no bridge echo/ping) |
+| Task/VM output → scrollback | `wanix:term-out` (filtered by attached kind + id) → `wanixiobridgepushterm` |
+| Routing on/off | `wanixsession` (`iswanixtermactive`, `iswanixtermraw`, attach/detach) |
 
-While `iswanixtermactive()`, non-`#` lines go to the task; `#wanix detach` / `#wanix attach` control routing.
+While `iswanixtermactive()`, non-`#` lines go to the attached task or VM. WASI tasks use cyan **`wanix`** prompt; VMs use **`wanix-vm`** (raw serial). `#wanix detach` / `#wanix attach` control routing.
 
 See `ops/fixtures/wanix/README.md` and `ops/e2e/wanix-host.spec.ts` (term-write while a task runs).
 

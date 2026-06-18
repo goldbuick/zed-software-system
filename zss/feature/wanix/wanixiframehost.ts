@@ -1,16 +1,32 @@
 import type { DEVICELIKE } from 'zss/device/api'
-import { normalizewanixcmd } from 'zss/feature/wanix/wanixcmd'
+import {
+  makewanixtaskid,
+  normalizewanixcmd,
+  uniquewanixtaskid,
+} from 'zss/feature/wanix/wanixcmd'
 import {
   wanixiobridgepush,
   wanixiobridgepushterm,
   wanixiobridgestart,
   wanixiobridgestop,
 } from 'zss/feature/wanix/wanixiobridge'
+import {
+  readwanixattached,
+  readwanixattachedkind,
+  setwanixattached,
+  type WANIX_ATTACH_KIND,
+} from 'zss/feature/wanix/wanixsession'
+import {
+  readwanixvmasseturls,
+  type WANIX_VM_ASSET_URLS,
+} from 'zss/feature/wanix/wanixvmassets'
 import { createsid } from 'zss/mapping/guid'
 
 const HOST_URL = '/wanix/host.html'
 const READY_TIMEOUT_MS = 120_000
 const RPC_TIMEOUT_MS = 300_000
+const VM_PREP_TIMEOUT_MS = 600_000
+const VM_RUN_TIMEOUT_MS = 600_000
 
 export type WANIX_HOST_STATE = 'idle' | 'starting' | 'ready'
 
@@ -20,6 +36,22 @@ export type WANIX_BIND_ENTRY = {
   dst: string
   label: string
   removable: boolean
+}
+
+export type WANIX_TASK_ENTRY = {
+  id: string
+  cmd: string
+  rid?: string
+  running: boolean
+  attached: boolean
+}
+
+export type WANIX_VM_ENTRY = {
+  id: string
+  mem: string
+  vrid?: string
+  running: boolean
+  attached: boolean
 }
 
 type RpcReply = {
@@ -32,17 +64,34 @@ type RpcReply = {
   taskactive?: boolean
   tid?: string
   termpath?: string
+  taskId?: string
+  vmId?: string
+  attachedTaskId?: string
+  attachedId?: string
+  attachedKind?: WANIX_ATTACH_KIND
+  attachKind?: WANIX_ATTACH_KIND
+  attachId?: string
   line?: string
   chunk?: string
   entries?: string[]
   binds?: WANIX_BIND_ENTRY[]
+  tasks?: WANIX_TASK_ENTRY[]
+  vms?: WANIX_VM_ENTRY[]
   bindId?: string
   removed?: string[]
+  raw?: boolean
+  vmactive?: boolean
+  vmbindsready?: boolean
 }
+
+type TaskExitHandler = (taskid: string, code: number) => void
+type VmExitHandler = (vmid: string, code: number) => void
 
 let iframe: HTMLIFrameElement | undefined
 let state: WANIX_HOST_STATE = 'idle'
 let messagehandler: ((ev: MessageEvent) => void) | undefined
+let taskexithandler: TaskExitHandler | undefined
+let vmexithandler: VmExitHandler | undefined
 const pending = new Map<
   string,
   {
@@ -51,15 +100,37 @@ const pending = new Map<
     timer: ReturnType<typeof setTimeout>
   }
 >()
+const taskwaiters = new Map<
+  string,
+  {
+    resolve: (code: number) => void
+    reject: (err: Error) => void
+  }
+>()
+const vmwaiters = new Map<
+  string,
+  {
+    resolve: (code: number) => void
+    reject: (err: Error) => void
+  }
+>()
 
 const RPC_DONE_TYPES = new Set([
   'wanix:run:done',
+  'wanix:run:started',
   'wanix:status',
   'wanix:put:done',
   'wanix:halt:done',
+  'wanix:vm-halt:done',
+  'wanix:vm-prep:done',
+  'wanix:vm-run:done',
+  'wanix:vm-run:started',
+  'wanix:attach:done',
   'wanix:mount-archive:done',
   'wanix:ls:done',
   'wanix:list-binds',
+  'wanix:list-tasks',
+  'wanix:list-vms',
   'wanix:unmount:done',
   'wanix:unmount-all:done',
   'wanix:term-write:done',
@@ -75,6 +146,14 @@ function rejectallpending(reason: string) {
     entry.reject(new Error(reason))
     pending.delete(id)
   }
+  for (const [, entry] of taskwaiters.entries()) {
+    entry.reject(new Error(reason))
+  }
+  taskwaiters.clear()
+  for (const [, entry] of vmwaiters.entries()) {
+    entry.reject(new Error(reason))
+  }
+  vmwaiters.clear()
 }
 
 function ensuremount(): HTMLElement {
@@ -114,11 +193,69 @@ function wiremessages() {
           wanixiobridgepush(msg.line)
         }
         break
-      case 'wanix:term-out':
-        if (typeof msg.chunk === 'string') {
+      case 'wanix:term-out': {
+        if (typeof msg.chunk !== 'string') {
+          break
+        }
+        const attachid = readwanixattached()
+        const attachkind = readwanixattachedkind()
+        const kind =
+          msg.attachKind === 'vm'
+            ? 'vm'
+            : msg.attachKind === 'task'
+              ? 'task'
+              : typeof msg.taskId === 'string'
+                ? 'task'
+                : null
+        const id =
+          typeof msg.attachId === 'string'
+            ? msg.attachId
+            : typeof msg.taskId === 'string'
+              ? msg.taskId
+              : null
+        if (id === attachid && kind === attachkind) {
           wanixiobridgepushterm(msg.chunk)
         }
         break
+      }
+      case 'wanix:attached-changed':
+        if (!msg.attachedId || !msg.attachedKind) {
+          setwanixattached(null, null)
+        } else if (
+          msg.attachedKind === 'task' ||
+          msg.attachedKind === 'vm'
+        ) {
+          setwanixattached(msg.attachedKind, msg.attachedId)
+        }
+        break
+      case 'wanix:task-exit': {
+        const taskid = msg.taskId
+        const code = msg.code
+        if (typeof taskid !== 'string' || typeof code !== 'number') {
+          break
+        }
+        const waiter = taskwaiters.get(taskid)
+        if (waiter) {
+          taskwaiters.delete(taskid)
+          waiter.resolve(code)
+        }
+        taskexithandler?.(taskid, code)
+        break
+      }
+      case 'wanix:vm-exit': {
+        const vmid = msg.vmId
+        const code = msg.code
+        if (typeof vmid !== 'string' || typeof code !== 'number') {
+          break
+        }
+        const waiter = vmwaiters.get(vmid)
+        if (waiter) {
+          vmwaiters.delete(vmid)
+          waiter.resolve(code)
+        }
+        vmexithandler?.(vmid, code)
+        break
+      }
       default:
         if (!RPC_DONE_TYPES.has(msg.type)) {
           break
@@ -182,6 +319,14 @@ export function iswanixspaceactive(): boolean {
   return state === 'ready' || state === 'starting'
 }
 
+export function setwanixtaskexithandler(handler: TaskExitHandler | undefined) {
+  taskexithandler = handler
+}
+
+export function setwanixvmexithandler(handler: VmExitHandler | undefined) {
+  vmexithandler = handler
+}
+
 export async function spawnwanixspace(
   device: DEVICELIKE,
   player: string,
@@ -239,6 +384,8 @@ export async function ensurewanixsandbox(
 
 function cleanup() {
   rejectallpending('wanix halted')
+  taskexithandler = undefined
+  vmexithandler = undefined
   wanixiobridgestop()
   if (iframe) {
     iframe.remove()
@@ -247,7 +394,16 @@ function cleanup() {
   state = 'idle'
 }
 
-export async function runwanixcommand(cmd: string): Promise<number> {
+export type SPAWN_WANIX_TASK_OPTS = {
+  taskid?: string
+  attach?: boolean
+  wait?: boolean
+}
+
+export async function spawnwanixtask(
+  cmd: string,
+  opts: SPAWN_WANIX_TASK_OPTS = {},
+): Promise<{ taskid: string; code?: number }> {
   if (state !== 'ready' || !iframe) {
     throw new Error('wanix not running — drop a .wasm to start')
   }
@@ -255,11 +411,64 @@ export async function runwanixcommand(cmd: string): Promise<number> {
   if (!taskcmd) {
     throw new Error('empty command')
   }
-  const reply = await postrpc('wanix:run', { cmd: taskcmd }, RPC_TIMEOUT_MS)
+  const taskid =
+    opts.taskid ??
+    uniquewanixtaskid(makewanixtaskid(taskcmd), [
+      ...(await listwanixtasks()).map((task) => task.id),
+    ])
+  if (opts.wait) {
+    const reply = await postrpc(
+      'wanix:run',
+      {
+        cmd: taskcmd,
+        taskId: taskid,
+        wait: true,
+        attach: opts.attach !== false,
+      },
+      RPC_TIMEOUT_MS,
+    )
+    if (reply.error) {
+      throw new Error(reply.error)
+    }
+    return {
+      taskid: typeof reply.taskId === 'string' ? reply.taskId : taskid,
+      code: typeof reply.code === 'number' ? reply.code : 0,
+    }
+  }
+  const reply = await postrpc(
+    'wanix:run',
+    {
+      cmd: taskcmd,
+      taskId: taskid,
+      wait: false,
+      attach: opts.attach !== false,
+    },
+    RPC_TIMEOUT_MS,
+  )
   if (reply.error) {
     throw new Error(reply.error)
   }
-  return typeof reply.code === 'number' ? reply.code : 0
+  const spawned =
+    typeof reply.taskId === 'string' ? reply.taskId : taskid
+  if (opts.attach !== false) {
+    setwanixattached('task', spawned)
+  }
+  return { taskid: spawned }
+}
+
+export function waitwanixtaskexit(taskid: string): Promise<number> {
+  return new Promise((resolve, reject) => {
+    if (taskwaiters.has(taskid)) {
+      reject(new Error(`task already waiting: ${taskid}`))
+      return
+    }
+    taskwaiters.set(taskid, { resolve, reject })
+  })
+}
+
+export async function runwanixcommand(cmd: string): Promise<number> {
+  const result = await spawnwanixtask(cmd, { wait: true, attach: true })
+  return typeof result.code === 'number' ? result.code : 0
 }
 
 export async function putwanixfile(name: string, bytes: Uint8Array) {
@@ -283,7 +492,11 @@ export async function putwanixfile(name: string, bytes: Uint8Array) {
   }
 }
 
-export async function mountwanixarchive(name: string, bytes: Uint8Array) {
+export async function mountwanixarchive(
+  name: string,
+  bytes: Uint8Array,
+  mountdst?: string,
+) {
   if (state !== 'ready' || !iframe) {
     throw new Error('wanix not running')
   }
@@ -296,7 +509,7 @@ export async function mountwanixarchive(name: string, bytes: Uint8Array) {
         )
   const reply = await postrpc(
     'wanix:mount-archive',
-    { name, bytes: buffer },
+    { name, bytes: buffer, mountDst: mountdst },
     RPC_TIMEOUT_MS,
   )
   if (reply.error) {
@@ -327,6 +540,17 @@ export async function listwanixbinds(): Promise<WANIX_BIND_ENTRY[]> {
   return Array.isArray(reply.binds) ? reply.binds : []
 }
 
+export async function listwanixtasks(): Promise<WANIX_TASK_ENTRY[]> {
+  if (state !== 'ready' || !iframe) {
+    throw new Error('wanix not running')
+  }
+  const reply = await postrpc('wanix:list-tasks', {}, RPC_TIMEOUT_MS)
+  if (reply.error) {
+    throw new Error(reply.error)
+  }
+  return Array.isArray(reply.tasks) ? reply.tasks : []
+}
+
 export async function unmountwanixbind(bindid: string): Promise<void> {
   if (state !== 'ready' || !iframe) {
     throw new Error('wanix not running')
@@ -348,24 +572,172 @@ export async function unmountallwanixbinds(): Promise<string[]> {
   return Array.isArray(reply.removed) ? reply.removed.map(String) : []
 }
 
-export async function haltwanixtask(): Promise<void> {
+export async function haltwanixtask(taskid?: string): Promise<void> {
   if (state !== 'ready' || !iframe) {
     return
   }
-  const reply = await postrpc('wanix:halt', {}, RPC_TIMEOUT_MS)
+  const reply = await postrpc(
+    'wanix:halt',
+    taskid ? { taskId: taskid } : {},
+    RPC_TIMEOUT_MS,
+  )
   if (reply.error) {
     throw new Error(reply.error)
   }
 }
 
-export async function sendwanixtermwrite(line: string): Promise<void> {
+export async function attachwanixtarget(
+  kind: WANIX_ATTACH_KIND,
+  id: string,
+): Promise<void> {
   if (state !== 'ready' || !iframe) {
     throw new Error('wanix not running')
   }
-  const reply = await postrpc('wanix:term-write', { data: line }, RPC_TIMEOUT_MS)
+  const reply = await postrpc(
+    'wanix:attach',
+    {
+      attachKind: kind,
+      attachId: id,
+      taskId: kind === 'task' ? id : undefined,
+      vmId: kind === 'vm' ? id : undefined,
+    },
+    RPC_TIMEOUT_MS,
+  )
   if (reply.error) {
     throw new Error(reply.error)
   }
+  setwanixattached(kind, id)
+}
+
+export async function attachwanixtask(taskid: string): Promise<void> {
+  await attachwanixtarget('task', taskid)
+}
+
+export async function attachwanixvm(vmid: string): Promise<void> {
+  await attachwanixtarget('vm', vmid)
+}
+
+export async function sendwanixtermwrite(
+  line: string,
+  opts: { raw?: boolean } = {},
+): Promise<void> {
+  if (state !== 'ready' || !iframe) {
+    throw new Error('wanix not running')
+  }
+  const raw = opts.raw === true || readwanixattachedkind() === 'vm'
+  const reply = await postrpc(
+    'wanix:term-write',
+    { data: line, raw },
+    RPC_TIMEOUT_MS,
+  )
+  if (reply.error) {
+    throw new Error(reply.error)
+  }
+}
+
+export async function prepwanixvm(
+  urls: WANIX_VM_ASSET_URLS = readwanixvmasseturls(),
+): Promise<void> {
+  if (state !== 'ready' || !iframe) {
+    throw new Error('wanix not running')
+  }
+  const reply = await postrpc(
+    'wanix:vm-prep',
+    { urls },
+    VM_PREP_TIMEOUT_MS,
+  )
+  if (reply.error) {
+    throw new Error(reply.error)
+  }
+}
+
+export type SPAWN_WANIX_VM_OPTS = {
+  vmid?: string
+  mem?: string
+  attach?: boolean
+  wait?: boolean
+}
+
+export async function spawnwanixvm(
+  opts: SPAWN_WANIX_VM_OPTS = {},
+): Promise<{ vmid: string; code?: number }> {
+  if (state !== 'ready' || !iframe) {
+    throw new Error('wanix not running — use #wanix vm to start')
+  }
+  const vmid = opts.vmid
+  if (opts.wait) {
+    const reply = await postrpc(
+      'wanix:vm-run',
+      {
+        vmId: vmid,
+        mem: opts.mem,
+        wait: true,
+        attach: opts.attach !== false,
+      },
+      VM_RUN_TIMEOUT_MS,
+    )
+    if (reply.error) {
+      throw new Error(reply.error)
+    }
+    return {
+      vmid: typeof reply.vmId === 'string' ? reply.vmId : vmid ?? 'linux-vm',
+      code: typeof reply.code === 'number' ? reply.code : 0,
+    }
+  }
+  const reply = await postrpc(
+    'wanix:vm-run',
+    {
+      vmId: vmid,
+      mem: opts.mem,
+      wait: false,
+      attach: opts.attach !== false,
+    },
+    VM_RUN_TIMEOUT_MS,
+  )
+  if (reply.error) {
+    throw new Error(reply.error)
+  }
+  const spawned =
+    typeof reply.vmId === 'string' ? reply.vmId : vmid ?? 'linux-vm'
+  if (opts.attach !== false) {
+    setwanixattached('vm', spawned)
+  }
+  return { vmid: spawned }
+}
+
+export function waitwanixvmexit(vmid: string): Promise<number> {
+  return new Promise((resolve, reject) => {
+    if (vmwaiters.has(vmid)) {
+      reject(new Error(`vm already waiting: ${vmid}`))
+      return
+    }
+    vmwaiters.set(vmid, { resolve, reject })
+  })
+}
+
+export async function haltwanixvm(vmid?: string): Promise<void> {
+  if (state !== 'ready' || !iframe) {
+    return
+  }
+  const reply = await postrpc(
+    'wanix:vm-halt',
+    vmid ? { vmId: vmid } : {},
+    RPC_TIMEOUT_MS,
+  )
+  if (reply.error) {
+    throw new Error(reply.error)
+  }
+}
+
+export async function listwanixvms(): Promise<WANIX_VM_ENTRY[]> {
+  if (state !== 'ready' || !iframe) {
+    throw new Error('wanix not running')
+  }
+  const reply = await postrpc('wanix:list-vms', {}, RPC_TIMEOUT_MS)
+  if (reply.error) {
+    throw new Error(reply.error)
+  }
+  return Array.isArray(reply.vms) ? reply.vms : []
 }
 
 export async function readwanixstatus(): Promise<{
@@ -373,6 +745,13 @@ export async function readwanixstatus(): Promise<{
   ready: boolean
   state: WANIX_HOST_STATE
   taskactive?: boolean
+  vmactive?: boolean
+  vmbindsready?: boolean
+  attachedId?: string
+  attachedKind?: WANIX_ATTACH_KIND
+  attachedTaskId?: string
+  tasks?: WANIX_TASK_ENTRY[]
+  vms?: WANIX_VM_ENTRY[]
   binds?: WANIX_BIND_ENTRY[]
 }> {
   if (!iframe || state !== 'ready') {
@@ -384,6 +763,20 @@ export async function readwanixstatus(): Promise<{
     ready: !!reply.ready,
     state,
     taskactive: !!reply.taskactive,
+    vmactive: !!reply.vmactive,
+    vmbindsready: !!reply.vmbindsready,
+    attachedId:
+      typeof reply.attachedId === 'string' ? reply.attachedId : undefined,
+    attachedKind:
+      reply.attachedKind === 'task' || reply.attachedKind === 'vm'
+        ? reply.attachedKind
+        : undefined,
+    attachedTaskId:
+      typeof reply.attachedTaskId === 'string'
+        ? reply.attachedTaskId
+        : undefined,
+    tasks: Array.isArray(reply.tasks) ? reply.tasks : undefined,
+    vms: Array.isArray(reply.vms) ? reply.vms : undefined,
     binds: Array.isArray(reply.binds) ? reply.binds : undefined,
   }
 }
@@ -391,6 +784,8 @@ export async function readwanixstatus(): Promise<{
 /** Test hook — reset module state without a live iframe. */
 export function resetwanixhostfortest() {
   rejectallpending('test reset')
+  taskexithandler = undefined
+  vmexithandler = undefined
   wanixiobridgestop()
   if (iframe) {
     iframe.remove()

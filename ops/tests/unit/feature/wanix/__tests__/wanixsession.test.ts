@@ -1,19 +1,21 @@
 import {
-  clearwanixpending,
-  formatwanixstatelines,
+  clearwanixtasks,
+  clearwanixvms,
   iswanixtermactive,
-  readwanixbinary,
-  readwanixlastexit,
-  readwanixpending,
-  readwanixphase,
-  readwanixtermrouting,
+  iswanixtermraw,
+  readwanixattached,
+  readwanixattachedkind,
+  readwanixtask,
+  readwanixtasks,
+  readwanixvm,
+  readwanixvms,
+  registertask,
+  registervm,
+  removetask,
+  removevm,
   resetwanixsessionfortest,
-  setwanixhalted,
-  setwanixidle,
-  setwanixrunning,
+  setwanixattached,
   setwanixtermrouting,
-  setwanixstopped,
-  stashwanixpending,
 } from 'zss/feature/wanix/wanixsession'
 
 describe('wanixsession', () => {
@@ -21,111 +23,78 @@ describe('wanixsession', () => {
     resetwanixsessionfortest()
   })
 
-  it('starts idle with no binary or pending', () => {
-    expect(readwanixphase()).toBe('idle')
-    expect(readwanixbinary()).toBeNull()
-    expect(readwanixpending()).toBeNull()
+  it('starts with no tasks or attachment', () => {
+    expect(readwanixtasks()).toEqual([])
+    expect(readwanixvms()).toEqual([])
+    expect(readwanixattached()).toBeNull()
+    expect(readwanixattachedkind()).toBeNull()
+    expect(iswanixtermactive()).toBe(false)
+    expect(iswanixtermraw()).toBe(false)
   })
 
-  it('stash pending while running without changing phase', () => {
-    setwanixrunning({ label: 'a.wasm', entrycmd: 'a.wasm' })
-    stashwanixpending({
-      label: 'b.wasm',
-      kind: 'wasm',
-      bytes: new Uint8Array([1]),
-    })
-    expect(readwanixphase()).toBe('running')
-    expect(readwanixbinary()?.label).toBe('a.wasm')
-    expect(readwanixpending()?.label).toBe('b.wasm')
+  it('registers and reads tasks', () => {
+    registertask({ id: 'hello-wasm', label: 'hello.wasm', entrycmd: 'hello.wasm' })
+    expect(readwanixtasks()).toHaveLength(1)
+    expect(readwanixtask('hello-wasm')?.label).toBe('hello.wasm')
   })
 
-  it('clears pending on clearwanixpending', () => {
-    setwanixrunning({ label: 'a.wasm', entrycmd: 'a.wasm' })
-    stashwanixpending({
-      label: 'b.wasm',
-      kind: 'wasm',
-      bytes: new Uint8Array(),
-    })
-    clearwanixpending()
-    expect(readwanixpending()).toBeNull()
-    expect(readwanixphase()).toBe('running')
+  it('registers and reads vms', () => {
+    registervm({ id: 'linux-vm', label: 'linux-vm', mem: '512M' })
+    expect(readwanixvms()).toHaveLength(1)
+    expect(readwanixvm('linux-vm')?.mem).toBe('512M')
   })
 
-  it('running clears pending and last exit', () => {
-    setwanixstopped(0)
-    stashwanixpending({
-      label: 'next.wasm',
-      kind: 'wasm',
-      bytes: new Uint8Array(),
-    })
-    setwanixrunning({ label: 'next.wasm', entrycmd: 'next.wasm' })
-    expect(readwanixphase()).toBe('running')
-    expect(readwanixpending()).toBeNull()
-    expect(readwanixlastexit()).toBeUndefined()
-  })
-
-  it('stopped records exit code', () => {
-    setwanixrunning({ label: 'demo.wasm', entrycmd: 'demo.wasm' })
-    setwanixstopped(42)
-    expect(readwanixphase()).toBe('stopped')
-    expect(readwanixlastexit()).toBe(42)
-  })
-
-  it('halted stops without exit code', () => {
-    setwanixrunning({ label: 'demo.wasm', entrycmd: 'demo.wasm' })
-    setwanixhalted()
-    expect(readwanixphase()).toBe('stopped')
-    expect(readwanixlastexit()).toBeUndefined()
-  })
-
-  it('idle clears binary pending and exit', () => {
-    setwanixstopped(0)
-    setwanixidle()
-    expect(readwanixphase()).toBe('idle')
-    expect(readwanixbinary()).toBeNull()
-    expect(readwanixpending()).toBeNull()
-    expect(readwanixlastexit()).toBeUndefined()
-  })
-
-  it('running starts with term routing on', () => {
-    setwanixrunning({ label: 'run.wasm', entrycmd: 'run.wasm' })
-    expect(readwanixtermrouting()).toBe(true)
+  it('tracks task attachment and term routing', () => {
+    registertask({ id: 'a-wasm', label: 'a.wasm', entrycmd: 'a.wasm' })
+    setwanixattached('task', 'a-wasm')
+    expect(readwanixattached()).toBe('a-wasm')
+    expect(readwanixattachedkind()).toBe('task')
     expect(iswanixtermactive()).toBe(true)
+    expect(iswanixtermraw()).toBe(false)
+    setwanixtermrouting(false)
+    expect(iswanixtermactive()).toBe(false)
+    expect(readwanixattached()).toBe('a-wasm')
   })
 
-  it('detach clears routing without stopping phase', () => {
-    setwanixrunning({ label: 'run.wasm', entrycmd: 'run.wasm' })
-    setwanixtermrouting(false)
-    expect(readwanixphase()).toBe('running')
+  it('tracks vm attachment as raw term', () => {
+    registervm({ id: 'linux-vm', label: 'linux-vm', mem: '512M' })
+    setwanixattached('vm', 'linux-vm')
+    expect(readwanixattachedkind()).toBe('vm')
+    expect(iswanixtermactive()).toBe(true)
+    expect(iswanixtermraw()).toBe(true)
+  })
+
+  it('removes task and clears attachment when attached task removed', () => {
+    registertask({ id: 'a-wasm', label: 'a.wasm', entrycmd: 'a.wasm' })
+    setwanixattached('task', 'a-wasm')
+    removetask('a-wasm')
+    expect(readwanixtasks()).toEqual([])
+    expect(readwanixattached()).toBeNull()
     expect(iswanixtermactive()).toBe(false)
   })
 
-  it('halted clears term routing', () => {
-    setwanixrunning({ label: 'run.wasm', entrycmd: 'run.wasm' })
-    setwanixhalted()
-    expect(readwanixtermrouting()).toBe(false)
+  it('removes vm and clears attachment when attached vm removed', () => {
+    registervm({ id: 'linux-vm', label: 'linux-vm', mem: '512M' })
+    setwanixattached('vm', 'linux-vm')
+    removevm('linux-vm')
+    expect(readwanixvms()).toEqual([])
+    expect(readwanixattached()).toBeNull()
+    expect(iswanixtermraw()).toBe(false)
   })
 
-  it('formatwanixstatelines reflects phase and host readiness', () => {
-    expect(formatwanixstatelines(false).join('\n')).toContain('drop to start')
-    expect(formatwanixstatelines(true).join('\n')).toContain('sandbox warm')
-    setwanixrunning({ label: 'run.wasm', entrycmd: 'run.wasm' })
-    expect(formatwanixstatelines(true).join('\n')).toContain('running')
-    expect(formatwanixstatelines(true).join('\n')).toContain('term attached')
-    expect(formatwanixstatelines(true).join('\n')).toContain('#wanix detach')
-    setwanixtermrouting(false)
-    expect(formatwanixstatelines(true).join('\n')).toContain('term detached')
-    expect(formatwanixstatelines(true).join('\n')).toContain('#wanix attach')
-    setwanixstopped(0)
-    expect(formatwanixstatelines(true).join('\n')).toContain('stopped')
-    expect(formatwanixstatelines(true).join('\n')).toContain('run.wasm')
-    expect(formatwanixstatelines(true).join('\n')).toContain('exit 0')
-    stashwanixpending({
-      label: 'pending.wasm',
-      kind: 'wasm',
-      bytes: new Uint8Array(),
-    })
-    expect(formatwanixstatelines(true).join('\n')).toContain('pending.wasm')
-    expect(formatwanixstatelines(true).join('\n')).toContain('#wanix unbind')
+  it('clearwanixtasks resets task state', () => {
+    registertask({ id: 'a-wasm', label: 'a.wasm', entrycmd: 'a.wasm' })
+    setwanixattached('task', 'a-wasm')
+    clearwanixtasks()
+    expect(readwanixtasks()).toEqual([])
+    expect(readwanixattached()).toBeNull()
+  })
+
+  it('clearwanixvms resets vm state', () => {
+    registervm({ id: 'linux-vm', label: 'linux-vm', mem: '512M' })
+    setwanixattached('vm', 'linux-vm')
+    clearwanixvms()
+    expect(readwanixvms()).toEqual([])
+    expect(readwanixattached()).toBeNull()
   })
 })

@@ -13,6 +13,12 @@ describe('pickwanixbundleentry', () => {
     )
   })
 
+  it('uses custom bundle prefix', () => {
+    expect(
+      pickwanixbundleentry(['README'], ['hello.wasm'], 'bundle-hold-wasm'),
+    ).toBe('bundle-hold-wasm/hello.wasm')
+  })
+
   it('falls back to single root wasm', () => {
     expect(pickwanixbundleentry(['solo.wasm'], null)).toBe('solo.wasm')
   })

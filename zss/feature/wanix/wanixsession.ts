@@ -1,128 +1,161 @@
-export type WANIX_PHASE = 'idle' | 'running' | 'stopped'
+export type WANIX_ATTACH_KIND = 'task' | 'vm'
 
-export type WANIX_BINARY = {
+export type WANIX_TASK_STATE = {
+  id: string
   label: string
   entrycmd: string
 }
 
-export type WANIX_PENDING = {
+export type WANIX_VM_STATE = {
+  id: string
   label: string
-  kind: 'wasm' | 'bundle'
-  bytes: Uint8Array
+  mem: string
 }
 
-let phase: WANIX_PHASE = 'idle'
-let binary: WANIX_BINARY | null = null
-let pending: WANIX_PENDING | null = null
-let lastexit: number | undefined
+const tasks = new Map<string, WANIX_TASK_STATE>()
+const vms = new Map<string, WANIX_VM_STATE>()
+let attachedid: string | null = null
+let attachedkind: WANIX_ATTACH_KIND | null = null
 let termrouting = false
 
-export function readwanixphase(): WANIX_PHASE {
-  return phase
+export function readwanixtasks(): WANIX_TASK_STATE[] {
+  return [...tasks.values()]
 }
 
-export function readwanixbinary(): WANIX_BINARY | null {
-  return binary
+export function readwanixvms(): WANIX_VM_STATE[] {
+  return [...vms.values()]
 }
 
-export function readwanixpending(): WANIX_PENDING | null {
-  return pending
+export function readwanixtask(taskid: string): WANIX_TASK_STATE | undefined {
+  return tasks.get(taskid)
 }
 
-export function readwanixlastexit(): number | undefined {
-  return lastexit
+export function readwanixvm(vmid: string): WANIX_VM_STATE | undefined {
+  return vms.get(vmid)
+}
+
+export function readwanixattached(): string | null {
+  return attachedid
+}
+
+export function readwanixattachedkind(): WANIX_ATTACH_KIND | null {
+  return attachedkind
 }
 
 export function readwanixtermrouting(): boolean {
   return termrouting
 }
 
+export function iswanixtermraw(): boolean {
+  return termrouting && attachedkind === 'vm'
+}
+
 export function iswanixtermactive(): boolean {
-  return phase === 'running' && termrouting
+  if (!termrouting || attachedid == null || attachedkind == null) {
+    return false
+  }
+  if (attachedkind === 'task') {
+    return tasks.has(attachedid)
+  }
+  return vms.has(attachedid)
+}
+
+export function registertask(entry: WANIX_TASK_STATE) {
+  tasks.set(entry.id, entry)
+}
+
+export function registervm(entry: WANIX_VM_STATE) {
+  vms.set(entry.id, entry)
+}
+
+export function removetask(taskid: string) {
+  tasks.delete(taskid)
+  if (attachedkind === 'task' && attachedid === taskid) {
+    attachedid = null
+    attachedkind = null
+    termrouting = false
+  }
+}
+
+export function removevm(vmid: string) {
+  vms.delete(vmid)
+  if (attachedkind === 'vm' && attachedid === vmid) {
+    attachedid = null
+    attachedkind = null
+    termrouting = false
+  }
+}
+
+export function setwanixattached(
+  kind: WANIX_ATTACH_KIND | null,
+  id: string | null,
+) {
+  attachedkind = kind
+  attachedid = id
+  if (kind == null || id == null) {
+    termrouting = false
+    return
+  }
+  termrouting =
+    (kind === 'task' && tasks.has(id)) || (kind === 'vm' && vms.has(id))
+}
+
+/** @deprecated use setwanixattached('task', id) */
+export function setwanixattachedtask(taskid: string | null) {
+  if (taskid == null) {
+    setwanixattached(null, null)
+    return
+  }
+  setwanixattached('task', taskid)
 }
 
 export function setwanixtermrouting(on: boolean) {
-  termrouting = on
-}
-
-export function setwanixrunning(entry: WANIX_BINARY) {
-  phase = 'running'
-  binary = entry
-  pending = null
-  lastexit = undefined
-  termrouting = true
-}
-
-export function setwanixstopped(exitcode: number) {
-  phase = 'stopped'
-  lastexit = exitcode
-  termrouting = false
-}
-
-export function setwanixhalted() {
-  phase = 'stopped'
-  lastexit = undefined
-  termrouting = false
-}
-
-export function setwanixidle() {
-  phase = 'idle'
-  binary = null
-  pending = null
-  lastexit = undefined
-  termrouting = false
-}
-
-export function stashwanixpending(entry: WANIX_PENDING) {
-  pending = entry
-}
-
-export function clearwanixpending() {
-  pending = null
-}
-
-export function formatwanixstatelines(hostready: boolean): string[] {
-  const lines: string[] = []
-  lines.push('$graywanix$white — drop a .wasm or .tgz bundle to run it')
-  if (phase === 'running' && binary) {
-    const termlabel = termrouting ? '$cyanterm attached' : '$yellowterm detached'
-    lines.push(
-      `$7 state: $greenrunning $white${binary.label} (${termlabel}$white)`,
-    )
-  } else if (phase === 'stopped' && binary) {
-    const exitlabel = lastexit === undefined ? 'halted' : `exit ${lastexit}`
-    lines.push(`$7 state: $yellowstopped $white${binary.label} (${exitlabel})`)
-  } else if (hostready) {
-    lines.push('$7 state: $grayidle $white(sandbox warm — drop to run)')
-  } else {
-    lines.push('$7 state: $grayidle $white(drop to start)')
+  if (!attachedid || !attachedkind) {
+    termrouting = false
+    return
   }
-  if (pending) {
-    lines.push(`$7 pending: $white${pending.label}`)
+  const exists =
+    attachedkind === 'task'
+      ? tasks.has(attachedid)
+      : vms.has(attachedid)
+  termrouting = on && exists
+}
+
+export function clearwanixtasks() {
+  tasks.clear()
+  if (attachedkind === 'task') {
+    attachedid = null
+    attachedkind = null
+    termrouting = false
   }
-  lines.push(
-    '$7 #wanix stop$white — halt running binary or clear stopped state',
-  )
-  lines.push('$7 #wanix unbind$white — list and remove mounted archives')
-  if (phase === 'running') {
-    if (termrouting) {
-      lines.push(
-        '$7 #wanix detach$white — stop routing terminal input (task keeps running)',
-      )
-    } else {
-      lines.push(
-        '$7 #wanix attach$white — route terminal input to running task',
-      )
-    }
+}
+
+export function clearwanixvms() {
+  vms.clear()
+  if (attachedkind === 'vm') {
+    attachedid = null
+    attachedkind = null
+    termrouting = false
   }
-  return lines
+}
+
+export function haswanixtasks(): boolean {
+  return tasks.size > 0
+}
+
+export function haswanixvms(): boolean {
+  return vms.size > 0
+}
+
+export function haswanixcompute(): boolean {
+  return tasks.size > 0 || vms.size > 0
 }
 
 /** Test hook — reset module state. */
 export function resetwanixsessionfortest() {
-  phase = 'idle'
-  binary = null
-  pending = null
-  lastexit = undefined
+  tasks.clear()
+  vms.clear()
+  attachedid = null
+  attachedkind = null
   termrouting = false
 }
