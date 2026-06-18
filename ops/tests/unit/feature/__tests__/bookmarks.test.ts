@@ -64,7 +64,7 @@ describe('runterminalbookmarkclibyid', () => {
       layout: 0,
       inspector: false,
       perfmonitor: false,
-      quickterminal: visible,
+      terminalmode: visible ? 'quick' : 'cli',
       autocompleteindex: 0,
       toast: '',
       workstatus: '',

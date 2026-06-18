@@ -6,7 +6,6 @@ import {
 } from 'zss/feature/wanix/wanixcmd'
 import {
   wanixiobridgepush,
-  wanixiobridgepushterm,
   wanixiobridgestart,
   wanixiobridgestop,
 } from 'zss/feature/wanix/wanixiobridge'
@@ -16,6 +15,13 @@ import {
   setwanixattached,
   type WANIX_ATTACH_KIND,
 } from 'zss/feature/wanix/wanixsession'
+import {
+  leavewanixattachedterminal,
+  readterminalmodeattached,
+  syncwanixattachedterminalmode,
+} from 'zss/feature/wanix/wanixterminalmode'
+import { wanixtermscreenwrite } from 'zss/feature/wanix/wanixtermscreen'
+import { wanixtrace } from 'zss/feature/wanix/wanixtrace'
 import {
   readwanixvmasseturls,
   type WANIX_VM_ASSET_URLS,
@@ -92,6 +98,7 @@ let state: WANIX_HOST_STATE = 'idle'
 let messagehandler: ((ev: MessageEvent) => void) | undefined
 let taskexithandler: TaskExitHandler | undefined
 let vmexithandler: VmExitHandler | undefined
+let rawtermwritechain: Promise<void> = Promise.resolve()
 const pending = new Map<
   string,
   {
@@ -213,19 +220,25 @@ function wiremessages() {
             : typeof msg.taskId === 'string'
               ? msg.taskId
               : null
-        if (id === attachid && kind === attachkind) {
-          wanixiobridgepushterm(msg.chunk)
+        if (
+          id === attachid &&
+          kind === attachkind &&
+          readterminalmodeattached()
+        ) {
+          wanixtermscreenwrite(msg.chunk)
         }
         break
       }
       case 'wanix:attached-changed':
         if (!msg.attachedId || !msg.attachedKind) {
           setwanixattached(null, null)
+          leavewanixattachedterminal()
         } else if (
           msg.attachedKind === 'task' ||
           msg.attachedKind === 'vm'
         ) {
           setwanixattached(msg.attachedKind, msg.attachedId)
+          syncwanixattachedterminalmode()
         }
         break
       case 'wanix:task-exit': {
@@ -248,6 +261,7 @@ function wiremessages() {
         if (typeof vmid !== 'string' || typeof code !== 'number') {
           break
         }
+        wanixtrace('vm-exit', { vmid, code })
         const waiter = vmwaiters.get(vmid)
         if (waiter) {
           vmwaiters.delete(vmid)
@@ -617,6 +631,32 @@ export async function attachwanixvm(vmid: string): Promise<void> {
   await attachwanixtarget('vm', vmid)
 }
 
+export async function sendwanixtermwriteraw(bytes: Uint8Array): Promise<void> {
+  if (state !== 'ready' || !iframe) {
+    throw new Error('wanix not running')
+  }
+  const buffer =
+    bytes.byteOffset === 0 && bytes.byteLength === bytes.buffer.byteLength
+      ? bytes.buffer
+      : bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)
+  const run = async () => {
+    wanixtrace('term-write:rpc:send', { len: bytes.byteLength })
+    const reply = await postrpc(
+      'wanix:term-write',
+      { bytes: buffer, stream: true, raw: true },
+      RPC_TIMEOUT_MS,
+    )
+    if (reply.error) {
+      wanixtrace('term-write:rpc:fail', { error: reply.error })
+      throw new Error(reply.error)
+    }
+    wanixtrace('term-write:rpc:done', { len: bytes.byteLength })
+  }
+  const job = rawtermwritechain.then(run, run)
+  rawtermwritechain = job.catch(() => {})
+  return job
+}
+
 export async function sendwanixtermwrite(
   line: string,
   opts: { raw?: boolean } = {},
@@ -784,6 +824,7 @@ export async function readwanixstatus(): Promise<{
 /** Test hook — reset module state without a live iframe. */
 export function resetwanixhostfortest() {
   rejectallpending('test reset')
+  rawtermwritechain = Promise.resolve()
   taskexithandler = undefined
   vmexithandler = undefined
   wanixiobridgestop()

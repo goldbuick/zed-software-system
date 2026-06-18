@@ -1,4 +1,4 @@
-import { useTape, useTerminal } from 'zss/gadget/data/state'
+import { TERMINAL_MODE, useTape, useTerminal } from 'zss/gadget/data/state'
 import { EditorComponent } from 'zss/screens/editor/component'
 import { TerminalComponent } from 'zss/screens/terminal/component'
 
@@ -6,14 +6,14 @@ import { TapeLayoutTiles } from './layouttiles'
 import { measureminwidth } from './measure'
 
 type TapeLayoutProps = {
-  quickterminal: boolean
+  terminalmode: TERMINAL_MODE
   top: number
   width: number
   height: number
 }
 
 export function TapeLayout({
-  quickterminal,
+  terminalmode,
   top,
   width,
   height,
@@ -24,7 +24,7 @@ export function TapeLayout({
     return (
       <TapeLayoutTiles
         label="editor"
-        quickterminal={quickterminal}
+        terminalmode={terminalmode}
         top={top}
         left={0}
         width={width}
@@ -38,7 +38,7 @@ export function TapeLayout({
   return (
     <TapeLayoutTiles
       label="terminal"
-      quickterminal={quickterminal}
+      terminalmode={terminalmode}
       top={top}
       left={-pan}
       width={terminalwidth}

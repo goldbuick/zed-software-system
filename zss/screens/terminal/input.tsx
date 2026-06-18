@@ -10,15 +10,14 @@ import {
   vmcli,
   vmclirepeatlast,
   vmloader,
-  wanixtermwrite,
 } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { withclipboard } from 'zss/feature/keyboard'
 import { SpeechToText } from 'zss/feature/speechtotext'
 import { storagewritehistorybuffer } from 'zss/feature/storage'
-import { iswanixtermactive, iswanixtermraw } from 'zss/feature/wanix/wanixsession'
 import {
+  TERMINAL_MODE,
   useEqual,
   useGadgetClient,
   useTape,
@@ -52,7 +51,7 @@ import {
   ZSS_CURSOR_BG,
   ZSS_CURSOR_FG,
   applycodetokencolors,
-  bgcolor,
+  bgcolorformode,
   buildzsswordcolors,
 } from 'zss/screens/tape/colors'
 import { commandromhint } from 'zss/screens/tape/commandarghints'
@@ -72,14 +71,14 @@ import { findterminalrowindexforcursor } from './logrowhit'
 import { tokenizeline } from './terminalinputhelpers'
 
 type TerminalInputProps = {
-  quickterminal: boolean
+  terminalmode: TERMINAL_MODE
   voice2text: boolean
   tapeycursor: number
   logrowtotalheight: number
 }
 
 export function TerminalInput({
-  quickterminal,
+  terminalmode,
   voice2text,
   tapeycursor,
   logrowtotalheight,
@@ -183,8 +182,7 @@ export function TerminalInput({
     [pinlines, sessionlogs],
   )
 
-  const wanixtermactive = iswanixtermactive()
-  const wanixtermraw = iswanixtermraw()
+  const quickterminal = terminalmode === 'quick'
   const logsrowmaxwidth = context.width - 1
   const logsrowheights = useMemo(
     () =>
@@ -336,7 +334,7 @@ export function TerminalInput({
 
   // autocomplete (ZSS words; only when focus on input line)
   const autocomplete = useMemo(() => {
-    if (!inputstateactive || wanixtermactive) {
+    if (!inputstateactive) {
       return EMPTY_AUTOCOMPLETE
     }
     const linewithnewline = inputstate + '\n'
@@ -356,7 +354,6 @@ export function TerminalInput({
     tapeterminal.xcursor,
     inputlinetokens,
     zsswords,
-    wanixtermactive,
   ])
 
   function acceptsuggestion() {
@@ -373,7 +370,7 @@ export function TerminalInput({
   }
 
   // reset color & bg
-  context.reset.bg = bgcolor(quickterminal)
+  context.reset.bg = bgcolorformode(terminalmode)
 
   if (!quickterminal) {
     // write hint
@@ -396,13 +393,6 @@ export function TerminalInput({
   const inputline = inputstate.padEnd(edge.width, ' ')
   setuplogitem(false, 0, edge.height - 1, context)
   context.active.color = COLOR.WHITE
-  if (wanixtermactive) {
-    tokenizeandwritetextformat(
-      wanixtermraw ? '$CYANwanix-vm$WHITE ' : '$CYANwanix$WHITE ',
-      context,
-      true,
-    )
-  }
   writeplaintext(inputline, context, true)
 
   if (!quickterminal) {
@@ -446,7 +436,6 @@ export function TerminalInput({
   // draw autocomplete (above input line when active)
   const autocompleteactive =
     !quickterminal &&
-    !wanixtermactive &&
     autocompleteindex >= 0 &&
     autocomplete.suggestions.length > 0
   const startx = edge.left
@@ -663,16 +652,7 @@ export function TerminalInput({
                 yselect: undefined,
                 buffer: historybuffer,
               })
-              const trimmed = invoke.trim()
-              if (
-                wanixtermactive &&
-                trimmed.length > 0 &&
-                !trimmed.startsWith('#')
-              ) {
-                wanixtermwrite(SOFTWARE, player, invoke)
-              } else {
-                vmcli(SOFTWARE, player, invoke)
-              }
+              vmcli(SOFTWARE, player, invoke)
               if (quickterminal) {
                 registerterminalclose(SOFTWARE, player)
               }

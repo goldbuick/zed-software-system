@@ -1,6 +1,7 @@
 import type { IToken } from 'chevrotain'
 import { lexer } from 'zss/feature/lang'
 import type { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
+import type { TERMINAL_MODE } from 'zss/gadget/data/state'
 import { codeunitoffsettocellindex } from 'zss/mapping/grapheme'
 import { isarray, ispresent } from 'zss/mapping/types'
 import { statformat } from 'zss/words/stats'
@@ -47,6 +48,11 @@ export const FG_SELECTED = COLOR.WHITE
 export const BG_SELECTED = COLOR.DKGRAY
 export const BG_ACTIVE = COLOR.BLACK
 
+export function bgcolorformode(mode: TERMINAL_MODE) {
+  return mode === 'quick' ? COLOR.ONCLEAR : COLOR.DKBLUE
+}
+
+/** @deprecated use bgcolorformode */
 export function bgcolor(quickterminal: boolean) {
   return quickterminal ? COLOR.ONCLEAR : COLOR.DKBLUE
 }

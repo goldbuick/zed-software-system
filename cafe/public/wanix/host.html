@@ -41,6 +41,111 @@
       post(type, { id: msg.id, error })
     }
 
+    function wanixtrace(checkpoint, detail) {
+      const parentwin = typeof parent !== 'undefined' ? parent : null
+      const on =
+        (typeof window !== 'undefined' && window.__ZSS_WANIX_TRACE__) ||
+        (parentwin && parentwin.__ZSS_WANIX_TRACE__)
+      if (!on) {
+        return
+      }
+      if (detail !== undefined) {
+        console.debug(`[wanix] ${checkpoint}`, detail)
+      } else {
+        console.debug(`[wanix] ${checkpoint}`)
+      }
+    }
+
+    let termwritechain = Promise.resolve()
+
+    function queuetermwrite(writefn) {
+      const job = termwritechain.then(writefn)
+      termwritechain = job.catch(() => {})
+      return job
+    }
+
+    function encodestreambytes(msg) {
+      const raw = msg.bytes
+      if (raw instanceof ArrayBuffer) {
+        if (raw.byteLength === 0) {
+          return null
+        }
+        return new Uint8Array(raw)
+      }
+      if (ArrayBuffer.isView(raw)) {
+        if (raw.byteLength === 0) {
+          return null
+        }
+        return new Uint8Array(raw.buffer, raw.byteOffset, raw.byteLength)
+      }
+      return null
+    }
+
+    function handlettermwrite(msg) {
+      if (!root || !registry.attached || !registry.attachedKind) {
+        replyerror('wanix:term-write:done', msg, 'no attached target')
+        return
+      }
+      void (async () => {
+        try {
+          const writer = await getattachedtermwriter()
+          if (msg.stream === true) {
+            const rawbytes = encodestreambytes(msg)
+            if (!rawbytes) {
+              wanixtrace('term-write:stream:reject', {
+                id: msg.id,
+                reason: 'missing or empty bytes',
+              })
+              replyerror('wanix:term-write:done', msg, 'missing stream bytes')
+              return
+            }
+            wanixtrace('term-write:stream:start', {
+              id: msg.id,
+              len: rawbytes.byteLength,
+            })
+            void queuetermwrite(() => writer.write(rawbytes))
+              .then(() => {
+                wanixtrace('term-write:stream:done', { id: msg.id })
+                replydone('wanix:term-write:done', msg)
+              })
+              .catch((err) => {
+                const message = err instanceof Error ? err.message : String(err)
+                wanixtrace('term-write:stream:fail', {
+                  id: msg.id,
+                  error: message,
+                })
+                replyerror('wanix:term-write:done', msg, message)
+              })
+            return
+          }
+          const line = typeof msg.data === 'string' ? msg.data : ''
+          const raw =
+            msg.raw === true || registry.attachedKind === 'vm'
+          const payload = raw
+            ? new TextEncoder().encode(`${line}\r\n`)
+            : new TextEncoder().encode(`${line}\n`)
+          wanixtrace('term-write:line:start', {
+            id: msg.id,
+            len: payload.byteLength,
+            raw,
+          })
+          void queuetermwrite(() => writer.write(payload))
+            .then(() => {
+              wanixtrace('term-write:line:done', { id: msg.id })
+              replydone('wanix:term-write:done', msg)
+            })
+            .catch((err) => {
+              const message = err instanceof Error ? err.message : String(err)
+              wanixtrace('term-write:line:fail', { id: msg.id, error: message })
+              replyerror('wanix:term-write:done', msg, message)
+            })
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err)
+          replyerror('wanix:term-write:done', msg, message)
+        }
+      })()
+    }
+
     function newbindid() {
       bindseq += 1
       return `bind-${bindseq}`
@@ -945,22 +1050,9 @@
             }
             break
           }
-          case 'wanix:term-write': {
-            if (!root || !registry.attached || !registry.attachedKind) {
-              replyerror('wanix:term-write:done', msg, 'no attached target')
-              break
-            }
-            const writer = await getattachedtermwriter()
-            const line = typeof msg.data === 'string' ? msg.data : ''
-            const raw =
-              msg.raw === true || registry.attachedKind === 'vm'
-            const payload = raw
-              ? new TextEncoder().encode(`${line}\r\n`)
-              : new TextEncoder().encode(`${line}\n`)
-            await writer.write(payload)
-            replydone('wanix:term-write:done', msg)
+          case 'wanix:term-write':
+            handlettermwrite(msg)
             break
-          }
           default:
             break
         }

@@ -1,7 +1,7 @@
 import { useTape } from 'zss/gadget/data/state'
 import { writetile } from 'zss/gadget/tiles'
 import { useWriteText } from 'zss/gadget/writetext'
-import { bgcolor } from 'zss/screens/tape/colors'
+import { bgcolorformode } from 'zss/screens/tape/colors'
 import { setupeditoritem } from 'zss/screens/tape/common'
 import {
   textformatreadedges,
@@ -15,15 +15,15 @@ export function EditorFrame() {
   const context = useWriteText()
   const edge = textformatreadedges(context)
 
-  const [quickterminal, editortype, editortitle] = useTape(
+  const [terminalmode, editortype, editortitle] = useTape(
     useShallow((state) => [
-      state.quickterminal,
+      state.terminalmode,
       state.editor.type,
       state.editor.title,
     ]),
   )
   const FG = COLOR.WHITE
-  const BG = bgcolor(quickterminal)
+  const BG = bgcolorformode(terminalmode)
 
   // left - right - bottom of frame
   for (let y = edge.top; y < edge.bottom; ++y) {

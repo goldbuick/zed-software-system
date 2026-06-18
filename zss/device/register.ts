@@ -38,6 +38,7 @@ import {
   storagewritevar,
 } from 'zss/feature/storage'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
+import { leavewanixattachedterminal } from 'zss/feature/wanix/wanixterminalmode'
 import { isjoin, znsset } from 'zss/feature/url'
 import { write } from 'zss/feature/writeui'
 import {
@@ -976,11 +977,14 @@ export const register = createdevice(
             yselect: undefined,
           })
         }
-        useTape.setState({ quickterminal: true, layout: TAPE_DISPLAY.TOP })
+        useTape.setState({ terminalmode: 'quick', layout: TAPE_DISPLAY.TOP })
         break
       case 'terminal:close':
+        if (useTape.getState().terminalmode === 'attached') {
+          leavewanixattachedterminal()
+        }
         useTape.setState((state) => ({
-          quickterminal: false,
+          terminalmode: 'cli',
           terminal: {
             ...state.terminal,
             open: false,

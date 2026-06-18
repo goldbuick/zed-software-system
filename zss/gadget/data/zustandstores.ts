@@ -119,11 +119,13 @@ export enum TAPE_DISPLAY {
   MAX,
 }
 
+export type TERMINAL_MODE = 'cli' | 'quick' | 'attached'
+
 export const useTape = create<{
   layout: TAPE_DISPLAY
   inspector: boolean
   perfmonitor: boolean
-  quickterminal: boolean
+  terminalmode: TERMINAL_MODE
   autocompleteindex: number
   toast: string
   workstatus: string
@@ -147,7 +149,7 @@ export const useTape = create<{
   layout: TAPE_DISPLAY.TOP,
   inspector: false,
   perfmonitor: false,
-  quickterminal: false,
+  terminalmode: 'cli',
   autocompleteindex: 0,
   toast: '',
   workstatus: '',
@@ -169,7 +171,7 @@ export const useTape = create<{
       layout: TAPE_DISPLAY.TOP,
       inspector: false,
       perfmonitor: false,
-      quickterminal: false,
+      terminalmode: 'cli',
       toast: '',
       workstatus: '',
       terminal: {

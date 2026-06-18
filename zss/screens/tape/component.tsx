@@ -23,10 +23,10 @@ const tapeprofileronrender: ProfilerOnRenderCallback = (
 
 export function TapeComponent() {
   const screensize = useScreenSize()
-  const [layout, quickterminal, terminalopen, editoropen] = useTape(
+  const [layout, terminalmode, terminalopen, editoropen] = useTape(
     useShallow((state) => [
       state.layout,
-      state.quickterminal,
+      state.terminalmode,
       state.terminal.open,
       state.editor.open,
     ]),
@@ -54,7 +54,11 @@ export function TapeComponent() {
   }
 
   const player = registerreadplayer()
-  const showterminal = quickterminal || terminalopen || editoropen
+  const showterminal =
+    terminalmode === 'quick' ||
+    terminalmode === 'attached' ||
+    terminalopen ||
+    editoropen
 
   const body = (
     <>
@@ -74,11 +78,11 @@ export function TapeComponent() {
             left={0}
             right={screensize.cols - 1}
             bottom={top + height - 1}
-            alpha={quickterminal ? 0.666 : 0.333}
+            alpha={terminalmode === 'quick' ? 0.666 : 0.333}
           />
           <UserFocus blockhotkeys>
             <TapeLayout
-              quickterminal={quickterminal}
+              terminalmode={terminalmode}
               top={top}
               width={screensize.cols}
               height={height}

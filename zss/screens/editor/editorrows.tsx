@@ -12,7 +12,7 @@ import {
   ZSS_TYPE_ERROR_LINE,
   ZSS_TYPE_LINE,
   applycodetokencolors,
-  bgcolor,
+  bgcolorformode,
 } from 'zss/screens/tape/colors'
 import { EDITOR_CODE_ROW, setupeditoritem } from 'zss/screens/tape/common'
 import {
@@ -51,7 +51,7 @@ export function EditorRows({
       startline: state.startline,
     })),
   )
-  const quickterminal = useTape((state) => state.quickterminal)
+  const terminalmode = useTape((state) => state.terminalmode)
   const isscrollpage = useTape((state) => state.editor.type === 'scroll')
 
   const withrows: EDITOR_CODE_ROW[] = useMemo(() => {
@@ -126,7 +126,7 @@ export function EditorRows({
     context.x = leftedge
     context.iseven = context.y % 2 === 0
     context.active.color = COLOR.WHITE
-    context.active.bg = active ? BG_ACTIVE : bgcolor(quickterminal)
+    context.active.bg = active ? BG_ACTIVE : bgcolorformode(terminalmode)
     context.disablewrap = true
     context.active.rightedge = rightedge
 

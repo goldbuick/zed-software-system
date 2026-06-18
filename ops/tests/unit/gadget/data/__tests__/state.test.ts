@@ -161,7 +161,7 @@ describe('state', () => {
       const state = useTape.getState()
       expect(state.layout).toBe(TAPE_DISPLAY.TOP)
       expect(state.inspector).toBe(false)
-      expect(state.quickterminal).toBe(false)
+      expect(state.terminalmode).toBe('cli')
       expect(state.toast).toBe('')
       expect(state.terminal.open).toBe(true)
       expect(state.terminal.logs).toEqual([])
@@ -190,7 +190,7 @@ describe('state', () => {
         layout: TAPE_DISPLAY.BOTTOM,
         inspector: true,
         perfmonitor: true,
-        quickterminal: true,
+        terminalmode: 'quick',
         toast: 'Test',
         terminal: {
           open: false,
@@ -213,7 +213,7 @@ describe('state', () => {
       expect(state.layout).toBe(TAPE_DISPLAY.TOP)
       expect(state.inspector).toBe(false)
       expect(state.perfmonitor).toBe(false)
-      expect(state.quickterminal).toBe(false)
+      expect(state.terminalmode).toBe('cli')
       expect(state.toast).toBe('')
       expect(state.terminal.open).toBe(true)
       expect(state.terminal.logs).toEqual([])

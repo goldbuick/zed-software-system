@@ -2,7 +2,7 @@ import { useTape } from 'zss/gadget/data/state'
 import { useWriteText } from 'zss/gadget/writetext'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
-import { BG_ACTIVE, bgcolor } from 'zss/screens/tape/colors'
+import { BG_ACTIVE, bgcolorformode } from 'zss/screens/tape/colors'
 import {
   TapeTerminalItemInputProps,
   TapeTerminalItemProps as TapeTerminalItemProps,
@@ -33,13 +33,13 @@ import { TerminalZSSEdit } from './zssedit'
 
 export function TerminalItem({ active, text, y }: TapeTerminalItemProps) {
   const context = useWriteText()
-  const quickterminal = useTape((state) => state.quickterminal)
+  const terminalmode = useTape((state) => state.terminalmode)
   const edge = textformatreadedges(context)
   const ishyperlink = text.startsWith('!')
 
   // write text or clear line for ui
   setuplogitem(!!active, 0, y, context)
-  context.reset.bg = active ? BG_ACTIVE : bgcolor(quickterminal)
+  context.reset.bg = active ? BG_ACTIVE : bgcolorformode(terminalmode)
   context.active.bottomedge = edge.bottom
 
   // detect $CENTER

@@ -269,7 +269,11 @@ export async function runterminalbookmarkclibyid(
   }
   const preview = rawline.length > 48 ? `${rawline.slice(0, 48)}…` : rawline
   const tape = useTape.getState()
-  if (tape.quickterminal || tape.terminal.open || tape.editor.open) {
+  if (
+    tape.terminalmode === 'quick' ||
+    tape.terminal.open ||
+    tape.editor.open
+  ) {
     apitoast(toastdevice, player, `bookmark run $cyan${preview}$white`)
   }
   vmcli(SOFTWARE, player, rawline)

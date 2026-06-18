@@ -1,5 +1,4 @@
 import { createdevice } from 'zss/device'
-import { apierror } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import {
   wanixhandleattach,

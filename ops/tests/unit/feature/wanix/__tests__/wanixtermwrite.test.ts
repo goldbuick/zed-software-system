@@ -1,5 +1,4 @@
 const mocktermwrite = jest.fn()
-const mockapilog = jest.fn()
 const mockapierror = jest.fn()
 
 jest.mock('zss/feature/wanix/wanixiframehost', () => ({
@@ -16,10 +15,18 @@ jest.mock('zss/feature/wanix/wanixsession', () => {
 
 jest.mock('zss/device/api', () => ({
   apierror: (...args: unknown[]) => mockapierror(...args),
-  apilog: (...args: unknown[]) => mockapilog(...args),
 }))
 
 import { wanixhandletermwrite } from 'zss/feature/wanix/wanixdrop'
+import { wanixtermscreenwritepong } from 'zss/feature/wanix/wanixtermscreen'
+
+jest.mock('zss/feature/wanix/wanixtermscreen', () => {
+  const actual = jest.requireActual('zss/feature/wanix/wanixtermscreen')
+  return {
+    ...actual,
+    wanixtermscreenwritepong: jest.fn(),
+  }
+})
 
 describe('wanixhandletermwrite', () => {
   const device = { emit: jest.fn() }
@@ -30,19 +37,17 @@ describe('wanixhandletermwrite', () => {
     mocktermwrite.mockResolvedValue(undefined)
   })
 
-  it('echoes line to scrollback after successful term-write', async () => {
+  it('sends line to host without scrollback echo', async () => {
     await wanixhandletermwrite(device, player, 'hello')
 
     expect(mocktermwrite).toHaveBeenCalledWith('hello', { raw: false })
-    expect(mockapilog).toHaveBeenCalledWith(device, player, 'hello')
     expect(mockapierror).not.toHaveBeenCalled()
   })
 
-  it('replies pong when line is ping', async () => {
+  it('writes pong on screen when line is ping', async () => {
     await wanixhandletermwrite(device, player, 'ping')
 
-    expect(mockapilog).toHaveBeenCalledWith(device, player, 'ping')
-    expect(mockapilog).toHaveBeenCalledWith(device, player, 'pong')
+    expect(wanixtermscreenwritepong).toHaveBeenCalled()
   })
 
   it('does not echo when term-write fails', async () => {
@@ -56,6 +61,6 @@ describe('wanixhandletermwrite', () => {
       'wanix',
       'no active task',
     )
-    expect(mockapilog).not.toHaveBeenCalled()
+    expect(wanixtermscreenwritepong).not.toHaveBeenCalled()
   })
 })

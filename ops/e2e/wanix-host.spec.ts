@@ -514,4 +514,161 @@ test.describe('wanix vm boot (gated)', () => {
     expect(result.serialok, 'expected serial term-out from vm').toBe(true)
     expect(result.output?.length ?? 0).toBeGreaterThan(0)
   })
+
+  test('vm accepts raw byte term-write after serial boot', async ({ page }) => {
+    const urls = {
+      linux: 'https://cdn.jsdelivr.net/npm/wanix-extras@0.4.0-rc1/dist/wanix-linux.tgz',
+      v86: 'https://cdn.jsdelivr.net/npm/wanix-extras@0.4.0-rc1/dist/v86.tgz',
+    }
+    await waitforwanixhostready(page)
+    const result = await page.evaluate(async (asseturls) => {
+      const origin = location.origin
+      const rpc = (
+        type: string,
+        data: Record<string, unknown>,
+        done: string,
+        rpcid: string,
+        timeoutms: number,
+      ) =>
+        new Promise<{ error?: string; vmId?: string }>((resolve) => {
+          const timer = setTimeout(
+            () => resolve({ error: `${type} timeout` }),
+            timeoutms,
+          )
+          window.addEventListener('message', function onmsg(ev: MessageEvent) {
+            if (ev.origin !== origin) {
+              return
+            }
+            if (ev.data?.type === done && ev.data.id === rpcid) {
+              clearTimeout(timer)
+              window.removeEventListener('message', onmsg)
+              resolve({
+                error: ev.data.error,
+                vmId: ev.data.vmId,
+              })
+            }
+          })
+          window.postMessage({ type, id: rpcid, ...data }, origin)
+        })
+
+      const prep = await rpc(
+        'wanix:vm-prep',
+        { urls: asseturls },
+        'wanix:vm-prep:done',
+        'e2e-vm-raw-prep',
+        600_000,
+      )
+      if (prep.error) {
+        return { error: prep.error, output: '' }
+      }
+
+      let output = ''
+      let vmexited = false
+      let vmexitcode: number | undefined
+      const onserial = (ev: MessageEvent) => {
+        if (ev.origin !== origin) {
+          return
+        }
+        if (ev.data?.type === 'wanix:term-out' && ev.data.chunk) {
+          output += String(ev.data.chunk)
+        }
+        if (ev.data?.type === 'wanix:vm-exit') {
+          vmexited = true
+          vmexitcode =
+            typeof ev.data.code === 'number' ? ev.data.code : undefined
+        }
+      }
+      window.addEventListener('message', onserial)
+
+      const runstart = await rpc(
+        'wanix:vm-run',
+        { vmId: 'linux-vm-raw', wait: false, attach: true },
+        'wanix:vm-run:started',
+        'e2e-vm-raw-run',
+        600_000,
+      )
+      if (runstart.error || !runstart.vmId) {
+        window.removeEventListener('message', onserial)
+        return {
+          error: runstart.error ?? 'vm run missing vmId',
+          output,
+        }
+      }
+
+      const bootdeadline = Date.now() + 240_000
+      while (Date.now() < bootdeadline) {
+        if (vmexited) {
+          break
+        }
+        if (output.includes('~ #') || output.includes('login:')) {
+          break
+        }
+        await new Promise((resolve) => setTimeout(resolve, 500))
+      }
+      if (vmexited) {
+        window.removeEventListener('message', onserial)
+        return {
+          error: `vm exited during boot (code ${vmexitcode ?? '?'})`,
+          output,
+        }
+      }
+      if (!output.includes('~ #') && !output.includes('login:')) {
+        window.removeEventListener('message', onserial)
+        return { error: 'vm boot prompt not seen', output }
+      }
+
+      const beforelen = output.length
+      const rawwrite = await rpc(
+        'wanix:term-write',
+        {
+          bytes: new Uint8Array([97, 98, 99]).buffer,
+          stream: true,
+          raw: true,
+        },
+        'wanix:term-write:done',
+        'e2e-vm-raw-write',
+        60_000,
+      )
+      if (rawwrite.error) {
+        window.removeEventListener('message', onserial)
+        return { error: rawwrite.error, output }
+      }
+
+      const writedeadline = Date.now() + 30_000
+      while (Date.now() < writedeadline) {
+        if (vmexited) {
+          break
+        }
+        if (output.length > beforelen) {
+          break
+        }
+        await new Promise((resolve) => setTimeout(resolve, 200))
+      }
+
+      await rpc(
+        'wanix:vm-halt',
+        { vmId: runstart.vmId },
+        'wanix:vm-halt:done',
+        'e2e-vm-raw-halt',
+        60_000,
+      )
+      window.removeEventListener('message', onserial)
+
+      if (vmexited) {
+        return {
+          error: `vm exited after raw write (code ${vmexitcode ?? '?'})`,
+          output,
+        }
+      }
+
+      return {
+        vmId: runstart.vmId,
+        output,
+        rawok: !rawwrite.error && !vmexited,
+      }
+    }, urls)
+
+    expect(result.error, JSON.stringify(result, null, 2)).toBeUndefined()
+    expect(result.rawok, 'raw term-write should not kill vm').toBe(true)
+  })
 })

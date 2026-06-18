@@ -3,7 +3,7 @@ import { writetile } from 'zss/gadget/tiles'
 import { useWriteText } from 'zss/gadget/writetext'
 import { textformatreadedges } from 'zss/words/textformat'
 
-import { FG, bgcolor } from './colors'
+import { FG, bgcolorformode } from './colors'
 import { BKG_PTRN, BKG_PTRN_ALT } from './common'
 
 type TapeBackPlateProps = {
@@ -13,14 +13,14 @@ type TapeBackPlateProps = {
 export function TapeBackPlate({ bump }: TapeBackPlateProps) {
   const context = useWriteText()
   const edge = textformatreadedges(context)
-  const quickterminal = useTape((state) => state.quickterminal)
-  const BG = bgcolor(quickterminal)
+  const terminalmode = useTape((state) => state.terminalmode)
+  const BG = bgcolorformode(terminalmode)
 
   if (bump) {
     edge.top++
   }
 
-  if (quickterminal) {
+  if (terminalmode === 'quick') {
     for (let y = edge.top; y <= edge.bottom; ++y) {
       for (let x = edge.left; x <= edge.right; ++x) {
         writetile(context, context.width, context.height, x, y, {

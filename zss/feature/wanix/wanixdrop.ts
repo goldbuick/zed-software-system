@@ -40,9 +40,13 @@ import {
   removetask,
   removevm,
   setwanixattached,
-  setwanixtermrouting,
   type WANIX_ATTACH_KIND,
 } from 'zss/feature/wanix/wanixsession'
+import {
+  leavewanixattachedterminal,
+  syncwanixattachedterminalmode,
+} from 'zss/feature/wanix/wanixterminalmode'
+import { wanixtermscreenwritepong } from 'zss/feature/wanix/wanixtermscreen'
 import {
   DEFAULT_WANIX_VM_ID,
   DEFAULT_WANIX_VM_MEM,
@@ -60,7 +64,12 @@ let exitplayer = ''
 
 function ensuretaskexithandler() {
   setwanixtaskexithandler((taskid, code) => {
+    const wasattached =
+      readwanixattached() === taskid && readwanixattachedkind() === 'task'
     removetask(taskid)
+    if (wasattached) {
+      leavewanixattachedterminal()
+    }
     if (exitdevice && exitplayer) {
       apilog(exitdevice, exitplayer, `wanix exit ${taskid} ${code}`)
     }
@@ -69,7 +78,12 @@ function ensuretaskexithandler() {
 
 function ensurevmexithandler() {
   setwanixvmexithandler((vmid, code) => {
+    const wasattached =
+      readwanixattached() === vmid && readwanixattachedkind() === 'vm'
     removevm(vmid)
+    if (wasattached) {
+      leavewanixattachedterminal()
+    }
     if (exitdevice && exitplayer) {
       apilog(exitdevice, exitplayer, `wanix vm exit ${vmid} ${code}`)
     }
@@ -136,6 +150,7 @@ async function launchwanixload(
   })
   registertask({ id: spawnedid, label, entrycmd })
   setwanixattached('task', spawnedid)
+  syncwanixattachedterminalmode()
   apilog(device, player, `wanix run ${spawnedid} ${entrycmd}`)
 }
 
@@ -183,6 +198,7 @@ export async function wanixhandlevmstart(
       mem: DEFAULT_WANIX_VM_MEM,
     })
     setwanixattached('vm', spawnedid)
+    syncwanixattachedterminalmode()
     apilog(device, player, `wanix vm boot ${spawnedid}`)
   } catch (err) {
     apierror(
@@ -217,7 +233,9 @@ export async function wanixhandleshownenu(
     } else {
       for (const task of tasks) {
         const isattached =
-          attachedkind === 'task' && attached === task.id
+          iswanixtermactive() &&
+          attachedkind === 'task' &&
+          attached === task.id
         const attachlabel = isattached
           ? `Attach ${task.label} $cyanattached`
           : `Attach ${task.label}`
@@ -233,7 +251,8 @@ export async function wanixhandleshownenu(
       parts.push(zsszedlinkline('wanix vm', 'Boot Linux in v86'))
     } else {
       for (const vm of vms) {
-        const isattached = attachedkind === 'vm' && attached === vm.id
+        const isattached =
+          iswanixtermactive() && attachedkind === 'vm' && attached === vm.id
         const attachlabel = isattached
           ? `Attach ${vm.label} $cyanattached`
           : `Attach ${vm.label}`
@@ -376,11 +395,8 @@ export async function wanixhandletermwrite(
   try {
     const raw = iswanixtermraw()
     await sendwanixtermwrite(line, { raw })
-    if (!raw) {
-      apilog(device, player, line)
-      if (line.trim() === 'ping') {
-        apilog(device, player, 'pong')
-      }
+    if (!raw && line.trim() === 'ping') {
+      wanixtermscreenwritepong()
     }
   } catch (err) {
     apierror(
@@ -410,7 +426,7 @@ export function wanixhandledetach(device: DEVICELIKE, player: string) {
     attached && attachedkind
       ? readattachlabel(attachedkind, attached)
       : 'task'
-  setwanixtermrouting(false)
+  leavewanixattachedterminal()
   apilog(
     device,
     player,
@@ -470,6 +486,7 @@ export async function wanixhandleattach(
       return
     }
     await attachwanixtarget(kind, target)
+    syncwanixattachedterminalmode()
     const label = readattachlabel(kind, target)
     const prompt = kind === 'vm' ? 'wanix-vm' : 'wanix'
     apilog(
