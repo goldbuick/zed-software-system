@@ -1,44 +1,27 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import {
+  hasagentsession,
   heavyrunagentstart,
   heavyrunagentstop,
   heavyrunrestoreagents,
+  resetagentsessionsfortest,
 } from 'zss/feature/heavy/agentlifecycle'
 import {
   type AGENTS_ROSTER,
   AGENTS_ROSTER_STORAGE_KEY,
+  migrateroster,
 } from 'zss/feature/heavy/agentsroster'
 
-let agentidseq = 0
-
-const mockcreateagent = jest.fn((_name: string, existingid?: string) => {
-  const id = existingid ?? `agent${++agentidseq}`
-  return {
-    id: () => id,
-    stop: jest.fn(),
-  }
-})
-
 const mockregisterstore = jest.fn()
-const mockregisteragentdooton = jest.fn()
-const mockregisteragentdootoff = jest.fn()
 const mockvmpilotclear = jest.fn()
 const mockheavymodelstop = jest.fn()
 const mockapierror = jest.fn()
 const mockworkstatus = jest.fn()
 
-jest.mock('zss/feature/heavy/agent', () => ({
-  createagent: (name: string, existingid?: string) =>
-    mockcreateagent(name, existingid),
-}))
-
 jest.mock('zss/device/api', () => ({
   ...jest.requireActual('zss/device/api'),
   registerstore: (...args: unknown[]) => mockregisterstore(...args),
-  registeragentdooton: (...args: unknown[]) => mockregisteragentdooton(...args),
-  registeragentdootoff: (...args: unknown[]) =>
-    mockregisteragentdootoff(...args),
   vmpilotclear: (...args: unknown[]) => mockvmpilotclear(...args),
   heavymodelstop: (...args: unknown[]) => mockheavymodelstop(...args),
   apierror: (...args: unknown[]) => mockapierror(...args),
@@ -76,98 +59,104 @@ function makemessage(
   }
 }
 
-const createdids: string[] = []
+describe('agentsroster', () => {
+  it('migrates legacy roster shape', () => {
+    expect(
+      migrateroster({
+        ids: ['id-a', 'id-b'],
+        names: { 'id-a': 'alpha', 'id-b': 'beta' },
+      }),
+    ).toEqual({ name: 'alpha' })
+  })
+})
 
 describe('agentlifecycle', () => {
+  const player = 'human1'
+
   beforeEach(() => {
-    agentidseq = 0
-    createdids.length = 0
-    mockcreateagent.mockClear()
+    resetagentsessionsfortest()
     mockregisterstore.mockClear()
-    mockregisteragentdooton.mockClear()
-    mockregisteragentdootoff.mockClear()
     mockvmpilotclear.mockClear()
     mockheavymodelstop.mockClear()
     mockapierror.mockClear()
     mockworkstatus.mockClear()
-    mockcreateagent.mockImplementation((_name: string, existingid?: string) => {
-      const id = existingid ?? `agent${++agentidseq}`
-      createdids.push(id)
-      return {
-        id: () => id,
-        stop: jest.fn(),
-      }
-    })
   })
 
   afterEach(() => {
-    const dev = mockdevice()
-    for (let i = 0; i < createdids.length; ++i) {
-      heavyrunagentstop(dev, makemessage('agentstop', createdids[i]))
-    }
+    resetagentsessionsfortest()
   })
 
-  it('starts an agent when none are running', () => {
+  it('starts an agent session keyed by register player', () => {
     const dev = mockdevice()
-    heavyrunagentstart(dev, makemessage('agentstart', 'helper'))
-    expect(mockcreateagent).toHaveBeenCalledTimes(1)
-    expect(mockcreateagent).toHaveBeenCalledWith('helper', undefined)
-    expect(mockregisteragentdooton).toHaveBeenCalledTimes(1)
+    heavyrunagentstart(dev, makemessage('agentstart', 'helper', player))
+    expect(hasagentsession(player)).toBe(true)
     expect(mockregisterstore).toHaveBeenCalledWith(
       dev,
-      'human1',
+      player,
       AGENTS_ROSTER_STORAGE_KEY,
-      expect.objectContaining({
-        ids: ['agent1'],
-        names: { agent1: 'helper' },
-      }),
+      { name: 'helper' },
+    )
+    expect(mockworkstatus).toHaveBeenCalledWith(
+      dev,
+      player,
+      'agent start helper',
     )
   })
 
   it('rejects a second start while one agent is running', () => {
     const dev = mockdevice()
-    heavyrunagentstart(dev, makemessage('agentstart', 'first'))
-    heavyrunagentstart(dev, makemessage('agentstart', 'second'))
-    expect(mockcreateagent).toHaveBeenCalledTimes(1)
+    heavyrunagentstart(dev, makemessage('agentstart', 'first', player))
+    heavyrunagentstart(dev, makemessage('agentstart', 'second', player))
     expect(mockapierror).toHaveBeenCalledWith(
       dev,
-      'human1',
+      player,
       'agent',
-      'only one agent per tab; stop it or open another tab',
+      'agent already running',
     )
   })
 
-  it('restores only the first agent from a multi-agent roster', () => {
+  it('restores agent name from roster without login', () => {
     const dev = mockdevice()
-    const roster: AGENTS_ROSTER = {
-      ids: ['id-a', 'id-b', 'id-c'],
-      names: { 'id-a': 'alpha', 'id-b': 'beta', 'id-c': 'gamma' },
-    }
-    heavyrunrestoreagents(dev, makemessage('restoreagents', roster))
-    expect(mockcreateagent).toHaveBeenCalledTimes(1)
-    expect(mockcreateagent).toHaveBeenCalledWith('alpha', 'id-a')
+    const roster: AGENTS_ROSTER = { name: 'alpha' }
+    heavyrunrestoreagents(dev, makemessage('restoreagents', roster, player))
+    expect(hasagentsession(player)).toBe(true)
     expect(mockregisterstore).toHaveBeenCalledWith(
       dev,
-      'human1',
+      player,
       AGENTS_ROSTER_STORAGE_KEY,
-      {
-        ids: ['id-a'],
-        names: { 'id-a': 'alpha' },
-      },
+      { name: 'alpha' },
     )
     expect(mockworkstatus).toHaveBeenCalledWith(
       dev,
-      'human1',
-      'agent restore 1 (open another tab for more)',
+      player,
+      'agent start alpha',
     )
+  })
+
+  it('restores from legacy roster via migrateroster in register path', () => {
+    expect(
+      migrateroster({
+        ids: ['id-a', 'id-b'],
+        names: { 'id-a': 'alpha', 'id-b': 'beta' },
+      }),
+    ).toEqual({ name: 'alpha' })
   })
 
   it('allows start after stop', () => {
     const dev = mockdevice()
-    heavyrunagentstart(dev, makemessage('agentstart', 'first'))
-    heavyrunagentstop(dev, makemessage('agentstop', 'agent1'))
-    heavyrunagentstart(dev, makemessage('agentstart', 'second'))
-    expect(mockcreateagent).toHaveBeenCalledTimes(2)
+    heavyrunagentstart(dev, makemessage('agentstart', 'first', player))
+    heavyrunagentstop(dev, makemessage('agentstop', undefined, player))
+    heavyrunagentstart(dev, makemessage('agentstart', 'second', player))
+    expect(hasagentsession(player)).toBe(true)
     expect(mockapierror).not.toHaveBeenCalled()
+  })
+
+  it('stops without requiring an agent id', () => {
+    const dev = mockdevice()
+    heavyrunagentstart(dev, makemessage('agentstart', 'helper', player))
+    heavyrunagentstop(dev, makemessage('agentstop', undefined, player))
+    expect(hasagentsession(player)).toBe(false)
+    expect(mockheavymodelstop).toHaveBeenCalledWith(dev, player, player)
+    expect(mockvmpilotclear).toHaveBeenCalledWith(dev, player, player)
   })
 })

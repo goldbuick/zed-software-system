@@ -8,7 +8,6 @@ import {
   memoryquerywritescript,
 } from 'zss/memory/agentscriptquery'
 import { memoryreadboardstatequery } from 'zss/memory/boardstatequery'
-import { memoryruncli } from 'zss/memory/runtime'
 
 export type PATHFIND_RESULT = { nextpoint: { x: number; y: number } } | null
 
@@ -38,19 +37,6 @@ export function handlequery(vm: DEVICE, message: MESSAGE): void {
           return
         }
         result = out
-        break
-      }
-      case 'runcli': {
-        const command = payload.command
-        if (!isstring(command)) {
-          vm.emit(agentid, 'heavy:queryresult', {
-            id,
-            error: 'missing_command',
-          })
-          return
-        }
-        memoryruncli(agentid, command, false)
-        result = { ok: true }
         break
       }
       case 'compilescript': {

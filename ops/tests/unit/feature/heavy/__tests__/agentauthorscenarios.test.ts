@@ -10,7 +10,8 @@ import {
 
 const BOARD = {
   context: 'Board: lake\nOBJECT KINDS: fish',
-  agentinfo: 'You are coder (id: ag1). Position (1,1).',
+  agentinfo:
+    'You are coder, assisting the player (id: human1) on board "lake" at (1,1).',
 }
 
 describe('agent author scenarios', () => {
@@ -65,7 +66,7 @@ describe('agent author scenarios', () => {
 
     await runagentpromptloop(
       'human1',
-      'ag1',
+      'human1',
       'coder',
       'make fish try north when red fish nearby',
       () => {},
@@ -102,7 +103,7 @@ describe('agent author scenarios', () => {
     }
     const history = await runagentpromptloop(
       'human1',
-      'ag1',
+      'human1',
       'coder',
       'add line sensor',
       () => {},

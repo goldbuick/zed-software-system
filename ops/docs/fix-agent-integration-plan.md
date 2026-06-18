@@ -1,8 +1,23 @@
 # Fix agent integration
 
-**Status:** partial — **ttsspace** and **sttspace** on-demand workers implemented; **agentspace** and heavy retirement still open
+**Status:** partial — **register-player copilot model** implemented (no `vm:login`, no per-agent boardrunner); **ttsspace** and **sttspace** on-demand workers implemented; **heavy retirement** (`heavy:*` → `agent:*` rename) still open
 
-## End state (completion criterion)
+## Implemented: register-player copilot (2026)
+
+Agents are **LLM sessions on the heavy worker**, keyed to the **register player** — not separate sim players.
+
+| Concern | Implementation |
+|---------|----------------|
+| Identity | Register player (`message.player` on `#agent start`) |
+| Lifecycle | [`agentlifecycle.ts`](../../zss/feature/heavy/agentlifecycle.ts) in-memory session + IDB roster `{ name }` |
+| Board context | `vm:query` `boardstate` for register player |
+| CLI actions | `vm:cli` as register player (human boardrunner handles ticks) |
+| Chat trigger | [`loader.ts`](../../zss/device/vm/handlers/loader.ts): operator on board → `heavy:modelprompt` |
+| Removed | `createagent`, `vmlogin({ agent: 1 })`, `agent_*` devices, `registeragentdooton/off` |
+
+**Supersedes** the per-agent **agentspace** + boardrunner worker plan below for agent execution. Agents do not get their own boardrunner worker; they act through the human operator.
+
+---
 
 **There is no heavy worker.** When this plan is fully executed, [`createplatform`](../../zss/platform.ts) must not spawn [`heavyspace`](../../zss/heavyspace.ts). The monolithic heavy realm is gone.
 
@@ -198,10 +213,10 @@ Replace [`shouldforwardclienttoheavy`](../../zss/device/forward.ts) with `should
 3. **CLI / API** ([`firmware/cli/commands/agent.ts`](../../zss/firmware/cli/commands/agent.ts), [`api.ts`](../../zss/device/api.ts))
    - Rename all `heavy:*` helpers to `agent:*` / `tts:*` per rename map above
    - `agent:start` → `platform.startagentworker`; `agent:stop` / `agent:restore` → platform
-   - Delete [`feature/heavy/agent.ts`](../../zss/feature/heavy/agent.ts) `createagent` device pattern
+   - ~~Delete [`feature/heavy/agent.ts`](../../zss/feature/heavy/agent.ts) `createagent` device pattern~~ **done** — file removed; sessions in `agentlifecycle.ts`
 
 4. **[`zss/device/register.ts`](../../zss/device/register.ts)**
-   - Remove `agentdootids` / `register:agentdooton/off`
+   - ~~Remove `agentdootids` / `register:agentdooton/off`~~ **done**
    - `acklogin` restore → `agent:restore` via platform spawns workers
    - `agent:llmpreset` on login → broadcast to all running agentspace workers
 

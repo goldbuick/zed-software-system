@@ -1,7 +1,6 @@
 import { CHIP } from 'zss/chip'
 import {
   apitoast,
-  heavyagentsyncuserdisplay,
   registerstore,
   vmlogout,
 } from 'zss/device/api'
@@ -722,12 +721,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
       switch (name) {
         case 'user': {
           registerstore(SOFTWARE, player, name, value)
-          heavyagentsyncuserdisplay(
-            SOFTWARE,
-            player,
-            player,
-            maptostring(value),
-          )
           break
         }
       }

@@ -1,5 +1,4 @@
 import {
-  apierror,
   heavyagentlist,
   heavyagentstart,
   heavyagentstop,
@@ -57,17 +56,12 @@ export function registeragentcommands(fw: FIRMWARE): FIRMWARE {
           break
         }
         case 'stop': {
-          const [agentid] = readargs(words, 1, [ARG_TYPE.NAME])
-          if (ispresent(agentid)) {
-            heavyagentstop(SOFTWARE, READ_CONTEXT.elementfocus, agentid)
-          } else {
-            apierror(
-              SOFTWARE,
-              READ_CONTEXT.elementfocus,
-              'agent',
-              '#agent stop <id>',
-            )
-          }
+          const [agentid] = readargs(words, 1, [ARG_TYPE.MAYBE_NAME])
+          heavyagentstop(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            isstring(agentid) ? agentid : undefined,
+          )
           break
         }
         default:

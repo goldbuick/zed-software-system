@@ -282,36 +282,15 @@ export function ttsrequest(
 
 type MODEL_PROMPT_ARGS = {
   prompt: string
-  agentid: string
-  agentname: string
-  lastinputtime: number
-  nearestrefid: string
-  nearestrefname: string
-  promptlogging: string
+  promptlogging?: string
 }
 
 export function heavymodelprompt(
   device: DEVICELIKE,
   player: string,
-  {
-    prompt,
-    agentid,
-    agentname,
-    lastinputtime,
-    nearestrefid,
-    nearestrefname,
-    promptlogging,
-  }: MODEL_PROMPT_ARGS,
+  { prompt, promptlogging }: MODEL_PROMPT_ARGS,
 ) {
-  device.emit(player, 'heavy:modelprompt', [
-    prompt,
-    agentid,
-    agentname,
-    lastinputtime,
-    nearestrefid,
-    nearestrefname,
-    promptlogging,
-  ])
+  device.emit(player, 'heavy:modelprompt', [prompt, promptlogging ?? ''])
 }
 
 export function heavymodelstop(
@@ -388,19 +367,10 @@ export function heavyagentstart(
   device.emit(player, 'heavy:agentstart', agentname)
 }
 
-export function heavyagentsyncuserdisplay(
-  device: DEVICELIKE,
-  player: string,
-  agentid: string,
-  displayname: string,
-) {
-  device.emit(player, 'heavy:syncuserdisplay', [agentid, displayname])
-}
-
 export function heavyagentstop(
   device: DEVICELIKE,
   player: string,
-  agentid: string,
+  agentid?: string,
 ) {
   device.emit(player, 'heavy:agentstop', agentid)
 }
@@ -487,22 +457,6 @@ export function heavyllmpreset(
 ) {
   const wantstoast = options?.toast !== false
   device.emit(player, 'heavy:llmpreset', wantstoast ? preset : [preset, false])
-}
-
-export function registeragentdooton(
-  device: DEVICELIKE,
-  player: string,
-  agentid: string,
-) {
-  device.emit(player, 'register:agentdooton', agentid)
-}
-
-export function registeragentdootoff(
-  device: DEVICELIKE,
-  player: string,
-  agentid: string,
-) {
-  device.emit(player, 'register:agentdootoff', agentid)
 }
 
 export function platformready(device: DEVICELIKE) {

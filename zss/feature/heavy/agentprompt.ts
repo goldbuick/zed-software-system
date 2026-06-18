@@ -26,7 +26,7 @@ export type Scripttoolresult = {
 
 export type Agentpromptdeps = {
   queryboardstate: (
-    agentid: string,
+    contextplayer: string,
     agentname: string,
   ) => Promise<Agentpromptboardstate>
   modelgenerategemma4: (
@@ -36,19 +36,19 @@ export type Agentpromptdeps = {
   ) => Promise<MODEL_GENERATE_GEMMA_RESULT>
   executeclicommands: (
     player: string,
-    agentid: string,
+    contextplayer: string,
     commands: string[],
   ) => Promise<void>
   executescripttoolcalls?: (
     player: string,
-    agentid: string,
+    contextplayer: string,
     calls: ParsedScriptToolCall[],
   ) => Promise<Scripttoolresult[]>
 }
 
 export async function runagentpromptloop(
   player: string,
-  agentid: string,
+  contextplayer: string,
   agentname: string,
   prompt: string,
   onworking: (msg: string) => void,
@@ -59,7 +59,7 @@ export async function runagentpromptloop(
 
   for (let iteration = 0; iteration < MAX_AGENT_REPROMPT; ++iteration) {
     const { context, agentinfo } = await deps.queryboardstate(
-      agentid,
+      contextplayer,
       agentname,
     )
     const systemprompt = buildagentsystemprompt(
@@ -90,7 +90,7 @@ export async function runagentpromptloop(
         } else {
           const scriptresults = await deps.executescripttoolcalls(
             player,
-            agentid,
+            contextplayer,
             g.scripttoolcalls,
           )
           for (let i = 0; i < scriptresults.length; ++i) {
@@ -122,7 +122,7 @@ export async function runagentpromptloop(
           (line) => line.trim() !== '#continue',
         )
         if (execcommands.length > 0) {
-          await deps.executeclicommands(player, agentid, execcommands)
+          await deps.executeclicommands(player, contextplayer, execcommands)
         }
         history.push({
           role: 'tool',

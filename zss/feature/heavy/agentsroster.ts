@@ -2,8 +2,7 @@ import { isarray, isstring } from 'zss/mapping/types'
 
 /** Persisted agent roster shape (IndexedDB `storage` vars via `registerstore`). */
 export type AGENTS_ROSTER = {
-  ids: string[]
-  names: Record<string, string>
+  name: string
 }
 
 export const AGENTS_ROSTER_STORAGE_KEY = 'agents_roster'
@@ -15,17 +14,30 @@ export function isvalidagentsroster(value: unknown): value is AGENTS_ROSTER {
   if (!value || typeof value !== 'object') {
     return false
   }
-  const v = value as { ids?: unknown; names?: unknown }
-  if (!isarray(v.ids)) {
-    return false
+  const v = value as { name?: unknown }
+  return isstring(v.name) && v.name.length > 0
+}
+
+/** Accept legacy `{ ids, names }` roster from IndexedDB. */
+export function migrateroster(raw: unknown): AGENTS_ROSTER | undefined {
+  if (isvalidagentsroster(raw)) {
+    return raw
   }
-  for (let i = 0; i < v.ids.length; ++i) {
-    if (!isstring(v.ids[i])) {
-      return false
-    }
+  if (!raw || typeof raw !== 'object') {
+    return undefined
   }
-  if (!v.names || typeof v.names !== 'object') {
-    return false
+  const legacy = raw as { ids?: unknown; names?: unknown }
+  if (!isarray(legacy.ids) || legacy.ids.length === 0) {
+    return undefined
   }
-  return true
+  const firstid = legacy.ids[0]
+  if (!isstring(firstid)) {
+    return undefined
+  }
+  const names = legacy.names
+  if (!names || typeof names !== 'object') {
+    return { name: firstid }
+  }
+  const n = (names as Record<string, unknown>)[firstid]
+  return { name: isstring(n) && n.length > 0 ? n : firstid }
 }

@@ -7,7 +7,8 @@ import type { MODEL_GENERATE_GEMMA_RESULT } from 'zss/feature/heavy/model'
 
 const BOARD_FIXTURE = {
   context: 'Board: test\n[player] human at (5,5)',
-  agentinfo: 'You are helper (id: agent1). Position (3,3).',
+  agentinfo:
+    'You are helper, assisting the player (id: player1) on board "test" at (3,3).',
 }
 
 function mockdeps(generations: MODEL_GENERATE_GEMMA_RESULT[]): {
@@ -27,7 +28,7 @@ function mockdeps(generations: MODEL_GENERATE_GEMMA_RESULT[]): {
       }
       return Promise.resolve(result)
     },
-    executeclicommands: (_player, _agentid, commands) => {
+    executeclicommands: (_player, _contextplayer, commands) => {
       executed.push([...commands])
       return Promise.resolve()
     },
@@ -53,7 +54,7 @@ describe('runagentpromptloop', () => {
     ])
     const history = await runagentpromptloop(
       'player1',
-      'agent1',
+      'player1',
       'helper',
       'go north',
       () => {},
@@ -82,7 +83,7 @@ describe('runagentpromptloop', () => {
     ])
     await runagentpromptloop(
       'player1',
-      'agent1',
+      'player1',
       'helper',
       'walk to 10 5',
       () => {},
@@ -98,7 +99,7 @@ describe('runagentpromptloop', () => {
     ])
     const history = await runagentpromptloop(
       'player1',
-      'agent1',
+      'player1',
       'helper',
       'hi agent',
       () => {},
@@ -123,7 +124,7 @@ describe('runagentpromptloop', () => {
     ])
     await runagentpromptloop(
       'player1',
-      'agent1',
+      'player1',
       'helper',
       'move up twice',
       () => {},
@@ -160,7 +161,7 @@ describe('runagentpromptloop', () => {
     }
     await runagentpromptloop(
       'player1',
-      'agent1',
+      'player1',
       'helper',
       'look around',
       () => {},
@@ -176,7 +177,7 @@ describe('runagentpromptloop', () => {
     ])
     const history = await runagentpromptloop(
       'player1',
-      'agent1',
+      'player1',
       'helper',
       'what is on the board?',
       () => {},

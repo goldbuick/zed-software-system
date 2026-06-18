@@ -12,7 +12,8 @@ const HELPER_BOARD = {
     '[player] human at (10,12)',
     'gem x3 at (15,8)',
   ].join('\n'),
-  agentinfo: 'You are guide (id: ag001). Position (10,10). Board: dungeon.',
+  agentinfo:
+    'You are guide, assisting the player (id: human1) on board "dungeon" at (10,10).',
 }
 
 function scenariodeps(generations: MODEL_GENERATE_GEMMA_RESULT[]): {
@@ -51,7 +52,7 @@ describe('agent help scenarios', () => {
     ])
     await runagentpromptloop(
       'human1',
-      'ag001',
+      'human1',
       'guide',
       'hi agent',
       () => {},
@@ -72,7 +73,7 @@ describe('agent help scenarios', () => {
     ])
     await runagentpromptloop(
       'human1',
-      'ag001',
+      'human1',
       'guide',
       'go north',
       () => {},
@@ -88,7 +89,7 @@ describe('agent help scenarios', () => {
     ])
     await runagentpromptloop(
       'human1',
-      'ag001',
+      'human1',
       'guide',
       "what's on this board?",
       () => {},
@@ -104,7 +105,7 @@ describe('agent help scenarios', () => {
     ])
     await runagentpromptloop(
       'human1',
-      'ag001',
+      'human1',
       'guide',
       'what does the scroll say?',
       () => {},
@@ -131,7 +132,7 @@ describe('agent help scenarios', () => {
     ])
     await runagentpromptloop(
       'human1',
-      'ag001',
+      'human1',
       'guide',
       'can you get the gem?',
       () => {},
@@ -153,7 +154,7 @@ describe('agent help scenarios', () => {
     ])
     await runagentpromptloop(
       'human1',
-      'ag001',
+      'human1',
       'guide',
       'go north',
       () => {},

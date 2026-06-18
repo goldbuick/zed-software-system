@@ -19,7 +19,7 @@ import { fetchrefscrolltext } from 'zss/feature/fetchrefscrolltext'
 import { getfingerprint } from 'zss/feature/fingerprint'
 import {
   AGENTS_ROSTER_STORAGE_KEY,
-  isvalidagentsroster,
+  migrateroster,
 } from 'zss/feature/heavy/agentsroster'
 import { HEAVY_LLM_STORAGE_KEY } from 'zss/feature/heavy/heavyllmpreset'
 import { itchiopublish } from 'zss/feature/itchiopublish'
@@ -262,9 +262,6 @@ let keepalive = 0
 // send keepalive message every 10 seconds
 const DOOT_RATE = 10
 
-/** Agent player ids: main-thread vm:doot from `second` (on/off via heavy worker messages). */
-const agentdootids = new Set<string>()
-
 /** Keepalive doots only after confirmed login (avoids zombie active sessions on refresh). */
 let loggedin = false
 
@@ -361,7 +358,6 @@ export const register = createdevice(
         break
       }
       case 'sessionreset':
-        agentdootids.clear()
         loggedin = false
         break
       case 'ackoperator':
@@ -418,8 +414,9 @@ export const register = createdevice(
           doasync(register, message.player, async () => {
             const vars = await storagereadvars()
             const raw = vars[AGENTS_ROSTER_STORAGE_KEY]
-            if (isvalidagentsroster(raw)) {
-              heavyrestoreagents(register, myplayerid, raw)
+            const roster = migrateroster(raw)
+            if (ispresent(roster)) {
+              heavyrestoreagents(register, myplayerid, roster)
             }
             if (typeof vars[HEAVY_LLM_STORAGE_KEY] === 'string') {
               heavyllmpreset(register, myplayerid, 'gemma', {
@@ -746,7 +743,6 @@ export const register = createdevice(
         capturecurrentboardtopng()
         break
       case 'nuke':
-        agentdootids.clear()
         doasync(register, message.player, async function () {
           for (const line of zssheaderlines('nuke in')) {
             write(register, message.player, line)
@@ -852,25 +848,12 @@ export const register = createdevice(
           }
         })
         break
-      case 'agentdooton':
-        if (isstring(message.data)) {
-          agentdootids.add(message.data)
-        }
-        break
-      case 'agentdootoff':
-        if (isstring(message.data)) {
-          agentdootids.delete(message.data)
-        }
-        break
       case 'second':
         ++keepalive
         if (keepalive >= DOOT_RATE) {
           keepalive -= DOOT_RATE
           if (loggedin) {
             vmdoot(register, myplayerid)
-            agentdootids.forEach((agentid) => {
-              vmdoot(register, agentid)
-            })
           }
         }
         break
