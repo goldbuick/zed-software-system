@@ -26,7 +26,9 @@ git clone --recurse-submodules <repo-url>
 
 The **browser runtime** vendored into `cafe/public/wanix/` comes from the **npm** package (`wanix@0.4.x`) via `yarn task run wanix:ensure` (stock package, no local wasm patch).
 
-Use `submodules/wanix/` to read upstream source (e.g. `wasi/worker/worker.js`, `term/`, workbench host wiring) when debugging or drafting patches — not as the runtime build input.
+Use `submodules/wanix/` to read upstream **0.4** source (`examples/basic-vm.html`, `elements/`, `term/`) when debugging — not as the runtime build input.
+
+**wanix.run** is the upstream **v0.3 stock bundle** demo, not the 0.4 `<wanix-system>` integration model zed.cafe uses.
 
 ## Daisy build
 

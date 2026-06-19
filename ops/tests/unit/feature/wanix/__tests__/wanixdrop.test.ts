@@ -4,7 +4,7 @@ const spawnmock = jest.fn()
 const bindsmock = jest.fn()
 const terminalmock = jest.fn()
 
-jest.mock('zss/feature/wanix/wanixiframehost', () => ({
+jest.mock('zss/feature/wanix/wanixhost', () => ({
   ensurewanixsandbox: (...args: unknown[]) => ensuremock(...args),
   putwanixfile: (...args: unknown[]) => putmock(...args),
   mountwanixarchive: jest.fn(),
@@ -38,7 +38,11 @@ describe('wanixhandledrop', () => {
     resetwanixsessionfortest()
     ensuremock.mockResolvedValue(undefined)
     putmock.mockResolvedValue(undefined)
-    spawnmock.mockResolvedValue({ taskid: 'demo-wasm' })
+    spawnmock.mockImplementation(async () => {
+      const { setwanixattached } = await import('zss/feature/wanix/wanixsession')
+      setwanixattached('task', 'demo-wasm')
+      return { taskid: 'demo-wasm' }
+    })
     bindsmock.mockResolvedValue([])
   })
 

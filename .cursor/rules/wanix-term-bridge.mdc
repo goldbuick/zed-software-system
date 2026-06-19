@@ -1,11 +1,11 @@
 ---
-description: Wanix interactive I/O goes through wanix-term / ZSS bridge — never patch fd_0 stdin
+description: Wanix interactive I/O goes through ZSS tile term bridge — never patch fd_0 stdin
 alwaysApply: true
 ---
 
 # Wanix term bridge (not WASI stdin)
 
-Interactive I/O for running Wanix tasks uses **`<wanix-term>`** — a line-disciplined terminal bound to `#task/…/term`. In ZSS, the **tape terminal** is the bridge: it plays the same role as `<wanix-term>` while a task is running.
+Interactive I/O for running Wanix tasks uses **`#task/…/term/data`** or **`#vm/<rid>/term/data`**. In ZSS, the **tape terminal tile bridge** plays the same role as upstream `<wanix-term>` while a task or VM is attached.
 
 Raw WASI **`fd_read(0)` / `fd/0` stdin is not the integration surface** and must not be “fixed” by patching Wanix.
 
@@ -13,38 +13,39 @@ Raw WASI **`fd_read(0)` / `fd/0` stdin is not the integration surface** and must
 
 | Direction | Owner |
 |-----------|--------|
-| User input → WASI task | `zss/screens/terminal/input.tsx` → `wanixtermwrite` → `wanixdrop` (`sendwanixtermwrite`) → `wanixiframehost` → `host.html` (`wanix:term-write` → `#task/<id>/term/data`, line + `\n`) |
-| User input → VM serial | Same bridge with **raw** mode: line submit on Enter → `wanix:term-write` with `{ raw: true }` → `#vm/<id>/term/data` (bytes + `\r\n`, no bridge echo/ping) |
-| Task/VM output → scrollback | `wanix:term-out` (filtered by attached kind + id) → `wanixiobridgepushterm` |
-| Routing on/off | `wanixsession` (`iswanixtermactive`, `iswanixtermraw`, attach/detach) |
+| User input → WASI task | `WanixTermInput` → `sendwanixtermwrite` → `wanixhost.ts` → `#task/<rid>/term/data` (line + `\n`) |
+| User input → VM serial | `WanixTermInput` → `sendwanixterminput` → `wanixhost.ts` `TextEncoder` → `#vm/<vrid>/term/data` |
+| Task/VM output → tile screen | `streamtermout` in `wanixhost.ts` → attach-on-first-serial → `wanixtermscreenwrite` |
+| Prep / mount logs | `wanixiobridgepush` → `apilog` scrollback (not tile until serial) |
+| Routing on/off | `wanixsession` + `wanixterminalmode` (`#wanix attach` forces tile; spawn waits for serial) |
 
 While `iswanixtermactive()`, non-`#` lines go to the attached task or VM. WASI tasks use cyan **`wanix`** prompt; VMs use **`wanix-vm`** (raw serial). `#wanix detach` / `#wanix attach` control routing.
 
-See `ops/fixtures/wanix/README.md` and `ops/e2e/wanix-host.spec.ts` (term-write while a task runs).
+Wanix runs **in-page** (`wanix-system` in `#zss-wanix-display`), not a hidden iframe. Boot may freeze WebGL on the shared main thread.
+
+See `ops/fixtures/wanix/README.md` and `ops/e2e/wanix-host.spec.ts`.
 
 ## Prohibited
 
-- Patching **`submodules/wanix`**, **`node_modules/wanix`**, or **`cafe/public/wanix`** to wire WASI stdin (`fd_read`, `fd/0`, `e.data.stdin`, `OpenEmptyFile` → `OpenFile`, rebuilding the runtime for stdin).
-- Adding REPL/interactive fixtures that **require** `fd_read(0)` and expecting a Wanix kernel patch to make them work.
-- Diagnosing “REPL broken” as “enable fd_0 in the WASI worker” instead of verifying the **term bridge** (`wanix:term-write`, term routing, `wanix:term-out`).
+- Patching **`submodules/wanix`**, **`node_modules/wanix`**, or **`cafe/public/wanix`** to wire WASI stdin.
+- Adding REPL fixtures that **require** `fd_read(0)` and expecting a Wanix kernel patch.
+- Diagnosing “REPL broken” as “enable fd_0” instead of verifying **`wanixhost.ts` term connect order** and `sendwanixterminput`.
 
 ## Allowed
 
-- Fixes and tests in the **ZSS bridge** (`wanixiframehost`, `wanixdrop`, `wanixiobridge`, `host.html` term RPC, terminal input routing).
+- Fixes in **`wanixhost.ts`**, `wanixdrop.ts`, `wanixiobridge.ts`, terminal input routing.
 - One-shot WASI binaries that only **`fd_write`** stdout (e.g. `hello.wat`).
-- Long-running tasks used to verify **term-write accepts input** while running (e.g. `hold.wat`, `termbridge.wat` + e2e).
-- `yarn task run wanix:ensure` to **vendor** upstream Wanix as-is — not to customize stdin.
+- Long-running tasks for term bridge verification (`hold.wat`, `termbridge.wat` + e2e).
 
 ## Examples
 
 ```text
 ❌ BAD — patch submodules/wanix/wasi/worker/worker.js to connect e.data.stdin
-❌ BAD — build repl.wasm with fd_read and patch wanix until ping/pong works
-❌ BAD — rebuild wanix from submodule to uncomment OpenFile(stdin)
+❌ BAD — rebuild wanix for fd/0 stdin
 
-✅ GOOD — drop .wasm, confirm wanix term attached, type a line, trace wanix:term-write → term-out
-✅ GOOD — extend wanix-host e2e: term-write while task runs, assert output in wanix:term-out / scrollback
-✅ GOOD — fix sendwanixtermwrite or host.html connectterm if term-write fails with an active task
+✅ GOOD — drop termbridge.wasm, wait for banner serial, tile opens with replay
+✅ GOOD — trace sendwanixterminput + connectvmterm order in wanixhost.ts
+✅ GOOD — extend wanix-host e2e via __zss_e2e bridge helpers
 ```
 
-If interactive REPL behavior is wrong, debug the **term bridge** with logs on `wanix:term-write`, `wanix:term-out`, and `iswanixtermactive()` — not WASI fd 0.
+If interactive behavior is wrong, debug **`wanixhost.ts`** term connect/spawn order and `iswanixtermactive()` — not WASI fd 0.

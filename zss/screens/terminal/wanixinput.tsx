@@ -2,11 +2,11 @@ import { useCallback, useRef, useState } from 'react'
 import { apierror, vmcli, wanixtermwrite } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import { sendwanixtermwriteraw } from 'zss/feature/wanix/wanixiframehost'
-import { iswanixtermraw, readwanixattachedkind } from 'zss/feature/wanix/wanixsession'
+import { sendwanixterminput } from 'zss/feature/wanix/wanixhost'
+import { iswanixtermraw } from 'zss/feature/wanix/wanixsession'
 import {
   iswanixcliescape,
-  keyboardeventtobytes,
+  keyboardeventtoxtermdata,
 } from 'zss/feature/wanix/wanixtermkeys'
 import { wanixtrace } from 'zss/feature/wanix/wanixtrace'
 import {
@@ -85,16 +85,13 @@ export function WanixTermInput() {
         if (event.repeat) {
           return
         }
-        const bytes = keyboardeventtobytes(event)
-        if (!bytes) {
+        const text = keyboardeventtoxtermdata(event)
+        if (!text) {
           return
         }
         event.preventDefault()
-        wanixtrace('raw-key', {
-          len: bytes.byteLength,
-          kind: readwanixattachedkind(),
-        })
-        void sendwanixtermwriteraw(bytes).catch((err) => {
+        wanixtrace('term-input', { len: text.length })
+        void sendwanixterminput(text).catch((err) => {
           apierror(
             SOFTWARE,
             player,

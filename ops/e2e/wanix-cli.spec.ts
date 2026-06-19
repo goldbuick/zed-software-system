@@ -48,7 +48,7 @@ test.describe('wanix CLI integration', () => {
     // eslint-disable-next-line no-console
     console.log('\nwanix smoke report:\n', JSON.stringify(report, null, 2))
 
-    expect(report.iframepresent, report.errormessage ?? 'iframe missing').toBe(
+    expect(report.hostpresent, report.errormessage ?? 'wanix host missing').toBe(
       true,
     )
     expect(report.sawsandbox, report.logs.join('\n')).toBe(true)

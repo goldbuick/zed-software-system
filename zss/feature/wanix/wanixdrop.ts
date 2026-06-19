@@ -13,16 +13,17 @@ import {
   listwanixbinds,
   listwanixdir,
   mountwanixarchive,
-  prepwanixvm,
   putwanixfile,
+  readwanixstatus,
   setwanixtaskexithandler,
   setwanixvmexithandler,
   spawnwanixtask,
   spawnwanixvm,
+  spawnwanixvmspace,
   sendwanixtermwrite,
   unmountallwanixbinds,
   unmountwanixbind,
-} from 'zss/feature/wanix/wanixiframehost'
+} from 'zss/feature/wanix/wanixhost'
 import {
   haswanixcompute,
   haswanixtasks,
@@ -39,13 +40,9 @@ import {
   registervm,
   removetask,
   removevm,
-  setwanixattached,
   type WANIX_ATTACH_KIND,
 } from 'zss/feature/wanix/wanixsession'
-import {
-  leavewanixattachedterminal,
-  syncwanixattachedterminalmode,
-} from 'zss/feature/wanix/wanixterminalmode'
+import { leavewanixattachedterminal } from 'zss/feature/wanix/wanixterminalmode'
 import { wanixtermscreenwritepong } from 'zss/feature/wanix/wanixtermscreen'
 import {
   DEFAULT_WANIX_VM_ID,
@@ -149,8 +146,6 @@ async function launchwanixload(
     wait: false,
   })
   registertask({ id: spawnedid, label, entrycmd })
-  setwanixattached('task', spawnedid)
-  syncwanixattachedterminalmode()
   apilog(device, player, `wanix run ${spawnedid} ${entrycmd}`)
 }
 
@@ -179,12 +174,22 @@ export async function wanixhandlevmstart(
   vmid?: string,
 ) {
   try {
-    await ensurewanixsandbox(device, player)
     exitdevice = device
     exitplayer = player
     ensurevmexithandler()
+    if (iswanixspaceactive()) {
+      const status = await readwanixstatus()
+      if (!status.vmbindsready && haswanixcompute()) {
+        apilog(
+          device,
+          player,
+          'wanix vm prep: rebooting wanix host for vm layout (stops tasks)',
+        )
+      }
+    }
     apilog(device, player, 'wanix vm prep: fetching linux + v86 archives...')
-    await prepwanixvm()
+    await spawnwanixvmspace(device, player)
+    ensurevmexithandler()
     const requested = vmid ?? DEFAULT_WANIX_VM_ID
     const { vmid: spawnedid } = await spawnwanixvm({
       vmid: requested,
@@ -197,8 +202,6 @@ export async function wanixhandlevmstart(
       label: spawnedid,
       mem: DEFAULT_WANIX_VM_MEM,
     })
-    setwanixattached('vm', spawnedid)
-    syncwanixattachedterminalmode()
     apilog(device, player, `wanix vm boot ${spawnedid}`)
   } catch (err) {
     apierror(
@@ -486,7 +489,6 @@ export async function wanixhandleattach(
       return
     }
     await attachwanixtarget(kind, target)
-    syncwanixattachedterminalmode()
     const label = readattachlabel(kind, target)
     const prompt = kind === 'vm' ? 'wanix-vm' : 'wanix'
     apilog(

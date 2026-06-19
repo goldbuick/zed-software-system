@@ -2,6 +2,41 @@
 
 Small WASI programs for drag-drop testing in the cafe app.
 
+## 0.4 upstream recipes (not wanix.run)
+
+Runtime: npm **`wanix@0.4.x`** → `yarn task run wanix:ensure` → `cafe/public/wanix/`.  
+Reference: [tractordev/wanix](https://github.com/tractordev/wanix) **`main`** (`<wanix-system>` custom elements).
+
+**Do not** copy [wanix.run](https://wanix.run) — that is the **v0.3 bundle** demo (`new Wanix({ bundle: "/shell/shell.tgz" })`), a different API generation.
+
+| ZSS feature | Upstream 0.4 recipe | ZSS owner |
+|-------------|---------------------|-----------|
+| WASI drop / `#wanix` tasks | Quick start `#ramfs` + `<wanix-task type="wasi" term>` | `spawnwanixspace` → `#ramfs` boot; `createtask` |
+| `#wanix vm` prep | [`examples/basic-vm.html`](https://github.com/tractordev/wanix/blob/main/examples/basic-vm.html) — linux + `#vm` ns + v86 binds **before** first `ready` | `spawnwanixvmspace` → `bootwanixsystemforvm` |
+| VM serial console | `<wanix-vm export="ttyS0" term>` + `#vm/<rid>/term/data` | `createvm` + `connectvmterm` after `el.start()` |
+| Term I/O | `<wanix-term path="…" raw>` (we use tile bridge instead of xterm) | `wanixhost.ts` + `WanixTermInput` |
+
+VM prep must **not** call `_setupNamespace` a second time after `#ramfs` (that caused the Go `writeFile` panic). `#wanix vm` reboots into the basic-vm bind layout via `spawnwanixvmspace`.
+
+### How we measure success (in order)
+
+| Gate | Command | Proves |
+|------|---------|--------|
+| 1. Upstream recipe | `yarn task run wanix:vm-prep-smoke` | `basic-vm.html` layout + vendored `wanix.wasm` + CDN archives — **no ZSS** |
+| 2. ZSS host prep | `PLAYWRIGHT_INCLUDE_WANIX_VM_E2E=1 yarn task run wanix:vm:verify` (prep phase) | `spawnwanixvmspace` in full app |
+| 3. Serial + attach | same verify (spawn + serial buffer) | VM runs; tile opens on first serial |
+| 4. Raw input | verify `term-input` test | `#vm/…/term/data` keystrokes after login |
+
+Manual: `#wanix vm` → apilog shows `mount ok` → `wanix vm boot …` → tile opens on kernel/login serial (not on prep lines).
+
+Isolated smoke page (browser): [/wanix/smoke-basic-vm.html](http://localhost:7777/wanix/smoke-basic-vm.html) — on-page log should end with `v86 driver present`, console must have **no** `panic` / `unreachable`.
+
+Verify:
+
+```bash
+PLAYWRIGHT_INCLUDE_WANIX_VM_E2E=1 yarn task run wanix:vm:verify
+```
+
 ## Quick build (WAT)
 
 After `yarn install` (provides `wabt` / `wat2wasm`):
@@ -18,35 +53,37 @@ Sources:
 |------|--------|
 | `hello.wat` | one-shot hello (batch stdout) |
 | `hold.wat` | infinite loop (e2e term-write while running) |
-| `termbridge.wat` | **ZSS wanix-term bridge demo** — banner on stdout, then hold |
+| `termbridge.wat` | **ZSS tile term bridge demo** — banner on stdout, then hold |
 
 Drag the `.wasm` onto a running app (`yarn task app dev`). Multiple drops run in parallel; use `#wanix` to attach, stop, or unmount.
 
-## ZSS wanix-term bridge (`termbridge.wasm`)
+## ZSS tile term bridge (`termbridge.wasm`)
 
-Upstream Wanix uses `<wanix-term>` bound to `#task/…/term`. In ZSS, **attached terminal mode** (`terminalmode: 'attached'`) is that bridge: a unified tile screen plus headless `WanixTermInput`.
+Upstream Wanix uses `<wanix-term>` bound to `#task/…/term` or `#vm/<rid>/term`. In ZSS, **attached terminal mode** is the same kernel contract with a **tile grid** (`WanixTermScreen`) plus headless `WanixTermInput` — not xterm.
+
+Wanix runs **in-page** (`wanix-system` in hidden `#zss-wanix-display` via `wanixhost.ts`), not a hidden iframe.
 
 | Direction | Path |
 |-----------|------|
-| Task → screen | guest `fd_write(1)` → `wanix:term-out` → **attached tile screen** (`WanixTermScreen`) |
-| Kernel logs | `wanix:log` → `apilog` scrollback (hidden behind screen while attached) |
-| Screen → task | headless `WanixTermInput` → `wanix:term-write` → `#task/run/term/data` |
-| Line echo + smoke reply | local echo on tile screen; `ping` → `pong` on screen |
+| Task → screen | guest `fd_write(1)` → `streamtermout` → **first serial opens tile** → `WanixTermScreen` (replays buffer) |
+| Kernel prep logs | `wanixiobridgepush` → `apilog` scrollback |
+| Screen → task | `WanixTermInput` → `sendwanixtermwrite` / `sendwanixterminput` → `#…/term/data` |
+| Line echo + smoke reply | local echo on tile; `ping` → `pong` on screen |
 
-`termbridge.wasm` is the fixture for this flow: it prints a banner (proves **term-out**), stays running (keeps term routing), and accepts lines you type (proves **term-write**). It uses only `fd_write` — not WASI `fd_read(0)`.
+**Attach-on-serial:** spawn/drop stays on CLI scrollback until the guest prints stdout; then tile mode opens and replays all serial since spawn. **`#wanix attach <id>`** forces tile immediately (manual attach).
 
-Submitted lines and the `ping`/`pong` reply come from the **ZSS bridge** (local line discipline), not from the wasm guest.
+`termbridge.wasm` prints a banner (proves term-out), stays running, and accepts lines via the bridge (proves term-write). It uses only `fd_write` — not WASI `fd_read(0)`.
 
 ### Manual test
 
 1. `yarn task run wanix:ensure` then `yarn task app dev`
-2. Drag `ops/fixtures/wanix/termbridge.wasm` onto the app — terminal enters **attached** mode (full-viewport tile screen)
-3. Confirm the banner `wanix term bridge ready` renders on the tile grid
-4. Type `ping` and press Enter — characters echo on the grid; `pong` appears after submit
-5. `#wanix detach` or `Ctrl+\` then `#wanix detach` returns to CLI scrollback (kernel prep lines visible there)
+2. Drag `ops/fixtures/wanix/termbridge.wasm` — stay on CLI until banner stdout
+3. Tile screen opens with `wanix term bridge ready` replayed
+4. Type `ping` and press Enter — `pong` on the grid
+5. `#wanix detach` or `Ctrl+\` then `#wanix detach` returns to CLI scrollback
 6. `#wanix stop` halts the task
 
-Raw WASI `fd_read(0)` is not the integration surface; do not patch Wanix for `fd/0`. See `.cursor/rules/wanix-term-bridge.mdc`.
+Raw WASI `fd_read(0)` is not the integration surface. See `.cursor/rules/wanix-term-bridge.mdc`.
 
 ## Optional C build (wasi-sdk)
 
@@ -79,7 +116,7 @@ yarn task run wanix:ensure
 
 `yarn install` provides the `wanix` npm package. Run `wanix:ensure` after install so `cafe/public/wanix` matches `node_modules/wanix`.
 
-Upstream source for reading/debugging (WASI worker, term device, workbench host): [`submodules/wanix/`](../../../submodules/wanix/) — see [`submodules/README.md`](../../../submodules/README.md).
+Upstream source: [`submodules/wanix/`](../../../submodules/wanix/) — see [`submodules/README.md`](../../../submodules/README.md).
 
 ## Linux VM (v86 serial console)
 
@@ -90,11 +127,13 @@ Boot Alpine Linux in v86 from the `#wanix` menu or CLI:
 #wanix vm stop [id]
 ```
 
-On first boot the host lazily fetches pinned `wanix-extras@0.4.0-rc1` archives (`wanix-linux.tgz` at `.`, `v86.tgz` at `#vm/v86`) from jsDelivr. Boot takes tens of seconds; prep progress lines go to **`apilog` scrollback** (not the guest tile screen).
+On first boot the host lazily fetches pinned `wanix-extras@0.4.0-rc1` archives from jsDelivr. Prep lines go to **`apilog` scrollback**. Tile mode opens on **first serial** from the VM (kernel/login output replayed).
 
-While a VM is attached, the terminal is in **attached** mode: `WanixTermInput` streams **raw serial** bytes on each keypress; screen updates come from `wanix:term-out` only. Use **`Ctrl+\`** for a temporary ZSS CLI line (`#wanix detach`, etc.). WASI tasks and one VM can run in parallel; a new VM auto-attaches and steals terminal I/O.
+While attached, `WanixTermInput` sends per-keystroke data via `sendwanixterminput` → `TextEncoder` → `#vm/<vrid>/term/data`. VM spawn connects term **after** `el.start()` using the rid path with alias fallback.
 
-Gated host e2e (large downloads, 3+ minutes):
+**Main thread:** in-page Wanix shares the browser main thread with ZSS WebGL — vm-prep/boot may freeze the canvas briefly; expected until upstream workerizes more kernel work.
+
+Gated e2e (large downloads, 3+ minutes):
 
 ```bash
 PLAYWRIGHT_INCLUDE_WANIX_VM_E2E=1 yarn task run wanix:vm:verify
@@ -103,23 +142,17 @@ PLAYWRIGHT_INCLUDE_WANIX_VM_E2E=1 yarn task run wanix:vm:verify
 ## IO verify (fix loop)
 
 ```bash
-yarn task run wanix:io:verify   # isolated host e2e
-yarn task run e2e:test:wanix    # host + full-app CLI smoke
+yarn task run wanix:io:verify   # in-page host e2e via full app
+yarn task run e2e:test:wanix    # full-app CLI smoke
 ```
 
-## VM raw keystroke repro (debug)
-
-The hidden Wanix iframe shares the **browser main thread** with ZSS — boot may stutter; that is expected.
-
-To trace one-char VM serial crashes:
+## VM keystroke repro (debug)
 
 1. `yarn task app dev`
-2. In DevTools console: `window.__ZSS_WANIX_TRACE__ = true`
-3. `#wanix vm` — wait for Alpine login prompt (`~ #`) on the attached tile screen
-4. Type one character — watch console for `[wanix] raw-key`, `term-write:rpc:*`, `term-write:stream:*`, and `vm-exit`
-5. If `vm-exit` fires immediately after `term-write`, capture the full trace before the VM dies
-
-Gated e2e with raw byte term-write after boot:
+2. `window.__ZSS_WANIX_TRACE__ = true`
+3. `#wanix vm` — prep in apilog; tile opens on first serial; wait for `~ #`
+4. Type a command and Enter — watch `[wanix] term-input` / `connectvmterm` traces
+5. Second command — if input stops, check `vm-exit` or worker panic in console
 
 ```bash
 PLAYWRIGHT_INCLUDE_WANIX_VM_E2E=1 yarn task run wanix:vm:verify

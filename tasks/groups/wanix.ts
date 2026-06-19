@@ -38,11 +38,27 @@ export const WANIX_TASKS: TaskDef[] = [
       'wanix vm boot',
     ]),
   }),
+  def('wanix:vm-prep-smoke', {
+    description:
+      'Upstream basic-vm.html smoke (CDN archives + wanix.wasm, no ZSS) — prep gate',
+    tags: ['slow'],
+    deps: ['wanix:ensure'],
+    run: exec([
+      'playwright',
+      'test',
+      '--config',
+      'ops/playwright.config.ts',
+      'ops/e2e/wanix-vm-prep-smoke.spec.ts',
+    ]),
+  }),
   def('wanix:vm:verify', {
     description:
       'Run gated wanix vm-prep + vm-run host e2e (large CDN downloads; slow)',
     tags: ['slow'],
-    env: { PLAYWRIGHT_INCLUDE_WANIX_VM_E2E: '1' },
+    env: {
+      PLAYWRIGHT_INCLUDE_WANIX_E2E: '1',
+      PLAYWRIGHT_INCLUDE_WANIX_VM_E2E: '1',
+    },
     run: exec([
       'playwright',
       'test',
@@ -51,6 +67,24 @@ export const WANIX_TASKS: TaskDef[] = [
       'ops/e2e/wanix-host.spec.ts',
       '--grep',
       'wanix vm boot',
+    ]),
+  }),
+  def('wanix:vm-prep:verify', {
+    description:
+      'ZSS spawnwanixvmspace prep only — mount ok + v86-vm.wasm (fast gate, ~3 min)',
+    tags: ['slow'],
+    env: {
+      PLAYWRIGHT_INCLUDE_WANIX_E2E: '1',
+      PLAYWRIGHT_INCLUDE_WANIX_VM_E2E: '1',
+    },
+    run: exec([
+      'playwright',
+      'test',
+      '--config',
+      'ops/playwright.config.ts',
+      'ops/e2e/wanix-host.spec.ts',
+      '--grep',
+      'vm-prep only',
     ]),
   }),
 ]

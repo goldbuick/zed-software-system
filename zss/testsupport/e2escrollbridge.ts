@@ -19,9 +19,26 @@ import { useGadgetClient, useTape, useTerminal } from 'zss/gadget/data/state'
 import { INPUT, LAYER_TYPE, paneladdress } from 'zss/gadget/data/types'
 import { ptstoarea } from 'zss/mapping/2d'
 import {
+  attachwanixtarget,
+  ensurewanixsandbox,
+  haltwanixtask,
+  haltwanixvm,
+  listwanixdir,
+  putwanixfile,
+  readwanixhostattachedserial,
+  runwanixhostwasm,
+  sendwanixterminput,
+  sendwanixtermwrite,
+  spawnwanixtask,
+  spawnwanixvm,
+  spawnwanixvmspace,
+} from 'zss/feature/wanix/wanixhost'
+import {
   type WANIX_SMOKE_REPORT,
+  type WANIX_VM_SMOKE_REPORT,
   readwanixdiag,
   runwanixsmoke,
+  runwanixvmsmoke,
 } from 'zss/testsupport/e2e/wanixrepro'
 import type { PT } from 'zss/words/types'
 export type ZssE2eMoveDir = 'left' | 'right' | 'up' | 'down'
@@ -85,7 +102,42 @@ export type ZssE2eBridge = {
   }) => Promise<LangCompileBenchReport>
   /** Drop hello.wasm (auto-start sandbox) with scrollback evidence. */
   runwanixsmoke: (deadlinems?: number) => Promise<WANIX_SMOKE_REPORT>
-  /** Iframe mount + wanixiframehost state snapshot. */
+  /** Prep + spawn VM + wait for serial/tile attach (full `#wanix vm` bar). */
+  runwanixvmsmoke: (deadlinems?: number) => Promise<WANIX_VM_SMOKE_REPORT>
+  /** Boot in-page wanix host for isolated wasm e2e. */
+  ensurewanixhostready: () => Promise<void>
+  /** Put wasm bytes and run via in-page host. */
+  runwanixhostwasm: (
+    name: string,
+    bytes: number[],
+    cmd: string,
+    opts?: { termline?: string; blockms?: number; haltafter?: boolean },
+  ) => Promise<{
+    code: number
+    error?: string
+    output: string
+    termwritesucceeded?: boolean
+  }>
+  putwanixhostfile: (name: string, bytes: number[]) => Promise<void>
+  spawnwanixhosttask: (
+    cmd: string,
+    opts?: { wait?: boolean; attach?: boolean },
+  ) => Promise<{ taskid: string; code?: number }>
+  attachwanixhosttarget: (kind: 'task' | 'vm', id: string) => Promise<void>
+  sendwanixhosttermwrite: (line: string) => Promise<void>
+  sendwanixhostterminput: (text: string) => Promise<void>
+  readwanixhostserial: () => string
+  prepwanixhostvm: (urls: { linux: string; v86: string }) => Promise<void>
+  spawnwanixhostvm: (opts?: {
+    vmid?: string
+    mem?: string
+    attach?: boolean
+    wait?: boolean
+  }) => Promise<{ vmid: string; code?: number }>
+  listwanixhostdir: (path: string) => Promise<string[]>
+  haltwanixhosttask: (taskid?: string) => Promise<void>
+  haltwanixhostvm: (vmid?: string) => Promise<void>
+  /** In-page wanix-system mount + host state snapshot. */
   getwanixdiag: () => ReturnType<typeof readwanixdiag>
 }
 
@@ -242,6 +294,57 @@ export function installe2ebridge(): void {
     },
     runwanixsmoke(deadlinems) {
       return runwanixsmoke(deadlinems)
+    },
+    runwanixvmsmoke(deadlinems) {
+      return runwanixvmsmoke(deadlinems)
+    },
+    async ensurewanixhostready() {
+      await ensurewanixsandbox(SOFTWARE, registerreadplayer())
+    },
+    async runwanixhostwasm(name, bytes, cmd, opts) {
+      await ensurewanixsandbox(SOFTWARE, registerreadplayer())
+      await putwanixfile(name, new Uint8Array(bytes))
+      return runwanixhostwasm(cmd, opts)
+    },
+    async putwanixhostfile(name, bytes) {
+      await ensurewanixsandbox(SOFTWARE, registerreadplayer())
+      await putwanixfile(name, new Uint8Array(bytes))
+    },
+    async spawnwanixhosttask(cmd, opts) {
+      await ensurewanixsandbox(SOFTWARE, registerreadplayer())
+      return spawnwanixtask(cmd, opts)
+    },
+    async attachwanixhosttarget(kind, id) {
+      await ensurewanixsandbox(SOFTWARE, registerreadplayer())
+      await attachwanixtarget(kind, id)
+    },
+    async sendwanixhosttermwrite(line) {
+      await ensurewanixsandbox(SOFTWARE, registerreadplayer())
+      await sendwanixtermwrite(line)
+    },
+    async sendwanixhostterminput(text) {
+      await ensurewanixsandbox(SOFTWARE, registerreadplayer())
+      await sendwanixterminput(text)
+    },
+    readwanixhostserial() {
+      return readwanixhostattachedserial()
+    },
+    async prepwanixhostvm(urls) {
+      await spawnwanixvmspace(SOFTWARE, registerreadplayer(), urls)
+    },
+    async spawnwanixhostvm(opts) {
+      return spawnwanixvm(opts)
+    },
+    async listwanixhostdir(path) {
+      return listwanixdir(path)
+    },
+    async haltwanixhosttask(taskid) {
+      await ensurewanixsandbox(SOFTWARE, registerreadplayer())
+      await haltwanixtask(taskid)
+    },
+    async haltwanixhostvm(vmid) {
+      await ensurewanixsandbox(SOFTWARE, registerreadplayer())
+      await haltwanixvm(vmid)
     },
     getwanixdiag() {
       return readwanixdiag()

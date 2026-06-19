@@ -1,7 +1,7 @@
 const mocktermwrite = jest.fn()
 const mockapierror = jest.fn()
 
-jest.mock('zss/feature/wanix/wanixiframehost', () => ({
+jest.mock('zss/feature/wanix/wanixhost', () => ({
   sendwanixtermwrite: (...args: unknown[]) => mocktermwrite(...args),
 }))
 

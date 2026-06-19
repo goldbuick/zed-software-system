@@ -3,6 +3,8 @@
  */
 const mockscreenwrite = jest.fn()
 
+let terminalattached = false
+
 jest.mock('zss/feature/wanix/wanixtermscreen', () => {
   const actual = jest.requireActual('zss/feature/wanix/wanixtermscreen')
   return {
@@ -11,98 +13,49 @@ jest.mock('zss/feature/wanix/wanixtermscreen', () => {
   }
 })
 
-const mockattachedmode = jest.fn(() => false)
-
 jest.mock('zss/feature/wanix/wanixterminalmode', () => {
   const actual = jest.requireActual('zss/feature/wanix/wanixterminalmode')
   return {
     ...actual,
-    readterminalmodeattached: () => mockattachedmode(),
+    readterminalmodeattached: () => terminalattached,
+    enterwanixattachedterminal: () => {
+      terminalattached = true
+    },
   }
 })
 
 import {
   resetwanixhostfortest,
-  spawnwanixspace,
-} from 'zss/feature/wanix/wanixiframehost'
-import {
-  registertask,
-  resetwanixsessionfortest,
-  setwanixattached,
-} from 'zss/feature/wanix/wanixsession'
+  wanixhosttestsetattached,
+  wanixhosttesttermout,
+} from 'zss/feature/wanix/wanixhost'
+import { resetwanixsessionfortest } from 'zss/feature/wanix/wanixsession'
 
-function dispatchtermout(chunk: string, taskid = 'demo-wasm') {
-  window.dispatchEvent(
-    new MessageEvent('message', {
-      data: {
-        type: 'wanix:term-out',
-        chunk,
-        taskId: taskid,
-        attachKind: 'task',
-        attachId: taskid,
-      },
-      origin: window.location.origin,
-    }),
-  )
-}
-
-describe('wanix:term-out routing', () => {
-  const mount = document.createElement('div')
-  mount.id = 'zss-wanix-display'
-
+describe('wanix term-out attach-on-serial', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    terminalattached = false
     resetwanixhostfortest()
     resetwanixsessionfortest()
-    mockattachedmode.mockReturnValue(false)
-    document.body.appendChild(mount)
   })
 
-  afterEach(() => {
-    resetwanixhostfortest()
-    mount.remove()
-  })
-
-  async function wirehost() {
-    const append = jest
-      .spyOn(mount, 'appendChild')
-      .mockImplementation((node) => {
-        if (node instanceof HTMLIFrameElement) {
-          setTimeout(() => {
-            window.dispatchEvent(
-              new MessageEvent('message', {
-                data: { type: 'wanix:ready' },
-                origin: window.location.origin,
-              }),
-            )
-          }, 0)
-        }
-        return node
-      })
-    const device = { emit: jest.fn() }
-    await spawnwanixspace(device, 'player1')
-    append.mockRestore()
-  }
-
-  it('writes to tile screen when attached mode is active', async () => {
-    await wirehost()
-    registertask({ id: 'demo-wasm', label: 'demo', entrycmd: 'demo.wasm' })
-    setwanixattached('task', 'demo-wasm')
-    mockattachedmode.mockReturnValue(true)
-
-    dispatchtermout('hello')
-
+  it('auto-attaches tile mode and replays buffered serial on first chunk', () => {
+    wanixhosttestsetattached('task', 'demo-wasm')
+    wanixhosttesttermout('task', 'demo-wasm', 'hello')
+    expect(terminalattached).toBe(true)
     expect(mockscreenwrite).toHaveBeenCalledWith('hello')
   })
 
-  it('drops guest output when not in attached terminal mode', async () => {
-    await wirehost()
-    registertask({ id: 'demo-wasm', label: 'demo', entrycmd: 'demo.wasm' })
-    setwanixattached('task', 'demo-wasm')
-    mockattachedmode.mockReturnValue(false)
+  it('appends to tile screen when already attached', () => {
+    wanixhosttestsetattached('task', 'demo-wasm', 'boot\n')
+    terminalattached = true
+    wanixhosttesttermout('task', 'demo-wasm', 'more')
+    expect(mockscreenwrite).toHaveBeenCalledWith('more')
+  })
 
-    dispatchtermout('hello')
-
+  it('ignores output for non-attached targets', () => {
+    wanixhosttestsetattached('task', 'demo-wasm')
+    wanixhosttesttermout('task', 'other-wasm', 'hello')
     expect(mockscreenwrite).not.toHaveBeenCalled()
   })
 })

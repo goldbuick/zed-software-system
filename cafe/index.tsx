@@ -55,6 +55,21 @@ function shoulde2ebridge(): boolean {
   return import.meta.env.ZSS_E2E === 'true' || import.meta.env.ZSS_E2E === '1'
 }
 
+function iswanixvmonly(): boolean {
+  if (typeof window === 'undefined') {
+    return false
+  }
+  const q = new URLSearchParams(window.location.search).get('ZSS_WANIX_VM')
+  return q === '1' || q === 'true'
+}
+
+/** E2e / wanix-vm: e2e bridge only — no R3F canvas, no platform workers. */
+async function bootwanixvmonly(): Promise<void> {
+  if (shoulde2ebridge()) {
+    installe2ebridge()
+  }
+}
+
 async function bootheadless(): Promise<void> {
   await initlangcompile()
   const g = globalThis as any
@@ -76,10 +91,17 @@ async function bootheadless(): Promise<void> {
 
 // Headless path: no WebGL, no Canvas, no UI — just platform + CLI
 async function main() {
-  await initlangcompile()
+  if (!iswanixvmonly()) {
+    await initlangcompile()
+  }
 
   if (isclimode()) {
     await bootheadless()
+    return
+  }
+
+  if (iswanixvmonly()) {
+    await bootwanixvmonly()
     return
   }
 
