@@ -2,24 +2,29 @@ import { useCallback, useRef, useState } from 'react'
 import { apierror, vmcli, wanixtermwrite } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import { sendwanixterminput } from 'zss/feature/wanix/wanixhost'
-import { iswanixtermraw } from 'zss/feature/wanix/wanixsession'
+import {
+  sendwanixterminput,
+  sendwanixvmline,
+} from 'zss/feature/wanix/wanixhost'
+import { iswanixtermraw, readwanixattachedkind } from 'zss/feature/wanix/wanixsession'
 import {
   iswanixcliescape,
   keyboardeventtoxtermdata,
 } from 'zss/feature/wanix/wanixtermkeys'
 import { wanixtrace } from 'zss/feature/wanix/wanixtrace'
+import { useTape } from 'zss/gadget/data/state'
 import {
   wanixtermscreenechochar,
   wanixtermscreenecholine,
   wanixtermscreenshowclihint,
+  wanixtermscreenwrite,
   wanixtermscreenwritepong,
 } from 'zss/feature/wanix/wanixtermscreen'
 import { UserInput } from 'zss/gadget/userinput'
 
 export function WanixTermInput() {
   const player = registerreadplayer()
-  const raw = iswanixtermraw()
+  const attached = useTape((state) => state.terminalmode === 'attached')
   const [climode, setclimode] = useState(false)
   const linebuffer = useRef('')
 
@@ -37,8 +42,23 @@ export function WanixTermInput() {
     [player],
   )
 
+  const reportinputerror = useCallback(
+    (err: unknown) => {
+      apierror(
+        SOFTWARE,
+        player,
+        'wanix',
+        err instanceof Error ? err.message : String(err),
+      )
+    },
+    [player],
+  )
+
   const handlekeydown = useCallback(
     (event: KeyboardEvent) => {
+      const vmattached =
+        attached && readwanixattachedkind() === 'vm'
+      const raw = iswanixtermraw() && !vmattached
       if (iswanixcliescape(event)) {
         event.preventDefault()
         setclimode(true)
@@ -81,6 +101,44 @@ export function WanixTermInput() {
         return
       }
 
+      // VM serial: line-buffered with local tile echo; serial echo of submitted line is stripped in wanixhost.
+      if (vmattached) {
+        if (event.repeat) {
+          return
+        }
+        if (event.ctrlKey || event.metaKey) {
+          if (event.key === 'c' || event.key === 'C') {
+            event.preventDefault()
+            linebuffer.current = ''
+            void sendwanixterminput('\x03').catch(reportinputerror)
+          }
+          return
+        }
+        if (event.key === 'Enter') {
+          event.preventDefault()
+          const line = linebuffer.current
+          linebuffer.current = ''
+          wanixtermscreenwrite('\r\n')
+          wanixtrace('term-input:line', { len: line.length })
+          void sendwanixvmline(line).catch(reportinputerror)
+          return
+        }
+        if (event.key === 'Backspace') {
+          event.preventDefault()
+          if (linebuffer.current.length > 0) {
+            linebuffer.current = linebuffer.current.slice(0, -1)
+            wanixtermscreenechochar('\b')
+          }
+          return
+        }
+        if (event.key.length === 1) {
+          event.preventDefault()
+          linebuffer.current += event.key
+          wanixtermscreenechochar(event.key)
+        }
+        return
+      }
+
       if (raw) {
         if (event.repeat) {
           return
@@ -91,14 +149,7 @@ export function WanixTermInput() {
         }
         event.preventDefault()
         wanixtrace('term-input', { len: text.length })
-        void sendwanixterminput(text).catch((err) => {
-          apierror(
-            SOFTWARE,
-            player,
-            'wanix',
-            err instanceof Error ? err.message : String(err),
-          )
-        })
+        void sendwanixterminput(text).catch(reportinputerror)
         return
       }
 
@@ -124,7 +175,7 @@ export function WanixTermInput() {
         wanixtermscreenechochar(event.key)
       }
     },
-    [climode, player, raw, sendline],
+    [attached, climode, player, reportinputerror, sendline],
   )
 
   return <UserInput keydown={handlekeydown} />

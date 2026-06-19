@@ -87,4 +87,47 @@ export const WANIX_TASKS: TaskDef[] = [
       'vm-prep only',
     ]),
   }),
+  def('wanix:vm:isolated:verify', {
+    description:
+      'Isolated wanix-vm-e2e.html term stress (gojs load order, no R3F)',
+    tags: ['slow'],
+    env: {
+      PLAYWRIGHT_INCLUDE_WANIX_E2E: '1',
+      PLAYWRIGHT_INCLUDE_WANIX_VM_E2E: '1',
+    },
+    run: exec([
+      'playwright',
+      'test',
+      '--config',
+      'ops/playwright.config.ts',
+      'ops/e2e/wanix-vm-app.spec.ts',
+      '--grep',
+      'isolated wanix-vm-e2e',
+    ]),
+  }),
+  def('wanix:vm:app:verify', {
+    description:
+      'Full ZSS app VM gate — spawn panic check + uname --help/id term stress (matches manual /?)',
+    tags: ['slow'],
+    env: {
+      PLAYWRIGHT_INCLUDE_WANIX_E2E: '1',
+      PLAYWRIGHT_INCLUDE_WANIX_VM_E2E: '1',
+    },
+    run: exec([
+      'playwright',
+      'test',
+      '--config',
+      'ops/playwright.config.ts',
+      'ops/e2e/wanix-vm-app.spec.ts',
+      '--grep',
+      'full ZSS app',
+    ]),
+  }),
+  def('wanix:vm:fixloop', {
+    description:
+      'Automated fix loop: upstream smoke + isolated + full-app VM gates (stop app dev first; ~15–25 min)',
+    tags: ['slow'],
+    deps: ['wanix:ensure'],
+    run: shell('sh tasks/implementations/wanix/vm-fixloop.sh'),
+  }),
 ]

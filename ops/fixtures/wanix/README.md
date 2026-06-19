@@ -139,7 +139,29 @@ Gated e2e (large downloads, 3+ minutes):
 PLAYWRIGHT_INCLUDE_WANIX_VM_E2E=1 yarn task run wanix:vm:verify
 ```
 
-## IO verify (fix loop)
+## Automated fix loop (use instead of manual browser checks)
+
+Stop `yarn task app dev` first (port **7777** must be free — Playwright starts its own Vite with `CI=1`).
+
+```bash
+yarn task run wanix:vm:fixloop
+```
+
+| Step | Task | What it catches |
+|------|------|-----------------|
+| 1 | `wanix:vm-prep-smoke` | Upstream CDN + wanix.wasm |
+| 2 | `wanix:vm:isolated:verify` | Isolated `wanix-vm-e2e.html` term stress |
+| 3 | `wanix:vm:app:verify` | **Full ZSS app** `/?ZSS_E2E=1` — spawn gojs panic + `uname --help` + `id` |
+
+Fast single gate (matches your manual `/` repro):
+
+```bash
+yarn task run wanix:vm:app:verify
+```
+
+Tests collect `panic` / `DataView` / `Value.Set on undefined` from the browser console — the same errors you see in DevTools.
+
+## IO verify (task bridge)
 
 ```bash
 yarn task run wanix:io:verify   # in-page host e2e via full app
@@ -154,6 +176,4 @@ yarn task run e2e:test:wanix    # full-app CLI smoke
 4. Type a command and Enter — watch `[wanix] term-input` / `connectvmterm` traces
 5. Second command — if input stops, check `vm-exit` or worker panic in console
 
-```bash
-PLAYWRIGHT_INCLUDE_WANIX_VM_E2E=1 yarn task run wanix:vm:verify
-```
+After code changes, prefer **`yarn task run wanix:vm:app:verify`** or **`yarn task run wanix:vm:fixloop`** over repeating steps 1–5 manually.

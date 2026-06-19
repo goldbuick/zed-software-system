@@ -34,7 +34,7 @@ import {
 import { isclimode } from 'zss/feature/detect'
 import { initlangcompile } from 'zss/feature/lang/langcompileclient'
 import { isjoin } from 'zss/feature/url'
-import { forcer3fglresize } from 'zss/gadget/canvasrelayout'
+import { forcer3fglresize, registerr3fstore } from 'zss/gadget/canvasrelayout'
 import { useDeviceData } from 'zss/gadget/device'
 import { bootstrapmobiletextcapture } from 'zss/gadget/mobiletextcapture'
 import { makeeven } from 'zss/mapping/number'
@@ -53,21 +53,6 @@ function shoulde2ebridge(): boolean {
     return true
   }
   return import.meta.env.ZSS_E2E === 'true' || import.meta.env.ZSS_E2E === '1'
-}
-
-function iswanixvmonly(): boolean {
-  if (typeof window === 'undefined') {
-    return false
-  }
-  const q = new URLSearchParams(window.location.search).get('ZSS_WANIX_VM')
-  return q === '1' || q === 'true'
-}
-
-/** E2e / wanix-vm: e2e bridge only — no R3F canvas, no platform workers. */
-async function bootwanixvmonly(): Promise<void> {
-  if (shoulde2ebridge()) {
-    installe2ebridge()
-  }
 }
 
 async function bootheadless(): Promise<void> {
@@ -89,19 +74,11 @@ async function bootheadless(): Promise<void> {
   g.__nodeReady?.()
 }
 
-// Headless path: no WebGL, no Canvas, no UI — just platform + CLI
 async function main() {
-  if (!iswanixvmonly()) {
-    await initlangcompile()
-  }
+  await initlangcompile()
 
   if (isclimode()) {
     await bootheadless()
-    return
-  }
-
-  if (iswanixvmonly()) {
-    await bootwanixvmonly()
     return
   }
 
@@ -237,10 +214,8 @@ async function main() {
     window.visualViewport.addEventListener('scroll', handleresize)
   }
   r3fcontext.store = root.render(<App />)
-  // Tier A mobile text: imperative DOM + zustand subscribe (no second React root — avoids invalid hook call).
+  registerr3fstore(r3fcontext.store)
   bootstrapmobiletextcapture()
-  // Debounced `handleresize` does not run on first call until `wait` elapses, so the
-  // canvas would stay on the sizeless initial `configure` until resize or ~256ms.
   applyconfig()
   requestAnimationFrame(() => {
     applyconfig()

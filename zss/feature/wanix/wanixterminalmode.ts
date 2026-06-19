@@ -1,4 +1,3 @@
-import { useTape } from 'zss/gadget/data/state'
 import {
   readwanixattached,
   readwanixattachedkind,
@@ -8,8 +7,24 @@ import {
 } from 'zss/feature/wanix/wanixsession'
 import { wanixtermscreenreset } from 'zss/feature/wanix/wanixtermscreen'
 
-export function enterwanixattachedterminal() {
+type TapeStore = typeof import('zss/gadget/data/state').useTape
+
+let tapestore: TapeStore | undefined
+
+async function readtapestore(): Promise<TapeStore> {
+  if (!tapestore) {
+    tapestore = (await import('zss/gadget/data/state')).useTape
+  }
+  return tapestore
+}
+
+function readtapestoresync(): TapeStore | undefined {
+  return tapestore
+}
+
+export async function enterwanixattachedterminal() {
   wanixtermscreenreset()
+  const useTape = await readtapestore()
   useTape.setState((state) => ({
     terminalmode: 'attached',
     terminal: {
@@ -23,11 +38,13 @@ export function enterwanixattachedterminal() {
 export function leavewanixattachedterminal() {
   setwanixtermrouting(false)
   wanixtermscreenreset()
-  useTape.setState({ terminalmode: 'cli' })
+  const useTape = readtapestoresync()
+  useTape?.setState({ terminalmode: 'cli' })
 }
 
 export function readterminalmodeattached() {
-  return useTape.getState().terminalmode === 'attached'
+  const useTape = readtapestoresync()
+  return useTape?.getState().terminalmode === 'attached'
 }
 
 export function syncwanixattachedterminalmode() {
@@ -42,6 +59,6 @@ export function syncwanixattachedterminalmode() {
   const exists =
     kind === 'task' ? readwanixtask(id) != null : readwanixvm(id) != null
   if (exists) {
-    enterwanixattachedterminal()
+    void enterwanixattachedterminal()
   }
 }

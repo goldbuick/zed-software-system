@@ -36,9 +36,11 @@ import {
 import {
   type WANIX_SMOKE_REPORT,
   type WANIX_VM_SMOKE_REPORT,
+  type WANIX_VM_TERM_STRESS_REPORT,
   readwanixdiag,
   runwanixsmoke,
   runwanixvmsmoke,
+  runwanixvmtermstress,
 } from 'zss/testsupport/e2e/wanixrepro'
 import type { PT } from 'zss/words/types'
 export type ZssE2eMoveDir = 'left' | 'right' | 'up' | 'down'
@@ -104,6 +106,11 @@ export type ZssE2eBridge = {
   runwanixsmoke: (deadlinems?: number) => Promise<WANIX_SMOKE_REPORT>
   /** Prep + spawn VM + wait for serial/tile attach (full `#wanix vm` bar). */
   runwanixvmsmoke: (deadlinems?: number) => Promise<WANIX_VM_SMOKE_REPORT>
+  /** Spawn + uname --help + id — reproduces manual term stress (use with panic collector). */
+  runwanixvmtermstress: (
+    urls?: { linux: string; v86: string },
+    deadlinems?: number,
+  ) => Promise<WANIX_VM_TERM_STRESS_REPORT>
   /** Boot in-page wanix host for isolated wasm e2e. */
   ensurewanixhostready: () => Promise<void>
   /** Put wasm bytes and run via in-page host. */
@@ -133,6 +140,7 @@ export type ZssE2eBridge = {
     mem?: string
     attach?: boolean
     wait?: boolean
+    skiptermconnect?: boolean
   }) => Promise<{ vmid: string; code?: number }>
   listwanixhostdir: (path: string) => Promise<string[]>
   haltwanixhosttask: (taskid?: string) => Promise<void>
@@ -297,6 +305,9 @@ export function installe2ebridge(): void {
     },
     runwanixvmsmoke(deadlinems) {
       return runwanixvmsmoke(deadlinems)
+    },
+    runwanixvmtermstress(urls, deadlinems) {
+      return runwanixvmtermstress(urls, deadlinems)
     },
     async ensurewanixhostready() {
       await ensurewanixsandbox(SOFTWARE, registerreadplayer())

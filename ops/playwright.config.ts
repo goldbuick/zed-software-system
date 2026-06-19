@@ -28,6 +28,7 @@ if (!includelangbenche2e) {
 if (!includewanixe2e) {
   testignore.push('**/wanix-host.spec.ts')
   testignore.push('**/wanix-cli.spec.ts')
+  testignore.push('**/wanix-vm-app.spec.ts')
 }
 
 /** Default per-test ceiling; specs may raise via test.describe.configure({ timeout }). */

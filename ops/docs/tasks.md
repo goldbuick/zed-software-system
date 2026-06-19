@@ -242,7 +242,11 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 | `yarn task run wanix:ensure` | Vend wanix browser runtime into cafe/public/wanix | — | — | — |
 | `yarn task run wanix:io:verify` | Build wanix wasm fixtures and run isolated host term/io e2e (fix loop gate) | `ci` | `wanix:wasm:build` | `PLAYWRIGHT_INCLUDE_WANIX_E2E=1` |
 | `yarn task run wanix:vm-prep-smoke` | Upstream basic-vm.html smoke (CDN archives + wanix.wasm, no ZSS) — prep gate | `slow` | `wanix:ensure` | — |
-| `yarn task run wanix:vm:verify` | Run gated wanix vm-prep + vm-run host e2e (large CDN downloads; slow) | `slow` | — | `PLAYWRIGHT_INCLUDE_WANIX_VM_E2E=1` |
+| `yarn task run wanix:vm-prep:verify` | ZSS spawnwanixvmspace prep only — mount ok + v86-vm.wasm (fast gate, ~3 min) | `slow` | — | `PLAYWRIGHT_INCLUDE_WANIX_E2E=1`, `PLAYWRIGHT_INCLUDE_WANIX_VM_E2E=1` |
+| `yarn task run wanix:vm:app:verify` | Full ZSS app VM gate — spawn panic check + uname --help/id term stress (matches manual /?) | `slow` | — | `PLAYWRIGHT_INCLUDE_WANIX_E2E=1`, `PLAYWRIGHT_INCLUDE_WANIX_VM_E2E=1` |
+| `yarn task run wanix:vm:fixloop` | Automated fix loop: upstream smoke + isolated + full-app VM gates (stop app dev first; ~15–25 min) | `slow` | `wanix:ensure` | — |
+| `yarn task run wanix:vm:isolated:verify` | Isolated wanix-vm-e2e.html term stress (gojs load order, no R3F) | `slow` | — | `PLAYWRIGHT_INCLUDE_WANIX_E2E=1`, `PLAYWRIGHT_INCLUDE_WANIX_VM_E2E=1` |
+| `yarn task run wanix:vm:verify` | Run gated wanix vm-prep + vm-run host e2e (large CDN downloads; slow) | `slow` | — | `PLAYWRIGHT_INCLUDE_WANIX_E2E=1`, `PLAYWRIGHT_INCLUDE_WANIX_VM_E2E=1` |
 | `yarn task run wanix:wasm:build` | Compile ops/fixtures/wanix/*.wat to .wasm via wabt (yarn install provides wat2wasm) | — | — | — |
 | `yarn task run wanix:wasm:build:all` | Compile wanix example .wat and optional .c sources to .wasm | — | `wanix:wasm:build`, `wanix:wasm:build:c` | — |
 | `yarn task run wanix:wasm:build:c` | Compile ops/fixtures/wanix/*.c to .wasm when wasi-sdk is installed (skips if missing) | — | — | — |

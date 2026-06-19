@@ -18,17 +18,18 @@ describe('wanixterminalmode', () => {
     useTape.getState().reset()
   })
 
-  it('enters attached mode when target is registered', () => {
+  it('enters attached mode when target is registered', async () => {
     registertask({ id: 'demo', label: 'demo', entrycmd: 'demo.wasm' })
     setwanixattached('task', 'demo')
     syncwanixattachedterminalmode()
+    await new Promise<void>((resolve) => setTimeout(resolve, 0))
     expect(useTape.getState().terminalmode).toBe('attached')
   })
 
-  it('leaves attached mode', () => {
+  it('leaves attached mode', async () => {
     registertask({ id: 'demo', label: 'demo', entrycmd: 'demo.wasm' })
     setwanixattached('task', 'demo')
-    enterwanixattachedterminal()
+    await enterwanixattachedterminal()
     leavewanixattachedterminal()
     expect(useTape.getState().terminalmode).toBe('cli')
   })

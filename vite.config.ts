@@ -159,6 +159,7 @@ export default defineConfig(({ mode }) => {
         input: {
           index: path.join(apppath, 'index.html'),
           sys: path.join(apppath, 'sys/index.html'),
+          'wanix-vm-e2e': path.join(apppath, 'wanix-vm-e2e.html'),
         },
       },
     },

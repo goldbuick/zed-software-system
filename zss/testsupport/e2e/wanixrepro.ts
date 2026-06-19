@@ -2,16 +2,23 @@ import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { parsewanixwasm } from 'zss/feature/wanix/wanixdrop'
 import {
+  haltwanixvm,
   iswanixspaceactive,
   readwanixhostattachedserial,
   readwanixhoststate,
   readwanixstatus,
   readwanixvmpreperror,
   readwanixvmprepstage,
+  sendwanixterminput,
   spawnwanixvm,
   spawnwanixvmspace,
   type WANIX_VM_PREP_STAGE,
 } from 'zss/feature/wanix/wanixhost'
+import {
+  readwanixvmasseturls,
+  DEFAULT_WANIX_VM_ID,
+  type WANIX_VM_ASSET_URLS,
+} from 'zss/feature/wanix/wanixvmassets'
 import { useTape } from 'zss/gadget/data/state'
 import { createhellowasmfile } from 'zss/testsupport/wanix/hellowasm'
 
@@ -182,6 +189,158 @@ export async function runwanixvmsmoke(
   const report = buildvmreport(logs)
   report.errormessage = `deadline ${deadlinems}ms stage=${report.stage} serial=${report.serial.length}`
   return report
+}
+
+export type WANIX_VM_TERM_STRESS_REPORT = {
+  ok: boolean
+  stage: WANIX_VM_PREP_STAGE
+  sawprompt: boolean
+  sawunamehelp: boolean
+  sawid: boolean
+  haswanixtermel: boolean
+  tileattached: boolean
+  serial: string
+  errormessage?: string
+}
+
+function haswanixvmprompt(serial: string) {
+  return serial.includes('~ #') || serial.includes('login:')
+}
+
+/**
+ * Full `#wanix vm` term path: spawn, `uname --help`, then `id` via sendwanixvmline.
+ * Pair with Playwright panic collector on the full ZSS app (`/?ZSS_E2E=1`).
+ */
+export async function runwanixvmtermstress(
+  urls: WANIX_VM_ASSET_URLS = readwanixvmasseturls(),
+  deadlinems = 600_000,
+): Promise<WANIX_VM_TERM_STRESS_REPORT> {
+  const player = registerreadplayer()
+  const vmid = DEFAULT_WANIX_VM_ID
+  const fail = (
+    partial: Partial<WANIX_VM_TERM_STRESS_REPORT> & { errormessage: string },
+  ): WANIX_VM_TERM_STRESS_REPORT => ({
+    ok: false,
+    stage: readwanixvmprepstage(),
+    sawprompt: false,
+    sawunamehelp: false,
+    sawid: false,
+    haswanixtermel: !!document.querySelector(
+      '#zss-vm-term-bridge, wanix-term[id^="zss-vm-term-"]',
+    ),
+    tileattached: useTape.getState().terminalmode === 'attached',
+    serial: readwanixhostattachedserial(),
+    ...partial,
+  })
+
+  try {
+    await spawnwanixvmspace(SOFTWARE, player, urls)
+    const status = await readwanixstatus()
+    if (!status.vmbindsready) {
+      throw new Error('vm prep finished without vmbindsready')
+    }
+    await spawnwanixvm({ vmid, attach: true, wait: false })
+  } catch (err) {
+    return fail({
+      errormessage: err instanceof Error ? err.message : String(err),
+    })
+  }
+
+  let serial = readwanixhostattachedserial()
+  const bootdeadline = Date.now() + Math.min(deadlinems, 300_000)
+  while (Date.now() < bootdeadline) {
+    serial = readwanixhostattachedserial()
+    if (haswanixvmprompt(serial)) {
+      break
+    }
+    if (readwanixvmprepstage() === 'failed' || readwanixvmpreperror()) {
+      return fail({
+        sawprompt: false,
+        errormessage: readwanixvmpreperror() ?? 'vm prep failed',
+      })
+    }
+    await sleep(500)
+  }
+
+  const sawprompt = haswanixvmprompt(serial)
+  if (!sawprompt) {
+    await haltwanixvm(vmid).catch(() => {})
+    return fail({
+      sawprompt: false,
+      errormessage: `boot prompt not seen (serial len=${serial.length})`,
+    })
+  }
+
+  await sleep(2000)
+
+  try {
+    await sendwanixterminput('uname --help\r')
+  } catch (err) {
+    await haltwanixvm(vmid).catch(() => {})
+    return fail({
+      sawprompt: true,
+      errormessage: `uname --help write: ${err instanceof Error ? err.message : String(err)}`,
+    })
+  }
+
+  const unamedeadline = Date.now() + 60_000
+  while (Date.now() < unamedeadline) {
+    serial = readwanixhostattachedserial()
+    if (serial.includes('BusyBox') && serial.includes('Usage:')) {
+      break
+    }
+    await sleep(300)
+  }
+
+  const sawunamehelp = serial.includes('Usage:')
+  if (!sawunamehelp) {
+    await haltwanixvm(vmid).catch(() => {})
+    return fail({
+      sawprompt: true,
+      sawunamehelp: false,
+      errormessage: 'uname --help output not seen in serial buffer',
+    })
+  }
+
+  await sleep(1500)
+
+  try {
+    await sendwanixterminput('id\r')
+  } catch (err) {
+    await haltwanixvm(vmid).catch(() => {})
+    return fail({
+      sawprompt: true,
+      sawunamehelp: true,
+      errormessage: `id write: ${err instanceof Error ? err.message : String(err)}`,
+    })
+  }
+
+  const iddeadline = Date.now() + 30_000
+  while (Date.now() < iddeadline) {
+    serial = readwanixhostattachedserial()
+    if (serial.includes('uid=')) {
+      break
+    }
+    await sleep(200)
+  }
+
+  const sawid = serial.includes('uid=')
+  const haswanixtermel = !!document.querySelector(
+    '#zss-vm-term-bridge, wanix-term[id^="zss-vm-term-"]',
+  )
+  await haltwanixvm(vmid).catch(() => {})
+
+  return {
+    ok: sawprompt && sawunamehelp && sawid,
+    stage: readwanixvmprepstage(),
+    sawprompt,
+    sawunamehelp,
+    sawid,
+    haswanixtermel,
+    tileattached: useTape.getState().terminalmode === 'attached',
+    serial,
+    errormessage: sawid ? undefined : 'id output not seen in serial buffer',
+  }
 }
 
 export function readwanixdiag(): Pick<

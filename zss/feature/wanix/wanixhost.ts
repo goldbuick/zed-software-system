@@ -14,10 +14,32 @@ import {
   uniquewanixtaskid,
 } from 'zss/feature/wanix/wanixcmd'
 import {
+  pausegadgetframeloop,
+  releasegadgetglcontext,
+  restoregadgetglcontext,
+  resumegadgetframeloop,
+  suspendgadgetglcontext,
+} from 'zss/gadget/canvasrelayout'
+import {
+  iframehaltvm,
+  iframeprepvmspace,
+  iframespawnvm,
+  iframeterminput,
+  iframetermline,
+  iswanixvmiframeactive,
+  iswanixvmiframemode,
+  readwanixvmiframserial,
+  readwanixvmiframepreperror,
+  readwanixvmiframeprepstage,
+  registervmiframehooks,
+  teardownwanixvmiframe,
+} from 'zss/feature/wanix/wanixvmiframehost'
+import {
   wanixiobridgepush,
   wanixiobridgestart,
   wanixiobridgestop,
 } from 'zss/feature/wanix/wanixiobridge'
+import { forwardwanixvmtermchunk } from 'zss/feature/wanix/wanixhosttermforward'
 import {
   readwanixattached,
   readwanixattachedkind,
@@ -66,33 +88,24 @@ let gadgetframesaved:
   | {
       display: string
       visibility: string
-      removed: boolean
-      parent: Node
-      next: ChildNode | null
+      pointerevents: string
     }
   | undefined
 
-/** v86 uses WebGL; release gadget canvas so allocate/term setup is not starved. */
+/** Hide gadget canvas while v86 runs; do not touch its WebGL context (R3F owns it). */
 function suspendgadgetgl() {
   const frame = document.getElementById('frame') as HTMLCanvasElement | null
   if (!frame || gadgetframesaved) {
     return
   }
-  const gl = frame.getContext('webgl') ?? frame.getContext('webgl2')
-  gl?.getExtension('WEBGL_lose_context')?.loseContext()
   gadgetframesaved = {
     display: frame.style.display,
     visibility: frame.style.visibility,
-    removed: false,
-    parent: frame.parentNode ?? document.body,
-    next: frame.nextSibling,
+    pointerevents: frame.style.pointerEvents,
   }
   frame.style.display = 'none'
   frame.style.visibility = 'hidden'
-  if (frame.parentNode) {
-    frame.remove()
-    gadgetframesaved.removed = true
-  }
+  frame.style.pointerEvents = 'none'
 }
 
 function resumegadgetgl() {
@@ -102,14 +115,20 @@ function resumegadgetgl() {
   }
   const saved = gadgetframesaved
   gadgetframesaved = undefined
-  if (saved.removed && frame) {
-    saved.parent.insertBefore(frame, saved.next)
+  if (!frame) {
+    return
   }
-  if (frame) {
-    frame.style.display = saved.display
-    frame.style.visibility = saved.visibility
-    const gl = frame.getContext('webgl') ?? frame.getContext('webgl2')
-    gl?.getExtension('WEBGL_lose_context')?.restoreContext()
+  frame.style.display = saved.display
+  frame.style.visibility = saved.visibility
+  frame.style.pointerEvents = saved.pointerevents
+  requestAnimationFrame(() => {
+    window.dispatchEvent(new Event('resize'))
+  })
+}
+
+function resumegadgetglifnovm() {
+  if (registry.vms.size === 0) {
+    resumegadgetgl()
   }
 }
 const RPC_TIMEOUT_MS = 300_000
@@ -179,6 +198,16 @@ type BindEntry = {
   removable: boolean
 }
 
+type WanixTermElement = HTMLElement & {
+  path?: string
+  connect(): Promise<void>
+  disconnect(): void
+  _term?: {
+    write: (data: string | Uint8Array, callback?: () => void) => void
+    input: (data: string) => void
+  }
+}
+
 type TermTargetEntry = {
   el: HTMLElement
   id: string
@@ -190,10 +219,16 @@ type TermTargetEntry = {
   termpath: string | null
   termridpath: string | null
   termaliaspath: string | null
+  termdatapath: string | null
   termwriter: WritableStreamDefaultWriter<Uint8Array> | null
   termreading: Promise<void> | null
+  /** VM only — upstream `<wanix-term raw>` owns the duplex pipe (basic-vm.html). */
+  wanixtermel: WanixTermElement | null
+  wanixtermunwire: (() => void) | null
   serialbuffer: string
   autotiletriggered: boolean
+  /** Strip one serial echo of the last submitted line (local tile already echoed). */
+  pendingvmline: string | null
   exitpoll: Promise<number> | null
 }
 
@@ -202,13 +237,104 @@ type VmExitHandler = (vmid: string, code: number) => void
 
 let state: WANIX_HOST_STATE = 'idle'
 let wanixscriptloaded = false
+let wanixloadpromise: Promise<void> | null = null
+
+function waitforwanixscriptel(script: HTMLScriptElement): Promise<void> {
+  if (wanixscriptloaded || customElements.get('wanix-system')) {
+    wanixscriptloaded = true
+    return Promise.resolve()
+  }
+  return new Promise((resolve, reject) => {
+    const done = () => {
+      wanixscriptloaded = true
+      resolve()
+    }
+    if (script.dataset.zssWanixLoaded === '1') {
+      done()
+      return
+    }
+    script.addEventListener(
+      'load',
+      () => {
+        script.dataset.zssWanixLoaded = '1'
+        done()
+      },
+      { once: true },
+    )
+    script.addEventListener(
+      'error',
+      () => reject(new Error('wanix.min.js failed to load')),
+      { once: true },
+    )
+  })
+}
+
+async function ensurewanixruntime() {
+  if (wanixscriptloaded || customElements.get('wanix-system')) {
+    wanixscriptloaded = true
+    return
+  }
+  if (wanixloadpromise) {
+    await wanixloadpromise
+    return
+  }
+  wanixloadpromise = Promise.race([
+    (async () => {
+      const existing = document.querySelector(
+        'script[src*="wanix.min.js"]',
+      ) as HTMLScriptElement | null
+      if (existing) {
+        await waitforwanixscriptel(existing)
+        return
+      }
+      const script = document.createElement('script')
+      script.type = 'module'
+      script.src = WANIX_JS_URL
+      document.head.appendChild(script)
+      await waitforwanixscriptel(script)
+    })(),
+    new Promise<never>((_, reject) => {
+      setTimeout(
+        () => reject(new Error('wanix.min.js load timeout (30s)')),
+        30_000,
+      )
+    }),
+  ])
+  await wanixloadpromise
+}
 let sys: WanixSystemElement | null = null
 let root: WanixRoot | null = null
 let active = false
 let bindseq = 0
 let termwritechain: Promise<void> = Promise.resolve()
 let terminputchain: Promise<void> = Promise.resolve()
+/** Serializes term/data read handling vs writes (gojs duplex mux is not re-entrant). */
+let termduplexchain: Promise<void> = Promise.resolve()
 let termencoder: TextEncoder | undefined
+
+function chaintermduplex<T>(fn: () => Promise<T>): Promise<T> {
+  const job = termduplexchain.then(fn, fn)
+  termduplexchain = job.then(
+    () => {},
+    () => {},
+  )
+  return job
+}
+
+async function writetermpayload(payload: Uint8Array) {
+  await chaintermduplex(async () => {
+    const writer = await getattachedtermwriter()
+    await Promise.race([
+      writer.write(payload),
+      new Promise<never>((_, reject) => {
+        setTimeout(
+          () => reject(new Error('wanix term write timeout (30s)')),
+          30_000,
+        )
+      }),
+    ])
+  })
+}
 
 function gettermencoder(): TextEncoder {
   if (typeof TextEncoder !== 'undefined') {
@@ -278,7 +404,7 @@ function ensuremount(): HTMLElement {
   return mount
 }
 
-/** VM/v86 needs layout + WebGL; mount like smoke-basic-vm (body child, not display:none). */
+/** VM/v86 needs a live layout but must not cover the tape UI (v86 VGA paints blue). */
 function ensurevmmount(): HTMLElement {
   suspendgadgetgl()
   let mount = document.getElementById('zss-wanix-display')
@@ -287,37 +413,17 @@ function ensurevmmount(): HTMLElement {
   }
   mount = document.createElement('div')
   mount.id = 'zss-wanix-display'
-  document.body.prepend(mount)
-  mount.style.display = 'block'
-  mount.style.width = '100%'
-  mount.style.height = '100vh'
+  document.body.appendChild(mount)
+  mount.style.position = 'fixed'
+  mount.style.left = '0'
+  mount.style.top = '0'
+  mount.style.width = '800px'
+  mount.style.height = '600px'
+  mount.style.opacity = '0'
+  mount.style.overflow = 'hidden'
   mount.style.pointerEvents = 'none'
+  mount.style.zIndex = '-1'
   return mount
-}
-
-async function ensurewanixruntime() {
-  if (wanixscriptloaded) {
-    return
-  }
-  await Promise.race([
-    new Promise<void>((resolve, reject) => {
-      const script = document.createElement('script')
-      script.type = 'module'
-      script.src = WANIX_JS_URL
-      script.onload = () => {
-        wanixscriptloaded = true
-        resolve()
-      }
-      script.onerror = () => reject(new Error('wanix.min.js failed to load'))
-      document.head.appendChild(script)
-    }),
-    new Promise<never>((_, reject) => {
-      setTimeout(
-        () => reject(new Error('wanix.min.js load timeout (30s)')),
-        30_000,
-      )
-    }),
-  ])
 }
 
 function newbindid() {
@@ -563,10 +669,42 @@ function getentry(kind: WANIX_ATTACH_KIND, id: string) {
   return kind === 'task' ? registry.tasks.get(id) : registry.vms.get(id)
 }
 
+function getattachedentry() {
+  if (!registry.attached || !registry.attachedKind) {
+    return null
+  }
+  return getentry(registry.attachedKind, registry.attached)
+}
+
+async function getattachedtermwriter() {
+  const entry = getattachedentry()
+  if (!entry?.termwriter) {
+    throw new Error('no attached term writer')
+  }
+  return entry.termwriter
+}
+
 function flushentryserialbuffer(entry: TermTargetEntry) {
   if (entry.serialbuffer.length > 0) {
     wanixtermscreenwrite(entry.serialbuffer)
   }
+}
+
+function stripvmlineecho(entry: TermTargetEntry, chunk: string): string {
+  const line = entry.pendingvmline
+  if (!line || !chunk.startsWith(line)) {
+    return chunk
+  }
+  let rest = chunk.slice(line.length)
+  if (rest.startsWith('\r\n')) {
+    rest = rest.slice(2)
+  } else if (rest.startsWith('\n')) {
+    rest = rest.slice(1)
+  } else if (rest.startsWith('\r')) {
+    rest = rest.slice(1)
+  }
+  entry.pendingvmline = null
+  return rest
 }
 
 function handletermchunk(kind: WANIX_ATTACH_KIND, id: string, chunk: string) {
@@ -577,7 +715,16 @@ function handletermchunk(kind: WANIX_ATTACH_KIND, id: string, chunk: string) {
   if (!entry) {
     return
   }
+  if (kind === 'vm') {
+    chunk = stripvmlineecho(entry, chunk)
+    if (!chunk.length) {
+      return
+    }
+  }
   entry.serialbuffer += chunk
+  if (kind === 'vm') {
+    forwardwanixvmtermchunk(id, chunk)
+  }
   if (registry.attached !== id || registry.attachedKind !== kind) {
     return
   }
@@ -588,7 +735,7 @@ function handletermchunk(kind: WANIX_ATTACH_KIND, id: string, chunk: string) {
   if (!entry.autotiletriggered) {
     entry.autotiletriggered = true
     vmprepstage = 'serial'
-    enterwanixattachedterminal()
+    void enterwanixattachedterminal()
     flushentryserialbuffer(entry)
   }
 }
@@ -598,19 +745,33 @@ function disconnectterm(entry: TermTargetEntry | null | undefined) {
     return
   }
   entry.termreading = null
-  if (entry.termwriter) {
+  if (entry.wanixtermunwire) {
+    entry.wanixtermunwire()
+    entry.wanixtermunwire = null
+  }
+  if (entry.wanixtermel) {
+    try {
+      entry.wanixtermel.disconnect()
+    } catch {
+      // term may already be torn down
+    }
+    entry.wanixtermel.remove()
+    entry.wanixtermel = null
+  } else if (entry.termwriter) {
     try {
       entry.termwriter.releaseLock()
     } catch {
       // writer may already be closed
     }
-    entry.termwriter = null
   }
+  entry.termwriter = null
+  entry.termdatapath = null
   entry.termpath = null
   entry.termridpath = null
   entry.termaliaspath = null
   entry.serialbuffer = ''
   entry.autotiletriggered = false
+  entry.pendingvmline = null
 }
 
 function notifyattached() {
@@ -650,6 +811,7 @@ async function removevm(vmid: string) {
   entry.el.remove()
   registry.vms.delete(vmid)
   clearattachedif('vm', vmid)
+  resumegadgetglifnovm()
 }
 
 function createtask(cmd: string, taskid: string) {
@@ -692,20 +854,34 @@ function createvm(vmid: string, mem: string) {
   return vm
 }
 
-async function ensurevmallocated(el: WanixVmElement) {
-  const vm = el as WanixWakeElement
-  if (vm.term) {
+async function waitforgadgetidle() {
+  pausegadgetframeloop()
+  await new Promise<void>((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+  })
+}
+
+async function allocatewanixvmel(el: WanixVmElement) {
+  if (el.rid) {
     return
   }
-  // rid is assigned before term during allocate(); that gap is in-progress, not stale.
-  if (vm.rid && !vm.term) {
-    return
-  }
-  if (sys?.isReady && typeof vm._awake === 'function') {
-    await vm._awake()
-    return
-  }
+  // Allocate only — ttyS0 → #vm/…/term binds before gojs start (basic-vm.html order).
   await el.allocate()
+}
+
+/** allocate + start in one _awake (matches smoke-basic-vm.html); use when term is not connected. */
+async function startwanixvmel(el: WanixVmElement) {
+  const wake = el as WanixWakeElement
+  if (wake.rid && wake.term) {
+    await el.start()
+    return
+  }
+  el.setAttribute('start', '')
+  await wake._awake()
+}
+
+async function startwanixvmgojs(el: WanixVmElement) {
+  await el.start()
 }
 
 async function waitforv86driver(timeoutms: number) {
@@ -765,8 +941,23 @@ function streamtermout(
           break
         }
         if (value && value.byteLength > 0) {
-          handletermchunk(kind, id, decoder.decode(value, { stream: true }))
+          const chunk = decoder.decode(value, { stream: true })
+          await chaintermduplex(async () => {
+            handletermchunk(kind, id, chunk)
+          })
         }
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      wanixtrace('term-out:read-error', { kind, id, message })
+      if (
+        registry.attached === id &&
+        registry.attachedKind === kind &&
+        readterminalmodeattached()
+      ) {
+        wanixtermscreenwrite(
+          '\n$redwanix: vm serial read lost (gojs worker may have crashed)$white\n',
+        )
       }
     } finally {
       reader.releaseLock()
@@ -814,99 +1005,66 @@ async function connecttaskterm(entry: TermTargetEntry) {
     termridpath: ridpath,
     termaliaspath: aliaspath,
   })
-  const writable = await root.openWritable(datapath)
-  entry.termwriter = writable.getWriter()
   const readable = await root.openReadable(datapath)
   const { reading } = streamtermout('task', entry.id, readable)
   entry.termreading = reading
+  const writable = await root.openWritable(datapath)
+  entry.termwriter = writable.getWriter()
   return { reading }
 }
 
-async function resolvevmtermdata(
-  el: WanixVmElement,
-  entry: TermTargetEntry,
-): Promise<{ termpath: string; datapath: string }> {
+async function openvmtermwriter(entry: TermTargetEntry, datapath: string) {
   if (!root) {
     throw new Error('wanix root missing')
   }
-  const candidates: string[] = []
-  if (el.term) {
-    candidates.push(`${el.term}/data`)
+  const writable = await root.openWritable(datapath)
+  entry.termwriter = writable.getWriter()
+}
+
+async function openvmtermreader(entry: TermTargetEntry, datapath: string) {
+  if (!root) {
+    throw new Error('wanix root missing')
   }
-  if (entry.vrid) {
-    candidates.push(`#term/${entry.vrid}/data`)
-  }
-  candidates.push(
-    `${entry.termridpath}/data`,
-    `${entry.termaliaspath}/data`,
-  )
-  try {
-    const termslots = await root.readDir('#term')
-    for (const slot of termslots) {
-      const name = slot.replace(/\/$/, '')
-      if (name && name !== 'new') {
-        candidates.push(`#term/${name}/data`)
-      }
-    }
-  } catch {
-    // #term may not exist yet
-  }
-  const tried: string[] = []
-  for (const path of candidates) {
-    if (tried.includes(path)) {
-      continue
-    }
-    tried.push(path)
-    const waitms = path.startsWith('#term/') ? 15_000 : VM_TERM_WAIT_MS
-    try {
-      await root.waitFor(path, waitms)
-      return { termpath: path.replace(/\/data$/, ''), datapath: path }
-    } catch {
-      // try next
-    }
-  }
-  throw new Error(`vm term/data not found (tried ${tried.join(', ')})`)
+  const readable = await root.openReadable(datapath)
+  const { reading } = streamtermout('vm', entry.id, readable)
+  entry.termreading = reading
 }
 
 async function connectvmterm(entry: TermTargetEntry) {
-  if (!root || entry.vrid == null) {
+  if (!sys || !root || entry.vrid == null) {
     throw new Error('vm not allocated')
   }
-  const el = entry.el as WanixVmElement
   const ridpath = `#vm/${entry.vrid}/term`
   const aliaspath = `#vm/${entry.id}/term`
   entry.termridpath = ridpath
   entry.termaliaspath = aliaspath
+  entry.termpath = ridpath
 
-  const { termpath, datapath } = await resolvevmtermdata(el, entry)
+  const { termpath, datapath } = await resolvedatapath(
+    ridpath,
+    aliaspath,
+    VM_TERM_WAIT_MS,
+  )
+  entry.termpath = termpath
+  entry.termdatapath = datapath
+
   wanixtrace('connectvmterm', {
     id: entry.id,
     vrid: entry.vrid,
     termpath,
     termridpath: ridpath,
     termaliaspath: aliaspath,
+    via: 'stream',
   })
-  const writable = await root.openWritable(datapath)
-  entry.termwriter = writable.getWriter()
-  const readable = await root.openReadable(datapath)
-  const { reading } = streamtermout('vm', entry.id, readable)
-  entry.termreading = reading
-  return { reading }
+
+  await openvmtermwriter(entry, datapath)
 }
 
-function getattachedentry() {
-  if (!registry.attached || !registry.attachedKind) {
-    return null
+async function startvmtermread(entry: TermTargetEntry) {
+  if (!entry.termdatapath || entry.termreading) {
+    return
   }
-  return getentry(registry.attachedKind, registry.attached)
-}
-
-async function getattachedtermwriter() {
-  const entry = getattachedentry()
-  if (!entry?.termwriter) {
-    throw new Error('no attached term writer')
-  }
-  return entry.termwriter
+  await openvmtermreader(entry, entry.termdatapath)
 }
 
 function queuetermwrite(writefn: () => Promise<void>) {
@@ -1058,10 +1216,14 @@ async function spawntask(
     termpath: null,
     termridpath: null,
     termaliaspath: null,
+    termdatapath: null,
     termwriter: null,
     termreading: null,
+    wanixtermel: null,
+    wanixtermunwire: null,
     serialbuffer: '',
     autotiletriggered: false,
+    pendingvmline: null,
     exitpoll: null,
   }
   registry.tasks.set(id, entry)
@@ -1098,13 +1260,18 @@ async function spawnwithtimeout<T>(
 
 async function spawnvm(
   vmid: string | undefined,
-  opts: { wait?: boolean; attach?: boolean; mem?: string } = {},
+  opts: {
+    wait?: boolean
+    attach?: boolean
+    mem?: string
+    skiptermconnect?: boolean
+  } = {},
 ) {
   requireactive()
   if (!registry.vmbindsready) {
     throw new Error('vm assets not prepared')
   }
-  const mem = typeof opts.mem === 'string' ? opts.mem : '512M'
+  const mem = typeof opts.mem === 'string' ? opts.mem : DEFAULT_WANIX_VM_MEM
   const id = vmid || uniquevmid('linux-vm')
   if (registry.vms.has(id)) {
     throw new Error(`vm already exists: ${id}`)
@@ -1120,21 +1287,44 @@ async function spawnvm(
     termpath: null,
     termridpath: null,
     termaliaspath: null,
+    termdatapath: null,
     termwriter: null,
     termreading: null,
+    wanixtermel: null,
+    wanixtermunwire: null,
     serialbuffer: '',
     autotiletriggered: false,
+    pendingvmline: null,
     exitpoll: null,
   }
   registry.vms.set(id, entry)
+  registervm({
+    id,
+    label: id,
+    mem,
+  })
   try {
-    suspendgadgetgl()
-    await ensurevmallocated(el)
-    await waitforwanixvmready(id, VM_TERM_READY_MS)
-    entry.vrid = el.rid
-    entry.innertaskrid = el.task.rid
-    await connectvmterm(entry)
-    await spawnwithtimeout(el.start(), VM_SPAWN_STEP_MS, 'start')
+    if (opts.skiptermconnect === true) {
+      suspendgadgetgl()
+      await spawnwithtimeout(startwanixvmel(el), VM_SPAWN_STEP_MS, 'start')
+      await waitforwanixvmready(id, VM_TERM_READY_MS)
+      entry.vrid = el.rid
+      entry.innertaskrid = el.task.rid
+    } else {
+      await waitforgadgetidle()
+      try {
+        await spawnwithtimeout(allocatewanixvmel(el), VM_SPAWN_STEP_MS, 'allocate')
+        await waitforwanixvmready(id, VM_TERM_READY_MS)
+        entry.vrid = el.rid
+        entry.innertaskrid = el.task.rid
+        await connectvmterm(entry)
+        suspendgadgetgl()
+        await spawnwithtimeout(startwanixvmgojs(el), VM_SPAWN_STEP_MS, 'start')
+        await startvmtermread(entry)
+      } finally {
+        resumegadgetframeloop()
+      }
+    }
   } catch (err) {
     await removevm(id)
     const message = err instanceof Error ? err.message : String(err)
@@ -1143,14 +1333,11 @@ async function spawnvm(
   entry.exitpoll = pollvmexit(id)
   if (opts.attach !== false) {
     await attachtarget('vm', id)
+    await enterwanixattachedterminal()
+    flushentryserialbuffer(entry)
   }
-  registervm({
-    id,
-    label: id,
-    mem,
-  })
   vmprepstage = 'spawn'
-  resumegadgetgl()
+  resumegadgetglifnovm()
   if (opts.wait) {
     const code = await entry.exitpoll
     return { vmId: id, code }
@@ -1284,6 +1471,30 @@ export async function spawnwanixvmspace(
   player: string,
   urls: WANIX_VM_ASSET_URLS = readwanixvmasseturls(),
 ): Promise<void> {
+  if (iswanixvmiframemode()) {
+    if (iswanixvmiframeactive()) {
+      wanixiobridgestart(device, player)
+      vmprepstage = 'mount_ok'
+      return
+    }
+    pausegadgetframeloop()
+    await suspendgadgetglcontext()
+    suspendgadgetgl()
+    state = 'starting'
+    vmprepstage = 'mounting'
+    vmpreperror = undefined
+    try {
+      await iframeprepvmspace(device, player, urls, wanixiobridgestart)
+      state = 'ready'
+      registry.vmbindsready = true
+    } catch (err) {
+      resumegadgetframeloop()
+      restoregadgetglcontext()
+      resumegadgetglifnovm()
+      throw err
+    }
+    return
+  }
   if (registry.vmbindsready && iswanixspaceactive()) {
     wanixiobridgestart(device, player)
     vmprepstage = 'mount_ok'
@@ -1485,7 +1696,6 @@ async function bootwanixsystemforvm(
 <wanix-bind dst="." src="${linux}" type="archive"></wanix-bind>
 <wanix-bind dst="vm" src="#vm"></wanix-bind>
 <wanix-bind dst="#vm/v86" src="${v86}" type="archive"></wanix-bind>
-<wanix-vm id="linux-vm" export="ttyS0" term></wanix-vm>
 </wanix-system>`,
   )
   const system = mount.querySelector('wanix-system') as WanixSystemElement | null
@@ -1547,6 +1757,9 @@ function cleanup() {
   vmexithandler = undefined
   wanixiobridgestop()
   resumegadgetgl()
+  teardownwanixvmiframe()
+  resumegadgetframeloop()
+  restoregadgetglcontext()
   const mount = document.getElementById('zss-wanix-display')
   if (mount) {
     mount.replaceChildren()
@@ -1563,6 +1776,9 @@ export function readwanixhoststate(): WANIX_HOST_STATE {
 }
 
 export function iswanixspaceactive(): boolean {
+  if (iswanixvmiframemode() && iswanixvmiframeactive()) {
+    return true
+  }
   return state === 'ready' || state === 'starting'
 }
 
@@ -1717,7 +1933,7 @@ export async function attachwanixtarget(
 ): Promise<void> {
   requireactive()
   await attachtarget(kind, id)
-  enterwanixattachedterminal()
+  await enterwanixattachedterminal()
   const entry = getentry(kind, id)
   if (entry) {
     flushentryserialbuffer(entry)
@@ -1732,17 +1948,50 @@ export async function attachwanixvm(vmid: string): Promise<void> {
   await attachwanixtarget('vm', vmid)
 }
 
+export async function openwanixvmtermstreams(vmid: string): Promise<void> {
+  requireactive()
+  const entry = registry.vms.get(vmid)
+  if (!entry) {
+    throw new Error(`vm not found: ${vmid}`)
+  }
+  if (entry.termwriter) {
+    return
+  }
+  await connectvmterm(entry)
+  await startvmtermread(entry)
+}
+
+export async function sendwanixvmline(line: string): Promise<void> {
+  if (iswanixvmiframemode() && readwanixattachedkind() === 'vm') {
+    return iframetermline(line)
+  }
+  requireactive()
+  const entry = getattachedentry()
+  if (entry && registry.attachedKind === 'vm') {
+    entry.pendingvmline = line
+  }
+  const run = async () => {
+    wanixtrace('term-input:line', { len: line.length })
+    await writetermpayload(gettermencoder().encode(`${line}\r`))
+    wanixtrace('term-input:done', { len: line.length + 1 })
+  }
+  const job = terminputchain.then(run, run)
+  terminputchain = job.catch(() => {})
+  return job
+}
+
 export async function sendwanixterminput(text: string): Promise<void> {
+  if (iswanixvmiframemode() && readwanixattachedkind() === 'vm') {
+    return iframeterminput(text)
+  }
   requireactive()
   if (!text.length) {
     return
   }
   const run = async () => {
     wanixtrace('term-input:send', { len: text.length })
-    const writer = await getattachedtermwriter()
-    const payload = gettermencoder().encode(text)
-    await queuetermwrite(() => writer.write(payload))
-    wanixtrace('term-input:done', { len: payload.byteLength })
+    await writetermpayload(gettermencoder().encode(text))
+    wanixtrace('term-input:done', { len: text.length })
   }
   const job = terminputchain.then(run, run)
   terminputchain = job.catch(() => {})
@@ -1766,12 +2015,11 @@ export async function sendwanixtermwrite(
 ): Promise<void> {
   requireactive()
   const raw = opts.raw === true || readwanixattachedkind() === 'vm'
-  const writer = await getattachedtermwriter()
   const payload = raw
     ? gettermencoder().encode(`${line}\r\n`)
     : gettermencoder().encode(`${line}\n`)
   wanixtrace('term-write:line', { len: payload.byteLength, raw })
-  await queuetermwrite(() => writer.write(payload))
+  await queuetermwrite(() => writetermpayload(payload))
 }
 
 export async function prepwanixvm(
@@ -1793,11 +2041,16 @@ export type SPAWN_WANIX_VM_OPTS = {
   mem?: string
   attach?: boolean
   wait?: boolean
+  /** E2e/diag: start gojs without opening #vm/…/term/data streams. */
+  skiptermconnect?: boolean
 }
 
 export async function spawnwanixvm(
   opts: SPAWN_WANIX_VM_OPTS = {},
 ): Promise<{ vmid: string; code?: number }> {
+  if (iswanixvmiframemode()) {
+    return iframespawnvm(opts)
+  }
   requireactive()
   const vmid = opts.vmid
   if (opts.wait) {
@@ -1805,6 +2058,7 @@ export async function spawnwanixvm(
       wait: true,
       attach: opts.attach !== false,
       mem: opts.mem,
+      skiptermconnect: opts.skiptermconnect,
     })
     return {
       vmid: result.vmId,
@@ -1815,6 +2069,7 @@ export async function spawnwanixvm(
     wait: false,
     attach: opts.attach !== false,
     mem: opts.mem,
+    skiptermconnect: opts.skiptermconnect,
   })
   return { vmid: typeof spawned === 'string' ? spawned : vmid ?? 'linux-vm' }
 }
@@ -1830,6 +2085,13 @@ export function waitwanixvmexit(vmid: string): Promise<number> {
 }
 
 export async function haltwanixvm(vmid?: string): Promise<void> {
+  if (iswanixvmiframemode() && iswanixvmiframeactive()) {
+    await iframehaltvm(vmid)
+    resumegadgetframeloop()
+    restoregadgetglcontext()
+    resumegadgetglifnovm()
+    return
+  }
   if (state !== 'ready') {
     return
   }
@@ -1857,6 +2119,18 @@ export async function readwanixstatus(): Promise<{
   vms?: WANIX_VM_ENTRY[]
   binds?: WANIX_BIND_ENTRY[]
 }> {
+  if (iswanixvmiframemode() && iswanixvmiframeactive()) {
+    return {
+      active: true,
+      ready: true,
+      state: 'ready',
+      vmbindsready: true,
+      vmprepstage: readwanixvmiframeprepstage(),
+      vmpreperror: readwanixvmiframepreperror(),
+      attachedId: readwanixattached() ?? undefined,
+      attachedKind: readwanixattachedkind() ?? undefined,
+    }
+  }
   if (state !== 'ready') {
     return {
       active: iswanixspaceactive(),
@@ -1902,10 +2176,14 @@ export function wanixhosttestsetattached(
     termpath: null,
     termridpath: null,
     termaliaspath: null,
+    termdatapath: null,
     termwriter: null,
     termreading: null,
+    wanixtermel: null,
+    wanixtermunwire: null,
     serialbuffer,
     autotiletriggered: false,
+    pendingvmline: null,
     exitpoll: null,
   }
   if (kind === 'task') {
@@ -1955,10 +2233,14 @@ export function resetwanixhostfortest() {
   cleanup()
   termwritechain = Promise.resolve()
   terminputchain = Promise.resolve()
+  termduplexchain = Promise.resolve()
 }
 
 /** Read buffered serial for the kernel-attached target (tests / smoke). */
 export function readwanixhostattachedserial(): string {
+  if (iswanixvmiframemode() && iswanixvmiframeactive()) {
+    return readwanixvmiframserial()
+  }
   const kind = readwanixattachedkind()
   const id = readwanixattached()
   if (!kind || !id) {
@@ -2016,3 +2298,14 @@ export async function runwanixhostwasm(
   }
   return { code: 1, output: '', error: 'unexpected spawn result' }
 }
+
+registervmiframehooks({
+  ingestchunk: () => {},
+  setstage: (stage, err) => {
+    vmprepstage = stage
+    vmpreperror = err
+  },
+  onvmexit: (vmid, code) => {
+    vmexithandler?.(vmid, code)
+  },
+})
