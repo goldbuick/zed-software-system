@@ -1,4 +1,3 @@
-import { degToRad } from 'maath/misc'
 import { PERF_INCREMENTAL_LAYERS } from 'zss/config'
 import {
   LAYER,
@@ -176,7 +175,7 @@ export function memoryconverttogadgetcontrollayer(
   }
 
   if (isnumber(facing)) {
-    control.facing = degToRad(facing)
+    control.facing = (facing * Math.PI) / 180
   }
 
   return [control]

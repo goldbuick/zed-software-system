@@ -25,7 +25,7 @@ All test fixture **assets** live under repo-root [`ops/fixtures/`](ops/fixtures/
 | Books (npm) | `books/` |
 | E2e repro | `e2e/` |
 | Generated training | `generated/training/` |
-| ZZT corpus | `zzt/corpus/` (`zss/` committed; `archives/`, `extracted/` gitignored) |
+| ZZT corpus | `zzt/corpus/` (`zss/` committed; `archives/`, `extracted/`, `screenshots/` gitignored) |
 
 ```typescript
 // ✅ GOOD

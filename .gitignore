@@ -49,6 +49,8 @@ ops/fixtures/zzt/corpus/archives/
 ops/fixtures/zzt/corpus/extracted/
 # extracted zzt-oop from .zzt/.brd files (yarn task run content:zzt:corpus:extract:zss)
 ops/fixtures/zzt/corpus/zss/
+# board PNG renders from extracted worlds (yarn task run content:zzt:corpus:screenshots)
+ops/fixtures/zzt/corpus/screenshots/
 
 # offline song renders (regenerate with yarn level-issue-song:render)
 ops/fixtures/renders/*.wav

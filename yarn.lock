@@ -9548,6 +9548,11 @@ playwright@1.58.2, playwright@^1.49.0:
   optionalDependencies:
     fsevents "2.3.2"
 
+pngjs@^7.0.0:
+  version "7.0.0"
+  resolved "https://registry.npmjs.org/pngjs/-/pngjs-7.0.0.tgz#a8b7446020ebbc6ac739db6c5415a65d17090e26"
+  integrity sha512-LKWqWJRhstyYo9pGvgor/ivk2w94eSjE3RGVuzLGlr3NmD8bf7RcYGze1mNdEHRP6TRP6rMuDHk5t44hnTRyow==
+
 pojo-dump@^1.4.0:
   version "1.4.0"
   resolved "https://registry.npmjs.org/pojo-dump/-/pojo-dump-1.4.0.tgz#4f2877ea3ed34c1345c37d1defe6ed26549e5b07"

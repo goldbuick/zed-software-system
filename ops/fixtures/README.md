@@ -25,7 +25,7 @@ add co-located `__fixtures__` trees beside implementation code.
 | `renders/` | Offline Daisy/synth render outputs (wav/json/txt); dev serves `/renders/` |
 | `e2e/` | Generated e2e repro JSON |
 | `generated/training/` | Generated SFT corpus (`train.jsonl`, `eval.jsonl`, `manifest.json`) |
-| `zzt/corpus/` | Museum manifest + committed `zss/`; gitignored `archives/`, `extracted/` |
+| `zzt/corpus/` | Museum manifest + committed `zss/`; gitignored `archives/`, `extracted/`, `screenshots/` |
 
 ## Regen tasks
 
@@ -36,6 +36,7 @@ add co-located `__fixtures__` trees beside implementation code.
 | Wanix wasm | `yarn task run wanix:wasm:build` |
 | Training corpus | buildcorpus test / heavy training pipeline |
 | ZZT OOP corpus | `yarn task run content:zzt:corpus:build` |
+| ZZT board screenshots | `yarn task run content:zzt:corpus:screenshots` |
 | Content books | `yarn task run content:book:build` / `content:book:validate` |
 | Host memory repro | `yarn task run memory:repro:build` |
 

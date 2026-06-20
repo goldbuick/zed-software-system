@@ -72,6 +72,11 @@ export const ZZT_CORPUS_ZSS_MANIFEST_PATH = path.join(
   ZZT_CORPUS_ZSS_DIR,
   'manifest.json',
 )
+export const ZZT_CORPUS_SCREENSHOTS_DIR = path.join(ZZT_CORPUS_DIR, 'screenshots')
+export const ZZT_CORPUS_SCREENSHOTS_MANIFEST_PATH = path.join(
+  ZZT_CORPUS_SCREENSHOTS_DIR,
+  'manifest.json',
+)
 
 export const CONTENT_MINIMAL_MANIFEST_PATH = path.join(
   CONTENT_TEMPLATES_DIR,

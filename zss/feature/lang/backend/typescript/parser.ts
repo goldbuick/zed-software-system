@@ -46,10 +46,14 @@ class ScriptParser extends CstParser {
   })
 
   line = this.RULED('line', () => {
-    this.OR([
-      { ALT: () => this.SUBRULE(this.stmt) },
-      { ALT: () => this.CONSUME(lexer.newline) },
-    ])
+    this.MANY({
+      GATE: this.BACKTRACK(() => {
+        const next = this.LA(1)
+        return next.tokenType !== lexer.newline
+      }),
+      DEF: () => this.SUBRULE(this.stmt),
+    })
+    this.OPTION(() => this.CONSUME(lexer.newline))
   })
 
   stmt = this.RULED('stmt', () => {
@@ -112,15 +116,25 @@ class ScriptParser extends CstParser {
 
   stmt_hyperlink = this.RULED('stmt_hyperlink', () => {
     this.CONSUME(lexer.hyperlink)
-    this.CONSUME(lexer.hyperlinktext)
+    this.OPTION(() => this.CONSUME(lexer.hyperlinktext))
   })
 
   stmt_command = this.RULED('stmt_command', () => {
     this.CONSUME(lexer.command)
     this.OR([
-      { ALT: () => this.SUBRULE(this.words) },
       { ALT: () => this.SUBRULE(this.structured_cmd) },
+      { ALT: () => this.SUBRULE(this.words) },
+      { ALT: () => this.SUBRULE(this.generic_extension_cmd) },
     ])
+  })
+
+  generic_extension_cmd = this.RULED('generic_extension_cmd', () => {
+    this.OR([
+      { ALT: () => this.CONSUME(lexer.command_do) },
+      { ALT: () => this.CONSUME(lexer.command_done) },
+      { ALT: () => this.CONSUME(lexer.command_else) },
+    ])
+    this.OPTION(() => this.SUBRULE(this.words))
   })
 
   structured_cmd = this.RULED('structured_cmd', () => {
@@ -140,6 +154,7 @@ class ScriptParser extends CstParser {
     this.OR([
       { ALT: () => this.SUBRULE(this.string_token) },
       { ALT: () => this.SUBRULE(this.dir) },
+      { ALT: () => this.CONSUME(lexer.label) },
     ])
   })
 
@@ -148,6 +163,7 @@ class ScriptParser extends CstParser {
     this.OR([
       { ALT: () => this.SUBRULE(this.string_token) },
       { ALT: () => this.SUBRULE(this.dir) },
+      { ALT: () => this.CONSUME(lexer.label) },
     ])
   })
 
@@ -676,7 +692,7 @@ class ScriptParser extends CstParser {
 
   token_expr_blocked = this.RULED('token_expr_blocked', () => {
     this.CONSUME(lexer.expr_blocked)
-    this.SUBRULE(this.dir)
+    this.OPTION(() => this.SUBRULE(this.dir))
   })
 
   token_expr_abs = this.RULED('token_expr_abs', () => {

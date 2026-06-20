@@ -10,6 +10,7 @@ import { range } from 'zss/mapping/array'
 import { isarray } from 'zss/mapping/types'
 import {
   iscommandat,
+  iscommandwordat,
   shouldstatat,
   linestartoffset,
 } from 'zss/feature/lang/zztlineclass'
@@ -182,9 +183,12 @@ function matchBasicText(text: string, startOffset: number) {
     case '@':
     case `'`:
     case ':':
-    case '!':
-      // not-okay
-      return null
+    case '!': {
+      if (matchHyperlink(text, startOffset)) {
+        return null
+      }
+      break
+    }
     case '\n':
       // okay
       break
@@ -252,9 +256,28 @@ export const label = createSimpleToken({
   start_chars_hint: [':'],
 })
 
+function matchHyperlink(
+  text: string,
+  startOffset: number,
+): RegExpExecArray | null {
+  if (text[startOffset] !== '!' || text[startOffset + 1] === '!') {
+    return null
+  }
+  const lineend = text.indexOf('\n', startOffset)
+  const semi = text.indexOf(';', startOffset + 1)
+  if (semi < 0 || (lineend >= 0 && semi > lineend)) {
+    return null
+  }
+  const match = text.slice(startOffset, semi)
+  if (match.length < 2) {
+    return null
+  }
+  return [match] as RegExpExecArray
+}
+
 export const hyperlink = createSimpleToken({
   name: 'hyperlink',
-  pattern: /![^;\n]*/,
+  pattern: matchHyperlink,
   start_chars_hint: ['!'],
 })
 
@@ -399,19 +422,50 @@ export const dir_flee = createWordToken('flee')
 
 export const dir_to = createWordToken('to')
 
-export const dir_i = createWordToken('i')
-export const dir_u = createWordToken('u')
+function matchdirshortcut(
+  letter: string,
+  text: string,
+  startOffset: number,
+): RegExpExecArray | null {
+  const linestart = linestartoffset(text, startOffset)
+  if (startOffset === linestart) {
+    return null
+  }
+  const before = text.slice(linestart, startOffset)
+  if (/(?:^|\s)(?:send|zap|restore)\s$/i.test(before)) {
+    return null
+  }
+  const rest = text.slice(startOffset)
+  const match = new RegExp(`^${letter}\\b`, 'i').exec(rest)
+  if (!match) {
+    return null
+  }
+  return [match[0]] as RegExpExecArray
+}
+
+function createdirshortcut(letter: string) {
+  return createSimpleToken({
+    name: letter,
+    pattern: (text: string, startOffset: number) =>
+      matchdirshortcut(letter, text, startOffset),
+    longer_alt: stringliteral,
+  })
+}
+
+export const dir_i = createdirshortcut('i')
+export const dir_u = createdirshortcut('u')
+export const dir_n = createdirshortcut('n')
+export const dir_d = createdirshortcut('d')
+export const dir_s = createdirshortcut('s')
+export const dir_l = createdirshortcut('l')
+export const dir_w = createdirshortcut('w')
+export const dir_r = createdirshortcut('r')
+export const dir_e = createdirshortcut('e')
+
 export const dir_north = createWordToken('north')
-export const dir_n = createWordToken('n')
-export const dir_d = createWordToken('d')
 export const dir_south = createWordToken('south')
-export const dir_s = createWordToken('s')
-export const dir_l = createWordToken('l')
 export const dir_west = createWordToken('west')
-export const dir_w = createWordToken('w')
-export const dir_r = createWordToken('r')
 export const dir_east = createWordToken('east')
-export const dir_e = createWordToken('e')
 
 export const dir_over = createWordToken('over')
 export const dir_under = createWordToken('under')
@@ -423,29 +477,46 @@ export const dir_select = createWordToken('select')
 export const dir_flood = createWordToken('flood')
 export const dir_beam = createWordToken('beam')
 
+function createexprword(word: string) {
+  return createSimpleToken({
+    name: word,
+    pattern: (text: string, startOffset: number) => {
+      if (iscommandwordat(text, startOffset)) {
+        return null
+      }
+      const rest = text.slice(startOffset)
+      const match = new RegExp(`^${word}\\b`, 'i').exec(rest)
+      if (!match) {
+        return null
+      }
+      return [match[0]] as RegExpExecArray
+    },
+    longer_alt: stringliteral,
+  })
+}
 export const expr_aligned = createSimpleToken({
   name: 'expr_aligned',
   pattern: /aligned|alligned/i,
   longer_alt: stringliteral,
 })
 
-export const expr_contact = createWordToken('contact')
-export const expr_blocked = createWordToken('blocked')
-export const expr_any = createWordToken('any')
-export const expr_count = createWordToken('countof')
-export const expr_abs = createWordToken('abs')
-export const expr_intceil = createWordToken('intceil')
-export const expr_intfloor = createWordToken('intfloor')
-export const expr_intround = createWordToken('intround')
-export const expr_clamp = createWordToken('clamp')
-export const expr_min = createWordToken('min')
-export const expr_max = createWordToken('max')
-export const expr_pick = createWordToken('pick')
-export const expr_pickwith = createWordToken('pickwith')
-export const expr_random = createWordToken('random')
-export const expr_randomwith = createWordToken('randomwith')
-export const expr_run = createWordToken('run')
-export const expr_runwith = createWordToken('runwith')
+export const expr_contact = createexprword('contact')
+export const expr_blocked = createexprword('blocked')
+export const expr_any = createexprword('any')
+export const expr_count = createexprword('countof')
+export const expr_abs = createexprword('abs')
+export const expr_intceil = createexprword('intceil')
+export const expr_intfloor = createexprword('intfloor')
+export const expr_intround = createexprword('intround')
+export const expr_clamp = createexprword('clamp')
+export const expr_min = createexprword('min')
+export const expr_max = createexprword('max')
+export const expr_pick = createexprword('pick')
+export const expr_pickwith = createexprword('pickwith')
+export const expr_random = createexprword('random')
+export const expr_randomwith = createexprword('randomwith')
+export const expr_run = createexprword('run')
+export const expr_runwith = createexprword('runwith')
 export const expr_stop = createSimpleToken({
   name: 'stop',
   pattern: /\|/,

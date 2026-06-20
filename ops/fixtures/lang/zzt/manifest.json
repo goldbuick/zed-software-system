@@ -5,7 +5,10 @@
     "scroll_mid_at_line",
     "langref_if_then",
     "langref_die",
-    "label_do_collision"
+    "label_do_collision",
+    "short_try_label",
+    "if_blocked_flag",
+    "inline_go_command"
   ],
   "corpus": []
 }

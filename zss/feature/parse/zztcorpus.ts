@@ -238,6 +238,14 @@ export function corpusentryid(parts: {
   return `${corpusidslug(parts.archivename)}__${corpusidslug(parts.sourcestem)}__b${parts.boardindex}__s${parts.statindex}__${parts.kind}`
 }
 
+export function corpusboardscreenshotid(parts: {
+  archivename: string
+  sourcestem: string
+  boardindex: number
+}): string {
+  return `${corpusidslug(parts.archivename)}__${corpusidslug(parts.sourcestem)}__b${parts.boardindex}`
+}
+
 export function layoutfromkind(kind: 'zzt' | 'szzt'): ZZT_BOARD_LAYOUT {
   if (kind === 'szzt') {
     return { tilewidth: 96, tileheight: 80, kind: 'szzt' }

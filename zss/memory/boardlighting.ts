@@ -1,4 +1,3 @@
-import { radToDeg } from 'maath/misc'
 import { SPRITE } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
@@ -162,7 +161,7 @@ function lightingrayshade(
   }
 
   const angle = Math.round(
-    radToDeg(Math.atan2(lightingraypt.y, lightingraypt.x)),
+    (Math.atan2(lightingraypt.y, lightingraypt.x) * 180) / Math.PI,
   )
 
   let current = 0

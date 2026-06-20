@@ -80,7 +80,7 @@ export const LANG_TASKS: TaskDef[] = [
   }),
   def('lang:zzt:corpus:analyze', {
     description:
-      'Analyze Museum ZZT corpus raw stat.code compile rate; write ops/fixtures/lang/zzt/failure-report.json',
+      'Analyze Museum ZZT corpus raw stat.code compile rate; write ops/fixtures/lang/zzt/failure-report.json. Flags: raw-only, write-fixtures, limit N, full',
     tags: ['slow'],
     run: tsxhandler(`${LANG}/analyze-zzt-corpus.ts`),
   }),

@@ -535,6 +535,25 @@ function processboards(
   }
 }
 
+export function importzztboardstobook(
+  zztboards: ZZT_BOARD[],
+  opts: {
+    startboard?: number
+    tilewidth: number
+    tileheight: number
+    croppedfromszzt: boolean
+  },
+): { book: BOOK; boardaddresses: string[] } {
+  const book = memorycreatebook([])
+  const startboard = opts.startboard ?? -1
+  processboards(book, startboard, zztboards, {
+    tilewidth: opts.tilewidth,
+    tileheight: opts.tileheight,
+    croppedfromszzt: opts.croppedfromszzt,
+  })
+  const boardaddresses = zztboards.map((_, i) => `zztboard${i}`)
+  return { book, boardaddresses }
+}
 
 export function parsebrd(player: string, content: Uint8Array) {
   workstatus(SOFTWARE, player, 'parse brd')

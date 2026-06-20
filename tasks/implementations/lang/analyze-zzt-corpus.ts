@@ -27,8 +27,29 @@ type AnalyzeOptions = {
   limit?: number
   full: boolean
   writefixtures: boolean
+  writereport: boolean
+  rawonly: boolean
 }
 
+type TriageCounts = {
+  fixable_fail: number
+  invalid_zzt_fail: number
+  ambiguous_fail: number
+}
+
+function emptytriage(): TriageCounts {
+  return { fixable_fail: 0, invalid_zzt_fail: 0, ambiguous_fail: 0 }
+}
+
+function tallytriage(triage: TriageCounts, tag: TriageTag) {
+  if (tag === 'fixable') {
+    triage.fixable_fail += 1
+  } else if (tag === 'invalid_zzt') {
+    triage.invalid_zzt_fail += 1
+  } else {
+    triage.ambiguous_fail += 1
+  }
+}
 type FailureBucket = {
   signature: string
   triage: TriageTag
@@ -53,9 +74,16 @@ type FailureReport = {
     ok_rate: number
   }
   triage: {
-    fixable_fail: number
-    invalid_zzt_fail: number
-    ambiguous_fail: number
+    raw: {
+      fixable_fail: number
+      invalid_zzt_fail: number
+      ambiguous_fail: number
+    }
+    wrapped: {
+      fixable_fail: number
+      invalid_zzt_fail: number
+      ambiguous_fail: number
+    }
   }
   buckets: FailureBucket[]
 }
@@ -68,15 +96,25 @@ function parseoptions(argv: string[]): AnalyzeOptions {
   let limit: number | undefined
   let full = false
   let writefixtures = false
+  let writereport = true
+  let rawonly = false
 
   for (let i = 0; i < argv.length; ++i) {
     const arg = argv[i]
+    if (arg === 'raw-only' || arg === '--raw-only') {
+      rawonly = true
+      continue
+    }
     if (arg === 'full' || arg === '--full') {
       full = true
       continue
     }
     if (arg === 'write-fixtures' || arg === '--write-fixtures') {
       writefixtures = true
+      continue
+    }
+    if (arg === 'write-report' || arg === '--write-report') {
+      writereport = true
       continue
     }
     if (arg === 'limit' || arg === '--limit') {
@@ -88,7 +126,7 @@ function parseoptions(argv: string[]): AnalyzeOptions {
     }
   }
 
-  return { root, limit, full, writefixtures }
+  return { root, limit, full, writefixtures, writereport, rawonly }
 }
 
 function iszztorbrd(name: string): boolean {
@@ -164,7 +202,7 @@ function processsource(
   sourcepath: string,
   buckets: Map<string, FailureBucket>,
   stats: FailureReport['raw_oop'],
-  triage: FailureReport['triage'],
+  triage: TriageCounts,
 ) {
   const bytes = readFileSync(sourcepath)
   const content = new Uint8Array(bytes)
@@ -189,13 +227,7 @@ function processsource(
       }
       stats.fail += 1
       const tag = triagecode(code, error)
-      if (tag === 'fixable') {
-        triage.fixable_fail += 1
-      } else if (tag === 'invalid_zzt') {
-        triage.invalid_zzt_fail += 1
-      } else {
-        triage.ambiguous_fail += 1
-      }
+      tallytriage(triage, tag)
       const signature = normalizeerror(error ?? 'unknown')
       let bucket = buckets.get(signature)
       if (!bucket) {
@@ -239,7 +271,7 @@ function processsource(
 function analyzewrapped(
   buckets: Map<string, FailureBucket>,
   stats: FailureReport['wrapped_zss'],
-  triage: FailureReport['triage'],
+  triage: TriageCounts,
   limit?: number,
 ) {
   const zssroot = ZZT_CORPUS_ZSS_DIR
@@ -274,13 +306,7 @@ function analyzewrapped(
     }
     stats.fail += 1
     const tag = triagecode(source, error)
-    if (tag === 'fixable') {
-      triage.fixable_fail += 1
-    } else if (tag === 'invalid_zzt') {
-      triage.invalid_zzt_fail += 1
-    } else {
-      triage.ambiguous_fail += 1
-    }
+    tallytriage(triage, tag)
     const signature = `wrapped:${normalizeerror(error ?? 'unknown')}`
     let bucket = buckets.get(signature)
     if (!bucket) {
@@ -346,12 +372,24 @@ function writerankfixtures(
       : guess.replace(/\.ZZT$/i, '.BRD')
     const bytes = readFileSync(sourcepath)
     const content = new Uint8Array(bytes)
-    const world = zztparseworld(content)
-    if (!world.ok || !world.boards[boardindex]) {
+    const lower = sourcepath.toLowerCase()
+    let board: ZZT_BOARD | undefined
+    let layoutkind: 'zzt' | 'szzt' = 'zzt'
+    if (lower.endsWith('.brd')) {
+      board = zztparseboard(content, layoutfromkind('zzt'))
+      layoutkind = 'zzt'
+    } else {
+      const world = zztparseworld(content)
+      if (!world.ok || !world.boards[boardindex]) {
+        continue
+      }
+      board = world.boards[boardindex]!
+      layoutkind = layoutfromkind('zzt').kind
+    }
+    if (!board) {
       continue
     }
-    const board = world.boards[boardindex]!
-    const layout = layoutfromkind('zzt')
+    const layout = layoutfromkind(layoutkind)
     const elements = boardcodedelements(board, layout, boardindex)
     const element = elements.find((el) => el.statindex === statindex)
     if (!element) {
@@ -383,21 +421,16 @@ export async function analyzezztcorpus(argv: string[]): Promise<number> {
   const buckets = new Map<string, FailureBucket>()
   const rawstats = { total: 0, ok: 0, fail: 0, ok_rate: 0 }
   const wrappedstats = { total: 0, ok: 0, fail: 0, ok_rate: 0 }
-  const triage = {
-    fixable_fail: 0,
-    invalid_zzt_fail: 0,
-    ambiguous_fail: 0,
-  }
+  const rawtriage = emptytriage()
+  const wrappedtriage = emptytriage()
+  const sampleonly = typeof opts.limit === 'number' && !opts.full
 
   if (corpuspresent) {
     const sources = collectsourcefiles(extractedroot)
-    const slice =
-      typeof opts.limit === 'number' && !opts.full
-        ? sources.slice(0, opts.limit)
-        : sources
+    const slice = sampleonly ? sources.slice(0, opts.limit) : sources
     for (let i = 0; i < slice.length; ++i) {
       try {
-        processsource(slice[i], buckets, rawstats, triage)
+        processsource(slice[i], buckets, rawstats, rawtriage)
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
         console.warn(`\nanalyze skip ${slice[i]}: ${message}`)
@@ -408,8 +441,13 @@ export async function analyzezztcorpus(argv: string[]): Promise<number> {
     }
     process.stdout.write('\n')
 
-    if (existsSync(ZZT_CORPUS_ZSS_DIR)) {
-      analyzewrapped(buckets, wrappedstats, triage, opts.limit)
+    if (existsSync(ZZT_CORPUS_ZSS_DIR) && !opts.rawonly) {
+      analyzewrapped(
+        buckets,
+        wrappedstats,
+        wrappedtriage,
+        sampleonly ? opts.limit : undefined,
+      )
     }
   }
 
@@ -423,20 +461,22 @@ export async function analyzezztcorpus(argv: string[]): Promise<number> {
     corpus_present: corpuspresent,
     raw_oop: rawstats,
     wrapped_zss: wrappedstats,
-    triage,
+    triage: { raw: rawtriage, wrapped: wrappedtriage },
     buckets: [...buckets.values()].sort((a, b) => b.count - a.count),
   }
 
   const reportpath = path.join(process.cwd(), REPORT_PATH)
-  mkdirSync(path.dirname(reportpath), { recursive: true })
-  writeFileSync(reportpath, `${JSON.stringify(report, null, 2)}\n`)
+  if (opts.writereport && !sampleonly) {
+    mkdirSync(path.dirname(reportpath), { recursive: true })
+    writeFileSync(reportpath, `${JSON.stringify(report, null, 2)}\n`)
+  }
 
   if (opts.writefixtures && corpuspresent) {
     writerankfixtures(report.buckets, extractedroot)
   }
 
   console.log(
-    `report: ${reportpath} raw_oop=${rawstats.ok}/${rawstats.total} (${(rawstats.ok_rate * 100).toFixed(2)}%) fixable=${triage.fixable_fail} invalid=${triage.invalid_zzt_fail}`,
+    `report: ${opts.writereport && !sampleonly ? reportpath : '(not written — use full run for committed report)'} raw_oop=${rawstats.ok}/${rawstats.total} (${(rawstats.ok_rate * 100).toFixed(2)}%) raw_fixable=${rawtriage.fixable_fail} raw_invalid=${rawtriage.invalid_zzt_fail}`,
   )
 
   return rawstats.ok_rate >= 0.99 ? 0 : 1

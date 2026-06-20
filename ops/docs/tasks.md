@@ -72,6 +72,7 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 | `yarn task run content:zzt:corpus:build` | Extract Museum archives and build ZZT OOP → .zss corpus (extract + zss) | `slow` | — | — |
 | `yarn task run content:zzt:corpus:extract` | Unzip vanilla ZZT archives into ops/fixtures/zzt/corpus/extracted (.zzt/.brd only) | `slow` | — | — |
 | `yarn task run content:zzt:corpus:manifest` | Crawl Museum of ZZT and write vanilla ZZT manifest only (no downloads) | — | — | — |
+| `yarn task run content:zzt:corpus:screenshots` | Render board PNGs from extracted ZZT/BRD into ops/fixtures/zzt/corpus/screenshots (gitignored) | `slow` | — | — |
 | `yarn task run content:zzt:corpus:sync` | Crawl Museum of ZZT and download vanilla ZZT world ZIPs into ops/fixtures/zzt/corpus/archives (gitignored) | `slow` | — | — |
 | `yarn task run content:zzt:corpus:zss` | Convert extracted ZZT/BRD OOP into ops/fixtures/zzt/corpus/zss/*.zss + manifest | `slow` | — | — |
 
@@ -218,7 +219,7 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 | `yarn task run lang:regression:test` | Full lang regression (TS tests, parity, corpus) | `ci` | — | — |
 | `yarn task run lang:train-corpus:test` | Jest train corpus tests | — | — | — |
 | `yarn task run lang:wasm:test` | Lang wasm smoke test (empty fixture) | — | — | — |
-| `yarn task run lang:zzt:corpus:analyze` | Analyze Museum ZZT corpus raw stat.code compile rate; write ops/fixtures/lang/zzt/failure-report.json | `slow` | — | — |
+| `yarn task run lang:zzt:corpus:analyze` | Analyze Museum ZZT corpus raw stat.code compile rate; write ops/fixtures/lang/zzt/failure-report.json. Flags: raw-only, write-fixtures, limit N, full | `slow` | — | — |
 
 
 ## memory

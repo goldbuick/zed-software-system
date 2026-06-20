@@ -10,6 +10,7 @@ Offline mirror of **vanilla ZZT world** archives from [Museum of ZZT](https://mu
 | `archives/{letter}/{filename}` | no (gitignored) | Original museum ZIP downloads |
 | `extracted/{letter}/{zip_stem}/` | no (gitignored) | Unpacked `.zzt` / `.brd` from archives |
 | `zss/{letter}/{zip_stem}/` | no (gitignored) | One `.zss` per coded element; `zss/manifest.json` at root (local regen) |
+| `screenshots/{letter}/{zip_stem}/` | no (gitignored) | One `.png` per board; `screenshots/manifest.json` at root (local regen) |
 
 ## Filter rules
 
@@ -57,9 +58,14 @@ yarn task run content:zzt:corpus:build force
 # Lang: raw stat.code compile analysis (requires extracted/ on disk)
 yarn task run lang:zzt:corpus:analyze
 yarn task run lang:zzt:corpus:analyze limit 50
+
+# Render board PNGs from extracted/ (requires extracted/ on disk)
+yarn task run content:zzt:corpus:screenshots
+yarn task run content:zzt:corpus:screenshots limit 5
+yarn task run content:zzt:corpus:screenshots force
 ```
 
-Committed lang artifacts from corpus analysis live under `ops/fixtures/lang/zzt/` (`failure-report.json`, regression fixtures). Bulk `zss/` output stays local/gitignored.
+Committed lang artifacts from corpus analysis live under `ops/fixtures/lang/zzt/` (`failure-report.json`, regression fixtures). Bulk `zss/` and `screenshots/` output stays local/gitignored.
 
 ## API
 

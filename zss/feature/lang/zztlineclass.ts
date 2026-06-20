@@ -122,7 +122,28 @@ export function iscommandat(text: string, startoffset: number): boolean {
   if (text[startoffset] !== '#') {
     return false
   }
-  return linestartoffset(text, startoffset) === startoffset
+  const linestart = linestartoffset(text, startoffset)
+  if (startoffset === linestart) {
+    return true
+  }
+  const prefix = text.slice(linestart, startoffset).trimEnd()
+  // ZZT inline stack: /i#char 53, ?n#send label
+  if (/^([/?][a-z]*\s*)+$/i.test(prefix)) {
+    return true
+  }
+  return false
+}
+
+export function iscommandwordat(text: string, startoffset: number): boolean {
+  const linestart = linestartoffset(text, startoffset)
+  const before = text.slice(linestart, startoffset).trimEnd()
+  if (before === '#') {
+    return true
+  }
+  if (/(?:[/?][a-z]*\s*)+#$/i.test(before)) {
+    return true
+  }
+  return false
 }
 
 export function iszztstatkeyword(word: string): boolean {

@@ -7,8 +7,8 @@
 | Symbol | ZZT meaning | ZSS lexer rule |
 |--------|-------------|----------------|
 | `@name` | Object name on **program line 1**; later `@` lines in scrolls are **text** | `@` is `stat` on line 1, or consecutive header `@keywords` at file start; otherwise **text** |
-| `#cmd` | Command at **first non-whitespace** column of the line | `#` is `command` only when `#` is the first non-ws character on the line |
-| `/dir` `?dir` | Go / try direction | Unchanged |
+| `#cmd` | Command at **first non-whitespace** column of the line | `#` is `command` at line start, or after inline `/dir` / `?dir` stacks (e.g. `/i#char 53`) |
+| `/dir` `?dir` | Go / try direction | Multiple `/` / `?` + `#command` may appear on one line (ZZT editor stacks) |
 | `:label` | Message handler | Unchanged |
 | `'comment` | Comment (deactivated label) | Unchanged |
 | `!btn;msg` | Hyperlink button | Unchanged |
@@ -29,6 +29,10 @@ ZZT forms that must keep working:
 
 - `:do` label, `'do` comment, `#send do`, prose lines containing those words
 - `#if flag then label` (ZZT inline send — no `#do` block required)
+- `/i#char 53` and `?n#send label` inline stacks on one line
+- `#send:label` and `#min:dec` — label may follow command word without whitespace
+
+ZSS `expr_*` words (`min`, `max`, `random`, …) do not match as expression tokens when they are the first word after `#` (generic ZZT command spelling).
 
 ## Import pipeline (`zztoop`)
 

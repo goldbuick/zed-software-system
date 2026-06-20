@@ -60,4 +60,19 @@ describe('zzt line classification', () => {
     const result = compileparse('@Creature\n#end\n')
     expect(result.errors ?? []).toEqual([])
   })
+
+  it('parses ? with label target', () => {
+    const result = compileparse('?:poured\n')
+    expect(result.errors ?? []).toEqual([])
+  })
+
+  it('parses inline /i#command stacks', () => {
+    const result = compileparse('@sec\n/i#char 53\n#restart\n')
+    expect(result.errors ?? []).toEqual([])
+  })
+
+  it('parses emphatic bang lines as scroll text', () => {
+    const result = compileparse('!!!!!Look out!!!!!\n')
+    expect(result.errors ?? []).toEqual([])
+  })
 })

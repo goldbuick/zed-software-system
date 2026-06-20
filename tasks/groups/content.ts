@@ -1,4 +1,6 @@
-import { def, jestexec } from '../helpers'
+import { spawnSync } from 'node:child_process'
+
+import { def, handler, jestexec } from '../helpers'
 import { nodehandler, tsxhandler } from '../implementations/modulehandler'
 import type { TaskDef } from '../types'
 
@@ -62,5 +64,33 @@ export const CONTENT_TASKS: TaskDef[] = [
       'Extract Museum archives and build ZZT OOP → .zss corpus (extract + zss)',
     tags: ['slow'],
     run: tsxhandler('tasks/implementations/content/museum-zzt-corpus-extract.ts'),
+  }),
+  def('content:zzt:corpus:screenshots', {
+    description:
+      'Render board PNGs from extracted ZZT/BRD into ops/fixtures/zzt/corpus/screenshots (gitignored)',
+    tags: ['slow'],
+    run: handler((ctx) => {
+      const result = spawnSync(
+        'yarn',
+        [
+          'jest',
+          '--config',
+          'ops/jest.config.ts',
+          '--runTestsByPath',
+          'ops/tests/integration/zzt/corpus-screenshots.test.ts',
+          '--no-coverage',
+        ],
+        {
+          cwd: ctx.root,
+          stdio: 'inherit',
+          env: {
+            ...ctx.env,
+            ZSS_TASK_ARGS: ctx.args.join(' '),
+          },
+          shell: false,
+        },
+      )
+      return result.status ?? 1
+    }),
   }),
 ]
