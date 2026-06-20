@@ -1,0 +1,7 @@
+@MyCreature
+:touch
+#send greet
+#end
+:greet
+Hello from ZZT-OOP.
+#end

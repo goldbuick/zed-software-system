@@ -1,0 +1,11 @@
+:touch
+$CENTER
+$CENTERStars
+These are easy. The stars simply go
+west (using #walk or a loop).  When they
+hit the wall, they change to #char 32 and
+go back east. When they hit the wall, they
+ #char back into stars and go west, and
+the loop continues.
+$CENTER
+#end

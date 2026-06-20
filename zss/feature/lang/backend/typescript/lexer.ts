@@ -8,6 +8,11 @@ import {
 import { LANG_DEV } from 'zss/config'
 import { range } from 'zss/mapping/array'
 import { isarray } from 'zss/mapping/types'
+import {
+  iscommandat,
+  shouldstatat,
+  linestartoffset,
+} from 'zss/feature/lang/zztlineclass'
 
 const all_chars = range(32, 126).map((char) => String.fromCharCode(char))
 
@@ -50,13 +55,37 @@ export const whitespaceandnewline = createSimpleToken({
 
 export const stat = createSimpleToken({
   name: 'stat',
-  pattern: /@.*/,
+  pattern: matchStatLine,
   start_chars_hint: ['@'],
 })
 
+function matchStatLine(
+  text: string,
+  startOffset: number,
+): RegExpExecArray | null {
+  if (!shouldstatat(text, startOffset)) {
+    return null
+  }
+  let end = startOffset + 1
+  while (end < text.length && text[end] !== '\n') {
+    end += 1
+  }
+  return [text.slice(startOffset, end)] as RegExpExecArray
+}
+
+function matchCommandHash(
+  text: string,
+  startOffset: number,
+): RegExpExecArray | null {
+  if (!iscommandat(text, startOffset)) {
+    return null
+  }
+  return ['#'] as RegExpExecArray
+}
+
 export const command = createSimpleToken({
   name: 'command',
-  pattern: /#/,
+  pattern: matchCommandHash,
   start_chars_hint: ['#'],
 })
 
@@ -67,6 +96,21 @@ const matchcomplexdir = /^(by|at|away|toward|find|flee|to|cw|ccw|opp|rndp)/i
 function matchBasicText(text: string, startOffset: number) {
   if (textmatchdepth <= 0) {
     return null
+  }
+
+  // indented scroll line with # in prose (e.g. " #char back")
+  if (text[startOffset] === '#' && !iscommandat(text, startOffset)) {
+    const linestart = linestartoffset(text, startOffset)
+    if (linestart < startOffset) {
+      let end = startOffset
+      while (end < text.length && text[end] !== '\n') {
+        end += 1
+      }
+      const match = text.substring(linestart, end)
+      if (match.trim().length > 0) {
+        return [match] as RegExpExecArray
+      }
+    }
   }
 
   // scan for possible text start
@@ -86,6 +130,19 @@ function matchBasicText(text: string, startOffset: number) {
     if (probablynottext.includes(text[cursor])) {
       return null
     }
+  }
+
+  // @ at line start as scroll text (not stat)
+  if (text[startOffset] === '@' && !shouldstatat(text, startOffset)) {
+    let i = startOffset
+    while (i < text.length && text[i] !== '\n') {
+      i++
+    }
+    const match = text.substring(startOffset, i)
+    if (match.trim().length === 0) {
+      return null
+    }
+    return [match] as RegExpExecArray
   }
 
   // scan backwards to check what kind of spot we're in
@@ -501,28 +558,54 @@ export const command_ticker = createSimpleToken({
 
 export const command_if = createSimpleToken({
   name: 'if',
-  pattern: /if|try|take|give|duplicate/i,
+  pattern: /(?<=#)if\b/i,
   longer_alt: stringliteral,
 })
 export const command_do = createSimpleToken({
   name: 'do',
-  pattern: /(?<!(zap |send |restore ))(?<=\s)do/i,
-  start_chars_hint: ['d'],
+  pattern: /(?<=#)do\b/i,
   longer_alt: stringliteral,
 })
-// export const command_do = createWordToken('do')
-export const command_done = createWordToken('done')
-export const command_else = createWordToken('else')
-export const command_while = createWordToken('while')
-export const command_repeat = createWordToken('repeat')
-export const command_waitfor = createWordToken('waitfor')
+export const command_done = createSimpleToken({
+  name: 'done',
+  pattern: /(?<=#)done\b/i,
+  longer_alt: stringliteral,
+})
+export const command_else = createSimpleToken({
+  name: 'else',
+  pattern: /(?<=#)else\b/i,
+  longer_alt: stringliteral,
+})
+export const command_while = createSimpleToken({
+  name: 'while',
+  pattern: /(?<=#)while\b/i,
+  longer_alt: stringliteral,
+})
+export const command_repeat = createSimpleToken({
+  name: 'repeat',
+  pattern: /(?<=#)repeat\b/i,
+  longer_alt: stringliteral,
+})
+export const command_waitfor = createSimpleToken({
+  name: 'waitfor',
+  pattern: /(?<=#)waitfor\b/i,
+  longer_alt: stringliteral,
+})
 export const command_foreach = createSimpleToken({
   name: 'foreach',
   pattern: /foreach|for/i,
   longer_alt: stringliteral,
 })
-export const command_break = createWordToken('break')
-export const command_continue = createWordToken('continue')
+export const command_break = createSimpleToken({
+  name: 'break',
+  pattern: /(?<=#)break\b/i,
+  longer_alt: stringliteral,
+})
+export const command_continue = createSimpleToken({
+  name: 'continue',
+  pattern: /(?<=#)continue\b/i,
+  longer_alt: stringliteral,
+})
 
 // common error marking
 export type LANG_ERROR = {

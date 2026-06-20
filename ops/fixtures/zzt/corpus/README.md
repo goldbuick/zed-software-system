@@ -9,7 +9,7 @@ Offline mirror of **vanilla ZZT world** archives from [Museum of ZZT](https://mu
 | `manifest.json` | yes | Metadata for every included archive |
 | `archives/{letter}/{filename}` | no (gitignored) | Original museum ZIP downloads |
 | `extracted/{letter}/{zip_stem}/` | no (gitignored) | Unpacked `.zzt` / `.brd` from archives |
-| `zss/` | yes | One `.zss` per coded element + `manifest.json` |
+| `zss/{letter}/{zip_stem}/` | no (gitignored) | One `.zss` per coded element; `zss/manifest.json` at root (local regen) |
 
 ## Filter rules
 
@@ -53,7 +53,13 @@ yarn task run content:zzt:corpus:build limit 5
 
 # Force re-extract / overwrite .zss outputs
 yarn task run content:zzt:corpus:build force
+
+# Lang: raw stat.code compile analysis (requires extracted/ on disk)
+yarn task run lang:zzt:corpus:analyze
+yarn task run lang:zzt:corpus:analyze limit 50
 ```
+
+Committed lang artifacts from corpus analysis live under `ops/fixtures/lang/zzt/` (`failure-report.json`, regression fixtures). Bulk `zss/` output stays local/gitignored.
 
 ## API
 

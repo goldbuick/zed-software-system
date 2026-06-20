@@ -218,6 +218,7 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 | `yarn task run lang:regression:test` | Full lang regression (TS tests, parity, corpus) | `ci` | — | — |
 | `yarn task run lang:train-corpus:test` | Jest train corpus tests | — | — | — |
 | `yarn task run lang:wasm:test` | Lang wasm smoke test (empty fixture) | — | — | — |
+| `yarn task run lang:zzt:corpus:analyze` | Analyze Museum ZZT corpus raw stat.code compile rate; write ops/fixtures/lang/zzt/failure-report.json | `slow` | — | — |
 
 
 ## memory

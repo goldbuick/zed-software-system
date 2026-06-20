@@ -20,6 +20,7 @@ The main entry point is `compile()` in `generator.ts`, which orchestrates the fu
 | File | Purpose |
 |------|---------|
 | [architecture.md](architecture.md) | End-to-end lang architecture, diagrams, precedence, runtime |
+| [ZZT-OOP reference](../../../ops/fixtures/lang/zzt-ref/README.md) | RoZZT LANGREF baseline + ZSS extension rules (`ZSS ⊃ ZZT-OOP`) |
 | [ast.md](ast.md) | AST compilation entry point (`compileast`) |
 | [generator.md](generator.md) | Full compilation pipeline (`compile`) |
 | [lexer.md](lexer.md) | Tokenization and token definitions |

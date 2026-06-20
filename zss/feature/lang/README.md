@@ -11,6 +11,7 @@ ZSS scripting language compiler with a **TypeScript backend** (CI parity oracle)
 | [`backend/typescript/`](backend/typescript/) | Chevrotain lexer → parser → AST → JS + source maps (CI parity oracle) |
 | [`backend/wasm/`](backend/wasm/) | C++ compiler → `zss_compile`, parity fixtures, tests |
 | [`docs/`](docs/) | Compiler pipeline documentation |
+| [`ops/fixtures/lang/zzt-ref/`](../../../ops/fixtures/lang/zzt-ref/) | ZZT-OOP baseline (RoZZT LANGREF) + ZSS extension rules |
 
 Legacy path `zss/lang/` was removed; import from `zss/feature/lang`.
 

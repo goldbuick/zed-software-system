@@ -78,6 +78,12 @@ export const LANG_TASKS: TaskDef[] = [
     tags: ['ci'],
     run: shellhandlerwithargs(`${LANG}/run-lang-regression.sh`),
   }),
+  def('lang:zzt:corpus:analyze', {
+    description:
+      'Analyze Museum ZZT corpus raw stat.code compile rate; write ops/fixtures/lang/zzt/failure-report.json',
+    tags: ['slow'],
+    run: tsxhandler(`${LANG}/analyze-zzt-corpus.ts`),
+  }),
   def('lang:build-train-corpus', {
     description: 'Jest build training corpus fixture',
     run: jestexec(

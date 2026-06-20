@@ -1,3 +1,4 @@
+import { execSync } from 'node:child_process'
 import {
   existsSync,
   mkdirSync,
@@ -59,6 +60,7 @@ type ZssManifestEntry = {
   y: number
   kind: string
   compile_ok: boolean
+  compile_error?: string
 }
 
 type ZssManifest = {
@@ -129,6 +131,25 @@ function iszztorbrd(name: string): boolean {
   return /\.(zzt|brd)$/i.test(name)
 }
 
+/** Mirror extracted/{letter}/{zip_stem}/ under zss/. */
+function zssrelpath(extractedrelpath: string, id: string): string {
+  const parts = extractedrelpath.split(/[/\\]/)
+  const letter = parts[0]
+  const zipstemdir = parts[1]
+  return path.join('zss', letter, zipstemdir, `${id}.zss`)
+}
+
+function cleanuplegacyflatzss(root: string): void {
+  const zssroot = path.join(root, ZSS_DIR)
+  if (!existsSync(zssroot)) {
+    return
+  }
+  console.log(`cleaning legacy flat .zss files in ${ZSS_DIR}/`)
+  execSync(`find "${zssroot}" -maxdepth 1 -name '*.zss' -delete`, {
+    stdio: 'inherit',
+  })
+}
+
 async function extractarchives(opts: ExtractOptions): Promise<number> {
   const manifest = readcorpusmanifest(opts.root)
   const entries = manifest.entries.filter((e) => e.status === 'ok')
@@ -191,9 +212,13 @@ async function extractarchives(opts: ExtractOptions): Promise<number> {
   return 0
 }
 
-function compileok(source: string): boolean {
+function compileok(source: string): { ok: boolean; error?: string } {
   const result = compileparse(source)
-  return !(result.errors && result.errors.length > 0) && !!result.cst
+  const ok = !(result.errors && result.errors.length > 0) && !!result.cst
+  return {
+    ok,
+    error: ok ? undefined : result.errors?.[0]?.message,
+  }
 }
 
 function collectsourcefiles(dir: string): string[] {
@@ -244,7 +269,7 @@ function processsourcefile(
         statindex: element.statindex,
         kind: element.kind,
       })
-      const zssrel = path.join('zss', `${id}.zss`)
+      const zssrel = zssrelpath(relpath, id)
       const zsspath = path.join(root, CORPUS_DIR, zssrel)
       if (!opts.force && existsSync(zsspath)) {
         manifest.stats.skipped_existing += 1
@@ -261,7 +286,8 @@ function processsourcefile(
         continue
       }
       const zsssource = elementtozss(element)
-      const ok = compileok(zsssource)
+      const compiled = compileok(zsssource)
+      const ok = compiled.ok
       mkdirSync(path.dirname(zsspath), { recursive: true })
       writeFileSync(zsspath, zsssource)
       manifest.stats.elements += 1
@@ -283,6 +309,7 @@ function processsourcefile(
         y: element.stat.y ?? 0,
         kind: element.kind,
         compile_ok: ok,
+        ...(compiled.error ? { compile_error: compiled.error } : {}),
       })
     }
   }
@@ -339,6 +366,10 @@ function convertextractedtozss(opts: ExtractOptions): number {
   }
 
   mkdirSync(path.join(opts.root, ZSS_DIR), { recursive: true })
+
+  if (opts.force) {
+    cleanuplegacyflatzss(opts.root)
+  }
 
   const existingbyid = new Map<string, ZssManifestEntry>()
   if (!opts.force) {

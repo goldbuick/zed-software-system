@@ -47,6 +47,8 @@ cafe/public/wanix/wanix.debug.wasm
 ops/fixtures/zzt/corpus/archives/
 # unpacked .zzt/.brd from archives (yarn task run content:zzt:corpus:extract)
 ops/fixtures/zzt/corpus/extracted/
+# extracted zzt-oop from .zzt/.brd files (yarn task run content:zzt:corpus:extract:zss)
+ops/fixtures/zzt/corpus/zss/
 
 # offline song renders (regenerate with yarn level-issue-song:render)
 ops/fixtures/renders/*.wav
