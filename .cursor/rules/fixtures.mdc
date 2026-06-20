@@ -20,10 +20,12 @@ All test fixture **assets** live under repo-root [`ops/fixtures/`](ops/fixtures/
 | Synth | `synth/wasm/`, `synth/daisy/` |
 | Wanix WASI | `wanix/` (built `.wasm` gitignored) |
 | Harness HTML | `harness/` (Daisy/synth Playwright pages; not in `cafe/public`) |
+| Offline renders | `renders/` (daisy offline wav/json/txt; served at `/renders/` in dev only) |
 | Book templates | `content/templates/`; build output `content/dist/` |
 | Books (npm) | `books/` |
 | E2e repro | `e2e/` |
 | Generated training | `generated/training/` |
+| ZZT corpus | `zzt/corpus/` (`zss/` committed; `archives/`, `extracted/` gitignored) |
 
 ```typescript
 // ✅ GOOD
