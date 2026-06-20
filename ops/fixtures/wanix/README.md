@@ -157,7 +157,7 @@ yarn task run wanix:vm:fixloop
 | Step | Task | What it catches |
 |------|------|-----------------|
 | 1 | `wanix:vm-prep-smoke` | Upstream CDN + wanix.wasm |
-| 2 | `wanix:vm-term-smoke` | `<wanix-term>` login + `id` (standalone) |
+| 2 | `wanix:vm-simple-smoke` | `vm-simple.html` login + `id` (upstream baseline) |
 | 3 | `wanix:vm-term-iframe-smoke` | term I/O in iframe under mock WebGL |
 | 4 | `wanix:vm:isolated:verify` | Isolated `wanix-vm-e2e.html` term stress |
 | 5 | `wanix:vm:app:verify` | **Full ZSS app** hidden iframe + tile bridge |

@@ -21,9 +21,11 @@ add co-located `__fixtures__` trees beside implementation code.
 | `content/templates/` | Importable book templates (`manifest.json` + `pages/*.json`) |
 | `content/dist/` | Built `.book.json` output (gitignored) |
 | `wanix/` | WASI `.wat`/`.c` sources; built `.wasm` gitignored |
-| `harness/` | Daisy/synth Playwright harness `.html` (not shipped in prod) |
+| `harness/` | Daisy/synth Playwright harness `.html` + wanix iframe smoke (not shipped in prod) |
+| `renders/` | Offline Daisy/synth render outputs (wav/json/txt); dev serves `/renders/` |
 | `e2e/` | Generated e2e repro JSON |
 | `generated/training/` | Generated SFT corpus (`train.jsonl`, `eval.jsonl`, `manifest.json`) |
+| `zzt/corpus/` | Museum manifest + committed `zss/`; gitignored `archives/`, `extracted/` |
 
 ## Regen tasks
 
@@ -33,6 +35,7 @@ add co-located `__fixtures__` trees beside implementation code.
 | Memory parity | `yarn task run memory:parity:test` |
 | Wanix wasm | `yarn task run wanix:wasm:build` |
 | Training corpus | buildcorpus test / heavy training pipeline |
+| ZZT OOP corpus | `yarn task run content:zzt:corpus:build` |
 | Content books | `yarn task run content:book:build` / `content:book:validate` |
 | Host memory repro | `yarn task run memory:repro:build` |
 

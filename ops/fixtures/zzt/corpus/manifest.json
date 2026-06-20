@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-20T00:02:44.977Z",
+  "generated_at": "2026-06-20T03:03:52.690Z",
   "filter": "vanilla-zzt-only",
   "museum_api": "v1/search/files",
   "stats": {
@@ -8,9 +8,9 @@
     "excluded_weave": 83,
     "excluded_super": 60,
     "excluded_no_zzt_world": 172,
-    "downloaded": 3250,
+    "downloaded": 3737,
     "failed": 0,
-    "skipped_existing": 487
+    "skipped_existing": 0
   },
   "entries": [
     {
@@ -31,7 +31,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 3,
       "total_boards": 10,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -50,7 +50,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 16,
       "total_boards": 17,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -70,7 +70,7 @@
       "publish_date": "2025-06-16T17:53:53.029Z",
       "playable_boards": 24,
       "total_boards": 25,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -90,7 +90,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 1,
       "total_boards": 2,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -110,7 +110,7 @@
       "publish_date": "2025-01-01T00:03:15.419Z",
       "playable_boards": 1,
       "total_boards": 2,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -129,7 +129,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 3,
       "total_boards": 9,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -148,7 +148,7 @@
       "publish_date": "2021-05-14T21:04:44Z",
       "playable_boards": 24,
       "total_boards": 24,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -171,7 +171,7 @@
       "publish_date": "2018-12-20T03:08:40.019Z",
       "playable_boards": 21,
       "total_boards": 26,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -192,7 +192,7 @@
       "publish_date": "2024-02-29T21:20:40.763Z",
       "playable_boards": 42,
       "total_boards": 107,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -211,7 +211,7 @@
       "publish_date": "2025-06-16T17:54:13.495Z",
       "playable_boards": 11,
       "total_boards": 11,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -230,7 +230,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 2,
       "total_boards": 2,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -249,7 +249,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 2,
       "total_boards": 5,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -269,7 +269,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 3,
       "total_boards": 8,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -289,7 +289,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 53,
       "total_boards": 55,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -309,7 +309,7 @@
       "publish_date": "2020-05-18T18:43:53.122Z",
       "playable_boards": 2,
       "total_boards": 2,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -328,7 +328,7 @@
       "publish_date": "2021-08-12T18:52:44.999Z",
       "playable_boards": 2,
       "total_boards": 3,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -347,7 +347,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 5,
       "total_boards": 6,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -366,7 +366,7 @@
       "publish_date": "2021-05-05T19:55:55.121Z",
       "playable_boards": 22,
       "total_boards": 23,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -386,7 +386,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 8,
       "total_boards": 12,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -406,7 +406,7 @@
       "publish_date": "2020-02-09T18:50:01Z",
       "playable_boards": 33,
       "total_boards": 56,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -426,7 +426,7 @@
       "publish_date": "2020-03-24T18:57:10.762Z",
       "playable_boards": 41,
       "total_boards": 56,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -447,7 +447,7 @@
       "publish_date": "2022-10-03T19:31:18Z",
       "playable_boards": 11,
       "total_boards": 16,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -466,7 +466,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 14,
       "total_boards": 18,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -485,7 +485,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 9,
       "total_boards": 9,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -505,7 +505,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 35,
       "total_boards": 38,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -524,7 +524,7 @@
       "publish_date": "2021-02-19T17:52:56.559Z",
       "playable_boards": 34,
       "total_boards": 36,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -544,7 +544,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 35,
       "total_boards": 38,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -563,7 +563,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 15,
       "total_boards": 38,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -583,7 +583,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 436,
       "total_boards": 580,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -603,7 +603,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 193,
       "total_boards": 317,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -623,7 +623,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 426,
       "total_boards": 554,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -643,7 +643,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 157,
       "total_boards": 196,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -663,7 +663,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 78,
       "total_boards": 106,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -700,7 +700,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 256,
       "total_boards": 334,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -720,7 +720,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 436,
       "total_boards": 559,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -740,7 +740,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 279,
       "total_boards": 404,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -761,7 +761,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 278,
       "total_boards": 320,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -781,7 +781,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 218,
       "total_boards": 274,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -801,7 +801,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 50,
       "total_boards": 78,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -846,7 +846,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 344,
       "total_boards": 455,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -903,7 +903,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 559,
       "total_boards": 731,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -952,7 +952,7 @@
       "publish_date": "2025-07-25T23:12:18.794Z",
       "playable_boards": 373,
       "total_boards": 530,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -974,7 +974,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 158,
       "total_boards": 188,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -995,7 +995,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 370,
       "total_boards": 514,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -1015,7 +1015,7 @@
       "publish_date": "2021-03-16T17:21:22.802Z",
       "playable_boards": 128,
       "total_boards": 169,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -1035,7 +1035,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 93,
       "total_boards": 115,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -1055,7 +1055,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 88,
       "total_boards": 127,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -1075,7 +1075,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 308,
       "total_boards": 398,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -1095,7 +1095,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 470,
       "total_boards": 618,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -1115,7 +1115,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 240,
       "total_boards": 309,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -1136,7 +1136,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 265,
       "total_boards": 418,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -1155,7 +1155,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 10,
       "total_boards": 19,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -1174,7 +1174,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 6,
       "total_boards": 18,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -1194,7 +1194,7 @@
       "publish_date": "2025-03-08T18:52:18.657Z",
       "playable_boards": 10,
       "total_boards": 12,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -1214,7 +1214,7 @@
       "publish_date": "2025-03-08T18:52:53.205Z",
       "playable_boards": 17,
       "total_boards": 17,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -1237,7 +1237,7 @@
       "publish_date": "2021-07-16T20:28:39Z",
       "playable_boards": 26,
       "total_boards": 26,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -1258,7 +1258,7 @@
       "publish_date": "2021-06-23T19:35:07.499Z",
       "playable_boards": 9,
       "total_boards": 9,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -1282,7 +1282,7 @@
       "publish_date": "2021-08-01T19:14:17Z",
       "playable_boards": 26,
       "total_boards": 26,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -1301,7 +1301,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 12,
       "total_boards": 16,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -1320,7 +1320,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 29,
       "total_boards": 41,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -1340,7 +1340,7 @@
       "publish_date": "2019-12-30T19:06:14.938Z",
       "playable_boards": 64,
       "total_boards": 89,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -1361,7 +1361,7 @@
       "publish_date": "2020-12-31T22:02:52.231Z",
       "playable_boards": 45,
       "total_boards": 46,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -1383,7 +1383,7 @@
       "publish_date": "2020-04-27T17:54:03Z",
       "playable_boards": 4,
       "total_boards": 4,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -1402,7 +1402,7 @@
       "publish_date": "2020-12-31T22:12:14Z",
       "playable_boards": 41,
       "total_boards": 45,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -1422,7 +1422,7 @@
       "publish_date": "2021-12-31T20:16:35.437Z",
       "playable_boards": 65,
       "total_boards": 80,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -1446,7 +1446,7 @@
       "publish_date": "2022-02-22T17:55:45Z",
       "playable_boards": 42,
       "total_boards": 42,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -1467,7 +1467,7 @@
       "publish_date": "2022-12-31T22:38:48.418Z",
       "playable_boards": 109,
       "total_boards": 119,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -1486,7 +1486,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 2,
       "total_boards": 2,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -1505,7 +1505,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 2,
       "total_boards": 2,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -1524,7 +1524,7 @@
       "publish_date": "2025-06-16T17:53:14.930Z",
       "playable_boards": 10,
       "total_boards": 10,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -1544,7 +1544,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 14,
       "total_boards": 34,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -1564,7 +1564,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 17,
       "total_boards": 22,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -1585,7 +1585,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 9,
       "total_boards": 10,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "1",
@@ -1604,7 +1604,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 17,
       "total_boards": 20,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -1623,7 +1623,7 @@
       "publish_date": "2022-01-16T21:53:11.840Z",
       "playable_boards": 23,
       "total_boards": 24,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -1642,7 +1642,7 @@
       "publish_date": "2022-01-16T21:53:14.917Z",
       "playable_boards": 41,
       "total_boards": 43,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -1661,7 +1661,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 42,
       "total_boards": 59,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -1680,7 +1680,7 @@
       "publish_date": "2021-01-29T19:13:04.029Z",
       "playable_boards": 6,
       "total_boards": 6,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -1699,7 +1699,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 41,
       "total_boards": 44,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -1719,7 +1719,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 61,
       "total_boards": 65,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -1738,7 +1738,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 101,
       "total_boards": 417,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -1758,7 +1758,7 @@
       "publish_date": "2019-01-01T03:17:23.886Z",
       "playable_boards": 36,
       "total_boards": 67,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -1781,7 +1781,7 @@
       "publish_date": "2022-03-24T17:39:10.467Z",
       "playable_boards": 52,
       "total_boards": 52,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -1801,7 +1801,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 14,
       "total_boards": 19,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -1820,7 +1820,7 @@
       "publish_date": "2021-05-20T20:31:25.729Z",
       "playable_boards": 8,
       "total_boards": 8,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -1839,7 +1839,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 26,
       "total_boards": 29,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -1858,7 +1858,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 47,
       "total_boards": 47,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -1880,7 +1880,7 @@
       "publish_date": "2022-05-27T17:31:07Z",
       "playable_boards": 45,
       "total_boards": 47,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -1902,7 +1902,7 @@
       "publish_date": "2022-02-22T17:55:06.478Z",
       "playable_boards": 2,
       "total_boards": 2,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -1922,7 +1922,7 @@
       "publish_date": "2021-01-29T19:13:58.871Z",
       "playable_boards": 27,
       "total_boards": 34,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -1941,7 +1941,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 3,
       "total_boards": 12,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -1960,7 +1960,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 2,
       "total_boards": 2,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -1979,7 +1979,7 @@
       "publish_date": "2020-02-09T18:48:10.542Z",
       "playable_boards": 49,
       "total_boards": 49,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -1998,7 +1998,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 33,
       "total_boards": 42,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2017,7 +2017,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 7,
       "total_boards": 13,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2036,7 +2036,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 88,
       "total_boards": 90,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2055,7 +2055,7 @@
       "publish_date": "2022-05-05T17:28:43Z",
       "playable_boards": 27,
       "total_boards": 33,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2074,7 +2074,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 23,
       "total_boards": 25,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2095,7 +2095,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 62,
       "total_boards": 64,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2114,7 +2114,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 57,
       "total_boards": 58,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2133,7 +2133,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 44,
       "total_boards": 52,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2153,7 +2153,7 @@
       "publish_date": "2021-05-28T19:11:09.685Z",
       "playable_boards": 24,
       "total_boards": 25,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2173,7 +2173,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 13,
       "total_boards": 17,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2193,7 +2193,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 39,
       "total_boards": 51,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2212,7 +2212,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 100,
       "total_boards": 140,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2232,7 +2232,7 @@
       "publish_date": "2021-05-05T19:55:06.953Z",
       "playable_boards": 51,
       "total_boards": 60,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2251,7 +2251,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 245,
       "total_boards": 296,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2272,7 +2272,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 11,
       "total_boards": 12,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2291,7 +2291,7 @@
       "publish_date": "2023-02-18T18:26:51.528Z",
       "playable_boards": 39,
       "total_boards": 39,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2310,7 +2310,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 39,
       "total_boards": 39,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2330,7 +2330,7 @@
       "publish_date": "2023-09-01T18:23:15.805Z",
       "playable_boards": 2,
       "total_boards": 6,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2349,7 +2349,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 25,
       "total_boards": 26,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2369,7 +2369,7 @@
       "publish_date": "2024-02-29T21:20:07.025Z",
       "playable_boards": 13,
       "total_boards": 23,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2389,7 +2389,7 @@
       "publish_date": "2021-10-17T19:08:17.191Z",
       "playable_boards": 53,
       "total_boards": 53,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2408,7 +2408,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 9,
       "total_boards": 10,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2428,7 +2428,7 @@
       "publish_date": "2022-11-23T19:08:28.760Z",
       "playable_boards": 10,
       "total_boards": 10,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2447,7 +2447,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 51,
       "total_boards": 53,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2466,7 +2466,7 @@
       "publish_date": "2021-05-20T20:31:48.375Z",
       "playable_boards": 21,
       "total_boards": 23,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2485,7 +2485,7 @@
       "publish_date": "2023-09-01T18:23:42.596Z",
       "playable_boards": 9,
       "total_boards": 10,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2504,7 +2504,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 5,
       "total_boards": 23,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2525,7 +2525,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 21,
       "total_boards": 26,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2544,7 +2544,7 @@
       "publish_date": "2023-09-01T18:23:52.718Z",
       "playable_boards": 12,
       "total_boards": 12,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2565,7 +2565,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 60,
       "total_boards": 60,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2584,7 +2584,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 101,
       "total_boards": 101,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2609,7 +2609,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 37,
       "total_boards": 41,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2628,7 +2628,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 7,
       "total_boards": 10,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2648,7 +2648,7 @@
       "publish_date": "2021-09-21T17:33:38.801Z",
       "playable_boards": 30,
       "total_boards": 31,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2668,7 +2668,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 36,
       "total_boards": 40,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2688,7 +2688,7 @@
       "publish_date": "2024-02-06T19:04:51.044Z",
       "playable_boards": 15,
       "total_boards": 15,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2708,7 +2708,7 @@
       "publish_date": "2024-07-11T18:43:06.682Z",
       "playable_boards": 18,
       "total_boards": 18,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2727,7 +2727,7 @@
       "publish_date": "2025-01-30T23:31:01.210Z",
       "playable_boards": 3,
       "total_boards": 35,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2746,7 +2746,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 26,
       "total_boards": 26,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2765,7 +2765,7 @@
       "publish_date": "2022-10-03T19:32:04.514Z",
       "playable_boards": 17,
       "total_boards": 19,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2786,7 +2786,7 @@
       "publish_date": "2021-12-31T23:46:35.995Z",
       "playable_boards": 11,
       "total_boards": 12,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2806,7 +2806,7 @@
       "publish_date": "2022-02-28T19:54:18.381Z",
       "playable_boards": 16,
       "total_boards": 16,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2825,7 +2825,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 5,
       "total_boards": 8,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2844,7 +2844,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 2,
       "total_boards": 5,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2863,7 +2863,7 @@
       "publish_date": "2020-05-18T18:42:11.880Z",
       "playable_boards": 5,
       "total_boards": 6,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2882,7 +2882,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 5,
       "total_boards": 22,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2903,7 +2903,7 @@
       "publish_date": "2019-05-29T02:24:35Z",
       "playable_boards": 22,
       "total_boards": 32,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2924,7 +2924,7 @@
       "publish_date": "2019-05-29T02:27:12Z",
       "playable_boards": 33,
       "total_boards": 51,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2943,7 +2943,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 16,
       "total_boards": 20,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2962,7 +2962,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 20,
       "total_boards": 24,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -2981,7 +2981,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 13,
       "total_boards": 24,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3000,7 +3000,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 38,
       "total_boards": 40,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3019,7 +3019,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 27,
       "total_boards": 28,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3038,7 +3038,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 26,
       "total_boards": 51,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3057,7 +3057,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 50,
       "total_boards": 52,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3078,7 +3078,7 @@
       "publish_date": "2021-03-16T17:21:12.365Z",
       "playable_boards": 100,
       "total_boards": 100,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3098,7 +3098,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 44,
       "total_boards": 44,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3118,7 +3118,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 16,
       "total_boards": 19,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3137,7 +3137,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 41,
       "total_boards": 49,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3157,7 +3157,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 50,
       "total_boards": 54,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3177,7 +3177,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 50,
       "total_boards": 50,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3196,7 +3196,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 13,
       "total_boards": 15,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3215,7 +3215,7 @@
       "publish_date": "2018-12-20T03:21:48.050Z",
       "playable_boards": 15,
       "total_boards": 15,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3235,7 +3235,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 31,
       "total_boards": 34,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3254,7 +3254,7 @@
       "publish_date": "2021-01-29T19:14:12.879Z",
       "playable_boards": 7,
       "total_boards": 7,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3274,7 +3274,7 @@
       "publish_date": "2022-12-22T23:31:25.079Z",
       "playable_boards": 24,
       "total_boards": 24,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3295,7 +3295,7 @@
       "publish_date": "2025-04-20T22:47:11.248Z",
       "playable_boards": 3,
       "total_boards": 3,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3315,7 +3315,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 16,
       "total_boards": 23,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3334,7 +3334,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 9,
       "total_boards": 9,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3353,7 +3353,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 31,
       "total_boards": 42,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3372,7 +3372,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 38,
       "total_boards": 56,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3392,7 +3392,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 49,
       "total_boards": 86,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3411,7 +3411,7 @@
       "publish_date": "2021-12-13T18:52:42Z",
       "playable_boards": 3,
       "total_boards": 3,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3431,7 +3431,7 @@
       "publish_date": "2018-12-26T21:30:52.832Z",
       "playable_boards": 2,
       "total_boards": 2,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3450,7 +3450,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 27,
       "total_boards": 30,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3470,7 +3470,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 8,
       "total_boards": 11,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3490,7 +3490,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 32,
       "total_boards": 49,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3511,7 +3511,7 @@
       "publish_date": "2021-01-29T19:14:32Z",
       "playable_boards": 7,
       "total_boards": 7,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3531,7 +3531,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 43,
       "total_boards": 44,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3551,7 +3551,7 @@
       "publish_date": "2024-12-13T19:30:09.014Z",
       "playable_boards": 16,
       "total_boards": 16,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3570,7 +3570,7 @@
       "publish_date": "1996-12-28T00:00:00Z",
       "playable_boards": 16,
       "total_boards": 16,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3589,7 +3589,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 20,
       "total_boards": 26,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3609,7 +3609,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 33,
       "total_boards": 33,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3630,7 +3630,7 @@
       "publish_date": "2020-05-18T18:42:36Z",
       "playable_boards": 18,
       "total_boards": 18,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3650,7 +3650,7 @@
       "publish_date": "2021-03-08T01:46:15.849Z",
       "playable_boards": 32,
       "total_boards": 34,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3669,7 +3669,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 43,
       "total_boards": 54,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3689,7 +3689,7 @@
       "publish_date": "2021-02-11T17:22:01.367Z",
       "playable_boards": 17,
       "total_boards": 19,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3709,7 +3709,7 @@
       "publish_date": "2021-02-11T17:21:44.624Z",
       "playable_boards": 8,
       "total_boards": 9,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3728,7 +3728,7 @@
       "publish_date": "2019-02-10T04:28:57.382Z",
       "playable_boards": 10,
       "total_boards": 10,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3748,7 +3748,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 32,
       "total_boards": 38,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3767,7 +3767,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 21,
       "total_boards": 22,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3788,7 +3788,7 @@
       "publish_date": "2025-02-16T18:42:55.792Z",
       "playable_boards": 3,
       "total_boards": 12,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3808,7 +3808,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 110,
       "total_boards": 135,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3830,7 +3830,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 37,
       "total_boards": 47,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3849,7 +3849,7 @@
       "publish_date": "2023-01-28T19:26:58.210Z",
       "playable_boards": 2,
       "total_boards": 2,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3869,7 +3869,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 37,
       "total_boards": 54,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3890,7 +3890,7 @@
       "publish_date": "2018-12-31T01:11:23Z",
       "playable_boards": 22,
       "total_boards": 25,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3910,7 +3910,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 3,
       "total_boards": 13,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3929,7 +3929,7 @@
       "publish_date": "2019-12-22T22:08:04.339Z",
       "playable_boards": 2,
       "total_boards": 29,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3948,7 +3948,7 @@
       "publish_date": "2024-03-23T21:22:28.620Z",
       "playable_boards": 23,
       "total_boards": 23,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3970,7 +3970,7 @@
       "publish_date": "2025-01-01T00:08:29.370Z",
       "playable_boards": 24,
       "total_boards": 50,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -3989,7 +3989,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 10,
       "total_boards": 14,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4009,7 +4009,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 16,
       "total_boards": 19,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4029,7 +4029,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 11,
       "total_boards": 13,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4049,7 +4049,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 20,
       "total_boards": 38,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4069,7 +4069,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 53,
       "total_boards": 62,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4088,7 +4088,7 @@
       "publish_date": "2022-07-16T17:48:26.900Z",
       "playable_boards": 14,
       "total_boards": 14,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4108,7 +4108,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 30,
       "total_boards": 37,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4127,7 +4127,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 2,
       "total_boards": 2,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4146,7 +4146,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 2,
       "total_boards": 4,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4165,7 +4165,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 13,
       "total_boards": 17,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4184,7 +4184,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 2,
       "total_boards": 2,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4203,7 +4203,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 36,
       "total_boards": 44,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4223,7 +4223,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 9,
       "total_boards": 13,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4244,7 +4244,7 @@
       "publish_date": "2023-10-11T17:41:46Z",
       "playable_boards": 10,
       "total_boards": 10,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4263,7 +4263,7 @@
       "publish_date": "2023-08-11T19:19:37.425Z",
       "playable_boards": 8,
       "total_boards": 13,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4283,7 +4283,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 8,
       "total_boards": 11,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4303,7 +4303,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 21,
       "total_boards": 22,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4323,7 +4323,7 @@
       "publish_date": "2022-10-20T21:27:47.972Z",
       "playable_boards": 14,
       "total_boards": 15,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4342,7 +4342,7 @@
       "publish_date": "2018-12-20T03:32:29.368Z",
       "playable_boards": 21,
       "total_boards": 22,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4361,7 +4361,7 @@
       "publish_date": "2018-12-26T21:31:34.565Z",
       "playable_boards": 18,
       "total_boards": 19,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4380,7 +4380,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 8,
       "total_boards": 13,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4399,7 +4399,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 18,
       "total_boards": 19,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4418,7 +4418,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 10,
       "total_boards": 23,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4439,7 +4439,7 @@
       "publish_date": "2020-05-18T18:44:15Z",
       "playable_boards": 35,
       "total_boards": 36,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4460,7 +4460,7 @@
       "publish_date": "2022-02-04T22:40:20Z",
       "playable_boards": 35,
       "total_boards": 36,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4479,7 +4479,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 24,
       "total_boards": 30,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4498,7 +4498,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 59,
       "total_boards": 66,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4518,7 +4518,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 48,
       "total_boards": 58,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4537,7 +4537,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 9,
       "total_boards": 12,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4556,7 +4556,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 6,
       "total_boards": 11,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4575,7 +4575,7 @@
       "publish_date": "2019-11-04T21:10:49.390Z",
       "playable_boards": 7,
       "total_boards": 12,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4594,7 +4594,7 @@
       "publish_date": "2020-06-30T19:23:08Z",
       "playable_boards": 11,
       "total_boards": 16,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4613,7 +4613,7 @@
       "publish_date": "2020-06-30T19:23:29Z",
       "playable_boards": 11,
       "total_boards": 17,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4632,7 +4632,7 @@
       "publish_date": "2020-06-30T19:14:07.296Z",
       "playable_boards": 12,
       "total_boards": 18,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4651,7 +4651,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 53,
       "total_boards": 82,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4671,7 +4671,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 60,
       "total_boards": 64,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4690,7 +4690,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 8,
       "total_boards": 15,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4710,7 +4710,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 15,
       "total_boards": 17,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4730,7 +4730,7 @@
       "publish_date": "2019-12-16T20:44:51.009Z",
       "playable_boards": 12,
       "total_boards": 14,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4750,7 +4750,7 @@
       "publish_date": "2019-11-28T19:42:57.704Z",
       "playable_boards": 12,
       "total_boards": 14,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4770,7 +4770,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 13,
       "total_boards": 16,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4790,7 +4790,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 21,
       "total_boards": 22,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4809,7 +4809,7 @@
       "publish_date": "2021-08-24T17:48:08.788Z",
       "playable_boards": 5,
       "total_boards": 9,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4829,7 +4829,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 18,
       "total_boards": 28,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4849,7 +4849,7 @@
       "publish_date": "2022-02-10T18:55:21.967Z",
       "playable_boards": 5,
       "total_boards": 9,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4869,7 +4869,7 @@
       "publish_date": "2022-02-10T18:55:31.012Z",
       "playable_boards": 12,
       "total_boards": 12,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4889,7 +4889,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 11,
       "total_boards": 15,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4909,7 +4909,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 3,
       "total_boards": 3,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4928,7 +4928,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 10,
       "total_boards": 10,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4951,7 +4951,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 32,
       "total_boards": 44,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4972,7 +4972,7 @@
       "publish_date": "2022-03-24T17:38:50Z",
       "playable_boards": 4,
       "total_boards": 54,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -4991,7 +4991,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 36,
       "total_boards": 47,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -5011,7 +5011,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 13,
       "total_boards": 14,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -5037,7 +5037,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 14,
       "total_boards": 16,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -5064,7 +5064,7 @@
       "publish_date": "2022-09-07T17:32:56.110Z",
       "playable_boards": 14,
       "total_boards": 14,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -5091,7 +5091,7 @@
       "publish_date": "2023-04-20T17:03:19.810Z",
       "playable_boards": 14,
       "total_boards": 14,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -5111,7 +5111,7 @@
       "publish_date": "2021-01-29T19:14:52.687Z",
       "playable_boards": 12,
       "total_boards": 12,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -5133,7 +5133,7 @@
       "publish_date": "2018-12-20T03:33:19.365Z",
       "playable_boards": 14,
       "total_boards": 15,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -5155,7 +5155,7 @@
       "publish_date": "2018-12-20T03:35:01.860Z",
       "playable_boards": 13,
       "total_boards": 14,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -5180,7 +5180,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 19,
       "total_boards": 21,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -5199,7 +5199,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 50,
       "total_boards": 51,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -5219,7 +5219,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 3,
       "total_boards": 9,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -5238,7 +5238,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 10,
       "total_boards": 10,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -5257,7 +5257,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 21,
       "total_boards": 23,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -5277,7 +5277,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 25,
       "total_boards": 25,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -5297,7 +5297,7 @@
       "publish_date": "2024-11-16T18:37:15.728Z",
       "playable_boards": 25,
       "total_boards": 25,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -5317,7 +5317,7 @@
       "publish_date": "2024-12-13T19:30:49.655Z",
       "playable_boards": 22,
       "total_boards": 23,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -5338,7 +5338,7 @@
       "publish_date": "2021-09-21T17:33:29.999Z",
       "playable_boards": 35,
       "total_boards": 35,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -5357,7 +5357,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 40,
       "total_boards": 40,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -5377,7 +5377,7 @@
       "publish_date": "2019-12-16T20:49:09Z",
       "playable_boards": 39,
       "total_boards": 40,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -5397,7 +5397,7 @@
       "publish_date": "2019-12-16T20:47:17.049Z",
       "playable_boards": 19,
       "total_boards": 39,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -5416,7 +5416,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 32,
       "total_boards": 32,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -5435,7 +5435,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 37,
       "total_boards": 41,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -5455,7 +5455,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 15,
       "total_boards": 23,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -5474,7 +5474,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 63,
       "total_boards": 63,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -5493,7 +5493,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 47,
       "total_boards": 53,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -5514,7 +5514,7 @@
       "publish_date": "2023-05-05T17:29:29.348Z",
       "playable_boards": 21,
       "total_boards": 24,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -5535,7 +5535,7 @@
       "publish_date": "2024-12-13T20:11:32.109Z",
       "playable_boards": 170,
       "total_boards": 177,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -5554,7 +5554,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 9,
       "total_boards": 16,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -5575,7 +5575,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 6,
       "total_boards": 8,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "a",
@@ -5595,7 +5595,7 @@
       "publish_date": "2022-12-22T23:31:54.389Z",
       "playable_boards": 16,
       "total_boards": 17,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -5614,7 +5614,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 10,
       "total_boards": 11,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -5633,7 +5633,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 38,
       "total_boards": 43,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -5653,7 +5653,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 7,
       "total_boards": 13,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -5672,7 +5672,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 7,
       "total_boards": 12,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -5692,7 +5692,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 3,
       "total_boards": 3,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -5712,7 +5712,7 @@
       "publish_date": "2019-08-30T02:38:17Z",
       "playable_boards": 3,
       "total_boards": 3,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -5731,7 +5731,7 @@
       "publish_date": "2020-03-01T17:21:50Z",
       "playable_boards": 49,
       "total_boards": 49,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -5750,7 +5750,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 13,
       "total_boards": 16,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -5771,7 +5771,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 28,
       "total_boards": 32,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -5791,7 +5791,7 @@
       "publish_date": "2020-03-17T18:15:05Z",
       "playable_boards": 59,
       "total_boards": 63,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -5811,7 +5811,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 101,
       "total_boards": 126,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -5830,7 +5830,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 5,
       "total_boards": 6,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -5852,7 +5852,7 @@
       "publish_date": "2025-04-04T18:24:02Z",
       "playable_boards": 20,
       "total_boards": 24,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -5871,7 +5871,7 @@
       "publish_date": "2023-02-18T18:28:35.479Z",
       "playable_boards": 34,
       "total_boards": 34,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -5890,7 +5890,7 @@
       "publish_date": "2023-02-18T18:28:38.369Z",
       "playable_boards": 36,
       "total_boards": 36,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -5909,7 +5909,7 @@
       "publish_date": "2023-02-18T18:28:41Z",
       "playable_boards": 41,
       "total_boards": 41,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -5928,7 +5928,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 7,
       "total_boards": 7,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -5947,7 +5947,7 @@
       "publish_date": "2020-05-31T18:05:09.231Z",
       "playable_boards": 22,
       "total_boards": 25,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -5966,7 +5966,7 @@
       "publish_date": "2024-04-13T23:39:54.177Z",
       "playable_boards": 17,
       "total_boards": 17,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -5985,7 +5985,7 @@
       "publish_date": "2021-03-25T17:42:33.119Z",
       "playable_boards": 10,
       "total_boards": 14,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6004,7 +6004,7 @@
       "publish_date": "2021-03-25T17:42:50.215Z",
       "playable_boards": 14,
       "total_boards": 14,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6024,7 +6024,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 10,
       "total_boards": 11,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6044,7 +6044,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 32,
       "total_boards": 36,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6064,7 +6064,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 3,
       "total_boards": 3,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6083,7 +6083,7 @@
       "publish_date": "2021-03-07T18:58:31Z",
       "playable_boards": 13,
       "total_boards": 13,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6102,7 +6102,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 21,
       "total_boards": 21,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6123,7 +6123,7 @@
       "publish_date": "2021-10-27T16:18:40.458Z",
       "playable_boards": 26,
       "total_boards": 26,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6142,7 +6142,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 15,
       "total_boards": 22,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6162,7 +6162,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 6,
       "total_boards": 13,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6182,7 +6182,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 9,
       "total_boards": 26,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6202,7 +6202,7 @@
       "publish_date": "2022-07-16T17:48:35.375Z",
       "playable_boards": 25,
       "total_boards": 25,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6221,7 +6221,7 @@
       "publish_date": "2018-12-26T21:35:25Z",
       "playable_boards": 18,
       "total_boards": 18,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6240,7 +6240,7 @@
       "publish_date": "2022-01-08T21:27:05.858Z",
       "playable_boards": 12,
       "total_boards": 12,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6259,7 +6259,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 8,
       "total_boards": 10,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6279,7 +6279,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 9,
       "total_boards": 14,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6298,7 +6298,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 11,
       "total_boards": 13,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6317,7 +6317,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 179,
       "total_boards": 187,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6336,7 +6336,7 @@
       "publish_date": "2020-12-25T01:55:54.127Z",
       "playable_boards": 132,
       "total_boards": 135,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6355,7 +6355,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 15,
       "total_boards": 19,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6375,7 +6375,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 8,
       "total_boards": 14,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6394,7 +6394,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 10,
       "total_boards": 14,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6415,7 +6415,7 @@
       "publish_date": "2021-04-19T00:59:27.833Z",
       "playable_boards": 1,
       "total_boards": 1,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6434,7 +6434,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 2,
       "total_boards": 2,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6454,7 +6454,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 4,
       "total_boards": 11,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6476,7 +6476,7 @@
       "publish_date": "2021-11-08T18:15:34Z",
       "playable_boards": 31,
       "total_boards": 40,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6495,7 +6495,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 6,
       "total_boards": 15,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6515,7 +6515,7 @@
       "publish_date": "2024-12-13T19:30:43.828Z",
       "playable_boards": 45,
       "total_boards": 46,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6534,7 +6534,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 23,
       "total_boards": 37,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6555,7 +6555,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 24,
       "total_boards": 24,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6574,7 +6574,7 @@
       "publish_date": "2021-04-27T18:22:12.430Z",
       "playable_boards": 18,
       "total_boards": 18,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6594,7 +6594,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 10,
       "total_boards": 16,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6613,7 +6613,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 8,
       "total_boards": 9,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6632,7 +6632,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 27,
       "total_boards": 27,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6651,7 +6651,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 91,
       "total_boards": 102,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6670,7 +6670,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 2,
       "total_boards": 34,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6691,7 +6691,7 @@
       "publish_date": "2019-12-22T21:56:13Z",
       "playable_boards": 58,
       "total_boards": 59,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6712,7 +6712,7 @@
       "publish_date": "2023-02-18T18:27:23.369Z",
       "playable_boards": 58,
       "total_boards": 59,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6731,7 +6731,7 @@
       "publish_date": "2024-02-29T21:20:33.392Z",
       "playable_boards": 14,
       "total_boards": 15,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6751,7 +6751,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 36,
       "total_boards": 37,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6772,7 +6772,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 22,
       "total_boards": 22,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6793,7 +6793,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 30,
       "total_boards": 35,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6815,7 +6815,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 21,
       "total_boards": 21,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6834,7 +6834,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 3,
       "total_boards": 4,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6855,7 +6855,7 @@
       "publish_date": "2023-07-13T20:57:57.684Z",
       "playable_boards": 2,
       "total_boards": 2,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6874,7 +6874,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 2,
       "total_boards": 2,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6894,7 +6894,7 @@
       "publish_date": "2020-09-13T16:57:08Z",
       "playable_boards": 21,
       "total_boards": 24,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6916,7 +6916,7 @@
       "publish_date": "2021-04-19T00:59:36Z",
       "playable_boards": 21,
       "total_boards": 24,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6935,7 +6935,7 @@
       "publish_date": "2019-11-04T21:06:10Z",
       "playable_boards": 5,
       "total_boards": 6,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6954,7 +6954,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 87,
       "total_boards": 87,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6974,7 +6974,7 @@
       "publish_date": "2019-12-22T21:52:37Z",
       "playable_boards": 13,
       "total_boards": 13,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -6994,7 +6994,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 22,
       "total_boards": 25,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7014,7 +7014,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 7,
       "total_boards": 21,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7034,7 +7034,7 @@
       "publish_date": "2023-01-28T19:27:09.872Z",
       "playable_boards": 27,
       "total_boards": 28,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7055,7 +7055,7 @@
       "publish_date": "2023-10-11T17:41:49.710Z",
       "playable_boards": 12,
       "total_boards": 12,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7076,7 +7076,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 3,
       "total_boards": 52,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7096,7 +7096,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 24,
       "total_boards": 27,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7117,7 +7117,7 @@
       "publish_date": "2024-04-13T23:41:05.992Z",
       "playable_boards": 2,
       "total_boards": 84,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7137,7 +7137,7 @@
       "publish_date": "2026-01-01T19:29:48.976Z",
       "playable_boards": 20,
       "total_boards": 23,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7157,7 +7157,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 19,
       "total_boards": 24,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7178,7 +7178,7 @@
       "publish_date": "2020-08-10T17:27:13.862Z",
       "playable_boards": 59,
       "total_boards": 61,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7201,7 +7201,7 @@
       "publish_date": "2022-11-28T19:37:47.011Z",
       "playable_boards": 6,
       "total_boards": 9,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7223,7 +7223,7 @@
       "publish_date": "2025-03-08T18:50:13.616Z",
       "playable_boards": 18,
       "total_boards": 18,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7242,7 +7242,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 11,
       "total_boards": 13,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7262,7 +7262,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 17,
       "total_boards": 30,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7281,7 +7281,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 40,
       "total_boards": 44,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7300,7 +7300,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 19,
       "total_boards": 21,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7320,7 +7320,7 @@
       "publish_date": "2022-07-16T17:48:45.040Z",
       "playable_boards": 48,
       "total_boards": 48,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7339,7 +7339,7 @@
       "publish_date": "2024-12-13T19:30:41.188Z",
       "playable_boards": 11,
       "total_boards": 12,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7358,7 +7358,7 @@
       "publish_date": "2019-03-23T02:25:09Z",
       "playable_boards": 12,
       "total_boards": 14,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7378,7 +7378,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 28,
       "total_boards": 36,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7398,7 +7398,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 25,
       "total_boards": 28,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7419,7 +7419,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 10,
       "total_boards": 13,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7439,7 +7439,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 5,
       "total_boards": 54,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7460,7 +7460,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 9,
       "total_boards": 26,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7480,7 +7480,7 @@
       "publish_date": "2023-08-11T19:20:12.673Z",
       "playable_boards": 6,
       "total_boards": 8,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7501,7 +7501,7 @@
       "publish_date": "2025-01-30T23:31:13.774Z",
       "playable_boards": 22,
       "total_boards": 34,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7521,7 +7521,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 18,
       "total_boards": 18,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7540,7 +7540,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 46,
       "total_boards": 49,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7559,7 +7559,7 @@
       "publish_date": "2025-09-22T17:19:25.806Z",
       "playable_boards": 44,
       "total_boards": 52,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7579,7 +7579,7 @@
       "publish_date": "2021-05-01T18:59:00.043Z",
       "playable_boards": 16,
       "total_boards": 16,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7599,7 +7599,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 102,
       "total_boards": 118,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7618,7 +7618,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 56,
       "total_boards": 69,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7637,7 +7637,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 46,
       "total_boards": 49,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7659,7 +7659,7 @@
       "publish_date": "2023-12-31T23:40:08.665Z",
       "playable_boards": 14,
       "total_boards": 14,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7682,7 +7682,7 @@
       "publish_date": "2022-08-22T19:22:50.509Z",
       "playable_boards": 1,
       "total_boards": 12,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7702,7 +7702,7 @@
       "publish_date": "2022-04-19T20:34:43Z",
       "playable_boards": 42,
       "total_boards": 45,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7721,7 +7721,7 @@
       "publish_date": "2023-04-20T17:07:14.988Z",
       "playable_boards": 3,
       "total_boards": 4,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7741,7 +7741,7 @@
       "publish_date": "2020-03-24T18:56:40.464Z",
       "playable_boards": 29,
       "total_boards": 29,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7760,7 +7760,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 58,
       "total_boards": 61,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7780,7 +7780,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 91,
       "total_boards": 101,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7800,7 +7800,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 2,
       "total_boards": 28,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7820,7 +7820,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 2,
       "total_boards": 34,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7839,7 +7839,7 @@
       "publish_date": "2021-03-07T18:56:43.657Z",
       "playable_boards": 3,
       "total_boards": 3,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7858,7 +7858,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 37,
       "total_boards": 38,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7877,7 +7877,7 @@
       "publish_date": "2023-12-17T23:51:12.250Z",
       "playable_boards": 17,
       "total_boards": 33,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7897,7 +7897,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 9,
       "total_boards": 10,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7916,7 +7916,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 15,
       "total_boards": 18,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7935,7 +7935,7 @@
       "publish_date": "2022-01-16T21:52:41.294Z",
       "playable_boards": 7,
       "total_boards": 9,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7954,7 +7954,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 26,
       "total_boards": 27,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7977,7 +7977,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 19,
       "total_boards": 20,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -7996,7 +7996,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 38,
       "total_boards": 42,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8015,7 +8015,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 17,
       "total_boards": 24,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8034,7 +8034,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 22,
       "total_boards": 23,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8053,7 +8053,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 6,
       "total_boards": 6,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8074,7 +8074,7 @@
       "publish_date": "2025-07-25T23:14:09.308Z",
       "playable_boards": 6,
       "total_boards": 6,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8093,7 +8093,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 46,
       "total_boards": 50,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8112,7 +8112,7 @@
       "publish_date": "2025-06-16T17:51:58.211Z",
       "playable_boards": 7,
       "total_boards": 10,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8133,7 +8133,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 13,
       "total_boards": 18,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8153,7 +8153,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 5,
       "total_boards": 14,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8173,7 +8173,7 @@
       "publish_date": "2022-05-17T17:02:54.443Z",
       "playable_boards": 2,
       "total_boards": 2,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8194,7 +8194,7 @@
       "publish_date": "2020-02-09T18:50:26.882Z",
       "playable_boards": 54,
       "total_boards": 57,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8215,7 +8215,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 107,
       "total_boards": 140,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8236,7 +8236,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 107,
       "total_boards": 140,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8255,7 +8255,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 33,
       "total_boards": 33,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8275,7 +8275,7 @@
       "publish_date": "2024-09-28T18:13:12.994Z",
       "playable_boards": 16,
       "total_boards": 16,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8295,7 +8295,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 31,
       "total_boards": 44,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8315,7 +8315,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 48,
       "total_boards": 73,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8335,7 +8335,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 67,
       "total_boards": 90,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8354,7 +8354,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 4,
       "total_boards": 14,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8373,7 +8373,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 15,
       "total_boards": 23,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8392,7 +8392,7 @@
       "publish_date": "2021-05-20T20:31:55.559Z",
       "playable_boards": 4,
       "total_boards": 6,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8411,7 +8411,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 11,
       "total_boards": 11,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8430,7 +8430,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 22,
       "total_boards": 29,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8449,7 +8449,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 12,
       "total_boards": 13,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8468,7 +8468,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 88,
       "total_boards": 111,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8487,7 +8487,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 29,
       "total_boards": 29,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8506,7 +8506,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 5,
       "total_boards": 11,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8525,7 +8525,7 @@
       "publish_date": "2021-10-27T16:18:28.538Z",
       "playable_boards": 25,
       "total_boards": 30,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8544,7 +8544,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 3,
       "total_boards": 3,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8566,7 +8566,7 @@
       "publish_date": "2023-12-17T23:49:35.794Z",
       "playable_boards": 51,
       "total_boards": 54,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8589,7 +8589,7 @@
       "publish_date": "2022-11-23T19:09:18.334Z",
       "playable_boards": 17,
       "total_boards": 33,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8608,7 +8608,7 @@
       "publish_date": "2021-07-16T20:27:51.428Z",
       "playable_boards": 15,
       "total_boards": 15,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8627,7 +8627,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 19,
       "total_boards": 27,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8647,7 +8647,7 @@
       "publish_date": "2020-12-25T01:53:38.436Z",
       "playable_boards": 6,
       "total_boards": 6,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8666,7 +8666,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 14,
       "total_boards": 22,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8686,7 +8686,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 12,
       "total_boards": 23,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8705,7 +8705,7 @@
       "publish_date": "2024-06-29T19:39:41.362Z",
       "playable_boards": 29,
       "total_boards": 41,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8727,7 +8727,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 13,
       "total_boards": 14,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8747,7 +8747,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 2,
       "total_boards": 25,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8767,7 +8767,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 14,
       "total_boards": 15,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8787,7 +8787,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 17,
       "total_boards": 20,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8807,7 +8807,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 6,
       "total_boards": 7,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8826,7 +8826,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 29,
       "total_boards": 32,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8846,7 +8846,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 56,
       "total_boards": 69,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8867,7 +8867,7 @@
       "publish_date": "2022-04-29T18:50:34.441Z",
       "playable_boards": 10,
       "total_boards": 11,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8887,7 +8887,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 35,
       "total_boards": 57,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8907,7 +8907,7 @@
       "publish_date": "2022-01-08T21:26:52.802Z",
       "playable_boards": 5,
       "total_boards": 5,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8926,7 +8926,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 5,
       "total_boards": 9,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8945,7 +8945,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 3,
       "total_boards": 7,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8964,7 +8964,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 30,
       "total_boards": 42,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -8983,7 +8983,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 18,
       "total_boards": 18,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -9003,7 +9003,7 @@
       "publish_date": "2020-12-31T22:18:11.099Z",
       "playable_boards": 7,
       "total_boards": 7,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -9022,7 +9022,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 11,
       "total_boards": 24,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -9042,7 +9042,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 5,
       "total_boards": 6,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -9061,7 +9061,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 43,
       "total_boards": 60,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -9081,7 +9081,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 28,
       "total_boards": 32,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -9100,7 +9100,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 39,
       "total_boards": 40,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -9119,7 +9119,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 22,
       "total_boards": 22,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -9138,7 +9138,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 129,
       "total_boards": 144,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -9157,7 +9157,7 @@
       "publish_date": "2021-04-19T00:59:01.459Z",
       "playable_boards": 2,
       "total_boards": 3,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -9176,7 +9176,7 @@
       "publish_date": "2021-08-24T17:47:50.575Z",
       "playable_boards": 4,
       "total_boards": 47,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -9195,7 +9195,7 @@
       "publish_date": "2024-12-13T19:30:36.933Z",
       "playable_boards": 14,
       "total_boards": 14,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -9214,7 +9214,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 44,
       "total_boards": 59,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -9233,7 +9233,7 @@
       "publish_date": "2020-12-31T22:06:19.399Z",
       "playable_boards": 6,
       "total_boards": 6,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -9252,7 +9252,7 @@
       "publish_date": "2022-02-28T19:54:25Z",
       "playable_boards": 6,
       "total_boards": 6,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "b",
@@ -9272,7 +9272,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 24,
       "total_boards": 25,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "c",
@@ -9292,7 +9292,7 @@
       "publish_date": "2024-05-31T20:01:53.153Z",
       "playable_boards": 178,
       "total_boards": 185,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "c",
@@ -9312,7 +9312,7 @@
       "publish_date": "2024-05-31T20:00:12.052Z",
       "playable_boards": 16,
       "total_boards": 34,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "c",
@@ -9332,7 +9332,7 @@
       "publish_date": "2022-01-27T21:03:19.411Z",
       "playable_boards": 6,
       "total_boards": 7,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "c",
@@ -9351,7 +9351,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 8,
       "total_boards": 28,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "c",
@@ -9371,7 +9371,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 4,
       "total_boards": 4,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "c",
@@ -9390,7 +9390,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 23,
       "total_boards": 33,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "c",
@@ -9410,7 +9410,7 @@
       "publish_date": "2022-11-23T19:08:33.803Z",
       "playable_boards": 89,
       "total_boards": 101,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "c",
@@ -9430,7 +9430,7 @@
       "publish_date": "2022-11-23T19:08:22.278Z",
       "playable_boards": 9,
       "total_boards": 9,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "c",
@@ -9451,7 +9451,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 3,
       "total_boards": 3,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "c",
@@ -9470,7 +9470,7 @@
       "publish_date": "2021-05-16T18:38:41.339Z",
       "playable_boards": 2,
       "total_boards": 2,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "c",
@@ -9491,7 +9491,7 @@
       "publish_date": "2021-05-16T18:38:59Z",
       "playable_boards": 2,
       "total_boards": 2,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "c",
@@ -9512,7 +9512,7 @@
       "publish_date": "2019-12-16T21:02:16.084Z",
       "playable_boards": 11,
       "total_boards": 11,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "c",
@@ -9531,7 +9531,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 24,
       "total_boards": 33,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "c",
@@ -9551,7 +9551,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 30,
       "total_boards": 30,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "c",
@@ -9572,7 +9572,7 @@
       "publish_date": "2021-05-01T18:59:03Z",
       "playable_boards": 28,
       "total_boards": 28,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "c",
@@ -9592,7 +9592,7 @@
       "publish_date": "2024-05-31T20:02:22.078Z",
       "playable_boards": 156,
       "total_boards": 337,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "c",
@@ -9613,7 +9613,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 24,
       "total_boards": 38,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "c",
@@ -9633,7 +9633,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 142,
       "total_boards": 146,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "c",
@@ -9653,7 +9653,7 @@
       "publish_date": "2024-09-28T18:14:01.953Z",
       "playable_boards": 8,
       "total_boards": 8,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "c",
@@ -9673,7 +9673,7 @@
       "publish_date": "2020-03-01T17:13:48Z",
       "playable_boards": 15,
       "total_boards": 15,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "c",
@@ -9692,7 +9692,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 26,
       "total_boards": 27,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "c",
@@ -9711,7 +9711,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 33,
       "total_boards": 38,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "c",
@@ -9735,7 +9735,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 31,
       "total_boards": 36,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "c",
@@ -9755,7 +9755,7 @@
       "publish_date": "2023-12-31T23:40:15.963Z",
       "playable_boards": 29,
       "total_boards": 29,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "c",
@@ -9774,7 +9774,7 @@
       "publish_date": "2024-08-24T23:29:14.708Z",
       "playable_boards": 17,
       "total_boards": 17,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "c",
@@ -9793,7 +9793,7 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 6,
       "total_boards": 6,
-      "status": "skipped"
+      "status": "ok"
     },
     {
       "letter": "c",

@@ -8,6 +8,8 @@ Offline mirror of **vanilla ZZT world** archives from [Museum of ZZT](https://mu
 |------|-----------|---------|
 | `manifest.json` | yes | Metadata for every included archive |
 | `archives/{letter}/{filename}` | no (gitignored) | Original museum ZIP downloads |
+| `extracted/{letter}/{zip_stem}/` | no (gitignored) | Unpacked `.zzt` / `.brd` from archives |
+| `zss/` | yes | One `.zss` per coded element + `manifest.json` |
 
 ## Filter rules
 
@@ -36,6 +38,21 @@ yarn task run content:zzt:corpus:sync limit 5
 
 # Force re-download
 yarn task run content:zzt:corpus:sync force
+
+# Unpack archives → extracted/ (.zzt and .brd only)
+yarn task run content:zzt:corpus:extract
+
+# Convert extracted boards → zss/*.zss + zss/manifest.json
+yarn task run content:zzt:corpus:zss
+
+# Full pipeline (extract + zss)
+yarn task run content:zzt:corpus:build
+
+# Smoke: first 5 archives only
+yarn task run content:zzt:corpus:build limit 5
+
+# Force re-extract / overwrite .zss outputs
+yarn task run content:zzt:corpus:build force
 ```
 
 ## API

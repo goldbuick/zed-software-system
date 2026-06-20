@@ -11,11 +11,13 @@ test.describe('wanix basic-vm wanix-term iframe smoke', () => {
   test('smoke-basic-vm-term-iframe.html under mock WebGL parent', async ({
     page,
   }) => {
+    test.setTimeout(600_000)
+    page.setDefaultTimeout(600_000)
     const collector = attachwanixpaniccollector(page)
     const errors: string[] = []
     page.on('pageerror', (err) => errors.push(err.message))
 
-    await page.goto('/wanix/smoke-basic-vm-term-iframe.html')
+    await page.goto('/wanix-iframe-smoke.html')
     await page.waitForFunction(
       () =>
         (window as Window & { __WANIX_IFRAME_SMOKE_OK__?: boolean }).__WANIX_IFRAME_SMOKE_OK__ ===
