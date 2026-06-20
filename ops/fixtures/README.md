@@ -21,6 +21,7 @@ add co-located `__fixtures__` trees beside implementation code.
 | `content/templates/` | Importable book templates (`manifest.json` + `pages/*.json`) |
 | `content/dist/` | Built `.book.json` output (gitignored) |
 | `wanix/` | WASI `.wat`/`.c` sources; built `.wasm` gitignored |
+| `harness/` | Daisy/synth Playwright harness `.html` (not shipped in prod) |
 | `e2e/` | Generated e2e repro JSON |
 | `generated/training/` | Generated SFT corpus (`train.jsonl`, `eval.jsonl`, `manifest.json`) |
 

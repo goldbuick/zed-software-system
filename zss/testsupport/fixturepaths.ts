@@ -25,6 +25,7 @@ export const SYNTH_MAXI_ARCHIVE_FIXTURES_DIR = path.join(
 
 export const PARSE_FIXTURES_DIR = path.join(FIXTURES_ROOT, 'parse')
 export const WANIX_FIXTURES_DIR = path.join(FIXTURES_ROOT, 'wanix')
+export const HARNESS_FIXTURES_DIR = path.join(FIXTURES_ROOT, 'harness')
 export const E2E_FIXTURES_DIR = path.join(FIXTURES_ROOT, 'e2e')
 export const TRAINING_CORPUS_DIR = path.join(
   FIXTURES_ROOT,

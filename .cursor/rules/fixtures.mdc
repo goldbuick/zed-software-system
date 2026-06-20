@@ -19,6 +19,7 @@ All test fixture **assets** live under repo-root [`ops/fixtures/`](ops/fixtures/
 | Memory WASM | `memory/wasm/` |
 | Synth | `synth/wasm/`, `synth/daisy/` |
 | Wanix WASI | `wanix/` (built `.wasm` gitignored) |
+| Harness HTML | `harness/` (Daisy/synth Playwright pages; not in `cafe/public`) |
 | Book templates | `content/templates/`; build output `content/dist/` |
 | Books (npm) | `books/` |
 | E2e repro | `e2e/` |

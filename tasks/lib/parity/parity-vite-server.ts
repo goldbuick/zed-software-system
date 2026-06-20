@@ -7,6 +7,8 @@ import path from 'node:path'
 import { createServer as createViteServer } from 'vite'
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
 
+import { harnesshtmlmiddleware } from './harness-middleware.ts'
+
 export const PARITY_SERVER_PORT = 9877
 
 export async function startparityvite(
@@ -39,9 +41,11 @@ export async function startparityvite(
   })
 
   const server = http.createServer((req, res) => {
-    vite.middlewares.handle(req, res, () => {
-      res.statusCode = 404
-      res.end('not found')
+    harnesshtmlmiddleware()(req, res, () => {
+      vite.middlewares.handle(req, res, () => {
+        res.statusCode = 404
+        res.end('not found')
+      })
     })
   })
 
