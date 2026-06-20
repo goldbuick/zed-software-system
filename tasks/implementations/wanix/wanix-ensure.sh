@@ -16,6 +16,9 @@ fi
 
 mkdir -p "$PUBLIC"
 cp "$NPM_DIST/wanix.min.js" "$NPM_DIST/wanix.wasm" "$PUBLIC/"
+if [ -f "$NPM_DIST/wanix.debug.wasm" ]; then
+  cp "$NPM_DIST/wanix.debug.wasm" "$PUBLIC/"
+fi
 
 NPM_VERSION="$(node -p "require('$ROOT/node_modules/wanix/package.json').version")"
 cat >"$PUBLIC/BUILD_ID" <<EOF

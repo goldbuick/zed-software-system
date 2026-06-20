@@ -12,6 +12,11 @@ export const WANIX_TASKS: TaskDef[] = [
       'Compile ops/fixtures/wanix/*.wat to .wasm via wabt (yarn install provides wat2wasm)',
     run: shell('sh ops/fixtures/wanix/build-wasm.sh'),
   }),
+  def('wanix:gojs:build', {
+    description:
+      'Build upstream gojscheck.wasm (Go js/wasm) for basic-terminal.html harness',
+    run: shell('sh ops/fixtures/wanix/build-gojs.sh'),
+  }),
   def('wanix:wasm:build:c', {
     description:
       'Compile ops/fixtures/wanix/*.c to .wasm when wasi-sdk is installed (skips if missing)',

@@ -31,6 +31,8 @@ VM prep must **not** call `_setupNamespace` a second time after `#ramfs` (that c
 
 Manual **vm-simple** (matches upstream basic-vm.html): [/wanix/vm-simple.html](http://localhost:7777/wanix/vm-simple.html) — full-height xterm; type `root`, Enter, Enter, then `id`.
 
+Manual **basic-terminal** (matches upstream [basic-terminal.html](https://github.com/tractordev/wanix/blob/main/examples/basic-terminal.html)): [/wanix/basic-terminal.html](http://localhost:7777/wanix/basic-terminal.html) — gojs task + xterm; expect `Dir:`, `Args:`, `Env:`, `Root:` tab output. Build guest wasm first: `yarn task run wanix:gojs:build` (requires Go).
+
 Manual **prep only** (no xterm): [/wanix/smoke-basic-vm.html](http://localhost:7777/wanix/smoke-basic-vm.html)
 
 Manual **deferred term** bisect: [/wanix/vm-simple-deferred.html?auto=1&delay=15000](http://localhost:7777/wanix/vm-simple-deferred.html?auto=1&delay=15000)
