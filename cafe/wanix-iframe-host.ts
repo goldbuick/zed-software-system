@@ -10,7 +10,6 @@ import {
   buildwanixtaskprehtml,
   buildwanixvmprehtml,
   buildwanixvmspawnhtml,
-  WANIX_VM_V86_DRIVER_PATH,
   type WANIX_VM_ASSET_URLS,
 } from 'zss/feature/wanix/wanixvmassets'
 import {
@@ -18,12 +17,12 @@ import {
   VM_SPAWN_STEP_MS,
   VM_TERM_READY_MS,
   waitforgadgetidle,
+  waitforv86driver,
   waitforwanixvmready,
 } from 'zss/feature/wanix/wanixvmspawnhelpers'
 import { installwanixtermprobeembed } from 'zss/testsupport/wanix/wanixtermprobe'
 
 type WanixRoot = {
-  waitFor: (path: string, ms?: number) => Promise<void>
   readDir: (path: string) => Promise<string[]>
   writeFile: (path: string, data: string | Uint8Array) => Promise<void>
 }
@@ -48,6 +47,7 @@ type WanixWakeElement = HTMLElement & {
 }
 
 const READY_TIMEOUT_MS = 180_000
+const VM_PREP_WAIT_MS = 600_000
 const SYSTEM_ID = 'zss-wanix-iframe-sys'
 
 let sys: WanixSystemElement | null = null
@@ -110,11 +110,8 @@ async function waitsystemready(system: WanixSystemElement) {
       system.removeEventListener('ready', onready)
       system.removeEventListener('error', onerror)
     }
-    system.addEventListener('ready', onready)
-    system.addEventListener('error', onerror)
-    if ((system as WanixSystemElement & { root?: WanixRoot }).root) {
-      onready()
-    }
+    system.addEventListener('ready', onready, { once: true })
+    system.addEventListener('error', onerror, { once: true })
   })
   root = system.root ?? null
   if (!root) {
@@ -136,7 +133,7 @@ function mountprehtml(html: string): WanixSystemElement {
 async function prepvmspace(urls: WANIX_VM_ASSET_URLS) {
   const system = mountprehtml(buildwanixvmprehtml(urls, SYSTEM_ID))
   await waitsystemready(system)
-  await root!.waitFor(WANIX_VM_V86_DRIVER_PATH, 600_000)
+  await waitforv86driver(root!, VM_PREP_WAIT_MS)
   mode = 'vm'
 }
 
