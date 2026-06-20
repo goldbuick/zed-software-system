@@ -24,7 +24,7 @@ git clone --recurse-submodules <repo-url>
 
 ## Wanix runtime vs submodule
 
-The **browser runtime** vendored into `cafe/public/wanix/` comes from the **npm** package (`wanix@0.4.x`) via `yarn task run wanix:ensure` (stock package, no local wasm patch).
+The **browser runtime** loads from jsDelivr (`wanix@0.4.0-alpha8` — see `zss/feature/wanix/wanixvmassets.ts`). `yarn task run wanix:ensure` records the npm pin in `cafe/public/wanix/BUILD_ID`.
 
 Use `submodules/wanix/` to read upstream **0.4** source (`examples/basic-vm.html`, `elements/`, `term/`) when debugging — not as the runtime build input.
 

@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 
+import { readwanixruntimeurls } from '../../zss/feature/wanix/wanixvmassets'
 import { HELLO_WASM_BYTE_LIST } from '../../zss/testsupport/wanix/hellowasm'
 import { HOLD_WASM_BYTE_LIST } from '../../zss/testsupport/wanix/holdwasm'
 import { TERM_BRIDGE_WASM_BYTE_LIST } from '../../zss/testsupport/wanix/termbridgewasm'
@@ -19,10 +20,11 @@ type WindowWithE2e = Window & { __zss_e2e?: ZssE2eBridge }
 test.describe('wanix in-page host (e2e app)', () => {
   test.describe.configure({ timeout: 180_000 })
 
-  test('vends runtime assets', async ({ request }) => {
-    for (const path of ['/wanix/wanix.wasm', '/wanix/wanix.min.js']) {
-      const res = await request.get(path)
-      expect(res.ok(), `${path} should be served`).toBeTruthy()
+  test('loads runtime from jsDelivr CDN', async ({ request }) => {
+    const { js, debugWasm } = readwanixruntimeurls()
+    for (const url of [js, debugWasm]) {
+      const res = await request.get(url)
+      expect(res.ok(), `${url} should be reachable`).toBeTruthy()
     }
   })
 

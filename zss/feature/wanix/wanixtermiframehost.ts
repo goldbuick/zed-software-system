@@ -179,7 +179,7 @@ function ensureiframe(): HTMLIFrameElement {
     el.title = 'wanix term host'
     el.src = WANIX_TERM_IFRAME_SRC
     el.style.cssText =
-      'position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;border:0'
+      'position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;visibility:hidden;pointer-events:none;border:0'
     document.body.appendChild(el)
   }
   iframeel = el

@@ -4,7 +4,8 @@ import type { TaskDef } from '../types'
 
 export const WANIX_TASKS: TaskDef[] = [
   def('wanix:ensure', {
-    description: 'Vend wanix browser runtime into cafe/public/wanix',
+    description:
+      'Record pinned wanix npm version (runtime loads from jsDelivr CDN)',
     run: shellhandlerwithargs('tasks/implementations/wanix/wanix-ensure.sh'),
   }),
   def('wanix:wasm:build', {

@@ -4,7 +4,8 @@ Small WASI programs for drag-drop testing in the cafe app.
 
 ## 0.4 upstream recipes (not wanix.run)
 
-Runtime: npm **`wanix@0.4.x`** → `yarn task run wanix:ensure` → `cafe/public/wanix/`.  
+Runtime: jsDelivr **`wanix@0.4.0-alpha8`** (`readwanixruntimeurls()` in `zss/feature/wanix/wanixvmassets.ts`).  
+Pin check: `yarn task run wanix:ensure` → `cafe/public/wanix/BUILD_ID`.  
 Reference: [tractordev/wanix](https://github.com/tractordev/wanix) **`main`** (`<wanix-system>` custom elements).
 
 **Do not** copy [wanix.run](https://wanix.run) — that is the **v0.3 bundle** demo (`new Wanix({ bundle: "/shell/shell.tgz" })`), a different API generation.
@@ -116,13 +117,11 @@ System `clang` on macOS does **not** target `wasm32-wasi`; use wasi-sdk's `clang
 
 ## Runtime
 
-Vend the browser wanix kernel into `cafe/public/wanix`:
+Browser kernel loads from jsDelivr (pinned in `zss/feature/wanix/wanixvmassets.ts`):
 
 ```bash
-yarn task run wanix:ensure
+yarn task run wanix:ensure   # writes BUILD_ID pin only
 ```
-
-`yarn install` provides the `wanix` npm package. Run `wanix:ensure` after install so `cafe/public/wanix` matches `node_modules/wanix`.
 
 Upstream source: [`submodules/wanix/`](../../../submodules/wanix/) — see [`submodules/README.md`](../../../submodules/README.md).
 

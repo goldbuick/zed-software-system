@@ -14,10 +14,6 @@ import {
   uniquewanixtaskid,
 } from 'zss/feature/wanix/wanixcmd'
 import {
-  pausegadgetframeloop,
-  resumegadgetframeloop,
-} from 'zss/gadget/canvasrelayout'
-import {
   iframechildlistdir,
   iframechildmountarchive,
   iframechildputfile,
@@ -59,14 +55,16 @@ import {
 import { wanixtermscreenwrite } from 'zss/feature/wanix/wanixtermscreen'
 import { wanixtrace } from 'zss/feature/wanix/wanixtrace'
 import {
+  applywanixsystemkernelattrs,
   DEFAULT_WANIX_VM_ID,
   DEFAULT_WANIX_VM_MEM,
+  readwanixkernelwasmurl,
+  readwanixruntimeurls,
   readwanixvmasseturls,
   type WANIX_VM_ASSET_URLS,
 } from 'zss/feature/wanix/wanixvmassets'
 
-const WANIX_JS_URL = '/wanix/wanix.min.js'
-const WANIX_WASM_URL = '/wanix/wanix.wasm'
+const { js: WANIX_JS_URL } = readwanixruntimeurls()
 const DATA_WAIT_MS = 30_000
 const BIND_MOUNT_TIMEOUT_MS = 120_000
 const VM_TERM_WAIT_MS = 60_000
@@ -88,53 +86,6 @@ export type WANIX_VM_PREP_STAGE =
 
 let vmprepstage: WANIX_VM_PREP_STAGE = 'idle'
 let vmpreperror: string | undefined
-let gadgetframesaved:
-  | {
-      display: string
-      visibility: string
-      pointerevents: string
-    }
-  | undefined
-
-/** Hide gadget canvas while v86 runs; do not touch its WebGL context (R3F owns it). */
-function suspendgadgetgl() {
-  const frame = document.getElementById('frame') as HTMLCanvasElement | null
-  if (!frame || gadgetframesaved) {
-    return
-  }
-  gadgetframesaved = {
-    display: frame.style.display,
-    visibility: frame.style.visibility,
-    pointerevents: frame.style.pointerEvents,
-  }
-  frame.style.display = 'none'
-  frame.style.visibility = 'hidden'
-  frame.style.pointerEvents = 'none'
-}
-
-function resumegadgetgl() {
-  const frame = document.getElementById('frame') as HTMLCanvasElement | null
-  if (!gadgetframesaved) {
-    return
-  }
-  const saved = gadgetframesaved
-  gadgetframesaved = undefined
-  if (!frame) {
-    return
-  }
-  frame.style.display = saved.display
-  frame.style.visibility = saved.visibility
-  frame.style.pointerEvents = saved.pointerevents
-  requestAnimationFrame(() => {
-    window.dispatchEvent(new Event('resize'))
-  })
-}
-
-function resumegadgetglifnovm() {
-  if (registry.vms.size === 0) {
-    resumegadgetgl()
-  }
-}
 const RPC_TIMEOUT_MS = 300_000
 const VM_PREP_TIMEOUT_MS = 600_000
 const VM_RUN_TIMEOUT_MS = 600_000
@@ -413,7 +364,6 @@ function ensuremount(): HTMLElement {
 
 /** VM/v86 needs a live layout but must not cover the tape UI (v86 VGA paints blue). */
 function ensurevmmount(): HTMLElement {
-  suspendgadgetgl()
   let mount = document.getElementById('zss-wanix-display')
   if (mount) {
     mount.remove()
@@ -815,7 +765,6 @@ async function removevm(vmid: string) {
   entry.el.remove()
   registry.vms.delete(vmid)
   clearattachedif('vm', vmid)
-  resumegadgetglifnovm()
 }
 
 function createtask(cmd: string, taskid: string) {
@@ -859,7 +808,6 @@ function createvm(vmid: string, mem: string) {
 }
 
 async function waitforgadgetidle() {
-  pausegadgetframeloop()
   await new Promise<void>((resolve) => {
     requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
   })
@@ -1372,8 +1320,8 @@ async function spawnvm(
     mem,
   })
   try {
-    suspendgadgetgl()
     const wake = el as WanixWakeElement
+    await waitforgadgetidle()
     await spawnwithtimeout(wake._awake?.() ?? el.start(), VM_SPAWN_STEP_MS, 'start')
     await waitforwanixvmready(id, VM_TERM_READY_MS)
     entry.vrid = el.rid
@@ -1391,7 +1339,6 @@ async function spawnvm(
     flushentryserialbuffer(entry)
   }
   vmprepstage = 'spawn'
-  resumegadgetglifnovm()
   if (opts.wait) {
     const code = await entry.exitpoll
     return { vmId: id, code }
@@ -1531,20 +1478,12 @@ export async function spawnwanixvmspace(
       vmprepstage = 'mount_ok'
       return
     }
-    pausegadgetframeloop()
-    suspendgadgetgl()
     state = 'starting'
     vmprepstage = 'mounting'
     vmpreperror = undefined
-    try {
-      await iframeprepvmspace(device, player, urls, wanixiobridgestart)
-      state = 'ready'
-      registry.vmbindsready = true
-    } catch (err) {
-      resumegadgetframeloop()
-      resumegadgetglifnovm()
-      throw err
-    }
+    await iframeprepvmspace(device, player, urls, wanixiobridgestart)
+    state = 'ready'
+    registry.vmbindsready = true
     return
   }
   if (registry.vmbindsready && iswanixspaceactive()) {
@@ -1682,7 +1621,7 @@ async function bootwanixsystem(mount: HTMLElement) {
   let system = mount.querySelector('wanix-system') as WanixSystemElement | null
   if (!system) {
     system = document.createElement('wanix-system') as WanixSystemElement
-    system.setAttribute('wasm', WANIX_WASM_URL)
+    applywanixsystemkernelattrs(system)
     const bootbind = document.createElement('wanix-bind')
     bootbind.setAttribute('dst', '.')
     bootbind.setAttribute('src', '#ramfs')
@@ -1744,7 +1683,7 @@ async function bootwanixsystemforvm(
   // from createElement + appendChild ordering.
   mount.insertAdjacentHTML(
     'beforeend',
-    `<wanix-system wasm="${WANIX_WASM_URL}">
+    `<wanix-system wasm="${readwanixkernelwasmurl()}" allow-origins="*" debug>
 <wanix-bind dst="." src="${linux}" type="archive"></wanix-bind>
 <wanix-bind dst="vm" src="#vm"></wanix-bind>
 <wanix-bind dst="#vm/v86" src="${v86}" type="archive"></wanix-bind>
@@ -1809,8 +1748,6 @@ function cleanup() {
   vmexithandler = undefined
   wanixiobridgestop()
   void teardownwanixtermiframe()
-  resumegadgetgl()
-  resumegadgetframeloop()
   const mount = document.getElementById('zss-wanix-display')
   if (mount) {
     mount.replaceChildren()
@@ -2173,8 +2110,6 @@ export function waitwanixvmexit(vmid: string): Promise<number> {
 export async function haltwanixvm(vmid?: string): Promise<void> {
   if (iswanixtermiframemode() && iswanixtermiframeactive()) {
     await iframehaltvm(vmid)
-    resumegadgetframeloop()
-    resumegadgetglifnovm()
     return
   }
   if (state !== 'ready') {

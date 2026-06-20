@@ -1,8 +1,7 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "entry": [
-    "cafe/index-boot.tsx",
-    "cafe/index-app.tsx",
+    "cafe/index.tsx",
     "cafe/sys/index.tsx",
     "zss/simspace.ts",
     "zss/heavyspace.ts",

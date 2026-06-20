@@ -1,16 +1,46 @@
-/** Pinned wanix-extras CDN URLs for v86 VM boot (see submodules/wanix/README.md). */
+/** Pinned wanix npm + extras CDN URLs (see cafe/public/wanix/vm-simple.html). */
+export const WANIX_NPM_VERSION = '0.4.0-alpha8'
 const WANIX_EXTRAS_VERSION = '0.4.0-rc1'
-const CDN_BASE = `https://cdn.jsdelivr.net/npm/wanix-extras@${WANIX_EXTRAS_VERSION}/dist`
+const WANIX_CDN_BASE = `https://cdn.jsdelivr.net/npm/wanix@${WANIX_NPM_VERSION}/dist`
+const EXTRAS_CDN_BASE = `https://cdn.jsdelivr.net/npm/wanix-extras@${WANIX_EXTRAS_VERSION}/dist`
+
+export type WANIX_RUNTIME_URLS = {
+  version: string
+  js: string
+  wasm: string
+  debugWasm: string
+}
 
 export type WANIX_VM_ASSET_URLS = {
   linux: string
   v86: string
 }
 
+export function readwanixruntimeurls(): WANIX_RUNTIME_URLS {
+  return {
+    version: WANIX_NPM_VERSION,
+    js: `${WANIX_CDN_BASE}/wanix.min.js`,
+    wasm: `${WANIX_CDN_BASE}/wanix.wasm`,
+    debugWasm: `${WANIX_CDN_BASE}/wanix.debug.wasm`,
+  }
+}
+
+/** Kernel wasm for `<wanix-system>` — debug build matches working vm-simple harness. */
+export function readwanixkernelwasmurl(): string {
+  return readwanixruntimeurls().debugWasm
+}
+
+/** Attrs on `<wanix-system>` required for VM/gojs (vm-simple.html recipe). */
+export function applywanixsystemkernelattrs(system: HTMLElement): void {
+  system.setAttribute('wasm', readwanixkernelwasmurl())
+  system.setAttribute('allow-origins', '*')
+  system.setAttribute('debug', '')
+}
+
 export function readwanixvmasseturls(): WANIX_VM_ASSET_URLS {
   return {
-    linux: `${CDN_BASE}/wanix-linux.tgz`,
-    v86: `${CDN_BASE}/v86.tgz`,
+    linux: `${EXTRAS_CDN_BASE}/wanix-linux.tgz`,
+    v86: `${EXTRAS_CDN_BASE}/v86.tgz`,
   }
 }
 

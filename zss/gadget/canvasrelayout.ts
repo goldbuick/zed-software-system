@@ -14,15 +14,6 @@ export function registerr3fstore(store: StoreApi<RootState> | undefined) {
   }
 }
 
-/** Pause gadget render loop while v86/gojs boots (does not destroy WebGL). */
-export function pausegadgetframeloop() {
-  r3fstore?.getState().setFrameloop('never')
-}
-
-export function resumegadgetframeloop() {
-  r3fstore?.getState().setFrameloop('always')
-}
-
 function bumpcanvassyncgeneration() {
   canvassyncgeneration += 1
 }

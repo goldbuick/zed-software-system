@@ -2,7 +2,10 @@
  * Hidden iframe child — declarative `<wanix-system>` + `<wanix-term>` (upstream 0.4).
  * Parent drives prep/spawn via postMessage; serial streams through probe embed.
  */
-import type { WANIX_VM_ASSET_URLS } from 'zss/feature/wanix/wanixvmassets'
+import {
+  applywanixsystemkernelattrs,
+  type WANIX_VM_ASSET_URLS,
+} from 'zss/feature/wanix/wanixvmassets'
 import { installwanixtermprobeembed } from 'zss/testsupport/wanix/wanixtermprobe'
 import {
   iswanixtermiframemsg,
@@ -113,10 +116,10 @@ async function waitsystemready(system: WanixSystemElement) {
   }
 }
 
-function createsystem(wasmurl = '/wanix/wanix.wasm'): WanixSystemElement {
+function createsystem(): WanixSystemElement {
   clearsystem()
   const el = document.createElement('wanix-system') as WanixSystemElement
-  el.setAttribute('wasm', wasmurl)
+  applywanixsystemkernelattrs(el)
   el.id = 'zss-wanix-iframe-sys'
   document.body.appendChild(el)
   sys = el
