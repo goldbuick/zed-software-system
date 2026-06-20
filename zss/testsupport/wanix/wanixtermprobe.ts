@@ -1,0 +1,205 @@
+/** Read/send via upstream `<wanix-term>` xterm instance (smoke + iframe child). */
+
+export type WanixTermProbe = {
+  readserial: () => string
+  sendinput: (text: string) => void
+  waitprompt: (timeoutms?: number) => Promise<void>
+  focusterm: () => void
+}
+
+type XtermLine = {
+  translateToString: (trim?: boolean) => string
+}
+
+type XtermBuffer = {
+  length: number
+  getLine: (index: number) => XtermLine | undefined
+}
+
+type XtermInstance = {
+  buffer: { active: XtermBuffer }
+  input: (data: string) => void
+  focus: () => void
+}
+
+type WanixTermElement = HTMLElement & {
+  _term?: XtermInstance | null
+  focus?: () => void
+}
+
+const LOGIN_PROMPT_RE = /login:/i
+const SHELL_PROMPT_RE = /~\s#/
+
+function findwanixtermel(): WanixTermElement | null {
+  return document.querySelector('wanix-term') as WanixTermElement | null
+}
+
+function readxtermserial(term: XtermInstance): string {
+  const active = term.buffer.active
+  const lines: string[] = []
+  for (let i = 0; i < active.length; i++) {
+    const line = active.getLine(i)
+    if (line) {
+      lines.push(line.translateToString(true))
+    }
+  }
+  return lines.join('\n')
+}
+
+function sleep(ms: number) {
+  return new Promise<void>((resolve) => setTimeout(resolve, ms))
+}
+
+export function installwanixtermprobe(): WanixTermProbe {
+  const focusterm = () => {
+    const el = findwanixtermel()
+    el?.focus?.()
+    el?._term?.focus()
+  }
+
+  const readserial = () => {
+    const el = findwanixtermel()
+    const term = el?._term
+    if (!term) {
+      return ''
+    }
+    return readxtermserial(term)
+  }
+
+  const sendinput = (text: string) => {
+    const el = findwanixtermel()
+    const term = el?._term
+    if (!term) {
+      throw new Error('wanix-term probe: xterm not ready')
+    }
+    term.input(text)
+  }
+
+  const waitprompt = async (timeoutms = 600_000) => {
+    const deadline = Date.now() + timeoutms
+    while (Date.now() < deadline) {
+      const serial = readserial()
+      if (LOGIN_PROMPT_RE.test(serial) || SHELL_PROMPT_RE.test(serial)) {
+        return
+      }
+      await sleep(500)
+    }
+    throw new Error(
+      `wanix-term probe: login prompt timeout (${timeoutms}ms)\n${readserial().slice(-400)}`,
+    )
+  }
+
+  return { readserial, sendinput, waitprompt, focusterm }
+}
+
+export type WanixTermProbeMsg =
+  | { type: 'zss-wanix-term-probe-rpc'; id: number; method: string; args?: unknown[] }
+  | {
+      type: 'zss-wanix-term-probe-rpc-res'
+      id: number
+      result?: unknown
+      error?: string
+    }
+  | { type: 'zss-wanix-term-ready' }
+  | { type: 'zss-wanix-term-chunk'; chunk: string }
+
+export function iswanixtermprobemsg(data: unknown): data is WanixTermProbeMsg {
+  if (!data || typeof data !== 'object') {
+    return false
+  }
+  const type = (data as { type?: unknown }).type
+  return (
+    type === 'zss-wanix-term-probe-rpc' ||
+    type === 'zss-wanix-term-probe-rpc-res' ||
+    type === 'zss-wanix-term-ready' ||
+    type === 'zss-wanix-term-chunk'
+  )
+}
+
+/** Child iframe: expose probe over postMessage + stream serial diffs to parent. */
+export function installwanixtermprobeembed(): WanixTermProbe {
+  const probe = installwanixtermprobe()
+  let lastserial = ''
+  let polltimer: ReturnType<typeof setInterval> | undefined
+
+  function posttoparent(message: WanixTermProbeMsg) {
+    const target =
+      window.opener ?? (window.parent !== window ? window.parent : null)
+    target?.postMessage(message, window.location.origin)
+  }
+
+  function emitserialdiff() {
+    const serial = probe.readserial()
+    if (serial.length <= lastserial.length) {
+      return
+    }
+    const chunk = serial.slice(lastserial.length)
+    lastserial = serial
+    if (chunk.length > 0) {
+      posttoparent({ type: 'zss-wanix-term-chunk', chunk })
+    }
+  }
+
+  polltimer = setInterval(emitserialdiff, 100)
+
+  window.addEventListener('message', async (event) => {
+    if (event.origin !== window.location.origin) {
+      return
+    }
+    const data = event.data
+    if (!iswanixtermprobemsg(data) || data.type !== 'zss-wanix-term-probe-rpc') {
+      return
+    }
+    const source = event.source as Window | null
+    if (!source) {
+      return
+    }
+    const reply = (payload: { result?: unknown; error?: string }) => {
+      source.postMessage(
+        { type: 'zss-wanix-term-probe-rpc-res', id: data.id, ...payload },
+        window.location.origin,
+      )
+    }
+    try {
+      switch (data.method) {
+        case 'readserial':
+          reply({ result: probe.readserial() })
+          return
+        case 'sendinput': {
+          const [text] = (data.args ?? []) as [string]
+          probe.sendinput(text)
+          emitserialdiff()
+          reply({ result: { ok: true } })
+          return
+        }
+        case 'waitprompt': {
+          const [ms] = (data.args ?? []) as [number | undefined]
+          await probe.waitprompt(ms)
+          emitserialdiff()
+          reply({ result: { ok: true } })
+          return
+        }
+        case 'focusterm':
+          probe.focusterm()
+          reply({ result: { ok: true } })
+          return
+        default:
+          reply({ error: `unknown probe rpc: ${data.method}` })
+      }
+    } catch (err) {
+      reply({
+        error: err instanceof Error ? err.message : String(err),
+      })
+    }
+  })
+
+  posttoparent({ type: 'zss-wanix-term-ready' })
+
+  window.addEventListener('beforeunload', () => {
+    if (polltimer) {
+      clearInterval(polltimer)
+    }
+  })
+
+  return probe
+}

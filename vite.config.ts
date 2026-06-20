@@ -160,6 +160,7 @@ export default defineConfig(({ mode }) => {
           index: path.join(apppath, 'index.html'),
           sys: path.join(apppath, 'sys/index.html'),
           'wanix-vm-e2e': path.join(apppath, 'wanix-vm-e2e.html'),
+          'wanix-iframe-host': path.join(apppath, 'wanix-iframe-host.html'),
         },
       },
     },

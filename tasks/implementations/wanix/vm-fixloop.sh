@@ -18,15 +18,23 @@ export PLAYWRIGHT_INCLUDE_WANIX_E2E=1
 export PLAYWRIGHT_INCLUDE_WANIX_VM_E2E=1
 
 echo ""
-echo "=== [1/3] upstream basic-vm smoke (CDN + wanix.wasm) ==="
+echo "=== [1/5] upstream basic-vm prep smoke (CDN + wanix.wasm) ==="
 yarn task run wanix:vm-prep-smoke
 
 echo ""
-echo "=== [2/3] isolated ZSS wanix-vm-e2e term stress ==="
+echo "=== [2/5] upstream vm-simple (basic-vm.html + wanix-term) ==="
+yarn task run wanix:vm-simple-smoke
+
+echo ""
+echo "=== [3/5] wanix-term inside iframe under mock WebGL parent ==="
+yarn task run wanix:vm-term-iframe-smoke
+
+echo ""
+echo "=== [4/5] isolated ZSS wanix-vm-e2e term stress ==="
 yarn task run wanix:vm:isolated:verify
 
 echo ""
-echo "=== [3/3] full ZSS app (/?ZSS_E2E=1) — matches manual #wanix vm ==="
+echo "=== [5/5] full ZSS app (/?ZSS_E2E=1) hidden iframe + tile bridge ==="
 yarn task run wanix:vm:app:verify
 
 echo ""

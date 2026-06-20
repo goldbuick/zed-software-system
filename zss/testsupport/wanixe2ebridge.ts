@@ -26,7 +26,6 @@ export type WanixE2eBridge = {
     mem?: string
     attach?: boolean
     wait?: boolean
-    skiptermconnect?: boolean
   }) => Promise<{ vmid: string; code?: number }>
   readwanixhostserial: () => string
   listwanixhostdir: (path: string) => Promise<string[]>

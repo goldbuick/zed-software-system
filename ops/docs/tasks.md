@@ -69,6 +69,8 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 | `yarn task run content:book:test` | Jest content book tests | `ci` | — | — |
 | `yarn task run content:book:validate` | Validate book JSON (pass path as extra args) | — | — | — |
 | `yarn task run content:codepage:validate` | Validate codepage JSON (pass path as extra args) | — | — | — |
+| `yarn task run content:zzt:corpus:manifest` | Crawl Museum of ZZT and write vanilla ZZT manifest only (no downloads) | — | — | — |
+| `yarn task run content:zzt:corpus:sync` | Crawl Museum of ZZT and download vanilla ZZT world ZIPs into ops/fixtures/zzt/corpus/archives (gitignored) | `slow` | — | — |
 
 
 ## daisy
@@ -243,6 +245,10 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 | `yarn task run wanix:io:verify` | Build wanix wasm fixtures and run isolated host term/io e2e (fix loop gate) | `ci` | `wanix:wasm:build` | `PLAYWRIGHT_INCLUDE_WANIX_E2E=1` |
 | `yarn task run wanix:vm-prep-smoke` | Upstream basic-vm.html smoke (CDN archives + wanix.wasm, no ZSS) — prep gate | `slow` | `wanix:ensure` | — |
 | `yarn task run wanix:vm-prep:verify` | ZSS spawnwanixvmspace prep only — mount ok + v86-vm.wasm (fast gate, ~3 min) | `slow` | — | `PLAYWRIGHT_INCLUDE_WANIX_E2E=1`, `PLAYWRIGHT_INCLUDE_WANIX_VM_E2E=1` |
+| `yarn task run wanix:vm-simple-deferred-smoke` | Deferred wanix-term connect (vm-simple-deferred.html) — term timing bisect | `slow` | `wanix:ensure` | — |
+| `yarn task run wanix:vm-simple-smoke` | Upstream basic-vm.html port (vm-simple.html) — visible wanix-term, login/id, no panic | `slow` | `wanix:ensure` | — |
+| `yarn task run wanix:vm-term-iframe-smoke` | wanix-term inside hidden iframe under mock WebGL parent — login/id | `slow` | `wanix:ensure` | — |
+| `yarn task run wanix:vm-term-smoke` | vm-simple.html + probe harness — login/id via __WANIX_TERM_PROBE__ | `slow` | `wanix:ensure` | — |
 | `yarn task run wanix:vm:app:verify` | Full ZSS app VM gate — spawn panic check + uname --help/id term stress (matches manual /?) | `slow` | — | `PLAYWRIGHT_INCLUDE_WANIX_E2E=1`, `PLAYWRIGHT_INCLUDE_WANIX_VM_E2E=1` |
 | `yarn task run wanix:vm:fixloop` | Automated fix loop: upstream smoke + isolated + full-app VM gates (stop app dev first; ~15–25 min) | `slow` | `wanix:ensure` | — |
 | `yarn task run wanix:vm:isolated:verify` | Isolated wanix-vm-e2e.html term stress (gojs load order, no R3F) | `slow` | — | `PLAYWRIGHT_INCLUDE_WANIX_E2E=1`, `PLAYWRIGHT_INCLUDE_WANIX_VM_E2E=1` |

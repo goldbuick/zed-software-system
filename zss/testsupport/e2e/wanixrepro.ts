@@ -9,7 +9,7 @@ import {
   readwanixstatus,
   readwanixvmpreperror,
   readwanixvmprepstage,
-  sendwanixterminput,
+  sendwanixvmline,
   spawnwanixvm,
   spawnwanixvmspace,
   type WANIX_VM_PREP_STAGE,
@@ -226,7 +226,7 @@ export async function runwanixvmtermstress(
     sawunamehelp: false,
     sawid: false,
     haswanixtermel: !!document.querySelector(
-      '#zss-vm-term-bridge, wanix-term[id^="zss-vm-term-"]',
+      '#zss-wanix-term-iframe, wanix-term',
     ),
     tileattached: useTape.getState().terminalmode === 'attached',
     serial: readwanixhostattachedserial(),
@@ -274,7 +274,7 @@ export async function runwanixvmtermstress(
   await sleep(2000)
 
   try {
-    await sendwanixterminput('uname --help\r')
+    await sendwanixvmline('uname --help')
   } catch (err) {
     await haltwanixvm(vmid).catch(() => {})
     return fail({
@@ -305,7 +305,7 @@ export async function runwanixvmtermstress(
   await sleep(1500)
 
   try {
-    await sendwanixterminput('id\r')
+    await sendwanixvmline('id')
   } catch (err) {
     await haltwanixvm(vmid).catch(() => {})
     return fail({
@@ -326,7 +326,7 @@ export async function runwanixvmtermstress(
 
   const sawid = serial.includes('uid=')
   const haswanixtermel = !!document.querySelector(
-    '#zss-vm-term-bridge, wanix-term[id^="zss-vm-term-"]',
+    '#zss-wanix-term-iframe, wanix-term',
   )
   await haltwanixvm(vmid).catch(() => {})
 

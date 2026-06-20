@@ -26,4 +26,17 @@ export const CONTENT_TASKS: TaskDef[] = [
     description: 'Validate codepage JSON (pass path as extra args)',
     run: nodehandler(CONTENT, ['codepage-validate']),
   }),
+  def('content:zzt:corpus:sync', {
+    description:
+      'Crawl Museum of ZZT and download vanilla ZZT world ZIPs into ops/fixtures/zzt/corpus/archives (gitignored)',
+    tags: ['slow'],
+    run: tsxhandler('tasks/implementations/content/museum-zzt-corpus-sync.ts'),
+  }),
+  def('content:zzt:corpus:manifest', {
+    description:
+      'Crawl Museum of ZZT and write vanilla ZZT manifest only (no downloads)',
+    run: tsxhandler('tasks/implementations/content/museum-zzt-corpus-sync.ts', [
+      'manifest',
+    ]),
+  }),
 ]

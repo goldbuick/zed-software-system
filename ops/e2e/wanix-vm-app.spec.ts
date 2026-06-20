@@ -26,43 +26,9 @@ test.describe('wanix vm full ZSS app (gated)', () => {
 
   test.describe.configure({ timeout: 600_000, mode: 'serial' })
 
-  test('gojs start alone has no panic before term connect', async ({ page }) => {
-    const collector = attachwanixpaniccollector(page)
-    await waitforwanixappbridge(page)
-
-    const spawn = await page.evaluate(async (asseturls) => {
-      const e = (window as WindowWithE2e).__zss_e2e!
-      try {
-        await e.prepwanixhostvm(asseturls)
-        const vm = await e.spawnwanixhostvm({
-          vmid: 'linux-vm-nterm',
-          attach: false,
-          skiptermconnect: true,
-          wait: false,
-        })
-        return { vmid: vm.vmid, error: undefined as string | undefined }
-      } catch (err) {
-        return {
-          vmid: undefined,
-          error: err instanceof Error ? err.message : String(err),
-        }
-      }
-    }, VM_ASSET_URLS)
-
-    expect(spawn.error, spawn.error).toBeUndefined()
-    await page.waitForTimeout(15_000)
-    expectnogojspanic(collector.filterpanics(), 'after start without term connect')
-    collector.detach()
-
-    await page.evaluate(async (vmid) => {
-      const e = (window as WindowWithE2e).__zss_e2e!
-      if (vmid) {
-        await e.haltwanixhostvm(vmid)
-      }
-    }, spawn.vmid)
-  })
-
-  test('spawn + connectvmterm has no gojs panic on full app', async ({ page }) => {
+  test('hidden iframe wanix-term spawn has no gojs panic on full app', async ({
+    page,
+  }) => {
     const collector = attachwanixpaniccollector(page)
     await waitforwanixappbridge(page)
 
@@ -86,7 +52,7 @@ test.describe('wanix vm full ZSS app (gated)', () => {
 
     expect(spawn.error, spawn.error).toBeUndefined()
     await page.waitForTimeout(15_000)
-    expectnogojspanic(collector.filterpanics(), 'after spawn + 15s settle')
+    expectnogojspanic(collector.filterpanics(), 'after iframe spawn + 15s settle')
     collector.detach()
 
     await page.evaluate(async (vmid) => {
@@ -124,42 +90,6 @@ test.describe('wanix vm isolated page (gated baseline)', () => {
   test.skip(!includevme2e, 'set PLAYWRIGHT_INCLUDE_WANIX_VM_E2E=1')
 
   test.describe.configure({ timeout: 600_000 })
-
-  test('isolated gojs start has no panic without term connect', async ({ page }) => {
-    const collector = attachwanixpaniccollector(page)
-    await waitforwanixvmbridge(page)
-
-    const spawn = await page.evaluate(async (asseturls) => {
-      const e = (window as WindowWithE2e).__zss_e2e!
-      try {
-        await e.prepwanixhostvm(asseturls)
-        const vm = await e.spawnwanixhostvm({
-          vmid: 'linux-vm-nterm',
-          attach: false,
-          skiptermconnect: true,
-          wait: false,
-        })
-        return { vmid: vm.vmid, error: undefined as string | undefined }
-      } catch (err) {
-        return {
-          vmid: undefined,
-          error: err instanceof Error ? err.message : String(err),
-        }
-      }
-    }, VM_ASSET_URLS)
-
-    expect(spawn.error, spawn.error).toBeUndefined()
-    await page.waitForTimeout(15_000)
-    expectnogojspanic(collector.filterpanics(), 'isolated start without term')
-    collector.detach()
-
-    await page.evaluate(async (vmid) => {
-      const e = (window as WindowWithE2e).__zss_e2e!
-      if (vmid) {
-        await e.haltwanixhostvm(vmid)
-      }
-    }, spawn.vmid)
-  })
 
   test('isolated wanix-vm-e2e.html survives term stress', async ({ page }) => {
     const collector = attachwanixpaniccollector(page)

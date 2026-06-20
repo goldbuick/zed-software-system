@@ -40,6 +40,9 @@ cafe/public/models/
 # wanix smoke wasm scratch (regenerate with yarn task run wanix:wasm:build)
 ops/fixtures/wanix/*.wasm
 
+# Museum of ZZT vanilla corpus archives (yarn task run content:zzt:corpus:sync)
+ops/fixtures/zzt/corpus/archives/
+
 # offline song renders (regenerate with yarn level-issue-song:render)
 cafe/public/renders/*.wav
 cafe/public/renders/*.json

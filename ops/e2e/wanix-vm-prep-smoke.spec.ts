@@ -1,5 +1,10 @@
 import { expect, test } from '@playwright/test'
 
+import {
+  attachwanixpaniccollector,
+  WANIX_GOJS_PANIC_RE,
+} from './helpers/wanixpanic'
+
 /**
  * Isolated upstream 0.4 basic-vm recipe — no ZSS host layer.
  * Gates whether wanix.wasm + CDN archives work in this browser build at all.
@@ -10,6 +15,7 @@ test.describe('wanix basic-vm smoke page', () => {
   test('smoke-basic-vm.html reaches ready without wasm panic', async ({
     page,
   }) => {
+    const collector = attachwanixpaniccollector(page)
     const errors: string[] = []
     page.on('pageerror', (err) => errors.push(err.message))
     page.on('console', (msg) => {
@@ -34,8 +40,15 @@ test.describe('wanix basic-vm smoke page', () => {
       log: document.getElementById('log')?.textContent ?? '',
     }))
 
-    const panics = errors.filter((line) => /panic|unreachable/i.test(line))
-    expect(panics, panics.join('\n')).toEqual([])
     expect(result.ok, result.log).toBe(true)
+
+    await page.waitForTimeout(60_000)
+
+    const panics = [
+      ...collector.filterpanics(),
+      ...errors.filter((line) => WANIX_GOJS_PANIC_RE.test(line)),
+    ]
+    expect(panics, panics.join('\n')).toEqual([])
+    collector.detach()
   })
 })

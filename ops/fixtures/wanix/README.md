@@ -22,19 +22,27 @@ VM prep must **not** call `_setupNamespace` a second time after `#ramfs` (that c
 
 | Gate | Command | Proves |
 |------|---------|--------|
-| 1. Upstream recipe | `yarn task run wanix:vm-prep-smoke` | `basic-vm.html` layout + vendored `wanix.wasm` + CDN archives — **no ZSS** |
-| 2. ZSS host prep | `PLAYWRIGHT_INCLUDE_WANIX_VM_E2E=1 yarn task run wanix:vm:verify` (prep phase) | `spawnwanixvmspace` in full app |
-| 3. Serial + attach | same verify (spawn + serial buffer) | VM runs; tile opens on first serial |
-| 4. Raw input | verify `term-input` test | `#vm/…/term/data` keystrokes after login |
+| 1. Upstream prep | `yarn task run wanix:vm-prep-smoke` | VM mount + v86 driver, **60s panic soak** (no `<wanix-term>`) |
+| 2. vm-simple | `yarn task run wanix:vm-simple-smoke` | upstream [`basic-vm.html`](https://github.com/tractordev/wanix/blob/main/examples/basic-vm.html) port — visible `<wanix-term>`, `login:`, `id` / `uid=` |
+| 3. Deferred term | `yarn task run wanix:vm-simple-deferred-smoke` | `<wanix-term>` connected after gojs settle — timing bisect |
+| 4. Iframe + WebGL | `yarn task run wanix:vm-term-iframe-smoke` | term I/O inside hidden iframe under mock `#frame` WebGL |
+| 5. Full app tile | `yarn task run wanix:vm:app:verify` | hidden iframe host → ZSS tile; `uname --help` + `id` |
+| 6. Fix loop | `yarn task run wanix:vm:fixloop` | all of the above + isolated ZSS baseline |
 
-Manual: `#wanix vm` → apilog shows `mount ok` → `wanix vm boot …` → tile opens on kernel/login serial (not on prep lines).
+Manual **vm-simple** (matches upstream basic-vm.html): [/wanix/vm-simple.html](http://localhost:7777/wanix/vm-simple.html) — full-height xterm; type `root`, Enter, Enter, then `id`.
 
-Isolated smoke page (browser): [/wanix/smoke-basic-vm.html](http://localhost:7777/wanix/smoke-basic-vm.html) — on-page log should end with `v86 driver present`, console must have **no** `panic` / `unreachable`.
+Manual **prep only** (no xterm): [/wanix/smoke-basic-vm.html](http://localhost:7777/wanix/smoke-basic-vm.html)
+
+Manual **deferred term** bisect: [/wanix/vm-simple-deferred.html?auto=1&delay=15000](http://localhost:7777/wanix/vm-simple-deferred.html?auto=1&delay=15000)
+
+Manual iframe page: [/wanix/smoke-basic-vm-term-iframe.html](http://localhost:7777/wanix/smoke-basic-vm-term-iframe.html) — status line should end with `iframe term smoke ok`.
+
+Legacy redirect: [/wanix/smoke-basic-vm-term.html](http://localhost:7777/wanix/smoke-basic-vm-term.html) → `vm-simple.html`.
 
 Verify:
 
 ```bash
-PLAYWRIGHT_INCLUDE_WANIX_VM_E2E=1 yarn task run wanix:vm:verify
+yarn task run wanix:vm:fixloop
 ```
 
 ## Quick build (WAT)
@@ -59,9 +67,7 @@ Drag the `.wasm` onto a running app (`yarn task app dev`). Multiple drops run in
 
 ## ZSS tile term bridge (`termbridge.wasm`)
 
-Upstream Wanix uses `<wanix-term>` bound to `#task/…/term` or `#vm/<rid>/term`. In ZSS, **attached terminal mode** is the same kernel contract with a **tile grid** (`WanixTermScreen`) plus headless `WanixTermInput` — not xterm.
-
-Wanix runs **in-page** (`wanix-system` in hidden `#zss-wanix-display` via `wanixhost.ts`), not a hidden iframe.
+Upstream Wanix uses `<wanix-term>` bound to `#task/…/term` or `#vm/<rid>/term`. On `/` (when `#frame` is present), ZSS hosts Wanix in a **hidden iframe** with `<wanix-term>` and mirrors serial to the **tile grid** (`WanixTermScreen`) plus `WanixTermInput`. Isolated pages and WASI drops without `#frame` still use in-page `#zss-wanix-display` until the iframe task path is active.
 
 | Direction | Path |
 |-----------|------|
@@ -150,8 +156,10 @@ yarn task run wanix:vm:fixloop
 | Step | Task | What it catches |
 |------|------|-----------------|
 | 1 | `wanix:vm-prep-smoke` | Upstream CDN + wanix.wasm |
-| 2 | `wanix:vm:isolated:verify` | Isolated `wanix-vm-e2e.html` term stress |
-| 3 | `wanix:vm:app:verify` | **Full ZSS app** `/?ZSS_E2E=1` — spawn gojs panic + `uname --help` + `id` |
+| 2 | `wanix:vm-term-smoke` | `<wanix-term>` login + `id` (standalone) |
+| 3 | `wanix:vm-term-iframe-smoke` | term I/O in iframe under mock WebGL |
+| 4 | `wanix:vm:isolated:verify` | Isolated `wanix-vm-e2e.html` term stress |
+| 5 | `wanix:vm:app:verify` | **Full ZSS app** hidden iframe + tile bridge |
 
 Fast single gate (matches your manual `/` repro):
 

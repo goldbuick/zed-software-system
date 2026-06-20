@@ -38,6 +38,58 @@ export const WANIX_TASKS: TaskDef[] = [
       'wanix vm boot',
     ]),
   }),
+  def('wanix:vm-simple-smoke', {
+    description:
+      'Upstream basic-vm.html port (vm-simple.html) — visible wanix-term, login/id, no panic',
+    tags: ['slow'],
+    deps: ['wanix:ensure'],
+    run: exec([
+      'playwright',
+      'test',
+      '--config',
+      'ops/playwright.config.ts',
+      'ops/e2e/wanix-vm-simple.spec.ts',
+    ]),
+  }),
+  def('wanix:vm-simple-deferred-smoke', {
+    description:
+      'Deferred wanix-term connect (vm-simple-deferred.html) — term timing bisect',
+    tags: ['slow'],
+    deps: ['wanix:ensure'],
+    run: exec([
+      'playwright',
+      'test',
+      '--config',
+      'ops/playwright.config.ts',
+      'ops/e2e/wanix-vm-simple-deferred.spec.ts',
+    ]),
+  }),
+  def('wanix:vm-term-smoke', {
+    description:
+      'vm-simple.html + probe harness — login/id via __WANIX_TERM_PROBE__',
+    tags: ['slow'],
+    deps: ['wanix:ensure'],
+    run: exec([
+      'playwright',
+      'test',
+      '--config',
+      'ops/playwright.config.ts',
+      'ops/e2e/wanix-vm-term-smoke.spec.ts',
+    ]),
+  }),
+  def('wanix:vm-term-iframe-smoke', {
+    description:
+      'wanix-term inside hidden iframe under mock WebGL parent — login/id',
+    tags: ['slow'],
+    deps: ['wanix:ensure'],
+    run: exec([
+      'playwright',
+      'test',
+      '--config',
+      'ops/playwright.config.ts',
+      'ops/e2e/wanix-vm-term-iframe-smoke.spec.ts',
+    ]),
+  }),
   def('wanix:vm-prep-smoke', {
     description:
       'Upstream basic-vm.html smoke (CDN archives + wanix.wasm, no ZSS) — prep gate',

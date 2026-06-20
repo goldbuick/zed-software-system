@@ -140,7 +140,6 @@ export type ZssE2eBridge = {
     mem?: string
     attach?: boolean
     wait?: boolean
-    skiptermconnect?: boolean
   }) => Promise<{ vmid: string; code?: number }>
   listwanixhostdir: (path: string) => Promise<string[]>
   haltwanixhosttask: (taskid?: string) => Promise<void>

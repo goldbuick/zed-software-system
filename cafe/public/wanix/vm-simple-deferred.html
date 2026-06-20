@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>wanix vm-simple deferred wanix-term</title>
+    <script type="module" src="/wanix/wanix.min.js"></script>
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+      wanix-system {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        min-height: 0;
+      }
+      wanix-term {
+        flex: 1;
+        min-height: 0;
+      }
+      #toolbar {
+        position: fixed;
+        top: 8px;
+        right: 8px;
+        z-index: 1;
+      }
+      #log {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        max-height: 22vh;
+        margin: 0;
+        padding: 8px;
+        background: rgba(0, 0, 0, 0.75);
+        color: #0f0;
+        font: 12px ui-monospace, Menlo, Monaco, Consolas, monospace;
+        overflow: auto;
+      }
+    </style>
+  </head>
+  <body style="height: 100vh; margin: 0">
+    <div id="toolbar">
+      <button type="button" id="connect-term">Connect wanix-term</button>
+    </div>
+    <!-- Same binds + VM as basic-vm; wanix-term added after gojs settle (timing bisect). -->
+    <wanix-system wasm="/wanix/wanix.wasm">
+      <wanix-bind
+        dst="."
+        src="https://cdn.jsdelivr.net/npm/wanix-extras@0.4.0-rc1/dist/wanix-linux.tgz"
+        type="archive"
+      ></wanix-bind>
+      <wanix-bind dst="vm" src="#vm"></wanix-bind>
+      <wanix-bind
+        dst="#vm/v86"
+        src="https://cdn.jsdelivr.net/npm/wanix-extras@0.4.0-rc1/dist/v86.tgz"
+        type="archive"
+      ></wanix-bind>
+      <wanix-vm export="ttyS0" term start></wanix-vm>
+    </wanix-system>
+    <pre id="log"></pre>
+    <script type="module">
+      const logel = document.getElementById('log')
+      function log(line) {
+        logel.textContent += line + '\n'
+        console.log('[vm-simple-deferred]', line)
+      }
+
+      window.addEventListener('error', (e) => log('window.error: ' + e.message))
+      window.addEventListener('unhandledrejection', (e) =>
+        log('unhandledrejection: ' + e.reason),
+      )
+
+      const sys = document.querySelector('wanix-system')
+      sys.addEventListener('ready', () => log('wanix-system ready'))
+
+      let termconnected = false
+      function connectterm() {
+        if (termconnected) {
+          return
+        }
+        termconnected = true
+        const term = document.createElement('wanix-term')
+        term.setAttribute('path', '#vm/1/term')
+        term.setAttribute('raw', '')
+        sys.appendChild(term)
+        log('wanix-term inserted (deferred connect)')
+      }
+
+      document.getElementById('connect-term')?.addEventListener('click', connectterm)
+
+      const params = new URLSearchParams(window.location.search)
+      const delayms = Number(params.get('delay') ?? '15000')
+      if (params.get('auto') === '1') {
+        log(`auto connect in ${delayms}ms`)
+        setTimeout(connectterm, delayms)
+      } else {
+        log('click Connect wanix-term or add ?auto=1&delay=15000')
+      }
+    </script>
+  </body>
+</html>
