@@ -69,9 +69,12 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 | `yarn task run content:book:test` | Jest content book tests | `ci` | — | — |
 | `yarn task run content:book:validate` | Validate book JSON (pass path as extra args) | — | — | — |
 | `yarn task run content:codepage:validate` | Validate codepage JSON (pass path as extra args) | — | — | — |
-| `yarn task run content:zzt:corpus:build` | Extract Museum archives and build ZZT OOP → .zss corpus (extract + zss) | `slow` | — | — |
+| `yarn task run content:zzt:corpus:build` | Extract Museum archives, build ZZT OOP → .zss corpus, and sanitize profanity/slurs | `slow` | `content:zzt:corpus:extract`, `content:zzt:corpus:zss`, `content:zzt:corpus:sanitize` | — |
 | `yarn task run content:zzt:corpus:extract` | Unzip vanilla ZZT archives into ops/fixtures/zzt/corpus/extracted (.zzt/.brd only) | `slow` | — | — |
 | `yarn task run content:zzt:corpus:manifest` | Crawl Museum of ZZT and write vanilla ZZT manifest only (no downloads) | — | — | — |
+| `yarn task run content:zzt:corpus:profanity:scan` | Scan ops/fixtures/zzt/corpus/zss for profanity and slurs; write profanity-report.json | `slow` | — | — |
+| `yarn task run content:zzt:corpus:profanity:verify` | Fail if corpus zss still contains profanity or slurs (CI gate) | `ci`, `slow` | — | — |
+| `yarn task run content:zzt:corpus:sanitize` | Redact profanity and racial slurs in ops/fixtures/zzt/corpus/zss/*.zss | `slow` | — | — |
 | `yarn task run content:zzt:corpus:screenshots` | Render board PNGs from extracted ZZT/BRD into ops/fixtures/zzt/corpus/screenshots (gitignored) | `slow` | — | — |
 | `yarn task run content:zzt:corpus:sync` | Crawl Museum of ZZT and download vanilla ZZT world ZIPs into ops/fixtures/zzt/corpus/archives (gitignored) | `slow` | — | — |
 | `yarn task run content:zzt:corpus:zss` | Convert extracted ZZT/BRD OOP into ops/fixtures/zzt/corpus/zss/*.zss + manifest | `slow` | — | — |

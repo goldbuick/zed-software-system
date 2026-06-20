@@ -61,9 +61,35 @@ export const CONTENT_TASKS: TaskDef[] = [
   }),
   def('content:zzt:corpus:build', {
     description:
-      'Extract Museum archives and build ZZT OOP → .zss corpus (extract + zss)',
+      'Extract Museum archives, build ZZT OOP → .zss corpus, and sanitize profanity/slurs',
     tags: ['slow'],
-    run: tsxhandler('tasks/implementations/content/museum-zzt-corpus-extract.ts'),
+    deps: ['content:zzt:corpus:extract', 'content:zzt:corpus:zss', 'content:zzt:corpus:sanitize'],
+    run: { kind: 'tasks' },
+  }),
+  def('content:zzt:corpus:profanity:scan', {
+    description:
+      'Scan ops/fixtures/zzt/corpus/zss for profanity and slurs; write profanity-report.json',
+    tags: ['slow'],
+    run: tsxhandler('tasks/implementations/content/zzt-corpus-profanity.ts', [
+      'scan',
+    ]),
+  }),
+  def('content:zzt:corpus:profanity:verify', {
+    description:
+      'Fail if corpus zss still contains profanity or slurs (CI gate)',
+    tags: ['ci', 'slow'],
+    run: tsxhandler('tasks/implementations/content/zzt-corpus-profanity.ts', [
+      'scan',
+      'verify',
+    ]),
+  }),
+  def('content:zzt:corpus:sanitize', {
+    description:
+      'Redact profanity and racial slurs in ops/fixtures/zzt/corpus/zss/*.zss',
+    tags: ['slow'],
+    run: tsxhandler('tasks/implementations/content/zzt-corpus-profanity.ts', [
+      'sanitize',
+    ]),
   }),
   def('content:zzt:corpus:screenshots', {
     description:

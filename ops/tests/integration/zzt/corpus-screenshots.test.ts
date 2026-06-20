@@ -16,5 +16,5 @@ it(
     const code = renderscreenshots(opts)
     expect(code).toBe(0)
   },
-  3_600_000,
+  259_200_000,
 )

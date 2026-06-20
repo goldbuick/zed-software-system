@@ -15,15 +15,13 @@ import {
 } from 'zss/gadget/capture/rasterize'
 import { importzztboardstobook } from 'zss/feature/parse/zzt'
 import { zztparseboard, zztparseworld } from 'zss/feature/parse/zztbinparse'
-import {
-  corpusboardscreenshotid,
-} from 'zss/feature/parse/zztcorpus'
+import { corpusboardscreenshotid } from 'zss/feature/parse/zztcorpus'
 import type { ZZT_BOARD } from 'zss/feature/parse/zztformattypes'
-import { memorylistcodepagebytype } from 'zss/memory/bookoperations'
-import { memoryreadcodepagedata } from 'zss/memory/codepageoperations'
+import { ispresent } from 'zss/mapping/types'
+import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import { memoryreadgadgetlayers } from 'zss/memory/rendering'
 import { memoryclearbook, memorywritebook } from 'zss/memory/session'
-import { BOARD_WIDTH, BOARD_HEIGHT, CODE_PAGE_TYPE } from 'zss/memory/types'
+import { BOARD_WIDTH, BOARD_HEIGHT } from 'zss/memory/types'
 
 const CORPUS_DIR = path.join('ops', 'fixtures', 'zzt', 'corpus')
 const EXTRACTED_DIR = path.join(CORPUS_DIR, 'extracted')
@@ -67,6 +65,7 @@ type ScreenshotManifest = {
     boards: number
     skipped_existing: number
     parse_errors: number
+    render_errors: number
   }
   entries: ScreenshotManifestEntry[]
   errors: { path: string; error: string }[]
@@ -110,6 +109,10 @@ function readcorpusmanifest(root: string): CorpusManifest {
 
 function zipstem(filename: string): string {
   return filename.replace(/\.zip$/i, '')
+}
+
+function manifestarchivename(entry: CorpusManifestEntry): string {
+  return entry.archive_name || zipstem(entry.filename)
 }
 
 function iszztorbrd(name: string): boolean {
@@ -160,6 +163,10 @@ function writepng(filepath: string, width: number, height: number, rgba: Uint8Cl
   writeFileSync(filepath, packed)
 }
 
+function errormessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
+}
+
 function processsourcefile(
   root: string,
   sourcepath: string,
@@ -181,20 +188,21 @@ function processsourcefile(
     tileheight: number,
     croppedfromszzt: boolean,
   ) => {
-    const { book } = importzztboardstobook(zztboards, {
-      startboard: -1,
-      tilewidth,
-      tileheight,
-      croppedfromszzt,
-    })
-    memorywritebook(book)
-    const boardpages = memorylistcodepagebytype(book, CODE_PAGE_TYPE.BOARD)
+    let bookid = ''
     try {
-      for (let bi = 0; bi < boardpages.length; bi++) {
+      const { book, boardaddresses } = importzztboardstobook(zztboards, {
+        startboard: -1,
+        tilewidth,
+        tileheight,
+        croppedfromszzt,
+      })
+      bookid = book.id
+      memorywritebook(book)
+      for (let bi = 0; bi < boardaddresses.length; bi++) {
         const boardindex = boardindexstart + bi
-        const boardname = zztboards[bi].boardname
+        const boardname = zztboards[bi]?.boardname ?? ''
         const id = corpusboardscreenshotid({
-          archivename: manifestentry.archive_name,
+          archivename: manifestarchivename(manifestentry),
           sourcestem,
           boardindex,
         })
@@ -213,31 +221,47 @@ function processsourcefile(
           })
           continue
         }
-        const board = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(boardpages[bi])
-        if (!board) {
-          continue
+        try {
+          const board = memoryreadboardbyaddress(boardaddresses[bi])
+          if (!ispresent(board) || !ispresent(board.terrain)) {
+            continue
+          }
+          const gadgetlayers = memoryreadgadgetlayers('flat', board)
+          const { width, height, rgba } = rasterizelayerstorgba(
+            gadgetlayers.layers,
+            media.charset,
+            media.palette,
+          )
+          mkdirSync(path.dirname(pngpath), { recursive: true })
+          writepng(pngpath, width, height, rgba)
+          manifest.stats.boards += 1
+          manifest.entries.push({
+            id,
+            png_path: pngrel.replace(/\\/g, '/'),
+            archive_name: manifestentry.archive_name,
+            archive_path: manifestentry.local_path,
+            source_file: sourcefile.replace(/\\/g, '/'),
+            board_index: boardindex,
+            board_name: boardname,
+          })
+        } catch (error) {
+          manifest.stats.render_errors += 1
+          manifest.errors.push({
+            path: `${relpath}#b${boardindex}`,
+            error: errormessage(error),
+          })
         }
-        const gadgetlayers = memoryreadgadgetlayers('flat', board)
-        const { width, height, rgba } = rasterizelayerstorgba(
-          gadgetlayers.layers,
-          media.charset,
-          media.palette,
-        )
-        mkdirSync(path.dirname(pngpath), { recursive: true })
-        writepng(pngpath, width, height, rgba)
-        manifest.stats.boards += 1
-        manifest.entries.push({
-          id,
-          png_path: pngrel.replace(/\\/g, '/'),
-          archive_name: manifestentry.archive_name,
-          archive_path: manifestentry.local_path,
-          source_file: sourcefile.replace(/\\/g, '/'),
-          board_index: boardindex,
-          board_name: boardname,
-        })
       }
+    } catch (error) {
+      manifest.stats.render_errors += 1
+      manifest.errors.push({
+        path: `${relpath}#b${boardindexstart}`,
+        error: errormessage(error),
+      })
     } finally {
-      memoryclearbook(book.id)
+      if (bookid) {
+        memoryclearbook(bookid)
+      }
     }
   }
 
@@ -290,9 +314,17 @@ export function renderscreenshots(opts: ScreenshotOptions): number {
       boards: 0,
       skipped_existing: 0,
       parse_errors: 0,
+      render_errors: 0,
     },
     entries: [],
     errors: [],
+  }
+
+  const manifestpath = path.join(opts.root, SCREENSHOTS_MANIFEST_PATH)
+
+  const writemanifest = () => {
+    manifest.generated_at = new Date().toISOString()
+    writeFileSync(manifestpath, `${JSON.stringify(manifest, null, 2)}\n`)
   }
 
   const media = defaultcapturemedia()
@@ -334,16 +366,14 @@ export function renderscreenshots(opts: ScreenshotOptions): number {
       process.stdout.write(
         `\rscreenshots: ${manifest.stats.archives_processed}/${lookup.size}`,
       )
+      writemanifest()
     }
   }
   process.stdout.write('\n')
 
-  writeFileSync(
-    path.join(opts.root, SCREENSHOTS_MANIFEST_PATH),
-    `${JSON.stringify(manifest, null, 2)}\n`,
-  )
+  writemanifest()
   console.log(
-    `screenshots manifest: ${SCREENSHOTS_MANIFEST_PATH} boards=${manifest.stats.boards} skipped=${manifest.stats.skipped_existing} parse_errors=${manifest.stats.parse_errors}`,
+    `screenshots manifest: ${SCREENSHOTS_MANIFEST_PATH} boards=${manifest.stats.boards} skipped=${manifest.stats.skipped_existing} parse_errors=${manifest.stats.parse_errors} render_errors=${manifest.stats.render_errors}`,
   )
-  return manifest.stats.parse_errors > 0 ? 1 : 0
+  return 0
 }

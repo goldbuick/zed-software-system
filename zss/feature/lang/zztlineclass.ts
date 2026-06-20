@@ -112,8 +112,8 @@ export function shouldstatat(text: string, startoffset: number): boolean {
   if (isfirstline(text, startoffset)) {
     return true
   }
-  if (!isinheaderblock(text, startoffset)) {
-    return false
+  if (isinheaderblock(text, startoffset)) {
+    return true
   }
   return ZSS_STAT_KEYWORDS.has(word)
 }

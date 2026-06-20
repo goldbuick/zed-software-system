@@ -114,6 +114,10 @@ function matchBasicText(text: string, startOffset: number) {
     }
   }
 
+  if (shouldstatat(text, startOffset)) {
+    return null
+  }
+
   // scan for possible text start
   let cursor = startOffset
 

@@ -122,7 +122,7 @@ export function memoryinitboardlookup(board: MAYBE<BOARD>) {
   const named: Record<string, Set<string | number>> = {}
 
   // add objects to lookup & to named
-  const objects = Object.values(board.objects)
+  const objects = ispresent(board.objects) ? Object.values(board.objects) : []
   for (let i = 0; i < objects.length; ++i) {
     const object = objects[i]
     if (
@@ -160,19 +160,25 @@ export function memoryinitboardlookup(board: MAYBE<BOARD>) {
   // add terrain to named
   let x = 0
   let y = 0
-  for (let i = 0; i < board.terrain.length; ++i) {
-    const terrain = board.terrain[i]
-    if (ispresent(terrain)) {
+  const terrain = board.terrain
+  if (!ispresent(terrain)) {
+    boardruntime.lookup = lookup
+    boardruntime.named = named
+    return
+  }
+  for (let i = 0; i < terrain.length; ++i) {
+    const tile = terrain[i]
+    if (ispresent(tile)) {
       // add coords
-      terrain.x = x
-      terrain.y = y
+      tile.x = x
+      tile.y = y
 
       // add category and kinddata
-      memoryensureboardelementruntime(terrain).category = CATEGORY.ISTERRAIN
-      memoryreadelementkind(terrain)
+      memoryensureboardelementruntime(tile).category = CATEGORY.ISTERRAIN
+      memoryreadelementkind(tile)
 
       // update named lookup
-      const display = memoryreadelementdisplay(terrain)
+      const display = memoryreadelementdisplay(tile)
       if (!named[display.name]) {
         named[display.name] = new Set<string>()
       }

@@ -35,6 +35,7 @@ import {
   BOOK,
   CODE_PAGE_TYPE,
 } from 'zss/memory/types'
+import { ensurezztelementlibrary } from 'zss/testsupport/coolregionsbowbook'
 import { STR_COLOR, mapcolortostrcolor } from 'zss/words/color'
 import { STR_KIND } from 'zss/words/kind'
 import { PT } from 'zss/words/types'
@@ -449,7 +450,7 @@ function processboards(
     const zztboard = zztboards[i]
     const statmap = buildstatmap(zztboard.stats, tilewidth, tileheight)
 
-    const codepagestats: string[] = [`@zztboard${i}`, ``]
+    const codepagestats: string[] = [`@zztboard${i}`]
     if (croppedfromszzt) {
       codepagestats.push(
         `@note Super ZZT board cropped to ${BOARD_WIDTH}x${BOARD_HEIGHT}`,
@@ -544,6 +545,7 @@ export function importzztboardstobook(
     croppedfromszzt: boolean
   },
 ): { book: BOOK; boardaddresses: string[] } {
+  ensurezztelementlibrary()
   const book = memorycreatebook([])
   const startboard = opts.startboard ?? -1
   processboards(book, startboard, zztboards, {

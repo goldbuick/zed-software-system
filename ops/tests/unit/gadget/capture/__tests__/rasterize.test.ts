@@ -1,18 +1,16 @@
 import { RUNTIME } from 'zss/config'
 import {
+  defaultcapturemedia,
   rasterizelayerstorgba,
 } from 'zss/gadget/capture/rasterize'
-import { createbitmap } from 'zss/gadget/data/bitmap'
-import type { PALETTE_RGB } from 'zss/gadget/data/palette'
 import { zztencodeworld } from 'zss/feature/parse/zztencode'
 import { importzztboardstobook } from 'zss/feature/parse/zzt'
 import { zztparseworld } from 'zss/feature/parse/zztbinparse'
 import type { ZZT_BOARD } from 'zss/feature/parse/zztformattypes'
-import { memorylistcodepagebytype } from 'zss/memory/bookoperations'
-import { memoryreadcodepagedata } from 'zss/memory/codepageoperations'
+import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import { memoryreadgadgetlayers } from 'zss/memory/rendering'
 import { memoryclearbook, memoryresetbooks, memorywritebook } from 'zss/memory/session'
-import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
+import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 
 jest.mock('zss/config', () => ({
   LANG_DEV: false,
@@ -36,10 +34,20 @@ function blankelements(): { type: number; color: number }[] {
   return Array.from({ length: 1500 }, () => ({ type: 0, color: 0 }))
 }
 
-function minimalboard(name: string): ZZT_BOARD {
+function walledboard(name: string): ZZT_BOARD {
+  const elements = blankelements()
+  const solid = { type: 21, color: 1 }
+  for (let x = 0; x < BOARD_WIDTH; ++x) {
+    elements[x] = solid
+    elements[(BOARD_HEIGHT - 1) * BOARD_WIDTH + x] = solid
+  }
+  for (let y = 0; y < BOARD_HEIGHT; ++y) {
+    elements[y * BOARD_WIDTH] = solid
+    elements[y * BOARD_WIDTH + BOARD_WIDTH - 1] = solid
+  }
   return {
     boardname: name,
-    elements: blankelements(),
+    elements,
     stats: [{ x: 0, y: 0, code: '' }],
     maxplayershots: 255,
     isdark: 0,
@@ -54,20 +62,10 @@ function minimalboard(name: string): ZZT_BOARD {
   }
 }
 
-function testmedia() {
-  const charset = createbitmap(128, 224)
-  const palette: PALETTE_RGB[] = Array.from({ length: 16 }, (_, i) => ({
-    r: i / 15,
-    g: i / 15,
-    b: i / 15,
-  }))
-  return { charset, palette }
-}
-
 describe('rasterizelayerstorgba', () => {
-  it('renders a minimal imported ZZT board at 960x700', () => {
+  it('renders a walled imported ZZT board at 960x700', () => {
     memoryresetbooks([])
-    const board = minimalboard('Title')
+    const board = walledboard('Title')
     const bytes = zztencodeworld('MYWORLD', 0, [board])
     const parsed = zztparseworld(bytes)
     expect(parsed.ok).toBe(true)
@@ -82,16 +80,14 @@ describe('rasterizelayerstorgba', () => {
     })
     memorywritebook(book)
     try {
-      const boardpages = memorylistcodepagebytype(book, CODE_PAGE_TYPE.BOARD)
-      expect(boardpages.length).toBeGreaterThan(0)
-      const memboard = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(boardpages[0])
+      const memboard = memoryreadboardbyaddress(boardaddresses[0])
       expect(memboard).toBeDefined()
       if (!memboard) {
         return
       }
 
       const gadgetlayers = memoryreadgadgetlayers('flat', memboard)
-      const media = testmedia()
+      const media = defaultcapturemedia()
       const { width, height, rgba } = rasterizelayerstorgba(
         gadgetlayers.layers,
         media.charset,
@@ -106,6 +102,14 @@ describe('rasterizelayerstorgba', () => {
       expect(height).toBe(700)
       expect(rgba.length).toBe(width * height * 4)
       expect(rgba[3]).toBe(255)
+
+      let nonzero = 0
+      for (let i = 0; i < rgba.length; i += 4) {
+        if (rgba[i] || rgba[i + 1] || rgba[i + 2]) {
+          nonzero += 1
+        }
+      }
+      expect(nonzero).toBeGreaterThan(1000)
     } finally {
       memoryclearbook(book.id)
     }

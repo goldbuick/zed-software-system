@@ -458,7 +458,12 @@ export async function extractmuseumzztcorpus(opts: ExtractOptions): Promise<numb
     }
   }
   if (opts.stage === 'zss' || opts.stage === 'both') {
-    return convertextractedtozss(opts)
+    const code = convertextractedtozss(opts)
+    if (code !== 0) {
+      return code
+    }
+    const { sanitizezztcorpus } = await import('./zzt-corpus-profanity')
+    return sanitizezztcorpus([])
   }
   return 0
 }

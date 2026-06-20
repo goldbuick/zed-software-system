@@ -1,0 +1,37 @@
+---
+description: Museum ZZT corpus profanity/slur scan, sanitize, and verify workflow
+globs: ops/fixtures/zzt/corpus/**/*.zss
+alwaysApply: false
+---
+
+# ZZT corpus content policy
+
+Museum ZZT `.zss` scripts under `ops/fixtures/zzt/corpus/zss/` must not contain profanity or slurs in player-facing text.
+
+## Tooling
+
+| Task | Purpose |
+|------|---------|
+| `yarn task run content:zzt:corpus:profanity:scan` | Report hits → `ops/fixtures/zzt/corpus/profanity-report.json` |
+| `yarn task run content:zzt:corpus:sanitize` | Redact hits in place → `sanitize-report.json` |
+| `yarn task run content:zzt:corpus:profanity:verify` | Exit 1 if any hits remain (CI) |
+
+Word lists and redaction logic: `zss/feature/content/zztcorpussanitize.ts`.
+
+## Pipeline
+
+`content:zzt:corpus:zss` and `content:zzt:corpus:build` run **sanitize automatically** after `.zss` generation.
+
+Rebuilding zss **without** sanitize wipes manual redaction — always run sanitize after `corpus:zss` if skipping the combined build.
+
+## Redaction rules
+
+- Matched words → `[removed]` (word boundaries only).
+- Slur `@stat` / `:label` / `#bind` names → `redacted`.
+- Allowlisted false positives: ZZT toolkit *“Colored empty”*, `:wop` labels, *Moby Dick*, color-adjective *“multi-colored”*, etc.
+
+## When editing corpus scripts
+
+1. Do not introduce new profanity or slurs.
+2. After bulk zss regen, run `content:zzt:corpus:sanitize` then `content:zzt:corpus:profanity:verify`.
+3. Extend `zztcorpussanitize.ts` (terms or allowlist) — not ad-hoc one-off sed.
