@@ -7,8 +7,8 @@
  *   yarn notepop:render:ab
  *
  * Outputs:
- *   cafe/public/renders/notepop-qcxdxexfx.wav (default)
- *   cafe/public/renders/notepop-qcxdxexfx-comp-on.* / -comp-off.* (--ab)
+ *   ops/fixtures/renders/notepop-qcxdxexfx.wav (default)
+ *   ops/fixtures/renders/notepop-qcxdxexfx-comp-on.* / -comp-off.* (--ab)
  *
  * Browser preview (yarn app:dev):
  *   https://localhost:7777/song-offline-render.html?scenario=notepop
@@ -17,6 +17,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { RENDERS_FIXTURES_DIR } from 'zss/testsupport/fixturepaths'
 import { chromium } from '@playwright/test'
 import {
   startparityvite,
@@ -32,7 +33,7 @@ import {
 const ROOT = process.cwd()
 const PROJECT = process.cwd()
 const PORT = 9881
-const OUTDIR = path.join(PROJECT, 'cafe/public/renders')
+const OUTDIR = RENDERS_FIXTURES_DIR
 const HOST_URL = `http://127.0.0.1:${PORT}/offline-render-host.html`
 
 type RENDER_PASS = {

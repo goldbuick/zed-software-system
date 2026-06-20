@@ -20,6 +20,8 @@ import {
   spawnwanixtask,
   spawnwanixvm,
   spawnwanixvmspace,
+  readwanixvmprepstage,
+  readwanixvmpreperror,
   sendwanixtermwrite,
   unmountallwanixbinds,
   unmountwanixbind,
@@ -189,8 +191,10 @@ export async function wanixhandlevmstart(
     }
     apilog(device, player, 'wanix vm prep: fetching linux + v86 archives...')
     await spawnwanixvmspace(device, player)
+    apilog(device, player, `wanix vm prep: ${readwanixvmprepstage()}`)
     ensurevmexithandler()
     const requested = vmid ?? DEFAULT_WANIX_VM_ID
+    apilog(device, player, `wanix vm spawn: ${requested}...`)
     const { vmid: spawnedid } = await spawnwanixvm({
       vmid: requested,
       mem: DEFAULT_WANIX_VM_MEM,
@@ -204,12 +208,11 @@ export async function wanixhandlevmstart(
     })
     apilog(device, player, `wanix vm boot ${spawnedid}`)
   } catch (err) {
-    apierror(
-      device,
-      player,
-      'wanix',
-      err instanceof Error ? err.message : String(err),
-    )
+    const stage = readwanixvmprepstage()
+    const prep = readwanixvmpreperror()
+    const detail = err instanceof Error ? err.message : String(err)
+    const suffix = prep ? ` (${prep})` : stage !== 'idle' && stage !== 'failed' ? ` (stage=${stage})` : ''
+    apierror(device, player, 'wanix', `${detail}${suffix}`)
   }
 }
 

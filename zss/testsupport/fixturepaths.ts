@@ -26,6 +26,8 @@ export const SYNTH_MAXI_ARCHIVE_FIXTURES_DIR = path.join(
 export const PARSE_FIXTURES_DIR = path.join(FIXTURES_ROOT, 'parse')
 export const WANIX_FIXTURES_DIR = path.join(FIXTURES_ROOT, 'wanix')
 export const HARNESS_FIXTURES_DIR = path.join(FIXTURES_ROOT, 'harness')
+/** Offline Daisy/synth render outputs (wav/json/txt); served at /renders/ in dev only. */
+export const RENDERS_FIXTURES_DIR = path.join(FIXTURES_ROOT, 'renders')
 export const E2E_FIXTURES_DIR = path.join(FIXTURES_ROOT, 'e2e')
 export const TRAINING_CORPUS_DIR = path.join(
   FIXTURES_ROOT,
@@ -61,6 +63,15 @@ export const CONTENT_TEMPLATES_DIR = path.join(
   'templates',
 )
 export const CONTENT_DIST_DIR = path.join(CONTENT_FIXTURES_DIR, 'dist')
+
+export const ZZT_CORPUS_DIR = path.join(FIXTURES_ROOT, 'zzt/corpus')
+export const ZZT_CORPUS_EXTRACTED_DIR = path.join(ZZT_CORPUS_DIR, 'extracted')
+export const ZZT_CORPUS_ZSS_DIR = path.join(ZZT_CORPUS_DIR, 'zss')
+export const ZZT_CORPUS_MANIFEST_PATH = path.join(ZZT_CORPUS_DIR, 'manifest.json')
+export const ZZT_CORPUS_ZSS_MANIFEST_PATH = path.join(
+  ZZT_CORPUS_ZSS_DIR,
+  'manifest.json',
+)
 
 export const CONTENT_MINIMAL_MANIFEST_PATH = path.join(
   CONTENT_TEMPLATES_DIR,

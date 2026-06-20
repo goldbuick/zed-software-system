@@ -8,6 +8,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { RENDERS_FIXTURES_DIR } from 'zss/testsupport/fixturepaths'
 import {
   type NOTEPOP_RENDER_METRICS,
   evalnotepopgates,
@@ -20,7 +21,7 @@ import {
 
 const ROOT = process.cwd()
 const PROJECT = process.cwd()
-const OUTDIR = path.join(PROJECT, 'cafe/public/renders')
+const OUTDIR = RENDERS_FIXTURES_DIR
 
 type NOTEPOP_JSON = NOTEPOP_RENDER_METRICS & {
   notepopmeta?: ReturnType<typeof notepopmeta>

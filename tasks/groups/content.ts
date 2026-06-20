@@ -39,4 +39,28 @@ export const CONTENT_TASKS: TaskDef[] = [
       'manifest',
     ]),
   }),
+  def('content:zzt:corpus:extract', {
+    description:
+      'Unzip vanilla ZZT archives into ops/fixtures/zzt/corpus/extracted (.zzt/.brd only)',
+    tags: ['slow'],
+    run: tsxhandler(
+      'tasks/implementations/content/museum-zzt-corpus-extract.ts',
+      ['extract'],
+    ),
+  }),
+  def('content:zzt:corpus:zss', {
+    description:
+      'Convert extracted ZZT/BRD OOP into ops/fixtures/zzt/corpus/zss/*.zss + manifest',
+    tags: ['slow'],
+    run: tsxhandler(
+      'tasks/implementations/content/museum-zzt-corpus-extract.ts',
+      ['zss'],
+    ),
+  }),
+  def('content:zzt:corpus:build', {
+    description:
+      'Extract Museum archives and build ZZT OOP → .zss corpus (extract + zss)',
+    tags: ['slow'],
+    run: tsxhandler('tasks/implementations/content/museum-zzt-corpus-extract.ts'),
+  }),
 ]

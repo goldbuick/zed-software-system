@@ -10,7 +10,9 @@ import mkcert from 'vite-plugin-mkcert'
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
 
 import pkg from './package.json'
-import { harnesshtmlmiddleware } from './tasks/lib/parity/harness-middleware.ts'
+import { harnesshtmlmiddleware, fixtureprefixmiddleware } from './tasks/lib/parity/harness-middleware.ts'
+
+const RENDERS_FIXTURES_DIR = path.join(process.cwd(), 'ops/fixtures/renders')
 
 /**
  * Firefox refuses module scripts when Content-Type is missing (""). Some dev
@@ -80,13 +82,14 @@ function stripzstdsourcemaprefs(): Plugin {
   }
 }
 
-function serveharnesshtmldev(): Plugin {
+function servefixturesdev(): Plugin {
   return {
-    name: 'serve-harness-html-dev',
+    name: 'serve-fixtures-dev',
     apply: 'serve',
     configureServer(server) {
       return () => {
         server.middlewares.use(harnesshtmlmiddleware())
+        server.middlewares.use(fixtureprefixmiddleware('/renders', RENDERS_FIXTURES_DIR))
       }
     },
   }
@@ -180,7 +183,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       devjavascriptmimetypedev(),
       stripzstdsourcemaprefs(),
-      serveharnesshtmldev(),
+      servefixturesdev(),
       react(),
       nodePolyfills({
         include: ['buffer'],

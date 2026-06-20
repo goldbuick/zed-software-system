@@ -70,19 +70,6 @@ export const WANIX_TASKS: TaskDef[] = [
       'ops/e2e/wanix-vm-simple-deferred.spec.ts',
     ]),
   }),
-  def('wanix:vm-term-smoke', {
-    description:
-      'vm-simple.html + probe harness — login/id via __WANIX_TERM_PROBE__',
-    tags: ['slow'],
-    deps: ['wanix:ensure'],
-    run: exec([
-      'playwright',
-      'test',
-      '--config',
-      'ops/playwright.config.ts',
-      'ops/e2e/wanix-vm-term-smoke.spec.ts',
-    ]),
-  }),
   def('wanix:vm-term-iframe-smoke', {
     description:
       'wanix-term inside hidden iframe under mock WebGL parent — login/id',

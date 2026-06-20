@@ -10,6 +10,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { RENDERS_FIXTURES_DIR } from 'zss/testsupport/fixturepaths'
 import {
   CALIBRATE_SCRIPT_TIMEOUT_MS,
   EXEC_BUILD_DAISY_TIMEOUT_MS,
@@ -34,7 +35,7 @@ const CONFIG_PATH = path.join(
   PROJECT,
   'zss/feature/synth/backend/daisy/native/zss/zss_config.h',
 )
-const OUTDIR = path.join(PROJECT, 'cafe/public/renders/synth-env-parity')
+const OUTDIR = path.join(RENDERS_FIXTURES_DIR, 'synth-env-parity')
 
 const dryrun = process.argv.includes('--dry-run')
 

@@ -56,6 +56,7 @@ import { wanixtermscreenwrite } from 'zss/feature/wanix/wanixtermscreen'
 import { wanixtrace } from 'zss/feature/wanix/wanixtrace'
 import {
   applywanixsystemkernelattrs,
+  buildwanixvmprehtml,
   DEFAULT_WANIX_VM_ID,
   DEFAULT_WANIX_VM_MEM,
   readwanixkernelwasmurl,
@@ -225,6 +226,9 @@ function waitforwanixscriptel(script: HTMLScriptElement): Promise<void> {
 }
 
 async function ensurewanixruntime() {
+  if (iswanixtermiframemode()) {
+    return
+  }
   if (wanixscriptloaded || customElements.get('wanix-system')) {
     wanixscriptloaded = true
     return
@@ -1460,10 +1464,16 @@ function iswasmpanicmessage(message: string): boolean {
 }
 
 export function readwanixvmprepstage(): WANIX_VM_PREP_STAGE {
+  if (iswanixtermiframemode()) {
+    return readwanixtermiframeprepstage()
+  }
   return vmprepstage
 }
 
 export function readwanixvmpreperror(): string | undefined {
+  if (iswanixtermiframemode()) {
+    return readwanixtermiframepreperror()
+  }
   return vmpreperror
 }
 
@@ -1681,14 +1691,7 @@ async function bootwanixsystemforvm(
 
   // Parser-style insert (matches smoke-basic-vm.html) — avoids archive/wasm ready race
   // from createElement + appendChild ordering.
-  mount.insertAdjacentHTML(
-    'beforeend',
-    `<wanix-system wasm="${readwanixkernelwasmurl()}" allow-origins="*" debug>
-<wanix-bind dst="." src="${linux}" type="archive"></wanix-bind>
-<wanix-bind dst="vm" src="#vm"></wanix-bind>
-<wanix-bind dst="#vm/v86" src="${v86}" type="archive"></wanix-bind>
-</wanix-system>`,
-  )
+  mount.insertAdjacentHTML('beforeend', buildwanixvmprehtml(urls, 'zss-wanix-vm-sys'))
   const system = mount.querySelector('wanix-system') as WanixSystemElement | null
   if (!system) {
     throw new Error('wanix vm prep: failed to mount wanix-system')

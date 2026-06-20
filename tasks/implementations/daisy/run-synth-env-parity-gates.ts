@@ -7,6 +7,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { RENDERS_FIXTURES_DIR } from 'zss/testsupport/fixturepaths'
 import {
   EXEC_GATE_TIMEOUT_MS,
   withscripttimeout,
@@ -24,7 +25,7 @@ import {
 
 const ROOT = process.cwd()
 const PROJECT = process.cwd()
-const OUTDIR = path.join(PROJECT, 'cafe/public/renders/synth-env-parity')
+const OUTDIR = path.join(RENDERS_FIXTURES_DIR, 'synth-env-parity')
 
 async function rungates() {
   let failed = false

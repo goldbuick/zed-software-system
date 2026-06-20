@@ -1,4 +1,5 @@
 import type { DEVICELIKE } from 'zss/device/api'
+import { apilog } from 'zss/device/api'
 import {
   enterwanixattachedterminal,
   readterminalmodeattached,
@@ -165,6 +166,19 @@ function onmessage(event: MessageEvent) {
     if (id) {
       handlechunk(kind, id, data.chunk)
     }
+    return
+  }
+  if (iswanixtermprobemsg(data) && data.type === 'zss-wanix-term-probe-rpc-res') {
+    const waiter = rpcwaiters.get(data.id)
+    if (!waiter) {
+      return
+    }
+    rpcwaiters.delete(data.id)
+    if (data.error) {
+      waiter.reject(new Error(data.error))
+      return
+    }
+    waiter.resolve(data.result)
   }
 }
 
@@ -277,11 +291,13 @@ export async function iframeprepvmspace(
 ): Promise<void> {
   vmprepstage = 'mounting'
   vmpreperror = undefined
+  apilog(device, player, 'wanix vm prep: mounting linux + v86 in iframe...')
   try {
     await childrpc('prepvm', [urls])
     vmbindsready = true
     iframelayout = 'vm'
     vmprepstage = 'mount_ok'
+    apilog(device, player, 'wanix vm prep: mount ok')
     if (!iobridgestarted && onstart) {
       onstart(device, player)
       iobridgestarted = true
@@ -316,7 +332,13 @@ export async function iframespawnvm(opts: {
   }
   proxies.set(vmid, entry)
   registervm({ id: vmid, label: vmid, mem })
-  await childrpc('spawnvm', [vmid, mem])
+  try {
+    await childrpc('spawnvm', [vmid, mem])
+  } catch (err) {
+    vmprepstage = 'failed'
+    vmpreperror = err instanceof Error ? err.message : String(err)
+    throw err
+  }
   vmprepstage = 'spawn'
   if (opts.attach !== false) {
     attachedkind = 'vm'

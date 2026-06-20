@@ -8,6 +8,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { RENDERS_FIXTURES_DIR } from 'zss/testsupport/fixturepaths'
 import {
   type SIDECHAIN_PARITY_RESULT,
   evalsidechainparitygate,
@@ -17,9 +18,7 @@ import { SIDECHAIN_SCENARIO_ID } from '../zss/feature/synth/backend/daisy/sidech
 
 const ROOT = process.cwd()
 const PROJECT = process.cwd()
-const JSONPATH = path.join(
-  PROJECT,
-  'cafe/public/renders',
+const JSONPATH = path.join(RENDERS_FIXTURES_DIR,
   `${SIDECHAIN_SCENARIO_ID}-sidechain-parity.json`,
 )
 

@@ -7,7 +7,8 @@ import path from 'node:path'
 import { createServer as createViteServer } from 'vite'
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
 
-import { harnesshtmlmiddleware } from './harness-middleware.ts'
+import { harnesshtmlmiddleware, fixtureprefixmiddleware } from './harness-middleware.ts'
+import { RENDERS_FIXTURES_DIR } from 'zss/testsupport/fixturepaths'
 
 export const PARITY_SERVER_PORT = 9877
 
@@ -42,9 +43,11 @@ export async function startparityvite(
 
   const server = http.createServer((req, res) => {
     harnesshtmlmiddleware()(req, res, () => {
-      vite.middlewares.handle(req, res, () => {
-        res.statusCode = 404
-        res.end('not found')
+      fixtureprefixmiddleware('/renders', RENDERS_FIXTURES_DIR)(req, res, () => {
+        vite.middlewares.handle(req, res, () => {
+          res.statusCode = 404
+          res.end('not found')
+        })
       })
     })
   })

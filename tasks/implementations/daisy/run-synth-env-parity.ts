@@ -7,6 +7,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { RENDERS_FIXTURES_DIR } from 'zss/testsupport/fixturepaths'
 import { chromium } from '@playwright/test'
 import {
   PARITY_RENDER_SCRIPT_TIMEOUT_MS,
@@ -28,7 +29,7 @@ const ROOT = process.cwd()
 const PROJECT = process.cwd()
 const PORT = 9888
 const HOST_URL = `http://127.0.0.1:${PORT}/offline-render-host.html`
-const OUTDIR = path.join(PROJECT, 'cafe/public/renders/synth-env-parity')
+const OUTDIR = path.join(RENDERS_FIXTURES_DIR, 'synth-env-parity')
 
 async function runrenders() {
   fs.mkdirSync(OUTDIR, { recursive: true })

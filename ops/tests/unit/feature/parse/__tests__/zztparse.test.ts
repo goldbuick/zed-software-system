@@ -1,4 +1,4 @@
-import { zztparseworld } from 'zss/feature/parse/zzt'
+import { zztparseworld } from 'zss/feature/parse/zztbinparse'
 import { zztencodeworld } from 'zss/feature/parse/zztencode'
 import type { ZZT_BOARD } from 'zss/feature/parse/zztformattypes'
 
