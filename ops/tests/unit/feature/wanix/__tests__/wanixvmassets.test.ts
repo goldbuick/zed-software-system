@@ -44,6 +44,6 @@ describe('wanixvmassets', () => {
     expect(html).toContain('wanix-vm id="linux-vm"')
     expect(html).toContain('export="ttyS0" term')
     expect(html).toContain('mem="512M" start')
-    expect(html).toContain('wanix-term path="#vm/1/term" raw')
+    expect(html).toContain('wanix-term path="#vm/1/term" raw data-zss-vm-term="linux-vm"')
   })
 })

@@ -10,7 +10,6 @@ import {
 import { modemwritevaluenumber } from 'zss/device/modem'
 import { register, registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import { runlangcompilebench } from 'zss/feature/lang/langcompilebench'
 import type { LangCompileBenchReport } from 'zss/feature/lang/langcompilebench'
 import { readnetworkpeerid, readsubscribetopic } from 'zss/feature/netterminal'
 import { isjoin } from 'zss/feature/url'
@@ -33,15 +32,15 @@ import {
   spawnwanixvm,
   spawnwanixvmspace,
 } from 'zss/feature/wanix/wanixhost'
+import type {
+  WANIX_SMOKE_REPORT,
+  WANIX_VM_SMOKE_REPORT,
+} from 'zss/testsupport/e2e/wanixrepro'
 import {
-  type WANIX_SMOKE_REPORT,
-  type WANIX_VM_SMOKE_REPORT,
   type WANIX_VM_TERM_STRESS_REPORT,
   readwanixdiag,
-  runwanixsmoke,
-  runwanixvmsmoke,
-  runwanixvmtermstress,
-} from 'zss/testsupport/e2e/wanixrepro'
+  runwanixvmtermstress as runwanixvmtermstresscore,
+} from 'zss/testsupport/e2e/wanixvmrepro'
 import type { PT } from 'zss/words/types'
 export type ZssE2eMoveDir = 'left' | 'right' | 'up' | 'down'
 
@@ -297,16 +296,22 @@ export function installe2ebridge(): void {
       }
     },
     runlangcompilebench(opts) {
-      return runlangcompilebench(opts)
+      return import('zss/feature/lang/langcompilebench').then((m) =>
+        m.runlangcompilebench(opts),
+      )
     },
     runwanixsmoke(deadlinems) {
-      return runwanixsmoke(deadlinems)
+      return import('zss/testsupport/e2e/wanixrepro').then((m) =>
+        m.runwanixsmoke(deadlinems),
+      )
     },
     runwanixvmsmoke(deadlinems) {
-      return runwanixvmsmoke(deadlinems)
+      return import('zss/testsupport/e2e/wanixrepro').then((m) =>
+        m.runwanixvmsmoke(deadlinems),
+      )
     },
     runwanixvmtermstress(urls, deadlinems) {
-      return runwanixvmtermstress(urls, deadlinems)
+      return runwanixvmtermstresscore(registerreadplayer(), urls, deadlinems)
     },
     async ensurewanixhostready() {
       await ensurewanixsandbox(SOFTWARE, registerreadplayer())

@@ -21,10 +21,12 @@ Requires local `ops/fixtures/zzt/corpus/extracted/` from `content:zzt:corpus:ext
 
 | Gate | ok / total | rate |
 |------|------------|------|
-| raw `stat.code` | 1,068,406 / 1,108,500 | **96.38%** |
+| raw `stat.code` | 1,066,895 / 1,108,500 | **96.25%** |
 | wrapped `.zss` | (re-run without `raw-only`) | ~96.3% prior |
 
-Target is ≥99% on raw OOP. Top remaining buckets: `##loop` labels in play expr, `:poured` in dir context, redundant single-letter tokens from corrupt/truncated OOP, mid-scroll `!` edge cases. See `failure-report.json` triage (`fixable` / `invalid_zzt` / `ambiguous`).
+Prior baseline (pre-fixable-parser work): **96.38%** (1,068,406 ok), **7,169** `fixable_fail`.
+
+After parser fixes: **~742** fewer fixable failures (`fixable_fail` **6,427**). Top remaining fixable buckets: multiline `#change`/`#become` arg tails, lone `#` after partial `stmt_change_become`, `dir`/`dir_select` newline splits. See `failure-report.json` triage (`fixable` / `invalid_zzt` / `ambiguous`).
 
 ```bash
 yarn task run lang:zzt:corpus:analyze raw-only   # faster: skip wrapped walk

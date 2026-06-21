@@ -1,5 +1,3 @@
-import { readFileSync } from 'node:fs'
-
 import { memoryimportbookfromjson } from 'zss/memory/bookoperations'
 import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
 import { memorywritebook } from 'zss/memory/session'
@@ -14,10 +12,20 @@ export type COOLREGIONSBOW_BOOK_EXPORT = {
   data: BOOK
 }
 
-export function readcoolregionsbowbookexport(): COOLREGIONSBOW_BOOK_EXPORT {
+function readcoolregionsbowbookfromdisk(): COOLREGIONSBOW_BOOK_EXPORT {
+  if (typeof window !== 'undefined') {
+    throw new Error('readcoolregionsbowbookexport is node-only')
+  }
+  const { readFileSync } =
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    require('node:fs') as typeof import('node:fs')
   return JSON.parse(
     readFileSync(COOLREGIONSBOW_BOOK_JSON_PATH, 'utf8'),
   ) as COOLREGIONSBOW_BOOK_EXPORT
+}
+
+export function readcoolregionsbowbookexport(): COOLREGIONSBOW_BOOK_EXPORT {
+  return readcoolregionsbowbookfromdisk()
 }
 
 /** Books array for `vm:loader` / storage content hooks. */

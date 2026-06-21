@@ -39,7 +39,6 @@ import { useDeviceData } from 'zss/gadget/device'
 import { bootstrapmobiletextcapture } from 'zss/gadget/mobiletextcapture'
 import { makeeven } from 'zss/mapping/number'
 import { createplatform } from 'zss/platform'
-import { installe2ebridge } from 'zss/testsupport/e2escrollbridge'
 import type { StoreApi } from 'zustand/vanilla'
 
 import { App } from './app'
@@ -67,6 +66,7 @@ async function bootheadless(): Promise<void> {
     vmcli(register, registerreadplayer(), line)
   }
   if (shoulde2ebridge()) {
+    const { installe2ebridge } = await import('zss/testsupport/e2escrollbridge')
     installe2ebridge()
   }
   await import('zss/userspace')
@@ -85,6 +85,7 @@ async function main() {
   await import('zss/userspace')
 
   if (shoulde2ebridge()) {
+    const { installe2ebridge } = await import('zss/testsupport/e2escrollbridge')
     installe2ebridge()
   }
 

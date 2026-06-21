@@ -85,5 +85,5 @@ export function buildwanixvmspawnhtml(vmid: string, mem: string): string {
   const id = escapehtmlattr(vmid)
   const memattr = escapehtmlattr(mem)
   return `<wanix-vm id="${id}" export="ttyS0" term mem="${memattr}" start></wanix-vm>
-<wanix-term path="#vm/1/term" raw></wanix-term>`
+<wanix-term path="#vm/1/term" raw data-zss-vm-term="${id}"></wanix-term>`
 }

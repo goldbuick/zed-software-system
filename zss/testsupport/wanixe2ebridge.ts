@@ -11,7 +11,7 @@ import {
 import {
   runwanixvmtermstress,
   type WANIX_VM_TERM_STRESS_REPORT,
-} from 'zss/testsupport/e2e/wanixrepro'
+} from 'zss/testsupport/e2e/wanixvmrepro'
 
 const E2E_DEVICE = {
   emit: () => true,
@@ -66,7 +66,7 @@ export function installewanixe2ebridge(): void {
       await sendwanixterminput(text)
     },
     runwanixvmtermstress(urls) {
-      return runwanixvmtermstress(urls)
+      return runwanixvmtermstress(E2E_PLAYER, urls)
     },
     getwanixdiag() {
       return readwanixstatus()

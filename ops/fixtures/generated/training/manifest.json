@@ -1,6 +1,6 @@
 {
-  "generated": "2026-06-19T17:09:55.739Z",
-  "traincount": 186,
+  "generated": "2026-06-20T22:04:22.185Z",
+  "traincount": 200,
   "evalcount": 11,
   "compilepassrate": 1,
   "entries": [
@@ -189,6 +189,12 @@
       "split": "train",
       "kind": "script",
       "sourcefile": "ops/fixtures/lang/scripts/graphics_fpv_block.zss"
+    },
+    {
+      "id": "fixture_hint_else_b",
+      "split": "train",
+      "kind": "script",
+      "sourcefile": "ops/fixtures/lang/scripts/hint_else_b.zss"
     },
     {
       "id": "fixture_hint_else_sidebar",
@@ -395,7 +401,19 @@
       "sourcefile": "ops/fixtures/lang/scripts/simple_chat_sidebar_a.zss"
     },
     {
+      "id": "fixture_simple_chat_sidebar_a_think",
+      "split": "train",
+      "kind": "script",
+      "sourcefile": "ops/fixtures/lang/scripts/simple_chat_sidebar_a.zss"
+    },
+    {
       "id": "fixture_simple_chat_sidebar_b_main",
+      "split": "train",
+      "kind": "script",
+      "sourcefile": "ops/fixtures/lang/scripts/simple_chat_sidebar_b.zss"
+    },
+    {
+      "id": "fixture_simple_chat_sidebar_b_think",
       "split": "train",
       "kind": "script",
       "sourcefile": "ops/fixtures/lang/scripts/simple_chat_sidebar_b.zss"
@@ -581,19 +599,7 @@
       "sourcefile": "ops/fixtures/lang/coolregionsbow/clockwise.zss"
     },
     {
-      "id": "fixture_clockwise_think",
-      "split": "train",
-      "kind": "script",
-      "sourcefile": "ops/fixtures/lang/coolregionsbow/clockwise.zss"
-    },
-    {
       "id": "fixture_counter_main",
-      "split": "train",
-      "kind": "script",
-      "sourcefile": "ops/fixtures/lang/coolregionsbow/counter.zss"
-    },
-    {
-      "id": "fixture_counter_think",
       "split": "train",
       "kind": "script",
       "sourcefile": "ops/fixtures/lang/coolregionsbow/counter.zss"
@@ -696,12 +702,6 @@
     },
     {
       "id": "fixture_invisible_main",
-      "split": "train",
-      "kind": "script",
-      "sourcefile": "ops/fixtures/lang/coolregionsbow/invisible.zss"
-    },
-    {
-      "id": "fixture_invisible_touch",
       "split": "train",
       "kind": "script",
       "sourcefile": "ops/fixtures/lang/coolregionsbow/invisible.zss"
@@ -977,12 +977,6 @@
       "sourcefile": "ops/fixtures/lang/coolregionsbow/slime.zss"
     },
     {
-      "id": "fixture_slime_touch",
-      "split": "train",
-      "kind": "script",
-      "sourcefile": "ops/fixtures/lang/coolregionsbow/slime.zss"
-    },
-    {
       "id": "fixture_solid",
       "split": "train",
       "kind": "script",
@@ -1067,12 +1061,6 @@
       "sourcefile": "ops/fixtures/lang/coolregionsbow/transporter.zss"
     },
     {
-      "id": "fixture_transporter_think",
-      "split": "train",
-      "kind": "script",
-      "sourcefile": "ops/fixtures/lang/coolregionsbow/transporter.zss"
-    },
-    {
       "id": "fixture_transporter_bump",
       "split": "train",
       "kind": "script",
@@ -1091,52 +1079,148 @@
       "sourcefile": "ops/fixtures/lang/coolregionsbow/water.zss"
     },
     {
-      "id": "tpl_any_dir_line_n",
+      "id": "tpl_any_black_line",
       "split": "train",
       "kind": "script",
-      "sourcefile": "template:any_dir_kind"
+      "sourcefile": "template:any_color_kind"
     },
     {
-      "id": "tpl_any_dir_line_s",
+      "id": "tpl_any_black_player",
       "split": "train",
       "kind": "script",
-      "sourcefile": "template:any_dir_kind"
+      "sourcefile": "template:any_color_kind"
     },
     {
-      "id": "tpl_any_dir_line_e",
+      "id": "tpl_any_black_solid",
       "split": "train",
       "kind": "script",
-      "sourcefile": "template:any_dir_kind"
+      "sourcefile": "template:any_color_kind"
     },
     {
-      "id": "tpl_any_dir_line_w",
+      "id": "tpl_any_black_breakable",
       "split": "train",
       "kind": "script",
-      "sourcefile": "template:any_dir_kind"
+      "sourcefile": "template:any_color_kind"
     },
     {
-      "id": "tpl_any_dir_line_up",
+      "id": "tpl_any_black_flow",
       "split": "train",
       "kind": "script",
-      "sourcefile": "template:any_dir_kind"
+      "sourcefile": "template:any_color_kind"
     },
     {
-      "id": "tpl_any_dir_line_down",
+      "id": "tpl_any_black_ricochet",
       "split": "train",
       "kind": "script",
-      "sourcefile": "template:any_dir_kind"
+      "sourcefile": "template:any_color_kind"
     },
     {
-      "id": "tpl_any_dir_line_left",
+      "id": "tpl_any_red_line",
       "split": "train",
       "kind": "script",
-      "sourcefile": "template:any_dir_kind"
+      "sourcefile": "template:any_color_kind"
     },
     {
-      "id": "tpl_any_dir_line_right",
+      "id": "tpl_any_red_player",
       "split": "train",
       "kind": "script",
-      "sourcefile": "template:any_dir_kind"
+      "sourcefile": "template:any_color_kind"
+    },
+    {
+      "id": "tpl_any_red_solid",
+      "split": "train",
+      "kind": "script",
+      "sourcefile": "template:any_color_kind"
+    },
+    {
+      "id": "tpl_any_red_breakable",
+      "split": "train",
+      "kind": "script",
+      "sourcefile": "template:any_color_kind"
+    },
+    {
+      "id": "tpl_any_red_flow",
+      "split": "train",
+      "kind": "script",
+      "sourcefile": "template:any_color_kind"
+    },
+    {
+      "id": "tpl_any_red_ricochet",
+      "split": "train",
+      "kind": "script",
+      "sourcefile": "template:any_color_kind"
+    },
+    {
+      "id": "tpl_any_blue_line",
+      "split": "train",
+      "kind": "script",
+      "sourcefile": "template:any_color_kind"
+    },
+    {
+      "id": "tpl_any_blue_player",
+      "split": "train",
+      "kind": "script",
+      "sourcefile": "template:any_color_kind"
+    },
+    {
+      "id": "tpl_any_blue_solid",
+      "split": "train",
+      "kind": "script",
+      "sourcefile": "template:any_color_kind"
+    },
+    {
+      "id": "tpl_any_blue_breakable",
+      "split": "train",
+      "kind": "script",
+      "sourcefile": "template:any_color_kind"
+    },
+    {
+      "id": "tpl_any_blue_flow",
+      "split": "train",
+      "kind": "script",
+      "sourcefile": "template:any_color_kind"
+    },
+    {
+      "id": "tpl_any_blue_ricochet",
+      "split": "train",
+      "kind": "script",
+      "sourcefile": "template:any_color_kind"
+    },
+    {
+      "id": "tpl_any_green_line",
+      "split": "train",
+      "kind": "script",
+      "sourcefile": "template:any_color_kind"
+    },
+    {
+      "id": "tpl_any_green_player",
+      "split": "train",
+      "kind": "script",
+      "sourcefile": "template:any_color_kind"
+    },
+    {
+      "id": "tpl_any_green_solid",
+      "split": "train",
+      "kind": "script",
+      "sourcefile": "template:any_color_kind"
+    },
+    {
+      "id": "tpl_any_green_breakable",
+      "split": "train",
+      "kind": "script",
+      "sourcefile": "template:any_color_kind"
+    },
+    {
+      "id": "tpl_any_green_flow",
+      "split": "train",
+      "kind": "script",
+      "sourcefile": "template:any_color_kind"
+    },
+    {
+      "id": "tpl_any_green_ricochet",
+      "split": "train",
+      "kind": "script",
+      "sourcefile": "template:any_color_kind"
     },
     {
       "id": "cli_movement_0",

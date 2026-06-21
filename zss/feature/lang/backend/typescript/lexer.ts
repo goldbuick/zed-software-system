@@ -99,6 +99,52 @@ function matchBasicText(text: string, startOffset: number) {
     return null
   }
 
+  // line-start and inline ZZT labels (e.g. ":loop", "#try to n :poured")
+  if (text[startOffset] === ':') {
+    const prev = text[startOffset - 1] ?? '\n'
+    if (prev === '\n' || prev === ' ') {
+      return null
+    }
+  }
+
+  // indented ZZT command arg continuation (e.g. "#change red\n lion gem")
+  if (text[startOffset] === ' ' || text[startOffset] === '\t') {
+    const linestart = linestartoffset(text, startOffset)
+    if (linestart < startOffset) {
+      let scan = startOffset
+      while (scan < text.length && (text[scan] === ' ' || text[scan] === '\t')) {
+        scan += 1
+      }
+      const lineend = text.indexOf('\n', scan)
+      const rest = text.slice(scan, lineend >= 0 ? lineend : text.length).trim()
+      if (/^[a-z][a-z0-9_ ]*$/i.test(rest)) {
+        return null
+      }
+    }
+  }
+
+  // indented scroll line with / in prose (e.g. " / 47" in ASCII charts)
+  if (text[startOffset] === ' ' || text[startOffset] === '\t') {
+    const linestart = linestartoffset(text, startOffset)
+    let scan = startOffset
+    while (scan < text.length && (text[scan] === ' ' || text[scan] === '\t')) {
+      scan += 1
+    }
+    if (scan > linestart && text[scan] === '/') {
+      if (iscommandat(text, linestart)) {
+        return null
+      }
+      let end = startOffset
+      while (end < text.length && text[end] !== '\n') {
+        end += 1
+      }
+      const match = text.substring(linestart, end)
+      if (match.trim().length > 0) {
+        return [match] as RegExpExecArray
+      }
+    }
+  }
+
   // indented scroll line with # in prose (e.g. " #char back")
   if (text[startOffset] === '#' && !iscommandat(text, startOffset)) {
     const linestart = linestartoffset(text, startOffset)
@@ -615,6 +661,64 @@ export const command_play = createSimpleToken({
   longer_alt: stringliteral,
 })
 
+function matchSendTarget(
+  text: string,
+  startOffset: number,
+): RegExpExecArray | null {
+  const m = text.slice(startOffset).match(/^[A-Za-z0-9_]+:[A-Za-z0-9_]+/i)
+  if (!m) {
+    return null
+  }
+  return [m[0]] as RegExpExecArray
+}
+
+export const send_target = createSimpleToken({
+  name: 'send_target',
+  pattern: matchSendTarget,
+  longer_alt: stringliteral,
+})
+
+function matchSendHashLabel(
+  text: string,
+  startOffset: number,
+): RegExpExecArray | null {
+  const m = text
+    .slice(startOffset)
+    .match(/^#[A-Za-z][A-Za-z0-9_]*(?::[A-Za-z0-9_]+)?/i)
+  if (!m) {
+    return null
+  }
+  return [m[0]] as RegExpExecArray
+}
+
+export const send_hash_label = createSimpleToken({
+  name: 'send_hash_label',
+  pattern: matchSendHashLabel,
+  longer_alt: stringliteral,
+})
+
+function matchStmtSendDoubleHash(
+  text: string,
+  startOffset: number,
+): RegExpExecArray | null {
+  if (!iscommandat(text, startOffset)) {
+    return null
+  }
+  const m = text.slice(startOffset).match(/^##[A-Za-z][A-Za-z0-9_]*/i)
+  if (!m) {
+    return null
+  }
+  const lineend = text.indexOf('\n', startOffset)
+  const end = lineend >= 0 ? lineend : text.length
+  return [text.slice(startOffset, end)] as RegExpExecArray
+}
+
+export const stmt_send_double_hash = createSimpleToken({
+  name: 'stmt_send_double_hash',
+  pattern: matchStmtSendDoubleHash,
+  start_chars_hint: ['#'],
+})
+
 export const command_toast = createSimpleToken({
   name: 'command_toast',
   pattern: /toast .*/i,
@@ -634,6 +738,26 @@ export const command_ticker = createSimpleToken({
 export const command_if = createSimpleToken({
   name: 'if',
   pattern: /(?<=#)if\b/i,
+  longer_alt: stringliteral,
+})
+export const command_try = createSimpleToken({
+  name: 'try',
+  pattern: /(?<=#)try\b/i,
+  longer_alt: stringliteral,
+})
+export const command_take = createSimpleToken({
+  name: 'take',
+  pattern: /(?<=#)take\b/i,
+  longer_alt: stringliteral,
+})
+export const command_change = createSimpleToken({
+  name: 'change',
+  pattern: /(?<=#)change\b/i,
+  longer_alt: stringliteral,
+})
+export const command_become = createSimpleToken({
+  name: 'become',
+  pattern: /(?<=#)become\b/i,
   longer_alt: stringliteral,
 })
 export const command_do = createSimpleToken({
@@ -879,10 +1003,13 @@ export const allTokens = createTokenSet(
     text,
     // commands
     stat,
+    stmt_send_double_hash,
     command_play,
     command_toast,
     command_ticker,
     command,
+    send_target,
+    send_hash_label,
     // flow
     comment,
     label,
@@ -900,6 +1027,10 @@ export const allTokens = createTokenSet(
     command_else,
     command_foreach,
     command_if,
+    command_try,
+    command_take,
+    command_change,
+    command_become,
     command_repeat,
     command_waitfor,
     command_while,

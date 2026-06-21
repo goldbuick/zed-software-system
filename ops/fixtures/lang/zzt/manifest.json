@@ -8,7 +8,15 @@
     "label_do_collision",
     "short_try_label",
     "if_blocked_flag",
-    "inline_go_command"
+    "inline_go_command",
+    "send_double_hash_loop",
+    "play_sharp_note",
+    "try_dir_fail_label",
+    "take_fail_label",
+    "send_shorthand",
+    "change_multiline_kind",
+    "kind_label_name",
+    "scroll_indented_slash"
   ],
   "corpus": []
 }

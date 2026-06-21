@@ -315,6 +315,31 @@ export async function iframepreptaskspace(): Promise<void> {
   iframelayout = 'task'
 }
 
+async function backfillvmserial(vmid: string) {
+  const entry = proxies.get(vmid)
+  if (!entry) {
+    return
+  }
+  const full = await probechildrpc<string>('readserial', [])
+  if (full.length <= entry.serialbuffer.length) {
+    return
+  }
+  handlechunk('vm', vmid, full.slice(entry.serialbuffer.length))
+}
+
+/** Pull any serial not yet streamed via postMessage (iframe boot / stress waits). */
+export async function syncwanixtermiframeserial(): Promise<void> {
+  if (attachedkind === 'vm' && attachedid) {
+    await backfillvmserial(attachedid)
+  }
+}
+
+/** Block until child xterm shows login or shell prompt (probe-owned). */
+export async function waitwanixtermiframeprompt(timeoutms: number): Promise<void> {
+  await probechildrpc('waitprompt', [timeoutms])
+  await syncwanixtermiframeserial()
+}
+
 export async function iframespawnvm(opts: {
   vmid?: string
   mem?: string
@@ -332,19 +357,27 @@ export async function iframespawnvm(opts: {
   }
   proxies.set(vmid, entry)
   registervm({ id: vmid, label: vmid, mem })
+  if (opts.attach !== false) {
+    attachedkind = 'vm'
+    attachedid = vmid
+    setwanixattached('vm', vmid)
+  }
   try {
     await childrpc('spawnvm', [vmid, mem])
   } catch (err) {
     vmprepstage = 'failed'
     vmpreperror = err instanceof Error ? err.message : String(err)
+    if (opts.attach !== false) {
+      attachedkind = null
+      attachedid = null
+      setwanixattached(null, null)
+    }
+    proxies.delete(vmid)
     throw err
   }
   vmprepstage = 'spawn'
   if (opts.attach !== false) {
-    attachedkind = 'vm'
-    attachedid = vmid
-    setwanixattached('vm', vmid)
-    await enterwanixattachedterminal()
+    await backfillvmserial(vmid)
   }
   return { vmid }
 }
