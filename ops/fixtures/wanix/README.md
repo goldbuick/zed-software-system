@@ -19,34 +19,18 @@ Reference: [tractordev/wanix](https://github.com/tractordev/wanix) **`main`** (`
 
 VM prep must **not** call `_setupNamespace` a second time after `#ramfs` (that caused the Go `writeFile` panic). `#wanix vm` reboots into the basic-vm bind layout via `spawnwanixvmspace`.
 
-### How we measure success (in order)
+### Manual vm-simple harness
 
-| Gate | Command | Proves |
-|------|---------|--------|
-| 1. Upstream prep | `yarn task run wanix:vm-prep-smoke` | VM mount + v86 driver, **60s panic soak** (no `<wanix-term>`) |
-| 2. vm-simple | `yarn task run wanix:vm-simple-smoke` | upstream [`basic-vm.html`](https://github.com/tractordev/wanix/blob/main/examples/basic-vm.html) port — visible `<wanix-term>`, `login:`, `id` / `uid=` |
-| 3. Deferred term | `yarn task run wanix:vm-simple-deferred-smoke` | `<wanix-term>` connected after gojs settle — timing bisect |
-| 4. Iframe + WebGL | `yarn task run wanix:vm-term-iframe-smoke` | term I/O inside hidden iframe under mock `#frame` WebGL |
-| 5. Full app tile | `yarn task run wanix:vm:app:verify` | hidden iframe host → ZSS tile; `uname --help` + `id` |
-| 6. Fix loop | `yarn task run wanix:vm:fixloop` | all of the above + isolated ZSS baseline |
+Upstream-faithful port of [`examples/basic-vm.html`](https://github.com/tractordev/wanix/blob/main/examples/basic-vm.html) — visible `<wanix-term>`, full-height xterm, event log, optional `?embed=1` for iframe parents.
 
-Manual **vm-simple** (matches upstream basic-vm.html): [/wanix/vm-simple.html](http://localhost:7777/wanix/vm-simple.html) — full-height xterm; type `root`, Enter, Enter, then `id`.
+Source: `ops/fixtures/harness/wanix/vm-simple.html`  
+Dev URL: [/wanix/vm-simple.html](http://localhost:7777/wanix/vm-simple.html)
 
-Manual **basic-terminal** (matches upstream [basic-terminal.html](https://github.com/tractordev/wanix/blob/main/examples/basic-terminal.html)): [/wanix/basic-terminal.html](http://localhost:7777/wanix/basic-terminal.html) — gojs task + xterm; expect `Dir:`, `Args:`, `Env:`, `Root:` tab output. Build guest wasm first: `yarn task run wanix:gojs:build` (requires Go).
-
-Manual **prep only** (no xterm): [/wanix/smoke-basic-vm.html](http://localhost:7777/wanix/smoke-basic-vm.html)
-
-Manual **deferred term** bisect: [/wanix/vm-simple-deferred.html?auto=1&delay=15000](http://localhost:7777/wanix/vm-simple-deferred.html?auto=1&delay=15000)
-
-Manual iframe page: [/wanix/smoke-basic-vm-term-iframe.html](http://localhost:7777/wanix/smoke-basic-vm-term-iframe.html) — status line should end with `iframe term smoke ok`.
-
-Legacy redirect: [/wanix/smoke-basic-vm-term.html](http://localhost:7777/wanix/smoke-basic-vm-term.html) → `vm-simple.html`.
-
-Verify:
-
-```bash
-yarn task run wanix:vm:fixloop
-```
+1. `yarn task run wanix:ensure` (optional pin check)
+2. `yarn task app dev`
+3. Open `/wanix/vm-simple.html` — wait for `login:` (large CDN download on first boot)
+4. Type `root`, Enter, Enter, then `id` — expect `uid=0(root)`
+5. Bottom log should show `wanix-system ready` with no panic lines
 
 ## Quick build (WAT)
 
@@ -140,15 +124,12 @@ While attached, `WanixTermInput` sends per-keystroke data via `sendwanixterminpu
 
 **Main thread:** in-page Wanix shares the browser main thread with ZSS WebGL — vm-prep/boot may freeze the canvas briefly; expected until upstream workerizes more kernel work.
 
-**Manual harness:** open `ops/fixtures/harness/wanix/vm-simple.html` via dev server (`/wanix/vm-simple.html` when Vite dev middleware is active).
-
 ## Manual verification
 
 1. `yarn task app dev`
-2. Drop `hello.wasm` or use `#wanix` commands — see IO verify section below
+2. Drop `hello.wasm` or use `#wanix` commands
 3. For VM term bridge: `#wanix vm` — prep in apilog; tile opens on first serial
-
-## IO verify (manual)
+4. For upstream VM baseline: `/wanix/vm-simple.html` — see **Manual vm-simple harness** above
 
 ## VM keystroke repro (debug)
 
@@ -158,4 +139,4 @@ While attached, `WanixTermInput` sends per-keystroke data via `sendwanixterminpu
 4. Type a command and Enter — watch `[wanix] term-input` / `connectvmterm` traces
 5. Second command — if input stops, check `vm-exit` or worker panic in console
 
-After code changes, prefer **`yarn task run wanix:vm:app:verify`** or **`yarn task run wanix:vm:fixloop`** over repeating steps 1–5 manually.
+After code changes, repeat steps 1–5 manually or use the `/wanix/vm-simple.html` harness to bisect VM term issues.

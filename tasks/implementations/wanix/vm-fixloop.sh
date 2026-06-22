@@ -1,4 +1,6 @@
 #!/bin/sh
+# Orphaned — wanix Playwright gates (wanix:vm-simple-smoke, etc.) were removed with
+# ops/e2e cleanup. Re-wire tasks in tasks/groups/wanix.ts before running this script.
 # Automated wanix VM fix loop — run after each code change instead of manual browser checks.
 # Requires port 7777 free (stop `yarn task app dev` first).
 set -e

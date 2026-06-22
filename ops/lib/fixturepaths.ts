@@ -38,6 +38,8 @@ export const LANG_ZZTOOP_REPORT_PATH = fixturepath(
 export const PARSE_FIXTURES_DIR = fixturepath('parse')
 export const WANIX_FIXTURES_DIR = fixturepath('wanix')
 export const HARNESS_FIXTURES_DIR = fixturepath('harness')
+/** Dev-served static assets at /fixtures/ (not shipped in cafe/public). */
+export const PUBLIC_FIXTURES_DIR = fixturepath('public')
 /** Offline Daisy/synth render outputs (wav/json/txt); served at /renders/ in dev only. */
 export const RENDERS_FIXTURES_DIR = fixturepath('renders')
 export const E2E_FIXTURES_DIR = fixturepath('e2e')

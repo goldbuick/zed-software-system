@@ -5,6 +5,7 @@ import path from 'node:path'
 const HARNESS_FIXTURES_DIR = path.join(process.cwd(), 'ops/fixtures/harness')
 
 const MIMES: Record<string, string> = {
+  '.html': 'text/html; charset=utf-8',
   '.wav': 'audio/wav',
   '.json': 'application/json',
   '.txt': 'text/plain; charset=utf-8',

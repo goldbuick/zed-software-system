@@ -1,4 +1,4 @@
-/** Pinned wanix npm + extras CDN URLs (see cafe/public/wanix/vm-simple.html). */
+/** Pinned wanix npm + extras CDN URLs (see ops/fixtures/harness/wanix/vm-simple.html). */
 export const WANIX_NPM_VERSION = '0.4.0-alpha8'
 const WANIX_EXTRAS_VERSION = '0.4.0-rc1'
 const WANIX_CDN_BASE = `https://cdn.jsdelivr.net/npm/wanix@${WANIX_NPM_VERSION}/dist`

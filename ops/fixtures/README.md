@@ -22,6 +22,7 @@ add co-located `__fixtures__` trees beside implementation code.
 | `content/dist/` | Built `.book.json` output (gitignored) |
 | `wanix/` | WASI `.wat`/`.c` sources; built `.wasm` gitignored |
 | `harness/` | Daisy/synth Playwright harness `.html` + wanix iframe smoke (not shipped in prod) |
+| `public/` | Dev-served static assets at `/fixtures/` (not in `cafe/public`) |
 | `renders/` | Offline Daisy/synth render outputs (wav/json/txt); dev serves `/renders/` |
 | `e2e/` | Generated e2e repro JSON |
 | `generated/training/` | Generated SFT corpus (`train.jsonl`, `eval.jsonl`, `manifest.json`) |

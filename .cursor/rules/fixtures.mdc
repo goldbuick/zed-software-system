@@ -22,6 +22,7 @@ All test fixture **assets** live under repo-root [`ops/fixtures/`](ops/fixtures/
 | Synth | `synth/wasm/`, `synth/daisy/` |
 | Wanix WASI | `wanix/` (built `.wasm` gitignored) |
 | Harness HTML | `harness/` (Daisy parity dev pages; not in `cafe/public`) |
+| Dev-served static | `public/` (served at `/fixtures/` in dev only) |
 | Offline renders | `renders/` (daisy offline wav/json/txt; served at `/renders/` in dev only) |
 | Book templates | `content/templates/`; build output `content/dist/` |
 | Books (npm) | `books/` |

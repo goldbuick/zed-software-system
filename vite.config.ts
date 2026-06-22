@@ -14,8 +14,7 @@ import {
   fixtureprefixmiddleware,
   harnesshtmlmiddleware,
 } from './tasks/lib/parity/harness-middleware.ts'
-
-const RENDERS_FIXTURES_DIR = path.join(process.cwd(), 'ops/fixtures/renders')
+import { PUBLIC_FIXTURES_DIR, RENDERS_FIXTURES_DIR } from './ops/lib/fixturepaths.ts'
 
 /**
  * Firefox refuses module scripts when Content-Type is missing (""). Some dev
@@ -91,39 +90,41 @@ function servefixturesdev(): Plugin {
     name: 'serve-fixtures-dev',
     apply: 'serve',
     configureServer(server) {
-      return () => {
-        server.middlewares.use(harnesshtmlmiddleware())
-        server.middlewares.use(
-          fixtureprefixmiddleware('/renders', RENDERS_FIXTURES_DIR),
-        )
-        server.middlewares.use(
-          fixtureprefixmiddleware('/ops/lib', path.join(root, 'ops/lib')),
-        )
-        server.middlewares.use(
-          fixtureprefixmiddleware(
-            '/ops/archive',
-            path.join(root, 'ops/archive'),
-          ),
-        )
-        server.middlewares.use(
-          fixtureprefixmiddleware(
-            '/ops/fixtures',
-            path.join(root, 'ops/fixtures'),
-          ),
-        )
-        server.middlewares.use(
-          fixtureprefixmiddleware(
-            '/wasm/archive/maximilian',
-            path.join(root, 'ops/archive/wasm/maximilian'),
-          ),
-        )
-        server.middlewares.use(
-          fixtureprefixmiddleware(
-            '/wanix',
-            path.join(root, 'ops/fixtures/harness/wanix'),
-          ),
-        )
-      }
+      // Register during setup (not in the post hook) so these run before Vite's SPA fallback.
+      server.middlewares.use(harnesshtmlmiddleware())
+      server.middlewares.use(
+        fixtureprefixmiddleware('/fixtures', PUBLIC_FIXTURES_DIR),
+      )
+      server.middlewares.use(
+        fixtureprefixmiddleware('/renders', RENDERS_FIXTURES_DIR),
+      )
+      server.middlewares.use(
+        fixtureprefixmiddleware('/ops/lib', path.join(root, 'ops/lib')),
+      )
+      server.middlewares.use(
+        fixtureprefixmiddleware(
+          '/ops/archive',
+          path.join(root, 'ops/archive'),
+        ),
+      )
+      server.middlewares.use(
+        fixtureprefixmiddleware(
+          '/ops/fixtures',
+          path.join(root, 'ops/fixtures'),
+        ),
+      )
+      server.middlewares.use(
+        fixtureprefixmiddleware(
+          '/wasm/archive/maximilian',
+          path.join(root, 'ops/archive/wasm/maximilian'),
+        ),
+      )
+      server.middlewares.use(
+        fixtureprefixmiddleware(
+          '/wanix',
+          path.join(root, 'ops/fixtures/harness/wanix'),
+        ),
+      )
     },
   }
 }
