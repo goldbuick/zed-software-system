@@ -18,7 +18,7 @@ jest.mock('zss/config', () => ({
 }))
 
 import { createchip } from 'zss/chip'
-import { compile } from 'zss/feature/lang'
+import { compile } from 'zss/feature/lang/backend/typescript/generator'
 import { readcorpus } from 'ops/tests/lib/lang/corpus'
 import {
   compilecppfromdisk,

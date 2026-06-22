@@ -11,11 +11,23 @@ export type WANIX_TERM_IFRAME_RPC = {
 
 export type WANIX_TERM_IFRAME_MSG =
   | WANIX_TERM_IFRAME_RPC
-  | { type: 'zss-wanix-term-rpc-res'; id: number; result?: unknown; error?: string }
+  | {
+      type: 'zss-wanix-term-rpc-res'
+      id: number
+      result?: unknown
+      error?: string
+    }
   | { type: 'zss-wanix-term-ready' }
-  | { type: 'zss-wanix-term-chunk'; chunk: string; kind?: 'vm' | 'task'; id?: string }
+  | {
+      type: 'zss-wanix-term-chunk'
+      chunk: string
+      kind?: 'vm' | 'task'
+      id?: string
+    }
 
-export function iswanixtermiframemsg(data: unknown): data is WANIX_TERM_IFRAME_MSG {
+export function iswanixtermiframemsg(
+  data: unknown,
+): data is WANIX_TERM_IFRAME_MSG {
   if (!data || typeof data !== 'object') {
     return false
   }

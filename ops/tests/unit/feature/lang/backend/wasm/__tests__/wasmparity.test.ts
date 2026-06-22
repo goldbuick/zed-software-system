@@ -26,7 +26,7 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
 import { createchip } from 'zss/chip'
-import { compile } from 'zss/feature/lang'
+import { compile } from 'zss/feature/lang/backend/typescript/generator'
 import { readfixture } from 'ops/tests/lib/lang/langparityload'
 import {
   compilenativewasmfortest,

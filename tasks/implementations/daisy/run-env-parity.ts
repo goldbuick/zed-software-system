@@ -9,8 +9,10 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { RENDERS_FIXTURES_DIR } from 'ops/lib/fixturepaths'
 import { chromium } from '@playwright/test'
+import type { ENV_PARITY_RESULT } from 'ops/lib/daisy-parity/envparityrender'
+import { ENV_PARITY_SCENARIOS } from 'ops/lib/daisy-parity/envparityscenario'
+import { RENDERS_FIXTURES_DIR } from 'ops/lib/fixturepaths'
 import {
   PARITY_RENDER_SCRIPT_TIMEOUT_MS,
   PLAYWRIGHT_SCENARIO_TIMEOUT_MS,
@@ -20,9 +22,6 @@ import {
   startparityvite,
   stopparityvite,
 } from 'tasks/lib/parity/parity-vite-server.ts'
-
-import type { ENV_PARITY_RESULT } from 'ops/lib/daisy-parity/envparityrender'
-import { ENV_PARITY_SCENARIOS } from 'ops/lib/daisy-parity/envparityscenario'
 
 const ROOT = process.cwd()
 const PROJECT = process.cwd()

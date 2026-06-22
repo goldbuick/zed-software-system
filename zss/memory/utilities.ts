@@ -8,8 +8,8 @@ import { isjoin } from 'zss/feature/url'
 import { DIVIDER, zsstexttape, zsszedlinklinechip } from 'zss/feature/zsstextui'
 import { ensurezstdwasm } from 'zss/feature/zstdwasm'
 import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
+import { scrolllinkescapefrag } from 'zss/mapping/string'
 import {
-  scrolllinkescapefrag,
   scrollwritelines,
 } from 'zss/gadget/data/scrollwritelines'
 import { qrlines } from 'zss/mapping/qr'

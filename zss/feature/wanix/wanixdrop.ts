@@ -2,8 +2,8 @@ import type { DEVICELIKE } from 'zss/device/api'
 import { apierror, apilog } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
-import { uniquewanixtaskid } from 'zss/feature/wanix/wanixcmd'
 import { pickwanixbundleentry } from 'zss/feature/wanix/wanixbundle'
+import { uniquewanixtaskid } from 'zss/feature/wanix/wanixcmd'
 import {
   attachwanixtarget,
   ensurewanixsandbox,
@@ -15,18 +15,19 @@ import {
   mountwanixarchive,
   putwanixfile,
   readwanixstatus,
+  readwanixvmpreperror,
+  readwanixvmprepstage,
+  sendwanixtermwrite,
   setwanixtaskexithandler,
   setwanixvmexithandler,
   spawnwanixtask,
   spawnwanixvm,
   spawnwanixvmspace,
-  readwanixvmprepstage,
-  readwanixvmpreperror,
-  sendwanixtermwrite,
   unmountallwanixbinds,
   unmountwanixbind,
 } from 'zss/feature/wanix/wanixhost'
 import {
+  type WANIX_ATTACH_KIND,
   haswanixcompute,
   haswanixtasks,
   haswanixvms,
@@ -42,7 +43,6 @@ import {
   registervm,
   removetask,
   removevm,
-  type WANIX_ATTACH_KIND,
 } from 'zss/feature/wanix/wanixsession'
 import { leavewanixattachedterminal } from 'zss/feature/wanix/wanixterminalmode'
 import { wanixtermscreenwritepong } from 'zss/feature/wanix/wanixtermscreen'
@@ -135,11 +135,7 @@ async function launchwanixload(
     } catch {
       bundleentries = null
     }
-    entrycmd = pickwanixbundleentry(
-      rootentries,
-      bundleentries,
-      bundleprefix,
-    )
+    entrycmd = pickwanixbundleentry(rootentries, bundleentries, bundleprefix)
   }
 
   const { taskid: spawnedid } = await spawnwanixtask(entrycmd, {
@@ -211,15 +207,16 @@ export async function wanixhandlevmstart(
     const stage = readwanixvmprepstage()
     const prep = readwanixvmpreperror()
     const detail = err instanceof Error ? err.message : String(err)
-    const suffix = prep ? ` (${prep})` : stage !== 'idle' && stage !== 'failed' ? ` (stage=${stage})` : ''
+    const suffix = prep
+      ? ` (${prep})`
+      : stage !== 'idle' && stage !== 'failed'
+        ? ` (stage=${stage})`
+        : ''
     apierror(device, player, 'wanix', `${detail}${suffix}`)
   }
 }
 
-export async function wanixhandleshownenu(
-  device: DEVICELIKE,
-  player: string,
-) {
+export async function wanixhandleshownenu(device: DEVICELIKE, player: string) {
   try {
     if (iswanixspaceactive()) {
       await ensurewanixsandbox(device, player)
@@ -239,14 +236,14 @@ export async function wanixhandleshownenu(
     } else {
       for (const task of tasks) {
         const isattached =
-          iswanixtermactive() &&
-          attachedkind === 'task' &&
-          attached === task.id
+          iswanixtermactive() && attachedkind === 'task' && attached === task.id
         const attachlabel = isattached
           ? `Attach ${task.label} $cyanattached`
           : `Attach ${task.label}`
         parts.push(zsszedlinkline(`wanix attach ${task.id}`, attachlabel))
-        parts.push(zsszedlinkline(`wanix stop ${task.id}`, `Stop ${task.label}`))
+        parts.push(
+          zsszedlinkline(`wanix stop ${task.id}`, `Stop ${task.label}`),
+        )
       }
       parts.push(
         zsszedlinkline('wanix stop', `Stop all (${tasks.length} tasks)`),
@@ -263,15 +260,10 @@ export async function wanixhandleshownenu(
           ? `Attach ${vm.label} $cyanattached`
           : `Attach ${vm.label}`
         parts.push(zsszedlinkline(`wanix attach ${vm.id}`, attachlabel))
-        parts.push(
-          zsszedlinkline(`wanix vm stop ${vm.id}`, `Stop ${vm.label}`),
-        )
+        parts.push(zsszedlinkline(`wanix vm stop ${vm.id}`, `Stop ${vm.label}`))
       }
       parts.push(
-        zsszedlinkline(
-          'wanix vm stop',
-          `Stop all (${vms.length} vms)`,
-        ),
+        zsszedlinkline('wanix vm stop', `Stop all (${vms.length} vms)`),
       )
     }
     parts.push(zsssectionlines('Binds'))
@@ -280,10 +272,7 @@ export async function wanixhandleshownenu(
     } else {
       for (const bind of binds) {
         parts.push(
-          zsszedlinkline(
-            `wanix unbind ${bind.id}`,
-            `Unmount ${bind.label}`,
-          ),
+          zsszedlinkline(`wanix unbind ${bind.id}`, `Unmount ${bind.label}`),
         )
       }
       parts.push(
@@ -294,9 +283,7 @@ export async function wanixhandleshownenu(
       )
     }
     if (iswanixtermactive()) {
-      parts.push(
-        zsstextline('#wanix detach — stop routing terminal input'),
-      )
+      parts.push(zsstextline('#wanix detach — stop routing terminal input'))
     }
     terminalwritelines(device, player, zsstexttape(...parts))
   } catch (err) {
@@ -429,9 +416,7 @@ export function wanixhandledetach(device: DEVICELIKE, player: string) {
   const attached = readwanixattached()
   const attachedkind = readwanixattachedkind()
   const label =
-    attached && attachedkind
-      ? readattachlabel(attachedkind, attached)
-      : 'task'
+    attached && attachedkind ? readattachlabel(attachedkind, attached) : 'task'
   leavewanixattachedterminal()
   apilog(
     device,

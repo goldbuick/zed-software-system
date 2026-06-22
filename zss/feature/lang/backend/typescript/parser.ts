@@ -212,9 +212,7 @@ class ScriptParser extends CstParser {
       return false
     }
     const next = this.LA(2).tokenType
-    return (
-      next === lexer.command_change || next === lexer.command_become
-    )
+    return next === lexer.command_change || next === lexer.command_become
   }
 
   private iszztkindcontinuation() {

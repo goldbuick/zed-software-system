@@ -60,4 +60,3 @@ export const AnsiLove = {
 }
 
 export default AnsiLove
-export * from './types'

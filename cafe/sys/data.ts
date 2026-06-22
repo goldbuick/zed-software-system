@@ -920,7 +920,7 @@ export const GLOSSARY: GlossaryEntry[] = [
     definition:
       'Render/UI projection of memory: layers, scrolls, terminal, per-player view.',
     related: 'gadgetclient, layers',
-    path: 'zss/gadget/data/state.ts',
+    path: 'zss/gadget/data/zustandstores.ts',
   },
   {
     term: 'tape',

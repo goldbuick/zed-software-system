@@ -419,5 +419,3 @@ export {
   resetwasmsabregistry,
   wasmsabsnapshot,
 } from 'zss/feature/synth/backend/wasm/sabpush'
-
-export { initwasmmainsab } from 'zss/feature/synth/backend/wasm/wasmmainsab'

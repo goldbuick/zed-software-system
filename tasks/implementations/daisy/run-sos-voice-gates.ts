@@ -3,14 +3,14 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { chromium } from '@playwright/test'
+import type { PARITY_AUDIO_METRICS } from 'ops/lib/daisy-parity/paritymetrics'
+import { evalsosvoicegate } from 'ops/lib/daisy-parity/sosvoicegate'
 import {
   startparityvite,
   stopparityvite,
 } from 'tasks/lib/parity/parity-vite-server.ts'
 
-import { evalsosvoicegate } from 'ops/lib/daisy-parity/sosvoicegate'
 import { SOS_VOICE_PATCHES } from '../zss/feature/synth/backend/daisy/sosvoicepatches.ts'
-import type { PARITY_AUDIO_METRICS } from 'ops/lib/daisy-parity/paritymetrics'
 
 const ROOT = process.cwd()
 const PROJECT = process.cwd()

@@ -1,14 +1,8 @@
 import {
-  type PARITY_AUDIO_METRICS,
-  audiobuffermetrics,
-} from './paritymetrics'
-import type {
-  DRUM_PARITY_PATCH,
-  FX_PARITY_PATCH,
-  MAIN_DYNAMICS_PARITY_PATCH,
-  PARITY_PATCH,
-} from './paritypatches'
-import { applydaisyparityvoiceconfigs } from './paritypatchvoice'
+  bootisolateddaisyengine,
+  startisolateddaisydsp,
+} from 'zss/feature/synth/backend/daisy/daisyengine'
+import { createdaisysynth } from 'zss/feature/synth/backend/daisy/daisysynth'
 import { defaultwasmalgoconfig } from 'zss/feature/synth/backend/wasm/wasmalgoconfigsab'
 import {
   applywasmfxconfig,
@@ -26,8 +20,14 @@ import {
 } from 'zss/feature/synth/playnotation'
 import { isstring } from 'zss/mapping/types'
 
-import { bootisolateddaisyengine, startisolateddaisydsp } from 'zss/feature/synth/backend/daisy/daisyengine'
-import { createdaisysynth } from 'zss/feature/synth/backend/daisy/daisysynth'
+import { type PARITY_AUDIO_METRICS, audiobuffermetrics } from './paritymetrics'
+import type {
+  DRUM_PARITY_PATCH,
+  FX_PARITY_PATCH,
+  MAIN_DYNAMICS_PARITY_PATCH,
+  PARITY_PATCH,
+} from './paritypatches'
+import { applydaisyparityvoiceconfigs } from './paritypatchvoice'
 
 const PARITY_SAMPLERATE = 44100
 const PARITY_REPLAY_OFFSET_SEC = 0.05

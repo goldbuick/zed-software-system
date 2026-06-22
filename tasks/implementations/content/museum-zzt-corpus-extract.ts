@@ -9,17 +9,16 @@ import {
 import path from 'node:path'
 
 import JSZip from 'jszip'
-
-import { compileparse } from 'zss/feature/lang/backend/typescript/compileparse'
 import {
+  type ZZT_BOARD_LAYOUT,
   boardcodedelements,
   corpusentryid,
   elementtozss,
   layoutfromkind,
-  type ZZT_BOARD_LAYOUT,
 } from 'ops/lib/content/zztcorpus'
-import type { ZZT_BOARD } from 'zss/feature/parse/zztformattypes'
+import { compileparse } from 'zss/feature/lang/backend/typescript/compileparse'
 import { zztparseboard, zztparseworld } from 'zss/feature/parse/zztbinparse'
+import type { ZZT_BOARD } from 'zss/feature/parse/zztformattypes'
 
 const CORPUS_DIR = path.join('ops', 'fixtures', 'zzt', 'corpus')
 const ARCHIVES_DIR = path.join(CORPUS_DIR, 'archives')
@@ -159,7 +158,12 @@ async function extractarchives(opts: ExtractOptions): Promise<number> {
 
   for (let i = 0; i < slice.length; ++i) {
     const entry = slice[i]
-    const archivepath = path.join(opts.root, ARCHIVES_DIR, entry.letter, entry.filename)
+    const archivepath = path.join(
+      opts.root,
+      ARCHIVES_DIR,
+      entry.letter,
+      entry.filename,
+    )
     if (!existsSync(archivepath)) {
       console.warn(`missing archive: ${archivepath}`)
       continue
@@ -322,7 +326,12 @@ function processsourcefile(
       return
     }
     for (let bi = 0; bi < parsed.boards.length; ++bi) {
-      emit(bi, parsed.boards[bi].boardname, layoutfromkind('zzt'), parsed.boards[bi])
+      emit(
+        bi,
+        parsed.boards[bi].boardname,
+        layoutfromkind('zzt'),
+        parsed.boards[bi],
+      )
     }
     return
   }
@@ -333,12 +342,7 @@ function processsourcefile(
     manifest.errors.push({ path: relpath, error: parsed.error })
     return
   }
-  emit(
-    0,
-    parsed.board.boardname,
-    layoutfromkind(parsed.layout),
-    parsed.board,
-  )
+  emit(0, parsed.board.boardname, layoutfromkind(parsed.layout), parsed.board)
 }
 
 function buildmanifestlookup(
@@ -362,7 +366,9 @@ function convertextractedtozss(opts: ExtractOptions): number {
 
   const extractedroot = path.join(opts.root, EXTRACTED_DIR)
   if (!existsSync(extractedroot)) {
-    throw new Error(`missing extracted dir at ${EXTRACTED_DIR} — run extract first`)
+    throw new Error(
+      `missing extracted dir at ${EXTRACTED_DIR} — run extract first`,
+    )
   }
 
   mkdirSync(path.join(opts.root, ZSS_DIR), { recursive: true })
@@ -450,7 +456,9 @@ function convertextractedtozss(opts: ExtractOptions): number {
   return manifest.stats.parse_errors > 0 ? 1 : 0
 }
 
-export async function extractmuseumzztcorpus(opts: ExtractOptions): Promise<number> {
+export async function extractmuseumzztcorpus(
+  opts: ExtractOptions,
+): Promise<number> {
   if (opts.stage === 'extract' || opts.stage === 'both') {
     const code = await extractarchives(opts)
     if (code !== 0) {

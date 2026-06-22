@@ -1,7 +1,7 @@
 import { Channel } from 'tone'
 import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { AUDIO_SYNTH } from 'zss/feature/synth'
+import { AUDIO_SYNTH } from 'ops/archive/synth/tone'
 import { volumetodb } from 'zss/feature/synth/fx'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 

@@ -17,7 +17,7 @@ jest.mock('zss/config', () => ({
   WASM_SCRIPT: false,
 }))
 
-import { compile } from 'zss/feature/lang'
+import { compile } from 'zss/feature/lang/backend/typescript/generator'
 import { readcorpus } from 'ops/tests/lib/lang/corpus'
 import { compilecppfromdisk } from 'ops/tests/lib/lang/langparityload'
 

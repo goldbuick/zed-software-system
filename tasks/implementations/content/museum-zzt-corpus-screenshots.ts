@@ -7,22 +7,21 @@ import {
 } from 'node:fs'
 import path from 'node:path'
 
+import { corpusboardscreenshotid } from 'ops/lib/content/zztcorpus'
+import { loadcoolregionsbowelementlibrary } from 'ops/lib/coolregionsbowbook'
 import { PNG } from 'pngjs'
-
+import { importzztboardstobook } from 'zss/feature/parse/zzt'
+import { zztparseboard, zztparseworld } from 'zss/feature/parse/zztbinparse'
+import type { ZZT_BOARD } from 'zss/feature/parse/zztformattypes'
 import {
   defaultcapturemedia,
   rasterizelayerstorgba,
 } from 'zss/gadget/capture/rasterize'
-import { loadcoolregionsbowelementlibrary } from 'ops/lib/coolregionsbowbook'
-import { importzztboardstobook } from 'zss/feature/parse/zzt'
-import { zztparseboard, zztparseworld } from 'zss/feature/parse/zztbinparse'
-import { corpusboardscreenshotid } from 'ops/lib/content/zztcorpus'
-import type { ZZT_BOARD } from 'zss/feature/parse/zztformattypes'
 import { ispresent } from 'zss/mapping/types'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import { memoryreadgadgetlayers } from 'zss/memory/rendering'
 import { memoryclearbook, memorywritebook } from 'zss/memory/session'
-import { BOARD_WIDTH, BOARD_HEIGHT } from 'zss/memory/types'
+import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 
 const CORPUS_DIR = path.join('ops', 'fixtures', 'zzt', 'corpus')
 const EXTRACTED_DIR = path.join(CORPUS_DIR, 'extracted')
@@ -157,7 +156,12 @@ function buildmanifestlookup(
   return map
 }
 
-function writepng(filepath: string, width: number, height: number, rgba: Uint8ClampedArray) {
+function writepng(
+  filepath: string,
+  width: number,
+  height: number,
+  rgba: Uint8ClampedArray,
+) {
   const png = new PNG({ width, height })
   png.data = Buffer.from(rgba)
   const packed = PNG.sync.write(png)
@@ -303,7 +307,9 @@ export function renderscreenshots(opts: ScreenshotOptions): number {
 
   const extractedroot = path.join(opts.root, EXTRACTED_DIR)
   if (!existsSync(extractedroot)) {
-    throw new Error(`missing extracted dir at ${EXTRACTED_DIR} — run extract first`)
+    throw new Error(
+      `missing extracted dir at ${EXTRACTED_DIR} — run extract first`,
+    )
   }
 
   mkdirSync(path.join(opts.root, SCREENSHOTS_DIR), { recursive: true })

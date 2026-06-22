@@ -10,6 +10,14 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import {
+  type SYNTH_ENV_PARITY_RESULT,
+  evalsynthenvparitygate,
+} from 'ops/lib/daisy-parity/synthenvparitygate'
+import {
+  SYNTH_ENV_PARITY_REQUIRED_IDS,
+  SYNTH_ENV_PARITY_SCENARIOS,
+} from 'ops/lib/daisy-parity/synthenvparityscenario'
 import { RENDERS_FIXTURES_DIR } from 'ops/lib/fixturepaths'
 import {
   CALIBRATE_SCRIPT_TIMEOUT_MS,
@@ -19,15 +27,6 @@ import {
   EXEC_RENDER_PARITY_TIMEOUT_MS,
   withscripttimeout,
 } from 'tasks/lib/parity/parity-timeouts.ts'
-
-import {
-  type SYNTH_ENV_PARITY_RESULT,
-  evalsynthenvparitygate,
-} from 'ops/lib/daisy-parity/synthenvparitygate'
-import {
-  SYNTH_ENV_PARITY_REQUIRED_IDS,
-  SYNTH_ENV_PARITY_SCENARIOS,
-} from 'ops/lib/daisy-parity/synthenvparityscenario'
 
 const ROOT = process.cwd()
 const PROJECT = process.cwd()

@@ -25,7 +25,7 @@ jest.mock('zss/words/textformat', () => ({
 import { mkdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 
-import { compile } from 'zss/feature/lang'
+import { compile } from 'zss/feature/lang/backend/typescript/generator'
 import { compileast } from 'zss/feature/lang/backend/typescript/ast'
 import { transformast } from 'zss/feature/lang/backend/typescript/transformer'
 import { readcorpus } from 'ops/tests/lib/lang/corpus'

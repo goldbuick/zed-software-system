@@ -30,11 +30,7 @@ export const DAISY_TASKS: TaskDef[] = [
   def('daisy:bench:synth', {
     description: 'Daisy synth micro-benchmark',
     env: { ZSS_DAISY_BENCH: '1' },
-    run: exec([
-      'npx',
-      'tsx',
-      'ops/lib/daisy-parity/daisyperfbench.ts',
-    ]),
+    run: exec(['npx', 'tsx', 'ops/lib/daisy-parity/daisyperfbench.ts']),
   }),
   def('daisy:regression:test', {
     description: 'Jest + critical Playwright parity gates',

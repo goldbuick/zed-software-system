@@ -72,7 +72,9 @@ export function buildwanixvmprehtml(
 }
 
 /** Declarative WASI task prep — ramfs boot bind before first ready. */
-export function buildwanixtaskprehtml(systemid = 'zss-wanix-iframe-sys'): string {
+export function buildwanixtaskprehtml(
+  systemid = 'zss-wanix-iframe-sys',
+): string {
   const wasm = escapehtmlattr(readwanixkernelwasmurl())
   const id = escapehtmlattr(systemid)
   return `<wanix-system wasm="${wasm}" allow-origins="*" debug id="${id}">

@@ -31,7 +31,7 @@ const LOGIN_PROMPT_RE = /login:/i
 const SHELL_PROMPT_RE = /~\s#/
 
 function findwanixtermel(): WanixTermElement | null {
-  return document.querySelector('wanix-term') as WanixTermElement | null
+  return document.querySelector('wanix-term')
 }
 
 function readxtermserial(term: XtermInstance): string {
@@ -93,7 +93,12 @@ export function installwanixtermprobe(): WanixTermProbe {
 }
 
 export type WanixTermProbeMsg =
-  | { type: 'zss-wanix-term-probe-rpc'; id: number; method: string; args?: unknown[] }
+  | {
+      type: 'zss-wanix-term-probe-rpc'
+      id: number
+      method: string
+      args?: unknown[]
+    }
   | {
       type: 'zss-wanix-term-probe-rpc-res'
       id: number
@@ -147,7 +152,10 @@ export function installwanixtermprobeembed(): WanixTermProbe {
       return
     }
     const data = event.data
-    if (!iswanixtermprobemsg(data) || data.type !== 'zss-wanix-term-probe-rpc') {
+    if (
+      !iswanixtermprobemsg(data) ||
+      data.type !== 'zss-wanix-term-probe-rpc'
+    ) {
       return
     }
     const source = event.source as Window | null

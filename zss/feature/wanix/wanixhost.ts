@@ -14,41 +14,41 @@ import {
   uniquewanixtaskid,
 } from 'zss/feature/wanix/wanixcmd'
 import {
-  iframechildlistdir,
-  iframechildmountarchive,
-  iframechildputfile,
-  iframehaltvm,
-  iframehalttask,
-  iframepreptaskspace,
-  iframeprepvmspace,
-  iframespawnvm,
-  iframespawntask,
-  iframeterminput,
-  iframetermline,
-  iswanixtermiframeactive,
-  iswanixtermiframemode,
-  readwanixtermiframelayout,
-  readwanixtermiframserial,
-  readwanixtermiframepreperror,
-  readwanixtermiframeprepstage,
-  registervmtermiframehooks,
-  syncwanixtermiframeserial,
-  teardownwanixtermiframe,
-  waitwanixtermiframeprompt,
-} from 'zss/feature/wanix/wanixtermiframehost'
-import {
   wanixiobridgepush,
   wanixiobridgestart,
   wanixiobridgestop,
 } from 'zss/feature/wanix/wanixiobridge'
 import {
+  type WANIX_ATTACH_KIND,
   readwanixattached,
   readwanixattachedkind,
   readwanixtasks,
   registervm,
   setwanixattached,
-  type WANIX_ATTACH_KIND,
 } from 'zss/feature/wanix/wanixsession'
+import {
+  iframechildlistdir,
+  iframechildmountarchive,
+  iframechildputfile,
+  iframehalttask,
+  iframehaltvm,
+  iframepreptaskspace,
+  iframeprepvmspace,
+  iframespawntask,
+  iframespawnvm,
+  iframeterminput,
+  iframetermline,
+  iswanixtermiframeactive,
+  iswanixtermiframemode,
+  readwanixtermiframelayout,
+  readwanixtermiframepreperror,
+  readwanixtermiframeprepstage,
+  readwanixtermiframserial,
+  registervmtermiframehooks,
+  syncwanixtermiframeserial,
+  teardownwanixtermiframe,
+  waitwanixtermiframeprompt,
+} from 'zss/feature/wanix/wanixtermiframehost'
 import {
   enterwanixattachedterminal,
   leavewanixattachedterminal,
@@ -57,15 +57,15 @@ import {
 import { wanixtermscreenwrite } from 'zss/feature/wanix/wanixtermscreen'
 import { wanixtrace } from 'zss/feature/wanix/wanixtrace'
 import {
+  DEFAULT_WANIX_VM_ID,
+  DEFAULT_WANIX_VM_MEM,
+  type WANIX_VM_ASSET_URLS,
   applywanixsystemkernelattrs,
   buildwanixvmprehtml,
   buildwanixvmspawnhtml,
-  DEFAULT_WANIX_VM_ID,
-  DEFAULT_WANIX_VM_MEM,
   readwanixkernelwasmurl,
   readwanixruntimeurls,
   readwanixvmasseturls,
-  type WANIX_VM_ASSET_URLS,
 } from 'zss/feature/wanix/wanixvmassets'
 import {
   spawnwithtimeout as spawnvmwithtimeout,
@@ -245,9 +245,7 @@ async function ensurewanixruntime() {
   }
   wanixloadpromise = Promise.race([
     (async () => {
-      const existing = document.querySelector(
-        'script[src*="wanix.min.js"]',
-      ) as HTMLScriptElement | null
+      const existing = document.querySelector('script[src*="wanix.min.js"]')
       if (existing) {
         await waitforwanixscriptel(existing)
         return
@@ -447,13 +445,13 @@ function readregistry() {
     attachedId: attached ?? undefined,
     attachedKind: attachedkind ?? undefined,
     attachedTaskId:
-      attachedkind === 'task' ? attached ?? undefined : undefined,
+      attachedkind === 'task' ? (attached ?? undefined) : undefined,
     taskactive: tasks.some((task) => task.running),
     vmactive: vms.some((vm) => vm.running),
     vmbindsready: registry.vmbindsready,
     tid:
       attachedkind === 'task'
-        ? registry.tasks.get(attached ?? '')?.rid ?? undefined
+        ? (registry.tasks.get(attached ?? '')?.rid ?? undefined)
         : undefined,
     termpath,
   }
@@ -799,7 +797,7 @@ function findwanixvmel(vmid: string): WanixVmElement | null {
   if (!sys) {
     return null
   }
-  return sys.querySelector(`wanix-vm#${vmid}`) as WanixVmElement | null
+  return sys.querySelector(`wanix-vm#${vmid}`)
 }
 
 async function waitforgadgetidle() {
@@ -816,9 +814,7 @@ async function waitforv86driver(timeoutms: number) {
   while (Date.now() < deadline) {
     try {
       const entries = await root.readDir('#vm/v86')
-      if (
-        entries.some((name) => name.replace(/\/$/, '') === 'v86-vm.wasm')
-      ) {
+      if (entries.some((name) => name.replace(/\/$/, '') === 'v86-vm.wasm')) {
         return
       }
     } catch {
@@ -826,7 +822,9 @@ async function waitforv86driver(timeoutms: number) {
     }
     await new Promise<void>((resolve) => setTimeout(resolve, 250))
   }
-  throw new Error('wanix vm prep: v86 driver not found after mount — check CDN/network')
+  throw new Error(
+    'wanix vm prep: v86 driver not found after mount — check CDN/network',
+  )
 }
 
 function streamtermout(
@@ -921,14 +919,18 @@ type WanixTermHostElement = HTMLElement & {
     buffer: {
       active: {
         length: number
-        getLine: (index: number) => { translateToString: (trim?: boolean) => string } | undefined
+        getLine: (
+          index: number,
+        ) => { translateToString: (trim?: boolean) => string } | undefined
       }
     }
     input: (data: string) => void
   } | null
 }
 
-function readwanixtermserial(term: NonNullable<WanixTermHostElement['_term']>): string {
+function readwanixtermserial(
+  term: NonNullable<WanixTermHostElement['_term']>,
+): string {
   const active = term.buffer.active
   const lines: string[] = []
   for (let i = 0; i < active.length; i++) {
@@ -945,10 +947,8 @@ function wirevmtermel(entry: TermTargetEntry) {
     return
   }
   const term =
-    (sys.querySelector(
-      `wanix-term[data-zss-vm-term="${entry.id}"]`,
-    ) as WanixTermHostElement | null) ??
-    (sys.querySelector('wanix-term') as WanixTermHostElement | null)
+    sys.querySelector(`wanix-term[data-zss-vm-term="${entry.id}"]`) ??
+    sys.querySelector('wanix-term')
   if (!term) {
     return
   }
@@ -1351,7 +1351,9 @@ function setvmprepstage(
   }
 }
 
-function readwasmpanicmessage(event: ErrorEvent | PromiseRejectionEvent): string {
+function readwasmpanicmessage(
+  event: ErrorEvent | PromiseRejectionEvent,
+): string {
   if ('reason' in event) {
     const reason = event.reason
     if (reason instanceof Error) {
@@ -1537,7 +1539,7 @@ async function waitwanixsystemready(system: WanixSystemElement) {
 
 async function bootwanixsystem(mount: HTMLElement) {
   await ensurewanixruntime()
-  let system = mount.querySelector('wanix-system') as WanixSystemElement | null
+  let system = mount.querySelector('wanix-system')
   if (!system) {
     system = document.createElement('wanix-system') as WanixSystemElement
     applywanixsystemkernelattrs(system)
@@ -1600,8 +1602,11 @@ async function bootwanixsystemforvm(
 
   // Parser-style insert (matches smoke-basic-vm.html) — avoids archive/wasm ready race
   // from createElement + appendChild ordering.
-  mount.insertAdjacentHTML('beforeend', buildwanixvmprehtml(urls, 'zss-wanix-vm-sys'))
-  const system = mount.querySelector('wanix-system') as WanixSystemElement | null
+  mount.insertAdjacentHTML(
+    'beforeend',
+    buildwanixvmprehtml(urls, 'zss-wanix-vm-sys'),
+  )
+  const system = mount.querySelector('wanix-system')
   if (!system) {
     throw new Error('wanix vm prep: failed to mount wanix-system')
   }
@@ -1817,7 +1822,9 @@ export async function mountwanixarchive(
     await iframechildmountarchive(name, bytes, dst)
     return dst
   }
-  const url = URL.createObjectURL(new Blob([bytes], { type: 'application/gzip' }))
+  const url = URL.createObjectURL(
+    new Blob([bytes], { type: 'application/gzip' }),
+  )
   try {
     return await addbind({
       type: 'archive',
@@ -2006,7 +2013,7 @@ export async function spawnwanixvm(
     attach: opts.attach !== false,
     mem: opts.mem,
   })
-  return { vmid: typeof spawned === 'string' ? spawned : vmid ?? 'linux-vm' }
+  return { vmid: typeof spawned === 'string' ? spawned : (vmid ?? 'linux-vm') }
 }
 
 export function waitwanixvmexit(vmid: string): Promise<number> {
@@ -2237,7 +2244,10 @@ export async function runwanixhostwasm(
   requireactive()
   let termwritesucceeded = false
   if (opts.haltafter) {
-    const spawned = await spawntask(cmd, undefined, { wait: false, attach: true })
+    const spawned = await spawntask(cmd, undefined, {
+      wait: false,
+      attach: true,
+    })
     const taskid = typeof spawned === 'string' ? spawned : ''
     if (opts.blockms) {
       await new Promise((resolve) => setTimeout(resolve, opts.blockms))

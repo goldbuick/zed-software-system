@@ -17,7 +17,10 @@ import { ARG_TYPE, NAME } from 'zss/words/types'
 export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
   return fw.command(
     'wanix',
-    [ARG_TYPE.MAYBE_NAME, 'bare: drop .wasm/.tgz to run; menu for tasks, vms, binds'],
+    [
+      ARG_TYPE.MAYBE_NAME,
+      'bare: drop .wasm/.tgz to run; menu for tasks, vms, binds',
+    ],
     (_, words) => {
       const [action, arg] = readargs(words, 0, [
         ARG_TYPE.MAYBE_NAME,

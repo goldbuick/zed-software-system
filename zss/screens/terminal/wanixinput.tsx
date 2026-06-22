@@ -6,13 +6,14 @@ import {
   sendwanixterminput,
   sendwanixvmline,
 } from 'zss/feature/wanix/wanixhost'
-import { iswanixtermraw, readwanixattachedkind } from 'zss/feature/wanix/wanixsession'
+import {
+  iswanixtermraw,
+  readwanixattachedkind,
+} from 'zss/feature/wanix/wanixsession'
 import {
   iswanixcliescape,
   keyboardeventtoxtermdata,
 } from 'zss/feature/wanix/wanixtermkeys'
-import { wanixtrace } from 'zss/feature/wanix/wanixtrace'
-import { useTape } from 'zss/gadget/data/state'
 import {
   wanixtermscreenechochar,
   wanixtermscreenecholine,
@@ -20,7 +21,9 @@ import {
   wanixtermscreenwrite,
   wanixtermscreenwritepong,
 } from 'zss/feature/wanix/wanixtermscreen'
-import { UserInput } from 'zss/gadget/userinput'
+import { wanixtrace } from 'zss/feature/wanix/wanixtrace'
+import { useTape } from 'zss/gadget/data/zustandstores'
+import { UserInput } from 'zss/gadget/userinput.bridge'
 
 export function WanixTermInput() {
   const player = registerreadplayer()
@@ -56,8 +59,7 @@ export function WanixTermInput() {
 
   const handlekeydown = useCallback(
     (event: KeyboardEvent) => {
-      const vmattached =
-        attached && readwanixattachedkind() === 'vm'
+      const vmattached = attached && readwanixattachedkind() === 'vm'
       const raw = iswanixtermraw() && !vmattached
       if (iswanixcliescape(event)) {
         event.preventDefault()

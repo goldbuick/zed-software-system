@@ -6,7 +6,7 @@ import {
   emptygadgetstate,
   ismaybeblankgadgetstate,
   useGadgetClient,
-} from 'zss/gadget/data/state'
+} from 'zss/gadget/data/zustandstores'
 import type { GADGET_STATE } from 'zss/gadget/data/types'
 import { setcrtcurveamp } from 'zss/gadget/fx/crtanim'
 import { setglitchpulse } from 'zss/gadget/fx/glitchpulse'

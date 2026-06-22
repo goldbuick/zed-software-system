@@ -38,8 +38,8 @@ import {
   storagewritevar,
 } from 'zss/feature/storage'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
-import { leavewanixattachedterminal } from 'zss/feature/wanix/wanixterminalmode'
 import { isjoin, znsset } from 'zss/feature/url'
+import { leavewanixattachedterminal } from 'zss/feature/wanix/wanixterminalmode'
 import { write } from 'zss/feature/writeui'
 import {
   zssheaderlines,
@@ -55,7 +55,7 @@ import {
   useInspector,
   useTape,
   useTerminal,
-} from 'zss/gadget/data/state'
+} from 'zss/gadget/data/zustandstores'
 import { GADGET_ZSS_WORDS, INPUT, paneladdress } from 'zss/gadget/data/types'
 import { inputdown, inputup } from 'zss/gadget/userinput'
 import { doasync } from 'zss/mapping/func'

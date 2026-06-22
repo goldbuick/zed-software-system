@@ -10,7 +10,7 @@ import {
 } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import { useGadgetClient, useTape } from 'zss/gadget/data/state'
+import { useGadgetClient, useTape } from 'zss/gadget/data/zustandstores'
 import {
   INPUT,
   INPUT_ALT,
@@ -23,7 +23,9 @@ import { FPVGraphics } from 'zss/gadget/graphics/fpv'
 import { IsoGraphics } from 'zss/gadget/graphics/iso'
 import { MediaLayers } from 'zss/gadget/graphics/medialayer'
 import { Mode7Graphics } from 'zss/gadget/graphics/mode7'
-import { UserInput, UserInputMods, modsfromevent } from 'zss/gadget/userinput'
+import { UserInputMods } from 'zss/gadget/userinputtypes'
+import { modsfromevent } from 'zss/gadget/userinput'
+import { UserInput } from 'zss/gadget/userinput.bridge'
 import { ispid } from 'zss/mapping/guid'
 import { ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'

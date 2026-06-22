@@ -23,7 +23,7 @@ jest.mock('zss/words/textformat', () => ({
 }))
 
 import { createchip } from 'zss/chip'
-import { compile } from 'zss/feature/lang'
+import { compile } from 'zss/feature/lang/backend/typescript/generator'
 import {
   allcorpusids,
   bookids,

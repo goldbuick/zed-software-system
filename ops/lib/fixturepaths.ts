@@ -74,7 +74,11 @@ export const CONTENT_TEMPLATES_DIR = fixturepath('content', 'templates')
 export const CONTENT_DIST_DIR = fixturepath('content', 'dist')
 
 export const ZZT_CORPUS_DIR = fixturepath('zzt', 'corpus')
-export const ZZT_CORPUS_EXTRACTED_DIR = fixturepath('zzt', 'corpus', 'extracted')
+export const ZZT_CORPUS_EXTRACTED_DIR = fixturepath(
+  'zzt',
+  'corpus',
+  'extracted',
+)
 export const ZZT_CORPUS_ZSS_DIR = fixturepath('zzt', 'corpus', 'zss')
 export const ZZT_CORPUS_MANIFEST_PATH = fixturepath(
   'zzt',
@@ -87,7 +91,11 @@ export const ZZT_CORPUS_ZSS_MANIFEST_PATH = fixturepath(
   'zss',
   'manifest.json',
 )
-export const ZZT_CORPUS_SCREENSHOTS_DIR = fixturepath('zzt', 'corpus', 'screenshots')
+export const ZZT_CORPUS_SCREENSHOTS_DIR = fixturepath(
+  'zzt',
+  'corpus',
+  'screenshots',
+)
 export const ZZT_CORPUS_SCREENSHOTS_MANIFEST_PATH = fixturepath(
   'zzt',
   'corpus',

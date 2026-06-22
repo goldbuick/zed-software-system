@@ -1,6 +1,6 @@
 import { agentlog } from 'zss/agentlog'
 import { WASM_SCRIPT } from 'zss/config'
-import { GeneratorBuild } from 'zss/feature/lang'
+import { GeneratorBuild } from 'zss/feature/lang/backend/typescript/generator'
 import {
   compilescript,
   islangcompileready,

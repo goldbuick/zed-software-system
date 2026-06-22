@@ -10,7 +10,10 @@ import mkcert from 'vite-plugin-mkcert'
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
 
 import pkg from './package.json'
-import { harnesshtmlmiddleware, fixtureprefixmiddleware } from './tasks/lib/parity/harness-middleware.ts'
+import {
+  fixtureprefixmiddleware,
+  harnesshtmlmiddleware,
+} from './tasks/lib/parity/harness-middleware.ts'
 
 const RENDERS_FIXTURES_DIR = path.join(process.cwd(), 'ops/fixtures/renders')
 
@@ -90,12 +93,17 @@ function servefixturesdev(): Plugin {
     configureServer(server) {
       return () => {
         server.middlewares.use(harnesshtmlmiddleware())
-        server.middlewares.use(fixtureprefixmiddleware('/renders', RENDERS_FIXTURES_DIR))
+        server.middlewares.use(
+          fixtureprefixmiddleware('/renders', RENDERS_FIXTURES_DIR),
+        )
         server.middlewares.use(
           fixtureprefixmiddleware('/ops/lib', path.join(root, 'ops/lib')),
         )
         server.middlewares.use(
-          fixtureprefixmiddleware('/ops/archive', path.join(root, 'ops/archive')),
+          fixtureprefixmiddleware(
+            '/ops/archive',
+            path.join(root, 'ops/archive'),
+          ),
         )
         server.middlewares.use(
           fixtureprefixmiddleware(

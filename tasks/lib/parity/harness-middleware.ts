@@ -1,6 +1,6 @@
 import fs from 'node:fs'
-import path from 'node:path'
 import type http from 'node:http'
+import path from 'node:path'
 
 const HARNESS_FIXTURES_DIR = path.join(process.cwd(), 'ops/fixtures/harness')
 
@@ -37,7 +37,10 @@ export function fixtureprefixmiddleware(
     }
     const file = path.join(rootdir, rel)
     const resolved = path.resolve(file)
-    if (!resolved.startsWith(path.resolve(rootdir)) || !fs.existsSync(resolved)) {
+    if (
+      !resolved.startsWith(path.resolve(rootdir)) ||
+      !fs.existsSync(resolved)
+    ) {
       next()
       return
     }

@@ -2,10 +2,10 @@ import { createdevice } from 'zss/device'
 import {
   type FXNAME,
   type SynthBackend,
-  applyboardstate,
-  createsynthbackend,
-} from 'zss/feature/synth'
-import { unlockaudiocontext } from 'zss/feature/synth/backend/wasm'
+} from 'zss/feature/synth/frontend/synthbackend'
+import { applyboardstate } from 'zss/feature/synth/frontend/applyboardstate'
+import { createsynthbackend } from 'zss/feature/synth/backend/synthbackendfactory'
+import { unlockaudiocontext } from 'zss/feature/synth/backend/wasm/audiocontextunlock'
 import { synthdebugtrace } from 'zss/feature/synth/synthdebugtrace'
 import {
   selectttsengine,
@@ -15,7 +15,7 @@ import {
   ttsqueue,
 } from 'zss/feature/tts'
 import { write } from 'zss/feature/writeui'
-import { useGadgetClient } from 'zss/gadget/data/state'
+import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { SYNTH_STATE } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'

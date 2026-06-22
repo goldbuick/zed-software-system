@@ -1,31 +1,37 @@
 import type { DEVICELIKE } from 'zss/device/api'
 import { apilog } from 'zss/device/api'
 import {
-  enterwanixattachedterminal,
-  readterminalmodeattached,
-} from 'zss/feature/wanix/wanixterminalmode'
-import {
-  iswanixtermiframemsg,
-  WANIX_TERM_IFRAME_SRC,
-} from 'zss/feature/wanix/wanixtermiframeprotocol'
-import { wanixtermscreenwrite } from 'zss/feature/wanix/wanixtermscreen'
-import type { WANIX_VM_ASSET_URLS } from 'zss/feature/wanix/wanixvmassets'
-import {
+  type WANIX_ATTACH_KIND,
   readwanixattached,
   readwanixattachedkind,
   registervm,
   setwanixattached,
-  type WANIX_ATTACH_KIND,
 } from 'zss/feature/wanix/wanixsession'
 import {
-  iswanixtermprobemsg,
+  WANIX_TERM_IFRAME_SRC,
+  iswanixtermiframemsg,
+} from 'zss/feature/wanix/wanixtermiframeprotocol'
+import {
+  enterwanixattachedterminal,
+  readterminalmodeattached,
+} from 'zss/feature/wanix/wanixterminalmode'
+import {
   type WanixTermProbeMsg,
+  iswanixtermprobemsg,
 } from 'zss/feature/wanix/wanixtermprobe'
+import { wanixtermscreenwrite } from 'zss/feature/wanix/wanixtermscreen'
+import type { WANIX_VM_ASSET_URLS } from 'zss/feature/wanix/wanixvmassets'
 
 const EMBED_READY_MS = 120_000
 const RPC_TIMEOUT_MS = 600_000
 
-type VmPrepStage = 'idle' | 'mounting' | 'mount_ok' | 'spawn' | 'serial' | 'failed'
+type VmPrepStage =
+  | 'idle'
+  | 'mounting'
+  | 'mount_ok'
+  | 'spawn'
+  | 'serial'
+  | 'failed'
 
 type ProxyEntry = {
   id: string
@@ -103,8 +109,7 @@ function handlechunk(kind: WANIX_ATTACH_KIND, id: string, chunk: string) {
   if (!entry || !chunk.length) {
     return
   }
-  const stripped =
-    kind === 'vm' ? stripvmlineecho(entry, chunk) : chunk
+  const stripped = kind === 'vm' ? stripvmlineecho(entry, chunk) : chunk
   if (!stripped.length) {
     return
   }
@@ -168,7 +173,10 @@ function onmessage(event: MessageEvent) {
     }
     return
   }
-  if (iswanixtermprobemsg(data) && data.type === 'zss-wanix-term-probe-rpc-res') {
+  if (
+    iswanixtermprobemsg(data) &&
+    data.type === 'zss-wanix-term-probe-rpc-res'
+  ) {
     const waiter = rpcwaiters.get(data.id)
     if (!waiter) {
       return
@@ -186,7 +194,9 @@ function ensureiframe(): HTMLIFrameElement {
   if (iframeel?.contentWindow) {
     return iframeel
   }
-  let el = document.getElementById('zss-wanix-term-iframe') as HTMLIFrameElement | null
+  let el = document.getElementById(
+    'zss-wanix-term-iframe',
+  ) as HTMLIFrameElement | null
   if (!el) {
     el = document.createElement('iframe')
     el.id = 'zss-wanix-term-iframe'
@@ -277,7 +287,12 @@ async function probechildrpc<T>(
       },
     })
     childwindow().postMessage(
-      { type: 'zss-wanix-term-probe-rpc', id, method, args } satisfies WanixTermProbeMsg,
+      {
+        type: 'zss-wanix-term-probe-rpc',
+        id,
+        method,
+        args,
+      } satisfies WanixTermProbeMsg,
       window.location.origin,
     )
   })
@@ -335,7 +350,9 @@ export async function syncwanixtermiframeserial(): Promise<void> {
 }
 
 /** Block until child xterm shows login or shell prompt (probe-owned). */
-export async function waitwanixtermiframeprompt(timeoutms: number): Promise<void> {
+export async function waitwanixtermiframeprompt(
+  timeoutms: number,
+): Promise<void> {
   await probechildrpc('waitprompt', [timeoutms])
   await syncwanixtermiframeserial()
 }
@@ -449,8 +466,7 @@ export async function iframeterminput(text: string): Promise<void> {
 }
 
 export async function iframetermline(line: string): Promise<void> {
-  const entry =
-    attachedid && attachedkind ? proxies.get(attachedid) : undefined
+  const entry = attachedid && attachedkind ? proxies.get(attachedid) : undefined
   if (entry && attachedkind === 'vm') {
     entry.pendingvmline = line
   }

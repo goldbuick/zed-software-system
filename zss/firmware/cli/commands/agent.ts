@@ -1,8 +1,4 @@
-import {
-  heavyagentlist,
-  heavyagentstart,
-  heavyagentstop,
-} from 'zss/device/api'
+import { heavyagentlist, heavyagentstart, heavyagentstop } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { HEAVY_LLM_PRESETS } from 'zss/feature/heavy/heavyllmpreset'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'

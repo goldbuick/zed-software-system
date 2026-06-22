@@ -11,7 +11,11 @@ import {
 import { memoryimportcodepagefromjson } from 'zss/memory/codepageoperations'
 import { memoryloader } from 'zss/memory/loader'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
-import { memoryreadbookbysoftware, memoryreadoperator, memorywritebook } from 'zss/memory/session'
+import {
+  memoryreadbookbysoftware,
+  memoryreadoperator,
+  memorywritebook,
+} from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
 import { memoryreadconfig } from 'zss/memory/utilities'
 

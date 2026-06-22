@@ -25,7 +25,8 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 | `yarn task run app:dev` | Install deps and start Vite dev server (WASM lang) | `dev` | `app:install`, `app:vite:dev` | — |
 | `yarn task run app:dev:no-sc` | Dev server with play-bus sidechain bypassed | `dev` | `app:dev` | `ZSS_DAISY_NO_SIDECHAIN=1` |
 | `yarn task run app:install` | Install yarn dependencies | — | — | — |
-| `yarn task run app:lint` | Dependency-cruiser, ESLint, and tsc --noEmit | `ci` | — | — |
+| `yarn task run app:lint` | Import guards, dependency-cruiser, ESLint, and tsc --noEmit | `ci` | — | — |
+| `yarn task run app:lint:imports` | Guard zss/ and cafe/ for no ../ imports, re-exports, or known barrel files | `ci` | — | — |
 | `yarn task run app:preview` | Preview production build on port 7777 | `dev` | — | — |
 | `yarn task run app:server:dev` | CLI build + Vite dev + zss dev server | `dev` | `cli:build`, `app:server:dev:run` | — |
 | `yarn task run app:server:dev:run` | Concurrent Vite dev and zss dev (internal) | `dev` | — | `ZSS_NO_HTTPS=1` |

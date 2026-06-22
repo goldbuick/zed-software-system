@@ -7,16 +7,12 @@ import { SOFTWARE } from 'zss/device/session'
 import {
   type CodeNode,
   NODE,
-  compileast,
-  createlineindexes,
-  lexer,
-} from 'zss/feature/lang'
-import {
-  useEditor,
-  useEqual,
-  useGadgetClient,
-  useTape,
-} from 'zss/gadget/data/state'
+} from 'zss/feature/lang/backend/typescript/visitor'
+import { compileast } from 'zss/feature/lang/backend/typescript/ast'
+import { createlineindexes } from 'zss/feature/lang/backend/typescript/transformer'
+import * as lexer from 'zss/feature/lang/backend/typescript/lexer'
+import { useEditor, useGadgetClient, useTape } from 'zss/gadget/data/zustandstores'
+import { useEqual } from 'zss/gadget/data/useequal'
 import { useWriteText } from 'zss/gadget/writetext'
 import { isarray, isnumber, ispresent } from 'zss/mapping/types'
 import { ScrollMarquee } from 'zss/screens/scroll/marquee'

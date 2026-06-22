@@ -5,8 +5,8 @@ import {
 } from 'zss/gadget/data/api'
 import {
   scrollwritelines,
-  zsszedlinklinechip,
 } from 'zss/gadget/data/scrollwritelines'
+import { zsszedlinklinechip } from 'zss/feature/zsstextui'
 import { GADGET_STATE } from 'zss/gadget/data/types'
 
 jest.mock('zss/device/modem', () => ({

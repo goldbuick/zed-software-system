@@ -11,7 +11,7 @@ import {
   formatobject,
   unformatobject,
 } from 'zss/feature/format'
-import { stat, tokenize } from 'zss/feature/lang'
+import { stat, tokenize } from 'zss/feature/lang/backend/typescript/lexer'
 import { PALETTE } from 'zss/feature/palette'
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import { FILE_BYTES_PER_COLOR } from 'zss/gadget/data/types'

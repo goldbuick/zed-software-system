@@ -6,14 +6,14 @@ import {
   createTokenInstance,
 } from 'chevrotain'
 import { LANG_DEV } from 'zss/config'
-import { range } from 'zss/mapping/array'
-import { isarray } from 'zss/mapping/types'
 import {
   iscommandat,
   iscommandwordat,
-  shouldstatat,
   linestartoffset,
+  shouldstatat,
 } from 'zss/feature/lang/zztlineclass'
+import { range } from 'zss/mapping/array'
+import { isarray } from 'zss/mapping/types'
 
 const all_chars = range(32, 126).map((char) => String.fromCharCode(char))
 
@@ -112,7 +112,10 @@ function matchBasicText(text: string, startOffset: number) {
     const linestart = linestartoffset(text, startOffset)
     if (linestart < startOffset) {
       let scan = startOffset
-      while (scan < text.length && (text[scan] === ' ' || text[scan] === '\t')) {
+      while (
+        scan < text.length &&
+        (text[scan] === ' ' || text[scan] === '\t')
+      ) {
         scan += 1
       }
       const lineend = text.indexOf('\n', scan)
@@ -665,7 +668,7 @@ function matchSendTarget(
   text: string,
   startOffset: number,
 ): RegExpExecArray | null {
-  const m = text.slice(startOffset).match(/^[A-Za-z0-9_]+:[A-Za-z0-9_]+/i)
+  const m = /^[A-Za-z0-9_]+:[A-Za-z0-9_]+/i.exec(text.slice(startOffset))
   if (!m) {
     return null
   }
@@ -682,9 +685,9 @@ function matchSendHashLabel(
   text: string,
   startOffset: number,
 ): RegExpExecArray | null {
-  const m = text
-    .slice(startOffset)
-    .match(/^#[A-Za-z][A-Za-z0-9_]*(?::[A-Za-z0-9_]+)?/i)
+  const m = /^#[A-Za-z][A-Za-z0-9_]*(?::[A-Za-z0-9_]+)?/i.exec(
+    text.slice(startOffset),
+  )
   if (!m) {
     return null
   }
@@ -704,7 +707,7 @@ function matchStmtSendDoubleHash(
   if (!iscommandat(text, startOffset)) {
     return null
   }
-  const m = text.slice(startOffset).match(/^##[A-Za-z][A-Za-z0-9_]*/i)
+  const m = /^##[A-Za-z][A-Za-z0-9_]*/i.exec(text.slice(startOffset))
   if (!m) {
     return null
   }

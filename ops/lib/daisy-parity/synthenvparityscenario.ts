@@ -1,9 +1,9 @@
-import { tonenotationseconds } from 'zss/feature/synth/playnotation'
-
 import type {
   LEVEL_STABILITY_SCENARIO,
   LEVEL_STABILITY_VOICE_CONFIG,
 } from 'zss/feature/synth/backend/daisy/levelstabilitytypes'
+import { tonenotationseconds } from 'zss/feature/synth/playnotation'
+
 import { paritydurationwithrelease } from './parityduration.ts'
 
 /** User-reported repro + long-release matrix (seconds). */

@@ -6,13 +6,12 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { chromium } from '@playwright/test'
+import type { PARITY_AUDIO_METRICS } from 'ops/lib/daisy-parity/paritymetrics'
+import { ENVELOPE_ADSR_PARITY_PATCHES } from 'ops/lib/daisy-parity/paritypatches'
 import {
   startparityvite,
   stopparityvite,
 } from 'tasks/lib/parity/parity-vite-server.ts'
-
-import type { PARITY_AUDIO_METRICS } from 'ops/lib/daisy-parity/paritymetrics'
-import { ENVELOPE_ADSR_PARITY_PATCHES } from 'ops/lib/daisy-parity/paritypatches'
 
 const ROOT = process.cwd()
 const PROJECT = process.cwd()

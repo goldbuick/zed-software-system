@@ -1,4 +1,4 @@
-import { useTape } from 'zss/gadget/data/state'
+import { useTape } from 'zss/gadget/data/zustandstores'
 
 import { InspectorPts } from './pts'
 import { InspectorSelect } from './select'

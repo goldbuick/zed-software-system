@@ -23,7 +23,7 @@ jest.mock('zss/device', () => ({
   }),
 }))
 
-jest.mock('zss/gadget/data/state', () => ({
+jest.mock('zss/gadget/data/zustandstores', () => ({
   applylayercacheupdate: jest.fn((cache) => cache),
   emptygadgetstate: () => ({ id: 'empty', board: '', layers: [] }),
   ismaybeblankgadgetstate: jest.fn(() => false),

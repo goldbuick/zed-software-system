@@ -8,7 +8,7 @@ import {
   useInspector,
   useTape,
   useTerminal,
-} from 'zss/gadget/data/state'
+} from 'zss/gadget/data/zustandstores'
 import {
   type LAYER,
   type LAYER_DITHER,

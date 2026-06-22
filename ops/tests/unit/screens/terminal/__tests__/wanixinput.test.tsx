@@ -20,7 +20,7 @@ const mockreadwanixattachedkind = jest.fn(() => null as 'task' | 'vm' | null)
 const mockterminalmode = jest.fn(() => 'attached')
 const mocktermscreenwrite = jest.fn()
 
-jest.mock('zss/gadget/data/state', () => ({
+jest.mock('zss/gadget/data/zustandstores', () => ({
   useTape: (selector: (state: { terminalmode: string }) => unknown) =>
     selector({ terminalmode: mockterminalmode() }),
 }))

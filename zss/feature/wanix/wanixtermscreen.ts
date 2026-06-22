@@ -49,7 +49,13 @@ function cellindex(x: number, y: number) {
   return x + y * screen.width
 }
 
-function putcell(x: number, y: number, ch: number, fg = DEFAULT_FG, bg = DEFAULT_BG) {
+function putcell(
+  x: number,
+  y: number,
+  ch: number,
+  fg = DEFAULT_FG,
+  bg = DEFAULT_BG,
+) {
   const index = cellindex(x, y)
   if (index < 0) {
     return
@@ -112,8 +118,7 @@ function writechar(ch: number, fg = DEFAULT_FG, bg = DEFAULT_BG) {
   }
   if (ch === 9) {
     const tabstop = 8
-    const next =
-      Math.ceil((screen.cursorx + 1) / tabstop) * tabstop
+    const next = Math.ceil((screen.cursorx + 1) / tabstop) * tabstop
     screen.cursorx = Math.min(next, Math.max(0, screen.width - 1))
     return
   }
@@ -268,7 +273,10 @@ export function wanixtermscreenwrite(chunk: string) {
 
 /** Flush coalesced term-out (tests and teardown). */
 export function flushwanixtermscreenpending() {
-  if (outflushhandle !== undefined && typeof cancelAnimationFrame === 'function') {
+  if (
+    outflushhandle !== undefined &&
+    typeof cancelAnimationFrame === 'function'
+  ) {
     cancelAnimationFrame(outflushhandle)
   }
   flushpendingout()
@@ -303,7 +311,10 @@ export function wanixtermscreenshowclihint() {
 
 /** Test hook — reset module state. */
 export function resetwanixtermscreenfortest() {
-  if (outflushhandle !== undefined && typeof cancelAnimationFrame === 'function') {
+  if (
+    outflushhandle !== undefined &&
+    typeof cancelAnimationFrame === 'function'
+  ) {
     cancelAnimationFrame(outflushhandle)
   }
   pendingout = ''

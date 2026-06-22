@@ -15,6 +15,10 @@
 import { objectKeys } from 'ts-extras'
 import { apitoast, workstatus } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import {
+  assertzztelementlibrary,
+  requirezztelementlibrary,
+} from 'zss/feature/parse/zztelementlibrary'
 import { indextox, indextoy } from 'zss/mapping/2d'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { memoryinitboard, memorywriteelementfromkind } from 'zss/memory/boards'
@@ -35,10 +39,6 @@ import {
   BOOK,
   CODE_PAGE_TYPE,
 } from 'zss/memory/types'
-import {
-  assertzztelementlibrary,
-  requirezztelementlibrary,
-} from 'zss/feature/parse/zztelementlibrary'
 import { STR_COLOR, mapcolortostrcolor } from 'zss/words/color'
 import { STR_KIND } from 'zss/words/kind'
 import { PT } from 'zss/words/types'
@@ -112,9 +112,6 @@ import {
   readworldheaderzzt,
   zztparseboard,
 } from './zztbinparse'
-
-export { zztparseboard, zztparseworld } from './zztbinparse'
-
 
 function buildstatmap(
   stats: ZZT_STAT[],

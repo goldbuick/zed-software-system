@@ -1,10 +1,10 @@
 import ErrorStackParser from 'error-stack-parser'
 import { agentlog } from 'zss/agentlog'
 import {
-  GENERATED_FILENAME,
-  GeneratorBuild,
-  GeneratorFunc,
-} from 'zss/feature/lang'
+  type GeneratorBuild,
+  type GeneratorFunc,
+} from 'zss/feature/lang/backend/typescript/generator'
+import { GENERATED_FILENAME } from 'zss/feature/lang/backend/typescript/transformer'
 import {
   type WasmScriptInstance,
   loadscriptsync,

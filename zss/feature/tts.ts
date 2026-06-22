@@ -9,7 +9,7 @@ import { SOFTWARE } from 'zss/device/session'
 import {
   getliveaudiocontext,
   unlockaudiocontext,
-} from 'zss/feature/synth/backend/wasm'
+} from 'zss/feature/synth/backend/wasm/audiocontextunlock'
 import { createsid } from 'zss/mapping/guid'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'

@@ -18,9 +18,9 @@ import { PerfHud } from 'zss/perf/hud'
 import { createplatform, haltplatform } from 'zss/platform'
 import {
   ScreenUILayout,
-  ScreenUIScrollLayer,
-  ScreenUIScrollProvider,
-} from 'zss/screens/screenui/component'
+} from 'zss/screens/screenui/layout'
+import { ScreenUIScrollLayer } from 'zss/screens/screenui/scrolllayer'
+import { ScreenUIScrollProvider } from 'zss/screens/screenui/scrollprovider'
 import { TapeComponent } from 'zss/screens/tape/component'
 
 import { Scanlines } from './fx/scanlines'

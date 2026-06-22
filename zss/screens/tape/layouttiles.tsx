@@ -1,6 +1,6 @@
 import { ReactNode, useMemo } from 'react'
 import { RUNTIME } from 'zss/config'
-import { TERMINAL_MODE } from 'zss/gadget/data/state'
+import { TERMINAL_MODE } from 'zss/gadget/data/zustandstores'
 import { useTiles } from 'zss/gadget/tiles'
 import { TilesData, TilesRender } from 'zss/gadget/usetiles'
 import { WriteTextContext } from 'zss/gadget/writetext'

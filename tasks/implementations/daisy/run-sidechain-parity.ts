@@ -8,8 +8,17 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { RENDERS_FIXTURES_DIR } from 'ops/lib/fixturepaths'
 import { chromium } from '@playwright/test'
+import {
+  SIDECHAIN_PARITY_PATCH_ID,
+  type SIDECHAIN_PARITY_RESULT,
+  analyzeduckdepth,
+  analyzeduckdepthpair,
+  evalsidechainparitygate,
+  formatsidechainparityreport,
+  metricsfromsamples,
+} from 'ops/lib/daisy-parity/sidechainparity'
+import { RENDERS_FIXTURES_DIR } from 'ops/lib/fixturepaths'
 import {
   PARITY_RENDER_SCRIPT_TIMEOUT_MS,
   PLAYWRIGHT_SCENARIO_TIMEOUT_MS,
@@ -21,15 +30,6 @@ import {
 } from 'tasks/lib/parity/parity-vite-server.ts'
 import { decodewav } from 'tasks/lib/parity/parity-wav.ts'
 
-import {
-  SIDECHAIN_PARITY_PATCH_ID,
-  type SIDECHAIN_PARITY_RESULT,
-  analyzeduckdepth,
-  analyzeduckdepthpair,
-  evalsidechainparitygate,
-  formatsidechainparityreport,
-  metricsfromsamples,
-} from 'ops/lib/daisy-parity/sidechainparity'
 import { SIDECHAIN_SCENARIO_ID } from '../zss/feature/synth/backend/daisy/sidechainscenario.ts'
 
 const ROOT = process.cwd()

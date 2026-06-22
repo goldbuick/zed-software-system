@@ -377,23 +377,19 @@ export function wanixvmstart(
   device.emit(player, 'wanix:vm-start', vmid)
 }
 
-export function wanixvmstop(
-  device: DEVICELIKE,
-  player: string,
-  vmid?: string,
-) {
+export function wanixvmstop(device: DEVICELIKE, player: string, vmid?: string) {
   device.emit(player, 'wanix:vm-stop', vmid)
 }
 
-export function wanixstop(
-  device: DEVICELIKE,
-  player: string,
-  taskid?: string,
-) {
+export function wanixstop(device: DEVICELIKE, player: string, taskid?: string) {
   device.emit(player, 'wanix:stop', taskid)
 }
 
-export function wanixtermwrite(device: DEVICELIKE, player: string, line: string) {
+export function wanixtermwrite(
+  device: DEVICELIKE,
+  player: string,
+  line: string,
+) {
   device.emit(player, 'wanix:term-write', line)
 }
 

@@ -1,9 +1,5 @@
 import { CHIP } from 'zss/chip'
-import {
-  apitoast,
-  registerstore,
-  vmlogout,
-} from 'zss/device/api'
+import { apitoast, registerstore, vmlogout } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import { firmwarewaitforboard } from 'zss/firmware/boardwaitsync'

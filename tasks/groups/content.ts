@@ -63,7 +63,11 @@ export const CONTENT_TASKS: TaskDef[] = [
     description:
       'Extract Museum archives, build ZZT OOP → .zss corpus, and sanitize profanity/slurs',
     tags: ['slow'],
-    deps: ['content:zzt:corpus:extract', 'content:zzt:corpus:zss', 'content:zzt:corpus:sanitize'],
+    deps: [
+      'content:zzt:corpus:extract',
+      'content:zzt:corpus:zss',
+      'content:zzt:corpus:sanitize',
+    ],
     run: { kind: 'tasks' },
   }),
   def('content:zzt:corpus:profanity:scan', {

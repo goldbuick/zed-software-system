@@ -1,9 +1,12 @@
-jest.mock('zss/feature/synth', () => ({
+jest.mock('zss/feature/synth/backend/synthbackendfactory', () => ({
   createsynthbackend: jest.fn(),
+}))
+
+jest.mock('zss/feature/synth/frontend/applyboardstate', () => ({
   applyboardstate: jest.fn(),
 }))
 
-jest.mock('zss/feature/synth/backend/wasm', () => ({
+jest.mock('zss/feature/synth/backend/wasm/audiocontextunlock', () => ({
   unlockaudiocontext: jest.fn(),
 }))
 
@@ -34,7 +37,7 @@ jest.mock('zss/feature/writeui', () => ({
 import { createmessage } from 'zss/device'
 import { setsynthdeviceteststate, synthdevice } from 'zss/device/synth'
 import type { SynthBackend } from 'zss/feature/synth/frontend/synthbackend'
-import { useGadgetClient } from 'zss/gadget/data/state'
+import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 
 describe('synth device play routing', () => {
   const SESSION = 'synth-play-test'

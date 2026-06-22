@@ -53,7 +53,10 @@ export type MuseumFilterStats = {
 
 export function classifymuseumfile(entry: MuseumFile): keyof MuseumFilterStats {
   const tags = entry.details.map((detail) => detail.detail)
-  if (tags.includes('Weave ZZT World') || entry.archive_name.startsWith('wzzt_')) {
+  if (
+    tags.includes('Weave ZZT World') ||
+    entry.archive_name.startsWith('wzzt_')
+  ) {
     return 'excluded_weave'
   }
   if (

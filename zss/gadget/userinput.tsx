@@ -17,7 +17,7 @@ import {
 } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import { useTape } from 'zss/gadget/data/state'
+import { useTape } from 'zss/gadget/data/zustandstores'
 import {
   INPUT,
   INPUT_ALT,
@@ -39,21 +39,7 @@ import {
   onmobiletextinput,
 } from './mobiletext'
 
-export { getmobiletextelement, mobiletextfocus, onmobiletextinput }
-export type { MobiletextInputCallback } from './mobiletext'
-
 // user input
-
-type INPUT_STATE = Record<INPUT, boolean>
-
-export type {
-  UserInputMods,
-  UserInputProps,
-  UserInputHandler,
-  KeyboardInputHandler,
-} from 'zss/gadget/userinputtypes'
-export { UserInput } from 'zss/gadget/userinput.bridge'
-
 const inputstates: Record<number, INPUT_STATE> = {}
 function playerlocal(index: number) {
   return `${registerreadplayer()}local${index}`

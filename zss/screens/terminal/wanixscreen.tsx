@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
-import { writetile } from 'zss/gadget/tiles'
-import { useWriteText } from 'zss/gadget/writetext'
 import {
   readwanixtermscreencells,
   subscribewanixtermscreen,
   wanixtermscreenresize,
 } from 'zss/feature/wanix/wanixtermscreen'
+import { writetile } from 'zss/gadget/tiles'
+import { useWriteText } from 'zss/gadget/writetext'
 import { drawblockcursor } from 'zss/screens/inputcommon'
 import { textformatreadedges } from 'zss/words/textformat'
 

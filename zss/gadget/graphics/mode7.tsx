@@ -9,7 +9,7 @@ import {
   Vector3,
 } from 'three'
 import { RUNTIME } from 'zss/config'
-import { useGadgetClient } from 'zss/gadget/data/state'
+import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
 import {
   FOCUS_ANIM_RATE,

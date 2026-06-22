@@ -1,14 +1,8 @@
-import { invokeplay, parseplay, tonenotationseconds } from 'zss/feature/synth/playnotation'
-import type { SYNTH_NOTE_ENTRY } from 'zss/feature/synth/playnotation'
-import { isstring } from 'zss/mapping/types'
-
 import {
   bootisolatedmaxiengine,
   startisolatedmaximiliandsp,
 } from 'ops/archive/synth/maxi/maximilian'
 import { createwasmsynth } from 'ops/archive/synth/maxi/maxisynth'
-import { type PARITY_AUDIO_METRICS, audiobuffermetrics } from './paritymetrics'
-import type { PARITY_PATCH } from './paritypatches'
 import { WASM_SYNTH_VOICE_PLAY_CODE } from 'ops/archive/synth/maxi/voiceplaycode'
 import { defaultwasmalgoconfig } from 'zss/feature/synth/backend/wasm/wasmalgoconfigsab'
 import { defaultwasmfxsab } from 'zss/feature/synth/backend/wasm/wasmfxstate'
@@ -16,6 +10,16 @@ import { WASM_DEFAULT_TTS_VOLUME } from 'zss/feature/synth/backend/wasm/wasmmain
 import { defaultwasmoscconfig } from 'zss/feature/synth/backend/wasm/wasmoscconfigsab'
 import type { WASM_REPLAY_STATE } from 'zss/feature/synth/backend/wasm/wasmreplaystate'
 import { defaultwasmvoicestate } from 'zss/feature/synth/backend/wasm/wasmvoiceconfig'
+import type { SYNTH_NOTE_ENTRY } from 'zss/feature/synth/playnotation'
+import {
+  invokeplay,
+  parseplay,
+  tonenotationseconds,
+} from 'zss/feature/synth/playnotation'
+import { isstring } from 'zss/mapping/types'
+
+import { type PARITY_AUDIO_METRICS, audiobuffermetrics } from './paritymetrics'
+import type { PARITY_PATCH } from './paritypatches'
 
 const PARITY_SAMPLERATE = 44100
 const PARITY_REPLAY_OFFSET_SEC = 0.05

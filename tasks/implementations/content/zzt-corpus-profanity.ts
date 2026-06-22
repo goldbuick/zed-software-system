@@ -237,7 +237,9 @@ export function sanitizezztcorpus(argv: string[]): number {
   )
 
   if (!opts.dryrun && posthits.length > 0) {
-    console.error('sanitize incomplete — remaining hits; extend word list or allowlist')
+    console.error(
+      'sanitize incomplete — remaining hits; extend word list or allowlist',
+    )
     return 1
   }
   return 0
@@ -247,9 +249,7 @@ async function main() {
   const mode = process.argv[2] ?? 'scan'
   const argv = process.argv.slice(3)
   const code =
-    mode === 'sanitize'
-      ? sanitizezztcorpus(argv)
-      : scanzztcorpusprofanity(argv)
+    mode === 'sanitize' ? sanitizezztcorpus(argv) : scanzztcorpusprofanity(argv)
   process.exit(code)
 }
 

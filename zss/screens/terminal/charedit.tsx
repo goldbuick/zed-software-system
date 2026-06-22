@@ -7,7 +7,7 @@ import { SOFTWARE } from 'zss/device/session'
 import { readcharfrombytes } from 'zss/feature/bytes'
 import { useHyperlinkSharedSync } from 'zss/gadget/data/usehyperlinksharedsync'
 import { useMedia } from 'zss/gadget/media'
-import { UserInput } from 'zss/gadget/userinput'
+import { UserInput } from 'zss/gadget/userinput.bridge'
 import { useWriteText } from 'zss/gadget/writetext'
 import { inputcolor } from 'zss/screens/panel/common'
 import {

@@ -96,8 +96,6 @@ export function initdaisyvoicesab(maxi: SabEngine) {
   initwasmalgoconfigsab(maxi)
 }
 
-export { initwasmfxsab } from 'zss/feature/synth/backend/wasm/wasmfxstate'
-
 function drumdurationfor(drumid: number, notationdur: number): number {
   if (drumid === 0) {
     return tonenotationseconds('16n')

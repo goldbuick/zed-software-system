@@ -1,5 +1,3 @@
-import type { SYNTH_NOTE_ENTRY } from 'zss/feature/synth/playnotation'
-
 import {
   bootisolatedmaxiengine,
   getmaximaudiocontext,
@@ -8,11 +6,15 @@ import {
 import { createwasmsynth } from 'ops/archive/synth/maxi/maxisynth'
 import { WASM_SYNTH_VOICE_PLAY_CODE } from 'ops/archive/synth/maxi/voiceplaycode'
 import { defaultwasmalgoconfig } from 'zss/feature/synth/backend/wasm/wasmalgoconfigsab'
-import { applywasmfxconfig, defaultwasmfxsab } from 'zss/feature/synth/backend/wasm/wasmfxstate'
+import {
+  applywasmfxconfig,
+  defaultwasmfxsab,
+} from 'zss/feature/synth/backend/wasm/wasmfxstate'
 import { WASM_DEFAULT_TTS_VOLUME } from 'zss/feature/synth/backend/wasm/wasmmainsab'
-import type { WASM_REPLAY_STATE } from 'zss/feature/synth/backend/wasm/wasmreplaystate'
 import { defaultwasmoscconfig } from 'zss/feature/synth/backend/wasm/wasmoscconfigsab'
+import type { WASM_REPLAY_STATE } from 'zss/feature/synth/backend/wasm/wasmreplaystate'
 import { defaultwasmvoicestate } from 'zss/feature/synth/backend/wasm/wasmvoiceconfig'
+import type { SYNTH_NOTE_ENTRY } from 'zss/feature/synth/playnotation'
 
 const DEFAULT_RENDER_SEC = 2
 const DEFAULT_SAMPLERATE = 44100
@@ -116,8 +118,7 @@ async function main() {
 }
 
 const isdirectrun =
-  typeof process !== 'undefined' &&
-  process.argv[1]?.includes('wasmperfbench')
+  typeof process !== 'undefined' && process.argv[1]?.includes('wasmperfbench')
 
 if (isdirectrun) {
   main().catch((err) => {

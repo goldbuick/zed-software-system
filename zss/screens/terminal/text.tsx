@@ -4,13 +4,13 @@ import { withclipboard } from 'zss/feature/keyboard'
 import { useHyperlinkSharedSync } from 'zss/gadget/data/usehyperlinksharedsync'
 import { useDeviceData } from 'zss/gadget/device'
 import {
-  UserFocus,
-  UserInput,
-  UserInputMods,
   getmobiletextelement,
   mobiletextfocus,
   onmobiletextinput,
-} from 'zss/gadget/userinput'
+} from 'zss/gadget/mobiletext'
+import { UserFocus } from 'zss/gadget/userinput'
+import type { UserInputMods } from 'zss/gadget/userinputtypes'
+import { UserInput } from 'zss/gadget/userinput.bridge'
 import { useWriteText } from 'zss/gadget/writetext'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'

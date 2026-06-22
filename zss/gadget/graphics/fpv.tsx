@@ -9,7 +9,7 @@ import {
   Vector3,
 } from 'three'
 import { RUNTIME } from 'zss/config'
-import { useGadgetClient } from 'zss/gadget/data/state'
+import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
 import { useDeviceData } from 'zss/gadget/device'
 import { DepthFog } from 'zss/gadget/fx/depthfog'

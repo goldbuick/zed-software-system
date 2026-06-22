@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { useMedia } from 'zss/gadget/media'
-import { UserInput } from 'zss/gadget/userinput'
+import { UserInput } from 'zss/gadget/userinput.bridge'
 import { extractcontentfromargs } from 'zss/screens/inputcommon'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 

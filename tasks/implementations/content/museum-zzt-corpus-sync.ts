@@ -10,9 +10,9 @@ import path from 'node:path'
 import { pipeline } from 'node:stream/promises'
 
 import {
-  filtervanillazztworlds,
   type MuseumFile,
   type MuseumFilterStats,
+  filtervanillazztworlds,
 } from './museum-zzt-filter'
 
 const MUSEUM_API_BASE = 'https://museumofzzt.com/api/v1'
@@ -157,9 +157,7 @@ async function crawlmuseumcatalog(): Promise<MuseumFile[]> {
       break
     }
     all.push(...batch)
-    process.stdout.write(
-      `\rcatalog: ${all.length} files (offset ${offset})`,
-    )
+    process.stdout.write(`\rcatalog: ${all.length} files (offset ${offset})`)
     offset += PAGE_SIZE
     await sleep(CATALOG_DELAY_MS)
   }
@@ -171,7 +169,10 @@ function localpathfor(entry: Pick<MuseumFile, 'letter' | 'filename'>) {
   return path.join('archives', entry.letter, entry.filename)
 }
 
-function absolutearchivepath(root: string, entry: Pick<MuseumFile, 'letter' | 'filename'>) {
+function absolutearchivepath(
+  root: string,
+  entry: Pick<MuseumFile, 'letter' | 'filename'>,
+) {
   return path.join(root, ARCHIVES_DIR, entry.letter, entry.filename)
 }
 
@@ -198,10 +199,7 @@ function buildmanifestentries(included: MuseumFile[]): ManifestEntry[] {
   }))
 }
 
-async function downloadfile(
-  url: string,
-  destpath: string,
-): Promise<void> {
+async function downloadfile(url: string, destpath: string): Promise<void> {
   let lasterror: unknown
   for (let attempt = 0; attempt < MAX_RETRIES; ++attempt) {
     try {
@@ -272,16 +270,13 @@ async function downloadentries(
       try {
         await downloadfile(url, dest)
         if (current.checksum && md5file(dest) !== current.checksum) {
-          throw new Error(
-            `checksum mismatch (expected ${current.checksum})`,
-          )
+          throw new Error(`checksum mismatch (expected ${current.checksum})`)
         }
         current.status = 'ok'
         stats.downloaded += 1
       } catch (error) {
         current.status = 'failed'
-        const message =
-          error instanceof Error ? error.message : String(error)
+        const message = error instanceof Error ? error.message : String(error)
         current.error = message
         stats.failed += 1
         failures.push({

@@ -44,9 +44,7 @@ export async function waitforv86driver(
   while (Date.now() < deadline) {
     try {
       const entries = await root.readDir('#vm/v86')
-      if (
-        entries.some((name) => name.replace(/\/$/, '') === 'v86-vm.wasm')
-      ) {
+      if (entries.some((name) => name.replace(/\/$/, '') === 'v86-vm.wasm')) {
         return
       }
     } catch {
@@ -67,7 +65,7 @@ export async function waitforwanixvmready(
 ): Promise<WanixWakeElement> {
   const deadline = Date.now() + timeoutms
   while (Date.now() < deadline) {
-    const vm = sys.querySelector(`wanix-vm#${vmid}`) as WanixWakeElement | null
+    const vm = sys.querySelector(`wanix-vm#${vmid}`)
     if (vm?.rid && vm?.term) {
       return vm
     }
@@ -79,7 +77,7 @@ export async function waitforwanixvmready(
   } catch {
     termdir = []
   }
-  const partial = sys.querySelector(`wanix-vm#${vmid}`) as WanixWakeElement | null
+  const partial = sys.querySelector(`wanix-vm#${vmid}`)
   throw new Error(
     `wanix vm prep: ${vmid} not ready (rid=${partial?.rid ?? 'none'} term=${partial?.term ?? 'none'} #term=${termdir.join(',')})`,
   )

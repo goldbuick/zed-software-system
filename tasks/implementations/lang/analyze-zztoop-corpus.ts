@@ -13,18 +13,18 @@ import {
 } from 'node:fs'
 import path from 'node:path'
 
-import { compileparse } from 'zss/feature/zztoop/compileparse'
 import {
   boardcodedelements,
   layoutfromkind,
   resolvestatcode,
 } from 'ops/lib/content/zztcorpus'
-import type { ZZT_BOARD } from 'zss/feature/parse/zztformattypes'
-import { zztparseboard, zztparseworld } from 'zss/feature/parse/zztbinparse'
 import {
   ZZT_CORPUS_EXTRACTED_DIR,
   ZZT_CORPUS_ZSS_DIR,
 } from 'ops/lib/fixturepaths'
+import { zztparseboard, zztparseworld } from 'zss/feature/parse/zztbinparse'
+import type { ZZT_BOARD } from 'zss/feature/parse/zztformattypes'
+import { compileparse } from 'zss/feature/zztoop/compileparse'
 
 type TriageTag = 'fixable' | 'invalid_zzt' | 'ambiguous'
 
@@ -221,7 +221,11 @@ function processsource(
   const lower = sourcepath.toLowerCase()
   const layoutkind = lower.endsWith('.brd') ? 'zzt' : 'zzt'
 
-  const emitboard = (boardindex: number, board: ZZT_BOARD, layoutkind2: 'zzt' | 'szzt') => {
+  const emitboard = (
+    boardindex: number,
+    board: ZZT_BOARD,
+    layoutkind2: 'zzt' | 'szzt',
+  ) => {
     const layout = layoutfromkind(layoutkind2)
     const elements = boardcodedelements(board, layout, boardindex)
     for (let e = 0; e < elements.length; ++e) {
@@ -231,7 +235,12 @@ function processsource(
         continue
       }
       stats.total += 1
-      const id = elementid(sourcepath, element.boardindex, element.statindex, element.kind)
+      const id = elementid(
+        sourcepath,
+        element.boardindex,
+        element.statindex,
+        element.kind,
+      )
       const { ok, error } = compilecheck(code)
       if (ok) {
         stats.ok += 1
@@ -341,10 +350,7 @@ function analyzewrapped(
   }
 }
 
-function writerankfixtures(
-  buckets: FailureBucket[],
-  extractedroot: string,
-) {
+function writerankfixtures(buckets: FailureBucket[], extractedroot: string) {
   const outdir = path.join(process.cwd(), FIXTURE_OUT)
   mkdirSync(outdir, { recursive: true })
   const top = buckets
@@ -367,12 +373,7 @@ function writerankfixtures(
     const boardindex = Number.parseInt(parts[2]?.replace(/^b/, '') ?? '0', 10)
     const statindex = Number.parseInt(parts[3]?.replace(/^s/, '') ?? '0', 10)
     const letter = zipstem[0]?.toLowerCase() ?? 'z'
-    const guess = path.join(
-      extractedroot,
-      letter,
-      zipstem,
-      `${sourcestem}.ZZT`,
-    )
+    const guess = path.join(extractedroot, letter, zipstem, `${sourcestem}.ZZT`)
     if (!existsSync(guess)) {
       const brd = guess.replace(/\.ZZT$/i, '.BRD')
       if (!existsSync(brd)) {
@@ -412,10 +413,7 @@ function writerankfixtures(
       continue
     }
     const outpath = path.join(outdir, `bucket_${i}.zss`)
-    writeFileSync(
-      outpath,
-      `// source: ${id}\n// ${bucket.signature}\n${code}`,
-    )
+    writeFileSync(outpath, `// source: ${id}\n// ${bucket.signature}\n${code}`)
   }
 }
 
@@ -463,8 +461,7 @@ export async function analyzezztoopcorpus(argv: string[]): Promise<number> {
     }
   }
 
-  rawstats.ok_rate =
-    rawstats.total > 0 ? rawstats.ok / rawstats.total : 1
+  rawstats.ok_rate = rawstats.total > 0 ? rawstats.ok / rawstats.total : 1
   wrappedstats.ok_rate =
     wrappedstats.total > 0 ? wrappedstats.ok / wrappedstats.total : 1
 

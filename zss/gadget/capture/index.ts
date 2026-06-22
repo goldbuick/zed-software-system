@@ -2,7 +2,7 @@
  * Board-to-PNG capture.
  * Uses useGadgetClient to get the current board and renders it to a PNG image.
  */
-import { useGadgetClient } from 'zss/gadget/data/state'
+import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { layersreadcontrol } from 'zss/gadget/data/types'
 import { useMedia } from 'zss/gadget/media'
 import { ispresent } from 'zss/mapping/types'
@@ -49,8 +49,11 @@ export function capturecurrentboardtopng() {
     bits: charsetbits,
   }
 
-  const { width: canvaswidth, height: canvasheight, rgba } =
-    rasterizelayerstorgba(layers, charset, palettedata)
+  const {
+    width: canvaswidth,
+    height: canvasheight,
+    rgba,
+  } = rasterizelayerstorgba(layers, charset, palettedata)
 
   const canvas = document.createElement('canvas')
   canvas.width = canvaswidth

@@ -11,6 +11,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { RENDERS_FIXTURES_DIR } from 'ops/lib/fixturepaths'
+
 import {
   type PLAY_DRUM_BALANCE_METRICS,
   PLAY_DRUM_TARGET_DRUM_MINUS_PLAY_DB,
@@ -24,7 +25,8 @@ const CONFIG_PATH = path.join(
   PROJECT,
   'zss/feature/synth/backend/daisy/native/zss/zss_config.h',
 )
-const BALANCE_JSON = path.join(RENDERS_FIXTURES_DIR,
+const BALANCE_JSON = path.join(
+  RENDERS_FIXTURES_DIR,
   `${PLAY_DRUM_BALANCE_SCENARIO_ID}.json`,
 )
 

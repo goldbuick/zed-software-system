@@ -7,13 +7,13 @@ import {
 } from 'zss/feature/wanix/wanixsession'
 import { wanixtermscreenreset } from 'zss/feature/wanix/wanixtermscreen'
 
-type TapeStore = typeof import('zss/gadget/data/state').useTape
+type TapeStore = typeof import('zss/gadget/data/zustandstores').useTape
 
 let tapestore: TapeStore | undefined
 
 async function readtapestore(): Promise<TapeStore> {
   if (!tapestore) {
-    tapestore = (await import('zss/gadget/data/state')).useTape
+    tapestore = (await import('zss/gadget/data/zustandstores')).useTape
   }
   return tapestore
 }

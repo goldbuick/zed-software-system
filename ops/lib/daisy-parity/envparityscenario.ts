@@ -1,6 +1,6 @@
+import type { LEVEL_STABILITY_SCENARIO } from 'zss/feature/synth/backend/daisy/levelstabilitytypes'
 import { tonenotationseconds } from 'zss/feature/synth/playnotation'
 
-import type { LEVEL_STABILITY_SCENARIO } from 'zss/feature/synth/backend/daisy/levelstabilitytypes'
 import {
   paritydurationwithrelease,
   releasesecfromvoiceconfigs,

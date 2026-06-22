@@ -115,9 +115,7 @@ export function setwanixtermrouting(on: boolean) {
     return
   }
   const exists =
-    attachedkind === 'task'
-      ? tasks.has(attachedid)
-      : vms.has(attachedid)
+    attachedkind === 'task' ? tasks.has(attachedid) : vms.has(attachedid)
   termrouting = on && exists
 }
 

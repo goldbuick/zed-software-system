@@ -2,10 +2,9 @@
  * Extract ZZT OOP from parsed boards into ZSS codepage text (corpus pipeline).
  */
 
-import { isnumber, ispresent, isstring } from 'zss/mapping/types'
-
 import type { ZZT_BOARD, ZZT_STAT } from 'zss/feature/parse/zztformattypes'
 import { zztoop } from 'zss/feature/parse/zztoop'
+import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 
 const ZZT_TILE_SCROLL = 10
 const ZZT_TILE_PASSAGE = 11

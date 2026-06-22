@@ -2,7 +2,8 @@ import { useCallback } from 'react'
 import { modemwritevaluenumber } from 'zss/device/modem'
 import { useWaitForValueNumber } from 'zss/device/modemhooks'
 import { paneladdress } from 'zss/gadget/data/types'
-import { UserInput, UserInputHandler } from 'zss/gadget/userinput'
+import { UserInputHandler } from 'zss/gadget/userinputtypes'
+import { UserInput } from 'zss/gadget/userinput.bridge'
 import { maptonumber, maptovalue } from 'zss/mapping/value'
 import {
   PanelItemProps,

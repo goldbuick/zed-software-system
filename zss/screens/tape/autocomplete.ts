@@ -1,11 +1,12 @@
-import { lexer } from 'zss/feature/lang'
+import * as lexer from 'zss/feature/lang/backend/typescript/lexer'
 import type {
   COMMAND_ARGS_SIGNATURE,
   COMMAND_ARG_AUTOCOMPLETE,
 } from 'zss/firmware'
 import { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
-import { romhintfrommarkdown, romread } from 'zss/rom'
+import { romread } from 'zss/rom'
+import { romhintfrommarkdown } from 'zss/rom/romhint'
 import {
   WRITE_TEXT_CONTEXT,
   applycolortoindexes,

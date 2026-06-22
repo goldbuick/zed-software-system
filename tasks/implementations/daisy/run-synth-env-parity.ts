@@ -7,8 +7,13 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { RENDERS_FIXTURES_DIR } from 'ops/lib/fixturepaths'
 import { chromium } from '@playwright/test'
+import {
+  evalsynthenvparitygate,
+  formatsynthenvparityreport,
+} from 'ops/lib/daisy-parity/synthenvparitygate'
+import { SYNTH_ENV_PARITY_SCENARIOS } from 'ops/lib/daisy-parity/synthenvparityscenario'
+import { RENDERS_FIXTURES_DIR } from 'ops/lib/fixturepaths'
 import {
   PARITY_RENDER_SCRIPT_TIMEOUT_MS,
   PLAYWRIGHT_SCENARIO_TIMEOUT_MS,
@@ -18,12 +23,6 @@ import {
   startparityvite,
   stopparityvite,
 } from 'tasks/lib/parity/parity-vite-server.ts'
-
-import {
-  evalsynthenvparitygate,
-  formatsynthenvparityreport,
-} from 'ops/lib/daisy-parity/synthenvparitygate'
-import { SYNTH_ENV_PARITY_SCENARIOS } from 'ops/lib/daisy-parity/synthenvparityscenario'
 
 const ROOT = process.cwd()
 const PROJECT = process.cwd()

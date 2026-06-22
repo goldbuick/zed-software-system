@@ -64,7 +64,9 @@ export function hasagentsession(requestplayer: string): boolean {
   return ispresent(sessions[requestplayer])
 }
 
-export function readagentdisplayname(requestplayer: string): string | undefined {
+export function readagentdisplayname(
+  requestplayer: string,
+): string | undefined {
   return sessions[requestplayer]?.name
 }
 

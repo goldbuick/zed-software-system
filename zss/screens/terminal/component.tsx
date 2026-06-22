@@ -3,7 +3,7 @@ import { chipmessage, vmcli } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { storagereadconfig } from 'zss/feature/storage'
-import { useTape, useTerminal } from 'zss/gadget/data/state'
+import { useTape, useTerminal } from 'zss/gadget/data/zustandstores'
 import { useWriteText } from 'zss/gadget/writetext'
 import { doasync } from 'zss/mapping/func'
 import { totarget } from 'zss/mapping/string'
@@ -83,28 +83,28 @@ export function TerminalComponent() {
   const attached = terminalmode === 'attached'
 
   return (
-  <>
-    {!attached && <TapeBackPlate />}
-    <TapeTerminalContext.Provider value={tapecontextvalue}>
-      {attached ? (
-        <>
-          <WanixTermScreen />
-          <WanixTermInput />
-        </>
-      ) : (
-        <>
-          <TerminalRows />
-          {!editoropen && voice2text !== undefined && (
-            <TerminalInput
-              terminalmode={terminalmode}
-              voice2text={voice2text}
-              tapeycursor={tapeycursor}
-              logrowtotalheight={logsrowtotalheight}
-            />
-          )}
-        </>
-      )}
-    </TapeTerminalContext.Provider>
-  </>
+    <>
+      {!attached && <TapeBackPlate />}
+      <TapeTerminalContext.Provider value={tapecontextvalue}>
+        {attached ? (
+          <>
+            <WanixTermScreen />
+            <WanixTermInput />
+          </>
+        ) : (
+          <>
+            <TerminalRows />
+            {!editoropen && voice2text !== undefined && (
+              <TerminalInput
+                terminalmode={terminalmode}
+                voice2text={voice2text}
+                tapeycursor={tapeycursor}
+                logrowtotalheight={logsrowtotalheight}
+              />
+            )}
+          </>
+        )}
+      </TapeTerminalContext.Provider>
+    </>
   )
 }

@@ -1,6 +1,6 @@
 import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { AUDIO_SYNTH } from 'zss/feature/synth'
+import { AUDIO_SYNTH } from 'ops/archive/synth/tone'
 import { SOURCE_TYPE } from 'ops/archive/synth/tone/source'
 import {
   MAYBE,
