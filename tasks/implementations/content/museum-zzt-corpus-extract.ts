@@ -16,7 +16,7 @@ import {
   elementtozss,
   layoutfromkind,
 } from 'ops/lib/content/zztcorpus'
-import { compileparse } from 'zss/feature/lang/backend/typescript/compileparse'
+import { compileparse } from 'zss/feature/zztoop/compileparse'
 import { zztparseboard, zztparseworld } from 'zss/feature/parse/zztbinparse'
 import type { ZZT_BOARD } from 'zss/feature/parse/zztformattypes'
 

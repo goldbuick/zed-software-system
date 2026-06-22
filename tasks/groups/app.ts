@@ -14,7 +14,7 @@ export const APP_TASKS: TaskDef[] = [
   }),
   tasksonly(
     'app:dev',
-    'Install deps and start Vite dev server (WASM lang)',
+    'Install deps and start Vite dev server',
     ['app:install', 'app:vite:dev'],
     {
       tags: ['dev'],
@@ -27,23 +27,6 @@ export const APP_TASKS: TaskDef[] = [
     {
       tags: ['dev'],
       env: { ZSS_DAISY_NO_SIDECHAIN: '1' },
-    },
-  ),
-  tasksonly(
-    'app:tslang:dev',
-    'Dev server using TS compiler for chip scripts',
-    ['app:install', 'app:vite:dev'],
-    {
-      tags: ['dev'],
-      env: { ZSS_WASM_SCRIPT: 'false' },
-    },
-  ),
-  tasksonly(
-    'app:wasm:dev',
-    'Rebuild lang WASM then start dev server',
-    ['lang:build', 'app:dev'],
-    {
-      tags: ['dev'],
     },
   ),
   def('app:build', {

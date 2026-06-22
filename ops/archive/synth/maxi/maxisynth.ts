@@ -34,7 +34,6 @@ import {
 } from 'zss/feature/synth/backend/wasm/wasminitsab'
 import {
   defaultwasmalgoconfig,
-  initwasmalgoconfigsab,
   pushwasmalgoconfigsab,
 } from 'zss/feature/synth/backend/wasm/wasmalgoconfigsab'
 import {
@@ -46,7 +45,6 @@ import {
 } from 'zss/feature/synth/backend/wasm/wasmfxstate'
 import {
   defaultwasmoscconfig,
-  initwasmoscconfigsab,
   pushwasmoscconfigsab,
 } from 'zss/feature/synth/backend/wasm/wasmoscconfigsab'
 import { createwasmplayscheduler } from 'zss/feature/synth/backend/wasm/wasmplayscheduler'
@@ -58,7 +56,6 @@ import {
 import {
   WASM_DRUMS_SAB,
   WASM_DRUM_COUNT,
-  WASM_DRUM_SAB_LEN,
   WASM_VOICES_SAB,
   WASM_VOICE_STRIDE,
 } from 'zss/feature/synth/backend/wasm/wasmsabchannels'
@@ -67,10 +64,7 @@ import {
   initwasmvibratosab,
   pushwasmvibratogroup,
 } from 'zss/feature/synth/backend/wasm/wasmvibratosab'
-import {
-  initwasmvoicecfgsab,
-  pushwasmvoicecfgsab,
-} from 'zss/feature/synth/backend/wasm/wasmvoicecfgsab'
+import { pushwasmvoicecfgsab } from 'zss/feature/synth/backend/wasm/wasmvoicecfgsab'
 import {
   type WASM_VOICE_STATE,
   applywasmvoiceconfig,

@@ -1,10 +1,11 @@
 /** Playwright harness parent — mock WebGL + hidden iframe host + VM login smoke. */
+/* eslint-disable no-console -- harness status logging */
 import { iswanixtermiframemsg } from 'zss/feature/wanix/wanixtermiframeprotocol'
-import { readwanixvmasseturls } from 'zss/feature/wanix/wanixvmassets'
 import {
-  iswanixtermprobemsg,
   type WanixTermProbeMsg,
+  iswanixtermprobemsg,
 } from 'zss/feature/wanix/wanixtermprobe'
+import { readwanixvmasseturls } from 'zss/feature/wanix/wanixvmassets'
 
 const RPC_TIMEOUT_MS = 600_000
 
@@ -32,12 +33,7 @@ function startmockwebgl() {
   const draw = () => {
     hue = (hue + 0.4) % 360
     gl.viewport(0, 0, canvas.width, canvas.height)
-    gl.clearColor(
-      0.08 + (hue % 60) / 600,
-      0.04,
-      0.12 + (hue % 40) / 500,
-      1,
-    )
+    gl.clearColor(0.08 + (hue % 60) / 600, 0.04, 0.12 + (hue % 40) / 500, 1)
     gl.clear(gl.COLOR_BUFFER_BIT)
     requestAnimationFrame(draw)
   }
@@ -62,7 +58,9 @@ const probewaiters = new Map<
 >()
 
 function childwindow(): Window {
-  const frame = document.getElementById('wanix-child') as HTMLIFrameElement | null
+  const frame = document.getElementById(
+    'wanix-child',
+  ) as HTMLIFrameElement | null
   const w = frame?.contentWindow
   if (!w) {
     throw new Error('wanix iframe child missing')
@@ -112,7 +110,12 @@ function probecall<T>(method: string, args: unknown[] = []): Promise<T> {
         reject(err)
       },
     })
-    postchild({ type: 'zss-wanix-term-probe-rpc', id, method, args } satisfies WanixTermProbeMsg)
+    postchild({
+      type: 'zss-wanix-term-probe-rpc',
+      id,
+      method,
+      args,
+    } satisfies WanixTermProbeMsg)
   })
 }
 
@@ -125,7 +128,10 @@ async function waitchildready() {
       if (event.origin !== window.location.origin) {
         return
       }
-      if (iswanixtermprobemsg(event.data) && event.data.type === 'zss-wanix-term-ready') {
+      if (
+        iswanixtermprobemsg(event.data) &&
+        event.data.type === 'zss-wanix-term-ready'
+      ) {
         clearTimeout(timer)
         window.removeEventListener('message', onmsg)
         resolve()
@@ -155,7 +161,10 @@ async function runsmoke() {
       waiter.resolve(data.result)
       return
     }
-    if (iswanixtermprobemsg(data) && data.type === 'zss-wanix-term-probe-rpc-res') {
+    if (
+      iswanixtermprobemsg(data) &&
+      data.type === 'zss-wanix-term-probe-rpc-res'
+    ) {
       const waiter = probewaiters.get(data.id)
       if (!waiter) {
         return
@@ -184,7 +193,7 @@ async function runsmoke() {
   await probecall('sendinput', ['id'])
   await probecall('sendinput', ['\r'])
   const serial = await probecall<string>('readserial', [])
-  if (!/uid=/.test(serial)) {
+  if (!serial.includes('uid=')) {
     throw new Error(`expected uid= in serial:\n${serial.slice(-800)}`)
   }
   log('iframe term smoke ok — uid= seen')

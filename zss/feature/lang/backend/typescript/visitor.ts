@@ -1,4 +1,4 @@
-import { CstNode, CstNodeLocation, IToken } from 'chevrotain'
+import { CstNode, CstNodeLocation } from 'chevrotain'
 import { LANG_DEV } from 'zss/config'
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, isarray, ispresent } from 'zss/mapping/types'
@@ -527,16 +527,6 @@ class ScriptVisitor
     if (ctx.stmt_hyperlink) {
       return this.go(ctx.stmt_hyperlink)
     }
-    if ((ctx as { stmt_send_double_hash?: CstNode[] }).stmt_send_double_hash) {
-      return this.go(
-        (ctx as { stmt_send_double_hash: CstNode[] }).stmt_send_double_hash,
-      )
-    }
-    if ((ctx as { stmt_change_become?: CstNode[] }).stmt_change_become) {
-      return this.go(
-        (ctx as { stmt_change_become: CstNode[] }).stmt_change_become,
-      )
-    }
     if (ctx.stmt_command) {
       return this.go(ctx.stmt_command)
     }
@@ -665,34 +655,9 @@ class ScriptVisitor
     )
   }
 
-  stmt_send_double_hash(
-    ctx: { token_stmt_send_double_hash: IToken[] },
-    location: CstNodeLocation,
-  ) {
-    const raw = tokenstring(ctx.token_stmt_send_double_hash, '').trim()
-    const label = raw.startsWith('##') ? `:${raw.slice(2)}` : raw
-    return this.createzztcommandline(
-      location,
-      'send',
-      this.createstringnode(location, label),
-    )
-  }
-
   stmt_command(ctx: Stmt_commandCstChildren, location: CstNodeLocation) {
     if (ctx.structured_cmd) {
       return this.go(ctx.structured_cmd)
-    }
-    if ((ctx as Record<string, unknown>).command_try) {
-      return this.go((ctx as Record<string, CstNode>).command_try)
-    }
-    if ((ctx as Record<string, unknown>).command_take) {
-      return this.go((ctx as Record<string, CstNode>).command_take)
-    }
-    if ((ctx as Record<string, unknown>).command_send_shorthand) {
-      return this.go((ctx as Record<string, CstNode>).command_send_shorthand)
-    }
-    if ((ctx as Record<string, unknown>).command_send_hash_label) {
-      return this.go((ctx as Record<string, CstNode>).command_send_hash_label)
     }
     return this.createlinenode(
       location,
@@ -701,198 +666,6 @@ class ScriptVisitor
         words: this.go(ctx.words),
       }),
     )
-  }
-
-  private createzztcommandline(
-    location: CstNodeLocation,
-    cmd: string,
-    args: CodeNode[],
-  ) {
-    return this.createlinenode(
-      location,
-      this.createcodenode(location, {
-        type: NODE.COMMAND,
-        words: [this.createstringnode(location, cmd), ...args].flat(),
-      }),
-    )
-  }
-
-  command_try(
-    ctx: {
-      token_try: IToken[]
-      dir?: CstNode[]
-      token_label?: IToken[]
-      token_send_target?: IToken[]
-      string_token?: CstNode[]
-    },
-    location: CstNodeLocation,
-  ) {
-    const args: CodeNode[] = []
-    if (ctx.dir) {
-      args.push(...this.go(ctx.dir))
-    }
-    if (ctx.token_label) {
-      args.push(
-        ...this.createstringnode(location, tokenstring(ctx.token_label, '')),
-      )
-    } else if (ctx.token_send_target) {
-      args.push(
-        ...this.createstringnode(
-          location,
-          tokenstring(ctx.token_send_target, ''),
-        ),
-      )
-    } else if (ctx.string_token) {
-      args.push(...this.go(ctx.string_token))
-    }
-    return this.createzztcommandline(location, 'try', args)
-  }
-
-  command_take(
-    ctx: { token_take: IToken[]; take_arg?: CstNode[] },
-    location: CstNodeLocation,
-  ) {
-    const args: CodeNode[] = []
-    if (ctx.take_arg) {
-      for (let i = 0; i < ctx.take_arg.length; ++i) {
-        args.push(...this.go(ctx.take_arg[i]))
-      }
-    }
-    return this.createzztcommandline(location, 'take', args)
-  }
-
-  take_arg(
-    ctx: {
-      token_send_target?: IToken[]
-      token_send_hash_label?: IToken[]
-      token_label?: IToken[]
-      string_token?: CstNode[]
-      token_numberliteral?: IToken[]
-    },
-    location: CstNodeLocation,
-  ) {
-    if (ctx.token_send_target) {
-      return this.createstringnode(
-        location,
-        tokenstring(ctx.token_send_target, ''),
-      )
-    }
-    if (ctx.token_send_hash_label) {
-      return this.createstringnode(
-        location,
-        tokenstring(ctx.token_send_hash_label, ''),
-      )
-    }
-    if (ctx.token_label) {
-      return this.createstringnode(location, tokenstring(ctx.token_label, ''))
-    }
-    if (ctx.string_token) {
-      return this.go(ctx.string_token)
-    }
-    if (ctx.token_numberliteral) {
-      const value = parseFloat(tokenstring(ctx.token_numberliteral, '0'))
-      return [
-        this.createcodenode(location, {
-          type: NODE.LITERAL,
-          literal: LITERAL.NUMBER,
-          value,
-        }),
-      ]
-    }
-    return []
-  }
-
-  command_send_shorthand(
-    ctx: { token_send_target: IToken[] },
-    location: CstNodeLocation,
-  ) {
-    return this.createzztcommandline(
-      location,
-      'send',
-      this.createstringnode(location, tokenstring(ctx.token_send_target, '')),
-    )
-  }
-
-  command_send_hash_label(
-    ctx: { token_send_hash_label: IToken[] },
-    location: CstNodeLocation,
-  ) {
-    const raw = tokenstring(ctx.token_send_hash_label, '')
-    const label = raw.startsWith('#') ? `:${raw.slice(1)}` : raw
-    return this.createzztcommandline(
-      location,
-      'send',
-      this.createstringnode(location, label),
-    )
-  }
-
-  stmt_change_become(
-    ctx: {
-      token_change?: IToken[]
-      token_become?: IToken[]
-      zzt_multiline_kind_args: CstNode[]
-    },
-    location: CstNodeLocation,
-  ) {
-    const cmdtoken = ctx.token_change?.[0] ?? ctx.token_become?.[0]
-    const cmd = tokenstring(cmdtoken, 'change').toLowerCase()
-    return this.createzztcommandline(
-      location,
-      cmd,
-      this.go(ctx.zzt_multiline_kind_args),
-    )
-  }
-
-  zzt_multiline_kind_args(
-    ctx: { zzt_kind_piece: CstNode[] },
-    location: CstNodeLocation,
-  ) {
-    void location
-    const out: CodeNode[] = []
-    if (ctx.zzt_kind_piece) {
-      for (let i = 0; i < ctx.zzt_kind_piece.length; ++i) {
-        out.push(...this.go(ctx.zzt_kind_piece[i]))
-      }
-    }
-    return out
-  }
-
-  zzt_kind_piece(
-    ctx: {
-      color?: CstNode[]
-      token_label?: IToken[]
-      string_token?: CstNode[]
-      token_text?: IToken[]
-      token_numberliteral?: IToken[]
-    },
-    location: CstNodeLocation,
-  ) {
-    if (ctx.color) {
-      return this.go(ctx.color)
-    }
-    if (ctx.token_label) {
-      return this.createstringnode(location, tokenstring(ctx.token_label, ''))
-    }
-    if (ctx.string_token) {
-      return this.go(ctx.string_token)
-    }
-    if (ctx.token_text) {
-      return this.createstringnode(
-        location,
-        tokenstring(ctx.token_text, '').trim(),
-      )
-    }
-    if (ctx.token_numberliteral) {
-      const value = parseFloat(tokenstring(ctx.token_numberliteral, '0'))
-      return [
-        this.createcodenode(location, {
-          type: NODE.LITERAL,
-          literal: LITERAL.NUMBER,
-          value,
-        }),
-      ]
-    }
-    return []
   }
 
   structured_cmd(ctx: Structured_cmdCstChildren) {
@@ -936,35 +709,12 @@ class ScriptVisitor
 
   short_try(ctx: Short_tryCstChildren, location: CstNodeLocation) {
     if (ctx.token_query) {
-      const words: CodeNode[] = []
-      if (ctx.string_token) {
-        words.push(...this.go(ctx.string_token))
-      }
-      if (ctx.dir) {
-        words.push(...this.go(ctx.dir))
-      }
-      if (ctx.token_label) {
-        words.push(
-          ...this.createstringnode(location, tokenstring(ctx.token_label, '')),
-        )
-      }
-      if ((ctx as { token_send_target?: IToken[] }).token_send_target) {
-        words.push(
-          ...this.createstringnode(
-            location,
-            tokenstring(
-              (ctx as { token_send_target: IToken[] }).token_send_target,
-              '',
-            ),
-          ),
-        )
-      }
       return this.createlinenode(
         location,
         this.createcodenode(location, {
           type: NODE.MOVE,
           wait: false,
-          words,
+          words: [this.go(ctx.string_token), this.go(ctx.dir)].flat(),
         }),
       )
     }
@@ -1819,15 +1569,7 @@ class ScriptVisitor
   }
 
   dir_find(ctx: Dir_findCstChildren, location: CstNodeLocation) {
-    const args: CodeNode[] = []
-    if (ctx.kind) {
-      args.push(...this.go(ctx.kind))
-    }
-    if (ctx.token_label) {
-      args.push(
-        ...this.createstringnode(location, tokenstring(ctx.token_label, '')),
-      )
-    }
+    const args: CodeNode[] = this.go(ctx.kind)
     if (ctx.token_numberliteral) {
       const value = parseFloat(tokenstring(ctx.token_numberliteral, '0'))
       args.push(
@@ -2547,13 +2289,6 @@ class ScriptVisitor
     }
     if (ctx.command_ticker) {
       return this.go(ctx.command_ticker)
-    }
-
-    if (ctx.token_send_target) {
-      return this.createstringnode(
-        location,
-        tokenstring(ctx.token_send_target, ''),
-      )
     }
 
     if (ctx.token_label) {

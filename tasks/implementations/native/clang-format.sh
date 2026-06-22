@@ -2,18 +2,17 @@
 set -eu
 
 MODE=${1:-}
-SCOPE=${2:-all}
+SCOPE=${2:-daisy}
 
 ROOT=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
 CLANG_FORMAT=${CLANG_FORMAT:-clang-format}
 
 DAISY_DIR="$ROOT/zss/feature/synth/backend/daisy/native/zss"
 DAISY_WRAPPER="$ROOT/zss/feature/synth/backend/daisy/native/zss_daisy_synth.cpp"
-LANG_DIR="$ROOT/zss/feature/lang/backend/wasm"
 IGNORE_FILE="$ROOT/.clang-format-ignore"
 
 usage() {
-  echo "usage: $0 check|fix [daisy|lang|all]" >&2
+  echo "usage: $0 check|fix [daisy|all]" >&2
   exit 2
 }
 
@@ -21,7 +20,7 @@ if [ "$MODE" != check ] && [ "$MODE" != fix ]; then
   usage
 fi
 
-if [ "$SCOPE" != daisy ] && [ "$SCOPE" != lang ] && [ "$SCOPE" != all ]; then
+if [ "$SCOPE" != daisy ] && [ "$SCOPE" != all ]; then
   usage
 fi
 
@@ -67,11 +66,6 @@ collectfiles() {
     if [ -f "$DAISY_WRAPPER" ]; then
       printf '%s\n' "$DAISY_WRAPPER"
     fi
-  fi
-  if [ "$scope" = lang ] || [ "$scope" = all ]; then
-    find "$LANG_DIR" -type f \( \
-      -name '*.cpp' -o -name '*.h' -o -name '*.hpp' -o -name '*.cc' \
-    \)
   fi
 }
 

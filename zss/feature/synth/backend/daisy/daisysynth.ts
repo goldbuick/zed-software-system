@@ -439,6 +439,7 @@ export function createdaisysynth(
   }
 
   function addplay(buffer: string) {
+    synthdebugtrace('C6 addplay', { buffer })
     const invokes = parseplay(buffer)
     const now = maxi.audioContext.currentTime
     if (pacertime === -1) {

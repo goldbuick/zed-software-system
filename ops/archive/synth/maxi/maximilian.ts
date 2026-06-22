@@ -4,7 +4,6 @@ import {
   getliveaudiocontext,
   getunlockedaudiocontext,
   setliveaudiocontext,
-  unlockaudiocontext,
 } from 'zss/feature/synth/backend/wasm/audiocontextunlock'
 import { isofflineaudiocontext } from 'zss/feature/synth/backend/wasm/audiocontextutil'
 import { ensurewasmcoep } from 'zss/feature/synth/backend/wasm/coopcoep'

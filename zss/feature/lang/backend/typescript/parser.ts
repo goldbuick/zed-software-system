@@ -46,14 +46,10 @@ class ScriptParser extends CstParser {
   })
 
   line = this.RULED('line', () => {
-    this.MANY({
-      GATE: this.BACKTRACK(() => {
-        const next = this.LA(1)
-        return next.tokenType !== lexer.newline
-      }),
-      DEF: () => this.SUBRULE(this.stmt),
-    })
-    this.OPTION(() => this.CONSUME(lexer.newline))
+    this.OR([
+      { ALT: () => this.SUBRULE(this.stmt) },
+      { ALT: () => this.CONSUME(lexer.newline) },
+    ])
   })
 
   stmt = this.RULED('stmt', () => {
@@ -63,11 +59,6 @@ class ScriptParser extends CstParser {
       { ALT: () => this.SUBRULE(this.stmt_text) },
       { ALT: () => this.SUBRULE(this.stmt_comment) },
       { ALT: () => this.SUBRULE(this.stmt_hyperlink) },
-      { ALT: () => this.SUBRULE(this.stmt_send_double_hash) },
-      {
-        GATE: () => this.iszztchangebecome(),
-        ALT: () => this.SUBRULE(this.stmt_change_become),
-      },
       { ALT: () => this.SUBRULE(this.stmt_command) },
       { ALT: () => this.SUBRULE(this.short_go) },
       { ALT: () => this.SUBRULE(this.short_try) },
@@ -121,146 +112,15 @@ class ScriptParser extends CstParser {
 
   stmt_hyperlink = this.RULED('stmt_hyperlink', () => {
     this.CONSUME(lexer.hyperlink)
-    this.OPTION(() => this.CONSUME(lexer.hyperlinktext))
-  })
-
-  stmt_change_become = this.RULED('stmt_change_become', () => {
-    this.CONSUME(lexer.command)
-    this.OR([
-      { ALT: () => this.CONSUME(lexer.command_change) },
-      { ALT: () => this.CONSUME(lexer.command_become) },
-    ])
-    this.SUBRULE(this.zzt_multiline_kind_args)
-  })
-
-  stmt_send_double_hash = this.RULED('stmt_send_double_hash', () => {
-    this.CONSUME(lexer.stmt_send_double_hash)
+    this.CONSUME(lexer.hyperlinktext)
   })
 
   stmt_command = this.RULED('stmt_command', () => {
     this.CONSUME(lexer.command)
     this.OR([
-      { ALT: () => this.SUBRULE(this.command_try) },
-      { ALT: () => this.SUBRULE(this.command_take) },
-      { ALT: () => this.SUBRULE(this.command_send_shorthand) },
-      { ALT: () => this.SUBRULE(this.command_send_hash_label) },
-      { ALT: () => this.SUBRULE(this.structured_cmd) },
       { ALT: () => this.SUBRULE(this.words) },
-      { ALT: () => this.SUBRULE(this.generic_extension_cmd) },
+      { ALT: () => this.SUBRULE(this.structured_cmd) },
     ])
-  })
-
-  command_try = this.RULED('command_try', () => {
-    this.CONSUME(lexer.command_try)
-    this.OPTION1(() => this.SUBRULE1(this.dir))
-    this.OPTION2(() =>
-      this.OR([
-        { ALT: () => this.CONSUME(lexer.label) },
-        { ALT: () => this.CONSUME(lexer.send_target) },
-        { ALT: () => this.SUBRULE(this.string_token) },
-      ]),
-    )
-  })
-
-  command_take = this.RULED('command_take', () => {
-    this.CONSUME(lexer.command_take)
-    this.AT_LEAST_ONE(() => this.SUBRULE(this.take_arg))
-  })
-
-  take_arg = this.RULED('take_arg', () => {
-    this.OR([
-      { ALT: () => this.CONSUME(lexer.send_target) },
-      { ALT: () => this.CONSUME(lexer.send_hash_label) },
-      { ALT: () => this.CONSUME(lexer.label) },
-      { ALT: () => this.SUBRULE(this.string_token) },
-      { ALT: () => this.CONSUME(lexer.numberliteral) },
-    ])
-  })
-
-  command_send_shorthand = this.RULED('command_send_shorthand', () => {
-    this.CONSUME(lexer.send_target)
-  })
-
-  command_send_hash_label = this.RULED('command_send_hash_label', () => {
-    this.CONSUME(lexer.send_hash_label)
-  })
-
-  zzt_kind_piece = this.RULED('zzt_kind_piece', () => {
-    this.OR([
-      { ALT: () => this.SUBRULE(this.color) },
-      { ALT: () => this.CONSUME(lexer.label) },
-      { ALT: () => this.SUBRULE(this.string_token) },
-      { ALT: () => this.CONSUME(lexer.text) },
-      { ALT: () => this.CONSUME(lexer.numberliteral) },
-    ])
-  })
-
-  zzt_multiline_kind_args = this.RULED('zzt_multiline_kind_args', () => {
-    this.AT_LEAST_ONE(() => this.SUBRULE(this.zzt_kind_piece))
-    this.MANY({
-      GATE: () => this.iszztkindcontinuation(),
-      DEF: () => {
-        this.CONSUME(lexer.newline)
-        this.OPTION(() => this.CONSUME(lexer.whitespace))
-        this.AT_LEAST_ONE(() => this.SUBRULE(this.zzt_kind_piece))
-      },
-    })
-  })
-
-  private iszztchangebecome() {
-    if (this.LA(1).tokenType !== lexer.command) {
-      return false
-    }
-    const next = this.LA(2).tokenType
-    return next === lexer.command_change || next === lexer.command_become
-  }
-
-  private iszztkindcontinuation() {
-    if (this.LA(1).tokenType !== lexer.newline) {
-      return false
-    }
-    let i = 2
-    while (this.LA(i).tokenType === lexer.whitespace) {
-      i += 1
-    }
-    const next = this.LA(i)
-    if (next.tokenType === lexer.newline) {
-      return false
-    }
-    if (next.tokenType === lexer.command) {
-      return false
-    }
-    if (next.tokenType === lexer.stmt_send_double_hash) {
-      return false
-    }
-    if (next.tokenType === lexer.stat) {
-      return false
-    }
-    if (next.tokenType === lexer.comment) {
-      return false
-    }
-    if (next.tokenType === lexer.divide) {
-      return false
-    }
-    if (next.tokenType === lexer.query) {
-      return false
-    }
-    if (next.tokenType === lexer.hyperlink) {
-      return false
-    }
-    if (next.tokenType === lexer.label && i === 2) {
-      return false
-    }
-    return true
-  }
-
-  generic_extension_cmd = this.RULED('generic_extension_cmd', () => {
-    this.OR([
-      { ALT: () => this.CONSUME(lexer.command_do) },
-      { ALT: () => this.CONSUME(lexer.command_done) },
-      { ALT: () => this.CONSUME(lexer.command_else) },
-    ])
-    this.OPTION(() => this.SUBRULE(this.words))
   })
 
   structured_cmd = this.RULED('structured_cmd', () => {
@@ -280,7 +140,6 @@ class ScriptParser extends CstParser {
     this.OR([
       { ALT: () => this.SUBRULE(this.string_token) },
       { ALT: () => this.SUBRULE(this.dir) },
-      { ALT: () => this.CONSUME(lexer.label) },
     ])
   })
 
@@ -289,8 +148,6 @@ class ScriptParser extends CstParser {
     this.OR([
       { ALT: () => this.SUBRULE(this.string_token) },
       { ALT: () => this.SUBRULE(this.dir) },
-      { ALT: () => this.CONSUME(lexer.label) },
-      { ALT: () => this.CONSUME(lexer.send_target) },
     ])
   })
 
@@ -564,10 +421,7 @@ class ScriptParser extends CstParser {
 
   kind = this.RULED('kind', () => {
     this.OPTION(() => this.SUBRULE(this.color))
-    this.OR([
-      { ALT: () => this.CONSUME(lexer.label) },
-      { ALT: () => this.SUBRULE(this.string_token) },
-    ])
+    this.SUBRULE(this.string_token)
   })
 
   category = this.RULED('category', () => {
@@ -710,7 +564,6 @@ class ScriptParser extends CstParser {
     this.OR([
       { ALT: () => this.SUBRULE(this.kind) },
       { ALT: () => this.CONSUME(lexer.numberliteral) },
-      { ALT: () => this.CONSUME(lexer.label) },
     ])
   })
 
@@ -725,15 +578,12 @@ class ScriptParser extends CstParser {
   dir_to = this.RULED('dir_to', () => {
     this.CONSUME(lexer.dir_to)
     this.SUBRULE1(this.dir)
-    this.OPTION(() => this.SUBRULE2(this.dir))
+    this.SUBRULE2(this.dir)
   })
 
   dir_select = this.RULED('dir_select', () => {
     this.CONSUME(lexer.dir_select)
-    this.OR([
-      { ALT: () => this.SUBRULE(this.simple_token) },
-      { ALT: () => this.CONSUME(lexer.numberliteral) },
-    ])
+    this.SUBRULE(this.simple_token) // inorder, shuffle, or random
     this.OPTION(() => this.SUBRULE(this.color))
     this.SUBRULE(this.string_token)
   })
@@ -826,7 +676,7 @@ class ScriptParser extends CstParser {
 
   token_expr_blocked = this.RULED('token_expr_blocked', () => {
     this.CONSUME(lexer.expr_blocked)
-    this.OPTION(() => this.SUBRULE(this.dir))
+    this.SUBRULE(this.dir)
   })
 
   token_expr_abs = this.RULED('token_expr_abs', () => {
@@ -949,7 +799,6 @@ class ScriptParser extends CstParser {
       { ALT: () => this.SUBRULE(this.command_play) },
       { ALT: () => this.SUBRULE(this.command_toast) },
       { ALT: () => this.SUBRULE(this.command_ticker) },
-      { ALT: () => this.CONSUME(lexer.send_target) },
       { ALT: () => this.CONSUME(lexer.label) },
       { ALT: () => this.CONSUME(lexer.stringliteraldouble) },
       { ALT: () => this.CONSUME(lexer.stringliteral) },

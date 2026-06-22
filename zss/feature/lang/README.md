@@ -1,26 +1,23 @@
 # Lang Module
 
-ZSS scripting language compiler with a **TypeScript backend** (CI parity oracle) and **C++ WASM compiler** under `backend/wasm/`.
+ZSS scripting language compiler — **TypeScript backend** (Chevrotain lexer → parser → AST → JS).
 
 ## Layout
 
 | Path | Role |
 |------|------|
-| [`index.ts`](index.ts) | Public API — `compile`, `compileast`, `tokenize`, types |
-| [`backend/typescript/`](backend/typescript/) | Chevrotain lexer → parser → AST → JS + source maps |
-| [`backend/typescript/`](backend/typescript/) | Chevrotain lexer → parser → AST → JS + source maps (CI parity oracle) |
-| [`backend/wasm/`](backend/wasm/) | C++ compiler → `zss_compile`, parity fixtures, tests |
+| [`backend/typescript/`](backend/typescript/) | Lexer, parser, visitor, generator, source maps |
+| [`langcompileclient.ts`](langcompileclient.ts) | Runtime `compilescript()` wrapper used by chip boot |
+| [`zztlineclass.ts`](zztlineclass.ts) | ZZT line classification helpers (zztoop tooling) |
 | [`docs/`](docs/) | Compiler pipeline documentation |
-| [`ops/fixtures/lang/zzt-ref/`](../../../ops/fixtures/lang/zzt-ref/) | ZZT-OOP baseline (RoZZT LANGREF) + ZSS extension rules |
+| [`zss/feature/zztoop/`](../zztoop/) | Separate ZZT-OOP parser pipeline |
 
-Legacy path `zss/lang/` was removed; import from `zss/feature/lang`.
+Legacy path `zss/lang/` was removed; import from `zss/feature/lang/backend/typescript/generator` or `zss/feature/lang/langcompileclient`.
 
 ## Quick Start
 
-Dev uses WASM lang by default (`ZSS_WASM_SCRIPT`); production builds default to the TS oracle until WASM lang is ready for ship. Use `yarn task run app:tslang:dev` to force TS in dev, or `ZSS_WASM_SCRIPT=true yarn task run app:build` to test WASM in a prod build:
-
 ```typescript
-import { compile } from 'zss/feature/lang'
+import { compile } from 'zss/feature/lang/backend/typescript/generator'
 
 const result = compile('mychip', '#if 1\n#die\n')
 if (result.code) {
@@ -28,59 +25,20 @@ if (result.code) {
 }
 ```
 
-## Parity (C++ compiler)
-
-ZSS validation corpus (TS oracle vs C++ WASM):
-
-| Tier | Path | Count | Role |
-|------|------|-------|------|
-| **parity** | [`ops/fixtures/lang/parity/`](../../../ops/fixtures/lang/parity/) | 19 | Micro-fixtures + TS golden `.js` / `.labels.json` |
-| **integration** | [`ops/fixtures/lang/scripts/`](../../../ops/fixtures/lang/scripts/) | 9 | Real board scripts (Simple Chat player, elseif chains, …) |
-| **book** | [`ops/fixtures/lang/coolregionsbow/`](../../../ops/fixtures/lang/coolregionsbow/) | 51 | Full element scripts from coolregionsbow |
-
-Manifests: `ops/fixtures/lang/parity/manifest.json`, `ops/fixtures/lang/integration/manifest.json`, `ops/fixtures/lang/coolregionsbow/manifest.json`.  
-Loader: [`backend/wasm/corpus.ts`](backend/wasm/corpus.ts).
-
-After editing `backend/wasm/` (C++ sources):
+## Tests
 
 ```bash
 yarn task run lang:regression:test
+yarn jest --config ops/jest.config.ts ops/tests/unit/feature/lang/backend/typescript/__tests__/ --no-coverage
 ```
 
-Quick checks:
+ZZT-OOP corpus and smoke tests live under `ops/tests/unit/feature/zztoop/`.
 
-```bash
-yarn task run lang:parity:test      # native C++ compile + behavioral vs TS oracle
-yarn task run lang:corpus:test      # browser zss_lang.wasm against full corpus
-yarn task run lang:wasm:test        # smoke (empty fixture only)
-```
+## Fixtures
 
-Regenerate golden fixtures from the TS oracle:
+| Tier | Path | Role |
+|------|------|------|
+| **integration** | [`ops/fixtures/lang/scripts/`](../../../ops/fixtures/lang/scripts/) | Real board scripts (Simple Chat player, elseif chains, …) |
+| **book** | [`ops/fixtures/lang/coolregionsbow/`](../../../ops/fixtures/lang/coolregionsbow/) | Full element scripts from coolregionsbow |
 
-```bash
-yarn task run lang:parity:fixtures:regen
-```
-
-Build WASM artifact:
-
-```bash
-yarn task run lang:build
-```
-
-Output: `cafe/public/wasm/lang/zss_lang.{js,wasm}`
-
-Compile a `.zss` file to JS (stdout, C++ backend):
-
-```bash
-yarn task run lang:compile path/to/script.zss
-cat script.zss | yarn task run lang:compile -
-```
-
-## Phase status
-
-| Phase | Status |
-|-------|--------|
-| TS move to `feature/lang` | Done |
-| C++ parity vs golden fixtures | In progress |
-| Production switch (`ZSS_CPP_LANG`) | v1.5 (not started) |
-| Bytecode VM | v2 (not started) |
+Per-script lang WASM was removed from the runtime path; chip scripts always compile via TS `compile()` → `new Function('api', code)`.

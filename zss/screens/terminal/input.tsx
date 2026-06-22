@@ -16,20 +16,20 @@ import { SOFTWARE } from 'zss/device/session'
 import { withclipboard } from 'zss/feature/keyboard'
 import { SpeechToText } from 'zss/feature/speechtotext'
 import { storagewritehistorybuffer } from 'zss/feature/storage'
+import { useEqual } from 'zss/gadget/data/useequal'
 import {
   TERMINAL_MODE,
   useGadgetClient,
   useTape,
   useTerminal,
 } from 'zss/gadget/data/zustandstores'
-import { useEqual } from 'zss/gadget/data/useequal'
 import { useDeviceData } from 'zss/gadget/device'
-import { Scrollable } from 'zss/gadget/scrollable'
 import {
   getmobiletextelement,
   mobiletextfocus,
   onmobiletextinput,
 } from 'zss/gadget/mobiletext'
+import { Scrollable } from 'zss/gadget/scrollable'
 import { modsfromevent } from 'zss/gadget/userinput'
 import { UserInput } from 'zss/gadget/userinput.bridge'
 import { useWriteText } from 'zss/gadget/writetext'

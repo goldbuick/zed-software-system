@@ -32,7 +32,6 @@ import {
   registersetmyplayerid,
 } from 'zss/device/register'
 import { isclimode } from 'zss/feature/detect'
-import { initlangcompile } from 'zss/feature/lang/langcompileclient'
 import { isjoin } from 'zss/feature/url'
 import { forcer3fglresize } from 'zss/gadget/canvasrelayout'
 import { useDeviceData } from 'zss/gadget/device'
@@ -44,7 +43,6 @@ import type { StoreApi } from 'zustand/vanilla'
 import { App } from './app'
 
 async function bootheadless(): Promise<void> {
-  await initlangcompile()
   const g = globalThis as any
   const readplayer = g.__nodeStorageReadPlayer
   if (typeof readplayer === 'function') {
@@ -60,8 +58,6 @@ async function bootheadless(): Promise<void> {
 }
 
 async function main() {
-  await initlangcompile()
-
   if (isclimode()) {
     await bootheadless()
     return

@@ -10,6 +10,8 @@
     "headless",
     "ops/infra",
     "ops/lib",
+    "ops/jest",
+    "ops/fixtures/harness",
     "ops/tests/lib",
     "ops/archive",
     "tasks",

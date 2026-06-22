@@ -15,7 +15,6 @@ jest.mock('zss/config', () => ({
   FORCE_CRT_OFF: false,
   FORCE_LOW_REZ: false,
   FORCE_TOUCH_UI: false,
-  WASM_SCRIPT: false,
 }))
 
 import { readFileSync } from 'node:fs'

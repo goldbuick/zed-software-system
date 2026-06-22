@@ -22,7 +22,7 @@ export function createmockmaxi() {
     advance(ms: number) {
       clock += ms / 1000
     },
-  } as SabEngine & { advance(ms: number): void }
+  } as unknown as SabEngine & { advance(ms: number): void }
   return {
     maxi,
     getclock: () => clock,

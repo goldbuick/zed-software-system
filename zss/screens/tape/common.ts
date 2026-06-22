@@ -1,7 +1,7 @@
 import { IToken } from 'chevrotain'
 import { createContext } from 'react'
-import type { CodeNode } from 'zss/feature/lang/backend/typescript/visitor'
 import type { LANG_ERROR } from 'zss/feature/lang/backend/typescript/lexer'
+import type { CodeNode } from 'zss/feature/lang/backend/typescript/visitor'
 import { BG_ACTIVE, FG_SELECTED } from 'zss/screens/tape/colors'
 import { WRITE_TEXT_CONTEXT, textformatreadedges } from 'zss/words/textformat'
 

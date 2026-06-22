@@ -80,10 +80,11 @@ export function readwanixtermiframepreperror(): string | undefined {
   return vmpreperror
 }
 
-export function registervmtermiframehooks(_hooks: {
+export function registervmtermiframehooks(hooks: {
   onvmexit?: (vmid: string, code: number) => void
   ontaskexit?: (taskid: string, code: number) => void
 }) {
+  void hooks
   // Reserved for child exit postMessage wiring.
 }
 

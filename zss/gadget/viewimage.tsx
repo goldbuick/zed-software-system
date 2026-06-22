@@ -7,7 +7,8 @@ import { useMedia } from 'zss/gadget/media'
 
 import { updateTexture } from './display/textures'
 import { ShadeBoxDither } from './graphics/dither'
-import { UserFocus, UserInput } from './userinput'
+import { UserFocus } from './userinput'
+import { UserInput } from './userinput.bridge'
 import { useScreenSize } from './userscreen'
 
 type TapeShowImage = {

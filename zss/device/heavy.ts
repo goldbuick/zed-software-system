@@ -96,6 +96,7 @@ async function executeclicommands(
     }
     vmcli(heavy, player, commands[i])
   }
+  await Promise.resolve()
 }
 
 function createonworking(player: string) {

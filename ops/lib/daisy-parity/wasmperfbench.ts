@@ -97,6 +97,7 @@ export async function runwasmperfbench(
   }
 }
 
+/* eslint-disable no-console -- CLI benchmark output */
 async function main() {
   if (typeof OfflineAudioContext === 'undefined') {
     console.error(

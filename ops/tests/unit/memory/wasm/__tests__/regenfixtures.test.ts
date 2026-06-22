@@ -17,7 +17,6 @@ jest.mock('zss/config', () => ({
   FORCE_CRT_OFF: false,
   FORCE_LOW_REZ: false,
   FORCE_TOUCH_UI: false,
-  WASM_SCRIPT: false,
 }))
 
 jest.mock('zss/words/textformat', () => ({
@@ -26,7 +25,6 @@ jest.mock('zss/words/textformat', () => ({
 }))
 
 jest.mock('zss/feature/lang/langcompileclient', () => ({
-  islangcompileready: () => true,
   compilescript: (_name: string, code: string) => ({
     labels: code.includes(':drawdisplay') ? { drawdisplay: [1] } : {},
   }),

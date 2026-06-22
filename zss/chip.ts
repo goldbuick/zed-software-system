@@ -5,10 +5,6 @@ import {
   type GeneratorFunc,
 } from 'zss/feature/lang/backend/typescript/generator'
 import { GENERATED_FILENAME } from 'zss/feature/lang/backend/typescript/transformer'
-import {
-  type WasmScriptInstance,
-  loadscriptsync,
-} from 'zss/feature/lang/wasmloader'
 
 import { RUNTIME } from './config'
 import { MESSAGE, apierror, chipmessage } from './device/api'
@@ -511,7 +507,6 @@ export function createchip(
   // ref to generator instance
 
   let logic: MAYBE<GeneratorFunc>
-  let wasmscript: MAYBE<WasmScriptInstance>
 
   // create labels
   const labels = deepcopy(Object.entries(build.labels ?? {}))
@@ -605,28 +600,7 @@ export function createchip(
 
       // invoke logic impl
       try {
-        if (wasmscript) {
-          const runresult = wasmscript.run()
-          const oncecount = debugoncecounts[id] ?? 0
-          if (oncecount < 2) {
-            debugoncecounts[id] = oncecount + 1
-            agentlog(
-              'chip.ts:once',
-              'wasm run',
-              {
-                id,
-                runresult,
-                getcase: chip.getcase(),
-                esbefore: flags.es,
-                oncecount,
-              },
-              'E',
-            )
-          }
-          if (!runresult) {
-            flags.es = 1
-          }
-        } else if (!logic?.(chip)) {
+        if (!logic?.(chip)) {
           flags.es = 1
         }
       } catch (err: any) {
@@ -1238,28 +1212,18 @@ export function createchip(
     },
   }
 
-  if (build.wasmbytes && build.wasmbytes.length > 0) {
-    wasmscript = loadscriptsync(build.wasmbytes, chip)
-    agentlog(
-      'chip.ts:createchip',
-      'wasm script loaded',
-      { id, wasmbytes: build.wasmbytes.length, inites: initfags.es },
-      'D',
-    )
-  } else {
-    logic = build.code
-    agentlog(
-      'chip.ts:createchip',
-      'js logic path',
-      {
-        id,
-        hascode: !!build.code,
-        errors: build.errors?.length ?? 0,
-        inites: initfags.es,
-      },
-      'D',
-    )
-  }
+  logic = build.code
+  agentlog(
+    'chip.ts:createchip',
+    'js logic path',
+    {
+      id,
+      hascode: !!build.code,
+      errors: build.errors?.length ?? 0,
+      inites: initfags.es,
+    },
+    'D',
+  )
 
   return chip
 }

@@ -43,6 +43,19 @@ import { STR_COLOR, mapcolortostrcolor } from 'zss/words/color'
 import { STR_KIND } from 'zss/words/kind'
 import { PT } from 'zss/words/types'
 
+import {
+  LAYOUT_SZZT,
+  LAYOUT_ZZT,
+  SZZT_BOARD_HEIGHT,
+  SZZT_BOARD_WIDTH,
+  ZZT_BOARD_HEIGHT,
+  ZZT_BOARD_WIDTH,
+  createreader,
+  readboardbytes,
+  readworldheaderszzt,
+  readworldheaderzzt,
+  zztparseboard,
+} from './zztbinparse'
 import type { ZZT_BOARD, ZZT_ELEMENT, ZZT_STAT } from './zztformattypes'
 import { zztoop } from './zztoop'
 
@@ -98,20 +111,6 @@ const ZZT_TILE_CUSTOMTEXT = 46
 const ZZT_TEXT_BLOCK_START = 47
 const ZZT_TEXT_BLOCK_END = 53
 const ZZT_TEXT_FANCY_MIN = 128
-
-import {
-  LAYOUT_SZZT,
-  LAYOUT_ZZT,
-  SZZT_BOARD_HEIGHT,
-  SZZT_BOARD_WIDTH,
-  ZZT_BOARD_HEIGHT,
-  ZZT_BOARD_WIDTH,
-  createreader,
-  readboardbytes,
-  readworldheaderszzt,
-  readworldheaderzzt,
-  zztparseboard,
-} from './zztbinparse'
 
 function buildstatmap(
   stats: ZZT_STAT[],

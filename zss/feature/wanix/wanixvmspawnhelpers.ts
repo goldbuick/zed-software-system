@@ -10,6 +10,10 @@ type WanixWakeElement = HTMLElement & {
   start?: () => Promise<void>
 }
 
+function querywanixvm(sys: ParentNode, vmid: string): WanixWakeElement | null {
+  return sys.querySelector(`wanix-vm#${vmid}`)
+}
+
 type WanixRoot = {
   readDir: (path: string) => Promise<string[]>
 }
@@ -65,7 +69,7 @@ export async function waitforwanixvmready(
 ): Promise<WanixWakeElement> {
   const deadline = Date.now() + timeoutms
   while (Date.now() < deadline) {
-    const vm = sys.querySelector(`wanix-vm#${vmid}`)
+    const vm = querywanixvm(sys, vmid)
     if (vm?.rid && vm?.term) {
       return vm
     }
@@ -77,7 +81,7 @@ export async function waitforwanixvmready(
   } catch {
     termdir = []
   }
-  const partial = sys.querySelector(`wanix-vm#${vmid}`)
+  const partial = querywanixvm(sys, vmid)
   throw new Error(
     `wanix vm prep: ${vmid} not ready (rid=${partial?.rid ?? 'none'} term=${partial?.term ?? 'none'} #term=${termdir.join(',')})`,
   )

@@ -1,6 +1,6 @@
 /** Pure ZZT / Super ZZT binary decode (no memory / device deps). */
 
-import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
+import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import type { ZZT_BOARD, ZZT_STAT } from './zztformattypes'
 

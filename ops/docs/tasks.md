@@ -22,7 +22,7 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 | `yarn task run app:build` | Production Vite build | `ci` | — | — |
 | `yarn task run app:build:strict` | Typecheck then production Vite build | — | — | — |
 | `yarn task run app:clear` | Remove build artifacts and Vite cache | — | — | — |
-| `yarn task run app:dev` | Install deps and start Vite dev server (WASM lang) | `dev` | `app:install`, `app:vite:dev` | — |
+| `yarn task run app:dev` | Install deps and start Vite dev server | `dev` | `app:install`, `app:vite:dev` | — |
 | `yarn task run app:dev:no-sc` | Dev server with play-bus sidechain bypassed | `dev` | `app:dev` | `ZSS_DAISY_NO_SIDECHAIN=1` |
 | `yarn task run app:install` | Install yarn dependencies | — | — | — |
 | `yarn task run app:lint` | Import guards, dependency-cruiser, ESLint, and tsc --noEmit | `ci` | — | — |
@@ -34,9 +34,7 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 | `yarn task run app:sloc` | Source lines of code count for zss/ | — | — | — |
 | `yarn task run app:test` | Run Jest test suite | `ci` | — | — |
 | `yarn task run app:test:coverage` | Jest with coverage on selected VM/gadget modules | — | — | — |
-| `yarn task run app:tslang:dev` | Dev server using TS compiler for chip scripts | `dev` | `app:install`, `app:vite:dev` | `ZSS_WASM_SCRIPT=false` |
 | `yarn task run app:vite:dev` | Start Vite dev server on port 7777 | `dev` | — | — |
-| `yarn task run app:wasm:dev` | Rebuild lang WASM then start dev server | `dev` | `lang:build`, `app:dev` | — |
 
 
 ## ci
@@ -187,26 +185,13 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 
 | Task | Description | Tags | Deps | Env |
 |------|-------------|------|------|-----|
-| `yarn task run lang:bench:compile` | Lang compile benchmark report | — | — | — |
-| `yarn task run lang:bench:wasm` | Emscripten zss_compile wall time benchmark | — | — | — |
 | `yarn task run lang:book:oracle:extract` | Extract book JSON into lang integration oracle files | — | — | — |
-| `yarn task run lang:build` | Build lang WASM via emscripten | — | — | — |
 | `yarn task run lang:build-train-corpus` | Jest build training corpus fixture | — | — | — |
-| `yarn task run lang:compare:browser-native` | Compare browser vs native lang compile for simple chat player | — | — | — |
-| `yarn task run lang:compare:simple-chat-labels` | Compare simple chat player wasm label maps | — | — | — |
-| `yarn task run lang:compile` | Compile ZSS source to JS via wasm (pass file path as args) | — | — | — |
-| `yarn task run lang:corpus:test` | Browser zss_lang.wasm against full corpus | — | — | — |
 | `yarn task run lang:finetune:eval` | Evaluate finetune ONNX model | — | — | — |
 | `yarn task run lang:finetune:export` | Export finetune model to ONNX | — | — | — |
 | `yarn task run lang:finetune:train` | Train lang finetune model | — | — | — |
-| `yarn task run lang:lint` | clang-format check on lang C++ | — | — | — |
-| `yarn task run lang:lint:fix` | Apply clang-format to lang C++ | — | — | — |
-| `yarn task run lang:parity:fixtures:regen` | Regenerate lang wasm parity fixtures | — | — | `REGEN_LANG_FIXTURES=1` |
-| `yarn task run lang:parity:test` | Native C++ compile parity vs TS oracle | `ci` | — | — |
-| `yarn task run lang:regression:test` | Full lang regression (TS tests, parity, corpus) | `ci` | — | — |
+| `yarn task run lang:regression:test` | TypeScript lang parser regression tests | `ci` | — | — |
 | `yarn task run lang:train-corpus:test` | Jest train corpus tests | — | — | — |
-| `yarn task run lang:wasm:test` | Lang wasm smoke test (empty fixture) | — | — | — |
-| `yarn task run lang:zzt:corpus:analyze` | Analyze Museum ZZT corpus raw stat.code compile rate; write ops/fixtures/lang/zzt/failure-report.json. Flags: raw-only, write-fixtures, limit N, full | `slow` | — | — |
 | `yarn task run lang:zztoop:corpus:analyze` | Analyze Museum ZZT corpus with the vanilla zss/feature/zztoop parser; write ops/fixtures/lang/zztoop/failure-report.json. Flags: raw-only, write-fixtures, limit N, full | `slow` | — | — |
 
 

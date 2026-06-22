@@ -47,6 +47,7 @@ import {
   zsstextline,
 } from 'zss/feature/zsstextui'
 import { capturecurrentboardtopng } from 'zss/gadget/capture'
+import { GADGET_ZSS_WORDS, INPUT, paneladdress } from 'zss/gadget/data/types'
 import {
   TAPE_DISPLAY,
   TAPE_MAX_LINES,
@@ -56,7 +57,6 @@ import {
   useTape,
   useTerminal,
 } from 'zss/gadget/data/zustandstores'
-import { GADGET_ZSS_WORDS, INPUT, paneladdress } from 'zss/gadget/data/types'
 import { inputdown, inputup } from 'zss/gadget/userinput'
 import { doasync } from 'zss/mapping/func'
 import { createpid } from 'zss/mapping/guid'

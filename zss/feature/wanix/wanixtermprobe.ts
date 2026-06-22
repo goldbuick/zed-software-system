@@ -125,7 +125,6 @@ export function iswanixtermprobemsg(data: unknown): data is WanixTermProbeMsg {
 export function installwanixtermprobeembed(): WanixTermProbe {
   const probe = installwanixtermprobe()
   let lastserial = ''
-  let polltimer: ReturnType<typeof setInterval> | undefined
 
   function posttoparent(message: WanixTermProbeMsg) {
     const target =
@@ -145,9 +144,9 @@ export function installwanixtermprobeembed(): WanixTermProbe {
     }
   }
 
-  polltimer = setInterval(emitserialdiff, 100)
+  const polltimer = setInterval(emitserialdiff, 100)
 
-  window.addEventListener('message', async (event) => {
+  const onprobemessage = async (event: MessageEvent) => {
     if (event.origin !== window.location.origin) {
       return
     }
@@ -199,6 +198,10 @@ export function installwanixtermprobeembed(): WanixTermProbe {
         error: err instanceof Error ? err.message : String(err),
       })
     }
+  }
+
+  window.addEventListener('message', (event) => {
+    void onprobemessage(event)
   })
 
   posttoparent({ type: 'zss-wanix-term-ready' })

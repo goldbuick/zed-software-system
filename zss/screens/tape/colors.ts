@@ -1,7 +1,7 @@
 import type { IToken } from 'chevrotain'
 import * as lexer from 'zss/feature/lang/backend/typescript/lexer'
-import type { TERMINAL_MODE } from 'zss/gadget/data/zustandstores'
 import type { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
+import type { TERMINAL_MODE } from 'zss/gadget/data/zustandstores'
 import { codeunitoffsettocellindex } from 'zss/mapping/grapheme'
 import { isarray, ispresent } from 'zss/mapping/types'
 import { statformat } from 'zss/words/stats'

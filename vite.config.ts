@@ -169,7 +169,6 @@ export default defineConfig(({ mode }) => {
     'ZSS_DEBUG_RAYCAST_DOT',
     'ZSS_DEBUG_RAYCAST_PICKSHEET',
     'ZSS_DEBUG_FLAT_CAMERA_ORTHO',
-    'ZSS_WASM_SCRIPT',
     'ZSS_BRANCH_NAME',
     'ZSS_BRANCH_VERSION',
     'ZSS_COMMIT_MESSAGE',
@@ -182,9 +181,6 @@ export default defineConfig(({ mode }) => {
       key === 'ZSS_COMMIT_MESSAGE'
     ) {
       return ''
-    }
-    if (key === 'ZSS_WASM_SCRIPT') {
-      return mode === 'production' ? 'false' : 'true'
     }
     return 'false'
   }

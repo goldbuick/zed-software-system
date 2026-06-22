@@ -12,9 +12,7 @@ type TapeStore = typeof import('zss/gadget/data/zustandstores').useTape
 let tapestore: TapeStore | undefined
 
 async function readtapestore(): Promise<TapeStore> {
-  if (!tapestore) {
-    tapestore = (await import('zss/gadget/data/zustandstores')).useTape
-  }
+  tapestore ??= (await import('zss/gadget/data/zustandstores')).useTape
   return tapestore
 }
 

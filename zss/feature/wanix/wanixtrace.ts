@@ -1,3 +1,4 @@
+/* eslint-disable no-console -- dev-only trace gated by window.__ZSS_WANIX_TRACE__ */
 /** Dev trace for wanix term I/O (set `window.__ZSS_WANIX_TRACE__ = true` in console). */
 export function wanixtrace(
   checkpoint: string,

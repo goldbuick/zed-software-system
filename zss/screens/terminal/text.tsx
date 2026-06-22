@@ -9,8 +9,8 @@ import {
   onmobiletextinput,
 } from 'zss/gadget/mobiletext'
 import { UserFocus } from 'zss/gadget/userinput'
-import type { UserInputMods } from 'zss/gadget/userinputtypes'
 import { UserInput } from 'zss/gadget/userinput.bridge'
+import type { UserInputMods } from 'zss/gadget/userinputtypes'
 import { useWriteText } from 'zss/gadget/writetext'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'

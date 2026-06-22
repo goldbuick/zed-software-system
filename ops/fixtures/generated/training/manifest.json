@@ -1,6 +1,6 @@
 {
-  "generated": "2026-06-20T22:04:22.185Z",
-  "traincount": 200,
+  "generated": "2026-06-22T14:56:43.612Z",
+  "traincount": 205,
   "evalcount": 11,
   "compilepassrate": 1,
   "entries": [
@@ -599,7 +599,19 @@
       "sourcefile": "ops/fixtures/lang/coolregionsbow/clockwise.zss"
     },
     {
+      "id": "fixture_clockwise_think",
+      "split": "train",
+      "kind": "script",
+      "sourcefile": "ops/fixtures/lang/coolregionsbow/clockwise.zss"
+    },
+    {
       "id": "fixture_counter_main",
+      "split": "train",
+      "kind": "script",
+      "sourcefile": "ops/fixtures/lang/coolregionsbow/counter.zss"
+    },
+    {
+      "id": "fixture_counter_think",
       "split": "train",
       "kind": "script",
       "sourcefile": "ops/fixtures/lang/coolregionsbow/counter.zss"
@@ -702,6 +714,12 @@
     },
     {
       "id": "fixture_invisible_main",
+      "split": "train",
+      "kind": "script",
+      "sourcefile": "ops/fixtures/lang/coolregionsbow/invisible.zss"
+    },
+    {
+      "id": "fixture_invisible_touch",
       "split": "train",
       "kind": "script",
       "sourcefile": "ops/fixtures/lang/coolregionsbow/invisible.zss"
@@ -977,6 +995,12 @@
       "sourcefile": "ops/fixtures/lang/coolregionsbow/slime.zss"
     },
     {
+      "id": "fixture_slime_touch",
+      "split": "train",
+      "kind": "script",
+      "sourcefile": "ops/fixtures/lang/coolregionsbow/slime.zss"
+    },
+    {
       "id": "fixture_solid",
       "split": "train",
       "kind": "script",
@@ -1056,6 +1080,12 @@
     },
     {
       "id": "fixture_transporter_main",
+      "split": "train",
+      "kind": "script",
+      "sourcefile": "ops/fixtures/lang/coolregionsbow/transporter.zss"
+    },
+    {
+      "id": "fixture_transporter_think",
       "split": "train",
       "kind": "script",
       "sourcefile": "ops/fixtures/lang/coolregionsbow/transporter.zss"

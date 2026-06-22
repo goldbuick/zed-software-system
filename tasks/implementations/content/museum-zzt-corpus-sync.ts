@@ -149,7 +149,7 @@ async function fetchjson<T>(url: string): Promise<T> {
 async function crawlmuseumcatalog(): Promise<MuseumFile[]> {
   const all: MuseumFile[] = []
   let offset = 0
-  while (true) {
+  for (;;) {
     const url = `${MUSEUM_API_BASE}/search/files/?offset=${offset}`
     const payload = await fetchjson<SearchResponse>(url)
     const batch = payload.data?.results ?? []
@@ -243,7 +243,7 @@ async function downloadentries(
   let nextindex = 0
 
   async function worker() {
-    while (true) {
+    for (;;) {
       const slot = nextindex
       nextindex += 1
       if (slot >= slice.length) {

@@ -2,8 +2,8 @@
  * Board-to-PNG capture.
  * Uses useGadgetClient to get the current board and renders it to a PNG image.
  */
-import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { layersreadcontrol } from 'zss/gadget/data/types'
+import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { useMedia } from 'zss/gadget/media'
 import { ispresent } from 'zss/mapping/types'
 
@@ -64,7 +64,11 @@ export function capturecurrentboardtopng() {
     throw new Error('Could not get canvas 2d context')
   }
 
-  const outimagedata = new ImageData(rgba, canvaswidth, canvasheight)
+  const outimagedata = new ImageData(
+    new Uint8ClampedArray(rgba),
+    canvaswidth,
+    canvasheight,
+  )
   ctx.putImageData(outimagedata, 0, 0)
   const dataurl = canvas.toDataURL('image/png')
   const filename = `${sanitizefilename(board)}.png`

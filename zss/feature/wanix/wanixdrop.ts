@@ -176,7 +176,7 @@ export async function wanixhandlevmstart(
     exitplayer = player
     ensurevmexithandler()
     if (iswanixspaceactive()) {
-      const status = await readwanixstatus()
+      const status = readwanixstatus()
       if (!status.vmbindsready && haswanixcompute()) {
         apilog(
           device,
@@ -225,7 +225,7 @@ export async function wanixhandleshownenu(device: DEVICELIKE, player: string) {
     const vms = readwanixvms()
     const attached = readwanixattached()
     const attachedkind = readwanixattachedkind()
-    const binds = iswanixspaceactive() ? await listwanixbinds() : []
+    const binds = iswanixspaceactive() ? listwanixbinds() : []
     const parts: (string | string[])[] = [
       zssheaderlines('wanix'),
       zsstextline('drop a .wasm or .tgz to run'),
@@ -502,7 +502,7 @@ export async function wanixhandleunbind(
   try {
     await ensurewanixsandbox(device, player)
     if (target === 'all') {
-      const removed = await unmountallwanixbinds()
+      const removed = unmountallwanixbinds()
       if (removed.length === 0) {
         apilog(device, player, 'wanix nothing to unbind')
         return
@@ -510,9 +510,9 @@ export async function wanixhandleunbind(
       apilog(device, player, `wanix unmounted ${removed.length} binds`)
       return
     }
-    const binds = await listwanixbinds()
+    const binds = listwanixbinds()
     const match = binds.find((bind) => bind.id === target)
-    await unmountwanixbind(target)
+    unmountwanixbind(target)
     apilog(device, player, `wanix unmounted ${match?.label ?? target}`)
   } catch (err) {
     apierror(

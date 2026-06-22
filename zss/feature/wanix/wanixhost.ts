@@ -14,7 +14,6 @@ import {
   uniquewanixtaskid,
 } from 'zss/feature/wanix/wanixcmd'
 import {
-  wanixiobridgepush,
   wanixiobridgestart,
   wanixiobridgestop,
 } from 'zss/feature/wanix/wanixiobridge'
@@ -57,13 +56,11 @@ import {
 import { wanixtermscreenwrite } from 'zss/feature/wanix/wanixtermscreen'
 import { wanixtrace } from 'zss/feature/wanix/wanixtrace'
 import {
-  DEFAULT_WANIX_VM_ID,
   DEFAULT_WANIX_VM_MEM,
   type WANIX_VM_ASSET_URLS,
   applywanixsystemkernelattrs,
   buildwanixvmprehtml,
   buildwanixvmspawnhtml,
-  readwanixkernelwasmurl,
   readwanixruntimeurls,
   readwanixvmasseturls,
 } from 'zss/feature/wanix/wanixvmassets'
@@ -78,7 +75,6 @@ const BIND_MOUNT_TIMEOUT_MS = 120_000
 const VM_SPAWN_STEP_MS = 120_000
 const VM_TERM_READY_MS = 90_000
 const VM_PREP_WAIT_MS = 180_000
-const VM_V86_DRIVER_PATH = '#vm/v86/v86-vm.wasm'
 const VM_LAYOUT_RELOAD_KEY = 'zss-wanix-vm-layout-reload'
 const READY_TIMEOUT_MS = 120_000
 const WASM_PANIC_RE = /unreachable|panic|arg 0 is not/i
@@ -93,9 +89,6 @@ export type WANIX_VM_PREP_STAGE =
 
 let vmprepstage: WANIX_VM_PREP_STAGE = 'idle'
 let vmpreperror: string | undefined
-const RPC_TIMEOUT_MS = 300_000
-const VM_PREP_TIMEOUT_MS = 600_000
-const VM_RUN_TIMEOUT_MS = 600_000
 
 export type WANIX_HOST_STATE = 'idle' | 'starting' | 'ready'
 
@@ -135,6 +128,10 @@ type WanixRoot = {
 type WanixSystemElement = HTMLElement & {
   root: WanixRoot
   _setupNamespace(id: string, path: string, binds: Element[]): Promise<void>
+}
+
+function querywanixsystem(mount: ParentNode): WanixSystemElement | null {
+  return mount.querySelector('wanix-system')
 }
 
 type WanixTaskElement = HTMLElement & {
@@ -247,7 +244,7 @@ async function ensurewanixruntime() {
     (async () => {
       const existing = document.querySelector('script[src*="wanix.min.js"]')
       if (existing) {
-        await waitforwanixscriptel(existing)
+        await waitforwanixscriptel(existing as HTMLScriptElement)
         return
       }
       const script = document.createElement('script')
@@ -286,7 +283,7 @@ function chaintermduplex<T>(fn: () => Promise<T>): Promise<T> {
 
 async function writetermpayload(payload: Uint8Array) {
   await chaintermduplex(async () => {
-    const writer = await getattachedtermwriter()
+    const writer = getattachedtermwriter()
     await Promise.race([
       writer.write(payload),
       new Promise<never>((_, reject) => {
@@ -502,11 +499,25 @@ function registerbootbind(el: Element) {
 
 const BIND_DOM_ATTRS = ['dst', 'src', 'type', 'mode', 'union'] as const
 
+function bindattrstring(value: unknown): string {
+  if (typeof value === 'string') {
+    return value
+  }
+  if (
+    typeof value === 'number' ||
+    typeof value === 'boolean' ||
+    typeof value === 'bigint'
+  ) {
+    return String(value)
+  }
+  return JSON.stringify(value)
+}
+
 function applybindattrs(bindel: Element, attrs: Record<string, unknown>) {
   for (const key of BIND_DOM_ATTRS) {
     const value = attrs[key]
     if (value != null) {
-      bindel.setAttribute(key, String(value))
+      bindel.setAttribute(key, bindattrstring(value))
     }
   }
 }
@@ -518,9 +529,9 @@ function createbindentry(attrs: Record<string, unknown>): BindEntry {
   const entry: BindEntry = {
     el: bindel,
     id,
-    kind: String(attrs.type ?? 'ns'),
-    dst: String(attrs.dst ?? '.'),
-    label: String(attrs.label ?? attrs.dst ?? id),
+    kind: bindattrstring(attrs.type ?? 'ns'),
+    dst: bindattrstring(attrs.dst ?? '.'),
+    label: bindattrstring(attrs.label ?? attrs.dst ?? id),
     removable: attrs.removable !== false,
   }
   bindel.dataset.wanixBindId = id
@@ -641,7 +652,7 @@ function getattachedentry() {
   return getentry(registry.attachedKind, registry.attached)
 }
 
-async function getattachedtermwriter() {
+function getattachedtermwriter() {
   const entry = getattachedentry()
   if (!entry?.termwriter) {
     throw new Error('no attached term writer')
@@ -753,7 +764,7 @@ function clearattachedif(kind: WANIX_ATTACH_KIND, id: string) {
   }
 }
 
-async function removetask(taskid: string) {
+function removetask(taskid: string) {
   const entry = registry.tasks.get(taskid)
   if (!entry) {
     return
@@ -764,7 +775,7 @@ async function removetask(taskid: string) {
   clearattachedif('task', taskid)
 }
 
-async function removevm(vmid: string) {
+function removevm(vmid: string) {
   const entry = registry.vms.get(vmid)
   if (!entry) {
     return
@@ -836,15 +847,16 @@ function streamtermout(
   const decoder = new TextDecoder()
   const reading = (async () => {
     try {
-      while (true) {
+      for (;;) {
         const { value, done } = await reader.read()
         if (done) {
           break
         }
         if (value && value.byteLength > 0) {
           const chunk = decoder.decode(value, { stream: true })
-          await chaintermduplex(async () => {
+          await chaintermduplex(() => {
             handletermchunk(kind, id, chunk)
+            return Promise.resolve()
           })
         }
       }
@@ -952,7 +964,8 @@ function wirevmtermel(entry: TermTargetEntry) {
   if (!term) {
     return
   }
-  term.style.cssText =
+  const termel = term as HTMLElement
+  termel.style.cssText =
     'position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;overflow:hidden'
   entry.wanixtermel = term as unknown as WanixTermElement
   let lastserial = ''
@@ -960,7 +973,7 @@ function wirevmtermel(entry: TermTargetEntry) {
     if (!registry.vms.has(entry.id)) {
       return
     }
-    const xterm = term._term
+    const xterm = (termel as WanixTermHostElement)._term
     if (xterm) {
       const serial = readwanixtermserial(xterm)
       if (serial.length > lastserial.length) {
@@ -1012,7 +1025,7 @@ function polltaskexit(taskid: string) {
     }
     const taskpath = `#task/${entry.rid}`
     const reading = entry.termreading
-    while (true) {
+    for (;;) {
       try {
         const exit = (await root.readText(`${taskpath}/exit`)).trim()
         if (exit !== '') {
@@ -1033,7 +1046,7 @@ function polltaskexit(taskid: string) {
             taskwaiters.delete(taskid)
             waiter.resolve(code)
           }
-          await removetask(taskid)
+          removetask(taskid)
           return code
         }
       } catch {
@@ -1058,7 +1071,7 @@ function pollvmexit(vmid: string) {
     }
     const taskpath = `#task/${entry.innertaskrid}`
     const reading = entry.termreading
-    while (true) {
+    for (;;) {
       try {
         const exit = (await root.readText(`${taskpath}/exit`)).trim()
         if (exit !== '') {
@@ -1080,7 +1093,7 @@ function pollvmexit(vmid: string) {
             vmwaiters.delete(vmid)
             waiter.resolve(code)
           }
-          await removevm(vmid)
+          removevm(vmid)
           return code
         }
       } catch {
@@ -1094,7 +1107,7 @@ function pollvmexit(vmid: string) {
   })()
 }
 
-async function attachtarget(kind: WANIX_ATTACH_KIND, id: string) {
+function attachtarget(kind: WANIX_ATTACH_KIND, id: string) {
   if (kind === 'task') {
     const entry = registry.tasks.get(id)
     if (!entry?.rid) {
@@ -1125,11 +1138,11 @@ async function spawntask(
   opts: { wait?: boolean; attach?: boolean } = {},
 ) {
   requireactive()
-  const taskcmd = (cmd || '').trim()
+  const taskcmd = (cmd ?? '').trim()
   if (!taskcmd) {
     throw new Error('empty command')
   }
-  const id = taskid || uniquetaskid(taskcmd)
+  const id = taskid ?? uniquetaskid(taskcmd)
   if (registry.tasks.has(id)) {
     throw new Error(`task already exists: ${id}`)
   }
@@ -1161,7 +1174,7 @@ async function spawntask(
   await connecttaskterm(entry)
   entry.exitpoll = polltaskexit(id)
   if (opts.attach !== false) {
-    await attachtarget('task', id)
+    attachtarget('task', id)
   }
   if (opts.wait) {
     const code = await entry.exitpoll
@@ -1183,7 +1196,7 @@ async function spawnvm(
     throw new Error('vm assets not prepared')
   }
   const mem = typeof opts.mem === 'string' ? opts.mem : DEFAULT_WANIX_VM_MEM
-  const id = vmid || uniquevmid('linux-vm')
+  const id = vmid ?? uniquevmid('linux-vm')
   if (registry.vms.has(id)) {
     throw new Error(`vm already exists: ${id}`)
   }
@@ -1224,7 +1237,7 @@ async function spawnvm(
     mem,
   })
   if (opts.attach !== false) {
-    await attachtarget('vm', id)
+    attachtarget('vm', id)
   }
   try {
     const wake = el as WanixWakeElement
@@ -1243,7 +1256,7 @@ async function spawnvm(
     wirevmtermel(entry)
     backfillvmserialinpage(entry)
   } catch (err) {
-    await removevm(id)
+    removevm(id)
     const message = err instanceof Error ? err.message : String(err)
     throw new Error(`wanix vm run: ${message}`)
   }
@@ -1281,7 +1294,7 @@ async function stoptask(taskid: string) {
       // exit poll may reject if task already removed
     }
   }
-  await removetask(taskid)
+  removetask(taskid)
 }
 
 async function stopvm(vmid: string) {
@@ -1309,7 +1322,7 @@ async function stopvm(vmid: string) {
       // exit poll may reject if vm already removed
     }
   }
-  await removevm(vmid)
+  removevm(vmid)
 }
 
 async function halttask(taskid?: string) {
@@ -1342,7 +1355,11 @@ function setvmprepstage(
   vmprepstage = stage
   if (stage === 'failed') {
     vmpreperror =
-      err instanceof Error ? err.message : err != null ? String(err) : 'unknown'
+      err instanceof Error
+        ? err.message
+        : typeof err === 'string'
+          ? err
+          : 'unknown'
   } else if (stage === 'mount_ok') {
     vmpreperror = undefined
   }
@@ -1451,6 +1468,7 @@ export async function spawnwanixvmspace(
   }
 }
 
+/* eslint-disable no-console -- wasm panic hooks patch console during boot */
 async function waitwanixsystemready(system: WanixSystemElement) {
   await new Promise<void>((resolve, reject) => {
     const timer = setTimeout(() => {
@@ -1474,8 +1492,8 @@ async function waitwanixsystemready(system: WanixSystemElement) {
       const message =
         detail instanceof Error
           ? detail.message
-          : detail != null
-            ? String(detail)
+          : typeof detail === 'string'
+            ? detail
             : 'wanix-system error'
       reject(new Error(message))
     }
@@ -1536,10 +1554,11 @@ async function waitwanixsystemready(system: WanixSystemElement) {
     console.log = onconsoleloghook
   })
 }
+/* eslint-enable no-console */
 
 async function bootwanixsystem(mount: HTMLElement) {
   await ensurewanixruntime()
-  let system = mount.querySelector('wanix-system')
+  let system: WanixSystemElement | null = mount.querySelector('wanix-system')
   if (!system) {
     system = document.createElement('wanix-system') as WanixSystemElement
     applywanixsystemkernelattrs(system)
@@ -1606,7 +1625,7 @@ async function bootwanixsystemforvm(
     'beforeend',
     buildwanixvmprehtml(urls, 'zss-wanix-vm-sys'),
   )
-  const system = mount.querySelector('wanix-system')
+  const system = querywanixsystem(mount)
   if (!system) {
     throw new Error('wanix vm prep: failed to mount wanix-system')
   }
@@ -1621,17 +1640,21 @@ async function bootwanixsystemforvm(
     await waitforv86driver(VM_PREP_WAIT_MS)
   } catch {
     let diag = ''
+    const wanixroot = root
+    if (!wanixroot) {
+      throw new Error('wanix vm prep: root missing after boot')
+    }
     try {
-      const rootentries = await root.readDir('.')
+      const rootentries = await wanixroot.readDir('.')
       let vmentries: string[] = []
       try {
-        vmentries = await root.readDir('#vm')
+        vmentries = await wanixroot.readDir('#vm')
       } catch {
         vmentries = []
       }
       let v86entries: string[] = []
       try {
-        v86entries = await root.readDir('#vm/v86')
+        v86entries = await wanixroot.readDir('#vm/v86')
       } catch {
         v86entries = []
       }
@@ -1775,6 +1798,9 @@ export async function spawnwanixtask(
       wait: true,
       attach: opts.attach !== false,
     })
+    if (typeof result === 'string') {
+      throw new Error('spawntask wait returned task id')
+    }
     return {
       taskid: result.taskId,
       code: typeof result.code === 'number' ? result.code : 0,
@@ -1818,19 +1844,19 @@ export async function mountwanixarchive(
 ) {
   requireactive()
   if (iswanixtermiframemode()) {
-    const dst = mountdst || '.'
+    const dst = mountdst ?? '.'
     await iframechildmountarchive(name, bytes, dst)
     return dst
   }
   const url = URL.createObjectURL(
-    new Blob([bytes], { type: 'application/gzip' }),
+    new Blob([Uint8Array.from(bytes)], { type: 'application/gzip' }),
   )
   try {
     return await addbind({
       type: 'archive',
-      dst: mountdst || '.',
+      dst: mountdst ?? '.',
       src: url,
-      label: name || 'archive.tgz',
+      label: name ?? 'archive.tgz',
     })
   } finally {
     URL.revokeObjectURL(url)
@@ -1846,22 +1872,22 @@ export async function listwanixdir(path: string): Promise<string[]> {
   return entries.map((name) => String(name))
 }
 
-export async function listwanixbinds(): Promise<WANIX_BIND_ENTRY[]> {
+export function listwanixbinds(): WANIX_BIND_ENTRY[] {
   requireactive()
   return registry.binds.filter((entry) => entry.removable).map(bindmeta)
 }
 
-export async function listwanixtasks(): Promise<WANIX_TASK_ENTRY[]> {
+export function listwanixtasks(): WANIX_TASK_ENTRY[] {
   requireactive()
   return [...registry.tasks.values()].map(taskmeta)
 }
 
-export async function unmountwanixbind(bindid: string): Promise<void> {
+export function unmountwanixbind(bindid: string): void {
   requireactive()
   removebind(bindid)
 }
 
-export async function unmountallwanixbinds(): Promise<string[]> {
+export function unmountallwanixbinds(): string[] {
   requireactive()
   return removeallbinds()
 }
@@ -1882,7 +1908,7 @@ export async function attachwanixtarget(
   id: string,
 ): Promise<void> {
   requireactive()
-  await attachtarget(kind, id)
+  attachtarget(kind, id)
   await enterwanixattachedterminal()
   const entry = getentry(kind, id)
   if (entry) {
@@ -2003,6 +2029,9 @@ export async function spawnwanixvm(
       attach: opts.attach !== false,
       mem: opts.mem,
     })
+    if (typeof result === 'string') {
+      throw new Error('spawnvm wait returned vm id')
+    }
     return {
       vmid: result.vmId,
       code: typeof result.code === 'number' ? result.code : 0,
@@ -2037,12 +2066,12 @@ export async function haltwanixvm(vmid?: string): Promise<void> {
   await haltvm(vmid)
 }
 
-export async function listwanixvms(): Promise<WANIX_VM_ENTRY[]> {
+export function listwanixvms(): WANIX_VM_ENTRY[] {
   requireactive()
   return [...registry.vms.values()].map(vmmeta)
 }
 
-export async function readwanixstatus(): Promise<{
+export function readwanixstatus(): {
   active: boolean
   ready: boolean
   state: WANIX_HOST_STATE
@@ -2057,7 +2086,7 @@ export async function readwanixstatus(): Promise<{
   tasks?: WANIX_TASK_ENTRY[]
   vms?: WANIX_VM_ENTRY[]
   binds?: WANIX_BIND_ENTRY[]
-}> {
+} {
   if (iswanixtermiframemode() && iswanixtermiframeactive()) {
     return {
       active: true,
@@ -2151,20 +2180,23 @@ export function wanixhosttestwirewriter(
   state = 'ready'
   active = true
   root = {} as WanixRoot
-  sys = document.createElement('div') as WanixSystemElement
+  sys = document.createElement('div') as unknown as WanixSystemElement
   wanixhosttestsetattached(kind, id)
   const entry = getentry(kind, id)
   if (!entry) {
     return
   }
   entry.termwriter = {
-    write: async (chunk) => {
-      onwrite(chunk)
+    write(chunk: Uint8Array | undefined) {
+      if (chunk) {
+        onwrite(chunk)
+      }
+      return Promise.resolve()
     },
-    releaseLock: async () => {},
+    releaseLock() {},
     closed: false,
     desiredSize: null,
-  } as WritableStreamDefaultWriter<Uint8Array>
+  } as unknown as WritableStreamDefaultWriter<Uint8Array>
 }
 
 /** Test hook — reset module state without a live wanix-system. */

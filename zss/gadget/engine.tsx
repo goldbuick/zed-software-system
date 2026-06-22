@@ -16,9 +16,7 @@ import { EffectComposerMain } from 'zss/gadget/graphics/effectcomposer'
 import { doasync } from 'zss/mapping/func'
 import { PerfHud } from 'zss/perf/hud'
 import { createplatform, haltplatform } from 'zss/platform'
-import {
-  ScreenUILayout,
-} from 'zss/screens/screenui/layout'
+import { ScreenUILayout } from 'zss/screens/screenui/layout'
 import { ScreenUIScrollLayer } from 'zss/screens/screenui/scrolllayer'
 import { ScreenUIScrollProvider } from 'zss/screens/screenui/scrollprovider'
 import { TapeComponent } from 'zss/screens/tape/component'

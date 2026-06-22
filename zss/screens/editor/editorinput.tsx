@@ -12,15 +12,19 @@ import { type SharedTextHandle } from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { withclipboard } from 'zss/feature/keyboard'
-import { useEditor, useGadgetClient, useTape } from 'zss/gadget/data/zustandstores'
 import { useEqual } from 'zss/gadget/data/useequal'
+import {
+  useEditor,
+  useGadgetClient,
+  useTape,
+} from 'zss/gadget/data/zustandstores'
 import { useDeviceData } from 'zss/gadget/device'
-import { Scrollable } from 'zss/gadget/scrollable'
 import {
   getmobiletextelement,
   mobiletextfocus,
   onmobiletextinput,
 } from 'zss/gadget/mobiletext'
+import { Scrollable } from 'zss/gadget/scrollable'
 import { modsfromevent } from 'zss/gadget/userinput'
 import { UserInput } from 'zss/gadget/userinput.bridge'
 import { useWriteText } from 'zss/gadget/writetext'

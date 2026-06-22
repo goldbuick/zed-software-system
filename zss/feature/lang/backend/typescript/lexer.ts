@@ -6,12 +6,6 @@ import {
   createTokenInstance,
 } from 'chevrotain'
 import { LANG_DEV } from 'zss/config'
-import {
-  iscommandat,
-  iscommandwordat,
-  linestartoffset,
-  shouldstatat,
-} from 'zss/feature/lang/zztlineclass'
 import { range } from 'zss/mapping/array'
 import { isarray } from 'zss/mapping/types'
 
@@ -56,37 +50,13 @@ export const whitespaceandnewline = createSimpleToken({
 
 export const stat = createSimpleToken({
   name: 'stat',
-  pattern: matchStatLine,
+  pattern: /@.*/,
   start_chars_hint: ['@'],
 })
 
-function matchStatLine(
-  text: string,
-  startOffset: number,
-): RegExpExecArray | null {
-  if (!shouldstatat(text, startOffset)) {
-    return null
-  }
-  let end = startOffset + 1
-  while (end < text.length && text[end] !== '\n') {
-    end += 1
-  }
-  return [text.slice(startOffset, end)] as RegExpExecArray
-}
-
-function matchCommandHash(
-  text: string,
-  startOffset: number,
-): RegExpExecArray | null {
-  if (!iscommandat(text, startOffset)) {
-    return null
-  }
-  return ['#'] as RegExpExecArray
-}
-
 export const command = createSimpleToken({
   name: 'command',
-  pattern: matchCommandHash,
+  pattern: /#/,
   start_chars_hint: ['#'],
 })
 
@@ -96,74 +66,6 @@ const probablynottext = `@#/?':!`
 const matchcomplexdir = /^(by|at|away|toward|find|flee|to|cw|ccw|opp|rndp)/i
 function matchBasicText(text: string, startOffset: number) {
   if (textmatchdepth <= 0) {
-    return null
-  }
-
-  // line-start and inline ZZT labels (e.g. ":loop", "#try to n :poured")
-  if (text[startOffset] === ':') {
-    const prev = text[startOffset - 1] ?? '\n'
-    if (prev === '\n' || prev === ' ') {
-      return null
-    }
-  }
-
-  // indented ZZT command arg continuation (e.g. "#change red\n lion gem")
-  if (text[startOffset] === ' ' || text[startOffset] === '\t') {
-    const linestart = linestartoffset(text, startOffset)
-    if (linestart < startOffset) {
-      let scan = startOffset
-      while (
-        scan < text.length &&
-        (text[scan] === ' ' || text[scan] === '\t')
-      ) {
-        scan += 1
-      }
-      const lineend = text.indexOf('\n', scan)
-      const rest = text.slice(scan, lineend >= 0 ? lineend : text.length).trim()
-      if (/^[a-z][a-z0-9_ ]*$/i.test(rest)) {
-        return null
-      }
-    }
-  }
-
-  // indented scroll line with / in prose (e.g. " / 47" in ASCII charts)
-  if (text[startOffset] === ' ' || text[startOffset] === '\t') {
-    const linestart = linestartoffset(text, startOffset)
-    let scan = startOffset
-    while (scan < text.length && (text[scan] === ' ' || text[scan] === '\t')) {
-      scan += 1
-    }
-    if (scan > linestart && text[scan] === '/') {
-      if (iscommandat(text, linestart)) {
-        return null
-      }
-      let end = startOffset
-      while (end < text.length && text[end] !== '\n') {
-        end += 1
-      }
-      const match = text.substring(linestart, end)
-      if (match.trim().length > 0) {
-        return [match] as RegExpExecArray
-      }
-    }
-  }
-
-  // indented scroll line with # in prose (e.g. " #char back")
-  if (text[startOffset] === '#' && !iscommandat(text, startOffset)) {
-    const linestart = linestartoffset(text, startOffset)
-    if (linestart < startOffset) {
-      let end = startOffset
-      while (end < text.length && text[end] !== '\n') {
-        end += 1
-      }
-      const match = text.substring(linestart, end)
-      if (match.trim().length > 0) {
-        return [match] as RegExpExecArray
-      }
-    }
-  }
-
-  if (shouldstatat(text, startOffset)) {
     return null
   }
 
@@ -184,19 +86,6 @@ function matchBasicText(text: string, startOffset: number) {
     if (probablynottext.includes(text[cursor])) {
       return null
     }
-  }
-
-  // @ at line start as scroll text (not stat)
-  if (text[startOffset] === '@' && !shouldstatat(text, startOffset)) {
-    let i = startOffset
-    while (i < text.length && text[i] !== '\n') {
-      i++
-    }
-    const match = text.substring(startOffset, i)
-    if (match.trim().length === 0) {
-      return null
-    }
-    return [match] as RegExpExecArray
   }
 
   // scan backwards to check what kind of spot we're in
@@ -236,12 +125,9 @@ function matchBasicText(text: string, startOffset: number) {
     case '@':
     case `'`:
     case ':':
-    case '!': {
-      if (matchHyperlink(text, startOffset)) {
-        return null
-      }
-      break
-    }
+    case '!':
+      // not-okay
+      return null
     case '\n':
       // okay
       break
@@ -309,28 +195,9 @@ export const label = createSimpleToken({
   start_chars_hint: [':'],
 })
 
-function matchHyperlink(
-  text: string,
-  startOffset: number,
-): RegExpExecArray | null {
-  if (text[startOffset] !== '!' || text[startOffset + 1] === '!') {
-    return null
-  }
-  const lineend = text.indexOf('\n', startOffset)
-  const semi = text.indexOf(';', startOffset + 1)
-  if (semi < 0 || (lineend >= 0 && semi > lineend)) {
-    return null
-  }
-  const match = text.slice(startOffset, semi)
-  if (match.length < 2) {
-    return null
-  }
-  return [match] as RegExpExecArray
-}
-
 export const hyperlink = createSimpleToken({
   name: 'hyperlink',
-  pattern: matchHyperlink,
+  pattern: /![^;\n]*/,
   start_chars_hint: ['!'],
 })
 
@@ -475,50 +342,19 @@ export const dir_flee = createWordToken('flee')
 
 export const dir_to = createWordToken('to')
 
-function matchdirshortcut(
-  letter: string,
-  text: string,
-  startOffset: number,
-): RegExpExecArray | null {
-  const linestart = linestartoffset(text, startOffset)
-  if (startOffset === linestart) {
-    return null
-  }
-  const before = text.slice(linestart, startOffset)
-  if (/(?:^|\s)(?:send|zap|restore)\s$/i.test(before)) {
-    return null
-  }
-  const rest = text.slice(startOffset)
-  const match = new RegExp(`^${letter}\\b`, 'i').exec(rest)
-  if (!match) {
-    return null
-  }
-  return [match[0]] as RegExpExecArray
-}
-
-function createdirshortcut(letter: string) {
-  return createSimpleToken({
-    name: letter,
-    pattern: (text: string, startOffset: number) =>
-      matchdirshortcut(letter, text, startOffset),
-    longer_alt: stringliteral,
-  })
-}
-
-export const dir_i = createdirshortcut('i')
-export const dir_u = createdirshortcut('u')
-export const dir_n = createdirshortcut('n')
-export const dir_d = createdirshortcut('d')
-export const dir_s = createdirshortcut('s')
-export const dir_l = createdirshortcut('l')
-export const dir_w = createdirshortcut('w')
-export const dir_r = createdirshortcut('r')
-export const dir_e = createdirshortcut('e')
-
+export const dir_i = createWordToken('i')
+export const dir_u = createWordToken('u')
 export const dir_north = createWordToken('north')
+export const dir_n = createWordToken('n')
+export const dir_d = createWordToken('d')
 export const dir_south = createWordToken('south')
+export const dir_s = createWordToken('s')
+export const dir_l = createWordToken('l')
 export const dir_west = createWordToken('west')
+export const dir_w = createWordToken('w')
+export const dir_r = createWordToken('r')
 export const dir_east = createWordToken('east')
+export const dir_e = createWordToken('e')
 
 export const dir_over = createWordToken('over')
 export const dir_under = createWordToken('under')
@@ -530,46 +366,29 @@ export const dir_select = createWordToken('select')
 export const dir_flood = createWordToken('flood')
 export const dir_beam = createWordToken('beam')
 
-function createexprword(word: string) {
-  return createSimpleToken({
-    name: word,
-    pattern: (text: string, startOffset: number) => {
-      if (iscommandwordat(text, startOffset)) {
-        return null
-      }
-      const rest = text.slice(startOffset)
-      const match = new RegExp(`^${word}\\b`, 'i').exec(rest)
-      if (!match) {
-        return null
-      }
-      return [match[0]] as RegExpExecArray
-    },
-    longer_alt: stringliteral,
-  })
-}
 export const expr_aligned = createSimpleToken({
   name: 'expr_aligned',
   pattern: /aligned|alligned/i,
   longer_alt: stringliteral,
 })
 
-export const expr_contact = createexprword('contact')
-export const expr_blocked = createexprword('blocked')
-export const expr_any = createexprword('any')
-export const expr_count = createexprword('countof')
-export const expr_abs = createexprword('abs')
-export const expr_intceil = createexprword('intceil')
-export const expr_intfloor = createexprword('intfloor')
-export const expr_intround = createexprword('intround')
-export const expr_clamp = createexprword('clamp')
-export const expr_min = createexprword('min')
-export const expr_max = createexprword('max')
-export const expr_pick = createexprword('pick')
-export const expr_pickwith = createexprword('pickwith')
-export const expr_random = createexprword('random')
-export const expr_randomwith = createexprword('randomwith')
-export const expr_run = createexprword('run')
-export const expr_runwith = createexprword('runwith')
+export const expr_contact = createWordToken('contact')
+export const expr_blocked = createWordToken('blocked')
+export const expr_any = createWordToken('any')
+export const expr_count = createWordToken('countof')
+export const expr_abs = createWordToken('abs')
+export const expr_intceil = createWordToken('intceil')
+export const expr_intfloor = createWordToken('intfloor')
+export const expr_intround = createWordToken('intround')
+export const expr_clamp = createWordToken('clamp')
+export const expr_min = createWordToken('min')
+export const expr_max = createWordToken('max')
+export const expr_pick = createWordToken('pick')
+export const expr_pickwith = createWordToken('pickwith')
+export const expr_random = createWordToken('random')
+export const expr_randomwith = createWordToken('randomwith')
+export const expr_run = createWordToken('run')
+export const expr_runwith = createWordToken('runwith')
 export const expr_stop = createSimpleToken({
   name: 'stop',
   pattern: /\|/,
@@ -664,64 +483,6 @@ export const command_play = createSimpleToken({
   longer_alt: stringliteral,
 })
 
-function matchSendTarget(
-  text: string,
-  startOffset: number,
-): RegExpExecArray | null {
-  const m = /^[A-Za-z0-9_]+:[A-Za-z0-9_]+/i.exec(text.slice(startOffset))
-  if (!m) {
-    return null
-  }
-  return [m[0]] as RegExpExecArray
-}
-
-export const send_target = createSimpleToken({
-  name: 'send_target',
-  pattern: matchSendTarget,
-  longer_alt: stringliteral,
-})
-
-function matchSendHashLabel(
-  text: string,
-  startOffset: number,
-): RegExpExecArray | null {
-  const m = /^#[A-Za-z][A-Za-z0-9_]*(?::[A-Za-z0-9_]+)?/i.exec(
-    text.slice(startOffset),
-  )
-  if (!m) {
-    return null
-  }
-  return [m[0]] as RegExpExecArray
-}
-
-export const send_hash_label = createSimpleToken({
-  name: 'send_hash_label',
-  pattern: matchSendHashLabel,
-  longer_alt: stringliteral,
-})
-
-function matchStmtSendDoubleHash(
-  text: string,
-  startOffset: number,
-): RegExpExecArray | null {
-  if (!iscommandat(text, startOffset)) {
-    return null
-  }
-  const m = /^##[A-Za-z][A-Za-z0-9_]*/i.exec(text.slice(startOffset))
-  if (!m) {
-    return null
-  }
-  const lineend = text.indexOf('\n', startOffset)
-  const end = lineend >= 0 ? lineend : text.length
-  return [text.slice(startOffset, end)] as RegExpExecArray
-}
-
-export const stmt_send_double_hash = createSimpleToken({
-  name: 'stmt_send_double_hash',
-  pattern: matchStmtSendDoubleHash,
-  start_chars_hint: ['#'],
-})
-
 export const command_toast = createSimpleToken({
   name: 'command_toast',
   pattern: /toast .*/i,
@@ -740,74 +501,28 @@ export const command_ticker = createSimpleToken({
 
 export const command_if = createSimpleToken({
   name: 'if',
-  pattern: /(?<=#)if\b/i,
-  longer_alt: stringliteral,
-})
-export const command_try = createSimpleToken({
-  name: 'try',
-  pattern: /(?<=#)try\b/i,
-  longer_alt: stringliteral,
-})
-export const command_take = createSimpleToken({
-  name: 'take',
-  pattern: /(?<=#)take\b/i,
-  longer_alt: stringliteral,
-})
-export const command_change = createSimpleToken({
-  name: 'change',
-  pattern: /(?<=#)change\b/i,
-  longer_alt: stringliteral,
-})
-export const command_become = createSimpleToken({
-  name: 'become',
-  pattern: /(?<=#)become\b/i,
+  pattern: /if|try|take|give|duplicate/i,
   longer_alt: stringliteral,
 })
 export const command_do = createSimpleToken({
   name: 'do',
-  pattern: /(?<=#)do\b/i,
+  pattern: /(?<!(zap |send |restore ))(?<=\s)do/i,
+  start_chars_hint: ['d'],
   longer_alt: stringliteral,
 })
-export const command_done = createSimpleToken({
-  name: 'done',
-  pattern: /(?<=#)done\b/i,
-  longer_alt: stringliteral,
-})
-export const command_else = createSimpleToken({
-  name: 'else',
-  pattern: /(?<=#)else\b/i,
-  longer_alt: stringliteral,
-})
-export const command_while = createSimpleToken({
-  name: 'while',
-  pattern: /(?<=#)while\b/i,
-  longer_alt: stringliteral,
-})
-export const command_repeat = createSimpleToken({
-  name: 'repeat',
-  pattern: /(?<=#)repeat\b/i,
-  longer_alt: stringliteral,
-})
-export const command_waitfor = createSimpleToken({
-  name: 'waitfor',
-  pattern: /(?<=#)waitfor\b/i,
-  longer_alt: stringliteral,
-})
+// export const command_do = createWordToken('do')
+export const command_done = createWordToken('done')
+export const command_else = createWordToken('else')
+export const command_while = createWordToken('while')
+export const command_repeat = createWordToken('repeat')
+export const command_waitfor = createWordToken('waitfor')
 export const command_foreach = createSimpleToken({
   name: 'foreach',
   pattern: /foreach|for/i,
   longer_alt: stringliteral,
 })
-export const command_break = createSimpleToken({
-  name: 'break',
-  pattern: /(?<=#)break\b/i,
-  longer_alt: stringliteral,
-})
-export const command_continue = createSimpleToken({
-  name: 'continue',
-  pattern: /(?<=#)continue\b/i,
-  longer_alt: stringliteral,
-})
+export const command_break = createWordToken('break')
+export const command_continue = createWordToken('continue')
 
 // common error marking
 export type LANG_ERROR = {
@@ -1006,13 +721,10 @@ export const allTokens = createTokenSet(
     text,
     // commands
     stat,
-    stmt_send_double_hash,
     command_play,
     command_toast,
     command_ticker,
     command,
-    send_target,
-    send_hash_label,
     // flow
     comment,
     label,
@@ -1030,10 +742,6 @@ export const allTokens = createTokenSet(
     command_else,
     command_foreach,
     command_if,
-    command_try,
-    command_take,
-    command_change,
-    command_become,
     command_repeat,
     command_waitfor,
     command_while,
