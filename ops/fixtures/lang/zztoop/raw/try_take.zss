@@ -1,0 +1,8 @@
+@merchant
+:buy
+#take gems 5 :poor
+#give torches 1
+#end
+:poor
+You can't afford that!
+#end

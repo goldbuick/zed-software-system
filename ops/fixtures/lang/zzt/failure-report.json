@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-06-20T23:30:39.611Z",
+  "generated_at": "2026-06-21T03:02:57.457Z",
   "corpus_present": true,
   "raw_oop": {
     "total": 1108500,
-    "ok": 1066895,
-    "fail": 41605,
-    "ok_rate": 0.962467298150654
+    "ok": 1066774,
+    "fail": 41726,
+    "ok_rate": 0.9623581416328372
   },
   "wrapped_zss": {
     "total": 0,
@@ -15,9 +15,9 @@
   },
   "triage": {
     "raw": {
-      "fixable_fail": 6427,
+      "fixable_fail": 6429,
       "invalid_zzt_fail": 33,
-      "ambiguous_fail": 35145
+      "ambiguous_fail": 35264
     },
     "wrapped": {
       "fixable_fail": 0,
@@ -38,7 +38,7 @@
       "sample_error": "Expecting: one of these possible Token sequences:\n  1. [token_numberliteral]\n  2. [token_stringliteral]\n  3. [token_stringliteraldouble]\n  4. [token_black]\n  5. [token_dkblue]\n  6. [token_dkgreen]\n  7. [token_dkcyan]\n  8. [token_dkred]\n  9. [token_dkpurple]\n  10. [token_dkyellow]\n  11. [token_ltgray]\n  12. [token_dkgray]\n  13. [token_blue]\n  14. [token_green]\n  15. [token_cyan]\n  16. [token_red]\n  17. [token_purple]\n  18. [token_yellow]\n  19. [token_white]\n  20. [token_brown]\n  21. [token_dkwhite]\n  22. [token_ltgrey]\n  23. [token_gray]\n  24. [token_grey]\n  25. [token_dkgrey]\n  26. [token_ltblack]\n  27. [token_onblack]\n  28. [token_ondkblue]\n  29. [token_ondkgreen]\n  30. [token_ondkcyan]\n  31. [token_ondkred]\n  32. [token_ondkpurple]\n  33. [token_ondkyellow]\n  34. [token_onltgray]\n  35. [token_ondkgray]\n  36. [token_onblue]\n  37. [token_ongreen]\n  38. [token_oncyan]\n  39. [token_onred]\n  40. [token_onpurple]\n  41. [token_onyellow]\n  42. [token_onwhite]\n  43. [token_onbrown]\n  44. [token_ondkwhite]\n  45. [token_onltgrey]\n  46. [token_ongray]\n  47. [token_ongrey]\n  48. [token_ondkgrey]\n  49. [token_onltblack]\n  50. [token_onclear]\n  51. [token_blblack]\n  52. [token_bldkblue]\n  53. [token_bldkgreen]\n  54. [token_bldkcyan]\n  55. [token_bldkred]\n  56. [token_bldkpurple]\n  57. [token_bldkyellow]\n  58. [token_blltgray]\n  59. [token_bldkgray]\n  60. [token_blblue]\n  61. [token_blgreen]\n  62. [token_blcyan]\n  63. [token_blred]\n  64. [token_blpurple]\n  65. [token_blyellow]\n  66. [token_blwhite]\n  67. [token_blbrown]\n  68. [token_bldkwhite]\n  69. [token_blltgrey]\n  70. [token_blgray]\n  71. [token_blgrey]\n  72. [token_bldkgrey]\n  73. [token_blltblack]\nbut found: '\n'"
     },
     {
-      "signature": "Expecting: one of these possible Token sequences:\n  N. [token_label]\n  N. [token_stat]\n  N. [token_text]\n  N. [token_comment]\n  N. [token_hyperlink]\n  N. [token_stmt_send_double_hash]\n  N. [token_stmt_play]\n  N. [token_command, token_change",
+      "signature": "Expecting: one of these possible Token sequences:\n  N. [token_label]\n  N. [token_stat]\n  N. [token_text]\n  N. [token_comment]\n  N. [token_hyperlink]\n  N. [token_stmt_send_double_hash]\n  N. [token_command, token_change]\n  N. [token_command, ",
       "triage": "fixable",
       "count": 1519,
       "sample_ids": [
@@ -46,7 +46,7 @@
         "24hoz-aut1999__OWLBOY__b18__s1__object",
         "24hoz-aut2001__SENKYORA__b12__s2__object"
       ],
-      "sample_error": "Expecting: one of these possible Token sequences:\n  1. [token_label]\n  2. [token_stat]\n  3. [token_text]\n  4. [token_comment]\n  5. [token_hyperlink]\n  6. [token_stmt_send_double_hash]\n  7. [token_stmt_play]\n  8. [token_command, token_change]\n  9. [token_command, token_become]\n  10. [token_command, token_try]\n  11. [token_command, token_take]\n  12. [token_command, token_send_target]\n  13. [token_command, token_send_hash_label]\n  14. [token_command, token_if]\n  15. [token_command, token_while]\n  16. [token_command, token_repeat]\n  17. [token_command, token_waitfor]\n  18. [token_command, token_foreach]\n  19. [token_command, token_break]\n  20. [token_command, token_continue]\n  21. [token_command, token_not]\n  22. [token_command, token_expr_aligned]\n  23. [token_command, token_contact]\n  24. [token_command, token_any]\n  25. [token_command, token_countof]\n  26. [token_command, token_blocked]\n  27. [token_command, token_abs]\n  28. [token_command, token_intceil]\n  29. [token_command, token_intfloor]\n  30. [token_command, token_intround]\n  31. [token_command, token_clamp]\n  32. [token_command, token_min]\n  33. [token_command, token_max]\n  34. [token_command, token_pick]\n  35. [token_command, token_pickwith]\n  36. [token_command, token_random]\n  37. [token_command, token_randomwith]\n  38. [token_command, token_run]\n  39. [token_command, token_runwith]\n  40. [token_command, token_plus]\n  41. [token_command, token_minus]\n  42. [token_command, token_isterrain]\n  43. [token_command, token_isobject]\n  44. [token_command, token_issolid]\n  45. [token_command, token_iswalk]\n  46. [token_command, token_isswim]\n  47. [token_command, token_isbullet]\n  48. [token_command, token_isghost]\n  49. [token_command, token_iswalking]\n  50. [token_command, token_iswalkable]\n  51. [token_command, token_isswimming]\n  52. [token_command, token_isswimmable]\n  53. [token_command, token_black]\n  54. [token_command, token_dkblue]\n  55. [token_command, token_dkgreen]\n  56. [token_command, token_dkcyan]\n  57. [token_command, token_dkred]\n  58. [token_command, token_dkpurple]\n  59. [token_command, token_dkyellow]\n  60. [token_command, token_ltgray]\n  61. [token_command, token_dkgray]\n  62. [token_command, token_blue]\n  63. [token_command, token_green]\n  64. [token_command, token_cyan]\n  65. [token_command, token_red]\n  66. [token_command, token_purple]\n  67. [token_command, token_yellow]\n  68. [token_command, token_white]\n  69. [token_command, token_brown]\n  70. [token_command, token_dkwhite]\n  71. [token_command, token_ltgrey]\n  72. [token_command, token_gray]\n  73. [token_command, token_grey]\n  74. [token_command, token_dkgrey]\n  75. [token_command, token_ltblack]\n  76. [token_command, token_onblack]\n  77. [token_command, token_ondkblue]\n  78. [token_command, token_ondkgreen]\n  79. [token_command, token_ondkcyan]\n  80. [token_command, token_ondkred]\n  81. [token_command, token_ondkpurple]\n  82. [token_command, token_ondkyellow]\n  83. [token_command, token_onltgray]\n  84. [token_command, token_ondkgray]\n  85. [token_command, token_onblue]\n  86. [token_command, token_ongreen]\n  87. [token_command, token_oncyan]\n  88. [token_command, token_onred]\n  89. [token_command, token_onpurple]\n  90. [token_command, token_onyellow]\n  91. [token_command, token_onwhite]\n  92. [token_command, token_onbrown]\n  93. [token_command, token_ondkwhite]\n  94. [token_command, token_onltgrey]\n  95. [token_command, token_ongray]\n  96. [token_command, token_ongrey]\n  97. [token_command, token_ondkgrey]\n  98. [token_command, token_onltblack]\n  99. [token_command, token_onclear]\n  100. [token_command, token_blblack]\n  101. [token_command, token_bldkblue]\n  102. [token_command, token_bldkgreen]\n  103. [token_command, token_bldkcyan]\n  104. [token_command, token_bldkred]\n  105. [token_command, token_bldkpurple]\n  106. [token_command, token_bldkyellow]\n  107. [token_command, token_blltgray]\n  108. [token_command, token_bldkgray]\n  109. [token_command, token_blblue]\n  110. [token_command, token_blgreen]\n  111. [token_command, token_blcyan]\n  112. [token_command, token_blred]\n  113. [token_command, token_blpurple]\n  114. [token_command, token_blyellow]\n  115. [token_command, token_blwhite]\n  116. [token_command, token_blbrown]\n  117. [token_command, token_bldkwhite]\n  118. [token_command, token_blltgrey]\n  119. [token_command, token_blgray]\n  120. [token_command, token_blgrey]\n  121. [token_command, token_bldkgrey]\n  122. [token_command, token_blltblack]\n  123. [token_command, token_cw]\n  124. [token_command, token_ccw]\n  125. [token_command, token_opp]\n  126. [token_command, token_rndp]\n  127. [token_command, token_over]\n  128. [token_command, token_under]\n  129. [token_command, token_ground]\n  130. [token_command, token_within]\n  131. [token_command, token_awayby]\n  132. [token_command, token_elements]\n  133. [token_command, token_idle]\n  134. [token_command, token_up]\n  135. [token_command, token_down]\n  136. [token_command, token_left]\n  137. [token_command, token_right]\n  138. [token_command, token_by]\n  139. [token_command, token_at]\n  140. [token_command, token_away]\n  141. [token_command, token_toward]\n  142. [token_command, token_flow]\n  143. [token_command, token_seek]\n  144. [token_command, token_rndns]\n  145. [token_command, token_rndne]\n  146. [token_command, token_rnd]\n  147. [token_command, token_find]\n  148. [token_command, token_flee]\n  149. [token_command, token_to]\n  150. [token_command, token_select]\n  151. [token_command, token_flood]\n  152. [token_command, token_beam]\n  153. [token_command, token_i]\n  154. [token_command, token_u]\n  155. [token_command, token_north]\n  156. [token_command, token_n]\n  157. [token_command, token_d]\n  158. [token_command, token_south]\n  159. [token_command, token_s]\n  160. [token_command, token_l]\n  161. [token_command, token_west]\n  162. [token_command, token_w]\n  163. [token_command, token_r]\n  164. [token_command, token_east]\n  165. [token_command, token_e]\n  166. [token_command, token_command_play]\n  167. [token_command, token_command_toast]\n  168. [token_command, token_command_ticker]\n  169. [token_command, token_label]\n  170. [token_command, token_stringliteraldouble]\n  171. [token_command, token_stringliteral]\n  172. [token_command, token_numberliteral]\n  173. [token_command, token_stop]\n  174. [token_command, token_lparen]\n  175. [token_command, token_do]\n  176. [token_command, token_done]\n  177. [token_command, token_else]\n  178. [token_divide]\n  179. [token_query]\nbut found: '#'"
+      "sample_error": "Expecting: one of these possible Token sequences:\n  1. [token_label]\n  2. [token_stat]\n  3. [token_text]\n  4. [token_comment]\n  5. [token_hyperlink]\n  6. [token_stmt_send_double_hash]\n  7. [token_command, token_change]\n  8. [token_command, token_become]\n  9. [token_command, token_try]\n  10. [token_command, token_take]\n  11. [token_command, token_send_target]\n  12. [token_command, token_send_hash_label]\n  13. [token_command, token_if]\n  14. [token_command, token_while]\n  15. [token_command, token_repeat]\n  16. [token_command, token_waitfor]\n  17. [token_command, token_foreach]\n  18. [token_command, token_break]\n  19. [token_command, token_continue]\n  20. [token_command, token_not]\n  21. [token_command, token_expr_aligned]\n  22. [token_command, token_contact]\n  23. [token_command, token_any]\n  24. [token_command, token_countof]\n  25. [token_command, token_blocked]\n  26. [token_command, token_abs]\n  27. [token_command, token_intceil]\n  28. [token_command, token_intfloor]\n  29. [token_command, token_intround]\n  30. [token_command, token_clamp]\n  31. [token_command, token_min]\n  32. [token_command, token_max]\n  33. [token_command, token_pick]\n  34. [token_command, token_pickwith]\n  35. [token_command, token_random]\n  36. [token_command, token_randomwith]\n  37. [token_command, token_run]\n  38. [token_command, token_runwith]\n  39. [token_command, token_plus]\n  40. [token_command, token_minus]\n  41. [token_command, token_isterrain]\n  42. [token_command, token_isobject]\n  43. [token_command, token_issolid]\n  44. [token_command, token_iswalk]\n  45. [token_command, token_isswim]\n  46. [token_command, token_isbullet]\n  47. [token_command, token_isghost]\n  48. [token_command, token_iswalking]\n  49. [token_command, token_iswalkable]\n  50. [token_command, token_isswimming]\n  51. [token_command, token_isswimmable]\n  52. [token_command, token_black]\n  53. [token_command, token_dkblue]\n  54. [token_command, token_dkgreen]\n  55. [token_command, token_dkcyan]\n  56. [token_command, token_dkred]\n  57. [token_command, token_dkpurple]\n  58. [token_command, token_dkyellow]\n  59. [token_command, token_ltgray]\n  60. [token_command, token_dkgray]\n  61. [token_command, token_blue]\n  62. [token_command, token_green]\n  63. [token_command, token_cyan]\n  64. [token_command, token_red]\n  65. [token_command, token_purple]\n  66. [token_command, token_yellow]\n  67. [token_command, token_white]\n  68. [token_command, token_brown]\n  69. [token_command, token_dkwhite]\n  70. [token_command, token_ltgrey]\n  71. [token_command, token_gray]\n  72. [token_command, token_grey]\n  73. [token_command, token_dkgrey]\n  74. [token_command, token_ltblack]\n  75. [token_command, token_onblack]\n  76. [token_command, token_ondkblue]\n  77. [token_command, token_ondkgreen]\n  78. [token_command, token_ondkcyan]\n  79. [token_command, token_ondkred]\n  80. [token_command, token_ondkpurple]\n  81. [token_command, token_ondkyellow]\n  82. [token_command, token_onltgray]\n  83. [token_command, token_ondkgray]\n  84. [token_command, token_onblue]\n  85. [token_command, token_ongreen]\n  86. [token_command, token_oncyan]\n  87. [token_command, token_onred]\n  88. [token_command, token_onpurple]\n  89. [token_command, token_onyellow]\n  90. [token_command, token_onwhite]\n  91. [token_command, token_onbrown]\n  92. [token_command, token_ondkwhite]\n  93. [token_command, token_onltgrey]\n  94. [token_command, token_ongray]\n  95. [token_command, token_ongrey]\n  96. [token_command, token_ondkgrey]\n  97. [token_command, token_onltblack]\n  98. [token_command, token_onclear]\n  99. [token_command, token_blblack]\n  100. [token_command, token_bldkblue]\n  101. [token_command, token_bldkgreen]\n  102. [token_command, token_bldkcyan]\n  103. [token_command, token_bldkred]\n  104. [token_command, token_bldkpurple]\n  105. [token_command, token_bldkyellow]\n  106. [token_command, token_blltgray]\n  107. [token_command, token_bldkgray]\n  108. [token_command, token_blblue]\n  109. [token_command, token_blgreen]\n  110. [token_command, token_blcyan]\n  111. [token_command, token_blred]\n  112. [token_command, token_blpurple]\n  113. [token_command, token_blyellow]\n  114. [token_command, token_blwhite]\n  115. [token_command, token_blbrown]\n  116. [token_command, token_bldkwhite]\n  117. [token_command, token_blltgrey]\n  118. [token_command, token_blgray]\n  119. [token_command, token_blgrey]\n  120. [token_command, token_bldkgrey]\n  121. [token_command, token_blltblack]\n  122. [token_command, token_cw]\n  123. [token_command, token_ccw]\n  124. [token_command, token_opp]\n  125. [token_command, token_rndp]\n  126. [token_command, token_over]\n  127. [token_command, token_under]\n  128. [token_command, token_ground]\n  129. [token_command, token_within]\n  130. [token_command, token_awayby]\n  131. [token_command, token_elements]\n  132. [token_command, token_idle]\n  133. [token_command, token_up]\n  134. [token_command, token_down]\n  135. [token_command, token_left]\n  136. [token_command, token_right]\n  137. [token_command, token_by]\n  138. [token_command, token_at]\n  139. [token_command, token_away]\n  140. [token_command, token_toward]\n  141. [token_command, token_flow]\n  142. [token_command, token_seek]\n  143. [token_command, token_rndns]\n  144. [token_command, token_rndne]\n  145. [token_command, token_rnd]\n  146. [token_command, token_find]\n  147. [token_command, token_flee]\n  148. [token_command, token_to]\n  149. [token_command, token_select]\n  150. [token_command, token_flood]\n  151. [token_command, token_beam]\n  152. [token_command, token_i]\n  153. [token_command, token_u]\n  154. [token_command, token_north]\n  155. [token_command, token_n]\n  156. [token_command, token_d]\n  157. [token_command, token_south]\n  158. [token_command, token_s]\n  159. [token_command, token_l]\n  160. [token_command, token_west]\n  161. [token_command, token_w]\n  162. [token_command, token_r]\n  163. [token_command, token_east]\n  164. [token_command, token_e]\n  165. [token_command, token_command_play]\n  166. [token_command, token_command_toast]\n  167. [token_command, token_command_ticker]\n  168. [token_command, token_label]\n  169. [token_command, token_stringliteraldouble]\n  170. [token_command, token_stringliteral]\n  171. [token_command, token_numberliteral]\n  172. [token_command, token_stop]\n  173. [token_command, token_lparen]\n  174. [token_command, token_do]\n  175. [token_command, token_done]\n  176. [token_command, token_else]\n  177. [token_divide]\n  178. [token_query]\nbut found: '#'"
     },
     {
       "signature": "Redundant input, expecting EOF but found: d",
@@ -73,13 +73,24 @@
     {
       "signature": "Redundant input, expecting EOF but found: e",
       "triage": "ambiguous",
-      "count": 1174,
+      "count": 1177,
       "sample_ids": [
         "2019__2019__b10__s9__object",
         "2019__2019__b12__s2__object",
         "2019__2019__b13__s2__object"
       ],
       "sample_error": "Redundant input, expecting EOF but found: e"
+    },
+    {
+      "signature": "unexpected character: ->!<- at offset: N, skipped N characters.",
+      "triage": "ambiguous",
+      "count": 1057,
+      "sample_ids": [
+        "2021dotzzt__2021dot__b66__s10__object",
+        "24hoz-aut1999__R0b024hb__b12__s8__object",
+        "24hoz-aut1999__SIAMESE__b9__s4__object"
+      ],
+      "sample_error": "unexpected character: ->!<- at offset: 572, skipped 1 characters."
     },
     {
       "signature": "Expecting: one of these possible Token sequences:\n  N. [token_idle]\n  N. [token_up]\n  N. [token_down]\n  N. [token_left]\n  N. [token_right]\n  N. [token_by]\n  N. [token_at]\n  N. [token_away]\n  N. [token_toward]\n  N. [token_flow]\n  N. [token_s",
@@ -102,17 +113,6 @@
         "Aura__AURA__b2__s4__object"
       ],
       "sample_error": "Redundant input, expecting EOF but found: od"
-    },
-    {
-      "signature": "unexpected character: ->!<- at offset: N, skipped N characters.",
-      "triage": "ambiguous",
-      "count": 995,
-      "sample_ids": [
-        "2021dotzzt__2021dot__b66__s10__object",
-        "24hoz-aut1999__R0b024hb__b12__s8__object",
-        "24hoz-aut1999__SIAMESE__b9__s4__object"
-      ],
-      "sample_error": "unexpected character: ->!<- at offset: 572, skipped 1 characters."
     },
     {
       "signature": "Redundant input, expecting EOF but found: n",
@@ -139,7 +139,7 @@
     {
       "signature": "Redundant input, expecting EOF but found: N",
       "triage": "ambiguous",
-      "count": 717,
+      "count": 723,
       "sample_ids": [
         "2020dotzzt__2020__b21__s1__object",
         "2020dotzzt__2020__b21__s2__object",
@@ -161,7 +161,7 @@
     {
       "signature": "Redundant input, expecting EOF but found: i",
       "triage": "ambiguous",
-      "count": 534,
+      "count": 539,
       "sample_ids": [
         "24hoz-aut1999__R0b024hb__b8__s2__object",
         "24hoz-spr2000__24hozf00__b0__s22__object",
@@ -260,7 +260,7 @@
     {
       "signature": "Redundant input, expecting EOF but found: y",
       "triage": "ambiguous",
-      "count": 416,
+      "count": 419,
       "sample_ids": [
         "24hoz-aut2001__Nmzaut01__b2__s8__object",
         "24hoz-spr1999__S24Z-424__b25__s11__object",
@@ -271,7 +271,7 @@
     {
       "signature": "Redundant input, expecting EOF but found: s",
       "triage": "ambiguous",
-      "count": 398,
+      "count": 399,
       "sample_ids": [
         "2019__2019__b10__s8__object",
         "2019__2019__b11__s1__object",
@@ -414,7 +414,7 @@
     {
       "signature": "Redundant input, expecting EOF but found: r",
       "triage": "ambiguous",
-      "count": 248,
+      "count": 249,
       "sample_ids": [
         "24hoz-aut1999__Subquest__b23__s30__object",
         "24hoz-spr2001__115__b27__s113__object",
@@ -656,7 +656,7 @@
     {
       "signature": "Redundant input, expecting EOF but found: uch",
       "triage": "ambiguous",
-      "count": 137,
+      "count": 138,
       "sample_ids": [
         "2021dotzzt__2021dot__b66__s43__object",
         "24hoz-aut2001__WCA__b14__s14__object",
@@ -1457,6 +1457,17 @@
       "sample_error": "Redundant input, expecting EOF but found: urt"
     },
     {
+      "signature": "Redundant input, expecting EOF but found: -",
+      "triage": "ambiguous",
+      "count": 53,
+      "sample_ids": [
+        "24hoz-win2000__HOLYTRIN__b1__s6__object",
+        "24hoz-win2000__HOLYTRIN__b2__s2__object",
+        "24hoz-win2000__HOLYTRIN__b4__s4__object"
+      ],
+      "sample_error": "Redundant input, expecting EOF but found: -"
+    },
+    {
       "signature": "Redundant input, expecting EOF but found: re",
       "triage": "ambiguous",
       "count": 53,
@@ -1488,17 +1499,6 @@
         "24hoz-win20012002__W24hozzt__b9__s21__object"
       ],
       "sample_error": "Redundant input, expecting EOF but found: he"
-    },
-    {
-      "signature": "Redundant input, expecting EOF but found: -",
-      "triage": "ambiguous",
-      "count": 52,
-      "sample_ids": [
-        "24hoz-win2000__HOLYTRIN__b1__s6__object",
-        "24hoz-win2000__HOLYTRIN__b2__s2__object",
-        "24hoz-win2000__HOLYTRIN__b4__s4__object"
-      ],
-      "sample_error": "Redundant input, expecting EOF but found: -"
     },
     {
       "signature": "Redundant input, expecting EOF but found: walk",
@@ -1886,6 +1886,17 @@
       "sample_error": "Redundant input, expecting EOF but found: loop"
     },
     {
+      "signature": "Redundant input, expecting EOF but found: ake",
+      "triage": "ambiguous",
+      "count": 38,
+      "sample_ids": [
+        "24hozzt-2000-summer-metamorphosis__Gipface__b10__s62__object",
+        "a2__A2__b7__s22__object",
+        "a2__A2__b24__s22__object"
+      ],
+      "sample_error": "Redundant input, expecting EOF but found: ake"
+    },
+    {
       "signature": "Redundant input, expecting EOF but found: stuck",
       "triage": "ambiguous",
       "count": 38,
@@ -1928,17 +1939,6 @@
         "24hoz-spr1999__S24Z-426__b15__s3__object"
       ],
       "sample_error": "Redundant input, expecting EOF but found: go"
-    },
-    {
-      "signature": "Redundant input, expecting EOF but found: ake",
-      "triage": "ambiguous",
-      "count": 37,
-      "sample_ids": [
-        "24hozzt-2000-summer-metamorphosis__Gipface__b10__s62__object",
-        "a2__A2__b7__s22__object",
-        "a2__A2__b24__s22__object"
-      ],
-      "sample_error": "Redundant input, expecting EOF but found: ake"
     },
     {
       "signature": "Redundant input, expecting EOF but found: ckme",
@@ -2326,6 +2326,17 @@
       "sample_error": "Redundant input, expecting EOF but found: oot"
     },
     {
+      "signature": "Redundant input, expecting EOF but found: me",
+      "triage": "ambiguous",
+      "count": 29,
+      "sample_ids": [
+        "24hoz-win20022003__DRAGDEVI__b11__s1__object",
+        "dwoods__DWOODS__b8__s43__object",
+        "Union__UNION__b14__s6__object"
+      ],
+      "sample_error": "Redundant input, expecting EOF but found: me"
+    },
+    {
       "signature": "Redundant input, expecting EOF but found: low",
       "triage": "ambiguous",
       "count": 29,
@@ -2379,17 +2390,6 @@
         "spcjones__spcjones__b7__s13__object"
       ],
       "sample_error": "Redundant input, expecting EOF but found: game"
-    },
-    {
-      "signature": "Redundant input, expecting EOF but found: me",
-      "triage": "ambiguous",
-      "count": 28,
-      "sample_ids": [
-        "dwoods__DWOODS__b8__s43__object",
-        "Union__UNION__b14__s6__object",
-        "Union__UNION__b14__s7__object"
-      ],
-      "sample_error": "Redundant input, expecting EOF but found: me"
     },
     {
       "signature": "Redundant input, expecting EOF but found: key",
@@ -2469,6 +2469,17 @@
       "sample_error": "Redundant input, expecting EOF but found: ll"
     },
     {
+      "signature": "Redundant input, expecting EOF but found: an",
+      "triage": "ambiguous",
+      "count": 26,
+      "sample_ids": [
+        "24hoz-spr1999__S24Z-424__b21__s2__object",
+        "24hoz-win20012002__Theta-e__b18__s8__object",
+        "cdslash__CDSLASH__b9__s2__object"
+      ],
+      "sample_error": "Redundant input, expecting EOF but found: an"
+    },
+    {
       "signature": "Redundant input, expecting EOF but found: shoot",
       "triage": "ambiguous",
       "count": 26,
@@ -2533,17 +2544,6 @@
         "zztv6__ZZTV6PT3__b8__s4__object"
       ],
       "sample_error": "Redundant input, expecting EOF but found: ast"
-    },
-    {
-      "signature": "Redundant input, expecting EOF but found: an",
-      "triage": "ambiguous",
-      "count": 25,
-      "sample_ids": [
-        "24hoz-spr1999__S24Z-424__b21__s2__object",
-        "24hoz-win20012002__Theta-e__b18__s8__object",
-        "cdslash__CDSLASH__b9__s2__object"
-      ],
-      "sample_error": "Redundant input, expecting EOF but found: an"
     },
     {
       "signature": "Redundant input, expecting EOF but found: cycle",
@@ -2711,6 +2711,28 @@
       "sample_error": "Redundant input, expecting EOF but found: tore"
     },
     {
+      "signature": "Expecting: one of these possible Token sequences:\n  N. [token_plus]\n  N. [token_minus]\n  N. [token_isterrain]\n  N. [token_isobject]\n  N. [token_issolid]\n  N. [token_iswalk]\n  N. [token_isswim]\n  N. [token_isbullet]\n  N. [token_isghost]\n  N.",
+      "triage": "fixable",
+      "count": 22,
+      "sample_ids": [
+        "assaorig__ASSASAIN__b5__s1__object",
+        "assaorig__ASSASAIN__b5__s2__object",
+        "assaorig__ASSASAIN__b5__s3__object"
+      ],
+      "sample_error": "Expecting: one of these possible Token sequences:\n  1. [token_plus]\n  2. [token_minus]\n  3. [token_isterrain]\n  4. [token_isobject]\n  5. [token_issolid]\n  6. [token_iswalk]\n  7. [token_isswim]\n  8. [token_isbullet]\n  9. [token_isghost]\n  10. [token_iswalking]\n  11. [token_iswalkable]\n  12. [token_isswimming]\n  13. [token_isswimmable]\n  14. [token_black]\n  15. [token_dkblue]\n  16. [token_dkgreen]\n  17. [token_dkcyan]\n  18. [token_dkred]\n  19. [token_dkpurple]\n  20. [token_dkyellow]\n  21. [token_ltgray]\n  22. [token_dkgray]\n  23. [token_blue]\n  24. [token_green]\n  25. [token_cyan]\n  26. [token_red]\n  27. [token_purple]\n  28. [token_yellow]\n  29. [token_white]\n  30. [token_brown]\n  31. [token_dkwhite]\n  32. [token_ltgrey]\n  33. [token_gray]\n  34. [token_grey]\n  35. [token_dkgrey]\n  36. [token_ltblack]\n  37. [token_onblack]\n  38. [token_ondkblue]\n  39. [token_ondkgreen]\n  40. [token_ondkcyan]\n  41. [token_ondkred]\n  42. [token_ondkpurple]\n  43. [token_ondkyellow]\n  44. [token_onltgray]\n  45. [token_ondkgray]\n  46. [token_onblue]\n  47. [token_ongreen]\n  48. [token_oncyan]\n  49. [token_onred]\n  50. [token_onpurple]\n  51. [token_onyellow]\n  52. [token_onwhite]\n  53. [token_onbrown]\n  54. [token_ondkwhite]\n  55. [token_onltgrey]\n  56. [token_ongray]\n  57. [token_ongrey]\n  58. [token_ondkgrey]\n  59. [token_onltblack]\n  60. [token_onclear]\n  61. [token_blblack]\n  62. [token_bldkblue]\n  63. [token_bldkgreen]\n  64. [token_bldkcyan]\n  65. [token_bldkred]\n  66. [token_bldkpurple]\n  67. [token_bldkyellow]\n  68. [token_blltgray]\n  69. [token_bldkgray]\n  70. [token_blblue]\n  71. [token_blgreen]\n  72. [token_blcyan]\n  73. [token_blred]\n  74. [token_blpurple]\n  75. [token_blyellow]\n  76. [token_blwhite]\n  77. [token_blbrown]\n  78. [token_bldkwhite]\n  79. [token_blltgrey]\n  80. [token_blgray]\n  81. [token_blgrey]\n  82. [token_bldkgrey]\n  83. [token_blltblack]\n  84. [token_cw]\n  85. [token_ccw]\n  86. [token_opp]\n  87. [token_rndp]\n  88. [token_over]\n  89. [token_under]\n  90. [token_ground]\n  91. [token_within]\n  92. [token_awayby]\n  93. [token_elements]\n  94. [token_idle]\n  95. [token_up]\n  96. [token_down]\n  97. [token_left]\n  98. [token_right]\n  99. [token_by]\n  100. [token_at]\n  101. [token_away]\n  102. [token_toward]\n  103. [token_flow]\n  104. [token_seek]\n  105. [token_rndns]\n  106. [token_rndne]\n  107. [token_rnd]\n  108. [token_find]\n  109. [token_flee]\n  110. [token_to]\n  111. [token_select]\n  112. [token_flood]\n  113. [token_beam]\n  114. [token_i]\n  115. [token_u]\n  116. [token_north]\n  117. [token_n]\n  118. [token_d]\n  119. [token_south]\n  120. [token_s]\n  121. [token_l]\n  122. [token_west]\n  123. [token_w]\n  124. [token_r]\n  125. [token_east]\n  126. [token_e]\n  127. [token_command_play]\n  128. [token_command_toast]\n  129. [token_command_ticker]\n  130. [token_send_target]\n  131. [token_label]\n  132. [token_stringliteraldouble]\n  133. [token_stringliteral]\n  134. [token_numberliteral]\n  135. [token_stop]\n  136. [token_lparen]\nbut found: '\n'"
+    },
+    {
+      "signature": "Redundant input, expecting EOF but found: cyan",
+      "triage": "ambiguous",
+      "count": 22,
+      "sample_ids": [
+        "neesboy__NEESBOY__b63__s12__object",
+        "Card__Card__b11__s2__object",
+        "Card__Card__b12__s2__object"
+      ],
+      "sample_error": "Redundant input, expecting EOF but found: cyan"
+    },
+    {
       "signature": "Redundant input, expecting EOF but found: te++",
       "triage": "ambiguous",
       "count": 22,
@@ -2788,17 +2810,6 @@
       "sample_error": "Redundant input, expecting EOF but found: reakable"
     },
     {
-      "signature": "Redundant input, expecting EOF but found: cyan",
-      "triage": "ambiguous",
-      "count": 21,
-      "sample_ids": [
-        "neesboy__NEESBOY__b63__s12__object",
-        "Card__Card__b11__s2__object",
-        "Card__Card__b12__s2__object"
-      ],
-      "sample_error": "Redundant input, expecting EOF but found: cyan"
-    },
-    {
       "signature": "Expecting: expecting at least one iteration which starts with one of these possible Token sequences::\n  <[token_send_target] ,[token_send_hash_label] ,[token_label] ,[token_stringliteral] ,[token_stringliteraldouble] ,[token_numberliteral]>",
       "triage": "fixable",
       "count": 21,
@@ -2863,17 +2874,6 @@
         "24hoz-win1999__w24hoz56__b9__s12__object"
       ],
       "sample_error": "Redundant input, expecting EOF but found: eflect"
-    },
-    {
-      "signature": "Expecting: one of these possible Token sequences:\n  N. [token_plus]\n  N. [token_minus]\n  N. [token_isterrain]\n  N. [token_isobject]\n  N. [token_issolid]\n  N. [token_iswalk]\n  N. [token_isswim]\n  N. [token_isbullet]\n  N. [token_isghost]\n  N.",
-      "triage": "fixable",
-      "count": 20,
-      "sample_ids": [
-        "assaorig__ASSASAIN__b5__s1__object",
-        "assaorig__ASSASAIN__b5__s2__object",
-        "assaorig__ASSASAIN__b5__s3__object"
-      ],
-      "sample_error": "Expecting: one of these possible Token sequences:\n  1. [token_plus]\n  2. [token_minus]\n  3. [token_isterrain]\n  4. [token_isobject]\n  5. [token_issolid]\n  6. [token_iswalk]\n  7. [token_isswim]\n  8. [token_isbullet]\n  9. [token_isghost]\n  10. [token_iswalking]\n  11. [token_iswalkable]\n  12. [token_isswimming]\n  13. [token_isswimmable]\n  14. [token_black]\n  15. [token_dkblue]\n  16. [token_dkgreen]\n  17. [token_dkcyan]\n  18. [token_dkred]\n  19. [token_dkpurple]\n  20. [token_dkyellow]\n  21. [token_ltgray]\n  22. [token_dkgray]\n  23. [token_blue]\n  24. [token_green]\n  25. [token_cyan]\n  26. [token_red]\n  27. [token_purple]\n  28. [token_yellow]\n  29. [token_white]\n  30. [token_brown]\n  31. [token_dkwhite]\n  32. [token_ltgrey]\n  33. [token_gray]\n  34. [token_grey]\n  35. [token_dkgrey]\n  36. [token_ltblack]\n  37. [token_onblack]\n  38. [token_ondkblue]\n  39. [token_ondkgreen]\n  40. [token_ondkcyan]\n  41. [token_ondkred]\n  42. [token_ondkpurple]\n  43. [token_ondkyellow]\n  44. [token_onltgray]\n  45. [token_ondkgray]\n  46. [token_onblue]\n  47. [token_ongreen]\n  48. [token_oncyan]\n  49. [token_onred]\n  50. [token_onpurple]\n  51. [token_onyellow]\n  52. [token_onwhite]\n  53. [token_onbrown]\n  54. [token_ondkwhite]\n  55. [token_onltgrey]\n  56. [token_ongray]\n  57. [token_ongrey]\n  58. [token_ondkgrey]\n  59. [token_onltblack]\n  60. [token_onclear]\n  61. [token_blblack]\n  62. [token_bldkblue]\n  63. [token_bldkgreen]\n  64. [token_bldkcyan]\n  65. [token_bldkred]\n  66. [token_bldkpurple]\n  67. [token_bldkyellow]\n  68. [token_blltgray]\n  69. [token_bldkgray]\n  70. [token_blblue]\n  71. [token_blgreen]\n  72. [token_blcyan]\n  73. [token_blred]\n  74. [token_blpurple]\n  75. [token_blyellow]\n  76. [token_blwhite]\n  77. [token_blbrown]\n  78. [token_bldkwhite]\n  79. [token_blltgrey]\n  80. [token_blgray]\n  81. [token_blgrey]\n  82. [token_bldkgrey]\n  83. [token_blltblack]\n  84. [token_cw]\n  85. [token_ccw]\n  86. [token_opp]\n  87. [token_rndp]\n  88. [token_over]\n  89. [token_under]\n  90. [token_ground]\n  91. [token_within]\n  92. [token_awayby]\n  93. [token_elements]\n  94. [token_idle]\n  95. [token_up]\n  96. [token_down]\n  97. [token_left]\n  98. [token_right]\n  99. [token_by]\n  100. [token_at]\n  101. [token_away]\n  102. [token_toward]\n  103. [token_flow]\n  104. [token_seek]\n  105. [token_rndns]\n  106. [token_rndne]\n  107. [token_rnd]\n  108. [token_find]\n  109. [token_flee]\n  110. [token_to]\n  111. [token_select]\n  112. [token_flood]\n  113. [token_beam]\n  114. [token_i]\n  115. [token_u]\n  116. [token_north]\n  117. [token_n]\n  118. [token_d]\n  119. [token_south]\n  120. [token_s]\n  121. [token_l]\n  122. [token_west]\n  123. [token_w]\n  124. [token_r]\n  125. [token_east]\n  126. [token_e]\n  127. [token_command_play]\n  128. [token_command_toast]\n  129. [token_command_ticker]\n  130. [token_send_target]\n  131. [token_label]\n  132. [token_stringliteraldouble]\n  133. [token_stringliteral]\n  134. [token_numberliteral]\n  135. [token_stop]\n  136. [token_lparen]\nbut found: '\n'"
     },
     {
       "signature": "Redundant input, expecting EOF but found: hecker:ok",
@@ -5824,6 +5824,17 @@
       "sample_error": "Redundant input, expecting EOF but found: d:ok"
     },
     {
+      "signature": "Redundant input, expecting EOF but found: ;S.+DXDHG",
+      "triage": "ambiguous",
+      "count": 5,
+      "sample_ids": [
+        "CHAOS2S__CHAOS2TM__b42__s66__object",
+        "CHAOS2S__CHAOS2TM__b42__s67__object",
+        "CHAOS2S__CHAOS2TM__b42__s68__object"
+      ],
+      "sample_error": "Redundant input, expecting EOF but found: ;S.+DXDHG"
+    },
+    {
       "signature": "Redundant input, expecting EOF but found: boy",
       "triage": "ambiguous",
       "count": 5,
@@ -7353,6 +7364,17 @@
       "sample_error": "Redundant input, expecting EOF but found: NOT"
     },
     {
+      "signature": "Redundant input, expecting EOF but found: ;ISCDEHDFGSXIECDXEDCXAECDX",
+      "triage": "ambiguous",
+      "count": 3,
+      "sample_ids": [
+        "CHAOS1__chaostm1__b5__s31__object",
+        "CHAOS1__chaostm1__b5__s47__object",
+        "CHAOS1__chaostm1__b5__s49__object"
+      ],
+      "sample_error": "Redundant input, expecting EOF but found: ;ISCDEHDFGSXIECDXEDCXAECDX"
+    },
+    {
       "signature": "Redundant input, expecting EOF but found: ssue",
       "triage": "ambiguous",
       "count": 3,
@@ -7450,6 +7472,17 @@
         "notfrost2__FROST2__b17__s62__object"
       ],
       "sample_error": "Redundant input, expecting EOF but found: T"
+    },
+    {
+      "signature": "Redundant input, expecting EOF but found: yan",
+      "triage": "ambiguous",
+      "count": 3,
+      "sample_ids": [
+        "DIGGAMAN__DIGGAMAN__b37__s31__object",
+        "NVBOB1__NVBOB1__b18__s8__object",
+        "prepostm__PREPOSTM__b3__s10__object"
+      ],
+      "sample_error": "Redundant input, expecting EOF but found: yan"
     },
     {
       "signature": "Redundant input, expecting EOF but found: rew",
@@ -8675,6 +8708,16 @@
       "sample_error": "Redundant input, expecting EOF but found: lon"
     },
     {
+      "signature": "Redundant input, expecting EOF but found: oint",
+      "triage": "ambiguous",
+      "count": 2,
+      "sample_ids": [
+        "BARNEYCO__BARNEY__b10__s2__object",
+        "BARNEYCO__BARNEY__b14__s2__object"
+      ],
+      "sample_error": "Redundant input, expecting EOF but found: oint"
+    },
+    {
       "signature": "Redundant input, expecting EOF but found: tle",
       "triage": "ambiguous",
       "count": 2,
@@ -8753,6 +8796,16 @@
         "CAVESMIX__CAVESMIX__b29__s35__object"
       ],
       "sample_error": "Redundant input, expecting EOF but found: bear"
+    },
+    {
+      "signature": "Redundant input, expecting EOF but found: ;ISCCXD",
+      "triage": "ambiguous",
+      "count": 2,
+      "sample_ids": [
+        "CHAOS1__chaostm1__b7__s4__object",
+        "CHAOS1__chaostm1__b15__s5__object"
+      ],
+      "sample_error": "Redundant input, expecting EOF but found: ;ISCCXD"
     },
     {
       "signature": "Redundant input, expecting EOF but found: ART",
@@ -8953,16 +9006,6 @@
         "NAMEXTREME__NAME-TST__b2__s11__object"
       ],
       "sample_error": "Redundant input, expecting EOF but found: ellow"
-    },
-    {
-      "signature": "Redundant input, expecting EOF but found: yan",
-      "triage": "ambiguous",
-      "count": 2,
-      "sample_ids": [
-        "DIGGAMAN__DIGGAMAN__b37__s31__object",
-        "prepostm__PREPOSTM__b3__s10__object"
-      ],
-      "sample_error": "Redundant input, expecting EOF but found: yan"
     },
     {
       "signature": "Redundant input, expecting EOF but found: .............LOADING..............",
@@ -9513,6 +9556,16 @@
         "jamijorig__JAMIJO__b18__s21__object"
       ],
       "sample_error": "Redundant input, expecting EOF but found: EnOw:okay"
+    },
+    {
+      "signature": "Redundant input, expecting EOF but found: Yes",
+      "triage": "ambiguous",
+      "count": 2,
+      "sample_ids": [
+        "jptour__jptour__b3__s6__object",
+        "OIL__OIL__b13__s37__object"
+      ],
+      "sample_error": "Redundant input, expecting EOF but found: Yes"
     },
     {
       "signature": "Redundant input, expecting EOF but found: lick",
@@ -12833,6 +12886,51 @@
       "sample_error": "Redundant input, expecting EOF but found: head"
     },
     {
+      "signature": "Redundant input, expecting EOF but found: ;IABCDEFGQNABCXXXSCXCHG",
+      "triage": "ambiguous",
+      "count": 1,
+      "sample_ids": [
+        "CHAOS1__chaostm1__b1__s17__object"
+      ],
+      "sample_error": "Redundant input, expecting EOF but found: ;IABCDEFGQ3ABCXXXSCXCHG"
+    },
+    {
+      "signature": "Redundant input, expecting EOF but found: ;ISCCGFGAFCCGFGAC..HXC",
+      "triage": "ambiguous",
+      "count": 1,
+      "sample_ids": [
+        "CHAOS1__chaostm1__b1__s19__object"
+      ],
+      "sample_error": "Redundant input, expecting EOF but found: ;ISCCGFGAFCCGFGAC..HXC"
+    },
+    {
+      "signature": "Redundant input, expecting EOF but found: ;ISCXCXBXBXHAXAXGXGXFXFXEXEXDXDX",
+      "triage": "ambiguous",
+      "count": 1,
+      "sample_ids": [
+        "CHAOS1__chaostm1__b1__s20__object"
+      ],
+      "sample_error": "Redundant input, expecting EOF but found: ;ISCXCXBXBXHAXAXGXGXFXFXEXEXDXDX"
+    },
+    {
+      "signature": "Redundant input, expecting EOF but found: ;ISCDEHDFGSXIECD",
+      "triage": "ambiguous",
+      "count": 1,
+      "sample_ids": [
+        "CHAOS1__chaostm1__b1__s36__object"
+      ],
+      "sample_error": "Redundant input, expecting EOF but found: ;ISCDEHDFGSXIECD"
+    },
+    {
+      "signature": "Redundant input, expecting EOF but found: ;GDHFGSFSXFDGDSDFSW..GX",
+      "triage": "ambiguous",
+      "count": 1,
+      "sample_ids": [
+        "CHAOS1__chaostm1__b5__s30__object"
+      ],
+      "sample_error": "Redundant input, expecting EOF but found: ;GDHFGSFSXFDGDSDFSW..GX"
+    },
+    {
       "signature": "Redundant input, expecting EOF but found: ;BEGIN",
       "triage": "ambiguous",
       "count": 1,
@@ -12840,6 +12938,69 @@
         "CHAOS1__chaostm1__b37__s8__object"
       ],
       "sample_error": "Redundant input, expecting EOF but found: ;BEGIN"
+    },
+    {
+      "signature": "Redundant input, expecting EOF but found: ;IS--Nxcdaxcdaxcdaxcdaxbbbcccdddeeeff",
+      "triage": "ambiguous",
+      "count": 1,
+      "sample_ids": [
+        "CHAOS1__chaostm1__b37__s9__object"
+      ],
+      "sample_error": "Redundant input, expecting EOF but found: ;IS--1xcdaxcdaxcdaxcdaxbbbcccdddeeeff"
+    },
+    {
+      "signature": "Redundant input, expecting EOF but found: ;T+++++++BB",
+      "triage": "ambiguous",
+      "count": 1,
+      "sample_ids": [
+        "CHAOS1__chaostm1__b44__s15__object"
+      ],
+      "sample_error": "Redundant input, expecting EOF but found: ;T+++++++BB"
+    },
+    {
+      "signature": "Redundant input, expecting EOF but found: ;s-eNee+eNd-bNeegf#edf#",
+      "triage": "ambiguous",
+      "count": 1,
+      "sample_ids": [
+        "CHAOS1__chaostm1__b46__s108__object"
+      ],
+      "sample_error": "Redundant input, expecting EOF but found: ;s-e8ee+e8d-b8eegf#edf#"
+    },
+    {
+      "signature": "Redundant input, expecting EOF but found: ;t++++++++bb",
+      "triage": "ambiguous",
+      "count": 1,
+      "sample_ids": [
+        "CHAOS1__chaostm1__b46__s109__object"
+      ],
+      "sample_error": "Redundant input, expecting EOF but found: ;t++++++++bb"
+    },
+    {
+      "signature": "Redundant input, expecting EOF but found: ;S.DXDHG",
+      "triage": "ambiguous",
+      "count": 1,
+      "sample_ids": [
+        "CHAOS2S__CHAOS2TM__b38__s116__object"
+      ],
+      "sample_error": "Redundant input, expecting EOF but found: ;S.DXDHG"
+    },
+    {
+      "signature": "Redundant input, expecting EOF but found: ;T----GG#AA#BB#+CC#DD#EE#FF#GG#AA#BB#",
+      "triage": "ambiguous",
+      "count": 1,
+      "sample_ids": [
+        "CHAOS2S__CHAOS2TM__b41__s90__object"
+      ],
+      "sample_error": "Redundant input, expecting EOF but found: ;T----GG#AA#BB#+CC#DD#EE#FF#GG#AA#BB#"
+    },
+    {
+      "signature": "Redundant input, expecting EOF but found: ;+S.DXDHG",
+      "triage": "ambiguous",
+      "count": 1,
+      "sample_ids": [
+        "CHAOS2S__CHAOS2TM__b41__s101__object"
+      ],
+      "sample_error": "Redundant input, expecting EOF but found: ;+S.DXDHG"
     },
     {
       "signature": "Redundant input, expecting EOF but found: WAIT",
@@ -13904,6 +14065,24 @@
       "sample_error": "Redundant input, expecting EOF but found: ox"
     },
     {
+      "signature": "Redundant input, expecting EOF but found: agai.fqgsxgaagaagai.+cdie",
+      "triage": "ambiguous",
+      "count": 1,
+      "sample_ids": [
+        "SKATEFOX__SKATEFOX__b1__s2__object"
+      ],
+      "sample_error": "Redundant input, expecting EOF but found: agai.fqgsxgaagaagai.+cdie"
+    },
+    {
+      "signature": "Redundant input, expecting EOF but found: qec",
+      "triage": "ambiguous",
+      "count": 1,
+      "sample_ids": [
+        "SKATEFOX__SKATEFOX__b4__s2__object"
+      ],
+      "sample_error": "Redundant input, expecting EOF but found: qec"
+    },
+    {
       "signature": "Redundant input, expecting EOF but found: rChair",
       "triage": "ambiguous",
       "count": 1,
@@ -14280,6 +14459,15 @@
         "jeremzzt__JEREMY__b3__s4__object"
       ],
       "sample_error": "Redundant input, expecting EOF but found: zard"
+    },
+    {
+      "signature": "Redundant input, expecting EOF but found: Scroll",
+      "triage": "ambiguous",
+      "count": 1,
+      "sample_ids": [
+        "jptour__jptour__b3__s1__object"
+      ],
+      "sample_error": "Redundant input, expecting EOF but found: Scroll"
     },
     {
       "signature": "Redundant input, expecting EOF but found: arding",
@@ -14813,6 +15001,33 @@
       "sample_error": "Redundant input, expecting EOF but found: all:lockr"
     },
     {
+      "signature": "Redundant input, expecting EOF but found: exx",
+      "triage": "ambiguous",
+      "count": 1,
+      "sample_ids": [
+        "NVBOB1__NVBOB1__b26__s1__object"
+      ],
+      "sample_error": "Redundant input, expecting EOF but found: exx"
+    },
+    {
+      "signature": "Redundant input, expecting EOF but found: TCHA",
+      "triage": "ambiguous",
+      "count": 1,
+      "sample_ids": [
+        "NVBOB1__NVBOB1__b28__s63__object"
+      ],
+      "sample_error": "Redundant input, expecting EOF but found: TCHA"
+    },
+    {
+      "signature": "Redundant input, expecting EOF but found: lay+d",
+      "triage": "ambiguous",
+      "count": 1,
+      "sample_ids": [
+        "NVBOB1__NVBOB1__b29__s8__object"
+      ],
+      "sample_error": "Redundant input, expecting EOF but found: lay+d"
+    },
+    {
       "signature": "Redundant input, expecting EOF but found: eahbob",
       "triage": "ambiguous",
       "count": 1,
@@ -14910,15 +15125,6 @@
         "OIL__OIL__b4__s5__object"
       ],
       "sample_error": "Redundant input, expecting EOF but found: echeck"
-    },
-    {
-      "signature": "Redundant input, expecting EOF but found: Yes",
-      "triage": "ambiguous",
-      "count": 1,
-      "sample_ids": [
-        "OIL__OIL__b13__s37__object"
-      ],
-      "sample_error": "Redundant input, expecting EOF but found: Yes"
     },
     {
       "signature": "Redundant input, expecting EOF but found: fend",

@@ -223,6 +223,7 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 | `yarn task run lang:train-corpus:test` | Jest train corpus tests | — | — | — |
 | `yarn task run lang:wasm:test` | Lang wasm smoke test (empty fixture) | — | — | — |
 | `yarn task run lang:zzt:corpus:analyze` | Analyze Museum ZZT corpus raw stat.code compile rate; write ops/fixtures/lang/zzt/failure-report.json. Flags: raw-only, write-fixtures, limit N, full | `slow` | — | — |
+| `yarn task run lang:zztoop:corpus:analyze` | Analyze Museum ZZT corpus with the vanilla zss/feature/zztoop parser; write ops/fixtures/lang/zztoop/failure-report.json. Flags: raw-only, write-fixtures, limit N, full | `slow` | — | — |
 
 
 ## memory

@@ -1,0 +1,7 @@
+@door
+'touch
+#end
+:learn
+#restore touch
+#char 0
+#end

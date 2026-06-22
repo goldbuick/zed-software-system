@@ -84,6 +84,12 @@ export const LANG_TASKS: TaskDef[] = [
     tags: ['slow'],
     run: tsxhandler(`${LANG}/analyze-zzt-corpus.ts`),
   }),
+  def('lang:zztoop:corpus:analyze', {
+    description:
+      'Analyze Museum ZZT corpus with the vanilla zss/feature/zztoop parser; write ops/fixtures/lang/zztoop/failure-report.json. Flags: raw-only, write-fixtures, limit N, full',
+    tags: ['slow'],
+    run: tsxhandler(`${LANG}/analyze-zztoop-corpus.ts`),
+  }),
   def('lang:build-train-corpus', {
     description: 'Jest build training corpus fixture',
     run: jestexec(

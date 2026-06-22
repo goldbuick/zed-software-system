@@ -1,0 +1,29 @@
+{
+  "generated_at": "2026-06-21T06:03:00.838Z",
+  "corpus_present": true,
+  "raw_oop": {
+    "total": 1108500,
+    "ok": 1108500,
+    "fail": 0,
+    "ok_rate": 1
+  },
+  "wrapped_zss": {
+    "total": 0,
+    "ok": 0,
+    "fail": 0,
+    "ok_rate": 1
+  },
+  "triage": {
+    "raw": {
+      "fixable_fail": 0,
+      "invalid_zzt_fail": 0,
+      "ambiguous_fail": 0
+    },
+    "wrapped": {
+      "fixable_fail": 0,
+      "invalid_zzt_fail": 0,
+      "ambiguous_fail": 0
+    }
+  },
+  "buckets": []
+}

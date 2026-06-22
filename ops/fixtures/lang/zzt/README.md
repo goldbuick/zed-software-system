@@ -26,10 +26,14 @@ Requires local `ops/fixtures/zzt/corpus/extracted/` from `content:zzt:corpus:ext
 
 Prior baseline (pre-fixable-parser work): **96.38%** (1,068,406 ok), **7,169** `fixable_fail`.
 
-After parser fixes: **~742** fewer fixable failures (`fixable_fail` **6,427**). Top remaining fixable buckets: multiline `#change`/`#become` arg tails, lone `#` after partial `stmt_change_become`, `dir`/`dir_select` newline splits. See `failure-report.json` triage (`fixable` / `invalid_zzt` / `ambiguous`).
+After parser fixes: **~740** fewer fixable failures (`fixable_fail` **6,429**). Top remaining fixable buckets: multiline `#change`/`#become` arg tails, lone `#` after partial `stmt_change_become`, `dir`/`dir_select` newline splits. See `failure-report.json` triage (`fixable` / `invalid_zzt` / `ambiguous`).
+
+| Gate | ok / total | rate |
+|------|------------|------|
+| raw `stat.code` (latest) | 1,066,774 / 1,108,500 | **96.24%** |
 
 ```bash
 yarn task run lang:zzt:corpus:analyze raw-only   # faster: skip wrapped walk
 ```
 
-Tests: `ops/tests/unit/feature/lang/backend/typescript/__tests__/zztcorpusparse.test.ts`, `zztlangrefsmoke.test.ts`.
+Tests: `ops/tests/unit/feature/lang/backend/typescript/__tests__/zztcorpusparse.test.ts`, `zztlangrefsmoke.test.ts`, `zztfixableparser.test.ts`.

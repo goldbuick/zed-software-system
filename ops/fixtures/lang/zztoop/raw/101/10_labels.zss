@@ -1,0 +1,14 @@
+@guard
+:touch
+Who goes there?
+#end
+:shot
+#die
+:bombed
+#die
+:energize
+#end
+:thud
+#end
+:custom_event
+#end

@@ -1,0 +1,7 @@
+@sign
+:touch
+'this is a comment, deactivated label
+Welcome to the shop.
+!buy;Buy something
+!leave;Leave the shop
+#end

@@ -1,0 +1,4 @@
+@runner
+This runs the moment the object acts.
+#end
+This never runs without an event.

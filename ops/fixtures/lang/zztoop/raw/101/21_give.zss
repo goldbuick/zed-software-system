@@ -1,0 +1,8 @@
+@chest
+:touch
+#give ammo 50
+#give torches 5
+#give gems 10
+#give health 25
+#give score 1000
+#end

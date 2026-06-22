@@ -1,0 +1,8 @@
+@walker
+:start
+?n?n?n
+/n/s/e/w
+?cw n
+?n#send :start
+/i#char 53
+#end

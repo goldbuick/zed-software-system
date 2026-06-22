@@ -1,0 +1,5 @@
+@SYNTAX
+:Touch
+#IF alligned shoot seek
+#If contact #Die
+#END

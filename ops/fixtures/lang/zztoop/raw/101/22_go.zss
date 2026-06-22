@@ -1,0 +1,5 @@
+@mover
+:start
+#go n
+/s
+#end

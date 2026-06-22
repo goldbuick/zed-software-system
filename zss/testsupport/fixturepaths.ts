@@ -28,6 +28,18 @@ export const SYNTH_MAXI_ARCHIVE_FIXTURES_DIR = fixturepath(
   'maxi',
 )
 
+export const LANG_ZZTOOP_DIR = fixturepath('lang', 'zztoop')
+export const LANG_ZZTOOP_MANIFEST_PATH = fixturepath(
+  'lang',
+  'zztoop',
+  'manifest.json',
+)
+export const LANG_ZZTOOP_REPORT_PATH = fixturepath(
+  'lang',
+  'zztoop',
+  'failure-report.json',
+)
+
 export const PARSE_FIXTURES_DIR = fixturepath('parse')
 export const WANIX_FIXTURES_DIR = fixturepath('wanix')
 export const HARNESS_FIXTURES_DIR = fixturepath('harness')

@@ -1,0 +1,8 @@
+@seeker
+:start
+#try seek
+#try w :blocked
+?n
+#end
+:blocked
+#end

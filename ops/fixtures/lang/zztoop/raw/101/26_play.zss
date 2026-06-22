@@ -1,0 +1,6 @@
+@band
+:touch
+#play tcdefgab
+#play c#d#fg#a#
+#play +c-c.c
+#end

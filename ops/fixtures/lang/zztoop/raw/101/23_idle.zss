@@ -1,0 +1,5 @@
+@waiter
+:start
+#idle
+/i
+#end
