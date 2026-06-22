@@ -8,12 +8,12 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { RENDERS_FIXTURES_DIR } from 'zss/testsupport/fixturepaths'
+import { RENDERS_FIXTURES_DIR } from 'ops/lib/fixturepaths'
 import {
   type SIDECHAIN_PARITY_RESULT,
   evalsidechainparitygate,
   formatsidechainparityreport,
-} from '../zss/feature/synth/backend/daisy/sidechainparity.ts'
+} from 'ops/lib/daisy-parity/sidechainparity'
 import { SIDECHAIN_SCENARIO_ID } from '../zss/feature/synth/backend/daisy/sidechainscenario.ts'
 
 const ROOT = process.cwd()

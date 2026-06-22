@@ -9,7 +9,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { RENDERS_FIXTURES_DIR } from 'zss/testsupport/fixturepaths'
+import { RENDERS_FIXTURES_DIR } from 'ops/lib/fixturepaths'
 import { chromium } from '@playwright/test'
 import {
   PARITY_RENDER_SCRIPT_TIMEOUT_MS,
@@ -21,8 +21,8 @@ import {
   stopparityvite,
 } from 'tasks/lib/parity/parity-vite-server.ts'
 
-import type { ENV_PARITY_RESULT } from '../zss/feature/synth/backend/daisy/envparityrender.ts'
-import { ENV_PARITY_SCENARIOS } from '../zss/feature/synth/backend/daisy/envparityscenario.ts'
+import type { ENV_PARITY_RESULT } from 'ops/lib/daisy-parity/envparityrender'
+import { ENV_PARITY_SCENARIOS } from 'ops/lib/daisy-parity/envparityscenario'
 
 const ROOT = process.cwd()
 const PROJECT = process.cwd()
@@ -88,11 +88,11 @@ async function runenvparity() {
       const payload = await page.evaluate(
         async ({ scenarioid, windowms }) => {
           const { runenvparityscenario, envparitytimelinesmatchsamples } =
-            await import('/zss/feature/synth/backend/daisy/envparityrender.ts')
+            await import('/ops/lib/daisy-parity/envparityrender.ts')
           const { arraybuffertobase64 } =
             await import('/zss/feature/synth/backend/daisy/daisysongrender.ts')
           const { envparityscenario, envparityretriggerscenario } =
-            await import('/zss/feature/synth/backend/daisy/envparityscenario.ts')
+            await import('/ops/lib/daisy-parity/envparityscenario.ts')
 
           const scenario =
             scenarioid === 'env-parity-amsaw-8n'

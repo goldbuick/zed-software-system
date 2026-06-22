@@ -8,9 +8,9 @@ import {
   stopparityvite,
 } from 'tasks/lib/parity/parity-vite-server.ts'
 
-import { evalsosvoicegate } from '../zss/feature/synth/backend/daisy/sosvoicegate.ts'
+import { evalsosvoicegate } from 'ops/lib/daisy-parity/sosvoicegate'
 import { SOS_VOICE_PATCHES } from '../zss/feature/synth/backend/daisy/sosvoicepatches.ts'
-import type { PARITY_AUDIO_METRICS } from '../zss/feature/synth/backend/wasm/paritymetrics.ts'
+import type { PARITY_AUDIO_METRICS } from 'ops/lib/daisy-parity/paritymetrics'
 
 const ROOT = process.cwd()
 const PROJECT = process.cwd()

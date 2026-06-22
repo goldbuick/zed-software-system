@@ -19,11 +19,11 @@ jest.mock('zss/feature/synth/mp3', () => ({
 }))
 
 const rendermock = jest.fn()
-jest.mock('zss/feature/synth/archive/maxi/wasmofflinerender', () => ({
+jest.mock('ops/archive/synth/maxi/wasmofflinerender', () => ({
   renderwasmrecord: (...args: unknown[]) => rendermock(...args),
 }))
 
-import { createwasmrecordhandler } from 'zss/feature/synth/archive/maxi/wasmrecordhandler'
+import { createwasmrecordhandler } from 'ops/archive/synth/maxi/wasmrecordhandler'
 import type { SYNTH_NOTE_ENTRY } from 'zss/feature/synth/playnotation'
 
 describe('wasm record handler', () => {

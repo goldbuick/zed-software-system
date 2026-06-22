@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
 import { SOS_VOICE_PATCHES } from 'zss/feature/synth/backend/daisy/sosvoicepatches'
-import { SYNTH_DAISY_FIXTURES_DIR } from 'zss/testsupport/fixturepaths'
+import { SYNTH_DAISY_FIXTURES_DIR } from 'ops/lib/fixturepaths'
 
 type FIXTURE_FILE = {
   patches: Record<string, unknown>
@@ -42,7 +42,7 @@ const CAN_RENDER =
         'zss/feature/synth/backend/daisy/sosvoicerender'
       )
       const { evalsosvoicegate } = await import(
-        'zss/feature/synth/backend/daisy/sosvoicegate'
+        'ops/lib/daisy-parity/sosvoicegate'
       )
       const fixtures = loadfixtures()
       const failures: string[] = []

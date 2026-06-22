@@ -83,6 +83,7 @@ function stripzstdsourcemaprefs(): Plugin {
 }
 
 function servefixturesdev(): Plugin {
+  const root = process.cwd()
   return {
     name: 'serve-fixtures-dev',
     apply: 'serve',
@@ -90,6 +91,30 @@ function servefixturesdev(): Plugin {
       return () => {
         server.middlewares.use(harnesshtmlmiddleware())
         server.middlewares.use(fixtureprefixmiddleware('/renders', RENDERS_FIXTURES_DIR))
+        server.middlewares.use(
+          fixtureprefixmiddleware('/ops/lib', path.join(root, 'ops/lib')),
+        )
+        server.middlewares.use(
+          fixtureprefixmiddleware('/ops/archive', path.join(root, 'ops/archive')),
+        )
+        server.middlewares.use(
+          fixtureprefixmiddleware(
+            '/ops/fixtures',
+            path.join(root, 'ops/fixtures'),
+          ),
+        )
+        server.middlewares.use(
+          fixtureprefixmiddleware(
+            '/wasm/archive/maximilian',
+            path.join(root, 'ops/archive/wasm/maximilian'),
+          ),
+        )
+        server.middlewares.use(
+          fixtureprefixmiddleware(
+            '/wanix',
+            path.join(root, 'ops/fixtures/harness/wanix'),
+          ),
+        )
       }
     },
   }
@@ -175,7 +200,6 @@ export default defineConfig(({ mode }) => {
         input: {
           index: path.join(apppath, 'index.html'),
           sys: path.join(apppath, 'sys/index.html'),
-          'wanix-vm-e2e': path.join(apppath, 'wanix-vm-e2e.html'),
           'wanix-iframe-host': path.join(apppath, 'wanix-iframe-host.html'),
         },
       },
@@ -197,7 +221,6 @@ export default defineConfig(({ mode }) => {
     ],
     define: {
       ...zssdefine,
-      'import.meta.env.ZSS_E2E': JSON.stringify(process.env.ZSS_E2E ?? ''),
       'import.meta.env.ZSS_DAISY_PERF': JSON.stringify(
         process.env.ZSS_DAISY_PERF ?? '',
       ),
@@ -219,6 +242,9 @@ export default defineConfig(({ mode }) => {
         zss: path.resolve(__dirname, './zss'),
         cafe: path.resolve(__dirname, './cafe'),
         'ops/fixtures': path.resolve(__dirname, './ops/fixtures'),
+        'ops/lib': path.resolve(__dirname, './ops/lib'),
+        'ops/archive': path.resolve(__dirname, './ops/archive'),
+        'ops/tests/lib': path.resolve(__dirname, './ops/tests/lib'),
       },
     },
     optimizeDeps: {

@@ -9,6 +9,7 @@ import {
   defaultcapturemedia,
   rasterizelayerstorgba,
 } from 'zss/gadget/capture/rasterize'
+import { loadcoolregionsbowelementlibrary } from 'ops/lib/coolregionsbowbook'
 import { importzztboardstobook } from 'zss/feature/parse/zzt'
 import { zztparseworld } from 'zss/feature/parse/zztbinparse'
 import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
@@ -65,6 +66,7 @@ describe('corpus screenshot validation', () => {
       return
     }
 
+    loadcoolregionsbowelementlibrary()
     const { book, boardaddresses } = importzztboardstobook(parsed.boards, {
       tilewidth: BOARD_WIDTH,
       tileheight: BOARD_HEIGHT,

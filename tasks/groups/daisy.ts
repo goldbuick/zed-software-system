@@ -33,7 +33,7 @@ export const DAISY_TASKS: TaskDef[] = [
     run: exec([
       'npx',
       'tsx',
-      'zss/feature/synth/backend/daisy/daisyperfbench.ts',
+      'ops/lib/daisy-parity/daisyperfbench.ts',
     ]),
   }),
   def('daisy:regression:test', {

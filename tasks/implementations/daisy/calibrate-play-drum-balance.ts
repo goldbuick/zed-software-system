@@ -10,7 +10,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { RENDERS_FIXTURES_DIR } from 'zss/testsupport/fixturepaths'
+import { RENDERS_FIXTURES_DIR } from 'ops/lib/fixturepaths'
 import {
   type PLAY_DRUM_BALANCE_METRICS,
   PLAY_DRUM_TARGET_DRUM_MINUS_PLAY_DB,

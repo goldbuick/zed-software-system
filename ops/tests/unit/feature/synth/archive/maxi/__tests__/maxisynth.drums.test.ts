@@ -1,5 +1,5 @@
-import { createwasmsynth } from 'zss/feature/synth/archive/maxi/maxisynth'
-import { createmockmaxi } from 'zss/feature/synth/archive/maxi/testhelpers/mockmaxi'
+import { createwasmsynth } from 'ops/archive/synth/maxi/maxisynth'
+import { createmockmaxi } from 'ops/tests/lib/synth/mockmaxi'
 import {
   WASM_DRUM_COUNT,
   WASM_DRUM_SAB_LEN,

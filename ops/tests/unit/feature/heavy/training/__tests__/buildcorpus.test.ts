@@ -16,13 +16,13 @@ import {
   EVAL_SNIPPET_IDS,
   NEGATIVE_TRAIN_PAIRS,
   PARITY_USER_PROMPTS,
-} from 'zss/feature/heavy/training/corpusprompts'
+} from 'ops/lib/training/corpusprompts'
 import {
   LANG_COOLREGIONSBOW_DIR,
   LANG_PARITY_DIR,
   LANG_SCRIPTS_DIR,
   TRAINING_CORPUS_DIR,
-} from 'zss/testsupport/fixturepaths'
+} from 'ops/lib/fixturepaths'
 
 const REPO_ROOT = process.cwd()
 const PARITYDIR = LANG_PARITY_DIR

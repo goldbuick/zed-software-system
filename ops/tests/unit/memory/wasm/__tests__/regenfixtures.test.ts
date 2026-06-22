@@ -123,7 +123,7 @@ import {
   CODE_PAGE_TYPE,
   CORNER_EXIT_DISPUTED,
 } from 'zss/memory/types'
-import { MEMORY_WASM_FIXTURES_DIR } from 'zss/testsupport/fixturepaths'
+import { MEMORY_WASM_FIXTURES_DIR } from 'ops/lib/fixturepaths'
 import { CATEGORY, COLLISION, COLOR } from 'zss/words/types'
 
 const FIXTUREDIR = MEMORY_WASM_FIXTURES_DIR

@@ -30,4 +30,4 @@ yarn lang-parity-fixtures:regen
 2. **integration** — drop `my_script.zss` in `__tests__/fixtures/`, add id to `__fixtures__/integration/manifest.json`.
 3. **book** — add to `coolregionsbow/manifest.json` and commit the `.zss` file.
 
-Use `readcorpus(tier, id)` from [`corpus.ts`](../../../zss/feature/lang/backend/wasm/corpus.ts) in tests.
+Use `readcorpus(tier, id)` from [`corpus.ts`](../../../ops/tests/lib/lang/corpus.ts) in tests.

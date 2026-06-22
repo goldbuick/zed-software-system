@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
 import { compilefiltersnippet } from 'zss/feature/heavy/training/corpus'
-import { TRAINING_CORPUS_DIR } from 'zss/testsupport/fixturepaths'
+import { TRAINING_CORPUS_DIR } from 'ops/lib/fixturepaths'
 
 const CORPUSDIR = TRAINING_CORPUS_DIR
 

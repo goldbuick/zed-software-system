@@ -1,7 +1,7 @@
 import {
-  type PARITY_AUDIO_METRICS,
+  type AUDIO_METRICS,
   audiobuffermetrics,
-} from 'zss/feature/synth/backend/wasm/paritymetrics'
+} from 'zss/feature/synth/backend/wasm/audiometrics'
 import { defaultwasmalgoconfig } from 'zss/feature/synth/backend/wasm/wasmalgoconfigsab'
 import { defaultwasmfxsab } from 'zss/feature/synth/backend/wasm/wasmfxstate'
 import { WASM_DEFAULT_TTS_VOLUME } from 'zss/feature/synth/backend/wasm/wasmmainsab'
@@ -59,7 +59,7 @@ function renderlengthsec(
 
 export async function rendersosvoicepatch(
   patch: SOS_VOICE_PATCH,
-): Promise<PARITY_AUDIO_METRICS> {
+): Promise<AUDIO_METRICS> {
   if (typeof OfflineAudioContext === 'undefined') {
     throw new Error('OfflineAudioContext not available')
   }
@@ -90,8 +90,8 @@ export async function rendersosvoicepatch(
 
 export async function rendersosvoicepatches(
   patches: SOS_VOICE_PATCH[],
-): Promise<Record<string, PARITY_AUDIO_METRICS>> {
-  const out: Record<string, PARITY_AUDIO_METRICS> = {}
+): Promise<Record<string, AUDIO_METRICS>> {
+  const out: Record<string, AUDIO_METRICS> = {}
   for (const patch of patches) {
     out[patch.id] = await rendersosvoicepatch(patch)
   }

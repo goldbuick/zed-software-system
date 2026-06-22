@@ -22,8 +22,8 @@ jest.mock('zss/words/textformat', () => ({
   tokenize: () => ({ errors: [{ message: 'mock' }], tokens: [] }),
 }))
 
-import { readfixture } from 'zss/feature/lang/backend/wasm/langparityload'
-import { compilenativewasmfortest } from 'zss/feature/lang/backend/wasm/testhelpers/nativewasmtestutil'
+import { readfixture } from 'ops/tests/lib/lang/langparityload'
+import { compilenativewasmfortest } from 'ops/tests/lib/lang/nativewasmtestutil'
 
 describe('lang compile wasm output', () => {
   it('native-produced if_break wasm is valid module bytes', () => {

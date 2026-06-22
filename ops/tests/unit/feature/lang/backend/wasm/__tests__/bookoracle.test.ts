@@ -26,8 +26,8 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
 import { compile } from 'zss/feature/lang'
-import { compilenativewasmfortest } from 'zss/feature/lang/backend/wasm/testhelpers/nativewasmtestutil'
-import { LANG_COOLREGIONSBOW_DIR } from 'zss/testsupport/fixturepaths'
+import { compilenativewasmfortest } from 'ops/tests/lib/lang/nativewasmtestutil'
+import { LANG_COOLREGIONSBOW_DIR } from 'ops/lib/fixturepaths'
 
 const FIXTUREDIR = LANG_COOLREGIONSBOW_DIR
 const manifest = JSON.parse(

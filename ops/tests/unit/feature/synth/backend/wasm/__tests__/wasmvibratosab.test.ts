@@ -1,4 +1,4 @@
-import { createmocksabengine } from 'zss/feature/synth/backend/wasm/testhelpers/mocksab'
+import { createmocksabengine } from 'ops/tests/lib/synth/mocksab'
 import {
   WASM_VIBRATO_GROUP_COUNT,
   WASM_VIBRATO_SAB_LEN,

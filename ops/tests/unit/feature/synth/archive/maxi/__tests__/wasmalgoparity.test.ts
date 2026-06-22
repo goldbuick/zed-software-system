@@ -1,4 +1,4 @@
-import { WASM_SYNTH_VOICE_PLAY_CODE } from 'zss/feature/synth/archive/maxi/voiceplaycode'
+import { WASM_SYNTH_VOICE_PLAY_CODE } from 'ops/archive/synth/maxi/voiceplaycode'
 import {
   WASM_ALGO_OP_GAIN,
   WASM_ALGO_OUT_GAIN,

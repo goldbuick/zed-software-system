@@ -1,5 +1,5 @@
 import { wasmsabsnapshot } from 'zss/feature/synth/backend/wasm/sabpush'
-import { createmocksabengine } from 'zss/feature/synth/backend/wasm/testhelpers/mocksab'
+import { createmocksabengine } from 'ops/tests/lib/synth/mocksab'
 import { defaultwasmalgoconfig } from 'zss/feature/synth/backend/wasm/wasmalgoconfigsab'
 import { initwasmvoicesab } from 'zss/feature/synth/backend/wasm/wasminitsab'
 import {

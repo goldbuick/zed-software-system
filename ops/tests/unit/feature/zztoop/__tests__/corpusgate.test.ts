@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 
-import { LANG_ZZTOOP_REPORT_PATH } from 'zss/testsupport/fixturepaths'
+import { LANG_ZZTOOP_REPORT_PATH } from 'ops/lib/fixturepaths'
 
 type FailureReport = {
   raw_oop: { total: number; ok: number; fail: number; ok_rate: number }

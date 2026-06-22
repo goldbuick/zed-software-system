@@ -19,7 +19,7 @@ loadscriptsync(wasmbytes, chip).run() // blocks event loop; testTimeout useless
 import {
   createwasmstubchip,
   runwasmscriptfortest,
-} from 'zss/feature/lang/backend/wasm/testhelpers/wasmruntestutil'
+} from 'ops/tests/lib/lang/wasmruntestutil'
 
 const chip = createwasmstubchip({
   command(...words: WORD[]) {

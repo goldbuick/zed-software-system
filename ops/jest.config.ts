@@ -11,10 +11,14 @@ const config: Config = {
   testTimeout: TEST_TIMEOUT_MS,
   /** CI safety net when a worker still has stray handles after suites finish. */
   forceExit: process.env.CI === 'true',
-  setupFilesAfterEnv: ['<rootDir>/zss/testsupport/jesttimeoutsetup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/ops/jest/timeoutsetup.ts'],
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
   moduleNameMapper: {
     '^zss/perf/ui$': '<rootDir>/ops/tests/mocks/perfui.ts',
+    '^ops/lib/daisy-parity/(.*)$': '<rootDir>/ops/lib/daisy-parity/$1',
+    '^ops/tests/lib/(.*)$': '<rootDir>/ops/tests/lib/$1',
+    '^ops/archive/(.*)$': '<rootDir>/ops/archive/$1',
+    '^ops/lib/(.*)$': '<rootDir>/ops/lib/$1',
     '^zss/(.*)$': '<rootDir>/zss/$1',
     '^uint8-util$': '<rootDir>/ops/tests/mocks/uint8-util.ts',
     '^@chevrotain/utils$':
@@ -47,7 +51,7 @@ const config: Config = {
   transformIgnorePatterns: [
     'node_modules/(?!(nanoid|nanoid-dictionary|human-id|alea|ts-extras|fast-json-patch|react-fast-compare|uqr|maath|@react-three|three|mime|uint8-util|@tonejs/midi|midi-file|chevrotain|lodash-es|@chevrotain|marked|json-joy|@jsonjoy.com)/)',
   ],
-  globalTeardown: '<rootDir>/zss/testsupport/jestglobalteardown.cjs',
+  globalTeardown: '<rootDir>/ops/jest/globalteardown.cjs',
   testPathIgnorePatterns: [
     '<rootDir>/ops/e2e/',
     '<rootDir>/ops/tests/unit/memory/wasm/__tests__/wasmparity.test.ts',

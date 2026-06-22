@@ -12,8 +12,8 @@ import {
   corpusmatchpattern,
   corpusscanline,
   sanitizesource,
-} from 'zss/feature/content/zztcorpussanitize'
-import { ZZT_CORPUS_ZSS_DIR } from 'zss/testsupport/fixturepaths'
+} from 'ops/lib/content/zztcorpussanitize'
+import { ZZT_CORPUS_ZSS_DIR } from 'ops/lib/fixturepaths'
 
 const REPORT_DIR = path.join('ops', 'fixtures', 'zzt', 'corpus')
 const SCAN_REPORT_PATH = path.join(REPORT_DIR, 'profanity-report.json')

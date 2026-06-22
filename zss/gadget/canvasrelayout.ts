@@ -4,16 +4,6 @@ import type { StoreApi } from 'zustand'
 /** Bumped after a forced GL resize so EffectComposer resets throttled `setSize`. */
 export let canvassyncgeneration = 0
 
-let r3fstore: StoreApi<RootState> | undefined
-
-export function registerr3fstore(store: StoreApi<RootState> | undefined) {
-  r3fstore = store
-  if (typeof window !== 'undefined') {
-    ;(window as Window & { __zss_r3f_ready?: boolean }).__zss_r3f_ready =
-      store != null
-  }
-}
-
 function bumpcanvassyncgeneration() {
   canvassyncgeneration += 1
 }

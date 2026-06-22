@@ -17,7 +17,7 @@ import {
   elementtozss,
   layoutfromkind,
   type ZZT_BOARD_LAYOUT,
-} from 'zss/feature/parse/zztcorpus'
+} from 'ops/lib/content/zztcorpus'
 import type { ZZT_BOARD } from 'zss/feature/parse/zztformattypes'
 import { zztparseboard, zztparseworld } from 'zss/feature/parse/zztbinparse'
 

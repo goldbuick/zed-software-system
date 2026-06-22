@@ -66,26 +66,3 @@ jobs:
           yarn task run content:book:build ops/fixtures/content/templates/minimal
           yarn task run content:book:validate ops/fixtures/content/dist/minimal.book.json
           yarn task run content:book:test
-
-  e2e:
-    timeout-minutes: 30
-    runs-on: ubuntu-latest
-    steps:
-      - name: checkout
-        uses: actions/checkout@v5
-        with:
-          set-safe-directory: true
-
-      - name: setup node
-        uses: actions/setup-node@v5
-        with:
-          node-version-file: .nvmrc
-
-      - name: install dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: install Playwright browsers
-        run: npx playwright install --with-deps chromium firefox webkit
-
-      - name: run e2e tests
-        run: PLAYWRIGHT_INCLUDE_GADGET_E2E=1 PLAYWRIGHT_INCLUDE_JOIN_E2E=1 yarn task run e2e:test

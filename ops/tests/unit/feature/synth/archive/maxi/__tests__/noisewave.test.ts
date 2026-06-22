@@ -11,7 +11,7 @@ import {
   generatenoisewave,
   generateretrowave,
   generatewhitewave,
-} from 'zss/feature/synth/archive/maxi/noisewave'
+} from 'ops/archive/synth/maxi/noisewave'
 import { SOURCE_TYPE } from 'zss/feature/synth/shared/sourcetype'
 
 function first16(wave: Float64Array) {

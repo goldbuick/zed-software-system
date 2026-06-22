@@ -2,11 +2,11 @@ import {
   SYNTH_ENV_RELEASE_CHECKPOINTS_SEC,
   SYNTH_ENV_SUSTAIN_TOL_DB,
   evalsynthenvparitygate,
-} from 'zss/feature/synth/backend/daisy/synthenvparitygate'
+} from 'ops/lib/daisy-parity/synthenvparitygate'
 import {
   SYNTH_ENV_PARITY_ADSR,
   SYNTH_ENV_PARITY_GATE_SEC,
-} from 'zss/feature/synth/backend/daisy/synthenvparityscenario'
+} from 'ops/lib/daisy-parity/synthenvparityscenario'
 import { ZssLinearEnv } from 'zss/feature/synth/backend/wasm/adsrenvcurve'
 
 const SAMPLERATE = 44100

@@ -26,7 +26,7 @@ import path from 'node:path'
 
 import { compileast } from 'zss/feature/lang/backend/typescript/ast'
 import { transformast } from 'zss/feature/lang/backend/typescript/transformer'
-import { LANG_PARITY_DIR } from 'zss/testsupport/fixturepaths'
+import { LANG_PARITY_DIR } from 'ops/lib/fixturepaths'
 
 const FIXTUREDIR = LANG_PARITY_DIR
 

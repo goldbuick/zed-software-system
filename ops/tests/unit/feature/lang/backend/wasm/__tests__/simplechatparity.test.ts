@@ -19,11 +19,11 @@ jest.mock('zss/config', () => ({
 
 import { createchip } from 'zss/chip'
 import { compile } from 'zss/feature/lang'
-import { readcorpus } from 'zss/feature/lang/backend/wasm/corpus'
+import { readcorpus } from 'ops/tests/lib/lang/corpus'
 import {
   compilecppfromdisk,
   wasmartifactspresent,
-} from 'zss/feature/lang/backend/wasm/langparityload'
+} from 'ops/tests/lib/lang/langparityload'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
 
 function labelsfromjson(labelsjson: string) {

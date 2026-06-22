@@ -1,5 +1,5 @@
-import { WASM_SYNTH_VOICE_PLAY_CODE } from 'zss/feature/synth/archive/maxi/voiceplaycode'
-import { WASM_MASTER_PLAY_CODE } from 'zss/feature/synth/archive/maxi/wasmmasterplaycode'
+import { WASM_SYNTH_VOICE_PLAY_CODE } from 'ops/archive/synth/maxi/voiceplaycode'
+import { WASM_MASTER_PLAY_CODE } from 'ops/archive/synth/maxi/wasmmasterplaycode'
 import { wirewasmmainchain } from 'zss/feature/synth/backend/wasm/wasmmainchain'
 
 describe('wasmmasterplaycode', () => {

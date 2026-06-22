@@ -18,8 +18,8 @@ jest.mock('zss/config', () => ({
 }))
 
 import { compile } from 'zss/feature/lang'
-import { readcorpus } from 'zss/feature/lang/backend/wasm/corpus'
-import { compilecppfromdisk } from 'zss/feature/lang/backend/wasm/langparityload'
+import { readcorpus } from 'ops/tests/lib/lang/corpus'
+import { compilecppfromdisk } from 'ops/tests/lib/lang/langparityload'
 
 describe('drawdisplay label parity', () => {
   it('TS and C++ agree on drawpass labels for :drawdisplay', () => {

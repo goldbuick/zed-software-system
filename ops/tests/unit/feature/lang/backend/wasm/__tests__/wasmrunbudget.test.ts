@@ -22,8 +22,8 @@ jest.mock('zss/words/textformat', () => ({
   tokenize: () => ({ errors: [{ message: 'mock' }], tokens: [] }),
 }))
 
-import { compilenativewasmfortest } from 'zss/feature/lang/backend/wasm/testhelpers/nativewasmtestutil'
-import { createwasmstubchip } from 'zss/feature/lang/backend/wasm/testhelpers/wasmruntestutil'
+import { compilenativewasmfortest } from 'ops/tests/lib/lang/nativewasmtestutil'
+import { createwasmstubchip } from 'ops/tests/lib/lang/wasmruntestutil'
 import { loadscriptsync } from 'zss/feature/lang/wasmloader'
 
 describe('wasm script run budget', () => {

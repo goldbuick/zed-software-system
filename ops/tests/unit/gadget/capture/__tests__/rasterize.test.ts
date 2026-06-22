@@ -4,6 +4,7 @@ import {
   rasterizelayerstorgba,
 } from 'zss/gadget/capture/rasterize'
 import { zztencodeworld } from 'zss/feature/parse/zztencode'
+import { loadcoolregionsbowelementlibrary } from 'ops/lib/coolregionsbowbook'
 import { importzztboardstobook } from 'zss/feature/parse/zzt'
 import { zztparseworld } from 'zss/feature/parse/zztbinparse'
 import type { ZZT_BOARD } from 'zss/feature/parse/zztformattypes'
@@ -73,6 +74,7 @@ describe('rasterizelayerstorgba', () => {
       return
     }
 
+    loadcoolregionsbowelementlibrary()
     const { book, boardaddresses } = importzztboardstobook(parsed.boards, {
       tilewidth: BOARD_WIDTH,
       tileheight: BOARD_HEIGHT,

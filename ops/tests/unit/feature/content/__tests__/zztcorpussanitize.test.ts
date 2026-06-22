@@ -5,7 +5,7 @@ import {
   corpusslurword,
   sanitizeline,
   sanitizesource,
-} from 'zss/feature/content/zztcorpussanitize'
+} from 'ops/lib/content/zztcorpussanitize'
 
 describe('zztcorpussanitize', () => {
   it('allowlists ZZT toolkit colored phrases', () => {

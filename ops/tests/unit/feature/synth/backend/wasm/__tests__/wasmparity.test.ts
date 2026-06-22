@@ -1,23 +1,23 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
-import type { PARITY_AUDIO_METRICS } from 'zss/feature/synth/backend/wasm/paritymetrics'
+import type { PARITY_AUDIO_METRICS } from 'ops/lib/daisy-parity/paritymetrics'
 import {
   formatmetricsdelta,
   metricswithin,
-} from 'zss/feature/synth/backend/wasm/paritymetrics'
+} from 'ops/lib/daisy-parity/paritymetrics'
 import {
   DRUM_PARITY_PATCHES,
   ENVELOPE_ADSR_PARITY_PATCHES,
   FX_PARITY_PATCHES,
   MAIN_DYNAMICS_PARITY_PATCHES,
   WASM_PARITY_PATCHES,
-} from 'zss/feature/synth/backend/wasm/paritypatches'
+} from 'ops/lib/daisy-parity/paritypatches'
 import {
   TONE_PARITY_EXCLUDED,
   paritytolerancesfor,
-} from 'zss/feature/synth/backend/wasm/paritytolerances'
-import { SYNTH_WASM_FIXTURES_DIR } from 'zss/testsupport/fixturepaths'
+} from 'ops/lib/daisy-parity/paritytolerances'
+import { SYNTH_WASM_FIXTURES_DIR } from 'ops/lib/fixturepaths'
 
 type PARITY_FIXTURE_FILE = {
   patches: Record<string, PARITY_AUDIO_METRICS>
@@ -93,7 +93,7 @@ const CAN_RENDER_PARITY =
   USE_DAISY_PARITY
 
 async function loadrenderer() {
-  const mod = await import('zss/feature/synth/backend/daisy/daisyparityrender')
+  const mod = await import('ops/lib/daisy-parity/daisyparityrender')
   return {
     voice: mod.renderdaisyparitypatch,
     drum: mod.renderdaisyparitydrumpatch,

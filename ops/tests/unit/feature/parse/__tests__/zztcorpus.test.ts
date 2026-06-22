@@ -4,7 +4,7 @@ import {
   elementtozss,
   layoutfromkind,
   resolvestatcode,
-} from 'zss/feature/parse/zztcorpus'
+} from 'ops/lib/content/zztcorpus'
 import { zztencodeboardblob, zztencodeworld } from 'zss/feature/parse/zztencode'
 import type { ZZT_BOARD, ZZT_ELEMENT, ZZT_STAT } from 'zss/feature/parse/zztformattypes'
 import { zztparseboard, zztparseworld } from 'zss/feature/parse/zztbinparse'

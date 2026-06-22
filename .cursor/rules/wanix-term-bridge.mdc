@@ -23,11 +23,11 @@ While `iswanixtermactive()`, non-`#` lines go to the attached task or VM. WASI t
 
 Wanix runs **in-page** (`wanix-system` in `#zss-wanix-display`), not a hidden iframe. Boot may freeze WebGL on the shared main thread.
 
-See `ops/fixtures/wanix/README.md` and `ops/e2e/wanix-host.spec.ts`.
+See `ops/fixtures/wanix/README.md` and harness pages under `ops/fixtures/harness/wanix/`.
 
 ## Prohibited
 
-- Patching **`submodules/wanix`**, **`node_modules/wanix`**, or **`cafe/public/wanix`** to wire WASI stdin.
+- Patching **`submodules/wanix`**, **`node_modules/wanix`**, or production **`cafe/public/`** wasm paths to wire WASI stdin.
 - Adding REPL fixtures that **require** `fd_read(0)` and expecting a Wanix kernel patch.
 - Diagnosing “REPL broken” as “enable fd_0” instead of verifying **`wanixhost.ts` term connect order** and `sendwanixterminput`.
 
@@ -45,7 +45,7 @@ See `ops/fixtures/wanix/README.md` and `ops/e2e/wanix-host.spec.ts`.
 
 ✅ GOOD — drop termbridge.wasm, wait for banner serial, tile opens with replay
 ✅ GOOD — trace sendwanixterminput + connectvmterm order in wanixhost.ts
-✅ GOOD — extend wanix-host e2e via __zss_e2e bridge helpers
+✅ GOOD — extend wanix harness pages under `ops/fixtures/harness/wanix/`
 ```
 
 If interactive behavior is wrong, debug **`wanixhost.ts`** term connect/spawn order and `iswanixtermactive()` — not WASI fd 0.

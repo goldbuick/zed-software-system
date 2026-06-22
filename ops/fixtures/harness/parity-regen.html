@@ -7,26 +7,26 @@
   <body>
     <pre id="out">rendering…</pre>
     <script type="module">
-      import { renderwasmparitypatch } from '/zss/feature/synth/archive/maxi/wasmparityrender.ts'
-      import { renderdaisyparitypatch } from '/zss/feature/synth/backend/daisy/daisyparityrender.ts'
+      import { renderwasmparitypatch } from '/ops/lib/daisy-parity/wasmparityrender.ts'
+      import { renderdaisyparitypatch } from '/ops/lib/daisy-parity/daisyparityrender.ts'
       import {
         renderdaisyparitydrumpatch,
         renderdaisyparityfxpatch,
         renderdaisyparitymainpatch,
-      } from '/zss/feature/synth/backend/daisy/daisyparityrender.ts'
+      } from '/ops/lib/daisy-parity/daisyparityrender.ts'
       import {
         rendertoneparitypatch,
         rendertoneparitydrumpatch,
         rendertoneparityfxpatch,
         rendertoneparitymainpatch,
-      } from '/zss/feature/synth/backend/wasm/toneparityrender.ts'
+      } from '/ops/lib/daisy-parity/toneparityrender.ts'
       import {
         DRUM_PARITY_PATCHES,
         ENVELOPE_ADSR_PARITY_PATCHES,
         FX_PARITY_PATCHES,
         MAIN_DYNAMICS_PARITY_PATCHES,
         WASM_PARITY_PATCHES,
-      } from '/zss/feature/synth/backend/wasm/paritypatches.ts'
+      } from '/ops/lib/daisy-parity/paritypatches.ts'
 
       const outel = document.getElementById('out')
       try {

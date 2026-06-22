@@ -24,7 +24,7 @@ import { compileparse } from 'zss/feature/zztoop/compileparse'
 import {
   LANG_ZZTOOP_DIR,
   LANG_ZZTOOP_MANIFEST_PATH,
-} from 'zss/testsupport/fixturepaths'
+} from 'ops/lib/fixturepaths'
 
 type Manifest = { raw: string[] }
 

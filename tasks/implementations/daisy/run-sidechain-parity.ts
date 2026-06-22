@@ -8,7 +8,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { RENDERS_FIXTURES_DIR } from 'zss/testsupport/fixturepaths'
+import { RENDERS_FIXTURES_DIR } from 'ops/lib/fixturepaths'
 import { chromium } from '@playwright/test'
 import {
   PARITY_RENDER_SCRIPT_TIMEOUT_MS,
@@ -29,7 +29,7 @@ import {
   evalsidechainparitygate,
   formatsidechainparityreport,
   metricsfromsamples,
-} from '../zss/feature/synth/backend/daisy/sidechainparity.ts'
+} from 'ops/lib/daisy-parity/sidechainparity'
 import { SIDECHAIN_SCENARIO_ID } from '../zss/feature/synth/backend/daisy/sidechainscenario.ts'
 
 const ROOT = process.cwd()
@@ -81,11 +81,11 @@ async function rendertonefixture(
   try {
     return await page.evaluate(async () => {
       const { rendertonelevelscenario } =
-        await import('/zss/feature/synth/backend/wasm/toneparityrender.ts')
+        await import('/ops/lib/daisy-parity/toneparityrender.ts')
       const { sidechainabscenario } =
         await import('/zss/feature/synth/backend/daisy/sidechainscenario.ts')
       const { audiobuffermetrics } =
-        await import('/zss/feature/synth/backend/wasm/paritymetrics.ts')
+        await import('/ops/lib/daisy-parity/paritymetrics.ts')
       const buffer = await rendertonelevelscenario(sidechainabscenario())
       const m = audiobuffermetrics(buffer)
       return { peakdb: m.peakdb, rmsdb: m.rmsdb }

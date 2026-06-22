@@ -23,4 +23,3 @@ export {
 } from './synthdefaults'
 export { canonicalvoicefxgroupindex, voiceindexfxgroup } from './voicefxgroup'
 export { converttomp3 } from './mp3'
-export type { AUDIO_SYNTH } from './archive/tone/index'

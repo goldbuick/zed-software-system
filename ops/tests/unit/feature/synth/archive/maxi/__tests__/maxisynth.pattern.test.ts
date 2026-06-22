@@ -1,5 +1,5 @@
-import { createwasmsynth } from 'zss/feature/synth/archive/maxi/maxisynth'
-import { createmockmaxi } from 'zss/feature/synth/archive/maxi/testhelpers/mockmaxi'
+import { createwasmsynth } from 'ops/archive/synth/maxi/maxisynth'
+import { createmockmaxi } from 'ops/tests/lib/synth/mockmaxi'
 import { wasmsabsnapshot } from 'zss/feature/synth/backend/wasm/sabpush'
 import { WASM_DRUM_COUNT } from 'zss/feature/synth/backend/wasm/wasmsabchannels'
 import { invokeplay, parseplay } from 'zss/feature/synth/playnotation'

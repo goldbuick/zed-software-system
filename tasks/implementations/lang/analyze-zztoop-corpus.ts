@@ -18,13 +18,13 @@ import {
   boardcodedelements,
   layoutfromkind,
   resolvestatcode,
-} from 'zss/feature/parse/zztcorpus'
+} from 'ops/lib/content/zztcorpus'
 import type { ZZT_BOARD } from 'zss/feature/parse/zztformattypes'
 import { zztparseboard, zztparseworld } from 'zss/feature/parse/zztbinparse'
 import {
   ZZT_CORPUS_EXTRACTED_DIR,
   ZZT_CORPUS_ZSS_DIR,
-} from 'zss/testsupport/fixturepaths'
+} from 'ops/lib/fixturepaths'
 
 type TriageTag = 'fixable' | 'invalid_zzt' | 'ambiguous'
 

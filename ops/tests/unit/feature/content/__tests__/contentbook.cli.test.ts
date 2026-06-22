@@ -9,7 +9,7 @@ import {
   writebookexport,
 } from 'zss/feature/content/contentbook'
 import type { CONTENT_BOOK_EXPORT } from 'zss/feature/content/contentbook'
-import { CONTENT_DIST_DIR } from 'zss/testsupport/fixturepaths'
+import { CONTENT_DIST_DIR } from 'ops/lib/fixturepaths'
 const task = process.env.CONTENT_CLI_TASK ?? ''
 
 function cliarg(): string {

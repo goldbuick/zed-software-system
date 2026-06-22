@@ -1,5 +1,5 @@
 import { def, exec, jestexec, shell } from '../helpers'
-import { nodehandler, tsxhandler } from '../implementations/modulehandler'
+import { nodehandler } from '../implementations/modulehandler'
 import type { TaskDef } from '../types'
 
 export const MEMORY_TASKS: TaskDef[] = [
@@ -34,9 +34,5 @@ export const MEMORY_TASKS: TaskDef[] = [
     run: nodehandler(
       'tasks/implementations/memory/memory-parity-check-coverage.mjs',
     ),
-  }),
-  def('memory:repro:build', {
-    description: 'Build host memory corruption repro bundle',
-    run: tsxhandler('tasks/implementations/memory/build-host-memory-repro.ts'),
   }),
 ]

@@ -31,11 +31,11 @@ import {
   iswasmmagic,
   parityids,
   readcorpus,
-} from 'zss/feature/lang/backend/wasm/corpus'
-import { compilecppfromdisk } from 'zss/feature/lang/backend/wasm/langparityload'
-import { compilenativewasmfortest } from 'zss/feature/lang/backend/wasm/testhelpers/nativewasmtestutil'
+} from 'ops/tests/lib/lang/corpus'
+import { compilecppfromdisk } from 'ops/tests/lib/lang/langparityload'
+import { compilenativewasmfortest } from 'ops/tests/lib/lang/nativewasmtestutil'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
-import { readcoolregionsbowbookexport } from 'zss/testsupport/coolregionsbowbook'
+import { readcoolregionsbowbookexport } from 'ops/lib/coolregionsbowbook'
 
 function labelsfromjson(labelsjson: string) {
   if (!labelsjson.trim()) {

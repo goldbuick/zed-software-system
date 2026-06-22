@@ -12,7 +12,6 @@ interface ImportMetaEnv {
   readonly ZSS_DEBUG_RAYCAST_PICKSHEET?: string
   readonly ZSS_DEBUG_FLAT_CAMERA_ORTHO?: string
   readonly ZSS_WASM_SCRIPT?: string
-  readonly ZSS_E2E?: string
   readonly ZSS_DAISY_PERF?: string
   readonly ZSS_DAISY_PARITY?: string
   readonly ZSS_DAISY_NO_SIDECHAIN?: string

@@ -8,7 +8,7 @@ import { createServer as createViteServer } from 'vite'
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
 
 import { harnesshtmlmiddleware, fixtureprefixmiddleware } from './harness-middleware.ts'
-import { RENDERS_FIXTURES_DIR } from 'zss/testsupport/fixturepaths'
+import { RENDERS_FIXTURES_DIR } from 'ops/lib/fixturepaths'
 
 export const PARITY_SERVER_PORT = 9877
 

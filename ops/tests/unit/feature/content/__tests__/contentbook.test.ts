@@ -19,7 +19,7 @@ import {
   CONTENT_DEMO_MANIFEST_PATH,
   CONTENT_MINIMAL_MANIFEST_PATH,
   CONTENT_TEMPLATES_DIR,
-} from 'zss/testsupport/fixturepaths'
+} from 'ops/lib/fixturepaths'
 
 const MINIMAL_MANIFEST = CONTENT_MINIMAL_MANIFEST_PATH
 const MINIMAL_PAGES = path.join(CONTENT_TEMPLATES_DIR, 'minimal/pages')

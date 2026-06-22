@@ -23,7 +23,7 @@ import path from 'node:path'
 
 import { compileparse } from 'zss/feature/zztoop/compileparse'
 import { compilezztoop } from 'zss/feature/zztoop/compile'
-import { LANG_ZZTOOP_DIR } from 'zss/testsupport/fixturepaths'
+import { LANG_ZZTOOP_DIR } from 'ops/lib/fixturepaths'
 
 // ---------------------------------------------------------------------------
 // ZZT-OOP 101 corpus — one fixture per section of

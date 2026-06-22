@@ -3,7 +3,7 @@ jest.mock('zss/feature/synth/backend/wasm/coopcoep', () => ({
   clearwasmcoepserviceworkers: jest.fn().mockResolvedValue(undefined),
 }))
 
-import { runwasmperfbench } from 'zss/feature/synth/archive/maxi/wasmperfbench'
+import { runwasmperfbench } from 'ops/archive/synth/maxi/wasmperfbench'
 
 const CAN_BENCH =
   typeof OfflineAudioContext !== 'undefined' &&

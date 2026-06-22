@@ -1,4 +1,4 @@
-import { WASM_FX_PLAY_CODE } from 'zss/feature/synth/archive/maxi/wasmfxplaycode'
+import { WASM_FX_PLAY_CODE } from 'ops/archive/synth/maxi/wasmfxplaycode'
 import { WASM_FX_GROUP_COUNT } from 'zss/feature/synth/backend/wasm/wasmfxstate'
 
 describe('wasm fx play code', () => {

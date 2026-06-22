@@ -5,8 +5,8 @@ import { fileURLToPath } from 'node:url'
 import { chromium } from '@playwright/test'
 import { startparityvite } from 'tasks/lib/parity/parity-vite-server.ts'
 
-import type { PARITY_AUDIO_METRICS } from '../zss/feature/synth/backend/wasm/paritymetrics.ts'
-import { DRUM_PARITY_PATCHES } from '../zss/feature/synth/backend/wasm/paritypatches.ts'
+import type { PARITY_AUDIO_METRICS } from 'ops/lib/daisy-parity/paritymetrics'
+import { DRUM_PARITY_PATCHES } from 'ops/lib/daisy-parity/paritypatches'
 
 const ROOT = process.cwd()
 const PROJECT = process.cwd()

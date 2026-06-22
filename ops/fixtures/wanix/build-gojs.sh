@@ -1,5 +1,5 @@
 #!/bin/sh
-# Build upstream gojscheck.wasm (Go js/wasm) into cafe/public/wanix/.
+# Build upstream gojscheck.wasm (Go js/wasm) into ops/fixtures/wanix/.
 #
 # Prereq: Go toolchain (brew install go)
 
@@ -7,7 +7,7 @@ set -e
 
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 SRC="$ROOT/submodules/wanix/test/gojs"
-OUT="$ROOT/cafe/public/wanix/gojscheck.wasm"
+OUT="$ROOT/ops/fixtures/wanix/gojscheck.wasm"
 
 if ! command -v go >/dev/null 2>&1; then
   echo "go not found — install Go (brew install go) to build gojscheck.wasm" >&2

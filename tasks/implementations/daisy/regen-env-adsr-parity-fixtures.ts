@@ -11,8 +11,8 @@ import {
   stopparityvite,
 } from 'tasks/lib/parity/parity-vite-server.ts'
 
-import type { PARITY_AUDIO_METRICS } from '../zss/feature/synth/backend/wasm/paritymetrics.ts'
-import { ENVELOPE_ADSR_PARITY_PATCHES } from '../zss/feature/synth/backend/wasm/paritypatches.ts'
+import type { PARITY_AUDIO_METRICS } from 'ops/lib/daisy-parity/paritymetrics'
+import { ENVELOPE_ADSR_PARITY_PATCHES } from 'ops/lib/daisy-parity/paritypatches'
 
 const ROOT = process.cwd()
 const PROJECT = process.cwd()

@@ -1,4 +1,4 @@
-import { createwasmsynth } from 'zss/feature/synth/archive/maxi/maxisynth'
+import { createwasmsynth } from 'ops/archive/synth/maxi/maxisynth'
 import { clonewasmreplaystate } from 'zss/feature/synth/backend/wasm/wasmreplaystate'
 import { invokeplay, parseplay } from 'zss/feature/synth/playnotation'
 

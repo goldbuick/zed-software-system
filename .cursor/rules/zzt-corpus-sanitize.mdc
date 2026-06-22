@@ -16,7 +16,7 @@ Museum ZZT `.zss` scripts under `ops/fixtures/zzt/corpus/zss/` must not contain 
 | `yarn task run content:zzt:corpus:sanitize` | Redact hits in place → `sanitize-report.json` |
 | `yarn task run content:zzt:corpus:profanity:verify` | Exit 1 if any hits remain (CI) |
 
-Word lists and redaction logic: `zss/feature/content/zztcorpussanitize.ts`.
+Word lists and redaction logic: `ops/lib/content/zztcorpussanitize.ts`.
 
 ## Pipeline
 

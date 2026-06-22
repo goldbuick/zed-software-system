@@ -18,8 +18,8 @@ jest.mock('zss/config', () => ({
 }))
 
 import { type CHIP } from 'zss/chip'
-import { readcorpus } from 'zss/feature/lang/backend/wasm/corpus'
-import { compilenativewasmfortest } from 'zss/feature/lang/backend/wasm/testhelpers/nativewasmtestutil'
+import { readcorpus } from 'ops/tests/lib/lang/corpus'
+import { compilenativewasmfortest } from 'ops/tests/lib/lang/nativewasmtestutil'
 import { loadscriptsync } from 'zss/feature/lang/wasmloader'
 import type { WORD } from 'zss/words/types'
 

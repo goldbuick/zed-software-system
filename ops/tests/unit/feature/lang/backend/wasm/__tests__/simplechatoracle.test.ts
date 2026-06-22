@@ -28,12 +28,12 @@ import path from 'node:path'
 import { compile } from 'zss/feature/lang'
 import { compileast } from 'zss/feature/lang/backend/typescript/ast'
 import { transformast } from 'zss/feature/lang/backend/typescript/transformer'
-import { readcorpus } from 'zss/feature/lang/backend/wasm/corpus'
+import { readcorpus } from 'ops/tests/lib/lang/corpus'
 import {
   compilecppfromdisk,
   wasmartifactspresent,
-} from 'zss/feature/lang/backend/wasm/langparityload'
-import { LANG_INTEGRATION_GOLDENS_DIR } from 'zss/testsupport/fixturepaths'
+} from 'ops/tests/lib/lang/langparityload'
+import { LANG_INTEGRATION_GOLDENS_DIR } from 'ops/lib/fixturepaths'
 
 const GOLDENDIR = LANG_INTEGRATION_GOLDENS_DIR
 const hasartifacts = wasmartifactspresent()

@@ -5,7 +5,7 @@ Small WASI programs for drag-drop testing in the cafe app.
 ## 0.4 upstream recipes (not wanix.run)
 
 Runtime: jsDelivr **`wanix@0.4.0-alpha8`** (`readwanixruntimeurls()` in `zss/feature/wanix/wanixvmassets.ts`).  
-Pin check: `yarn task run wanix:ensure` → `cafe/public/wanix/BUILD_ID`.  
+Pin check: `yarn task run wanix:ensure` → `ops/fixtures/wanix/BUILD_ID`.  
 Reference: [tractordev/wanix](https://github.com/tractordev/wanix) **`main`** (`<wanix-system>` custom elements).
 
 **Do not** copy [wanix.run](https://wanix.run) — that is the **v0.3 bundle** demo (`new Wanix({ bundle: "/shell/shell.tgz" })`), a different API generation.
@@ -140,42 +140,15 @@ While attached, `WanixTermInput` sends per-keystroke data via `sendwanixterminpu
 
 **Main thread:** in-page Wanix shares the browser main thread with ZSS WebGL — vm-prep/boot may freeze the canvas briefly; expected until upstream workerizes more kernel work.
 
-Gated e2e (large downloads, 3+ minutes):
+**Manual harness:** open `ops/fixtures/harness/wanix/vm-simple.html` via dev server (`/wanix/vm-simple.html` when Vite dev middleware is active).
 
-```bash
-PLAYWRIGHT_INCLUDE_WANIX_VM_E2E=1 yarn task run wanix:vm:verify
-```
+## Manual verification
 
-## Automated fix loop (use instead of manual browser checks)
+1. `yarn task app dev`
+2. Drop `hello.wasm` or use `#wanix` commands — see IO verify section below
+3. For VM term bridge: `#wanix vm` — prep in apilog; tile opens on first serial
 
-Stop `yarn task app dev` first (port **7777** must be free — Playwright starts its own Vite with `CI=1`).
-
-```bash
-yarn task run wanix:vm:fixloop
-```
-
-| Step | Task | What it catches |
-|------|------|-----------------|
-| 1 | `wanix:vm-prep-smoke` | Upstream CDN + wanix.wasm |
-| 2 | `wanix:vm-simple-smoke` | `vm-simple.html` login + `id` (upstream baseline) |
-| 3 | `wanix:vm-term-iframe-smoke` | term I/O in iframe under mock WebGL |
-| 4 | `wanix:vm:isolated:verify` | Isolated `wanix-vm-e2e.html` term stress |
-| 5 | `wanix:vm:app:verify` | **Full ZSS app** hidden iframe + tile bridge |
-
-Fast single gate (matches your manual `/` repro):
-
-```bash
-yarn task run wanix:vm:app:verify
-```
-
-Tests collect `panic` / `DataView` / `Value.Set on undefined` from the browser console — the same errors you see in DevTools.
-
-## IO verify (task bridge)
-
-```bash
-yarn task run wanix:io:verify   # in-page host e2e via full app
-yarn task run e2e:test:wanix    # full-app CLI smoke
-```
+## IO verify (manual)
 
 ## VM keystroke repro (debug)
 

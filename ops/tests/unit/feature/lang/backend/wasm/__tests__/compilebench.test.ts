@@ -30,7 +30,7 @@ import {
   LANG_COOLREGIONSBOW_DIR,
   LANG_PARITY_DIR,
   LANG_SCRIPTS_DIR,
-} from 'zss/testsupport/fixturepaths'
+} from 'ops/lib/fixturepaths'
 
 const FIXTUREDIR = LANG_PARITY_DIR
 const INTEGRATIONDIR = LANG_SCRIPTS_DIR

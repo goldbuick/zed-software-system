@@ -27,20 +27,20 @@ import path from 'node:path'
 
 import { createchip } from 'zss/chip'
 import { compile } from 'zss/feature/lang'
-import { readfixture } from 'zss/feature/lang/backend/wasm/langparityload'
+import { readfixture } from 'ops/tests/lib/lang/langparityload'
 import {
   compilenativewasmfortest,
   runnativeparitygatefortest,
-} from 'zss/feature/lang/backend/wasm/testhelpers/nativewasmtestutil'
+} from 'ops/tests/lib/lang/nativewasmtestutil'
 import {
   createwasmstubchip,
   runwasmscriptfortest,
-} from 'zss/feature/lang/backend/wasm/testhelpers/wasmruntestutil'
+} from 'ops/tests/lib/lang/wasmruntestutil'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
 import {
   LANG_COOLREGIONSBOW_DIR,
   LANG_SCRIPTS_DIR,
-} from 'zss/testsupport/fixturepaths'
+} from 'ops/lib/fixturepaths'
 import type { WORD } from 'zss/words/types'
 
 const FIXTUREDIR = LANG_SCRIPTS_DIR

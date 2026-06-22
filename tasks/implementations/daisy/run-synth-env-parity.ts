@@ -7,7 +7,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { RENDERS_FIXTURES_DIR } from 'zss/testsupport/fixturepaths'
+import { RENDERS_FIXTURES_DIR } from 'ops/lib/fixturepaths'
 import { chromium } from '@playwright/test'
 import {
   PARITY_RENDER_SCRIPT_TIMEOUT_MS,
@@ -22,8 +22,8 @@ import {
 import {
   evalsynthenvparitygate,
   formatsynthenvparityreport,
-} from '../zss/feature/synth/backend/daisy/synthenvparitygate.ts'
-import { SYNTH_ENV_PARITY_SCENARIOS } from '../zss/feature/synth/backend/daisy/synthenvparityscenario.ts'
+} from 'ops/lib/daisy-parity/synthenvparitygate'
+import { SYNTH_ENV_PARITY_SCENARIOS } from 'ops/lib/daisy-parity/synthenvparityscenario'
 
 const ROOT = process.cwd()
 const PROJECT = process.cwd()
@@ -55,13 +55,13 @@ async function runrenders() {
       const payload = await page.evaluate(
         async ({ scenarioid, windowms }) => {
           const { runenvparityscenario } =
-            await import('/zss/feature/synth/backend/daisy/envparityrender.ts')
+            await import('/ops/lib/daisy-parity/envparityrender.ts')
           const { arraybuffertobase64 } =
             await import('/zss/feature/synth/backend/daisy/daisysongrender.ts')
           const { SYNTH_ENV_PARITY_SCENARIOS } =
-            await import('/zss/feature/synth/backend/daisy/synthenvparityscenario.ts')
+            await import('/ops/lib/daisy-parity/synthenvparityscenario.ts')
           const { analyzesynthenvparity } =
-            await import('/zss/feature/synth/backend/daisy/synthenvparity.ts')
+            await import('/ops/lib/daisy-parity/synthenvparity.ts')
 
           const scenario = SYNTH_ENV_PARITY_SCENARIOS.find(
             (s) => s.id === scenarioid,

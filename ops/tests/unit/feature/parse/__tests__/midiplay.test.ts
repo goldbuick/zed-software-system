@@ -14,7 +14,7 @@ import {
   playpitchfromscientificname,
   playreststringforticks,
 } from 'zss/feature/parse/midiplay'
-import { PARSE_FIXTURES_DIR } from 'zss/testsupport/fixturepaths'
+import { PARSE_FIXTURES_DIR } from 'ops/lib/fixturepaths'
 
 describe('midiplay helpers', () => {
   it('durationticksToOp maps PPQ-relative lengths', () => {

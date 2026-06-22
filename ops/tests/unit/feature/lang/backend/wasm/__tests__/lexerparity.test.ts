@@ -26,11 +26,11 @@ import {
   stringliteral,
   tokenize,
 } from 'zss/feature/lang/backend/typescript/lexer'
-import { compilenativewasmfortest } from 'zss/feature/lang/backend/wasm/testhelpers/nativewasmtestutil'
+import { compilenativewasmfortest } from 'ops/tests/lib/lang/nativewasmtestutil'
 import {
   createwasmstubchip,
   runwasmscriptfortest,
-} from 'zss/feature/lang/backend/wasm/testhelpers/wasmruntestutil'
+} from 'ops/tests/lib/lang/wasmruntestutil'
 import type { WORD } from 'zss/words/types'
 
 function stringliteralimages(text: string): string[] {

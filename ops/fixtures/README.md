@@ -1,7 +1,7 @@
 # Test fixtures
 
 All test fixture **assets** live under this directory. Resolve paths via
-[`zss/testsupport/fixturepaths.ts`](../../zss/testsupport/fixturepaths.ts) — do not
+[`ops/lib/fixturepaths.ts`](../../ops/lib/fixturepaths.ts) — do not
 add co-located `__fixtures__` trees beside implementation code.
 
 ## Layout
@@ -38,11 +38,9 @@ add co-located `__fixtures__` trees beside implementation code.
 | ZZT OOP corpus | `yarn task run content:zzt:corpus:build` |
 | ZZT board screenshots | `yarn task run content:zzt:corpus:screenshots` |
 | Content books | `yarn task run content:book:build` / `content:book:validate` |
-| Host memory repro | `yarn task run memory:repro:build` |
 
 ## Harness code (not here)
 
-Embedded loaders and test helpers stay in `zss/testsupport/` (e.g. wanix hex
-bytes). They reference sources under `ops/fixtures/wanix/`, not duplicate assets.
+Embedded loaders and test helpers live under `ops/lib/` and `ops/tests/lib/` (e.g. wanix harness pages reference `ops/fixtures/wanix/` sources).
 
 See [`.cursor/rules/fixtures.mdc`](../../.cursor/rules/fixtures.mdc) for agent guidance.

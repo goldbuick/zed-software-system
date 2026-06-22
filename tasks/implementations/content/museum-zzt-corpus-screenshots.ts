@@ -13,9 +13,10 @@ import {
   defaultcapturemedia,
   rasterizelayerstorgba,
 } from 'zss/gadget/capture/rasterize'
+import { loadcoolregionsbowelementlibrary } from 'ops/lib/coolregionsbowbook'
 import { importzztboardstobook } from 'zss/feature/parse/zzt'
 import { zztparseboard, zztparseworld } from 'zss/feature/parse/zztbinparse'
-import { corpusboardscreenshotid } from 'zss/feature/parse/zztcorpus'
+import { corpusboardscreenshotid } from 'ops/lib/content/zztcorpus'
 import type { ZZT_BOARD } from 'zss/feature/parse/zztformattypes'
 import { ispresent } from 'zss/mapping/types'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
@@ -190,6 +191,7 @@ function processsourcefile(
   ) => {
     let bookid = ''
     try {
+      loadcoolregionsbowelementlibrary()
       const { book, boardaddresses } = importzztboardstobook(zztboards, {
         startboard: -1,
         tilewidth,

@@ -20,7 +20,7 @@ import {
 import {
   iswanixtermprobemsg,
   type WanixTermProbeMsg,
-} from 'zss/testsupport/wanix/wanixtermprobe'
+} from 'zss/feature/wanix/wanixtermprobe'
 
 const EMBED_READY_MS = 120_000
 const RPC_TIMEOUT_MS = 600_000

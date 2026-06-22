@@ -35,7 +35,10 @@ import {
   BOOK,
   CODE_PAGE_TYPE,
 } from 'zss/memory/types'
-import { ensurezztelementlibrary } from 'zss/testsupport/coolregionsbowbook'
+import {
+  assertzztelementlibrary,
+  requirezztelementlibrary,
+} from 'zss/feature/parse/zztelementlibrary'
 import { STR_COLOR, mapcolortostrcolor } from 'zss/words/color'
 import { STR_KIND } from 'zss/words/kind'
 import { PT } from 'zss/words/types'
@@ -545,7 +548,7 @@ export function importzztboardstobook(
     croppedfromszzt: boolean
   },
 ): { book: BOOK; boardaddresses: string[] } {
-  ensurezztelementlibrary()
+  assertzztelementlibrary()
   const book = memorycreatebook([])
   const startboard = opts.startboard ?? -1
   processboards(book, startboard, zztboards, {
@@ -559,6 +562,9 @@ export function importzztboardstobook(
 
 export function parsebrd(player: string, content: Uint8Array) {
   workstatus(SOFTWARE, player, 'parse brd')
+  if (!requirezztelementlibrary(player)) {
+    return
+  }
   const contentbook = memoryreadfirstcontentbook()
   if (!ispresent(contentbook)) {
     apitoast(SOFTWARE, player, 'no content book to import into')
@@ -585,6 +591,9 @@ export function parsebrd(player: string, content: Uint8Array) {
 
 export function parsezzt(player: string, content: Uint8Array) {
   workstatus(SOFTWARE, player, 'parse zzt')
+  if (!requirezztelementlibrary(player)) {
+    return
+  }
   const reader = createreader(content)
   const header = readworldheaderzzt(reader)
   if (!header || reader.haserror()) {
@@ -621,6 +630,9 @@ export function parsezzt(player: string, content: Uint8Array) {
 
 export function parseszt(player: string, content: Uint8Array) {
   workstatus(SOFTWARE, player, 'parse szt')
+  if (!requirezztelementlibrary(player)) {
+    return
+  }
   const reader = createreader(content)
   const header = readworldheaderszzt(reader)
   if (!header || reader.haserror()) {

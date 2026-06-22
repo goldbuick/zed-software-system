@@ -23,8 +23,8 @@ import path from 'node:path'
 import { compile } from 'zss/feature/lang'
 import { compileast } from 'zss/feature/lang/backend/typescript/ast'
 import { transformast } from 'zss/feature/lang/backend/typescript/transformer'
-import { compilecppfromdisk } from 'zss/feature/lang/backend/wasm/langparityload'
-import { LANG_SCRIPTS_DIR } from 'zss/testsupport/fixturepaths'
+import { compilecppfromdisk } from 'ops/tests/lib/lang/langparityload'
+import { LANG_SCRIPTS_DIR } from 'ops/lib/fixturepaths'
 
 const FIXTUREDIR = LANG_SCRIPTS_DIR
 
