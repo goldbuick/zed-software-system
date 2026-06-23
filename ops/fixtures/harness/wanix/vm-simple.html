@@ -75,7 +75,8 @@
     <pre id="log"></pre>
     <script type="module">
       const params = new URLSearchParams(window.location.search)
-      if (params.get('embed') === '1') {
+      const embed = params.get('embed') === '1'
+      if (embed) {
         document.body.classList.add('embed')
       }
 
@@ -98,6 +99,19 @@
       sys.addEventListener('error', (e) => {
         log('wanix-system error: ' + (e.detail?.error ?? e))
       })
+
+      if (embed) {
+        const postvmready = () => {
+          const target =
+            window.parent !== window ? window.parent : null
+          target?.postMessage(
+            { type: 'zss-wanix-vm-ready' },
+            window.location.origin,
+          )
+        }
+        sys?.addEventListener('ready', postvmready, { once: true })
+        import('/wanix-vm-embed.ts')
+      }
     </script>
   </body>
 </html>

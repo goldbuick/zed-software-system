@@ -9,12 +9,15 @@ import fullreload from 'vite-plugin-full-reload'
 import mkcert from 'vite-plugin-mkcert'
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
 
+import {
+  PUBLIC_FIXTURES_DIR,
+  RENDERS_FIXTURES_DIR,
+} from './ops/lib/fixturepaths.ts'
 import pkg from './package.json'
 import {
   fixtureprefixmiddleware,
   harnesshtmlmiddleware,
 } from './tasks/lib/parity/harness-middleware.ts'
-import { PUBLIC_FIXTURES_DIR, RENDERS_FIXTURES_DIR } from './ops/lib/fixturepaths.ts'
 
 /**
  * Firefox refuses module scripts when Content-Type is missing (""). Some dev
@@ -102,10 +105,7 @@ function servefixturesdev(): Plugin {
         fixtureprefixmiddleware('/ops/lib', path.join(root, 'ops/lib')),
       )
       server.middlewares.use(
-        fixtureprefixmiddleware(
-          '/ops/archive',
-          path.join(root, 'ops/archive'),
-        ),
+        fixtureprefixmiddleware('/ops/archive', path.join(root, 'ops/archive')),
       )
       server.middlewares.use(
         fixtureprefixmiddleware(

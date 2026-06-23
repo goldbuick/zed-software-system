@@ -128,15 +128,15 @@ export const DIAGRAMS: Record<DiagramLayer, DiagramConfig> = {
         id: 'wanix',
         label: 'Wanix sandbox',
         definition:
-          'Hidden iframe host for dropped .wasm/.tgz; terminal I/O bridged while a task runs.',
+          'In-page <wanix-system> orchestrated by wanixhost.ts; on main / view (#frame) tasks use wanix-iframe-host.html and VMs use vm-simple.html?embed=1; serial mirrors to tape tile.',
         audience: 'Dev',
-        path: 'zss/device/wanix.ts',
+        path: 'zss/feature/wanix/wanixhost.ts',
       },
       {
         id: 'heavy',
         label: 'Heavy worker',
         definition:
-          'Off-thread LLM agents and expensive browser APIs isolated from the sim loop.',
+          'Eager worker for LLM copilot sessions; models load on demand; WebGPU via GPU coordinator.',
         audience: 'Dev',
         path: 'zss/device/heavy.ts',
       },
@@ -217,7 +217,8 @@ export const DIAGRAMS: Record<DiagramLayer, DiagramConfig> = {
       {
         id: 'msynth',
         label: 'synth',
-        definition: 'Tone.js audio device: play, voices, FX, TTS playback.',
+        definition:
+          'Daisy WASM synth device: play, voices, FX; TTS playback routing on main thread.',
         audience: 'Dev',
         path: 'zss/device/synth.ts',
       },
@@ -225,9 +226,9 @@ export const DIAGRAMS: Record<DiagramLayer, DiagramConfig> = {
         id: 'mwanix',
         label: 'wanix',
         definition:
-          'Main-thread Wanix host: iframe sandbox, drop handling, terminal I/O bridge.',
+          'In-page Wanix host + optional iframe term children (wanixtermiframehost.ts); drop/task/VM orchestration.',
         audience: 'Dev',
-        path: 'zss/device/wanix.ts',
+        path: 'zss/feature/wanix/wanixhost.ts',
       },
       {
         id: 'mmodem',
@@ -253,11 +254,19 @@ export const DIAGRAMS: Record<DiagramLayer, DiagramConfig> = {
       },
       {
         id: 'svm',
-        label: 'vm',
+        label: 'vm (sim or stub)',
         definition:
-          'Sim worker game device: ticktock, cli, books, boardrunner orchestration.',
+          'Sim worker game device: ticktock, cli, books, boardrunner orchestration; stubspace replaces sim on /join/.',
         audience: 'Dev',
         path: 'zss/device/vm.ts',
+      },
+      {
+        id: 'sstub',
+        label: 'stubspace',
+        definition:
+          'Join-mode stub VM (no clock/tick); replaces sim when /join/ URL; heavy + boardrunner still eager.',
+        audience: 'Dev',
+        path: 'zss/stubspace.ts',
       },
       {
         id: 'sclock',
@@ -301,7 +310,7 @@ export const DIAGRAMS: Record<DiagramLayer, DiagramConfig> = {
         id: 'hheavy',
         label: 'heavy',
         definition:
-          'Gemma LLM inference and agent lifecycle in an isolated worker.',
+          'Gemma 4 E2B + SmolLM2 intent gate; copilot sessions; models on demand; WebGPU via GPU coordinator.',
         audience: 'Dev',
         path: 'zss/device/heavy.ts',
       },
@@ -325,15 +334,20 @@ export const DIAGRAMS: Record<DiagramLayer, DiagramConfig> = {
     edges: [
       { from: 'mhub', to: 'mforward' },
       { from: 'mforward', to: 'shub' },
+      { from: 'mforward', to: 'sstub' },
       { from: 'mforward', to: 'brunner' },
       { from: 'mforward', to: 'hheavy' },
       { from: 'mforward', to: 'htts' },
       { from: 'mforward', to: 'hstt' },
       { from: 'shub', to: 'svm' },
       { from: 'shub', to: 'sclock' },
+      { from: 'sstub', to: 'brunner' },
       { from: 'svm', to: 'brunner' },
       { from: 'mregister', to: 'mhub' },
       { from: 'mgadget', to: 'mhub' },
+      { from: 'mbridge', to: 'mhub' },
+      { from: 'msynth', to: 'mhub' },
+      { from: 'mmodem', to: 'mhub' },
       { from: 'mwanix', to: 'mhub' },
     ],
   },
@@ -794,7 +808,8 @@ export const GLOSSARY: GlossaryEntry[] = [
     term: 'pilot',
     category: 'Simulation',
     audience: 'Dev',
-    definition: 'Auto-pathfinding system for LLM agents moving on boards.',
+    definition:
+      'Agent tool pathfinding for register player movement on the current board (#pilot).',
     related: 'agent, heavy',
     path: 'zss/device/vm/handlers/pilot.ts',
   },
@@ -1005,8 +1020,9 @@ export const GLOSSARY: GlossaryEntry[] = [
     category: 'Multiplayer',
     audience: 'Dev',
     definition:
-      'Join-mode lightweight worker (/join/ URL) without full sim VM.',
+      'Join-mode stub VM (/join/ URL) without clock/tick; replaces sim only — heavy and boardrunner still spawn eagerly.',
     related: 'bridge, join',
+    path: 'zss/stubspace.ts',
   },
   {
     term: 'operator',
@@ -1047,8 +1063,8 @@ export const GLOSSARY: GlossaryEntry[] = [
     category: 'Integrations',
     audience: 'Both',
     definition:
-      'Worker device for LLM inference, board agents, and ONNX/transformers off the sim hot path.',
-    related: 'agent, ttsspace',
+      'Eager worker for Gemma 4 E2B copilot LLM and SmolLM2 intent gate; models load on demand off the sim hot path.',
+    related: 'agent, GPU coordinator',
     path: 'zss/device/heavy.ts',
   },
   {
@@ -1056,9 +1072,36 @@ export const GLOSSARY: GlossaryEntry[] = [
     category: 'Integrations',
     audience: 'Both',
     definition:
-      'In-browser WASM sandbox: drop .wasm/.tgz on the terminal, run tasks, route terminal I/O while active (#wanix).',
-    related: 'register, terminal',
+      'In-browser WASM sandbox: drop .wasm/.tgz, run tasks or #wanix vm; term I/O via #task/…/term/data or #vm/<rid>/term/data (not WASI stdin); attach-on-serial opens tile.',
+    related: 'wanix term bridge, WanixTermScreen',
     path: 'zss/feature/wanix/wanixsession.ts',
+  },
+  {
+    term: 'wanix term bridge',
+    category: 'Integrations',
+    audience: 'Dev',
+    definition:
+      'WanixTermInput → sendwanixtermwrite / sendwanixterminput → #…/term/data; guest serial → WanixTermScreen tile.',
+    related: 'wanix, attach-on-serial',
+    path: 'zss/feature/wanix/wanixhost.ts',
+  },
+  {
+    term: 'attach-on-serial',
+    category: 'Integrations',
+    audience: 'Both',
+    definition:
+      'Tape tile opens on first guest stdout or VM serial; replays serial buffer. #wanix attach forces tile immediately.',
+    related: 'wanix term bridge, WanixTermScreen',
+    path: 'zss/feature/wanix/wanixterminalmode.ts',
+  },
+  {
+    term: 'GPU coordinator',
+    category: 'Integrations',
+    audience: 'Dev',
+    definition:
+      'bootgpucoordinator() arbitrates WebGPU access between heavy LLM inference and lazy STT worker.',
+    related: 'heavy, sttspace',
+    path: 'zss/feature/gpu/gpumain.ts',
   },
   {
     term: 'ttsspace',
@@ -1091,7 +1134,8 @@ export const GLOSSARY: GlossaryEntry[] = [
     term: 'agent',
     category: 'Integrations',
     audience: 'Creator',
-    definition: '#agent — LLM-driven NPC with tool calls and board presence.',
+    definition:
+      '#agent — LLM copilot for the register player; tool calls via vm:query / vm:cli; one agent per tab.',
     related: 'heavy, pilot',
     path: 'zss/feature/docs/heavy.md',
   },
@@ -1274,7 +1318,7 @@ export const FEATURE_DOMAINS: FeatureDomain[] = [
       [
         '#agent',
         'Creator',
-        'LLM agent interaction on boards (operator).',
+        'LLM copilot session for register player with tool calls (operator).',
         '#agent',
       ],
       [
@@ -1286,8 +1330,33 @@ export const FEATURE_DOMAINS: FeatureDomain[] = [
       [
         '#wanix',
         'Creator',
-        'Run dropped .wasm/.tgz in Wanix sandbox; attach, detach, stop, unbind.',
+        'Run dropped .wasm/.tgz; attach, detach, stop, unbind; vm / vm stop for Linux VM.',
         '#wanix',
+      ],
+      [
+        '#endgame',
+        'Both',
+        'End current game session and return to title flow.',
+        '#endgame',
+      ],
+      [
+        '#bookrename / #pagetrash / #trash',
+        'Creator',
+        'Rename books or trash pages and books.',
+        '#bookrename',
+      ],
+      [
+        '#pageexport / #bookexport',
+        'Both',
+        'Export single page or full book JSON.',
+        '#pageexport',
+      ],
+      ['#ttsvol', 'Creator', 'Set TTS playback volume level.', '#ttsvol'],
+      [
+        'Speech-to-text (mic)',
+        'Creator',
+        'Pause-based mic input on tape; lazy sttspace worker transcribes.',
+        'zss/screens/terminal/input.tsx',
       ],
     ],
   },
@@ -1505,8 +1574,14 @@ export const FEATURE_DOMAINS: FeatureDomain[] = [
       [
         '#synth / #synth1–5',
         'Creator',
-        'Configure multi-voice FM synth for play/bgplay.',
+        'Configure Daisy multi-voice synth for #play/bgplay.',
         '#synth',
+      ],
+      [
+        'Daisy WASM backend',
+        'Dev',
+        'Production synth: AudioWorklet + shared-array-buffer path.',
+        'zss/feature/synth/backend/daisy/',
       ],
       [
         '#synthrecord / #synthflush',
@@ -1607,7 +1682,7 @@ export const FEATURE_DOMAINS: FeatureDomain[] = [
       [
         'Hidden sessions',
         'Both',
-        'Join mode stubspace for lightweight viewers.',
+        'Join clients use stubspace (no sim tick); host runs authoritative sim.',
         '/join/ URL',
       ],
       [
@@ -1643,25 +1718,49 @@ export const FEATURE_DOMAINS: FeatureDomain[] = [
       [
         '#wanix',
         'Creator',
-        'Show status, stop/replace/keep pending drop, attach/detach terminal routing.',
+        'Show status, stop/replace/keep pending drop, attach/detach terminal routing, vm subcommands.',
         '#wanix',
+      ],
+      [
+        '#wanix vm',
+        'Creator',
+        'Prep Linux+v86 VM in vm-simple.html?embed=1 iframe; serial console via term bridge.',
+        '#wanix vm',
       ],
       [
         'Terminal drop',
         'Creator',
-        'Drag .wasm or .tgz onto tape to mount and run in hidden iframe host.',
+        'Drag .wasm or .tgz onto tape; mounts via in-page Wanix or hidden iframe host (route-dependent).',
         'zss/feature/wanix/wanixdrop.ts',
+      ],
+      [
+        'Wanix term tile',
+        'Both',
+        'WanixTermScreen grid + WanixTermInput when tape is in attached mode.',
+        'zss/feature/wanix/wanixtermscreen.ts',
       ],
       [
         'Terminal I/O bridge',
         'Dev',
-        'While running, terminal input routes to Wanix task stdin; output via apilog.',
-        'zss/feature/wanix/wanixiobridge.ts',
+        'Serial via #…/term/data → tile; wanixiobridge pushes prep/mount logs to apilog only.',
+        'zss/feature/wanix/wanixhost.ts',
+      ],
+      [
+        'Task iframe host',
+        'Dev',
+        'wanix-iframe-host.html child: WASI task RPC + term probe streaming.',
+        'cafe/wanix-iframe-host.ts',
+      ],
+      [
+        'VM embed iframe',
+        'Dev',
+        'vm-simple.html?embed=1 + wanix-vm-embed.ts: warm halt/respawn for VM serial.',
+        'cafe/wanix-vm-embed.ts',
       ],
       [
         'Bind mounts',
         'Creator',
-        'Attach/detach/unbind 9P bind entries between guest and host paths.',
+        'Attach/detach/unbind Wanix bind mounts between guest and host paths.',
         '#wanix attach',
       ],
     ],
@@ -1673,14 +1772,20 @@ export const FEATURE_DOMAINS: FeatureDomain[] = [
       [
         '#agent',
         'Creator',
-        'LLM agents on boards with tool calls (operator).',
+        'LLM copilot for register player with tool calls (operator).',
         '#agent',
       ],
       [
         'Model presets',
         'Dev',
-        'Gemma 4 E2B in-browser agent LLM for heavy worker.',
+        'Gemma 4 E2B in-browser agent LLM; single supported preset (#agent model for info).',
         'heavy:llmpreset',
+      ],
+      [
+        'GPU coordinator',
+        'Dev',
+        'Arbitrates WebGPU between heavy LLM and lazy STT worker.',
+        'zss/feature/gpu/gpumain.ts',
       ],
       [
         'TTS engines',
@@ -1691,7 +1796,7 @@ export const FEATURE_DOMAINS: FeatureDomain[] = [
       [
         'Pilot pathfinding',
         'Dev',
-        'Auto-navigation for agents between board cells.',
+        'Copilot tool: auto-navigation for register player on current board.',
         'vm:pilotstart/stop',
       ],
       [

@@ -1,6 +1,7 @@
 /** postMessage protocol — hidden iframe `<wanix-term>` host (parent ↔ child). */
 
 export const WANIX_TERM_IFRAME_SRC = '/wanix-iframe-host.html'
+export const WANIX_VM_IFRAME_SRC = '/wanix/vm-simple.html?embed=1'
 
 export type WANIX_TERM_IFRAME_RPC = {
   type: 'zss-wanix-term-rpc'
@@ -18,6 +19,7 @@ export type WANIX_TERM_IFRAME_MSG =
       error?: string
     }
   | { type: 'zss-wanix-term-ready' }
+  | { type: 'zss-wanix-vm-ready' }
   | {
       type: 'zss-wanix-term-chunk'
       chunk: string
@@ -36,6 +38,7 @@ export function iswanixtermiframemsg(
     type === 'zss-wanix-term-rpc' ||
     type === 'zss-wanix-term-rpc-res' ||
     type === 'zss-wanix-term-ready' ||
+    type === 'zss-wanix-vm-ready' ||
     type === 'zss-wanix-term-chunk'
   )
 }

@@ -16,9 +16,9 @@ import {
   elementtozss,
   layoutfromkind,
 } from 'ops/lib/content/zztcorpus'
-import { compileparse } from 'zss/feature/zztoop/compileparse'
 import { zztparseboard, zztparseworld } from 'zss/feature/parse/zztbinparse'
 import type { ZZT_BOARD } from 'zss/feature/parse/zztformattypes'
+import { compileparse } from 'zss/feature/zztoop/compileparse'
 
 const CORPUS_DIR = path.join('ops', 'fixtures', 'zzt', 'corpus')
 const ARCHIVES_DIR = path.join(CORPUS_DIR, 'archives')

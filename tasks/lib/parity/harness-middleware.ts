@@ -11,6 +11,23 @@ const MIMES: Record<string, string> = {
   '.txt': 'text/plain; charset=utf-8',
 }
 
+/** Lets same-origin harness HTML load in iframes under COEP require-corp. */
+const COEP_IFRAME_HTML_HEADERS: Record<string, string> = {
+  'Cross-Origin-Resource-Policy': 'same-origin',
+}
+
+function applycoepiframehtmlheaders(
+  res: http.ServerResponse,
+  filepath: string,
+) {
+  if (path.extname(filepath).toLowerCase() !== '.html') {
+    return
+  }
+  for (const [key, value] of Object.entries(COEP_IFRAME_HTML_HEADERS)) {
+    res.setHeader(key, value)
+  }
+}
+
 function contenttype(filepath: string): string | undefined {
   return MIMES[path.extname(filepath).toLowerCase()]
 }
@@ -54,6 +71,7 @@ export function fixtureprefixmiddleware(
     if (type) {
       res.setHeader('Content-Type', type)
     }
+    applycoepiframehtmlheaders(res, resolved)
     if (req.method === 'HEAD') {
       res.statusCode = 200
       res.end()
@@ -84,6 +102,7 @@ export function harnesshtmlmiddleware(
       return
     }
     res.setHeader('Content-Type', 'text/html; charset=utf-8')
+    applycoepiframehtmlheaders(res, file)
     if (req.method === 'HEAD') {
       res.statusCode = 200
       res.end()

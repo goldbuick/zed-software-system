@@ -9,6 +9,7 @@ import {
 } from 'zss/feature/wanix/wanixsession'
 import {
   WANIX_TERM_IFRAME_SRC,
+  WANIX_VM_IFRAME_SRC,
   iswanixtermiframemsg,
 } from 'zss/feature/wanix/wanixtermiframeprotocol'
 import {
@@ -23,7 +24,10 @@ import { wanixtermscreenwrite } from 'zss/feature/wanix/wanixtermscreen'
 import type { WANIX_VM_ASSET_URLS } from 'zss/feature/wanix/wanixvmassets'
 
 const EMBED_READY_MS = 120_000
+const VM_READY_MS = 600_000
 const RPC_TIMEOUT_MS = 600_000
+const IFRAME_STYLE =
+  'position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;visibility:hidden;pointer-events:none;border:0'
 
 type VmPrepStage =
   | 'idle'
@@ -46,6 +50,10 @@ let iframeel: HTMLIFrameElement | null = null
 let iframelayout: 'idle' | 'vm' | 'task' = 'idle'
 let embedready = false
 let embedreadywait: Promise<void> | null = null
+let vmready = false
+let vmreadywait: Promise<void> | null = null
+let vmhalted = false
+let messagelistenerinstalled = false
 let vmbindsready = false
 let taskspaceready = false
 let vmprepstage: VmPrepStage = 'idle'
@@ -86,6 +94,52 @@ export function registervmtermiframehooks(hooks: {
 }) {
   void hooks
   // Reserved for child exit postMessage wiring.
+}
+
+function isvmiframesrc(src: string): boolean {
+  return src.includes('vm-simple.html') && src.includes('embed=1')
+}
+
+function resetembedreadywait() {
+  embedreadywait = new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error('wanix term iframe ready timeout'))
+    }, EMBED_READY_MS)
+    const poll = () => {
+      if (embedready) {
+        clearTimeout(timer)
+        resolve()
+        return
+      }
+      setTimeout(poll, 50)
+    }
+    poll()
+  })
+}
+
+function resetvmreadywait() {
+  vmreadywait = new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error('wanix vm iframe ready timeout'))
+    }, VM_READY_MS)
+    const poll = () => {
+      if (vmready) {
+        clearTimeout(timer)
+        resolve()
+        return
+      }
+      setTimeout(poll, 50)
+    }
+    poll()
+  })
+}
+
+function ensuremessagelistener() {
+  if (messagelistenerinstalled) {
+    return
+  }
+  window.addEventListener('message', onmessage)
+  messagelistenerinstalled = true
 }
 
 function stripvmlineecho(entry: ProxyEntry, chunk: string): string {
@@ -144,6 +198,10 @@ function onmessage(event: MessageEvent) {
       embedready = true
       return
     }
+    if (data.type === 'zss-wanix-vm-ready') {
+      vmready = true
+      return
+    }
     if (data.type === 'zss-wanix-term-rpc-res') {
       const waiter = rpcwaiters.get(data.id)
       if (!waiter) {
@@ -191,46 +249,78 @@ function onmessage(event: MessageEvent) {
   }
 }
 
+function createiframe(src: string, title: string): HTMLIFrameElement {
+  const el = document.createElement('iframe')
+  el.id = 'zss-wanix-term-iframe'
+  el.title = title
+  el.src = src
+  el.style.cssText = IFRAME_STYLE
+  document.body.appendChild(el)
+  return el
+}
+
+async function ensurevmiframe(): Promise<void> {
+  ensuremessagelistener()
+  if (
+    iframeel?.contentWindow &&
+    isvmiframesrc(iframeel.src) &&
+    embedready &&
+    vmready
+  ) {
+    return
+  }
+  if (iframeel && !isvmiframesrc(iframeel.src)) {
+    iframeel.remove()
+    iframeel = null
+  }
+  if (!iframeel) {
+    embedready = false
+    vmready = false
+    iframeel = createiframe(WANIX_VM_IFRAME_SRC, 'wanix vm host')
+    resetembedreadywait()
+    resetvmreadywait()
+  }
+  await embedreadywait
+  await vmreadywait
+}
+
 function ensureiframe(): HTMLIFrameElement {
-  if (iframeel?.contentWindow) {
+  ensuremessagelistener()
+  if (iframeel?.contentWindow && !isvmiframesrc(iframeel.src)) {
     return iframeel
+  }
+  if (iframeel && isvmiframesrc(iframeel.src)) {
+    iframeel.remove()
+    iframeel = null
+    embedready = false
+    embedreadywait = null
+    vmready = false
+    vmreadywait = null
   }
   let el = document.getElementById(
     'zss-wanix-term-iframe',
   ) as HTMLIFrameElement | null
   if (!el) {
-    el = document.createElement('iframe')
-    el.id = 'zss-wanix-term-iframe'
-    el.title = 'wanix term host'
-    el.src = WANIX_TERM_IFRAME_SRC
-    el.style.cssText =
-      'position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;visibility:hidden;pointer-events:none;border:0'
-    document.body.appendChild(el)
+    el = createiframe(WANIX_TERM_IFRAME_SRC, 'wanix term host')
   }
   iframeel = el
   if (!embedreadywait) {
-    window.addEventListener('message', onmessage)
-    embedreadywait = new Promise<void>((resolve, reject) => {
-      const timer = setTimeout(() => {
-        reject(new Error('wanix term iframe ready timeout'))
-      }, EMBED_READY_MS)
-      const poll = () => {
-        if (embedready) {
-          clearTimeout(timer)
-          resolve()
-          return
-        }
-        setTimeout(poll, 50)
-      }
-      poll()
-    })
+    resetembedreadywait()
   }
   return el
 }
 
 async function waitembedready() {
+  if (iframelayout === 'vm') {
+    await ensurevmiframe()
+    return
+  }
   ensureiframe()
   await embedreadywait
+}
+
+function postchildvm(message: object) {
+  childwindow().postMessage(message, window.location.origin)
 }
 
 function childwindow(): Window {
@@ -302,16 +392,17 @@ async function probechildrpc<T>(
 export async function iframeprepvmspace(
   device: DEVICELIKE,
   player: string,
-  urls: WANIX_VM_ASSET_URLS,
+  _urls: WANIX_VM_ASSET_URLS,
   onstart?: (device: DEVICELIKE, player: string) => void,
 ): Promise<void> {
+  void _urls
   vmprepstage = 'mounting'
   vmpreperror = undefined
   apilog(device, player, 'wanix vm prep: mounting linux + v86 in iframe...')
   try {
-    await childrpc('prepvm', [urls])
-    vmbindsready = true
     iframelayout = 'vm'
+    await ensurevmiframe()
+    vmbindsready = true
     vmprepstage = 'mount_ok'
     apilog(device, player, 'wanix vm prep: mount ok')
     if (!iobridgestarted && onstart) {
@@ -326,9 +417,9 @@ export async function iframeprepvmspace(
 }
 
 export async function iframepreptaskspace(): Promise<void> {
+  iframelayout = 'task'
   await childrpc('preptask', [])
   taskspaceready = true
-  iframelayout = 'task'
 }
 
 async function backfillvmserial(vmid: string) {
@@ -380,18 +471,11 @@ export async function iframespawnvm(opts: {
     attachedid = vmid
     setwanixattached('vm', vmid)
   }
-  try {
-    await childrpc('spawnvm', [vmid, mem])
-  } catch (err) {
-    vmprepstage = 'failed'
-    vmpreperror = err instanceof Error ? err.message : String(err)
-    if (opts.attach !== false) {
-      attachedkind = null
-      attachedid = null
-      setwanixattached(null, null)
-    }
-    proxies.delete(vmid)
-    throw err
+  await waitembedready()
+  if (vmhalted) {
+    postchildvm({ type: 'zss-wanix-vm-respawn' })
+    vmhalted = false
+    await new Promise<void>((resolve) => setTimeout(resolve, 500))
   }
   vmprepstage = 'spawn'
   if (opts.attach !== false) {
@@ -424,7 +508,17 @@ export async function iframespawntask(
 }
 
 export async function iframehaltvm(vmid?: string): Promise<void> {
-  await childrpc('haltvm', [vmid])
+  if (iframelayout === 'vm' && iframeel?.contentWindow) {
+    try {
+      await waitembedready()
+      postchildvm({ type: 'zss-wanix-vm-halt' })
+      vmhalted = true
+    } catch {
+      // iframe may not be ready
+    }
+  } else {
+    await childrpc('haltvm', [vmid])
+  }
   if (vmid) {
     proxies.delete(vmid)
   } else {
@@ -513,6 +607,9 @@ export async function teardownwanixtermiframe(): Promise<void> {
   iframeel = null
   embedready = false
   embedreadywait = null
+  vmready = false
+  vmreadywait = null
+  vmhalted = false
   vmbindsready = false
   taskspaceready = false
   vmprepstage = 'idle'
