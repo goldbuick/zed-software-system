@@ -21,7 +21,7 @@ VM prep must **not** call `_setupNamespace` a second time after `#ramfs` (that c
 
 ### Manual vm-simple harness
 
-Upstream-faithful port of [`examples/basic-vm.html`](https://github.com/tractordev/wanix/blob/main/examples/basic-vm.html) — visible `<wanix-term>`, full-height xterm, event log, optional `?embed=1` for iframe parents.
+Upstream-faithful port of [`examples/basic-vm.html`](https://github.com/tractordev/wanix/blob/main/examples/basic-vm.html) — visible `<wanix-term>`, full-height xterm, event log.
 
 Source: `ops/fixtures/harness/wanix/vm-simple.html`  
 Dev URL: [/wanix/vm-simple.html](http://localhost:7777/wanix/vm-simple.html)
@@ -134,9 +134,9 @@ While attached, `WanixTermInput` sends per-keystroke data via `sendwanixterminpu
 ## VM keystroke repro (debug)
 
 1. `yarn task app dev`
-2. `window.__ZSS_WANIX_TRACE__ = true`
+2. `ZSS_WANIX_SHOW=true` in `cafe/.env.local` (or `window.ZSS_WANIX_SHOW = true`) — restart dev server if using env
 3. `#wanix vm` — prep in apilog; tile opens on first serial; wait for `~ #`
-4. Type a command and Enter — watch `[wanix] term-input` / `connectvmterm` traces
-5. Second command — if input stops, check `vm-exit` or worker panic in console
+4. Type a command and Enter — check console for `[wanix] iframe-term-size` / `iframe-pixel-size` if sizing looks wrong
+5. Second command — if input stops, check worker panic in console
 
 After code changes, repeat steps 1–5 manually or use the `/wanix/vm-simple.html` harness to bisect VM term issues.

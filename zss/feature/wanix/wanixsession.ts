@@ -42,10 +42,6 @@ export function readwanixattachedkind(): WANIX_ATTACH_KIND | null {
   return attachedkind
 }
 
-export function readwanixtermrouting(): boolean {
-  return termrouting
-}
-
 export function iswanixtermraw(): boolean {
   return termrouting && attachedkind === 'vm'
 }
@@ -98,15 +94,6 @@ export function setwanixattached(
   }
   termrouting =
     (kind === 'task' && tasks.has(id)) || (kind === 'vm' && vms.has(id))
-}
-
-/** @deprecated use setwanixattached('task', id) */
-export function setwanixattachedtask(taskid: string | null) {
-  if (taskid == null) {
-    setwanixattached(null, null)
-    return
-  }
-  setwanixattached('task', taskid)
 }
 
 export function setwanixtermrouting(on: boolean) {

@@ -12,10 +12,6 @@ import {
   uniquewanixtaskid,
 } from 'zss/feature/wanix/wanixcmd'
 import {
-  wanixiobridgestart,
-  wanixiobridgestop,
-} from 'zss/feature/wanix/wanixiobridge'
-import {
   type WANIX_ATTACH_KIND,
   readwanixattached,
   readwanixattachedkind,
@@ -41,7 +37,6 @@ import {
   readwanixtermiframepreperror,
   readwanixtermiframeprepstage,
   readwanixtermiframserial,
-  registervmtermiframehooks,
   teardownwanixtermiframe,
 } from 'zss/feature/wanix/wanixtermiframehost'
 import {
@@ -83,12 +78,7 @@ export type WANIX_VM_ENTRY = {
   attached: boolean
 }
 
-type TaskExitHandler = (taskid: string, code: number) => void
-type VmExitHandler = (vmid: string, code: number) => void
-
 let state: WANIX_HOST_STATE = 'idle'
-let taskexithandler: TaskExitHandler | undefined
-let vmexithandler: VmExitHandler | undefined
 
 function requireactive() {
   if (iswanixtermiframemode() && iswanixtermiframeactive()) {
@@ -97,14 +87,7 @@ function requireactive() {
   throw new Error('wanix not running — drop a .wasm to start')
 }
 
-function sleep(ms: number) {
-  return new Promise<void>((resolve) => setTimeout(resolve, ms))
-}
-
 function cleanup() {
-  taskexithandler = undefined
-  vmexithandler = undefined
-  wanixiobridgestop()
   void teardownwanixtermiframe()
   state = 'idle'
 }
@@ -128,20 +111,13 @@ export function readwanixvmpreperror(): string | undefined {
   return readwanixtermiframepreperror()
 }
 
-export function setwanixtaskexithandler(handler: TaskExitHandler | undefined) {
-  taskexithandler = handler
-}
-
-export function setwanixvmexithandler(handler: VmExitHandler | undefined) {
-  vmexithandler = handler
-}
-
 export async function spawnwanixspace(
   device: DEVICELIKE,
   player: string,
 ): Promise<void> {
+  void device
+  void player
   if (iswanixtermiframeactive() && readwanixtermiframelayout() === 'task') {
-    wanixiobridgestart(device, player)
     return
   }
   if (iswanixtermiframeactive()) {
@@ -151,7 +127,6 @@ export async function spawnwanixspace(
   try {
     await iframepreptaskspace()
     state = 'ready'
-    wanixiobridgestart(device, player)
   } catch (err) {
     cleanup()
     throw err
@@ -164,14 +139,13 @@ export async function spawnwanixvmspace(
   urls: WANIX_VM_ASSET_URLS = readwanixvmasseturls(),
 ): Promise<void> {
   if (readwanixtermiframelayout() === 'vm') {
-    wanixiobridgestart(device, player)
     return
   }
   if (iswanixtermiframeactive()) {
     await teardownwanixtermiframe()
   }
   state = 'starting'
-  await iframeprepvmspace(device, player, urls, wanixiobridgestart)
+  await iframeprepvmspace(device, player, urls)
   state = 'ready'
 }
 
@@ -279,17 +253,6 @@ export async function sendwanixterminput(text: string): Promise<void> {
   return iframeterminput(text)
 }
 
-export async function sendwanixtermwriteraw(bytes: Uint8Array): Promise<void> {
-  if (bytes.byteLength === 0) {
-    return
-  }
-  let text = ''
-  for (let i = 0; i < bytes.byteLength; i++) {
-    text += String.fromCharCode(bytes[i] ?? 0)
-  }
-  return sendwanixterminput(text)
-}
-
 export async function sendwanixtermwrite(
   line: string,
   opts: { raw?: boolean } = {},
@@ -371,60 +334,3 @@ export function readwanixhostattachedserial(): string {
   }
   return ''
 }
-
-/** E2e hook — run cmd with attach inside an active sandbox. */
-export async function runwanixhostwasm(
-  cmd: string,
-  opts: { termline?: string; blockms?: number; haltafter?: boolean } = {},
-): Promise<{
-  code: number
-  error?: string
-  output: string
-  termwritesucceeded?: boolean
-}> {
-  requireactive()
-  let termwritesucceeded = false
-  const { taskid } = await spawnwanixtask(cmd, { attach: true })
-  if (opts.haltafter) {
-    if (opts.blockms) {
-      await sleep(opts.blockms)
-    }
-    if (opts.termline != null) {
-      try {
-        await sendwanixtermwrite(opts.termline)
-        termwritesucceeded = true
-      } catch (err) {
-        await haltwanixtask(taskid)
-        return {
-          code: -1,
-          error: err instanceof Error ? err.message : String(err),
-          output: readwanixhostattachedserial(),
-          termwritesucceeded,
-        }
-      }
-    }
-    await haltwanixtask(taskid)
-    return {
-      code: 0,
-      output: readwanixhostattachedserial(),
-      termwritesucceeded,
-    }
-  }
-  if (opts.blockms) {
-    await sleep(opts.blockms)
-  }
-  return {
-    code: 0,
-    output: readwanixhostattachedserial(),
-    termwritesucceeded,
-  }
-}
-
-registervmtermiframehooks({
-  onvmexit: (vmid, code) => {
-    vmexithandler?.(vmid, code)
-  },
-  ontaskexit: (taskid, code) => {
-    taskexithandler?.(taskid, code)
-  },
-})

@@ -18,13 +18,6 @@ export type WANIX_TERM_IFRAME_MSG =
       error?: string
     }
   | { type: 'zss-wanix-term-ready' }
-  | { type: 'zss-wanix-vm-ready' }
-  | {
-      type: 'zss-wanix-term-chunk'
-      chunk: string
-      kind?: 'vm' | 'task'
-      id?: string
-    }
 
 export function iswanixtermiframemsg(
   data: unknown,
@@ -36,8 +29,6 @@ export function iswanixtermiframemsg(
   return (
     type === 'zss-wanix-term-rpc' ||
     type === 'zss-wanix-term-rpc-res' ||
-    type === 'zss-wanix-term-ready' ||
-    type === 'zss-wanix-vm-ready' ||
-    type === 'zss-wanix-term-chunk'
+    type === 'zss-wanix-term-ready'
   )
 }

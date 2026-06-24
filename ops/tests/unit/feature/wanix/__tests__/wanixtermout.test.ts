@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-const mockscreenwrite = jest.fn()
+const mockscreensync = jest.fn()
 
 let terminalattached = false
 
@@ -9,7 +9,7 @@ jest.mock('zss/feature/wanix/wanixtermscreen', () => {
   const actual = jest.requireActual('zss/feature/wanix/wanixtermscreen')
   return {
     ...actual,
-    wanixtermscreenwrite: (...args: unknown[]) => mockscreenwrite(...args),
+    wanixtermscreensync: (...args: unknown[]) => mockscreensync(...args),
   }
 })
 
@@ -24,16 +24,38 @@ jest.mock('zss/feature/wanix/wanixterminalmode', () => {
   }
 })
 
+import { COLOR } from 'zss/words/types'
+import type { WanixTermCellsSnapshot } from 'zss/feature/wanix/wanixtermcells'
 import { resetwanixsessionfortest } from 'zss/feature/wanix/wanixsession'
 import {
+  wanixtermiframehosttestcells,
   wanixtermiframehosttestreset,
   wanixtermiframehosttestsetattached,
-  wanixtermiframehosttesttermout,
 } from 'zss/feature/wanix/wanixtermiframehost'
+
+function makesnapshot(text: string, cols = 10): WanixTermCellsSnapshot {
+  const rows = 1
+  const char = new Array<number>(cols * rows).fill(32)
+  const color = new Array<number>(cols * rows).fill(COLOR.WHITE)
+  const bg = new Array<number>(cols * rows).fill(COLOR.BLACK)
+  for (let i = 0; i < text.length && i < cols; i++) {
+    char[i] = text.charCodeAt(i)
+  }
+  return {
+    cols,
+    rows,
+    char,
+    color,
+    bg,
+    cursorx: text.length,
+    cursory: 0,
+    cursorvisible: true,
+  }
+}
 
 const flush = () => new Promise<void>((resolve) => setTimeout(resolve, 0))
 
-describe('wanix iframe term-out attach-on-serial', () => {
+describe('wanix iframe term cells attach', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     terminalattached = false
@@ -41,24 +63,25 @@ describe('wanix iframe term-out attach-on-serial', () => {
     resetwanixsessionfortest()
   })
 
-  it('auto-attaches tile mode and replays buffered serial on first chunk', async () => {
+  it('auto-attaches tile mode on first cell snapshot', async () => {
     wanixtermiframehosttestsetattached('task', 'demo-wasm')
-    wanixtermiframehosttesttermout('task', 'demo-wasm', 'hello')
+    wanixtermiframehosttestcells('task', 'demo-wasm', makesnapshot('hello'))
     await flush()
     expect(terminalattached).toBe(true)
-    expect(mockscreenwrite).toHaveBeenCalledWith('hello')
+    expect(mockscreensync).toHaveBeenCalled()
   })
 
-  it('appends to tile screen when already attached', () => {
-    wanixtermiframehosttestsetattached('task', 'demo-wasm', 'boot\n')
-    terminalattached = true
-    wanixtermiframehosttesttermout('task', 'demo-wasm', 'more')
-    expect(mockscreenwrite).toHaveBeenCalledWith('more')
-  })
-
-  it('ignores output for non-attached targets', () => {
+  it('syncs to tile screen when already attached', () => {
     wanixtermiframehosttestsetattached('task', 'demo-wasm')
-    wanixtermiframehosttesttermout('task', 'other-wasm', 'hello')
-    expect(mockscreenwrite).not.toHaveBeenCalled()
+    terminalattached = true
+    const snapshot = makesnapshot('more')
+    wanixtermiframehosttestcells('task', 'demo-wasm', snapshot)
+    expect(mockscreensync).toHaveBeenCalledWith(snapshot)
+  })
+
+  it('ignores cells for non-attached targets', () => {
+    wanixtermiframehosttestsetattached('task', 'demo-wasm')
+    wanixtermiframehosttestcells('task', 'other-wasm', makesnapshot('hello'))
+    expect(mockscreensync).not.toHaveBeenCalled()
   })
 })

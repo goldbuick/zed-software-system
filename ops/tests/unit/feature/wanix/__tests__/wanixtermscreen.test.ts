@@ -4,6 +4,7 @@ import {
   resetwanixtermscreenfortest,
   wanixtermscreenreset,
   wanixtermscreenresize,
+  wanixtermscreensync,
   wanixtermscreenwrite,
 } from 'zss/feature/wanix/wanixtermscreen'
 
@@ -52,15 +53,42 @@ describe('wanixtermscreen', () => {
     expect(cells.char[1]).toBe('b'.charCodeAt(0))
   })
 
-  it('queues serial before tile resize and flushes on resize', () => {
+  it('writes printable text after resize', () => {
     resetwanixtermscreenfortest()
-    wanixtermscreenwrite('boot banner')
-    flushwanixtermscreenpending()
-    expect(readwanixtermscreencells().width).toBe(0)
     wanixtermscreenresize(20, 3)
+    wanixtermscreenwrite('boot banner')
     flushwanixtermscreenpending()
     const cells = readwanixtermscreencells()
     expect(cells.char[0]).toBe('b'.charCodeAt(0))
     expect(cells.char[4]).toBe(' '.charCodeAt(0))
+  })
+
+  it('syncs mirrored cells and reserves the bottom row', () => {
+    resetwanixtermscreenfortest()
+    wanixtermscreenresize(4, 3)
+    wanixtermscreensync({
+      cols: 4,
+      rows: 2,
+      char: [
+        'a'.charCodeAt(0),
+        'b'.charCodeAt(0),
+        32,
+        32,
+        'c'.charCodeAt(0),
+        32,
+        32,
+        32,
+      ],
+      color: new Array(8).fill(1),
+      bg: new Array(8).fill(0),
+      cursorx: 1,
+      cursory: 0,
+      cursorvisible: true,
+    })
+    const cells = readwanixtermscreencells()
+    expect(cells.char[0]).toBe('a'.charCodeAt(0))
+    expect(cells.char[4]).toBe('c'.charCodeAt(0))
+    expect(cells.cursorx).toBe(1)
+    expect(cells.cursorvisible).toBe(true)
   })
 })

@@ -1,3 +1,4 @@
+import { WANIX_SHOW } from 'zss/config'
 import type { DEVICELIKE } from 'zss/device/api'
 import { apilog } from 'zss/device/api'
 import {
@@ -16,22 +17,24 @@ import {
   readterminalmodeattached,
 } from 'zss/feature/wanix/wanixterminalmode'
 import {
-  type WanixTermProbeMsg,
+  type WanixTermCellsSnapshot,
   iswanixtermprobemsg,
 } from 'zss/feature/wanix/wanixtermprobe'
 import {
   wanixtermscreenshowdetachhint,
-  wanixtermscreenwrite,
+  wanixtermscreensync,
 } from 'zss/feature/wanix/wanixtermscreen'
 import type { WANIX_VM_ASSET_URLS } from 'zss/feature/wanix/wanixvmassets'
 
 const EMBED_READY_MS = 120_000
 const RPC_TIMEOUT_MS = 600_000
+
 // Fixed xterm cell size (px) for the default wanix-term font. The host sizes the
 // iframe to cols*WIDTH x rows*HEIGHT and the child wanix-term FitAddon fits the
 // xterm grid to that box. Width/height are set by the host, not in the cssText.
-const WANIX_CHAR_WIDTH = 8
-const WANIX_CHAR_HEIGHT = 20
+const WANIX_CHAR_WIDTH = 9
+const WANIX_CHAR_HEIGHT = 18
+
 const IFRAME_STYLE_HIDDEN =
   'position:fixed;left:-9999px;top:0;opacity:0;visibility:hidden;pointer-events:none;border:0'
 // Debug overlay: translucent, click-through, top-right. Opt-in only.
@@ -44,9 +47,23 @@ function iswanixiframeshow(): boolean {
     if ((window as unknown as { ZSS_WANIX_SHOW?: unknown }).ZSS_WANIX_SHOW) {
       return true
     }
-    return window.localStorage?.getItem('zss-wanix-show') === '1'
+    if (window.localStorage?.getItem('zss-wanix-show') === '1') {
+      return true
+    }
+    return WANIX_SHOW
   } catch {
-    return false
+    return WANIX_SHOW
+  }
+}
+
+function wanixshowlog(checkpoint: string, detail?: Record<string, unknown>) {
+  if (!iswanixiframeshow()) {
+    return
+  }
+  if (detail) {
+    console.info(`[wanix] ${checkpoint}`, detail)
+  } else {
+    console.info(`[wanix] ${checkpoint}`)
   }
 }
 
@@ -69,9 +86,7 @@ type ProxyEntry = {
   id: string
   kind: WANIX_ATTACH_KIND
   mem?: string
-  serialbuffer: string
   autotiletriggered: boolean
-  pendingvmline: string | null
 }
 
 let iframeel: HTMLIFrameElement | null = null
@@ -89,16 +104,31 @@ const rpcwaiters = new Map<
   { resolve: (value: unknown) => void; reject: (err: Error) => void }
 >()
 const proxies = new Map<string, ProxyEntry>()
-let iobridgestarted = false
 let desirediframecols = 0
 let desirediframerows = 0
 
 function applyiframepixels() {
   if (!iframeel || desirediframecols <= 0 || desirediframerows <= 0) {
+    wanixshowlog('iframe-pixel-size:skip', {
+      hasiframe: !!iframeel,
+      cols: desirediframecols,
+      rows: desirediframerows,
+    })
     return
   }
-  iframeel.style.width = `${desirediframecols * WANIX_CHAR_WIDTH}px`
-  iframeel.style.height = `${desirediframerows * WANIX_CHAR_HEIGHT}px`
+  // the +1 is for the scrollbar
+  const widthpx = (desirediframecols + 1) * WANIX_CHAR_WIDTH
+  const heightpx = desirediframerows * WANIX_CHAR_HEIGHT
+  iframeel.style.width = `${widthpx}px`
+  iframeel.style.height = `${heightpx}px`
+  wanixshowlog('iframe-pixel-size', {
+    cols: desirediframecols,
+    rows: desirediframerows,
+    widthpx,
+    heightpx,
+    charwidth: WANIX_CHAR_WIDTH,
+    charheight: WANIX_CHAR_HEIGHT,
+  })
 }
 
 /** Host-driven sizing: pixel-size the iframe to cols x rows (fixed cell size). */
@@ -106,12 +136,30 @@ export function iframeapplytermsize(cols: number, rows: number) {
   if (cols <= 0 || rows <= 0) {
     return
   }
+  wanixshowlog('!!!! iframe-term-size', { cols, rows })
   desirediframecols = cols
   desirediframerows = rows
   applyiframepixels()
 }
 
-async function opentileonserial(kind: WANIX_ATTACH_KIND, entry: ProxyEntry) {
+async function synccellsfromchild(): Promise<WanixTermCellsSnapshot | null> {
+  return childrpc<WanixTermCellsSnapshot | null>(
+    'zss-wanix-term-probe-rpc',
+    'readcells',
+    [],
+  )
+}
+
+function applycells(snapshot: WanixTermCellsSnapshot) {
+  wanixtermscreensync(snapshot)
+  wanixtermscreenshowdetachhint()
+}
+
+async function opentileoncells(
+  kind: WANIX_ATTACH_KIND,
+  entry: ProxyEntry,
+  snapshot?: WanixTermCellsSnapshot,
+) {
   if (entry.autotiletriggered) {
     return
   }
@@ -120,10 +168,12 @@ async function opentileonserial(kind: WANIX_ATTACH_KIND, entry: ProxyEntry) {
     vmprepstage = 'serial'
   }
   await enterwanixattachedterminal()
-  if (entry.serialbuffer.length > 0) {
-    wanixtermscreenwrite(entry.serialbuffer)
+  const cells = snapshot ?? (await synccellsfromchild())
+  if (cells) {
+    applycells(cells)
+  } else {
+    wanixtermscreenshowdetachhint()
   }
-  wanixtermscreenshowdetachhint()
 }
 
 export function readwanixtermiframelayout(): 'idle' | 'vm' | 'task' {
@@ -144,14 +194,6 @@ export function readwanixtermiframeprepstage(): VmPrepStage {
 
 export function readwanixtermiframepreperror(): string | undefined {
   return vmpreperror
-}
-
-export function registervmtermiframehooks(hooks: {
-  onvmexit?: (vmid: string, code: number) => void
-  ontaskexit?: (taskid: string, code: number) => void
-}) {
-  void hooks
-  // Reserved for child exit postMessage wiring.
 }
 
 function resetembedreadywait() {
@@ -179,43 +221,25 @@ function ensuremessagelistener() {
   messagelistenerinstalled = true
 }
 
-function stripvmlineecho(entry: ProxyEntry, chunk: string): string {
-  const line = entry.pendingvmline
-  if (!line || !chunk.startsWith(line)) {
-    return chunk
-  }
-  let rest = chunk.slice(line.length)
-  if (rest.startsWith('\r\n')) {
-    rest = rest.slice(2)
-  } else if (rest.startsWith('\n')) {
-    rest = rest.slice(1)
-  } else if (rest.startsWith('\r')) {
-    rest = rest.slice(1)
-  }
-  entry.pendingvmline = null
-  return rest
-}
-
-function handlechunk(kind: WANIX_ATTACH_KIND, id: string, chunk: string) {
+function handlecells(
+  kind: WANIX_ATTACH_KIND,
+  id: string,
+  snapshot: WanixTermCellsSnapshot,
+) {
   const entry = proxies.get(id)
-  if (!entry || !chunk.length) {
+  if (!entry) {
     return
   }
-  const stripped = kind === 'vm' ? stripvmlineecho(entry, chunk) : chunk
-  if (!stripped.length) {
-    return
-  }
-  entry.serialbuffer += stripped
   const attached = readwanixattached()
   const attachedkind = readwanixattachedkind()
   if (attached !== id || attachedkind !== kind) {
     return
   }
   if (readterminalmodeattached()) {
-    wanixtermscreenwrite(stripped)
+    applycells(snapshot)
     return
   }
-  void opentileonserial(kind, entry)
+  void opentileoncells(kind, entry, snapshot)
 }
 
 function onmessage(event: MessageEvent) {
@@ -241,20 +265,21 @@ function onmessage(event: MessageEvent) {
       waiter.resolve(data.result)
       return
     }
-    if (data.type === 'zss-wanix-term-chunk') {
-      const kind = data.kind ?? readwanixattachedkind() ?? 'vm'
-      const id = data.id ?? readwanixattached() ?? ''
-      if (id) {
-        handlechunk(kind, id, data.chunk)
-      }
-      return
-    }
   }
-  if (iswanixtermprobemsg(data) && data.type === 'zss-wanix-term-chunk') {
+  if (iswanixtermprobemsg(data) && data.type === 'zss-wanix-term-cells') {
     const id = readwanixattached() ?? ''
     const kind = readwanixattachedkind() ?? 'vm'
     if (id) {
-      handlechunk(kind, id, data.chunk)
+      handlecells(kind, id, {
+        cols: data.cols,
+        rows: data.rows,
+        char: data.char,
+        color: data.color,
+        bg: data.bg,
+        cursorx: data.cursorx,
+        cursory: data.cursory,
+        cursorvisible: data.cursorvisible,
+      })
     }
     return
   }
@@ -317,41 +342,20 @@ function childwindow(): Window {
   return w
 }
 
-async function childrpc<T>(method: string, args: unknown[] = []): Promise<T> {
-  await waitembedready()
-  const id = ++rpcseq
-  return new Promise<T>((resolve, reject) => {
-    const timer = setTimeout(() => {
-      rpcwaiters.delete(id)
-      reject(new Error(`wanix term iframe rpc timeout: ${method}`))
-    }, RPC_TIMEOUT_MS)
-    rpcwaiters.set(id, {
-      resolve: (value) => {
-        clearTimeout(timer)
-        resolve(value as T)
-      },
-      reject: (err) => {
-        clearTimeout(timer)
-        reject(err)
-      },
-    })
-    childwindow().postMessage(
-      { type: 'zss-wanix-term-rpc', id, method, args },
-      window.location.origin,
-    )
-  })
-}
+type ChildRpcType = 'zss-wanix-term-rpc' | 'zss-wanix-term-probe-rpc'
 
-async function probechildrpc<T>(
+async function childrpc<T>(
+  msgtype: ChildRpcType,
   method: string,
   args: unknown[] = [],
 ): Promise<T> {
   await waitembedready()
   const id = ++rpcseq
+  const label = msgtype === 'zss-wanix-term-rpc' ? 'iframe' : 'probe'
   return new Promise<T>((resolve, reject) => {
     const timer = setTimeout(() => {
       rpcwaiters.delete(id)
-      reject(new Error(`wanix term probe rpc timeout: ${method}`))
+      reject(new Error(`wanix term ${label} rpc timeout: ${method}`))
     }, RPC_TIMEOUT_MS)
     rpcwaiters.set(id, {
       resolve: (value) => {
@@ -364,12 +368,7 @@ async function probechildrpc<T>(
       },
     })
     childwindow().postMessage(
-      {
-        type: 'zss-wanix-term-probe-rpc',
-        id,
-        method,
-        args,
-      } satisfies WanixTermProbeMsg,
+      { type: msgtype, id, method, args },
       window.location.origin,
     )
   })
@@ -383,25 +382,23 @@ export async function iframeattachtarget(
     proxies.set(id, {
       id,
       kind,
-      serialbuffer: '',
       autotiletriggered: false,
-      pendingvmline: null,
     })
   }
   setwanixattached(kind, id)
   await enterwanixattachedterminal()
-  const entry = proxies.get(id)
-  if (entry && entry.serialbuffer.length > 0) {
-    wanixtermscreenwrite(entry.serialbuffer)
+  const snapshot = await synccellsfromchild()
+  if (snapshot) {
+    applycells(snapshot)
+  } else {
+    wanixtermscreenshowdetachhint()
   }
-  wanixtermscreenshowdetachhint()
 }
 
 export async function iframeprepvmspace(
   device: DEVICELIKE,
   player: string,
   urls: WANIX_VM_ASSET_URLS,
-  onstart?: (device: DEVICELIKE, player: string) => void,
 ): Promise<void> {
   vmprepstage = 'mounting'
   vmpreperror = undefined
@@ -409,14 +406,10 @@ export async function iframeprepvmspace(
   try {
     iframelayout = 'vm'
     ensureiframe()
-    await childrpc('prepvm', [urls])
+    await childrpc('zss-wanix-term-rpc', 'prepvm', [urls])
     vmbindsready = true
     vmprepstage = 'mount_ok'
     apilog(device, player, 'wanix vm prep: assets ready (mounts on spawn)')
-    if (!iobridgestarted && onstart) {
-      onstart(device, player)
-      iobridgestarted = true
-    }
   } catch (err) {
     vmprepstage = 'failed'
     vmpreperror = err instanceof Error ? err.message : String(err)
@@ -426,36 +419,8 @@ export async function iframeprepvmspace(
 
 export async function iframepreptaskspace(): Promise<void> {
   iframelayout = 'task'
-  await childrpc('preptask', [])
+  await childrpc('zss-wanix-term-rpc', 'preptask', [])
   taskspaceready = true
-}
-
-async function backfillvmserial(vmid: string) {
-  const entry = proxies.get(vmid)
-  if (!entry) {
-    return
-  }
-  const full = await probechildrpc<string>('readserial', [])
-  if (full.length <= entry.serialbuffer.length) {
-    return
-  }
-  handlechunk('vm', vmid, full.slice(entry.serialbuffer.length))
-}
-
-/** Pull any serial not yet streamed via postMessage (iframe boot / stress waits). */
-export async function syncwanixtermiframeserial(): Promise<void> {
-  const attached = readwanixattached()
-  if (readwanixattachedkind() === 'vm' && attached) {
-    await backfillvmserial(attached)
-  }
-}
-
-/** Block until child xterm shows login or shell prompt (probe-owned). */
-export async function waitwanixtermiframeprompt(
-  timeoutms: number,
-): Promise<void> {
-  await probechildrpc('waitprompt', [timeoutms])
-  await syncwanixtermiframeserial()
 }
 
 export async function iframespawnvm(opts: {
@@ -469,9 +434,7 @@ export async function iframespawnvm(opts: {
     id: vmid,
     kind: 'vm',
     mem,
-    serialbuffer: '',
     autotiletriggered: false,
-    pendingvmline: null,
   }
   proxies.set(vmid, entry)
   registervm({ id: vmid, label: vmid, mem })
@@ -479,10 +442,7 @@ export async function iframespawnvm(opts: {
     setwanixattached('vm', vmid)
   }
   vmprepstage = 'spawn'
-  await childrpc('spawnvm', [vmid, mem])
-  if (opts.attach !== false) {
-    await backfillvmserial(vmid)
-  }
+  await childrpc('zss-wanix-term-rpc', 'spawnvm', [vmid, mem])
   return { vmid }
 }
 
@@ -494,12 +454,10 @@ export async function iframespawntask(
   const entry: ProxyEntry = {
     id: taskid,
     kind: 'task',
-    serialbuffer: '',
     autotiletriggered: false,
-    pendingvmline: null,
   }
   proxies.set(taskid, entry)
-  await childrpc('spawntask', [taskid, cmd])
+  await childrpc('zss-wanix-term-rpc', 'spawntask', [taskid, cmd])
   if (attach) {
     setwanixattached('task', taskid)
   }
@@ -507,7 +465,7 @@ export async function iframespawntask(
 }
 
 export async function iframehaltvm(vmid?: string): Promise<void> {
-  await childrpc('haltvm', [vmid])
+  await childrpc('zss-wanix-term-rpc', 'haltvm', [vmid])
   if (vmid) {
     proxies.delete(vmid)
   } else {
@@ -523,7 +481,7 @@ export async function iframehaltvm(vmid?: string): Promise<void> {
 }
 
 export async function iframehalttask(taskid?: string): Promise<void> {
-  await childrpc('halttask', [taskid])
+  await childrpc('zss-wanix-term-rpc', 'halttask', [taskid])
   if (taskid) {
     proxies.delete(taskid)
   } else {
@@ -542,38 +500,28 @@ export async function iframeterminput(text: string): Promise<void> {
   if (!text.length) {
     return
   }
-  await probechildrpc('sendinput', [text])
+  await childrpc('zss-wanix-term-probe-rpc', 'sendinput', [text])
 }
 
 export async function iframetermline(line: string): Promise<void> {
-  const attached = readwanixattached()
   const attachedkind = readwanixattachedkind()
-  const entry = attached && attachedkind ? proxies.get(attached) : undefined
-  if (entry && attachedkind === 'vm') {
-    entry.pendingvmline = line
-  }
   const payload = attachedkind === 'vm' ? `${line}\r` : `${line}\n`
-  await probechildrpc('sendinput', [payload])
+  await childrpc('zss-wanix-term-probe-rpc', 'sendinput', [payload])
 }
 
 export function readwanixtermiframserial(): string {
-  const kind = readwanixattachedkind()
-  const id = readwanixattached()
-  if (!kind || !id) {
-    return ''
-  }
-  return proxies.get(id)?.serialbuffer ?? ''
+  return ''
 }
 
 export async function iframechildputfile(
   name: string,
   bytes: Uint8Array,
 ): Promise<void> {
-  await childrpc('putfile', [name, [...bytes]])
+  await childrpc('zss-wanix-term-rpc', 'putfile', [name, [...bytes]])
 }
 
 export async function iframechildlistdir(path: string): Promise<string[]> {
-  return childrpc<string[]>('listdir', [path])
+  return childrpc<string[]>('zss-wanix-term-rpc', 'listdir', [path])
 }
 
 export async function iframechildmountarchive(
@@ -581,48 +529,33 @@ export async function iframechildmountarchive(
   bytes: Uint8Array,
   mountdst: string,
 ): Promise<void> {
-  await childrpc('mountarchive', [name, [...bytes], mountdst])
+  await childrpc('zss-wanix-term-rpc', 'mountarchive', [
+    name,
+    [...bytes],
+    mountdst,
+  ])
 }
 
 /** Test hook — register a proxy + mark attached without a live iframe. */
 export function wanixtermiframehosttestsetattached(
   kind: WANIX_ATTACH_KIND,
   id: string,
-  serialbuffer = '',
 ) {
   proxies.set(id, {
     id,
     kind,
-    serialbuffer,
     autotiletriggered: false,
-    pendingvmline: null,
   })
   setwanixattached(kind, id)
 }
 
-/** Test hook — set the pending vm echo line for a proxy. */
-export function wanixtermiframehosttestsetpendingvmline(
-  id: string,
-  line: string | null,
-) {
-  const entry = proxies.get(id)
-  if (entry) {
-    entry.pendingvmline = line
-  }
-}
-
-/** Test hook — deliver a serial chunk to the attach-on-serial handler. */
-export function wanixtermiframehosttesttermout(
+/** Test hook — deliver a cell snapshot to the attach-on-cells handler. */
+export function wanixtermiframehosttestcells(
   kind: WANIX_ATTACH_KIND,
   id: string,
-  chunk: string,
+  snapshot: WanixTermCellsSnapshot,
 ) {
-  handlechunk(kind, id, chunk)
-}
-
-/** Test hook — read buffered serial for a proxy. */
-export function wanixtermiframehosttestreadserial(id: string): string {
-  return proxies.get(id)?.serialbuffer ?? ''
+  handlecells(kind, id, snapshot)
 }
 
 /** Test hook — reset proxy + attach state. */
@@ -633,7 +566,7 @@ export function wanixtermiframehosttestreset() {
 
 export async function teardownwanixtermiframe(): Promise<void> {
   try {
-    await childrpc('teardown', [])
+    await childrpc('zss-wanix-term-rpc', 'teardown', [])
   } catch {
     // iframe may already be gone
   }
@@ -647,7 +580,6 @@ export async function teardownwanixtermiframe(): Promise<void> {
   vmpreperror = undefined
   proxies.clear()
   setwanixattached(null, null)
-  iobridgestarted = false
   iframelayout = 'idle'
   desirediframecols = 0
   desirediframerows = 0

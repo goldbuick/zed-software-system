@@ -30,13 +30,6 @@ export function readwanixkernelwasmurl(): string {
   return readwanixruntimeurls().debugWasm
 }
 
-/** Attrs on `<wanix-system>` required for VM/gojs (vm-simple.html recipe). */
-export function applywanixsystemkernelattrs(system: HTMLElement): void {
-  system.setAttribute('wasm', readwanixkernelwasmurl())
-  system.setAttribute('allow-origins', '*')
-  system.setAttribute('debug', '')
-}
-
 export function readwanixvmasseturls(): WANIX_VM_ASSET_URLS {
   return {
     linux: `${EXTRAS_CDN_BASE}/wanix-linux.tgz`,

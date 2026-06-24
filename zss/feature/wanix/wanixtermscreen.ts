@@ -1,8 +1,10 @@
+import type { WanixTermCellsSnapshot } from 'zss/feature/wanix/wanixtermcells'
 import { COLOR } from 'zss/words/types'
 import { metakey } from 'zss/words/system'
 
 const DEFAULT_FG = COLOR.WHITE
 const DEFAULT_BG = COLOR.DKBLUE
+const MIRROR_EMPTY_BG = COLOR.BLACK
 const SPACE = 32
 
 type WANIX_TERM_SCREEN = {
@@ -13,6 +15,7 @@ type WANIX_TERM_SCREEN = {
   bg: number[]
   cursorx: number
   cursory: number
+  cursorvisible: boolean
   version: number
 }
 
@@ -32,6 +35,7 @@ function createtermscreen(width: number, height: number): WANIX_TERM_SCREEN {
     bg: new Array(size).fill(DEFAULT_BG),
     cursorx: 0,
     cursory: 0,
+    cursorvisible: false,
     version: 0,
   }
 }
@@ -210,6 +214,7 @@ function wanixtermscreenresetcells() {
   screen.bg.fill(DEFAULT_BG)
   screen.cursorx = 0
   screen.cursory = 0
+  screen.cursorvisible = false
 }
 
 export function readwanixtermscreenversion() {
@@ -232,33 +237,46 @@ export function readwanixtermscreencells() {
     bg: screen.bg,
     cursorx: screen.cursorx,
     cursory: screen.cursory,
+    cursorvisible: screen.cursorvisible,
     version: screen.version,
   }
+}
+
+export function wanixtermscreensync(snapshot: WanixTermCellsSnapshot) {
+  if (screen.width <= 0 || screen.height <= 0) {
+    return
+  }
+  const mirrorrows = Math.min(snapshot.rows, Math.max(0, screen.height - 1))
+  const mirrorcols = Math.min(snapshot.cols, screen.width)
+
+  for (let y = 0; y < mirrorrows; y++) {
+    for (let x = 0; x < mirrorcols; x++) {
+      const from = x + y * snapshot.cols
+      const to = x + y * screen.width
+      screen.char[to] = snapshot.char[from] ?? SPACE
+      screen.color[to] = snapshot.color[from] ?? DEFAULT_FG
+      screen.bg[to] = snapshot.bg[from] ?? MIRROR_EMPTY_BG
+    }
+    for (let x = mirrorcols; x < screen.width; x++) {
+      const to = x + y * screen.width
+      screen.char[to] = SPACE
+      screen.color[to] = DEFAULT_FG
+      screen.bg[to] = MIRROR_EMPTY_BG
+    }
+  }
+
+  screen.cursorx = snapshot.cursorx
+  screen.cursory = snapshot.cursory
+  screen.cursorvisible = snapshot.cursorvisible
+  bump()
 }
 
 export function wanixtermscreenresize(width: number, height: number) {
   if (width === screen.width && height === screen.height) {
     return
   }
-  const next = createtermscreen(width, height)
-  const copyw = Math.min(width, screen.width)
-  const copyh = Math.min(height, screen.height)
-  for (let y = 0; y < copyh; ++y) {
-    for (let x = 0; x < copyw; ++x) {
-      const from = x + y * screen.width
-      const to = x + y * width
-      next.char[to] = screen.char[from]
-      next.color[to] = screen.color[from]
-      next.bg[to] = screen.bg[from]
-    }
-  }
-  next.cursorx = Math.min(screen.cursorx, Math.max(0, width - 1))
-  next.cursory = Math.min(screen.cursory, Math.max(0, height - 1))
-  screen = next
+  screen = createtermscreen(width, height)
   bump()
-  if (pendingout.length > 0) {
-    schedulependingout()
-  }
 }
 
 export function wanixtermscreenreset() {
@@ -322,7 +340,7 @@ export function wanixtermscreenshowclihint() {
   const hint = 'ctrl+\\  cli (# commands)'
   const y = screen.height - 1
   for (let i = 0; i < hint.length && i < screen.width; ++i) {
-    putcell(i, y, hint.charCodeAt(i), COLOR.DKGRAY, DEFAULT_BG)
+    putcell(i, y, hint.charCodeAt(i), COLOR.DKGRAY, MIRROR_EMPTY_BG)
   }
   bump()
 }
@@ -334,7 +352,7 @@ export function wanixtermscreenshowdetachhint() {
   const hint = `${metakey}+\\ detach`
   const y = screen.height - 1
   for (let i = 0; i < hint.length && i < screen.width; ++i) {
-    putcell(i, y, hint.charCodeAt(i), COLOR.DKGRAY, DEFAULT_BG)
+    putcell(i, y, hint.charCodeAt(i), COLOR.DKGRAY, MIRROR_EMPTY_BG)
   }
   bump()
 }

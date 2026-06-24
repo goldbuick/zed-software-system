@@ -23,29 +23,6 @@
         flex: 1;
         min-height: 0;
       }
-      body.embed wanix-system {
-        position: fixed;
-        left: -9999px;
-        top: 0;
-        width: max-content;
-        height: max-content;
-        opacity: 0;
-        pointer-events: none;
-        overflow: hidden;
-      }
-      body.embed wanix-term {
-        display: block;
-        width: 640px;
-        height: 480px;
-        min-width: 640px;
-        min-height: 480px;
-      }
-      /* Debug overlay (?show=1): bring the hidden term on-screen so the parent
-         iframe (translucent, click-through) reveals the real xterm rendering. */
-      body.embed.show wanix-system {
-        left: 0;
-        opacity: 1;
-      }
       #log {
         position: fixed;
         bottom: 0;
@@ -59,9 +36,6 @@
         font: 12px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
         overflow: auto;
         pointer-events: none;
-      }
-      body.embed #log {
-        display: none;
       }
     </style>
   </head>
@@ -89,15 +63,6 @@
     </wanix-system>
     <pre id="log"></pre>
     <script type="module">
-      const params = new URLSearchParams(window.location.search)
-      const embed = params.get('embed') === '1'
-      if (embed) {
-        document.body.classList.add('embed')
-      }
-      if (params.get('show') === '1') {
-        document.body.classList.add('show')
-      }
-
       const logel = document.getElementById('log')
       function log(line) {
         if (!logel) {
@@ -117,19 +82,6 @@
       sys.addEventListener('error', (e) => {
         log('wanix-system error: ' + (e.detail?.error ?? e))
       })
-
-      if (embed) {
-        const postvmready = () => {
-          const target =
-            window.parent !== window ? window.parent : null
-          target?.postMessage(
-            { type: 'zss-wanix-vm-ready' },
-            window.location.origin,
-          )
-        }
-        sys?.addEventListener('ready', postvmready, { once: true })
-        import('/wanix-vm-embed.ts')
-      }
     </script>
   </body>
 </html>

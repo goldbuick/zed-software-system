@@ -18,10 +18,8 @@ import {
   wanixtermscreenechochar,
   wanixtermscreenecholine,
   wanixtermscreenshowclihint,
-  wanixtermscreenwrite,
   wanixtermscreenwritepong,
 } from 'zss/feature/wanix/wanixtermscreen'
-import { wanixtrace } from 'zss/feature/wanix/wanixtrace'
 import { useTape } from 'zss/gadget/data/zustandstores'
 import { UserInput } from 'zss/gadget/userinput.bridge'
 
@@ -38,11 +36,11 @@ export function WanixTermInput() {
         return
       }
       wanixtermwrite(SOFTWARE, player, line)
-      if (line.trim() === 'ping') {
+      if (!attached && line.trim() === 'ping') {
         wanixtermscreenwritepong()
       }
     },
-    [player],
+    [attached, player],
   )
 
   const reportinputerror = useCallback(
@@ -69,7 +67,9 @@ export function WanixTermInput() {
           return
         }
         setclimode(true)
-        wanixtermscreenshowclihint()
+        if (!attached) {
+          wanixtermscreenshowclihint()
+        }
         return
       }
 
@@ -90,6 +90,9 @@ export function WanixTermInput() {
           }
           return
         }
+        if (attached) {
+          return
+        }
         if (event.key === 'Backspace') {
           event.preventDefault()
           if (linebuffer.current.length > 0) {
@@ -102,12 +105,10 @@ export function WanixTermInput() {
           event.preventDefault()
           linebuffer.current += event.key
           wanixtermscreenechochar(event.key)
-          return
         }
         return
       }
 
-      // VM serial: line-buffered with local tile echo; serial echo of submitted line is stripped in wanixhost.
       if (vmattached) {
         if (event.repeat) {
           return
@@ -124,8 +125,6 @@ export function WanixTermInput() {
           event.preventDefault()
           const line = linebuffer.current
           linebuffer.current = ''
-          wanixtermscreenwrite('\r\n')
-          wanixtrace('term-input:line', { len: line.length })
           void sendwanixvmline(line).catch(reportinputerror)
           return
         }
@@ -133,14 +132,12 @@ export function WanixTermInput() {
           event.preventDefault()
           if (linebuffer.current.length > 0) {
             linebuffer.current = linebuffer.current.slice(0, -1)
-            wanixtermscreenechochar('\b')
           }
           return
         }
         if (event.key.length === 1) {
           event.preventDefault()
           linebuffer.current += event.key
-          wanixtermscreenechochar(event.key)
         }
         return
       }
@@ -154,8 +151,25 @@ export function WanixTermInput() {
           return
         }
         event.preventDefault()
-        wanixtrace('term-input', { len: text.length })
         void sendwanixterminput(text).catch(reportinputerror)
+        return
+      }
+
+      if (attached) {
+        if (event.key === 'Enter') {
+          event.preventDefault()
+          const line = linebuffer.current
+          linebuffer.current = ''
+          sendline(line)
+        } else if (event.key === 'Backspace') {
+          event.preventDefault()
+          if (linebuffer.current.length > 0) {
+            linebuffer.current = linebuffer.current.slice(0, -1)
+          }
+        } else if (event.key.length === 1 && !event.ctrlKey && !event.metaKey) {
+          event.preventDefault()
+          linebuffer.current += event.key
+        }
         return
       }
 

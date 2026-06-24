@@ -18,8 +18,6 @@ import {
   readwanixvmpreperror,
   readwanixvmprepstage,
   sendwanixtermwrite,
-  setwanixtaskexithandler,
-  setwanixvmexithandler,
   spawnwanixtask,
   spawnwanixvm,
   spawnwanixvmspace,
@@ -58,37 +56,6 @@ import {
   zsszedlinkline,
 } from 'zss/feature/zsstextui'
 
-let exitdevice: DEVICELIKE | undefined
-let exitplayer = ''
-
-function ensuretaskexithandler() {
-  setwanixtaskexithandler((taskid, code) => {
-    const wasattached =
-      readwanixattached() === taskid && readwanixattachedkind() === 'task'
-    removetask(taskid)
-    if (wasattached) {
-      leavewanixattachedterminal()
-    }
-    if (exitdevice && exitplayer) {
-      apilog(exitdevice, exitplayer, `wanix exit ${taskid} ${code}`)
-    }
-  })
-}
-
-function ensurevmexithandler() {
-  setwanixvmexithandler((vmid, code) => {
-    const wasattached =
-      readwanixattached() === vmid && readwanixattachedkind() === 'vm'
-    removevm(vmid)
-    if (wasattached) {
-      leavewanixattachedterminal()
-    }
-    if (exitdevice && exitplayer) {
-      apilog(exitdevice, exitplayer, `wanix vm exit ${vmid} ${code}`)
-    }
-  })
-}
-
 export function iswanixwasmfile(name: string, bytes: Uint8Array): boolean {
   if (/\.wasm$/i.test(name)) {
     return true
@@ -114,9 +81,6 @@ async function launchwanixload(
   bytes: Uint8Array,
 ) {
   await ensurewanixsandbox(device, player)
-  exitdevice = device
-  exitplayer = player
-  ensuretaskexithandler()
 
   const taskid = uniquewanixtaskid(
     label,
@@ -172,9 +136,6 @@ export async function wanixhandlevmstart(
   vmid?: string,
 ) {
   try {
-    exitdevice = device
-    exitplayer = player
-    ensurevmexithandler()
     if (iswanixspaceactive()) {
       const status = readwanixstatus()
       if (!status.vmbindsready && haswanixcompute()) {
@@ -188,7 +149,6 @@ export async function wanixhandlevmstart(
     apilog(device, player, 'wanix vm prep: fetching linux + v86 archives...')
     await spawnwanixvmspace(device, player)
     apilog(device, player, `wanix vm prep: ${readwanixvmprepstage()}`)
-    ensurevmexithandler()
     const requested = vmid ?? DEFAULT_WANIX_VM_ID
     apilog(device, player, `wanix vm spawn: ${requested}...`)
     const { vmid: spawnedid } = await spawnwanixvm({

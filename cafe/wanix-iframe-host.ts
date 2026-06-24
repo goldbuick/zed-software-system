@@ -293,7 +293,6 @@ async function handlerrpc(
   source: MessageEventSource | null,
 ) {
   try {
-    console.info('handlerrpc', data.method, data.args)
     switch (data.method) {
       case 'prepvm': {
         const [urls] = data.args as [WANIX_VM_ASSET_URLS]

@@ -1,22 +1,44 @@
 /** Read/send via upstream `<wanix-term>` xterm instance (smoke + iframe child). */
 
+import {
+  digestwanixtermcells,
+  readxtermcellsfromterm,
+  type WanixTermCellsSnapshot,
+} from 'zss/feature/wanix/wanixtermcells'
+
+export type { WanixTermCellsSnapshot } from 'zss/feature/wanix/wanixtermcells'
+
 export type WanixTermProbe = {
   readserial: () => string
+  readcells: () => WanixTermCellsSnapshot | null
   sendinput: (text: string) => void
   waitprompt: (timeoutms?: number) => Promise<void>
   focusterm: () => void
 }
 
+type XtermCell = {
+  getChars: () => string
+  getWidth: () => number
+  getFgColor: () => number
+  getBgColor: () => number
+}
+
 type XtermLine = {
+  length: number
   translateToString: (trim?: boolean) => string
+  getCell: (x: number) => XtermCell | undefined
 }
 
 type XtermBuffer = {
   length: number
+  cursorX: number
+  cursorY: number
   getLine: (index: number) => XtermLine | undefined
 }
 
 type XtermInstance = {
+  cols: number
+  rows: number
   buffer: { active: XtermBuffer }
   input: (data: string) => void
   focus: () => void
@@ -65,6 +87,14 @@ function findwanixtermel(): WanixTermElement | null {
   return document.querySelector('wanix-term')
 }
 
+function readxtermsize(): { cols: number; rows: number } | null {
+  const term = findwanixtermel()?._term
+  if (!term || term.cols <= 0 || term.rows <= 0) {
+    return null
+  }
+  return { cols: term.cols, rows: term.rows }
+}
+
 function readxtermserial(term: XtermInstance): string {
   const active = term.buffer.active
   const lines: string[] = []
@@ -97,6 +127,15 @@ export function installwanixtermprobe(): WanixTermProbe {
     return readxtermserial(term)
   }
 
+  const readcells = () => {
+    const el = findwanixtermel()
+    const term = el?._term
+    if (!term) {
+      return null
+    }
+    return readxtermcellsfromterm(term)
+  }
+
   const sendinput = (text: string) => {
     const el = findwanixtermel()
     const term = el?._term
@@ -120,7 +159,7 @@ export function installwanixtermprobe(): WanixTermProbe {
     )
   }
 
-  return { readserial, sendinput, waitprompt, focusterm }
+  return { readserial, readcells, sendinput, waitprompt, focusterm }
 }
 
 export type WanixTermProbeMsg =
@@ -138,6 +177,7 @@ export type WanixTermProbeMsg =
     }
   | { type: 'zss-wanix-term-ready' }
   | { type: 'zss-wanix-term-chunk'; chunk: string }
+  | ({ type: 'zss-wanix-term-cells' } & WanixTermCellsSnapshot)
 
 export function iswanixtermprobemsg(data: unknown): data is WanixTermProbeMsg {
   if (!data || typeof data !== 'object') {
@@ -148,14 +188,35 @@ export function iswanixtermprobemsg(data: unknown): data is WanixTermProbeMsg {
     type === 'zss-wanix-term-probe-rpc' ||
     type === 'zss-wanix-term-probe-rpc-res' ||
     type === 'zss-wanix-term-ready' ||
-    type === 'zss-wanix-term-chunk'
+    type === 'zss-wanix-term-chunk' ||
+    type === 'zss-wanix-term-cells'
   )
 }
 
-/** Child iframe: expose probe over postMessage + stream serial diffs to parent. */
+/** Child iframe: expose probe over postMessage + stream cell snapshots to parent. */
 export function installwanixtermprobeembed(): WanixTermProbe {
   const probe = installwanixtermprobe()
-  let lastserial = ''
+  let lastcelldigest = ''
+  let lastfitcols = 0
+  let lastfitrows = 0
+
+  function logxtermfitsizeifchanged() {
+    const size = readxtermsize()
+    if (!size) {
+      return
+    }
+    if (size.cols === lastfitcols && size.rows === lastfitrows) {
+      return
+    }
+    lastfitcols = size.cols
+    lastfitrows = size.rows
+    console.info('[wanix] xterm-fit-size', size)
+  }
+
+  function onlayouttick() {
+    ensurewanixtermprobelayout()
+    logxtermfitsizeifchanged()
+  }
 
   function posttoparent(message: WanixTermProbeMsg) {
     const target =
@@ -163,20 +224,21 @@ export function installwanixtermprobeembed(): WanixTermProbe {
     target?.postMessage(message, window.location.origin)
   }
 
-  function emitserialdiff() {
+  function emitcellsnapshot() {
     ensurewanixtermprobelayout()
-    const serial = probe.readserial()
-    if (serial.length <= lastserial.length) {
+    const snapshot = probe.readcells()
+    if (!snapshot) {
       return
     }
-    const chunk = serial.slice(lastserial.length)
-    lastserial = serial
-    if (chunk.length > 0) {
-      posttoparent({ type: 'zss-wanix-term-chunk', chunk })
+    const digest = digestwanixtermcells(snapshot)
+    if (digest === lastcelldigest) {
+      return
     }
+    lastcelldigest = digest
+    posttoparent({ type: 'zss-wanix-term-cells', ...snapshot })
   }
 
-  const polltimer = setInterval(emitserialdiff, 100)
+  const polltimer = setInterval(emitcellsnapshot, 100)
 
   const onprobemessage = async (event: MessageEvent) => {
     if (event.origin !== window.location.origin) {
@@ -204,17 +266,20 @@ export function installwanixtermprobeembed(): WanixTermProbe {
         case 'readserial':
           reply({ result: probe.readserial() })
           return
+        case 'readcells':
+          reply({ result: probe.readcells() })
+          return
         case 'sendinput': {
           const [text] = (data.args ?? []) as [string]
           probe.sendinput(text)
-          emitserialdiff()
+          emitcellsnapshot()
           reply({ result: { ok: true } })
           return
         }
         case 'waitprompt': {
           const [ms] = (data.args ?? []) as [number | undefined]
           await probe.waitprompt(ms)
-          emitserialdiff()
+          emitcellsnapshot()
           reply({ result: { ok: true } })
           return
         }
@@ -237,8 +302,9 @@ export function installwanixtermprobeembed(): WanixTermProbe {
   })
 
   posttoparent({ type: 'zss-wanix-term-ready' })
-  ensurewanixtermprobelayout()
-  const layouttimer = setInterval(ensurewanixtermprobelayout, 250)
+  onlayouttick()
+  emitcellsnapshot()
+  const layouttimer = setInterval(onlayouttick, 250)
 
   window.addEventListener('beforeunload', () => {
     if (polltimer) {

@@ -10,7 +10,6 @@ jest.mock('zss/feature/wanix/wanixhost', () => ({
   mountwanixarchive: jest.fn(),
   listwanixdir: jest.fn(),
   spawnwanixtask: (...args: unknown[]) => spawnmock(...args),
-  setwanixtaskexithandler: jest.fn(),
   listwanixbinds: (...args: unknown[]) => bindsmock(...args),
   iswanixspaceactive: () => false,
 }))
