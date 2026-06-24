@@ -138,13 +138,13 @@ async function launchwanixload(
     entrycmd = pickwanixbundleentry(rootentries, bundleentries, bundleprefix)
   }
 
-  const { taskid: spawnedid } = await spawnwanixtask(entrycmd, {
+  registertask({ id: taskid, label, entrycmd })
+  await spawnwanixtask(entrycmd, {
     taskid,
     attach: true,
     wait: false,
   })
-  registertask({ id: spawnedid, label, entrycmd })
-  apilog(device, player, `wanix run ${spawnedid} ${entrycmd}`)
+  apilog(device, player, `wanix run ${taskid} ${entrycmd}`)
 }
 
 export async function wanixhandledrop(

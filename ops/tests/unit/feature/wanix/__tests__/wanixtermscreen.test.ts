@@ -51,4 +51,16 @@ describe('wanixtermscreen', () => {
     expect(cells.char[0]).toBe('a'.charCodeAt(0))
     expect(cells.char[1]).toBe('b'.charCodeAt(0))
   })
+
+  it('queues serial before tile resize and flushes on resize', () => {
+    resetwanixtermscreenfortest()
+    wanixtermscreenwrite('boot banner')
+    flushwanixtermscreenpending()
+    expect(readwanixtermscreencells().width).toBe(0)
+    wanixtermscreenresize(20, 3)
+    flushwanixtermscreenpending()
+    const cells = readwanixtermscreencells()
+    expect(cells.char[0]).toBe('b'.charCodeAt(0))
+    expect(cells.char[4]).toBe(' '.charCodeAt(0))
+  })
 })

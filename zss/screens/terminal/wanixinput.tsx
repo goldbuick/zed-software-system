@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react'
-import { apierror, vmcli, wanixtermwrite } from 'zss/device/api'
+import { apierror, vmcli, wanixdetach, wanixtermwrite } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import {
@@ -63,9 +63,13 @@ export function WanixTermInput() {
       const raw = iswanixtermraw() && !vmattached
       if (iswanixcliescape(event)) {
         event.preventDefault()
+        linebuffer.current = ''
+        if (vmattached) {
+          wanixdetach(SOFTWARE, player)
+          return
+        }
         setclimode(true)
         wanixtermscreenshowclihint()
-        linebuffer.current = ''
         return
       }
 

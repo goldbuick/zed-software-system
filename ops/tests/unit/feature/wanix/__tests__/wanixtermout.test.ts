@@ -39,9 +39,10 @@ describe('wanix term-out attach-on-serial', () => {
     resetwanixsessionfortest()
   })
 
-  it('auto-attaches tile mode and replays buffered serial on first chunk', () => {
+  it('auto-attaches tile mode and replays buffered serial on first chunk', async () => {
     wanixhosttestsetattached('task', 'demo-wasm')
     wanixhosttesttermout('task', 'demo-wasm', 'hello')
+    await Promise.resolve()
     expect(terminalattached).toBe(true)
     expect(mockscreenwrite).toHaveBeenCalledWith('hello')
   })

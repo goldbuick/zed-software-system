@@ -11,8 +11,10 @@ const MIMES: Record<string, string> = {
   '.txt': 'text/plain; charset=utf-8',
 }
 
-/** Lets same-origin harness HTML load in iframes under COEP require-corp. */
+/** Lets same-origin harness HTML load in iframes under the app COEP require-corp. */
 const COEP_IFRAME_HTML_HEADERS: Record<string, string> = {
+  'Cross-Origin-Opener-Policy': 'same-origin',
+  'Cross-Origin-Embedder-Policy': 'require-corp',
   'Cross-Origin-Resource-Policy': 'same-origin',
 }
 

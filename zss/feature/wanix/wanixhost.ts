@@ -29,6 +29,7 @@ import {
   iframechildlistdir,
   iframechildmountarchive,
   iframechildputfile,
+  iframeattachtarget,
   iframehalttask,
   iframehaltvm,
   iframepreptaskspace,
@@ -48,12 +49,13 @@ import {
   teardownwanixtermiframe,
   waitwanixtermiframeprompt,
 } from 'zss/feature/wanix/wanixtermiframehost'
+import { applywanixtermprobelayout } from 'zss/feature/wanix/wanixtermprobe'
 import {
   enterwanixattachedterminal,
   leavewanixattachedterminal,
   readterminalmodeattached,
 } from 'zss/feature/wanix/wanixterminalmode'
-import { wanixtermscreenwrite } from 'zss/feature/wanix/wanixtermscreen'
+import { wanixtermscreenwrite, wanixtermscreenshowdetachhint } from 'zss/feature/wanix/wanixtermscreen'
 import { wanixtrace } from 'zss/feature/wanix/wanixtrace'
 import {
   DEFAULT_WANIX_VM_MEM,
@@ -708,8 +710,10 @@ function handletermchunk(kind: WANIX_ATTACH_KIND, id: string, chunk: string) {
   if (!entry.autotiletriggered) {
     entry.autotiletriggered = true
     vmprepstage = 'serial'
-    void enterwanixattachedterminal()
-    flushentryserialbuffer(entry)
+    void Promise.resolve(enterwanixattachedterminal()).then(() => {
+      flushentryserialbuffer(entry)
+      wanixtermscreenshowdetachhint()
+    })
   }
 }
 
@@ -965,8 +969,7 @@ function wirevmtermel(entry: TermTargetEntry) {
     return
   }
   const termel = term as HTMLElement
-  termel.style.cssText =
-    'position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;overflow:hidden'
+  applywanixtermprobelayout(termel)
   entry.wanixtermel = term as unknown as WanixTermElement
   let lastserial = ''
   const poll = () => {
@@ -1907,6 +1910,10 @@ export async function attachwanixtarget(
   kind: WANIX_ATTACH_KIND,
   id: string,
 ): Promise<void> {
+  if (iswanixtermiframemode() && iswanixtermiframeactive()) {
+    await iframeattachtarget(kind, id)
+    return
+  }
   requireactive()
   attachtarget(kind, id)
   await enterwanixattachedterminal()

@@ -84,7 +84,7 @@ export function TerminalComponent() {
 
   return (
     <>
-      {!attached && <TapeBackPlate />}
+      <TapeBackPlate />
       <TapeTerminalContext.Provider value={tapecontextvalue}>
         {attached ? (
           <>

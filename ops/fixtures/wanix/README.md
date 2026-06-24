@@ -73,7 +73,7 @@ Upstream Wanix uses `<wanix-term>` bound to `#task/…/term` or `#vm/<rid>/term`
 2. Drag `ops/fixtures/wanix/termbridge.wasm` — stay on CLI until banner stdout
 3. Tile screen opens with `wanix term bridge ready` replayed
 4. Type `ping` and press Enter — `pong` on the grid
-5. `#wanix detach` or `Ctrl+\` then `#wanix detach` returns to CLI scrollback
+5. `#wanix detach` or `Ctrl+\` returns to CLI scrollback
 6. `#wanix stop` halts the task
 
 Raw WASI `fd_read(0)` is not the integration surface. See `.cursor/rules/wanix-term-bridge.mdc`.

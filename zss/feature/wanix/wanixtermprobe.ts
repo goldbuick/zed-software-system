@@ -30,6 +30,24 @@ type WanixTermElement = HTMLElement & {
 const LOGIN_PROMPT_RE = /login:/i
 const SHELL_PROMPT_RE = /~\s#/
 
+/** xterm cols/rows for hidden probe hosts — must not be 1px or serial wraps one char per line. */
+export const WANIX_PROBE_TERM_COLS = 80
+export const WANIX_PROBE_TERM_ROWS = 24
+
+const WANIX_PROBE_TERM_LAYOUT_CSS =
+  'position:fixed;left:-9999px;top:0;width:640px;height:480px;opacity:0;pointer-events:none;overflow:hidden'
+
+export function applywanixtermprobelayout(el: HTMLElement) {
+  el.style.cssText = WANIX_PROBE_TERM_LAYOUT_CSS
+}
+
+export function ensurewanixtermprobelayout() {
+  const el = findwanixtermel()
+  if (el) {
+    applywanixtermprobelayout(el)
+  }
+}
+
 function findwanixtermel(): WanixTermElement | null {
   return document.querySelector('wanix-term')
 }
@@ -133,6 +151,7 @@ export function installwanixtermprobeembed(): WanixTermProbe {
   }
 
   function emitserialdiff() {
+    ensurewanixtermprobelayout()
     const serial = probe.readserial()
     if (serial.length <= lastserial.length) {
       return
@@ -205,11 +224,14 @@ export function installwanixtermprobeembed(): WanixTermProbe {
   })
 
   posttoparent({ type: 'zss-wanix-term-ready' })
+  ensurewanixtermprobelayout()
+  const layouttimer = setInterval(ensurewanixtermprobelayout, 250)
 
   window.addEventListener('beforeunload', () => {
     if (polltimer) {
       clearInterval(polltimer)
     }
+    clearInterval(layouttimer)
   })
 
   return probe

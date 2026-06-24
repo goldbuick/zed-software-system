@@ -20,7 +20,10 @@ import {
   type WanixTermProbeMsg,
   iswanixtermprobemsg,
 } from 'zss/feature/wanix/wanixtermprobe'
-import { wanixtermscreenwrite } from 'zss/feature/wanix/wanixtermscreen'
+import {
+  wanixtermscreenwrite,
+  wanixtermscreenshowdetachhint,
+} from 'zss/feature/wanix/wanixtermscreen'
 import type { WANIX_VM_ASSET_URLS } from 'zss/feature/wanix/wanixvmassets'
 
 const EMBED_READY_MS = 120_000
@@ -64,9 +67,25 @@ const rpcwaiters = new Map<
   { resolve: (value: unknown) => void; reject: (err: Error) => void }
 >()
 const proxies = new Map<string, ProxyEntry>()
-let attachedkind: WANIX_ATTACH_KIND | null = null
-let attachedid: string | null = null
 let iobridgestarted = false
+
+async function opentileonserial(
+  kind: WANIX_ATTACH_KIND,
+  entry: ProxyEntry,
+) {
+  if (entry.autotiletriggered) {
+    return
+  }
+  entry.autotiletriggered = true
+  if (kind === 'vm') {
+    vmprepstage = 'serial'
+  }
+  await enterwanixattachedterminal()
+  if (entry.serialbuffer.length > 0) {
+    wanixtermscreenwrite(entry.serialbuffer)
+  }
+  wanixtermscreenshowdetachhint()
+}
 
 export function readwanixtermiframelayout(): 'idle' | 'vm' | 'task' {
   return iframelayout
@@ -169,23 +188,16 @@ function handlechunk(kind: WANIX_ATTACH_KIND, id: string, chunk: string) {
     return
   }
   entry.serialbuffer += stripped
-  if (attachedid !== id || attachedkind !== kind) {
+  const attached = readwanixattached()
+  const attachedkind = readwanixattachedkind()
+  if (attached !== id || attachedkind !== kind) {
     return
   }
   if (readterminalmodeattached()) {
     wanixtermscreenwrite(stripped)
     return
   }
-  if (!entry.autotiletriggered) {
-    entry.autotiletriggered = true
-    if (kind === 'vm') {
-      vmprepstage = 'serial'
-    }
-    void enterwanixattachedterminal()
-    if (entry.serialbuffer.length > 0) {
-      wanixtermscreenwrite(entry.serialbuffer)
-    }
-  }
+  void opentileonserial(kind, entry)
 }
 
 function onmessage(event: MessageEvent) {
@@ -216,8 +228,8 @@ function onmessage(event: MessageEvent) {
       return
     }
     if (data.type === 'zss-wanix-term-chunk') {
-      const kind = data.kind ?? attachedkind ?? 'vm'
-      const id = data.id ?? attachedid ?? ''
+      const kind = data.kind ?? readwanixattachedkind() ?? 'vm'
+      const id = data.id ?? readwanixattached() ?? ''
       if (id) {
         handlechunk(kind, id, data.chunk)
       }
@@ -225,8 +237,8 @@ function onmessage(event: MessageEvent) {
     }
   }
   if (iswanixtermprobemsg(data) && data.type === 'zss-wanix-term-chunk') {
-    const id = attachedid ?? ''
-    const kind = attachedkind ?? 'vm'
+    const id = readwanixattached() ?? ''
+    const kind = readwanixattachedkind() ?? 'vm'
     if (id) {
       handlechunk(kind, id, data.chunk)
     }
@@ -389,6 +401,28 @@ async function probechildrpc<T>(
   })
 }
 
+export async function iframeattachtarget(
+  kind: WANIX_ATTACH_KIND,
+  id: string,
+): Promise<void> {
+  if (!proxies.has(id)) {
+    proxies.set(id, {
+      id,
+      kind,
+      serialbuffer: '',
+      autotiletriggered: false,
+      pendingvmline: null,
+    })
+  }
+  setwanixattached(kind, id)
+  await enterwanixattachedterminal()
+  const entry = proxies.get(id)
+  if (entry && entry.serialbuffer.length > 0) {
+    wanixtermscreenwrite(entry.serialbuffer)
+  }
+  wanixtermscreenshowdetachhint()
+}
+
 export async function iframeprepvmspace(
   device: DEVICELIKE,
   player: string,
@@ -436,8 +470,9 @@ async function backfillvmserial(vmid: string) {
 
 /** Pull any serial not yet streamed via postMessage (iframe boot / stress waits). */
 export async function syncwanixtermiframeserial(): Promise<void> {
-  if (attachedkind === 'vm' && attachedid) {
-    await backfillvmserial(attachedid)
+  const attached = readwanixattached()
+  if (readwanixattachedkind() === 'vm' && attached) {
+    await backfillvmserial(attached)
   }
 }
 
@@ -467,8 +502,6 @@ export async function iframespawnvm(opts: {
   proxies.set(vmid, entry)
   registervm({ id: vmid, label: vmid, mem })
   if (opts.attach !== false) {
-    attachedkind = 'vm'
-    attachedid = vmid
     setwanixattached('vm', vmid)
   }
   await waitembedready()
@@ -499,10 +532,7 @@ export async function iframespawntask(
   proxies.set(taskid, entry)
   await childrpc('spawntask', [taskid, cmd])
   if (attach) {
-    attachedkind = 'task'
-    attachedid = taskid
     setwanixattached('task', taskid)
-    await enterwanixattachedterminal()
   }
   return { taskid }
 }
@@ -528,9 +558,7 @@ export async function iframehaltvm(vmid?: string): Promise<void> {
       }
     }
   }
-  if (attachedkind === 'vm') {
-    attachedkind = null
-    attachedid = null
+  if (readwanixattachedkind() === 'vm') {
     setwanixattached(null, null)
   }
 }
@@ -546,9 +574,7 @@ export async function iframehalttask(taskid?: string): Promise<void> {
       }
     }
   }
-  if (attachedkind === 'task') {
-    attachedkind = null
-    attachedid = null
+  if (readwanixattachedkind() === 'task') {
     setwanixattached(null, null)
   }
 }
@@ -561,7 +587,10 @@ export async function iframeterminput(text: string): Promise<void> {
 }
 
 export async function iframetermline(line: string): Promise<void> {
-  const entry = attachedid && attachedkind ? proxies.get(attachedid) : undefined
+  const attached = readwanixattached()
+  const attachedkind = readwanixattachedkind()
+  const entry =
+    attached && attachedkind ? proxies.get(attached) : undefined
   if (entry && attachedkind === 'vm') {
     entry.pendingvmline = line
   }
@@ -615,8 +644,7 @@ export async function teardownwanixtermiframe(): Promise<void> {
   vmprepstage = 'idle'
   vmpreperror = undefined
   proxies.clear()
-  attachedkind = null
-  attachedid = null
+  setwanixattached(null, null)
   iobridgestarted = false
   iframelayout = 'idle'
 }

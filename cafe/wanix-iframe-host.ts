@@ -6,7 +6,10 @@ import {
   type WANIX_TERM_IFRAME_RPC,
   iswanixtermiframemsg,
 } from 'zss/feature/wanix/wanixtermiframeprotocol'
-import { installwanixtermprobeembed } from 'zss/feature/wanix/wanixtermprobe'
+import {
+  applywanixtermprobelayout,
+  installwanixtermprobeembed,
+} from 'zss/feature/wanix/wanixtermprobe'
 import {
   type WANIX_VM_ASSET_URLS,
   buildwanixtaskprehtml,
@@ -183,6 +186,7 @@ async function spawntask(taskid: string, cmd: string) {
 
   const term = document.createElement('wanix-term')
   term.setAttribute('path', `#task/${taskid}/term`)
+  applywanixtermprobelayout(term)
   sys.appendChild(term)
 
   await task.allocate?.()

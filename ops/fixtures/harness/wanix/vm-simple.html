@@ -25,11 +25,20 @@
       }
       body.embed wanix-system {
         position: fixed;
-        width: 1px;
-        height: 1px;
+        left: -9999px;
+        top: 0;
+        width: max-content;
+        height: max-content;
         opacity: 0;
         pointer-events: none;
         overflow: hidden;
+      }
+      body.embed wanix-term {
+        display: block;
+        width: 640px;
+        height: 480px;
+        min-width: 640px;
+        min-height: 480px;
       }
       #log {
         position: fixed;

@@ -1,4 +1,5 @@
 import { COLOR } from 'zss/words/types'
+import { metakey } from 'zss/words/system'
 
 const DEFAULT_FG = COLOR.WHITE
 const DEFAULT_BG = COLOR.DKBLUE
@@ -177,11 +178,11 @@ function writechunkinternal(chunk: string) {
 function flushpendingout() {
   outflushpending = false
   outflushhandle = undefined
-  const chunk = pendingout
-  pendingout = ''
-  if (!chunk.length || screen.width <= 0 || screen.height <= 0) {
+  if (!pendingout.length || screen.width <= 0 || screen.height <= 0) {
     return
   }
+  const chunk = pendingout
+  pendingout = ''
   writechunkinternal(chunk)
   bump()
 }
@@ -255,19 +256,36 @@ export function wanixtermscreenresize(width: number, height: number) {
   next.cursory = Math.min(screen.cursory, Math.max(0, height - 1))
   screen = next
   bump()
+  if (pendingout.length > 0) {
+    schedulependingout()
+  }
 }
 
 export function wanixtermscreenreset() {
-  flushwanixtermscreenpending()
+  if (
+    outflushhandle !== undefined &&
+    typeof cancelAnimationFrame === 'function'
+  ) {
+    cancelAnimationFrame(outflushhandle)
+  }
+  outflushpending = false
+  outflushhandle = undefined
   screen = createtermscreen(screen.width, screen.height)
+  wanixtermscreenresetcells()
   bump()
+  if (pendingout.length > 0 && screen.width > 0 && screen.height > 0) {
+    schedulependingout()
+  }
 }
 
 export function wanixtermscreenwrite(chunk: string) {
-  if (!chunk.length || screen.width <= 0 || screen.height <= 0) {
+  if (!chunk.length) {
     return
   }
   pendingout += chunk
+  if (screen.width <= 0 || screen.height <= 0) {
+    return
+  }
   schedulependingout()
 }
 
@@ -301,7 +319,19 @@ export function wanixtermscreenshowclihint() {
   if (screen.height <= 0 || screen.width <= 0) {
     return
   }
-  const hint = 'ctrl+\\ cli'
+  const hint = 'ctrl+\\  cli (# commands)'
+  const y = screen.height - 1
+  for (let i = 0; i < hint.length && i < screen.width; ++i) {
+    putcell(i, y, hint.charCodeAt(i), COLOR.DKGRAY, DEFAULT_BG)
+  }
+  bump()
+}
+
+export function wanixtermscreenshowdetachhint() {
+  if (screen.height <= 0 || screen.width <= 0) {
+    return
+  }
+  const hint = `${metakey}+\\ detach`
   const y = screen.height - 1
   for (let i = 0; i < hint.length && i < screen.width; ++i) {
     putcell(i, y, hint.charCodeAt(i), COLOR.DKGRAY, DEFAULT_BG)

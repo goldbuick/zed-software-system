@@ -37,6 +37,7 @@ jest.mock('zss/device/register', () => ({
 jest.mock('zss/device/api', () => ({
   apierror: jest.fn(),
   vmcli: jest.fn(),
+  wanixdetach: jest.fn(),
   wanixtermwrite: (...args: unknown[]) => mockwanixtermwrite(...args),
 }))
 
@@ -55,6 +56,7 @@ import { type ReactNode, useContext, useLayoutEffect, useState } from 'react'
 import { act } from 'react'
 import { type Root, createRoot } from 'react-dom/client'
 import { UserInputContext } from 'zss/gadget/userinputcontext'
+import { wanixdetach } from 'zss/device/api'
 import { WanixTermInput } from 'zss/screens/terminal/wanixinput'
 
 function UserFocusLite({ children }: { children: ReactNode }) {
@@ -139,6 +141,17 @@ describe('WanixTermInput vm raw input', () => {
     expect(mockechochar).toHaveBeenCalledWith('i')
     expect(mocktermscreenwrite).toHaveBeenCalledWith('\r\n')
     expect(mockecholine).not.toHaveBeenCalled()
+  })
+
+  it('ctrl+\\ detaches vm without cli mode', () => {
+    mockreadwanixattachedkind.mockReturnValue('vm')
+    mountinput()
+
+    emitkeydown(
+      keyevent('keydown', { key: '\\', ctrlKey: true, code: 'Backslash' }),
+    )
+
+    expect(wanixdetach).toHaveBeenCalled()
   })
 
   it('sends ctrl+c immediately in vm line mode', () => {
