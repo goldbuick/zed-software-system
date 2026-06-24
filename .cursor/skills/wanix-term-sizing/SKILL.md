@@ -10,16 +10,18 @@ description: >-
 
 # Wanix terminal sizing
 
+Full reference: [ops/docs/wanix-term-sizing.md](../../../ops/docs/wanix-term-sizing.md)
+
 ## The one true approach
 
 The host (zed.cafe) sizes the **iframe element** in pixels to `cols x rows`. The
 child `<wanix-term>` fills the iframe; xterm's `FitAddon` + `ResizeObserver`
-compute cols/rows from that pixel box. That is the entire mechanism.
+compute cols/rows from that pixel box. That is the entire sizing mechanism.
 
-- Fixed cell constants: `WANIX_CHAR_WIDTH = 8`, `WANIX_CHAR_HEIGHT = 20` in
+- Fixed xterm cell constants: `WANIX_CHAR_WIDTH = 9`, `WANIX_CHAR_HEIGHT = 18` in
   [zss/feature/wanix/wanixtermiframehost.ts](../../../zss/feature/wanix/wanixtermiframehost.ts).
-- `iframeapplytermsize(cols, rows)` sets `iframeel.style.width/height =
-  cols*8px / rows*20px`. Reapplied on iframe (re)creation in `ensureiframe`.
+- `iframeapplytermsize(cols, rows)` sets iframe px to `(cols+1)*9` × `rows*18`
+  (+1 col for scrollbar). Reapplied on iframe (re)creation in `ensureiframe`.
 - Host entry point: `wanixhostapplytermsize(cols, rows)` in
   [zss/feature/wanix/wanixhost.ts](../../../zss/feature/wanix/wanixhost.ts),
   called from [zss/screens/terminal/wanixscreen.tsx](../../../zss/screens/terminal/wanixscreen.tsx)
@@ -27,6 +29,8 @@ compute cols/rows from that pixel box. That is the entire mechanism.
 - The `<wanix-term>` probe layout fills the viewport (`100vw`/`100vh`) so fit
   follows the iframe — see
   [zss/feature/wanix/wanixtermprobe.ts](../../../zss/feature/wanix/wanixtermprobe.ts).
+- Content mirror: 100ms cell snapshot poll + push on fit-size change; tile GPU
+  needs `context.changed()` after `writetile` in `WanixTermScreen`.
 
 ## Never do these (they were ripped out for a reason)
 
@@ -36,13 +40,13 @@ compute cols/rows from that pixel box. That is the entire mechanism.
 - NO `setsize` probe RPC / explicit `term.resize(cols, rows)`. The FitAddon's
   `ResizeObserver` overrides explicit resizes anyway — they fight and lose.
 - NO measuring real cell dimensions, no reading `_renderService.dimensions`.
-  Use the fixed 8x20 constants.
+  Use the fixed 9×18 constants.
 - NO `80x24` anywhere. It is a dead VT100 default, not a target. The only size
   that matters is the tile (`edge.width x edge.height`).
 - NO patching `submodules/wanix` / v86 to propagate winsize.
 
 There is also NO size message needed from xterm to zed.cafe: the tile already
-knows its own dimensions and re-parses the serial text into its own grid in
+knows its own dimensions. Content arrives via cell snapshots in
 [zss/feature/wanix/wanixtermscreen.ts](../../../zss/feature/wanix/wanixtermscreen.ts).
 
 ## If sizing looks wrong

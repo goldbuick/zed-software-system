@@ -1,6 +1,6 @@
 {
-  "generated": "2026-06-22T14:56:43.612Z",
-  "traincount": 205,
+  "generated": "2026-06-24T19:39:54.058Z",
+  "traincount": 186,
   "evalcount": 11,
   "compilepassrate": 1,
   "entries": [
@@ -189,12 +189,6 @@
       "split": "train",
       "kind": "script",
       "sourcefile": "ops/fixtures/lang/scripts/graphics_fpv_block.zss"
-    },
-    {
-      "id": "fixture_hint_else_b",
-      "split": "train",
-      "kind": "script",
-      "sourcefile": "ops/fixtures/lang/scripts/hint_else_b.zss"
     },
     {
       "id": "fixture_hint_else_sidebar",
@@ -401,19 +395,7 @@
       "sourcefile": "ops/fixtures/lang/scripts/simple_chat_sidebar_a.zss"
     },
     {
-      "id": "fixture_simple_chat_sidebar_a_think",
-      "split": "train",
-      "kind": "script",
-      "sourcefile": "ops/fixtures/lang/scripts/simple_chat_sidebar_a.zss"
-    },
-    {
       "id": "fixture_simple_chat_sidebar_b_main",
-      "split": "train",
-      "kind": "script",
-      "sourcefile": "ops/fixtures/lang/scripts/simple_chat_sidebar_b.zss"
-    },
-    {
-      "id": "fixture_simple_chat_sidebar_b_think",
       "split": "train",
       "kind": "script",
       "sourcefile": "ops/fixtures/lang/scripts/simple_chat_sidebar_b.zss"
@@ -1109,148 +1091,52 @@
       "sourcefile": "ops/fixtures/lang/coolregionsbow/water.zss"
     },
     {
-      "id": "tpl_any_black_line",
+      "id": "tpl_any_dir_line_n",
       "split": "train",
       "kind": "script",
-      "sourcefile": "template:any_color_kind"
+      "sourcefile": "template:any_dir_kind"
     },
     {
-      "id": "tpl_any_black_player",
+      "id": "tpl_any_dir_line_s",
       "split": "train",
       "kind": "script",
-      "sourcefile": "template:any_color_kind"
+      "sourcefile": "template:any_dir_kind"
     },
     {
-      "id": "tpl_any_black_solid",
+      "id": "tpl_any_dir_line_e",
       "split": "train",
       "kind": "script",
-      "sourcefile": "template:any_color_kind"
+      "sourcefile": "template:any_dir_kind"
     },
     {
-      "id": "tpl_any_black_breakable",
+      "id": "tpl_any_dir_line_w",
       "split": "train",
       "kind": "script",
-      "sourcefile": "template:any_color_kind"
+      "sourcefile": "template:any_dir_kind"
     },
     {
-      "id": "tpl_any_black_flow",
+      "id": "tpl_any_dir_line_up",
       "split": "train",
       "kind": "script",
-      "sourcefile": "template:any_color_kind"
+      "sourcefile": "template:any_dir_kind"
     },
     {
-      "id": "tpl_any_black_ricochet",
+      "id": "tpl_any_dir_line_down",
       "split": "train",
       "kind": "script",
-      "sourcefile": "template:any_color_kind"
+      "sourcefile": "template:any_dir_kind"
     },
     {
-      "id": "tpl_any_red_line",
+      "id": "tpl_any_dir_line_left",
       "split": "train",
       "kind": "script",
-      "sourcefile": "template:any_color_kind"
+      "sourcefile": "template:any_dir_kind"
     },
     {
-      "id": "tpl_any_red_player",
+      "id": "tpl_any_dir_line_right",
       "split": "train",
       "kind": "script",
-      "sourcefile": "template:any_color_kind"
-    },
-    {
-      "id": "tpl_any_red_solid",
-      "split": "train",
-      "kind": "script",
-      "sourcefile": "template:any_color_kind"
-    },
-    {
-      "id": "tpl_any_red_breakable",
-      "split": "train",
-      "kind": "script",
-      "sourcefile": "template:any_color_kind"
-    },
-    {
-      "id": "tpl_any_red_flow",
-      "split": "train",
-      "kind": "script",
-      "sourcefile": "template:any_color_kind"
-    },
-    {
-      "id": "tpl_any_red_ricochet",
-      "split": "train",
-      "kind": "script",
-      "sourcefile": "template:any_color_kind"
-    },
-    {
-      "id": "tpl_any_blue_line",
-      "split": "train",
-      "kind": "script",
-      "sourcefile": "template:any_color_kind"
-    },
-    {
-      "id": "tpl_any_blue_player",
-      "split": "train",
-      "kind": "script",
-      "sourcefile": "template:any_color_kind"
-    },
-    {
-      "id": "tpl_any_blue_solid",
-      "split": "train",
-      "kind": "script",
-      "sourcefile": "template:any_color_kind"
-    },
-    {
-      "id": "tpl_any_blue_breakable",
-      "split": "train",
-      "kind": "script",
-      "sourcefile": "template:any_color_kind"
-    },
-    {
-      "id": "tpl_any_blue_flow",
-      "split": "train",
-      "kind": "script",
-      "sourcefile": "template:any_color_kind"
-    },
-    {
-      "id": "tpl_any_blue_ricochet",
-      "split": "train",
-      "kind": "script",
-      "sourcefile": "template:any_color_kind"
-    },
-    {
-      "id": "tpl_any_green_line",
-      "split": "train",
-      "kind": "script",
-      "sourcefile": "template:any_color_kind"
-    },
-    {
-      "id": "tpl_any_green_player",
-      "split": "train",
-      "kind": "script",
-      "sourcefile": "template:any_color_kind"
-    },
-    {
-      "id": "tpl_any_green_solid",
-      "split": "train",
-      "kind": "script",
-      "sourcefile": "template:any_color_kind"
-    },
-    {
-      "id": "tpl_any_green_breakable",
-      "split": "train",
-      "kind": "script",
-      "sourcefile": "template:any_color_kind"
-    },
-    {
-      "id": "tpl_any_green_flow",
-      "split": "train",
-      "kind": "script",
-      "sourcefile": "template:any_color_kind"
-    },
-    {
-      "id": "tpl_any_green_ricochet",
-      "split": "train",
-      "kind": "script",
-      "sourcefile": "template:any_color_kind"
+      "sourcefile": "template:any_dir_kind"
     },
     {
       "id": "cli_movement_0",

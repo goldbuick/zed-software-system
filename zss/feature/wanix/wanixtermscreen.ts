@@ -339,8 +339,11 @@ export function wanixtermscreenshowclihint() {
   }
   const hint = 'ctrl+\\  cli (# commands)'
   const y = screen.height - 1
+  for (let x = 0; x < screen.width; ++x) {
+    putcell(x, y, SPACE, DEFAULT_FG, DEFAULT_BG)
+  }
   for (let i = 0; i < hint.length && i < screen.width; ++i) {
-    putcell(i, y, hint.charCodeAt(i), COLOR.DKGRAY, MIRROR_EMPTY_BG)
+    putcell(i, y, hint.charCodeAt(i), DEFAULT_FG, DEFAULT_BG)
   }
   bump()
 }
@@ -351,8 +354,11 @@ export function wanixtermscreenshowdetachhint() {
   }
   const hint = `${metakey}+\\ detach`
   const y = screen.height - 1
+  for (let x = 0; x < screen.width; ++x) {
+    putcell(x, y, SPACE, DEFAULT_FG, DEFAULT_BG)
+  }
   for (let i = 0; i < hint.length && i < screen.width; ++i) {
-    putcell(i, y, hint.charCodeAt(i), COLOR.DKGRAY, MIRROR_EMPTY_BG)
+    putcell(i, y, hint.charCodeAt(i), DEFAULT_FG, DEFAULT_BG)
   }
   bump()
 }

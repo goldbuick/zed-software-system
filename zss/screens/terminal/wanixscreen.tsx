@@ -59,5 +59,7 @@ export function WanixTermScreen() {
     }
   }
 
+  context.changed()
+
   return null
 }

@@ -106,6 +106,32 @@ const rpcwaiters = new Map<
 const proxies = new Map<string, ProxyEntry>()
 let desirediframecols = 0
 let desirediframerows = 0
+let pendingcellsraf = 0
+
+function schedulecellsyncafterresize() {
+  if (!readterminalmodeattached() || !readwanixattached() || !embedready) {
+    return
+  }
+  if (pendingcellsraf && typeof cancelAnimationFrame === 'function') {
+    cancelAnimationFrame(pendingcellsraf)
+  }
+  if (typeof requestAnimationFrame !== 'function') {
+    void synccellsfromchild().then((snapshot) => {
+      if (snapshot) {
+        applycells(snapshot)
+      }
+    })
+    return
+  }
+  pendingcellsraf = requestAnimationFrame(() => {
+    pendingcellsraf = 0
+    void synccellsfromchild().then((snapshot) => {
+      if (snapshot) {
+        applycells(snapshot)
+      }
+    })
+  })
+}
 
 function applyiframepixels() {
   if (!iframeel || desirediframecols <= 0 || desirediframerows <= 0) {
@@ -129,6 +155,7 @@ function applyiframepixels() {
     charwidth: WANIX_CHAR_WIDTH,
     charheight: WANIX_CHAR_HEIGHT,
   })
+  schedulecellsyncafterresize()
 }
 
 /** Host-driven sizing: pixel-size the iframe to cols x rows (fixed cell size). */

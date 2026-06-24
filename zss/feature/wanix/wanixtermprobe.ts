@@ -211,6 +211,8 @@ export function installwanixtermprobeembed(): WanixTermProbe {
     lastfitcols = size.cols
     lastfitrows = size.rows
     console.info('[wanix] xterm-fit-size', size)
+    lastcelldigest = ''
+    emitcellsnapshot()
   }
 
   function onlayouttick() {
