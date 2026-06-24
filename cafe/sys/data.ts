@@ -1330,7 +1330,7 @@ export const FEATURE_DOMAINS: FeatureDomain[] = [
       [
         '#wanix',
         'Creator',
-        'Run dropped .wasm/.tgz; attach, detach, stop, unbind; vm / vm stop for Linux VM.',
+        'Run dropped .wasm/.tgz; attach, detach, stop; vm / vm stop for Linux VM.',
         '#wanix',
       ],
       [
@@ -1742,26 +1742,26 @@ export const FEATURE_DOMAINS: FeatureDomain[] = [
       [
         'Terminal I/O bridge',
         'Dev',
-        'Serial via #…/term/data → tile; wanixiobridge pushes prep/mount logs to apilog only.',
+        'Serial via iframe child xterm → cell snapshots → tile; prep logs to apilog only.',
         'zss/feature/wanix/wanixhost.ts',
       ],
       [
         'Task iframe host',
         'Dev',
-        'wanix-iframe-host.html child: WASI task RPC + term probe streaming.',
+        'Hidden iframe child: WASI task RPC + xterm cell probe streaming.',
         'cafe/wanix-iframe-host.ts',
       ],
       [
         'VM iframe host',
         'Dev',
-        'wanix-iframe-host.html child: programmatic VM prep/spawn/halt RPC + term probe streaming.',
+        'wanix-iframe-host.html child: programmatic VM prep/spawn/halt RPC + cell probe streaming.',
         'cafe/wanix-iframe-host.ts',
       ],
       [
-        'Bind mounts',
-        'Creator',
-        'Attach/detach/unbind Wanix bind mounts between guest and host paths.',
-        '#wanix attach',
+        'Wanix spawn HTML',
+        'Dev',
+        'Declarative bind + vm + term markup in buildwanixvmfullhtml / buildwanixtaskprehtml.',
+        'zss/feature/wanix/wanixvmassets.ts',
       ],
     ],
   },

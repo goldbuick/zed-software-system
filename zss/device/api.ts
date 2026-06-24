@@ -393,14 +393,6 @@ export function wanixtermwrite(
   device.emit(player, 'wanix:term-write', line)
 }
 
-export function wanixunbind(
-  device: DEVICELIKE,
-  player: string,
-  target: string,
-) {
-  device.emit(player, 'wanix:unbind', target)
-}
-
 export function wanixdetach(device: DEVICELIKE, player: string) {
   device.emit(player, 'wanix:detach')
 }

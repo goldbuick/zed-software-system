@@ -7,7 +7,6 @@ const termwritemock = jest.fn()
 const detachmock = jest.fn()
 const attachmock = jest.fn()
 const showmock = jest.fn()
-const unbindmock = jest.fn()
 const vmstartmock = jest.fn()
 const vmstopmock = jest.fn()
 
@@ -22,7 +21,6 @@ jest.mock('zss/feature/wanix/wanixdrop', () => ({
   wanixhandledetach: (...args: unknown[]) => detachmock(...args),
   wanixhandleattach: (...args: unknown[]) => attachmock(...args),
   wanixhandleshownenu: (...args: unknown[]) => showmock(...args),
-  wanixhandleunbind: (...args: unknown[]) => unbindmock(...args),
   wanixhandlevmstart: (...args: unknown[]) => vmstartmock(...args),
   wanixhandlevmstop: (...args: unknown[]) => vmstopmock(...args),
 }))
@@ -105,16 +103,6 @@ describe('wanix device', () => {
     invoke('unbind-show')
     await new Promise((r) => setTimeout(r, 0))
     expect(showmock).toHaveBeenCalledTimes(2)
-  })
-
-  it('routes unbind to wanixhandleunbind', async () => {
-    invoke('unbind', 'bind-1')
-    await new Promise((r) => setTimeout(r, 0))
-    expect(unbindmock).toHaveBeenCalledWith(
-      expect.anything(),
-      'player1',
-      'bind-1',
-    )
   })
 
   it('routes vm-start to wanixhandlevmstart', async () => {

@@ -1,7 +1,6 @@
 /** @jest-environment jsdom */
 
 const mockterminput = jest.fn()
-const mockvmline = jest.fn()
 const mockiswanixtermraw = jest.fn(() => false)
 const mockechochar = jest.fn()
 const mockecholine = jest.fn()
@@ -13,12 +12,10 @@ jest.mock('zss/gadget/userinput', () => ({
 
 jest.mock('zss/feature/wanix/wanixhost', () => ({
   sendwanixterminput: (...args: unknown[]) => mockterminput(...args),
-  sendwanixvmline: (...args: unknown[]) => mockvmline(...args),
 }))
 
 const mockreadwanixattachedkind = jest.fn(() => null as 'task' | 'vm' | null)
 const mockterminalmode = jest.fn(() => 'attached')
-const mocktermscreenwrite = jest.fn()
 
 jest.mock('zss/gadget/data/zustandstores', () => ({
   useTape: (selector: (state: { terminalmode: string }) => unknown) =>
@@ -44,7 +41,6 @@ jest.mock('zss/device/api', () => ({
 jest.mock('zss/feature/wanix/wanixtermscreen', () => ({
   wanixtermscreenechochar: (...args: unknown[]) => mockechochar(...args),
   wanixtermscreenecholine: (...args: unknown[]) => mockecholine(...args),
-  wanixtermscreenwrite: (...args: unknown[]) => mocktermscreenwrite(...args),
   wanixtermscreenshowclihint: jest.fn(),
   wanixtermscreenwritepong: jest.fn(),
 }))
@@ -94,7 +90,6 @@ describe('WanixTermInput vm raw input', () => {
     jest.clearAllMocks()
     mockiswanixtermraw.mockReturnValue(false)
     mockterminput.mockResolvedValue(undefined)
-    mockvmline.mockResolvedValue(undefined)
     container = document.createElement('div')
     document.body.appendChild(container)
     root = createRoot(container)
@@ -139,7 +134,6 @@ describe('WanixTermInput vm raw input', () => {
     expect(mockterminput).toHaveBeenCalledWith('h')
     expect(mockterminput).toHaveBeenCalledWith('i')
     expect(mockterminput).toHaveBeenCalledWith('\r')
-    expect(mockvmline).not.toHaveBeenCalled()
     expect(mockechochar).not.toHaveBeenCalled()
     expect(mockecholine).not.toHaveBeenCalled()
   })
@@ -166,7 +160,6 @@ describe('WanixTermInput vm raw input', () => {
     )
 
     expect(mockterminput).toHaveBeenCalledWith('\x03')
-    expect(mockvmline).not.toHaveBeenCalled()
   })
 
   it('sends per-keystroke xterm data when raw and not vm-attached', () => {
@@ -181,7 +174,6 @@ describe('WanixTermInput vm raw input', () => {
     expect(mockterminput).toHaveBeenCalledWith('h')
     expect(mockterminput).toHaveBeenCalledWith('i')
     expect(mockterminput).toHaveBeenCalledWith('\r')
-    expect(mockvmline).not.toHaveBeenCalled()
     expect(mockechochar).not.toHaveBeenCalled()
     expect(mockecholine).not.toHaveBeenCalled()
   })
@@ -205,7 +197,6 @@ describe('WanixTermInput vm raw input', () => {
 
     emitkeydown(keyevent('keydown', { key: 'l' }))
 
-    expect(mockvmline).not.toHaveBeenCalled()
     expect(mockterminput).toHaveBeenCalledWith('l')
     expect(mockechochar).not.toHaveBeenCalled()
   })

@@ -4,7 +4,6 @@ import {
   wanixdetach,
   wanixshow,
   wanixstop,
-  wanixunbind,
   wanixvmstart,
   wanixvmstop,
 } from 'zss/device/api'
@@ -19,7 +18,7 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
     'wanix',
     [
       ARG_TYPE.MAYBE_NAME,
-      'bare: drop .wasm/.tgz to run; menu for tasks, vms, binds',
+      'bare: drop .wasm/.tgz to run; menu for tasks and vms',
     ],
     (_, words) => {
       const [action, arg] = readargs(words, 0, [
@@ -59,19 +58,12 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
         case 'attach':
           wanixattach(SOFTWARE, player, ispresent(arg) ? NAME(arg) : undefined)
           break
-        case 'unbind':
-          if (ispresent(arg)) {
-            wanixunbind(SOFTWARE, player, NAME(arg))
-          } else {
-            wanixshow(SOFTWARE, player)
-          }
-          break
         default:
           apierror(
             SOFTWARE,
             player,
             'wanix',
-            'drop a .wasm or .tgz — #wanix menu, vm, attach, stop, detach, unbind',
+            'drop a .wasm or .tgz — #wanix menu, vm, attach, stop, detach',
           )
           break
       }

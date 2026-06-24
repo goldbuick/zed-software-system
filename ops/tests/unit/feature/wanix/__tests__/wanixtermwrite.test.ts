@@ -40,7 +40,7 @@ describe('wanixhandletermwrite', () => {
   it('sends line to host without scrollback echo', async () => {
     await wanixhandletermwrite(device, player, 'hello')
 
-    expect(mocktermwrite).toHaveBeenCalledWith('hello', { raw: false })
+    expect(mocktermwrite).toHaveBeenCalledWith('hello')
     expect(mockapierror).not.toHaveBeenCalled()
   })
 

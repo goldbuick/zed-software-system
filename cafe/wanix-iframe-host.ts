@@ -1,6 +1,6 @@
 /**
  * Hidden iframe child — programmatic `<wanix-system>` + `<wanix-term>`.
- * Parent drives prep/spawn via postMessage; serial streams through probe embed.
+ * Parent drives prep/spawn via postMessage; cell snapshots stream through probe embed.
  */
 import {
   type WANIX_TERM_IFRAME_RPC,

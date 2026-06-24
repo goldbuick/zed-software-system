@@ -1,10 +1,4 @@
-import {
-  readwanixattached,
-  readwanixattachedkind,
-  readwanixtask,
-  readwanixvm,
-  setwanixtermrouting,
-} from 'zss/feature/wanix/wanixsession'
+import { setwanixtermrouting } from 'zss/feature/wanix/wanixsession'
 import { wanixtermscreenreset } from 'zss/feature/wanix/wanixtermscreen'
 
 type TapeStore = typeof import('zss/gadget/data/zustandstores').useTape
@@ -43,20 +37,4 @@ export function leavewanixattachedterminal() {
 export function readterminalmodeattached() {
   const useTape = readtapestoresync()
   return useTape?.getState().terminalmode === 'attached'
-}
-
-export function syncwanixattachedterminalmode() {
-  const id = readwanixattached()
-  const kind = readwanixattachedkind()
-  if (!id || !kind) {
-    if (readterminalmodeattached()) {
-      leavewanixattachedterminal()
-    }
-    return
-  }
-  const exists =
-    kind === 'task' ? readwanixtask(id) != null : readwanixvm(id) != null
-  if (exists) {
-    void enterwanixattachedterminal()
-  }
 }

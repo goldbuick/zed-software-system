@@ -10,7 +10,6 @@ import {
   haltwanixtask,
   haltwanixvm,
   iswanixspaceactive,
-  listwanixbinds,
   listwanixdir,
   mountwanixarchive,
   putwanixfile,
@@ -21,8 +20,6 @@ import {
   spawnwanixtask,
   spawnwanixvm,
   spawnwanixvmspace,
-  unmountallwanixbinds,
-  unmountwanixbind,
 } from 'zss/feature/wanix/wanixhost'
 import {
   type WANIX_ATTACH_KIND,
@@ -106,7 +103,6 @@ async function launchwanixload(
   await spawnwanixtask(entrycmd, {
     taskid,
     attach: true,
-    wait: false,
   })
   apilog(device, player, `wanix run ${taskid} ${entrycmd}`)
 }
@@ -155,7 +151,6 @@ export async function wanixhandlevmstart(
       vmid: requested,
       mem: DEFAULT_WANIX_VM_MEM,
       attach: true,
-      wait: false,
     })
     registervm({
       id: spawnedid,
@@ -185,7 +180,6 @@ export async function wanixhandleshownenu(device: DEVICELIKE, player: string) {
     const vms = readwanixvms()
     const attached = readwanixattached()
     const attachedkind = readwanixattachedkind()
-    const binds = iswanixspaceactive() ? listwanixbinds() : []
     const parts: (string | string[])[] = [
       zssheaderlines('wanix'),
       zsstextline('drop a .wasm or .tgz to run'),
@@ -224,22 +218,6 @@ export async function wanixhandleshownenu(device: DEVICELIKE, player: string) {
       }
       parts.push(
         zsszedlinkline('wanix vm stop', `Stop all (${vms.length} vms)`),
-      )
-    }
-    parts.push(zsssectionlines('Binds'))
-    if (binds.length === 0) {
-      parts.push(zsstextline('$grayno mounts'))
-    } else {
-      for (const bind of binds) {
-        parts.push(
-          zsszedlinkline(`wanix unbind ${bind.id}`, `Unmount ${bind.label}`),
-        )
-      }
-      parts.push(
-        zsszedlinkline(
-          'wanix unbind all',
-          `Unmount all (${binds.length} binds)`,
-        ),
       )
     }
     if (iswanixtermactive()) {
@@ -347,7 +325,7 @@ export async function wanixhandletermwrite(
 ) {
   try {
     const raw = iswanixtermraw()
-    await sendwanixtermwrite(line, { raw })
+    await sendwanixtermwrite(line)
     if (!raw && line.trim() === 'ping') {
       wanixtermscreenwritepong()
     }
@@ -444,36 +422,6 @@ export async function wanixhandleattach(
       player,
       `wanix term attached — typing goes to ${label} (${prompt} prompt, #wanix detach to escape routing)`,
     )
-  } catch (err) {
-    apierror(
-      device,
-      player,
-      'wanix',
-      err instanceof Error ? err.message : String(err),
-    )
-  }
-}
-
-export async function wanixhandleunbind(
-  device: DEVICELIKE,
-  player: string,
-  target: string,
-) {
-  try {
-    await ensurewanixsandbox(device, player)
-    if (target === 'all') {
-      const removed = unmountallwanixbinds()
-      if (removed.length === 0) {
-        apilog(device, player, 'wanix nothing to unbind')
-        return
-      }
-      apilog(device, player, `wanix unmounted ${removed.length} binds`)
-      return
-    }
-    const binds = listwanixbinds()
-    const match = binds.find((bind) => bind.id === target)
-    unmountwanixbind(target)
-    apilog(device, player, `wanix unmounted ${match?.label ?? target}`)
   } catch (err) {
     apierror(
       device,

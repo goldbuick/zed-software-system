@@ -84,7 +84,7 @@ export function readxtermcellsfromterm(
   }
 
   let cursorx = active.cursorX
-  let cursory = Math.min(active.cursorY, rows - 1)
+  const cursory = Math.min(active.cursorY, rows - 1)
   const cursorvisible = active.cursorY >= 0 && active.cursorY < term.rows
   if (cursorx >= cols) {
     cursorx = Math.max(0, cols - 1)

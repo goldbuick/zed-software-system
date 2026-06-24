@@ -8,7 +8,6 @@ import { resetwanixtermscreenfortest } from 'zss/feature/wanix/wanixtermscreen'
 import {
   enterwanixattachedterminal,
   leavewanixattachedterminal,
-  syncwanixattachedterminalmode,
 } from 'zss/feature/wanix/wanixterminalmode'
 
 describe('wanixterminalmode', () => {
@@ -21,8 +20,7 @@ describe('wanixterminalmode', () => {
   it('enters attached mode when target is registered', async () => {
     registertask({ id: 'demo', label: 'demo', entrycmd: 'demo.wasm' })
     setwanixattached('task', 'demo')
-    syncwanixattachedterminalmode()
-    await new Promise<void>((resolve) => setTimeout(resolve, 0))
+    await enterwanixattachedterminal()
     expect(useTape.getState().terminalmode).toBe('attached')
   })
 

@@ -7,7 +7,6 @@ import {
   wanixhandleshownenu,
   wanixhandlestop,
   wanixhandletermwrite,
-  wanixhandleunbind,
   wanixhandlevmstart,
   wanixhandlevmstop,
 } from 'zss/feature/wanix/wanixdrop'
@@ -87,14 +86,6 @@ const wanix = createdevice('wanix', [], (message) => {
     case 'show':
       doasync(wanix, message.player, async () => {
         await wanixhandleshownenu(wanix, message.player)
-      })
-      break
-    case 'unbind':
-      if (!isstring(message.data)) {
-        break
-      }
-      doasync(wanix, message.player, async () => {
-        await wanixhandleunbind(wanix, message.player, message.data)
       })
       break
     case 'drop': {

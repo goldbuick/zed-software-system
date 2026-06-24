@@ -54,24 +54,24 @@ Drag the `.wasm` onto a running app (`yarn task app dev`). Multiple drops run in
 
 ## ZSS tile term bridge (`termbridge.wasm`)
 
-Upstream Wanix uses `<wanix-term>` bound to `#task/…/term` or `#vm/<rid>/term`. On `/` (when `#frame` is present), ZSS hosts Wanix in a **hidden iframe** with `<wanix-term>` and mirrors serial to the **tile grid** (`WanixTermScreen`) plus `WanixTermInput`. Isolated pages and WASI drops without `#frame` still use in-page `#zss-wanix-display` until the iframe task path is active.
+Upstream Wanix uses `<wanix-term>` bound to `#task/…/term` or `#vm/<rid>/term`. On `/` (when `#frame` is present), ZSS hosts Wanix in a **hidden iframe** with `<wanix-term>` and mirrors the child xterm grid to the **tile GPU** (`WanixTermScreen`) via cell snapshots plus `WanixTermInput`.
 
 | Direction | Path |
 |-----------|------|
-| Task → screen | guest `fd_write(1)` → `streamtermout` → **first serial opens tile** → `WanixTermScreen` (replays buffer) |
-| Kernel prep logs | `wanixiobridgepush` → `apilog` scrollback |
-| Screen → task | `WanixTermInput` → `sendwanixtermwrite` / `sendwanixterminput` → `#…/term/data` |
-| Line echo + smoke reply | local echo on tile; `ping` → `pong` on screen |
+| Task → screen | guest `fd_write(1)` → iframe xterm → **50ms cell poll** → `wanixtermscreensync` → tile |
+| Kernel prep logs | `apilog` scrollback during spawn (not mirrored to tile) |
+| Screen → task | `WanixTermInput` → `sendwanixtermwrite` / `sendwanixterminput` → iframe child RPC → `#…/term/data` |
+| Line echo + smoke reply | local echo on tile before attach; `ping` → `pong` on screen |
 
-**Attach-on-serial:** spawn/drop stays on CLI scrollback until the guest prints stdout; then tile mode opens and replays all serial since spawn. **`#wanix attach <id>`** forces tile immediately (manual attach).
+**Attach-on-first-cells:** spawn/drop stays on CLI scrollback until the iframe child emits the first cell snapshot; then tile mode opens. **`#wanix attach <id>`** forces tile immediately (manual attach).
 
 `termbridge.wasm` prints a banner (proves term-out), stays running, and accepts lines via the bridge (proves term-write). It uses only `fd_write` — not WASI `fd_read(0)`.
 
 ### Manual test
 
 1. `yarn task run wanix:ensure` then `yarn task app dev`
-2. Drag `ops/fixtures/wanix/termbridge.wasm` — stay on CLI until banner stdout
-3. Tile screen opens with `wanix term bridge ready` replayed
+2. Drag `ops/fixtures/wanix/termbridge.wasm` — stay on CLI until banner appears on tile
+3. Tile screen opens with `wanix term bridge ready` mirrored from xterm
 4. Type `ping` and press Enter — `pong` on the grid
 5. `#wanix detach` or `Ctrl+\` returns to CLI scrollback
 6. `#wanix stop` halts the task
@@ -118,25 +118,25 @@ Boot Alpine Linux in v86 from the `#wanix` menu or CLI:
 #wanix vm stop [id]
 ```
 
-On first boot the host lazily fetches pinned `wanix-extras@0.4.0-rc1` archives from jsDelivr. Prep lines go to **`apilog` scrollback**. Tile mode opens on **first serial** from the VM (kernel/login output replayed).
+On first boot the host lazily fetches pinned `wanix-extras@0.4.0-rc1` archives from jsDelivr. Prep lines go to **`apilog` scrollback**. Tile mode opens on **first cell snapshot** from the VM (kernel/login output mirrored from iframe xterm).
 
 While attached, `WanixTermInput` sends per-keystroke data via `sendwanixterminput` → `TextEncoder` → `#vm/<vrid>/term/data`. VM spawn connects term **after** `el.start()` using the rid path with alias fallback.
 
-**Main thread:** in-page Wanix shares the browser main thread with ZSS WebGL — vm-prep/boot may freeze the canvas briefly; expected until upstream workerizes more kernel work.
+**Main thread:** the hidden iframe shares the browser main thread with ZSS WebGL — vm-prep/boot may freeze the canvas briefly; expected until upstream workerizes more kernel work.
 
 ## Manual verification
 
 1. `yarn task app dev`
 2. Drop `hello.wasm` or use `#wanix` commands
-3. For VM term bridge: `#wanix vm` — prep in apilog; tile opens on first serial
+3. For VM term bridge: `#wanix vm` — prep in apilog; tile opens on first cell snapshot
 4. For upstream VM baseline: `/wanix/vm-simple.html` — see **Manual vm-simple harness** above
 
 ## VM keystroke repro (debug)
 
 1. `yarn task app dev`
 2. `ZSS_WANIX_SHOW=true` in `cafe/.env.local` (or `window.ZSS_WANIX_SHOW = true`) — restart dev server if using env
-3. `#wanix vm` — prep in apilog; tile opens on first serial; wait for `~ #`
-4. Type a command and Enter — check console for `[wanix] iframe-term-size` / `iframe-pixel-size` if sizing looks wrong
+3. `#wanix vm` — prep in apilog; tile opens on first cell snapshot; wait for `~ #`
+4. Type a command and Enter — check console for `[wanix] iframe-term-size` / `iframe-pixel-size` if sizing looks wrong (set `ZSS_WANIX_SHOW=true` in `cafe/.env.local`)
 5. Second command — if input stops, check worker panic in console
 
 After code changes, repeat steps 1–5 manually or use the `/wanix/vm-simple.html` harness to bisect VM term issues.

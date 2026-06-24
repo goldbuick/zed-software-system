@@ -1,6 +1,6 @@
 import type { WanixTermCellsSnapshot } from 'zss/feature/wanix/wanixtermcells'
-import { COLOR } from 'zss/words/types'
 import { metakey } from 'zss/words/system'
+import { COLOR } from 'zss/words/types'
 
 const DEFAULT_FG = COLOR.WHITE
 const DEFAULT_BG = COLOR.DKBLUE
@@ -21,9 +21,6 @@ type WANIX_TERM_SCREEN = {
 
 let screen: WANIX_TERM_SCREEN = createtermscreen(0, 0)
 const listeners = new Set<() => void>()
-let pendingout = ''
-let outflushpending = false
-let outflushhandle: number | undefined
 
 function createtermscreen(width: number, height: number): WANIX_TERM_SCREEN {
   const size = Math.max(0, width * height)
@@ -179,30 +176,6 @@ function writechunkinternal(chunk: string) {
   }
 }
 
-function flushpendingout() {
-  outflushpending = false
-  outflushhandle = undefined
-  if (!pendingout.length || screen.width <= 0 || screen.height <= 0) {
-    return
-  }
-  const chunk = pendingout
-  pendingout = ''
-  writechunkinternal(chunk)
-  bump()
-}
-
-function schedulependingout() {
-  if (outflushpending) {
-    return
-  }
-  outflushpending = true
-  if (typeof requestAnimationFrame === 'function') {
-    outflushhandle = requestAnimationFrame(flushpendingout)
-    return
-  }
-  flushpendingout()
-}
-
 function writechunk(chunk: string) {
   writechunkinternal(chunk)
   bump()
@@ -266,10 +239,7 @@ export function wanixtermscreensync(snapshot: WanixTermCellsSnapshot) {
   }
 
   screen.cursorx = snapshot.cursorx
-  screen.cursory = Math.min(
-    snapshot.cursory,
-    Math.max(0, mirrorrows - 1),
-  )
+  screen.cursory = Math.min(snapshot.cursory, Math.max(0, mirrorrows - 1))
   screen.cursorvisible = snapshot.cursorvisible
   bump()
 }
@@ -283,42 +253,9 @@ export function wanixtermscreenresize(width: number, height: number) {
 }
 
 export function wanixtermscreenreset() {
-  if (
-    outflushhandle !== undefined &&
-    typeof cancelAnimationFrame === 'function'
-  ) {
-    cancelAnimationFrame(outflushhandle)
-  }
-  outflushpending = false
-  outflushhandle = undefined
   screen = createtermscreen(screen.width, screen.height)
   wanixtermscreenresetcells()
   bump()
-  if (pendingout.length > 0 && screen.width > 0 && screen.height > 0) {
-    schedulependingout()
-  }
-}
-
-export function wanixtermscreenwrite(chunk: string) {
-  if (!chunk.length) {
-    return
-  }
-  pendingout += chunk
-  if (screen.width <= 0 || screen.height <= 0) {
-    return
-  }
-  schedulependingout()
-}
-
-/** Flush coalesced term-out (tests and teardown). */
-export function flushwanixtermscreenpending() {
-  if (
-    outflushhandle !== undefined &&
-    typeof cancelAnimationFrame === 'function'
-  ) {
-    cancelAnimationFrame(outflushhandle)
-  }
-  flushpendingout()
 }
 
 export function wanixtermscreenechochar(ch: string) {
@@ -368,15 +305,6 @@ export function wanixtermscreenshowdetachhint() {
 
 /** Test hook — reset module state. */
 export function resetwanixtermscreenfortest() {
-  if (
-    outflushhandle !== undefined &&
-    typeof cancelAnimationFrame === 'function'
-  ) {
-    cancelAnimationFrame(outflushhandle)
-  }
-  pendingout = ''
-  outflushpending = false
-  outflushhandle = undefined
   screen = createtermscreen(0, 0)
   listeners.clear()
 }

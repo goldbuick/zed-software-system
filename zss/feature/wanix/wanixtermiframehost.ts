@@ -8,6 +8,7 @@ import {
   registervm,
   setwanixattached,
 } from 'zss/feature/wanix/wanixsession'
+import type { WanixTermCellsSnapshot } from 'zss/feature/wanix/wanixtermcells'
 import {
   WANIX_TERM_IFRAME_SRC,
   iswanixtermiframemsg,
@@ -16,10 +17,7 @@ import {
   enterwanixattachedterminal,
   readterminalmodeattached,
 } from 'zss/feature/wanix/wanixterminalmode'
-import {
-  type WanixTermCellsSnapshot,
-  iswanixtermprobemsg,
-} from 'zss/feature/wanix/wanixtermprobe'
+import { iswanixtermprobemsg } from 'zss/feature/wanix/wanixtermprobe'
 import {
   wanixtermscreenshowdetachhint,
   wanixtermscreensync,
@@ -79,7 +77,7 @@ type VmPrepStage =
   | 'mounting'
   | 'mount_ok'
   | 'spawn'
-  | 'serial'
+  | 'tile'
   | 'failed'
 
 type ProxyEntry = {
@@ -163,7 +161,7 @@ export function iframeapplytermsize(cols: number, rows: number) {
   if (cols <= 0 || rows <= 0) {
     return
   }
-  wanixshowlog('!!!! iframe-term-size', { cols, rows })
+  wanixshowlog('iframe-term-size', { cols, rows })
   desirediframecols = cols
   desirediframerows = rows
   applyiframepixels()
@@ -192,7 +190,7 @@ async function opentileoncells(
   }
   entry.autotiletriggered = true
   if (kind === 'vm') {
-    vmprepstage = 'serial'
+    vmprepstage = 'tile'
   }
   await enterwanixattachedterminal()
   const cells = snapshot ?? (await synccellsfromchild())
@@ -534,10 +532,6 @@ export async function iframetermline(line: string): Promise<void> {
   const attachedkind = readwanixattachedkind()
   const payload = attachedkind === 'vm' ? `${line}\r` : `${line}\n`
   await childrpc('zss-wanix-term-probe-rpc', 'sendinput', [payload])
-}
-
-export function readwanixtermiframserial(): string {
-  return ''
 }
 
 export async function iframechildputfile(

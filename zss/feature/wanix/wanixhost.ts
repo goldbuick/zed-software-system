@@ -36,7 +36,6 @@ import {
   readwanixtermiframelayout,
   readwanixtermiframepreperror,
   readwanixtermiframeprepstage,
-  readwanixtermiframserial,
   teardownwanixtermiframe,
 } from 'zss/feature/wanix/wanixtermiframehost'
 import {
@@ -49,18 +48,10 @@ export type WANIX_VM_PREP_STAGE =
   | 'mounting'
   | 'mount_ok'
   | 'spawn'
-  | 'serial'
+  | 'tile'
   | 'failed'
 
 export type WANIX_HOST_STATE = 'idle' | 'starting' | 'ready'
-
-export type WANIX_BIND_ENTRY = {
-  id: string
-  kind: string
-  dst: string
-  label: string
-  removable: boolean
-}
 
 export type WANIX_TASK_ENTRY = {
   id: string
@@ -161,7 +152,6 @@ export async function ensurewanixsandbox(
 export type SPAWN_WANIX_TASK_OPTS = {
   taskid?: string
   attach?: boolean
-  wait?: boolean
 }
 
 export async function spawnwanixtask(
@@ -185,11 +175,6 @@ export async function spawnwanixtask(
   return { taskid }
 }
 
-export async function runwanixcommand(cmd: string): Promise<number> {
-  const result = await spawnwanixtask(cmd, { wait: true, attach: true })
-  return typeof result.code === 'number' ? result.code : 0
-}
-
 export async function putwanixfile(name: string, bytes: Uint8Array) {
   requireactive()
   await iframechildputfile(name, bytes)
@@ -211,21 +196,6 @@ export async function listwanixdir(path: string): Promise<string[]> {
   return iframechildlistdir(path)
 }
 
-export function listwanixbinds(): WANIX_BIND_ENTRY[] {
-  requireactive()
-  return []
-}
-
-export function unmountwanixbind(bindid: string): void {
-  requireactive()
-  throw new Error(`unknown bind: ${bindid}`)
-}
-
-export function unmountallwanixbinds(): string[] {
-  requireactive()
-  return []
-}
-
 export async function haltwanixtask(taskid?: string): Promise<void> {
   if (iswanixtermiframeactive()) {
     await iframehalttask(taskid)
@@ -240,11 +210,6 @@ export async function attachwanixtarget(
   await iframeattachtarget(kind, id)
 }
 
-export async function sendwanixvmline(line: string): Promise<void> {
-  requireactive()
-  return iframetermline(line)
-}
-
 export async function sendwanixterminput(text: string): Promise<void> {
   requireactive()
   if (!text.length) {
@@ -253,11 +218,7 @@ export async function sendwanixterminput(text: string): Promise<void> {
   return iframeterminput(text)
 }
 
-export async function sendwanixtermwrite(
-  line: string,
-  opts: { raw?: boolean } = {},
-): Promise<void> {
-  void opts
+export async function sendwanixtermwrite(line: string): Promise<void> {
   requireactive()
   return iframetermline(line)
 }
@@ -274,7 +235,6 @@ export type SPAWN_WANIX_VM_OPTS = {
   vmid?: string
   mem?: string
   attach?: boolean
-  wait?: boolean
 }
 
 export async function spawnwanixvm(
@@ -304,7 +264,6 @@ export function readwanixstatus(): {
   attachedTaskId?: string
   tasks?: WANIX_TASK_ENTRY[]
   vms?: WANIX_VM_ENTRY[]
-  binds?: WANIX_BIND_ENTRY[]
 } {
   if (iswanixtermiframemode() && iswanixtermiframeactive()) {
     return {
@@ -325,12 +284,4 @@ export function readwanixstatus(): {
     vmprepstage: readwanixtermiframeprepstage(),
     vmpreperror: readwanixtermiframepreperror(),
   }
-}
-
-/** Read buffered serial for the attached target (tests / smoke). */
-export function readwanixhostattachedserial(): string {
-  if (iswanixtermiframemode() && iswanixtermiframeactive()) {
-    return readwanixtermiframserial()
-  }
-  return ''
 }

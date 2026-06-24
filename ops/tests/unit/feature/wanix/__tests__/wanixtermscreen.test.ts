@@ -1,11 +1,11 @@
 import {
-  flushwanixtermscreenpending,
   readwanixtermscreencells,
   resetwanixtermscreenfortest,
+  wanixtermscreenechochar,
+  wanixtermscreenecholine,
   wanixtermscreenreset,
   wanixtermscreenresize,
   wanixtermscreensync,
-  wanixtermscreenwrite,
 } from 'zss/feature/wanix/wanixtermscreen'
 
 describe('wanixtermscreen', () => {
@@ -14,9 +14,9 @@ describe('wanixtermscreen', () => {
     wanixtermscreenresize(10, 3)
   })
 
-  it('writes printable text and advances cursor', () => {
-    wanixtermscreenwrite('hi')
-    flushwanixtermscreenpending()
+  it('echoes printable text and advances cursor', () => {
+    wanixtermscreenechochar('h')
+    wanixtermscreenechochar('i')
     const cells = readwanixtermscreencells()
     expect(cells.char[0]).toBe('h'.charCodeAt(0))
     expect(cells.char[1]).toBe('i'.charCodeAt(0))
@@ -24,9 +24,9 @@ describe('wanixtermscreen', () => {
     expect(cells.cursory).toBe(0)
   })
 
-  it('wraps on newline', () => {
-    wanixtermscreenwrite('a\nb')
-    flushwanixtermscreenpending()
+  it('wraps on echoline newline', () => {
+    wanixtermscreenecholine('a')
+    wanixtermscreenechochar('b')
     const cells = readwanixtermscreencells()
     expect(cells.char[0]).toBe('a'.charCodeAt(0))
     expect(cells.char[10]).toBe('b'.charCodeAt(0))
@@ -35,8 +35,7 @@ describe('wanixtermscreen', () => {
   })
 
   it('clears on reset', () => {
-    wanixtermscreenwrite('hello')
-    flushwanixtermscreenpending()
+    wanixtermscreenechochar('hello')
     wanixtermscreenreset()
     const cells = readwanixtermscreencells()
     expect(cells.char[0]).toBe(32)
@@ -44,20 +43,10 @@ describe('wanixtermscreen', () => {
     expect(cells.cursory).toBe(0)
   })
 
-  it('coalesces multiple writes into one flush', () => {
-    wanixtermscreenwrite('a')
-    wanixtermscreenwrite('b')
-    flushwanixtermscreenpending()
-    const cells = readwanixtermscreencells()
-    expect(cells.char[0]).toBe('a'.charCodeAt(0))
-    expect(cells.char[1]).toBe('b'.charCodeAt(0))
-  })
-
-  it('writes printable text after resize', () => {
+  it('echoes printable text after resize', () => {
     resetwanixtermscreenfortest()
     wanixtermscreenresize(20, 3)
-    wanixtermscreenwrite('boot banner')
-    flushwanixtermscreenpending()
+    wanixtermscreenecholine('boot banner')
     const cells = readwanixtermscreencells()
     expect(cells.char[0]).toBe('b'.charCodeAt(0))
     expect(cells.char[4]).toBe(' '.charCodeAt(0))

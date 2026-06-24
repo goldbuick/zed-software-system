@@ -1,7 +1,6 @@
 const ensuremock = jest.fn()
 const putmock = jest.fn()
 const spawnmock = jest.fn()
-const bindsmock = jest.fn()
 const terminalmock = jest.fn()
 
 jest.mock('zss/feature/wanix/wanixhost', () => ({
@@ -10,7 +9,6 @@ jest.mock('zss/feature/wanix/wanixhost', () => ({
   mountwanixarchive: jest.fn(),
   listwanixdir: jest.fn(),
   spawnwanixtask: (...args: unknown[]) => spawnmock(...args),
-  listwanixbinds: (...args: unknown[]) => bindsmock(...args),
   iswanixspaceactive: () => false,
 }))
 
@@ -42,7 +40,6 @@ describe('wanixhandledrop', () => {
       setwanixattached('task', 'demo-wasm')
       return { taskid: 'demo-wasm' }
     })
-    bindsmock.mockResolvedValue([])
   })
 
   it('launches wasm without blocking on exit', async () => {
@@ -57,7 +54,7 @@ describe('wanixhandledrop', () => {
     expect(putmock).toHaveBeenCalledWith('demo.wasm', expect.any(Uint8Array))
     expect(spawnmock).toHaveBeenCalledWith(
       'demo.wasm',
-      expect.objectContaining({ taskid: 'demo-wasm', wait: false, attach: true }),
+      expect.objectContaining({ taskid: 'demo-wasm', attach: true }),
     )
     expect(readwanixtasks()).toHaveLength(1)
     expect(readwanixattached()).toBe('demo-wasm')
@@ -79,10 +76,9 @@ describe('wanixhandleshownenu', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     resetwanixsessionfortest()
-    bindsmock.mockResolvedValue([])
   })
 
-  it('renders task, vm, and bind sections', async () => {
+  it('renders task and vm sections', async () => {
     const { registertask, registervm } = await import('zss/feature/wanix/wanixsession')
     registertask({ id: 'hello-wasm', label: 'hello.wasm', entrycmd: 'hello.wasm' })
     registervm({ id: 'linux-vm', label: 'linux-vm', mem: '512M' })
@@ -91,7 +87,7 @@ describe('wanixhandleshownenu', () => {
     const tape = String(terminalmock.mock.calls[0]?.[2] ?? '')
     expect(tape).toContain('Tasks')
     expect(tape).toContain('VMs')
-    expect(tape).toContain('Binds')
+    expect(tape).not.toContain('Binds')
     expect(tape).toContain('wanix attach hello-wasm')
     expect(tape).toContain('wanix stop hello-wasm')
     expect(tape).toContain('wanix attach linux-vm')

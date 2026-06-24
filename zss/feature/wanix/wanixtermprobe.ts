@@ -1,12 +1,10 @@
 /** Read/send via upstream `<wanix-term>` xterm instance (smoke + iframe child). */
 
 import {
+  type WanixTermCellsSnapshot,
   digestwanixtermcells,
   readxtermcellsfromterm,
-  type WanixTermCellsSnapshot,
 } from 'zss/feature/wanix/wanixtermcells'
-
-export type { WanixTermCellsSnapshot } from 'zss/feature/wanix/wanixtermcells'
 
 export type WanixTermProbe = {
   readserial: () => string
@@ -176,7 +174,6 @@ export type WanixTermProbeMsg =
       error?: string
     }
   | { type: 'zss-wanix-term-ready' }
-  | { type: 'zss-wanix-term-chunk'; chunk: string }
   | ({ type: 'zss-wanix-term-cells' } & WanixTermCellsSnapshot)
 
 export function iswanixtermprobemsg(data: unknown): data is WanixTermProbeMsg {
@@ -188,7 +185,6 @@ export function iswanixtermprobemsg(data: unknown): data is WanixTermProbeMsg {
     type === 'zss-wanix-term-probe-rpc' ||
     type === 'zss-wanix-term-probe-rpc-res' ||
     type === 'zss-wanix-term-ready' ||
-    type === 'zss-wanix-term-chunk' ||
     type === 'zss-wanix-term-cells'
   )
 }

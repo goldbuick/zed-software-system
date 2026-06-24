@@ -81,9 +81,7 @@ export function TapeComponent() {
             left={0}
             right={screensize.cols - 1}
             bottom={top + height - 1}
-            alpha={
-              attached ? 0.85 : terminalmode === 'quick' ? 0.666 : 0.333
-            }
+            alpha={attached ? 0.85 : terminalmode === 'quick' ? 0.666 : 0.333}
           />
           <UserFocus blockhotkeys>
             <TapeLayout
