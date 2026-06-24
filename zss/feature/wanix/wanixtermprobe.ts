@@ -5,7 +5,6 @@ export type WanixTermProbe = {
   sendinput: (text: string) => void
   waitprompt: (timeoutms?: number) => Promise<void>
   focusterm: () => void
-  setsize: (cols: number, rows: number) => void
 }
 
 type XtermLine = {
@@ -32,16 +31,14 @@ type WanixTermElement = HTMLElement & {
 const LOGIN_PROMPT_RE = /login:/i
 const SHELL_PROMPT_RE = /~\s#/
 
-/** xterm cols/rows for hidden probe hosts — must not be 1px or serial wraps one char per line. */
-export const WANIX_PROBE_TERM_COLS = 80
-export const WANIX_PROBE_TERM_ROWS = 24
-
+// Fill the iframe viewport so the term's FitAddon fits the xterm grid to the
+// host-set iframe pixel size (cols x rows). The iframe itself is hidden/off-screen.
 const WANIX_PROBE_TERM_LAYOUT_CSS =
-  'position:fixed;left:-9999px;top:0;width:640px;height:480px;opacity:0;pointer-events:none;overflow:hidden'
+  'position:fixed;left:0;top:0;width:100vw;height:100vh;opacity:0;pointer-events:none;overflow:hidden'
 
-// Debug overlay (?show=1): keep the term on-screen and opaque instead of parked.
+// Debug overlay (?show=1): opaque instead of transparent.
 const WANIX_PROBE_TERM_LAYOUT_SHOW_CSS =
-  'position:fixed;left:0;top:0;width:640px;height:480px;opacity:1;pointer-events:none;overflow:hidden'
+  'position:fixed;left:0;top:0;width:100vw;height:100vh;opacity:1;pointer-events:none;overflow:hidden'
 
 function iswanixtermprobeshow(): boolean {
   try {
@@ -109,18 +106,6 @@ export function installwanixtermprobe(): WanixTermProbe {
     term.input(text)
   }
 
-  const setsize = (cols: number, rows: number) => {
-    if (cols <= 0 || rows <= 0) {
-      return
-    }
-    const el = findwanixtermel()
-    const term = el?._term
-    if (!term?.resize) {
-      throw new Error('wanix-term probe: xterm not ready')
-    }
-    term.resize(cols, rows)
-  }
-
   const waitprompt = async (timeoutms = 600_000) => {
     const deadline = Date.now() + timeoutms
     while (Date.now() < deadline) {
@@ -135,7 +120,7 @@ export function installwanixtermprobe(): WanixTermProbe {
     )
   }
 
-  return { readserial, sendinput, waitprompt, focusterm, setsize }
+  return { readserial, sendinput, waitprompt, focusterm }
 }
 
 export type WanixTermProbeMsg =
@@ -237,15 +222,6 @@ export function installwanixtermprobeembed(): WanixTermProbe {
           probe.focusterm()
           reply({ result: { ok: true } })
           return
-        case 'setsize': {
-          const [cols, rows] = (data.args ?? []) as [number, number]
-          probe.setsize(cols, rows)
-          // The reflow renumbers buffer rows; re-baseline so the next diff does
-          // not re-emit the whole buffer to the parent.
-          lastserial = probe.readserial()
-          reply({ result: { ok: true } })
-          return
-        }
         default:
           reply({ error: `unknown probe rpc: ${data.method}` })
       }

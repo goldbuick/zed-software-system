@@ -1,56 +1,53 @@
 /**
  * @jest-environment jsdom
  */
+const mockscreenwrite = jest.fn()
+
+jest.mock('zss/feature/wanix/wanixtermscreen', () => {
+  const actual = jest.requireActual('zss/feature/wanix/wanixtermscreen')
+  return {
+    ...actual,
+    wanixtermscreenwrite: (...args: unknown[]) => mockscreenwrite(...args),
+  }
+})
+
+jest.mock('zss/feature/wanix/wanixterminalmode', () => {
+  const actual = jest.requireActual('zss/feature/wanix/wanixterminalmode')
+  return {
+    ...actual,
+    readterminalmodeattached: () => true,
+    enterwanixattachedterminal: () => {},
+  }
+})
+
+import { resetwanixsessionfortest } from 'zss/feature/wanix/wanixsession'
 import {
-  resetwanixhostfortest,
-  sendwanixterminput,
-  sendwanixtermwriteraw,
-  wanixhosttestwirewriter,
-} from 'zss/feature/wanix/wanixhost'
+  wanixtermiframehosttestreadserial,
+  wanixtermiframehosttestreset,
+  wanixtermiframehosttestsetattached,
+  wanixtermiframehosttestsetpendingvmline,
+  wanixtermiframehosttesttermout,
+} from 'zss/feature/wanix/wanixtermiframehost'
 
-describe('sendwanixterminput', () => {
+describe('wanix iframe vm line echo', () => {
   beforeEach(() => {
-    resetwanixhostfortest()
+    jest.clearAllMocks()
+    wanixtermiframehosttestreset()
+    resetwanixsessionfortest()
   })
 
-  afterEach(() => {
-    resetwanixhostfortest()
+  it('strips the local echo of a submitted vm line', () => {
+    wanixtermiframehosttestsetattached('vm', 'linux-vm')
+    wanixtermiframehosttestsetpendingvmline('linux-vm', 'ls')
+    wanixtermiframehosttesttermout('vm', 'linux-vm', 'ls\r\noutput')
+    expect(mockscreenwrite).toHaveBeenCalledWith('output')
+    expect(wanixtermiframehosttestreadserial('linux-vm')).toBe('output')
   })
 
-  it('writes encoded bytes to attached term writer', async () => {
-    const writes: Uint8Array[] = []
-    wanixhosttestwirewriter('vm', 'linux-vm', (bytes) => {
-      writes.push(bytes)
-    })
-    await sendwanixterminput('a')
-    expect(writes).toHaveLength(1)
-    expect(Array.from(writes[0] ?? [])).toEqual([97])
-  })
-
-  it('serializes concurrent term-input writes', async () => {
-    const order: number[] = []
-    const writes: Uint8Array[] = []
-    wanixhosttestwirewriter('vm', 'linux-vm', (bytes) => {
-      writes.push(bytes)
-    })
-    const first = sendwanixterminput('a').then(() => {
-      order.push(1)
-    })
-    const second = sendwanixterminput('b').then(() => {
-      order.push(2)
-    })
-    await Promise.all([first, second])
-    expect(order).toEqual([1, 2])
-    expect(writes).toHaveLength(2)
-  })
-
-  it('routes sendwanixtermwriteraw through term-input encoding', async () => {
-    const writes: Uint8Array[] = []
-    wanixhosttestwirewriter('vm', 'linux-vm', (bytes) => {
-      writes.push(bytes)
-    })
-    await sendwanixtermwriteraw(new Uint8Array([3]))
-    expect(writes).toHaveLength(1)
-    expect(Array.from(writes[0] ?? [])).toEqual([3])
+  it('keeps serial that does not match the pending line', () => {
+    wanixtermiframehosttestsetattached('vm', 'linux-vm')
+    wanixtermiframehosttestsetpendingvmline('linux-vm', 'ls')
+    wanixtermiframehosttesttermout('vm', 'linux-vm', 'different')
+    expect(mockscreenwrite).toHaveBeenCalledWith('different')
   })
 })

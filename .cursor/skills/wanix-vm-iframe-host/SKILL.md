@@ -52,7 +52,7 @@ const buf = await frame.evaluate(() => {
 })
 ```
 
-6. Wait for `/~\s#/`. To prove tile→guest sizing: type `stty size` and assert it equals the tile dims; resize the viewport and assert the guest cols change; run `ls` and assert no line exceeds cols.
+6. Wait for `/~\s#/`. Terminal sizing is display-side only (pixel-size the iframe, let xterm's FitAddon compute cols/rows) — see skill `wanix-term-sizing`. Do NOT validate sizing via `stty`/winch/guest winsize. To check the grid, resize the viewport and assert `wanix-term._term.cols`/`.rows` change with the tile.
 
 Ready-to-run template: [scripts/validate-wanix-vm.mjs](scripts/validate-wanix-vm.mjs) — `node .cursor/skills/wanix-vm-iframe-host/scripts/validate-wanix-vm.mjs` (needs the dev server up). Delete any throwaway copies when done.
 

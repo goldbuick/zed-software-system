@@ -14,7 +14,6 @@ import {
   type WANIX_VM_ASSET_URLS,
   buildwanixtaskprehtml,
   buildwanixvmfullhtml,
-  buildwanixvmprehtml,
 } from 'zss/feature/wanix/wanixvmassets'
 import {
   VM_TERM_READY_MS,
@@ -124,13 +123,11 @@ function mountprehtml(html: string): WanixSystemElement {
   return system
 }
 
-async function prepvmspace(urls: WANIX_VM_ASSET_URLS) {
-  // Validate + warm the linux/v86 archives early; the actual vm is mounted with
-  // the system in spawnvm (a vm added after `ready` never launches).
+function prepvmspace(urls: WANIX_VM_ASSET_URLS) {
+  // Only cache the asset urls — spawnvm mounts the whole system with the vm as
+  // an initial child (a vm added after `ready` never launches), so a separate
+  // prep mount would just be booted and then thrown away.
   vmurls = urls
-  const system = mountprehtml(buildwanixvmprehtml(urls, SYSTEM_ID))
-  await waitsystemready(system)
-  await waitforv86driver(root!, VM_PREP_WAIT_MS)
   mode = 'vm'
 }
 
@@ -158,7 +155,9 @@ async function spawnvm(vmid: string, mem: string) {
   // Re-mount the system WITH the vm + term as initial children (vm-simple
   // recipe). wanix-system only launches vm children present at boot, so a vm
   // added after `ready` registers in #vm but never actually starts.
-  const system = mountprehtml(buildwanixvmfullhtml(vmurls, vmid, mem, SYSTEM_ID))
+  const system = mountprehtml(
+    buildwanixvmfullhtml(vmurls, vmid, mem, SYSTEM_ID),
+  )
   await waitsystemready(system)
   await waitforv86driver(root!, VM_PREP_WAIT_MS)
   const vm = await waitvmchildready(system, VM_TERM_READY_MS)
@@ -171,7 +170,7 @@ async function waitvmchildready(
 ): Promise<WanixWakeElement> {
   const deadline = Date.now() + timeoutms
   while (Date.now() < deadline) {
-    const vm = system.querySelector('wanix-vm') as WanixWakeElement | null
+    const vm = system.querySelector('wanix-vm')
     if (vm?.rid && vm?.term) {
       return vm
     }
@@ -294,10 +293,11 @@ async function handlerrpc(
   source: MessageEventSource | null,
 ) {
   try {
+    console.info('handlerrpc', data.method, data.args)
     switch (data.method) {
       case 'prepvm': {
         const [urls] = data.args as [WANIX_VM_ASSET_URLS]
-        await prepvmspace(urls)
+        prepvmspace(urls)
         replyrpc(source, data.id, { result: { ok: true } })
         return
       }
@@ -374,7 +374,7 @@ async function installwanixiframechild() {
     if (event.origin !== window.location.origin) {
       return
     }
-    const data = event.data
+    const { data } = event
     if (!iswanixtermiframemsg(data)) {
       return
     }

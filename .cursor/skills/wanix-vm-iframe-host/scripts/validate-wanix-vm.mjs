@@ -51,15 +51,17 @@ const sendline = async (s) => {
   await page.keyboard.type(s, { delay: 25 })
   await page.keyboard.press('Enter')
 }
-const sttysize = async () => {
-  const b = (await readbuf()).length
-  await sendline('stty size')
-  await wait('echo', async () => (await readbuf()).length > b, 8000, 400)
-  await page.waitForTimeout(800)
-  const buf = await readbuf()
-  const m = [...buf.matchAll(/(?:^|\n)\s*(\d{1,3})\s+(\d{1,3})\s*(?=\n|$)/g)]
-  const l = m[m.length - 1]
-  return l ? { rows: +l[1], cols: +l[2] } : null
+// Sizing is display-side: read the xterm grid the FitAddon computed from the
+// host-set iframe pixel size. Do NOT use stty/winch/guest winsize.
+const gridsize = async () => {
+  const f = vmframe()
+  if (!f) return null
+  return f
+    .evaluate(() => {
+      const t = document.querySelector('wanix-term')?._term
+      return t ? { cols: t.cols, rows: t.rows } : null
+    })
+    .catch(() => null)
 }
 
 try {
@@ -78,26 +80,19 @@ try {
   }
   log('BOOTED')
 
-  const a = await sttysize()
-  log('stty @1280:', JSON.stringify(a))
-  const before = (await readbuf()).length
-  await sendline('ls -la /usr/bin')
-  await wait('ls', async () => (await readbuf()).length > before + 20, 8000, 400)
-  await page.waitForTimeout(1000)
-  const lsbuf = await readbuf()
-  const maxlen = Math.max(...lsbuf.split('\n').map((l) => l.replace(/\s+$/, '').length))
-  log(`ls maxlen=${maxlen} cols=${a?.cols}`)
+  const a = await gridsize()
+  log('grid @1280:', JSON.stringify(a))
 
   await page.setViewportSize({ width: 860, height: 800 })
   await page.waitForTimeout(4500)
-  const b = await sttysize()
-  log('stty @860:', JSON.stringify(b))
+  const b = await gridsize()
+  log('grid @860:', JSON.stringify(b))
 
-  const reflowok = a && maxlen <= a.cols
+  const haveok = a && a.cols > 0 && a.rows > 0
   const dynok = a && b && b.cols !== a.cols
-  log(`reflow (ls <= cols): ${reflowok ? 'PASS' : 'FAIL'}`)
+  log(`grid present: ${haveok ? 'PASS' : 'FAIL'}`)
   log(`dynamic (cols change on resize): ${dynok ? 'PASS' : 'FAIL'}`)
-  process.exitCode = reflowok && dynok ? 0 : 3
+  process.exitCode = haveok && dynok ? 0 : 3
 } catch (e) {
   log('FAILED:', e?.message || e)
   process.exitCode = 1

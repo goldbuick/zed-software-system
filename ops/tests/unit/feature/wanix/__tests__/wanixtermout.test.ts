@@ -24,39 +24,41 @@ jest.mock('zss/feature/wanix/wanixterminalmode', () => {
   }
 })
 
-import {
-  resetwanixhostfortest,
-  wanixhosttestsetattached,
-  wanixhosttesttermout,
-} from 'zss/feature/wanix/wanixhost'
 import { resetwanixsessionfortest } from 'zss/feature/wanix/wanixsession'
+import {
+  wanixtermiframehosttestreset,
+  wanixtermiframehosttestsetattached,
+  wanixtermiframehosttesttermout,
+} from 'zss/feature/wanix/wanixtermiframehost'
 
-describe('wanix term-out attach-on-serial', () => {
+const flush = () => new Promise<void>((resolve) => setTimeout(resolve, 0))
+
+describe('wanix iframe term-out attach-on-serial', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     terminalattached = false
-    resetwanixhostfortest()
+    wanixtermiframehosttestreset()
     resetwanixsessionfortest()
   })
 
   it('auto-attaches tile mode and replays buffered serial on first chunk', async () => {
-    wanixhosttestsetattached('task', 'demo-wasm')
-    wanixhosttesttermout('task', 'demo-wasm', 'hello')
-    await Promise.resolve()
+    wanixtermiframehosttestsetattached('task', 'demo-wasm')
+    wanixtermiframehosttesttermout('task', 'demo-wasm', 'hello')
+    await flush()
     expect(terminalattached).toBe(true)
     expect(mockscreenwrite).toHaveBeenCalledWith('hello')
   })
 
   it('appends to tile screen when already attached', () => {
-    wanixhosttestsetattached('task', 'demo-wasm', 'boot\n')
+    wanixtermiframehosttestsetattached('task', 'demo-wasm', 'boot\n')
     terminalattached = true
-    wanixhosttesttermout('task', 'demo-wasm', 'more')
+    wanixtermiframehosttesttermout('task', 'demo-wasm', 'more')
     expect(mockscreenwrite).toHaveBeenCalledWith('more')
   })
 
   it('ignores output for non-attached targets', () => {
-    wanixhosttestsetattached('task', 'demo-wasm')
-    wanixhosttesttermout('task', 'other-wasm', 'hello')
+    wanixtermiframehosttestsetattached('task', 'demo-wasm')
+    wanixtermiframehosttesttermout('task', 'other-wasm', 'hello')
     expect(mockscreenwrite).not.toHaveBeenCalled()
   })
 })
