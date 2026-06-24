@@ -1,0 +1,1475 @@
+{
+  "code": "@board outro\n@exitnorth wanixsteps",
+  "board": {
+    "name": "outro",
+    "terrain": [
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 5,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 6,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 7,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 8,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 9,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 10,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 11,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 12,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 13,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 14,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 15,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 16,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 17,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 18,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 19,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 20,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 21,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 22,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 23,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 24,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 25,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 26,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 27,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 28,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 29,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 30,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 31,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 32,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 33,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 34,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 35,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 36,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 37,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 38,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 39,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 40,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 41,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 42,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 43,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 44,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 45,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 46,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 47,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 48,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 49,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 50,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 51,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 52,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 53,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 54,
+        "y": 1
+      },
+      {
+        "kind": "text",
+        "char": 84,
+        "color": 14,
+        "x": 22,
+        "y": 3
+      },
+      {
+        "kind": "text",
+        "char": 72,
+        "color": 14,
+        "x": 23,
+        "y": 3
+      },
+      {
+        "kind": "text",
+        "char": 65,
+        "color": 14,
+        "x": 24,
+        "y": 3
+      },
+      {
+        "kind": "text",
+        "char": 84,
+        "color": 14,
+        "x": 25,
+        "y": 3
+      },
+      {
+        "kind": "text",
+        "char": 39,
+        "color": 14,
+        "x": 26,
+        "y": 3
+      },
+      {
+        "kind": "text",
+        "char": 83,
+        "color": 14,
+        "x": 27,
+        "y": 3
+      },
+      {
+        "kind": "text",
+        "char": 90,
+        "color": 14,
+        "x": 29,
+        "y": 3
+      },
+      {
+        "kind": "text",
+        "char": 69,
+        "color": 14,
+        "x": 30,
+        "y": 3
+      },
+      {
+        "kind": "text",
+        "char": 68,
+        "color": 14,
+        "x": 31,
+        "y": 3
+      },
+      {
+        "kind": "text",
+        "char": 46,
+        "color": 14,
+        "x": 32,
+        "y": 3
+      },
+      {
+        "kind": "text",
+        "char": 67,
+        "color": 14,
+        "x": 33,
+        "y": 3
+      },
+      {
+        "kind": "text",
+        "char": 65,
+        "color": 14,
+        "x": 34,
+        "y": 3
+      },
+      {
+        "kind": "text",
+        "char": 70,
+        "color": 14,
+        "x": 35,
+        "y": 3
+      },
+      {
+        "kind": "text",
+        "char": 69,
+        "color": 14,
+        "x": 36,
+        "y": 3
+      },
+      {
+        "kind": "text",
+        "char": 97,
+        "color": 11,
+        "x": 13,
+        "y": 6
+      },
+      {
+        "kind": "text",
+        "char": 112,
+        "color": 11,
+        "x": 15,
+        "y": 6
+      },
+      {
+        "kind": "text",
+        "char": 108,
+        "color": 11,
+        "x": 16,
+        "y": 6
+      },
+      {
+        "kind": "text",
+        "char": 97,
+        "color": 11,
+        "x": 17,
+        "y": 6
+      },
+      {
+        "kind": "text",
+        "char": 99,
+        "color": 11,
+        "x": 18,
+        "y": 6
+      },
+      {
+        "kind": "text",
+        "char": 101,
+        "color": 11,
+        "x": 19,
+        "y": 6
+      },
+      {
+        "kind": "text",
+        "char": 116,
+        "color": 11,
+        "x": 21,
+        "y": 6
+      },
+      {
+        "kind": "text",
+        "char": 111,
+        "color": 11,
+        "x": 22,
+        "y": 6
+      },
+      {
+        "kind": "text",
+        "char": 98,
+        "color": 11,
+        "x": 24,
+        "y": 6
+      },
+      {
+        "kind": "text",
+        "char": 117,
+        "color": 11,
+        "x": 25,
+        "y": 6
+      },
+      {
+        "kind": "text",
+        "char": 105,
+        "color": 11,
+        "x": 26,
+        "y": 6
+      },
+      {
+        "kind": "text",
+        "char": 108,
+        "color": 11,
+        "x": 27,
+        "y": 6
+      },
+      {
+        "kind": "text",
+        "char": 100,
+        "color": 11,
+        "x": 28,
+        "y": 6
+      },
+      {
+        "kind": "text",
+        "char": 44,
+        "color": 11,
+        "x": 29,
+        "y": 6
+      },
+      {
+        "kind": "text",
+        "char": 112,
+        "color": 11,
+        "x": 31,
+        "y": 6
+      },
+      {
+        "kind": "text",
+        "char": 108,
+        "color": 11,
+        "x": 32,
+        "y": 6
+      },
+      {
+        "kind": "text",
+        "char": 97,
+        "color": 11,
+        "x": 33,
+        "y": 6
+      },
+      {
+        "kind": "text",
+        "char": 121,
+        "color": 11,
+        "x": 34,
+        "y": 6
+      },
+      {
+        "kind": "text",
+        "char": 44,
+        "color": 11,
+        "x": 35,
+        "y": 6
+      },
+      {
+        "kind": "text",
+        "char": 97,
+        "color": 11,
+        "x": 37,
+        "y": 6
+      },
+      {
+        "kind": "text",
+        "char": 110,
+        "color": 11,
+        "x": 38,
+        "y": 6
+      },
+      {
+        "kind": "text",
+        "char": 100,
+        "color": 11,
+        "x": 39,
+        "y": 6
+      },
+      {
+        "kind": "text",
+        "char": 116,
+        "color": 11,
+        "x": 41,
+        "y": 6
+      },
+      {
+        "kind": "text",
+        "char": 105,
+        "color": 11,
+        "x": 42,
+        "y": 6
+      },
+      {
+        "kind": "text",
+        "char": 110,
+        "color": 11,
+        "x": 43,
+        "y": 6
+      },
+      {
+        "kind": "text",
+        "char": 107,
+        "color": 11,
+        "x": 44,
+        "y": 6
+      },
+      {
+        "kind": "text",
+        "char": 101,
+        "color": 11,
+        "x": 45,
+        "y": 6
+      },
+      {
+        "kind": "text",
+        "char": 114,
+        "color": 11,
+        "x": 46,
+        "y": 6
+      },
+      {
+        "kind": "text",
+        "char": 112,
+        "color": 14,
+        "x": 6,
+        "y": 12
+      },
+      {
+        "kind": "text",
+        "char": 114,
+        "color": 14,
+        "x": 7,
+        "y": 12
+      },
+      {
+        "kind": "text",
+        "char": 101,
+        "color": 14,
+        "x": 8,
+        "y": 12
+      },
+      {
+        "kind": "text",
+        "char": 115,
+        "color": 14,
+        "x": 9,
+        "y": 12
+      },
+      {
+        "kind": "text",
+        "char": 115,
+        "color": 14,
+        "x": 10,
+        "y": 12
+      },
+      {
+        "kind": "text",
+        "char": 82,
+        "color": 14,
+        "x": 12,
+        "y": 12
+      },
+      {
+        "kind": "text",
+        "char": 73,
+        "color": 14,
+        "x": 13,
+        "y": 12
+      },
+      {
+        "kind": "text",
+        "char": 71,
+        "color": 14,
+        "x": 14,
+        "y": 12
+      },
+      {
+        "kind": "text",
+        "char": 72,
+        "color": 14,
+        "x": 15,
+        "y": 12
+      },
+      {
+        "kind": "text",
+        "char": 84,
+        "color": 14,
+        "x": 16,
+        "y": 12
+      },
+      {
+        "kind": "text",
+        "char": 118,
+        "color": 14,
+        "x": 19,
+        "y": 12
+      },
+      {
+        "kind": "text",
+        "char": 105,
+        "color": 14,
+        "x": 20,
+        "y": 12
+      },
+      {
+        "kind": "text",
+        "char": 115,
+        "color": 14,
+        "x": 21,
+        "y": 12
+      },
+      {
+        "kind": "text",
+        "char": 105,
+        "color": 14,
+        "x": 22,
+        "y": 12
+      },
+      {
+        "kind": "text",
+        "char": 116,
+        "color": 14,
+        "x": 23,
+        "y": 12
+      },
+      {
+        "kind": "text",
+        "char": 122,
+        "color": 14,
+        "x": 25,
+        "y": 12
+      },
+      {
+        "kind": "text",
+        "char": 101,
+        "color": 14,
+        "x": 26,
+        "y": 12
+      },
+      {
+        "kind": "text",
+        "char": 100,
+        "color": 14,
+        "x": 27,
+        "y": 12
+      },
+      {
+        "kind": "text",
+        "char": 46,
+        "color": 14,
+        "x": 28,
+        "y": 12
+      },
+      {
+        "kind": "text",
+        "char": 99,
+        "color": 14,
+        "x": 29,
+        "y": 12
+      },
+      {
+        "kind": "text",
+        "char": 97,
+        "color": 14,
+        "x": 30,
+        "y": 12
+      },
+      {
+        "kind": "text",
+        "char": 102,
+        "color": 14,
+        "x": 31,
+        "y": 12
+      },
+      {
+        "kind": "text",
+        "char": 101,
+        "color": 14,
+        "x": 32,
+        "y": 12
+      },
+      {
+        "kind": "text",
+        "char": 109,
+        "color": 7,
+        "x": 18,
+        "y": 17
+      },
+      {
+        "kind": "text",
+        "char": 97,
+        "color": 7,
+        "x": 19,
+        "y": 17
+      },
+      {
+        "kind": "text",
+        "char": 100,
+        "color": 7,
+        "x": 20,
+        "y": 17
+      },
+      {
+        "kind": "text",
+        "char": 101,
+        "color": 7,
+        "x": 21,
+        "y": 17
+      },
+      {
+        "kind": "text",
+        "char": 102,
+        "color": 7,
+        "x": 23,
+        "y": 17
+      },
+      {
+        "kind": "text",
+        "char": 111,
+        "color": 7,
+        "x": 24,
+        "y": 17
+      },
+      {
+        "kind": "text",
+        "char": 114,
+        "color": 7,
+        "x": 25,
+        "y": 17
+      },
+      {
+        "kind": "text",
+        "char": 99,
+        "color": 7,
+        "x": 27,
+        "y": 17
+      },
+      {
+        "kind": "text",
+        "char": 117,
+        "color": 7,
+        "x": 28,
+        "y": 17
+      },
+      {
+        "kind": "text",
+        "char": 114,
+        "color": 7,
+        "x": 29,
+        "y": 17
+      },
+      {
+        "kind": "text",
+        "char": 105,
+        "color": 7,
+        "x": 30,
+        "y": 17
+      },
+      {
+        "kind": "text",
+        "char": 111,
+        "color": 7,
+        "x": 31,
+        "y": 17
+      },
+      {
+        "kind": "text",
+        "char": 117,
+        "color": 7,
+        "x": 32,
+        "y": 17
+      },
+      {
+        "kind": "text",
+        "char": 115,
+        "color": 7,
+        "x": 33,
+        "y": 17
+      },
+      {
+        "kind": "text",
+        "char": 112,
+        "color": 7,
+        "x": 35,
+        "y": 17
+      },
+      {
+        "kind": "text",
+        "char": 101,
+        "color": 7,
+        "x": 36,
+        "y": 17
+      },
+      {
+        "kind": "text",
+        "char": 111,
+        "color": 7,
+        "x": 37,
+        "y": 17
+      },
+      {
+        "kind": "text",
+        "char": 112,
+        "color": 7,
+        "x": 38,
+        "y": 17
+      },
+      {
+        "kind": "text",
+        "char": 108,
+        "color": 7,
+        "x": 39,
+        "y": 17
+      },
+      {
+        "kind": "text",
+        "char": 101,
+        "color": 7,
+        "x": 40,
+        "y": 17
+      },
+      {
+        "kind": "text",
+        "char": 116,
+        "color": 10,
+        "x": 17,
+        "y": 20
+      },
+      {
+        "kind": "text",
+        "char": 104,
+        "color": 10,
+        "x": 18,
+        "y": 20
+      },
+      {
+        "kind": "text",
+        "char": 97,
+        "color": 10,
+        "x": 19,
+        "y": 20
+      },
+      {
+        "kind": "text",
+        "char": 110,
+        "color": 10,
+        "x": 20,
+        "y": 20
+      },
+      {
+        "kind": "text",
+        "char": 107,
+        "color": 10,
+        "x": 21,
+        "y": 20
+      },
+      {
+        "kind": "text",
+        "char": 115,
+        "color": 10,
+        "x": 22,
+        "y": 20
+      },
+      {
+        "kind": "text",
+        "char": 102,
+        "color": 10,
+        "x": 24,
+        "y": 20
+      },
+      {
+        "kind": "text",
+        "char": 111,
+        "color": 10,
+        "x": 25,
+        "y": 20
+      },
+      {
+        "kind": "text",
+        "char": 114,
+        "color": 10,
+        "x": 26,
+        "y": 20
+      },
+      {
+        "kind": "text",
+        "char": 119,
+        "color": 10,
+        "x": 28,
+        "y": 20
+      },
+      {
+        "kind": "text",
+        "char": 97,
+        "color": 10,
+        "x": 29,
+        "y": 20
+      },
+      {
+        "kind": "text",
+        "char": 108,
+        "color": 10,
+        "x": 30,
+        "y": 20
+      },
+      {
+        "kind": "text",
+        "char": 107,
+        "color": 10,
+        "x": 31,
+        "y": 20
+      },
+      {
+        "kind": "text",
+        "char": 105,
+        "color": 10,
+        "x": 32,
+        "y": 20
+      },
+      {
+        "kind": "text",
+        "char": 110,
+        "color": 10,
+        "x": 33,
+        "y": 20
+      },
+      {
+        "kind": "text",
+        "char": 103,
+        "color": 10,
+        "x": 34,
+        "y": 20
+      },
+      {
+        "kind": "text",
+        "char": 116,
+        "color": 10,
+        "x": 36,
+        "y": 20
+      },
+      {
+        "kind": "text",
+        "char": 104,
+        "color": 10,
+        "x": 37,
+        "y": 20
+      },
+      {
+        "kind": "text",
+        "char": 114,
+        "color": 10,
+        "x": 38,
+        "y": 20
+      },
+      {
+        "kind": "text",
+        "char": 111,
+        "color": 10,
+        "x": 39,
+        "y": 20
+      },
+      {
+        "kind": "text",
+        "char": 117,
+        "color": 10,
+        "x": 40,
+        "y": 20
+      },
+      {
+        "kind": "text",
+        "char": 103,
+        "color": 10,
+        "x": 41,
+        "y": 20
+      },
+      {
+        "kind": "text",
+        "char": 104,
+        "color": 10,
+        "x": 42,
+        "y": 20
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 5,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 6,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 7,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 8,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 9,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 10,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 11,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 12,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 13,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 14,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 15,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 16,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 17,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 18,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 19,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 20,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 21,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 22,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 23,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 24,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 25,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 26,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 27,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 28,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 29,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 30,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 31,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 32,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 33,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 34,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 35,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 36,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 37,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 38,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 39,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 40,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 41,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 42,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 43,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 44,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 45,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 46,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 47,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 48,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 49,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 50,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 51,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 52,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 53,
+        "y": 23
+      },
+      {
+        "kind": "text",
+        "char": 205,
+        "color": 3,
+        "x": 54,
+        "y": 23
+      }
+    ],
+    "objects": {
+      "sid_wtbtnvisit": {
+        "id": "sid_wtbtnvisit",
+        "x": 3,
+        "y": 12,
+        "kind": "object",
+        "char": 16,
+        "color": 11,
+        "code": "@visitbtn\n@char 16\n@color cyan\n:touch\n$cyanzed.cafe\n!openit https://zed.cafe;$greenopen zed.cafe\n#end\n"
+      }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "wanixtour",
+  "pages": [
+    "pages/player.object.json",
+    "pages/solid.terrain.json",
+    "pages/text.terrain.json",
+    "pages/title.board.json",
+    "pages/what.board.json",
+    "pages/concepts.board.json",
+    "pages/wanixintro.board.json",
+    "pages/wanixsteps.board.json",
+    "pages/outro.board.json"
+  ]
+}

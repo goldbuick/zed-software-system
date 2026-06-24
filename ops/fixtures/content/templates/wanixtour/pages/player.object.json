@@ -1,0 +1,3 @@
+{
+  "code": "@player\n@ispushable\n@cycle 1\n@char 2\n@color white\n:think\n?inputmove\n#idle\n#think\n"
+}
