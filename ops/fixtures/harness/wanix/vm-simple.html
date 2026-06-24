@@ -40,6 +40,12 @@
         min-width: 640px;
         min-height: 480px;
       }
+      /* Debug overlay (?show=1): bring the hidden term on-screen so the parent
+         iframe (translucent, click-through) reveals the real xterm rendering. */
+      body.embed.show wanix-system {
+        left: 0;
+        opacity: 1;
+      }
       #log {
         position: fixed;
         bottom: 0;
@@ -87,6 +93,9 @@
       const embed = params.get('embed') === '1'
       if (embed) {
         document.body.classList.add('embed')
+      }
+      if (params.get('show') === '1') {
+        document.body.classList.add('show')
       }
 
       const logel = document.getElementById('log')

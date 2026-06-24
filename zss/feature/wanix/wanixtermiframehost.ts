@@ -9,7 +9,6 @@ import {
 } from 'zss/feature/wanix/wanixsession'
 import {
   WANIX_TERM_IFRAME_SRC,
-  WANIX_VM_IFRAME_SRC,
   iswanixtermiframemsg,
 } from 'zss/feature/wanix/wanixtermiframeprotocol'
 import {
@@ -21,16 +20,37 @@ import {
   iswanixtermprobemsg,
 } from 'zss/feature/wanix/wanixtermprobe'
 import {
-  wanixtermscreenwrite,
   wanixtermscreenshowdetachhint,
+  wanixtermscreenwrite,
 } from 'zss/feature/wanix/wanixtermscreen'
 import type { WANIX_VM_ASSET_URLS } from 'zss/feature/wanix/wanixvmassets'
 
 const EMBED_READY_MS = 120_000
-const VM_READY_MS = 600_000
 const RPC_TIMEOUT_MS = 600_000
-const IFRAME_STYLE =
+const IFRAME_STYLE_HIDDEN =
   'position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;visibility:hidden;pointer-events:none;border:0'
+// Debug overlay: translucent, click-through, top-right. Opt-in only.
+const IFRAME_STYLE_SHOW =
+  'position:fixed;right:0;top:0;width:640px;height:480px;opacity:0.6;visibility:visible;pointer-events:none;border:0;z-index:2147483647'
+
+/** Dev-only: reveal the hidden VM iframe as a translucent overlay to inspect the real xterm. */
+function iswanixiframeshow(): boolean {
+  try {
+    if ((window as unknown as { ZSS_WANIX_SHOW?: unknown }).ZSS_WANIX_SHOW) {
+      return true
+    }
+    return window.localStorage?.getItem('zss-wanix-show') === '1'
+  } catch {
+    return false
+  }
+}
+
+function appendshowparam(src: string): string {
+  if (!iswanixiframeshow()) {
+    return src
+  }
+  return src.includes('?') ? `${src}&show=1` : `${src}?show=1`
+}
 
 type VmPrepStage =
   | 'idle'
@@ -53,9 +73,6 @@ let iframeel: HTMLIFrameElement | null = null
 let iframelayout: 'idle' | 'vm' | 'task' = 'idle'
 let embedready = false
 let embedreadywait: Promise<void> | null = null
-let vmready = false
-let vmreadywait: Promise<void> | null = null
-let vmhalted = false
 let messagelistenerinstalled = false
 let vmbindsready = false
 let taskspaceready = false
@@ -69,10 +86,35 @@ const rpcwaiters = new Map<
 const proxies = new Map<string, ProxyEntry>()
 let iobridgestarted = false
 
-async function opentileonserial(
-  kind: WANIX_ATTACH_KIND,
-  entry: ProxyEntry,
-) {
+const TERM_SIZE_DEBOUNCE_MS = 200
+const VM_IDLE_PROMPT_RE = /~\s#/
+let desiredtermcols = 0
+let desiredtermrows = 0
+let appliedcols = 0
+let appliedrows = 0
+let sttysentcols = 0
+let sttysentrows = 0
+let termsizehandle: ReturnType<typeof setTimeout> | undefined
+
+/** Forget what we pushed to the guest so a freshly attached VM is re-synced. */
+function resetiframetermsizeapplied() {
+  appliedcols = 0
+  appliedrows = 0
+  sttysentcols = 0
+  sttysentrows = 0
+}
+
+function resetiframetermsize() {
+  if (termsizehandle !== undefined) {
+    clearTimeout(termsizehandle)
+    termsizehandle = undefined
+  }
+  desiredtermcols = 0
+  desiredtermrows = 0
+  resetiframetermsizeapplied()
+}
+
+async function opentileonserial(kind: WANIX_ATTACH_KIND, entry: ProxyEntry) {
   if (entry.autotiletriggered) {
     return
   }
@@ -115,10 +157,6 @@ export function registervmtermiframehooks(hooks: {
   // Reserved for child exit postMessage wiring.
 }
 
-function isvmiframesrc(src: string): boolean {
-  return src.includes('vm-simple.html') && src.includes('embed=1')
-}
-
 function resetembedreadywait() {
   embedreadywait = new Promise<void>((resolve, reject) => {
     const timer = setTimeout(() => {
@@ -126,23 +164,6 @@ function resetembedreadywait() {
     }, EMBED_READY_MS)
     const poll = () => {
       if (embedready) {
-        clearTimeout(timer)
-        resolve()
-        return
-      }
-      setTimeout(poll, 50)
-    }
-    poll()
-  })
-}
-
-function resetvmreadywait() {
-  vmreadywait = new Promise<void>((resolve, reject) => {
-    const timer = setTimeout(() => {
-      reject(new Error('wanix vm iframe ready timeout'))
-    }, VM_READY_MS)
-    const poll = () => {
-      if (vmready) {
         clearTimeout(timer)
         resolve()
         return
@@ -193,6 +214,10 @@ function handlechunk(kind: WANIX_ATTACH_KIND, id: string, chunk: string) {
   if (attached !== id || attachedkind !== kind) {
     return
   }
+  if (kind === 'vm') {
+    // A prompt may have just landed — retry the idle-gated stty winsize push.
+    trysendiframevmstty()
+  }
   if (readterminalmodeattached()) {
     wanixtermscreenwrite(stripped)
     return
@@ -208,10 +233,6 @@ function onmessage(event: MessageEvent) {
   if (iswanixtermiframemsg(data)) {
     if (data.type === 'zss-wanix-term-ready') {
       embedready = true
-      return
-    }
-    if (data.type === 'zss-wanix-vm-ready') {
-      vmready = true
       return
     }
     if (data.type === 'zss-wanix-term-rpc-res') {
@@ -265,56 +286,23 @@ function createiframe(src: string, title: string): HTMLIFrameElement {
   const el = document.createElement('iframe')
   el.id = 'zss-wanix-term-iframe'
   el.title = title
-  el.src = src
-  el.style.cssText = IFRAME_STYLE
+  el.src = appendshowparam(src)
+  el.style.cssText = iswanixiframeshow()
+    ? IFRAME_STYLE_SHOW
+    : IFRAME_STYLE_HIDDEN
   document.body.appendChild(el)
   return el
 }
 
-async function ensurevmiframe(): Promise<void> {
-  ensuremessagelistener()
-  if (
-    iframeel?.contentWindow &&
-    isvmiframesrc(iframeel.src) &&
-    embedready &&
-    vmready
-  ) {
-    return
-  }
-  if (iframeel && !isvmiframesrc(iframeel.src)) {
-    iframeel.remove()
-    iframeel = null
-  }
-  if (!iframeel) {
-    embedready = false
-    vmready = false
-    iframeel = createiframe(WANIX_VM_IFRAME_SRC, 'wanix vm host')
-    resetembedreadywait()
-    resetvmreadywait()
-  }
-  await embedreadywait
-  await vmreadywait
-}
-
 function ensureiframe(): HTMLIFrameElement {
   ensuremessagelistener()
-  if (iframeel?.contentWindow && !isvmiframesrc(iframeel.src)) {
+  if (iframeel?.contentWindow) {
     return iframeel
-  }
-  if (iframeel && isvmiframesrc(iframeel.src)) {
-    iframeel.remove()
-    iframeel = null
-    embedready = false
-    embedreadywait = null
-    vmready = false
-    vmreadywait = null
   }
   let el = document.getElementById(
     'zss-wanix-term-iframe',
   ) as HTMLIFrameElement | null
-  if (!el) {
-    el = createiframe(WANIX_TERM_IFRAME_SRC, 'wanix term host')
-  }
+  el ??= createiframe(WANIX_TERM_IFRAME_SRC, 'wanix term host')
   iframeel = el
   if (!embedreadywait) {
     resetembedreadywait()
@@ -323,16 +311,8 @@ function ensureiframe(): HTMLIFrameElement {
 }
 
 async function waitembedready() {
-  if (iframelayout === 'vm') {
-    await ensurevmiframe()
-    return
-  }
   ensureiframe()
   await embedreadywait
-}
-
-function postchildvm(message: object) {
-  childwindow().postMessage(message, window.location.origin)
 }
 
 function childwindow(): Window {
@@ -415,6 +395,10 @@ export async function iframeattachtarget(
     })
   }
   setwanixattached(kind, id)
+  if (kind === 'vm') {
+    // New guest defaults to 80 cols — re-push the current tile size to it.
+    resetiframetermsizeapplied()
+  }
   await enterwanixattachedterminal()
   const entry = proxies.get(id)
   if (entry && entry.serialbuffer.length > 0) {
@@ -426,16 +410,16 @@ export async function iframeattachtarget(
 export async function iframeprepvmspace(
   device: DEVICELIKE,
   player: string,
-  _urls: WANIX_VM_ASSET_URLS,
+  urls: WANIX_VM_ASSET_URLS,
   onstart?: (device: DEVICELIKE, player: string) => void,
 ): Promise<void> {
-  void _urls
   vmprepstage = 'mounting'
   vmpreperror = undefined
   apilog(device, player, 'wanix vm prep: mounting linux + v86 in iframe...')
   try {
     iframelayout = 'vm'
-    await ensurevmiframe()
+    ensureiframe()
+    await childrpc('prepvm', [urls])
     vmbindsready = true
     vmprepstage = 'mount_ok'
     apilog(device, player, 'wanix vm prep: mount ok')
@@ -503,14 +487,11 @@ export async function iframespawnvm(opts: {
   registervm({ id: vmid, label: vmid, mem })
   if (opts.attach !== false) {
     setwanixattached('vm', vmid)
-  }
-  await waitembedready()
-  if (vmhalted) {
-    postchildvm({ type: 'zss-wanix-vm-respawn' })
-    vmhalted = false
-    await new Promise<void>((resolve) => setTimeout(resolve, 500))
+    // New guest defaults to 80 cols — re-push the current tile size to it.
+    resetiframetermsizeapplied()
   }
   vmprepstage = 'spawn'
+  await childrpc('spawnvm', [vmid, mem])
   if (opts.attach !== false) {
     await backfillvmserial(vmid)
   }
@@ -538,17 +519,7 @@ export async function iframespawntask(
 }
 
 export async function iframehaltvm(vmid?: string): Promise<void> {
-  if (iframelayout === 'vm' && iframeel?.contentWindow) {
-    try {
-      await waitembedready()
-      postchildvm({ type: 'zss-wanix-vm-halt' })
-      vmhalted = true
-    } catch {
-      // iframe may not be ready
-    }
-  } else {
-    await childrpc('haltvm', [vmid])
-  }
+  await childrpc('haltvm', [vmid])
   if (vmid) {
     proxies.delete(vmid)
   } else {
@@ -589,8 +560,7 @@ export async function iframeterminput(text: string): Promise<void> {
 export async function iframetermline(line: string): Promise<void> {
   const attached = readwanixattached()
   const attachedkind = readwanixattachedkind()
-  const entry =
-    attached && attachedkind ? proxies.get(attached) : undefined
+  const entry = attached && attachedkind ? proxies.get(attached) : undefined
   if (entry && attachedkind === 'vm') {
     entry.pendingvmline = line
   }
@@ -605,6 +575,75 @@ export function readwanixtermiframserial(): string {
     return ''
   }
   return proxies.get(id)?.serialbuffer ?? ''
+}
+
+/**
+ * Sync the guest terminal width to the visible tile (iframe route). Resizes the
+ * child xterm so serial readback keeps full-width lines, then pushes the winsize
+ * into the guest via `stty` at an idle prompt. Debounced; retried from handlechunk.
+ */
+export function iframeapplytermsize(cols: number, rows: number) {
+  if (cols <= 0 || rows <= 0) {
+    return
+  }
+  desiredtermcols = cols
+  desiredtermrows = rows
+  if (termsizehandle !== undefined) {
+    clearTimeout(termsizehandle)
+  }
+  termsizehandle = setTimeout(() => {
+    termsizehandle = undefined
+    void iframeapplytermsizenow()
+  }, TERM_SIZE_DEBOUNCE_MS)
+}
+
+async function iframeapplytermsizenow() {
+  if (readwanixattachedkind() !== 'vm' || desiredtermcols <= 0) {
+    return
+  }
+  if (desiredtermcols !== appliedcols || desiredtermrows !== appliedrows) {
+    const cols = desiredtermcols
+    const rows = desiredtermrows
+    try {
+      await probechildrpc('setsize', [cols, rows])
+      appliedcols = cols
+      appliedrows = rows
+    } catch {
+      // child xterm not ready — retried on the next size change / chunk
+    }
+  }
+  trysendiframevmstty()
+}
+
+/**
+ * Push the desired winsize into the guest via `stty`, but only at an idle shell
+ * prompt so we never inject into a running program. Re-attempted from handlechunk.
+ */
+function trysendiframevmstty() {
+  if (readwanixattachedkind() !== 'vm' || desiredtermcols <= 0) {
+    return
+  }
+  if (desiredtermcols === sttysentcols && desiredtermrows === sttysentrows) {
+    return
+  }
+  const tail = readwanixtermiframserial().slice(-200)
+  if (!VM_IDLE_PROMPT_RE.test(tail)) {
+    return
+  }
+  const cols = desiredtermcols
+  const rows = desiredtermrows
+  sttysentcols = cols
+  sttysentrows = rows
+  // VM serial submits lines with CR (matches iframetermline).
+  void probechildrpc('sendinput', [`stty cols ${cols} rows ${rows}\r`]).catch(
+    () => {
+      // input chain rejected — allow a retry on the next chunk
+      if (sttysentcols === cols && sttysentrows === rows) {
+        sttysentcols = 0
+        sttysentrows = 0
+      }
+    },
+  )
 }
 
 export async function iframechildputfile(
@@ -636,9 +675,6 @@ export async function teardownwanixtermiframe(): Promise<void> {
   iframeel = null
   embedready = false
   embedreadywait = null
-  vmready = false
-  vmreadywait = null
-  vmhalted = false
   vmbindsready = false
   taskspaceready = false
   vmprepstage = 'idle'
@@ -647,4 +683,5 @@ export async function teardownwanixtermiframe(): Promise<void> {
   setwanixattached(null, null)
   iobridgestarted = false
   iframelayout = 'idle'
+  resetiframetermsize()
 }

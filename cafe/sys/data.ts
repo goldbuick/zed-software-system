@@ -128,7 +128,7 @@ export const DIAGRAMS: Record<DiagramLayer, DiagramConfig> = {
         id: 'wanix',
         label: 'Wanix sandbox',
         definition:
-          'In-page <wanix-system> orchestrated by wanixhost.ts; on main / view (#frame) tasks use wanix-iframe-host.html and VMs use vm-simple.html?embed=1; serial mirrors to tape tile.',
+          'In-page <wanix-system> orchestrated by wanixhost.ts; on main / view (#frame) both tasks and VMs use wanix-iframe-host.html; serial mirrors to tape tile.',
         audience: 'Dev',
         path: 'zss/feature/wanix/wanixhost.ts',
       },
@@ -1724,7 +1724,7 @@ export const FEATURE_DOMAINS: FeatureDomain[] = [
       [
         '#wanix vm',
         'Creator',
-        'Prep Linux+v86 VM in vm-simple.html?embed=1 iframe; serial console via term bridge.',
+        'Prep Linux+v86 VM in wanix-iframe-host.html iframe; serial console via term bridge.',
         '#wanix vm',
       ],
       [
@@ -1752,10 +1752,10 @@ export const FEATURE_DOMAINS: FeatureDomain[] = [
         'cafe/wanix-iframe-host.ts',
       ],
       [
-        'VM embed iframe',
+        'VM iframe host',
         'Dev',
-        'vm-simple.html?embed=1 + wanix-vm-embed.ts: warm halt/respawn for VM serial.',
-        'cafe/wanix-vm-embed.ts',
+        'wanix-iframe-host.html child: programmatic VM prep/spawn/halt RPC + term probe streaming.',
+        'cafe/wanix-iframe-host.ts',
       ],
       [
         'Bind mounts',

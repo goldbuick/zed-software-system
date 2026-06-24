@@ -13,16 +13,12 @@ import {
 import {
   type WANIX_VM_ASSET_URLS,
   buildwanixtaskprehtml,
+  buildwanixvmfullhtml,
   buildwanixvmprehtml,
-  buildwanixvmspawnhtml,
 } from 'zss/feature/wanix/wanixvmassets'
 import {
-  VM_SPAWN_STEP_MS,
   VM_TERM_READY_MS,
-  spawnwithtimeout,
-  waitforgadgetidle,
   waitforv86driver,
-  waitforwanixvmready,
 } from 'zss/feature/wanix/wanixvmspawnhelpers'
 
 type WanixRoot = {
@@ -56,6 +52,7 @@ const SYSTEM_ID = 'zss-wanix-iframe-sys'
 let sys: WanixSystemElement | null = null
 let root: WanixRoot | null = null
 let mode: 'idle' | 'vm' | 'task' = 'idle'
+let vmurls: WANIX_VM_ASSET_URLS | null = null
 
 function replyrpc(
   source: MessageEventSource | null,
@@ -128,6 +125,9 @@ function mountprehtml(html: string): WanixSystemElement {
 }
 
 async function prepvmspace(urls: WANIX_VM_ASSET_URLS) {
+  // Validate + warm the linux/v86 archives early; the actual vm is mounted with
+  // the system in spawnvm (a vm added after `ready` never launches).
+  vmurls = urls
   const system = mountprehtml(buildwanixvmprehtml(urls, SYSTEM_ID))
   await waitsystemready(system)
   await waitforv86driver(root!, VM_PREP_WAIT_MS)
@@ -152,24 +152,32 @@ function cleartargetels() {
 }
 
 async function spawnvm(vmid: string, mem: string) {
-  if (!sys || mode !== 'vm' || !root) {
+  if (mode !== 'vm' || !vmurls) {
     throw new Error('wanix iframe child: vm space not prepared')
   }
-  cleartargetels()
-  sys.insertAdjacentHTML('beforeend', buildwanixvmspawnhtml(vmid, mem))
-  const vm = sys.querySelector(`wanix-vm#${vmid}`)
-  if (!vm) {
-    throw new Error(`wanix iframe child: failed to create wanix-vm ${vmid}`)
-  }
-  const wake = vm
-  await waitforgadgetidle()
-  await spawnwithtimeout(
-    wake._awake?.() ?? vm.start?.() ?? Promise.resolve(),
-    VM_SPAWN_STEP_MS,
-    'start',
-  )
-  await waitforwanixvmready(sys, root, vmid, VM_TERM_READY_MS)
+  // Re-mount the system WITH the vm + term as initial children (vm-simple
+  // recipe). wanix-system only launches vm children present at boot, so a vm
+  // added after `ready` registers in #vm but never actually starts.
+  const system = mountprehtml(buildwanixvmfullhtml(vmurls, vmid, mem, SYSTEM_ID))
+  await waitsystemready(system)
+  await waitforv86driver(root!, VM_PREP_WAIT_MS)
+  const vm = await waitvmchildready(system, VM_TERM_READY_MS)
   return { vmid, vrid: vm.rid ?? '1' }
+}
+
+async function waitvmchildready(
+  system: WanixSystemElement,
+  timeoutms: number,
+): Promise<WanixWakeElement> {
+  const deadline = Date.now() + timeoutms
+  while (Date.now() < deadline) {
+    const vm = system.querySelector('wanix-vm') as WanixWakeElement | null
+    if (vm?.rid && vm?.term) {
+      return vm
+    }
+    await new Promise<void>((resolve) => setTimeout(resolve, 250))
+  }
+  throw new Error(`wanix iframe child: vm ${system.id} not ready`)
 }
 
 async function spawntask(taskid: string, cmd: string) {

@@ -89,3 +89,30 @@ export function buildwanixvmspawnhtml(vmid: string, mem: string): string {
   return `<wanix-vm id="${id}" export="ttyS0" term mem="${memattr}" start></wanix-vm>
 <wanix-term path="#vm/1/term" raw data-zss-vm-term="${id}"></wanix-term>`
 }
+
+/**
+ * Full declarative VM system — binds + vm + term as initial children, matching
+ * the working vm-simple recipe. `<wanix-system>` only launches `<wanix-vm>`
+ * children present at boot, so the vm MUST be in the initial markup (a vm added
+ * after `ready` registers but never starts).
+ */
+export function buildwanixvmfullhtml(
+  urls: WANIX_VM_ASSET_URLS,
+  vmid: string,
+  mem: string,
+  systemid = 'zss-wanix-iframe-sys',
+): string {
+  const wasm = escapehtmlattr(readwanixkernelwasmurl())
+  const linux = escapehtmlattr(urls.linux)
+  const v86 = escapehtmlattr(urls.v86)
+  const id = escapehtmlattr(systemid)
+  const memattr = escapehtmlattr(mem)
+  const vmidattr = escapehtmlattr(vmid)
+  return `<wanix-system wasm="${wasm}" allow-origins="*" debug id="${id}">
+<wanix-bind dst="." src="${linux}" type="archive"></wanix-bind>
+<wanix-bind dst="vm" src="#vm"></wanix-bind>
+<wanix-bind dst="#vm/v86" src="${v86}" type="archive"></wanix-bind>
+<wanix-vm export="ttyS0" term mem="${memattr}" start></wanix-vm>
+<wanix-term path="#vm/1/term" raw data-zss-vm-term="${vmidattr}"></wanix-term>
+</wanix-system>`
+}

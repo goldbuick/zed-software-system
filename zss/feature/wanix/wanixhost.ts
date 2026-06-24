@@ -27,6 +27,7 @@ import {
 } from 'zss/feature/wanix/wanixsession'
 import {
   iframechildlistdir,
+  iframeapplytermsize,
   iframechildmountarchive,
   iframechildputfile,
   iframeattachtarget,
@@ -166,6 +167,7 @@ type WanixTermElement = HTMLElement & {
   _term?: {
     write: (data: string | Uint8Array, callback?: () => void) => void
     input: (data: string) => void
+    resize?: (cols: number, rows: number) => void
   }
 }
 
@@ -187,6 +189,8 @@ type TermTargetEntry = {
   wanixtermel: WanixTermElement | null
   wanixtermunwire: (() => void) | null
   serialbuffer: string
+  /** VM only — last full xterm serial read, baseline for the readback diff. */
+  lastserial: string
   autotiletriggered: boolean
   /** Strip one serial echo of the last submitted line (local tile already echoed). */
   pendingvmline: string | null
@@ -971,7 +975,7 @@ function wirevmtermel(entry: TermTargetEntry) {
   const termel = term as HTMLElement
   applywanixtermprobelayout(termel)
   entry.wanixtermel = term as unknown as WanixTermElement
-  let lastserial = ''
+  entry.lastserial = ''
   const poll = () => {
     if (!registry.vms.has(entry.id)) {
       return
@@ -979,11 +983,12 @@ function wirevmtermel(entry: TermTargetEntry) {
     const xterm = (termel as WanixTermHostElement)._term
     if (xterm) {
       const serial = readwanixtermserial(xterm)
-      if (serial.length > lastserial.length) {
-        handletermchunk('vm', entry.id, serial.slice(lastserial.length))
-        lastserial = serial
+      if (serial.length > entry.lastserial.length) {
+        handletermchunk('vm', entry.id, serial.slice(entry.lastserial.length))
+        entry.lastserial = serial
       }
     }
+    applytermsizenow()
     window.setTimeout(poll, 100)
   }
   window.setTimeout(poll, 250)
@@ -999,6 +1004,116 @@ function backfillvmserialinpage(entry: TermTargetEntry) {
   if (full.length > entry.serialbuffer.length) {
     handletermchunk('vm', entry.id, full.slice(entry.serialbuffer.length))
   }
+}
+
+const TERM_SIZE_DEBOUNCE_MS = 200
+let desiredtermcols = 0
+let desiredtermrows = 0
+let xtermsizedcols = 0
+let xtermsizedrows = 0
+let sttysentcols = 0
+let sttysentrows = 0
+let termsizehandle: number | undefined
+
+/** Forget what we pushed to the guest so a freshly attached VM is re-synced. */
+function resetwanixtermsizeapplied() {
+  xtermsizedcols = 0
+  xtermsizedrows = 0
+  sttysentcols = 0
+  sttysentrows = 0
+}
+
+function resetwanixtermsizesync() {
+  if (termsizehandle !== undefined) {
+    window.clearTimeout(termsizehandle)
+    termsizehandle = undefined
+  }
+  desiredtermcols = 0
+  desiredtermrows = 0
+  resetwanixtermsizeapplied()
+}
+
+/**
+ * Sync the guest terminal width to the visible tile. Guest layout (busybox)
+ * follows the tty winsize, which wanix never propagates, so we set it from the
+ * guest side via `stty` and widen the hidden xterm so readback holds full lines.
+ */
+export function wanixhostapplytermsize(cols: number, rows: number) {
+  if (cols <= 0 || rows <= 0) {
+    return
+  }
+  if (iswanixtermiframemode()) {
+    iframeapplytermsize(cols, rows)
+    return
+  }
+  desiredtermcols = cols
+  desiredtermrows = rows
+  if (termsizehandle !== undefined) {
+    window.clearTimeout(termsizehandle)
+  }
+  termsizehandle = window.setTimeout(() => {
+    termsizehandle = undefined
+    applytermsizenow()
+  }, TERM_SIZE_DEBOUNCE_MS)
+}
+
+function applytermsizenow() {
+  if (readwanixattachedkind() !== 'vm' || desiredtermcols <= 0) {
+    return
+  }
+  const entry = getattachedentry()
+  if (!entry) {
+    return
+  }
+  // Widen the hidden xterm so the serial readback keeps full-width lines on one
+  // row (otherwise tiles wider than the xterm would wrap at the xterm width).
+  if (desiredtermcols !== xtermsizedcols || desiredtermrows !== xtermsizedrows) {
+    const resizable = entry.wanixtermel?._term
+    if (resizable?.resize) {
+      try {
+        resizable.resize(desiredtermcols, desiredtermrows)
+        xtermsizedcols = desiredtermcols
+        xtermsizedrows = desiredtermrows
+        // The reflow renumbers buffer rows; re-baseline so we do not re-emit it.
+        const xterm = (entry.wanixtermel as WanixTermHostElement | null)?._term
+        if (xterm) {
+          entry.lastserial = readwanixtermserial(xterm)
+        }
+      } catch {
+        // xterm not ready — retried on the next size change
+      }
+    }
+  }
+  trysendvmstty()
+}
+
+/**
+ * Push the desired winsize into the guest via `stty`, but only at an idle shell
+ * prompt so we never inject into a running program. Re-attempted by the VM poll.
+ */
+function trysendvmstty() {
+  if (readwanixattachedkind() !== 'vm' || desiredtermcols <= 0) {
+    return
+  }
+  if (desiredtermcols === sttysentcols && desiredtermrows === sttysentrows) {
+    return
+  }
+  const tail = readwanixhostattachedserial().slice(-200)
+  if (!VM_SHELL_PROMPT_RE.test(tail)) {
+    return
+  }
+  const cols = desiredtermcols
+  const rows = desiredtermrows
+  sttysentcols = cols
+  sttysentrows = rows
+  // VM serial submits lines with CR (matches writetermviawanixterm).
+  void sendwanixterminput(`stty cols ${cols} rows ${rows}\r`).catch(() => {
+    // input chain rejected — allow a retry on the next poll
+    if (sttysentcols === cols && sttysentrows === rows) {
+      sttysentcols = 0
+      sttysentrows = 0
+    }
+  })
 }
 
 async function writetermviawanixterm(text: string) {
@@ -1124,6 +1239,8 @@ function attachtarget(kind: WANIX_ATTACH_KIND, id: string) {
   }
   registry.attached = id
   registry.attachedKind = kind
+  // New guest defaults to 80 cols — re-push the current tile size to it.
+  resetwanixtermsizeapplied()
   const entry = getattachedentry()
   wanixtrace('attach', {
     kind,
@@ -1166,6 +1283,7 @@ async function spawntask(
     wanixtermel: null,
     wanixtermunwire: null,
     serialbuffer: '',
+    lastserial: '',
     autotiletriggered: false,
     pendingvmline: null,
     exitpoll: null,
@@ -1229,6 +1347,7 @@ async function spawnvm(
     wanixtermel: null,
     wanixtermunwire: null,
     serialbuffer: '',
+    lastserial: '',
     autotiletriggered: false,
     pendingvmline: null,
     exitpoll: null,
@@ -1691,6 +1810,7 @@ function cleanup() {
   vmexithandler = undefined
   wanixiobridgestop()
   void teardownwanixtermiframe()
+  resetwanixtermsizesync()
   const mount = document.getElementById('zss-wanix-display')
   if (mount) {
     mount.replaceChildren()
@@ -2157,6 +2277,7 @@ export function wanixhosttestsetattached(
     wanixtermel: null,
     wanixtermunwire: null,
     serialbuffer,
+    lastserial: '',
     autotiletriggered: false,
     pendingvmline: null,
     exitpoll: null,

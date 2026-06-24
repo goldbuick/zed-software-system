@@ -1,7 +1,6 @@
 /** postMessage protocol — hidden iframe `<wanix-term>` host (parent ↔ child). */
 
 export const WANIX_TERM_IFRAME_SRC = '/wanix-iframe-host.html'
-export const WANIX_VM_IFRAME_SRC = '/wanix/vm-simple.html?embed=1'
 
 export type WANIX_TERM_IFRAME_RPC = {
   type: 'zss-wanix-term-rpc'
