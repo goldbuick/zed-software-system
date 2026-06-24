@@ -91,4 +91,22 @@ describe('wanixtermscreen', () => {
     expect(cells.cursorx).toBe(1)
     expect(cells.cursorvisible).toBe(true)
   })
+
+  it('clamps cursor above the hint row on sync', () => {
+    resetwanixtermscreenfortest()
+    wanixtermscreenresize(4, 3)
+    wanixtermscreensync({
+      cols: 4,
+      rows: 2,
+      char: new Array(8).fill(32),
+      color: new Array(8).fill(1),
+      bg: new Array(8).fill(0),
+      cursorx: 0,
+      cursory: 5,
+      cursorvisible: true,
+    })
+    const cells = readwanixtermscreencells()
+    expect(cells.cursory).toBe(1)
+    expect(cells.cursorvisible).toBe(true)
+  })
 })

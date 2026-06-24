@@ -266,7 +266,10 @@ export function wanixtermscreensync(snapshot: WanixTermCellsSnapshot) {
   }
 
   screen.cursorx = snapshot.cursorx
-  screen.cursory = snapshot.cursory
+  screen.cursory = Math.min(
+    snapshot.cursory,
+    Math.max(0, mirrorrows - 1),
+  )
   screen.cursorvisible = snapshot.cursorvisible
   bump()
 }

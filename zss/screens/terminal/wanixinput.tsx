@@ -2,10 +2,7 @@ import { useCallback, useRef, useState } from 'react'
 import { apierror, vmcli, wanixdetach, wanixtermwrite } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import {
-  sendwanixterminput,
-  sendwanixvmline,
-} from 'zss/feature/wanix/wanixhost'
+import { sendwanixterminput } from 'zss/feature/wanix/wanixhost'
 import {
   iswanixtermraw,
   readwanixattachedkind,
@@ -58,7 +55,7 @@ export function WanixTermInput() {
   const handlekeydown = useCallback(
     (event: KeyboardEvent) => {
       const vmattached = attached && readwanixattachedkind() === 'vm'
-      const raw = iswanixtermraw() && !vmattached
+      const raw = iswanixtermraw()
       if (iswanixcliescape(event)) {
         event.preventDefault()
         linebuffer.current = ''
@@ -105,39 +102,6 @@ export function WanixTermInput() {
           event.preventDefault()
           linebuffer.current += event.key
           wanixtermscreenechochar(event.key)
-        }
-        return
-      }
-
-      if (vmattached) {
-        if (event.repeat) {
-          return
-        }
-        if (event.ctrlKey || event.metaKey) {
-          if (event.key === 'c' || event.key === 'C') {
-            event.preventDefault()
-            linebuffer.current = ''
-            void sendwanixterminput('\x03').catch(reportinputerror)
-          }
-          return
-        }
-        if (event.key === 'Enter') {
-          event.preventDefault()
-          const line = linebuffer.current
-          linebuffer.current = ''
-          void sendwanixvmline(line).catch(reportinputerror)
-          return
-        }
-        if (event.key === 'Backspace') {
-          event.preventDefault()
-          if (linebuffer.current.length > 0) {
-            linebuffer.current = linebuffer.current.slice(0, -1)
-          }
-          return
-        }
-        if (event.key.length === 1) {
-          event.preventDefault()
-          linebuffer.current += event.key
         }
         return
       }

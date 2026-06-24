@@ -22,7 +22,7 @@ export function WanixTermScreen() {
 
   useEffect(() => {
     wanixtermscreenresize(edge.width, edge.height)
-    wanixhostapplytermsize(edge.width, edge.height)
+    wanixhostapplytermsize(edge.width, edge.height - 1)
   }, [edge.width, edge.height])
 
   const cells = readwanixtermscreencells()

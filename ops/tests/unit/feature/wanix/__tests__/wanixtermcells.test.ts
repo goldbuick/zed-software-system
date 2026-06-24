@@ -17,7 +17,7 @@ describe('wanixtermcolormap', () => {
 })
 
 describe('readxtermcellsfromterm', () => {
-  it('reads visible rows excluding the last xterm row', () => {
+  it('reads full xterm viewport rows', () => {
     const cells = [
       { ch: 'a', fg: 0, bg: 0 },
       { ch: 'b', fg: 0, bg: 0 },
@@ -45,14 +45,14 @@ describe('readxtermcellsfromterm', () => {
       },
     })
     expect(snapshot).not.toBeNull()
-    expect(snapshot?.rows).toBe(2)
+    expect(snapshot?.rows).toBe(3)
     expect(snapshot?.char[0]).toBe('a'.charCodeAt(0))
     expect(snapshot?.char[1]).toBe('b'.charCodeAt(0))
     expect(snapshot?.cursorx).toBe(1)
     expect(snapshot?.cursory).toBe(0)
   })
 
-  it('hides cursor when on the reserved xterm row', () => {
+  it('maps cursor on bottom viewport row to last mirror row', () => {
     const line = {
       length: 1,
       translateToString: () => '#',
@@ -75,6 +75,58 @@ describe('readxtermcellsfromterm', () => {
         },
       },
     })
-    expect(snapshot?.cursorvisible).toBe(false)
+    expect(snapshot?.cursory).toBe(1)
+    expect(snapshot?.cursorvisible).toBe(true)
+  })
+
+  it('reads viewport from baseY after scroll', () => {
+    const staleline = {
+      length: 1,
+      translateToString: () => 'X',
+      getCell: () => ({
+        getChars: () => 'X',
+        getWidth: () => 1,
+        getFgColor: () => 0,
+        getBgColor: () => 0,
+      }),
+    }
+    const promptline = {
+      length: 2,
+      translateToString: () => '~#',
+      getCell: (x: number) => ({
+        getChars: () => (x === 0 ? '~' : '#'),
+        getWidth: () => 1,
+        getFgColor: () => 0,
+        getBgColor: () => 0,
+      }),
+    }
+    const basey = 5
+    const snapshot = readxtermcellsfromterm({
+      cols: 2,
+      rows: 3,
+      buffer: {
+        active: {
+          length: 20,
+          baseY: basey,
+          cursorX: 1,
+          cursorY: 1,
+          getLine: (y: number) => {
+            if (y === 0) {
+              return staleline
+            }
+            if (y === basey + 1) {
+              return promptline
+            }
+            return undefined
+          },
+        },
+      },
+    })
+    expect(snapshot?.rows).toBe(3)
+    expect(snapshot?.char[0]).toBe(' '.charCodeAt(0))
+    expect(snapshot?.char[2]).toBe('~'.charCodeAt(0))
+    expect(snapshot?.char[3]).toBe('#'.charCodeAt(0))
+    expect(snapshot?.cursory).toBe(1)
+    expect(snapshot?.cursorvisible).toBe(true)
   })
 })

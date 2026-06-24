@@ -4,7 +4,7 @@ How zed.cafe sizes the hidden wanix `<wanix-term>` iframe and mirrors its xterm 
 
 ## Architecture overview
 
-Sizing is **one-way host → guest**. The visible ZSS tile knows its character grid; the host pixel-sizes a hidden iframe to match. Upstream `<wanix-term>` (wanix CDN) uses xterm **FitAddon** + **ResizeObserver** to derive cols/rows from that pixel box. Content flows **child → parent** via a **100ms cell snapshot poll** — not via serial replay or winsize propagation.
+Sizing is **one-way host → guest**. The visible ZSS tile knows its character grid; the host pixel-sizes a hidden iframe to match. Upstream `<wanix-term>` (wanix CDN) uses xterm **FitAddon** + **ResizeObserver** to derive cols/rows from that pixel box. Content flows **child → parent** via a **50ms cell snapshot poll** — not via serial replay or winsize propagation.
 
 **Do not add:** `winch` file writes, `stty cols/rows`, explicit `term.resize()`, or guest-side size messages back to the host. See [`.cursor/skills/wanix-term-sizing/SKILL.md`](../../.cursor/skills/wanix-term-sizing/SKILL.md).
 
@@ -41,7 +41,7 @@ flowchart TD
 flowchart TD
   Guest["WASI task / VM serial output"]
   XT["xterm buffer"]
-  Poll["setInterval emitcellsnapshot 100ms"]
+  Poll["setInterval emitcellsnapshot 50ms"]
   FitPush["on fit-size change: emitcellsnapshot"]
   PM["postMessage zss-wanix-term-cells"]
   HC["handlecells → wanixtermscreensync"]
@@ -56,6 +56,8 @@ flowchart TD
   PM --> HC --> Bump --> WTS --> WT --> CH --> TR
 ```
 
+Cell read uses the **visible xterm viewport** (`buffer.active.baseY + y`), not absolute buffer line 0. After scrollback fills, line 0 is stale history; the live prompt and cursor sit at `baseY + cursorY`.
+
 ## Key modules
 
 | Module | Role |
@@ -65,7 +67,7 @@ flowchart TD
 | [`zss/screens/tape/measure.ts`](../../zss/screens/tape/measure.ts) | Terminal width = `screensize.cols - 1` |
 | [`zss/screens/terminal/wanixscreen.tsx`](../../zss/screens/terminal/wanixscreen.tsx) | Resize entry point; mirrors cells to tile store |
 | [`zss/feature/wanix/wanixtermiframehost.ts`](../../zss/feature/wanix/wanixtermiframehost.ts) | Parent iframe pixel math, cell message handler |
-| [`zss/feature/wanix/wanixtermprobe.ts`](../../zss/feature/wanix/wanixtermprobe.ts) | Child iframe: 100ms poll, fit-size push, probe RPC |
+| [`zss/feature/wanix/wanixtermprobe.ts`](../../zss/feature/wanix/wanixtermprobe.ts) | Child iframe: 50ms poll, fit-size push, probe RPC |
 | [`zss/feature/wanix/wanixtermscreen.ts`](../../zss/feature/wanix/wanixtermscreen.ts) | Main-thread cell mirror buffer |
 | [`zss/feature/wanix/wanixtermcells.ts`](../../zss/feature/wanix/wanixtermcells.ts) | Read xterm buffer → snapshot; digest for dedup |
 | Upstream `wanix-term` CE | FitAddon + ResizeObserver (not in this repo) |
@@ -77,12 +79,12 @@ flowchart TD
 | **256ms** | `cafe/index.tsx` `debounce(applyconfig, 256)` | Screen grid updates after window resize settles |
 | **0ms** | `WanixTermScreen` `useEffect` on `edge` change | Tile buffer reset + iframe px applied synchronously |
 | **async** | wanix-term `ResizeObserver` → FitAddon | xterm cols/rows catch up after iframe style change |
-| **100ms** | `installwanixtermprobeembed` `setInterval(emitcellsnapshot, 100)` | Regular cell push when digest changes |
+| **50ms** | `installwanixtermprobeembed` `setInterval(emitcellsnapshot, 50)` | Regular cell push when digest changes |
 | **immediate** | `logxtermfitsizeifchanged` on fit change | Extra push when xterm grid dimensions change |
 | **rAF** | `applyiframepixels` → `synccellsfromchild` | Parent pull after host resize (when attached) |
 | **250ms** | `onlayouttick` | Re-applies probe layout CSS; logs fit size |
 
-Worst-case visible lag before fixes: 256ms debounce + async FitAddon + up to 100ms poll + missing `context.changed()` (tile GPU never repainted until next resize).
+Worst-case visible lag before fixes: 256ms debounce + async FitAddon + up to 50ms poll + missing `context.changed()` (tile GPU never repainted until next resize).
 
 ## Dimension math
 
@@ -101,6 +103,15 @@ screen_rows = floor(viewport_height / 28)
 ```
 terminal_cols = max(BOARD_WIDTH + 1, screen_cols - 1)   // measureminwidth
 terminal_rows = screen_rows                               // full height in attached mode
+content_rows  = terminal_rows - 1                         // above hint strip
+hint_row      = terminal_rows - 1                         // tile-only detach hint
+```
+
+The tile has **H rows total**: rows `0..H-2` are terminal content, row `H-1` is the hint strip (`cmd+\ detach`). xterm/iframe is sized to **H-1 content rows** only — the hint does not exist in xterm.
+
+```
+wanixtermscreenresize(edge.width, edge.height)            // tile buffer H rows
+wanixhostapplytermsize(edge.width, edge.height - 1)       // iframe/xterm H-1 rows
 ```
 
 The `- 1` col reserves space for the tape frame border.
@@ -128,10 +139,10 @@ terminal_cols = max(27, 80 - 1) = 79
 terminal_rows = 25
 
 iframe_width  = (79 + 1) * 9 = 720 px
-iframe_height = 25 * 18      = 450 px
+iframe_height = (25 - 1) * 18 = 432 px   // content rows only (H-1)
 ```
 
-xterm FitAddon computes cols/rows from 720×450 using its font metrics. The host does not read xterm dimensions back — it trusts the tile grid.
+xterm FitAddon computes cols/rows from the content-area pixel box. The host does not read xterm dimensions back — it trusts the content row count (`edge.height - 1`).
 
 ## Intentional off-by-one (not bugs)
 
@@ -139,9 +150,9 @@ xterm FitAddon computes cols/rows from 720×450 using its font metrics. The host
 |----------|----------|
 | `measureminwidth` | Terminal 1 col narrower than `screensize.cols` |
 | `applyiframepixels` | `(cols + 1) * 9` px width for scrollbar column |
-| `readxtermcellsfromterm` | Reads `term.rows - 1` (excludes xterm bottom row) |
-| `wanixtermscreensync` | Mirrors at most `screen.height - 1` rows |
-| `wanixtermscreenshowdetachhint` | Bottom tile row reserved for `meta+\ detach` hint |
+| `readxtermcellsfromterm` | Reads full `term.rows` viewport via `getLine(baseY + y)` |
+| `wanixtermscreensync` | Mirrors at most `screen.height - 1` content rows; clamps cursor |
+| `wanixtermscreenshowdetachhint` | Bottom tile row reserved for `meta+\ detach` hint (tile only, not xterm) |
 
 ## Cell constants vs tile constants
 

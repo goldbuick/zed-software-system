@@ -31,6 +31,7 @@ type XtermBuffer = {
   length: number
   cursorX: number
   cursorY: number
+  baseY?: number
   getLine: (index: number) => XtermLine | undefined
 }
 
@@ -48,23 +49,24 @@ function charcodefromcell(cell: XtermCell): number {
   return text.codePointAt(0) ?? SPACE
 }
 
-/** Read visible xterm buffer cells (excludes last xterm row — reserved for tile hints). */
+/** Read visible xterm viewport cells. Hint row is tile-side only (see wanixtermscreenshowdetachhint). */
 export function readxtermcellsfromterm(
   term: XtermCellSource,
 ): WanixTermCellsSnapshot | null {
-  if (term.cols <= 0 || term.rows <= 1) {
+  if (term.cols <= 0 || term.rows <= 0) {
     return null
   }
   const cols = term.cols
-  const rows = term.rows - 1
+  const rows = term.rows
   const active = term.buffer.active
+  const basey = active.baseY ?? 0
   const size = cols * rows
   const char = new Array<number>(size).fill(SPACE)
   const color = new Array<number>(size).fill(COLOR.WHITE)
   const bg = new Array<number>(size).fill(COLOR.BLACK)
 
   for (let y = 0; y < rows; y++) {
-    const line = active.getLine(y)
+    const line = active.getLine(basey + y)
     if (!line) {
       continue
     }
@@ -82,12 +84,8 @@ export function readxtermcellsfromterm(
   }
 
   let cursorx = active.cursorX
-  let cursory = active.cursorY
-  let cursorvisible = true
-  if (cursory >= rows) {
-    cursorvisible = false
-    cursory = Math.max(0, rows - 1)
-  }
+  let cursory = Math.min(active.cursorY, rows - 1)
+  const cursorvisible = active.cursorY >= 0 && active.cursorY < term.rows
   if (cursorx >= cols) {
     cursorx = Math.max(0, cols - 1)
   }

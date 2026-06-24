@@ -240,7 +240,7 @@ export function installwanixtermprobeembed(): WanixTermProbe {
     posttoparent({ type: 'zss-wanix-term-cells', ...snapshot })
   }
 
-  const polltimer = setInterval(emitcellsnapshot, 100)
+  const polltimer = setInterval(emitcellsnapshot, 50)
 
   const onprobemessage = async (event: MessageEvent) => {
     if (event.origin !== window.location.origin) {

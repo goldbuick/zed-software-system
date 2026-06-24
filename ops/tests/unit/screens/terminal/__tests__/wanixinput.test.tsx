@@ -127,24 +127,26 @@ describe('WanixTermInput vm raw input', () => {
     })
   }
 
-  it('sends one vm line on enter with local echo', () => {
+  it('sends per-keystroke xterm data when vm attached', () => {
     mockreadwanixattachedkind.mockReturnValue('vm')
+    mockiswanixtermraw.mockReturnValue(true)
     mountinput()
 
     emitkeydown(keyevent('keydown', { key: 'h' }))
     emitkeydown(keyevent('keydown', { key: 'i' }))
     emitkeydown(keyevent('keydown', { key: 'Enter' }))
 
-    expect(mockvmline).toHaveBeenCalledWith('hi')
-    expect(mockterminput).not.toHaveBeenCalled()
-    expect(mockechochar).toHaveBeenCalledWith('h')
-    expect(mockechochar).toHaveBeenCalledWith('i')
-    expect(mocktermscreenwrite).toHaveBeenCalledWith('\r\n')
+    expect(mockterminput).toHaveBeenCalledWith('h')
+    expect(mockterminput).toHaveBeenCalledWith('i')
+    expect(mockterminput).toHaveBeenCalledWith('\r')
+    expect(mockvmline).not.toHaveBeenCalled()
+    expect(mockechochar).not.toHaveBeenCalled()
     expect(mockecholine).not.toHaveBeenCalled()
   })
 
   it('ctrl+\\ detaches vm without cli mode', () => {
     mockreadwanixattachedkind.mockReturnValue('vm')
+    mockiswanixtermraw.mockReturnValue(true)
     mountinput()
 
     emitkeydown(
@@ -154,8 +156,9 @@ describe('WanixTermInput vm raw input', () => {
     expect(wanixdetach).toHaveBeenCalled()
   })
 
-  it('sends ctrl+c immediately in vm line mode', () => {
+  it('sends ctrl+c immediately in vm raw mode', () => {
     mockreadwanixattachedkind.mockReturnValue('vm')
+    mockiswanixtermraw.mockReturnValue(true)
     mountinput()
 
     emitkeydown(
@@ -195,19 +198,20 @@ describe('WanixTermInput vm raw input', () => {
     expect(mockterminput).toHaveBeenCalledWith('\x03')
   })
 
-  it('echoes vm keystrokes locally while buffering', () => {
+  it('forwards vm keystrokes to xterm without local echo', () => {
     mockreadwanixattachedkind.mockReturnValue('vm')
+    mockiswanixtermraw.mockReturnValue(true)
     mountinput()
 
     emitkeydown(keyevent('keydown', { key: 'l' }))
 
     expect(mockvmline).not.toHaveBeenCalled()
-    expect(mockterminput).not.toHaveBeenCalled()
-    expect(mockechochar).toHaveBeenCalledWith('l')
+    expect(mockterminput).toHaveBeenCalledWith('l')
+    expect(mockechochar).not.toHaveBeenCalled()
   })
 
   it('uses task line discipline when vm raw mode is off', () => {
-    mockterminalmode.mockReturnValue('attached')
+    mockterminalmode.mockReturnValue('cli')
     mockiswanixtermraw.mockReturnValue(false)
     mockreadwanixattachedkind.mockReturnValue(null)
     mountinput()
