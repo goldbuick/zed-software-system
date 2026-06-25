@@ -611,8 +611,9 @@ export function synthttsengine(
   board: string,
   engine: string,
   config: string,
+  model?: string,
 ) {
-  device.emit(player, 'synth:ttsengine', [board, engine, config])
+  device.emit(player, 'synth:ttsengine', [board, engine, config, model ?? ''])
 }
 
 export function synthtts(

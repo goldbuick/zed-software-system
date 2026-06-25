@@ -8,7 +8,7 @@ import {
 } from 'zss/feature/synth/frontend/synthbackend'
 import { synthdebugtrace } from 'zss/feature/synth/synthdebugtrace'
 import {
-  selectttsengine,
+  applyttsengineconfig,
   ttsclearqueue,
   ttsinfo,
   ttsplay,
@@ -258,8 +258,20 @@ const synthdevice = createdevice('synth', [], (message) => {
       break
     case 'ttsengine':
       if (isarray(message.data)) {
-        const [, engine, apikey] = message.data as [string, any, string]
-        selectttsengine(engine, apikey)
+        const [, engine, apikey, model] = message.data as [
+          string,
+          any,
+          string,
+          string,
+        ]
+        doasync(synthdevice, message.player, async () => {
+          await applyttsengineconfig(
+            message.player,
+            engine,
+            apikey ?? '',
+            model,
+          )
+        })
       }
       break
     case 'ttsclearqueue':

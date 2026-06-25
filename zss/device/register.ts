@@ -26,6 +26,7 @@ import { itchiopublish } from 'zss/feature/itchiopublish'
 import { withclipboard } from 'zss/feature/keyboard'
 import { terminalwritemarkdownlines } from 'zss/feature/parse/markdownterminal'
 import {
+  isconfigstringkey,
   storagenukecontent,
   storagereadconfigall,
   storagereadcontent,
@@ -34,9 +35,11 @@ import {
   storagesharecontent,
   storagewatchcontent,
   storagewriteconfig,
+  storagewriteconfigstring,
   storagewritecontent,
   storagewritevar,
 } from 'zss/feature/storage'
+import { restorettsenginefromstorage } from 'zss/feature/tts'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import { isjoin, znsset } from 'zss/feature/url'
 import { leavewanixattachedterminal } from 'zss/feature/wanix/wanixterminalmode'
@@ -377,6 +380,7 @@ export const register = createdevice(
         break
       case 'loginready':
         doasync(register, message.player, async () => {
+          await restorettsenginefromstorage()
           const storage = await storagereadvars()
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { [ZSS_BOOKMARKS_KEY]: _bookmarks, ...storageforlogin } =
@@ -590,7 +594,12 @@ export const register = createdevice(
           if (isarray(message.data)) {
             const [name, value] = message.data
             if (typeof name === 'string' && name.startsWith('config_')) {
-              await storagewriteconfig(name.slice(7), value)
+              const keyname = name.slice(7)
+              if (isconfigstringkey(keyname)) {
+                await storagewriteconfigstring(keyname, String(value ?? ''))
+              } else {
+                await storagewriteconfig(keyname, value)
+              }
             } else {
               await storagewritevar(name, value)
             }

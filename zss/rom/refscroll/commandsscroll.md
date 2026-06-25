@@ -176,9 +176,10 @@ $whiteclear synth buffer
 ## audio - tts
 
 #ttsengine <engine> [config]  
-$whiteset tts engine  
+$whiteset tts engine (piper, supertonic, fish)  
 #tts [voice] [phrase]  
 $whitespeak or clear queue  
+$dkgrayfish: #ttsengine fish <api_key> [s2.1-pro] then #tts <reference_id> phrase (via brick.zed.cafe)  
 #ttsqueue <voice> <phrase>  
 $whitequeue phrase  
 #ttsvol <volume>  
