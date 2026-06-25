@@ -17,11 +17,7 @@ export const MEMORY_WASM_FIXTURES_DIR = fixturepath('memory', 'wasm')
 
 export const SYNTH_WASM_FIXTURES_DIR = fixturepath('synth', 'wasm')
 export const SYNTH_DAISY_FIXTURES_DIR = fixturepath('synth', 'daisy')
-export const SYNTH_MAXI_ARCHIVE_FIXTURES_DIR = fixturepath(
-  'synth',
-  'archive',
-  'maxi',
-)
+export const SYNTH_MAXI_FIXTURES_DIR = fixturepath('synth', 'maxi')
 
 export const LANG_ZZTOOP_DIR = fixturepath('lang', 'zztoop')
 export const LANG_ZZTOOP_MANIFEST_PATH = fixturepath(
@@ -42,7 +38,6 @@ export const HARNESS_FIXTURES_DIR = fixturepath('harness')
 export const PUBLIC_FIXTURES_DIR = fixturepath('public')
 /** Offline Daisy/synth render outputs (wav/json/txt); served at /renders/ in dev only. */
 export const RENDERS_FIXTURES_DIR = fixturepath('renders')
-export const E2E_FIXTURES_DIR = fixturepath('e2e')
 export const TRAINING_CORPUS_DIR = fixturepath('generated', 'training')
 
 export const COOLREGIONSBOW_BOOK_JSON_PATH = fixturepath(
@@ -64,11 +59,6 @@ export const LANG_COOLREGIONSBOW_MANIFEST_PATH = fixturepath(
   'lang',
   'coolregionsbow',
   'manifest.json',
-)
-
-export const HOST_MEMORY_REPRO_FIXTURE_PATH = fixturepath(
-  'e2e',
-  'host-memory-repro.json',
 )
 
 export const CONTENT_FIXTURES_DIR = fixturepath('content')

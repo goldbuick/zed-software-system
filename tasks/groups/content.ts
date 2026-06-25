@@ -19,10 +19,9 @@ export const CONTENT_TASKS: TaskDef[] = [
   def('content:book:test', {
     description: 'Jest content book tests',
     tags: ['ci'],
-    run: jestexec(
-      'ops/tests/unit/feature/content/__tests__/contentbook.test.ts',
-      ['--no-coverage'],
-    ),
+    run: jestexec('ops/tests/unit/feature/content/contentbook.test.ts', [
+      '--no-coverage',
+    ]),
   }),
   def('content:codepage:validate', {
     description: 'Validate codepage JSON (pass path as extra args)',

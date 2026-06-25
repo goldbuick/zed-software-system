@@ -36,4 +36,4 @@ After parser fixes: **~740** fewer fixable failures (`fixable_fail` **6,429**). 
 yarn task run lang:zzt:corpus:analyze raw-only   # faster: skip wrapped walk
 ```
 
-Tests: `ops/tests/unit/feature/lang/backend/typescript/__tests__/zztcorpusparse.test.ts`, `zztlangrefsmoke.test.ts`, `zztfixableparser.test.ts`.
+Tests: `ops/tests/unit/feature/lang/backend/typescript/zztcorpusparse.test.ts`, `zztlangrefsmoke.test.ts`, `zztfixableparser.test.ts`.

@@ -45,7 +45,7 @@ export const DAISY_TASKS: TaskDef[] = [
   def('daisy:adsr-parity:jest', {
     description: 'Jest adsrenvcurve tests (internal)',
     run: jestexec(
-      'ops/tests/unit/feature/synth/backend/wasm/__tests__/adsrenvcurve.test.ts',
+      'ops/tests/unit/feature/synth/backend/wasm/adsrenvcurve.test.ts',
     ),
   }),
   def('daisy:env-parity:test', {

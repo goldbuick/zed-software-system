@@ -34,7 +34,7 @@ Do NOT "fix" a dead VM by calling `vm.start()` / `_awake()` again, retrying, or 
 
 ## Validating wanix VM changes (full app, no product hooks)
 
-Drive the **real app**, never a bare child page. Per `ops/e2e/README.md`, add NO `window.__zss_e2e` hooks to `zss/feature/` or `cafe/` — read live state with Playwright `frame.evaluate()` (runtime inspection only).
+Drive the **real app**, never a bare child page. Per `ops/fixtures/README.md`, add NO `window.__zss_e2e` hooks to `zss/feature/` or `cafe/` — read live state with Playwright `frame.evaluate()` (runtime inspection only).
 
 1. A dev server is usually already running on `https://localhost:7777/` (`yarn task app dev`). Reuse it.
 2. Headed Chromium with real GPU (NOT headless). First time: `npx playwright install chromium` (the headless-shell alone fails `headless:false`).

@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url'
 const ROOT = process.cwd()
 const CLITEST = path.join(
   ROOT,
-  'ops/tests/unit/feature/content/__tests__/contentbook.cli.test.ts',
+  'ops/tests/unit/feature/content/contentbook.cli.test.ts',
 )
 
 const task = process.argv[2]

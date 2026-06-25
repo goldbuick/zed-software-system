@@ -23,8 +23,8 @@ const PROJECT = process.cwd()
 const SKIP_PLAYWRIGHT = process.argv.includes('--skip-playwright')
 
 const JEST_PATHS = [
-  'ops/tests/unit/feature/synth/backend/daisy/__tests__',
-  'ops/tests/unit/feature/synth/backend/wasm/__tests__/adsrenvcurve.test.ts',
+  'ops/tests/unit/feature/synth/backend/daisy',
+  'ops/tests/unit/feature/synth/backend/wasm/adsrenvcurve.test.ts',
 ]
 
 const SOS_VOICE_GATE = 'yarn task run daisy:sos-voices:test'

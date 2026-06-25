@@ -18,8 +18,8 @@
       "ops/archive/*": [
         "./ops/archive/*"
       ],
-      "ops/tests/lib/*": [
-        "./ops/tests/lib/*"
+      "ops/lib/test/*": [
+        "./ops/lib/test/*"
       ],
       "ops/lib/daisy-parity/*": [
         "./ops/lib/daisy-parity/*"
@@ -57,7 +57,7 @@
     "headless",
     "ops/fixtures",
     "ops/lib",
-    "ops/tests/lib",
+    "ops/lib/test",
     "ops/archive"
   ],
   "exclude": [],

@@ -195,9 +195,7 @@ export async function wanixhandleshownenu(device: DEVICELIKE, player: string) {
           ? `Attach ${task.label} $cyanattached`
           : `Attach ${task.label}`
         parts.push(zsszedlinkline(`wanixattach ${task.id}`, attachlabel))
-        parts.push(
-          zsszedlinkline(`wanixstop ${task.id}`, `Stop ${task.label}`),
-        )
+        parts.push(zsszedlinkline(`wanixstop ${task.id}`, `Stop ${task.label}`))
       }
       parts.push(
         zsszedlinkline('wanixstop', `Stop all (${tasks.length} tasks)`),
@@ -216,9 +214,7 @@ export async function wanixhandleshownenu(device: DEVICELIKE, player: string) {
         parts.push(zsszedlinkline(`wanixattach ${vm.id}`, attachlabel))
         parts.push(zsszedlinkline(`wanixvmstop ${vm.id}`, `Stop ${vm.label}`))
       }
-      parts.push(
-        zsszedlinkline('wanixvmstop', `Stop all (${vms.length} vms)`),
-      )
+      parts.push(zsszedlinkline('wanixvmstop', `Stop all (${vms.length} vms)`))
     }
     if (iswanixtermactive()) {
       parts.push(zsstextline('#wanix detach — stop routing terminal input'))

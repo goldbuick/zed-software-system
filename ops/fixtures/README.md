@@ -15,7 +15,7 @@ add co-located `__fixtures__` trees beside implementation code.
 | `memory/wasm/` | Memory WASM step fixtures (`*.json`) |
 | `synth/wasm/` | Synth parity metrics JSON |
 | `synth/daisy/` | Daisy voice fixtures JSON |
-| `synth/archive/maxi/` | Legacy Maxi parity JSON |
+| `synth/maxi/` | Legacy Maxi parity JSON |
 | `parse/` | Parse test assets (e.g. `twomeasures.mid`) |
 | `books/` | Shipped book JSON (npm `"files"`) |
 | `content/templates/` | Importable book templates (`manifest.json` + `pages/*.json`) |
@@ -24,7 +24,6 @@ add co-located `__fixtures__` trees beside implementation code.
 | `harness/` | Daisy/synth Playwright harness `.html` + wanix iframe smoke (not shipped in prod) |
 | `public/` | Dev-served static assets at `/fixtures/` (not in `cafe/public`) |
 | `renders/` | Offline Daisy/synth render outputs (wav/json/txt); dev serves `/renders/` |
-| `e2e/` | Generated e2e repro JSON |
 | `generated/training/` | Generated SFT corpus (`train.jsonl`, `eval.jsonl`, `manifest.json`) |
 | `zzt/corpus/` | Museum manifest + committed `zss/`; gitignored `archives/`, `extracted/`, `screenshots/` |
 
@@ -42,6 +41,8 @@ add co-located `__fixtures__` trees beside implementation code.
 
 ## Harness code (not here)
 
-Embedded loaders and test helpers live under `ops/lib/` and `ops/tests/lib/` (e.g. wanix harness pages reference `ops/fixtures/wanix/` sources).
+Embedded loaders and test helpers live under `ops/lib/` and `ops/lib/test/` (e.g. wanix harness pages reference `ops/fixtures/wanix/` sources).
+
+Browser e2e should use harness HTML under `harness/` only — no `window.__zss_e2e` instrumentation in `cafe/` or `zss/feature/`. Daisy parity tasks use Playwright via `tasks/lib/parity/parity-playwright.ts` (calibration only).
 
 See [`.cursor/rules/fixtures.mdc`](../../.cursor/rules/fixtures.mdc) for agent guidance.

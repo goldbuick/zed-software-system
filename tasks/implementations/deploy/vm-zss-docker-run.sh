@@ -1,6 +1,6 @@
 #!/bin/sh
 # Run the published ZSS image with --network host and a named volume for /data.
-# See docs/deploy-aws-ec2.md and docs/deploy-digitalocean.md.
+# See ops/infra/README.md for Cloudflare Workers deploy.
 #
 # On the VM (after Docker is installed):
 #   VM_RUN_LOCAL=1 sh scripts/vm-zss-docker-run.sh

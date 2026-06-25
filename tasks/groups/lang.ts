@@ -28,17 +28,15 @@ export const LANG_TASKS: TaskDef[] = [
   }),
   def('lang:build-train-corpus', {
     description: 'Jest build training corpus fixture',
-    run: jestexec(
-      'ops/tests/unit/feature/heavy/training/__tests__/buildcorpus.test.ts',
-      ['--no-coverage'],
-    ),
+    run: jestexec('ops/tests/unit/feature/heavy/training/buildcorpus.test.ts', [
+      '--no-coverage',
+    ]),
   }),
   def('lang:train-corpus:test', {
     description: 'Jest train corpus tests',
-    run: jestexec(
-      'ops/tests/unit/feature/heavy/training/__tests__/traincorpus.test.ts',
-      ['--no-coverage'],
-    ),
+    run: jestexec('ops/tests/unit/feature/heavy/training/traincorpus.test.ts', [
+      '--no-coverage',
+    ]),
   }),
   def('lang:finetune:train', {
     description: 'Train lang finetune model',

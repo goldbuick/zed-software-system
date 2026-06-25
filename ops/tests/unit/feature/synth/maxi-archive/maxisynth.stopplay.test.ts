@@ -1,5 +1,5 @@
 import { createwasmsynth } from 'ops/archive/synth/maxi/maxisynth'
-import { createmockmaxi } from 'ops/tests/lib/synth/mockmaxi'
+import { createmockmaxi } from 'ops/lib/test/synth/mockmaxi'
 import {
   WASM_FX_SEND_COUNT,
   WASM_FX_SEND_IDX,
