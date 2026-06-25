@@ -6,11 +6,11 @@ Tier 1 scrolls are covered by Jest (see below). Tier 2 is manual only.
 
 | Area | Tests / code |
 |------|----------------|
-| Zip file list tape + import route | `ops/tests/unit/device/vm/handlers/__tests__/zipfile.handler.test.ts`, `ops/tests/unit/device/vm/handlers/__tests__/default.handlers.tier1.test.ts` |
-| Quoted zip `select` row shape | `ops/tests/unit/gadget/data/__tests__/scrollwritelines.test.ts` (`zipfilelist quoted select target…`) |
-| Refscroll submenus (`char` / `color` / `bg`, admin, object/terrain lists) | `ops/tests/unit/device/vm/handlers/__tests__/default.handlers.tier1.test.ts` |
-| ROM `refscroll:menu` → `handlerefscroll` | `ops/tests/unit/device/vm/handlers/__tests__/scroll.refscroll.test.ts` |
-| Clear / make-it / gadget scroll handlers | `ops/tests/unit/device/vm/handlers/__tests__/scroll.handlers.test.ts` |
+| Zip file list tape + import route | `ops/tests/unit/device/vm/handlers/zipfile.handler.test.ts`, `ops/tests/unit/device/vm/handlers/default.handlers.tier1.test.ts` |
+| Quoted zip `select` row shape | `ops/tests/unit/gadget/data/scrollwritelines.test.ts` (`zipfilelist quoted select target…`) |
+| Refscroll submenus (`char` / `color` / `bg`, admin, object/terrain lists) | `ops/tests/unit/device/vm/handlers/default.handlers.tier1.test.ts` |
+| ROM `refscroll:menu` → `handlerefscroll` | `ops/tests/unit/device/vm/handlers/scroll.refscroll.test.ts` |
+| Clear / make-it / gadget scroll handlers | `ops/tests/unit/device/vm/handlers/scroll.handlers.test.ts` |
 
 Related implementation:
 

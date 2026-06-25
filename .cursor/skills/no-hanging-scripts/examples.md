@@ -19,7 +19,7 @@ loadscriptsync(wasmbytes, chip).run() // blocks event loop; testTimeout useless
 import {
   createwasmstubchip,
   runwasmscriptfortest,
-} from 'ops/tests/lib/lang/wasmruntestutil'
+} from 'ops/lib/test/lang/wasmruntestutil'
 
 const chip = createwasmstubchip({
   command(...words: WORD[]) {
@@ -42,10 +42,10 @@ expect(() =>
 
 ```bash
 # 1. One file, no coverage
-yarn jest ops/tests/unit/feature/lang/backend/wasm/__tests__/lexerparity.test.ts --no-coverage
+yarn jest ops/tests/unit/feature/lang/backend/wasm/lexerparity.test.ts --no-coverage
 
 # 2. After pass, broader
-yarn jest ops/tests/unit/feature/lang/backend/wasm/__tests__/ --no-coverage
+yarn jest ops/tests/unit/feature/lang/backend/wasm/ --no-coverage
 
 # 3. Full suite last
 yarn task run app:test

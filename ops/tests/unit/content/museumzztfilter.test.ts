@@ -2,7 +2,7 @@ import {
   filtervanillazztworlds,
   isvanillazztworld,
   type MuseumFile,
-} from '../../../../../tasks/implementations/content/museum-zzt-filter'
+} from '../../../../tasks/implementations/content/museum-zzt-filter'
 
 function sample(partial: Partial<MuseumFile> & Pick<MuseumFile, 'details'>): MuseumFile {
   return {

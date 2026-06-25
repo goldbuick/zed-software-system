@@ -249,7 +249,7 @@ export default defineConfig(({ mode }) => {
         'ops/fixtures': path.resolve(__dirname, './ops/fixtures'),
         'ops/lib': path.resolve(__dirname, './ops/lib'),
         'ops/archive': path.resolve(__dirname, './ops/archive'),
-        'ops/tests/lib': path.resolve(__dirname, './ops/tests/lib'),
+        'ops/lib/test': path.resolve(__dirname, './ops/lib/test'),
       },
     },
     optimizeDeps: {

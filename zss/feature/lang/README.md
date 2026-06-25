@@ -29,7 +29,7 @@ if (result.code) {
 
 ```bash
 yarn task run lang:regression:test
-yarn jest --config ops/jest.config.ts ops/tests/unit/feature/lang/backend/typescript/__tests__/ --no-coverage
+yarn jest --config ops/jest.config.ts ops/tests/unit/feature/lang/backend/typescript/ --no-coverage
 ```
 
 ZZT-OOP corpus and smoke tests live under `ops/tests/unit/feature/zztoop/`.

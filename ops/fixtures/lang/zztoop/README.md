@@ -48,7 +48,7 @@ Requires a local Museum corpus under `ops/fixtures/zzt/corpus/extracted/`
 
 ## Tests
 
-- `ops/tests/unit/feature/zztoop/__tests__/corpusparse.test.ts` — every fixture parses clean
-- `ops/tests/unit/feature/zztoop/__tests__/emission.test.ts` — fixtures emit the expected `api.command` / `api.if` / move shapes
-- `ops/tests/unit/feature/zztoop/__tests__/zztoop101.test.ts` — ZZT-OOP 101 corpus: parse + compile + expected lowering + runtime execution model
-- `ops/tests/unit/feature/zztoop/__tests__/corpusgate.test.ts` — committed corpus ok-rate floor
+- `ops/tests/unit/feature/zztoop/corpusparse.test.ts` — every fixture parses clean
+- `ops/tests/unit/feature/zztoop/emission.test.ts` — fixtures emit the expected `api.command` / `api.if` / move shapes
+- `ops/tests/unit/feature/zztoop/zztoop101.test.ts` — ZZT-OOP 101 corpus: parse + compile + expected lowering + runtime execution model
+- `ops/tests/unit/feature/zztoop/corpusgate.test.ts` — committed corpus ok-rate floor

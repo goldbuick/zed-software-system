@@ -4,8 +4,8 @@ import {
   wasmsabsnapshot,
 } from 'zss/feature/synth/backend/wasm/sabpush'
 import { sabseqsnapshot } from 'zss/feature/synth/backend/wasm/sabseq'
-import { createminsabsynth } from 'ops/tests/lib/synth/minsabsynth'
-import { createmocksabengine } from 'ops/tests/lib/synth/mocksab'
+import { createminsabsynth } from 'ops/lib/test/synth/minsabsynth'
+import { createmocksabengine } from 'ops/lib/test/synth/mocksab'
 import {
   WASM_DRUMS_SAB,
   WASM_SAB_SEQ_IDX,

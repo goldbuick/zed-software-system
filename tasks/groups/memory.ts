@@ -20,14 +20,10 @@ export const MEMORY_TASKS: TaskDef[] = [
   def('memory:parity:regen', {
     description: 'Regenerate memory parity fixtures',
     env: { REGEN_MEMORY_FIXTURES: '1' },
-    run: jestexec(
-      'ops/tests/unit/memory/wasm/__tests__/regenfixtures.test.ts',
-      [
-        '--runTestsByPath',
-        '--testPathIgnorePatterns=/ops/e2e/',
-        '--no-coverage',
-      ],
-    ),
+    run: jestexec('ops/tests/unit/memory/wasm/regenfixtures.test.ts', [
+      '--runTestsByPath',
+      '--no-coverage',
+    ]),
   }),
   def('memory:parity:check-coverage', {
     description: 'Check memory parity fixture coverage',

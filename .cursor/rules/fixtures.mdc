@@ -19,7 +19,7 @@ All test fixture **assets** live under repo-root [`ops/fixtures/`](ops/fixtures/
 | Lang integration goldens | `lang/integration/` |
 | Book corpus | `lang/coolregionsbow/` |
 | Memory WASM | `memory/wasm/` |
-| Synth | `synth/wasm/`, `synth/daisy/` |
+| Synth | `synth/wasm/`, `synth/daisy/`, `synth/maxi/` |
 | Wanix WASI | `wanix/` (built `.wasm` gitignored) |
 | Harness HTML | `harness/` (Daisy parity dev pages; not in `cafe/public`) |
 | Dev-served static | `public/` (served at `/fixtures/` in dev only) |
@@ -54,6 +54,6 @@ path.join(__dirname, '__fixtures__/parity')
 | Fixture path constants | `ops/lib/fixturepaths.ts` |
 | Daisy parity / bench | `ops/lib/daisy-parity/` |
 | Legacy Tone/Maxi synth | `ops/archive/synth/` |
-| Jest test helpers | `ops/tests/lib/` |
+| Jest test helpers | `ops/lib/test/` |
 
 See [`ops/fixtures/README.md`](ops/fixtures/README.md) for regen task ids.

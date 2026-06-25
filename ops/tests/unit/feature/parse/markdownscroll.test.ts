@@ -41,7 +41,7 @@ jest.mock('zss/mapping/value', () => ({
   maptostring: jest.fn((value: unknown) => String(value)),
 }))
 
-const romdir = join(__dirname, '../../../../../../zss/rom/refscroll')
+const romdir = join(__dirname, '../../../../../zss/rom/refscroll')
 
 function parsemarkdownlines(content: string): string[] {
   const lines: string[] = []
