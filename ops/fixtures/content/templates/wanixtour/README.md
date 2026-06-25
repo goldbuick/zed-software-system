@@ -28,5 +28,6 @@ After editing copy in `gen-boards.mjs`:
 node ops/fixtures/content/templates/wanixtour/gen-boards.mjs
 ```
 
-Board terrain uses `kind: "fake"` with per-cell `char` overrides for text, plus
-seeded random `kind: "water"` pools in the side margins (see `boardtext.mjs`).
+Board terrain uses `kind: "fake"` with per-cell `char` overrides for text, a
+coolregionsbow-style fake floor dither (`char` 178, colors 1/8), accent tiles,
+and seeded random `kind: "water"` pools (see `boardtext.mjs`).

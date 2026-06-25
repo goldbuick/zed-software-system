@@ -5,6 +5,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import {
+  floordecor,
   makeboard,
   solidborder,
   textblock,
@@ -29,6 +30,7 @@ function writeboard(filename, board) {
 function boardwithborder(name, code, lines, opts = {}) {
   const starty = opts.starty ?? 3
   const sparseterrain = [
+    ...floordecor(name, { count: opts.flooraccents ?? 28 }),
     ...waterpools(name, { count: opts.waterpools ?? 3 }),
     ...solidborder(),
     ...textblock(lines, starty, {

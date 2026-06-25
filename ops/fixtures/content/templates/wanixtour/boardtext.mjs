@@ -131,6 +131,81 @@ export function waterpools(seedstr, opts = {}) {
   return terrain
 }
 
+/** CP437 shade / block chars used on coolregionsbow title board fake floor. */
+const FLOOR_DITHER_CHAR = 178
+const FLOOR_DITHER_COLORS = [1, 8]
+const FLOOR_ACCENT_CHARS = [176, 177, 30, 31, 16, 17]
+const FLOOR_ACCENT_COLORS = [1, 7, 8]
+
+function iswallcell(x, y) {
+  return x === 0 || x === BOARD_WIDTH - 1 || y === 0 || y === BOARD_HEIGHT - 1
+}
+
+function iscornerband(x, y, corner = 8) {
+  if (y !== 0 && y !== BOARD_HEIGHT - 1) {
+    return x === 0 || x === BOARD_WIDTH - 1
+  }
+  return x < corner || x >= BOARD_WIDTH - corner
+}
+
+/** Full interior fake dither — coolregionsbow title board row-1 pattern. */
+export function floordither() {
+  const terrain = []
+  for (let y = 0; y < BOARD_HEIGHT; y++) {
+    for (let x = 0; x < BOARD_WIDTH; x++) {
+      if (!iswallcell(x, y)) {
+        const color = FLOOR_DITHER_COLORS[(x + y) % 2]
+        terrain.push({ kind: 'fake', char: FLOOR_DITHER_CHAR, color, x, y })
+        continue
+      }
+      if (iscornerband(x, y)) {
+        continue
+      }
+      const color = FLOOR_DITHER_COLORS[(x + y) % 2]
+      terrain.push({ kind: 'fake', char: FLOOR_DITHER_CHAR, color, x, y })
+    }
+  }
+  return terrain
+}
+
+/** Scattered fake accent tiles — skips center text band. */
+export function flooraccents(seedstr, opts = {}) {
+  const count = opts.count ?? 28
+  const rng = makerng(hashseed(`${seedstr}:floor`))
+  const terrain = []
+  const used = new Set()
+
+  for (let i = 0; i < count; i++) {
+    let placed = false
+    for (let tryn = 0; tryn < 48 && !placed; tryn++) {
+      const x = 1 + Math.floor(rng() * (BOARD_WIDTH - 2))
+      const y = 1 + Math.floor(rng() * (BOARD_HEIGHT - 2))
+      if (intextzone(x, y) || inexitlane(x, y)) {
+        continue
+      }
+      const slot = `${x},${y}`
+      if (used.has(slot)) {
+        continue
+      }
+      used.add(slot)
+      const char =
+        FLOOR_ACCENT_CHARS[Math.floor(rng() * FLOOR_ACCENT_CHARS.length)]
+      const color =
+        FLOOR_ACCENT_COLORS[Math.floor(rng() * FLOOR_ACCENT_COLORS.length)]
+      terrain.push({ kind: 'fake', char, color, x, y })
+      placed = true
+    }
+  }
+  return terrain
+}
+
+export function floordecor(seedstr, opts = {}) {
+  return [
+    ...floordither(),
+    ...flooraccents(seedstr, opts),
+  ]
+}
+
 export function flattenboardterrain(sparse, width = BOARD_WIDTH, height = BOARD_HEIGHT) {
   const size = width * height
   const flat = new Array(size).fill(null)
