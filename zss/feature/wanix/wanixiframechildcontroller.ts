@@ -1,5 +1,5 @@
 import { createdeferred, replychildrpc } from 'zss/feature/wanix/wanixifracerpc'
-import { mountwanixdomstyle } from 'zss/feature/wanix/wanixiframechilddom'
+import { mountwanixdompopup } from 'zss/feature/wanix/wanixiframechilddom'
 import type {
   WanixIframeArchive,
   WanixIframeHostState,
@@ -252,7 +252,7 @@ export function createwanixiframechildcontroller() {
           if (!root) {
             throw new Error('wanix iframe child: root missing')
           }
-          await mountwanixdomstyle(root)
+          await mountwanixdompopup(root)
           replychildrpc(source, data.id, { result: { ok: true } })
           return
         }

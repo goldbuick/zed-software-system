@@ -497,3 +497,13 @@ export async function teardownwanixtermiframe(): Promise<void> {
   desirediframecols = 0
   desirediframerows = 0
 }
+
+/** Re-read iframe xterm cells into the tile buffer (after tile resize). */
+export async function iframesynctilefromchild(): Promise<void> {
+  const snapshot = await synccellsfromchild()
+  if (snapshot) {
+    applycells(snapshot)
+    return
+  }
+  wanixtermscreenshowdetachhint()
+}

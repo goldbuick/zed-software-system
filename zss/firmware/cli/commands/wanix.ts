@@ -67,7 +67,11 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
           wanixattach(SOFTWARE, player, ispresent(arg) ? NAME(arg) : undefined)
           break
         case 'dom':
-          wanixdommount(SOFTWARE, player)
+          wanixdommount(
+            SOFTWARE,
+            player,
+            ispresent(arg) ? NAME(arg) : undefined,
+          )
           break
         case 'bind': {
           const scrollname = ispresent(arg) ? NAME(arg) : undefined

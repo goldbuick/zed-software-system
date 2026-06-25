@@ -30,6 +30,7 @@ import {
   iframeprepvmspace,
   iframespawntask,
   iframespawnvm,
+  iframesynctilefromchild,
   iframeterminput,
   iframetermline,
   iswanixtermiframeactive,
@@ -228,6 +229,14 @@ export function wanixhostapplytermsize(cols: number, rows: number) {
     return
   }
   iframeapplytermsize(cols, rows)
+}
+
+/** Re-mirror iframe xterm cells onto the tile after a local buffer resize. */
+export async function wanixhostsynctilefromchild(): Promise<void> {
+  if (!iswanixtermiframeactive()) {
+    return
+  }
+  await iframesynctilefromchild()
 }
 
 export type SPAWN_WANIX_VM_OPTS = {

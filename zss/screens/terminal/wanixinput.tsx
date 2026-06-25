@@ -4,10 +4,7 @@ import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { withclipboard } from 'zss/feature/keyboard'
 import { sendwanixterminput } from 'zss/feature/wanix/wanixhost'
-import {
-  iswanixtermraw,
-  readwanixattachedkind,
-} from 'zss/feature/wanix/wanixsession'
+import { iswanixtermraw } from 'zss/feature/wanix/wanixsession'
 import {
   iswanixcliescape,
   iswanixpasteevent,
@@ -97,7 +94,7 @@ export function WanixTermInput() {
             return
           }
           if (attached) {
-            appendpasteintobuffer(text, false)
+            appendpasteintobuffer(text, true)
             return
           }
           appendpasteintobuffer(text, true)
@@ -110,19 +107,16 @@ export function WanixTermInput() {
 
   const handlekeydown = useCallback(
     (event: KeyboardEvent) => {
-      const vmattached = attached && readwanixattachedkind() === 'vm'
       const raw = iswanixtermraw()
       if (iswanixcliescape(event)) {
         event.preventDefault()
         linebuffer.current = ''
-        if (vmattached) {
+        if (attached) {
           wanixdetach(SOFTWARE, player)
           return
         }
         setclimode(true)
-        if (!attached) {
-          wanixtermscreenshowclihint()
-        }
+        wanixtermscreenshowclihint()
         return
       }
 
@@ -189,10 +183,12 @@ export function WanixTermInput() {
           event.preventDefault()
           if (linebuffer.current.length > 0) {
             linebuffer.current = linebuffer.current.slice(0, -1)
+            wanixtermscreenechochar('\b')
           }
         } else if (event.key.length === 1 && !event.ctrlKey && !event.metaKey) {
           event.preventDefault()
           linebuffer.current += event.key
+          wanixtermscreenechochar(event.key)
         }
         return
       }

@@ -8,8 +8,7 @@ import {
   floordecor,
   makeboard,
   solidborder,
-  textblock,
-  textline,
+  textblockbottom,
   waterpools,
 } from './boardtext.mjs'
 
@@ -27,25 +26,18 @@ function writeboard(filename, board) {
 }
 
 function boardwithborder(name, code, lines, opts = {}) {
-  const starty = opts.starty ?? 3
   const sparseterrain = [
     ...floordecor(name, { count: opts.flooraccents ?? 28 }),
     ...waterpools(name, { count: opts.waterpools ?? 3 }),
     ...solidborder(),
-    ...textblock(lines, starty, {
+    ...textblockbottom(lines, opts.heading, {
       x0: opts.x0 ?? 8,
       color: opts.color ?? COLOR_BODY,
+      headingcolor: COLOR_HEADING,
       rowgap: opts.rowgap ?? 0,
+      bottomy: opts.bottomy ?? 21,
     }),
   ]
-  if (opts.heading) {
-    sparseterrain.push(
-      ...textline(opts.heading, 2, {
-        x0: opts.x0 ?? 8,
-        color: COLOR_HEADING,
-      }),
-    )
-  }
   return makeboard(name, code, sparseterrain)
 }
 
@@ -158,29 +150,13 @@ boardchain(
   'wanixbind.board.json',
   'wanixbind',
   'wanixvm',
-  'wanixdom',
+  'wanixattach',
   'STEP 4 — BIND SCROLL',
   [
     'This book includes @scroll wanixnotes.',
     'Warm wanix, then type: #wanix bind wanixnotes',
     'Writes scroll-wanixnotes.txt in the active namespace.',
     'In VM serial: cat scroll-wanixnotes.txt',
-    '',
-    'Walk SOUTH for #web/dom fun.',
-  ],
-)
-
-boardchain(
-  'wanixdom.board.json',
-  'wanixdom',
-  'wanixbind',
-  'wanixattach',
-  'STEP 5 — WEB DOM',
-  [
-    'Wanix exposes the browser as #web/dom (a vfs).',
-    'Type #wanix dom — mounts rainbow CSS on iframe body.',
-    'Or: #wanix bind wanixdom #web/dom/style (same CSS).',
-    'Peek: ZSS_WANIX_SHOW=true in cafe/.env.local',
     '',
     'Walk SOUTH for tile attach mode.',
   ],
@@ -189,9 +165,9 @@ boardchain(
 boardchain(
   'wanixattach.board.json',
   'wanixattach',
-  'wanixdom',
+  'wanixbind',
   'outro',
-  'STEP 6 — TILE TERMINAL',
+  'STEP 5 — TILE TERMINAL',
   [
     'With termbridge.wasm running, type ping — expect pong.',
     'Type #wanix attach for tile terminal mode.',
@@ -213,7 +189,6 @@ boardchain(
     '',
     'Walk NORTH to revisit any board.',
   ],
-  { starty: 4 },
 )
 
-console.log('wrote 10 wanixtour board pages')
+console.log('wrote 9 wanixtour board pages')

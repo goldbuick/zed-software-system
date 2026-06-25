@@ -143,7 +143,8 @@ const wanix = createdevice('wanix', [], (message) => {
     }
     case 'dom-mount':
       doasync(wanix, message.player, async () => {
-        await wanixhandledommount(wanix, message.player)
+        const scrollname = isstring(message.data) ? message.data : undefined
+        await wanixhandledommount(wanix, message.player, scrollname)
       })
       break
     default:

@@ -33,6 +33,46 @@ export function textblock(lines, starty, opts = {}) {
   return terrain
 }
 
+export function counttextrows(lines, opts = {}) {
+  const rowgap = opts.rowgap ?? 0
+  if (lines.length === 0) {
+    return 0
+  }
+  return lines.length + rowgap * (lines.length - 1)
+}
+
+export function bottomalignstarty(bodylinecount, opts = {}) {
+  const bottomy = opts.bottomy ?? 21
+  const headingrows = opts.heading ? 1 : 0
+  const total = bodylinecount + headingrows
+  return bottomy - total + 1
+}
+
+/** Bottom-anchored heading + body for boards under the default top-half CLI. */
+export function textblockbottom(lines, heading, opts = {}) {
+  const rowgap = opts.rowgap ?? 0
+  const bottomy = opts.bottomy ?? 21
+  const bodyrows = counttextrows(lines, { rowgap })
+  const starty = bottomalignstarty(bodyrows, { bottomy, heading: !!heading })
+  const terrain = []
+  if (heading) {
+    terrain.push(
+      ...textline(heading, starty, {
+        ...opts,
+        color: opts.headingcolor ?? opts.color ?? 11,
+      }),
+    )
+    terrain.push(
+      ...textblock(lines, starty + 1, {
+        ...opts,
+        rowgap,
+      }),
+    )
+    return terrain
+  }
+  return textblock(lines, starty, { ...opts, rowgap })
+}
+
 /** Corner solids only on N/S rows — middle stays open for @exitnorth/@exitsouth (coolregionsbow style). */
 export function solidborder(width = BOARD_WIDTH, height = BOARD_HEIGHT, opts = {}) {
   const corner = opts.corner ?? 8
@@ -73,7 +113,7 @@ function makerng(seed) {
 }
 
 function intextzone(x, y) {
-  return x >= 7 && x <= 57 && y >= 2 && y <= 21
+  return x >= 7 && x <= 57 && y >= 11 && y <= 21
 }
 
 function inexitlane(x, y, width = BOARD_WIDTH, height = BOARD_HEIGHT) {

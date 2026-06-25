@@ -150,9 +150,21 @@ describe('WanixTermInput vm raw input', () => {
     expect(mockecholine).not.toHaveBeenCalled()
   })
 
-  it('ctrl+\\ detaches vm without cli mode', () => {
+  it('ctrl+\\ detaches when attached (vm)', () => {
     mockreadwanixattachedkind.mockReturnValue('vm')
     mockiswanixtermraw.mockReturnValue(true)
+    mountinput()
+
+    emitkeydown(
+      keyevent('keydown', { key: '\\', ctrlKey: true, code: 'Backslash' }),
+    )
+
+    expect(wanixdetach).toHaveBeenCalled()
+  })
+
+  it('ctrl+\\ detaches when attached (task)', () => {
+    mockreadwanixattachedkind.mockReturnValue('task')
+    mockiswanixtermraw.mockReturnValue(false)
     mountinput()
 
     emitkeydown(
@@ -200,6 +212,24 @@ describe('WanixTermInput vm raw input', () => {
     )
 
     expect(mockterminput).toHaveBeenCalledWith('\x03')
+  })
+
+  it('echoes attached task line input locally', () => {
+    mockreadwanixattachedkind.mockReturnValue('task')
+    mockiswanixtermraw.mockReturnValue(false)
+    mountinput()
+
+    emitkeydown(keyevent('keydown', { key: 'p' }))
+    emitkeydown(keyevent('keydown', { key: 'i' }))
+    emitkeydown(keyevent('keydown', { key: 'Enter' }))
+
+    expect(mockechochar).toHaveBeenCalledWith('p')
+    expect(mockechochar).toHaveBeenCalledWith('i')
+    expect(mockwanixtermwrite).toHaveBeenCalledWith(
+      expect.anything(),
+      'player1',
+      'pi',
+    )
   })
 
   it('forwards vm keystrokes to xterm without local echo', () => {
@@ -302,7 +332,7 @@ describe('WanixTermInput paste', () => {
     expect(mockterminput).toHaveBeenCalledWith('line1\rline2')
   })
 
-  it('pastes into attached task line buffer without local echo', async () => {
+  it('pastes into attached task line buffer with local echo', async () => {
     mockterminalmode.mockReturnValue('attached')
     mockiswanixtermraw.mockReturnValue(false)
     mockreadwanixattachedkind.mockReturnValue('task')
@@ -312,7 +342,8 @@ describe('WanixTermInput paste', () => {
     await flushasync()
     emitkeydown(keyevent('keydown', { key: 'Enter' }))
 
-    expect(mockechochar).not.toHaveBeenCalled()
+    expect(mockechochar).toHaveBeenCalledWith('h')
+    expect(mockechochar).toHaveBeenCalledWith('e')
     expect(mockwanixtermwrite).toHaveBeenCalledWith(
       expect.anything(),
       'player1',

@@ -1,3 +1,0 @@
-{
-  "code": "@scroll wanixdom\n@keyframes zss-wanix-tour-shift {\n  0% { background-position: 0% 50%; }\n  50% { background-position: 100% 50%; }\n  100% { background-position: 0% 50%; }\n}\nbody {\n  background: linear-gradient(90deg, #ff6ec7, #ffc93c, #6bcbff, #b388ff);\n  background-size: 240% 240%;\n  animation: zss-wanix-tour-shift 2.5s ease infinite;\n}\nbody::after {\n  content: '✨ Zed + Wanix #web/dom';\n  position: fixed;\n  bottom: 12px;\n  right: 12px;\n  font: 700 20px ui-monospace, monospace;\n  color: #fff;\n  text-shadow: 0 0 10px #ff6ec7;\n  padding: 10px 16px;\n  border: 2px solid rgba(255, 255, 255, 0.35);\n  border-radius: 10px;\n  background: rgba(0, 0, 0, 0.55);\n  pointer-events: none;\n}\n"
-}

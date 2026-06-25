@@ -7,7 +7,6 @@ import {
   haltwanixtask,
   haltwanixvm,
   iswanixspaceactive,
-  mountwanixdom,
   putwanixfile,
   readwanixstatus,
   readwanixvmpreperror,
@@ -33,6 +32,18 @@ import {
   removetask,
   removevm,
 } from 'zss/feature/wanix/wanixsession'
+import {
+  DEFAULT_WANIX_DOM_SCROLL,
+  iswanixdompopuppath,
+  scrollbodytodomhtml,
+} from 'zss/feature/wanix/wanixiframechilddom'
+import {
+  openwanixdompopup,
+  preparewanixdompopup,
+} from 'zss/feature/wanix/wanixdompopup'
+import { readscrollcodepagebody } from 'zss/feature/scroll/stripscrollheader'
+import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
+import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import { readwanixtermiframelayout } from 'zss/feature/wanix/wanixtermiframehost'
 import { leavewanixattachedterminal } from 'zss/feature/wanix/wanixterminalmode'
 import { wanixtermscreenwritepong } from 'zss/feature/wanix/wanixtermscreen'
@@ -47,6 +58,27 @@ import {
   zsstexttape,
   zsszedlinkline,
 } from 'zss/feature/zsstextui'
+
+function readwanixscrollbody(
+  device: DEVICELIKE,
+  player: string,
+  scrollname: string,
+): string | undefined {
+  const codepage = memorypickcodepagewithtypeandstat(
+    CODE_PAGE_TYPE.SCROLL,
+    scrollname,
+  )
+  if (!codepage) {
+    apierror(device, player, 'wanix', `unknown @scroll codepage: ${scrollname}`)
+    return undefined
+  }
+  const body = readscrollcodepagebody(codepage)
+  if (body === undefined) {
+    apierror(device, player, 'wanix', `not a scroll codepage: ${scrollname}`)
+    return undefined
+  }
+  return body
+}
 
 export async function wanixhandlevmstart(
   device: DEVICELIKE,
@@ -106,7 +138,7 @@ export async function wanixhandleshownenu(device: DEVICELIKE, player: string) {
       zssheaderlines('wanix'),
       zsstextline('drop a .wasm or .tgz to run'),
       zsstextline('#wanix bind <scroll> [path] — push @scroll text into wanix'),
-      zsstextline('#wanix dom — rainbow banner via #web/dom/style'),
+      zsstextline('#wanix dom [scroll] — @scroll HTML → #web/dom/popup window'),
       zsssectionlines('Tasks'),
     ]
     if (tasks.length === 0) {
@@ -164,6 +196,19 @@ export async function wanixhandlebindscroll(
   },
 ) {
   try {
+    if (iswanixdompopuppath(opts.path)) {
+      preparewanixdompopup()
+      const html = scrollbodytodomhtml(opts.text)
+      const win = openwanixdompopup(html)
+      apilog(
+        device,
+        player,
+        win
+          ? `wanix bind scroll ${opts.scrollname} → #web/dom/popup — opened from @scroll`
+          : `wanix bind scroll ${opts.scrollname} → #web/dom/popup — allow popups to see demo`,
+      )
+      return
+    }
     await ensurewanixsandbox(device, player)
     const bytes = new TextEncoder().encode(opts.text)
     await putwanixfile(opts.path, bytes)
@@ -185,14 +230,25 @@ export async function wanixhandlebindscroll(
   }
 }
 
-export async function wanixhandledommount(device: DEVICELIKE, player: string) {
+export async function wanixhandledommount(
+  device: DEVICELIKE,
+  player: string,
+  scrollname = DEFAULT_WANIX_DOM_SCROLL,
+) {
   try {
-    await ensurewanixsandbox(device, player)
-    await mountwanixdom()
+    const body = readwanixscrollbody(device, player, scrollname)
+    if (body === undefined) {
+      return
+    }
+    preparewanixdompopup()
+    const html = scrollbodytodomhtml(body)
+    const win = openwanixdompopup(html)
     apilog(
       device,
       player,
-      'wanix dom mounted — rainbow CSS on iframe body (peek: ZSS_WANIX_SHOW=true)',
+      win
+        ? `wanix dom opened @scroll ${scrollname} → #web/dom/popup`
+        : `wanix dom @scroll ${scrollname} ready — allow popups to see #web/dom/popup`,
     )
   } catch (err) {
     apierror(

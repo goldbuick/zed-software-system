@@ -1,8 +1,7 @@
 # wanixtour
 
 Boards + scrolls for the Wanix feature tour. Terrain kinds come from
-coolregionsbow; this book adds tour boards, `@scroll wanixnotes`, and
-`@scroll wanixdom`.
+coolregionsbow; this book adds tour boards and `@scroll wanixnotes`.
 
 ## Prerequisites
 
@@ -19,11 +18,10 @@ coolregionsbow; this book adds tour boards, `@scroll wanixnotes`, and
 | Start Here | intro |
 | concepts | — |
 | wanixintro | — |
-| wanixdrop | `ops/fixtures/wanix/termbridge.wasm` (also `hello.wasm`, `hold.wasm`) |
+| wanixdrop | `termbridge.wasm` (also `hello.wasm`, `hold.wasm`) |
 | wanixmenu | `#wanix` |
 | wanixvm | `#wanix vm` (in-app iframe host; first boot fetches linux + v86) |
 | wanixbind | `#wanix bind wanixnotes` → `scroll-wanixnotes.txt` |
-| wanixdom | `#wanix dom` or `#wanix bind wanixdom #web/dom/style` |
 | wanixattach | `#wanix attach`, `ping` / `pong` on termbridge |
 | outro | `ops/fixtures/wanix/README.md` |
 
@@ -32,7 +30,8 @@ coolregionsbow; this book adds tour boards, `@scroll wanixnotes`, and
 | Page | Use |
 |------|-----|
 | `@scroll wanixnotes` | `#wanix bind wanixnotes` after warm wanix |
-| `@scroll wanixdom` | CSS for `#web/dom/style` — or use `#wanix dom` shortcut |
+
+Board copy is **bottom-aligned** (rows ~12–21) so instructions stay visible under the default top-half CLI tape.
 
 ## Build
 
@@ -40,5 +39,3 @@ coolregionsbow; this book adds tour boards, `@scroll wanixnotes`, and
 node ops/fixtures/content/templates/wanixtour/gen-boards.mjs
 yarn task run content:book:build ops/fixtures/content/templates/wanixtour
 ```
-
-Do not run `content:book:validate` — partial book (no `@object player` / `@board title`).

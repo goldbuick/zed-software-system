@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
-import { wanixhostapplytermsize } from 'zss/feature/wanix/wanixhost'
+import {
+  wanixhostapplytermsize,
+  wanixhostsynctilefromchild,
+} from 'zss/feature/wanix/wanixhost'
 import {
   readwanixtermscreencells,
   subscribewanixtermscreen,
@@ -23,6 +26,7 @@ export function WanixTermScreen() {
   useEffect(() => {
     wanixtermscreenresize(edge.width, edge.height)
     wanixhostapplytermsize(edge.width, edge.height - 1)
+    void wanixhostsynctilefromchild()
   }, [edge.width, edge.height])
 
   const cells = readwanixtermscreencells()
