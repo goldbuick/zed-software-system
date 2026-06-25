@@ -158,13 +158,29 @@ boardchain(
   'wanixbind.board.json',
   'wanixbind',
   'wanixvm',
-  'wanixattach',
+  'wanixdom',
   'STEP 4 — BIND SCROLL',
   [
     'This book includes @scroll wanixnotes.',
     'Warm wanix, then type: #wanix bind wanixnotes',
     'Writes scroll-wanixnotes.txt in the active namespace.',
     'In VM serial: cat scroll-wanixnotes.txt',
+    '',
+    'Walk SOUTH for #web/dom fun.',
+  ],
+)
+
+boardchain(
+  'wanixdom.board.json',
+  'wanixdom',
+  'wanixbind',
+  'wanixattach',
+  'STEP 5 — WEB DOM',
+  [
+    'Wanix exposes the browser as #web/dom (a vfs).',
+    'Type #wanix dom — mounts rainbow CSS on iframe body.',
+    'Or: #wanix bind wanixdom #web/dom/style (same CSS).',
+    'Peek: ZSS_WANIX_SHOW=true in cafe/.env.local',
     '',
     'Walk SOUTH for tile attach mode.',
   ],
@@ -173,9 +189,9 @@ boardchain(
 boardchain(
   'wanixattach.board.json',
   'wanixattach',
-  'wanixbind',
+  'wanixdom',
   'outro',
-  'STEP 5 — TILE TERMINAL',
+  'STEP 6 — TILE TERMINAL',
   [
     'With termbridge.wasm running, type ping — expect pong.',
     'Type #wanix attach for tile terminal mode.',
@@ -200,4 +216,4 @@ boardchain(
   { starty: 4 },
 )
 
-console.log('wrote 9 wanixtour board pages')
+console.log('wrote 10 wanixtour board pages')

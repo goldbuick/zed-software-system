@@ -434,6 +434,10 @@ export async function iframechildputfile(
   await childrpc('zss-wanix-term-rpc', 'putfile', [name, [...bytes]])
 }
 
+export async function iframechilddommount(): Promise<void> {
+  await childrpc('zss-wanix-term-rpc', 'dommount', [])
+}
+
 export async function iframechildlistdir(path: string): Promise<string[]> {
   return childrpc<string[]>('zss-wanix-term-rpc', 'listdir', [path])
 }

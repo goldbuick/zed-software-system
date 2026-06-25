@@ -1,4 +1,5 @@
 import { createdeferred, replychildrpc } from 'zss/feature/wanix/wanixifracerpc'
+import { mountwanixdomstyle } from 'zss/feature/wanix/wanixiframechilddom'
 import type {
   WanixIframeArchive,
   WanixIframeHostState,
@@ -244,6 +245,14 @@ export function createwanixiframechildcontroller() {
             throw new Error('wanix iframe child: root missing')
           }
           await root.writeFile(name, new Uint8Array(bytes))
+          replychildrpc(source, data.id, { result: { ok: true } })
+          return
+        }
+        case 'dommount': {
+          if (!root) {
+            throw new Error('wanix iframe child: root missing')
+          }
+          await mountwanixdomstyle(root)
           replychildrpc(source, data.id, { result: { ok: true } })
           return
         }

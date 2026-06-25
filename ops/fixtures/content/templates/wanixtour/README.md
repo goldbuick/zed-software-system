@@ -1,7 +1,8 @@
 # wanixtour
 
-Boards + one scroll for the Wanix feature tour. Terrain kinds come from
-coolregionsbow; this book adds tour boards and `@scroll wanixnotes`.
+Boards + scrolls for the Wanix feature tour. Terrain kinds come from
+coolregionsbow; this book adds tour boards, `@scroll wanixnotes`, and
+`@scroll wanixdom`.
 
 ## Prerequisites
 
@@ -22,14 +23,16 @@ coolregionsbow; this book adds tour boards and `@scroll wanixnotes`.
 | wanixmenu | `#wanix` |
 | wanixvm | `#wanix vm` (in-app iframe host; first boot fetches linux + v86) |
 | wanixbind | `#wanix bind wanixnotes` → `scroll-wanixnotes.txt` |
+| wanixdom | `#wanix dom` or `#wanix bind wanixdom #web/dom/style` |
 | wanixattach | `#wanix attach`, `ping` / `pong` on termbridge |
 | outro | `ops/fixtures/wanix/README.md` |
 
-## Scroll in this book
+## Scrolls in this book
 
 | Page | Use |
 |------|-----|
 | `@scroll wanixnotes` | `#wanix bind wanixnotes` after warm wanix |
+| `@scroll wanixdom` | CSS for `#web/dom/style` — or use `#wanix dom` shortcut |
 
 ## Build
 

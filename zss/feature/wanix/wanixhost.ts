@@ -21,6 +21,7 @@ import {
   iframeapplytermsize,
   iframeattachtarget,
   iframechildlistdir,
+  iframechilddommount,
   iframechildmountarchive,
   iframechildputfile,
   iframehalttask,
@@ -171,6 +172,11 @@ export async function spawnwanixtask(
 export async function putwanixfile(name: string, bytes: Uint8Array) {
   requireactive()
   await iframechildputfile(name, bytes)
+}
+
+export async function mountwanixdom() {
+  requireactive()
+  await iframechilddommount()
 }
 
 export async function mountwanixarchive(

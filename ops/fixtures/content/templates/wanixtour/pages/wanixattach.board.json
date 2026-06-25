@@ -1,5 +1,5 @@
 {
-  "code": "@board wanixattach\n@exitnorth wanixbind\n@exitsouth outro",
+  "code": "@board wanixattach\n@exitnorth wanixdom\n@exitsouth outro",
   "board": {
     "name": "wanixattach",
     "terrain": [
@@ -632,7 +632,7 @@
       },
       {
         "kind": "fake",
-        "char": 53,
+        "char": 54,
         "color": 14
       },
       {

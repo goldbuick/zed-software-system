@@ -2,6 +2,7 @@
   "name": "wanixtour",
   "pages": [
     "pages/wanixnotes.scroll.json",
+    "pages/wanixdom.scroll.json",
     "pages/starthere.board.json",
     "pages/concepts.board.json",
     "pages/wanixintro.board.json",
@@ -9,6 +10,7 @@
     "pages/wanixmenu.board.json",
     "pages/wanixvm.board.json",
     "pages/wanixbind.board.json",
+    "pages/wanixdom.board.json",
     "pages/wanixattach.board.json",
     "pages/outro.board.json"
   ]

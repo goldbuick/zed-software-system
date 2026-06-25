@@ -14,6 +14,7 @@ export type WanixIframeRpcMethod =
   | 'putfile'
   | 'listdir'
   | 'mountarchive'
+  | 'dommount'
   | 'teardown'
 
 export type WanixRpcMsgType = 'zss-wanix-term-rpc' | 'zss-wanix-term-probe-rpc'

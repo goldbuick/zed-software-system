@@ -429,6 +429,10 @@ export function wanixbindscroll(
   device.emit(player, 'wanix:bind-scroll', payload)
 }
 
+export function wanixdommount(device: DEVICELIKE, player: string) {
+  device.emit(player, 'wanix:dom-mount')
+}
+
 export function heavyrestoreagents(
   device: DEVICELIKE,
   player: string,

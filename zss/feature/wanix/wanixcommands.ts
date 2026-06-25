@@ -7,6 +7,7 @@ import {
   haltwanixtask,
   haltwanixvm,
   iswanixspaceactive,
+  mountwanixdom,
   putwanixfile,
   readwanixstatus,
   readwanixvmpreperror,
@@ -105,6 +106,7 @@ export async function wanixhandleshownenu(device: DEVICELIKE, player: string) {
       zssheaderlines('wanix'),
       zsstextline('drop a .wasm or .tgz to run'),
       zsstextline('#wanix bind <scroll> [path] — push @scroll text into wanix'),
+      zsstextline('#wanix dom — rainbow banner via #web/dom/style'),
       zsssectionlines('Tasks'),
     ]
     if (tasks.length === 0) {
@@ -172,6 +174,25 @@ export async function wanixhandlebindscroll(
       device,
       player,
       `wanix bind scroll ${opts.scrollname} → ${opts.path} (${target})`,
+    )
+  } catch (err) {
+    apierror(
+      device,
+      player,
+      'wanix',
+      err instanceof Error ? err.message : String(err),
+    )
+  }
+}
+
+export async function wanixhandledommount(device: DEVICELIKE, player: string) {
+  try {
+    await ensurewanixsandbox(device, player)
+    await mountwanixdom()
+    apilog(
+      device,
+      player,
+      'wanix dom mounted — rainbow CSS on iframe body (peek: ZSS_WANIX_SHOW=true)',
     )
   } catch (err) {
     apierror(

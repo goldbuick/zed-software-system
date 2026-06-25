@@ -2,6 +2,7 @@ import {
   apierror,
   wanixattach,
   wanixbindscroll,
+  wanixdommount,
   wanixdetach,
   wanixshow,
   wanixstop,
@@ -65,6 +66,9 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
         case 'attach':
           wanixattach(SOFTWARE, player, ispresent(arg) ? NAME(arg) : undefined)
           break
+        case 'dom':
+          wanixdommount(SOFTWARE, player)
+          break
         case 'bind': {
           const scrollname = ispresent(arg) ? NAME(arg) : undefined
           if (!scrollname) {
@@ -115,7 +119,7 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
             SOFTWARE,
             player,
             'wanix',
-            'drop .wasm/.tgz — #wanix menu, bind, vm, attach, stop, detach',
+            'drop .wasm/.tgz — #wanix menu, bind, dom, vm, attach, stop, detach',
           )
           break
       }
