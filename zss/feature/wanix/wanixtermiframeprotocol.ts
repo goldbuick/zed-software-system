@@ -2,6 +2,14 @@
 
 export const WANIX_TERM_IFRAME_SRC = '/wanix-iframe-host.html'
 
+export type WANIX_VM_PREP_STAGE =
+  | 'idle'
+  | 'mounting'
+  | 'mount_ok'
+  | 'spawn'
+  | 'tile'
+  | 'failed'
+
 export type WANIX_TERM_IFRAME_RPC = {
   type: 'zss-wanix-term-rpc'
   id: number

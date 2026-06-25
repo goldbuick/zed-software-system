@@ -17,7 +17,7 @@ jest.mock('zss/device/api', () => ({
   apierror: (...args: unknown[]) => mockapierror(...args),
 }))
 
-import { wanixhandletermwrite } from 'zss/feature/wanix/wanixdrop'
+import { wanixhandletermwrite } from 'zss/feature/wanix/wanixcommands'
 import { wanixtermscreenwritepong } from 'zss/feature/wanix/wanixtermscreen'
 
 jest.mock('zss/feature/wanix/wanixtermscreen', () => {

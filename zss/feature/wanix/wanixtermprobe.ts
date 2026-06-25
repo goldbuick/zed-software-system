@@ -5,6 +5,10 @@ import {
   digestwanixtermcells,
   readxtermcellsfromterm,
 } from 'zss/feature/wanix/wanixtermcells'
+import type {
+  WanixTermElement,
+  XtermInstance,
+} from 'zss/feature/wanix/wanixtermxtermtypes'
 
 export type WanixTermProbe = {
   readserial: () => string
@@ -12,43 +16,6 @@ export type WanixTermProbe = {
   sendinput: (text: string) => void
   waitprompt: (timeoutms?: number) => Promise<void>
   focusterm: () => void
-}
-
-type XtermCell = {
-  getChars: () => string
-  getWidth: () => number
-  getFgColor: () => number
-  getBgColor: () => number
-  getFgColorMode?: () => number
-  getBgColorMode?: () => number
-}
-
-type XtermLine = {
-  length: number
-  translateToString: (trim?: boolean) => string
-  getCell: (x: number) => XtermCell | undefined
-}
-
-type XtermBuffer = {
-  length: number
-  cursorX: number
-  cursorY: number
-  baseY?: number
-  getLine: (index: number) => XtermLine | undefined
-}
-
-type XtermInstance = {
-  cols: number
-  rows: number
-  buffer: { active: XtermBuffer }
-  input: (data: string) => void
-  focus: () => void
-  resize: (cols: number, rows: number) => void
-}
-
-type WanixTermElement = HTMLElement & {
-  _term?: XtermInstance | null
-  focus?: () => void
 }
 
 const LOGIN_PROMPT_RE = /login:/i

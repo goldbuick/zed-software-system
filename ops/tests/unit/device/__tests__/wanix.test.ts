@@ -14,8 +14,11 @@ jest.mock('zss/device/register', () => ({
   registerreadplayer: () => 'player1',
 }))
 
-jest.mock('zss/feature/wanix/wanixdrop', () => ({
+jest.mock('zss/feature/wanix/wanixlaunch', () => ({
   wanixhandledrop: (...args: unknown[]) => dropmock(...args),
+}))
+
+jest.mock('zss/feature/wanix/wanixcommands', () => ({
   wanixhandlestop: (...args: unknown[]) => stopmock(...args),
   wanixhandletermwrite: (...args: unknown[]) => termwritemock(...args),
   wanixhandledetach: (...args: unknown[]) => detachmock(...args),

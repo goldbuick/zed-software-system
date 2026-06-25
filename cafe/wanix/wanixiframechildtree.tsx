@@ -4,12 +4,13 @@ import {
   WANIX_IFRAME_VM_PREP_WAIT_MS,
   waitsystemready,
   waitvmchildready,
-} from 'zss/feature/wanix/wanixiframechildhelpers'
+} from 'zss/feature/wanix/wanixiframechildcontroller'
 import {
   appendwanixarchivebind,
   appendwanixtasktarget,
   cleartargetwanixels,
   mountwanixsystemtree,
+  wirewanixarchivebind,
 } from 'zss/feature/wanix/wanixiframechildmount'
 import type {
   WanixIframeHostState,
@@ -20,18 +21,6 @@ import {
   VM_TERM_READY_MS,
   waitforv86driver,
 } from 'zss/feature/wanix/wanixvmspawnhelpers'
-
-function wirearchivebind(
-  bind: HTMLElement,
-  archiveid: string,
-  controller: WanixIframeChildController,
-) {
-  const onmount = () => controller.onarchivemounted(archiveid)
-  const onerror = () =>
-    controller.onarchiveerror(archiveid, new Error('archive mount failed'))
-  bind.addEventListener('mount', onmount, { once: true })
-  bind.addEventListener('error', onerror, { once: true })
-}
 
 export function WanixIframeChildTree({
   state,
@@ -47,6 +36,7 @@ export function WanixIframeChildTree({
   const taskid = state.phase === 'task-active' ? state.taskid : ''
   const taskcmd = state.phase === 'task-active' ? state.cmd : ''
 
+  // Remount wanix-system when mountKey changes (VM spawn requires fresh tree).
   useLayoutEffect(() => {
     const host = hostref.current
     if (!host) {
@@ -73,12 +63,15 @@ export function WanixIframeChildTree({
         `wanix-bind[data-zss-archive-id="${archive.id}"]`,
       )
       if (bind) {
-        wirearchivebind(bind, archive.id, controller)
+        wirewanixarchivebind(bind, archive.id, controller)
         mountedarchives.current.add(archive.id)
       }
     }
+    // mountKey-only full remount; archives at remount time are wired below, not on every archive change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional mountKey gate
   }, [controller, state.mountKey])
 
+  // Append archive binds added after initial mount.
   useLayoutEffect(() => {
     const system = systemref.current
     if (!system) {
@@ -90,11 +83,12 @@ export function WanixIframeChildTree({
         continue
       }
       const bind = appendwanixarchivebind(system, archive)
-      wirearchivebind(bind, archive.id, controller)
+      wirewanixarchivebind(bind, archive.id, controller)
       mountedarchives.current.add(archive.id)
     }
   }, [controller, state.archives])
 
+  // Task target: clear VM/task/term children and spawn wasi task when active.
   useLayoutEffect(() => {
     const system = systemref.current
     if (!system) {
@@ -145,8 +139,11 @@ export function WanixIframeChildTree({
     return () => {
       cancelled = true
     }
+    // taskid/taskcmd are derived from state.taskid/state.cmd when phase is task-active.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- derived task fields
   }, [controller, state.phase, taskid, taskcmd])
 
+  // Wait for wanix-system ready; VM path also waits for v86 driver + wanix-vm term.
   useEffect(() => {
     const system = systemref.current
     if (!system) {

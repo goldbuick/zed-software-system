@@ -1,45 +1,19 @@
-import {
-  WANIX_IFRAME_ARCHIVE_MOUNT_TIMEOUT_MS,
-  halttarget,
-} from 'zss/feature/wanix/wanixiframechildhelpers'
+import { createdeferred, replychildrpc } from 'zss/feature/wanix/wanixifracerpc'
 import type {
   WanixIframeArchive,
   WanixIframeHostState,
   WanixRoot,
+  WanixSystemElement,
+  WanixTaskElement,
+  WanixWakeElement,
 } from 'zss/feature/wanix/wanixiframechildtypes'
 import { createidlewanixiframestate } from 'zss/feature/wanix/wanixiframechildtypes'
 import type { WANIX_TERM_IFRAME_RPC } from 'zss/feature/wanix/wanixtermiframeprotocol'
 import type { WANIX_VM_ASSET_URLS } from 'zss/feature/wanix/wanixvmassets'
 
-type Deferred<T> = {
-  promise: Promise<T>
-  resolve: (value: T) => void
-  reject: (error: Error) => void
-}
-
-function createdeferred<T>(): Deferred<T> {
-  let resolve!: (value: T) => void
-  let reject!: (error: Error) => void
-  const promise = new Promise<T>((res, rej) => {
-    resolve = res
-    reject = rej
-  })
-  return { promise, resolve, reject }
-}
-
-function replyrpc(
-  source: MessageEventSource | null,
-  id: number,
-  payload: { result?: unknown; error?: string },
-) {
-  if (!source || typeof (source as Window).postMessage !== 'function') {
-    return
-  }
-  ;(source as Window).postMessage(
-    { type: 'zss-wanix-term-rpc-res', id, ...payload },
-    window.location.origin,
-  )
-}
+export const WANIX_IFRAME_READY_TIMEOUT_MS = 180_000
+export const WANIX_IFRAME_VM_PREP_WAIT_MS = 600_000
+export const WANIX_IFRAME_ARCHIVE_MOUNT_TIMEOUT_MS = 120_000
 
 function nextmountkey(state: WanixIframeHostState): number {
   return state.mountKey + 1
@@ -173,7 +147,7 @@ export function createwanixiframechildcontroller() {
             urls,
           })
           root = null
-          replyrpc(source, data.id, { result: { ok: true } })
+          replychildrpc(source, data.id, { result: { ok: true } })
           return
         }
         case 'preptask': {
@@ -186,7 +160,7 @@ export function createwanixiframechildcontroller() {
           })
           root = null
           await deferred.promise
-          replyrpc(source, data.id, { result: { ok: true } })
+          replychildrpc(source, data.id, { result: { ok: true } })
           return
         }
         case 'spawnvm': {
@@ -206,7 +180,7 @@ export function createwanixiframechildcontroller() {
           })
           root = null
           const result = await deferred.promise
-          replyrpc(source, data.id, { result })
+          replychildrpc(source, data.id, { result })
           return
         }
         case 'spawntask': {
@@ -227,7 +201,7 @@ export function createwanixiframechildcontroller() {
             cmd,
           })
           const result = await deferred.promise
-          replyrpc(source, data.id, { result })
+          replychildrpc(source, data.id, { result })
           return
         }
         case 'haltvm': {
@@ -242,7 +216,7 @@ export function createwanixiframechildcontroller() {
             })
           }
           root = null
-          replyrpc(source, data.id, { result: { ok: true } })
+          replychildrpc(source, data.id, { result: { ok: true } })
           return
         }
         case 'halttask': {
@@ -261,7 +235,7 @@ export function createwanixiframechildcontroller() {
               archives: state.archives,
             })
           }
-          replyrpc(source, data.id, { result: { ok: true } })
+          replychildrpc(source, data.id, { result: { ok: true } })
           return
         }
         case 'putfile': {
@@ -270,7 +244,7 @@ export function createwanixiframechildcontroller() {
             throw new Error('wanix iframe child: root missing')
           }
           await root.writeFile(name, new Uint8Array(bytes))
-          replyrpc(source, data.id, { result: { ok: true } })
+          replychildrpc(source, data.id, { result: { ok: true } })
           return
         }
         case 'listdir': {
@@ -279,7 +253,7 @@ export function createwanixiframechildcontroller() {
             throw new Error('wanix iframe child: root missing')
           }
           const entries = await root.readDir(path)
-          replyrpc(source, data.id, { result: entries })
+          replychildrpc(source, data.id, { result: entries })
           return
         }
         case 'mountarchive': {
@@ -314,7 +288,7 @@ export function createwanixiframechildcontroller() {
             const current = getstate()
             setstate(witharchives(current, [...current.archives, archive]))
             await deferred.promise
-            replyrpc(source, data.id, { result: { ok: true } })
+            replychildrpc(source, data.id, { result: { ok: true } })
           } finally {
             clearTimeout(timer)
             URL.revokeObjectURL(src)
@@ -324,14 +298,16 @@ export function createwanixiframechildcontroller() {
         case 'teardown': {
           setstate(createidlewanixiframestate())
           root = null
-          replyrpc(source, data.id, { result: { ok: true } })
+          replychildrpc(source, data.id, { result: { ok: true } })
           return
         }
         default:
-          replyrpc(source, data.id, { error: `unknown rpc: ${data.method}` })
+          replychildrpc(source, data.id, {
+            error: `unknown rpc: ${data.method}`,
+          })
       }
     } catch (err) {
-      replyrpc(source, data.id, {
+      replychildrpc(source, data.id, {
         error: err instanceof Error ? err.message : String(err),
       })
     }
@@ -351,5 +327,98 @@ export function createwanixiframechildcontroller() {
     onarchivemounted,
     onarchiveerror,
     handlerrpc,
+  }
+}
+
+export async function waitsystemready(
+  system: WanixSystemElement,
+  timeoutms = WANIX_IFRAME_READY_TIMEOUT_MS,
+): Promise<WanixRoot> {
+  await new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      stop()
+      reject(new Error('wanix iframe child: ready timeout'))
+    }, timeoutms)
+    const onready = () => {
+      stop()
+      resolve()
+    }
+    const onerror = (event: Event) => {
+      stop()
+      const custom = event as CustomEvent<{ error?: unknown }>
+      const detail = custom.detail?.error
+      reject(
+        new Error(
+          detail instanceof Error
+            ? detail.message
+            : typeof detail === 'string'
+              ? detail
+              : 'wanix-system error',
+        ),
+      )
+    }
+    const stop = () => {
+      clearTimeout(timer)
+      system.removeEventListener('ready', onready)
+      system.removeEventListener('error', onerror)
+    }
+    system.addEventListener('ready', onready, { once: true })
+    system.addEventListener('error', onerror, { once: true })
+  })
+  const root = system.root ?? null
+  if (!root) {
+    throw new Error('wanix iframe child: root missing after ready')
+  }
+  return root
+}
+
+export async function waitvmchildready(
+  system: WanixSystemElement,
+  timeoutms: number,
+): Promise<WanixWakeElement> {
+  const deadline = Date.now() + timeoutms
+  while (Date.now() < deadline) {
+    const vm = system.querySelector('wanix-vm')
+    if (vm?.rid && vm?.term) {
+      return vm
+    }
+    await new Promise<void>((resolve) => setTimeout(resolve, 250))
+  }
+  throw new Error(`wanix iframe child: vm ${system.id} not ready`)
+}
+
+export async function halttarget(
+  root: WanixRoot | null,
+  kind: 'vm' | 'task',
+  id: string,
+) {
+  if (!root) {
+    return
+  }
+  if (kind === 'vm') {
+    const entries = await root.readDir('#vm').catch(() => [] as string[])
+    for (const name of entries) {
+      const rid = name.replace(/\/$/, '')
+      if (!rid || rid === 'v86') {
+        continue
+      }
+      try {
+        const inner = await root.readDir(`#vm/${rid}`)
+        const taskname = inner.find((n) => n.startsWith('task'))
+        if (taskname) {
+          const taskrid = taskname.replace(/\/$/, '').replace(/^task\/?/, '')
+          if (taskrid) {
+            await root.writeFile(`#task/${taskrid}/ctl`, 'stop')
+          }
+        }
+      } catch {
+        // vm may already be gone
+      }
+    }
+    return
+  }
+  const task = document.getElementById(id) as WanixTaskElement | null
+  if (task?.rid) {
+    await root.writeFile(`#task/${task.rid}/ctl`, 'stop')
   }
 }

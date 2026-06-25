@@ -16,10 +16,8 @@ jest.mock('zss/feature/terminalwritelines', () => ({
   terminalwritelines: (...args: unknown[]) => terminalmock(...args),
 }))
 
-import {
-  wanixhandledrop,
-  wanixhandleshownenu,
-} from 'zss/feature/wanix/wanixdrop'
+import { wanixhandledrop } from 'zss/feature/wanix/wanixlaunch'
+import { wanixhandleshownenu } from 'zss/feature/wanix/wanixcommands'
 import {
   readwanixattached,
   readwanixtasks,

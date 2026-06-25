@@ -38,18 +38,11 @@ import {
   readwanixtermiframeprepstage,
   teardownwanixtermiframe,
 } from 'zss/feature/wanix/wanixtermiframehost'
+import type { WANIX_VM_PREP_STAGE } from 'zss/feature/wanix/wanixtermiframeprotocol'
 import {
   type WANIX_VM_ASSET_URLS,
   readwanixvmasseturls,
 } from 'zss/feature/wanix/wanixvmassets'
-
-export type WANIX_VM_PREP_STAGE =
-  | 'idle'
-  | 'mounting'
-  | 'mount_ok'
-  | 'spawn'
-  | 'tile'
-  | 'failed'
 
 export type WANIX_HOST_STATE = 'idle' | 'starting' | 'ready'
 

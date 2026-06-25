@@ -2,6 +2,10 @@ import {
   xtermcellcolortozss,
   xtermcolortozss,
 } from 'zss/feature/wanix/wanixtermcolormap'
+import type {
+  XtermCell,
+  XtermCellSource,
+} from 'zss/feature/wanix/wanixtermxtermtypes'
 import { COLOR } from 'zss/words/types'
 
 const SPACE = 32
@@ -15,35 +19,6 @@ export type WanixTermCellsSnapshot = {
   cursorx: number
   cursory: number
   cursorvisible: boolean
-}
-
-type XtermCell = {
-  getChars: () => string
-  getWidth: () => number
-  getFgColor: () => number
-  getBgColor: () => number
-  getFgColorMode?: () => number
-  getBgColorMode?: () => number
-}
-
-type XtermLine = {
-  length: number
-  translateToString: (trim?: boolean) => string
-  getCell: (x: number) => XtermCell | undefined
-}
-
-type XtermBuffer = {
-  length: number
-  cursorX: number
-  cursorY: number
-  baseY?: number
-  getLine: (index: number) => XtermLine | undefined
-}
-
-export type XtermCellSource = {
-  cols: number
-  rows: number
-  buffer: { active: XtermBuffer }
 }
 
 function charcodefromcell(cell: XtermCell): number {

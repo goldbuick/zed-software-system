@@ -26,7 +26,7 @@ jest.mock('zss/feature/wanix/wanixterminalmode', () => {
 
 import { COLOR } from 'zss/words/types'
 import type { WanixTermCellsSnapshot } from 'zss/feature/wanix/wanixtermcells'
-import { resetwanixsessionfortest } from 'zss/feature/wanix/wanixsession'
+import { registertask, resetwanixsessionfortest } from 'zss/feature/wanix/wanixsession'
 import {
   wanixtermiframehosttestcells,
   wanixtermiframehosttestreset,
@@ -61,6 +61,7 @@ describe('wanix iframe term cells attach', () => {
     terminalattached = false
     wanixtermiframehosttestreset()
     resetwanixsessionfortest()
+    registertask({ id: 'demo-wasm', label: 'demo', entrycmd: 'demo.wasm' })
   })
 
   it('auto-attaches tile mode on first cell snapshot', async () => {

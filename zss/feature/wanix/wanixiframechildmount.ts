@@ -1,3 +1,4 @@
+import type { WanixIframeChildController } from 'zss/feature/wanix/wanixiframechildcontroller'
 import {
   WANIX_IFRAME_SYSTEM_ID,
   type WanixIframeArchive,
@@ -90,6 +91,18 @@ export function appendwanixarchivebind(
   bind.setAttribute('data-zss-archive-id', archive.id)
   sys.appendChild(bind)
   return bind
+}
+
+export function wirewanixarchivebind(
+  bind: HTMLElement,
+  archiveid: string,
+  controller: WanixIframeChildController,
+) {
+  const onmount = () => controller.onarchivemounted(archiveid)
+  const onerror = () =>
+    controller.onarchiveerror(archiveid, new Error('archive mount failed'))
+  bind.addEventListener('mount', onmount, { once: true })
+  bind.addEventListener('error', onerror, { once: true })
 }
 
 export function cleartargetwanixels(sys: WanixSystemElement) {

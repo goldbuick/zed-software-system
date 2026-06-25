@@ -1731,7 +1731,7 @@ export const FEATURE_DOMAINS: FeatureDomain[] = [
         'Terminal drop',
         'Creator',
         'Drag .wasm or .tgz onto tape; mounts via in-page Wanix or hidden iframe host (route-dependent).',
-        'zss/feature/wanix/wanixdrop.ts',
+        'zss/feature/wanix/wanixlaunch.ts',
       ],
       [
         'Wanix term tile',

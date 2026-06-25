@@ -4,12 +4,14 @@ export type WANIX_TASK_STATE = {
   id: string
   label: string
   entrycmd: string
+  autotiletriggered?: boolean
 }
 
 export type WANIX_VM_STATE = {
   id: string
   label: string
   mem: string
+  autotiletriggered?: boolean
 }
 
 const tasks = new Map<string, WANIX_TASK_STATE>()
@@ -134,6 +136,43 @@ export function haswanixvms(): boolean {
 
 export function haswanixcompute(): boolean {
   return tasks.size > 0 || vms.size > 0
+}
+
+export function readwanixautotiletriggered(
+  kind: WANIX_ATTACH_KIND,
+  id: string,
+): boolean {
+  if (kind === 'task') {
+    return tasks.get(id)?.autotiletriggered ?? false
+  }
+  return vms.get(id)?.autotiletriggered ?? false
+}
+
+export function setwanixautotiletriggered(kind: WANIX_ATTACH_KIND, id: string) {
+  if (kind === 'task') {
+    const task = tasks.get(id)
+    if (task) {
+      tasks.set(id, { ...task, autotiletriggered: true })
+    }
+    return
+  }
+  const vm = vms.get(id)
+  if (vm) {
+    vms.set(id, { ...vm, autotiletriggered: true })
+  }
+}
+
+export function clearwanixautotileflags() {
+  for (const [id, task] of tasks) {
+    if (task.autotiletriggered) {
+      tasks.set(id, { ...task, autotiletriggered: false })
+    }
+  }
+  for (const [id, vm] of vms) {
+    if (vm.autotiletriggered) {
+      vms.set(id, { ...vm, autotiletriggered: false })
+    }
+  }
 }
 
 /** Test hook — reset module state. */

@@ -1,15 +1,28 @@
 import type { DEVICELIKE } from 'zss/device/api'
 import { apilog } from 'zss/device/api'
 import {
+  type ParentRpcWaiters,
+  WANIX_IFRAME_RPC_TIMEOUT_MS,
+  callchildrpc,
+  rejectparentrpc,
+  resolveparentrpc,
+} from 'zss/feature/wanix/wanixifracerpc'
+import {
   type WANIX_ATTACH_KIND,
+  clearwanixautotileflags,
   readwanixattached,
   readwanixattachedkind,
+  readwanixautotiletriggered,
+  readwanixtask,
+  readwanixvm,
   registervm,
   setwanixattached,
+  setwanixautotiletriggered,
 } from 'zss/feature/wanix/wanixsession'
 import type { WanixTermCellsSnapshot } from 'zss/feature/wanix/wanixtermcells'
 import {
   WANIX_TERM_IFRAME_SRC,
+  type WANIX_VM_PREP_STAGE,
   iswanixtermiframemsg,
 } from 'zss/feature/wanix/wanixtermiframeprotocol'
 import {
@@ -24,7 +37,6 @@ import {
 import type { WANIX_VM_ASSET_URLS } from 'zss/feature/wanix/wanixvmassets'
 
 const EMBED_READY_MS = 120_000
-const RPC_TIMEOUT_MS = 600_000
 
 // Fixed xterm cell size (px) for the default wanix-term font. The host sizes the
 // iframe to cols*WIDTH x rows*HEIGHT and the child wanix-term FitAddon fits the
@@ -35,21 +47,6 @@ const WANIX_CHAR_HEIGHT = 18
 const IFRAME_STYLE_HIDDEN =
   'position:fixed;left:-9999px;top:0;opacity:0;visibility:hidden;pointer-events:none;border:0'
 
-type VmPrepStage =
-  | 'idle'
-  | 'mounting'
-  | 'mount_ok'
-  | 'spawn'
-  | 'tile'
-  | 'failed'
-
-type ProxyEntry = {
-  id: string
-  kind: WANIX_ATTACH_KIND
-  mem?: string
-  autotiletriggered: boolean
-}
-
 let iframeel: HTMLIFrameElement | null = null
 let iframelayout: 'idle' | 'vm' | 'task' = 'idle'
 let embedready = false
@@ -57,14 +54,10 @@ let embedreadywait: Promise<void> | null = null
 let messagelistenerinstalled = false
 let vmbindsready = false
 let taskspaceready = false
-let vmprepstage: VmPrepStage = 'idle'
+let vmprepstage: WANIX_VM_PREP_STAGE = 'idle'
 let vmpreperror: string | undefined
 let rpcseq = 0
-const rpcwaiters = new Map<
-  number,
-  { resolve: (value: unknown) => void; reject: (err: Error) => void }
->()
-const proxies = new Map<string, ProxyEntry>()
+const rpcwaiters: ParentRpcWaiters = new Map()
 let desirediframecols = 0
 let desirediframerows = 0
 let pendingcellsraf = 0
@@ -145,13 +138,13 @@ function applycells(snapshot: WanixTermCellsSnapshot) {
 
 async function opentileoncells(
   kind: WANIX_ATTACH_KIND,
-  entry: ProxyEntry,
+  id: string,
   snapshot?: WanixTermCellsSnapshot,
 ) {
-  if (entry.autotiletriggered) {
+  if (readwanixautotiletriggered(kind, id)) {
     return
   }
-  entry.autotiletriggered = true
+  setwanixautotiletriggered(kind, id)
   if (kind === 'vm') {
     vmprepstage = 'tile'
   }
@@ -176,7 +169,7 @@ export function iswanixtermiframeactive(): boolean {
   return vmbindsready || taskspaceready
 }
 
-export function readwanixtermiframeprepstage(): VmPrepStage {
+export function readwanixtermiframeprepstage(): WANIX_VM_PREP_STAGE {
   return vmprepstage
 }
 
@@ -214,8 +207,8 @@ function handlecells(
   id: string,
   snapshot: WanixTermCellsSnapshot,
 ) {
-  const entry = proxies.get(id)
-  if (!entry) {
+  const exists = kind === 'task' ? readwanixtask(id) : readwanixvm(id)
+  if (!exists) {
     return
   }
   const attached = readwanixattached()
@@ -227,7 +220,7 @@ function handlecells(
     applycells(snapshot)
     return
   }
-  void opentileoncells(kind, entry, snapshot)
+  void opentileoncells(kind, id, snapshot)
 }
 
 function onmessage(event: MessageEvent) {
@@ -241,16 +234,11 @@ function onmessage(event: MessageEvent) {
       return
     }
     if (data.type === 'zss-wanix-term-rpc-res') {
-      const waiter = rpcwaiters.get(data.id)
-      if (!waiter) {
-        return
-      }
-      rpcwaiters.delete(data.id)
       if (data.error) {
-        waiter.reject(new Error(data.error))
+        rejectparentrpc(rpcwaiters, data.id, data.error)
         return
       }
-      waiter.resolve(data.result)
+      resolveparentrpc(rpcwaiters, data.id, data.result)
       return
     }
   }
@@ -275,16 +263,11 @@ function onmessage(event: MessageEvent) {
     iswanixtermprobemsg(data) &&
     data.type === 'zss-wanix-term-probe-rpc-res'
   ) {
-    const waiter = rpcwaiters.get(data.id)
-    if (!waiter) {
-      return
-    }
-    rpcwaiters.delete(data.id)
     if (data.error) {
-      waiter.reject(new Error(data.error))
+      rejectparentrpc(rpcwaiters, data.id, data.error)
       return
     }
-    waiter.resolve(data.result)
+    resolveparentrpc(rpcwaiters, data.id, data.result)
   }
 }
 
@@ -328,35 +311,22 @@ function childwindow(): Window {
   return w
 }
 
-type ChildRpcType = 'zss-wanix-term-rpc' | 'zss-wanix-term-probe-rpc'
-
 async function childrpc<T>(
-  msgtype: ChildRpcType,
+  msgtype: 'zss-wanix-term-rpc' | 'zss-wanix-term-probe-rpc',
   method: string,
   args: unknown[] = [],
 ): Promise<T> {
   await waitembedready()
-  const id = ++rpcseq
   const label = msgtype === 'zss-wanix-term-rpc' ? 'iframe' : 'probe'
-  return new Promise<T>((resolve, reject) => {
-    const timer = setTimeout(() => {
-      rpcwaiters.delete(id)
-      reject(new Error(`wanix term ${label} rpc timeout: ${method}`))
-    }, RPC_TIMEOUT_MS)
-    rpcwaiters.set(id, {
-      resolve: (value) => {
-        clearTimeout(timer)
-        resolve(value as T)
-      },
-      reject: (err) => {
-        clearTimeout(timer)
-        reject(err)
-      },
-    })
-    childwindow().postMessage(
-      { type: msgtype, id, method, args },
-      window.location.origin,
-    )
+  return callchildrpc<T>({
+    target: childwindow(),
+    msgtype,
+    method,
+    args,
+    timeoutms: WANIX_IFRAME_RPC_TIMEOUT_MS,
+    nextid: () => ++rpcseq,
+    waiters: rpcwaiters,
+    label,
   })
 }
 
@@ -364,13 +334,6 @@ export async function iframeattachtarget(
   kind: WANIX_ATTACH_KIND,
   id: string,
 ): Promise<void> {
-  if (!proxies.has(id)) {
-    proxies.set(id, {
-      id,
-      kind,
-      autotiletriggered: false,
-    })
-  }
   setwanixattached(kind, id)
   await enterwanixattachedterminal()
   const snapshot = await synccellsfromchild()
@@ -416,13 +379,6 @@ export async function iframespawnvm(opts: {
 }): Promise<{ vmid: string }> {
   const vmid = opts.vmid ?? 'linux-vm'
   const mem = opts.mem ?? '512M'
-  const entry: ProxyEntry = {
-    id: vmid,
-    kind: 'vm',
-    mem,
-    autotiletriggered: false,
-  }
-  proxies.set(vmid, entry)
   registervm({ id: vmid, label: vmid, mem })
   if (opts.attach !== false) {
     setwanixattached('vm', vmid)
@@ -437,12 +393,6 @@ export async function iframespawntask(
   cmd: string,
   attach: boolean,
 ): Promise<{ taskid: string }> {
-  const entry: ProxyEntry = {
-    id: taskid,
-    kind: 'task',
-    autotiletriggered: false,
-  }
-  proxies.set(taskid, entry)
   await childrpc('zss-wanix-term-rpc', 'spawntask', [taskid, cmd])
   if (attach) {
     setwanixattached('task', taskid)
@@ -452,15 +402,6 @@ export async function iframespawntask(
 
 export async function iframehaltvm(vmid?: string): Promise<void> {
   await childrpc('zss-wanix-term-rpc', 'haltvm', [vmid])
-  if (vmid) {
-    proxies.delete(vmid)
-  } else {
-    for (const [id, entry] of proxies) {
-      if (entry.kind === 'vm') {
-        proxies.delete(id)
-      }
-    }
-  }
   if (readwanixattachedkind() === 'vm') {
     setwanixattached(null, null)
   }
@@ -468,15 +409,6 @@ export async function iframehaltvm(vmid?: string): Promise<void> {
 
 export async function iframehalttask(taskid?: string): Promise<void> {
   await childrpc('zss-wanix-term-rpc', 'halttask', [taskid])
-  if (taskid) {
-    proxies.delete(taskid)
-  } else {
-    for (const [id, entry] of proxies) {
-      if (entry.kind === 'task') {
-        proxies.delete(id)
-      }
-    }
-  }
   if (readwanixattachedkind() === 'task') {
     setwanixattached(null, null)
   }
@@ -523,11 +455,6 @@ export function wanixtermiframehosttestsetattached(
   kind: WANIX_ATTACH_KIND,
   id: string,
 ) {
-  proxies.set(id, {
-    id,
-    kind,
-    autotiletriggered: false,
-  })
   setwanixattached(kind, id)
 }
 
@@ -542,7 +469,7 @@ export function wanixtermiframehosttestcells(
 
 /** Test hook — reset proxy + attach state. */
 export function wanixtermiframehosttestreset() {
-  proxies.clear()
+  clearwanixautotileflags()
   setwanixattached(null, null)
 }
 
@@ -560,7 +487,7 @@ export async function teardownwanixtermiframe(): Promise<void> {
   taskspaceready = false
   vmprepstage = 'idle'
   vmpreperror = undefined
-  proxies.clear()
+  clearwanixautotileflags()
   setwanixattached(null, null)
   iframelayout = 'idle'
   desirediframecols = 0

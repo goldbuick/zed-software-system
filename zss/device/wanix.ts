@@ -3,13 +3,13 @@ import { registerreadplayer } from 'zss/device/register'
 import {
   wanixhandleattach,
   wanixhandledetach,
-  wanixhandledrop,
   wanixhandleshownenu,
   wanixhandlestop,
   wanixhandletermwrite,
   wanixhandlevmstart,
   wanixhandlevmstop,
-} from 'zss/feature/wanix/wanixdrop'
+} from 'zss/feature/wanix/wanixcommands'
+import { wanixhandledrop } from 'zss/feature/wanix/wanixlaunch'
 import { doasync } from 'zss/mapping/func'
 import { ispresent, isstring } from 'zss/mapping/types'
 

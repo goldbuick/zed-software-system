@@ -1,10 +1,6 @@
-/** VM spawn wait helpers for the iframe child. */
+import type { WanixRoot } from 'zss/feature/wanix/wanixiframechildtypes'
 
 export const VM_TERM_READY_MS = 90_000
-
-type WanixRoot = {
-  readDir: (path: string) => Promise<string[]>
-}
 
 export async function waitforv86driver(
   root: WanixRoot,
