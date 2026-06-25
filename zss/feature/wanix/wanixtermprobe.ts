@@ -62,22 +62,8 @@ const WANIX_CELL_POLL_MS = 100
 const WANIX_PROBE_TERM_LAYOUT_CSS =
   'position:fixed;left:0;top:0;width:100vw;height:100vh;opacity:0;pointer-events:none;overflow:hidden'
 
-// Debug overlay (?show=1): opaque instead of transparent.
-const WANIX_PROBE_TERM_LAYOUT_SHOW_CSS =
-  'position:fixed;left:0;top:0;width:100vw;height:100vh;opacity:1;pointer-events:none;overflow:hidden'
-
-function iswanixtermprobeshow(): boolean {
-  try {
-    return new URLSearchParams(window.location.search).get('show') === '1'
-  } catch {
-    return false
-  }
-}
-
 export function applywanixtermprobelayout(el: HTMLElement) {
-  el.style.cssText = iswanixtermprobeshow()
-    ? WANIX_PROBE_TERM_LAYOUT_SHOW_CSS
-    : WANIX_PROBE_TERM_LAYOUT_CSS
+  el.style.cssText = WANIX_PROBE_TERM_LAYOUT_CSS
 }
 
 export function ensurewanixtermprobelayout() {
@@ -113,62 +99,6 @@ function readxtermserial(term: XtermInstance): string {
 
 function sleep(ms: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, ms))
-}
-
-function summarizewanixtermcolors(snapshot: WanixTermCellsSnapshot) {
-  return {
-    uniqueFg: new Set(snapshot.color).size,
-    uniqueBg: new Set(snapshot.bg).size,
-  }
-}
-
-const RAW_COLOR_SAMPLE_MAX = 5
-
-function summarizewanixtermrawcolors(term: XtermInstance) {
-  const active = term.buffer.active
-  const basey = active.baseY ?? 0
-  const rawfgmodes = new Set<number>()
-  const rawfgsamples: { mode: number; color: number }[] = []
-  const rawbgmodes = new Set<number>()
-  const rawbgsamples: { mode: number; color: number }[] = []
-
-  for (let y = 0; y < term.rows; y++) {
-    const line = active.getLine(basey + y)
-    if (!line) {
-      continue
-    }
-    const linelen = Math.min(term.cols, line.length)
-    for (let x = 0; x < linelen; x++) {
-      const cell = line.getCell(x)
-      if (!cell) {
-        continue
-      }
-      const fgmode = cell.getFgColorMode?.() ?? 0
-      const fg = cell.getFgColor()
-      const bgmode = cell.getBgColorMode?.() ?? 0
-      const bg = cell.getBgColor()
-
-      if (fgmode !== 0) {
-        rawfgmodes.add(fgmode)
-        if (rawfgsamples.length < RAW_COLOR_SAMPLE_MAX) {
-          rawfgsamples.push({ mode: fgmode, color: fg })
-        }
-      }
-      if (bgmode !== 0) {
-        rawbgmodes.add(bgmode)
-        if (rawbgsamples.length < RAW_COLOR_SAMPLE_MAX) {
-          rawbgsamples.push({ mode: bgmode, color: bg })
-        }
-      }
-    }
-  }
-
-  return {
-    rawFgModes: [...rawfgmodes],
-    rawFgSamples: rawfgsamples,
-    rawBgModes: [...rawbgmodes],
-    rawBgSamples: rawbgsamples,
-  }
 }
 
 export function installwanixtermprobe(): WanixTermProbe {
@@ -268,7 +198,7 @@ export function installwanixtermprobeembed(): WanixTermProbe {
     }
     lastfitcols = size.cols
     lastfitrows = size.rows
-    console.info('[wanix] xterm-fit-size', size)
+    // console.info('[wanix] xterm-fit-size', size)
     lastcelldigest = ''
     emitcellsnapshot()
   }
@@ -295,13 +225,6 @@ export function installwanixtermprobeembed(): WanixTermProbe {
       return
     }
     lastcelldigest = digest
-    if (iswanixtermprobeshow()) {
-      const term = findwanixtermel()?._term
-      console.info('[wanix] cell-colors', {
-        ...summarizewanixtermcolors(snapshot),
-        ...(term ? summarizewanixtermrawcolors(term) : {}),
-      })
-    }
     posttoparent({ type: 'zss-wanix-term-cells', ...snapshot })
   }
 

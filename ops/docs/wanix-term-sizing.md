@@ -165,23 +165,14 @@ These are independent. The iframe is sized so FitAddon produces a grid that matc
 
 ## Debug checklist
 
-1. **Reveal hidden iframe overlay**
-   - `window.ZSS_WANIX_SHOW = true` or `localStorage.setItem('zss-wanix-show', '1')`
-   - Reload; iframe appears top-right at 60% opacity
-
-2. **Console tags** (when show mode on)
-   - `[wanix] iframe-pixel-size` — parent applied iframe px
-   - `[wanix] xterm-fit-size` — child detected xterm cols/rows change
-
-3. **Verify tile GPU updates**
+1. **Verify tile GPU updates**
    - React devtools: `TilesRender` should re-render when `store.render` increments
    - `WanixTermScreen` must call `context.changed()` after `writetile` loop
 
-4. **Verify cell bridge**
-   - Network tab not relevant; use `[wanix] xterm-fit-size` + tile content
+2. **Verify cell bridge**
    - Attach task (`termbridge.wat`) or VM; type or run output; tile should update without resizing
 
-5. **E2E sizing**
+3. **E2E sizing**
    - `.cursor/skills/wanix-vm-iframe-host/scripts/validate-wanix-vm.mjs`
 
 ## Known failure modes (fixed)

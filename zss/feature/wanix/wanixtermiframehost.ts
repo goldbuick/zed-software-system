@@ -1,4 +1,3 @@
-import { WANIX_SHOW } from 'zss/config'
 import type { DEVICELIKE } from 'zss/device/api'
 import { apilog } from 'zss/device/api'
 import {
@@ -35,42 +34,6 @@ const WANIX_CHAR_HEIGHT = 18
 
 const IFRAME_STYLE_HIDDEN =
   'position:fixed;left:-9999px;top:0;opacity:0;visibility:hidden;pointer-events:none;border:0'
-// Debug overlay: translucent, click-through, top-right. Opt-in only.
-const IFRAME_STYLE_SHOW =
-  'position:fixed;right:0;top:0;opacity:0.6;visibility:visible;pointer-events:none;border:0;z-index:2147483647'
-
-/** Dev-only: reveal the hidden VM iframe as a translucent overlay to inspect the real xterm. */
-function iswanixiframeshow(): boolean {
-  try {
-    if ((window as unknown as { ZSS_WANIX_SHOW?: unknown }).ZSS_WANIX_SHOW) {
-      return true
-    }
-    if (window.localStorage?.getItem('zss-wanix-show') === '1') {
-      return true
-    }
-    return WANIX_SHOW
-  } catch {
-    return WANIX_SHOW
-  }
-}
-
-function wanixshowlog(checkpoint: string, detail?: Record<string, unknown>) {
-  if (!iswanixiframeshow()) {
-    return
-  }
-  if (detail) {
-    console.info(`[wanix] ${checkpoint}`, detail)
-  } else {
-    console.info(`[wanix] ${checkpoint}`)
-  }
-}
-
-function appendshowparam(src: string): string {
-  if (!iswanixiframeshow()) {
-    return src
-  }
-  return src.includes('?') ? `${src}&show=1` : `${src}?show=1`
-}
 
 type VmPrepStage =
   | 'idle'
@@ -133,11 +96,11 @@ function schedulecellsyncafterresize() {
 
 function applyiframepixels() {
   if (!iframeel || desirediframecols <= 0 || desirediframerows <= 0) {
-    wanixshowlog('iframe-pixel-size:skip', {
-      hasiframe: !!iframeel,
-      cols: desirediframecols,
-      rows: desirediframerows,
-    })
+    // wanixshowlog('iframe-pixel-size:skip', {
+    //   hasiframe: !!iframeel,
+    //   cols: desirediframecols,
+    //   rows: desirediframerows,
+    // })
     return
   }
   // the +1 is for the scrollbar
@@ -145,14 +108,14 @@ function applyiframepixels() {
   const heightpx = desirediframerows * WANIX_CHAR_HEIGHT
   iframeel.style.width = `${widthpx}px`
   iframeel.style.height = `${heightpx}px`
-  wanixshowlog('iframe-pixel-size', {
-    cols: desirediframecols,
-    rows: desirediframerows,
-    widthpx,
-    heightpx,
-    charwidth: WANIX_CHAR_WIDTH,
-    charheight: WANIX_CHAR_HEIGHT,
-  })
+  // wanixshowlog('iframe-pixel-size', {
+  //   cols: desirediframecols,
+  //   rows: desirediframerows,
+  //   widthpx,
+  //   heightpx,
+  //   charwidth: WANIX_CHAR_WIDTH,
+  //   charheight: WANIX_CHAR_HEIGHT,
+  // })
   schedulecellsyncafterresize()
 }
 
@@ -161,7 +124,7 @@ export function iframeapplytermsize(cols: number, rows: number) {
   if (cols <= 0 || rows <= 0) {
     return
   }
-  wanixshowlog('iframe-term-size', { cols, rows })
+  // wanixshowlog('iframe-term-size', { cols, rows })
   desirediframecols = cols
   desirediframerows = rows
   applyiframepixels()
@@ -329,10 +292,8 @@ function createiframe(src: string, title: string): HTMLIFrameElement {
   const el = document.createElement('iframe')
   el.id = 'zss-wanix-term-iframe'
   el.title = title
-  el.src = appendshowparam(src)
-  el.style.cssText = iswanixiframeshow()
-    ? IFRAME_STYLE_SHOW
-    : IFRAME_STYLE_HIDDEN
+  el.src = src
+  el.style.cssText = IFRAME_STYLE_HIDDEN
   document.body.appendChild(el)
   return el
 }

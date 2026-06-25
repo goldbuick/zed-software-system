@@ -3,6 +3,7 @@
   "entry": [
     "cafe/index.tsx",
     "cafe/sys/index.tsx",
+    "cafe/wanix-iframe-host.tsx",
     "zss/simspace.ts",
     "zss/heavyspace.ts",
     "zss/boardrunnerspace.ts",

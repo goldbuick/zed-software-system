@@ -1,6 +1,4 @@
 import {
-  buildwanixvmprehtml,
-  buildwanixvmspawnhtml,
   readwanixruntimeurls,
   readwanixvmasseturls,
   WANIX_NPM_VERSION,
@@ -26,24 +24,5 @@ describe('wanixvmassets', () => {
 
   it('documents v86 driver path required after vm-prep', () => {
     expect(WANIX_VM_V86_DRIVER_PATH).toBe('#vm/v86/v86-vm.wasm')
-  })
-
-  it('buildwanixvmprehtml matches vm-simple bind layout', () => {
-    const urls = readwanixvmasseturls()
-    const html = buildwanixvmprehtml(urls)
-    expect(html).toContain('wanix-system')
-    expect(html).toContain('allow-origins="*"')
-    expect(html).toContain(`src="${urls.linux}"`)
-    expect(html).toContain('dst="vm" src="#vm"')
-    expect(html).toContain(`src="${urls.v86}"`)
-    expect(html).toContain('wanix.debug.wasm')
-  })
-
-  it('buildwanixvmspawnhtml matches vm-simple vm + term', () => {
-    const html = buildwanixvmspawnhtml('linux-vm', '512M')
-    expect(html).toContain('wanix-vm id="linux-vm"')
-    expect(html).toContain('export="ttyS0" term')
-    expect(html).toContain('mem="512M" start')
-    expect(html).toContain('wanix-term path="#vm/1/term" raw data-zss-vm-term="linux-vm"')
   })
 })

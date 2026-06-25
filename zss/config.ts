@@ -21,8 +21,6 @@ const RAYCAST_DEBUG_DOT = zssjsonbool('ZSS_DEBUG_RAYCAST_DOT')
 const RAYCAST_DEBUG_PICKSHEET = zssjsonbool('ZSS_DEBUG_RAYCAST_PICKSHEET')
 /** Flat ortho: assert board fills frustum on cropped axes (see `flatcameradevassertboardinortho`). */
 const FLAT_CAMERA_ORTHO_ASSERT = zssjsonbool('ZSS_DEBUG_FLAT_CAMERA_ORTHO')
-/** Reveal hidden wanix iframe overlay + sizing logs (see `iswanixiframeshow`). */
-const WANIX_SHOW = zssjsonbool('ZSS_WANIX_SHOW')
 
 /**
  * Phase 3 perf flags - default ON for safe algorithmic swaps; OFF for changes
@@ -82,7 +80,6 @@ export {
   RAYCAST_DEBUG_DOT,
   RAYCAST_DEBUG_PICKSHEET,
   FLAT_CAMERA_ORTHO_ASSERT,
-  WANIX_SHOW,
   PERF_SPATIAL_INDEX,
   PERF_INCREMENTAL_LAYERS,
   PERF_TILE_SUBIMAGE,

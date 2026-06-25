@@ -56,21 +56,18 @@ export function WanixTermInput() {
     [player],
   )
 
-  const appendpasteintobuffer = useCallback(
-    (text: string, echo: boolean) => {
-      const chunk = pastetexttolinebuffer(text)
-      if (!chunk.length) {
-        return
+  const appendpasteintobuffer = useCallback((text: string, echo: boolean) => {
+    const chunk = pastetexttolinebuffer(text)
+    if (!chunk.length) {
+      return
+    }
+    linebuffer.current += chunk
+    if (echo) {
+      for (let i = 0; i < chunk.length; i++) {
+        wanixtermscreenechochar(chunk[i])
       }
-      linebuffer.current += chunk
-      if (echo) {
-        for (let i = 0; i < chunk.length; i++) {
-          wanixtermscreenechochar(chunk[i])
-        }
-      }
-    },
-    [],
-  )
+    }
+  }, [])
 
   const handlepaste = useCallback(
     (event: KeyboardEvent) => {
