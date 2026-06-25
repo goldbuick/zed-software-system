@@ -1,0 +1,3 @@
+{
+  "code": "@scroll wanixnotes\n# Wanix bind demo\n\nThis scroll ships in the wanixtour book.\nWarm wanix first (#wanix or drop termbridge.wasm), then:\n\n  #wanix bind wanixnotes\n\nwrites scroll-wanixnotes.txt to the active namespace.\nIn a VM: cat scroll-wanixnotes.txt from serial.\n"
+}

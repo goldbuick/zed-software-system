@@ -1,10 +1,15 @@
 {
   "name": "wanixtour",
   "pages": [
+    "pages/wanixnotes.scroll.json",
     "pages/starthere.board.json",
     "pages/concepts.board.json",
     "pages/wanixintro.board.json",
-    "pages/wanixsteps.board.json",
+    "pages/wanixdrop.board.json",
+    "pages/wanixmenu.board.json",
+    "pages/wanixvm.board.json",
+    "pages/wanixbind.board.json",
+    "pages/wanixattach.board.json",
     "pages/outro.board.json"
   ]
 }

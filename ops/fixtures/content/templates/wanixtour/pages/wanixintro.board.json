@@ -1,5 +1,5 @@
 {
-  "code": "@board wanixintro\n@exitnorth concepts\n@exitsouth wanixsteps",
+  "code": "@board wanixintro\n@exitnorth concepts\n@exitsouth wanixdrop",
   "board": {
     "name": "wanixintro",
     "terrain": [
@@ -1775,203 +1775,203 @@
       },
       {
         "kind": "fake",
-        "char": 84,
-        "color": 11
+        "char": 178,
+        "color": 1
       },
       {
         "kind": "fake",
-        "char": 121,
-        "color": 11
+        "char": 178,
+        "color": 8
       },
       {
         "kind": "fake",
-        "char": 112,
-        "color": 11
+        "char": 178,
+        "color": 1
       },
       {
         "kind": "fake",
-        "char": 101,
-        "color": 11
+        "char": 178,
+        "color": 8
       },
       {
         "kind": "fake",
-        "char": 32,
-        "color": 11
+        "char": 178,
+        "color": 1
       },
       {
         "kind": "fake",
-        "char": 35,
-        "color": 11
+        "char": 178,
+        "color": 8
       },
       {
         "kind": "fake",
-        "char": 119,
-        "color": 11
+        "char": 178,
+        "color": 1
       },
       {
         "kind": "fake",
-        "char": 97,
-        "color": 11
+        "char": 178,
+        "color": 8
       },
       {
         "kind": "fake",
-        "char": 110,
-        "color": 11
+        "char": 178,
+        "color": 1
       },
       {
         "kind": "fake",
-        "char": 105,
-        "color": 11
+        "char": 178,
+        "color": 8
       },
       {
         "kind": "fake",
-        "char": 120,
-        "color": 11
+        "char": 178,
+        "color": 1
       },
       {
         "kind": "fake",
-        "char": 32,
-        "color": 11
+        "char": 178,
+        "color": 8
       },
       {
         "kind": "fake",
-        "char": 105,
-        "color": 11
+        "char": 178,
+        "color": 1
       },
       {
         "kind": "fake",
-        "char": 110,
-        "color": 11
+        "char": 178,
+        "color": 8
       },
       {
         "kind": "fake",
-        "char": 32,
-        "color": 11
+        "char": 178,
+        "color": 1
       },
       {
         "kind": "fake",
-        "char": 116,
-        "color": 11
+        "char": 178,
+        "color": 8
       },
       {
         "kind": "fake",
-        "char": 104,
-        "color": 11
+        "char": 178,
+        "color": 1
       },
       {
         "kind": "fake",
-        "char": 101,
-        "color": 11
+        "char": 178,
+        "color": 8
       },
       {
         "kind": "fake",
-        "char": 32,
-        "color": 11
+        "char": 178,
+        "color": 1
       },
       {
         "kind": "fake",
-        "char": 67,
-        "color": 11
+        "char": 178,
+        "color": 8
       },
       {
         "kind": "fake",
-        "char": 76,
-        "color": 11
+        "char": 178,
+        "color": 1
       },
       {
         "kind": "fake",
-        "char": 73,
-        "color": 11
+        "char": 178,
+        "color": 8
       },
       {
         "kind": "fake",
-        "char": 32,
-        "color": 11
+        "char": 178,
+        "color": 1
       },
       {
         "kind": "fake",
-        "char": 116,
-        "color": 11
+        "char": 178,
+        "color": 8
       },
       {
         "kind": "fake",
-        "char": 111,
-        "color": 11
+        "char": 178,
+        "color": 1
       },
       {
         "kind": "fake",
-        "char": 32,
-        "color": 11
+        "char": 178,
+        "color": 8
       },
       {
         "kind": "fake",
-        "char": 111,
-        "color": 11
+        "char": 178,
+        "color": 1
       },
       {
         "kind": "fake",
-        "char": 112,
-        "color": 11
+        "char": 178,
+        "color": 8
       },
       {
         "kind": "fake",
-        "char": 101,
-        "color": 11
+        "char": 178,
+        "color": 1
       },
       {
         "kind": "fake",
-        "char": 110,
-        "color": 11
+        "char": 178,
+        "color": 8
       },
       {
         "kind": "fake",
-        "char": 32,
-        "color": 11
+        "char": 178,
+        "color": 1
       },
       {
         "kind": "fake",
-        "char": 116,
-        "color": 11
+        "char": 178,
+        "color": 8
       },
       {
         "kind": "fake",
-        "char": 104,
-        "color": 11
+        "char": 178,
+        "color": 1
       },
       {
         "kind": "fake",
-        "char": 101,
-        "color": 11
+        "char": 178,
+        "color": 8
       },
       {
         "kind": "fake",
-        "char": 32,
-        "color": 11
+        "char": 178,
+        "color": 1
       },
       {
         "kind": "fake",
-        "char": 109,
-        "color": 11
+        "char": 178,
+        "color": 8
       },
       {
         "kind": "fake",
-        "char": 101,
-        "color": 11
+        "char": 178,
+        "color": 1
       },
       {
         "kind": "fake",
-        "char": 110,
-        "color": 11
+        "char": 178,
+        "color": 8
       },
       {
         "kind": "fake",
-        "char": 117,
-        "color": 11
+        "char": 178,
+        "color": 1
       },
       {
         "kind": "fake",
-        "char": 46,
-        "color": 11
+        "char": 178,
+        "color": 8
       },
       {
         "kind": "fake",
@@ -2069,302 +2069,6 @@
       },
       {
         "kind": "fake",
-        "char": 178,
-        "color": 8
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 1
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 8
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 1
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 8
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 1
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 8
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 1
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 8
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 1
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 8
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 1
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 8
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 1
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 8
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 1
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 8
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 1
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 8
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 1
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 8
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 1
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 8
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 1
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 8
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 1
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 8
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 1
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 8
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 1
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 8
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 1
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 8
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 1
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 8
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 1
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 8
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 1
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 8
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 1
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 8
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 1
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 8
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 1
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 8
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 1
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 8
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 1
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 8
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 1
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 8
-      },
-      {
-        "kind": "solid"
-      },
-      {
-        "kind": "solid"
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 8
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 1
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 8
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 1
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 8
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 1
-      },
-      {
-        "kind": "fake",
-        "char": 178,
-        "color": 8
-      },
-      {
-        "kind": "fake",
         "char": 87,
         "color": 11
       },
@@ -2440,51 +2144,6 @@
       },
       {
         "kind": "fake",
-        "char": 104,
-        "color": 11
-      },
-      {
-        "kind": "fake",
-        "char": 97,
-        "color": 11
-      },
-      {
-        "kind": "fake",
-        "char": 110,
-        "color": 11
-      },
-      {
-        "kind": "fake",
-        "char": 100,
-        "color": 11
-      },
-      {
-        "kind": "fake",
-        "char": 115,
-        "color": 11
-      },
-      {
-        "kind": "fake",
-        "char": 45,
-        "color": 11
-      },
-      {
-        "kind": "fake",
-        "char": 111,
-        "color": 11
-      },
-      {
-        "kind": "fake",
-        "char": 110,
-        "color": 11
-      },
-      {
-        "kind": "fake",
-        "char": 32,
-        "color": 11
-      },
-      {
-        "kind": "fake",
         "char": 115,
         "color": 11
       },
@@ -2505,13 +2164,354 @@
       },
       {
         "kind": "fake",
-        "char": 115,
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 49,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 111,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 102,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 53,
         "color": 11
       },
       {
         "kind": "fake",
         "char": 46,
         "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 1
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 8
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 1
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 8
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 1
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 8
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 1
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 8
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 1
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 8
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 1
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 8
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 1
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 8
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 1
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 8
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 1
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 8
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 1
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 8
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 1
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 8
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 1
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 8
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 8
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 1
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 8
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 1
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 8
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 1
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 8
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 1
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 8
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 1
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 8
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 1
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 8
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 1
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 8
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 1
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 8
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 1
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 8
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 1
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 8
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 1
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 8
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 1
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 8
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 1
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 8
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 1
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 8
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 1
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 8
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 1
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 8
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 1
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 8
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 1
+      },
+      {
+        "kind": "fake",
+        "char": 178,
+        "color": 8
       },
       {
         "kind": "fake",
