@@ -2,6 +2,7 @@ import { createdevice } from 'zss/device'
 import { registerreadplayer } from 'zss/device/register'
 import {
   wanixhandleattach,
+  wanixhandlebindscroll,
   wanixhandledetach,
   wanixhandleshownenu,
   wanixhandlestop,
@@ -31,6 +32,31 @@ function readwanixdroppayload(data: unknown): WANIX_DROP_PAYLOAD | undefined {
     return undefined
   }
   if (!(payload.bytes instanceof Uint8Array)) {
+    return undefined
+  }
+  return payload
+}
+
+type WANIX_BIND_SCROLL_PAYLOAD = {
+  scrollname: string
+  path: string
+  text: string
+}
+
+function readwanixbindscrollpayload(
+  data: unknown,
+): WANIX_BIND_SCROLL_PAYLOAD | undefined {
+  if (!ispresent(data) || typeof data !== 'object') {
+    return undefined
+  }
+  const payload = data as WANIX_BIND_SCROLL_PAYLOAD
+  if (!isstring(payload.scrollname) || !payload.scrollname.trim()) {
+    return undefined
+  }
+  if (!isstring(payload.path) || !payload.path.trim()) {
+    return undefined
+  }
+  if (!isstring(payload.text)) {
     return undefined
   }
   return payload
@@ -101,6 +127,16 @@ const wanix = createdevice('wanix', [], (message) => {
           payload.kind,
           payload.bytes,
         )
+      })
+      break
+    }
+    case 'bind-scroll': {
+      const payload = readwanixbindscrollpayload(message.data)
+      if (!payload) {
+        break
+      }
+      doasync(wanix, message.player, async () => {
+        await wanixhandlebindscroll(wanix, message.player, payload)
       })
       break
     }

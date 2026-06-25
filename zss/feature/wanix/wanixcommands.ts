@@ -7,6 +7,7 @@ import {
   haltwanixtask,
   haltwanixvm,
   iswanixspaceactive,
+  putwanixfile,
   readwanixstatus,
   readwanixvmpreperror,
   readwanixvmprepstage,
@@ -31,6 +32,7 @@ import {
   removetask,
   removevm,
 } from 'zss/feature/wanix/wanixsession'
+import { readwanixtermiframelayout } from 'zss/feature/wanix/wanixtermiframehost'
 import { leavewanixattachedterminal } from 'zss/feature/wanix/wanixterminalmode'
 import { wanixtermscreenwritepong } from 'zss/feature/wanix/wanixtermscreen'
 import {
@@ -102,6 +104,7 @@ export async function wanixhandleshownenu(device: DEVICELIKE, player: string) {
     const parts: (string | string[])[] = [
       zssheaderlines('wanix'),
       zsstextline('drop a .wasm or .tgz to run'),
+      zsstextline('#wanix bind <scroll> [path] — push @scroll text into wanix'),
       zsssectionlines('Tasks'),
     ]
     if (tasks.length === 0) {
@@ -139,6 +142,37 @@ export async function wanixhandleshownenu(device: DEVICELIKE, player: string) {
       parts.push(zsstextline('#wanix detach — stop routing terminal input'))
     }
     terminalwritelines(device, player, zsstexttape(...parts))
+  } catch (err) {
+    apierror(
+      device,
+      player,
+      'wanix',
+      err instanceof Error ? err.message : String(err),
+    )
+  }
+}
+
+export async function wanixhandlebindscroll(
+  device: DEVICELIKE,
+  player: string,
+  opts: {
+    scrollname: string
+    path: string
+    text: string
+  },
+) {
+  try {
+    await ensurewanixsandbox(device, player)
+    const bytes = new TextEncoder().encode(opts.text)
+    await putwanixfile(opts.path, bytes)
+    const layout = readwanixtermiframelayout()
+    const target =
+      layout === 'vm' ? 'vm root' : layout === 'task' ? 'task ramfs' : 'wanix'
+    apilog(
+      device,
+      player,
+      `wanix bind scroll ${opts.scrollname} → ${opts.path} (${target})`,
+    )
   } catch (err) {
     apierror(
       device,

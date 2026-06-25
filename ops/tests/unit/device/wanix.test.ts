@@ -2,6 +2,7 @@ import { createmessage } from 'zss/device'
 import { hub } from 'zss/hub'
 
 const dropmock = jest.fn()
+const bindscrollmock = jest.fn()
 const stopmock = jest.fn()
 const termwritemock = jest.fn()
 const detachmock = jest.fn()
@@ -19,6 +20,7 @@ jest.mock('zss/feature/wanix/wanixlaunch', () => ({
 }))
 
 jest.mock('zss/feature/wanix/wanixcommands', () => ({
+  wanixhandlebindscroll: (...args: unknown[]) => bindscrollmock(...args),
   wanixhandlestop: (...args: unknown[]) => stopmock(...args),
   wanixhandletermwrite: (...args: unknown[]) => termwritemock(...args),
   wanixhandledetach: (...args: unknown[]) => detachmock(...args),
@@ -115,6 +117,24 @@ describe('wanix device', () => {
       expect.anything(),
       'player1',
       undefined,
+    )
+  })
+
+  it('routes bind-scroll to wanixhandlebindscroll', async () => {
+    invoke('bind-scroll', {
+      scrollname: 'wanixnotes',
+      path: 'scroll-wanixnotes.txt',
+      text: 'hello',
+    })
+    await new Promise((r) => setTimeout(r, 0))
+    expect(bindscrollmock).toHaveBeenCalledWith(
+      expect.anything(),
+      'player1',
+      {
+        scrollname: 'wanixnotes',
+        path: 'scroll-wanixnotes.txt',
+        text: 'hello',
+      },
     )
   })
 

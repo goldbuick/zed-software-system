@@ -415,6 +415,20 @@ export function wanixdrop(
   device.emit(player, 'wanix:drop', { label, kind, bytes })
 }
 
+export type WANIX_BIND_SCROLL_PAYLOAD = {
+  scrollname: string
+  path: string
+  text: string
+}
+
+export function wanixbindscroll(
+  device: DEVICELIKE,
+  player: string,
+  payload: WANIX_BIND_SCROLL_PAYLOAD,
+) {
+  device.emit(player, 'wanix:bind-scroll', payload)
+}
+
 export function heavyrestoreagents(
   device: DEVICELIKE,
   player: string,

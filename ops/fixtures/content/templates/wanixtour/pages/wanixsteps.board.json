@@ -4,1257 +4,2740 @@
     "name": "wanixsteps",
     "terrain": [
       {
-        "kind": "text",
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        "kind": "fake",
         "char": 84,
-        "color": 14,
-        "x": 25,
-        "y": 2
+        "color": 14
       },
       {
-        "kind": "text",
+        "kind": "fake",
         "char": 82,
-        "color": 14,
-        "x": 26,
-        "y": 2
+        "color": 14
       },
       {
-        "kind": "text",
+        "kind": "fake",
         "char": 89,
-        "color": 14,
-        "x": 27,
-        "y": 2
+        "color": 14
       },
       {
-        "kind": "text",
+        "kind": "fake",
+        "char": 32,
+        "color": 14
+      },
+      {
+        "kind": "fake",
         "char": 87,
-        "color": 14,
-        "x": 29,
-        "y": 2
+        "color": 14
       },
       {
-        "kind": "text",
+        "kind": "fake",
         "char": 65,
-        "color": 14,
-        "x": 30,
-        "y": 2
+        "color": 14
       },
       {
-        "kind": "text",
+        "kind": "fake",
         "char": 78,
-        "color": 14,
-        "x": 31,
-        "y": 2
+        "color": 14
       },
       {
-        "kind": "text",
+        "kind": "fake",
         "char": 73,
-        "color": 14,
-        "x": 32,
-        "y": 2
+        "color": 14
       },
       {
-        "kind": "text",
+        "kind": "fake",
         "char": 88,
-        "color": 14,
-        "x": 33,
-        "y": 2
+        "color": 14
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        "kind": "solid"
       },
       {
-        "kind": "text",
+        "kind": "solid"
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        "kind": "fake",
         "char": 49,
-        "color": 15,
-        "x": 6,
-        "y": 5
+        "color": 11
       },
       {
-        "kind": "text",
-        "char": 100,
-        "color": 15,
-        "x": 9,
-        "y": 5
-      },
-      {
-        "kind": "text",
-        "char": 114,
-        "color": 15,
-        "x": 10,
-        "y": 5
-      },
-      {
-        "kind": "text",
-        "char": 97,
-        "color": 15,
-        "x": 11,
-        "y": 5
-      },
-      {
-        "kind": "text",
-        "char": 103,
-        "color": 15,
-        "x": 12,
-        "y": 5
-      },
-      {
-        "kind": "text",
-        "char": 116,
-        "color": 15,
-        "x": 14,
-        "y": 5
-      },
-      {
-        "kind": "text",
-        "char": 101,
-        "color": 15,
-        "x": 15,
-        "y": 5
-      },
-      {
-        "kind": "text",
-        "char": 114,
-        "color": 15,
-        "x": 16,
-        "y": 5
-      },
-      {
-        "kind": "text",
-        "char": 109,
-        "color": 15,
-        "x": 17,
-        "y": 5
-      },
-      {
-        "kind": "text",
-        "char": 98,
-        "color": 15,
-        "x": 18,
-        "y": 5
-      },
-      {
-        "kind": "text",
-        "char": 114,
-        "color": 15,
-        "x": 19,
-        "y": 5
-      },
-      {
-        "kind": "text",
-        "char": 105,
-        "color": 15,
-        "x": 20,
-        "y": 5
-      },
-      {
-        "kind": "text",
-        "char": 100,
-        "color": 15,
-        "x": 21,
-        "y": 5
-      },
-      {
-        "kind": "text",
-        "char": 103,
-        "color": 15,
-        "x": 22,
-        "y": 5
-      },
-      {
-        "kind": "text",
-        "char": 101,
-        "color": 15,
-        "x": 23,
-        "y": 5
-      },
-      {
-        "kind": "text",
+        "kind": "fake",
         "char": 46,
-        "color": 15,
-        "x": 24,
-        "y": 5
+        "color": 11
       },
       {
-        "kind": "text",
-        "char": 119,
-        "color": 15,
-        "x": 25,
-        "y": 5
+        "kind": "fake",
+        "char": 32,
+        "color": 11
       },
       {
-        "kind": "text",
-        "char": 97,
-        "color": 15,
-        "x": 26,
-        "y": 5
-      },
-      {
-        "kind": "text",
-        "char": 115,
-        "color": 15,
-        "x": 27,
-        "y": 5
-      },
-      {
-        "kind": "text",
-        "char": 109,
-        "color": 15,
-        "x": 28,
-        "y": 5
-      },
-      {
-        "kind": "text",
-        "char": 111,
-        "color": 15,
-        "x": 30,
-        "y": 5
-      },
-      {
-        "kind": "text",
-        "char": 110,
-        "color": 15,
-        "x": 31,
-        "y": 5
-      },
-      {
-        "kind": "text",
-        "char": 116,
-        "color": 15,
-        "x": 32,
-        "y": 5
-      },
-      {
-        "kind": "text",
-        "char": 111,
-        "color": 15,
-        "x": 33,
-        "y": 5
-      },
-      {
-        "kind": "text",
-        "char": 116,
-        "color": 15,
-        "x": 35,
-        "y": 5
-      },
-      {
-        "kind": "text",
-        "char": 104,
-        "color": 15,
-        "x": 36,
-        "y": 5
-      },
-      {
-        "kind": "text",
-        "char": 101,
-        "color": 15,
-        "x": 37,
-        "y": 5
-      },
-      {
-        "kind": "text",
-        "char": 112,
-        "color": 15,
-        "x": 39,
-        "y": 5
-      },
-      {
-        "kind": "text",
-        "char": 97,
-        "color": 15,
-        "x": 40,
-        "y": 5
-      },
-      {
-        "kind": "text",
-        "char": 103,
-        "color": 15,
-        "x": 41,
-        "y": 5
-      },
-      {
-        "kind": "text",
-        "char": 101,
-        "color": 15,
-        "x": 42,
-        "y": 5
-      },
-      {
-        "kind": "text",
-        "char": 50,
-        "color": 15,
-        "x": 6,
-        "y": 7
-      },
-      {
-        "kind": "text",
-        "char": 116,
-        "color": 15,
-        "x": 9,
-        "y": 7
-      },
-      {
-        "kind": "text",
-        "char": 104,
-        "color": 15,
-        "x": 10,
-        "y": 7
-      },
-      {
-        "kind": "text",
-        "char": 101,
-        "color": 15,
-        "x": 11,
-        "y": 7
-      },
-      {
-        "kind": "text",
-        "char": 116,
-        "color": 15,
-        "x": 13,
-        "y": 7
-      },
-      {
-        "kind": "text",
-        "char": 101,
-        "color": 15,
-        "x": 14,
-        "y": 7
-      },
-      {
-        "kind": "text",
-        "char": 114,
-        "color": 15,
-        "x": 15,
-        "y": 7
-      },
-      {
-        "kind": "text",
-        "char": 109,
-        "color": 15,
-        "x": 16,
-        "y": 7
-      },
-      {
-        "kind": "text",
-        "char": 105,
-        "color": 15,
-        "x": 17,
-        "y": 7
-      },
-      {
-        "kind": "text",
-        "char": 110,
-        "color": 15,
-        "x": 18,
-        "y": 7
-      },
-      {
-        "kind": "text",
-        "char": 97,
-        "color": 15,
-        "x": 19,
-        "y": 7
-      },
-      {
-        "kind": "text",
-        "char": 108,
-        "color": 15,
-        "x": 20,
-        "y": 7
-      },
-      {
-        "kind": "text",
-        "char": 119,
-        "color": 15,
-        "x": 22,
-        "y": 7
-      },
-      {
-        "kind": "text",
-        "char": 97,
-        "color": 15,
-        "x": 23,
-        "y": 7
-      },
-      {
-        "kind": "text",
-        "char": 107,
-        "color": 15,
-        "x": 24,
-        "y": 7
-      },
-      {
-        "kind": "text",
-        "char": 101,
-        "color": 15,
-        "x": 25,
-        "y": 7
-      },
-      {
-        "kind": "text",
-        "char": 115,
-        "color": 15,
-        "x": 26,
-        "y": 7
-      },
-      {
-        "kind": "text",
-        "char": 117,
-        "color": 15,
-        "x": 28,
-        "y": 7
-      },
-      {
-        "kind": "text",
-        "char": 112,
-        "color": 15,
-        "x": 29,
-        "y": 7
-      },
-      {
-        "kind": "text",
-        "char": 44,
-        "color": 15,
-        "x": 30,
-        "y": 7
-      },
-      {
-        "kind": "text",
-        "char": 116,
-        "color": 15,
-        "x": 32,
-        "y": 7
-      },
-      {
-        "kind": "text",
-        "char": 121,
-        "color": 15,
-        "x": 33,
-        "y": 7
-      },
-      {
-        "kind": "text",
-        "char": 112,
-        "color": 15,
-        "x": 34,
-        "y": 7
-      },
-      {
-        "kind": "text",
-        "char": 101,
-        "color": 15,
-        "x": 35,
-        "y": 7
-      },
-      {
-        "kind": "text",
-        "char": 112,
-        "color": 15,
-        "x": 37,
-        "y": 7
-      },
-      {
-        "kind": "text",
-        "char": 105,
-        "color": 15,
-        "x": 38,
-        "y": 7
-      },
-      {
-        "kind": "text",
-        "char": 110,
-        "color": 15,
-        "x": 39,
-        "y": 7
-      },
-      {
-        "kind": "text",
-        "char": 103,
-        "color": 15,
-        "x": 40,
-        "y": 7
-      },
-      {
-        "kind": "text",
-        "char": 51,
-        "color": 15,
-        "x": 6,
-        "y": 9
-      },
-      {
-        "kind": "text",
-        "char": 112,
-        "color": 15,
-        "x": 9,
-        "y": 9
-      },
-      {
-        "kind": "text",
-        "char": 114,
-        "color": 15,
-        "x": 10,
-        "y": 9
-      },
-      {
-        "kind": "text",
-        "char": 101,
-        "color": 15,
-        "x": 11,
-        "y": 9
-      },
-      {
-        "kind": "text",
-        "char": 115,
-        "color": 15,
-        "x": 12,
-        "y": 9
-      },
-      {
-        "kind": "text",
-        "char": 115,
-        "color": 15,
-        "x": 13,
-        "y": 9
-      },
-      {
-        "kind": "text",
-        "char": 99,
-        "color": 15,
-        "x": 15,
-        "y": 9
-      },
-      {
-        "kind": "text",
-        "char": 116,
-        "color": 15,
-        "x": 16,
-        "y": 9
-      },
-      {
-        "kind": "text",
-        "char": 114,
-        "color": 15,
-        "x": 17,
-        "y": 9
-      },
-      {
-        "kind": "text",
-        "char": 108,
-        "color": 15,
-        "x": 18,
-        "y": 9
-      },
-      {
-        "kind": "text",
-        "char": 98,
-        "color": 15,
-        "x": 20,
-        "y": 9
-      },
-      {
-        "kind": "text",
-        "char": 97,
-        "color": 15,
-        "x": 21,
-        "y": 9
-      },
-      {
-        "kind": "text",
-        "char": 99,
-        "color": 15,
-        "x": 22,
-        "y": 9
-      },
-      {
-        "kind": "text",
-        "char": 107,
-        "color": 15,
-        "x": 23,
-        "y": 9
-      },
-      {
-        "kind": "text",
-        "char": 115,
-        "color": 15,
-        "x": 24,
-        "y": 9
-      },
-      {
-        "kind": "text",
-        "char": 108,
-        "color": 15,
-        "x": 25,
-        "y": 9
-      },
-      {
-        "kind": "text",
-        "char": 97,
-        "color": 15,
-        "x": 26,
-        "y": 9
-      },
-      {
-        "kind": "text",
-        "char": 115,
-        "color": 15,
-        "x": 27,
-        "y": 9
-      },
-      {
-        "kind": "text",
-        "char": 104,
-        "color": 15,
-        "x": 28,
-        "y": 9
-      },
-      {
-        "kind": "text",
-        "char": 116,
-        "color": 15,
-        "x": 30,
-        "y": 9
-      },
-      {
-        "kind": "text",
-        "char": 111,
-        "color": 15,
-        "x": 31,
-        "y": 9
-      },
-      {
-        "kind": "text",
-        "char": 115,
-        "color": 15,
-        "x": 33,
-        "y": 9
-      },
-      {
-        "kind": "text",
-        "char": 116,
-        "color": 15,
-        "x": 34,
-        "y": 9
-      },
-      {
-        "kind": "text",
-        "char": 101,
-        "color": 15,
-        "x": 35,
-        "y": 9
-      },
-      {
-        "kind": "text",
-        "char": 112,
-        "color": 15,
-        "x": 36,
-        "y": 9
-      },
-      {
-        "kind": "text",
-        "char": 97,
-        "color": 15,
-        "x": 38,
-        "y": 9
-      },
-      {
-        "kind": "text",
-        "char": 119,
-        "color": 15,
-        "x": 39,
-        "y": 9
-      },
-      {
-        "kind": "text",
-        "char": 97,
-        "color": 15,
-        "x": 40,
-        "y": 9
-      },
-      {
-        "kind": "text",
-        "char": 121,
-        "color": 15,
-        "x": 41,
-        "y": 9
-      },
-      {
-        "kind": "text",
-        "char": 111,
-        "color": 11,
-        "x": 6,
-        "y": 13
-      },
-      {
-        "kind": "text",
-        "char": 114,
-        "color": 11,
-        "x": 7,
-        "y": 13
-      },
-      {
-        "kind": "text",
-        "char": 117,
-        "color": 11,
-        "x": 9,
-        "y": 13
-      },
-      {
-        "kind": "text",
-        "char": 115,
-        "color": 11,
-        "x": 10,
-        "y": 13
-      },
-      {
-        "kind": "text",
-        "char": 101,
-        "color": 11,
-        "x": 11,
-        "y": 13
-      },
-      {
-        "kind": "text",
-        "char": 116,
-        "color": 11,
-        "x": 13,
-        "y": 13
-      },
-      {
-        "kind": "text",
-        "char": 104,
-        "color": 11,
-        "x": 14,
-        "y": 13
-      },
-      {
-        "kind": "text",
-        "char": 101,
-        "color": 11,
-        "x": 15,
-        "y": 13
-      },
-      {
-        "kind": "text",
-        "char": 115,
-        "color": 11,
-        "x": 16,
-        "y": 13
-      },
-      {
-        "kind": "text",
-        "char": 101,
-        "color": 11,
-        "x": 17,
-        "y": 13
-      },
-      {
-        "kind": "text",
-        "char": 98,
-        "color": 11,
-        "x": 19,
-        "y": 13
-      },
-      {
-        "kind": "text",
-        "char": 117,
-        "color": 11,
-        "x": 20,
-        "y": 13
-      },
-      {
-        "kind": "text",
-        "char": 116,
-        "color": 11,
-        "x": 21,
-        "y": 13
-      },
-      {
-        "kind": "text",
-        "char": 116,
-        "color": 11,
-        "x": 22,
-        "y": 13
-      },
-      {
-        "kind": "text",
-        "char": 111,
-        "color": 11,
-        "x": 23,
-        "y": 13
-      },
-      {
-        "kind": "text",
-        "char": 110,
-        "color": 11,
-        "x": 24,
-        "y": 13
-      },
-      {
-        "kind": "text",
-        "char": 115,
-        "color": 11,
-        "x": 25,
-        "y": 13
-      },
-      {
-        "kind": "text",
-        "char": 112,
-        "color": 14,
-        "x": 6,
-        "y": 16
-      },
-      {
-        "kind": "text",
-        "char": 114,
-        "color": 14,
-        "x": 7,
-        "y": 16
-      },
-      {
-        "kind": "text",
-        "char": 101,
-        "color": 14,
-        "x": 8,
-        "y": 16
-      },
-      {
-        "kind": "text",
-        "char": 115,
-        "color": 14,
-        "x": 9,
-        "y": 16
-      },
-      {
-        "kind": "text",
-        "char": 115,
-        "color": 14,
-        "x": 10,
-        "y": 16
-      },
-      {
-        "kind": "text",
-        "char": 82,
-        "color": 14,
-        "x": 12,
-        "y": 16
-      },
-      {
-        "kind": "text",
-        "char": 73,
-        "color": 14,
-        "x": 13,
-        "y": 16
-      },
-      {
-        "kind": "text",
-        "char": 71,
-        "color": 14,
-        "x": 14,
-        "y": 16
-      },
-      {
-        "kind": "text",
-        "char": 72,
-        "color": 14,
-        "x": 15,
-        "y": 16
-      },
-      {
-        "kind": "text",
-        "char": 84,
-        "color": 14,
-        "x": 16,
-        "y": 16
-      },
-      {
-        "kind": "text",
-        "char": 111,
-        "color": 14,
-        "x": 19,
-        "y": 16
-      },
-      {
-        "kind": "text",
-        "char": 112,
-        "color": 14,
-        "x": 20,
-        "y": 16
-      },
-      {
-        "kind": "text",
-        "char": 101,
-        "color": 14,
-        "x": 21,
-        "y": 16
-      },
-      {
-        "kind": "text",
-        "char": 110,
-        "color": 14,
-        "x": 22,
-        "y": 16
-      },
-      {
-        "kind": "text",
-        "char": 116,
-        "color": 14,
-        "x": 24,
-        "y": 16
-      },
-      {
-        "kind": "text",
-        "char": 104,
-        "color": 14,
-        "x": 25,
-        "y": 16
-      },
-      {
-        "kind": "text",
-        "char": 101,
-        "color": 14,
-        "x": 26,
-        "y": 16
-      },
-      {
-        "kind": "text",
-        "char": 119,
-        "color": 14,
-        "x": 28,
-        "y": 16
-      },
-      {
-        "kind": "text",
-        "char": 97,
-        "color": 14,
-        "x": 29,
-        "y": 16
-      },
-      {
-        "kind": "text",
-        "char": 110,
-        "color": 14,
-        "x": 30,
-        "y": 16
-      },
-      {
-        "kind": "text",
-        "char": 105,
-        "color": 14,
-        "x": 31,
-        "y": 16
-      },
-      {
-        "kind": "text",
-        "char": 120,
-        "color": 14,
-        "x": 32,
-        "y": 16
-      },
-      {
-        "kind": "text",
-        "char": 109,
-        "color": 14,
-        "x": 34,
-        "y": 16
-      },
-      {
-        "kind": "text",
-        "char": 101,
-        "color": 14,
-        "x": 35,
-        "y": 16
-      },
-      {
-        "kind": "text",
-        "char": 110,
-        "color": 14,
-        "x": 36,
-        "y": 16
-      },
-      {
-        "kind": "text",
-        "char": 117,
-        "color": 14,
-        "x": 37,
-        "y": 16
-      },
-      {
-        "kind": "text",
-        "char": 112,
-        "color": 10,
-        "x": 6,
-        "y": 19
-      },
-      {
-        "kind": "text",
-        "char": 114,
-        "color": 10,
-        "x": 7,
-        "y": 19
-      },
-      {
-        "kind": "text",
-        "char": 101,
-        "color": 10,
-        "x": 8,
-        "y": 19
-      },
-      {
-        "kind": "text",
-        "char": 115,
-        "color": 10,
-        "x": 9,
-        "y": 19
-      },
-      {
-        "kind": "text",
-        "char": 115,
-        "color": 10,
-        "x": 10,
-        "y": 19
-      },
-      {
-        "kind": "text",
-        "char": 82,
-        "color": 10,
-        "x": 12,
-        "y": 19
-      },
-      {
-        "kind": "text",
-        "char": 73,
-        "color": 10,
-        "x": 13,
-        "y": 19
-      },
-      {
-        "kind": "text",
-        "char": 71,
-        "color": 10,
-        "x": 14,
-        "y": 19
-      },
-      {
-        "kind": "text",
-        "char": 72,
-        "color": 10,
-        "x": 15,
-        "y": 19
-      },
-      {
-        "kind": "text",
-        "char": 84,
-        "color": 10,
-        "x": 16,
-        "y": 19
-      },
-      {
-        "kind": "text",
-        "char": 98,
-        "color": 10,
-        "x": 19,
-        "y": 19
-      },
-      {
-        "kind": "text",
-        "char": 111,
-        "color": 10,
-        "x": 20,
-        "y": 19
-      },
-      {
-        "kind": "text",
-        "char": 111,
-        "color": 10,
-        "x": 21,
-        "y": 19
-      },
-      {
-        "kind": "text",
-        "char": 116,
-        "color": 10,
-        "x": 22,
-        "y": 19
-      },
-      {
-        "kind": "text",
-        "char": 97,
-        "color": 10,
-        "x": 24,
-        "y": 19
-      },
-      {
-        "kind": "text",
-        "char": 108,
-        "color": 10,
-        "x": 25,
-        "y": 19
-      },
-      {
-        "kind": "text",
-        "char": 112,
-        "color": 10,
-        "x": 26,
-        "y": 19
-      },
-      {
-        "kind": "text",
-        "char": 105,
-        "color": 10,
-        "x": 27,
-        "y": 19
-      },
-      {
-        "kind": "text",
-        "char": 110,
-        "color": 10,
-        "x": 28,
-        "y": 19
-      },
-      {
-        "kind": "text",
-        "char": 101,
-        "color": 10,
-        "x": 29,
-        "y": 19
-      },
-      {
-        "kind": "text",
-        "char": 108,
-        "color": 10,
-        "x": 31,
-        "y": 19
-      },
-      {
-        "kind": "text",
-        "char": 105,
-        "color": 10,
-        "x": 32,
-        "y": 19
-      },
-      {
-        "kind": "text",
-        "char": 110,
-        "color": 10,
-        "x": 33,
-        "y": 19
-      },
-      {
-        "kind": "text",
-        "char": 117,
-        "color": 10,
-        "x": 34,
-        "y": 19
-      },
-      {
-        "kind": "text",
-        "char": 120,
-        "color": 10,
-        "x": 35,
-        "y": 19
-      },
-      {
-        "kind": "text",
-        "char": 108,
-        "color": 7,
-        "x": 23,
-        "y": 23
-      },
-      {
-        "kind": "text",
-        "char": 97,
-        "color": 7,
-        "x": 24,
-        "y": 23
-      },
-      {
-        "kind": "text",
-        "char": 115,
-        "color": 7,
-        "x": 25,
-        "y": 23
-      },
-      {
-        "kind": "text",
-        "char": 116,
-        "color": 7,
-        "x": 26,
-        "y": 23
-      },
-      {
-        "kind": "text",
-        "char": 115,
-        "color": 7,
-        "x": 28,
-        "y": 23
-      },
-      {
-        "kind": "text",
-        "char": 116,
-        "color": 7,
-        "x": 29,
-        "y": 23
-      },
-      {
-        "kind": "text",
-        "char": 111,
-        "color": 7,
-        "x": 30,
-        "y": 23
-      },
-      {
-        "kind": "text",
-        "char": 112,
-        "color": 7,
-        "x": 31,
-        "y": 23
-      },
-      {
-        "kind": "text",
+        "kind": "fake",
         "char": 68,
-        "color": 7,
-        "x": 33,
-        "y": 23
+        "color": 11
       },
       {
-        "kind": "text",
-        "char": 79,
-        "color": 7,
-        "x": 34,
-        "y": 23
+        "kind": "fake",
+        "char": 114,
+        "color": 11
       },
       {
-        "kind": "text",
+        "kind": "fake",
+        "char": 111,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 112,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 97,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 46,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 119,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 97,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 115,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 109,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 102,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 105,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 108,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 101,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 111,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 110,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 116,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 111,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 116,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 104,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 101,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 112,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 97,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 103,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 101,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 46,
+        "color": 11
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        "kind": "fake",
+        "char": 50,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 46,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 84,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 121,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 112,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 101,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 35,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 119,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 97,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 110,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 105,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 120,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 116,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 111,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 111,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 112,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 101,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 110,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 116,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 104,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 101,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 119,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 97,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 110,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 105,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 120,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 109,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 101,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 110,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 117,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 46,
+        "color": 11
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        "kind": "fake",
+        "char": 51,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 46,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 84,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 121,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 112,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 101,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 35,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 119,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 97,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 110,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 105,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 120,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 118,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 109,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 116,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 111,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 98,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 111,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 111,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 116,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 97,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 108,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 112,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 105,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 110,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 101,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 108,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 105,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 110,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 117,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 120,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 46,
+        "color": 11
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        "kind": "fake",
+        "char": 52,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 46,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 84,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 121,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 112,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 101,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 35,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 119,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 97,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 110,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 105,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 120,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 98,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 105,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 110,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 100,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 60,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 115,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 99,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 114,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 111,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 108,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 108,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 62,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 102,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 111,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 114,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 97,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 115,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 99,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 114,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 111,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 108,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 108,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 102,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 105,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 108,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 101,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 46,
+        "color": 11
+      },
+      null,
+      null,
+      null,
+      null,
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        "kind": "fake",
+        "char": 53,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 46,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 84,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 121,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 112,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 101,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 35,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 119,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 97,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 110,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 105,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 120,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 97,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 116,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 116,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 97,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 99,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 104,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 102,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 111,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 114,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 116,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 105,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 108,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 101,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 116,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 101,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 114,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 109,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 105,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 110,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 97,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 108,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 109,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 111,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 100,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 101,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 46,
+        "color": 11
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      null,
+      {
+        "kind": "water"
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      null,
+      null,
+      null,
+      {
+        "kind": "fake",
         "char": 87,
-        "color": 7,
-        "x": 35,
-        "y": 23
+        "color": 11
       },
       {
-        "kind": "text",
-        "char": 78,
-        "color": 7,
-        "x": 36,
-        "y": 23
+        "kind": "fake",
+        "char": 97,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 108,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 107,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 83,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 79,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 85,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 84,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 72,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 116,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 111,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 102,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 105,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 110,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 105,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 115,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 104,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 116,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 104,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 101,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 116,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 111,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 117,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 114,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 46,
+        "color": 11
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      null,
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      null,
+      null,
+      null,
+      {
+        "kind": "water"
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      null,
+      {
+        "kind": "water"
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      {
+        "kind": "water"
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      null,
+      {
+        "kind": "water"
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
+      },
+      {
+        "kind": "solid"
       }
     ],
-    "objects": {
-      "sid_wtbtnmenu": {
-        "id": "sid_wtbtnmenu",
-        "x": 3,
-        "y": 16,
-        "kind": "object",
-        "char": 16,
-        "color": 14,
-        "code": "@menubtn\n@char 16\n@color yellow\n:touch\n$cyanwanix\n$whitedrop a .wasm or boot linux\n!runit #wanix;$greenopen the wanix menu\n#end\n"
-      },
-      "sid_wtbtnvm": {
-        "id": "sid_wtbtnvm",
-        "x": 3,
-        "y": 19,
-        "kind": "object",
-        "char": 16,
-        "color": 10,
-        "code": "@vmbtn\n@char 16\n@color green\n:touch\n$cyanlinux vm\n$whitefirst boot downloads a disk image\n!runit #wanix vm;$greenboot alpine linux\n#end\n"
-      }
-    }
+    "objects": {}
   }
 }

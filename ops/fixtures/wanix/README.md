@@ -16,8 +16,23 @@ Reference: [tractordev/wanix](https://github.com/tractordev/wanix) **`main`** (`
 | `#wanix vm` prep | [`examples/basic-vm.html`](https://github.com/tractordev/wanix/blob/main/examples/basic-vm.html) — linux + `#vm` ns + v86 binds **before** first `ready` | `spawnwanixvmspace` → `bootwanixsystemforvm` |
 | VM serial console | `<wanix-vm export="ttyS0" term>` + `#vm/<rid>/term/data` | `createvm` + `connectvmterm` after `el.start()` |
 | Term I/O | `<wanix-term path="…" raw>` (we use tile bridge instead of xterm) | `wanixhost.ts` + `WanixTermInput` |
+| `@scroll` bind | `#wanix bind <scroll> [path]` → `putfile` on active layout | `wanixcommands.ts` + firmware `#wanix bind` |
 
 VM prep must **not** call `_setupNamespace` a second time after `#ramfs` (that caused the Go `writeFile` panic). `#wanix vm` reboots into the basic-vm bind layout via `spawnwanixvmspace`.
+
+### Bind @scroll codepages
+
+Push a scroll codepage body (plaintext after the `@scroll <name>` header) into the active Wanix namespace:
+
+```text
+#wanix bind wanixnotes
+#wanix bind wanixnotes custom.txt
+```
+
+- **Task layout** — file lands on `#ramfs` (visible to WASI tasks)
+- **VM layout** — file lands on the linux rootfs (e.g. `cat scroll-wanixnotes.txt` from serial)
+
+Default path: `scroll-<name>.txt`. Import **`wanixtour`** book for a playable demo on the `wanixsteps` board.
 
 ### Manual vm-simple harness
 

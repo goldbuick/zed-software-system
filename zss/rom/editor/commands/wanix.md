@@ -1,3 +1,3 @@
 ---
-hint: $DKGRAY#wanix menu — attach, stop, unmount via links
+hint: $DKGRAY#wanix menu — bind @scroll, attach, stop; #wanix bind <scroll> [path]
 ---
