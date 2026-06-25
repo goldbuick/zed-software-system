@@ -194,18 +194,18 @@ export async function wanixhandleshownenu(device: DEVICELIKE, player: string) {
         const attachlabel = isattached
           ? `Attach ${task.label} $cyanattached`
           : `Attach ${task.label}`
-        parts.push(zsszedlinkline(`wanix attach ${task.id}`, attachlabel))
+        parts.push(zsszedlinkline(`wanixattach ${task.id}`, attachlabel))
         parts.push(
-          zsszedlinkline(`wanix stop ${task.id}`, `Stop ${task.label}`),
+          zsszedlinkline(`wanixstop ${task.id}`, `Stop ${task.label}`),
         )
       }
       parts.push(
-        zsszedlinkline('wanix stop', `Stop all (${tasks.length} tasks)`),
+        zsszedlinkline('wanixstop', `Stop all (${tasks.length} tasks)`),
       )
     }
     parts.push(zsssectionlines('VMs'))
     if (vms.length === 0) {
-      parts.push(zsszedlinkline('wanix vm', 'Boot Linux in v86'))
+      parts.push(zsszedlinkline('wanixvm', 'Boot Linux in v86'))
     } else {
       for (const vm of vms) {
         const isattached =
@@ -213,11 +213,11 @@ export async function wanixhandleshownenu(device: DEVICELIKE, player: string) {
         const attachlabel = isattached
           ? `Attach ${vm.label} $cyanattached`
           : `Attach ${vm.label}`
-        parts.push(zsszedlinkline(`wanix attach ${vm.id}`, attachlabel))
-        parts.push(zsszedlinkline(`wanix vm stop ${vm.id}`, `Stop ${vm.label}`))
+        parts.push(zsszedlinkline(`wanixattach ${vm.id}`, attachlabel))
+        parts.push(zsszedlinkline(`wanixvmstop ${vm.id}`, `Stop ${vm.label}`))
       }
       parts.push(
-        zsszedlinkline('wanix vm stop', `Stop all (${vms.length} vms)`),
+        zsszedlinkline('wanixvmstop', `Stop all (${vms.length} vms)`),
       )
     }
     if (iswanixtermactive()) {

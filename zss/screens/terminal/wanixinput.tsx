@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from 'react'
 import { apierror, vmcli, wanixdetach, wanixtermwrite } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
+import { withclipboard } from 'zss/feature/keyboard'
 import { sendwanixterminput } from 'zss/feature/wanix/wanixhost'
 import {
   iswanixtermraw,
@@ -9,7 +10,10 @@ import {
 } from 'zss/feature/wanix/wanixsession'
 import {
   iswanixcliescape,
+  iswanixpasteevent,
   keyboardeventtoxtermdata,
+  pastetexttolinebuffer,
+  pastetexttovmserial,
 } from 'zss/feature/wanix/wanixtermkeys'
 import {
   wanixtermscreenechochar,
@@ -52,6 +56,61 @@ export function WanixTermInput() {
     [player],
   )
 
+  const appendpasteintobuffer = useCallback(
+    (text: string, echo: boolean) => {
+      const chunk = pastetexttolinebuffer(text)
+      if (!chunk.length) {
+        return
+      }
+      linebuffer.current += chunk
+      if (echo) {
+        for (let i = 0; i < chunk.length; i++) {
+          wanixtermscreenechochar(chunk[i])
+        }
+      }
+    },
+    [],
+  )
+
+  const handlepaste = useCallback(
+    (event: KeyboardEvent) => {
+      if (!iswanixpasteevent(event)) {
+        return false
+      }
+      event.preventDefault()
+      const clip = withclipboard()
+      if (!clip) {
+        return true
+      }
+      const raw = iswanixtermraw()
+      void clip
+        .readText()
+        .then((text) => {
+          if (!text.length) {
+            return
+          }
+          if (raw) {
+            void sendwanixterminput(pastetexttovmserial(text)).catch(
+              reportinputerror,
+            )
+            return
+          }
+          if (climode) {
+            appendpasteintobuffer(text, !attached)
+            return
+          }
+          if (attached) {
+            appendpasteintobuffer(text, false)
+            return
+          }
+          appendpasteintobuffer(text, true)
+        })
+        .catch(reportinputerror)
+      return true
+    },
+    [appendpasteintobuffer, attached, climode, reportinputerror],
+  )
+
   const handlekeydown = useCallback(
     (event: KeyboardEvent) => {
       const vmattached = attached && readwanixattachedkind() === 'vm'
@@ -67,6 +126,10 @@ export function WanixTermInput() {
         if (!attached) {
           wanixtermscreenshowclihint()
         }
+        return
+      }
+
+      if (handlepaste(event)) {
         return
       }
 
@@ -159,7 +222,7 @@ export function WanixTermInput() {
         wanixtermscreenechochar(event.key)
       }
     },
-    [attached, climode, player, reportinputerror, sendline],
+    [attached, climode, handlepaste, player, reportinputerror, sendline],
   )
 
   return <UserInput keydown={handlekeydown} />

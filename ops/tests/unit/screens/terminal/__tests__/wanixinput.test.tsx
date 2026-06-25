@@ -6,8 +6,17 @@ const mockechochar = jest.fn()
 const mockecholine = jest.fn()
 const mockwanixtermwrite = jest.fn()
 
+const mockreadtext = jest.fn()
+
 jest.mock('zss/gadget/userinput', () => ({
   UserInput: jest.requireActual('zss/gadget/userinput.bridge').UserInput,
+}))
+
+jest.mock('zss/feature/keyboard', () => ({
+  withclipboard: () => ({
+    readText: mockreadtext,
+    writeText: jest.fn(),
+  }),
 }))
 
 jest.mock('zss/feature/wanix/wanixhost', () => ({
@@ -89,7 +98,10 @@ describe('WanixTermInput vm raw input', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockiswanixtermraw.mockReturnValue(false)
+    mockterminalmode.mockReturnValue('attached')
+    mockreadwanixattachedkind.mockReturnValue(null)
     mockterminput.mockResolvedValue(undefined)
+    mockreadtext.mockResolvedValue('')
     container = document.createElement('div')
     document.body.appendChild(container)
     root = createRoot(container)
@@ -220,5 +232,104 @@ describe('WanixTermInput vm raw input', () => {
       'ping',
     )
     expect(mockterminput).not.toHaveBeenCalled()
+  })
+})
+
+describe('WanixTermInput paste', () => {
+  let container: HTMLDivElement
+  let root: Root
+  const holder: { current: ReturnType<typeof mitt> | null } = { current: null }
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    mockiswanixtermraw.mockReturnValue(false)
+    mockterminalmode.mockReturnValue('attached')
+    mockreadwanixattachedkind.mockReturnValue(null)
+    mockterminput.mockResolvedValue(undefined)
+    mockreadtext.mockResolvedValue('')
+    container = document.createElement('div')
+    document.body.appendChild(container)
+    root = createRoot(container)
+    holder.current = null
+  })
+
+  afterEach(() => {
+    act(() => {
+      root.unmount()
+    })
+    container.remove()
+  })
+
+  function mountinput() {
+    const CaptureMitt = capturemittref(holder)
+    act(() => {
+      root.render(
+        <UserFocusLite>
+          <CaptureMitt />
+          <WanixTermInput />
+        </UserFocusLite>,
+      )
+    })
+    expect(holder.current).not.toBeNull()
+  }
+
+  function emitkeydown(event: KeyboardEvent) {
+    act(() => {
+      holder.current!.emit('keydown', event)
+    })
+  }
+
+  async function flushasync() {
+    await act(async () => {
+      await Promise.resolve()
+    })
+  }
+
+  function emitpaste(text: string) {
+    mockreadtext.mockResolvedValueOnce(text)
+    emitkeydown(keyevent('keydown', { key: 'v', ctrlKey: true }))
+  }
+
+  it('pastes multiline text to vm serial with carriage returns', async () => {
+    mockreadwanixattachedkind.mockReturnValue('vm')
+    mockiswanixtermraw.mockReturnValue(true)
+    mountinput()
+
+    emitpaste('line1\nline2')
+    await flushasync()
+
+    expect(mockreadtext).toHaveBeenCalled()
+    expect(mockterminput).toHaveBeenCalledWith('line1\rline2')
+  })
+
+  it('pastes into attached task line buffer without local echo', async () => {
+    mockterminalmode.mockReturnValue('attached')
+    mockiswanixtermraw.mockReturnValue(false)
+    mockreadwanixattachedkind.mockReturnValue('task')
+    mountinput()
+
+    emitpaste('hello')
+    await flushasync()
+    emitkeydown(keyevent('keydown', { key: 'Enter' }))
+
+    expect(mockechochar).not.toHaveBeenCalled()
+    expect(mockwanixtermwrite).toHaveBeenCalledWith(
+      expect.anything(),
+      'player1',
+      'hello',
+    )
+  })
+
+  it('pastes into pre-attach buffer with local echo', async () => {
+    mockterminalmode.mockReturnValue('cli')
+    mockiswanixtermraw.mockReturnValue(false)
+    mockreadwanixattachedkind.mockReturnValue(null)
+    mountinput()
+
+    emitpaste('ab')
+    await flushasync()
+
+    expect(mockechochar).toHaveBeenCalledWith('a')
+    expect(mockechochar).toHaveBeenCalledWith('b')
   })
 })

@@ -4,7 +4,7 @@ How zed.cafe sizes the hidden wanix `<wanix-term>` iframe and mirrors its xterm 
 
 ## Architecture overview
 
-Sizing is **one-way host → guest**. The visible ZSS tile knows its character grid; the host pixel-sizes a hidden iframe to match. Upstream `<wanix-term>` (wanix CDN) uses xterm **FitAddon** + **ResizeObserver** to derive cols/rows from that pixel box. Content flows **child → parent** via a **50ms cell snapshot poll** — not via serial replay or winsize propagation.
+Sizing is **one-way host → guest**. The visible ZSS tile knows its character grid; the host pixel-sizes a hidden iframe to match. Upstream `<wanix-term>` (wanix CDN) uses xterm **FitAddon** + **ResizeObserver** to derive cols/rows from that pixel box. Content flows **child → parent** via a **100ms cell snapshot poll** — not via serial replay or winsize propagation.
 
 **Do not add:** `winch` file writes, `stty cols/rows`, explicit `term.resize()`, or guest-side size messages back to the host. See [`.cursor/skills/wanix-term-sizing/SKILL.md`](../../.cursor/skills/wanix-term-sizing/SKILL.md).
 
@@ -41,7 +41,7 @@ flowchart TD
 flowchart TD
   Guest["WASI task / VM serial output"]
   XT["xterm buffer"]
-  Poll["setInterval emitcellsnapshot 50ms"]
+  Poll["setInterval emitcellsnapshot 100ms"]
   FitPush["on fit-size change: emitcellsnapshot"]
   PM["postMessage zss-wanix-term-cells"]
   HC["handlecells → wanixtermscreensync"]
@@ -67,7 +67,7 @@ Cell read uses the **visible xterm viewport** (`buffer.active.baseY + y`), not a
 | [`zss/screens/tape/measure.ts`](../../zss/screens/tape/measure.ts) | Terminal width = `screensize.cols - 1` |
 | [`zss/screens/terminal/wanixscreen.tsx`](../../zss/screens/terminal/wanixscreen.tsx) | Resize entry point; mirrors cells to tile store |
 | [`zss/feature/wanix/wanixtermiframehost.ts`](../../zss/feature/wanix/wanixtermiframehost.ts) | Parent iframe pixel math, cell message handler |
-| [`zss/feature/wanix/wanixtermprobe.ts`](../../zss/feature/wanix/wanixtermprobe.ts) | Child iframe: 50ms poll, fit-size push, probe RPC |
+| [`zss/feature/wanix/wanixtermprobe.ts`](../../zss/feature/wanix/wanixtermprobe.ts) | Child iframe: 100ms poll, fit-size push, probe RPC |
 | [`zss/feature/wanix/wanixtermscreen.ts`](../../zss/feature/wanix/wanixtermscreen.ts) | Main-thread cell mirror buffer |
 | [`zss/feature/wanix/wanixtermcells.ts`](../../zss/feature/wanix/wanixtermcells.ts) | Read xterm buffer → snapshot; digest for dedup |
 | Upstream `wanix-term` CE | FitAddon + ResizeObserver (not in this repo) |
@@ -79,12 +79,12 @@ Cell read uses the **visible xterm viewport** (`buffer.active.baseY + y`), not a
 | **256ms** | `cafe/index.tsx` `debounce(applyconfig, 256)` | Screen grid updates after window resize settles |
 | **0ms** | `WanixTermScreen` `useEffect` on `edge` change | Tile buffer reset + iframe px applied synchronously |
 | **async** | wanix-term `ResizeObserver` → FitAddon | xterm cols/rows catch up after iframe style change |
-| **50ms** | `installwanixtermprobeembed` `setInterval(emitcellsnapshot, 50)` | Regular cell push when digest changes |
+| **100ms** | `installwanixtermprobeembed` `setInterval(emitcellsnapshot, 100)` | Regular cell push when digest changes |
 | **immediate** | `logxtermfitsizeifchanged` on fit change | Extra push when xterm grid dimensions change |
 | **rAF** | `applyiframepixels` → `synccellsfromchild` | Parent pull after host resize (when attached) |
 | **250ms** | `onlayouttick` | Re-applies probe layout CSS; logs fit size |
 
-Worst-case visible lag before fixes: 256ms debounce + async FitAddon + up to 50ms poll + missing `context.changed()` (tile GPU never repainted until next resize).
+Worst-case visible lag before fixes: 256ms debounce + async FitAddon + up to 100ms poll + missing `context.changed()` (tile GPU never repainted until next resize).
 
 ## Dimension math
 

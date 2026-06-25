@@ -29,6 +29,12 @@ import { TerminalRunIt } from './runit'
 import { TerminalSelect } from './select'
 import { TerminalText } from './text'
 import { TerminalViewIt } from './viewit'
+import {
+  TerminalWanixAttach,
+  TerminalWanixStop,
+  TerminalWanixVm,
+  TerminalWanixVmStop,
+} from './wanixlink'
 import { TerminalZSSEdit } from './zssedit'
 
 export function TerminalItem({ active, text, y }: TapeTerminalItemProps) {
@@ -90,6 +96,14 @@ export function TerminalItem({ active, text, y }: TapeTerminalItemProps) {
         return <TerminalViewIt {...props} words={words} />
       case 'runit':
         return <TerminalRunIt {...props} words={words} />
+      case 'wanixattach':
+        return <TerminalWanixAttach {...props} words={words} />
+      case 'wanixstop':
+        return <TerminalWanixStop {...props} words={words} />
+      case 'wanixvmstop':
+        return <TerminalWanixVmStop {...props} words={words} />
+      case 'wanixvm':
+        return <TerminalWanixVm {...props} words={words} />
       default:
       case 'hyperlink':
         return <TerminalHyperlink {...props} words={words} />

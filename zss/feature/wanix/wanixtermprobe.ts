@@ -19,6 +19,8 @@ type XtermCell = {
   getWidth: () => number
   getFgColor: () => number
   getBgColor: () => number
+  getFgColorMode?: () => number
+  getBgColorMode?: () => number
 }
 
 type XtermLine = {
@@ -31,6 +33,7 @@ type XtermBuffer = {
   length: number
   cursorX: number
   cursorY: number
+  baseY?: number
   getLine: (index: number) => XtermLine | undefined
 }
 
@@ -50,6 +53,9 @@ type WanixTermElement = HTMLElement & {
 
 const LOGIN_PROMPT_RE = /login:/i
 const SHELL_PROMPT_RE = /~\s#/
+
+/** Background cell poll; keystrokes also push immediately via sendinput. */
+const WANIX_CELL_POLL_MS = 100
 
 // Fill the iframe viewport so the term's FitAddon fits the xterm grid to the
 // host-set iframe pixel size (cols x rows). The iframe itself is hidden/off-screen.
@@ -107,6 +113,62 @@ function readxtermserial(term: XtermInstance): string {
 
 function sleep(ms: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, ms))
+}
+
+function summarizewanixtermcolors(snapshot: WanixTermCellsSnapshot) {
+  return {
+    uniqueFg: new Set(snapshot.color).size,
+    uniqueBg: new Set(snapshot.bg).size,
+  }
+}
+
+const RAW_COLOR_SAMPLE_MAX = 5
+
+function summarizewanixtermrawcolors(term: XtermInstance) {
+  const active = term.buffer.active
+  const basey = active.baseY ?? 0
+  const rawfgmodes = new Set<number>()
+  const rawfgsamples: { mode: number; color: number }[] = []
+  const rawbgmodes = new Set<number>()
+  const rawbgsamples: { mode: number; color: number }[] = []
+
+  for (let y = 0; y < term.rows; y++) {
+    const line = active.getLine(basey + y)
+    if (!line) {
+      continue
+    }
+    const linelen = Math.min(term.cols, line.length)
+    for (let x = 0; x < linelen; x++) {
+      const cell = line.getCell(x)
+      if (!cell) {
+        continue
+      }
+      const fgmode = cell.getFgColorMode?.() ?? 0
+      const fg = cell.getFgColor()
+      const bgmode = cell.getBgColorMode?.() ?? 0
+      const bg = cell.getBgColor()
+
+      if (fgmode !== 0) {
+        rawfgmodes.add(fgmode)
+        if (rawfgsamples.length < RAW_COLOR_SAMPLE_MAX) {
+          rawfgsamples.push({ mode: fgmode, color: fg })
+        }
+      }
+      if (bgmode !== 0) {
+        rawbgmodes.add(bgmode)
+        if (rawbgsamples.length < RAW_COLOR_SAMPLE_MAX) {
+          rawbgsamples.push({ mode: bgmode, color: bg })
+        }
+      }
+    }
+  }
+
+  return {
+    rawFgModes: [...rawfgmodes],
+    rawFgSamples: rawfgsamples,
+    rawBgModes: [...rawbgmodes],
+    rawBgSamples: rawbgsamples,
+  }
 }
 
 export function installwanixtermprobe(): WanixTermProbe {
@@ -233,10 +295,17 @@ export function installwanixtermprobeembed(): WanixTermProbe {
       return
     }
     lastcelldigest = digest
+    if (iswanixtermprobeshow()) {
+      const term = findwanixtermel()?._term
+      console.info('[wanix] cell-colors', {
+        ...summarizewanixtermcolors(snapshot),
+        ...(term ? summarizewanixtermrawcolors(term) : {}),
+      })
+    }
     posttoparent({ type: 'zss-wanix-term-cells', ...snapshot })
   }
 
-  const polltimer = setInterval(emitcellsnapshot, 50)
+  const polltimer = setInterval(emitcellsnapshot, WANIX_CELL_POLL_MS)
 
   const onprobemessage = async (event: MessageEvent) => {
     if (event.origin !== window.location.origin) {

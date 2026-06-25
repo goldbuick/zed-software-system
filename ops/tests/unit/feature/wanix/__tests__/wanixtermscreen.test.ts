@@ -7,6 +7,7 @@ import {
   wanixtermscreenresize,
   wanixtermscreensync,
 } from 'zss/feature/wanix/wanixtermscreen'
+import { COLOR } from 'zss/words/types'
 
 describe('wanixtermscreen', () => {
   beforeEach(() => {
@@ -79,6 +80,26 @@ describe('wanixtermscreen', () => {
     expect(cells.char[4]).toBe('c'.charCodeAt(0))
     expect(cells.cursorx).toBe(1)
     expect(cells.cursorvisible).toBe(true)
+  })
+
+  it('syncs fg and bg from snapshot', () => {
+    resetwanixtermscreenfortest()
+    wanixtermscreenresize(2, 2)
+    wanixtermscreensync({
+      cols: 2,
+      rows: 1,
+      char: ['a'.charCodeAt(0), 'b'.charCodeAt(0)],
+      color: [COLOR.RED, COLOR.BLUE],
+      bg: [COLOR.DKBLUE, COLOR.DKGREEN],
+      cursorx: 0,
+      cursory: 0,
+      cursorvisible: true,
+    })
+    const cells = readwanixtermscreencells()
+    expect(cells.color[0]).toBe(COLOR.RED)
+    expect(cells.color[1]).toBe(COLOR.BLUE)
+    expect(cells.bg[0]).toBe(COLOR.DKBLUE)
+    expect(cells.bg[1]).toBe(COLOR.DKGREEN)
   })
 
   it('clamps cursor above the hint row on sync', () => {

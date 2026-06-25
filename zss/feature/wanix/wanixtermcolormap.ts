@@ -2,7 +2,11 @@ import { COLOR } from 'zss/words/types'
 
 const CM_MASK = 0x03000000
 const CM_DEFAULT = 0
-const CM_PALETTE = 0x01000000
+/** xterm.js CM_P16 — 16-color ANSI palette */
+const CM_P16 = 0x01000000
+/** legacy combined encoding (same value as CM_P16) */
+const CM_PALETTE = CM_P16
+/** legacy combined encoding for rgb in old tests */
 const CM_RGB = 0x02000000
 
 const XTERM_PALETTE_FG: COLOR[] = [
@@ -68,6 +72,23 @@ function xtermpalettetozss(index: number, isbg: boolean): COLOR {
   return palette[index & 15] ?? (isbg ? COLOR.BLACK : COLOR.WHITE)
 }
 
+/** Map xterm.js getFgColorMode/getBgColorMode + raw color index. */
+export function xtermcellcolortozss(
+  mode: number,
+  color: number,
+  isbg: boolean,
+): COLOR {
+  if (mode === CM_DEFAULT) {
+    return isbg ? COLOR.BLACK : COLOR.WHITE
+  }
+  if (mode === CM_P16) {
+    return xtermpalettetozss(color, isbg)
+  }
+  // P256 / RGB deferred — fall back to default fg/bg
+  return isbg ? COLOR.BLACK : COLOR.WHITE
+}
+
+/** Legacy combined encoding when mode bits are embedded in the color integer. */
 export function xtermcolortozss(value: number, isbg: boolean): COLOR {
   const mode = value & CM_MASK
   if (mode === CM_DEFAULT) {

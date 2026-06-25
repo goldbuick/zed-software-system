@@ -120,9 +120,38 @@ Boot Alpine Linux in v86 from the `#wanix` menu or CLI:
 
 On first boot the host lazily fetches pinned `wanix-extras@0.4.0-rc1` archives from jsDelivr. Prep lines go to **`apilog` scrollback**. Tile mode opens on **first cell snapshot** from the VM (kernel/login output mirrored from iframe xterm).
 
-While attached, `WanixTermInput` sends per-keystroke data via `sendwanixterminput` → `TextEncoder` → `#vm/<vrid>/term/data`. VM spawn connects term **after** `el.start()` using the rid path with alias fallback.
+While attached, `WanixTermInput` sends per-keystroke data via `sendwanixterminput` → `TextEncoder` → `#vm/<vrid>/term/data`. VM spawn connects term **after** `el.start()` using the rid path with alias fallback. **Paste:** Ctrl+V / Cmd+V while the wanix term is focused (VM raw sends clipboard text to serial; task/pre-attach modes buffer until Enter).
 
 **Main thread:** the hidden iframe shares the browser main thread with ZSS WebGL — vm-prep/boot may freeze the canvas briefly; expected until upstream workerizes more kernel work.
+
+### Color validation
+
+Plain `ls -la` on BusyBox is **white-on-black** — it does not emit SGR unless you force color. Use these commands at `~ #` to validate the tile bridge carries fg/bg:
+
+1. Set `ZSS_WANIX_SHOW=true` in `cafe/.env.local` and restart dev (optional iframe xterm overlay + `[wanix] cell-colors` console log).
+2. `#wanix vm` → wait for `~ #`.
+3. Run in order:
+
+```sh
+# Raw ANSI — best signal (bypasses ls/dircolors)
+printf '\033[31mred\033[0m \033[32mgreen\033[0m \033[34mblue\033[0m \033[43;30myellow-bg\033[0m\n'
+
+# BusyBox ls with forced color
+ls --color=always /
+
+# If still plain, force directory/file colors
+LS_COLORS='di=34:fi=32' ls --color=always /
+```
+
+**How to read results**
+
+| iframe xterm (show overlay) | ZSS tile | Verdict |
+|-----------------------------|----------|---------|
+| Colored | Colored | End-to-end color working |
+| Colored | White/black only | Tile bridge bug — follow-up fix |
+| Both plain | Both plain | Guest/xterm not applying SGR (unlikely after `printf` test) |
+
+With show mode on, console should log `[wanix] cell-colors { uniqueFg: N, uniqueBg: M }` with **N > 1** after the `printf` line when xterm holds palette colors.
 
 ## Manual verification
 

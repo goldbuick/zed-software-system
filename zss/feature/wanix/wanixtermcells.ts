@@ -1,4 +1,7 @@
-import { xtermcolortozss } from 'zss/feature/wanix/wanixtermcolormap'
+import {
+  xtermcellcolortozss,
+  xtermcolortozss,
+} from 'zss/feature/wanix/wanixtermcolormap'
 import { COLOR } from 'zss/words/types'
 
 const SPACE = 32
@@ -19,6 +22,8 @@ type XtermCell = {
   getWidth: () => number
   getFgColor: () => number
   getBgColor: () => number
+  getFgColorMode?: () => number
+  getBgColorMode?: () => number
 }
 
 type XtermLine = {
@@ -47,6 +52,16 @@ function charcodefromcell(cell: XtermCell): number {
     return SPACE
   }
   return text.codePointAt(0) ?? SPACE
+}
+
+function readxtermcellcolor(cell: XtermCell, kind: 'fg' | 'bg'): COLOR {
+  const isbg = kind === 'bg'
+  const color = isbg ? cell.getBgColor() : cell.getFgColor()
+  const mode = isbg ? cell.getBgColorMode?.() : cell.getFgColorMode?.()
+  if (mode !== undefined) {
+    return xtermcellcolortozss(mode, color, isbg)
+  }
+  return xtermcolortozss(color, isbg)
 }
 
 /** Read visible xterm viewport cells. Hint row is tile-side only (see wanixtermscreenshowdetachhint). */
@@ -78,8 +93,8 @@ export function readxtermcellsfromterm(
       }
       const index = x + y * cols
       char[index] = charcodefromcell(cell)
-      color[index] = xtermcolortozss(cell.getFgColor(), false)
-      bg[index] = xtermcolortozss(cell.getBgColor(), true)
+      color[index] = readxtermcellcolor(cell, 'fg')
+      bg[index] = readxtermcellcolor(cell, 'bg')
     }
   }
 
