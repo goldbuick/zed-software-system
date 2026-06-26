@@ -1,6 +1,10 @@
 import { createdevice } from 'zss/device'
 import { modemreadtextsync } from 'zss/device/modem'
 import {
+  registerreadplayer as readplayerid,
+  registerwriteplayer,
+} from 'zss/device/registerplayer'
+import {
   BOOKMARK_NAME_TARGET,
   BOOKMARK_SCROLL_CHIP,
   ZSS_BOOKMARKS_KEY,
@@ -113,7 +117,7 @@ function readsession(key: string): MAYBE<string> {
   try {
     return sessionStorage.getItem(key) ?? undefined
   } catch (err: any) {
-    apierror(register, myplayerid, `readsession ${key}`, err.message)
+    apierror(register, readplayerid(), `readsession ${key}`, err.message)
   }
   return undefined
 }
@@ -128,7 +132,7 @@ function writesession(key: string, value: MAYBE<string>) {
   } catch (err: any) {
     apierror(
       register,
-      myplayerid,
+      readplayerid(),
       `writesession ${key} <- ${value}`,
       err.message,
     )
@@ -136,16 +140,16 @@ function writesession(key: string, value: MAYBE<string>) {
 }
 
 async function writeclilink() {
-  workstatus(register, myplayerid, 'cli help')
+  workstatus(register, readplayerid(), 'cli help')
   try {
     const markdowntext = await fetchrefscrolltext('cliscroll')
     if (markdowntext.trim()) {
-      terminalwritemarkdownlines(myplayerid, markdowntext)
+      terminalwritemarkdownlines(readplayerid(), markdowntext)
     } else {
-      apierror(register, myplayerid, 'help', 'cli doc not found')
+      apierror(register, readplayerid(), 'help', 'cli doc not found')
     }
   } catch (err: any) {
-    apierror(register, myplayerid, 'help', err?.message ?? err)
+    apierror(register, readplayerid(), 'help', err?.message ?? err)
   }
 }
 
@@ -153,13 +157,13 @@ async function writehelphint() {
   await waitfor(1000)
   write(
     register,
-    myplayerid,
+    readplayerid(),
     zsstextline(`try typing $green#help$blue and pressing enter!`),
   )
 }
 
 function writepages() {
-  vmcli(register, myplayerid, '#pages')
+  vmcli(register, readplayerid(), '#pages')
 }
 
 function renderrow(content: string[]) {
@@ -249,15 +253,15 @@ function terminalinclayout(inc: boolean) {
 
 async function loadmem(books: string | BOOK[]) {
   if (!books || books.length === 0) {
-    apierror(register, myplayerid, 'content', 'no content found')
+    apierror(register, readplayerid(), 'content', 'no content found')
     await writeclilink()
-    vmzsswords(register, myplayerid)
-    registerterminalfull(register, myplayerid)
+    vmzsswords(register, readplayerid())
+    registerterminalfull(register, readplayerid())
     await writehelphint()
     return
   }
   // init vm with content
-  vmbooks(register, myplayerid, books)
+  vmbooks(register, readplayerid(), books)
 }
 
 // simple bootstrap manager
@@ -270,8 +274,8 @@ const DOOT_RATE = 10
 let loggedin = false
 
 // stable unique id (CLI mode injects via registerSetPlayerId)
-let myplayerid = readsession('PLAYER') ?? createpid()
-writesession('PLAYER', myplayerid)
+registerwriteplayer(readsession('PLAYER') ?? createpid())
+writesession('PLAYER', readplayerid())
 initdeeplinks()
 
 async function syncterminalbookmarkpins() {
@@ -288,7 +292,7 @@ async function syncterminalbookmarkpins() {
 }
 
 export function registersetmyplayerid(id: string) {
-  myplayerid = id
+  registerwriteplayer(id)
 }
 
 // timeout for TOAST
@@ -297,9 +301,7 @@ let toasttimer: any
 // timeout for WORK STATUS badge
 let workstatustimer: any
 
-export function registerreadplayer() {
-  return myplayerid
-}
+export { registerreadplayer } from 'zss/device/registerplayer'
 
 export const register = createdevice(
   'register',
@@ -319,7 +321,7 @@ export const register = createdevice(
       case 'sessionreset':
         break
       default:
-        if (message.player !== myplayerid) {
+        if (message.player !== readplayerid()) {
           return
         }
         break
@@ -331,9 +333,9 @@ export const register = createdevice(
       case 'ready': {
         doasync(register, message.player, async () => {
           // start boardrunner
-          boardrunnerstart(register, myplayerid)
+          boardrunnerstart(register, readplayerid())
           // setup content watcher
-          storagewatchcontent(myplayerid)
+          storagewatchcontent(readplayerid())
           // setup history buffer
           const historybuffer = await storagereadhistorybuffer()
           if (ispresent(historybuffer)) {
@@ -347,12 +349,12 @@ export const register = createdevice(
           await syncterminalbookmarkpins()
           // signal init
           await waitfor(256)
-          apilog(register, myplayerid, `myplayerid ${myplayerid}`)
-          vmoperator(register, myplayerid)
+          apilog(register, readplayerid(), `player ${readplayerid()}`)
+          vmoperator(register, readplayerid())
           if (!isclimode()) {
             await waitfor(512)
             await rundeeplinks({
-              player: myplayerid,
+              player: readplayerid(),
               surface: 'boot',
               openterminal: true,
               device: register,
@@ -366,12 +368,12 @@ export const register = createdevice(
         break
       case 'ackoperator':
         // reset display
-        vmgadgetdesync(register, myplayerid)
+        vmgadgetdesync(register, readplayerid())
         // determine which backend to run
         doasync(register, message.player, async () => {
-          const urlcontent = await storagereadcontent(myplayerid)
+          const urlcontent = await storagereadcontent(readplayerid())
           if (isjoin() && isstring(urlcontent)) {
-            bridgejoin(register, myplayerid, urlcontent)
+            bridgejoin(register, readplayerid(), urlcontent)
           } else {
             // pull data && init
             await loadmem(urlcontent)
@@ -387,25 +389,25 @@ export const register = createdevice(
             storage
           const config = await storagereadconfigall()
           const token = await getfingerprint()
-          vmlogin(register, myplayerid, {
+          vmlogin(register, readplayerid(), {
             ...storageforlogin,
             config,
             token,
           })
-          vmzsswords(register, myplayerid)
+          vmzsswords(register, readplayerid())
         })
         break
       case 'acklogin':
         if (message.data) {
           loggedin = true
           // hide terminal
-          registerterminalclose(register, myplayerid)
+          registerterminalclose(register, readplayerid())
           // signal sim loaded
           vmloader(register, message.player, undefined, 'text', 'sim:load', '')
           if (!isclimode()) {
-            doasync(register, myplayerid, async () => {
+            doasync(register, readplayerid(), async () => {
               await rundeeplinks({
-                player: myplayerid,
+                player: readplayerid(),
                 surface: 'boot',
                 openterminal: true,
                 device: register,
@@ -414,17 +416,17 @@ export const register = createdevice(
           }
           // CLI mode: start multiplayer after confirmed login (player is on board)
           if (isclimode()) {
-            vmcli(register, myplayerid, '#joincode')
+            vmcli(register, readplayerid(), '#joincode')
           }
           doasync(register, message.player, async () => {
             const vars = await storagereadvars()
             const raw = vars[AGENTS_ROSTER_STORAGE_KEY]
             const roster = migrateroster(raw)
             if (ispresent(roster)) {
-              heavyrestoreagents(register, myplayerid, roster)
+              heavyrestoreagents(register, readplayerid(), roster)
             }
             if (typeof vars[HEAVY_LLM_STORAGE_KEY] === 'string') {
-              heavyllmpreset(register, myplayerid, 'gemma', {
+              heavyllmpreset(register, readplayerid(), 'gemma', {
                 toast: false,
               })
             }
@@ -435,7 +437,7 @@ export const register = createdevice(
             await writeclilink()
             writepages()
             // full open on login fail
-            registerterminalfull(register, myplayerid)
+            registerterminalfull(register, readplayerid())
             // signal sim loaded
             vmloader(
               register,
@@ -462,7 +464,7 @@ export const register = createdevice(
           const blob = await readbookmarksfromstorage()
           vmbookmarkscroll(
             register,
-            myplayerid,
+            readplayerid(),
             blob.url,
             message.data ? blob.editor : [],
           )
@@ -476,7 +478,7 @@ export const register = createdevice(
               const blob = await readbookmarksfromstorage()
               vmeditorbookmarkscroll(
                 register,
-                myplayerid,
+                readplayerid(),
                 blob.editor,
                 codepagename,
                 codepagepath,
@@ -489,13 +491,13 @@ export const register = createdevice(
         doasync(register, message.player, async () => {
           const line = message.data
           if (!isstring(line) || !line.trim()) {
-            apitoast(register, myplayerid, 'nothing to bookmark')
+            apitoast(register, readplayerid(), 'nothing to bookmark')
             return
           }
           await appendterminalbookmark(line)
           await syncterminalbookmarkpins()
-          apitoast(register, myplayerid, `bookmarked $green${line}`)
-          vmclearscroll(register, myplayerid)
+          apitoast(register, readplayerid(), `bookmarked $green${line}`)
+          vmclearscroll(register, readplayerid())
         })
         break
       case 'bookmark:clirun':
@@ -513,7 +515,7 @@ export const register = createdevice(
           if (!pinid) {
             return
           }
-          await runterminalbookmarkclibyid(register, myplayerid, pinid)
+          await runterminalbookmarkclibyid(register, readplayerid(), pinid)
         })
         break
       case 'bookmark:codepagesave':
@@ -526,8 +528,8 @@ export const register = createdevice(
                 title,
                 codepage,
               })
-              apitoast(register, myplayerid, `bookmarked $green${title}`)
-              vmclearscroll(register, myplayerid)
+              apitoast(register, readplayerid(), `bookmarked $green${title}`)
+              vmclearscroll(register, readplayerid())
             }
           }
         })
@@ -535,8 +537,8 @@ export const register = createdevice(
       case 'bookmark:codepagecopytogame':
         doasync(register, message.player, async () => {
           if (isstring(message.data)) {
-            await runbookmarkcopytogame(register, myplayerid, message.data)
-            vmclearscroll(register, myplayerid)
+            await runbookmarkcopytogame(register, readplayerid(), message.data)
+            vmclearscroll(register, readplayerid())
           }
         })
         break
@@ -545,19 +547,19 @@ export const register = createdevice(
           const addr = paneladdress(BOOKMARK_SCROLL_CHIP, BOOKMARK_NAME_TARGET)
           const rawname = modemreadtextsync(addr).trim()
           if (!rawname.length) {
-            apitoast(register, myplayerid, 'enter a bookmark name first')
+            apitoast(register, readplayerid(), 'enter a bookmark name first')
             return
           }
           await appendurlbookmark(rawname, location.href)
-          apitoast(register, myplayerid, `bookmarked $green${rawname}`)
-          vmclearscroll(register, myplayerid)
+          apitoast(register, readplayerid(), `bookmarked $green${rawname}`)
+          vmclearscroll(register, readplayerid())
         })
         break
       case 'bookmark:urlnavigate':
         doasync(register, message.player, async () => {
           if (isstring(message.data)) {
-            await runbookmarkurlnavigate(register, myplayerid, message.data)
-            vmclearscroll(register, myplayerid)
+            await runbookmarkurlnavigate(register, readplayerid(), message.data)
+            vmclearscroll(register, readplayerid())
           }
         })
         break
@@ -569,9 +571,9 @@ export const register = createdevice(
           }
           const ok = await removebookmarkbyid(id)
           if (ok) {
-            apitoast(register, myplayerid, 'bookmark removed')
+            apitoast(register, readplayerid(), 'bookmark removed')
             await syncterminalbookmarkpins()
-            vmclearscroll(register, myplayerid)
+            vmclearscroll(register, readplayerid())
           }
         })
         break
@@ -863,7 +865,7 @@ export const register = createdevice(
         if (keepalive >= DOOT_RATE) {
           keepalive -= DOOT_RATE
           if (loggedin) {
-            vmdoot(register, myplayerid)
+            vmdoot(register, readplayerid())
           }
         }
         break

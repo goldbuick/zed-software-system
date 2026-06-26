@@ -43,7 +43,7 @@ import {
   bridgetabopen,
   vmloader,
 } from './api'
-import { registerreadplayer } from './register'
+import { registerreadplayer } from './registerplayer'
 import { SOFTWARE } from './session'
 import { synthbroadcastdestination } from './synth'
 

@@ -12,7 +12,7 @@ import { setcrtcurveamp } from 'zss/gadget/fx/crtanim'
 import { setglitchpulse } from 'zss/gadget/fx/glitchpulse'
 import { deepcopy, ispresent } from 'zss/mapping/types'
 
-import { registerreadplayer } from './register'
+import { registerreadplayer } from './registerplayer'
 
 let fallback = emptygadgetstate()
 const gadgetjsonpipe = createjsonpipe<GADGET_STATE>(

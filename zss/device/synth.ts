@@ -34,7 +34,7 @@ import {
   vmloader,
   workstatus,
 } from './api'
-import { registerreadplayer } from './register'
+import { registerreadplayer } from './registerplayer'
 
 type CustomNavigator = {
   audioSession?: {

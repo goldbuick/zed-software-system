@@ -237,7 +237,7 @@ function onmessage(event: MessageEvent) {
     if (data.type === 'zss-wanix-term-apilog') {
       void Promise.all([
         import('zss/device/session'),
-        import('zss/device/register'),
+        import('zss/device/registerplayer'),
       ]).then(([{ SOFTWARE }, { registerreadplayer }]) => {
         apilog(SOFTWARE, registerreadplayer(), data.message)
       })

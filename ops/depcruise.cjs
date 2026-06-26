@@ -33,6 +33,16 @@ module.exports = {
       from: { path: '^zss/' },
       to: { path: '^node_modules/@react-three/' },
     },
+    {
+      name: 'worker-no-register-device',
+      severity: 'error',
+      comment:
+        'Workers must use registerplayer.ts for player id, not the full register device.',
+      from: {
+        path: '^zss/(simspace|heavyspace|boardrunnerspace|sttspace)\\.ts',
+      },
+      to: { path: '^zss/device/register\\.ts$' },
+    },
   ],
   options: {
     tsConfig: {
