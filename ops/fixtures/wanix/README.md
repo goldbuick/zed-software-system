@@ -85,8 +85,25 @@ Sources:
 | `hello.wat` | one-shot hello (batch stdout) |
 | `hold.wat` | infinite loop (e2e term-write while running) |
 | `termbridge.wat` | **ZSS tile term bridge demo** — banner on stdout, then hold |
+| `zedcaferead.c` / `zedcaferead.wat` | **zed-cafe FS read** — opens `zed-cafe/manifest.json`, prints `zed-cafe ok: …` |
 
 Drag the `.wasm` onto a running app (`yarn task app dev`). Multiple drops run in parallel; use `#wanix` to attach, stop, or unmount.
+
+### zed-cafe task read (`zedcaferead.wasm`)
+
+After Wanix is warm and session books have exported to `./zed-cafe/`, drop `zedcaferead.wasm` to prove a WASI task can read `zed-cafe/manifest.json`.
+
+Full scenario: [`zed-cafe-task-read-scenario.md`](zed-cafe-task-read-scenario.md)  
+Harness: [/wanix/zed-cafe-task-read.html](http://localhost:7777/wanix/zed-cafe-task-read.html) (build wasm with `yarn task run wanix:wasm:build` first).
+
+```bash
+yarn task run wanix:wasm:build    # zedcaferead.wat → zedcaferead.wasm (wabt)
+# optional C rebuild when wasi-sdk is installed:
+yarn task run wanix:wasm:build:c
+yarn task app dev
+# drag ops/fixtures/wanix/zedcaferead.wasm — expect: zed-cafe ok: {"bookCount":...
+# gate: yarn task run wanix:zed-cafe:task-read:validate
+```
 
 ## ZSS tile term bridge (`termbridge.wasm`)
 

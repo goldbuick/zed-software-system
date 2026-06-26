@@ -36,6 +36,13 @@ export const WANIX_TASKS: TaskDef[] = [
       'node tasks/implementations/wanix/validate-zed-cafe-export-app.mjs',
     ),
   }),
+  def('wanix:zed-cafe:task-read:validate', {
+    description:
+      'Headed Playwright: zed-cafe-task-read harness — dropped WASI task reads zed-cafe/manifest.json (local gate, not CI)',
+    run: shell(
+      'node tasks/implementations/wanix/validate-zed-cafe-task-read.mjs',
+    ),
+  }),
   def('wanix:wasm:build:c', {
     description:
       'Compile ops/fixtures/wanix/*.c to .wasm when wasi-sdk is installed (skips if missing)',
