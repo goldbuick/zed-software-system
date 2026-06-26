@@ -1,17 +1,20 @@
-import { FishAudioClient, FishAudioError } from 'fish-audio'
+import { encode } from '@msgpack/msgpack'
 import { brickproxiedurl } from 'zss/feature/url'
 
-/** Fish API origin; SDK appends resource paths (v1/tts, …). */
+/** Fish API origin (upstream). */
 export const FISH_API_ORIGIN = 'https://api.fish.audio'
 
-/** Upstream Fish TTS endpoint (reference only). */
+/** Upstream Fish TTS HTTP endpoint. */
 export const FISH_TTS_UPSTREAM = `${FISH_API_ORIGIN}/v1/tts`
 
-/** brick.zed.cafe CORS proxy — same pattern as Museum of ZZT fetches. */
-export const FISH_API_BASE = brickproxiedurl(FISH_API_ORIGIN)
+/**
+ * brick encodes the full upstream URL in `?brick=` — not a reusable SDK baseUrl.
+ * Museum of ZZT uses the same pattern: {@link brickproxiedurl} per request target.
+ */
+export const FISH_TTS_BRICK_URL = brickproxiedurl(FISH_TTS_UPSTREAM)
 
-/** Default Fish model (S2.1 Pro — matches fish.audio web app). */
-export const FISH_DEFAULT_MODEL = 's2.1-pro'
+/** Default Fish model when #ttsengine fish omits the model arg. */
+export const FISH_DEFAULT_MODEL = 's2.1-pro-free'
 
 const FISH_MODEL_ALIASES: Record<string, string> = {
   's2.1-pro': 's2.1-pro',
@@ -58,13 +61,6 @@ export type FISH_CONFIG_VALIDATE_RESULT =
   | { ok: true; lines: string[] }
   | { ok: false; errormsg: string }
 
-function createfishclient(apikey: string) {
-  return new FishAudioClient({
-    apiKey: apikey,
-    baseUrl: FISH_API_BASE,
-  })
-}
-
 export function describefishconfig(
   apikey: string,
   model: string,
@@ -87,6 +83,7 @@ export function describefishconfig(
 
 export type FISH_TTS_REQUEST_PAYLOAD = {
   endpoint: string
+  brickurl: string
   model: string
   reference_id: string
   text: string
@@ -100,6 +97,7 @@ export function buildfishttsrequestpayload(
 ): FISH_TTS_REQUEST_PAYLOAD {
   return {
     endpoint: FISH_TTS_UPSTREAM,
+    brickurl: FISH_TTS_BRICK_URL,
     model: normalizemodel(model?.trim() ? model : FISH_DEFAULT_MODEL),
     reference_id: String(referenceid).trim(),
     text: String(text).trim(),
@@ -107,52 +105,26 @@ export function buildfishttsrequestpayload(
   }
 }
 
-export function formatfishttsrequestlines(
-  payload: FISH_TTS_REQUEST_PAYLOAD,
-  apikey: string,
-): string[] {
-  const preview =
-    payload.text.length > 80
-      ? `${payload.text.slice(0, 80)}… (${payload.text.length} chars)`
-      : payload.text
-  return [
-    `fish tts request>> POST ${payload.endpoint}`,
-    `fish tts request>> header model: ${payload.model}`,
-    `fish tts request>> header authorization: Bearer ${maskfishapikey(apikey)}`,
-    `fish tts request>> body reference_id: ${payload.reference_id}`,
-    `fish tts request>> body text: ${preview}`,
-    `fish tts request>> body format: ${payload.format}`,
-  ]
-}
-
 export type FISH_TTS_RESULT =
   | { ok: true; bytes: ArrayBuffer }
   | { ok: false; errormsg: string }
 
-function formatfisherror(err: FishAudioError): string {
-  const body = err.body
-  if (body && typeof body === 'object' && body !== null && 'message' in body) {
-    const msg = (body as { message: unknown }).message
-    if (typeof msg === 'string' && msg.trim() !== '') {
-      if (err.statusCode === 402) {
-        return `${msg} — fish.audio/app/developers`
+async function parsefishhttperror(response: Response): Promise<string> {
+  try {
+    const body = (await response.json()) as { message?: string }
+    if (typeof body.message === 'string' && body.message.trim() !== '') {
+      if (response.status === 402) {
+        return `${body.message} — fish.audio/app/developers`
       }
-      return msg
+      return body.message
     }
+  } catch {
+    //
   }
-  if (err.statusCode === 402) {
+  if (response.status === 402) {
     return 'Insufficient API credit — add funds at fish.audio/app/developers'
   }
-  if (err.message.trim() !== '') {
-    return err.message
-  }
-  return `Fish TTS failed (status ${err.statusCode ?? 'unknown'})`
-}
-
-async function readablestreamtoarraybuffer(
-  stream: ReadableStream<Uint8Array>,
-): Promise<ArrayBuffer> {
-  return new Response(stream).arrayBuffer()
+  return `Fish TTS failed (status ${response.status})`
 }
 
 export async function requestfishaudiobytes(
@@ -171,22 +143,27 @@ export async function requestfishaudiobytes(
     }
   }
   const payload = buildfishttsrequestpayload(voice, phrase, model)
+  const bodybytes = encode({
+    text: payload.text,
+    reference_id: payload.reference_id,
+    format: payload.format,
+  })
   try {
-    const client = createfishclient(key)
-    const stream = await client.textToSpeech.convert(
-      {
-        text: payload.text,
-        reference_id: payload.reference_id,
-        format: payload.format,
+    const response = await fetch(payload.brickurl, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${key}`,
+        model: payload.model,
+        'Content-Type': 'application/msgpack',
       },
-      payload.model as 's1',
-    )
-    const bytes = await readablestreamtoarraybuffer(stream)
+      body: new Uint8Array(bodybytes),
+    })
+    if (!response.ok) {
+      return { ok: false, errormsg: await parsefishhttperror(response) }
+    }
+    const bytes = await response.arrayBuffer()
     return { ok: true, bytes }
   } catch (err) {
-    if (err instanceof FishAudioError) {
-      return { ok: false, errormsg: formatfisherror(err) }
-    }
     return {
       ok: false,
       errormsg: err instanceof Error ? err.message : String(err),

@@ -15,9 +15,7 @@ import {
 } from 'zss/feature/synth/backend/wasm/audiocontextunlock'
 import {
   FISH_DEFAULT_MODEL,
-  buildfishttsrequestpayload,
   describefishconfig,
-  formatfishttsrequestlines,
   maskfishapikey,
   normalizemodel,
   requestfishaudiobytes,
@@ -32,7 +30,7 @@ export type TTS_ENGINE = 'piper' | 'supertonic' | 'fish'
 const FISH_VOICE_HELP =
   'fish voice = reference_id from fish.audio (use as #tts <id> <phrase>)'
 const FISH_MODEL_HELP =
-  'fish models: s2.1-pro (default), s2.1-pro-free, s2-pro, s1 — #ttsengine fish <key> [model]'
+  'fish models: s2.1-pro-free (default), s2.1-pro, s2-pro, s1 — #ttsengine fish <key> [model]'
 
 export function readttsenginestatuslines(): string[] {
   if (ttsengine === 'fish') {
@@ -108,53 +106,47 @@ export async function applyttsengineconfig(
   engine: string,
   config: string,
   model?: string,
-) {
+): Promise<string[]> {
   const normalized = normalizettsengine(engine)
   const haskey = config.trim() !== ''
 
   if (normalized === 'fish' && !haskey) {
-    for (const line of readttsenginestatuslines()) {
-      apilog(SOFTWARE, player, line)
-    }
+    const lines = readttsenginestatuslines()
     if (ttsconfig.trim()) {
       const result = describefishconfig(ttsconfig, ttsfishmodel)
       if (result.ok) {
-        for (const line of result.lines) {
-          apilog(SOFTWARE, player, line)
-        }
+        lines.push(...result.lines)
       } else {
         apierror(SOFTWARE, player, 'fish tts config', result.errormsg)
       }
     }
-    return
+    return lines
   }
 
-  selectttsengine(engine, config, model)
+  const effectivemodel =
+    normalized === 'fish' && haskey && (!model || model.trim() === '')
+      ? FISH_DEFAULT_MODEL
+      : model
+
+  selectttsengine(engine, config, effectivemodel)
   storettsengineconfig(
     player,
     engine,
     haskey ? config : ttsconfig,
-    model,
+    effectivemodel,
   )
-
-  for (const line of readttsenginestatuslines()) {
-    apilog(SOFTWARE, player, line)
-  }
 
   if (normalized === 'fish') {
     const key = haskey ? config : ttsconfig
     const result = describefishconfig(key, ttsfishmodel)
-    if (result.ok) {
-      for (const line of result.lines) {
-        apilog(SOFTWARE, player, line)
-      }
-    } else {
+    if (!result.ok) {
       apierror(SOFTWARE, player, 'fish tts config', result.errormsg)
     }
-    return
+    return []
   }
 
   apilog(SOFTWARE, player, `ttsengine ${ttsengine} ready`)
+  return []
 }
 
 export async function restorettsenginefromstorage() {
@@ -192,10 +184,6 @@ async function requestaudiobuffer(
         'set api key with #ttsengine fish <key> [model]',
       )
       return undefined
-    }
-    const payload = buildfishttsrequestpayload(voice, input, ttsfishmodel)
-    for (const line of formatfishttsrequestlines(payload, ttsconfig)) {
-      apilog(SOFTWARE, player, line)
     }
     const result = await requestfishaudiobytes(
       ttsconfig,

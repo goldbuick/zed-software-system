@@ -265,12 +265,15 @@ const synthdevice = createdevice('synth', [], (message) => {
           string,
         ]
         doasync(synthdevice, message.player, async () => {
-          await applyttsengineconfig(
+          const lines = await applyttsengineconfig(
             message.player,
             engine,
             apikey ?? '',
             model,
           )
+          for (let i = 0; i < lines.length; i++) {
+            write(synthdevice, message.player, `$WHITE${lines[i]}`)
+          }
         })
       }
       break

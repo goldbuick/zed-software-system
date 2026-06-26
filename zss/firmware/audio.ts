@@ -205,7 +205,7 @@ export const AUDIO_FIRMWARE = createfirmware()
         write(
           SOFTWARE,
           READ_CONTEXT.elementfocus,
-          'fish: #ttsengine fish <api_key> [s2.1-pro|s2.1-pro-free|s2-pro|s1]',
+          'fish: #ttsengine fish <api_key> [s2.1-pro-free|s2.1-pro|s2-pro|s1]',
         )
         write(
           SOFTWARE,

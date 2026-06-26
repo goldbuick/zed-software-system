@@ -8,7 +8,7 @@ jest.mock('zss/device/api', () => ({
 }))
 
 jest.mock('zss/feature/fishaudio', () => ({
-  FISH_DEFAULT_MODEL: 's2.1-pro',
+  FISH_DEFAULT_MODEL: 's2.1-pro-free',
   maskfishapikey: (key: string) => (key ? '****' : '(not set)'),
   normalizemodel: (raw: string) => raw.trim(),
   requestfishaudiobytes: jest.fn(),
@@ -90,17 +90,31 @@ describe('tts config persistence', () => {
     expect(storagereadconfigstring).toHaveBeenCalledTimes(1)
   })
 
-  it('applyttsengineconfig describes fish without overwriting key', async () => {
+  it('applyttsengineconfig returns fish config lines without apilog when key omitted', async () => {
     await applyttsengineconfig('player1', 'fish', 'secret-key', 's2-pro')
     jest.clearAllMocks()
-    await applyttsengineconfig('player1', 'fish', '', '')
-    expect(apilog).toHaveBeenCalled()
+    const lines = await applyttsengineconfig('player1', 'fish', '', '')
+    expect(lines.length).toBeGreaterThan(0)
+    expect(lines.join('\n')).toContain('fish tts config:')
     expect(describefishconfig).toHaveBeenCalledWith('secret-key', 's2-pro')
+    expect(apilog).not.toHaveBeenCalled()
     expect(registerstore).not.toHaveBeenCalledWith(
       expect.anything(),
       'player1',
       'config_ttsengineconfig',
       '',
+    )
+  })
+
+  it('applyttsengineconfig stores default model when model omitted', async () => {
+    const lines = await applyttsengineconfig('player1', 'fish', 'secret-key', '')
+    expect(lines).toEqual([])
+    expect(apilog).not.toHaveBeenCalled()
+    expect(registerstore).toHaveBeenCalledWith(
+      expect.anything(),
+      'player1',
+      'config_ttsenginemodel',
+      's2.1-pro-free',
     )
   })
 })

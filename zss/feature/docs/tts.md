@@ -5,7 +5,7 @@
 ## Dependencies
 
 - `@henrygd/queue` — newQueue
-- `fish-audio` — Fish Audio SDK (engine `fish` only)
+- `fish-audio` — (optional; not used for browser TTS — see Fish path below)
 - `zss/device` — createdevice
 - `zss/device/api` — ttsinfo, ttsrequest, synthaudiobuffer
 - `zss/device/session` — SOFTWARE
@@ -27,7 +27,7 @@
 ## Engine flow
 
 - **Piper / Supertonic**: [`heavy/tts.ts`](../heavy/tts.ts) in **ttsspace** worker; audio bytes returned via `tts:request`
-- **Fish**: [`fishaudio.ts`](../fishaudio.ts) — `fish-audio` SDK via [`brickproxiedurl`](../url.ts) → `brick.zed.cafe` → `api.fish.audio`
+- **Fish**: [`fishaudio.ts`](../fishaudio.ts) — MessagePack `POST /v1/tts` via [`brickproxiedurl`](../url.ts) on the **full upstream URL** (`https://api.fish.audio/v1/tts` encoded in `?brick=`), not an SDK `baseUrl`
 
 ### Fish Audio setup
 

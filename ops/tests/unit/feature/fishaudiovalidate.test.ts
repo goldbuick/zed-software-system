@@ -25,7 +25,7 @@ describe('fish config describe', () => {
 
     expect(result.ok).toBe(true)
     if (result.ok) {
-      expect(result.lines.join('\n')).toContain('model=s2.1-pro')
+      expect(result.lines.join('\n')).toContain('model=s2.1-pro-free')
       expect(result.lines.join('\n')).toContain('api_key=')
       expect(result.lines.join('\n')).not.toContain('api credit')
     }
