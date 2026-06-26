@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import { vmboardrunnerpatch } from 'zss/device/api'
+import { vmboardrunnerpatch } from 'zss/device/patchapi'
 import { ispresent } from 'zss/mapping/types'
 import { memoryboundaryget } from 'zss/memory/boundaries'
 import {

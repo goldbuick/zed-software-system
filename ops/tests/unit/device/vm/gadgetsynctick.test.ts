@@ -2,8 +2,7 @@ jest.mock('zss/config', () => ({
   PERF_UI: false,
 }))
 
-jest.mock('zss/device/api', () => ({
-  boardrunnerpatch: jest.fn(),
+jest.mock('zss/device/patchapi', () => ({
   gadgetclientpatch: jest.fn(),
 }))
 
@@ -69,7 +68,7 @@ jest.mock('zss/mapping/guid', () => ({
 }))
 
 import type { DEVICE } from 'zss/device'
-import { gadgetclientpatch } from 'zss/device/api'
+import { gadgetclientpatch } from 'zss/device/patchapi'
 import { gadgetsynctick } from 'zss/device/vm/gadgetsynctick'
 import { gadgetstate } from 'zss/gadget/data/api'
 import type { GADGET_STATE, LAYER } from 'zss/gadget/data/types'

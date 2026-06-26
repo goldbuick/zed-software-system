@@ -3,40 +3,25 @@ what is api? a set of common helper functions to send messages to devices
 without having to include device code
 */
 import type { BRIDGE_CHAT_START_OBJECT } from 'zss/device/bridge/chattypes'
+import type {
+  DEVICELIKE as DEVICELIKE_TYPE,
+  MESSAGE as MESSAGE_TYPE,
+} from 'zss/device/messagetypes'
+import { ismessage as ismessage_fn } from 'zss/device/messagetypes'
 import type { AGENTS_ROSTER } from 'zss/feature/heavy/agentsroster'
 import type { HEAVY_LLM_PRESET } from 'zss/feature/heavy/heavyllmpreset'
-import type { Operation } from 'zss/feature/jsonpipe/observe'
-import { encodepatchwire } from 'zss/feature/jsonpipe/wire'
-import { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
-import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
-import { BOOK } from 'zss/memory/types'
-import { PT } from 'zss/words/types'
+import type { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
+import { MAYBE, ispresent } from 'zss/mapping/types'
+import type { BOOK } from 'zss/memory/types'
+import type { PT } from 'zss/words/types'
 
 // be careful to keep imports here minimal
 
-export type DEVICELIKE = {
-  emit: (player: string, target: string, data?: any) => void
-}
+export type DEVICELIKE = DEVICELIKE_TYPE
 
-export type MESSAGE = {
-  session: string
-  player: string
-  id: string
-  sender: string
-  target: string
-  data?: any
-}
+export type MESSAGE = MESSAGE_TYPE
 
-export function ismessage(value: any): value is MESSAGE {
-  return (
-    typeof value === 'object' &&
-    isstring(value.session) &&
-    isstring(value.player) &&
-    isstring(value.id) &&
-    isstring(value.sender) &&
-    isstring(value.target)
-  )
-}
+export const ismessage = ismessage_fn
 
 export function sessionreset(device: DEVICELIKE) {
   device.emit('', 'sessionreset')
@@ -145,15 +130,6 @@ export function boardrunnerpaint(
   device.emit(player, 'boardrunner:paint', [doc, boundary])
 }
 
-export function boardrunnerpatch(
-  device: DEVICELIKE,
-  player: string,
-  patch: Operation[],
-  boundary?: string,
-) {
-  device.emit(player, 'boardrunner:patch', [encodepatchwire(patch), boundary])
-}
-
 export function bridgestreamstart(
   device: DEVICELIKE,
   player: string,
@@ -234,14 +210,6 @@ export function gadgetclientpaint(
   device.emit(player, 'gadgetclient:paint', json)
 }
 
-export function gadgetclientpatch(
-  device: DEVICELIKE,
-  player: string,
-  patch: Operation[],
-) {
-  device.emit(player, 'gadgetclient:patch', encodepatchwire(patch))
-}
-
 export function vmgadgetdesync(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:gadgetdesync')
 }
@@ -298,15 +266,6 @@ export function vmboardrunneraccess(
   accessboard: string,
 ) {
   device.emit(player, 'vm:boardrunneraccess', [currentboard, accessboard])
-}
-
-export function vmboardrunnerpatch(
-  device: DEVICELIKE,
-  player: string,
-  patch: Operation[],
-  boundary?: string,
-) {
-  device.emit(player, 'vm:boardrunnerpatch', [encodepatchwire(patch), boundary])
 }
 
 /** Full boundary document from runner → sim (boundary id required). */

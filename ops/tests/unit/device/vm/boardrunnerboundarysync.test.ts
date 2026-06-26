@@ -11,7 +11,7 @@ jest.mock('zss/device/vm/boardrunnermanagement', () => ({
   boardrunneraccessfor: jest.fn(() => ['boundary-sync']),
 }))
 
-jest.mock('zss/device/api', () => ({
+jest.mock('zss/device/patchapi', () => ({
   boardrunnerpatch: jest.fn(),
 }))
 
@@ -29,7 +29,7 @@ jest.mock('zss/memory/boundaries', () => ({
 }))
 
 import type { DEVICE } from 'zss/device'
-import { boardrunnerpatch } from 'zss/device/api'
+import { boardrunnerpatch } from 'zss/device/patchapi'
 import {
   boardrunnerboundarypaint,
   boardrunnerboundarypatch,

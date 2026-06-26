@@ -25,7 +25,8 @@ How **devices** talk to each other in ZSS: **four JavaScript realms** (main thre
 4. **Multiple hubs** — The browser runs **main-thread** code plus **Web Workers** (see [what creates each realm](#what-creates-each-thread-or-worker)). Each realm has its **own** `hub` singleton; `postMessage` + **`forward`** sync selected traffic ([`forward.ts`](../forward.ts), [`platform.ts`](../../platform.ts)).
 5. **`SOFTWARE`** ([`session.ts`](../session.ts)) — A minimal `createdevice('SOFTWARE')` used as a **convenient `emit` sender** (session id from first `ready`). UI and chip code often call `SOFTWARE.emit(...)` so messages enter the **caller’s** hub with the right session.
 6. **`MESSAGE`** ([`api.ts`](../api.ts)) — Shape: `session`, `player`, `id`, `sender`, `target`, `data`. **`reply(to, subtarget)`** / **`replynext`** emit a new message whose `target` is **`to.sender:subtarget`**, so the original sender’s device handles `subtarget` as `message.target` after routing.
-7. **`message.id` deduplication** — [`createforward`](../forward.ts) records each `message.id` in a `syncids` set so the same message is not applied repeatedly when it crosses hubs (avoids ping-pong loops).
+7. **POD emit surface vs patch encoding** — [`api.ts`](../api.ts) is the **worker-safe** set of `device.emit(...)` helpers: runtime imports are limited to [`messagetypes.ts`](../messagetypes.ts) and [`mapping/types`](../../mapping/types.ts); domain signatures use **`import type` only**. **Jsonpipe patch wire encoding** (`encodepatchwire`) lives in [`patchapi.ts`](../patchapi.ts) (`boardrunnerpatch`, `gadgetclientpatch`, `vmboardrunnerpatch`); call sites that emit patches import `patchapi` explicitly. ESLint enforces the import boundary on `api.ts`.
+8. **`message.id` deduplication** — [`createforward`](../forward.ts) records each `message.id` in a `syncids` set so the same message is not applied repeatedly when it crosses hubs (avoids ping-pong loops).
 
 See also: [message-flow.md](message-flow.md) (ASCII + first mermaid, boot sequence, flow table).
 
@@ -537,7 +538,7 @@ Join-side Peer outbound already intersects with **`shouldforwardclienttoserver`*
 ## Discovering message targets
 
 - **Tables** — [message-flow.md § Main message flows](message-flow.md#main-message-flows)
-- **API helpers** — [`device/api.ts`](../api.ts) (`vmcli`, `gadgetclientpaint`, `ttsrequest`, …)
+- **API helpers** — [`device/api.ts`](../api.ts) (`vmcli`, `gadgetclientpaint`, `ttsrequest`, …); patch emit helpers in [`device/patchapi.ts`](../patchapi.ts)
 - **Handlers** — [`vm/handlers/registry.ts`](../vm/handlers/registry.ts) maps `vm` subtargets to implementations
 - **Tests** — [`device/__tests__/device.test.ts`](../__tests__/device.test.ts) (`createdevice`, session, topics); [`device/__tests__/forward.boardrunner.test.ts`](../__tests__/forward.boardrunner.test.ts) (`shouldforwardclienttoboardrunner`)
 

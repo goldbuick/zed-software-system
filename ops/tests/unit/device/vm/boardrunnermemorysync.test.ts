@@ -7,7 +7,7 @@ jest.mock('zss/perf/ticktimingstats', () => ({
   recordemitdiff: jest.fn(),
 }))
 
-jest.mock('zss/device/api', () => ({
+jest.mock('zss/device/patchapi', () => ({
   boardrunnerpatch: jest.fn(),
 }))
 
@@ -17,7 +17,7 @@ jest.mock('zss/memory/session', () => ({
 }))
 
 import type { DEVICE } from 'zss/device'
-import { boardrunnerpatch } from 'zss/device/api'
+import { boardrunnerpatch } from 'zss/device/patchapi'
 import { boardrunneremitpatch } from 'zss/device/vm/boardrunnermemorysync'
 import { boardrunners } from 'zss/device/vm/state'
 import { memoryreadbookbysoftware } from 'zss/memory/session'
