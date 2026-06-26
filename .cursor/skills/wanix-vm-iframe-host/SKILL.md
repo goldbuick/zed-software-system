@@ -56,6 +56,15 @@ const buf = await frame.evaluate(() => {
 
 Ready-to-run template: [scripts/validate-wanix-vm.mjs](scripts/validate-wanix-vm.mjs) — `node .cursor/skills/wanix-vm-iframe-host/scripts/validate-wanix-vm.mjs` (needs the dev server up). Delete any throwaway copies when done.
 
+Zed-cafe export gates (local only, not CI — dev server must be running):
+
+```bash
+yarn task run wanix:zed-cafe:export:validate      # minimal harness → #task/<rid>/export/manifest.json
+yarn task run wanix:zed-cafe:export:validate:app  # full app #wanix vm → cat /zed-cafe/manifest.json
+```
+
+Legacy headed script: [scripts/validate-zed-cafe-vm-export.mjs](scripts/validate-zed-cafe-vm-export.mjs)
+
 ## Guardrails
 
 - Bound every Playwright run; v86 boot is heavy. Log progress each step so a slow boot is distinguishable from a hang. Kill orphaned `Chrome for Testing` processes after interrupts.

@@ -134,7 +134,7 @@ boardchain(
   'wanixvm.board.json',
   'wanixvm',
   'wanixmenu',
-  'wanixbind',
+  'wanixzedcafe',
   'STEP 3 — LINUX VM',
   [
     'Type #wanix vm in the CLI (in-app hidden iframe).',
@@ -142,21 +142,22 @@ boardchain(
     'VM serial mirrors to the tile when attached.',
     'Prep: yarn task run wanix:ensure then yarn task app dev',
     '',
-    'Walk SOUTH to bind a scroll file.',
+    'Walk SOUTH to read the zed-cafe export.',
   ],
 )
 
 boardchain(
-  'wanixbind.board.json',
-  'wanixbind',
+  'wanixzedcafe.board.json',
+  'wanixzedcafe',
   'wanixvm',
   'wanixattach',
-  'STEP 4 — BIND SCROLL',
+  'STEP 4 — ZED-CAFE FS',
   [
-    'This book includes @scroll wanixnotes.',
-    'Warm wanix, then type: #wanix bind wanixnotes',
-    'Writes scroll-wanixnotes.txt in the active namespace.',
-    'In VM serial: cat scroll-wanixnotes.txt',
+    'Session books mirror to ./zed-cafe/ when wanix is warm.',
+    'Task: cat zed-cafe/manifest.json',
+    'VM serial: cat /zed-cafe/manifest.json',
+    'Drop ops/fixtures/wanix/zedcaferead.wasm — expect zed-cafe ok: on tile.',
+    'Edits to books update within ~2s (debounced export).',
     '',
     'Walk SOUTH for tile attach mode.',
   ],
@@ -165,7 +166,7 @@ boardchain(
 boardchain(
   'wanixattach.board.json',
   'wanixattach',
-  'wanixbind',
+  'wanixzedcafe',
   'outro',
   'STEP 5 — TILE TERMINAL',
   [

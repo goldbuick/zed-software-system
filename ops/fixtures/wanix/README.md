@@ -16,23 +16,44 @@ Reference: [tractordev/wanix](https://github.com/tractordev/wanix) **`main`** (`
 | `#wanix vm` prep | [`examples/basic-vm.html`](https://github.com/tractordev/wanix/blob/main/examples/basic-vm.html) — linux + `#vm` ns + v86 binds **before** first `ready` | `spawnwanixvmspace` → `bootwanixsystemforvm` |
 | VM serial console | `<wanix-vm export="ttyS0" term>` + `#vm/<rid>/term/data` | `createvm` + `connectvmterm` after `el.start()` |
 | Term I/O | `<wanix-term path="…" raw>` (we use tile bridge instead of xterm) | `wanixhost.ts` + `WanixTermInput` |
-| `@scroll` bind | `#wanix bind <scroll> [path]` → `putfile` on active layout | `wanixcommands.ts` + firmware `#wanix bind` |
+| `./zed-cafe/` book export | Auto on warm + debounced book edits; gojs daemon `zed-cafe` | `wanixstateexport.ts` + `wanixzedcafe.ts` |
+
+Session books mirror to **`./zed-cafe/`** (WASI tasks) or **`/zed-cafe/`** (Linux VM) when Wanix is warm. No CLI command — edit a book and `manifest.json` updates within ~2s.
+
+Build the gojs export guest (runs automatically before `app:build`):
+
+```bash
+yarn task run wanix:zed-cafe:build
+```
+
+Shipped at `/wanix/zed-cafe.wasm` (`cafe/public/wanix/`). Staging stays internal: wasm file bind `{ dst: #ramfs/zed-cafe.wasm, src: /wanix/zed-cafe.wasm }`; gojs cmd is `#ramfs/zed-cafe.wasm`. Inbox writes to **`#ramfs/zed-cafe-inbox.json`** via `putwanixfile`; iframe child verifies bytes exist before gojs `start` (no blob overlay on `#ramfs`). Export bind `{ dst: zed-cafe, src: #task/<rid>/export }` resolves to `./zed-cafe/` (task) or `/zed-cafe/` (VM). On export bind failure, fallback: `#ramfs/zed-cafe` ← export, then `zed-cafe` ← `#ramfs/zed-cafe`. Guest `ls /` should show only normal Linux dirs plus **`zed-cafe/`** after export — no `_wanix`, `zed-cafe.wasm`, or `zed-cafe-inbox.json` on `/`.
+
+**Local gates** (dev server must be running: `yarn task app dev`):
+
+```bash
+yarn task run wanix:zed-cafe:export:validate      # minimal harness → #task/<rid>/export/manifest.json
+yarn task run wanix:zed-cafe:export:validate:app  # full app #wanix vm → cat /zed-cafe/manifest.json
+```
+
+| Layout | Read books |
+|--------|------------|
+| Task | `cat zed-cafe/manifest.json` |
+| VM | `cat /zed-cafe/manifest.json` |
+
+Layout:
+
+```text
+zed-cafe/
+  manifest.json
+  books/<book-id>/book.json
+  books/<book-id>/pages/<page-id>.json
+```
+
+Verify: warm Wanix → `cat zed-cafe/manifest.json` from a task, or `#wanix vm` → `cat /zed-cafe/manifest.json`.
 
 VM prep must **not** call `_setupNamespace` a second time after `#ramfs` (that caused the Go `writeFile` panic). `#wanix vm` reboots into the basic-vm bind layout via `spawnwanixvmspace`.
 
-### Bind @scroll codepages
-
-Push a scroll codepage body (plaintext after the `@scroll <name>` header) into the active Wanix namespace:
-
-```text
-#wanix bind wanixnotes
-#wanix bind wanixnotes custom.txt
-```
-
-- **Task layout** — file lands on `#ramfs` (visible to WASI tasks)
-- **VM layout** — file lands on the linux rootfs (e.g. `cat scroll-wanixnotes.txt` from serial)
-
-Default path: `scroll-<name>.txt`. Import **`wanixtour`** book for a playable demo on the `wanixsteps` board.
+Import **`wanixtour`** book for a playable demo of `./zed-cafe/` on the `wanixzedcafe` board.
 
 ### Manual vm-simple harness
 
@@ -64,8 +85,25 @@ Sources:
 | `hello.wat` | one-shot hello (batch stdout) |
 | `hold.wat` | infinite loop (e2e term-write while running) |
 | `termbridge.wat` | **ZSS tile term bridge demo** — banner on stdout, then hold |
+| `zedcaferead.c` / `zedcaferead.wat` | **zed-cafe FS read** — opens `zed-cafe/manifest.json`, prints `zed-cafe ok: …` |
 
 Drag the `.wasm` onto a running app (`yarn task app dev`). Multiple drops run in parallel; use `#wanix` to attach, stop, or unmount.
+
+### zed-cafe task read (`zedcaferead.wasm`)
+
+After Wanix is warm and session books have exported to `./zed-cafe/`, drop `zedcaferead.wasm` to prove a WASI task can read `zed-cafe/manifest.json`.
+
+Full scenario: [`zed-cafe-task-read-scenario.md`](zed-cafe-task-read-scenario.md)  
+Harness: [/wanix/zed-cafe-task-read.html](http://localhost:7777/wanix/zed-cafe-task-read.html) (build wasm with `yarn task run wanix:wasm:build` first).
+
+```bash
+yarn task run wanix:wasm:build    # zedcaferead.wat → zedcaferead.wasm (wabt)
+# optional C rebuild when wasi-sdk is installed:
+yarn task run wanix:wasm:build:c
+yarn task app dev
+# drag ops/fixtures/wanix/zedcaferead.wasm — expect: zed-cafe ok: {"bookCount":...
+# gate: yarn task run wanix:zed-cafe:task-read:validate
+```
 
 ## ZSS tile term bridge (`termbridge.wasm`)
 

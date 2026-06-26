@@ -1,3 +1,5 @@
+import { iswanixzedcafetask } from 'zss/feature/wanix/wanixzedcafesession'
+
 export type WANIX_ATTACH_KIND = 'task' | 'vm'
 
 export type WANIX_TASK_STATE = {
@@ -21,7 +23,7 @@ let attachedkind: WANIX_ATTACH_KIND | null = null
 let termrouting = false
 
 export function readwanixtasks(): WANIX_TASK_STATE[] {
-  return [...tasks.values()]
+  return [...tasks.values()].filter((task) => !iswanixzedcafetask(task.id))
 }
 
 export function readwanixvms(): WANIX_VM_STATE[] {

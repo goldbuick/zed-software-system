@@ -6,6 +6,7 @@
  * delegates to wanixtermiframehost.ts.
  */
 import type { DEVICELIKE } from 'zss/device/api'
+import { wanixrequestzedcafeexport } from 'zss/device/api'
 import {
   makewanixtaskid,
   normalizewanixcmd,
@@ -17,11 +18,12 @@ import {
   readwanixattachedkind,
   readwanixtasks,
 } from 'zss/feature/wanix/wanixsession'
+import type { WanixZedCafeGuestFile } from 'zss/feature/wanix/wanixiframechildtypes'
 import {
   iframeapplytermsize,
   iframeattachtarget,
+  iframecapturezedcafeexport,
   iframechildlistdir,
-  iframechilddommount,
   iframechildmountarchive,
   iframechildputfile,
   iframehalttask,
@@ -45,6 +47,7 @@ import {
   type WANIX_VM_ASSET_URLS,
   readwanixvmasseturls,
 } from 'zss/feature/wanix/wanixvmassets'
+import { wanixdrainpendingzedcafeexport } from 'zss/feature/wanix/wanixzedcafe'
 
 export type WANIX_HOST_STATE = 'idle' | 'starting' | 'ready'
 
@@ -101,9 +104,8 @@ export async function spawnwanixspace(
   device: DEVICELIKE,
   player: string,
 ): Promise<void> {
-  void device
-  void player
   if (iswanixtermiframeactive() && readwanixtermiframelayout() === 'task') {
+    await wanixdrainpendingzedcafeexport(device, player)
     return
   }
   if (iswanixtermiframeactive()) {
@@ -113,16 +115,21 @@ export async function spawnwanixspace(
   try {
     await iframepreptaskspace()
     state = 'ready'
+    await wanixdrainpendingzedcafeexport(device, player)
+    wanixrequestzedcafeexport(device, player)
   } catch (err) {
     cleanup()
     throw err
   }
 }
 
+export { iframecapturezedcafeexport } from 'zss/feature/wanix/wanixtermiframehost'
+
 export async function spawnwanixvmspace(
   device: DEVICELIKE,
   player: string,
   urls: WANIX_VM_ASSET_URLS = readwanixvmasseturls(),
+  guestfiles: WanixZedCafeGuestFile[] = [],
 ): Promise<void> {
   if (readwanixtermiframelayout() === 'vm') {
     return
@@ -131,7 +138,7 @@ export async function spawnwanixvmspace(
     await teardownwanixtermiframe()
   }
   state = 'starting'
-  await iframeprepvmspace(device, player, urls)
+  await iframeprepvmspace(device, player, urls, guestfiles)
   state = 'ready'
 }
 
@@ -141,7 +148,9 @@ export async function ensurewanixsandbox(
 ): Promise<void> {
   if (!iswanixspaceactive()) {
     await spawnwanixspace(device, player)
+    return
   }
+  await wanixdrainpendingzedcafeexport(device, player)
 }
 
 export type SPAWN_WANIX_TASK_OPTS = {
@@ -173,11 +182,6 @@ export async function spawnwanixtask(
 export async function putwanixfile(name: string, bytes: Uint8Array) {
   requireactive()
   await iframechildputfile(name, bytes)
-}
-
-export async function mountwanixdom() {
-  requireactive()
-  await iframechilddommount()
 }
 
 export async function mountwanixarchive(

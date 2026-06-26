@@ -2,7 +2,6 @@ import { createmessage } from 'zss/device'
 import { hub } from 'zss/hub'
 
 const dropmock = jest.fn()
-const bindscrollmock = jest.fn()
 const stopmock = jest.fn()
 const termwritemock = jest.fn()
 const detachmock = jest.fn()
@@ -15,12 +14,17 @@ jest.mock('zss/device/register', () => ({
   registerreadplayer: () => 'player1',
 }))
 
+const exportstatemock = jest.fn()
+
 jest.mock('zss/feature/wanix/wanixlaunch', () => ({
   wanixhandledrop: (...args: unknown[]) => dropmock(...args),
 }))
 
+jest.mock('zss/feature/wanix/wanixzedcafe', () => ({
+  wanixhandleexportstate: (...args: unknown[]) => exportstatemock(...args),
+}))
+
 jest.mock('zss/feature/wanix/wanixcommands', () => ({
-  wanixhandlebindscroll: (...args: unknown[]) => bindscrollmock(...args),
   wanixhandlestop: (...args: unknown[]) => stopmock(...args),
   wanixhandletermwrite: (...args: unknown[]) => termwritemock(...args),
   wanixhandledetach: (...args: unknown[]) => detachmock(...args),
@@ -120,24 +124,6 @@ describe('wanix device', () => {
     )
   })
 
-  it('routes bind-scroll to wanixhandlebindscroll', async () => {
-    invoke('bind-scroll', {
-      scrollname: 'wanixnotes',
-      path: 'scroll-wanixnotes.txt',
-      text: 'hello',
-    })
-    await new Promise((r) => setTimeout(r, 0))
-    expect(bindscrollmock).toHaveBeenCalledWith(
-      expect.anything(),
-      'player1',
-      {
-        scrollname: 'wanixnotes',
-        path: 'scroll-wanixnotes.txt',
-        text: 'hello',
-      },
-    )
-  })
-
   it('routes vm-stop with vm id', async () => {
     invoke('vm-stop', 'linux-vm')
     await new Promise((r) => setTimeout(r, 0))
@@ -145,6 +131,22 @@ describe('wanix device', () => {
       expect.anything(),
       'player1',
       'linux-vm',
+    )
+  })
+
+  it('routes export-state to wanixhandleexportstate', async () => {
+    const files = [
+      {
+        path: 'manifest.json',
+        bytes: new Uint8Array([123, 125]),
+      },
+    ]
+    invoke('export-state', { files })
+    await new Promise((r) => setTimeout(r, 0))
+    expect(exportstatemock).toHaveBeenCalledWith(
+      expect.anything(),
+      'player1',
+      files,
     )
   })
 })

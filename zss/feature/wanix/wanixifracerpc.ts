@@ -14,7 +14,12 @@ export type WanixIframeRpcMethod =
   | 'putfile'
   | 'listdir'
   | 'mountarchive'
-  | 'dommount'
+  | 'synczedcafe'
+  | 'waitzedcafeready'
+  | 'setzedcafeready'
+  | 'haltzedcafe'
+  | 'probezedcafeexport'
+  | 'readzedcafeexportfiles'
   | 'teardown'
 
 export type WanixRpcMsgType = 'zss-wanix-term-rpc' | 'zss-wanix-term-probe-rpc'

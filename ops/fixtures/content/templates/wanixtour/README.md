@@ -1,7 +1,7 @@
 # wanixtour
 
-Boards + scrolls for the Wanix feature tour. Terrain kinds come from
-coolregionsbow; this book adds tour boards and `@scroll wanixnotes`.
+Boards for the Wanix feature tour. Terrain kinds come from
+coolregionsbow; this book adds tour boards.
 
 ## Prerequisites
 
@@ -21,15 +21,9 @@ coolregionsbow; this book adds tour boards and `@scroll wanixnotes`.
 | wanixdrop | `termbridge.wasm` (also `hello.wasm`, `hold.wasm`) |
 | wanixmenu | `#wanix` |
 | wanixvm | `#wanix vm` (in-app iframe host; first boot fetches linux + v86) |
-| wanixbind | `#wanix bind wanixnotes` → `scroll-wanixnotes.txt` |
+| wanixzedcafe | `cat zed-cafe/manifest.json`, drop `zedcaferead.wasm`, or VM `cat /zed-cafe/manifest.json` |
 | wanixattach | `#wanix attach`, `ping` / `pong` on termbridge |
 | outro | `ops/fixtures/wanix/README.md` |
-
-## Scrolls in this book
-
-| Page | Use |
-|------|-----|
-| `@scroll wanixnotes` | `#wanix bind wanixnotes` after warm wanix |
 
 Board copy is **bottom-aligned** (rows ~12–21) so instructions stay visible under the default top-half CLI tape.
 

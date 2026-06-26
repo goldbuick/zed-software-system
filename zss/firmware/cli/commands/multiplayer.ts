@@ -13,9 +13,9 @@ import {
 import { normalizechatkind } from 'zss/device/bridge/chattypes'
 import { SOFTWARE } from 'zss/device/session'
 import {
-  buildchatstartforkind,
-  resolvechatstartwords,
-} from 'zss/feature/bridgechatcli'
+  listwhipendpointaliases,
+  resolvewhipendpoint,
+} from 'zss/feature/broadcast/webbroadcastwhipaliases'
 import {
   bridgedeleteprofile,
   bridgereadallprofiles,
@@ -241,9 +241,38 @@ export function registermultiplayercommands(fw: FIRMWARE): FIRMWARE {
       'broadcast',
       [ARG_TYPE.MAYBE_NAME, 'stream broadcast (operator only)'],
       (_, words) => {
-        const [streamkey] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
-        if (streamkey) {
-          bridgestreamstart(SOFTWARE, READ_CONTEXT.elementfocus, streamkey)
+        const [first, endpoint, bearer] = readargs(words, 0, [
+          ARG_TYPE.MAYBE_NAME,
+          ARG_TYPE.MAYBE_NAME,
+          ARG_TYPE.MAYBE_NAME,
+        ])
+        if (first && NAME(String(first)) === 'WHIP') {
+          if (endpoint && bearer) {
+            const resolved = resolvewhipendpoint(String(endpoint))
+            if (!resolved) {
+              apierror(
+                SOFTWARE,
+                READ_CONTEXT.elementfocus,
+                'broadcast',
+                `unknown whip endpoint; use a URL or alias: ${listwhipendpointaliases().join(', ')}`,
+              )
+            } else {
+              bridgestreamstart(SOFTWARE, READ_CONTEXT.elementfocus, {
+                kind: 'whip',
+                endpoint: resolved,
+                bearer: String(bearer),
+              })
+            }
+          } else {
+            apierror(
+              SOFTWARE,
+              READ_CONTEXT.elementfocus,
+              'broadcast',
+              `usage: broadcast whip <endpoint|${listwhipendpointaliases().join('|')}> <bearer>`,
+            )
+          }
+        } else if (first) {
+          bridgestreamstart(SOFTWARE, READ_CONTEXT.elementfocus, String(first))
         } else {
           bridgestreamstop(SOFTWARE, READ_CONTEXT.elementfocus)
         }

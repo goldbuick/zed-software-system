@@ -1,18 +1,14 @@
 import { newQueue } from '@henrygd/queue'
 import { createdevice } from 'zss/device'
 import {
-  apilog,
   apierror,
-  registerstore,
+  apilog,
   ttsinfo as emitttsinfo,
   ttsrequest as emitttsrequest,
+  registerstore,
   synthaudiobuffer,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import {
-  getliveaudiocontext,
-  unlockaudiocontext,
-} from 'zss/feature/synth/backend/wasm/audiocontextunlock'
 import {
   FISH_DEFAULT_MODEL,
   describefishconfig,
@@ -21,6 +17,10 @@ import {
   requestfishaudiobytes,
 } from 'zss/feature/fishaudio'
 import { storagereadconfigstring } from 'zss/feature/storage'
+import {
+  getliveaudiocontext,
+  unlockaudiocontext,
+} from 'zss/feature/synth/backend/wasm/audiocontextunlock'
 import { createsid } from 'zss/mapping/guid'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
@@ -48,7 +48,9 @@ export function readttsenginestatuslines(): string[] {
 async function fishconfiginfowithvalidate(): Promise<string[]> {
   const lines = readttsenginestatuslines()
   if (!ttsconfig.trim()) {
-    lines.push('fish tts config: set api key with #ttsengine fish <key> [model]')
+    lines.push(
+      'fish tts config: set api key with #ttsengine fish <key> [model]',
+    )
     return lines
   }
   const result = describefishconfig(ttsconfig, ttsfishmodel)
@@ -72,12 +74,20 @@ function normalizettsengine(engine: string): TTS_ENGINE {
   return 'piper'
 }
 
-export function selectttsengine(engine: string, config: string, model?: string) {
+export function selectttsengine(
+  engine: string,
+  config: string,
+  model?: string,
+) {
   ttsengine = normalizettsengine(engine)
   if (config.trim() !== '') {
     ttsconfig = config
   }
-  if (ttsengine === 'fish' && typeof model === 'string' && model.trim() !== '') {
+  if (
+    ttsengine === 'fish' &&
+    typeof model === 'string' &&
+    model.trim() !== ''
+  ) {
     ttsfishmodel = normalizemodel(model)
   }
 }

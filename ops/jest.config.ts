@@ -3,6 +3,9 @@ import type { Config } from 'jest'
 /** Per-test and hook ceiling so suites cannot hang without failing. */
 const TEST_TIMEOUT_MS = 120_000
 
+const CORPUS_SCREENSHOTS_TEST =
+  '<rootDir>/ops/tests/integration/zzt/corpus-screenshots.test.ts'
+
 const config: Config = {
   rootDir: '..',
   roots: ['<rootDir>/ops/tests'],
@@ -55,6 +58,9 @@ const config: Config = {
   testPathIgnorePatterns: [
     '<rootDir>/ops/tests/unit/memory/wasm/wasmparity.test.ts',
     '<rootDir>/ops/tests/unit/memory/wasm/regenfixtures.test.ts',
+    ...(process.env.ZSS_JEST_INCLUDE_CORPUS_SCREENSHOTS === '1'
+      ? []
+      : [CORPUS_SCREENSHOTS_TEST]),
   ],
   testMatch: [
     '**/__tests__/**/*.ts',

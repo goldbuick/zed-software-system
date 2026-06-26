@@ -2,8 +2,22 @@ import type { WANIX_VM_ASSET_URLS } from 'zss/feature/wanix/wanixvmassets'
 
 export const WANIX_IFRAME_SYSTEM_ID = 'zss-wanix-iframe-sys'
 
+export type WanixZedCafeGuestFile = {
+  path: string
+  data: number[]
+}
+
+export type WanixZedCafeHostState = {
+  cmd: string
+  generation: number
+  ready: boolean
+  taskrid: string | null
+  guestfiles?: WanixZedCafeGuestFile[]
+}
+
 export type WanixRoot = {
   readDir: (path: string) => Promise<string[]>
+  readFile: (path: string) => Promise<Uint8Array | string>
   writeFile: (path: string, data: string | Uint8Array) => Promise<void>
 }
 
@@ -32,6 +46,7 @@ export type WanixIframeArchive = {
 type WanixIframeBase = {
   mountKey: number
   archives: WanixIframeArchive[]
+  zedcafe: WanixZedCafeHostState | null
 }
 
 export type WanixIframeHostState =
@@ -52,5 +67,5 @@ export type WanixIframeHostState =
     } & WanixIframeBase)
 
 export function createidlewanixiframestate(): WanixIframeHostState {
-  return { phase: 'idle', mountKey: 0, archives: [] }
+  return { phase: 'idle', mountKey: 0, archives: [], zedcafe: null }
 }

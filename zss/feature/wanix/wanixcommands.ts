@@ -1,13 +1,13 @@
 import type { DEVICELIKE } from 'zss/device/api'
-import { apierror, apilog } from 'zss/device/api'
+import { apierror, apilog, wanixrequestzedcafeexport } from 'zss/device/api'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import {
   attachwanixtarget,
   ensurewanixsandbox,
   haltwanixtask,
   haltwanixvm,
+  iframecapturezedcafeexport,
   iswanixspaceactive,
-  putwanixfile,
   readwanixstatus,
   readwanixvmpreperror,
   readwanixvmprepstage,
@@ -32,25 +32,13 @@ import {
   removetask,
   removevm,
 } from 'zss/feature/wanix/wanixsession'
-import {
-  DEFAULT_WANIX_DOM_SCROLL,
-  iswanixdompopuppath,
-  scrollbodytodomhtml,
-} from 'zss/feature/wanix/wanixiframechilddom'
-import {
-  openwanixdompopup,
-  preparewanixdompopup,
-} from 'zss/feature/wanix/wanixdompopup'
-import { readscrollcodepagebody } from 'zss/feature/scroll/stripscrollheader'
-import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
-import { CODE_PAGE_TYPE } from 'zss/memory/types'
-import { readwanixtermiframelayout } from 'zss/feature/wanix/wanixtermiframehost'
 import { leavewanixattachedterminal } from 'zss/feature/wanix/wanixterminalmode'
 import { wanixtermscreenwritepong } from 'zss/feature/wanix/wanixtermscreen'
 import {
   DEFAULT_WANIX_VM_ID,
   DEFAULT_WANIX_VM_MEM,
 } from 'zss/feature/wanix/wanixvmassets'
+import { ensurewanixzedcafedaemon } from 'zss/feature/wanix/wanixzedcafe'
 import {
   zssheaderlines,
   zsssectionlines,
@@ -58,27 +46,6 @@ import {
   zsstexttape,
   zsszedlinkline,
 } from 'zss/feature/zsstextui'
-
-function readwanixscrollbody(
-  device: DEVICELIKE,
-  player: string,
-  scrollname: string,
-): string | undefined {
-  const codepage = memorypickcodepagewithtypeandstat(
-    CODE_PAGE_TYPE.SCROLL,
-    scrollname,
-  )
-  if (!codepage) {
-    apierror(device, player, 'wanix', `unknown @scroll codepage: ${scrollname}`)
-    return undefined
-  }
-  const body = readscrollcodepagebody(codepage)
-  if (body === undefined) {
-    apierror(device, player, 'wanix', `not a scroll codepage: ${scrollname}`)
-    return undefined
-  }
-  return body
-}
 
 export async function wanixhandlevmstart(
   device: DEVICELIKE,
@@ -96,8 +63,17 @@ export async function wanixhandlevmstart(
         )
       }
     }
+    apilog(device, player, 'wanix vm prep: ensuring zed-cafe export...')
+    await ensurewanixsandbox(device, player)
+    await ensurewanixzedcafedaemon(device, player)
+    const guestfiles = await iframecapturezedcafeexport()
+    apilog(
+      device,
+      player,
+      `wanix vm prep: captured ${guestfiles.length} zed-cafe guest files`,
+    )
     apilog(device, player, 'wanix vm prep: fetching linux + v86 archives...')
-    await spawnwanixvmspace(device, player)
+    await spawnwanixvmspace(device, player, undefined, guestfiles)
     apilog(device, player, `wanix vm prep: ${readwanixvmprepstage()}`)
     const requested = vmid ?? DEFAULT_WANIX_VM_ID
     apilog(device, player, `wanix vm spawn: ${requested}...`)
@@ -112,6 +88,7 @@ export async function wanixhandlevmstart(
       mem: DEFAULT_WANIX_VM_MEM,
     })
     apilog(device, player, `wanix vm boot ${spawnedid}`)
+    wanixrequestzedcafeexport(device, player)
   } catch (err) {
     const stage = readwanixvmprepstage()
     const prep = readwanixvmpreperror()
@@ -137,8 +114,7 @@ export async function wanixhandleshownenu(device: DEVICELIKE, player: string) {
     const parts: (string | string[])[] = [
       zssheaderlines('wanix'),
       zsstextline('drop a .wasm or .tgz to run'),
-      zsstextline('#wanix bind <scroll> [path] — push @scroll text into wanix'),
-      zsstextline('#wanix dom [scroll] — @scroll HTML → #web/dom/popup window'),
+      zsstextline('$gray./zed-cafe/ mirrors session books when wanix is warm'),
       zsssectionlines('Tasks'),
     ]
     if (tasks.length === 0) {
@@ -176,80 +152,6 @@ export async function wanixhandleshownenu(device: DEVICELIKE, player: string) {
       parts.push(zsstextline('#wanix detach — stop routing terminal input'))
     }
     terminalwritelines(device, player, zsstexttape(...parts))
-  } catch (err) {
-    apierror(
-      device,
-      player,
-      'wanix',
-      err instanceof Error ? err.message : String(err),
-    )
-  }
-}
-
-export async function wanixhandlebindscroll(
-  device: DEVICELIKE,
-  player: string,
-  opts: {
-    scrollname: string
-    path: string
-    text: string
-  },
-) {
-  try {
-    if (iswanixdompopuppath(opts.path)) {
-      preparewanixdompopup()
-      const html = scrollbodytodomhtml(opts.text)
-      const win = openwanixdompopup(html)
-      apilog(
-        device,
-        player,
-        win
-          ? `wanix bind scroll ${opts.scrollname} → #web/dom/popup — opened from @scroll`
-          : `wanix bind scroll ${opts.scrollname} → #web/dom/popup — allow popups to see demo`,
-      )
-      return
-    }
-    await ensurewanixsandbox(device, player)
-    const bytes = new TextEncoder().encode(opts.text)
-    await putwanixfile(opts.path, bytes)
-    const layout = readwanixtermiframelayout()
-    const target =
-      layout === 'vm' ? 'vm root' : layout === 'task' ? 'task ramfs' : 'wanix'
-    apilog(
-      device,
-      player,
-      `wanix bind scroll ${opts.scrollname} → ${opts.path} (${target})`,
-    )
-  } catch (err) {
-    apierror(
-      device,
-      player,
-      'wanix',
-      err instanceof Error ? err.message : String(err),
-    )
-  }
-}
-
-export async function wanixhandledommount(
-  device: DEVICELIKE,
-  player: string,
-  scrollname = DEFAULT_WANIX_DOM_SCROLL,
-) {
-  try {
-    const body = readwanixscrollbody(device, player, scrollname)
-    if (body === undefined) {
-      return
-    }
-    preparewanixdompopup()
-    const html = scrollbodytodomhtml(body)
-    const win = openwanixdompopup(html)
-    apilog(
-      device,
-      player,
-      win
-        ? `wanix dom opened @scroll ${scrollname} → #web/dom/popup`
-        : `wanix dom @scroll ${scrollname} ready — allow popups to see #web/dom/popup`,
-    )
   } catch (err) {
     apierror(
       device,

@@ -1,5 +1,4 @@
 import {
-  defaultwanixbindpathforscroll,
   readscrollcodepagebody,
   scrollsourceisscrollcodepage,
   stripscrollcodepageheader,
@@ -30,12 +29,5 @@ describe('stripscrollcodepageheader', () => {
       code: '@board title',
     })
     expect(body).toBeUndefined()
-  })
-
-  it('builds default bind path', () => {
-    expect(defaultwanixbindpathforscroll('wanixnotes')).toBe(
-      'scroll-wanixnotes.txt',
-    )
-    expect(defaultwanixbindpathforscroll('my notes!')).toBe('scroll-my-notes.txt')
   })
 })

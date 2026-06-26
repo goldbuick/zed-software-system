@@ -7,6 +7,7 @@ import {
   rejectparentrpc,
   resolveparentrpc,
 } from 'zss/feature/wanix/wanixifracerpc'
+import type { WanixZedCafeGuestFile } from 'zss/feature/wanix/wanixiframechildtypes'
 import {
   type WANIX_ATTACH_KIND,
   clearwanixautotileflags,
@@ -233,6 +234,15 @@ function onmessage(event: MessageEvent) {
       embedready = true
       return
     }
+    if (data.type === 'zss-wanix-term-apilog') {
+      void Promise.all([
+        import('zss/device/session'),
+        import('zss/device/register'),
+      ]).then(([{ SOFTWARE }, { registerreadplayer }]) => {
+        apilog(SOFTWARE, registerreadplayer(), data.message)
+      })
+      return
+    }
     if (data.type === 'zss-wanix-term-rpc-res') {
       if (data.error) {
         rejectparentrpc(rpcwaiters, data.id, data.error)
@@ -344,10 +354,21 @@ export async function iframeattachtarget(
   }
 }
 
+export async function iframecapturezedcafeexport(): Promise<
+  WanixZedCafeGuestFile[]
+> {
+  if (!iswanixtermiframeactive()) {
+    return []
+  }
+  const files = await childrpc('zss-wanix-term-rpc', 'readzedcafeexportfiles', [])
+  return Array.isArray(files) ? (files as WanixZedCafeGuestFile[]) : []
+}
+
 export async function iframeprepvmspace(
   device: DEVICELIKE,
   player: string,
   urls: WANIX_VM_ASSET_URLS,
+  guestfiles: WanixZedCafeGuestFile[] = [],
 ): Promise<void> {
   vmprepstage = 'mounting'
   vmpreperror = undefined
@@ -355,7 +376,7 @@ export async function iframeprepvmspace(
   try {
     iframelayout = 'vm'
     ensureiframe()
-    await childrpc('zss-wanix-term-rpc', 'prepvm', [urls])
+    await childrpc('zss-wanix-term-rpc', 'prepvm', [urls, guestfiles])
     vmbindsready = true
     vmprepstage = 'mount_ok'
     apilog(device, player, 'wanix vm prep: assets ready (mounts on spawn)')
@@ -434,8 +455,33 @@ export async function iframechildputfile(
   await childrpc('zss-wanix-term-rpc', 'putfile', [name, [...bytes]])
 }
 
-export async function iframechilddommount(): Promise<void> {
-  await childrpc('zss-wanix-term-rpc', 'dommount', [])
+export async function iframechildsynczedcafe(
+  cmd: string,
+  generation: number,
+): Promise<void> {
+  await childrpc('zss-wanix-term-rpc', 'synczedcafe', [cmd, generation])
+}
+
+export async function iframechildwaitzedcafeready(
+  timeoutms = 30_000,
+): Promise<string | null> {
+  return childrpc<string | null>('zss-wanix-term-rpc', 'waitzedcafeready', [
+    timeoutms,
+  ])
+}
+
+export async function iframechildsetzedcafeready(
+  ready: boolean,
+): Promise<void> {
+  await childrpc('zss-wanix-term-rpc', 'setzedcafeready', [ready])
+}
+
+export async function iframechildhaltzedcafe(): Promise<void> {
+  await childrpc('zss-wanix-term-rpc', 'haltzedcafe', [])
+}
+
+export async function iframechildprobezedcafeexport(): Promise<unknown> {
+  return childrpc('zss-wanix-term-rpc', 'probezedcafeexport', [])
 }
 
 export async function iframechildlistdir(path: string): Promise<string[]> {

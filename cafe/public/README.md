@@ -17,4 +17,4 @@ Static assets served at site root by Vite (`public/`). Do not add ad-hoc trees h
 - `wasm/archive/` — removed; legacy maximilian assets are under `ops/archive/wasm/`
 - `renders/` — offline parity WAVs under `ops/fixtures/` and task output dirs
 - `fixtures/` — dev-only static tree from `ops/fixtures/public/` (Vite middleware)
-- `wanix/` — runtime pin (`BUILD_ID`) is written by `wanix-ensure.sh` to `ops/fixtures/wanix/`; harness HTML is under `ops/fixtures/harness/wanix/`
+- `wanix/` — shipped guests (`zed-cafe.wasm`; build via `wanix:zed-cafe:build`); runtime pin in `ops/fixtures/wanix/BUILD_ID`

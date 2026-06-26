@@ -157,9 +157,9 @@ export function boardrunnerpatch(
 export function bridgestreamstart(
   device: DEVICELIKE,
   player: string,
-  streamkey: string,
+  payload: string | Record<string, unknown>,
 ) {
-  device.emit(player, 'bridge:streamstart', streamkey)
+  device.emit(player, 'bridge:streamstart', payload)
 }
 
 export function bridgestreamstop(device: DEVICELIKE, player: string) {
@@ -415,26 +415,25 @@ export function wanixdrop(
   device.emit(player, 'wanix:drop', { label, kind, bytes })
 }
 
-export type WANIX_BIND_SCROLL_PAYLOAD = {
-  scrollname: string
+export type WANIX_ZED_CAFE_EXPORT_FILE = {
   path: string
-  text: string
+  bytes: Uint8Array
 }
 
-export function wanixbindscroll(
-  device: DEVICELIKE,
-  player: string,
-  payload: WANIX_BIND_SCROLL_PAYLOAD,
-) {
-  device.emit(player, 'wanix:bind-scroll', payload)
+export type WANIX_ZED_CAFE_EXPORT_PAYLOAD = {
+  files: WANIX_ZED_CAFE_EXPORT_FILE[]
 }
 
-export function wanixdommount(
+export function wanixexportstate(
   device: DEVICELIKE,
   player: string,
-  scrollname?: string,
+  payload: WANIX_ZED_CAFE_EXPORT_PAYLOAD,
 ) {
-  device.emit(player, 'wanix:dom-mount', scrollname)
+  device.emit(player, 'wanix:export-state', payload)
+}
+
+export function wanixrequestzedcafeexport(device: DEVICELIKE, player: string) {
+  device.emit(player, 'vm:export-zed-cafe')
 }
 
 export function heavyrestoreagents(
