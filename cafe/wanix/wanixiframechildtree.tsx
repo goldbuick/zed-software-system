@@ -7,11 +7,15 @@ import {
 } from 'zss/feature/wanix/wanixiframechildcontroller'
 import {
   appendwanixarchivebind,
+  appendwanixgojstasktarget,
   appendwanixtasktarget,
   cleartargetwanixels,
   mountwanixsystemtree,
+  stagezedcafetaskforgojs,
+  waitforwanixroot,
   wirewanixarchivebind,
 } from 'zss/feature/wanix/wanixiframechildmount'
+import { postwanixiframeapilog } from 'zss/feature/wanix/wanixtermiframeprotocol'
 import type {
   WanixIframeHostState,
   WanixSystemElement,
@@ -21,6 +25,7 @@ import {
   VM_TERM_READY_MS,
   waitforv86driver,
 } from 'zss/feature/wanix/wanixvmspawnhelpers'
+import { WANIX_ZED_CAFE_TASK_ID } from 'zss/feature/wanix/wanixzedcafeconstants'
 
 export function WanixIframeChildTree({
   state,
@@ -35,6 +40,10 @@ export function WanixIframeChildTree({
   const vmid = state.phase === 'vm-active' ? state.vmid : ''
   const taskid = state.phase === 'task-active' ? state.taskid : ''
   const taskcmd = state.phase === 'task-active' ? state.cmd : ''
+  const zedcafe = state.zedcafe
+  const zedcafegen = zedcafe?.generation ?? 0
+  const zedcafecmd = zedcafe?.cmd ?? ''
+  const mountkey = state.mountKey
 
   // Remount wanix-system when mountKey changes (VM spawn requires fresh tree).
   useLayoutEffect(() => {
@@ -142,6 +151,86 @@ export function WanixIframeChildTree({
     // taskid/taskcmd are derived from state.taskid/state.cmd when phase is task-active.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- derived task fields
   }, [controller, state.phase, taskid, taskcmd])
+
+  // zed-cafe gojs export daemon (persists across user task spawns).
+  useLayoutEffect(() => {
+    const system = systemref.current
+    if (!system || !zedcafe?.cmd) {
+      return
+    }
+
+    const existing = system.querySelector(
+      `wanix-task[id="${WANIX_ZED_CAFE_TASK_ID}"]`,
+    )
+    if (existing) {
+      existing.remove()
+    }
+
+    const task = appendwanixgojstasktarget(
+      system,
+      WANIX_ZED_CAFE_TASK_ID,
+      zedcafe.cmd,
+    ) as WanixTaskElement
+
+    postwanixiframeapilog(
+      `zed-cafe export: gojs task appended cmd=${zedcafe.cmd}`,
+    )
+
+    const ontaskerror = () => {
+      controller.onzedcafeerror(new Error('zed-cafe gojs task failed'))
+    }
+    task.addEventListener('error', ontaskerror, { once: true })
+
+    let cancelled = false
+
+    void (async () => {
+      await task.allocate?.()
+      if (cancelled) {
+        return
+      }
+      if (task.rid) {
+        controller.setzedcafetaskrid(task.rid)
+      }
+      const root = await waitforwanixroot(system, controller.getroot)
+      if (cancelled || !root) {
+        controller.onzedcafeerror(
+          new Error('zed-cafe export: wanix root not ready before staging'),
+        )
+        return
+      }
+      if (!task.rid) {
+        controller.onzedcafeerror(
+          new Error('zed-cafe export: gojs allocate missing rid'),
+        )
+        return
+      }
+      const staged = await stagezedcafetaskforgojs(
+        system,
+        root,
+        controller,
+        task.rid,
+      )
+      if (cancelled || !staged) {
+        return
+      }
+      postwanixiframeapilog(
+        `zed-cafe export: starting gojs task rid=${task.rid ?? 'unknown'}`,
+      )
+      await task.start?.()
+    })().catch((err) => {
+      if (cancelled) {
+        return
+      }
+      controller.onzedcafeerror(
+        err instanceof Error ? err : new Error(String(err)),
+      )
+    })
+
+    return () => {
+      cancelled = true
+      task.removeEventListener('error', ontaskerror)
+    }
+  }, [controller, mountkey, zedcafecmd, zedcafegen])
 
   // Wait for wanix-system ready; VM path also waits for v86 driver + wanix-vm term.
   useEffect(() => {

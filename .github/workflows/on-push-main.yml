@@ -19,6 +19,11 @@ jobs:
         with:
           node-version-file: .nvmrc
 
+      - name: setup go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+
       - name: setup and build
         run: |
           yarn

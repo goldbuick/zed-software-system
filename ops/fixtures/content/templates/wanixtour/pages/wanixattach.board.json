@@ -1,5 +1,5 @@
 {
-  "code": "@board wanixattach\n@exitnorth wanixbind\n@exitsouth outro",
+  "code": "@board wanixattach\n@exitnorth wanixzedcafe\n@exitsouth outro",
   "board": {
     "name": "wanixattach",
     "terrain": [

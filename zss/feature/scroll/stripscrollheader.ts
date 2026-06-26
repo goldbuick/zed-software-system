@@ -40,11 +40,3 @@ export function readscrollcodepagebody(
   }
   return stripscrollcodepageheader(codepage.code ?? '')
 }
-
-export function defaultwanixbindpathforscroll(scrollname: string): string {
-  const safe = scrollname
-    .replace(/[^a-zA-Z0-9._-]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-  const base = safe.length > 0 ? safe : 'scroll'
-  return `scroll-${base}.txt`
-}

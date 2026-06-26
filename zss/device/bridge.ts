@@ -1,4 +1,3 @@
-import IVSBroadcastClient, { Callback } from 'amazon-ivs-web-broadcast'
 import { objectFromEntries } from 'ts-extras'
 import { createdevice } from 'zss/device'
 import { createblueskyfeedconnector } from 'zss/device/bridge/blueskyfeedconnector'
@@ -14,6 +13,11 @@ import { createrssfeedconnector } from 'zss/device/bridge/rssfeedconnector'
 import { createtwitchchatconnector } from 'zss/device/bridge/twitchchatconnector'
 import type { TWITCH_CHAT_HANDLERS } from 'zss/device/bridge/twitchchatconnector'
 import { withclipboard } from 'zss/feature/keyboard'
+import {
+  createwebbroadcastclient,
+  parsebroadcaststartpayload,
+} from 'zss/feature/broadcast/webbroadcastclient'
+import type { WebBroadcastClient } from 'zss/feature/broadcast/webbroadcastclient'
 import {
   netterminalhost,
   netterminaljoin,
@@ -43,7 +47,7 @@ import { SOFTWARE } from './session'
 import { synthbroadcastdestination } from './synth'
 
 const chatslots = new Map<CHAT_KIND, CHAT_CONNECTOR>()
-let broadcastclient: MAYBE<IVSBroadcastClient.AmazonIVSBroadcastClient>
+let broadcastclient: MAYBE<WebBroadcastClient>
 let broadcastivsconnection = 'idle'
 let broadcastlive = false
 
@@ -468,52 +472,36 @@ const bridge = createdevice('bridge', [], (message) => {
       break
     case 'streamstart':
       doasync(bridge, message.player, async () => {
+        const startpayload = parsebroadcaststartpayload(message.data)
         if (ispresent(broadcastclient)) {
           apierror(bridge, message.player, 'bridge', 'stream is already open')
         } else {
           broadcastivsconnection = 'starting'
           broadcastlive = false
-          const isportrait = window.innerHeight > window.innerWidth
-          const streamconfig = isportrait
-            ? IVSBroadcastClient.STANDARD_PORTRAIT
-            : IVSBroadcastClient.STANDARD_LANDSCAPE
-          broadcastclient = IVSBroadcastClient.create({
-            streamConfig: streamconfig,
-          })
+          broadcastclient = createwebbroadcastclient()
           setIvsBroadcastClient(broadcastclient)
 
-          // event handlers
-          broadcastclient.on(
-            IVSBroadcastClient.BroadcastClientEvents.ACTIVE_STATE_CHANGE,
-            // @ts-expect-error wow?
-            function (activestate: boolean) {
-              broadcastlive = activestate
-            },
-          )
+          broadcastclient.on('activestatechange', function (activestate) {
+            broadcastlive = Boolean(activestate)
+          })
 
-          broadcastclient.on(
-            IVSBroadcastClient.BroadcastClientEvents.CONNECTION_STATE_CHANGE,
-            function (state: string) {
-              broadcastivsconnection = state
-              apilog(bridge, message.player, state)
-            } as Callback,
-          )
+          broadcastclient.on('connectionstatechange', function (state) {
+            broadcastivsconnection = String(state)
+            apilog(bridge, message.player, String(state))
+          })
 
-          broadcastclient.on(
-            IVSBroadcastClient.BroadcastClientEvents.ERROR,
-            function (error: string) {
-              broadcastivsconnection = 'error'
-              broadcastlive = false
-              apierror(bridge, message.player, 'bridge', error)
-              broadcastclient = undefined
-              clearIvsBroadcastClient()
-            } as Callback,
-          )
+          broadcastclient.on('error', function (error) {
+            broadcastivsconnection = 'error'
+            broadcastlive = false
+            apierror(bridge, message.player, 'bridge', String(error))
+            broadcastclient?.delete()
+            broadcastclient = undefined
+            clearIvsBroadcastClient()
+          })
 
-          // pull visual content from canvas
           const video = document.querySelector('canvas')
           if (ispresent(video)) {
-            await broadcastclient.addImageSource(video, 'video', { index: 1 })
+            await broadcastclient.addimagesource(video, 'video', { index: 1 })
           } else {
             apierror(
               bridge,
@@ -521,6 +509,7 @@ const bridge = createdevice('bridge', [], (message) => {
               'video',
               'unabled to find canvas element',
             )
+            broadcastclient.delete()
             broadcastclient = undefined
             broadcastivsconnection = 'idle'
             broadcastlive = false
@@ -528,10 +517,9 @@ const bridge = createdevice('bridge', [], (message) => {
             return
           }
 
-          // pull audio content from tonejs
           const audio = synthbroadcastdestination()
           if (ispresent(audio)) {
-            await broadcastclient.addAudioInputDevice(audio.stream, 'audio')
+            await broadcastclient.addaudioinputdevice(audio.stream, 'audio')
           } else {
             apierror(
               bridge,
@@ -539,6 +527,7 @@ const bridge = createdevice('bridge', [], (message) => {
               'video',
               'unable create media audio node destination',
             )
+            broadcastclient.delete()
             broadcastclient = undefined
             broadcastivsconnection = 'idle'
             broadcastlive = false
@@ -546,10 +535,9 @@ const bridge = createdevice('bridge', [], (message) => {
             return
           }
 
-          // signal success
           apilog(bridge, message.player, `created client`)
         }
-        if (isstring(message.data) && ispresent(broadcastclient)) {
+        if (ispresent(startpayload) && ispresent(broadcastclient)) {
           for (const line of zssheaderlines('broadcasting in')) {
             write(bridge, message.player, line)
           }
@@ -562,16 +550,27 @@ const bridge = createdevice('bridge', [], (message) => {
           for (const line of zssheaderlines('GOING LIVE')) {
             write(bridge, message.player, line)
           }
-          await broadcastclient.startBroadcast(
-            message.data,
-            'https://g.webrtc.live-video.net:4443',
-          )
+          try {
+            await broadcastclient.start(startpayload)
+          } catch (error) {
+            broadcastivsconnection = 'error'
+            broadcastlive = false
+            apierror(
+              bridge,
+              message.player,
+              'bridge',
+              error instanceof Error ? error.message : String(error),
+            )
+            broadcastclient.delete()
+            broadcastclient = undefined
+            clearIvsBroadcastClient()
+          }
         }
       })
       break
     case 'streamstop':
       if (ispresent(broadcastclient)) {
-        broadcastclient.stopBroadcast()
+        broadcastclient.stop()
         broadcastclient.delete()
         broadcastclient = undefined
         broadcastivsconnection = 'idle'

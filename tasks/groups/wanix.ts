@@ -18,6 +18,24 @@ export const WANIX_TASKS: TaskDef[] = [
       'Build upstream gojscheck.wasm (Go js/wasm) for basic-terminal.html harness',
     run: shell('sh ops/fixtures/wanix/build-gojs.sh'),
   }),
+  def('wanix:zed-cafe:build', {
+    description:
+      'Build zed-cafe.wasm (Go js/wasm) into cafe/public/wanix/ for prod',
+    tags: ['ci'],
+    run: shell('sh ops/fixtures/wanix/build-zed-cafe.sh'),
+  }),
+  def('wanix:zed-cafe:export:validate', {
+    description:
+      'Headed Playwright: minimal zed-cafe-export harness must show export/manifest.json (local gate, not CI)',
+    run: shell('node tasks/implementations/wanix/validate-zed-cafe-export.mjs'),
+  }),
+  def('wanix:zed-cafe:export:validate:app', {
+    description:
+      'Headed Playwright: full app #wanix vm → cat /zed-cafe/manifest.json (local gate, not CI)',
+    run: shell(
+      'node tasks/implementations/wanix/validate-zed-cafe-export-app.mjs',
+    ),
+  }),
   def('wanix:wasm:build:c', {
     description:
       'Compile ops/fixtures/wanix/*.c to .wasm when wasi-sdk is installed (skips if missing)',

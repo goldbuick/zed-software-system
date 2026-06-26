@@ -26,6 +26,17 @@ export type WANIX_TERM_IFRAME_MSG =
       error?: string
     }
   | { type: 'zss-wanix-term-ready' }
+  | { type: 'zss-wanix-term-apilog'; message: string }
+
+export function postwanixiframeapilog(message: string) {
+  if (typeof window === 'undefined' || !window.parent) {
+    return
+  }
+  window.parent.postMessage(
+    { type: 'zss-wanix-term-apilog', message },
+    window.location.origin,
+  )
+}
 
 export function iswanixtermiframemsg(
   data: unknown,
@@ -37,6 +48,7 @@ export function iswanixtermiframemsg(
   return (
     type === 'zss-wanix-term-rpc' ||
     type === 'zss-wanix-term-rpc-res' ||
-    type === 'zss-wanix-term-ready'
+    type === 'zss-wanix-term-ready' ||
+    type === 'zss-wanix-term-apilog'
   )
 }

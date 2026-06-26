@@ -2,8 +2,6 @@ import { createdevice } from 'zss/device'
 import { registerreadplayer } from 'zss/device/register'
 import {
   wanixhandleattach,
-  wanixhandlebindscroll,
-  wanixhandledommount,
   wanixhandledetach,
   wanixhandleshownenu,
   wanixhandlestop,
@@ -12,6 +10,12 @@ import {
   wanixhandlevmstop,
 } from 'zss/feature/wanix/wanixcommands'
 import { wanixhandledrop } from 'zss/feature/wanix/wanixlaunch'
+import type { WANIX_ZED_CAFE_EXPORT_FILE } from 'zss/feature/wanix/wanixstateexport'
+import {
+  clearwanixzedcafependingexport,
+  wanixdrainpendingzedcafeexport,
+  wanixhandleexportstate,
+} from 'zss/feature/wanix/wanixzedcafe'
 import { doasync } from 'zss/mapping/func'
 import { ispresent, isstring } from 'zss/mapping/types'
 
@@ -38,26 +42,32 @@ function readwanixdroppayload(data: unknown): WANIX_DROP_PAYLOAD | undefined {
   return payload
 }
 
-type WANIX_BIND_SCROLL_PAYLOAD = {
-  scrollname: string
-  path: string
-  text: string
+type WANIX_EXPORT_STATE_PAYLOAD = {
+  files: WANIX_ZED_CAFE_EXPORT_FILE[]
 }
 
-function readwanixbindscrollpayload(
+function readwanixexportstatepayload(
   data: unknown,
-): WANIX_BIND_SCROLL_PAYLOAD | undefined {
+): WANIX_EXPORT_STATE_PAYLOAD | undefined {
   if (!ispresent(data) || typeof data !== 'object') {
     return undefined
   }
-  const payload = data as WANIX_BIND_SCROLL_PAYLOAD
-  if (!isstring(payload.scrollname) || !payload.scrollname.trim()) {
+  const payload = data as WANIX_EXPORT_STATE_PAYLOAD
+  if (!Array.isArray(payload.files)) {
     return undefined
   }
-  if (!isstring(payload.path) || !payload.path.trim()) {
-    return undefined
-  }
-  if (!isstring(payload.text)) {
+  for (let i = 0; i < payload.files.length; ++i) {
+    const file = payload.files[i]
+    if (!ispresent(file) || typeof file.path !== 'string') {
+      return undefined
+    }
+    if (file.bytes instanceof Uint8Array) {
+      continue
+    }
+    if (Array.isArray(file.bytes)) {
+      file.bytes = new Uint8Array(file.bytes as number[])
+      continue
+    }
     return undefined
   }
   return payload
@@ -131,22 +141,16 @@ const wanix = createdevice('wanix', [], (message) => {
       })
       break
     }
-    case 'bind-scroll': {
-      const payload = readwanixbindscrollpayload(message.data)
+    case 'export-state': {
+      const payload = readwanixexportstatepayload(message.data)
       if (!payload) {
         break
       }
       doasync(wanix, message.player, async () => {
-        await wanixhandlebindscroll(wanix, message.player, payload)
+        await wanixhandleexportstate(wanix, message.player, payload.files)
       })
       break
     }
-    case 'dom-mount':
-      doasync(wanix, message.player, async () => {
-        const scrollname = isstring(message.data) ? message.data : undefined
-        await wanixhandledommount(wanix, message.player, scrollname)
-      })
-      break
     default:
       break
   }

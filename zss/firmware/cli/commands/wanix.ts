@@ -1,8 +1,6 @@
 import {
   apierror,
   wanixattach,
-  wanixbindscroll,
-  wanixdommount,
   wanixdetach,
   wanixshow,
   wanixstop,
@@ -10,14 +8,8 @@ import {
   wanixvmstop,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import {
-  defaultwanixbindpathforscroll,
-  readscrollcodepagebody,
-} from 'zss/feature/scroll/stripscrollheader'
 import { FIRMWARE } from 'zss/firmware'
 import { ispresent } from 'zss/mapping/types'
-import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
-import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE, NAME } from 'zss/words/types'
 
@@ -66,64 +58,12 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
         case 'attach':
           wanixattach(SOFTWARE, player, ispresent(arg) ? NAME(arg) : undefined)
           break
-        case 'dom':
-          wanixdommount(
-            SOFTWARE,
-            player,
-            ispresent(arg) ? NAME(arg) : undefined,
-          )
-          break
-        case 'bind': {
-          const scrollname = ispresent(arg) ? NAME(arg) : undefined
-          if (!scrollname) {
-            apierror(
-              SOFTWARE,
-              player,
-              'wanix',
-              'usage: #wanix bind <scrollname> [path]',
-            )
-            break
-          }
-          const [patharg] = readargs(words, 2, [ARG_TYPE.MAYBE_NAME])
-          const codepage = memorypickcodepagewithtypeandstat(
-            CODE_PAGE_TYPE.SCROLL,
-            scrollname,
-          )
-          if (!codepage) {
-            apierror(
-              SOFTWARE,
-              player,
-              'wanix',
-              `unknown @scroll codepage: ${scrollname}`,
-            )
-            break
-          }
-          const body = readscrollcodepagebody(codepage)
-          if (body === undefined) {
-            apierror(
-              SOFTWARE,
-              player,
-              'wanix',
-              `not a scroll codepage: ${scrollname}`,
-            )
-            break
-          }
-          const path = ispresent(patharg)
-            ? NAME(patharg)
-            : defaultwanixbindpathforscroll(scrollname)
-          wanixbindscroll(SOFTWARE, player, {
-            scrollname,
-            path,
-            text: body,
-          })
-          break
-        }
         default:
           apierror(
             SOFTWARE,
             player,
             'wanix',
-            'drop .wasm/.tgz — #wanix menu, bind, dom, vm, attach, stop, detach',
+            'drop .wasm/.tgz — #wanix menu, vm, attach, stop, detach',
           )
           break
       }

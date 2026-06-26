@@ -114,6 +114,7 @@ export const CONTENT_TASKS: TaskDef[] = [
           stdio: 'inherit',
           env: {
             ...ctx.env,
+            ZSS_JEST_INCLUDE_CORPUS_SCREENSHOTS: '1',
             ZSS_TASK_ARGS: ctx.args.join(' '),
           },
           shell: false,

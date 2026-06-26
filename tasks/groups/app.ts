@@ -32,6 +32,7 @@ export const APP_TASKS: TaskDef[] = [
   def('app:build', {
     description: 'Production Vite build',
     tags: ['ci'],
+    deps: ['wanix:zed-cafe:build'],
     run: exec(['vite', 'build']),
   }),
   def('app:build:strict', {

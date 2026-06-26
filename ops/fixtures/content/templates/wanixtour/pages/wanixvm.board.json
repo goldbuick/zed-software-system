@@ -1,5 +1,5 @@
 {
-  "code": "@board wanixvm\n@exitnorth wanixmenu\n@exitsouth wanixbind",
+  "code": "@board wanixvm\n@exitnorth wanixmenu\n@exitsouth wanixzedcafe",
   "board": {
     "name": "wanixvm",
     "terrain": [
@@ -6187,17 +6187,17 @@
       },
       {
         "kind": "fake",
-        "char": 98,
+        "char": 114,
         "color": 11
       },
       {
         "kind": "fake",
-        "char": 105,
+        "char": 101,
         "color": 11
       },
       {
         "kind": "fake",
-        "char": 110,
+        "char": 97,
         "color": 11
       },
       {
@@ -6212,62 +6212,12 @@
       },
       {
         "kind": "fake",
-        "char": 97,
+        "char": 116,
         "color": 11
       },
       {
         "kind": "fake",
-        "char": 32,
-        "color": 11
-      },
-      {
-        "kind": "fake",
-        "char": 115,
-        "color": 11
-      },
-      {
-        "kind": "fake",
-        "char": 99,
-        "color": 11
-      },
-      {
-        "kind": "fake",
-        "char": 114,
-        "color": 11
-      },
-      {
-        "kind": "fake",
-        "char": 111,
-        "color": 11
-      },
-      {
-        "kind": "fake",
-        "char": 108,
-        "color": 11
-      },
-      {
-        "kind": "fake",
-        "char": 108,
-        "color": 11
-      },
-      {
-        "kind": "fake",
-        "char": 32,
-        "color": 11
-      },
-      {
-        "kind": "fake",
-        "char": 102,
-        "color": 11
-      },
-      {
-        "kind": "fake",
-        "char": 105,
-        "color": 11
-      },
-      {
-        "kind": "fake",
-        "char": 108,
+        "char": 104,
         "color": 11
       },
       {
@@ -6277,38 +6227,88 @@
       },
       {
         "kind": "fake",
-        "char": 46,
+        "char": 32,
         "color": 11
       },
       {
         "kind": "fake",
-        "char": 178,
-        "color": 1
+        "char": 122,
+        "color": 11
       },
       {
         "kind": "fake",
-        "char": 178,
-        "color": 8
+        "char": 101,
+        "color": 11
       },
       {
         "kind": "fake",
-        "char": 178,
-        "color": 1
+        "char": 100,
+        "color": 11
       },
       {
         "kind": "fake",
-        "char": 178,
-        "color": 8
+        "char": 45,
+        "color": 11
       },
       {
         "kind": "fake",
-        "char": 178,
-        "color": 1
+        "char": 99,
+        "color": 11
       },
       {
         "kind": "fake",
-        "char": 178,
-        "color": 8
+        "char": 97,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 102,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 101,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 32,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 101,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 120,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 112,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 111,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 114,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 116,
+        "color": 11
+      },
+      {
+        "kind": "fake",
+        "char": 46,
+        "color": 11
       },
       {
         "kind": "fake",
