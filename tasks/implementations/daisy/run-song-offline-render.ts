@@ -5,9 +5,9 @@
  *   yarn level-issue-song:render
  *
  * Outputs:
- *   cafe/public/renders/level-issue-song.wav
- *   cafe/public/renders/level-issue-song.json
- *   cafe/public/renders/level-issue-song.txt
+ *   ops/fixtures/renders/level-issue-song.wav
+ *   ops/fixtures/renders/level-issue-song.json
+ *   ops/fixtures/renders/level-issue-song.txt
  *
  * Browser preview (yarn app:dev):
  *   https://localhost:7777/song-offline-render.html
@@ -17,6 +17,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { chromium } from '@playwright/test'
+import { RENDERS_FIXTURES_DIR } from 'ops/lib/fixturepaths'
 import {
   startparityvite,
   stopparityvite,
@@ -31,7 +32,7 @@ import {
 const ROOT = process.cwd()
 const PROJECT = process.cwd()
 const PORT = 9880
-const OUTDIR = path.join(PROJECT, 'cafe/public/renders')
+const OUTDIR = RENDERS_FIXTURES_DIR
 
 async function main() {
   fs.mkdirSync(OUTDIR, { recursive: true })

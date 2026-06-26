@@ -8,6 +8,8 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { RENDERS_FIXTURES_DIR } from 'ops/lib/fixturepaths'
+
 import {
   type PITCH_STABILITY_METRICS,
   evalpitchstabilitygate,
@@ -18,8 +20,7 @@ import { PITCH_STABILITY_SCENARIO_ID } from '../zss/feature/synth/backend/daisy/
 const ROOT = process.cwd()
 const PROJECT = process.cwd()
 const JSONPATH = path.join(
-  PROJECT,
-  'cafe/public/renders',
+  RENDERS_FIXTURES_DIR,
   `${PITCH_STABILITY_SCENARIO_ID}.json`,
 )
 

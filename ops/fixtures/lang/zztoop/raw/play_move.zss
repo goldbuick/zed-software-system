@@ -1,0 +1,7 @@
+@walker
+:start
+#play tcc#d
+/n
+?s
+#walk e
+#end

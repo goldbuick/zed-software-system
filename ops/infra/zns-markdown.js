@@ -364,34 +364,39 @@ function parsetokenzsstext(sink, token) {
 }
 
 function createrenderer(sink) {
+  let hasemitted = false
+  function emitblock(token) {
+    parsetokenzsstext(sink, token)
+    hasemitted = true
+    return ''
+  }
   return {
-    heading(t) {
-      parsetokenzsstext(sink, t)
+    space() {
+      if (hasemitted) {
+        sink.line('')
+      }
       return ''
+    },
+    heading(t) {
+      return emitblock(t)
     },
     blockquote(t) {
-      parsetokenzsstext(sink, t)
-      return ''
+      return emitblock(t)
     },
     hr(_t) {
-      parsetokenzsstext(sink, _t)
-      return ''
+      return emitblock(_t)
     },
     list(t) {
-      parsetokenzsstext(sink, t)
-      return ''
+      return emitblock(t)
     },
     listitem(t) {
-      parsetokenzsstext(sink, t)
-      return ''
+      return emitblock(t)
     },
     paragraph(t) {
-      parsetokenzsstext(sink, t)
-      return ''
+      return emitblock(t)
     },
     code(t) {
-      parsetokenzsstext(sink, t)
-      return ''
+      return emitblock(t)
     },
     html() {
       return ''

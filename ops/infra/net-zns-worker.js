@@ -15,9 +15,11 @@ import { buildznscodeemailhtml, buildznscodemeta } from './zns-email-card.js'
 import {
   measuredrawnwidth,
   scrollsourceisrawzss,
+  scrollsourceisscrollcodepage,
   textformatlinehtml,
   zederrorlinehtml,
   zedopenitznslinkrowhtml,
+  zedscrollhtml,
   zedtapehtml,
   zedtaperowshtml,
   zedzsshtml,
@@ -679,6 +681,7 @@ function buildznstenantscrollhtml({
   key,
   markdown,
   zss,
+  scrollcodepage,
   notfound,
   tenantsuffix: suffix,
 }) {
@@ -702,9 +705,11 @@ ${framehtml}
 </article>`
   const content = notfound
     ? zederrorlinehtml('doc not found', key)
-    : zss
-      ? zedzsshtml(markdown, { tenantbase: '/' })
-      : zedtapehtml(markdown, { tenantbase: '/' })
+    : scrollcodepage
+      ? zedscrollhtml(markdown, { tenantbase: '/' })
+      : zss
+        ? zedzsshtml(markdown, { tenantbase: '/' })
+        : zedtapehtml(markdown, { tenantbase: '/' })
   const html = buildznsvgapage({
     title: pagetitle,
     bodyhtml,
@@ -1103,6 +1108,7 @@ function tenantscrollresponse(request, env, namespace, pathkey, opts) {
     key: pathkey,
     markdown: opts.markdown,
     zss: opts.zss,
+    scrollcodepage: opts.scrollcodepage,
     notfound: opts.notfound,
     tenantsuffix: tenantsuffix(env),
   })
@@ -1227,6 +1233,7 @@ async function handletenantread(request, env, namespace) {
     if (kind === 'text') {
       return tenantscrollresponse(request, env, namespace, pathkey, {
         markdown: stored,
+        scrollcodepage: scrollsourceisscrollcodepage(stored),
         zss: scrollsourceisrawzss(stored),
         notfound: false,
         status: 200,

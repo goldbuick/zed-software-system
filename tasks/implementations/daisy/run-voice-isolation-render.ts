@@ -8,6 +8,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { chromium } from '@playwright/test'
+import { RENDERS_FIXTURES_DIR } from 'ops/lib/fixturepaths'
 import {
   startparityvite,
   stopparityvite,
@@ -24,7 +25,7 @@ import type { LEVEL_STABILITY_METRICS } from '../zss/feature/synth/backend/wasm/
 const ROOT = process.cwd()
 const PROJECT = process.cwd()
 const PORT = 9881
-const OUTDIR = path.join(PROJECT, 'cafe/public/renders/voice-isolation')
+const OUTDIR = path.join(RENDERS_FIXTURES_DIR, 'voice-isolation')
 const WINDOWMS = 46
 
 function peakbands(metrics: LEVEL_STABILITY_METRICS) {

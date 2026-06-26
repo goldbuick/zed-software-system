@@ -537,7 +537,7 @@ export function PerfMonitorTiles() {
     >
       <TapeLayoutTiles
         label="perfmon"
-        quickterminal={false}
+        terminalmode="cli"
         top={0}
         left={0}
         width={PANEL_W}

@@ -1,0 +1,3 @@
+@looper
+This prints once per loop.
+#restart

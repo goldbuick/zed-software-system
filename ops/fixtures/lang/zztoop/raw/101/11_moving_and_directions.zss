@@ -1,0 +1,11 @@
+@walker
+:start
+/n/s/e/w
+?seek?flow
+/cw n
+/ccw s
+/opp e
+?rndp rndns
+/opp opp opp opp n
+/s/s/s?e?e/i/i#shoot seek
+#end

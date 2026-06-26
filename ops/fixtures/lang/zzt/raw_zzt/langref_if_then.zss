@@ -1,0 +1,7 @@
+:touch
+#if energize then retreat
+#go seek
+#end
+:retreat
+#go opp seek
+#end

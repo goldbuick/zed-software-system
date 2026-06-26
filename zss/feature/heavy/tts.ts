@@ -4,6 +4,10 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import { PiperTTS } from './pipertts'
 import { SupertonicTTS } from './supertonictts'
+import {
+  requestfishaudiobytesforworker,
+  requestfishinfo,
+} from './ttsfish'
 import { RawAudio, TextSplitterStream } from './utils'
 
 let pipertts: MAYBE<PiperTTS>
@@ -75,20 +79,93 @@ function convertarraybytes(rawaudio: RawAudio) {
   return rawaudio.encodeWAV(rawaudio.audio, rawaudio.sampling_rate)
 }
 
+/** Piper config is a HuggingFace voice path, not an opaque token (e.g. fish api key). */
+export function ispipervoicepath(config: string): boolean {
+  const trimmed = config.trim()
+  if (!trimmed) {
+    return false
+  }
+  return trimmed.includes('/') || trimmed.endsWith('.onnx')
+}
+
+function piperconfigforworker(config: string): string {
+  return ispipervoicepath(config) ? config.trim() : ''
+}
+
+function localttsconfiginfo(
+  engine: 'piper' | 'supertonic',
+  config: string,
+): string[] {
+  const effective =
+    engine === 'piper' ? piperconfigforworker(config) : config.trim()
+  if (effective) {
+    return [`ttsengine ${engine} config=${effective}`]
+  }
+  return [
+    `ttsengine ${engine}`,
+    `set config with #ttsengine ${engine} <config>`,
+  ]
+}
+
+function localpipervalidate(
+  config: string,
+  model: string,
+): { ok: true; model: string } | { ok: false; errormsg: string } {
+  if (!config.trim()) {
+    return { ok: false, errormsg: 'config is not set' }
+  }
+  if (!ispipervoicepath(config)) {
+    return {
+      ok: false,
+      errormsg:
+        'config must be a piper voice path (e.g. en/en_US/.../voice.onnx)',
+    }
+  }
+  return { ok: true, model: model.trim() }
+}
+
+function localsupertonicvalidate(
+  config: string,
+  model: string,
+): { ok: true; model: string } | { ok: false; errormsg: string } {
+  if (!config.trim()) {
+    return { ok: false, errormsg: 'config is not set' }
+  }
+  return { ok: true, model: model.trim() }
+}
+
 export async function requestinfo(
   device: DEVICELIKE,
   player: string,
-  engine: 'piper' | 'supertonic',
+  engine: 'piper' | 'supertonic' | 'fish',
   info: string,
+  config = '',
+  model = '',
 ): Promise<any> {
   try {
     switch (engine) {
+      case 'fish':
+        return requestfishinfo(config, model, info)
       case 'supertonic':
-        if (info === 'voices') {
-          return SupertonicTTS.voices.map((v) => v.id)
+        switch (info) {
+          case 'voices':
+            return SupertonicTTS.voices.map((v) => v.id)
+          case 'config':
+            return localttsconfiginfo('supertonic', config)
+          case 'status':
+            return localttsconfiginfo('supertonic', config)
+          case 'validate':
+            return localsupertonicvalidate(config, model)
+          default:
+            return []
         }
-        return []
       case 'piper': {
+        if (info === 'config' || info === 'status') {
+          return localttsconfiginfo('piper', config)
+        }
+        if (info === 'validate') {
+          return localpipervalidate(config, model)
+        }
         const baseurl = `https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/libritts_r/medium/en_US-libritts_r-medium.onnx`
         const jsonurl = `${baseurl}.json`
         await ensurepiper(device, player, baseurl, jsonurl)
@@ -114,13 +191,23 @@ const TTS_TIMEOUT_MS = 10000
 export async function requestaudiobytes(
   device: DEVICELIKE,
   player: string,
-  engine: 'piper' | 'supertonic',
+  engine: 'piper' | 'supertonic' | 'fish',
   config: string,
   voice: string,
   input: string,
+  model = '',
 ): Promise<MAYBE<ArrayBuffer>> {
   try {
     switch (engine) {
+      case 'fish':
+        return requestfishaudiobytesforworker(
+          device,
+          player,
+          config,
+          voice,
+          input,
+          model,
+        )
       case 'supertonic': {
         await ensuresupertonic(device, player)
         if (!ispresent(supertonictts) || !supertonictts.pipeline) {
@@ -171,8 +258,9 @@ export async function requestaudiobytes(
       }
       case 'piper': {
         let baseurl: string
-        if (config) {
-          baseurl = `https://huggingface.co/rhasspy/piper-voices/resolve/main/${config}`
+        const voicepath = piperconfigforworker(config)
+        if (voicepath) {
+          baseurl = `https://huggingface.co/rhasspy/piper-voices/resolve/main/${voicepath}`
         } else {
           baseurl = `https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/libritts_r/medium/en_US-libritts_r-medium.onnx`
         }

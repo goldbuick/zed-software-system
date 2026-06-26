@@ -8,14 +8,15 @@
     "zss",
     "cafe",
     "headless",
-    "ops/e2e",
     "ops/infra",
+    "ops/lib",
+    "ops/tests/setup",
+    "ops/fixtures/harness",
+    "ops/lib/test",
+    "ops/archive",
     "tasks",
     "vite.config.ts",
-    "ops/jest.config.ts",
-    "ops/playwright.config.ts"
+    "ops/jest.config.ts"
   ],
-  "exclude": [
-    "zss/feature/synth/archive"
-  ]
+  "exclude": []
 }

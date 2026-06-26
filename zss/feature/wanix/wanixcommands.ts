@@ -1,0 +1,351 @@
+import type { DEVICELIKE } from 'zss/device/api'
+import { apierror, apilog, wanixrequestzedcafeexport } from 'zss/device/api'
+import { terminalwritelines } from 'zss/feature/terminalwritelines'
+import {
+  attachwanixtarget,
+  ensurewanixsandbox,
+  haltwanixtask,
+  haltwanixvm,
+  iframecapturezedcafeexport,
+  iswanixspaceactive,
+  readwanixstatus,
+  readwanixvmpreperror,
+  readwanixvmprepstage,
+  sendwanixtermwrite,
+  spawnwanixvm,
+  spawnwanixvmspace,
+} from 'zss/feature/wanix/wanixhost'
+import {
+  type WANIX_ATTACH_KIND,
+  haswanixcompute,
+  haswanixtasks,
+  haswanixvms,
+  iswanixtermactive,
+  iswanixtermraw,
+  readwanixattached,
+  readwanixattachedkind,
+  readwanixtask,
+  readwanixtasks,
+  readwanixvm,
+  readwanixvms,
+  registervm,
+  removetask,
+  removevm,
+} from 'zss/feature/wanix/wanixsession'
+import { leavewanixattachedterminal } from 'zss/feature/wanix/wanixterminalmode'
+import { wanixtermscreenwritepong } from 'zss/feature/wanix/wanixtermscreen'
+import {
+  DEFAULT_WANIX_VM_ID,
+  DEFAULT_WANIX_VM_MEM,
+} from 'zss/feature/wanix/wanixvmassets'
+import { ensurewanixzedcafedaemon } from 'zss/feature/wanix/wanixzedcafe'
+import {
+  zssheaderlines,
+  zsssectionlines,
+  zsstextline,
+  zsstexttape,
+  zsszedlinkline,
+} from 'zss/feature/zsstextui'
+
+export async function wanixhandlevmstart(
+  device: DEVICELIKE,
+  player: string,
+  vmid?: string,
+) {
+  try {
+    if (iswanixspaceactive()) {
+      const status = readwanixstatus()
+      if (!status.vmbindsready && haswanixcompute()) {
+        apilog(
+          device,
+          player,
+          'wanix vm prep: rebooting wanix host for vm layout (stops tasks)',
+        )
+      }
+    }
+    apilog(device, player, 'wanix vm prep: ensuring zed-cafe export...')
+    await ensurewanixsandbox(device, player)
+    await ensurewanixzedcafedaemon(device, player)
+    const guestfiles = await iframecapturezedcafeexport()
+    apilog(
+      device,
+      player,
+      `wanix vm prep: captured ${guestfiles.length} zed-cafe guest files`,
+    )
+    apilog(device, player, 'wanix vm prep: fetching linux + v86 archives...')
+    await spawnwanixvmspace(device, player, undefined, guestfiles)
+    apilog(device, player, `wanix vm prep: ${readwanixvmprepstage()}`)
+    const requested = vmid ?? DEFAULT_WANIX_VM_ID
+    apilog(device, player, `wanix vm spawn: ${requested}...`)
+    const { vmid: spawnedid } = await spawnwanixvm({
+      vmid: requested,
+      mem: DEFAULT_WANIX_VM_MEM,
+      attach: true,
+    })
+    registervm({
+      id: spawnedid,
+      label: spawnedid,
+      mem: DEFAULT_WANIX_VM_MEM,
+    })
+    apilog(device, player, `wanix vm boot ${spawnedid}`)
+    wanixrequestzedcafeexport(device, player)
+  } catch (err) {
+    const stage = readwanixvmprepstage()
+    const prep = readwanixvmpreperror()
+    const detail = err instanceof Error ? err.message : String(err)
+    const suffix = prep
+      ? ` (${prep})`
+      : stage !== 'idle' && stage !== 'failed'
+        ? ` (stage=${stage})`
+        : ''
+    apierror(device, player, 'wanix', `${detail}${suffix}`)
+  }
+}
+
+export async function wanixhandleshownenu(device: DEVICELIKE, player: string) {
+  try {
+    if (iswanixspaceactive()) {
+      await ensurewanixsandbox(device, player)
+    }
+    const tasks = readwanixtasks()
+    const vms = readwanixvms()
+    const attached = readwanixattached()
+    const attachedkind = readwanixattachedkind()
+    const parts: (string | string[])[] = [
+      zssheaderlines('wanix'),
+      zsstextline('drop a .wasm or .tgz to run'),
+      zsstextline('$gray./zed-cafe/ mirrors session books when wanix is warm'),
+      zsssectionlines('Tasks'),
+    ]
+    if (tasks.length === 0) {
+      parts.push(zsstextline('$grayno tasks running'))
+    } else {
+      for (const task of tasks) {
+        const isattached =
+          iswanixtermactive() && attachedkind === 'task' && attached === task.id
+        const attachlabel = isattached
+          ? `Attach ${task.label} $cyanattached`
+          : `Attach ${task.label}`
+        parts.push(zsszedlinkline(`wanixattach ${task.id}`, attachlabel))
+        parts.push(zsszedlinkline(`wanixstop ${task.id}`, `Stop ${task.label}`))
+      }
+      parts.push(
+        zsszedlinkline('wanixstop', `Stop all (${tasks.length} tasks)`),
+      )
+    }
+    parts.push(zsssectionlines('VMs'))
+    if (vms.length === 0) {
+      parts.push(zsszedlinkline('wanixvm', 'Boot Linux in v86'))
+    } else {
+      for (const vm of vms) {
+        const isattached =
+          iswanixtermactive() && attachedkind === 'vm' && attached === vm.id
+        const attachlabel = isattached
+          ? `Attach ${vm.label} $cyanattached`
+          : `Attach ${vm.label}`
+        parts.push(zsszedlinkline(`wanixattach ${vm.id}`, attachlabel))
+        parts.push(zsszedlinkline(`wanixvmstop ${vm.id}`, `Stop ${vm.label}`))
+      }
+      parts.push(zsszedlinkline('wanixvmstop', `Stop all (${vms.length} vms)`))
+    }
+    if (iswanixtermactive()) {
+      parts.push(zsstextline('#wanix detach — stop routing terminal input'))
+    }
+    terminalwritelines(device, player, zsstexttape(...parts))
+  } catch (err) {
+    apierror(
+      device,
+      player,
+      'wanix',
+      err instanceof Error ? err.message : String(err),
+    )
+  }
+}
+
+export async function wanixhandlestop(
+  device: DEVICELIKE,
+  player: string,
+  taskid?: string,
+) {
+  try {
+    if (!haswanixtasks() && !iswanixspaceactive()) {
+      apilog(device, player, 'wanix idle')
+      return
+    }
+    await ensurewanixsandbox(device, player)
+    if (taskid) {
+      await haltwanixtask(taskid)
+      removetask(taskid)
+      apilog(device, player, `wanix halted ${taskid}`)
+      return
+    }
+    const running = readwanixtasks()
+    if (running.length === 0) {
+      apilog(device, player, 'wanix idle (sandbox warm)')
+      return
+    }
+    await haltwanixtask()
+    for (const task of running) {
+      removetask(task.id)
+    }
+    apilog(device, player, `wanix halted ${running.length} tasks`)
+  } catch (err) {
+    apierror(
+      device,
+      player,
+      'wanix',
+      err instanceof Error ? err.message : String(err),
+    )
+  }
+}
+
+export async function wanixhandlevmstop(
+  device: DEVICELIKE,
+  player: string,
+  vmid?: string,
+) {
+  try {
+    if (!haswanixvms() && !iswanixspaceactive()) {
+      apilog(device, player, 'wanix vm idle')
+      return
+    }
+    await ensurewanixsandbox(device, player)
+    if (vmid) {
+      await haltwanixvm(vmid)
+      removevm(vmid)
+      apilog(device, player, `wanix vm halted ${vmid}`)
+      return
+    }
+    const running = readwanixvms()
+    if (running.length === 0) {
+      apilog(device, player, 'wanix vm idle')
+      return
+    }
+    await haltwanixvm()
+    for (const vm of running) {
+      removevm(vm.id)
+    }
+    apilog(device, player, `wanix vm halted ${running.length} vms`)
+  } catch (err) {
+    apierror(
+      device,
+      player,
+      'wanix',
+      err instanceof Error ? err.message : String(err),
+    )
+  }
+}
+
+export async function wanixhandletermwrite(
+  device: DEVICELIKE,
+  player: string,
+  line: string,
+) {
+  try {
+    const raw = iswanixtermraw()
+    await sendwanixtermwrite(line)
+    if (!raw && line.trim() === 'ping') {
+      wanixtermscreenwritepong()
+    }
+  } catch (err) {
+    apierror(
+      device,
+      player,
+      'wanix',
+      err instanceof Error ? err.message : String(err),
+    )
+  }
+}
+
+function readattachlabel(kind: WANIX_ATTACH_KIND, id: string) {
+  if (kind === 'vm') {
+    return readwanixvm(id)?.label ?? id
+  }
+  return readwanixtask(id)?.label ?? id
+}
+
+export function wanixhandledetach(device: DEVICELIKE, player: string) {
+  if (!haswanixcompute()) {
+    apierror(device, player, 'wanix', 'nothing running to detach from')
+    return
+  }
+  const attached = readwanixattached()
+  const attachedkind = readwanixattachedkind()
+  const label =
+    attached && attachedkind ? readattachlabel(attachedkind, attached) : 'task'
+  leavewanixattachedterminal()
+  apilog(
+    device,
+    player,
+    `wanix term detached — ${label} still running (#wanix attach to resume)`,
+  )
+}
+
+export async function wanixhandleattach(
+  device: DEVICELIKE,
+  player: string,
+  targetid?: string,
+) {
+  try {
+    if (!haswanixcompute()) {
+      apierror(device, player, 'wanix', 'nothing running to attach to')
+      return
+    }
+    await ensurewanixsandbox(device, player)
+    const tasks = readwanixtasks()
+    const vms = readwanixvms()
+    let kind: WANIX_ATTACH_KIND | undefined
+    let target = targetid
+    if (target) {
+      if (readwanixvm(target)) {
+        kind = 'vm'
+      } else if (readwanixtask(target)) {
+        kind = 'task'
+      } else {
+        apierror(device, player, 'wanix', `unknown target: ${target}`)
+        return
+      }
+    } else if (tasks.length + vms.length === 1) {
+      if (vms.length === 1) {
+        kind = 'vm'
+        target = vms[0]?.id
+      } else {
+        kind = 'task'
+        target = tasks[0]?.id
+      }
+    } else {
+      apierror(
+        device,
+        player,
+        'wanix',
+        'multiple targets running — use #wanix attach <id>',
+      )
+      return
+    }
+    if (!target || !kind) {
+      return
+    }
+    if (
+      readwanixattached() === target &&
+      readwanixattachedkind() === kind &&
+      iswanixtermactive()
+    ) {
+      return
+    }
+    await attachwanixtarget(kind, target)
+    const label = readattachlabel(kind, target)
+    const prompt = kind === 'vm' ? 'wanix-vm' : 'wanix'
+    apilog(
+      device,
+      player,
+      `wanix term attached — typing goes to ${label} (${prompt} prompt, #wanix detach to escape routing)`,
+    )
+  } catch (err) {
+    apierror(
+      device,
+      player,
+      'wanix',
+      err instanceof Error ? err.message : String(err),
+    )
+  }
+}

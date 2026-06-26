@@ -4,6 +4,8 @@ import { fileURLToPath } from 'node:url'
 
 import {
   scrollsourceisrawzss,
+  scrollsourceisscrollcodepage,
+  zedscrollhtml,
   zedtapehtml,
   zedtaperowshtml,
   zedzsshtml,
@@ -28,12 +30,14 @@ function assertok(condition, message) {
 
 const cliscroll = readfixture('cliscroll.md')
 const helptext = readfixture('helptext.md')
+const algoscroll = readfixture('algoscroll.md')
 const passage = readFileSync(
   join(root, 'ops/fixtures/lang/coolregionsbow/passage.zss'),
   'utf8',
 ).replace(/\r\n/g, '\n')
 const clhtml = zedtapehtml(cliscroll, { tenantbase: '/' })
 const helhtml = zedtapehtml(helptext, { tenantbase: '/' })
+const algohtml = zedtapehtml(algoscroll, { tenantbase: '/' })
 const passagehtml = zedzsshtml(passage, { tenantbase: '/' })
 
 const clwithtitle = `@cliscroll\n${cliscroll}`
@@ -42,6 +46,20 @@ assertok(!scrollsourceisrawzss(cliscroll), 'cliscroll is markdown not raw ZSS')
 assertok(!scrollsourceisrawzss(helptext), 'helptext is markdown not raw ZSS')
 assertok(scrollsourceisrawzss(passage), 'passage is raw ZSS')
 assertok(validatecp437webchars().length === 0, 'all cp437 0-255 must be web-safe')
+
+const scrollcodepage = '@scroll notes\n## heading\n$RED hi'
+assertok(scrollsourceisscrollcodepage(scrollcodepage), 'scroll codepage detected')
+assertok(!scrollsourceisrawzss(scrollcodepage), 'scroll codepage is not raw ZSS')
+const scrollhtml = zedscrollhtml(scrollcodepage, { tenantbase: '/' })
+assertok(!scrollhtml.includes('@scroll notes'), 'scroll header stripped from html')
+assertok(!scrollhtml.includes('## heading'), 'scroll heading rendered via markdown')
+assertok(scrollhtml.includes('heading'), 'scroll heading text present')
+assertok(!scrollhtml.includes('$RED'), 'scroll $RED should not show literal')
+assertok(
+  scrollhtml.toLowerCase().includes('color:#') &&
+    !scrollhtml.includes('$RED'),
+  'scroll $RED should render as colored span',
+)
 
 assertok(clhtml.includes('OPENIT'), 'cliscroll should render OPENIT rows')
 assertok(!clhtml.includes('[ZTK'), 'cliscroll should not contain raw markdown links')
@@ -92,6 +110,15 @@ assertok(
   'cliscroll OPENIT label should use white',
 )
 
+assertok(algohtml.includes('--&gt; = signal flow') || algohtml.includes('--> = signal flow'), 'algoscroll legend content present')
+assertok(algohtml.includes('algo0'), 'algoscroll algo0 heading present')
+assertok(algohtml.includes('synthscroll'), 'algoscroll back link present')
+assertok(
+  /--&gt; = signal flow[\s\S]*<div class="zns-line"><\/div>[\s\S]*algo0/.test(algohtml) ||
+    /--> = signal flow[\s\S]*<div class="zns-line"><\/div>[\s\S]*algo0/.test(algohtml),
+  'algoscroll should preserve blank row between legend and algo0 sections',
+)
+
 mkdirSync(dirname(dest), { recursive: true })
 const html = `<!doctype html>
 <html lang="en">
@@ -107,7 +134,9 @@ section { margin-bottom: 32px; }
 <body>
 <section><h1>cliscroll</h1>${clhtml}</section>
 <section><h1>helptext</h1>${helhtml}</section>
+<section><h1>algoscroll</h1>${algohtml}</section>
 <section><h1>passage</h1>${passagehtml}</section>
+<section><h1>scroll codepage</h1>${scrollhtml}</section>
 </body>
 </html>`
 writeFileSync(dest, html)

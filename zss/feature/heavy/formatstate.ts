@@ -172,11 +172,11 @@ export function formatboardfortext(
 
 export function formatagentinfofortext(
   data: BOARDSTATE_DATA | { error: string },
-  agentid: string,
+  contextplayer: string,
   agentname: string,
 ): string {
   if ('error' in data && data.error === 'no_board') {
-    return `You are ${agentname} (id: ${agentid}). You are not on any board.`
+    return `You are ${agentname}, assisting the player (id: ${contextplayer}). The player is not on any board.`
   }
   const d = data as BOARDSTATE_DATA
   const pos =
@@ -184,5 +184,5 @@ export function formatagentinfofortext(
       ? `(${d.self.x}, ${d.self.y})`
       : '(unknown)'
   const boardlabel = d.board.name || d.board.id
-  return `You are ${agentname} (id: ${agentid}), on board "${boardlabel}", at ${pos}.`
+  return `You are ${agentname}, assisting the player (id: ${contextplayer}) on board "${boardlabel}" at ${pos}.`
 }

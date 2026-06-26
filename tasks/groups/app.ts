@@ -14,7 +14,7 @@ export const APP_TASKS: TaskDef[] = [
   }),
   tasksonly(
     'app:dev',
-    'Install deps and start Vite dev server (WASM lang)',
+    'Install deps and start Vite dev server',
     ['app:install', 'app:vite:dev'],
     {
       tags: ['dev'],
@@ -29,26 +29,10 @@ export const APP_TASKS: TaskDef[] = [
       env: { ZSS_DAISY_NO_SIDECHAIN: '1' },
     },
   ),
-  tasksonly(
-    'app:tslang:dev',
-    'Dev server using TS compiler for chip scripts',
-    ['app:install', 'app:vite:dev'],
-    {
-      tags: ['dev'],
-      env: { ZSS_WASM_SCRIPT: 'false' },
-    },
-  ),
-  tasksonly(
-    'app:wasm:dev',
-    'Rebuild lang WASM then start dev server',
-    ['lang:build', 'app:dev'],
-    {
-      tags: ['dev'],
-    },
-  ),
   def('app:build', {
     description: 'Production Vite build',
     tags: ['ci'],
+    deps: ['wanix:zed-cafe:build'],
     run: exec(['vite', 'build']),
   }),
   def('app:build:strict', {
@@ -74,11 +58,17 @@ export const APP_TASKS: TaskDef[] = [
     tags: ['dev'],
     run: exec(['vite', 'preview', '--host', '0.0.0.0', '--port', '7777']),
   }),
+  def('app:lint:imports', {
+    description:
+      'Guard zss/ and cafe/ for no ../ imports, re-exports, or known barrel files',
+    tags: ['ci'],
+    run: shell('sh tasks/implementations/app/lint-imports.sh'),
+  }),
   def('app:lint', {
-    description: 'Dependency-cruiser, ESLint, and tsc --noEmit',
+    description: 'Import guards, dependency-cruiser, ESLint, and tsc --noEmit',
     tags: ['ci'],
     run: shell(
-      "depcruise zss/simspace.ts zss/heavyspace.ts zss/boardrunnerspace.ts zss/sttspace.ts --validate --config ops/depcruise.cjs && eslint . --ext ts,tsx --fix --report-unused-disable-directives --max-warnings 0 && eslint 'ops/infra/net-*-worker.js' --fix --report-unused-disable-directives --max-warnings 0 && tsc --noEmit",
+      "sh tasks/implementations/app/lint-imports.sh && depcruise zss/simspace.ts zss/heavyspace.ts zss/boardrunnerspace.ts zss/sttspace.ts --validate --config ops/depcruise.cjs && eslint . --ext ts,tsx --fix --report-unused-disable-directives --max-warnings 0 && eslint 'ops/infra/net-*-worker.js' --fix --report-unused-disable-directives --max-warnings 0 && tsc --noEmit",
     ),
   }),
   def('app:test', {

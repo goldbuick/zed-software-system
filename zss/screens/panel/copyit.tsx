@@ -2,7 +2,7 @@ import { useCallback, useContext } from 'react'
 import { registercopy } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import { UserInput } from 'zss/gadget/userinput'
+import { UserInput } from 'zss/gadget/userinput.bridge'
 import { extractcontentfromargs } from 'zss/screens/inputcommon'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 

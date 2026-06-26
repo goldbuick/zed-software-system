@@ -2,6 +2,7 @@ import {
   WASM_DEFAULT_BGPLAY_VOLUME,
   WASM_DEFAULT_PLAY_VOLUME,
   WASM_DEFAULT_TTS_VOLUME,
+  initwasmmainsab,
 } from 'zss/feature/synth/backend/wasm/wasmmainsab'
 import {
   SYNTH_DEFAULT_WAVE,
@@ -10,7 +11,6 @@ import {
 
 import {
   ensuredaisysynthwasm,
-  initwasmmainsab,
   setdaisysynthbgplayvolume,
   setdaisysynthplayvolume,
   setdaisysynthttsvolume,

@@ -1,0 +1,6 @@
+@gate
+:shot
+#if blocked n #send :stuck
+#die
+:stuck
+#end

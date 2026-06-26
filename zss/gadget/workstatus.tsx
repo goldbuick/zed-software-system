@@ -5,7 +5,7 @@ import { RUNTIME } from 'zss/config'
 import { resettiles, useTiles, writetile } from 'zss/gadget/tiles'
 import { COLOR } from 'zss/words/types'
 
-import { useTape } from './data/state'
+import { useTape } from './data/zustandstores'
 import { useScreenSize } from './userscreen'
 import { TilesData, TilesRender } from './usetiles'
 

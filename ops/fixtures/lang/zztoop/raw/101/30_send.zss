@@ -1,0 +1,10 @@
+@dispatcher
+:touch
+#send greet
+#send dog:fetch
+#send all:panic
+#send others:wait
+#send self:throwstick
+#end
+:greet
+#end

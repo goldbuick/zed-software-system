@@ -39,13 +39,29 @@ cafe/public/models/
 
 # wanix smoke wasm scratch (regenerate with yarn task run wanix:wasm:build)
 ops/fixtures/wanix/*.wasm
+# wanix harness guests (regenerate with yarn task run wanix:gojs:build / wanix:ensure)
+cafe/public/wanix/gojscheck.wasm
+cafe/public/wanix/wanix.debug.wasm
+cafe/public/wanix/zed-cafe.wasm
+
+# Museum of ZZT vanilla corpus archives (yarn task run content:zzt:corpus:sync)
+ops/fixtures/zzt/corpus/archives/
+# unpacked .zzt/.brd from archives (yarn task run content:zzt:corpus:extract)
+ops/fixtures/zzt/corpus/extracted/
+# profanity/slur scan reports (yarn task run content:zzt:corpus:profanity:scan)
+ops/fixtures/zzt/corpus/profanity-report.json
+ops/fixtures/zzt/corpus/sanitize-report.json
+# extracted zzt-oop from .zzt/.brd files (yarn task run content:zzt:corpus:zss)
+ops/fixtures/zzt/corpus/zss/
+# board PNG renders from extracted worlds (yarn task run content:zzt:corpus:screenshots)
+ops/fixtures/zzt/corpus/screenshots/
 
 # offline song renders (regenerate with yarn level-issue-song:render)
-cafe/public/renders/*.wav
-cafe/public/renders/*.json
-cafe/public/renders/*.txt
-cafe/public/renders/env-parity/
-cafe/public/renders/synth-env-parity/
+ops/fixtures/renders/*.wav
+ops/fixtures/renders/*.json
+ops/fixtures/renders/*.txt
+ops/fixtures/renders/env-parity/
+ops/fixtures/renders/synth-env-parity/
 
 # local Emscripten SDK (yarn daisy:build)
 .emsdk/

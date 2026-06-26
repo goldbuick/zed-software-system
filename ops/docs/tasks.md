@@ -19,13 +19,14 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 | `yarn task run app:analyze` | Production build with bundle analyzer | — | — | `NODE_OPTIONS=--max-old-space-size=8192`, `ZSS_ANALYZER=1` |
 | `yarn task run app:audit:deadcode` | Knip dead-code audit (files, exports, dependencies) | — | — | — |
 | `yarn task run app:audit:export-catalogs` | Audit export catalogs | — | — | — |
-| `yarn task run app:build` | Production Vite build | `ci` | — | — |
+| `yarn task run app:build` | Production Vite build | `ci` | `wanix:zed-cafe:build` | — |
 | `yarn task run app:build:strict` | Typecheck then production Vite build | — | — | — |
 | `yarn task run app:clear` | Remove build artifacts and Vite cache | — | — | — |
-| `yarn task run app:dev` | Install deps and start Vite dev server (WASM lang) | `dev` | `app:install`, `app:vite:dev` | — |
+| `yarn task run app:dev` | Install deps and start Vite dev server | `dev` | `app:install`, `app:vite:dev` | — |
 | `yarn task run app:dev:no-sc` | Dev server with play-bus sidechain bypassed | `dev` | `app:dev` | `ZSS_DAISY_NO_SIDECHAIN=1` |
 | `yarn task run app:install` | Install yarn dependencies | — | — | — |
-| `yarn task run app:lint` | Dependency-cruiser, ESLint, and tsc --noEmit | `ci` | — | — |
+| `yarn task run app:lint` | Import guards, dependency-cruiser, ESLint, and tsc --noEmit | `ci` | — | — |
+| `yarn task run app:lint:imports` | Guard zss/ and cafe/ for no ../ imports, re-exports, or known barrel files | `ci` | — | — |
 | `yarn task run app:preview` | Preview production build on port 7777 | `dev` | — | — |
 | `yarn task run app:server:dev` | CLI build + Vite dev + zss dev server | `dev` | `cli:build`, `app:server:dev:run` | — |
 | `yarn task run app:server:dev:run` | Concurrent Vite dev and zss dev (internal) | `dev` | — | `ZSS_NO_HTTPS=1` |
@@ -33,9 +34,7 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 | `yarn task run app:sloc` | Source lines of code count for zss/ | — | — | — |
 | `yarn task run app:test` | Run Jest test suite | `ci` | — | — |
 | `yarn task run app:test:coverage` | Jest with coverage on selected VM/gadget modules | — | — | — |
-| `yarn task run app:tslang:dev` | Dev server using TS compiler for chip scripts | `dev` | `app:install`, `app:vite:dev` | `ZSS_WASM_SCRIPT=false` |
 | `yarn task run app:vite:dev` | Start Vite dev server on port 7777 | `dev` | — | — |
-| `yarn task run app:wasm:dev` | Rebuild lang WASM then start dev server | `dev` | `lang:build`, `app:dev` | — |
 
 
 ## ci
@@ -69,6 +68,15 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 | `yarn task run content:book:test` | Jest content book tests | `ci` | — | — |
 | `yarn task run content:book:validate` | Validate book JSON (pass path as extra args) | — | — | — |
 | `yarn task run content:codepage:validate` | Validate codepage JSON (pass path as extra args) | — | — | — |
+| `yarn task run content:zzt:corpus:build` | Extract Museum archives, build ZZT OOP → .zss corpus, and sanitize profanity/slurs | `slow` | `content:zzt:corpus:extract`, `content:zzt:corpus:zss`, `content:zzt:corpus:sanitize` | — |
+| `yarn task run content:zzt:corpus:extract` | Unzip vanilla ZZT archives into ops/fixtures/zzt/corpus/extracted (.zzt/.brd only) | `slow` | — | — |
+| `yarn task run content:zzt:corpus:manifest` | Crawl Museum of ZZT and write vanilla ZZT manifest only (no downloads) | — | — | — |
+| `yarn task run content:zzt:corpus:profanity:scan` | Scan ops/fixtures/zzt/corpus/zss for profanity and slurs; write profanity-report.json | `slow` | — | — |
+| `yarn task run content:zzt:corpus:profanity:verify` | Fail if corpus zss still contains profanity or slurs (CI gate) | `ci`, `slow` | — | — |
+| `yarn task run content:zzt:corpus:sanitize` | Redact profanity and racial slurs in ops/fixtures/zzt/corpus/zss/*.zss | `slow` | — | — |
+| `yarn task run content:zzt:corpus:screenshots` | Render board PNGs from extracted ZZT/BRD into ops/fixtures/zzt/corpus/screenshots (gitignored) | `slow` | — | — |
+| `yarn task run content:zzt:corpus:sync` | Crawl Museum of ZZT and download vanilla ZZT world ZIPs into ops/fixtures/zzt/corpus/archives (gitignored) | `slow` | — | — |
+| `yarn task run content:zzt:corpus:zss` | Convert extracted ZZT/BRD OOP into ops/fixtures/zzt/corpus/zss/*.zss + manifest | `slow` | — | — |
 
 
 ## daisy
@@ -166,23 +174,6 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 | `yarn task run docs:check-links` | Check relative links in tracked markdown files | `ci` | — | — |
 
 
-## e2e
-
-| Task | Description | Tags | Deps | Env |
-|------|-------------|------|------|-----|
-| `yarn task run e2e:install` | Install Playwright browsers (chromium, firefox, webkit) | — | — | — |
-| `yarn task run e2e:join-move:loop` | Repeated join-move e2e loop | — | — | — |
-| `yarn task run e2e:manual:join-charedit` | Manual headed join charedit debug session | — | — | `PLAYWRIGHT_INCLUDE_JOIN_E2E=1`, `PLAYWRIGHT_MANUAL_JOIN_CHAREDIT=1` |
-| `yarn task run e2e:test` | Run Playwright e2e tests | `ci` | — | — |
-| `yarn task run e2e:test:all-browsers` | Run Playwright on all browsers | — | — | `PLAYWRIGHT_ALL_BROWSERS=1` |
-| `yarn task run e2e:test:gadget-scroll` | Gadget inspect scroll e2e | — | — | `PLAYWRIGHT_INCLUDE_GADGET_E2E=1` |
-| `yarn task run e2e:test:join-gadget-charedit` | Join gadget charedit e2e | — | — | `PLAYWRIGHT_INCLUDE_JOIN_E2E=1` |
-| `yarn task run e2e:test:join-move` | Join boardrunner move e2e | — | — | `PLAYWRIGHT_INCLUDE_JOIN_E2E=1` |
-| `yarn task run e2e:test:lang-bench` | Lang compile bench e2e | — | — | `PLAYWRIGHT_INCLUDE_LANG_BENCH=1` |
-| `yarn task run e2e:test:ui` | Run Playwright with UI mode | `dev` | — | — |
-| `yarn task run e2e:test:wanix` | Wanix host and drop hello.wasm CLI e2e | — | — | `PLAYWRIGHT_INCLUDE_WANIX_E2E=1` |
-
-
 ## infra
 
 | Task | Description | Tags | Deps | Env |
@@ -194,25 +185,14 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 
 | Task | Description | Tags | Deps | Env |
 |------|-------------|------|------|-----|
-| `yarn task run lang:bench:compile` | Lang compile benchmark report | — | — | — |
-| `yarn task run lang:bench:wasm` | Emscripten zss_compile wall time benchmark | — | — | — |
 | `yarn task run lang:book:oracle:extract` | Extract book JSON into lang integration oracle files | — | — | — |
-| `yarn task run lang:build` | Build lang WASM via emscripten | — | — | — |
 | `yarn task run lang:build-train-corpus` | Jest build training corpus fixture | — | — | — |
-| `yarn task run lang:compare:browser-native` | Compare browser vs native lang compile for simple chat player | — | — | — |
-| `yarn task run lang:compare:simple-chat-labels` | Compare simple chat player wasm label maps | — | — | — |
-| `yarn task run lang:compile` | Compile ZSS source to JS via wasm (pass file path as args) | — | — | — |
-| `yarn task run lang:corpus:test` | Browser zss_lang.wasm against full corpus | — | — | — |
 | `yarn task run lang:finetune:eval` | Evaluate finetune ONNX model | — | — | — |
 | `yarn task run lang:finetune:export` | Export finetune model to ONNX | — | — | — |
 | `yarn task run lang:finetune:train` | Train lang finetune model | — | — | — |
-| `yarn task run lang:lint` | clang-format check on lang C++ | — | — | — |
-| `yarn task run lang:lint:fix` | Apply clang-format to lang C++ | — | — | — |
-| `yarn task run lang:parity:fixtures:regen` | Regenerate lang wasm parity fixtures | — | — | `REGEN_LANG_FIXTURES=1` |
-| `yarn task run lang:parity:test` | Native C++ compile parity vs TS oracle | `ci` | — | — |
-| `yarn task run lang:regression:test` | Full lang regression (TS tests, parity, corpus) | `ci` | — | — |
+| `yarn task run lang:regression:test` | TypeScript lang parser regression tests | `ci` | — | — |
 | `yarn task run lang:train-corpus:test` | Jest train corpus tests | — | — | — |
-| `yarn task run lang:wasm:test` | Lang wasm smoke test (empty fixture) | — | — | — |
+| `yarn task run lang:zztoop:corpus:analyze` | Analyze Museum ZZT corpus with the vanilla zss/feature/zztoop parser; write ops/fixtures/lang/zztoop/failure-report.json. Flags: raw-only, write-fixtures, limit N, full | `slow` | — | — |
 
 
 ## memory
@@ -223,7 +203,6 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 | `yarn task run memory:parity:check-coverage` | Check memory parity fixture coverage | — | — | — |
 | `yarn task run memory:parity:regen` | Regenerate memory parity fixtures | — | — | `REGEN_MEMORY_FIXTURES=1` |
 | `yarn task run memory:parity:test` | Memory wasm parity test suite | — | — | — |
-| `yarn task run memory:repro:build` | Build host memory corruption repro bundle | — | — | — |
 | `yarn task run memory:test:native` | Memory parity native-only run | — | — | — |
 
 
@@ -239,8 +218,12 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 
 | Task | Description | Tags | Deps | Env |
 |------|-------------|------|------|-----|
-| `yarn task run wanix:ensure` | Vend wanix browser runtime into cafe/public/wanix | — | — | — |
-| `yarn task run wanix:stdin:verify` | Build wanix wasm fixtures and run isolated host stdin e2e (fix loop gate) | `ci` | `wanix:wasm:build` | `PLAYWRIGHT_INCLUDE_WANIX_E2E=1` |
+| `yarn task run wanix:ensure` | Record pinned wanix npm version (runtime loads from jsDelivr CDN) | — | — | — |
+| `yarn task run wanix:gojs:build` | Build upstream gojscheck.wasm (Go js/wasm) for basic-terminal.html harness | — | — | — |
 | `yarn task run wanix:wasm:build` | Compile ops/fixtures/wanix/*.wat to .wasm via wabt (yarn install provides wat2wasm) | — | — | — |
 | `yarn task run wanix:wasm:build:all` | Compile wanix example .wat and optional .c sources to .wasm | — | `wanix:wasm:build`, `wanix:wasm:build:c` | — |
 | `yarn task run wanix:wasm:build:c` | Compile ops/fixtures/wanix/*.c to .wasm when wasi-sdk is installed (skips if missing) | — | — | — |
+| `yarn task run wanix:zed-cafe:build` | Build zed-cafe.wasm (Go js/wasm) into cafe/public/wanix/ for prod | `ci` | — | — |
+| `yarn task run wanix:zed-cafe:export:validate` | Headed Playwright: minimal zed-cafe-export harness must show export/manifest.json (local gate, not CI) | — | — | — |
+| `yarn task run wanix:zed-cafe:export:validate:app` | Headed Playwright: full app #wanix vm → cat /zed-cafe/manifest.json (local gate, not CI) | — | — | — |
+| `yarn task run wanix:zed-cafe:task-read:validate` | Headed Playwright: zed-cafe-task-read harness — dropped WASI task reads zed-cafe/manifest.json (local gate, not CI) | — | — | — |

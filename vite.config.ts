@@ -9,7 +9,15 @@ import fullreload from 'vite-plugin-full-reload'
 import mkcert from 'vite-plugin-mkcert'
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
 
+import {
+  PUBLIC_FIXTURES_DIR,
+  RENDERS_FIXTURES_DIR,
+} from './ops/lib/fixturepaths.ts'
 import pkg from './package.json'
+import {
+  fixtureprefixmiddleware,
+  harnesshtmlmiddleware,
+} from './tasks/lib/parity/harness-middleware.ts'
 
 /**
  * Firefox refuses module scripts when Content-Type is missing (""). Some dev
@@ -79,6 +87,48 @@ function stripzstdsourcemaprefs(): Plugin {
   }
 }
 
+function servefixturesdev(): Plugin {
+  const root = process.cwd()
+  return {
+    name: 'serve-fixtures-dev',
+    apply: 'serve',
+    configureServer(server) {
+      // Register during setup (not in the post hook) so these run before Vite's SPA fallback.
+      server.middlewares.use(harnesshtmlmiddleware())
+      server.middlewares.use(
+        fixtureprefixmiddleware('/fixtures', PUBLIC_FIXTURES_DIR),
+      )
+      server.middlewares.use(
+        fixtureprefixmiddleware('/renders', RENDERS_FIXTURES_DIR),
+      )
+      server.middlewares.use(
+        fixtureprefixmiddleware('/ops/lib', path.join(root, 'ops/lib')),
+      )
+      server.middlewares.use(
+        fixtureprefixmiddleware('/ops/archive', path.join(root, 'ops/archive')),
+      )
+      server.middlewares.use(
+        fixtureprefixmiddleware(
+          '/ops/fixtures',
+          path.join(root, 'ops/fixtures'),
+        ),
+      )
+      server.middlewares.use(
+        fixtureprefixmiddleware(
+          '/wasm/archive/maximilian',
+          path.join(root, 'ops/archive/wasm/maximilian'),
+        ),
+      )
+      server.middlewares.use(
+        fixtureprefixmiddleware(
+          '/wanix',
+          path.join(root, 'ops/fixtures/harness/wanix'),
+        ),
+      )
+    },
+  }
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const envprefix = 'ZSS_'
@@ -120,7 +170,6 @@ export default defineConfig(({ mode }) => {
     'ZSS_DEBUG_RAYCAST_DOT',
     'ZSS_DEBUG_RAYCAST_PICKSHEET',
     'ZSS_DEBUG_FLAT_CAMERA_ORTHO',
-    'ZSS_WASM_SCRIPT',
     'ZSS_BRANCH_NAME',
     'ZSS_BRANCH_VERSION',
     'ZSS_COMMIT_MESSAGE',
@@ -133,9 +182,6 @@ export default defineConfig(({ mode }) => {
       key === 'ZSS_COMMIT_MESSAGE'
     ) {
       return ''
-    }
-    if (key === 'ZSS_WASM_SCRIPT') {
-      return mode === 'production' ? 'false' : 'true'
     }
     return 'false'
   }
@@ -159,12 +205,14 @@ export default defineConfig(({ mode }) => {
         input: {
           index: path.join(apppath, 'index.html'),
           sys: path.join(apppath, 'sys/index.html'),
+          'wanix-iframe-host': path.join(apppath, 'wanix-iframe-host.html'),
         },
       },
     },
     plugins: [
       devjavascriptmimetypedev(),
       stripzstdsourcemaprefs(),
+      servefixturesdev(),
       react(),
       nodePolyfills({
         include: ['buffer'],
@@ -178,7 +226,6 @@ export default defineConfig(({ mode }) => {
     ],
     define: {
       ...zssdefine,
-      'import.meta.env.ZSS_E2E': JSON.stringify(process.env.ZSS_E2E ?? ''),
       'import.meta.env.ZSS_DAISY_PERF': JSON.stringify(
         process.env.ZSS_DAISY_PERF ?? '',
       ),
@@ -200,6 +247,9 @@ export default defineConfig(({ mode }) => {
         zss: path.resolve(__dirname, './zss'),
         cafe: path.resolve(__dirname, './cafe'),
         'ops/fixtures': path.resolve(__dirname, './ops/fixtures'),
+        'ops/lib': path.resolve(__dirname, './ops/lib'),
+        'ops/archive': path.resolve(__dirname, './ops/archive'),
+        'ops/lib/test': path.resolve(__dirname, './ops/lib/test'),
       },
     },
     optimizeDeps: {

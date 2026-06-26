@@ -13,7 +13,9 @@ import { fileURLToPath } from 'node:url'
 import {
   type SIDECHAIN_PARITY_RESULT,
   evalsidechainparitygate,
-} from '../zss/feature/synth/backend/daisy/sidechainparity.ts'
+} from 'ops/lib/daisy-parity/sidechainparity'
+import { RENDERS_FIXTURES_DIR } from 'ops/lib/fixturepaths'
+
 import { SIDECHAIN_SCENARIO_ID } from '../zss/feature/synth/backend/daisy/sidechainscenario.ts'
 
 const ROOT = process.cwd()
@@ -23,8 +25,7 @@ const CONFIG_PATH = path.join(
   'zss/feature/synth/backend/daisy/native/zss/zss_config.h',
 )
 const PARITY_JSON = path.join(
-  PROJECT,
-  'cafe/public/renders',
+  RENDERS_FIXTURES_DIR,
   `${SIDECHAIN_SCENARIO_ID}-sidechain-parity.json`,
 )
 

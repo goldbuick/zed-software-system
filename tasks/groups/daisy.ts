@@ -30,11 +30,7 @@ export const DAISY_TASKS: TaskDef[] = [
   def('daisy:bench:synth', {
     description: 'Daisy synth micro-benchmark',
     env: { ZSS_DAISY_BENCH: '1' },
-    run: exec([
-      'npx',
-      'tsx',
-      'zss/feature/synth/backend/daisy/daisyperfbench.ts',
-    ]),
+    run: exec(['npx', 'tsx', 'ops/lib/daisy-parity/daisyperfbench.ts']),
   }),
   def('daisy:regression:test', {
     description: 'Jest + critical Playwright parity gates',
@@ -49,7 +45,7 @@ export const DAISY_TASKS: TaskDef[] = [
   def('daisy:adsr-parity:jest', {
     description: 'Jest adsrenvcurve tests (internal)',
     run: jestexec(
-      'ops/tests/unit/feature/synth/backend/wasm/__tests__/adsrenvcurve.test.ts',
+      'ops/tests/unit/feature/synth/backend/wasm/adsrenvcurve.test.ts',
     ),
   }),
   def('daisy:env-parity:test', {

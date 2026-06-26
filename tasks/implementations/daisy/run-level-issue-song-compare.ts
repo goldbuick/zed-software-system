@@ -5,19 +5,21 @@
  *   yarn level-issue-song-compare:test
  *
  * Requires:
- *   cafe/public/renders/level-issue-song.json
- *   cafe/public/renders/level-issue-song-tone.json
+ *   ops/fixtures/renders/level-issue-song.json
+ *   ops/fixtures/renders/level-issue-song-tone.json
  */
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+
+import { RENDERS_FIXTURES_DIR } from 'ops/lib/fixturepaths'
 
 import { comparesongmetrics } from '../zss/feature/synth/backend/daisy/levelissuesongcompare.ts'
 import type { LEVEL_STABILITY_METRICS } from '../zss/feature/synth/backend/wasm/levelstabilitymetrics.ts'
 
 const ROOT = process.cwd()
 const PROJECT = process.cwd()
-const OUTDIR = path.join(PROJECT, 'cafe/public/renders')
+const OUTDIR = RENDERS_FIXTURES_DIR
 
 type SONG_JSON = {
   meta: { scenarioid: string; rendersec: number }

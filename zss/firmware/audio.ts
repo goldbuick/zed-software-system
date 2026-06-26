@@ -187,10 +187,12 @@ export const AUDIO_FIRMWARE = createfirmware()
     [
       ARG_TYPE.MAYBE_STRING,
       ARG_TYPE.MAYBE_STRING,
+      ARG_TYPE.MAYBE_STRING,
       'TTS engine and config (no args: list engines)',
     ],
     (_, words) => {
-      const [engine, config] = readargs(words, 0, [
+      const [engine, config, model] = readargs(words, 0, [
+        ARG_TYPE.MAYBE_STRING,
         ARG_TYPE.MAYBE_STRING,
         ARG_TYPE.MAYBE_STRING,
       ])
@@ -198,7 +200,17 @@ export const AUDIO_FIRMWARE = createfirmware()
         write(
           SOFTWARE,
           READ_CONTEXT.elementfocus,
-          'TTS engines: piper, supertonic',
+          'TTS engines: piper, supertonic, fish',
+        )
+        write(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          'fish: #ttsengine fish <api_key> [s2.1-pro-free|s2.1-pro|s2-pro|s1]',
+        )
+        write(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          'fish: #ttsengine fish (no key) or #tts config — show saved config',
         )
         return 0
       }
@@ -208,6 +220,7 @@ export const AUDIO_FIRMWARE = createfirmware()
         READ_CONTEXT.board?.id ?? '',
         engine,
         config ?? '',
+        model ?? '',
       )
       return 0
     },

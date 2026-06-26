@@ -1,26 +1,23 @@
 #!/bin/sh
-# Vend Wanix browser runtime into cafe/public/wanix/.
-#
-# Prereq: yarn install (wanix npm package + ops/patches/wanix+*.patch via patch-package)
+# Record pinned wanix npm version — runtime loads from jsDelivr CDN (see wanixvmassets.ts).
 
 set -e
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-PUBLIC="$ROOT/cafe/public/wanix"
-NPM_DIST="$ROOT/node_modules/wanix/dist"
+ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
+PUBLIC="$ROOT/ops/fixtures/wanix"
+NPM_PKG="$ROOT/node_modules/wanix/package.json"
 
-if [ ! -f "$NPM_DIST/wanix.min.js" ]; then
-  echo "missing $NPM_DIST — run yarn install" >&2
+if [ ! -f "$NPM_PKG" ]; then
+  echo "missing $NPM_PKG — run yarn install" >&2
   exit 1
 fi
 
 mkdir -p "$PUBLIC"
-cp "$NPM_DIST/wanix.min.js" "$NPM_DIST/wanix.wasm" "$PUBLIC/"
-
-NPM_VERSION="$(node -p "require('$ROOT/node_modules/wanix/package.json').version")"
-cat >"$PUBLIC/BUILD_ID" <<EOF
+NPM_VERSION="$(node -p "require('$NPM_PKG').version")"
+cat >"$PUBLIC/BUILD_ID" <<EOF_INNER
 wanix-npm=$NPM_VERSION
+runtime=cdn.jsdelivr.net/npm/wanix@0.4.0-alpha8/dist
 generated=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-EOF
+EOF_INNER
 
-echo "wanix runtime written to $PUBLIC"
+echo "wanix runtime pin recorded (CDN) in $PUBLIC/BUILD_ID"

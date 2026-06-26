@@ -7,12 +7,13 @@ How the in-app **stream broadcast** works today, why you cannot aim it at LiveKi
 The terminal **`#broadcast`** command (operator-only, via bridge permissions) starts and stops a browser-side stream built from:
 
 - **Video:** the page’s main **`canvas`** element.
-- **Audio:** [`synthbroadcastdestination()`](../../zss/feature/synth/archive/tone/audiochain.ts) (Tone/Web Audio routed into a `MediaStreamDestination`).
+- **Audio:** [`synthbroadcastdestination()`](../../ops/archive/synth/tone/audiochain.ts) (Tone/Web Audio routed into a `MediaStreamDestination`).
 
-Implementation lives in [`zss/device/bridge.ts`](../../zss/device/bridge.ts) on messages `bridge:streamstart` / `bridge:streamstop`. The client is **[Amazon IVS Web Broadcast](https://www.npmjs.com/package/amazon-ivs-web-broadcast)** (`amazon-ivs-web-broadcast`). After attaching sources, it calls:
+Implementation lives in [`zss/device/bridge.ts`](../../zss/device/bridge.ts) on messages `bridge:streamstart` / `bridge:streamstop`. The runtime client is the first-party module [`zss/feature/broadcast/`](../../zss/feature/broadcast/README.md) (replaces the former `amazon-ivs-web-broadcast` npm dependency). Low-latency ingest uses:
 
 ```ts
-startBroadcast(streamKey, 'https://g.webrtc.live-video.net:4443')
+client.start({ kind: 'ivs-low-latency', streamKey })
+// POST https://g.webrtc.live-video.net:4443/v1/offer
 ```
 
 That host is **Amazon IVS WebRTC ingest** (the same ecosystem Twitch uses for that ingest path). It is **not** a generic WHIP URL you can repoint.

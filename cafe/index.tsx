@@ -32,31 +32,17 @@ import {
   registersetmyplayerid,
 } from 'zss/device/register'
 import { isclimode } from 'zss/feature/detect'
-import { initlangcompile } from 'zss/feature/lang/langcompileclient'
 import { isjoin } from 'zss/feature/url'
 import { forcer3fglresize } from 'zss/gadget/canvasrelayout'
 import { useDeviceData } from 'zss/gadget/device'
 import { bootstrapmobiletextcapture } from 'zss/gadget/mobiletextcapture'
 import { makeeven } from 'zss/mapping/number'
 import { createplatform } from 'zss/platform'
-import { installe2ebridge } from 'zss/testsupport/e2escrollbridge'
 import type { StoreApi } from 'zustand/vanilla'
 
 import { App } from './app'
 
-function shoulde2ebridge(): boolean {
-  if (typeof window === 'undefined') {
-    return false
-  }
-  const q = new URLSearchParams(window.location.search).get('ZSS_E2E')
-  if (q === '1' || q === 'true') {
-    return true
-  }
-  return import.meta.env.ZSS_E2E === 'true' || import.meta.env.ZSS_E2E === '1'
-}
-
 async function bootheadless(): Promise<void> {
-  await initlangcompile()
   const g = globalThis as any
   const readplayer = g.__nodeStorageReadPlayer
   if (typeof readplayer === 'function') {
@@ -66,28 +52,18 @@ async function bootheadless(): Promise<void> {
   g.__onCliInput = (line: string) => {
     vmcli(register, registerreadplayer(), line)
   }
-  if (shoulde2ebridge()) {
-    installe2ebridge()
-  }
   await import('zss/userspace')
   createplatform(isjoin(), true)
   g.__nodeReady?.()
 }
 
-// Headless path: no WebGL, no Canvas, no UI — just platform + CLI
 async function main() {
-  await initlangcompile()
-
   if (isclimode()) {
     await bootheadless()
     return
   }
 
   await import('zss/userspace')
-
-  if (shoulde2ebridge()) {
-    installe2ebridge()
-  }
 
   extend({
     Mesh,
@@ -215,10 +191,7 @@ async function main() {
     window.visualViewport.addEventListener('scroll', handleresize)
   }
   r3fcontext.store = root.render(<App />)
-  // Tier A mobile text: imperative DOM + zustand subscribe (no second React root — avoids invalid hook call).
   bootstrapmobiletextcapture()
-  // Debounced `handleresize` does not run on first call until `wait` elapses, so the
-  // canvas would stay on the sizeless initial `configure` until resize or ~256ms.
   applyconfig()
   requestAnimationFrame(() => {
     applyconfig()

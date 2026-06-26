@@ -28,11 +28,20 @@ const tts = createdevice('tts', [], (message) => {
     case 'info':
       enqueuettsjob(message.player, async () => {
         if (isarray(message.data)) {
-          const [engine, info] = message.data as [
-            engine: 'piper' | 'supertonic',
+          const [engine, info, config, model] = message.data as [
+            engine: 'piper' | 'supertonic' | 'fish',
             info: string,
+            config: string,
+            model: string,
           ]
-          const data = await requestinfo(tts, message.player, engine, info)
+          const data = await requestinfo(
+            tts,
+            message.player,
+            engine,
+            info,
+            config ?? '',
+            model ?? '',
+          )
           tts.reply(message, 'tts:info', ispresent(data) ? data : [])
         }
       })
@@ -40,11 +49,12 @@ const tts = createdevice('tts', [], (message) => {
     case 'request':
       enqueuettsjob(message.player, async () => {
         if (isarray(message.data)) {
-          const [engine, config, voice, phrase] = message.data as [
-            engine: 'piper' | 'supertonic',
+          const [engine, config, voice, phrase, model] = message.data as [
+            engine: 'piper' | 'supertonic' | 'fish',
             config: string,
             voice: string,
             phrase: string,
+            model: string,
           ]
           const audiobytes = await requestaudiobytes(
             tts,
@@ -53,6 +63,7 @@ const tts = createdevice('tts', [], (message) => {
             config,
             voice,
             phrase,
+            model ?? '',
           )
           tts.reply(
             message,

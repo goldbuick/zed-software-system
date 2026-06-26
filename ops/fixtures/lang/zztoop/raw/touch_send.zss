@@ -1,0 +1,8 @@
+@guard
+:touch
+Hello, traveler!
+#send :greet
+#end
+:greet
+#give health 10
+#end

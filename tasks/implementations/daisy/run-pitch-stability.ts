@@ -5,14 +5,15 @@
  *   yarn pitch-stability:render
  *
  * Outputs:
- *   cafe/public/renders/pitch-stability-c4-8n.wav
- *   cafe/public/renders/pitch-stability-c4-8n.json
+ *   ops/fixtures/renders/pitch-stability-c4-8n.wav
+ *   ops/fixtures/renders/pitch-stability-c4-8n.json
  */
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { chromium } from '@playwright/test'
+import { RENDERS_FIXTURES_DIR } from 'ops/lib/fixturepaths'
 import {
   startparityvite,
   stopparityvite,
@@ -33,7 +34,7 @@ import {
 const ROOT = process.cwd()
 const PROJECT = process.cwd()
 const PORT = 9883
-const OUTDIR = path.join(PROJECT, 'cafe/public/renders')
+const OUTDIR = RENDERS_FIXTURES_DIR
 const HOST_URL = `http://127.0.0.1:${PORT}/offline-render-host.html`
 
 type RENDER_PAYLOAD = {

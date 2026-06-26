@@ -25,7 +25,9 @@ How **devices** talk to each other in ZSS: **four JavaScript realms** (main thre
 4. **Multiple hubs** — The browser runs **main-thread** code plus **Web Workers** (see [what creates each realm](#what-creates-each-thread-or-worker)). Each realm has its **own** `hub` singleton; `postMessage` + **`forward`** sync selected traffic ([`forward.ts`](../forward.ts), [`platform.ts`](../../platform.ts)).
 5. **`SOFTWARE`** ([`session.ts`](../session.ts)) — A minimal `createdevice('SOFTWARE')` used as a **convenient `emit` sender** (session id from first `ready`). UI and chip code often call `SOFTWARE.emit(...)` so messages enter the **caller’s** hub with the right session.
 6. **`MESSAGE`** ([`api.ts`](../api.ts)) — Shape: `session`, `player`, `id`, `sender`, `target`, `data`. **`reply(to, subtarget)`** / **`replynext`** emit a new message whose `target` is **`to.sender:subtarget`**, so the original sender’s device handles `subtarget` as `message.target` after routing.
-7. **`message.id` deduplication** — [`createforward`](../forward.ts) records each `message.id` in a `syncids` set so the same message is not applied repeatedly when it crosses hubs (avoids ping-pong loops).
+7. **POD emit surface vs patch encoding** — [`api.ts`](../api.ts) is the **worker-safe** set of `device.emit(...)` helpers: runtime imports are limited to [`messagetypes.ts`](../messagetypes.ts) and [`mapping/types`](../../mapping/types.ts); domain signatures use **`import type` only**. **Jsonpipe patch wire encoding** (`encodepatchwire`) lives in [`patchapi.ts`](../patchapi.ts) (`boardrunnerpatch`, `gadgetclientpatch`, `vmboardrunnerpatch`); call sites that emit patches import `patchapi` explicitly. ESLint enforces the import boundary on `api.ts`.
+8. **`message.id` deduplication** — [`createforward`](../forward.ts) records each `message.id` in a `syncids` set so the same message is not applied repeatedly when it crosses hubs (avoids ping-pong loops).
+9. **`registerplayer` vs `register`** — [`registerplayer.ts`](../registerplayer.ts) holds the current player id string only (worker-safe). [`register.ts`](../register.ts) is the full main-thread login device (storage, UI, bookmarks); workers and device modules that only need `registerreadplayer()` must import `registerplayer`, not `register`.
 
 See also: [message-flow.md](message-flow.md) (ASCII + first mermaid, boot sequence, flow table).
 
@@ -111,9 +113,8 @@ CLI **`bootheadless`** ([`cafe/index.tsx`](../../../cafe/index.tsx)) skips Canva
 | `userinput` | main | — | Keyboard/gamepad → `vm:*` / `register:*`. Device is **not** loaded from [`userspace.ts`](../../userspace.ts); it is created as a **side effect** of importing [`userinput.tsx`](../../gadget/userinput.tsx) when the UI mounts (e.g. [`Engine`](../../gadget/engine.tsx) → `UserFocus`, tape/terminal/editor imports). |
 | `bridge` | main | — | `bridge:*` multiplayer / fetch / streams |
 | `synth` | main | — | `synth:*` audio |
-| `heavy` | **heavy worker** hub ([`heavyspace.ts`](../../heavyspace.ts)) | — | TTS / LLM, **`heavy:agent*`** lifecycle ([`heavy.ts`](../heavy.ts), [`agentlifecycle.ts`](../../feature/heavy/agentlifecycle.ts)); reached via main `forward` → `postMessage` |
+| `heavy` | **heavy worker** hub ([`heavyspace.ts`](../../heavyspace.ts)) | — | LLM, **`heavy:agent*`** copilot sessions ([`heavy.ts`](../heavy.ts), [`agentlifecycle.ts`](../../feature/heavy/agentlifecycle.ts)); reached via main `forward` → `postMessage` |
 | `boardrunner` | **boardrunner worker** hub ([`boardrunnerspace.ts`](../../boardrunnerspace.ts)) | `vm` | Real per-board sim ([`boardrunner.ts`](../boardrunner.ts), [`boardrunner/`](../boardrunner/)); receives `boardrunner:paint` / `patch` (memory + per-boundary jsonpipe), `boardrunner:tick` (board id + timestamp + boundary list), and `boardrunner:input`; runs [`memorytickmain`](../../memory/runtime.ts) for the assigned board and emits boundary patches back as `vm:boardrunnerack` / `vm:boardrunnerpatch`. Also subscribes to topic `vm` so chip / scroll / sidebar messages (`vm:CHIP:LABEL`) reach `memorymessagechip` on the worker that actually runs the chips. Forwarded by [`shouldforwardclienttoboardrunner`](../forward.ts). |
-| `agent_<pid>` | **heavy worker** (per agent) | `second` | Keepalive → `vm:doot` ([`agent.ts`](../../feature/heavy/agent.ts)); roster persisted in IDB `storage` as `agents_roster` via `register:store` |
 | `SOFTWARE` | whichever hub loaded it | — | Session holder + `emit` helper |
 | **Ephemeral** `createdevice` | varies | — | e.g. one-off TTS in [`feature/tts.ts`](../../feature/tts.ts) |
 
@@ -282,16 +283,16 @@ flowchart TB
 
 - **Sim worker** — `clock`, `vm`, one **`modem`** instance ([`simspace.ts`](../../simspace.ts)). Gadget paint/patch is produced **inside** the VM tick by [`gadgetsynctick`](../vm/gadgetsynctick.ts) and emitted as `gadgetclient:paint` / `gadgetclient:patch`; there is no separate `gadgetserver` device any more.
 - **Main thread** — `register`, `gadgetclient`, `userinput`, `bridge`, `synth`, second **`modem`** instance ([`userspace.ts`](../../userspace.ts)), and `api`-driven emits (**`apihelpers`**); chips/UI often use **`SOFTWARE`** on whichever hub loaded them (sim for game logic).
-- **Heavy worker** — `heavy` plus dynamic **`agent_*`** devices ([`heavyspace.ts`](../../heavyspace.ts), [`feature/heavy/agent.ts`](../../feature/heavy/agent.ts)). LLM and agent lifecycle only; TTS moved to **ttsspace**.
+- **Heavy worker** — `heavy` hub ([`heavyspace.ts`](../../heavyspace.ts), [`agentlifecycle.ts`](../../feature/heavy/agentlifecycle.ts)). LLM and per-tab agent copilot sessions; TTS moved to **ttsspace**.
 - **TTS worker** — `tts` device ([`ttsspace.ts`](../../ttsspace.ts), [`ttsworker.ts`](../ttsworker.ts)); lazy spawn via `ensurettsworker()` on first `tts:info` / `tts:request`.
 - **STT worker** — `stt` device ([`sttspace.ts`](../../sttspace.ts), [`sttworker.ts`](../sttworker.ts)); lazy spawn via `ensuresttworker()` on first `stt:*`.
 - **Boardrunner worker** — `boardrunner` device ([`boardrunnerspace.ts`](../../boardrunnerspace.ts), [`boardrunner.ts`](../boardrunner.ts), [`boardrunner/handlers/`](../boardrunner/handlers/)). The sim VM elects one player per active board to be its runner each tick ([`boardrunnermanagement.ts`](../vm/boardrunnermanagement.ts)). The runner receives memory + per-boundary jsonpipe paint/patch plus `boardrunner:tick`, runs [`memorytickmain`](../../memory/runtime.ts) for that board, and replies with `vm:boardrunnerack` and one `vm:boardrunnerpatch` per dirty boundary.
-- **`second`** — `clock` runs on sim; **`register`**, **main `modem`**, **`heavy`/`agent_*`**, and **`boardrunner`** receive **`second`** after **sim → main** forward (and main → heavy / boardrunner where applicable), same tick as sim-local `vm` / `modemSim`.
+- **`second`** — `clock` runs on sim; **`register`**, **main `modem`**, **`heavy`**, and **`boardrunner`** receive **`second`** after **sim → main** forward (and main → heavy / boardrunner where applicable), same tick as sim-local `vm` / `modemSim`.
 
 Notes:
 
 - **`reply_register_paths`** — `vm.reply` / `vm.replynext` send to `register:ackoperator`, `register:acklogin`, `register:ackzsswords`, `register:acklook`, etc. (see [`vm/handlers/`](../vm/handlers/)).
-- **`agent_*`** — Dynamic [`agent_${pid}`](../../feature/heavy/agent.ts) on the **heavy worker** hub; `second` (forwarded to heavy) drives `vm:doot`. Roster is stored under **`agents_roster`** in IDB (`storagewritevar`); **`register`** triggers **`heavy:restoreagents`** after successful **`acklogin`**. Agent **`vm:login`** merges book flags on the sim (including **`agent: 1`**); chat routing in [`loader.ts`](../vm/handlers/loader.ts) uses board **player** elements whose book flags mark them as agents (`flags.agent === 1`), not a separate sim roster. For each candidate line, the sim sends **`heavy:modelprompt`** with the message text, agent id/name, **nearest-agent** reference (id + display name), and related fields. On [`heavy`](../heavy.ts), **`heavy:modelprompt`** and **`heavy:llmpreset`** share one **single serial FIFO** ([`heavyjobqueue.ts`](../../feature/heavy/heavyjobqueue.ts) `enqueueheavyjob`). TTS (`tts:info` / `tts:request`) runs in **ttsspace** independently via [`ttsworker.ts`](../ttsworker.ts). For **`heavy:modelprompt`**, it runs the small **classifier** first; only if intent is not `none` does it await the full **agent LLM** (`modelgenerate` / `runagentprompt`) for that item before starting the next queued item.
+- **Agent copilot** — One LLM session per tab keyed to the **register player** ([`agentlifecycle.ts`](../../feature/heavy/agentlifecycle.ts)). No `vm:login`, no board element, no per-agent boardrunner. Roster `{ name }` is stored under **`agents_roster`** in IDB; **`register`** triggers **`heavy:restoreagents`** after **`acklogin`**. Board chat on a board where the **operator** is present routes **`heavy:modelprompt`** to that player when a session is active ([`loader.ts`](../vm/handlers/loader.ts)). CLI actions use **`vm:cli`** as the register player; board reads use **`vm:query`** `boardstate`. On [`heavy`](../heavy.ts), **`heavy:modelprompt`** and **`heavy:llmpreset`** share one **single serial FIFO** ([`heavyjobqueue.ts`](../../feature/heavy/heavyjobqueue.ts) `enqueueheavyjob`). TTS (`tts:info` / `tts:request`) runs in **ttsspace** independently via [`ttsworker.ts`](../ttsworker.ts). For **`heavy:modelprompt`**, it runs the small **classifier** first; only if intent is not `none` does it await the full **agent LLM** (`modelgenerate` / `runagentprompt`) for that item before starting the next queued item.
 - **`apihelpers`** — [`api.ts`](../api.ts) `apilog` → `log`, `apichat` → `chat`, `apitoast` → `toast` (**`register`** subscribes to those topics). Call sites can be sim or main; **`emit`** always hits the **caller's** hub first.
 - **`ready`** — [`vm`](../vm.ts) or [`stub`](../stub.ts) (device name `vm`) emits via [`platformready`](../api.ts); all devices may capture session on first `ready` (not shown as edges to every node).
 - **`SOFTWARE.emit`** from chips / UI uses targets like `{chipId}:message`; routing is per-device id, not the `vm` node (see [`chip.ts`](../../chip.ts), [`gamesend.ts`](../../memory/gamesend.ts)).
@@ -304,7 +305,7 @@ Notes:
 | `second` | `vm` | Sim worker | `clock` | Sim worker |
 | `second` | `modem` | Sim **or** main (two instances) | `clock` | Sim → forward → main |
 | `second` | `register` | Main thread | `clock` (forwarded) | Sim → main |
-| `second` | `heavy`, `agent_*` | Heavy worker | `clock` / main forward | Sim / main → heavy |
+| `second` | `heavy` | Heavy worker | `clock` / main forward | Sim / main → heavy |
 | `second` | `boardrunner` | Boardrunner worker | `clock` / main forward | Sim / main → boardrunner |
 | `boardrunner` | `boardrunner` | Boardrunner worker | `vm` (`boardrunner:paint`, `boardrunner:patch`, `boardrunner:tick`, `boardrunner:idle`, `boardrunner:thud`, `boardrunner:start`), `userinput` (`boardrunner:input`) | Sim / main → boardrunner |
 | `ready` | all devices | per hub | `vm` / stub, [`platformready`](../api.ts) | Sim (or stub worker) |
@@ -395,7 +396,7 @@ flowchart TB
 **Realm notes**
 
 - **Sim vs stub** — Only one platform worker runs per session (`createplatform` chooses [`simspace`](../../simspace.ts) or [`stubspace`](../../stubspace.ts)). **simspace** boots **`clock`**, sim **`modem`**, and **`vm`**. **stubspace** boots **`stub`** (device name **`vm`**) and **`forward`** only—no **`clock`** or sim **`modem`**. Labels **`clock_sim_only`** / **`modem_sim_only`** apply only when **`simspace`** is active.
-- **Heavy** — Dynamic **`agent_<pid>`** devices are created on the heavy hub alongside **`heavy`** ([`feature/heavy/agent.ts`](../../feature/heavy/agent.ts)).
+- **Heavy** — Agent copilot sessions live on the **`heavy`** hub ([`agentlifecycle.ts`](../../feature/heavy/agentlifecycle.ts)); no separate agent devices.
 
 ### Diagram: `postMessage` bridges and predicates
 
@@ -538,7 +539,7 @@ Join-side Peer outbound already intersects with **`shouldforwardclienttoserver`*
 ## Discovering message targets
 
 - **Tables** — [message-flow.md § Main message flows](message-flow.md#main-message-flows)
-- **API helpers** — [`device/api.ts`](../api.ts) (`vmcli`, `gadgetclientpaint`, `ttsrequest`, …)
+- **API helpers** — [`device/api.ts`](../api.ts) (`vmcli`, `gadgetclientpaint`, `ttsrequest`, …); patch emit helpers in [`device/patchapi.ts`](../patchapi.ts)
 - **Handlers** — [`vm/handlers/registry.ts`](../vm/handlers/registry.ts) maps `vm` subtargets to implementations
 - **Tests** — [`device/__tests__/device.test.ts`](../__tests__/device.test.ts) (`createdevice`, session, topics); [`device/__tests__/forward.boardrunner.test.ts`](../__tests__/forward.boardrunner.test.ts) (`shouldforwardclienttoboardrunner`)
 

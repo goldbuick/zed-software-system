@@ -2,11 +2,8 @@
  * Incremental `:drawdisplay`: fingerprints, cell dirtiness with 8-neighbor expansion,
  * and next-tick allow-lists. Non-local draw logic must call `memoryinvalidatedraw`.
  */
-import { PERF_SPATIAL_INDEX, WASM_SCRIPT } from 'zss/config'
-import {
-  compilescript,
-  islangcompileready,
-} from 'zss/feature/lang/langcompileclient'
+import { PERF_SPATIAL_INDEX } from 'zss/config'
+import { compilescript } from 'zss/feature/lang/langcompileclient'
 import { indextox, indextoy, pttoindex } from 'zss/mapping/2d'
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
@@ -23,15 +20,12 @@ const DRAWHASCACHE: Record<string, boolean> = {}
 export function memorycodehasdrawdisplay(code: string) {
   const drawlabel = NAME(DRAW_LABEL)
   const key = `${drawlabel}:${code}`
-  const wasmnotready = WASM_SCRIPT && !islangcompileready()
-  if (!wasmnotready && ispresent(DRAWHASCACHE[key])) {
+  if (ispresent(DRAWHASCACHE[key])) {
     return DRAWHASCACHE[key]
   }
   const labels = compilescript('drawpass', code).labels ?? {}
   const result = ispresent(labels[drawlabel])
-  if (!wasmnotready) {
-    DRAWHASCACHE[key] = result
-  }
+  DRAWHASCACHE[key] = result
   return result
 }
 

@@ -8,11 +8,11 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const ROOT = process.cwd()
-const TESTDIR = path.join(ROOT, 'ops/tests/unit/memory/__tests__')
+const TESTDIR = path.join(ROOT, 'ops/tests/unit/memory')
 const FIXTUREDIR = path.join(ROOT, 'ops/fixtures/memory/wasm')
 const REGEN = path.join(
   ROOT,
-  'ops/tests/unit/memory/wasm/__tests__/regenfixtures.test.ts',
+  'ops/tests/unit/memory/wasm/regenfixtures.test.ts',
 )
 const EXCLUDED = new Set(['adminconfig.test.ts'])
 

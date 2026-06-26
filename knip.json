@@ -3,12 +3,12 @@
   "entry": [
     "cafe/index.tsx",
     "cafe/sys/index.tsx",
+    "cafe/wanix-iframe-host.tsx",
     "zss/simspace.ts",
     "zss/heavyspace.ts",
     "zss/boardrunnerspace.ts",
     "tasks/cli.ts",
-    "ops/jest.config.ts",
-    "ops/playwright.config.ts"
+    "ops/jest.config.ts"
   ],
   "project": [
     "zss/**/*.{ts,tsx}",
@@ -18,7 +18,7 @@
   ],
   "ignoreExportsUsedInFile": true,
   "ignore": [
-    "zss/feature/synth/archive/**",
+    "ops/archive/**",
     "**/__tests__/**",
     "**/*.test.ts",
     "**/*.test.tsx",

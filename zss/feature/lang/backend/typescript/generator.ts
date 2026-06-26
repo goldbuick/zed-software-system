@@ -19,9 +19,6 @@ export type GeneratorBuild = {
   map?: SourceMapGenerator
   code?: GeneratorFunc
   source?: string
-  wasmbytes?: Uint8Array
-  debugmap?: string
-  importmanifest?: string
 }
 
 export function compile(_name: string, text: string): GeneratorBuild {
@@ -42,8 +39,7 @@ export function compile(_name: string, text: string): GeneratorBuild {
 
   const transformResult = transformast(astResult.ast)
 
-  // TS transform + new Function is the CI parity oracle. Production uses
-  // compilescript() → zss_compile wasm_bytes when ZSS_WASM_SCRIPT is enabled.
+  // TS transform + new Function executes chip scripts in the browser.
   if (transformResult.code) {
     try {
       return {

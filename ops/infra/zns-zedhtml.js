@@ -261,14 +261,52 @@ export function zedtapehtml(markdown, opts = {}) {
   return `<div class="zns-tape">${zedtaperowshtml(rows.join('\n'), opts)}</div>`
 }
 
+/** Scroll codepage (`@scroll <name>` first line): markdown body, no ZSS lexer highlight. */
+export function scrollsourceisscrollcodepage(source) {
+  const lines = String(source ?? '').split('\n')
+  for (const line of lines) {
+    const t = line.trim()
+    if (!t) {
+      continue
+    }
+    return /^@scroll\s+\S/i.test(t)
+  }
+  return false
+}
+
+export function stripscrollcodepageheader(source) {
+  const lines = String(source ?? '').split('\n')
+  let skippedheader = false
+  const out = []
+  for (const line of lines) {
+    const t = line.trim()
+    if (!skippedheader && t && /^@scroll\s+\S/i.test(t)) {
+      skippedheader = true
+      continue
+    }
+    out.push(line)
+  }
+  while (out.length > 0 && out[0].trim() === '') {
+    out.shift()
+  }
+  return out.join('\n')
+}
+
+export function zedscrollhtml(source, opts = {}) {
+  return zedtapehtml(stripscrollcodepageheader(source), opts)
+}
+
 /** Raw ZSS codepage (text-kind tenant scrolls) with editor-style syntax colors. */
 export function zedzsshtml(source, opts = {}) {
   const tape = highlightzsssource(source)
   return `<div class="zns-tape">${zedtaperowshtml(tape, opts)}</div>`
 }
 
-/** Route text-kind scrolls: raw ZSS codepages vs markdown+tape scrolls. */
+/** Route text-kind scrolls: scroll codepage vs raw ZSS vs markdown+tape scrolls. */
 export function scrollsourceisrawzss(source) {
+  if (scrollsourceisscrollcodepage(source)) {
+    return false
+  }
   const lines = String(source ?? '').split('\n')
   let skippedscrolltitle = false
   for (const line of lines) {

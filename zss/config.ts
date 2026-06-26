@@ -52,11 +52,6 @@ const PERF_TILE_SUBIMAGE = zssjsonboolwithdefault(
   'ZSS_PERF_TILE_SUBIMAGE',
   false,
 )
-/** Per-script WASM modules instead of new Function() for CHIP logic. */
-const WASM_SCRIPT = zssjsonboolwithdefault(
-  'ZSS_WASM_SCRIPT',
-  process.env.NODE_ENV !== 'production',
-)
 
 // runtime config
 export const RUNTIME = {
@@ -88,5 +83,4 @@ export {
   PERF_SPATIAL_INDEX,
   PERF_INCREMENTAL_LAYERS,
   PERF_TILE_SUBIMAGE,
-  WASM_SCRIPT,
 }

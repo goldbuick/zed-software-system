@@ -267,5 +267,58 @@ module.exports = {
         ],
       },
     },
+    {
+      files: ['zss/device/api.ts'],
+      rules: {
+        '@typescript-eslint/no-restricted-imports': [
+          'error',
+          {
+            paths: [
+              {
+                name: 'zss/feature/jsonpipe/wire',
+                message:
+                  'Patch wire encoding belongs in zss/device/patchapi.ts, not device/api.',
+              },
+              {
+                name: 'json-joy',
+                message:
+                  'device/api is POD emit helpers only; patch codecs belong in patchapi.',
+              },
+              {
+                name: 'fast-json-patch',
+                message:
+                  'device/api is POD emit helpers only; patch codecs belong in patchapi.',
+              },
+            ],
+            patterns: [
+              {
+                group: ['zss/feature/*', 'zss/feature/**'],
+                allowTypeImports: true,
+                message:
+                  'device/api is POD emit helpers only; use import type or move logic to a feature module.',
+              },
+              {
+                group: ['zss/memory/*', 'zss/memory/**'],
+                allowTypeImports: true,
+                message:
+                  'device/api is POD emit helpers only; use import type for signatures.',
+              },
+              {
+                group: ['zss/gadget/*', 'zss/gadget/**'],
+                allowTypeImports: true,
+                message:
+                  'device/api is POD emit helpers only; use import type for signatures.',
+              },
+              {
+                group: ['zss/firmware/*', 'zss/firmware/**'],
+                allowTypeImports: true,
+                message:
+                  'device/api is POD emit helpers only; use import type for signatures.',
+              },
+            ],
+          },
+        ],
+      },
+    },
   ],
 }

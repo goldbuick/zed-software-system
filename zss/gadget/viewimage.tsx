@@ -2,12 +2,13 @@ import { useLoader } from '@react-three/fiber'
 import { Suspense, useEffect } from 'react'
 import { TextureLoader } from 'three'
 import { RUNTIME } from 'zss/config'
-import { brickproxiedurl } from 'zss/feature/url'
+import { brickproxiedurl } from 'zss/feature/brickurl'
 import { useMedia } from 'zss/gadget/media'
 
 import { updateTexture } from './display/textures'
 import { ShadeBoxDither } from './graphics/dither'
-import { UserFocus, UserInput } from './userinput'
+import { UserFocus } from './userinput'
+import { UserInput } from './userinput.bridge'
 import { useScreenSize } from './userscreen'
 
 type TapeShowImage = {

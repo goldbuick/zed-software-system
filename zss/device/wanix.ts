@@ -1,25 +1,21 @@
 import { createdevice } from 'zss/device'
-import { apierror } from 'zss/device/api'
-import { registerreadplayer } from 'zss/device/register'
-import { terminalwritelines } from 'zss/feature/terminalwritelines'
+import { registerreadplayer } from 'zss/device/registerplayer'
 import {
   wanixhandleattach,
   wanixhandledetach,
-  wanixhandledrop,
-  wanixhandlekeep,
-  wanixhandlereplace,
-  wanixhandlestdin,
+  wanixhandleshownenu,
   wanixhandlestop,
-} from 'zss/feature/wanix/wanixdrop'
+  wanixhandletermwrite,
+  wanixhandlevmstart,
+  wanixhandlevmstop,
+} from 'zss/feature/wanix/wanixcommands'
+import { wanixhandledrop } from 'zss/feature/wanix/wanixlaunch'
+import type { WANIX_ZED_CAFE_EXPORT_FILE } from 'zss/feature/wanix/wanixstateexport'
 import {
-  iswanixspaceactive,
-  readwanixstatus,
-} from 'zss/feature/wanix/wanixiframehost'
-import {
-  formatwanixstatelines,
-  readwanixpending,
-} from 'zss/feature/wanix/wanixsession'
-import { zssheaderlines, zsstexttape } from 'zss/feature/zsstextui'
+  clearwanixzedcafependingexport,
+  wanixdrainpendingzedcafeexport,
+  wanixhandleexportstate,
+} from 'zss/feature/wanix/wanixzedcafe'
 import { doasync } from 'zss/mapping/func'
 import { ispresent, isstring } from 'zss/mapping/types'
 
@@ -46,6 +42,37 @@ function readwanixdroppayload(data: unknown): WANIX_DROP_PAYLOAD | undefined {
   return payload
 }
 
+type WANIX_EXPORT_STATE_PAYLOAD = {
+  files: WANIX_ZED_CAFE_EXPORT_FILE[]
+}
+
+function readwanixexportstatepayload(
+  data: unknown,
+): WANIX_EXPORT_STATE_PAYLOAD | undefined {
+  if (!ispresent(data) || typeof data !== 'object') {
+    return undefined
+  }
+  const payload = data as WANIX_EXPORT_STATE_PAYLOAD
+  if (!Array.isArray(payload.files)) {
+    return undefined
+  }
+  for (let i = 0; i < payload.files.length; ++i) {
+    const file = payload.files[i]
+    if (!ispresent(file) || typeof file.path !== 'string') {
+      return undefined
+    }
+    if (file.bytes instanceof Uint8Array) {
+      continue
+    }
+    if (Array.isArray(file.bytes)) {
+      file.bytes = new Uint8Array(file.bytes as number[])
+      continue
+    }
+    return undefined
+  }
+  return payload
+}
+
 const wanix = createdevice('wanix', [], (message) => {
   if (!wanix.session(message)) {
     return
@@ -59,30 +86,44 @@ const wanix = createdevice('wanix', [], (message) => {
   switch (message.target) {
     case 'stop':
       doasync(wanix, message.player, async () => {
-        await wanixhandlestop(wanix, message.player)
+        const taskid = isstring(message.data) ? message.data : undefined
+        await wanixhandlestop(wanix, message.player, taskid)
       })
       break
-    case 'replace':
+    case 'vm-start':
       doasync(wanix, message.player, async () => {
-        await wanixhandlereplace(wanix, message.player)
+        const vmid = isstring(message.data) ? message.data : undefined
+        await wanixhandlevmstart(wanix, message.player, vmid)
       })
       break
-    case 'keep':
-      wanixhandlekeep(wanix, message.player)
+    case 'vm-stop':
+      doasync(wanix, message.player, async () => {
+        const vmid = isstring(message.data) ? message.data : undefined
+        await wanixhandlevmstop(wanix, message.player, vmid)
+      })
       break
-    case 'stdin':
+    case 'term-write':
       if (!isstring(message.data)) {
         break
       }
       doasync(wanix, message.player, async () => {
-        await wanixhandlestdin(wanix, message.player, message.data)
+        await wanixhandletermwrite(wanix, message.player, message.data)
       })
       break
     case 'detach':
       wanixhandledetach(wanix, message.player)
       break
     case 'attach':
-      wanixhandleattach(wanix, message.player)
+      doasync(wanix, message.player, async () => {
+        const taskid = isstring(message.data) ? message.data : undefined
+        await wanixhandleattach(wanix, message.player, taskid)
+      })
+      break
+    case 'unbind-show':
+    case 'show':
+      doasync(wanix, message.player, async () => {
+        await wanixhandleshownenu(wanix, message.player)
+      })
       break
     case 'drop': {
       const payload = readwanixdroppayload(message.data)
@@ -100,38 +141,16 @@ const wanix = createdevice('wanix', [], (message) => {
       })
       break
     }
-    case 'show':
+    case 'export-state': {
+      const payload = readwanixexportstatepayload(message.data)
+      if (!payload) {
+        break
+      }
       doasync(wanix, message.player, async () => {
-        try {
-          const status = await readwanixstatus()
-          const hostready = status.ready || iswanixspaceactive()
-          terminalwritelines(
-            wanix,
-            message.player,
-            zsstexttape(
-              zssheaderlines('wanix'),
-              ...formatwanixstatelines(hostready),
-            ),
-          )
-          if (readwanixpending()) {
-            terminalwritelines(
-              wanix,
-              message.player,
-              zsstexttape(
-                '$grayuse the links above to replace or keep the running binary',
-              ),
-            )
-          }
-        } catch (err) {
-          apierror(
-            wanix,
-            message.player,
-            'wanix',
-            err instanceof Error ? err.message : String(err),
-          )
-        }
+        await wanixhandleexportstate(wanix, message.player, payload.files)
       })
       break
+    }
     default:
       break
   }

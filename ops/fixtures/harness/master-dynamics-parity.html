@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>main dynamics parity</title>
+  </head>
+  <body>
+    <pre id="out">rendering…</pre>
+    <script type="module">
+      import { renderdaisyparitymainpatch } from '/ops/lib/daisy-parity/daisyparityrender.ts'
+      import { MAIN_DYNAMICS_PARITY_PATCHES } from '/ops/lib/daisy-parity/paritypatches.ts'
+
+      const outel = document.getElementById('out')
+
+      try {
+        const params = new URLSearchParams(window.location.search)
+        const patchid = params.get('patch')
+        if (!patchid) {
+          throw new Error('missing patch query param')
+        }
+        const patch = MAIN_DYNAMICS_PARITY_PATCHES.find((item) => item.id === patchid)
+        if (!patch) {
+          throw new Error(`unknown main patch ${patchid}`)
+        }
+        outel.textContent = `rendering ${patchid}…`
+        const metrics = await renderdaisyparitymainpatch(patch)
+        outel.textContent = JSON.stringify({ [patchid]: metrics })
+      } catch (err) {
+        outel.textContent = `error: ${err?.message ?? err}`
+        throw err
+      }
+    </script>
+  </body>
+</html>

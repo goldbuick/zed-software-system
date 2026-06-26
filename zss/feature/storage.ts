@@ -65,6 +65,25 @@ export async function storagewriteconfig(name: string, value: string) {
   return writeidb(`config_${name}`, () => value)
 }
 
+/** Arbitrary string values under `config_*` (not normalized to on/off). */
+export const CONFIG_STRING_KEYS = [
+  'ttsengine',
+  'ttsengineconfig',
+  'ttsenginemodel',
+] as const
+
+export function isconfigstringkey(name: string): boolean {
+  return (CONFIG_STRING_KEYS as readonly string[]).includes(name)
+}
+
+export async function storagereadconfigstring(name: string) {
+  return readidb<string>(`config_${name}`)
+}
+
+export async function storagewriteconfigstring(name: string, value: string) {
+  return writeidb(`config_${name}`, () => value)
+}
+
 export async function storagereadconfigall() {
   if (
     isclimode() &&

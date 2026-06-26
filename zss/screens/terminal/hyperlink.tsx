@@ -1,6 +1,6 @@
 import { useCallback, useContext, useMemo } from 'react'
 import { parseterminalmodemprefix } from 'zss/gadget/data/api'
-import { UserInput } from 'zss/gadget/userinput'
+import { UserInput } from 'zss/gadget/userinput.bridge'
 import { useWriteText } from 'zss/gadget/writetext'
 import { inputcolor } from 'zss/screens/panel/common'
 import {

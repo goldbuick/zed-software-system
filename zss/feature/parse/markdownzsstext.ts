@@ -387,34 +387,39 @@ export function parsetokenzsstext(sink: MarkdownZedSink, token: Token) {
 }
 
 function createrenderer(sink: MarkdownZedSink) {
+  let hasemitted = false
+  function emitblock(token: Token) {
+    parsetokenzsstext(sink, token)
+    hasemitted = true
+    return ''
+  }
   return {
-    heading(t: Tokens.Heading) {
-      parsetokenzsstext(sink, t)
+    space() {
+      if (hasemitted) {
+        sink.line('')
+      }
       return ''
+    },
+    heading(t: Tokens.Heading) {
+      return emitblock(t)
     },
     blockquote(t: Tokens.Blockquote) {
-      parsetokenzsstext(sink, t)
-      return ''
+      return emitblock(t)
     },
     hr(_t: Tokens.Hr) {
-      parsetokenzsstext(sink, _t)
-      return ''
+      return emitblock(_t)
     },
     list(t: Tokens.List) {
-      parsetokenzsstext(sink, t)
-      return ''
+      return emitblock(t)
     },
     listitem(t: Tokens.ListItem) {
-      parsetokenzsstext(sink, t)
-      return ''
+      return emitblock(t)
     },
     paragraph(t: Tokens.Paragraph) {
-      parsetokenzsstext(sink, t)
-      return ''
+      return emitblock(t)
     },
     code(t: Tokens.Code) {
-      parsetokenzsstext(sink, t)
-      return ''
+      return emitblock(t)
     },
     html() {
       return ''

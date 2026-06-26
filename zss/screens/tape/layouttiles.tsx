@@ -1,5 +1,6 @@
 import { ReactNode, useMemo } from 'react'
 import { RUNTIME } from 'zss/config'
+import { TERMINAL_MODE } from 'zss/gadget/data/zustandstores'
 import { useTiles } from 'zss/gadget/tiles'
 import { TilesData, TilesRender } from 'zss/gadget/usetiles'
 import { WriteTextContext } from 'zss/gadget/writetext'
@@ -9,11 +10,11 @@ import {
 } from 'zss/words/textformat'
 import type { COLOR } from 'zss/words/types'
 
-import { FG, bgcolor } from './colors'
+import { FG, bgcolorformode } from './colors'
 
 type TapeLayoutTilesProps = {
   label: string
-  quickterminal: boolean
+  terminalmode: TERMINAL_MODE
   top: number
   left: number
   width: number
@@ -26,7 +27,7 @@ type TapeLayoutTilesProps = {
 
 export function TapeLayoutTiles({
   label,
-  quickterminal,
+  terminalmode,
   top,
   left,
   width,
@@ -36,7 +37,7 @@ export function TapeLayoutTiles({
   platebg,
 }: TapeLayoutTilesProps) {
   const tilefg = framefg ?? FG
-  const tilebg = platebg ?? bgcolor(quickterminal)
+  const tilebg = platebg ?? bgcolorformode(terminalmode)
   const store = useTiles(width, height, 0, tilefg, tilebg)
   const context: WRITE_TEXT_CONTEXT = useMemo(() => {
     return {

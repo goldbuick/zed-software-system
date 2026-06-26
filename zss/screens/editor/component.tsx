@@ -4,19 +4,19 @@ import { vmcodeaddress, vmcoderelease, vmcodewatch } from 'zss/device/api'
 import { useWaitForValueString } from 'zss/device/modemhooks'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
+import { compileast } from 'zss/feature/lang/backend/typescript/ast'
+import * as lexer from 'zss/feature/lang/backend/typescript/lexer'
+import { createlineindexes } from 'zss/feature/lang/backend/typescript/transformer'
 import {
   type CodeNode,
   NODE,
-  compileast,
-  createlineindexes,
-  lexer,
-} from 'zss/feature/lang'
+} from 'zss/feature/lang/backend/typescript/visitor'
+import { useEqual } from 'zss/gadget/data/useequal'
 import {
   useEditor,
-  useEqual,
   useGadgetClient,
   useTape,
-} from 'zss/gadget/data/state'
+} from 'zss/gadget/data/zustandstores'
 import { useWriteText } from 'zss/gadget/writetext'
 import { isarray, isnumber, ispresent } from 'zss/mapping/types'
 import { ScrollMarquee } from 'zss/screens/scroll/marquee'
@@ -39,6 +39,7 @@ export function EditorComponent() {
   const zsswords = useGadgetClient(useEqual((state) => state.zsswords))
   const [editor] = useTape(useShallow((state) => [state.editor]))
   const autocompleteindex = useTape((state) => state.autocompleteindex)
+  const isscrollpage = editor.type === 'scroll'
 
   const tapeeditor = useEditor(
     useShallow((state) => ({
@@ -64,6 +65,9 @@ export function EditorComponent() {
   // tokenize, parse, and fold into rows (only re-run when text changes)
   const rows = useMemo(() => {
     const rows = splitcoderows(strvalue)
+    if (isscrollpage) {
+      return rows
+    }
     const parsed = compileast(strvalue)
 
     // fold tokens into lines
@@ -173,7 +177,7 @@ export function EditorComponent() {
     }
 
     return rows
-  }, [strvalue, zsswords])
+  }, [strvalue, zsswords, isscrollpage])
 
   // cursor placement
   const ycursor = findcursorinrows(tapeeditor.cursor, rows)

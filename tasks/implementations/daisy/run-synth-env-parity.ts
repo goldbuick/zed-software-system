@@ -9,6 +9,12 @@ import { fileURLToPath } from 'node:url'
 
 import { chromium } from '@playwright/test'
 import {
+  evalsynthenvparitygate,
+  formatsynthenvparityreport,
+} from 'ops/lib/daisy-parity/synthenvparitygate'
+import { SYNTH_ENV_PARITY_SCENARIOS } from 'ops/lib/daisy-parity/synthenvparityscenario'
+import { RENDERS_FIXTURES_DIR } from 'ops/lib/fixturepaths'
+import {
   PARITY_RENDER_SCRIPT_TIMEOUT_MS,
   PLAYWRIGHT_SCENARIO_TIMEOUT_MS,
   withscripttimeout,
@@ -18,17 +24,11 @@ import {
   stopparityvite,
 } from 'tasks/lib/parity/parity-vite-server.ts'
 
-import {
-  evalsynthenvparitygate,
-  formatsynthenvparityreport,
-} from '../zss/feature/synth/backend/daisy/synthenvparitygate.ts'
-import { SYNTH_ENV_PARITY_SCENARIOS } from '../zss/feature/synth/backend/daisy/synthenvparityscenario.ts'
-
 const ROOT = process.cwd()
 const PROJECT = process.cwd()
 const PORT = 9888
 const HOST_URL = `http://127.0.0.1:${PORT}/offline-render-host.html`
-const OUTDIR = path.join(PROJECT, 'cafe/public/renders/synth-env-parity')
+const OUTDIR = path.join(RENDERS_FIXTURES_DIR, 'synth-env-parity')
 
 async function runrenders() {
   fs.mkdirSync(OUTDIR, { recursive: true })
@@ -54,13 +54,13 @@ async function runrenders() {
       const payload = await page.evaluate(
         async ({ scenarioid, windowms }) => {
           const { runenvparityscenario } =
-            await import('/zss/feature/synth/backend/daisy/envparityrender.ts')
+            await import('/ops/lib/daisy-parity/envparityrender.ts')
           const { arraybuffertobase64 } =
             await import('/zss/feature/synth/backend/daisy/daisysongrender.ts')
           const { SYNTH_ENV_PARITY_SCENARIOS } =
-            await import('/zss/feature/synth/backend/daisy/synthenvparityscenario.ts')
+            await import('/ops/lib/daisy-parity/synthenvparityscenario.ts')
           const { analyzesynthenvparity } =
-            await import('/zss/feature/synth/backend/daisy/synthenvparity.ts')
+            await import('/ops/lib/daisy-parity/synthenvparity.ts')
 
           const scenario = SYNTH_ENV_PARITY_SCENARIOS.find(
             (s) => s.id === scenarioid,

@@ -1,0 +1,37 @@
+import { apierror } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
+import { AUDIO_SYNTH } from 'ops/archive/synth/tone'
+import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
+
+import { canonicalvoicefxgroupindex } from 'ops/archive/synth/tone/voicefxgroup'
+
+export function synthvoicefxvibratoconfig(
+  player: string,
+  synth: MAYBE<AUDIO_SYNTH>,
+  index: number,
+  config: number | string,
+  value: number | string,
+) {
+  if (!ispresent(synth)) {
+    return
+  }
+  const groupidx = canonicalvoicefxgroupindex(index)
+  if (groupidx < 0 || groupidx >= synth.FX.length) {
+    apierror(SOFTWARE, player, `synth`, `index ${index} out of bounds`)
+    return
+  }
+  const vibrato = synth.FXCHAIN.vibrato
+  try {
+    switch (config) {
+      case 'maxdelay':
+        if (isnumber(value)) {
+          vibrato.set({ maxDelay: value })
+          return
+        }
+        break
+    }
+    throw new Error(`unknown vibrato|${config}|${value}`)
+  } catch (err) {
+    apierror(SOFTWARE, player, 'synth', err)
+  }
+}

@@ -3,7 +3,7 @@ import { PERF_UI } from 'zss/config'
 import { registerterminalopen } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/state'
+import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/zustandstores'
 import { ShadeBoxDither } from 'zss/gadget/graphics/dither'
 import { UserFocus, UserHotkey } from 'zss/gadget/userinput'
 import { useScreenSize } from 'zss/gadget/userscreen'
@@ -23,29 +23,32 @@ const tapeprofileronrender: ProfilerOnRenderCallback = (
 
 export function TapeComponent() {
   const screensize = useScreenSize()
-  const [layout, quickterminal, terminalopen, editoropen] = useTape(
+  const [layout, terminalmode, terminalopen, editoropen] = useTape(
     useShallow((state) => [
       state.layout,
-      state.quickterminal,
+      state.terminalmode,
       state.terminal.open,
       state.editor.open,
     ]),
   )
 
+  const attached = terminalmode === 'attached'
   let top = 0
   let height = screensize.rows
-  switch (layout) {
-    case TAPE_DISPLAY.TOP:
-      height = Math.floor(screensize.rows * 0.5)
-      break
-    case TAPE_DISPLAY.BOTTOM:
-      height = Math.ceil(screensize.rows * 0.5)
-      top = screensize.rows - height
-      break
-    default:
-    case TAPE_DISPLAY.FULL:
-      // defaults
-      break
+  if (!attached) {
+    switch (layout) {
+      case TAPE_DISPLAY.TOP:
+        height = Math.floor(screensize.rows * 0.5)
+        break
+      case TAPE_DISPLAY.BOTTOM:
+        height = Math.ceil(screensize.rows * 0.5)
+        top = screensize.rows - height
+        break
+      default:
+      case TAPE_DISPLAY.FULL:
+        // defaults
+        break
+    }
   }
 
   // bail on odd states
@@ -54,7 +57,11 @@ export function TapeComponent() {
   }
 
   const player = registerreadplayer()
-  const showterminal = quickterminal || terminalopen || editoropen
+  const showterminal =
+    terminalmode === 'quick' ||
+    terminalmode === 'attached' ||
+    terminalopen ||
+    editoropen
 
   const body = (
     <>
@@ -74,11 +81,11 @@ export function TapeComponent() {
             left={0}
             right={screensize.cols - 1}
             bottom={top + height - 1}
-            alpha={quickterminal ? 0.666 : 0.333}
+            alpha={attached ? 0.85 : terminalmode === 'quick' ? 0.666 : 0.333}
           />
           <UserFocus blockhotkeys>
             <TapeLayout
-              quickterminal={quickterminal}
+              terminalmode={terminalmode}
               top={top}
               width={screensize.cols}
               height={height}

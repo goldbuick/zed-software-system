@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>wanix iframe smoke</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #120818;
+        color: #c8b8e8;
+        font: 14px/1.4 monospace;
+      }
+      #status {
+        position: fixed;
+        left: 8px;
+        bottom: 8px;
+        z-index: 2;
+        max-width: calc(100% - 16px);
+      }
+      #frame {
+        display: block;
+        width: 100vw;
+        height: 100vh;
+      }
+      #wanix-child {
+        position: fixed;
+        left: -9999px;
+        top: 0;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        visibility: hidden;
+        border: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="frame"></canvas>
+    <iframe id="wanix-child" title="wanix iframe host" src="/wanix-iframe-host.html"></iframe>
+    <div id="status">starting…</div>
+    <script type="module" src="/ops/fixtures/harness/wanixiframesmokeparent.ts"></script>
+  </body>
+</html>

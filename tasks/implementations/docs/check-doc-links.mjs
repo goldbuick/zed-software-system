@@ -40,7 +40,11 @@ function checkrelative(fromfile, rawlink) {
 }
 
 for (const file of files) {
-  const content = readFileSync(join(root, file), 'utf8')
+  const fullpath = join(root, file)
+  if (!existsSync(fullpath)) {
+    continue
+  }
+  const content = readFileSync(fullpath, 'utf8')
   let match
   while ((match = linkre.exec(content)) !== null) {
     const href = match[1].trim()
@@ -55,6 +59,10 @@ for (const file of files) {
 
 for (const file of files) {
   if (file.startsWith('zss/rom/')) {
+    continue
+  }
+  const fullpath = join(root, file)
+  if (!existsSync(fullpath)) {
     continue
   }
   try {

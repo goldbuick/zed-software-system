@@ -1,12 +1,14 @@
 ---
 description: Test fixture layout — all assets under ./ops/fixtures/, use fixturepaths.ts
-globs: ops/fixtures/**,**/__tests__/**,ops/e2e/**,scripts/**,zss/testsupport/**
+globs: ops/fixtures/**,**/__tests__/**,scripts/**,ops/lib/**
 alwaysApply: false
 ---
 
 # Fixtures layout
 
-All test fixture **assets** live under repo-root [`ops/fixtures/`](ops/fixtures/). Resolve paths via [`zss/testsupport/fixturepaths.ts`](zss/testsupport/fixturepaths.ts).
+All test fixture **assets** live under repo-root [`ops/fixtures/`](ops/fixtures/). Resolve paths via [`ops/lib/fixturepaths.ts`](ops/lib/fixturepaths.ts).
+
+`zss/feature/` and `cafe/public/` must not import `ops/fixtures` or host test/parity/archive code.
 
 ## Required
 
@@ -17,16 +19,19 @@ All test fixture **assets** live under repo-root [`ops/fixtures/`](ops/fixtures/
 | Lang integration goldens | `lang/integration/` |
 | Book corpus | `lang/coolregionsbow/` |
 | Memory WASM | `memory/wasm/` |
-| Synth | `synth/wasm/`, `synth/daisy/` |
+| Synth | `synth/wasm/`, `synth/daisy/`, `synth/maxi/` |
 | Wanix WASI | `wanix/` (built `.wasm` gitignored) |
+| Harness HTML | `harness/` (Daisy parity dev pages; not in `cafe/public`) |
+| Dev-served static | `public/` (served at `/fixtures/` in dev only) |
+| Offline renders | `renders/` (daisy offline wav/json/txt; served at `/renders/` in dev only) |
 | Book templates | `content/templates/`; build output `content/dist/` |
 | Books (npm) | `books/` |
-| E2e repro | `e2e/` |
 | Generated training | `generated/training/` |
+| ZZT corpus | `zzt/corpus/` (`zss/` committed; `archives/`, `extracted/`, `screenshots/` gitignored) |
 
 ```typescript
 // ✅ GOOD
-import { LANG_PARITY_DIR } from 'zss/testsupport/fixturepaths'
+import { LANG_PARITY_DIR } from 'ops/lib/fixturepaths'
 path.join(LANG_PARITY_DIR, `${id}.zss`)
 
 // ❌ BAD — co-located fixture trees
@@ -39,11 +44,16 @@ path.join(__dirname, '__fixtures__/parity')
 
 ## Generated vs committed
 
-- Regenerate `ops/fixtures/generated/training/` and `ops/fixtures/e2e/` via existing tasks/scripts.
+- Regenerate `ops/fixtures/generated/training/` via existing tasks/scripts.
 - Lang/memory/synth goldens: regen via parity/regen tests — do not hand-edit unless fixing the generator.
 
-## Harness code
+## Ops layout
 
-Embedded loaders in `zss/testsupport/` (e.g. wanix hex bytes) stay in testsupport; they reference `ops/fixtures/wanix/` sources for regen comments only.
+| Kind | Location |
+|------|----------|
+| Fixture path constants | `ops/lib/fixturepaths.ts` |
+| Daisy parity / bench | `ops/lib/daisy-parity/` |
+| Legacy Tone/Maxi synth | `ops/archive/synth/` |
+| Jest test helpers | `ops/lib/test/` |
 
 See [`ops/fixtures/README.md`](ops/fixtures/README.md) for regen task ids.

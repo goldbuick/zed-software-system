@@ -350,11 +350,11 @@ function FeaturesView() {
     <div className="stack stack-gap-20">
       <div className="stat-grid">
         <div className="stat-card">
-          <div className="stat-value">~150</div>
+          <div className="stat-value">~175</div>
           <div className="stat-label">Firmware commands</div>
         </div>
         <div className="stat-card">
-          <div className="stat-value">34</div>
+          <div className="stat-value">57</div>
           <div className="stat-label">CLI commands</div>
         </div>
         <div className="stat-card">
@@ -362,8 +362,8 @@ function FeaturesView() {
           <div className="stat-label">Audio commands</div>
         </div>
         <div className="stat-card">
-          <div className="stat-value">4</div>
-          <div className="stat-label">JS realms</div>
+          <div className="stat-value">6</div>
+          <div className="stat-label">Worker realms</div>
         </div>
       </div>
       <hr className="overview-divider" />

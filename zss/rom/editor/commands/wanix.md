@@ -1,3 +1,3 @@
 ---
-hint: $DKGRAYdrop .wasm or .tgz to run; stdin routes when a task reads it; #wanix attach/detach
+hint: $DKGRAY#wanix menu — attach, vm; ./zed-cafe/ auto-syncs session books when wanix is warm
 ---

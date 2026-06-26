@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import type { SharedTextHandle } from 'zss/device/modem'
-import { useEditor, useTape } from 'zss/gadget/data/state'
+import { useEditor, useTape } from 'zss/gadget/data/zustandstores'
 import { useWriteText } from 'zss/gadget/writetext'
 import { codeunitoffsettocellindex } from 'zss/mapping/grapheme'
 import { MAYBE, ispresent } from 'zss/mapping/types'
@@ -12,7 +12,7 @@ import {
   ZSS_TYPE_ERROR_LINE,
   ZSS_TYPE_LINE,
   applycodetokencolors,
-  bgcolor,
+  bgcolorformode,
 } from 'zss/screens/tape/colors'
 import { EDITOR_CODE_ROW, setupeditoritem } from 'zss/screens/tape/common'
 import {
@@ -51,7 +51,8 @@ export function EditorRows({
       startline: state.startline,
     })),
   )
-  const quickterminal = useTape((state) => state.quickterminal)
+  const terminalmode = useTape((state) => state.terminalmode)
+  const isscrollpage = useTape((state) => state.editor.type === 'scroll')
 
   const withrows: EDITOR_CODE_ROW[] = useMemo(() => {
     if (rows.length) {
@@ -125,7 +126,7 @@ export function EditorRows({
     context.x = leftedge
     context.iseven = context.y % 2 === 0
     context.active.color = COLOR.WHITE
-    context.active.bg = active ? BG_ACTIVE : bgcolor(quickterminal)
+    context.active.bg = active ? BG_ACTIVE : bgcolorformode(terminalmode)
     context.disablewrap = true
     context.active.rightedge = rightedge
 
@@ -154,15 +155,17 @@ export function EditorRows({
     clippedapplybgtoindexes(index, edge.right, 46, 46, COLOR.DKCYAN, context)
 
     // apply token colors (line = code part; prefix = line number + space)
-    applycodetokencolors(
-      xoffset,
-      index,
-      edge.right,
-      row.tokens ?? [],
-      context,
-      text,
-      prefixcells,
-    )
+    if (!isscrollpage) {
+      applycodetokencolors(
+        xoffset,
+        index,
+        edge.right,
+        row.tokens ?? [],
+        context,
+        text,
+        prefixcells,
+      )
+    }
 
     // render selection (maybestart/maybeend are offsets within code; add prefixcells for line-relative columns; xoffset includes -4 layout shift so subtract 4 so selection aligns)
     if (hasselection && row.start <= ii2 && row.end >= ii1) {

@@ -11,6 +11,15 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import {
+  type SYNTH_ENV_PARITY_RESULT,
+  evalsynthenvparitygate,
+} from 'ops/lib/daisy-parity/synthenvparitygate'
+import {
+  SYNTH_ENV_PARITY_REQUIRED_IDS,
+  SYNTH_ENV_PARITY_SCENARIOS,
+} from 'ops/lib/daisy-parity/synthenvparityscenario'
+import { RENDERS_FIXTURES_DIR } from 'ops/lib/fixturepaths'
+import {
   CALIBRATE_SCRIPT_TIMEOUT_MS,
   EXEC_BUILD_DAISY_TIMEOUT_MS,
   EXEC_CALIBRATE_STEP_TIMEOUT_MS,
@@ -19,22 +28,13 @@ import {
   withscripttimeout,
 } from 'tasks/lib/parity/parity-timeouts.ts'
 
-import {
-  type SYNTH_ENV_PARITY_RESULT,
-  evalsynthenvparitygate,
-} from '../zss/feature/synth/backend/daisy/synthenvparitygate.ts'
-import {
-  SYNTH_ENV_PARITY_REQUIRED_IDS,
-  SYNTH_ENV_PARITY_SCENARIOS,
-} from '../zss/feature/synth/backend/daisy/synthenvparityscenario.ts'
-
 const ROOT = process.cwd()
 const PROJECT = process.cwd()
 const CONFIG_PATH = path.join(
   PROJECT,
   'zss/feature/synth/backend/daisy/native/zss/zss_config.h',
 )
-const OUTDIR = path.join(PROJECT, 'cafe/public/renders/synth-env-parity')
+const OUTDIR = path.join(RENDERS_FIXTURES_DIR, 'synth-env-parity')
 
 const dryrun = process.argv.includes('--dry-run')
 

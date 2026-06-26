@@ -10,6 +10,16 @@ import { fileURLToPath } from 'node:url'
 
 import { chromium } from '@playwright/test'
 import {
+  SIDECHAIN_PARITY_PATCH_ID,
+  type SIDECHAIN_PARITY_RESULT,
+  analyzeduckdepth,
+  analyzeduckdepthpair,
+  evalsidechainparitygate,
+  formatsidechainparityreport,
+  metricsfromsamples,
+} from 'ops/lib/daisy-parity/sidechainparity'
+import { RENDERS_FIXTURES_DIR } from 'ops/lib/fixturepaths'
+import {
   PARITY_RENDER_SCRIPT_TIMEOUT_MS,
   PLAYWRIGHT_SCENARIO_TIMEOUT_MS,
   withscripttimeout,
@@ -20,21 +30,12 @@ import {
 } from 'tasks/lib/parity/parity-vite-server.ts'
 import { decodewav } from 'tasks/lib/parity/parity-wav.ts'
 
-import {
-  SIDECHAIN_PARITY_PATCH_ID,
-  type SIDECHAIN_PARITY_RESULT,
-  analyzeduckdepth,
-  analyzeduckdepthpair,
-  evalsidechainparitygate,
-  formatsidechainparityreport,
-  metricsfromsamples,
-} from '../zss/feature/synth/backend/daisy/sidechainparity.ts'
 import { SIDECHAIN_SCENARIO_ID } from '../zss/feature/synth/backend/daisy/sidechainscenario.ts'
 
 const ROOT = process.cwd()
 const PROJECT = process.cwd()
 const PORT = 9886
-const OUTDIR = path.join(PROJECT, 'cafe/public/renders')
+const OUTDIR = RENDERS_FIXTURES_DIR
 const HOST_URL = `http://127.0.0.1:${PORT}/offline-render-host.html`
 const PARITY_JSON = path.join(
   OUTDIR,
@@ -80,11 +81,11 @@ async function rendertonefixture(
   try {
     return await page.evaluate(async () => {
       const { rendertonelevelscenario } =
-        await import('/zss/feature/synth/backend/wasm/toneparityrender.ts')
+        await import('/ops/lib/daisy-parity/toneparityrender.ts')
       const { sidechainabscenario } =
         await import('/zss/feature/synth/backend/daisy/sidechainscenario.ts')
       const { audiobuffermetrics } =
-        await import('/zss/feature/synth/backend/wasm/paritymetrics.ts')
+        await import('/ops/lib/daisy-parity/paritymetrics.ts')
       const buffer = await rendertonelevelscenario(sidechainabscenario())
       const m = audiobuffermetrics(buffer)
       return { peakdb: m.peakdb, rmsdb: m.rmsdb }

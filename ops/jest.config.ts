@@ -3,6 +3,9 @@ import type { Config } from 'jest'
 /** Per-test and hook ceiling so suites cannot hang without failing. */
 const TEST_TIMEOUT_MS = 120_000
 
+const CORPUS_SCREENSHOTS_TEST =
+  '<rootDir>/ops/tests/integration/zzt/corpus-screenshots.test.ts'
+
 const config: Config = {
   rootDir: '..',
   roots: ['<rootDir>/ops/tests'],
@@ -11,12 +14,16 @@ const config: Config = {
   testTimeout: TEST_TIMEOUT_MS,
   /** CI safety net when a worker still has stray handles after suites finish. */
   forceExit: process.env.CI === 'true',
-  setupFilesAfterEnv: ['<rootDir>/zss/testing/jesttimeoutsetup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/ops/tests/setup/timeoutsetup.ts'],
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
   moduleNameMapper: {
-    '^zss/perf/ui$': '<rootDir>/ops/tests/mocks/perfui.ts',
+    '^zss/perf/ui$': '<rootDir>/ops/lib/test/mocks/perfui.ts',
+    '^ops/lib/daisy-parity/(.*)$': '<rootDir>/ops/lib/daisy-parity/$1',
+    '^ops/lib/test/(.*)$': '<rootDir>/ops/lib/test/$1',
+    '^ops/archive/(.*)$': '<rootDir>/ops/archive/$1',
+    '^ops/lib/(.*)$': '<rootDir>/ops/lib/$1',
     '^zss/(.*)$': '<rootDir>/zss/$1',
-    '^uint8-util$': '<rootDir>/ops/tests/mocks/uint8-util.ts',
+    '^uint8-util$': '<rootDir>/ops/lib/test/mocks/uint8-util.ts',
     '^@chevrotain/utils$':
       '<rootDir>/node_modules/@chevrotain/utils/lib/src/api.js',
     '^@chevrotain/gast$':
@@ -47,11 +54,13 @@ const config: Config = {
   transformIgnorePatterns: [
     'node_modules/(?!(nanoid|nanoid-dictionary|human-id|alea|ts-extras|fast-json-patch|react-fast-compare|uqr|maath|@react-three|three|mime|uint8-util|@tonejs/midi|midi-file|chevrotain|lodash-es|@chevrotain|marked|json-joy|@jsonjoy.com)/)',
   ],
-  globalTeardown: '<rootDir>/zss/testing/jestglobalteardown.cjs',
+  globalTeardown: '<rootDir>/ops/tests/setup/globalteardown.cjs',
   testPathIgnorePatterns: [
-    '<rootDir>/ops/e2e/',
-    '<rootDir>/ops/tests/unit/memory/wasm/__tests__/wasmparity.test.ts',
-    '<rootDir>/ops/tests/unit/memory/wasm/__tests__/regenfixtures.test.ts',
+    '<rootDir>/ops/tests/unit/memory/wasm/wasmparity.test.ts',
+    '<rootDir>/ops/tests/unit/memory/wasm/regenfixtures.test.ts',
+    ...(process.env.ZSS_JEST_INCLUDE_CORPUS_SCREENSHOTS === '1'
+      ? []
+      : [CORPUS_SCREENSHOTS_TEST]),
   ],
   testMatch: [
     '**/__tests__/**/*.ts',
@@ -66,7 +75,7 @@ const config: Config = {
   collectCoverageFrom: ['zss/**/*.{ts,tsx}'],
   coveragePathIgnorePatterns: [
     '/node_modules/',
-    '/ops/tests/mocks/',
+    '/ops/lib/test/mocks/',
     '/__tests__/',
   ],
   coverageThreshold: {

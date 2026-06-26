@@ -3,7 +3,7 @@ import { chipmessage, vmcli } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { storagereadconfig } from 'zss/feature/storage'
-import { useTape, useTerminal } from 'zss/gadget/data/state'
+import { useTape, useTerminal } from 'zss/gadget/data/zustandstores'
 import { useWriteText } from 'zss/gadget/writetext'
 import { doasync } from 'zss/mapping/func'
 import { totarget } from 'zss/mapping/string'
@@ -17,17 +17,19 @@ import { useShallow } from 'zustand/react/shallow'
 
 import { TerminalInput } from './input'
 import { TerminalRows } from './rows'
+import { WanixTermInput } from './wanixinput'
+import { WanixTermScreen } from './wanixscreen'
 
 export function TerminalComponent() {
   const player = registerreadplayer()
   const editoropen = useTape((state) => state.editor.open)
+  const terminalmode = useTape((state) => state.terminalmode)
   const pinlines = useTape((state) => state.terminal.pinlines)
   const sessionlogs = useTape((state) => state.terminal.logs)
   const terminallogs = useMemo(
     () => [...pinlines, ...sessionlogs],
     [pinlines, sessionlogs],
   )
-  const quickterminal = useTape((state) => state.quickterminal)
 
   const [voice2text, setvoice2text] = useState<MAYBE<boolean>>(undefined)
   useLayoutEffect(() => {
@@ -45,10 +47,8 @@ export function TerminalComponent() {
     })),
   )
 
-  // terminal edges
   const edge = textformatreadedges(context)
 
-  // measure rows
   const logsrowmaxwidth = context.width - 1
   const logsrowheights: number[] = useMemo(() => {
     const logs = terminallogs ?? []
@@ -57,14 +57,12 @@ export function TerminalComponent() {
     )
   }, [edge.height, logsrowmaxwidth, terminallogs])
 
-  // ycoords for rows
   let logsrowtotalheight = 0
   logsrowheights.forEach((rowheight) => {
     logsrowtotalheight += rowheight
   })
   ++logsrowtotalheight
 
-  // calculate ycoord to render cursor
   const tapeycursor = edge.bottom - tapeterminal.ycursor + tapeterminal.scroll
 
   const tapecontextvalue = useMemo(
@@ -82,18 +80,29 @@ export function TerminalComponent() {
     [player],
   )
 
+  const attached = terminalmode === 'attached'
+
   return (
     <>
       <TapeBackPlate />
       <TapeTerminalContext.Provider value={tapecontextvalue}>
-        <TerminalRows />
-        {!editoropen && voice2text !== undefined && (
-          <TerminalInput
-            quickterminal={quickterminal}
-            voice2text={voice2text}
-            tapeycursor={tapeycursor}
-            logrowtotalheight={logsrowtotalheight}
-          />
+        {attached ? (
+          <>
+            <WanixTermScreen />
+            <WanixTermInput />
+          </>
+        ) : (
+          <>
+            <TerminalRows />
+            {!editoropen && voice2text !== undefined && (
+              <TerminalInput
+                terminalmode={terminalmode}
+                voice2text={voice2text}
+                tapeycursor={tapeycursor}
+                logrowtotalheight={logsrowtotalheight}
+              />
+            )}
+          </>
         )}
       </TapeTerminalContext.Provider>
     </>

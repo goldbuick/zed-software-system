@@ -1,0 +1,54 @@
+---
+description: Wanix interactive I/O goes through ZSS tile term bridge — never patch fd_0 stdin
+alwaysApply: true
+---
+
+# Wanix term bridge (not WASI stdin)
+
+Interactive I/O for running Wanix tasks uses **`#task/…/term/data`** or **`#vm/<rid>/term/data`**. In ZSS, the **tape terminal tile bridge** mirrors the hidden iframe child `<wanix-term>` xterm grid while a task or VM is attached.
+
+Raw WASI **`fd_read(0)` / `fd/0` stdin is not the integration surface** and must not be “fixed” by patching Wanix.
+
+## Canonical path (use this)
+
+| Direction | Owner |
+|-----------|--------|
+| User input → WASI task | `WanixTermInput` → `sendwanixtermwrite` → `wanixhost.ts` → iframe child RPC → `#task/<rid>/term/data` (line + `\n`) |
+| User input → VM serial | `WanixTermInput` → `sendwanixterminput` → iframe child RPC → `#vm/<rid>/term/data` (per keystroke) |
+| Task/VM output → tile screen | iframe child `installwanixtermprobeembed` → `zss-wanix-term-cells` → `wanixtermscreensync` → `WanixTermScreen` tile GPU |
+| Prep / mount logs | `apilog` scrollback during spawn (not mirrored to tile) |
+| Routing on/off | `wanixsession` + `wanixterminalmode` (`#wanix attach` forces tile; auto-open on first cell snapshot) |
+| Terminal sizing | Host pixel-sizes iframe; child FitAddon fits xterm — see `ops/docs/wanix-term-sizing.md` |
+
+While `iswanixtermactive()`, non-`#` lines go to the attached task or VM. WASI tasks use cyan **`wanix`** prompt; VMs use **`wanix-vm`** (raw serial). `#wanix detach` / `#wanix attach` control routing.
+
+Wanix runs in a **hidden iframe** (`cafe/wanix-iframe-host.html` → `wanix-iframe-host.ts`) when `#frame` is present. Boot may freeze WebGL briefly on the shared main thread.
+
+See `ops/fixtures/wanix/README.md` and harness pages under `ops/fixtures/harness/wanix/`.
+
+## Prohibited
+
+- Patching **`submodules/wanix`**, **`node_modules/wanix`**, or production **`cafe/public/`** wasm paths to wire WASI stdin.
+- Adding REPL fixtures that **require** `fd_read(0)` and expecting a Wanix kernel patch.
+- Diagnosing “REPL broken” as “enable fd_0” instead of verifying iframe term connect/spawn order and `sendwanixterminput`.
+- Propagating winsize/winch/stty — size the iframe pixels and let FitAddon fit the grid.
+
+## Allowed
+
+- Fixes in **`wanixhost.ts`**, `wanixtermiframehost.ts`, `wanixdrop.ts`, terminal input routing, iframe child host.
+- One-shot WASI binaries that only **`fd_write`** stdout (e.g. `hello.wat`).
+- Long-running tasks for term bridge verification (`hold.wat`, `termbridge.wat`).
+
+## Examples
+
+```text
+❌ BAD — patch submodules/wanix/wasi/worker/worker.js to connect e.data.stdin
+❌ BAD — rebuild wanix for fd/0 stdin
+❌ BAD — serial replay path via wanixtermscreenwrite (removed; use cell snapshots)
+
+✅ GOOD — drop termbridge.wasm, tile opens on first cell snapshot with banner text
+✅ GOOD — trace sendwanixterminput + iframe spawn order in wanixtermiframehost.ts
+✅ GOOD — extend wanix harness pages under `ops/fixtures/harness/wanix/`
+```
+
+If interactive behavior is wrong, debug **`wanixtermiframehost.ts`** attach-on-cells, iframe sizing, and `iswanixtermactive()` — not WASI fd 0.

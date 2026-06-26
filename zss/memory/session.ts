@@ -2,6 +2,7 @@
  * Session state and book storage: MEMORY singleton, operator/topic/halt/loaders, and book map.
  * Other memory modules (books, codepages, etc.) depend on this for `MEMORY.books` / `MEMORY.loaders` and `MEMORY.software`.
  */
+import { notifyzedcafebookschanged } from 'zss/feature/wanix/wanixstateexport'
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
@@ -136,10 +137,12 @@ export function memoryresetbooks(books: BOOK[]) {
       MEMORY.software.main = first.id
     }
   }
+  notifyzedcafebookschanged(memoryreadoperator())
 }
 
 export function memorywritebook(book: BOOK) {
   MEMORY.books[book.id] = book
+  notifyzedcafebookschanged(memoryreadoperator())
   return book.id
 }
 
@@ -163,6 +166,7 @@ export function memoryclearbook(address: string) {
   if (ispresent(book)) {
     memoryfreebook(book)
     delete MEMORY.books[book.id]
+    notifyzedcafebookschanged(memoryreadoperator())
   }
 }
 

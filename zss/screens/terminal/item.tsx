@@ -1,8 +1,8 @@
-import { useTape } from 'zss/gadget/data/state'
+import { useTape } from 'zss/gadget/data/zustandstores'
 import { useWriteText } from 'zss/gadget/writetext'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
-import { BG_ACTIVE, bgcolor } from 'zss/screens/tape/colors'
+import { BG_ACTIVE, bgcolorformode } from 'zss/screens/tape/colors'
 import {
   TapeTerminalItemInputProps,
   TapeTerminalItemProps as TapeTerminalItemProps,
@@ -29,17 +29,23 @@ import { TerminalRunIt } from './runit'
 import { TerminalSelect } from './select'
 import { TerminalText } from './text'
 import { TerminalViewIt } from './viewit'
+import {
+  TerminalWanixAttach,
+  TerminalWanixStop,
+  TerminalWanixVm,
+  TerminalWanixVmStop,
+} from './wanixlink'
 import { TerminalZSSEdit } from './zssedit'
 
 export function TerminalItem({ active, text, y }: TapeTerminalItemProps) {
   const context = useWriteText()
-  const quickterminal = useTape((state) => state.quickterminal)
+  const terminalmode = useTape((state) => state.terminalmode)
   const edge = textformatreadedges(context)
   const ishyperlink = text.startsWith('!')
 
   // write text or clear line for ui
   setuplogitem(!!active, 0, y, context)
-  context.reset.bg = active ? BG_ACTIVE : bgcolor(quickterminal)
+  context.reset.bg = active ? BG_ACTIVE : bgcolorformode(terminalmode)
   context.active.bottomedge = edge.bottom
 
   // detect $CENTER
@@ -90,6 +96,14 @@ export function TerminalItem({ active, text, y }: TapeTerminalItemProps) {
         return <TerminalViewIt {...props} words={words} />
       case 'runit':
         return <TerminalRunIt {...props} words={words} />
+      case 'wanixattach':
+        return <TerminalWanixAttach {...props} words={words} />
+      case 'wanixstop':
+        return <TerminalWanixStop {...props} words={words} />
+      case 'wanixvmstop':
+        return <TerminalWanixVmStop {...props} words={words} />
+      case 'wanixvm':
+        return <TerminalWanixVm {...props} words={words} />
       default:
       case 'hyperlink':
         return <TerminalHyperlink {...props} words={words} />

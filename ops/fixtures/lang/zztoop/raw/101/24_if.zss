@@ -1,0 +1,11 @@
+@gate
+:touch
+#if blocked n #send :stuck
+#if not energized #end
+#if alligned then shoot seek
+#if any red key #give gems 1
+#if contact #die
+#if hasorb #end
+#end
+:stuck
+#end

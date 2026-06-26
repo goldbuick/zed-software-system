@@ -1,0 +1,8 @@
+@chest
+'this is a plain comment
+'locked
+You see a locked chest.
+#end
+:open
+The chest creaks open.
+#end

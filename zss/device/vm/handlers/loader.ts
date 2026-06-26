@@ -1,36 +1,23 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE, TEXT_READER } from 'zss/device/api'
-import { apie2eloadernotify, apilog, heavymodelprompt } from 'zss/device/api'
-import { lastinputtime } from 'zss/device/vm/state'
+import { apilog, heavymodelprompt } from 'zss/device/api'
 import { parsewebfile } from 'zss/feature/parse/file'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
-import { maptostring } from 'zss/mapping/value'
-import { memoryreadobject } from 'zss/memory/boardaccess'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import {
   memoryimportbookfromjson,
   memorywritecodepage,
 } from 'zss/memory/bookoperations'
 import { memoryimportcodepagefromjson } from 'zss/memory/codepageoperations'
-import { memoryreadflags } from 'zss/memory/flags'
 import { memoryloader } from 'zss/memory/loader'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
-import { memoryreadbookbysoftware, memorywritebook } from 'zss/memory/session'
 import {
-  memorylistboardnamedelements,
-  memorypickboardnearestpt,
-} from 'zss/memory/spatialqueries'
-import { BOARD, BOARD_ELEMENT, MEMORY_LABEL } from 'zss/memory/types'
+  memoryreadbookbysoftware,
+  memoryreadoperator,
+  memorywritebook,
+} from 'zss/memory/session'
+import { MEMORY_LABEL } from 'zss/memory/types'
 import { memoryreadconfig } from 'zss/memory/utilities'
-
-function playerisagent(playerid: string): boolean {
-  return memoryreadflags(playerid).agent === 1
-}
-
-function playerdisplayname(playerid: string): string {
-  const s = maptostring(memoryreadflags(playerid).user)
-  return s || playerid
-}
 
 function iscodepagejsonfile(eventname: string) {
   return (
@@ -41,62 +28,8 @@ function iscodepagejsonfile(eventname: string) {
   )
 }
 
-function boardagentelements(board: BOARD, boardid: string): BOARD_ELEMENT[] {
-  const players = memorylistboardnamedelements(board, 'player')
-  const out: BOARD_ELEMENT[] = []
-  for (let i = 0; i < players.length; ++i) {
-    const el = players[i]
-    const pid = el.id
-    if (!isstring(pid) || !playerisagent(pid)) {
-      continue
-    }
-    const agentboard = memoryreadplayerboard(pid)
-    if (!ispresent(agentboard) || agentboard.id !== boardid) {
-      continue
-    }
-    out.push(el)
-  }
-  return out
-}
-
-function boardnearestagentref(
-  board: BOARD,
-  boardid: string,
-  messageplayer: string,
-  sendername: string,
-): { id: string; name: string } | undefined {
-  const senderelement = memoryreadobject(board, messageplayer)
-  if (!ispresent(senderelement)) {
-    return undefined
-  }
-  const senderpt = { x: senderelement.x ?? 0, y: senderelement.y ?? 0 }
-  const candidates = boardagentelements(board, boardid)
-  const agentelements: BOARD_ELEMENT[] = []
-  for (let i = 0; i < candidates.length; ++i) {
-    const el = candidates[i]
-    const agentid = el.id
-    if (!isstring(agentid)) {
-      continue
-    }
-    if (
-      agentid === messageplayer ||
-      playerdisplayname(agentid) === sendername
-    ) {
-      continue
-    }
-    agentelements.push(el)
-  }
-  const nearest = memorypickboardnearestpt(senderpt, agentelements)
-  const nearestid = nearest?.id
-  if (!ispresent(nearest) || !isstring(nearestid)) {
-    return undefined
-  }
-  return { id: nearestid, name: playerdisplayname(nearestid) }
-}
-
-function routechattoagents(
+function routechattoagent(
   vm: DEVICE,
-  message: MESSAGE,
   eventname: string,
   content: TEXT_READER,
 ): void {
@@ -115,7 +48,6 @@ function routechattoagents(
     return
   }
 
-  const sendername = chatline.slice(0, colonidx)
   const prompt = chatline.slice(colonidx + 1)
 
   const board = memoryreadboardbyaddress(boardid)
@@ -123,60 +55,17 @@ function routechattoagents(
     return
   }
 
-  const nearestref = boardnearestagentref(
-    board,
-    boardid,
-    message.player,
-    sendername,
-  )
-  const nearestrefid = nearestref?.id ?? ''
-  const nearestrefname = nearestref?.name ?? ''
-
-  const defaulttime = new Date('2000-01-01').getTime()
-  const allagents = boardagentelements(board, boardid)
-  for (let i = 0; i < allagents.length; ++i) {
-    const agent = allagents[i]
-    const agentid = agent.id
-    if (!isstring(agentid)) {
-      continue
-    }
-
-    const agentname = playerdisplayname(agentid)
-    if (agentid === message.player || sendername === agentname) {
-      continue
-    }
-
-    const withlastinputtime = lastinputtime[agentid] ?? defaulttime
-    const withpromptlogging = memoryreadconfig('promptlogging')
-
-    heavymodelprompt(vm, message.player, {
-      prompt,
-      agentid,
-      agentname,
-      nearestrefid,
-      nearestrefname,
-      lastinputtime: withlastinputtime,
-      promptlogging: withpromptlogging,
-    })
+  const operator = memoryreadoperator()
+  const operatorboard = memoryreadplayerboard(operator)
+  if (!ispresent(operatorboard) || operatorboard.id !== boardid) {
+    return
   }
-}
 
-function e2eloaderstrings(
-  eventname: unknown,
-  format: unknown,
-): { eventname: string; format: string } {
-  return {
-    eventname: isstring(eventname)
-      ? eventname
-      : typeof eventname === 'number' || typeof eventname === 'boolean'
-        ? String(eventname)
-        : '',
-    format: isstring(format)
-      ? format
-      : typeof format === 'number' || typeof format === 'boolean'
-        ? String(format)
-        : '',
-  }
+  const withpromptlogging = memoryreadconfig('promptlogging')
+  heavymodelprompt(vm, operator, {
+    prompt,
+    promptlogging: withpromptlogging,
+  })
 }
 
 export function handleloader(vm: DEVICE, message: MESSAGE): void {
@@ -184,12 +73,6 @@ export function handleloader(vm: DEVICE, message: MESSAGE): void {
     return
   }
   const [arg, format, eventname, content] = message.data
-  const ef = e2eloaderstrings(eventname, format)
-  apie2eloadernotify(vm, message.player, {
-    phase: 'start',
-    eventname: ef.eventname,
-    format: ef.format,
-  })
   if (memoryreadconfig('loaderlogging') === 'on') {
     apilog(vm, message.player, `loader event ${eventname} ${format}`)
   }
@@ -232,17 +115,11 @@ export function handleloader(vm: DEVICE, message: MESSAGE): void {
       break
   }
 
-  apie2eloadernotify(vm, message.player, {
-    phase: 'done',
-    eventname: ef.eventname,
-    format: ef.format,
-  })
-
   if (
     isstring(eventname) &&
     eventname.startsWith('chat:message:') &&
     format === 'text'
   ) {
-    routechattoagents(vm, message, eventname, content as TEXT_READER)
+    routechattoagent(vm, eventname, content as TEXT_READER)
   }
 }

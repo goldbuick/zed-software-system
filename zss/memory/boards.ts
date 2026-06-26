@@ -280,8 +280,14 @@ export function memoryinitboard(board: MAYBE<BOARD>) {
   if (!ispresent(board)) {
     return
   }
-  for (let i = 0; i < board.terrain.length; ++i) {
-    memoryreadelementkind(board.terrain[i])
+  if (ispresent(board.terrain)) {
+    for (let i = 0; i < board.terrain.length; ++i) {
+      memoryreadelementkind(board.terrain[i])
+    }
+  }
+  if (!ispresent(board.objects)) {
+    memoryresetboardlookups(board)
+    return
   }
   const oids = Object.keys(board.objects)
   for (let i = 0; i < oids.length; ++i) {

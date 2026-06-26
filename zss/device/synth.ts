@@ -1,22 +1,22 @@
 import { createdevice } from 'zss/device'
+import { createsynthbackend } from 'zss/feature/synth/backend/synthbackendfactory'
+import { unlockaudiocontext } from 'zss/feature/synth/backend/wasm/audiocontextunlock'
+import { applyboardstate } from 'zss/feature/synth/frontend/applyboardstate'
 import {
   type FXNAME,
   type SynthBackend,
-  applyboardstate,
-  createsynthbackend,
-} from 'zss/feature/synth'
-import { unlockaudiocontext } from 'zss/feature/synth/backend/wasm'
+} from 'zss/feature/synth/frontend/synthbackend'
 import { synthdebugtrace } from 'zss/feature/synth/synthdebugtrace'
 import {
-  selectttsengine,
+  applyttsengineconfig,
   ttsclearqueue,
   ttsinfo,
   ttsplay,
   ttsqueue,
 } from 'zss/feature/tts'
 import { write } from 'zss/feature/writeui'
-import { useGadgetClient } from 'zss/gadget/data/state'
 import { SYNTH_STATE } from 'zss/gadget/data/types'
+import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
 import {
@@ -34,7 +34,7 @@ import {
   vmloader,
   workstatus,
 } from './api'
-import { registerreadplayer } from './register'
+import { registerreadplayer } from './registerplayer'
 
 type CustomNavigator = {
   audioSession?: {
@@ -258,8 +258,23 @@ const synthdevice = createdevice('synth', [], (message) => {
       break
     case 'ttsengine':
       if (isarray(message.data)) {
-        const [, engine, apikey] = message.data as [string, any, string]
-        selectttsengine(engine, apikey)
+        const [, engine, apikey, model] = message.data as [
+          string,
+          any,
+          string,
+          string,
+        ]
+        doasync(synthdevice, message.player, async () => {
+          const lines = await applyttsengineconfig(
+            message.player,
+            engine,
+            apikey ?? '',
+            model,
+          )
+          for (let i = 0; i < lines.length; i++) {
+            write(synthdevice, message.player, `$WHITE${lines[i]}`)
+          }
+        })
       }
       break
     case 'ttsclearqueue':

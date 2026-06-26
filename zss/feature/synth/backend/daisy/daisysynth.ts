@@ -96,8 +96,6 @@ export function initdaisyvoicesab(maxi: SabEngine) {
   initwasmalgoconfigsab(maxi)
 }
 
-export { initwasmfxsab } from 'zss/feature/synth/backend/wasm/wasmfxstate'
-
 function drumdurationfor(drumid: number, notationdur: number): number {
   if (drumid === 0) {
     return tonenotationseconds('16n')
@@ -441,6 +439,7 @@ export function createdaisysynth(
   }
 
   function addplay(buffer: string) {
+    synthdebugtrace('C6 addplay', { buffer })
     const invokes = parseplay(buffer)
     const now = maxi.audioContext.currentTime
     if (pacertime === -1) {

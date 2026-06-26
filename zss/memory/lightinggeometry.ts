@@ -1,4 +1,3 @@
-import { radToDeg } from 'maath/misc'
 import { CHAR_HEIGHT, CHAR_WIDTH } from 'zss/gadget/data/types'
 import { PT } from 'zss/words/types'
 
@@ -75,7 +74,7 @@ export function lightingmixmaxrange(
     Math.atan2(dy + occh + margin, dx + occw + margin),
   ]
 
-  const degs = angles.map((v) => radToDeg(v))
+  const degs = angles.map((v) => (v * 180) / Math.PI)
   const minfloat = Math.min(...degs)
   const maxfloat = Math.max(...degs)
   const spandeg = maxfloat - minfloat

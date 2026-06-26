@@ -1,0 +1,6 @@
+@scroll
+You found a scroll!
+#send self:again
+:again
+It always starts from the top when touched.
+#end

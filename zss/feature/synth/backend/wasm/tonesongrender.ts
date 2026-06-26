@@ -1,3 +1,4 @@
+import { rendertonelevelscenario } from 'ops/lib/daisy-parity/toneparityrender'
 import {
   type SONG_RENDER_PAYLOAD,
   type SONG_RENDER_RESULT,
@@ -11,7 +12,6 @@ import {
   analyzelevelstability,
   formatlevelstabilityline,
 } from './levelstabilitymetrics.ts'
-import { rendertonelevelscenario } from './toneparityrender.ts'
 
 function monobuffer(buffer: AudioBuffer): Float32Array {
   if (buffer.numberOfChannels === 1) {

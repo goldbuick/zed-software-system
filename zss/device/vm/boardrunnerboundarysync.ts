@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import { boardrunnerpatch } from 'zss/device/api'
+import { boardrunnerpatch } from 'zss/device/patchapi'
 import { boardrunneraccessfor } from 'zss/device/vm/boardrunnermanagement'
 import type { JSON_PIPE_HANDLE, Operation } from 'zss/feature/jsonpipe/observe'
 import { createjsonpipe } from 'zss/feature/jsonpipe/observe'

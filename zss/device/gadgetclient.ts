@@ -1,18 +1,18 @@
 import { createdevice } from 'zss/device'
 import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
 import { decodepatchwire } from 'zss/feature/jsonpipe/wire'
+import type { GADGET_STATE } from 'zss/gadget/data/types'
 import {
   applylayercacheupdate,
   emptygadgetstate,
   ismaybeblankgadgetstate,
   useGadgetClient,
-} from 'zss/gadget/data/state'
-import type { GADGET_STATE } from 'zss/gadget/data/types'
+} from 'zss/gadget/data/zustandstores'
 import { setcrtcurveamp } from 'zss/gadget/fx/crtanim'
 import { setglitchpulse } from 'zss/gadget/fx/glitchpulse'
 import { deepcopy, ispresent } from 'zss/mapping/types'
 
-import { registerreadplayer } from './register'
+import { registerreadplayer } from './registerplayer'
 
 let fallback = emptygadgetstate()
 const gadgetjsonpipe = createjsonpipe<GADGET_STATE>(

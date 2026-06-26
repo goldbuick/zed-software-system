@@ -12,6 +12,18 @@
       "ops/fixtures/*": [
         "./ops/fixtures/*"
       ],
+      "ops/lib/*": [
+        "./ops/lib/*"
+      ],
+      "ops/archive/*": [
+        "./ops/archive/*"
+      ],
+      "ops/lib/test/*": [
+        "./ops/lib/test/*"
+      ],
+      "ops/lib/daisy-parity/*": [
+        "./ops/lib/daisy-parity/*"
+      ],
       "tasks/*": [
         "./tasks/*"
       ]
@@ -43,11 +55,12 @@
     "zss",
     "cafe",
     "headless",
-    "ops/fixtures"
+    "ops/fixtures",
+    "ops/lib",
+    "ops/lib/test",
+    "ops/archive"
   ],
-  "exclude": [
-    "zss/feature/synth/archive"
-  ],
+  "exclude": [],
   "references": [
     {
       "path": "./tsconfig.node.json"

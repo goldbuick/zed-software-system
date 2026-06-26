@@ -3,37 +3,42 @@ import type { MESSAGE } from 'zss/device/api'
 import {
   apierror,
   heavymodelstop,
-  registeragentdootoff,
-  registeragentdooton,
   registerstore,
   vmpilotclear,
   workstatus,
 } from 'zss/device/api'
-import { createagent } from 'zss/feature/heavy/agent'
 import {
   type AGENTS_ROSTER,
   AGENTS_ROSTER_STORAGE_KEY,
   MAX_ON_DEMAND_AGENTS,
-  isvalidagentsroster,
+  migrateroster,
 } from 'zss/feature/heavy/agentsroster'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import { write } from 'zss/feature/writeui'
 import { zssheaderlines } from 'zss/feature/zsstextui'
 import { createshortnameid } from 'zss/mapping/guid'
-import { isarray, ispresent, isstring } from 'zss/mapping/types'
+import { ispresent, isstring } from 'zss/mapping/types'
 
-import type { AGENT } from './agent'
+type AGENT_SESSION = {
+  name: string
+}
 
-const agents: Record<string, AGENT> = {}
-const agentnames: Record<string, string> = {}
+const sessions: Record<string, AGENT_SESSION> = {}
 
-function buildroster(): AGENTS_ROSTER {
-  const ids = Object.keys(agents)
-  return { ids, names: { ...agentnames } }
+function buildroster(requestplayer: string): AGENTS_ROSTER | undefined {
+  const session = sessions[requestplayer]
+  if (!ispresent(session)) {
+    return undefined
+  }
+  return { name: session.name }
 }
 
 function persistrostertostorage(heavydev: DEVICE, requestplayer: string) {
-  const roster = buildroster()
+  const roster = buildroster(requestplayer)
+  if (!ispresent(roster)) {
+    registerstore(heavydev, requestplayer, AGENTS_ROSTER_STORAGE_KEY, null)
+    return
+  }
   registerstore(heavydev, requestplayer, AGENTS_ROSTER_STORAGE_KEY, roster)
 }
 
@@ -42,30 +47,42 @@ function writeagentlistto(heavydev: DEVICE, requestplayer: string) {
     write(heavydev, requestplayer, line)
   }
   const lines: string[] = []
-  const ids = Object.keys(agents)
-  if (ids.length === 0) {
+  const session = sessions[requestplayer]
+  if (!ispresent(session)) {
     lines.push('no agents running')
   } else {
-    for (let i = 0; i < ids.length; ++i) {
-      const id = ids[i]
-      const name = readagentdisplayname(id)
-      lines.push(`!copyit ${id};${name} (${id})`)
-    }
+    lines.push(`!copyit ${requestplayer};${session.name} (running)`)
   }
   terminalwritelines(heavydev, requestplayer, lines.join('\n'))
 }
 
-function readagentdisplayname(agentid: string): string {
-  const n = agentnames[agentid]
-  return isstring(n) ? n : agentid
+function runningagentcount(): number {
+  return Object.keys(sessions).length
 }
 
-function runningagentcount(): number {
-  return Object.keys(agents).length
+export function hasagentsession(requestplayer: string): boolean {
+  return ispresent(sessions[requestplayer])
+}
+
+export function readagentdisplayname(
+  requestplayer: string,
+): string | undefined {
+  return sessions[requestplayer]?.name
+}
+
+/** Clears in-memory sessions (unit tests only). */
+export function resetagentsessionsfortest(): void {
+  for (const key of Object.keys(sessions)) {
+    delete sessions[key]
+  }
 }
 
 export function heavyrunagentstart(heavydev: DEVICE, message: MESSAGE): void {
   const requestplayer = message.player
+  if (hasagentsession(requestplayer)) {
+    apierror(heavydev, requestplayer, 'agent', 'agent already running')
+    return
+  }
   if (runningagentcount() >= MAX_ON_DEMAND_AGENTS) {
     apierror(
       heavydev,
@@ -76,43 +93,35 @@ export function heavyrunagentstart(heavydev: DEVICE, message: MESSAGE): void {
     return
   }
   const agentname = isstring(message.data) ? message.data : createshortnameid()
-  const agent = createagent(agentname)
-  const id = agent.id()
-  agents[id] = agent
-  agentnames[id] = agentname
-  registeragentdooton(heavydev, requestplayer, id)
+  sessions[requestplayer] = { name: agentname }
   persistrostertostorage(heavydev, requestplayer)
   writeagentlistto(heavydev, requestplayer)
+  workstatus(heavydev, requestplayer, `agent start ${agentname}`)
 }
 
 export function heavyrunagentstop(heavydev: DEVICE, message: MESSAGE): void {
-  if (!isstring(message.data)) {
-    return
-  }
-  const agentid = message.data
   const requestplayer = message.player
-  if (!stopagentbyid(heavydev, agentid, requestplayer)) {
-    apierror(heavydev, requestplayer, 'heavy', `agent ${agentid} not found`)
+  const stopid = isstring(message.data) ? message.data : requestplayer
+  if (!stopsession(heavydev, stopid, requestplayer)) {
+    apierror(heavydev, requestplayer, 'heavy', 'agent not running')
   }
 }
 
-function stopagentbyid(
+function stopsession(
   heavydev: DEVICE,
-  agentid: string,
+  stopid: string,
   requestplayer: string,
 ): boolean {
-  const agent = agents[agentid]
-  if (!ispresent(agent)) {
+  const player =
+    stopid === requestplayer || hasagentsession(stopid) ? stopid : requestplayer
+  if (!hasagentsession(player)) {
     return false
   }
-  registeragentdootoff(heavydev, requestplayer, agentid)
-  vmpilotclear(heavydev, requestplayer, agentid)
-  heavymodelstop(heavydev, requestplayer, agentid)
-  agent.stop()
-  delete agents[agentid]
-  delete agentnames[agentid]
+  vmpilotclear(heavydev, requestplayer, player)
+  heavymodelstop(heavydev, requestplayer, player)
+  delete sessions[player]
   persistrostertostorage(heavydev, requestplayer)
-  workstatus(heavydev, requestplayer, `agent stop ${agentid}`)
+  workstatus(heavydev, requestplayer, 'agent stop')
   writeagentlistto(heavydev, requestplayer)
   return true
 }
@@ -121,81 +130,22 @@ export function heavyrunagentlist(heavydev: DEVICE, message: MESSAGE): void {
   writeagentlistto(heavydev, message.player)
 }
 
-export function heavyrunagentname(heavydev: DEVICE, message: MESSAGE): void {
-  if (!isarray(message.data)) {
-    return
-  }
-  const [agentid, newname] = message.data as [string, string]
-  if (!isstring(agentid) || !isstring(newname)) {
-    return
-  }
-  if (!ispresent(agents[agentid])) {
-    apierror(heavydev, message.player, 'heavy', `agent ${agentid} not found`)
-    return
-  }
-  agentnames[agentid] = newname
-  persistrostertostorage(heavydev, message.player)
-  workstatus(heavydev, message.player, `rename ${newname}`)
-}
-
-/** `#set user` from firmware: update heavy roster only when `agentid` is a running agent. */
-export function heavyrunsyncuserdisplay(
-  heavydev: DEVICE,
-  message: MESSAGE,
-): void {
-  if (!isarray(message.data)) {
-    return
-  }
-  const [agentid, newname] = message.data as [string, string]
-  if (!isstring(agentid) || !isstring(newname)) {
-    return
-  }
-  if (!ispresent(agents[agentid])) {
-    return
-  }
-  agentnames[agentid] = newname
-  persistrostertostorage(heavydev, message.player)
-}
-
 export function heavyrunrestoreagents(
   heavydev: DEVICE,
   message: MESSAGE,
 ): void {
-  const roster = message.data
-  if (!isvalidagentsroster(roster)) {
+  const roster = migrateroster(message.data)
+  if (!ispresent(roster)) {
     return
   }
   if (runningagentcount() >= MAX_ON_DEMAND_AGENTS) {
     return
   }
   const requestplayer = message.player
-  const hadextras = roster.ids.length > MAX_ON_DEMAND_AGENTS
-  const restoreids = roster.ids.slice(0, MAX_ON_DEMAND_AGENTS)
-  let count = 0
-  for (let i = 0; i < restoreids.length; ++i) {
-    const id = restoreids[i]
-    if (agents[id]) {
-      continue
-    }
-    const name = isstring(roster.names[id]) ? roster.names[id] : id
-    const agent = createagent(name, id)
-    agents[id] = agent
-    agentnames[id] = name
-    registeragentdooton(heavydev, requestplayer, id)
-    count += 1
+  if (hasagentsession(requestplayer)) {
+    return
   }
-  if (count > 0 || hadextras) {
-    persistrostertostorage(heavydev, requestplayer)
-  }
-  if (count > 0) {
-    if (hadextras) {
-      workstatus(
-        heavydev,
-        requestplayer,
-        'agent restore 1 (open another tab for more)',
-      )
-    } else {
-      workstatus(heavydev, requestplayer, `agent start ${count}`)
-    }
-  }
+  sessions[requestplayer] = { name: roster.name }
+  persistrostertostorage(heavydev, requestplayer)
+  workstatus(heavydev, requestplayer, `agent start ${roster.name}`)
 }

@@ -3,40 +3,25 @@ what is api? a set of common helper functions to send messages to devices
 without having to include device code
 */
 import type { BRIDGE_CHAT_START_OBJECT } from 'zss/device/bridge/chattypes'
+import type {
+  DEVICELIKE as DEVICELIKE_TYPE,
+  MESSAGE as MESSAGE_TYPE,
+} from 'zss/device/messagetypes'
+import { ismessage as ismessage_fn } from 'zss/device/messagetypes'
 import type { AGENTS_ROSTER } from 'zss/feature/heavy/agentsroster'
 import type { HEAVY_LLM_PRESET } from 'zss/feature/heavy/heavyllmpreset'
-import type { Operation } from 'zss/feature/jsonpipe/observe'
-import { encodepatchwire } from 'zss/feature/jsonpipe/wire'
-import { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
-import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
-import { BOOK } from 'zss/memory/types'
-import { PT } from 'zss/words/types'
+import type { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
+import { MAYBE, ispresent } from 'zss/mapping/types'
+import type { BOOK } from 'zss/memory/types'
+import type { PT } from 'zss/words/types'
 
 // be careful to keep imports here minimal
 
-export type DEVICELIKE = {
-  emit: (player: string, target: string, data?: any) => void
-}
+export type DEVICELIKE = DEVICELIKE_TYPE
 
-export type MESSAGE = {
-  session: string
-  player: string
-  id: string
-  sender: string
-  target: string
-  data?: any
-}
+export type MESSAGE = MESSAGE_TYPE
 
-export function ismessage(value: any): value is MESSAGE {
-  return (
-    typeof value === 'object' &&
-    isstring(value.session) &&
-    isstring(value.player) &&
-    isstring(value.id) &&
-    isstring(value.sender) &&
-    isstring(value.target)
-  )
-}
+export const ismessage = ismessage_fn
 
 export function sessionreset(device: DEVICELIKE) {
   device.emit('', 'sessionreset')
@@ -55,20 +40,6 @@ export function apierror(
 export function apilog(device: DEVICELIKE, player: string, ...message: any[]) {
   device.emit(player, 'log', message)
   return true
-}
-
-export type E2E_LOADER_NOTIFY = {
-  phase: 'start' | 'done'
-  eventname: string
-  format: string
-}
-
-export function apie2eloadernotify(
-  device: DEVICELIKE,
-  player: string,
-  detail: E2E_LOADER_NOTIFY,
-) {
-  device.emit(player, 'register:e2eloaderevent', detail)
 }
 
 export function apichat(device: DEVICELIKE, board: string, ...message: any[]) {
@@ -159,21 +130,12 @@ export function boardrunnerpaint(
   device.emit(player, 'boardrunner:paint', [doc, boundary])
 }
 
-export function boardrunnerpatch(
-  device: DEVICELIKE,
-  player: string,
-  patch: Operation[],
-  boundary?: string,
-) {
-  device.emit(player, 'boardrunner:patch', [encodepatchwire(patch), boundary])
-}
-
 export function bridgestreamstart(
   device: DEVICELIKE,
   player: string,
-  streamkey: string,
+  payload: string | Record<string, unknown>,
 ) {
-  device.emit(player, 'bridge:streamstart', streamkey)
+  device.emit(player, 'bridge:streamstart', payload)
 }
 
 export function bridgestreamstop(device: DEVICELIKE, player: string) {
@@ -248,14 +210,6 @@ export function gadgetclientpaint(
   device.emit(player, 'gadgetclient:paint', json)
 }
 
-export function gadgetclientpatch(
-  device: DEVICELIKE,
-  player: string,
-  patch: Operation[],
-) {
-  device.emit(player, 'gadgetclient:patch', encodepatchwire(patch))
-}
-
 export function vmgadgetdesync(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:gadgetdesync')
 }
@@ -263,55 +217,37 @@ export function vmgadgetdesync(device: DEVICELIKE, player: string) {
 export function ttsinfo(
   device: DEVICELIKE,
   player: string,
-  engine: 'piper' | 'supertonic',
+  engine: 'piper' | 'supertonic' | 'fish',
   info: string,
+  config = '',
+  model = '',
 ) {
-  device.emit(player, 'tts:info', [engine, info])
+  device.emit(player, 'tts:info', [engine, info, config, model])
 }
 
 export function ttsrequest(
   device: DEVICELIKE,
   player: string,
-  engine: 'piper' | 'supertonic',
+  engine: 'piper' | 'supertonic' | 'fish',
   config: string,
   voice: string | number,
   phrase: string,
+  model = '',
 ) {
-  device.emit(player, 'tts:request', [engine, config, voice, phrase])
+  device.emit(player, 'tts:request', [engine, config, voice, phrase, model])
 }
 
 type MODEL_PROMPT_ARGS = {
   prompt: string
-  agentid: string
-  agentname: string
-  lastinputtime: number
-  nearestrefid: string
-  nearestrefname: string
-  promptlogging: string
+  promptlogging?: string
 }
 
 export function heavymodelprompt(
   device: DEVICELIKE,
   player: string,
-  {
-    prompt,
-    agentid,
-    agentname,
-    lastinputtime,
-    nearestrefid,
-    nearestrefname,
-    promptlogging,
-  }: MODEL_PROMPT_ARGS,
+  { prompt, promptlogging }: MODEL_PROMPT_ARGS,
 ) {
-  device.emit(player, 'heavy:modelprompt', [
-    prompt,
-    agentid,
-    agentname,
-    lastinputtime,
-    nearestrefid,
-    nearestrefname,
-    promptlogging,
-  ])
+  device.emit(player, 'heavy:modelprompt', [prompt, promptlogging ?? ''])
 }
 
 export function heavymodelstop(
@@ -333,15 +269,6 @@ export function vmboardrunneraccess(
   accessboard: string,
 ) {
   device.emit(player, 'vm:boardrunneraccess', [currentboard, accessboard])
-}
-
-export function vmboardrunnerpatch(
-  device: DEVICELIKE,
-  player: string,
-  patch: Operation[],
-  boundary?: string,
-) {
-  device.emit(player, 'vm:boardrunnerpatch', [encodepatchwire(patch), boundary])
 }
 
 /** Full boundary document from runner → sim (boundary id required). */
@@ -388,19 +315,10 @@ export function heavyagentstart(
   device.emit(player, 'heavy:agentstart', agentname)
 }
 
-export function heavyagentsyncuserdisplay(
-  device: DEVICELIKE,
-  player: string,
-  agentid: string,
-  displayname: string,
-) {
-  device.emit(player, 'heavy:syncuserdisplay', [agentid, displayname])
-}
-
 export function heavyagentstop(
   device: DEVICELIKE,
   player: string,
-  agentid: string,
+  agentid?: string,
 ) {
   device.emit(player, 'heavy:agentstop', agentid)
 }
@@ -413,28 +331,40 @@ export function wanixshow(device: DEVICELIKE, player: string) {
   device.emit(player, 'wanix:show')
 }
 
-export function wanixstop(device: DEVICELIKE, player: string) {
-  device.emit(player, 'wanix:stop')
+export function wanixvmstart(
+  device: DEVICELIKE,
+  player: string,
+  vmid?: string,
+) {
+  device.emit(player, 'wanix:vm-start', vmid)
 }
 
-export function wanixreplace(device: DEVICELIKE, player: string) {
-  device.emit(player, 'wanix:replace')
+export function wanixvmstop(device: DEVICELIKE, player: string, vmid?: string) {
+  device.emit(player, 'wanix:vm-stop', vmid)
 }
 
-export function wanixkeep(device: DEVICELIKE, player: string) {
-  device.emit(player, 'wanix:keep')
+export function wanixstop(device: DEVICELIKE, player: string, taskid?: string) {
+  device.emit(player, 'wanix:stop', taskid)
 }
 
-export function wanixstdin(device: DEVICELIKE, player: string, line: string) {
-  device.emit(player, 'wanix:stdin', line)
+export function wanixtermwrite(
+  device: DEVICELIKE,
+  player: string,
+  line: string,
+) {
+  device.emit(player, 'wanix:term-write', line)
 }
 
 export function wanixdetach(device: DEVICELIKE, player: string) {
   device.emit(player, 'wanix:detach')
 }
 
-export function wanixattach(device: DEVICELIKE, player: string) {
-  device.emit(player, 'wanix:attach')
+export function wanixattach(
+  device: DEVICELIKE,
+  player: string,
+  taskid?: string,
+) {
+  device.emit(player, 'wanix:attach', taskid)
 }
 
 export function wanixdrop(
@@ -445,6 +375,27 @@ export function wanixdrop(
   bytes: Uint8Array,
 ) {
   device.emit(player, 'wanix:drop', { label, kind, bytes })
+}
+
+export type WANIX_ZED_CAFE_EXPORT_FILE = {
+  path: string
+  bytes: Uint8Array
+}
+
+export type WANIX_ZED_CAFE_EXPORT_PAYLOAD = {
+  files: WANIX_ZED_CAFE_EXPORT_FILE[]
+}
+
+export function wanixexportstate(
+  device: DEVICELIKE,
+  player: string,
+  payload: WANIX_ZED_CAFE_EXPORT_PAYLOAD,
+) {
+  device.emit(player, 'wanix:export-state', payload)
+}
+
+export function wanixrequestzedcafeexport(device: DEVICELIKE, player: string) {
+  device.emit(player, 'vm:export-zed-cafe')
 }
 
 export function heavyrestoreagents(
@@ -463,22 +414,6 @@ export function heavyllmpreset(
 ) {
   const wantstoast = options?.toast !== false
   device.emit(player, 'heavy:llmpreset', wantstoast ? preset : [preset, false])
-}
-
-export function registeragentdooton(
-  device: DEVICELIKE,
-  player: string,
-  agentid: string,
-) {
-  device.emit(player, 'register:agentdooton', agentid)
-}
-
-export function registeragentdootoff(
-  device: DEVICELIKE,
-  player: string,
-  agentid: string,
-) {
-  device.emit(player, 'register:agentdootoff', agentid)
 }
 
 export function platformready(device: DEVICELIKE) {
@@ -637,8 +572,9 @@ export function synthttsengine(
   board: string,
   engine: string,
   config: string,
+  model?: string,
 ) {
-  device.emit(player, 'synth:ttsengine', [board, engine, config])
+  device.emit(player, 'synth:ttsengine', [board, engine, config, model ?? ''])
 }
 
 export function synthtts(

@@ -5,15 +5,16 @@
  *   yarn level-issue-song:render:tone
  *
  * Outputs:
- *   cafe/public/renders/level-issue-song-tone.wav
- *   cafe/public/renders/level-issue-song-tone.json
- *   cafe/public/renders/level-issue-song-tone.txt
+ *   ops/fixtures/renders/level-issue-song-tone.wav
+ *   ops/fixtures/renders/level-issue-song-tone.json
+ *   ops/fixtures/renders/level-issue-song-tone.txt
  */
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { chromium } from '@playwright/test'
+import { RENDERS_FIXTURES_DIR } from 'ops/lib/fixturepaths'
 import {
   startparityvite,
   stopparityvite,
@@ -28,7 +29,7 @@ import {
 const ROOT = process.cwd()
 const PROJECT = process.cwd()
 const PORT = 9881
-const OUTDIR = path.join(PROJECT, 'cafe/public/renders')
+const OUTDIR = RENDERS_FIXTURES_DIR
 
 async function main() {
   fs.mkdirSync(OUTDIR, { recursive: true })

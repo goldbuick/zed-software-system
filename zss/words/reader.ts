@@ -80,6 +80,14 @@ function didexpect(msg: string, value: any, words: WORD[]) {
   )
 }
 
+/** Coerce only pure digit tokens; keep hex ids and mixed alnum as strings. */
+function coercenumberorstringtoken(value: string): number | string {
+  if (/^\d+$/.test(value)) {
+    return parseInt(value, 10)
+  }
+  return value
+}
+
 function readdestfromdir(dir: STR_DIR) {
   const startpt: PT = {
     x: READ_CONTEXT.element?.x ?? 0,
@@ -210,11 +218,7 @@ export function readargs<T extends ARG_TYPES>(
         const [value, iii] = readexpr(ii)
         let maybevalue = value
         if (isstring(maybevalue)) {
-          // can we convert to number ?
-          const maybernumber = parseFloat(maybevalue)
-          if (isnumber(maybernumber)) {
-            maybevalue = maybernumber
-          }
+          maybevalue = coercenumberorstringtoken(maybevalue)
         } else if (!isnumber(maybevalue)) {
           didexpect('number or string', maybevalue, words)
         }
@@ -304,11 +308,7 @@ export function readargs<T extends ARG_TYPES>(
         const [value, iii] = readexpr(ii)
         let maybevalue = value
         if (isstring(maybevalue)) {
-          // can we convert to number ?
-          const maybernumber = parseFloat(maybevalue)
-          if (isnumber(maybernumber)) {
-            maybevalue = maybernumber
-          }
+          maybevalue = coercenumberorstringtoken(maybevalue)
         } else if (maybevalue !== undefined && !isnumber(maybevalue)) {
           didexpect('number or string', maybevalue, words)
         }

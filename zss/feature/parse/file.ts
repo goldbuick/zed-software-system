@@ -9,7 +9,10 @@ import {
   workstatus,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { iswanixbundlefile, iswanixwasmfile } from 'zss/feature/wanix/wanixdrop'
+import {
+  iswanixbundlefile,
+  iswanixwasmfile,
+} from 'zss/feature/wanix/wanixfilematch'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 

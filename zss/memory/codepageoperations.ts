@@ -11,7 +11,7 @@ import {
   formatobject,
   unformatobject,
 } from 'zss/feature/format'
-import { stat, tokenize } from 'zss/feature/lang'
+import { stat, tokenize } from 'zss/feature/lang/backend/typescript/lexer'
 import { PALETTE } from 'zss/feature/palette'
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import { FILE_BYTES_PER_COLOR } from 'zss/gadget/data/types'
@@ -361,6 +361,9 @@ export function memoryreadcodepagedata<T extends CODE_PAGE_TYPE>(
     case CODE_PAGE_TYPE.LOADER: {
       return (codepage.code ?? '') as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
+    case CODE_PAGE_TYPE.SCROLL: {
+      return (codepage.code ?? '') as MAYBE<CODE_PAGE_TYPE_MAP[T]>
+    }
     case CODE_PAGE_TYPE.BOARD: {
       const rt = memoryensurecodepageruntime(codepage)
       if (!ispresent(rt.board)) {
@@ -651,6 +654,10 @@ export function memoryreadcodepagestatsfromtext(
           stats.type = CODE_PAGE_TYPE.PALETTE
           stats.name = maybename
           break
+        case STAT_TYPE.SCROLL:
+          stats.type = CODE_PAGE_TYPE.SCROLL
+          stats.name = maybename
+          break
         case STAT_TYPE.CONST: {
           const [maybename, ...maybevalues] = stat.values
           if (isstring(maybename)) {
@@ -737,6 +744,8 @@ export function memorycodepagetypetostring(
       return stattypestring(STAT_TYPE.CHARSET)
     case CODE_PAGE_TYPE.PALETTE:
       return stattypestring(STAT_TYPE.PALETTE)
+    case CODE_PAGE_TYPE.SCROLL:
+      return stattypestring(STAT_TYPE.SCROLL)
   }
 }
 

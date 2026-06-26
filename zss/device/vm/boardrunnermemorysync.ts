@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import { boardrunnerpatch } from 'zss/device/api'
+import { boardrunnerpatch } from 'zss/device/patchapi'
 import { Operation, createjsonpipe } from 'zss/feature/jsonpipe/observe'
 import { ispresent } from 'zss/mapping/types'
 import { memoryrootshouldemitpath } from 'zss/memory/jsonpipefilter'

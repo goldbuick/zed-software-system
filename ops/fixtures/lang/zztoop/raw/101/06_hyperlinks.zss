@@ -1,0 +1,6 @@
+@menu
+:touch
+Make a choice:
+!yes;Accept the quest
+!;No thank you
+#end

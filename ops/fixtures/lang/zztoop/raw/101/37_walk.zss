@@ -1,0 +1,9 @@
+@strider
+:start
+#walk seek
+#walk e
+#walk i
+#end
+:thud
+#walk cw flow
+#end

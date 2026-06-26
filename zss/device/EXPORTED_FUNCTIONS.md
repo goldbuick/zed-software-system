@@ -108,8 +108,9 @@ Core virtual machine operations for managing game state, memory, code execution,
 ### Boardrunner Acks
 - `vmboardrunnerack(device, player)` - Boardrunner ack of a `boardrunner:tick`; refreshes ack budget
 - `vmboardrunneraccess(device, player, boardid)` - Runner (or firmware on worker) asks sim VM to track `boardid` for the elected board until the board codepage runtime is hydrated; tick/boundary sync include extra ids
-- `vmboardrunnerpatch(device, player, patch, boundary?)` - Boardrunner sends a boundary jsonpipe patch back to authoritative memory
 - `vmboardrunnerpaint(device, player, doc, boundary)` - Boardrunner sends a full boundary document to authoritative memory (sim jsonpipe reset for that id)
+
+Patch emit helpers (`vmboardrunnerpatch`, `boardrunnerpatch`, `gadgetclientpatch`) live in [`patchapi.ts`](patchapi.ts).
 
 ### Content & Discovery
 - `vmzztsearch(device, player, field, text)` - Search Museum of ZZT
@@ -247,6 +248,18 @@ Functions for network operations, streaming, and external service integration.
 
 ---
 
+## Patch API
+
+**File:** [`patchapi.ts`](patchapi.ts)
+
+Jsonpipe patch wire encoding for cross-realm sync. Import explicitly when emitting patches — not from `api.ts`.
+
+- `boardrunnerpatch(device, player, patch, boundary?)` - jsonpipe patch of memory or a single boundary slice
+- `gadgetclientpatch(device, player, patch)` - Apply jsonpipe patch to gadget state
+- `vmboardrunnerpatch(device, player, patch, boundary?)` - Boardrunner sends a boundary jsonpipe patch back to authoritative memory
+
+---
+
 ## Gadget Client
 
 **File:** `gadgetclient.ts` (via api.ts)
@@ -255,7 +268,6 @@ Per-player gadget state synchronization. The previous `gadgetserver` device has 
 
 ### Sim → Client
 - `gadgetclientpaint(device, player, json)` - Paint full gadget state (desync)
-- `gadgetclientpatch(device, player, patch)` - Apply jsonpipe (RFC 6902) patch to gadget state
 - `gadgetclientbonk(device, player)` - Emit `gadgetclient:bonk` (CRT curve hit)
 - `gadgetclientzap(device, player)` - Emit `gadgetclient:zap` (glitch pulse hit)
 
@@ -274,7 +286,6 @@ Per-board chip simulation that runs inside the **boardrunner worker**. The sim V
 - `boardrunnerstart(device, player)` - One-shot `boardrunner:start`; worker sets `MEMORY.boardrunner`. Elected board id is `MEMORY.assignedboard` (from `boardrunner:tick`, cleared on `idle`).
 - `boardrunnertick(device, player, board, timestamp, boundaries)` - Drive one tick on the runner for `board` with the listed boundary ids
 - `boardrunnerpaint(device, player, doc, boundary?)` - Full jsonpipe sync of memory (no `boundary`) or a single boundary slice
-- `boardrunnerpatch(device, player, patch, boundary?)` - jsonpipe patch of memory or a single boundary slice
 - `boardrunnerinput(device, player, input, mods)` - Forward keyboard / gamepad input to the runner
 - `boardrunneridle(device, player)` - Tell the previously-assigned runner that it is no longer the runner for that board
 - `boardrunnerthud(device, player, thudplayer)` - Report a failed move back to the runner

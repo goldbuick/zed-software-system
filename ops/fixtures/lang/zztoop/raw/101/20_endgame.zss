@@ -1,0 +1,5 @@
+@trap
+:touch
+#endgame
+#give health 100
+#end

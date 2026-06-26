@@ -1,5 +1,5 @@
 import { useCallback, useContext } from 'react'
-import { UserInput } from 'zss/gadget/userinput'
+import { UserInput } from 'zss/gadget/userinput.bridge'
 import { maptovalue } from 'zss/mapping/value'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 

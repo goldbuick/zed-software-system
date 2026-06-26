@@ -35,7 +35,7 @@ Hanging commands waste time. **Never start a long or risky command without a pla
 
 | Pattern | Risk | Fix |
 |---------|------|-----|
-| `loadscriptsync(...).run()` with hand-rolled stub chip | Sync infinite `while(true)` | Use `createwasmstubchip()` from `zss/feature/lang/backend/wasm/testhelpers/wasmruntestutil.ts` |
+| `loadscriptsync(...).run()` with hand-rolled stub chip | Sync infinite `while(true)` | Use `createwasmstubchip()` from `ops/lib/test/lang/wasmruntestutil.ts` |
 | `getcase: () => 1` without advancing `nextcase` | Stuck on one case forever | Advance `ec` in `nextcase`, or use `createwasmstubchip()` |
 | `sy: () => false` with no loop counter | Never yields | Mirror real chip: yield after `RUNTIME.YIELD_AT_COUNT` polls |
 | `command` returning `1` without yield path | `continue` loops forever | Return `0`, or stub `yield` / `sy` like production |
@@ -59,7 +59,7 @@ while (true) {
 import {
   createwasmstubchip,
   runwasmscriptfortest,
-} from 'zss/feature/lang/backend/wasm/testhelpers/wasmruntestutil'
+} from 'ops/lib/test/lang/wasmruntestutil'
 
 const chip = createwasmstubchip({
   command(...words) { /* ... */ return 0 },
@@ -71,7 +71,7 @@ runwasmscriptfortest(wasmbytes, chip)
 
 - Override budget: `loadscriptsync(bytes, chip, { runbudget: 512 })`
 - Disable in worker: `ZSS_WASM_RUN_BUDGET=0`
-- Regression test: `ops/tests/unit/feature/lang/backend/wasm/__tests__/wasmrunbudget.test.ts`
+- Regression test: `ops/tests/unit/feature/lang/backend/wasm/wasmrunbudget.test.ts`
 
 ## When a command runs too long
 
@@ -83,7 +83,7 @@ runwasmscriptfortest(wasmbytes, chip)
 
 ## Jest exit hygiene
 
-- Global teardown clears modem Awareness: `zss/testing/jestglobalteardown.cjs`
+- Global teardown clears modem Awareness: `ops/tests/setup/globalteardown.cjs`
 - CI uses `forceExit: true` in `ops/jest.config.ts` when `CI=true`
 - Debug stray handles locally: `yarn jest <file> --detectOpenHandles`
 - If tests pass but process won't exit → find `setInterval` / unclosed servers / modem leaks

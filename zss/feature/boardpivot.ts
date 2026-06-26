@@ -567,5 +567,3 @@ export function boardpivot(
 
   return true
 }
-
-export type { PIVOTDISCRETIZATION } from 'zss/feature/boardpivotmath'

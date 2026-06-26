@@ -1,4 +1,3 @@
-import { degToRad } from 'maath/misc'
 import { boardcopy } from 'zss/feature/boardcopy'
 import { boardpivot } from 'zss/feature/boardpivot'
 import {
@@ -271,7 +270,7 @@ export const TRANSFORM_FIRMWARE = createfirmware()
         'didfail',
         boardpivot(
           READ_CONTEXT.board.id,
-          degToRad(degrees),
+          (degrees * Math.PI) / 180,
           filter.pt1,
           filter.pt2,
           READ_CONTEXT.elementid,
