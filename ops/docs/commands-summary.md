@@ -55,7 +55,7 @@ This document lists all `.command('name', ...` invocations organized by firmware
 - `joincode` - Start multiplayer bridge (operator only)
 - `jointab` - Join via tab (operator only)
 - `chat` - Start/stop chat channel (operator only)
-- `broadcast` - Start/stop stream broadcast (operator only)
+- `broadcast` - Stream broadcast menu, stop, or start (operator only)
 - `zns` - ZNS login/publish actions (login, list, publish, delete, restart)
 
 ---

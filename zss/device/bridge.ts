@@ -18,6 +18,7 @@ import {
   parsebroadcaststartpayload,
 } from 'zss/feature/broadcast/webbroadcastclient'
 import type { WebBroadcastClient } from 'zss/feature/broadcast/webbroadcastclient'
+import { setbroadcastactive } from 'zss/feature/broadcast/broadcastactive'
 import {
   netterminalhost,
   netterminaljoin,
@@ -50,6 +51,11 @@ const chatslots = new Map<CHAT_KIND, CHAT_CONNECTOR>()
 let broadcastclient: MAYBE<WebBroadcastClient>
 let broadcastivsconnection = 'idle'
 let broadcastlive = false
+
+function setbroadcastclient(client: MAYBE<WebBroadcastClient>) {
+  broadcastclient = client
+  setbroadcastactive(ispresent(broadcastclient))
+}
 
 async function runnetworkfetch(
   player: string,
@@ -478,7 +484,7 @@ const bridge = createdevice('bridge', [], (message) => {
         } else {
           broadcastivsconnection = 'starting'
           broadcastlive = false
-          broadcastclient = createwebbroadcastclient()
+          setbroadcastclient(createwebbroadcastclient())
           setIvsBroadcastClient(broadcastclient)
 
           broadcastclient.on('activestatechange', function (activestate) {
@@ -495,7 +501,7 @@ const bridge = createdevice('bridge', [], (message) => {
             broadcastlive = false
             apierror(bridge, message.player, 'bridge', String(error))
             broadcastclient?.delete()
-            broadcastclient = undefined
+            setbroadcastclient(undefined)
             clearIvsBroadcastClient()
           })
 
@@ -509,8 +515,8 @@ const bridge = createdevice('bridge', [], (message) => {
               'video',
               'unabled to find canvas element',
             )
-            broadcastclient.delete()
-            broadcastclient = undefined
+            broadcastclient?.delete()
+            setbroadcastclient(undefined)
             broadcastivsconnection = 'idle'
             broadcastlive = false
             clearIvsBroadcastClient()
@@ -527,8 +533,8 @@ const bridge = createdevice('bridge', [], (message) => {
               'video',
               'unable create media audio node destination',
             )
-            broadcastclient.delete()
-            broadcastclient = undefined
+            broadcastclient?.delete()
+            setbroadcastclient(undefined)
             broadcastivsconnection = 'idle'
             broadcastlive = false
             clearIvsBroadcastClient()
@@ -561,8 +567,8 @@ const bridge = createdevice('bridge', [], (message) => {
               'bridge',
               error instanceof Error ? error.message : String(error),
             )
-            broadcastclient.delete()
-            broadcastclient = undefined
+            broadcastclient?.delete()
+            setbroadcastclient(undefined)
             clearIvsBroadcastClient()
           }
         }
@@ -572,7 +578,7 @@ const bridge = createdevice('bridge', [], (message) => {
       if (ispresent(broadcastclient)) {
         broadcastclient.stop()
         broadcastclient.delete()
-        broadcastclient = undefined
+        setbroadcastclient(undefined)
         broadcastivsconnection = 'idle'
         broadcastlive = false
         clearIvsBroadcastClient()

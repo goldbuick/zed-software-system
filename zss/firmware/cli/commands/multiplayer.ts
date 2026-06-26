@@ -16,6 +16,7 @@ import {
   listwhipendpointaliases,
   resolvewhipendpoint,
 } from 'zss/feature/broadcast/webbroadcastwhipaliases'
+import { showbroadcastmenu } from 'zss/feature/broadcastmenu'
 import {
   bridgedeleteprofile,
   bridgereadallprofiles,
@@ -90,7 +91,7 @@ export function registermultiplayercommands(fw: FIRMWARE): FIRMWARE {
           return 0
         }
         const head = NAME(w[0])
-        if (head === 'PROFILE') {
+        if (head === 'profile') {
           const sub = NAME(w[1] ?? '')
           const listprofiles = () => {
             doasync(SOFTWARE, player, async () => {
@@ -103,11 +104,11 @@ export function registermultiplayercommands(fw: FIRMWARE): FIRMWARE {
               apilog(SOFTWARE, player, `bridge profiles: ${names.join(', ')}`)
             })
           }
-          if (sub === 'LIST' || !w[1]?.trim()) {
+          if (sub === 'list' || !w[1]?.trim()) {
             listprofiles()
             return 0
           }
-          if (sub === 'SHOW') {
+          if (sub === 'show') {
             const name = w[2]?.trim()
             if (!name) {
               apierror(SOFTWARE, player, 'bridge', chatusageprofile())
@@ -134,7 +135,7 @@ export function registermultiplayercommands(fw: FIRMWARE): FIRMWARE {
             })
             return 0
           }
-          if (sub === 'DELETE') {
+          if (sub === 'delete') {
             const name = w[2]?.trim()
             if (!name) {
               apierror(SOFTWARE, player, 'bridge', chatusageprofile())
@@ -150,7 +151,7 @@ export function registermultiplayercommands(fw: FIRMWARE): FIRMWARE {
             })
             return 0
           }
-          if (sub === 'SAVE') {
+          if (sub === 'save') {
             const name = w[2]?.trim()
             const kind = normalizechatkind(w[3] ?? '')
             if (!name || !kind) {
@@ -177,7 +178,7 @@ export function registermultiplayercommands(fw: FIRMWARE): FIRMWARE {
           apierror(SOFTWARE, player, 'bridge', chatusageprofile())
           return 0
         }
-        if (head === 'START') {
+        if (head === 'start') {
           const kind = normalizechatkind(w[1] ?? '')
           if (!kind) {
             apierror(
@@ -200,7 +201,7 @@ export function registermultiplayercommands(fw: FIRMWARE): FIRMWARE {
           })
           return 0
         }
-        if (head === 'STOP') {
+        if (head === 'stop') {
           const kind = normalizechatkind(w[1] ?? '')
           if (!kind) {
             apierror(
@@ -224,7 +225,7 @@ export function registermultiplayercommands(fw: FIRMWARE): FIRMWARE {
       (_, words) => {
         const [sub] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
         const s = sub ? NAME(String(sub)) : ''
-        if (!s || s === 'STATUS') {
+        if (!s || s === 'status') {
           bridgestatus(SOFTWARE, READ_CONTEXT.elementfocus)
         } else {
           apierror(
@@ -239,25 +240,34 @@ export function registermultiplayercommands(fw: FIRMWARE): FIRMWARE {
     )
     .command(
       'broadcast',
-      [ARG_TYPE.MAYBE_NAME, 'stream broadcast (operator only)'],
+      [ARG_TYPE.MAYBE_NAME, 'stream broadcast menu, stop, or start (operator only)'],
       (_, words) => {
         const [first, endpoint, bearer] = readargs(words, 0, [
           ARG_TYPE.MAYBE_NAME,
           ARG_TYPE.MAYBE_NAME,
           ARG_TYPE.MAYBE_NAME,
         ])
-        if (first && NAME(String(first)) === 'WHIP') {
+        const player = READ_CONTEXT.elementfocus
+        if (!first) {
+          showbroadcastmenu(player)
+          return 0
+        }
+        if (NAME(String(first)) === 'stop') {
+          bridgestreamstop(SOFTWARE, player)
+          return 0
+        }
+        if (NAME(String(first)) === 'whip') {
           if (endpoint && bearer) {
             const resolved = resolvewhipendpoint(String(endpoint))
             if (!resolved) {
               apierror(
                 SOFTWARE,
-                READ_CONTEXT.elementfocus,
+                player,
                 'broadcast',
                 `unknown whip endpoint; use a URL or alias: ${listwhipendpointaliases().join(', ')}`,
               )
             } else {
-              bridgestreamstart(SOFTWARE, READ_CONTEXT.elementfocus, {
+              bridgestreamstart(SOFTWARE, player, {
                 kind: 'whip',
                 endpoint: resolved,
                 bearer: String(bearer),
@@ -266,15 +276,13 @@ export function registermultiplayercommands(fw: FIRMWARE): FIRMWARE {
           } else {
             apierror(
               SOFTWARE,
-              READ_CONTEXT.elementfocus,
+              player,
               'broadcast',
               `usage: broadcast whip <endpoint|${listwhipendpointaliases().join('|')}> <bearer>`,
             )
           }
-        } else if (first) {
-          bridgestreamstart(SOFTWARE, READ_CONTEXT.elementfocus, String(first))
         } else {
-          bridgestreamstop(SOFTWARE, READ_CONTEXT.elementfocus)
+          bridgestreamstart(SOFTWARE, player, String(first))
         }
         return 0
       },
