@@ -1,5 +1,5 @@
 import { encode } from '@msgpack/msgpack'
-import { brickproxiedurl } from 'zss/feature/url'
+import { brickproxiedurl } from 'zss/feature/brickurl'
 
 /** Fish API origin (upstream). */
 export const FISH_API_ORIGIN = 'https://api.fish.audio'

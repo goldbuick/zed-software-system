@@ -1,55 +1,66 @@
 # tts.ts
 
-**Purpose**: Text-to-speech orchestration. Supports Piper, Supertonic (ttsspace worker), and Fish Audio (main-thread SDK). Queues playback and integrates with synth.
+**Purpose**: Engine-agnostic text-to-speech orchestration. All engines use ttsspace; main thread holds opaque state and generic worker emit/wait.
 
 ## Dependencies
 
 - `@henrygd/queue` — newQueue
-- `fish-audio` — (optional; not used for browser TTS — see Fish path below)
 - `zss/device` — createdevice
 - `zss/device/api` — ttsinfo, ttsrequest, synthaudiobuffer
+- `zss/device/messagetypes` — isttsvalidatereply
 - `zss/device/session` — SOFTWARE
-- `zss/feature/fishaudio` — Fish TTS client
+- `zss/feature/ttsengine` — normalizettsengine, TTS_ENGINE
 - `zss/mapping/guid` — createsid
 - `zss/mapping/tick` — waitfor
 - `zss/mapping/types` — MAYBE, ispresent
+
+Main thread does **not** import `fishaudio.ts`. Engine-specific behavior lives in ttsspace (`heavy/tts.ts`, `heavy/ttsfish.ts`).
+
+## Main-thread state (opaque)
+
+| Variable | IDB key | Meaning (interpreted by worker) |
+|----------|---------|----------------------------------|
+| `ttsengine` | `config_ttsengine` | Active engine id |
+| `ttsconfig` | `config_ttsengineconfig` | Engine config (HF path, API key, etc.) |
+| `ttsmodel` | `config_ttsenginemodel` | Secondary slot (Fish model, etc.) |
 
 ## Exports
 
 | Function | Args | Description |
 |----------|------|-------------|
-| `selectttsengine` | `engine`, `config` | Set engine (`piper`, `supertonic`, `fish`) and config |
-| `ttsinfo` | `player`, `info` | Request engine info (e.g. voices list) |
-| `ttsplay` | `player`, `voice`, `input` | Play text as speech |
-| `ttsqueue` | `player`, `voice`, `input` | Queue text for playback |
-| `ttsclearqueue` | — | Clear TTS queue |
+| `selectttsengine` | `engine`, `config`, `model?` | Update in-memory engine slots |
+| `applyttsengineconfig` | `player`, `engine`, `config`, `model?` | Unified setup: persist engine, validate+store config, or show config |
+| `ttsinfo` | `player`, `info` | Worker info request |
+| `ttsplay` / `ttsqueue` | … | Playback via worker fetch + decode |
 
-## Engine flow
+## Unified `#ttsengine` flow
 
-- **Piper / Supertonic**: [`heavy/tts.ts`](../heavy/tts.ts) in **ttsspace** worker; audio bytes returned via `tts:request`
-- **Fish**: [`fishaudio.ts`](../fishaudio.ts) — MessagePack `POST /v1/tts` via [`brickproxiedurl`](../url.ts) on the **full upstream URL** (`https://api.fish.audio/v1/tts` encoded in `?brick=`), not an SDK `baseUrl`
+1. **No config arg** — persist `config_ttsengine`, worker `tts:info` `config` with current slots, return display lines.
+2. **With config arg** — worker `tts:info` `validate`, store slots on success, `apilog ready`.
 
-### Fish Audio setup
+All engines persist engine choice across refresh.
 
-```text
-#ttsengine fish <your_fish_api_key> [model]
-#tts <reference_id> Hello, you're doing great.
-```
+## Wire format
 
-- First line sets the engine, API key, and optional model (`s2.1-pro` default, or `s2.1-pro-free`, `s2-pro`, `s1`)
-- Persisted in IndexedDB as `config_ttsengine`, `config_ttsengineconfig`, `config_ttsenginemodel` (restored on login)
-- `#ttsengine fish` (no key) or `#tts config` — show saved config (model + masked api key)
-- Fish API errors (e.g. 402 insufficient credit) appear in the terminal scrollback
-- Each `#tts` call logs the Fish [POST /v1/tts](https://docs.fish.audio/api-reference/endpoint/openapi-v1/text-to-speech) payload (model header, masked key, reference_id, text, format) before the request
-- Second line: `voice` = Fish `reference_id`, not the key
+- `tts:request` — `[engine, config, voice, phrase, model]` (always passes both config slots)
+- `tts:info` — `[engine, info, config, model]`
 
-## Worker wiring (piper / supertonic)
+Info kinds (worker): `voices`, `config`, `status`, `validate`.
 
-- Lazy spawn: `ensurettsworker()` in `zss/platform.ts` on first `tts:info` / `tts:request`
-- Worker device: `zss/device/ttsworker.ts`
-- Fish does **not** use ttsspace
+## Worker modules
+
+| Engine | Module |
+|--------|--------|
+| Piper | [`heavy/pipertts.ts`](../heavy/pipertts.ts) |
+| Supertonic | [`heavy/supertonictts.ts`](../heavy/supertonictts.ts) |
+| Fish | [`heavy/ttsfish.ts`](../heavy/ttsfish.ts) → [`fishaudio.ts`](../fishaudio.ts) |
+
+## Worker wiring
+
+- Lazy spawn: `ensurettsworker()` in `zss/platform.ts`
+- Entry: `zss/ttsspace.ts` → `zss/device/ttsworker.ts` → `zss/feature/heavy/tts.ts`
 
 ## Consumed by
 
-- `zss/device/synth.ts` — `#tts`, `#ttsqueue`, `#ttsinfo`
+- `zss/device/synth.ts` — `#tts`, `#ttsqueue`, `#ttsinfo`, `#ttsengine`
 - `zss/firmware/audio.ts` — firmware TTS commands

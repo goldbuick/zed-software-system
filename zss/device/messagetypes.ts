@@ -34,3 +34,18 @@ export function workerlogerror(
   device.emit(player, 'log', [`$red${kind}$blue>>`, ...message])
   return false
 }
+
+export type TTS_VALIDATE_REPLY =
+  | { ok: true; model: string }
+  | { ok: false; errormsg: string }
+
+export function isttsvalidatereply(
+  value: unknown,
+): value is TTS_VALIDATE_REPLY {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'ok' in value &&
+    typeof (value as TTS_VALIDATE_REPLY).ok === 'boolean'
+  )
+}

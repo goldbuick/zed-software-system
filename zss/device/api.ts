@@ -217,21 +217,24 @@ export function vmgadgetdesync(device: DEVICELIKE, player: string) {
 export function ttsinfo(
   device: DEVICELIKE,
   player: string,
-  engine: 'piper' | 'supertonic',
+  engine: 'piper' | 'supertonic' | 'fish',
   info: string,
+  config = '',
+  model = '',
 ) {
-  device.emit(player, 'tts:info', [engine, info])
+  device.emit(player, 'tts:info', [engine, info, config, model])
 }
 
 export function ttsrequest(
   device: DEVICELIKE,
   player: string,
-  engine: 'piper' | 'supertonic',
+  engine: 'piper' | 'supertonic' | 'fish',
   config: string,
   voice: string | number,
   phrase: string,
+  model = '',
 ) {
-  device.emit(player, 'tts:request', [engine, config, voice, phrase])
+  device.emit(player, 'tts:request', [engine, config, voice, phrase, model])
 }
 
 type MODEL_PROMPT_ARGS = {

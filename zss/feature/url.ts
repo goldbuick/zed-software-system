@@ -12,6 +12,8 @@ import { write } from 'zss/feature/writeui'
 import { zsstextline } from 'zss/feature/zsstextui'
 import { NAME } from 'zss/words/types'
 
+import { brickproxiedurl } from 'zss/feature/brickurl'
+
 import { parsewebfile } from './parse/file'
 
 // bytes api
@@ -32,51 +34,6 @@ export async function shorturl(url: string) {
 // assess what mode we're running in
 export function isjoin() {
   return location.href.includes(`/join/`)
-}
-
-// brick proxy: museum API + images use BRICK_BASE/?brick=<base64url upstream URL>
-
-export const BRICK_BASE = 'https://brick.zed.cafe'
-
-function base64urlencode(text: string): string {
-  const bytes = new TextEncoder().encode(text)
-  let binary = ''
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i])
-  }
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-}
-
-/** Load remote http(s) images via brick `?brick=`; brick decodes base64url (legacy percent-encoded URL fallback). */
-export function brickproxiedurl(url: string): string {
-  const trimmed = url.trim()
-  if (!trimmed) {
-    return trimmed
-  }
-  if (trimmed.startsWith(`${BRICK_BASE}/`)) {
-    return trimmed
-  }
-  if (trimmed.startsWith('data:') || trimmed.startsWith('blob:')) {
-    return trimmed
-  }
-  let absolute = trimmed
-  if (typeof location !== 'undefined') {
-    try {
-      absolute = new URL(trimmed, location.href).href
-    } catch {
-      return trimmed
-    }
-  }
-  let parsed: URL
-  try {
-    parsed = new URL(absolute)
-  } catch {
-    return trimmed
-  }
-  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-    return trimmed
-  }
-  return `${BRICK_BASE}/?brick=${base64urlencode(absolute)}`
 }
 
 /** Upstream Museum of ZZT HTTP URLs; clients reach them only via {@link brickproxiedurl}. */

@@ -39,9 +39,17 @@ module.exports = {
       comment:
         'Workers must use registerplayer.ts for player id, not the full register device.',
       from: {
-        path: '^zss/(simspace|heavyspace|boardrunnerspace|sttspace)\\.ts',
+        path: '^zss/(simspace|heavyspace|boardrunnerspace|sttspace|ttsspace)\\.ts',
       },
       to: { path: '^zss/device/register\\.ts$' },
+    },
+    {
+      name: 'main-no-fishaudio',
+      severity: 'error',
+      comment:
+        'Main-thread TTS orchestration must not import fishaudio; Fish runs in ttsspace only.',
+      from: { path: '^zss/feature/tts\\.ts$' },
+      to: { path: '^zss/feature/fishaudio\\.ts$' },
     },
   ],
   options: {

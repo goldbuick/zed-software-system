@@ -1,4 +1,4 @@
-import { BRICK_BASE, brickproxiedurl } from 'zss/feature/url'
+import { BRICK_BASE, brickproxiedurl } from 'zss/feature/brickurl'
 
 function base64urldecode(input: string): string {
   let b64 = input.replace(/-/g, '+').replace(/_/g, '/')

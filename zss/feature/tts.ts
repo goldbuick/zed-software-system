@@ -1,5 +1,7 @@
 import { newQueue } from '@henrygd/queue'
 import { createdevice } from 'zss/device'
+import type { DEVICELIKE } from 'zss/device/messagetypes'
+import { isttsvalidatereply } from 'zss/device/messagetypes'
 import {
   apierror,
   apilog,
@@ -9,69 +11,78 @@ import {
   synthaudiobuffer,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import {
-  FISH_DEFAULT_MODEL,
-  describefishconfig,
-  maskfishapikey,
-  normalizemodel,
-  requestfishaudiobytes,
-} from 'zss/feature/fishaudio'
 import { storagereadconfigstring } from 'zss/feature/storage'
 import {
   getliveaudiocontext,
   unlockaudiocontext,
 } from 'zss/feature/synth/backend/wasm/audiocontextunlock'
+import {
+  normalizettsengine,
+  type TTS_ENGINE,
+} from 'zss/feature/ttsengine'
 import { createsid } from 'zss/mapping/guid'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
-export type TTS_ENGINE = 'piper' | 'supertonic' | 'fish'
-
-const FISH_VOICE_HELP =
-  'fish voice = reference_id from fish.audio (use as #tts <id> <phrase>)'
-const FISH_MODEL_HELP =
-  'fish models: s2.1-pro-free (default), s2.1-pro, s2-pro, s1 — #ttsengine fish <key> [model]'
-
-export function readttsenginestatuslines(): string[] {
-  if (ttsengine === 'fish') {
-    return [
-      `ttsengine fish model=${ttsfishmodel}`,
-      `api_key=${maskfishapikey(ttsconfig)}`,
-    ]
-  }
-  if (ttsconfig.trim() !== '') {
-    return [`ttsengine ${ttsengine} config=${ttsconfig}`]
-  }
-  return [`ttsengine ${ttsengine}`]
-}
-
-async function fishconfiginfowithvalidate(): Promise<string[]> {
-  const lines = readttsenginestatuslines()
-  if (!ttsconfig.trim()) {
-    lines.push(
-      'fish tts config: set api key with #ttsengine fish <key> [model]',
-    )
-    return lines
-  }
-  const result = describefishconfig(ttsconfig, ttsfishmodel)
-  if (result.ok) {
-    lines.push(...result.lines)
-  } else {
-    lines.push(`fish tts validate>> ${result.errormsg}`)
-  }
-  return lines
-}
-
 // engine config
 let ttsengine: TTS_ENGINE = 'piper'
 let ttsconfig = ''
-let ttsfishmodel = FISH_DEFAULT_MODEL
+let ttsmodel = ''
 
-function normalizettsengine(engine: string): TTS_ENGINE {
-  if (engine === 'supertonic' || engine === 'fish') {
-    return engine
+async function awaitworkerreply<T>(
+  _player: string,
+  target: 'tts:request' | 'tts:info',
+  emit: (device: DEVICELIKE) => void,
+): Promise<T | undefined> {
+  return new Promise((resolve) => {
+    const once = createdevice(
+      createsid(),
+      [],
+      (message) => {
+        if (message.target === target) {
+          resolve(message.data as T | undefined)
+        }
+        once.disconnect()
+      },
+      SOFTWARE.session(),
+    )
+    emit(once)
+  })
+}
+
+function emitworkerrequest(
+  device: DEVICELIKE,
+  player: string,
+  voice: string,
+  phrase: string,
+) {
+  emitttsrequest(device, player, ttsengine, ttsconfig, voice, phrase, ttsmodel)
+}
+
+function emitworkerinfo(
+  device: DEVICELIKE,
+  player: string,
+  info: string,
+  config = ttsconfig,
+  model = ttsmodel,
+  engine: TTS_ENGINE = ttsengine,
+) {
+  emitttsinfo(device, player, engine, info, config, model)
+}
+
+async function reloadslotsfromstorage(player: string, engine: TTS_ENGINE) {
+  const savedconfig = (await storagereadconfigstring('ttsengineconfig')) ?? ''
+  const savedmodel = (await storagereadconfigstring('ttsenginemodel')) ?? ''
+  if (!savedconfig.trim()) {
+    return
   }
-  return 'piper'
+  const validated = await awaitworkerreply<unknown>(player, 'tts:info', (once) =>
+    emitworkerinfo(once, player, 'validate', savedconfig, savedmodel, engine),
+  )
+  if (isttsvalidatereply(validated) && validated.ok) {
+    ttsconfig = savedconfig
+    ttsmodel = validated.model || savedmodel
+  }
 }
 
 export function selectttsengine(
@@ -83,12 +94,8 @@ export function selectttsengine(
   if (config.trim() !== '') {
     ttsconfig = config
   }
-  if (
-    ttsengine === 'fish' &&
-    typeof model === 'string' &&
-    model.trim() !== ''
-  ) {
-    ttsfishmodel = normalizemodel(model)
+  if (typeof model === 'string' && model.trim() !== '') {
+    ttsmodel = model.trim()
   }
 }
 
@@ -102,11 +109,9 @@ export function storettsengineconfig(
   if (config.trim() !== '') {
     registerstore(SOFTWARE, player, 'config_ttsengineconfig', config)
   }
-  if (engine === 'fish') {
-    const modelval =
-      typeof model === 'string' && model.trim() !== ''
-        ? normalizemodel(model)
-        : ttsfishmodel
+  const modelval =
+    typeof model === 'string' && model.trim() !== '' ? model.trim() : ttsmodel
+  if (modelval.trim() !== '') {
     registerstore(SOFTWARE, player, 'config_ttsenginemodel', modelval)
   }
 }
@@ -118,45 +123,45 @@ export async function applyttsengineconfig(
   model?: string,
 ): Promise<string[]> {
   const normalized = normalizettsengine(engine)
-  const haskey = config.trim() !== ''
+  const hasconfig = config.trim() !== ''
 
-  if (normalized === 'fish' && !haskey) {
-    const lines = readttsenginestatuslines()
-    if (ttsconfig.trim()) {
-      const result = describefishconfig(ttsconfig, ttsfishmodel)
-      if (result.ok) {
-        lines.push(...result.lines)
-      } else {
-        apierror(SOFTWARE, player, 'fish tts config', result.errormsg)
-      }
+  if (!hasconfig) {
+    const prevengine = ttsengine
+    ttsengine = normalized
+    registerstore(SOFTWARE, player, 'config_ttsengine', normalized)
+    if (prevengine !== normalized) {
+      ttsconfig = ''
+      ttsmodel = ''
+      await reloadslotsfromstorage(player, normalized)
     }
-    return lines
+    const lines = await awaitworkerreply<string[]>(player, 'tts:info', (once) =>
+      emitworkerinfo(once, player, 'config', ttsconfig, ttsmodel, normalized),
+    )
+    return isarraylines(lines) ? lines : []
   }
 
-  const effectivemodel =
-    normalized === 'fish' && haskey && (!model || model.trim() === '')
-      ? FISH_DEFAULT_MODEL
-      : model
-
-  selectttsengine(engine, config, effectivemodel)
-  storettsengineconfig(
-    player,
-    engine,
-    haskey ? config : ttsconfig,
-    effectivemodel,
+  const proposedmodel = typeof model === 'string' ? model : ''
+  const validated = await awaitworkerreply<unknown>(player, 'tts:info', (once) =>
+    emitworkerinfo(once, player, 'validate', config, proposedmodel, normalized),
   )
 
-  if (normalized === 'fish') {
-    const key = haskey ? config : ttsconfig
-    const result = describefishconfig(key, ttsfishmodel)
-    if (!result.ok) {
-      apierror(SOFTWARE, player, 'fish tts config', result.errormsg)
-    }
+  if (!isttsvalidatereply(validated)) {
+    apierror(SOFTWARE, player, 'tts config', 'validate failed')
+    return []
+  }
+  if (!validated.ok) {
+    apierror(SOFTWARE, player, 'tts config', validated.errormsg)
     return []
   }
 
+  selectttsengine(normalized, config, validated.model)
+  storettsengineconfig(player, normalized, config, validated.model)
   apilog(SOFTWARE, player, `ttsengine ${ttsengine} ready`)
   return []
+}
+
+function isarraylines(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((line) => typeof line === 'string')
 }
 
 export async function restorettsenginefromstorage() {
@@ -168,7 +173,7 @@ export async function restorettsenginefromstorage() {
   selectttsengine(engine, config)
   const model = await storagereadconfigstring('ttsenginemodel')
   if (model) {
-    ttsfishmodel = normalizemodel(model)
+    ttsmodel = model
   }
 }
 
@@ -185,77 +190,33 @@ async function requestaudiobuffer(
   voice: string,
   input: string,
 ): Promise<MAYBE<AudioBuffer>> {
-  if (ttsengine === 'fish') {
-    if (!ttsconfig.trim()) {
-      apierror(
-        SOFTWARE,
-        player,
-        'fish tts',
-        'set api key with #ttsengine fish <key> [model]',
-      )
-      return undefined
-    }
-    const result = await requestfishaudiobytes(
-      ttsconfig,
-      voice,
-      input,
-      ttsfishmodel,
-    )
-    if (!result.ok) {
-      apierror(SOFTWARE, player, 'fish tts', result.errormsg)
-      return undefined
-    }
-    try {
-      return await convertarraybytes(result.bytes)
-    } catch (err) {
-      apierror(
-        SOFTWARE,
-        player,
-        'fish tts decode',
-        err instanceof Error ? err.message : String(err),
-      )
-      return undefined
-    }
+  const bytes = await awaitworkerreply<ArrayBuffer>(player, 'tts:request', (once) =>
+    emitworkerrequest(once, player, voice, input),
+  )
+  if (!ispresent(bytes)) {
+    return undefined
   }
-  return new Promise((resolve) => {
-    const once = createdevice(
-      createsid(),
-      [],
-      (message) => {
-        if (message.target === 'tts:request' && message.data) {
-          convertarraybytes(message.data).then(resolve).catch(console.error)
-        }
-        once.disconnect()
-      },
-      SOFTWARE.session(),
+  try {
+    return await convertarraybytes(bytes)
+  } catch (err) {
+    apierror(
+      SOFTWARE,
+      player,
+      'tts decode',
+      err instanceof Error ? err.message : String(err),
     )
-    emitttsrequest(once, player, ttsengine, ttsconfig, voice, input)
-  })
+    return undefined
+  }
 }
 
 export function ttsinfo(player: string, info: string) {
-  if (ttsengine === 'fish') {
-    if (info === 'voices') {
-      return Promise.resolve([FISH_VOICE_HELP, FISH_MODEL_HELP])
+  return awaitworkerreply<string[]>(player, 'tts:info', (once) =>
+    emitworkerinfo(once, player, info),
+  ).then((data) => {
+    if (isarraylines(data)) {
+      return data
     }
-    if (info === 'config') {
-      return fishconfiginfowithvalidate()
-    }
-    return Promise.resolve([])
-  }
-  return new Promise((resolve) => {
-    const once = createdevice(
-      createsid(),
-      [],
-      (message) => {
-        if (message.target === 'tts:info' && message.data) {
-          resolve(message.data)
-        }
-        once.disconnect()
-      },
-      SOFTWARE.session(),
-    )
-    emitttsinfo(once, player, ttsengine, info)
+    return []
   })
 }
 
@@ -268,7 +229,6 @@ export async function ttsplay(
   if (input.trim() === '') {
     return
   }
-  // play the audio
   const audiobuffer = await requestaudiobuffer(player, voice, input)
   if (ispresent(audiobuffer)) {
     synthaudiobuffer(SOFTWARE, player, board, audiobuffer)
@@ -283,9 +243,7 @@ async function audioplaytask(
   board: string,
   audiobuffer: AudioBuffer,
 ): Promise<void> {
-  // play the audio
   synthaudiobuffer(SOFTWARE, player, board, audiobuffer)
-  // wait audio duration before playing next audio
   const waittime = Math.max(1000, Math.round(audiobuffer.duration * 1000))
   await waitfor(waittime)
 }
