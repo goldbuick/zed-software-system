@@ -16,9 +16,9 @@ Reference: [tractordev/wanix](https://github.com/tractordev/wanix) **`main`** (`
 | `#wanix vm` prep | [`examples/basic-vm.html`](https://github.com/tractordev/wanix/blob/main/examples/basic-vm.html) — linux + `#vm` ns + v86 binds **before** first `ready` | `spawnwanixvmspace` → `bootwanixsystemforvm` |
 | VM serial console | `<wanix-vm export="ttyS0" term>` + `#vm/<rid>/term/data` | `createvm` + `connectvmterm` after `el.start()` |
 | Term I/O | `<wanix-term path="…" raw>` (we use tile bridge instead of xterm) | `wanixhost.ts` + `WanixTermInput` |
-| `./zed-cafe/` book export | Auto on warm + debounced book edits; gojs daemon `zed-cafe` | `wanixstateexport.ts` + `wanixzedcafe.ts` |
+| `./zed-cafe/` book export | Live ns bind + host `writeFile`; gojs boot once for initial tree | `wanixstateexport.ts` + `wanixzedcafe.ts` + `wanixstateimport.ts` |
 
-Session books mirror to **`./zed-cafe/`** (WASI tasks) or **`/zed-cafe/`** (Linux VM) when Wanix is warm. No CLI command — edit a book and `stats.json` updates within ~2s.
+Session books mirror to **`./zed-cafe/`** (WASI tasks) or **`/zed-cafe/`** (Linux VM) when Wanix is warm. Host pushes edits via live `writeFile` into `#task/<rid>/export` (no gojs restart per edit). Guest edits import via auto-poll (~3s) or **`#wanix pull`**.
 
 Build the gojs export guest (runs automatically before `app:build`):
 
@@ -33,6 +33,10 @@ Shipped at `/wanix/zed-cafe.wasm` (`cafe/public/wanix/`). Staging stays internal
 ```bash
 yarn task run wanix:zed-cafe:export:validate      # minimal harness → #task/<rid>/export/stats.json
 yarn task run wanix:zed-cafe:export:validate:app  # full app #wanix vm → cat /zed-cafe/stats.json
+yarn task run wanix:vm:zed-cafe:validate          # primary: #wanix vm → ls / shows zed-cafe (6m script cap)
+yarn task run wanix:zed-cafe:duplex:validate      # guest write zed-cafe/stats.json (minimal harness)
+yarn task run wanix:zed-cafe:duplex:validate:app  # drop zedcafewrite.wasm + #wanix pull
+yarn task run wanix:vm:boot:validate              # seeded book + #wanix vm boot gate
 ```
 
 | Layout | Read books |
@@ -60,6 +64,12 @@ zed-cafe/
 ```
 
 Verify: warm Wanix → `cat zed-cafe/stats.json` from a task, or `#wanix vm` → `cat /zed-cafe/stats.json`.
+
+Playwright gates use bounded waits (`tasks/implementations/wanix/wanix-playwright-vm.mjs`):
+
+- `SCRIPT_TOTAL_MS` default 360000 (6m hard cap per script)
+- `VM_SHELL_MS` default 240000 (plan gate 3)
+- Override: `ZSS_WANIX_VM_SCRIPT_TIMEOUT_MS`, `ZSS_WANIX_VM_SHELL_TIMEOUT_MS`
 
 VM prep must **not** call `_setupNamespace` a second time after `#ramfs` (that caused the Go `writeFile` panic). `#wanix vm` reboots into the basic-vm bind layout via `spawnwanixvmspace`.
 
@@ -96,6 +106,7 @@ Sources:
 | `hold.wat` | infinite loop (e2e term-write while running) |
 | `termbridge.wat` | **ZSS tile term bridge demo** — banner on stdout, then hold |
 | `zedcaferead.c` / `zedcaferead.wat` | **zed-cafe FS read** — opens `zed-cafe/stats.json`, prints `zed-cafe ok: …` |
+| `zedcafewrite.c` / `zedcafewrite.wat` | **zed-cafe FS write** — overwrites `zed-cafe/stats.json` with `guestTouch` |
 
 Drag the `.wasm` onto a running app (`yarn task app dev`). Multiple drops run in parallel; use `#wanix` to attach, stop, or unmount.
 
@@ -143,16 +154,16 @@ Raw WASI `fd_read(0)` is not the integration surface. See `.cursor/rules/wanix-t
 
 ## Optional C build (wasi-sdk)
 
-Readable C version: `hello.c`. Compile when [wasi-sdk](https://github.com/WebAssembly/wasi-sdk) is installed:
+Readable C sources: `hello.c`, `zedcaferead.c`, `zedcafewrite.c`. **Homebrew does not ship `wasi-sdk`** — use the WAT path above, or install wasi-sdk manually:
 
 ```bash
-brew install wasi-sdk
-# or download a release and export WASI_SDK_PATH
+# https://github.com/WebAssembly/wasi-sdk/releases — unpack and set:
+export WASI_SDK_PATH=/path/to/wasi-sdk-25.0
 
 yarn task run wanix:wasm:build:c
 ```
 
-If wasi-sdk is missing, the task prints a skip message and exits 0.
+If wasi-sdk is missing, the task prints a skip message and exits 0 (`.wat` builds still work).
 
 Build everything:
 

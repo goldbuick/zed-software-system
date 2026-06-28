@@ -247,6 +247,7 @@ export type SPAWN_WANIX_VM_OPTS = {
   vmid?: string
   mem?: string
   attach?: boolean
+  inboxbytes?: number[]
 }
 
 export async function spawnwanixvm(

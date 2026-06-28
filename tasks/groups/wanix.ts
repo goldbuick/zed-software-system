@@ -43,6 +43,30 @@ export const WANIX_TASKS: TaskDef[] = [
       'node tasks/implementations/wanix/validate-zed-cafe-task-read.mjs',
     ),
   }),
+  def('wanix:zed-cafe:duplex:validate', {
+    description:
+      'Headed Playwright: zed-cafe-duplex harness — guest write to zed-cafe/stats.json (local gate, not CI)',
+    run: shell('node tasks/implementations/wanix/validate-zed-cafe-duplex.mjs'),
+  }),
+  def('wanix:zed-cafe:duplex:validate:app', {
+    description:
+      'Headed Playwright: full app drop zedcafewrite.wasm + #wanix pull import (local gate, not CI)',
+    run: shell(
+      'node tasks/implementations/wanix/validate-zed-cafe-duplex-app.mjs',
+    ),
+  }),
+  def('wanix:vm:boot:validate', {
+    description:
+      'Headed Playwright: seeded book + #wanix vm must reach shell and /zed-cafe/stats.json (local gate, not CI)',
+    run: shell('node tasks/implementations/wanix/validate-wanix-vm-boot.mjs'),
+  }),
+  def('wanix:vm:zed-cafe:validate', {
+    description:
+      'Headed Playwright: #wanix vm → ls / shows zed-cafe, cat stats.json (primary local gate, not CI)',
+    run: shell(
+      'node tasks/implementations/wanix/validate-wanix-vm-zedcafe.mjs',
+    ),
+  }),
   def('wanix:wasm:build:c', {
     description:
       'Compile ops/fixtures/wanix/*.c to .wasm when wasi-sdk is installed (skips if missing)',

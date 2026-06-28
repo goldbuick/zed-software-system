@@ -6,10 +6,12 @@ jest.mock('zss/feature/wanix/wanixvmassets', () => ({
 
 import {
   appendwanixgojstasktarget,
+  collectzedcafeexportfiles,
   mountwanixsystemtree,
   readzedcafeexportprobe,
   stagezedcafetaskforgojs,
   waitwanixbindmount,
+  waitzedcafeexportready,
 } from 'zss/feature/wanix/wanixiframechildmount'
 import {
   createidlewanixiframestate,
@@ -38,6 +40,7 @@ describe('wanixiframechildmount zed-cafe staging', () => {
     const sys = mountwanixsystemtree({
       ...createidlewanixiframestate(),
       phase: 'vm-active',
+      bootstage: 'export',
       mountKey: 1,
       vmid: 'vm1',
       mem: '512M',
@@ -47,6 +50,10 @@ describe('wanixiframechildmount zed-cafe staging', () => {
       },
     })
     expect(sys).not.toBeNull()
+    expect(sys!.querySelector('wanix-vm')).toBeNull()
+    expect(
+      sys!.querySelector('wanix-bind[dst="vm"]'),
+    ).not.toBeNull()
     const binds = sys!.querySelectorAll(':scope > wanix-bind')
     const filebinds = [...binds].filter((b) => b.getAttribute('type') === 'file')
     expect(filebinds).toHaveLength(1)
@@ -54,6 +61,35 @@ describe('wanixiframechildmount zed-cafe staging', () => {
     expect(
       sys!.querySelector('wanix-bind[data-zss-zed-cafe-inbox]'),
     ).toBeNull()
+  })
+
+  it('vm-boot stage mounts wanix-vm with #ramfs/zed-cafe file binds', () => {
+    const sys = mountwanixsystemtree({
+      ...createidlewanixiframestate(),
+      phase: 'vm-active',
+      bootstage: 'boot',
+      mountKey: 2,
+      vmid: 'vm1',
+      mem: '512M',
+      urls: {
+        linux: '/wanix/linux.tgz',
+        v86: '/wanix/v86.tgz',
+      },
+      zedcafe: {
+        cmd: '#ramfs/zed-cafe.wasm',
+        generation: 1,
+        ready: true,
+        taskrid: '2',
+        guestfiles: [{ path: 'stats.json', data: [123, 125] }],
+      },
+    })
+    expect(sys!.querySelector('wanix-vm')).not.toBeNull()
+    expect(
+      sys!.querySelector('wanix-bind[data-zss-zed-cafe-export-ramfs-file]'),
+    ).not.toBeNull()
+    expect(
+      sys!.querySelector('wanix-vm wanix-bind[data-zss-zed-cafe-export="vm-staging"]'),
+    ).not.toBeNull()
   })
 
   it('creates gojs task without auto-start attribute', () => {
@@ -117,5 +153,91 @@ describe('wanixiframechildmount zed-cafe staging', () => {
     const pending = waitwanixbindmount(bind, 1000)
     bind.dispatchEvent(new Event('mount'))
     await expect(pending).resolves.toBeUndefined()
+  })
+
+  it('waitzedcafeexportready polls until stats.json appears', async () => {
+    jest.useFakeTimers()
+    let listed = false
+    const root = {
+      readDir: jest.fn(async (path: string) => {
+        if (path === '#task/4/export' && listed) {
+          return ['stats.json']
+        }
+        if (path === '#task/4/export') {
+          throw new Error('file does not exist')
+        }
+        return []
+      }),
+      readFile: jest.fn(),
+      writeFile: jest.fn(),
+    }
+    const pending = waitzedcafeexportready(root, '4', 2000)
+    await jest.advanceTimersByTimeAsync(300)
+    listed = true
+    await jest.advanceTimersByTimeAsync(300)
+    await expect(pending).resolves.toBe(true)
+    jest.useRealTimers()
+  })
+
+  it('waitzedcafeexportready returns false on timeout', async () => {
+    jest.useFakeTimers()
+    const root = {
+      readDir: jest.fn(async () => {
+        throw new Error('file does not exist')
+      }),
+      readFile: jest.fn(),
+      writeFile: jest.fn(),
+    }
+    const pending = waitzedcafeexportready(root, '4', 500)
+    await jest.advanceTimersByTimeAsync(600)
+    await expect(pending).resolves.toBe(false)
+    jest.useRealTimers()
+  })
+
+  it('collectzedcafeexportfiles does not readDir json leaf paths', async () => {
+    const statsbytes = Uint8Array.from([123, 34, 105, 100, 34, 58, 34, 112, 49, 34, 125, 10])
+    const readdirpaths: string[] = []
+    const root = {
+      readDir: jest.fn(async (path: string) => {
+        readdirpaths.push(path)
+        if (/\.json$/.test(path)) {
+          throw new Error('readdir invalid argument')
+        }
+        if (path === '#task/4/export') {
+          return ['stats.json', 'books/']
+        }
+        if (path === '#task/4/export/books') {
+          return ['book1/']
+        }
+        if (path === '#task/4/export/books/book1') {
+          return ['pages/']
+        }
+        if (path === '#task/4/export/books/book1/pages') {
+          return ['page1/']
+        }
+        if (path === '#task/4/export/books/book1/pages/page1') {
+          return ['stats.json']
+        }
+        return []
+      }),
+      readFile: jest.fn(async (path: string) => {
+        if (path.endsWith('stats.json')) {
+          return statsbytes
+        }
+        throw new Error(`missing ${path}`)
+      }),
+    }
+
+    const files = await collectzedcafeexportfiles(root, '4')
+    const stats = files.find((file) => file.path === 'stats.json')
+    const pagestats = files.find(
+      (file) => file.path === 'books/book1/pages/page1/stats.json',
+    )
+
+    expect(stats).toBeDefined()
+    expect(pagestats).toBeDefined()
+    expect(
+      readdirpaths.some((path) => /\.json$/.test(path)),
+    ).toBe(false)
   })
 })

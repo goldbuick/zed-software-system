@@ -2,6 +2,7 @@ import {
   apierror,
   wanixattach,
   wanixdetach,
+  wanixpull,
   wanixshow,
   wanixstop,
   wanixvmstart,
@@ -58,12 +59,15 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
         case 'attach':
           wanixattach(SOFTWARE, player, ispresent(arg) ? NAME(arg) : undefined)
           break
+        case 'pull':
+          wanixpull(SOFTWARE, player)
+          break
         default:
           apierror(
             SOFTWARE,
             player,
             'wanix',
-            'drop .wasm/.tgz — #wanix menu, vm, attach, stop, detach',
+            'drop .wasm/.tgz — #wanix menu, vm, attach, pull, stop, detach',
           )
           break
       }

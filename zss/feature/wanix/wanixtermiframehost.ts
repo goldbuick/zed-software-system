@@ -397,6 +397,7 @@ export async function iframespawnvm(opts: {
   vmid?: string
   mem?: string
   attach?: boolean
+  inboxbytes?: number[]
 }): Promise<{ vmid: string }> {
   const vmid = opts.vmid ?? 'linux-vm'
   const mem = opts.mem ?? '512M'
@@ -405,7 +406,11 @@ export async function iframespawnvm(opts: {
     setwanixattached('vm', vmid)
   }
   vmprepstage = 'spawn'
-  await childrpc('zss-wanix-term-rpc', 'spawnvm', [vmid, mem])
+  await childrpc('zss-wanix-term-rpc', 'spawnvm', [
+    vmid,
+    mem,
+    opts.inboxbytes ?? [],
+  ])
   return { vmid }
 }
 
@@ -474,6 +479,10 @@ export async function iframechildsetzedcafeready(
   ready: boolean,
 ): Promise<void> {
   await childrpc('zss-wanix-term-rpc', 'setzedcafeready', [ready])
+}
+
+export async function iframechildreadzedcafetaskrid(): Promise<string | null> {
+  return childrpc<string | null>('zss-wanix-term-rpc', 'readzedcafetaskrid', [])
 }
 
 export async function iframechildhaltzedcafe(): Promise<void> {

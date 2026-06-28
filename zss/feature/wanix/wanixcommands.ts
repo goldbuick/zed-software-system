@@ -1,12 +1,11 @@
 import type { DEVICELIKE } from 'zss/device/api'
-import { apierror, apilog, wanixrequestzedcafeexport } from 'zss/device/api'
+import { apierror, apilog } from 'zss/device/api'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import {
   attachwanixtarget,
   ensurewanixsandbox,
   haltwanixtask,
   haltwanixvm,
-  iframecapturezedcafeexport,
   iswanixspaceactive,
   readwanixstatus,
   readwanixvmpreperror,
@@ -15,6 +14,9 @@ import {
   spawnwanixvm,
   spawnwanixvmspace,
 } from 'zss/feature/wanix/wanixhost'
+import {
+  iframechildhaltzedcafe,
+} from 'zss/feature/wanix/wanixtermiframehost'
 import {
   type WANIX_ATTACH_KIND,
   haswanixcompute,
@@ -38,7 +40,16 @@ import {
   DEFAULT_WANIX_VM_ID,
   DEFAULT_WANIX_VM_MEM,
 } from 'zss/feature/wanix/wanixvmassets'
-import { ensurewanixzedcafedaemon } from 'zss/feature/wanix/wanixzedcafe'
+import {
+  encodezedcafeinboxjson,
+  finalizewanixzedcafeaftervmboot,
+  stopzedcafepoll,
+  wanixpullzedcafe,
+} from 'zss/feature/wanix/wanixzedcafe'
+import {
+  setwanixzedcafeready,
+  setwanixzedcafetaskrid,
+} from 'zss/feature/wanix/wanixzedcafesession'
 import {
   zssheaderlines,
   zsssectionlines,
@@ -65,30 +76,40 @@ export async function wanixhandlevmstart(
     }
     apilog(device, player, 'wanix vm prep: ensuring zed-cafe export...')
     await ensurewanixsandbox(device, player)
-    await ensurewanixzedcafedaemon(device, player)
-    const guestfiles = await iframecapturezedcafeexport()
-    apilog(
-      device,
-      player,
-      `wanix vm prep: captured ${guestfiles.length} zed-cafe guest files`,
-    )
+    await iframechildhaltzedcafe()
+    stopzedcafepoll()
+    setwanixzedcafeready(false)
+    setwanixzedcafetaskrid(null)
     apilog(device, player, 'wanix vm prep: fetching linux + v86 archives...')
-    await spawnwanixvmspace(device, player, undefined, guestfiles)
+    await spawnwanixvmspace(device, player, undefined, [])
     apilog(device, player, `wanix vm prep: ${readwanixvmprepstage()}`)
+    const { buildzedcafeexportfiles } = await import(
+      'zss/feature/wanix/wanixstateexport'
+    )
+    const exportfiles = buildzedcafeexportfiles()
+    const inboxbytes = [...encodezedcafeinboxjson(exportfiles)]
     const requested = vmid ?? DEFAULT_WANIX_VM_ID
     apilog(device, player, `wanix vm spawn: ${requested}...`)
     const { vmid: spawnedid } = await spawnwanixvm({
       vmid: requested,
       mem: DEFAULT_WANIX_VM_MEM,
       attach: true,
+      inboxbytes,
     })
+    const exportready = await finalizewanixzedcafeaftervmboot(device, player)
+    if (!exportready) {
+      apilog(
+        device,
+        player,
+        'wanix vm: zed-cafe export not ready — /zed-cafe/ may be missing in guest',
+      )
+    }
     registervm({
       id: spawnedid,
       label: spawnedid,
       mem: DEFAULT_WANIX_VM_MEM,
     })
     apilog(device, player, `wanix vm boot ${spawnedid}`)
-    wanixrequestzedcafeexport(device, player)
   } catch (err) {
     const stage = readwanixvmprepstage()
     const prep = readwanixvmpreperror()
@@ -114,7 +135,7 @@ export async function wanixhandleshownenu(device: DEVICELIKE, player: string) {
     const parts: (string | string[])[] = [
       zssheaderlines('wanix'),
       zsstextline('drop a .wasm or .tgz to run'),
-      zsstextline('$gray./zed-cafe/ mirrors session books when wanix is warm'),
+      zsstextline('$gray./zed-cafe/ mirrors session books; #wanix pull imports guest edits'),
       zsssectionlines('Tasks'),
     ]
     if (tasks.length === 0) {
@@ -340,6 +361,22 @@ export async function wanixhandleattach(
       player,
       `wanix term attached — typing goes to ${label} (${prompt} prompt, #wanix detach to escape routing)`,
     )
+  } catch (err) {
+    apierror(
+      device,
+      player,
+      'wanix',
+      err instanceof Error ? err.message : String(err),
+    )
+  }
+}
+
+export async function wanixhandlepull(device: DEVICELIKE, player: string) {
+  try {
+    if (!iswanixspaceactive()) {
+      await ensurewanixsandbox(device, player)
+    }
+    await wanixpullzedcafe(device, player)
   } catch (err) {
     apierror(
       device,

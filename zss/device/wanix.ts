@@ -3,6 +3,7 @@ import { registerreadplayer } from 'zss/device/registerplayer'
 import {
   wanixhandleattach,
   wanixhandledetach,
+  wanixhandlepull,
   wanixhandleshownenu,
   wanixhandlestop,
   wanixhandletermwrite,
@@ -123,6 +124,11 @@ const wanix = createdevice('wanix', [], (message) => {
     case 'show':
       doasync(wanix, message.player, async () => {
         await wanixhandleshownenu(wanix, message.player)
+      })
+      break
+    case 'pull':
+      doasync(wanix, message.player, async () => {
+        await wanixhandlepull(wanix, message.player)
       })
       break
     case 'drop': {

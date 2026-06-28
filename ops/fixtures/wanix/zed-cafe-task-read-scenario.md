@@ -62,3 +62,47 @@ yarn task run wanix:zed-cafe:task-read:validate
 - Task path is **`zed-cafe/stats.json`** (relative, no leading `/`) — matches WASI task namespace, not VM serial `/zed-cafe/…`.
 - Do not patch WASI `fd_read(0)` stdin; stdout goes through the term bridge (`fd_write` → tile).
 - Rebuild `zedcaferead.wasm` after editing `zedcaferead.c`.
+
+## D — Duplex guest write (WASI → host import)
+
+| Artifact | Purpose |
+|----------|---------|
+| `zedcafewrite.c` | Overwrites `./zed-cafe/stats.json` with `"guestTouch": true` |
+| `zedcafewrite.wasm` | Built via `yarn task run wanix:wasm:build` (`zedcafewrite.wat`; optional C rebuild with wasi-sdk) |
+| `ops/fixtures/harness/wanix/zed-cafe-duplex.html` | Isolated ns-bind harness — sets `window.zedcafeDuplexResult` |
+
+**Isolated gate** (dev server running):
+
+```bash
+yarn task run wanix:wasm:build
+yarn task run wanix:zed-cafe:duplex:validate
+```
+
+**Full app** (drop `zedcafewrite.wasm`, then `#wanix pull` or wait for auto-poll):
+
+```bash
+yarn task run wanix:zed-cafe:duplex:validate:app
+```
+
+Steady-state host→guest updates use live `writeFile` into `#task/<rid>/export` (no gojs restart per edit). Guest→MEMORY uses fingerprint poll + `#wanix pull`.
+
+## E — VM zed-cafe visibility (headed Playwright)
+
+Primary acceptance gate: after `#wanix vm`, the Linux guest must show `/zed-cafe/` on the root filesystem.
+
+**Automated** (dev server running):
+
+```bash
+yarn task run wanix:vm:zed-cafe:validate
+```
+
+**Milestones**
+
+| Step | Guest command | Pass |
+|------|---------------|------|
+| B | (wait for shell) | prompt `~ #` |
+| C | `ls /` | listing contains `zed-cafe` |
+| D | `ls /zed-cafe` | listing contains `stats.json` |
+| E | `cat /zed-cafe/stats.json` | JSON with `"bookCount"` or `"exportedAt"` |
+
+Related gates: `wanix:zed-cafe:export:validate:app` (same milestones), `wanix:vm:boot:validate` (adds book seed + anti-hang Milestone A).

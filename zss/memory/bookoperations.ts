@@ -7,6 +7,7 @@ import { COLOR, NAME, WORD } from 'zss/words/types'
 
 import {
   memoryboundaryalloc,
+  memoryboundarydelete,
   memoryboundaryget,
   memoryboundaryset,
 } from './boundaries'
@@ -21,6 +22,7 @@ import {
   memoryreadcodepagename,
   memoryreadcodepagestats,
   memoryreadcodepagetype,
+  memoryresetcodepagestats,
 } from './codepageoperations'
 import { memoryreadboardelementruntime } from './runtimeboundary'
 import { memoryreadoperator } from './session'
@@ -431,6 +433,45 @@ export function memorywritecodepage(
   }
   book.pages.push(codepage)
   memoryupdatebooktoken(book)
+  return true
+}
+
+export function memoryupsertcodepage(
+  book: MAYBE<BOOK>,
+  flat: {
+    id: string
+    code: string
+    board?: Record<string, unknown>
+    object?: Record<string, unknown>
+    terrain?: Record<string, unknown>
+    charset?: Record<string, unknown>
+    palette?: Record<string, unknown>
+  },
+): boolean {
+  if (!ispresent(book)) {
+    return false
+  }
+  const existing = memoryreadcodepage(book, flat.id)
+  if (!ispresent(existing)) {
+    const page = memoryimportcodepagefromjson(flat)
+    if (!page) {
+      return false
+    }
+    return memorywritecodepage(book, page)
+  }
+  memoryboundarydelete(flat.id)
+  existing.code = flat.code
+  memoryboundaryalloc(
+    {
+      board: flat.board,
+      object: flat.object,
+      terrain: flat.terrain,
+      charset: flat.charset,
+      palette: flat.palette,
+    },
+    flat.id,
+  )
+  memoryresetcodepagestats(existing)
   return true
 }
 

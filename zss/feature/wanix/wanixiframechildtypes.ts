@@ -13,6 +13,7 @@ export type WanixZedCafeHostState = {
   ready: boolean
   taskrid: string | null
   guestfiles?: WanixZedCafeGuestFile[]
+  inboxbytes?: number[]
 }
 
 export type WanixRoot = {
@@ -23,6 +24,7 @@ export type WanixRoot = {
 
 export type WanixSystemElement = HTMLElement & {
   root?: WanixRoot
+  isReady?: boolean
 }
 
 export type WanixTaskElement = HTMLElement & {
@@ -61,6 +63,7 @@ export type WanixIframeHostState =
     } & WanixIframeBase)
   | ({
       phase: 'vm-active'
+      bootstage: 'export' | 'boot'
       urls: WANIX_VM_ASSET_URLS
       vmid: string
       mem: string

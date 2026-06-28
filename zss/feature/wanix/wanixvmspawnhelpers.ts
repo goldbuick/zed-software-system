@@ -1,6 +1,8 @@
 import type { WanixRoot } from 'zss/feature/wanix/wanixiframechildtypes'
 
 export const VM_TERM_READY_MS = 90_000
+/** Linux guest shell after wanix-vm start (Playwright gate allows 240s). */
+export const WANIX_VM_GUEST_SHELL_MS = 300_000
 
 export async function waitforv86driver(
   root: WanixRoot,

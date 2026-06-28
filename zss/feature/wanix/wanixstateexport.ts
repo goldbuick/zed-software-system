@@ -2,6 +2,7 @@ import type { DEVICELIKE } from 'zss/device/api'
 import { wanixexportstate, wanixrequestzedcafeexport } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { WANIX_ZED_CAFE_EXPORT_DEBOUNCE_MS } from 'zss/feature/wanix/wanixzedcafeconstants'
+import { readzedcafeimportsuppressingexport } from 'zss/feature/wanix/wanixzedcafesession'
 import { memoryreadbookflags } from 'zss/memory/bookoperations'
 import {
   memoryexportcodepageasjson,
@@ -221,6 +222,9 @@ export function readzedcafeexportpendingwhileidle(): boolean {
 }
 
 export function notifyzedcafebookschanged(player: string) {
+  if (readzedcafeimportsuppressingexport()) {
+    return
+  }
   schedulewanixexport(SOFTWARE, player)
 }
 

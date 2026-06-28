@@ -367,6 +367,10 @@ export function wanixattach(
   device.emit(player, 'wanix:attach', taskid)
 }
 
+export function wanixpull(device: DEVICELIKE, player: string) {
+  device.emit(player, 'wanix:pull')
+}
+
 export function wanixdrop(
   device: DEVICELIKE,
   player: string,

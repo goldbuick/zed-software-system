@@ -20,6 +20,7 @@ export type WanixIframeRpcMethod =
   | 'haltzedcafe'
   | 'probezedcafeexport'
   | 'readzedcafeexportfiles'
+  | 'readzedcafetaskrid'
   | 'teardown'
 
 export type WanixRpcMsgType = 'zss-wanix-term-rpc' | 'zss-wanix-term-probe-rpc'

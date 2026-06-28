@@ -2,6 +2,7 @@ import { createdeferred, replychildrpc } from 'zss/feature/wanix/wanixifracerpc'
 import {
   collectzedcafeexportfiles,
   readzedcafeexportprobe,
+  waitzedcafeexportready,
 } from 'zss/feature/wanix/wanixiframechildmount'
 import type {
   WanixIframeArchive,
@@ -49,25 +50,17 @@ async function waitforzedcafeexport(
   const deadline = Date.now() + timeoutms
   while (Date.now() < deadline) {
     const root = readroot()
-    if (root) {
-      const taskrid = readzedcafetaskrid(readstate())
-      if (taskrid) {
-        try {
-          const entries = await root.readDir(`#task/${taskrid}/export`)
-          if (
-            entries.some(
-              (entry) => entry.replace(/\/$/, '') === 'stats.json',
-            )
-          ) {
-            postwanixiframeapilog(
-              `zed-cafe export: #task/${taskrid}/export ready (${entries.length} entries)`,
-            )
-            return taskrid
-          }
-        } catch {
-          // export mount not ready yet
-        }
+    const taskrid = readzedcafetaskrid(readstate())
+    if (root && taskrid) {
+      const ready = await waitzedcafeexportready(
+        root,
+        taskrid,
+        deadline - Date.now(),
+      )
+      if (ready) {
+        return taskrid
       }
+      return null
     }
     await new Promise<void>((resolve) => setTimeout(resolve, 250))
   }
@@ -213,24 +206,19 @@ export function createwanixiframechildcontroller() {
     try {
       switch (data.method) {
         case 'prepvm': {
-          const [urls, guestfiles = []] = data.args as [
-            WANIX_VM_ASSET_URLS,
-            WanixZedCafeGuestFile[]?,
-          ]
+          const [urls] = data.args as [WANIX_VM_ASSET_URLS, WanixZedCafeGuestFile[]?]
           setstate({
             phase: 'vm-prepared',
             mountKey: nextmountkey(state),
             archives: [],
-            zedcafe:
-              guestfiles.length > 0
-                ? {
-                    cmd: WANIX_ZED_CAFE_WASM_CMD,
-                    generation: state.zedcafe?.generation ?? 0,
-                    ready: false,
-                    taskrid: null,
-                    guestfiles,
-                  }
-                : state.zedcafe,
+            zedcafe: state.zedcafe
+              ? {
+                  cmd: state.zedcafe.cmd,
+                  generation: state.zedcafe.generation,
+                  ready: false,
+                  taskrid: null,
+                }
+              : undefined,
             urls,
           })
           root = null
@@ -252,17 +240,29 @@ export function createwanixiframechildcontroller() {
           return
         }
         case 'spawnvm': {
-          const [vmid, mem] = data.args as [string, string]
+          const [vmid, mem, inboxbytes = []] = data.args as [
+            string,
+            string,
+            number[]?,
+          ]
           if (state.phase !== 'vm-prepared') {
             throw new Error('wanix iframe child: vm space not prepared')
           }
           const deferred = createdeferred<{ vmid: string; vrid: string }>()
           pendingspawnvm = deferred
+          const generation = (state.zedcafe?.generation ?? 0) + 1
           setstate({
             phase: 'vm-active',
+            bootstage: 'export',
             mountKey: nextmountkey(state),
             archives: state.archives,
-            zedcafe: state.zedcafe,
+            zedcafe: {
+              cmd: state.zedcafe?.cmd ?? WANIX_ZED_CAFE_WASM_CMD,
+              generation,
+              ready: false,
+              taskrid: null,
+              inboxbytes: inboxbytes.length ? inboxbytes : undefined,
+            },
             urls: state.urls,
             vmid,
             mem,
@@ -459,6 +459,13 @@ export function createwanixiframechildcontroller() {
           replychildrpc(source, data.id, { result: files })
           return
         }
+        case 'readzedcafetaskrid': {
+          const current = getstate()
+          replychildrpc(source, data.id, {
+            result: readzedcafetaskrid(current),
+          })
+          return
+        }
         case 'probezedcafeexport': {
           const wanixroot = await waitforcontrollerroot()
           const current = getstate()
@@ -504,12 +511,50 @@ export function createwanixiframechildcontroller() {
     } as WanixIframeHostState)
   }
 
+  function markzedcafeready() {
+    const current = getstate()
+    if (!current.zedcafe) {
+      return
+    }
+    setstate({
+      ...current,
+      zedcafe: {
+        ...current.zedcafe,
+        ready: true,
+      },
+    } as WanixIframeHostState)
+  }
+
+  function beginvmboot(guestfiles: WanixZedCafeGuestFile[]) {
+    const current = getstate()
+    if (current.phase !== 'vm-active' || current.bootstage !== 'export') {
+      return
+    }
+    postwanixiframeapilog(
+      `zed-cafe export: #ramfs/zed-cafe ready — remounting wanix-system with wanix-vm (${guestfiles.length} files)`,
+    )
+    setstate({
+      ...current,
+      bootstage: 'boot',
+      mountKey: nextmountkey(current),
+      zedcafe: current.zedcafe
+        ? {
+            ...current.zedcafe,
+            guestfiles,
+            ready: true,
+          }
+        : null,
+    })
+  }
+
   return {
     getstate,
     subscribe,
     setroot,
     getroot,
     setzedcafetaskrid,
+    markzedcafeready,
+    beginvmboot,
     onsystemready,
     onsystemerror,
     onspawnvmcomplete,
