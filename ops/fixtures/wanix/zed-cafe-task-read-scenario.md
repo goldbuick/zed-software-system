@@ -98,11 +98,14 @@ yarn task run wanix:vm:zed-cafe:validate
 
 **Milestones**
 
-| Step | Guest command | Pass |
-|------|---------------|------|
+| Step | Check | Pass |
+|------|-------|------|
+| A (boot gate only) | iframe apilog after `#wanix vm` | `#ramfs/zed-cafe ready — remounting wanix-system with wanix-vm` |
 | B | (wait for shell) | prompt `~ #` |
 | C | `ls /` | listing contains `zed-cafe` |
 | D | `ls /zed-cafe` | listing contains `stats.json` |
 | E | `cat /zed-cafe/stats.json` | JSON with `"bookCount"` or `"exportedAt"` |
 
-Related gates: `wanix:zed-cafe:export:validate:app` (same milestones), `wanix:vm:boot:validate` (adds book seed + anti-hang Milestone A).
+Book import seeds host memory only; iframe apilog appears after `#wanix vm` starts the iframe. Do not wait for export apilog before spawn in validators.
+
+Related gates: `wanix:zed-cafe:export:validate:app` (milestones B–E), `wanix:vm:boot:validate` (book seed + Milestone A + B–E).

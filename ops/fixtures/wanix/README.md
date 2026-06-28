@@ -13,10 +13,10 @@ Reference: [tractordev/wanix](https://github.com/tractordev/wanix) **`main`** (`
 | ZSS feature | Upstream 0.4 recipe | ZSS owner |
 |-------------|---------------------|-----------|
 | WASI drop / `#wanix` tasks | Quick start `#ramfs` + `<wanix-task type="wasi" term>` | `spawnwanixspace` → `#ramfs` boot; `createtask` |
-| `#wanix vm` prep | [`examples/basic-vm.html`](https://github.com/tractordev/wanix/blob/main/examples/basic-vm.html) — linux + `#vm` ns + v86 binds **before** first `ready` | `spawnwanixvmspace` → `bootwanixsystemforvm` |
-| VM serial console | `<wanix-vm export="ttyS0" term>` + `#vm/<rid>/term/data` | `createvm` + `connectvmterm` after `el.start()` |
+| `#wanix vm` prep | [`examples/basic-vm.html`](https://github.com/tractordev/wanix/blob/main/examples/basic-vm.html) — linux + `#vm` ns + v86 binds **before** first `ready` | `spawnwanixvmspace` → two-phase `vm-active` (`bootstage: export` then `boot`) in iframe child |
+| VM serial console | `<wanix-vm export="ttyS0" term>` + `#vm/<rid>/term/data` | `<wanix-vm>` must be **initial child** on boot remount — not appended after `ready` |
 | Term I/O | `<wanix-term path="…" raw>` (we use tile bridge instead of xterm) | `wanixhost.ts` + `WanixTermInput` |
-| `./zed-cafe/` book export | Live ns bind + host `writeFile`; gojs boot once for initial tree | `wanixstateexport.ts` + `wanixzedcafe.ts` + `wanixstateimport.ts` |
+| `./zed-cafe/` / `/zed-cafe/` export | gojs export → live ns bind (task) or capture + VM remount (VM) | `wanixstateexport.ts` + `wanixzedcafe.ts` + `wanixiframechildmount.ts` |
 
 Session books mirror to **`./zed-cafe/`** (WASI tasks) or **`/zed-cafe/`** (Linux VM) when Wanix is warm. Host pushes edits via live `writeFile` into `#task/<rid>/export` (no gojs restart per edit). Guest edits import via auto-poll (~3s) or **`#wanix pull`**.
 
@@ -26,7 +26,25 @@ Build the gojs export guest (runs automatically before `app:build`):
 yarn task run wanix:zed-cafe:build
 ```
 
-Shipped at `/wanix/zed-cafe.wasm` (`cafe/public/wanix/`). Staging stays internal: wasm file bind `{ dst: #ramfs/zed-cafe.wasm, src: /wanix/zed-cafe.wasm }`; gojs cmd is `#ramfs/zed-cafe.wasm`. Inbox writes to **`#ramfs/zed-cafe-inbox.json`** via `putwanixfile`; iframe child verifies bytes exist before gojs `start` (no blob overlay on `#ramfs`). Export bind `{ dst: zed-cafe, src: #task/<rid>/export }` resolves to `./zed-cafe/` (task) or `/zed-cafe/` (VM). On export bind failure, fallback: `#ramfs/zed-cafe` ← export, then `zed-cafe` ← `#ramfs/zed-cafe`. Guest `ls /` should show only normal Linux dirs plus **`zed-cafe/`** after export — no `_wanix`, `zed-cafe.wasm`, or `zed-cafe-inbox.json` on `/`.
+Shipped at `/wanix/zed-cafe.wasm` (`cafe/public/wanix/`). Staging: wasm file bind `{ dst: #ramfs/zed-cafe.wasm, src: /wanix/zed-cafe.wasm }`; gojs cmd is `#ramfs/zed-cafe.wasm`.
+
+**Inbox** (`#ramfs/zed-cafe-inbox.json`):
+
+| Layout | Staging |
+|--------|---------|
+| Task | `putwanixfile` when wanix root exists; iframe verifies before gojs `start` |
+| VM | **File bind at mount** — host passes `inboxbytes` into `spawnvm` (no `putwanixfile` while `vm-prepared`) |
+
+**Export → guest:**
+
+| Layout | Mount |
+|--------|-------|
+| Task | ns bind `{ dst: zed-cafe, src: #task/<rid>/export }` after `waitzedcafeexportready` → `./zed-cafe/` |
+| VM | **Two-phase boot** — export phase: gojs only; boot phase: capture files from `#task/<rid>/export`, file binds on `#ramfs/zed-cafe/*`, `<wanix-vm>` child bind `zed-cafe` ← `#ramfs/zed-cafe` → `/zed-cafe/` |
+
+On task export bind failure, fallback: `#ramfs/zed-cafe` ← export, then `zed-cafe` ← `#ramfs/zed-cafe`. Guest `ls /` (VM) should show normal Linux dirs plus **`zed-cafe/`** only — no `_wanix`, `zed-cafe.wasm`, or inbox on `/`.
+
+Agent docs: `.cursor/skills/wanix-zed-cafe-export/SKILL.md`, `.cursor/rules/wanix-vm-lifecycle.mdc`.
 
 **Local gates** (dev server must be running: `yarn task app dev`):
 
@@ -65,13 +83,15 @@ zed-cafe/
 
 Verify: warm Wanix → `cat zed-cafe/stats.json` from a task, or `#wanix vm` → `cat /zed-cafe/stats.json`.
 
-Playwright gates use bounded waits (`tasks/implementations/wanix/wanix-playwright-vm.mjs`):
+Playwright gates use bounded waits ([`tasks/implementations/wanix/wanix-playwright-vm.mjs`](../../../tasks/implementations/wanix/wanix-playwright-vm.mjs)):
 
-- `SCRIPT_TOTAL_MS` default 360000 (6m hard cap per script)
-- `VM_SHELL_MS` default 240000 (plan gate 3)
+- `SCRIPT_TOTAL_MS` default **420000** (7m hard cap per script)
+- `VM_SHELL_MS` default **360000**
 - Override: `ZSS_WANIX_VM_SCRIPT_TIMEOUT_MS`, `ZSS_WANIX_VM_SHELL_TIMEOUT_MS`
 
-VM prep must **not** call `_setupNamespace` a second time after `#ramfs` (that caused the Go `writeFile` panic). `#wanix vm` reboots into the basic-vm bind layout via `spawnwanixvmspace`.
+Validators capture **iframe** apilog (`zss-wanix-term-apilog` postMessage), not host tape scrollback.
+
+VM prep must **not** call `_setupNamespace` a second time after `#ramfs` (that caused the Go `writeFile` panic). `#wanix vm` uses `spawnwanixvmspace` then two-phase iframe remount (`bootstage: export` → `boot`).
 
 Import **`wanixtour`** book for a playable demo of `./zed-cafe/` on the `wanixzedcafe` board.
 
