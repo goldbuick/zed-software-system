@@ -86,40 +86,29 @@ try {
         await dropbook(page)
         await page.waitForTimeout(3000)
 
-        const exportready = await waitfor(
-          page,
-          'zed-cafe export ready',
-          async () => {
-            const logs = await readapilog(page, APILOG_KEY)
-            return logs.some((line) => /\/export ready/.test(line))
-          },
-          WANIX_VM_VALIDATE_TIMEOUTS.EXPORT_APILOG_MS,
-          2000,
-          log,
-        )
-        if (!exportready) {
-          throw new Error('zed-cafe export never became ready after book import')
-        }
-
         log('typing #wanix vm')
         const vmstart = Date.now()
         await sendline(page, '#wanix vm')
 
         const milestonea = await waitfor(
           page,
-          'milestone A fetching linux',
+          'milestone A vm export mount',
           async () => {
             const logs = await readapilog(page, APILOG_KEY)
-            return logs.some((line) => /wanix vm prep: fetching linux/i.test(line))
+            return logs.some((line) =>
+              /#ramfs\/zed-cafe ready — remounting wanix-system with wanix-vm/.test(line),
+            )
           },
-          45_000,
-          1500,
+          WANIX_VM_VALIDATE_TIMEOUTS.EXPORT_APILOG_MS,
+          2000,
           log,
         )
         if (!milestonea) {
           const tail = (await readapilog(page, APILOG_KEY)).slice(-12)
           log('apilog tail:', tail.join('\n'))
-          throw new Error('Milestone A failed — never reached fetching linux within 45s')
+          throw new Error(
+            'Milestone A failed — export never reached vm remount within timeout',
+          )
         }
         log(`Milestone A ok (${Date.now() - vmstart}ms)`)
 
