@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>zed-cafe gojs export write harness</title>
+    <script
+      type="module"
+      src="https://cdn.jsdelivr.net/npm/wanix@0.4.0-alpha8/dist/wanix.min.js"
+    ></script>
+    <style>
+      body {
+        font: 14px ui-monospace, Menlo, Monaco, Consolas, monospace;
+        margin: 16px;
+      }
+      #status {
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>zed-cafe export write harness</h1>
+    <pre id="status">booting…</pre>
+    <wanix-system
+      id="zed-cafe-export-write"
+      wasm="https://cdn.jsdelivr.net/npm/wanix@0.4.0-alpha8/dist/wanix.debug.wasm"
+      allow-origins="*"
+      debug
+    >
+      <wanix-bind dst="." src="#ramfs"></wanix-bind>
+      <wanix-bind
+        type="file"
+        dst="#ramfs/zed-cafe.wasm"
+        src="/wanix/zed-cafe.wasm"
+      ></wanix-bind>
+      <wanix-bind
+        type="file"
+        dst="zedcafewrite.wasm"
+        src="/ops/fixtures/wanix/zedcafewrite.wasm"
+      ></wanix-bind>
+      <wanix-bind
+        dst="zed-cafe"
+        src="#task/2/export"
+        data-zss-export-write-guest=""
+      ></wanix-bind>
+      <wanix-task
+        id="zed-cafe"
+        type="gojs"
+        cmd="#ramfs/zed-cafe.wasm"
+      ></wanix-task>
+    </wanix-system>
+    <script type="module">
+      const INBOX_RAMFS = '#ramfs/zed-cafe-inbox.json'
+      const EXPORT_TASK_ID = 'zed-cafe'
+      const WRITE_TASK_ID = 'write-stats'
+      const GUEST_STATS = 'zed-cafe/stats.json'
+      const EXPECTED_EXPORT_RID = '2'
+      const statusel = document.getElementById('status')
+
+      function setstatus(text) {
+        if (statusel) {
+          statusel.textContent = text
+        }
+      }
+
+      function sampleinboxbytes() {
+        const payload = {
+          files: [
+            {
+              path: 'stats.json',
+              data: btoa(
+                JSON.stringify({
+                  exportedAt: new Date().toISOString(),
+                  bookCount: 0,
+                  books: [],
+                }),
+              ),
+            },
+          ],
+        }
+        return new TextEncoder().encode(`${JSON.stringify(payload)}\n`)
+      }
+
+      function readtermtext() {
+        const term = document.querySelector('wanix-term')?._term
+        if (!term) {
+          return ''
+        }
+        const active = term.buffer.active
+        const lines = []
+        for (let i = 0; i < active.length; i++) {
+          lines.push(active.getLine(i)?.translateToString(true) ?? '')
+        }
+        return lines.join('\n').trim()
+      }
+
+      function decodestats(raw) {
+        const text =
+          raw instanceof Uint8Array
+            ? new TextDecoder().decode(raw)
+            : String(raw)
+        try {
+          JSON.parse(text.trim())
+          return text
+        } catch {
+          return null
+        }
+      }
+
+      async function waitforexportlisting(root, rid, timeoutms = 30000) {
+        const deadline = Date.now() + timeoutms
+        while (Date.now() < deadline) {
+          try {
+            const listing = await root.readDir(`#task/${rid}/export`)
+            if (
+              Array.isArray(listing) &&
+              listing.some((entry) => entry.replace(/\/$/, '') === 'stats.json')
+            ) {
+              return true
+            }
+          } catch {
+            // keep polling
+          }
+          await new Promise((r) => setTimeout(r, 250))
+        }
+        return false
+      }
+
+      async function waitforstatsjson(root, path, timeoutms = 30000) {
+        const deadline = Date.now() + timeoutms
+        while (Date.now() < deadline) {
+          try {
+            const raw = await root.readFile(path)
+            const text = decodestats(raw)
+            if (text) {
+              return text
+            }
+          } catch {
+            // keep polling
+          }
+          await new Promise((r) => setTimeout(r, 150))
+        }
+        return null
+      }
+
+      async function waitforguesttouchinexport(root, rid, timeoutms = 20000) {
+        const path = `#task/${rid}/export/stats.json`
+        const deadline = Date.now() + timeoutms
+        while (Date.now() < deadline) {
+          try {
+            const raw = await root.readFile(path)
+            const text = decodestats(raw)
+            if (text?.includes('"guestTouch":true')) {
+              return { ok: true, text }
+            }
+          } catch {
+            // keep polling
+          }
+          await new Promise((r) => setTimeout(r, 150))
+        }
+        return { ok: false, error: 'guestTouch missing in export namespace' }
+      }
+
+      async function run() {
+        const sys = document.querySelector('wanix-system')
+        const root = await new Promise((resolve, reject) => {
+          const timer = setTimeout(
+            () => reject(new Error('wanix-system ready timeout')),
+            120000,
+          )
+          sys.addEventListener(
+            'ready',
+            () => {
+              clearTimeout(timer)
+              resolve(sys.root)
+            },
+            { once: true },
+          )
+          sys.addEventListener(
+            'error',
+            (e) => {
+              clearTimeout(timer)
+              reject(e.detail?.error ?? new Error('wanix-system error'))
+            },
+            { once: true },
+          )
+        })
+
+        await root.writeFile(INBOX_RAMFS, sampleinboxbytes())
+
+        sys.querySelector(`wanix-task[id="${WRITE_TASK_ID}"]`)?.remove()
+        sys.querySelector('wanix-term[data-zss-export-write-term]')?.remove()
+
+        const exporttask = sys.querySelector(`wanix-task[id="${EXPORT_TASK_ID}"]`)
+        if (!exporttask) {
+          throw new Error('zed-cafe export task missing from harness tree')
+        }
+
+        if (!exporttask.rid) {
+          await exporttask.allocate?.()
+        }
+        const exportrid = exporttask.rid
+        if (!exportrid) {
+          throw new Error('zed-cafe export task allocate: missing rid')
+        }
+        if (String(exportrid) !== EXPECTED_EXPORT_RID) {
+          throw new Error(
+            `unexpected export rid ${exportrid} (harness expects ${EXPECTED_EXPORT_RID} for static guest bind)`,
+          )
+        }
+
+        await exporttask.start?.()
+
+        if (!(await waitforexportlisting(root, exportrid))) {
+          throw new Error('export stats.json missing before write')
+        }
+
+        if (!(await waitforstatsjson(root, GUEST_STATS))) {
+          throw new Error(`${GUEST_STATS} missing after direct export bind`)
+        }
+
+        const writetask = document.createElement('wanix-task')
+        writetask.id = WRITE_TASK_ID
+        writetask.setAttribute('type', 'wasi')
+        writetask.setAttribute('cmd', 'zedcafewrite.wasm')
+        writetask.setAttribute('term', '')
+        sys.appendChild(writetask)
+
+        await writetask.allocate?.()
+        const writerid = writetask.rid
+        if (!writerid) {
+          throw new Error('write task allocate: missing rid')
+        }
+
+        const term = document.createElement('wanix-term')
+        term.setAttribute('path', `#task/${writerid}/term`)
+        term.setAttribute('data-zss-export-write-term', '')
+        sys.appendChild(term)
+
+        const poll = waitforguesttouchinexport(root, exportrid, 20000)
+        await writetask.start?.()
+        const exporttree = await poll
+        const output = readtermtext()
+        const evidence = {
+          pass: exporttree.ok,
+          exportrid,
+          writerid,
+          export_tree: exporttree.text ?? null,
+          output,
+          error: exporttree.error ?? null,
+        }
+        window.zedcafeExportWriteResult = evidence
+        setstatus(JSON.stringify(evidence, null, 2))
+        if (!evidence.pass) {
+          throw new Error(
+            `zed-cafe export write failed: ${evidence.output || evidence.error || 'no output'}`,
+          )
+        }
+      }
+
+      run().catch((err) => {
+        const prior = window.zedcafeExportWriteResult
+        const evidence = {
+          pass: false,
+          error: err instanceof Error ? err.message : String(err),
+          ...(prior && typeof prior === 'object' ? prior : {}),
+        }
+        window.zedcafeExportWriteResult = evidence
+        setstatus(JSON.stringify(evidence, null, 2))
+      })
+    </script>
+  </body>
+</html>

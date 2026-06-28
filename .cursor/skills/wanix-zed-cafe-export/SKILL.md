@@ -61,7 +61,7 @@ Shared helpers: [`tasks/implementations/wanix/wanix-playwright-vm.mjs`](../../..
 - Book drop seeds **host memory** only; iframe apilog starts after `#wanix vm` (or task space boot).
 - Milestone A (boot gate): `#ramfs/zed-cafe ready — remounting wanix-system with wanix-vm`.
 
-Timeouts (override via env): `ZSS_WANIX_VM_SCRIPT_TIMEOUT_MS` (default 420000), `ZSS_WANIX_VM_SHELL_TIMEOUT_MS` (default 360000). See skill `no-hanging-scripts`.
+Timeouts (override via env): `ZSS_WANIX_VM_SCRIPT_TIMEOUT_MS` (default 420000), `ZSS_WANIX_VM_SHELL_TIMEOUT_MS` (default 360000). See rule `no-hanging-scripts.mdc`.
 
 Scenario doc: [`ops/fixtures/wanix/zed-cafe-task-read-scenario.md`](../../../ops/fixtures/wanix/zed-cafe-task-read-scenario.md) section **E**.
 

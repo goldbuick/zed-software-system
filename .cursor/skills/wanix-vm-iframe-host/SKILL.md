@@ -11,7 +11,7 @@ description: >-
 
 The hidden iframe `/wanix-iframe-host.html` (child: [cafe/wanix-iframe-host.ts](../../../cafe/wanix-iframe-host.ts)) runs both WASI tasks and v86 VMs for `#frame` mode. The parent is [zss/feature/wanix/wanixtermiframehost.ts](../../../zss/feature/wanix/wanixtermiframehost.ts).
 
-Related: rule `wanix-term-bridge.mdc`, rule `wanix-vm-lifecycle.mdc`, skill `wanix-zed-cafe-export`, skill `wanix-term-sizing`, skill `no-hanging-scripts`.
+Related: rule `wanix-term-bridge.mdc`, rule `wanix-vm-lifecycle.mdc`, rule `no-hanging-scripts.mdc`, skill `wanix-zed-cafe-export`, skill `wanix-term-sizing`.
 
 ## Invariant: VMs must be declared at system boot
 
@@ -112,7 +112,7 @@ On gate failure: `dumpfailurediagnostics` logs xterm tail + apilog tail.
 
 ## Guardrails
 
-- Bound every Playwright run (skill `no-hanging-scripts`); v86 boot is heavy
+- Bound every Playwright run (rule `no-hanging-scripts.mdc`); v86 boot is heavy
 - Log progress per milestone so slow boot ≠ hang
 - Kill orphaned Chrome for Testing after interrupts
 - Diagnose via live `#vm` tree and `wanix-term._term` — not WASI fd 0 (rule `wanix-term-bridge.mdc`)

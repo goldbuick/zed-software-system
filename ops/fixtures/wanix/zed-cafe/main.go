@@ -3,30 +3,21 @@
 package main
 
 import (
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
-	"io/fs"
 	"log"
 	"os"
 
-	"tractor.dev/wanix/fs/fskit"
 	"tractor.dev/wanix/gojs"
 )
 
 const inboxpath = "zed-cafe-inbox.json"
 
-type inboxentry struct {
-	Path string `json:"path"`
-	Data string `json:"data"`
-}
-
-type inboxpayload struct {
-	Files []inboxentry `json:"files"`
-}
-
 func main() {
-	exportfs, err := buildinboxexport()
+	raw, err := readinboxfile()
+	if err != nil {
+		log.Fatal(err)
+	}
+	exportfs, err := NewExportFromInboxJSON(raw)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -52,24 +43,4 @@ func readinboxfile() ([]byte, error) {
 		lasterr = err
 	}
 	return nil, fmt.Errorf("read inbox: %w", lasterr)
-}
-
-func buildinboxexport() (fs.FS, error) {
-	raw, err := readinboxfile()
-	if err != nil {
-		return nil, err
-	}
-	var payload inboxpayload
-	if err := json.Unmarshal(raw, &payload); err != nil {
-		return nil, err
-	}
-	nodes := fskit.MapFS{}
-	for _, entry := range payload.Files {
-		data, err := base64.StdEncoding.DecodeString(entry.Data)
-		if err != nil {
-			return nil, err
-		}
-		nodes[entry.Path] = fskit.RawNode(data)
-	}
-	return nodes, nil
 }

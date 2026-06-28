@@ -1,14 +1,15 @@
 ---
 name: no-hanging-scripts
 description: >-
-  Prevents tests, scripts, and dev servers from hanging without exiting.
-  Use before running Jest, yarn scripts, background shells, lang/WASM tests,
-  vite preview/dev, or when a command stalls, runs too long, or fails to return.
+  Extended examples and checklists for rule no-hanging-scripts.mdc.
+  Use when authoring WASM tests, Playwright validators, or debugging hung processes.
 ---
 
 # No hanging scripts
 
-Hanging commands waste time. **Never start a long or risky command without a plan to detect, bound, or kill it.**
+**Always-applied rule:** `.cursor/rules/no-hanging-scripts.mdc` — read that first.
+
+This skill adds detail, examples, and checklists. Hanging commands waste time. **Never start a long or risky command without a plan to detect, bound, or kill it.**
 
 ## Before you run anything
 

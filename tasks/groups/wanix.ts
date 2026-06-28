@@ -29,6 +29,18 @@ export const WANIX_TASKS: TaskDef[] = [
       'Headed Playwright: minimal zed-cafe-export harness must show export/stats.json (local gate, not CI)',
     run: shell('node tasks/implementations/wanix/validate-zed-cafe-export.mjs'),
   }),
+  def('wanix:zed-cafe:export-write:validate', {
+    description:
+      'Playwright: gojs export memfs — zedcafewrite.wasm O_CREAT through #task/rid/export bind (local gate, not CI)',
+    run: shell(
+      'node tasks/implementations/wanix/validate-zed-cafe-export-write.mjs',
+    ),
+  }),
+  def('wanix:zed-cafe:memfs:validate', {
+    description:
+      'Composite ExportFS rollout gate — build, go test, harness Playwright (headless), jest smoke',
+    run: shell('node tasks/implementations/wanix/validate-zed-cafe-memfs.mjs'),
+  }),
   def('wanix:zed-cafe:export:validate:app', {
     description:
       'Headed Playwright: full app #wanix vm → cat /zed-cafe/stats.json (local gate, not CI)',

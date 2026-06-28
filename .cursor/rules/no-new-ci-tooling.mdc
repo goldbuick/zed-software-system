@@ -1,0 +1,41 @@
+---
+description: Do not add new CI tooling, GitHub Actions, or citty tasks
+alwaysApply: true
+---
+
+# No new CI tooling, actions, or tasks
+
+Do **not** expand CI surface area. The repo already has lint, Jest, and a fixed task/workflow set — extend those instead of adding infrastructure.
+
+## Prohibited
+
+- **New citty tasks** — no new `TaskDef` entries in `tasks/groups/`, handlers in `tasks/implementations/`, or pipeline deps in `tasks/pipelines.ts`.
+- **New GitHub Actions** — no new files under `.github/workflows/` and no new jobs or steps in existing workflows.
+- **New CI tooling** — no husky, lint-staged, pre-commit, codecov, Sonar, Dependabot configs, alternate CI platforms (Circle, Buildkite, etc.), or new `package.json` scripts beyond `postinstall` and `task`.
+
+## Allowed
+
+- **Lint** — fix or extend existing ESLint / clang-format / `app:lint` / `native:lint` configs and call sites.
+- **Jest** — add or fix tests under existing Jest setup; run via existing `app:test` (or equivalent already-wired task).
+- **In-place fixes** — repair existing workflow steps or task handlers without adding new task ids, jobs, or tools.
+
+## When CI coverage is needed
+
+1. Prefer a **Jest test** or **lint rule** in existing tooling.
+2. Wire through an **existing** task id already referenced in `.github/workflows/` if absolutely necessary.
+3. If neither works, **stop and ask the user** — do not add tasks, workflows, or CI services on your own.
+
+## Examples
+
+```text
+❌ BAD — def('wanix:vm:foo:validate', …) + new Playwright gate task
+❌ BAD — .github/workflows/nightly-e2e.yml
+❌ BAD — husky pre-commit hook running eslint
+❌ BAD — codecov or third-party coverage upload action
+
+✅ GOOD — new spec file run by existing app:test
+✅ GOOD — eslint rule or fix in existing app:lint path
+✅ GOOD — fix a broken step in on-pr-check.yml without adding jobs
+```
+
+See `task-manifest.mdc` for how existing tasks are invoked — not for adding new ones.

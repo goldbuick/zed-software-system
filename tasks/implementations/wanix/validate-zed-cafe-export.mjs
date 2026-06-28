@@ -7,12 +7,13 @@
  * Exit 0 only when #task/<rid>/export/stats.json exists.
  */
 import { chromium } from 'playwright'
+import { readplaywrightheadless } from './wanix-playwright-launch.mjs'
 
 const URL =
   process.env.ZSS_URL ?? 'https://localhost:7777/wanix/zed-cafe-export.html'
 const log = (...a) => console.log('[zed-cafe-export-validate]', ...a)
 
-const browser = await chromium.launch({ headless: false })
+const browser = await chromium.launch({ headless: readplaywrightheadless() })
 const page = await browser.newPage({ ignoreHTTPSErrors: true })
 page.setDefaultTimeout(120000)
 

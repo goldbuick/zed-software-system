@@ -10,6 +10,7 @@
 import { chromium } from 'playwright'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
+import { readplaywrightheadless } from './wanix-playwright-launch.mjs'
 
 const ROOT = join(import.meta.dirname, '../../..')
 const WASM = join(ROOT, 'ops/fixtures/wanix/zedcaferead.wasm')
@@ -26,7 +27,7 @@ if (!existsSync(WASM)) {
   process.exit(1)
 }
 
-const browser = await chromium.launch({ headless: false })
+const browser = await chromium.launch({ headless: readplaywrightheadless() })
 const page = await browser.newPage({ ignoreHTTPSErrors: true })
 page.setDefaultTimeout(120000)
 
