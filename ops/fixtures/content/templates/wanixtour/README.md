@@ -21,7 +21,7 @@ coolregionsbow; this book adds tour boards.
 | wanixdrop | `termbridge.wasm` (also `hello.wasm`, `hold.wasm`) |
 | wanixmenu | `#wanix` |
 | wanixvm | `#wanix vm` (in-app iframe host; first boot fetches linux + v86) |
-| wanixzedcafe | `cat zed-cafe/manifest.json`, drop `zedcaferead.wasm`, or VM `cat /zed-cafe/manifest.json` |
+| wanixzedcafe | `cat zed-cafe/stats.json`, drop `zedcaferead.wasm`, or VM `cat /zed-cafe/stats.json` |
 | wanixattach | `#wanix attach`, `ping` / `pong` on termbridge |
 | outro | `ops/fixtures/wanix/README.md` |
 

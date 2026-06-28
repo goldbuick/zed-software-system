@@ -224,6 +224,6 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 | `yarn task run wanix:wasm:build:all` | Compile wanix example .wat and optional .c sources to .wasm | — | `wanix:wasm:build`, `wanix:wasm:build:c` | — |
 | `yarn task run wanix:wasm:build:c` | Compile ops/fixtures/wanix/*.c to .wasm when wasi-sdk is installed (skips if missing) | — | — | — |
 | `yarn task run wanix:zed-cafe:build` | Build zed-cafe.wasm (Go js/wasm) into cafe/public/wanix/ for prod | `ci` | — | — |
-| `yarn task run wanix:zed-cafe:export:validate` | Headed Playwright: minimal zed-cafe-export harness must show export/manifest.json (local gate, not CI) | — | — | — |
-| `yarn task run wanix:zed-cafe:export:validate:app` | Headed Playwright: full app #wanix vm → cat /zed-cafe/manifest.json (local gate, not CI) | — | — | — |
-| `yarn task run wanix:zed-cafe:task-read:validate` | Headed Playwright: zed-cafe-task-read harness — dropped WASI task reads zed-cafe/manifest.json (local gate, not CI) | — | — | — |
+| `yarn task run wanix:zed-cafe:export:validate` | Headed Playwright: minimal zed-cafe-export harness must show export/stats.json (local gate, not CI) | — | — | — |
+| `yarn task run wanix:zed-cafe:export:validate:app` | Headed Playwright: full app #wanix vm → cat /zed-cafe/stats.json (local gate, not CI) | — | — | — |
+| `yarn task run wanix:zed-cafe:task-read:validate` | Headed Playwright: zed-cafe-task-read harness — dropped WASI task reads zed-cafe/stats.json (local gate, not CI) | — | — | — |

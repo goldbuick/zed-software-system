@@ -137,7 +137,7 @@ describe('wanix device', () => {
   it('routes export-state to wanixhandleexportstate', async () => {
     const files = [
       {
-        path: 'manifest.json',
+        path: 'stats.json',
         bytes: new Uint8Array([123, 125]),
       },
     ]

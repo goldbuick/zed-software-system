@@ -4,7 +4,7 @@
  * Requires dev server: yarn task app dev
  * Requires: npx playwright install chromium
  *
- * Exit 0 only when #task/<rid>/export/manifest.json exists.
+ * Exit 0 only when #task/<rid>/export/stats.json exists.
  */
 import { chromium } from 'playwright'
 
@@ -30,7 +30,7 @@ try {
   if (!evidence?.pass) {
     process.exitCode = 1
   } else {
-    log('PASS — harness export manifest.json ready')
+    log('PASS — harness export stats.json ready')
     process.exitCode = 0
   }
   void passed

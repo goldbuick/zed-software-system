@@ -79,7 +79,7 @@ const readexportready = async () => {
   if (!diag?.export || !Array.isArray(diag.export)) {
     return false
   }
-  return diag.export.some((entry) => entry.replace(/\/$/, '') === 'manifest.json')
+  return diag.export.some((entry) => entry.replace(/\/$/, '') === 'stats.json')
 }
 const wait = async (label, pred, ms, step = 2000) => {
   const dl = Date.now() + ms
@@ -120,7 +120,7 @@ try {
   if (!exportready) {
     log('diagnostics:', JSON.stringify(await readdiagnostics()))
     log('apilog tail:\n' + apilogs.slice(-8).join('\n'))
-    throw new Error('zed-cafe export did not complete (#task/rid/export missing manifest.json)')
+    throw new Error('zed-cafe export did not complete (#task/rid/export missing stats.json)')
   }
   log('EXPORT READY (host-side)')
 
@@ -133,9 +133,9 @@ try {
   }
   log('guest ls / shows zed-cafe/')
 
-  await sendline('cat /zed-cafe/manifest.json')
-  const manifestok = await wait(
-    'manifest.json in guest',
+  await sendline('cat /zed-cafe/stats.json')
+  const statsok = await wait(
+    'stats.json in guest',
     async () => {
       buf = await readbuf()
       return /"bookCount"|"exportedAt"/.test(buf)
@@ -143,11 +143,11 @@ try {
     30000,
     1500,
   )
-  if (!manifestok) {
+  if (!statsok) {
     log('cat tail:\n' + buf.split('\n').slice(-12).join('\n'))
-    throw new Error('cat /zed-cafe/manifest.json did not show JSON')
+    throw new Error('cat /zed-cafe/stats.json did not show JSON')
   }
-  log('PASS — /zed-cafe/manifest.json readable in VM')
+  log('PASS — /zed-cafe/stats.json readable in VM')
   process.exitCode = 0
 } catch (e) {
   log('FAILED:', e?.message || e)

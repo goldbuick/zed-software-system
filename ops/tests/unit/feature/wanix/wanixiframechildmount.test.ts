@@ -95,7 +95,7 @@ describe('wanixiframechildmount zed-cafe staging', () => {
 
   it('readzedcafeexportprobe reports inbox and export state', async () => {
     const root = {
-      readDir: jest.fn(async () => ['manifest.json']),
+      readDir: jest.fn(async () => ['stats.json']),
       readFile: jest.fn(async () => Uint8Array.from([1, 2, 3])),
       writeFile: jest.fn(),
     }
@@ -108,7 +108,7 @@ describe('wanixiframechildmount zed-cafe staging', () => {
     expect(probe.taskrid).toBe('3')
     expect(probe.inbox_ramfs_bytes).toBe(3)
     expect(probe.inbox_task_bytes).toBe(3)
-    expect(probe.export_listing).toEqual(['manifest.json'])
+    expect(probe.export_listing).toEqual(['stats.json'])
   })
 
   it('waitwanixbindmount resolves on mount event', async () => {

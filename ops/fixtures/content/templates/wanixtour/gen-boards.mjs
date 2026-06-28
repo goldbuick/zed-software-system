@@ -154,8 +154,8 @@ boardchain(
   'STEP 4 — ZED-CAFE FS',
   [
     'Session books mirror to ./zed-cafe/ when wanix is warm.',
-    'Task: cat zed-cafe/manifest.json',
-    'VM serial: cat /zed-cafe/manifest.json',
+    'Task: cat zed-cafe/stats.json',
+    'VM serial: cat /zed-cafe/stats.json',
     'Drop ops/fixtures/wanix/zedcaferead.wasm — expect zed-cafe ok: on tile.',
     'Edits to books update within ~2s (debounced export).',
     '',

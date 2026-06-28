@@ -18,7 +18,7 @@ Reference: [tractordev/wanix](https://github.com/tractordev/wanix) **`main`** (`
 | Term I/O | `<wanix-term path="…" raw>` (we use tile bridge instead of xterm) | `wanixhost.ts` + `WanixTermInput` |
 | `./zed-cafe/` book export | Auto on warm + debounced book edits; gojs daemon `zed-cafe` | `wanixstateexport.ts` + `wanixzedcafe.ts` |
 
-Session books mirror to **`./zed-cafe/`** (WASI tasks) or **`/zed-cafe/`** (Linux VM) when Wanix is warm. No CLI command — edit a book and `manifest.json` updates within ~2s.
+Session books mirror to **`./zed-cafe/`** (WASI tasks) or **`/zed-cafe/`** (Linux VM) when Wanix is warm. No CLI command — edit a book and `stats.json` updates within ~2s.
 
 Build the gojs export guest (runs automatically before `app:build`):
 
@@ -31,25 +31,35 @@ Shipped at `/wanix/zed-cafe.wasm` (`cafe/public/wanix/`). Staging stays internal
 **Local gates** (dev server must be running: `yarn task app dev`):
 
 ```bash
-yarn task run wanix:zed-cafe:export:validate      # minimal harness → #task/<rid>/export/manifest.json
-yarn task run wanix:zed-cafe:export:validate:app  # full app #wanix vm → cat /zed-cafe/manifest.json
+yarn task run wanix:zed-cafe:export:validate      # minimal harness → #task/<rid>/export/stats.json
+yarn task run wanix:zed-cafe:export:validate:app  # full app #wanix vm → cat /zed-cafe/stats.json
 ```
 
 | Layout | Read books |
 |--------|------------|
-| Task | `cat zed-cafe/manifest.json` |
-| VM | `cat /zed-cafe/manifest.json` |
+| Task | `cat zed-cafe/stats.json` |
+| VM | `cat /zed-cafe/stats.json` |
 
 Layout:
 
 ```text
 zed-cafe/
-  manifest.json
-  books/<book-id>/book.json
-  books/<book-id>/pages/<page-id>.json
+  stats.json
+  books/<book-id>/
+    stats.json
+    pages/<page-id>/
+      stats.json
+      board/
+        terrain.json
+        stats.json
+        objects/<object-id>.json
+      object/element.json
+      terrain/element.json
+      charset/bitmap.json
+      palette/bitmap.json
 ```
 
-Verify: warm Wanix → `cat zed-cafe/manifest.json` from a task, or `#wanix vm` → `cat /zed-cafe/manifest.json`.
+Verify: warm Wanix → `cat zed-cafe/stats.json` from a task, or `#wanix vm` → `cat /zed-cafe/stats.json`.
 
 VM prep must **not** call `_setupNamespace` a second time after `#ramfs` (that caused the Go `writeFile` panic). `#wanix vm` reboots into the basic-vm bind layout via `spawnwanixvmspace`.
 
@@ -85,13 +95,13 @@ Sources:
 | `hello.wat` | one-shot hello (batch stdout) |
 | `hold.wat` | infinite loop (e2e term-write while running) |
 | `termbridge.wat` | **ZSS tile term bridge demo** — banner on stdout, then hold |
-| `zedcaferead.c` / `zedcaferead.wat` | **zed-cafe FS read** — opens `zed-cafe/manifest.json`, prints `zed-cafe ok: …` |
+| `zedcaferead.c` / `zedcaferead.wat` | **zed-cafe FS read** — opens `zed-cafe/stats.json`, prints `zed-cafe ok: …` |
 
 Drag the `.wasm` onto a running app (`yarn task app dev`). Multiple drops run in parallel; use `#wanix` to attach, stop, or unmount.
 
 ### zed-cafe task read (`zedcaferead.wasm`)
 
-After Wanix is warm and session books have exported to `./zed-cafe/`, drop `zedcaferead.wasm` to prove a WASI task can read `zed-cafe/manifest.json`.
+After Wanix is warm and session books have exported to `./zed-cafe/`, drop `zedcaferead.wasm` to prove a WASI task can read `zed-cafe/stats.json`.
 
 Full scenario: [`zed-cafe-task-read-scenario.md`](zed-cafe-task-read-scenario.md)  
 Harness: [/wanix/zed-cafe-task-read.html](http://localhost:7777/wanix/zed-cafe-task-read.html) (build wasm with `yarn task run wanix:wasm:build` first).

@@ -49,7 +49,7 @@
         const payload = {
           files: [
             {
-              path: 'manifest.json',
+              path: 'stats.json',
               data: btoa(
                 JSON.stringify({
                   exportedAt: new Date().toISOString(),
@@ -137,7 +137,7 @@
           if (
             Array.isArray(probe.export_listing) &&
             probe.export_listing.some(
-              (entry) => entry.replace(/\/$/, '') === 'manifest.json',
+              (entry) => entry.replace(/\/$/, '') === 'stats.json',
             )
           ) {
             return { ok: true, probe }
@@ -210,7 +210,7 @@
         window.zedcafeExportResult = evidence
         setstatus(JSON.stringify(evidence, null, 2))
         if (!result.ok) {
-          throw new Error('export manifest.json missing')
+          throw new Error('export stats.json missing')
         }
       }
 

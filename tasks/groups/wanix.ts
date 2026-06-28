@@ -26,19 +26,19 @@ export const WANIX_TASKS: TaskDef[] = [
   }),
   def('wanix:zed-cafe:export:validate', {
     description:
-      'Headed Playwright: minimal zed-cafe-export harness must show export/manifest.json (local gate, not CI)',
+      'Headed Playwright: minimal zed-cafe-export harness must show export/stats.json (local gate, not CI)',
     run: shell('node tasks/implementations/wanix/validate-zed-cafe-export.mjs'),
   }),
   def('wanix:zed-cafe:export:validate:app', {
     description:
-      'Headed Playwright: full app #wanix vm → cat /zed-cafe/manifest.json (local gate, not CI)',
+      'Headed Playwright: full app #wanix vm → cat /zed-cafe/stats.json (local gate, not CI)',
     run: shell(
       'node tasks/implementations/wanix/validate-zed-cafe-export-app.mjs',
     ),
   }),
   def('wanix:zed-cafe:task-read:validate', {
     description:
-      'Headed Playwright: zed-cafe-task-read harness — dropped WASI task reads zed-cafe/manifest.json (local gate, not CI)',
+      'Headed Playwright: zed-cafe-task-read harness — dropped WASI task reads zed-cafe/stats.json (local gate, not CI)',
     run: shell(
       'node tasks/implementations/wanix/validate-zed-cafe-task-read.mjs',
     ),

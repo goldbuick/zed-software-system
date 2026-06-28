@@ -59,8 +59,8 @@ Ready-to-run template: [scripts/validate-wanix-vm.mjs](scripts/validate-wanix-vm
 Zed-cafe export gates (local only, not CI — dev server must be running):
 
 ```bash
-yarn task run wanix:zed-cafe:export:validate      # minimal harness → #task/<rid>/export/manifest.json
-yarn task run wanix:zed-cafe:export:validate:app  # full app #wanix vm → cat /zed-cafe/manifest.json
+yarn task run wanix:zed-cafe:export:validate      # minimal harness → #task/<rid>/export/stats.json
+yarn task run wanix:zed-cafe:export:validate:app  # full app #wanix vm → cat /zed-cafe/stats.json
 ```
 
 Legacy headed script: [scripts/validate-zed-cafe-vm-export.mjs](scripts/validate-zed-cafe-vm-export.mjs)

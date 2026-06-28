@@ -117,9 +117,9 @@ try {
     throw new Error('guest ls / missing zed-cafe/')
   }
 
-  await sendline('cat /zed-cafe/manifest.json')
-  const manifestok = await wait(
-    'manifest.json in guest',
+  await sendline('cat /zed-cafe/stats.json')
+  const statsok = await wait(
+    'stats.json in guest',
     async () => {
       buf = await readbuf()
       return /"bookCount"|"exportedAt"/.test(buf)
@@ -127,12 +127,12 @@ try {
     30000,
     1500,
   )
-  if (!manifestok) {
+  if (!statsok) {
     log('cat tail:\n' + buf.split('\n').slice(-12).join('\n'))
-    throw new Error('cat /zed-cafe/manifest.json did not show JSON')
+    throw new Error('cat /zed-cafe/stats.json did not show JSON')
   }
 
-  log('PASS — /zed-cafe/manifest.json readable in VM')
+  log('PASS — /zed-cafe/stats.json readable in VM')
   process.exitCode = 0
 } catch (err) {
   log('FAILED:', err instanceof Error ? err.message : String(err))

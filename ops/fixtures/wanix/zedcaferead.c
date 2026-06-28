@@ -1,8 +1,8 @@
 /*
- * WASI task: read ./zed-cafe/manifest.json and print the first chunk to stdout.
+ * WASI task: read ./zed-cafe/stats.json and print the first chunk to stdout.
  * Drag-drop fixture for verifying zed-cafe FS visibility from a Wanix task.
  *
- * Success: "zed-cafe ok: " + bytes from manifest.json
+ * Success: "zed-cafe ok: " + bytes from stats.json
  * Failure: "zed-cafe missing\n" (path_open) or "zed-cafe empty\n" (read)
  */
 typedef unsigned int size_t;
@@ -103,7 +103,7 @@ static void write_marker(void) {
 
 __attribute__((export_name("_start")))
 void _start(void) {
-  const char *path = "zed-cafe/manifest.json";
+  const char *path = "zed-cafe/stats.json";
   __wasi_fd_t opened = 0;
   __wasi_errno_t err = __wasi_path_open(
     PREOPEN_CWD,

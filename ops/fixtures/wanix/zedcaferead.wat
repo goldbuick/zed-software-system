@@ -1,4 +1,4 @@
-;; WASI task: read zed-cafe/manifest.json (same behavior as zedcaferead.c).
+;; WASI task: read zed-cafe/stats.json (same behavior as zedcaferead.c).
 (module
   (import "wasi_snapshot_preview1" "fd_write" (func $fd_write (param i32 i32 i32 i32) (result i32)))
   (import "wasi_snapshot_preview1" "fd_read" (func $fd_read (param i32 i32 i32 i32) (result i32)))
@@ -8,7 +8,7 @@
 
   (memory (export "memory") 2)
 
-  (data (i32.const 512) "zed-cafe/manifest.json")
+  (data (i32.const 512) "zed-cafe/stats.json")
   (data (i32.const 544) "zed-cafe missing\n")
   (data (i32.const 576) "zed-cafe empty\n")
   (data (i32.const 608) "zed-cafe ok: ")

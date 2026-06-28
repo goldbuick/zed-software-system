@@ -44,7 +44,7 @@ try {
   if (!evidence?.pass) {
     process.exitCode = 1
   } else {
-    log('PASS — task read zed-cafe/manifest.json')
+    log('PASS — task read zed-cafe/stats.json')
     process.exitCode = 0
   }
   void passed

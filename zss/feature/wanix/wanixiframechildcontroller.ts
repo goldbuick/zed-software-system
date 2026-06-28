@@ -56,7 +56,7 @@ async function waitforzedcafeexport(
           const entries = await root.readDir(`#task/${taskrid}/export`)
           if (
             entries.some(
-              (entry) => entry.replace(/\/$/, '') === 'manifest.json',
+              (entry) => entry.replace(/\/$/, '') === 'stats.json',
             )
           ) {
             postwanixiframeapilog(

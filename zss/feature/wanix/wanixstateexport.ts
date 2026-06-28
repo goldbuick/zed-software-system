@@ -2,10 +2,15 @@ import type { DEVICELIKE } from 'zss/device/api'
 import { wanixexportstate, wanixrequestzedcafeexport } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { WANIX_ZED_CAFE_EXPORT_DEBOUNCE_MS } from 'zss/feature/wanix/wanixzedcafeconstants'
-import { memoryexportbookasjson } from 'zss/memory/bookoperations'
-import { memoryexportcodepageasjson } from 'zss/memory/codepageoperations'
+import { memoryreadbookflags } from 'zss/memory/bookoperations'
+import {
+  memoryexportcodepageasjson,
+  memoryreadcodepagename,
+  memoryreadcodepagetypeasstring,
+} from 'zss/memory/codepageoperations'
 import { memoryreadbooklist } from 'zss/memory/session'
-import type { BOOK } from 'zss/memory/types'
+import { ispresent } from 'zss/mapping/types'
+import type { BOOK, CODE_PAGE } from 'zss/memory/types'
 
 export type WANIX_ZED_CAFE_EXPORT_FILE = {
   path: string
@@ -29,7 +34,7 @@ function encodejson(value: unknown): Uint8Array {
   return encodetext(`${JSON.stringify(value, null, 2)}\n`)
 }
 
-export function buildzedcafemanifest(books: BOOK[]) {
+export function buildzedcafestats(books: BOOK[]) {
   return {
     exportedAt: new Date().toISOString(),
     bookCount: books.length,
@@ -41,35 +46,142 @@ export function buildzedcafemanifest(books: BOOK[]) {
   }
 }
 
+export function buildzedcafebookmeta(book: BOOK) {
+  const flagsout: Record<string, unknown> = {}
+  const names = Object.keys(book.flags ?? {})
+  for (let i = 0; i < names.length; ++i) {
+    const name = names[i]!
+    flagsout[name] = memoryreadbookflags(book, name)
+  }
+  const pages: { id: string; type: string; name: string | undefined }[] = []
+  for (let i = 0; i < book.pages.length; ++i) {
+    const page = book.pages[i]!
+    pages.push({
+      id: page.id,
+      type: memoryreadcodepagetypeasstring(page),
+      name: memoryreadcodepagename(page),
+    })
+  }
+  return {
+    id: book.id,
+    name: book.name,
+    token: book.token,
+    timestamp: book.timestamp,
+    activelist: book.activelist,
+    flags: flagsout,
+    pages,
+  }
+}
+
+export function splitboardexport(
+  boardjson: Record<string, unknown>,
+): WANIX_ZED_CAFE_EXPORT_FILE[] {
+  const files: WANIX_ZED_CAFE_EXPORT_FILE[] = []
+  const { terrain, objects, ...stats } = boardjson
+  if (terrain !== undefined) {
+    files.push({
+      path: 'board/terrain.json',
+      bytes: encodejson(terrain),
+    })
+  }
+  if (Object.keys(stats).length > 0) {
+    files.push({
+      path: 'board/stats.json',
+      bytes: encodejson(stats),
+    })
+  }
+  if (ispresent(objects) && typeof objects === 'object') {
+    const entries = Object.entries(objects as Record<string, unknown>)
+    for (let i = 0; i < entries.length; ++i) {
+      const [objid, obj] = entries[i]!
+      files.push({
+        path: `board/objects/${objid}.json`,
+        bytes: encodejson(obj),
+      })
+    }
+  }
+  return files
+}
+
+export function buildzedcafecodepagefiles(
+  bookid: string,
+  page: CODE_PAGE,
+): WANIX_ZED_CAFE_EXPORT_FILE[] {
+  const pagejson = memoryexportcodepageasjson(page)
+  if (pagejson === undefined) {
+    return []
+  }
+  const prefix = `books/${bookid}/pages/${page.id}`
+  const files: WANIX_ZED_CAFE_EXPORT_FILE[] = []
+
+  files.push({
+    path: `${prefix}/stats.json`,
+    bytes: encodejson({
+      id: page.id,
+      code: page.code,
+      type: memoryreadcodepagetypeasstring(page),
+      name: memoryreadcodepagename(page),
+    }),
+  })
+
+  if (ispresent(pagejson.board)) {
+    const boardfiles = splitboardexport(pagejson.board as Record<string, unknown>)
+    for (let i = 0; i < boardfiles.length; ++i) {
+      const file = boardfiles[i]!
+      files.push({
+        path: `${prefix}/${file.path}`,
+        bytes: file.bytes,
+      })
+    }
+  }
+  if (ispresent(pagejson.object)) {
+    files.push({
+      path: `${prefix}/object/element.json`,
+      bytes: encodejson(pagejson.object),
+    })
+  }
+  if (ispresent(pagejson.terrain)) {
+    files.push({
+      path: `${prefix}/terrain/element.json`,
+      bytes: encodejson(pagejson.terrain),
+    })
+  }
+  if (ispresent(pagejson.charset)) {
+    files.push({
+      path: `${prefix}/charset/bitmap.json`,
+      bytes: encodejson(pagejson.charset),
+    })
+  }
+  if (ispresent(pagejson.palette)) {
+    files.push({
+      path: `${prefix}/palette/bitmap.json`,
+      bytes: encodejson(pagejson.palette),
+    })
+  }
+
+  return files
+}
+
 export function buildzedcafeexportfiles(): WANIX_ZED_CAFE_EXPORT_FILE[] {
   const books = memoryreadbooklist()
   const files: WANIX_ZED_CAFE_EXPORT_FILE[] = []
 
   files.push({
-    path: 'manifest.json',
-    bytes: encodejson(buildzedcafemanifest(books)),
+    path: 'stats.json',
+    bytes: encodejson(buildzedcafestats(books)),
   })
 
   for (let i = 0; i < books.length; ++i) {
-    const book = books[i]
-    const bookjson = memoryexportbookasjson(book)
-    if (bookjson === undefined) {
-      continue
-    }
+    const book = books[i]!
     files.push({
-      path: `books/${book.id}/book.json`,
-      bytes: encodejson(bookjson),
+      path: `books/${book.id}/stats.json`,
+      bytes: encodejson(buildzedcafebookmeta(book)),
     })
     for (let j = 0; j < book.pages.length; ++j) {
-      const page = book.pages[j]
-      const pagejson = memoryexportcodepageasjson(page)
-      if (pagejson === undefined) {
-        continue
+      const pagefiles = buildzedcafecodepagefiles(book.id, book.pages[j]!)
+      for (let k = 0; k < pagefiles.length; ++k) {
+        files.push(pagefiles[k]!)
       }
-      files.push({
-        path: `books/${book.id}/pages/${page.id}.json`,
-        bytes: encodejson(pagejson),
-      })
     }
   }
 

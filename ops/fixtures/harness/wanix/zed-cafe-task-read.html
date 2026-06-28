@@ -34,14 +34,14 @@
       ></wanix-bind>
       <wanix-bind
         type="file"
-        dst="zed-cafe/manifest.json"
-        src="/ops/fixtures/wanix/zed-cafe-harness-manifest.json"
+        dst="zed-cafe/stats.json"
+        src="/ops/fixtures/wanix/zed-cafe-harness-stats.json"
       ></wanix-bind>
     </wanix-system>
     <script type="module">
       const WASM_URL = '/ops/fixtures/wanix/zedcaferead.wasm'
-      const MANIFEST_PATH = 'zed-cafe/manifest.json'
-      const TASK_ID = 'read-manifest'
+      const STATS_PATH = 'zed-cafe/stats.json'
+      const TASK_ID = 'read-stats'
       const statusel = document.getElementById('status')
 
       function setstatus(text) {
@@ -50,9 +50,9 @@
         }
       }
 
-      async function probemanifest(root) {
+      async function probestats(root) {
         try {
-          const probe = await root.readFile(MANIFEST_PATH)
+          const probe = await root.readFile(STATS_PATH)
           return probe instanceof Uint8Array
             ? `${probe.length} bytes`
             : 'present'
@@ -124,7 +124,7 @@
           )
         })
 
-        const manifestprobe = await probemanifest(root)
+        const statsprobe = await probestats(root)
 
         const task = document.createElement('wanix-task')
         task.id = TASK_ID
@@ -147,9 +147,9 @@
         await task.start?.()
         const result = await exitwait
         const evidence = {
-          pass: result.ok && /bytes$/.test(manifestprobe),
+          pass: result.ok && /bytes$/.test(statsprobe),
           taskrid: rid,
-          manifest_probe: manifestprobe,
+          stats_probe: statsprobe,
           marker: result.marker ?? null,
           output: result.text ?? '',
           error: result.error ?? null,
