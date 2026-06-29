@@ -40,8 +40,40 @@ export function ensurewanixtermprobelayout() {
   }
 }
 
+/** Active target for multi-term probe routing (iframe child). */
+let activetargetid: string | null = null
+
+export function setwanixtermprobeactivetarget(targetid: string | null) {
+  activetargetid = targetid
+  document.querySelectorAll('wanix-term[data-zss-target-id]').forEach((el) => {
+    if (targetid && el.getAttribute('data-zss-target-id') === targetid) {
+      el.setAttribute('data-zss-term-attached', '')
+    } else {
+      el.removeAttribute('data-zss-term-attached')
+    }
+  })
+}
+
+export function readwanixtermprobeactivetarget(): string | null {
+  return activetargetid
+}
+
 function findwanixtermel(): WanixTermElement | null {
-  return document.querySelector('wanix-term')
+  if (activetargetid) {
+    const attached = document.querySelector(
+      `wanix-term[data-zss-target-id="${activetargetid}"]`,
+    ) as WanixTermElement | null
+    if (attached) {
+      return attached
+    }
+  }
+  const marked = document.querySelector(
+    'wanix-term[data-zss-term-attached]',
+  ) as WanixTermElement | null
+  if (marked) {
+    return marked
+  }
+  return null
 }
 
 function readxtermsize(): { cols: number; rows: number } | null {
@@ -244,6 +276,14 @@ export function installwanixtermprobeembed(): WanixTermProbe {
           probe.focusterm()
           reply({ result: { ok: true } })
           return
+        case 'setactiveterm': {
+          const [targetid] = (data.args ?? []) as [string | null]
+          setwanixtermprobeactivetarget(targetid ?? null)
+          lastcelldigest = ''
+          emitcellsnapshot()
+          reply({ result: { ok: true } })
+          return
+        }
         default:
           reply({ error: `unknown probe rpc: ${data.method}` })
       }

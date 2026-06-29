@@ -272,6 +272,15 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/wanix-remote-9p\/?/, '/'),
         },
+        '/wanix-bridge-host': {
+          target: 'ws://127.0.0.1:7654',
+          ws: true,
+          changeOrigin: true,
+          rewrite: (path) => {
+            const q = path.includes('?') ? path.slice(path.indexOf('?')) : ''
+            return `/host${q}`
+          },
+        },
       },
     },
   }

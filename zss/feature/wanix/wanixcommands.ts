@@ -15,6 +15,8 @@ import {
   sendwanixtermwrite,
   spawnwanixvm,
   spawnwanixvmspace,
+  startwanixbridge,
+  stopwanixbridge,
 } from 'zss/feature/wanix/wanixhost'
 import {
   iframechildhaltzedcafe,
@@ -50,6 +52,10 @@ import {
   wanixpullzedcafe,
 } from 'zss/feature/wanix/wanixzedcafe'
 import { WANIX_REMOTE_DEFAULT_DST } from 'zss/feature/wanix/wanixremoteconstants'
+import {
+  parsewanixbridgehosturl,
+  readwanixbridgeimporturl,
+} from 'zss/feature/wanix/wanixbridgehost'
 import {
   setwanixzedcafeready,
   setwanixzedcafetaskrid,
@@ -181,6 +187,11 @@ export async function wanixhandleshownenu(device: DEVICELIKE, player: string) {
     if (iswanixtermactive()) {
       parts.push(zsstextline('#wanix detach — stop routing terminal input'))
     }
+    parts.push(
+      zsstextline(
+        '$gray#wanix bridge <ws-url> — export namespace (run wanix-bridge CLI first)',
+      ),
+    )
     parts.push(zsssectionlines('Remote'))
     parts.push(zsszedlinkline('wanixremote', 'Remote imports (WSS 9P)'))
     terminalwritelines(device, player, zsstexttape(...parts))
@@ -476,6 +487,53 @@ export async function wanixhandleremotedisconnect(
     await disconnectwanixremote(remoteid)
     apilog(device, player, `wanix remote: disconnected ${remoteid}`)
     await wanixhandleremotemenu(device, player)
+  } catch (err) {
+    apierror(
+      device,
+      player,
+      'wanix',
+      err instanceof Error ? err.message : String(err),
+    )
+  }
+}
+
+export async function wanixhandlebridgestart(
+  device: DEVICELIKE,
+  player: string,
+  url: string,
+) {
+  try {
+    await ensurewanixsandbox(device, player)
+    parsewanixbridgehosturl(url)
+    await startwanixbridge(url.trim())
+    const importurl = readwanixbridgeimporturl(url.trim())
+    apilog(device, player, `wanix bridge: host connected`)
+    apilog(
+      device,
+      player,
+      `wanix bridge: external import — <wanix-bind type="import" src="${importurl}">`,
+    )
+  } catch (err) {
+    apierror(
+      device,
+      player,
+      'wanix',
+      err instanceof Error ? err.message : String(err),
+    )
+  }
+}
+
+export async function wanixhandlebridgestop(
+  device: DEVICELIKE,
+  player: string,
+) {
+  try {
+    if (!iswanixspaceactive()) {
+      apierror(device, player, 'wanix', 'wanix bridge not running')
+      return
+    }
+    await stopwanixbridge()
+    apilog(device, player, 'wanix bridge: stopped')
   } catch (err) {
     apierror(
       device,

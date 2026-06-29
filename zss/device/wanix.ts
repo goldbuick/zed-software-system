@@ -2,6 +2,8 @@ import { createdevice } from 'zss/device'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import {
   wanixhandleattach,
+  wanixhandlebridgestart,
+  wanixhandlebridgestop,
   wanixhandledetach,
   wanixhandlepull,
   wanixhandleremoteconnect,
@@ -160,6 +162,19 @@ const wanix = createdevice('wanix', [], (message) => {
       }
       doasync(wanix, message.player, async () => {
         await wanixhandleremotedisconnect(wanix, message.player, message.data)
+      })
+      break
+    case 'bridge-start':
+      if (!isstring(message.data)) {
+        break
+      }
+      doasync(wanix, message.player, async () => {
+        await wanixhandlebridgestart(wanix, message.player, message.data)
+      })
+      break
+    case 'bridge-stop':
+      doasync(wanix, message.player, async () => {
+        await wanixhandlebridgestop(wanix, message.player)
       })
       break
     case 'drop': {

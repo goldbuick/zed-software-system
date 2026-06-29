@@ -6,7 +6,6 @@
  * delegates to wanixtermiframehost.ts.
  */
 import type { DEVICELIKE } from 'zss/device/api'
-import { wanixrequestzedcafeexport } from 'zss/device/api'
 import {
   makewanixtaskid,
   normalizewanixcmd,
@@ -33,6 +32,8 @@ import {
   iframechilddisconnectremote,
   iframechildmountarchive,
   iframechildputfile,
+  iframechildstartbridge,
+  iframechildstopbridge,
   iframehalttask,
   iframehaltvm,
   iframepreptaskspace,
@@ -44,7 +45,6 @@ import {
   iframetermline,
   iswanixtermiframeactive,
   iswanixtermiframemode,
-  readwanixtermiframelayout,
   readwanixtermiframepreperror,
   readwanixtermiframeprepstage,
   teardownwanixtermiframe,
@@ -111,19 +111,15 @@ export async function spawnwanixspace(
   device: DEVICELIKE,
   player: string,
 ): Promise<void> {
-  if (iswanixtermiframeactive() && readwanixtermiframelayout() === 'task') {
+  if (iswanixtermiframeactive()) {
     await wanixdrainpendingzedcafeexport(device, player)
     return
-  }
-  if (iswanixtermiframeactive()) {
-    await teardownwanixtermiframe()
   }
   state = 'starting'
   try {
     await iframepreptaskspace()
     state = 'ready'
     await wanixdrainpendingzedcafeexport(device, player)
-    wanixrequestzedcafeexport(device, player)
   } catch (err) {
     cleanup()
     throw err
@@ -136,16 +132,14 @@ export async function spawnwanixvmspace(
   device: DEVICELIKE,
   player: string,
   urls: WANIX_VM_ASSET_URLS = readwanixvmasseturls(),
-  guestfiles: WanixZedCafeGuestFile[] = [],
+  _guestfiles: WanixZedCafeGuestFile[] = [],
 ): Promise<void> {
-  if (readwanixtermiframelayout() === 'vm') {
+  if (iswanixtermiframeactive()) {
+    await iframeprepvmspace(device, player, urls, _guestfiles)
     return
   }
-  if (iswanixtermiframeactive()) {
-    await teardownwanixtermiframe()
-  }
   state = 'starting'
-  await iframeprepvmspace(device, player, urls, guestfiles)
+  await iframeprepvmspace(device, player, urls, _guestfiles)
   state = 'ready'
 }
 
@@ -179,9 +173,6 @@ export async function spawnwanixtask(
     uniquewanixtaskid(makewanixtaskid(taskcmd), [
       ...readwanixtasks().map((task) => task.id),
     ])
-  if (readwanixtermiframelayout() !== 'task') {
-    throw new Error('wanix task space not prepared')
-  }
   await iframespawntask(taskid, taskcmd, opts.attach !== false)
   return { taskid }
 }
@@ -231,6 +222,17 @@ export async function disconnectwanixremote(remoteid: string): Promise<void> {
   requireactive()
   await iframechilddisconnectremote(remoteid)
   removeremote(remoteid)
+}
+
+export async function startwanixbridge(url: string): Promise<void> {
+  requireactive()
+  await iframechildstartbridge(url)
+}
+
+export async function stopwanixbridge(): Promise<void> {
+  if (iswanixtermiframeactive()) {
+    await iframechildstopbridge()
+  }
 }
 
 export async function haltwanixtask(taskid?: string): Promise<void> {

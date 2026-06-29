@@ -17,6 +17,7 @@ Reference: [tractordev/wanix](https://github.com/tractordev/wanix) **`main`** (`
 | VM serial console | `<wanix-vm export="ttyS0" term>` + `#vm/<rid>/term/data` | `<wanix-vm>` must be **initial child** on boot remount — not appended after `ready` |
 | Term I/O | `<wanix-term path="…" raw>` (we use tile bridge instead of xterm) | `wanixhost.ts` + `WanixTermInput` |
 | `./zed-cafe/` / `/zed-cafe/` export | gojs export → live ns bind (task) or capture + VM remount (VM) | `wanixstateexport.ts` + `wanixzedcafe.ts` + `wanixiframechildmount.ts` |
+| **Namespace export (LAN)** | Browser cannot listen for WebSocket — use **`wanix-bridge` CLI** | `ops/tools/wanixbridge/` + `#wanix bridge <ws-url>` |
 
 Session books mirror to **`./zed-cafe/`** (WASI tasks) or **`/zed-cafe/`** (Linux VM) when Wanix is warm. Host pushes edits via live `writeFile` into `#task/<rid>/export` (no gojs restart per edit). Guest edits import via auto-poll (~3s) or **`#wanix pull`**.
 
@@ -111,6 +112,47 @@ Dev URL: [/wanix/vm-simple.html](http://localhost:7777/wanix/vm-simple.html)
 3. Open `/wanix/vm-simple.html` — wait for `login:` (large CDN download on first boot)
 4. Type `root`, Enter, Enter, then `id` — expect `uid=0(root)`
 5. Bottom log should show `wanix-system ready` with no panic lines
+
+### `wanix-bridge` — export namespace over WebSocket 9P
+
+Browsers cannot accept inbound WebSocket connections. **`wanix-bridge`** listens on `:7654`; the zed.cafe Wanix iframe dials out as the 9P **server**; external clients connect as 9P **clients**.
+
+HTTPS dev (`yarn task app dev`) cannot use `ws://` URLs (mixed content). The dev server proxies:
+
+| Path | Backend |
+|------|---------|
+| `/wanix-bridge-host` | `ws://127.0.0.1:7654/host` |
+| `/wanix-remote-9p` | `ws://127.0.0.1:7654/` |
+
+**Terminal A** — dev app:
+
+```bash
+yarn task app dev
+```
+
+**Terminal B** — bridge (prints `wss://` tape line via Vite proxy):
+
+```bash
+yarn task run wanix:bridge
+```
+
+On start the CLI copies e.g. `#wanix bridge wss://localhost:7777/wanix-bridge-host?token=…` to the clipboard. It also prints **direct** `ws://<lan-ip>:7654/…` lines for LAN/native clients.
+
+1. Warm Wanix in zed.cafe (drop a `.wasm` or `#wanix vm`).
+2. Paste the tape line from clipboard.
+3. Import on same machine (HTTPS dev):
+
+```html
+<wanix-bind type="import" dst="remote" src="wss://localhost:7777/wanix-remote-9p/?token=…"></wanix-bind>
+```
+
+Or `#wanix remote connect wss://localhost:7777/wanix-remote-9p/?token=…` in the full app.
+
+Stop: `#wanix bridge stop`. Up to **9** concurrent client sessions. Full root namespace (`_open9P("1")`).
+
+`ZSS_NO_HTTPS=true`: `ZSS_URL=http://localhost:7777 yarn task run wanix:bridge`
+
+Owners: `ops/tools/wanixbridge/` (CLI), `zss/feature/wanix/wanixbridgehost.ts` (iframe host mux). Candidate for upstream `tractor.dev/wanix` after ZSS validation.
 
 ## Quick build (WAT)
 

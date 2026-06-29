@@ -3,6 +3,12 @@ import { shellhandlerwithargs } from '../implementations/modulehandler'
 import type { TaskDef } from '../types'
 
 export const WANIX_TASKS: TaskDef[] = [
+  def('wanix:bridge', {
+    description:
+      'Run wanix-bridge for WebSocket 9P export (HTTPS dev: wss URLs via Vite proxy)',
+    tags: ['dev'],
+    run: shell('sh tasks/implementations/wanix/run-wanix-bridge.sh'),
+  }),
   def('wanix:ensure', {
     description:
       'Record pinned wanix npm version (runtime loads from jsDelivr CDN)',

@@ -5,12 +5,14 @@ export const WANIX_IFRAME_CHILD_RPC_RES = 'zss-wanix-term-rpc-res' as const
 export const WANIX_PROBE_RPC_RES = 'zss-wanix-term-probe-rpc-res' as const
 
 export type WanixIframeRpcMethod =
+  | 'bootroom'
   | 'prepvm'
   | 'preptask'
   | 'spawnvm'
   | 'spawntask'
   | 'haltvm'
   | 'halttask'
+  | 'activatetarget'
   | 'putfile'
   | 'listdir'
   | 'mountarchive'

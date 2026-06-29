@@ -1,6 +1,8 @@
 import {
   apierror,
   wanixattach,
+  wanixbridgestart,
+  wanixbridgestop,
   wanixdetach,
   wanixpull,
   wanixremoteconnect,
@@ -64,6 +66,25 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
         case 'pull':
           wanixpull(SOFTWARE, player)
           break
+        case 'bridge': {
+          const [urlorstop] = readargs(words, 1, [ARG_TYPE.MAYBE_STRING])
+          if (!ispresent(urlorstop) || !urlorstop.trim()) {
+            apierror(
+              SOFTWARE,
+              player,
+              'wanix',
+              'usage: #wanix bridge <ws-url> | #wanix bridge stop',
+            )
+            break
+          }
+          const trimmed = urlorstop.trim()
+          if (trimmed.toLowerCase() === 'stop') {
+            wanixbridgestop(SOFTWARE, player)
+            break
+          }
+          wanixbridgestart(SOFTWARE, player, trimmed)
+          break
+        }
         case 'remote': {
           const sub = ispresent(arg) ? NAME(arg) : undefined
           if (!ispresent(sub)) {
@@ -105,7 +126,7 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
             SOFTWARE,
             player,
             'wanix',
-            'drop .wasm/.tgz — #wanix menu, vm, remote, attach, pull, stop, detach',
+            'drop .wasm/.tgz — #wanix menu, vm, remote, bridge, attach, pull, stop, detach',
           )
           break
       }

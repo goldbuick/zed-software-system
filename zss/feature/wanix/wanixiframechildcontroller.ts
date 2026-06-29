@@ -20,6 +20,7 @@ import type {
 import {
   WANIX_IFRAME_SYSTEM_ID,
   createidlewanixiframestate,
+  iswanixroomready,
 } from 'zss/feature/wanix/wanixiframechildtypes'
 import { WANIX_REMOTE_DEFAULT_DST } from 'zss/feature/wanix/wanixremoteconstants'
 import {
@@ -27,9 +28,17 @@ import {
   WANIX_ZED_CAFE_WASM_CMD,
 } from 'zss/feature/wanix/wanixzedcafeconstants'
 import type { WANIX_TERM_IFRAME_RPC } from 'zss/feature/wanix/wanixtermiframeprotocol'
+import { postwanixiframeapilog } from 'zss/feature/wanix/wanixtermiframeprotocol'
 import type { WANIX_VM_ASSET_URLS } from 'zss/feature/wanix/wanixvmassets'
 import type { WanixZedCafeExportProbe } from 'zss/feature/wanix/wanixzedcafeprobe'
-import { postwanixiframeapilog } from 'zss/feature/wanix/wanixtermiframeprotocol'
+import {
+  startwanixbridgehost,
+  stopwanixbridgehost,
+  readwanixbridgeactive,
+  readwanixbridgesessioncount,
+  readwanixbridgeurl,
+} from 'zss/feature/wanix/wanixbridgehost'
+import { setwanixtermprobeactivetarget } from 'zss/feature/wanix/wanixtermprobe'
 
 export const WANIX_IFRAME_READY_TIMEOUT_MS = 180_000
 export const WANIX_IFRAME_VM_PREP_WAIT_MS = 600_000
@@ -54,11 +63,11 @@ async function waitforzedcafeexport(
 ): Promise<string | null> {
   const deadline = Date.now() + timeoutms
   while (Date.now() < deadline) {
-    const root = readroot()
+    const wanixroot = readroot()
     const taskrid = readzedcafetaskrid(readstate())
-    if (root && taskrid) {
+    if (wanixroot && taskrid) {
       const ready = await waitzedcafeexportready(
-        root,
+        wanixroot,
         taskrid,
         deadline - Date.now(),
       )
@@ -72,22 +81,18 @@ async function waitforzedcafeexport(
   return null
 }
 
-function nextmountkey(state: WanixIframeHostState): number {
-  return state.mountKey + 1
-}
-
 function witharchives(
   state: WanixIframeHostState,
   archives: WanixIframeArchive[],
 ): WanixIframeHostState {
-  return { ...state, archives } as WanixIframeHostState
+  return { ...state, archives }
 }
 
 function withremotes(
   state: WanixIframeHostState,
   remotes: WanixIframeRemote[],
 ): WanixIframeHostState {
-  return { ...state, remotes } as WanixIframeHostState
+  return { ...state, remotes }
 }
 
 export type WanixIframeChildController = ReturnType<
@@ -101,12 +106,12 @@ export function createwanixiframechildcontroller() {
   let remoteseq = 0
   const listeners = new Set<() => void>()
 
-  let pendingpreptask: Deferred<void> | null = null
+  let pendingbootroom: Deferred<void> | null = null
   let pendingspawnvm: Deferred<{ vmid: string; vrid: string }> | null = null
-  let pendingspawntask: Deferred<{
-    taskid: string
-    rid: string | null
-  }> | null = null
+  const pendingtaskspawns = new Map<
+    number,
+    Deferred<{ taskid: string; rid: string | null }>
+  >()
   const pendingarchives = new Map<string, Deferred<void>>()
   const pendingremotes = new Map<string, Deferred<void>>()
 
@@ -151,18 +156,22 @@ export function createwanixiframechildcontroller() {
 
   function onsystemready(wanixroot: WanixRoot) {
     root = wanixroot
-    if (state.phase === 'task-system') {
-      setstate({ ...state, phase: 'task-ready' })
-      pendingpreptask?.resolve()
-      pendingpreptask = null
+    if (state.room === 'booting') {
+      setstate({ ...state, room: 'ready' })
+      pendingbootroom?.resolve()
+      pendingbootroom = null
     }
   }
 
   function onsystemerror(err: Error) {
-    pendingpreptask?.reject(err)
-    pendingpreptask = null
+    pendingbootroom?.reject(err)
+    pendingbootroom = null
     pendingspawnvm?.reject(err)
     pendingspawnvm = null
+    for (const pending of pendingtaskspawns.values()) {
+      pending.reject(err)
+    }
+    pendingtaskspawns.clear()
   }
 
   function onspawnvmcomplete(result: { vmid: string; vrid: string }) {
@@ -175,14 +184,25 @@ export function createwanixiframechildcontroller() {
     pendingspawnvm = null
   }
 
-  function onspawntaskcomplete(result: { taskid: string; rid: string | null }) {
-    pendingspawntask?.resolve(result)
-    pendingspawntask = null
+  function onspawntaskcomplete(
+    spawnid: number,
+    result: { taskid: string; rid: string | null },
+  ) {
+    const pending = pendingtaskspawns.get(spawnid)
+    if (!pending) {
+      return
+    }
+    pendingtaskspawns.delete(spawnid)
+    pending.resolve(result)
   }
 
-  function onspawntaskerror(err: Error) {
-    pendingspawntask?.reject(err)
-    pendingspawntask = null
+  function onspawntaskerror(spawnid: number, err: Error) {
+    const pending = pendingtaskspawns.get(spawnid)
+    if (!pending) {
+      return
+    }
+    pendingtaskspawns.delete(spawnid)
+    pending.reject(err)
   }
 
   function onarchivemounted(archiveid: string) {
@@ -238,45 +258,85 @@ export function createwanixiframechildcontroller() {
     postwanixiframeapilog(`zed-cafe export: ${err.message}`)
   }
 
+  async function bootroom(opts?: {
+    urls?: WANIX_VM_ASSET_URLS
+    vmcapable?: boolean
+  }) {
+    const vmcapable = opts?.vmcapable ?? false
+    if (iswanixroomready(state) && state.vmcapable === vmcapable) {
+      return
+    }
+    if (iswanixroomready(state) && vmcapable && !state.vmcapable) {
+      await upgradetovmroom(opts?.urls)
+      return
+    }
+    if (state.room === 'booting') {
+      await pendingbootroom?.promise
+      return
+    }
+    const deferred = createdeferred<void>()
+    pendingbootroom = deferred
+    setstate({
+      ...state,
+      room: 'booting',
+      vmcapable,
+      urls: opts?.urls ?? state.urls,
+      archives: state.archives,
+      remotes: state.remotes,
+      zedcafe: state.zedcafe,
+      pendingtasks: [],
+      removetaskids: [],
+      taskspawnseq: state.taskspawnseq,
+      vm: state.vm,
+      activetargetid: state.activetargetid,
+      activetargetkind: state.activetargetkind,
+    })
+    root = null
+    await deferred.promise
+  }
+
+  async function upgradetovmroom(urls?: WANIX_VM_ASSET_URLS) {
+    if (state.room === 'booting') {
+      await pendingbootroom?.promise
+      return
+    }
+    const deferred = createdeferred<void>()
+    pendingbootroom = deferred
+    setstate({
+      ...state,
+      room: 'booting',
+      vmcapable: true,
+      roommountkey: state.roommountkey + 1,
+      urls: urls ?? state.urls,
+      pendingtasks: [],
+      removetaskids: [],
+    })
+    root = null
+    await deferred.promise
+  }
+
   async function handlerrpc(
     data: WANIX_TERM_IFRAME_RPC,
     source: MessageEventSource | null,
   ) {
     try {
       switch (data.method) {
+        case 'bootroom': {
+          const [opts] = (data.args ?? []) as [
+            { urls?: WANIX_VM_ASSET_URLS; vmcapable?: boolean }?,
+          ]
+          await bootroom(opts)
+          replychildrpc(source, data.id, { result: { ok: true } })
+          return
+        }
         case 'prepvm': {
           const [urls] = data.args as [WANIX_VM_ASSET_URLS, WanixZedCafeGuestFile[]?]
-          setstate({
-            phase: 'vm-prepared',
-            mountKey: nextmountkey(state),
-            archives: [],
-            remotes: state.remotes,
-            zedcafe: state.zedcafe
-              ? {
-                  cmd: state.zedcafe.cmd,
-                  generation: state.zedcafe.generation,
-                  ready: false,
-                  taskrid: null,
-                }
-              : undefined,
-            urls,
-          })
-          root = null
+          await bootroom({ urls, vmcapable: true })
           replychildrpc(source, data.id, { result: { ok: true } })
           return
         }
         case 'preptask': {
-          const deferred = createdeferred<void>()
-          pendingpreptask = deferred
-          setstate({
-            phase: 'task-system',
-            mountKey: nextmountkey(state),
-            archives: [],
-            remotes: state.remotes,
-            zedcafe: null,
-          })
-          root = null
-          await deferred.promise
+          await bootroom({ vmcapable: false })
           replychildrpc(source, data.id, { result: { ok: true } })
           return
         }
@@ -286,18 +346,14 @@ export function createwanixiframechildcontroller() {
             string,
             number[]?,
           ]
-          if (state.phase !== 'vm-prepared') {
-            throw new Error('wanix iframe child: vm space not prepared')
+          if (!iswanixroomready(state)) {
+            throw new Error('wanix iframe child: room not ready')
           }
           const deferred = createdeferred<{ vmid: string; vrid: string }>()
           pendingspawnvm = deferred
           const generation = (state.zedcafe?.generation ?? 0) + 1
           setstate({
-            phase: 'vm-active',
-            bootstage: 'export',
-            mountKey: nextmountkey(state),
-            archives: state.archives,
-            remotes: state.remotes,
+            ...state,
             zedcafe: {
               cmd: state.zedcafe?.cmd ?? WANIX_ZED_CAFE_WASM_CMD,
               generation,
@@ -305,33 +361,31 @@ export function createwanixiframechildcontroller() {
               taskrid: null,
               inboxbytes: inboxbytes.length ? inboxbytes : undefined,
             },
-            urls: state.urls,
-            vmid,
-            mem,
+            vm: {
+              vmid,
+              mem,
+              bootstage: 'export',
+            },
           })
-          root = null
           const result = await deferred.promise
           replychildrpc(source, data.id, { result })
           return
         }
         case 'spawntask': {
           const [taskid, cmd] = data.args as [string, string]
-          if (state.phase !== 'task-ready' && state.phase !== 'task-active') {
-            throw new Error('wanix iframe child: task space not prepared')
+          if (!iswanixroomready(state)) {
+            throw new Error('wanix iframe child: room not ready')
           }
+          const spawnid = state.taskspawnseq + 1
           const deferred = createdeferred<{
             taskid: string
             rid: string | null
           }>()
-          pendingspawntask = deferred
+          pendingtaskspawns.set(spawnid, deferred)
           setstate({
-            phase: 'task-active',
-            mountKey: state.mountKey,
-            archives: state.archives,
-            remotes: state.remotes,
-            zedcafe: state.zedcafe,
-            taskid,
-            cmd,
+            ...state,
+            taskspawnseq: spawnid,
+            pendingtasks: [...state.pendingtasks, { spawnid, taskid, cmd }],
           })
           const result = await deferred.promise
           replychildrpc(source, data.id, { result })
@@ -340,19 +394,16 @@ export function createwanixiframechildcontroller() {
         case 'haltvm': {
           const [vmid] = data.args as [string | undefined]
           await halttarget(root, 'vm', vmid ?? 'linux-vm')
-          if (state.phase === 'vm-active' && 'urls' in state) {
+          if (state.vm) {
             setstate({
-              phase: 'vm-prepared',
-              mountKey: nextmountkey(state),
-              archives: state.archives,
-              remotes: state.remotes,
-              zedcafe: state.zedcafe
-                ? { ...state.zedcafe, ready: false, taskrid: null }
-                : null,
-              urls: state.urls,
+              ...state,
+              vm: {
+                ...state.vm,
+                bootstage: 'idle',
+                guestfiles: undefined,
+              },
             })
           }
-          root = null
           replychildrpc(source, data.id, { result: { ok: true } })
           return
         }
@@ -360,20 +411,25 @@ export function createwanixiframechildcontroller() {
           const [taskid] = data.args as [string | undefined]
           if (taskid) {
             await halttarget(root, 'task', taskid)
-          }
-          if (
-            state.phase === 'task-active' ||
-            state.phase === 'task-ready' ||
-            state.phase === 'task-system'
-          ) {
             setstate({
-              phase: 'task-ready',
-              mountKey: state.mountKey,
-              archives: state.archives,
-              remotes: state.remotes,
-              zedcafe: state.zedcafe,
+              ...state,
+              removetaskids: [...state.removetaskids, taskid],
             })
           }
+          replychildrpc(source, data.id, { result: { ok: true } })
+          return
+        }
+        case 'activatetarget': {
+          const [kind, targetid] = data.args as [
+            'task' | 'vm',
+            string,
+          ]
+          setstate({
+            ...state,
+            activetargetid: targetid,
+            activetargetkind: kind,
+          })
+          setwanixtermprobeactivetarget(targetid)
           replychildrpc(source, data.id, { result: { ok: true } })
           return
         }
@@ -403,12 +459,8 @@ export function createwanixiframechildcontroller() {
             number[],
             string,
           ]
-          if (
-            state.phase !== 'task-ready' &&
-            state.phase !== 'task-active' &&
-            state.phase !== 'task-system'
-          ) {
-            throw new Error('wanix iframe child: system missing')
+          if (!iswanixroomready(state)) {
+            throw new Error('wanix iframe child: room not ready')
           }
           const archiveid = `archive-${++archiveseq}`
           const src = URL.createObjectURL(
@@ -442,11 +494,8 @@ export function createwanixiframechildcontroller() {
             string?,
             string?,
           ]
-          if (
-            state.phase === 'idle' ||
-            state.phase === 'vm-prepared'
-          ) {
-            throw new Error('wanix iframe child: system missing')
+          if (!iswanixroomready(state)) {
+            throw new Error('wanix iframe child: room not ready')
           }
           if (!url.startsWith('ws://') && !url.startsWith('wss://')) {
             throw new Error('wanix remote: url must start with ws:// or wss://')
@@ -499,7 +548,7 @@ export function createwanixiframechildcontroller() {
               ready: false,
               taskrid: null,
             },
-          } as WanixIframeHostState)
+          })
           replychildrpc(source, data.id, { result: { ok: true } })
           return
         }
@@ -517,7 +566,7 @@ export function createwanixiframechildcontroller() {
                   ...current.zedcafe,
                   taskrid,
                 },
-              } as WanixIframeHostState)
+              })
             }
           }
           replychildrpc(source, data.id, { result: taskrid })
@@ -536,7 +585,7 @@ export function createwanixiframechildcontroller() {
               ...current.zedcafe,
               ready,
             },
-          } as WanixIframeHostState)
+          })
           replychildrpc(source, data.id, { result: { ok: true } })
           return
         }
@@ -567,9 +616,8 @@ export function createwanixiframechildcontroller() {
           return
         }
         case 'readzedcafetaskrid': {
-          const current = getstate()
           replychildrpc(source, data.id, {
-            result: readzedcafetaskrid(current),
+            result: readzedcafetaskrid(getstate()),
           })
           return
         }
@@ -587,9 +635,32 @@ export function createwanixiframechildcontroller() {
           replychildrpc(source, data.id, { result: probe })
           return
         }
+        case 'startbridge': {
+          const [url] = data.args as [string]
+          await startwanixbridgehost(url)
+          replychildrpc(source, data.id, { result: { ok: true } })
+          return
+        }
+        case 'stopbridge': {
+          stopwanixbridgehost()
+          replychildrpc(source, data.id, { result: { ok: true } })
+          return
+        }
+        case 'readbridgestatus': {
+          replychildrpc(source, data.id, {
+            result: {
+              active: readwanixbridgeactive(),
+              url: readwanixbridgeurl(),
+              sessions: readwanixbridgesessioncount(),
+            },
+          })
+          return
+        }
         case 'teardown': {
+          stopwanixbridgehost()
           setstate(createidlewanixiframestate())
           root = null
+          setwanixtermprobeactivetarget(null)
           replychildrpc(source, data.id, { result: { ok: true } })
           return
         }
@@ -616,7 +687,7 @@ export function createwanixiframechildcontroller() {
         ...current.zedcafe,
         taskrid,
       },
-    } as WanixIframeHostState)
+    })
   }
 
   function markzedcafeready() {
@@ -630,21 +701,26 @@ export function createwanixiframechildcontroller() {
         ...current.zedcafe,
         ready: true,
       },
-    } as WanixIframeHostState)
+    })
   }
 
-  function beginvmboot(guestfiles: WanixZedCafeGuestFile[]) {
+  function activatevm(guestfiles: WanixZedCafeGuestFile[]) {
     const current = getstate()
-    if (current.phase !== 'vm-active' || current.bootstage !== 'export') {
+    if (current.vm?.bootstage !== 'export') {
       return
     }
     postwanixiframeapilog(
-      `zed-cafe export: #ramfs/zed-cafe ready — remounting wanix-system with wanix-vm (${guestfiles.length} files)`,
+      `zed-cafe export: #ramfs/zed-cafe ready — activating vm slot (${guestfiles.length} files)`,
     )
     setstate({
       ...current,
-      bootstage: 'boot',
-      mountKey: nextmountkey(current),
+      vm: current.vm
+        ? {
+            ...current.vm,
+            bootstage: 'activating',
+            guestfiles,
+          }
+        : null,
       zedcafe: current.zedcafe
         ? {
             ...current.zedcafe,
@@ -655,6 +731,40 @@ export function createwanixiframechildcontroller() {
     })
   }
 
+  function markvmactive() {
+    const current = getstate()
+    if (!current.vm) {
+      return
+    }
+    setstate({
+      ...current,
+      vm: {
+        ...current.vm,
+        bootstage: 'active',
+      },
+    })
+  }
+
+  function consumependingtasks() {
+    const current = getstate()
+    if (!current.pendingtasks.length) {
+      return current.pendingtasks
+    }
+    const batch = current.pendingtasks
+    setstate({ ...current, pendingtasks: [] })
+    return batch
+  }
+
+  function consumeremovetasks() {
+    const current = getstate()
+    if (!current.removetaskids.length) {
+      return []
+    }
+    const batch = current.removetaskids
+    setstate({ ...current, removetaskids: [] })
+    return batch
+  }
+
   return {
     getstate,
     subscribe,
@@ -662,7 +772,10 @@ export function createwanixiframechildcontroller() {
     getroot,
     setzedcafetaskrid,
     markzedcafeready,
-    beginvmboot,
+    activatevm,
+    markvmactive,
+    consumependingtasks,
+    consumeremovetasks,
     onsystemready,
     onsystemerror,
     onspawnvmcomplete,
@@ -710,14 +823,19 @@ export async function waitsystemready(
       system.removeEventListener('ready', onready)
       system.removeEventListener('error', onerror)
     }
+    if (system.isReady) {
+      stop()
+      resolve()
+      return
+    }
     system.addEventListener('ready', onready, { once: true })
     system.addEventListener('error', onerror, { once: true })
   })
-  const root = system.root ?? null
-  if (!root) {
+  const wanixroot = system.root ?? null
+  if (!wanixroot) {
     throw new Error('wanix iframe child: root missing after ready')
   }
-  return root
+  return wanixroot
 }
 
 export async function waitvmchildready(
@@ -728,7 +846,7 @@ export async function waitvmchildready(
   while (Date.now() < deadline) {
     const vm = system.querySelector('wanix-vm')
     if (vm?.rid && vm?.term) {
-      return vm
+      return vm as WanixWakeElement
     }
     await new Promise<void>((resolve) => setTimeout(resolve, 250))
   }

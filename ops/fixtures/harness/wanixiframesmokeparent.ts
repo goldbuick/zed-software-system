@@ -181,7 +181,7 @@ async function runsmoke() {
   log('waiting for wanix iframe child…')
   await waitchildready()
   log('child ready — prep vm space…')
-  await liferpc('prepvm', [readwanixvmasseturls()])
+  await liferpc('bootroom', [readwanixvmasseturls()])
   log('vm space ready — spawning vm…')
   await liferpc('spawnvm', ['linux-vm', '512M'])
   log('vm spawned — waiting for login prompt…')

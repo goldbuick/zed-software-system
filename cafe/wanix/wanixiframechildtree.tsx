@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import type { WanixIframeChildController } from 'zss/feature/wanix/wanixiframechildcontroller'
 import {
   WANIX_IFRAME_VM_PREP_WAIT_MS,
@@ -8,14 +8,10 @@ import {
 } from 'zss/feature/wanix/wanixiframechildcontroller'
 import {
   appendwanixarchivebind,
-  appendwanixgojstasktarget,
   appendwanixremotebind,
-  appendwanixtasktarget,
   appendzedcafeexportbind,
-  cleartargetwanixels,
-  clearzedcafeexportbinds,
+  appendzedcafeinboxfilebind,
   collectzedcafeexportfiles,
-  mountwanixsystemtree,
   stagezedcafetaskforgojs,
   waitforwanixroot,
   waitwanixbindmount,
@@ -24,12 +20,24 @@ import {
   wirewanixremotebind,
   wirezedcafeexportbind,
 } from 'zss/feature/wanix/wanixiframechildmount'
+import { createwanixroomtree } from 'zss/feature/wanix/wanixroombootstrap'
+import {
+  appendgojstasktarget,
+  appendtasktargetpair,
+  removetargetpair,
+} from 'zss/feature/wanix/wanixtargetmount'
+import { activatevmslot } from 'zss/feature/wanix/wanixvmslot'
 import { postwanixiframeapilog } from 'zss/feature/wanix/wanixtermiframeprotocol'
 import type {
   WanixIframeHostState,
   WanixSystemElement,
   WanixTaskElement,
 } from 'zss/feature/wanix/wanixiframechildtypes'
+import {
+  iswanixroomready,
+  iswanixvmexportstage,
+} from 'zss/feature/wanix/wanixiframechildtypes'
+import { setwanixtermprobeactivetarget } from 'zss/feature/wanix/wanixtermprobe'
 import {
   WANIX_VM_GUEST_SHELL_MS,
   waitforv86driver,
@@ -45,44 +53,53 @@ export function WanixIframeChildTree({
 }) {
   const hostref = useRef<HTMLDivElement>(null)
   const systemref = useRef<WanixSystemElement | null>(null)
+  const roommounted = useRef(false)
+  const lastroommountkey = useRef(-1)
   const mountedarchives = useRef(new Set<string>())
   const mountedremotes = useRef(new Set<string>())
-  const vmid = state.phase === 'vm-active' ? state.vmid : ''
-  const vmexportstage =
-    state.phase === 'vm-active' && state.bootstage === 'export'
-  const vmbootstage = state.phase === 'vm-active' && state.bootstage === 'boot'
-  const vmmem = state.phase === 'vm-active' ? state.mem : '512M'
-  const taskid = state.phase === 'task-active' ? state.taskid : ''
-  const taskcmd = state.phase === 'task-active' ? state.cmd : ''
+  const spawnedtasks = useRef(new Set<number>())
   const zedcafe = state.zedcafe
   const zedcafegen = zedcafe?.generation ?? 0
   const zedcafecmd = zedcafe?.cmd ?? ''
-  const mountkey = state.mountKey
+  const vmexportstage = iswanixvmexportstage(state)
+  const vmid = state.vm?.vmid ?? ''
+  const vmmem = state.vm?.mem ?? '512M'
 
-  // Remount wanix-system when mountKey changes (VM spawn requires fresh tree).
+  // Boot persistent wanix-system once (never replaceChildren on task/vm ops).
   useLayoutEffect(() => {
     const host = hostref.current
+    if (state.room === 'idle') {
+      roommounted.current = false
+      lastroommountkey.current = -1
+      systemref.current = null
+      mountedarchives.current.clear()
+      mountedremotes.current.clear()
+      spawnedtasks.current.clear()
+      host?.replaceChildren()
+      return
+    }
     if (!host) {
       return
     }
-
-    host.replaceChildren()
-    systemref.current = null
-    mountedarchives.current.clear()
-    mountedremotes.current.clear()
-
-    const system = mountwanixsystemtree(state)
-    if (!system) {
+    if (
+      roommounted.current &&
+      systemref.current?.isConnected &&
+      lastroommountkey.current === state.roommountkey
+    ) {
       return
     }
 
+    const system = createwanixroomtree(state)
+    host.replaceChildren()
     host.appendChild(system)
     systemref.current = system
+    roommounted.current = true
+    lastroommountkey.current = state.roommountkey
+    mountedarchives.current.clear()
+    mountedremotes.current.clear()
+    spawnedtasks.current.clear()
 
     for (const archive of state.archives) {
-      if (mountedarchives.current.has(archive.id)) {
-        continue
-      }
       const bind = system.querySelector(
         `wanix-bind[data-zss-archive-id="${archive.id}"]`,
       )
@@ -92,9 +109,6 @@ export function WanixIframeChildTree({
       }
     }
     for (const remote of state.remotes) {
-      if (mountedremotes.current.has(remote.id)) {
-        continue
-      }
       const bind = system.querySelector(
         `wanix-bind[data-zss-remote-id="${remote.id}"]`,
       )
@@ -103,17 +117,38 @@ export function WanixIframeChildTree({
         mountedremotes.current.add(remote.id)
       }
     }
-    // mountKey-only full remount; archives at remount time are wired below, not on every archive change.
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional mountKey gate
-  }, [controller, state.mountKey])
 
-  // Append archive binds added after initial mount.
+    if (state.room === 'booting') {
+      let cancelled = false
+      void waitsystemready(system)
+        .then((wanixroot) => {
+          if (cancelled) {
+            return
+          }
+          controller.onsystemready(wanixroot)
+          postwanixiframeapilog('wanix room: system ready')
+        })
+        .catch((err) => {
+          if (cancelled) {
+            return
+          }
+          controller.onsystemerror(
+            err instanceof Error ? err : new Error(String(err)),
+          )
+        })
+      return () => {
+        cancelled = true
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- room mount keyed by roommountkey
+  }, [controller, state.room === 'idle' ? 'idle' : `up-${state.roommountkey}`])
+
+  // Append archive binds added after room boot.
   useLayoutEffect(() => {
     const system = systemref.current
     if (!system) {
       return
     }
-
     for (const archive of state.archives) {
       if (mountedarchives.current.has(archive.id)) {
         continue
@@ -124,13 +159,12 @@ export function WanixIframeChildTree({
     }
   }, [controller, state.archives])
 
-  // Append remote import binds added after initial mount.
+  // Append remote import binds added after room boot.
   useLayoutEffect(() => {
     const system = systemref.current
     if (!system) {
       return
     }
-
     const activeids = new Set(state.remotes.map((remote) => remote.id))
     system
       .querySelectorAll('wanix-bind[data-zss-remote-id]')
@@ -141,7 +175,6 @@ export function WanixIframeChildTree({
           mountedremotes.current.delete(remoteid)
         }
       })
-
     for (const remote of state.remotes) {
       if (mountedremotes.current.has(remote.id)) {
         continue
@@ -152,74 +185,74 @@ export function WanixIframeChildTree({
     }
   }, [controller, state.remotes])
 
-  // Task target: clear VM/task/term children and spawn wasi task when active.
+  // Spawn pending task targets (multi-task — no bulk wipe).
+  useLayoutEffect(() => {
+    const system = systemref.current
+    if (!system || !iswanixroomready(state)) {
+      return
+    }
+    const batch = controller.consumependingtasks()
+    for (const pending of batch) {
+      if (spawnedtasks.current.has(pending.spawnid)) {
+        continue
+      }
+      spawnedtasks.current.add(pending.spawnid)
+      const task = appendtasktargetpair(
+        system,
+        pending.taskid,
+        pending.cmd,
+      ) as WanixTaskElement
+      let cancelled = false
+      void (async () => {
+        await task.allocate?.()
+        await task.start?.()
+        if (cancelled) {
+          return
+        }
+        controller.onspawntaskcomplete(pending.spawnid, {
+          taskid: pending.taskid,
+          rid: task.rid ?? null,
+        })
+      })().catch((err) => {
+        if (cancelled) {
+          return
+        }
+        controller.onspawntaskerror(
+          pending.spawnid,
+          err instanceof Error ? err : new Error(String(err)),
+        )
+      })
+    }
+  }, [controller, state.pendingtasks, state.taskspawnseq, state.room])
+
+  // Remove halted task targets.
   useLayoutEffect(() => {
     const system = systemref.current
     if (!system) {
       return
     }
-
-    const istaskphase =
-      state.phase === 'task-system' ||
-      state.phase === 'task-ready' ||
-      state.phase === 'task-active'
-
-    if (!istaskphase) {
-      return
+    const removeids = controller.consumeremovetasks()
+    for (const taskid of removeids) {
+      removetargetpair(system, taskid)
     }
+  }, [controller, state.removetaskids])
 
-    cleartargetwanixels(system)
-    if (state.phase !== 'task-active') {
-      return
+  // Sync probe attach target.
+  useLayoutEffect(() => {
+    if (state.activetargetid) {
+      setwanixtermprobeactivetarget(state.activetargetid)
     }
+  }, [state.activetargetid])
 
-    const task = appendwanixtasktarget(
-      system,
-      state.taskid,
-      state.cmd,
-    ) as WanixTaskElement
-
-    let cancelled = false
-
-    void (async () => {
-      await task.allocate?.()
-      await task.start?.()
-      if (cancelled) {
-        return
-      }
-      controller.onspawntaskcomplete({
-        taskid: state.taskid,
-        rid: task.rid ?? null,
-      })
-    })().catch((err) => {
-      if (cancelled) {
-        return
-      }
-      controller.onspawntaskerror(
-        err instanceof Error ? err : new Error(String(err)),
-      )
-    })
-
-    return () => {
-      cancelled = true
-    }
-    // taskid/taskcmd are derived from state.taskid/state.cmd when phase is task-active.
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- derived task fields
-  }, [controller, state.phase, taskid, taskcmd])
-
-  // zed-cafe gojs export daemon (persists across user task spawns).
+  // zed-cafe gojs export daemon.
   useLayoutEffect(() => {
     const system = systemref.current
-    if (!system || !zedcafe?.cmd) {
+    if (!system || !zedcafe?.cmd || !iswanixroomready(state)) {
       return
     }
-
     const runzedcafeexport =
-      state.phase === 'task-system' ||
-      state.phase === 'task-ready' ||
-      state.phase === 'task-active' ||
-      vmexportstage
-
+      state.vm?.bootstage !== 'activating' &&
+      state.vm?.bootstage !== 'active'
     if (!runzedcafeexport) {
       return
     }
@@ -227,12 +260,18 @@ export function WanixIframeChildTree({
     const existing = system.querySelector(
       `wanix-task[id="${WANIX_ZED_CAFE_TASK_ID}"]`,
     )
+    if (existing && state.vm?.bootstage !== 'export' && state.vm?.bootstage !== 'idle') {
+      return
+    }
     if (existing) {
       existing.remove()
     }
-    clearzedcafeexportbinds(system)
 
-    const task = appendwanixgojstasktarget(
+    if (state.zedcafe?.inboxbytes?.length) {
+      appendzedcafeinboxfilebind(system, state.zedcafe.inboxbytes)
+    }
+
+    const task = appendgojstasktarget(
       system,
       WANIX_ZED_CAFE_TASK_ID,
       zedcafe.cmd,
@@ -250,12 +289,12 @@ export function WanixIframeChildTree({
     let cancelled = false
 
     void (async () => {
-      const root = await waitforwanixroot(
+      const wanixroot = await waitforwanixroot(
         system,
         controller.getroot,
         WANIX_ZED_CAFE_EXPORT_WAIT_MS,
       )
-      if (cancelled || !root) {
+      if (cancelled || !wanixroot) {
         controller.onzedcafeerror(
           new Error('zed-cafe export: wanix root not ready before staging'),
         )
@@ -276,7 +315,7 @@ export function WanixIframeChildTree({
       }
       const staged = await stagezedcafetaskforgojs(
         system,
-        root,
+        wanixroot,
         controller,
         task.rid,
       )
@@ -290,7 +329,7 @@ export function WanixIframeChildTree({
       if (cancelled || !task.rid) {
         return
       }
-      const exportready = await waitzedcafeexportready(root, task.rid)
+      const exportready = await waitzedcafeexportready(wanixroot, task.rid)
       if (cancelled) {
         return
       }
@@ -313,14 +352,14 @@ export function WanixIframeChildTree({
       }
       if (vmexportstage && !cancelled) {
         try {
-          const guestfiles = await collectzedcafeexportfiles(root, task.rid)
+          const guestfiles = await collectzedcafeexportfiles(wanixroot, task.rid)
           if (!guestfiles.some((file) => file.path === 'stats.json')) {
             throw new Error(
               'zed-cafe export: stats.json missing from #task export capture',
             )
           }
           controller.markzedcafeready()
-          controller.beginvmboot(guestfiles)
+          controller.activatevm(guestfiles)
         } catch (err) {
           const detail = err instanceof Error ? err.message : String(err)
           postwanixiframeapilog(`zed-cafe export: vm start failed — ${detail}`)
@@ -342,68 +381,55 @@ export function WanixIframeChildTree({
       cancelled = true
       task.removeEventListener('error', ontaskerror)
     }
-  }, [controller, mountkey, vmexportstage, zedcafecmd, zedcafegen])
+  }, [controller, zedcafecmd, zedcafegen, vmexportstage, state.room])
 
-  // Wait for wanix-system ready; VM path also waits for v86 driver + wanix-vm term.
-  useEffect(() => {
+  // Activate dormant VM slot after export (no wanix-system remount).
+  useLayoutEffect(() => {
     const system = systemref.current
-    if (!system) {
+    if (!system || state.vm?.bootstage !== 'activating') {
       return
     }
+    const guestfiles = state.vm.guestfiles ?? state.zedcafe?.guestfiles ?? []
     let cancelled = false
 
-    async function bootsystem() {
-      const wanixroot = await waitsystemready(system!)
-      if (cancelled) {
-        return
-      }
-      controller.setroot(wanixroot)
-      if (state.phase === 'vm-active') {
-        if (state.bootstage === 'export') {
+    void (async () => {
+      try {
+        const wanixroot = await waitforwanixroot(
+          system,
+          controller.getroot,
+          WANIX_ZED_CAFE_EXPORT_WAIT_MS,
+        )
+        if (cancelled || !wanixroot) {
+          throw new Error('wanix room: root missing before vm activation')
+        }
+        await waitforv86driver(wanixroot, WANIX_IFRAME_VM_PREP_WAIT_MS)
+        await activatevmslot(system, state.vm?.mem ?? '512M', guestfiles)
+        await waitvmchildready(system, WANIX_VM_GUEST_SHELL_MS)
+        if (cancelled) {
           return
         }
-        try {
-          await waitforv86driver(wanixroot, WANIX_IFRAME_VM_PREP_WAIT_MS)
-          await waitvmchildready(system!, WANIX_VM_GUEST_SHELL_MS)
-          if (cancelled) {
-            return
-          }
-          const vm = system!.querySelector('wanix-vm')
-          controller.onspawnvmcomplete({
-            vmid,
-            vrid: vm?.rid ?? '1',
-          })
-        } catch (err) {
-          if (cancelled) {
-            return
-          }
-          controller.onspawnvmerror(
-            err instanceof Error ? err : new Error(String(err)),
-          )
+        controller.markvmactive()
+        const vm = system.querySelector('wanix-vm')
+        controller.onspawnvmcomplete({
+          vmid,
+          vrid: vm?.rid ?? '1',
+        })
+      } catch (err) {
+        if (cancelled) {
+          return
         }
-        return
+        controller.onspawnvmerror(
+          err instanceof Error ? err : new Error(String(err)),
+        )
       }
-      controller.onsystemready(wanixroot)
-    }
-
-    void bootsystem().catch((err) => {
-      if (cancelled) {
-        return
-      }
-      const error = err instanceof Error ? err : new Error(String(err))
-      if (state.phase === 'vm-active') {
-        controller.onspawnvmerror(error)
-        return
-      }
-      controller.onsystemerror(error)
-    })
+    })()
 
     return () => {
       cancelled = true
     }
-  }, [controller, state.mountKey, state.phase, state.bootstage, vmid])
+  }, [controller, state.vm?.bootstage, vmid, vmmem])
 
-  if (state.phase === 'idle' || state.phase === 'vm-prepared') {
+  if (state.room === 'idle') {
     return null
   }
 

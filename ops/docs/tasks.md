@@ -218,6 +218,7 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 
 | Task | Description | Tags | Deps | Env |
 |------|-------------|------|------|-----|
+| `yarn task run wanix:bridge` | Run wanix-bridge for WebSocket 9P export (HTTPS dev: wss URLs via Vite proxy) | `dev` | — | — |
 | `yarn task run wanix:ensure` | Record pinned wanix npm version (runtime loads from jsDelivr CDN) | — | — | — |
 | `yarn task run wanix:gojs:build` | Build upstream gojscheck.wasm (Go js/wasm) for basic-terminal.html harness | — | — | — |
 | `yarn task run wanix:vm:boot:validate` | Headed Playwright: seeded book + #wanix vm must reach shell and /zed-cafe/stats.json (local gate, not CI) | — | — | — |
@@ -228,6 +229,8 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 | `yarn task run wanix:zed-cafe:build` | Build zed-cafe.wasm (Go js/wasm) into cafe/public/wanix/ for prod | `ci` | — | — |
 | `yarn task run wanix:zed-cafe:duplex:validate` | Headed Playwright: zed-cafe-duplex harness — guest write to zed-cafe/stats.json (local gate, not CI) | — | — | — |
 | `yarn task run wanix:zed-cafe:duplex:validate:app` | Headed Playwright: full app drop zedcafewrite.wasm + #wanix pull import (local gate, not CI) | — | — | — |
+| `yarn task run wanix:zed-cafe:export-write:validate` | Playwright: gojs export memfs — write guestTouch into #task/rid/export/stats.json (local gate, not CI) | — | — | — |
 | `yarn task run wanix:zed-cafe:export:validate` | Headed Playwright: minimal zed-cafe-export harness must show export/stats.json (local gate, not CI) | — | — | — |
 | `yarn task run wanix:zed-cafe:export:validate:app` | Headed Playwright: full app #wanix vm → cat /zed-cafe/stats.json (local gate, not CI) | — | — | — |
+| `yarn task run wanix:zed-cafe:memfs:validate` | Composite ExportFS rollout gate — build, go test, harness Playwright (headless), jest smoke | — | — | — |
 | `yarn task run wanix:zed-cafe:task-read:validate` | Headed Playwright: zed-cafe-task-read harness — dropped WASI task reads zed-cafe/stats.json (local gate, not CI) | — | — | — |

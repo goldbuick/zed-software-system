@@ -4,9 +4,11 @@ import {
   type WanixIframeArchive,
   type WanixIframeRemote,
   type WanixIframeHostState,
+  iswanixroomready,
   type WanixRoot,
   type WanixSystemElement,
 } from 'zss/feature/wanix/wanixiframechildtypes'
+import { createwanixroomtree } from 'zss/feature/wanix/wanixroombootstrap'
 import { applywanixtermprobelayout } from 'zss/feature/wanix/wanixtermprobe'
 import { postwanixiframeapilog } from 'zss/feature/wanix/wanixtermiframeprotocol'
 import {
@@ -82,7 +84,7 @@ function appendtaskbinds(sys: WanixSystemElement) {
   sys.appendChild(createwanixbind({ dst: '.', src: '#ramfs' }))
 }
 
-function appendzedcafeinboxfilebind(
+export function appendzedcafeinboxfilebind(
   sys: WanixSystemElement,
   inboxbytes: number[],
 ) {
@@ -207,9 +209,11 @@ export async function waitforwanixroot(
 }
 
 export function iswanixzedcafevmbootexport(
-  state: Pick<WanixIframeHostState, 'phase' | 'bootstage'>,
+  state: Pick<WanixIframeHostState, 'vm'>,
 ): boolean {
-  return state.phase === 'vm-active' && state.bootstage === 'boot'
+  return (
+    state.vm?.bootstage === 'activating' || state.vm?.bootstage === 'active'
+  )
 }
 
 /** Poll #task/<rid>/export until gojs has written stats.json. */
@@ -805,62 +809,14 @@ export function appendwanixgojstasktarget(
   return task
 }
 
-/** Build detached wanix-system with attrs set before any connect. */
+/** @deprecated use createwanixroomtree — kept for unit tests */
 export function mountwanixsystemtree(
   state: WanixIframeHostState,
 ): WanixSystemElement | null {
-  if (state.phase === 'idle' || state.phase === 'vm-prepared') {
+  if (!iswanixroomready(state) && state.room !== 'booting') {
     return null
   }
-
-  const sys = createwanixsystem()
-
-  const istaskphase =
-    state.phase === 'task-system' ||
-    state.phase === 'task-ready' ||
-    state.phase === 'task-active'
-
-  if (istaskphase) {
-    appendtaskbinds(sys)
-  }
-
-  appendzedcafestagingbinds(sys)
-  if (state.zedcafe?.inboxbytes?.length) {
-    appendzedcafeinboxfilebind(sys, state.zedcafe.inboxbytes)
-  }
-
-  if (state.phase === 'vm-active') {
-    appendvmprepbinds(sys, state.urls)
-    if (state.bootstage === 'boot') {
-      const guestfiles = state.zedcafe?.guestfiles ?? []
-      if (guestfiles.length) {
-        appendzedcafeexportramfsfilebinds(sys, guestfiles)
-        postwanixiframeapilog(
-          `zed-cafe export: staging ${guestfiles.length} files on #ramfs/zed-cafe for vm boot`,
-        )
-      }
-      appendwanixvminitialtree(sys, state.vmid, state.mem, state.remotes)
-    }
-  }
-
-  for (const archive of state.archives) {
-    appendwanixarchivebind(sys, archive)
-  }
-
-  for (const remote of state.remotes) {
-    appendwanixremotebind(sys, remote)
-  }
-
-  const zedcafetaskrid =
-    state.zedcafe?.ready && state.zedcafe.taskrid ? state.zedcafe.taskrid : null
-  if (zedcafetaskrid && istaskphase) {
-    appendzedcafeexportbind(sys, zedcafetaskrid)
-    postwanixiframeapilog(
-      `zed-cafe export: live ns bind from #task/${zedcafetaskrid}/export`,
-    )
-  }
-
-  return sys
+  return createwanixroomtree(state)
 }
 
 export function appendwanixtasktarget(

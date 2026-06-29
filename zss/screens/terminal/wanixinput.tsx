@@ -179,6 +179,9 @@ export function WanixTermInput() {
           const line = linebuffer.current
           linebuffer.current = ''
           sendline(line)
+          if (!line.startsWith('#')) {
+            wanixtermscreenecholine('')
+          }
         } else if (event.key === 'Backspace') {
           event.preventDefault()
           if (linebuffer.current.length > 0) {

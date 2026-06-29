@@ -53,7 +53,7 @@ const IFRAME_STYLE_HIDDEN =
   'position:fixed;left:-9999px;top:0;opacity:0;visibility:hidden;pointer-events:none;border:0'
 
 let iframeel: HTMLIFrameElement | null = null
-let iframelayout: 'idle' | 'vm' | 'task' = 'idle'
+let roomready = false
 let embedready = false
 let embedreadywait: Promise<void> | null = null
 let messagelistenerinstalled = false
@@ -162,8 +162,8 @@ async function opentileoncells(
   }
 }
 
-export function readwanixtermiframelayout(): 'idle' | 'vm' | 'task' {
-  return iframelayout
+export function readwanixtermiframelayout(): 'idle' | 'room' {
+  return roomready ? 'room' : 'idle'
 }
 
 export function iswanixtermiframemode(): boolean {
@@ -171,7 +171,7 @@ export function iswanixtermiframemode(): boolean {
 }
 
 export function iswanixtermiframeactive(): boolean {
-  return vmbindsready || taskspaceready
+  return roomready
 }
 
 export function readwanixtermiframeprepstage(): WANIX_VM_PREP_STAGE {
@@ -349,6 +349,8 @@ export async function iframeattachtarget(
   id: string,
 ): Promise<void> {
   setwanixattached(kind, id)
+  await childrpc('zss-wanix-term-rpc', 'activatetarget', [kind, id])
+  await childrpc('zss-wanix-term-probe-rpc', 'setactiveterm', [id])
   await enterwanixattachedterminal()
   const snapshot = await synccellsfromchild()
   if (snapshot) {
@@ -368,22 +370,46 @@ export async function iframecapturezedcafeexport(): Promise<
   return Array.isArray(files) ? (files as WanixZedCafeGuestFile[]) : []
 }
 
-export async function iframeprepvmspace(
-  device: DEVICELIKE,
-  player: string,
-  urls: WANIX_VM_ASSET_URLS,
-  guestfiles: WanixZedCafeGuestFile[] = [],
-): Promise<void> {
+async function iframebootroom(opts: {
+  device?: DEVICELIKE | null
+  player?: string | null
+  urls?: WANIX_VM_ASSET_URLS
+  vmcapable?: boolean
+}): Promise<void> {
+  const vmcapable = opts.vmcapable ?? false
+  if (roomready && !vmcapable) {
+    return
+  }
+  if (roomready && vmcapable && vmbindsready) {
+    return
+  }
   vmprepstage = 'mounting'
   vmpreperror = undefined
-  apilog(device, player, 'wanix vm prep: caching linux + v86 asset urls...')
+  const device = opts.device ?? null
+  const player = opts.player ?? null
+  if (device && player) {
+    apilog(
+      device,
+      player,
+      vmcapable
+        ? 'wanix room: booting vm-capable wanix-system...'
+        : 'wanix room: booting task wanix-system...',
+    )
+  }
   try {
-    iframelayout = 'vm'
     ensureiframe()
-    await childrpc('zss-wanix-term-rpc', 'prepvm', [urls, guestfiles])
-    vmbindsready = true
+    await childrpc('zss-wanix-term-rpc', 'bootroom', [
+      { vmcapable, urls: opts.urls },
+    ])
+    roomready = true
+    taskspaceready = true
+    if (vmcapable) {
+      vmbindsready = true
+    }
     vmprepstage = 'mount_ok'
-    apilog(device, player, 'wanix vm prep: assets ready (mounts on spawn)')
+    if (device && player) {
+      apilog(device, player, 'wanix room: ready')
+    }
   } catch (err) {
     vmprepstage = 'failed'
     vmpreperror = err instanceof Error ? err.message : String(err)
@@ -391,10 +417,17 @@ export async function iframeprepvmspace(
   }
 }
 
+export async function iframeprepvmspace(
+  device: DEVICELIKE,
+  player: string,
+  urls: WANIX_VM_ASSET_URLS,
+  _guestfiles: WanixZedCafeGuestFile[] = [],
+): Promise<void> {
+  await iframebootroom({ device, player, urls, vmcapable: true })
+}
+
 export async function iframepreptaskspace(): Promise<void> {
-  iframelayout = 'task'
-  await childrpc('zss-wanix-term-rpc', 'preptask', [])
-  taskspaceready = true
+  await iframebootroom({ vmcapable: false })
 }
 
 export async function iframespawnvm(opts: {
@@ -408,6 +441,8 @@ export async function iframespawnvm(opts: {
   registervm({ id: vmid, label: vmid, mem })
   if (opts.attach !== false) {
     setwanixattached('vm', vmid)
+    await childrpc('zss-wanix-term-rpc', 'activatetarget', ['vm', vmid])
+    await childrpc('zss-wanix-term-probe-rpc', 'setactiveterm', [vmid])
   }
   vmprepstage = 'spawn'
   await childrpc('zss-wanix-term-rpc', 'spawnvm', [
@@ -426,6 +461,8 @@ export async function iframespawntask(
   await childrpc('zss-wanix-term-rpc', 'spawntask', [taskid, cmd])
   if (attach) {
     setwanixattached('task', taskid)
+    await childrpc('zss-wanix-term-rpc', 'activatetarget', ['task', taskid])
+    await childrpc('zss-wanix-term-probe-rpc', 'setactiveterm', [taskid])
   }
   return { taskid }
 }
@@ -533,6 +570,22 @@ export async function iframechildlistremotes(): Promise<WanixIframeRemote[]> {
   return childrpc<WanixIframeRemote[]>('zss-wanix-term-rpc', 'listremotes', [])
 }
 
+export async function iframechildstartbridge(url: string): Promise<void> {
+  await childrpc('zss-wanix-term-rpc', 'startbridge', [url])
+}
+
+export async function iframechildstopbridge(): Promise<void> {
+  await childrpc('zss-wanix-term-rpc', 'stopbridge', [])
+}
+
+export async function iframechildreadbridgestatus(): Promise<{
+  active: boolean
+  url: string
+  sessions: number
+}> {
+  return childrpc('zss-wanix-term-rpc', 'readbridgestatus', [])
+}
+
 /** Test hook — register a proxy + mark attached without a live iframe. */
 export function wanixtermiframehosttestsetattached(
   kind: WANIX_ATTACH_KIND,
@@ -566,6 +619,7 @@ export async function teardownwanixtermiframe(): Promise<void> {
   iframeel = null
   embedready = false
   embedreadywait = null
+  roomready = false
   vmbindsready = false
   taskspaceready = false
   vmprepstage = 'idle'
@@ -573,7 +627,6 @@ export async function teardownwanixtermiframe(): Promise<void> {
   clearwanixautotileflags()
   clearwanixremotes()
   setwanixattached(null, null)
-  iframelayout = 'idle'
   desirediframecols = 0
   desirediframerows = 0
 }

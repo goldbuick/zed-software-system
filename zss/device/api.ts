@@ -392,6 +392,18 @@ export function wanixremotedisconnect(
   device.emit(player, 'wanix:remote-disconnect', remoteid)
 }
 
+export function wanixbridgestart(
+  device: DEVICELIKE,
+  player: string,
+  url: string,
+) {
+  device.emit(player, 'wanix:bridge-start', url)
+}
+
+export function wanixbridgestop(device: DEVICELIKE, player: string) {
+  device.emit(player, 'wanix:bridge-stop')
+}
+
 export function wanixdrop(
   device: DEVICELIKE,
   player: string,

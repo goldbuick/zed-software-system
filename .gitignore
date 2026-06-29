@@ -39,6 +39,8 @@ cafe/public/models/
 
 # wanix smoke wasm scratch (regenerate with yarn task run wanix:wasm:build)
 ops/fixtures/wanix/*.wasm
+# wanix-bridge CLI build output (go build -o wanix-bridge in ops/tools/wanixbridge)
+ops/tools/wanixbridge/wanix-bridge
 # wanix harness guests (regenerate with yarn task run wanix:gojs:build / wanix:ensure)
 cafe/public/wanix/gojscheck.wasm
 cafe/public/wanix/wanix.debug.wasm

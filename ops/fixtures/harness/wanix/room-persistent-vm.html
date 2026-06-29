@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>wanix persistent room — dormant VM activation spike</title>
+    <script
+      type="module"
+      src="https://cdn.jsdelivr.net/npm/wanix@0.4.0-alpha8/dist/wanix.min.js"
+    ></script>
+    <style>
+      body {
+        font: 13px ui-monospace, Menlo, Monaco, Consolas, monospace;
+        margin: 16px;
+      }
+      #log {
+        white-space: pre-wrap;
+        max-height: 50vh;
+        overflow: auto;
+        border: 1px solid #333;
+        padding: 8px;
+      }
+      wanix-term {
+        display: block;
+        height: 240px;
+        margin-top: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Persistent room + dormant VM spike</h1>
+    <p>
+      Boots <code>wanix-system</code> once with a dormant <code>wanix-vm</code>
+      (no <code>start</code>). Runs a gojs export task in the same tree, stages
+      <code>#ramfs/zed-cafe</code>, then activates the VM without remounting the
+      system.
+    </p>
+    <pre id="log">booting…</pre>
+    <wanix-system
+      id="room-harness"
+      wasm="https://cdn.jsdelivr.net/npm/wanix@0.4.0-alpha8/dist/wanix.debug.wasm"
+      allow-origins="*"
+      debug
+    >
+      <wanix-bind dst="." src="#ramfs"></wanix-bind>
+      <wanix-bind
+        type="file"
+        dst="#ramfs/zed-cafe.wasm"
+        src="/wanix/zed-cafe.wasm"
+      ></wanix-bind>
+      <wanix-bind
+        dst="."
+        src="https://cdn.jsdelivr.net/npm/wanix-extras@0.4.0-rc1/dist/wanix-linux.tgz"
+        type="archive"
+      ></wanix-bind>
+      <wanix-bind dst="vm" src="#vm"></wanix-bind>
+      <wanix-bind
+        dst="#vm/v86"
+        src="https://cdn.jsdelivr.net/npm/wanix-extras@0.4.0-rc1/dist/v86.tgz"
+        type="archive"
+      ></wanix-bind>
+      <wanix-vm export="ttyS0" term data-zss-dormant-vm></wanix-vm>
+      <wanix-bind dst="zed-cafe" src="#ramfs/zed-cafe" data-zss-zed-cafe-export="vm-staging"></wanix-bind>
+      <wanix-term path="#vm/1/term" raw data-zss-target-kind="vm" data-zss-target-id="linux-vm"></wanix-term>
+    </wanix-system>
+    <script type="module">
+      const logel = document.getElementById('log')
+      const lines = []
+      function log(line) {
+        lines.push(line)
+        if (logel) {
+          logel.textContent = lines.join('\n')
+        }
+        console.log('[room-persistent-vm]', line)
+      }
+
+      const sys = document.querySelector('wanix-system')
+      const vm = sys.querySelector('wanix-vm')
+
+      sys.addEventListener('ready', () => {
+        log('wanix-system ready (room persistent — no remount)')
+        log(`dormant vm present: ${!!vm}, start=${vm?.hasAttribute('start')}`)
+        log('spike: activate VM with vm.setAttribute("start") after staging #ramfs/zed-cafe')
+        log('manual: drop inbox + run gojs export, then click Activate below')
+      })
+
+      window.activatevm = () => {
+        if (!vm) {
+          log('no vm element')
+          return
+        }
+        vm.setAttribute('start', '')
+        vm.setAttribute('mem', '512M')
+        log('vm start attribute set — watch serial term output')
+        if (typeof vm.start === 'function') {
+          void vm.start().then(() => log('vm.start() resolved'))
+        }
+      }
+    </script>
+    <button type="button" onclick="window.activatevm()">Activate dormant VM</button>
+  </body>
+</html>

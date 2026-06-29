@@ -225,6 +225,7 @@ describe('WanixTermInput vm raw input', () => {
 
     expect(mockechochar).toHaveBeenCalledWith('p')
     expect(mockechochar).toHaveBeenCalledWith('i')
+    expect(mockecholine).toHaveBeenCalledWith('')
     expect(mockwanixtermwrite).toHaveBeenCalledWith(
       expect.anything(),
       'player1',

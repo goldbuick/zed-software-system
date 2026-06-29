@@ -270,7 +270,7 @@ export function wanixtermscreenecholine(line: string) {
 }
 
 export function wanixtermscreenwritepong() {
-  writechunk('pong\r\n')
+  writechunk('-> pong\r\n')
 }
 
 export function wanixtermscreenshowclihint() {
