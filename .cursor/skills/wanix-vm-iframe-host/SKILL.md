@@ -93,7 +93,7 @@ yarn task run wanix:zed-cafe:export:validate  # regression (same guest milestone
 yarn task run wanix:vm:boot:validate       # book seed + remount milestone
 ```
 
-Shared: [`tasks/implementations/wanix/wanix-playwright-vm.mjs`](../../../tasks/implementations/wanix/wanix-playwright-vm.mjs) — `assertguestzedcafe`, `waitforvmshell`, bounded timeouts.
+Shared: [`tasks/groups/wanix.ts`](../../../tasks/groups/wanix.ts) — `assertguestzedcafe`, `waitforvmshell`, bounded timeouts.
 
 **Iframe apilog only:** validators listen for `zss-wanix-term-apilog` postMessage. Host tape `apilog` lines are **not** visible. Do not use host-only strings (e.g. `wanix vm prep: fetching linux`) as Playwright milestones.
 

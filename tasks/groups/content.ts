@@ -1,6 +1,6 @@
 import { execSync, spawnSync } from 'node:child_process'
+import { createHash } from 'node:crypto'
 import {
-  createHash,
   createWriteStream,
   existsSync,
   mkdirSync,
@@ -15,6 +15,7 @@ import JSZip from 'jszip'
 import {
   type ZZT_BOARD_LAYOUT,
   boardcodedelements,
+  corpusboardscreenshotid,
   corpusentryid,
   elementtozss,
   layoutfromkind,
@@ -25,13 +26,24 @@ import {
   corpusscanline,
   sanitizesource,
 } from 'ops/lib/content/zztcorpussanitize'
-import { loadcoolregionsbowelementlibrary } from 'ops/lib/coolregionsbowbook'
 import { ZZT_CORPUS_ZSS_DIR } from 'ops/lib/fixturepaths'
 import { zztparseboard, zztparseworld } from 'zss/feature/parse/zztbinparse'
 import type { ZZT_BOARD } from 'zss/feature/parse/zztformattypes'
 import { compileparse } from 'zss/feature/zztoop/compileparse'
 import { def, handler, jestexec } from '../helpers'
 import type { TaskContext, TaskDef } from '../types'
+
+const CORPUS_DIR = path.join('ops', 'fixtures', 'zzt', 'corpus')
+const ARCHIVES_DIR = path.join(CORPUS_DIR, 'archives')
+const EXTRACTED_DIR = path.join(CORPUS_DIR, 'extracted')
+const ZSS_DIR = path.join(CORPUS_DIR, 'zss')
+const MANIFEST_PATH = path.join(CORPUS_DIR, 'manifest.json')
+const ZSS_MANIFEST_PATH = path.join(ZSS_DIR, 'manifest.json')
+const SCREENSHOTS_DIR = path.join(CORPUS_DIR, 'screenshots')
+const SCREENSHOTS_MANIFEST_PATH = path.join(SCREENSHOTS_DIR, 'manifest.json')
+const REPORT_DIR = path.join('ops', 'fixtures', 'zzt', 'corpus')
+const SCAN_REPORT_PATH = path.join(REPORT_DIR, 'profanity-report.json')
+const SANITIZE_REPORT_PATH = path.join(REPORT_DIR, 'sanitize-report.json')
 
 // --- museum-zzt-filter ---
 export type MuseumDetail = {
@@ -197,8 +209,7 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-function parseoptions(argv: string[]): SyncOptions {
-  const root = ctx.root
+function parseoptions(argv: string[], root: string): SyncOptions {
   let manifestonly = false
   let force = false
   let usemanifest = false
@@ -499,8 +510,8 @@ export async function syncmuseumzztcorpus(opts: SyncOptions): Promise<number> {
   return manifest.failures.length > 0 ? 1 : 0
 }
 
-async function runmuseumzztcorpussyncinner(argv: string[]) {
-  const opts = parseoptions(argv)
+async function runmuseumzztcorpussyncinner(argv: string[], root: string) {
+  const opts = parseoptions(argv, root)
   const code = await syncmuseumzztcorpus(opts)
   return code
 }
@@ -508,7 +519,7 @@ async function runmuseumzztcorpussyncinner(argv: string[]) {
 
 async function runmuseumzztcorpussync(ctx: TaskContext): Promise<number> {
   try {
-    return await runmuseumzztcorpussyncinner(ctx.args)
+    return await runmuseumzztcorpussyncinner(ctx.args, ctx.root)
   } catch (err) {
     console.error(err)
     return 1
@@ -565,8 +576,7 @@ type ZssManifest = {
   errors: { path: string; error: string }[]
 }
 
-function parseextractoptions(argv: string[]): ExtractOptions {
-  const root = ctx.root
+function parseextractoptions(argv: string[], root: string): ExtractOptions {
   let stage: ExtractOptions['stage'] = 'both'
   let force = false
   let limit: number | undefined
@@ -958,18 +968,13 @@ export async function extractmuseumzztcorpus(
     }
   }
   if (opts.stage === 'zss' || opts.stage === 'both') {
-    const code = convertextractedtozss(opts)
-    if (code !== 0) {
-      return code
-    }
-    const { sanitizezztcorpus } = await import('./zzt-corpus-profanity')
-    return sanitizezztcorpus([])
+    return convertextractedtozss(opts)
   }
   return 0
 }
 
-async function runmuseumzztcorpusextractinner(argv: string[]) {
-  const opts = parseextractoptions(argv)
+async function runmuseumzztcorpusextractinner(argv: string[], root: string) {
+  const opts = parseextractoptions(argv, root)
   const code = await extractmuseumzztcorpus(opts)
   return code
 }
@@ -977,7 +982,7 @@ async function runmuseumzztcorpusextractinner(argv: string[]) {
 
 async function runmuseumzztcorpusextract(ctx: TaskContext): Promise<number> {
   try {
-    return await runmuseumzztcorpusextractinner(ctx.args)
+    return await runmuseumzztcorpusextractinner(ctx.args, ctx.root)
   } catch (err) {
     console.error(err)
     return 1
@@ -1268,8 +1273,10 @@ type ScreenshotManifest = {
   errors: { path: string; error: string }[]
 }
 
-export function parsescreenshotoptions(argv: string[]): ScreenshotOptions {
-  const root = ctx.root
+export function parsescreenshotoptions(
+  argv: string[],
+  root = process.cwd(),
+): ScreenshotOptions {
   let force = false
   let limit: number | undefined
 
@@ -1296,6 +1303,59 @@ export function parsescreenshotoptions(argv: string[]): ScreenshotOptions {
   return { root, force, limit }
 }
 
+type ScreenshotDeps = {
+  PNG: typeof import('pngjs').PNG
+  loadcoolregionsbowelementlibrary: typeof import('ops/lib/coolregionsbowbook').loadcoolregionsbowelementlibrary
+  importzztboardstobook: typeof import('zss/feature/parse/zzt').importzztboardstobook
+  defaultcapturemedia: typeof import('zss/gadget/capture/rasterize').defaultcapturemedia
+  rasterizelayerstorgba: typeof import('zss/gadget/capture/rasterize').rasterizelayerstorgba
+  ispresent: typeof import('zss/mapping/types').ispresent
+  memoryreadboardbyaddress: typeof import('zss/memory/boards').memoryreadboardbyaddress
+  memoryreadgadgetlayers: typeof import('zss/memory/rendering').memoryreadgadgetlayers
+  memoryclearbook: typeof import('zss/memory/session').memoryclearbook
+  memorywritebook: typeof import('zss/memory/session').memorywritebook
+  BOARD_WIDTH: number
+  BOARD_HEIGHT: number
+}
+
+async function loadscreenshotdeps(): Promise<ScreenshotDeps> {
+  const [
+    { PNG },
+    { loadcoolregionsbowelementlibrary },
+    { importzztboardstobook },
+    rasterize,
+    { ispresent },
+    boards,
+    rendering,
+    session,
+    memorytypes,
+  ] = await Promise.all([
+    import('pngjs'),
+    import('ops/lib/coolregionsbowbook'),
+    import('zss/feature/parse/zzt'),
+    import('zss/gadget/capture/rasterize'),
+    import('zss/mapping/types'),
+    import('zss/memory/boards'),
+    import('zss/memory/rendering'),
+    import('zss/memory/session'),
+    import('zss/memory/types'),
+  ])
+  return {
+    PNG,
+    loadcoolregionsbowelementlibrary,
+    importzztboardstobook,
+    defaultcapturemedia: rasterize.defaultcapturemedia,
+    rasterizelayerstorgba: rasterize.rasterizelayerstorgba,
+    ispresent,
+    memoryreadboardbyaddress: boards.memoryreadboardbyaddress,
+    memoryreadgadgetlayers: rendering.memoryreadgadgetlayers,
+    memoryclearbook: session.memoryclearbook,
+    memorywritebook: session.memorywritebook,
+    BOARD_WIDTH: memorytypes.BOARD_WIDTH,
+    BOARD_HEIGHT: memorytypes.BOARD_HEIGHT,
+  }
+}
+
 function screenshotrelpath(extractedrelpath: string, id: string): string {
   const parts = extractedrelpath.split(/[/\\]/)
   const letter = parts[0]
@@ -1304,6 +1364,7 @@ function screenshotrelpath(extractedrelpath: string, id: string): string {
 }
 
 function writepng(
+  PNG: ScreenshotDeps['PNG'],
   filepath: string,
   width: number,
   height: number,
@@ -1320,12 +1381,13 @@ function errormessage(error: unknown): string {
 }
 
 function processscreenshotsource(
+  deps: ScreenshotDeps,
   root: string,
   sourcepath: string,
   manifestentry: CorpusManifestEntry,
   opts: Pick<ScreenshotOptions, 'force'>,
   manifest: ScreenshotManifest,
-  media: ReturnType<typeof defaultcapturemedia>,
+  media: ReturnType<ScreenshotDeps['defaultcapturemedia']>,
 ) {
   const bytes = readFileSync(sourcepath)
   const content = new Uint8Array(bytes)
@@ -1342,15 +1404,15 @@ function processscreenshotsource(
   ) => {
     let bookid = ''
     try {
-      loadcoolregionsbowelementlibrary()
-      const { book, boardaddresses } = importzztboardstobook(zztboards, {
+      deps.loadcoolregionsbowelementlibrary()
+      const { book, boardaddresses } = deps.importzztboardstobook(zztboards, {
         startboard: -1,
         tilewidth,
         tileheight,
         croppedfromszzt,
       })
       bookid = book.id
-      memorywritebook(book)
+      deps.memorywritebook(book)
       for (let bi = 0; bi < boardaddresses.length; bi++) {
         const boardindex = boardindexstart + bi
         const boardname = zztboards[bi]?.boardname ?? ''
@@ -1375,18 +1437,18 @@ function processscreenshotsource(
           continue
         }
         try {
-          const board = memoryreadboardbyaddress(boardaddresses[bi])
-          if (!ispresent(board) || !ispresent(board.terrain)) {
+          const board = deps.memoryreadboardbyaddress(boardaddresses[bi])
+          if (!deps.ispresent(board) || !deps.ispresent(board.terrain)) {
             continue
           }
-          const gadgetlayers = memoryreadgadgetlayers('flat', board)
-          const { width, height, rgba } = rasterizelayerstorgba(
+          const gadgetlayers = deps.memoryreadgadgetlayers('flat', board)
+          const { width, height, rgba } = deps.rasterizelayerstorgba(
             gadgetlayers.layers,
             media.charset,
             media.palette,
           )
           mkdirSync(path.dirname(pngpath), { recursive: true })
-          writepng(pngpath, width, height, rgba)
+          writepng(deps.PNG, pngpath, width, height, rgba)
           manifest.stats.boards += 1
           manifest.entries.push({
             id,
@@ -1413,7 +1475,7 @@ function processscreenshotsource(
       })
     } finally {
       if (bookid) {
-        memoryclearbook(bookid)
+        deps.memoryclearbook(bookid)
       }
     }
   }
@@ -1425,7 +1487,7 @@ function processscreenshotsource(
       manifest.errors.push({ path: relpath, error: parsed.error })
       return
     }
-    renderboards(0, parsed.boards, BOARD_WIDTH, BOARD_HEIGHT, false)
+    renderboards(0, parsed.boards, deps.BOARD_WIDTH, deps.BOARD_HEIGHT, false)
     return
   }
 
@@ -1439,13 +1501,14 @@ function processscreenshotsource(
   renderboards(
     0,
     [parsed.board],
-    usedszzt ? 96 : BOARD_WIDTH,
-    usedszzt ? 80 : BOARD_HEIGHT,
+    usedszzt ? 96 : deps.BOARD_WIDTH,
+    usedszzt ? 80 : deps.BOARD_HEIGHT,
     usedszzt,
   )
 }
 
-export function renderscreenshots(opts: ScreenshotOptions): number {
+export async function renderscreenshots(opts: ScreenshotOptions): Promise<number> {
+  const deps = await loadscreenshotdeps()
   const corpusmanifest = readcorpusmanifest(opts.root)
   const okentries = corpusmanifest.entries.filter((e) => e.status === 'ok')
   const lookup = buildmanifestlookup(
@@ -1482,7 +1545,7 @@ export function renderscreenshots(opts: ScreenshotOptions): number {
     writeFileSync(manifestpath, `${JSON.stringify(manifest, null, 2)}\n`)
   }
 
-  const media = defaultcapturemedia()
+  const media = deps.defaultcapturemedia()
 
   const letters = readdirSync(extractedroot, { withFileTypes: true })
   for (let li = 0; li < letters.length; ++li) {
@@ -1510,6 +1573,7 @@ export function renderscreenshots(opts: ScreenshotOptions): number {
       for (let fi = 0; fi < sources.length; ++fi) {
         manifest.stats.source_files += 1
         processscreenshotsource(
+          deps,
           opts.root,
           sources[fi],
           manifestentry,

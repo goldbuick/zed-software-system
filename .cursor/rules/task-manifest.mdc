@@ -36,7 +36,7 @@ yarn task app dev           # nested shorthand for run app:dev
 ## Adding a task
 
 1. Add a `TaskDef` in `tasks/groups/<subject>.ts` (use `def()` / `tasksonly()` from `tasks/helpers.ts`).
-2. Implement leaf tasks with `handler()` in `tasks/implementations/<subject>/` — do not add new `scripts/` entrypoints.
+2. Implement leaf tasks as `handler()` functions in the same `tasks/groups/<subject>.ts` file — do not add new `scripts/` entrypoints.
 3. Composite pipelines: `tasks/pipelines.ts` (`parityfull`, etc.).
 4. Run `yarn task docs` and commit `ops/docs/tasks.md`.
 5. Document in the task `description` field; link narrative context in domain READMEs.

@@ -12,7 +12,7 @@ Do not change multiplayer, boundary sync, gadget projection, or host/join memory
 1. **Repro scenario** — document how to trigger the bug every time:
    - manual steps (host + join tabs, actions, timing), or
    - an automated spec / fixture (`ops/fixtures/e2e/*`), or
-   - a headed Playwright validator under `tasks/implementations/`.
+   - a headed Playwright validator under `tasks/groups/`.
 2. **Log-pinned diagnosis** — capture runtime evidence and identify **which memory is wrong**:
    - **host sim** — `memoryboundaryget`, board terrain in main worker
    - **join boardrunner worker** — worker-local boundary / board state

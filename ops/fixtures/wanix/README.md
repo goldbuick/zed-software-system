@@ -87,7 +87,7 @@ Folder segments are `{kebab-case-name}-{id}` for human browsing; canonical ids r
 
 Verify: warm Wanix → `ls zed-cafe/books/` shows `demo-book1`-style dirs → `yarn task run wanix:zed-cafe:export:validate`.
 
-Playwright gates use bounded waits ([`tasks/implementations/wanix/wanix-playwright-vm.mjs`](../../../tasks/implementations/wanix/wanix-playwright-vm.mjs)):
+Playwright gates use bounded waits ([`tasks/groups/wanix.ts`](../../../tasks/groups/wanix.ts)):
 
 - `SCRIPT_TOTAL_MS` default **420000** (7m hard cap per script)
 - `VM_SHELL_MS` default **360000**

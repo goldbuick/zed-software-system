@@ -9,7 +9,7 @@ Do **not** expand CI surface area. The repo already has lint, Jest, and a fixed 
 
 ## Prohibited
 
-- **New citty tasks** — no new `TaskDef` entries in `tasks/groups/`, handlers in `tasks/implementations/`, or pipeline deps in `tasks/pipelines.ts`.
+- **New citty tasks** — no new `TaskDef` entries in `tasks/groups/` beyond inline `handler()` implementations in those files, or new pipeline deps in `tasks/pipelines.ts`.
 - **New GitHub Actions** — no new files under `.github/workflows/` and no new jobs or steps in existing workflows.
 - **New CI tooling** — no husky, lint-staged, pre-commit, codecov, Sonar, Dependabot configs, alternate CI platforms (Circle, Buildkite, etc.), or new `package.json` scripts beyond `postinstall` and `task`.
 

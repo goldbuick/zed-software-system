@@ -66,7 +66,7 @@ Ready probe: **`stats.json`** at `#task/<rid>/export/stats.json` (poll via `wait
 
 ## Playwright gates (local, headed, dev server required)
 
-Shared helpers: [`tasks/implementations/wanix/wanix-playwright-vm.mjs`](../../../tasks/implementations/wanix/wanix-playwright-vm.mjs)
+Shared helpers: [`tasks/groups/wanix.ts`](../../../tasks/groups/wanix.ts)
 
 | Task | Role |
 |------|------|

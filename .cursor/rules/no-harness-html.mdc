@@ -12,7 +12,7 @@ Do not add committed test harness HTML pages. Browser debugging and parity use *
 - New files under `ops/fixtures/harness/` (directory removed)
 - `harnesshtmlmiddleware` or serving `*.html` test fixtures from `ops/fixtures/`
 - Standalone debug HTML outside `cafe/` (e.g. `ops/fixtures/**/**.html` for Playwright hosts)
-- New Wanix minimal `<wanix-system>` pages for validators — use full app (`https://localhost:7777/`) + headed Playwright scripts in `tasks/implementations/wanix/`
+- New Wanix minimal `<wanix-system>` pages for validators — use full app (`https://localhost:7777/`) + headed Playwright handlers in `tasks/groups/wanix.ts`
 
 ## Required instead
 

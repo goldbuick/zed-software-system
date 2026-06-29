@@ -1,30 +1,8 @@
 import { execFileSync, spawnSync } from 'node:child_process'
-import { existsSync, inflateSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { inflateSync } from 'node:zlib'
 import { dirname, join } from 'node:path'
 
-import { buildznsgridpreviewhtml } from '../../ops/infra/zns-grid-preview.js'
-import { validatecp437webchars } from '../../ops/infra/zns-cp437.js'
-import { ZNS_DOT_BG } from '../../ops/infra/zns-dotbkg.js'
-import { buildznscodemeta, buildznscodeemailhtml, buildznsemailpalette } from '../../ops/infra/zns-email-card.js'
-import {
-  buildznsemailcardpreviewhtml,
-  buildznsemailcardsvg,
-} from '../../ops/infra/zns-email-card-svg.js'
-import {
-  initemailcardwasm,
-  reademailcardfontbytes,
-  renderemailcardpngwasmcore,
-} from '../../ops/infra/zns-email-card-png-wasm-core.js'
-import {
-  scrollsourceisrawzss,
-  scrollsourceisscrollcodepage,
-  zedscrollhtml,
-  zedtapehtml,
-  zedtaperowshtml,
-  zedzsshtml,
-  zsssectionlines,
-} from '../../ops/infra/zns-zedhtml.js'
-import { ZNS_VGA_FONT_DATA_URI } from '../../ops/infra/generated/zns-vga-font.js'
 import { def, exec, handler, shell, tasksonly } from '../helpers'
 import type { TaskContext, TaskDef } from '../types'
 
@@ -365,6 +343,20 @@ async function runznsemailpreview(ctx: TaskContext): Promise<number> {
   const joinorigin = 'https://zed.cafe'
   const LEGACY_BAD = ['#153f15', '#3f3f3f', '#00002a', '#2a2a2a', '#15153f', '#3f3f15']
 
+  const [
+    { ZNS_DOT_BG },
+    { buildznscodemeta, buildznscodeemailhtml, buildznsemailpalette },
+    { buildznsemailcardpreviewhtml, buildznsemailcardsvg },
+    { initemailcardwasm, reademailcardfontbytes, renderemailcardpngwasmcore },
+    { ZNS_VGA_FONT_DATA_URI },
+  ] = await Promise.all([
+    import('../../ops/infra/zns-dotbkg.js'),
+    import('../../ops/infra/zns-email-card.js'),
+    import('../../ops/infra/zns-email-card-svg.js'),
+    import('../../ops/infra/zns-email-card-png-wasm-core.js'),
+    import('../../ops/infra/generated/zns-vga-font.js'),
+  ])
+
   const assertok = (condition: boolean, message: string) => {
     if (!condition) {
       console.error(`assert failed: ${message}`)
@@ -433,12 +425,16 @@ ${productionhtml}`,
   return 0
 }
 
-function runznsgridpreview(ctx: TaskContext): number {
+async function runznsgridpreview(ctx: TaskContext): Promise<number> {
   const root = ctx.root
   const fixturedir = join(root, 'ops/fixtures/zns')
   const dest = join(root, 'ops/infra/generated/zns-grid-preview.html')
   const readfixture = (name: string) =>
     readFileSync(join(fixturedir, name), 'utf8').replace(/\r\n/g, '\n')
+  const [{ validatecp437webchars }, { buildznsgridpreviewhtml }] = await Promise.all([
+    import('../../ops/infra/zns-cp437.js'),
+    import('../../ops/infra/zns-grid-preview.js'),
+  ])
   const problems = validatecp437webchars()
   if (problems.length !== 0) {
     console.error(`assert failed: cp437 web chars invalid: ${JSON.stringify(problems.slice(0, 3))}`)
@@ -455,10 +451,20 @@ function runznsgridpreview(ctx: TaskContext): number {
   return 0
 }
 
-function runznsscrollpreview(ctx: TaskContext): number {
+async function runznsscrollpreview(ctx: TaskContext): Promise<number> {
   const root = ctx.root
   const romdir = join(root, 'zss/rom/refscroll')
   const dest = join(root, 'ops/infra/generated/zns-scroll-preview.html')
+  const {
+    scrollsourceisrawzss,
+    scrollsourceisscrollcodepage,
+    zedscrollhtml,
+    zedtapehtml,
+    zedtaperowshtml,
+    zedzsshtml,
+    zsssectionlines,
+  } = await import('../../ops/infra/zns-zedhtml.js')
+  const { validatecp437webchars } = await import('../../ops/infra/zns-cp437.js')
   const readfixture = (name: string) =>
     readFileSync(join(romdir, name), 'utf8').replace(/\r\n/g, '\n')
   const assertok = (condition: boolean, message: string) => {
