@@ -8,7 +8,10 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { chromium } from '@playwright/test'
+import {
+  launchparitybrowser,
+  parityhosturl,
+} from 'tasks/lib/parity/parity-playwright.ts'
 import { RENDERS_FIXTURES_DIR } from 'ops/lib/fixturepaths'
 import {
   startparityvite,
@@ -30,7 +33,6 @@ const ROOT = process.cwd()
 const PROJECT = process.cwd()
 const PORT = 9884
 const OUTDIR = RENDERS_FIXTURES_DIR
-const HOST_URL = `http://127.0.0.1:${PORT}/offline-render-host.html`
 
 function encodewavmono16(samples: Float32Array, samplerate: number): Buffer {
   const datasize = samples.length * 2
@@ -100,7 +102,7 @@ async function main() {
   fs.mkdirSync(OUTDIR, { recursive: true })
 
   const parity = await startparityvite(PROJECT, PORT)
-  const browser = await chromium.launch()
+  const browser = await launchparitybrowser()
 
   try {
     const playpage = await browser.newPage()
@@ -119,8 +121,8 @@ async function main() {
       })
     }
 
-    await playpage.goto(HOST_URL, { waitUntil: 'domcontentloaded' })
-    await drumpage.goto(HOST_URL, { waitUntil: 'domcontentloaded' })
+    await playpage.goto(parityhosturl(PORT), { waitUntil: 'domcontentloaded' })
+    await drumpage.goto(parityhosturl(PORT), { waitUntil: 'domcontentloaded' })
 
     const playrender = await renderstem(playpage, 'play')
     const drumrender = await renderstem(drumpage, 'drum')

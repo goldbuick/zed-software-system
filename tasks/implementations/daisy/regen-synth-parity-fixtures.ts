@@ -2,7 +2,6 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { chromium } from '@playwright/test'
 import type { PARITY_AUDIO_METRICS } from 'ops/lib/daisy-parity/paritymetrics'
 import {
   DRUM_PARITY_PATCHES,
@@ -11,6 +10,10 @@ import {
   MAIN_DYNAMICS_PARITY_PATCHES,
   WASM_PARITY_PATCHES,
 } from 'ops/lib/daisy-parity/paritypatches'
+import {
+  launchparitybrowser,
+  parityhosturl,
+} from 'tasks/lib/parity/parity-playwright.ts'
 import { startparityvite } from 'tasks/lib/parity/parity-vite-server.ts'
 
 const ROOT = process.cwd()
@@ -44,27 +47,15 @@ async function renderpatchmetrics(
   patchid: string,
   kind: 'voice' | 'drum' | 'fx' | 'main',
 ): Promise<PARITY_AUDIO_METRICS> {
-  const params = new URLSearchParams({
-    patch: patchid,
-    kind,
-  })
-  if (USE_TONE) {
-    params.set('backend', 'tone')
-  }
-  const url = `http://127.0.0.1:${REGEN_PORT}/parity-regen.html?${params.toString()}`
-  await page.goto(url, { waitUntil: 'networkidle', timeout: 180000 })
-  await page.waitForFunction(
-    () => {
-      const el = document.getElementById('out')
-      return el && el.textContent && !el.textContent.startsWith('rendering')
+  const backend = USE_TONE ? 'tone' : 'wasm'
+  const parsed = await page.evaluate(
+    async (args) => {
+      const { runparityregen } =
+        await import('/ops/lib/daisy-parity/parity-regen-runner.ts')
+      return runparityregen(args)
     },
-    { timeout: 180000 },
+    { patchid, kind, backend },
   )
-  const body = await page.locator('#out').textContent()
-  if (!body) {
-    throw new Error(`empty parity regen response for ${patchid}`)
-  }
-  const parsed = JSON.parse(body) as Record<string, PARITY_AUDIO_METRICS>
   const metrics = parsed[patchid]
   if (!metrics) {
     throw new Error(`missing metrics for ${patchid}`)
@@ -76,10 +67,15 @@ async function renderallpatches(): Promise<
   Record<string, PARITY_AUDIO_METRICS>
 > {
   const { server, vite } = await startparityvite(PROJECT, REGEN_PORT)
-  const browser = await chromium.launch()
+  const browser = await launchparitybrowser()
   const out: Record<string, PARITY_AUDIO_METRICS> = {}
   try {
     const page = await browser.newPage()
+    page.setDefaultTimeout(180_000)
+    await page.goto(parityhosturl(REGEN_PORT), {
+      waitUntil: 'domcontentloaded',
+      timeout: 180000,
+    })
     page.on('console', (msg) => {
       if (msg.type() === 'error') {
         console.error(`browser [${msg.text()}]`)

@@ -15,7 +15,8 @@ import {
   stagezedcafetaskforgojs,
   waitforwanixroot,
   waitwanixbindmount,
-  waitzedcafeexportready,
+  waitandstagezedcafetaskexport,
+  waitzedcafeguestready,
   wirewanixarchivebind,
   wirewanixremotebind,
   wirezedcafeexportbind,
@@ -313,13 +314,13 @@ export function WanixIframeChildTree({
         )
         return
       }
-      const staged = await stagezedcafetaskforgojs(
+      const inboxstaged = await stagezedcafetaskforgojs(
         system,
         wanixroot,
         controller,
         task.rid,
       )
-      if (cancelled || !staged) {
+      if (cancelled || !inboxstaged) {
         return
       }
       postwanixiframeapilog(
@@ -329,23 +330,31 @@ export function WanixIframeChildTree({
       if (cancelled || !task.rid) {
         return
       }
-      const exportready = await waitzedcafeexportready(wanixroot, task.rid)
+      const exportstaged = await waitandstagezedcafetaskexport(
+        system,
+        wanixroot,
+        task.rid,
+      )
       if (cancelled) {
         return
       }
-      if (!exportready) {
+      if (!exportstaged) {
         controller.onzedcafeerror(
           new Error('zed-cafe export: export tree never became ready'),
         )
         return
       }
-      const exportbind = vmexportstage
-        ? null
-        : appendzedcafeexportbind(system, task.rid)
+      let exportbind: HTMLElement | null = null
+      if (!vmexportstage) {
+        exportbind = appendzedcafeexportbind(system, task.rid)
+      }
       if (exportbind) {
         wirezedcafeexportbind(exportbind, system, task.rid, controller)
         try {
           await waitwanixbindmount(exportbind)
+          if (await waitzedcafeguestready(wanixroot, WANIX_ZED_CAFE_EXPORT_WAIT_MS)) {
+            controller.markzedcafeready()
+          }
         } catch {
           // bind error handler may install #ramfs fallback
         }

@@ -71,9 +71,10 @@ Shared helpers: [`tasks/implementations/wanix/wanix-playwright-vm.mjs`](../../..
 | Task | Role |
 |------|------|
 | **`wanix:vm:zed-cafe:validate`** | **Primary acceptance** — `#wanix vm` → `ls /`, `ls /zed-cafe`, `cat stats.json` |
-| `wanix:zed-cafe:export:validate:app` | Regression alias (same guest milestones) |
+| `wanix:zed-cafe:export:validate` | Regression — same guest milestones via full app |
 | `wanix:vm:boot:validate` | Book seed + remount Milestone A + same guest milestones |
-| `wanix:zed-cafe:export:validate` | Minimal harness (no full app) |
+| `wanix:zed-cafe:task-read:validate` | Drop `zedcaferead.wasm` → tile `zed-cafe ok:` |
+| `wanix:zed-cafe:duplex:validate` | Drop `zedcafewrite.wasm` + `#wanix pull` |
 
 **Unit tests do not prove guest visibility.** Gate 3 (or equivalent) is required for `/zed-cafe/` bugs.
 
@@ -89,7 +90,7 @@ yarn jest --config ops/jest.config.ts \
   ops/tests/unit/feature/wanix/wanixiframechildmount.test.ts --no-coverage
 ```
 
-Composite: `yarn task run wanix:zed-cafe:memfs:validate` (build + `go test` + harness + jest smoke).
+Composite: `yarn task run wanix:zed-cafe:memfs:validate` (build + `go test` + headed app Playwright + jest smoke).
 
 ### Validator observability
 

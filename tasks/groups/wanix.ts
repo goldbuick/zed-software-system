@@ -21,7 +21,7 @@ export const WANIX_TASKS: TaskDef[] = [
   }),
   def('wanix:gojs:build', {
     description:
-      'Build upstream gojscheck.wasm (Go js/wasm) for basic-terminal.html harness',
+      'Build upstream gojscheck.wasm (Go js/wasm) for terminal smoke tests',
     run: shell('sh ops/fixtures/wanix/build-gojs.sh'),
   }),
   def('wanix:zed-cafe:build', {
@@ -32,41 +32,24 @@ export const WANIX_TASKS: TaskDef[] = [
   }),
   def('wanix:zed-cafe:export:validate', {
     description:
-      'Headed Playwright: minimal zed-cafe-export harness must show export/stats.json (local gate, not CI)',
-    run: shell('node tasks/implementations/wanix/validate-zed-cafe-export.mjs'),
-  }),
-  def('wanix:zed-cafe:export-write:validate', {
-    description:
-      'Playwright: gojs export memfs — write guestTouch into #task/rid/export/stats.json (local gate, not CI)',
-    run: shell(
-      'node tasks/implementations/wanix/validate-zed-cafe-export-write.mjs',
-    ),
-  }),
-  def('wanix:zed-cafe:memfs:validate', {
-    description:
-      'Composite ExportFS rollout gate — build, go test, harness Playwright (headless), jest smoke',
-    run: shell('node tasks/implementations/wanix/validate-zed-cafe-memfs.mjs'),
-  }),
-  def('wanix:zed-cafe:export:validate:app', {
-    description:
       'Headed Playwright: full app #wanix vm → cat /zed-cafe/stats.json (local gate, not CI)',
     run: shell(
       'node tasks/implementations/wanix/validate-zed-cafe-export-app.mjs',
     ),
   }),
+  def('wanix:zed-cafe:memfs:validate', {
+    description:
+      'Composite ExportFS rollout gate — build, go test, headed app Playwright, jest smoke',
+    run: shell('node tasks/implementations/wanix/validate-zed-cafe-memfs.mjs'),
+  }),
   def('wanix:zed-cafe:task-read:validate', {
     description:
-      'Headed Playwright: zed-cafe-task-read harness — dropped WASI task reads zed-cafe/stats.json (local gate, not CI)',
+      'Headed Playwright: full app drop zedcaferead.wasm reads zed-cafe/stats.json (local gate, not CI)',
     run: shell(
-      'node tasks/implementations/wanix/validate-zed-cafe-task-read.mjs',
+      'node tasks/implementations/wanix/validate-zed-cafe-task-read-app.mjs',
     ),
   }),
   def('wanix:zed-cafe:duplex:validate', {
-    description:
-      'Headed Playwright: zed-cafe-duplex harness — guest write to zed-cafe/stats.json (local gate, not CI)',
-    run: shell('node tasks/implementations/wanix/validate-zed-cafe-duplex.mjs'),
-  }),
-  def('wanix:zed-cafe:duplex:validate:app', {
     description:
       'Headed Playwright: full app drop zedcafewrite.wasm + #wanix pull import (local gate, not CI)',
     run: shell(

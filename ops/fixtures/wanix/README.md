@@ -17,7 +17,7 @@ Reference: [tractordev/wanix](https://github.com/tractordev/wanix) **`main`** (`
 | VM serial console | `<wanix-vm export="ttyS0" term>` + `#vm/<rid>/term/data` | `<wanix-vm>` must be **initial child** on boot remount — not appended after `ready` |
 | Term I/O | `<wanix-term path="…" raw>` (we use tile bridge instead of xterm) | `wanixhost.ts` + `WanixTermInput` |
 | `./zed-cafe/` / `/zed-cafe/` export | gojs export → live ns bind (task) or capture + VM remount (VM) | `wanixstateexport.ts` + `wanixzedcafe.ts` + `wanixiframechildmount.ts` |
-| **Namespace export (LAN)** | Browser cannot listen for WebSocket — use **`wanix-bridge` CLI** | `ops/tools/wanixbridge/` + `#wanix bridge <ws-url>` |
+| **Namespace export (LAN)** | Upstream **Wanix CLI console protocol** (browser dials out) | `wanixbridgehost.ts` + `#wanix bridge <wss-url>` |
 
 Session books mirror to **`./zed-cafe/`** (WASI tasks) or **`/zed-cafe/`** (Linux VM) when Wanix is warm. Host pushes edits via live `writeFile` into `#task/<rid>/export` (no gojs restart per edit). Guest edits import via auto-poll (~3s) or **`#wanix pull`**.
 
@@ -50,12 +50,11 @@ Agent docs: `.cursor/skills/wanix-zed-cafe-export/SKILL.md`, `.cursor/rules/wani
 **Local gates** (dev server must be running: `yarn task app dev`):
 
 ```bash
-yarn task run wanix:zed-cafe:export:validate      # minimal harness → #task/<rid>/export/stats.json
-yarn task run wanix:zed-cafe:export:validate:app  # full app #wanix vm → cat /zed-cafe/stats.json
-yarn task run wanix:vm:zed-cafe:validate          # primary: #wanix vm → ls / shows zed-cafe (6m script cap)
-yarn task run wanix:zed-cafe:duplex:validate      # guest write zed-cafe/stats.json (minimal harness)
-yarn task run wanix:zed-cafe:duplex:validate:app  # drop zedcafewrite.wasm + #wanix pull
-yarn task run wanix:vm:boot:validate              # seeded book + #wanix vm boot gate
+yarn task run wanix:zed-cafe:export:validate   # headed full app #wanix vm → cat /zed-cafe/stats.json
+yarn task run wanix:vm:zed-cafe:validate       # primary: #wanix vm → ls / shows zed-cafe (6m script cap)
+yarn task run wanix:zed-cafe:duplex:validate   # headed: drop zedcafewrite.wasm + #wanix pull
+yarn task run wanix:zed-cafe:task-read:validate # headed: drop zedcaferead.wasm → zed-cafe ok:
+yarn task run wanix:vm:boot:validate           # seeded book + #wanix vm boot gate
 ```
 
 | Layout | Read books |
@@ -100,59 +99,37 @@ VM prep must **not** call `_setupNamespace` a second time after `#ramfs` (that c
 
 Import **`wanixtour`** book for a playable demo of `./zed-cafe/` on the `wanixzedcafe` board.
 
-### Manual vm-simple harness
+### VM baseline (headed Playwright)
 
-Upstream-faithful port of [`examples/basic-vm.html`](https://github.com/tractordev/wanix/blob/main/examples/basic-vm.html) — visible `<wanix-term>`, full-height xterm, event log.
-
-Source: `ops/fixtures/harness/wanix/vm-simple.html`  
-Dev URL: [/wanix/vm-simple.html](http://localhost:7777/wanix/vm-simple.html)
-
-1. `yarn task run wanix:ensure` (optional pin check)
-2. `yarn task app dev`
-3. Open `/wanix/vm-simple.html` — wait for `login:` (large CDN download on first boot)
-4. Type `root`, Enter, Enter, then `id` — expect `uid=0(root)`
-5. Bottom log should show `wanix-system ready` with no panic lines
-
-### `wanix-bridge` — export namespace over WebSocket 9P
-
-Browsers cannot accept inbound WebSocket connections. **`wanix-bridge`** listens on `:7654`; the zed.cafe Wanix iframe dials out as the 9P **server**; external clients connect as 9P **clients**.
-
-HTTPS dev (`yarn task app dev`) cannot use `ws://` URLs (mixed content). The dev server proxies:
-
-| Path | Backend |
-|------|---------|
-| `/wanix-bridge-host` | `ws://127.0.0.1:7654/host` |
-| `/wanix-remote-9p` | `ws://127.0.0.1:7654/` |
-
-**Terminal A** — dev app:
+Use upstream-faithful validation via the full app — not standalone HTML:
 
 ```bash
-yarn task app dev
+yarn task run wanix:vm:zed-cafe:validate   # #wanix vm → shell + /zed-cafe/stats.json
+yarn task run wanix:vm:boot:validate       # book seed + remount milestones
 ```
 
-**Terminal B** — bridge (prints `wss://` tape line via Vite proxy):
+If these gates pass headed but a manual `#wanix vm` path fails, the defect is in ZSS spawn/mount code, not the environment.
 
-```bash
-yarn task run wanix:bridge
+### Namespace export — browser bridge + upstream console protocol
+
+Browsers cannot accept inbound WebSocket connections. The zed.cafe Wanix iframe dials **out** as the 9P server via [`zss/feature/wanix/wanixbridgehost.ts`](../../../zss/feature/wanix/wanixbridgehost.ts); external clients connect as 9P clients.
+
+External access uses the **upstream Wanix CLI console protocol** (not yet on main in the pinned submodule). Paste the CLI-printed tape line:
+
+```text
+#wanix bridge wss://localhost:7777/wanix-bridge-host?token=…
 ```
 
-On start the CLI copies e.g. `#wanix bridge wss://localhost:7777/wanix-bridge-host?token=…` to the clipboard. It also prints **direct** `ws://<lan-ip>:7654/…` lines for LAN/native clients.
+Stop: `#wanix bridge stop`.
 
-1. Warm Wanix in zed.cafe (drop a `.wasm` or `#wanix vm`).
-2. Paste the tape line from clipboard.
-3. Import on same machine (HTTPS dev):
+HTTPS dev (`yarn task app dev`) cannot use bare `ws://` URLs (mixed content). Vite proxies WSS → local WS:
 
-```html
-<wanix-bind type="import" dst="remote" src="wss://localhost:7777/wanix-remote-9p/?token=…"></wanix-bind>
-```
+| Path | Role |
+|------|------|
+| `/wanix-bridge-host` | Browser host session (iframe dials out) |
+| `/wanix-remote-9p` | Remote 9P import (`wanix serve` or console protocol listener) |
 
-Or `#wanix remote connect wss://localhost:7777/wanix-remote-9p/?token=…` in the full app.
-
-Stop: `#wanix bridge stop`. Up to **9** concurrent client sessions. Full root namespace (`_open9P("1")`).
-
-`ZSS_NO_HTTPS=true`: `ZSS_URL=http://localhost:7777 yarn task run wanix:bridge`
-
-Owners: `ops/tools/wanixbridge/` (CLI), `zss/feature/wanix/wanixbridgehost.ts` (iframe host mux). Candidate for upstream `tractor.dev/wanix` after ZSS validation.
+Remote import in the full app: `#wanix remote connect wss://…` (see **WSS remote import** below). Harness: [/wanix/wss-import.html](http://localhost:7777/wanix/wss-import.html).
 
 ## Quick build (WAT)
 
@@ -305,14 +282,13 @@ echo 'hello from serve' > /tmp/wanix-remote-test/hello.txt
 wanix serve /tmp/wanix-remote-test
 ```
 
-**Terminal B** — app or harness:
+**Terminal B** — full app:
 
 ```bash
 yarn task app dev
 ```
 
-- Harness: [/wanix/wss-import.html](http://localhost:7777/wanix/wss-import.html) (uses `wss://<host>/wanix-remote-9p` by default)
-- Full app: `#wanix remote` menu → `#wanix remote connect wss://localhost:7777/wanix-remote-9p` → `#wanix vm` → `ls /remote` and `cat /remote/hello.txt`
+- `#wanix remote` menu → `#wanix remote connect wss://localhost:7777/wanix-remote-9p` → `#wanix vm` → `ls /remote` and `cat /remote/hello.txt`
 
 Disconnect via the **Disconnect** hyperlink in the `#wanix remote` menu.
 
@@ -321,7 +297,7 @@ Disconnect via the **Disconnect** hyperlink in the `#wanix remote` menu.
 1. `yarn task app dev`
 2. Drop `hello.wasm` or use `#wanix` commands
 3. For VM term bridge: `#wanix vm` — prep in apilog; tile opens on first cell snapshot
-4. For upstream VM baseline: `/wanix/vm-simple.html` — see **Manual vm-simple harness** above
+4. For VM baseline: `yarn task run wanix:vm:zed-cafe:validate` (headed Playwright)
 
 ## VM keystroke repro (debug)
 
@@ -331,4 +307,4 @@ Disconnect via the **Disconnect** hyperlink in the `#wanix remote` menu.
 4. Type a command and Enter — check console for `[wanix] iframe-term-size` / `iframe-pixel-size` if sizing looks wrong (set `ZSS_WANIX_SHOW=true` in `cafe/.env.local`)
 5. Second command — if input stops, check worker panic in console
 
-After code changes, repeat steps 1–5 manually or use the `/wanix/vm-simple.html` harness to bisect VM term issues.
+After code changes, repeat steps 1–5 manually or run `yarn task run wanix:vm:zed-cafe:validate` to bisect VM term issues.

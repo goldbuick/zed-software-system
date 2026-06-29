@@ -2,13 +2,14 @@ import { writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { chromium } from '@playwright/test'
+import {
+  launchparitybrowser,
+  parityhosturl,
+} from 'tasks/lib/parity/parity-playwright.ts'
 import {
   startparityvite,
   stopparityvite,
 } from 'tasks/lib/parity/parity-vite-server.ts'
-
-import type { LEVEL_STABILITY_METRICS } from '../zss/feature/synth/backend/wasm/levelstabilitymetrics.ts'
 
 const ROOT = process.cwd()
 const PROJECT = process.cwd()
@@ -20,7 +21,7 @@ const PORT = 9885
 
 async function main() {
   const parity = await startparityvite(PROJECT, PORT)
-  const browser = await chromium.launch()
+  const browser = await launchparitybrowser()
   try {
     const page = await browser.newPage()
     page.on('pageerror', (err) => {
@@ -32,30 +33,15 @@ async function main() {
       }
     })
     page.setDefaultTimeout(120_000)
-    await page.goto(`http://127.0.0.1:${PORT}/adsrenvcurve-regen.html`, {
+    await page.goto(parityhosturl(PORT), {
       waitUntil: 'domcontentloaded',
       timeout: 120_000,
     })
-    await page.waitForFunction(
-      () => {
-        const el = document.getElementById('out')
-        return (
-          el &&
-          el.textContent &&
-          !el.textContent.startsWith('rendering') &&
-          !el.textContent.startsWith('error')
-        )
-      },
-      { timeout: 120_000 },
-    )
-    const body = await page.locator('#out').textContent()
-    if (!body || body.startsWith('error') || body.startsWith('rendering')) {
-      throw new Error(`adsrenvcurve regen failed: ${body}`)
-    }
-    const parsed = JSON.parse(body) as {
-      tone: LEVEL_STABILITY_METRICS
-      sustain: { peakdb: number; rmsdb: number }
-    }
+    const parsed = await page.evaluate(async () => {
+      const { runadsrenvcurveregen } =
+        await import('/ops/lib/daisy-parity/adsrenvcurve-regen-runner.ts')
+      return runadsrenvcurveregen()
+    })
     writeFileSync(OUT, `${JSON.stringify(parsed, null, 2)}\n`)
     console.log(`wrote ${OUT}`)
   } finally {

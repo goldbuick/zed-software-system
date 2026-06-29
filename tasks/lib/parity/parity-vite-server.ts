@@ -10,7 +10,7 @@ import { nodePolyfills } from 'vite-plugin-node-polyfills'
 
 import {
   fixtureprefixmiddleware,
-  harnesshtmlmiddleware,
+  parityblankhostmiddleware,
 } from './harness-middleware.ts'
 
 export const PARITY_SERVER_PORT = 9877
@@ -45,7 +45,7 @@ export async function startparityvite(
   })
 
   const server = http.createServer((req, res) => {
-    harnesshtmlmiddleware()(req, res, () => {
+    parityblankhostmiddleware()(req, res, () => {
       fixtureprefixmiddleware('/renders', RENDERS_FIXTURES_DIR)(
         req,
         res,

@@ -11,13 +11,16 @@
  *   ops/fixtures/renders/duck-bg-stab-sc-on.* / -sc-off.* (--ab)
  *
  * Browser preview (yarn app:dev):
- *   https://localhost:7777/song-offline-render.html?scenario=sidechain
+ *   yarn sidechain-song:render
  */
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { chromium } from '@playwright/test'
+import {
+  launchparitybrowser,
+  parityhosturl,
+} from 'tasks/lib/parity/parity-playwright.ts'
 import { RENDERS_FIXTURES_DIR } from 'ops/lib/fixturepaths'
 import {
   startparityvite,
@@ -34,7 +37,6 @@ const ROOT = process.cwd()
 const PROJECT = process.cwd()
 const PORT = 9882
 const OUTDIR = RENDERS_FIXTURES_DIR
-const HOST_URL = `http://127.0.0.1:${PORT}/offline-render-host.html`
 
 type RENDER_PASS = {
   suffix: string
@@ -84,7 +86,7 @@ async function main() {
   console.log('Sidechain scenario:', scenario.id, scenario.description)
 
   const parity = await startparityvite(PROJECT, PORT)
-  const browser = await chromium.launch()
+  const browser = await launchparitybrowser()
 
   try {
     for (const pass of passes) {
@@ -101,7 +103,7 @@ async function main() {
         }
       })
 
-      await passpage.goto(HOST_URL, { waitUntil: 'domcontentloaded' })
+      await passpage.goto(parityhosturl(PORT), { waitUntil: 'domcontentloaded' })
       console.log(
         `Rendering ${SIDECHAIN_SCENARIO_ID}${pass.suffix || ''} (sidechain ${pass.sidechainbypass ? 'OFF' : 'ON'})…`,
       )
@@ -139,9 +141,6 @@ async function main() {
       console.log(`Listen: afplay ${wavpath}`)
     }
 
-    console.log(
-      `Browser: https://localhost:7777/song-offline-render.html?scenario=sidechain`,
-    )
   } finally {
     await browser.close()
     await stopparityvite(parity)

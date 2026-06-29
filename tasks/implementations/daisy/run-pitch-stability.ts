@@ -12,7 +12,10 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { chromium } from '@playwright/test'
+import {
+  launchparitybrowser,
+  parityhosturl,
+} from 'tasks/lib/parity/parity-playwright.ts'
 import { RENDERS_FIXTURES_DIR } from 'ops/lib/fixturepaths'
 import {
   startparityvite,
@@ -35,7 +38,6 @@ const ROOT = process.cwd()
 const PROJECT = process.cwd()
 const PORT = 9883
 const OUTDIR = RENDERS_FIXTURES_DIR
-const HOST_URL = `http://127.0.0.1:${PORT}/offline-render-host.html`
 
 type RENDER_PAYLOAD = {
   meta: {
@@ -109,7 +111,7 @@ async function main() {
   fs.mkdirSync(OUTDIR, { recursive: true })
 
   const parity = await startparityvite(PROJECT, PORT)
-  const browser = await chromium.launch()
+  const browser = await launchparitybrowser()
 
   try {
     const page = await browser.newPage()
@@ -125,7 +127,7 @@ async function main() {
       }
     })
 
-    await page.goto(HOST_URL, { waitUntil: 'domcontentloaded' })
+    await page.goto(parityhosturl(PORT), { waitUntil: 'domcontentloaded' })
     console.log(`Rendering ${PITCH_STABILITY_SCENARIO_ID}…`)
 
     const result = await renderpass(page)

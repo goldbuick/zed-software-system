@@ -8,7 +8,10 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { chromium } from '@playwright/test'
+import {
+  launchparitybrowser,
+  parityhosturl,
+} from 'tasks/lib/parity/parity-playwright.ts'
 import {
   SIDECHAIN_PARITY_PATCH_ID,
   type SIDECHAIN_PARITY_RESULT,
@@ -36,7 +39,6 @@ const ROOT = process.cwd()
 const PROJECT = process.cwd()
 const PORT = 9886
 const OUTDIR = RENDERS_FIXTURES_DIR
-const HOST_URL = `http://127.0.0.1:${PORT}/offline-render-host.html`
 const PARITY_JSON = path.join(
   OUTDIR,
   `${SIDECHAIN_SCENARIO_ID}-sidechain-parity.json`,
@@ -110,7 +112,7 @@ async function main() {
   fs.mkdirSync(OUTDIR, { recursive: true })
 
   const parity = await startparityvite(PROJECT, PORT)
-  const browser = await chromium.launch()
+  const browser = await launchparitybrowser()
 
   try {
     const page = await browser.newPage()
@@ -121,7 +123,7 @@ async function main() {
         console.log(text)
       }
     })
-    await page.goto(HOST_URL, { waitUntil: 'domcontentloaded' })
+    await page.goto(parityhosturl(PORT), { waitUntil: 'domcontentloaded' })
 
     console.log('Rendering duck-bg-stab SC ON…')
     const on = await renderdaisypass(page, false)

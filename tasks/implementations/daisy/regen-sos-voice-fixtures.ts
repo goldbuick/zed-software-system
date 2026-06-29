@@ -2,8 +2,11 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { chromium } from '@playwright/test'
 import type { PARITY_AUDIO_METRICS } from 'ops/lib/daisy-parity/paritymetrics'
+import {
+  launchparitybrowser,
+  parityhosturl,
+} from 'tasks/lib/parity/parity-playwright.ts'
 import {
   startparityvite,
   stopparityvite,
@@ -23,30 +26,25 @@ async function rendersospatch(
   page: import('@playwright/test').Page,
   patchid: string | null,
 ): Promise<Record<string, PARITY_AUDIO_METRICS>> {
-  const params = new URLSearchParams()
-  if (patchid) {
-    params.set('patch', patchid)
-  }
-  const url = `http://127.0.0.1:${REGEN_PORT}/sos-voice-regen.html?${params.toString()}`
-  await page.goto(url, { waitUntil: 'networkidle', timeout: 300000 })
-  await page.waitForFunction(
-    () => {
-      const el = document.getElementById('out')
-      return el && el.textContent && !el.textContent.startsWith('rendering')
+  return page.evaluate(
+    async (args) => {
+      const { runsosvoiceregen } =
+        await import('/ops/lib/daisy-parity/sos-voice-regen-runner.ts')
+      return runsosvoiceregen(args)
     },
-    { timeout: 300000 },
+    { patchid: patchid ?? undefined },
   )
-  const body = await page.locator('#out').textContent()
-  if (!body || body.startsWith('error:')) {
-    throw new Error(body ?? 'empty sos regen response')
-  }
-  return JSON.parse(body) as Record<string, PARITY_AUDIO_METRICS>
 }
 
 async function main() {
   const handle = await startparityvite(PROJECT, REGEN_PORT)
-  const browser = await chromium.launch()
+  const browser = await launchparitybrowser()
   const page = await browser.newPage()
+  page.setDefaultTimeout(300_000)
+  await page.goto(parityhosturl(REGEN_PORT), {
+    waitUntil: 'domcontentloaded',
+    timeout: 300000,
+  })
   const patches: Record<string, PARITY_AUDIO_METRICS> = {}
 
   try {

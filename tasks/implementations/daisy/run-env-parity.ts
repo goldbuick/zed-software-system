@@ -9,10 +9,13 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { chromium } from '@playwright/test'
 import type { ENV_PARITY_RESULT } from 'ops/lib/daisy-parity/envparityrender'
 import { ENV_PARITY_SCENARIOS } from 'ops/lib/daisy-parity/envparityscenario'
 import { RENDERS_FIXTURES_DIR } from 'ops/lib/fixturepaths'
+import {
+  launchparitybrowser,
+  parityhosturl,
+} from 'tasks/lib/parity/parity-playwright.ts'
 import {
   PARITY_RENDER_SCRIPT_TIMEOUT_MS,
   PLAYWRIGHT_SCENARIO_TIMEOUT_MS,
@@ -26,7 +29,6 @@ import {
 const ROOT = process.cwd()
 const PROJECT = process.cwd()
 const PORT = 9886
-const HOST_URL = `http://127.0.0.1:${PORT}/offline-render-host.html`
 const OUTDIR = path.join(RENDERS_FIXTURES_DIR, 'env-parity')
 
 const PEAK_TOLERANCE_DB = 6
@@ -71,7 +73,7 @@ async function runenvparity() {
   fs.mkdirSync(OUTDIR, { recursive: true })
 
   const parity = await startparityvite(PROJECT, PORT)
-  const browser = await chromium.launch({ timeout: 60_000 })
+  const browser = await launchparitybrowser(60_000)
   const results: ENV_PARITY_RESULT[] = []
   let failed = false
 
@@ -80,7 +82,7 @@ async function runenvparity() {
       console.log(`Rendering env parity: ${scenario.id}…`)
       const page = await browser.newPage()
       page.setDefaultTimeout(PLAYWRIGHT_SCENARIO_TIMEOUT_MS)
-      await page.goto(HOST_URL, {
+      await page.goto(parityhosturl(PORT), {
         waitUntil: 'domcontentloaded',
         timeout: PLAYWRIGHT_SCENARIO_TIMEOUT_MS,
       })

@@ -123,7 +123,9 @@ export async function waitforzedcafeexportapilog(
         (line) =>
           /\/export ready/.test(line) ||
           /guest bind mounted from #task\//.test(line) ||
-          /export ramfs bind mounted from #task\//.test(line),
+          /guest bind mounted from #ramfs\/zed-cafe/.test(line) ||
+          /export ramfs bind mounted from #task\//.test(line) ||
+          /guest zed-cafe ready/.test(line),
       )
     },
     ms,

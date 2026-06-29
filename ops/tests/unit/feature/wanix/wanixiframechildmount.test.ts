@@ -18,6 +18,7 @@ import {
   stagezedcafetaskforgojs,
   waitwanixbindmount,
   waitzedcafeexportready,
+  waitzedcafeguestready,
 } from 'zss/feature/wanix/wanixiframechildmount'
 import {
   createidlewanixiframestate,
@@ -276,6 +277,45 @@ describe('wanixiframechildmount zed-cafe staging', () => {
       writeFile: jest.fn(),
     }
     const pending = waitzedcafeexportready(root, '4', 500)
+    await jest.advanceTimersByTimeAsync(600)
+    await expect(pending).resolves.toBe(false)
+    jest.useRealTimers()
+  })
+
+  it('waitzedcafeguestready polls until zed-cafe/stats.json appears', async () => {
+    jest.useFakeTimers()
+    let listed = false
+    const root = {
+      readDir: jest.fn(async (path: string) => {
+        if (path === 'zed-cafe' && listed) {
+          return ['stats.json']
+        }
+        if (path === 'zed-cafe') {
+          throw new Error('file does not exist')
+        }
+        return []
+      }),
+      readFile: jest.fn(),
+      writeFile: jest.fn(),
+    }
+    const pending = waitzedcafeguestready(root, 2000)
+    await jest.advanceTimersByTimeAsync(300)
+    listed = true
+    await jest.advanceTimersByTimeAsync(300)
+    await expect(pending).resolves.toBe(true)
+    jest.useRealTimers()
+  })
+
+  it('waitzedcafeguestready returns false on timeout', async () => {
+    jest.useFakeTimers()
+    const root = {
+      readDir: jest.fn(async () => {
+        throw new Error('file does not exist')
+      }),
+      readFile: jest.fn(),
+      writeFile: jest.fn(),
+    }
+    const pending = waitzedcafeguestready(root, 500)
     await jest.advanceTimersByTimeAsync(600)
     await expect(pending).resolves.toBe(false)
     jest.useRealTimers()

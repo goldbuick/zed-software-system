@@ -7,7 +7,10 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { chromium } from '@playwright/test'
+import {
+  launchparitybrowser,
+  parityhosturl,
+} from 'tasks/lib/parity/parity-playwright.ts'
 import { RENDERS_FIXTURES_DIR } from 'ops/lib/fixturepaths'
 import {
   startparityvite,
@@ -97,7 +100,7 @@ async function main() {
   ]
 
   const parity = await startparityvite(PROJECT, PORT)
-  const browser = await chromium.launch()
+  const browser = await launchparitybrowser()
   const results: {
     id: string
     overallpeakdb: number
@@ -112,7 +115,7 @@ async function main() {
 
   try {
     const page = await browser.newPage()
-    await page.goto(`http://127.0.0.1:${PORT}/level-stability.html`, {
+    await page.goto(parityhosturl(PORT), {
       waitUntil: 'domcontentloaded',
     })
 

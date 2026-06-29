@@ -7,7 +7,10 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { chromium } from '@playwright/test'
+import {
+  launchparitybrowser,
+  parityhosturl,
+} from 'tasks/lib/parity/parity-playwright.ts'
 import {
   evalsynthenvparitygate,
   formatsynthenvparityreport,
@@ -27,14 +30,13 @@ import {
 const ROOT = process.cwd()
 const PROJECT = process.cwd()
 const PORT = 9888
-const HOST_URL = `http://127.0.0.1:${PORT}/offline-render-host.html`
 const OUTDIR = path.join(RENDERS_FIXTURES_DIR, 'synth-env-parity')
 
 async function runrenders() {
   fs.mkdirSync(OUTDIR, { recursive: true })
 
   const parity = await startparityvite(PROJECT, PORT)
-  const browser = await chromium.launch({ timeout: 60_000 })
+  const browser = await launchparitybrowser(60_000)
   const reportentries: {
     id: string
     gate: ReturnType<typeof evalsynthenvparitygate>
@@ -46,7 +48,7 @@ async function runrenders() {
       console.log(`Rendering synth env parity: ${scenario.id}…`)
       const page = await browser.newPage()
       page.setDefaultTimeout(PLAYWRIGHT_SCENARIO_TIMEOUT_MS)
-      await page.goto(HOST_URL, {
+      await page.goto(parityhosturl(PORT), {
         waitUntil: 'domcontentloaded',
         timeout: PLAYWRIGHT_SCENARIO_TIMEOUT_MS,
       })

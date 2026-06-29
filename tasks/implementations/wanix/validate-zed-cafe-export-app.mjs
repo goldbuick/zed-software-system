@@ -26,7 +26,7 @@ const browser = await chromium.launch({ headless: false })
 try {
   await runwithscripttimeout(
     WANIX_VM_VALIDATE_TIMEOUTS.SCRIPT_TOTAL_MS,
-    'wanix:zed-cafe:export:validate:app',
+    'wanix:zed-cafe:export:validate',
     async () => {
       const page = await browser.newPage({
         ignoreHTTPSErrors: true,

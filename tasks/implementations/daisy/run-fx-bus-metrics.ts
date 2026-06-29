@@ -6,7 +6,10 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { chromium } from '@playwright/test'
+import {
+  launchparitybrowser,
+  parityhosturl,
+} from 'tasks/lib/parity/parity-playwright.ts'
 import { startparityvite } from 'tasks/lib/parity/parity-vite-server.ts'
 
 import {
@@ -22,31 +25,18 @@ const ROOT = process.cwd()
 const PROJECT = process.cwd()
 const PORT = 9878
 
-type PAYLOAD = { metrics: Record<string, LEVEL_STABILITY_METRICS> }
-
 async function renderscenario(
   page: import('@playwright/test').Page,
   scenarioid: string,
 ): Promise<LEVEL_STABILITY_METRICS> {
-  const url = `http://127.0.0.1:${PORT}/level-stability.html?scenario=${scenarioid}`
-  await page.goto(url, { waitUntil: 'networkidle', timeout: 600000 })
-  await page.waitForFunction(
-    () => {
-      const el = document.getElementById('out')
-      return (
-        el &&
-        el.textContent &&
-        !el.textContent.startsWith('rendering') &&
-        !el.textContent.startsWith('error')
-      )
+  const parsed = await page.evaluate(
+    async (args) => {
+      const { runlevelstabilitybrowser } =
+        await import('/ops/lib/daisy-parity/level-stability-runner.ts')
+      return runlevelstabilitybrowser(args)
     },
-    { timeout: 600000 },
+    { scenarioid },
   )
-  const body = await page.locator('#out').textContent()
-  if (!body) {
-    throw new Error(`empty response for ${scenarioid}`)
-  }
-  const parsed = JSON.parse(body) as PAYLOAD
   const metrics = parsed.metrics[scenarioid]
   if (!metrics) {
     throw new Error(`missing metrics for ${scenarioid}`)
@@ -57,10 +47,15 @@ async function renderscenario(
 async function main() {
   const scenarios = filterlevelstabilityscenarios('fxmatrix')
   const { server, vite } = await startparityvite(PROJECT, PORT)
-  const browser = await chromium.launch()
+  const browser = await launchparitybrowser()
   const metrics: Record<string, LEVEL_STABILITY_METRICS> = {}
   try {
     const page = await browser.newPage()
+    page.setDefaultTimeout(600_000)
+    await page.goto(parityhosturl(PORT), {
+      waitUntil: 'domcontentloaded',
+      timeout: 600000,
+    })
     for (const scenario of scenarios) {
       console.warn(`Rendering ${scenario.id}…`)
       metrics[scenario.id] = await renderscenario(page, scenario.id)

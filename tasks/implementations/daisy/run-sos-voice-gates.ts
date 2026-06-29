@@ -2,9 +2,12 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { chromium } from '@playwright/test'
 import type { PARITY_AUDIO_METRICS } from 'ops/lib/daisy-parity/paritymetrics'
 import { evalsosvoicegate } from 'ops/lib/daisy-parity/sosvoicegate'
+import {
+  launchparitybrowser,
+  parityhosturl,
+} from 'tasks/lib/parity/parity-playwright.ts'
 import {
   startparityvite,
   stopparityvite,
@@ -33,21 +36,14 @@ async function rendersospatch(
   page: import('@playwright/test').Page,
   patchid: string,
 ): Promise<PARITY_AUDIO_METRICS> {
-  const params = new URLSearchParams({ patch: patchid })
-  const url = `http://127.0.0.1:${REGEN_PORT}/sos-voice-regen.html?${params.toString()}`
-  await page.goto(url, { waitUntil: 'networkidle', timeout: 180000 })
-  await page.waitForFunction(
-    () => {
-      const el = document.getElementById('out')
-      return el && el.textContent && !el.textContent.startsWith('rendering')
+  const parsed = await page.evaluate(
+    async (args) => {
+      const { runsosvoiceregen } =
+        await import('/ops/lib/daisy-parity/sos-voice-regen-runner.ts')
+      return runsosvoiceregen(args)
     },
-    { timeout: 180000 },
+    { patchid },
   )
-  const body = await page.locator('#out').textContent()
-  if (!body || body.startsWith('error:')) {
-    throw new Error(body ?? `empty response for ${patchid}`)
-  }
-  const parsed = JSON.parse(body) as Record<string, PARITY_AUDIO_METRICS>
   const metrics = parsed[patchid]
   if (!metrics) {
     throw new Error(`missing metrics for ${patchid}`)
@@ -58,8 +54,13 @@ async function rendersospatch(
 async function main() {
   const fixtures = loadfixtures()
   const handle = await startparityvite(PROJECT, REGEN_PORT)
-  const browser = await chromium.launch()
+  const browser = await launchparitybrowser()
   const page = await browser.newPage()
+  page.setDefaultTimeout(180_000)
+  await page.goto(parityhosturl(REGEN_PORT), {
+    waitUntil: 'domcontentloaded',
+    timeout: 180000,
+  })
   const failures: string[] = []
 
   try {

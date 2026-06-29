@@ -197,4 +197,4 @@ These are independent. The iframe is sized so FitAddon produces a grid that matc
 
 - [`.cursor/skills/wanix-term-sizing/SKILL.md`](../../.cursor/skills/wanix-term-sizing/SKILL.md) — agent quick reference
 - [`.cursor/rules/wanix-term-bridge.mdc`](../../.cursor/rules/wanix-term-bridge.mdc) — term I/O routing
-- [`ops/fixtures/wanix/README.md`](../fixtures/wanix/README.md) — fixtures and harness pages
+- [`ops/fixtures/wanix/README.md`](../fixtures/wanix/README.md) — fixtures and headed Playwright validators

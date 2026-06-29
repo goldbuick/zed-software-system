@@ -16,7 +16,7 @@ import {
 import pkg from './package.json'
 import {
   fixtureprefixmiddleware,
-  harnesshtmlmiddleware,
+  parityblankhostmiddleware,
 } from './tasks/lib/parity/harness-middleware.ts'
 
 /**
@@ -94,7 +94,7 @@ function servefixturesdev(): Plugin {
     apply: 'serve',
     configureServer(server) {
       // Register during setup (not in the post hook) so these run before Vite's SPA fallback.
-      server.middlewares.use(harnesshtmlmiddleware())
+      server.middlewares.use(parityblankhostmiddleware())
       server.middlewares.use(
         fixtureprefixmiddleware('/fixtures', PUBLIC_FIXTURES_DIR),
       )
@@ -117,12 +117,6 @@ function servefixturesdev(): Plugin {
         fixtureprefixmiddleware(
           '/wasm/archive/maximilian',
           path.join(root, 'ops/archive/wasm/maximilian'),
-        ),
-      )
-      server.middlewares.use(
-        fixtureprefixmiddleware(
-          '/wanix',
-          path.join(root, 'ops/fixtures/harness/wanix'),
         ),
       )
     },

@@ -54,7 +54,7 @@ import {
   type WANIX_VM_ASSET_URLS,
   readwanixvmasseturls,
 } from 'zss/feature/wanix/wanixvmassets'
-import { wanixdrainpendingzedcafeexport } from 'zss/feature/wanix/wanixzedcafe'
+import { wanixdrainpendingzedcafeexport, ensurewanixzedcafedaemon } from 'zss/feature/wanix/wanixzedcafe'
 
 export type WANIX_HOST_STATE = 'idle' | 'starting' | 'ready'
 
@@ -113,6 +113,7 @@ export async function spawnwanixspace(
 ): Promise<void> {
   if (iswanixtermiframeactive()) {
     await wanixdrainpendingzedcafeexport(device, player)
+    await ensurewanixzedcafedaemon(device, player)
     return
   }
   state = 'starting'
@@ -120,6 +121,7 @@ export async function spawnwanixspace(
     await iframepreptaskspace()
     state = 'ready'
     await wanixdrainpendingzedcafeexport(device, player)
+    await ensurewanixzedcafedaemon(device, player)
   } catch (err) {
     cleanup()
     throw err
@@ -152,6 +154,7 @@ export async function ensurewanixsandbox(
     return
   }
   await wanixdrainpendingzedcafeexport(device, player)
+  await ensurewanixzedcafedaemon(device, player)
 }
 
 export type SPAWN_WANIX_TASK_OPTS = {

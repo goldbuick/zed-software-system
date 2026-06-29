@@ -5,9 +5,12 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { chromium } from '@playwright/test'
 import type { PARITY_AUDIO_METRICS } from 'ops/lib/daisy-parity/paritymetrics'
 import { ENVELOPE_ADSR_PARITY_PATCHES } from 'ops/lib/daisy-parity/paritypatches'
+import {
+  launchparitybrowser,
+  parityhosturl,
+} from 'tasks/lib/parity/parity-playwright.ts'
 import {
   startparityvite,
   stopparityvite,
@@ -25,25 +28,14 @@ async function renderpatchmetrics(
   page: import('@playwright/test').Page,
   patchid: string,
 ): Promise<PARITY_AUDIO_METRICS> {
-  const params = new URLSearchParams({
-    patch: patchid,
-    kind: 'voice',
-    backend: 'tone',
-  })
-  const url = `http://127.0.0.1:${PORT}/parity-regen.html?${params.toString()}`
-  await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 180000 })
-  await page.waitForFunction(
-    () => {
-      const el = document.getElementById('out')
-      return el && el.textContent && !el.textContent.startsWith('rendering')
+  const parsed = await page.evaluate(
+    async (args) => {
+      const { runparityregen } =
+        await import('/ops/lib/daisy-parity/parity-regen-runner.ts')
+      return runparityregen(args)
     },
-    { timeout: 180000 },
+    { patchid, kind: 'voice' as const, backend: 'tone' as const },
   )
-  const body = await page.locator('#out').textContent()
-  if (!body || body.startsWith('error')) {
-    throw new Error(`parity regen failed for ${patchid}: ${body}`)
-  }
-  const parsed = JSON.parse(body) as Record<string, PARITY_AUDIO_METRICS>
   const metrics = parsed[patchid]
   if (!metrics) {
     throw new Error(`missing metrics for ${patchid}`)
@@ -57,10 +49,14 @@ async function main() {
     patches: Record<string, PARITY_AUDIO_METRICS>
   }
   const parity = await startparityvite(PROJECT, PORT)
-  const browser = await chromium.launch()
+  const browser = await launchparitybrowser()
   try {
     const page = await browser.newPage()
     page.setDefaultTimeout(180_000)
+    await page.goto(parityhosturl(PORT), {
+      waitUntil: 'domcontentloaded',
+      timeout: 180000,
+    })
     page.on('pageerror', (err) => console.error('pageerror:', err.message))
     page.on('console', (msg) => {
       if (msg.type() === 'error') {

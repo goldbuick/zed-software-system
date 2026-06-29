@@ -189,7 +189,7 @@ export async function wanixhandleshownenu(device: DEVICELIKE, player: string) {
     }
     parts.push(
       zsstextline(
-        '$gray#wanix bridge <ws-url> — export namespace (run wanix-bridge CLI first)',
+        '$gray#wanix bridge <ws-url> — export namespace (upstream wanix CLI console protocol)',
       ),
     )
     parts.push(zsssectionlines('Remote'))

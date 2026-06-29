@@ -1,7 +1,7 @@
 /**
  * Composite zed-cafe ExportFS (memfs) rollout validator.
  *
- * Builds wasm, runs Go unit tests, starts dev server if needed, runs harness gates.
+ * Builds wasm, runs Go unit tests, starts dev server if needed, runs app Playwright gates.
  *
  * Usage: yarn task run wanix:zed-cafe:memfs:validate
  */
@@ -20,7 +20,7 @@ function run(cmd, args, opts = {}) {
   const result = spawnSync(cmd, args, {
     cwd: ROOT,
     stdio: 'inherit',
-    env: { ...process.env, ZSS_PLAYWRIGHT_HEADLESS: '1', ...opts.env },
+    env: { ...process.env, ...opts.env },
     ...opts,
   })
   if (result.status !== 0) {
@@ -90,6 +90,10 @@ const steps = [
     run: () => run('yarn', ['task', 'run', 'wanix:wasm:build']),
   },
   {
+    name: 'wanix:wasm:build:c',
+    run: () => run('yarn', ['task', 'run', 'wanix:wasm:build:c']),
+  },
+  {
     name: 'go test exportfs',
     run: () => run('go', ['test', './...'], { cwd: ZED_CAFE_DIR }),
   },
@@ -98,23 +102,32 @@ const steps = [
     run: async () => {
       await ensuredevserver()
       run('node', [
-        'tasks/implementations/wanix/validate-zed-cafe-export.mjs',
+        'tasks/implementations/wanix/validate-zed-cafe-export-app.mjs',
       ])
     },
   },
   {
-    name: 'export-write:validate',
+    name: 'duplex:validate',
     run: () =>
       run('node', [
-        'tasks/implementations/wanix/validate-zed-cafe-export-write.mjs',
+        'tasks/implementations/wanix/validate-zed-cafe-duplex-app.mjs',
       ]),
   },
   {
     name: 'task-read:validate',
     run: () =>
       run('node', [
-        'tasks/implementations/wanix/validate-zed-cafe-task-read.mjs',
+        'tasks/implementations/wanix/validate-zed-cafe-task-read-app.mjs',
       ]),
+  },
+  {
+    name: 'list-app:validate',
+    run: async () => {
+      await ensuredevserver()
+      run('node', [
+        'tasks/implementations/wanix/validate-zed-cafe-list-app.mjs',
+      ])
+    },
   },
   {
     name: 'jest wanix smoke',

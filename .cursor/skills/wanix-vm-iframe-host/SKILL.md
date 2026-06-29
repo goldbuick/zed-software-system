@@ -59,9 +59,9 @@ Zed-cafe details: skill `wanix-zed-cafe-export`.
 
 ## Known-good reference recipe
 
-[ops/fixtures/harness/wanix/vm-simple.html](../../../ops/fixtures/harness/wanix/vm-simple.html) — binds + `<wanix-vm export="ttyS0" term start>` + `<wanix-term path="#vm/1/term" raw>` in one `<wanix-system>`, boots to `~ #` in ~10s.
+Upstream [`examples/basic-vm.html`](https://github.com/tractordev/wanix/blob/main/examples/basic-vm.html) — binds + `<wanix-vm export="ttyS0" term start>` + `<wanix-term>` in one `<wanix-system>`, boots to `~ #`.
 
-If vm-simple works headed but the app path does not, the defect is in ZSS spawn/mount code, not the environment.
+Validate via headed Playwright: `yarn task run wanix:vm:zed-cafe:validate`. If that gate passes but the manual app path does not, the defect is in ZSS spawn/mount code, not the environment.
 
 ## Validating wanix VM changes (full app, no product hooks)
 
@@ -88,9 +88,9 @@ const buf = await frame.evaluate(() => {
 ### Playwright gates
 
 ```bash
-yarn task run wanix:vm:zed-cafe:validate          # primary acceptance
-yarn task run wanix:zed-cafe:export:validate:app  # regression
-yarn task run wanix:vm:boot:validate              # book seed + remount milestone
+yarn task run wanix:vm:zed-cafe:validate   # primary acceptance
+yarn task run wanix:zed-cafe:export:validate  # regression (same guest milestones)
+yarn task run wanix:vm:boot:validate       # book seed + remount milestone
 ```
 
 Shared: [`tasks/implementations/wanix/wanix-playwright-vm.mjs`](../../../tasks/implementations/wanix/wanix-playwright-vm.mjs) — `assertguestzedcafe`, `waitforvmshell`, bounded timeouts.
@@ -105,7 +105,7 @@ Before code changes:
 
 1. Headed repro (`#wanix vm` or gate script)
 2. Poll iframe apilog (gate capture or DevTools `message` events)
-3. Compare against vm-simple harness
+3. Compare against `wanix:vm:zed-cafe:validate` headed gate
 4. Pin failing phase: export / remount / v86 / virtfs
 
 On gate failure: `dumpfailurediagnostics` logs xterm tail + apilog tail.

@@ -8,7 +8,6 @@ Prove a **dropped WASI task** can read the session book mirror at `./zed-cafe/st
 |----------|---------|
 | `zedcaferead.c` / `zedcaferead.wat` | Source — `path_open` + `fd_read` on `zed-cafe/stats.json`, prints `zed-cafe ok: …` |
 | `zedcaferead.wasm` | Built locally (`yarn task run wanix:wasm:build`) — drag this onto the app |
-| `ops/fixtures/harness/wanix/zed-cafe-task-read.html` | Isolated harness (no React) — sets `window.zedcafeTaskReadResult` |
 
 ## Build fixture wasm
 
@@ -19,19 +18,15 @@ yarn task run wanix:wasm:build
 
 Optional C rebuild when wasi-sdk is installed: `yarn task run wanix:wasm:build:c` (overwrites from `zedcaferead.c`).
 
-## A — Isolated harness (fast)
+## A — Headed Playwright gate
 
-1. `yarn task app dev`
-2. Open `https://localhost:7777/wanix/zed-cafe-task-read.html`
-3. Pass when `window.zedcafeTaskReadResult.pass === true` (`stats_probe` shows bytes and task wrote `zed-cafe-read.ok`)
-
-The harness polls for `zed-cafe-read.ok` in the task root listing (written by the wasm on success). In the full app, expect the same read on the **tile** via stdout (`zed-cafe ok: …`).
-
-Automated gate (dev server must be running):
+**Precondition:** dev server running (`yarn task app dev`).
 
 ```bash
 yarn task run wanix:zed-cafe:task-read:validate
 ```
+
+Drops `zedcaferead.wasm` in the full app and asserts tile apilog contains `zed-cafe ok:`.
 
 ## B — Full app drag-drop (manual)
 
@@ -69,20 +64,15 @@ yarn task run wanix:zed-cafe:task-read:validate
 |----------|---------|
 | `zedcafewrite.c` | Overwrites `./zed-cafe/stats.json` with `"guestTouch": true` |
 | `zedcafewrite.wasm` | Built via `yarn task run wanix:wasm:build` (`zedcafewrite.wat`; optional C rebuild with wasi-sdk) |
-| `ops/fixtures/harness/wanix/zed-cafe-duplex.html` | Isolated ns-bind harness — sets `window.zedcafeDuplexResult` |
 
-**Isolated gate** (dev server running):
+**Headed Playwright gate** (dev server running):
 
 ```bash
 yarn task run wanix:wasm:build
 yarn task run wanix:zed-cafe:duplex:validate
 ```
 
-**Full app** (drop `zedcafewrite.wasm`, then `#wanix pull` or wait for auto-poll):
-
-```bash
-yarn task run wanix:zed-cafe:duplex:validate:app
-```
+**Manual** (drop `zedcafewrite.wasm`, then `#wanix pull` or wait for auto-poll): same steps as gate B for write fixture.
 
 Steady-state host→guest updates use live `writeFile` into `#task/<rid>/export` (no gojs restart per edit). Guest→MEMORY uses fingerprint poll + `#wanix pull`.
 
@@ -108,4 +98,4 @@ yarn task run wanix:vm:zed-cafe:validate
 
 Book import seeds host memory only; iframe apilog appears after `#wanix vm` starts the iframe. Do not wait for export apilog before spawn in validators.
 
-Related gates: `wanix:zed-cafe:export:validate:app` (milestones B–E), `wanix:vm:boot:validate` (book seed + Milestone A + B–E).
+Related gates: `wanix:zed-cafe:export:validate` (milestones B–E), `wanix:vm:boot:validate` (book seed + Milestone A + B–E).

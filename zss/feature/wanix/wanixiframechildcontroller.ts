@@ -5,6 +5,7 @@ import {
   iswanixzedcafevmbootexport,
   readzedcafeexportprobe,
   waitzedcafeexportready,
+  waitzedcafeguestready,
   WANIX_BIND_MOUNT_TIMEOUT_MS,
 } from 'zss/feature/wanix/wanixiframechildmount'
 import type {
@@ -63,22 +64,38 @@ async function waitforzedcafeexport(
 ): Promise<string | null> {
   const deadline = Date.now() + timeoutms
   while (Date.now() < deadline) {
-    const wanixroot = readroot()
     const taskrid = readzedcafetaskrid(readstate())
-    if (wanixroot && taskrid) {
-      const ready = await waitzedcafeexportready(
-        wanixroot,
-        taskrid,
-        deadline - Date.now(),
-      )
-      if (ready) {
-        return taskrid
-      }
-      return null
+    if (taskrid) {
+      break
     }
     await new Promise<void>((resolve) => setTimeout(resolve, 250))
   }
-  return null
+  const taskrid = readzedcafetaskrid(readstate())
+  const wanixroot = readroot()
+  if (!wanixroot || !taskrid) {
+    return null
+  }
+  const exportwaitms = deadline - Date.now()
+  if (exportwaitms <= 0) {
+    return null
+  }
+  const exportready = await waitzedcafeexportready(
+    wanixroot,
+    taskrid,
+    exportwaitms,
+  )
+  if (!exportready) {
+    return null
+  }
+  const guestwaitms = deadline - Date.now()
+  if (guestwaitms <= 0) {
+    return null
+  }
+  const guestready = await waitzedcafeguestready(wanixroot, guestwaitms)
+  if (!guestready) {
+    return null
+  }
+  return taskrid
 }
 
 function witharchives(
