@@ -7,7 +7,7 @@ globs:
 
 # Wanix VM lifecycle (iframe child)
 
-Applies when editing `#wanix vm`, `wanixiframechildtree`, VM prep/spawn, or zed-cafe export in the VM guest. See skill `wanix-vm-iframe-host` and skill `wanix-zed-cafe-export`. Term I/O remains rule `wanix-term-bridge.mdc`.
+Applies when editing `#wanix vm`, `wanixiframechildtree`, VM prep/spawn, or zed-cafe export in the VM guest. See skill `wanix-vm-iframe-host` and skill `wanix-zed-cafe-export`, rule `wanix-zed-cafe-export.mdc`. Term I/O remains rule `wanix-term-bridge.mdc`.
 
 ## Invariants (from upstream `submodules/wanix/elements/`)
 
@@ -42,7 +42,8 @@ Flow owners: [`cafe/wanix/wanixiframechildtree.tsx`](cafe/wanix/wanixiframechild
 ## Required before merging VM / zed-cafe guest changes
 
 1. Headed repro or gate output with **iframe apilog tail** pinned to failing phase.
-2. Unit: `yarn jest ops/tests/unit/feature/wanix/wanixvmstart.test.ts ops/tests/unit/feature/wanix/wanixiframechildmount.test.ts`
+2. Unit (always `--config ops/jest.config.ts`):
+   `yarn jest --config ops/jest.config.ts ops/tests/unit/feature/wanix/zedcafetreeschema.test.ts ops/tests/unit/feature/wanix/wanixstateexport.test.ts ops/tests/unit/feature/wanix/wanixstateimport.test.ts ops/tests/unit/feature/wanix/wanixiframechildmount.test.ts ops/tests/unit/feature/wanix/wanixvmstart.test.ts --no-coverage`
 3. Acceptance: `yarn task run wanix:vm:zed-cafe:validate` (dev server up)
 
 ## Host `#wanix vm` order

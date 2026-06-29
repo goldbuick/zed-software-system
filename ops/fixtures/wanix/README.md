@@ -44,7 +44,7 @@ Shipped at `/wanix/zed-cafe.wasm` (`cafe/public/wanix/`). Staging: wasm file bin
 
 On task export bind failure, fallback: `#ramfs/zed-cafe` ← export, then `zed-cafe` ← `#ramfs/zed-cafe`. Guest `ls /` (VM) should show normal Linux dirs plus **`zed-cafe/`** only — no `_wanix`, `zed-cafe.wasm`, or inbox on `/`.
 
-Agent docs: `.cursor/skills/wanix-zed-cafe-export/SKILL.md`, `.cursor/rules/wanix-vm-lifecycle.mdc`.
+Agent docs: `.cursor/skills/wanix-zed-cafe-export/SKILL.md`, `.cursor/rules/wanix-zed-cafe-export.mdc`, `.cursor/rules/wanix-vm-lifecycle.mdc`.
 
 **Local gates** (dev server must be running: `yarn task app dev`):
 
@@ -83,7 +83,9 @@ zed-cafe/
 
 Folder segments are `{kebab-case-name}-{id}` for human browsing; canonical ids remain in `stats.json` bodies. Export/push validates this layout; import does not accept legacy `books/<id>/` paths.
 
-Verify: warm Wanix → `cat zed-cafe/stats.json` from a task, or `#wanix vm` → `cat /zed-cafe/stats.json`.
+**Schema owner:** `zss/feature/wanix/zedcafetreeschema.ts` (TypeScript only). Go `ExportFS` (`ops/fixtures/wanix/zed-cafe/exportfs.go`) hydrates inbox into memfs without duplicating guards — host validates before push/inbox encode.
+
+Verify: warm Wanix → `ls zed-cafe/books/` shows `demo-book1`-style dirs → `yarn task run wanix:zed-cafe:export:validate`.
 
 Playwright gates use bounded waits ([`tasks/implementations/wanix/wanix-playwright-vm.mjs`](../../../tasks/implementations/wanix/wanix-playwright-vm.mjs)):
 

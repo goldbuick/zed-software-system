@@ -121,8 +121,12 @@ const steps = [
     run: () =>
       run('yarn', [
         'jest',
-        'ops/tests/unit/feature/wanix/wanixiframechildmount.test.ts',
+        '--config',
+        'ops/jest.config.ts',
+        'ops/tests/unit/feature/wanix/zedcafetreeschema.test.ts',
         'ops/tests/unit/feature/wanix/wanixstateexport.test.ts',
+        'ops/tests/unit/feature/wanix/wanixstateimport.test.ts',
+        'ops/tests/unit/feature/wanix/wanixiframechildmount.test.ts',
         '--no-coverage',
       ]),
   },

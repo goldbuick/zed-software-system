@@ -10,12 +10,13 @@ description: >-
 
 Session books mirror to the Wanix guest as a **`zed-cafe/`** tree. Task layout: **`./zed-cafe/`**. VM layout: **`/zed-cafe/`** (virtfs child bind on `<wanix-vm>`).
 
-See also: skill `wanix-vm-iframe-host`, rule `wanix-vm-lifecycle.mdc`, [`ops/fixtures/wanix/README.md`](../../../ops/fixtures/wanix/README.md).
+See also: skill `wanix-vm-iframe-host`, rule `wanix-vm-lifecycle.mdc`, rule `wanix-zed-cafe-export.mdc`, [`ops/fixtures/wanix/README.md`](../../../ops/fixtures/wanix/README.md).
 
 ## Owners
 
 | Concern | Module |
 |---------|--------|
+| Export tree schema (paths + guards) | `zedcafetreeschema.ts` |
 | Host export files / inbox JSON | `wanixstateexport.ts`, `encodezedcafeinboxjson` in `wanixzedcafe.ts` |
 | gojs daemon boot (task space) | `wanixzedcafe.ts` → `bootzedcafeexport` |
 | VM spawn inbox + finalize | `wanixcommands.ts` → `spawnwanixvm({ inboxbytes })`, `finalizewanixzedcafedaemon` |
@@ -34,6 +35,23 @@ zed-cafe/books/.../pages/<kebab-name>-<page-id>/stats.json, terrain.json, …
 ```
 
 Folder segments use `{kebab-case-name}-{id}` (e.g. `my-cool-book-book1`, `player-page2`). Empty name falls back to id-only (`sid_abc`). Legacy `books/<id>/` import is not supported.
+
+### Schema helpers (export only)
+
+| Helper | Output |
+|--------|--------|
+| `kebabcasezedcafedirname(name, id)` | `my-cool-book-book1` or `sid_abc` when name empty |
+| `readzedcafebookprefix(book)` | `books/<seg>` |
+| `readzedcafepageprefix(book, page)` | `books/<seg>/pages/<seg>` |
+| `validatezedcafeexportpaths(files)` | `{ ok, errors[] }` — structural + allowlist |
+
+**Export/push:** `buildzedcafeexportfiles` → `assertzedcafeexportvalid`; `pushzedcafeexportfiles` / `encodezedcafeinboxjson` fail closed (`apilog` + skip write).
+
+**Import:** permissive for unknown paths; resolves book/page dirs from meta `name` + `id` via `kebabcasezedcafedirname`. Do not re-add id-only folder import.
+
+### Go ExportFS (`ops/fixtures/wanix/zed-cafe/exportfs.go`)
+
+gojs hydrates inbox JSON into embedded `memfs.FS`. Schema guards live in TypeScript only — Go does not validate tree shape. `go test ./...` in that dir proves memfs create/write round-trip; host push is guarded before inbox encode.
 
 Ready probe: **`stats.json`** at `#task/<rid>/export/stats.json` (poll via `waitzedcafeexportready`).
 
@@ -59,6 +77,20 @@ Shared helpers: [`tasks/implementations/wanix/wanix-playwright-vm.mjs`](../../..
 
 **Unit tests do not prove guest visibility.** Gate 3 (or equivalent) is required for `/zed-cafe/` bugs.
 
+### Jest (wanix unit)
+
+Always use the repo config — bare `yarn jest` on `.ts` files fails Babel `import type` parsing:
+
+```bash
+yarn jest --config ops/jest.config.ts \
+  ops/tests/unit/feature/wanix/zedcafetreeschema.test.ts \
+  ops/tests/unit/feature/wanix/wanixstateexport.test.ts \
+  ops/tests/unit/feature/wanix/wanixstateimport.test.ts \
+  ops/tests/unit/feature/wanix/wanixiframechildmount.test.ts --no-coverage
+```
+
+Composite: `yarn task run wanix:zed-cafe:memfs:validate` (build + `go test` + harness + jest smoke).
+
 ### Validator observability
 
 - Captured: iframe `postwanixiframeapilog` → `zss-wanix-term-apilog` postMessage.
@@ -81,6 +113,8 @@ Scenario doc: [`ops/fixtures/wanix/zed-cafe-task-read-scenario.md`](../../../ops
 
 | Log / symptom | Likely cause |
 |---------------|--------------|
+| `zed-cafe export: invalid tree` | Path outside allowlist or missing book/page `stats.json` for meta entries — fix in `zedcafetreeschema.ts` / export builder, not push workaround |
+| `inbox encode skipped` | Same — `encodezedcafeinboxjson` returned null after validation |
 | `#task/N/export: file does not exist` | Export bind before gojs created export tree |
 | `#ramfs/zed-cafe: file does not exist` | VM/bind before export staged; or ns bind never mounted |
 | `vm started`, empty serial | `<wanix-vm>` appended after `ready` |
