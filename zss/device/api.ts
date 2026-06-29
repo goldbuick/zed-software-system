@@ -371,6 +371,27 @@ export function wanixpull(device: DEVICELIKE, player: string) {
   device.emit(player, 'wanix:pull')
 }
 
+export function wanixremoteshow(device: DEVICELIKE, player: string) {
+  device.emit(player, 'wanix:remote-show')
+}
+
+export function wanixremoteconnect(
+  device: DEVICELIKE,
+  player: string,
+  url: string,
+  mountdst?: string,
+) {
+  device.emit(player, 'wanix:remote-connect', { url, mountdst })
+}
+
+export function wanixremotedisconnect(
+  device: DEVICELIKE,
+  player: string,
+  remoteid: string,
+) {
+  device.emit(player, 'wanix:remote-disconnect', remoteid)
+}
+
 export function wanixdrop(
   device: DEVICELIKE,
   player: string,

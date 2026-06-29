@@ -1,32 +1,24 @@
 /**
  * Validate zed-cafe gojs export write — minimal harness (no full app).
  *
- * Proves zedcafewrite.wasm can O_CREAT through gojs-exported memfs.
+ * Writes guestTouch into #task/<rid>/export/stats.json via root.writeFile (same
+ * 9P path as pushzedcafeexportfiles). Proves ExportFS memfs accepts create/write
+ * on the live gojs export namespace (MapFS could not).
+ *
+ * Guest WASI O_CREAT via zed-cafe bind is covered by exportfs_test.go and
+ * wanix:zed-cafe:duplex:validate.
  *
  * Requires dev server: yarn task app dev
- * Requires: yarn task run wanix:zed-cafe:build wanix:wasm:build
+ * Requires: yarn task run wanix:zed-cafe:build
  * Requires: npx playwright install chromium
  */
 import { chromium } from 'playwright'
-import { existsSync } from 'node:fs'
-import { join } from 'node:path'
 import { readplaywrightheadless } from './wanix-playwright-launch.mjs'
 
-const ROOT = join(import.meta.dirname, '../../..')
-const WASM = join(ROOT, 'ops/fixtures/wanix/zedcafewrite.wasm')
 const URL =
   process.env.ZSS_URL ??
   'https://localhost:7777/wanix/zed-cafe-export-write.html'
 const log = (...a) => console.log('[zed-cafe-export-write-validate]', ...a)
-
-if (!existsSync(WASM)) {
-  console.error(
-    '[zed-cafe-export-write-validate] missing',
-    WASM,
-    '— run: yarn task run wanix:wasm:build',
-  )
-  process.exit(1)
-}
 
 const browser = await chromium.launch({ headless: readplaywrightheadless() })
 const page = await browser.newPage({ ignoreHTTPSErrors: true })
@@ -46,7 +38,7 @@ try {
   if (!evidence?.pass) {
     process.exitCode = 1
   } else {
-    log('PASS — guestTouch in #task/rid/export via gojs memfs bind')
+    log('PASS — guestTouch in #task/rid/export via gojs memfs write')
     process.exitCode = 0
   }
 } catch (err) {

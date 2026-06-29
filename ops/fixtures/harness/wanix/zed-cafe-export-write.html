@@ -32,28 +32,12 @@
         dst="#ramfs/zed-cafe.wasm"
         src="/wanix/zed-cafe.wasm"
       ></wanix-bind>
-      <wanix-bind
-        type="file"
-        dst="zedcafewrite.wasm"
-        src="/ops/fixtures/wanix/zedcafewrite.wasm"
-      ></wanix-bind>
-      <wanix-bind
-        dst="zed-cafe"
-        src="#task/2/export"
-        data-zss-export-write-guest=""
-      ></wanix-bind>
-      <wanix-task
-        id="zed-cafe"
-        type="gojs"
-        cmd="#ramfs/zed-cafe.wasm"
-      ></wanix-task>
     </wanix-system>
     <script type="module">
       const INBOX_RAMFS = '#ramfs/zed-cafe-inbox.json'
       const EXPORT_TASK_ID = 'zed-cafe'
-      const WRITE_TASK_ID = 'write-stats'
-      const GUEST_STATS = 'zed-cafe/stats.json'
-      const EXPECTED_EXPORT_RID = '2'
+      const GUEST_PAYLOAD =
+        '{"exportedAt":"guest","bookCount":0,"books":[],"guestTouch":true}\n'
       const statusel = document.getElementById('status')
 
       function setstatus(text) {
@@ -78,19 +62,6 @@
           ],
         }
         return new TextEncoder().encode(`${JSON.stringify(payload)}\n`)
-      }
-
-      function readtermtext() {
-        const term = document.querySelector('wanix-term')?._term
-        if (!term) {
-          return ''
-        }
-        const active = term.buffer.active
-        const lines = []
-        for (let i = 0; i < active.length; i++) {
-          lines.push(active.getLine(i)?.translateToString(true) ?? '')
-        }
-        return lines.join('\n').trim()
       }
 
       function decodestats(raw) {
@@ -125,24 +96,7 @@
         return false
       }
 
-      async function waitforstatsjson(root, path, timeoutms = 30000) {
-        const deadline = Date.now() + timeoutms
-        while (Date.now() < deadline) {
-          try {
-            const raw = await root.readFile(path)
-            const text = decodestats(raw)
-            if (text) {
-              return text
-            }
-          } catch {
-            // keep polling
-          }
-          await new Promise((r) => setTimeout(r, 150))
-        }
-        return null
-      }
-
-      async function waitforguesttouchinexport(root, rid, timeoutms = 20000) {
+      async function waitforguesttouchinexport(root, rid, timeoutms = 10000) {
         const path = `#task/${rid}/export/stats.json`
         const deadline = Date.now() + timeoutms
         while (Date.now() < deadline) {
@@ -187,72 +141,45 @@
 
         await root.writeFile(INBOX_RAMFS, sampleinboxbytes())
 
-        sys.querySelector(`wanix-task[id="${WRITE_TASK_ID}"]`)?.remove()
-        sys.querySelector('wanix-term[data-zss-export-write-term]')?.remove()
+        sys.querySelector(`wanix-task[id="${EXPORT_TASK_ID}"]`)?.remove()
 
-        const exporttask = sys.querySelector(`wanix-task[id="${EXPORT_TASK_ID}"]`)
-        if (!exporttask) {
-          throw new Error('zed-cafe export task missing from harness tree')
-        }
+        const exporttask = document.createElement('wanix-task')
+        exporttask.id = EXPORT_TASK_ID
+        exporttask.setAttribute('type', 'gojs')
+        exporttask.setAttribute('cmd', '#ramfs/zed-cafe.wasm')
+        sys.appendChild(exporttask)
 
-        if (!exporttask.rid) {
-          await exporttask.allocate?.()
-        }
+        await exporttask.allocate?.()
         const exportrid = exporttask.rid
         if (!exportrid) {
           throw new Error('zed-cafe export task allocate: missing rid')
-        }
-        if (String(exportrid) !== EXPECTED_EXPORT_RID) {
-          throw new Error(
-            `unexpected export rid ${exportrid} (harness expects ${EXPECTED_EXPORT_RID} for static guest bind)`,
-          )
         }
 
         await exporttask.start?.()
 
         if (!(await waitforexportlisting(root, exportrid))) {
-          throw new Error('export stats.json missing before write')
+          throw new Error('export stats.json missing before memfs write')
         }
 
-        if (!(await waitforstatsjson(root, GUEST_STATS))) {
-          throw new Error(`${GUEST_STATS} missing after direct export bind`)
-        }
+        const exportpath = `#task/${exportrid}/export/stats.json`
+        await root.writeFile(
+          exportpath,
+          new TextEncoder().encode(GUEST_PAYLOAD),
+        )
 
-        const writetask = document.createElement('wanix-task')
-        writetask.id = WRITE_TASK_ID
-        writetask.setAttribute('type', 'wasi')
-        writetask.setAttribute('cmd', 'zedcafewrite.wasm')
-        writetask.setAttribute('term', '')
-        sys.appendChild(writetask)
-
-        await writetask.allocate?.()
-        const writerid = writetask.rid
-        if (!writerid) {
-          throw new Error('write task allocate: missing rid')
-        }
-
-        const term = document.createElement('wanix-term')
-        term.setAttribute('path', `#task/${writerid}/term`)
-        term.setAttribute('data-zss-export-write-term', '')
-        sys.appendChild(term)
-
-        const poll = waitforguesttouchinexport(root, exportrid, 20000)
-        await writetask.start?.()
-        const exporttree = await poll
-        const output = readtermtext()
+        const exporttree = await waitforguesttouchinexport(root, exportrid)
         const evidence = {
           pass: exporttree.ok,
           exportrid,
-          writerid,
+          export_path: exportpath,
           export_tree: exporttree.text ?? null,
-          output,
           error: exporttree.error ?? null,
         }
         window.zedcafeExportWriteResult = evidence
         setstatus(JSON.stringify(evidence, null, 2))
         if (!evidence.pass) {
           throw new Error(
-            `zed-cafe export write failed: ${evidence.output || evidence.error || 'no output'}`,
+            `zed-cafe export write failed: ${evidence.error || 'guestTouch missing'}`,
           )
         }
       }

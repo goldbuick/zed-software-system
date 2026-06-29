@@ -3,6 +3,8 @@ import {
   wanixattach,
   wanixdetach,
   wanixpull,
+  wanixremoteconnect,
+  wanixremoteshow,
   wanixshow,
   wanixstop,
   wanixvmstart,
@@ -62,12 +64,48 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
         case 'pull':
           wanixpull(SOFTWARE, player)
           break
+        case 'remote': {
+          const sub = ispresent(arg) ? NAME(arg) : undefined
+          if (!ispresent(sub)) {
+            wanixremoteshow(SOFTWARE, player)
+            break
+          }
+          if (NAME(sub) === 'connect') {
+            const [url, mountdst] = readargs(words, 2, [
+              ARG_TYPE.STRING,
+              ARG_TYPE.MAYBE_NAME,
+            ])
+            if (!ispresent(url) || !url.trim()) {
+              apierror(
+                SOFTWARE,
+                player,
+                'wanix',
+                'usage: #wanix remote connect <wss-url> [dst]',
+              )
+              break
+            }
+            wanixremoteconnect(
+              SOFTWARE,
+              player,
+              url.trim(),
+              ispresent(mountdst) ? NAME(mountdst) : undefined,
+            )
+            break
+          }
+          apierror(
+            SOFTWARE,
+            player,
+            'wanix',
+            'usage: #wanix remote | #wanix remote connect <wss-url> [dst]',
+          )
+          break
+        }
         default:
           apierror(
             SOFTWARE,
             player,
             'wanix',
-            'drop .wasm/.tgz — #wanix menu, vm, attach, pull, stop, detach',
+            'drop .wasm/.tgz — #wanix menu, vm, remote, attach, pull, stop, detach',
           )
           break
       }

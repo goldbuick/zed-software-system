@@ -3,6 +3,8 @@ import { apierror, apilog } from 'zss/device/api'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import {
   attachwanixtarget,
+  connectwanixremote,
+  disconnectwanixremote,
   ensurewanixsandbox,
   haltwanixtask,
   haltwanixvm,
@@ -26,6 +28,7 @@ import {
   iswanixtermraw,
   readwanixattached,
   readwanixattachedkind,
+  readwanixremotes,
   readwanixtask,
   readwanixtasks,
   readwanixvm,
@@ -46,6 +49,7 @@ import {
   stopzedcafepoll,
   wanixpullzedcafe,
 } from 'zss/feature/wanix/wanixzedcafe'
+import { WANIX_REMOTE_DEFAULT_DST } from 'zss/feature/wanix/wanixremoteconstants'
 import {
   setwanixzedcafeready,
   setwanixzedcafetaskrid,
@@ -172,6 +176,8 @@ export async function wanixhandleshownenu(device: DEVICELIKE, player: string) {
     if (iswanixtermactive()) {
       parts.push(zsstextline('#wanix detach — stop routing terminal input'))
     }
+    parts.push(zsssectionlines('Remote'))
+    parts.push(zsszedlinkline('wanixremote', 'Remote imports (WSS 9P)'))
     terminalwritelines(device, player, zsstexttape(...parts))
   } catch (err) {
     apierror(
@@ -377,6 +383,94 @@ export async function wanixhandlepull(device: DEVICELIKE, player: string) {
       await ensurewanixsandbox(device, player)
     }
     await wanixpullzedcafe(device, player)
+  } catch (err) {
+    apierror(
+      device,
+      player,
+      'wanix',
+      err instanceof Error ? err.message : String(err),
+    )
+  }
+}
+
+export async function wanixhandleremotemenu(device: DEVICELIKE, player: string) {
+  try {
+    if (iswanixspaceactive()) {
+      await ensurewanixsandbox(device, player)
+    }
+    const remotes = readwanixremotes()
+    const parts: (string | string[])[] = [
+      zssheaderlines('wanix remote'),
+      zsstextline(
+        `$gray#wanix remote connect <wss-url> [dst] (default dst: ${WANIX_REMOTE_DEFAULT_DST})`,
+      ),
+      zsstextline('$grayInspect via #wanix vm → ls /remote'),
+      zsssectionlines('Imports'),
+    ]
+    if (remotes.length === 0) {
+      parts.push(zsstextline('$grayno remote imports'))
+    } else {
+      for (const remote of remotes) {
+        const status = remote.mounted ? '$greenmounted' : '$yellowpending'
+        parts.push(
+          zsstextline(`$gray${remote.url} → ${remote.mountdst} ${status}`),
+        )
+        parts.push(
+          zsszedlinkline(
+            `wanixremotedisconnect ${remote.id}`,
+            `Disconnect ${remote.label}`,
+          ),
+        )
+      }
+    }
+    terminalwritelines(device, player, zsstexttape(...parts))
+  } catch (err) {
+    apierror(
+      device,
+      player,
+      'wanix',
+      err instanceof Error ? err.message : String(err),
+    )
+  }
+}
+
+export async function wanixhandleremoteconnect(
+  device: DEVICELIKE,
+  player: string,
+  url: string,
+  mountdst?: string,
+) {
+  try {
+    await ensurewanixsandbox(device, player)
+    const remote = await connectwanixremote(url, { mountdst })
+    apilog(
+      device,
+      player,
+      `wanix remote: connected ${remote.label} → ${remote.mountdst} (${remote.url})`,
+    )
+  } catch (err) {
+    apierror(
+      device,
+      player,
+      'wanix',
+      err instanceof Error ? err.message : String(err),
+    )
+  }
+}
+
+export async function wanixhandleremotedisconnect(
+  device: DEVICELIKE,
+  player: string,
+  remoteid: string,
+) {
+  try {
+    if (!iswanixspaceactive()) {
+      apierror(device, player, 'wanix', 'wanix not running')
+      return
+    }
+    await disconnectwanixremote(remoteid)
+    apilog(device, player, `wanix remote: disconnected ${remoteid}`)
+    await wanixhandleremotemenu(device, player)
   } catch (err) {
     apierror(
       device,

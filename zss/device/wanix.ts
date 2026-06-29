@@ -4,6 +4,9 @@ import {
   wanixhandleattach,
   wanixhandledetach,
   wanixhandlepull,
+  wanixhandleremoteconnect,
+  wanixhandleremotedisconnect,
+  wanixhandleremotemenu,
   wanixhandleshownenu,
   wanixhandlestop,
   wanixhandletermwrite,
@@ -129,6 +132,34 @@ const wanix = createdevice('wanix', [], (message) => {
     case 'pull':
       doasync(wanix, message.player, async () => {
         await wanixhandlepull(wanix, message.player)
+      })
+      break
+    case 'remote-show':
+      doasync(wanix, message.player, async () => {
+        await wanixhandleremotemenu(wanix, message.player)
+      })
+      break
+    case 'remote-connect': {
+      const payload = message.data as { url?: string; mountdst?: string }
+      if (!isstring(payload?.url)) {
+        break
+      }
+      doasync(wanix, message.player, async () => {
+        await wanixhandleremoteconnect(
+          wanix,
+          message.player,
+          payload.url!,
+          isstring(payload.mountdst) ? payload.mountdst : undefined,
+        )
+      })
+      break
+    }
+    case 'remote-disconnect':
+      if (!isstring(message.data)) {
+        break
+      }
+      doasync(wanix, message.player, async () => {
+        await wanixhandleremotedisconnect(wanix, message.player, message.data)
       })
       break
     case 'drop': {

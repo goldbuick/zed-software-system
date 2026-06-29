@@ -17,13 +17,20 @@ import {
   readwanixattached,
   readwanixattachedkind,
   readwanixtasks,
+  registerremote,
+  removeremote,
 } from 'zss/feature/wanix/wanixsession'
-import type { WanixZedCafeGuestFile } from 'zss/feature/wanix/wanixiframechildtypes'
+import type {
+  WanixIframeRemote,
+  WanixZedCafeGuestFile,
+} from 'zss/feature/wanix/wanixiframechildtypes'
 import {
   iframeapplytermsize,
   iframeattachtarget,
   iframecapturezedcafeexport,
   iframechildlistdir,
+  iframechildconnectremote,
+  iframechilddisconnectremote,
   iframechildmountarchive,
   iframechildputfile,
   iframehalttask,
@@ -198,6 +205,32 @@ export async function mountwanixarchive(
 export async function listwanixdir(path: string): Promise<string[]> {
   requireactive()
   return iframechildlistdir(path)
+}
+
+export async function connectwanixremote(
+  url: string,
+  opts: { mountdst?: string; label?: string } = {},
+): Promise<WanixIframeRemote> {
+  requireactive()
+  const remote = await iframechildconnectremote(
+    url,
+    opts.mountdst,
+    opts.label,
+  )
+  registerremote({
+    id: remote.id,
+    label: remote.label,
+    url: remote.url,
+    mountdst: remote.mountdst,
+    mounted: true,
+  })
+  return remote
+}
+
+export async function disconnectwanixremote(remoteid: string): Promise<void> {
+  requireactive()
+  await iframechilddisconnectremote(remoteid)
+  removeremote(remoteid)
 }
 
 export async function haltwanixtask(taskid?: string): Promise<void> {

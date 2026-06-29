@@ -1,0 +1,59 @@
+---
+description: Ask user permission before adding fallback logic to work around a problem
+alwaysApply: true
+---
+
+# Ask before fallback logic
+
+Do not add **fallback logic** to paper over a bug, missing data, or a failing primary path without **explicit user approval**.
+
+## What counts as fallback logic
+
+- **Alternate code paths** when the primary path fails or is unavailable (`try/catch` → different behavior, `if (!ready) useStale…`, retry-then-fallback).
+- **Silent defaults** that hide the real failure (`??` / `||` / empty sentinel when the value should exist; swallow errors and continue).
+- **Graceful degradation** added to mask a broken owner instead of fixing that owner.
+- **Timeout-or-fallback** branches that substitute synthetic behavior when the real async path does not complete.
+- **Defense-in-depth stacks** — primary fix unclear, so add a second path “just in case.”
+
+Legitimate defaults (optional config, empty collections for absent user input) are fine when they are **not** compensating for a diagnosed bug.
+
+## Required before adding fallback logic
+
+1. **Stop and ask** — present the primary fix vs the proposed fallback; wait for user approval.
+2. **Root cause first** — state why the primary path fails; name the module that should own a real fix (see `no-new-systems-for-bugs.mdc`).
+3. **Tradeoffs** — what the fallback hides, what it costs (complexity, stale state, harder debugging).
+
+If the user approves a fallback, implement the **smallest** fallback and note in the change (comment or PR text) that it is intentional degradation, not the root fix.
+
+## Prohibited without approval
+
+- Shipping fallback branches during bug fixes “to be safe.”
+- Adding retries, caches, or alternate APIs to route around a failure you have not diagnosed.
+- Combining a speculative primary tweak **and** a fallback in the same change without asking.
+
+## Allowed without asking
+
+- Fixing the **primary path** at its owner (preferred).
+- **Instrumentation** to diagnose failure (logs, traces) — not behavior fallbacks.
+- Fallbacks the user **explicitly requested** in the task (e.g. “if export missing, show placeholder”).
+- Matching an **existing documented pattern** in the same module when extending it — not introducing a new fallback layer.
+
+## Examples
+
+```typescript
+// ❌ BAD — no ask: mask missing export with hardcoded bundle
+const bundle = await loadexport() ?? FALLBACK_BUNDLE
+
+// ✅ GOOD — fix wanix export ready gate; or ask user before any FALLBACK_BUNDLE path
+await waitzedcafeexportready()
+const bundle = await loadexport()
+```
+
+```typescript
+// ❌ BAD — sync notify + fallback resync after edit
+onedit(() => { try { sync() } catch { boardrunnerpushupdates(); gadgetsynctick() } })
+
+// ✅ GOOD — ask before fallback; default is fix the edit path that skips invalidation
+```
+
+If unsure whether a change is fallback logic, treat it as fallback and **ask first**.

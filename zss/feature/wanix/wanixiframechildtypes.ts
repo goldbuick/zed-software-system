@@ -45,9 +45,17 @@ export type WanixIframeArchive = {
   mountdst: string
 }
 
+export type WanixIframeRemote = {
+  id: string
+  label: string
+  url: string
+  mountdst: string
+}
+
 type WanixIframeBase = {
   mountKey: number
   archives: WanixIframeArchive[]
+  remotes: WanixIframeRemote[]
   zedcafe: WanixZedCafeHostState | null
 }
 
@@ -70,5 +78,5 @@ export type WanixIframeHostState =
     } & WanixIframeBase)
 
 export function createidlewanixiframestate(): WanixIframeHostState {
-  return { phase: 'idle', mountKey: 0, archives: [], zedcafe: null }
+  return { phase: 'idle', mountKey: 0, archives: [], remotes: [], zedcafe: null }
 }

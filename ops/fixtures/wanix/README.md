@@ -247,6 +247,29 @@ LS_COLORS='di=34:fi=32' ls --color=always /
 
 With show mode on, console should log `[wanix] cell-colors { uniqueFg: N, uniqueBg: M }` with **N > 1** after the `printf` line when xterm holds palette colors.
 
+## WSS remote import (`wanix serve`)
+
+Mount a directory served by upstream **`wanix serve`** into the local iframe namespace via WebSocket 9P (`type="import"`). The dev server proxies **`/wanix-remote-9p`** → `ws://127.0.0.1:7654` so the https app can connect without mixed-content errors.
+
+**Terminal A** — serve a scratch directory (default listen `:7654`):
+
+```bash
+mkdir -p /tmp/wanix-remote-test
+echo 'hello from serve' > /tmp/wanix-remote-test/hello.txt
+wanix serve /tmp/wanix-remote-test
+```
+
+**Terminal B** — app or harness:
+
+```bash
+yarn task app dev
+```
+
+- Harness: [/wanix/wss-import.html](http://localhost:7777/wanix/wss-import.html) (uses `wss://<host>/wanix-remote-9p` by default)
+- Full app: `#wanix remote` menu → `#wanix remote connect wss://localhost:7777/wanix-remote-9p` → `#wanix vm` → `ls /remote` and `cat /remote/hello.txt`
+
+Disconnect via the **Disconnect** hyperlink in the `#wanix remote` menu.
+
 ## Manual verification
 
 1. `yarn task app dev`

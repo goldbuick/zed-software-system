@@ -1,12 +1,14 @@
-import { createdeferred, replychildrpc } from 'zss/feature/wanix/wanixifracerpc'
+import { createdeferred, replychildrpc, type Deferred } from 'zss/feature/wanix/wanixifracerpc'
 import {
   collectzedcafeexportfiles,
   readzedcafeexportprobe,
   waitzedcafeexportready,
+  WANIX_BIND_MOUNT_TIMEOUT_MS,
 } from 'zss/feature/wanix/wanixiframechildmount'
 import type {
   WanixIframeArchive,
   WanixIframeHostState,
+  WanixIframeRemote,
   WanixRoot,
   WanixSystemElement,
   WanixTaskElement,
@@ -17,6 +19,7 @@ import {
   WANIX_IFRAME_SYSTEM_ID,
   createidlewanixiframestate,
 } from 'zss/feature/wanix/wanixiframechildtypes'
+import { WANIX_REMOTE_DEFAULT_DST } from 'zss/feature/wanix/wanixremoteconstants'
 import {
   WANIX_ZED_CAFE_TASK_ID,
   WANIX_ZED_CAFE_WASM_CMD,
@@ -78,6 +81,13 @@ function witharchives(
   return { ...state, archives } as WanixIframeHostState
 }
 
+function withremotes(
+  state: WanixIframeHostState,
+  remotes: WanixIframeRemote[],
+): WanixIframeHostState {
+  return { ...state, remotes } as WanixIframeHostState
+}
+
 export type WanixIframeChildController = ReturnType<
   typeof createwanixiframechildcontroller
 >
@@ -86,6 +96,7 @@ export function createwanixiframechildcontroller() {
   let state = createidlewanixiframestate()
   let root: WanixRoot | null = null
   let archiveseq = 0
+  let remoteseq = 0
   const listeners = new Set<() => void>()
 
   let pendingpreptask: Deferred<void> | null = null
@@ -95,6 +106,7 @@ export function createwanixiframechildcontroller() {
     rid: string | null
   }> | null = null
   const pendingarchives = new Map<string, Deferred<void>>()
+  const pendingremotes = new Map<string, Deferred<void>>()
 
   function emit() {
     for (const listener of listeners) {
@@ -195,6 +207,31 @@ export function createwanixiframechildcontroller() {
     )
   }
 
+  function onremotemounted(remoteid: string) {
+    const pending = pendingremotes.get(remoteid)
+    if (pending) {
+      pendingremotes.delete(remoteid)
+      pending.resolve()
+    }
+    postwanixiframeapilog(`wanix remote: import mounted (${remoteid})`)
+  }
+
+  function onremoteerror(remoteid: string, err: Error) {
+    const pending = pendingremotes.get(remoteid)
+    if (pending) {
+      pendingremotes.delete(remoteid)
+      pending.reject(err)
+    }
+    const current = getstate()
+    setstate(
+      withremotes(
+        current,
+        current.remotes.filter((entry) => entry.id !== remoteid),
+      ),
+    )
+    postwanixiframeapilog(`wanix remote: import failed (${remoteid}): ${err.message}`)
+  }
+
   function onzedcafeerror(err: Error) {
     postwanixiframeapilog(`zed-cafe export: ${err.message}`)
   }
@@ -211,6 +248,7 @@ export function createwanixiframechildcontroller() {
             phase: 'vm-prepared',
             mountKey: nextmountkey(state),
             archives: [],
+            remotes: state.remotes,
             zedcafe: state.zedcafe
               ? {
                   cmd: state.zedcafe.cmd,
@@ -232,6 +270,7 @@ export function createwanixiframechildcontroller() {
             phase: 'task-system',
             mountKey: nextmountkey(state),
             archives: [],
+            remotes: state.remotes,
             zedcafe: null,
           })
           root = null
@@ -256,6 +295,7 @@ export function createwanixiframechildcontroller() {
             bootstage: 'export',
             mountKey: nextmountkey(state),
             archives: state.archives,
+            remotes: state.remotes,
             zedcafe: {
               cmd: state.zedcafe?.cmd ?? WANIX_ZED_CAFE_WASM_CMD,
               generation,
@@ -286,6 +326,7 @@ export function createwanixiframechildcontroller() {
             phase: 'task-active',
             mountKey: state.mountKey,
             archives: state.archives,
+            remotes: state.remotes,
             zedcafe: state.zedcafe,
             taskid,
             cmd,
@@ -302,6 +343,7 @@ export function createwanixiframechildcontroller() {
               phase: 'vm-prepared',
               mountKey: nextmountkey(state),
               archives: state.archives,
+              remotes: state.remotes,
               zedcafe: state.zedcafe
                 ? { ...state.zedcafe, ready: false, taskrid: null }
                 : null,
@@ -326,6 +368,7 @@ export function createwanixiframechildcontroller() {
               phase: 'task-ready',
               mountKey: state.mountKey,
               archives: state.archives,
+              remotes: state.remotes,
               zedcafe: state.zedcafe,
             })
           }
@@ -389,6 +432,59 @@ export function createwanixiframechildcontroller() {
             clearTimeout(timer)
             URL.revokeObjectURL(src)
           }
+          return
+        }
+        case 'connectremote': {
+          const [url, mountdst = WANIX_REMOTE_DEFAULT_DST, label] = data.args as [
+            string,
+            string?,
+            string?,
+          ]
+          if (
+            state.phase === 'idle' ||
+            state.phase === 'vm-prepared'
+          ) {
+            throw new Error('wanix iframe child: system missing')
+          }
+          if (!url.startsWith('ws://') && !url.startsWith('wss://')) {
+            throw new Error('wanix remote: url must start with ws:// or wss://')
+          }
+          const remoteid = `remote-${++remoteseq}`
+          const remote: WanixIframeRemote = {
+            id: remoteid,
+            label: label?.trim() || remoteid,
+            url,
+            mountdst: mountdst?.trim() || WANIX_REMOTE_DEFAULT_DST,
+          }
+          const deferred = createdeferred<void>()
+          pendingremotes.set(remoteid, deferred)
+          const timer = setTimeout(() => {
+            onremoteerror(remoteid, new Error('remote import mount timeout'))
+          }, WANIX_BIND_MOUNT_TIMEOUT_MS)
+          try {
+            const current = getstate()
+            setstate(withremotes(current, [...current.remotes, remote]))
+            await deferred.promise
+            replychildrpc(source, data.id, { result: remote })
+          } finally {
+            clearTimeout(timer)
+          }
+          return
+        }
+        case 'disconnectremote': {
+          const [remoteid] = data.args as [string]
+          const current = getstate()
+          setstate(
+            withremotes(
+              current,
+              current.remotes.filter((entry) => entry.id !== remoteid),
+            ),
+          )
+          replychildrpc(source, data.id, { result: { ok: true } })
+          return
+        }
+        case 'listremotes': {
+          replychildrpc(source, data.id, { result: getstate().remotes })
           return
         }
         case 'synczedcafe': {
@@ -563,6 +659,8 @@ export function createwanixiframechildcontroller() {
     onspawntaskerror,
     onarchivemounted,
     onarchiveerror,
+    onremotemounted,
+    onremoteerror,
     onzedcafeerror,
     handlerrpc,
   }

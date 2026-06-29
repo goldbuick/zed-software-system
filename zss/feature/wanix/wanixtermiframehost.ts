@@ -7,7 +7,10 @@ import {
   rejectparentrpc,
   resolveparentrpc,
 } from 'zss/feature/wanix/wanixifracerpc'
-import type { WanixZedCafeGuestFile } from 'zss/feature/wanix/wanixiframechildtypes'
+import type {
+  WanixIframeRemote,
+  WanixZedCafeGuestFile,
+} from 'zss/feature/wanix/wanixiframechildtypes'
 import {
   type WANIX_ATTACH_KIND,
   clearwanixautotileflags,
@@ -16,6 +19,7 @@ import {
   readwanixautotiletriggered,
   readwanixtask,
   readwanixvm,
+  clearwanixremotes,
   registervm,
   setwanixattached,
   setwanixautotiletriggered,
@@ -509,6 +513,26 @@ export async function iframechildmountarchive(
   ])
 }
 
+export async function iframechildconnectremote(
+  url: string,
+  mountdst?: string,
+  label?: string,
+): Promise<WanixIframeRemote> {
+  return childrpc<WanixIframeRemote>('zss-wanix-term-rpc', 'connectremote', [
+    url,
+    mountdst,
+    label,
+  ])
+}
+
+export async function iframechilddisconnectremote(remoteid: string): Promise<void> {
+  await childrpc('zss-wanix-term-rpc', 'disconnectremote', [remoteid])
+}
+
+export async function iframechildlistremotes(): Promise<WanixIframeRemote[]> {
+  return childrpc<WanixIframeRemote[]>('zss-wanix-term-rpc', 'listremotes', [])
+}
+
 /** Test hook — register a proxy + mark attached without a live iframe. */
 export function wanixtermiframehosttestsetattached(
   kind: WANIX_ATTACH_KIND,
@@ -547,6 +571,7 @@ export async function teardownwanixtermiframe(): Promise<void> {
   vmprepstage = 'idle'
   vmpreperror = undefined
   clearwanixautotileflags()
+  clearwanixremotes()
   setwanixattached(null, null)
   iframelayout = 'idle'
   desirediframecols = 0

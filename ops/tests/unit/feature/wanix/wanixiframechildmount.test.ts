@@ -50,16 +50,19 @@ describe('wanixiframechildmount zed-cafe staging', () => {
       },
     })
     expect(sys).not.toBeNull()
-    expect(sys!.querySelector('wanix-vm')).toBeNull()
+    if (!sys) {
+      throw new Error('expected system')
+    }
+    expect(sys.querySelector('wanix-vm')).toBeNull()
     expect(
-      sys!.querySelector('wanix-bind[dst="vm"]'),
+      sys.querySelector('wanix-bind[dst="vm"]'),
     ).not.toBeNull()
-    const binds = sys!.querySelectorAll(':scope > wanix-bind')
+    const binds = sys.querySelectorAll(':scope > wanix-bind')
     const filebinds = [...binds].filter((b) => b.getAttribute('type') === 'file')
     expect(filebinds).toHaveLength(1)
     expect(filebinds[0]?.getAttribute('dst')).toBe(WANIX_ZED_CAFE_WASM_RAMFS)
     expect(
-      sys!.querySelector('wanix-bind[data-zss-zed-cafe-inbox]'),
+      sys.querySelector('wanix-bind[data-zss-zed-cafe-inbox]'),
     ).toBeNull()
   })
 
@@ -83,12 +86,15 @@ describe('wanixiframechildmount zed-cafe staging', () => {
         guestfiles: [{ path: 'stats.json', data: [123, 125] }],
       },
     })
-    expect(sys!.querySelector('wanix-vm')).not.toBeNull()
+    if (!sys) {
+      throw new Error('expected system')
+    }
+    expect(sys.querySelector('wanix-vm')).not.toBeNull()
     expect(
-      sys!.querySelector('wanix-bind[data-zss-zed-cafe-export-ramfs-file]'),
+      sys.querySelector('wanix-bind[data-zss-zed-cafe-export-ramfs-file]'),
     ).not.toBeNull()
     expect(
-      sys!.querySelector('wanix-vm wanix-bind[data-zss-zed-cafe-export="vm-staging"]'),
+      sys.querySelector('wanix-vm wanix-bind[data-zss-zed-cafe-export="vm-staging"]'),
     ).not.toBeNull()
   })
 
@@ -97,7 +103,10 @@ describe('wanixiframechildmount zed-cafe staging', () => {
       ...createidlewanixiframestate(),
       phase: 'task-ready',
       mountKey: 1,
-    })!
+    })
+    if (!sys) {
+      throw new Error('expected system')
+    }
     const task = appendwanixgojstasktarget(
       sys,
       'zed-cafe',
@@ -113,7 +122,10 @@ describe('wanixiframechildmount zed-cafe staging', () => {
       ...createidlewanixiframestate(),
       phase: 'task-ready',
       mountKey: 1,
-    })!
+    })
+    if (!sys) {
+      throw new Error('expected system')
+    }
     const payload = Uint8Array.from([123, 125, 10])
     const root = {
       readDir: jest.fn(),
@@ -192,6 +204,40 @@ describe('wanixiframechildmount zed-cafe staging', () => {
     await jest.advanceTimersByTimeAsync(600)
     await expect(pending).resolves.toBe(false)
     jest.useRealTimers()
+  })
+
+  it('mounts remote import bind and vm guest virtfs when remotes present', () => {
+    const sys = mountwanixsystemtree({
+      ...createidlewanixiframestate(),
+      phase: 'vm-active',
+      bootstage: 'boot',
+      mountKey: 3,
+      vmid: 'vm1',
+      mem: '512M',
+      urls: {
+        linux: '/wanix/linux.tgz',
+        v86: '/wanix/v86.tgz',
+      },
+      remotes: [
+        {
+          id: 'remote-1',
+          label: 'remote-1',
+          url: 'wss://localhost:7777/wanix-remote-9p',
+          mountdst: 'remote',
+        },
+      ],
+    })
+    if (!sys) {
+      throw new Error('expected system')
+    }
+    expect(
+      sys.querySelector('wanix-bind[type="import"][dst="remote"]'),
+    ).not.toBeNull()
+    expect(
+      sys.querySelector(
+        'wanix-vm wanix-bind[data-zss-remote-guest="remote-1"]',
+      ),
+    ).not.toBeNull()
   })
 
   it('collectzedcafeexportfiles does not readDir json leaf paths', async () => {

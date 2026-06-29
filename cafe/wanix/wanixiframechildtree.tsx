@@ -9,6 +9,7 @@ import {
 import {
   appendwanixarchivebind,
   appendwanixgojstasktarget,
+  appendwanixremotebind,
   appendwanixtasktarget,
   appendzedcafeexportbind,
   cleartargetwanixels,
@@ -20,6 +21,7 @@ import {
   waitwanixbindmount,
   waitzedcafeexportready,
   wirewanixarchivebind,
+  wirewanixremotebind,
   wirezedcafeexportbind,
 } from 'zss/feature/wanix/wanixiframechildmount'
 import { postwanixiframeapilog } from 'zss/feature/wanix/wanixtermiframeprotocol'
@@ -44,6 +46,7 @@ export function WanixIframeChildTree({
   const hostref = useRef<HTMLDivElement>(null)
   const systemref = useRef<WanixSystemElement | null>(null)
   const mountedarchives = useRef(new Set<string>())
+  const mountedremotes = useRef(new Set<string>())
   const vmid = state.phase === 'vm-active' ? state.vmid : ''
   const vmexportstage =
     state.phase === 'vm-active' && state.bootstage === 'export'
@@ -66,6 +69,7 @@ export function WanixIframeChildTree({
     host.replaceChildren()
     systemref.current = null
     mountedarchives.current.clear()
+    mountedremotes.current.clear()
 
     const system = mountwanixsystemtree(state)
     if (!system) {
@@ -83,8 +87,20 @@ export function WanixIframeChildTree({
         `wanix-bind[data-zss-archive-id="${archive.id}"]`,
       )
       if (bind) {
-        wirewanixarchivebind(bind, archive.id, controller)
+        wirewanixarchivebind(bind as HTMLElement, archive.id, controller)
         mountedarchives.current.add(archive.id)
+      }
+    }
+    for (const remote of state.remotes) {
+      if (mountedremotes.current.has(remote.id)) {
+        continue
+      }
+      const bind = system.querySelector(
+        `wanix-bind[data-zss-remote-id="${remote.id}"]`,
+      )
+      if (bind) {
+        wirewanixremotebind(bind as HTMLElement, remote.id, controller)
+        mountedremotes.current.add(remote.id)
       }
     }
     // mountKey-only full remount; archives at remount time are wired below, not on every archive change.
@@ -107,6 +123,34 @@ export function WanixIframeChildTree({
       mountedarchives.current.add(archive.id)
     }
   }, [controller, state.archives])
+
+  // Append remote import binds added after initial mount.
+  useLayoutEffect(() => {
+    const system = systemref.current
+    if (!system) {
+      return
+    }
+
+    const activeids = new Set(state.remotes.map((remote) => remote.id))
+    system
+      .querySelectorAll('wanix-bind[data-zss-remote-id]')
+      .forEach((element) => {
+        const remoteid = element.getAttribute('data-zss-remote-id')
+        if (remoteid && !activeids.has(remoteid)) {
+          element.remove()
+          mountedremotes.current.delete(remoteid)
+        }
+      })
+
+    for (const remote of state.remotes) {
+      if (mountedremotes.current.has(remote.id)) {
+        continue
+      }
+      const bind = appendwanixremotebind(system, remote)
+      wirewanixremotebind(bind, remote.id, controller)
+      mountedremotes.current.add(remote.id)
+    }
+  }, [controller, state.remotes])
 
   // Task target: clear VM/task/term children and spawn wasi task when active.
   useLayoutEffect(() => {

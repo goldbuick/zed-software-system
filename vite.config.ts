@@ -265,6 +265,14 @@ export default defineConfig(({ mode }) => {
             'Cross-Origin-Embedder-Policy': 'require-corp',
           }
         : undefined,
+      proxy: {
+        '/wanix-remote-9p': {
+          target: 'ws://127.0.0.1:7654',
+          ws: true,
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/wanix-remote-9p\/?/, '/'),
+        },
+      },
     },
   }
 })

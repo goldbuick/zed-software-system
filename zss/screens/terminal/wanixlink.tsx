@@ -1,6 +1,8 @@
 import { useCallback } from 'react'
 import {
   wanixattach,
+  wanixremotedisconnect,
+  wanixremoteshow,
   wanixstop,
   wanixvmstart,
   wanixvmstop,
@@ -103,6 +105,57 @@ export function TerminalWanixVm({
 
   const invoke = useCallback(() => {
     wanixvmstart(SOFTWARE, registerreadplayer(), readoptionalid(words))
+  }, [words])
+
+  const tcolor = inputcolor(!!active)
+  setuplogitem(!!active, 0, y, context)
+  tokenizeandwritetextformat(
+    `${prefix} $purple$16 $CYAN${tcolor}${label}`,
+    context,
+    true,
+  )
+
+  return active && <UserInput OK_BUTTON={invoke} />
+}
+
+export function TerminalWanixRemote({
+  active,
+  prefix,
+  label,
+  y,
+}: TapeTerminalItemInputProps) {
+  const context = useWriteText()
+
+  const invoke = useCallback(() => {
+    wanixremoteshow(SOFTWARE, registerreadplayer())
+  }, [])
+
+  const tcolor = inputcolor(!!active)
+  setuplogitem(!!active, 0, y, context)
+  tokenizeandwritetextformat(
+    `${prefix} $purple$16 $CYAN${tcolor}${label}`,
+    context,
+    true,
+  )
+
+  return active && <UserInput OK_BUTTON={invoke} />
+}
+
+export function TerminalWanixRemoteDisconnect({
+  active,
+  prefix,
+  label,
+  words,
+  y,
+}: TapeTerminalItemInputProps) {
+  const context = useWriteText()
+
+  const invoke = useCallback(() => {
+    const remoteid = words.length > 1 ? words[1] : undefined
+    if (!remoteid) {
+      return
+    }
+    wanixremotedisconnect(SOFTWARE, registerreadplayer(), remoteid)
   }, [words])
 
   const tcolor = inputcolor(!!active)

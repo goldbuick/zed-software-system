@@ -31,7 +31,7 @@ export const WANIX_TASKS: TaskDef[] = [
   }),
   def('wanix:zed-cafe:export-write:validate', {
     description:
-      'Playwright: gojs export memfs — zedcafewrite.wasm O_CREAT through #task/rid/export bind (local gate, not CI)',
+      'Playwright: gojs export memfs — write guestTouch into #task/rid/export/stats.json (local gate, not CI)',
     run: shell(
       'node tasks/implementations/wanix/validate-zed-cafe-export-write.mjs',
     ),

@@ -31,6 +31,8 @@ import { TerminalText } from './text'
 import { TerminalViewIt } from './viewit'
 import {
   TerminalWanixAttach,
+  TerminalWanixRemote,
+  TerminalWanixRemoteDisconnect,
   TerminalWanixStop,
   TerminalWanixVm,
   TerminalWanixVmStop,
@@ -104,6 +106,10 @@ export function TerminalItem({ active, text, y }: TapeTerminalItemProps) {
         return <TerminalWanixVmStop {...props} words={words} />
       case 'wanixvm':
         return <TerminalWanixVm {...props} words={words} />
+      case 'wanixremote':
+        return <TerminalWanixRemote {...props} words={words} />
+      case 'wanixremotedisconnect':
+        return <TerminalWanixRemoteDisconnect {...props} words={words} />
       default:
       case 'hyperlink':
         return <TerminalHyperlink {...props} words={words} />

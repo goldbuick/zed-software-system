@@ -2,6 +2,7 @@ import type { WanixIframeChildController } from 'zss/feature/wanix/wanixiframech
 import {
   WANIX_IFRAME_SYSTEM_ID,
   type WanixIframeArchive,
+  type WanixIframeRemote,
   type WanixIframeHostState,
   type WanixRoot,
   type WanixSystemElement,
@@ -506,6 +507,26 @@ export function appendwanixarchivebind(
   return bind
 }
 
+export function appendwanixremotebind(
+  sys: WanixSystemElement,
+  remote: WanixIframeRemote,
+) {
+  const existing = sys.querySelector(
+    `wanix-bind[data-zss-remote-id="${remote.id}"]`,
+  )
+  if (existing) {
+    return existing as HTMLElement
+  }
+  const bind = createwanixbind({
+    type: 'import',
+    dst: remote.mountdst,
+    src: remote.url,
+  })
+  bind.setAttribute('data-zss-remote-id', remote.id)
+  sys.appendChild(bind)
+  return bind
+}
+
 export function wirewanixarchivebind(
   bind: HTMLElement,
   archiveid: string,
@@ -518,12 +539,40 @@ export function wirewanixarchivebind(
   bind.addEventListener('error', onerror, { once: true })
 }
 
+export function wirewanixremotebind(
+  bind: HTMLElement,
+  remoteid: string,
+  controller: WanixIframeChildController,
+) {
+  const onmount = () => controller.onremotemounted(remoteid)
+  const onerror = () =>
+    controller.onremoteerror(remoteid, new Error('remote import mount failed'))
+  bind.addEventListener('mount', onmount, { once: true })
+  bind.addEventListener('error', onerror, { once: true })
+}
+
 export function cleartargetwanixels(sys: WanixSystemElement) {
   sys
     .querySelectorAll(
       ':scope > wanix-vm, :scope > wanix-task:not([id="zed-cafe"]), :scope > wanix-term:not([data-zss-zed-cafe-skip])',
     )
     .forEach((el) => el.remove())
+}
+
+function appendvmremoteguestbinds(vm: HTMLElement, remotes: WanixIframeRemote[]) {
+  for (const remote of remotes) {
+    if (
+      vm.querySelector(`wanix-bind[data-zss-remote-guest="${remote.id}"]`)
+    ) {
+      continue
+    }
+    const bind = createwanixbind({
+      dst: remote.mountdst,
+      src: remote.mountdst,
+    })
+    bind.setAttribute('data-zss-remote-guest', remote.id)
+    vm.appendChild(bind)
+  }
 }
 
 function appendvmzedcafestagingbind(vm: HTMLElement) {
@@ -566,6 +615,7 @@ export function appendwanixvminitialtree(
   sys: WanixSystemElement,
   vmid: string,
   mem: string,
+  remotes: WanixIframeRemote[] = [],
 ) {
   if (sys.querySelector('wanix-vm')) {
     return sys.querySelector('wanix-vm') as HTMLElement
@@ -578,6 +628,7 @@ export function appendwanixvminitialtree(
     start: true,
   })
   appendvmzedcafestagingbind(vm)
+  appendvmremoteguestbinds(vm, remotes)
   sys.appendChild(vm)
   sys.appendChild(
     createwanixterm('#vm/1/term', { raw: true, vmid }),
@@ -775,12 +826,16 @@ export function mountwanixsystemtree(
           `zed-cafe export: staging ${guestfiles.length} files on #ramfs/zed-cafe for vm boot`,
         )
       }
-      appendwanixvminitialtree(sys, state.vmid, state.mem)
+      appendwanixvminitialtree(sys, state.vmid, state.mem, state.remotes)
     }
   }
 
   for (const archive of state.archives) {
     appendwanixarchivebind(sys, archive)
+  }
+
+  for (const remote of state.remotes) {
+    appendwanixremotebind(sys, remote)
   }
 
   const zedcafetaskrid =

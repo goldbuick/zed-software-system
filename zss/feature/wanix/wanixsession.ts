@@ -16,8 +16,17 @@ export type WANIX_VM_STATE = {
   autotiletriggered?: boolean
 }
 
+export type WANIX_REMOTE_STATE = {
+  id: string
+  label: string
+  url: string
+  mountdst: string
+  mounted: boolean
+}
+
 const tasks = new Map<string, WANIX_TASK_STATE>()
 const vms = new Map<string, WANIX_VM_STATE>()
+const remotes = new Map<string, WANIX_REMOTE_STATE>()
 let attachedid: string | null = null
 let attachedkind: WANIX_ATTACH_KIND | null = null
 let termrouting = false
@@ -28,6 +37,10 @@ export function readwanixtasks(): WANIX_TASK_STATE[] {
 
 export function readwanixvms(): WANIX_VM_STATE[] {
   return [...vms.values()]
+}
+
+export function readwanixremotes(): WANIX_REMOTE_STATE[] {
+  return [...remotes.values()]
 }
 
 export function readwanixtask(taskid: string): WANIX_TASK_STATE | undefined {
@@ -66,6 +79,18 @@ export function registertask(entry: WANIX_TASK_STATE) {
 
 export function registervm(entry: WANIX_VM_STATE) {
   vms.set(entry.id, entry)
+}
+
+export function registerremote(entry: WANIX_REMOTE_STATE) {
+  remotes.set(entry.id, entry)
+}
+
+export function removeremote(remoteid: string) {
+  remotes.delete(remoteid)
+}
+
+export function clearwanixremotes() {
+  remotes.clear()
 }
 
 export function removetask(taskid: string) {
@@ -181,6 +206,7 @@ export function clearwanixautotileflags() {
 export function resetwanixsessionfortest() {
   tasks.clear()
   vms.clear()
+  remotes.clear()
   attachedid = null
   attachedkind = null
   termrouting = false
