@@ -117,7 +117,7 @@ in `ops/jest.config.ts`.
 
 ## Legacy
 
-Do not add files under `tasks/implementations/` — groups are canonical. Delete or ignore stale implementation copies when touching an area.
+`tasks/implementations/` was deleted after the inline migration — do not recreate. All handlers live in `tasks/groups/`.
 
 ## Verify
 

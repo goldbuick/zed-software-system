@@ -40,10 +40,10 @@ yarn task app dev           # nested shorthand for run app:dev
 | `tasks/groups/<subject>.ts` | `TaskDef` registry + `handler()` implementations |
 | `tasks/lib/` | Task-runner infrastructure (parity, Playwright, argv, lazy loaders) |
 | `tasks/shellutil.ts` | Spawn, env merge, Jest, `checkrg` |
-| `tasks/registry.ts` | Imports **groups only** — not `tasks/implementations/` |
+| `tasks/registry.ts` | Imports **groups only** |
 | `ops/lib/` | Domain libs shared by tasks **and** Jest (corpus walk, sanitize, fixturepaths) |
 
-`tasks/implementations/` is **legacy** — do not add or extend files there. New work goes in `tasks/groups/` + `tasks/lib/` or `ops/lib/`.
+`tasks/implementations/` was removed after inline migration — all handlers live in `tasks/groups/` + shared code in `tasks/lib/` or `ops/lib/`.
 
 ## Registry load safety
 
@@ -66,7 +66,7 @@ After editing any group file, run **`yarn task list`** — cheapest integration 
 ## Adding a task
 
 1. Add a `TaskDef` in `tasks/groups/<subject>.ts` (use `def()` / `tasksonly()` from `tasks/helpers.ts`).
-2. Implement leaf tasks as `handler()` functions in the same file — do not add `scripts/` entrypoints or `tasks/implementations/` files.
+2. Implement leaf tasks as `handler()` functions in the same file — do not add `scripts/` entrypoints.
 3. Extract repeated glue to `tasks/lib/` (infrastructure) or `ops/lib/` (domain shared with tests).
 4. Composite pipelines: `tasks/pipelines.ts` (`parityfull`, etc.).
 5. Run `yarn task docs` and commit `ops/docs/tasks.md`.

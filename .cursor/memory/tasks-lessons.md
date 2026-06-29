@@ -34,8 +34,8 @@ If Jest tests and multiple subjects need it → `ops/lib/`, not `tasks/lib/`.
 
 ## Canonical vs legacy
 
-- **Canonical:** `tasks/groups/*.ts` + `tasks/registry.ts`
-- **Legacy:** `tasks/implementations/` — do not extend; remove when safe
+- **Canonical:** `tasks/groups/*.ts` + `tasks/registry.ts` + `tasks/lib/` + `ops/lib/`
+- **`tasks/implementations/`** — removed (2026); do not recreate
 
 ## Verification habit
 
