@@ -91,7 +91,12 @@ export async function wanixhandlevmstart(
       'zss/feature/wanix/wanixstateexport'
     )
     const exportfiles = buildzedcafeexportfiles()
-    const inboxbytes = [...encodezedcafeinboxjson(exportfiles)]
+    const inboxencoded = encodezedcafeinboxjson(exportfiles)
+    if (!inboxencoded) {
+      apilog(device, player, 'wanix vm prep: zed-cafe export tree invalid')
+      return
+    }
+    const inboxbytes = [...inboxencoded]
     const requested = vmid ?? DEFAULT_WANIX_VM_ID
     apilog(device, player, `wanix vm spawn: ${requested}...`)
     const { vmid: spawnedid } = await spawnwanixvm({

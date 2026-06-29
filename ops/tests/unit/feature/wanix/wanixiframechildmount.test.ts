@@ -7,6 +7,8 @@ jest.mock('zss/feature/wanix/wanixvmassets', () => ({
 import {
   appendwanixgojstasktarget,
   collectzedcafeexportfiles,
+  collectzedcafeexportramfsfiles,
+  iswanixzedcafevmbootexport,
   mountwanixsystemtree,
   readzedcafeexportprobe,
   stagezedcafetaskforgojs,
@@ -17,6 +19,7 @@ import {
   createidlewanixiframestate,
 } from 'zss/feature/wanix/wanixiframechildtypes'
 import {
+  WANIX_ZED_CAFE_EXPORT_RAMFS,
   WANIX_ZED_CAFE_INBOX_RAMFS,
   WANIX_ZED_CAFE_WASM_RAMFS,
 } from 'zss/feature/wanix/wanixzedcafeconstants'
@@ -157,6 +160,69 @@ describe('wanixiframechildmount zed-cafe staging', () => {
     expect(probe.inbox_ramfs_bytes).toBe(3)
     expect(probe.inbox_task_bytes).toBe(3)
     expect(probe.export_listing).toEqual(['stats.json'])
+    expect(root.readDir).toHaveBeenCalledWith('#task/3/export')
+  })
+
+  it('readzedcafeexportprobe lists #ramfs/zed-cafe on vm boot path', async () => {
+    const root = {
+      readDir: jest.fn(async () => ['stats.json', 'books/']),
+      readFile: jest.fn(async () => Uint8Array.from([1, 2, 3])),
+      writeFile: jest.fn(),
+    }
+    const probe = await readzedcafeexportprobe(
+      root,
+      '4',
+      true,
+      'zed-cafe.wasm',
+      true,
+    )
+    expect(probe.export_listing).toEqual(['stats.json', 'books/'])
+    expect(root.readDir).toHaveBeenCalledWith(WANIX_ZED_CAFE_EXPORT_RAMFS)
+    expect(root.readDir).not.toHaveBeenCalledWith('#task/4/export')
+  })
+
+  it('collectzedcafeexportramfsfiles reads #ramfs/zed-cafe not task export', async () => {
+    const root = {
+      readDir: jest.fn(async (path: string) => {
+        if (path === WANIX_ZED_CAFE_EXPORT_RAMFS) {
+          return ['stats.json']
+        }
+        throw new Error(`unexpected readDir ${path}`)
+      }),
+      readFile: jest.fn(async (path: string) => {
+        if (path === `${WANIX_ZED_CAFE_EXPORT_RAMFS}/stats.json`) {
+          return Uint8Array.from([123])
+        }
+        throw new Error(`unexpected readFile ${path}`)
+      }),
+      writeFile: jest.fn(),
+    }
+    const files = await collectzedcafeexportramfsfiles(root)
+    expect(files).toEqual([
+      { path: 'stats.json', data: [123] },
+    ])
+    expect(root.readDir).not.toHaveBeenCalledWith('#task/4/export')
+  })
+
+  it('iswanixzedcafevmbootexport is true only for vm-active boot stage', () => {
+    expect(
+      iswanixzedcafevmbootexport({
+        phase: 'vm-active',
+        bootstage: 'boot',
+      }),
+    ).toBe(true)
+    expect(
+      iswanixzedcafevmbootexport({
+        phase: 'vm-active',
+        bootstage: 'export',
+      }),
+    ).toBe(false)
+    expect(
+      iswanixzedcafevmbootexport({
+        phase: 'task-active',
+        bootstage: 'boot',
+      }),
+    ).toBe(false)
   })
 
   it('waitwanixbindmount resolves on mount event', async () => {
@@ -253,15 +319,15 @@ describe('wanixiframechildmount zed-cafe staging', () => {
           return ['stats.json', 'books/']
         }
         if (path === '#task/4/export/books') {
-          return ['book1/']
+          return ['demo-book1/']
         }
-        if (path === '#task/4/export/books/book1') {
+        if (path === '#task/4/export/books/demo-book1') {
           return ['pages/']
         }
-        if (path === '#task/4/export/books/book1/pages') {
-          return ['page1/']
+        if (path === '#task/4/export/books/demo-book1/pages') {
+          return ['demo-page1/']
         }
-        if (path === '#task/4/export/books/book1/pages/page1') {
+        if (path === '#task/4/export/books/demo-book1/pages/demo-page1') {
           return ['stats.json']
         }
         return []
@@ -277,7 +343,7 @@ describe('wanixiframechildmount zed-cafe staging', () => {
     const files = await collectzedcafeexportfiles(root, '4')
     const stats = files.find((file) => file.path === 'stats.json')
     const pagestats = files.find(
-      (file) => file.path === 'books/book1/pages/page1/stats.json',
+      (file) => file.path === 'books/demo-book1/pages/demo-page1/stats.json',
     )
 
     expect(stats).toBeDefined()

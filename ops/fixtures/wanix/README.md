@@ -67,9 +67,9 @@ Layout:
 ```text
 zed-cafe/
   stats.json
-  books/<book-id>/
+  books/<kebab-case-name>-<book-id>/
     stats.json
-    pages/<page-id>/
+    pages/<kebab-case-name>-<page-id>/
       stats.json
       board/
         terrain.json
@@ -80,6 +80,8 @@ zed-cafe/
       charset/bitmap.json
       palette/bitmap.json
 ```
+
+Folder segments are `{kebab-case-name}-{id}` for human browsing; canonical ids remain in `stats.json` bodies. Export/push validates this layout; import does not accept legacy `books/<id>/` paths.
 
 Verify: warm Wanix → `cat zed-cafe/stats.json` from a task, or `#wanix vm` → `cat /zed-cafe/stats.json`.
 

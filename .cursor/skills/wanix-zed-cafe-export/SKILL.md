@@ -25,10 +25,15 @@ See also: skill `wanix-vm-iframe-host`, rule `wanix-vm-lifecycle.mdc`, [`ops/fix
 
 ## Export tree shape
 
+Schema owner: `zss/feature/wanix/zedcafetreeschema.ts` (`validatezedcafeexportpaths` on export/push).
+
 ```text
 zed-cafe/stats.json
-zed-cafe/books/<book-id>/…/stats.json, terrain.json, …
+zed-cafe/books/<kebab-name>-<book-id>/stats.json
+zed-cafe/books/.../pages/<kebab-name>-<page-id>/stats.json, terrain.json, …
 ```
+
+Folder segments use `{kebab-case-name}-{id}` (e.g. `my-cool-book-book1`, `player-page2`). Empty name falls back to id-only (`sid_abc`). Legacy `books/<id>/` import is not supported.
 
 Ready probe: **`stats.json`** at `#task/<rid>/export/stats.json` (poll via `waitzedcafeexportready`).
 

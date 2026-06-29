@@ -1,5 +1,8 @@
 import type { DEVICELIKE } from 'zss/device/api'
 import { apilog } from 'zss/device/api'
+import {
+  kebabcasezedcafedirname,
+} from 'zss/feature/wanix/zedcafetreeschema'
 import type { WANIX_ZED_CAFE_EXPORT_FILE } from 'zss/feature/wanix/wanixstateexport'
 import {
   memoryimportbookfromjson,
@@ -96,10 +99,9 @@ export function assembleboardjson(
 
 export function assemblecodepagejson(
   index: Map<string, Uint8Array>,
-  bookid: string,
-  pageid: string,
+  pageprefix: string,
 ): WANIX_ZED_CAFE_PARSED_PAGE | undefined {
-  const prefix = `books/${bookid}/pages/${pageid}`
+  const prefix = pageprefix
   const stats = parsejsonfile(index, `${prefix}/stats.json`) as
     | {
         id?: string
@@ -109,8 +111,9 @@ export function assemblecodepagejson(
   if (!ispresent(stats)) {
     return undefined
   }
+  const pageid = stats.id ?? prefix.split('/').pop() ?? ''
   const wire: WANIX_ZED_CAFE_PARSED_PAGE = {
-    id: stats.id ?? pageid,
+    id: pageid,
     code: stats.code ?? '',
   }
   const board = assembleboardjson(index, prefix)
@@ -144,14 +147,16 @@ export function parsezedcafeexportfiles(
     | {
         exportedAt?: string
         guestTouch?: boolean
-        books?: { id: string }[]
+        books?: { id: string; name?: string }[]
       }
     | undefined
   const books: WANIX_ZED_CAFE_PARSED_BOOK[] = []
   const bookrefs = rootstats?.books ?? []
   for (let i = 0; i < bookrefs.length; ++i) {
-    const bookid = bookrefs[i]!.id
-    const bookmeta = parsejsonfile(index, `books/${bookid}/stats.json`) as
+    const bookref = bookrefs[i]!
+    const bookid = bookref.id
+    const bookdirname = kebabcasezedcafedirname(bookref.name, bookid)
+    const bookmeta = parsejsonfile(index, `books/${bookdirname}/stats.json`) as
       | {
           id?: string
           name?: string
@@ -159,7 +164,7 @@ export function parsezedcafeexportfiles(
           timestamp?: number
           activelist?: string[]
           flags?: Record<string, unknown>
-          pages?: { id: string }[]
+          pages?: { id: string; name?: string }[]
         }
       | undefined
     if (!ispresent(bookmeta)) {
@@ -168,8 +173,11 @@ export function parsezedcafeexportfiles(
     const pages: WANIX_ZED_CAFE_PARSED_PAGE[] = []
     const pagerefs = bookmeta.pages ?? []
     for (let j = 0; j < pagerefs.length; ++j) {
-      const pageid = pagerefs[j]!.id
-      const page = assemblecodepagejson(index, bookid, pageid)
+      const pageref = pagerefs[j]!
+      const pageid = pageref.id
+      const pagedirname = kebabcasezedcafedirname(pageref.name, pageid)
+      const pageprefix = `books/${bookdirname}/pages/${pagedirname}`
+      const page = assemblecodepagejson(index, pageprefix)
       if (page) {
         pages.push(page)
       }

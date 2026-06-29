@@ -1,6 +1,12 @@
 import type { DEVICELIKE } from 'zss/device/api'
-import { wanixexportstate, wanixrequestzedcafeexport } from 'zss/device/api'
+import { apilog, wanixexportstate, wanixrequestzedcafeexport } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import {
+  assertzedcafeexportvalid,
+  readzedcafebookstatspath,
+  readzedcafepageprefix,
+  validatezedcafeexportpaths,
+} from 'zss/feature/wanix/zedcafetreeschema'
 import { WANIX_ZED_CAFE_EXPORT_DEBOUNCE_MS } from 'zss/feature/wanix/wanixzedcafeconstants'
 import { readzedcafeimportsuppressingexport } from 'zss/feature/wanix/wanixzedcafesession'
 import { memoryreadbookflags } from 'zss/memory/bookoperations'
@@ -105,14 +111,14 @@ export function splitboardexport(
 }
 
 export function buildzedcafecodepagefiles(
-  bookid: string,
+  book: BOOK,
   page: CODE_PAGE,
 ): WANIX_ZED_CAFE_EXPORT_FILE[] {
   const pagejson = memoryexportcodepageasjson(page)
   if (pagejson === undefined) {
     return []
   }
-  const prefix = `books/${bookid}/pages/${page.id}`
+  const prefix = readzedcafepageprefix(book, page)
   const files: WANIX_ZED_CAFE_EXPORT_FILE[] = []
 
   files.push({
@@ -175,25 +181,33 @@ export function buildzedcafeexportfiles(): WANIX_ZED_CAFE_EXPORT_FILE[] {
   for (let i = 0; i < books.length; ++i) {
     const book = books[i]!
     files.push({
-      path: `books/${book.id}/stats.json`,
+      path: readzedcafebookstatspath(book),
       bytes: encodejson(buildzedcafebookmeta(book)),
     })
     for (let j = 0; j < book.pages.length; ++j) {
-      const pagefiles = buildzedcafecodepagefiles(book.id, book.pages[j]!)
+      const pagefiles = buildzedcafecodepagefiles(book, book.pages[j]!)
       for (let k = 0; k < pagefiles.length; ++k) {
         files.push(pagefiles[k]!)
       }
     }
   }
 
+  assertzedcafeexportvalid(files)
   return files
 }
 
 export function runzedcafeexport(device: DEVICELIKE, player: string) {
-  const payload: WANIX_ZED_CAFE_EXPORT_PAYLOAD = {
-    files: buildzedcafeexportfiles(),
+  const files = buildzedcafeexportfiles()
+  const check = validatezedcafeexportpaths(files)
+  if (!check.ok) {
+    apilog(
+      device,
+      player,
+      `zed-cafe export: invalid tree — ${check.errors[0] ?? 'unknown'}`,
+    )
+    return
   }
-  wanixexportstate(device, player, payload)
+  wanixexportstate(device, player, { files })
 }
 
 export function schedulewanixexport(device: DEVICELIKE, player: string) {

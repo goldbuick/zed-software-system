@@ -102,8 +102,7 @@ describe('wanixstateimport', () => {
 
     const page1 = assemblecodepagejson(
       new Map(exported.map((file) => [file.path, file.bytes])),
-      'book1',
-      'page1',
+      'books/demo-book1/pages/demo-page1',
     )
     expect(page1?.code).toBe('@board demo')
     expect(page1?.board).toEqual({
@@ -114,8 +113,7 @@ describe('wanixstateimport', () => {
 
     const page2 = assemblecodepagejson(
       new Map(exported.map((file) => [file.path, file.bytes])),
-      'book1',
-      'page2',
+      'books/demo-book1/pages/player-page2',
     )
     expect(page2?.object).toEqual({ kind: 'player', char: 2 })
   })

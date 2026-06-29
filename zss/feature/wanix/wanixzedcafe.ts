@@ -1,6 +1,8 @@
 import type { DEVICELIKE } from 'zss/device/api'
 import { apilog, wanixrequestzedcafeexport } from 'zss/device/api'
 import { iswanixspaceactive, putwanixfile } from 'zss/feature/wanix/wanixhost'
+import { haswanixvms } from 'zss/feature/wanix/wanixsession'
+import { validatezedcafeexportpaths } from 'zss/feature/wanix/zedcafetreeschema'
 import type { WANIX_ZED_CAFE_EXPORT_FILE } from 'zss/feature/wanix/wanixstateexport'
 import type { WanixZedCafeGuestFile } from 'zss/feature/wanix/wanixiframechildtypes'
 import {
@@ -49,7 +51,11 @@ function bytestobase64(bytes: Uint8Array): string {
 
 export function encodezedcafeinboxjson(
   files: WANIX_ZED_CAFE_EXPORT_FILE[],
-): Uint8Array {
+): Uint8Array | null {
+  const check = validatezedcafeexportpaths(files)
+  if (!check.ok) {
+    return null
+  }
   const payload = {
     files: files.map((file) => ({
       path: file.path,
@@ -112,8 +118,39 @@ export function clearwanixzedcafependingexport() {
   pendingexport = false
 }
 
-async function writzedcafeinbox(files: WANIX_ZED_CAFE_EXPORT_FILE[]) {
-  await putwanixfile(WANIX_ZED_CAFE_INBOX_RAMFS, encodezedcafeinboxjson(files))
+function guardzedcafeexportpush(
+  device: DEVICELIKE,
+  player: string,
+  files: WANIX_ZED_CAFE_EXPORT_FILE[],
+): boolean {
+  const check = validatezedcafeexportpaths(files)
+  if (!check.ok) {
+    apilog(
+      device,
+      player,
+      `zed-cafe export: invalid tree — ${check.errors[0] ?? 'unknown'}`,
+    )
+    return false
+  }
+  return true
+}
+
+async function writzedcafeinbox(
+  device: DEVICELIKE,
+  player: string,
+  files: WANIX_ZED_CAFE_EXPORT_FILE[],
+): Promise<boolean> {
+  const encoded = encodezedcafeinboxjson(files)
+  if (!encoded) {
+    apilog(
+      device,
+      player,
+      'zed-cafe export: invalid tree — inbox encode skipped',
+    )
+    return false
+  }
+  await putwanixfile(WANIX_ZED_CAFE_INBOX_RAMFS, encoded)
+  return true
 }
 
 async function readexporttree(): Promise<WANIX_ZED_CAFE_EXPORT_FILE[]> {
@@ -122,23 +159,34 @@ async function readexporttree(): Promise<WANIX_ZED_CAFE_EXPORT_FILE[]> {
 }
 
 async function pushzedcafeexportfiles(
+  device: DEVICELIKE,
+  player: string,
   taskrid: string,
   files: WANIX_ZED_CAFE_EXPORT_FILE[],
-) {
+): Promise<boolean> {
+  if (!guardzedcafeexportpush(device, player, files)) {
+    return false
+  }
   const base = readwanixzedcafeexportsrc(taskrid)
   for (let i = 0; i < files.length; ++i) {
     const file = files[i]!
     await putwanixfile(`${base}/${file.path}`, file.bytes)
   }
+  return true
 }
 
 export async function synczedcafeexportinbox(
+  device: DEVICELIKE,
+  player: string,
   files: WANIX_ZED_CAFE_EXPORT_FILE[],
-): Promise<void> {
-  await writzedcafeinbox(files)
+): Promise<boolean> {
+  if (!(await writzedcafeinbox(device, player, files))) {
+    return false
+  }
   const restart = readwanixzedcaferestart() + 1
   setwanixzedcaferestart(restart)
   await iframechildsynczedcafe(WANIX_ZED_CAFE_WASM_CMD, restart)
+  return true
 }
 
 export async function finalizewanixzedcafeaftervmboot(
@@ -172,7 +220,9 @@ async function bootzedcafeexport(
   player: string,
   files: WANIX_ZED_CAFE_EXPORT_FILE[],
 ): Promise<string | null> {
-  await synczedcafeexportinbox(files)
+  if (!(await synczedcafeexportinbox(device, player, files))) {
+    return null
+  }
   await yieldframe()
   const taskrid = await iframechildwaitzedcafeready()
   if (!taskrid) {
@@ -320,7 +370,9 @@ export async function wanixhandleexportstate(
     if (treefp !== readlasthostpushfingerprint()) {
       await runzedcafeimport(device, player, tree)
     }
-    await pushzedcafeexportfiles(taskrid, files)
+    if (!haswanixvms()) {
+      await pushzedcafeexportfiles(device, player, taskrid, files)
+    }
     setlasthostpushfingerprint(fingerprintzedcafeexportfiles(files))
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err)

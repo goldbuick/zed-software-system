@@ -115,7 +115,9 @@ describe('wanixstateexport', () => {
     const files = buildzedcafeexportfiles()
     expect(files[0]?.path).toBe('stats.json')
 
-    const bookmeta = files.find((file) => file.path === 'books/book1/stats.json')
+    const bookmeta = files.find(
+      (file) => file.path === 'books/demo-book1/stats.json',
+    )
     expect(bookmeta).toBeDefined()
     const bookjson = decodefilebytes(bookmeta!.bytes) as {
       pages: { id: string; type: string }[]
@@ -128,21 +130,34 @@ describe('wanixstateexport', () => {
     expect(bookjson.code).toBeUndefined()
 
     expect(
-      files.some((file) => file.path === 'books/book1/pages/page1/stats.json'),
+      files.some(
+        (file) => file.path === 'books/demo-book1/pages/demo-page1/stats.json',
+      ),
     ).toBe(true)
     expect(
-      files.some((file) => file.path === 'books/book1/pages/page1/board/terrain.json'),
+      files.some(
+        (file) =>
+          file.path === 'books/demo-book1/pages/demo-page1/board/terrain.json',
+      ),
     ).toBe(true)
     expect(
-      files.some((file) => file.path === 'books/book1/pages/page1/board/stats.json'),
+      files.some(
+        (file) =>
+          file.path === 'books/demo-book1/pages/demo-page1/board/stats.json',
+      ),
     ).toBe(true)
     expect(
-      files.some((file) => file.path === 'books/book1/pages/page2/object/element.json'),
+      files.some(
+        (file) =>
+          file.path === 'books/demo-book1/pages/player-page2/object/element.json',
+      ),
     ).toBe(true)
     expect(
-      files.some((file) => file.path === 'books/book1/pages/page1.json'),
+      files.some((file) => file.path === 'books/demo-book1/pages/demo-page1.json'),
     ).toBe(false)
-    expect(files.some((file) => file.path === 'books/book1/book.json')).toBe(false)
+    expect(files.some((file) => file.path === 'books/demo-book1/book.json')).toBe(
+      false,
+    )
   })
 
   it('buildzedcafebookmeta indexes pages without code bodies', () => {
@@ -161,15 +176,24 @@ describe('wanixstateexport', () => {
   })
 
   it('buildzedcafecodepagefiles emits page stats and object payload', () => {
+    const book = {
+      id: 'book1',
+      name: 'demo',
+      token: 'tok',
+      timestamp: 1,
+      activelist: [],
+      pages: [],
+      flags: {},
+    } as BOOK
     const page = {
       id: 'page2',
       code: '@object gem',
       object: { kind: 'gem', char: 4 },
     } as CODE_PAGE & { object: Record<string, unknown> }
-    const files = buildzedcafecodepagefiles('book1', page)
+    const files = buildzedcafecodepagefiles(book, page)
     expect(files.map((file) => file.path)).toEqual([
-      'books/book1/pages/page2/stats.json',
-      'books/book1/pages/page2/object/element.json',
+      'books/demo-book1/pages/gem-page2/stats.json',
+      'books/demo-book1/pages/gem-page2/object/element.json',
     ])
   })
 

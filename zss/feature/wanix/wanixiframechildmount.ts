@@ -206,6 +206,12 @@ export async function waitforwanixroot(
   return system.root ?? readroot()
 }
 
+export function iswanixzedcafevmbootexport(
+  state: Pick<WanixIframeHostState, 'phase' | 'bootstage'>,
+): boolean {
+  return state.phase === 'vm-active' && state.bootstage === 'boot'
+}
+
 /** Poll #task/<rid>/export until gojs has written stats.json. */
 export async function waitzedcafeexportready(
   root: WanixRoot,
@@ -251,6 +257,7 @@ export async function readzedcafeexportprobe(
   taskrid: string | null,
   zedcafeready: boolean,
   wasm_cmd: string | null,
+  vmbootexport = false,
 ): Promise<WanixZedCafeExportProbe> {
   const probe: WanixZedCafeExportProbe = {
     taskrid,
@@ -273,21 +280,27 @@ export async function readzedcafeexportprobe(
     probe.inbox_ramfs_bytes =
       err instanceof Error ? err.message : String(err)
   }
-  if (!taskrid) {
-    return probe
+  if (taskrid) {
+    try {
+      const taskinbox = await root.readFile(WANIX_ZED_CAFE_INBOX_RAMFS)
+      probe.inbox_task_bytes =
+        taskinbox instanceof Uint8Array ? taskinbox.length : String(taskinbox).length
+    } catch (err) {
+      probe.inbox_task_bytes =
+        err instanceof Error ? err.message : String(err)
+    }
   }
-  try {
-    const taskinbox = await root.readFile(WANIX_ZED_CAFE_INBOX_RAMFS)
-    probe.inbox_task_bytes =
-      taskinbox instanceof Uint8Array ? taskinbox.length : String(taskinbox).length
-  } catch (err) {
-    probe.inbox_task_bytes =
-      err instanceof Error ? err.message : String(err)
-  }
-  try {
-    probe.export_listing = await root.readDir(readwanixzedcafeexportsrc(taskrid))
-  } catch (err) {
-    probe.export_error = err instanceof Error ? err.message : String(err)
+  const exportsrc = vmbootexport
+    ? WANIX_ZED_CAFE_EXPORT_RAMFS
+    : taskrid
+      ? readwanixzedcafeexportsrc(taskrid)
+      : null
+  if (exportsrc) {
+    try {
+      probe.export_listing = await root.readDir(exportsrc)
+    } catch (err) {
+      probe.export_error = err instanceof Error ? err.message : String(err)
+    }
   }
   return probe
 }

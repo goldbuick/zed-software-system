@@ -1,6 +1,8 @@
 import { createdeferred, replychildrpc, type Deferred } from 'zss/feature/wanix/wanixifracerpc'
 import {
   collectzedcafeexportfiles,
+  collectzedcafeexportramfsfiles,
+  iswanixzedcafevmbootexport,
   readzedcafeexportprobe,
   waitzedcafeexportready,
   WANIX_BIND_MOUNT_TIMEOUT_MS,
@@ -546,8 +548,17 @@ export function createwanixiframechildcontroller() {
         case 'readzedcafeexportfiles': {
           const wanixroot = await waitforcontrollerroot()
           const current = getstate()
+          if (!wanixroot) {
+            replychildrpc(source, data.id, { result: [] })
+            return
+          }
+          if (iswanixzedcafevmbootexport(current)) {
+            const files = await collectzedcafeexportramfsfiles(wanixroot)
+            replychildrpc(source, data.id, { result: files })
+            return
+          }
           const taskrid = readzedcafetaskrid(current)
-          if (!wanixroot || !taskrid) {
+          if (!taskrid) {
             replychildrpc(source, data.id, { result: [] })
             return
           }
@@ -571,6 +582,7 @@ export function createwanixiframechildcontroller() {
             taskrid,
             current.zedcafe?.ready ?? false,
             current.zedcafe?.cmd ?? null,
+            iswanixzedcafevmbootexport(current),
           )
           replychildrpc(source, data.id, { result: probe })
           return
