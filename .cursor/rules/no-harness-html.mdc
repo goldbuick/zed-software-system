@@ -12,14 +12,14 @@ Do not add committed test harness HTML pages. Browser debugging and parity use *
 - New files under `ops/fixtures/harness/` (directory removed)
 - `harnesshtmlmiddleware` or serving `*.html` test fixtures from `ops/fixtures/`
 - Standalone debug HTML outside `cafe/` (e.g. `ops/fixtures/**/**.html` for Playwright hosts)
-- New Wanix minimal `<wanix-system>` pages for validators — use full app (`https://localhost:7777/`) + headed Playwright handlers in `tasks/groups/wanix.ts`
+- New Wanix minimal `<wanix-system>` pages for validators — use full app (`https://localhost:7777/`) + headed Playwright handlers in `tasks/groups/wanix.ts` (helpers in `tasks/lib/wanix/playwright-vm.ts`)
 
 ## Required instead
 
 | Use case | Approach |
 |----------|----------|
 | Daisy/synth offline parity | Headed Playwright → `GET /parity-host` (inline COEP blank page) → `page.evaluate` + `ops/lib/daisy-parity/*-runner.ts` |
-| Wanix / zed-cafe gates | Headed Playwright against full app — `yarn task run wanix:*:validate` |
+| Wanix / zed-cafe gates | Headed Playwright against full app — `yarn task run wanix:*:validate` (helpers: `tasks/lib/wanix/playwright-vm.ts`) |
 | Manual VM bisect | `wanix:vm:boot:validate`, `wanix:vm:zed-cafe:validate` (not harness URLs) |
 
 Shared helpers: [`tasks/lib/parity/parity-playwright.ts`](../../tasks/lib/parity/parity-playwright.ts) (`launchparitybrowser`, `parityhosturl`), [`tasks/lib/parity/harness-middleware.ts`](../../tasks/lib/parity/harness-middleware.ts) (`parityblankhostmiddleware` only).

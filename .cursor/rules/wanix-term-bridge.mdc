@@ -49,7 +49,7 @@ See `ops/fixtures/wanix/README.md`. Wanix debugging: headed Playwright validator
 
 ✅ GOOD — drop termbridge.wasm, tile opens on first cell snapshot with banner text
 ✅ GOOD — trace sendwanixterminput + iframe spawn order in wanixtermiframehost.ts
-✅ GOOD — extend headed Playwright validators in `tasks/groups/wanix.ts`
+✅ GOOD — extend headed Playwright validators in `tasks/groups/wanix.ts` (helpers in `tasks/lib/wanix/playwright-vm.ts`)
 ```
 
 If interactive behavior is wrong, debug **`wanixtermiframehost.ts`** attach-on-cells, iframe sizing, and `iswanixtermactive()` — not WASI fd 0.

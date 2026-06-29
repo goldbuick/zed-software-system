@@ -1,6 +1,6 @@
 ---
 description: Task manifest conventions (citty CLI)
-globs: tasks/**/*,package.json
+globs: tasks/**/*,package.json,ops/jest.config.ts
 alwaysApply: true
 ---
 
@@ -33,13 +33,58 @@ yarn task app dev           # nested shorthand for run app:dev
 | `deploy` | `deploy:docker:build` |
 | `ci` | `ci:pages:copy-404` |
 
+## Layout (canonical)
+
+| Path | Role |
+|------|------|
+| `tasks/groups/<subject>.ts` | `TaskDef` registry + `handler()` implementations |
+| `tasks/lib/` | Task-runner infrastructure (parity, Playwright, argv, lazy loaders) |
+| `tasks/shellutil.ts` | Spawn, env merge, Jest, `checkrg` |
+| `tasks/registry.ts` | Imports **groups only** — not `tasks/implementations/` |
+| `ops/lib/` | Domain libs shared by tasks **and** Jest (corpus walk, sanitize, fixturepaths) |
+
+`tasks/implementations/` is **legacy** — do not add or extend files there. New work goes in `tasks/groups/` + `tasks/lib/` or `ops/lib/`.
+
+## Registry load safety
+
+`yarn task list` imports every `tasks/groups/*.ts` file at startup. A top-level import that pulls `zss/*` (e.g. `zss/mapping/guid` → `nanoid-dictionary`) can break the registry on Node 24 **before any handler runs**.
+
+### Prohibited at module top level in group files
+
+- Static `import` from `zss/*` or `ops/*` that transitively loads the app graph
+- Static imports of heavy optional deps (`coolregionsbowbook`, screenshot rasterize stack, etc.)
+
+### Required instead
+
+- **`handler(async (ctx) => { const x = await import('…') })`** inside the handler
+- **Lazy loaders** in `tasks/lib/` when many handlers share the same dynamic imports:
+  - `loaddaisyparityruntime()` — [`tasks/lib/daisy/parity-runtime.ts`](../../tasks/lib/daisy/parity-runtime.ts)
+  - `loadscreenshotdeps()` — inline in `content.ts` (screenshot-only)
+
+After editing any group file, run **`yarn task list`** — cheapest integration test for registry safety.
+
 ## Adding a task
 
 1. Add a `TaskDef` in `tasks/groups/<subject>.ts` (use `def()` / `tasksonly()` from `tasks/helpers.ts`).
-2. Implement leaf tasks as `handler()` functions in the same `tasks/groups/<subject>.ts` file — do not add new `scripts/` entrypoints.
-3. Composite pipelines: `tasks/pipelines.ts` (`parityfull`, etc.).
-4. Run `yarn task docs` and commit `ops/docs/tasks.md`.
-5. Document in the task `description` field; link narrative context in domain READMEs.
+2. Implement leaf tasks as `handler()` functions in the same file — do not add `scripts/` entrypoints or `tasks/implementations/` files.
+3. Extract repeated glue to `tasks/lib/` (infrastructure) or `ops/lib/` (domain shared with tests).
+4. Composite pipelines: `tasks/pipelines.ts` (`parityfull`, etc.).
+5. Run `yarn task docs` and commit `ops/docs/tasks.md`.
+6. Document in the task `description` field; link narrative context in domain READMEs.
+
+## Shared helpers (prefer over local copies)
+
+| Helper | Module | Use for |
+|--------|--------|---------|
+| `taskenv`, `requiretaskenv`, `spawntask` | `tasks/shellutil.ts` | spawn + env merge |
+| `runjest(ctx, paths, extra?, { env? })` | `tasks/shellutil.ts` | Jest from task handlers |
+| `checkrg(label, pattern, cwd)` | `tasks/shellutil.ts` | import-hygiene `rg` gates |
+| `readlimit`, `readforce`, `hasflag` | `tasks/lib/cliargv.ts` | `limit` / `--force` argv parsing |
+| `loaddaisyparityruntime()` | `tasks/lib/daisy/parity-runtime.ts` | Daisy Playwright + vite parity handlers |
+| `withscripttimeout` | `tasks/lib/parity/parity-timeouts.ts` | **Signature:** `(label, ms, fn)` — not `(ms, label, fn)` |
+| Wanix Playwright hub | `tasks/lib/wanix/playwright-vm.ts` | VM validators, apilog capture, timeouts |
+
+Wanix validators live in `tasks/groups/wanix.ts` but **import** shared helpers from `tasks/lib/wanix/playwright-vm.ts` — do not duplicate `runwithscripttimeout` or iframe helpers.
 
 ## Composite tasks
 
@@ -48,6 +93,45 @@ yarn task app dev           # nested shorthand for run app:dev
 - `run: handler(fn)` — preferred for leaf tasks.
 - `run: exec([...])` or `shell('...')` — only for one-off external tools (vite, jest).
 
+## Jest + tasks imports
+
+`tsconfig` maps `tasks/*`, but Jest needs an explicit mapper in [`ops/jest.config.ts`](../../ops/jest.config.ts):
+
+```typescript
+'^tasks/(.*)$': '<rootDir>/tasks/$1',
+```
+
+If a test imports from `tasks/groups/*.ts` or `tasks/lib/*` and fails with "Cannot find module 'tasks/…'", add or verify this mapping — do not switch tests to relative paths only.
+
+## Mechanical refactors
+
+When 10+ handlers share identical dynamic-import blocks (e.g. daisy parity handlers):
+
+1. Add a lazy loader in `tasks/lib/`.
+2. Use a **one-shot script in `/tmp`** to rewrite the group file — do not commit `.mjs` build scaffolding to the repo.
+3. Re-run `yarn task list` and targeted Jest after the transform.
+4. Strip dead imports in the same pass (`fileURLToPath` was imported in many handlers but never called).
+
+## Inlining checklist (script → group handler)
+
+When inlining a former `.mjs` / `.sh` script into a group handler:
+
+| Check | Correct module |
+|-------|----------------|
+| `createHash` | `node:crypto` — not `node:fs` |
+| `inflateSync` | `node:zlib` — not `node:fs` |
+| Node built-ins | Use correct `node:*` subpath |
+| Registry safety | No top-level `zss/*` that pulls nanoid-dictionary |
+| Timeout helper | `withscripttimeout(label, ms, fn)` from parity-timeouts |
+
 ## Tags
 
 `ci`, `dev`, `deploy`, `slow`, `calibrate` — filter with `yarn task list --tag ci`.
+
+## Verification after task edits
+
+```bash
+yarn task list
+yarn task explain <task-id>    # smoke one changed task
+yarn jest <relevant-test> --config ops/jest.config.ts --no-coverage
+```

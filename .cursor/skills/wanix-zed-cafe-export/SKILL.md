@@ -66,7 +66,7 @@ Ready probe: **`stats.json`** at `#task/<rid>/export/stats.json` (poll via `wait
 
 ## Playwright gates (local, headed, dev server required)
 
-Shared helpers: [`tasks/groups/wanix.ts`](../../../tasks/groups/wanix.ts)
+Shared helpers: [`tasks/lib/wanix/playwright-vm.ts`](../../../tasks/lib/wanix/playwright-vm.ts) — `withscripttimeout(label, ms, fn)`, `WANIX_VM_VALIDATE_TIMEOUTS`, apilog capture, VM frame helpers. Task defs: [`tasks/groups/wanix.ts`](../../../tasks/groups/wanix.ts).
 
 | Task | Role |
 |------|------|

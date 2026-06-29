@@ -6,6 +6,7 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { def, exec, handler, jestexec, shell, tasksonly } from '../helpers'
 import { parityfull } from '../pipelines'
 import { runclangformat } from './native'
+import { loaddaisyparityruntime } from 'tasks/lib/daisy/parity-runtime'
 import type { TaskContext, TaskDef } from '../types'
 
 // --- bundle-daisy-processor.ts ---
@@ -623,13 +624,17 @@ async function rundaisycalibratesynthenvparity(ctx: TaskContext): Promise<number
 // --- regen-adsrenvcurve-tone-fixture.ts ---
 async function rundaisyregenadsrenvcurvetonefixture(ctx: TaskContext): Promise<number> {
   try {
-    const { writeFileSync } = await import('node:fs')
-    const path = (await import('node:path')).default
-    const { fileURLToPath } = await import('node:url')
-    const { launchparitybrowser,
-  parityhosturl, } = await import('tasks/lib/parity/parity-playwright.ts')
-    const { startparityvite,
-  stopparityvite, } = await import('tasks/lib/parity/parity-vite-server.ts')
+    const {
+      path,
+      readFileSync,
+      writeFileSync,
+      launchparitybrowser,
+      parityhosturl,
+      startparityvite,
+      stopparityvite,
+      withscripttimeout,
+      RENDERS_FIXTURES_DIR,
+    } = await loaddaisyparityruntime()
     const ROOT = ctx.root
     const PROJECT = ctx.root
     const OUT = path.join(
@@ -679,13 +684,18 @@ async function rundaisyregenadsrenvcurvetonefixture(ctx: TaskContext): Promise<n
 // --- regen-daisy-drum-parity-fixtures.ts ---
 async function rundaisyregendaisydrumparityfixtures(ctx: TaskContext): Promise<number> {
   try {
-    const { readFileSync, writeFileSync } = await import('node:fs')
-    const path = (await import('node:path')).default
-    const { fileURLToPath } = await import('node:url')
+    const {
+      path,
+      readFileSync,
+      writeFileSync,
+      launchparitybrowser,
+      parityhosturl,
+      startparityvite,
+      stopparityvite,
+      withscripttimeout,
+      RENDERS_FIXTURES_DIR,
+    } = await loaddaisyparityruntime()
     const { DRUM_PARITY_PATCHES } = await import('ops/lib/daisy-parity/paritypatches')
-    const { launchparitybrowser,
-  parityhosturl, } = await import('tasks/lib/parity/parity-playwright.ts')
-    const { startparityvite } = await import('tasks/lib/parity/parity-vite-server.ts')
     const ROOT = ctx.root
     const PROJECT = ctx.root
     const OUT = path.join(
@@ -779,14 +789,18 @@ async function rundaisyregendaisydrumparityfixtures(ctx: TaskContext): Promise<n
 // --- regen-env-adsr-parity-fixtures.ts ---
 async function rundaisyregenenvadsrparityfixtures(ctx: TaskContext): Promise<number> {
   try {
-    const { readFileSync, writeFileSync } = await import('node:fs')
-    const path = (await import('node:path')).default
-    const { fileURLToPath } = await import('node:url')
+    const {
+      path,
+      readFileSync,
+      writeFileSync,
+      launchparitybrowser,
+      parityhosturl,
+      startparityvite,
+      stopparityvite,
+      withscripttimeout,
+      RENDERS_FIXTURES_DIR,
+    } = await loaddaisyparityruntime()
     const { ENVELOPE_ADSR_PARITY_PATCHES } = await import('ops/lib/daisy-parity/paritypatches')
-    const { launchparitybrowser,
-  parityhosturl, } = await import('tasks/lib/parity/parity-playwright.ts')
-    const { startparityvite,
-  stopparityvite, } = await import('tasks/lib/parity/parity-vite-server.ts')
     /**
      * Regen Tone metrics for env-adsr-sustain / env-adsr-retrigger only.
      */
@@ -866,13 +880,17 @@ async function rundaisyregenenvadsrparityfixtures(ctx: TaskContext): Promise<num
 // --- regen-sos-voice-fixtures.ts ---
 async function rundaisyregensosvoicefixtures(ctx: TaskContext): Promise<number> {
   try {
-    const { readFileSync, writeFileSync } = await import('node:fs')
-    const path = (await import('node:path')).default
-    const { fileURLToPath } = await import('node:url')
-    const { launchparitybrowser,
-  parityhosturl, } = await import('tasks/lib/parity/parity-playwright.ts')
-    const { startparityvite,
-  stopparityvite, } = await import('tasks/lib/parity/parity-vite-server.ts')
+    const {
+      path,
+      readFileSync,
+      writeFileSync,
+      launchparitybrowser,
+      parityhosturl,
+      startparityvite,
+      stopparityvite,
+      withscripttimeout,
+      RENDERS_FIXTURES_DIR,
+    } = await loaddaisyparityruntime()
     const { SOS_VOICE_PATCHES } = await import('zss/feature/synth/backend/daisy/sosvoicepatches.ts')
     const ROOT = ctx.root
     const PROJECT = ctx.root
@@ -937,17 +955,22 @@ async function rundaisyregensosvoicefixtures(ctx: TaskContext): Promise<number> 
 // --- regen-synth-parity-fixtures.ts ---
 async function rundaisyregensynthparityfixtures(ctx: TaskContext): Promise<number> {
   try {
-    const { readFileSync, writeFileSync } = await import('node:fs')
-    const path = (await import('node:path')).default
-    const { fileURLToPath } = await import('node:url')
+    const {
+      path,
+      readFileSync,
+      writeFileSync,
+      launchparitybrowser,
+      parityhosturl,
+      startparityvite,
+      stopparityvite,
+      withscripttimeout,
+      RENDERS_FIXTURES_DIR,
+    } = await loaddaisyparityruntime()
     const { DRUM_PARITY_PATCHES,
   ENVELOPE_ADSR_PARITY_PATCHES,
   FX_PARITY_PATCHES,
   MAIN_DYNAMICS_PARITY_PATCHES,
   WASM_PARITY_PATCHES, } = await import('ops/lib/daisy-parity/paritypatches')
-    const { launchparitybrowser,
-  parityhosturl, } = await import('tasks/lib/parity/parity-playwright.ts')
-    const { startparityvite } = await import('tasks/lib/parity/parity-vite-server.ts')
     const ROOT = ctx.root
     const PROJECT = ctx.root
     const USE_TONE = ctx.args.includes('--tone')
@@ -1224,18 +1247,18 @@ async function rundaisyrundaisyregression(ctx: TaskContext): Promise<number> {
 // --- run-env-parity.ts ---
 async function rundaisyrunenvparity(ctx: TaskContext): Promise<number> {
   try {
-    const fs = (await import('node:fs')).default
-    const path = (await import('node:path')).default
-    const { fileURLToPath } = await import('node:url')
+    const {
+      path,
+      readFileSync,
+      writeFileSync,
+      launchparitybrowser,
+      parityhosturl,
+      startparityvite,
+      stopparityvite,
+      withscripttimeout,
+      RENDERS_FIXTURES_DIR,
+    } = await loaddaisyparityruntime()
     const { ENV_PARITY_SCENARIOS } = await import('ops/lib/daisy-parity/envparityscenario')
-    const { RENDERS_FIXTURES_DIR } = await import('ops/lib/fixturepaths')
-    const { launchparitybrowser,
-  parityhosturl, } = await import('tasks/lib/parity/parity-playwright.ts')
-    const { PARITY_RENDER_SCRIPT_TIMEOUT_MS,
-  PLAYWRIGHT_SCENARIO_TIMEOUT_MS,
-  withscripttimeout, } = await import('tasks/lib/parity/parity-timeouts.ts')
-    const { startparityvite,
-  stopparityvite, } = await import('tasks/lib/parity/parity-vite-server.ts')
     /**
      * Tone vs Daisy env parity offline renders.
      *
@@ -1418,11 +1441,17 @@ async function rundaisyrunenvparity(ctx: TaskContext): Promise<number> {
 // --- run-fx-bus-metrics.ts ---
 async function rundaisyrunfxbusmetrics(ctx: TaskContext): Promise<number> {
   try {
-    const path = (await import('node:path')).default
-    const { fileURLToPath } = await import('node:url')
-    const { launchparitybrowser,
-  parityhosturl, } = await import('tasks/lib/parity/parity-playwright.ts')
-    const { startparityvite } = await import('tasks/lib/parity/parity-vite-server.ts')
+    const {
+      path,
+      readFileSync,
+      writeFileSync,
+      launchparitybrowser,
+      parityhosturl,
+      startparityvite,
+      stopparityvite,
+      withscripttimeout,
+      RENDERS_FIXTURES_DIR,
+    } = await loaddaisyparityruntime()
     const { computefxbusmetrics,
   formatfxbusmetricsline,
   isfxbussoloscenario, } = await import('zss/feature/synth/backend/daisy/fxbusmetrics')
@@ -1592,11 +1621,17 @@ async function rundaisyrunlevelissuesongcompare(ctx: TaskContext): Promise<numbe
 // --- run-level-stability.ts ---
 async function rundaisyrunlevelstability(ctx: TaskContext): Promise<number> {
   try {
-    const path = (await import('node:path')).default
-    const { fileURLToPath } = await import('node:url')
-    const { launchparitybrowser,
-  parityhosturl, } = await import('tasks/lib/parity/parity-playwright.ts')
-    const { startparityvite } = await import('tasks/lib/parity/parity-vite-server.ts')
+    const {
+      path,
+      readFileSync,
+      writeFileSync,
+      launchparitybrowser,
+      parityhosturl,
+      startparityvite,
+      stopparityvite,
+      withscripttimeout,
+      RENDERS_FIXTURES_DIR,
+    } = await loaddaisyparityruntime()
     const { computefxbusmetrics,
   formatfxbusmetricsline,
   isfxbussoloscenario, } = await import('zss/feature/synth/backend/daisy/fxbusmetrics')
@@ -2035,14 +2070,17 @@ async function rundaisyrunnotepopgates(ctx: TaskContext): Promise<number> {
 // --- run-notepop-render.ts ---
 async function rundaisyrunnotepoprender(ctx: TaskContext): Promise<number> {
   try {
-    const fs = (await import('node:fs')).default
-    const path = (await import('node:path')).default
-    const { fileURLToPath } = await import('node:url')
-    const { launchparitybrowser,
-  parityhosturl, } = await import('tasks/lib/parity/parity-playwright.ts')
-    const { RENDERS_FIXTURES_DIR } = await import('ops/lib/fixturepaths')
-    const { startparityvite,
-  stopparityvite, } = await import('tasks/lib/parity/parity-vite-server.ts')
+    const {
+      path,
+      readFileSync,
+      writeFileSync,
+      launchparitybrowser,
+      parityhosturl,
+      startparityvite,
+      stopparityvite,
+      withscripttimeout,
+      RENDERS_FIXTURES_DIR,
+    } = await loaddaisyparityruntime()
     const { notepopmeta,
   notepopscenario, } = await import('zss/feature/synth/backend/daisy/notepopscenario.ts')
     /**
@@ -2252,14 +2290,17 @@ async function rundaisyrunpitchstabilitygates(ctx: TaskContext): Promise<number>
 // --- run-pitch-stability.ts ---
 async function rundaisyrunpitchstability(ctx: TaskContext): Promise<number> {
   try {
-    const fs = (await import('node:fs')).default
-    const path = (await import('node:path')).default
-    const { fileURLToPath } = await import('node:url')
-    const { launchparitybrowser,
-  parityhosturl, } = await import('tasks/lib/parity/parity-playwright.ts')
-    const { RENDERS_FIXTURES_DIR } = await import('ops/lib/fixturepaths')
-    const { startparityvite,
-  stopparityvite, } = await import('tasks/lib/parity/parity-vite-server.ts')
+    const {
+      path,
+      readFileSync,
+      writeFileSync,
+      launchparitybrowser,
+      parityhosturl,
+      startparityvite,
+      stopparityvite,
+      withscripttimeout,
+      RENDERS_FIXTURES_DIR,
+    } = await loaddaisyparityruntime()
     const { analyzepitchstability,
   evalpitchstabilitygate,
   formatpitchstabilityreport, } = await import('zss/feature/synth/backend/daisy/pitchstability.ts')
@@ -2532,14 +2573,17 @@ async function rundaisyrunplaydrumbalancegates(ctx: TaskContext): Promise<number
 // --- run-play-drum-balance-render.ts ---
 async function rundaisyrunplaydrumbalancerender(ctx: TaskContext): Promise<number> {
   try {
-    const fs = (await import('node:fs')).default
-    const path = (await import('node:path')).default
-    const { fileURLToPath } = await import('node:url')
-    const { launchparitybrowser,
-  parityhosturl, } = await import('tasks/lib/parity/parity-playwright.ts')
-    const { RENDERS_FIXTURES_DIR } = await import('ops/lib/fixturepaths')
-    const { startparityvite,
-  stopparityvite, } = await import('tasks/lib/parity/parity-vite-server.ts')
+    const {
+      path,
+      readFileSync,
+      writeFileSync,
+      launchparitybrowser,
+      parityhosturl,
+      startparityvite,
+      stopparityvite,
+      withscripttimeout,
+      RENDERS_FIXTURES_DIR,
+    } = await loaddaisyparityruntime()
     const { analyzeplaydrumbalance,
   evalplaydrumbalancegate,
   formatplaydrumbalancereport, } = await import('zss/feature/synth/backend/daisy/playdrumbalance.ts')
@@ -2777,11 +2821,17 @@ async function rundaisyrunsidechainparitygates(ctx: TaskContext): Promise<number
 // --- run-sidechain-parity.ts ---
 async function rundaisyrunsidechainparity(ctx: TaskContext): Promise<number> {
   try {
-    const fs = (await import('node:fs')).default
-    const path = (await import('node:path')).default
-    const { fileURLToPath } = await import('node:url')
-    const { launchparitybrowser,
-  parityhosturl, } = await import('tasks/lib/parity/parity-playwright.ts')
+    const {
+      path,
+      readFileSync,
+      writeFileSync,
+      launchparitybrowser,
+      parityhosturl,
+      startparityvite,
+      stopparityvite,
+      withscripttimeout,
+      RENDERS_FIXTURES_DIR,
+    } = await loaddaisyparityruntime()
     const { SIDECHAIN_PARITY_PATCH_ID,
   SIDECHAIN_PARITY_RESULT,
   analyzeduckdepth,
@@ -2789,12 +2839,6 @@ async function rundaisyrunsidechainparity(ctx: TaskContext): Promise<number> {
   evalsidechainparitygate,
   formatsidechainparityreport,
   metricsfromsamples, } = await import('ops/lib/daisy-parity/sidechainparity')
-    const { RENDERS_FIXTURES_DIR } = await import('ops/lib/fixturepaths')
-    const { PARITY_RENDER_SCRIPT_TIMEOUT_MS,
-  PLAYWRIGHT_SCENARIO_TIMEOUT_MS,
-  withscripttimeout, } = await import('tasks/lib/parity/parity-timeouts.ts')
-    const { startparityvite,
-  stopparityvite, } = await import('tasks/lib/parity/parity-vite-server.ts')
     const { decodewav } = await import('tasks/lib/parity/parity-wav.ts')
     const { SIDECHAIN_SCENARIO_ID } = await import('zss/feature/synth/backend/daisy/sidechainscenario.ts')
     /**
@@ -2964,14 +3008,17 @@ async function rundaisyrunsidechainparity(ctx: TaskContext): Promise<number> {
 // --- run-sidechain-render.ts ---
 async function rundaisyrunsidechainrender(ctx: TaskContext): Promise<number> {
   try {
-    const fs = (await import('node:fs')).default
-    const path = (await import('node:path')).default
-    const { fileURLToPath } = await import('node:url')
-    const { launchparitybrowser,
-  parityhosturl, } = await import('tasks/lib/parity/parity-playwright.ts')
-    const { RENDERS_FIXTURES_DIR } = await import('ops/lib/fixturepaths')
-    const { startparityvite,
-  stopparityvite, } = await import('tasks/lib/parity/parity-vite-server.ts')
+    const {
+      path,
+      readFileSync,
+      writeFileSync,
+      launchparitybrowser,
+      parityhosturl,
+      startparityvite,
+      stopparityvite,
+      withscripttimeout,
+      RENDERS_FIXTURES_DIR,
+    } = await loaddaisyparityruntime()
     const { SIDECHAIN_SCENARIO_ID,
   sidechainabscenario, } = await import('zss/feature/synth/backend/daisy/sidechainscenario.ts')
     /**
@@ -3121,14 +3168,17 @@ async function rundaisyrunsidechainrender(ctx: TaskContext): Promise<number> {
 // --- run-song-offline-render-tone.ts ---
 async function rundaisyrunsongofflinerendertone(ctx: TaskContext): Promise<number> {
   try {
-    const fs = (await import('node:fs')).default
-    const path = (await import('node:path')).default
-    const { fileURLToPath } = await import('node:url')
-    const { launchparitybrowser,
-  parityhosturl, } = await import('tasks/lib/parity/parity-playwright.ts')
-    const { RENDERS_FIXTURES_DIR } = await import('ops/lib/fixturepaths')
-    const { startparityvite,
-  stopparityvite, } = await import('tasks/lib/parity/parity-vite-server.ts')
+    const {
+      path,
+      readFileSync,
+      writeFileSync,
+      launchparitybrowser,
+      parityhosturl,
+      startparityvite,
+      stopparityvite,
+      withscripttimeout,
+      RENDERS_FIXTURES_DIR,
+    } = await loaddaisyparityruntime()
     const { levelissuescenario,
   levelissuesongmeta, } = await import('zss/feature/synth/backend/daisy/levelissuesong.ts')
     /**
@@ -3227,14 +3277,17 @@ async function rundaisyrunsongofflinerendertone(ctx: TaskContext): Promise<numbe
 // --- run-song-offline-render.ts ---
 async function rundaisyrunsongofflinerender(ctx: TaskContext): Promise<number> {
   try {
-    const fs = (await import('node:fs')).default
-    const path = (await import('node:path')).default
-    const { fileURLToPath } = await import('node:url')
-    const { launchparitybrowser,
-  parityhosturl, } = await import('tasks/lib/parity/parity-playwright.ts')
-    const { RENDERS_FIXTURES_DIR } = await import('ops/lib/fixturepaths')
-    const { startparityvite,
-  stopparityvite, } = await import('tasks/lib/parity/parity-vite-server.ts')
+    const {
+      path,
+      readFileSync,
+      writeFileSync,
+      launchparitybrowser,
+      parityhosturl,
+      startparityvite,
+      stopparityvite,
+      withscripttimeout,
+      RENDERS_FIXTURES_DIR,
+    } = await loaddaisyparityruntime()
     const { levelissuescenario,
   levelissuesongmeta, } = await import('zss/feature/synth/backend/daisy/levelissuesong.ts')
     /**
@@ -3330,14 +3383,18 @@ async function rundaisyrunsongofflinerender(ctx: TaskContext): Promise<number> {
 // --- run-sos-voice-gates.ts ---
 async function rundaisyrunsosvoicegates(ctx: TaskContext): Promise<number> {
   try {
-    const { readFileSync } = await import('node:fs')
-    const path = (await import('node:path')).default
-    const { fileURLToPath } = await import('node:url')
+    const {
+      path,
+      readFileSync,
+      writeFileSync,
+      launchparitybrowser,
+      parityhosturl,
+      startparityvite,
+      stopparityvite,
+      withscripttimeout,
+      RENDERS_FIXTURES_DIR,
+    } = await loaddaisyparityruntime()
     const { evalsosvoicegate } = await import('ops/lib/daisy-parity/sosvoicegate')
-    const { launchparitybrowser,
-  parityhosturl, } = await import('tasks/lib/parity/parity-playwright.ts')
-    const { startparityvite,
-  stopparityvite, } = await import('tasks/lib/parity/parity-vite-server.ts')
     const { SOS_VOICE_PATCHES } = await import('zss/feature/synth/backend/daisy/sosvoicepatches.ts')
     const ROOT = ctx.root
     const PROJECT = ctx.root
@@ -3503,20 +3560,20 @@ async function rundaisyrunsynthenvparitygates(ctx: TaskContext): Promise<number>
 // --- run-synth-env-parity.ts ---
 async function rundaisyrunsynthenvparity(ctx: TaskContext): Promise<number> {
   try {
-    const fs = (await import('node:fs')).default
-    const path = (await import('node:path')).default
-    const { fileURLToPath } = await import('node:url')
-    const { launchparitybrowser,
-  parityhosturl, } = await import('tasks/lib/parity/parity-playwright.ts')
+    const {
+      path,
+      readFileSync,
+      writeFileSync,
+      launchparitybrowser,
+      parityhosturl,
+      startparityvite,
+      stopparityvite,
+      withscripttimeout,
+      RENDERS_FIXTURES_DIR,
+    } = await loaddaisyparityruntime()
     const { evalsynthenvparitygate,
   formatsynthenvparityreport, } = await import('ops/lib/daisy-parity/synthenvparitygate')
     const { SYNTH_ENV_PARITY_SCENARIOS } = await import('ops/lib/daisy-parity/synthenvparityscenario')
-    const { RENDERS_FIXTURES_DIR } = await import('ops/lib/fixturepaths')
-    const { PARITY_RENDER_SCRIPT_TIMEOUT_MS,
-  PLAYWRIGHT_SCENARIO_TIMEOUT_MS,
-  withscripttimeout, } = await import('tasks/lib/parity/parity-timeouts.ts')
-    const { startparityvite,
-  stopparityvite, } = await import('tasks/lib/parity/parity-vite-server.ts')
     /**
      * Tone vs Daisy synth env parity (long release, multi-wave).
      *
@@ -3646,14 +3703,17 @@ async function rundaisyrunsynthenvparity(ctx: TaskContext): Promise<number> {
 // --- run-voice-isolation-render.ts ---
 async function rundaisyrunvoiceisolationrender(ctx: TaskContext): Promise<number> {
   try {
-    const fs = (await import('node:fs')).default
-    const path = (await import('node:path')).default
-    const { fileURLToPath } = await import('node:url')
-    const { launchparitybrowser,
-  parityhosturl, } = await import('tasks/lib/parity/parity-playwright.ts')
-    const { RENDERS_FIXTURES_DIR } = await import('ops/lib/fixturepaths')
-    const { startparityvite,
-  stopparityvite, } = await import('tasks/lib/parity/parity-vite-server.ts')
+    const {
+      path,
+      readFileSync,
+      writeFileSync,
+      launchparitybrowser,
+      parityhosturl,
+      startparityvite,
+      stopparityvite,
+      withscripttimeout,
+      RENDERS_FIXTURES_DIR,
+    } = await loaddaisyparityruntime()
     const { LEVEL_ISSUE_SONG_ID,
   levelissuescenario,
   levelissuevoicerolesummary,

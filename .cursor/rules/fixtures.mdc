@@ -51,7 +51,12 @@ path.join(__dirname, '__fixtures__/parity')
 | Kind | Location |
 |------|----------|
 | Fixture path constants | `ops/lib/fixturepaths.ts` |
+| ZZT corpus walk + OOP compile | `ops/lib/content/zztcorpuswalk.ts` |
+| ZZT corpus layout / element extract | `ops/lib/content/zztcorpus.ts` |
+| ZZT profanity scan/sanitize | `ops/lib/content/zztcorpussanitize.ts` |
 | Daisy parity / bench | `ops/lib/daisy-parity/` |
+| Task spawn / Jest helpers | `tasks/shellutil.ts` |
+| Task Playwright / parity glue | `tasks/lib/` |
 | Legacy Tone/Maxi synth | `ops/archive/synth/` |
 | Jest test helpers | `ops/lib/test/` |
 

@@ -17,6 +17,7 @@ Museum ZZT `.zss` scripts under `ops/fixtures/zzt/corpus/zss/` must not contain 
 | `yarn task run content:zzt:corpus:profanity:verify` | Exit 1 if any hits remain (CI) |
 
 Word lists and redaction logic: `ops/lib/content/zztcorpussanitize.ts`.
+Corpus file walk (`.zzt`/`.brd`) and OOP compile-check: `ops/lib/content/zztcorpuswalk.ts` (shared by `content` and `lang` tasks).
 
 ## Pipeline
 

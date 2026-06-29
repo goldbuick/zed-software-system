@@ -1,7 +1,7 @@
-import { spawnSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import path from 'node:path'
 
+import { checkrg, spawntask } from 'tasks/shellutil'
 import { def, exec, handler, shell, tasksonly } from '../helpers'
 import type { TaskContext, TaskDef } from '../types'
 
@@ -26,31 +26,16 @@ const BARREL_FILES = [
   'zss/screens/screenui/component.tsx',
 ]
 
-function checkrg(label: string, pattern: string): boolean {
-  const result = spawnSync(
-    'rg',
-    ['-q', pattern, 'zss', 'cafe', '--glob', '*.{ts,tsx}'],
-    { encoding: 'utf8' },
-  )
-  if (result.status === 0) {
-    console.log(`FAIL: ${label}`)
-    spawnSync('rg', [pattern, 'zss', 'cafe', '--glob', '*.{ts,tsx}'], {
-      stdio: 'inherit',
-    })
-    return false
-  }
-  return true
-}
-
 function runlintimports(ctx: TaskContext): number {
   let ok = true
-  if (!checkrg('parent-directory imports (../)', "from ['\"][^'\"]*\\.\\./")) {
+  if (!checkrg('parent-directory imports (../)', "from ['\"][^'\"]*\\.\\./", ctx.root)) {
     ok = false
   }
   if (
     !checkrg(
       're-export syntax',
       'export \\{[^}]+\\} from|export \\* from|export type \\{[^}]+\\} from',
+      ctx.root,
     )
   ) {
     ok = false
@@ -77,15 +62,15 @@ function runapplint(ctx: TaskContext): number {
   if (importresult !== 0) {
     return importresult
   }
-  const result = spawnSync(
+  return spawntask(
     'sh',
     [
       '-c',
       "depcruise zss/simspace.ts zss/heavyspace.ts zss/boardrunnerspace.ts zss/sttspace.ts --validate --config ops/depcruise.cjs && eslint . --ext ts,tsx --fix --report-unused-disable-directives --max-warnings 0 && eslint 'ops/infra/net-*-worker.js' --fix --report-unused-disable-directives --max-warnings 0 && tsc --noEmit",
     ],
-    { cwd: ctx.root, stdio: 'inherit' },
+    ctx,
+    { inherit: true },
   )
-  return result.status ?? 1
 }
 
 function listexports(dir: string): Set<string> {

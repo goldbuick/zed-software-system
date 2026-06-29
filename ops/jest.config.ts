@@ -22,6 +22,7 @@ const config: Config = {
     '^ops/lib/test/(.*)$': '<rootDir>/ops/lib/test/$1',
     '^ops/archive/(.*)$': '<rootDir>/ops/archive/$1',
     '^ops/lib/(.*)$': '<rootDir>/ops/lib/$1',
+    '^tasks/(.*)$': '<rootDir>/tasks/$1',
     '^zss/(.*)$': '<rootDir>/zss/$1',
     '^uint8-util$': '<rootDir>/ops/lib/test/mocks/uint8-util.ts',
     '^@chevrotain/utils$':

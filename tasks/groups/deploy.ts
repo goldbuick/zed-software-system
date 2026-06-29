@@ -1,57 +1,27 @@
-import { execFileSync, spawnSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { inflateSync } from 'node:zlib'
 import { dirname, join } from 'node:path'
 
+import {
+  requiretaskenv,
+  spawntask,
+  taskenv,
+} from 'tasks/shellutil'
 import { def, exec, handler, shell, tasksonly } from '../helpers'
 import type { TaskContext, TaskDef } from '../types'
 
-function env(ctx: TaskContext): NodeJS.ProcessEnv {
-  return { ...process.env, ...ctx.env }
-}
-
-function requireenv(ctx: TaskContext, key: string): string {
-  const value = env(ctx)[key]
-  if (!value) {
-    console.error(`set ${key}`)
-    return ''
-  }
-  return value
-}
-
-function runspawn(
-  cmd: string,
-  args: string[],
-  ctx: TaskContext,
-  opts: { inherit?: boolean } = {},
-): number {
-  const result = spawnSync(cmd, args, {
-    cwd: ctx.root,
-    stdio: opts.inherit ? 'inherit' : 'pipe',
-    env: env(ctx),
-  })
-  if (result.status !== 0 && !opts.inherit) {
-    if (result.stderr) {
-      process.stderr.write(result.stderr)
-    }
-    if (result.stdout) {
-      process.stdout.write(result.stdout)
-    }
-  }
-  return result.status ?? 1
-}
-
 function runvmzssdocker(ctx: TaskContext): number {
-  const e = env(ctx)
+  const e = taskenv(ctx)
   const image = e.ZSS_IMAGE ?? 'ellium12/zed-software-system:latest'
   const vol = e.ZSS_DATA_VOLUME ?? 'zss-data'
   const port = e.ZSS_PORT ?? '4175'
   const runlocal = e.VM_RUN_LOCAL === '1'
 
   const rundocker = () => {
-    runspawn('docker', ['pull', image], ctx, { inherit: true })
+    spawntask('docker', ['pull', image], ctx, { inherit: true })
     spawnSync('docker', ['rm', '-f', 'zss'], { stdio: 'ignore' })
-    return runspawn(
+    return spawntask(
       'docker',
       [
         'run',
@@ -95,11 +65,11 @@ function runvmzssdocker(ctx: TaskContext): number {
     ? ['-i', ident, '-o', 'StrictHostKeyChecking=accept-new', `${user}@${host}`, remote]
     : ['-o', 'StrictHostKeyChecking=accept-new', `${user}@${host}`, remote]
   console.log(`Running on ${user}@${host} via SSH...`)
-  return runspawn('ssh', sshargs, ctx, { inherit: true })
+  return spawntask('ssh', sshargs, ctx, { inherit: true })
 }
 
 function runawsec2docker(ctx: TaskContext): number {
-  const e = env(ctx)
+  const e = taskenv(ctx)
   const merged: NodeJS.ProcessEnv = {
     ...e,
     VM_SSH_HOST: e.AWS_EC2_HOST ?? e.VM_SSH_HOST ?? '',
@@ -111,7 +81,7 @@ function runawsec2docker(ctx: TaskContext): number {
 }
 
 function rundigitaloceandocker(ctx: TaskContext): number {
-  const e = env(ctx)
+  const e = taskenv(ctx)
   const merged: NodeJS.ProcessEnv = {
     ...e,
     VM_SSH_HOST: e.DO_DROPLET_HOST ?? e.VM_SSH_HOST ?? '',
@@ -582,14 +552,14 @@ section { margin-bottom: 32px; }
 }
 
 function rungcpvmcreate(ctx: TaskContext): number {
-  const project = requireenv(ctx, 'GCP_PROJECT_ID')
+  const project = requiretaskenv(ctx, 'GCP_PROJECT_ID')
   if (!project) return 1
-  const e = env(ctx)
+  const e = taskenv(ctx)
   const zone = e.GCP_ZONE ?? 'us-west1-a'
   const name = e.GCP_VM_NAME ?? 'zss-vm'
   const tag = e.GCP_VM_TAG ?? 'zss-server'
-  runspawn('gcloud', ['config', 'set', 'project', project], ctx, { inherit: true })
-  const code = runspawn(
+  spawntask('gcloud', ['config', 'set', 'project', project], ctx, { inherit: true })
+  const code = spawntask(
     'gcloud',
     [
       'compute',
@@ -614,13 +584,13 @@ function rungcpvmcreate(ctx: TaskContext): number {
 }
 
 function rungcpvmfirewall(ctx: TaskContext): number {
-  const project = requireenv(ctx, 'GCP_PROJECT_ID')
+  const project = requiretaskenv(ctx, 'GCP_PROJECT_ID')
   if (!project) return 1
-  const e = env(ctx)
+  const e = taskenv(ctx)
   const rule = e.GCP_FW_RULE ?? 'allow-zss-4175'
   const tag = e.GCP_VM_TAG ?? 'zss-server'
   const port = e.GCP_APP_PORT ?? '4175'
-  runspawn('gcloud', ['config', 'set', 'project', project], ctx, { inherit: true })
+  spawntask('gcloud', ['config', 'set', 'project', project], ctx, { inherit: true })
   const describe = spawnSync(
     'gcloud',
     ['compute', 'firewall-rules', 'describe', rule],
@@ -630,7 +600,7 @@ function rungcpvmfirewall(ctx: TaskContext): number {
     console.log(`Firewall rule ${rule} already exists.`)
     return 0
   }
-  const code = runspawn(
+  const code = spawntask(
     'gcloud',
     [
       'compute',
@@ -650,20 +620,20 @@ function rungcpvmfirewall(ctx: TaskContext): number {
 }
 
 function rungcpartifactrepo(ctx: TaskContext): number {
-  const project = requireenv(ctx, 'GCP_PROJECT_ID')
+  const project = requiretaskenv(ctx, 'GCP_PROJECT_ID')
   if (!project) return 1
-  const e = env(ctx)
+  const e = taskenv(ctx)
   const region = e.GCP_REGION ?? 'us-central1'
   const repo = e.AR_REPO ?? 'zss-repo'
   const registryhost = `${region}-docker.pkg.dev`
-  runspawn('gcloud', ['config', 'set', 'project', project], ctx, { inherit: true })
+  spawntask('gcloud', ['config', 'set', 'project', project], ctx, { inherit: true })
   const describe = spawnSync(
     'gcloud',
     ['artifacts', 'repositories', 'describe', repo, `--location=${region}`],
     { stdio: 'ignore' },
   )
   if (describe.status !== 0) {
-    runspawn(
+    spawntask(
       'gcloud',
       [
         'artifacts',
@@ -680,7 +650,7 @@ function rungcpartifactrepo(ctx: TaskContext): number {
   } else {
     console.log(`Repository ${repo} already exists in ${region}.`)
   }
-  runspawn(
+  spawntask(
     'gcloud',
     ['auth', 'configure-docker', registryhost, '--quiet'],
     ctx,
@@ -691,18 +661,18 @@ function rungcpartifactrepo(ctx: TaskContext): number {
 }
 
 function rungcpenableapis(ctx: TaskContext): number {
-  const project = requireenv(ctx, 'GCP_PROJECT_ID')
+  const project = requiretaskenv(ctx, 'GCP_PROJECT_ID')
   if (!project) return 1
-  const e = env(ctx)
-  runspawn('gcloud', ['config', 'set', 'project', project], ctx, { inherit: true })
-  runspawn(
+  const e = taskenv(ctx)
+  spawntask('gcloud', ['config', 'set', 'project', project], ctx, { inherit: true })
+  spawntask(
     'gcloud',
     ['services', 'enable', 'run.googleapis.com', 'artifactregistry.googleapis.com'],
     ctx,
     { inherit: true },
   )
   if (e.GCP_ENABLE_COMPUTE === '1') {
-    runspawn('gcloud', ['services', 'enable', 'compute.googleapis.com'], ctx, {
+    spawntask('gcloud', ['services', 'enable', 'compute.googleapis.com'], ctx, {
       inherit: true,
     })
   }
@@ -713,9 +683,9 @@ function rungcpenableapis(ctx: TaskContext): number {
 }
 
 function rungcppush(ctx: TaskContext): number {
-  const project = requireenv(ctx, 'GCP_PROJECT_ID')
+  const project = requiretaskenv(ctx, 'GCP_PROJECT_ID')
   if (!project) return 1
-  const e = env(ctx)
+  const e = taskenv(ctx)
   const region = e.GCP_REGION ?? 'us-central1'
   const repo = e.AR_REPO ?? 'zss-repo'
   const tag = e.GCP_IMAGE_TAG ?? 'latest'
@@ -728,8 +698,8 @@ function rungcppush(ctx: TaskContext): number {
     console.error(`Local image ${imagelocal} not found. Run: yarn deploy:docker:build`)
     return 1
   }
-  runspawn('docker', ['tag', imagelocal, registry], ctx, { inherit: true })
-  const code = runspawn('docker', ['push', registry], ctx, { inherit: true })
+  spawntask('docker', ['tag', imagelocal, registry], ctx, { inherit: true })
+  const code = spawntask('docker', ['push', registry], ctx, { inherit: true })
   if (code === 0) {
     console.log(`Pushed ${registry}`)
   }
@@ -737,16 +707,16 @@ function rungcppush(ctx: TaskContext): number {
 }
 
 function rungcpdeploycloudrun(ctx: TaskContext): number {
-  const project = requireenv(ctx, 'GCP_PROJECT_ID')
+  const project = requiretaskenv(ctx, 'GCP_PROJECT_ID')
   if (!project) return 1
-  const e = env(ctx)
+  const e = taskenv(ctx)
   const region = e.GCP_REGION ?? 'us-central1'
   const repo = e.AR_REPO ?? 'zss-repo'
   const tag = e.GCP_IMAGE_TAG ?? 'latest'
   const service = e.GCP_RUN_SERVICE ?? 'zss-service'
   const image = `${region}-docker.pkg.dev/${project}/${repo}/zss:${tag}`
-  runspawn('gcloud', ['config', 'set', 'project', project], ctx, { inherit: true })
-  return runspawn(
+  spawntask('gcloud', ['config', 'set', 'project', project], ctx, { inherit: true })
+  return spawntask(
     'gcloud',
     [
       'run',
@@ -766,17 +736,17 @@ function rungcpdeploycloudrun(ctx: TaskContext): number {
 }
 
 function rungcpvmdocker(ctx: TaskContext): number {
-  const e = env(ctx)
-  const image = requireenv(ctx, 'GCP_PUSH_IMAGE')
+  const e = taskenv(ctx)
+  const image = requiretaskenv(ctx, 'GCP_PUSH_IMAGE')
   if (!image) return 1
   const port = e.GCP_APP_PORT ?? '4175'
   const vol = e.GCP_DOCKER_VOLUME ?? 'zss-data'
   const runline = `docker run -d --restart unless-stopped -p ${port}:${port} -v ${vol}:/data -e ZSS_SERVER_PORT=${port} ${image}`
   if (e.GCP_RUN_LOCAL === '1') {
     console.log('Running on local machine (VM shell):')
-    return runspawn('sh', ['-c', runline], ctx, { inherit: true })
+    return spawntask('sh', ['-c', runline], ctx, { inherit: true })
   }
-  const project = requireenv(ctx, 'GCP_PROJECT_ID')
+  const project = requiretaskenv(ctx, 'GCP_PROJECT_ID')
   if (!project) return 1
   const zone = e.GCP_ZONE ?? 'us-west1-a'
   const name = e.GCP_VM_NAME ?? 'zss-vm'

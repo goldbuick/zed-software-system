@@ -1,4 +1,3 @@
-import { spawnSync } from 'node:child_process'
 import {
   existsSync,
   mkdirSync,
@@ -14,12 +13,17 @@ import {
   resolvestatcode,
 } from 'ops/lib/content/zztcorpus'
 import {
+  collectzztcorpussourcefiles,
+  compilezztoop,
+} from 'ops/lib/content/zztcorpuswalk'
+import {
   ZZT_CORPUS_EXTRACTED_DIR,
   ZZT_CORPUS_ZSS_DIR,
 } from 'ops/lib/fixturepaths'
+import { readlimit } from 'tasks/lib/cliargv'
+import { runjest } from 'tasks/shellutil'
 import { zztparseboard, zztparseworld } from 'zss/feature/parse/zztbinparse'
 import type { ZZT_BOARD } from 'zss/feature/parse/zztformattypes'
-import { compileparse } from 'zss/feature/zztoop/compileparse'
 import { def, handler, jestexec } from '../helpers'
 import type { TaskContext, TaskDef } from '../types'
 
@@ -92,21 +96,15 @@ function runlangbookoracleextract(ctx: TaskContext): number {
 
 function runlangregression(ctx: TaskContext): number {
   console.log('▶ typescript-compiler')
-  const result = spawnSync(
-    'yarn',
-    [
-      'jest',
-      '--config',
-      'ops/jest.config.ts',
-      'ops/tests/unit/feature/lang/backend/typescript/',
-      '--no-coverage',
-    ],
-    { cwd: ctx.root, stdio: 'inherit' },
+  const status = runjest(
+    ctx,
+    'ops/tests/unit/feature/lang/backend/typescript/',
+    ['--no-coverage'],
   )
-  if (result.status === 0) {
+  if (status === 0) {
     console.log('✓ lang regression complete')
   }
-  return result.status ?? 1
+  return status
 }
 
 type TriageTag = 'fixable' | 'invalid_zzt' | 'ambiguous'
@@ -188,7 +186,6 @@ const FIXTURE_OUT = path.join('ops', 'fixtures', 'lang', 'zztoop', 'corpus')
 
 function parseoptions(argv: string[]): AnalyzeOptions {
   const root = process.cwd()
-  let limit: number | undefined
   let full = false
   let writefixtures = false
   let writereport = true
@@ -212,42 +209,16 @@ function parseoptions(argv: string[]): AnalyzeOptions {
       writereport = true
       continue
     }
-    if (arg === 'limit' || arg === '--limit') {
-      const next = argv[i + 1]
-      if (next) {
-        limit = Number.parseInt(next, 10)
-        ++i
-      }
-    }
   }
 
-  return { root, limit, full, writefixtures, writereport, rawonly }
-}
-
-function iszztorbrd(name: string): boolean {
-  const lower = name.toLowerCase()
-  return lower.endsWith('.zzt') || lower.endsWith('.brd')
-}
-
-function collectsourcefiles(dir: string): string[] {
-  const out: string[] = []
-  function walk(current: string) {
-    if (!existsSync(current)) {
-      return
-    }
-    const entries = readdirSync(current, { withFileTypes: true })
-    for (let i = 0; i < entries.length; ++i) {
-      const entry = entries[i]
-      const full = path.join(current, entry.name)
-      if (entry.isDirectory()) {
-        walk(full)
-      } else if (iszztorbrd(entry.name)) {
-        out.push(full)
-      }
-    }
+  return {
+    root,
+    limit: readlimit(argv),
+    full,
+    writefixtures,
+    writereport,
+    rawonly,
   }
-  walk(dir)
-  return out
 }
 
 function normalizeerror(message: string): string {
@@ -274,9 +245,7 @@ function triagecode(code: string, error?: string): TriageTag {
 }
 
 function compilecheck(source: string) {
-  const result = compileparse(source)
-  const ok = !(result.errors && result.errors.length > 0) && !!result.cst
-  const error = result.errors?.[0]?.message
+  const { ok, error } = compilezztoop(source)
   return { ok, error }
 }
 
@@ -519,7 +488,7 @@ export async function analyzezztoopcorpus(argv: string[]): Promise<number> {
   const sampleonly = typeof opts.limit === 'number' && !opts.full
 
   if (corpuspresent) {
-    const sources = collectsourcefiles(extractedroot)
+    const sources = collectzztcorpussourcefiles(extractedroot)
     const slice = sampleonly ? sources.slice(0, opts.limit) : sources
     for (let i = 0; i < slice.length; ++i) {
       try {

@@ -68,3 +68,19 @@ sleep 2
 curl -sk -o /dev/null -w "%{http_code}\n" https://127.0.0.1:7777/wasm/lang/zss_lang.wasm
 kill %1                     # or kill <pid>
 ```
+
+## Task / Playwright script timeouts
+
+Use `withscripttimeout` from `tasks/lib/parity/parity-timeouts.ts` (or re-export via `tasks/lib/wanix/playwright-vm.ts` for Wanix gates).
+
+**Signature is `(label, ms, fn)` — label first.** Swapping ms and label fails silently (wrong timeout or wrong log label).
+
+```typescript
+import { withscripttimeout } from 'tasks/lib/parity/parity-timeouts'
+
+await withscripttimeout('wanix:vm:zed-cafe:validate', SCRIPT_TOTAL_MS, async () => {
+  // … headed Playwright work …
+})
+```
+
+Do not add local `runwithscripttimeout` wrappers in group files — import the shared helper.

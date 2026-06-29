@@ -35,7 +35,8 @@ Hanging commands waste time. **Never start a long or risky command without a pla
 | Jest per-test default | `ops/tests/setup/timeoutsetup.ts` (120s); override with `jest.setTimeout(ms)` when needed |
 | WASM `loadscriptsync` tests | `createwasmstubchip()` / `runwasmscriptfortest()` from `ops/lib/test/lang/wasmruntestutil.ts` |
 | WASM run budget (Jest workers) | Default 16_384 `sy()` polls in `zss/feature/lang/wasmloader.ts`; override `{ runbudget: N }` |
-| Parity / Playwright task scripts | Constants + `withscripttimeout()` in `tasks/lib/parity/parity-timeouts.ts` |
+| Parity / Playwright task handlers | Constants + `withscripttimeout(label, ms, fn)` in `tasks/lib/parity/parity-timeouts.ts` |
+| Wanix Playwright validators | `withscripttimeout` via `tasks/lib/wanix/playwright-vm.ts` (re-export) |
 | Wanix Playwright validators | `runwithscripttimeout` / env `ZSS_WANIX_VM_SCRIPT_TIMEOUT_MS`, `ZSS_WANIX_VM_SHELL_TIMEOUT_MS` |
 | New polling loops | Wall-clock deadline; log and exit non-zero on timeout |
 

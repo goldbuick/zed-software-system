@@ -26,10 +26,16 @@ import {
   corpusscanline,
   sanitizesource,
 } from 'ops/lib/content/zztcorpussanitize'
+import {
+  collectzztcorpussourcefiles,
+  compilezztoop,
+  iszztorbrd,
+} from 'ops/lib/content/zztcorpuswalk'
 import { ZZT_CORPUS_ZSS_DIR } from 'ops/lib/fixturepaths'
+import { readforce, readlimit } from 'tasks/lib/cliargv'
+import { runjest } from 'tasks/shellutil'
 import { zztparseboard, zztparseworld } from 'zss/feature/parse/zztbinparse'
 import type { ZZT_BOARD } from 'zss/feature/parse/zztformattypes'
-import { compileparse } from 'zss/feature/zztoop/compileparse'
 import { def, handler, jestexec } from '../helpers'
 import type { TaskContext, TaskDef } from '../types'
 
@@ -211,9 +217,7 @@ function sleep(ms: number) {
 
 function parseoptions(argv: string[], root: string): SyncOptions {
   let manifestonly = false
-  let force = false
   let usemanifest = false
-  let limit: number | undefined
 
   for (let i = 0; i < argv.length; ++i) {
     const arg = argv[i]
@@ -225,25 +229,15 @@ function parseoptions(argv: string[], root: string): SyncOptions {
       usemanifest = true
       continue
     }
-    if (arg === 'force' || arg === '--force') {
-      force = true
-      continue
-    }
-    if (arg === 'limit' || arg === '--limit') {
-      const next = argv[i + 1]
-      if (!next) {
-        throw new Error('limit requires a number')
-      }
-      limit = Number.parseInt(next, 10)
-      if (!Number.isFinite(limit) || limit < 1) {
-        throw new Error('limit must be a positive integer')
-      }
-      ++i
-      continue
-    }
   }
 
-  return { root, manifestonly, force, usemanifest, limit }
+  return {
+    root,
+    manifestonly,
+    force: readforce(argv),
+    usemanifest,
+    limit: readlimit(argv),
+  }
 }
 
 function readexistingmanifest(root: string): Manifest | undefined {
@@ -578,8 +572,6 @@ type ZssManifest = {
 
 function parseextractoptions(argv: string[], root: string): ExtractOptions {
   let stage: ExtractOptions['stage'] = 'both'
-  let force = false
-  let limit: number | undefined
 
   for (let i = 0; i < argv.length; ++i) {
     const arg = argv[i]
@@ -591,25 +583,14 @@ function parseextractoptions(argv: string[], root: string): ExtractOptions {
       stage = 'zss'
       continue
     }
-    if (arg === 'force' || arg === '--force') {
-      force = true
-      continue
-    }
-    if (arg === 'limit' || arg === '--limit') {
-      const next = argv[i + 1]
-      if (!next) {
-        throw new Error('limit requires a number')
-      }
-      limit = Number.parseInt(next, 10)
-      if (!Number.isFinite(limit) || limit < 1) {
-        throw new Error('limit must be a positive integer')
-      }
-      ++i
-      continue
-    }
   }
 
-  return { root, stage, force, limit }
+  return {
+    root,
+    stage,
+    force: readforce(argv),
+    limit: readlimit(argv),
+  }
 }
 
 function readcorpusmanifest(root: string): CorpusManifest {
@@ -628,9 +609,6 @@ function manifestarchivename(entry: CorpusManifestEntry): string {
   return entry.archive_name || zipstem(entry.filename)
 }
 
-function iszztorbrd(name: string): boolean {
-  return /\.(zzt|brd)$/i.test(name)
-}
 
 /** Mirror extracted/{letter}/{zip_stem}/ under zss/. */
 function zssrelpath(extractedrelpath: string, id: string): string {
@@ -718,32 +696,7 @@ async function extractarchives(opts: ExtractOptions): Promise<number> {
   return 0
 }
 
-function compileok(source: string): { ok: boolean; error?: string } {
-  const result = compileparse(source)
-  const ok = !(result.errors && result.errors.length > 0) && !!result.cst
-  return {
-    ok,
-    error: ok ? undefined : result.errors?.[0]?.message,
-  }
-}
 
-function collectsourcefiles(dir: string): string[] {
-  const out: string[] = []
-  function walk(current: string) {
-    const entries = readdirSync(current, { withFileTypes: true })
-    for (let i = 0; i < entries.length; ++i) {
-      const entry = entries[i]
-      const full = path.join(current, entry.name)
-      if (entry.isDirectory()) {
-        walk(full)
-      } else if (iszztorbrd(entry.name)) {
-        out.push(full)
-      }
-    }
-  }
-  walk(dir)
-  return out
-}
 
 function processsourcefile(
   root: string,
@@ -792,7 +745,7 @@ function processsourcefile(
         continue
       }
       const zsssource = elementtozss(element)
-      const compiled = compileok(zsssource)
+      const compiled = compilezztoop(zsssource)
       const ok = compiled.ok
       mkdirSync(path.dirname(zsspath), { recursive: true })
       writeFileSync(zsspath, zsssource)
@@ -929,7 +882,7 @@ function convertextractedtozss(opts: ExtractOptions): number {
       }
       manifest.stats.archives_processed += 1
       const stemdir = path.join(letterdir, stem)
-      const sources = collectsourcefiles(stemdir)
+      const sources = collectzztcorpussourcefiles(stemdir)
       for (let fi = 0; fi < sources.length; ++fi) {
         manifest.stats.source_files += 1
         processsourcefile(
@@ -1000,7 +953,6 @@ type TaskOptions = {
 function parseprofanityoptions(argv: string[]): TaskOptions {
   let dryrun = false
   let verify = false
-  let limit: number | undefined
 
   for (let i = 0; i < argv.length; ++i) {
     const arg = argv[i]
@@ -1012,16 +964,9 @@ function parseprofanityoptions(argv: string[]): TaskOptions {
       verify = true
       continue
     }
-    if (arg === 'limit' || arg === '--limit') {
-      const next = argv[i + 1]
-      if (next) {
-        limit = Number.parseInt(next, 10)
-        ++i
-      }
-    }
   }
 
-  return { dryrun, limit, verify }
+  return { dryrun, limit: readlimit(argv), verify }
 }
 
 function collectzztfiles(root: string): string[] {
@@ -1277,30 +1222,7 @@ export function parsescreenshotoptions(
   argv: string[],
   root = process.cwd(),
 ): ScreenshotOptions {
-  let force = false
-  let limit: number | undefined
-
-  for (let i = 0; i < argv.length; ++i) {
-    const arg = argv[i]
-    if (arg === 'force' || arg === '--force') {
-      force = true
-      continue
-    }
-    if (arg === 'limit' || arg === '--limit') {
-      const next = argv[i + 1]
-      if (!next) {
-        throw new Error('limit requires a number')
-      }
-      limit = Number.parseInt(next, 10)
-      if (!Number.isFinite(limit) || limit < 1) {
-        throw new Error('limit must be a positive integer')
-      }
-      ++i
-      continue
-    }
-  }
-
-  return { root, force, limit }
+  return { root, force: readforce(argv), limit: readlimit(argv) }
 }
 
 type ScreenshotDeps = {
@@ -1569,7 +1491,7 @@ export async function renderscreenshots(opts: ScreenshotOptions): Promise<number
       }
       manifest.stats.archives_processed += 1
       const stemdir = path.join(letterdir, stem)
-      const sources = collectsourcefiles(stemdir)
+      const sources = collectzztcorpussourcefiles(stemdir)
       for (let fi = 0; fi < sources.length; ++fi) {
         manifest.stats.source_files += 1
         processscreenshotsource(
@@ -1607,29 +1529,18 @@ function runcontentcli(ctx: TaskContext): number {
     )
     return 1
   }
-  const result = spawnSync(
-    process.platform === 'win32' ? 'yarn.cmd' : 'yarn',
-    [
-      'jest',
-      '--config',
-      'ops/jest.config.ts',
-      'ops/tests/unit/feature/content/contentbook.cli.test.ts',
-      '--no-coverage',
-      '--runTestsByPath',
-    ],
+  return runjest(
+    ctx,
+    'ops/tests/unit/feature/content/contentbook.cli.test.ts',
+    ['--no-coverage', '--runTestsByPath'],
     {
-      cwd: ctx.root,
-      stdio: 'inherit',
       env: {
-        ...process.env,
-        ...ctx.env,
         CONTENT_CLI_TASK: task,
         CONTENT_CLI_ARG: arg,
         CONTENT_CLI_EXTRA: JSON.stringify(extra),
       },
     },
   )
-  return result.status ?? 1
 }
 
 export const CONTENT_TASKS: TaskDef[] = [
@@ -1699,29 +1610,18 @@ export const CONTENT_TASKS: TaskDef[] = [
     description:
       'Render board PNGs from extracted ZZT/BRD into ops/fixtures/zzt/corpus/screenshots (gitignored)',
     tags: ['slow'],
-    run: handler((ctx) => {
-      const result = spawnSync(
-        'yarn',
-        [
-          'jest',
-          '--config',
-          'ops/jest.config.ts',
-          '--runTestsByPath',
-          'ops/tests/integration/zzt/corpus-screenshots.test.ts',
-          '--no-coverage',
-        ],
+    run: handler((ctx) =>
+      runjest(
+        ctx,
+        'ops/tests/integration/zzt/corpus-screenshots.test.ts',
+        ['--runTestsByPath', '--no-coverage'],
         {
-          cwd: ctx.root,
-          stdio: 'inherit',
           env: {
-            ...ctx.env,
             ZSS_JEST_INCLUDE_CORPUS_SCREENSHOTS: '1',
             ZSS_TASK_ARGS: ctx.args.join(' '),
           },
-          shell: false,
         },
-      )
-      return result.status ?? 1
-    }),
+      ),
+    ),
   }),
 ]
