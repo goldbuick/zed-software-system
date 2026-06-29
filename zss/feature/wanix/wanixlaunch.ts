@@ -11,6 +11,16 @@ import {
   spawnwanixtask,
 } from 'zss/feature/wanix/wanixhost'
 import { readwanixtasks, registertask } from 'zss/feature/wanix/wanixsession'
+import { ensurewanixzedcafedaemon } from 'zss/feature/wanix/wanixzedcafe'
+
+function iszedcafefixturewasm(label: string) {
+  const base = label.toLowerCase()
+  return (
+    base === 'zedcaferead.wasm' ||
+    base === 'zedcafewrite.wasm' ||
+    base === 'zedcafelist.wasm'
+  )
+}
 
 async function launchwanixload(
   device: DEVICELIKE,
@@ -20,6 +30,9 @@ async function launchwanixload(
   bytes: Uint8Array,
 ) {
   await ensurewanixsandbox(device, player)
+  if (iszedcafefixturewasm(label)) {
+    await ensurewanixzedcafedaemon(device, player)
+  }
 
   const taskid = uniquewanixtaskid(
     label,

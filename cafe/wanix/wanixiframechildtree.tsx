@@ -9,17 +9,14 @@ import {
 import {
   appendwanixarchivebind,
   appendwanixremotebind,
-  appendzedcafeexportbind,
   appendzedcafeinboxfilebind,
   collectzedcafeexportfiles,
   stagezedcafetaskforgojs,
+  waitandmountzedcafeguestexport,
   waitforwanixroot,
-  waitwanixbindmount,
-  waitandstagezedcafetaskexport,
   waitzedcafeguestready,
   wirewanixarchivebind,
   wirewanixremotebind,
-  wirezedcafeexportbind,
 } from 'zss/feature/wanix/wanixiframechildmount'
 import { createwanixroomtree } from 'zss/feature/wanix/wanixroombootstrap'
 import {
@@ -326,38 +323,33 @@ export function WanixIframeChildTree({
       postwanixiframeapilog(
         `zed-cafe export: starting gojs task rid=${task.rid ?? 'unknown'}`,
       )
+      const mountpromise =
+        !vmexportstage && task.rid
+          ? waitandmountzedcafeguestexport(
+              system,
+              wanixroot,
+              task.rid,
+              controller,
+              WANIX_ZED_CAFE_EXPORT_WAIT_MS,
+            )
+          : Promise.resolve(null)
       await task.start?.()
       if (cancelled || !task.rid) {
         return
       }
-      const exportstaged = await waitandstagezedcafetaskexport(
-        system,
-        wanixroot,
-        task.rid,
-      )
-      if (cancelled) {
-        return
-      }
-      if (!exportstaged) {
-        controller.onzedcafeerror(
-          new Error('zed-cafe export: export tree never became ready'),
-        )
-        return
-      }
       let exportbind: HTMLElement | null = null
       if (!vmexportstage) {
-        exportbind = appendzedcafeexportbind(system, task.rid)
-      }
-      if (exportbind) {
-        wirezedcafeexportbind(exportbind, system, task.rid, controller)
-        try {
-          await waitwanixbindmount(exportbind)
-          if (await waitzedcafeguestready(wanixroot, WANIX_ZED_CAFE_EXPORT_WAIT_MS)) {
-            controller.markzedcafeready()
-          }
-        } catch {
-          // bind error handler may install #ramfs fallback
+        exportbind = await mountpromise
+        if (cancelled) {
+          return
         }
+        if (!exportbind) {
+          controller.onzedcafeerror(
+            new Error('zed-cafe export: guest ./zed-cafe never became ready'),
+          )
+          return
+        }
+        controller.markzedcafeready()
       }
       if (vmexportstage && !cancelled) {
         try {

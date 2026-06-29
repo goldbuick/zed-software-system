@@ -16,10 +16,9 @@ import {
   installapilogcapture,
   openapp,
   readapilog,
-  readvmterm,
   runwithscripttimeout,
   sendline,
-  waitfor,
+  waitforzedcafeexportapilog,
 } from './wanix-playwright-vm.mjs'
 
 const ROOT = join(import.meta.dirname, '../../..')
@@ -63,31 +62,36 @@ try {
         }
       })
 
+      const wait = async (label, pred, ms, step = 2000) => {
+        const deadline = Date.now() + ms
+        while (Date.now() < deadline) {
+          if (await pred()) {
+            return true
+          }
+          await page.waitForTimeout(step)
+        }
+        log('TIMEOUT', label)
+        return false
+      }
+
       try {
         await openapp(page, DEFAULT_ZSS_URL, log)
         log('warming wanix + zed-cafe export via #wanix pull')
         await sendline(page, '#wanix pull')
-        log('waiting for zed-cafe guest bind')
-        const guestbound = await waitfor(
-          page,
-          'guest zed-cafe bind',
+        await waitforzedcafeexportapilog(page, log, APILOG_KEY)
+
+        const exportwarm = await wait(
+          'guest zed-cafe ready',
           async () => {
             const logs = await readapilog(page, APILOG_KEY)
-            return logs.some(
-              (line) =>
-                /guest bind mounted from #ramfs\/zed-cafe/.test(line) ||
-                /guest zed-cafe ready/.test(line) ||
-                /staged \d+ files on #ramfs\/zed-cafe/.test(line),
-            )
+            return logs.some((line) => /guest zed-cafe ready/i.test(line))
           },
-          WANIX_VM_VALIDATE_TIMEOUTS.EXPORT_APILOG_MS,
+          120_000,
           2000,
-          log,
         )
-        if (!guestbound) {
-          throw new Error('zed-cafe guest bind never mounted')
+        if (!exportwarm) {
+          throw new Error('zed-cafe guest ./zed-cafe never became ready')
         }
-        await page.waitForTimeout(500)
 
         const wasmbytes = readFileSync(WASM)
         log('dropping zedcafelist.wasm (' + wasmbytes.length + ' bytes)')
@@ -104,26 +108,21 @@ try {
           })
           document.dispatchEvent(event)
         }, [...wasmbytes])
-        await focuscanvas(page)
 
-        const listok = await waitfor(
-          page,
+        const listok = await wait(
           'zed-cafe list output',
           async () => {
-            const buf = await readvmterm(page)
+            const logs = await readapilog(page, APILOG_KEY)
             return (
-              /zed-cafe list/i.test(buf) &&
-              /stats\.json/.test(buf) &&
-              !/zed-cafe missing/i.test(buf)
+              logs.some((line) => /zed-cafe list/i.test(line)) &&
+              logs.some((line) => /stats\.json/.test(line)) &&
+              !logs.some((line) => /zed-cafe missing/i.test(line))
             )
           },
           120_000,
           2000,
-          log,
         )
         if (!listok) {
-          const buf = await readvmterm(page)
-          log('term buffer tail:\n' + buf.split('\n').slice(-15).join('\n'))
           throw new Error('zedcafelist did not print zed-cafe tree with stats.json')
         }
 
@@ -133,6 +132,7 @@ try {
           )
         }
 
+        await focuscanvas(page)
         log('PASS — zed-cafe list shows stats.json after export warm')
         process.exitCode = 0
       } catch (err) {
