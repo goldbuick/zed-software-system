@@ -83,7 +83,7 @@ function appendvmzedcafestagingbind(vm: HTMLElement) {
   vm.appendChild(bind)
 }
 
-function appendvmzedcafeguestfilebinds(
+export function appendvmzedcafeguestfilebinds(
   vm: HTMLElement,
   guestfiles: WanixZedCafeGuestFile[],
 ) {
@@ -173,6 +173,26 @@ export function isvmslotactive(sys: WanixSystemElement): boolean {
   return !!vm?.hasAttribute('start')
 }
 
+/** In-place ramfs + vm guest file bind refresh (no room remount). */
+export function refreshvmzedcafeguestfiles(
+  sys: WanixSystemElement,
+  guestfiles: WanixZedCafeGuestFile[],
+): number {
+  if (!guestfiles.some((file) => file.path === 'stats.json')) {
+    return 0
+  }
+  appendzedcafeexportramfsfilebinds(sys, guestfiles)
+  const vm = readvmslot(sys)
+  if (vm && isvmslotactive(sys)) {
+    appendvmzedcafeguestfilebinds(vm, guestfiles)
+    postwanixiframeapilog(
+      `zed-cafe export: refreshed vm guest (${guestfiles.length} files)`,
+    )
+  }
+  return guestfiles.length
+}
+
+/** Boot-phase wanix-vm with guest virtfs and start (tests / legacy only). */
 export function appendvmbootslot(
   sys: WanixSystemElement,
   mem: string,
@@ -200,7 +220,7 @@ export function appendvmbootslot(
   return vm
 }
 
-/** @deprecated post-ready append — use appendvmbootslot on room remount instead */
+/** In-place activation on dormant wanix-vm after wanix-system ready. */
 export async function activatevmslot(
   sys: WanixSystemElement,
   root: WanixRoot,
@@ -243,13 +263,16 @@ export async function activatevmslot(
     `zed-cafe export: staged ${guestfiles.length} files on vm guest /${WANIX_ZED_CAFE_GUEST_MOUNT}/`,
   )
 
-  appendwanixvmterm(sys)
+  if (!sys.querySelector('wanix-term[data-zss-target-kind="vm"]')) {
+    appendwanixvmterm(sys)
+  }
   await waitforv86driver(root, WANIX_IFRAME_VM_PREP_WAIT_MS)
   setwanixattrs(vm, { mem, start: true })
   vm.removeAttribute('data-zss-dormant-vm')
 
   const vmel = vm as WanixWakeElement & { start?: () => Promise<void> }
-  if (typeof vmel.start === 'function') {
+  if (typeof vmel.start === 'function' && !vm.hasAttribute('data-zss-vm-started')) {
+    vm.setAttribute('data-zss-vm-started', '')
     await vmel.start()
   }
 

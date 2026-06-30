@@ -13,10 +13,10 @@ Reference: [tractordev/wanix](https://github.com/tractordev/wanix) **`main`** (`
 | ZSS feature | Upstream 0.4 recipe | ZSS owner |
 |-------------|---------------------|-----------|
 | WASI drop / `#wanix` tasks | Quick start `#ramfs` + `<wanix-task type="wasi" term>` | `spawnwanixspace` → `#ramfs` boot; `createtask` |
-| `#wanix vm` prep | [`examples/basic-vm.html`](https://github.com/tractordev/wanix/blob/main/examples/basic-vm.html) — linux + `#vm` ns + v86 binds **before** first `ready` | `spawnwanixvmspace` → two-phase `vm-active` (`bootstage: export` then `boot`) in iframe child |
-| VM serial console | `<wanix-vm export="ttyS0" term>` + `#vm/<rid>/term/data` | `<wanix-vm>` must be **initial child** on boot remount — not appended after `ready` |
+| `#wanix vm` prep | [`examples/basic-vm.html`](https://github.com/tractordev/wanix/blob/main/examples/basic-vm.html) — linux + `#vm` ns + v86 binds **before** first `ready` | `spawnwanixvmspace` → single mount with dormant `<wanix-vm>` + bootstrap `guestfiles`; `activatevmslot` in place |
+| VM serial console | `<wanix-vm export="ttyS0" term>` + `#vm/<rid>/term/data` | `<wanix-vm>` must be **initial child** before `ready` (dormant until `activatevmslot`) |
 | Term I/O | `<wanix-term path="…" raw>` (we use tile bridge instead of xterm) | `wanixhost.ts` + `WanixTermInput` |
-| `./zedcafe/` / `/zedcafe/` export | gojs export → live ns bind (task) or capture + VM remount (VM) | `wanixstateexport.ts` + `wanixzedcafe.ts` + `wanixiframechildmount.ts` |
+| `./zedcafe/` / `/zedcafe/` export | Bootstrap snapshot at boot + gojs live `#task/<rid>/export` | `wanixstateexport.ts` + `wanixzedcafe.ts` + `wanixiframechildmount.ts` |
 | **Namespace export (LAN)** | Upstream **Wanix CLI console protocol** (browser dials out) | `wanixbridgehost.ts` + `#wanix bridge <wss-url>` |
 
 Session books mirror to **`./zedcafe/`** (WASI tasks) or **`/zedcafe/`** (Linux VM) when Wanix is warm. Host pushes edits via live `writeFile` into `#task/<rid>/export` (no gojs restart per edit). Guest edits import via auto-poll (~3s) or **`#wanix pull`**.
@@ -43,7 +43,7 @@ Shipped at `/wanix/zedcafe.wasm` (`cafe/public/wanix/`). Staging: wasm file bind
 | Task | ns bind `{ dst: zedcafe, src: #task/<rid>/export }` after `waitzedcafeexportready` → `./zedcafe/` |
 | VM | **Two-phase boot** — export phase: gojs only; boot phase: capture files from `#task/<rid>/export`, file binds on `#ramfs/zedcafe/*`, `<wanix-vm>` child bind `zedcafe` ← `#ramfs/zedcafe` → `/zedcafe/` |
 
-On task export bind failure, fallback: `#ramfs/zed-cafe` ← export, then `zed-cafe` ← `#ramfs/zed-cafe`. Guest `ls /` (VM) should show normal Linux dirs plus **`zed-cafe/`** only — no `_wanix`, `zed-cafe.wasm`, or inbox on `/`.
+On task export bind failure, fallback: `#ramfs/zedcafe` ← export, then `zedcafe` ← `#ramfs/zedcafe`. Guest `ls /` (VM) should show normal Linux dirs plus **`zedcafe/`** only — no `_wanix`, `zedcafe.wasm`, or inbox on `/`.
 
 Agent docs: `.cursor/skills/wanix-zed-cafe-export/SKILL.md`, `.cursor/rules/wanix-zed-cafe-export.mdc`, `.cursor/rules/wanix-vm-lifecycle.mdc`.
 
@@ -98,7 +98,7 @@ Playwright gates use bounded waits ([`tasks/groups/wanix.ts`](../../../tasks/gro
 
 Validators capture **iframe** apilog (`zss-wanix-term-apilog` postMessage), not host tape scrollback.
 
-VM prep must **not** call `_setupNamespace` a second time after `#ramfs` (that caused the Go `writeFile` panic). `#wanix vm` uses `spawnwanixvmspace` then two-phase iframe remount (`bootstage: export` → `boot`).
+VM prep must **not** call `_setupNamespace` a second time after `#ramfs` (that caused the Go `writeFile` panic). `#wanix vm` uses `spawnwanixvmspace` with bootstrap `guestfiles`, then `activatevmslot` on the dormant `<wanix-vm>` (no room remount).
 
 Import **`wanixtour`** book for a playable demo of `./zed-cafe/` on the `wanixzedcafe` board.
 
@@ -108,7 +108,7 @@ Use upstream-faithful validation via the full app — not standalone HTML:
 
 ```bash
 yarn task run wanix:vm:zed-cafe:validate   # #wanix vm → shell + /zed-cafe/stats.json
-yarn task run wanix:vm:boot:validate       # book seed + remount milestones
+yarn task run wanix:vm:boot:validate       # book seed + in-place vm activation milestones
 ```
 
 If these gates pass headed but a manual `#wanix vm` path fails, the defect is in ZSS spawn/mount code, not the environment.
@@ -149,7 +149,7 @@ Or build everything locally via [`build.sh`](build.sh):
 sh ops/fixtures/wanix/build.sh all      # wasi + zed-cafe
 sh ops/fixtures/wanix/build.sh wasi     # WASI drops only
 sh ops/fixtures/wanix/build.sh zed-cafe  # export daemon only
-sh ops/fixtures/wanix/build.sh gojs      # gojscheck smoke wasm
+sh ops/fixtures/wanix/build.sh zed-cafe  # export daemon only
 ```
 
 Compiles Go WASI packages in this directory to `.wasm` (`GOOS=wasip1 GOARCH=wasm`).

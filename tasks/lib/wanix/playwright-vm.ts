@@ -29,7 +29,7 @@ export const WANIX_VM_VALIDATE_TIMEOUTS = {
 }
 
 export const ZED_CAFE_VM_EXPORT_READY_RE =
-  /#ramfs\/zedcafe ready — activating vm slot/
+  /#ramfs\/zedcafe ready — activating vm slot|vm slot already started from bootstrap mount/
 
 export function defaultzssurl(): string {
   return process.env.ZSS_URL ?? 'https://localhost:7777/'
@@ -174,7 +174,22 @@ export async function waitforzedcafevmexportready(
   key = '__wanixVmApilog',
   ms = WANIX_VM_VALIDATE_TIMEOUTS.EXPORT_APILOG_MS,
 ) {
-  const ready = await waitforapilogmatch(page, key, ZED_CAFE_VM_EXPORT_READY_RE, ms, log)
+  const ready = await waitfor(
+    page,
+    'zedcafe vm export ready',
+    async () => {
+      const logs = await readapilog(page, key)
+      return logs.some(
+        (line) =>
+          ZED_CAFE_VM_EXPORT_READY_RE.test(line) ||
+          /#ramfs\/zedcafe ready — activating vm slot/.test(line) ||
+          /vm slot already started from bootstrap mount/.test(line),
+      )
+    },
+    ms,
+    2000,
+    log,
+  )
   if (!ready) {
     const tail = (await readapilog(page, key)).slice(-12)
     log('apilog tail:', tail.join('\n'))
@@ -200,6 +215,7 @@ export async function waitforzedcafeexportapilog(
           /guest bind mounted from #ramfs\/zedcafe/.test(line) ||
           /export ramfs bind mounted from #task\//.test(line) ||
           /guest zed-cafe ready/.test(line) ||
+          /bootstrap snapshot/.test(line) ||
           ZED_CAFE_VM_EXPORT_READY_RE.test(line),
       )
     },

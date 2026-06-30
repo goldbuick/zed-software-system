@@ -1,7 +1,7 @@
 #!/bin/sh
 # Build ops/fixtures/wanix Go wasm binaries.
 #
-# Usage: build.sh [all|wasi|zedcafe|gojs]
+# Usage: build.sh [all|wasi|zedcafe]
 # Default (no args): all (= wasi + zedcafe)
 #
 # Prereq: Go toolchain + git submodule update --init submodules/wanix
@@ -13,8 +13,6 @@ WANIX_DIR="$ROOT/ops/fixtures/wanix"
 WANIX_SUBMODULE="$ROOT/submodules/wanix"
 ZEDCAFE_FIXTURE="$WANIX_DIR/zedcafe.wasm"
 ZEDCAFE_PUBLIC="$ROOT/cafe/public/wanix/zedcafe.wasm"
-GOJS_SRC="$WANIX_SUBMODULE/test/gojs"
-GOJS_OUT="$WANIX_DIR/gojscheck.wasm"
 
 WASI_FIXTURES="hello hold termbridge zedcaferead zedcafewrite zedcafewritebad zedcafelist"
 
@@ -76,22 +74,6 @@ build_zedcafe() {
   echo "zedcafe.wasm written to $ZEDCAFE_FIXTURE (copied to $ZEDCAFE_PUBLIC)"
 }
 
-build_gojs() {
-  require_wanix_submodule
-  if [ ! -f "$GOJS_SRC/main.go" ]; then
-    echo "missing $GOJS_SRC/main.go — run: git submodule update --init submodules/wanix" >&2
-    exit 1
-  fi
-  mkdir -p "$(dirname "$GOJS_OUT")"
-  echo "go build gojs -> gojscheck.wasm"
-  (
-    cd "$GOJS_SRC"
-    GOOS=js GOARCH=wasm go build -o gojscheck.wasm .
-  )
-  cp "$GOJS_SRC/gojscheck.wasm" "$GOJS_OUT"
-  echo "gojscheck.wasm written to $GOJS_OUT"
-}
-
 build_all() {
   build_wasi
   build_zedcafe
@@ -114,11 +96,8 @@ case "$TARGET" in
   zed-cafe)
     build_zedcafe
     ;;
-  gojs)
-    build_gojs
-    ;;
   *)
-    echo "usage: $0 [all|wasi|zedcafe|zed-cafe|gojs]" >&2
+    echo "usage: $0 [all|wasi|zedcafe|zed-cafe]" >&2
     exit 1
     ;;
 esac

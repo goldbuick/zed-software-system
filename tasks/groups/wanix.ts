@@ -275,12 +275,29 @@ async function runvalidatezedcafeduplexapp(ctx: TaskContext): Promise<number> {
 
 async function runvalidatezedcafetaskreadapp(ctx: TaskContext): Promise<number> {
   const ROOT = ctx.root
+  const BOOK = join(ROOT, 'ops/fixtures/books/example-coolregionsbow.book.json')
   const APILOG_KEY = '__zedcafeTaskReadApilog'
   const log = (...a) => console.log('[zed-cafe-task-read-app-validate]', ...a)
+  if (!existsSync(BOOK)) {
+    console.error('[zed-cafe-task-read-app-validate] missing book fixture', BOOK)
+    return 1
+  }
   return runheadedwanixgate('wanix:zed-cafe:task-read:validate', async ({ page }) => {
     await installapilogcapture(page, APILOG_KEY)
     await openapp(page, defaultzssurl(), log)
-    await warmwanixexport(page, log, APILOG_KEY)
+    log('import coolregionsbow book')
+    const bookbytes = readFileSync(BOOK)
+    await page.evaluate(async (payload) => {
+      const file = new File([new Uint8Array(payload)], 'example-coolregionsbow.book.json', {
+        type: 'application/json',
+      })
+      const dt = new DataTransfer()
+      dt.items.add(file)
+      document.dispatchEvent(
+        new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: dt }),
+      )
+    }, [...bookbytes])
+    await page.waitForTimeout(2000)
     log('dropping zedcaferead.wasm')
     await dropwasm(page, 'zedcaferead.wasm', readfixturewasm(ROOT, 'zedcaferead'))
     const ok = await waitforvmtermorapilog(
@@ -407,13 +424,19 @@ async function runvalidatewanixvmboot(ctx: TaskContext): Promise<number> {
 
 async function runvalidatewanixvmzedcafe(ctx: TaskContext): Promise<number> {
   const ROOT = ctx.root
+  const BOOK = join(ROOT, 'ops/fixtures/books/example-coolregionsbow.book.json')
   const log = (...a) => console.log('[wanix-vm-zedcafe-validate]', ...a)
   const APILOG_KEY = '__wanixVmZedcafeApilog'
-  
+
+  if (!existsSync(BOOK)) {
+    console.error('[wanix-vm-zedcafe-validate] missing book fixture', BOOK)
+    return 1
+  }
+
   const browser = await chromium.launch({ headless: false })
-  
+
   try {
-    await withscripttimeout(
+    return await withscripttimeout(
       'wanix:vm:zed-cafe:validate',
       WANIX_VM_VALIDATE_TIMEOUTS.SCRIPT_TOTAL_MS,
       async () => {
@@ -438,7 +461,21 @@ async function runvalidatewanixvmzedcafe(ctx: TaskContext): Promise<number> {
   
         try {
           await openapp(page, defaultzssurl(), log)
-  
+
+          log('import coolregionsbow book')
+          const bookbytes = readFileSync(BOOK)
+          await page.evaluate(async (payload) => {
+            const file = new File([new Uint8Array(payload)], 'example-coolregionsbow.book.json', {
+              type: 'application/json',
+            })
+            const dt = new DataTransfer()
+            dt.items.add(file)
+            document.dispatchEvent(
+              new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: dt }),
+            )
+          }, [...bookbytes])
+          await page.waitForTimeout(2000)
+
           log('typing #wanix vm')
           await sendline(page, '#wanix vm')
 
@@ -472,7 +509,6 @@ async function runvalidatewanixvmzedcafe(ctx: TaskContext): Promise<number> {
   } finally {
     await browser.close()
   }
-  return 0
 }
 
 async function runvalidatezedcafelistapp(ctx: TaskContext): Promise<number> {
@@ -1010,10 +1046,6 @@ export const WANIX_TASKS: TaskDef[] = [
     description:
       'Compile ops/fixtures/wanix Go WASI fixtures (hello, hold, termbridge, zed-cafe gates) to .wasm',
     run: shell('sh ops/fixtures/wanix/build.sh wasi'),
-  }),
-  def('wanix:gojs:build', {
-    description: 'Build upstream gojscheck.wasm (Go js/wasm) for terminal smoke tests',
-    run: shell('sh ops/fixtures/wanix/build.sh gojs'),
   }),
   def('wanix:zed-cafe:build', {
     description: 'Build zedcafe.wasm (Go js/wasm) into ops/fixtures/wanix/ and cafe/public/wanix/',

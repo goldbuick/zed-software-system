@@ -39,8 +39,7 @@ cafe/public/models/
 
 # wanix smoke wasm scratch (regenerate with yarn task run wanix:wasm:build)
 ops/fixtures/wanix/*.wasm
-# wanix harness guests (regenerate with yarn task run wanix:gojs:build / wanix:ensure)
-cafe/public/wanix/gojscheck.wasm
+# wanix harness guests (regenerate with yarn task run wanix:zed-cafe:build / wanix:ensure)
 cafe/public/wanix/wanix.debug.wasm
 cafe/public/wanix/zedcafe.wasm
 

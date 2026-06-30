@@ -30,9 +30,10 @@ yarn task run wanix:wasm:build
 | Guest FS create guard (gojs export memfs) | `ops/fixtures/wanix/zed-cafe/schemaguardfs.go` |
 | Host export files / inbox JSON | `wanixstateexport.ts`, `encodezedcafeinboxjson` in `wanixzedcafe.ts` |
 | gojs daemon boot (task space) | `wanixzedcafe.ts` → `bootzedcafeexport` |
-| VM spawn inbox + finalize | `wanixcommands.ts` → `spawnwanixvm({ inboxbytes })`, `finalizewanixzedcafedaemon` |
+| VM spawn inbox + finalize | `wanixcommands.ts` → `spawnwanixvm({ inboxbytes, guestfiles })`, `finalizewanixzedcafedaemon` |
+| Bootstrap snapshot at room boot | `readwanixbootzedcafestate`, `appendzedcafebootstrapbinds` in `wanixroombootstrap.ts` |
 | Export wait + file capture | `wanixiframechildmount.ts` → `waitzedcafeexportready`, `collectzedcafeexportfiles` |
-| VM two-phase remount | `wanixiframechildtree.tsx`, `beginvmboot` in controller |
+| VM in-place activation | `wanixiframechildtree.tsx` → `activatevmslot` on dormant `<wanix-vm>` |
 | Guest → MEMORY import | `wanixstateimport.ts`, poll in `wanixzedcafe.ts` |
 
 ## Export tree shape
@@ -40,9 +41,9 @@ yarn task run wanix:wasm:build
 Schema owner: `zss/feature/wanix/zedcafetreeschema.ts` (`validatezedcafeexportpaths` on export/push).
 
 ```text
-zed-cafe/stats.json
-zed-cafe/books/<kebab-name>-<book-id>/stats.json
-zed-cafe/books/.../pages/<kebab-name>-<page-id>/stats.json, terrain.json, …
+zedcafe/stats.json
+zedcafe/books/<kebab-name>-<book-id>/stats.json
+zedcafe/books/.../pages/<kebab-name>-<page-id>/stats.json, terrain.json, …
 ```
 
 Folder segments use `{kebab-case-name}-{id}` (e.g. `my-cool-book-book1`, `player-page2`). Empty name falls back to id-only (`sid_abc`). Legacy `books/<id>/` import is not supported.
@@ -66,15 +67,16 @@ gojs hydrates inbox JSON into `schemaGuardFS` wrapping memfs. Allowlist: `allowe
 
 Ready probe: **`stats.json`** at `#task/<rid>/export/stats.json` (poll via `waitzedcafeexportready`).
 
-VM `#ramfs/zed-cafe` uses ns bind from guarded export (`appendzedcafeexportramfsbind`), not blob file binds.
+VM `#ramfs/zedcafe` uses ns bind from guarded export (`appendzedcafeexportramfsbind`), not blob file binds on the live path. Bootstrap uses per-file `#ramfs/zedcafe/*` binds from host memory at first mount.
 
 ## Task vs VM path
 
 | | Task (`task-*` phase) | VM (`vm-active`) |
 |--|----------------------|------------------|
-| Export bind | `{ dst: zed-cafe, src: #task/<rid>/export }` on system | Skip live bind on export phase; capture files from `#task/<rid>/export` |
-| Inbox | `putwanixfile(#ramfs/zed-cafe-inbox.json)` when root exists | **File bind at mount** from `inboxbytes` passed to `spawnvm` |
-| Guest mount | ns bind → `./zed-cafe/` | Remount: file binds on `#ramfs/zed-cafe/*` + child bind `zed-cafe` ← `#ramfs/zed-cafe` on `<wanix-vm>` |
+| Bootstrap | `appendzedcafebootstrapbinds` on system at `bootroom` | Ramfs file binds on system + dormant `<wanix-vm>` |
+| Export bind | `{ dst: zedcafe, src: #task/<rid>/export }` on system | Skip live bind on export phase; capture files from `#task/<rid>/export` or use prefilled `guestfiles` |
+| Inbox | `inboxbytes` file bind at mount + optional `putwanixfile` | **File bind at mount** from `inboxbytes` passed to `spawnvm` |
+| Guest mount | ns bind → `./zedcafe/` | `activatevmslot`: per-file virtfs on `<wanix-vm>` + `start` (no room remount) |
 | Host after boot | `startzedcafepoll` | `finalizewanixzedcafedaemon` — **no second gojs boot** |
 
 ## Playwright gates (local, headed, dev server required)
@@ -85,7 +87,7 @@ Shared helpers: [`tasks/lib/wanix/playwright-vm.ts`](../../../tasks/lib/wanix/pl
 |------|------|
 | **`wanix:vm:zed-cafe:validate`** | **Primary acceptance** — `#wanix vm` → `ls /`, `ls /zed-cafe`, `cat stats.json` |
 | `wanix:zed-cafe:export:validate` | Regression — same guest milestones via full app |
-| `wanix:vm:boot:validate` | Book seed + remount Milestone A + same guest milestones |
+| `wanix:vm:boot:validate` | Book seed + dormant vm + in-place activation milestones |
 | `wanix:zed-cafe:task-read:validate` | Drop `zedcaferead.wasm` → tile `zed-cafe ok:` (**needs `wanix:wasm:build`**) |
 | `wanix:zed-cafe:duplex:validate` | Drop `zedcafewrite.wasm` + `#wanix pull` + `zedcafewritebad.wasm` schema guard (**needs `wanix:wasm:build`**) |
 | `wanix:zed-cafe:list:validate` | Drop `zedcafelist.wasm` after export warm (**needs `wanix:wasm:build`**) |
@@ -111,7 +113,7 @@ Composite: `yarn task run wanix:zed-cafe:memfs:validate` (build + `go test` + he
 - Captured: iframe `postwanixiframeapilog` → `zss-wanix-term-apilog` postMessage.
 - **Not** captured: host tape `apilog` scrollback (`wanix vm prep: fetching linux`, etc.).
 - Book drop seeds **host memory** only; iframe apilog starts after `#wanix vm` (or task space boot).
-- Milestone A (boot gate): `#ramfs/zed-cafe ready — remounting wanix-system with wanix-vm`.
+- Milestone A (boot gate): `#ramfs/zedcafe ready — activating vm slot` (in-place, no remount apilog)
 
 Timeouts (override via env): `ZSS_WANIX_VM_SCRIPT_TIMEOUT_MS` (default 420000), `ZSS_WANIX_VM_SHELL_TIMEOUT_MS` (default 360000). See rule `no-hanging-scripts.mdc`.
 
@@ -121,7 +123,7 @@ Scenario doc: [`ops/fixtures/wanix/zed-cafe-task-read-scenario.md`](../../../ops
 
 1. Headed repro: `#wanix vm` or `yarn task run wanix:vm:zed-cafe:validate`
 2. Poll iframe apilog every few seconds (gate scripts or manual `message` listener)
-3. Pin phase: inbox staging → gojs export → task export ready → remount → v86 shell → virtfs / `ls /zed-cafe`
+3. Pin phase: inbox staging → gojs export → task export ready → in-place vm activation → v86 shell → virtfs / `ls /zedcafe`
 4. Fix in the owner module above — no new notify/coordination layers (rule `no-new-systems-for-bugs.mdc`)
 
 ## Common errors
@@ -131,7 +133,7 @@ Scenario doc: [`ops/fixtures/wanix/zed-cafe-task-read-scenario.md`](../../../ops
 | `zed-cafe export: invalid tree` | Path outside allowlist or missing book/page `stats.json` for meta entries — fix in `zedcafetreeschema.ts` / export builder, not push workaround |
 | `inbox encode skipped` | Same — `encodezedcafeinboxjson` returned null after validation |
 | `#task/N/export: file does not exist` | Export bind before gojs created export tree |
-| `#ramfs/zed-cafe: file does not exist` | VM/bind before export staged; or ns bind never mounted |
+| `#ramfs/zedcafe: file does not exist` | VM/bind before export staged; or ns bind never mounted |
 | `vm started`, empty serial | `<wanix-vm>` appended after `ready` |
-| `/zed-cafe/` missing, shell OK | virtfs bind failed or export capture empty |
+| `/zedcafe/` missing, shell OK | virtfs bind failed or export capture empty |
 | Duplicate gojs rid in apilog | `ensurewanixzedcafedaemon` after `spawnwanixvm` on VM path |

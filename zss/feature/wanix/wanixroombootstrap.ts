@@ -11,9 +11,14 @@ import {
 import {
   appendwanixarchivebind,
   appendwanixremotebind,
+  appendzedcafebootstrapbinds,
   appendzedcafeinboxfilebind,
+  haszedcafebootstrapguestfiles,
 } from 'zss/feature/wanix/wanixiframechildmount'
-import { readwanixkernelwasmurl } from 'zss/feature/wanix/wanixvmassets'
+import {
+  DEFAULT_WANIX_VM_MEM,
+  readwanixkernelwasmurl,
+} from 'zss/feature/wanix/wanixvmassets'
 import { WANIX_IFRAME_SYSTEM_ID } from 'zss/feature/wanix/wanixiframechildtypes'
 import { setwanixattrs } from 'zss/feature/wanix/wanixiframechildmount'
 
@@ -30,10 +35,16 @@ export function createwanixsystemel(): WanixSystemElement {
 
 function appendroomshared(
   sys: WanixSystemElement,
-  state: Pick<WanixIframeHostState, 'archives' | 'remotes' | 'zedcafe'>,
+  state: Pick<WanixIframeHostState, 'archives' | 'remotes' | 'zedcafe' | 'vmcapable'>,
 ) {
   if (state.zedcafe?.inboxbytes?.length) {
     appendzedcafeinboxfilebind(sys, state.zedcafe.inboxbytes)
+  }
+  const guestfiles = state.zedcafe?.guestfiles
+  if (haszedcafebootstrapguestfiles(guestfiles)) {
+    appendzedcafebootstrapbinds(sys, guestfiles!, {
+      includetaskguest: !state.vmcapable,
+    })
   }
   for (const archive of state.archives) {
     appendwanixarchivebind(sys, archive)
@@ -52,11 +63,10 @@ export function createtaskroomtree(
 ): WanixSystemElement {
   const sys = createwanixsystemel()
   appendwanixroomtaskbinds(sys)
-  appendroomshared(sys, state)
+  appendroomshared(sys, { ...state, vmcapable: false })
   return sys
 }
 
-/** VM-capable room: task binds + linux/v86; dormant wanix-vm only after export capture. */
 export function createvmcapableroomtree(
   state: Pick<
     WanixIframeHostState,
@@ -66,19 +76,15 @@ export function createvmcapableroomtree(
   const sys = createwanixsystemel()
   appendwanixroomtaskbinds(sys)
   appendwanixroomvmprepbinds(sys, state.urls)
-  appendroomshared(sys, state)
-  const skipprebootvm =
-    state.vm?.bootstage === 'export' ||
-    (state.vmcapable && !state.vm)
-  if (!skipprebootvm && state.vm) {
-    const guestfiles = state.vm.guestfiles ?? state.zedcafe?.guestfiles ?? []
-    if (
-      (state.vm.bootstage === 'activating' || state.vm.bootstage === 'active') &&
-      guestfiles.length
-    ) {
-      appendvmbootslot(sys, state.vm.mem, guestfiles, state.remotes)
+  appendroomshared(sys, { ...state, vmcapable: true })
+  if (state.vmcapable) {
+    const vmmem = state.vm?.mem ?? DEFAULT_WANIX_VM_MEM
+    const guestfiles =
+      state.vm?.guestfiles ?? state.zedcafe?.guestfiles ?? []
+    if (haszedcafebootstrapguestfiles(guestfiles)) {
+      appendvmbootslot(sys, vmmem, guestfiles, state.remotes)
     } else {
-      appenddormantvmslot(sys, state.vm.mem, state.remotes)
+      appenddormantvmslot(sys, vmmem, state.remotes)
     }
   }
   return sys

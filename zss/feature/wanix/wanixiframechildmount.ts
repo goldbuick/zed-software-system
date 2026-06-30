@@ -575,6 +575,27 @@ function revokeexportramfsblobsurl(bind: Element | null | undefined) {
   }
 }
 
+export function haszedcafebootstrapguestfiles(
+  guestfiles: WanixZedCafeGuestFile[] | undefined,
+): boolean {
+  return !!guestfiles?.some((file) => file.path === 'stats.json')
+}
+
+/** Stage zedcafe export snapshot in initial wanix-system tree (before ready). */
+export function appendzedcafebootstrapbinds(
+  sys: WanixSystemElement,
+  guestfiles: WanixZedCafeGuestFile[],
+  opts?: { includetaskguest?: boolean },
+) {
+  if (!haszedcafebootstrapguestfiles(guestfiles)) {
+    return
+  }
+  appendzedcafeexportramfsfilebinds(sys, guestfiles)
+  if (opts?.includetaskguest !== false) {
+    appendzedcafeguestfilebinds(sys, guestfiles)
+  }
+}
+
 export function appendzedcafeexportramfsfilebinds(
   sys: WanixSystemElement,
   guestfiles: WanixZedCafeGuestFile[],
@@ -622,6 +643,38 @@ export function appendzedcafeguestfilebinds(
     bind.setAttribute('data-zss-zedcafe-guest', '')
     bind.setAttribute('data-zss-guest-blob-url', bloburl)
     sys.appendChild(bind)
+  }
+}
+
+/** True when #ramfs inbox bytes are readable (bootstrap file bind or prior write). */
+export async function iszedcafeinboxstaged(
+  root: WanixRoot,
+): Promise<boolean> {
+  try {
+    const raw = await root.readFile(WANIX_ZED_CAFE_INBOX_RAMFS)
+    const bytes =
+      raw instanceof Uint8Array ? raw : new TextEncoder().encode(String(raw))
+    return bytes.length > 0
+  } catch {
+    return false
+  }
+}
+
+export async function ensurezedcafeinboxstaged(
+  root: WanixRoot,
+  inboxbind: Element | null,
+): Promise<boolean> {
+  if (await iszedcafeinboxstaged(root)) {
+    return true
+  }
+  if (!inboxbind) {
+    return false
+  }
+  try {
+    await waitwanixbindmount(inboxbind)
+    return await iszedcafeinboxstaged(root)
+  } catch {
+    return false
   }
 }
 

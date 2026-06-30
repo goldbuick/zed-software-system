@@ -4,11 +4,12 @@ import { iswanixspaceactive, putwanixfile } from 'zss/feature/wanix/wanixhost'
 import { haswanixvms } from 'zss/feature/wanix/wanixsession'
 import { validatezedcafeexportpaths } from 'zss/feature/wanix/zedcafetreeschema'
 import type { WANIX_ZED_CAFE_EXPORT_FILE } from 'zss/feature/wanix/wanixstateexport'
-import type { WanixZedCafeGuestFile } from 'zss/feature/wanix/wanixiframechildtypes'
+import type { WanixZedCafeGuestFile, WanixZedCafeHostState } from 'zss/feature/wanix/wanixiframechildtypes'
 import {
   iframecapturezedcafeexport,
   iframechildhaltzedcafe,
   iframechildreadzedcafetaskrid,
+  iframechildrefreshvmzedcafeexport,
   iframechildsetzedcafeready,
   iframechildsynczedcafe,
   iframechildwaitzedcafeready,
@@ -17,6 +18,7 @@ import {
   WANIX_ZED_CAFE_IMPORT_POLL_MS,
   WANIX_ZED_CAFE_INBOX_RAMFS,
   WANIX_ZED_CAFE_WASM_CMD,
+  WANIX_VM_ZED_CAFE_EXPORT_FETCH_MS,
   readwanixzedcafeexportsrc,
 } from 'zss/feature/wanix/wanixzedcafeconstants'
 import {
@@ -36,6 +38,14 @@ let pendingexport = false
 let polltimer: ReturnType<typeof setInterval> | undefined
 let polldevice: DEVICELIKE | null = null
 let pollplayer = ''
+
+type VmZedCafeExportWaiter = {
+  resolve: (files: WANIX_ZED_CAFE_EXPORT_FILE[]) => void
+  reject: (error: Error) => void
+  timer: ReturnType<typeof setTimeout>
+}
+
+let pendingexportwait: VmZedCafeExportWaiter | null = null
 
 function encodetext(text: string): Uint8Array {
   return new TextEncoder().encode(text)
@@ -83,6 +93,127 @@ function guestfilestoexport(
     })
   }
   return out
+}
+
+export function guestfilestoexportfiles(
+  files: WanixZedCafeGuestFile[],
+): WANIX_ZED_CAFE_EXPORT_FILE[] {
+  return guestfilestoexport(files)
+}
+
+export function exportfilestoguestfiles(
+  files: WANIX_ZED_CAFE_EXPORT_FILE[],
+): WanixZedCafeGuestFile[] {
+  const out: WanixZedCafeGuestFile[] = []
+  for (let i = 0; i < files.length; ++i) {
+    const file = files[i]!
+    out.push({
+      path: file.path,
+      data: [...file.bytes],
+    })
+  }
+  return out
+}
+
+export async function readwanixbootzedcafestate(
+  device?: DEVICELIKE | null,
+  player?: string | null,
+): Promise<WanixZedCafeHostState | null> {
+  let exportfiles: WANIX_ZED_CAFE_EXPORT_FILE[]
+  if (device && player) {
+    exportfiles = await fetchzedcafeexportfiles(device, player)
+  } else {
+    const { buildzedcafeexportfiles } = await import(
+      'zss/feature/wanix/wanixstateexport'
+    )
+    exportfiles = buildzedcafeexportfiles()
+  }
+  if (!exportfiles.length) {
+    return null
+  }
+  const inboxencoded = encodezedcafeinboxjson(exportfiles)
+  if (!inboxencoded) {
+    return null
+  }
+  return {
+    cmd: WANIX_ZED_CAFE_WASM_CMD,
+    generation: 1,
+    ready: false,
+    taskrid: null,
+    guestfiles: exportfilestoguestfiles(exportfiles),
+    inboxbytes: [...inboxencoded],
+  }
+}
+
+export function readzedcafeexportbookcount(
+  files: WANIX_ZED_CAFE_EXPORT_FILE[],
+): number {
+  const stats = files.find((file) => file.path === 'stats.json')
+  if (!stats) {
+    return 0
+  }
+  try {
+    const parsed = JSON.parse(new TextDecoder().decode(stats.bytes)) as {
+      bookCount?: unknown
+    }
+    return typeof parsed.bookCount === 'number' ? parsed.bookCount : 0
+  } catch {
+    return 0
+  }
+}
+
+export function resolvevmzedcafeexportwaiter(
+  files: WANIX_ZED_CAFE_EXPORT_FILE[],
+): boolean {
+  if (!pendingexportwait) {
+    return false
+  }
+  clearTimeout(pendingexportwait.timer)
+  pendingexportwait.resolve(files)
+  pendingexportwait = null
+  return true
+}
+
+export function requestvmzedcafeexportfiles(
+  device: DEVICELIKE,
+  player: string,
+  timeoutms = WANIX_VM_ZED_CAFE_EXPORT_FETCH_MS,
+): Promise<WANIX_ZED_CAFE_EXPORT_FILE[]> {
+  if (pendingexportwait) {
+    return Promise.reject(
+      new Error('zed-cafe export: concurrent vm export fetch'),
+    )
+  }
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      pendingexportwait = null
+      reject(new Error('zed-cafe export: vm export fetch timed out'))
+    }, timeoutms)
+    pendingexportwait = { resolve, reject, timer }
+    wanixrequestzedcafeexport(device, player)
+  })
+}
+
+export async function fetchzedcafeexportfiles(
+  device: DEVICELIKE,
+  player: string,
+  timeoutms = WANIX_VM_ZED_CAFE_EXPORT_FETCH_MS,
+): Promise<WANIX_ZED_CAFE_EXPORT_FILE[]> {
+  try {
+    return await requestvmzedcafeexportfiles(device, player, timeoutms)
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err)
+    const { buildzedcafeexportfiles } = await import(
+      'zss/feature/wanix/wanixstateexport'
+    )
+    const fallback = buildzedcafeexportfiles()
+    apilog(
+      device,
+      player,
+      `zed-cafe export: sim fetch failed (${detail}) — local fallback (${fallback.length} files)`,
+    )
+    return fallback
+  }
 }
 
 export function fingerprintzedcafeexportfiles(
@@ -336,13 +467,26 @@ export async function ensurewanixzedcafedaemon(
   if (readwanixzedcafeready() && readwanixzedcafetaskrid()) {
     return true
   }
-  const { buildzedcafeexportfiles } = await import(
-    'zss/feature/wanix/wanixstateexport'
-  )
+  if (iswanixspaceactive()) {
+    const taskrid = await iframechildwaitzedcafeready()
+    if (taskrid) {
+      setwanixzedcafeready(true)
+      setwanixzedcafetaskrid(taskrid)
+      await iframechildsetzedcafeready(true)
+      startzedcafepoll(device, player)
+      try {
+        const tree = await readexporttree()
+        setlasthostpushfingerprint(fingerprintzedcafeexportfiles(tree))
+      } catch {
+        // poll will refresh on next tick
+      }
+      return true
+    }
+  }
   const taskrid = await bootzedcafeexport(
     device,
     player,
-    buildzedcafeexportfiles(),
+    await fetchzedcafeexportfiles(device, player),
   )
   return taskrid !== null
 }
@@ -352,6 +496,8 @@ export async function wanixhandleexportstate(
   player: string,
   files: WANIX_ZED_CAFE_EXPORT_FILE[],
 ) {
+  resolvevmzedcafeexportwaiter(files)
+
   if (!iswanixspaceactive()) {
     markwanixzedcafependingexport()
     return
@@ -367,13 +513,19 @@ export async function wanixhandleexportstate(
   try {
     const tree = await readexporttree()
     const treefp = fingerprintzedcafeexportfiles(tree)
+    const filesfp = fingerprintzedcafeexportfiles(files)
     if (treefp !== readlasthostpushfingerprint()) {
       await runzedcafeimport(device, player, tree)
     }
-    if (!haswanixvms()) {
-      await pushzedcafeexportfiles(device, player, taskrid, files)
+    await pushzedcafeexportfiles(device, player, taskrid, files)
+    if (haswanixvms()) {
+      const guestfiles = exportfilestoguestfiles(files)
+      const hasbooks = guestfiles.some((file) => file.path.startsWith('books/'))
+      if (hasbooks || filesfp !== readlasthostpushfingerprint()) {
+        await iframechildrefreshvmzedcafeexport(guestfiles)
+      }
     }
-    setlasthostpushfingerprint(fingerprintzedcafeexportfiles(files))
+    setlasthostpushfingerprint(filesfp)
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err)
     apilog(device, player, `zed-cafe export: live push failed (${detail}) — recovering`)
@@ -393,6 +545,11 @@ export async function wanixdrainpendingzedcafeexport(
 
 /** Test hook — reset pending flag. */
 export function resetwanixzedcafefortest() {
+  if (pendingexportwait) {
+    clearTimeout(pendingexportwait.timer)
+    pendingexportwait.reject(new Error('zed-cafe export: test reset'))
+    pendingexportwait = null
+  }
   pendingexport = false
   stopzedcafepoll()
 }

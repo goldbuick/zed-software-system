@@ -216,7 +216,6 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 | Task | Description | Tags | Deps | Env |
 |------|-------------|------|------|-----|
 | `yarn task run wanix:ensure` | Record pinned wanix npm version (runtime loads from jsDelivr CDN) | — | — | — |
-| `yarn task run wanix:gojs:build` | Build upstream gojscheck.wasm (Go js/wasm) for terminal smoke tests | — | — | — |
 | `yarn task run wanix:hello:validate` | Headed Playwright: drop hello.wasm → Hello from wanix! (local gate, not CI) | — | — | — |
 | `yarn task run wanix:hold:validate` | Headed Playwright: drop hold.wasm stays running 5s (local gate, not CI) | — | — | — |
 | `yarn task run wanix:termbridge:validate` | Headed Playwright: drop termbridge.wasm banner + ping/pong (local gate, not CI) | — | — | — |

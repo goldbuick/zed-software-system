@@ -15,9 +15,9 @@ Applies when editing Wanix WASI fixture sources, [`build.sh`](../../ops/fixtures
 |-------|------|
 | WASI drop fixtures | **Go only** — `ops/fixtures/wanix/<name>/main.go` |
 | Module | Single root [`go.mod`](../../ops/fixtures/wanix/go.mod) at `ops/fixtures/wanix/` |
-| Build | [`build.sh`](../../ops/fixtures/wanix/build.sh) — targets `wasi`, `zed-cafe`, `gojs`, `all` |
+| Build | [`build.sh`](../../ops/fixtures/wanix/build.sh) — targets `wasi`, `zed-cafe`, `all` |
 | Prereq | Go + `git submodule update --init submodules/wanix` |
-| Toolchain | **Go** (`GOOS=wasip1 GOARCH=wasm` for WASI; `GOOS=js GOARCH=wasm` for zed-cafe/gojs) |
+| Toolchain | **Go** (`GOOS=wasip1 GOARCH=wasm` for WASI; `GOOS=js GOARCH=wasm` for zed-cafe export daemon) |
 
 ## Fixtures
 
@@ -31,7 +31,6 @@ Applies when editing Wanix WASI fixture sources, [`build.sh`](../../ops/fixtures
 | `zedcafewritebad/` | `zedcafewritebad.wasm` | schema guard negative (`evil.json`) |
 | `zedcafelist/` | `zedcafelist.wasm` | walk `./zed-cafe/` tree |
 | `zed-cafe/` | `zed-cafe.wasm` (+ copy to `cafe/public/wanix/`) | gojs export daemon |
-| upstream `test/gojs` | `gojscheck.wasm` | terminal smoke test (separate upstream module) |
 
 ## Build tasks
 
@@ -39,7 +38,6 @@ Applies when editing Wanix WASI fixture sources, [`build.sh`](../../ops/fixtures
 |------|-------------------|
 | `wanix:wasm:build` | `wasi` |
 | `wanix:zed-cafe:build` | `zed-cafe` |
-| `wanix:gojs:build` | `gojs` |
 | `wanix:wasm:build:all` | `all` (wasi + zed-cafe) |
 
 ## Prohibited

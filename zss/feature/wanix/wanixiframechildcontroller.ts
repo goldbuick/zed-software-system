@@ -17,6 +17,7 @@ import type {
   WanixTaskElement,
   WanixWakeElement,
   WanixZedCafeGuestFile,
+  WanixZedCafeHostState,
 } from 'zss/feature/wanix/wanixiframechildtypes'
 import {
   WANIX_IFRAME_SYSTEM_ID,
@@ -31,6 +32,7 @@ import {
 import type { WANIX_TERM_IFRAME_RPC } from 'zss/feature/wanix/wanixtermiframeprotocol'
 import { postwanixiframeapilog } from 'zss/feature/wanix/wanixtermiframeprotocol'
 import type { WANIX_VM_ASSET_URLS } from 'zss/feature/wanix/wanixvmassets'
+import { refreshvmzedcafeguestfiles } from 'zss/feature/wanix/wanixvmslot'
 import type { WanixZedCafeExportProbe } from 'zss/feature/wanix/wanixzedcafeprobe'
 import {
   startwanixbridgehost,
@@ -278,13 +280,14 @@ export function createwanixiframechildcontroller() {
   async function bootroom(opts?: {
     urls?: WANIX_VM_ASSET_URLS
     vmcapable?: boolean
+    zedcafe?: WanixZedCafeHostState | null
   }) {
     const vmcapable = opts?.vmcapable ?? false
     if (iswanixroomready(state) && state.vmcapable === vmcapable) {
       return
     }
     if (iswanixroomready(state) && vmcapable && !state.vmcapable) {
-      await upgradetovmroom(opts?.urls)
+      await upgradetovmroom(opts?.urls, opts?.zedcafe)
       return
     }
     if (state.room === 'booting') {
@@ -300,7 +303,8 @@ export function createwanixiframechildcontroller() {
       urls: opts?.urls ?? state.urls,
       archives: state.archives,
       remotes: state.remotes,
-      zedcafe: state.zedcafe,
+      zedcafe:
+        opts?.zedcafe !== undefined ? opts.zedcafe : state.zedcafe,
       pendingtasks: [],
       removetaskids: [],
       taskspawnseq: state.taskspawnseq,
@@ -312,7 +316,10 @@ export function createwanixiframechildcontroller() {
     await deferred.promise
   }
 
-  async function upgradetovmroom(urls?: WANIX_VM_ASSET_URLS) {
+  async function upgradetovmroom(
+    urls?: WANIX_VM_ASSET_URLS,
+    zedcafe?: WanixZedCafeHostState | null,
+  ) {
     if (state.room === 'booting') {
       await pendingbootroom?.promise
       return
@@ -325,6 +332,7 @@ export function createwanixiframechildcontroller() {
       vmcapable: true,
       roommountkey: state.roommountkey + 1,
       urls: urls ?? state.urls,
+      zedcafe: zedcafe !== undefined ? zedcafe : state.zedcafe,
       pendingtasks: [],
       removetaskids: [],
     })
@@ -340,7 +348,11 @@ export function createwanixiframechildcontroller() {
       switch (data.method) {
         case 'bootroom': {
           const [opts] = (data.args ?? []) as [
-            { urls?: WANIX_VM_ASSET_URLS; vmcapable?: boolean }?,
+            {
+              urls?: WANIX_VM_ASSET_URLS
+              vmcapable?: boolean
+              zedcafe?: WanixZedCafeHostState | null
+            }?,
           ]
           await bootroom(opts)
           replychildrpc(source, data.id, { result: { ok: true } })
@@ -358,32 +370,58 @@ export function createwanixiframechildcontroller() {
           return
         }
         case 'spawnvm': {
-          const [vmid, mem, inboxbytes = []] = data.args as [
+          const [vmid, mem, inboxbytes = [], guestfiles = []] = data.args as [
             string,
             string,
             number[]?,
+            WanixZedCafeGuestFile[]?,
           ]
           if (!iswanixroomready(state)) {
             throw new Error('wanix iframe child: room not ready')
           }
           const deferred = createdeferred<{ vmid: string; vrid: string }>()
           pendingspawnvm = deferred
-          const generation = (state.zedcafe?.generation ?? 0) + 1
-          setstate({
-            ...state,
-            zedcafe: {
-              cmd: state.zedcafe?.cmd ?? WANIX_ZED_CAFE_WASM_CMD,
-              generation,
-              ready: false,
-              taskrid: null,
-              inboxbytes: inboxbytes.length ? inboxbytes : undefined,
-            },
-            vm: {
-              vmid,
-              mem,
-              bootstage: 'export',
-            },
-          })
+          const hasprefill = guestfiles.some((file) => file.path === 'stats.json')
+          if (hasprefill) {
+            setstate({
+              ...state,
+              vm: {
+                vmid,
+                mem,
+                bootstage: 'activating',
+                guestfiles,
+              },
+              zedcafe: state.zedcafe
+                ? {
+                    ...state.zedcafe,
+                    guestfiles,
+                    inboxbytes: inboxbytes.length
+                      ? inboxbytes
+                      : state.zedcafe.inboxbytes,
+                  }
+                : null,
+            })
+          } else {
+            const generation = (state.zedcafe?.generation ?? 0) + 1
+            setstate({
+              ...state,
+              zedcafe: {
+                cmd: state.zedcafe?.cmd ?? WANIX_ZED_CAFE_WASM_CMD,
+                generation,
+                ready: false,
+                taskrid: null,
+                guestfiles: state.zedcafe?.guestfiles,
+                inboxbytes: inboxbytes.length
+                  ? inboxbytes
+                  : state.zedcafe?.inboxbytes,
+              },
+              vm: {
+                vmid,
+                mem,
+                bootstage: 'export',
+              },
+            })
+          }
           const result = await deferred.promise
           replychildrpc(source, data.id, { result })
           return
@@ -564,6 +602,8 @@ export function createwanixiframechildcontroller() {
               generation,
               ready: false,
               taskrid: null,
+              guestfiles: state.zedcafe?.guestfiles,
+              inboxbytes: state.zedcafe?.inboxbytes,
             },
           })
           replychildrpc(source, data.id, { result: { ok: true } })
@@ -636,6 +676,37 @@ export function createwanixiframechildcontroller() {
           replychildrpc(source, data.id, {
             result: readzedcafetaskrid(getstate()),
           })
+          return
+        }
+        case 'refreshvmzedcafeexport': {
+          const [guestfiles] = data.args as [WanixZedCafeGuestFile[]]
+          const sys = document.querySelector(
+            `wanix-system#${WANIX_IFRAME_SYSTEM_ID}`,
+          ) as WanixSystemElement | null
+          if (!sys) {
+            replychildrpc(source, data.id, {
+              error: 'wanix iframe child: system missing for vm export refresh',
+            })
+            return
+          }
+          const count = refreshvmzedcafeguestfiles(sys, guestfiles ?? [])
+          const current = getstate()
+          if (current.zedcafe && count > 0) {
+            setstate({
+              ...current,
+              zedcafe: {
+                ...current.zedcafe,
+                guestfiles,
+              },
+              vm: current.vm
+                ? {
+                    ...current.vm,
+                    guestfiles,
+                  }
+                : current.vm,
+            })
+          }
+          replychildrpc(source, data.id, { result: { ok: true, count } })
           return
         }
         case 'probezedcafeexport': {
@@ -723,21 +794,17 @@ export function createwanixiframechildcontroller() {
 
   function activatevm(guestfiles: WanixZedCafeGuestFile[]) {
     const current = getstate()
-    if (current.vm?.bootstage !== 'export') {
+    if (
+      current.vm?.bootstage !== 'export' &&
+      current.vm?.bootstage !== 'activating'
+    ) {
       return
     }
     postwanixiframeapilog(
       `#ramfs/zedcafe ready — activating vm slot (${guestfiles.length} files)`,
     )
-    postwanixiframeapilog(
-      `zed-cafe export: export captured (${guestfiles.length} files), remounting for vm boot`,
-    )
     setstate({
       ...current,
-      room: 'booting',
-      roommountkey: current.roommountkey + 1,
-      pendingtasks: [],
-      removetaskids: [],
       vm: current.vm
         ? {
             ...current.vm,
@@ -753,7 +820,6 @@ export function createwanixiframechildcontroller() {
           }
         : null,
     })
-    root = null
   }
 
   function markvmactive() {

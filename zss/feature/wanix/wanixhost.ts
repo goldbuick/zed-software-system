@@ -117,7 +117,7 @@ export async function spawnwanixspace(
   }
   state = 'starting'
   try {
-    await iframepreptaskspace()
+    await iframepreptaskspace(device, player)
     state = 'ready'
     await wanixdrainpendingzedcafeexport(device, player)
   } catch (err) {
@@ -132,14 +132,15 @@ export async function spawnwanixvmspace(
   device: DEVICELIKE,
   player: string,
   urls: WANIX_VM_ASSET_URLS = readwanixvmasseturls(),
-  _guestfiles: WanixZedCafeGuestFile[] = [],
+  guestfiles: WanixZedCafeGuestFile[] = [],
+  inboxbytes?: number[],
 ): Promise<void> {
   if (iswanixtermiframeactive()) {
-    await iframeprepvmspace(device, player, urls, _guestfiles)
+    await iframeprepvmspace(device, player, urls, guestfiles, inboxbytes)
     return
   }
   state = 'starting'
-  await iframeprepvmspace(device, player, urls, _guestfiles)
+  await iframeprepvmspace(device, player, urls, guestfiles, inboxbytes)
   state = 'ready'
 }
 
@@ -283,6 +284,7 @@ export type SPAWN_WANIX_VM_OPTS = {
   mem?: string
   attach?: boolean
   inboxbytes?: number[]
+  guestfiles?: WanixZedCafeGuestFile[]
 }
 
 export async function spawnwanixvm(

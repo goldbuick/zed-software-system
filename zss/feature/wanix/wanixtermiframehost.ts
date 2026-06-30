@@ -10,6 +10,7 @@ import {
 import type {
   WanixIframeRemote,
   WanixZedCafeGuestFile,
+  WanixZedCafeHostState,
 } from 'zss/feature/wanix/wanixiframechildtypes'
 import {
   type WANIX_ATTACH_KIND,
@@ -40,6 +41,8 @@ import {
   wanixtermscreensync,
 } from 'zss/feature/wanix/wanixtermscreen'
 import type { WANIX_VM_ASSET_URLS } from 'zss/feature/wanix/wanixvmassets'
+import { readwanixbootzedcafestate } from 'zss/feature/wanix/wanixzedcafe'
+import { WANIX_ZED_CAFE_WASM_CMD } from 'zss/feature/wanix/wanixzedcafeconstants'
 
 const EMBED_READY_MS = 120_000
 
@@ -375,6 +378,7 @@ async function iframebootroom(opts: {
   player?: string | null
   urls?: WANIX_VM_ASSET_URLS
   vmcapable?: boolean
+  zedcafe?: WanixZedCafeHostState | null
 }): Promise<void> {
   const vmcapable = opts.vmcapable ?? false
   if (roomready && !vmcapable) {
@@ -387,6 +391,10 @@ async function iframebootroom(opts: {
   vmpreperror = undefined
   const device = opts.device ?? null
   const player = opts.player ?? null
+  const bootzedcafe =
+    opts.zedcafe !== undefined
+      ? opts.zedcafe
+      : await readwanixbootzedcafestate(device, player)
   if (device && player) {
     apilog(
       device,
@@ -399,7 +407,7 @@ async function iframebootroom(opts: {
   try {
     ensureiframe()
     await childrpc('zss-wanix-term-rpc', 'bootroom', [
-      { vmcapable, urls: opts.urls },
+      { vmcapable, urls: opts.urls, zedcafe: bootzedcafe },
     ])
     roomready = true
     taskspaceready = true
@@ -421,13 +429,40 @@ export async function iframeprepvmspace(
   device: DEVICELIKE,
   player: string,
   urls: WANIX_VM_ASSET_URLS,
-  _guestfiles: WanixZedCafeGuestFile[] = [],
+  guestfiles: WanixZedCafeGuestFile[] = [],
+  inboxbytes?: number[],
 ): Promise<void> {
-  await iframebootroom({ device, player, urls, vmcapable: true })
+  let bootzedcafe: WanixZedCafeHostState | null = null
+  if (guestfiles.length) {
+    bootzedcafe = {
+      cmd: WANIX_ZED_CAFE_WASM_CMD,
+      generation: 1,
+      ready: false,
+      taskrid: null,
+      guestfiles,
+      inboxbytes: inboxbytes?.length ? inboxbytes : undefined,
+    }
+  } else {
+    bootzedcafe = await readwanixbootzedcafestate(device, player)
+  }
+  await iframebootroom({
+    device,
+    player,
+    urls,
+    vmcapable: true,
+    zedcafe: bootzedcafe,
+  })
 }
 
-export async function iframepreptaskspace(): Promise<void> {
-  await iframebootroom({ vmcapable: false })
+export async function iframepreptaskspace(
+  device?: DEVICELIKE,
+  player?: string,
+): Promise<void> {
+  await iframebootroom({
+    device,
+    player,
+    vmcapable: false,
+  })
 }
 
 export async function iframespawnvm(opts: {
@@ -435,6 +470,7 @@ export async function iframespawnvm(opts: {
   mem?: string
   attach?: boolean
   inboxbytes?: number[]
+  guestfiles?: WanixZedCafeGuestFile[]
 }): Promise<{ vmid: string }> {
   const vmid = opts.vmid ?? 'linux-vm'
   const mem = opts.mem ?? '512M'
@@ -449,6 +485,7 @@ export async function iframespawnvm(opts: {
     vmid,
     mem,
     opts.inboxbytes ?? [],
+    opts.guestfiles ?? [],
   ])
   return { vmid }
 }
@@ -528,6 +565,15 @@ export async function iframechildreadzedcafetaskrid(): Promise<string | null> {
 
 export async function iframechildhaltzedcafe(): Promise<void> {
   await childrpc('zss-wanix-term-rpc', 'haltzedcafe', [])
+}
+
+export async function iframechildrefreshvmzedcafeexport(
+  guestfiles: WanixZedCafeGuestFile[],
+): Promise<void> {
+  if (!iswanixtermiframeactive()) {
+    return
+  }
+  await childrpc('zss-wanix-term-rpc', 'refreshvmzedcafeexport', [guestfiles])
 }
 
 export async function iframechildprobezedcafeexport(): Promise<unknown> {

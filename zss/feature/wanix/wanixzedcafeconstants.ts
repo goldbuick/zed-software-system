@@ -9,6 +9,8 @@ export const WANIX_ZED_CAFE_WASM_URL = '/wanix/zedcafe.wasm'
 export const WANIX_ZED_CAFE_WASM_CMD = WANIX_ZED_CAFE_WASM_RAMFS
 export const WANIX_ZED_CAFE_EXPORT_DEBOUNCE_MS = 2000
 export const WANIX_ZED_CAFE_IMPORT_POLL_MS = 3000
+/** Wall-clock cap for sim-worker export fetch during VM prep. */
+export const WANIX_VM_ZED_CAFE_EXPORT_FETCH_MS = 10_000
 
 export function readwanixzedcafetaskinboxpath(taskrid: string): string {
   return `#task/${taskrid}/${WANIX_ZED_CAFE_TASK_INBOX}`

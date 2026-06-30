@@ -47,7 +47,11 @@ import {
 } from 'zss/feature/wanix/wanixvmassets'
 import {
   encodezedcafeinboxjson,
+  exportfilestoguestfiles,
+  fetchzedcafeexportfiles,
   finalizewanixzedcafeaftervmboot,
+  guestfilestoexportfiles,
+  readzedcafeexportbookcount,
   stopzedcafepoll,
   wanixpullzedcafe,
 } from 'zss/feature/wanix/wanixzedcafe'
@@ -57,6 +61,7 @@ import {
   readwanixbridgeimporturl,
 } from 'zss/feature/wanix/wanixbridgehost'
 import {
+  readwanixzedcafeready,
   setwanixzedcafeready,
   setwanixzedcafetaskrid,
 } from 'zss/feature/wanix/wanixzedcafesession'
@@ -85,6 +90,36 @@ export async function wanixhandlevmstart(
       }
     }
     apilog(device, player, 'wanix vm prep: ensuring zed-cafe export...')
+    let exportfiles = await fetchzedcafeexportfiles(device, player)
+    let guestfiles = exportfilestoguestfiles(exportfiles)
+    const bookcount = readzedcafeexportbookcount(exportfiles)
+    apilog(
+      device,
+      player,
+      `wanix vm prep: export bookCount=${bookcount} files=${exportfiles.length}`,
+    )
+    if (bookcount === 0) {
+      apilog(
+        device,
+        player,
+        'wanix vm prep: warning — no books in export snapshot',
+      )
+    }
+    if (iswanixspaceactive() && readwanixzedcafeready()) {
+      const { iframecapturezedcafeexport } = await import(
+        'zss/feature/wanix/wanixtermiframehost'
+      )
+      const captured = await iframecapturezedcafeexport()
+      if (captured.length > guestfiles.length) {
+        guestfiles = captured
+        exportfiles = guestfilestoexportfiles(captured)
+        apilog(
+          device,
+          player,
+          `wanix vm prep: using iframe export capture (${guestfiles.length} files)`,
+        )
+      }
+    }
     if (iswanixspaceactive()) {
       await iframechildhaltzedcafe()
     }
@@ -92,18 +127,19 @@ export async function wanixhandlevmstart(
     setwanixzedcafeready(false)
     setwanixzedcafetaskrid(null)
     apilog(device, player, 'wanix vm prep: fetching linux + v86 archives...')
-    await spawnwanixvmspace(device, player, undefined, [])
-    apilog(device, player, `wanix vm prep: ${readwanixvmprepstage()}`)
-    const { buildzedcafeexportfiles } = await import(
-      'zss/feature/wanix/wanixstateexport'
-    )
-    const exportfiles = buildzedcafeexportfiles()
     const inboxencoded = encodezedcafeinboxjson(exportfiles)
     if (!inboxencoded) {
       apilog(device, player, 'wanix vm prep: zed-cafe export tree invalid')
       return
     }
     const inboxbytes = [...inboxencoded]
+    apilog(
+      device,
+      player,
+      `wanix vm prep: staging ${guestfiles.length} export files for vm guest`,
+    )
+    await spawnwanixvmspace(device, player, undefined, guestfiles, inboxbytes)
+    apilog(device, player, `wanix vm prep: ${readwanixvmprepstage()}`)
     const requested = vmid ?? DEFAULT_WANIX_VM_ID
     apilog(device, player, `wanix vm spawn: ${requested}...`)
     const { vmid: spawnedid } = await spawnwanixvm({
@@ -111,6 +147,7 @@ export async function wanixhandlevmstart(
       mem: DEFAULT_WANIX_VM_MEM,
       attach: true,
       inboxbytes,
+      guestfiles,
     })
     const exportready = await finalizewanixzedcafeaftervmboot(device, player)
     if (!exportready) {
