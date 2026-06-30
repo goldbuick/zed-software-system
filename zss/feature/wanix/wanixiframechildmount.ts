@@ -254,26 +254,36 @@ export async function waitzedcafeguestready(
 ): Promise<boolean> {
   const deadline = Date.now() + timeoutms
   while (Date.now() < deadline) {
-    try {
-      const entries = await root.readDir('zed-cafe')
-      if (
-        entries.some(
-          (entry) => entry.replace(/\/$/, '') === 'stats.json',
-        )
-      ) {
-        postwanixiframeapilog(
-          `zed-cafe export: guest zed-cafe ready (${entries.length} entries)`,
-        )
-        return true
-      }
-    } catch {
-      // guest bind not mounted yet
+    if (await readzedcafeexportstatsready(root, 'zed-cafe')) {
+      postwanixiframeapilog(
+        `zed-cafe export: guest zed-cafe ready`,
+      )
+      return true
     }
     await new Promise<void>((resolve) =>
       setTimeout(resolve, WANIX_ZED_CAFE_EXPORT_READY_POLL_MS),
     )
   }
   return false
+}
+
+async function readzedcafeexportstatsready(
+  root: WanixRoot,
+  base: string,
+): Promise<boolean> {
+  try {
+    await root.readFile(`${base}/stats.json`)
+    return true
+  } catch {
+    try {
+      const entries = await root.readDir(base)
+      return entries.some(
+        (entry) => entry.replace(/\/$/, '') === 'stats.json',
+      )
+    } catch {
+      return false
+    }
+  }
 }
 
 function cleartaskstagingbinds(sys: WanixSystemElement) {
@@ -351,7 +361,7 @@ export async function collectzedcafeexportfiles(
   return collectexporttreefiles(root, readwanixzedcafeexportsrc(taskrid))
 }
 
-/** Poll live export, capture on #ramfs, mount guest ./zed-cafe (parallel with gojs start). */
+/** Poll live export, snapshot files on #ramfs, mount guest ./zed-cafe (task layout). */
 export async function waitandmountzedcafeguestexport(
   sys: WanixSystemElement,
   root: WanixRoot,
@@ -362,7 +372,7 @@ export async function waitandmountzedcafeguestexport(
   const exportsrc = readwanixzedcafeexportsrc(taskrid)
   const deadline = Date.now() + timeoutms
   let exportlogged = false
-  let captured = false
+  let staged = false
   let guestbindappended = false
 
   while (Date.now() < deadline) {
@@ -382,8 +392,7 @@ export async function waitandmountzedcafeguestexport(
       exportlive = false
     }
 
-    if (exportlive && !captured) {
-      captured = true
+    if (exportlive && !staged) {
       const guestfiles = await collectzedcafeexportfiles(root, taskrid)
       if (!guestfiles.some((file) => file.path === 'stats.json')) {
         postwanixiframeapilog(
@@ -394,20 +403,14 @@ export async function waitandmountzedcafeguestexport(
         postwanixiframeapilog(
           `zed-cafe export: staging ${guestfiles.length} files on ${WANIX_ZED_CAFE_EXPORT_RAMFS}`,
         )
-        const ramfsbind = appendzedcafeexportramfsbind(sys, taskrid)
-        if (ramfsbind) {
-          wirezedcafeexportbind(ramfsbind, sys, taskrid, controller)
-        }
-        postwanixiframeapilog(
-          `zed-cafe export: binding ${WANIX_ZED_CAFE_EXPORT_RAMFS} from guarded #task/${taskrid}/export (${guestfiles.length} files)`,
-        )
+        staged = true
       }
     }
 
     if (
-      captured &&
+      staged &&
       !guestbindappended &&
-      (await verifyzedcafeexportramfs(root))
+      (await readzedcafeexportstatsready(root, WANIX_ZED_CAFE_EXPORT_RAMFS))
     ) {
       sys
         .querySelectorAll('wanix-bind[data-zss-zed-cafe-export="guest"]')
@@ -419,7 +422,15 @@ export async function waitandmountzedcafeguestexport(
       guestbind.setAttribute('data-zss-zed-cafe-export', 'guest')
       sys.appendChild(guestbind)
       wirezedcafeexportbind(guestbind, sys, taskrid, controller)
+      try {
+        await waitwanixbindmount(guestbind)
+      } catch {
+        appendzedcafeexportfallbackbinds(sys, taskrid)
+      }
       guestbindappended = true
+      postwanixiframeapilog(
+        `zed-cafe export: guest bind from ${WANIX_ZED_CAFE_EXPORT_RAMFS}`,
+      )
     }
 
     if (
@@ -802,14 +813,7 @@ export function iswanixvmlayout(sys: WanixSystemElement): boolean {
 export async function verifyzedcafeexportramfs(
   root: WanixRoot,
 ): Promise<boolean> {
-  try {
-    const entries = await root.readDir(WANIX_ZED_CAFE_EXPORT_RAMFS)
-    return entries.some(
-      (entry) => entry.replace(/\/$/, '') === 'stats.json',
-    )
-  } catch {
-    return false
-  }
+  return readzedcafeexportstatsready(root, WANIX_ZED_CAFE_EXPORT_RAMFS)
 }
 
 export function appendzedcafeexportbind(

@@ -131,25 +131,35 @@ HTTPS dev (`yarn task app dev`) cannot use bare `ws://` URLs (mixed content). Vi
 
 Remote import in the full app: `#wanix remote connect wss://…` (see **WSS remote import** below). Harness: [/wanix/wss-import.html](http://localhost:7777/wanix/wss-import.html).
 
-## Quick build (Go WASI)
+## Quick build (Go)
 
-Requires **Go** only (`brew install go`):
+Requires **Go** and the wanix submodule:
 
 ```bash
+git submodule update --init submodules/wanix
 yarn task run wanix:wasm:build
 ```
 
-Compiles [`wasi/`](wasi/) packages to `.wasm` in this directory via [`build-wasm-go.sh`](build-wasm-go.sh) (`GOOS=wasip1 GOARCH=wasm`).
+Or build everything locally via [`build.sh`](build.sh):
+
+```bash
+sh ops/fixtures/wanix/build.sh all      # wasi + zed-cafe
+sh ops/fixtures/wanix/build.sh wasi     # WASI drops only
+sh ops/fixtures/wanix/build.sh zed-cafe  # export daemon only
+sh ops/fixtures/wanix/build.sh gojs      # gojscheck smoke wasm
+```
+
+Compiles Go WASI packages in this directory to `.wasm` (`GOOS=wasip1 GOARCH=wasm`).
 
 | Source | Output | Role |
 |--------|--------|------|
-| `wasi/hello` | `hello.wasm` | one-shot hello (batch stdout) |
-| `wasi/hold` | `hold.wasm` | infinite loop (e2e term-write while running) |
-| `wasi/termbridge` | `termbridge.wasm` | **ZSS tile term bridge demo** — banner on stdout, then hold |
-| `wasi/zedcaferead` | `zedcaferead.wasm` | read `zed-cafe/stats.json`, print `zed-cafe ok: …` |
-| `wasi/zedcafewrite` | `zedcafewrite.wasm` | overwrite `zed-cafe/stats.json` with `guestTouch` |
-| `wasi/zedcafewritebad` | `zedcafewritebad.wasm` | schema guard negative — create `zed-cafe/evil.json` must fail |
-| `wasi/zedcafelist` | `zedcafelist.wasm` | walk `./zed-cafe/` tree |
+| `hello/` | `hello.wasm` | one-shot hello (batch stdout) |
+| `hold/` | `hold.wasm` | infinite loop (e2e term-write while running) |
+| `termbridge/` | `termbridge.wasm` | **ZSS tile term bridge demo** — banner on stdout, then hold |
+| `zedcaferead/` | `zedcaferead.wasm` | read `zed-cafe/stats.json`, print `zed-cafe ok: …` |
+| `zedcafewrite/` | `zedcafewrite.wasm` | overwrite `zed-cafe/stats.json` with `guestTouch` |
+| `zedcafewritebad/` | `zedcafewritebad.wasm` | schema guard negative — create `zed-cafe/evil.json` must fail |
+| `zedcafelist/` | `zedcafelist.wasm` | walk `./zed-cafe/` tree |
 
 Drag the `.wasm` onto a running app (`yarn task app dev`). Multiple drops run in parallel; use `#wanix` to attach, stop, or unmount.
 

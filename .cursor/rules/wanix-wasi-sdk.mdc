@@ -7,46 +7,52 @@ globs:
 
 # Wanix WASI fixtures (Go)
 
-Applies when editing Wanix WASI fixture sources, `build-wasm-go.sh`, or `tasks/groups/wanix.ts` wasm build tasks. See [`ops/fixtures/wanix/README.md`](../../ops/fixtures/wanix/README.md), skill `wanix-zed-cafe-export`.
+Applies when editing Wanix WASI fixture sources, [`build.sh`](../../ops/fixtures/wanix/build.sh), or `tasks/groups/wanix.ts` wasm build tasks. See [`ops/fixtures/wanix/README.md`](../../ops/fixtures/wanix/README.md), skill `wanix-zed-cafe-export`.
 
 ## Policy
 
 | Topic | Rule |
 |-------|------|
-| WASI drop fixtures | **Go only** — `ops/fixtures/wanix/wasi/<name>/main.go` |
-| Build | `yarn task run wanix:wasm:build` → [`build-wasm-go.sh`](../../ops/fixtures/wanix/build-wasm-go.sh) |
-| Toolchain | **Go** (`GOOS=wasip1 GOARCH=wasm`); no wasi-sdk, no wabt |
-| zed-cafe export daemon | Separate module: `ops/fixtures/wanix/zed-cafe/` (`GOOS=js GOARCH=wasm`) via `wanix:zed-cafe:build` |
+| WASI drop fixtures | **Go only** — `ops/fixtures/wanix/<name>/main.go` |
+| Module | Single root [`go.mod`](../../ops/fixtures/wanix/go.mod) at `ops/fixtures/wanix/` |
+| Build | [`build.sh`](../../ops/fixtures/wanix/build.sh) — targets `wasi`, `zed-cafe`, `gojs`, `all` |
+| Prereq | Go + `git submodule update --init submodules/wanix` |
+| Toolchain | **Go** (`GOOS=wasip1 GOARCH=wasm` for WASI; `GOOS=js GOARCH=wasm` for zed-cafe/gojs) |
 
 ## Fixtures
 
 | Package | Output | Role |
 |---------|--------|------|
-| `wasi/hello` | `hello.wasm` | one-shot stdout |
-| `wasi/hold` | `hold.wasm` | infinite loop (term-write while running) |
-| `wasi/termbridge` | `termbridge.wasm` | term bridge banner + hold |
-| `wasi/zedcaferead` | `zedcaferead.wasm` | read `./zed-cafe/stats.json` |
-| `wasi/zedcafewrite` | `zedcafewrite.wasm` | overwrite `stats.json` with `guestTouch` |
-| `wasi/zedcafewritebad` | `zedcafewritebad.wasm` | schema guard negative (`evil.json`) |
-| `wasi/zedcafelist` | `zedcafelist.wasm` | walk `./zed-cafe/` tree |
+| `hello/` | `hello.wasm` | one-shot stdout |
+| `hold/` | `hold.wasm` | infinite loop (term-write while running) |
+| `termbridge/` | `termbridge.wasm` | term bridge banner + hold |
+| `zedcaferead/` | `zedcaferead.wasm` | read `./zed-cafe/stats.json` |
+| `zedcafewrite/` | `zedcafewrite.wasm` | overwrite `stats.json` with `guestTouch` |
+| `zedcafewritebad/` | `zedcafewritebad.wasm` | schema guard negative (`evil.json`) |
+| `zedcafelist/` | `zedcafelist.wasm` | walk `./zed-cafe/` tree |
+| `zed-cafe/` | `zed-cafe.wasm` (+ copy to `cafe/public/wanix/`) | gojs export daemon |
+| upstream `test/gojs` | `gojscheck.wasm` | terminal smoke test (separate upstream module) |
 
 ## Build tasks
 
-| Task | Builds |
-|------|--------|
-| `wanix:wasm:build` | All Go WASI fixtures above |
-| `wanix:zed-cafe:build` | `zed-cafe.wasm` (gojs export daemon) |
-| `wanix:wasm:build:all` | `wanix:wasm:build` + `wanix:zed-cafe:build` |
+| Task | `build.sh` target |
+|------|-------------------|
+| `wanix:wasm:build` | `wasi` |
+| `wanix:zed-cafe:build` | `zed-cafe` |
+| `wanix:gojs:build` | `gojs` |
+| `wanix:wasm:build:all` | `all` (wasi + zed-cafe) |
 
 ## Prohibited
 
 - New `.c` or `.wat` Wanix drop fixtures
 - `wasi-sdk`, `wabt`, `build-wasm-c.sh`, `build-wasm.sh`, `install-wasi-sdk.sh`
 - `wanix:wasm:build:c` task id (removed — use `wanix:wasm:build`)
+- Separate `go.mod` per fixture subdirectory
+- Nesting WASI packages under `wasi/` (flat layout under `ops/fixtures/wanix/`)
 
 ## Allowed
 
-- Go `wasip1` packages under `ops/fixtures/wanix/wasi/`
+- Go `wasip1` packages under `ops/fixtures/wanix/<name>/`
 - Go `js/wasm` export daemon under `ops/fixtures/wanix/zed-cafe/`
 
 Cross-link: rule `fixtures.mdc`, rule `wanix-term-bridge.mdc`.

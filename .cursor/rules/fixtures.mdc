@@ -20,7 +20,7 @@ All test fixture **assets** live under repo-root [`ops/fixtures/`](ops/fixtures/
 | Book corpus | `lang/coolregionsbow/` |
 | Memory WASM | `memory/wasm/` |
 | Synth | `synth/wasm/`, `synth/daisy/`, `synth/maxi/` |
-| Wanix WASI | `wanix/` (Go `wasip1` fixtures in `wanix/wasi/`; `yarn task run wanix:wasm:build`) |
+| Wanix WASI | `wanix/` (Go `wasip1` fixtures in `wanix/<name>/`; `yarn task run wanix:wasm:build`) |
 | Dev-served static | `public/` (served at `/fixtures/` in dev only) |
 | Offline renders | `renders/` (daisy offline wav/json/txt; served at `/renders/` in dev only) |
 | Book templates | `content/templates/`; build output `content/dist/` |
@@ -37,7 +37,7 @@ path.join(LANG_PARITY_DIR, `${id}.zss`)
 path.join(__dirname, '__fixtures__/parity')
 
 // ❌ BAD — legacy paths
-'ops/fixtures/wanix/wasi/hello/main.go'
+'ops/fixtures/wanix/hello/main.go'
 'src/fixtures/example-coolregionsbow.book.json'
 ```
 

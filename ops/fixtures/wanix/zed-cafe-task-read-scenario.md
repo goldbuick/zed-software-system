@@ -10,7 +10,7 @@ Prove a **dropped WASI task** can read the session book mirror at `./zed-cafe/st
 
 | Artifact | Purpose |
 |----------|---------|
-| `wasi/zedcaferead/main.go` | Source — read `zed-cafe/stats.json`, prints `zed-cafe ok: …` |
+| `zedcaferead/main.go` | Source — read `zed-cafe/stats.json`, prints `zed-cafe ok: …` |
 | `zedcaferead.wasm` | Built via `yarn task run wanix:wasm:build` — drag this onto the app |
 
 ## Build fixture wasm
@@ -58,13 +58,13 @@ Drops `zedcaferead.wasm` in the full app and asserts tile apilog contains `zed-c
 
 - Task path is **`zed-cafe/stats.json`** (relative, no leading `/`) — matches WASI task namespace, not VM serial `/zed-cafe/…`.
 - Do not patch WASI `fd_read(0)` stdin; stdout goes through the term bridge (`fd_write` → tile).
-- Rebuild `zedcaferead.wasm` after editing `wasi/zedcaferead/main.go` via `wanix:wasm:build`.
+- Rebuild `zedcaferead.wasm` after editing `zedcaferead/main.go` via `wanix:wasm:build`.
 
 ## D — Duplex guest write (WASI → host import)
 
 | Artifact | Purpose |
 |----------|---------|
-| `wasi/zedcafewrite/main.go` | Overwrites `./zed-cafe/stats.json` with `"guestTouch": true` |
+| `zedcafewrite/main.go` | Overwrites `./zed-cafe/stats.json` with `"guestTouch": true` |
 | `zedcafewrite.wasm` | Built via `yarn task run wanix:wasm:build` |
 
 **Headed Playwright gate** (dev server running):

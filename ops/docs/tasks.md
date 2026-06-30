@@ -219,9 +219,9 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 | `yarn task run wanix:gojs:build` | Build upstream gojscheck.wasm (Go js/wasm) for terminal smoke tests | — | — | — |
 | `yarn task run wanix:vm:boot:validate` | Headed Playwright: seeded book + #wanix vm must reach shell and /zed-cafe/stats.json (local gate, not CI) | — | — | — |
 | `yarn task run wanix:vm:zed-cafe:validate` | Headed Playwright: #wanix vm → ls / shows zed-cafe, cat stats.json (primary local gate, not CI) | — | — | — |
-| `yarn task run wanix:wasm:build` | Compile ops/fixtures/wanix/wasi Go WASI fixtures (hello, hold, termbridge, zed-cafe gates) to .wasm | — | — | — |
-| `yarn task run wanix:wasm:build:all` | Compile wanix Go WASI fixtures and zed-cafe export wasm | — | `wanix:wasm:build`, `wanix:zed-cafe:build` | — |
-| `yarn task run wanix:zed-cafe:build` | Build zed-cafe.wasm (Go js/wasm) into cafe/public/wanix/ for prod | `ci` | — | — |
+| `yarn task run wanix:wasm:build` | Compile ops/fixtures/wanix Go WASI fixtures (hello, hold, termbridge, zed-cafe gates) to .wasm | — | — | — |
+| `yarn task run wanix:wasm:build:all` | Compile wanix Go WASI fixtures and zed-cafe export wasm | — | — | — |
+| `yarn task run wanix:zed-cafe:build` | Build zed-cafe.wasm (Go js/wasm) into ops/fixtures/wanix/ and cafe/public/wanix/ | `ci` | — | — |
 | `yarn task run wanix:zed-cafe:duplex:validate` | Headed Playwright: full app drop zedcafewrite.wasm + #wanix pull import (local gate, not CI) | — | — | — |
 | `yarn task run wanix:zed-cafe:export:validate` | Headed Playwright: full app #wanix vm → cat /zed-cafe/stats.json (local gate, not CI) | — | — | — |
 | `yarn task run wanix:zed-cafe:list:validate` | Headed Playwright: drop zedcafelist.wasm after export warm (local gate, not CI) | — | — | — |

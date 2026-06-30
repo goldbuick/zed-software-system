@@ -20,7 +20,7 @@ Go WASI fixtures (`zedcaferead`, `zedcafewrite`, `zedcafewritebad`, `zedcafelist
 yarn task run wanix:wasm:build
 ```
 
-`wanix:wasm:build` alone builds all WASI drop fixtures under `ops/fixtures/wanix/wasi/`.
+`wanix:wasm:build` alone builds all WASI drop fixtures under `ops/fixtures/wanix/`.
 
 ## Owners
 

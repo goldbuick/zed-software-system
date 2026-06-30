@@ -312,7 +312,9 @@ describe('wanixiframechildmount zed-cafe staging', () => {
       readDir: jest.fn(async () => {
         throw new Error('file does not exist')
       }),
-      readFile: jest.fn(),
+      readFile: jest.fn(async () => {
+        throw new Error('file does not exist')
+      }),
       writeFile: jest.fn(),
     }
     const pending = waitzedcafeguestready(root, 500)

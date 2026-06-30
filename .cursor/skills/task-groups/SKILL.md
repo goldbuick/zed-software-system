@@ -93,11 +93,14 @@ Handlers that also need **other** exports from `parity-timeouts` (e.g. `EXEC_GAT
 
 ### Wanix wasm build tasks
 
-| Task | Toolchain |
-|------|-----------|
-| `wanix:wasm:build` | **Go** — all WASI fixtures under `ops/fixtures/wanix/wasi/` |
-| `wanix:zed-cafe:build` | **Go** — `zed-cafe.wasm` gojs export daemon |
-| `wanix:wasm:build:all` | `wanix:wasm:build` + `wanix:zed-cafe:build` |
+| Task | `build.sh` target |
+|------|-------------------|
+| `wanix:wasm:build` | `wasi` — all WASI fixtures under `ops/fixtures/wanix/<name>/` |
+| `wanix:zed-cafe:build` | `zed-cafe` — gojs export daemon |
+| `wanix:gojs:build` | `gojs` — upstream gojscheck smoke wasm |
+| `wanix:wasm:build:all` | `all` — wasi + zed-cafe |
+
+Single module: `ops/fixtures/wanix/go.mod`. Prereq: `git submodule update --init submodules/wanix`.
 
 Rule: `wanix-wasi-sdk.mdc`.
 

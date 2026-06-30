@@ -21,7 +21,7 @@ import {
   waitforzedcafeexportapilog,
   withscripttimeout,
 } from 'tasks/lib/wanix/playwright-vm'
-import { def, handler, shell, tasksonly } from '../helpers'
+import { def, handler, shell } from '../helpers'
 import type { TaskContext, TaskDef } from '../types'
 
 function runwanixensure(ctx: TaskContext): number {
@@ -628,7 +628,10 @@ async function runvalidatezedcafelistapp(ctx: TaskContext): Promise<number> {
   
         try {
           await openapp(page, defaultzssurl(), log)
-          log('warming wanix + zed-cafe export via #wanix pull')
+          log('warming wanix via #wanix')
+          await sendline(page, '#wanix')
+          await page.waitForTimeout(3000)
+          log('warming zed-cafe export via #wanix pull')
           await sendline(page, '#wanix pull')
           await waitforzedcafeexportapilog(page, log, APILOG_KEY)
   
@@ -708,7 +711,7 @@ async function runvalidatezedcafelistapp(ctx: TaskContext): Promise<number> {
 
 async function runvalidatezedcafememfs(ctx: TaskContext): Promise<number> {
   const ROOT = ctx.root
-  const ZED_CAFE_DIR = join(ROOT, 'ops/fixtures/wanix/zed-cafe')
+  const WANIX_GO_DIR = join(ROOT, 'ops/fixtures/wanix')
   const DEV_URL = process.env.ZSS_URL ?? 'https://localhost:7777/'
   const log = (...a) => console.log('[zed-cafe-memfs-validate]', ...a)
 
@@ -777,9 +780,8 @@ async function runvalidatezedcafememfs(ctx: TaskContext): Promise<number> {
   }
 
   const steps = [
-    { name: 'wanix:zed-cafe:build', run: () => run('yarn', ['task', 'run', 'wanix:zed-cafe:build']) },
-    { name: 'wanix:wasm:build', run: () => run('yarn', ['task', 'run', 'wanix:wasm:build']) },
-    { name: 'go test exportfs', run: () => run('go', ['test', './...'], { cwd: ZED_CAFE_DIR }) },
+    { name: 'wanix build all', run: () => run('sh', ['ops/fixtures/wanix/build.sh', 'all']) },
+    { name: 'go test exportfs', run: () => run('go', ['test', './zed-cafe/...', './zedcafelist/...'], { cwd: WANIX_GO_DIR }) },
     {
       name: 'export:validate',
       run: async () => {
@@ -848,17 +850,17 @@ export const WANIX_TASKS: TaskDef[] = [
   }),
   def('wanix:wasm:build', {
     description:
-      'Compile ops/fixtures/wanix/wasi Go WASI fixtures (hello, hold, termbridge, zed-cafe gates) to .wasm',
-    run: shell('sh ops/fixtures/wanix/build-wasm-go.sh'),
+      'Compile ops/fixtures/wanix Go WASI fixtures (hello, hold, termbridge, zed-cafe gates) to .wasm',
+    run: shell('sh ops/fixtures/wanix/build.sh wasi'),
   }),
   def('wanix:gojs:build', {
     description: 'Build upstream gojscheck.wasm (Go js/wasm) for terminal smoke tests',
-    run: shell('sh ops/fixtures/wanix/build-gojs.sh'),
+    run: shell('sh ops/fixtures/wanix/build.sh gojs'),
   }),
   def('wanix:zed-cafe:build', {
-    description: 'Build zed-cafe.wasm (Go js/wasm) into cafe/public/wanix/ for prod',
+    description: 'Build zed-cafe.wasm (Go js/wasm) into ops/fixtures/wanix/ and cafe/public/wanix/',
     tags: ['ci'],
-    run: shell('sh ops/fixtures/wanix/build-zed-cafe.sh'),
+    run: shell('sh ops/fixtures/wanix/build.sh zed-cafe'),
   }),
   def('wanix:zed-cafe:export:validate', {
     description: 'Headed Playwright: full app #wanix vm → cat /zed-cafe/stats.json (local gate, not CI)',
@@ -888,9 +890,8 @@ export const WANIX_TASKS: TaskDef[] = [
     description: 'Headed Playwright: drop zedcafelist.wasm after export warm (local gate, not CI)',
     run: handler(runvalidatezedcafelistapp),
   }),
-  tasksonly(
-    'wanix:wasm:build:all',
-    'Compile wanix Go WASI fixtures and zed-cafe export wasm',
-    ['wanix:wasm:build', 'wanix:zed-cafe:build'],
-  ),
+  def('wanix:wasm:build:all', {
+    description: 'Compile wanix Go WASI fixtures and zed-cafe export wasm',
+    run: shell('sh ops/fixtures/wanix/build.sh all'),
+  }),
 ]
