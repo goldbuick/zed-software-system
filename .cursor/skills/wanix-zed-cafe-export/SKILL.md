@@ -10,7 +10,18 @@ description: >-
 
 Session books mirror to the Wanix guest as a **`zed-cafe/`** tree. Task layout: **`./zed-cafe/`**. VM layout: **`/zed-cafe/`** (virtfs child bind on `<wanix-vm>`).
 
-See also: skill `wanix-vm-iframe-host`, rule `wanix-vm-lifecycle.mdc`, rule `wanix-zed-cafe-export.mdc`, [`ops/fixtures/wanix/README.md`](../../../ops/fixtures/wanix/README.md).
+See also: skill `wanix-vm-iframe-host`, rule `wanix-vm-lifecycle.mdc`, rule `wanix-zed-cafe-export.mdc`, rule `wanix-wasi-sdk.mdc`, [`ops/fixtures/wanix/README.md`](../../../ops/fixtures/wanix/README.md).
+
+## Prerequisites (WASI drop fixtures)
+
+C-built `.wasm` fixtures (`zedcaferead`, `zedcafewrite`, `zedcafelist`) require **wasi-sdk** at `/opt/wasi-sdk`:
+
+```bash
+sh ops/fixtures/wanix/install-wasi-sdk.sh
+yarn task run wanix:wasm:build:c
+```
+
+`wanix:wasm:build` alone only builds WAT fixtures (`hold`, `termbridge`) — not zed-cafe read/write/list gates.
 
 ## Owners
 
@@ -73,8 +84,9 @@ Shared helpers: [`tasks/lib/wanix/playwright-vm.ts`](../../../tasks/lib/wanix/pl
 | **`wanix:vm:zed-cafe:validate`** | **Primary acceptance** — `#wanix vm` → `ls /`, `ls /zed-cafe`, `cat stats.json` |
 | `wanix:zed-cafe:export:validate` | Regression — same guest milestones via full app |
 | `wanix:vm:boot:validate` | Book seed + remount Milestone A + same guest milestones |
-| `wanix:zed-cafe:task-read:validate` | Drop `zedcaferead.wasm` → tile `zed-cafe ok:` |
-| `wanix:zed-cafe:duplex:validate` | Drop `zedcafewrite.wasm` + `#wanix pull` |
+| `wanix:zed-cafe:task-read:validate` | Drop `zedcaferead.wasm` → tile `zed-cafe ok:` (**needs `wanix:wasm:build:c`**) |
+| `wanix:zed-cafe:duplex:validate` | Drop `zedcafewrite.wasm` + `#wanix pull` (**needs `wanix:wasm:build:c`**) |
+| `wanix:zed-cafe:list:validate` | Drop `zedcafelist.wasm` after export warm (**needs `wanix:wasm:build:c`**) |
 
 **Unit tests do not prove guest visibility.** Gate 3 (or equivalent) is required for `/zed-cafe/` bugs.
 

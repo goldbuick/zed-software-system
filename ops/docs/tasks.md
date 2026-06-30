@@ -219,9 +219,9 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 | `yarn task run wanix:gojs:build` | Build upstream gojscheck.wasm (Go js/wasm) for terminal smoke tests | — | — | — |
 | `yarn task run wanix:vm:boot:validate` | Headed Playwright: seeded book + #wanix vm must reach shell and /zed-cafe/stats.json (local gate, not CI) | — | — | — |
 | `yarn task run wanix:vm:zed-cafe:validate` | Headed Playwright: #wanix vm → ls / shows zed-cafe, cat stats.json (primary local gate, not CI) | — | — | — |
-| `yarn task run wanix:wasm:build` | Compile ops/fixtures/wanix/*.wat to .wasm via wabt (yarn install provides wat2wasm) | — | — | — |
-| `yarn task run wanix:wasm:build:all` | Compile wanix example .wat and optional .c sources to .wasm | — | `wanix:wasm:build`, `wanix:wasm:build:c` | — |
-| `yarn task run wanix:wasm:build:c` | Compile ops/fixtures/wanix/*.c to .wasm when wasi-sdk is installed (skips if missing) | — | — | — |
+| `yarn task run wanix:wasm:build` | Compile ops/fixtures/wanix/*.wat (hold, termbridge) to .wasm via wabt | — | — | — |
+| `yarn task run wanix:wasm:build:all` | Compile wanix WAT (hold/termbridge) and C fixtures — C step requires wasi-sdk | — | `wanix:wasm:build`, `wanix:wasm:build:c` | — |
+| `yarn task run wanix:wasm:build:c` | Compile ops/fixtures/wanix/*.c to .wasm — requires wasi-sdk at /opt/wasi-sdk (fails if missing) | — | — | — |
 | `yarn task run wanix:zed-cafe:build` | Build zed-cafe.wasm (Go js/wasm) into cafe/public/wanix/ for prod | `ci` | — | — |
 | `yarn task run wanix:zed-cafe:duplex:validate` | Headed Playwright: full app drop zedcafewrite.wasm + #wanix pull import (local gate, not CI) | — | — | — |
 | `yarn task run wanix:zed-cafe:export:validate` | Headed Playwright: full app #wanix vm → cat /zed-cafe/stats.json (local gate, not CI) | — | — | — |

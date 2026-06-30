@@ -2,21 +2,24 @@
 
 Prove a **dropped WASI task** can read the session book mirror at `./zed-cafe/stats.json` after Wanix export is warm.
 
+## Prerequisites
+
+wasi-sdk at **`/opt/wasi-sdk`** (see `sh ops/fixtures/wanix/install-wasi-sdk.sh`).
+
 ## Fixture
 
 | Artifact | Purpose |
 |----------|---------|
-| `zedcaferead.c` / `zedcaferead.wat` | Source — `path_open` + `fd_read` on `zed-cafe/stats.json`, prints `zed-cafe ok: …` |
-| `zedcaferead.wasm` | Built locally (`yarn task run wanix:wasm:build`) — drag this onto the app |
+| `zedcaferead.c` | Source — `path_open` + `fd_read` on `zed-cafe/stats.json`, prints `zed-cafe ok: …` |
+| `zedcaferead.wasm` | Built via `yarn task run wanix:wasm:build:c` — drag this onto the app |
 
 ## Build fixture wasm
 
 ```bash
-yarn task run wanix:wasm:build
-# → ops/fixtures/wanix/zedcaferead.wasm
+sh ops/fixtures/wanix/install-wasi-sdk.sh   # first time only
+yarn task run wanix:wasm:build:c
+# → ops/fixtures/wanix/zedcaferead.wasm (and hello, zedcafewrite, zedcafelist)
 ```
-
-Optional C rebuild when wasi-sdk is installed: `yarn task run wanix:wasm:build:c` (overwrites from `zedcaferead.c`).
 
 ## A — Headed Playwright gate
 
@@ -56,19 +59,19 @@ Drops `zedcaferead.wasm` in the full app and asserts tile apilog contains `zed-c
 
 - Task path is **`zed-cafe/stats.json`** (relative, no leading `/`) — matches WASI task namespace, not VM serial `/zed-cafe/…`.
 - Do not patch WASI `fd_read(0)` stdin; stdout goes through the term bridge (`fd_write` → tile).
-- Rebuild `zedcaferead.wasm` after editing `zedcaferead.c`.
+- Rebuild `zedcaferead.wasm` after editing `zedcaferead.c` via `wanix:wasm:build:c`.
 
 ## D — Duplex guest write (WASI → host import)
 
 | Artifact | Purpose |
 |----------|---------|
 | `zedcafewrite.c` | Overwrites `./zed-cafe/stats.json` with `"guestTouch": true` |
-| `zedcafewrite.wasm` | Built via `yarn task run wanix:wasm:build` (`zedcafewrite.wat`; optional C rebuild with wasi-sdk) |
+| `zedcafewrite.wasm` | Built via `yarn task run wanix:wasm:build:c` (requires wasi-sdk) |
 
 **Headed Playwright gate** (dev server running):
 
 ```bash
-yarn task run wanix:wasm:build
+yarn task run wanix:wasm:build:c
 yarn task run wanix:zed-cafe:duplex:validate
 ```
 

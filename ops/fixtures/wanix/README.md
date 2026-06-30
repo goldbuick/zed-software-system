@@ -139,17 +139,16 @@ After `yarn install` (provides `wabt` / `wat2wasm`):
 yarn task run wanix:wasm:build
 ```
 
-Compiles every `ops/fixtures/wanix/*.wat` to a matching `.wasm` in this directory.
+Compiles WAT-only fixtures (`hold.wat`, `termbridge.wat`) to `.wasm` in this directory.
 
-Sources:
-
-| File | Output |
-|------|--------|
-| `hello.wat` | one-shot hello (batch stdout) |
-| `hold.wat` | infinite loop (e2e term-write while running) |
-| `termbridge.wat` | **ZSS tile term bridge demo** — banner on stdout, then hold |
-| `zedcaferead.c` / `zedcaferead.wat` | **zed-cafe FS read** — opens `zed-cafe/stats.json`, prints `zed-cafe ok: …` |
-| `zedcafewrite.c` / `zedcafewrite.wat` | **zed-cafe FS write** — overwrites `zed-cafe/stats.json` with `guestTouch` |
+| File | Output | Build |
+|------|--------|-------|
+| `hold.wat` | infinite loop (e2e term-write while running) | wabt |
+| `termbridge.wat` | **ZSS tile term bridge demo** — banner on stdout, then hold | wabt |
+| `hello.c` | one-shot hello (batch stdout) | wasi-sdk |
+| `zedcaferead.c` | **zed-cafe FS read** — opens `zed-cafe/stats.json`, prints `zed-cafe ok: …` | wasi-sdk |
+| `zedcafewrite.c` | **zed-cafe FS write** — overwrites `zed-cafe/stats.json` with `guestTouch` | wasi-sdk |
+| `zedcafelist.c` | lists `zed-cafe/books/` after export warm | wasi-sdk |
 
 Drag the `.wasm` onto a running app (`yarn task app dev`). Multiple drops run in parallel; use `#wanix` to attach, stop, or unmount.
 
@@ -157,13 +156,11 @@ Drag the `.wasm` onto a running app (`yarn task app dev`). Multiple drops run in
 
 After Wanix is warm and session books have exported to `./zed-cafe/`, drop `zedcaferead.wasm` to prove a WASI task can read `zed-cafe/stats.json`.
 
-Full scenario: [`zed-cafe-task-read-scenario.md`](zed-cafe-task-read-scenario.md)  
-Harness: [/wanix/zed-cafe-task-read.html](http://localhost:7777/wanix/zed-cafe-task-read.html) (build wasm with `yarn task run wanix:wasm:build` first).
+Full scenario: [`zed-cafe-task-read-scenario.md`](zed-cafe-task-read-scenario.md)
 
 ```bash
-yarn task run wanix:wasm:build    # zedcaferead.wat → zedcaferead.wasm (wabt)
-# optional C rebuild when wasi-sdk is installed:
-yarn task run wanix:wasm:build:c
+sh ops/fixtures/wanix/install-wasi-sdk.sh   # first time: wasi-sdk → /opt/wasi-sdk
+yarn task run wanix:wasm:build:c            # hello, zedcaferead, zedcafewrite, zedcafelist
 yarn task app dev
 # drag ops/fixtures/wanix/zedcaferead.wasm — expect: zed-cafe ok: {"bookCount":...
 # gate: yarn task run wanix:zed-cafe:task-read:validate
@@ -195,26 +192,34 @@ Upstream Wanix uses `<wanix-term>` bound to `#task/…/term` or `#vm/<rid>/term`
 
 Raw WASI `fd_read(0)` is not the integration surface. See `.cursor/rules/wanix-term-bridge.mdc`.
 
-## Optional C build (wasi-sdk)
+## C build (requires wasi-sdk)
 
-Readable C sources: `hello.c`, `zedcaferead.c`, `zedcafewrite.c`. **Homebrew does not ship `wasi-sdk`** — use the WAT path above, or install wasi-sdk manually:
+Readable C sources: `hello.c`, `zedcaferead.c`, `zedcafewrite.c`, `zedcafelist.c`. **Homebrew does not ship `wasi-sdk`**.
+
+**Setup** (first time):
 
 ```bash
-# https://github.com/WebAssembly/wasi-sdk/releases — unpack and set:
-export WASI_SDK_PATH=/path/to/wasi-sdk-25.0
+sh ops/fixtures/wanix/install-wasi-sdk.sh
+# follow printed sudo mv step → /opt/wasi-sdk
+```
 
+Manual install: [WebAssembly/wasi-sdk releases](https://github.com/WebAssembly/wasi-sdk/releases) — unpack to `/opt/wasi-sdk` (abort if path already exists; relocate manually first).
+
+```bash
 yarn task run wanix:wasm:build:c
 ```
 
-If wasi-sdk is missing, the task prints a skip message and exits 0 (`.wat` builds still work).
+[`build-wasm-c.sh`](build-wasm-c.sh) resolves clang via `$WASI_SDK_PATH`, then `/opt/wasi-sdk`, then `brew --prefix wasi-sdk`. **Exits non-zero** when wasi-sdk is missing or `clang` does not run.
 
-Build everything:
+Build everything (WAT + C):
 
 ```bash
 yarn task run wanix:wasm:build:all
 ```
 
-System `clang` on macOS does **not** target `wasm32-wasi`; use wasi-sdk's `clang`.
+System `clang` on macOS does **not** target `wasm32-wasip1`; use wasi-sdk's `clang`.
+
+Agent docs: rule `wanix-wasi-sdk.mdc`.
 
 ## Runtime
 

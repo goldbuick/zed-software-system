@@ -1,0 +1,44 @@
+---
+description: Wanix C fixtures require wasi-sdk at /opt/wasi-sdk — fail closed, no WAT fallback
+globs:
+  - ops/fixtures/wanix/**
+  - tasks/groups/wanix.ts
+---
+
+# Wanix wasi-sdk (C fixtures)
+
+Applies when editing Wanix WASI `.c` sources, `build-wasm-c.sh`, install docs, or `tasks/groups/wanix.ts` wasm build tasks. See [`ops/fixtures/wanix/README.md`](../../ops/fixtures/wanix/README.md), skill `wanix-zed-cafe-export`.
+
+## Policy
+
+| Topic | Rule |
+|-------|------|
+| C fixtures | **Require** wasi-sdk — `hello.c`, `zedcaferead.c`, `zedcafewrite.c`, `zedcafelist.c` |
+| WAT fixtures | **Only** `hold.wat`, `termbridge.wat` via `wanix:wasm:build` (wabt) |
+| Install path | Canonical **`/opt/wasi-sdk`**; override via `$WASI_SDK_PATH` only |
+| Setup | `sh ops/fixtures/wanix/install-wasi-sdk.sh` — no Homebrew `wasi-sdk` formula |
+| `wanix:wasm:build:c` | **Must exit 1** when SDK missing or `clang` broken |
+| `wanix:wasm:build:all` | C step is required — composite fails without SDK |
+
+## Build tasks
+
+| Task | Needs wasi-sdk |
+|------|----------------|
+| `wanix:wasm:build` | No (WAT only: hold, termbridge) |
+| `wanix:wasm:build:c` | **Yes** — all `*.c` |
+| `wanix:wasm:build:all` | **Yes** (C step) |
+
+## Prohibited
+
+- `exit 0` skip when wasi-sdk absent in [`build-wasm-c.sh`](../../ops/fixtures/wanix/build-wasm-c.sh)
+- Re-adding `.wat` for C-covered fixtures (`hello`, `zedcaferead`, `zedcafewrite`) as a no-SDK fallback
+- `~/.local/wasi-sdk` or other shadow install paths in build scripts
+- `rm -rf` in install scripts — abort if target exists; user relocates manually
+- Patching wasi-sdk tarball / libedit in repo to paper over a bad install
+
+## Allowed
+
+- WAT-only fixtures via [`build-wasm.sh`](../../ops/fixtures/wanix/build-wasm.sh)
+- Pointing users to `install-wasi-sdk.sh` + README
+
+Cross-link: rule `fixtures.mdc`, rule `wanix-term-bridge.mdc`.

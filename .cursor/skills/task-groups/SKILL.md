@@ -91,6 +91,16 @@ Handlers that also need **other** exports from `parity-timeouts` (e.g. `EXEC_GAT
 - Use `withscripttimeout(label, ms, fn)` — **label first**
 - Do not add `runwithscripttimeout` duplicates
 
+### Wanix wasm build tasks
+
+| Task | wasi-sdk |
+|------|----------|
+| `wanix:wasm:build` | No — WAT only (`hold`, `termbridge`) |
+| `wanix:wasm:build:c` | **Required** — all `*.c`; fails if `/opt/wasi-sdk` missing |
+| `wanix:wasm:build:all` | **Required** (C step) |
+
+Install: `sh ops/fixtures/wanix/install-wasi-sdk.sh`. Rule: `wanix-wasi-sdk.mdc`.
+
 ## Content / lang corpus
 
 - Walk `.zzt`/`.brd` trees: `collectzztcorpussourcefiles` from `ops/lib/content/zztcorpuswalk`

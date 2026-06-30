@@ -114,7 +114,9 @@ async function runvalidatezedcafeduplexapp(ctx: TaskContext): Promise<number> {
   const log = (...a) => console.log('[zed-cafe-duplex-app-validate]', ...a)
   
   if (!existsSync(WASM)) {
-    console.error('[zed-cafe-duplex-app-validate] missing wasm — run wanix:wasm:build')
+    console.error(
+      '[zed-cafe-duplex-app-validate] missing wasm — run: yarn task run wanix:wasm:build:c (requires wasi-sdk at /opt/wasi-sdk; sh ops/fixtures/wanix/install-wasi-sdk.sh)',
+    )
     return 1
   }
   
@@ -236,7 +238,7 @@ async function runvalidatezedcafetaskreadapp(ctx: TaskContext): Promise<number> 
   
   if (!existsSync(WASM)) {
     console.error(
-      '[zed-cafe-task-read-app-validate] missing wasm — run: yarn task run wanix:wasm:build',
+      '[zed-cafe-task-read-app-validate] missing wasm — run: yarn task run wanix:wasm:build:c (requires wasi-sdk; sh ops/fixtures/wanix/install-wasi-sdk.sh)',
     )
     return 1
   }
@@ -542,7 +544,7 @@ async function runvalidatezedcafelistapp(ctx: TaskContext): Promise<number> {
   
   if (!existsSync(WASM)) {
     console.error(
-      '[zed-cafe-list-app-validate] missing wasm — run: yarn task run wanix:wasm:build:c',
+      '[zed-cafe-list-app-validate] missing wasm — run: yarn task run wanix:wasm:build:c (requires wasi-sdk; sh ops/fixtures/wanix/install-wasi-sdk.sh)',
     )
     return 1
   }
@@ -810,7 +812,7 @@ export const WANIX_TASKS: TaskDef[] = [
     run: handler(runwanixensure),
   }),
   def('wanix:wasm:build', {
-    description: 'Compile ops/fixtures/wanix/*.wat to .wasm via wabt (yarn install provides wat2wasm)',
+    description: 'Compile ops/fixtures/wanix/*.wat (hold, termbridge) to .wasm via wabt',
     run: shell('sh ops/fixtures/wanix/build-wasm.sh'),
   }),
   def('wanix:gojs:build', {
@@ -851,12 +853,12 @@ export const WANIX_TASKS: TaskDef[] = [
     run: handler(runvalidatezedcafelistapp),
   }),
   def('wanix:wasm:build:c', {
-    description: 'Compile ops/fixtures/wanix/*.c to .wasm when wasi-sdk is installed (skips if missing)',
+    description: 'Compile ops/fixtures/wanix/*.c to .wasm — requires wasi-sdk at /opt/wasi-sdk (fails if missing)',
     run: shell('sh ops/fixtures/wanix/build-wasm-c.sh'),
   }),
   tasksonly(
     'wanix:wasm:build:all',
-    'Compile wanix example .wat and optional .c sources to .wasm',
+    'Compile wanix WAT (hold/termbridge) and C fixtures — C step requires wasi-sdk',
     ['wanix:wasm:build', 'wanix:wasm:build:c'],
   ),
 ]

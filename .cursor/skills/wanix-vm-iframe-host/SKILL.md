@@ -11,7 +11,7 @@ description: >-
 
 The hidden iframe `/wanix-iframe-host.html` (child: [cafe/wanix-iframe-host.ts](../../../cafe/wanix-iframe-host.ts)) runs both WASI tasks and v86 VMs for `#frame` mode. The parent is [zss/feature/wanix/wanixtermiframehost.ts](../../../zss/feature/wanix/wanixtermiframehost.ts).
 
-Related: rule `wanix-term-bridge.mdc`, rule `wanix-vm-lifecycle.mdc`, rule `wanix-zed-cafe-export.mdc`, skill `wanix-zed-cafe-export`, skill `wanix-term-sizing`.
+Related: rule `wanix-term-bridge.mdc`, rule `wanix-vm-lifecycle.mdc`, rule `wanix-zed-cafe-export.mdc`, rule `wanix-wasi-sdk.mdc`, skill `wanix-zed-cafe-export`, skill `wanix-term-sizing`.
 
 ## Invariant: VMs must be declared at system boot
 

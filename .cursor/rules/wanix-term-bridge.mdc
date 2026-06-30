@@ -25,7 +25,7 @@ While `iswanixtermactive()`, non-`#` lines go to the attached task or VM. WASI t
 
 Wanix runs in a **hidden iframe** (`cafe/wanix-iframe-host.html` → `wanix-iframe-host.ts`) when `#frame` is present. Boot may freeze WebGL briefly on the shared main thread.
 
-See `ops/fixtures/wanix/README.md`. Wanix debugging: headed Playwright validators (`yarn task run wanix:vm:zed-cafe:validate`, etc.) — not standalone HTML pages.
+See `ops/fixtures/wanix/README.md`. Wanix debugging: headed Playwright validators (`yarn task run wanix:vm:zed-cafe:validate`, etc.) — not standalone HTML pages. C fixtures: rule `wanix-wasi-sdk.mdc`.
 
 ## Prohibited
 
@@ -37,7 +37,7 @@ See `ops/fixtures/wanix/README.md`. Wanix debugging: headed Playwright validator
 ## Allowed
 
 - Fixes in **`wanixhost.ts`**, `wanixtermiframehost.ts`, `wanixdrop.ts`, terminal input routing, iframe child host.
-- One-shot WASI binaries that only **`fd_write`** stdout (e.g. `hello.wat`).
+- One-shot WASI binaries that only **`fd_write`** stdout (e.g. `hello.c` via wasi-sdk).
 - Long-running tasks for term bridge verification (`hold.wat`, `termbridge.wat`).
 
 ## Examples
