@@ -19,7 +19,7 @@ type inboxpayload struct {
 
 // ExportFS is the zed-cafe export namespace served by gojs.Export.
 type ExportFS struct {
-	*memfs.FS
+	*schemaGuardFS
 }
 
 func NewExportFromInboxJSON(raw []byte) (*ExportFS, error) {
@@ -35,7 +35,7 @@ func NewExportFromPayload(payload inboxpayload) (*ExportFS, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &ExportFS{FS: memfs.From(snapshot)}, nil
+	return &ExportFS{schemaGuardFS: newSchemaGuardFS(memfs.From(snapshot))}, nil
 }
 
 func snapshotfrompayload(payload inboxpayload) (fskit.MapFS, error) {

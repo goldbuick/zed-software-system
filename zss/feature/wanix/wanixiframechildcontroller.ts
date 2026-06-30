@@ -44,7 +44,7 @@ import { setwanixtermprobeactivetarget } from 'zss/feature/wanix/wanixtermprobe'
 export const WANIX_IFRAME_READY_TIMEOUT_MS = 180_000
 export const WANIX_IFRAME_VM_PREP_WAIT_MS = 600_000
 export const WANIX_IFRAME_ARCHIVE_MOUNT_TIMEOUT_MS = 120_000
-export const WANIX_ZED_CAFE_EXPORT_WAIT_MS = 30_000
+export const WANIX_ZED_CAFE_EXPORT_WAIT_MS = 90_000
 const WANIX_ROOT_RPC_WAIT_MS = 10_000
 
 function readzedcafetaskrid(state: WanixIframeHostState): string | null {

@@ -5,7 +5,7 @@ import type {
   WanixZedCafeGuestFile,
 } from 'zss/feature/wanix/wanixiframechildtypes'
 import {
-  appendzedcafeexportramfsfilebinds,
+  appendzedcafeexportramfsbind,
   setwanixattrs,
   waitwanixbindmount,
 } from 'zss/feature/wanix/wanixiframechildmount'
@@ -138,23 +138,26 @@ export function isvmslotactive(sys: WanixSystemElement): boolean {
   return !!vm?.hasAttribute('start')
 }
 
-/** Stage export bytes and boot the dormant VM slot without remounting wanix-system. */
+/** Stage guarded export namespace and boot the dormant VM slot without remounting wanix-system. */
 export async function activatevmslot(
   sys: WanixSystemElement,
   mem: string,
+  taskrid: string,
   guestfiles: WanixZedCafeGuestFile[],
 ): Promise<WanixWakeElement> {
-  appendzedcafeexportramfsfilebinds(sys, guestfiles)
+  const ramfsbind = appendzedcafeexportramfsbind(sys, taskrid)
   postwanixiframeapilog(
-    `wanix room: staging ${guestfiles.length} files on #ramfs/zed-cafe for vm activation`,
+    `wanix room: binding ${WANIX_ZED_CAFE_EXPORT_RAMFS} from guarded #task/${taskrid}/export (${guestfiles.length} files)`,
   )
 
-  const filebinds = sys.querySelectorAll(
-    'wanix-bind[data-zss-zed-cafe-export-ramfs-file]',
-  )
-  await Promise.all(
-    [...filebinds].map((bind) => waitwanixbindmount(bind as HTMLElement)),
-  )
+  const bind =
+    ramfsbind ??
+    (sys.querySelector(
+      'wanix-bind[data-zss-zed-cafe-export="ramfs"]',
+    ) as HTMLElement | null)
+  if (bind) {
+    await waitwanixbindmount(bind)
+  }
 
   const vm = readvmslot(sys)
   if (!vm) {

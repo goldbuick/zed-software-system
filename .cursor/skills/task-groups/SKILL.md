@@ -93,13 +93,13 @@ Handlers that also need **other** exports from `parity-timeouts` (e.g. `EXEC_GAT
 
 ### Wanix wasm build tasks
 
-| Task | wasi-sdk |
-|------|----------|
-| `wanix:wasm:build` | No — WAT only (`hold`, `termbridge`) |
-| `wanix:wasm:build:c` | **Required** — all `*.c`; fails if `/opt/wasi-sdk` missing |
-| `wanix:wasm:build:all` | **Required** (C step) |
+| Task | Toolchain |
+|------|-----------|
+| `wanix:wasm:build` | **Go** — all WASI fixtures under `ops/fixtures/wanix/wasi/` |
+| `wanix:zed-cafe:build` | **Go** — `zed-cafe.wasm` gojs export daemon |
+| `wanix:wasm:build:all` | `wanix:wasm:build` + `wanix:zed-cafe:build` |
 
-Install: `sh ops/fixtures/wanix/install-wasi-sdk.sh`. Rule: `wanix-wasi-sdk.mdc`.
+Rule: `wanix-wasi-sdk.mdc`.
 
 ## Content / lang corpus
 

@@ -398,10 +398,17 @@ export async function waitandmountzedcafeguestexport(
         if (ramfsbind) {
           wirezedcafeexportbind(ramfsbind, sys, taskrid, controller)
         }
+        postwanixiframeapilog(
+          `zed-cafe export: binding ${WANIX_ZED_CAFE_EXPORT_RAMFS} from guarded #task/${taskrid}/export (${guestfiles.length} files)`,
+        )
       }
     }
 
-    if (captured && !guestbindappended && (await verifyzedcafeexportramfs(root))) {
+    if (
+      captured &&
+      !guestbindappended &&
+      (await verifyzedcafeexportramfs(root))
+    ) {
       sys
         .querySelectorAll('wanix-bind[data-zss-zed-cafe-export="guest"]')
         .forEach((el) => el.remove())
@@ -416,14 +423,20 @@ export async function waitandmountzedcafeguestexport(
     }
 
     if (
-      await waitzedcafeguestready(
+      guestbindappended &&
+      (await waitzedcafeguestready(
         root,
         WANIX_ZED_CAFE_EXPORT_READY_POLL_MS * 4,
-      )
+      ))
     ) {
-      return sys.querySelector(
-        'wanix-bind[data-zss-zed-cafe-export="guest"]',
-      ) as HTMLElement | null
+      return (
+        (sys.querySelector(
+          'wanix-bind[data-zss-zed-cafe-guest]',
+        ) as HTMLElement | null) ??
+        (sys.querySelector(
+          'wanix-bind[data-zss-zed-cafe-export="guest"]',
+        ) as HTMLElement | null)
+      )
     }
 
     await new Promise<void>((resolve) =>

@@ -1,8 +1,11 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import {
   assertzedcafeexportvalid,
   kebabcasezedcafedirname,
   kebabcasezedcafenameportion,
   validatezedcafeexportpaths,
+  ZED_CAFE_EXPORT_ALLOWED_PATH,
 } from 'zss/feature/wanix/zedcafetreeschema'
 import { buildzedcafeexportfiles } from 'zss/feature/wanix/wanixstateexport'
 import type { BOOK, CODE_PAGE } from 'zss/memory/types'
@@ -81,6 +84,29 @@ describe('zedcafetreeschema', () => {
     expect(
       result.errors.some((err) => err.includes('missing book stats')),
     ).toBe(true)
+  })
+
+  it('matches guest fs allowlist json fixture', () => {
+    const jsonpath = join(
+      process.cwd(),
+      'ops/fixtures/wanix/zed-cafe/allowed-path-patterns.json',
+    )
+    const patterns = JSON.parse(readFileSync(jsonpath, 'utf8')) as string[]
+    expect(patterns.length).toBe(ZED_CAFE_EXPORT_ALLOWED_PATH.length)
+    const probes = [
+      'stats.json',
+      'books/demo-book1/stats.json',
+      'books/demo-book1/pages/demo-page1/board/objects/obj1.json',
+      'evil.txt',
+      'books/foo/bar.json',
+    ]
+    for (let i = 0; i < patterns.length; ++i) {
+      const ts = ZED_CAFE_EXPORT_ALLOWED_PATH[i]!
+      const go = new RegExp(patterns[i]!)
+      for (const probe of probes) {
+        expect(go.test(probe)).toBe(ts.test(probe))
+      }
+    }
   })
 
   it('accepts full tree from buildzedcafeexportfiles', () => {

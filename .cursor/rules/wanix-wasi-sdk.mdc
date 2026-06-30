@@ -1,44 +1,52 @@
 ---
-description: Wanix C fixtures require wasi-sdk at /opt/wasi-sdk — fail closed, no WAT fallback
+description: Wanix WASI drop fixtures — Go wasip1 only (no C, no WAT)
 globs:
   - ops/fixtures/wanix/**
   - tasks/groups/wanix.ts
 ---
 
-# Wanix wasi-sdk (C fixtures)
+# Wanix WASI fixtures (Go)
 
-Applies when editing Wanix WASI `.c` sources, `build-wasm-c.sh`, install docs, or `tasks/groups/wanix.ts` wasm build tasks. See [`ops/fixtures/wanix/README.md`](../../ops/fixtures/wanix/README.md), skill `wanix-zed-cafe-export`.
+Applies when editing Wanix WASI fixture sources, `build-wasm-go.sh`, or `tasks/groups/wanix.ts` wasm build tasks. See [`ops/fixtures/wanix/README.md`](../../ops/fixtures/wanix/README.md), skill `wanix-zed-cafe-export`.
 
 ## Policy
 
 | Topic | Rule |
 |-------|------|
-| C fixtures | **Require** wasi-sdk — `hello.c`, `zedcaferead.c`, `zedcafewrite.c`, `zedcafelist.c` |
-| WAT fixtures | **Only** `hold.wat`, `termbridge.wat` via `wanix:wasm:build` (wabt) |
-| Install path | Canonical **`/opt/wasi-sdk`**; override via `$WASI_SDK_PATH` only |
-| Setup | `sh ops/fixtures/wanix/install-wasi-sdk.sh` — no Homebrew `wasi-sdk` formula |
-| `wanix:wasm:build:c` | **Must exit 1** when SDK missing or `clang` broken |
-| `wanix:wasm:build:all` | C step is required — composite fails without SDK |
+| WASI drop fixtures | **Go only** — `ops/fixtures/wanix/wasi/<name>/main.go` |
+| Build | `yarn task run wanix:wasm:build` → [`build-wasm-go.sh`](../../ops/fixtures/wanix/build-wasm-go.sh) |
+| Toolchain | **Go** (`GOOS=wasip1 GOARCH=wasm`); no wasi-sdk, no wabt |
+| zed-cafe export daemon | Separate module: `ops/fixtures/wanix/zed-cafe/` (`GOOS=js GOARCH=wasm`) via `wanix:zed-cafe:build` |
+
+## Fixtures
+
+| Package | Output | Role |
+|---------|--------|------|
+| `wasi/hello` | `hello.wasm` | one-shot stdout |
+| `wasi/hold` | `hold.wasm` | infinite loop (term-write while running) |
+| `wasi/termbridge` | `termbridge.wasm` | term bridge banner + hold |
+| `wasi/zedcaferead` | `zedcaferead.wasm` | read `./zed-cafe/stats.json` |
+| `wasi/zedcafewrite` | `zedcafewrite.wasm` | overwrite `stats.json` with `guestTouch` |
+| `wasi/zedcafewritebad` | `zedcafewritebad.wasm` | schema guard negative (`evil.json`) |
+| `wasi/zedcafelist` | `zedcafelist.wasm` | walk `./zed-cafe/` tree |
 
 ## Build tasks
 
-| Task | Needs wasi-sdk |
-|------|----------------|
-| `wanix:wasm:build` | No (WAT only: hold, termbridge) |
-| `wanix:wasm:build:c` | **Yes** — all `*.c` |
-| `wanix:wasm:build:all` | **Yes** (C step) |
+| Task | Builds |
+|------|--------|
+| `wanix:wasm:build` | All Go WASI fixtures above |
+| `wanix:zed-cafe:build` | `zed-cafe.wasm` (gojs export daemon) |
+| `wanix:wasm:build:all` | `wanix:wasm:build` + `wanix:zed-cafe:build` |
 
 ## Prohibited
 
-- `exit 0` skip when wasi-sdk absent in [`build-wasm-c.sh`](../../ops/fixtures/wanix/build-wasm-c.sh)
-- Re-adding `.wat` for C-covered fixtures (`hello`, `zedcaferead`, `zedcafewrite`) as a no-SDK fallback
-- `~/.local/wasi-sdk` or other shadow install paths in build scripts
-- `rm -rf` in install scripts — abort if target exists; user relocates manually
-- Patching wasi-sdk tarball / libedit in repo to paper over a bad install
+- New `.c` or `.wat` Wanix drop fixtures
+- `wasi-sdk`, `wabt`, `build-wasm-c.sh`, `build-wasm.sh`, `install-wasi-sdk.sh`
+- `wanix:wasm:build:c` task id (removed — use `wanix:wasm:build`)
 
 ## Allowed
 
-- WAT-only fixtures via [`build-wasm.sh`](../../ops/fixtures/wanix/build-wasm.sh)
-- Pointing users to `install-wasi-sdk.sh` + README
+- Go `wasip1` packages under `ops/fixtures/wanix/wasi/`
+- Go `js/wasm` export daemon under `ops/fixtures/wanix/zed-cafe/`
 
 Cross-link: rule `fixtures.mdc`, rule `wanix-term-bridge.mdc`.

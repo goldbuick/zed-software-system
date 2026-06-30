@@ -10,6 +10,26 @@ import (
 	"tractor.dev/wanix/fs"
 )
 
+func TestExportFromPayloadRejectsInvalidCreate(t *testing.T) {
+	seed := `{"exportedAt":"test","bookCount":0,"books":[]}`
+	payload := inboxpayload{
+		Files: []inboxentry{
+			{
+				Path: "stats.json",
+				Data: base64.StdEncoding.EncodeToString([]byte(seed + "\n")),
+			},
+		},
+	}
+	exportfs, err := NewExportFromPayload(payload)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = fs.Create(exportfs, "evil.txt")
+	if err == nil {
+		t.Fatal("expected guarded ExportFS to reject evil.txt")
+	}
+}
+
 func TestExportFromPayloadCreateWrite(t *testing.T) {
 	seed := `{"exportedAt":"test","bookCount":0,"books":[]}`
 	payload := inboxpayload{

@@ -37,8 +37,8 @@ See `ops/fixtures/wanix/README.md`. Wanix debugging: headed Playwright validator
 ## Allowed
 
 - Fixes in **`wanixhost.ts`**, `wanixtermiframehost.ts`, `wanixdrop.ts`, terminal input routing, iframe child host.
-- One-shot WASI binaries that only **`fd_write`** stdout (e.g. `hello.c` via wasi-sdk).
-- Long-running tasks for term bridge verification (`hold.wat`, `termbridge.wat`).
+- One-shot WASI binaries that only **`fd_write`** stdout (e.g. `wasi/hello` via `wanix:wasm:build`).
+- Long-running tasks for term bridge verification (`wasi/hold`, `wasi/termbridge`).
 
 ## Examples
 

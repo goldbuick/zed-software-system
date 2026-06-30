@@ -20,6 +20,7 @@ Applies when editing export/import paths, inbox JSON, gojs memfs, or zed-cafe Pl
 | `readzedcafebookprefix` / `readzedcafepageprefix` | Export path prefixes |
 | `validatezedcafeexportpaths` | Export/push guard — returns `{ ok, errors[] }` |
 | `assertzedcafeexportvalid` | Tests / `buildzedcafeexportfiles` — throws on failure |
+| `ZED_CAFE_EXPORT_ALLOWED_PATH` | Canonical regex allowlist — mirrored in `ops/fixtures/wanix/zed-cafe/allowed-path-patterns.json` for Go guest FS |
 
 Canonical **ids** stay in `stats.json` bodies; folder names are for browsing only.
 
@@ -41,6 +42,7 @@ Examples: `demo-book1`, `player-page2`, id-only fallback `sid_abc`.
 | `buildzedcafeexportfiles` | `assertzedcafeexportvalid` at end |
 | `runzedcafeexport`, `pushzedcafeexportfiles`, `encodezedcafeinboxjson` | `validatezedcafeexportpaths` — **fail closed** (`apilog` + skip write) |
 | `parsezedcafeexportfiles` / guest import | **No** allowlist — permissive for stray files; resolve dirs via `kebabcasezedcafedirname` from meta names |
+| Guest FS create (`#task/<rid>/export`, `#ramfs/zed-cafe` ns bind) | `schemaguardfs.go` — reject `Create`/`Mkdir`/`Rename`/`Symlink` outside allowlist |
 
 ## Required wiring
 
@@ -50,7 +52,9 @@ Examples: `demo-book1`, `player-page2`, id-only fallback `sid_abc`.
 
 ## Go ExportFS boundary
 
-`ops/fixtures/wanix/zed-cafe/exportfs.go` embeds `memfs.FS` for gojs inbox hydration only. **Do not** duplicate TypeScript schema guards in Go — host TS validates before inbox/push; guest memfs may still accept arbitrary writes from gojs/WASI (import stays permissive).
+`ops/fixtures/wanix/zed-cafe/exportfs.go` hydrates inbox JSON into guarded memfs (`schemaguardfs.go`). Path allowlist is embedded from `allowed-path-patterns.json` (must match `ZED_CAFE_EXPORT_ALLOWED_PATH` in TS — Jest parity test). Guest `Create`/`Mkdir`/`Rename`/`Symlink` outside the allowlist return `ErrPermission`. Host push remains TS-only (`validatezedcafeexportpaths` before inbox encode).
+
+VM `#ramfs/zed-cafe` stages via ns bind from guarded `#task/<rid>/export` (`appendzedcafeexportramfsbind`), not per-file ramfs blob copies.
 
 ## Prohibited
 

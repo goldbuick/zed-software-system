@@ -18,6 +18,7 @@ function iszedcafefixturewasm(label: string) {
   return (
     base === 'zedcaferead.wasm' ||
     base === 'zedcafewrite.wasm' ||
+    base === 'zedcafewritebad.wasm' ||
     base === 'zedcafelist.wasm'
   )
 }
@@ -31,7 +32,16 @@ async function launchwanixload(
 ) {
   await ensurewanixsandbox(device, player)
   if (iszedcafefixturewasm(label)) {
-    await ensurewanixzedcafedaemon(device, player)
+    const exportready = await ensurewanixzedcafedaemon(device, player)
+    if (!exportready) {
+      apierror(
+        device,
+        player,
+        'wanix',
+        'zed-cafe export not ready — wait for guest zed-cafe ready or run #wanix pull before zed-cafe fixtures',
+      )
+      return
+    }
   }
 
   const taskid = uniquewanixtaskid(

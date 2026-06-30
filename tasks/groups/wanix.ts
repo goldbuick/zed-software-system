@@ -115,7 +115,7 @@ async function runvalidatezedcafeduplexapp(ctx: TaskContext): Promise<number> {
   
   if (!existsSync(WASM)) {
     console.error(
-      '[zed-cafe-duplex-app-validate] missing wasm — run: yarn task run wanix:wasm:build:c (requires wasi-sdk at /opt/wasi-sdk; sh ops/fixtures/wanix/install-wasi-sdk.sh)',
+      '[zed-cafe-duplex-app-validate] missing wasm — run: yarn task run wanix:wasm:build',
     )
     return 1
   }
@@ -216,8 +216,43 @@ async function runvalidatezedcafeduplexapp(ctx: TaskContext): Promise<number> {
     if (!imported) {
       throw new Error('#wanix pull did not log zed-cafe import')
     }
-  
-    log('PASS — guest write + pull import')
+
+    const badwasm = join(ROOT, 'ops/fixtures/wanix/zedcafewritebad.wasm')
+    if (!existsSync(badwasm)) {
+      throw new Error(
+        'missing zedcafewritebad.wasm — run: yarn task run wanix:wasm:build',
+      )
+    }
+    const badbytes = readFileSync(badwasm)
+    log('dropping zedcafewritebad.wasm (' + badbytes.length + ' bytes)')
+    await page.evaluate(async (bytes) => {
+      const file = new File([new Uint8Array(bytes)], 'zedcafewritebad.wasm', {
+        type: 'application/wasm',
+      })
+      const dt = new DataTransfer()
+      dt.items.add(file)
+      const event = new DragEvent('drop', {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer: dt,
+      })
+      document.dispatchEvent(event)
+    }, [...badbytes])
+
+    const badblocked = await wait(
+      'schema guard rejected evil.json',
+      async () => {
+        const logs = await page.evaluate(() => window.__zedcafeApilog ?? [])
+        return logs.some((line) => /zed-cafe write bad ok/i.test(line))
+      },
+      120000,
+      2000,
+    )
+    if (!badblocked) {
+      throw new Error('zedcafewritebad task did not report schema guard rejection')
+    }
+
+    log('PASS — guest write + pull import + schema guard')
     return 0
   } catch (err) {
     log('FAILED:', err instanceof Error ? err.message : String(err))
@@ -238,7 +273,7 @@ async function runvalidatezedcafetaskreadapp(ctx: TaskContext): Promise<number> 
   
   if (!existsSync(WASM)) {
     console.error(
-      '[zed-cafe-task-read-app-validate] missing wasm — run: yarn task run wanix:wasm:build:c (requires wasi-sdk; sh ops/fixtures/wanix/install-wasi-sdk.sh)',
+      '[zed-cafe-task-read-app-validate] missing wasm — run: yarn task run wanix:wasm:build',
     )
     return 1
   }
@@ -544,15 +579,16 @@ async function runvalidatezedcafelistapp(ctx: TaskContext): Promise<number> {
   
   if (!existsSync(WASM)) {
     console.error(
-      '[zed-cafe-list-app-validate] missing wasm — run: yarn task run wanix:wasm:build:c (requires wasi-sdk; sh ops/fixtures/wanix/install-wasi-sdk.sh)',
+      '[zed-cafe-list-app-validate] missing wasm — run: yarn task run wanix:wasm:build',
     )
     return 1
   }
   
   const browser = await chromium.launch({ headless: false })
-  
+  let exitcode = 1
+
   try {
-    await withscripttimeout(
+    exitcode = await withscripttimeout(
       'zed-cafe-list-app-validate',
       WANIX_VM_VALIDATE_TIMEOUTS.SCRIPT_TOTAL_MS,
       async () => {
@@ -663,11 +699,11 @@ async function runvalidatezedcafelistapp(ctx: TaskContext): Promise<number> {
     )
   } catch (err) {
     log('FAILED:', err instanceof Error ? err.message : String(err))
-    return 1
+    exitcode = 1
   } finally {
     await browser.close()
   }
-  return 0
+  return exitcode
 }
 
 async function runvalidatezedcafememfs(ctx: TaskContext): Promise<number> {
@@ -743,7 +779,6 @@ async function runvalidatezedcafememfs(ctx: TaskContext): Promise<number> {
   const steps = [
     { name: 'wanix:zed-cafe:build', run: () => run('yarn', ['task', 'run', 'wanix:zed-cafe:build']) },
     { name: 'wanix:wasm:build', run: () => run('yarn', ['task', 'run', 'wanix:wasm:build']) },
-    { name: 'wanix:wasm:build:c', run: () => run('yarn', ['task', 'run', 'wanix:wasm:build:c']) },
     { name: 'go test exportfs', run: () => run('go', ['test', './...'], { cwd: ZED_CAFE_DIR }) },
     {
       name: 'export:validate',
@@ -812,8 +847,9 @@ export const WANIX_TASKS: TaskDef[] = [
     run: handler(runwanixensure),
   }),
   def('wanix:wasm:build', {
-    description: 'Compile ops/fixtures/wanix/*.wat (hold, termbridge) to .wasm via wabt',
-    run: shell('sh ops/fixtures/wanix/build-wasm.sh'),
+    description:
+      'Compile ops/fixtures/wanix/wasi Go WASI fixtures (hello, hold, termbridge, zed-cafe gates) to .wasm',
+    run: shell('sh ops/fixtures/wanix/build-wasm-go.sh'),
   }),
   def('wanix:gojs:build', {
     description: 'Build upstream gojscheck.wasm (Go js/wasm) for terminal smoke tests',
@@ -852,13 +888,9 @@ export const WANIX_TASKS: TaskDef[] = [
     description: 'Headed Playwright: drop zedcafelist.wasm after export warm (local gate, not CI)',
     run: handler(runvalidatezedcafelistapp),
   }),
-  def('wanix:wasm:build:c', {
-    description: 'Compile ops/fixtures/wanix/*.c to .wasm — requires wasi-sdk at /opt/wasi-sdk (fails if missing)',
-    run: shell('sh ops/fixtures/wanix/build-wasm-c.sh'),
-  }),
   tasksonly(
     'wanix:wasm:build:all',
-    'Compile wanix WAT (hold/termbridge) and C fixtures — C step requires wasi-sdk',
-    ['wanix:wasm:build', 'wanix:wasm:build:c'],
+    'Compile wanix Go WASI fixtures and zed-cafe export wasm',
+    ['wanix:wasm:build', 'wanix:zed-cafe:build'],
   ),
 ]

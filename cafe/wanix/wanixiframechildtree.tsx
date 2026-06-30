@@ -404,7 +404,11 @@ export function WanixIframeChildTree({
           throw new Error('wanix room: root missing before vm activation')
         }
         await waitforv86driver(wanixroot, WANIX_IFRAME_VM_PREP_WAIT_MS)
-        await activatevmslot(system, state.vm?.mem ?? '512M', guestfiles)
+        const taskrid = state.zedcafe?.taskrid
+        if (!taskrid) {
+          throw new Error('wanix room: zed-cafe export task rid missing before vm activation')
+        }
+        await activatevmslot(system, state.vm?.mem ?? '512M', taskrid, guestfiles)
         await waitvmchildready(system, WANIX_VM_GUEST_SHELL_MS)
         if (cancelled) {
           return

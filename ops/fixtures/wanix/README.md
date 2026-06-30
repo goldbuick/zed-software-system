@@ -83,7 +83,7 @@ zed-cafe/
 
 Folder segments are `{kebab-case-name}-{id}` for human browsing; canonical ids remain in `stats.json` bodies. Export/push validates this layout; import does not accept legacy `books/<id>/` paths.
 
-**Schema owner:** `zss/feature/wanix/zedcafetreeschema.ts` (TypeScript only). Go `ExportFS` (`ops/fixtures/wanix/zed-cafe/exportfs.go`) hydrates inbox into memfs without duplicating guards — host validates before push/inbox encode.
+**Schema owner:** `zss/feature/wanix/zedcafetreeschema.ts` (host export/push). Guest FS create guard: `ops/fixtures/wanix/zed-cafe/schemaguardfs.go` with allowlist in `allowed-path-patterns.json` (Jest parity with TS regexes). VM `#ramfs/zed-cafe` ns-binds from guarded `#task/<rid>/export`.
 
 Verify: warm Wanix → `ls zed-cafe/books/` shows `demo-book1`-style dirs → `yarn task run wanix:zed-cafe:export:validate`.
 
@@ -131,26 +131,35 @@ HTTPS dev (`yarn task app dev`) cannot use bare `ws://` URLs (mixed content). Vi
 
 Remote import in the full app: `#wanix remote connect wss://…` (see **WSS remote import** below). Harness: [/wanix/wss-import.html](http://localhost:7777/wanix/wss-import.html).
 
-## Quick build (WAT)
+## Quick build (Go WASI)
 
-After `yarn install` (provides `wabt` / `wat2wasm`):
+Requires **Go** only (`brew install go`):
 
 ```bash
 yarn task run wanix:wasm:build
 ```
 
-Compiles WAT-only fixtures (`hold.wat`, `termbridge.wat`) to `.wasm` in this directory.
+Compiles [`wasi/`](wasi/) packages to `.wasm` in this directory via [`build-wasm-go.sh`](build-wasm-go.sh) (`GOOS=wasip1 GOARCH=wasm`).
 
-| File | Output | Build |
-|------|--------|-------|
-| `hold.wat` | infinite loop (e2e term-write while running) | wabt |
-| `termbridge.wat` | **ZSS tile term bridge demo** — banner on stdout, then hold | wabt |
-| `hello.c` | one-shot hello (batch stdout) | wasi-sdk |
-| `zedcaferead.c` | **zed-cafe FS read** — opens `zed-cafe/stats.json`, prints `zed-cafe ok: …` | wasi-sdk |
-| `zedcafewrite.c` | **zed-cafe FS write** — overwrites `zed-cafe/stats.json` with `guestTouch` | wasi-sdk |
-| `zedcafelist.c` | lists `zed-cafe/books/` after export warm | wasi-sdk |
+| Source | Output | Role |
+|--------|--------|------|
+| `wasi/hello` | `hello.wasm` | one-shot hello (batch stdout) |
+| `wasi/hold` | `hold.wasm` | infinite loop (e2e term-write while running) |
+| `wasi/termbridge` | `termbridge.wasm` | **ZSS tile term bridge demo** — banner on stdout, then hold |
+| `wasi/zedcaferead` | `zedcaferead.wasm` | read `zed-cafe/stats.json`, print `zed-cafe ok: …` |
+| `wasi/zedcafewrite` | `zedcafewrite.wasm` | overwrite `zed-cafe/stats.json` with `guestTouch` |
+| `wasi/zedcafewritebad` | `zedcafewritebad.wasm` | schema guard negative — create `zed-cafe/evil.json` must fail |
+| `wasi/zedcafelist` | `zedcafelist.wasm` | walk `./zed-cafe/` tree |
 
 Drag the `.wasm` onto a running app (`yarn task app dev`). Multiple drops run in parallel; use `#wanix` to attach, stop, or unmount.
+
+Build WASI fixtures + zed-cafe export daemon:
+
+```bash
+yarn task run wanix:wasm:build:all
+```
+
+Agent docs: rule `wanix-wasi-sdk.mdc` (Go WASI fixtures).
 
 ### zed-cafe task read (`zedcaferead.wasm`)
 
@@ -159,11 +168,22 @@ After Wanix is warm and session books have exported to `./zed-cafe/`, drop `zedc
 Full scenario: [`zed-cafe-task-read-scenario.md`](zed-cafe-task-read-scenario.md)
 
 ```bash
-sh ops/fixtures/wanix/install-wasi-sdk.sh   # first time: wasi-sdk → /opt/wasi-sdk
-yarn task run wanix:wasm:build:c            # hello, zedcaferead, zedcafewrite, zedcafelist
+yarn task run wanix:wasm:build
 yarn task app dev
 # drag ops/fixtures/wanix/zedcaferead.wasm — expect: zed-cafe ok: {"bookCount":...
 # gate: yarn task run wanix:zed-cafe:task-read:validate
+```
+
+### zed-cafe task list (`zedcafelist.wasm`)
+
+Lists `./zed-cafe/` after export warm. Dropping `zedcafelist.wasm` (or other zed-cafe fixtures) **boots the gojs export daemon** if it is not already running; wait for apilog **`guest zed-cafe ready`** before expecting output. Console `#task/N/export … does not exist` lines during export boot are gojs polling noise — the headed gate `wanix:zed-cafe:list:validate` fails if they persist after warm.
+
+```bash
+yarn task run wanix:wasm:build
+yarn task app dev
+# optional: #wanix pull — warms export before drop
+# drag ops/fixtures/wanix/zedcafelist.wasm — expect: zed-cafe list + stats.json
+# gate: yarn task run wanix:zed-cafe:list:validate
 ```
 
 ## ZSS tile term bridge (`termbridge.wasm`)
@@ -191,35 +211,6 @@ Upstream Wanix uses `<wanix-term>` bound to `#task/…/term` or `#vm/<rid>/term`
 6. `#wanix stop` halts the task
 
 Raw WASI `fd_read(0)` is not the integration surface. See `.cursor/rules/wanix-term-bridge.mdc`.
-
-## C build (requires wasi-sdk)
-
-Readable C sources: `hello.c`, `zedcaferead.c`, `zedcafewrite.c`, `zedcafelist.c`. **Homebrew does not ship `wasi-sdk`**.
-
-**Setup** (first time):
-
-```bash
-sh ops/fixtures/wanix/install-wasi-sdk.sh
-# follow printed sudo mv step → /opt/wasi-sdk
-```
-
-Manual install: [WebAssembly/wasi-sdk releases](https://github.com/WebAssembly/wasi-sdk/releases) — unpack to `/opt/wasi-sdk` (abort if path already exists; relocate manually first).
-
-```bash
-yarn task run wanix:wasm:build:c
-```
-
-[`build-wasm-c.sh`](build-wasm-c.sh) resolves clang via `$WASI_SDK_PATH`, then `/opt/wasi-sdk`, then `brew --prefix wasi-sdk`. **Exits non-zero** when wasi-sdk is missing or `clang` does not run.
-
-Build everything (WAT + C):
-
-```bash
-yarn task run wanix:wasm:build:all
-```
-
-System `clang` on macOS does **not** target `wasm32-wasip1`; use wasi-sdk's `clang`.
-
-Agent docs: rule `wanix-wasi-sdk.mdc`.
 
 ## Runtime
 

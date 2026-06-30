@@ -86,7 +86,7 @@ After editing any group file, run **`yarn task list`** — cheapest integration 
 
 Wanix validators live in `tasks/groups/wanix.ts` but **import** shared helpers from `tasks/lib/wanix/playwright-vm.ts` — do not duplicate `runwithscripttimeout` or iframe helpers.
 
-`wanix:wasm:build:c` requires wasi-sdk at `/opt/wasi-sdk` (install: `sh ops/fixtures/wanix/install-wasi-sdk.sh`). Fails closed if missing — rule `wanix-wasi-sdk.mdc`.
+`wanix:wasm:build` compiles Go WASI fixtures from `ops/fixtures/wanix/wasi/` — rule `wanix-wasi-sdk.mdc`.
 
 ## Composite tasks
 

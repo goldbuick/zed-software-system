@@ -14,20 +14,20 @@ See also: skill `wanix-vm-iframe-host`, rule `wanix-vm-lifecycle.mdc`, rule `wan
 
 ## Prerequisites (WASI drop fixtures)
 
-C-built `.wasm` fixtures (`zedcaferead`, `zedcafewrite`, `zedcafelist`) require **wasi-sdk** at `/opt/wasi-sdk`:
+Go WASI fixtures (`zedcaferead`, `zedcafewrite`, `zedcafewritebad`, `zedcafelist`, etc.) require **Go**:
 
 ```bash
-sh ops/fixtures/wanix/install-wasi-sdk.sh
-yarn task run wanix:wasm:build:c
+yarn task run wanix:wasm:build
 ```
 
-`wanix:wasm:build` alone only builds WAT fixtures (`hold`, `termbridge`) — not zed-cafe read/write/list gates.
+`wanix:wasm:build` alone builds all WASI drop fixtures under `ops/fixtures/wanix/wasi/`.
 
 ## Owners
 
 | Concern | Module |
 |---------|--------|
-| Export tree schema (paths + guards) | `zedcafetreeschema.ts` |
+| Export tree schema (paths + host guards) | `zedcafetreeschema.ts` |
+| Guest FS create guard (gojs export memfs) | `ops/fixtures/wanix/zed-cafe/schemaguardfs.go` |
 | Host export files / inbox JSON | `wanixstateexport.ts`, `encodezedcafeinboxjson` in `wanixzedcafe.ts` |
 | gojs daemon boot (task space) | `wanixzedcafe.ts` → `bootzedcafeexport` |
 | VM spawn inbox + finalize | `wanixcommands.ts` → `spawnwanixvm({ inboxbytes })`, `finalizewanixzedcafedaemon` |
@@ -62,9 +62,11 @@ Folder segments use `{kebab-case-name}-{id}` (e.g. `my-cool-book-book1`, `player
 
 ### Go ExportFS (`ops/fixtures/wanix/zed-cafe/exportfs.go`)
 
-gojs hydrates inbox JSON into embedded `memfs.FS`. Schema guards live in TypeScript only — Go does not validate tree shape. `go test ./...` in that dir proves memfs create/write round-trip; host push is guarded before inbox encode.
+gojs hydrates inbox JSON into `schemaGuardFS` wrapping memfs. Allowlist: `allowed-path-patterns.json` (parity with `ZED_CAFE_EXPORT_ALLOWED_PATH`). Guest creates outside the allowlist fail at FS layer (`ErrPermission`). `go test ./...` covers allow/reject paths; `zedcafewritebad.wasm` is the headed duplex gate for live rejection.
 
 Ready probe: **`stats.json`** at `#task/<rid>/export/stats.json` (poll via `waitzedcafeexportready`).
+
+VM `#ramfs/zed-cafe` uses ns bind from guarded export (`appendzedcafeexportramfsbind`), not blob file binds.
 
 ## Task vs VM path
 
@@ -84,9 +86,9 @@ Shared helpers: [`tasks/lib/wanix/playwright-vm.ts`](../../../tasks/lib/wanix/pl
 | **`wanix:vm:zed-cafe:validate`** | **Primary acceptance** — `#wanix vm` → `ls /`, `ls /zed-cafe`, `cat stats.json` |
 | `wanix:zed-cafe:export:validate` | Regression — same guest milestones via full app |
 | `wanix:vm:boot:validate` | Book seed + remount Milestone A + same guest milestones |
-| `wanix:zed-cafe:task-read:validate` | Drop `zedcaferead.wasm` → tile `zed-cafe ok:` (**needs `wanix:wasm:build:c`**) |
-| `wanix:zed-cafe:duplex:validate` | Drop `zedcafewrite.wasm` + `#wanix pull` (**needs `wanix:wasm:build:c`**) |
-| `wanix:zed-cafe:list:validate` | Drop `zedcafelist.wasm` after export warm (**needs `wanix:wasm:build:c`**) |
+| `wanix:zed-cafe:task-read:validate` | Drop `zedcaferead.wasm` → tile `zed-cafe ok:` (**needs `wanix:wasm:build`**) |
+| `wanix:zed-cafe:duplex:validate` | Drop `zedcafewrite.wasm` + `#wanix pull` + `zedcafewritebad.wasm` schema guard (**needs `wanix:wasm:build`**) |
+| `wanix:zed-cafe:list:validate` | Drop `zedcafelist.wasm` after export warm (**needs `wanix:wasm:build`**) |
 
 **Unit tests do not prove guest visibility.** Gate 3 (or equivalent) is required for `/zed-cafe/` bugs.
 
