@@ -89,7 +89,7 @@ describe('zedcafetreeschema', () => {
   it('matches guest fs allowlist json fixture', () => {
     const jsonpath = join(
       process.cwd(),
-      'ops/fixtures/wanix/zed-cafe/allowed-path-patterns.json',
+      'ops/fixtures/wanix/zedcafe/allowed-path-patterns.json',
     )
     const patterns = JSON.parse(readFileSync(jsonpath, 'utf8')) as string[]
     expect(patterns.length).toBe(ZED_CAFE_EXPORT_ALLOWED_PATH.length)

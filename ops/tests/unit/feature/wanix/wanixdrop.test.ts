@@ -49,9 +49,9 @@ describe('wanixhandledrop', () => {
       new Uint8Array([0, 97, 115, 109]),
     )
     expect(ensuremock).toHaveBeenCalled()
-    expect(putmock).toHaveBeenCalledWith('demo.wasm', expect.any(Uint8Array))
+    expect(putmock).toHaveBeenCalledWith('#ramfs/demo.wasm', expect.any(Uint8Array))
     expect(spawnmock).toHaveBeenCalledWith(
-      'demo.wasm',
+      '#ramfs/demo.wasm',
       expect.objectContaining({ taskid: 'demo-wasm', attach: true }),
     )
     expect(readwanixtasks()).toHaveLength(1)

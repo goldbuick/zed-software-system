@@ -9,16 +9,24 @@ import {
   WANIX_VM_VALIDATE_TIMEOUTS,
   assertguestzedcafe,
   defaultzssurl,
+  dropwasm,
   dumpfailurediagnostics,
   focuscanvas,
   installapilogcapture,
   openapp,
   readapilog,
+  readfixturewasm,
+  readiframetaskcmds,
   readvmterm,
+  runheadedwanixgate,
   sendline,
   waitfor,
+  waitforapilogmatch,
   waitforvmshell,
+  waitforvmtermorapilog,
   waitforzedcafeexportapilog,
+  waitforzedcafevmexportready,
+  warmwanixexport,
   withscripttimeout,
 } from 'tasks/lib/wanix/playwright-vm'
 import { def, handler, shell } from '../helpers'
@@ -86,7 +94,7 @@ async function runvalidatezedcafeexportapp(ctx: TaskContext): Promise<number> {
           log('BOOTED')
           await focuscanvas(page)
           await assertguestzedcafe(page, log, { apilogKey: APILOG_KEY })
-          log('PASS — /zed-cafe/stats.json readable in VM')
+          log('PASS — /zedcafe/stats.json readable in VM')
           code = 0
         } catch (err) {
           log('FAILED:', err instanceof Error ? err.message : String(err))
@@ -267,98 +275,28 @@ async function runvalidatezedcafeduplexapp(ctx: TaskContext): Promise<number> {
 
 async function runvalidatezedcafetaskreadapp(ctx: TaskContext): Promise<number> {
   const ROOT = ctx.root
-  const WASM = join(ROOT, 'ops/fixtures/wanix/zedcaferead.wasm')
-  const log = (...a) => console.log('[zed-cafe-task-read-app-validate]', ...a)
   const APILOG_KEY = '__zedcafeTaskReadApilog'
-  
-  if (!existsSync(WASM)) {
-    console.error(
-      '[zed-cafe-task-read-app-validate] missing wasm — run: yarn task run wanix:wasm:build',
+  const log = (...a) => console.log('[zed-cafe-task-read-app-validate]', ...a)
+  return runheadedwanixgate('wanix:zed-cafe:task-read:validate', async ({ page }) => {
+    await installapilogcapture(page, APILOG_KEY)
+    await openapp(page, defaultzssurl(), log)
+    await warmwanixexport(page, log, APILOG_KEY)
+    log('dropping zedcaferead.wasm')
+    await dropwasm(page, 'zedcaferead.wasm', readfixturewasm(ROOT, 'zedcaferead'))
+    const ok = await waitforvmtermorapilog(
+      page,
+      APILOG_KEY,
+      /zed-cafe ok:/i,
+      120_000,
+      log,
     )
-    return 1
-  }
-  
-  const browser = await chromium.launch({ headless: false })
-  
-  try {
-    await withscripttimeout(
-      'wanix:zed-cafe:task-read:validate',
-      WANIX_VM_VALIDATE_TIMEOUTS.SCRIPT_TOTAL_MS,
-      async () => {
-        const page = await browser.newPage({
-          ignoreHTTPSErrors: true,
-          viewport: { width: 1280, height: 800 },
-        })
-        page.setDefaultTimeout(WANIX_VM_VALIDATE_TIMEOUTS.VM_SHELL_MS)
-        await installapilogcapture(page, APILOG_KEY)
-  
-        const wait = async (label, pred, ms, step = 2000) => {
-          const deadline = Date.now() + ms
-          while (Date.now() < deadline) {
-            if (await pred()) {
-              return true
-            }
-            await page.waitForTimeout(step)
-          }
-          log('TIMEOUT', label)
-          return false
-        }
-  
-        try {
-          await openapp(page, defaultzssurl(), log)
-          log('warm export via #wanix')
-          await sendline(page, '#wanix')
-          await page.waitForTimeout(2000)
-  
-          const wasmbytes = readFileSync(WASM)
-          log('dropping zedcaferead.wasm (' + wasmbytes.length + ' bytes)')
-          await page.evaluate(async (bytes) => {
-            const file = new File([new Uint8Array(bytes)], 'zedcaferead.wasm', {
-              type: 'application/wasm',
-            })
-            const dt = new DataTransfer()
-            dt.items.add(file)
-            const event = new DragEvent('drop', {
-              bubbles: true,
-              cancelable: true,
-              dataTransfer: dt,
-            })
-            document.dispatchEvent(event)
-          }, [...wasmbytes])
-  
-          const readok = await wait(
-            'zed-cafe ok stdout',
-            async () => {
-              const logs = await page.evaluate((key) => window[key] ?? [], APILOG_KEY)
-              return logs.some((line) => /zed-cafe ok:/i.test(line))
-            },
-            120000,
-            2000,
-          )
-          if (!readok) {
-            throw new Error('zedcaferead task did not print zed-cafe ok: on tile')
-          }
-  
-          await focuscanvas(page)
-          log('PASS — dropped WASI task read zed-cafe/stats.json')
-          return 0
-        } catch (err) {
-          log('FAILED:', err instanceof Error ? err.message : String(err))
-          await dumpfailurediagnostics(page, log, APILOG_KEY)
-          return 1
-        } finally {
-          await page.waitForTimeout(800)
-          await page.close()
-        }
-      },
-    )
-  } catch (err) {
-    log('FAILED:', err instanceof Error ? err.message : String(err))
-    return 1
-  } finally {
-    await browser.close()
-  }
-  return 0
+    if (!ok) {
+      await dumpfailurediagnostics(page, log, APILOG_KEY)
+      throw new Error('zedcaferead task did not print zed-cafe ok:')
+    }
+    log('PASS — dropped WASI task read zedcafe/stats.json')
+    return 0
+  })
 }
 
 async function runvalidatewanixvmboot(ctx: TaskContext): Promise<number> {
@@ -429,27 +367,8 @@ async function runvalidatewanixvmboot(ctx: TaskContext): Promise<number> {
           log('typing #wanix vm')
           const vmstart = Date.now()
           await sendline(page, '#wanix vm')
-  
-          const milestonea = await waitfor(
-            page,
-            'milestone A vm export mount',
-            async () => {
-              const logs = await readapilog(page, APILOG_KEY)
-              return logs.some((line) =>
-                /#ramfs\/zed-cafe ready — remounting wanix-system with wanix-vm/.test(line),
-              )
-            },
-            WANIX_VM_VALIDATE_TIMEOUTS.EXPORT_APILOG_MS,
-            2000,
-            log,
-          )
-          if (!milestonea) {
-            const tail = (await readapilog(page, APILOG_KEY)).slice(-12)
-            log('apilog tail:', tail.join('\n'))
-            throw new Error(
-              'Milestone A failed — export never reached vm remount within timeout',
-            )
-          }
+
+          await waitforzedcafevmexportready(page, log, APILOG_KEY)
           log(`Milestone A ok (${Date.now() - vmstart}ms)`)
   
           const booted = await waitforvmshell(page, log)
@@ -522,24 +441,9 @@ async function runvalidatewanixvmzedcafe(ctx: TaskContext): Promise<number> {
   
           log('typing #wanix vm')
           await sendline(page, '#wanix vm')
-  
-          const exportmounted = await waitfor(
-            page,
-            'zed-cafe vm mount',
-            async () => {
-              const logs = await readapilog(page, APILOG_KEY)
-              return logs.some((line) =>
-                /#ramfs\/zed-cafe ready — remounting wanix-system with wanix-vm/.test(line),
-              )
-            },
-            WANIX_VM_VALIDATE_TIMEOUTS.EXPORT_APILOG_MS,
-            2000,
-            log,
-          )
-          if (!exportmounted) {
-            throw new Error('zed-cafe export never reached vm mount milestone')
-          }
-          log('Milestone A ok — #ramfs/zed-cafe ready, wanix-vm mounting')
+
+          await waitforzedcafevmexportready(page, log, APILOG_KEY)
+          log('Milestone A ok — #ramfs/zedcafe ready, vm activating')
   
           const booted = await waitforvmshell(page, log)
           if (!booted) {
@@ -550,7 +454,7 @@ async function runvalidatewanixvmzedcafe(ctx: TaskContext): Promise<number> {
           await focuscanvas(page)
           await assertguestzedcafe(page, log, { apilogKey: APILOG_KEY })
   
-          log('PASS — /zed-cafe/ visible and readable after #wanix vm')
+          log('PASS — /zedcafe/ visible and readable after #wanix vm')
           return 0
         } catch (err) {
           log('FAILED:', err instanceof Error ? err.message : String(err))
@@ -781,7 +685,7 @@ async function runvalidatezedcafememfs(ctx: TaskContext): Promise<number> {
 
   const steps = [
     { name: 'wanix build all', run: () => run('sh', ['ops/fixtures/wanix/build.sh', 'all']) },
-    { name: 'go test exportfs', run: () => run('go', ['test', './zed-cafe/...', './zedcafelist/...'], { cwd: WANIX_GO_DIR }) },
+    { name: 'go test exportfs', run: () => run('go', ['test', './zedcafe/...', './zedcafelist/...'], { cwd: WANIX_GO_DIR }) },
     {
       name: 'export:validate',
       run: async () => {
@@ -843,6 +747,260 @@ async function runvalidatezedcafememfs(ctx: TaskContext): Promise<number> {
     stopdevserver()
   }
 }
+
+async function runvalidatehelloapp(ctx: TaskContext): Promise<number> {
+  const ROOT = ctx.root
+  const APILOG_KEY = '__helloApilog'
+  const log = (...a) => console.log('[hello-app-validate]', ...a)
+  return runheadedwanixgate('wanix:hello:validate', async ({ page }) => {
+    await installapilogcapture(page, APILOG_KEY)
+    await openapp(page, defaultzssurl(), log)
+    const bytes = readfixturewasm(ROOT, 'hello')
+    log('dropping hello.wasm')
+    await dropwasm(page, 'hello.wasm', bytes)
+    const ok = await waitforvmtermorapilog(
+      page,
+      APILOG_KEY,
+      /Hello from wanix!/i,
+      120_000,
+      log,
+    )
+    if (!ok) {
+      await dumpfailurediagnostics(page, log, APILOG_KEY)
+      throw new Error('hello.wasm did not print Hello from wanix!')
+    }
+    log('PASS — hello.wasm stdout')
+    return 0
+  })
+}
+
+async function runvalidateholdapp(ctx: TaskContext): Promise<number> {
+  const ROOT = ctx.root
+  const APILOG_KEY = '__holdApilog'
+  const log = (...a) => console.log('[hold-app-validate]', ...a)
+  return runheadedwanixgate('wanix:hold:validate', async ({ page }) => {
+    await installapilogcapture(page, APILOG_KEY)
+    await openapp(page, defaultzssurl(), log)
+    const bytes = readfixturewasm(ROOT, 'hold')
+    log('dropping hold.wasm')
+    await dropwasm(page, 'hold.wasm', bytes)
+    const spawned = await waitfor(
+      page,
+      'hold task spawn',
+      async () => {
+        const cmds = await readiframetaskcmds(page)
+        return cmds.some((cmd) => /hold\.wasm/i.test(cmd))
+      },
+      60_000,
+      2000,
+      log,
+    )
+    if (!spawned) {
+      await dumpfailurediagnostics(page, log, APILOG_KEY)
+      throw new Error('hold.wasm task did not spawn')
+    }
+    log('hold task spawned — waiting 5s for steady state')
+    await page.waitForTimeout(5000)
+    const cmds = await readiframetaskcmds(page)
+    if (!cmds.some((cmd) => /hold\.wasm/i.test(cmd))) {
+      throw new Error('hold.wasm exited before 5s')
+    }
+    log('PASS — hold.wasm still running after 5s')
+    return 0
+  })
+}
+
+async function runvalidatetermbridgeapp(ctx: TaskContext): Promise<number> {
+  const ROOT = ctx.root
+  const APILOG_KEY = '__termbridgeApilog'
+  const log = (...a) => console.log('[termbridge-app-validate]', ...a)
+  return runheadedwanixgate('wanix:termbridge:validate', async ({ page }) => {
+    await installapilogcapture(page, APILOG_KEY)
+    await openapp(page, defaultzssurl(), log)
+    const bytes = readfixturewasm(ROOT, 'termbridge')
+    log('dropping termbridge.wasm')
+    await dropwasm(page, 'termbridge.wasm', bytes)
+    const banner = await waitforvmtermorapilog(
+      page,
+      APILOG_KEY,
+      /wanix term bridge ready/i,
+      120_000,
+      log,
+    )
+    if (!banner) {
+      await dumpfailurediagnostics(page, log, APILOG_KEY)
+      throw new Error('termbridge.wasm did not print banner')
+    }
+    log('banner ok — sending ping')
+    await focuscanvas(page)
+    await sendline(page, 'ping')
+    const pong = await waitfor(
+      page,
+      'ping pong',
+      async () => /pong/i.test(await readvmterm(page)),
+      30_000,
+      1500,
+      log,
+    )
+    if (!pong) {
+      const tile = await readvmterm(page)
+      log('tile tail:\n' + tile.split('\n').slice(-12).join('\n'))
+      throw new Error('ping did not produce pong on tile')
+    }
+    log('PASS — termbridge banner + ping/pong')
+    return 0
+  })
+}
+
+async function runvalidatewasmfixturesapp(ctx: TaskContext): Promise<number> {
+  const ROOT = ctx.root
+  const APILOG_KEY = '__wasmFixturesApilog'
+  const log = (...a) => console.log('[wasm-fixtures-validate]', ...a)
+  return runheadedwanixgate('wanix:wasm:fixtures:validate', async ({ page }) => {
+    await installapilogcapture(page, APILOG_KEY)
+    await openapp(page, defaultzssurl(), log)
+
+    log('step 1 — hello.wasm')
+    await dropwasm(page, 'hello.wasm', readfixturewasm(ROOT, 'hello'))
+    if (
+      !(await waitforvmtermorapilog(
+        page,
+        APILOG_KEY,
+        /Hello from wanix!/i,
+        120_000,
+        log,
+      ))
+    ) {
+      throw new Error('composite: hello failed')
+    }
+
+    log('step 2 — hold.wasm')
+    await dropwasm(page, 'hold.wasm', readfixturewasm(ROOT, 'hold'))
+    const holdspawn = await waitfor(
+      page,
+      'hold spawn',
+      async () => {
+        const cmds = await readiframetaskcmds(page)
+        return cmds.some((cmd) => /hold\.wasm/i.test(cmd))
+      },
+      60_000,
+      2000,
+      log,
+    )
+    if (!holdspawn) {
+      throw new Error('composite: hold spawn failed')
+    }
+    await page.waitForTimeout(5000)
+
+    log('step 3 — termbridge.wasm')
+    await dropwasm(page, 'termbridge.wasm', readfixturewasm(ROOT, 'termbridge'))
+    if (
+      !(await waitforvmtermorapilog(
+        page,
+        APILOG_KEY,
+        /wanix term bridge ready/i,
+        120_000,
+        log,
+      ))
+    ) {
+      throw new Error('composite: termbridge banner failed')
+    }
+    await focuscanvas(page)
+    await sendline(page, 'ping')
+    if (
+      !(await waitfor(
+        page,
+        'ping pong',
+        async () => /pong/i.test(await readvmterm(page)),
+        30_000,
+        1500,
+        log,
+      ))
+    ) {
+      throw new Error('composite: ping/pong failed')
+    }
+
+    log('step 4 — warm zedcafe export')
+    await warmwanixexport(page, log, APILOG_KEY)
+
+    log('step 5 — zedcaferead.wasm')
+    await dropwasm(page, 'zedcaferead.wasm', readfixturewasm(ROOT, 'zedcaferead'))
+    if (
+      !(await waitforapilogmatch(page, APILOG_KEY, /zed-cafe ok:/i, 120_000, log))
+    ) {
+      throw new Error('composite: zedcaferead failed')
+    }
+
+    log('step 6 — zedcafewrite.wasm + pull')
+    await dropwasm(page, 'zedcafewrite.wasm', readfixturewasm(ROOT, 'zedcafewrite'))
+    if (
+      !(await waitforapilogmatch(
+        page,
+        APILOG_KEY,
+        /zed-cafe write ok/i,
+        120_000,
+        log,
+      ))
+    ) {
+      throw new Error('composite: zedcafewrite failed')
+    }
+    await sendline(page, '#wanix pull')
+    if (
+      !(await waitforapilogmatch(
+        page,
+        APILOG_KEY,
+        /zed-cafe import:/i,
+        30_000,
+        log,
+      ))
+    ) {
+      throw new Error('composite: pull import failed')
+    }
+
+    log('step 7 — zedcafewritebad.wasm')
+    await dropwasm(
+      page,
+      'zedcafewritebad.wasm',
+      readfixturewasm(ROOT, 'zedcafewritebad'),
+    )
+    if (
+      !(await waitforapilogmatch(
+        page,
+        APILOG_KEY,
+        /zed-cafe write bad ok/i,
+        120_000,
+        log,
+      ))
+    ) {
+      throw new Error('composite: zedcafewritebad failed')
+    }
+
+    log('step 8 — zedcafelist.wasm')
+    await dropwasm(page, 'zedcafelist.wasm', readfixturewasm(ROOT, 'zedcafelist'))
+    const listok = await waitfor(
+      page,
+      'zed-cafe list',
+      async () => {
+        const logs = await readapilog(page, APILOG_KEY)
+        return (
+          logs.some((line) => /zed-cafe list/i.test(line)) &&
+          logs.some((line) => /stats\.json/i.test(line)) &&
+          !logs.some((line) => /zed-cafe missing/i.test(line))
+        )
+      },
+      120_000,
+      2000,
+      log,
+    )
+    if (!listok) {
+      throw new Error('composite: zedcafelist failed')
+    }
+
+    log('PASS — all 7 WASI fixtures in one session')
+    return 0
+  })
+}
+
 export const WANIX_TASKS: TaskDef[] = [
   def('wanix:ensure', {
     description: 'Record pinned wanix npm version (runtime loads from jsDelivr CDN)',
@@ -858,12 +1016,12 @@ export const WANIX_TASKS: TaskDef[] = [
     run: shell('sh ops/fixtures/wanix/build.sh gojs'),
   }),
   def('wanix:zed-cafe:build', {
-    description: 'Build zed-cafe.wasm (Go js/wasm) into ops/fixtures/wanix/ and cafe/public/wanix/',
+    description: 'Build zedcafe.wasm (Go js/wasm) into ops/fixtures/wanix/ and cafe/public/wanix/',
     tags: ['ci'],
-    run: shell('sh ops/fixtures/wanix/build.sh zed-cafe'),
+    run: shell('sh ops/fixtures/wanix/build.sh zedcafe'),
   }),
   def('wanix:zed-cafe:export:validate', {
-    description: 'Headed Playwright: full app #wanix vm → cat /zed-cafe/stats.json (local gate, not CI)',
+    description: 'Headed Playwright: full app #wanix vm → cat /zedcafe/stats.json (local gate, not CI)',
     run: handler(runvalidatezedcafeexportapp),
   }),
   def('wanix:zed-cafe:memfs:validate', {
@@ -871,7 +1029,7 @@ export const WANIX_TASKS: TaskDef[] = [
     run: handler(runvalidatezedcafememfs),
   }),
   def('wanix:zed-cafe:task-read:validate', {
-    description: 'Headed Playwright: full app drop zedcaferead.wasm reads zed-cafe/stats.json (local gate, not CI)',
+    description: 'Headed Playwright: full app drop zedcaferead.wasm reads zedcafe/stats.json (local gate, not CI)',
     run: handler(runvalidatezedcafetaskreadapp),
   }),
   def('wanix:zed-cafe:duplex:validate', {
@@ -879,19 +1037,35 @@ export const WANIX_TASKS: TaskDef[] = [
     run: handler(runvalidatezedcafeduplexapp),
   }),
   def('wanix:vm:boot:validate', {
-    description: 'Headed Playwright: seeded book + #wanix vm must reach shell and /zed-cafe/stats.json (local gate, not CI)',
+    description: 'Headed Playwright: seeded book + #wanix vm must reach shell and /zedcafe/stats.json (local gate, not CI)',
     run: handler(runvalidatewanixvmboot),
   }),
   def('wanix:vm:zed-cafe:validate', {
-    description: 'Headed Playwright: #wanix vm → ls / shows zed-cafe, cat stats.json (primary local gate, not CI)',
+    description: 'Headed Playwright: #wanix vm → ls / shows zedcafe, cat stats.json (primary local gate, not CI)',
     run: handler(runvalidatewanixvmzedcafe),
   }),
   def('wanix:zed-cafe:list:validate', {
     description: 'Headed Playwright: drop zedcafelist.wasm after export warm (local gate, not CI)',
     run: handler(runvalidatezedcafelistapp),
   }),
+  def('wanix:hello:validate', {
+    description: 'Headed Playwright: drop hello.wasm → Hello from wanix! (local gate, not CI)',
+    run: handler(runvalidatehelloapp),
+  }),
+  def('wanix:hold:validate', {
+    description: 'Headed Playwright: drop hold.wasm stays running 5s (local gate, not CI)',
+    run: handler(runvalidateholdapp),
+  }),
+  def('wanix:termbridge:validate', {
+    description: 'Headed Playwright: drop termbridge.wasm banner + ping/pong (local gate, not CI)',
+    run: handler(runvalidatetermbridgeapp),
+  }),
+  def('wanix:wasm:fixtures:validate', {
+    description: 'Headed Playwright: all 7 WASI fixtures sequential in one session (local gate, not CI)',
+    run: handler(runvalidatewasmfixturesapp),
+  }),
   def('wanix:wasm:build:all', {
-    description: 'Compile wanix Go WASI fixtures and zed-cafe export wasm',
+    description: 'Compile wanix Go WASI fixtures and zedcafe export wasm',
     run: shell('sh ops/fixtures/wanix/build.sh all'),
   }),
 ]

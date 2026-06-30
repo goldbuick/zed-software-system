@@ -10,7 +10,7 @@ import (
 
 func TestWalkdirListsNestedTree(t *testing.T) {
 	root := t.TempDir()
-	cafe := filepath.Join(root, "zed-cafe")
+	cafe := filepath.Join(root, "zedcafe")
 	if err := os.MkdirAll(filepath.Join(cafe, "books", "demo"), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -23,7 +23,7 @@ func TestWalkdirListsNestedTree(t *testing.T) {
 
 	var buf bytes.Buffer
 	_, _ = buf.WriteString("zed-cafe list\n")
-	_, _ = buf.WriteString("zed-cafe/\n")
+	_, _ = buf.WriteString("zedcafe/\n")
 	if err := walkdir(cafe, 1, &buf); err != nil {
 		t.Fatal(err)
 	}
@@ -31,7 +31,7 @@ func TestWalkdirListsNestedTree(t *testing.T) {
 	out := buf.String()
 	for _, want := range []string{
 		"zed-cafe list",
-		"zed-cafe/",
+		"zedcafe/",
 		"stats.json",
 		"books/",
 		"demo/",

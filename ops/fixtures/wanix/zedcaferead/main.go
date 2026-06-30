@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	file, err := os.Open("zed-cafe/stats.json")
+	file, err := os.Open("zedcafe/stats.json")
 	if err != nil {
 		_, _ = fmt.Fprint(os.Stdout, "zed-cafe missing\n")
 		os.Exit(1)

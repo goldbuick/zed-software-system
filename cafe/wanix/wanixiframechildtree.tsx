@@ -1,7 +1,6 @@
 import { useLayoutEffect, useRef } from 'react'
 import type { WanixIframeChildController } from 'zss/feature/wanix/wanixiframechildcontroller'
 import {
-  WANIX_IFRAME_VM_PREP_WAIT_MS,
   WANIX_ZED_CAFE_EXPORT_WAIT_MS,
   waitsystemready,
   waitvmchildready,
@@ -14,6 +13,8 @@ import {
   stagezedcafetaskforgojs,
   waitandmountzedcafeguestexport,
   waitforwanixroot,
+  waitwanixbindmount,
+  waitzedcafeexportready,
   waitzedcafeguestready,
   wirewanixarchivebind,
   wirewanixremotebind,
@@ -21,10 +22,11 @@ import {
 import { createwanixroomtree } from 'zss/feature/wanix/wanixroombootstrap'
 import {
   appendgojstasktarget,
-  appendtasktargetpair,
   removetargetpair,
 } from 'zss/feature/wanix/wanixtargetmount'
-import { activatevmslot } from 'zss/feature/wanix/wanixvmslot'
+import { setwanixattrs } from 'zss/feature/wanix/wanixiframechildmount'
+import { applywanixtermprobelayout } from 'zss/feature/wanix/wanixtermprobe'
+import { WANIX_ZED_CAFE_TASK_ID, WANIX_ZED_CAFE_INBOX_RAMFS } from 'zss/feature/wanix/wanixzedcafeconstants'
 import { postwanixiframeapilog } from 'zss/feature/wanix/wanixtermiframeprotocol'
 import type {
   WanixIframeHostState,
@@ -36,11 +38,7 @@ import {
   iswanixvmexportstage,
 } from 'zss/feature/wanix/wanixiframechildtypes'
 import { setwanixtermprobeactivetarget } from 'zss/feature/wanix/wanixtermprobe'
-import {
-  WANIX_VM_GUEST_SHELL_MS,
-  waitforv86driver,
-} from 'zss/feature/wanix/wanixvmspawnhelpers'
-import { WANIX_ZED_CAFE_TASK_ID } from 'zss/feature/wanix/wanixzedcafeconstants'
+import { WANIX_VM_GUEST_SHELL_MS } from 'zss/feature/wanix/wanixvmspawnhelpers'
 
 export function WanixIframeChildTree({
   state,
@@ -56,6 +54,7 @@ export function WanixIframeChildTree({
   const mountedarchives = useRef(new Set<string>())
   const mountedremotes = useRef(new Set<string>())
   const spawnedtasks = useRef(new Set<number>())
+  const zedcafeexportgen = useRef(-1)
   const zedcafe = state.zedcafe
   const zedcafegen = zedcafe?.generation ?? 0
   const zedcafecmd = zedcafe?.cmd ?? ''
@@ -69,6 +68,7 @@ export function WanixIframeChildTree({
     if (state.room === 'idle') {
       roommounted.current = false
       lastroommountkey.current = -1
+      zedcafeexportgen.current = -1
       systemref.current = null
       mountedarchives.current.clear()
       mountedremotes.current.clear()
@@ -93,6 +93,7 @@ export function WanixIframeChildTree({
     systemref.current = system
     roommounted.current = true
     lastroommountkey.current = state.roommountkey
+    zedcafeexportgen.current = -1
     mountedarchives.current.clear()
     mountedremotes.current.clear()
     spawnedtasks.current.clear()
@@ -195,14 +196,35 @@ export function WanixIframeChildTree({
         continue
       }
       spawnedtasks.current.add(pending.spawnid)
-      const task = appendtasktargetpair(
-        system,
-        pending.taskid,
-        pending.cmd,
-      ) as WanixTaskElement
+      const task = document.createElement('wanix-task') as WanixTaskElement
+      setwanixattrs(task, {
+        id: pending.taskid,
+        type: 'wasi',
+        term: true,
+        cmd: pending.cmd,
+      })
+      task.setAttribute('data-zss-target-id', pending.taskid)
+      task.setAttribute('data-zss-target-kind', 'task')
+      system.appendChild(task)
       let cancelled = false
       void (async () => {
         await task.allocate?.()
+        const termpath = (task as { term?: string }).term
+        if (termpath) {
+          const term = document.createElement('wanix-term')
+          setwanixattrs(term, {
+            path: termpath,
+            raw: true,
+          })
+          term.setAttribute('data-zss-target-id', pending.taskid)
+          term.setAttribute('data-zss-target-kind', 'task')
+          applywanixtermprobelayout(term)
+          system.appendChild(term)
+          if (system.isReady) {
+            const wake = term as HTMLElement & { _awake?: () => void }
+            wake._awake?.()
+          }
+        }
         await task.start?.()
         if (cancelled) {
           return
@@ -254,20 +276,30 @@ export function WanixIframeChildTree({
     if (!runzedcafeexport) {
       return
     }
+    if (state.vmcapable && !state.vm) {
+      return
+    }
 
     const existing = system.querySelector(
       `wanix-task[id="${WANIX_ZED_CAFE_TASK_ID}"]`,
     )
-    if (existing && state.vm?.bootstage !== 'export' && state.vm?.bootstage !== 'idle') {
+    if (existing && zedcafeexportgen.current === zedcafegen) {
       return
     }
     if (existing) {
       existing.remove()
     }
+    zedcafeexportgen.current = zedcafegen
 
-    if (state.zedcafe?.inboxbytes?.length) {
-      appendzedcafeinboxfilebind(system, state.zedcafe.inboxbytes)
+    const inboxbytes = state.zedcafe?.inboxbytes ?? []
+
+    if (inboxbytes.length) {
+      appendzedcafeinboxfilebind(system, inboxbytes)
     }
+
+    const inboxbind = system.querySelector(
+      'wanix-bind[data-zss-zedcafe-inbox-file]',
+    )
 
     const task = appendgojstasktarget(
       system,
@@ -284,22 +316,50 @@ export function WanixIframeChildTree({
     }
     task.addEventListener('error', ontaskerror, { once: true })
 
-    let cancelled = false
+    const launchgen = zedcafegen
 
     void (async () => {
-      const wanixroot = await waitforwanixroot(
-        system,
-        controller.getroot,
-        WANIX_ZED_CAFE_EXPORT_WAIT_MS,
-      )
-      if (cancelled || !wanixroot) {
+      let wanixroot = controller.getroot()
+      if (!wanixroot) {
+        wanixroot = await waitforwanixroot(
+          system,
+          controller.getroot,
+          WANIX_ZED_CAFE_EXPORT_WAIT_MS,
+        )
+      }
+      if (launchgen !== zedcafeexportgen.current) {
+        postwanixiframeapilog(
+          `zed-cafe export: gojs async stale gen=${launchgen} current=${zedcafeexportgen.current}`,
+        )
+        return
+      }
+      if (!wanixroot) {
         controller.onzedcafeerror(
           new Error('zed-cafe export: wanix root not ready before staging'),
         )
         return
       }
+      postwanixiframeapilog('zed-cafe export: gojs root ready')
+      if (inboxbytes.length && iswanixvmexportstage(controller.getstate())) {
+        await wanixroot.writeFile(
+          WANIX_ZED_CAFE_INBOX_RAMFS,
+          new Uint8Array(inboxbytes),
+        )
+      } else if (inboxbind) {
+        try {
+          await waitwanixbindmount(inboxbind)
+        } catch {
+          controller.onzedcafeerror(
+            new Error('zed-cafe staging: inbox bind mount failed'),
+          )
+          return
+        }
+      }
       await task.allocate?.()
-      if (cancelled) {
+      if (launchgen !== zedcafeexportgen.current) {
+        postwanixiframeapilog(
+          `zed-cafe export: gojs async stale after allocate gen=${launchgen}`,
+        )
         return
       }
       if (task.rid) {
@@ -317,42 +377,31 @@ export function WanixIframeChildTree({
         controller,
         task.rid,
       )
-      if (cancelled || !inboxstaged) {
+      if (launchgen !== zedcafeexportgen.current || !inboxstaged) {
         return
       }
       postwanixiframeapilog(
         `zed-cafe export: starting gojs task rid=${task.rid ?? 'unknown'}`,
       )
-      const mountpromise =
-        !vmexportstage && task.rid
-          ? waitandmountzedcafeguestexport(
-              system,
-              wanixroot,
-              task.rid,
-              controller,
-              WANIX_ZED_CAFE_EXPORT_WAIT_MS,
-            )
-          : Promise.resolve(null)
       await task.start?.()
-      if (cancelled || !task.rid) {
+      if (launchgen !== zedcafeexportgen.current || !task.rid) {
         return
       }
-      let exportbind: HTMLElement | null = null
-      if (!vmexportstage) {
-        exportbind = await mountpromise
-        if (cancelled) {
-          return
-        }
-        if (!exportbind) {
-          controller.onzedcafeerror(
-            new Error('zed-cafe export: guest ./zed-cafe never became ready'),
-          )
-          return
-        }
-        controller.markzedcafeready()
-      }
-      if (vmexportstage && !cancelled) {
+      if (iswanixvmexportstage(controller.getstate())) {
         try {
+          const exportready = await waitzedcafeexportready(
+            wanixroot,
+            task.rid,
+            WANIX_ZED_CAFE_EXPORT_WAIT_MS,
+          )
+          if (launchgen !== zedcafeexportgen.current) {
+            return
+          }
+          if (!exportready) {
+            throw new Error(
+              'zed-cafe export: stats.json missing from #task export capture',
+            )
+          }
           const guestfiles = await collectzedcafeexportfiles(wanixroot, task.rid)
           if (!guestfiles.some((file) => file.path === 'stats.json')) {
             throw new Error(
@@ -362,15 +411,36 @@ export function WanixIframeChildTree({
           controller.markzedcafeready()
           controller.activatevm(guestfiles)
         } catch (err) {
+          if (launchgen !== zedcafeexportgen.current) {
+            return
+          }
           const detail = err instanceof Error ? err.message : String(err)
           postwanixiframeapilog(`zed-cafe export: vm start failed — ${detail}`)
           controller.onspawnvmerror(
             err instanceof Error ? err : new Error(String(err)),
           )
         }
+        return
       }
+      const exportbind = await waitandmountzedcafeguestexport(
+        system,
+        wanixroot,
+        task.rid,
+        controller,
+        WANIX_ZED_CAFE_EXPORT_WAIT_MS,
+      )
+      if (launchgen !== zedcafeexportgen.current) {
+        return
+      }
+      if (!exportbind) {
+        controller.onzedcafeerror(
+          new Error('zed-cafe export: guest ./zedcafe never became ready'),
+        )
+        return
+      }
+      controller.markzedcafeready()
     })().catch((err) => {
-      if (cancelled) {
+      if (launchgen !== zedcafeexportgen.current) {
         return
       }
       controller.onzedcafeerror(
@@ -379,36 +449,24 @@ export function WanixIframeChildTree({
     })
 
     return () => {
-      cancelled = true
       task.removeEventListener('error', ontaskerror)
     }
-  }, [controller, zedcafecmd, zedcafegen, vmexportstage, state.room])
+  }, [controller, zedcafecmd, zedcafegen, vmexportstage, state.room, state.vmcapable, state.vm?.bootstage])
 
-  // Activate dormant VM slot after export (no wanix-system remount).
+  // Wait for boot-phase wanix-vm after export remount (vm must be initial child before ready).
   useLayoutEffect(() => {
     const system = systemref.current
-    if (!system || state.vm?.bootstage !== 'activating') {
+    if (
+      !system ||
+      state.vm?.bootstage !== 'activating' ||
+      state.room !== 'ready'
+    ) {
       return
     }
-    const guestfiles = state.vm.guestfiles ?? state.zedcafe?.guestfiles ?? []
     let cancelled = false
 
     void (async () => {
       try {
-        const wanixroot = await waitforwanixroot(
-          system,
-          controller.getroot,
-          WANIX_ZED_CAFE_EXPORT_WAIT_MS,
-        )
-        if (cancelled || !wanixroot) {
-          throw new Error('wanix room: root missing before vm activation')
-        }
-        await waitforv86driver(wanixroot, WANIX_IFRAME_VM_PREP_WAIT_MS)
-        const taskrid = state.zedcafe?.taskrid
-        if (!taskrid) {
-          throw new Error('wanix room: zed-cafe export task rid missing before vm activation')
-        }
-        await activatevmslot(system, state.vm?.mem ?? '512M', taskrid, guestfiles)
         await waitvmchildready(system, WANIX_VM_GUEST_SHELL_MS)
         if (cancelled) {
           return
@@ -423,6 +481,8 @@ export function WanixIframeChildTree({
         if (cancelled) {
           return
         }
+        const detail = err instanceof Error ? err.message : String(err)
+        postwanixiframeapilog(`zed-cafe export: vm activation failed — ${detail}`)
         controller.onspawnvmerror(
           err instanceof Error ? err : new Error(String(err)),
         )
@@ -432,7 +492,7 @@ export function WanixIframeChildTree({
     return () => {
       cancelled = true
     }
-  }, [controller, state.vm?.bootstage, vmid, vmmem])
+  }, [controller, state.vm?.bootstage, state.room, state.roommountkey, vmid, vmmem])
 
   if (state.room === 'idle') {
     return null

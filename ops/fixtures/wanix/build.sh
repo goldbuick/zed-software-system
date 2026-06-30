@@ -1,8 +1,8 @@
 #!/bin/sh
 # Build ops/fixtures/wanix Go wasm binaries.
 #
-# Usage: build.sh [all|wasi|zed-cafe|gojs]
-# Default (no args): all (= wasi + zed-cafe)
+# Usage: build.sh [all|wasi|zedcafe|gojs]
+# Default (no args): all (= wasi + zedcafe)
 #
 # Prereq: Go toolchain + git submodule update --init submodules/wanix
 
@@ -11,8 +11,8 @@ set -e
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 WANIX_DIR="$ROOT/ops/fixtures/wanix"
 WANIX_SUBMODULE="$ROOT/submodules/wanix"
-ZED_CAFE_FIXTURE="$WANIX_DIR/zed-cafe.wasm"
-ZED_CAFE_PUBLIC="$ROOT/cafe/public/wanix/zed-cafe.wasm"
+ZEDCAFE_FIXTURE="$WANIX_DIR/zedcafe.wasm"
+ZEDCAFE_PUBLIC="$ROOT/cafe/public/wanix/zedcafe.wasm"
 GOJS_SRC="$WANIX_SUBMODULE/test/gojs"
 GOJS_OUT="$WANIX_DIR/gojscheck.wasm"
 
@@ -59,21 +59,21 @@ build_wasi() {
   echo "wanix Go WASI wasm build ok ($WANIX_DIR)"
 }
 
-build_zed_cafe() {
+build_zedcafe() {
   require_root_gomod
   require_wanix_submodule
-  if [ ! -f "$WANIX_DIR/zed-cafe/main.go" ]; then
-    echo "missing $WANIX_DIR/zed-cafe/main.go" >&2
+  if [ ! -f "$WANIX_DIR/zedcafe/main.go" ]; then
+    echo "missing $WANIX_DIR/zedcafe/main.go" >&2
     exit 1
   fi
-  mkdir -p "$(dirname "$ZED_CAFE_PUBLIC")"
-  echo "go build zed-cafe -> zed-cafe.wasm"
+  mkdir -p "$(dirname "$ZEDCAFE_PUBLIC")"
+  echo "go build zedcafe -> zedcafe.wasm"
   (
     cd "$WANIX_DIR"
-    GOOS=js GOARCH=wasm go build -o zed-cafe.wasm ./zed-cafe
+    GOOS=js GOARCH=wasm go build -o zedcafe.wasm ./zedcafe
   )
-  cp "$ZED_CAFE_FIXTURE" "$ZED_CAFE_PUBLIC"
-  echo "zed-cafe.wasm written to $ZED_CAFE_FIXTURE (copied to $ZED_CAFE_PUBLIC)"
+  cp "$ZEDCAFE_FIXTURE" "$ZEDCAFE_PUBLIC"
+  echo "zedcafe.wasm written to $ZEDCAFE_FIXTURE (copied to $ZEDCAFE_PUBLIC)"
 }
 
 build_gojs() {
@@ -94,7 +94,7 @@ build_gojs() {
 
 build_all() {
   build_wasi
-  build_zed_cafe
+  build_zedcafe
 }
 
 require_go
@@ -108,14 +108,17 @@ case "$TARGET" in
   wasi)
     build_wasi
     ;;
+  zedcafe)
+    build_zedcafe
+    ;;
   zed-cafe)
-    build_zed_cafe
+    build_zedcafe
     ;;
   gojs)
     build_gojs
     ;;
   *)
-    echo "usage: $0 [all|wasi|zed-cafe|gojs]" >&2
+    echo "usage: $0 [all|wasi|zedcafe|zed-cafe|gojs]" >&2
     exit 1
     ;;
 esac

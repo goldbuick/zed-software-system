@@ -50,7 +50,11 @@ async function launchwanixload(
   )
   let entrycmd = label
   if (kind === 'wasm') {
-    await putwanixfile(label, bytes)
+    const ramfspath = label.startsWith('#ramfs/')
+      ? label
+      : `#ramfs/${label.replace(/^\/+/, '')}`
+    await putwanixfile(ramfspath, bytes)
+    entrycmd = ramfspath
   } else {
     const bundleprefix = `bundle-${taskid}`
     await mountwanixarchive(label, bytes, bundleprefix)

@@ -28,14 +28,14 @@ func walkdir(path string, depth int, w interface{ Write([]byte) (int, error) }) 
 }
 
 func main() {
-	if _, err := os.Stat("zed-cafe"); err != nil {
+	if _, err := os.Stat("zedcafe"); err != nil {
 		_, _ = fmt.Fprint(os.Stdout, "zed-cafe missing\n")
 		os.Exit(1)
 	}
 
 	_, _ = fmt.Fprint(os.Stdout, "zed-cafe list\n")
-	_, _ = fmt.Fprint(os.Stdout, "zed-cafe/\n")
-	if err := walkdir("zed-cafe", 1, os.Stdout); err != nil {
+	_, _ = fmt.Fprint(os.Stdout, "zedcafe/\n")
+	if err := walkdir("zedcafe", 1, os.Stdout); err != nil {
 		_, _ = fmt.Fprint(os.Stdout, "zed-cafe missing\n")
 		os.Exit(1)
 	}

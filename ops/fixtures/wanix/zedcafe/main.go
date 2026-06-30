@@ -10,7 +10,7 @@ import (
 	"tractor.dev/wanix/gojs"
 )
 
-const inboxpath = "zed-cafe-inbox.json"
+const inboxpath = "zedcafeinbox.json"
 
 func main() {
 	raw, err := readinboxfile()

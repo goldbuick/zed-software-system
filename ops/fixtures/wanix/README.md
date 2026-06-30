@@ -16,10 +16,10 @@ Reference: [tractordev/wanix](https://github.com/tractordev/wanix) **`main`** (`
 | `#wanix vm` prep | [`examples/basic-vm.html`](https://github.com/tractordev/wanix/blob/main/examples/basic-vm.html) — linux + `#vm` ns + v86 binds **before** first `ready` | `spawnwanixvmspace` → two-phase `vm-active` (`bootstage: export` then `boot`) in iframe child |
 | VM serial console | `<wanix-vm export="ttyS0" term>` + `#vm/<rid>/term/data` | `<wanix-vm>` must be **initial child** on boot remount — not appended after `ready` |
 | Term I/O | `<wanix-term path="…" raw>` (we use tile bridge instead of xterm) | `wanixhost.ts` + `WanixTermInput` |
-| `./zed-cafe/` / `/zed-cafe/` export | gojs export → live ns bind (task) or capture + VM remount (VM) | `wanixstateexport.ts` + `wanixzedcafe.ts` + `wanixiframechildmount.ts` |
+| `./zedcafe/` / `/zedcafe/` export | gojs export → live ns bind (task) or capture + VM remount (VM) | `wanixstateexport.ts` + `wanixzedcafe.ts` + `wanixiframechildmount.ts` |
 | **Namespace export (LAN)** | Upstream **Wanix CLI console protocol** (browser dials out) | `wanixbridgehost.ts` + `#wanix bridge <wss-url>` |
 
-Session books mirror to **`./zed-cafe/`** (WASI tasks) or **`/zed-cafe/`** (Linux VM) when Wanix is warm. Host pushes edits via live `writeFile` into `#task/<rid>/export` (no gojs restart per edit). Guest edits import via auto-poll (~3s) or **`#wanix pull`**.
+Session books mirror to **`./zedcafe/`** (WASI tasks) or **`/zedcafe/`** (Linux VM) when Wanix is warm. Host pushes edits via live `writeFile` into `#task/<rid>/export` (no gojs restart per edit). Guest edits import via auto-poll (~3s) or **`#wanix pull`**.
 
 Build the gojs export guest (runs automatically before `app:build`):
 
@@ -27,9 +27,9 @@ Build the gojs export guest (runs automatically before `app:build`):
 yarn task run wanix:zed-cafe:build
 ```
 
-Shipped at `/wanix/zed-cafe.wasm` (`cafe/public/wanix/`). Staging: wasm file bind `{ dst: #ramfs/zed-cafe.wasm, src: /wanix/zed-cafe.wasm }`; gojs cmd is `#ramfs/zed-cafe.wasm`.
+Shipped at `/wanix/zedcafe.wasm` (`cafe/public/wanix/`). Staging: wasm file bind `{ dst: #ramfs/zedcafe.wasm, src: /wanix/zedcafe.wasm }`; gojs cmd is `#ramfs/zedcafe.wasm`.
 
-**Inbox** (`#ramfs/zed-cafe-inbox.json`):
+**Inbox** (`#ramfs/zedcafeinbox.json`):
 
 | Layout | Staging |
 |--------|---------|
@@ -40,8 +40,8 @@ Shipped at `/wanix/zed-cafe.wasm` (`cafe/public/wanix/`). Staging: wasm file bin
 
 | Layout | Mount |
 |--------|-------|
-| Task | ns bind `{ dst: zed-cafe, src: #task/<rid>/export }` after `waitzedcafeexportready` → `./zed-cafe/` |
-| VM | **Two-phase boot** — export phase: gojs only; boot phase: capture files from `#task/<rid>/export`, file binds on `#ramfs/zed-cafe/*`, `<wanix-vm>` child bind `zed-cafe` ← `#ramfs/zed-cafe` → `/zed-cafe/` |
+| Task | ns bind `{ dst: zedcafe, src: #task/<rid>/export }` after `waitzedcafeexportready` → `./zedcafe/` |
+| VM | **Two-phase boot** — export phase: gojs only; boot phase: capture files from `#task/<rid>/export`, file binds on `#ramfs/zedcafe/*`, `<wanix-vm>` child bind `zedcafe` ← `#ramfs/zedcafe` → `/zedcafe/` |
 
 On task export bind failure, fallback: `#ramfs/zed-cafe` ← export, then `zed-cafe` ← `#ramfs/zed-cafe`. Guest `ls /` (VM) should show normal Linux dirs plus **`zed-cafe/`** only — no `_wanix`, `zed-cafe.wasm`, or inbox on `/`.
 
@@ -50,11 +50,14 @@ Agent docs: `.cursor/skills/wanix-zed-cafe-export/SKILL.md`, `.cursor/rules/wani
 **Local gates** (dev server must be running: `yarn task app dev`):
 
 ```bash
-yarn task run wanix:zed-cafe:export:validate   # headed full app #wanix vm → cat /zed-cafe/stats.json
-yarn task run wanix:vm:zed-cafe:validate       # primary: #wanix vm → ls / shows zed-cafe (6m script cap)
+yarn task run wanix:zed-cafe:export:validate   # headed full app #wanix vm → cat /zedcafe/stats.json
+yarn task run wanix:vm:zed-cafe:validate       # primary: #wanix vm → ls / shows zedcafe (6m script cap)
+yarn task run wanix:hello:validate             # headed: drop hello.wasm
+yarn task run wanix:hold:validate              # headed: drop hold.wasm (still running after 5s)
+yarn task run wanix:termbridge:validate        # headed: termbridge ping/pong
+yarn task run wanix:wasm:fixtures:validate   # headed: all 7 WASI binaries in one session
 yarn task run wanix:zed-cafe:duplex:validate   # headed: drop zedcafewrite.wasm + #wanix pull
 yarn task run wanix:zed-cafe:task-read:validate # headed: drop zedcaferead.wasm → zed-cafe ok:
-yarn task run wanix:vm:boot:validate           # seeded book + #wanix vm boot gate
 ```
 
 | Layout | Read books |

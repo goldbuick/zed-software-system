@@ -85,8 +85,9 @@ export async function wanixhandlevmstart(
       }
     }
     apilog(device, player, 'wanix vm prep: ensuring zed-cafe export...')
-    await ensurewanixsandbox(device, player)
-    await iframechildhaltzedcafe()
+    if (iswanixspaceactive()) {
+      await iframechildhaltzedcafe()
+    }
     stopzedcafepoll()
     setwanixzedcafeready(false)
     setwanixzedcafetaskrid(null)
@@ -116,7 +117,7 @@ export async function wanixhandlevmstart(
       apilog(
         device,
         player,
-        'wanix vm: zed-cafe export not ready — /zed-cafe/ may be missing in guest',
+        'wanix vm: zedcafe export not ready — /zedcafe/ may be missing in guest',
       )
     }
     registervm({
@@ -150,7 +151,7 @@ export async function wanixhandleshownenu(device: DEVICELIKE, player: string) {
     const parts: (string | string[])[] = [
       zssheaderlines('wanix'),
       zsstextline('drop a .wasm or .tgz to run'),
-      zsstextline('$gray./zed-cafe/ mirrors session books; #wanix pull imports guest edits'),
+      zsstextline('$gray./zedcafe/ mirrors session books; #wanix pull imports guest edits'),
       zsssectionlines('Tasks'),
     ]
     if (tasks.length === 0) {

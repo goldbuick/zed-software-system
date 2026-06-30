@@ -9,7 +9,7 @@ const payload = "{\"exportedAt\":\"guest\",\"bookCount\":0,\"books\":[],\"guestT
 
 func main() {
 	file, err := os.OpenFile(
-		"zed-cafe/stats.json",
+		"zedcafe/stats.json",
 		os.O_CREATE|os.O_TRUNC|os.O_WRONLY,
 		0o644,
 	)

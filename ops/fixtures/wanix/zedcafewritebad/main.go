@@ -7,7 +7,7 @@ import (
 
 func main() {
 	file, err := os.OpenFile(
-		"zed-cafe/evil.json",
+		"zedcafe/evil.json",
 		os.O_CREATE|os.O_TRUNC|os.O_WRONLY,
 		0o644,
 	)

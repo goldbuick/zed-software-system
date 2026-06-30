@@ -4,6 +4,7 @@ import type {
 } from 'zss/feature/wanix/wanixiframechildtypes'
 import {
   appenddormantvmslot,
+  appendvmbootslot,
   appendwanixroomtaskbinds,
   appendwanixroomvmprepbinds,
 } from 'zss/feature/wanix/wanixvmslot'
@@ -55,19 +56,31 @@ export function createtaskroomtree(
   return sys
 }
 
-/** VM-capable room: task binds + linux/v86 + dormant wanix-vm (no VM term until activate). */
+/** VM-capable room: task binds + linux/v86; dormant wanix-vm only after export capture. */
 export function createvmcapableroomtree(
   state: Pick<
     WanixIframeHostState,
-    'archives' | 'remotes' | 'zedcafe' | 'vm' | 'urls'
+    'archives' | 'remotes' | 'zedcafe' | 'vm' | 'urls' | 'vmcapable'
   >,
 ): WanixSystemElement {
   const sys = createwanixsystemel()
   appendwanixroomtaskbinds(sys)
   appendwanixroomvmprepbinds(sys, state.urls)
   appendroomshared(sys, state)
-  const mem = state.vm?.mem ?? '512M'
-  appenddormantvmslot(sys, mem, state.remotes)
+  const skipprebootvm =
+    state.vm?.bootstage === 'export' ||
+    (state.vmcapable && !state.vm)
+  if (!skipprebootvm && state.vm) {
+    const guestfiles = state.vm.guestfiles ?? state.zedcafe?.guestfiles ?? []
+    if (
+      (state.vm.bootstage === 'activating' || state.vm.bootstage === 'active') &&
+      guestfiles.length
+    ) {
+      appendvmbootslot(sys, state.vm.mem, guestfiles, state.remotes)
+    } else {
+      appenddormantvmslot(sys, state.vm.mem, state.remotes)
+    }
+  }
   return sys
 }
 

@@ -607,7 +607,7 @@ export function createwanixiframechildcontroller() {
           return
         }
         case 'haltzedcafe': {
-          await halttarget(root, 'task', 'zed-cafe')
+          await halttarget(root, 'task', WANIX_ZED_CAFE_TASK_ID)
           replychildrpc(source, data.id, { result: { ok: true } })
           return
         }
@@ -727,10 +727,17 @@ export function createwanixiframechildcontroller() {
       return
     }
     postwanixiframeapilog(
-      `zed-cafe export: #ramfs/zed-cafe ready — activating vm slot (${guestfiles.length} files)`,
+      `#ramfs/zedcafe ready — activating vm slot (${guestfiles.length} files)`,
+    )
+    postwanixiframeapilog(
+      `zed-cafe export: export captured (${guestfiles.length} files), remounting for vm boot`,
     )
     setstate({
       ...current,
+      room: 'booting',
+      roommountkey: current.roommountkey + 1,
+      pendingtasks: [],
+      removetaskids: [],
       vm: current.vm
         ? {
             ...current.vm,
@@ -746,6 +753,7 @@ export function createwanixiframechildcontroller() {
           }
         : null,
     })
+    root = null
   }
 
   function markvmactive() {

@@ -20,6 +20,8 @@ import {
   WANIX_ZED_CAFE_INBOX_RAMFS,
   WANIX_ZED_CAFE_WASM_RAMFS,
   WANIX_ZED_CAFE_WASM_URL,
+  WANIX_ZED_CAFE_GUEST_MOUNT,
+  WANIX_ZED_CAFE_TASK_ID,
   readwanixzedcafeexportsrc,
 } from 'zss/feature/wanix/wanixzedcafeconstants'
 import type { WanixZedCafeExportProbe } from 'zss/feature/wanix/wanixzedcafeprobe'
@@ -91,7 +93,7 @@ export function appendzedcafeinboxfilebind(
   if (!inboxbytes.length) {
     return
   }
-  const existing = sys.querySelector('wanix-bind[data-zss-zed-cafe-inbox-file]')
+  const existing = sys.querySelector('wanix-bind[data-zss-zedcafe-inbox-file]')
   if (existing) {
     return
   }
@@ -102,7 +104,7 @@ export function appendzedcafeinboxfilebind(
     dst: WANIX_ZED_CAFE_INBOX_RAMFS,
     src: bloburl,
   })
-  bind.setAttribute('data-zss-zed-cafe-inbox-file', '')
+  bind.setAttribute('data-zss-zedcafe-inbox-file', '')
   bind.setAttribute('data-zss-inbox-blob-url', bloburl)
   sys.appendChild(bind)
 }
@@ -179,33 +181,44 @@ export async function waitforwanixroot(
   readroot: () => WanixRoot | null,
   timeoutms = WANIX_ROOT_WAIT_TIMEOUT_MS,
 ): Promise<WanixRoot | null> {
-  const cached = readroot()
-  if (cached) {
-    return cached
-  }
-  if (system.isReady && system.root) {
-    return system.root
-  }
-  const ready = await new Promise<boolean>((resolve) => {
-    const timer = setTimeout(() => {
-      system.removeEventListener('ready', onready)
-      resolve(false)
-    }, timeoutms)
-    const onready = () => {
-      clearTimeout(timer)
-      resolve(true)
+  const deadline = Date.now() + timeoutms
+  while (Date.now() < deadline) {
+    const cached = readroot()
+    if (cached) {
+      return cached
     }
-    system.addEventListener('ready', onready, { once: true })
+    if (system.isReady && system.root) {
+      return system.root
+    }
     if (system.isReady) {
-      clearTimeout(timer)
-      system.removeEventListener('ready', onready)
-      resolve(true)
+      await new Promise<void>((resolve) => setTimeout(resolve, 50))
+      continue
     }
-  })
-  if (!ready) {
-    return null
+    const remaining = deadline - Date.now()
+    if (remaining <= 0) {
+      break
+    }
+    const ready = await new Promise<boolean>((resolve) => {
+      const timer = setTimeout(() => {
+        system.removeEventListener('ready', onready)
+        resolve(false)
+      }, remaining)
+      const onready = () => {
+        clearTimeout(timer)
+        resolve(true)
+      }
+      system.addEventListener('ready', onready, { once: true })
+      if (system.isReady) {
+        clearTimeout(timer)
+        system.removeEventListener('ready', onready)
+        resolve(true)
+      }
+    })
+    if (!ready) {
+      break
+    }
   }
-  return system.root ?? readroot()
+  return readroot() ?? system.root ?? null
 }
 
 export function iswanixzedcafevmbootexport(
@@ -254,7 +267,7 @@ export async function waitzedcafeguestready(
 ): Promise<boolean> {
   const deadline = Date.now() + timeoutms
   while (Date.now() < deadline) {
-    if (await readzedcafeexportstatsready(root, 'zed-cafe')) {
+    if (await readzedcafeexportstatsready(root, WANIX_ZED_CAFE_GUEST_MOUNT)) {
       postwanixiframeapilog(
         `zed-cafe export: guest zed-cafe ready`,
       )
@@ -288,10 +301,10 @@ async function readzedcafeexportstatsready(
 
 function cleartaskstagingbinds(sys: WanixSystemElement) {
   revokeinboxblobsurl(
-    sys.querySelector('wanix-bind[data-zss-zed-cafe-inbox]'),
+    sys.querySelector('wanix-bind[data-zss-zedcafe-inbox]'),
   )
   sys
-    .querySelectorAll('wanix-bind[data-zss-zed-cafe-inbox]')
+    .querySelectorAll('wanix-bind[data-zss-zedcafe-inbox]')
     .forEach((el) => el.remove())
 }
 
@@ -374,6 +387,7 @@ export async function waitandmountzedcafeguestexport(
   let exportlogged = false
   let staged = false
   let guestbindappended = false
+  let stagedguestfiles: WanixZedCafeGuestFile[] = []
 
   while (Date.now() < deadline) {
     let exportlive = false
@@ -400,10 +414,16 @@ export async function waitandmountzedcafeguestexport(
         )
       } else {
         appendzedcafeexportramfsfilebinds(sys, guestfiles)
+        appendzedcafeguestfilebinds(sys, guestfiles)
+        stagedguestfiles = guestfiles
         postwanixiframeapilog(
           `zed-cafe export: staging ${guestfiles.length} files on ${WANIX_ZED_CAFE_EXPORT_RAMFS}`,
         )
         staged = true
+        guestbindappended = true
+        postwanixiframeapilog(
+          `zed-cafe export: guest ./${WANIX_ZED_CAFE_GUEST_MOUNT} file binds (${guestfiles.length} files)`,
+        )
       }
     }
 
@@ -413,13 +433,13 @@ export async function waitandmountzedcafeguestexport(
       (await readzedcafeexportstatsready(root, WANIX_ZED_CAFE_EXPORT_RAMFS))
     ) {
       sys
-        .querySelectorAll('wanix-bind[data-zss-zed-cafe-export="guest"]')
+        .querySelectorAll('wanix-bind[data-zss-zedcafe-export="guest"]')
         .forEach((el) => el.remove())
       const guestbind = createwanixbind({
-        dst: 'zed-cafe',
+        dst: WANIX_ZED_CAFE_GUEST_MOUNT,
         src: WANIX_ZED_CAFE_EXPORT_RAMFS,
       })
-      guestbind.setAttribute('data-zss-zed-cafe-export', 'guest')
+      guestbind.setAttribute('data-zss-zedcafe-export', 'guest')
       sys.appendChild(guestbind)
       wirezedcafeexportbind(guestbind, sys, taskrid, controller)
       try {
@@ -435,6 +455,21 @@ export async function waitandmountzedcafeguestexport(
 
     if (
       guestbindappended &&
+      stagedguestfiles.some((file) => file.path === 'stats.json')
+    ) {
+      return (
+        (sys.querySelector(
+          'wanix-bind[data-zss-zedcafe-guest]',
+        ) as HTMLElement | null) ??
+        (sys.querySelector(
+          'wanix-bind[data-zss-zedcafe-export="guest"]',
+        ) as HTMLElement | null) ??
+        sys.querySelector('wanix-bind[data-zss-zedcafe-guest]')
+      )
+    }
+
+    if (
+      guestbindappended &&
       (await waitzedcafeguestready(
         root,
         WANIX_ZED_CAFE_EXPORT_READY_POLL_MS * 4,
@@ -442,10 +477,10 @@ export async function waitandmountzedcafeguestexport(
     ) {
       return (
         (sys.querySelector(
-          'wanix-bind[data-zss-zed-cafe-guest]',
+          'wanix-bind[data-zss-zedcafe-guest]',
         ) as HTMLElement | null) ??
         (sys.querySelector(
-          'wanix-bind[data-zss-zed-cafe-export="guest"]',
+          'wanix-bind[data-zss-zedcafe-export="guest"]',
         ) as HTMLElement | null)
       )
     }
@@ -545,7 +580,7 @@ export function appendzedcafeexportramfsfilebinds(
   guestfiles: WanixZedCafeGuestFile[],
 ) {
   sys
-    .querySelectorAll('wanix-bind[data-zss-zed-cafe-export-ramfs-file]')
+    .querySelectorAll('wanix-bind[data-zss-zedcafe-export-ramfs-file]')
     .forEach((el) => {
       revokeexportramfsblobsurl(el)
       el.remove()
@@ -559,7 +594,7 @@ export function appendzedcafeexportramfsfilebinds(
       dst: `${WANIX_ZED_CAFE_EXPORT_RAMFS}/${file.path}`,
       src: bloburl,
     })
-    bind.setAttribute('data-zss-zed-cafe-export-ramfs-file', '')
+    bind.setAttribute('data-zss-zedcafe-export-ramfs-file', '')
     bind.setAttribute('data-zss-export-ramfs-blob-url', bloburl)
     sys.appendChild(bind)
   }
@@ -570,7 +605,7 @@ export function appendzedcafeguestfilebinds(
   guestfiles: WanixZedCafeGuestFile[],
 ) {
   sys
-    .querySelectorAll('wanix-bind[data-zss-zed-cafe-guest]')
+    .querySelectorAll('wanix-bind[data-zss-zedcafe-guest]')
     .forEach((el) => {
       revokeguestfileblobsurl(el)
       el.remove()
@@ -581,10 +616,10 @@ export function appendzedcafeguestfilebinds(
     const bloburl = URL.createObjectURL(new Blob([bytes]))
     const bind = createwanixbind({
       type: 'file',
-      dst: `zed-cafe/${file.path}`,
+      dst: `${WANIX_ZED_CAFE_GUEST_MOUNT}/${file.path}`,
       src: bloburl,
     })
-    bind.setAttribute('data-zss-zed-cafe-guest', '')
+    bind.setAttribute('data-zss-zedcafe-guest', '')
     bind.setAttribute('data-zss-guest-blob-url', bloburl)
     sys.appendChild(bind)
   }
@@ -613,7 +648,7 @@ export async function stagezedcafetaskforgojs(
       raw instanceof Uint8Array ? raw : new TextEncoder().encode(String(raw))
   } catch {
     controller.onzedcafeerror(
-      new Error('zed-cafe staging: cannot read #ramfs/zed-cafe-inbox.json'),
+      new Error(`zed-cafe staging: cannot read ${WANIX_ZED_CAFE_INBOX_RAMFS}`),
     )
     return false
   }
@@ -706,7 +741,7 @@ export function wirewanixremotebind(
 export function cleartargetwanixels(sys: WanixSystemElement) {
   sys
     .querySelectorAll(
-      ':scope > wanix-vm, :scope > wanix-task:not([id="zed-cafe"]), :scope > wanix-term:not([data-zss-zed-cafe-skip])',
+      ':scope > wanix-vm, :scope > wanix-task:not([id="zedcafe"]), :scope > wanix-term:not([data-zss-zedcafe-skip])',
     )
     .forEach((el) => el.remove())
 }
@@ -728,14 +763,14 @@ function appendvmremoteguestbinds(vm: HTMLElement, remotes: WanixIframeRemote[])
 }
 
 function appendvmzedcafestagingbind(vm: HTMLElement) {
-  if (vm.querySelector('wanix-bind[data-zss-zed-cafe-export="vm-staging"]')) {
+  if (vm.querySelector('wanix-bind[data-zss-zedcafe-export="vm-staging"]')) {
     return
   }
   const bind = createwanixbind({
-    dst: 'zed-cafe',
+    dst: WANIX_ZED_CAFE_GUEST_MOUNT,
     src: WANIX_ZED_CAFE_EXPORT_RAMFS,
   })
-  bind.setAttribute('data-zss-zed-cafe-export', 'vm-staging')
+  bind.setAttribute('data-zss-zedcafe-export', 'vm-staging')
   vm.appendChild(bind)
 }
 
@@ -745,19 +780,19 @@ export function appendzedcafeexportramfsbind(
 ) {
   const exportsrc = readwanixzedcafeexportsrc(taskrid)
   const existing = sys.querySelector(
-    'wanix-bind[data-zss-zed-cafe-export="ramfs"]',
+    'wanix-bind[data-zss-zedcafe-export="ramfs"]',
   )
   if (existing?.getAttribute('src') === exportsrc) {
     return null
   }
   sys
-    .querySelectorAll('wanix-bind[data-zss-zed-cafe-export="ramfs"]')
+    .querySelectorAll('wanix-bind[data-zss-zedcafe-export="ramfs"]')
     .forEach((el) => el.remove())
   const bind = createwanixbind({
     dst: WANIX_ZED_CAFE_EXPORT_RAMFS,
     src: exportsrc,
   })
-  bind.setAttribute('data-zss-zed-cafe-export', 'ramfs')
+  bind.setAttribute('data-zss-zedcafe-export', 'ramfs')
   bind.setAttribute('src', exportsrc)
   sys.appendChild(bind)
   return bind
@@ -800,7 +835,7 @@ export function appendwanixvmtarget(
 export function clearzedcafeexportbinds(sys: WanixSystemElement) {
   sys
     .querySelectorAll(
-      'wanix-bind[data-zss-zed-cafe-export]:not([data-zss-zed-cafe-export="vm-staging"]), wanix-bind[data-zss-zed-cafe-export-fallback]',
+      'wanix-bind[data-zss-zedcafe-export]:not([data-zss-zedcafe-export="vm-staging"]), wanix-bind[data-zss-zedcafe-export-fallback]',
     )
     .forEach((el) => el.remove())
 }
@@ -809,7 +844,7 @@ export function iswanixvmlayout(sys: WanixSystemElement): boolean {
   return !!sys.querySelector('wanix-bind[dst="vm"]')
 }
 
-/** Confirm #ramfs/zed-cafe is populated before wanix-vm virtfs bind. */
+/** Confirm #ramfs/zedcafe is populated before wanix-vm virtfs bind. */
 export async function verifyzedcafeexportramfs(
   root: WanixRoot,
 ): Promise<boolean> {
@@ -823,17 +858,17 @@ export function appendzedcafeexportbind(
   if (iswanixvmlayout(sys) || sys.querySelector('wanix-vm')) {
     return appendzedcafeexportramfsbind(sys, taskrid)
   }
-  const existing = sys.querySelector('wanix-bind[data-zss-zed-cafe-export="guest"]')
+  const existing = sys.querySelector('wanix-bind[data-zss-zedcafe-export="guest"]')
   const exportsrc = readwanixzedcafeexportsrc(taskrid)
   if (existing?.getAttribute('src') === exportsrc) {
     return null
   }
   clearzedcafeexportbinds(sys)
   const bind = createwanixbind({
-    dst: 'zed-cafe',
+    dst: WANIX_ZED_CAFE_GUEST_MOUNT,
     src: exportsrc,
   })
-  bind.setAttribute('data-zss-zed-cafe-export', 'guest')
+  bind.setAttribute('data-zss-zedcafe-export', 'guest')
   sys.appendChild(bind)
   return bind
 }
@@ -842,7 +877,7 @@ export function appendzedcafeexportfallbackbinds(
   sys: WanixSystemElement,
   taskrid: string,
 ) {
-  if (sys.querySelector('wanix-bind[data-zss-zed-cafe-export-fallback]')) {
+  if (sys.querySelector('wanix-bind[data-zss-zedcafe-export-fallback]')) {
     return
   }
   const exportsrc = readwanixzedcafeexportsrc(taskrid)
@@ -850,39 +885,39 @@ export function appendzedcafeexportfallbackbinds(
     dst: WANIX_ZED_CAFE_EXPORT_RAMFS,
     src: exportsrc,
   })
-  ramfsbind.setAttribute('data-zss-zed-cafe-export-fallback', 'ramfs')
+  ramfsbind.setAttribute('data-zss-zedcafe-export-fallback', 'ramfs')
   sys.appendChild(ramfsbind)
   ramfsbind.addEventListener(
     'mount',
     () => {
-      postwanixiframeapilog('zed-cafe export: fallback #ramfs/zed-cafe mounted')
+      postwanixiframeapilog('zed-cafe export: fallback #ramfs/zedcafe mounted')
     },
     { once: true },
   )
   ramfsbind.addEventListener(
     'error',
     () => {
-      postwanixiframeapilog('zed-cafe export: fallback #ramfs/zed-cafe mount failed')
+      postwanixiframeapilog('zed-cafe export: fallback #ramfs/zedcafe mount failed')
     },
     { once: true },
   )
   const guestbind = createwanixbind({
-    dst: 'zed-cafe',
+    dst: WANIX_ZED_CAFE_GUEST_MOUNT,
     src: WANIX_ZED_CAFE_EXPORT_RAMFS,
   })
-  guestbind.setAttribute('data-zss-zed-cafe-export-fallback', 'guest')
+  guestbind.setAttribute('data-zss-zedcafe-export-fallback', 'guest')
   sys.appendChild(guestbind)
   guestbind.addEventListener(
     'mount',
     () => {
-      postwanixiframeapilog('zed-cafe export: fallback guest zed-cafe mounted')
+      postwanixiframeapilog('zed-cafe export: fallback guest zedcafe mounted')
     },
     { once: true },
   )
   guestbind.addEventListener(
     'error',
     () => {
-      postwanixiframeapilog('zed-cafe export: fallback guest zed-cafe mount failed')
+      postwanixiframeapilog('zed-cafe export: fallback guest zedcafe mount failed')
     },
     { once: true },
   )
@@ -897,7 +932,7 @@ export function wirezedcafeexportbind(
   bind.addEventListener(
     'mount',
     () => {
-      const dst = bind.getAttribute('dst') ?? 'zed-cafe'
+      const dst = bind.getAttribute('dst') ?? WANIX_ZED_CAFE_GUEST_MOUNT
       const src = bind.getAttribute('src') ?? ''
       if (dst.startsWith('#ramfs/')) {
         postwanixiframeapilog(

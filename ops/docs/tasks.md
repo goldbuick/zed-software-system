@@ -217,13 +217,17 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 |------|-------------|------|------|-----|
 | `yarn task run wanix:ensure` | Record pinned wanix npm version (runtime loads from jsDelivr CDN) | — | — | — |
 | `yarn task run wanix:gojs:build` | Build upstream gojscheck.wasm (Go js/wasm) for terminal smoke tests | — | — | — |
-| `yarn task run wanix:vm:boot:validate` | Headed Playwright: seeded book + #wanix vm must reach shell and /zed-cafe/stats.json (local gate, not CI) | — | — | — |
-| `yarn task run wanix:vm:zed-cafe:validate` | Headed Playwright: #wanix vm → ls / shows zed-cafe, cat stats.json (primary local gate, not CI) | — | — | — |
+| `yarn task run wanix:hello:validate` | Headed Playwright: drop hello.wasm → Hello from wanix! (local gate, not CI) | — | — | — |
+| `yarn task run wanix:hold:validate` | Headed Playwright: drop hold.wasm stays running 5s (local gate, not CI) | — | — | — |
+| `yarn task run wanix:termbridge:validate` | Headed Playwright: drop termbridge.wasm banner + ping/pong (local gate, not CI) | — | — | — |
+| `yarn task run wanix:vm:boot:validate` | Headed Playwright: seeded book + #wanix vm must reach shell and /zedcafe/stats.json (local gate, not CI) | — | — | — |
+| `yarn task run wanix:vm:zed-cafe:validate` | Headed Playwright: #wanix vm → ls / shows zedcafe, cat stats.json (primary local gate, not CI) | — | — | — |
 | `yarn task run wanix:wasm:build` | Compile ops/fixtures/wanix Go WASI fixtures (hello, hold, termbridge, zed-cafe gates) to .wasm | — | — | — |
-| `yarn task run wanix:wasm:build:all` | Compile wanix Go WASI fixtures and zed-cafe export wasm | — | — | — |
-| `yarn task run wanix:zed-cafe:build` | Build zed-cafe.wasm (Go js/wasm) into ops/fixtures/wanix/ and cafe/public/wanix/ | `ci` | — | — |
+| `yarn task run wanix:wasm:build:all` | Compile wanix Go WASI fixtures and zedcafe export wasm | — | — | — |
+| `yarn task run wanix:wasm:fixtures:validate` | Headed Playwright: all 7 WASI fixtures sequential in one session (local gate, not CI) | — | — | — |
+| `yarn task run wanix:zed-cafe:build` | Build zedcafe.wasm (Go js/wasm) into ops/fixtures/wanix/ and cafe/public/wanix/ | `ci` | — | — |
 | `yarn task run wanix:zed-cafe:duplex:validate` | Headed Playwright: full app drop zedcafewrite.wasm + #wanix pull import (local gate, not CI) | — | — | — |
-| `yarn task run wanix:zed-cafe:export:validate` | Headed Playwright: full app #wanix vm → cat /zed-cafe/stats.json (local gate, not CI) | — | — | — |
+| `yarn task run wanix:zed-cafe:export:validate` | Headed Playwright: full app #wanix vm → cat /zedcafe/stats.json (local gate, not CI) | — | — | — |
 | `yarn task run wanix:zed-cafe:list:validate` | Headed Playwright: drop zedcafelist.wasm after export warm (local gate, not CI) | — | — | — |
 | `yarn task run wanix:zed-cafe:memfs:validate` | Composite ExportFS rollout gate — build, go test, headed app Playwright, jest smoke | — | — | — |
-| `yarn task run wanix:zed-cafe:task-read:validate` | Headed Playwright: full app drop zedcaferead.wasm reads zed-cafe/stats.json (local gate, not CI) | — | — | — |
+| `yarn task run wanix:zed-cafe:task-read:validate` | Headed Playwright: full app drop zedcaferead.wasm reads zedcafe/stats.json (local gate, not CI) | — | — | — |

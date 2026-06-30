@@ -53,7 +53,7 @@ export function appendgojstasktarget(
     cmd,
   })
   task.setAttribute('data-zss-target-id', taskid)
-  task.setAttribute('data-zss-target-kind', 'zed-cafe')
+  task.setAttribute('data-zss-target-kind', WANIX_ZED_CAFE_TASK_ID)
   sys.appendChild(task)
   return task
 }
