@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.body.focus()
 })
 
-export function App() {
+export function CafeApp() {
   const active = useDeviceData((state) => state.active)
   return active && <Engine />
 }

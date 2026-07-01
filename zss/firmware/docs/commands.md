@@ -54,7 +54,6 @@ All firmware commands and their descriptions. Commands are available depending o
 | `unban` | Unban player by id or list banned tokens |
 | `agent` | start/stop/list AI agents; prompt agents via in-world chat only |
 | `userinput` | Inject player input (`up` / `down` / `left` / `right` / `ok` / `cancel` / `shoot*`…) |
-| `pilot` | Walk player toward coordinates (`#pilot x y`) or `#pilot stop` |
 | `screenshot` | Screenshot for capture |
 | `zns` | Login/publish actions |
 
