@@ -4,7 +4,7 @@ import { SOFTWARE } from 'zss/device/session'
 import { fetchrefscrolltext } from 'zss/feature/fetchrefscrolltext'
 import { terminalwritemarkdownlines } from 'zss/feature/parse/markdownterminal'
 import { UserInput } from 'zss/gadget/userinput.bridge'
-import { doasync } from 'zss/mapping/func'
+import { doasync } from 'zss/device/doasync'
 import { extractcontentfromargs } from 'zss/screens/inputcommon'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 

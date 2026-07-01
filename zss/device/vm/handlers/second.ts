@@ -9,7 +9,7 @@ import {
   setflushtick,
   tracking,
 } from 'zss/device/vm/state'
-import { doasync } from 'zss/mapping/func'
+import { doasync } from 'zss/device/doasync'
 import { memoryscanplayers } from 'zss/memory/playermanagement'
 import { memoryreadfrozen } from 'zss/memory/session'
 import { perfmeasure } from 'zss/perf/ui'

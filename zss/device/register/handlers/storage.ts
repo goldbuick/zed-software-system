@@ -8,7 +8,7 @@ import {
   storagewriteconfigstring,
   storagewritevar,
 } from 'zss/feature/storage'
-import { doasync } from 'zss/mapping/func'
+import { doasync } from 'zss/device/doasync'
 import { isarray, isstring } from 'zss/mapping/types'
 
 export function handlestore(device: DEVICE, message: MESSAGE): void {

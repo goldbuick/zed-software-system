@@ -28,7 +28,7 @@ import {
 } from 'zss/feature/broadcast/webbroadcastwhipaliases'
 import { showbroadcastmenu } from 'zss/feature/broadcastmenu'
 import { FIRMWARE } from 'zss/firmware'
-import { doasync } from 'zss/mapping/func'
+import { doasync } from 'zss/device/doasync'
 import { ispresent } from 'zss/mapping/types'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'

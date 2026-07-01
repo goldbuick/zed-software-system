@@ -1,7 +1,7 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { savestate } from 'zss/device/vm/helpers'
-import { doasync } from 'zss/mapping/func'
+import { doasync } from 'zss/device/doasync'
 import { memoryreadoperator } from 'zss/memory/session'
 
 export function handleflush(vm: DEVICE, message: MESSAGE): void {

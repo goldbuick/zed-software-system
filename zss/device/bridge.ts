@@ -26,7 +26,7 @@ import {
 } from 'zss/feature/netterminal'
 import { write, writecopyit } from 'zss/feature/writeui'
 import { zssheaderlines, zssoptionline } from 'zss/feature/zsstextui'
-import { doasync } from 'zss/mapping/func'
+import { doasync } from 'zss/device/doasync'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { recordChatMessage } from 'zss/perf/chatmessagestats'
@@ -484,30 +484,31 @@ const bridge = createdevice('bridge', [], (message) => {
         } else {
           broadcastivsconnection = 'starting'
           broadcastlive = false
-          setbroadcastclient(createwebbroadcastclient())
-          setIvsBroadcastClient(broadcastclient)
+          const client = createwebbroadcastclient()
+          setbroadcastclient(client)
+          setIvsBroadcastClient(client)
 
-          broadcastclient.on('activestatechange', function (activestate) {
+          client.on('activestatechange', function (activestate: unknown) {
             broadcastlive = Boolean(activestate)
           })
 
-          broadcastclient.on('connectionstatechange', function (state) {
+          client.on('connectionstatechange', function (state: unknown) {
             broadcastivsconnection = String(state)
             apilog(bridge, message.player, String(state))
           })
 
-          broadcastclient.on('error', function (error) {
+          client.on('error', function (error: unknown) {
             broadcastivsconnection = 'error'
             broadcastlive = false
             apierror(bridge, message.player, 'bridge', String(error))
-            broadcastclient?.delete()
+            client.delete()
             setbroadcastclient(undefined)
             clearIvsBroadcastClient()
           })
 
           const video = document.querySelector('canvas')
           if (ispresent(video)) {
-            await broadcastclient.addimagesource(video, 'video', { index: 1 })
+            await client.addimagesource(video, 'video', { index: 1 })
           } else {
             apierror(
               bridge,
@@ -515,7 +516,7 @@ const bridge = createdevice('bridge', [], (message) => {
               'video',
               'unabled to find canvas element',
             )
-            broadcastclient?.delete()
+            client.delete()
             setbroadcastclient(undefined)
             broadcastivsconnection = 'idle'
             broadcastlive = false
@@ -525,7 +526,7 @@ const bridge = createdevice('bridge', [], (message) => {
 
           const audio = synthbroadcastdestination()
           if (ispresent(audio)) {
-            await broadcastclient.addaudioinputdevice(audio.stream, 'audio')
+            await client.addaudioinputdevice(audio.stream, 'audio')
           } else {
             apierror(
               bridge,
@@ -533,7 +534,7 @@ const bridge = createdevice('bridge', [], (message) => {
               'video',
               'unable create media audio node destination',
             )
-            broadcastclient?.delete()
+            client.delete()
             setbroadcastclient(undefined)
             broadcastivsconnection = 'idle'
             broadcastlive = false

@@ -13,3 +13,11 @@ export function maptovalue<T>(arg: any, defaultvalue: T): T {
   }
   return defaultvalue
 }
+
+/** Coerce only pure digit tokens; keep hex ids and mixed alnum as strings. */
+export function coercenumberorstringtoken(value: string): number | string {
+  if (/^\d+$/.test(value)) {
+    return parseInt(value, 10)
+  }
+  return value
+}

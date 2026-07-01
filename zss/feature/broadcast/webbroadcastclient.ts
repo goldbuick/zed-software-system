@@ -28,10 +28,13 @@ function towhipstart(payload: BroadcastStartPayload): {
   if (payload.kind === 'whip') {
     return { endpoint: payload.endpoint, bearer: payload.bearer }
   }
-  return {
-    endpoint: payload.endpoint ?? DEFAULT_IVS_WHIP_ENDPOINT,
-    bearer: payload.token,
+  if (payload.kind === 'ivs-whip') {
+    return {
+      endpoint: payload.endpoint ?? DEFAULT_IVS_WHIP_ENDPOINT,
+      bearer: payload.token,
+    }
   }
+  throw new Error('towhipstart expects whip or ivs-whip payload')
 }
 
 export class WebBroadcastClient implements WebBroadcastStatsReader {

@@ -24,7 +24,8 @@ import {
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { indextopt, ptstoarea, rectpoints } from 'zss/mapping/2d'
 import { range } from 'zss/mapping/array'
-import { doasync } from 'zss/mapping/func'
+import { doasync } from 'zss/device/doasync'
+import { escapedoublequoted } from 'zss/mapping/string'
 import { CYCLE_DEFAULT, waitfor } from 'zss/mapping/tick'
 import {
   MAYBE,
@@ -92,7 +93,7 @@ function memoryinspectjoinlinkwords(words: WORD[]): string {
       }
       const s = `${w ?? ''}`
       if (/\s/.test(s) || s.length === 0) {
-        return `"${s.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`
+        return `"${escapedoublequoted(s)}"`
       }
       return s
     })

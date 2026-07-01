@@ -15,6 +15,7 @@ import {
   LAYER_TYPE,
   layersreadcontrol,
 } from 'zss/gadget/data/types'
+import { indextox, indextoy, pttoindex } from 'zss/mapping/2d'
 import { COLOR } from 'zss/words/types'
 
 export type RASTERIZE_RESULT = {
@@ -47,14 +48,14 @@ function compositetiles(layers: LAYER[], width: number, height: number) {
 
   const all = [...layers].filter(istileslayer).reverse()
   for (let i = 0; i < size; i++) {
-    const tx = i % width
-    const ty = Math.floor(i / width)
+    const tx = indextox(i, width)
+    const ty = indextoy(i, width)
     for (let li = 0; li < all.length; li++) {
       const layer = all[li]
       if (tx >= layer.width || ty >= layer.height) {
         continue
       }
-      const ci = tx + ty * layer.width
+      const ci = pttoindex({ x: tx, y: ty }, layer.width)
       const chr = layer.char[ci] ?? 0
       const fgidx = mapcoloridx(layer.color[ci] ?? 0)
       const bgidx = mapcoloridx(layer.bg[ci] ?? 0)

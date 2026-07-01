@@ -10,6 +10,7 @@ import {
   apilog,
   boardrunnerinput,
   registerbookmarkclirun,
+  registerperfmonitor,
   vmcli,
   vmdoot,
   vmlocal,
@@ -199,6 +200,7 @@ function handlekeydown(event: KeyboardEvent) {
     case 'a':
     case 'p':
     case 'h':
+    case 'i':
     case 'k':
     case 'b':
     case 'n': // prevent default behavior
@@ -314,6 +316,11 @@ function handlekeydown(event: KeyboardEvent) {
       if (mods.ctrl) {
         vmrefscroll(SOFTWARE, player)
         console.info('refscroll', player)
+      }
+      break
+    case 'i':
+      if (mods.ctrl) {
+        registerperfmonitor(SOFTWARE, player, undefined)
       }
       break
     case '1':

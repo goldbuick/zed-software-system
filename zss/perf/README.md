@@ -1,15 +1,23 @@
 # UI performance tooling
 
-## `ZSS_DEBUG_PERF_UI`
+## Perf monitor overlay
 
-Set `ZSS_DEBUG_PERF_UI=true` in `cafe/.env` or `cafe/.env.local` (see [`cafe/.env`](../../cafe/.env)). Rebuild or restart Vite so `import.meta.env` picks it up.
+Toggle the in-game perf panel with **`Ctrl+I`** or the CLI command **`#perf`**.
 
-When enabled:
+When the panel is on:
+
+- **[`PerfMonitorTiles`](perfmonitortiles.tsx)** shows tick timing, render stats, peer wire volume, and related HUD tiles.
+- **[`PerfHud`](hud.tsx)** logs renderer.info to the console once per second.
+- In **development** builds, React **`Profiler`** wraps [`TapeComponent`](../screens/tape/component.tsx) and logs commit times as `[zss perf] TapeComponent …`.
+
+## Dev instrumentation
+
+In Vite **development** builds (`import.meta.env.DEV`):
 
 - **`perfmeasure` calls** ([`ui.ts`](ui.ts)) record [User Timing](https://developer.mozilla.org/en-US/docs/Web/API/Performance_API/User_timing) measures prefixed with `zss:`. Inspect them in Chrome DevTools **Performance** → load profile → **Timings** / User Timing track.
-- **React `Profiler`** wraps [`TapeComponent`](../screens/tape/component.tsx) in development only and logs commit times to the console as `[zss perf] TapeComponent …`.
+- **`measurestage`** ([`ticktimingstats.ts`](ticktimingstats.ts)) accumulates tick-stage timings for the overlay.
 
-When disabled, helpers are no-ops and the `Profiler` wrapper is not used.
+Production builds skip this instrumentation overhead.
 
 ## Bundle size
 
@@ -23,7 +31,7 @@ When disabled, helpers are no-ops and the `Profiler` wrapper is not used.
 
 ## Baseline capture checklist (before/after comparisons)
 
-1. Set `ZSS_DEBUG_PERF_UI=true`, restart Vite, reproduce the scenario you care about.
+1. Open cafe in dev, press **`Ctrl+I`** (or run `#perf`) to show the overlay, then reproduce the scenario you care about.
 2. Open Chrome **Performance**, start recording **without** enabling **CPU sampling** / JS profiler if you want traces comparable to production-style overhead.
 3. Use a **clean profile or incognito** so extensions do not add `FunctionCall` noise.
 4. Optional: run a **production** build (`yarn task run app:build` + `yarn task run app:preview`) for a second baseline.
@@ -31,4 +39,4 @@ When disabled, helpers are no-ops and the `Profiler` wrapper is not used.
 
 ## Jest
 
-[`ops/jest.config.ts`](../../ops/jest.config.ts) maps `zss/perf/ui` to [`ops/lib/test/mocks/perfui.ts`](../../ops/lib/test/mocks/perfui.ts) so Node tests do not load `zss/config` (`import.meta.env` from Vite).
+[`ops/jest.config.ts`](../../ops/jest.config.ts) maps `zss/perf/ui` to [`ops/lib/test/mocks/perfui.ts`](../../ops/lib/test/mocks/perfui.ts) so Node tests do not load Vite `import.meta.env`.

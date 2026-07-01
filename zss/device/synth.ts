@@ -17,7 +17,7 @@ import {
 import { write } from 'zss/feature/writeui'
 import { SYNTH_STATE } from 'zss/gadget/data/types'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
-import { doasync } from 'zss/mapping/func'
+import { doasync } from 'zss/device/doasync'
 import { waitfor } from 'zss/mapping/tick'
 import {
   MAYBE,

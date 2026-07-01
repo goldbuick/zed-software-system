@@ -1,4 +1,3 @@
-import { PERF_UI } from 'zss/config'
 import { createdevice } from 'zss/device'
 
 import {
@@ -26,7 +25,10 @@ const perfreport = createdevice('perfreport', [], (message) => {
   }
 })
 
-if (PERF_UI && !ismainthread) {
+const PERF_DEV =
+  typeof import.meta !== 'undefined' && import.meta.env?.DEV === true
+
+if (PERF_DEV && !ismainthread) {
   setInterval(() => {
     const snap = snapshotlocalandreset()
     if (snap) {

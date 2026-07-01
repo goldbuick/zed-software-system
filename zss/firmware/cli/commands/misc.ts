@@ -28,7 +28,7 @@ import {
   znsrunimportcode,
   znsrunpublish,
 } from 'zss/firmware/cli/commands/znsmenu'
-import { doasync } from 'zss/mapping/func'
+import { doasync } from 'zss/device/doasync'
 import { isemail } from 'zss/mapping/validate'
 import { memoryreadboardstatequery } from 'zss/memory/boardstatequery'
 import { memoryreadlookstatequery } from 'zss/memory/lookstatequery'

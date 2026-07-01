@@ -1,6 +1,7 @@
 import { apitoast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { write, writecopyit } from 'zss/feature/writeui'
+import { escapesinglequoted } from 'zss/mapping/string'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 import { memorywritecodepage } from 'zss/memory/bookoperations'
 import {
@@ -26,10 +27,6 @@ type ZZM_SET = {
 
 const META_CHECK = /; \$(\w+) ?(.*)/
 const TITLE_CHECK = /title (.+?) (.*)/i
-
-function escapestring(value: string): string {
-  return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
-}
 
 export function parsezzm(player: string, content: string) {
   const contentbook = memoryreadfirstcontentbook()
@@ -119,9 +116,9 @@ export function parsezzm(player: string, content: string) {
 #end
 
 :touch
-"ALBUM: ${escapestring(album.title)}"
-"$purple  ${escapestring(album.gendate)}"
-"$purple  ${escapestring(album.gentime)}"
+"ALBUM: ${escapesinglequoted(album.title)}"
+"$purple  ${escapesinglequoted(album.gendate)}"
+"$purple  ${escapesinglequoted(album.gentime)}"
 ${titles.map((title, index) => `!song_${index};${index + 1} ${title || 'untitled'}`).join('\n')}
 #end
 

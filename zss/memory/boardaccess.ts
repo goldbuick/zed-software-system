@@ -33,7 +33,7 @@ export function memoryboardelementindex(
   ) {
     return -1
   }
-  return pt.x + pt.y * BOARD_WIDTH
+  return pttoindex({ x: pt.x, y: pt.y }, BOARD_WIDTH)
 }
 
 export function memoryreadterrain(
@@ -42,7 +42,7 @@ export function memoryreadterrain(
   y: number,
 ): MAYBE<BOARD_ELEMENT> {
   return ((x >= 0 && x < BOARD_WIDTH) ?? (y >= 0 && y < BOARD_HEIGHT))
-    ? board?.terrain[x + y * BOARD_WIDTH]
+    ? board?.terrain[pttoindex({ x, y }, BOARD_WIDTH)]
     : undefined
 }
 

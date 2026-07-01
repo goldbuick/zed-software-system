@@ -10,7 +10,7 @@ import {
   museumofzztrandom,
   museumofzztsearch,
 } from 'zss/feature/url'
-import { doasync } from 'zss/mapping/func'
+import { doasync } from 'zss/device/doasync'
 import { isarray } from 'zss/mapping/types'
 
 export function handlezztsearch(vm: DEVICE, message: MESSAGE): void {

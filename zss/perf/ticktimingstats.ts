@@ -1,5 +1,3 @@
-import { PERF_UI } from 'zss/config'
-
 export type STAGE_STAT = { ms: number; calls: number }
 export type FANOUT_STAT = {
   ops: number
@@ -7,6 +5,9 @@ export type FANOUT_STAT = {
   calls: number
   emits: number
 }
+
+const PERF_DEV =
+  typeof import.meta !== 'undefined' && import.meta.env?.DEV === true
 
 const localstages = new Map<string, STAGE_STAT>()
 const localfanout = new Map<string, FANOUT_STAT>()
@@ -41,9 +42,9 @@ export function recordemitdiff(
   localfanout.set(name, e)
 }
 
-/** Time the run and accumulate as ms into the named stage. No-op when PERF_UI is off. */
+/** Time the run and accumulate as ms into the named stage. No-op outside dev builds. */
 export function measurestage<T>(name: string, run: () => T): T {
-  if (!PERF_UI || typeof performance === 'undefined') {
+  if (!PERF_DEV || typeof performance === 'undefined') {
     return run()
   }
   const t0 = performance.now()

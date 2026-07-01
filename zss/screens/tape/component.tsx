@@ -1,5 +1,4 @@
 import { Profiler, type ProfilerOnRenderCallback } from 'react'
-import { PERF_UI } from 'zss/config'
 import { registerterminalopen } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
@@ -17,18 +16,19 @@ const tapeprofileronrender: ProfilerOnRenderCallback = (
   phase,
   actualDuration,
 ) => {
-  // eslint-disable-next-line no-console -- intentional perf logging when ZSS_DEBUG_PERF_UI is on
+  // eslint-disable-next-line no-console -- intentional perf logging when perf monitor is on
   console.debug(`[zss perf] ${id} ${phase} ${actualDuration.toFixed(2)}ms`)
 }
 
 export function TapeComponent() {
   const screensize = useScreenSize()
-  const [layout, terminalmode, terminalopen, editoropen] = useTape(
+  const [layout, terminalmode, terminalopen, editoropen, perfmonitor] = useTape(
     useShallow((state) => [
       state.layout,
       state.terminalmode,
       state.terminal.open,
       state.editor.open,
+      state.perfmonitor,
     ]),
   )
 
@@ -98,7 +98,7 @@ export function TapeComponent() {
     </>
   )
 
-  if (import.meta.env.DEV && PERF_UI) {
+  if (import.meta.env.DEV && perfmonitor) {
     return (
       <Profiler id="TapeComponent" onRender={tapeprofileronrender}>
         {body}

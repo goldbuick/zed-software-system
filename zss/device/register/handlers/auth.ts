@@ -31,7 +31,7 @@ import { restorettsenginefromstorage } from 'zss/feature/tts'
 import { isjoin } from 'zss/feature/url'
 import { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
-import { doasync } from 'zss/mapping/func'
+import { doasync } from 'zss/device/doasync'
 import { ispresent, isstring } from 'zss/mapping/types'
 
 export function handlesessionreset(device: DEVICE, message: MESSAGE): void {

@@ -1,4 +1,6 @@
 import {
+  escapedoublequoted,
+  escapesinglequoted,
   parsetarget,
   scrolllinkescapefrag,
   scrolllinkunescapefrag,
@@ -115,6 +117,16 @@ describe('string', () => {
     it('returns target and path matching totarget', () => {
       expect(parsetarget('a:b:c')).toEqual({ target: 'a', path: 'b:c' })
       expect(parsetarget('self')).toEqual({ target: 'self', path: 'self' })
+    })
+  })
+
+  describe('escapesinglequoted / escapedoublequoted', () => {
+    it('escapes backslash and quotes for single-quoted literals', () => {
+      expect(escapesinglequoted("a\\b'c")).toBe("a\\\\b\\'c")
+    })
+
+    it('escapes backslash and quotes for double-quoted literals', () => {
+      expect(escapedoublequoted('a\\b"c')).toBe('a\\\\b\\"c')
     })
   })
 

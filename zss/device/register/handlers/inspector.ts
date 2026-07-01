@@ -3,7 +3,7 @@ import type { MESSAGE } from 'zss/device/api'
 import { storagewriteconfig } from 'zss/feature/storage'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import { useInspector, useTape } from 'zss/gadget/data/zustandstores'
-import { doasync } from 'zss/mapping/func'
+import { doasync } from 'zss/device/doasync'
 import { isarray, ispresent } from 'zss/mapping/types'
 import { memorywriteconfig } from 'zss/memory/utilities'
 

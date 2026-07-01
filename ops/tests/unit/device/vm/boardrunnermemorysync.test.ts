@@ -1,7 +1,3 @@
-jest.mock('zss/config', () => ({
-  PERF_UI: false,
-}))
-
 jest.mock('zss/perf/ticktimingstats', () => ({
   measurestage: (_name: string, fn: () => unknown) => fn(),
   recordemitdiff: jest.fn(),

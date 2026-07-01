@@ -10,7 +10,7 @@ import {
   zssoptionline,
   zsstextline,
 } from 'zss/feature/zsstextui'
-import { doasync } from 'zss/mapping/func'
+import { doasync } from 'zss/device/doasync'
 import { waitfor } from 'zss/mapping/tick'
 import { isarray, isbook, isstring } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'

@@ -6,7 +6,7 @@ export type WhipStart = {
 }
 
 function mapconnectionstate(pc: RTCPeerConnection): ConnectionState {
-  const state = pc.connectionState || pc.iceConnectionState
+  const state = String(pc.connectionState || pc.iceConnectionState)
   switch (state) {
     case 'new':
       return 'new'

@@ -4,7 +4,7 @@ import { apierror, apitoast, workstatus } from 'zss/device/api'
 import { withclipboard } from 'zss/feature/keyboard'
 import { storagesharecontent } from 'zss/feature/storage'
 import { capturecurrentboardtopng } from 'zss/gadget/capture'
-import { doasync } from 'zss/mapping/func'
+import { doasync } from 'zss/device/doasync'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
 
 export function handlecopy(device: DEVICE, message: MESSAGE): void {
@@ -64,7 +64,7 @@ export function handledownloadjsonfile(device: DEVICE, message: MESSAGE): void {
 }
 
 export function handledownloadbinaryfile(
-  device: DEVICE,
+  _device: DEVICE,
   message: MESSAGE,
 ): void {
   if (isarray(message.data)) {

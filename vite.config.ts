@@ -154,7 +154,6 @@ export default defineConfig(({ mode }) => {
   const zssprocessenvkeys = [
     'ZSS_DEBUG_LANG_DEV',
     'ZSS_DEBUG_LANG_TYPES',
-    'ZSS_DEBUG_PERF_UI',
     'ZSS_DEBUG_SHOW_CODE',
     'ZSS_DEBUG_TRACE_CODE',
     'ZSS_DEBUG_LOG',

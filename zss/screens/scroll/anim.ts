@@ -1,7 +1,6 @@
 import { damp, rsqw } from 'maath/easing'
 import { Object3D } from 'three'
-
-import { snap } from './number'
+import { snap } from 'zss/mapping/number'
 
 const CHAR_SCALE = 2
 const CHAR_WIDTH = 8

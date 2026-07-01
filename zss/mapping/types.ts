@@ -38,6 +38,25 @@ export function ismaybearray(word: any): word is MAYBE<any[]> {
   return Array.isArray(word) || word === undefined
 }
 
+export function isplainobject(value: unknown): value is Record<string, unknown> {
+  if (value === null || typeof value !== 'object') {
+    return false
+  }
+  if (Array.isArray(value)) {
+    return false
+  }
+  if (value instanceof Set) {
+    return false
+  }
+  if (value instanceof Uint8Array) {
+    return false
+  }
+  if (value instanceof Date) {
+    return false
+  }
+  return true
+}
+
 export function noop<T>(item: T) {
   return item
 }

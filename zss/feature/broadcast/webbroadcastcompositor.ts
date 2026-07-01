@@ -220,8 +220,11 @@ export class WebBroadcastCompositor {
     if (typeof CanvasCaptureMediaStreamTrack === 'undefined') {
       return
     }
-    if (typeof this.compositestream.requestFrame === 'function') {
-      this.compositestream.requestFrame()
+    const stream = this.compositestream as MediaStream & {
+      requestFrame?: () => void
+    }
+    if (typeof stream.requestFrame === 'function') {
+      stream.requestFrame()
       return
     }
     const track = this.getvideotrack()

@@ -3,6 +3,9 @@ import {
   analyzelevelstability,
   formatlevelstabilityline,
 } from 'zss/feature/synth/backend/wasm/levelstabilitymetrics'
+import { arraybuffertobase64 } from 'zss/mapping/encode'
+
+export { arraybuffertobase64 }
 
 import {
   type LEVEL_STABILITY_RENDER,
@@ -82,17 +85,6 @@ export function encodewavmono16(
     offset += 2
   }
   return buffer
-}
-
-export function arraybuffertobase64(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer)
-  let binary = ''
-  const chunk = 0x8000
-  for (let i = 0; i < bytes.length; i += chunk) {
-    const slice = bytes.subarray(i, i + chunk)
-    binary += String.fromCharCode(...slice)
-  }
-  return btoa(binary)
 }
 
 export async function renderdaisysongscenario(

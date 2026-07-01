@@ -24,7 +24,7 @@ import {
   runterminalbookmarkclibyid,
 } from 'zss/feature/bookmarks'
 import { paneladdress } from 'zss/gadget/data/types'
-import { doasync } from 'zss/mapping/func'
+import { doasync } from 'zss/device/doasync'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 
 export function handlebookmarkscroll(device: DEVICE, message: MESSAGE): void {

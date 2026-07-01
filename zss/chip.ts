@@ -490,8 +490,6 @@ function maptoresult(value: WORD): WORD {
  * @param build - The compiled generator build containing code and labels
  * @returns A fully configured CHIP instance ready for execution
  */
-const debugoncecounts: Record<string, number> = {}
-
 export function createchip(
   id: string,
   driver: DRIVER_TYPE,

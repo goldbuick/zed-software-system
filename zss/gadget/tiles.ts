@@ -1,5 +1,6 @@
 import { createContext, useContext, useState } from 'react'
 import { objectKeys } from 'ts-extras'
+import { pttoindex } from 'zss/mapping/2d'
 import { ispresent } from 'zss/mapping/types'
 import { StoreApi, createStore } from 'zustand'
 
@@ -66,7 +67,7 @@ export function writetile(
     return
   }
 
-  const index = x + y * width
+  const index = pttoindex({ x, y }, width)
   objectKeys(value).forEach((key) => {
     const v = value[key]
     if (ispresent(v)) {

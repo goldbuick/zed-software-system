@@ -10,7 +10,7 @@ import {
   storagewatchcontent,
 } from 'zss/feature/storage'
 import { useTerminal } from 'zss/gadget/data/zustandstores'
-import { doasync } from 'zss/mapping/func'
+import { doasync } from 'zss/device/doasync'
 import { waitfor } from 'zss/mapping/tick'
 import { ispresent } from 'zss/mapping/types'
 
