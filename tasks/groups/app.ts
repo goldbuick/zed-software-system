@@ -1,7 +1,8 @@
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import path from 'node:path'
 
 import { checkrg, spawntask } from 'tasks/shellutil'
+
 import { def, exec, handler, shell, tasksonly } from '../helpers'
 import type { TaskContext, TaskDef } from '../types'
 
@@ -28,7 +29,13 @@ const BARREL_FILES = [
 
 function runlintimports(ctx: TaskContext): number {
   let ok = true
-  if (!checkrg('parent-directory imports (../)', "from ['\"][^'\"]*\\.\\./", ctx.root)) {
+  if (
+    !checkrg(
+      'parent-directory imports (../)',
+      'from [\'"][^\'"]*\\.\\./',
+      ctx.root,
+    )
+  ) {
     ok = false
   }
   if (
@@ -109,7 +116,9 @@ function runauditexportcatalogs(ctx: TaskContext): number {
     const dir = path.dirname(path.join(root, catalogpath))
     const exports = listexports(dir)
     const catalog = readFileSync(path.join(root, catalogpath), 'utf8')
-    const missing = [...exports].filter((name) => !catalog.includes(name)).sort()
+    const missing = [...exports]
+      .filter((name) => !catalog.includes(name))
+      .sort()
     const stale: string[] = []
     for (const match of catalog.matchAll(
       /`([a-z][a-z0-9]*|[A-Z_][A-Z0-9_]*)`/g,

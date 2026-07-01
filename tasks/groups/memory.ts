@@ -1,8 +1,8 @@
 import { execFileSync, spawnSync } from 'node:child_process'
-import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import path from 'node:path'
-import { isDeepStrictEqual } from 'node:util'
 import { pathToFileURL } from 'node:url'
+import { isDeepStrictEqual } from 'node:util'
 
 import { def, exec, handler, jestexec, shell } from '../helpers'
 import type { TaskContext, TaskDef } from '../types'
@@ -60,14 +60,21 @@ async function runwasm(root: string) {
   const create = (await import(jsurl)).default
   const module = await create()
   const init = module.cwrap('zss_memory_init', null, [])
-  const runop = module.cwrap('zss_memory_run_op', 'number', ['string', 'string'])
+  const runop = module.cwrap('zss_memory_run_op', 'number', [
+    'string',
+    'string',
+  ])
   const freestr = module.cwrap('zss_memory_free_string', null, ['number'])
-  const importjson = module.cwrap('zss_memory_import_json', 'number', ['string'])
+  const importjson = module.cwrap('zss_memory_import_json', 'number', [
+    'string',
+  ])
   const readutf8 = module.UTF8ToString
 
   let pass = 0
   let fail = 0
-  for (const name of readdirSync(fixturedir).filter((f) => f.endsWith('.json'))) {
+  for (const name of readdirSync(fixturedir).filter((f) =>
+    f.endsWith('.json'),
+  )) {
     const fixture = JSON.parse(
       readFileSync(path.join(fixturedir, name), 'utf8'),
     )
@@ -184,7 +191,7 @@ function parsemanifest(root: string) {
     }
   }
   const literal = src.slice(brace, end + 1)
-  // eslint-disable-next-line no-new-func
+
   return Function(`return (${literal})`)() as Record<string, string[]>
 }
 

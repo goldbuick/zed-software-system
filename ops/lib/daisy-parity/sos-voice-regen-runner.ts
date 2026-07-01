@@ -1,5 +1,5 @@
-import { rendersosvoicepatch } from 'zss/feature/synth/backend/daisy/sosvoicerender'
 import { SOS_VOICE_PATCHES } from 'zss/feature/synth/backend/daisy/sosvoicepatches'
+import { rendersosvoicepatch } from 'zss/feature/synth/backend/daisy/sosvoicerender'
 
 export async function runsosvoiceregen(args: {
   patchid?: string

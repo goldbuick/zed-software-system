@@ -6,7 +6,8 @@ import { def, handler } from '../helpers'
 import type { TaskContext, TaskDef } from '../types'
 
 const DAISY_DIR = 'zss/feature/synth/backend/daisy/native/zss'
-const DAISY_WRAPPER = 'zss/feature/synth/backend/daisy/native/zss_daisy_synth.cpp'
+const DAISY_WRAPPER =
+  'zss/feature/synth/backend/daisy/native/zss_daisy_synth.cpp'
 const IGNORE_FILE = '.clang-format-ignore'
 
 function loadignore(root: string): string[] {
@@ -108,11 +109,9 @@ export function runclangformat(
   let failed = 0
   for (const file of files) {
     if (mode === 'check') {
-      const result = spawnSync(
-        clangformat,
-        ['--dry-run', '--Werror', file],
-        { stdio: 'pipe' },
-      )
+      const result = spawnSync(clangformat, ['--dry-run', '--Werror', file], {
+        stdio: 'pipe',
+      })
       if (result.status !== 0) {
         console.error(`clang-format check failed: ${file}`)
         failed = 1

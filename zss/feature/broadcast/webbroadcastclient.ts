@@ -1,11 +1,9 @@
 import { IvsLowLatencyTransport } from 'zss/feature/broadcast/ivslowlatencytransport'
+import { WebBroadcastCompositor } from 'zss/feature/broadcast/webbroadcastcompositor'
 import {
   DEFAULT_IVS_WHIP_ENDPOINT,
   DEFAULT_STREAM_CONFIG,
 } from 'zss/feature/broadcast/webbroadcastconstants'
-import { WebBroadcastCompositor } from 'zss/feature/broadcast/webbroadcastcompositor'
-import { resolvewhipendpoint } from 'zss/feature/broadcast/webbroadcastwhipaliases'
-import { WhipTransport } from 'zss/feature/broadcast/whiptransport'
 import type {
   BroadcastClientEvents,
   BroadcastEventHandler,
@@ -16,6 +14,8 @@ import type {
   VideoComposition,
   WebBroadcastStatsReader,
 } from 'zss/feature/broadcast/webbroadcasttypes'
+import { resolvewhipendpoint } from 'zss/feature/broadcast/webbroadcastwhipaliases'
+import { WhipTransport } from 'zss/feature/broadcast/whiptransport'
 
 export type WebBroadcastClientConfig = {
   streamConfig?: StreamConfig
@@ -225,7 +225,10 @@ export function parsebroadcaststartpayload(
     return undefined
   }
   const record = data as Record<string, unknown>
-  if (record.kind === 'ivs-low-latency' && typeof record.streamKey === 'string') {
+  if (
+    record.kind === 'ivs-low-latency' &&
+    typeof record.streamKey === 'string'
+  ) {
     return {
       kind: 'ivs-low-latency',
       streamKey: record.streamKey,

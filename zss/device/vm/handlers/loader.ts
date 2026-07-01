@@ -3,7 +3,10 @@ import type { MESSAGE } from 'zss/device/api'
 import { apilog } from 'zss/device/api'
 import { parsewebfile } from 'zss/feature/parse/file'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
-import { memoryimportbookfromjson, memorywritecodepage } from 'zss/memory/bookoperations'
+import {
+  memoryimportbookfromjson,
+  memorywritecodepage,
+} from 'zss/memory/bookoperations'
 import { memoryimportcodepagefromjson } from 'zss/memory/codepageoperations'
 import { memoryloader } from 'zss/memory/loader'
 import { memoryreadbookbysoftware, memorywritebook } from 'zss/memory/session'

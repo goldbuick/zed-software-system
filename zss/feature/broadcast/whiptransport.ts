@@ -37,13 +37,13 @@ function parseiceserversfromlink(header: string | null): RTCIceServer[] {
     if (!part.includes('rel="ice-server"')) {
       continue
     }
-    const urlmatch = part.match(/<([^>]+)>/)
+    const urlmatch = /<([^>]+)>/.exec(part)
     if (!urlmatch) {
       continue
     }
     const server: RTCIceServer = { urls: urlmatch[1] }
-    const user = part.match(/username="([^"]+)"/)
-    const cred = part.match(/credential="([^"]+)"/)
+    const user = /username="([^"]+)"/.exec(part)
+    const cred = /credential="([^"]+)"/.exec(part)
     if (user) {
       server.username = user[1]
     }
@@ -75,7 +75,9 @@ export class WhipTransport {
   private peerconnection: RTCPeerConnection | undefined
   private sessionurl: string | undefined
   private bearer: string | undefined
-  private onconnectionstatechange: ((state: ConnectionState) => void) | undefined
+  private onconnectionstatechange:
+    | ((state: ConnectionState) => void)
+    | undefined
   private onerror: ((message: string) => void) | undefined
 
   sethandlers(handlers: {

@@ -1,7 +1,5 @@
 import { newQueue } from '@henrygd/queue'
 import { createdevice } from 'zss/device'
-import type { DEVICELIKE } from 'zss/device/messagetypes'
-import { isttsvalidatereply } from 'zss/device/messagetypes'
 import {
   apierror,
   apilog,
@@ -10,16 +8,15 @@ import {
   registerstore,
   synthaudiobuffer,
 } from 'zss/device/api'
+import type { DEVICELIKE } from 'zss/device/messagetypes'
+import { isttsvalidatereply } from 'zss/device/messagetypes'
 import { SOFTWARE } from 'zss/device/session'
 import { storagereadconfigstring } from 'zss/feature/storage'
 import {
   getliveaudiocontext,
   unlockaudiocontext,
 } from 'zss/feature/synth/backend/wasm/audiocontextunlock'
-import {
-  normalizettsengine,
-  type TTS_ENGINE,
-} from 'zss/feature/ttsengine'
+import { type TTS_ENGINE, normalizettsengine } from 'zss/feature/ttsengine'
 import { createsid } from 'zss/mapping/guid'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
@@ -76,8 +73,11 @@ async function reloadslotsfromstorage(player: string, engine: TTS_ENGINE) {
   if (!savedconfig.trim()) {
     return
   }
-  const validated = await awaitworkerreply<unknown>(player, 'tts:info', (once) =>
-    emitworkerinfo(once, player, 'validate', savedconfig, savedmodel, engine),
+  const validated = await awaitworkerreply<unknown>(
+    player,
+    'tts:info',
+    (once) =>
+      emitworkerinfo(once, player, 'validate', savedconfig, savedmodel, engine),
   )
   if (isttsvalidatereply(validated) && validated.ok) {
     ttsconfig = savedconfig
@@ -141,8 +141,18 @@ export async function applyttsengineconfig(
   }
 
   const proposedmodel = typeof model === 'string' ? model : ''
-  const validated = await awaitworkerreply<unknown>(player, 'tts:info', (once) =>
-    emitworkerinfo(once, player, 'validate', config, proposedmodel, normalized),
+  const validated = await awaitworkerreply<unknown>(
+    player,
+    'tts:info',
+    (once) =>
+      emitworkerinfo(
+        once,
+        player,
+        'validate',
+        config,
+        proposedmodel,
+        normalized,
+      ),
   )
 
   if (!isttsvalidatereply(validated)) {
@@ -190,8 +200,10 @@ async function requestaudiobuffer(
   voice: string,
   input: string,
 ): Promise<MAYBE<AudioBuffer>> {
-  const bytes = await awaitworkerreply<ArrayBuffer>(player, 'tts:request', (once) =>
-    emitworkerrequest(once, player, voice, input),
+  const bytes = await awaitworkerreply<ArrayBuffer>(
+    player,
+    'tts:request',
+    (once) => emitworkerrequest(once, player, voice, input),
   )
   if (!ispresent(bytes)) {
     return undefined

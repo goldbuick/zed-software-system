@@ -35,17 +35,17 @@ export function TapeComponent() {
   let top = 0
   let height = screensize.rows
   switch (layout) {
-      case TAPE_DISPLAY.TOP:
-        height = Math.floor(screensize.rows * 0.5)
-        break
-      case TAPE_DISPLAY.BOTTOM:
-        height = Math.ceil(screensize.rows * 0.5)
-        top = screensize.rows - height
-        break
-      default:
-      case TAPE_DISPLAY.FULL:
-        // defaults
-        break
+    case TAPE_DISPLAY.TOP:
+      height = Math.floor(screensize.rows * 0.5)
+      break
+    case TAPE_DISPLAY.BOTTOM:
+      height = Math.ceil(screensize.rows * 0.5)
+      top = screensize.rows - height
+      break
+    default:
+    case TAPE_DISPLAY.FULL:
+      // defaults
+      break
   }
 
   // bail on odd states
@@ -54,8 +54,7 @@ export function TapeComponent() {
   }
 
   const player = registerreadplayer()
-  const showterminal =
-    terminalmode === 'quick' || terminalopen || editoropen
+  const showterminal = terminalmode === 'quick' || terminalopen || editoropen
 
   const body = (
     <>

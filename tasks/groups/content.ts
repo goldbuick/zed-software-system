@@ -36,6 +36,7 @@ import { readforce, readlimit } from 'tasks/lib/cliargv'
 import { runjest } from 'tasks/shellutil'
 import { zztparseboard, zztparseworld } from 'zss/feature/parse/zztbinparse'
 import type { ZZT_BOARD } from 'zss/feature/parse/zztformattypes'
+
 import { def, handler, jestexec } from '../helpers'
 import type { TaskContext, TaskDef } from '../types'
 
@@ -149,7 +150,6 @@ export function filtervanillazztworlds(entries: MuseumFile[]): {
   }
   return { included, stats }
 }
-
 
 const MUSEUM_API_BASE = 'https://museumofzzt.com/api/v1'
 const MUSEUM_DOWNLOAD_BASE = 'https://museumofzzt.com/zgames'
@@ -510,7 +510,6 @@ async function runmuseumzztcorpussyncinner(argv: string[], root: string) {
   return code
 }
 
-
 async function runmuseumzztcorpussync(ctx: TaskContext): Promise<number> {
   try {
     return await runmuseumzztcorpussyncinner(ctx.args, ctx.root)
@@ -609,7 +608,6 @@ function manifestarchivename(entry: CorpusManifestEntry): string {
   return entry.archive_name || zipstem(entry.filename)
 }
 
-
 /** Mirror extracted/{letter}/{zip_stem}/ under zss/. */
 function zssrelpath(extractedrelpath: string, id: string): string {
   const parts = extractedrelpath.split(/[/\\]/)
@@ -695,8 +693,6 @@ async function extractarchives(opts: ExtractOptions): Promise<number> {
   )
   return 0
 }
-
-
 
 function processsourcefile(
   root: string,
@@ -932,7 +928,6 @@ async function runmuseumzztcorpusextractinner(argv: string[], root: string) {
   return code
 }
 
-
 async function runmuseumzztcorpusextract(ctx: TaskContext): Promise<number> {
   try {
     return await runmuseumzztcorpusextractinner(ctx.args, ctx.root)
@@ -1163,9 +1158,10 @@ export function sanitizezztcorpus(argv: string[]): number {
 async function runzztcorpusprofanityinner(args: string[]) {
   const mode = args[0] ?? 'scan'
   const rest = args.slice(1)
-  return mode === 'sanitize' ? sanitizezztcorpus(rest) : scanzztcorpusprofanity(rest)
+  return mode === 'sanitize'
+    ? sanitizezztcorpus(rest)
+    : scanzztcorpusprofanity(rest)
 }
-
 
 async function runzztcorpusprofanity(ctx: TaskContext): Promise<number> {
   try {
@@ -1429,7 +1425,9 @@ function processscreenshotsource(
   )
 }
 
-export async function renderscreenshots(opts: ScreenshotOptions): Promise<number> {
+export async function renderscreenshots(
+  opts: ScreenshotOptions,
+): Promise<number> {
   const deps = await loadscreenshotdeps()
   const corpusmanifest = readcorpusmanifest(opts.root)
   const okentries = corpusmanifest.entries.filter((e) => e.status === 'ok')
@@ -1545,21 +1543,30 @@ function runcontentcli(ctx: TaskContext): number {
 
 export const CONTENT_TASKS: TaskDef[] = [
   def('content:book:build', {
-    description: 'Build importable book JSON from template path (pass path as extra args)',
-    run: handler((ctx) => runcontentcli({ ...ctx, args: ['build', ...ctx.args] })),
+    description:
+      'Build importable book JSON from template path (pass path as extra args)',
+    run: handler((ctx) =>
+      runcontentcli({ ...ctx, args: ['build', ...ctx.args] }),
+    ),
   }),
   def('content:book:validate', {
     description: 'Validate book JSON (pass path as extra args)',
-    run: handler((ctx) => runcontentcli({ ...ctx, args: ['validate', ...ctx.args] })),
+    run: handler((ctx) =>
+      runcontentcli({ ...ctx, args: ['validate', ...ctx.args] }),
+    ),
   }),
   def('content:book:test', {
     description: 'Jest content book tests',
     tags: ['ci'],
-    run: jestexec('ops/tests/unit/feature/content/contentbook.test.ts', ['--no-coverage']),
+    run: jestexec('ops/tests/unit/feature/content/contentbook.test.ts', [
+      '--no-coverage',
+    ]),
   }),
   def('content:codepage:validate', {
     description: 'Validate codepage JSON (pass path as extra args)',
-    run: handler((ctx) => runcontentcli({ ...ctx, args: ['codepage-validate', ...ctx.args] })),
+    run: handler((ctx) =>
+      runcontentcli({ ...ctx, args: ['codepage-validate', ...ctx.args] }),
+    ),
   }),
   def('content:zzt:corpus:sync', {
     description:
@@ -1568,43 +1575,62 @@ export const CONTENT_TASKS: TaskDef[] = [
     run: handler(runmuseumzztcorpussync),
   }),
   def('content:zzt:corpus:manifest', {
-    description: 'Crawl Museum of ZZT and write vanilla ZZT manifest only (no downloads)',
-    run: handler((ctx) => runmuseumzztcorpussync({ ...ctx, args: ['manifest', ...ctx.args] })),
+    description:
+      'Crawl Museum of ZZT and write vanilla ZZT manifest only (no downloads)',
+    run: handler((ctx) =>
+      runmuseumzztcorpussync({ ...ctx, args: ['manifest', ...ctx.args] }),
+    ),
   }),
   def('content:zzt:corpus:extract', {
     description:
       'Unzip vanilla ZZT archives into ops/fixtures/zzt/corpus/extracted (.zzt/.brd only)',
     tags: ['slow'],
-    run: handler((ctx) => runmuseumzztcorpusextract({ ...ctx, args: ['extract', ...ctx.args] })),
+    run: handler((ctx) =>
+      runmuseumzztcorpusextract({ ...ctx, args: ['extract', ...ctx.args] }),
+    ),
   }),
   def('content:zzt:corpus:zss', {
     description:
       'Convert extracted ZZT/BRD OOP into ops/fixtures/zzt/corpus/zss/*.zss + manifest',
     tags: ['slow'],
-    run: handler((ctx) => runmuseumzztcorpusextract({ ...ctx, args: ['zss', ...ctx.args] })),
+    run: handler((ctx) =>
+      runmuseumzztcorpusextract({ ...ctx, args: ['zss', ...ctx.args] }),
+    ),
   }),
   def('content:zzt:corpus:build', {
     description:
       'Extract Museum archives, build ZZT OOP → .zss corpus, and sanitize profanity/slurs',
     tags: ['slow'],
-    deps: ['content:zzt:corpus:extract', 'content:zzt:corpus:zss', 'content:zzt:corpus:sanitize'],
+    deps: [
+      'content:zzt:corpus:extract',
+      'content:zzt:corpus:zss',
+      'content:zzt:corpus:sanitize',
+    ],
     run: { kind: 'tasks' },
   }),
   def('content:zzt:corpus:profanity:scan', {
     description:
       'Scan ops/fixtures/zzt/corpus/zss for profanity and slurs; write profanity-report.json',
     tags: ['slow'],
-    run: handler((ctx) => runzztcorpusprofanity({ ...ctx, args: ['scan', ...ctx.args] })),
+    run: handler((ctx) =>
+      runzztcorpusprofanity({ ...ctx, args: ['scan', ...ctx.args] }),
+    ),
   }),
   def('content:zzt:corpus:profanity:verify', {
-    description: 'Fail if corpus zss still contains profanity or slurs (CI gate)',
+    description:
+      'Fail if corpus zss still contains profanity or slurs (CI gate)',
     tags: ['ci', 'slow'],
-    run: handler((ctx) => runzztcorpusprofanity({ ...ctx, args: ['scan', 'verify', ...ctx.args] })),
+    run: handler((ctx) =>
+      runzztcorpusprofanity({ ...ctx, args: ['scan', 'verify', ...ctx.args] }),
+    ),
   }),
   def('content:zzt:corpus:sanitize', {
-    description: 'Redact profanity and racial slurs in ops/fixtures/zzt/corpus/zss/*.zss',
+    description:
+      'Redact profanity and racial slurs in ops/fixtures/zzt/corpus/zss/*.zss',
     tags: ['slow'],
-    run: handler((ctx) => runzztcorpusprofanity({ ...ctx, args: ['sanitize', ...ctx.args] })),
+    run: handler((ctx) =>
+      runzztcorpusprofanity({ ...ctx, args: ['sanitize', ...ctx.args] }),
+    ),
   }),
   def('content:zzt:corpus:screenshots', {
     description:

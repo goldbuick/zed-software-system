@@ -974,7 +974,7 @@ export const GLOSSARY: GlossaryEntry[] = [
     category: 'Multiplayer',
     audience: 'Dev',
     definition:
-          'Join-mode stub VM (/join/ URL) without clock/tick; replaces sim only — boardrunner still spawns eagerly.',
+      'Join-mode stub VM (/join/ URL) without clock/tick; replaces sim only — boardrunner still spawns eagerly.',
     related: 'bridge, join',
     path: 'zss/stubspace.ts',
   },

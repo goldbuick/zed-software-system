@@ -13,11 +13,6 @@ import {
 import { normalizechatkind } from 'zss/device/bridge/chattypes'
 import { SOFTWARE } from 'zss/device/session'
 import {
-  listwhipendpointaliases,
-  resolvewhipendpoint,
-} from 'zss/feature/broadcast/webbroadcastwhipaliases'
-import { showbroadcastmenu } from 'zss/feature/broadcastmenu'
-import {
   buildchatstartforkind,
   resolvechatstartwords,
 } from 'zss/feature/bridgechatcli'
@@ -27,6 +22,11 @@ import {
   bridgereadprofile,
   bridgewriteprofile,
 } from 'zss/feature/bridgeprofiles'
+import {
+  listwhipendpointaliases,
+  resolvewhipendpoint,
+} from 'zss/feature/broadcast/webbroadcastwhipaliases'
+import { showbroadcastmenu } from 'zss/feature/broadcastmenu'
 import { FIRMWARE } from 'zss/firmware'
 import { doasync } from 'zss/mapping/func'
 import { ispresent } from 'zss/mapping/types'
@@ -244,7 +244,10 @@ export function registermultiplayercommands(fw: FIRMWARE): FIRMWARE {
     )
     .command(
       'broadcast',
-      [ARG_TYPE.MAYBE_NAME, 'stream broadcast menu, stop, or start (operator only)'],
+      [
+        ARG_TYPE.MAYBE_NAME,
+        'stream broadcast menu, stop, or start (operator only)',
+      ],
       (_, words) => {
         const [first, endpoint, bearer] = readargs(words, 0, [
           ARG_TYPE.MAYBE_NAME,

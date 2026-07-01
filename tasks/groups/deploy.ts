@@ -1,13 +1,10 @@
 import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { inflateSync } from 'node:zlib'
 import { dirname, join } from 'node:path'
+import { inflateSync } from 'node:zlib'
 
-import {
-  requiretaskenv,
-  spawntask,
-  taskenv,
-} from 'tasks/shellutil'
+import { requiretaskenv, spawntask, taskenv } from 'tasks/shellutil'
+
 import { def, exec, handler, shell, tasksonly } from '../helpers'
 import type { TaskContext, TaskDef } from '../types'
 
@@ -62,7 +59,14 @@ function runvmzssdocker(ctx: TaskContext): number {
   const ident = e.VM_SSH_IDENTITYFILE ?? ''
   const remote = `docker pull ${image} && docker rm -f zss 2>/dev/null || true; docker run -d --name zss --restart unless-stopped --network host -v ${vol}:/data -e ZSS_SERVER_PORT=${port} -e ZSS_DATA_DIR=/data ${image}`
   const sshargs = ident
-    ? ['-i', ident, '-o', 'StrictHostKeyChecking=accept-new', `${user}@${host}`, remote]
+    ? [
+        '-i',
+        ident,
+        '-o',
+        'StrictHostKeyChecking=accept-new',
+        `${user}@${host}`,
+        remote,
+      ]
     : ['-o', 'StrictHostKeyChecking=accept-new', `${user}@${host}`, remote]
   console.log(`Running on ${user}@${host} via SSH...`)
   return spawntask('ssh', sshargs, ctx, { inherit: true })
@@ -93,7 +97,9 @@ function rundigitaloceandocker(ctx: TaskContext): number {
 }
 
 function rundockerrunhelp(): number {
-  console.log('deploy:docker:run — published image (ellium12/zed-software-system)')
+  console.log(
+    'deploy:docker:run — published image (ellium12/zed-software-system)',
+  )
   console.log('')
   console.log('This runs the equivalent of:')
   console.log('')
@@ -285,7 +291,10 @@ function runznstenantverify(ctx: TaskContext): number {
         return fail('https', `${label} ${url} request failed${hint}`)
       }
       if (status !== '200') {
-        return fail('https', `${label} ${url} returned HTTP ${status}, expected 200`)
+        return fail(
+          'https',
+          `${label} ${url} returned HTTP ${status}, expected 200`,
+        )
       }
       if (expecthtml) {
         const contenttype = curlcontenttype(url)
@@ -311,7 +320,14 @@ async function runznsemailpreview(ctx: TaskContext): Promise<number> {
   const email = 'whitlark@gmail.com'
   const namespace = 'docs'
   const joinorigin = 'https://zed.cafe'
-  const LEGACY_BAD = ['#153f15', '#3f3f3f', '#00002a', '#2a2a2a', '#15153f', '#3f3f15']
+  const LEGACY_BAD = [
+    '#153f15',
+    '#3f3f3f',
+    '#00002a',
+    '#2a2a2a',
+    '#15153f',
+    '#3f3f15',
+  ]
 
   const [
     { ZNS_DOT_BG },
@@ -345,23 +361,47 @@ async function runznsemailpreview(ctx: TaskContext): Promise<number> {
     ZNS_VGA_FONT_DATA_URI,
   )
   const svglc = svg.toLowerCase()
-  assertok(svglc.includes('fill="#55ff55"'), 'command row must use bright green #55FF55')
+  assertok(
+    svglc.includes('fill="#55ff55"'),
+    'command row must use bright green #55FF55',
+  )
   assertok(!svglc.includes('#153f15'), 'must not use legacy dark green #153f15')
-  assertok(!svglc.includes('╔'), 'email card must use single-line CP437 frame like at.zed.cafe')
+  assertok(
+    !svglc.includes('╔'),
+    'email card must use single-line CP437 frame like at.zed.cafe',
+  )
   assertok(svglc.includes('openit'), 'email card must include OPENIT row')
-  assertok(svglc.includes('fill="#ff55ff"'), 'OPENIT arrow must use purple #FF55FF')
-  assertok(svglc.includes('fill="#ffff55"'), 'OPENIT label must use yellow #FFFF55')
+  assertok(
+    svglc.includes('fill="#ff55ff"'),
+    'OPENIT arrow must use purple #FF55FF',
+  )
+  assertok(
+    svglc.includes('fill="#ffff55"'),
+    'OPENIT label must use yellow #FFFF55',
+  )
   for (const bad of LEGACY_BAD) {
     assertok(!svglc.includes(bad), `SVG must not contain legacy token ${bad}`)
   }
-  assertok(svglc.includes(ZNS_DOT_BG.toLowerCase()), `SVG background must use ${ZNS_DOT_BG}`)
-  assertok(svglc.includes('cx="9" cy="15"'), 'email dot pattern must use checkerboard tile')
-  assertok(svglc.includes('fill="#55ffff"'), 'frame/links must use bright cyan #55FFFF')
+  assertok(
+    svglc.includes(ZNS_DOT_BG.toLowerCase()),
+    `SVG background must use ${ZNS_DOT_BG}`,
+  )
+  assertok(
+    svglc.includes('cx="9" cy="15"'),
+    'email dot pattern must use checkerboard tile',
+  )
+  assertok(
+    svglc.includes('fill="#55ffff"'),
+    'frame/links must use bright cyan #55FFFF',
+  )
   assertok(svglc.includes('fill="#ffffff"'), 'body text must use white #FFFFFF')
 
   const wasmpath = join(root, 'node_modules/@resvg/resvg-wasm/index_bg.wasm')
   await initemailcardwasm(readFileSync(wasmpath))
-  const pngbytes = await renderemailcardpngwasmcore(svg, reademailcardfontbytes())
+  const pngbytes = await renderemailcardpngwasmcore(
+    svg,
+    reademailcardfontbytes(),
+  )
   const pngpath = join(outdir, 'zns-email-preview.png')
   const htmlpath = join(outdir, 'zns-email-preview.html')
   const productionhtml = buildznscodeemailhtml({
@@ -373,11 +413,15 @@ async function runznsemailpreview(ctx: TaskContext): Promise<number> {
   const previewhtml = buildznsemailcardpreviewhtml(meta, ZNS_VGA_FONT_DATA_URI)
   const emailpalette = buildznsemailpalette()
   assertok(
-    productionhtml.toLowerCase().includes(`background:${emailpalette.dkblue.toLowerCase()}`),
+    productionhtml
+      .toLowerCase()
+      .includes(`background:${emailpalette.dkblue.toLowerCase()}`),
     'production email button must use dot background blue',
   )
   assertok(
-    productionhtml.toLowerCase().includes(`color:${emailpalette.white.toLowerCase()}`),
+    productionhtml
+      .toLowerCase()
+      .includes(`color:${emailpalette.white.toLowerCase()}`),
     'production email button must use white text',
   )
   writeFileSync(pngpath, pngbytes)
@@ -401,13 +445,16 @@ async function runznsgridpreview(ctx: TaskContext): Promise<number> {
   const dest = join(root, 'ops/infra/generated/zns-grid-preview.html')
   const readfixture = (name: string) =>
     readFileSync(join(fixturedir, name), 'utf8').replace(/\r\n/g, '\n')
-  const [{ validatecp437webchars }, { buildznsgridpreviewhtml }] = await Promise.all([
-    import('../../ops/infra/zns-cp437.js'),
-    import('../../ops/infra/zns-grid-preview.js'),
-  ])
+  const [{ validatecp437webchars }, { buildznsgridpreviewhtml }] =
+    await Promise.all([
+      import('../../ops/infra/zns-cp437.js'),
+      import('../../ops/infra/zns-grid-preview.js'),
+    ])
   const problems = validatecp437webchars()
   if (problems.length !== 0) {
-    console.error(`assert failed: cp437 web chars invalid: ${JSON.stringify(problems.slice(0, 3))}`)
+    console.error(
+      `assert failed: cp437 web chars invalid: ${JSON.stringify(problems.slice(0, 3))}`,
+    )
     return 1
   }
   mkdirSync(dirname(dest), { recursive: true })
@@ -455,50 +502,97 @@ async function runznsscrollpreview(ctx: TaskContext): Promise<number> {
   const algohtml = zedtapehtml(algoscroll, { tenantbase: '/' })
   const passagehtml = zedzsshtml(passage, { tenantbase: '/' })
   const clwithtitle = `@cliscroll\n${cliscroll}`
-  assertok(!scrollsourceisrawzss(clwithtitle), 'cliscroll with @ title is markdown not raw ZSS')
-  assertok(!scrollsourceisrawzss(cliscroll), 'cliscroll is markdown not raw ZSS')
+  assertok(
+    !scrollsourceisrawzss(clwithtitle),
+    'cliscroll with @ title is markdown not raw ZSS',
+  )
+  assertok(
+    !scrollsourceisrawzss(cliscroll),
+    'cliscroll is markdown not raw ZSS',
+  )
   assertok(!scrollsourceisrawzss(helptext), 'helptext is markdown not raw ZSS')
   assertok(scrollsourceisrawzss(passage), 'passage is raw ZSS')
-  assertok(validatecp437webchars().length === 0, 'all cp437 0-255 must be web-safe')
+  assertok(
+    validatecp437webchars().length === 0,
+    'all cp437 0-255 must be web-safe',
+  )
   const scrollcodepage = '@scroll notes\n## heading\n$RED hi'
-  assertok(scrollsourceisscrollcodepage(scrollcodepage), 'scroll codepage detected')
-  assertok(!scrollsourceisrawzss(scrollcodepage), 'scroll codepage is not raw ZSS')
+  assertok(
+    scrollsourceisscrollcodepage(scrollcodepage),
+    'scroll codepage detected',
+  )
+  assertok(
+    !scrollsourceisrawzss(scrollcodepage),
+    'scroll codepage is not raw ZSS',
+  )
   const scrollhtml = zedscrollhtml(scrollcodepage, { tenantbase: '/' })
-  assertok(!scrollhtml.includes('@scroll notes'), 'scroll header stripped from html')
-  assertok(!scrollhtml.includes('## heading'), 'scroll heading rendered via markdown')
+  assertok(
+    !scrollhtml.includes('@scroll notes'),
+    'scroll header stripped from html',
+  )
+  assertok(
+    !scrollhtml.includes('## heading'),
+    'scroll heading rendered via markdown',
+  )
   assertok(scrollhtml.includes('heading'), 'scroll heading text present')
   assertok(!scrollhtml.includes('$RED'), 'scroll $RED should not show literal')
   assertok(
-    scrollhtml.toLowerCase().includes('color:#') && !scrollhtml.includes('$RED'),
+    scrollhtml.toLowerCase().includes('color:#') &&
+      !scrollhtml.includes('$RED'),
     'scroll $RED should render as colored span',
   )
   assertok(clhtml.includes('OPENIT'), 'cliscroll should render OPENIT rows')
-  assertok(!clhtml.includes('[ZTK'), 'cliscroll should not contain raw markdown links')
-  assertok(!clhtml.includes('$onblue'), 'cliscroll should not show literal $onblue')
-  assertok(!clhtml.includes('$blwhite'), 'cliscroll should not show literal $blwhite')
   assertok(
-    clhtml.includes('═') || clhtml.includes('&#9552;') || !clhtml.includes('$205'),
+    !clhtml.includes('[ZTK'),
+    'cliscroll should not contain raw markdown links',
+  )
+  assertok(
+    !clhtml.includes('$onblue'),
+    'cliscroll should not show literal $onblue',
+  )
+  assertok(
+    !clhtml.includes('$blwhite'),
+    'cliscroll should not show literal $blwhite',
+  )
+  assertok(
+    clhtml.includes('═') ||
+      clhtml.includes('&#9552;') ||
+      !clhtml.includes('$205'),
     'cliscroll should render box drawing from $205',
   )
-  const hcolors = new Set([...helhtml.matchAll(/color:#[0-9a-fA-F]+/gi)].map((m) => m[0]))
+  const hcolors = new Set(
+    [...helhtml.matchAll(/color:#[0-9a-fA-F]+/gi)].map((m) => m[0]),
+  )
   assertok(hcolors.size >= 3, 'helptext should have multiple syntax colors')
   assertok(!helhtml.includes('$RED'), 'helptext should not show literal $RED')
-  assertok(helhtml.includes('foreground color'), 'helptext fixture content present')
-  const passagecolors = new Set([
-    ...passagehtml.matchAll(/color:#[0-9a-fA-F]+/gi),
-  ].map((m) => m[0]))
+  assertok(
+    helhtml.includes('foreground color'),
+    'helptext fixture content present',
+  )
+  const passagecolors = new Set(
+    [...passagehtml.matchAll(/color:#[0-9a-fA-F]+/gi)].map((m) => m[0]),
+  )
   assertok(passagecolors.size >= 3, 'passage should have ZSS syntax colors')
   assertok(passagehtml.includes('@passage'), 'passage content present')
-  assertok(passagehtml.includes('color:#aa00aa'), 'passage @ stats should be dkpurple')
+  assertok(
+    passagehtml.includes('color:#aa00aa'),
+    'passage @ stats should be dkpurple',
+  )
   const indexrows = [
     ...zsssectionlines('bytes'),
     '$purple$16 $yellowOPENIT $whitecoolregionsbow ',
   ].join('\n')
   const indexhtml = `<div class="zns-tape">${zedtaperowshtml(indexrows)}</div>`
-  assertok(!indexhtml.includes('$dkpurple'), 'section bar should render not leak tokens')
-  assertok(!indexhtml.match(/>\s*\|/), 'OPENIT rows should not have pipe prefix')
+  assertok(
+    !indexhtml.includes('$dkpurple'),
+    'section bar should render not leak tokens',
+  )
+  assertok(!/>\s*\|/.exec(indexhtml), 'OPENIT rows should not have pipe prefix')
   assertok(indexhtml.includes('OPENIT'), 'index-style OPENIT row present')
-  assertok(!indexhtml.includes('\u0010'), 'OPENIT marker must not be Unicode control U+0010')
+  assertok(
+    !indexhtml.includes('\u0010'),
+    'OPENIT marker must not be Unicode control U+0010',
+  )
   assertok(
     indexhtml.includes('\u25ba') ||
       indexhtml.includes('&#9658;') ||
@@ -515,14 +609,19 @@ async function runznsscrollpreview(ctx: TaskContext): Promise<number> {
     'cliscroll OPENIT label should use white',
   )
   assertok(
-    algohtml.includes('--&gt; = signal flow') || algohtml.includes('--> = signal flow'),
+    algohtml.includes('--&gt; = signal flow') ||
+      algohtml.includes('--> = signal flow'),
     'algoscroll legend content present',
   )
   assertok(algohtml.includes('algo0'), 'algoscroll algo0 heading present')
   assertok(algohtml.includes('synthscroll'), 'algoscroll back link present')
   assertok(
-    /--&gt; = signal flow[\s\S]*<div class="zns-line"><\/div>[\s\S]*algo0/.test(algohtml) ||
-      /--> = signal flow[\s\S]*<div class="zns-line"><\/div>[\s\S]*algo0/.test(algohtml),
+    /--&gt; = signal flow[\s\S]*<div class="zns-line"><\/div>[\s\S]*algo0/.test(
+      algohtml,
+    ) ||
+      /--> = signal flow[\s\S]*<div class="zns-line"><\/div>[\s\S]*algo0/.test(
+        algohtml,
+      ),
     'algoscroll should preserve blank row between legend and algo0 sections',
   )
   mkdirSync(dirname(dest), { recursive: true })
@@ -553,12 +652,16 @@ section { margin-bottom: 32px; }
 
 function rungcpvmcreate(ctx: TaskContext): number {
   const project = requiretaskenv(ctx, 'GCP_PROJECT_ID')
-  if (!project) return 1
+  if (!project) {
+    return 1
+  }
   const e = taskenv(ctx)
   const zone = e.GCP_ZONE ?? 'us-west1-a'
   const name = e.GCP_VM_NAME ?? 'zss-vm'
   const tag = e.GCP_VM_TAG ?? 'zss-server'
-  spawntask('gcloud', ['config', 'set', 'project', project], ctx, { inherit: true })
+  spawntask('gcloud', ['config', 'set', 'project', project], ctx, {
+    inherit: true,
+  })
   const code = spawntask(
     'gcloud',
     [
@@ -585,12 +688,16 @@ function rungcpvmcreate(ctx: TaskContext): number {
 
 function rungcpvmfirewall(ctx: TaskContext): number {
   const project = requiretaskenv(ctx, 'GCP_PROJECT_ID')
-  if (!project) return 1
+  if (!project) {
+    return 1
+  }
   const e = taskenv(ctx)
   const rule = e.GCP_FW_RULE ?? 'allow-zss-4175'
   const tag = e.GCP_VM_TAG ?? 'zss-server'
   const port = e.GCP_APP_PORT ?? '4175'
-  spawntask('gcloud', ['config', 'set', 'project', project], ctx, { inherit: true })
+  spawntask('gcloud', ['config', 'set', 'project', project], ctx, {
+    inherit: true,
+  })
   const describe = spawnSync(
     'gcloud',
     ['compute', 'firewall-rules', 'describe', rule],
@@ -621,12 +728,16 @@ function rungcpvmfirewall(ctx: TaskContext): number {
 
 function rungcpartifactrepo(ctx: TaskContext): number {
   const project = requiretaskenv(ctx, 'GCP_PROJECT_ID')
-  if (!project) return 1
+  if (!project) {
+    return 1
+  }
   const e = taskenv(ctx)
   const region = e.GCP_REGION ?? 'us-central1'
   const repo = e.AR_REPO ?? 'zss-repo'
   const registryhost = `${region}-docker.pkg.dev`
-  spawntask('gcloud', ['config', 'set', 'project', project], ctx, { inherit: true })
+  spawntask('gcloud', ['config', 'set', 'project', project], ctx, {
+    inherit: true,
+  })
   const describe = spawnSync(
     'gcloud',
     ['artifacts', 'repositories', 'describe', repo, `--location=${region}`],
@@ -662,12 +773,21 @@ function rungcpartifactrepo(ctx: TaskContext): number {
 
 function rungcpenableapis(ctx: TaskContext): number {
   const project = requiretaskenv(ctx, 'GCP_PROJECT_ID')
-  if (!project) return 1
+  if (!project) {
+    return 1
+  }
   const e = taskenv(ctx)
-  spawntask('gcloud', ['config', 'set', 'project', project], ctx, { inherit: true })
+  spawntask('gcloud', ['config', 'set', 'project', project], ctx, {
+    inherit: true,
+  })
   spawntask(
     'gcloud',
-    ['services', 'enable', 'run.googleapis.com', 'artifactregistry.googleapis.com'],
+    [
+      'services',
+      'enable',
+      'run.googleapis.com',
+      'artifactregistry.googleapis.com',
+    ],
     ctx,
     { inherit: true },
   )
@@ -684,7 +804,9 @@ function rungcpenableapis(ctx: TaskContext): number {
 
 function rungcppush(ctx: TaskContext): number {
   const project = requiretaskenv(ctx, 'GCP_PROJECT_ID')
-  if (!project) return 1
+  if (!project) {
+    return 1
+  }
   const e = taskenv(ctx)
   const region = e.GCP_REGION ?? 'us-central1'
   const repo = e.AR_REPO ?? 'zss-repo'
@@ -695,7 +817,9 @@ function rungcppush(ctx: TaskContext): number {
     stdio: 'ignore',
   })
   if (inspect.status !== 0) {
-    console.error(`Local image ${imagelocal} not found. Run: yarn deploy:docker:build`)
+    console.error(
+      `Local image ${imagelocal} not found. Run: yarn deploy:docker:build`,
+    )
     return 1
   }
   spawntask('docker', ['tag', imagelocal, registry], ctx, { inherit: true })
@@ -708,14 +832,18 @@ function rungcppush(ctx: TaskContext): number {
 
 function rungcpdeploycloudrun(ctx: TaskContext): number {
   const project = requiretaskenv(ctx, 'GCP_PROJECT_ID')
-  if (!project) return 1
+  if (!project) {
+    return 1
+  }
   const e = taskenv(ctx)
   const region = e.GCP_REGION ?? 'us-central1'
   const repo = e.AR_REPO ?? 'zss-repo'
   const tag = e.GCP_IMAGE_TAG ?? 'latest'
   const service = e.GCP_RUN_SERVICE ?? 'zss-service'
   const image = `${region}-docker.pkg.dev/${project}/${repo}/zss:${tag}`
-  spawntask('gcloud', ['config', 'set', 'project', project], ctx, { inherit: true })
+  spawntask('gcloud', ['config', 'set', 'project', project], ctx, {
+    inherit: true,
+  })
   return spawntask(
     'gcloud',
     [
@@ -738,7 +866,9 @@ function rungcpdeploycloudrun(ctx: TaskContext): number {
 function rungcpvmdocker(ctx: TaskContext): number {
   const e = taskenv(ctx)
   const image = requiretaskenv(ctx, 'GCP_PUSH_IMAGE')
-  if (!image) return 1
+  if (!image) {
+    return 1
+  }
   const port = e.GCP_APP_PORT ?? '4175'
   const vol = e.GCP_DOCKER_VOLUME ?? 'zss-data'
   const runline = `docker run -d --restart unless-stopped -p ${port}:${port} -v ${vol}:/data -e ZSS_SERVER_PORT=${port} ${image}`
@@ -747,10 +877,14 @@ function rungcpvmdocker(ctx: TaskContext): number {
     return spawntask('sh', ['-c', runline], ctx, { inherit: true })
   }
   const project = requiretaskenv(ctx, 'GCP_PROJECT_ID')
-  if (!project) return 1
+  if (!project) {
+    return 1
+  }
   const zone = e.GCP_ZONE ?? 'us-west1-a'
   const name = e.GCP_VM_NAME ?? 'zss-vm'
-  console.log('Run this on the VM (after: sudo apt update && sudo apt install -y docker.io && sudo usermod -aG docker $USER):')
+  console.log(
+    'Run this on the VM (after: sudo apt update && sudo apt install -y docker.io && sudo usermod -aG docker $USER):',
+  )
   console.log('')
   console.log(runline)
   console.log('')

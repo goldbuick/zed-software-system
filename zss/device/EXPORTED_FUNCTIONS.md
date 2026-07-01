@@ -130,12 +130,15 @@ Patch emit helpers (`vmboardrunnerpatch`, `boardrunnerpatch`, `gadgetclientpatch
 
 ## Register Device
 
-**File:** `register.ts`, `api.ts`
+**Files:** `register.ts` (thin entry), `register/handlers/registry.ts`, `api.ts`
+
+`register.ts` creates the device and dispatches to handlers under `register/handlers/` (auth, bookmarks, terminal, editor, memory, etc.), matching the `boardrunner/` and `vm/` layout.
 
 Functions for managing the register device, which handles UI state, terminal, editor, and clipboard operations.
 
 ### Player
-- `registerreadplayer()` - Get current player ID from session (register.ts)
+- `registerreadplayer()` - Get current player ID from session (`registerplayer.ts`, re-exported from `register.ts`)
+- `registersetmyplayerid(id)` - Set player ID (CLI headless boot)
 
 ### Terminal Management
 - `registerterminalopen(device, player, openwith?)` - Open terminal with optional initial text

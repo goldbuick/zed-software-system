@@ -1,26 +1,27 @@
-import fs from 'node:fs'
-import path from 'node:path'
 import { execSync } from 'node:child_process'
+import fs, { readFileSync, writeFileSync } from 'node:fs'
+import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { readFileSync, writeFileSync } from 'node:fs'
+
+import { loaddaisyparityruntime } from 'tasks/lib/daisy/parity-runtime'
+
 import { def, exec, handler, jestexec, shell, tasksonly } from '../helpers'
 import { parityfull } from '../pipelines'
-import { runclangformat } from './native'
-import { loaddaisyparityruntime } from 'tasks/lib/daisy/parity-runtime'
 import type { TaskContext, TaskDef } from '../types'
+
+import { runclangformat } from './native'
 
 // --- bundle-daisy-processor.ts ---
 async function rundaisybundledaisyprocessor(ctx: TaskContext): Promise<number> {
   try {
     const fs = (await import('node:fs')).default
     const path = (await import('node:path')).default
-    const { formatdaisyworkletsablayout } = await import('zss/feature/synth/backend/daisy/daisycontrol')
+    const { formatdaisyworkletsablayout } =
+      await import('zss/feature/synth/backend/daisy/daisycontrol')
     /**
      * Bundle Emscripten glue + DaisyProcessor into a classic AudioWorklet script.
      * Injects SAB layout from daisycontrol.ts so worklet offsets stay aligned with C++.
      */
-
-
 
     const root = ctx.root
     const outdir = path.join(root, 'cafe/public/wasm/daisy')
@@ -95,17 +96,22 @@ async function rundaisybundledaisyprocessor(ctx: TaskContext): Promise<number> {
 }
 
 // --- calibrate-play-drum-balance.ts ---
-async function rundaisycalibrateplaydrumbalance(ctx: TaskContext): Promise<number> {
+async function rundaisycalibrateplaydrumbalance(
+  ctx: TaskContext,
+): Promise<number> {
   try {
     const { execSync } = await import('node:child_process')
     const fs = (await import('node:fs')).default
     const path = (await import('node:path')).default
     const { fileURLToPath } = await import('node:url')
     const { RENDERS_FIXTURES_DIR } = await import('ops/lib/fixturepaths')
-    const { PLAY_DRUM_BALANCE_METRICS,
-  PLAY_DRUM_TARGET_DRUM_MINUS_PLAY_DB,
-  evalplaydrumbalancegate, } = await import('zss/feature/synth/backend/daisy/playdrumbalance.ts')
-    const { PLAY_DRUM_BALANCE_SCENARIO_ID } = await import('zss/feature/synth/backend/daisy/playdrumbalancescenario.ts')
+    const {
+      PLAY_DRUM_BALANCE_METRICS,
+      PLAY_DRUM_TARGET_DRUM_MINUS_PLAY_DB,
+      evalplaydrumbalancegate,
+    } = await import('zss/feature/synth/backend/daisy/playdrumbalance.ts')
+    const { PLAY_DRUM_BALANCE_SCENARIO_ID } =
+      await import('zss/feature/synth/backend/daisy/playdrumbalancescenario.ts')
     /**
      * Grid-search kDrumBusGain / kPlayBusGain for play-drum balance gate.
      *
@@ -113,12 +119,6 @@ async function rundaisycalibrateplaydrumbalance(ctx: TaskContext): Promise<numbe
      *   yarn play-drum-balance:calibrate
      *   yarn play-drum-balance:calibrate --dry-run
      */
-
-
-
-
-
-
 
     const ROOT = ctx.root
     const PROJECT = ctx.root
@@ -250,7 +250,11 @@ async function rundaisycalibrateplaydrumbalance(ctx: TaskContext): Promise<numbe
         }
       }
 
-      console.log('\nBest:', best.gains, `drum−play=${best.delta.toFixed(2)} dB`)
+      console.log(
+        '\nBest:',
+        best.gains,
+        `drum−play=${best.delta.toFixed(2)} dB`,
+      )
 
       if (!dryrun) {
         writegains(best.gains)
@@ -274,16 +278,19 @@ async function rundaisycalibrateplaydrumbalance(ctx: TaskContext): Promise<numbe
 }
 
 // --- calibrate-sidechain-parity.ts ---
-async function rundaisycalibratesidechainparity(ctx: TaskContext): Promise<number> {
+async function rundaisycalibratesidechainparity(
+  ctx: TaskContext,
+): Promise<number> {
   try {
     const { execSync } = await import('node:child_process')
     const fs = (await import('node:fs')).default
     const path = (await import('node:path')).default
     const { fileURLToPath } = await import('node:url')
-    const { SIDECHAIN_PARITY_RESULT,
-  evalsidechainparitygate, } = await import('ops/lib/daisy-parity/sidechainparity')
+    const { SIDECHAIN_PARITY_RESULT, evalsidechainparitygate } =
+      await import('ops/lib/daisy-parity/sidechainparity')
     const { RENDERS_FIXTURES_DIR } = await import('ops/lib/fixturepaths')
-    const { SIDECHAIN_SCENARIO_ID } = await import('zss/feature/synth/backend/daisy/sidechainscenario.ts')
+    const { SIDECHAIN_SCENARIO_ID } =
+      await import('zss/feature/synth/backend/daisy/sidechainscenario.ts')
     /**
      * Grid-search kScMix / kScMakeupDb for sidechain duck depth + bypass gate.
      *
@@ -291,12 +298,6 @@ async function rundaisycalibratesidechainparity(ctx: TaskContext): Promise<numbe
      *   yarn sidechain-parity:calibrate
      *   yarn sidechain-parity:calibrate --dry-run
      */
-
-
-
-
-
-
 
     const ROOT = ctx.root
     const PROJECT = ctx.root
@@ -447,23 +448,27 @@ async function rundaisycalibratesidechainparity(ctx: TaskContext): Promise<numbe
 }
 
 // --- calibrate-synth-env-parity.ts ---
-async function rundaisycalibratesynthenvparity(ctx: TaskContext): Promise<number> {
+async function rundaisycalibratesynthenvparity(
+  ctx: TaskContext,
+): Promise<number> {
   try {
     const { execSync } = await import('node:child_process')
     const fs = (await import('node:fs')).default
     const path = (await import('node:path')).default
     const { fileURLToPath } = await import('node:url')
-    const { SYNTH_ENV_PARITY_RESULT,
-  evalsynthenvparitygate, } = await import('ops/lib/daisy-parity/synthenvparitygate')
-    const { SYNTH_ENV_PARITY_REQUIRED_IDS,
-  SYNTH_ENV_PARITY_SCENARIOS, } = await import('ops/lib/daisy-parity/synthenvparityscenario')
+    const { SYNTH_ENV_PARITY_RESULT, evalsynthenvparitygate } =
+      await import('ops/lib/daisy-parity/synthenvparitygate')
+    const { SYNTH_ENV_PARITY_REQUIRED_IDS, SYNTH_ENV_PARITY_SCENARIOS } =
+      await import('ops/lib/daisy-parity/synthenvparityscenario')
     const { RENDERS_FIXTURES_DIR } = await import('ops/lib/fixturepaths')
-    const { CALIBRATE_SCRIPT_TIMEOUT_MS,
-  EXEC_BUILD_DAISY_TIMEOUT_MS,
-  EXEC_CALIBRATE_STEP_TIMEOUT_MS,
-  EXEC_GATE_TIMEOUT_MS,
-  EXEC_RENDER_PARITY_TIMEOUT_MS,
-  withscripttimeout, } = await import('tasks/lib/parity/parity-timeouts.ts')
+    const {
+      CALIBRATE_SCRIPT_TIMEOUT_MS,
+      EXEC_BUILD_DAISY_TIMEOUT_MS,
+      EXEC_CALIBRATE_STEP_TIMEOUT_MS,
+      EXEC_GATE_TIMEOUT_MS,
+      EXEC_RENDER_PARITY_TIMEOUT_MS,
+      withscripttimeout,
+    } = await import('tasks/lib/parity/parity-timeouts.ts')
     /**
      * Grid-search kEnvDecayTauScale / kEnvReleaseTauScale for synth env parity.
      *
@@ -471,13 +476,6 @@ async function rundaisycalibratesynthenvparity(ctx: TaskContext): Promise<number
      *   yarn synth-env-parity:calibrate
      *   yarn synth-env-parity:calibrate --dry-run
      */
-
-
-
-
-
-
-
 
     const ROOT = ctx.root
     const PROJECT = ctx.root
@@ -572,7 +570,11 @@ async function rundaisycalibratesynthenvparity(ctx: TaskContext): Promise<number
 
       let best = { params: original, err: 999, pass: false }
 
-      for (let releasescale = 0.04; releasescale <= 0.351; releasescale += 0.04) {
+      for (
+        let releasescale = 0.04;
+        releasescale <= 0.351;
+        releasescale += 0.04
+      ) {
         for (let decayscale = 0.5; decayscale <= 1.101; decayscale += 0.1) {
           const params = { decayscale, releasescale }
           console.log(
@@ -599,7 +601,11 @@ async function rundaisycalibratesynthenvparity(ctx: TaskContext): Promise<number
         }
       }
 
-      console.log('\nBest:', best.params, best.pass ? 'PASS' : `err=${best.err}`)
+      console.log(
+        '\nBest:',
+        best.params,
+        best.pass ? 'PASS' : `err=${best.err}`,
+      )
 
       if (!dryrun) {
         writeparams(best.params)
@@ -622,7 +628,9 @@ async function rundaisycalibratesynthenvparity(ctx: TaskContext): Promise<number
 }
 
 // --- regen-adsrenvcurve-tone-fixture.ts ---
-async function rundaisyregenadsrenvcurvetonefixture(ctx: TaskContext): Promise<number> {
+async function rundaisyregenadsrenvcurvetonefixture(
+  ctx: TaskContext,
+): Promise<number> {
   try {
     const {
       path,
@@ -682,7 +690,9 @@ async function rundaisyregenadsrenvcurvetonefixture(ctx: TaskContext): Promise<n
 }
 
 // --- regen-daisy-drum-parity-fixtures.ts ---
-async function rundaisyregendaisydrumparityfixtures(ctx: TaskContext): Promise<number> {
+async function rundaisyregendaisydrumparityfixtures(
+  ctx: TaskContext,
+): Promise<number> {
   try {
     const {
       path,
@@ -695,7 +705,8 @@ async function rundaisyregendaisydrumparityfixtures(ctx: TaskContext): Promise<n
       withscripttimeout,
       RENDERS_FIXTURES_DIR,
     } = await loaddaisyparityruntime()
-    const { DRUM_PARITY_PATCHES } = await import('ops/lib/daisy-parity/paritypatches')
+    const { DRUM_PARITY_PATCHES } =
+      await import('ops/lib/daisy-parity/paritypatches')
     const ROOT = ctx.root
     const PROJECT = ctx.root
     const OUT = path.join(
@@ -787,7 +798,9 @@ async function rundaisyregendaisydrumparityfixtures(ctx: TaskContext): Promise<n
 }
 
 // --- regen-env-adsr-parity-fixtures.ts ---
-async function rundaisyregenenvadsrparityfixtures(ctx: TaskContext): Promise<number> {
+async function rundaisyregenenvadsrparityfixtures(
+  ctx: TaskContext,
+): Promise<number> {
   try {
     const {
       path,
@@ -800,16 +813,11 @@ async function rundaisyregenenvadsrparityfixtures(ctx: TaskContext): Promise<num
       withscripttimeout,
       RENDERS_FIXTURES_DIR,
     } = await loaddaisyparityruntime()
-    const { ENVELOPE_ADSR_PARITY_PATCHES } = await import('ops/lib/daisy-parity/paritypatches')
+    const { ENVELOPE_ADSR_PARITY_PATCHES } =
+      await import('ops/lib/daisy-parity/paritypatches')
     /**
      * Regen Tone metrics for env-adsr-sustain / env-adsr-retrigger only.
      */
-
-
-
-
-
-
 
     const ROOT = ctx.root
     const PROJECT = ctx.root
@@ -878,7 +886,9 @@ async function rundaisyregenenvadsrparityfixtures(ctx: TaskContext): Promise<num
 }
 
 // --- regen-sos-voice-fixtures.ts ---
-async function rundaisyregensosvoicefixtures(ctx: TaskContext): Promise<number> {
+async function rundaisyregensosvoicefixtures(
+  ctx: TaskContext,
+): Promise<number> {
   try {
     const {
       path,
@@ -891,7 +901,8 @@ async function rundaisyregensosvoicefixtures(ctx: TaskContext): Promise<number> 
       withscripttimeout,
       RENDERS_FIXTURES_DIR,
     } = await loaddaisyparityruntime()
-    const { SOS_VOICE_PATCHES } = await import('zss/feature/synth/backend/daisy/sosvoicepatches.ts')
+    const { SOS_VOICE_PATCHES } =
+      await import('zss/feature/synth/backend/daisy/sosvoicepatches.ts')
     const ROOT = ctx.root
     const PROJECT = ctx.root
     const OUT = path.join(
@@ -953,7 +964,9 @@ async function rundaisyregensosvoicefixtures(ctx: TaskContext): Promise<number> 
 }
 
 // --- regen-synth-parity-fixtures.ts ---
-async function rundaisyregensynthparityfixtures(ctx: TaskContext): Promise<number> {
+async function rundaisyregensynthparityfixtures(
+  ctx: TaskContext,
+): Promise<number> {
   try {
     const {
       path,
@@ -966,11 +979,13 @@ async function rundaisyregensynthparityfixtures(ctx: TaskContext): Promise<numbe
       withscripttimeout,
       RENDERS_FIXTURES_DIR,
     } = await loaddaisyparityruntime()
-    const { DRUM_PARITY_PATCHES,
-  ENVELOPE_ADSR_PARITY_PATCHES,
-  FX_PARITY_PATCHES,
-  MAIN_DYNAMICS_PARITY_PATCHES,
-  WASM_PARITY_PATCHES, } = await import('ops/lib/daisy-parity/paritypatches')
+    const {
+      DRUM_PARITY_PATCHES,
+      ENVELOPE_ADSR_PARITY_PATCHES,
+      FX_PARITY_PATCHES,
+      MAIN_DYNAMICS_PARITY_PATCHES,
+      WASM_PARITY_PATCHES,
+    } = await import('ops/lib/daisy-parity/paritypatches')
     const ROOT = ctx.root
     const PROJECT = ctx.root
     const USE_TONE = ctx.args.includes('--tone')
@@ -1084,7 +1099,9 @@ async function rundaisyregensynthparityfixtures(ctx: TaskContext): Promise<numbe
             console.warn(`keep ${patchid} — render silent`)
             continue
           }
-          console.warn(`skip ${patchid} — render silent and no existing fixture`)
+          console.warn(
+            `skip ${patchid} — render silent and no existing fixture`,
+          )
           continue
         }
         patches[patchid] = metrics
@@ -1113,10 +1130,12 @@ async function rundaisyrundaisyregression(ctx: TaskContext): Promise<number> {
     const { execSync } = await import('node:child_process')
     const path = (await import('node:path')).default
     const { fileURLToPath } = await import('node:url')
-    const { EXEC_GATE_TIMEOUT_MS,
-  EXEC_RENDER_PARITY_TIMEOUT_MS,
-  PARITY_RENDER_SCRIPT_TIMEOUT_MS,
-  withscripttimeout, } = await import('tasks/lib/parity/parity-timeouts.ts')
+    const {
+      EXEC_GATE_TIMEOUT_MS,
+      EXEC_RENDER_PARITY_TIMEOUT_MS,
+      PARITY_RENDER_SCRIPT_TIMEOUT_MS,
+      withscripttimeout,
+    } = await import('tasks/lib/parity/parity-timeouts.ts')
     /**
      * Local Daisy regression: Jest unit gates + one build + critical Playwright :full suites.
      * Not run in CI (see on-pr-check.yml). Use before merging native DSP changes.
@@ -1125,9 +1144,6 @@ async function rundaisyrundaisyregression(ctx: TaskContext): Promise<number> {
      *   yarn task run daisy:regression:test
      *   yarn task run daisy:regression:test --skip-playwright
      */
-
-
-
 
     const ROOT = ctx.root
     const PROJECT = ctx.root
@@ -1154,7 +1170,10 @@ async function rundaisyrundaisyregression(ctx: TaskContext): Promise<number> {
         name: 'sidechain-parity',
         cmd: 'yarn task run daisy:sidechain:parity:test:full',
       },
-      { name: 'synth-env-parity', cmd: 'yarn task run daisy:synth-env:test:full' },
+      {
+        name: 'synth-env-parity',
+        cmd: 'yarn task run daisy:synth-env:test:full',
+      },
       { name: 'notepop', cmd: 'yarn task run daisy:notepop:test:full' },
     ]
 
@@ -1258,7 +1277,8 @@ async function rundaisyrunenvparity(ctx: TaskContext): Promise<number> {
       withscripttimeout,
       RENDERS_FIXTURES_DIR,
     } = await loaddaisyparityruntime()
-    const { ENV_PARITY_SCENARIOS } = await import('ops/lib/daisy-parity/envparityscenario')
+    const { ENV_PARITY_SCENARIOS } =
+      await import('ops/lib/daisy-parity/envparityscenario')
     /**
      * Tone vs Daisy env parity offline renders.
      *
@@ -1266,14 +1286,6 @@ async function rundaisyrunenvparity(ctx: TaskContext): Promise<number> {
      *
      * Outputs: ops/fixtures/renders/env-parity/
      */
-
-
-
-
-
-
-
-
 
     const ROOT = ctx.root
     const PROJECT = ctx.root
@@ -1384,7 +1396,10 @@ async function rundaisyrunenvparity(ctx: TaskContext): Promise<number> {
             path.join(OUTDIR, `${scenario.id}-tone.wav`),
             Buffer.from(payload.tonewavbase64, 'base64'),
           )
-          fs.writeFileSync(path.join(OUTDIR, `${scenario.id}.txt`), payload.report)
+          fs.writeFileSync(
+            path.join(OUTDIR, `${scenario.id}.txt`),
+            payload.report,
+          )
 
           results.push({
             id: payload.id,
@@ -1452,23 +1467,17 @@ async function rundaisyrunfxbusmetrics(ctx: TaskContext): Promise<number> {
       withscripttimeout,
       RENDERS_FIXTURES_DIR,
     } = await loaddaisyparityruntime()
-    const { computefxbusmetrics,
-  formatfxbusmetricsline,
-  isfxbussoloscenario, } = await import('zss/feature/synth/backend/daisy/fxbusmetrics')
-    const { FX_MATRIX_COMPARE_BASELINE } = await import('zss/feature/synth/backend/daisy/fxlevelscenarios')
-    const { filterlevelstabilityscenarios } = await import('zss/feature/synth/backend/daisy/levelstabilityscenarios')
+    const { computefxbusmetrics, formatfxbusmetricsline, isfxbussoloscenario } =
+      await import('zss/feature/synth/backend/daisy/fxbusmetrics')
+    const { FX_MATRIX_COMPARE_BASELINE } =
+      await import('zss/feature/synth/backend/daisy/fxlevelscenarios')
+    const { filterlevelstabilityscenarios } =
+      await import('zss/feature/synth/backend/daisy/levelstabilityscenarios')
     /**
      * FX bus wet-lift report via Playwright offline render (needs OfflineAudioContext).
      *
      *   yarn fx-bus-metrics:test
      */
-
-
-
-
-
-
-
 
     const ROOT = ctx.root
     const PROJECT = ctx.root
@@ -1528,7 +1537,9 @@ async function rundaisyrunfxbusmetrics(ctx: TaskContext): Promise<number> {
         }
         const cand = metrics[id]
         if (cand) {
-          console.log(formatfxbusmetricsline(computefxbusmetrics(id, cand, base)))
+          console.log(
+            formatfxbusmetricsline(computefxbusmetrics(id, cand, base)),
+          )
         }
       }
     }
@@ -1541,13 +1552,16 @@ async function rundaisyrunfxbusmetrics(ctx: TaskContext): Promise<number> {
 }
 
 // --- run-level-issue-song-compare.ts ---
-async function rundaisyrunlevelissuesongcompare(ctx: TaskContext): Promise<number> {
+async function rundaisyrunlevelissuesongcompare(
+  ctx: TaskContext,
+): Promise<number> {
   try {
     const fs = (await import('node:fs')).default
     const path = (await import('node:path')).default
     const { fileURLToPath } = await import('node:url')
     const { RENDERS_FIXTURES_DIR } = await import('ops/lib/fixturepaths')
-    const { comparesongmetrics } = await import('zss/feature/synth/backend/daisy/levelissuesongcompare.ts')
+    const { comparesongmetrics } =
+      await import('zss/feature/synth/backend/daisy/levelissuesongcompare.ts')
     /**
      * Evidence-based Daisy vs Tone compare for level-issue song renders.
      *
@@ -1558,11 +1572,6 @@ async function rundaisyrunlevelissuesongcompare(ctx: TaskContext): Promise<numbe
      *   ops/fixtures/renders/level-issue-song.json
      *   ops/fixtures/renders/level-issue-song-tone.json
      */
-
-
-
-
-
 
     const ROOT = ctx.root
     const PROJECT = ctx.root
@@ -1632,25 +1641,32 @@ async function rundaisyrunlevelstability(ctx: TaskContext): Promise<number> {
       withscripttimeout,
       RENDERS_FIXTURES_DIR,
     } = await loaddaisyparityruntime()
-    const { computefxbusmetrics,
-  formatfxbusmetricsline,
-  isfxbussoloscenario, } = await import('zss/feature/synth/backend/daisy/fxbusmetrics')
-    const { FX_MATRIX_COMPARE_BASELINE,
-  FX_MATRIX_MIN_SOLO_DISTORT_PEAK_LIFT_DB,
-  FX_MATRIX_MIN_SOLO_PEAK_VS_DRY_DB,
-  FX_MATRIX_PEAK_DELTA_MAX_DB, } = await import('zss/feature/synth/backend/daisy/fxlevelscenarios')
-    const { LEVEL_STABILITY_COMPARE_PAIRS,
-  LEVEL_STABILITY_MIN_FX_PEAKRANGE_INCREASE_DB,
-  LEVEL_STABILITY_MIN_REVERB_RMSRANGE_INCREASE_DB,
-  LEVEL_STABILITY_MIX_BALANCE_PAIRS,
-  LEVEL_STABILITY_SCENARIOS,
-  filterlevelstabilityscenarios, } = await import('zss/feature/synth/backend/daisy/levelstabilityscenarios.ts')
-    const { formatmixbalanceline } = await import('zss/feature/synth/backend/wasm/compressormetrics.ts')
-    const { LEVEL_STABILITY_METRICS,
-  comparelevelstability,
-  diagnoselevelstability,
-  formatlevelstabilityline,
-  formatwindowcompareplot, } = await import('zss/feature/synth/backend/wasm/levelstabilitymetrics.ts')
+    const { computefxbusmetrics, formatfxbusmetricsline, isfxbussoloscenario } =
+      await import('zss/feature/synth/backend/daisy/fxbusmetrics')
+    const {
+      FX_MATRIX_COMPARE_BASELINE,
+      FX_MATRIX_MIN_SOLO_DISTORT_PEAK_LIFT_DB,
+      FX_MATRIX_MIN_SOLO_PEAK_VS_DRY_DB,
+      FX_MATRIX_PEAK_DELTA_MAX_DB,
+    } = await import('zss/feature/synth/backend/daisy/fxlevelscenarios')
+    const {
+      LEVEL_STABILITY_COMPARE_PAIRS,
+      LEVEL_STABILITY_MIN_FX_PEAKRANGE_INCREASE_DB,
+      LEVEL_STABILITY_MIN_REVERB_RMSRANGE_INCREASE_DB,
+      LEVEL_STABILITY_MIX_BALANCE_PAIRS,
+      LEVEL_STABILITY_SCENARIOS,
+      filterlevelstabilityscenarios,
+    } =
+      await import('zss/feature/synth/backend/daisy/levelstabilityscenarios.ts')
+    const { formatmixbalanceline } =
+      await import('zss/feature/synth/backend/wasm/compressormetrics.ts')
+    const {
+      LEVEL_STABILITY_METRICS,
+      comparelevelstability,
+      diagnoselevelstability,
+      formatlevelstabilityline,
+      formatwindowcompareplot,
+    } = await import('zss/feature/synth/backend/wasm/levelstabilitymetrics.ts')
     /**
      * Offline Daisy level-stability harness (Playwright + Vite, mirrors parity regen).
      *
@@ -1661,14 +1677,6 @@ async function rundaisyrunlevelstability(ctx: TaskContext): Promise<number> {
      *   yarn level-stability:test --scenario scalecrew-climax-full
      *   yarn level-stability:test --compare scalecrew-climax-melody scalecrew-climax-full
      */
-
-
-
-
-
-
-
-
 
     const ROOT = ctx.root
     const PROJECT = ctx.root
@@ -1764,7 +1772,10 @@ async function rundaisyrunlevelstability(ctx: TaskContext): Promise<number> {
     }
 
     async function renderall(filter: string): Promise<SCENARIO_PAYLOAD> {
-      const { server, vite } = await startparityvite(PROJECT, LEVEL_STABILITY_PORT)
+      const { server, vite } = await startparityvite(
+        PROJECT,
+        LEVEL_STABILITY_PORT,
+      )
       const browser = await launchparitybrowser()
       const metrics: Record<string, LEVEL_STABILITY_METRICS> = {}
       try {
@@ -2014,22 +2025,19 @@ async function rundaisyrunnotepopgates(ctx: TaskContext): Promise<number> {
     const path = (await import('node:path')).default
     const { fileURLToPath } = await import('node:url')
     const { RENDERS_FIXTURES_DIR } = await import('ops/lib/fixturepaths')
-    const { NOTEPOP_RENDER_METRICS,
-  evalnotepopgates,
-  formatnotepopgatereport, } = await import('zss/feature/synth/backend/daisy/notepopgates.ts')
-    const { NOTEPOP_SCENARIO_ID,
-  notepopmeta, } = await import('zss/feature/synth/backend/daisy/notepopscenario.ts')
+    const {
+      NOTEPOP_RENDER_METRICS,
+      evalnotepopgates,
+      formatnotepopgatereport,
+    } = await import('zss/feature/synth/backend/daisy/notepopgates.ts')
+    const { NOTEPOP_SCENARIO_ID, notepopmeta } =
+      await import('zss/feature/synth/backend/daisy/notepopscenario.ts')
     /**
      * Objective pass/fail gates for notepop comp-on vs comp-off renders.
      *
      * Usage:
      *   yarn notepop:test
      */
-
-
-
-
-
 
     const ROOT = ctx.root
     const PROJECT = ctx.root
@@ -2081,8 +2089,8 @@ async function rundaisyrunnotepoprender(ctx: TaskContext): Promise<number> {
       withscripttimeout,
       RENDERS_FIXTURES_DIR,
     } = await loaddaisyparityruntime()
-    const { notepopmeta,
-  notepopscenario, } = await import('zss/feature/synth/backend/daisy/notepopscenario.ts')
+    const { notepopmeta, notepopscenario } =
+      await import('zss/feature/synth/backend/daisy/notepopscenario.ts')
     /**
      * Offline render of the note-pop repro → WAV + metrics report.
      *
@@ -2098,13 +2106,6 @@ async function rundaisyrunnotepoprender(ctx: TaskContext): Promise<number> {
      * Browser preview (yarn app:dev):
      *   yarn notepop-song:render
      */
-
-
-
-
-
-
-
 
     const ROOT = ctx.root
     const PROJECT = ctx.root
@@ -2176,7 +2177,9 @@ async function rundaisyrunnotepoprender(ctx: TaskContext): Promise<number> {
             }
           })
 
-          await passpage.goto(parityhosturl(PORT), { waitUntil: 'domcontentloaded' })
+          await passpage.goto(parityhosturl(PORT), {
+            waitUntil: 'domcontentloaded',
+          })
           console.log(
             `Rendering notepop${pass.suffix || ''} (comp ${pass.maincompbypass ? 'OFF' : 'ON'})…`,
           )
@@ -2214,7 +2217,6 @@ async function rundaisyrunnotepoprender(ctx: TaskContext): Promise<number> {
           console.log('')
           console.log(`Listen: afplay ${wavpath}`)
         }
-
       } finally {
         await browser.close()
         await stopparityvite(parity)
@@ -2229,27 +2231,27 @@ async function rundaisyrunnotepoprender(ctx: TaskContext): Promise<number> {
 }
 
 // --- run-pitch-stability-gates.ts ---
-async function rundaisyrunpitchstabilitygates(ctx: TaskContext): Promise<number> {
+async function rundaisyrunpitchstabilitygates(
+  ctx: TaskContext,
+): Promise<number> {
   try {
     const fs = (await import('node:fs')).default
     const path = (await import('node:path')).default
     const { fileURLToPath } = await import('node:url')
     const { RENDERS_FIXTURES_DIR } = await import('ops/lib/fixturepaths')
-    const { PITCH_STABILITY_METRICS,
-  evalpitchstabilitygate,
-  formatpitchstabilityreport, } = await import('zss/feature/synth/backend/daisy/pitchstability.ts')
-    const { PITCH_STABILITY_SCENARIO_ID } = await import('zss/feature/synth/backend/daisy/pitchstabilityscenario.ts')
+    const {
+      PITCH_STABILITY_METRICS,
+      evalpitchstabilitygate,
+      formatpitchstabilityreport,
+    } = await import('zss/feature/synth/backend/daisy/pitchstability.ts')
+    const { PITCH_STABILITY_SCENARIO_ID } =
+      await import('zss/feature/synth/backend/daisy/pitchstabilityscenario.ts')
     /**
      * Pass/fail gate for pitch-stability offline render.
      *
      * Usage:
      *   yarn pitch-stability:test
      */
-
-
-
-
-
 
     const ROOT = ctx.root
     const PROJECT = ctx.root
@@ -2301,13 +2303,18 @@ async function rundaisyrunpitchstability(ctx: TaskContext): Promise<number> {
       withscripttimeout,
       RENDERS_FIXTURES_DIR,
     } = await loaddaisyparityruntime()
-    const { analyzepitchstability,
-  evalpitchstabilitygate,
-  formatpitchstabilityreport, } = await import('zss/feature/synth/backend/daisy/pitchstability.ts')
-    const { PITCH_STABILITY_EXPECTED_PITCH,
-  PITCH_STABILITY_SCENARIO_ID,
-  pitchstabilityattacktimes,
-  pitchstabilityscenario, } = await import('zss/feature/synth/backend/daisy/pitchstabilityscenario.ts')
+    const {
+      analyzepitchstability,
+      evalpitchstabilitygate,
+      formatpitchstabilityreport,
+    } = await import('zss/feature/synth/backend/daisy/pitchstability.ts')
+    const {
+      PITCH_STABILITY_EXPECTED_PITCH,
+      PITCH_STABILITY_SCENARIO_ID,
+      pitchstabilityattacktimes,
+      pitchstabilityscenario,
+    } =
+      await import('zss/feature/synth/backend/daisy/pitchstabilityscenario.ts')
     /**
      * Offline render for pitch-stability scenario → WAV + pitch metrics JSON.
      *
@@ -2318,13 +2325,6 @@ async function rundaisyrunpitchstability(ctx: TaskContext): Promise<number> {
      *   ops/fixtures/renders/pitch-stability-c4-8n.wav
      *   ops/fixtures/renders/pitch-stability-c4-8n.json
      */
-
-
-
-
-
-
-
 
     const ROOT = ctx.root
     const PROJECT = ctx.root
@@ -2513,27 +2513,27 @@ async function rundaisyrunpitchstability(ctx: TaskContext): Promise<number> {
 }
 
 // --- run-play-drum-balance-gates.ts ---
-async function rundaisyrunplaydrumbalancegates(ctx: TaskContext): Promise<number> {
+async function rundaisyrunplaydrumbalancegates(
+  ctx: TaskContext,
+): Promise<number> {
   try {
     const fs = (await import('node:fs')).default
     const path = (await import('node:path')).default
     const { fileURLToPath } = await import('node:url')
     const { RENDERS_FIXTURES_DIR } = await import('ops/lib/fixturepaths')
-    const { PLAY_DRUM_BALANCE_METRICS,
-  evalplaydrumbalancegate,
-  formatplaydrumbalancereport, } = await import('zss/feature/synth/backend/daisy/playdrumbalance.ts')
-    const { PLAY_DRUM_BALANCE_SCENARIO_ID } = await import('zss/feature/synth/backend/daisy/playdrumbalancescenario.ts')
+    const {
+      PLAY_DRUM_BALANCE_METRICS,
+      evalplaydrumbalancegate,
+      formatplaydrumbalancereport,
+    } = await import('zss/feature/synth/backend/daisy/playdrumbalance.ts')
+    const { PLAY_DRUM_BALANCE_SCENARIO_ID } =
+      await import('zss/feature/synth/backend/daisy/playdrumbalancescenario.ts')
     /**
      * Pass/fail gate for play vs drum balance render.
      *
      * Usage:
      *   yarn play-drum-balance:test
      */
-
-
-
-
-
 
     const ROOT = ctx.root
     const PROJECT = ctx.root
@@ -2571,7 +2571,9 @@ async function rundaisyrunplaydrumbalancegates(ctx: TaskContext): Promise<number
 }
 
 // --- run-play-drum-balance-render.ts ---
-async function rundaisyrunplaydrumbalancerender(ctx: TaskContext): Promise<number> {
+async function rundaisyrunplaydrumbalancerender(
+  ctx: TaskContext,
+): Promise<number> {
   try {
     const {
       path,
@@ -2584,12 +2586,17 @@ async function rundaisyrunplaydrumbalancerender(ctx: TaskContext): Promise<numbe
       withscripttimeout,
       RENDERS_FIXTURES_DIR,
     } = await loaddaisyparityruntime()
-    const { analyzeplaydrumbalance,
-  evalplaydrumbalancegate,
-  formatplaydrumbalancereport, } = await import('zss/feature/synth/backend/daisy/playdrumbalance.ts')
-    const { PLAY_DRUM_BALANCE_SCENARIO_ID,
-  playdrumbalancedrumscenario,
-  playdrumbalanceplayscenario, } = await import('zss/feature/synth/backend/daisy/playdrumbalancescenario.ts')
+    const {
+      analyzeplaydrumbalance,
+      evalplaydrumbalancegate,
+      formatplaydrumbalancereport,
+    } = await import('zss/feature/synth/backend/daisy/playdrumbalance.ts')
+    const {
+      PLAY_DRUM_BALANCE_SCENARIO_ID,
+      playdrumbalancedrumscenario,
+      playdrumbalanceplayscenario,
+    } =
+      await import('zss/feature/synth/backend/daisy/playdrumbalancescenario.ts')
     /**
      * Offline play vs drum balance stems → WAV + JSON.
      *
@@ -2597,19 +2604,15 @@ async function rundaisyrunplaydrumbalancerender(ctx: TaskContext): Promise<numbe
      *   yarn play-drum-balance:render
      */
 
-
-
-
-
-
-
-
     const ROOT = ctx.root
     const PROJECT = ctx.root
     const PORT = 9884
     const OUTDIR = RENDERS_FIXTURES_DIR
 
-    function encodewavmono16(samples: Float32Array, samplerate: number): Buffer {
+    function encodewavmono16(
+      samples: Float32Array,
+      samplerate: number,
+    ): Buffer {
       const datasize = samples.length * 2
       const buffer = Buffer.alloc(44 + datasize)
       const view = new DataView(buffer.buffer)
@@ -2696,8 +2699,12 @@ async function rundaisyrunplaydrumbalancerender(ctx: TaskContext): Promise<numbe
           })
         }
 
-        await playpage.goto(parityhosturl(PORT), { waitUntil: 'domcontentloaded' })
-        await drumpage.goto(parityhosturl(PORT), { waitUntil: 'domcontentloaded' })
+        await playpage.goto(parityhosturl(PORT), {
+          waitUntil: 'domcontentloaded',
+        })
+        await drumpage.goto(parityhosturl(PORT), {
+          waitUntil: 'domcontentloaded',
+        })
 
         const playrender = await renderstem(playpage, 'play')
         const drumrender = await renderstem(drumpage, 'drum')
@@ -2764,27 +2771,27 @@ async function rundaisyrunplaydrumbalancerender(ctx: TaskContext): Promise<numbe
 }
 
 // --- run-sidechain-parity-gates.ts ---
-async function rundaisyrunsidechainparitygates(ctx: TaskContext): Promise<number> {
+async function rundaisyrunsidechainparitygates(
+  ctx: TaskContext,
+): Promise<number> {
   try {
     const fs = (await import('node:fs')).default
     const path = (await import('node:path')).default
     const { fileURLToPath } = await import('node:url')
-    const { SIDECHAIN_PARITY_RESULT,
-  evalsidechainparitygate,
-  formatsidechainparityreport, } = await import('ops/lib/daisy-parity/sidechainparity')
+    const {
+      SIDECHAIN_PARITY_RESULT,
+      evalsidechainparitygate,
+      formatsidechainparityreport,
+    } = await import('ops/lib/daisy-parity/sidechainparity')
     const { RENDERS_FIXTURES_DIR } = await import('ops/lib/fixturepaths')
-    const { SIDECHAIN_SCENARIO_ID } = await import('zss/feature/synth/backend/daisy/sidechainscenario.ts')
+    const { SIDECHAIN_SCENARIO_ID } =
+      await import('zss/feature/synth/backend/daisy/sidechainscenario.ts')
     /**
      * Pass/fail gate for sidechain parity render.
      *
      * Usage:
      *   yarn sidechain-parity:test
      */
-
-
-
-
-
 
     const ROOT = ctx.root
     const PROJECT = ctx.root
@@ -2832,30 +2839,24 @@ async function rundaisyrunsidechainparity(ctx: TaskContext): Promise<number> {
       withscripttimeout,
       RENDERS_FIXTURES_DIR,
     } = await loaddaisyparityruntime()
-    const { SIDECHAIN_PARITY_PATCH_ID,
-  SIDECHAIN_PARITY_RESULT,
-  analyzeduckdepth,
-  analyzeduckdepthpair,
-  evalsidechainparitygate,
-  formatsidechainparityreport,
-  metricsfromsamples, } = await import('ops/lib/daisy-parity/sidechainparity')
+    const {
+      SIDECHAIN_PARITY_PATCH_ID,
+      SIDECHAIN_PARITY_RESULT,
+      analyzeduckdepth,
+      analyzeduckdepthpair,
+      evalsidechainparitygate,
+      formatsidechainparityreport,
+      metricsfromsamples,
+    } = await import('ops/lib/daisy-parity/sidechainparity')
     const { decodewav } = await import('tasks/lib/parity/parity-wav.ts')
-    const { SIDECHAIN_SCENARIO_ID } = await import('zss/feature/synth/backend/daisy/sidechainscenario.ts')
+    const { SIDECHAIN_SCENARIO_ID } =
+      await import('zss/feature/synth/backend/daisy/sidechainscenario.ts')
     /**
      * Offline sidechain parity: SC on/off duck depth + optional Tone compare.
      *
      * Usage:
      *   yarn sidechain-parity:render
      */
-
-
-
-
-
-
-
-
-
 
     const ROOT = ctx.root
     const PROJECT = ctx.root
@@ -3019,8 +3020,8 @@ async function rundaisyrunsidechainrender(ctx: TaskContext): Promise<number> {
       withscripttimeout,
       RENDERS_FIXTURES_DIR,
     } = await loaddaisyparityruntime()
-    const { SIDECHAIN_SCENARIO_ID,
-  sidechainabscenario, } = await import('zss/feature/synth/backend/daisy/sidechainscenario.ts')
+    const { SIDECHAIN_SCENARIO_ID, sidechainabscenario } =
+      await import('zss/feature/synth/backend/daisy/sidechainscenario.ts')
     /**
      * Offline A/B render for play-bus sidechain duck (duck-bg-stab scenario).
      *
@@ -3036,13 +3037,6 @@ async function rundaisyrunsidechainrender(ctx: TaskContext): Promise<number> {
      * Browser preview (yarn app:dev):
      *   yarn sidechain-song:render
      */
-
-
-
-
-
-
-
 
     const ROOT = ctx.root
     const PROJECT = ctx.root
@@ -3114,7 +3108,9 @@ async function rundaisyrunsidechainrender(ctx: TaskContext): Promise<number> {
             }
           })
 
-          await passpage.goto(parityhosturl(PORT), { waitUntil: 'domcontentloaded' })
+          await passpage.goto(parityhosturl(PORT), {
+            waitUntil: 'domcontentloaded',
+          })
           console.log(
             `Rendering ${SIDECHAIN_SCENARIO_ID}${pass.suffix || ''} (sidechain ${pass.sidechainbypass ? 'OFF' : 'ON'})…`,
           )
@@ -3151,7 +3147,6 @@ async function rundaisyrunsidechainrender(ctx: TaskContext): Promise<number> {
           console.log('')
           console.log(`Listen: afplay ${wavpath}`)
         }
-
       } finally {
         await browser.close()
         await stopparityvite(parity)
@@ -3166,7 +3161,9 @@ async function rundaisyrunsidechainrender(ctx: TaskContext): Promise<number> {
 }
 
 // --- run-song-offline-render-tone.ts ---
-async function rundaisyrunsongofflinerendertone(ctx: TaskContext): Promise<number> {
+async function rundaisyrunsongofflinerendertone(
+  ctx: TaskContext,
+): Promise<number> {
   try {
     const {
       path,
@@ -3179,8 +3176,8 @@ async function rundaisyrunsongofflinerendertone(ctx: TaskContext): Promise<numbe
       withscripttimeout,
       RENDERS_FIXTURES_DIR,
     } = await loaddaisyparityruntime()
-    const { levelissuescenario,
-  levelissuesongmeta, } = await import('zss/feature/synth/backend/daisy/levelissuesong.ts')
+    const { levelissuescenario, levelissuesongmeta } =
+      await import('zss/feature/synth/backend/daisy/levelissuesong.ts')
     /**
      * Offline render of the user level-issue song via archived Tone.js → WAV + metrics.
      *
@@ -3192,13 +3189,6 @@ async function rundaisyrunsongofflinerendertone(ctx: TaskContext): Promise<numbe
      *   ops/fixtures/renders/level-issue-song-tone.json
      *   ops/fixtures/renders/level-issue-song-tone.txt
      */
-
-
-
-
-
-
-
 
     const ROOT = ctx.root
     const PROJECT = ctx.root
@@ -3288,8 +3278,8 @@ async function rundaisyrunsongofflinerender(ctx: TaskContext): Promise<number> {
       withscripttimeout,
       RENDERS_FIXTURES_DIR,
     } = await loaddaisyparityruntime()
-    const { levelissuescenario,
-  levelissuesongmeta, } = await import('zss/feature/synth/backend/daisy/levelissuesong.ts')
+    const { levelissuescenario, levelissuesongmeta } =
+      await import('zss/feature/synth/backend/daisy/levelissuesong.ts')
     /**
      * Offline render of the user level-issue song → WAV + metrics report.
      *
@@ -3301,13 +3291,6 @@ async function rundaisyrunsongofflinerender(ctx: TaskContext): Promise<number> {
      *   ops/fixtures/renders/level-issue-song.json
      *   ops/fixtures/renders/level-issue-song.txt
      */
-
-
-
-
-
-
-
 
     const ROOT = ctx.root
     const PROJECT = ctx.root
@@ -3394,8 +3377,10 @@ async function rundaisyrunsosvoicegates(ctx: TaskContext): Promise<number> {
       withscripttimeout,
       RENDERS_FIXTURES_DIR,
     } = await loaddaisyparityruntime()
-    const { evalsosvoicegate } = await import('ops/lib/daisy-parity/sosvoicegate')
-    const { SOS_VOICE_PATCHES } = await import('zss/feature/synth/backend/daisy/sosvoicepatches.ts')
+    const { evalsosvoicegate } =
+      await import('ops/lib/daisy-parity/sosvoicegate')
+    const { SOS_VOICE_PATCHES } =
+      await import('zss/feature/synth/backend/daisy/sosvoicepatches.ts')
     const ROOT = ctx.root
     const PROJECT = ctx.root
     const FIXTURE_PATH = path.join(
@@ -3482,30 +3467,28 @@ async function rundaisyrunsosvoicegates(ctx: TaskContext): Promise<number> {
 }
 
 // --- run-synth-env-parity-gates.ts ---
-async function rundaisyrunsynthenvparitygates(ctx: TaskContext): Promise<number> {
+async function rundaisyrunsynthenvparitygates(
+  ctx: TaskContext,
+): Promise<number> {
   try {
     const fs = (await import('node:fs')).default
     const path = (await import('node:path')).default
     const { fileURLToPath } = await import('node:url')
-    const { SYNTH_ENV_PARITY_RESULT,
-  evalsynthenvparitygate,
-  formatsynthenvparityreport, } = await import('ops/lib/daisy-parity/synthenvparitygate')
-    const { SYNTH_ENV_PARITY_REQUIRED_IDS,
-  SYNTH_ENV_PARITY_SCENARIOS, } = await import('ops/lib/daisy-parity/synthenvparityscenario')
+    const {
+      SYNTH_ENV_PARITY_RESULT,
+      evalsynthenvparitygate,
+      formatsynthenvparityreport,
+    } = await import('ops/lib/daisy-parity/synthenvparitygate')
+    const { SYNTH_ENV_PARITY_REQUIRED_IDS, SYNTH_ENV_PARITY_SCENARIOS } =
+      await import('ops/lib/daisy-parity/synthenvparityscenario')
     const { RENDERS_FIXTURES_DIR } = await import('ops/lib/fixturepaths')
-    const { EXEC_GATE_TIMEOUT_MS,
-  withscripttimeout, } = await import('tasks/lib/parity/parity-timeouts.ts')
+    const { EXEC_GATE_TIMEOUT_MS, withscripttimeout } =
+      await import('tasks/lib/parity/parity-timeouts.ts')
     /**
      * Pass/fail gate for synth env parity renders.
      *
      * Usage: yarn synth-env-parity:test
      */
-
-
-
-
-
-
 
     const ROOT = ctx.root
     const PROJECT = ctx.root
@@ -3537,7 +3520,9 @@ async function rundaisyrunsynthenvparitygates(ctx: TaskContext): Promise<number>
             `FAIL (required) ${scenario.id}: ${gate.reasons.join('; ')}`,
           )
         } else if (!gate.pass) {
-          console.warn(`WARN (advisory) ${scenario.id}: ${gate.reasons.join('; ')}`)
+          console.warn(
+            `WARN (advisory) ${scenario.id}: ${gate.reasons.join('; ')}`,
+          )
         }
       }
 
@@ -3571,22 +3556,15 @@ async function rundaisyrunsynthenvparity(ctx: TaskContext): Promise<number> {
       withscripttimeout,
       RENDERS_FIXTURES_DIR,
     } = await loaddaisyparityruntime()
-    const { evalsynthenvparitygate,
-  formatsynthenvparityreport, } = await import('ops/lib/daisy-parity/synthenvparitygate')
-    const { SYNTH_ENV_PARITY_SCENARIOS } = await import('ops/lib/daisy-parity/synthenvparityscenario')
+    const { evalsynthenvparitygate, formatsynthenvparityreport } =
+      await import('ops/lib/daisy-parity/synthenvparitygate')
+    const { SYNTH_ENV_PARITY_SCENARIOS } =
+      await import('ops/lib/daisy-parity/synthenvparityscenario')
     /**
      * Tone vs Daisy synth env parity (long release, multi-wave).
      *
      * Usage: yarn synth-env-parity:render
      */
-
-
-
-
-
-
-
-
 
     const ROOT = ctx.root
     const PROJECT = ctx.root
@@ -3701,7 +3679,9 @@ async function rundaisyrunsynthenvparity(ctx: TaskContext): Promise<number> {
 }
 
 // --- run-voice-isolation-render.ts ---
-async function rundaisyrunvoiceisolationrender(ctx: TaskContext): Promise<number> {
+async function rundaisyrunvoiceisolationrender(
+  ctx: TaskContext,
+): Promise<number> {
   try {
     const {
       path,
@@ -3714,22 +3694,17 @@ async function rundaisyrunvoiceisolationrender(ctx: TaskContext): Promise<number
       withscripttimeout,
       RENDERS_FIXTURES_DIR,
     } = await loaddaisyparityruntime()
-    const { LEVEL_ISSUE_SONG_ID,
-  levelissuescenario,
-  levelissuevoicerolesummary,
-  levelissuevoicescenario, } = await import('zss/feature/synth/backend/daisy/levelissuesong.ts')
+    const {
+      LEVEL_ISSUE_SONG_ID,
+      levelissuescenario,
+      levelissuevoicerolesummary,
+      levelissuevoicescenario,
+    } = await import('zss/feature/synth/backend/daisy/levelissuesong.ts')
     /**
      * Per-voice offline renders for level-issue song → compare peak behavior by lane.
      *
      * Usage: yarn level-issue-voices:render
      */
-
-
-
-
-
-
-
 
     const ROOT = ctx.root
     const PROJECT = ctx.root
@@ -3840,7 +3815,9 @@ async function rundaisyrunvoiceisolationrender(ctx: TaskContext): Promise<number
               if (scenarioid === 'level-issue-song') {
                 scenario = levelissuescenario()
               } else {
-                const v = Number(scenarioid.replace('level-issue-song-voice-', ''))
+                const v = Number(
+                  scenarioid.replace('level-issue-song-voice-', ''),
+                )
                 scenario = levelissuevoicescenario(v)
               }
               const render = await renderdaisylevelscenario(scenario)
@@ -3860,7 +3837,10 @@ async function rundaisyrunvoiceisolationrender(ctx: TaskContext): Promise<number
 
           const metrics = payload.metrics as LEVEL_STABILITY_METRICS
           const bands = peakbands(metrics)
-          const timeline = timelinascii(metrics.windowpeaksDb, payload.rendersec)
+          const timeline = timelinascii(
+            metrics.windowpeaksDb,
+            payload.rendersec,
+          )
 
           results.push({
             id: payload.id,
@@ -3965,7 +3945,9 @@ export const DAISY_TASKS: TaskDef[] = [
   }),
   def('daisy:adsr-parity:jest', {
     description: 'Jest adsrenvcurve tests (internal)',
-    run: jestexec('ops/tests/unit/feature/synth/backend/wasm/adsrenvcurve.test.ts'),
+    run: jestexec(
+      'ops/tests/unit/feature/synth/backend/wasm/adsrenvcurve.test.ts',
+    ),
   }),
   def('daisy:env-parity:test', {
     description: 'Offline env ADSR parity render + gates',
@@ -3981,7 +3963,12 @@ export const DAISY_TASKS: TaskDef[] = [
   }),
   def('daisy:fixtures:regen:tone', {
     description: 'Regenerate synth parity fixtures (tone backend)',
-    run: handler((ctx) => rundaisyregensynthparityfixtures({ ...ctx, args: ['--tone', ...ctx.args] })),
+    run: handler((ctx) =>
+      rundaisyregensynthparityfixtures({
+        ...ctx,
+        args: ['--tone', ...ctx.args],
+      }),
+    ),
   }),
   def('daisy:fixtures:regen:adsrenvcurve:tone', {
     description: 'Regenerate adsrenvcurve tone metrics fixture',
@@ -4013,7 +4000,12 @@ export const DAISY_TASKS: TaskDef[] = [
   }),
   def('daisy:level-stability:test:fxmatrix', {
     description: 'Level stability FX matrix filter',
-    run: handler((ctx) => rundaisyrunlevelstability({ ...ctx, args: ['--filter', 'fxmatrix', ...ctx.args] })),
+    run: handler((ctx) =>
+      rundaisyrunlevelstability({
+        ...ctx,
+        args: ['--filter', 'fxmatrix', ...ctx.args],
+      }),
+    ),
   }),
   def('daisy:pitch-stability:render', {
     description: 'Pitch stability offline render',
@@ -4040,7 +4032,13 @@ export const DAISY_TASKS: TaskDef[] = [
   parityfull('play-drum-balance'),
   def('daisy:play-drum:loop', {
     description: 'Watch native + play-drum parity loop',
-    run: exec(['npx', 'tsx', 'tasks/lib/daisy/parity-loop.ts', '--suite', 'play-drum']),
+    run: exec([
+      'npx',
+      'tsx',
+      'tasks/lib/daisy/parity-loop.ts',
+      '--suite',
+      'play-drum',
+    ]),
   }),
   def('daisy:sidechain:parity:calibrate', {
     description: 'Calibrate sidechain parity (slow, dev-only)',
@@ -4058,7 +4056,13 @@ export const DAISY_TASKS: TaskDef[] = [
   parityfull('sidechain:parity'),
   def('daisy:sidechain:loop', {
     description: 'Watch native + sidechain parity loop',
-    run: exec(['npx', 'tsx', 'tasks/lib/daisy/parity-loop.ts', '--suite', 'sidechain']),
+    run: exec([
+      'npx',
+      'tsx',
+      'tasks/lib/daisy/parity-loop.ts',
+      '--suite',
+      'sidechain',
+    ]),
   }),
   def('daisy:sidechain:render', {
     description: 'Sidechain demo offline render',
@@ -4066,7 +4070,9 @@ export const DAISY_TASKS: TaskDef[] = [
   }),
   def('daisy:sidechain:render:ab', {
     description: 'Sidechain demo A/B offline render',
-    run: handler((ctx) => rundaisyrunsidechainrender({ ...ctx, args: ['--ab', ...ctx.args] })),
+    run: handler((ctx) =>
+      rundaisyrunsidechainrender({ ...ctx, args: ['--ab', ...ctx.args] }),
+    ),
   }),
   def('daisy:sos-voice:fixtures:regen', {
     description: 'Regenerate SOS voice parity fixtures',
@@ -4098,11 +4104,23 @@ export const DAISY_TASKS: TaskDef[] = [
   parityfull('synth-env'),
   def('daisy:synth-env:loop', {
     description: 'Watch native + synth-env parity loop',
-    run: exec(['npx', 'tsx', 'tasks/lib/daisy/parity-loop.ts', '--suite', 'synth-env']),
+    run: exec([
+      'npx',
+      'tsx',
+      'tasks/lib/daisy/parity-loop.ts',
+      '--suite',
+      'synth-env',
+    ]),
   }),
   def('daisy:notepop:loop', {
     description: 'Watch native + notepop parity loop',
-    run: exec(['npx', 'tsx', 'tasks/lib/daisy/parity-loop.ts', '--suite', 'notepop']),
+    run: exec([
+      'npx',
+      'tsx',
+      'tasks/lib/daisy/parity-loop.ts',
+      '--suite',
+      'notepop',
+    ]),
   }),
   def('daisy:notepop:render', {
     description: 'Notepop offline render',
@@ -4110,7 +4128,9 @@ export const DAISY_TASKS: TaskDef[] = [
   }),
   def('daisy:notepop:render:ab', {
     description: 'Notepop A/B offline render',
-    run: handler((ctx) => rundaisyrunnotepoprender({ ...ctx, args: ['--ab', ...ctx.args] })),
+    run: handler((ctx) =>
+      rundaisyrunnotepoprender({ ...ctx, args: ['--ab', ...ctx.args] }),
+    ),
   }),
   def('daisy:notepop:test', {
     description: 'Notepop parity gates',

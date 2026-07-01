@@ -4,10 +4,7 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import { PiperTTS } from './pipertts'
 import { SupertonicTTS } from './supertonictts'
-import {
-  requestfishaudiobytesforworker,
-  requestfishinfo,
-} from './ttsfish'
+import { requestfishaudiobytesforworker, requestfishinfo } from './ttsfish'
 import { RawAudio, TextSplitterStream } from './utils'
 
 let pipertts: MAYBE<PiperTTS>

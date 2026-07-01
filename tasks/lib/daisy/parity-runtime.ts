@@ -1,6 +1,9 @@
 import type { launchparitybrowser } from 'tasks/lib/parity/parity-playwright'
-import type { startparityvite, stopparityvite } from 'tasks/lib/parity/parity-vite-server'
 import type { withscripttimeout } from 'tasks/lib/parity/parity-timeouts'
+import type {
+  startparityvite,
+  stopparityvite,
+} from 'tasks/lib/parity/parity-vite-server'
 
 export type DaisyParityRuntime = {
   fs: typeof import('node:fs').default

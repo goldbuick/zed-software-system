@@ -1,5 +1,4 @@
-import type { DEVICELIKE } from 'zss/device/messagetypes'
-import type { TTS_VALIDATE_REPLY } from 'zss/device/messagetypes'
+import type { DEVICELIKE, TTS_VALIDATE_REPLY } from 'zss/device/messagetypes'
 import { workerlogerror } from 'zss/device/messagetypes'
 import {
   FISH_DEFAULT_MODEL,
