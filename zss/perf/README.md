@@ -7,6 +7,7 @@ Toggle the in-game perf panel with **`Ctrl+I`** or the CLI command **`#perf`**.
 When the panel is on:
 
 - **[`PerfMonitorTiles`](perfmonitortiles.tsx)** shows tick timing, render stats, peer wire volume, and related HUD tiles.
+- **`gpu geos` / `tex` / `prog`** — renderer resource footprint (`info.memory` + compiled programs). **`tex`** is a lifetime allocation counter: it increases when new GPU textures are created and decreases when they are `dispose()`d (tile/dither layers dispose on unmount). Cycling among the same boards should plateau rather than stair-step on every revisit.
 - **[`PerfHud`](hud.tsx)** logs renderer.info to the console once per second.
 - In **development** builds, React **`Profiler`** wraps [`TapeComponent`](../screens/tape/component.tsx) and logs commit times as `[zss perf] TapeComponent …`.
 

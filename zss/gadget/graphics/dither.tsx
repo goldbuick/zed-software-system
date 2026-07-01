@@ -18,7 +18,14 @@ export function Dither({ width, height, alphas }: DitherProps) {
 
   // create data texture
   useEffect(() => {
-    material.uniforms.data.value = createDitherDataTexture(width, height)
+    if (width === 0 || height === 0) {
+      return
+    }
+    const texture = createDitherDataTexture(width, height)
+    material.uniforms.data.value = texture
+    return () => {
+      texture.dispose()
+    }
   }, [material.uniforms.data, width, height])
 
   // set data texture
