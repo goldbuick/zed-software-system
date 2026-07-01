@@ -199,7 +199,6 @@ export default defineConfig(({ mode }) => {
         input: {
           index: path.join(apppath, 'index.html'),
           sys: path.join(apppath, 'sys/index.html'),
-          'wanix-iframe-host': path.join(apppath, 'wanix-iframe-host.html'),
         },
       },
     },
@@ -259,23 +258,6 @@ export default defineConfig(({ mode }) => {
             'Cross-Origin-Embedder-Policy': 'require-corp',
           }
         : undefined,
-      proxy: {
-        '/wanix-remote-9p': {
-          target: 'ws://127.0.0.1:7654',
-          ws: true,
-          changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/wanix-remote-9p\/?/, '/'),
-        },
-        '/wanix-bridge-host': {
-          target: 'ws://127.0.0.1:7654',
-          ws: true,
-          changeOrigin: true,
-          rewrite: (path) => {
-            const q = path.includes('?') ? path.slice(path.indexOf('?')) : ''
-            return `/host${q}`
-          },
-        },
-      },
     },
   }
 })

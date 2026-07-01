@@ -21,11 +21,6 @@ import { initdeeplinks, rundeeplinks } from 'zss/feature/deeplink'
 import { isclimode } from 'zss/feature/detect'
 import { fetchrefscrolltext } from 'zss/feature/fetchrefscrolltext'
 import { getfingerprint } from 'zss/feature/fingerprint'
-import {
-  AGENTS_ROSTER_STORAGE_KEY,
-  migrateroster,
-} from 'zss/feature/heavy/agentsroster'
-import { HEAVY_LLM_STORAGE_KEY } from 'zss/feature/heavy/heavyllmpreset'
 import { itchiopublish } from 'zss/feature/itchiopublish'
 import { withclipboard } from 'zss/feature/keyboard'
 import { terminalwritemarkdownlines } from 'zss/feature/parse/markdownterminal'
@@ -46,7 +41,6 @@ import {
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import { restorettsenginefromstorage } from 'zss/feature/tts'
 import { isjoin, znsset } from 'zss/feature/url'
-import { leavewanixattachedterminal } from 'zss/feature/wanix/wanixterminalmode'
 import { write } from 'zss/feature/writeui'
 import {
   zssheaderlines,
@@ -88,9 +82,6 @@ import {
   apitoast,
   boardrunnerstart,
   bridgejoin,
-  heavyllmpreset,
-  heavypullvarresult,
-  heavyrestoreagents,
   registerterminalclose,
   registerterminalfull,
   vmbookmarkscroll,
@@ -389,6 +380,7 @@ export const register = createdevice(
             storage
           const config = await storagereadconfigall()
           const token = await getfingerprint()
+          console.info('!!!!', { token })
           vmlogin(register, readplayerid(), {
             ...storageforlogin,
             config,
@@ -418,19 +410,6 @@ export const register = createdevice(
           if (isclimode()) {
             vmcli(register, readplayerid(), '#joincode')
           }
-          doasync(register, message.player, async () => {
-            const vars = await storagereadvars()
-            const raw = vars[AGENTS_ROSTER_STORAGE_KEY]
-            const roster = migrateroster(raw)
-            if (ispresent(roster)) {
-              heavyrestoreagents(register, readplayerid(), roster)
-            }
-            if (typeof vars[HEAVY_LLM_STORAGE_KEY] === 'string') {
-              heavyllmpreset(register, readplayerid(), 'gemma', {
-                toast: false,
-              })
-            }
-          })
         } else {
           loggedin = false
           doasync(register, message.player, async () => {
@@ -620,38 +599,24 @@ export const register = createdevice(
             !payload ||
             !isstring(payload.id) ||
             !isstring(payload.key) ||
-            (payload.channel !== 'vm' && payload.channel !== 'heavy')
+            payload.channel !== 'vm'
           ) {
             return
           }
           try {
             const vars = await storagereadvars()
             const value = vars[payload.key]
-            if (payload.channel === 'vm') {
-              vmpullvarresult(register, player, {
-                id: payload.id,
-                value,
-              })
-            } else {
-              heavypullvarresult(register, player, {
-                id: payload.id,
-                value,
-              })
-            }
+            vmpullvarresult(register, player, {
+              id: payload.id,
+              value,
+            })
           } catch (err) {
             const msg =
               err instanceof Error ? err.message : 'storagereadvars_failed'
-            if (payload.channel === 'vm') {
-              vmpullvarresult(register, player, {
-                id: payload.id,
-                error: msg,
-              })
-            } else {
-              heavypullvarresult(register, player, {
-                id: payload.id,
-                error: msg,
-              })
-            }
+            vmpullvarresult(register, player, {
+              id: payload.id,
+              error: msg,
+            })
           }
         })
         break
@@ -980,9 +945,6 @@ export const register = createdevice(
         useTape.setState({ terminalmode: 'quick', layout: TAPE_DISPLAY.TOP })
         break
       case 'terminal:close':
-        if (useTape.getState().terminalmode === 'attached') {
-          leavewanixattachedterminal()
-        }
         useTape.setState((state) => ({
           terminalmode: 'cli',
           terminal: {

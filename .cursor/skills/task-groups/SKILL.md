@@ -3,7 +3,7 @@ name: task-groups
 description: >-
   Edit citty task groups (tasks/groups/*.ts), extract shared glue to tasks/lib/
   and ops/lib/, and keep yarn task list registry-safe. Use when adding tasks,
-  inlining scripts, refactoring daisy/wanix/content handlers, or debugging
+  inlining scripts, refactoring daisy/content handlers, or debugging
   registry load failures (nanoid-dictionary, etc.).
 ---
 
@@ -43,7 +43,6 @@ run: handler(async (ctx) => {
 | CLI flags | `tasks/lib/cliargv` — `readlimit`, `readforce`, `hasflag` |
 | Daisy parity Playwright | `loaddaisyparityruntime` from `tasks/lib/daisy/parity-runtime` |
 | Parity timeouts | `withscripttimeout(label, ms, fn)` from `tasks/lib/parity/parity-timeouts` |
-| Wanix Playwright gates | `tasks/lib/wanix/playwright-vm` |
 | ZZT corpus file walk + OOP compile | `ops/lib/content/zztcorpuswalk` |
 | ZZT corpus layout / element extract | `ops/lib/content/zztcorpus` |
 | Fixture path constants | `ops/lib/fixturepaths` |

@@ -32,11 +32,9 @@ export function TapeComponent() {
     ]),
   )
 
-  const attached = terminalmode === 'attached'
   let top = 0
   let height = screensize.rows
-  if (!attached) {
-    switch (layout) {
+  switch (layout) {
       case TAPE_DISPLAY.TOP:
         height = Math.floor(screensize.rows * 0.5)
         break
@@ -48,7 +46,6 @@ export function TapeComponent() {
       case TAPE_DISPLAY.FULL:
         // defaults
         break
-    }
   }
 
   // bail on odd states
@@ -58,10 +55,7 @@ export function TapeComponent() {
 
   const player = registerreadplayer()
   const showterminal =
-    terminalmode === 'quick' ||
-    terminalmode === 'attached' ||
-    terminalopen ||
-    editoropen
+    terminalmode === 'quick' || terminalopen || editoropen
 
   const body = (
     <>
@@ -81,7 +75,7 @@ export function TapeComponent() {
             left={0}
             right={screensize.cols - 1}
             bottom={top + height - 1}
-            alpha={attached ? 0.85 : terminalmode === 'quick' ? 0.666 : 0.333}
+            alpha={terminalmode === 'quick' ? 0.666 : 0.333}
           />
           <UserFocus blockhotkeys>
             <TapeLayout

@@ -18,6 +18,10 @@ import {
 } from 'zss/feature/broadcast/webbroadcastwhipaliases'
 import { showbroadcastmenu } from 'zss/feature/broadcastmenu'
 import {
+  buildchatstartforkind,
+  resolvechatstartwords,
+} from 'zss/feature/bridgechatcli'
+import {
   bridgedeleteprofile,
   bridgereadallprofiles,
   bridgereadprofile,

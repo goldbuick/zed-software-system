@@ -36,8 +36,6 @@ Hanging commands waste time. **Never start a long or risky command without a pla
 | WASM `loadscriptsync` tests | `createwasmstubchip()` / `runwasmscriptfortest()` from `ops/lib/test/lang/wasmruntestutil.ts` |
 | WASM run budget (Jest workers) | Default 16_384 `sy()` polls in `zss/feature/lang/wasmloader.ts`; override `{ runbudget: N }` |
 | Parity / Playwright task handlers | Constants + `withscripttimeout(label, ms, fn)` in `tasks/lib/parity/parity-timeouts.ts` |
-| Wanix Playwright validators | `withscripttimeout` via `tasks/lib/wanix/playwright-vm.ts` (re-export) |
-| Wanix Playwright validators | `runwithscripttimeout` / env `ZSS_WANIX_VM_SCRIPT_TIMEOUT_MS`, `ZSS_WANIX_VM_SHELL_TIMEOUT_MS` |
 | New polling loops | Wall-clock deadline; log and exit non-zero on timeout |
 
 **WASM lang tests:** compiled scripts use a synchronous top-level loop. Stub chips must yield via `sy()` or terminate; scripts must `#die`, `return 0`, or yield — not spin forever.
@@ -77,7 +75,6 @@ Set **above** expected runtime. If backgrounded, poll the terminal file — do n
 
 ✅ GOOD — runwasmscriptfortest(wasmbytes, createwasmstubchip({ command: () => 0 }))
 ✅ GOOD — withscripttimeout('render', PARITY_RENDER_SCRIPT_TIMEOUT_MS, fn)
-✅ GOOD — Wanix gate wrapped in runwithscripttimeout with env override
 ✅ GOOD — preview: background → curl verify → kill pid
 ```
 

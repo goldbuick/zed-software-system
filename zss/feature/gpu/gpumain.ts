@@ -4,14 +4,11 @@ import { SOFTWARE } from 'zss/device/session'
 import { acquiregpulock, releasegpulock } from 'zss/feature/gpu/gpulock'
 import {
   canresidentboth,
-  getgpuresidencymode,
   initgpumodelbudget,
 } from 'zss/feature/gpu/gpumodelbudget'
-import type { GPU_PRIORITY } from 'zss/feature/gpu/gpupolicy'
 import { createsid } from 'zss/mapping/guid'
 
 type PlatformWorkers = {
-  heavy?: Worker
   stt?: Worker
 }
 
@@ -37,13 +34,12 @@ export function handleplatformgpurequest(
     return false
   }
 
-  const data = message.data as { lockid?: string; priority?: GPU_PRIORITY }
+  const data = message.data as { lockid?: string }
   const session = message.session || SOFTWARE.session()
 
   if (path === 'acquire') {
     const lockid = typeof data?.lockid === 'string' ? data.lockid : createsid()
-    const priority: GPU_PRIORITY = data?.priority === 'heavy' ? 'heavy' : 'stt'
-    void acquiregpulock(lockid, priority).then(() => {
+    void acquiregpulock(lockid, 'stt').then(() => {
       source.postMessage(
         createmessage(
           session,
@@ -68,7 +64,7 @@ export function handleplatformgpurequest(
     const requestid = (message.data as { requestid?: string })?.requestid
     void requeststtdispose().then(() => {
       source.postMessage(
-        createmessage(session, '', 'platform', 'heavy:sttdisposed', {
+        createmessage(session, '', 'platform', 'stt:disposed', {
           requestid,
         }),
       )
@@ -81,48 +77,6 @@ export function handleplatformgpurequest(
 
 export async function prepareforsttload(): Promise<void> {
   await initgpumodelbudget()
-  if (getgpuresidencymode() !== 'exclusive') {
-    return
-  }
-  await requestheavydisposeifidle()
-}
-
-export function requestheavydisposeifidle(): Promise<void> {
-  const bound = workers.heavy
-  if (!bound) {
-    return Promise.resolve()
-  }
-  const session = SOFTWARE.session()
-  if (!session) {
-    return Promise.resolve()
-  }
-  const requestid = createsid()
-  const heavyworker: Worker = bound
-  return new Promise((resolve) => {
-    const timeout = setTimeout(() => {
-      heavyworker.removeEventListener('message', onreply)
-      resolve()
-    }, 30_000)
-
-    function onreply(event: MessageEvent) {
-      const reply = event.data as MESSAGE
-      if (
-        reply?.target === `platform:heavy:disposeifidle` &&
-        (reply.data as { requestid?: string })?.requestid === requestid
-      ) {
-        clearTimeout(timeout)
-        heavyworker.removeEventListener('message', onreply)
-        resolve()
-      }
-    }
-
-    heavyworker.addEventListener('message', onreply)
-    heavyworker.postMessage(
-      createmessage(session, '', 'platform', 'heavy:disposeifidle', {
-        requestid,
-      }),
-    )
-  })
 }
 
 export function requeststtdispose(): Promise<void> {

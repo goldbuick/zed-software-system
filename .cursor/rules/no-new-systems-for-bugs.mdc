@@ -37,16 +37,4 @@ memoryregisterboardsyncnotify(() => { boardrunnerpushupdates(); gadgetsynctick()
 // (in the existing tick handler that already owns push timing)
 ```
 
-Wanix VM / zed-cafe export:
-
-```text
-❌ BAD — export-ready notify bus + host force-remount wrapper
-❌ BAD — appendChild('<wanix-vm>') after gojs export completes
-❌ BAD — ensurewanixzedcafedaemon after spawnwanixvm (second gojs boot)
-❌ BAD — duplicate runwithscripttimeout in wanix.ts (use withscripttimeout via tasks/lib/wanix/playwright-vm.ts)
-✅ GOOD — waitzedcafeexportready in zedcafe effect; beginvmboot remount in controller
-✅ GOOD — headed gate: yarn task run wanix:vm:zed-cafe:validate
-✅ GOOD — shared Playwright hub: tasks/lib/wanix/playwright-vm.ts
-```
-
 If root cause is unknown, stop at diagnosis (repro + logs). Do not add architecture to compensate.

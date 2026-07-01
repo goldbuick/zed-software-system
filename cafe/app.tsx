@@ -60,37 +60,33 @@ if (typeof window !== 'undefined') {
     enableaudio()
     event.preventDefault()
 
-    if (event.dataTransfer?.items) {
-      const items = [...event.dataTransfer.items]
-      // Use DataTransferItemList interface to access the file(s)
-      items.forEach((item) => {
-        // If dropped items aren't files, reject them
+    const dt = event.dataTransfer
+    if (!dt) {
+      return
+    }
+
+    const dropped: File[] = []
+    if (dt.items?.length) {
+      for (const item of [...dt.items]) {
         if (item.kind === 'file') {
           const file = item.getAsFile()
           if (ispresent(file)) {
-            vmloader(
-              SOFTWARE,
-              registerreadplayer(),
-              undefined,
-              'file',
-              file.name,
-              file,
-            )
+            dropped.push(file)
           }
         }
-      })
-    } else {
-      // Use DataTransfer interface to access the file(s)
-      const files = [...(event.dataTransfer?.files ?? [])]
-      files.forEach((file) =>
-        vmloader(
-          SOFTWARE,
-          registerreadplayer(),
-          undefined,
-          'file',
-          file.name,
-          file,
-        ),
+      }
+    }
+    if (!dropped.length && dt.files?.length) {
+      dropped.push(...dt.files)
+    }
+    for (const file of dropped) {
+      vmloader(
+        SOFTWARE,
+        registerreadplayer(),
+        undefined,
+        'file',
+        file.name,
+        file,
       )
     }
   })

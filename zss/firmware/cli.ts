@@ -1,5 +1,4 @@
 import { createfirmware } from 'zss/firmware'
-import { registeragentcommands } from 'zss/firmware/cli/commands/agent'
 import { registerbookscommands } from 'zss/firmware/cli/commands/books'
 import { registereditorcommands } from 'zss/firmware/cli/commands/editor'
 import { registerexportcommands } from 'zss/firmware/cli/commands/export'
@@ -9,7 +8,6 @@ import { registermultiplayercommands } from 'zss/firmware/cli/commands/multiplay
 import { registerpermissionscommands } from 'zss/firmware/cli/commands/permissions'
 import { registersendcommands } from 'zss/firmware/cli/commands/send'
 import { registerstatecommands } from 'zss/firmware/cli/commands/state'
-import { registerwanixcommands } from 'zss/firmware/cli/commands/wanix'
 import { registerzztcommands } from 'zss/firmware/cli/commands/zzt'
 
 const REGISTER_COMMANDS = [
@@ -21,8 +19,6 @@ const REGISTER_COMMANDS = [
   registerzztcommands,
   registermultiplayercommands,
   registerpermissionscommands,
-  registeragentcommands,
-  registerwanixcommands,
   registerinputcommands,
   registermisccommands,
 ]

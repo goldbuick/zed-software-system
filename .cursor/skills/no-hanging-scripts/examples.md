@@ -71,14 +71,14 @@ kill %1                     # or kill <pid>
 
 ## Task / Playwright script timeouts
 
-Use `withscripttimeout` from `tasks/lib/parity/parity-timeouts.ts` (or re-export via `tasks/lib/wanix/playwright-vm.ts` for Wanix gates).
+Use `withscripttimeout` from `tasks/lib/parity/parity-timeouts.ts`.
 
 **Signature is `(label, ms, fn)` — label first.** Swapping ms and label fails silently (wrong timeout or wrong log label).
 
 ```typescript
 import { withscripttimeout } from 'tasks/lib/parity/parity-timeouts'
 
-await withscripttimeout('wanix:vm:zed-cafe:validate', SCRIPT_TOTAL_MS, async () => {
+await withscripttimeout('daisy:parity:render', SCRIPT_TOTAL_MS, async () => {
   // … headed Playwright work …
 })
 ```

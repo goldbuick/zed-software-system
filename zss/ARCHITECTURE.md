@@ -62,7 +62,7 @@ zss/feature/lang/       Script compiler (TS backend + native parity target)
 Boot flow:
 
 1. [`cafe/index.tsx`](../cafe/index.tsx) loads [`zss/userspace.ts`](userspace.ts) (side-effect imports of main-thread devices), then renders [`cafe/app.tsx`](../cafe/app.tsx) → [`zss/gadget/engine.tsx`](gadget/engine.tsx).
-2. `Engine` calls [`createplatform()`](platform.ts): `sessionreset` on [`SOFTWARE`](device/session.ts), spawns **heavyspace** (LLM/TTS-heavy work), **boardrunnerspace** (per-board sim), and **simspace** or **stubspace** (authoritative VM).
+2. `Engine` calls [`createplatform()`](platform.ts): `sessionreset` on [`SOFTWARE`](device/session.ts), spawns **boardrunnerspace** (per-board sim) and **simspace** or **stubspace** (authoritative VM). **ttsspace** / **sttspace** workers start on demand for TTS/STT.
 
 [`zss/simspace.ts`](simspace.ts) runs **inside the sim worker**: imports `clock` and `modem`, wires `createforward` so messages that must reach the browser UI are `postMessage`’d out, then calls `started()` from [`zss/device/vm.ts`](device/vm.ts) which dispatches per-tick handlers (including the per-player gadget projection in [`gadgetsynctick`](device/vm/gadgetsynctick.ts)).
 
@@ -188,7 +188,7 @@ So: **memory is authoritative**; gadget state is a **projection** for rendering 
 
 ## Features and integrations
 
-Scattered under [`zss/feature/`](feature/): storage (idb), TTS/STT, URL/multiplayer hooks, parsing, etc. [`zss/device/heavy.ts`](device/heavy.ts) and the **heavyspace** worker isolate expensive browser APIs (e.g. transformers, ONNX) from the sim loop.
+Scattered under [`zss/feature/`](feature/): storage (idb), TTS/STT, URL/multiplayer hooks, parsing, etc. **ttsspace** and **sttspace** workers isolate ONNX / WebGPU inference from the sim loop.
 
 **`modem`**: networking / sync-related message handling (present on both sides as imported modules—routing distinguishes behavior).
 

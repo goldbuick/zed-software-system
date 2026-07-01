@@ -20,10 +20,8 @@ add co-located `__fixtures__` trees beside implementation code.
 | `books/` | Shipped book JSON (npm `"files"`) |
 | `content/templates/` | Importable book templates (`manifest.json` + `pages/*.json`) |
 | `content/dist/` | Built `.book.json` output (gitignored) |
-| `wanix/` | WASI `.wat`/`.c` sources; built `.wasm` gitignored |
 | `public/` | Dev-served static assets at `/fixtures/` (not in `cafe/public`) |
 | `renders/` | Offline Daisy/synth render outputs (wav/json/txt); dev serves `/renders/` |
-| `generated/training/` | Generated SFT corpus (`train.jsonl`, `eval.jsonl`, `manifest.json`) |
 | `zzt/corpus/` | Museum manifest + committed `zss/`; gitignored `archives/`, `extracted/`, `screenshots/` |
 
 ## Regen tasks
@@ -32,8 +30,6 @@ add co-located `__fixtures__` trees beside implementation code.
 |--------|----------------|
 | Lang parity goldens | `yarn task run lang:parity:regen` (or regenfixtures test) |
 | Memory parity | `yarn task run memory:parity:test` |
-| Wanix wasm | `yarn task run wanix:wasm:build` |
-| Training corpus | buildcorpus test / heavy training pipeline |
 | ZZT OOP corpus | `yarn task run content:zzt:corpus:build` |
 | ZZT board screenshots | `yarn task run content:zzt:corpus:screenshots` |
 | Content books | `yarn task run content:book:build` / `content:book:validate` |

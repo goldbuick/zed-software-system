@@ -17,8 +17,6 @@ import { useShallow } from 'zustand/react/shallow'
 
 import { TerminalInput } from './input'
 import { TerminalRows } from './rows'
-import { WanixTermInput } from './wanixinput'
-import { WanixTermScreen } from './wanixscreen'
 
 export function TerminalComponent() {
   const player = registerreadplayer()
@@ -80,29 +78,18 @@ export function TerminalComponent() {
     [player],
   )
 
-  const attached = terminalmode === 'attached'
-
   return (
     <>
       <TapeBackPlate />
       <TapeTerminalContext.Provider value={tapecontextvalue}>
-        {attached ? (
-          <>
-            <WanixTermScreen />
-            <WanixTermInput />
-          </>
-        ) : (
-          <>
-            <TerminalRows />
-            {!editoropen && voice2text !== undefined && (
-              <TerminalInput
-                terminalmode={terminalmode}
-                voice2text={voice2text}
-                tapeycursor={tapeycursor}
-                logrowtotalheight={logsrowtotalheight}
-              />
-            )}
-          </>
+        <TerminalRows />
+        {!editoropen && voice2text !== undefined && (
+          <TerminalInput
+            terminalmode={terminalmode}
+            voice2text={voice2text}
+            tapeycursor={tapeycursor}
+            logrowtotalheight={logsrowtotalheight}
+          />
         )}
       </TapeTerminalContext.Provider>
     </>

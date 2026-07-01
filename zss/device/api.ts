@@ -8,8 +8,6 @@ import type {
   MESSAGE as MESSAGE_TYPE,
 } from 'zss/device/messagetypes'
 import { ismessage as ismessage_fn } from 'zss/device/messagetypes'
-import type { AGENTS_ROSTER } from 'zss/feature/heavy/agentsroster'
-import type { HEAVY_LLM_PRESET } from 'zss/feature/heavy/heavyllmpreset'
 import type { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import type { BOOK } from 'zss/memory/types'
@@ -237,27 +235,6 @@ export function ttsrequest(
   device.emit(player, 'tts:request', [engine, config, voice, phrase, model])
 }
 
-type MODEL_PROMPT_ARGS = {
-  prompt: string
-  promptlogging?: string
-}
-
-export function heavymodelprompt(
-  device: DEVICELIKE,
-  player: string,
-  { prompt, promptlogging }: MODEL_PROMPT_ARGS,
-) {
-  device.emit(player, 'heavy:modelprompt', [prompt, promptlogging ?? ''])
-}
-
-export function heavymodelstop(
-  device: DEVICELIKE,
-  player: string,
-  agentid: string,
-) {
-  device.emit(player, 'heavy:modelstop', agentid)
-}
-
 export function vmboardrunnerack(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:boardrunnerack')
 }
@@ -297,160 +274,6 @@ export function vmlastinputtouch(
   targetplayer: string,
 ) {
   device.emit(player, 'vm:lastinputtouch', targetplayer)
-}
-
-export function vmpilotclear(
-  device: DEVICELIKE,
-  player: string,
-  playerid: string,
-) {
-  device.emit(player, 'vm:pilotclear', playerid)
-}
-
-export function heavyagentstart(
-  device: DEVICELIKE,
-  player: string,
-  agentname?: string,
-) {
-  device.emit(player, 'heavy:agentstart', agentname)
-}
-
-export function heavyagentstop(
-  device: DEVICELIKE,
-  player: string,
-  agentid?: string,
-) {
-  device.emit(player, 'heavy:agentstop', agentid)
-}
-
-export function heavyagentlist(device: DEVICELIKE, player: string) {
-  device.emit(player, 'heavy:agentlist')
-}
-
-export function wanixshow(device: DEVICELIKE, player: string) {
-  device.emit(player, 'wanix:show')
-}
-
-export function wanixvmstart(
-  device: DEVICELIKE,
-  player: string,
-  vmid?: string,
-) {
-  device.emit(player, 'wanix:vm-start', vmid)
-}
-
-export function wanixvmstop(device: DEVICELIKE, player: string, vmid?: string) {
-  device.emit(player, 'wanix:vm-stop', vmid)
-}
-
-export function wanixstop(device: DEVICELIKE, player: string, taskid?: string) {
-  device.emit(player, 'wanix:stop', taskid)
-}
-
-export function wanixtermwrite(
-  device: DEVICELIKE,
-  player: string,
-  line: string,
-) {
-  device.emit(player, 'wanix:term-write', line)
-}
-
-export function wanixdetach(device: DEVICELIKE, player: string) {
-  device.emit(player, 'wanix:detach')
-}
-
-export function wanixattach(
-  device: DEVICELIKE,
-  player: string,
-  taskid?: string,
-) {
-  device.emit(player, 'wanix:attach', taskid)
-}
-
-export function wanixpull(device: DEVICELIKE, player: string) {
-  device.emit(player, 'wanix:pull')
-}
-
-export function wanixremoteshow(device: DEVICELIKE, player: string) {
-  device.emit(player, 'wanix:remote-show')
-}
-
-export function wanixremoteconnect(
-  device: DEVICELIKE,
-  player: string,
-  url: string,
-  mountdst?: string,
-) {
-  device.emit(player, 'wanix:remote-connect', { url, mountdst })
-}
-
-export function wanixremotedisconnect(
-  device: DEVICELIKE,
-  player: string,
-  remoteid: string,
-) {
-  device.emit(player, 'wanix:remote-disconnect', remoteid)
-}
-
-export function wanixbridgestart(
-  device: DEVICELIKE,
-  player: string,
-  url: string,
-) {
-  device.emit(player, 'wanix:bridge-start', url)
-}
-
-export function wanixbridgestop(device: DEVICELIKE, player: string) {
-  device.emit(player, 'wanix:bridge-stop')
-}
-
-export function wanixdrop(
-  device: DEVICELIKE,
-  player: string,
-  label: string,
-  kind: 'wasm' | 'bundle',
-  bytes: Uint8Array,
-) {
-  device.emit(player, 'wanix:drop', { label, kind, bytes })
-}
-
-export type WANIX_ZED_CAFE_EXPORT_FILE = {
-  path: string
-  bytes: Uint8Array
-}
-
-export type WANIX_ZED_CAFE_EXPORT_PAYLOAD = {
-  files: WANIX_ZED_CAFE_EXPORT_FILE[]
-}
-
-export function wanixexportstate(
-  device: DEVICELIKE,
-  player: string,
-  payload: WANIX_ZED_CAFE_EXPORT_PAYLOAD,
-) {
-  device.emit(player, 'wanix:export-state', payload)
-}
-
-export function wanixrequestzedcafeexport(device: DEVICELIKE, player: string) {
-  device.emit(player, 'vm:export-zed-cafe')
-}
-
-export function heavyrestoreagents(
-  device: DEVICELIKE,
-  player: string,
-  roster: AGENTS_ROSTER,
-) {
-  device.emit(player, 'heavy:restoreagents', roster)
-}
-
-export function heavyllmpreset(
-  device: DEVICELIKE,
-  player: string,
-  preset: HEAVY_LLM_PRESET,
-  options?: { toast?: boolean },
-) {
-  const wantstoast = options?.toast !== false
-  device.emit(player, 'heavy:llmpreset', wantstoast ? preset : [preset, false])
 }
 
 export function platformready(device: DEVICELIKE) {
@@ -712,14 +535,6 @@ export function vmpullvarresult(
   device.emit(player, 'vm:pullvarresult', data)
 }
 
-export function heavypullvarresult(
-  device: DEVICELIKE,
-  player: string,
-  data: { id: string; value?: unknown; error?: string },
-) {
-  device.emit(player, 'heavy:pullvarresult', data)
-}
-
 export function registerbookmarkscroll(
   device: DEVICELIKE,
   player: string,
@@ -976,19 +791,6 @@ export function vmlogout(device: DEVICELIKE, player: string) {
 
 export function vmdoot(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:doot')
-}
-
-export function vmpilotstart(
-  device: DEVICELIKE,
-  player: string,
-  x: number,
-  y: number,
-) {
-  device.emit(player, 'vm:pilotstart', { x, y })
-}
-
-export function vmpilotstop(device: DEVICELIKE, player: string) {
-  device.emit(player, 'vm:pilotstop')
 }
 
 export function vmmakeitscroll(

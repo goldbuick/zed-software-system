@@ -1,58 +1,29 @@
 # heavy/
 
-**Purpose**: Heavy processing workloads — Gemma 4 E2B agent LLM via Transformers.js (WebGPU) and board copilot agents. Runs in **heavyspace**; models load on demand. Piper/Supertonic TTS inference moved to on-demand **ttsspace** ([`ttsworker.ts`](../../device/ttsworker.ts)); [`heavy/tts.ts`](../heavy/tts.ts) remains the shared inference library.
-
-## Agent LLM
-
-In-browser agents use **Gemma 4 E2B instruct ONNX** only:
-
-- Model: `onnx-community/gemma-4-E2B-it-ONNX` (`q4f16`, WebGPU)
-- Stack: `Gemma4ForConditionalGeneration` + OpenAI-style **tool calling** (`run_zss_command`)
-- Context: 131k tokens
-- Intent gate: SmolLM2-135M classifier before full agent generation
-
-**CLI**: `#agent model` shows model info; `#agent start` / `#agent stop` manage agents. **One agent per browser tab** — open another tab for additional agents.
-
-Agents are **copilot sessions** keyed to the register player: no `vm:login`, no board element. Board context and CLI actions use the register player via `vm:query` (read) and `vm:cli` (act).
-
-Function-calling reference: [Google Gemma 4 function calling](https://ai.google.dev/gemma/docs/capabilities/text/function-calling-gemma4).
+**Purpose**: Shared TTS inference library for on-demand **ttsspace** ([`ttsworker.ts`](../../device/ttsworker.ts)). Piper/Supertonic ONNX runs in the TTS worker; main thread calls `tts:info` / `tts:request` via [`device/tts.ts`](../tts.ts).
 
 ## Modules
 
 | File | Purpose |
 |------|---------|
-| `heavyllmpreset.ts` | Gemma 4 E2B model id, dtype, context; legacy storage key normalization |
-| `agentlifecycle.ts` | Per-tab agent session start/stop/restore; roster persistence |
-| `agentsroster.ts` | IDB roster shape `{ name }` and legacy migration |
-| `agentprompt.ts` | Testable agent tool loop (`runagentpromptloop`) |
-| `prompt.ts` | `buildagentsystemprompt` for cooperative player-help behavior |
 | `tts.ts` | Piper/Supertonic TTS; `requestinfo`, `requestaudiobytes` |
 | `pipertts.ts` | PiperTTS class — ONNX-based TTS |
 | `supertonictts.ts` | SupertonicTTS class — Supertonic-TTS-2-ONNX via Transformers.js |
-| `model.ts` | Gemma 4 generator + SmolLM2 classifier; `modelgenerategemma4`, `modelclassify` |
-| `llm/` | Tool-call parsing, output cleanup; see `llm/README.md` |
+| `ttsfish.ts` | Fish Audio TTS backend |
 | `modelcache.ts` | Piper fetch helper — Cache Storage API (`zss-heavy-models`) + per-URL singleflight |
 | `utils.ts` | `RawAudio`, `TextSplitterStream`, `normalizePeak`, `trimSilence`, `detectWebGPU` |
 | `textcleaner.ts` | `cleanTextForTTS`, `chunkText` |
-| `formatstate.ts` | Board text for agents; `AGENT_ZSS_COMMANDS` |
+| `formatstate.ts` | Board text formatters for `#query` / `#look` |
 | `phonemizerparser.ts` | Phonemize text (JavaScript) |
-| `vmquery.ts` | `vm:query` bridge from heavy worker to sim |
 
 ## Exports (main)
 
 | Function | Description |
 |----------|-------------|
 | `requestinfo` | TTS engine info (voices) |
-| `requestaudiobytes` | Generate audio bytes from Piper/Supertonic |
-| `modelgenerategemma4` | Gemma 4 generation with tools + tool-call parsing |
-| `modelclassify` | Short intent classification (SmolLM2) |
-| `runagentpromptloop` | Multi-turn tool loop for board agents |
-| `destroysharedmodel` | Dispose main + classifier (e.g. last agent stopped) |
-| `hasagentsession` | Whether register player has active agent session |
+| `requestaudiobytes` | Generate audio bytes from Piper/Supertonic/Fish |
 
 ## Consumed By
 
-- `zss/device/heavy.ts` — Model caller, agent prompts
-- `zss/device/ttsworker.ts` — Piper/Supertonic inference (`requestinfo`, `requestaudiobytes`)
-- `zss/device/register.ts` — Legacy preset storage migration on login; agent roster restore
-- `zss/firmware/cli/commands/agent.ts` — `#agent`
+- `zss/device/ttsworker.ts` — Piper/Supertonic/Fish inference (`requestinfo`, `requestaudiobytes`)
+- `zss/firmware/cli/commands/query.ts` — `#query` board snapshot text via `formatstate.ts`

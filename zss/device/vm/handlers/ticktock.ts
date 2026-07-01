@@ -19,17 +19,12 @@ import { memoryreadbookbysoftware, memoryreadfrozen } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
 import { perfmeasure } from 'zss/perf/ui'
 
-import { pilottick } from './pilot'
-
 export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
   void _message
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook) || memoryreadfrozen()) {
     return
   }
-  perfmeasure('vm:pilottick', () => {
-    pilottick(vm)
-  })
   perfmeasure('vm:memorytickloaders', () => {
     memorytickloaders()
   })

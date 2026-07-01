@@ -559,16 +559,4 @@ export const LANG_TASKS: TaskDef[] = [
     tags: ['slow'],
     run: handler((ctx) => analyzezztoopcorpus(ctx.args)),
   }),
-  def('lang:build-train-corpus', {
-    description: 'Jest build training corpus fixture',
-    run: jestexec('ops/tests/unit/feature/heavy/training/buildcorpus.test.ts', [
-      '--no-coverage',
-    ]),
-  }),
-  def('lang:train-corpus:test', {
-    description: 'Jest train corpus tests',
-    run: jestexec('ops/tests/unit/feature/heavy/training/traincorpus.test.ts', [
-      '--no-coverage',
-    ]),
-  }),
 ]

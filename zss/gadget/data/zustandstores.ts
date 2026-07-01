@@ -119,7 +119,7 @@ export enum TAPE_DISPLAY {
   MAX,
 }
 
-export type TERMINAL_MODE = 'cli' | 'quick' | 'attached'
+export type TERMINAL_MODE = 'cli' | 'quick'
 
 export const useTape = create<{
   layout: TAPE_DISPLAY

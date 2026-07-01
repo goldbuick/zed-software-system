@@ -82,11 +82,6 @@ After editing any group file, run **`yarn task list`** — cheapest integration 
 | `readlimit`, `readforce`, `hasflag` | `tasks/lib/cliargv.ts` | `limit` / `--force` argv parsing |
 | `loaddaisyparityruntime()` | `tasks/lib/daisy/parity-runtime.ts` | Daisy Playwright + vite parity handlers |
 | `withscripttimeout` | `tasks/lib/parity/parity-timeouts.ts` | **Signature:** `(label, ms, fn)` — not `(ms, label, fn)` |
-| Wanix Playwright hub | `tasks/lib/wanix/playwright-vm.ts` | VM validators, apilog capture, timeouts |
-
-Wanix validators live in `tasks/groups/wanix.ts` but **import** shared helpers from `tasks/lib/wanix/playwright-vm.ts` — do not duplicate `runwithscripttimeout` or iframe helpers.
-
-`wanix:wasm:build` compiles Go WASI fixtures from `ops/fixtures/wanix/` — rule `wanix-wasi-sdk.mdc`.
 
 ## Composite tasks
 

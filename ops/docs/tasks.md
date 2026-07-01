@@ -19,7 +19,7 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 | `yarn task run app:analyze` | Production build with bundle analyzer | — | — | `NODE_OPTIONS=--max-old-space-size=8192`, `ZSS_ANALYZER=1` |
 | `yarn task run app:audit:deadcode` | Knip dead-code audit (files, exports, dependencies) | — | — | — |
 | `yarn task run app:audit:export-catalogs` | Audit export catalogs | — | — | — |
-| `yarn task run app:build` | Production Vite build | `ci` | `wanix:zed-cafe:build` | — |
+| `yarn task run app:build` | Production Vite build | `ci` | — | — |
 | `yarn task run app:build:strict` | Typecheck then production Vite build | — | — | — |
 | `yarn task run app:clear` | Remove build artifacts and Vite cache | — | — | — |
 | `yarn task run app:dev` | Install deps and start Vite dev server | `dev` | `app:install`, `app:vite:dev` | — |
@@ -186,9 +186,7 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 | Task | Description | Tags | Deps | Env |
 |------|-------------|------|------|-----|
 | `yarn task run lang:book:oracle:extract` | Extract book JSON into lang integration oracle files | — | — | — |
-| `yarn task run lang:build-train-corpus` | Jest build training corpus fixture | — | — | — |
 | `yarn task run lang:regression:test` | TypeScript lang parser regression tests | `ci` | — | — |
-| `yarn task run lang:train-corpus:test` | Jest train corpus tests | — | — | — |
 | `yarn task run lang:zztoop:corpus:analyze` | Analyze Museum ZZT corpus with the vanilla zss/feature/zztoop parser; write ops/fixtures/lang/zztoop/failure-report.json. Flags: raw-only, write-fixtures, limit N, full | `slow` | — | — |
 
 
@@ -209,24 +207,3 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 |------|-------------|------|------|-----|
 | `yarn task run native:lint` | clang-format check on first-party C++ (all targets) | `ci` | — | — |
 | `yarn task run native:lint:fix` | Apply clang-format to first-party C++ (all targets) | — | — | — |
-
-
-## wanix
-
-| Task | Description | Tags | Deps | Env |
-|------|-------------|------|------|-----|
-| `yarn task run wanix:ensure` | Record pinned wanix npm version (runtime loads from jsDelivr CDN) | — | — | — |
-| `yarn task run wanix:hello:validate` | Headed Playwright: drop hello.wasm → Hello from wanix! (local gate, not CI) | — | — | — |
-| `yarn task run wanix:hold:validate` | Headed Playwright: drop hold.wasm stays running 5s (local gate, not CI) | — | — | — |
-| `yarn task run wanix:termbridge:validate` | Headed Playwright: drop termbridge.wasm banner + ping/pong (local gate, not CI) | — | — | — |
-| `yarn task run wanix:vm:boot:validate` | Headed Playwright: seeded book + #wanix vm must reach shell and /zedcafe/stats.json (local gate, not CI) | — | — | — |
-| `yarn task run wanix:vm:zed-cafe:validate` | Headed Playwright: #wanix vm → ls / shows zedcafe, cat stats.json (primary local gate, not CI) | — | — | — |
-| `yarn task run wanix:wasm:build` | Compile ops/fixtures/wanix Go WASI fixtures (hello, hold, termbridge, zed-cafe gates) to .wasm | — | — | — |
-| `yarn task run wanix:wasm:build:all` | Compile wanix Go WASI fixtures and zedcafe export wasm | — | — | — |
-| `yarn task run wanix:wasm:fixtures:validate` | Headed Playwright: all 7 WASI fixtures sequential in one session (local gate, not CI) | — | — | — |
-| `yarn task run wanix:zed-cafe:build` | Build zedcafe.wasm (Go js/wasm) into ops/fixtures/wanix/ and cafe/public/wanix/ | `ci` | — | — |
-| `yarn task run wanix:zed-cafe:duplex:validate` | Headed Playwright: full app drop zedcafewrite.wasm + #wanix pull import (local gate, not CI) | — | — | — |
-| `yarn task run wanix:zed-cafe:export:validate` | Headed Playwright: full app #wanix vm → cat /zedcafe/stats.json (local gate, not CI) | — | — | — |
-| `yarn task run wanix:zed-cafe:list:validate` | Headed Playwright: drop zedcafelist.wasm after export warm (local gate, not CI) | — | — | — |
-| `yarn task run wanix:zed-cafe:memfs:validate` | Composite ExportFS rollout gate — build, go test, headed app Playwright, jest smoke | — | — | — |
-| `yarn task run wanix:zed-cafe:task-read:validate` | Headed Playwright: full app drop zedcaferead.wasm reads zedcafe/stats.json (local gate, not CI) | — | — | — |

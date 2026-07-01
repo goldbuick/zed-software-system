@@ -1,4 +1,4 @@
-import { boardrunnerinput, vmpilotstart, vmpilotstop } from 'zss/device/api'
+import { boardrunnerinput } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { FIRMWARE } from 'zss/firmware'
 import { INPUT, INPUT_SHIFT } from 'zss/gadget/data/types'
@@ -19,40 +19,17 @@ const USERINPUT_MAP: Record<string, [INPUT, number]> = {
 }
 
 export function registerinputcommands(fw: FIRMWARE): FIRMWARE {
-  return fw
-    .command(
-      'userinput',
-      [ARG_TYPE.NAME, 'user input actions (up/down/left/right/etc)'],
-      (_, words) => {
-        const player = READ_CONTEXT.elementfocus
-        const [action] = readargs(words, 0, [ARG_TYPE.NAME])
-        const entry = USERINPUT_MAP[NAME(action)]
-        if (entry) {
-          boardrunnerinput(SOFTWARE, player, entry[0], entry[1])
-        }
-        return 0
-      },
-    )
-    .command(
-      'pilot',
-      [
-        ARG_TYPE.ANY,
-        'walk to coordinates or stop (e.g. #pilot 10 5, #pilot stop)',
-      ],
-      (_, words) => {
-        const player = READ_CONTEXT.elementfocus
-        const [first, ii] = readargs(words, 0, [ARG_TYPE.ANY])
-        if (NAME(first) === 'stop') {
-          vmpilotstop(SOFTWARE, player)
-          return 0
-        }
-        const x = Number(first)
-        const [second] = readargs(words, ii, [ARG_TYPE.ANY])
-        const y = Number(second)
-        if (isFinite(x) && isFinite(y)) {
-          vmpilotstart(SOFTWARE, player, x, y)
-        }
-        return 0
-      },
-    )
+  return fw.command(
+    'userinput',
+    [ARG_TYPE.NAME, 'user input actions (up/down/left/right/etc)'],
+    (_, words) => {
+      const player = READ_CONTEXT.elementfocus
+      const [action] = readargs(words, 0, [ARG_TYPE.NAME])
+      const entry = USERINPUT_MAP[NAME(action)]
+      if (entry) {
+        boardrunnerinput(SOFTWARE, player, entry[0], entry[1])
+      }
+      return 0
+    },
+  )
 }
