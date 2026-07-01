@@ -2,6 +2,7 @@ import { Canvas, events } from '@react-three/fiber'
 import type { ComponentProps } from 'react'
 import type { Intersection } from 'three'
 
+import { CafeApp } from './cafeapp'
 import { ViewportSync } from './viewportsync'
 
 const eventmanagerfactory: NonNullable<
@@ -30,7 +31,7 @@ const eventmanagerfactory: NonNullable<
   },
 })
 
-export function CafeCanvas({ children }: { children: React.ReactNode }) {
+export function CafeCanvas() {
   return (
     <Canvas
       style={{ width: '100%', height: '100%' }}
@@ -48,7 +49,7 @@ export function CafeCanvas({ children }: { children: React.ReactNode }) {
       resize={{ debounce: { resize: 256, scroll: 50 } }}
     >
       <ViewportSync />
-      {children}
+      <CafeApp />
     </Canvas>
   )
 }

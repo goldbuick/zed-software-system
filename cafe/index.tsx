@@ -8,9 +8,9 @@ import {
 } from 'zss/device/register'
 import { isclimode } from 'zss/feature/detect'
 import { isjoin } from 'zss/feature/url'
+import { WanixSystem } from 'zss/feature/wanix/wanixsystem'
 import { createplatform } from 'zss/platform'
 
-import { CafeApp } from './cafeapp'
 import { CafeCanvas } from './cafecanvas'
 import { WebGLCheck } from './webglcheck'
 
@@ -44,9 +44,8 @@ async function main() {
 
   createRoot(frame).render(
     <WebGLCheck>
-      <CafeCanvas>
-        <CafeApp />
-      </CafeCanvas>
+      <CafeCanvas />
+      <WanixSystem />
     </WebGLCheck>,
   )
 }
