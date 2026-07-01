@@ -18,7 +18,7 @@ If Jest tests and multiple subjects need it → `ops/lib/`, not `tasks/lib/`.
 
 ## Extraction order that worked
 
-1. Wanix Playwright hub + delete duplicate timeout wrappers
+1. Playwright hub extraction + delete duplicate timeout wrappers
 2. `loaddaisyparityruntime()` for daisy parity handlers
 3. Extend `shellutil.ts` (deploy/app/lang/content)
 4. `cliargv.ts` for limit/force parsing

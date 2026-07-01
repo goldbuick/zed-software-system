@@ -17,7 +17,7 @@
 | Script execution | Chevrotain → JS string → `new Function('api', code)` **or** lang WASM (`ZSS_WASM_SCRIPT`) | ZSS **bytecode** + C++ interpreter in **`zss_runtime.wasm`** |
 | Sim / memory / firmware | TypeScript in sim + boardrunner workers | **`zss_runtime.wasm`** (C++) in one **wasm worker** |
 | Synth DSP | `zss_daisy.wasm` in AudioWorklet | Same **runtime** binary; `_zss_process` on AudioWorklet |
-| Workers per tab | main + sim + boardrunner + heavy | main + **wasm** + **heavy** |
+| Workers per tab | main + sim + boardrunner + tts/stt | main + **wasm** + tts/stt |
 | UI / PeerJS / editor shell | TypeScript on main | Stays TypeScript |
 
 Enable with **`ZSS_WASM_SIM=true`** per page load during migration. Default **on** only after Phase 7 (full parity + perf).
@@ -28,7 +28,7 @@ Enable with **`ZSS_WASM_SIM=true`** per page load during migration. Default **on
 
 - **Bytecode VM** replaces `new Function` and CHIP JS control flow (CSP-safe, deterministic).
 - **Full sim core in WASM:** memory, tick loop, loaders, pilot, firmware, CHIP/OS.
-- **One wasm worker** per tab: sim + **synth coordinator**; **heavy worker** stays separate for LLM/TTS.
+- **One wasm worker** per tab: sim + **synth coordinator**; **tts/stt** stay on-demand workers.
 - **Retire** boardrunner worker and stub worker; **keep** election/ack TS on `vm` for multiplayer semantics.
 - **No scope deferrals:** RUNTIME + CLI + LOADER firmware at 100% before flipping the default flag.
 
@@ -40,7 +40,7 @@ Enable with **`ZSS_WASM_SIM=true`** per page load during migration. Default **on
 |-------|----------|
 | State bridge to UI | v1 **JSON** snapshot/delta; no typed linear-memory views until post-parity |
 | CLI | Port **CLI driver to C++ early** (Phase 2) |
-| Workers | **wasm** (sim + synth coord) + **heavy**; no boardrunner worker |
+| Workers | **wasm** (sim + synth coord) + tts/stt; no boardrunner worker |
 | Heavy | **Separate worker** (RAM + 80ms tick isolation) |
 | WASM threading | v1 **sequential** ticks; pthreads optional later; COOP/COEP already required for synth SAB |
 | Parity CI | Record **golden fixtures once** from TS; WASM-only compare (no standing dual-run CI) |
@@ -154,8 +154,9 @@ flowchart TB
     Clock -->|ticktock| Vm
   end
 
-  subgraph heavyW [Heavy worker]
-    Heavy[heavy LLM]
+  subgraph inferW [TTS STT workers lazy]
+    TTS[tts]
+    STT[stt]
   end
 
   subgraph aw [AudioWorklet]
@@ -163,7 +164,7 @@ flowchart TB
   end
 
   Forward <--> wasmW
-  Forward <--> heavyW
+  Forward <--> inferW
   Synth -.-> DSP
   Vm -->|gadget JSON| Gadget
 ```
@@ -218,7 +219,7 @@ Browsers support WASM threads with **SharedArrayBuffer** + **COOP/COEP** (alread
 
 ### Phase 5 — Wasm worker integration (2–3 weeks)
 
-- `platform.ts`: wasm + heavy only
+- `platform.ts`: wasm + on-demand tts/stt only
 - Rename peer targets: `vm:memorypatch`, `vm:memorypaint`
 - Synth device on wasm worker
 
@@ -280,7 +281,7 @@ Golden pattern: mirror [`wasmparity.test.ts`](../tests/unit/feature/synth/backen
 
 ## TypeScript end state
 
-**Keep:** cafe, gadget, screens, forward, hub, gadgetclient, bridge, register, heavy, jsonpipe (peers/saves), feature/heavy.
+**Keep:** cafe, gadget, screens, forward, hub, gadgetclient, bridge, register, jsonpipe (peers/saves), feature/tts, feature/stt.
 
 **Wasm worker shell:** clock, modem, vm, synth coordinator.
 

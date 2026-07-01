@@ -2,7 +2,7 @@
 
 **Status:** design / planning (target architecture). Describes **host + two join players** with devices per tab, messages over **PeerJS**, and how **`zss_runtime.wasm`** fits in.
 
-**Current production topology (TypeScript):** main + sim worker + **boardrunner worker** + heavy worker; gadget paint/patch from [`gadgetsynctick`](../../zss/device/vm/gadgetsynctick.ts) inside the sim VM tick. Authoritative messaging diagram: [`zss/device/docs/devices-and-messaging.md`](../../zss/device/docs/devices-and-messaging.md).
+**Current production topology (TypeScript):** main + sim worker + **boardrunner worker** + on-demand **tts/stt** workers; gadget paint/patch from [`gadgetsynctick`](../../zss/device/vm/gadgetsynctick.ts) inside the sim VM tick. Authoritative messaging diagram: [`zss/device/docs/devices-and-messaging.md`](../../zss/device/docs/devices-and-messaging.md).
 
 **Parent plan:** [wasm-sim-port.md](wasm-sim-port.md)
 
@@ -12,7 +12,7 @@
 
 ## Overview
 
-- **Three browser tabs** = three **independent** runtimes (each: main + wasm worker + heavy worker + AudioWorklet).
+- **Three browser tabs** = three **independent** runtimes (each: main + wasm worker + on-demand tts/stt + AudioWorklet).
 - **Not** one shared WASM heap — each tab loads its own `zss_runtime.wasm`.
 - **PeerJS** on the **main thread** links tabs (star: host peer id = **topic**, joins connect via `DataConnection`).
 - **Host MAIN book game memory is authoritative**; joins apply **`vm:memorypatch`** from host (no legacy `boardrunnerpatch` on the wire).
@@ -87,7 +87,7 @@ Each tab has **three hubs** ([`hub.ts`](../../zss/hub.ts) per realm). WASM is **
 |-------|----------------|--------------|
 | **Main** | `forward`, `register`, `bridge` (PeerJS), `gadgetclient`, `modem` (Yjs) | — |
 | **Wasm worker** | `forward`, `clock`, `modem`, `vm` (shell), `synth` (coordinator) | `zss_runtime`: `zss_tick`, `zss_compile`, memory, VM, firmware |
-| **Heavy worker** | `forward`, `heavy` | Transformers / ONNX / Vosk (not inside `zss_runtime`) |
+| **Inference workers** | `forward`, `tts`, `stt` (lazy) | Transformers / ONNX for TTS/STT (not inside `zss_runtime`) |
 | **AudioWorklet** | — | Same wasm bytes, `_zss_process` only |
 
 ```mermaid
@@ -109,21 +109,21 @@ flowchart LR
     Clock --> Vm
   end
 
-  subgraph heavyHub [Heavy]
-    Heavy[heavy]
+  subgraph inferHub [TTS STT lazy]
+    TTS[tts]
+    STT[stt]
   end
 
   FwdM <--> wasmHub
-  FwdM <--> heavyHub
+  FwdM <--> inferHub
   wasmHub -->|gadget JSON| Gadget
-  Heavy -->|vm:query| Vm
 ```
 
 ### Intra-tab routing ([`platform.ts`](../../zss/platform.ts) target)
 
-- Main `forward` ↔ wasm worker `forward` ↔ heavy worker `forward`
+- Main `forward` ↔ wasm worker `forward` ↔ on-demand tts/stt workers
 - **No** boardrunner worker (retired)
-- Peer messages arrive on **main** hub → `forward` routes to wasm / heavy per `shouldforward*`
+- Peer messages arrive on **main** hub → `forward` routes to wasm / tts / stt per `shouldforward*`
 
 ---
 
@@ -231,19 +231,6 @@ sequenceDiagram
   VmH->>RtH: zss_input
 ```
 
-### D. Join heavy agent → host CLI
-
-```mermaid
-sequenceDiagram
-  participant HeavyJ as Join heavy
-  participant Peer as PeerJS
-  participant VmH as Host vm
-  participant RtH as zss_runtime
-
-  HeavyJ->>Peer: vm:query runcli
-  Peer->>VmH: forward
-  VmH->>RtH: zss_cli
-```
 
 ---
 
@@ -264,7 +251,7 @@ sequenceDiagram
 
 | | Today | Target |
 |---|-------|--------|
-| Workers | sim + boardrunner + heavy | wasm + heavy |
+| Workers | sim + boardrunner + tts/stt | wasm + tts/stt |
 | Board tick | boardrunner worker `memorytickmain` | `zss_tick` in wasm worker |
 | Peer patch name | `vm:boardrunnerpatch` | **`vm:memorypatch`** |
 | Host authority | De facto via host runner + patches | **Explicit** host `zss_runtime` |

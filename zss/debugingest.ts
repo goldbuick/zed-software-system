@@ -4,7 +4,7 @@ const DEBUG_INGEST =
   'http://127.0.0.1:7474/ingest/f2bfd0d8-5208-447d-9aef-a3f39f2dbf4e'
 const DEBUG_SESSION = '5cf1ca'
 
-export function agentlog(
+export function debugingest(
   location: string,
   message: string,
   data: Record<string, unknown>,

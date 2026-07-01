@@ -306,20 +306,22 @@ Per-board chip simulation that runs inside the **boardrunner worker**. The sim V
 
 **File:** `forward.ts`
 
-Functions for managing message forwarding between peers, server, client, and heavy worker.
+Functions for managing message forwarding between peers, server, client, and workers.
 
 ### Forward Creation
 - `createforward(handler)` - Create forward device with message handler
 
 ### Forwarding Rules
-- `shouldnotforwardonpeerserver(message)` - Check if message should NOT forward on peer server
-- `shouldforwardservertoclient(message)` - Check if message should forward sim→client (covers `vm`, `heavy`, `boardrunner`, `synth`, `modem`, `bridge`, `register`, `gadgetclient`, plus `log/chat/ticktock/ready/toast/second` topics and `sync/heavy/joinack/acklook/acklogin/ackoperator/ackzsswords/gadgetclient` path suffixes)
-- `shouldnotforwardonpeerclient(message)` - Check if message should NOT forward on peer client
+- `shouldforwardonpeerserver(message)` - Check if message should forward on peer server
+- `shouldforwardonpeerclient(message)` - Check if message should forward on peer client
+- `shouldforwardservertoclient(message)` - Check if message should forward sim→client (covers `tts`, `synth`, `modem`, `bridge`, `register`, `boardrunner`, `gadgetclient`, `perfreport`, plus `log/chat/ready/toast/second` topics and `sync/joinack/acklook/acklogin/ackoperator/ackzsswords/boardrunner/gadgetclient` path suffixes)
 - `shouldforwardclienttoserver(message)` - Check if message should forward client→sim (`vm:*`, `modem:*`, `*sync` / `*desync` / `*joinack`)
-- `shouldforwardclienttoheavy(message)` - Check if message should forward client→heavy (`heavy:*`, `second`, `ready`, `*acklook`)
-- `shouldforwardheavytoclient(message)` - Check if message should forward heavy→client
-- `shouldforwardclienttoboardrunner(message)` - Check if message should forward client→boardrunner (`boardrunner:*`, `vm:*`, `second`, `ready`). `vm:*` is forwarded so chip / scroll / sidebar messages also reach the chip OS running on the boardrunner.
+- `shouldforwardclienttoboardrunner(message)` - Check if message should forward client→boardrunner (`boardrunner:*`, `second`, `ready`)
 - `shouldforwardboardrunnertoclient(message)` - Check if message should forward boardrunner→client
+- `shouldforwardclienttostt(message)` - Check if message should forward client→stt (`stt:*`, `second`, `ready`)
+- `shouldforwardstttoclient(message)` - Check if message should forward stt→client
+- `shouldforwardclienttotts(message)` - Check if message should forward client→tts (`tts:*`, `second`, `ready`)
+- `shouldforwardttstoclient(message)` - Check if message should forward tts→client
 
 ---
 

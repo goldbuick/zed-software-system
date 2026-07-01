@@ -28,7 +28,7 @@ Do **not** expand CI surface area. The repo already has lint, Jest, and a fixed 
 ## Examples
 
 ```text
-❌ BAD — def('wanix:vm:foo:validate', …) + new Playwright gate task
+❌ BAD — def('foo:bar:validate', …) + new Playwright gate task
 ❌ BAD — .github/workflows/nightly-e2e.yml
 ❌ BAD — husky pre-commit hook running eslint
 ❌ BAD — codecov or third-party coverage upload action

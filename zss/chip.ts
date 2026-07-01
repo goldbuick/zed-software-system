@@ -1,5 +1,5 @@
 import ErrorStackParser from 'error-stack-parser'
-import { agentlog } from 'zss/agentlog'
+import { debugingest } from 'zss/debugingest'
 import {
   type GeneratorBuild,
   type GeneratorFunc,
@@ -1209,7 +1209,7 @@ export function createchip(
   }
 
   const logic: MAYBE<GeneratorFunc> = build.code
-  agentlog(
+  debugingest(
     'chip.ts:createchip',
     'js logic path',
     {

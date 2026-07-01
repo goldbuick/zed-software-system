@@ -83,26 +83,6 @@ const {
 
 Handlers that also need **other** exports from `parity-timeouts` (e.g. `EXEC_GATE_TIMEOUT_MS`, `CALIBRATE_SCRIPT_TIMEOUT_MS`) keep a separate dynamic import for those constants only — do not re-import `withscripttimeout` twice.
 
-## Wanix validators
-
-- Task definitions: `tasks/groups/wanix.ts`
-- Shared Playwright helpers: `tasks/lib/wanix/playwright-vm.ts`
-- Use `withscripttimeout(label, ms, fn)` — **label first**
-- Do not add `runwithscripttimeout` duplicates
-
-### Wanix wasm build tasks
-
-| Task | `build.sh` target |
-|------|-------------------|
-| `wanix:wasm:build` | `wasi` — all WASI fixtures under `ops/fixtures/wanix/<name>/` |
-| `wanix:zed-cafe:build` | `zed-cafe` — gojs export daemon |
-| `wanix:wasm:build:all` | `all` — WASI drops + zedcafe |
-| `wanix:wasm:build:all` | `all` — wasi + zed-cafe |
-
-Single module: `ops/fixtures/wanix/go.mod`. Prereq: `git submodule update --init submodules/wanix`.
-
-Rule: `wanix-wasi-sdk.mdc`.
-
 ## Content / lang corpus
 
 - Walk `.zzt`/`.brd` trees: `collectzztcorpussourcefiles` from `ops/lib/content/zztcorpuswalk`

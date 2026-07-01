@@ -44,7 +44,7 @@ If the user approves a fallback, implement the **smallest** fallback and note in
 // ❌ BAD — no ask: mask missing export with hardcoded bundle
 const bundle = await loadexport() ?? FALLBACK_BUNDLE
 
-// ✅ GOOD — fix wanix export ready gate; or ask user before any FALLBACK_BUNDLE path
+// ✅ GOOD — fix export ready gate; or ask user before any FALLBACK_BUNDLE path
 await waitzedcafeexportready()
 const bundle = await loadexport()
 ```

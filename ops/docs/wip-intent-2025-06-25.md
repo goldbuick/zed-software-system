@@ -13,7 +13,7 @@ On HEAD `bd5f50819`, **Fish TTS runs on the main thread** in `zss/feature/tts.ts
 | `fish tts>> Reference not found` | Fish moved to worker before dev smoke proved parity with main-thread path |
 | Piper `HTTP error: 404` in worker console | Unified worker path passes `ttsconfig` (Fish API key) into Piper’s HuggingFace URL builder when engine is Piper but config still holds fish key |
 | TTS queue hang after Fish error | Main-thread waiter only resolved on truthy `message.data`; worker replied `undefined` on failure |
-| `window is not defined` in workers | Static import chains from Wanix/broadcast into `register.ts` / React (motivated worker import fixes) |
+| `window is not defined` in workers | Static import chains from broadcast into `register.ts` / React (motivated worker import fixes) |
 
 ## Goals in the discarded WIP
 
@@ -52,7 +52,6 @@ Do not unify the `config` slot across engines without engine-specific emit logic
 
 | Intent | Files |
 |--------|-------|
-| Break Wanix → `register.ts` → React chain in workers | `zss/feature/wanix/wanixfilematch.ts`, `wanixlaunch.ts` |
 | Break broadcast → `bridge.ts` → React chain | `broadcastactive.ts`, `broadcastmenu.ts`, `registerplayer.ts` |
 | Vite worker `@react-refresh` stub | `tasks/groups/app.ts`, `vite.config.ts` |
 
@@ -69,17 +68,16 @@ Do not unify the `config` slot across engines without engine-specific emit logic
 ### 5. Other incidental edits (review after reset)
 
 - `zss/device.ts` — session capture from any message (global behavior change)
-- Wanix term iframe host tweaks
 - Multiplayer CLI / firmware docs
 - Gadget/boardrunner sync import path updates (patchapi migration)
 
 ## Rule going forward
 
-**Fish stays on the main thread until the worker move is its own PR with manual smoke.** Do not bundle Fish worker migration with api slim, Wanix, or brickurl refactors.
+**Fish stays on the main thread until the worker move is its own PR with manual smoke.** Do not bundle Fish worker migration with api slim or brickurl refactors.
 
 ## Recommended redo order
 
-1. Worker React import fixes (Wanix, broadcast)
+1. Worker React import fixes (broadcast)
 2. Slim `device/api.ts` (patchapi + messagetypes + ESLint)
 3. `brickurl` extraction
 4. Fish worker move — **last**, only after main-thread baseline re-verified
@@ -97,4 +95,4 @@ git checkout HEAD -- .
 git clean -fd
 ```
 
-Untracked files removed included: `messagetypes.ts`, `patchapi.ts`, `registerplayer.ts`, `brickurl.ts`, `broadcastactive.ts`, `broadcastmenu.ts`, `ttsfish.ts`, `wanixfilematch.ts`, and fish TTS unit tests added during WIP.
+Untracked files removed included: `messagetypes.ts`, `patchapi.ts`, `registerplayer.ts`, `brickurl.ts`, `broadcastactive.ts`, `broadcastmenu.ts`, `ttsfish.ts`, and fish TTS unit tests added during WIP.
