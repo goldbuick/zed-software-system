@@ -10,7 +10,7 @@ export async function runadsrenvcurveregen(): Promise<{
 }> {
   const gatesec = tonenotationseconds('2n')
   const totalsec = gatesec + ENV_PARITY_ADSR_SEC.release + 0.5
-  const samples = await rendertoneenvelopeoffline(gatesec, totalsec, 44100)
+  const samples = await rendertoneenvelopeoffline(gatesec, totalsec)
   const metrics = analyzelevelstability(samples, 44100, 46)
   const attackdecaysec = 0.03 + 0.2 + 0.02
   const start = Math.floor(attackdecaysec * 44100)

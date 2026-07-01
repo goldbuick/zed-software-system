@@ -6,7 +6,6 @@ import { ENV_PARITY_ADSR_SEC } from './adsrenvcurve'
 export async function rendertoneenvelopeoffline(
   gatesec: number,
   totalsec: number,
-  _samplerate: number,
 ): Promise<Float32Array> {
   const rendered = await Offline(({ transport }) => {
     const synth = new Synth({

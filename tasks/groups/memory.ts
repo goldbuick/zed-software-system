@@ -192,6 +192,8 @@ function parsemanifest(root: string) {
   }
   const literal = src.slice(brace, end + 1)
 
+  // Parse inline object literal from fixture source (trusted task-local file).
+  // eslint-disable-next-line @typescript-eslint/no-implied-eval
   return Function(`return (${literal})`)() as Record<string, string[]>
 }
 

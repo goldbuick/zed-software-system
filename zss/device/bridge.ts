@@ -12,6 +12,7 @@ import { createmastodonfeedconnector } from 'zss/device/bridge/mastodonfeedconne
 import { createrssfeedconnector } from 'zss/device/bridge/rssfeedconnector'
 import { createtwitchchatconnector } from 'zss/device/bridge/twitchchatconnector'
 import type { TWITCH_CHAT_HANDLERS } from 'zss/device/bridge/twitchchatconnector'
+import { doasync } from 'zss/device/doasync'
 import { setbroadcastactive } from 'zss/feature/broadcast/broadcastactive'
 import {
   createwebbroadcastclient,
@@ -26,7 +27,6 @@ import {
 } from 'zss/feature/netterminal'
 import { write, writecopyit } from 'zss/feature/writeui'
 import { zssheaderlines, zssoptionline } from 'zss/feature/zsstextui'
-import { doasync } from 'zss/device/doasync'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { recordChatMessage } from 'zss/perf/chatmessagestats'
@@ -508,7 +508,7 @@ const bridge = createdevice('bridge', [], (message) => {
 
           const video = document.querySelector('canvas')
           if (ispresent(video)) {
-            await client.addimagesource(video, 'video', { index: 1 })
+            client.addimagesource(video, 'video', { index: 1 })
           } else {
             apierror(
               bridge,

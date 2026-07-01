@@ -97,12 +97,12 @@ export class WebBroadcastClient implements WebBroadcastStatsReader {
     }
   }
 
-  async addimagesource(
+  addimagesource(
     image: CanvasImageSource & { width: number; height: number },
     name: string,
     position: VideoComposition,
   ) {
-    await this.compositor.addimagesource(image, name, position)
+    this.compositor.addimagesource(image, name, position)
   }
 
   async addaudioinputdevice(device: MediaStream, name: string) {

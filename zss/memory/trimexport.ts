@@ -1,5 +1,5 @@
 import { FORMAT_OBJECT } from 'zss/feature/format'
-import { isplainobject, MAYBE, ispresent } from 'zss/mapping/types'
+import { MAYBE, isplainobject, ispresent } from 'zss/mapping/types'
 
 function isplainobjectempty(value: unknown): boolean {
   return isplainobject(value) && Object.keys(value).length === 0

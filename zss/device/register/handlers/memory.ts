@@ -1,6 +1,7 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { apierror, workstatus } from 'zss/device/api'
+import { doasync } from 'zss/device/doasync'
 import { itchiopublish } from 'zss/feature/itchiopublish'
 import { storagenukecontent, storagewritecontent } from 'zss/feature/storage'
 import { znsset } from 'zss/feature/url'
@@ -10,7 +11,6 @@ import {
   zssoptionline,
   zsstextline,
 } from 'zss/feature/zsstextui'
-import { doasync } from 'zss/device/doasync'
 import { waitfor } from 'zss/mapping/tick'
 import { isarray, isbook, isstring } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'

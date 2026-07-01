@@ -18,6 +18,8 @@ const config: Config = {
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
   moduleNameMapper: {
     '^zss/perf/ui$': '<rootDir>/ops/lib/test/mocks/perfui.ts',
+    '^zss/perf/ticktimingstats$':
+      '<rootDir>/ops/lib/test/mocks/ticktimingstats.ts',
     '^ops/lib/daisy-parity/(.*)$': '<rootDir>/ops/lib/daisy-parity/$1',
     '^ops/lib/test/(.*)$': '<rootDir>/ops/lib/test/$1',
     '^ops/archive/(.*)$': '<rootDir>/ops/archive/$1',

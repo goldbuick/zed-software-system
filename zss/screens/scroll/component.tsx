@@ -18,12 +18,12 @@ import { UserInput } from 'zss/gadget/userinput.bridge'
 import { UserInputHandler } from 'zss/gadget/userinputtypes'
 import { TilesData } from 'zss/gadget/usetiles'
 import { WriteTextContext } from 'zss/gadget/writetext'
-import { animpositiontotarget } from 'zss/screens/scroll/anim'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { perfmeasure } from 'zss/perf/ui'
 import { ScrollContext } from 'zss/screens/panel/common'
 import { PanelComponent } from 'zss/screens/panel/component'
+import { animpositiontotarget } from 'zss/screens/scroll/anim'
 import {
   WRITE_TEXT_CONTEXT,
   createwritetextcontext,

@@ -1,4 +1,5 @@
 import { createdevice } from 'zss/device'
+import { doasync } from 'zss/device/doasync'
 import { createsynthbackend } from 'zss/feature/synth/backend/synthbackendfactory'
 import { unlockaudiocontext } from 'zss/feature/synth/backend/wasm/audiocontextunlock'
 import { applyboardstate } from 'zss/feature/synth/frontend/applyboardstate'
@@ -17,7 +18,6 @@ import {
 import { write } from 'zss/feature/writeui'
 import { SYNTH_STATE } from 'zss/gadget/data/types'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
-import { doasync } from 'zss/device/doasync'
 import { waitfor } from 'zss/mapping/tick'
 import {
   MAYBE,

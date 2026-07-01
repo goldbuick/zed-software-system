@@ -78,7 +78,7 @@ function rundoclinks(ctx: TaskContext): number {
       )
     } catch (error: unknown) {
       const err = error as { stdout?: Buffer; stderr?: Buffer }
-      const output = `${err.stdout ?? ''}${err.stderr ?? ''}`
+      const output = `${String(err.stdout ?? '')}${String(err.stderr ?? '')}`
       const lines = output.split('\n').filter((line) => line.includes('[✖]'))
       if (lines.length) {
         console.log(`FILE: ${file}`)

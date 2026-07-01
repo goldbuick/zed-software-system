@@ -43,24 +43,25 @@ function matchesignore(
   return false
 }
 
+function walkcppdir(dir: string, files: string[]) {
+  for (const entry of readdirSync(dir)) {
+    const full = path.join(dir, entry)
+    if (statSync(full).isDirectory()) {
+      walkcppdir(full, files)
+      continue
+    }
+    if (/\.(cpp|h|hpp|cc)$/.test(entry)) {
+      files.push(full)
+    }
+  }
+}
+
 function collectcppfiles(root: string, scope: string): string[] {
   const files: string[] = []
   if (scope === 'daisy' || scope === 'all') {
     const daisydir = path.join(root, DAISY_DIR)
-    function walk(dir: string) {
-      for (const entry of readdirSync(dir)) {
-        const full = path.join(dir, entry)
-        if (statSync(full).isDirectory()) {
-          walk(full)
-          continue
-        }
-        if (/\.(cpp|h|hpp|cc)$/.test(entry)) {
-          files.push(full)
-        }
-      }
-    }
     if (existsSync(daisydir)) {
-      walk(daisydir)
+      walkcppdir(daisydir, files)
     }
     const wrapper = path.join(root, DAISY_WRAPPER)
     if (existsSync(wrapper)) {

@@ -504,8 +504,6 @@ export function createchip(
 
   // ref to generator instance
 
-  let logic: MAYBE<GeneratorFunc>
-
   // create labels
   const labels = deepcopy(Object.entries(build.labels ?? {}))
 
@@ -1210,7 +1208,7 @@ export function createchip(
     },
   }
 
-  logic = build.code
+  const logic: MAYBE<GeneratorFunc> = build.code
   agentlog(
     'chip.ts:createchip',
     'js logic path',

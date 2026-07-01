@@ -2066,8 +2066,9 @@ async function rundaisyrunnotepopgates(ctx: TaskContext): Promise<number> {
       }
     }
 
-    main()
-    await main()
+    if (main() === 1) {
+      return 1
+    }
     return 0
   } catch (err) {
     console.error(err)
@@ -2280,8 +2281,9 @@ async function rundaisyrunpitchstabilitygates(
       }
     }
 
-    main()
-    await main()
+    if (main() === 1) {
+      return 1
+    }
     return 0
   } catch (err) {
     console.error(err)
@@ -2561,8 +2563,9 @@ async function rundaisyrunplaydrumbalancegates(
       }
     }
 
-    main()
-    await main()
+    if (main() === 1) {
+      return 1
+    }
     return 0
   } catch (err) {
     console.error(err)
@@ -2816,8 +2819,9 @@ async function rundaisyrunsidechainparitygates(
       }
     }
 
-    main()
-    await main()
+    if (main() === 1) {
+      return 1
+    }
     return 0
   } catch (err) {
     console.error(err)

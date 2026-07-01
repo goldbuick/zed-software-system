@@ -104,7 +104,7 @@ export class WhipTransport {
   }
 
   async start(start: WhipStart, tracks: MediaStreamTrack[]) {
-    this.stop()
+    void this.stop()
     this.bearer = start.bearer
     const pc = new RTCPeerConnection({ bundlePolicy: 'max-bundle' })
     this.peerconnection = pc
@@ -148,7 +148,7 @@ export class WhipTransport {
       } catch {
         /* ignore */
       }
-      this.stop()
+      void this.stop()
       this.onerror?.(message)
       throw new Error(message)
     }

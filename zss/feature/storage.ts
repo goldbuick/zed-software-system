@@ -6,9 +6,9 @@ import {
   update as idbupdate,
 } from 'idb-keyval'
 import { apierror, apilog, vmbooks, workstatus } from 'zss/device/api'
+import { doasync } from 'zss/device/doasync'
 import { SOFTWARE } from 'zss/device/session'
 import { isclimode } from 'zss/feature/detect'
-import { doasync } from 'zss/device/doasync'
 import { isarray, ispresent } from 'zss/mapping/types'
 import { BOOK } from 'zss/memory/types'
 

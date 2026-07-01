@@ -1,4 +1,5 @@
 import { registerscreenshot } from 'zss/device/api'
+import { doasync } from 'zss/device/doasync'
 import { SOFTWARE } from 'zss/device/session'
 import { rundeeplinks } from 'zss/feature/deeplink'
 import {
@@ -24,7 +25,6 @@ import {
   znsrunimportcode,
   znsrunpublish,
 } from 'zss/firmware/cli/commands/znsmenu'
-import { doasync } from 'zss/device/doasync'
 import { isemail } from 'zss/mapping/validate'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE, NAME } from 'zss/words/types'

@@ -6,6 +6,7 @@ import {
   vmclearscroll,
   vmeditorbookmarkscroll,
 } from 'zss/device/api'
+import { doasync } from 'zss/device/doasync'
 import { modemreadtextsync } from 'zss/device/modem'
 import { syncterminalbookmarkpins } from 'zss/device/register/helpers/bootstrap'
 import { registerreadplayer } from 'zss/device/registerplayer'
@@ -24,7 +25,6 @@ import {
   runterminalbookmarkclibyid,
 } from 'zss/feature/bookmarks'
 import { paneladdress } from 'zss/gadget/data/types'
-import { doasync } from 'zss/device/doasync'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 
 export function handlebookmarkscroll(device: DEVICE, message: MESSAGE): void {

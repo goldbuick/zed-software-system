@@ -1,9 +1,9 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
+import { doasync } from 'zss/device/doasync'
 import { storagewriteconfig } from 'zss/feature/storage'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import { useInspector, useTape } from 'zss/gadget/data/zustandstores'
-import { doasync } from 'zss/device/doasync'
 import { isarray, ispresent } from 'zss/mapping/types'
 import { memorywriteconfig } from 'zss/memory/utilities'
 

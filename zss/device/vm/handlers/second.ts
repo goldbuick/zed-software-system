@@ -1,6 +1,7 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { vmlogout } from 'zss/device/api'
+import { doasync } from 'zss/device/doasync'
 import { savestate } from 'zss/device/vm/helpers'
 import {
   FLUSH_RATE,
@@ -9,7 +10,6 @@ import {
   setflushtick,
   tracking,
 } from 'zss/device/vm/state'
-import { doasync } from 'zss/device/doasync'
 import { memoryscanplayers } from 'zss/memory/playermanagement'
 import { memoryreadfrozen } from 'zss/memory/session'
 import { perfmeasure } from 'zss/perf/ui'

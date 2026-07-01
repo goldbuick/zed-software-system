@@ -211,6 +211,7 @@ module.exports = {
       },
       rules: {
         'no-console': 'off',
+        'no-inner-declarations': 'off',
         '@typescript-eslint/require-await': 'off',
         '@typescript-eslint/no-unused-vars': 'off',
         '@typescript-eslint/prefer-optional-chain': 'off',

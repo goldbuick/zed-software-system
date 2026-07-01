@@ -1,6 +1,7 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { vmplayertoken, vmpullvarresult } from 'zss/device/api'
+import { doasync } from 'zss/device/doasync'
 import {
   isconfigstringkey,
   storagereadvars,
@@ -8,7 +9,6 @@ import {
   storagewriteconfigstring,
   storagewritevar,
 } from 'zss/feature/storage'
-import { doasync } from 'zss/device/doasync'
 import { isarray, isstring } from 'zss/mapping/types'
 
 export function handlestore(device: DEVICE, message: MESSAGE): void {

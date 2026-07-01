@@ -119,7 +119,7 @@ export class WebBroadcastCompositor {
     return this.audiodestination.stream.getAudioTracks()[0]
   }
 
-  async addimagesource(
+  addimagesource(
     image: CanvasImageSource & { width: number; height: number },
     name: string,
     position: VideoComposition,

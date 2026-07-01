@@ -1,10 +1,10 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { apierror, apitoast, workstatus } from 'zss/device/api'
+import { doasync } from 'zss/device/doasync'
 import { withclipboard } from 'zss/feature/keyboard'
 import { storagesharecontent } from 'zss/feature/storage'
 import { capturecurrentboardtopng } from 'zss/gadget/capture'
-import { doasync } from 'zss/device/doasync'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
 
 export function handlecopy(device: DEVICE, message: MESSAGE): void {

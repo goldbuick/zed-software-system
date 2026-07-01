@@ -15,9 +15,9 @@ import {
   createunicodeoverlaymaterial,
   getunicodeoverlayquadgeometry,
 } from 'zss/gadget/display/unicodeoverlay'
-import { indextox, indextoy } from 'zss/mapping/2d'
 import { useMedia } from 'zss/gadget/media'
 import { noraycastmesh } from 'zss/gadget/noraycastmesh'
+import { indextox, indextoy } from 'zss/mapping/2d'
 
 const defaultpalette = palettetothreecolors(
   convertpalettetocolors(loadpalettefrombytes(PALETTE)),

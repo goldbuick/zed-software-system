@@ -1,6 +1,6 @@
 import { createContext, useState } from 'react'
-import { StoreApi, createStore } from 'zustand'
 import { pttoindex } from 'zss/mapping/2d'
+import { StoreApi, createStore } from 'zustand'
 
 export type DITHER_DATA = {
   dither: number[]

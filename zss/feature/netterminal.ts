@@ -7,6 +7,7 @@ import {
   vmtopic,
   workstatus,
 } from 'zss/device/api'
+import { doasync } from 'zss/device/doasync'
 import {
   createforward,
   shouldforwardclienttoboardrunner,
@@ -25,7 +26,6 @@ import {
 import { storagereadnetid, storagewritenetid } from 'zss/feature/storage'
 import { znsautopublishpeer } from 'zss/feature/url'
 import { ensurezstdwasm } from 'zss/feature/zstdwasm'
-import { doasync } from 'zss/device/doasync'
 import { createinfohash } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { recordpeerwirereceived, recordpeerwiresent } from 'zss/perf/peerwire'

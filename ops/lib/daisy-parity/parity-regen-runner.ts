@@ -1,3 +1,4 @@
+import { renderwasmparitypatch } from 'ops/archive/synth/maxi/wasmparityrender'
 import {
   renderdaisyparitydrumpatch,
   renderdaisyparityfxpatch,
@@ -18,7 +19,6 @@ import {
   rendertoneparitymainpatch,
   rendertoneparitypatch,
 } from 'ops/lib/daisy-parity/toneparityrender'
-import { renderwasmparitypatch } from 'ops/archive/synth/maxi/wasmparityrender'
 
 export type PARITY_REGEN_KIND = 'voice' | 'drum' | 'fx' | 'main'
 export type PARITY_REGEN_BACKEND = 'wasm' | 'tone' | 'daisy'

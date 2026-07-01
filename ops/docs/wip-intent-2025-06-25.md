@@ -22,9 +22,9 @@ On HEAD `bd5f50819`, **Fish TTS runs on the main thread** in `zss/feature/tts.ts
 | Intent | Files |
 |--------|-------|
 | Route Fish through ttsspace like Piper/Supertonic | `zss/feature/tts.ts`, `zss/device/ttsworker.ts`, `zss/device/api.ts` |
-| Worker-only Fish module | `zss/feature/heavy/ttsfish.ts` |
+| Worker-only Fish module | `zss/feature/tts/ttsfish.ts` |
 | Extend `tts:request` to 5-tuple `[engine, config, voice, phrase, model]` | `zss/device/api.ts` |
-| Tests | `ops/tests/unit/device/ttsrequest.transit.test.ts`, `ttsworker.fish.test.ts`, `heavy/tts.fish.test.ts` |
+| Tests | `ops/tests/unit/device/ttsrequest.transit.test.ts`, `ttsworker.fish.test.ts`, `ops/tests/unit/feature/tts/tts.fish.test.ts` |
 
 **Why it failed:** Fish was removed from the proven main-thread path before worker parity was verified in dev. Unit tests passed tuple wiring, but runtime still broke. Too many coupled changes made bisection impossible.
 

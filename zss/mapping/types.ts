@@ -38,7 +38,9 @@ export function ismaybearray(word: any): word is MAYBE<any[]> {
   return Array.isArray(word) || word === undefined
 }
 
-export function isplainobject(value: unknown): value is Record<string, unknown> {
+export function isplainobject(
+  value: unknown,
+): value is Record<string, unknown> {
   if (value === null || typeof value !== 'object') {
     return false
   }

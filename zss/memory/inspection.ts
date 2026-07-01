@@ -7,6 +7,7 @@ import {
   vmclearscroll,
   vmcodeaddress,
 } from 'zss/device/api'
+import { doasync } from 'zss/device/doasync'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
 import {
@@ -24,7 +25,6 @@ import {
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { indextopt, ptstoarea, rectpoints } from 'zss/mapping/2d'
 import { range } from 'zss/mapping/array'
-import { doasync } from 'zss/device/doasync'
 import { escapedoublequoted } from 'zss/mapping/string'
 import { CYCLE_DEFAULT, waitfor } from 'zss/mapping/tick'
 import {
