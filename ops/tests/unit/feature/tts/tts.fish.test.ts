@@ -1,10 +1,10 @@
 import {
   requestfishinfo,
   requestfishaudiobytesforworker,
-} from 'zss/feature/heavy/ttsfish'
-import { requestfishaudiobytes } from 'zss/feature/fishaudio'
+} from 'zss/feature/tts/ttsfish'
+import { requestfishaudiobytes } from 'zss/feature/tts/fishaudio'
 
-jest.mock('zss/feature/fishaudio', () => ({
+jest.mock('zss/feature/tts/fishaudio', () => ({
   FISH_DEFAULT_MODEL: 's2.1-pro-free',
   maskfishapikey: (key: string) => (key ? '****' : '(not set)'),
   normalizemodel: (raw: string) => raw.trim(),
@@ -20,7 +20,7 @@ jest.mock('zss/device/messagetypes', () => ({
   workerlogerror: jest.fn(),
 }))
 
-describe('heavy ttsfish', () => {
+describe('tts fish', () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })

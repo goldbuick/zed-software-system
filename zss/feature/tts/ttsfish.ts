@@ -6,7 +6,7 @@ import {
   maskfishapikey,
   normalizemodel,
   requestfishaudiobytes,
-} from 'zss/feature/fishaudio'
+} from 'zss/feature/tts/fishaudio'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
 export const FISH_VOICE_HELP =

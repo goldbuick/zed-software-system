@@ -27,7 +27,7 @@ import {
   storagereadcontent,
   storagereadvars,
 } from 'zss/feature/storage'
-import { restorettsenginefromstorage } from 'zss/feature/tts'
+import { restorettsenginefromstorage } from 'zss/feature/tts/client'
 import { isjoin } from 'zss/feature/url'
 import { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'

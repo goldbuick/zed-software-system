@@ -1,7 +1,7 @@
 import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 
-const CACHE_NAME = 'zss-heavy-models'
+const CACHE_NAME = 'zss-tts-models'
 
 const inflight = new Map<string, Promise<Response>>()
 

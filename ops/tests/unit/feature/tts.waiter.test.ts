@@ -31,7 +31,7 @@ jest.mock('zss/device', () => ({
 }))
 
 import { synthaudiobuffer, ttsrequest } from 'zss/device/api'
-import { ttsqueue, ttsclearqueue } from 'zss/feature/tts'
+import { ttsqueue, ttsclearqueue } from 'zss/feature/tts/client'
 
 describe('tts worker waiter', () => {
   beforeEach(() => {

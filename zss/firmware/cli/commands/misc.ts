@@ -2,10 +2,6 @@ import { registerscreenshot } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { rundeeplinks } from 'zss/feature/deeplink'
 import {
-  formatboardfortext,
-  formatlookfortext,
-} from 'zss/feature/heavy/formatstate'
-import {
   storagereadznsemail,
   storagereadznsnamespace,
 } from 'zss/feature/storage'
@@ -30,35 +26,11 @@ import {
 } from 'zss/firmware/cli/commands/znsmenu'
 import { doasync } from 'zss/device/doasync'
 import { isemail } from 'zss/mapping/validate'
-import { memoryreadboardstatequery } from 'zss/memory/boardstatequery'
-import { memoryreadlookstatequery } from 'zss/memory/lookstatequery'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE, NAME } from 'zss/words/types'
 
 export function registermisccommands(fw: FIRMWARE): FIRMWARE {
   return fw
-    .command(
-      'query',
-      ['show board snapshot (objects, terrain counts, exits, kinds)'],
-      () => {
-        const data = memoryreadboardstatequery(READ_CONTEXT.elementfocus)
-        const text = formatboardfortext(data)
-        terminalwritelines(SOFTWARE, READ_CONTEXT.elementfocus, text)
-        return 0
-      },
-    )
-    .command(
-      'look',
-      [
-        'show scroll, sidebar, and board tickers (text snapshot of player UI state)',
-      ],
-      () => {
-        const look = memoryreadlookstatequery(READ_CONTEXT.elementfocus)
-        const text = formatlookfortext(look)
-        terminalwritelines(SOFTWARE, READ_CONTEXT.elementfocus, text)
-        return 0
-      },
-    )
     .command('screenshot', ['screenshot for capture'], () => {
       registerscreenshot(SOFTWARE, READ_CONTEXT.elementfocus)
       return 0

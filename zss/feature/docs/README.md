@@ -9,7 +9,8 @@ Feature modules are **stateless utilities** and **domain logic** that:
 - **Board operations** — Copy, pivot, snapshot, remix, weave (used by `zss/firmware/transforms`)
 - **Format** — Object serialization with msgpack for memory/gadget state
 - **Parse** — File format parsers (ZZT, ANSI, CHR, ZZM, markdown, etc.)
-- **heavy** — ML/TTS workloads (Piper, Supertonic; transformers models; agent)
+- **tts** — Text-to-speech (Piper, Supertonic, Fish) in ttsspace worker
+- **stt** — Speech-to-text (Moonshine ONNX) in sttspace worker
 - **ROM** — Embedded help/documentation content
 - **Synth** — Audio synthesis (see [synth/docs](../synth/docs/README.md))
 - **zsstextui / writeui** — zsstext layout lines; terminal log sinks (hyperlinks, QR, copy)
@@ -26,8 +27,7 @@ Feature modules are **stateless utilities** and **domain logic** that:
 | [format.md](format.md) | Object formatting and msgpack serialization |
 | [netterminal.md](netterminal.md) | Peer-to-peer terminal via PeerJS |
 | [media-transport-layer.md](media-transport-layer.md) | PeerJS media transport design (canvas + synth capture, dual-plane fan-out) |
-| [tts.md](tts.md) | Text-to-speech (Edge, Piper, Supertonic) |
-| [heavy.md](heavy.md) | Heavy processing (TTS engines, models, agent) |
+| [tts.md](tts.md) | Text-to-speech (Piper, Supertonic, Fish) |
 | [parse.md](parse.md) | File parsing (ZIP, ZZT, ANSI, CHR, ZZM, markdown) |
 | [rom.md](rom.md) | ROM/help content and scroll display |
 | [writeui.md](writeui.md) | zsstextui layout + writeui terminal sinks |
@@ -45,6 +45,7 @@ Feature modules are **stateless utilities** and **domain logic** that:
 ## Submodules
 
 - **synth** — Web-based synthesizer with Tone.js; see [synth/docs/README.md](../synth/docs/README.md)
-- **heavy** — Piper/Supertonic TTS, transformers models, agent with tool calls
+- **tts** — Piper/Supertonic/Fish TTS in ttsspace worker; main-thread playback in `tts/client.ts`
+- **stt** — Moonshine speech recognition in sttspace worker; mic capture in `stt/speechtotext.ts`
 - **parse** — Format-specific parsers; dispatches from `parse/file.ts`
 - **rom** — Static `.md` ROM (YAML `hint:` for editor help, Markdown for help screens, refscroll mix)

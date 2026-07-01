@@ -10,7 +10,7 @@ jest.mock('zss/feature/synth/backend/wasm/audiocontextunlock', () => ({
   unlockaudiocontext: jest.fn(),
 }))
 
-jest.mock('zss/feature/tts', () => ({
+jest.mock('zss/feature/tts/client', () => ({
   applyttsengineconfig: jest.fn(),
   ttsclearqueue: jest.fn(),
   ttsinfo: jest.fn(),

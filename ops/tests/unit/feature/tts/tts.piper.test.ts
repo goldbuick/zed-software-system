@@ -1,17 +1,17 @@
-import { requestinfo } from 'zss/feature/heavy/tts'
+import { requestinfo } from 'zss/feature/tts/inference'
 
 jest.mock('zss/device/api', () => ({
   workstatus: jest.fn(),
 }))
 
-jest.mock('zss/feature/heavy/pipertts', () => ({
+jest.mock('zss/feature/tts/pipertts', () => ({
   PiperTTS: {
     from_pretrained: jest.fn(),
     voices: [{ id: 'M1' }],
   },
 }))
 
-jest.mock('zss/feature/heavy/supertonictts', () => ({
+jest.mock('zss/feature/tts/supertonictts', () => ({
   SupertonicTTS: {
     from_pretrained: jest.fn(),
     voices: [{ id: '0' }, { id: '1' }],
@@ -20,7 +20,7 @@ jest.mock('zss/feature/heavy/supertonictts', () => ({
 
 const device = { emit: jest.fn() }
 
-describe('heavy tts piper info', () => {
+describe('tts inference piper info', () => {
   it('validate returns ok with trimmed model', async () => {
     const result = await requestinfo(
       device as any,
@@ -104,7 +104,7 @@ describe('heavy tts piper info', () => {
   })
 })
 
-describe('heavy tts supertonic info', () => {
+describe('tts inference supertonic info', () => {
   it('validate returns ok when config present', async () => {
     const result = await requestinfo(
       device as any,

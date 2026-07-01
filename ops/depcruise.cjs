@@ -48,8 +48,8 @@ module.exports = {
       severity: 'error',
       comment:
         'Main-thread TTS orchestration must not import fishaudio; Fish runs in ttsspace only.',
-      from: { path: '^zss/feature/tts\\.ts$' },
-      to: { path: '^zss/feature/fishaudio\\.ts$' },
+      from: { path: '^zss/feature/tts/client\\.ts$' },
+      to: { path: '^zss/feature/tts/fishaudio\\.ts$' },
     },
   ],
   options: {

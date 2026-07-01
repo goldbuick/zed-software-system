@@ -13,7 +13,7 @@ import {
   ttsinfo,
   ttsplay,
   ttsqueue,
-} from 'zss/feature/tts'
+} from 'zss/feature/tts/client'
 import { write } from 'zss/feature/writeui'
 import { SYNTH_STATE } from 'zss/gadget/data/types'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'

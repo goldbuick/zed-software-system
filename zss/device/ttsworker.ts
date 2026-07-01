@@ -1,6 +1,6 @@
 import { createdevice } from 'zss/device'
 import { apierror } from 'zss/device/api'
-import { requestaudiobytes, requestinfo } from 'zss/feature/heavy/tts'
+import { requestaudiobytes, requestinfo } from 'zss/feature/tts/inference'
 import { isarray, ispresent } from 'zss/mapping/types'
 
 let ttsjobchain: Promise<unknown> = Promise.resolve()

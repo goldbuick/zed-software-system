@@ -35,7 +35,7 @@ import {
   applyttsengineconfig,
   restorettsenginefromstorage,
   storettsengineconfig,
-} from 'zss/feature/tts'
+} from 'zss/feature/tts/client'
 
 function replyinfo(data: unknown) {
   workerhandler?.({ target: 'tts:info', data })
