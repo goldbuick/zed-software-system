@@ -12,53 +12,12 @@ import { nodePolyfills } from 'vite-plugin-node-polyfills'
 import {
   PUBLIC_FIXTURES_DIR,
   RENDERS_FIXTURES_DIR,
-} from './ops/lib/fixturepaths.ts'
+} from './ops/lib/fixturepaths'
 import pkg from './package.json'
 import {
   fixtureprefixmiddleware,
   parityblankhostmiddleware,
-} from './tasks/lib/parity/harness-middleware.ts'
-
-/**
- * Firefox refuses module scripts when Content-Type is missing (""). Some dev
- * responses for `/@fs/.../.vite/deps/*.js` and `/wasm/daisy/*.js` worklets can
- * end up without a MIME; set it before the response is sent.
- */
-function devjavascriptmimetypedev(): Plugin {
-  return {
-    name: 'dev-javascript-mime',
-    apply: 'serve',
-    configureServer(server) {
-      return () => {
-        server.middlewares.use((req, res, next) => {
-          const url = req.url ?? ''
-          const needstype =
-            req.method === 'GET' &&
-            (url.includes('/node_modules/.vite/deps') ||
-              url.includes('/@fs/') ||
-              url.includes('/wasm/daisy/')) &&
-            /\.js(\?|#|$)/.test(url)
-          if (!needstype) {
-            return next()
-          }
-          const origend = res.end.bind(res)
-          res.end = function (
-            ...args: Parameters<typeof res.end>
-          ): ReturnType<typeof res.end> {
-            if (!res.headersSent && !res.getHeader('content-type')) {
-              res.setHeader(
-                'Content-Type',
-                'application/javascript; charset=utf-8',
-              )
-            }
-            return origend(...args)
-          }
-          next()
-        })
-      }
-    },
-  }
-}
+} from './tasks/lib/parity/harness-middleware'
 
 /** @bokuweb/zstd-wasm ships .map files referencing unpublished lib/*.ts sources. */
 function stripzstdsourcemaprefs(): Plugin {
@@ -167,22 +126,12 @@ export default defineConfig(({ mode }) => {
     'ZSS_BRANCH_VERSION',
     'ZSS_COMMIT_MESSAGE',
   ] as const
-  const zssenvfallback = (key: (typeof zssprocessenvkeys)[number]): string => {
-    if (
-      key === 'ZSS_DEBUG_TRACE_CODE' ||
-      key === 'ZSS_BRANCH_NAME' ||
-      key === 'ZSS_BRANCH_VERSION' ||
-      key === 'ZSS_COMMIT_MESSAGE'
-    ) {
-      return ''
-    }
-    return 'false'
-  }
+
   const zssdefine = Object.fromEntries(
     zssprocessenvkeys.map((key) => {
       return [
         `process.env.${key}`,
-        JSON.stringify(process.env[key] ?? zssenvfallback(key)),
+        JSON.stringify(process.env[key] ?? 'false'),
       ] as const
     }),
   )
@@ -197,13 +146,12 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         input: {
           index: path.join(apppath, 'index.html'),
-          sys: path.join(apppath, 'sys/index.html'),
           wanix: path.join(apppath, 'wanix.html'),
+          sys: path.join(apppath, 'sys/index.html'),
         },
       },
     },
     plugins: [
-      devjavascriptmimetypedev(),
       stripzstdsourcemaprefs(),
       servefixturesdev(),
       react(),

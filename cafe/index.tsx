@@ -8,6 +8,7 @@ import {
 } from 'zss/device/register'
 import { isclimode } from 'zss/feature/detect'
 import { isjoin } from 'zss/feature/url'
+import { WanixHost } from 'zss/feature/wanix/wanixhost'
 import { createplatform } from 'zss/platform'
 
 import { CafeCanvas } from './cafecanvas'
@@ -44,6 +45,7 @@ async function main() {
   createRoot(frame).render(
     <WebGLCheck>
       <CafeCanvas />
+      <WanixHost />
     </WebGLCheck>,
   )
 }

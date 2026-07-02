@@ -6,39 +6,28 @@
   <title>Wanix — ZSS</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" type="image/x-icon" href="./favicon.ico" />
+  <script type="module" crossorigin src="https://cdn.jsdelivr.net/npm/wanix@0.4.0-alpha8/dist/wanix.min.js"></script>
   <style>
     html,
     body {
-      height: 100%;
+      height: 100vh;
       margin: 0;
     }
-
-    wanix-system {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-    }
-
-    wanix-term {
-      flex: 1;
-      height: 100%;
-    }
   </style>
-  <script type="module" crossorigin src="https://cdn.jsdelivr.net/npm/wanix@0.4.0-alpha8/dist/wanix.min.js"></script>
 </head>
 
 <body>
-  <wanix-system id="wanix-system" debug allow-origins="*">
+  <wanix-system id="wanix-system" allow-origins="*" debug>
     <wanix-bind dst="." type="archive"
-      src="https://cdn.jsdelivr.net/npm/wanix-extras@0.4.0-rc1/dist/wanix-linux.tgz"></wanix-bind>
+      src="https://cdn.jsdelivr.net/npm/wanix-extras@0.4.0-rc1/dist/wanix-linux.tgz" ></wanix-bind>
     <wanix-bind dst="#vm/v86" type="archive"
-      src="https://cdn.jsdelivr.net/npm/wanix-extras@0.4.0-rc1/dist/v86.tgz"></wanix-bind>
-    <wanix-vm export="ttyS0" mem="512M" term start></wanix-vm>
-    <wanix-term path="#vm/1/term" raw></wanix-term>
+      src="https://cdn.jsdelivr.net/npm/wanix-extras@0.4.0-rc1/dist/v86.tgz" ></wanix-bind>
+    <wanix-vm export="ttyS0" mem="512M" term start ></wanix-vm>
+    <wanix-term path="#vm/1/term" raw ></wanix-term>
   </wanix-system>
   <script type="module">
     const sys = document.querySelector('wanix-system')
-    sys.addEventListener('ready', () => console.log('[wanix] ready'))
+    sys.addEventListener('ready', () => console.info('[wanix] ready'))
     sys.addEventListener('error', (e) =>
       console.error('[wanix] error', e.detail),
     )
