@@ -17,20 +17,124 @@
 </head>
 
 <body>
-  <wanix-system id="wanix-system" allow-origins="*" debug>
-    <wanix-bind dst="." type="archive"
-      src="https://cdn.jsdelivr.net/npm/wanix-extras@0.4.0-rc1/dist/wanix-linux.tgz" ></wanix-bind>
-    <wanix-bind dst="#vm/v86" type="archive"
-      src="https://cdn.jsdelivr.net/npm/wanix-extras@0.4.0-rc1/dist/v86.tgz" ></wanix-bind>
-    <wanix-vm export="ttyS0" mem="512M" term start ></wanix-vm>
-    <wanix-term path="#vm/1/term" raw ></wanix-term>
-  </wanix-system>
+  <wanix-system id="wanix-system" allow-origins="*" debug></wanix-system>
   <script type="module">
+    const WANIX_MSG_READY = 'zss-wanix-ready'
+    const WANIX_MSG_RPC = 'zss-wanix-rpc'
+    const WANIX_MSG_RPC_RES = 'zss-wanix-rpc-res'
+
     const sys = document.querySelector('wanix-system')
-    sys.addEventListener('ready', () => console.info('[wanix] ready'))
+
+    function replyrpc(source, id, payload) {
+      if (!source || typeof source.postMessage !== 'function') {
+        return
+      }
+      source.postMessage(
+        { type: WANIX_MSG_RPC_RES, id, ...payload },
+        window.location.origin,
+      )
+    }
+
+    function readterm() {
+      const term = document.querySelector('wanix-term')
+      if (!term) {
+        throw new Error('wanix-term missing')
+      }
+      return term
+    }
+
+    function readroot() {
+      if (!sys?.isReady) {
+        throw new Error('wanix-system not ready')
+      }
+      return sys.root
+    }
+
+    async function handlerrpc(data, source) {
+      const { id, method, args = [] } = data
+      try {
+        let result
+        switch (method) {
+          case 'ping':
+            result = { ok: true }
+            break
+          case 'readready':
+            result = { isReady: sys.isReady, instanceID: sys.instanceID }
+            break
+          case 'listdir': {
+            const [path] = args
+            result = await readroot().readDir(String(path ?? '.'))
+            break
+          }
+          case 'readtext': {
+            const [path] = args
+            result = await readroot().readText(String(path))
+            break
+          }
+          case 'readfile': {
+            const [path] = args
+            const bytes = await readroot().readFile(String(path))
+            result = Array.from(bytes)
+            break
+          }
+          case 'writefile': {
+            const [path, bytes] = args
+            await readroot().writeFile(
+              String(path),
+              new Uint8Array(bytes ?? []),
+            )
+            result = { ok: true }
+            break
+          }
+          case 'termwrite': {
+            const [data] = args
+            readterm().write(String(data ?? ''))
+            result = { ok: true }
+            break
+          }
+          case 'termfit':
+            readterm().fit()
+            result = { ok: true }
+            break
+          default:
+            replyrpc(source, id, { error: `unknown rpc: ${method}` })
+            return
+        }
+        replyrpc(source, id, { result })
+      } catch (err) {
+        replyrpc(source, id, {
+          error: err instanceof Error ? err.message : String(err),
+        })
+      }
+    }
+
+    window.addEventListener('message', (event) => {
+      if (event.origin !== window.location.origin) {
+        return
+      }
+      const data = event.data
+      if (!data || data.type !== WANIX_MSG_RPC) {
+        return
+      }
+      void handlerrpc(data, event.source)
+    })
+
+    function postready() {
+      console.info('[wanix] ready')
+      window.parent.postMessage(
+        { type: WANIX_MSG_READY },
+        window.location.origin,
+      )
+    }
+
+    sys.addEventListener('ready', postready)
     sys.addEventListener('error', (e) =>
       console.error('[wanix] error', e.detail),
     )
+
+    if (sys.isReady) {
+      postready()
+    }
   </script>
 </body>
 
