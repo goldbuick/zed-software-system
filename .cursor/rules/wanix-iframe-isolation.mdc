@@ -1,0 +1,49 @@
+---
+description: Wanix must run in an iframe — never co-load wanix.min.js with the React cafe
+globs:
+  - cafe/wanix.html
+  - cafe/index.html
+  - cafe/index.tsx
+  - zss/feature/wanix/**
+alwaysApply: false
+---
+
+# Wanix iframe isolation
+
+Wanix **must** run in its own document, loaded via **iframe** (`src="/wanix.html"`), not in the same JS realm as the React cafe.
+
+## Why
+
+`wanix.min.js` pollutes the shared global namespace. Co-loading it on [`cafe/index.html`](../../cafe/index.html) alongside React/Vite/ZSS breaks or races the main app.
+
+| Global / side effect | Risk |
+|----------------------|------|
+| `window.__wanix` | Wanix system registry |
+| `window.Go` | Go `wasm_exec` injected into `<head>` at runtime |
+| `customElements.define(...)` | Six Wanix tags — permanent, cannot unregister |
+| `globalThis.list/read/write/bind/...` | DevTools helpers when `debug` is set |
+| `window.WanixSocket`, AMD `require` (workbench) | More globals on `window` |
+
+Separate document (iframe or navigation to `/wanix.html`) = clean `window` per realm.
+
+## Prohibited
+
+- `<script src="…/wanix.min.js">` in [`cafe/index.html`](../../cafe/index.html) or any cafe React entry
+- `<wanix-system>` (or other Wanix custom elements) in React/TSX under `cafe/`
+- Importing Wanix runtime into the Vite bundle for the main app
+
+## Required
+
+| Piece | Location |
+|-------|----------|
+| Canonical Wanix host | [`cafe/wanix.html`](../../cafe/wanix.html) — kernel, `<wanix-system>` tree, tasks, VMs |
+| Cafe ↔ Wanix bridge | `zss/feature/wanix/` — iframe host + `postMessage` RPC (parent on `/`, child in iframe) |
+| JSX types for Wanix tags | [`zss/feature/wanix/wanixelements.d.ts`](../../zss/feature/wanix/wanixelements.d.ts) |
+
+## Examples
+
+```text
+❌ BAD — wanix.min.js in index.html; WanixSystem in React tree
+✅ GOOD — hidden iframe src="/wanix.html"; bridge in zss/feature/wanix/
+✅ GOOD — direct visit /wanix.html for Wanix-only debugging
+```

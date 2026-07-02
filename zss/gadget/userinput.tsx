@@ -200,7 +200,6 @@ function handlekeydown(event: KeyboardEvent) {
     case 'a':
     case 'p':
     case 'h':
-    case 'i':
     case 'k':
     case 'b':
     case 'n': // prevent default behavior
@@ -318,7 +317,7 @@ function handlekeydown(event: KeyboardEvent) {
         console.info('refscroll', player)
       }
       break
-    case 'i':
+    case '`':
       if (mods.ctrl) {
         registerperfmonitor(SOFTWARE, player, undefined)
       }

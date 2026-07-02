@@ -198,6 +198,7 @@ export default defineConfig(({ mode }) => {
         input: {
           index: path.join(apppath, 'index.html'),
           sys: path.join(apppath, 'sys/index.html'),
+          wanix: path.join(apppath, 'wanix.html'),
         },
       },
     },
