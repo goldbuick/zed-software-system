@@ -8,6 +8,10 @@ import {
   workstatus,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import {
+  emitwanixdropfile,
+  iswanixdropfilename,
+} from 'zss/feature/wanix/wanixdropparse'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
@@ -476,5 +480,12 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
 }
 
 export function parsewebfile(player: string, file: File | undefined) {
-  handlefiletype(player, file?.type ?? '', file)
+  if (!ispresent(file)) {
+    return
+  }
+  if (iswanixdropfilename(file.name)) {
+    emitwanixdropfile(SOFTWARE, player, file)
+    return
+  }
+  handlefiletype(player, file.type ?? '', file)
 }

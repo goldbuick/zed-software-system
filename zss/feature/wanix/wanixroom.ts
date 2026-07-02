@@ -190,12 +190,3 @@ export async function handlewanixdrop(payload: WanixDropPayload): Promise<{
   await spawntaskinroom(taskid, cmd)
   return { taskid, cmd }
 }
-
-export async function parsewanixdropfile(
-  file: File,
-): Promise<WanixDropPayload> {
-  const lower = file.name.toLowerCase()
-  const kind = lower.endsWith('.tgz') ? 'bundle' : 'wasm'
-  const bytes = new Uint8Array(await file.arrayBuffer())
-  return { label: file.name, kind, bytes }
-}
