@@ -1,5 +1,4 @@
 import { Profiler, type ProfilerOnRenderCallback } from 'react'
-import { PERF_UI } from 'zss/config'
 import { registerterminalopen } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
@@ -17,38 +16,36 @@ const tapeprofileronrender: ProfilerOnRenderCallback = (
   phase,
   actualDuration,
 ) => {
-  // eslint-disable-next-line no-console -- intentional perf logging when ZSS_DEBUG_PERF_UI is on
+  // eslint-disable-next-line no-console -- intentional perf logging when perf monitor is on
   console.debug(`[zss perf] ${id} ${phase} ${actualDuration.toFixed(2)}ms`)
 }
 
 export function TapeComponent() {
   const screensize = useScreenSize()
-  const [layout, terminalmode, terminalopen, editoropen] = useTape(
+  const [layout, terminalmode, terminalopen, editoropen, perfmonitor] = useTape(
     useShallow((state) => [
       state.layout,
       state.terminalmode,
       state.terminal.open,
       state.editor.open,
+      state.perfmonitor,
     ]),
   )
 
-  const attached = terminalmode === 'attached'
   let top = 0
   let height = screensize.rows
-  if (!attached) {
-    switch (layout) {
-      case TAPE_DISPLAY.TOP:
-        height = Math.floor(screensize.rows * 0.5)
-        break
-      case TAPE_DISPLAY.BOTTOM:
-        height = Math.ceil(screensize.rows * 0.5)
-        top = screensize.rows - height
-        break
-      default:
-      case TAPE_DISPLAY.FULL:
-        // defaults
-        break
-    }
+  switch (layout) {
+    case TAPE_DISPLAY.TOP:
+      height = Math.floor(screensize.rows * 0.5)
+      break
+    case TAPE_DISPLAY.BOTTOM:
+      height = Math.ceil(screensize.rows * 0.5)
+      top = screensize.rows - height
+      break
+    default:
+    case TAPE_DISPLAY.FULL:
+      // defaults
+      break
   }
 
   // bail on odd states
@@ -57,11 +54,7 @@ export function TapeComponent() {
   }
 
   const player = registerreadplayer()
-  const showterminal =
-    terminalmode === 'quick' ||
-    terminalmode === 'attached' ||
-    terminalopen ||
-    editoropen
+  const showterminal = terminalmode === 'quick' || terminalopen || editoropen
 
   const body = (
     <>
@@ -81,7 +74,7 @@ export function TapeComponent() {
             left={0}
             right={screensize.cols - 1}
             bottom={top + height - 1}
-            alpha={attached ? 0.85 : terminalmode === 'quick' ? 0.666 : 0.333}
+            alpha={terminalmode === 'quick' ? 0.666 : 0.333}
           />
           <UserFocus blockhotkeys>
             <TapeLayout
@@ -105,7 +98,7 @@ export function TapeComponent() {
     </>
   )
 
-  if (import.meta.env.DEV && PERF_UI) {
+  if (import.meta.env.DEV && perfmonitor) {
     return (
       <Profiler id="TapeComponent" onRender={tapeprofileronrender}>
         {body}

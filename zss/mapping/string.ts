@@ -1,5 +1,15 @@
 import Fuse from 'fuse.js'
 
+/** Escape `\` and `'` for embedding in single-quoted string literals. */
+export function escapesinglequoted(s: string): string {
+  return s.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
+}
+
+/** Escape `\` and `"` for embedding in double-quoted string literals. */
+export function escapedoublequoted(s: string): string {
+  return s.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+}
+
 /** Zed `NumberLiteral` for ASCII `;` (59); use inside `!left;right` when payload or label contains a semicolon. */
 const ZED_SCROLL_SEMI_LITERAL = '$59'
 

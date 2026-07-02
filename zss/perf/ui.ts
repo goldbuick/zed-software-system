@@ -1,11 +1,12 @@
-import { PERF_UI } from 'zss/config'
-
 let perfseq = 0
 
-/** User Timing measure for synchronous work; no-ops when `ZSS_DEBUG_PERF_UI` is off. */
+const PERF_DEV =
+  typeof import.meta !== 'undefined' && import.meta.env?.DEV === true
+
+/** User Timing measure for synchronous work; no-ops outside Vite dev builds. */
 export function perfmeasure<T>(name: string, run: () => T): T {
   if (
-    !PERF_UI ||
+    !PERF_DEV ||
     typeof performance === 'undefined' ||
     typeof performance.mark !== 'function'
   ) {

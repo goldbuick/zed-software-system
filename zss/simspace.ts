@@ -1,5 +1,5 @@
 import 'zss/rom/vitepopulate'
-import { agentlog } from 'zss/agentlog'
+import { debugingest } from 'zss/debugingest'
 import { setclimode } from 'zss/feature/detect'
 
 import { createforward, shouldforwardservertoclient } from './device/forward'
@@ -32,7 +32,7 @@ onmessage = function handleMessage(
   forward(event.data)
 }
 
-agentlog(
+debugingest(
   'simspace.ts:started',
   'worker starting vm',
   { runId: 'post-fix' },

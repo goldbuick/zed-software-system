@@ -11,7 +11,6 @@ export const TASK_GROUPS = [
   'lang',
   'memory',
   'native',
-  'wanix',
 ] as const
 
 export type TaskGroup = (typeof TASK_GROUPS)[number]

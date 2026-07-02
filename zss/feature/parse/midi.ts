@@ -20,6 +20,7 @@ import { apilog, apitoast, workstatus } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { midiplaysnippetsbymeasure } from 'zss/feature/parse/midiplay'
 import { write, writecopyit } from 'zss/feature/writeui'
+import { escapesinglequoted } from 'zss/mapping/string'
 import { ispresent } from 'zss/mapping/types'
 import { memorywritecodepage } from 'zss/memory/bookoperations'
 import {
@@ -29,10 +30,6 @@ import {
 } from 'zss/memory/codepageoperations'
 import { memoryreadfirstcontentbook } from 'zss/memory/session'
 import { NAME } from 'zss/words/types'
-
-function escapestring(value: string): string {
-  return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
-}
 
 export async function parsemidi(player: string, file: File) {
   workstatus(SOFTWARE, player, 'parse midi')
@@ -87,7 +84,7 @@ export async function parsemidi(player: string, file: File) {
 #end
 
 :touch
-"MIDI: ${escapestring(albumtitle)}"
+"MIDI: ${escapesinglequoted(albumtitle)}"
 !song_0;play
 #end
 

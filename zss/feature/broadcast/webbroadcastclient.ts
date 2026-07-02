@@ -1,11 +1,9 @@
 import { IvsLowLatencyTransport } from 'zss/feature/broadcast/ivslowlatencytransport'
+import { WebBroadcastCompositor } from 'zss/feature/broadcast/webbroadcastcompositor'
 import {
   DEFAULT_IVS_WHIP_ENDPOINT,
   DEFAULT_STREAM_CONFIG,
 } from 'zss/feature/broadcast/webbroadcastconstants'
-import { WebBroadcastCompositor } from 'zss/feature/broadcast/webbroadcastcompositor'
-import { resolvewhipendpoint } from 'zss/feature/broadcast/webbroadcastwhipaliases'
-import { WhipTransport } from 'zss/feature/broadcast/whiptransport'
 import type {
   BroadcastClientEvents,
   BroadcastEventHandler,
@@ -16,6 +14,8 @@ import type {
   VideoComposition,
   WebBroadcastStatsReader,
 } from 'zss/feature/broadcast/webbroadcasttypes'
+import { resolvewhipendpoint } from 'zss/feature/broadcast/webbroadcastwhipaliases'
+import { WhipTransport } from 'zss/feature/broadcast/whiptransport'
 
 export type WebBroadcastClientConfig = {
   streamConfig?: StreamConfig
@@ -28,10 +28,13 @@ function towhipstart(payload: BroadcastStartPayload): {
   if (payload.kind === 'whip') {
     return { endpoint: payload.endpoint, bearer: payload.bearer }
   }
-  return {
-    endpoint: payload.endpoint ?? DEFAULT_IVS_WHIP_ENDPOINT,
-    bearer: payload.token,
+  if (payload.kind === 'ivs-whip') {
+    return {
+      endpoint: payload.endpoint ?? DEFAULT_IVS_WHIP_ENDPOINT,
+      bearer: payload.token,
+    }
   }
+  throw new Error('towhipstart expects whip or ivs-whip payload')
 }
 
 export class WebBroadcastClient implements WebBroadcastStatsReader {
@@ -94,12 +97,12 @@ export class WebBroadcastClient implements WebBroadcastStatsReader {
     }
   }
 
-  async addimagesource(
+  addimagesource(
     image: CanvasImageSource & { width: number; height: number },
     name: string,
     position: VideoComposition,
   ) {
-    await this.compositor.addimagesource(image, name, position)
+    this.compositor.addimagesource(image, name, position)
   }
 
   async addaudioinputdevice(device: MediaStream, name: string) {
@@ -225,7 +228,10 @@ export function parsebroadcaststartpayload(
     return undefined
   }
   const record = data as Record<string, unknown>
-  if (record.kind === 'ivs-low-latency' && typeof record.streamKey === 'string') {
+  if (
+    record.kind === 'ivs-low-latency' &&
+    typeof record.streamKey === 'string'
+  ) {
     return {
       kind: 'ivs-low-latency',
       streamKey: record.streamKey,

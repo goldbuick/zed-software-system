@@ -119,16 +119,20 @@ export class WebBroadcastCompositor {
     return this.audiodestination.stream.getAudioTracks()[0]
   }
 
-  async addimagesource(
+  addimagesource(
     image: CanvasImageSource & { width: number; height: number },
     name: string,
     position: VideoComposition,
   ) {
     if (this.videolayers.some((layer) => layer.name === name)) {
-      throw new Error(`web broadcast compositor: video name already registered: ${name}`)
+      throw new Error(
+        `web broadcast compositor: video name already registered: ${name}`,
+      )
     }
     if (typeof position.index !== 'number') {
-      throw new Error('web broadcast compositor: video composition index is required')
+      throw new Error(
+        'web broadcast compositor: video composition index is required',
+      )
     }
     this.videolayers.push({
       name,
@@ -140,7 +144,9 @@ export class WebBroadcastCompositor {
 
   async addaudioinputdevice(device: MediaStream, name: string) {
     if (this.audiolayers.some((layer) => layer.name === name)) {
-      throw new Error(`web broadcast compositor: audio name already registered: ${name}`)
+      throw new Error(
+        `web broadcast compositor: audio name already registered: ${name}`,
+      )
     }
     const tracks = device.getAudioTracks()
     if (!tracks.length) {
@@ -194,12 +200,10 @@ export class WebBroadcastCompositor {
         sourcewidth = element.videoWidth
         sourceheight = element.videoHeight
       }
-      const region = computedrawregion(
-        layer.position,
-        width,
-        height,
-        { width: sourcewidth, height: sourceheight },
-      )
+      const region = computedrawregion(layer.position, width, height, {
+        width: sourcewidth,
+        height: sourceheight,
+      })
       this.compositecontext.drawImage(
         element,
         region.x,
@@ -216,8 +220,11 @@ export class WebBroadcastCompositor {
     if (typeof CanvasCaptureMediaStreamTrack === 'undefined') {
       return
     }
-    if (typeof this.compositestream.requestFrame === 'function') {
-      this.compositestream.requestFrame()
+    const stream = this.compositestream as MediaStream & {
+      requestFrame?: () => void
+    }
+    if (typeof stream.requestFrame === 'function') {
+      stream.requestFrame()
       return
     }
     const track = this.getvideotrack()

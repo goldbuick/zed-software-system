@@ -10,15 +10,7 @@ let currentlockid: string | undefined
 const waitqueue: LockWaiter[] = []
 
 function sortwaitqueue() {
-  waitqueue.sort((a, b) => {
-    if (a.priority === 'stt' && b.priority === 'heavy') {
-      return -1
-    }
-    if (a.priority === 'heavy' && b.priority === 'stt') {
-      return 1
-    }
-    return 0
-  })
+  waitqueue.sort(() => 0)
 }
 
 function grantnext() {

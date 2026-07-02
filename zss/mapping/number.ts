@@ -14,6 +14,10 @@ export function snap(value: number, snap: number) {
   return Math.round(value / snap) * snap
 }
 
+export function modpositive(value: number, modulus: number) {
+  return ((value % modulus) + modulus) % modulus
+}
+
 export function randomnumber() {
   return prng()
 }

@@ -1,11 +1,11 @@
 import { useCallback } from 'react'
+import { doasync } from 'zss/device/doasync'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { fetchrefscrolltext } from 'zss/feature/fetchrefscrolltext'
 import { terminalwritemarkdownlines } from 'zss/feature/parse/markdownterminal'
 import { UserInput } from 'zss/gadget/userinput.bridge'
 import { useWriteText } from 'zss/gadget/writetext'
-import { doasync } from 'zss/mapping/func'
 import { extractcontentfromargs } from 'zss/screens/inputcommon'
 import { inputcolor } from 'zss/screens/panel/common'
 import {

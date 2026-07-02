@@ -1,11 +1,11 @@
 import { useLayoutEffect, useMemo, useState } from 'react'
 import { chipmessage, vmcli } from 'zss/device/api'
+import { doasync } from 'zss/device/doasync'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { storagereadconfig } from 'zss/feature/storage'
 import { useTape, useTerminal } from 'zss/gadget/data/zustandstores'
 import { useWriteText } from 'zss/gadget/writetext'
-import { doasync } from 'zss/mapping/func'
 import { totarget } from 'zss/mapping/string'
 import { MAYBE } from 'zss/mapping/types'
 import { perfmeasure } from 'zss/perf/ui'
@@ -17,8 +17,6 @@ import { useShallow } from 'zustand/react/shallow'
 
 import { TerminalInput } from './input'
 import { TerminalRows } from './rows'
-import { WanixTermInput } from './wanixinput'
-import { WanixTermScreen } from './wanixscreen'
 
 export function TerminalComponent() {
   const player = registerreadplayer()
@@ -80,29 +78,18 @@ export function TerminalComponent() {
     [player],
   )
 
-  const attached = terminalmode === 'attached'
-
   return (
     <>
       <TapeBackPlate />
       <TapeTerminalContext.Provider value={tapecontextvalue}>
-        {attached ? (
-          <>
-            <WanixTermScreen />
-            <WanixTermInput />
-          </>
-        ) : (
-          <>
-            <TerminalRows />
-            {!editoropen && voice2text !== undefined && (
-              <TerminalInput
-                terminalmode={terminalmode}
-                voice2text={voice2text}
-                tapeycursor={tapeycursor}
-                logrowtotalheight={logsrowtotalheight}
-              />
-            )}
-          </>
+        <TerminalRows />
+        {!editoropen && voice2text !== undefined && (
+          <TerminalInput
+            terminalmode={terminalmode}
+            voice2text={voice2text}
+            tapeycursor={tapeycursor}
+            logrowtotalheight={logsrowtotalheight}
+          />
         )}
       </TapeTerminalContext.Provider>
     </>

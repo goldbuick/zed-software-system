@@ -1,0 +1,81 @@
+---
+description: Bound tests, scripts, and dev servers — never let tooling hang without a timeout or kill plan
+alwaysApply: true
+---
+
+# No hanging scripts
+
+Hanging commands waste time. **Never start a long or risky command without a plan to detect, bound, or kill it.** When adding or editing tests, task handlers, or Playwright validators, add explicit timeouts — do not rely on "it should finish."
+
+## Prohibited
+
+- **Unbounded loops** in tests or scripts (no wall-clock ceiling, no poll budget, no `Promise.race` timeout).
+- **Hand-rolled WASM stub chips** for `loadscriptsync(...).run()` — sync `while(true)` blocks the event loop; Jest `testTimeout` cannot interrupt it.
+- **Relying on Jest timeout alone** for sync WASM/lang runs or CPU-bound work.
+- **Background Jest or one-off scripts** without monitoring output and a kill plan.
+- **Playwright / shell validators** with open-ended `waitFor*` or polling loops and no script-level timeout.
+- **Dev servers left running** after verification (`app:preview`, `vite:dev`) — start background, verify, then kill.
+- **Retrying blindly** when a command exceeds 2× expected duration — kill, diagnose root cause, re-run targeted.
+
+## Required before running
+
+1. **Classify the command**
+   - **Fast** (<30s): lint, single test file → foreground OK
+   - **Medium** (30s–3m): full `app:test`, builds → set shell `block_until_ms` with buffer
+   - **Risky**: WASM `loadscriptsync`, dev servers, e2e, v86/Playwright → extra guards below
+
+2. **Prefer narrow runs while iterating**
+   - `yarn jest path/to/file.test.ts --no-coverage`
+   - Full suite only before commit/PR
+
+## Required when adding tests or tooling
+
+| Surface | Use |
+|---------|-----|
+| Jest per-test default | `ops/tests/setup/timeoutsetup.ts` (120s); override with `jest.setTimeout(ms)` when needed |
+| WASM `loadscriptsync` tests | `createwasmstubchip()` / `runwasmscriptfortest()` from `ops/lib/test/lang/wasmruntestutil.ts` |
+| WASM run budget (Jest workers) | Default 16_384 `sy()` polls in `zss/feature/lang/wasmloader.ts`; override `{ runbudget: N }` |
+| Parity / Playwright task handlers | Constants + `withscripttimeout(label, ms, fn)` in `tasks/lib/parity/parity-timeouts.ts` |
+| New polling loops | Wall-clock deadline; log and exit non-zero on timeout |
+
+**WASM lang tests:** compiled scripts use a synchronous top-level loop. Stub chips must yield via `sy()` or terminate; scripts must `#die`, `return 0`, or yield — not spin forever.
+
+## Agent shell `block_until_ms`
+
+| Command | Suggested ms |
+|---------|-------------|
+| Single jest file | 60_000 |
+| `yarn app:test` | 120_000 |
+| `yarn lang-regression:test` | 180_000 |
+| `yarn lang:build` | 300_000 |
+| `yarn app:build:strict` | 600_000 |
+
+Set **above** expected runtime. If backgrounded, poll the terminal file — do not assume completion.
+
+## When a command runs too long
+
+1. Check output — compile steps (`g++`, emscripten) can look hung but are progressing.
+2. No progress for 2× expected duration → **kill** (`kill <pid>`).
+3. Diagnose (bad stub, sync loop, open handle); fix at source.
+4. Re-run targeted, not full suite.
+
+## Jest exit hygiene
+
+- Teardown: `ops/tests/setup/globalteardown.cjs`
+- CI: `forceExit: true` in `ops/jest.config.ts` when `CI=true`
+- Stray handles: `yarn jest <file> --detectOpenHandles`
+
+## Examples
+
+```text
+❌ BAD — loadscriptsync(wasmbytes, { sy: () => false, getcase: () => 1 }).run()
+❌ BAD — Playwright validator polling until guest ready with no script timeout
+❌ BAD — yarn app:preview started and never killed
+❌ BAD — new test with infinite while loop and only jest.setTimeout hoping
+
+✅ GOOD — runwasmscriptfortest(wasmbytes, createwasmstubchip({ command: () => 0 }))
+✅ GOOD — withscripttimeout('render', PARITY_RENDER_SCRIPT_TIMEOUT_MS, fn)
+✅ GOOD — preview: background → curl verify → kill pid
+```
+
+More examples: skill `no-hanging-scripts` → `.cursor/skills/no-hanging-scripts/examples.md`.

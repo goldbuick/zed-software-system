@@ -1,9 +1,10 @@
 import { vmcli, vmplayermovetoboard } from 'zss/device/api'
+import { doasync } from 'zss/device/doasync'
 import { SOFTWARE } from 'zss/device/session'
 import { write } from 'zss/feature/writeui'
 import { zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
-import { doasync } from 'zss/mapping/func'
+import { escapedoublequoted } from 'zss/mapping/string'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { statformat, stattypestring } from 'zss/words/stats'
@@ -27,7 +28,7 @@ import {
 
 function makeitlinktoken(s: string): string {
   if (/\s/.test(s) || s.length === 0) {
-    return `"${s.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`
+    return `"${escapedoublequoted(s)}"`
   }
   return s
 }

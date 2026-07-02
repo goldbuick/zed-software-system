@@ -15,7 +15,9 @@ export function listwhipendpointaliases(): string[] {
   return ['twitch', 'ivs']
 }
 
-export function resolvewhipendpoint(endpointoralias: string): string | undefined {
+export function resolvewhipendpoint(
+  endpointoralias: string,
+): string | undefined {
   const raw = endpointoralias.trim()
   if (/^https?:\/\//i.test(raw)) {
     return raw

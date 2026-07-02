@@ -19,6 +19,6 @@ All workflows run through the task CLI. Full index: [ops/docs/tasks.md](ops/docs
 
 Shorthand: `yarn task app dev` is equivalent to `yarn task run app:dev`.
 
-Set `ZSS_DEBUG_PERF_UI=true` in `cafe/.env` (or export it) to enable the in-game perf overlay; see [`zss/perf/README.md`](zss/perf/README.md).
+Press **`Ctrl+I`** (or run `#perf` in the terminal) to toggle the in-game perf overlay; see [`zss/perf/README.md`](zss/perf/README.md).
 
 Production build: `yarn task run app:build`. Chip scripts compile via the TypeScript lang backend. Per-area docs live under `zss/**/docs/` and `ops/docs/`.

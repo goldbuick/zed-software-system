@@ -1,5 +1,6 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
+import { doasync } from 'zss/device/doasync'
 import {
   writezztcontentlinks,
   writezztcontentwait,
@@ -10,7 +11,6 @@ import {
   museumofzztrandom,
   museumofzztsearch,
 } from 'zss/feature/url'
-import { doasync } from 'zss/mapping/func'
 import { isarray } from 'zss/mapping/types'
 
 export function handlezztsearch(vm: DEVICE, message: MESSAGE): void {

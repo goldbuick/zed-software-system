@@ -68,3 +68,19 @@ sleep 2
 curl -sk -o /dev/null -w "%{http_code}\n" https://127.0.0.1:7777/wasm/lang/zss_lang.wasm
 kill %1                     # or kill <pid>
 ```
+
+## Task / Playwright script timeouts
+
+Use `withscripttimeout` from `tasks/lib/parity/parity-timeouts.ts`.
+
+**Signature is `(label, ms, fn)` — label first.** Swapping ms and label fails silently (wrong timeout or wrong log label).
+
+```typescript
+import { withscripttimeout } from 'tasks/lib/parity/parity-timeouts'
+
+await withscripttimeout('daisy:parity:render', SCRIPT_TOTAL_MS, async () => {
+  // … headed Playwright work …
+})
+```
+
+Do not add local `runwithscripttimeout` wrappers in group files — import the shared helper.

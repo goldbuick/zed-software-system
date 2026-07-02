@@ -1,26 +1,7 @@
 import { FORMAT_OBJECT } from 'zss/feature/format'
-import { MAYBE, ispresent } from 'zss/mapping/types'
+import { MAYBE, isplainobject, ispresent } from 'zss/mapping/types'
 
-function isplainobject(value: any): value is Record<string, any> {
-  if (value === null || typeof value !== 'object') {
-    return false
-  }
-  if (Array.isArray(value)) {
-    return false
-  }
-  if (value instanceof Set) {
-    return false
-  }
-  if (value instanceof Uint8Array) {
-    return false
-  }
-  if (value instanceof Date) {
-    return false
-  }
-  return true
-}
-
-function isplainobjectempty(value: any): boolean {
+function isplainobjectempty(value: unknown): boolean {
   return isplainobject(value) && Object.keys(value).length === 0
 }
 

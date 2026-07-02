@@ -1,5 +1,6 @@
 import { workstatus } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { brickproxiedurl } from 'zss/feature/brickurl'
 import { clearqueryparams } from 'zss/feature/deeplink'
 import {
   storagereadznssession,
@@ -11,8 +12,6 @@ import {
 import { write } from 'zss/feature/writeui'
 import { zsstextline } from 'zss/feature/zsstextui'
 import { NAME } from 'zss/words/types'
-
-import { brickproxiedurl } from 'zss/feature/brickurl'
 
 import { parsewebfile } from './parse/file'
 

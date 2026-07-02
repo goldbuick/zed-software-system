@@ -2,14 +2,14 @@ import type { DEVICELIKE } from 'zss/device/api'
 import { createsid } from 'zss/mapping/guid'
 import { isstring } from 'zss/mapping/types'
 
-export type STORAGE_PULL_CHANNEL = 'vm' | 'heavy'
+export type STORAGE_PULL_CHANNEL = 'vm'
 
 const pending = new Map<
   string,
   { resolve: (value: unknown) => void; reject: (reason: unknown) => void }
 >()
 
-/** Simspace or heavy worker: read one key from main-thread register storage (IndexedDB). */
+/** Sim worker: read one key from main-thread register storage (IndexedDB). */
 export function pullstoragevarfrommain(
   device: DEVICELIKE,
   player: string,
@@ -23,7 +23,7 @@ export function pullstoragevarfrommain(
   })
 }
 
-/** VM or heavy device handler: complete a pending `pullstoragevarfrommain` promise. */
+/** VM device handler: complete a pending `pullstoragevarfrommain` promise. */
 export function resolvestoragepullmessage(data: unknown): void {
   if (!data || typeof data !== 'object') {
     return

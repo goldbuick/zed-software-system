@@ -1,4 +1,4 @@
-import { agentlog } from 'zss/agentlog'
+import { debugingest } from 'zss/debugingest'
 import { GeneratorBuild } from 'zss/feature/lang/backend/typescript/generator'
 import { compilescript } from 'zss/feature/lang/langcompileclient'
 
@@ -47,7 +47,7 @@ export function createos() {
   function build(name: string, code: string) {
     const cached = builds[code]
     if (cached) {
-      agentlog(
+      debugingest(
         'os.ts:build',
         'build cache hit',
         {
@@ -59,7 +59,7 @@ export function createos() {
       return cached
     }
     const result = compilescript(name, code)
-    agentlog(
+    debugingest(
       'os.ts:build',
       'build result',
       {
@@ -121,7 +121,7 @@ export function createos() {
         // create chip from build
         chip = chips[id] = createchip(id, driver, result)
 
-        agentlog(
+        debugingest(
           'os.ts:boot',
           'chip boot',
           {

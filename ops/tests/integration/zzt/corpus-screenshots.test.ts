@@ -5,15 +5,15 @@
 import {
   parsescreenshotoptions,
   renderscreenshots,
-} from '../../../../tasks/implementations/content/museum-zzt-corpus-screenshots'
+} from '../../../../tasks/groups/content'
 
 const TASK_ARGV = process.env.ZSS_TASK_ARGS?.split(' ').filter(Boolean) ?? []
 
 it(
   'renders zzt corpus board screenshots',
-  () => {
+  async () => {
     const opts = parsescreenshotoptions(TASK_ARGV)
-    const code = renderscreenshots(opts)
+    const code = await renderscreenshots(opts)
     expect(code).toBe(0)
   },
   259_200_000,

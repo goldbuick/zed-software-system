@@ -2,7 +2,10 @@ import { Channel } from 'tone'
 import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { AUDIO_SYNTH } from 'ops/archive/synth/tone'
-import { volumetodb } from 'zss/feature/synth/fx'
+/** Archived Tone chain volume helper (was `zss/feature/synth/fx.ts`). */
+function volumetodb(value: number) {
+  return 20 * Math.log10(value) - 35
+}
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 
 import { canonicalvoicefxgroupindex } from 'ops/archive/synth/tone/voicefxgroup'

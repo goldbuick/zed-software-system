@@ -335,7 +335,7 @@ This runs `deploy:cloudflare:zns` then `zns:tenant:verify` (DNS + HTTPS).
 | `zns:tenant:smoke` | HTTPS-only check on `/` and `/cliscroll` |
 | `zns:tenant:verify` | Full production suite (DNS + apex + tenant index + scroll) |
 
-Verifier script: [`tasks/implementations/deploy/zns-tenant-verify.mjs`](../../tasks/implementations/deploy/zns-tenant-verify.mjs).
+Verifier task: `yarn task run deploy:zns:tenant:verify` ([`tasks/groups/deploy.ts`](../../tasks/groups/deploy.ts)).
 
 Checks performed by `zns:tenant:verify`:
 

@@ -5,10 +5,16 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
-    "strict": true
+    "strict": true,
+    "paths": {
+      "ops/lib/*": ["./ops/lib/*"],
+      "tasks/*": ["./tasks/*"]
+    }
   },
   "include": [
     "vite.config.ts",
     "ops/jest.config.ts",
+    "ops/lib/fixturepaths.ts",
+    "tasks/lib/parity/harness-middleware.ts"
   ]
 }

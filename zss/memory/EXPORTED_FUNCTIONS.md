@@ -111,11 +111,6 @@ Lookup tables (object id → pt, named indices).
 
 - **memoryevaldir(board, element, player, dir, startpt)** - Resolves direction commands (`n`/`rndne`/`flow` / etc.) into destination points
 
-## boardstatequery.ts
-
-- **BOARDSTATE_DATA** (type)
-- **memoryreadboardstatequery(...)** - Aggregated board snapshot used by the inspect query system
-
 ## boardtick.ts
 
 - **memorytickboard(board, timestamp, rundraw, drawallowforqueue?)** - Builds the per-tick run list for chips on a board
@@ -240,10 +235,6 @@ Pooled sprite / dither / control / tile builders for [`gadgetsynctick`](../devic
 ## gadgetlayersflags.ts
 
 - **memoryreadbookgadgetlayersforboard(book, boardid)** - Returns the per-board cached gadget layer store keyed by graphics variant
-
-## lookstatequery.ts
-
-- **memoryreadlookstatequery(agentid)** - Look-state aggregation for queries / heavy
 
 ## synthstate.ts
 

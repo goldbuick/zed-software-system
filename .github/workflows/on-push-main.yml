@@ -20,12 +20,6 @@ jobs:
         with:
           node-version-file: .nvmrc
 
-      - name: setup go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.24.x'
-          cache-dependency-path: ops/fixtures/wanix/zed-cafe/go.sum
-
       - name: setup and build
         run: |
           yarn

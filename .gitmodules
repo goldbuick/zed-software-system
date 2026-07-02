@@ -1,6 +1,3 @@
 [submodule "submodules/DaisySP"]
 	path = submodules/DaisySP
 	url = https://github.com/electro-smith/DaisySP.git
-[submodule "submodules/wanix"]
-	path = submodules/wanix
-	url = https://github.com/tractordev/wanix.git

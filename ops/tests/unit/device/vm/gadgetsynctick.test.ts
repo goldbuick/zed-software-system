@@ -1,7 +1,3 @@
-jest.mock('zss/config', () => ({
-  PERF_UI: false,
-}))
-
 jest.mock('zss/device/patchapi', () => ({
   gadgetclientpatch: jest.fn(),
 }))

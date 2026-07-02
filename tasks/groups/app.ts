@@ -1,6 +1,153 @@
-import { def, exec, shell, tasksonly } from '../helpers'
-import { nodehandler } from '../implementations/modulehandler'
-import type { TaskDef } from '../types'
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
+import path from 'node:path'
+
+import { checkrg, spawntask } from 'tasks/shellutil'
+
+import { def, exec, handler, shell, tasksonly } from '../helpers'
+import type { TaskContext, TaskDef } from '../types'
+
+const CATALOGS = [
+  'zss/device/EXPORTED_FUNCTIONS.md',
+  'zss/gadget/EXPORTED_FUNCTIONS.md',
+  'zss/memory/EXPORTED_FUNCTIONS.md',
+  'zss/firmware/EXPORTED_FUNCTIONS.md',
+  'zss/feature/EXPORTED_FUNCTIONS.md',
+  'zss/feature/lang/EXPORTED_FUNCTIONS.md',
+  'zss/mapping/EXPORTED_FUNCTIONS.md',
+  'zss/screens/EXPORTED_FUNCTIONS.md',
+  'zss/words/EXPORTED_FUNCTIONS.md',
+]
+
+const BARREL_FILES = [
+  'zss/gadget/data/state.ts',
+  'zss/feature/lang/index.ts',
+  'zss/feature/synth/index.ts',
+  'zss/feature/synth/backend/wasm/index.ts',
+  'zss/feature/synth/backend/daisy/index.ts',
+  'zss/screens/screenui/component.tsx',
+]
+
+function runlintimports(ctx: TaskContext): number {
+  let ok = true
+  if (
+    !checkrg(
+      'parent-directory imports (../)',
+      'from [\'"][^\'"]*\\.\\./',
+      ctx.root,
+    )
+  ) {
+    ok = false
+  }
+  if (
+    !checkrg(
+      're-export syntax',
+      'export \\{[^}]+\\} from|export \\* from|export type \\{[^}]+\\} from',
+      ctx.root,
+    )
+  ) {
+    ok = false
+  }
+  for (const barrel of BARREL_FILES) {
+    if (existsSync(path.join(ctx.root, barrel))) {
+      console.log(`FAIL: barrel file still exists: ${barrel}`)
+      ok = false
+    }
+  }
+  if (!ok) {
+    console.log('')
+    console.log(
+      'Import hygiene violations found. See .cursor/rules/no-barrels-reexports.mdc and no-parent-imports.mdc',
+    )
+    return 1
+  }
+  console.log('Import hygiene OK (zss/ + cafe/)')
+  return 0
+}
+
+function runapplint(ctx: TaskContext): number {
+  const importresult = runlintimports(ctx)
+  if (importresult !== 0) {
+    return importresult
+  }
+  return spawntask(
+    'sh',
+    [
+      '-c',
+      "depcruise zss/simspace.ts zss/boardrunnerspace.ts zss/sttspace.ts zss/ttsspace.ts --validate --config ops/depcruise.cjs && eslint . --ext ts,tsx --fix --report-unused-disable-directives --max-warnings 0 && eslint 'ops/infra/net-*-worker.js' --fix --report-unused-disable-directives --max-warnings 0 && tsc --noEmit",
+    ],
+    ctx,
+    { inherit: true },
+  )
+}
+
+function listexports(dir: string): Set<string> {
+  const names = new Set<string>()
+  for (const entry of readdirSync(dir)) {
+    const full = path.join(dir, entry)
+    if (statSync(full).isDirectory()) {
+      if (entry === '__tests__' || entry === 'node_modules') {
+        continue
+      }
+      for (const name of listexports(full)) {
+        names.add(name)
+      }
+      continue
+    }
+    if (!/\.tsx?$/.test(entry)) {
+      continue
+    }
+    const text = readFileSync(full, 'utf8')
+    for (const match of text.matchAll(
+      /^export (?:async )?function ([a-z][a-z0-9]*)/gm,
+    )) {
+      names.add(match[1])
+    }
+    for (const match of text.matchAll(/^export const ([A-Z_][A-Z0-9_]*) =/gm)) {
+      names.add(match[1])
+    }
+  }
+  return names
+}
+
+function runauditexportcatalogs(ctx: TaskContext): number {
+  const root = ctx.root
+  let exitcode = 0
+  for (const catalogpath of CATALOGS) {
+    const dir = path.dirname(path.join(root, catalogpath))
+    const exports = listexports(dir)
+    const catalog = readFileSync(path.join(root, catalogpath), 'utf8')
+    const missing = [...exports]
+      .filter((name) => !catalog.includes(name))
+      .sort()
+    const stale: string[] = []
+    for (const match of catalog.matchAll(
+      /`([a-z][a-z0-9]*|[A-Z_][A-Z0-9_]*)`/g,
+    )) {
+      const name = match[1]
+      if (!exports.has(name) && !catalog.includes(`(${name})`)) {
+        stale.push(name)
+      }
+    }
+    const uniquestale = [...new Set(stale)].sort()
+    console.log(`\n## ${catalogpath}`)
+    if (missing.length) {
+      exitcode = 1
+      console.log(
+        `missing from catalog (${missing.length}): ${missing.slice(0, 20).join(', ')}${missing.length > 20 ? '…' : ''}`,
+      )
+    } else {
+      console.log('missing from catalog: none')
+    }
+    if (uniquestale.length) {
+      console.log(
+        `possibly stale in catalog (${uniquestale.length}): ${uniquestale.slice(0, 20).join(', ')}${uniquestale.length > 20 ? '…' : ''}`,
+      )
+    } else {
+      console.log('possibly stale in catalog: none')
+    }
+  }
+  return exitcode
+}
 
 export const APP_TASKS: TaskDef[] = [
   def('app:install', {
@@ -32,7 +179,6 @@ export const APP_TASKS: TaskDef[] = [
   def('app:build', {
     description: 'Production Vite build',
     tags: ['ci'],
-    deps: ['wanix:zed-cafe:build'],
     run: exec(['vite', 'build']),
   }),
   def('app:build:strict', {
@@ -62,14 +208,12 @@ export const APP_TASKS: TaskDef[] = [
     description:
       'Guard zss/ and cafe/ for no ../ imports, re-exports, or known barrel files',
     tags: ['ci'],
-    run: shell('sh tasks/implementations/app/lint-imports.sh'),
+    run: handler(runlintimports),
   }),
   def('app:lint', {
     description: 'Import guards, dependency-cruiser, ESLint, and tsc --noEmit',
     tags: ['ci'],
-    run: shell(
-      "sh tasks/implementations/app/lint-imports.sh && depcruise zss/simspace.ts zss/heavyspace.ts zss/boardrunnerspace.ts zss/sttspace.ts --validate --config ops/depcruise.cjs && eslint . --ext ts,tsx --fix --report-unused-disable-directives --max-warnings 0 && eslint 'ops/infra/net-*-worker.js' --fix --report-unused-disable-directives --max-warnings 0 && tsc --noEmit",
-    ),
+    run: handler(runapplint),
   }),
   def('app:test', {
     description: 'Run Jest test suite',
@@ -93,7 +237,7 @@ export const APP_TASKS: TaskDef[] = [
   }),
   def('app:audit:export-catalogs', {
     description: 'Audit export catalogs',
-    run: nodehandler('tasks/implementations/app/audit-export-catalogs.mjs'),
+    run: handler(runauditexportcatalogs),
   }),
   def('app:sloc', {
     description: 'Source lines of code count for zss/',

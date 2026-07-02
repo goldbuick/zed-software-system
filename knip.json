@@ -3,11 +3,13 @@
   "entry": [
     "cafe/index.tsx",
     "cafe/sys/index.tsx",
-    "cafe/wanix-iframe-host.tsx",
     "zss/simspace.ts",
-    "zss/heavyspace.ts",
     "zss/boardrunnerspace.ts",
+    "zss/sttspace.ts",
+    "zss/ttsspace.ts",
+    "headless/src/commands/run.ts",
     "tasks/cli.ts",
+    "tasks/lib/daisy/parity-loop.ts",
     "ops/jest.config.ts"
   ],
   "project": [
@@ -25,5 +27,11 @@
     "**/*.spec.ts",
     "zss/rom/**"
   ],
-  "ignoreDependencies": ["@types/*"]
+  "ignoreDependencies": [
+    "@types/*",
+    "fish-audio",
+    "ink",
+    "ink-text-input",
+    "playwright"
+  ]
 }

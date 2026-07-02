@@ -8,6 +8,7 @@ import {
   ismaybenumber,
   ismaybestring,
   isnumber,
+  isplainobject,
   ispresent,
   isstring,
   noop,
@@ -125,6 +126,21 @@ describe('types', () => {
       expect(ismaybenumber('1')).toBe(false)
       expect(ismaybenumber(null)).toBe(false)
       expect(ismaybenumber(true)).toBe(false)
+    })
+  })
+
+  describe('isplainobject', () => {
+    it('identifies plain objects', () => {
+      expect(isplainobject({})).toBe(true)
+      expect(isplainobject({ a: 1 })).toBe(true)
+    })
+
+    it('rejects arrays and special objects', () => {
+      expect(isplainobject([])).toBe(false)
+      expect(isplainobject(new Set())).toBe(false)
+      expect(isplainobject(new Uint8Array())).toBe(false)
+      expect(isplainobject(new Date())).toBe(false)
+      expect(isplainobject(null)).toBe(false)
     })
   })
 

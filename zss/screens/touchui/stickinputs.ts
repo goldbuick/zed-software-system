@@ -3,7 +3,7 @@ import { Vector2 } from 'three'
 import { INPUT } from 'zss/gadget/data/types'
 import { useDeviceData } from 'zss/gadget/device'
 import { inputdown, inputup } from 'zss/gadget/userinput'
-import { snap } from 'zss/mapping/number'
+import { modpositive, snap } from 'zss/mapping/number'
 
 const mergevec = new Vector2()
 const angleunit = new Vector2()
@@ -33,8 +33,7 @@ function mergedsnapdir(
     return null
   }
   let deg = radToDeg(mergevec.angle())
-  deg = snap(deg, 45)
-  deg = ((deg % 360) + 360) % 360
+  deg = modpositive(snap(deg, 45), 360)
   return deg
 }
 

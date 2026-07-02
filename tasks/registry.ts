@@ -10,7 +10,6 @@ import { INFRA_TASKS } from './groups/infra'
 import { LANG_TASKS } from './groups/lang'
 import { MEMORY_TASKS } from './groups/memory'
 import { NATIVE_TASKS } from './groups/native'
-import { WANIX_TASKS } from './groups/wanix'
 import type { TaskDef } from './types'
 
 const ALL_TASK_LIST: TaskDef[] = [
@@ -26,7 +25,6 @@ const ALL_TASK_LIST: TaskDef[] = [
   ...LANG_TASKS,
   ...MEMORY_TASKS,
   ...NATIVE_TASKS,
-  ...WANIX_TASKS,
 ]
 
 let taskmap: Record<string, TaskDef> | undefined

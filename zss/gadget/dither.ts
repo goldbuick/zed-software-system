@@ -1,4 +1,5 @@
 import { createContext, useState } from 'react'
+import { pttoindex } from 'zss/mapping/2d'
 import { StoreApi, createStore } from 'zustand'
 
 export type DITHER_DATA = {
@@ -37,7 +38,7 @@ export function writedither(
   if (x < 0 || x >= width || y < 0 || y >= height) {
     return -1
   }
-  dither[x + y * width] = value
+  dither[pttoindex({ x, y }, width)] = value
 }
 
 export const DitherContext = createContext(createditherstore())

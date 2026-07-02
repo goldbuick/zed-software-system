@@ -1,14 +1,15 @@
 ---
 name: no-hanging-scripts
 description: >-
-  Prevents tests, scripts, and dev servers from hanging without exiting.
-  Use before running Jest, yarn scripts, background shells, lang/WASM tests,
-  vite preview/dev, or when a command stalls, runs too long, or fails to return.
+  Extended examples and checklists for rule no-hanging-scripts.mdc.
+  Use when authoring WASM tests, Playwright validators, or debugging hung processes.
 ---
 
 # No hanging scripts
 
-Hanging commands waste time. **Never start a long or risky command without a plan to detect, bound, or kill it.**
+**Always-applied rule:** `.cursor/rules/no-hanging-scripts.mdc` — read that first.
+
+This skill adds detail, examples, and checklists. Hanging commands waste time. **Never start a long or risky command without a plan to detect, bound, or kill it.**
 
 ## Before you run anything
 
@@ -23,9 +24,10 @@ Hanging commands waste time. **Never start a long or risky command without a pla
    - A "hung" Jest worker often means sync code, not a slow test
 
 3. **Prefer narrow runs while iterating**
-   - One file: `yarn jest path/to/file.test.ts --no-coverage`
-   - Filter: `yarn jest -t "pattern"`
+   - One file: `yarn jest --config ops/jest.config.ts path/to/file.test.ts --no-coverage`
+   - Filter: `yarn jest --config ops/jest.config.ts -t "pattern"`
    - Full suite only when validating before commit/PR
+   - **Never** bare `yarn jest` on `.ts` tests — default Babel config cannot parse `import type` (use `ops/jest.config.ts`)
 
 4. **Background only when necessary**
    - Dev servers (`app:preview`, `vite:dev`) → background + verify with `curl` + kill when done

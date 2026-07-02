@@ -14,8 +14,8 @@ import {
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { withclipboard } from 'zss/feature/keyboard'
-import { SpeechToText } from 'zss/feature/speechtotext'
 import { storagewritehistorybuffer } from 'zss/feature/storage'
+import { SpeechToText } from 'zss/feature/stt/speechtotext'
 import { useEqual } from 'zss/gadget/data/useequal'
 import {
   TERMINAL_MODE,

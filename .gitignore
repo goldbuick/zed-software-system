@@ -37,12 +37,6 @@ ops/fixtures/content/dist
 # vosk speech recognition models (large binaries)
 cafe/public/models/
 
-# wanix smoke wasm scratch (regenerate with yarn task run wanix:wasm:build)
-ops/fixtures/wanix/*.wasm
-# wanix harness guests (regenerate with yarn task run wanix:gojs:build / wanix:ensure)
-cafe/public/wanix/gojscheck.wasm
-cafe/public/wanix/wanix.debug.wasm
-cafe/public/wanix/zed-cafe.wasm
 
 # Museum of ZZT vanilla corpus archives (yarn task run content:zzt:corpus:sync)
 ops/fixtures/zzt/corpus/archives/

@@ -46,7 +46,6 @@ This document lists all `.command('name', ...` invocations organized by firmware
 
 - `gadget` - Toggle built-in inspector
 - `findany` - Highlight matched elements
-- `agent` - Agent/LLM interaction (operator only)
 - `screenshot` - Capture screenshot (operator only)
 
 ### Multiplayer & Social

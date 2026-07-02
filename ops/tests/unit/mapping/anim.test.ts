@@ -1,5 +1,5 @@
 import { Object3D } from 'three'
-import { animpositiontotarget, animsnapx, animsnapy } from 'zss/mapping/anim'
+import { animpositiontotarget, animsnapx, animsnapy } from 'zss/screens/scroll/anim'
 
 describe('anim', () => {
   describe('animsnapy', () => {

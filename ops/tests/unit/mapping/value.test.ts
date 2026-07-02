@@ -1,4 +1,9 @@
-import { maptonumber, maptostring, maptovalue } from 'zss/mapping/value'
+import {
+  coercenumberorstringtoken,
+  maptonumber,
+  maptostring,
+  maptovalue,
+} from 'zss/mapping/value'
 
 describe('value', () => {
   describe('maptostring', () => {
@@ -103,6 +108,17 @@ describe('value', () => {
       expect(maptovalue(obj, {})).toEqual(obj)
       expect(maptovalue(obj, 0)).toBe(0)
       expect(maptovalue(123, {})).toEqual({})
+    })
+  })
+
+  describe('coercenumberorstringtoken', () => {
+    it('parses pure digit strings as numbers', () => {
+      expect(coercenumberorstringtoken('42')).toBe(42)
+    })
+
+    it('keeps mixed alnum as strings', () => {
+      expect(coercenumberorstringtoken('abc')).toBe('abc')
+      expect(coercenumberorstringtoken('1a')).toBe('1a')
     })
   })
 })

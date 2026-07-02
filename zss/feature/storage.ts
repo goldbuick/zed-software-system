@@ -6,9 +6,9 @@ import {
   update as idbupdate,
 } from 'idb-keyval'
 import { apierror, apilog, vmbooks, workstatus } from 'zss/device/api'
+import { doasync } from 'zss/device/doasync'
 import { SOFTWARE } from 'zss/device/session'
 import { isclimode } from 'zss/feature/detect'
-import { doasync } from 'zss/mapping/func'
 import { isarray, ispresent } from 'zss/mapping/types'
 import { BOOK } from 'zss/memory/types'
 
@@ -33,7 +33,6 @@ export function storagereadconfigdefault(name: string) {
     case 'crt':
       return 'on'
     case 'loaderlogging':
-    case 'promptlogging':
       return 'off'
     default:
       return 'off'
@@ -97,7 +96,6 @@ export async function storagereadconfigall() {
     'config_scanlines',
     'config_voice2text',
     'config_loaderlogging',
-    'config_promptlogging',
     'config_dev',
     'config_gadget',
   ]

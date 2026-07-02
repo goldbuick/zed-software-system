@@ -1,5 +1,5 @@
 import ErrorStackParser from 'error-stack-parser'
-import { agentlog } from 'zss/agentlog'
+import { debugingest } from 'zss/debugingest'
 import {
   type GeneratorBuild,
   type GeneratorFunc,
@@ -490,8 +490,6 @@ function maptoresult(value: WORD): WORD {
  * @param build - The compiled generator build containing code and labels
  * @returns A fully configured CHIP instance ready for execution
  */
-const debugoncecounts: Record<string, number> = {}
-
 export function createchip(
   id: string,
   driver: DRIVER_TYPE,
@@ -505,8 +503,6 @@ export function createchip(
   }
 
   // ref to generator instance
-
-  let logic: MAYBE<GeneratorFunc>
 
   // create labels
   const labels = deepcopy(Object.entries(build.labels ?? {}))
@@ -1212,8 +1208,8 @@ export function createchip(
     },
   }
 
-  logic = build.code
-  agentlog(
+  const logic: MAYBE<GeneratorFunc> = build.code
+  debugingest(
     'chip.ts:createchip',
     'js logic path',
     {

@@ -5,7 +5,7 @@ module.exports = {
       name: 'worker-no-react',
       severity: 'error',
       comment:
-        'Simspace/heavy worker dependency graphs must not reach react (use worker-safe modules only).',
+        'Worker dependency graphs must not reach react (use worker-safe modules only).',
       from: { path: '^zss/' },
       to: { path: '^node_modules/react(/|$)' },
     },
@@ -13,7 +13,7 @@ module.exports = {
       name: 'worker-no-react-dom',
       severity: 'error',
       comment:
-        'Simspace/heavy worker dependency graphs must not reach react-dom.',
+        'Worker dependency graphs must not reach react-dom.',
       from: { path: '^zss/' },
       to: { path: '^node_modules/react-dom(/|$)' },
     },
@@ -21,7 +21,7 @@ module.exports = {
       name: 'worker-no-three',
       severity: 'error',
       comment:
-        'Simspace/heavy worker dependency graphs must not reach three.js.',
+        'Worker dependency graphs must not reach three.js.',
       from: { path: '^zss/' },
       to: { path: '^node_modules/three(/|$)' },
     },
@@ -29,7 +29,7 @@ module.exports = {
       name: 'worker-no-react-three',
       severity: 'error',
       comment:
-        'Simspace/heavy worker dependency graphs must not reach @react-three/*.',
+        'Worker dependency graphs must not reach @react-three/*.',
       from: { path: '^zss/' },
       to: { path: '^node_modules/@react-three/' },
     },
@@ -39,7 +39,7 @@ module.exports = {
       comment:
         'Workers must use registerplayer.ts for player id, not the full register device.',
       from: {
-        path: '^zss/(simspace|heavyspace|boardrunnerspace|sttspace|ttsspace)\\.ts',
+        path: '^zss/(simspace|boardrunnerspace|sttspace|ttsspace)\\.ts',
       },
       to: { path: '^zss/device/register\\.ts$' },
     },
@@ -48,8 +48,8 @@ module.exports = {
       severity: 'error',
       comment:
         'Main-thread TTS orchestration must not import fishaudio; Fish runs in ttsspace only.',
-      from: { path: '^zss/feature/tts\\.ts$' },
-      to: { path: '^zss/feature/fishaudio\\.ts$' },
+      from: { path: '^zss/feature/tts/client\\.ts$' },
+      to: { path: '^zss/feature/tts/fishaudio\\.ts$' },
     },
   ],
   options: {

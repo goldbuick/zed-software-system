@@ -1,8 +1,8 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { registerloginready, workstatus } from 'zss/device/api'
+import { doasync } from 'zss/device/doasync'
 import { tracking } from 'zss/device/vm/state'
-import { doasync } from 'zss/mapping/func'
 import { isarray, isstring } from 'zss/mapping/types'
 import {
   memoryreadoperator,

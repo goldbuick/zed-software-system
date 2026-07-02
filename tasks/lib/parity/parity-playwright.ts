@@ -11,7 +11,7 @@ import {
 } from 'tasks/lib/parity/parity-vite-server.ts'
 
 export const DEFAULT_PARITY_PORT = PARITY_SERVER_PORT
-export const PARITY_HOST_PATH = '/offline-render-host.html'
+export const PARITY_HOST_PATH = '/parity-host'
 
 export function parityhosturl(port = DEFAULT_PARITY_PORT): string {
   return `http://127.0.0.1:${port}${PARITY_HOST_PATH}`
@@ -27,7 +27,7 @@ export async function startparityvitehost(
 export async function launchparitybrowser(
   timeoutms = 60_000,
 ): Promise<Browser> {
-  return chromium.launch({ timeout: timeoutms })
+  return chromium.launch({ headless: false, timeout: timeoutms })
 }
 
 export async function openparitypage(

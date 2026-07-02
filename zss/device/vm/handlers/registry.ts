@@ -21,7 +21,6 @@ import { handlecli, handleclirepeatlast } from './cli'
 import { handlecoderelease, handlecodewatch } from './codewatch'
 import { handledoot } from './doot'
 import { handleeditorbookmarkscroll } from './editorbookmarkscroll'
-import { handleexportzedcafe } from './exportzedcafe'
 import { handleflush } from './flush'
 import { handlefork } from './fork'
 import { handlehalt } from './halt'
@@ -32,11 +31,9 @@ import { handlelastinputtouch } from './lastinputtouch'
 import { handleloader } from './loader'
 import { handleoperator } from './operator'
 import { handlepage } from './page'
-import { handlepilotclear, handlepilotstart, handlepilotstop } from './pilot'
 import { handleplayermovetoboard } from './playermovetoboard'
 import { handlepublish } from './publish'
 import { handlepullvarresult } from './pullvarresult'
-import { handlequery } from './query'
 import { handlerestart } from './restart'
 import {
   handleclearscroll,
@@ -68,11 +65,7 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   doot: handledoot,
   input: handleinput,
   lastinputtouch: handlelastinputtouch,
-  query: handlequery,
   pullvarresult: handlepullvarresult,
-  pilotclear: handlepilotclear,
-  pilotstart: handlepilotstart,
-  pilotstop: handlepilotstop,
   codewatch: handlecodewatch,
   coderelease: handlecoderelease,
   clearscroll: handleclearscroll,
@@ -96,7 +89,6 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   zztrandom: handlezztrandom,
   publish: handlepublish,
   flush: handleflush,
-  'export-zed-cafe': handleexportzedcafe,
   bookmarkscroll: handlebookmarkscroll,
   editorbookmarkscroll: handleeditorbookmarkscroll,
   cli: handlecli,

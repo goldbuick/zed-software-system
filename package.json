@@ -1,7 +1,7 @@
 {
   "name": "zed-software-system",
   "private": true,
-  "version": "1.8.62",
+  "version": "1.8.81",
   "type": "module",
   "files": [
     "headless/bin",
@@ -124,8 +124,7 @@
     "ink": "^6.8.0",
     "ink-text-input": "^6.0.0",
     "json-joy": "^18.28.0",
-    "playwright": "^1.49.0",
-    "wanix": "^0.4.0-alpha8"
+    "playwright": "^1.58.2"
   },
   "bin": {
     "zss": "./headless/bin/run.js"
