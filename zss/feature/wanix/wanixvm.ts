@@ -1,9 +1,12 @@
-import { callwanixrpc, waitwanixready } from 'zss/feature/wanix/wanixbridge'
+import { waitwanixready } from 'zss/feature/wanix/wanixbridge'
+import {
+  readwanixroomstatus,
+  startwanixvmroom,
+  stopwanixroom,
+} from 'zss/feature/wanix/wanixroom'
 
 export const DEFAULT_WANIX_VM_ID = 'linux-vm'
 export const DEFAULT_WANIX_VM_MEM = '512M'
-
-const WANIX_VM_START_TIMEOUT_MS = 180_000
 
 export type WanixVmStatus = {
   running: boolean
@@ -25,21 +28,43 @@ export async function startwanixvm(
   vmid = DEFAULT_WANIX_VM_ID,
 ): Promise<WanixVmStartResult> {
   await waitwanixready()
-  return callwanixrpc<WanixVmStartResult>(
-    'startvm',
-    [mem, vmid],
-    WANIX_VM_START_TIMEOUT_MS,
-  )
+  const result = (await startwanixvmroom(vmid, mem)) as WanixVmStatus & {
+    vrid?: string | null
+    already?: boolean
+  }
+  if (result.running) {
+    return {
+      ok: true,
+      already: true,
+      vmid: result.vmid ?? vmid,
+      vrid: result.vrid ?? null,
+      mem: result.mem ?? mem,
+    }
+  }
+  return {
+    ok: true,
+    vmid: result.vmid ?? vmid,
+    vrid: result.vrid ?? null,
+    mem: result.mem ?? mem,
+  }
 }
 
 export async function stopwanixvm(
-  vmid = DEFAULT_WANIX_VM_ID,
+  _vmid = DEFAULT_WANIX_VM_ID,
 ): Promise<{ ok: boolean }> {
   await waitwanixready()
-  return callwanixrpc<{ ok: boolean }>('stopvm', [vmid])
+  await stopwanixroom()
+  return { ok: true }
 }
 
 export async function readwanixvmstatus(): Promise<WanixVmStatus> {
   await waitwanixready()
-  return callwanixrpc<WanixVmStatus>('readvmstatus')
+  const status = await readwanixroomstatus()
+  const vm = status.vm
+  return {
+    running: status.vmrunning ?? false,
+    vmid: vm?.id ?? null,
+    vrid: null,
+    mem: vm?.mem ?? null,
+  }
 }

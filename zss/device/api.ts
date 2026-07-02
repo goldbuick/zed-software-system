@@ -188,6 +188,18 @@ export function wanixvmstop(device: DEVICELIKE, player: string, vmid?: string) {
   device.emit(player, 'wanix:vm-stop', vmid)
 }
 
+export function wanixdrop(
+  device: DEVICELIKE,
+  player: string,
+  payload: { label: string; kind: 'wasm' | 'bundle'; bytes: Uint8Array },
+) {
+  device.emit(player, 'wanix:drop', payload)
+}
+
+export function wanixstop(device: DEVICELIKE, player: string, taskid?: string) {
+  device.emit(player, 'wanix:stop', taskid)
+}
+
 export function bridgejoin(device: DEVICELIKE, player: string, topic: string) {
   device.emit(player, 'bridge:join', topic)
 }

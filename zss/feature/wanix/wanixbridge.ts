@@ -1,4 +1,5 @@
 const WANIX_MSG_READY = 'zss-wanix-ready'
+const WANIX_MSG_IDLE = 'zss-wanix-idle'
 const WANIX_MSG_RPC = 'zss-wanix-rpc'
 const WANIX_MSG_RPC_RES = 'zss-wanix-rpc-res'
 
@@ -39,6 +40,10 @@ function handleparentmessage(event: MessageEvent) {
   if (data.type === WANIX_MSG_READY) {
     wanixisready = true
     readyresolve?.()
+    return
+  }
+  if (data.type === WANIX_MSG_IDLE) {
+    resetready()
     return
   }
   if (data.type !== WANIX_MSG_RPC_RES) {

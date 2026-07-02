@@ -9,7 +9,7 @@
   <script type="module" crossorigin src="https://cdn.jsdelivr.net/npm/wanix@0.4.0-alpha8/dist/wanix.min.js"></script>
   <style>
     html,
-    body {
+    body, #wanix-host {
       height: 100vh;
       margin: 0;
     }
@@ -17,9 +17,10 @@
 </head>
 
 <body>
-  <wanix-system id="wanix-system" allow-origins="*" debug></wanix-system>
+  <div id="wanix-host"></div>
   <script type="module">
     const WANIX_MSG_READY = 'zss-wanix-ready'
+    const WANIX_MSG_IDLE = 'zss-wanix-idle'
     const WANIX_MSG_RPC = 'zss-wanix-rpc'
     const WANIX_MSG_RPC_RES = 'zss-wanix-rpc-res'
 
@@ -30,17 +31,24 @@
 
     const DEFAULT_VM_ID = 'linux-vm'
     const DEFAULT_VM_MEM = '512M'
+    const ROOM_READY_TIMEOUT_MS = 180_000
+    const BIND_MOUNT_TIMEOUT_MS = 120_000
     const VM_RID_WAIT_MS = 120_000
-    const VM_RID_POLL_MS = 250
+    const POLL_MS = 250
 
-    const sys = document.querySelector('wanix-system')
+    const host = document.getElementById('wanix-host')
 
-    const vmstate = {
-      running: false,
-      vmid: null,
-      vrid: null,
-      mem: null,
+    /** @type {import('zss/feature/wanix/wanixroomtypes').WanixRoomConfig} */
+    let roomconfig = {
+      mode: 'idle',
+      mountkey: 0,
+      archives: [],
+      remotes: [],
+      tasks: [],
     }
+    let lastmountkey = -1
+    /** @type {import('zss/feature/wanix/wanixelements.d.ts').WanixSystemElement | null} */
+    let system = null
 
     function replyrpc(source, id, payload) {
       if (!source || typeof source.postMessage !== 'function') {
@@ -52,19 +60,20 @@
       )
     }
 
-    function readterm() {
-      const term = document.querySelector('wanix-term')
-      if (!term) {
-        throw new Error('wanix-term missing')
-      }
-      return term
+    function postready() {
+      console.info('[wanix] ready')
+      window.parent.postMessage(
+        { type: WANIX_MSG_READY },
+        window.location.origin,
+      )
     }
 
-    function readroot() {
-      if (!sys?.isReady) {
-        throw new Error('wanix-system not ready')
-      }
-      return sys.root
+    function postidle() {
+      console.info('[wanix] idle')
+      window.parent.postMessage(
+        { type: WANIX_MSG_IDLE },
+        window.location.origin,
+      )
     }
 
     function setwanixattrs(el, attrs) {
@@ -81,45 +90,134 @@
       }
     }
 
-    function readvmbyid(vmid) {
-      return sys.querySelector(`wanix-vm[id="${vmid}"]`)
-    }
-
-    function readvmstatelive() {
-      const vm = sys.querySelector('wanix-vm')
-      const running = !!vm
-      return {
-        running,
-        vmid: vm?.getAttribute('id') ?? vmstate.vmid,
-        vrid: vm?.rid ?? vmstate.vrid,
-        mem: vm?.getAttribute('mem') ?? vmstate.mem,
-      }
-    }
-
-    function createarchivebind(marker, dst, src) {
+    function createbind(attrs, markerattr) {
       const bind = document.createElement('wanix-bind')
-      bind.setAttribute(`data-zss-${marker}-bind`, '')
-      setwanixattrs(bind, { dst, type: 'archive', src })
+      setwanixattrs(bind, attrs)
+      if (markerattr) {
+        bind.setAttribute(markerattr, '')
+      }
       return bind
     }
 
-    function mountvmbinds() {
-      if (!sys.querySelector('wanix-bind[data-zss-linux-bind]')) {
-        sys.appendChild(createarchivebind('linux', '.', WANIX_LINUX_URL))
+    function readroot() {
+      if (!system?.isReady) {
+        throw new Error('wanix-system not ready')
       }
-      if (!sys.querySelector('wanix-bind[data-zss-v86-bind]')) {
-        sys.appendChild(createarchivebind('v86', '#vm/v86', WANIX_V86_URL))
+      return system.root
+    }
+
+    function readterm() {
+      const term = system?.querySelector('wanix-term')
+      if (!term) {
+        throw new Error('wanix-term missing')
+      }
+      return term
+    }
+
+    function appendtaskroombinds(sys, config) {
+      sys.appendChild(createbind({ dst: '.', src: '#ramfs' }))
+      for (const archive of config.archives) {
+        const bind = createbind({
+          type: 'archive',
+          dst: archive.dst,
+          src: archive.src,
+        })
+        bind.setAttribute('data-zss-archive-id', archive.id)
+        sys.appendChild(bind)
+      }
+      for (const remote of config.remotes) {
+        const bind = createbind(
+          { type: 'import', dst: remote.dst, src: remote.url },
+        )
+        bind.setAttribute('data-zss-remote-id', remote.id)
+        sys.appendChild(bind)
       }
     }
 
-    function unmountvmbinds() {
-      sys.querySelector('wanix-bind[data-zss-linux-bind]')?.remove()
-      sys.querySelector('wanix-bind[data-zss-v86-bind]')?.remove()
+    function appendvmroombinds(sys) {
+      sys.appendChild(
+        createbind(
+          { type: 'archive', dst: '.', src: WANIX_LINUX_URL },
+          'data-zss-linux-bind',
+        ),
+      )
+      sys.appendChild(createbind({ dst: 'vm', src: '#vm' }))
+      sys.appendChild(
+        createbind(
+          { type: 'archive', dst: '#vm/v86', src: WANIX_V86_URL },
+          'data-zss-v86-bind',
+        ),
+      )
     }
 
-    async function waitvmbindmount() {
-      mountvmbinds()
-      const deadline = Date.now() + 60_000
+    function buildroomtree(config) {
+      const sys = document.createElement('wanix-system')
+      setwanixattrs(sys, {
+        id: 'wanix-system',
+        'allow-origins': '*',
+        debug: true,
+      })
+
+      if (config.mode === 'idle') {
+        return sys
+      }
+
+      appendtaskroombinds(sys, config)
+
+      if (config.mode === 'vm') {
+        appendvmroombinds(sys)
+        const vm = config.vm
+        if (vm?.active) {
+          const vmel = document.createElement('wanix-vm')
+          setwanixattrs(vmel, {
+            id: vm.id,
+            export: 'ttyS0',
+            mem: vm.mem,
+            term: true,
+            start: true,
+          })
+          sys.appendChild(vmel)
+          const term = document.createElement('wanix-term')
+          setwanixattrs(term, {
+            path: '#vm/1/term',
+            raw: true,
+          })
+          term.setAttribute('data-zss-target-kind', 'vm')
+          term.setAttribute('data-zss-target-id', vm.id)
+          sys.appendChild(term)
+        }
+      }
+
+      return sys
+    }
+
+    function waitsystemready(sys, timeoutms = ROOM_READY_TIMEOUT_MS) {
+      if (sys.isReady) {
+        return Promise.resolve()
+      }
+      return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+          sys.removeEventListener('ready', onready)
+          reject(new Error('wanix-system ready timeout'))
+        }, timeoutms)
+        const onready = () => {
+          clearTimeout(timer)
+          resolve()
+        }
+        sys.addEventListener('ready', onready, { once: true })
+        sys.addEventListener(
+          'error',
+          () => {
+            clearTimeout(timer)
+            reject(new Error('wanix-system error'))
+          },
+          { once: true },
+        )
+      })
+    }
+
+    async function waitvmlinuxmount() {
+      const deadline = Date.now() + BIND_MOUNT_TIMEOUT_MS
       while (Date.now() < deadline) {
         try {
           const entries = await readroot().readDir('.')
@@ -129,7 +227,7 @@
         } catch {
           // root not ready for vm layout yet
         }
-        await new Promise((resolve) => setTimeout(resolve, VM_RID_POLL_MS))
+        await new Promise((resolve) => setTimeout(resolve, POLL_MS))
       }
       throw new Error('wanix vm binds not mounted')
     }
@@ -139,59 +237,156 @@
         if (vm.rid) {
           return vm.rid
         }
-        await new Promise((resolve) => setTimeout(resolve, VM_RID_POLL_MS))
+        await new Promise((resolve) => setTimeout(resolve, POLL_MS))
       }
       return vm.rid ?? null
     }
 
-    async function startvm(mem = DEFAULT_VM_MEM, vmid = DEFAULT_VM_ID) {
+    async function applyroom(config) {
+      roomconfig = {
+        mode: config.mode ?? 'idle',
+        mountkey: config.mountkey ?? 0,
+        archives: config.archives ?? [],
+        remotes: config.remotes ?? [],
+        tasks: config.tasks ?? [],
+        vm: config.vm,
+      }
+
+      if (roomconfig.mode === 'idle') {
+        host.replaceChildren()
+        system = null
+        lastmountkey = roomconfig.mountkey
+        postidle()
+        return { ok: true, mode: 'idle', mountkey: lastmountkey }
+      }
+
+      if (
+        lastmountkey === roomconfig.mountkey &&
+        system?.isConnected &&
+        system.isReady
+      ) {
+        return {
+          ok: true,
+          mode: roomconfig.mode,
+          mountkey: lastmountkey,
+          already: true,
+        }
+      }
+
       await customElements.whenDefined('wanix-system')
-      if (!sys?.isReady) {
-        throw new Error('wanix-system not ready')
+      const next = buildroomtree(roomconfig)
+      host.replaceChildren()
+      host.appendChild(next)
+      system = next
+      lastmountkey = roomconfig.mountkey
+
+      await waitsystemready(system)
+      postready()
+
+      if (roomconfig.mode === 'vm' && roomconfig.vm?.active) {
+        await waitvmlinuxmount()
+        const vm = system.querySelector('wanix-vm')
+        const vrid = vm
+          ? await waitforvmrid(vm, Date.now() + VM_RID_WAIT_MS)
+          : null
+        return {
+          ok: true,
+          mode: 'vm',
+          mountkey: lastmountkey,
+          vmid: roomconfig.vm.id,
+          vrid,
+          mem: roomconfig.vm.mem,
+        }
       }
-      await waitvmbindmount()
-      const existing = readvmbyid(vmid)
-      if (existing?.hasAttribute('start')) {
-        const status = readvmstatelive()
-        return { ok: true, already: true, ...status }
-      }
-      if (existing) {
-        existing.remove()
-      }
-      sys.querySelector('wanix-term')?.remove()
-      const vm = document.createElement('wanix-vm')
-      setwanixattrs(vm, {
-        id: vmid,
-        export: 'ttyS0',
-        mem,
-        term: true,
-        start: true,
-      })
-      sys.appendChild(vm)
-      const term = document.createElement('wanix-term')
-      setwanixattrs(term, {
-        path: '#vm/1/term',
-        raw: true,
-      })
-      sys.appendChild(term)
-      const vrid = await waitforvmrid(vm, Date.now() + VM_RID_WAIT_MS)
-      vmstate.running = true
-      vmstate.vmid = vmid
-      vmstate.vrid = vrid
-      vmstate.mem = mem
-      return { ok: true, vmid, vrid, mem }
+
+      return { ok: true, mode: roomconfig.mode, mountkey: lastmountkey }
     }
 
-    function stopvm(vmid = DEFAULT_VM_ID) {
-      const vm = readvmbyid(vmid) ?? sys.querySelector('wanix-vm')
-      vm?.remove()
-      sys.querySelector('wanix-term')?.remove()
-      unmountvmbinds()
-      vmstate.running = false
-      vmstate.vmid = null
-      vmstate.vrid = null
-      vmstate.mem = null
-      return { ok: true }
+    function removetargetpair(taskid) {
+      system
+        ?.querySelectorAll(`[data-zss-target-id="${taskid}"]`)
+        .forEach((el) => el.remove())
+      system?.querySelector(`wanix-task[id="${taskid}"]`)?.remove()
+      roomconfig.tasks = roomconfig.tasks.filter((task) => task.id !== taskid)
+    }
+
+    async function spawntask(taskid, cmd) {
+      if (!system?.isReady) {
+        throw new Error('wanix room not ready')
+      }
+      if (system.querySelector(`wanix-task[id="${taskid}"]`)) {
+        return { ok: true, already: true, taskid }
+      }
+
+      const task = document.createElement('wanix-task')
+      setwanixattrs(task, {
+        id: taskid,
+        type: 'wasi',
+        term: true,
+        cmd,
+      })
+      task.setAttribute('data-zss-target-id', taskid)
+      task.setAttribute('data-zss-target-kind', 'task')
+      system.appendChild(task)
+
+      if (typeof task.allocate === 'function') {
+        await task.allocate()
+      }
+
+      const termpath =
+        typeof task.term === 'string' && task.term.length > 0
+          ? task.term
+          : `#task/${taskid}/term`
+      const term = document.createElement('wanix-term')
+      setwanixattrs(term, {
+        path: termpath,
+        raw: true,
+      })
+      term.setAttribute('data-zss-target-id', taskid)
+      term.setAttribute('data-zss-target-kind', 'task')
+      system.appendChild(term)
+
+      if (typeof task.start === 'function') {
+        await task.start()
+      }
+
+      const entry = { id: taskid, cmd, running: true }
+      roomconfig.tasks = [...roomconfig.tasks.filter((t) => t.id !== taskid), entry]
+
+      return { ok: true, taskid, rid: task.rid ?? null }
+    }
+
+    function halttask(taskid) {
+      removetargetpair(taskid)
+      return { ok: true, taskid }
+    }
+
+    function stoproom() {
+      return applyroom({
+        mode: 'idle',
+        mountkey: roomconfig.mountkey + 1,
+        archives: [],
+        remotes: [],
+        tasks: [],
+      })
+    }
+
+    function readroomstatus() {
+      return {
+        ...roomconfig,
+        ready: !!system?.isReady,
+        vmrunning: !!system?.querySelector('wanix-vm[start], wanix-vm[start=""]'),
+      }
+    }
+
+    function readvmstatelive() {
+      const vm = system?.querySelector('wanix-vm')
+      return {
+        running: !!vm,
+        vmid: vm?.getAttribute('id') ?? roomconfig.vm?.id ?? null,
+        vrid: vm?.rid ?? null,
+        mem: vm?.getAttribute('mem') ?? roomconfig.vm?.mem ?? null,
+      }
     }
 
     async function handlerrpc(data, source) {
@@ -203,24 +398,51 @@
             result = { ok: true }
             break
           case 'readready':
-            result = { isReady: sys.isReady, instanceID: sys.instanceID }
+            result = {
+              isReady: !!system?.isReady,
+              instanceID: system?.instanceID ?? null,
+            }
+            break
+          case 'readroomstatus':
+            result = readroomstatus()
             break
           case 'readvmstatus':
             result = readvmstatelive()
             break
+          case 'applyroom': {
+            const [config] = args
+            result = await applyroom(config ?? { mode: 'idle', mountkey: 0 })
+            break
+          }
+          case 'spawntask': {
+            const [taskid, cmd] = args
+            result = await spawntask(String(taskid), String(cmd))
+            break
+          }
+          case 'halttask': {
+            const [taskid] = args
+            result = halttask(String(taskid))
+            break
+          }
+          case 'stoproom':
+            result = await stoproom()
+            break
           case 'startvm': {
             const [mem, vmid] = args
-            result = await startvm(
-              String(mem ?? DEFAULT_VM_MEM),
-              String(vmid ?? DEFAULT_VM_ID),
-            )
+            result = await applyroom({
+              ...roomconfig,
+              mode: 'vm',
+              mountkey: roomconfig.mountkey + 1,
+              vm: {
+                id: String(vmid ?? DEFAULT_VM_ID),
+                mem: String(mem ?? DEFAULT_VM_MEM),
+                active: true,
+              },
+            })
             break
           }
           case 'stopvm': {
-            const [vmid] = args
-            result = stopvm(
-              vmid ? String(vmid) : DEFAULT_VM_ID,
-            )
+            result = await stoproom()
             break
           }
           case 'listdir': {
@@ -249,8 +471,8 @@
             break
           }
           case 'termwrite': {
-            const [data] = args
-            readterm().write(String(data ?? ''))
+            const [linedata] = args
+            readterm().write(String(linedata ?? ''))
             result = { ok: true }
             break
           }
@@ -281,27 +503,8 @@
       void handlerrpc(data, event.source)
     })
 
-    function postready() {
-      console.info('[wanix] ready')
-      window.parent.postMessage(
-        { type: WANIX_MSG_READY },
-        window.location.origin,
-      )
-    }
-
-    sys.addEventListener('ready', postready)
-    sys.addEventListener('error', (e) =>
-      console.error('[wanix] error', e.detail),
-    )
-
     await customElements.whenDefined('wanix-system')
-    if (!sys.isReady) {
-      mountvmbinds()
-    }
-
-    if (sys.isReady) {
-      postready()
-    }
+    postidle()
   </script>
 </body>
 

@@ -2,6 +2,7 @@ import {
   apierror,
   apilog,
   wanixshow,
+  wanixstop,
   wanixvmstart,
   wanixvmstop,
 } from 'zss/device/api'
@@ -51,14 +52,15 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
           }
           break
         }
-        case 'stop':
-          wanixstublog(
+        case 'stop': {
+          const [stoparg] = readargs(words, 1, [ARG_TYPE.MAYBE_NAME])
+          wanixstop(
+            SOFTWARE,
             player,
-            ispresent(arg)
-              ? `stop task ${NAME(arg)} (not wired)`
-              : 'stop all tasks (not wired)',
+            ispresent(stoparg) ? NAME(stoparg) : undefined,
           )
           break
+        }
         case 'detach':
           wanixstublog(player, 'detach (not wired)')
           break
