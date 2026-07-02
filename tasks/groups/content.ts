@@ -1568,6 +1568,15 @@ export const CONTENT_TASKS: TaskDef[] = [
       runcontentcli({ ...ctx, args: ['codepage-validate', ...ctx.args] }),
     ),
   }),
+  def('content:wanix:fixtures:build', {
+    description:
+      'Build WASI .wasm and .tgz drag-drop fixtures under ops/fixtures/wanix/ (needs wabt wat2wasm)',
+    run: handler(async () => {
+      const { buildwanixfixtures } = await import('ops/lib/wanix/buildfixtures')
+      buildwanixfixtures()
+      return 0
+    }),
+  }),
   def('content:zzt:corpus:sync', {
     description:
       'Crawl Museum of ZZT and download vanilla ZZT world ZIPs into ops/fixtures/zzt/corpus/archives (gitignored)',

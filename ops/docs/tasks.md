@@ -68,6 +68,7 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
 | `yarn task run content:book:test` | Jest content book tests | `ci` | — | — |
 | `yarn task run content:book:validate` | Validate book JSON (pass path as extra args) | — | — | — |
 | `yarn task run content:codepage:validate` | Validate codepage JSON (pass path as extra args) | — | — | — |
+| `yarn task run content:wanix:fixtures:build` | Build WASI .wasm and .tgz drag-drop fixtures under ops/fixtures/wanix/ (needs wabt wat2wasm) | — | — | — |
 | `yarn task run content:zzt:corpus:build` | Extract Museum archives, build ZZT OOP → .zss corpus, and sanitize profanity/slurs | `slow` | `content:zzt:corpus:extract`, `content:zzt:corpus:zss`, `content:zzt:corpus:sanitize` | — |
 | `yarn task run content:zzt:corpus:extract` | Unzip vanilla ZZT archives into ops/fixtures/zzt/corpus/extracted (.zzt/.brd only) | `slow` | — | — |
 | `yarn task run content:zzt:corpus:manifest` | Crawl Museum of ZZT and write vanilla ZZT manifest only (no downloads) | — | — | — |

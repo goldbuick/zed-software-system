@@ -4,8 +4,8 @@ import { doasync } from 'zss/device/doasync'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { showwanixmenu } from 'zss/feature/wanix/wanixmenu'
 import {
-  handlewanixdrop,
   halttaskinroom,
+  handlewanixdrop,
   stopwanixroom,
 } from 'zss/feature/wanix/wanixroom'
 import type { WanixDropPayload } from 'zss/feature/wanix/wanixroomtypes'
@@ -56,11 +56,19 @@ const wanix = createdevice('wanix', [], (message) => {
       doasync(wanix, message.player, async () => {
         try {
           const result = await handlewanixdrop(payload)
-          apilog(
-            wanix,
-            message.player,
-            `wanix run ${result.taskid} ${result.cmd}`,
-          )
+          if (result.cmd) {
+            apilog(
+              wanix,
+              message.player,
+              `wanix run ${result.taskid} ${result.cmd}`,
+            )
+          } else if (payload.kind === 'bundle') {
+            apilog(
+              wanix,
+              message.player,
+              `wanix bundle ${result.taskid} has no .wasm entries`,
+            )
+          }
         } catch (err) {
           apierror(
             wanix,
@@ -95,7 +103,9 @@ const wanix = createdevice('wanix', [], (message) => {
     case 'vm-start':
       doasync(wanix, message.player, async () => {
         try {
-          const vmid = isstring(message.data) ? message.data : DEFAULT_WANIX_VM_ID
+          const vmid = isstring(message.data)
+            ? message.data
+            : DEFAULT_WANIX_VM_ID
           const result = await startwanixvm(DEFAULT_WANIX_VM_MEM, vmid)
           if (result.already) {
             apilog(
@@ -123,7 +133,9 @@ const wanix = createdevice('wanix', [], (message) => {
     case 'vm-stop':
       doasync(wanix, message.player, async () => {
         try {
-          const vmid = isstring(message.data) ? message.data : DEFAULT_WANIX_VM_ID
+          const vmid = isstring(message.data)
+            ? message.data
+            : DEFAULT_WANIX_VM_ID
           await stopwanixvm(vmid)
           apilog(wanix, message.player, 'wanix vm stopped')
         } catch (err) {

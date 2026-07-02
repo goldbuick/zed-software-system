@@ -1,5 +1,5 @@
 import { callwanixrpc, waitwanixready } from 'zss/feature/wanix/wanixbridge'
-import { pickwanixbundleentry } from 'zss/feature/wanix/wanixbundle'
+import { listwanixwasmentries } from 'zss/feature/wanix/wanixbundle'
 import { uniquewanixtaskid } from 'zss/feature/wanix/wanixcmd'
 import type {
   WanixDropPayload,
@@ -8,6 +8,7 @@ import type {
   WanixSpawnTaskResult,
 } from 'zss/feature/wanix/wanixroomtypes'
 import { createidleroomconfig } from 'zss/feature/wanix/wanixroomtypes'
+import { extractwanixtgz } from 'zss/feature/wanix/wanixtgzextract'
 import {
   DEFAULT_WANIX_VM_ID,
   DEFAULT_WANIX_VM_MEM,
@@ -16,7 +17,6 @@ import {
 const WANIX_ROOM_TIMEOUT_MS = 180_000
 
 let roomconfig: WanixRoomConfig = createidleroomconfig()
-const archivebloburls = new Map<string, string>()
 
 function bumpmountkey(config: WanixRoomConfig): WanixRoomConfig {
   return { ...config, mountkey: config.mountkey + 1 }
@@ -78,11 +78,22 @@ export async function startwanixvmroom(
   return applywanixroom(next)
 }
 
-export async function stopwanixroom(): Promise<unknown> {
-  for (const url of archivebloburls.values()) {
-    URL.revokeObjectURL(url)
+export async function stopwanixvmroom(): Promise<unknown> {
+  await waitwanixready(WANIX_ROOM_TIMEOUT_MS)
+  const result = await callwanixrpc<unknown>(
+    'stopvm',
+    [],
+    WANIX_ROOM_TIMEOUT_MS,
+  )
+  roomconfig = {
+    ...roomconfig,
+    mode: 'task',
+    vm: undefined,
   }
-  archivebloburls.clear()
+  return result
+}
+
+export async function stopwanixroom(): Promise<unknown> {
   const next = createidleroomconfig()
   next.mountkey = roomconfig.mountkey + 1
   return applywanixroom(next)
@@ -141,6 +152,10 @@ function normalizewanixpath(label: string): string {
   return trimmed.startsWith('#ramfs/') ? trimmed : `#ramfs/${trimmed}`
 }
 
+function readtaskidset(): Set<string> {
+  return new Set(roomconfig.tasks.map((task) => task.id))
+}
+
 export async function handlewanixdrop(payload: WanixDropPayload): Promise<{
   taskid: string
   cmd: string
@@ -158,35 +173,30 @@ export async function handlewanixdrop(payload: WanixDropPayload): Promise<{
     return { taskid, cmd: path }
   }
 
-  const bundledst = `bundle-${taskid}`
-  const bloburl = URL.createObjectURL(
-    new Blob([payload.bytes], { type: 'application/gzip' }),
-  )
-  archivebloburls.set(taskid, bloburl)
-
-  const next: WanixRoomConfig = {
-    ...(roomconfig.mode === 'idle'
-      ? bumpmountkey(roomconfig)
-      : { ...roomconfig, mountkey: roomconfig.mountkey + 1 }),
-    mode: 'task',
-    remotes: roomconfig.remotes,
-    tasks: roomconfig.tasks,
-    vm: undefined,
-    archives: [
-      ...roomconfig.archives.filter((entry) => entry.id !== taskid),
-      { id: taskid, dst: bundledst, src: bloburl },
-    ],
+  await ensurewanixtaskroom()
+  const prefix = `bundle-${taskid}`
+  const files = await extractwanixtgz(payload.bytes, prefix)
+  for (const file of files) {
+    await putwanixroomfile(normalizewanixpath(file.path), file.bytes)
   }
-  await applywanixroom(next)
 
-  const rootentries = await listwanixroomdir('.')
-  let bundleentries: string[] | null = null
-  try {
-    bundleentries = await listwanixroomdir(bundledst)
-  } catch {
-    bundleentries = null
+  const wasmpaths = listwanixwasmentries(files, prefix)
+  if (!wasmpaths.length) {
+    return { taskid, cmd: '' }
   }
-  const cmd = pickwanixbundleentry(rootentries, bundleentries, bundledst)
-  await spawntaskinroom(taskid, cmd)
-  return { taskid, cmd }
+
+  const usedids = readtaskidset()
+  let firstcmd = ''
+  for (const relpath of wasmpaths) {
+    const cmd = normalizewanixpath(relpath)
+    const basename = relpath.split('/').pop() ?? relpath
+    const subtaskid = uniquewanixtaskid(`${taskid}-${basename}`, usedids)
+    usedids.add(subtaskid)
+    await spawntaskinroom(subtaskid, cmd)
+    if (!firstcmd) {
+      firstcmd = cmd
+    }
+  }
+
+  return { taskid, cmd: firstcmd }
 }

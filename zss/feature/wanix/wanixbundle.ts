@@ -1,3 +1,34 @@
+export type WanixExtractedFileRef = {
+  path: string
+  bytes: Uint8Array
+}
+
+/** Collect all .wasm paths from extracted bundle files. */
+export function listwanixwasmentries(
+  files: WanixExtractedFileRef[],
+  prefix: string,
+): string[] {
+  const trimmedprefix = prefix.replace(/\/+$/, '')
+  const paths: string[] = []
+  for (const file of files) {
+    if (!file.path.toLowerCase().endsWith('.wasm')) {
+      continue
+    }
+    const normalized = file.path.replace(/\\/g, '/').replace(/^\/+/, '')
+    if (
+      normalized === `${trimmedprefix}.wasm` ||
+      normalized.startsWith(`${trimmedprefix}/`)
+    ) {
+      paths.push(normalized)
+      continue
+    }
+    if (!normalized.includes('/')) {
+      paths.push(`${trimmedprefix}/${normalized}`)
+    }
+  }
+  return paths.sort()
+}
+
 /** Pick a single wasm entry path from wanix namespace listings. */
 export function pickwanixbundleentry(
   rootentries: string[],

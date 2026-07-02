@@ -361,6 +361,29 @@
       return { ok: true, taskid }
     }
 
+    function stopvm() {
+      if (!system?.isReady) {
+        throw new Error('wanix room not ready')
+      }
+      system
+        .querySelectorAll('[data-zss-target-kind="vm"]')
+        .forEach((el) => el.remove())
+      system.querySelector('wanix-vm')?.remove()
+      system.querySelector('[data-zss-linux-bind]')?.remove()
+      system.querySelector('[data-zss-v86-bind]')?.remove()
+      for (const bind of system.querySelectorAll('wanix-bind')) {
+        if (bind.getAttribute('dst') === 'vm') {
+          bind.remove()
+        }
+      }
+      roomconfig = {
+        ...roomconfig,
+        mode: 'task',
+        vm: undefined,
+      }
+      return { ok: true, mode: 'task' }
+    }
+
     function stoproom() {
       return applyroom({
         mode: 'idle',
@@ -442,7 +465,7 @@
             break
           }
           case 'stopvm': {
-            result = await stoproom()
+            result = stopvm()
             break
           }
           case 'listdir': {

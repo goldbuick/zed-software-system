@@ -1,8 +1,9 @@
 import { waitwanixready } from 'zss/feature/wanix/wanixbridge'
 import {
+  readwanixroomconfig,
   readwanixroomstatus,
   startwanixvmroom,
-  stopwanixroom,
+  stopwanixvmroom,
 } from 'zss/feature/wanix/wanixroom'
 
 export const DEFAULT_WANIX_VM_ID = 'linux-vm'
@@ -50,10 +51,17 @@ export async function startwanixvm(
 }
 
 export async function stopwanixvm(
-  _vmid = DEFAULT_WANIX_VM_ID,
+  vmid = DEFAULT_WANIX_VM_ID,
 ): Promise<{ ok: boolean }> {
   await waitwanixready()
-  await stopwanixroom()
+  const config = readwanixroomconfig()
+  if (config.mode !== 'vm') {
+    return { ok: true }
+  }
+  if (config.vm?.id && config.vm.id !== vmid) {
+    return { ok: true }
+  }
+  await stopwanixvmroom()
   return { ok: true }
 }
 
