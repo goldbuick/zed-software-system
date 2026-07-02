@@ -172,6 +172,22 @@ export function bridgefetch(
   device.emit(player, 'bridge:fetch', [arg, label, url, method, words])
 }
 
+export function wanixshow(device: DEVICELIKE, player: string) {
+  device.emit(player, 'wanix:show')
+}
+
+export function wanixvmstart(
+  device: DEVICELIKE,
+  player: string,
+  vmid?: string,
+) {
+  device.emit(player, 'wanix:vm-start', vmid)
+}
+
+export function wanixvmstop(device: DEVICELIKE, player: string, vmid?: string) {
+  device.emit(player, 'wanix:vm-stop', vmid)
+}
+
 export function bridgejoin(device: DEVICELIKE, player: string, topic: string) {
   device.emit(player, 'bridge:join', topic)
 }

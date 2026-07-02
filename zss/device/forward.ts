@@ -70,6 +70,7 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
         case 'synth':
         case 'modem':
         case 'bridge':
+        case 'wanix':
         case 'register':
         case 'boardrunner':
         case 'gadgetclient':

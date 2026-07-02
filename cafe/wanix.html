@@ -23,7 +23,24 @@
     const WANIX_MSG_RPC = 'zss-wanix-rpc'
     const WANIX_MSG_RPC_RES = 'zss-wanix-rpc-res'
 
+    const WANIX_LINUX_URL =
+      'https://cdn.jsdelivr.net/npm/wanix-extras@0.4.0-rc1/dist/wanix-linux.tgz'
+    const WANIX_V86_URL =
+      'https://cdn.jsdelivr.net/npm/wanix-extras@0.4.0-rc1/dist/v86.tgz'
+
+    const DEFAULT_VM_ID = 'linux-vm'
+    const DEFAULT_VM_MEM = '512M'
+    const VM_RID_WAIT_MS = 120_000
+    const VM_RID_POLL_MS = 250
+
     const sys = document.querySelector('wanix-system')
+
+    const vmstate = {
+      running: false,
+      vmid: null,
+      vrid: null,
+      mem: null,
+    }
 
     function replyrpc(source, id, payload) {
       if (!source || typeof source.postMessage !== 'function') {
@@ -50,6 +67,133 @@
       return sys.root
     }
 
+    function setwanixattrs(el, attrs) {
+      for (const [key, value] of Object.entries(attrs)) {
+        if (value === undefined || value === false) {
+          el.removeAttribute(key)
+          continue
+        }
+        if (value === true || value === '') {
+          el.setAttribute(key, '')
+          continue
+        }
+        el.setAttribute(key, value)
+      }
+    }
+
+    function readvmbyid(vmid) {
+      return sys.querySelector(`wanix-vm[id="${vmid}"]`)
+    }
+
+    function readvmstatelive() {
+      const vm = sys.querySelector('wanix-vm')
+      const running = !!vm
+      return {
+        running,
+        vmid: vm?.getAttribute('id') ?? vmstate.vmid,
+        vrid: vm?.rid ?? vmstate.vrid,
+        mem: vm?.getAttribute('mem') ?? vmstate.mem,
+      }
+    }
+
+    function createarchivebind(marker, dst, src) {
+      const bind = document.createElement('wanix-bind')
+      bind.setAttribute(`data-zss-${marker}-bind`, '')
+      setwanixattrs(bind, { dst, type: 'archive', src })
+      return bind
+    }
+
+    function mountvmbinds() {
+      if (!sys.querySelector('wanix-bind[data-zss-linux-bind]')) {
+        sys.appendChild(createarchivebind('linux', '.', WANIX_LINUX_URL))
+      }
+      if (!sys.querySelector('wanix-bind[data-zss-v86-bind]')) {
+        sys.appendChild(createarchivebind('v86', '#vm/v86', WANIX_V86_URL))
+      }
+    }
+
+    function unmountvmbinds() {
+      sys.querySelector('wanix-bind[data-zss-linux-bind]')?.remove()
+      sys.querySelector('wanix-bind[data-zss-v86-bind]')?.remove()
+    }
+
+    async function waitvmbindmount() {
+      mountvmbinds()
+      const deadline = Date.now() + 60_000
+      while (Date.now() < deadline) {
+        try {
+          const entries = await readroot().readDir('.')
+          if (entries.some((entry) => entry.startsWith('bin'))) {
+            return
+          }
+        } catch {
+          // root not ready for vm layout yet
+        }
+        await new Promise((resolve) => setTimeout(resolve, VM_RID_POLL_MS))
+      }
+      throw new Error('wanix vm binds not mounted')
+    }
+
+    async function waitforvmrid(vm, deadline) {
+      while (Date.now() < deadline) {
+        if (vm.rid) {
+          return vm.rid
+        }
+        await new Promise((resolve) => setTimeout(resolve, VM_RID_POLL_MS))
+      }
+      return vm.rid ?? null
+    }
+
+    async function startvm(mem = DEFAULT_VM_MEM, vmid = DEFAULT_VM_ID) {
+      await customElements.whenDefined('wanix-system')
+      if (!sys?.isReady) {
+        throw new Error('wanix-system not ready')
+      }
+      await waitvmbindmount()
+      const existing = readvmbyid(vmid)
+      if (existing?.hasAttribute('start')) {
+        const status = readvmstatelive()
+        return { ok: true, already: true, ...status }
+      }
+      if (existing) {
+        existing.remove()
+      }
+      sys.querySelector('wanix-term')?.remove()
+      const vm = document.createElement('wanix-vm')
+      setwanixattrs(vm, {
+        id: vmid,
+        export: 'ttyS0',
+        mem,
+        term: true,
+        start: true,
+      })
+      sys.appendChild(vm)
+      const term = document.createElement('wanix-term')
+      setwanixattrs(term, {
+        path: '#vm/1/term',
+        raw: true,
+      })
+      sys.appendChild(term)
+      const vrid = await waitforvmrid(vm, Date.now() + VM_RID_WAIT_MS)
+      vmstate.running = true
+      vmstate.vmid = vmid
+      vmstate.vrid = vrid
+      vmstate.mem = mem
+      return { ok: true, vmid, vrid, mem }
+    }
+
+    function stopvm(vmid = DEFAULT_VM_ID) {
+      const vm = readvmbyid(vmid) ?? sys.querySelector('wanix-vm')
+      vm?.remove()
+      sys.querySelector('wanix-term')?.remove()
+      unmountvmbinds()
+      vmstate.running = false
+      vmstate.vmid = null
+      vmstate.vrid = null
+      vmstate.mem = null
+      return { ok: true }
+    }
+
     async function handlerrpc(data, source) {
       const { id, method, args = [] } = data
       try {
@@ -61,6 +205,24 @@
           case 'readready':
             result = { isReady: sys.isReady, instanceID: sys.instanceID }
             break
+          case 'readvmstatus':
+            result = readvmstatelive()
+            break
+          case 'startvm': {
+            const [mem, vmid] = args
+            result = await startvm(
+              String(mem ?? DEFAULT_VM_MEM),
+              String(vmid ?? DEFAULT_VM_ID),
+            )
+            break
+          }
+          case 'stopvm': {
+            const [vmid] = args
+            result = stopvm(
+              vmid ? String(vmid) : DEFAULT_VM_ID,
+            )
+            break
+          }
           case 'listdir': {
             const [path] = args
             result = await readroot().readDir(String(path ?? '.'))
@@ -131,6 +293,11 @@
     sys.addEventListener('error', (e) =>
       console.error('[wanix] error', e.detail),
     )
+
+    await customElements.whenDefined('wanix-system')
+    if (!sys.isReady) {
+      mountvmbinds()
+    }
 
     if (sys.isReady) {
       postready()

@@ -2,6 +2,7 @@
 import './device/gadgetclient'
 import './device/modem'
 import './device/bridge'
+import './device/wanix'
 import './device/register'
 import './device/synth'
 import './perf/perfreport'
