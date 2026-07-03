@@ -1,5 +1,9 @@
-import { callwanixrpc, waitwanixready } from 'zss/feature/wanix/wanixbridge'
-import { listwanixwasmentries } from 'zss/feature/wanix/wanixbundle'
+import {
+  callwanixrpc,
+  waitwanixiframe,
+  waitwanixready,
+} from 'zss/feature/wanix/wanixbridge'
+import { listwanixwasmentries, readbundleflatpath } from 'zss/feature/wanix/wanixbundle'
 import { uniquewanixtaskid } from 'zss/feature/wanix/wanixcmd'
 import type {
   WanixDropPayload,
@@ -29,7 +33,7 @@ export function readwanixroomconfig(): WanixRoomConfig {
 export async function applywanixroom(
   config: WanixRoomConfig,
 ): Promise<unknown> {
-  await waitwanixready(WANIX_ROOM_TIMEOUT_MS)
+  await waitwanixiframe(WANIX_ROOM_TIMEOUT_MS)
   const result = await callwanixrpc<unknown>(
     'applyroom',
     [config],
@@ -119,7 +123,15 @@ export async function spawntaskinroom(
   return result
 }
 
-export async function halttaskinroom(taskid: string): Promise<{ ok: boolean }> {
+export async function halttaskinroom(
+  taskid: string,
+): Promise<{ ok: boolean; idle?: boolean }> {
+  if (roomconfig.mode === 'idle') {
+    return { ok: true, idle: true }
+  }
+  if (!roomconfig.tasks.some((task) => task.id === taskid)) {
+    return { ok: true, idle: true }
+  }
   await waitwanixready()
   const result = await callwanixrpc<{ ok: boolean }>('halttask', [taskid])
   roomconfig = {
@@ -138,13 +150,23 @@ export async function putwanixroomfile(
 }
 
 export async function listwanixroomdir(path: string): Promise<string[]> {
+  if (roomconfig.mode === 'idle') {
+    return []
+  }
   await waitwanixready()
   return callwanixrpc<string[]>('listdir', [path])
 }
 
-export async function readwanixroomstatus(): Promise<WanixRoomStatus> {
+export async function readwanixroomstatus(): Promise<
+  WanixRoomStatus & { vmrunning?: boolean }
+> {
+  if (roomconfig.mode === 'idle') {
+    return { ...roomconfig, ready: false, vmrunning: false }
+  }
   await waitwanixready()
-  return callwanixrpc<WanixRoomStatus>('readroomstatus')
+  return callwanixrpc<WanixRoomStatus & { vmrunning?: boolean }>(
+    'readroomstatus',
+  )
 }
 
 function normalizewanixpath(label: string): string {
@@ -159,6 +181,7 @@ function readtaskidset(): Set<string> {
 export async function handlewanixdrop(payload: WanixDropPayload): Promise<{
   taskid: string
   cmd: string
+  spawns: { taskid: string; cmd: string }[]
 }> {
   const taskid = uniquewanixtaskid(
     payload.label,
@@ -170,33 +193,37 @@ export async function handlewanixdrop(payload: WanixDropPayload): Promise<{
     const path = normalizewanixpath(payload.label)
     await putwanixroomfile(path, payload.bytes)
     await spawntaskinroom(taskid, path)
-    return { taskid, cmd: path }
+    return { taskid, cmd: path, spawns: [{ taskid, cmd: path }] }
   }
 
   await ensurewanixtaskroom()
   const prefix = `bundle-${taskid}`
   const files = await extractwanixtgz(payload.bytes, prefix)
   for (const file of files) {
-    await putwanixroomfile(normalizewanixpath(file.path), file.bytes)
+    const flatpath = readbundleflatpath(prefix, file.path)
+    await putwanixroomfile(normalizewanixpath(flatpath), file.bytes)
   }
 
   const wasmpaths = listwanixwasmentries(files, prefix)
   if (!wasmpaths.length) {
-    return { taskid, cmd: '' }
+    return { taskid, cmd: '', spawns: [] }
   }
 
   const usedids = readtaskidset()
+  const spawns: { taskid: string; cmd: string }[] = []
   let firstcmd = ''
   for (const relpath of wasmpaths) {
-    const cmd = normalizewanixpath(relpath)
+    const flatpath = readbundleflatpath(prefix, relpath)
+    const cmd = normalizewanixpath(flatpath)
     const basename = relpath.split('/').pop() ?? relpath
     const subtaskid = uniquewanixtaskid(`${taskid}-${basename}`, usedids)
     usedids.add(subtaskid)
     await spawntaskinroom(subtaskid, cmd)
+    spawns.push({ taskid: subtaskid, cmd })
     if (!firstcmd) {
       firstcmd = cmd
     }
   }
 
-  return { taskid, cmd: firstcmd }
+  return { taskid, cmd: firstcmd, spawns }
 }

@@ -57,9 +57,15 @@ export function iswanixtarjunkpath(name: string): boolean {
   return normalized.startsWith('__MACOSX/')
 }
 
+export function sanitizewanixtarpath(name: string): string {
+  const normalized = name.replace(/\\/g, '/').replace(/^\/+/, '')
+  const parts = normalized.split('/').filter((part) => part.length > 0 && part !== '.')
+  return parts.join('/')
+}
+
 function joinprefixpath(prefix: string, tarpath: string): string {
   const trimmedprefix = prefix.replace(/\/+$/, '')
-  const trimmedpath = tarpath.replace(/^\/+/, '')
+  const trimmedpath = sanitizewanixtarpath(tarpath)
   if (!trimmedpath) {
     return trimmedprefix
   }

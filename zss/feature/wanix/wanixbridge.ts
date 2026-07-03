@@ -74,7 +74,7 @@ function notifychildwindow() {
   }
 }
 
-function waitchildwindow(timeoutms = 30_000): Promise<Window> {
+export function waitwanixiframe(timeoutms = 30_000): Promise<Window> {
   if (childwindow) {
     return Promise.resolve(childwindow)
   }
@@ -139,7 +139,7 @@ export async function callwanixrpc<T>(
   args?: unknown[],
   timeoutms = WANIX_RPC_TIMEOUT_MS,
 ): Promise<T> {
-  const target = await waitchildwindow()
+  const target = await waitwanixiframe()
   const id = ++rpcseq
   return new Promise<T>((resolve, reject) => {
     const timer = setTimeout(() => {

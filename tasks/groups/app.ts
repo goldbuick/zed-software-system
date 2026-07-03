@@ -204,6 +204,17 @@ export const APP_TASKS: TaskDef[] = [
     tags: ['dev'],
     run: exec(['vite', 'preview', '--host', '0.0.0.0', '--port', '7777']),
   }),
+  def('app:playwright:headed', {
+    description:
+      'Run a headed Playwright script against an already-running dev server (--url required)',
+    tags: ['dev'],
+    run: handler(async (ctx) => {
+      const { runheadedplaywrightscript } = await import(
+        'tasks/lib/playwright/runheadedscript'
+      )
+      return runheadedplaywrightscript(ctx.root, 'app:playwright:headed', ctx.args)
+    }),
+  }),
   def('app:lint:imports', {
     description:
       'Guard zss/ and cafe/ for no ../ imports, re-exports, or known barrel files',

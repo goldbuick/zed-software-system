@@ -11,6 +11,7 @@ import { SOFTWARE } from 'zss/device/session'
 import {
   emitwanixdropfile,
   iswanixdropfilename,
+  iswanixgzipmagic,
 } from 'zss/feature/wanix/wanixdropparse'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
@@ -479,13 +480,39 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
   }
 }
 
+function emitwanixdropfileroute(player: string, file: File) {
+  if (import.meta.env.DEV) {
+    apilog(
+      SOFTWARE,
+      player,
+      `wanix drop route: name=${file.name} type=${file.type ?? ''}`,
+    )
+  }
+  emitwanixdropfile(SOFTWARE, player, file)
+}
+
 export function parsewebfile(player: string, file: File | undefined) {
   if (!ispresent(file)) {
     return
   }
   if (iswanixdropfilename(file.name)) {
-    emitwanixdropfile(SOFTWARE, player, file)
+    emitwanixdropfileroute(player, file)
     return
   }
-  handlefiletype(player, file.type ?? '', file)
+  const type = file.type ?? ''
+  if (type === 'application/gzip' || type === 'application/x-gzip') {
+    void file
+      .slice(0, 2)
+      .arrayBuffer()
+      .then((buffer) => {
+        if (iswanixgzipmagic(new Uint8Array(buffer))) {
+          emitwanixdropfileroute(player, file)
+          return
+        }
+        handlefiletype(player, type, file)
+      })
+      .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
+    return
+  }
+  handlefiletype(player, type, file)
 }

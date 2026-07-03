@@ -13,6 +13,16 @@
       height: 100vh;
       margin: 0;
     }
+    #wanix-host wanix-system {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 8px;
+    }
+    #wanix-host wanix-term {
+      flex: 1 1 auto;
+      min-height: 120px;
+    }
   </style>
 </head>
 
@@ -303,6 +313,12 @@
     }
 
     function removetargetpair(taskid) {
+      const term = system?.querySelector(
+        `wanix-term[data-zss-target-id="${taskid}"]`,
+      )
+      if (term && typeof term.disconnect === 'function') {
+        term.disconnect()
+      }
       system
         ?.querySelectorAll(`[data-zss-target-id="${taskid}"]`)
         .forEach((el) => el.remove())
@@ -345,6 +361,13 @@
       term.setAttribute('data-zss-target-id', taskid)
       term.setAttribute('data-zss-target-kind', 'task')
       system.appendChild(term)
+
+      if (typeof term.connect === 'function') {
+        await term.connect()
+      }
+      if (typeof term.fit === 'function') {
+        term.fit()
+      }
 
       if (typeof task.start === 'function') {
         await task.start()

@@ -1,4 +1,3 @@
-import { waitwanixready } from 'zss/feature/wanix/wanixbridge'
 import {
   readwanixroomconfig,
   readwanixroomstatus,
@@ -28,7 +27,6 @@ export async function startwanixvm(
   mem = DEFAULT_WANIX_VM_MEM,
   vmid = DEFAULT_WANIX_VM_ID,
 ): Promise<WanixVmStartResult> {
-  await waitwanixready()
   const result = (await startwanixvmroom(vmid, mem)) as WanixVmStatus & {
     vrid?: string | null
     already?: boolean
@@ -53,7 +51,6 @@ export async function startwanixvm(
 export async function stopwanixvm(
   vmid = DEFAULT_WANIX_VM_ID,
 ): Promise<{ ok: boolean }> {
-  await waitwanixready()
   const config = readwanixroomconfig()
   if (config.mode !== 'vm') {
     return { ok: true }
@@ -66,7 +63,9 @@ export async function stopwanixvm(
 }
 
 export async function readwanixvmstatus(): Promise<WanixVmStatus> {
-  await waitwanixready()
+  if (readwanixroomconfig().mode === 'idle') {
+    return { running: false, vmid: null, vrid: null, mem: null }
+  }
   const status = await readwanixroomstatus()
   const vm = status.vm
   return {

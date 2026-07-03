@@ -1,6 +1,20 @@
-import { listwanixwasmentries } from 'zss/feature/wanix/wanixbundle'
+import { listwanixwasmentries, readbundleflatpath } from 'zss/feature/wanix/wanixbundle'
 
 describe('wanixbundle', () => {
+  describe('readbundleflatpath', () => {
+    it('flattens single wasm under bundle prefix', () => {
+      expect(readbundleflatpath('bundle-a', 'bundle-a/hello.wasm')).toBe(
+        'bundle-a-hello.wasm',
+      )
+    })
+
+    it('flattens nested wasm paths', () => {
+      expect(readbundleflatpath('bundle-a', 'bundle-a/sub/b.wasm')).toBe(
+        'bundle-a-sub-b.wasm',
+      )
+    })
+  })
+
   describe('listwanixwasmentries', () => {
     it('lists wasm paths under bundle prefix', () => {
       const files = [

@@ -92,6 +92,14 @@ describe('wanixtgzextract', () => {
       const files = extractwanixtarbytes(tar, 'bundle-multi')
       expect(files).toHaveLength(2)
     })
+
+    it('normalizes bsd tar ./ member paths', () => {
+      const body = new TextEncoder().encode('wasm-bytes')
+      const tar = buildtararchive([{ name: './hello.wasm', body }])
+      const files = extractwanixtarbytes(tar, 'bundle-bsd')
+      expect(files).toHaveLength(1)
+      expect(files[0].path).toBe('bundle-bsd/hello.wasm')
+    })
   })
 
   describe('extractwanixtgz', () => {

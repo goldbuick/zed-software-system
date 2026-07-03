@@ -6,6 +6,7 @@ import { showwanixmenu } from 'zss/feature/wanix/wanixmenu'
 import {
   halttaskinroom,
   handlewanixdrop,
+  readwanixroomconfig,
   stopwanixroom,
 } from 'zss/feature/wanix/wanixroom'
 import type { WanixDropPayload } from 'zss/feature/wanix/wanixroomtypes'
@@ -17,21 +18,43 @@ import {
 } from 'zss/feature/wanix/wanixvm'
 import { ispresent, isstring } from 'zss/mapping/types'
 
-function readwanixdroppayload(data: unknown): WanixDropPayload | undefined {
+function normalizewanixdropbytes(data: unknown): Uint8Array | undefined {
+  if (data instanceof Uint8Array) {
+    return data
+  }
+  if (data instanceof ArrayBuffer) {
+    return new Uint8Array(data)
+  }
+  if (Array.isArray(data) && data.every((value) => typeof value === 'number')) {
+    return new Uint8Array(data)
+  }
+  return undefined
+}
+
+function readwanixdroppayload(
+  data: unknown,
+): { payload?: WanixDropPayload; reject?: string } {
   if (!ispresent(data) || typeof data !== 'object') {
-    return undefined
+    return { reject: 'drop payload missing' }
   }
-  const payload = data as WanixDropPayload
-  if (!isstring(payload.label) || !payload.label.trim()) {
-    return undefined
+  const raw = data as WanixDropPayload
+  if (!isstring(raw.label) || !raw.label.trim()) {
+    return { reject: 'drop label missing' }
   }
-  if (payload.kind !== 'wasm' && payload.kind !== 'bundle') {
-    return undefined
+  if (raw.kind !== 'wasm' && raw.kind !== 'bundle') {
+    return { reject: `drop kind invalid: ${String(raw.kind)}` }
   }
-  if (!(payload.bytes instanceof Uint8Array)) {
-    return undefined
+  const bytes = normalizewanixdropbytes(raw.bytes)
+  if (!bytes) {
+    return { reject: 'drop bytes invalid' }
   }
-  return payload
+  return {
+    payload: {
+      label: raw.label,
+      kind: raw.kind,
+      bytes,
+    },
+  }
 }
 
 const wanix = createdevice('wanix', [], (message) => {
@@ -49,19 +72,41 @@ const wanix = createdevice('wanix', [], (message) => {
       showwanixmenu(message.player)
       break
     case 'drop': {
-      const payload = readwanixdroppayload(message.data)
-      if (!payload) {
+      const parsed = readwanixdroppayload(message.data)
+      if (!parsed.payload) {
+        apierror(
+          wanix,
+          message.player,
+          'wanix',
+          parsed.reject ?? 'drop payload rejected',
+        )
         break
+      }
+      const payload = parsed.payload
+      if (
+        import.meta.env.DEV &&
+        !(message.data as WanixDropPayload).bytes instanceof Uint8Array
+      ) {
+        apilog(
+          wanix,
+          message.player,
+          `wanix drop bytes normalized kind=${payload.kind} len=${payload.bytes.length}`,
+        )
       }
       doasync(wanix, message.player, async () => {
         try {
+          if (readwanixroomconfig().mode === 'idle') {
+            apilog(wanix, message.player, 'wanix task room starting…')
+          }
           const result = await handlewanixdrop(payload)
-          if (result.cmd) {
-            apilog(
-              wanix,
-              message.player,
-              `wanix run ${result.taskid} ${result.cmd}`,
-            )
+          if (result.spawns.length) {
+            for (const spawn of result.spawns) {
+              apilog(
+                wanix,
+                message.player,
+                `wanix run ${spawn.taskid} ${spawn.cmd}`,
+              )
+            }
           } else if (payload.kind === 'bundle') {
             apilog(
               wanix,
@@ -84,8 +129,17 @@ const wanix = createdevice('wanix', [], (message) => {
       doasync(wanix, message.player, async () => {
         try {
           if (isstring(message.data) && message.data.trim()) {
-            await halttaskinroom(message.data)
-            apilog(wanix, message.player, `wanix task stopped ${message.data}`)
+            const taskid = message.data.trim()
+            const result = await halttaskinroom(taskid)
+            if (result.idle) {
+              apilog(wanix, message.player, 'wanix no such task')
+              return
+            }
+            apilog(wanix, message.player, `wanix task stopped ${taskid}`)
+            return
+          }
+          if (readwanixroomconfig().mode === 'idle') {
+            apilog(wanix, message.player, 'wanix already idle')
             return
           }
           await stopwanixroom()
@@ -103,6 +157,7 @@ const wanix = createdevice('wanix', [], (message) => {
     case 'vm-start':
       doasync(wanix, message.player, async () => {
         try {
+          apilog(wanix, message.player, 'wanix vm starting…')
           const vmid = isstring(message.data)
             ? message.data
             : DEFAULT_WANIX_VM_ID

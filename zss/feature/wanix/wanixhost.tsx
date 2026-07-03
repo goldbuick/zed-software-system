@@ -4,6 +4,9 @@ import {
   setwanixchildwindow,
 } from 'zss/feature/wanix/wanixbridge'
 
+const SHOW = false
+const GHOST = true
+
 export function WanixHost() {
   const iframeref = useRef<HTMLIFrameElement>(null)
 
@@ -21,13 +24,13 @@ export function WanixHost() {
       onLoad={onload}
       style={{
         border: 0,
-        opacity: 0.5,
         position: 'fixed',
         top: 0,
-        left: 0, // -99999,
         width: '100%',
         height: '100%',
-        pointerEvents: 'none',
+        opacity: SHOW || GHOST ? 0.5 : 1,
+        left: SHOW || GHOST ? 0 : -99999,
+        pointerEvents: GHOST ? 'none' : 'auto',
       }}
     />
   )

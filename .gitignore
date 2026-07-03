@@ -16,6 +16,7 @@ dist-bin
 dist-server
 oclif.manifest.json
 *.local
+*.tsbuildinfo
 
 # Editor directories and files
 .vscode/*
