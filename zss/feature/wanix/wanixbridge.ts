@@ -2,6 +2,7 @@ import {
   applywanixtermread,
   clearwanixtermbuffers,
 } from 'zss/feature/wanix/wanixtermbuffer'
+import { detachwanixterm, tryautoattachwanixterm } from 'zss/feature/wanix/wanixattachstate'
 import type { WanixTermCellsSnapshot } from 'zss/feature/wanix/wanixtermgridstate'
 
 export {
@@ -61,6 +62,7 @@ function handleparentmessage(event: MessageEvent) {
   if (data.type === WANIX_MSG_IDLE) {
     resetready()
     clearwanixtermbuffers()
+    detachwanixterm()
     return
   }
   if (data.type === WANIX_MSG_CELLS) {
@@ -74,6 +76,7 @@ function handleparentmessage(event: MessageEvent) {
       typeof payload.snapshot === 'object'
     ) {
       applywanixtermread(payload.sessionkey, payload.snapshot)
+      tryautoattachwanixterm()
     }
     return
   }
@@ -183,6 +186,18 @@ export async function callwanixtermfit(
     args.push(sessionkey)
   }
   return callwanixrpc<WanixTermFitResult>('termfit', args)
+}
+
+export async function callwanixtermwrite(
+  data: string,
+  sessionkey?: string,
+): Promise<{ ok: boolean }> {
+  await waitwanixready()
+  const args: unknown[] = [data]
+  if (sessionkey != null && sessionkey !== '') {
+    args.push(sessionkey)
+  }
+  return callwanixrpc<{ ok: boolean }>('termwrite', args)
 }
 
 export async function callwanixrpc<T>(

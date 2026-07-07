@@ -1,4 +1,5 @@
-import { useLayoutEffect, useRef } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
+import { subscribewanixattach } from 'zss/feature/wanix/wanixattachstate'
 import {
   callwanixtermfit,
   waitwanixready,
@@ -16,6 +17,12 @@ export function WanixTermSizeSync() {
   const context = useWriteText()
   const edge = textformatreadedges(context)
   const lastpush = useRef<{ cols: number; rows: number } | null>(null)
+  const [attachversion, setattachversion] = useState(0)
+
+  useLayoutEffect(() => subscribewanixattach(() => {
+    lastpush.current = null
+    setattachversion((prev) => prev + 1)
+  }), [])
 
   useLayoutEffect(() => {
     if (!terminalopen || editoropen) {
@@ -44,7 +51,7 @@ export function WanixTermSizeSync() {
         })
     }, TERM_FIT_DEBOUNCE_MS)
     return () => clearTimeout(timer)
-  }, [edge.width, edge.height, terminalopen, editoropen])
+  }, [edge.width, edge.height, terminalopen, editoropen, attachversion])
 
   return null
 }

@@ -200,6 +200,18 @@ export function wanixstop(device: DEVICELIKE, player: string, taskid?: string) {
   device.emit(player, 'wanix:stop', taskid)
 }
 
+export function wanixattach(
+  device: DEVICELIKE,
+  player: string,
+  sessionkey?: string,
+) {
+  device.emit(player, 'wanix:attach', sessionkey)
+}
+
+export function wanixdetach(device: DEVICELIKE, player: string) {
+  device.emit(player, 'wanix:detach')
+}
+
 export function bridgejoin(device: DEVICELIKE, player: string, topic: string) {
   device.emit(player, 'bridge:join', topic)
 }

@@ -3,7 +3,9 @@ import {
   waitwanixiframe,
   waitwanixready,
 } from 'zss/feature/wanix/wanixbridge'
+import { readattachedsession } from 'zss/feature/wanix/wanixattachstate'
 import { listwanixwasmentries, readbundleflatpath } from 'zss/feature/wanix/wanixbundle'
+import { readwanixtermbufferkeys } from 'zss/feature/wanix/wanixtermbuffer'
 import { uniquewanixtaskid } from 'zss/feature/wanix/wanixcmd'
 import type {
   WanixDropPayload,
@@ -192,6 +194,13 @@ function withwanixtimeout<T>(promise: Promise<T>, timeoutms: number): Promise<T>
   })
 }
 
+function readwanixmenusessionfields() {
+  return {
+    sessionkeys: readwanixtermbufferkeys(),
+    attachedsessionkey: readattachedsession(),
+  }
+}
+
 function readwanixmenufallbackvm(): WanixMenuVmStatus | null {
   const vm = roomconfig.vm
   if (!vm?.active) {
@@ -216,6 +225,7 @@ export async function readwanixmenustate(
       vmrunning: false,
       vm: null,
       stalled: false,
+      ...readwanixmenusessionfields(),
     }
   }
   try {
@@ -242,6 +252,7 @@ export async function readwanixmenustate(
       vmrunning,
       vm: vmrunning || vmstatus.running ? vmstatus : null,
       stalled: false,
+      ...readwanixmenusessionfields(),
     }
   } catch {
     const fallbackvm = readwanixmenufallbackvm()
@@ -251,6 +262,7 @@ export async function readwanixmenustate(
       vmrunning: !!fallbackvm?.running,
       vm: fallbackvm,
       stalled: true,
+      ...readwanixmenusessionfields(),
     }
   }
 }

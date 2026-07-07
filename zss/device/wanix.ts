@@ -2,6 +2,11 @@ import { createdevice } from 'zss/device'
 import { apierror, apilog } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
 import { registerreadplayer } from 'zss/device/registerplayer'
+import {
+  detachwanixterm,
+  setattachedsession,
+} from 'zss/feature/wanix/wanixattachstate'
+import { readwanixtermbufferkeys } from 'zss/feature/wanix/wanixtermbuffer'
 import { showwanixmenu } from 'zss/feature/wanix/wanixmenu'
 import {
   halttaskinroom,
@@ -213,6 +218,28 @@ const wanix = createdevice('wanix', [], (message) => {
           )
         }
       })
+      break
+    case 'attach': {
+      const keys = readwanixtermbufferkeys()
+      const requested =
+        isstring(message.data) && message.data.trim()
+          ? message.data.trim()
+          : keys[0]
+      if (!requested) {
+        apilog(wanix, message.player, 'wanix no session to attach')
+        break
+      }
+      if (!keys.includes(requested)) {
+        apilog(wanix, message.player, `wanix no such session ${requested}`)
+        break
+      }
+      setattachedsession(requested)
+      apilog(wanix, message.player, `wanix attached ${requested}`)
+      break
+    }
+    case 'detach':
+      detachwanixterm()
+      apilog(wanix, message.player, 'wanix detached')
       break
     default:
       break

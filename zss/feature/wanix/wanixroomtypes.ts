@@ -50,6 +50,8 @@ export type WanixMenuState = {
   vmrunning: boolean
   vm: WanixMenuVmStatus | null
   stalled: boolean
+  sessionkeys: string[]
+  attachedsessionkey: string | null
 }
 
 export type WanixSpawnTaskResult = {

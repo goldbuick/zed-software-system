@@ -62,6 +62,23 @@ export function buildwanixmenutape(state: WanixMenuState): string {
     parts.push(...zsssectionlines('Control'))
     parts.push(zsszedlinkline('wanix stop', 'Stop all'))
   }
+  parts.push(...zsssectionlines('Sessions'))
+  if (state.sessionkeys.length === 0) {
+    parts.push(zsstextline('$grayno terminal sessions'))
+  } else {
+    for (const sessionkey of state.sessionkeys) {
+      const attached = sessionkey === state.attachedsessionkey
+      parts.push(
+        zsszedlinkline(
+          `wanix attach "${sessionkey}"`,
+          attached ? `* ${sessionkey} (attached)` : sessionkey,
+        ),
+      )
+    }
+    if (state.attachedsessionkey) {
+      parts.push(zsszedlinkline('wanix detach', 'Detach terminal'))
+    }
+  }
   parts.push(...zsssectionlines('Remote'))
   parts.push(zsszedlinkline('wanix remote', 'Remote imports (WSS 9P)'))
   parts.push(

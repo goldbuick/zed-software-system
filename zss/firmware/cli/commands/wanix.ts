@@ -1,6 +1,8 @@
 import {
   apierror,
   apilog,
+  wanixattach,
+  wanixdetach,
   wanixshow,
   wanixstop,
   wanixvmstart,
@@ -62,14 +64,13 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
           break
         }
         case 'detach':
-          wanixstublog(player, 'detach (not wired)')
+          wanixdetach(SOFTWARE, player)
           break
         case 'attach':
-          wanixstublog(
+          wanixattach(
+            SOFTWARE,
             player,
-            ispresent(arg)
-              ? `attach ${NAME(arg)} (not wired)`
-              : 'attach (not wired)',
+            ispresent(arg) ? NAME(arg) : undefined,
           )
           break
         case 'pull':
