@@ -1,7 +1,23 @@
+import {
+  applywanixtermread,
+  clearwanixtermbuffers,
+} from 'zss/feature/wanix/wanixtermbuffer'
+import type { WanixTermCellsSnapshot } from 'zss/feature/wanix/wanixtermgridstate'
+
+export {
+  clearwanixtermbuffers,
+  readwanixtermbuffer,
+  readwanixtermbufferkeys,
+  readwanixtermnotifyversion,
+  subscribewanixtermbuffer,
+} from 'zss/feature/wanix/wanixtermbuffer'
+export type { WanixTermCellsSnapshot } from 'zss/feature/wanix/wanixtermgridstate'
+
 const WANIX_MSG_READY = 'zss-wanix-ready'
 const WANIX_MSG_IDLE = 'zss-wanix-idle'
 const WANIX_MSG_RPC = 'zss-wanix-rpc'
 const WANIX_MSG_RPC_RES = 'zss-wanix-rpc-res'
+const WANIX_MSG_CELLS = 'zss-wanix-cells'
 
 const WANIX_RPC_TIMEOUT_MS = 30_000
 const WANIX_READY_TIMEOUT_MS = 180_000
@@ -44,6 +60,21 @@ function handleparentmessage(event: MessageEvent) {
   }
   if (data.type === WANIX_MSG_IDLE) {
     resetready()
+    clearwanixtermbuffers()
+    return
+  }
+  if (data.type === WANIX_MSG_CELLS) {
+    const payload = data as {
+      sessionkey?: unknown
+      snapshot?: WanixTermCellsSnapshot
+    }
+    if (
+      typeof payload.sessionkey === 'string' &&
+      payload.snapshot &&
+      typeof payload.snapshot === 'object'
+    ) {
+      applywanixtermread(payload.sessionkey, payload.snapshot)
+    }
     return
   }
   if (data.type !== WANIX_MSG_RPC_RES) {

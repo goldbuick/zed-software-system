@@ -29,6 +29,13 @@
     const WANIX_MSG_IDLE = 'zss-wanix-idle'
     const WANIX_MSG_RPC = 'zss-wanix-rpc'
     const WANIX_MSG_RPC_RES = 'zss-wanix-rpc-res'
+    const WANIX_MSG_CELLS = 'zss-wanix-cells'
+
+    const DEFAULT_TERM_COLS = 80
+    const DEFAULT_TERM_ROWS = 24
+    const GRID_FG = 15
+    const GRID_BG = 0
+    const GRID_SPACE = 32
 
     const WANIX_LINUX_URL =
       'https://cdn.jsdelivr.net/npm/wanix-extras@0.4.0-rc1/dist/wanix-linux.tgz'
@@ -46,6 +53,219 @@
     const host = document.getElementById('wanix-host')
     const termsessions = new Map()
     const termencoder = new TextEncoder()
+    const termdecoder = new TextDecoder()
+
+    function createtermgrid(cols, rows) {
+      const nextcols = Math.max(1, cols)
+      const nextrows = Math.max(1, rows)
+      const size = nextcols * nextrows
+      return {
+        cols: nextcols,
+        rows: nextrows,
+        char: new Array(size).fill(GRID_SPACE),
+        color: new Array(size).fill(GRID_FG),
+        bg: new Array(size).fill(GRID_BG),
+        cursorx: 0,
+        cursory: 0,
+        cursorvisible: true,
+        lastcelldigest: '',
+      }
+    }
+
+    function gridcellindex(grid, x, y) {
+      if (x < 0 || y < 0 || x >= grid.cols || y >= grid.rows) {
+        return -1
+      }
+      return x + y * grid.cols
+    }
+
+    function gridputcell(grid, x, y, ch, fg = GRID_FG, bg = GRID_BG) {
+      const index = gridcellindex(grid, x, y)
+      if (index < 0) {
+        return
+      }
+      grid.char[index] = ch
+      grid.color[index] = fg
+      grid.bg[index] = bg
+    }
+
+    function gridscrollup(grid) {
+      if (grid.rows <= 1) {
+        return
+      }
+      const rowsize = grid.cols
+      for (let y = 1; y < grid.rows; ++y) {
+        for (let x = 0; x < rowsize; ++x) {
+          const from = x + y * rowsize
+          const to = x + (y - 1) * rowsize
+          grid.char[to] = grid.char[from]
+          grid.color[to] = grid.color[from]
+          grid.bg[to] = grid.bg[from]
+        }
+      }
+      const lastrow = (grid.rows - 1) * rowsize
+      for (let x = 0; x < rowsize; ++x) {
+        const index = lastrow + x
+        grid.char[index] = GRID_SPACE
+        grid.color[index] = GRID_FG
+        grid.bg[index] = GRID_BG
+      }
+    }
+
+    function gridnewline(grid) {
+      grid.cursorx = 0
+      if (grid.cursory >= grid.rows - 1) {
+        gridscrollup(grid)
+      } else {
+        grid.cursory += 1
+      }
+    }
+
+    function gridwritechar(grid, ch, fg = GRID_FG, bg = GRID_BG) {
+      if (ch === 10) {
+        gridnewline(grid)
+        return
+      }
+      if (ch === 13) {
+        grid.cursorx = 0
+        return
+      }
+      if (ch === 8 || ch === 127) {
+        if (grid.cursorx > 0) {
+          grid.cursorx -= 1
+          gridputcell(grid, grid.cursorx, grid.cursory, GRID_SPACE, fg, bg)
+        }
+        return
+      }
+      if (ch < 32 && ch !== 9) {
+        return
+      }
+      if (ch === 9) {
+        const tabstop = 8
+        const next = Math.ceil((grid.cursorx + 1) / tabstop) * tabstop
+        grid.cursorx = Math.min(next, Math.max(0, grid.cols - 1))
+        return
+      }
+      gridputcell(grid, grid.cursorx, grid.cursory, ch, fg, bg)
+      grid.cursorx += 1
+      if (grid.cursorx >= grid.cols) {
+        gridnewline(grid)
+      }
+    }
+
+    function gridresetcells(grid) {
+      grid.char.fill(GRID_SPACE)
+      grid.color.fill(GRID_FG)
+      grid.bg.fill(GRID_BG)
+      grid.cursorx = 0
+      grid.cursory = 0
+      grid.cursorvisible = true
+    }
+
+    function gridparsecsi(grid, seq) {
+      if (seq === '2J' || seq === 'H') {
+        gridresetcells(grid)
+        return
+      }
+      const cursor = /^(\d*);(\d*)H$/.exec(seq)
+      if (cursor) {
+        const row = Math.max(0, (parseInt(cursor[1] || '1', 10) || 1) - 1)
+        const col = Math.max(0, (parseInt(cursor[2] || '1', 10) || 1) - 1)
+        grid.cursory = Math.min(row, Math.max(0, grid.rows - 1))
+        grid.cursorx = Math.min(col, Math.max(0, grid.cols - 1))
+      }
+    }
+
+    function gridwritechunk(grid, chunk) {
+      let i = 0
+      while (i < chunk.length) {
+        const ch = chunk.charCodeAt(i)
+        if (ch === 27 && chunk.charCodeAt(i + 1) === 91) {
+          i += 2
+          let seq = ''
+          while (i < chunk.length) {
+            const code = chunk.charCodeAt(i)
+            if (code >= 0x40 && code <= 0x7e) {
+              seq += chunk[i]
+              ++i
+              break
+            }
+            seq += chunk[i]
+            ++i
+          }
+          gridparsecsi(grid, seq)
+          continue
+        }
+        gridwritechar(grid, ch)
+        ++i
+      }
+    }
+
+    function gridwritebytes(grid, bytes) {
+      if (!bytes?.length) {
+        return false
+      }
+      gridwritechunk(grid, termdecoder.decode(bytes))
+      return true
+    }
+
+    function digestgridsnapshot(snapshot) {
+      let hash = snapshot.cols * 65537 + snapshot.rows
+      hash = hash * 31 + snapshot.cursorx
+      hash = hash * 31 + snapshot.cursory
+      hash = hash * 31 + (snapshot.cursorvisible ? 1 : 0)
+      for (let i = 0; i < snapshot.char.length; i++) {
+        hash = (hash * 33 + snapshot.char[i]) | 0
+        hash = (hash * 33 + snapshot.color[i]) | 0
+        hash = (hash * 33 + snapshot.bg[i]) | 0
+      }
+      return String(hash)
+    }
+
+    function readgridsnapshot(grid) {
+      const snapshot = {
+        cols: grid.cols,
+        rows: grid.rows,
+        char: [...grid.char],
+        color: [...grid.color],
+        bg: [...grid.bg],
+        cursorx: grid.cursorx,
+        cursory: grid.cursory,
+        cursorvisible: grid.cursorvisible,
+        digest: '',
+      }
+      snapshot.digest = digestgridsnapshot(snapshot)
+      return snapshot
+    }
+
+    function postcells(sessionkey, session) {
+      if (!session?.grid || session.grid.cols <= 0) {
+        return
+      }
+      const snapshot = readgridsnapshot(session.grid)
+      if (snapshot.digest === session.grid.lastcelldigest) {
+        return
+      }
+      session.grid.lastcelldigest = snapshot.digest
+      window.parent.postMessage(
+        { type: WANIX_MSG_CELLS, sessionkey, snapshot },
+        window.location.origin,
+      )
+    }
+
+    function resizesessiongrid(sessionkey, session, cols, rows) {
+      const nextcols = Math.max(1, Number(cols) || 1)
+      const nextrows = Math.max(1, Number(rows) || 1)
+      if (
+        session.grid &&
+        session.grid.cols === nextcols &&
+        session.grid.rows === nextrows
+      ) {
+        return
+      }
+      session.grid = createtermgrid(nextcols, nextrows)
+      postcells(sessionkey, session)
+    }
 
     /** @type {import('zss/feature/wanix/wanixroomtypes').WanixRoomConfig} */
     let roomconfig = {
@@ -115,12 +335,16 @@
       return system.root
     }
 
-    async function readtermloop(session) {
+    async function readtermloop(sessionkey, session) {
       while (session.alive && session.reader) {
         try {
-          const { done } = await session.reader.read()
+          const { done, value } = await session.reader.read()
           if (done || !session.alive) {
             break
+          }
+          if (value?.length && session.grid) {
+            gridwritebytes(session.grid, value)
+            postcells(sessionkey, session)
           }
         } catch {
           break
@@ -152,6 +376,7 @@
         _term: { cols: nextcols, rows: nextrows },
       }
       updateterminals(shim)
+      resizesessiongrid(sessionkey, session, nextcols, nextrows)
       console.info(`[wanix term ${sessionkey}] winsize`, {
         cols: nextcols,
         rows: nextrows,
@@ -202,8 +427,9 @@
       const session = {
         alive: true,
         termpath,
-        lastcols: undefined,
-        lastrows: undefined,
+        lastcols: DEFAULT_TERM_COLS,
+        lastrows: DEFAULT_TERM_ROWS,
+        grid: createtermgrid(DEFAULT_TERM_COLS, DEFAULT_TERM_ROWS),
         reader,
         writer,
         async write(text) {
@@ -228,7 +454,7 @@
         },
       }
       termsessions.set(sessionkey, session)
-      void readtermloop(session)
+      void readtermloop(sessionkey, session)
       return session
     }
 

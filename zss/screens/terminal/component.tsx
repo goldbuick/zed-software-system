@@ -20,6 +20,7 @@ import { useShallow } from 'zustand/react/shallow'
 
 import { TerminalInput } from './input'
 import { TerminalRows } from './rows'
+import { WanixTermReadSync } from './wanixtermreadsync'
 import { WanixTermSizeSync } from './wanixtermsizesync'
 
 export function TerminalComponent() {
@@ -88,6 +89,7 @@ export function TerminalComponent() {
   return (
     <>
       <WanixTermSizeSync />
+      <WanixTermReadSync />
       <TapeBackPlate />
       <TapeTerminalContext.Provider value={tapecontextvalue}>
         <TerminalRows />
