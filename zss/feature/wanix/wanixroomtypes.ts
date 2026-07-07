@@ -37,6 +37,21 @@ export type WanixRoomStatus = WanixRoomConfig & {
   ready: boolean
 }
 
+export type WanixMenuVmStatus = {
+  running: boolean
+  vmid: string | null
+  vrid: string | null
+  mem: string | null
+}
+
+export type WanixMenuState = {
+  config: WanixRoomConfig
+  ready: boolean
+  vmrunning: boolean
+  vm: WanixMenuVmStatus | null
+  stalled: boolean
+}
+
 export type WanixSpawnTaskResult = {
   ok: boolean
   taskid: string

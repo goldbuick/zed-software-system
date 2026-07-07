@@ -1,6 +1,6 @@
+import { callwanixrpc } from 'zss/feature/wanix/wanixbridge'
 import {
   readwanixroomconfig,
-  readwanixroomstatus,
   startwanixvmroom,
   stopwanixvmroom,
 } from 'zss/feature/wanix/wanixroom'
@@ -62,16 +62,11 @@ export async function stopwanixvm(
   return { ok: true }
 }
 
-export async function readwanixvmstatus(): Promise<WanixVmStatus> {
+export async function readwanixvmstatus(
+  timeoutms?: number,
+): Promise<WanixVmStatus> {
   if (readwanixroomconfig().mode === 'idle') {
     return { running: false, vmid: null, vrid: null, mem: null }
   }
-  const status = await readwanixroomstatus()
-  const vm = status.vm
-  return {
-    running: status.vmrunning ?? false,
-    vmid: vm?.id ?? null,
-    vrid: null,
-    mem: vm?.mem ?? null,
-  }
+  return callwanixrpc<WanixVmStatus>('readvmstatus', [], timeoutms)
 }

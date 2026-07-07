@@ -19,10 +19,6 @@
       gap: 8px;
       padding: 8px;
     }
-    #wanix-host wanix-term {
-      flex: 1 1 auto;
-      min-height: 120px;
-    }
   </style>
 </head>
 
@@ -44,9 +40,12 @@
     const ROOM_READY_TIMEOUT_MS = 180_000
     const BIND_MOUNT_TIMEOUT_MS = 120_000
     const VM_RID_WAIT_MS = 120_000
+    const TERM_CONNECT_TIMEOUT_MS = 30_000
     const POLL_MS = 250
 
     const host = document.getElementById('wanix-host')
+    const termsessions = new Map()
+    const termencoder = new TextEncoder()
 
     /** @type {import('zss/feature/wanix/wanixroomtypes').WanixRoomConfig} */
     let roomconfig = {
@@ -116,12 +115,124 @@
       return system.root
     }
 
-    function readterm() {
-      const term = system?.querySelector('wanix-term')
-      if (!term) {
-        throw new Error('wanix-term missing')
+    function readtermchunktext(chunk) {
+      if (chunk instanceof Uint8Array) {
+        return new TextDecoder().decode(chunk)
       }
-      return term
+      if (chunk instanceof ArrayBuffer) {
+        return new TextDecoder().decode(new Uint8Array(chunk))
+      }
+      return String(chunk ?? '')
+    }
+
+    async function readtermloop(session, label) {
+      while (session.alive && session.reader) {
+        try {
+          const { done, value } = await session.reader.read()
+          if (done || !session.alive) {
+            break
+          }
+          if (value) {
+            console.info(`[wanix term ${label}]`, readtermchunktext(value))
+          }
+        } catch (err) {
+          if (session.alive) {
+            console.info(
+              `[wanix term ${label}] read end`,
+              err instanceof Error ? err.message : String(err),
+            )
+          }
+          break
+        }
+      }
+    }
+
+    function disconnecttermsession(sessionkey) {
+      const session = termsessions.get(sessionkey)
+      if (!session) {
+        return
+      }
+      session.disconnect()
+      termsessions.delete(sessionkey)
+    }
+
+    function disconnectalltermsessions() {
+      for (const key of [...termsessions.keys()]) {
+        disconnecttermsession(key)
+      }
+    }
+
+    async function connecttermsession(sessionkey, termpath) {
+      disconnecttermsession(sessionkey)
+      const root = readroot()
+      const datapath = `${termpath}/data`
+      await root.waitFor(datapath, TERM_CONNECT_TIMEOUT_MS)
+      const readable = await root.openReadable(datapath)
+      const writable = await root.openWritable(datapath)
+      const reader = readable.getReader()
+      const writer = writable.getWriter()
+      const session = {
+        alive: true,
+        reader,
+        writer,
+        async write(text) {
+          if (!this.alive || !this.writer) {
+            return
+          }
+          await this.writer.write(termencoder.encode(String(text ?? '')))
+        },
+        disconnect() {
+          if (!this.alive) {
+            return
+          }
+          this.alive = false
+          if (this.reader) {
+            this.reader.cancel().catch(() => {})
+            this.reader = null
+          }
+          if (this.writer) {
+            this.writer.close().catch(() => {})
+            this.writer = null
+          }
+        },
+      }
+      termsessions.set(sessionkey, session)
+      void readtermloop(session, sessionkey)
+      return session
+    }
+
+    function readtermsession(sessionkey) {
+      if (sessionkey != null && sessionkey !== '') {
+        const session = termsessions.get(String(sessionkey))
+        if (!session) {
+          throw new Error(`wanix term session missing: ${sessionkey}`)
+        }
+        return session
+      }
+      const first = termsessions.values().next().value
+      if (!first) {
+        throw new Error('wanix term session missing')
+      }
+      return first
+    }
+
+    function readvmtermpath(vmel) {
+      if (typeof vmel?.term === 'string' && vmel.term.length > 0) {
+        return vmel.term
+      }
+      return '#vm/1/term'
+    }
+
+    async function connectvmtermsession() {
+      const vm = roomconfig.vm
+      if (!vm?.active || !system?.isReady) {
+        return
+      }
+      const vmel = system.querySelector('wanix-vm')
+      if (!vmel) {
+        return
+      }
+      await connecttermsession(vm.id, readvmtermpath(vmel))
     }
 
     function appendtaskroombinds(sys, config) {
@@ -187,14 +298,6 @@
             start: true,
           })
           sys.appendChild(vmel)
-          const term = document.createElement('wanix-term')
-          setwanixattrs(term, {
-            path: '#vm/1/term',
-            raw: true,
-          })
-          term.setAttribute('data-zss-target-kind', 'vm')
-          term.setAttribute('data-zss-target-id', vm.id)
-          sys.appendChild(term)
         }
       }
 
@@ -263,6 +366,7 @@
       }
 
       if (roomconfig.mode === 'idle') {
+        disconnectalltermsessions()
         host.replaceChildren()
         system = null
         lastmountkey = roomconfig.mountkey
@@ -284,6 +388,7 @@
       }
 
       await customElements.whenDefined('wanix-system')
+      disconnectalltermsessions()
       const next = buildroomtree(roomconfig)
       host.replaceChildren()
       host.appendChild(next)
@@ -299,6 +404,7 @@
         const vrid = vm
           ? await waitforvmrid(vm, Date.now() + VM_RID_WAIT_MS)
           : null
+        await connectvmtermsession()
         return {
           ok: true,
           mode: 'vm',
@@ -313,17 +419,9 @@
     }
 
     function removetargetpair(taskid) {
-      const term = system?.querySelector(
-        `wanix-term[data-zss-target-id="${taskid}"]`,
-      )
-      if (term && typeof term.disconnect === 'function') {
-        term.disconnect()
-      }
-      system
-        ?.querySelectorAll(`[data-zss-target-id="${taskid}"]`)
-        .forEach((el) => el.remove())
+      disconnecttermsession(taskid)
       system?.querySelector(`wanix-task[id="${taskid}"]`)?.remove()
-      roomconfig.tasks = roomconfig.tasks.filter((task) => task.id !== taskid)
+      roomconfig.tasks = roomconfig.tasks.filter((entry) => entry.id !== taskid)
     }
 
     async function spawntask(taskid, cmd) {
@@ -353,21 +451,7 @@
         typeof task.term === 'string' && task.term.length > 0
           ? task.term
           : `#task/${taskid}/term`
-      const term = document.createElement('wanix-term')
-      setwanixattrs(term, {
-        path: termpath,
-        raw: true,
-      })
-      term.setAttribute('data-zss-target-id', taskid)
-      term.setAttribute('data-zss-target-kind', 'task')
-      system.appendChild(term)
-
-      if (typeof term.connect === 'function') {
-        await term.connect()
-      }
-      if (typeof term.fit === 'function') {
-        term.fit()
-      }
+      await connecttermsession(taskid, termpath)
 
       if (typeof task.start === 'function') {
         await task.start()
@@ -388,9 +472,8 @@
       if (!system?.isReady) {
         throw new Error('wanix room not ready')
       }
-      system
-        .querySelectorAll('[data-zss-target-kind="vm"]')
-        .forEach((el) => el.remove())
+      const vmid = roomconfig.vm?.id ?? DEFAULT_VM_ID
+      disconnecttermsession(vmid)
       system.querySelector('wanix-vm')?.remove()
       system.querySelector('[data-zss-linux-bind]')?.remove()
       system.querySelector('[data-zss-v86-bind]')?.remove()
@@ -517,14 +600,16 @@
             break
           }
           case 'termwrite': {
-            const [linedata] = args
-            readterm().write(String(linedata ?? ''))
+            const [linedata, sessionkey] = args
+            const session = readtermsession(
+              sessionkey != null ? String(sessionkey) : undefined,
+            )
+            await session.write(String(linedata ?? ''))
             result = { ok: true }
             break
           }
           case 'termfit':
-            readterm().fit()
-            result = { ok: true }
+            result = { ok: true, noop: true }
             break
           default:
             replyrpc(source, id, { error: `unknown rpc: ${method}` })

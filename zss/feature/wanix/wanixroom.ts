@@ -7,6 +7,8 @@ import { listwanixwasmentries, readbundleflatpath } from 'zss/feature/wanix/wani
 import { uniquewanixtaskid } from 'zss/feature/wanix/wanixcmd'
 import type {
   WanixDropPayload,
+  WanixMenuState,
+  WanixMenuVmStatus,
   WanixRoomConfig,
   WanixRoomStatus,
   WanixSpawnTaskResult,
@@ -19,6 +21,9 @@ import {
 } from 'zss/feature/wanix/wanixvm'
 
 const WANIX_ROOM_TIMEOUT_MS = 180_000
+const WANIX_MENU_TIMEOUT_MS = 3_000
+
+export type { WanixMenuState } from 'zss/feature/wanix/wanixroomtypes'
 
 let roomconfig: WanixRoomConfig = createidleroomconfig()
 
@@ -167,6 +172,87 @@ export async function readwanixroomstatus(): Promise<
   return callwanixrpc<WanixRoomStatus & { vmrunning?: boolean }>(
     'readroomstatus',
   )
+}
+
+function withwanixtimeout<T>(promise: Promise<T>, timeoutms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error('wanix menu timeout'))
+    }, timeoutms)
+    void promise.then(
+      (value) => {
+        clearTimeout(timer)
+        resolve(value)
+      },
+      (err: unknown) => {
+        clearTimeout(timer)
+        reject(err instanceof Error ? err : new Error(String(err)))
+      },
+    )
+  })
+}
+
+function readwanixmenufallbackvm(): WanixMenuVmStatus | null {
+  const vm = roomconfig.vm
+  if (!vm?.active) {
+    return null
+  }
+  return {
+    running: true,
+    vmid: vm.id,
+    vrid: null,
+    mem: vm.mem,
+  }
+}
+
+export async function readwanixmenustate(
+  timeoutms = WANIX_MENU_TIMEOUT_MS,
+): Promise<WanixMenuState> {
+  const config = readwanixroomconfig()
+  if (config.mode === 'idle') {
+    return {
+      config,
+      ready: false,
+      vmrunning: false,
+      vm: null,
+      stalled: false,
+    }
+  }
+  try {
+    const [roomstatus, vmstatus] = await withwanixtimeout(
+      Promise.all([
+        callwanixrpc<WanixRoomStatus & { vmrunning?: boolean }>(
+          'readroomstatus',
+          [],
+          timeoutms,
+        ),
+        callwanixrpc<WanixMenuVmStatus>('readvmstatus', [], timeoutms),
+      ]),
+      timeoutms,
+    )
+    const vmrunning = roomstatus.vmrunning ?? vmstatus.running ?? false
+    return {
+      config: {
+        ...config,
+        mode: roomstatus.mode ?? config.mode,
+        tasks: roomstatus.tasks ?? config.tasks,
+        vm: roomstatus.vm ?? config.vm,
+      },
+      ready: roomstatus.ready ?? false,
+      vmrunning,
+      vm: vmrunning || vmstatus.running ? vmstatus : null,
+      stalled: false,
+    }
+  } catch {
+    const fallbackvm = readwanixmenufallbackvm()
+    return {
+      config,
+      ready: false,
+      vmrunning: !!fallbackvm?.running,
+      vm: fallbackvm,
+      stalled: true,
+    }
+  }
 }
 
 function normalizewanixpath(label: string): string {

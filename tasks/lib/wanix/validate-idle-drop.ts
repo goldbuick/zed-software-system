@@ -129,12 +129,12 @@ const validateidledrop: HeadedPlaywrightScript = async ({
   )
 
   await withscripttimeout(
-    'wanix-task-xterm',
+    'wanix-task-spawned',
     WANIX_IDLE_DROP_TIMEOUT_MS,
     async () => {
       const frame = page.frameLocator('iframe[title="wanix"]')
       while (true) {
-        const count = await frame.locator('wanix-term .xterm').count()
+        const count = await frame.locator('wanix-task[id]').count()
         if (count >= 1) {
           break
         }

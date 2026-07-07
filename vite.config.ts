@@ -196,7 +196,7 @@ export default defineConfig(({ mode }) => {
     optimizeDeps: {
       exclude: ['@bokuweb/zstd-wasm'],
       esbuildOptions: {
-        target: 'es2020',
+        target: 'es2022',
       },
     },
     server: {

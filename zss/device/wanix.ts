@@ -69,7 +69,18 @@ const wanix = createdevice('wanix', [], (message) => {
 
   switch (message.target) {
     case 'show':
-      showwanixmenu(message.player)
+      doasync(wanix, message.player, async () => {
+        try {
+          await showwanixmenu(message.player)
+        } catch (err) {
+          apierror(
+            wanix,
+            message.player,
+            'wanix',
+            err instanceof Error ? err.message : String(err),
+          )
+        }
+      })
       break
     case 'drop': {
       const parsed = readwanixdroppayload(message.data)
@@ -85,7 +96,7 @@ const wanix = createdevice('wanix', [], (message) => {
       const payload = parsed.payload
       if (
         import.meta.env.DEV &&
-        !(message.data as WanixDropPayload).bytes instanceof Uint8Array
+        !((message.data as WanixDropPayload).bytes instanceof Uint8Array)
       ) {
         apilog(
           wanix,
