@@ -56,7 +56,6 @@ import {
 } from 'zss/screens/tape/colors'
 import { commandromhint } from 'zss/screens/tape/commandarghints'
 import { setuplogitem } from 'zss/screens/tape/common'
-import { measurerow } from 'zss/screens/tape/measure'
 import {
   applycolortoindexes,
   textformatreadedges,
@@ -75,6 +74,7 @@ type TerminalInputProps = {
   voice2text: boolean
   tapeycursor: number
   logrowtotalheight: number
+  logzoneheight: number
 }
 
 export function TerminalInput({
@@ -82,6 +82,7 @@ export function TerminalInput({
   voice2text,
   tapeycursor,
   logrowtotalheight,
+  logzoneheight,
 }: TerminalInputProps) {
   const context = useWriteText()
   const tapeterminal = useTerminal(
@@ -177,20 +178,9 @@ export function TerminalInput({
     [tapeterminal.buffer, tapeterminal.bufferindex],
   )
 
-  const terminallogs = useMemo(
-    () => [...pinlines, ...sessionlogs],
-    [pinlines, sessionlogs],
-  )
-
   const quickterminal = terminalmode === 'quick'
   const logsrowmaxwidth = context.width - 1
-  const logsrowheights = useMemo(
-    () =>
-      terminallogs.map((item) =>
-        measurerow(item, logsrowmaxwidth, edge.height),
-      ),
-    [terminallogs, logsrowmaxwidth, edge.height],
-  )
+
   const zsswordcolormap = useMemo(
     () => buildzsswordcolors(zsswords),
     [zsswords],
@@ -201,22 +191,24 @@ export function TerminalInput({
       findterminalrowindexforcursor({
         tapeycursor,
         scroll: tapeterminal.scroll,
-        terminallogs,
-        logsrowheights,
+        pinlines,
+        sessionlogs,
+        maxwidth: logsrowmaxwidth,
         edge,
         editoropen,
       }),
     [
       tapeycursor,
       tapeterminal.scroll,
-      terminallogs,
-      logsrowheights,
+      pinlines,
+      sessionlogs,
+      logsrowmaxwidth,
       edge,
       editoropen,
     ],
   )
 
-  const visiblerows = edge.bottom - edge.top - (editoropen ? 0 : 2)
+  const visiblerows = logzoneheight
   const inputstateycursor = useCallback(
     (moveby: number) => {
       useTerminal.setState((state) => {
@@ -228,7 +220,7 @@ export function TerminalInput({
         const scroll = clamp(
           ycursor - Math.round(visiblerows * 0.5),
           0,
-          logrowtotalheight - visiblerows,
+          Math.max(0, logrowtotalheight - visiblerows),
         )
         return {
           ycursor,
@@ -373,9 +365,8 @@ export function TerminalInput({
   context.reset.bg = bgcolorformode(terminalmode)
 
   if (!quickterminal) {
-    // write hint
     setuplogitem(false, 0, 0, context)
-    const hint = `$DKCYAN${import.meta.env.ZSS_BRANCH_NAME}:${import.meta.env.ZSS_BRANCH_VERSION} ${import.meta.env.ZSS_COMMIT_MESSAGE}`
+    const hint = `$DKCYAN${import.meta.env.ZSS_BRANCH_VERSION}`
     const measured = tokenizeandmeasuretextformat(hint, edge.width, 1)
     context.x = edge.width - (measured?.measuredwidth ?? 0) - 1
     tokenizeandwritetextformat(hint, context, true)
@@ -735,9 +726,9 @@ export function TerminalInput({
                     if (
                       rowi !== undefined &&
                       rowi >= pincount &&
-                      rowi < terminallogs.length
+                      rowi < pincount + sessionlogs.length
                     ) {
-                      const logline = terminallogs[rowi] ?? ''
+                      const logline = sessionlogs[rowi - pincount] ?? ''
                       registerbookmarkclisave(SOFTWARE, player, logline)
                       break
                     }

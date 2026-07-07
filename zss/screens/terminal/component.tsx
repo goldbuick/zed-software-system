@@ -11,7 +11,10 @@ import { MAYBE } from 'zss/mapping/types'
 import { perfmeasure } from 'zss/perf/ui'
 import { TapeBackPlate } from 'zss/screens/tape/backplate'
 import { TapeTerminalContext } from 'zss/screens/tape/common'
-import { measurerowcached } from 'zss/screens/terminal/measurerowcache'
+import {
+  readlogrowtotalheight,
+  readterminallayout,
+} from 'zss/screens/terminal/terminallayout'
 import { textformatreadedges } from 'zss/words/textformat'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -24,10 +27,6 @@ export function TerminalComponent() {
   const terminalmode = useTape((state) => state.terminalmode)
   const pinlines = useTape((state) => state.terminal.pinlines)
   const sessionlogs = useTape((state) => state.terminal.logs)
-  const terminallogs = useMemo(
-    () => [...pinlines, ...sessionlogs],
-    [pinlines, sessionlogs],
-  )
 
   const [voice2text, setvoice2text] = useState<MAYBE<boolean>>(undefined)
   useLayoutEffect(() => {
@@ -46,20 +45,27 @@ export function TerminalComponent() {
   )
 
   const edge = textformatreadedges(context)
-
   const logsrowmaxwidth = context.width - 1
-  const logsrowheights: number[] = useMemo(() => {
-    const logs = terminallogs ?? []
-    return perfmeasure('terminal:measurerows', () =>
-      logs.map((item) => measurerowcached(item, logsrowmaxwidth, edge.height)),
-    )
-  }, [edge.height, logsrowmaxwidth, terminallogs])
 
-  let logsrowtotalheight = 0
-  logsrowheights.forEach((rowheight) => {
-    logsrowtotalheight += rowheight
-  })
-  ++logsrowtotalheight
+  const layout = useMemo(
+    () =>
+      readterminallayout({
+        pinlines,
+        sessionlogs,
+        maxwidth: logsrowmaxwidth,
+        edge,
+        editoropen,
+      }),
+    [pinlines, sessionlogs, logsrowmaxwidth, edge, editoropen],
+  )
+
+  const logrowtotalheight = useMemo(
+    () =>
+      perfmeasure('terminal:measurerows', () =>
+        readlogrowtotalheight(layout.pinheights, layout.sessionheights),
+      ),
+    [layout.pinheights, layout.sessionheights],
+  )
 
   const tapeycursor = edge.bottom - tapeterminal.ycursor + tapeterminal.scroll
 
@@ -88,7 +94,8 @@ export function TerminalComponent() {
             terminalmode={terminalmode}
             voice2text={voice2text}
             tapeycursor={tapeycursor}
-            logrowtotalheight={logsrowtotalheight}
+            logrowtotalheight={logrowtotalheight}
+            logzoneheight={layout.logzoneheight}
           />
         )}
       </TapeTerminalContext.Provider>

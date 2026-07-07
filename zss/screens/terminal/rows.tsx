@@ -4,7 +4,11 @@ import { useTape, useTerminal } from 'zss/gadget/data/zustandstores'
 import { useScreenSize } from 'zss/gadget/userscreen'
 import { useWriteText } from 'zss/gadget/writetext'
 import { clamp } from 'zss/mapping/number'
-import { measurerowcached } from 'zss/screens/terminal/measurerowcache'
+import {
+  readpinrowycoords,
+  readsesslogrowycoords,
+  readterminallayout,
+} from 'zss/screens/terminal/terminallayout'
 import { textformatreadedges } from 'zss/words/textformat'
 
 import { TapeTerminalActiveItem, TerminalItem } from './item'
@@ -14,10 +18,6 @@ export function TerminalRows() {
   const editoropen = useTape(useEqual((state) => state.editor.open))
   const pinlines = useTape(useEqual((state) => state.terminal.pinlines))
   const sessionlogs = useTape(useEqual((state) => state.terminal.logs))
-  const terminallogs = useMemo(
-    () => [...pinlines, ...sessionlogs],
-    [pinlines, sessionlogs],
-  )
 
   const context = useWriteText()
   const scroll = useTerminal(useEqual((state) => state.scroll))
@@ -25,6 +25,29 @@ export function TerminalRows() {
   const ycursor = useTerminal(useEqual((state) => state.ycursor))
 
   const edge = textformatreadedges(context)
+  const logsrowmaxwidth = context.width - 1
+
+  const layout = useMemo(
+    () =>
+      readterminallayout({
+        pinlines,
+        sessionlogs,
+        maxwidth: logsrowmaxwidth,
+        edge,
+        editoropen,
+      }),
+    [pinlines, sessionlogs, logsrowmaxwidth, edge, editoropen],
+  )
+
+  const pinycoords = useMemo(
+    () => readpinrowycoords(layout.pinheights, layout.pinstarty),
+    [layout.pinheights, layout.pinstarty],
+  )
+
+  const sessionycoords = useMemo(
+    () => readsesslogrowycoords(layout.sessionheights, layout.logzonebottom),
+    [layout.sessionheights, layout.logzonebottom],
+  )
 
   // control panning
   useEffect(() => {
@@ -45,34 +68,14 @@ export function TerminalRows() {
     }
   }, [xcursor, screensize.cols, context.width])
 
-  // measure rows
-  const logsrowmaxwidth = context.width - 1
-  const logsrowheights: number[] = terminallogs.map((item) => {
-    return measurerowcached(item, logsrowmaxwidth, edge.height)
-  })
-
-  // baseline
-  const baseline = edge.bottom - edge.top - (editoropen ? 0 : 2)
-
-  // upper bound on ycursor
-  let logsrowycoord = baseline + 1
-
-  // ycoords for rows
-  const logsrowycoords: number[] = logsrowheights.map((rowheight) => {
-    logsrowycoord -= rowheight
-    return logsrowycoord
-  })
-
-  // calculate ycoord to render cursor
   const tapeycursor = edge.bottom - ycursor + scroll
 
-  // filter to visible rows
-  const visiblelogs = terminallogs
+  const visiblepins = pinlines
     .map((text, index) => {
-      const y = logsrowycoords[index] + scroll
-      const yheight = logsrowheights[index]
+      const y = pinycoords[index]
+      const yheight = layout.pinheights[index]
       const ybottom = y + yheight
-      if (ybottom < 0 || y < 0 || y > baseline) {
+      if (y < 0 || y > layout.logzonebottom) {
         return null
       }
       return [
@@ -84,13 +87,41 @@ export function TerminalRows() {
     })
     .filter((item) => item !== null)
 
+  const visiblesessionlogs = sessionlogs
+    .map((text, index) => {
+      const y = sessionycoords[index] + scroll
+      const yheight = layout.sessionheights[index]
+      const ybottom = y + yheight
+      if (ybottom <= layout.logzonetop || y > layout.logzonebottom) {
+        return null
+      }
+      if (ybottom < 0 || y < 0) {
+        return null
+      }
+      const mergedindex = pinlines.length + index
+      return [
+        mergedindex,
+        text,
+        y,
+        !editoropen && tapeycursor >= y && tapeycursor < ybottom,
+      ] as [number, string, number, boolean]
+    })
+    .filter((item) => item !== null)
+
   return (
     <>
-      {visiblelogs.map(([index, text, y, active]) =>
+      {visiblepins.map(([index, text, y, active]) =>
         active ? (
-          <TapeTerminalActiveItem key={index} active text={text} y={y} />
+          <TapeTerminalActiveItem key={`pin-${index}`} active text={text} y={y} />
         ) : (
-          <TerminalItem key={index} text={text} y={y} />
+          <TerminalItem key={`pin-${index}`} text={text} y={y} />
+        ),
+      )}
+      {visiblesessionlogs.map(([index, text, y, active]) =>
+        active ? (
+          <TapeTerminalActiveItem key={`log-${index}`} active text={text} y={y} />
+        ) : (
+          <TerminalItem key={`log-${index}`} text={text} y={y} />
         ),
       )}
     </>
