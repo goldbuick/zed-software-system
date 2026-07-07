@@ -1,7 +1,7 @@
 {
   "name": "zed-software-system",
   "private": true,
-  "version": "1.8.84",
+  "version": "1.9.0",
   "type": "module",
   "files": [
     "headless/bin",
