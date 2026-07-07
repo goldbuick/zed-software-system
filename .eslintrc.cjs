@@ -261,6 +261,11 @@ module.exports = {
                 message:
                   'Do not import three in worker entry files; keep worker entrypoints worker-safe.',
               },
+              {
+                name: 'idb-keyval',
+                message:
+                  'Use zss/feature/durable.ts for IndexedDB KV access; do not import idb-keyval directly.',
+              },
             ],
             patterns: [
               {
@@ -320,6 +325,30 @@ module.exports = {
                 allowTypeImports: true,
                 message:
                   'device/api is POD emit helpers only; use import type for signatures.',
+              },
+            ],
+          },
+        ],
+      },
+    },
+    {
+      files: ['zss/**/*.{ts,tsx}', 'cafe/**/*.{ts,tsx}'],
+      excludedFiles: [
+        'zss/feature/durable.ts',
+        'zss/simspace.ts',
+        'zss/boardrunnerspace.ts',
+        'zss/sttspace.ts',
+        'zss/ttsspace.ts',
+      ],
+      rules: {
+        'no-restricted-imports': [
+          'error',
+          {
+            paths: [
+              {
+                name: 'idb-keyval',
+                message:
+                  'Use zss/feature/durable.ts for IndexedDB KV access; do not import idb-keyval directly.',
               },
             ],
           },

@@ -33,7 +33,6 @@ import { handleoperator } from './operator'
 import { handlepage } from './page'
 import { handleplayermovetoboard } from './playermovetoboard'
 import { handlepublish } from './publish'
-import { handlepullvarresult } from './pullvarresult'
 import { handlerestart } from './restart'
 import {
   handleclearscroll,
@@ -65,7 +64,6 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   doot: handledoot,
   input: handleinput,
   lastinputtouch: handlelastinputtouch,
-  pullvarresult: handlepullvarresult,
   codewatch: handlecodewatch,
   coderelease: handlecoderelease,
   clearscroll: handleclearscroll,

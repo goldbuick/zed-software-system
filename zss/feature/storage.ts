@@ -1,32 +1,19 @@
 import humanid from 'human-id'
-import {
-  del as idbdel,
-  get as idbget,
-  getMany as idbgetmany,
-  update as idbupdate,
-} from 'idb-keyval'
 import { apierror, apilog, vmbooks, workstatus } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
 import { SOFTWARE } from 'zss/device/session'
+import {
+  durabledel,
+  durableget,
+  durablegetmany,
+  durableupdate,
+} from 'zss/feature/durable'
 import { isclimode } from 'zss/feature/detect'
 import { isarray, ispresent } from 'zss/mapping/types'
 import { BOOK } from 'zss/memory/types'
 
 import { shorturl, znsnormalizenamespace } from './url'
 import { writecopyit } from './writeui'
-
-// read / write from indexdb
-
-async function readidb<T>(key: string): Promise<T | undefined> {
-  return idbget(key)
-}
-
-async function writeidb<T>(
-  key: string,
-  updater: (oldValue: T | undefined) => T,
-): Promise<void> {
-  return idbupdate(key, updater)
-}
 
 export function storagereadconfigdefault(name: string) {
   switch (name) {
@@ -40,14 +27,7 @@ export function storagereadconfigdefault(name: string) {
 }
 
 export async function storagereadconfig(name: string) {
-  if (
-    isclimode() &&
-    typeof (globalThis as any).__nodeStorageReadConfig === 'function'
-  ) {
-    const value = await (globalThis as any).__nodeStorageReadConfig(name)
-    return value && value !== 'off' ? 'on' : 'off'
-  }
-  const value = await readidb<string>(`config_${name}`)
+  const value = await durableget<string>(`config_${name}`)
   if (!value) {
     return storagereadconfigdefault(name)
   }
@@ -55,41 +35,20 @@ export async function storagereadconfig(name: string) {
 }
 
 export async function storagewriteconfig(name: string, value: string) {
-  if (
-    isclimode() &&
-    typeof (globalThis as any).__nodeStorageWriteConfig === 'function'
-  ) {
-    return (globalThis as any).__nodeStorageWriteConfig(name, value)
-  }
-  return writeidb(`config_${name}`, () => value)
+  return durableupdate(`config_${name}`, () => value)
 }
 
-/** Arbitrary string values under `config_*` (not normalized to on/off). */
-export const CONFIG_STRING_KEYS = [
-  'ttsengine',
-  'ttsengineconfig',
-  'ttsenginemodel',
-] as const
-
-export function isconfigstringkey(name: string): boolean {
-  return (CONFIG_STRING_KEYS as readonly string[]).includes(name)
-}
+export { CONFIG_STRING_KEYS, isconfigstringkey } from 'zss/feature/storagekeys'
 
 export async function storagereadconfigstring(name: string) {
-  return readidb<string>(`config_${name}`)
+  return durableget<string>(`config_${name}`)
 }
 
 export async function storagewriteconfigstring(name: string, value: string) {
-  return writeidb(`config_${name}`, () => value)
+  return durableupdate(`config_${name}`, () => value)
 }
 
 export async function storagereadconfigall() {
-  if (
-    isclimode() &&
-    typeof (globalThis as any).__nodeStorageReadConfigAll === 'function'
-  ) {
-    return (globalThis as any).__nodeStorageReadConfigAll()
-  }
   const lookup = [
     'config_crt',
     'config_lowrez',
@@ -99,7 +58,7 @@ export async function storagereadconfigall() {
     'config_dev',
     'config_gadget',
   ]
-  const configs = await idbgetmany<string>(lookup)
+  const configs = await durablegetmany<string>(lookup)
   return configs.map((value, index) => {
     const key = lookup[index]
     const keyname = key.replace('config_', '')
@@ -111,27 +70,15 @@ export async function storagereadconfigall() {
 }
 
 export async function storagereadhistorybuffer() {
-  if (
-    isclimode() &&
-    typeof (globalThis as any).__nodeStorageReadHistoryBuffer === 'function'
-  ) {
-    return (globalThis as any).__nodeStorageReadHistoryBuffer()
-  }
-  return readidb<string[]>('HISTORYBUFFER')
+  return durableget<string[]>('HISTORYBUFFER')
 }
 
 export async function storagewritehistorybuffer(historybuffer: string[]) {
-  if (
-    isclimode() &&
-    typeof (globalThis as any).__nodeStorageWriteHistoryBuffer === 'function'
-  ) {
-    return (globalThis as any).__nodeStorageWriteHistoryBuffer(historybuffer)
-  }
-  return writeidb('HISTORYBUFFER', () => historybuffer)
+  return durableupdate('HISTORYBUFFER', () => historybuffer)
 }
 
 async function writelocalurl(fullurl: string) {
-  let shorturl = await readidb<string>(fullurl)
+  let shorturl = await durableget<string>(fullurl)
   if (shorturl === undefined) {
     // build short url
     while (shorturl === undefined) {
@@ -140,20 +87,20 @@ async function writelocalurl(fullurl: string) {
         capitalize: false,
         adjectiveCount: 2,
       })
-      const hasvalue = await readidb<string>(maybeurl)
+      const hasvalue = await durableget<string>(maybeurl)
       if (hasvalue === undefined) {
         shorturl = maybeurl
       }
     }
     // write lookups
-    await writeidb(fullurl, () => shorturl)
-    await writeidb(shorturl, () => fullurl)
+    await durableupdate(fullurl, () => shorturl!)
+    await durableupdate(shorturl, () => fullurl)
   }
   return shorturl
 }
 
 async function readlocalurl(shorturl: string) {
-  return await readidb<string>(shorturl)
+  return await durableget<string>(shorturl)
 }
 
 // read / write from window url #hash
@@ -241,54 +188,44 @@ export async function storagewritecontent(
 }
 
 export async function storagereadvars(): Promise<Record<string, any>> {
-  if (
-    isclimode() &&
-    typeof (globalThis as any).__nodeStorageReadVars === 'function'
-  ) {
-    return (globalThis as any).__nodeStorageReadVars()
-  }
-  const storage = await readidb<Record<string, any>>('storage')
+  const storage = await durableget<Record<string, any>>('storage')
   return storage ?? {}
 }
 
 export async function storagewritevar(name: string, value: any) {
-  if (
-    isclimode() &&
-    typeof (globalThis as any).__nodeStorageWriteVar === 'function'
-  ) {
-    return (globalThis as any).__nodeStorageWriteVar(name, value)
-  }
-  const storage = await storagereadvars()
-  storage[name] = value
-  return writeidb('storage', () => storage)
+  return durableupdate<Record<string, any>>('storage', (storage) => {
+    const blob = storage ?? {}
+    blob[name] = value
+    return blob
+  })
 }
 
 export async function storagereadnetid(): Promise<string | undefined> {
-  return readidb<string>('netid')
+  return durableget<string>('netid')
 }
 
 export async function storagewritenetid(netid: string) {
-  return writeidb('netid', () => netid)
+  return durableupdate('netid', () => netid)
 }
 
 export async function storagereadznsemail(): Promise<string | undefined> {
-  return readidb<string>('znsemail')
+  return durableget<string>('znsemail')
 }
 
 export async function storagewriteznsemail(email: string) {
-  return writeidb('znsemail', () => email)
+  return durableupdate('znsemail', () => email)
 }
 
 export async function storagereadznstoken(): Promise<string | undefined> {
-  return readidb<string>('znstoken')
+  return durableget<string>('znstoken')
 }
 
 export async function storagewritznstoken(token: string) {
-  return writeidb('znstoken', () => token)
+  return durableupdate('znstoken', () => token)
 }
 
 export async function storagereadznsnamespace(): Promise<string | undefined> {
-  const namespace = await readidb<string>('znsnamespace')
+  const namespace = await durableget<string>('znsnamespace')
   if (!namespace) {
     return undefined
   }
@@ -296,7 +233,7 @@ export async function storagereadznsnamespace(): Promise<string | undefined> {
 }
 
 export async function storagewriteznsnamespace(namespace: string) {
-  return writeidb('znsnamespace', () => znsnormalizenamespace(namespace))
+  return durableupdate('znsnamespace', () => znsnormalizenamespace(namespace))
 }
 
 export async function storagereadznssession(): Promise<
@@ -312,9 +249,9 @@ export async function storagereadznssession(): Promise<
 }
 
 export async function storagewriteznsclear() {
-  await idbdel('znsemail')
-  await idbdel('znstoken')
-  await idbdel('znsnamespace')
+  await durabledel('znsemail')
+  await durabledel('znstoken')
+  await durabledel('znsnamespace')
 }
 
 let currenturlhash = ''

@@ -2,7 +2,6 @@ jest.mock('zss/device/api', () => ({
   apierror: jest.fn(),
   ttsinfo: jest.fn(),
   ttsrequest: jest.fn(),
-  registerstore: jest.fn(),
   synthaudiobuffer: jest.fn(),
 }))
 

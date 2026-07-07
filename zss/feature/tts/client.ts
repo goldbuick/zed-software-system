@@ -5,12 +5,12 @@ import {
   apilog,
   ttsinfo as emitttsinfo,
   ttsrequest as emitttsrequest,
-  registerstore,
   synthaudiobuffer,
 } from 'zss/device/api'
 import type { DEVICELIKE } from 'zss/device/messagetypes'
 import { isttsvalidatereply } from 'zss/device/messagetypes'
 import { SOFTWARE } from 'zss/device/session'
+import { storagewritekey } from 'zss/feature/loginstorage'
 import { storagereadconfigstring } from 'zss/feature/storage'
 import {
   getliveaudiocontext,
@@ -105,14 +105,14 @@ export function storettsengineconfig(
   config: string,
   model?: string,
 ) {
-  registerstore(SOFTWARE, player, 'config_ttsengine', engine)
+  void storagewritekey('config_ttsengine', engine)
   if (config.trim() !== '') {
-    registerstore(SOFTWARE, player, 'config_ttsengineconfig', config)
+    void storagewritekey('config_ttsengineconfig', config)
   }
   const modelval =
     typeof model === 'string' && model.trim() !== '' ? model.trim() : ttsmodel
   if (modelval.trim() !== '') {
-    registerstore(SOFTWARE, player, 'config_ttsenginemodel', modelval)
+    void storagewritekey('config_ttsenginemodel', modelval)
   }
 }
 
@@ -128,7 +128,7 @@ export async function applyttsengineconfig(
   if (!hasconfig) {
     const prevengine = ttsengine
     ttsengine = normalized
-    registerstore(SOFTWARE, player, 'config_ttsengine', normalized)
+    void storagewritekey('config_ttsengine', normalized)
     if (prevengine !== normalized) {
       ttsconfig = ''
       ttsmodel = ''

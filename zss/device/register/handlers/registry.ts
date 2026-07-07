@@ -37,7 +37,7 @@ import {
 } from './memory'
 import { handleready } from './ready'
 import { handlesecond } from './second'
-import { handlepullvar, handlestore, handletoken } from './storage'
+import { handletoken } from './storage'
 import { handlechat, handlelog, handletoast, handleworkstatus } from './tape'
 import {
   handleterminalclose,
@@ -67,8 +67,6 @@ export const registerhandlers: Record<string, REGISTER_HANDLER> = {
   'bookmark:urlnavigate': handlebookmarkurlnavigate,
   'bookmark:delete': handlebookmarkdelete,
   input: handleinput,
-  store: handlestore,
-  pullvar: handlepullvar,
   token: handletoken,
   copy: handlecopy,
   downloadjsonfile: handledownloadjsonfile,

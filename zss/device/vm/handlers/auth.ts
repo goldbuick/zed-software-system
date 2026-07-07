@@ -18,6 +18,7 @@ import {
   lastinputtime,
   tracking,
 } from 'zss/device/vm/state'
+import { sanitizeloginflags } from 'zss/feature/loginflags'
 import { ispresent, isstring } from 'zss/mapping/types'
 import {
   memoryistokenbanned,
@@ -111,7 +112,7 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
   // const reattach = memoryreadplayeractive(message.player)
 
   // attempt to login player
-  if (memoryloginplayer(message.player, flags as BOOK_FLAGS)) {
+  if (memoryloginplayer(message.player, sanitizeloginflags(flags) as BOOK_FLAGS)) {
     // start tracking
     tracking[message.player] = 0
     lastinputtime[message.player] = Date.now()

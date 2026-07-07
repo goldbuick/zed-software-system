@@ -1,4 +1,4 @@
-import { get as idbget, update as idbupdate } from 'idb-keyval'
+import { durableget, durableupdate } from 'zss/feature/durable'
 import { parsetarget } from 'zss/device'
 import { apierror, apitoast, registercopy, vmcli } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
@@ -108,7 +108,7 @@ function createboardelementbuffer(
 async function writesecretheap(
   updater: (oldvalue: BOARD_ELEMENT_BUFFER | undefined) => BOARD_ELEMENT_BUFFER,
 ): Promise<void> {
-  return idbupdate('secretheap', updater)
+  return durableupdate('secretheap', updater)
 }
 
 export async function memoryhassecretheap() {
@@ -494,5 +494,5 @@ export function memoryinspectpastemenu(player: string, p1: PT, p2: PT) {
 export async function memoryreadsecretheap(): Promise<
   BOARD_ELEMENT_BUFFER | undefined
 > {
-  return idbget('secretheap')
+  return durableget('secretheap')
 }

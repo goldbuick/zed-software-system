@@ -1,8 +1,10 @@
 import { compress, decompress } from '@bokuweb/zstd-wasm'
 import JSZip, { JSZipObject } from 'jszip'
-import { registerinspector, registerstore } from 'zss/device/api'
+import { registerinspector } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { getclimode } from 'zss/feature/detect'
+import { CONFIG_KEYS } from 'zss/feature/storagekeys'
+import { storagewriteconfig } from 'zss/feature/storage'
 import { packformat, unpackformat } from 'zss/feature/format'
 import { isjoin } from 'zss/feature/url'
 import { DIVIDER, zsstexttape, zsszedlinklinechip } from 'zss/feature/zsstextui'
@@ -35,16 +37,8 @@ import {
 import { trimformatobject, trimmemoryexport } from './trimexport'
 import { BOOK, FIXED_DATE, MEMORY_LABEL } from './types'
 
-// In-memory config (register sends at login; utilities render/emit only)
-export const CONFIG_KEYS = [
-  'crt',
-  'lowrez',
-  'scanlines',
-  'voice2text',
-  'loaderlogging',
-  'dev',
-  'gadget',
-] as const
+export { CONFIG_KEYS } from 'zss/feature/storagekeys'
+
 const CONFIG_DEFAULTS: Record<string, string> = {
   crt: 'on',
   lowrez: 'off',
@@ -118,7 +112,7 @@ registerhyperlinksharedbridge(
     }
     const newval = val ? 'on' : 'off'
     memorywriteconfig(p.key, newval)
-    registerstore(SOFTWARE, p.player, `config_${p.key}`, newval)
+    void storagewriteconfig(p.key, newval)
     if (p.key === 'dev') {
       memorywritehalt(newval === 'on')
     } else if (p.key === 'gadget') {

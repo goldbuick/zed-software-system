@@ -6,7 +6,8 @@
 
 - `@bokuweb/zstd-wasm` — compress, decompress
 - `jszip` — JSZip
-- `zss/device/api` — registerinspector, registerstore
+- `zss/device/api` — registerinspector
+- `zss/feature/storage` — storagewriteconfig
 - `zss/device/session` — SOFTWARE
 - `zss/feature/detect` — getclimode
 - `zss/feature/format` — packformat, unpackformat

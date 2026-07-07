@@ -1,3 +1,7 @@
+jest.mock('zss/feature/url', () => ({
+  isjoin: jest.fn(() => false),
+}))
+
 jest.mock('zss/device/modem', () => {
   const observers = new Map<string, (value: unknown) => void>()
   return {
@@ -23,10 +27,13 @@ jest.mock('zss/device/api', () => {
   const actual = jest.requireActual('zss/device/api')
   return {
     ...actual,
-    registerstore: jest.fn(),
     registerinspector: jest.fn(),
   }
 })
+
+jest.mock('zss/feature/storage', () => ({
+  storagewriteconfig: jest.fn(),
+}))
 
 jest.mock('zss/device/session', () => ({
   SOFTWARE: { emit: jest.fn() },
@@ -41,7 +48,7 @@ jest.mock('zss/words/reader', () => ({
 }))
 
 // registers admin select bridge via zss/memory/utilities side effects
-import { registerstore } from 'zss/device/api'
+import { storagewriteconfig } from 'zss/feature/storage'
 import {
   applyhyperlinksharedmodemsync,
   clearpanelsharedsync,
@@ -119,12 +126,7 @@ describe('admin config persistence', () => {
     modem.modemwritevaluenumber(`admin:${target}`, 1)
 
     expect(memoryreadconfig('voice2text')).toBe('on')
-    expect(registerstore).toHaveBeenCalledWith(
-      expect.anything(),
-      PLAYER,
-      'config_voice2text',
-      'on',
-    )
+    expect(storagewriteconfig).toHaveBeenCalledWith('voice2text', 'on')
   })
 
   it('clears observer on panel unmount hook cleanup', () => {

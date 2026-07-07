@@ -546,23 +546,6 @@ export function synthupdate(
   device.emit(player, 'synth:update', [board, synthstate])
 }
 
-export function registerstore(
-  device: DEVICELIKE,
-  player: string,
-  name: string,
-  value: any,
-) {
-  device.emit(player, 'register:store', [name, value])
-}
-
-export function vmpullvarresult(
-  device: DEVICELIKE,
-  player: string,
-  data: { id: string; value?: unknown; error?: string },
-) {
-  device.emit(player, 'vm:pullvarresult', data)
-}
-
 export function registerbookmarkscroll(
   device: DEVICELIKE,
   player: string,

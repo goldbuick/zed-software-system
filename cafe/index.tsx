@@ -6,6 +6,10 @@ import {
   registerreadplayer,
   registersetmyplayerid,
 } from 'zss/device/register'
+import {
+  durablehydratefromdisk,
+  startdurableclisync,
+} from 'zss/feature/durablecli'
 import { isclimode } from 'zss/feature/detect'
 import { isjoin } from 'zss/feature/url'
 import { WanixHost } from 'zss/feature/wanix/wanixhost'
@@ -25,7 +29,9 @@ async function bootheadless(): Promise<void> {
     vmcli(register, registerreadplayer(), line)
   }
   await import('zss/userspace')
+  await durablehydratefromdisk()
   createplatform(isjoin(), true)
+  startdurableclisync()
   g.__nodeReady?.()
 }
 

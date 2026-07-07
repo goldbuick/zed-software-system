@@ -1,5 +1,6 @@
-import { apierror, registerstore } from 'zss/device/api'
+import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { storagewritevar } from 'zss/feature/storage'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import { write } from 'zss/feature/writeui'
 import {
@@ -38,29 +39,21 @@ import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE, NAME } from 'zss/words/types'
 
 function persistpermissionstores() {
-  const op = memoryreadoperator()
   const data = memoryserializepermissions()
-  registerstore(SOFTWARE, op, 'rolebytoken', data.rolebytoken)
-  registerstore(SOFTWARE, op, 'permissionconfig', data.permissionconfig)
-  registerstore(SOFTWARE, op, 'allowlistbyrole', data.allowlistbyrole)
-  registerstore(
-    SOFTWARE,
-    op,
-    'allowlistbyrolecustom',
-    data.allowlistbyrolecustom,
-  )
-  registerstore(
-    SOFTWARE,
-    op,
-    'permissionoverrideaddbyrole',
-    data.permissionoverrideaddbyrole,
-  )
-  registerstore(
-    SOFTWARE,
-    op,
-    'permissionoverrideremovebyrole',
-    data.permissionoverrideremovebyrole,
-  )
+  void (async () => {
+    await storagewritevar('rolebytoken', data.rolebytoken)
+    await storagewritevar('permissionconfig', data.permissionconfig)
+    await storagewritevar('allowlistbyrole', data.allowlistbyrole)
+    await storagewritevar('allowlistbyrolecustom', data.allowlistbyrolecustom)
+    await storagewritevar(
+      'permissionoverrideaddbyrole',
+      data.permissionoverrideaddbyrole,
+    )
+    await storagewritevar(
+      'permissionoverrideremovebyrole',
+      data.permissionoverrideremovebyrole,
+    )
+  })()
 }
 
 export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
@@ -262,9 +255,8 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
         }
         memorysetrolefortoken(token, role)
 
-        const op = memoryreadoperator()
         const data = memoryserializepermissions()
-        registerstore(SOFTWARE, op, 'rolebytoken', data.rolebytoken)
+        void storagewritevar('rolebytoken', data.rolebytoken)
 
         write(
           SOFTWARE,
@@ -293,9 +285,8 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
           }
           memorybantoken(token)
 
-          const op = memoryreadoperator()
           const data = memoryserializepermissions()
-          registerstore(SOFTWARE, op, 'bannedtokens', data.bannedtokens)
+          void storagewritevar('bannedtokens', data.bannedtokens)
 
           write(
             SOFTWARE,
@@ -352,9 +343,8 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
           }
           memoryunbantoken(token)
 
-          const op = memoryreadoperator()
           const data = memoryserializepermissions()
-          registerstore(SOFTWARE, op, 'bannedtokens', data.bannedtokens)
+          void storagewritevar('bannedtokens', data.bannedtokens)
 
           write(
             SOFTWARE,

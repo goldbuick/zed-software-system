@@ -1,5 +1,8 @@
+jest.mock('zss/feature/loginstorage', () => ({
+  storagewritekey: jest.fn(),
+}))
+
 jest.mock('zss/device/api', () => ({
-  registerstore: jest.fn(),
   apilog: jest.fn(),
   apierror: jest.fn(),
   ttsinfo: jest.fn(),
@@ -29,7 +32,8 @@ jest.mock('zss/device', () => ({
   }),
 }))
 
-import { apilog, registerstore, ttsinfo } from 'zss/device/api'
+import { apilog, ttsinfo } from 'zss/device/api'
+import { storagewritekey } from 'zss/feature/loginstorage'
 import { storagereadconfigstring } from 'zss/feature/storage'
 import {
   applyttsengineconfig,
@@ -59,23 +63,14 @@ describe('tts config persistence', () => {
     })
   })
 
-  it('storettsengineconfig writes config_ keys via registerstore', () => {
+  it('storettsengineconfig writes config_ keys via storagewritekey', () => {
     storettsengineconfig('player1', 'fish', 'secret-key', 's2-pro')
-    expect(registerstore).toHaveBeenCalledWith(
-      expect.anything(),
-      'player1',
-      'config_ttsengine',
-      'fish',
-    )
-    expect(registerstore).toHaveBeenCalledWith(
-      expect.anything(),
-      'player1',
+    expect(storagewritekey).toHaveBeenCalledWith('config_ttsengine', 'fish')
+    expect(storagewritekey).toHaveBeenCalledWith(
       'config_ttsengineconfig',
       'secret-key',
     )
-    expect(registerstore).toHaveBeenCalledWith(
-      expect.anything(),
-      'player1',
+    expect(storagewritekey).toHaveBeenCalledWith(
       'config_ttsenginemodel',
       's2-pro',
     )
@@ -114,12 +109,7 @@ describe('tts config persistence', () => {
     const lines = await applyttsengineconfig('player1', 'fish', '', '')
     expect(lines.length).toBeGreaterThan(0)
     expect(lines.join('\n')).toContain('fish tts config:')
-    expect(registerstore).toHaveBeenCalledWith(
-      expect.anything(),
-      'player1',
-      'config_ttsengine',
-      'fish',
-    )
+    expect(storagewritekey).toHaveBeenCalledWith('config_ttsengine', 'fish')
     expect(ttsinfo).toHaveBeenCalledWith(
       expect.anything(),
       'player1',
@@ -162,12 +152,7 @@ describe('tts config persistence', () => {
       '',
     )
     expect(apilog).toHaveBeenCalled()
-    expect(registerstore).toHaveBeenCalledWith(
-      expect.anything(),
-      'player1',
-      'config_ttsengine',
-      'fish',
-    )
+    expect(storagewritekey).toHaveBeenCalledWith('config_ttsengine', 'fish')
   })
 
   it('applyttsengineconfig drops fish api key when switching to piper', async () => {
@@ -220,12 +205,7 @@ describe('tts config persistence', () => {
       'ttsengine piper',
       'set config with #ttsengine piper <config>',
     ])
-    expect(registerstore).toHaveBeenCalledWith(
-      expect.anything(),
-      'player1',
-      'config_ttsengine',
-      'piper',
-    )
+    expect(storagewritekey).toHaveBeenCalledWith('config_ttsengine', 'piper')
     expect(apilog).not.toHaveBeenCalled()
   })
 
@@ -238,9 +218,7 @@ describe('tts config persistence', () => {
     const lines = await applyttsengineconfig('player1', 'fish', 'secret-key', '')
     expect(lines).toEqual([])
     expect(apilog).toHaveBeenCalled()
-    expect(registerstore).toHaveBeenCalledWith(
-      expect.anything(),
-      'player1',
+    expect(storagewritekey).toHaveBeenCalledWith(
       'config_ttsenginemodel',
       's2.1-pro-free',
     )

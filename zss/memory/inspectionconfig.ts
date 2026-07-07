@@ -1,6 +1,6 @@
-import { get as idbget, update as idbupdate } from 'idb-keyval'
+import { durableget, durableupdate } from 'zss/feature/durable'
 
-/** Tiny helper used by inspection menus that persist a config blob in idb-keyval. */
+/** Tiny helper used by inspection menus that persist a config blob in durable KV. */
 export type INSPECTION_CONFIG_STORE<T> = {
   load(): Promise<void>
   save(): Promise<void>
@@ -15,13 +15,13 @@ export function createinspectionconfig<T extends Record<string, unknown>>(
   let current: T = { ...defaults }
   return {
     async load() {
-      const stored = await idbget(key)
+      const stored = await durableget<T>(key)
       if (stored) {
         current = { ...current, ...stored }
       }
     },
     async save() {
-      await idbupdate(key, () => current)
+      await durableupdate(key, () => current)
     },
     read() {
       return current
