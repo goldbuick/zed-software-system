@@ -1,9 +1,10 @@
 import {
   callwanixrpc,
+  registerwanixsessioncloseprune,
   waitwanixiframe,
   waitwanixready,
 } from 'zss/feature/wanix/wanixbridge'
-import { readattachedsession } from 'zss/feature/wanix/wanixattachstate'
+import { readattachedsession, readwanixactivesession } from 'zss/feature/wanix/wanixattachstate'
 import { listwanixwasmentries, readbundleflatpath } from 'zss/feature/wanix/wanixbundle'
 import { readwanixtermbufferkeys } from 'zss/feature/wanix/wanixtermbuffer'
 import { uniquewanixtaskid } from 'zss/feature/wanix/wanixcmd'
@@ -148,6 +149,16 @@ export async function halttaskinroom(
   return result
 }
 
+export function removewanixroomtask(taskid: string) {
+  if (!roomconfig.tasks.some((task) => task.id === taskid)) {
+    return
+  }
+  roomconfig = {
+    ...roomconfig,
+    tasks: roomconfig.tasks.filter((task) => task.id !== taskid),
+  }
+}
+
 export async function putwanixroomfile(
   path: string,
   bytes: Uint8Array,
@@ -198,6 +209,7 @@ function readwanixmenusessionfields() {
   return {
     sessionkeys: readwanixtermbufferkeys(),
     attachedsessionkey: readattachedsession(),
+    activesessionkey: readwanixactivesession(),
   }
 }
 
@@ -325,3 +337,5 @@ export async function handlewanixdrop(payload: WanixDropPayload): Promise<{
 
   return { taskid, cmd: firstcmd, spawns }
 }
+
+registerwanixsessioncloseprune(removewanixroomtask)

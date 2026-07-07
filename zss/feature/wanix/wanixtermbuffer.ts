@@ -24,6 +24,14 @@ export function clearwanixtermbuffers() {
   bump()
 }
 
+export function removewanixtermbuffer(sessionkey: string): boolean {
+  if (!buffers.delete(sessionkey)) {
+    return false
+  }
+  bump()
+  return true
+}
+
 export function applywanixtermread(
   sessionkey: string,
   snapshot: WanixTermCellsSnapshot,

@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { callwanixtermwrite } from 'zss/feature/wanix/wanixbridge'
 import {
+  cyclewanixattachedsession,
   detachwanixterm,
   readattachedsession,
   subscribewanixattach,
 } from 'zss/feature/wanix/wanixattachstate'
 import {
   readwanixtermbuffer,
+  readwanixtermbufferkeys,
   readwanixtermnotifyversion,
   subscribewanixtermbuffer,
 } from 'zss/feature/wanix/wanixtermbuffer'
@@ -16,6 +18,11 @@ import { writetile } from 'zss/gadget/tiles'
 import { useWriteText } from 'zss/gadget/writetext'
 import { NAME } from 'zss/words/types'
 import { textformatreadedges } from 'zss/words/textformat'
+
+const HINT_IDLE = 'Ctrl+\\ : detach / switch'
+const HINT_ARMED = 'Ctrl+\\  n next  p prev  d detach  Esc cancel'
+const HINT_COLOR = 0
+const HINT_BG = 7
 
 function usewanixattachsessionkey() {
   const [sessionkey, setsessionkey] = useState(readattachedsession)
@@ -64,12 +71,6 @@ function readlinecell(
 function encodekeyboard(event: KeyboardEvent): string | null {
   const rawkey = event.key
   const key = rawkey.toLowerCase()
-  if (event.ctrlKey && rawkey === '\\') {
-    return null
-  }
-  if (key === 'pageup' || key === 'pagedown') {
-    return null
-  }
   if (event.ctrlKey && rawkey.length === 1) {
     const code = rawkey.toLowerCase().charCodeAt(0)
     if (code >= 97 && code <= 122) {
@@ -105,6 +106,27 @@ function encodekeyboard(event: KeyboardEvent): string | null {
   return null
 }
 
+function drawhintbar(
+  context: ReturnType<typeof useWriteText>,
+  edge: ReturnType<typeof textformatreadedges>,
+  text: string,
+) {
+  const width = edge.width
+  const drawy = edge.top + edge.height - 1
+  const padded = text.padEnd(width, ' ').slice(0, width)
+  for (let x = 0; x < width; x++) {
+    writetile(context, context.width, context.height, edge.left + x, drawy, {
+      char: padded.charCodeAt(x),
+      color: HINT_COLOR,
+      bg: HINT_BG,
+    })
+  }
+}
+
+function isctrlbackslash(event: KeyboardEvent) {
+  return event.ctrlKey && event.key === '\\'
+}
+
 export function WanixTermScreen() {
   const context = useWriteText()
   const edge = textformatreadedges(context)
@@ -112,6 +134,7 @@ export function WanixTermScreen() {
   usewanixtermbufferversion()
   const lastframe = useRef<WanixTermTileBuffer | null>(null)
   const [scrolloffset, setscrolloffset] = useState(0)
+  const [prefixarmed, setprefixarmed] = useState(false)
 
   const buffer =
     sessionkey != null ? readwanixtermbuffer(sessionkey) : null
@@ -122,6 +145,7 @@ export function WanixTermScreen() {
 
   useEffect(() => {
     setscrolloffset(0)
+    setprefixarmed(false)
   }, [sessionkey])
 
   if (!frame) {
@@ -130,7 +154,7 @@ export function WanixTermScreen() {
 
   const scrollbackrows = frame.scrollbackrows ?? 0
   const cols = Math.min(frame.cols, edge.width)
-  const visibleheight = edge.height
+  const visibleheight = Math.max(0, edge.height - 1)
   const totallines = scrollbackrows + frame.rows
   const maxscrolloffset = Math.max(0, totallines - visibleheight)
   const clampedoffset = Math.min(scrolloffset, maxscrolloffset)
@@ -161,17 +185,53 @@ export function WanixTermScreen() {
       })
     }
   }
+
+  if (edge.height >= 1) {
+    drawhintbar(context, edge, prefixarmed ? HINT_ARMED : HINT_IDLE)
+  }
+
   context.changed()
 
   return (
     <UserInput
       keydown={(event) => {
         const key = NAME(event.key)
-        if (event.ctrlKey && key === '\\') {
+
+        if (prefixarmed) {
           event.preventDefault()
-          detachwanixterm()
+          setprefixarmed(false)
+          if (key === 'p' || key === 'arrowleft') {
+            cyclewanixattachedsession(readwanixtermbufferkeys(), -1)
+            return
+          }
+          if (key === 'n' || key === 'arrowright') {
+            cyclewanixattachedsession(readwanixtermbufferkeys(), 1)
+            return
+          }
+          if (key === 'd' || isctrlbackslash(event)) {
+            detachwanixterm()
+            return
+          }
+          if (key === 'escape') {
+            return
+          }
+          if (!atliveline) {
+            return
+          }
+          const payload = encodekeyboard(event)
+          const targetkey = sessionkey ?? readattachedsession()
+          if (payload != null && targetkey) {
+            void callwanixtermwrite(payload, targetkey)
+          }
           return
         }
+
+        if (isctrlbackslash(event)) {
+          event.preventDefault()
+          setprefixarmed(true)
+          return
+        }
+
         if (key === 'pageup') {
           event.preventDefault()
           setscrolloffset((prev) =>

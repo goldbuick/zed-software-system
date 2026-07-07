@@ -21,6 +21,10 @@ const WANIX_MSG_IDLE = 'zss-wanix-idle'
 const WANIX_MSG_RPC = 'zss-wanix-rpc'
 const WANIX_MSG_RPC_RES = 'zss-wanix-rpc-res'
 const WANIX_MSG_CELLS = 'zss-wanix-cells'
+const WANIX_MSG_SESSION = 'zss-wanix-session'
+
+type WanixSessionKind = 'vm' | 'task'
+type WanixSessionEvent = 'open' | 'active' | 'close'
 
 const DEFAULT_TERM_COLS = 80
 const DEFAULT_TERM_ROWS = 24
@@ -28,6 +32,12 @@ const WINCH_SENTINEL = -1
 
 const DEFAULT_VM_ID = 'linux-vm'
 const DEFAULT_VM_MEM = '512M'
+
+// The published wanix npm dist ships a TinyGo-compiled wanix.wasm whose
+// syscall/js runtime corrupts under load (upstream tractordev/wanix#171),
+// crashing the guest during heavy terminal I/O. Point <wanix-system> at a
+// full-Go build served from cafe/public so the loader uses the stable Go glue.
+const WANIX_WASM_URL = '/wasm/wanix/wanix.wasm'
 const ROOM_READY_TIMEOUT_MS = 180_000
 const BIND_MOUNT_TIMEOUT_MS = 120_000
 const VM_RID_WAIT_MS = 120_000
@@ -67,8 +77,11 @@ if (!host) {
 }
 
 const termsessions = new Map<string, TermSession>()
+const sessionconnectorder: string[] = []
 const termencoder = new TextEncoder()
 const termdecoder = new TextDecoder()
+
+let activesessionkey: string | null = null
 
 let roomconfig: WanixRoomConfig = {
   mode: 'idle',
@@ -104,7 +117,6 @@ function replyrpc(
 }
 
 function postready() {
-  console.info('[wanix] ready')
   window.parent.postMessage(
     { type: WANIX_MSG_READY },
     window.location.origin,
@@ -112,11 +124,91 @@ function postready() {
 }
 
 function postidle() {
-  console.info('[wanix] idle')
   window.parent.postMessage(
     { type: WANIX_MSG_IDLE },
     window.location.origin,
   )
+}
+
+function readsessionsessionkind(sessionkey: string): WanixSessionKind {
+  if (roomconfig.vm?.active && sessionkey === roomconfig.vm.id) {
+    return 'vm'
+  }
+  return 'task'
+}
+
+function postsession(
+  event: WanixSessionEvent,
+  sessionkey: string,
+  kind?: WanixSessionKind,
+) {
+  window.parent.postMessage(
+    {
+      type: WANIX_MSG_SESSION,
+      event,
+      sessionkey,
+      kind,
+    },
+    window.location.origin,
+  )
+}
+
+function recordtermsessionconnect(sessionkey: string) {
+  const index = sessionconnectorder.indexOf(sessionkey)
+  if (index >= 0) {
+    sessionconnectorder.splice(index, 1)
+  }
+  sessionconnectorder.push(sessionkey)
+}
+
+function forgettermsessionconnect(sessionkey: string) {
+  const index = sessionconnectorder.indexOf(sessionkey)
+  if (index >= 0) {
+    sessionconnectorder.splice(index, 1)
+  }
+}
+
+function pruneworkerroomtask(taskid: string) {
+  if (readsessionsessionkind(taskid) !== 'task') {
+    return
+  }
+  roomconfig.tasks = roomconfig.tasks.filter((entry) => entry.id !== taskid)
+}
+
+function recomputeactivesession() {
+  const live = sessionconnectorder.filter((key) => termsessions.has(key))
+  if (live.length === 0) {
+    activesessionkey = null
+    return
+  }
+  const next = live[live.length - 1]
+  activesessionkey = next
+  postsession('active', next, readsessionsessionkind(next))
+}
+
+function setactivesession(sessionkey: string) {
+  activesessionkey = sessionkey
+  postsession('active', sessionkey, readsessionsessionkind(sessionkey))
+}
+
+function notifytermsessionclose(sessionkey: string) {
+  forgettermsessionconnect(sessionkey)
+  pruneworkerroomtask(sessionkey)
+  postsession('close', sessionkey)
+  if (activesessionkey === sessionkey) {
+    activesessionkey = null
+    recomputeactivesession()
+  }
+}
+
+function handletermsessioneof(sessionkey: string) {
+  const session = termsessions.get(sessionkey)
+  if (!session?.alive) {
+    return
+  }
+  session.disconnect()
+  termsessions.delete(sessionkey)
+  notifytermsessionclose(sessionkey)
 }
 
 function setwanixattrs(el: HTMLElement, attrs: Record<string, unknown>) {
@@ -184,10 +276,12 @@ function resizesessiongrid(
 }
 
 async function readtermloop(sessionkey: string, session: TermSession) {
+  let eof = false
   while (session.alive && session.reader) {
     try {
       const { done, value } = await session.reader.read()
-      if (done || !session.alive) {
+      if (done) {
+        eof = session.alive
         break
       }
       if (value?.length && session.grid) {
@@ -197,6 +291,9 @@ async function readtermloop(sessionkey: string, session: TermSession) {
     } catch {
       break
     }
+  }
+  if (eof) {
+    handletermsessioneof(sessionkey)
   }
 }
 
@@ -232,11 +329,6 @@ async function fitonesession(
   }
   updateterminals(shim)
   resizesessiongrid(sessionkey, session, nextcols, nextrows)
-  console.info(`[wanix term ${sessionkey}] winsize`, {
-    cols: nextcols,
-    rows: nextrows,
-    termpath: session.termpath,
-  })
 }
 
 async function fitalltermsessions(cols: number, rows: number) {
@@ -255,22 +347,41 @@ async function fitalltermsessions(cols: number, rows: number) {
   }
 }
 
-function disconnecttermsession(sessionkey: string) {
+function disconnecttermsession(
+  sessionkey: string,
+  opts?: { notifyclose?: boolean },
+) {
   const session = termsessions.get(sessionkey)
   if (!session) {
     return
   }
+  const wasalive = session.alive
   session.disconnect()
   termsessions.delete(sessionkey)
+  if (opts?.notifyclose && wasalive) {
+    notifytermsessionclose(sessionkey)
+  } else {
+    forgettermsessionconnect(sessionkey)
+    if (activesessionkey === sessionkey) {
+      activesessionkey = null
+      recomputeactivesession()
+    }
+  }
 }
 
 function disconnectalltermsessions() {
   for (const key of [...termsessions.keys()]) {
     disconnecttermsession(key)
   }
+  activesessionkey = null
+  sessionconnectorder.length = 0
 }
 
-async function connecttermsession(sessionkey: string, termpath: string) {
+async function connecttermsession(
+  sessionkey: string,
+  termpath: string,
+  kind?: WanixSessionKind,
+) {
   disconnecttermsession(sessionkey)
   const root = readroot()
   const datapath = `${termpath}/data`
@@ -279,6 +390,7 @@ async function connecttermsession(sessionkey: string, termpath: string) {
   const writable = await root.openWritable(datapath)
   const reader = readable.getReader()
   const writer = writable.getWriter()
+  const sessionkind = kind ?? readsessionsessionkind(sessionkey)
   const session: TermSession = {
     alive: true,
     termpath,
@@ -310,6 +422,9 @@ async function connecttermsession(sessionkey: string, termpath: string) {
     },
   }
   termsessions.set(sessionkey, session)
+  recordtermsessionconnect(sessionkey)
+  postsession('open', sessionkey, sessionkind)
+  setactivesession(sessionkey)
   void readtermloop(sessionkey, session)
   return session
 }
@@ -345,7 +460,7 @@ async function connectvmtermsession() {
   if (!vmel) {
     return
   }
-  await connecttermsession(vm.id, readvmtermpath(vmel))
+  await connecttermsession(vm.id, readvmtermpath(vmel), 'vm')
 }
 
 function appendtaskroombinds(sys: WanixSystemElement, config: WanixRoomConfig) {
@@ -391,7 +506,7 @@ function buildroomtree(config: WanixRoomConfig) {
   setwanixattrs(sys, {
     id: 'wanix-system',
     'allow-origins': '*',
-    debug: true,
+    wasm: WANIX_WASM_URL,
   })
 
   if (config.mode === 'idle') {
@@ -519,9 +634,9 @@ async function applyroom(config: WanixRoomConfig) {
     await waitvmlinuxmount()
     const vmel = system.querySelector('wanix-vm') as WanixVmElement | null
     if (vmel) {
-      if (typeof vmel.allocate === 'function') {
-        await vmel.allocate()
-      }
+      // wanix-vm auto-allocates itself via _awake() on the system 'ready'
+      // event, so calling allocate() here would throw 'VM already allocated'.
+      // connectvmtermsession() waits on the term data path, covering timing.
       await connectvmtermsession()
       if (typeof vmel.start === 'function') {
         await vmel.start()
@@ -544,7 +659,7 @@ async function applyroom(config: WanixRoomConfig) {
 }
 
 function removetargetpair(taskid: string) {
-  disconnecttermsession(taskid)
+  disconnecttermsession(taskid, { notifyclose: true })
   system?.querySelector(`wanix-task[id="${taskid}"]`)?.remove()
   roomconfig.tasks = roomconfig.tasks.filter((entry) => entry.id !== taskid)
 }
@@ -576,7 +691,7 @@ async function spawntask(taskid: string, cmd: string) {
     typeof task.term === 'string' && task.term.length > 0
       ? task.term
       : `#task/${taskid}/term`
-  await connecttermsession(taskid, termpath)
+  await connecttermsession(taskid, termpath, 'task')
 
   if (typeof task.start === 'function') {
     await task.start()
@@ -601,7 +716,7 @@ function stopvm() {
     throw new Error('wanix room not ready')
   }
   const vmid = roomconfig.vm?.id ?? DEFAULT_VM_ID
-  disconnecttermsession(vmid)
+  disconnecttermsession(vmid, { notifyclose: true })
   system.querySelector('wanix-vm')?.remove()
   system.querySelector('[data-zss-linux-bind]')?.remove()
   system.querySelector('[data-zss-v86-bind]')?.remove()
@@ -755,9 +870,6 @@ async function handlerrpc(data: WanixRpcMessage, source: MessageEventSource | nu
     replyrpc(source, id, { result })
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
-    if (method === 'termfit') {
-      console.warn('[wanix termfit]', message)
-    }
     replyrpc(source, id, {
       error: message,
     })

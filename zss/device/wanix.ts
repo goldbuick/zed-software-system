@@ -4,6 +4,7 @@ import { doasync } from 'zss/device/doasync'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import {
   detachwanixterm,
+  readwanixactivesession,
   setattachedsession,
 } from 'zss/feature/wanix/wanixattachstate'
 import { readwanixtermbufferkeys } from 'zss/feature/wanix/wanixtermbuffer'
@@ -173,7 +174,6 @@ const wanix = createdevice('wanix', [], (message) => {
     case 'vm-start':
       doasync(wanix, message.player, async () => {
         try {
-          apilog(wanix, message.player, 'wanix vm starting…')
           const vmid = isstring(message.data)
             ? message.data
             : DEFAULT_WANIX_VM_ID
@@ -186,6 +186,7 @@ const wanix = createdevice('wanix', [], (message) => {
             )
             return
           }
+          apilog(wanix, message.player, 'wanix vm starting…')
           apilog(
             wanix,
             message.player,
@@ -221,10 +222,11 @@ const wanix = createdevice('wanix', [], (message) => {
       break
     case 'attach': {
       const keys = readwanixtermbufferkeys()
+      const activesession = readwanixactivesession()
       const requested =
         isstring(message.data) && message.data.trim()
           ? message.data.trim()
-          : keys[0]
+          : activesession ?? keys[0]
       if (!requested) {
         apilog(wanix, message.player, 'wanix no session to attach')
         break

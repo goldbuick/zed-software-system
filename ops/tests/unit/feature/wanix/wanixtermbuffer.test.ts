@@ -3,6 +3,7 @@ import {
   clearwanixtermbuffers,
   readwanixtermbuffer,
   readwanixtermbufferkeys,
+  removewanixtermbuffer,
   resetwanixtermbufferfortest,
 } from 'zss/feature/wanix/wanixtermbuffer'
 import type { WanixTermCellsSnapshot } from 'zss/feature/wanix/wanixtermgridstate'
@@ -59,5 +60,13 @@ describe('wanixtermbuffer', () => {
     applywanixtermread('task-b', readsnapshot('b'))
     clearwanixtermbuffers()
     expect(readwanixtermbufferkeys()).toEqual([])
+  })
+
+  it('removes one session buffer', () => {
+    applywanixtermread('task-a', readsnapshot('a'))
+    applywanixtermread('task-b', readsnapshot('b'))
+    expect(removewanixtermbuffer('task-a')).toBe(true)
+    expect(readwanixtermbufferkeys()).toEqual(['task-b'])
+    expect(removewanixtermbuffer('task-a')).toBe(false)
   })
 })

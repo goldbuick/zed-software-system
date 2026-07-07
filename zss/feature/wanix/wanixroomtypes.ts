@@ -52,6 +52,7 @@ export type WanixMenuState = {
   stalled: boolean
   sessionkeys: string[]
   attachedsessionkey: string | null
+  activesessionkey: string | null
 }
 
 export type WanixSpawnTaskResult = {

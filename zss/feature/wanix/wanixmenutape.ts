@@ -68,10 +68,19 @@ export function buildwanixmenutape(state: WanixMenuState): string {
   } else {
     for (const sessionkey of state.sessionkeys) {
       const attached = sessionkey === state.attachedsessionkey
+      const active = sessionkey === state.activesessionkey
+      let label = sessionkey
+      if (attached && active) {
+        label = `* ${sessionkey} (attached, active)`
+      } else if (attached) {
+        label = `* ${sessionkey} (attached)`
+      } else if (active) {
+        label = `${sessionkey} (active)`
+      }
       parts.push(
         zsszedlinkline(
           `wanix attach "${sessionkey}"`,
-          attached ? `* ${sessionkey} (attached)` : sessionkey,
+          label,
         ),
       )
     }

@@ -32,6 +32,7 @@ function idlestate(): WanixMenuState {
     stalled: false,
     sessionkeys: [],
     attachedsessionkey: null,
+    activesessionkey: null,
   }
 }
 
@@ -69,10 +70,13 @@ describe('wanixmenu', () => {
         ready: true,
         sessionkeys: ['hello-wasm', 'other-wasm'],
         attachedsessionkey: 'hello-wasm',
+        activesessionkey: 'other-wasm',
       })
       expect(tape).toContain('SECTION:Sessions')
-      expect(tape).toContain('!wanix attach "hello-wasm";* hello-wasm (attached)')
-      expect(tape).toContain('!wanix attach "other-wasm";other-wasm')
+      expect(tape).toContain(
+        '!wanix attach "hello-wasm";* hello-wasm (attached)',
+      )
+      expect(tape).toContain('!wanix attach "other-wasm";other-wasm (active)')
       expect(tape).toContain('!wanix detach;Detach terminal')
     })
 
@@ -89,6 +93,7 @@ describe('wanixmenu', () => {
         stalled: false,
         sessionkeys: [],
         attachedsessionkey: null,
+        activesessionkey: null,
       })
       expect(tape).toContain('HEADER:WANIX — task')
       expect(tape).toContain('!wanix stop "hello-wasm";Stop hello-wasm — hello.wasm')
@@ -112,6 +117,7 @@ describe('wanixmenu', () => {
         stalled: false,
         sessionkeys: [],
         attachedsessionkey: null,
+        activesessionkey: null,
       })
       expect(tape).toContain('!wanix stop "hello-wasm";')
       expect(tape).toContain('!wanix stop "greet-wasm";')
@@ -136,6 +142,7 @@ describe('wanixmenu', () => {
         stalled: false,
         sessionkeys: [],
         attachedsessionkey: null,
+        activesessionkey: null,
       })
       expect(tape).toContain('HEADER:WANIX — vm')
       expect(tape).toContain('linux-vm 512M vrid=vm-42')
@@ -157,6 +164,7 @@ describe('wanixmenu', () => {
         stalled: true,
         sessionkeys: [],
         attachedsessionkey: null,
+        activesessionkey: null,
       })
       expect(tape).toContain('wanix starting')
       expect(tape).toContain('!wanix stop "hello-wasm";')

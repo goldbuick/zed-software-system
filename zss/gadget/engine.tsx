@@ -57,7 +57,7 @@ export function Engine() {
   }, [])
 
   // detect gpu info
-  const gputier = useDetectGPU({ benchmarksURL: '/benchmarks-min' })
+  const gputier = useDetectGPU()
 
   // read config
   const [forcelowrez, setforcelowrez] = useState(false)

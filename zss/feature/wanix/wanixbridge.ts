@@ -1,8 +1,13 @@
 import {
   applywanixtermread,
   clearwanixtermbuffers,
+  removewanixtermbuffer,
 } from 'zss/feature/wanix/wanixtermbuffer'
-import { detachwanixterm, tryautoattachwanixterm } from 'zss/feature/wanix/wanixattachstate'
+import {
+  readattachedsession,
+  resetwanixattachforidle,
+  setwanixactivesession,
+} from 'zss/feature/wanix/wanixattachstate'
 import type { WanixTermCellsSnapshot } from 'zss/feature/wanix/wanixtermgridstate'
 
 export {
@@ -10,6 +15,7 @@ export {
   readwanixtermbuffer,
   readwanixtermbufferkeys,
   readwanixtermnotifyversion,
+  removewanixtermbuffer,
   subscribewanixtermbuffer,
 } from 'zss/feature/wanix/wanixtermbuffer'
 export type { WanixTermCellsSnapshot } from 'zss/feature/wanix/wanixtermgridstate'
@@ -19,6 +25,7 @@ const WANIX_MSG_IDLE = 'zss-wanix-idle'
 const WANIX_MSG_RPC = 'zss-wanix-rpc'
 const WANIX_MSG_RPC_RES = 'zss-wanix-rpc-res'
 const WANIX_MSG_CELLS = 'zss-wanix-cells'
+const WANIX_MSG_SESSION = 'zss-wanix-session'
 
 const WANIX_RPC_TIMEOUT_MS = 30_000
 const WANIX_READY_TIMEOUT_MS = 180_000
@@ -46,6 +53,14 @@ function resetready() {
 
 resetready()
 
+let onwanixsessioncloseprune: ((sessionkey: string) => void) | null = null
+
+export function registerwanixsessioncloseprune(
+  fn: (sessionkey: string) => void,
+) {
+  onwanixsessioncloseprune = fn
+}
+
 function handleparentmessage(event: MessageEvent) {
   if (event.origin !== window.location.origin) {
     return
@@ -62,7 +77,7 @@ function handleparentmessage(event: MessageEvent) {
   if (data.type === WANIX_MSG_IDLE) {
     resetready()
     clearwanixtermbuffers()
-    detachwanixterm()
+    resetwanixattachforidle()
     return
   }
   if (data.type === WANIX_MSG_CELLS) {
@@ -76,7 +91,29 @@ function handleparentmessage(event: MessageEvent) {
       typeof payload.snapshot === 'object'
     ) {
       applywanixtermread(payload.sessionkey, payload.snapshot)
-      tryautoattachwanixterm()
+    }
+    return
+  }
+  if (data.type === WANIX_MSG_SESSION) {
+    const payload = data as {
+      event?: unknown
+      sessionkey?: unknown
+    }
+    if (typeof payload.sessionkey !== 'string') {
+      return
+    }
+    const sessionkey = payload.sessionkey
+    if (payload.event === 'active') {
+      setwanixactivesession(sessionkey)
+      return
+    }
+    if (payload.event === 'close') {
+      if (sessionkey === readattachedsession()) {
+        return
+      }
+      removewanixtermbuffer(sessionkey)
+      onwanixsessioncloseprune?.(sessionkey)
+      return
     }
     return
   }
