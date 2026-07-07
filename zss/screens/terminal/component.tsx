@@ -20,6 +20,7 @@ import { useShallow } from 'zustand/react/shallow'
 
 import { TerminalInput } from './input'
 import { TerminalRows } from './rows'
+import { WanixTermSizeSync } from './wanixtermsizesync'
 
 export function TerminalComponent() {
   const player = registerreadplayer()
@@ -86,6 +87,7 @@ export function TerminalComponent() {
 
   return (
     <>
+      <WanixTermSizeSync />
       <TapeBackPlate />
       <TapeTerminalContext.Provider value={tapecontextvalue}>
         <TerminalRows />

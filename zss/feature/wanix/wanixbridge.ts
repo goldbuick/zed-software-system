@@ -134,6 +134,26 @@ export function waitwanixready(
   })
 }
 
+export type WanixTermFitResult = {
+  ok: boolean
+  cols?: number
+  rows?: number
+  noop?: boolean
+}
+
+export async function callwanixtermfit(
+  cols: number,
+  rows: number,
+  sessionkey?: string,
+): Promise<WanixTermFitResult> {
+  await waitwanixready()
+  const args: unknown[] = [cols, rows]
+  if (sessionkey != null && sessionkey !== '') {
+    args.push(sessionkey)
+  }
+  return callwanixrpc<WanixTermFitResult>('termfit', args)
+}
+
 export async function callwanixrpc<T>(
   method: string,
   args?: unknown[],

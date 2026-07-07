@@ -115,35 +115,77 @@
       return system.root
     }
 
-    function readtermchunktext(chunk) {
-      if (chunk instanceof Uint8Array) {
-        return new TextDecoder().decode(chunk)
-      }
-      if (chunk instanceof ArrayBuffer) {
-        return new TextDecoder().decode(new Uint8Array(chunk))
-      }
-      return String(chunk ?? '')
-    }
-
-    async function readtermloop(session, label) {
+    async function readtermloop(session) {
       while (session.alive && session.reader) {
         try {
-          const { done, value } = await session.reader.read()
+          const { done } = await session.reader.read()
           if (done || !session.alive) {
             break
           }
-          if (value) {
-            console.info(`[wanix term ${label}]`, readtermchunktext(value))
-          }
-        } catch (err) {
-          if (session.alive) {
-            console.info(
-              `[wanix term ${label}] read end`,
-              err instanceof Error ? err.message : String(err),
-            )
-          }
+        } catch {
           break
         }
+      }
+    }
+
+    function readkernel() {
+      const kernel = system?._kernel
+      if (!kernel) {
+        throw new Error('wanix kernel not available')
+      }
+      return kernel
+    }
+
+    async function fitonesession(
+      sessionkey,
+      session,
+      cols,
+      rows,
+      kernel,
+      updateterminals,
+    ) {
+      console.info(6)
+      const nextcols = Math.max(1, Number(cols) || 1)
+      const nextrows = Math.max(1, Number(rows) || 1)
+      if (session.lastcols === nextcols && session.lastrows === nextrows) {
+        return
+      }
+      console.info(7)
+      session.lastcols = nextcols
+      session.lastrows = nextrows
+      const shim = {
+        path: session.termpath,
+        _term: { cols: nextcols, rows: nextrows },
+      }
+      updateterminals.call(kernel, shim)
+      console.info(`[wanix term ${sessionkey}] winsize`, {
+        cols: nextcols,
+        rows: nextrows,
+        termpath: session.termpath,
+      })
+    }
+
+    async function fitalltermsessions(cols, rows) {
+      console.info(3)
+      if (termsessions.size === 0) {
+        return
+      }
+      console.info(4)
+      const kernel = readkernel()
+      const updateterminals = kernel._updateTerminals
+      if (typeof updateterminals !== 'function') {
+        throw new Error('wanix _updateTerminals missing')
+      }
+      console.info(5)
+      for (const [sessionkey, session] of termsessions) {
+        await fitonesession(
+          sessionkey,
+          session,
+          cols,
+          rows,
+          kernel,
+          updateterminals,
+        )
       }
     }
 
@@ -173,6 +215,9 @@
       const writer = writable.getWriter()
       const session = {
         alive: true,
+        termpath,
+        lastcols: undefined,
+        lastrows: undefined,
         reader,
         writer,
         async write(text) {
@@ -197,7 +242,7 @@
         },
       }
       termsessions.set(sessionkey, session)
-      void readtermloop(session, sessionkey)
+      void readtermloop(session)
       return session
     }
 
@@ -608,9 +653,22 @@
             result = { ok: true }
             break
           }
-          case 'termfit':
-            result = { ok: true, noop: true }
+          case 'termfit': {
+            const [cols, rows] = args
+            if (termsessions.size === 0) {
+              result = { ok: true, noop: true }
+              break
+            }
+            console.info(1)
+            await fitalltermsessions(Number(cols), Number(rows))
+            console.info(2)
+            result = {
+              ok: true,
+              cols: Number(cols),
+              rows: Number(rows),
+            }
             break
+          }
           default:
             replyrpc(source, id, { error: `unknown rpc: ${method}` })
             return
