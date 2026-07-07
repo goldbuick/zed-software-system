@@ -34,7 +34,14 @@ export function WanixTermSizeSync() {
         .then(() => {
           lastpush.current = { cols, rows }
         })
-        .catch(() => {})
+        .catch((err) => {
+          if (import.meta.env.DEV) {
+            console.warn(
+              '[wanix termfit]',
+              err instanceof Error ? err.message : String(err),
+            )
+          }
+        })
     }, TERM_FIT_DEBOUNCE_MS)
     return () => clearTimeout(timer)
   }, [edge.width, edge.height, terminalopen, editoropen])

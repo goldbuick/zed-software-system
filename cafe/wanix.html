@@ -128,36 +128,30 @@
       }
     }
 
-    function readkernel() {
-      const kernel = system?._kernel
-      if (!kernel) {
-        throw new Error('wanix kernel not available')
+    function readupdateterminals() {
+      if (!system?.isReady) {
+        throw new Error('wanix-system not ready')
       }
-      return kernel
+      const updateterminals = system._updateTerminals
+      if (typeof updateterminals !== 'function') {
+        throw new Error('wanix _updateTerminals missing')
+      }
+      return updateterminals.bind(system)
     }
 
-    async function fitonesession(
-      sessionkey,
-      session,
-      cols,
-      rows,
-      kernel,
-      updateterminals,
-    ) {
-      console.info(6)
+    async function fitonesession(sessionkey, session, cols, rows, updateterminals) {
       const nextcols = Math.max(1, Number(cols) || 1)
       const nextrows = Math.max(1, Number(rows) || 1)
       if (session.lastcols === nextcols && session.lastrows === nextrows) {
         return
       }
-      console.info(7)
       session.lastcols = nextcols
       session.lastrows = nextrows
       const shim = {
         path: session.termpath,
         _term: { cols: nextcols, rows: nextrows },
       }
-      updateterminals.call(kernel, shim)
+      updateterminals(shim)
       console.info(`[wanix term ${sessionkey}] winsize`, {
         cols: nextcols,
         rows: nextrows,
@@ -166,24 +160,16 @@
     }
 
     async function fitalltermsessions(cols, rows) {
-      console.info(3)
       if (termsessions.size === 0) {
         return
       }
-      console.info(4)
-      const kernel = readkernel()
-      const updateterminals = kernel._updateTerminals
-      if (typeof updateterminals !== 'function') {
-        throw new Error('wanix _updateTerminals missing')
-      }
-      console.info(5)
+      const updateterminals = readupdateterminals()
       for (const [sessionkey, session] of termsessions) {
         await fitonesession(
           sessionkey,
           session,
           cols,
           rows,
-          kernel,
           updateterminals,
         )
       }
@@ -659,9 +645,7 @@
               result = { ok: true, noop: true }
               break
             }
-            console.info(1)
             await fitalltermsessions(Number(cols), Number(rows))
-            console.info(2)
             result = {
               ok: true,
               cols: Number(cols),
@@ -675,8 +659,12 @@
         }
         replyrpc(source, id, { result })
       } catch (err) {
+        const message = err instanceof Error ? err.message : String(err)
+        if (method === 'termfit') {
+          console.warn('[wanix termfit]', message)
+        }
         replyrpc(source, id, {
-          error: err instanceof Error ? err.message : String(err),
+          error: message,
         })
       }
     }
