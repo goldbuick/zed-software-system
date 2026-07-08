@@ -2,7 +2,6 @@ import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 import type { Browser, Page } from '@playwright/test'
-
 import { launchparitybrowser } from 'tasks/lib/parity/parity-playwright'
 import {
   PARITY_RENDER_SCRIPT_TIMEOUT_MS,
@@ -44,7 +43,9 @@ function readurlflag(argv: string[]): string {
   if (argv[0]?.includes('://')) {
     return argv[0]
   }
-  throw new Error('--url is required (or pass base URL as first positional arg)')
+  throw new Error(
+    '--url is required (or pass base URL as first positional arg)',
+  )
 }
 
 function readscriptpath(argv: string[], root: string): string {
@@ -91,8 +92,10 @@ export async function runheadedplaywrightscript(
     const context = await browser.newContext({ ignoreHTTPSErrors: true })
     const page = await context.newPage()
     page.setDefaultTimeout(PARITY_RENDER_SCRIPT_TIMEOUT_MS)
-    await withscripttimeout('headed-playwright-script', PARITY_RENDER_SCRIPT_TIMEOUT_MS, () =>
-      script({ browser, page, baseurl, root }),
+    await withscripttimeout(
+      'headed-playwright-script',
+      PARITY_RENDER_SCRIPT_TIMEOUT_MS,
+      () => script({ browser, page, baseurl, root }),
     )
     return 0
   } finally {

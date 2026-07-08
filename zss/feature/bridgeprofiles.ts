@@ -1,5 +1,5 @@
-import { durableget, durableset } from 'zss/feature/durable'
 import type { BRIDGE_CHAT_START_OBJECT } from 'zss/device/bridge/chattypes'
+import { durableget, durableset } from 'zss/feature/durable'
 
 const BRIDGE_PROFILES_IDB_KEY = 'bridge_profiles_v1'
 

@@ -1,12 +1,12 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
-import type { HeadedPlaywrightScript } from 'tasks/lib/playwright/runheadedscript'
-import { waitforregistersession } from 'tasks/lib/wanix/playwrightwaits'
 import {
   PLAYWRIGHT_SCENARIO_TIMEOUT_MS,
   withscripttimeout,
 } from 'tasks/lib/parity/parity-timeouts'
+import type { HeadedPlaywrightScript } from 'tasks/lib/playwright/runheadedscript'
+import { waitforregistersession } from 'tasks/lib/wanix/playwrightwaits'
 
 const WANIX_IDLE_DROP_TIMEOUT_MS = PLAYWRIGHT_SCENARIO_TIMEOUT_MS
 
@@ -79,11 +79,15 @@ const validateidledrop: HeadedPlaywrightScript = async ({
     timeout: WANIX_IDLE_DROP_TIMEOUT_MS,
   })
 
-  await withscripttimeout('wanix-idle', WANIX_IDLE_DROP_TIMEOUT_MS, async () => {
-    while (!wanixidle) {
-      await page.waitForTimeout(250)
-    }
-  })
+  await withscripttimeout(
+    'wanix-idle',
+    WANIX_IDLE_DROP_TIMEOUT_MS,
+    async () => {
+      while (!wanixidle) {
+        await page.waitForTimeout(250)
+      }
+    },
+  )
 
   await waitforregistersession(page, root)
 
@@ -94,7 +98,7 @@ const validateidledrop: HeadedPlaywrightScript = async ({
     'wanix-bundle-starting',
     WANIX_IDLE_DROP_TIMEOUT_MS,
     async () => {
-      while (true) {
+      for (;;) {
         const logs = await readplaywrightlogs(page)
         if (logs.some((line) => line.includes('wanix task room starting'))) {
           break
@@ -108,7 +112,7 @@ const validateidledrop: HeadedPlaywrightScript = async ({
     'wanix-bundle-run',
     WANIX_IDLE_DROP_TIMEOUT_MS,
     async () => {
-      while (true) {
+      for (;;) {
         const logs = await readplaywrightlogs(page)
         if (logs.some((line) => line.includes('wanix run'))) {
           break
@@ -133,7 +137,7 @@ const validateidledrop: HeadedPlaywrightScript = async ({
     WANIX_IDLE_DROP_TIMEOUT_MS,
     async () => {
       const frame = page.frameLocator('iframe[title="wanix"]')
-      while (true) {
+      for (;;) {
         const count = await frame.locator('wanix-task[id]').count()
         if (count >= 1) {
           break

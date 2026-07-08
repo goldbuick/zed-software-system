@@ -10,7 +10,7 @@ export async function waitforregistersession(
   timeoutms = PLAYWRIGHT_SCENARIO_TIMEOUT_MS,
 ): Promise<void> {
   await withscripttimeout(label, timeoutms, async () => {
-    while (true) {
+    for (;;) {
       const ready = await page.evaluate(async (projectroot) => {
         const { register } = await import(
           `/@fs${projectroot}/zss/device/register.ts`

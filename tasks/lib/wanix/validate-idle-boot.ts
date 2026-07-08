@@ -1,9 +1,9 @@
-import type { HeadedPlaywrightScript } from 'tasks/lib/playwright/runheadedscript'
-import { waitforregistersession } from 'tasks/lib/wanix/playwrightwaits'
 import {
   PLAYWRIGHT_SCENARIO_TIMEOUT_MS,
   withscripttimeout,
 } from 'tasks/lib/parity/parity-timeouts'
+import type { HeadedPlaywrightScript } from 'tasks/lib/playwright/runheadedscript'
+import { waitforregistersession } from 'tasks/lib/wanix/playwrightwaits'
 
 const WANIX_IDLE_BOOT_TIMEOUT_MS = PLAYWRIGHT_SCENARIO_TIMEOUT_MS
 
@@ -60,35 +60,47 @@ const validateidleboot: HeadedPlaywrightScript = async ({
     timeout: WANIX_IDLE_BOOT_TIMEOUT_MS,
   })
 
-  await withscripttimeout('wanix-idle', WANIX_IDLE_BOOT_TIMEOUT_MS, async () => {
-    while (!wanixidle) {
-      await page.waitForTimeout(250)
-    }
-  })
+  await withscripttimeout(
+    'wanix-idle',
+    WANIX_IDLE_BOOT_TIMEOUT_MS,
+    async () => {
+      while (!wanixidle) {
+        await page.waitForTimeout(250)
+      }
+    },
+  )
 
   await waitforregistersession(page, root)
 
   await sendwanixvmcli(page, root)
 
-  await withscripttimeout('wanix-vm-starting', WANIX_IDLE_BOOT_TIMEOUT_MS, async () => {
-    while (true) {
-      const logs = await readplaywrightlogs(page)
-      if (logs.some((line) => line.includes('wanix vm starting'))) {
-        break
+  await withscripttimeout(
+    'wanix-vm-starting',
+    WANIX_IDLE_BOOT_TIMEOUT_MS,
+    async () => {
+      for (;;) {
+        const logs = await readplaywrightlogs(page)
+        if (logs.some((line) => line.includes('wanix vm starting'))) {
+          break
+        }
+        await page.waitForTimeout(250)
       }
-      await page.waitForTimeout(250)
-    }
-  })
+    },
+  )
 
-  await withscripttimeout('wanix-vm-started', WANIX_IDLE_BOOT_TIMEOUT_MS, async () => {
-    while (true) {
-      const logs = await readplaywrightlogs(page)
-      if (logs.some((line) => line.includes('wanix vm started'))) {
-        break
+  await withscripttimeout(
+    'wanix-vm-started',
+    WANIX_IDLE_BOOT_TIMEOUT_MS,
+    async () => {
+      for (;;) {
+        const logs = await readplaywrightlogs(page)
+        if (logs.some((line) => line.includes('wanix vm started'))) {
+          break
+        }
+        await page.waitForTimeout(500)
       }
-      await page.waitForTimeout(500)
-    }
-  })
+    },
+  )
 }
 
 export default validateidleboot

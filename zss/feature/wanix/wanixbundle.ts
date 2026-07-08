@@ -16,7 +16,9 @@ export function readbundleflatpath(prefix: string, relpath: string): string {
       : normalized
   }
   const tail =
-    normalized === trimmedprefix ? '' : normalized.slice(trimmedprefix.length + 1)
+    normalized === trimmedprefix
+      ? ''
+      : normalized.slice(trimmedprefix.length + 1)
   if (!tail) {
     return trimmedprefix
   }

@@ -1,13 +1,5 @@
-import {
-  durabledel,
-  durableentries,
-  durableget,
-  durablegetmany,
-  durableset,
-  durablesetmany,
-  durableupdate,
-} from 'zss/feature/durable'
 import { isclimode } from 'zss/feature/detect'
+import { durableentries, durablesetmany } from 'zss/feature/durable'
 import { CONFIG_KEYS, CONFIG_STRING_KEYS } from 'zss/feature/storagekeys'
 
 const CLI_SYNC_INTERVAL_MS = 2000
@@ -122,7 +114,9 @@ async function readlegacyvarsentries(): Promise<[string, unknown][]> {
   return entrieslist
 }
 
-async function readlegacyhistoryentry(): Promise<[string, unknown] | undefined> {
+async function readlegacyhistoryentry(): Promise<
+  [string, unknown] | undefined
+> {
   const g = readnodeglobal()
   if (typeof g.__nodeStorageReadHistoryBuffer !== 'function') {
     return undefined

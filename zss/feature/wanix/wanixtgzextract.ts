@@ -59,7 +59,9 @@ export function iswanixtarjunkpath(name: string): boolean {
 
 export function sanitizewanixtarpath(name: string): string {
   const normalized = name.replace(/\\/g, '/').replace(/^\/+/, '')
-  const parts = normalized.split('/').filter((part) => part.length > 0 && part !== '.')
+  const parts = normalized
+    .split('/')
+    .filter((part) => part.length > 0 && part !== '.')
   return parts.join('/')
 }
 

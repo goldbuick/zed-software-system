@@ -1,8 +1,8 @@
 import {
+  type TextEdge,
   readpinrowycoords,
   readsesslogrowycoords,
   readterminallayout,
-  type TextEdge,
 } from 'zss/screens/terminal/terminallayout'
 
 import { findterminalrowindexfromcoords } from './logrowhitcoords'
@@ -47,5 +47,3 @@ export function findterminalrowindexforcursor(args: {
     sessionheights: layout.sessionheights,
   })
 }
-
-export { findterminalrowindexfromcoords } from './logrowhitcoords'

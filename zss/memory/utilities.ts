@@ -3,9 +3,9 @@ import JSZip, { JSZipObject } from 'jszip'
 import { registerinspector } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { getclimode } from 'zss/feature/detect'
-import { CONFIG_KEYS } from 'zss/feature/storagekeys'
-import { storagewriteconfig } from 'zss/feature/storage'
 import { packformat, unpackformat } from 'zss/feature/format'
+import { storagewriteconfig } from 'zss/feature/storage'
+import { CONFIG_KEYS } from 'zss/feature/storagekeys'
 import { isjoin } from 'zss/feature/url'
 import { DIVIDER, zsstexttape, zsszedlinklinechip } from 'zss/feature/zsstextui'
 import { ensurezstdwasm } from 'zss/feature/zstdwasm'
@@ -36,8 +36,6 @@ import {
 } from './session'
 import { trimformatobject, trimmemoryexport } from './trimexport'
 import { BOOK, FIXED_DATE, MEMORY_LABEL } from './types'
-
-export { CONFIG_KEYS } from 'zss/feature/storagekeys'
 
 const CONFIG_DEFAULTS: Record<string, string> = {
   crt: 'on',

@@ -1,12 +1,12 @@
 import type {
   WanixSystemElement,
-  WanixTaskElement,
   WanixVmElement,
 } from 'zss/feature/wanix/wanixelements.d.ts'
 import type { WanixRoomConfig } from 'zss/feature/wanix/wanixroomtypes'
 import {
   WANIX_LINUX_ARCHIVE_URL,
   WANIX_V86_ARCHIVE_URL,
+  createidleroomconfig,
 } from 'zss/feature/wanix/wanixroomtypes'
 import type { WANIX_TERM_GRID } from 'zss/feature/wanix/wanixtermgridstate'
 import {
@@ -71,10 +71,11 @@ type WanixRpcMessage = {
   args?: unknown[]
 }
 
-const host = document.getElementById('wanix-host')
-if (!host) {
+const hostel = document.getElementById('wanix-host')
+if (!hostel) {
   throw new Error('wanix-host missing')
 }
+const host: HTMLElement = hostel
 
 const termsessions = new Map<string, TermSession>()
 const sessionconnectorder: string[] = []
@@ -117,17 +118,11 @@ function replyrpc(
 }
 
 function postready() {
-  window.parent.postMessage(
-    { type: WANIX_MSG_READY },
-    window.location.origin,
-  )
+  window.parent.postMessage({ type: WANIX_MSG_READY }, window.location.origin)
 }
 
 function postidle() {
-  window.parent.postMessage(
-    { type: WANIX_MSG_IDLE },
-    window.location.origin,
-  )
+  window.parent.postMessage({ type: WANIX_MSG_IDLE }, window.location.origin)
 }
 
 function readsessionsessionkind(sessionkey: string): WanixSessionKind {
@@ -221,7 +216,7 @@ function setwanixattrs(el: HTMLElement, attrs: Record<string, unknown>) {
       el.setAttribute(key, '')
       continue
     }
-    el.setAttribute(key, String(value))
+    el.setAttribute(key, String(value as string | number))
   }
 }
 
@@ -264,11 +259,7 @@ function resizesessiongrid(
 ) {
   const nextcols = Math.max(1, Number(cols) || 1)
   const nextrows = Math.max(1, Number(rows) || 1)
-  if (
-    session.grid &&
-    session.grid.cols === nextcols &&
-    session.grid.rows === nextrows
-  ) {
+  if (session.grid?.cols === nextcols && session.grid.rows === nextrows) {
     return
   }
   session.grid = wanixtermgridresize(session.grid, nextcols, nextrows)
@@ -309,7 +300,7 @@ function readupdateterminals() {
   return updateterminals.bind(wanixsystem)
 }
 
-async function fitonesession(
+function fitonesession(
   sessionkey: string,
   session: TermSession,
   cols: number,
@@ -331,19 +322,13 @@ async function fitonesession(
   resizesessiongrid(sessionkey, session, nextcols, nextrows)
 }
 
-async function fitalltermsessions(cols: number, rows: number) {
+function fitalltermsessions(cols: number, rows: number) {
   if (termsessions.size === 0) {
     return
   }
   const updateterminals = readupdateterminals()
   for (const [sessionkey, session] of termsessions) {
-    await fitonesession(
-      sessionkey,
-      session,
-      cols,
-      rows,
-      updateterminals,
-    )
+    fitonesession(sessionkey, session, cols, rows, updateterminals)
   }
 }
 
@@ -456,7 +441,7 @@ async function connectvmtermsession() {
   if (!vm?.active || !system?.isReady) {
     return
   }
-  const vmel = system.querySelector('wanix-vm') as WanixVmElement | null
+  const vmel = system.querySelector('wanix-vm')
   if (!vmel) {
     return
   }
@@ -502,7 +487,7 @@ function appendvmroombinds(sys: WanixSystemElement) {
 }
 
 function buildroomtree(config: WanixRoomConfig) {
-  const sys = document.createElement('wanix-system') as WanixSystemElement
+  const sys = document.createElement('wanix-system')
   setwanixattrs(sys, {
     id: 'wanix-system',
     'allow-origins': '*',
@@ -519,7 +504,7 @@ function buildroomtree(config: WanixRoomConfig) {
     appendvmroombinds(sys)
     const vm = config.vm
     if (vm?.active) {
-      const vmel = document.createElement('wanix-vm') as WanixVmElement
+      const vmel = document.createElement('wanix-vm')
       setwanixattrs(vmel, {
         id: vm.id,
         export: 'ttyS0',
@@ -632,7 +617,7 @@ async function applyroom(config: WanixRoomConfig) {
 
   if (roomconfig.mode === 'vm' && roomconfig.vm?.active) {
     await waitvmlinuxmount()
-    const vmel = system.querySelector('wanix-vm') as WanixVmElement | null
+    const vmel = system.querySelector('wanix-vm')
     if (vmel) {
       // wanix-vm auto-allocates itself via _awake() on the system 'ready'
       // event, so calling allocate() here would throw 'VM already allocated'.
@@ -672,7 +657,7 @@ async function spawntask(taskid: string, cmd: string) {
     return { ok: true, already: true, taskid }
   }
 
-  const task = document.createElement('wanix-task') as WanixTaskElement
+  const task = document.createElement('wanix-task')
   setwanixattrs(task, {
     id: taskid,
     type: 'wasi',
@@ -698,10 +683,7 @@ async function spawntask(taskid: string, cmd: string) {
   }
 
   const entry = { id: taskid, cmd, running: true }
-  roomconfig.tasks = [
-    ...roomconfig.tasks.filter((t) => t.id !== taskid),
-    entry,
-  ]
+  roomconfig.tasks = [...roomconfig.tasks.filter((t) => t.id !== taskid), entry]
 
   return { ok: true, taskid, rid: task.rid ?? null }
 }
@@ -761,7 +743,10 @@ function readvmstatelive() {
   }
 }
 
-async function handlerrpc(data: WanixRpcMessage, source: MessageEventSource | null) {
+async function handlerrpc(
+  data: WanixRpcMessage,
+  source: MessageEventSource | null,
+) {
   const { id, method, args = [] } = data
   try {
     let result: unknown
@@ -783,7 +768,7 @@ async function handlerrpc(data: WanixRpcMessage, source: MessageEventSource | nu
         break
       case 'applyroom': {
         const [config] = args as [WanixRoomConfig?]
-        result = await applyroom(config ?? { mode: 'idle', mountkey: 0 })
+        result = await applyroom(config ?? createidleroomconfig())
         break
       }
       case 'spawntask': {
@@ -855,7 +840,7 @@ async function handlerrpc(data: WanixRpcMessage, source: MessageEventSource | nu
           result = { ok: true, noop: true }
           break
         }
-        await fitalltermsessions(Number(cols), Number(rows))
+        fitalltermsessions(Number(cols), Number(rows))
         result = {
           ok: true,
           cols: Number(cols),
@@ -881,7 +866,7 @@ window.addEventListener('message', (event) => {
     return
   }
   const data = event.data as WanixRpcMessage
-  if (!data || data.type !== WANIX_MSG_RPC) {
+  if (data?.type !== WANIX_MSG_RPC) {
     return
   }
   void handlerrpc(data, event.source)

@@ -2,6 +2,12 @@ import fs from 'node:fs'
 import type http from 'node:http'
 import path from 'node:path'
 
+type ConnectMiddleware = (
+  req: http.IncomingMessage,
+  res: http.ServerResponse,
+  next: (err?: unknown) => void,
+) => void
+
 const MIMES: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
   '.wav': 'audio/wav',
@@ -40,7 +46,7 @@ function contenttype(filepath: string): string | undefined {
 export function fixtureprefixmiddleware(
   prefix: string,
   rootdir: string,
-): http.RequestListener {
+): ConnectMiddleware {
   const prefixwithslash = prefix.endsWith('/') ? prefix : `${prefix}/`
   return (req, res, next) => {
     if (req.method !== 'GET' && req.method !== 'HEAD') {
@@ -86,7 +92,7 @@ export function fixtureprefixmiddleware(
 }
 
 /** Inline blank COEP host for Playwright page.evaluate (no committed HTML file). */
-export function parityblankhostmiddleware(): http.RequestListener {
+export function parityblankhostmiddleware(): ConnectMiddleware {
   return (req, res, next) => {
     if (req.method !== 'GET' && req.method !== 'HEAD') {
       next()

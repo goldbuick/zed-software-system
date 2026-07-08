@@ -112,14 +112,24 @@ export function TerminalRows() {
     <>
       {visiblepins.map(([index, text, y, active]) =>
         active ? (
-          <TapeTerminalActiveItem key={`pin-${index}`} active text={text} y={y} />
+          <TapeTerminalActiveItem
+            key={`pin-${index}`}
+            active
+            text={text}
+            y={y}
+          />
         ) : (
           <TerminalItem key={`pin-${index}`} text={text} y={y} />
         ),
       )}
       {visiblesessionlogs.map(([index, text, y, active]) =>
         active ? (
-          <TapeTerminalActiveItem key={`log-${index}`} active text={text} y={y} />
+          <TapeTerminalActiveItem
+            key={`log-${index}`}
+            active
+            text={text}
+            y={y}
+          />
         ) : (
           <TerminalItem key={`log-${index}`} text={text} y={y} />
         ),

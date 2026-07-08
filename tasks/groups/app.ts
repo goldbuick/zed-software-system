@@ -209,10 +209,13 @@ export const APP_TASKS: TaskDef[] = [
       'Run a headed Playwright script against an already-running dev server (--url required)',
     tags: ['dev'],
     run: handler(async (ctx) => {
-      const { runheadedplaywrightscript } = await import(
-        'tasks/lib/playwright/runheadedscript'
+      const { runheadedplaywrightscript } =
+        await import('tasks/lib/playwright/runheadedscript')
+      return runheadedplaywrightscript(
+        ctx.root,
+        'app:playwright:headed',
+        ctx.args,
       )
-      return runheadedplaywrightscript(ctx.root, 'app:playwright:headed', ctx.args)
     }),
   }),
   def('app:lint:imports', {

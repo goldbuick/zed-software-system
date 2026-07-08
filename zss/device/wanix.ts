@@ -7,7 +7,6 @@ import {
   readwanixactivesession,
   setattachedsession,
 } from 'zss/feature/wanix/wanixattachstate'
-import { readwanixtermbufferkeys } from 'zss/feature/wanix/wanixtermbuffer'
 import { showwanixmenu } from 'zss/feature/wanix/wanixmenu'
 import {
   halttaskinroom,
@@ -16,6 +15,7 @@ import {
   stopwanixroom,
 } from 'zss/feature/wanix/wanixroom'
 import type { WanixDropPayload } from 'zss/feature/wanix/wanixroomtypes'
+import { readwanixtermbufferkeys } from 'zss/feature/wanix/wanixtermbuffer'
 import {
   DEFAULT_WANIX_VM_ID,
   DEFAULT_WANIX_VM_MEM,
@@ -37,9 +37,10 @@ function normalizewanixdropbytes(data: unknown): Uint8Array | undefined {
   return undefined
 }
 
-function readwanixdroppayload(
-  data: unknown,
-): { payload?: WanixDropPayload; reject?: string } {
+function readwanixdroppayload(data: unknown): {
+  payload?: WanixDropPayload
+  reject?: string
+} {
   if (!ispresent(data) || typeof data !== 'object') {
     return { reject: 'drop payload missing' }
   }
@@ -226,7 +227,7 @@ const wanix = createdevice('wanix', [], (message) => {
       const requested =
         isstring(message.data) && message.data.trim()
           ? message.data.trim()
-          : activesession ?? keys[0]
+          : (activesession ?? keys[0])
       if (!requested) {
         apilog(wanix, message.player, 'wanix no session to attach')
         break

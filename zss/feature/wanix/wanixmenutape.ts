@@ -1,8 +1,8 @@
 import type {
   WanixMenuState,
+  WanixMenuVmStatus,
   WanixRoomMode,
   WanixTaskSpec,
-  WanixMenuVmStatus,
 } from 'zss/feature/wanix/wanixroomtypes'
 import {
   zssheaderlines,
@@ -77,12 +77,7 @@ export function buildwanixmenutape(state: WanixMenuState): string {
       } else if (active) {
         label = `${sessionkey} (active)`
       }
-      parts.push(
-        zsszedlinkline(
-          `wanix attach "${sessionkey}"`,
-          label,
-        ),
-      )
+      parts.push(zsszedlinkline(`wanix attach "${sessionkey}"`, label))
     }
     if (state.attachedsessionkey) {
       parts.push(zsszedlinkline('wanix detach', 'Detach terminal'))

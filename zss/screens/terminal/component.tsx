@@ -1,9 +1,13 @@
-import { useLayoutEffect, useMemo, useState, useEffect } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { chipmessage, vmcli } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { storagereadconfig } from 'zss/feature/storage'
+import {
+  readattachedsession,
+  subscribewanixattach,
+} from 'zss/feature/wanix/wanixattachstate'
 import { useTape, useTerminal } from 'zss/gadget/data/zustandstores'
 import { useWriteText } from 'zss/gadget/writetext'
 import { totarget } from 'zss/mapping/string'
@@ -22,10 +26,6 @@ import { TerminalInput } from './input'
 import { TerminalRows } from './rows'
 import { WanixTermScreen } from './wanixtermscreen'
 import { WanixTermSizeSync } from './wanixtermsizesync'
-import {
-  readattachedsession,
-  subscribewanixattach,
-} from 'zss/feature/wanix/wanixattachstate'
 
 export function TerminalComponent() {
   const player = registerreadplayer()
@@ -100,11 +100,7 @@ export function TerminalComponent() {
       <WanixTermSizeSync />
       <TapeBackPlate />
       <TapeTerminalContext.Provider value={tapecontextvalue}>
-        {attachedsession ? (
-          <WanixTermScreen />
-        ) : (
-          <TerminalRows />
-        )}
+        {attachedsession ? <WanixTermScreen /> : <TerminalRows />}
         {!editoropen && !attachedsession && voice2text !== undefined && (
           <TerminalInput
             terminalmode={terminalmode}

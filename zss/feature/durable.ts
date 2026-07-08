@@ -1,12 +1,4 @@
-import {
-  del,
-  entries,
-  get,
-  getMany,
-  set,
-  setMany,
-  update,
-} from 'idb-keyval'
+import { del, entries, get, getMany, set, setMany, update } from 'idb-keyval'
 
 export async function durableget<T>(key: string): Promise<T | undefined> {
   return get<T>(key)
@@ -35,7 +27,7 @@ export async function durablegetmany<T>(
 
 export async function durableentries(): Promise<[string, unknown][]> {
   const rows = await entries()
-  return rows.map(([key, value]) => [String(key), value])
+  return rows.map(([key, value]) => [String(key as string | number), value])
 }
 
 export async function durablesetmany(

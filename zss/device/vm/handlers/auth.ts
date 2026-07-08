@@ -112,7 +112,9 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
   // const reattach = memoryreadplayeractive(message.player)
 
   // attempt to login player
-  if (memoryloginplayer(message.player, sanitizeloginflags(flags) as BOOK_FLAGS)) {
+  if (
+    memoryloginplayer(message.player, sanitizeloginflags(flags) as BOOK_FLAGS)
+  ) {
     // start tracking
     tracking[message.player] = 0
     lastinputtime[message.player] = Date.now()

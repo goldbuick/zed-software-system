@@ -112,14 +112,14 @@ function ansibgtocolor(index: number, bright: boolean) {
 }
 
 function brightenfg(fg: number) {
-  if (fg >= COLOR.BLACK && fg <= COLOR.LTGRAY) {
+  if ((fg as COLOR) >= COLOR.BLACK && (fg as COLOR) <= COLOR.LTGRAY) {
     return fg + BRIGHT_FG_OFFSET
   }
   return fg
 }
 
 function normalizefg(color: number) {
-  if (color >= COLOR.BLBLACK) {
+  if ((color as COLOR) >= COLOR.BLBLACK) {
     return color - BLINK_FG_OFFSET
   }
   return color
@@ -134,7 +134,11 @@ function resolvecellcolors(grid: WANIX_TERM_GRID) {
     fg = swapbg
     bg = swapfg
   }
-  if (grid.blink && fg >= COLOR.BLACK && fg <= COLOR.WHITE) {
+  if (
+    grid.blink &&
+    (fg as COLOR) >= COLOR.BLACK &&
+    (fg as COLOR) <= COLOR.WHITE
+  ) {
     fg += BLINK_FG_OFFSET
   }
   return { fg, bg }
@@ -337,7 +341,10 @@ function applysgrcode(grid: WANIX_TERM_GRID, code: number) {
   }
   if (code === 22) {
     grid.curfg = normalizefg(grid.curfg)
-    if (grid.curfg >= COLOR.DKGRAY && grid.curfg <= COLOR.WHITE) {
+    if (
+      (grid.curfg as COLOR) >= COLOR.DKGRAY &&
+      (grid.curfg as COLOR) <= COLOR.WHITE
+    ) {
       grid.curfg -= BRIGHT_FG_OFFSET
     }
     return
@@ -477,7 +484,9 @@ function scrollbacktophysical(
   }))
 }
 
-function physicaltoscrollback(row: WanixTermPhysicalRow): WanixTermScrollbackLine {
+function physicaltoscrollback(
+  row: WanixTermPhysicalRow,
+): WanixTermScrollbackLine {
   return {
     char: [...row.char],
     color: [...row.color],
@@ -539,7 +548,7 @@ function reflowgridcontent(
   while (physidx < allrows.length) {
     const startphys = physidx
     const cells: WanixTermCell[] = []
-    while (true) {
+    for (;;) {
       const row = allrows[physidx]
       for (let x = 0; x < row.char.length; x++) {
         cells.push({
@@ -657,7 +666,11 @@ function reflowgrid(grid: WANIX_TERM_GRID, newcols: number, newrows: number) {
   grid.cursorx = reflowed.cursorx
 }
 
-function resizealtviewport(grid: WANIX_TERM_GRID, newcols: number, newrows: number) {
+function resizealtviewport(
+  grid: WANIX_TERM_GRID,
+  newcols: number,
+  newrows: number,
+) {
   grid.cols = newcols
   grid.rows = newrows
   const size = newcols * newrows
@@ -712,7 +725,10 @@ function flattenscrollback(grid: WANIX_TERM_GRID) {
   }
 }
 
-export function createwanixtermgrid(cols: number, rows: number): WANIX_TERM_GRID {
+export function createwanixtermgrid(
+  cols: number,
+  rows: number,
+): WANIX_TERM_GRID {
   const nextcols = Math.max(1, cols)
   const nextrows = Math.max(1, rows)
   const size = nextcols * nextrows

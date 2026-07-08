@@ -1,13 +1,13 @@
 import {
-  applywanixtermread,
-  clearwanixtermbuffers,
-  removewanixtermbuffer,
-} from 'zss/feature/wanix/wanixtermbuffer'
-import {
   readattachedsession,
   resetwanixattachforidle,
   setwanixactivesession,
 } from 'zss/feature/wanix/wanixattachstate'
+import {
+  applywanixtermread,
+  clearwanixtermbuffers,
+  removewanixtermbuffer,
+} from 'zss/feature/wanix/wanixtermbuffer'
 import type { WanixTermCellsSnapshot } from 'zss/feature/wanix/wanixtermgridstate'
 
 export {
@@ -18,7 +18,6 @@ export {
   removewanixtermbuffer,
   subscribewanixtermbuffer,
 } from 'zss/feature/wanix/wanixtermbuffer'
-export type { WanixTermCellsSnapshot } from 'zss/feature/wanix/wanixtermgridstate'
 
 const WANIX_MSG_READY = 'zss-wanix-ready'
 const WANIX_MSG_IDLE = 'zss-wanix-idle'

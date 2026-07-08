@@ -60,10 +60,5 @@
     "ops/lib/test",
     "ops/archive"
   ],
-  "exclude": [],
-  "references": [
-    {
-      "path": "./tsconfig.node.json"
-    }
-  ]
+  "exclude": []
 }

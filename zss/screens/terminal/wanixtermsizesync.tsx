@@ -1,9 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { subscribewanixattach } from 'zss/feature/wanix/wanixattachstate'
-import {
-  callwanixtermfit,
-  waitwanixready,
-} from 'zss/feature/wanix/wanixbridge'
+import { callwanixtermfit, waitwanixready } from 'zss/feature/wanix/wanixbridge'
 import { readwanixtermgridsize } from 'zss/feature/wanix/wanixtermgrid'
 import { useTape } from 'zss/gadget/data/zustandstores'
 import { useWriteText } from 'zss/gadget/writetext'
@@ -18,22 +15,23 @@ export function WanixTermSizeSync() {
   const edge = textformatreadedges(context)
   const lastpush = useRef<{ cols: number; rows: number } | null>(null)
   const [attachversion, setattachversion] = useState(0)
+  const { cols, rows } = readwanixtermgridsize(edge)
 
-  useLayoutEffect(() => subscribewanixattach(() => {
-    lastpush.current = null
-    setattachversion((prev) => prev + 1)
-  }), [])
+  useLayoutEffect(
+    () =>
+      subscribewanixattach(() => {
+        lastpush.current = null
+        setattachversion((prev) => prev + 1)
+      }),
+    [],
+  )
 
   useLayoutEffect(() => {
     if (!terminalopen || editoropen) {
       return
     }
-    const { cols, rows } = readwanixtermgridsize(edge)
     const timer = setTimeout(() => {
-      if (
-        lastpush.current?.cols === cols &&
-        lastpush.current?.rows === rows
-      ) {
+      if (lastpush.current?.cols === cols && lastpush.current?.rows === rows) {
         return
       }
       void waitwanixready()
@@ -44,7 +42,7 @@ export function WanixTermSizeSync() {
         .catch(() => {})
     }, TERM_FIT_DEBOUNCE_MS)
     return () => clearTimeout(timer)
-  }, [edge.width, edge.height, terminalopen, editoropen, attachversion])
+  }, [cols, rows, terminalopen, editoropen, attachversion])
 
   return null
 }

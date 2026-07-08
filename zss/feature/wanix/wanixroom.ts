@@ -1,12 +1,17 @@
 import {
+  readattachedsession,
+  readwanixactivesession,
+} from 'zss/feature/wanix/wanixattachstate'
+import {
   callwanixrpc,
   registerwanixsessioncloseprune,
   waitwanixiframe,
   waitwanixready,
 } from 'zss/feature/wanix/wanixbridge'
-import { readattachedsession, readwanixactivesession } from 'zss/feature/wanix/wanixattachstate'
-import { listwanixwasmentries, readbundleflatpath } from 'zss/feature/wanix/wanixbundle'
-import { readwanixtermbufferkeys } from 'zss/feature/wanix/wanixtermbuffer'
+import {
+  listwanixwasmentries,
+  readbundleflatpath,
+} from 'zss/feature/wanix/wanixbundle'
 import { uniquewanixtaskid } from 'zss/feature/wanix/wanixcmd'
 import type {
   WanixDropPayload,
@@ -17,6 +22,7 @@ import type {
   WanixSpawnTaskResult,
 } from 'zss/feature/wanix/wanixroomtypes'
 import { createidleroomconfig } from 'zss/feature/wanix/wanixroomtypes'
+import { readwanixtermbufferkeys } from 'zss/feature/wanix/wanixtermbuffer'
 import { extractwanixtgz } from 'zss/feature/wanix/wanixtgzextract'
 import {
   DEFAULT_WANIX_VM_ID,
@@ -25,8 +31,6 @@ import {
 
 const WANIX_ROOM_TIMEOUT_MS = 180_000
 const WANIX_MENU_TIMEOUT_MS = 3_000
-
-export type { WanixMenuState } from 'zss/feature/wanix/wanixroomtypes'
 
 let roomconfig: WanixRoomConfig = createidleroomconfig()
 
@@ -187,7 +191,10 @@ export async function readwanixroomstatus(): Promise<
   )
 }
 
-function withwanixtimeout<T>(promise: Promise<T>, timeoutms: number): Promise<T> {
+function withwanixtimeout<T>(
+  promise: Promise<T>,
+  timeoutms: number,
+): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     const timer = setTimeout(() => {
       reject(new Error('wanix menu timeout'))

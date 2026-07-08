@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import { callwanixtermwrite } from 'zss/feature/wanix/wanixbridge'
 import {
   cyclewanixattachedsession,
   detachwanixterm,
   readattachedsession,
   subscribewanixattach,
 } from 'zss/feature/wanix/wanixattachstate'
+import { callwanixtermwrite } from 'zss/feature/wanix/wanixbridge'
 import {
   readwanixtermbuffer,
   readwanixtermbufferkeys,
@@ -13,27 +13,31 @@ import {
   subscribewanixtermbuffer,
 } from 'zss/feature/wanix/wanixtermbuffer'
 import type { WanixTermTileBuffer } from 'zss/feature/wanix/wanixtermbuffer'
-import { UserInput } from 'zss/gadget/userinput.bridge'
 import { writetile } from 'zss/gadget/tiles'
+import { UserInput } from 'zss/gadget/userinput.bridge'
 import { useWriteText } from 'zss/gadget/writetext'
-import { NAME } from 'zss/words/types'
 import { textformatreadedges } from 'zss/words/textformat'
+import { NAME } from 'zss/words/types'
 
 const HINT_IDLE = 'Ctrl+\\ : detach / switch'
 const HINT_ARMED = 'Ctrl+\\  n next  p prev  d detach  Esc cancel'
 const HINT_COLOR = 0
 const HINT_BG = 7
 
-function usewanixattachsessionkey() {
+function useWanixAttachSessionKey() {
   const [sessionkey, setsessionkey] = useState(readattachedsession)
-  useEffect(() => subscribewanixattach(() => setsessionkey(readattachedsession())), [])
+  useEffect(
+    () => subscribewanixattach(() => setsessionkey(readattachedsession())),
+    [],
+  )
   return sessionkey
 }
 
-function usewanixtermbufferversion() {
+function useWanixTermBufferVersion() {
   const [version, setversion] = useState(readwanixtermnotifyversion)
   useEffect(
-    () => subscribewanixtermbuffer(() => setversion(readwanixtermnotifyversion())),
+    () =>
+      subscribewanixtermbuffer(() => setversion(readwanixtermnotifyversion())),
     [],
   )
   return version
@@ -130,14 +134,13 @@ function isctrlbackslash(event: KeyboardEvent) {
 export function WanixTermScreen() {
   const context = useWriteText()
   const edge = textformatreadedges(context)
-  const sessionkey = usewanixattachsessionkey()
-  usewanixtermbufferversion()
+  const sessionkey = useWanixAttachSessionKey()
+  useWanixTermBufferVersion()
   const lastframe = useRef<WanixTermTileBuffer | null>(null)
   const [scrolloffset, setscrolloffset] = useState(0)
   const [prefixarmed, setprefixarmed] = useState(false)
 
-  const buffer =
-    sessionkey != null ? readwanixtermbuffer(sessionkey) : null
+  const buffer = sessionkey != null ? readwanixtermbuffer(sessionkey) : null
   if (buffer) {
     lastframe.current = buffer
   }
@@ -166,7 +169,10 @@ export function WanixTermScreen() {
     for (let x = 0; x < cols; x++) {
       const drawx = edge.left + x
       const drawy = edge.top + screeny
-      let { char, color, bg } = readlinecell(frame, lineindex, x)
+      const cell = readlinecell(frame, lineindex, x)
+      const char = cell.char
+      let color = cell.color
+      let bg = cell.bg
       if (
         atliveline &&
         frame.cursorvisible &&
@@ -241,7 +247,9 @@ export function WanixTermScreen() {
         }
         if (key === 'pagedown') {
           event.preventDefault()
-          setscrolloffset((prev) => Math.max(0, prev - (event.ctrlKey ? 10 : 1)))
+          setscrolloffset((prev) =>
+            Math.max(0, prev - (event.ctrlKey ? 10 : 1)),
+          )
           return
         }
         if (!atliveline) {

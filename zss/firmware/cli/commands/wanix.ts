@@ -67,11 +67,7 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
           wanixdetach(SOFTWARE, player)
           break
         case 'attach':
-          wanixattach(
-            SOFTWARE,
-            player,
-            ispresent(arg) ? NAME(arg) : undefined,
-          )
+          wanixattach(SOFTWARE, player, ispresent(arg) ? NAME(arg) : undefined)
           break
         case 'pull':
           wanixstublog(player, 'pull zed-cafe export (not wired)')

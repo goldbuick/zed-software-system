@@ -2,13 +2,13 @@ import humanid from 'human-id'
 import { apierror, apilog, vmbooks, workstatus } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
 import { SOFTWARE } from 'zss/device/session'
+import { isclimode } from 'zss/feature/detect'
 import {
   durabledel,
   durableget,
   durablegetmany,
   durableupdate,
 } from 'zss/feature/durable'
-import { isclimode } from 'zss/feature/detect'
 import { isarray, ispresent } from 'zss/mapping/types'
 import { BOOK } from 'zss/memory/types'
 
@@ -37,8 +37,6 @@ export async function storagereadconfig(name: string) {
 export async function storagewriteconfig(name: string, value: string) {
   return durableupdate(`config_${name}`, () => value)
 }
-
-export { CONFIG_STRING_KEYS, isconfigstringkey } from 'zss/feature/storagekeys'
 
 export async function storagereadconfigstring(name: string) {
   return durableget<string>(`config_${name}`)

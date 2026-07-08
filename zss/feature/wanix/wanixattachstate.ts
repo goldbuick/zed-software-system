@@ -10,11 +10,7 @@ function bump() {
 }
 
 function maybeattachactivesession() {
-  if (
-    activesessionkey == null ||
-    attachedsessionkey != null ||
-    userdetached
-  ) {
+  if (activesessionkey == null || attachedsessionkey != null || userdetached) {
     return
   }
   attachedsessionkey = activesessionkey
