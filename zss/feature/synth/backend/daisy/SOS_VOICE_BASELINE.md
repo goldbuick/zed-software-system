@@ -7,7 +7,7 @@ Recorded after DaisySP fidelity improvements (Phase A/B).
 Run worst-case load (8 held notes + FX + drums):
 
 ```bash
-yarn daisy:bench:synth
+yarn task run ops:daisy:bench:synth
 ```
 
 Target: `realtimefactor >= 1.0` on dev hardware for worst-case load.
@@ -19,7 +19,7 @@ Regression: `yarn sos-voices:test` (12 SOS instrument patches vs `ops/fixtures/s
 Regenerate after intentional voice DSP changes:
 
 ```bash
-yarn daisy:build
+yarn task run ops:daisy:build
 yarn sos-voice-fixtures:regen
 ```
 

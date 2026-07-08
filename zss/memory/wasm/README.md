@@ -7,33 +7,33 @@ Golden-fixture parity harness for the C++ `zss_memory` port. **Not run in CI** â
 1. **Record fixtures** from TS oracle (after changing memory behavior or adding scenarios):
 
    ```bash
-   yarn task run memory:parity:regen
+   yarn task run ops:fixtures:memory:parity:regen
    ```
 
 2. **Validate native + WASM** (requires `g++`; WASM step needs Emscripten `emcc`):
 
    ```bash
-   yarn task run memory:parity:test
+   yarn task run ops:fixtures:memory:parity:test
    ```
 
    Native only:
 
    ```bash
-   yarn task run memory:test:native
+   yarn task run ops:fixtures:memory:test:native
    ```
 
-3. **Rebuild WASM artifacts** when C++ changes (also run automatically by `memory:parity:test`):
+3. **Rebuild WASM artifacts** when C++ changes (also run automatically by `ops:fixtures:memory:parity:test`):
 
    ```bash
-   yarn task run memory:build
+   yarn task run ops:fixtures:memory:build
    ```
 
-   Outputs: `cafe/public/wasm/memory/zss_memory.{js,wasm}`
+   Outputs: `cafe/public/memory/zss_memory.{js,wasm}`
 
 4. **Check fixture coverage** against `ops/tests/unit/memory/`:
 
    ```bash
-   yarn task run memory:parity:check-coverage
+   yarn task run ops:fixtures:memory:parity:check-coverage
    ```
 
 ## Layout
@@ -44,12 +44,12 @@ Golden-fixture parity harness for the C++ `zss_memory` port. **Not run in CI** â
 | `zss_memory_*.hpp` | Modular ports (permissions, lighting, synth, â€¦) |
 | `ops/fixtures/memory/wasm/*.json` | Frozen TS-oracle scenarios |
 | `ops/tests/unit/memory/wasm/regenfixtures.test.ts` | Fixture recorder (`REGEN_MEMORY_FIXTURES=1`) |
-| `ops/tests/unit/memory/wasm/wasmparity.test.ts` | Native parity gate (local / `memory:parity:test`) |
-| `yarn task run memory:parity:test` | Native + WASM replay runner |
+| `ops/tests/unit/memory/wasm/wasmparity.test.ts` | Native parity gate (local / `ops:fixtures:memory:parity:test`) |
+| `yarn task run ops:fixtures:ops:fixtures:memory:parity:test` | Native + WASM replay runner |
 
 ## Adding a scenario
 
 1. Add or extend a test in `ops/tests/unit/memory/`.
 2. Add a fixture writer in `ops/tests/unit/memory/wasm/regenfixtures.test.ts` and register it in `FIXTURE_MANIFEST`.
 3. Implement or extend the matching `run_op` in C++.
-4. Run `yarn task run memory:parity:regen` then `yarn task run memory:parity:test`.
+4. Run `yarn task run ops:fixtures:memory:parity:regen` then `yarn task run ops:fixtures:ops:fixtures:memory:parity:test`.

@@ -11,8 +11,10 @@ Two halves talk over `postMessage` RPC across an iframe boundary:
 - **Child (iframe): [`cafe/wanix.ts`](../../../cafe/wanix.ts)** — loads
   `wanix.min.js`, owns the `<wanix-system>` element, allocates VMs/tasks, opens
   each term's `data` pipe, parses the byte stream into a cell grid, and posts
-  grid snapshots to the parent. Served at `/wanix.html` via a hidden
-  ("ghost") iframe mounted by [`wanixhost.tsx`](wanixhost.tsx).
+  grid snapshots to the parent. Zed-cafe export daemon boot/bind logic lives in
+  [`wanixzedcafehost.ts`](wanixzedcafehost.ts) (imported by `cafe/wanix.ts`).
+  Served at `/wanix.html` via a hidden ("ghost") iframe mounted by
+  [`wanixhost.tsx`](wanixhost.tsx).
 - **Parent (ZSS): [`wanixbridge.ts`](wanixbridge.ts)** — sends RPC calls
   (`applyroom`, `startvm`, `spawntask`, `termwrite`, `termfit`, …), receives
   `cells` snapshots into [`wanixtermbuffer.ts`](wanixtermbuffer.ts), and tracks
@@ -41,7 +43,7 @@ symptom was `RangeError: Offset is outside the bounds of the DataView` /
 
 Fix: a **full-Go** build from the matching commit (`b21f64d4`, npm `gitHead`
 for alpha8) is hosted at
-[`cafe/public/wasm/wanix/wanix.wasm`](../../../cafe/public/wasm/wanix/wanix.wasm)
+[`cafe/public/wanix/wanix.wasm`](../../../cafe/public/wanix/wanix.wasm)
 and selected via the `wasm` attribute on `<wanix-system>`. The wanix loader
 sniffs the binary: no `asyncify_start_unwind` marker → it logs "Go WASM
 detected" and uses the stable Go glue.
@@ -104,6 +106,8 @@ forwards to the guest when the viewport is at the live line.
 | File | Role |
 |---|---|
 | `cafe/wanix.ts` | iframe orchestrator: system, VM/task lifecycle, term read loop, RPC handler |
+| `wanixzedcafehost.ts` | iframe-side zed-cafe: `<wanix-bind>` setup, Go wasm boot, export tree I/O |
+| `wanixzedcafe.ts` | parent-side zed-cafe: export/import, daemon lifecycle, device API |
 | `wanixhost.tsx` | mounts the hidden `/wanix.html` iframe |
 | `wanixbridge.ts` | parent RPC client + ready/cells message handling |
 | `wanixtermgridstate.ts` | shared cell-grid engine (ANSI parse, scrollback, alt-screen, resize) |

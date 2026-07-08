@@ -74,7 +74,7 @@ twice, idles twice, then shoots toward the player — the canonical case the
 
 ### Validation
 
-`yarn task run lang:zztoop:corpus:analyze raw-only full` writes
+`yarn task run ops:fixtures:lang:zztoop:corpus:analyze raw-only full` writes
 [`../zztoop/failure-report.json`](../zztoop/failure-report.json). The committed
 report and its CI floor live alongside the unit tests in
 `ops/tests/unit/feature/zztoop/`.

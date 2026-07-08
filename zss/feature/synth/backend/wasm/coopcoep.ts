@@ -1,7 +1,7 @@
 import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 
-const SW_URL = '/wasm/coep/enable-threads.js'
+const SW_URL = '/coep/enable-threads.js'
 const RELOAD_GUARD_KEY = 'zss_wasm_coep_reload'
 
 let coepinflight: Promise<void> | undefined

@@ -14,14 +14,14 @@ Hanging commands waste time. **Never start a long or risky command without a pla
 - **Relying on Jest timeout alone** for sync WASM/lang runs or CPU-bound work.
 - **Background Jest or one-off scripts** without monitoring output and a kill plan.
 - **Playwright / shell validators** with open-ended `waitFor*` or polling loops and no script-level timeout.
-- **Dev servers left running** after verification (`app:preview`, `vite:dev`) — start background, verify, then kill.
+- **Dev servers left running** after verification (`cafe:preview`, `vite:dev`) — start background, verify, then kill.
 - **Retrying blindly** when a command exceeds 2× expected duration — kill, diagnose root cause, re-run targeted.
 
 ## Required before running
 
 1. **Classify the command**
    - **Fast** (<30s): lint, single test file → foreground OK
-   - **Medium** (30s–3m): full `app:test`, builds → set shell `block_until_ms` with buffer
+   - **Medium** (30s–3m): full `ops:test`, builds → set shell `block_until_ms` with buffer
    - **Risky**: WASM `loadscriptsync`, dev servers, e2e, v86/Playwright → extra guards below
 
 2. **Prefer narrow runs while iterating**
@@ -45,10 +45,9 @@ Hanging commands waste time. **Never start a long or risky command without a pla
 | Command | Suggested ms |
 |---------|-------------|
 | Single jest file | 60_000 |
-| `yarn app:test` | 120_000 |
-| `yarn lang-regression:test` | 180_000 |
-| `yarn lang:build` | 300_000 |
-| `yarn app:build:strict` | 600_000 |
+| `yarn ops:test` | 120_000 |
+| `yarn task run ops:fixtures:lang:regression:test` | 180_000 |
+| `yarn task run cafe:build:strict` | 600_000 |
 
 Set **above** expected runtime. If backgrounded, poll the terminal file — do not assume completion.
 
@@ -70,7 +69,7 @@ Set **above** expected runtime. If backgrounded, poll the terminal file — do n
 ```text
 ❌ BAD — loadscriptsync(wasmbytes, { sy: () => false, getcase: () => 1 }).run()
 ❌ BAD — Playwright validator polling until guest ready with no script timeout
-❌ BAD — yarn app:preview started and never killed
+❌ BAD — yarn cafe:preview started and never killed
 ❌ BAD — new test with infinite while loop and only jest.setTimeout hoping
 
 ✅ GOOD — runwasmscriptfortest(wasmbytes, createwasmstubchip({ command: () => 0 }))

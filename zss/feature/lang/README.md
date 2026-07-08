@@ -28,7 +28,7 @@ if (result.code) {
 ## Tests
 
 ```bash
-yarn task run lang:regression:test
+yarn task run ops:fixtures:lang:regression:test
 yarn jest --config ops/jest.config.ts ops/tests/unit/feature/lang/backend/typescript/ --no-coverage
 ```
 

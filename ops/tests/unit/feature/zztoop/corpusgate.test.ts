@@ -8,7 +8,7 @@ type FailureReport = {
 
 // CI floor for the committed corpus report. Raise this if a future run improves
 // the rate; never lower it without a documented reason. Regenerate via:
-//   yarn task run lang:zztoop:corpus:analyze raw-only full
+//   yarn task run ops:fixtures:lang:zztoop:corpus:analyze raw-only full
 const OK_RATE_FLOOR = 1.0
 
 describe('zztoop committed corpus report', () => {

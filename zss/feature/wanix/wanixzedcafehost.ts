@@ -1,4 +1,4 @@
-import type { WanixSystemElement } from 'zss/feature/wanix/wanixelements.d.ts'
+import type { WanixSystemElement } from './wanixelements.d.ts'
 import {
   WANIX_ZEDCAFE_EXPORT_RAMFS,
   WANIX_ZEDCAFE_EXPORT_READY_POLL_MS,
@@ -9,8 +9,8 @@ import {
   WANIX_ZEDCAFE_WASM_RAMFS,
   WANIX_ZEDCAFE_WASM_URL,
   readwanixzedcafeexportsrc,
-} from 'zss/feature/wanix/wanixzedcafeconstants'
-import type { WanixZedCafeGuestFile } from 'zss/feature/wanix/wanixzedcafetypes'
+} from './wanixzedcafeconstants'
+import type { WanixZedCafeGuestFile } from './wanixzedcafetypes'
 
 type WanixRoot = {
   readDir: (path: string) => Promise<string[]>

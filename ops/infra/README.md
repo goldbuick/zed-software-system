@@ -61,7 +61,7 @@ Start OTP login and reserve a namespace for the email.
 | `email` | yes | Lowercased/trimmed |
 | `namespace` | yes | `[a-z0-9-]`, 1–63 chars; reserved: `www`, `api`, `mail`, `ftp` |
 
-**200** `{ "success": true }` — OTP emailed. Subject: `{code} — finish login to {namespace} on zed.cafe`. HTML: **clickable PNG terminal card** (`cid:zns-card`, rasterized from the same 40-column layout as before) linking to `{JOIN_ORIGIN}/?zns-code=…`, plus a bulletproof **Open in zed.cafe** button and monospace command line. Plain-text body unchanged: `#zns {code}` + deep link. Preview locally: `yarn task run zns:email:preview`. Sender display name: `zed.cafe`.
+**200** `{ "success": true }` — OTP emailed. Subject: `{code} — finish login to {namespace} on zed.cafe`. HTML: **clickable PNG terminal card** (`cid:zns-card`, rasterized from the same 40-column layout as before) linking to `{JOIN_ORIGIN}/?zns-code=…`, plus a bulletproof **Open in zed.cafe** button and monospace command line. Plain-text body unchanged: `#zns {code}` + deep link. Preview locally: `yarn task run ops:zns:email:preview`. Sender display name: `zed.cafe`.
 
 **403** namespace owned by another account, or email already bound to a different namespace.
 
@@ -171,7 +171,7 @@ Raw stored markdown is available via `POST /api/read` only (unchanged).
 
 Publish docs via `POST /api/set` after login (`#zns <email> <namespace>`). In-app help still loads from client ROM (`zss/rom/refscroll/`); ZNS serves only what is published to KV.
 
-VGA font asset is generated via `yarn task run zns:vga:sync` (runs automatically before `deploy:cloudflare:zns`).
+VGA font asset is generated via `yarn task run ops:zns:vga:sync` (runs automatically before `ops:deploy:cloudflare:zns`).
 
 ---
 
@@ -287,7 +287,7 @@ Cross-peer messages (OFFER, ANSWER, CANDIDATE, etc.) relay DO-to-DO. Same peer i
 
 ## Local tooling
 
-- **ZNS worker preview:** `yarn task run zns:landing:dev` (syncs VGA font, then starts wrangler on port 8787).
+- **ZNS worker preview:** `yarn task run ops:zns:landing:dev` (syncs VGA font, then starts wrangler on port 8787).
   - Apex landing: [http://127.0.0.1:8787/](http://127.0.0.1:8787/) or [http://at.zed.cafe:8787/](http://at.zed.cafe:8787/) with hosts below.
   - Tenant index: [http://docs.at.zed.cafe:8787/](http://docs.at.zed.cafe:8787/) — KV-published keys only.
   - Tenant scrolls: add to `/etc/hosts`:
@@ -296,7 +296,7 @@ Cross-peer messages (OFFER, ANSWER, CANDIDATE, etc.) relay DO-to-DO. Same peer i
     ```
     then open paths under `http://docs.at.zed.cafe:8787/{key}` after publishing via `POST /api/set`.
   - Edits to [`net-zns-worker.js`](net-zns-worker.js) hot-reload; refresh the browser.
-- **VGA font sync only:** `yarn task run zns:vga:sync`
+- **VGA font sync only:** `yarn task run ops:zns:vga:sync`
 
 ---
 
@@ -324,20 +324,20 @@ Universal SSL for `*.zed.cafe` does **not** cover `foo.at.zed.cafe`. Provision a
 Standard ZNS production deploy (worker + verification):
 
 ```bash
-yarn task run deploy:cloudflare:zns:verify
+yarn task run ops:deploy:cloudflare:zns:verify
 ```
 
-This runs `deploy:cloudflare:zns` then `zns:tenant:verify` (DNS + HTTPS).
+This runs `ops:deploy:cloudflare:zns` then `ops:zns:tenant:verify` (DNS + HTTPS).
 
 | Task | Purpose |
 |------|---------|
-| `zns:tenant:dns:check` | Fast DNS-only check (`dig` on `docs.at` and `wil.at`) |
-| `zns:tenant:smoke` | HTTPS-only check on `/` and `/cliscroll` |
-| `zns:tenant:verify` | Full production suite (DNS + apex + tenant index + scroll) |
+| `ops:zns:tenant:dns:check` | Fast DNS-only check (`dig` on `docs.at` and `wil.at`) |
+| `ops:zns:tenant:smoke` | HTTPS-only check on `/` and `/cliscroll` |
+| `ops:zns:tenant:verify` | Full production suite (DNS + apex + tenant index + scroll) |
 
-Verifier task: `yarn task run deploy:zns:tenant:verify` ([`tasks/groups/deploy.ts`](../../tasks/groups/deploy.ts)).
+Verifier task: `yarn task run ops:zns:tenant:verify` ([`tasks/groups/ops/deploy.ts`](../../tasks/groups/ops/deploy.ts)).
 
-Checks performed by `zns:tenant:verify`:
+Checks performed by `ops:zns:tenant:verify`:
 
 1. `docs.at.zed.cafe` and `wil.at.zed.cafe` resolve (proves `*.at` wildcard, not a one-off record)
 2. `docs.zed.cafe` does **not** resolve (wrong hostname pattern)
@@ -398,22 +398,22 @@ Run from repo root.
 From repo root:
 
 ```bash
-yarn task run deploy:cloudflare:zns:verify
+yarn task run ops:deploy:cloudflare:zns:verify
 ```
 
 Deploy workers individually (without verify):
 
 ```bash
-yarn task run deploy:cloudflare:zns
-yarn task run deploy:cloudflare:bytes
-yarn task run deploy:cloudflare:brick
-yarn task run deploy:cloudflare:terminal
+yarn task run ops:deploy:cloudflare:zns
+yarn task run ops:deploy:cloudflare:bytes
+yarn task run ops:deploy:cloudflare:brick
+yarn task run ops:deploy:cloudflare:terminal
 ```
 
 Post-deploy verification only:
 
 ```bash
-yarn task run zns:tenant:verify
+yarn task run ops:zns:tenant:verify
 ```
 
 Equivalent raw Wrangler commands (also from repo root):

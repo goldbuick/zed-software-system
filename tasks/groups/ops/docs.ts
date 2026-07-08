@@ -2,8 +2,8 @@ import { execSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 
-import { def, handler } from '../helpers'
-import type { TaskContext, TaskDef } from '../types'
+import { def, handler } from '../../helpers'
+import type { TaskContext, TaskDef } from '../../types'
 
 const LINKRE = /!?\[[^\]]*\]\(([^)]+)\)/g
 const SKIPSCHEMES = /^(https?:|mailto:|ftp:|tel:|data:|#)/i
@@ -99,8 +99,8 @@ function rundoclinks(ctx: TaskContext): number {
   return 0
 }
 
-export const DOCS_TASKS: TaskDef[] = [
-  def('docs:check-links', {
+export const OPS_DOCS_TASKS: TaskDef[] = [
+  def('ops:docs:check-links', {
     description: 'Check relative links in tracked markdown files',
     tags: ['ci'],
     run: handler(rundoclinks),

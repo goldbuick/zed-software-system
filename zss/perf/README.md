@@ -22,7 +22,7 @@ Production builds skip this instrumentation overhead.
 
 ## Bundle size
 
-`yarn task run app:analyze` runs a production build with `ZSS_ANALYZER=1` and opens the bundle analyzer (see [ops/docs/tasks.md](../../ops/docs/tasks.md)).
+`yarn task run cafe:analyze` runs a production build with `ZSS_ANALYZER=1` and opens the bundle analyzer (see [ops/docs/tasks.md](../../ops/docs/tasks.md)).
 
 ## Browser tools
 
@@ -35,7 +35,7 @@ Production builds skip this instrumentation overhead.
 1. Open cafe in dev, press **`Ctrl+I`** (or run `#perf`) to show the overlay, then reproduce the scenario you care about.
 2. Open Chrome **Performance**, start recording **without** enabling **CPU sampling** / JS profiler if you want traces comparable to production-style overhead.
 3. Use a **clean profile or incognito** so extensions do not add `FunctionCall` noise.
-4. Optional: run a **production** build (`yarn task run app:build` + `yarn task run app:preview`) for a second baseline.
+4. Optional: run a **production** build (`yarn task run cafe:build` + `yarn task run cafe:preview`) for a second baseline.
 5. After changes, repeat the same steps and compare the **User Timing** `zss:*` rows and frame slices.
 
 ## Jest

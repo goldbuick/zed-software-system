@@ -26,43 +26,43 @@ Dual-tagged compilations (e.g. ZZT + Super ZZT in one ZIP) are excluded.
 
 ```bash
 # Crawl catalog + write manifest (fast, no downloads)
-yarn task run content:zzt:corpus:manifest
+yarn task run ops:fixtures:zzt:corpus:manifest
 
 # Full crawl + download (resumable; skips files matching museum MD5 checksum)
-yarn task run content:zzt:corpus:sync
+yarn task run ops:fixtures:zzt:corpus:sync
 
 # Resume download from existing manifest (skip catalog crawl)
-yarn task run content:zzt:corpus:sync use-manifest
+yarn task run ops:fixtures:zzt:corpus:sync use-manifest
 
 # Smoke test: download first 5 archives only
-yarn task run content:zzt:corpus:sync limit 5
+yarn task run ops:fixtures:zzt:corpus:sync limit 5
 
 # Force re-download
-yarn task run content:zzt:corpus:sync force
+yarn task run ops:fixtures:zzt:corpus:sync force
 
 # Unpack archives → extracted/ (.zzt and .brd only)
-yarn task run content:zzt:corpus:extract
+yarn task run ops:fixtures:zzt:corpus:extract
 
 # Convert extracted boards → zss/*.zss + zss/manifest.json
-yarn task run content:zzt:corpus:zss
+yarn task run ops:fixtures:zzt:corpus:zss
 
 # Full pipeline (extract + zss)
-yarn task run content:zzt:corpus:build
+yarn task run ops:fixtures:zzt:corpus:build
 
 # Smoke: first 5 archives only
-yarn task run content:zzt:corpus:build limit 5
+yarn task run ops:fixtures:zzt:corpus:build limit 5
 
 # Force re-extract / overwrite .zss outputs
-yarn task run content:zzt:corpus:build force
+yarn task run ops:fixtures:zzt:corpus:build force
 
 # Lang: raw stat.code compile analysis (requires extracted/ on disk)
-yarn task run lang:zzt:corpus:analyze
-yarn task run lang:zzt:corpus:analyze limit 50
+yarn task run ops:fixtures:lang:zztoop:corpus:analyze
+yarn task run ops:fixtures:lang:zztoop:corpus:analyze limit 50
 
 # Render board PNGs from extracted/ (requires extracted/ on disk)
-yarn task run content:zzt:corpus:screenshots
-yarn task run content:zzt:corpus:screenshots limit 5
-yarn task run content:zzt:corpus:screenshots force
+yarn task run ops:fixtures:zzt:corpus:screenshots
+yarn task run ops:fixtures:zzt:corpus:screenshots limit 5
+yarn task run ops:fixtures:zzt:corpus:screenshots force
 ```
 
 Committed lang artifacts from corpus analysis live under `ops/fixtures/lang/zzt/` (`failure-report.json`, regression fixtures). Bulk `zss/` and `screenshots/` output stays local/gitignored.

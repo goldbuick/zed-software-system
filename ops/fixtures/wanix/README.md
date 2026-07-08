@@ -4,7 +4,7 @@ WASI `.wasm` and `.tgz` bundles for manual wanix testing (`#wanix`, file drop, p
 
 ## Quick use
 
-1. `yarn task app dev`
+1. `yarn task cafe dev`
 2. Drag files from **`ops/fixtures/wanix/`** onto the cafe page (or paste from Finder).
 
 | File | Tests |
@@ -14,6 +14,15 @@ WASI `.wasm` and `.tgz` bundles for manual wanix testing (`#wanix`, file drop, p
 | `bundle-one.tgz` | Single `.wasm` inside a gzip tar |
 | `bundle-two.tgz` | Two `.wasm` files (`alpha.wasm`, `beta.wasm`) — spawns both tasks |
 | `bundle-empty.tgz` | No `.wasm` — expect `wanix bundle … has no .wasm entries` warning |
+| `termbridge.wasm` | Term bridge smoke — banner on stdout, stays running; type `ping` + Enter → `-> pong` on the tile |
+
+## Term bridge (`termbridge.wasm`)
+
+Guest prints a banner via WASI `fd_write` only (no stdin). Input and the `ping` → `pong` reply use the ZSS tile term bridge (`#task/…/term/data`), not WASI `fd_read(0)`.
+
+1. Drop `termbridge.wasm` onto the app (or attach from `#wanix` after drop).
+2. Confirm scrollback shows `wanix term bridge ready`.
+3. Type `ping` and press Enter — tile should show `-> pong`.
 
 ## Suggested flows
 
@@ -39,7 +48,7 @@ WASI `.wasm` and `.tgz` bundles for manual wanix testing (`#wanix`, file drop, p
 Requires [WABT](https://github.com/WebAssembly/wabt) (`wat2wasm`, `wasm-validate`):
 
 ```bash
-yarn task run content:wanix:fixtures:build
+yarn task run ops:fixtures:wanix:build
 ```
 
 Sources live in `src/*.wat`. Built artifacts are copied to `ops/fixtures/public/wanix/` for dev URLs at `/fixtures/wanix/` (optional fetch; drag-drop uses the paths above).

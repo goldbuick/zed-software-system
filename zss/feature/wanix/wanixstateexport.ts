@@ -1,8 +1,8 @@
 import type { DEVICELIKE } from 'zss/device/api'
 import { apilog, vmexportzedcafe, wanixexportstate } from 'zss/device/api'
-import { SOFTWARE } from 'zss/device/session'
+import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
 import { WANIX_ZEDCAFE_EXPORT_DEBOUNCE_MS } from 'zss/feature/wanix/wanixzedcafeconstants'
-import { readzedcafeimportsuppressingexport } from 'zss/feature/wanix/wanixzedcafesession'
+import { readwanixzedcafeready } from 'zss/feature/wanix/wanixzedcafesession'
 import {
   assertzedcafeexportvalid,
   readzedcafebookstatspath,
@@ -16,8 +16,18 @@ import {
   memoryreadcodepagename,
   memoryreadcodepagetypeasstring,
 } from 'zss/memory/codepageoperations'
-import { memoryreadbooklist } from 'zss/memory/session'
+import { memoryrootshouldemitpath } from 'zss/memory/jsonpipefilter'
+import {
+  memoryreadbooklist,
+  memoryreadoperator,
+  memoryreadroot,
+} from 'zss/memory/session'
 import type { BOOK, CODE_PAGE } from 'zss/memory/types'
+
+const zedcafebookspipe = createjsonpipe<Record<string, BOOK>>(
+  {},
+  memoryrootshouldemitpath,
+)
 
 export type WANIX_ZED_CAFE_EXPORT_FILE = {
   path: string
@@ -237,11 +247,19 @@ export function readzedcafeexportpendingwhileidle(): boolean {
   return pendingwhileidle
 }
 
-export function notifyzedcafebookschanged(player: string) {
-  if (readzedcafeimportsuppressingexport()) {
+export function primezedcafeexportshadow() {
+  zedcafebookspipe.applyfullsync(memoryreadroot().books)
+}
+
+export function checkzedcafeexportontick(device: DEVICELIKE) {
+  if (!readwanixzedcafeready()) {
     return
   }
-  schedulewanixexport(SOFTWARE, player)
+  const operations = zedcafebookspipe.emitdiff(memoryreadroot().books)
+  if (operations.length === 0) {
+    return
+  }
+  schedulewanixexport(device, memoryreadoperator())
 }
 
 export function resetwanixstateexportfortest() {
@@ -250,4 +268,5 @@ export function resetwanixstateexportfortest() {
     debouncetimer = undefined
   }
   pendingwhileidle = false
+  primezedcafeexportshadow()
 }

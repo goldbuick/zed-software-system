@@ -9,7 +9,7 @@ description: >-
 
 # Task groups
 
-Citty tasks are defined in [`tasks/groups/<subject>.ts`](../../../tasks/groups/) and registered via [`tasks/registry.ts`](../../../tasks/registry.ts). Skill complements rule `task-manifest.mdc` and memory [`.cursor/memory/tasks-lessons.md`](../../memory/tasks-lessons.md).
+Citty tasks are defined in [`tasks/groups/`](../../../tasks/groups/) (`cafe.ts`, `headless.ts`, `ops/`) and registered via [`tasks/registry.ts`](../../../tasks/registry.ts). Skill complements rule `task-manifest.mdc` and memory [`.cursor/memory/tasks-lessons.md`](../../memory/tasks-lessons.md).
 
 ## Before you edit
 
@@ -99,7 +99,7 @@ For 10+ identical import blocks in one group file:
 
 ## Jest
 
-Tests importing `tasks/groups/content.ts` (or any `tasks/*`) require:
+Tests importing `tasks/groups/ops/fixtures/*.ts` (or any `tasks/*`) require:
 
 ```typescript
 '^tasks/(.*)$': '<rootDir>/tasks/$1',

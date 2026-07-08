@@ -2,8 +2,8 @@ import { spawnSync } from 'node:child_process'
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import path from 'node:path'
 
-import { def, handler } from '../helpers'
-import type { TaskContext, TaskDef } from '../types'
+import { def, handler } from '../../helpers'
+import type { TaskContext, TaskDef } from '../../types'
 
 const DAISY_DIR = 'zss/feature/synth/backend/daisy/native/zss'
 const DAISY_WRAPPER =
@@ -126,7 +126,7 @@ export function runclangformat(
   }
 
   if (failed !== 0) {
-    console.error("run 'yarn task run native:lint:fix' to apply formatting")
+    console.error("run 'yarn task run ops:native:lint:fix' to apply formatting")
     return 1
   }
 
@@ -134,13 +134,13 @@ export function runclangformat(
   return 0
 }
 
-export const NATIVE_TASKS: TaskDef[] = [
-  def('native:lint', {
+export const OPS_NATIVE_TASKS: TaskDef[] = [
+  def('ops:native:lint', {
     description: 'clang-format check on first-party C++ (all targets)',
     tags: ['ci'],
     run: handler((ctx) => runclangformat(ctx, 'check', 'all')),
   }),
-  def('native:lint:fix', {
+  def('ops:native:lint:fix', {
     description: 'Apply clang-format to first-party C++ (all targets)',
     run: handler((ctx) => runclangformat(ctx, 'fix', 'all')),
   }),

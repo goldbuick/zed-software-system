@@ -74,7 +74,7 @@ function servefixturesdev(): Plugin {
       )
       server.middlewares.use(
         fixtureprefixmiddleware(
-          '/wasm/archive/maximilian',
+          '/archive/maximilian',
           path.join(root, 'ops/archive/wasm/maximilian'),
         ),
       )

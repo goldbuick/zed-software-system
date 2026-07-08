@@ -15,7 +15,7 @@ This skill adds detail, examples, and checklists. Hanging commands waste time. *
 
 1. **Classify the command**
    - **Fast** (<30s): lint, single test file, small script → run foreground, default timeout OK
-   - **Medium** (30s–3m): full `app:test`, `lang-regression:test`, builds → set `block_until_ms` with buffer
+   - **Medium** (30s–3m): full `ops:test`, `ops:fixtures:lang:regression:test`, builds → set `block_until_ms` with buffer
    - **Risky**: WASM `loadscriptsync`, dev servers, loops, e2e → extra guards below
 
 2. **Never assume Jest will save you**
@@ -30,7 +30,7 @@ This skill adds detail, examples, and checklists. Hanging commands waste time. *
    - **Never** bare `yarn jest` on `.ts` tests — default Babel config cannot parse `import type` (use `ops/jest.config.ts`)
 
 4. **Background only when necessary**
-   - Dev servers (`app:preview`, `vite:dev`) → background + verify with `curl` + kill when done
+   - Dev servers (`cafe:preview`, `vite:dev`) → background + verify with `curl` + kill when done
    - Do **not** background Jest or one-off scripts unless monitoring output
 
 ## Red flags — fix before running
@@ -94,7 +94,7 @@ runwasmscriptfortest(wasmbytes, chip)
 
 ```bash
 # Start background only when needed
-yarn app:preview
+yarn cafe:preview
 
 # Verify (this project uses HTTPS preview)
 curl -sk -o /dev/null -w "%{http_code}\n" https://127.0.0.1:7777/
@@ -108,10 +108,9 @@ kill <pid>
 | Command | Suggested `block_until_ms` |
 |---------|---------------------------|
 | Single jest file | 60_000 |
-| `yarn app:test` | 120_000 |
-| `yarn lang-regression:test` | 180_000 |
-| `yarn lang:build` | 300_000 |
-| `yarn app:build:strict` | 600_000 |
+| `yarn ops:test` | 120_000 |
+| `yarn task run ops:fixtures:lang:regression:test` | 180_000 |
+| `yarn task run cafe:build:strict` | 600_000 |
 
 Set `block_until_ms` **above** expected runtime. If sent to background, poll terminal file — do not assume completion.
 

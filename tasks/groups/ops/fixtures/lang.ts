@@ -25,8 +25,8 @@ import { runjest } from 'tasks/shellutil'
 import { zztparseboard, zztparseworld } from 'zss/feature/parse/zztbinparse'
 import type { ZZT_BOARD } from 'zss/feature/parse/zztformattypes'
 
-import { def, handler, jestexec } from '../helpers'
-import type { TaskContext, TaskDef } from '../types'
+import { def, handler, jestexec } from '../../../helpers'
+import type { TaskContext, TaskDef } from '../../../types'
 
 type BookPage = { code?: string }
 type BookData = { data?: { pages?: BookPage[] } }
@@ -544,17 +544,17 @@ export async function analyzezztoopcorpus(argv: string[]): Promise<number> {
   return rawstats.ok_rate >= 0.99 ? 0 : 1
 }
 
-export const LANG_TASKS: TaskDef[] = [
-  def('lang:book:oracle:extract', {
+export const OPS_FIXTURES_LANG_TASKS: TaskDef[] = [
+  def('ops:fixtures:lang:book:oracle:extract', {
     description: 'Extract book JSON into lang integration oracle files',
     run: handler(runlangbookoracleextract),
   }),
-  def('lang:regression:test', {
+  def('ops:fixtures:lang:regression:test', {
     description: 'TypeScript lang parser regression tests',
     tags: ['ci'],
     run: handler(runlangregression),
   }),
-  def('lang:zztoop:corpus:analyze', {
+  def('ops:fixtures:lang:zztoop:corpus:analyze', {
     description:
       'Analyze Museum ZZT corpus with the vanilla zss/feature/zztoop parser; write ops/fixtures/lang/zztoop/failure-report.json. Flags: raw-only, write-fixtures, limit N, full',
     tags: ['slow'],

@@ -1,10 +1,10 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import path from 'node:path'
 
-import { checkrg, spawntask } from 'tasks/shellutil'
+import { checkrg, runjest, spawntask } from 'tasks/shellutil'
 
-import { def, exec, handler, shell, tasksonly } from '../helpers'
-import type { TaskContext, TaskDef } from '../types'
+import { def, exec, handler, shell } from '../../helpers'
+import type { TaskContext, TaskDef } from '../../types'
 
 const CATALOGS = [
   'zss/device/EXPORTED_FUNCTIONS.md',
@@ -149,98 +149,30 @@ function runauditexportcatalogs(ctx: TaskContext): number {
   return exitcode
 }
 
-export const APP_TASKS: TaskDef[] = [
-  def('app:install', {
-    description: 'Install yarn dependencies',
-    run: exec(['yarn']),
-  }),
-  def('app:vite:dev', {
-    description: 'Start Vite dev server on port 7777',
-    tags: ['dev'],
-    run: exec(['vite', '--host', '0.0.0.0', '--port', '7777']),
-  }),
-  tasksonly(
-    'app:dev',
-    'Install deps and start Vite dev server',
-    ['app:install', 'app:vite:dev'],
-    {
-      tags: ['dev'],
-    },
-  ),
-  tasksonly(
-    'app:dev:no-sc',
-    'Dev server with play-bus sidechain bypassed',
-    ['app:dev'],
-    {
-      tags: ['dev'],
-      env: { ZSS_DAISY_NO_SIDECHAIN: '1' },
-    },
-  ),
-  def('app:build', {
-    description: 'Production Vite build',
-    tags: ['ci'],
-    run: exec(['vite', 'build']),
-  }),
-  def('app:build:strict', {
-    description: 'Typecheck then production Vite build',
-    run: shell('tsc && vite build'),
-  }),
-  def('app:analyze', {
-    description: 'Production build with bundle analyzer',
-    env: {
-      NODE_OPTIONS: '--max-old-space-size=8192',
-      ZSS_ANALYZER: '1',
-    },
-    run: exec(['vite', 'build']),
-  }),
-  def('app:clear', {
-    description: 'Remove build artifacts and Vite cache',
-    run: shell(
-      'rimraf tmp && rimraf dist && rimraf headless/dist && rimraf cafe/dist && rimraf node_modules/.vite',
-    ),
-  }),
-  def('app:preview', {
-    description: 'Preview production build on port 7777',
-    tags: ['dev'],
-    run: exec(['vite', 'preview', '--host', '0.0.0.0', '--port', '7777']),
-  }),
-  def('app:playwright:headed', {
-    description:
-      'Run a headed Playwright script against an already-running dev server (--url required)',
-    tags: ['dev'],
-    run: handler(async (ctx) => {
-      const { runheadedplaywrightscript } =
-        await import('tasks/lib/playwright/runheadedscript')
-      return runheadedplaywrightscript(
-        ctx.root,
-        'app:playwright:headed',
-        ctx.args,
-      )
-    }),
-  }),
-  def('app:lint:imports', {
+export const OPS_TEST_TASKS: TaskDef[] = [
+  def('ops:lint:imports', {
     description:
       'Guard zss/ and cafe/ for no ../ imports, re-exports, or known barrel files',
     tags: ['ci'],
     run: handler(runlintimports),
   }),
-  def('app:lint', {
+  def('ops:lint', {
     description: 'Import guards, dependency-cruiser, ESLint, and tsc --noEmit',
     tags: ['ci'],
     run: handler(runapplint),
   }),
-  def('app:test', {
+  def('ops:test', {
     description: 'Run Jest test suite',
     tags: ['ci'],
     run: exec(['yarn', 'jest', '--config', 'ops/jest.config.ts', '--verbose']),
   }),
-  def('app:test:coverage', {
+  def('ops:test:coverage', {
     description: 'Jest with coverage on selected VM/gadget modules',
     run: shell(
       "yarn jest --config ops/jest.config.ts --coverage --collectCoverageFrom='zss/device/vm/gadgetsynctick.ts' --collectCoverageFrom='zss/device/vm/handlers/scroll.ts' --collectCoverageFrom='zss/device/vm/handlers/ticktock.ts' --collectCoverageFrom='zss/device/boardrunner/handlers/linkdead.ts' --collectCoverageFrom='zss/device/gadgetclient.ts'",
     ),
   }),
-  def('app:audit:deadcode', {
+  def('ops:audit:deadcode', {
     description: 'Knip dead-code audit (files, exports, dependencies)',
     run: exec([
       'knip',
@@ -249,34 +181,12 @@ export const APP_TASKS: TaskDef[] = [
       '--no-exit-code',
     ]),
   }),
-  def('app:audit:export-catalogs', {
+  def('ops:audit:export-catalogs', {
     description: 'Audit export catalogs',
     run: handler(runauditexportcatalogs),
   }),
-  def('app:sloc', {
+  def('ops:sloc', {
     description: 'Source lines of code count for zss/',
     run: shell("npx sloc -e .js -e '__tests__|\\.test\\.(ts|tsx)$' zss"),
-  }),
-  def('app:server:dev:run', {
-    description: 'Concurrent Vite dev and zss dev (internal)',
-    tags: ['dev'],
-    env: { ZSS_NO_HTTPS: '1' },
-    run: shell(
-      'npx concurrently -k "yarn task run app:vite:dev" "sleep 8 && ./headless/bin/dev.js --dev"',
-    ),
-  }),
-  tasksonly(
-    'app:server:dev',
-    'CLI build + Vite dev + zss dev server',
-    ['cli:build', 'app:server:dev:run'],
-    {
-      tags: ['dev'],
-    },
-  ),
-  def('app:server:run', {
-    description: 'Production build, CLI build, run zss server',
-    deps: ['app:build', 'cli:build'],
-    tags: ['dev'],
-    run: exec(['./headless/bin/dev.js']),
   }),
 ]

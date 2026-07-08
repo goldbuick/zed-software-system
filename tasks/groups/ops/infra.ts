@@ -1,8 +1,8 @@
-import { def, shell } from '../helpers'
-import type { TaskDef } from '../types'
+import { def, shell } from '../../helpers'
+import type { TaskDef } from '../../types'
 
-export const INFRA_TASKS: TaskDef[] = [
-  def('infra:lint', {
+export const OPS_INFRA_TASKS: TaskDef[] = [
+  def('ops:infra:lint', {
     description: 'ESLint Cloudflare worker sources (ops/infra/net-*-worker.js)',
     tags: ['ci'],
     run: shell(

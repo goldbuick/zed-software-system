@@ -1,6 +1,6 @@
 /**
  * Corpus screenshot batch runner (jest for zss/memory module resolution).
- * yarn task run content:zzt:corpus:screenshots [limit N] [force]
+ * yarn task run ops:fixtures:zzt:corpus:screenshots [limit N] [force]
  */
 import {
   parsescreenshotoptions,

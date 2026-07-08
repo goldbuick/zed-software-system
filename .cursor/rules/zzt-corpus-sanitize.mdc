@@ -12,16 +12,16 @@ Museum ZZT `.zss` scripts under `ops/fixtures/zzt/corpus/zss/` must not contain 
 
 | Task | Purpose |
 |------|---------|
-| `yarn task run content:zzt:corpus:profanity:scan` | Report hits → `ops/fixtures/zzt/corpus/profanity-report.json` |
-| `yarn task run content:zzt:corpus:sanitize` | Redact hits in place → `sanitize-report.json` |
-| `yarn task run content:zzt:corpus:profanity:verify` | Exit 1 if any hits remain (CI) |
+| `yarn task run ops:fixtures:zzt:corpus:profanity:scan` | Report hits → `ops/fixtures/zzt/corpus/profanity-report.json` |
+| `yarn task run ops:fixtures:zzt:corpus:sanitize` | Redact hits in place → `sanitize-report.json` |
+| `yarn task run ops:fixtures:zzt:corpus:profanity:verify` | Exit 1 if any hits remain (CI) |
 
 Word lists and redaction logic: `ops/lib/content/zztcorpussanitize.ts`.
 Corpus file walk (`.zzt`/`.brd`) and OOP compile-check: `ops/lib/content/zztcorpuswalk.ts` (shared by `content` and `lang` tasks).
 
 ## Pipeline
 
-`content:zzt:corpus:zss` and `content:zzt:corpus:build` run **sanitize automatically** after `.zss` generation.
+`ops:fixtures:zzt:corpus:zss` and `ops:fixtures:zzt:corpus:build` run **sanitize automatically** after `.zss` generation.
 
 Rebuilding zss **without** sanitize wipes manual redaction — always run sanitize after `corpus:zss` if skipping the combined build.
 
@@ -34,5 +34,5 @@ Rebuilding zss **without** sanitize wipes manual redaction — always run saniti
 ## When editing corpus scripts
 
 1. Do not introduce new profanity or slurs.
-2. After bulk zss regen, run `content:zzt:corpus:sanitize` then `content:zzt:corpus:profanity:verify`.
+2. After bulk zss regen, run `ops:fixtures:zzt:corpus:sanitize` then `ops:fixtures:zzt:corpus:profanity:verify`.
 3. Extend `zztcorpussanitize.ts` (terms or allowlist) — not ad-hoc one-off sed.

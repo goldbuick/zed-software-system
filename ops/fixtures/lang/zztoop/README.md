@@ -11,7 +11,7 @@ arithmetic expressions, `#toast`) are accepted here — those live in
 | [`raw/`](raw/) | Verbatim vanilla ZZT-OOP programs (no `zztoop` import transforms) |
 | [`raw/101/`](raw/101/) | One example per section of [ZZT-OOP 101](https://museumofzzt.com/article/view/747/zzt-oop-101/), numbered `01..38` in article order (1:1 with its table of contents) |
 | [`manifest.json`](manifest.json) | Fixture id lists (`raw`, `oop101`) consumed by the parse + emission tests |
-| [`failure-report.json`](failure-report.json) | Latest `lang:zztoop:corpus:analyze` summary |
+| [`failure-report.json`](failure-report.json) | Latest `ops:fixtures:lang:zztoop:corpus:analyze` summary |
 
 ## ZZT-OOP 101 coverage
 
@@ -38,13 +38,13 @@ as text rather than rendering ZZT's white-centered directive.
 ## Tasks
 
 ```bash
-yarn task run lang:zztoop:corpus:analyze raw-only          # fast loop, skip wrapped walk
-yarn task run lang:zztoop:corpus:analyze raw-only limit 500
-yarn task run lang:zztoop:corpus:analyze full              # full corpus
+yarn task run ops:fixtures:lang:zztoop:corpus:analyze raw-only          # fast loop, skip wrapped walk
+yarn task run ops:fixtures:lang:zztoop:corpus:analyze raw-only limit 500
+yarn task run ops:fixtures:lang:zztoop:corpus:analyze full              # full corpus
 ```
 
 Requires a local Museum corpus under `ops/fixtures/zzt/corpus/extracted/`
-(`content:zzt:corpus:extract`).
+(`ops:fixtures:zzt:corpus:extract`).
 
 ## Tests
 

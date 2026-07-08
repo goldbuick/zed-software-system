@@ -51,6 +51,34 @@ function rendertable(tasks: TaskDef[]): string {
   return `${lines.join('\n')}\n`
 }
 
+function opssubsection(tasks: TaskDef[], segment: string): string[] {
+  const filtered = tasks
+    .filter((task) => {
+      const parts = task.id.split(':')
+      return parts[1] === segment
+    })
+    .sort((a, b) => a.id.localeCompare(b.id))
+  if (filtered.length === 0) {
+    return []
+  }
+  if (segment === 'fixtures') {
+    const parts: string[] = ['### fixtures', '']
+    const folders = new Set<string>()
+    for (const task of filtered) {
+      const folder = task.id.split(':')[2]
+      if (folder) {
+        folders.add(folder)
+      }
+    }
+    for (const folder of [...folders].sort()) {
+      const subtasks = filtered.filter((task) => task.id.split(':')[2] === folder)
+      parts.push(`#### fixtures/${folder}`, '', rendertable(subtasks), '')
+    }
+    return parts
+  }
+  return [`### ${segment}`, '', rendertable(filtered), '']
+}
+
 export function rendertasksdoc(): string {
   const all = getalltasks()
   const bygroup = new Map<string, TaskDef[]>()
@@ -76,7 +104,7 @@ export function rendertasksdoc(): string {
     'yarn task explain <task-id>',
     '```',
     '',
-    'Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).',
+    'Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task cafe dev`).',
     '',
   ]
 
@@ -87,7 +115,21 @@ export function rendertasksdoc(): string {
     if (tasks.length === 0) {
       continue
     }
-    parts.push(`## ${group}`, '', rendertable(tasks), '')
+    parts.push(`## ${group}`, '')
+    if (group === 'ops') {
+      const segments = new Set<string>()
+      for (const task of tasks) {
+        const segment = task.id.split(':')[1]
+        if (segment) {
+          segments.add(segment)
+        }
+      }
+      for (const segment of [...segments].sort()) {
+        parts.push(...opssubsection(tasks, segment))
+      }
+    } else {
+      parts.push(rendertable(tasks), '')
+    }
   }
 
   return `${parts.join('\n').trimEnd()}\n`

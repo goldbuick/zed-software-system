@@ -48,7 +48,7 @@ yarn jest ops/tests/unit/feature/lang/backend/wasm/lexerparity.test.ts --no-cove
 yarn jest ops/tests/unit/feature/lang/backend/wasm/ --no-coverage
 
 # 3. Full suite last
-yarn task run app:test
+yarn task run ops:test
 ```
 
 ## Hung background Jest from a prior turn
@@ -62,10 +62,10 @@ kill <pid>
 ## Preview server lifecycle
 
 ```bash
-yarn task run app:build:strict
-yarn task run app:preview &          # background
+yarn task run cafe:build:strict
+yarn task run cafe:preview &          # background
 sleep 2
-curl -sk -o /dev/null -w "%{http_code}\n" https://127.0.0.1:7777/wasm/lang/zss_lang.wasm
+curl -sk -o /dev/null -w "%{http_code}\n" https://127.0.0.1:7777/lang/zss_lang.wasm
 kill %1                     # or kill <pid>
 ```
 
@@ -78,7 +78,7 @@ Use `withscripttimeout` from `tasks/lib/parity/parity-timeouts.ts`.
 ```typescript
 import { withscripttimeout } from 'tasks/lib/parity/parity-timeouts'
 
-await withscripttimeout('daisy:parity:render', SCRIPT_TOTAL_MS, async () => {
+await withscripttimeout('ops:daisy:parity:render', SCRIPT_TOTAL_MS, async () => {
   // … headed Playwright work …
 })
 ```

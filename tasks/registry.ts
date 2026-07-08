@@ -1,30 +1,12 @@
-import { APP_TASKS } from './groups/app'
-import { CI_TASKS } from './groups/ci'
-import { CLI_TASKS } from './groups/cli'
-import { CONTENT_TASKS } from './groups/content'
-import { DAISY_TASKS } from './groups/daisy'
-import { DEPLOY_TASKS } from './groups/deploy'
-import { DOCS_TASKS } from './groups/docs'
-import { E2E_TASKS } from './groups/e2e'
-import { INFRA_TASKS } from './groups/infra'
-import { LANG_TASKS } from './groups/lang'
-import { MEMORY_TASKS } from './groups/memory'
-import { NATIVE_TASKS } from './groups/native'
+import { CAFE_TASKS } from './groups/cafe'
+import { HEADLESS_TASKS } from './groups/headless'
+import { OPS_TASKS } from './groups/ops'
 import type { TaskDef } from './types'
 
 const ALL_TASK_LIST: TaskDef[] = [
-  ...APP_TASKS,
-  ...CI_TASKS,
-  ...CLI_TASKS,
-  ...CONTENT_TASKS,
-  ...DAISY_TASKS,
-  ...DEPLOY_TASKS,
-  ...DOCS_TASKS,
-  ...E2E_TASKS,
-  ...INFRA_TASKS,
-  ...LANG_TASKS,
-  ...MEMORY_TASKS,
-  ...NATIVE_TASKS,
+  ...CAFE_TASKS,
+  ...HEADLESS_TASKS,
+  ...OPS_TASKS,
 ]
 
 let taskmap: Record<string, TaskDef> | undefined

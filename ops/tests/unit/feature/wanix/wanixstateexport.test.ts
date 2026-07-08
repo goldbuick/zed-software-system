@@ -16,6 +16,7 @@ jest.mock('zss/device/api', () => ({
 jest.mock('zss/memory/session', () => ({
   memoryreadbooklist: jest.fn(() => []),
   memoryreadoperator: jest.fn(() => 'player1'),
+  memoryreadroot: jest.fn(() => ({ books: {} })),
 }))
 
 jest.mock('zss/memory/codepageoperations', () => ({

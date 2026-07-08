@@ -21,7 +21,7 @@ import {
 import { WASM_SPIKE_PLAY_CODE } from './spikeplay'
 import { WASM_SYNTH_VOICE_PLAY_CODE } from './voiceplaycode'
 
-const MAXIMILIAN_BASE = '/wasm/archive/maximilian'
+const MAXIMILIAN_BASE = '/archive/maximilian'
 
 function maximilianorigin(): string {
   return new URL(MAXIMILIAN_BASE, window.location.href).href.replace(/\/$/, '')

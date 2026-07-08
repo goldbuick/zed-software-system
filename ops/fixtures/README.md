@@ -29,12 +29,13 @@ add co-located `__fixtures__` trees beside implementation code.
 
 | Domain | Task / script |
 |--------|----------------|
-| Lang parity goldens | `yarn task run lang:parity:regen` (or regenfixtures test) |
-| Memory parity | `yarn task run memory:parity:test` |
-| ZZT OOP corpus | `yarn task run content:zzt:corpus:build` |
-| ZZT board screenshots | `yarn task run content:zzt:corpus:screenshots` |
-| Content books | `yarn task run content:book:build` / `content:book:validate` |
-| Wanix drop fixtures | `yarn task run content:wanix:fixtures:build` (needs WABT `wat2wasm`) |
+| **All build + fixture regen** | `yarn task run ops:build` |
+| Lang parity goldens | `yarn task run ops:fixtures:lang:regression:test` (Jest parity suite; regen via native g++ harness if goldens drift) |
+| Memory parity | `yarn task run ops:fixtures:memory:parity:test` |
+| ZZT OOP corpus | `yarn task run ops:fixtures:zzt:corpus:build` |
+| ZZT board screenshots | `yarn task run ops:fixtures:zzt:corpus:screenshots` |
+| Content books | `yarn task run ops:fixtures:content:book:build` / `ops:fixtures:content:book:validate` |
+| Wanix drop fixtures | `yarn task run ops:fixtures:wanix:build` (needs WABT `wat2wasm`) |
 
 ## Parity / Playwright (not here)
 

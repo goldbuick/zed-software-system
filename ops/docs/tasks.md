@@ -10,202 +10,250 @@ yarn task run <task-id>
 yarn task explain <task-id>
 ```
 
-Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task app dev`).
+Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task cafe dev`).
 
-## app
-
-| Task | Description | Tags | Deps | Env |
-|------|-------------|------|------|-----|
-| `yarn task run app:analyze` | Production build with bundle analyzer | — | — | `NODE_OPTIONS=--max-old-space-size=8192`, `ZSS_ANALYZER=1` |
-| `yarn task run app:audit:deadcode` | Knip dead-code audit (files, exports, dependencies) | — | — | — |
-| `yarn task run app:audit:export-catalogs` | Audit export catalogs | — | — | — |
-| `yarn task run app:build` | Production Vite build | `ci` | — | — |
-| `yarn task run app:build:strict` | Typecheck then production Vite build | — | — | — |
-| `yarn task run app:clear` | Remove build artifacts and Vite cache | — | — | — |
-| `yarn task run app:dev` | Install deps and start Vite dev server | `dev` | `app:install`, `app:vite:dev` | — |
-| `yarn task run app:dev:no-sc` | Dev server with play-bus sidechain bypassed | `dev` | `app:dev` | `ZSS_DAISY_NO_SIDECHAIN=1` |
-| `yarn task run app:install` | Install yarn dependencies | — | — | — |
-| `yarn task run app:lint` | Import guards, dependency-cruiser, ESLint, and tsc --noEmit | `ci` | — | — |
-| `yarn task run app:lint:imports` | Guard zss/ and cafe/ for no ../ imports, re-exports, or known barrel files | `ci` | — | — |
-| `yarn task run app:playwright:headed` | Run a headed Playwright script against an already-running dev server (--url required) | `dev` | — | — |
-| `yarn task run app:preview` | Preview production build on port 7777 | `dev` | — | — |
-| `yarn task run app:server:dev` | CLI build + Vite dev + zss dev server | `dev` | `cli:build`, `app:server:dev:run` | — |
-| `yarn task run app:server:dev:run` | Concurrent Vite dev and zss dev (internal) | `dev` | — | `ZSS_NO_HTTPS=1` |
-| `yarn task run app:server:run` | Production build, CLI build, run zss server | `dev` | `app:build`, `cli:build` | — |
-| `yarn task run app:sloc` | Source lines of code count for zss/ | — | — | — |
-| `yarn task run app:test` | Run Jest test suite | `ci` | — | — |
-| `yarn task run app:test:coverage` | Jest with coverage on selected VM/gadget modules | — | — | — |
-| `yarn task run app:vite:dev` | Start Vite dev server on port 7777 | `dev` | — | — |
-
-
-## ci
+## cafe
 
 | Task | Description | Tags | Deps | Env |
 |------|-------------|------|------|-----|
-| `yarn task run ci:pages:copy-404` | Copy GitHub Pages 404.html into cafe/dist | `ci` | — | — |
-| `yarn task run ci:pages:copy-cname` | Copy GitHub Pages CNAME into cafe/dist | `ci` | — | — |
+| `yarn task run cafe:analyze` | Production build with bundle analyzer | — | — | `NODE_OPTIONS=--max-old-space-size=8192`, `ZSS_ANALYZER=1` |
+| `yarn task run cafe:build` | Production Vite build | `ci` | — | — |
+| `yarn task run cafe:build:strict` | Typecheck then production Vite build | — | — | — |
+| `yarn task run cafe:clear` | Remove build artifacts and Vite cache | — | — | — |
+| `yarn task run cafe:dev` | Install deps and start Vite dev server | `dev` | `cafe:install`, `cafe:vite:dev` | — |
+| `yarn task run cafe:dev:no-sc` | Dev server with play-bus sidechain bypassed | `dev` | `cafe:dev` | `ZSS_DAISY_NO_SIDECHAIN=1` |
+| `yarn task run cafe:install` | Install yarn dependencies | — | — | — |
+| `yarn task run cafe:playwright:headed` | Run a headed Playwright script against an already-running dev server (--url required) | `dev` | — | — |
+| `yarn task run cafe:preview` | Preview production build on port 7777 | `dev` | — | — |
+| `yarn task run cafe:vite:dev` | Start Vite dev server on port 7777 | `dev` | — | — |
 
 
-## cli
-
-| Task | Description | Tags | Deps | Env |
-|------|-------------|------|------|-----|
-| `yarn task run cli:build` | Compile CLI and refresh oclif manifest | — | — | — |
-| `yarn task run cli:build:all` | Production app + CLI build and pack tarballs | — | `cli:build:all:app`, `cli:build:all:cli`, `cli:build:all:pack` | — |
-| `yarn task run cli:build:all:app` | Production app build for CLI pack (internal) | — | `app:build` | `NODE_ENV=production` |
-| `yarn task run cli:build:all:cli` | Production CLI build for pack (internal) | — | `cli:build` | `NODE_ENV=production` |
-| `yarn task run cli:build:all:pack` | oclif pack tarballs (internal) | — | — | — |
-| `yarn task run cli:build:linux` | Production builds and pack linux-x64 tarball | — | `cli:build:linux:app`, `cli:build:linux:cli`, `cli:build:linux:pack` | — |
-| `yarn task run cli:build:linux:app` | Production app build for linux pack (internal) | — | `app:build` | `NODE_ENV=production` |
-| `yarn task run cli:build:linux:cli` | Production CLI build for linux pack (internal) | — | `cli:build` | `NODE_ENV=production` |
-| `yarn task run cli:build:linux:pack` | oclif pack linux-x64 tarball (internal) | — | — | — |
-
-
-## content
+## headless
 
 | Task | Description | Tags | Deps | Env |
 |------|-------------|------|------|-----|
-| `yarn task run content:book:build` | Build importable book JSON from template path (pass path as extra args) | — | — | — |
-| `yarn task run content:book:test` | Jest content book tests | `ci` | — | — |
-| `yarn task run content:book:validate` | Validate book JSON (pass path as extra args) | — | — | — |
-| `yarn task run content:codepage:validate` | Validate codepage JSON (pass path as extra args) | — | — | — |
-| `yarn task run content:wanix:fixtures:build` | Build WASI .wasm and .tgz drag-drop fixtures under ops/fixtures/wanix/ (needs wabt wat2wasm) | — | — | — |
-| `yarn task run content:zzt:corpus:build` | Extract Museum archives, build ZZT OOP → .zss corpus, and sanitize profanity/slurs | `slow` | `content:zzt:corpus:extract`, `content:zzt:corpus:zss`, `content:zzt:corpus:sanitize` | — |
-| `yarn task run content:zzt:corpus:extract` | Unzip vanilla ZZT archives into ops/fixtures/zzt/corpus/extracted (.zzt/.brd only) | `slow` | — | — |
-| `yarn task run content:zzt:corpus:manifest` | Crawl Museum of ZZT and write vanilla ZZT manifest only (no downloads) | — | — | — |
-| `yarn task run content:zzt:corpus:profanity:scan` | Scan ops/fixtures/zzt/corpus/zss for profanity and slurs; write profanity-report.json | `slow` | — | — |
-| `yarn task run content:zzt:corpus:profanity:verify` | Fail if corpus zss still contains profanity or slurs (CI gate) | `ci`, `slow` | — | — |
-| `yarn task run content:zzt:corpus:sanitize` | Redact profanity and racial slurs in ops/fixtures/zzt/corpus/zss/*.zss | `slow` | — | — |
-| `yarn task run content:zzt:corpus:screenshots` | Render board PNGs from extracted ZZT/BRD into ops/fixtures/zzt/corpus/screenshots (gitignored) | `slow` | — | — |
-| `yarn task run content:zzt:corpus:sync` | Crawl Museum of ZZT and download vanilla ZZT world ZIPs into ops/fixtures/zzt/corpus/archives (gitignored) | `slow` | — | — |
-| `yarn task run content:zzt:corpus:zss` | Convert extracted ZZT/BRD OOP into ops/fixtures/zzt/corpus/zss/*.zss + manifest | `slow` | — | — |
+| `yarn task run headless:build` | Compile CLI and refresh oclif manifest | — | — | — |
+| `yarn task run headless:build:all` | Production app + CLI build and pack tarballs | — | `headless:build:all:app`, `headless:build:all:cli`, `headless:build:all:pack` | — |
+| `yarn task run headless:build:all:app` | Production app build for CLI pack (internal) | — | `cafe:build` | `NODE_ENV=production` |
+| `yarn task run headless:build:all:cli` | Production CLI build for pack (internal) | — | `headless:build` | `NODE_ENV=production` |
+| `yarn task run headless:build:all:pack` | oclif pack tarballs (internal) | — | — | — |
+| `yarn task run headless:build:linux` | Production builds and pack linux-x64 tarball | — | `headless:build:linux:app`, `headless:build:linux:cli`, `headless:build:linux:pack` | — |
+| `yarn task run headless:build:linux:app` | Production app build for linux pack (internal) | — | `cafe:build` | `NODE_ENV=production` |
+| `yarn task run headless:build:linux:cli` | Production CLI build for linux pack (internal) | — | `headless:build` | `NODE_ENV=production` |
+| `yarn task run headless:build:linux:pack` | oclif pack linux-x64 tarball (internal) | — | — | — |
+| `yarn task run headless:server:dev` | CLI build + Vite dev + zss dev server | `dev` | `headless:build`, `headless:server:dev:run` | — |
+| `yarn task run headless:server:dev:run` | Concurrent Vite dev and zss dev (internal) | `dev` | — | `ZSS_NO_HTTPS=1` |
+| `yarn task run headless:server:run` | Production build, CLI build, run zss server | `dev` | `cafe:build`, `headless:build` | — |
 
 
-## daisy
+## ops
 
-| Task | Description | Tags | Deps | Env |
-|------|-------------|------|------|-----|
-| `yarn task run daisy:adsr-parity:jest` | Jest adsrenvcurve tests (internal) | — | — | — |
-| `yarn task run daisy:adsr-parity:test` | Short amsaw ADSR Jest + env parity | — | `daisy:adsr-parity:jest`, `daisy:env-parity:test` | — |
-| `yarn task run daisy:bench:synth` | Daisy synth micro-benchmark | — | — | `ZSS_DAISY_BENCH=1` |
-| `yarn task run daisy:build` | Build Daisy WASM native synth | — | — | — |
-| `yarn task run daisy:bundle:processor` | Bundle daisy audio worklet processor | — | — | — |
-| `yarn task run daisy:env-parity:test` | Offline env ADSR parity render + gates | — | — | — |
-| `yarn task run daisy:fixtures:regen:adsrenvcurve:tone` | Regenerate adsrenvcurve tone metrics fixture | — | — | — |
-| `yarn task run daisy:fixtures:regen:drums` | Regenerate daisy drum parity fixtures | — | — | — |
-| `yarn task run daisy:fixtures:regen:env-adsr:tone` | Regenerate env ADSR tone parity metrics fixture | — | — | — |
-| `yarn task run daisy:fixtures:regen:tone` | Regenerate synth parity fixtures (tone backend) | — | — | — |
-| `yarn task run daisy:fx-bus-metrics:test` | FX bus metrics offline test | — | — | — |
-| `yarn task run daisy:level-issue:song-compare:test` | Compare offline song renders (wasm vs tone) | — | — | — |
-| `yarn task run daisy:level-issue:song:render` | Offline song render (wasm) | — | — | — |
-| `yarn task run daisy:level-issue:song:render:tone` | Offline song render (tone) | — | — | — |
-| `yarn task run daisy:level-issue:voices:render` | Voice isolation offline render | — | — | — |
-| `yarn task run daisy:level-stability:test` | Level stability offline matrix | — | — | — |
-| `yarn task run daisy:level-stability:test:fxmatrix` | Level stability FX matrix filter | — | — | — |
-| `yarn task run daisy:lint` | clang-format check on daisy C++ | — | — | — |
-| `yarn task run daisy:lint:fix` | Apply clang-format to daisy C++ | — | — | — |
-| `yarn task run daisy:notepop:loop` | Watch native + notepop parity loop | — | — | — |
-| `yarn task run daisy:notepop:render` | Notepop offline render | — | — | — |
-| `yarn task run daisy:notepop:render:ab` | Notepop A/B offline render | — | — | — |
-| `yarn task run daisy:notepop:test` | Notepop parity gates | — | — | — |
-| `yarn task run daisy:notepop:test:full` | Build daisy native, render notepop stems, run gates | `slow` | `daisy:build`, `daisy:notepop:render:ab`, `daisy:notepop:test` | — |
-| `yarn task run daisy:pitch-stability:render` | Pitch stability offline render | — | — | — |
-| `yarn task run daisy:pitch-stability:test` | Pitch stability gates | — | — | — |
-| `yarn task run daisy:pitch-stability:test:full` | Build daisy native, render pitch-stability stems, run gates | `slow` | `daisy:build`, `daisy:pitch-stability:render`, `daisy:pitch-stability:test` | — |
-| `yarn task run daisy:play-drum-balance:calibrate` | Calibrate play vs drum balance (slow, dev-only) | `calibrate`, `slow` | — | — |
-| `yarn task run daisy:play-drum-balance:render` | Play vs drum balance offline render | — | — | — |
-| `yarn task run daisy:play-drum-balance:test` | Play vs drum balance gates | — | — | — |
-| `yarn task run daisy:play-drum-balance:test:full` | Build daisy native, render play-drum-balance stems, run gates | `slow` | `daisy:build`, `daisy:play-drum-balance:render`, `daisy:play-drum-balance:test` | — |
-| `yarn task run daisy:play-drum:loop` | Watch native + play-drum parity loop | — | — | — |
-| `yarn task run daisy:regression:test` | Jest + critical Playwright parity gates | `slow` | — | — |
-| `yarn task run daisy:sidechain:loop` | Watch native + sidechain parity loop | — | — | — |
-| `yarn task run daisy:sidechain:parity:calibrate` | Calibrate sidechain parity (slow, dev-only) | `calibrate`, `slow` | — | — |
-| `yarn task run daisy:sidechain:parity:render` | Sidechain parity offline render | — | — | — |
-| `yarn task run daisy:sidechain:parity:test` | Sidechain parity gates | — | — | — |
-| `yarn task run daisy:sidechain:parity:test:full` | Build daisy native, render sidechain:parity stems, run gates | `slow` | `daisy:build`, `daisy:sidechain:parity:render`, `daisy:sidechain:parity:test` | — |
-| `yarn task run daisy:sidechain:render` | Sidechain demo offline render | — | — | — |
-| `yarn task run daisy:sidechain:render:ab` | Sidechain demo A/B offline render | — | — | — |
-| `yarn task run daisy:sos-voice:fixtures:regen` | Regenerate SOS voice parity fixtures | — | — | — |
-| `yarn task run daisy:sos-voices:test` | SOS voice parity gates | — | — | — |
-| `yarn task run daisy:sos-voices:test:full` | Regenerate SOS voice fixtures and run gates | `slow` | `daisy:build`, `daisy:sos-voice:fixtures:regen`, `daisy:sos-voices:test` | — |
-| `yarn task run daisy:synth-env:calibrate` | Calibrate synth env parity (slow, dev-only) | `calibrate`, `slow` | — | — |
-| `yarn task run daisy:synth-env:loop` | Watch native + synth-env parity loop | — | — | — |
-| `yarn task run daisy:synth-env:render` | Synth env parity offline render | — | — | — |
-| `yarn task run daisy:synth-env:test` | Synth env parity gates | — | — | — |
-| `yarn task run daisy:synth-env:test:full` | Build daisy native, render synth-env stems, run gates | `slow` | `daisy:build`, `daisy:synth-env:render`, `daisy:synth-env:test` | — |
-
-
-## deploy
+### audit
 
 | Task | Description | Tags | Deps | Env |
 |------|-------------|------|------|-----|
-| `yarn task run deploy:aws-ec2:docker-run` | Run zss on AWS EC2 via Docker | `deploy` | — | — |
-| `yarn task run deploy:cloudflare:brick` | Deploy brick worker to Cloudflare | `deploy` | — | — |
-| `yarn task run deploy:cloudflare:bytes` | Deploy bytes worker to Cloudflare | `deploy` | — | — |
-| `yarn task run deploy:cloudflare:terminal` | Deploy terminal worker to Cloudflare | `deploy` | — | — |
-| `yarn task run deploy:cloudflare:zns` | Deploy zns worker to Cloudflare | `deploy` | `zns:vga:sync` | — |
-| `yarn task run deploy:cloudflare:zns:verify` | Deploy zns worker then verify production tenant DNS and HTTPS | `deploy` | `deploy:cloudflare:zns` | — |
-| `yarn task run deploy:docker:build` | Build linux CLI and local Docker image | `deploy` | `cli:build:linux`, `deploy:docker:build:image` | — |
-| `yarn task run deploy:docker:build:image` | Docker build zss:local (internal) | — | — | — |
-| `yarn task run deploy:docker:run` | Run local Docker container | `deploy` | — | — |
-| `yarn task run deploy:docker:shell` | Build and open shell in local Docker image | `deploy` | `deploy:docker:build`, `deploy:docker:shell:exec` | — |
-| `yarn task run deploy:docker:shell:exec` | Docker run interactive shell (internal) | — | — | — |
-| `yarn task run deploy:droplet:docker-run` | Run zss on DigitalOcean droplet via Docker | `deploy` | — | — |
-| `yarn task run deploy:gcp-cloudrun:run` | Deploy zss to GCP Cloud Run | `deploy` | — | — |
-| `yarn task run deploy:gcp-vm:create` | Create GCP VM for zss | `deploy` | — | — |
-| `yarn task run deploy:gcp-vm:docker-run` | Run zss Docker on GCP VM | `deploy` | — | — |
-| `yarn task run deploy:gcp-vm:firewall` | Configure GCP VM firewall rules | `deploy` | — | — |
-| `yarn task run deploy:gcp:artifact-repo` | Create GCP artifact registry repo | `deploy` | — | — |
-| `yarn task run deploy:gcp:enable-apis` | Enable required GCP APIs | `deploy` | — | — |
-| `yarn task run deploy:gcp:push` | Push zss image to GCP artifact registry | `deploy` | — | — |
-| `yarn task run deploy:vm:docker-run` | Run zss Docker on generic VM | `deploy` | — | — |
-| `yarn task run zns:email:preview` | Write ZNS login email preview PNG + HTML + assert tenant VGA palette parity (ops/infra/generated/zns-email-preview.{png,html}) | `dev`, `ci` | `zns:vga:sync` | — |
-| `yarn task run zns:grid:preview` | Write CP437 0–255 VGA calibration HTML + assert web-safe glyph mapping (ops/infra/generated/zns-grid-preview.html) | `dev`, `ci` | `zns:vga:sync` | — |
-| `yarn task run zns:landing:dev` | Local ZNS worker dev server — apex landing at http://127.0.0.1:8787/ | `dev` | `zns:vga:sync` | — |
-| `yarn task run zns:scroll:preview` | Write scroll tape HTML preview + assert cliscroll/helptext rendering (ops/infra/generated/zns-scroll-preview.html) | `dev`, `ci` | — | — |
-| `yarn task run zns:tenant:dns:check` | DNS check for *.at.zed.cafe tenant wildcards in production (dig only) | `deploy`, `ci` | — | — |
-| `yarn task run zns:tenant:smoke` | HTTPS smoke test docs.at.zed.cafe/ tenant index (subset of zns:tenant:verify) | `deploy` | — | — |
-| `yarn task run zns:tenant:verify` | Full production verify: tenant DNS + HTTPS apex, index, and scroll | `deploy`, `ci` | — | — |
-| `yarn task run zns:vga:sync` | Generate embedded VGA font module for ZNS worker (ops/infra/generated/zns-vga-font.js) | `deploy` | — | — |
+| `yarn task run ops:audit:deadcode` | Knip dead-code audit (files, exports, dependencies) | — | — | — |
+| `yarn task run ops:audit:export-catalogs` | Audit export catalogs | — | — | — |
 
 
-## docs
+### build
 
 | Task | Description | Tags | Deps | Env |
 |------|-------------|------|------|-----|
-| `yarn task run docs:check-links` | Check relative links in tracked markdown files | `ci` | — | — |
+| `yarn task run ops:build` | Build ops native artifacts (daisy, wanix, memory) and regen committed fixtures | `slow` | `ops:daisy:build`, `ops:fixtures:wanix:build`, `ops:fixtures:wanix:zedcafe:build`, `ops:fixtures:memory:build`, `ops:fixtures:content:book:build:all`, `ops:fixtures:synth:regen:all` | — |
 
 
-## infra
-
-| Task | Description | Tags | Deps | Env |
-|------|-------------|------|------|-----|
-| `yarn task run infra:lint` | ESLint Cloudflare worker sources (ops/infra/net-*-worker.js) | `ci` | — | — |
-
-
-## lang
+### ci
 
 | Task | Description | Tags | Deps | Env |
 |------|-------------|------|------|-----|
-| `yarn task run lang:book:oracle:extract` | Extract book JSON into lang integration oracle files | — | — | — |
-| `yarn task run lang:regression:test` | TypeScript lang parser regression tests | `ci` | — | — |
-| `yarn task run lang:zztoop:corpus:analyze` | Analyze Museum ZZT corpus with the vanilla zss/feature/zztoop parser; write ops/fixtures/lang/zztoop/failure-report.json. Flags: raw-only, write-fixtures, limit N, full | `slow` | — | — |
+| `yarn task run ops:ci:pages:copy-404` | Copy GitHub Pages 404.html into cafe/dist | `ci` | — | — |
+| `yarn task run ops:ci:pages:copy-cname` | Copy GitHub Pages CNAME into cafe/dist | `ci` | — | — |
 
 
-## memory
-
-| Task | Description | Tags | Deps | Env |
-|------|-------------|------|------|-----|
-| `yarn task run memory:build` | Build memory WASM via emscripten | — | — | — |
-| `yarn task run memory:parity:check-coverage` | Check memory parity fixture coverage | — | — | — |
-| `yarn task run memory:parity:regen` | Regenerate memory parity fixtures | — | — | `REGEN_MEMORY_FIXTURES=1` |
-| `yarn task run memory:parity:test` | Memory wasm parity test suite | — | — | — |
-| `yarn task run memory:test:native` | Memory parity native-only run | — | — | — |
-
-
-## native
+### daisy
 
 | Task | Description | Tags | Deps | Env |
 |------|-------------|------|------|-----|
-| `yarn task run native:lint` | clang-format check on first-party C++ (all targets) | `ci` | — | — |
-| `yarn task run native:lint:fix` | Apply clang-format to first-party C++ (all targets) | — | — | — |
+| `yarn task run ops:daisy:adsr-parity:jest` | Jest adsrenvcurve tests (internal) | — | — | — |
+| `yarn task run ops:daisy:adsr-parity:test` | Short amsaw ADSR Jest + env parity | — | `ops:daisy:adsr-parity:jest`, `ops:daisy:env-parity:test` | — |
+| `yarn task run ops:daisy:bench:synth` | Daisy synth micro-benchmark | — | — | `ZSS_DAISY_BENCH=1` |
+| `yarn task run ops:daisy:build` | Build Daisy WASM native synth | — | — | — |
+| `yarn task run ops:daisy:bundle:processor` | Bundle daisy audio worklet processor | — | — | — |
+| `yarn task run ops:daisy:env-parity:test` | Offline env ADSR parity render + gates | — | — | — |
+| `yarn task run ops:daisy:fx-bus-metrics:test` | FX bus metrics offline test | — | — | — |
+| `yarn task run ops:daisy:level-issue:song-compare:test` | Compare offline song renders (wasm vs tone) | — | — | — |
+| `yarn task run ops:daisy:level-issue:song:render` | Offline song render (wasm) | — | — | — |
+| `yarn task run ops:daisy:level-issue:song:render:tone` | Offline song render (tone) | — | — | — |
+| `yarn task run ops:daisy:level-issue:voices:render` | Voice isolation offline render | — | — | — |
+| `yarn task run ops:daisy:level-stability:test` | Level stability offline matrix | — | — | — |
+| `yarn task run ops:daisy:level-stability:test:fxmatrix` | Level stability FX matrix filter | — | — | — |
+| `yarn task run ops:daisy:lint` | clang-format check on daisy C++ | — | — | — |
+| `yarn task run ops:daisy:lint:fix` | Apply clang-format to daisy C++ | — | — | — |
+| `yarn task run ops:daisy:notepop:loop` | Watch native + notepop parity loop | — | — | — |
+| `yarn task run ops:daisy:notepop:render` | Notepop offline render | — | — | — |
+| `yarn task run ops:daisy:notepop:render:ab` | Notepop A/B offline render | — | — | — |
+| `yarn task run ops:daisy:notepop:test` | Notepop parity gates | — | — | — |
+| `yarn task run ops:daisy:notepop:test:full` | Build daisy native, render notepop stems, run gates | `slow` | `ops:daisy:build`, `ops:daisy:notepop:render:ab`, `ops:daisy:notepop:test` | — |
+| `yarn task run ops:daisy:pitch-stability:render` | Pitch stability offline render | — | — | — |
+| `yarn task run ops:daisy:pitch-stability:test` | Pitch stability gates | — | — | — |
+| `yarn task run ops:daisy:pitch-stability:test:full` | Build daisy native, render pitch-stability stems, run gates | `slow` | `ops:daisy:build`, `ops:daisy:pitch-stability:render`, `ops:daisy:pitch-stability:test` | — |
+| `yarn task run ops:daisy:play-drum-balance:calibrate` | Calibrate play vs drum balance (slow, dev-only) | `calibrate`, `slow` | — | — |
+| `yarn task run ops:daisy:play-drum-balance:render` | Play vs drum balance offline render | — | — | — |
+| `yarn task run ops:daisy:play-drum-balance:test` | Play vs drum balance gates | — | — | — |
+| `yarn task run ops:daisy:play-drum-balance:test:full` | Build daisy native, render play-drum-balance stems, run gates | `slow` | `ops:daisy:build`, `ops:daisy:play-drum-balance:render`, `ops:daisy:play-drum-balance:test` | — |
+| `yarn task run ops:daisy:play-drum:loop` | Watch native + play-drum parity loop | — | — | — |
+| `yarn task run ops:daisy:regression:test` | Jest + critical Playwright parity gates | `slow` | — | — |
+| `yarn task run ops:daisy:sidechain:loop` | Watch native + sidechain parity loop | — | — | — |
+| `yarn task run ops:daisy:sidechain:parity:calibrate` | Calibrate sidechain parity (slow, dev-only) | `calibrate`, `slow` | — | — |
+| `yarn task run ops:daisy:sidechain:parity:render` | Sidechain parity offline render | — | — | — |
+| `yarn task run ops:daisy:sidechain:parity:test` | Sidechain parity gates | — | — | — |
+| `yarn task run ops:daisy:sidechain:parity:test:full` | Build daisy native, render sidechain:parity stems, run gates | `slow` | `ops:daisy:build`, `ops:daisy:sidechain:parity:render`, `ops:daisy:sidechain:parity:test` | — |
+| `yarn task run ops:daisy:sidechain:render` | Sidechain demo offline render | — | — | — |
+| `yarn task run ops:daisy:sidechain:render:ab` | Sidechain demo A/B offline render | — | — | — |
+| `yarn task run ops:daisy:sos-voices:test` | SOS voice parity gates | — | — | — |
+| `yarn task run ops:daisy:sos-voices:test:full` | Regenerate SOS voice fixtures and run gates | `slow` | `ops:daisy:build`, `ops:fixtures:synth:regen:sos-voice`, `ops:daisy:sos-voices:test` | — |
+| `yarn task run ops:daisy:synth-env:calibrate` | Calibrate synth env parity (slow, dev-only) | `calibrate`, `slow` | — | — |
+| `yarn task run ops:daisy:synth-env:loop` | Watch native + synth-env parity loop | — | — | — |
+| `yarn task run ops:daisy:synth-env:render` | Synth env parity offline render | — | — | — |
+| `yarn task run ops:daisy:synth-env:test` | Synth env parity gates | — | — | — |
+| `yarn task run ops:daisy:synth-env:test:full` | Build daisy native, render synth-env stems, run gates | `slow` | `ops:daisy:build`, `ops:daisy:synth-env:render`, `ops:daisy:synth-env:test` | — |
+
+
+### deploy
+
+| Task | Description | Tags | Deps | Env |
+|------|-------------|------|------|-----|
+| `yarn task run ops:deploy:aws-ec2:docker-run` | Run zss on AWS EC2 via Docker | `deploy` | — | — |
+| `yarn task run ops:deploy:cloudflare:brick` | Deploy brick worker to Cloudflare | `deploy` | — | — |
+| `yarn task run ops:deploy:cloudflare:bytes` | Deploy bytes worker to Cloudflare | `deploy` | — | — |
+| `yarn task run ops:deploy:cloudflare:terminal` | Deploy terminal worker to Cloudflare | `deploy` | — | — |
+| `yarn task run ops:deploy:cloudflare:zns` | Deploy zns worker to Cloudflare | `deploy` | `ops:zns:vga:sync` | — |
+| `yarn task run ops:deploy:cloudflare:zns:verify` | Deploy zns worker then verify production tenant DNS and HTTPS | `deploy` | `ops:deploy:cloudflare:zns` | — |
+| `yarn task run ops:deploy:docker:build` | Build linux CLI and local Docker image | `deploy` | `headless:build:linux`, `ops:deploy:docker:build:image` | — |
+| `yarn task run ops:deploy:docker:build:image` | Docker build zss:local (internal) | — | — | — |
+| `yarn task run ops:deploy:docker:run` | Run local Docker container | `deploy` | — | — |
+| `yarn task run ops:deploy:docker:shell` | Build and open shell in local Docker image | `deploy` | `ops:deploy:docker:build`, `ops:deploy:docker:shell:exec` | — |
+| `yarn task run ops:deploy:docker:shell:exec` | Docker run interactive shell (internal) | — | — | — |
+| `yarn task run ops:deploy:droplet:docker-run` | Run zss on DigitalOcean droplet via Docker | `deploy` | — | — |
+| `yarn task run ops:deploy:gcp-cloudrun:run` | Deploy zss to GCP Cloud Run | `deploy` | — | — |
+| `yarn task run ops:deploy:gcp-vm:create` | Create GCP VM for zss | `deploy` | — | — |
+| `yarn task run ops:deploy:gcp-vm:docker-run` | Run zss Docker on GCP VM | `deploy` | — | — |
+| `yarn task run ops:deploy:gcp-vm:firewall` | Configure GCP VM firewall rules | `deploy` | — | — |
+| `yarn task run ops:deploy:gcp:artifact-repo` | Create GCP artifact registry repo | `deploy` | — | — |
+| `yarn task run ops:deploy:gcp:enable-apis` | Enable required GCP APIs | `deploy` | — | — |
+| `yarn task run ops:deploy:gcp:push` | Push zss image to GCP artifact registry | `deploy` | — | — |
+| `yarn task run ops:deploy:vm:docker-run` | Run zss Docker on generic VM | `deploy` | — | — |
+
+
+### docs
+
+| Task | Description | Tags | Deps | Env |
+|------|-------------|------|------|-----|
+| `yarn task run ops:docs:check-links` | Check relative links in tracked markdown files | `ci` | — | — |
+
+
+### fixtures
+
+#### fixtures/content
+
+| Task | Description | Tags | Deps | Env |
+|------|-------------|------|------|-----|
+| `yarn task run ops:fixtures:content:book:build` | Build importable book JSON from template path (pass path as extra args) | — | — | — |
+| `yarn task run ops:fixtures:content:book:build:all` | Build importable book JSON for every template under ops/fixtures/content/templates/ | — | — | — |
+| `yarn task run ops:fixtures:content:book:test` | Jest content book tests | `ci` | — | — |
+| `yarn task run ops:fixtures:content:book:validate` | Validate book JSON (pass path as extra args) | — | — | — |
+| `yarn task run ops:fixtures:content:codepage:validate` | Validate codepage JSON (pass path as extra args) | — | — | — |
+
+
+#### fixtures/lang
+
+| Task | Description | Tags | Deps | Env |
+|------|-------------|------|------|-----|
+| `yarn task run ops:fixtures:lang:book:oracle:extract` | Extract book JSON into lang integration oracle files | — | — | — |
+| `yarn task run ops:fixtures:lang:regression:test` | TypeScript lang parser regression tests | `ci` | — | — |
+| `yarn task run ops:fixtures:lang:zztoop:corpus:analyze` | Analyze Museum ZZT corpus with the vanilla zss/feature/zztoop parser; write ops/fixtures/lang/zztoop/failure-report.json. Flags: raw-only, write-fixtures, limit N, full | `slow` | — | — |
+
+
+#### fixtures/memory
+
+| Task | Description | Tags | Deps | Env |
+|------|-------------|------|------|-----|
+| `yarn task run ops:fixtures:memory:build` | Build memory WASM via emscripten | — | — | — |
+| `yarn task run ops:fixtures:memory:parity:check-coverage` | Check memory parity fixture coverage | — | — | — |
+| `yarn task run ops:fixtures:memory:parity:regen` | Regenerate memory parity fixtures | — | — | `REGEN_MEMORY_FIXTURES=1` |
+| `yarn task run ops:fixtures:memory:parity:test` | Memory wasm parity test suite | — | — | — |
+| `yarn task run ops:fixtures:memory:test:native` | Memory parity native-only run | — | — | — |
+
+
+#### fixtures/synth
+
+| Task | Description | Tags | Deps | Env |
+|------|-------------|------|------|-----|
+| `yarn task run ops:fixtures:synth:regen:adsrenvcurve:tone` | Regenerate adsrenvcurve tone metrics fixture | — | — | — |
+| `yarn task run ops:fixtures:synth:regen:all` | Regenerate all synth parity fixtures under ops/fixtures/synth/ | `slow` | `ops:daisy:build`, `ops:fixtures:synth:regen:tone`, `ops:fixtures:synth:regen:drums`, `ops:fixtures:synth:regen:adsrenvcurve:tone`, `ops:fixtures:synth:regen:env-adsr:tone`, `ops:fixtures:synth:regen:sos-voice` | — |
+| `yarn task run ops:fixtures:synth:regen:drums` | Regenerate daisy drum parity fixtures | — | — | — |
+| `yarn task run ops:fixtures:synth:regen:env-adsr:tone` | Regenerate env ADSR tone parity metrics fixture | — | — | — |
+| `yarn task run ops:fixtures:synth:regen:sos-voice` | Regenerate SOS voice parity fixtures | — | — | — |
+| `yarn task run ops:fixtures:synth:regen:tone` | Regenerate synth parity fixtures (tone backend) | — | — | — |
+
+
+#### fixtures/wanix
+
+| Task | Description | Tags | Deps | Env |
+|------|-------------|------|------|-----|
+| `yarn task run ops:fixtures:wanix:build` | Build WASI .wasm and .tgz drag-drop fixtures under ops/fixtures/wanix/ (needs wabt wat2wasm) | — | — | — |
+| `yarn task run ops:fixtures:wanix:zedcafe:build` | Build the zed-cafe export daemon (Go js/wasm) into ops/fixtures/wanix/ and cafe/public/wanix/ (needs Go + submodules/wanix) | — | — | — |
+
+
+#### fixtures/zzt
+
+| Task | Description | Tags | Deps | Env |
+|------|-------------|------|------|-----|
+| `yarn task run ops:fixtures:zzt:corpus:build` | Extract Museum archives, build ZZT OOP → .zss corpus, and sanitize profanity/slurs | `slow` | `ops:fixtures:zzt:corpus:extract`, `ops:fixtures:zzt:corpus:zss`, `ops:fixtures:zzt:corpus:sanitize` | — |
+| `yarn task run ops:fixtures:zzt:corpus:extract` | Unzip vanilla ZZT archives into ops/fixtures/zzt/corpus/extracted (.zzt/.brd only) | `slow` | — | — |
+| `yarn task run ops:fixtures:zzt:corpus:manifest` | Crawl Museum of ZZT and write vanilla ZZT manifest only (no downloads) | — | — | — |
+| `yarn task run ops:fixtures:zzt:corpus:profanity:scan` | Scan ops/fixtures/zzt/corpus/zss for profanity and slurs; write profanity-report.json | `slow` | — | — |
+| `yarn task run ops:fixtures:zzt:corpus:profanity:verify` | Fail if corpus zss still contains profanity or slurs (CI gate) | `ci`, `slow` | — | — |
+| `yarn task run ops:fixtures:zzt:corpus:sanitize` | Redact profanity and racial slurs in ops/fixtures/zzt/corpus/zss/*.zss | `slow` | — | — |
+| `yarn task run ops:fixtures:zzt:corpus:screenshots` | Render board PNGs from extracted ZZT/BRD into ops/fixtures/zzt/corpus/screenshots (gitignored) | `slow` | — | — |
+| `yarn task run ops:fixtures:zzt:corpus:sync` | Crawl Museum of ZZT and download vanilla ZZT world ZIPs into ops/fixtures/zzt/corpus/archives (gitignored) | `slow` | — | — |
+| `yarn task run ops:fixtures:zzt:corpus:zss` | Convert extracted ZZT/BRD OOP into ops/fixtures/zzt/corpus/zss/*.zss + manifest | `slow` | — | — |
+
+
+### infra
+
+| Task | Description | Tags | Deps | Env |
+|------|-------------|------|------|-----|
+| `yarn task run ops:infra:lint` | ESLint Cloudflare worker sources (ops/infra/net-*-worker.js) | `ci` | — | — |
+
+
+### lint
+
+| Task | Description | Tags | Deps | Env |
+|------|-------------|------|------|-----|
+| `yarn task run ops:lint` | Import guards, dependency-cruiser, ESLint, and tsc --noEmit | `ci` | — | — |
+| `yarn task run ops:lint:imports` | Guard zss/ and cafe/ for no ../ imports, re-exports, or known barrel files | `ci` | — | — |
+
+
+### native
+
+| Task | Description | Tags | Deps | Env |
+|------|-------------|------|------|-----|
+| `yarn task run ops:native:lint` | clang-format check on first-party C++ (all targets) | `ci` | — | — |
+| `yarn task run ops:native:lint:fix` | Apply clang-format to first-party C++ (all targets) | — | — | — |
+
+
+### sloc
+
+| Task | Description | Tags | Deps | Env |
+|------|-------------|------|------|-----|
+| `yarn task run ops:sloc` | Source lines of code count for zss/ | — | — | — |
+
+
+### test
+
+| Task | Description | Tags | Deps | Env |
+|------|-------------|------|------|-----|
+| `yarn task run ops:test` | Run Jest test suite | `ci` | — | — |
+| `yarn task run ops:test:coverage` | Jest with coverage on selected VM/gadget modules | — | — | — |

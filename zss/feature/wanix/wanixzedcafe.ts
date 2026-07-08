@@ -5,7 +5,10 @@ import {
   putwanixroomfile,
   readwanixroomconfig,
 } from 'zss/feature/wanix/wanixroom'
-import type { WANIX_ZED_CAFE_EXPORT_FILE } from 'zss/feature/wanix/wanixstateexport'
+import {
+  type WANIX_ZED_CAFE_EXPORT_FILE,
+  primezedcafeexportshadow,
+} from 'zss/feature/wanix/wanixstateexport'
 import {
   WANIX_VM_ZEDCAFE_EXPORT_FETCH_MS,
   WANIX_ZEDCAFE_EXPORT_WAIT_MS,
@@ -23,7 +26,6 @@ import {
   setwanixzedcafeready,
   setwanixzedcaferestart,
   setwanixzedcafetaskrid,
-  withzedcafeimportsuppress,
 } from 'zss/feature/wanix/wanixzedcafesession'
 import type {
   WanixZedCafeGuestFile,
@@ -332,6 +334,7 @@ export async function finalizewanixzedcafeaftervmboot(
   } catch {
     // poll will refresh on next tick
   }
+  primezedcafeexportshadow()
   return true
 }
 
@@ -362,6 +365,7 @@ async function bootzedcafeexport(
   startzedcafepoll(device, player)
   const tree = await readexporttree()
   setlasthostpushfingerprint(fingerprintzedcafeexportfiles(tree))
+  primezedcafeexportshadow()
   return taskrid
 }
 
@@ -400,8 +404,9 @@ export async function runzedcafeimport(
     parsezedcafeexportfiles,
   } = await import('zss/feature/wanix/wanixstateimport')
   const parsed = parsezedcafeexportfiles(files)
-  const changed = withzedcafeimportsuppress(() => applyzedcafetomemory(parsed))
+  const changed = applyzedcafetomemory(parsed)
   setlasthostpushfingerprint(fingerprintzedcafeexportfiles(files))
+  primezedcafeexportshadow()
   logzedcafeimportresult(device, player, parsed, changed)
 }
 
@@ -463,6 +468,7 @@ export async function ensurewanixzedcafedaemon(
       } catch {
         // poll will refresh on next tick
       }
+      primezedcafeexportshadow()
       return true
     }
   }

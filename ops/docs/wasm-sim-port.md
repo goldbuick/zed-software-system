@@ -44,7 +44,7 @@ Enable with **`ZSS_WASM_SIM=true`** per page load during migration. Default **on
 | Heavy | **Separate worker** (RAM + 80ms tick isolation) |
 | WASM threading | v1 **sequential** ticks; pthreads optional later; COOP/COEP already required for synth SAB |
 | Parity CI | Record **golden fixtures once** from TS; WASM-only compare (no standing dual-run CI) |
-| Artifacts | Commit **`zss_runtime.wasm`** + glue under `cafe/public/wasm/runtime/` |
+| Artifacts | Commit **`zss_runtime.wasm`** + glue under `cafe/public/runtime/` |
 | Migration | `ZSS_WASM_SIM` env flag per page load only |
 | Lang | Port parser/compiler to **C++** (`zss_compile`); TS pipeline is **parity oracle** until green |
 | C++ parser | **re2c** lexer + hand-written **recursive descent** |
@@ -83,11 +83,11 @@ zss/sim/native/
   lang/                   # re2c lexer, RD parser, bytecode emitter
   synth/                  # Daisy wrapper (from feature/synth/backend/daisy/native)
   sim/                    # memory, chip, vm, firmware
-  build-runtime.sh        # emcc → cafe/public/wasm/runtime/zss_runtime.{js,wasm}
+  build-runtime.sh        # emcc → cafe/public/runtime/zss_runtime.{js,wasm}
 zss/sim/
   wasm-bridge.ts          # load runtime; FFI for vm + synth
   hostevents.ts           # browser CLI host event IDs (planned)
-cafe/public/wasm/runtime/ # committed artifacts (yarn app:build:runtime)
+cafe/public/runtime/ # committed artifacts (yarn cafe:build)
 zss/wasmspace.ts          # wasm worker entry (replaces simspace + boardrunnerspace)
 ```
 

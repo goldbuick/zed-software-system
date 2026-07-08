@@ -5,9 +5,9 @@ import { fileURLToPath } from 'node:url'
 
 import { loaddaisyparityruntime } from 'tasks/lib/daisy/parity-runtime'
 
-import { def, exec, handler, jestexec, shell, tasksonly } from '../helpers'
-import { parityfull } from '../pipelines'
-import type { TaskContext, TaskDef } from '../types'
+import { def, exec, handler, jestexec, shell, tasksonly } from '../../helpers'
+import { parityfull } from '../../pipelines'
+import type { TaskContext, TaskDef } from '../../types'
 
 import { runclangformat } from './native'
 
@@ -23,8 +23,9 @@ async function rundaisybundledaisyprocessor(ctx: TaskContext): Promise<number> {
      * Injects SAB layout from daisycontrol.ts so worklet offsets stay aligned with C++.
      */
 
+    const { CAFE_PUBLIC_DAISY_DIR } = await import('ops/lib/cafepublicpaths')
     const root = ctx.root
-    const outdir = path.join(root, 'cafe/public/wasm/daisy')
+    const outdir = CAFE_PUBLIC_DAISY_DIR
     const gluepath = path.join(outdir, 'zss_daisy.js')
     const workletpath = path.join(
       root,
@@ -66,7 +67,7 @@ async function rundaisybundledaisyprocessor(ctx: TaskContext): Promise<number> {
     }
 
     const bundled = `/**
-     * GENERATED — do not edit. Run \`yarn daisy:bundle:processor\`.
+     * GENERATED — do not edit. Run \`yarn task run ops:daisy:bundle:processor\`.
      * Classic AudioWorklet bundle (Emscripten glue + DaisyProcessor).
      */
     ${glue}
@@ -83,7 +84,7 @@ async function rundaisybundledaisyprocessor(ctx: TaskContext): Promise<number> {
     const buildid = String(Math.floor(Date.now() / 1000))
     fs.writeFileSync(
       buildidpath,
-      `/** Bumped by \`yarn daisy:build\` — busts browser cache when wasm changes on same commit. */
+      `/** Bumped by \`yarn task run ops:daisy:build\` — busts browser cache when wasm changes on same commit. */
     export const DAISY_BUILD_ID = '${buildid}'
     `,
     )
@@ -162,11 +163,11 @@ async function rundaisycalibrateplaydrumbalance(
     }
 
     function builddaisy() {
-      execSync('yarn task run daisy:build', { cwd: PROJECT, stdio: 'inherit' })
+      execSync('yarn task run ops:daisy:build', { cwd: PROJECT, stdio: 'inherit' })
     }
 
     function renderandmeasure(): PLAY_DRUM_BALANCE_METRICS {
-      execSync('yarn task run daisy:play-drum-balance:render', {
+      execSync('yarn task run ops:daisy:play-drum-balance:render', {
         cwd: PROJECT,
         stdio: 'inherit',
       })
@@ -260,7 +261,7 @@ async function rundaisycalibrateplaydrumbalance(
         writegains(best.gains)
         builddaisy()
         console.log('Wrote best gains to zss_config.h and rebuilt.')
-        execSync('yarn task run daisy:play-drum-balance:test', {
+        execSync('yarn task run ops:daisy:play-drum-balance:test', {
           cwd: PROJECT,
           stdio: 'inherit',
         })
@@ -341,11 +342,11 @@ async function rundaisycalibratesidechainparity(
     }
 
     function builddaisy() {
-      execSync('yarn task run daisy:build', { cwd: PROJECT, stdio: 'inherit' })
+      execSync('yarn task run ops:daisy:build', { cwd: PROJECT, stdio: 'inherit' })
     }
 
     function measure(): SIDECHAIN_PARITY_RESULT {
-      execSync('yarn task run daisy:sidechain:parity:render', {
+      execSync('yarn task run ops:daisy:sidechain:parity:render', {
         cwd: PROJECT,
         stdio: 'inherit',
       })
@@ -431,7 +432,7 @@ async function rundaisycalibratesidechainparity(
       if (!dryrun && best.result) {
         writeparams(best.params)
         builddaisy()
-        execSync('yarn task run daisy:sidechain:parity:test', {
+        execSync('yarn task run ops:daisy:sidechain:parity:test', {
           cwd: PROJECT,
           stdio: 'inherit',
         })
@@ -516,7 +517,7 @@ async function rundaisycalibratesynthenvparity(
     }
 
     function builddaisy() {
-      execSync('yarn task run daisy:build', {
+      execSync('yarn task run ops:daisy:build', {
         cwd: PROJECT,
         stdio: 'inherit',
         timeout: EXEC_BUILD_DAISY_TIMEOUT_MS,
@@ -528,7 +529,7 @@ async function rundaisycalibratesynthenvparity(
       err: number
       results: SYNTH_ENV_PARITY_RESULT[]
     } {
-      execSync('yarn task run daisy:synth-env:render', {
+      execSync('yarn task run ops:daisy:synth-env:render', {
         cwd: PROJECT,
         stdio: 'inherit',
         timeout: EXEC_RENDER_PARITY_TIMEOUT_MS,
@@ -610,7 +611,7 @@ async function rundaisycalibratesynthenvparity(
       if (!dryrun) {
         writeparams(best.params)
         builddaisy()
-        execSync('yarn task run daisy:synth-env:test', {
+        execSync('yarn task run ops:daisy:synth-env:test', {
           cwd: PROJECT,
           stdio: 'inherit',
           timeout: EXEC_GATE_TIMEOUT_MS,
@@ -628,7 +629,7 @@ async function rundaisycalibratesynthenvparity(
 }
 
 // --- regen-adsrenvcurve-tone-fixture.ts ---
-async function rundaisyregenadsrenvcurvetonefixture(
+export async function rundaisyregenadsrenvcurvetonefixture(
   ctx: TaskContext,
 ): Promise<number> {
   try {
@@ -690,7 +691,7 @@ async function rundaisyregenadsrenvcurvetonefixture(
 }
 
 // --- regen-daisy-drum-parity-fixtures.ts ---
-async function rundaisyregendaisydrumparityfixtures(
+export async function rundaisyregendaisydrumparityfixtures(
   ctx: TaskContext,
 ): Promise<number> {
   try {
@@ -798,7 +799,7 @@ async function rundaisyregendaisydrumparityfixtures(
 }
 
 // --- regen-env-adsr-parity-fixtures.ts ---
-async function rundaisyregenenvadsrparityfixtures(
+export async function rundaisyregenenvadsrparityfixtures(
   ctx: TaskContext,
 ): Promise<number> {
   try {
@@ -886,7 +887,7 @@ async function rundaisyregenenvadsrparityfixtures(
 }
 
 // --- regen-sos-voice-fixtures.ts ---
-async function rundaisyregensosvoicefixtures(
+export async function rundaisyregensosvoicefixtures(
   ctx: TaskContext,
 ): Promise<number> {
   try {
@@ -964,7 +965,7 @@ async function rundaisyregensosvoicefixtures(
 }
 
 // --- regen-synth-parity-fixtures.ts ---
-async function rundaisyregensynthparityfixtures(
+export async function rundaisyregensynthparityfixtures(
   ctx: TaskContext,
 ): Promise<number> {
   try {
@@ -1141,8 +1142,8 @@ async function rundaisyrundaisyregression(ctx: TaskContext): Promise<number> {
      * Not run in CI (see on-pr-check.yml). Use before merging native DSP changes.
      *
      * Usage:
-     *   yarn task run daisy:regression:test
-     *   yarn task run daisy:regression:test --skip-playwright
+     *   yarn task run ops:daisy:regression:test
+     *   yarn task run ops:daisy:regression:test --skip-playwright
      */
 
     const ROOT = ctx.root
@@ -1155,26 +1156,26 @@ async function rundaisyrundaisyregression(ctx: TaskContext): Promise<number> {
       'ops/tests/unit/feature/synth/backend/wasm/adsrenvcurve.test.ts',
     ]
 
-    const SOS_VOICE_GATE = 'yarn task run daisy:sos-voices:test'
+    const SOS_VOICE_GATE = 'yarn task run ops:daisy:sos-voices:test'
 
     const PLAYWRIGHT_FULL: { name: string; cmd: string }[] = [
       {
         name: 'pitch-stability',
-        cmd: 'yarn task run daisy:pitch-stability:test:full',
+        cmd: 'yarn task run ops:daisy:pitch-stability:test:full',
       },
       {
         name: 'play-drum-balance',
-        cmd: 'yarn task run daisy:play-drum-balance:test:full',
+        cmd: 'yarn task run ops:daisy:play-drum-balance:test:full',
       },
       {
         name: 'sidechain-parity',
-        cmd: 'yarn task run daisy:sidechain:parity:test:full',
+        cmd: 'yarn task run ops:daisy:sidechain:parity:test:full',
       },
       {
         name: 'synth-env-parity',
-        cmd: 'yarn task run daisy:synth-env:test:full',
+        cmd: 'yarn task run ops:daisy:synth-env:test:full',
       },
-      { name: 'notepop', cmd: 'yarn task run daisy:notepop:test:full' },
+      { name: 'notepop', cmd: 'yarn task run ops:daisy:notepop:test:full' },
     ]
 
     type STEPREPORT = { name: string; pass: boolean; detail?: string }
@@ -1236,7 +1237,7 @@ async function rundaisyrundaisyregression(ctx: TaskContext): Promise<number> {
       reports.push(
         runstep(
           'adsr-parity',
-          'yarn task run daisy:adsr-parity:test',
+          'yarn task run ops:daisy:adsr-parity:test',
           PARITY_RENDER_SCRIPT_TIMEOUT_MS,
         ),
       )
@@ -2104,7 +2105,7 @@ async function rundaisyrunnotepoprender(ctx: TaskContext): Promise<number> {
      *   ops/fixtures/renders/notepop-qcxdxexfx.wav (default)
      *   ops/fixtures/renders/notepop-qcxdxexfx-comp-on.* / -comp-off.* (--ab)
      *
-     * Browser preview (yarn app:dev):
+     * Browser preview (yarn task cafe dev):
      *   yarn notepop-song:render
      */
 
@@ -3038,7 +3039,7 @@ async function rundaisyrunsidechainrender(ctx: TaskContext): Promise<number> {
      *   ops/fixtures/renders/duck-bg-stab.wav (default, sidechain ON)
      *   ops/fixtures/renders/duck-bg-stab-sc-on.* / -sc-off.* (--ab)
      *
-     * Browser preview (yarn app:dev):
+     * Browser preview (yarn task cafe dev):
      *   yarn sidechain-song:render
      */
 
@@ -3915,94 +3916,73 @@ async function rundaisyrunvoiceisolationrender(
   }
 }
 
-export const DAISY_TASKS: TaskDef[] = [
-  def('daisy:build', {
+export const OPS_DAISY_TASKS: TaskDef[] = [
+  def('ops:daisy:build', {
     description: 'Build Daisy WASM native synth',
     run: shell('sh zss/feature/synth/backend/daisy/native/build-daisy.sh'),
   }),
-  def('daisy:bundle:processor', {
+  def('ops:daisy:bundle:processor', {
     description: 'Bundle daisy audio worklet processor',
     run: handler(rundaisybundledaisyprocessor),
   }),
-  def('daisy:lint', {
+  def('ops:daisy:lint', {
     description: 'clang-format check on daisy C++',
     run: handler((ctx) => runclangformat(ctx, 'check', 'daisy')),
   }),
-  def('daisy:lint:fix', {
+  def('ops:daisy:lint:fix', {
     description: 'Apply clang-format to daisy C++',
     run: handler((ctx) => runclangformat(ctx, 'fix', 'daisy')),
   }),
-  def('daisy:bench:synth', {
+  def('ops:daisy:bench:synth', {
     description: 'Daisy synth micro-benchmark',
     env: { ZSS_DAISY_BENCH: '1' },
     run: exec(['npx', 'tsx', 'ops/lib/daisy-parity/daisyperfbench.ts']),
   }),
-  def('daisy:regression:test', {
+  def('ops:daisy:regression:test', {
     description: 'Jest + critical Playwright parity gates',
     tags: ['slow'],
     run: handler(rundaisyrundaisyregression),
   }),
-  def('daisy:adsr-parity:test', {
+  def('ops:daisy:adsr-parity:test', {
     description: 'Short amsaw ADSR Jest + env parity',
-    deps: ['daisy:adsr-parity:jest', 'daisy:env-parity:test'],
+    deps: ['ops:daisy:adsr-parity:jest', 'ops:daisy:env-parity:test'],
     run: { kind: 'tasks' },
   }),
-  def('daisy:adsr-parity:jest', {
+  def('ops:daisy:adsr-parity:jest', {
     description: 'Jest adsrenvcurve tests (internal)',
     run: jestexec(
       'ops/tests/unit/feature/synth/backend/wasm/adsrenvcurve.test.ts',
     ),
   }),
-  def('daisy:env-parity:test', {
+  def('ops:daisy:env-parity:test', {
     description: 'Offline env ADSR parity render + gates',
     run: handler(rundaisyrunenvparity),
   }),
-  def('daisy:fx-bus-metrics:test', {
+  def('ops:daisy:fx-bus-metrics:test', {
     description: 'FX bus metrics offline test',
     run: handler(rundaisyrunfxbusmetrics),
   }),
-  def('daisy:fixtures:regen:drums', {
-    description: 'Regenerate daisy drum parity fixtures',
-    run: handler(rundaisyregendaisydrumparityfixtures),
-  }),
-  def('daisy:fixtures:regen:tone', {
-    description: 'Regenerate synth parity fixtures (tone backend)',
-    run: handler((ctx) =>
-      rundaisyregensynthparityfixtures({
-        ...ctx,
-        args: ['--tone', ...ctx.args],
-      }),
-    ),
-  }),
-  def('daisy:fixtures:regen:adsrenvcurve:tone', {
-    description: 'Regenerate adsrenvcurve tone metrics fixture',
-    run: handler(rundaisyregenadsrenvcurvetonefixture),
-  }),
-  def('daisy:fixtures:regen:env-adsr:tone', {
-    description: 'Regenerate env ADSR tone parity metrics fixture',
-    run: handler(rundaisyregenenvadsrparityfixtures),
-  }),
-  def('daisy:level-issue:song-compare:test', {
+  def('ops:daisy:level-issue:song-compare:test', {
     description: 'Compare offline song renders (wasm vs tone)',
     run: handler(rundaisyrunlevelissuesongcompare),
   }),
-  def('daisy:level-issue:song:render', {
+  def('ops:daisy:level-issue:song:render', {
     description: 'Offline song render (wasm)',
     run: handler(rundaisyrunsongofflinerender),
   }),
-  def('daisy:level-issue:song:render:tone', {
+  def('ops:daisy:level-issue:song:render:tone', {
     description: 'Offline song render (tone)',
     run: handler(rundaisyrunsongofflinerendertone),
   }),
-  def('daisy:level-issue:voices:render', {
+  def('ops:daisy:level-issue:voices:render', {
     description: 'Voice isolation offline render',
     run: handler(rundaisyrunvoiceisolationrender),
   }),
-  def('daisy:level-stability:test', {
+  def('ops:daisy:level-stability:test', {
     description: 'Level stability offline matrix',
     run: handler(rundaisyrunlevelstability),
   }),
-  def('daisy:level-stability:test:fxmatrix', {
+  def('ops:daisy:level-stability:test:fxmatrix', {
     description: 'Level stability FX matrix filter',
     run: handler((ctx) =>
       rundaisyrunlevelstability({
@@ -4011,30 +3991,30 @@ export const DAISY_TASKS: TaskDef[] = [
       }),
     ),
   }),
-  def('daisy:pitch-stability:render', {
+  def('ops:daisy:pitch-stability:render', {
     description: 'Pitch stability offline render',
     run: handler(rundaisyrunpitchstability),
   }),
-  def('daisy:pitch-stability:test', {
+  def('ops:daisy:pitch-stability:test', {
     description: 'Pitch stability gates',
     run: handler(rundaisyrunpitchstabilitygates),
   }),
   parityfull('pitch-stability'),
-  def('daisy:play-drum-balance:calibrate', {
+  def('ops:daisy:play-drum-balance:calibrate', {
     description: 'Calibrate play vs drum balance (slow, dev-only)',
     tags: ['calibrate', 'slow'],
     run: handler(rundaisycalibrateplaydrumbalance),
   }),
-  def('daisy:play-drum-balance:render', {
+  def('ops:daisy:play-drum-balance:render', {
     description: 'Play vs drum balance offline render',
     run: handler(rundaisyrunplaydrumbalancerender),
   }),
-  def('daisy:play-drum-balance:test', {
+  def('ops:daisy:play-drum-balance:test', {
     description: 'Play vs drum balance gates',
     run: handler(rundaisyrunplaydrumbalancegates),
   }),
   parityfull('play-drum-balance'),
-  def('daisy:play-drum:loop', {
+  def('ops:daisy:play-drum:loop', {
     description: 'Watch native + play-drum parity loop',
     run: exec([
       'npx',
@@ -4044,21 +4024,21 @@ export const DAISY_TASKS: TaskDef[] = [
       'play-drum',
     ]),
   }),
-  def('daisy:sidechain:parity:calibrate', {
+  def('ops:daisy:sidechain:parity:calibrate', {
     description: 'Calibrate sidechain parity (slow, dev-only)',
     tags: ['calibrate', 'slow'],
     run: handler(rundaisycalibratesidechainparity),
   }),
-  def('daisy:sidechain:parity:render', {
+  def('ops:daisy:sidechain:parity:render', {
     description: 'Sidechain parity offline render',
     run: handler(rundaisyrunsidechainparity),
   }),
-  def('daisy:sidechain:parity:test', {
+  def('ops:daisy:sidechain:parity:test', {
     description: 'Sidechain parity gates',
     run: handler(rundaisyrunsidechainparitygates),
   }),
   parityfull('sidechain:parity'),
-  def('daisy:sidechain:loop', {
+  def('ops:daisy:sidechain:loop', {
     description: 'Watch native + sidechain parity loop',
     run: exec([
       'npx',
@@ -4068,45 +4048,41 @@ export const DAISY_TASKS: TaskDef[] = [
       'sidechain',
     ]),
   }),
-  def('daisy:sidechain:render', {
+  def('ops:daisy:sidechain:render', {
     description: 'Sidechain demo offline render',
     run: handler(rundaisyrunsidechainrender),
   }),
-  def('daisy:sidechain:render:ab', {
+  def('ops:daisy:sidechain:render:ab', {
     description: 'Sidechain demo A/B offline render',
     run: handler((ctx) =>
       rundaisyrunsidechainrender({ ...ctx, args: ['--ab', ...ctx.args] }),
     ),
   }),
-  def('daisy:sos-voice:fixtures:regen', {
-    description: 'Regenerate SOS voice parity fixtures',
-    run: handler(rundaisyregensosvoicefixtures),
-  }),
-  def('daisy:sos-voices:test', {
+  def('ops:daisy:sos-voices:test', {
     description: 'SOS voice parity gates',
     run: handler(rundaisyrunsosvoicegates),
   }),
   tasksonly(
-    'daisy:sos-voices:test:full',
+    'ops:daisy:sos-voices:test:full',
     'Regenerate SOS voice fixtures and run gates',
-    ['daisy:build', 'daisy:sos-voice:fixtures:regen', 'daisy:sos-voices:test'],
+    ['ops:daisy:build', 'ops:fixtures:synth:regen:sos-voice', 'ops:daisy:sos-voices:test'],
     { tags: ['slow'] },
   ),
-  def('daisy:synth-env:calibrate', {
+  def('ops:daisy:synth-env:calibrate', {
     description: 'Calibrate synth env parity (slow, dev-only)',
     tags: ['calibrate', 'slow'],
     run: handler(rundaisycalibratesynthenvparity),
   }),
-  def('daisy:synth-env:render', {
+  def('ops:daisy:synth-env:render', {
     description: 'Synth env parity offline render',
     run: handler(rundaisyrunsynthenvparity),
   }),
-  def('daisy:synth-env:test', {
+  def('ops:daisy:synth-env:test', {
     description: 'Synth env parity gates',
     run: handler(rundaisyrunsynthenvparitygates),
   }),
   parityfull('synth-env'),
-  def('daisy:synth-env:loop', {
+  def('ops:daisy:synth-env:loop', {
     description: 'Watch native + synth-env parity loop',
     run: exec([
       'npx',
@@ -4116,7 +4092,7 @@ export const DAISY_TASKS: TaskDef[] = [
       'synth-env',
     ]),
   }),
-  def('daisy:notepop:loop', {
+  def('ops:daisy:notepop:loop', {
     description: 'Watch native + notepop parity loop',
     run: exec([
       'npx',
@@ -4126,19 +4102,19 @@ export const DAISY_TASKS: TaskDef[] = [
       'notepop',
     ]),
   }),
-  def('daisy:notepop:render', {
+  def('ops:daisy:notepop:render', {
     description: 'Notepop offline render',
     run: handler(rundaisyrunnotepoprender),
   }),
-  def('daisy:notepop:render:ab', {
+  def('ops:daisy:notepop:render:ab', {
     description: 'Notepop A/B offline render',
     run: handler((ctx) =>
       rundaisyrunnotepoprender({ ...ctx, args: ['--ab', ...ctx.args] }),
     ),
   }),
-  def('daisy:notepop:test', {
+  def('ops:daisy:notepop:test', {
     description: 'Notepop parity gates',
     run: handler(rundaisyrunnotepopgates),
   }),
-  parityfull('notepop', { render: 'daisy:notepop:render:ab' }),
+  parityfull('notepop', { render: 'ops:daisy:notepop:render:ab' }),
 ]

@@ -5,8 +5,8 @@ import { inflateSync } from 'node:zlib'
 
 import { requiretaskenv, spawntask, taskenv } from 'tasks/shellutil'
 
-import { def, exec, handler, shell, tasksonly } from '../helpers'
-import type { TaskContext, TaskDef } from '../types'
+import { def, exec, handler, shell, tasksonly } from '../../helpers'
+import type { TaskContext, TaskDef } from '../../types'
 
 function runvmzssdocker(ctx: TaskContext): number {
   const e = taskenv(ctx)
@@ -98,7 +98,7 @@ function rundigitaloceandocker(ctx: TaskContext): number {
 
 function rundockerrunhelp(): number {
   console.log(
-    'deploy:docker:run — published image (ellium12/zed-software-system)',
+    'ops:deploy:docker:run — published image (ellium12/zed-software-system)',
   )
   console.log('')
   console.log('This runs the equivalent of:')
@@ -895,48 +895,48 @@ function rungcpvmdocker(ctx: TaskContext): number {
   return 0
 }
 
-export const DEPLOY_TASKS: TaskDef[] = [
-  def('deploy:aws-ec2:docker-run', {
+export const OPS_DEPLOY_TASKS: TaskDef[] = [
+  def('ops:deploy:aws-ec2:docker-run', {
     description: 'Run zss on AWS EC2 via Docker',
     tags: ['deploy'],
     run: handler(runawsec2docker),
   }),
-  def('deploy:cloudflare:brick', {
+  def('ops:deploy:cloudflare:brick', {
     description: 'Deploy brick worker to Cloudflare',
     tags: ['deploy'],
     run: exec(['wrangler', 'deploy', '-c', 'ops/infra/wrangler-brick.toml']),
   }),
-  def('deploy:cloudflare:bytes', {
+  def('ops:deploy:cloudflare:bytes', {
     description: 'Deploy bytes worker to Cloudflare',
     tags: ['deploy'],
     run: exec(['wrangler', 'deploy', '-c', 'ops/infra/wrangler-bytes.toml']),
   }),
-  def('deploy:cloudflare:terminal', {
+  def('ops:deploy:cloudflare:terminal', {
     description: 'Deploy terminal worker to Cloudflare',
     tags: ['deploy'],
     run: exec(['wrangler', 'deploy', '-c', 'ops/infra/wrangler-terminal.toml']),
   }),
-  def('zns:vga:sync', {
+  def('ops:zns:vga:sync', {
     description:
       'Generate embedded VGA font module for ZNS worker (ops/infra/generated/zns-vga-font.js)',
     tags: ['deploy'],
     group: 'deploy',
     run: handler(runznsvgasync),
   }),
-  def('deploy:cloudflare:zns', {
+  def('ops:deploy:cloudflare:zns', {
     description: 'Deploy zns worker to Cloudflare',
     tags: ['deploy'],
-    deps: ['zns:vga:sync'],
+    deps: ['ops:zns:vga:sync'],
     run: exec(['wrangler', 'deploy', '-c', 'ops/infra/wrangler-zns.toml']),
   }),
-  def('deploy:cloudflare:zns:verify', {
+  def('ops:deploy:cloudflare:zns:verify', {
     description:
       'Deploy zns worker then verify production tenant DNS and HTTPS',
     tags: ['deploy'],
-    deps: ['deploy:cloudflare:zns'],
+    deps: ['ops:deploy:cloudflare:zns'],
     run: handler(runznstenantverify),
   }),
-  def('zns:tenant:dns:check', {
+  def('ops:zns:tenant:dns:check', {
     description:
       'DNS check for *.at.zed.cafe tenant wildcards in production (dig only)',
     tags: ['deploy', 'ci'],
@@ -945,14 +945,14 @@ export const DEPLOY_TASKS: TaskDef[] = [
       runznstenantverify({ ...ctx, args: ['--dns-only', ...ctx.args] }),
     ),
   }),
-  def('zns:tenant:verify', {
+  def('ops:zns:tenant:verify', {
     description:
       'Full production verify: tenant DNS + HTTPS apex, index, and scroll',
     tags: ['deploy', 'ci'],
     group: 'deploy',
     run: handler(runznstenantverify),
   }),
-  def('zns:tenant:smoke', {
+  def('ops:zns:tenant:smoke', {
     description:
       'HTTPS smoke test docs.at.zed.cafe/ tenant index (subset of zns:tenant:verify)',
     tags: ['deploy'],
@@ -961,35 +961,35 @@ export const DEPLOY_TASKS: TaskDef[] = [
       'code=$(curl -fsS -o /dev/null -w "%{http_code}" https://docs.at.zed.cafe/) && test "$code" = "200"',
     ),
   }),
-  def('zns:email:preview', {
+  def('ops:zns:email:preview', {
     description:
       'Write ZNS login email preview PNG + HTML + assert tenant VGA palette parity (ops/infra/generated/zns-email-preview.{png,html})',
     tags: ['dev', 'ci'],
     group: 'deploy',
-    deps: ['zns:vga:sync'],
+    deps: ['ops:zns:vga:sync'],
     run: handler(runznsemailpreview),
   }),
-  def('zns:grid:preview', {
+  def('ops:zns:grid:preview', {
     description:
       'Write CP437 0–255 VGA calibration HTML + assert web-safe glyph mapping (ops/infra/generated/zns-grid-preview.html)',
     tags: ['dev', 'ci'],
     group: 'deploy',
-    deps: ['zns:vga:sync'],
+    deps: ['ops:zns:vga:sync'],
     run: handler(runznsgridpreview),
   }),
-  def('zns:scroll:preview', {
+  def('ops:zns:scroll:preview', {
     description:
       'Write scroll tape HTML preview + assert cliscroll/helptext rendering (ops/infra/generated/zns-scroll-preview.html)',
     tags: ['dev', 'ci'],
     group: 'deploy',
     run: handler(runznsscrollpreview),
   }),
-  def('zns:landing:dev', {
+  def('ops:zns:landing:dev', {
     description:
       'Local ZNS worker dev server — apex landing at http://127.0.0.1:8787/',
     tags: ['dev'],
     group: 'deploy',
-    deps: ['zns:vga:sync'],
+    deps: ['ops:zns:vga:sync'],
     run: exec([
       'wrangler',
       'dev',
@@ -1002,78 +1002,78 @@ export const DEPLOY_TASKS: TaskDef[] = [
       '8787',
     ]),
   }),
-  def('deploy:docker:build:image', {
+  def('ops:deploy:docker:build:image', {
     description: 'Docker build zss:local (internal)',
     run: shell(
       'docker build --no-cache -f ops/deploy/Dockerfile -t zss:local .',
     ),
   }),
   tasksonly(
-    'deploy:docker:build',
+    'ops:deploy:docker:build',
     'Build linux CLI and local Docker image',
-    ['cli:build:linux', 'deploy:docker:build:image'],
+    ['headless:build:linux', 'ops:deploy:docker:build:image'],
     {
       tags: ['deploy'],
     },
   ),
-  def('deploy:docker:run', {
+  def('ops:deploy:docker:run', {
     description: 'Run local Docker container',
     tags: ['deploy'],
     run: handler(rundockerrunhelp),
   }),
-  def('deploy:docker:shell:exec', {
+  def('ops:deploy:docker:shell:exec', {
     description: 'Docker run interactive shell (internal)',
     run: shell('docker run --rm -it --init zss:local ./start.sh'),
   }),
   tasksonly(
-    'deploy:docker:shell',
+    'ops:deploy:docker:shell',
     'Build and open shell in local Docker image',
-    ['deploy:docker:build', 'deploy:docker:shell:exec'],
+    ['ops:deploy:docker:build', 'ops:deploy:docker:shell:exec'],
     {
       tags: ['deploy'],
     },
   ),
-  def('deploy:droplet:docker-run', {
+  def('ops:deploy:droplet:docker-run', {
     description: 'Run zss on DigitalOcean droplet via Docker',
     tags: ['deploy'],
     run: handler(rundigitaloceandocker),
   }),
-  def('deploy:gcp-cloudrun:run', {
+  def('ops:deploy:gcp-cloudrun:run', {
     description: 'Deploy zss to GCP Cloud Run',
     tags: ['deploy'],
     run: handler(rungcpdeploycloudrun),
   }),
-  def('deploy:gcp-vm:create', {
+  def('ops:deploy:gcp-vm:create', {
     description: 'Create GCP VM for zss',
     tags: ['deploy'],
     run: handler(rungcpvmcreate),
   }),
-  def('deploy:gcp-vm:docker-run', {
+  def('ops:deploy:gcp-vm:docker-run', {
     description: 'Run zss Docker on GCP VM',
     tags: ['deploy'],
     run: handler(rungcpvmdocker),
   }),
-  def('deploy:gcp-vm:firewall', {
+  def('ops:deploy:gcp-vm:firewall', {
     description: 'Configure GCP VM firewall rules',
     tags: ['deploy'],
     run: handler(rungcpvmfirewall),
   }),
-  def('deploy:gcp:artifact-repo', {
+  def('ops:deploy:gcp:artifact-repo', {
     description: 'Create GCP artifact registry repo',
     tags: ['deploy'],
     run: handler(rungcpartifactrepo),
   }),
-  def('deploy:gcp:enable-apis', {
+  def('ops:deploy:gcp:enable-apis', {
     description: 'Enable required GCP APIs',
     tags: ['deploy'],
     run: handler(rungcpenableapis),
   }),
-  def('deploy:gcp:push', {
+  def('ops:deploy:gcp:push', {
     description: 'Push zss image to GCP artifact registry',
     tags: ['deploy'],
     run: handler(rungcppush),
   }),
-  def('deploy:vm:docker-run', {
+  def('ops:deploy:vm:docker-run', {
     description: 'Run zss Docker on generic VM',
     tags: ['deploy'],
     run: handler(runvmzssdocker),

@@ -15,8 +15,8 @@ Do **not** expand CI surface area. The repo already has lint, Jest, and a fixed 
 
 ## Allowed
 
-- **Lint** — fix or extend existing ESLint / clang-format / `app:lint` / `native:lint` configs and call sites.
-- **Jest** — add or fix tests under existing Jest setup; run via existing `app:test` (or equivalent already-wired task).
+- **Lint** — fix or extend existing ESLint / clang-format / `ops:lint` / `ops:native:lint` configs and call sites.
+- **Jest** — add or fix tests under existing Jest setup; run via existing `ops:test` (or equivalent already-wired task).
 - **In-place fixes** — repair existing workflow steps or task handlers without adding new task ids, jobs, or tools.
 
 ## When CI coverage is needed
@@ -33,8 +33,8 @@ Do **not** expand CI surface area. The repo already has lint, Jest, and a fixed 
 ❌ BAD — husky pre-commit hook running eslint
 ❌ BAD — codecov or third-party coverage upload action
 
-✅ GOOD — new spec file run by existing app:test
-✅ GOOD — eslint rule or fix in existing app:lint path
+✅ GOOD — new spec file run by existing ops:test
+✅ GOOD — eslint rule or fix in existing ops:lint path
 ✅ GOOD — fix a broken step in on-pr-check.yml without adding jobs
 ```
 

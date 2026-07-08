@@ -15,7 +15,7 @@ import {
   WANIX_PUBLIC_FIXTURES_DIR,
 } from 'ops/lib/fixturepaths'
 
-const WASM_SOURCES = ['hello', 'greet', 'alpha', 'beta'] as const
+const WASM_SOURCES = ['hello', 'greet', 'alpha', 'beta', 'termbridge'] as const
 
 function requirecommand(name: string): string {
   try {

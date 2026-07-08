@@ -4,8 +4,10 @@ import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { isDeepStrictEqual } from 'node:util'
 
-import { def, exec, handler, jestexec, shell } from '../helpers'
-import type { TaskContext, TaskDef } from '../types'
+import { CAFE_PUBLIC_MEMORY_DIR } from 'ops/lib/cafepublicpaths'
+
+import { def, exec, handler, jestexec, shell } from '../../../helpers'
+import type { TaskContext, TaskDef } from '../../../types'
 
 const MEMORYDIR = 'zss/memory/wasm'
 const FIXTUREDIR = 'ops/fixtures/memory/wasm'
@@ -47,14 +49,14 @@ function runnative(root: string) {
 
 async function runwasm(root: string) {
   const memorydir = path.join(root, MEMORYDIR)
-  const wasmdir = path.join(root, 'cafe/public/wasm/memory')
+  const wasmdir = CAFE_PUBLIC_MEMORY_DIR
   const fixturedir = path.join(root, FIXTUREDIR)
   const build = spawnSync('sh', [path.join(memorydir, 'build-memory.sh')], {
     stdio: 'inherit',
     cwd: root,
   })
   if (build.status !== 0) {
-    throw new Error('memory:build failed')
+    throw new Error('ops:fixtures:memory:build failed')
   }
   const jsurl = pathToFileURL(path.join(wasmdir, 'zss_memory.js')).href
   const create = (await import(jsurl)).default
@@ -201,7 +203,7 @@ function runmemoryparitycoverage(ctx: TaskContext): number {
   const root = ctx.root
   const fixturedir = path.join(root, FIXTUREDIR)
   if (!existsSync(fixturedir)) {
-    console.error('fixture dir missing; run yarn memory:parity:regen first')
+    console.error('fixture dir missing; run yarn task run ops:fixtures:memory:parity:regen first')
     return 1
   }
 
@@ -263,22 +265,22 @@ function runmemoryparitycoverage(ctx: TaskContext): number {
   return 0
 }
 
-export const MEMORY_TASKS: TaskDef[] = [
-  def('memory:build', {
+export const OPS_FIXTURES_MEMORY_TASKS: TaskDef[] = [
+  def('ops:fixtures:memory:build', {
     description: 'Build memory WASM via emscripten',
     run: shell('sh zss/memory/wasm/build-memory.sh'),
   }),
-  def('memory:parity:test', {
+  def('ops:fixtures:memory:parity:test', {
     description: 'Memory wasm parity test suite',
     run: handler(runmemoryparity),
   }),
-  def('memory:test:native', {
+  def('ops:fixtures:memory:test:native', {
     description: 'Memory parity native-only run',
     run: handler((ctx) =>
       runmemoryparity({ ...ctx, args: ['--native-only', ...ctx.args] }),
     ),
   }),
-  def('memory:parity:regen', {
+  def('ops:fixtures:memory:parity:regen', {
     description: 'Regenerate memory parity fixtures',
     env: { REGEN_MEMORY_FIXTURES: '1' },
     run: jestexec('ops/tests/unit/memory/wasm/regenfixtures.test.ts', [
@@ -286,7 +288,7 @@ export const MEMORY_TASKS: TaskDef[] = [
       '--no-coverage',
     ]),
   }),
-  def('memory:parity:check-coverage', {
+  def('ops:fixtures:memory:parity:check-coverage', {
     description: 'Check memory parity fixture coverage',
     run: handler(runmemoryparitycoverage),
   }),

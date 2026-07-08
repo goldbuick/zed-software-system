@@ -20,13 +20,9 @@ C++ ZSS script compiler under `backend/wasm/`.
 
 ## Build
 
-From repo root:
+From repo root, compile the lang WASM module with Emscripten (same toolchain as other native WASM targets), or use the parity harness below for C++ regression without Emscripten.
 
-```bash
-yarn lang:build
-```
-
-Output: `cafe/public/wasm/lang/zss_lang.{js,wasm}`
+Output: `cafe/public/lang/zss_lang.{js,wasm}`
 
 Parity harness (no Emscripten):
 

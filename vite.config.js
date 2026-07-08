@@ -113,7 +113,7 @@ function servefixturesdev() {
             server.middlewares.use(fixtureprefixmiddleware('/ops/lib', path.join(root, 'ops/lib')));
             server.middlewares.use(fixtureprefixmiddleware('/ops/archive', path.join(root, 'ops/archive')));
             server.middlewares.use(fixtureprefixmiddleware('/ops/fixtures', path.join(root, 'ops/fixtures')));
-            server.middlewares.use(fixtureprefixmiddleware('/wasm/archive/maximilian', path.join(root, 'ops/archive/wasm/maximilian')));
+            server.middlewares.use(fixtureprefixmiddleware('/archive/maximilian', path.join(root, 'ops/archive/wasm/maximilian')));
         },
     };
 }

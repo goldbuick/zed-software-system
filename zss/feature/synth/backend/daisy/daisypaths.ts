@@ -1,6 +1,6 @@
 import { DAISY_BUILD_ID } from './daisybuildid'
 
-export const DAISY_WASM_BASE = '/wasm/daisy'
+export const DAISY_WASM_BASE = '/daisy'
 
 export function daisyasseturl(filename: string): string {
   const base = DAISY_WASM_BASE.replace(/\/$/, '')

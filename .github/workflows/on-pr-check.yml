@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        task: ['app:lint', 'app:test', 'native:lint']
+        task: ['ops:lint', 'ops:test', 'ops:native:lint']
     steps:
       - name: checkout
         uses: actions/checkout@v5
@@ -27,7 +27,7 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: install clang-format
-        if: matrix.task == 'native:lint'
+        if: matrix.task == 'ops:native:lint'
         run: sudo apt-get update && sudo apt-get install -y clang-format-18
 
       - name: run ${{ matrix.task }}
@@ -56,13 +56,13 @@ jobs:
         run: yarn task docs --check
 
       - name: check doc links
-        run: yarn task run docs:check-links
+        run: yarn task run ops:docs:check-links
 
       - name: lang regression
-        run: yarn task run lang:regression:test
+        run: yarn task run ops:fixtures:lang:regression:test
 
       - name: content book build and validate
         run: |
-          yarn task run content:book:build ops/fixtures/content/templates/minimal
-          yarn task run content:book:validate ops/fixtures/content/dist/minimal.book.json
-          yarn task run content:book:test
+          yarn task run ops:fixtures:content:book:build ops/fixtures/content/templates/minimal
+          yarn task run ops:fixtures:content:book:validate ops/fixtures/content/dist/minimal.book.json
+          yarn task run ops:fixtures:content:book:test

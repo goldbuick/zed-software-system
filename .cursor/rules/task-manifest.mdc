@@ -16,7 +16,7 @@ yarn task run <task-id>
 yarn task explain <task-id>
 yarn task docs              # regenerate ops/docs/tasks.md
 yarn task docs --check      # CI: fail if docs drift
-yarn task app dev           # nested shorthand for run app:dev
+yarn task cafe dev           # nested shorthand for run cafe:dev
 ```
 
 `package.json` scripts: `postinstall` and `task` only.
@@ -27,17 +27,17 @@ yarn task app dev           # nested shorthand for run app:dev
 
 | Subject | Example |
 |---------|---------|
-| `app` | `app:dev`, `app:lint`, `app:vite:dev` |
-| `daisy` | `daisy:build`, `daisy:notepop:test:full` |
-| `lang` | `lang:build`, `lang:parity:test` |
-| `deploy` | `deploy:docker:build` |
-| `ci` | `ci:pages:copy-404` |
+| `cafe` | `cafe:dev`, `cafe:build`, `cafe:vite:dev` |
+| `headless` | `headless:build`, `headless:server:dev` |
+| `ops` | `ops:lint`, `ops:daisy:build`, `ops:fixtures:lang:regression:test`, `ops:deploy:docker:build` |
 
 ## Layout (canonical)
 
 | Path | Role |
 |------|------|
-| `tasks/groups/<subject>.ts` | `TaskDef` registry + `handler()` implementations |
+| `tasks/groups/cafe.ts` | Vite browser app tasks |
+| `tasks/groups/headless.ts` | oclif CLI build/pack + server dev |
+| `tasks/groups/ops/` | Fixtures, Jest, parity, infra, deploy (`ops/fixtures/*` mirrors `ops/fixtures/`) |
 | `tasks/lib/` | Task-runner infrastructure (parity, Playwright, argv, lazy loaders) |
 | `tasks/shellutil.ts` | Spawn, env merge, Jest, `checkrg` |
 | `tasks/registry.ts` | Imports **groups only** |
@@ -59,13 +59,13 @@ yarn task app dev           # nested shorthand for run app:dev
 - **`handler(async (ctx) => { const x = await import('…') })`** inside the handler
 - **Lazy loaders** in `tasks/lib/` when many handlers share the same dynamic imports:
   - `loaddaisyparityruntime()` — [`tasks/lib/daisy/parity-runtime.ts`](../../tasks/lib/daisy/parity-runtime.ts)
-  - `loadscreenshotdeps()` — inline in `content.ts` (screenshot-only)
+  - `loadscreenshotdeps()` — inline in `ops/fixtures/zzt.ts` (screenshot-only)
 
 After editing any group file, run **`yarn task list`** — cheapest integration test for registry safety.
 
 ## Adding a task
 
-1. Add a `TaskDef` in `tasks/groups/<subject>.ts` (use `def()` / `tasksonly()` from `tasks/helpers.ts`).
+1. Add a `TaskDef` in `tasks/groups/<subject>.ts` or `tasks/groups/ops/<area>.ts` (use `def()` / `tasksonly()` from `tasks/helpers.ts`).
 2. Implement leaf tasks as `handler()` functions in the same file — do not add `scripts/` entrypoints.
 3. Extract repeated glue to `tasks/lib/` (infrastructure) or `ops/lib/` (domain shared with tests).
 4. Composite pipelines: `tasks/pipelines.ts` (`parityfull`, etc.).

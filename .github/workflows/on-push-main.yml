@@ -23,9 +23,9 @@ jobs:
       - name: setup and build
         run: |
           yarn
-          yarn task run app:build
-          yarn task run ci:pages:copy-404
-          yarn task run ci:pages:copy-cname
+          yarn task run cafe:build
+          yarn task run ops:ci:pages:copy-404
+          yarn task run ops:ci:pages:copy-cname
 
       - name: Push
         uses: s0/git-publish-subdir-action@develop

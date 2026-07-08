@@ -10,7 +10,7 @@ Do not import from active code. This tree is kept for reference during the Maxim
 - Generated play-code strings: `*playcode.ts`, `voiceplaycode.ts`, `drumplaycode.ts`
 - Adapter: `wasmsynthadapter.ts`
 - Offline render / parity / bench: `wasmofflinerender.ts`, `wasmparityrender.ts`, `wasmperfbench.ts`
-- Vendored runtime assets: `cafe/public/wasm/archive/maximilian/`
+- Vendored runtime assets: `ops/archive/wasm/maximilian/`
 
 ## Active replacements
 

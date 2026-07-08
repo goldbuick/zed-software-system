@@ -29,6 +29,10 @@ import {
   WANIX_ZEDCAFE_WASM_RAMFS,
   WANIX_ZEDCAFE_WASM_URL,
 } from 'zss/feature/wanix/wanixzedcafeconstants'
+import {
+  WANIX_TERM_BRIDGE_PONG,
+  trackwanixtermlinebuf,
+} from 'zss/feature/wanix/wanixtermbridgesmoke'
 
 import {
   bootzedcafegojs,
@@ -43,7 +47,7 @@ import {
   setzedcafereadylocal,
   synczedcafestate,
   waitzedcafereadyrpc,
-} from './wanixzedcafe'
+} from 'zss/feature/wanix/wanixzedcafehost'
 
 type WanixSessionKind = 'vm' | 'task'
 type WanixSessionEvent = 'open' | 'active' | 'close'
@@ -59,7 +63,7 @@ const DEFAULT_VM_MEM = '512M'
 // syscall/js runtime corrupts under load (upstream tractordev/wanix#171),
 // crashing the guest during heavy terminal I/O. Point <wanix-system> at a
 // full-Go build served from cafe/public so the loader uses the stable Go glue.
-const WANIX_WASM_URL = '/wasm/wanix/wanix.wasm'
+const WANIX_WASM_URL = '/wanix/wanix.wasm'
 const ROOM_READY_TIMEOUT_MS = 180_000
 const BIND_MOUNT_TIMEOUT_MS = 120_000
 const VM_RID_WAIT_MS = 120_000
@@ -103,6 +107,7 @@ const termsessions = new Map<string, TermSession>()
 const sessionconnectorder: string[] = []
 const termencoder = new TextEncoder()
 const termdecoder = new TextDecoder()
+const termlinebufs = new Map<string, string>()
 
 let activesessionkey: string | null = null
 
@@ -354,6 +359,28 @@ function fitalltermsessions(cols: number, rows: number) {
   }
 }
 
+function maybeapplytermbridgesmokereply(
+  sessionkey: string,
+  session: TermSession,
+  text: string,
+) {
+  if (readsessionsessionkind(sessionkey) === 'vm') {
+    return
+  }
+  const prev = termlinebufs.get(sessionkey) ?? ''
+  const { nextbuf, pong } = trackwanixtermlinebuf(prev, text)
+  termlinebufs.set(sessionkey, nextbuf)
+  if (!pong || !session.grid) {
+    return
+  }
+  wanixtermgridwritebytes(
+    session.grid,
+    termencoder.encode(WANIX_TERM_BRIDGE_PONG),
+    termdecoder,
+  )
+  postcells(sessionkey, session)
+}
+
 function disconnecttermsession(
   sessionkey: string,
   opts?: { notifyclose?: boolean },
@@ -365,6 +392,7 @@ function disconnecttermsession(
   const wasalive = session.alive
   session.disconnect()
   termsessions.delete(sessionkey)
+  termlinebufs.delete(sessionkey)
   if (opts?.notifyclose && wasalive) {
     notifytermsessionclose(sessionkey)
   } else {
@@ -895,10 +923,16 @@ async function handlerrpc(
       }
       case 'termwrite': {
         const [linedata, sessionkey] = args as [string?, string?]
-        const session = readtermsession(
-          sessionkey != null ? String(sessionkey) : undefined,
-        )
-        await session.write(String(linedata ?? ''))
+        const key =
+          sessionkey != null && sessionkey !== ''
+            ? String(sessionkey)
+            : activesessionkey
+        const session = readtermsession(key)
+        const text = String(linedata ?? '')
+        await session.write(text)
+        if (key) {
+          maybeapplytermbridgesmokereply(key, session, text)
+        }
         result = { ok: true }
         break
       }
