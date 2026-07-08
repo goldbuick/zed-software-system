@@ -33,7 +33,7 @@ export const LANG_ZZTOOP_REPORT_PATH = fixturepath(
 
 export const PARSE_FIXTURES_DIR = fixturepath('parse')
 export const WANIX_FIXTURES_DIR = fixturepath('wanix')
-/** Dev-served copy at /fixtures/wanix/ */
+/** Built wanix binaries (drag-drop + zedcafe staging); dev-served at /fixtures/wanix/ */
 export const WANIX_PUBLIC_FIXTURES_DIR = fixturepath('public', 'wanix')
 /** Dev-served static assets at /fixtures/ (not shipped in cafe/public). */
 export const PUBLIC_FIXTURES_DIR = fixturepath('public')

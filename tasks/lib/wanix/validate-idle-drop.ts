@@ -91,7 +91,7 @@ const validateidledrop: HeadedPlaywrightScript = async ({
 
   await waitforregistersession(page, root)
 
-  const fixturepath = path.join(root, 'ops/fixtures/wanix/bundle-one.tgz')
+  const fixturepath = path.join(root, 'ops/fixtures/public/wanix/bundle-one.tgz')
   await dropwanixbundle(page, root, fixturepath, 'bundle-one.tgz')
 
   await withscripttimeout(

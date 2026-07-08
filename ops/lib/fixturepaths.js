@@ -31,7 +31,7 @@ export var LANG_ZZTOOP_MANIFEST_PATH = fixturepath('lang', 'zztoop', 'manifest.j
 export var LANG_ZZTOOP_REPORT_PATH = fixturepath('lang', 'zztoop', 'failure-report.json');
 export var PARSE_FIXTURES_DIR = fixturepath('parse');
 export var WANIX_FIXTURES_DIR = fixturepath('wanix');
-/** Dev-served copy at /fixtures/wanix/ */
+/** Built wanix binaries (drag-drop + zedcafe staging); dev-served at /fixtures/wanix/ */
 export var WANIX_PUBLIC_FIXTURES_DIR = fixturepath('public', 'wanix');
 /** Dev-served static assets at /fixtures/ (not shipped in cafe/public). */
 export var PUBLIC_FIXTURES_DIR = fixturepath('public');

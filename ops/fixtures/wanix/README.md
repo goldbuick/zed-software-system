@@ -5,7 +5,7 @@ WASI `.wasm` and `.tgz` bundles for manual wanix testing (`#wanix`, file drop, p
 ## Quick use
 
 1. `yarn task cafe dev`
-2. Drag files from **`ops/fixtures/wanix/`** onto the cafe page (or paste from Finder).
+2. Drag files from **`ops/fixtures/public/wanix/`** onto the cafe page (or paste from Finder).
 
 | File | Tests |
 |------|--------|
@@ -51,4 +51,4 @@ Requires [WABT](https://github.com/WebAssembly/wabt) (`wat2wasm`, `wasm-validate
 yarn task run ops:fixtures:wanix:build
 ```
 
-Sources live in `src/*.wat`. Built artifacts are copied to `ops/fixtures/public/wanix/` for dev URLs at `/fixtures/wanix/` (optional fetch; drag-drop uses the paths above).
+Sources live in `src/*.wat` (this directory). Built artifacts land in `ops/fixtures/public/wanix/` — drag-drop from there or fetch at `/fixtures/wanix/` in dev.

@@ -17,7 +17,7 @@ add co-located `__fixtures__` trees beside implementation code.
 | `synth/daisy/` | Daisy voice fixtures JSON |
 | `synth/maxi/` | Legacy Maxi parity JSON |
 | `parse/` | Parse test assets (e.g. `twomeasures.mid`) |
-| `wanix/` | WASI `.wasm` + `.tgz` drag-drop fixtures for manual wanix testing |
+| `wanix/` | Wanix sources (`src/*.wat`, zedcafe Go) + built binaries in `public/wanix/` |
 | `books/` | Shipped book JSON (npm `"files"`) |
 | `content/templates/` | Importable book templates (`manifest.json` + `pages/*.json`) |
 | `content/dist/` | Built `.book.json` output (gitignored) |

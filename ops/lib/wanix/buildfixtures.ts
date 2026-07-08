@@ -44,7 +44,7 @@ function maketarball(output: string, cwd: string): void {
   }
 }
 
-/** Build drag-drop wanix fixtures from ops/fixtures/wanix/src/*.wat */
+/** Build drag-drop wanix fixtures from ops/fixtures/wanix/src/*.wat into ops/fixtures/public/wanix/ */
 export function buildwanixfixtures(): void {
   const wat2wasmbin = requirecommand('wat2wasm')
   const wasmvalidatebin = requirecommand('wasm-validate')
@@ -59,7 +59,7 @@ export function buildwanixfixtures(): void {
   const wasmout: Record<string, string> = {}
   for (const name of WASM_SOURCES) {
     const input = path.join(srcdir, `${name}.wat`)
-    const output = path.join(WANIX_FIXTURES_DIR, `${name}.wasm`)
+    const output = path.join(WANIX_PUBLIC_FIXTURES_DIR, `${name}.wasm`)
     wat2wasm(wat2wasmbin, wasmvalidatebin, input, output)
     wasmout[name] = output
   }
@@ -82,24 +82,17 @@ export function buildwanixfixtures(): void {
       'utf8',
     )
 
-    maketarball(path.join(WANIX_FIXTURES_DIR, 'bundle-one.tgz'), single)
-    maketarball(path.join(WANIX_FIXTURES_DIR, 'bundle-two.tgz'), two)
-    maketarball(path.join(WANIX_FIXTURES_DIR, 'bundle-empty.tgz'), empty)
+    maketarball(path.join(WANIX_PUBLIC_FIXTURES_DIR, 'bundle-one.tgz'), single)
+    maketarball(path.join(WANIX_PUBLIC_FIXTURES_DIR, 'bundle-two.tgz'), two)
+    maketarball(
+      path.join(WANIX_PUBLIC_FIXTURES_DIR, 'bundle-empty.tgz'),
+      empty,
+    )
   } finally {
     rmSync(stage, { recursive: true, force: true })
   }
 
-  for (const name of WASM_SOURCES) {
-    cpSync(wasmout[name], path.join(WANIX_PUBLIC_FIXTURES_DIR, `${name}.wasm`))
-  }
-  for (const bundle of ['bundle-one', 'bundle-two', 'bundle-empty'] as const) {
-    cpSync(
-      path.join(WANIX_FIXTURES_DIR, `${bundle}.tgz`),
-      path.join(WANIX_PUBLIC_FIXTURES_DIR, `${bundle}.tgz`),
-    )
-  }
-
   process.stdout.write(
-    `wanix fixtures built in ${WANIX_FIXTURES_DIR} and ${WANIX_PUBLIC_FIXTURES_DIR}\n`,
+    `wanix drag-drop fixtures built in ${WANIX_PUBLIC_FIXTURES_DIR}\n`,
   )
 }

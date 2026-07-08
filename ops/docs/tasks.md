@@ -202,8 +202,8 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task cafe dev`).
 
 | Task | Description | Tags | Deps | Env |
 |------|-------------|------|------|-----|
-| `yarn task run ops:fixtures:wanix:build` | Build WASI .wasm and .tgz drag-drop fixtures under ops/fixtures/wanix/ (needs wabt wat2wasm) | — | — | — |
-| `yarn task run ops:fixtures:wanix:zedcafe:build` | Build the zed-cafe export daemon (Go js/wasm) into ops/fixtures/wanix/ and cafe/public/wanix/ (needs Go + submodules/wanix) | — | — | — |
+| `yarn task run ops:fixtures:wanix:build` | Build WASI .wasm and .tgz drag-drop fixtures into ops/fixtures/public/wanix/ (needs wabt wat2wasm) | — | — | — |
+| `yarn task run ops:fixtures:wanix:zedcafe:build` | Build the zed-cafe export daemon (Go js/wasm) into ops/fixtures/public/wanix/ and cafe/public/wanix/ (needs Go + submodules/wanix) | — | — | — |
 
 
 #### fixtures/zzt
