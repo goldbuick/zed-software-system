@@ -4,7 +4,7 @@ import type { TaskDef } from '../../../types'
 export const OPS_FIXTURES_WANIX_TASKS: TaskDef[] = [
   def('ops:fixtures:wanix:build', {
     description:
-      'Build WASI .wasm and .tgz drag-drop fixtures into ops/fixtures/public/wanix/ (needs wabt wat2wasm)',
+      'Build WASI .wasm and .tgz drag-drop fixtures into ops/public/wanix/ (needs wabt wat2wasm)',
     run: handler(async () => {
       const { buildwanixfixtures } = await import('ops/lib/wanix/buildfixtures')
       buildwanixfixtures()
@@ -13,7 +13,7 @@ export const OPS_FIXTURES_WANIX_TASKS: TaskDef[] = [
   }),
   def('ops:fixtures:wanix:zedcafe:build', {
     description:
-      'Build the zed-cafe export daemon (Go js/wasm) into ops/fixtures/public/wanix/ and cafe/public/wanix/ (needs Go + submodules/wanix)',
+      'Build the zed-cafe export daemon (Go js/wasm) into ops/public/wanix/ and cafe/public/wanix/ (needs Go + submodules/wanix)',
     run: handler(async () => {
       const { buildwanixzedcafe } = await import('ops/lib/wanix/buildzedcafe')
       buildwanixzedcafe()

@@ -20,13 +20,13 @@ All test fixture **assets** live under repo-root [`ops/fixtures/`](ops/fixtures/
 | Book corpus | `lang/coolregionsbow/` |
 | Memory WASM | `memory/wasm/` |
 | Synth | `synth/wasm/`, `synth/daisy/`, `synth/maxi/` |
-| Dev-served static | `public/` (served at `/fixtures/` in dev only) |
+| Dev-served static | `../public/` under `ops/` (served at `/fixtures/` in dev only) |
 | Offline renders | `renders/` (daisy offline wav/json/txt; served at `/renders/` in dev only) |
 | Book templates | `content/templates/`; build output `content/dist/` |
 | Books (npm) | `books/` |
 | Generated training | `generated/training/` |
 | ZZT corpus | `zzt/corpus/` (`zss/` committed; `archives/`, `extracted/`, `screenshots/` gitignored) |
-| Wanix drop tests | `wanix/` (sources + zedcafe Go); built binaries at `public/wanix/` |
+| Wanix drop tests | `wanix/` (sources + zedcafe Go); built binaries at `ops/public/wanix/` |
 
 ```typescript
 // ✅ GOOD

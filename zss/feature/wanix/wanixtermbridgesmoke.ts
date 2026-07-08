@@ -1,4 +1,4 @@
-/** Smoke reply for ops/fixtures/public/wanix/termbridge.wasm — not guest WASI stdin. */
+/** Smoke reply for ops/public/wanix/termbridge.wasm — not guest WASI stdin. */
 export const WANIX_TERM_BRIDGE_PONG = '-> pong\r\n'
 
 export function trackwanixtermlinebuf(

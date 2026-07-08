@@ -42,7 +42,7 @@ function requiregomod(): void {
 }
 
 /**
- * Build the zed-cafe export daemon (Go js/wasm) into ops/fixtures/public/wanix/
+ * Build the zed-cafe export daemon (Go js/wasm) into ops/public/wanix/
  * and copy it to cafe/public/wanix/ for the runtime to load.
  */
 export function buildwanixzedcafe(): void {

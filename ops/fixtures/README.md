@@ -17,11 +17,10 @@ add co-located `__fixtures__` trees beside implementation code.
 | `synth/daisy/` | Daisy voice fixtures JSON |
 | `synth/maxi/` | Legacy Maxi parity JSON |
 | `parse/` | Parse test assets (e.g. `twomeasures.mid`) |
-| `wanix/` | Wanix sources (`src/*.wat`, zedcafe Go) + built binaries in `public/wanix/` |
+| `wanix/` | Wanix sources (`src/*.wat`, zedcafe Go); built binaries in [`ops/public/wanix/`](../public/wanix/) |
 | `books/` | Shipped book JSON (npm `"files"`) |
 | `content/templates/` | Importable book templates (`manifest.json` + `pages/*.json`) |
 | `content/dist/` | Built `.book.json` output (gitignored) |
-| `public/` | Dev-served static assets at `/fixtures/` (not in `cafe/public`) |
 | `renders/` | Offline Daisy/synth render outputs (wav/json/txt); dev serves `/renders/` |
 | `zzt/corpus/` | Museum manifest + committed `zss/`; gitignored `archives/`, `extracted/`, `screenshots/` |
 

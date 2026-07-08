@@ -44,7 +44,7 @@ function maketarball(output: string, cwd: string): void {
   }
 }
 
-/** Build drag-drop wanix fixtures from ops/fixtures/wanix/src/*.wat into ops/fixtures/public/wanix/ */
+/** Build drag-drop wanix fixtures from ops/fixtures/wanix/src/*.wat into ops/public/wanix/ */
 export function buildwanixfixtures(): void {
   const wat2wasmbin = requirecommand('wat2wasm')
   const wasmvalidatebin = requirecommand('wasm-validate')

@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
+import { WANIX_PUBLIC_FIXTURES_DIR } from 'ops/lib/fixturepaths'
 import {
   PLAYWRIGHT_SCENARIO_TIMEOUT_MS,
   withscripttimeout,
@@ -91,7 +92,7 @@ const validateidledrop: HeadedPlaywrightScript = async ({
 
   await waitforregistersession(page, root)
 
-  const fixturepath = path.join(root, 'ops/fixtures/public/wanix/bundle-one.tgz')
+  const fixturepath = path.join(WANIX_PUBLIC_FIXTURES_DIR, 'bundle-one.tgz')
   await dropwanixbundle(page, root, fixturepath, 'bundle-one.tgz')
 
   await withscripttimeout(

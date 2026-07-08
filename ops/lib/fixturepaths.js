@@ -31,10 +31,10 @@ export var LANG_ZZTOOP_MANIFEST_PATH = fixturepath('lang', 'zztoop', 'manifest.j
 export var LANG_ZZTOOP_REPORT_PATH = fixturepath('lang', 'zztoop', 'failure-report.json');
 export var PARSE_FIXTURES_DIR = fixturepath('parse');
 export var WANIX_FIXTURES_DIR = fixturepath('wanix');
-/** Built wanix binaries (drag-drop + zedcafe staging); dev-served at /fixtures/wanix/ */
-export var WANIX_PUBLIC_FIXTURES_DIR = fixturepath('public', 'wanix');
-/** Dev-served static assets at /fixtures/ (not shipped in cafe/public). */
-export var PUBLIC_FIXTURES_DIR = fixturepath('public');
+/** Built wanix binaries; dev-served at /fixtures/wanix/ via ops/public/ */
+export var WANIX_PUBLIC_FIXTURES_DIR = path.join(process.cwd(), 'ops', 'public', 'wanix');
+/** Dev-served static assets at /fixtures/ (ops/public/, not cafe/public). */
+export var PUBLIC_FIXTURES_DIR = path.join(process.cwd(), 'ops', 'public');
 /** Offline Daisy/synth render outputs (wav/json/txt); served at /renders/ in dev only. */
 export var RENDERS_FIXTURES_DIR = fixturepath('renders');
 export var TRAINING_CORPUS_DIR = fixturepath('generated', 'training');
