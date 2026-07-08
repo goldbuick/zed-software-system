@@ -109,6 +109,7 @@ forwards to the guest when the viewport is at the live line.
 | `wanixtermgridstate.ts` | shared cell-grid engine (ANSI parse, scrollback, alt-screen, resize) |
 | `wanixtermbuffer.ts` | parent-side snapshot store per session |
 | `wanixattachstate.ts` | which session is attached; auto-attach |
-| `wanixroom.ts` / `wanixroomtypes.ts` | room config (archives, remotes, tasks, vm) |
-| `wanixmenu.ts` / `wanixmenutape.ts` | terminal menu state |
+| `wanixroom.ts` / `wanixroomtypes.ts` | room config (archives, remotes, tasks, vm) + VM start/stop |
+| `wanixmenu.ts` | terminal menu tape (`#wanix`) |
+| `wanixrpcmessages.ts` | shared `postMessage` type constants (parent + iframe) |
 | `wanixcmd.ts` | `#wanix` CLI command wiring |

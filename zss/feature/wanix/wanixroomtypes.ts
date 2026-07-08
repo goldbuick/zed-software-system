@@ -73,6 +73,9 @@ export const WANIX_LINUX_ARCHIVE_URL =
 export const WANIX_V86_ARCHIVE_URL =
   'https://cdn.jsdelivr.net/npm/wanix-extras@0.4.0-rc1/dist/v86.tgz'
 
+export const DEFAULT_WANIX_VM_ID = 'linux-vm'
+export const DEFAULT_WANIX_VM_MEM = '512M'
+
 export function createidleroomconfig(): WanixRoomConfig {
   return {
     mode: 'idle',

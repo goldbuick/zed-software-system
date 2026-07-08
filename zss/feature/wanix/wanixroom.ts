@@ -21,13 +21,13 @@ import type {
   WanixRoomStatus,
   WanixSpawnTaskResult,
 } from 'zss/feature/wanix/wanixroomtypes'
-import { createidleroomconfig } from 'zss/feature/wanix/wanixroomtypes'
-import { readwanixtermbufferkeys } from 'zss/feature/wanix/wanixtermbuffer'
-import { extractwanixtgz } from 'zss/feature/wanix/wanixtgzextract'
 import {
   DEFAULT_WANIX_VM_ID,
   DEFAULT_WANIX_VM_MEM,
-} from 'zss/feature/wanix/wanixvm'
+  createidleroomconfig,
+} from 'zss/feature/wanix/wanixroomtypes'
+import { readwanixtermbufferkeys } from 'zss/feature/wanix/wanixtermbuffer'
+import { extractwanixtgz } from 'zss/feature/wanix/wanixtgzextract'
 
 const WANIX_ROOM_TIMEOUT_MS = 180_000
 const WANIX_MENU_TIMEOUT_MS = 3_000
@@ -169,26 +169,6 @@ export async function putwanixroomfile(
 ): Promise<void> {
   await waitwanixready()
   await callwanixrpc('writefile', [path, Array.from(bytes)])
-}
-
-export async function listwanixroomdir(path: string): Promise<string[]> {
-  if (roomconfig.mode === 'idle') {
-    return []
-  }
-  await waitwanixready()
-  return callwanixrpc<string[]>('listdir', [path])
-}
-
-export async function readwanixroomstatus(): Promise<
-  WanixRoomStatus & { vmrunning?: boolean }
-> {
-  if (roomconfig.mode === 'idle') {
-    return { ...roomconfig, ready: false, vmrunning: false }
-  }
-  await waitwanixready()
-  return callwanixrpc<WanixRoomStatus & { vmrunning?: boolean }>(
-    'readroomstatus',
-  )
 }
 
 function withwanixtimeout<T>(
@@ -346,3 +326,57 @@ export async function handlewanixdrop(payload: WanixDropPayload): Promise<{
 }
 
 registerwanixsessioncloseprune(removewanixroomtask)
+
+export type WanixVmStatus = {
+  running: boolean
+  vmid: string | null
+  vrid: string | null
+  mem: string | null
+}
+
+export type WanixVmStartResult = {
+  ok: boolean
+  already?: boolean
+  vmid: string
+  vrid?: string | null
+  mem?: string | null
+}
+
+export async function startwanixvm(
+  mem = DEFAULT_WANIX_VM_MEM,
+  vmid = DEFAULT_WANIX_VM_ID,
+): Promise<WanixVmStartResult> {
+  const result = (await startwanixvmroom(vmid, mem)) as WanixVmStatus & {
+    vrid?: string | null
+    already?: boolean
+  }
+  if (result.running) {
+    return {
+      ok: true,
+      already: true,
+      vmid: result.vmid ?? vmid,
+      vrid: result.vrid ?? null,
+      mem: result.mem ?? mem,
+    }
+  }
+  return {
+    ok: true,
+    vmid: result.vmid ?? vmid,
+    vrid: result.vrid ?? null,
+    mem: result.mem ?? mem,
+  }
+}
+
+export async function stopwanixvm(
+  vmid = DEFAULT_WANIX_VM_ID,
+): Promise<{ ok: boolean }> {
+  const config = readwanixroomconfig()
+  if (config.mode !== 'vm') {
+    return { ok: true }
+  }
+  if (config.vm?.id && config.vm.id !== vmid) {
+    return { ok: true }
+  }
+  await stopwanixvmroom()
+  return { ok: true }
+}

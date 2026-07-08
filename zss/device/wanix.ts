@@ -12,16 +12,16 @@ import {
   halttaskinroom,
   handlewanixdrop,
   readwanixroomconfig,
+  startwanixvm,
   stopwanixroom,
+  stopwanixvm,
 } from 'zss/feature/wanix/wanixroom'
 import type { WanixDropPayload } from 'zss/feature/wanix/wanixroomtypes'
-import { readwanixtermbufferkeys } from 'zss/feature/wanix/wanixtermbuffer'
 import {
   DEFAULT_WANIX_VM_ID,
   DEFAULT_WANIX_VM_MEM,
-  startwanixvm,
-  stopwanixvm,
-} from 'zss/feature/wanix/wanixvm'
+} from 'zss/feature/wanix/wanixroomtypes'
+import { readwanixtermbufferkeys } from 'zss/feature/wanix/wanixtermbuffer'
 import { ispresent, isstring } from 'zss/mapping/types'
 
 function normalizewanixdropbytes(data: unknown): Uint8Array | undefined {

@@ -8,6 +8,14 @@ import {
   WANIX_V86_ARCHIVE_URL,
   createidleroomconfig,
 } from 'zss/feature/wanix/wanixroomtypes'
+import {
+  WANIX_MSG_CELLS,
+  WANIX_MSG_IDLE,
+  WANIX_MSG_READY,
+  WANIX_MSG_RPC,
+  WANIX_MSG_RPC_RES,
+  WANIX_MSG_SESSION,
+} from 'zss/feature/wanix/wanixrpcmessages'
 import type { WANIX_TERM_GRID } from 'zss/feature/wanix/wanixtermgridstate'
 import {
   createwanixtermgrid,
@@ -15,13 +23,6 @@ import {
   wanixtermgridresize,
   wanixtermgridwritebytes,
 } from 'zss/feature/wanix/wanixtermgridstate'
-
-const WANIX_MSG_READY = 'zss-wanix-ready'
-const WANIX_MSG_IDLE = 'zss-wanix-idle'
-const WANIX_MSG_RPC = 'zss-wanix-rpc'
-const WANIX_MSG_RPC_RES = 'zss-wanix-rpc-res'
-const WANIX_MSG_CELLS = 'zss-wanix-cells'
-const WANIX_MSG_SESSION = 'zss-wanix-session'
 
 type WanixSessionKind = 'vm' | 'task'
 type WanixSessionEvent = 'open' | 'active' | 'close'

@@ -1,3 +1,7 @@
+jest.mock('zss/feature/wanix/wanixroom', () => ({
+  readwanixmenustate: jest.fn(),
+}))
+
 jest.mock('zss/feature/zsstextui', () => ({
   zssheaderlines: (header: string) => [`HEADER:${header}`],
   zsssectionlines: (section: string) => [`SECTION:${section}`],
@@ -19,7 +23,7 @@ jest.mock('zss/feature/zsstextui', () => ({
 import {
   buildwanixmenutape,
   readwanixtasklabel,
-} from 'zss/feature/wanix/wanixmenutape'
+} from 'zss/feature/wanix/wanixmenu'
 import type { WanixMenuState } from 'zss/feature/wanix/wanixroomtypes'
 import { createidleroomconfig } from 'zss/feature/wanix/wanixroomtypes'
 
@@ -49,17 +53,16 @@ describe('wanixmenu', () => {
   })
 
   describe('buildwanixmenutape', () => {
-    it('shows idle header, empty tasks, and vm boot link', () => {
+    it('shows idle header, drop notice, and vm boot link', () => {
       const tape = buildwanixmenutape(idlestate())
-      expect(tape).toContain('HEADER:WANIX — idle')
-      expect(tape).toContain('no tasks running')
-      expect(tape).toContain('no terminal sessions')
-      expect(tape).toContain('!wanix vm;Boot Linux in v86')
+      expect(tape).toContain('HEADER:WANIX $YELLOWidle')
+      expect(tape).toContain('drop a .wasm or .tgz to start a task')
+      expect(tape).toContain('!wanix vm;boot linux in v86')
       expect(tape).not.toContain('Stop all')
-      expect(tape).not.toContain('SECTION:Control')
+      expect(tape).toContain('SECTION:externals')
     })
 
-    it('lists sessions with attach and detach links', () => {
+    it('lists sessions with attach links', () => {
       const tape = buildwanixmenutape({
         ...idlestate(),
         config: {
@@ -72,12 +75,10 @@ describe('wanixmenu', () => {
         attachedsessionkey: 'hello-wasm',
         activesessionkey: 'other-wasm',
       })
-      expect(tape).toContain('SECTION:Sessions')
-      expect(tape).toContain(
-        '!wanix attach "hello-wasm";* hello-wasm (attached)',
-      )
-      expect(tape).toContain('!wanix attach "other-wasm";other-wasm (active)')
-      expect(tape).toContain('!wanix detach;Detach terminal')
+      expect(tape).toContain('SECTION:attach to session')
+      expect(tape).toContain('!wanix attach "hello-wasm";hello-wasm')
+      expect(tape).toContain('!wanix attach "other-wasm";other-wasm')
+      expect(tape).not.toContain('wanix detach')
     })
 
     it('lists one task with per-task stop link', () => {
@@ -95,13 +96,14 @@ describe('wanixmenu', () => {
         attachedsessionkey: null,
         activesessionkey: null,
       })
-      expect(tape).toContain('HEADER:WANIX — task')
-      expect(tape).toContain('!wanix stop "hello-wasm";Stop hello-wasm — hello.wasm')
-      expect(tape).toContain('!wanix stop;Stop all')
-      expect(tape).not.toContain('Stop all (')
+      expect(tape).toContain('HEADER:WANIX $YELLOWtask')
+      expect(tape).toContain(
+        '!wanix stop "hello-wasm";stop $greenhello-wasm — hello.wasm',
+      )
+      expect(tape).not.toContain('Stop all')
     })
 
-    it('lists two tasks without stop-all under Tasks', () => {
+    it('lists two tasks without stop-all', () => {
       const tape = buildwanixmenutape({
         config: {
           ...createidleroomconfig(),
@@ -121,7 +123,7 @@ describe('wanixmenu', () => {
       })
       expect(tape).toContain('!wanix stop "hello-wasm";')
       expect(tape).toContain('!wanix stop "greet-wasm";')
-      expect(tape).toContain('!wanix stop;Stop all')
+      expect(tape).not.toContain('Stop all')
     })
 
     it('shows running vm status and stop link', () => {
@@ -144,11 +146,11 @@ describe('wanixmenu', () => {
         attachedsessionkey: null,
         activesessionkey: null,
       })
-      expect(tape).toContain('HEADER:WANIX — vm')
+      expect(tape).toContain('HEADER:WANIX $YELLOWvm')
       expect(tape).toContain('linux-vm 512M vrid=vm-42')
-      expect(tape).toContain('!wanix vm stop;Stop Linux VM')
-      expect(tape).not.toContain('!wanix vm;Boot Linux in v86')
-      expect(tape).toContain('!wanix stop;Stop all')
+      expect(tape).toContain('!wanix vm stop;')
+      expect(tape).not.toContain('!wanix vm;boot linux in v86')
+      expect(tape).not.toContain('Stop all')
     })
 
     it('shows stalled footnote with local tasks', () => {

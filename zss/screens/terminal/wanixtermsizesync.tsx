@@ -1,12 +1,18 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { subscribewanixattach } from 'zss/feature/wanix/wanixattachstate'
 import { callwanixtermfit, waitwanixready } from 'zss/feature/wanix/wanixbridge'
-import { readwanixtermgridsize } from 'zss/feature/wanix/wanixtermgrid'
 import { useTape } from 'zss/gadget/data/zustandstores'
 import { useWriteText } from 'zss/gadget/writetext'
 import { textformatreadedges } from 'zss/words/textformat'
 
 const TERM_FIT_DEBOUNCE_MS = 100
+
+function readwanixtermgridsize(edge: { width: number; height: number }) {
+  return {
+    cols: Math.max(1, edge.width),
+    rows: Math.max(1, edge.height),
+  }
+}
 
 export function WanixTermSizeSync() {
   const terminalopen = useTape((state) => state.terminal.open)

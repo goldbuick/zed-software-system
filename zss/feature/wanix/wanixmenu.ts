@@ -1,17 +1,16 @@
 import { SOFTWARE } from 'zss/device/session'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import { readwanixmenustate } from 'zss/feature/wanix/wanixroom'
-import { ispresent } from 'zss/mapping/types'
-
 import {
   zssheaderlines,
   zsssectionlines,
   zsstextline,
   zsstexttape,
   zsszedlinkline,
-} from '../zsstextui'
+} from 'zss/feature/zsstextui'
+import { ispresent } from 'zss/mapping/types'
 
-import {
+import type {
   WanixMenuState,
   WanixMenuVmStatus,
   WanixRoomMode,
@@ -24,7 +23,7 @@ function readwanixcmdbasename(cmd: string): string {
   return parts[parts.length - 1] ?? trimmed
 }
 
-function readwanixtasklabel(task: WanixTaskSpec): string {
+export function readwanixtasklabel(task: WanixTaskSpec): string {
   return `${task.id} — ${readwanixcmdbasename(task.cmd)}`
 }
 
@@ -36,7 +35,7 @@ function readwanixvmstatusline(vm: WanixMenuVmStatus): string {
   return `${vm.vmid ?? '?'} ${vm.mem ?? '?'} vrid=${vm.vrid ?? '?'}`
 }
 
-function buildwanixmenutape(state: WanixMenuState): string {
+export function buildwanixmenutape(state: WanixMenuState): string {
   const parts: (string | string[])[] = []
 
   // header
