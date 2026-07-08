@@ -1,3 +1,4 @@
+import type { DEVICELIKE } from 'zss/device/api'
 import {
   readattachedsession,
   readwanixactivesession,
@@ -28,6 +29,13 @@ import {
 } from 'zss/feature/wanix/wanixroomtypes'
 import { readwanixtermbufferkeys } from 'zss/feature/wanix/wanixtermbuffer'
 import { extractwanixtgz } from 'zss/feature/wanix/wanixtgzextract'
+import {
+  ensurewanixzedcafedaemon,
+  finalizewanixzedcafeaftervmboot,
+  readwanixbootzedcafestate,
+  wanixdrainpendingzedcafeexport,
+} from 'zss/feature/wanix/wanixzedcafe'
+import type { WanixZedCafeRoomSpec } from 'zss/feature/wanix/wanixzedcafetypes'
 
 const WANIX_ROOM_TIMEOUT_MS = 180_000
 const WANIX_MENU_TIMEOUT_MS = 3_000
@@ -55,9 +63,27 @@ export async function applywanixroom(
   return result
 }
 
-export async function ensurewanixtaskroom(): Promise<void> {
+export async function ensurewanixtaskroom(
+  device?: DEVICELIKE,
+  player?: string,
+): Promise<void> {
   if (roomconfig.mode !== 'idle') {
+    if (device && player) {
+      await ensurewanixzedcafedaemon(device, player)
+    }
     return
+  }
+  let zedcafe: WanixZedCafeRoomSpec | null | undefined
+  if (device && player) {
+    const boot = await readwanixbootzedcafestate(device, player)
+    if (boot) {
+      zedcafe = {
+        cmd: boot.cmd,
+        generation: boot.generation,
+        inboxbytes: boot.inboxbytes,
+        guestfiles: boot.guestfiles,
+      }
+    }
   }
   const next: WanixRoomConfig = {
     ...bumpmountkey(roomconfig),
@@ -66,13 +92,19 @@ export async function ensurewanixtaskroom(): Promise<void> {
     remotes: [],
     tasks: [],
     vm: undefined,
+    zedcafe,
   }
   await applywanixroom(next)
+  if (device && player) {
+    await ensurewanixzedcafedaemon(device, player)
+    wanixdrainpendingzedcafeexport(device, player)
+  }
 }
 
 export async function startwanixvmroom(
   vmid = DEFAULT_WANIX_VM_ID,
   mem = DEFAULT_WANIX_VM_MEM,
+  zedcafe?: WanixZedCafeRoomSpec | null,
 ): Promise<unknown> {
   if (
     roomconfig.mode === 'vm' &&
@@ -90,6 +122,7 @@ export async function startwanixvmroom(
     remotes: roomconfig.remotes,
     tasks: [],
     vm: { id: vmid, mem, active: true },
+    zedcafe: zedcafe ?? roomconfig.zedcafe,
   }
   return applywanixroom(next)
 }
@@ -275,7 +308,11 @@ function readtaskidset(): Set<string> {
   return new Set(roomconfig.tasks.map((task) => task.id))
 }
 
-export async function handlewanixdrop(payload: WanixDropPayload): Promise<{
+export async function handlewanixdrop(
+  payload: WanixDropPayload,
+  device?: DEVICELIKE,
+  player?: string,
+): Promise<{
   taskid: string
   cmd: string
   spawns: { taskid: string; cmd: string }[]
@@ -286,14 +323,14 @@ export async function handlewanixdrop(payload: WanixDropPayload): Promise<{
   )
 
   if (payload.kind === 'wasm') {
-    await ensurewanixtaskroom()
+    await ensurewanixtaskroom(device, player)
     const path = normalizewanixpath(payload.label)
     await putwanixroomfile(path, payload.bytes)
     await spawntaskinroom(taskid, path)
     return { taskid, cmd: path, spawns: [{ taskid, cmd: path }] }
   }
 
-  await ensurewanixtaskroom()
+  await ensurewanixtaskroom(device, player)
   const prefix = `bundle-${taskid}`
   const files = await extractwanixtgz(payload.bytes, prefix)
   for (const file of files) {
@@ -345,10 +382,32 @@ export type WanixVmStartResult = {
 export async function startwanixvm(
   mem = DEFAULT_WANIX_VM_MEM,
   vmid = DEFAULT_WANIX_VM_ID,
+  device?: DEVICELIKE,
+  player?: string,
 ): Promise<WanixVmStartResult> {
-  const result = (await startwanixvmroom(vmid, mem)) as WanixVmStatus & {
+  let zedcafe: WanixZedCafeRoomSpec | null | undefined
+  if (device && player) {
+    const boot = await readwanixbootzedcafestate(device, player)
+    if (boot) {
+      zedcafe = {
+        cmd: boot.cmd,
+        generation: boot.generation,
+        inboxbytes: boot.inboxbytes,
+        guestfiles: boot.guestfiles,
+      }
+    }
+  }
+  const result = (await startwanixvmroom(
+    vmid,
+    mem,
+    zedcafe,
+  )) as WanixVmStatus & {
     vrid?: string | null
     already?: boolean
+  }
+  if (device && player && !result.already) {
+    await finalizewanixzedcafeaftervmboot(device, player)
+    wanixdrainpendingzedcafeexport(device, player)
   }
   if (result.running) {
     return {

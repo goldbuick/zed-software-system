@@ -1,3 +1,5 @@
+import type { WanixZedCafeRoomSpec } from 'zss/feature/wanix/wanixzedcafetypes'
+
 export type WanixRoomMode = 'idle' | 'task' | 'vm'
 
 export type WanixArchiveSpec = {
@@ -31,6 +33,7 @@ export type WanixRoomConfig = {
   remotes: WanixRemoteSpec[]
   tasks: WanixTaskSpec[]
   vm?: WanixVmSpec
+  zedcafe?: WanixZedCafeRoomSpec | null
 }
 
 export type WanixRoomStatus = WanixRoomConfig & {

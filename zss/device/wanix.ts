@@ -21,7 +21,9 @@ import {
   DEFAULT_WANIX_VM_ID,
   DEFAULT_WANIX_VM_MEM,
 } from 'zss/feature/wanix/wanixroomtypes'
+import type { WANIX_ZED_CAFE_EXPORT_FILE } from 'zss/feature/wanix/wanixstateexport'
 import { readwanixtermbufferkeys } from 'zss/feature/wanix/wanixtermbuffer'
+import { wanixhandleexportstate } from 'zss/feature/wanix/wanixzedcafe'
 import { ispresent, isstring } from 'zss/mapping/types'
 
 function normalizewanixdropbytes(data: unknown): Uint8Array | undefined {
@@ -62,6 +64,37 @@ function readwanixdroppayload(data: unknown): {
       bytes,
     },
   }
+}
+
+type WANIX_EXPORT_STATE_PAYLOAD = {
+  files: WANIX_ZED_CAFE_EXPORT_FILE[]
+}
+
+function readwanixexportstatepayload(
+  data: unknown,
+): WANIX_EXPORT_STATE_PAYLOAD | undefined {
+  if (!ispresent(data) || typeof data !== 'object') {
+    return undefined
+  }
+  const payload = data as WANIX_EXPORT_STATE_PAYLOAD
+  if (!Array.isArray(payload.files)) {
+    return undefined
+  }
+  for (let i = 0; i < payload.files.length; ++i) {
+    const file = payload.files[i]
+    if (!ispresent(file) || typeof file.path !== 'string') {
+      return undefined
+    }
+    if (file.bytes instanceof Uint8Array) {
+      continue
+    }
+    if (Array.isArray(file.bytes)) {
+      file.bytes = new Uint8Array(file.bytes as number[])
+      continue
+    }
+    return undefined
+  }
+  return payload
 }
 
 const wanix = createdevice('wanix', [], (message) => {
@@ -116,7 +149,7 @@ const wanix = createdevice('wanix', [], (message) => {
           if (readwanixroomconfig().mode === 'idle') {
             apilog(wanix, message.player, 'wanix task room starting…')
           }
-          const result = await handlewanixdrop(payload)
+          const result = await handlewanixdrop(payload, wanix, message.player)
           if (result.spawns.length) {
             for (const spawn of result.spawns) {
               apilog(
@@ -178,7 +211,12 @@ const wanix = createdevice('wanix', [], (message) => {
           const vmid = isstring(message.data)
             ? message.data
             : DEFAULT_WANIX_VM_ID
-          const result = await startwanixvm(DEFAULT_WANIX_VM_MEM, vmid)
+          const result = await startwanixvm(
+            DEFAULT_WANIX_VM_MEM,
+            vmid,
+            wanix,
+            message.player,
+          )
           if (result.already) {
             apilog(
               wanix,
@@ -244,6 +282,16 @@ const wanix = createdevice('wanix', [], (message) => {
       detachwanixterm()
       apilog(wanix, message.player, 'wanix detached')
       break
+    case 'export-state': {
+      const payload = readwanixexportstatepayload(message.data)
+      if (!payload) {
+        break
+      }
+      doasync(wanix, message.player, async () => {
+        await wanixhandleexportstate(wanix, message.player, payload.files)
+      })
+      break
+    }
     default:
       break
   }

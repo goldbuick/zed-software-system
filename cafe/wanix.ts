@@ -23,6 +23,27 @@ import {
   wanixtermgridresize,
   wanixtermgridwritebytes,
 } from 'zss/feature/wanix/wanixtermgridstate'
+import {
+  WANIX_ZEDCAFE_EXPORT_RAMFS,
+  WANIX_ZEDCAFE_GUEST_MOUNT,
+  WANIX_ZEDCAFE_WASM_RAMFS,
+  WANIX_ZEDCAFE_WASM_URL,
+} from 'zss/feature/wanix/wanixzedcafeconstants'
+
+import {
+  bootzedcafegojs,
+  collectzedcafeexportfiles,
+  collectzedcafeexportramfsfiles,
+  haltzedcafetask,
+  pushzedcafeexportlive,
+  readzedcafereadylocal,
+  readzedcafetaskridlocal,
+  refreshvmzedcafeguestfiles,
+  resetzedcafestate,
+  setzedcafereadylocal,
+  synczedcafestate,
+  waitzedcafereadyrpc,
+} from './wanixzedcafe'
 
 type WanixSessionKind = 'vm' | 'task'
 type WanixSessionEvent = 'open' | 'active' | 'close'
@@ -449,8 +470,30 @@ async function connectvmtermsession() {
   await connecttermsession(vm.id, readvmtermpath(vmel), 'vm')
 }
 
+function appendzedcafestagingbinds(sys: WanixSystemElement) {
+  if (!sys.querySelector('wanix-bind[data-zss-zedcafe-wasm]')) {
+    sys.appendChild(
+      createbind(
+        {
+          type: 'file',
+          dst: WANIX_ZEDCAFE_WASM_RAMFS,
+          src: WANIX_ZEDCAFE_WASM_URL,
+        },
+        'data-zss-zedcafe-wasm',
+      ),
+    )
+  }
+  const guestfiles = roomconfig.zedcafe?.guestfiles
+  if (guestfiles?.some((file) => file.path === 'stats.json')) {
+    refreshvmzedcafeguestfiles(sys, guestfiles)
+  }
+}
+
 function appendtaskroombinds(sys: WanixSystemElement, config: WanixRoomConfig) {
   sys.appendChild(createbind({ dst: '.', src: '#ramfs' }))
+  if (config.zedcafe) {
+    appendzedcafestagingbinds(sys)
+  }
   for (const archive of config.archives) {
     const bind = createbind({
       type: 'archive',
@@ -472,6 +515,9 @@ function appendtaskroombinds(sys: WanixSystemElement, config: WanixRoomConfig) {
 }
 
 function appendvmroombinds(sys: WanixSystemElement) {
+  if (roomconfig.zedcafe) {
+    appendzedcafestagingbinds(sys)
+  }
   sys.appendChild(
     createbind(
       { type: 'archive', dst: '.', src: WANIX_LINUX_ARCHIVE_URL },
@@ -512,6 +558,14 @@ function buildroomtree(config: WanixRoomConfig) {
         mem: vm.mem,
         term: true,
       })
+      if (config.zedcafe?.guestfiles?.length) {
+        const bind = createbind({
+          dst: WANIX_ZEDCAFE_GUEST_MOUNT,
+          src: WANIX_ZEDCAFE_EXPORT_RAMFS,
+        })
+        bind.setAttribute('data-zss-zedcafe-export', 'vm-staging')
+        vmel.appendChild(bind)
+      }
       sys.appendChild(vmel)
     }
   }
@@ -581,6 +635,7 @@ async function applyroom(config: WanixRoomConfig) {
     remotes: config.remotes ?? [],
     tasks: config.tasks ?? [],
     vm: config.vm,
+    zedcafe: config.zedcafe,
   }
 
   if (roomconfig.mode === 'idle') {
@@ -588,6 +643,7 @@ async function applyroom(config: WanixRoomConfig) {
     host.replaceChildren()
     system = null
     lastmountkey = roomconfig.mountkey
+    resetzedcafestate()
     postidle()
     return { ok: true, mode: 'idle', mountkey: lastmountkey }
   }
@@ -615,6 +671,18 @@ async function applyroom(config: WanixRoomConfig) {
 
   await waitsystemready(system)
   postready()
+
+  if (roomconfig.zedcafe?.cmd) {
+    const spec = roomconfig.zedcafe
+    synczedcafestate(spec.cmd, spec.generation)
+    await bootzedcafegojs(
+      system,
+      readroot(),
+      spec.cmd,
+      spec.inboxbytes ?? [],
+      roomconfig.mode === 'vm',
+    )
+  }
 
   if (roomconfig.mode === 'vm' && roomconfig.vm?.active) {
     await waitvmlinuxmount()
@@ -847,6 +915,86 @@ async function handlerrpc(
           cols: Number(cols),
           rows: Number(rows),
         }
+        break
+      }
+      case 'synczedcafe': {
+        const [cmd, generation] = args as [string, number]
+        synczedcafestate(String(cmd), Number(generation))
+        if (system) {
+          haltzedcafetask(system)
+        }
+        result = { ok: true }
+        break
+      }
+      case 'waitzedcafeready': {
+        const [timeoutms] = args as [number?]
+        if (!system?.isReady) {
+          result = null
+          break
+        }
+        result = await waitzedcafereadyrpc(
+          system,
+          readroot(),
+          Number(timeoutms ?? 90_000),
+          roomconfig.mode === 'vm',
+        )
+        break
+      }
+      case 'setzedcafeready': {
+        const [ready] = args as [boolean]
+        setzedcafereadylocal(!!ready)
+        result = { ok: true }
+        break
+      }
+      case 'haltzedcafe': {
+        if (system) {
+          haltzedcafetask(system)
+        }
+        resetzedcafestate()
+        result = { ok: true }
+        break
+      }
+      case 'readzedcafetaskrid': {
+        result = readzedcafetaskridlocal()
+        break
+      }
+      case 'readzedcafeexportfiles': {
+        if (!system?.isReady) {
+          result = []
+          break
+        }
+        const root = readroot()
+        if (roomconfig.mode === 'vm' && readzedcafereadylocal()) {
+          result = await collectzedcafeexportramfsfiles(root)
+          break
+        }
+        const taskrid = readzedcafetaskridlocal()
+        if (!taskrid) {
+          result = []
+          break
+        }
+        result = await collectzedcafeexportfiles(root, taskrid)
+        break
+      }
+      case 'pushzedcafeexport': {
+        const [taskrid, files] = args as [
+          string,
+          { path: string; data: number[] }[],
+        ]
+        if (!system?.isReady) {
+          throw new Error('wanix room not ready')
+        }
+        await pushzedcafeexportlive(readroot(), String(taskrid), files ?? [])
+        result = { ok: true }
+        break
+      }
+      case 'refreshvmzedcafeexport': {
+        const [guestfiles] = args as [{ path: string; data: number[] }[]?]
+        if (!system) {
+          throw new Error('wanix system missing')
+        }
+        const count = refreshvmzedcafeguestfiles(system, guestfiles ?? [])
+        result = { ok: true, count }
         break
       }
       default:

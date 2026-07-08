@@ -8,6 +8,7 @@ import type {
   MESSAGE as MESSAGE_TYPE,
 } from 'zss/device/messagetypes'
 import { ismessage as ismessage_fn } from 'zss/device/messagetypes'
+import type { WANIX_ZED_CAFE_EXPORT_PAYLOAD } from 'zss/feature/wanix/wanixstateexport'
 import type { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import type { BOOK } from 'zss/memory/types'
@@ -212,6 +213,14 @@ export function wanixdetach(device: DEVICELIKE, player: string) {
   device.emit(player, 'wanix:detach')
 }
 
+export function wanixexportstate(
+  device: DEVICELIKE,
+  player: string,
+  payload: WANIX_ZED_CAFE_EXPORT_PAYLOAD,
+) {
+  device.emit(player, 'wanix:export-state', payload)
+}
+
 export function bridgejoin(device: DEVICELIKE, player: string, topic: string) {
   device.emit(player, 'bridge:join', topic)
 }
@@ -250,6 +259,10 @@ export function gadgetclientpaint(
 
 export function vmgadgetdesync(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:gadgetdesync')
+}
+
+export function vmexportzedcafe(device: DEVICELIKE, player: string) {
+  device.emit(player, 'vm:export-zedcafe')
 }
 
 export function ttsinfo(

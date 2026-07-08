@@ -1,4 +1,5 @@
 import { FORMAT_OBJECT, formatobject, unformatobject } from 'zss/feature/format'
+import { notifyzedcafebookschanged } from 'zss/feature/wanix/wanixstateexport'
 import { createnameid, createshortnameid, createsid } from 'zss/mapping/guid'
 import { randominteger } from 'zss/mapping/number'
 import { MAYBE, ispresent } from 'zss/mapping/types'
@@ -24,6 +25,7 @@ import {
   memoryresetcodepagestats,
 } from './codepageoperations'
 import { memoryreadboardelementruntime } from './runtimeboundary'
+import { memoryreadoperator } from './session'
 import {
   BOARD_ELEMENT,
   BOOK,
@@ -414,6 +416,7 @@ export function memoryupdatebookname(book: MAYBE<BOOK>) {
 export function memoryupdatebooktoken(book: MAYBE<BOOK>) {
   if (ispresent(book)) {
     book.token = `${createshortnameid()}${randominteger(1111, 9999)}`
+    notifyzedcafebookschanged(memoryreadoperator())
   }
 }
 
