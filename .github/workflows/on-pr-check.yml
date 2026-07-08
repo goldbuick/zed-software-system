@@ -64,5 +64,5 @@ jobs:
       - name: content book build and validate
         run: |
           yarn task run ops:fixtures:content:book:build ops/fixtures/content/templates/minimal
-          yarn task run ops:fixtures:content:book:validate ops/fixtures/content/dist/minimal.book.json
+          yarn task run ops:fixtures:content:book:validate ops/public/books/minimal.book.json
           yarn task run ops:fixtures:content:book:test

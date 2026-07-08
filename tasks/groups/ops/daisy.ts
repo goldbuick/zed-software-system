@@ -1285,7 +1285,7 @@ async function rundaisyrunenvparity(ctx: TaskContext): Promise<number> {
      *
      * Usage: yarn env-parity:test
      *
-     * Outputs: ops/fixtures/renders/env-parity/
+     * Outputs: ops/public/renders/env-parity/
      */
 
     const ROOT = ctx.root
@@ -1570,8 +1570,8 @@ async function rundaisyrunlevelissuesongcompare(
      *   yarn level-issue-song-compare:test
      *
      * Requires:
-     *   ops/fixtures/renders/level-issue-song.json
-     *   ops/fixtures/renders/level-issue-song-tone.json
+     *   ops/public/renders/level-issue-song.json
+     *   ops/public/renders/level-issue-song-tone.json
      */
 
     const ROOT = ctx.root
@@ -2102,8 +2102,8 @@ async function rundaisyrunnotepoprender(ctx: TaskContext): Promise<number> {
      *   yarn notepop:render:ab
      *
      * Outputs:
-     *   ops/fixtures/renders/notepop-qcxdxexfx.wav (default)
-     *   ops/fixtures/renders/notepop-qcxdxexfx-comp-on.* / -comp-off.* (--ab)
+     *   ops/public/renders/notepop-qcxdxexfx.wav (default)
+     *   ops/public/renders/notepop-qcxdxexfx-comp-on.* / -comp-off.* (--ab)
      *
      * Browser preview (yarn task cafe dev):
      *   yarn notepop-song:render
@@ -2325,8 +2325,8 @@ async function rundaisyrunpitchstability(ctx: TaskContext): Promise<number> {
      *   yarn pitch-stability:render
      *
      * Outputs:
-     *   ops/fixtures/renders/pitch-stability-c4-8n.wav
-     *   ops/fixtures/renders/pitch-stability-c4-8n.json
+     *   ops/public/renders/pitch-stability-c4-8n.wav
+     *   ops/public/renders/pitch-stability-c4-8n.json
      */
 
     const ROOT = ctx.root
@@ -3036,8 +3036,8 @@ async function rundaisyrunsidechainrender(ctx: TaskContext): Promise<number> {
      *   yarn sidechain:render:ab
      *
      * Outputs:
-     *   ops/fixtures/renders/duck-bg-stab.wav (default, sidechain ON)
-     *   ops/fixtures/renders/duck-bg-stab-sc-on.* / -sc-off.* (--ab)
+     *   ops/public/renders/duck-bg-stab.wav (default, sidechain ON)
+     *   ops/public/renders/duck-bg-stab-sc-on.* / -sc-off.* (--ab)
      *
      * Browser preview (yarn task cafe dev):
      *   yarn sidechain-song:render
@@ -3190,9 +3190,9 @@ async function rundaisyrunsongofflinerendertone(
      *   yarn level-issue-song:render:tone
      *
      * Outputs:
-     *   ops/fixtures/renders/level-issue-song-tone.wav
-     *   ops/fixtures/renders/level-issue-song-tone.json
-     *   ops/fixtures/renders/level-issue-song-tone.txt
+     *   ops/public/renders/level-issue-song-tone.wav
+     *   ops/public/renders/level-issue-song-tone.json
+     *   ops/public/renders/level-issue-song-tone.txt
      */
 
     const ROOT = ctx.root
@@ -3292,9 +3292,9 @@ async function rundaisyrunsongofflinerender(ctx: TaskContext): Promise<number> {
      *   yarn level-issue-song:render
      *
      * Outputs:
-     *   ops/fixtures/renders/level-issue-song.wav
-     *   ops/fixtures/renders/level-issue-song.json
-     *   ops/fixtures/renders/level-issue-song.txt
+     *   ops/public/renders/level-issue-song.wav
+     *   ops/public/renders/level-issue-song.json
+     *   ops/public/renders/level-issue-song.txt
      */
 
     const ROOT = ctx.root

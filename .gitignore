@@ -30,7 +30,7 @@ oclif.manifest.json
 *.sw?
 
 # content build output
-ops/fixtures/content/dist
+ops/public/books
 
 # runtime data
 .zss-data
@@ -52,11 +52,11 @@ ops/fixtures/zzt/corpus/zss/
 ops/fixtures/zzt/corpus/screenshots/
 
 # offline song renders (regenerate with yarn level-issue-song:render)
-ops/fixtures/renders/*.wav
-ops/fixtures/renders/*.json
-ops/fixtures/renders/*.txt
-ops/fixtures/renders/env-parity/
-ops/fixtures/renders/synth-env-parity/
+ops/public/renders/*.wav
+ops/public/renders/*.json
+ops/public/renders/*.txt
+ops/public/renders/env-parity/
+ops/public/renders/synth-env-parity/
 
 # local Emscripten SDK (yarn daisy:build)
 .emsdk/

@@ -19,9 +19,7 @@ add co-located `__fixtures__` trees beside implementation code.
 | `parse/` | Parse test assets (e.g. `twomeasures.mid`) |
 | `wanix/` | Wanix sources (`src/*.wat`, zedcafe Go); built binaries in [`ops/public/wanix/`](../public/wanix/) |
 | `books/` | Shipped book JSON (npm `"files"`) |
-| `content/templates/` | Importable book templates (`manifest.json` + `pages/*.json`) |
-| `content/dist/` | Built `.book.json` output (gitignored) |
-| `renders/` | Offline Daisy/synth render outputs (wav/json/txt); dev serves `/renders/` |
+| `content/templates/` | Importable book templates (`manifest.json` + `pages/*.json`); built books in [`ops/public/books/`](../public/books/) |
 | `zzt/corpus/` | Museum manifest + committed `zss/`; gitignored `archives/`, `extracted/`, `screenshots/` |
 
 ## Regen tasks

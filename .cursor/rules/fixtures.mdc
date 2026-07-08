@@ -21,8 +21,8 @@ All test fixture **assets** live under repo-root [`ops/fixtures/`](ops/fixtures/
 | Memory WASM | `memory/wasm/` |
 | Synth | `synth/wasm/`, `synth/daisy/`, `synth/maxi/` |
 | Dev-served static | `../public/` under `ops/` (served at `/fixtures/` in dev only) |
-| Offline renders | `renders/` (daisy offline wav/json/txt; served at `/renders/` in dev only) |
-| Book templates | `content/templates/`; build output `content/dist/` |
+| Offline renders | `../public/renders/` under `ops/` (served at `/renders/` in dev only) |
+| Book templates | `content/templates/`; build output `ops/public/books/` |
 | Books (npm) | `books/` |
 | Generated training | `generated/training/` |
 | ZZT corpus | `zzt/corpus/` (`zss/` committed; `archives/`, `extracted/`, `screenshots/` gitignored) |

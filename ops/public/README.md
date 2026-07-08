@@ -2,8 +2,10 @@
 
 Ops-owned assets that need browser URLs without living in `cafe/public/`.
 
-Served at `/fixtures/` in dev only (see `vite.config.ts` `servefixturesdev`).
+| Subdir | Dev URL | Contents |
+|--------|---------|----------|
+| `wanix/` | `/fixtures/wanix/` | Drag-drop WASI `.wasm`/`.tgz` + `zedcafe.wasm` staging |
+| `renders/` | `/renders/` | Offline Daisy/synth wav/json/txt (parity task output) |
+| `books/` | `/fixtures/books/` | Built importable `.book.json` (from `ops/fixtures/content/templates/`) |
 
-Wanix drag-drop `.wasm`/`.tgz` and `zedcafe.wasm` staging live under `wanix/`.
-
-See also: `ops/fixtures/renders/` (offline audio at `/renders/`).
+Served in dev via `vite.config.ts` (`/fixtures` → this tree; `/renders` → `renders/`).

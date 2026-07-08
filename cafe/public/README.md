@@ -18,7 +18,7 @@ Static assets served at site root by Vite (`public/`). Do not add ad-hoc trees h
 ## Not here
 
 - `archive/` — legacy maximilian assets are under `ops/archive/wasm/` (dev middleware at `/archive/maximilian`)
-- `renders/` — offline parity WAVs under `ops/fixtures/` and task output dirs
+- `renders/` — offline parity WAVs under `ops/public/renders/`
 - `fixtures/` — dev-only static tree from `ops/public/` (Vite middleware)
 
 Disk layout constants: [`ops/lib/cafepublicpaths.ts`](../../ops/lib/cafepublicpaths.ts).

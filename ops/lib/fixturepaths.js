@@ -35,8 +35,8 @@ export var WANIX_FIXTURES_DIR = fixturepath('wanix');
 export var WANIX_PUBLIC_FIXTURES_DIR = path.join(process.cwd(), 'ops', 'public', 'wanix');
 /** Dev-served static assets at /fixtures/ (ops/public/, not cafe/public). */
 export var PUBLIC_FIXTURES_DIR = path.join(process.cwd(), 'ops', 'public');
-/** Offline Daisy/synth render outputs (wav/json/txt); served at /renders/ in dev only. */
-export var RENDERS_FIXTURES_DIR = fixturepath('renders');
+/** Offline Daisy/synth render outputs (wav/json/txt); dev-served at /renders/ */
+export var RENDERS_FIXTURES_DIR = path.join(process.cwd(), 'ops', 'public', 'renders');
 export var TRAINING_CORPUS_DIR = fixturepath('generated', 'training');
 export var COOLREGIONSBOW_BOOK_JSON_PATH = fixturepath('books', 'example-coolregionsbow.book.json');
 export var LANG_PARITY_MANIFEST_PATH = fixturepath('lang', 'parity', 'manifest.json');
@@ -44,7 +44,8 @@ export var LANG_INTEGRATION_MANIFEST_PATH = fixturepath('lang', 'integration', '
 export var LANG_COOLREGIONSBOW_MANIFEST_PATH = fixturepath('lang', 'coolregionsbow', 'manifest.json');
 export var CONTENT_FIXTURES_DIR = fixturepath('content');
 export var CONTENT_TEMPLATES_DIR = fixturepath('content', 'templates');
-export var CONTENT_DIST_DIR = fixturepath('content', 'dist');
+/** Built importable book JSON; drag-drop from ops/public/books/ */
+export var CONTENT_DIST_DIR = path.join(process.cwd(), 'ops', 'public', 'books');
 export var ZZT_CORPUS_DIR = fixturepath('zzt', 'corpus');
 export var ZZT_CORPUS_EXTRACTED_DIR = fixturepath('zzt', 'corpus', 'extracted');
 export var ZZT_CORPUS_ZSS_DIR = fixturepath('zzt', 'corpus', 'zss');
