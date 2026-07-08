@@ -17,6 +17,7 @@ const config: Config = {
   setupFilesAfterEnv: ['<rootDir>/ops/tests/setup/timeoutsetup.ts'],
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
   moduleNameMapper: {
+    '^zss/feature/devbuild$': '<rootDir>/ops/lib/test/mocks/devbuild.ts',
     '^zss/perf/ui$': '<rootDir>/ops/lib/test/mocks/perfui.ts',
     '^zss/perf/ticktimingstats$':
       '<rootDir>/ops/lib/test/mocks/ticktimingstats.ts',

@@ -1,8 +1,8 @@
 /**
- * GENERATED — do not edit. Run `yarn daisy:bundle:processor`.
- * Classic AudioWorklet bundle (Emscripten glue + DaisyProcessor).
- */
-
+     * GENERATED — do not edit. Run `yarn task run ops:daisy:bundle:processor`.
+     * Classic AudioWorklet bundle (Emscripten glue + DaisyProcessor).
+     */
+    
 var ZssDaisy = (() => {
   var _scriptName = "";
   
@@ -18,7 +18,7 @@ var Module=moduleArg;var readyPromiseResolve,readyPromiseReject;var readyPromise
 );
 })();
 
-/**
+    /**
  * ZSS DaisySP AudioWorklet source — bundled with zss_daisy.js as a classic script
  * (no ES module imports; Firefox-compatible like maximilian maxi-processor.js).
  */
@@ -250,3 +250,4 @@ class DaisyProcessor extends AudioWorkletProcessor {
 
 registerProcessor('zss-daisy-processor', DaisyProcessor)
 
+    

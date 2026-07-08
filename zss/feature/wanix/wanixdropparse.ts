@@ -1,4 +1,5 @@
 import { apierror, apilog, wanixdrop } from 'zss/device/api'
+import { isdevbuild } from 'zss/feature/devbuild'
 import type { DEVICELIKE } from 'zss/device/api'
 import type { WanixDropPayload } from 'zss/feature/wanix/wanixroomtypes'
 
@@ -38,7 +39,7 @@ export function emitwanixdropfile(
 ): void {
   void parsewanixdropfile(file)
     .then((payload) => {
-      if (import.meta.env.DEV) {
+      if (isdevbuild()) {
         apilog(
           device,
           player,

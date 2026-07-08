@@ -8,6 +8,7 @@ import {
   workstatus,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { isdevbuild } from 'zss/feature/devbuild'
 import {
   emitwanixdropfile,
   iswanixdropfilename,
@@ -481,7 +482,7 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
 }
 
 function emitwanixdropfileroute(player: string, file: File) {
-  if (import.meta.env.DEV) {
+  if (isdevbuild()) {
     apilog(
       SOFTWARE,
       player,

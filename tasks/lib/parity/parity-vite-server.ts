@@ -28,6 +28,10 @@ export async function startparityvite(
       alias: {
         zss: path.join(projectroot, 'zss'),
         cafe: path.join(projectroot, 'cafe'),
+        'ops/fixtures': path.join(projectroot, 'ops/fixtures'),
+        'ops/lib': path.join(projectroot, 'ops/lib'),
+        'ops/archive': path.join(projectroot, 'ops/archive'),
+        'ops/lib/test': path.join(projectroot, 'ops/lib/test'),
       },
     },
     server: {
@@ -50,9 +54,14 @@ export async function startparityvite(
         req,
         res,
         () => {
-          vite.middlewares.handle(req, res, () => {
-            res.statusCode = 404
-            res.end('not found')
+          fixtureprefixmiddleware(
+            '/archive/maximilian',
+            path.join(projectroot, 'ops/archive/wasm/maximilian'),
+          )(req, res, () => {
+            vite.middlewares.handle(req, res, () => {
+              res.statusCode = 404
+              res.end('not found')
+            })
           })
         },
       )

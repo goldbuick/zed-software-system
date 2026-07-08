@@ -23,9 +23,10 @@ function requirego(): void {
 }
 
 function requirewanixsubmodule(): void {
-  if (!existsSync(WANIX_SUBMODULE_DIR)) {
+  const wanixgomod = path.join(WANIX_SUBMODULE_DIR, 'go.mod')
+  if (!existsSync(wanixgomod)) {
     throw new Error(
-      `missing ${WANIX_SUBMODULE_DIR} — run: git submodule update --init submodules/wanix`,
+      `missing ${wanixgomod} — run: git submodule update --init submodules/wanix`,
     )
   }
 }
