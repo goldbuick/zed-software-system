@@ -82,6 +82,15 @@ export function buildwanixmenutape(state: WanixMenuState): string {
     }
   }
 
+  if (ispresent(state.attachedsessionkey)) {
+    parts.push('$32')
+    parts.push(
+      zsstextline(
+        '$gray drop files → input/ for attached processor (see ops/fixtures/wanix README)',
+      ),
+    )
+  }
+
   // list remote imports
   parts.push('$32')
   parts.push(zsssectionlines('externals'))

@@ -1,4 +1,6 @@
 export const WANIX_ZEDCAFE_TASK_ID = 'zedcafe'
+/** Attached-session drop mount: `input/<file>` (task `./input/…`, VM guest `/input/…`). */
+export const WANIX_INPUT_MOUNT = 'input'
 /** User-visible mount: `./zedcafe/` (task) or `/zedcafe/` (VM guest). */
 export const WANIX_ZEDCAFE_GUEST_MOUNT = 'zedcafe'
 /** Internal gojs staging — never union-bind `#ramfs` at `.`. */

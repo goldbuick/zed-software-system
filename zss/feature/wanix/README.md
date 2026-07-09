@@ -82,6 +82,15 @@ session. When a non-attached session ends, its buffer and task entry are pruned
 from the menu; if the attached session ends, the parent does nothing until the
 user acts via the menu.
 
+### Bind-on-drop (`input/`)
+
+While **attached** to a Wanix term session, file drops bind under **`input/<name>`**
+(task: `./input/…`, VM guest: `/input/…`) instead of spawning tasks or hitting
+book/image parsers. User-written processors (WASI tasks or VM guest scripts) read
+`input/` and write zedcafe export paths under `zedcafe/…` so the host import poll
+can sync boards and terrain. See `ops/fixtures/wanix/README.md` for
+`input2terrain.wasm` and `png2terrain.sh` examples.
+
 ### Keyboard shortcuts (attached terminal)
 
 The bottom row of the terminal screen is a hint bar. `Ctrl+\` is a prefix key

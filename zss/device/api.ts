@@ -197,6 +197,20 @@ export function wanixdrop(
   device.emit(player, 'wanix:drop', payload)
 }
 
+export function wanixbinddrop(
+  device: DEVICELIKE,
+  player: string,
+  payload: {
+    label: string
+    kind: 'file' | 'archive'
+    bytes: Uint8Array
+    dst: string
+    perm: string
+  },
+) {
+  device.emit(player, 'wanix:bind-drop', payload)
+}
+
 export function wanixstop(device: DEVICELIKE, player: string, taskid?: string) {
   device.emit(player, 'wanix:stop', taskid)
 }

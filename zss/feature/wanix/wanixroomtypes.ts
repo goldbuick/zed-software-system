@@ -70,6 +70,16 @@ export type WanixDropPayload = {
   bytes: Uint8Array
 }
 
+export type WanixBindDropKind = 'file' | 'archive'
+
+export type WanixBindDropPayload = {
+  label: string
+  kind: WanixBindDropKind
+  bytes: Uint8Array
+  dst: string
+  perm: string
+}
+
 export const WANIX_LINUX_ARCHIVE_URL =
   'https://cdn.jsdelivr.net/npm/wanix-extras@0.4.0-rc1/dist/wanix-linux.tgz'
 

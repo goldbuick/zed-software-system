@@ -44,6 +44,35 @@ function maketarball(output: string, cwd: string): void {
   }
 }
 
+/** Minimal 1x1 PNG for bind-on-drop pipeline demos. */
+const STAMP_PNG_BYTES = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+  'base64',
+)
+
+function buildinput2terrainwasm(output: string): void {
+  const maindir = path.join(WANIX_FIXTURES_DIR, 'input2terrain')
+  if (!existsSync(path.join(maindir, 'main.go'))) {
+    throw new Error(`input2terrain source missing: ${maindir}`)
+  }
+  const result = spawnSync(
+    'go',
+    ['build', '-o', output, '.'],
+    {
+      cwd: maindir,
+      stdio: 'inherit',
+      env: {
+        ...process.env,
+        GOOS: 'wasip1',
+        GOARCH: 'wasm',
+      },
+    },
+  )
+  if (result.status !== 0) {
+    throw new Error('go build input2terrain.wasm failed')
+  }
+}
+
 /** Build drag-drop wanix fixtures from ops/fixtures/wanix/src/*.wat into ops/public/wanix/ */
 export function buildwanixfixtures(): void {
   const wat2wasmbin = requirecommand('wat2wasm')
@@ -91,6 +120,15 @@ export function buildwanixfixtures(): void {
   } finally {
     rmSync(stage, { recursive: true, force: true })
   }
+
+  buildinput2terrainwasm(
+    path.join(WANIX_PUBLIC_FIXTURES_DIR, 'input2terrain.wasm'),
+  )
+  cpSync(
+    path.join(srcdir, 'png2terrain.sh'),
+    path.join(WANIX_PUBLIC_FIXTURES_DIR, 'png2terrain.sh'),
+  )
+  writeFileSync(path.join(WANIX_PUBLIC_FIXTURES_DIR, 'stamp.png'), STAMP_PNG_BYTES)
 
   process.stdout.write(
     `wanix drag-drop fixtures built in ${WANIX_PUBLIC_FIXTURES_DIR}\n`,
