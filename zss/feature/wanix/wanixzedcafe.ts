@@ -1,10 +1,7 @@
 import type { DEVICELIKE } from 'zss/device/api'
 import { apilog, vmexportzedcafe } from 'zss/device/api'
 import { callwanixrpc } from 'zss/feature/wanix/wanixbridge'
-import {
-  putwanixroomfile,
-  readwanixroomconfig,
-} from 'zss/feature/wanix/wanixroom'
+import { readwanixroomconfig } from 'zss/feature/wanix/wanixroom'
 import {
   type WANIX_ZED_CAFE_EXPORT_FILE,
   primezedcafeexportshadow,
@@ -13,7 +10,6 @@ import {
   WANIX_VM_ZEDCAFE_EXPORT_FETCH_MS,
   WANIX_ZEDCAFE_EXPORT_WAIT_MS,
   WANIX_ZEDCAFE_IMPORT_POLL_MS,
-  WANIX_ZEDCAFE_INBOX_RAMFS,
   WANIX_ZEDCAFE_WASM_CMD,
 } from 'zss/feature/wanix/wanixzedcafeconstants'
 import {
@@ -257,7 +253,7 @@ async function writzedcafeinbox(
   device: DEVICELIKE,
   player: string,
   files: WANIX_ZED_CAFE_EXPORT_FILE[],
-): Promise<boolean> {
+): Promise<number[] | null> {
   const encoded = encodezedcafeinboxjson(files)
   if (!encoded) {
     apilog(
@@ -265,10 +261,9 @@ async function writzedcafeinbox(
       player,
       'zedcafe export: invalid tree — inbox encode skipped',
     )
-    return false
+    return null
   }
-  await putwanixroomfile(WANIX_ZEDCAFE_INBOX_RAMFS, encoded)
-  return true
+  return [...encoded]
 }
 
 async function readexporttree(): Promise<WANIX_ZED_CAFE_EXPORT_FILE[]> {
@@ -302,12 +297,17 @@ export async function synczedcafeexportinbox(
   player: string,
   files: WANIX_ZED_CAFE_EXPORT_FILE[],
 ): Promise<boolean> {
-  if (!(await writzedcafeinbox(device, player, files))) {
+  const inboxbytes = await writzedcafeinbox(device, player, files)
+  if (!inboxbytes) {
     return false
   }
   const restart = readwanixzedcaferestart() + 1
   setwanixzedcaferestart(restart)
-  await callwanixrpc('synczedcafe', [WANIX_ZEDCAFE_WASM_CMD, restart])
+  await callwanixrpc('synczedcafe', [
+    WANIX_ZEDCAFE_WASM_CMD,
+    restart,
+    inboxbytes,
+  ])
   return true
 }
 

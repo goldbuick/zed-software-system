@@ -26,8 +26,6 @@ import {
 import {
   WANIX_ZEDCAFE_EXPORT_RAMFS,
   WANIX_ZEDCAFE_GUEST_MOUNT,
-  WANIX_ZEDCAFE_WASM_RAMFS,
-  WANIX_ZEDCAFE_WASM_URL,
 } from 'zss/feature/wanix/wanixzedcafeconstants'
 import {
   WANIX_TERM_BRIDGE_PONG,
@@ -499,18 +497,6 @@ async function connectvmtermsession() {
 }
 
 function appendzedcafestagingbinds(sys: WanixSystemElement) {
-  if (!sys.querySelector('wanix-bind[data-zss-zedcafe-wasm]')) {
-    sys.appendChild(
-      createbind(
-        {
-          type: 'file',
-          dst: WANIX_ZEDCAFE_WASM_RAMFS,
-          src: WANIX_ZEDCAFE_WASM_URL,
-        },
-        'data-zss-zedcafe-wasm',
-      ),
-    )
-  }
   const guestfiles = roomconfig.zedcafe?.guestfiles
   if (guestfiles?.some((file) => file.path === 'stats.json')) {
     refreshvmzedcafeguestfiles(sys, guestfiles)
@@ -518,7 +504,7 @@ function appendzedcafestagingbinds(sys: WanixSystemElement) {
 }
 
 function appendtaskroombinds(sys: WanixSystemElement, config: WanixRoomConfig) {
-  sys.appendChild(createbind({ dst: '.', src: '#ramfs' }))
+  // Never bind `#ramfs` at `.` — staging stays internal; user surface is `./zedcafe/` only.
   if (config.zedcafe) {
     appendzedcafestagingbinds(sys)
   }
@@ -722,6 +708,16 @@ async function applyroom(config: WanixRoomConfig) {
       await connectvmtermsession()
       if (typeof vmel.start === 'function') {
         await vmel.start()
+      }
+      if (readzedcafereadylocal()) {
+        const taskrid = readzedcafetaskridlocal()
+        if (taskrid) {
+          const guestfiles = await collectzedcafeexportfiles(
+            readroot(),
+            taskrid,
+          )
+          refreshvmzedcafeguestfiles(system, guestfiles)
+        }
       }
     }
     const vrid = vmel
@@ -952,8 +948,16 @@ async function handlerrpc(
         break
       }
       case 'synczedcafe': {
-        const [cmd, generation] = args as [string, number]
-        synczedcafestate(String(cmd), Number(generation))
+        const [cmd, generation, inboxbytes] = args as [
+          string,
+          number,
+          number[]?,
+        ]
+        synczedcafestate(
+          String(cmd),
+          Number(generation),
+          Array.isArray(inboxbytes) ? inboxbytes : undefined,
+        )
         if (system) {
           haltzedcafetask(system)
         }
