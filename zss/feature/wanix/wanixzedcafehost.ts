@@ -85,15 +85,57 @@ export function readzedcafetaskridlocal(): string | null {
   return zedcafetaskrid
 }
 
+/** Reconcile host rid when sync cleared state but the gojs task is still mounted. */
+export function recoverzedcafetaskrid(
+  sys: WanixSystemElement | null | undefined,
+): string | null {
+  if (zedcafetaskrid) {
+    return zedcafetaskrid
+  }
+  if (!sys) {
+    return null
+  }
+  const task = sys.querySelector(
+    `wanix-task[id="${WANIX_ZEDCAFE_TASK_ID}"]`,
+  ) as WanixTaskElement | null
+  const rid = task?.rid ?? null
+  if (rid) {
+    zedcafetaskrid = rid
+  }
+  return rid
+}
+
+export async function readzedcafeexporthasbooks(
+  root: WanixRoot,
+  taskrid: string,
+): Promise<boolean> {
+  if (!taskrid) {
+    return false
+  }
+  const base = readwanixzedcafeexportsrc(taskrid)
+  try {
+    const entries = await root.readDir(base)
+    return entries.some((entry) => entry.replace(/\/$/, '') === 'books')
+  } catch {
+    return false
+  }
+}
+
 export function readzedcafereadylocal(): boolean {
   return zedcafeready
 }
 
-export function synczedcafestate(cmd: string, generation: number) {
+export function synczedcafestate(
+  cmd: string,
+  generation: number,
+  opts?: { keeptaskrid?: boolean },
+) {
   zedcafecmd = cmd
   zedcafegen = generation
   zedcafeready = false
-  zedcafetaskrid = null
+  if (!opts?.keeptaskrid) {
+    zedcafetaskrid = null
+  }
   zedcafebootpromise = null
 }
 

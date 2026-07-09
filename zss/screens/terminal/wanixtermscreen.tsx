@@ -7,6 +7,7 @@ import {
   subscribewanixattach,
 } from 'zss/feature/wanix/wanixattachstate'
 import { callwanixtermwrite } from 'zss/feature/wanix/wanixbridge'
+import { readwanixsessionlabel } from 'zss/feature/wanix/wanixsessionmeta'
 import {
   readwanixtermbuffer,
   readwanixtermbufferkeys,
@@ -24,6 +25,12 @@ import {
   readwanixtermguestcursor,
   readwanixtermlinecell,
 } from 'zss/feature/wanix/wanixtermclipboard'
+import {
+  readwanixtermscrollstate,
+  scrollwanixtermby,
+  scrollwanixtermto,
+} from 'zss/feature/wanix/wanixtermscroll'
+import { Scrollable } from 'zss/gadget/scrollable'
 import { writetile } from 'zss/gadget/tiles'
 import { modsfromevent } from 'zss/gadget/userinput'
 import { UserInput } from 'zss/gadget/userinput.bridge'
@@ -187,10 +194,12 @@ export function WanixTermScreen() {
   const [prefixarmed, setprefixarmed] = useState(false)
   const [selanchor, setselanchor] = useState<WanixTermCellPos | null>(null)
   const [selactive, setselactive] = useState<WanixTermCellPos | null>(null)
+  const [hasnewoutput, sethasnewoutput] = useState(false)
 
   const atlivelineref = useRef(true)
   const sessionkeyref = useRef(sessionkey)
   const bracketedpasteref = useRef(false)
+  const scrollversionref = useRef(0)
 
   const buffer = sessionkey != null ? readwanixtermbuffer(sessionkey) : null
   if (buffer) {
@@ -206,14 +215,23 @@ export function WanixTermScreen() {
   useEffect(() => {
     setscrolloffset(0)
     setprefixarmed(false)
+    sethasnewoutput(false)
     clearsel()
   }, [sessionkey, clearsel])
 
   useEffect(() => {
-    if (scrolloffset !== 0) {
-      clearsel()
+    if (!frame) {
+      return
     }
-  }, [scrolloffset, clearsel])
+    if (scrolloffset === 0) {
+      sethasnewoutput(false)
+      scrollversionref.current = frame.version
+      return
+    }
+    if (frame.version > scrollversionref.current) {
+      sethasnewoutput(true)
+    }
+  }, [frame?.version, scrolloffset, frame])
 
   const pastetext = useCallback((text: string) => {
     const targetkey = sessionkeyref.current ?? readattachedsession()
@@ -251,11 +269,12 @@ export function WanixTermScreen() {
   const scrollbackrows = frame.scrollbackrows ?? 0
   const cols = Math.min(frame.cols, edge.width)
   const visibleheight = Math.max(0, edge.height - 1)
-  const totallines = scrollbackrows + frame.rows
-  const maxscrolloffset = Math.max(0, totallines - visibleheight)
-  const clampedoffset = Math.min(scrolloffset, maxscrolloffset)
-  const startline = Math.max(0, totallines - visibleheight - clampedoffset)
-  const atliveline = clampedoffset === 0
+  const scrollstate = readwanixtermscrollstate(frame, visibleheight, scrolloffset)
+  const {
+    maxoffset: maxscrolloffset,
+    startline,
+    atliveline,
+  } = scrollstate
   const hasselection = haswanixtermselection(selanchor, selactive)
 
   atlivelineref.current = atliveline
@@ -272,7 +291,6 @@ export function WanixTermScreen() {
       let color = cell.color
       let bg = cell.bg
       if (
-        atliveline &&
         hasselection &&
         cellinwanixtermselection(lineindex, x, selanchor, selactive)
       ) {
@@ -303,7 +321,10 @@ export function WanixTermScreen() {
     const sessions = readwanixtermbufferkeys()
     const sessioncount = sessions.length
     const sessionindex = sessions.indexOf(sessionkey ?? '')
-    const sessionhint = `session ${sessionindex + 1} of ${sessioncount}`
+    const label = sessionkey ? readwanixsessionlabel(sessionkey) : '?'
+    const altbadge = frame.altactive ? ' alt' : ''
+    const newoutputbadge = hasnewoutput ? ' new output' : ''
+    const sessionhint = `${label} (${sessionindex + 1}/${sessioncount})${altbadge}${newoutputbadge}`
     drawhintbar(
       context,
       edge,
@@ -312,6 +333,18 @@ export function WanixTermScreen() {
   }
 
   context.changed()
+
+  function scrollby(delta: number) {
+    setscrolloffset((prev) => scrollwanixtermby(prev, delta, maxscrolloffset))
+  }
+
+  function scrollto(target: 'top' | 'live') {
+    setscrolloffset(scrollwanixtermto(scrolloffset, target, maxscrolloffset))
+    if (target === 'live') {
+      sethasnewoutput(false)
+      scrollversionref.current = frame!.version
+    }
+  }
 
   function trycopy(event: KeyboardEvent) {
     if (!hasselection || selanchor == null || selactive == null) {
@@ -388,61 +421,117 @@ export function WanixTermScreen() {
     }
   }
 
-  return (
-    <UserInput
-      keydown={(event) => {
-        const key = NAME(event.key)
+  function handlescrolledinput(event: KeyboardEvent, key: string) {
+    if (key === 'home') {
+      event.preventDefault()
+      scrollto('top')
+      return
+    }
+    if (key === 'end' || (key === 'g' && event.ctrlKey)) {
+      event.preventDefault()
+      scrollto('live')
+      return
+    }
+    if (key === 'pageup') {
+      event.preventDefault()
+      scrollby(event.shiftKey ? 10 : 1)
+      return
+    }
+    if (key === 'pagedown') {
+      event.preventDefault()
+      scrollby(event.shiftKey ? -10 : -1)
+      return
+    }
+    if (key === 'escape') {
+      if (hasselection) {
+        event.preventDefault()
+        clearsel()
+        return
+      }
+    }
+    if (tryshiftselection(event, key)) {
+      return
+    }
+    if (trycopy(event)) {
+      return
+    }
+  }
 
-        if (prefixarmed) {
-          event.preventDefault()
-          setprefixarmed(false)
-          if (key === 'p' || key === 'arrowleft') {
-            cyclewanixattachedsession(readwanixtermbufferkeys(), -1)
+  return (
+    <>
+      <Scrollable
+        blocking
+        x={edge.left}
+        y={edge.top}
+        width={edge.width}
+        height={Math.max(0, edge.height - 1)}
+        onScroll={(deltay) => {
+          scrollby(-deltay)
+        }}
+      />
+      <UserInput
+        keydown={(event) => {
+          const key = NAME(event.key)
+
+          if (prefixarmed) {
+            event.preventDefault()
+            setprefixarmed(false)
+            if (key === 'p' || key === 'arrowleft') {
+              cyclewanixattachedsession(readwanixtermbufferkeys(), -1)
+              return
+            }
+            if (key === 'n' || key === 'arrowright') {
+              cyclewanixattachedsession(readwanixtermbufferkeys(), 1)
+              return
+            }
+            if (key === 'd' || isctrlbackslash(event)) {
+              detachwanixterm()
+              return
+            }
+            if (key === 'escape') {
+              return
+            }
+            if (!atliveline) {
+              return
+            }
+            handleliveinput(event, key)
             return
           }
-          if (key === 'n' || key === 'arrowright') {
-            cyclewanixattachedsession(readwanixtermbufferkeys(), 1)
+
+          if (isctrlbackslash(event)) {
+            event.preventDefault()
+            setprefixarmed(true)
             return
           }
-          if (key === 'd' || isctrlbackslash(event)) {
-            detachwanixterm()
-            return
-          }
-          if (key === 'escape') {
-            return
-          }
+
           if (!atliveline) {
+            handlescrolledinput(event, key)
+            return
+          }
+
+          if (key === 'pageup') {
+            event.preventDefault()
+            scrollby(event.shiftKey ? 10 : 1)
+            return
+          }
+          if (key === 'pagedown') {
+            event.preventDefault()
+            scrollby(event.shiftKey ? -10 : -1)
+            return
+          }
+          if (key === 'home') {
+            event.preventDefault()
+            scrollto('top')
+            return
+          }
+          if (key === 'end' || (key === 'g' && event.ctrlKey)) {
+            event.preventDefault()
+            scrollto('live')
             return
           }
           handleliveinput(event, key)
-          return
-        }
-
-        if (isctrlbackslash(event)) {
-          event.preventDefault()
-          setprefixarmed(true)
-          return
-        }
-
-        if (key === 'pageup') {
-          event.preventDefault()
-          setscrolloffset((prev) =>
-            Math.min(maxscrolloffset, prev + (event.shiftKey ? 10 : 1)),
-          )
-          return
-        }
-        if (key === 'pagedown') {
-          event.preventDefault()
-          setscrolloffset((prev) =>
-            Math.max(0, prev - (event.shiftKey ? 10 : 1)),
-          )
-          return
-        }
-        if (!atliveline) {
-          return
-        }
-        handleliveinput(event, key)
-      }}
-    />
+        }}
+      />
+    </>
   )
 }

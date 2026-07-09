@@ -62,7 +62,7 @@ Built with `yarn task run ops:fixtures:wanix:zedcafe:build` (run `ops:fixtures:w
 | File | Role |
 |------|------|
 | `zedcafe.wasm` | Export daemon — mounts empty guarded export FS; host pushes game state via `writeFile` at guest mount `zedcafe/` |
-| `findplayers.wasm` | One-shot scanner — prints JSON list of all `pid_*` players from `zedcafe/` |
+| `findplayers.wasm` | One-shot scanner — prints a JSON array of export paths containing player elements |
 
 **findplayers flow**
 
@@ -72,7 +72,7 @@ Zedcafe warms on **register ready** (sim + memory up), not on wasm drop or `#wan
 
 1. Cafe boots the wanix task room and zedcafe export daemon from live memory when export files are available.
 2. Drop `findplayers.wasm` as a gojs task. The iframe **blocks spawn** until `#task/{rid}/export/stats.json` is readable, attaches a per-task `zedcafe/` bind (child tasks do not inherit system binds), then `allocate()` / `start()`.
-3. The guest polls `zedcafe/stats.json` in its own task namespace (defense-in-depth) and prints one JSON stdout line.
+3. The guest polls `zedcafe/stats.json` in its own task namespace (defense-in-depth) and prints one JSON stdout line: a sorted array of export-relative paths.
 
 If zedcafe is not ready, spawn is blocked with a terminal error (the guest does not start).
 

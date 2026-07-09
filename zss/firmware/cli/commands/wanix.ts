@@ -5,6 +5,8 @@ import {
   wanixdetach,
   wanixshow,
   wanixstop,
+  wanixtermdump,
+  wanixtermstatus,
   wanixvmstart,
   wanixvmstop,
 } from 'zss/device/api'
@@ -69,6 +71,46 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
         case 'attach':
           wanixattach(SOFTWARE, player, ispresent(arg) ? NAME(arg) : undefined)
           break
+        case 'term': {
+          const sub = ispresent(arg) ? NAME(arg) : undefined
+          if (!ispresent(sub)) {
+            apierror(
+              SOFTWARE,
+              player,
+              'wanix',
+              'usage: #wanix term dump [session] | #wanix term status',
+            )
+            break
+          }
+          if (NAME(sub) === 'dump') {
+            const [sessionkey, tailraw] = readargs(words, 2, [
+              ARG_TYPE.MAYBE_NAME,
+              ARG_TYPE.MAYBE_NUMBER,
+            ])
+            const tail =
+              typeof tailraw === 'number' && tailraw > 0
+                ? Math.floor(tailraw)
+                : undefined
+            wanixtermdump(
+              SOFTWARE,
+              player,
+              ispresent(sessionkey) ? NAME(sessionkey) : undefined,
+              tail,
+            )
+            break
+          }
+          if (NAME(sub) === 'status') {
+            wanixtermstatus(SOFTWARE, player)
+            break
+          }
+          apierror(
+            SOFTWARE,
+            player,
+            'wanix',
+            'usage: #wanix term dump [session] [tail] | #wanix term status',
+          )
+          break
+        }
         case 'pull':
           wanixstublog(player, 'pull zed-cafe export (not wired)')
           break
@@ -132,7 +174,7 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
             SOFTWARE,
             player,
             'wanix',
-            'drop .wasm/.tgz — #wanix menu, vm, remote, bridge, attach, pull, stop, detach',
+            'drop .wasm/.tgz — #wanix menu, vm, remote, bridge, attach, term, pull, stop, detach',
           )
           break
       }

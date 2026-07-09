@@ -32,6 +32,7 @@ export type ZedcafeFailureReport = {
   readdirerrors: string[]
   walkbookserrors: string[]
   termdump: string
+  termdumptail: string
   recentlogs: string[]
   hoststats?: ZedcafeStatsSnapshot | null
   gueststats?: ZedcafeStatsSnapshot | null
@@ -154,32 +155,40 @@ export async function readtermbuffertext(
   page: import('@playwright/test').Page,
   root: string,
   sessionkey: string,
+  opts?: { tail?: number; viewportonly?: boolean },
 ): Promise<string> {
   return page.evaluate(
-    async ({ projectroot, key }) => {
+    async ({ projectroot, key, dumpopts }) => {
       const { readwanixtermbuffer } = await import(
         `/@fs${projectroot}/zss/feature/wanix/wanixtermbuffer.ts`
       )
-      const { readwanixtermlinecell } = await import(
-        `/@fs${projectroot}/zss/feature/wanix/wanixtermclipboard.ts`
+      const { dumpwanixtermbuffertext } = await import(
+        `/@fs${projectroot}/zss/feature/wanix/wanixtermtext.ts`
       )
       const buffer = readwanixtermbuffer(key)
       if (!buffer) {
         return ''
       }
-      const lines: string[] = []
-      const totallines = (buffer.scrollbackrows ?? 0) + buffer.rows
-      for (let line = 0; line < totallines; line++) {
-        let text = ''
-        for (let col = 0; col < buffer.cols; col++) {
-          const ch = readwanixtermlinecell(buffer, line, col).char
-          text += ch >= 32 && ch <= 126 ? String.fromCharCode(ch) : ' '
-        }
-        lines.push(text.replace(/ +$/, ''))
-      }
-      return lines.join('\n')
+      return dumpwanixtermbuffertext(buffer, dumpopts)
     },
-    { projectroot: root, key: sessionkey },
+    { projectroot: root, key: sessionkey, dumpopts: opts },
+  )
+}
+
+export async function waitwanixtermcontains(
+  page: import('@playwright/test').Page,
+  root: string,
+  sessionkey: string,
+  pattern: string,
+  budgetms = 30_000,
+  pollms = 250,
+): Promise<string> {
+  return polluntil(
+    `wanix-term-contains:${pattern}`,
+    budgetms,
+    pollms,
+    () => readtermbuffertext(page, root, sessionkey),
+    (text) => text.includes(pattern),
   )
 }
 

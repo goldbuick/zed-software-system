@@ -27,7 +27,12 @@ func main() {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
-	report, err := findplayers.Scan(os.DirFS(root), filepath.Base(root))
+	exportfs, err := findplayers.OpenExportFS(fsys, root)
+	if err != nil {
+		fmt.Printf("findplayers: open export root: %v\n", err)
+		os.Exit(1)
+	}
+	report, err := findplayers.Scan(exportfs, filepath.Base(root))
 	if err != nil {
 		if errors.Is(err, findplayers.ErrExportNotReady) {
 			fmt.Println(err.Error())
@@ -36,7 +41,11 @@ func main() {
 		}
 		os.Exit(1)
 	}
-	raw, err := json.Marshal(report)
+	paths := report.PlayerPaths
+	if paths == nil {
+		paths = []string{}
+	}
+	raw, err := json.Marshal(paths)
 	if err != nil {
 		fmt.Printf("findplayers: encode: %v\n", err)
 		os.Exit(1)

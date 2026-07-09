@@ -67,6 +67,8 @@ async function dropwanixwasm(
   )
 }
 
+const TERM_DUMP_TAIL_LINES = 40
+
 function buildfailcontext(
   timeline: ZedcafeTimelineEntry[],
   taskrid: string | null,
@@ -81,6 +83,11 @@ function buildfailcontext(
 ) {
   const { readdirerrors, walkbookserrors } =
     collectexportconsoleerrors(consolelines)
+  const termlines = termdump.length ? termdump.split('\n') : []
+  const termdumptail =
+    termlines.length > TERM_DUMP_TAIL_LINES
+      ? termlines.slice(-TERM_DUMP_TAIL_LINES).join('\n')
+      : termdump
   return {
     timeline,
     taskrid,
@@ -88,6 +95,7 @@ function buildfailcontext(
     readdirerrors,
     walkbookserrors,
     termdump,
+    termdumptail,
     recentlogs: pagelogs.slice(-80),
     hoststats,
     gueststats,
@@ -505,7 +513,7 @@ const validatezedcafevmexport: HeadedPlaywrightScript = async ({
   await withscripttimeout('findplayers-run', VALIDATE_TIMEOUT_MS, async () => {
     for (;;) {
       const logs = await readplaywrightlogs(page)
-      if (logs.some((line) => /findplayers|"players"/.test(line))) {
+      if (logs.some((line) => /^\[.*"books\//.test(line.trim()) || line.trim() === '[]')) {
         break
       }
       await page.waitForTimeout(EXPORT_POLL_MS)

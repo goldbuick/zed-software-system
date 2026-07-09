@@ -30,6 +30,7 @@ type Player struct {
 type Report struct {
 	ExportRoot  string   `json:"exportRoot"`
 	PlayerCount int      `json:"playerCount"`
+	PlayerPaths []string `json:"playerPaths"`
 	Players     []Player `json:"players"`
 }
 
@@ -43,6 +44,32 @@ type boardObject struct {
 	ID   string  `json:"id"`
 	X    float64 `json:"x"`
 	Y    float64 `json:"y"`
+}
+
+func markplayerpath(paths map[string]struct{}, rel string) {
+	if rel == "" {
+		return
+	}
+	paths[path.Clean(rel)] = struct{}{}
+}
+
+func sortedplayerpaths(paths map[string]struct{}) []string {
+	if len(paths) == 0 {
+		return nil
+	}
+	out := make([]string, 0, len(paths))
+	for rel := range paths {
+		out = append(out, rel)
+	}
+	sort.Strings(out)
+	return out
+}
+
+func isplayerelement(kind string, id string) bool {
+	if kind == "player" {
+		return true
+	}
+	return ispid(id)
 }
 
 func ispid(id string) bool {
@@ -75,6 +102,7 @@ func scanbookstats(
 	fsys fs.FS,
 	rel string,
 	players map[string]*Player,
+	playerpaths map[string]struct{},
 ) error {
 	data, err := readfile(fsys, rel)
 	if err != nil {
@@ -85,10 +113,12 @@ func scanbookstats(
 		return fmt.Errorf("parse %s: %w", rel, err)
 	}
 	bookdir := strings.Split(rel, "/")[1]
+	found := false
 	for _, id := range stats.ActiveList {
 		if !ispid(id) {
 			continue
 		}
+		found = true
 		p := ensureplayer(players, id)
 		p.Active = true
 		p.Book = bookdir
@@ -106,6 +136,7 @@ func scanbookstats(
 		if !ispid(id) {
 			continue
 		}
+		found = true
 		p := ensureplayer(players, id)
 		if p.Book == "" {
 			p.Book = bookdir
@@ -122,6 +153,9 @@ func scanbookstats(
 			}
 		}
 	}
+	if found {
+		markplayerpath(playerpaths, rel)
+	}
 	return nil
 }
 
@@ -129,6 +163,7 @@ func scanboardobject(
 	rel string,
 	data []byte,
 	players map[string]*Player,
+	playerpaths map[string]struct{},
 ) error {
 	parts := strings.Split(rel, "/")
 	if len(parts) < 6 {
@@ -143,6 +178,11 @@ func scanboardobject(
 	if err := json.Unmarshal(data, &obj); err != nil {
 		return fmt.Errorf("parse %s: %w", rel, err)
 	}
+	if !isplayerelement(obj.Kind, obj.ID) && !isplayerelement(obj.Kind, objid) {
+		return nil
+	}
+	markplayerpath(playerpaths, rel)
+
 	id := objid
 	if obj.ID != "" {
 		id = obj.ID
@@ -169,6 +209,47 @@ func scanboardobject(
 	return nil
 }
 
+func scanobjectelement(
+	rel string,
+	data []byte,
+	players map[string]*Player,
+	playerpaths map[string]struct{},
+) error {
+	parts := strings.Split(rel, "/")
+	if len(parts) < 5 {
+		return nil
+	}
+	bookdir := parts[1]
+	pagedir := parts[3]
+
+	var obj boardObject
+	if err := json.Unmarshal(data, &obj); err != nil {
+		return fmt.Errorf("parse %s: %w", rel, err)
+	}
+	id := obj.ID
+	if !isplayerelement(obj.Kind, id) {
+		return nil
+	}
+	markplayerpath(playerpaths, rel)
+	if id == "" && strings.HasPrefix(pagedir, "player-") {
+		id = strings.TrimPrefix(pagedir, "player-")
+	}
+	if !ispid(id) {
+		return nil
+	}
+	p := ensureplayer(players, id)
+	p.Onboard = true
+	p.Book = bookdir
+	p.Page = pagedir
+	if obj.Kind != "" {
+		p.Kind = obj.Kind
+	}
+	p.X = intfromcoord(obj.X)
+	p.Y = intfromcoord(obj.Y)
+	markplayerpath(playerpaths, rel)
+	return nil
+}
+
 // Scan walks a zedcafe export tree and merges roster + board avatars.
 func Scan(fsys fs.FS, exportroot string) (Report, error) {
 	if exportroot == "" {
@@ -179,6 +260,7 @@ func Scan(fsys fs.FS, exportroot string) (Report, error) {
 	}
 
 	players := make(map[string]*Player)
+	playerpaths := make(map[string]struct{})
 	var walkerr error
 	err := fs.WalkDir(fsys, ".", func(rel string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -193,7 +275,7 @@ func Scan(fsys fs.FS, exportroot string) (Report, error) {
 		}
 		switch {
 		case strings.HasSuffix(rel, "/stats.json") && strings.Count(rel, "/") == 2 && strings.HasPrefix(rel, "books/"):
-			if err := scanbookstats(fsys, rel, players); err != nil {
+			if err := scanbookstats(fsys, rel, players, playerpaths); err != nil {
 				walkerr = err
 			}
 		case strings.Contains(rel, "/board/objects/") && strings.HasSuffix(rel, ".json"):
@@ -202,7 +284,16 @@ func Scan(fsys fs.FS, exportroot string) (Report, error) {
 				walkerr = err
 				return nil
 			}
-			if err := scanboardobject(rel, data, players); err != nil {
+			if err := scanboardobject(rel, data, players, playerpaths); err != nil {
+				walkerr = err
+			}
+		case strings.HasSuffix(rel, "/object/element.json") && strings.HasPrefix(rel, "books/"):
+			data, err := readfile(fsys, rel)
+			if err != nil {
+				walkerr = err
+				return nil
+			}
+			if err := scanobjectelement(rel, data, players, playerpaths); err != nil {
 				walkerr = err
 			}
 		}
@@ -227,6 +318,7 @@ func Scan(fsys fs.FS, exportroot string) (Report, error) {
 	return Report{
 		ExportRoot:  exportroot,
 		PlayerCount: len(out),
+		PlayerPaths: sortedplayerpaths(playerpaths),
 		Players:     out,
 	}, nil
 }

@@ -255,6 +255,44 @@ function readexporthostsyncneeded(
   )
 }
 
+async function tryreuselivezedcafeexport(
+  device: DEVICELIKE,
+  player: string,
+  files: WANIX_ZED_CAFE_EXPORT_FILE[],
+): Promise<string | null> {
+  const taskrid = await readtaskrid()
+  if (!taskrid || !(await iszedcafeexportlive(taskrid))) {
+    return null
+  }
+  const memcount = readbookcountfromexportfiles(files)
+  if (memcount > 0) {
+    return null
+  }
+  let treecount = -1
+  try {
+    treecount = readbookcountfromexportfiles(await readexporttree())
+  } catch {
+    return null
+  }
+  if (treecount <= 0) {
+    return null
+  }
+  tracezedcafeexport(
+    `boot-export reuse-live taskrid=${taskrid} treecount=${treecount}`,
+  )
+  if (!(await iszedcafeguestbound())) {
+    await callwanixrpc(
+      'wirezedcafeexport',
+      [taskrid],
+      WANIX_ZEDCAFE_EXPORT_WAIT_MS,
+    )
+  }
+  if (!readzedcafepollactive()) {
+    await markzedcafepollready(device, player)
+  }
+  return taskrid
+}
+
 async function synczedcafeexportifstale(
   device: DEVICELIKE,
   player: string,
@@ -457,6 +495,10 @@ async function bootzedcafeexportinner(
   }
   const memcount = readbookcountfromexportfiles(files)
   tracezedcafeexport(`boot-export start memcount=${memcount} paths=${files.length}`)
+  const reused = await tryreuselivezedcafeexport(device, player, files)
+  if (reused) {
+    return reused
+  }
   await synczedcafedaemoncmd()
   const taskrid = await waitzedcafemount()
   if (!taskrid) {
@@ -643,7 +685,7 @@ export async function ensurewanixzedcafedaemon(
   device: DEVICELIKE,
   player: string,
 ): Promise<boolean> {
-  const files = buildzedcafeexportfiles()
+  const files = await resolvehostexportfiles(device, player)
   const memcount = readbookcountfromexportfiles(files)
   tracezedcafeexport(`warm start memcount=${memcount}`)
   const taskrid = await readtaskrid()

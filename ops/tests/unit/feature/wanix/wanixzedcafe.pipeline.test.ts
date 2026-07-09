@@ -95,6 +95,7 @@ describe('ensurezedcafeexportready pipeline', () => {
     expect(taskrid).toBe('7')
     expect(order).toEqual([
       'readzedcafetaskrid',
+      'readzedcafetaskrid',
       'synczedcafe',
       'waitzedcafemount',
     ])
@@ -145,6 +146,7 @@ describe('ensurezedcafeexportready pipeline', () => {
     expect(taskrid).toBe('7')
     expect(order).toEqual([
       'readzedcafetaskrid',
+      'readzedcafetaskrid',
       'synczedcafe',
       'waitzedcafemount',
       'pushzedcafeexport',
@@ -177,6 +179,42 @@ describe('ensurezedcafeexportready pipeline', () => {
     expect(mockrpc).not.toHaveBeenCalledWith('synczedcafe', expect.anything())
     expect(mockrpc).not.toHaveBeenCalledWith('waitzedcafemount', expect.anything())
     expect(mockrpc).not.toHaveBeenCalledWith('pushzedcafeexport', expect.anything())
+  })
+
+  it('reuses live guest export on boot without halting daemon', async () => {
+    let livechecks = 0
+    const bookstats = new TextEncoder().encode(
+      '{"exportedAt":"t","bookCount":1,"books":[]}\n',
+    )
+    mockrpc.mockImplementation(async (method: string) => {
+      switch (method) {
+        case 'readzedcafetaskrid':
+          return '9'
+        case 'iszedcafeexportlive':
+          livechecks += 1
+          return livechecks >= 2
+        case 'iszedcafeguestbound':
+          return true
+        case 'readzedcafeexportfiles':
+          return [
+            { path: 'stats.json', data: [...bookstats] },
+            {
+              path: 'books/demo-sid_book/stats.json',
+              data: [...bookstats],
+            },
+          ]
+        case 'setzedcafeready':
+          return { ok: true }
+        default:
+          return null
+      }
+    })
+
+    const taskrid = await ensurezedcafeexportready(device, player, files)
+
+    expect(taskrid).toBe('9')
+    expect(mockrpc).not.toHaveBeenCalledWith('synczedcafe', expect.anything())
+    expect(mockrpc).not.toHaveBeenCalledWith('waitzedcafemount', expect.anything())
   })
 
   it('pushes when iframe export is live but stale vs memory', async () => {

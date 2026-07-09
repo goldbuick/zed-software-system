@@ -40,6 +40,7 @@ function makebuffer(
     scrollbackcolor: new Array(scrollbackrows * cols).fill(15),
     scrollbackbg: new Array(scrollbackrows * cols).fill(0),
     bracketedpaste: false,
+    altactive: false,
     digest: '',
     version: 1,
   }

@@ -44,8 +44,10 @@ import {
   pushzedcafeexportlive,
   readzedcafeguestbound,
   readzedcafeexportlive,
+  readzedcafeexporthasbooks,
   readzedcafeexportcontentready,
   readzedcafetaskridlocal,
+  recoverzedcafetaskrid,
   resetzedcafestate,
   setzedcafereadylocal,
   synczedcafewasmversionifneeded,
@@ -740,6 +742,7 @@ function isfindplayerswasmcmd(cmd: string): boolean {
 }
 
 async function waitlocalzedcafetaskrid(): Promise<string | null> {
+  recoverzedcafetaskrid(system)
   if (readzedcafetaskridlocal()) {
     return readzedcafetaskridlocal()
   }
@@ -808,6 +811,7 @@ async function spawntask(taskid: string, cmd: string) {
   task.setAttribute('data-zss-target-id', taskid)
   task.setAttribute('data-zss-target-kind', 'task')
   if (driver === 'gojs' && isfindplayerswasmcmd(cmd)) {
+    recoverzedcafetaskrid(system)
     const taskrid = await waitlocalzedcafetaskrid()
     if (!taskrid) {
       throw new Error(
@@ -1011,6 +1015,24 @@ async function handlerrpc(
       }
       case 'synczedcafe': {
         const [cmd, generation] = args as [string, number]
+        if (system?.isReady) {
+          const rid =
+            recoverzedcafetaskrid(system) ?? readzedcafetaskridlocal()
+          if (
+            rid &&
+            (await readzedcafeexportlive(readroot(), rid)) &&
+            (await readzedcafeexporthasbooks(readroot(), rid))
+          ) {
+            synczedcafestate(String(cmd), Number(generation), {
+              keeptaskrid: true,
+            })
+            console.info(
+              `[zedcafe-export] synczedcafe skip-halt taskrid=${rid} generation=${generation}`,
+            )
+            result = { ok: true, skippedhalt: true }
+            break
+          }
+        }
         synczedcafestate(String(cmd), Number(generation))
         if (system) {
           haltzedcafetask(system)
@@ -1086,7 +1108,8 @@ async function handlerrpc(
         break
       }
       case 'readzedcafetaskrid': {
-        result = readzedcafetaskridlocal()
+        result =
+          recoverzedcafetaskrid(system) ?? readzedcafetaskridlocal()
         break
       }
       case 'readzedcafeexportfiles': {
@@ -1095,7 +1118,8 @@ async function handlerrpc(
           break
         }
         const root = readroot()
-        const taskrid = readzedcafetaskridlocal()
+        const taskrid =
+          recoverzedcafetaskrid(system) ?? readzedcafetaskridlocal()
         if (!taskrid) {
           result = []
           break

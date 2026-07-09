@@ -50,6 +50,7 @@ export type WanixTermCellsSnapshot = {
   scrollbackcolor: number[]
   scrollbackbg: number[]
   bracketedpaste: boolean
+  altactive: boolean
   digest: string
 }
 
@@ -1063,6 +1064,7 @@ export function readwanixtermgridsnapshot(
     scrollbackcolor: scrollback.scrollbackcolor,
     scrollbackbg: scrollback.scrollbackbg,
     bracketedpaste: grid.bracketedpaste,
+    altactive: grid.altactive,
     digest: '',
   }
   snapshot.digest = digestwanixtermcells(snapshot)
@@ -1076,6 +1078,7 @@ export function digestwanixtermcells(snapshot: WanixTermCellsSnapshot): string {
   hash = hash * 31 + (snapshot.cursorvisible ? 1 : 0)
   hash = hash * 31 + snapshot.scrollbackrows
   hash = hash * 31 + (snapshot.bracketedpaste ? 1 : 0)
+  hash = hash * 31 + (snapshot.altactive ? 1 : 0)
   for (let i = 0; i < snapshot.char.length; i++) {
     hash = (hash * 33 + snapshot.char[i]) | 0
     hash = (hash * 33 + snapshot.color[i]) | 0

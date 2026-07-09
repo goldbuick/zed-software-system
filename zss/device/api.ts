@@ -213,6 +213,19 @@ export function wanixdetach(device: DEVICELIKE, player: string) {
   device.emit(player, 'wanix:detach')
 }
 
+export function wanixtermdump(
+  device: DEVICELIKE,
+  player: string,
+  sessionkey?: string,
+  tail?: number,
+) {
+  device.emit(player, 'wanix:term-dump', { sessionkey, tail })
+}
+
+export function wanixtermstatus(device: DEVICELIKE, player: string) {
+  device.emit(player, 'wanix:term-status')
+}
+
 export function wanixexportstate(
   device: DEVICELIKE,
   player: string,

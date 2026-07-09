@@ -23,6 +23,10 @@ import {
 } from 'zss/feature/wanix/wanixroomtypes'
 import type { WANIX_ZED_CAFE_EXPORT_FILE } from 'zss/feature/wanix/wanixstateexport'
 import { readwanixtermbufferkeys } from 'zss/feature/wanix/wanixtermbuffer'
+import {
+  writewanixtermdump,
+  writewanixtermstatus,
+} from 'zss/feature/wanix/wanixtermhandlers'
 import { wanixhandleexportstate } from 'zss/feature/wanix/wanixzedcafe'
 import { ispresent, isstring } from 'zss/mapping/types'
 
@@ -281,6 +285,25 @@ const wanix = createdevice('wanix', [], (message) => {
     case 'detach':
       detachwanixterm()
       apilog(wanix, message.player, 'wanix detached')
+      break
+    case 'term-dump': {
+      const payload =
+        ispresent(message.data) && typeof message.data === 'object'
+          ? (message.data as { sessionkey?: unknown; tail?: unknown })
+          : {}
+      const sessionkey =
+        isstring(payload.sessionkey) && payload.sessionkey.trim()
+          ? payload.sessionkey.trim()
+          : undefined
+      const tail =
+        typeof payload.tail === 'number' && payload.tail > 0
+          ? Math.floor(payload.tail)
+          : undefined
+      writewanixtermdump(wanix, message.player, sessionkey, tail)
+      break
+    }
+    case 'term-status':
+      writewanixtermstatus(wanix, message.player)
       break
     case 'export-state': {
       const payload = readwanixexportstatepayload(message.data)
