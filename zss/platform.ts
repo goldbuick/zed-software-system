@@ -1,9 +1,3 @@
-import {
-  bootgpucoordinator,
-  handleplatformgpurequest,
-  setplatformgpuworkers,
-} from 'zss/feature/gpu/gpumain'
-
 import boardrunnerspace from './boardrunnerspace??worker'
 import { createmessage } from './device'
 import { MESSAGE, sessionreset } from './device/api'
@@ -47,7 +41,6 @@ export function ensuresttworker(): Worker | undefined {
     stt.addEventListener('message', sttmessagehandler)
   }
   postreadytoworker(stt)
-  setplatformgpuworkers({ stt })
   return stt
 }
 
@@ -69,10 +62,6 @@ export function createplatform(isstub = false, climode = false) {
   }
   // reset session
   sessionreset(SOFTWARE)
-
-  void bootgpucoordinator()
-
-  setplatformgpuworkers({ stt })
 
   // create boardrunner worker
   boardrunner = new boardrunnerspace({ name: 'boardrunner' })
@@ -136,9 +125,6 @@ export function createplatform(isstub = false, climode = false) {
 
   function sttmessages(event: MessageEvent<any>) {
     const message = event.data as MESSAGE
-    if (ispresent(stt) && handleplatformgpurequest(message, stt)) {
-      return
-    }
     if (shouldforwardclienttoboardrunner(message) && ispresent(boardrunner)) {
       boardrunner.postMessage(message)
     }

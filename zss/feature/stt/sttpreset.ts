@@ -7,3 +7,5 @@ export const STT_MODEL_DEVICE = 'webgpu'
 export const STT_DTYPE = 'q4'
 
 export const STT_TARGET_SAMPLE_RATE = 16000
+
+export const STT_IDLE_DISPOSE_MS = 60_000

@@ -1,4 +1,4 @@
-import { STT_IDLE_DISPOSE_MS } from 'zss/feature/gpu/gpupolicy'
+import { STT_IDLE_DISPOSE_MS } from 'zss/feature/stt/sttpreset'
 import { sttdispose, sttensure, stttranscribe } from 'zss/feature/stt/sttclient'
 import {
   getliveaudiocontext,

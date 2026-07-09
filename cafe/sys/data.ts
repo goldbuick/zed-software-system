@@ -1013,15 +1013,6 @@ export const GLOSSARY: GlossaryEntry[] = [
     related: 'lockdown, #access',
   },
   {
-    term: 'GPU coordinator',
-    category: 'Integrations',
-    audience: 'Dev',
-    definition:
-      'bootgpucoordinator() arbitrates WebGPU access for lazy STT worker inference.',
-    related: 'sttspace',
-    path: 'zss/feature/gpu/gpumain.ts',
-  },
-  {
     term: 'ttsspace',
     category: 'Integrations',
     audience: 'Dev',
@@ -1612,12 +1603,6 @@ export const FEATURE_DOMAINS: FeatureDomain[] = [
     title: 'Speech & TTS',
     color: 'purple',
     features: [
-      [
-        'GPU coordinator',
-        'Dev',
-        'Arbitrates WebGPU for lazy STT worker inference.',
-        'zss/feature/gpu/gpumain.ts',
-      ],
       [
         'TTS engines',
         'Creator',

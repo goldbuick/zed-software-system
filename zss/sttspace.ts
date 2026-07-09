@@ -1,7 +1,4 @@
 import { createforward, shouldforwardstttoclient } from 'zss/device/forward'
-import { initgpumodelbudget } from 'zss/feature/gpu/gpumodelbudget'
-
-void initgpumodelbudget()
 
 import './device/sttworker'
 
