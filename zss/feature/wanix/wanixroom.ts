@@ -15,6 +15,8 @@ import {
   readbundleflatpath,
 } from 'zss/feature/wanix/wanixbundle'
 import { uniquewanixtaskid } from 'zss/feature/wanix/wanixcmd'
+import type { WanixTaskDriver } from 'zss/feature/wanix/wanixelements.d.ts'
+import { readwanixwasmdriver } from 'zss/feature/wanix/wanixwasmdriver'
 import type {
   WanixDropPayload,
   WanixMenuState,
@@ -188,11 +190,12 @@ export async function stopwanixroom(hard = false): Promise<unknown> {
 export async function spawntaskinroom(
   taskid: string,
   cmd: string,
+  driver?: WanixTaskDriver,
 ): Promise<WanixSpawnTaskResult> {
   await waitwanixready(WANIX_ROOM_TIMEOUT_MS)
   const result = await callwanixrpc<WanixSpawnTaskResult>(
     'spawntask',
-    [taskid, cmd],
+    [taskid, cmd, driver ?? null],
     WANIX_ROOM_TIMEOUT_MS,
   )
   roomconfig = {
@@ -389,7 +392,7 @@ export async function handlewanixdrop(
         apilog(device, player, `wanix: spawning task ${taskid}…`)
       }
     }
-    await spawntaskinroom(taskid, path)
+    await spawntaskinroom(taskid, path, readwanixwasmdriver(payload.bytes))
     wanixperfmark('spawntask-return', { taskid, cmd: path })
     if (device && player && isfindplayers) {
       apilog(

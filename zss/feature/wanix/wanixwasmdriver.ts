@@ -20,11 +20,11 @@ function bytescontain(haystack: Uint8Array, needle: Uint8Array): boolean {
 
 /** Pick wanix task driver from wasm bytes (gojs vs wasip1). */
 export function readwanixwasmdriver(bytes: Uint8Array): WanixTaskDriver {
-  if (bytescontain(bytes, WASI_IMPORT)) {
-    return 'wasi'
-  }
   if (bytescontain(bytes, GOJS_IMPORT)) {
     return 'gojs'
+  }
+  if (bytescontain(bytes, WASI_IMPORT)) {
+    return 'wasi'
   }
   return 'wasi'
 }

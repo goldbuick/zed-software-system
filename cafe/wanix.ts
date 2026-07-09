@@ -1,5 +1,6 @@
 import type {
   WanixSystemElement,
+  WanixTaskDriver,
   WanixVmElement,
 } from 'zss/feature/wanix/wanixelements.d.ts'
 import type { WanixRoomConfig } from 'zss/feature/wanix/wanixroomtypes'
@@ -846,13 +847,27 @@ function removetargetpair(taskid: string) {
   roomconfig.tasks = roomconfig.tasks.filter((entry) => entry.id !== taskid)
 }
 
-async function readwasmdriverforcmd(cmd: string) {
+async function readwasmdriverforcmd(cmd: string): Promise<WanixTaskDriver> {
   try {
     const bytes = await readroot().readFile(cmd)
     return readwanixwasmdriver(bytes)
-  } catch {
-    return 'wasi' as const
+  } catch (err) {
+    console.error(`[wanix] readwasmdriver failed cmd=${cmd}`, err)
+    return 'wasi'
   }
+}
+
+function resolvedriverforcmd(
+  cmd: string,
+  driverhint?: WanixTaskDriver | null,
+): Promise<WanixTaskDriver> {
+  if (driverhint) {
+    return Promise.resolve(driverhint)
+  }
+  if (isfindplayerswasmcmd(cmd)) {
+    return Promise.resolve('gojs')
+  }
+  return readwasmdriverforcmd(cmd)
 }
 
 function isfindplayerswasmcmd(cmd: string): boolean {
@@ -911,7 +926,11 @@ async function waitzedcafeexportstatsatroot(
   return false
 }
 
-async function spawntask(taskid: string, cmd: string) {
+async function spawntask(
+  taskid: string,
+  cmd: string,
+  driverhint?: WanixTaskDriver | null,
+) {
   if (!system?.isReady) {
     throw new Error('wanix room not ready')
   }
@@ -919,7 +938,7 @@ async function spawntask(taskid: string, cmd: string) {
     return { ok: true, already: true, taskid }
   }
 
-  const driver = await readwasmdriverforcmd(cmd)
+  const driver = await resolvedriverforcmd(cmd, driverhint)
   const task = document.createElement('wanix-task')
   setwanixattrs(task, {
     id: taskid,
@@ -1054,8 +1073,16 @@ async function handlerrpc(
         break
       }
       case 'spawntask': {
-        const [taskid, cmd] = args as [string, string]
-        result = await spawntask(String(taskid), String(cmd))
+        const [taskid, cmd, driverhint] = args as [
+          string,
+          string,
+          WanixTaskDriver | null?,
+        ]
+        result = await spawntask(
+          String(taskid),
+          String(cmd),
+          driverhint ?? undefined,
+        )
         break
       }
       case 'halttask': {
