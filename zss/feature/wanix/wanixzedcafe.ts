@@ -16,13 +16,11 @@ import {
 import {
   iswanixzedcafetask,
   readlasthostpushfingerprint,
-  readwanixzedcafeready,
   readwanixzedcaferestart,
-  readwanixzedcafetaskrid,
+  readzedcafepollactive,
   setlasthostpushfingerprint,
-  setwanixzedcafeready,
+  setzedcafepollactive,
   setwanixzedcaferestart,
-  setwanixzedcafetaskrid,
 } from 'zss/feature/wanix/wanixzedcafesession'
 import type {
   WanixZedCafeGuestFile,
@@ -250,6 +248,7 @@ async function pushzedcafeexportfiles(
 }
 
 async function synczedcafedaemoncmd() {
+  clearzedcafeexportsession()
   const restart = readwanixzedcaferestart() + 1
   setwanixzedcaferestart(restart)
   await callwanixrpc('synczedcafe', [WANIX_ZEDCAFE_WASM_CMD, restart])
@@ -284,8 +283,7 @@ async function finalizezedcafeexport(
   await callwanixrpc('finalizezedcafeexport', [taskrid, vmmode])
 }
 
-async function markzedcafeready(device: DEVICELIKE, player: string) {
-  setwanixzedcafeready(true)
+async function markzedcafepollready(device: DEVICELIKE, player: string) {
   await callwanixrpc('setzedcafeready', [true])
   startzedcafepoll(device, player)
   try {
@@ -295,29 +293,6 @@ async function markzedcafeready(device: DEVICELIKE, player: string) {
     // poll will refresh on next tick
   }
   primezedcafeexportshadow()
-}
-
-export async function finalizewanixzedcafeaftervmboot(
-  device: DEVICELIKE,
-  player: string,
-): Promise<boolean> {
-  const taskrid = await readtaskrid()
-  if (!taskrid) {
-    apilog(
-      device,
-      player,
-      'zedcafe export: vm boot finished without export task rid',
-    )
-    return false
-  }
-  if (!readwanixzedcafeready()) {
-    const files = await fetchzedcafeexportfiles(device, player)
-    const booted = await bootzedcafeexport(device, player, files)
-    return booted !== null
-  }
-  setwanixzedcafetaskrid(taskrid)
-  await markzedcafeready(device, player)
-  return true
 }
 
 async function bootzedcafeexportinner(
@@ -338,7 +313,6 @@ async function bootzedcafeexportinner(
     )
     return null
   }
-  setwanixzedcafetaskrid(taskrid)
   if (!(await pushzedcafeexportfiles(device, player, taskrid, files))) {
     return null
   }
@@ -351,8 +325,32 @@ async function bootzedcafeexportinner(
     return null
   }
   await finalizezedcafeexport(taskrid, haswanixvms())
-  await markzedcafeready(device, player)
+  await markzedcafepollready(device, player)
   return taskrid
+}
+
+export async function ensurezedcafeexportready(
+  device: DEVICELIKE,
+  player: string,
+  files: WANIX_ZED_CAFE_EXPORT_FILE[],
+): Promise<string | null> {
+  const existing = await readtaskrid()
+  if (existing && (await iszedcafeexportlive(existing))) {
+    if (!readzedcafepollactive()) {
+      await markzedcafepollready(device, player)
+    }
+    return existing
+  }
+  return bootzedcafeexport(device, player, files)
+}
+
+export async function finalizewanixzedcafeaftervmboot(
+  device: DEVICELIKE,
+  player: string,
+): Promise<boolean> {
+  const files = await fetchzedcafeexportfiles(device, player)
+  const taskrid = await ensurezedcafeexportready(device, player, files)
+  return taskrid !== null
 }
 
 async function bootzedcafeexport(
@@ -374,23 +372,39 @@ async function recoverzedcafeexport(
   player: string,
   files: WANIX_ZED_CAFE_EXPORT_FILE[],
 ): Promise<string | null> {
-  stopzedcafepoll()
+  clearzedcafeexportsession()
   await callwanixrpc('haltzedcafe', [])
-  setwanixzedcafeready(false)
-  setwanixzedcafetaskrid(null)
   return bootzedcafeexport(device, player, files)
 }
 
+function clearzedcafeexportsession() {
+  stopzedcafepoll()
+  setlasthostpushfingerprint('')
+}
+
 async function readtaskrid(): Promise<string | null> {
-  const local = readwanixzedcafetaskrid()
-  if (local) {
-    return local
+  return callwanixrpc<string | null>('readzedcafetaskrid', [])
+}
+
+async function iszedcafeexportlive(
+  taskrid: string | null | undefined,
+): Promise<boolean> {
+  if (!taskrid) {
+    return false
   }
-  const remote = await callwanixrpc<string | null>('readzedcafetaskrid', [])
-  if (remote) {
-    setwanixzedcafetaskrid(remote)
-  }
-  return remote
+  return callwanixrpc<boolean>(
+    'iszedcafeexportlive',
+    [taskrid],
+    WANIX_ZEDCAFE_EXPORT_WAIT_MS,
+  ).then((result) => !!result)
+}
+
+async function iszedcafeguestbound(): Promise<boolean> {
+  return callwanixrpc<boolean>(
+    'iszedcafeguestbound',
+    [],
+    WANIX_ZEDCAFE_EXPORT_WAIT_MS,
+  ).then((result) => !!result)
 }
 
 export function iswanixspaceactive(): boolean {
@@ -423,6 +437,7 @@ export function startzedcafepoll(device: DEVICELIKE, player: string) {
   stopzedcafepoll()
   polldevice = device
   pollplayer = player
+  setzedcafepollactive(true)
   polltimer = setInterval(() => {
     void tickzedcafepoll()
   }, WANIX_ZEDCAFE_IMPORT_POLL_MS)
@@ -435,13 +450,18 @@ export function stopzedcafepoll() {
   }
   polldevice = null
   pollplayer = ''
+  setzedcafepollactive(false)
 }
 
 async function tickzedcafepoll() {
-  if (!readwanixzedcafeready() || !polldevice) {
+  if (!readzedcafepollactive() || !polldevice) {
     return
   }
   try {
+    const taskrid = await readtaskrid()
+    if (!(await iszedcafeexportlive(taskrid))) {
+      return
+    }
     const tree = await readexporttree()
     const fingerprint = fingerprintzedcafeexportfiles(tree)
     if (fingerprint === readlasthostpushfingerprint()) {
@@ -462,20 +482,10 @@ async function waitzedcafereadyafterboot(
     [WANIX_ZEDCAFE_EXPORT_WAIT_MS],
     WANIX_ZEDCAFE_EXPORT_WAIT_MS + 5_000,
   )
-  if (!taskrid) {
+  if (!taskrid || !(await iszedcafeexportlive(taskrid))) {
     return false
   }
-  setwanixzedcafeready(true)
-  setwanixzedcafetaskrid(taskrid)
-  await callwanixrpc('setzedcafeready', [true])
-  startzedcafepoll(device, player)
-  try {
-    const tree = await readexporttree()
-    setlasthostpushfingerprint(fingerprintzedcafeexportfiles(tree))
-  } catch {
-    // poll will refresh on next tick
-  }
-  primezedcafeexportshadow()
+  await markzedcafepollready(device, player)
   return true
 }
 
@@ -483,7 +493,11 @@ export async function ensurewanixzedcafedaemon(
   device: DEVICELIKE,
   player: string,
 ): Promise<boolean> {
-  if (readwanixzedcafeready() && readwanixzedcafetaskrid()) {
+  const taskrid = await readtaskrid()
+  if (await iszedcafeexportlive(taskrid)) {
+    if (!readzedcafepollactive()) {
+      await markzedcafepollready(device, player)
+    }
     return true
   }
   if (iswanixspaceactive()) {
@@ -492,11 +506,12 @@ export async function ensurewanixzedcafedaemon(
     }
   }
   try {
-    await fetchzedcafeexportfiles(device, player)
+    const files = await fetchzedcafeexportfiles(device, player)
+    const booted = await ensurezedcafeexportready(device, player, files)
+    return booted !== null
   } catch {
-    // wanixhandleexportstate owns boot when export is triggered
+    return false
   }
-  return waitzedcafereadyafterboot(device, player)
 }
 
 export async function wanixhandleexportstate(
@@ -513,8 +528,13 @@ export async function wanixhandleexportstate(
   clearwanixzedcafependingexport()
 
   const taskrid = await readtaskrid()
-  if (!readwanixzedcafeready() || !taskrid) {
-    await bootzedcafeexport(device, player, files)
+  if (!(await iszedcafeexportlive(taskrid))) {
+    await ensurezedcafeexportready(device, player, files)
+    return
+  }
+  const live = taskrid
+  if (!live) {
+    await ensurezedcafeexportready(device, player, files)
     return
   }
 
@@ -525,11 +545,9 @@ export async function wanixhandleexportstate(
     if (treefp !== readlasthostpushfingerprint()) {
       await runzedcafeimport(device, player, tree)
     }
-    await pushzedcafeexportfiles(device, player, taskrid, files)
-    if (haswanixvms()) {
-      if (filesfp !== readlasthostpushfingerprint()) {
-        await callwanixrpc('refreshvmzedcafeexport', [taskrid])
-      }
+    await pushzedcafeexportfiles(device, player, live, files)
+    if (haswanixvms() && !(await iszedcafeguestbound())) {
+      await callwanixrpc('wirezedcafeexport', [live])
     }
     setlasthostpushfingerprint(filesfp)
   } catch (err) {
@@ -562,7 +580,7 @@ export function resetwanixzedcafefortest() {
   }
   pendingexport = false
   bootinflight = null
-  stopzedcafepoll()
+  clearzedcafeexportsession()
 }
 
 export { iswanixzedcafetask }

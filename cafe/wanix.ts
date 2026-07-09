@@ -41,15 +41,16 @@ import {
   haltzedcafetask,
   collectzedcafeexportfiles,
   pushzedcafeexportlive,
-  readzedcafereadylocal,
+  readzedcafeguestbound,
+  readzedcafeexportlive,
   readzedcafetaskridlocal,
-  refreshzedcafeexportbinds,
   resetzedcafestate,
   setzedcafereadylocal,
   synczedcafestate,
   waitzedcafeexportcontentready,
   waitzedcafemountrpc,
   waitzedcafereadyrpc,
+  wirezedcafeexportbinds,
 } from 'zss/feature/wanix/wanixzedcafehost'
 
 type WanixSessionKind = 'vm' | 'task'
@@ -692,12 +693,6 @@ async function applyroom(config: WanixRoomConfig) {
       if (typeof vmel.start === 'function') {
         await vmel.start()
       }
-      if (readzedcafereadylocal()) {
-        const taskrid = readzedcafetaskridlocal()
-        if (taskrid) {
-          refreshzedcafeexportbinds(system, taskrid)
-        }
-      }
     }
     const vrid = vmel
       ? await waitforvmrid(vmel, Date.now() + VM_RID_WAIT_MS)
@@ -1116,16 +1111,38 @@ async function handlerrpc(
         result = { ok: true }
         break
       }
-      case 'refreshvmzedcafeexport': {
+      case 'iszedcafeexportlive': {
         const [taskrid] = args as [string?]
-        if (!system) {
-          throw new Error('wanix system missing')
+        if (!system?.isReady) {
+          result = false
+          break
+        }
+        const rid = String(taskrid ?? readzedcafetaskridlocal() ?? '')
+        if (!rid) {
+          result = false
+          break
+        }
+        result = await readzedcafeexportlive(readroot(), rid)
+        break
+      }
+      case 'iszedcafeguestbound': {
+        if (!system?.isReady) {
+          result = false
+          break
+        }
+        result = await readzedcafeguestbound(readroot())
+        break
+      }
+      case 'wirezedcafeexport': {
+        const [taskrid] = args as [string?]
+        if (!system?.isReady) {
+          throw new Error('wanix room not ready')
         }
         const rid = String(taskrid ?? readzedcafetaskridlocal() ?? '')
         if (!rid) {
           throw new Error('zedcafe export: missing task rid')
         }
-        const count = refreshzedcafeexportbinds(system, rid)
+        const count = await wirezedcafeexportbinds(system, rid)
         result = { ok: true, count }
         break
       }

@@ -12,8 +12,7 @@
   ],
   "scripts": {
     "postinstall": "patch-package --patch-dir ops/patches",
-    "task": "tsx tasks/cli.ts",
-    "t": "tsx tasks/cli.ts"
+    "task": "tsx tasks/cli.ts"
   },
   "devDependencies": {
     "@bokuweb/zstd-wasm": "^0.0.27",

@@ -43,6 +43,7 @@ export type WanixTaskElement = HTMLElement & {
   role: string | null
   cmd: string | null
   term: string | null
+  root: WanixRoot
   allocate: (bindElements?: NodeListOf<Element> | null) => Promise<void>
   start: () => Promise<void>
 }
@@ -52,6 +53,7 @@ export type WanixVmElement = HTMLElement & {
   alias: string | null
   type: string
   term: string | null
+  task: WanixTaskElement
   allocate: () => Promise<void>
   start: () => Promise<void>
 }

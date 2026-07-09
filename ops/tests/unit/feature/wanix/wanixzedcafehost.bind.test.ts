@@ -1,73 +1,69 @@
 /** @jest-environment jsdom */
 
 import {
-  appendvmzedcafeexportguestbind,
-  appendzedcafeexportguestbind,
-  refreshzedcafeexportbinds,
   resetzedcafestate,
+  wirezedcafeexportbinds,
 } from 'zss/feature/wanix/wanixzedcafehost'
 import {
   WANIX_ZEDCAFE_GUEST_MOUNT,
   readwanixzedcafeexportsrc,
 } from 'zss/feature/wanix/wanixzedcafeconstants'
+import type {
+  WanixRoot,
+  WanixSystemElement,
+  WanixVmElement,
+} from 'zss/feature/wanix/wanixelements.d.ts'
 
-describe('wanixzedcafe export guest binds', () => {
+function mockroot(): WanixRoot & {
+  bindcalls: Array<[string, string]>
+  unbindcalls: Array<[string, string]>
+} {
+  const bindcalls: Array<[string, string]> = []
+  const unbindcalls: Array<[string, string]> = []
+  return {
+    bindcalls,
+    unbindcalls,
+    readDir: async () => [],
+    readFile: async () => new Uint8Array(),
+    readText: async () => '',
+    writeFile: async () => {},
+    appendFile: async () => {},
+    bind: async (name, newname) => {
+      bindcalls.push([name, newname])
+    },
+    unbind: async (name, newname) => {
+      unbindcalls.push([name, newname])
+    },
+    waitFor: async () => {},
+    openReadable: async () => new ReadableStream(),
+    openWritable: async () => new WritableStream(),
+  }
+}
+
+describe('wirezedcafeexportbinds', () => {
   beforeEach(() => {
     resetzedcafestate()
     document.body.replaceChildren()
   })
 
-  it('binds zedcafe/ to #task/rid/export on wanix-system', () => {
-    const sys = document.createElement('wanix-system')
-    document.body.appendChild(sys)
-    const taskrid = 'task-abc'
-
-    appendzedcafeexportguestbind(sys, taskrid)
-
-    const bind = sys.querySelector(
-      'wanix-bind[data-zss-zedcafe-export="guest"]',
-    )
-    expect(bind).not.toBeNull()
-    expect(bind?.getAttribute('dst')).toBe(WANIX_ZEDCAFE_GUEST_MOUNT)
-    expect(bind?.getAttribute('src')).toBe(readwanixzedcafeexportsrc(taskrid))
-  })
-
-  it('binds zedcafe/ to #task/rid/export on wanix-vm', () => {
-    const vm = document.createElement('wanix-vm')
-    document.body.appendChild(vm)
-    const taskrid = 'task-vm'
-
-    appendvmzedcafeexportguestbind(vm, taskrid)
-
-    const bind = vm.querySelector(
-      'wanix-bind[data-zss-zedcafe-export="vm-guest"]',
-    )
-    expect(bind).not.toBeNull()
-    expect(bind?.getAttribute('dst')).toBe(WANIX_ZEDCAFE_GUEST_MOUNT)
-    expect(bind?.getAttribute('src')).toBe(readwanixzedcafeexportsrc(taskrid))
-  })
-
-  it('refreshzedcafeexportbinds applies system and vm binds', () => {
-    const sys = document.createElement('wanix-system')
-    const vm = document.createElement('wanix-vm')
+  it('binds export src to zedcafe on system and vm task roots', async () => {
+    const sysroot = mockroot()
+    const vmroot = mockroot()
+    const sys = document.createElement('wanix-system') as WanixSystemElement
+    const vm = document.createElement('wanix-vm') as WanixVmElement
+    sys.root = sysroot
+    ;(vm as WanixVmElement).task = {
+      root: vmroot,
+    } as WanixVmElement['task']
     sys.appendChild(vm)
     document.body.appendChild(sys)
-    const taskrid = 'task-both'
+    const taskrid = 'task-wire'
 
-    const count = refreshzedcafeexportbinds(sys, taskrid)
+    const count = await wirezedcafeexportbinds(sys, taskrid)
 
+    const src = readwanixzedcafeexportsrc(taskrid)
     expect(count).toBe(2)
-    expect(
-      sys.querySelector('wanix-bind[data-zss-zedcafe-export="guest"]'),
-    ).not.toBeNull()
-    expect(
-      vm.querySelector('wanix-bind[data-zss-zedcafe-export="vm-guest"]'),
-    ).not.toBeNull()
-    expect(
-      sys.querySelector('wanix-bind[data-zss-zedcafe-export="ramfs"]'),
-    ).toBeNull()
-    expect(
-      vm.querySelector('wanix-bind[data-zss-zedcafe-export="vm-staging"]'),
-    ).toBeNull()
+    expect(sysroot.bindcalls).toEqual([[src, WANIX_ZEDCAFE_GUEST_MOUNT]])
+    expect(vmroot.bindcalls).toEqual([[src, WANIX_ZEDCAFE_GUEST_MOUNT]])
   })
 })

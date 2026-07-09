@@ -2,7 +2,7 @@ import type { DEVICELIKE } from 'zss/device/api'
 import { apilog, vmexportzedcafe, wanixexportstate } from 'zss/device/api'
 import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
 import { WANIX_ZEDCAFE_EXPORT_DEBOUNCE_MS } from 'zss/feature/wanix/wanixzedcafeconstants'
-import { readwanixzedcafeready } from 'zss/feature/wanix/wanixzedcafesession'
+import { readzedcafepollactive } from 'zss/feature/wanix/wanixzedcafesession'
 import {
   assertzedcafeexportvalid,
   readzedcafebookstatspath,
@@ -260,7 +260,7 @@ export function primezedcafeexportshadow() {
 }
 
 export function checkzedcafeexportontick(device: DEVICELIKE) {
-  if (!readwanixzedcafeready()) {
+  if (!readzedcafepollactive()) {
     return
   }
   const operations = zedcafebookspipe.emitdiff(memoryreadroot().books)

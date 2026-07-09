@@ -4,6 +4,7 @@ let zedcaferestart = 0
 let zedcafeready = false
 let zedcafetaskrid: string | null = null
 let lasthostpushfingerprint = ''
+let pollactive = false
 
 export function readwanixzedcaferestart(): number {
   return zedcaferestart
@@ -41,9 +42,18 @@ export function setlasthostpushfingerprint(fingerprint: string) {
   lasthostpushfingerprint = fingerprint
 }
 
+export function readzedcafepollactive(): boolean {
+  return pollactive
+}
+
+export function setzedcafepollactive(active: boolean) {
+  pollactive = active
+}
+
 export function resetwanixzedcafesessionfortest() {
   zedcaferestart = 0
   zedcafeready = false
   zedcafetaskrid = null
   lasthostpushfingerprint = ''
+  pollactive = false
 }
