@@ -18,6 +18,7 @@ export type WanixRoot = {
   readFile: (path: string) => Promise<Uint8Array>
   readText: (path: string) => Promise<string>
   writeFile: (path: string, data: string | Uint8Array) => Promise<void>
+  makeDirAll: (path: string) => Promise<void>
   appendFile: (path: string, data: string | Uint8Array) => Promise<void>
   bind: (name: string, newname: string) => Promise<void>
   unbind: (name: string, newname: string) => Promise<void>

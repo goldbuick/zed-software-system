@@ -27,6 +27,33 @@ func TestSchemaGuardRejectsInvalidCreate(t *testing.T) {
 	}
 }
 
+func TestSchemaGuardNestedBookPathFromEmptyExport(t *testing.T) {
+	export := NewEmptyExport()
+	rootstats := `{"exportedAt":"test","bookCount":1,"books":[{"id":"sid_vuYEPNKWWAPd","name":"coolregionsbow"}]}` + "\n"
+	if err := fs.WriteFile(export, "stats.json", []byte(rootstats), 0o644); err != nil {
+		t.Fatalf("write root stats.json: %v", err)
+	}
+	bookpath := "books/coolregionsbow-sid_vuYEPNKWWAPd/stats.json"
+	bookstats := `{"id":"sid_vuYEPNKWWAPd","name":"coolregionsbow","pages":[]}` + "\n"
+	if err := fs.WriteFile(export, bookpath, []byte(bookstats), 0o644); err != nil {
+		t.Fatalf("write nested book stats.json: %v", err)
+	}
+	gotroot, err := fs.ReadFile(export, "stats.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(gotroot), `"coolregionsbow"`) {
+		t.Fatalf("root stats unexpected: %q", string(gotroot))
+	}
+	gotbook, err := fs.ReadFile(export, bookpath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(gotbook), `"sid_vuYEPNKWWAPd"`) {
+		t.Fatalf("book stats unexpected: %q", string(gotbook))
+	}
+}
+
 func TestSchemaGuardAllowsStatsJsonCreateWrite(t *testing.T) {
 	guarded := newSchemaGuardFS(memfs.New())
 	written := `{"exportedAt":"guest","bookCount":0,"books":[],"guestTouch":true}` + "\n"
@@ -78,9 +105,20 @@ func TestSchemaGuardAllowsDeepObjectPath(t *testing.T) {
 
 func TestSchemaGuardRejectsInvalidMkdir(t *testing.T) {
 	guarded := newSchemaGuardFS(memfs.New())
-	err := fs.Mkdir(guarded, "books/evil-dir", 0o755)
+	err := fs.Mkdir(guarded, "totally/invalid", 0o755)
 	if err == nil {
-		t.Fatal("expected mkdir books/evil-dir to fail")
+		t.Fatal("expected mkdir totally/invalid to fail")
+	}
+}
+
+func TestSchemaGuardAllowsBookPrefixMkdir(t *testing.T) {
+	guarded := newSchemaGuardFS(memfs.New())
+	if err := fs.Mkdir(guarded, "books", 0o755); err != nil {
+		t.Fatalf("mkdir books: %v", err)
+	}
+	bookdir := "books/coolregionsbow-sid_vuYEPNKWWAPd"
+	if err := fs.Mkdir(guarded, bookdir, 0o755); err != nil {
+		t.Fatalf("mkdir book prefix: %v", err)
 	}
 }
 

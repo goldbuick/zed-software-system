@@ -9,10 +9,12 @@ import {
   WANIX_ZEDCAFE_GUEST_MOUNT,
   WANIX_ZEDCAFE_TASK_ID,
   WANIX_ZEDCAFE_TASK_WASM,
+  WANIX_ZEDCAFE_WASM_BUILD_ID,
+  WANIX_ZEDCAFE_WASM_BUILD_STORAGE_KEY,
   WANIX_ZEDCAFE_WASM_RAMFS,
-  WANIX_ZEDCAFE_WASM_URL,
   readwanixzedcafeexportsrc,
   readwanixzedcafeguestpath,
+  readwanixzedcafewasmurl,
 } from './wanixzedcafeconstants'
 import type { WanixZedCafeGuestFile } from './wanixzedcafetypes'
 
@@ -98,6 +100,33 @@ export function setzedcafereadylocal(ready: boolean) {
   zedcafeready = ready
 }
 
+const WANIX_ZEDCAFE_WASM_UPDATED_LOG =
+  '[wanix] zedcafe.wasm updated — restarted export task'
+
+export function synczedcafewasmversionifneeded(
+  sys: WanixSystemElement | null,
+): boolean {
+  if (typeof sessionStorage === 'undefined') {
+    return false
+  }
+  const stored = sessionStorage.getItem(WANIX_ZEDCAFE_WASM_BUILD_STORAGE_KEY)
+  if (stored === WANIX_ZEDCAFE_WASM_BUILD_ID) {
+    return false
+  }
+  if (sys) {
+    haltzedcafetask(sys)
+  }
+  resetzedcafestate()
+  sessionStorage.setItem(
+    WANIX_ZEDCAFE_WASM_BUILD_STORAGE_KEY,
+    WANIX_ZEDCAFE_WASM_BUILD_ID,
+  )
+  if (stored) {
+    console.info(WANIX_ZEDCAFE_WASM_UPDATED_LOG)
+  }
+  return true
+}
+
 function appendzedcafewasmbind(task: WanixTaskElement) {
   if (task.querySelector('wanix-bind[data-zss-zedcafe-wasm]')) {
     return
@@ -106,7 +135,7 @@ function appendzedcafewasmbind(task: WanixTaskElement) {
     {
       type: 'file',
       dst: WANIX_ZEDCAFE_TASK_WASM,
-      src: WANIX_ZEDCAFE_WASM_URL,
+      src: readwanixzedcafewasmurl(),
     },
     'data-zss-zedcafe-wasm',
   )
@@ -318,9 +347,16 @@ export async function pushzedcafeexportlive(
   files: WanixZedCafeGuestFile[],
 ) {
   const base = readwanixzedcafeexportsrc(taskrid)
+  // Export writes cross the p9 client, which walks parent dirs before Create.
+  // Materialize allowlisted prefix dirs on the export mount first.
   for (let i = 0; i < files.length; ++i) {
     const file = files[i]
-    await root.writeFile(`${base}/${file.path}`, new Uint8Array(file.data))
+    const full = `${base}/${file.path}`
+    const parentdir = full.slice(0, full.lastIndexOf('/'))
+    if (parentdir.length > base.length) {
+      await root.makeDirAll(parentdir)
+    }
+    await root.writeFile(full, new Uint8Array(file.data))
   }
 }
 
@@ -406,6 +442,7 @@ export async function ensurezedcafeboot(
   root: WanixRoot,
   cmd: string,
 ): Promise<string | null> {
+  synczedcafewasmversionifneeded(sys)
   if (zedcafetaskrid && zedcafecmd === cmd) {
     const mountready = await waitzedcafeexportmountready(root, zedcafetaskrid)
     if (mountready) {

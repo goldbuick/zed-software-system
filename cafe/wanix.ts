@@ -47,6 +47,7 @@ import {
   readzedcafetaskridlocal,
   resetzedcafestate,
   setzedcafereadylocal,
+  synczedcafewasmversionifneeded,
   synczedcafestate,
   waitzedcafeexportcontentready,
   waitzedcafemountrpc,
@@ -659,6 +660,9 @@ async function applyroom(config: WanixRoomConfig) {
     system?.isConnected &&
     system.isReady
   ) {
+    if (roomconfig.zedcafe?.cmd) {
+      synczedcafewasmversionifneeded(system)
+    }
     return {
       ok: true,
       mode: roomconfig.mode,

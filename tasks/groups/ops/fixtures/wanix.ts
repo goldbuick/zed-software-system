@@ -25,10 +25,21 @@ export const OPS_FIXTURES_WANIX_TASKS: TaskDef[] = [
   }),
   def('ops:fixtures:wanix:zedcafe:build', {
     description:
-      'Build zed-cafe export daemon and findplayers scanner (Go js/wasm) into ops/public/wanix/ and cafe/public/wanix/ (needs Go + submodules/wanix — run ops:fixtures:wanix:toolchains first)',
+      'Build zed-cafe export daemon (Go js/wasm) into cafe/public/wanix/ (needs Go + submodules/wanix — run ops:fixtures:wanix:toolchains first)',
     run: handler(async () => {
       const { buildwanixzedcafe } = await import('ops/lib/wanix/buildzedcafe')
       buildwanixzedcafe()
+      return 0
+    }),
+  }),
+  def('ops:fixtures:wanix:findplayers:build', {
+    description:
+      'Build findplayers gojs scanner into ops/public/wanix/ only (needs Go + submodules/wanix — run ops:fixtures:wanix:toolchains first)',
+    run: handler(async () => {
+      const { buildwanixfindplayers } = await import(
+        'ops/lib/wanix/buildfindplayers'
+      )
+      buildwanixfindplayers()
       return 0
     }),
   }),

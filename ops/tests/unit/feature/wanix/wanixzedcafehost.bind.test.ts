@@ -27,6 +27,7 @@ function mockroot(): WanixRoot & {
     readFile: async () => new Uint8Array(),
     readText: async () => '',
     writeFile: async () => {},
+    makeDirAll: async () => {},
     appendFile: async () => {},
     bind: async (name, newname) => {
       bindcalls.push([name, newname])

@@ -27,7 +27,3 @@ export const CAFE_PUBLIC_ZEDCAFE_WASM = path.join(
   CAFE_PUBLIC_WANIX_DIR,
   'zedcafe.wasm',
 )
-export const CAFE_PUBLIC_FINDPLAYERS_WASM = path.join(
-  CAFE_PUBLIC_WANIX_DIR,
-  'findplayers.wasm',
-)

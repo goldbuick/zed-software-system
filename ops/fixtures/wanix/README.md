@@ -57,7 +57,7 @@ Sources for per-lang hellos live in `hello/` (see `hello/manifest.json`). WAT so
 
 ## GoJS zedcafe tools
 
-Built with `yarn task run ops:fixtures:wanix:zedcafe:build` (run `ops:fixtures:wanix:toolchains` first):
+Built with `yarn task run ops:fixtures:wanix:zedcafe:build` (run `ops:fixtures:wanix:toolchains` first). `findplayers.wasm` is a separate fixture build: `yarn task run ops:fixtures:wanix:findplayers:build`.
 
 | File | Role |
 |------|------|
