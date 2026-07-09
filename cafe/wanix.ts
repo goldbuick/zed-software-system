@@ -6,6 +6,7 @@ import type { WanixRoomConfig } from 'zss/feature/wanix/wanixroomtypes'
 import {
   WANIX_LINUX_ARCHIVE_URL,
   WANIX_V86_ARCHIVE_URL,
+  WANIX_ZEDCAFE_LINUX_OVERLAY_URL,
   createidleroomconfig,
 } from 'zss/feature/wanix/wanixroomtypes'
 import {
@@ -25,18 +26,22 @@ import {
 } from 'zss/feature/wanix/wanixtermgridstate'
 import {
   WANIX_ZEDCAFE_EXPORT_RAMFS,
+  WANIX_ZEDCAFE_EXPORT_READY_POLL_MS,
+  WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS,
   WANIX_ZEDCAFE_GUEST_MOUNT,
+  readwanixzedcafeexportsrc,
 } from 'zss/feature/wanix/wanixzedcafeconstants'
 import {
   WANIX_TERM_BRIDGE_PONG,
   trackwanixtermlinebuf,
 } from 'zss/feature/wanix/wanixtermbridgesmoke'
+import { readwanixwasmdriver } from 'zss/feature/wanix/wanixwasmdriver'
 
 import {
-  bootzedcafegojs,
+  finalizezedcafeexportcontent,
+  haltzedcafetask,
   collectzedcafeexportfiles,
   collectzedcafeexportramfsfiles,
-  haltzedcafetask,
   pushzedcafeexportlive,
   readzedcafereadylocal,
   readzedcafetaskridlocal,
@@ -44,6 +49,8 @@ import {
   resetzedcafestate,
   setzedcafereadylocal,
   synczedcafestate,
+  waitzedcafeexportcontentready,
+  waitzedcafemountrpc,
   waitzedcafereadyrpc,
 } from 'zss/feature/wanix/wanixzedcafehost'
 
@@ -538,6 +545,12 @@ function appendvmroombinds(sys: WanixSystemElement) {
       'data-zss-linux-bind',
     ),
   )
+  sys.appendChild(
+    createbind(
+      { type: 'archive', dst: '.', src: WANIX_ZEDCAFE_LINUX_OVERLAY_URL },
+      'data-zss-zedcafe-linux-overlay-bind',
+    ),
+  )
   sys.appendChild(createbind({ dst: 'vm', src: '#vm' }))
   sys.appendChild(
     createbind(
@@ -689,13 +702,6 @@ async function applyroom(config: WanixRoomConfig) {
   if (roomconfig.zedcafe?.cmd) {
     const spec = roomconfig.zedcafe
     synczedcafestate(spec.cmd, spec.generation)
-    await bootzedcafegojs(
-      system,
-      readroot(),
-      spec.cmd,
-      spec.inboxbytes ?? [],
-      roomconfig.mode === 'vm',
-    )
   }
 
   if (roomconfig.mode === 'vm' && roomconfig.vm?.active) {
@@ -742,6 +748,76 @@ function removetargetpair(taskid: string) {
   roomconfig.tasks = roomconfig.tasks.filter((entry) => entry.id !== taskid)
 }
 
+async function readwasmdriverforcmd(cmd: string) {
+  try {
+    const bytes = await readroot().readFile(cmd)
+    return readwanixwasmdriver(bytes)
+  } catch {
+    return 'wasi' as const
+  }
+}
+
+function isfindplayerswasmcmd(cmd: string): boolean {
+  const base = cmd.split('/').pop() ?? cmd
+  return base === 'findplayers.wasm'
+}
+
+async function waitlocalzedcafetaskrid(): Promise<string | null> {
+  if (readzedcafereadylocal() && readzedcafetaskridlocal()) {
+    return readzedcafetaskridlocal()
+  }
+  if (!system) {
+    return null
+  }
+  return waitzedcafereadyrpc(
+    system,
+    readroot(),
+    WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS,
+    roomconfig.mode === 'vm',
+  )
+}
+
+function appendfindplayersexportbind(task: HTMLElement, taskrid: string) {
+  const bind = createbind(
+    {
+      dst: WANIX_ZEDCAFE_GUEST_MOUNT,
+      src: readwanixzedcafeexportsrc(taskrid),
+    },
+    'data-zss-findplayers-export',
+  )
+  task.appendChild(bind)
+}
+
+async function readzedcafeexportstatsready(
+  root: ReturnType<typeof readroot>,
+  base: string,
+): Promise<boolean> {
+  try {
+    await root.readFile(`${base}/stats.json`)
+    return true
+  } catch {
+    return false
+  }
+}
+
+async function waitzedcafeexportstatsatroot(
+  root: ReturnType<typeof readroot>,
+  taskrid: string,
+  timeoutms = WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS,
+): Promise<boolean> {
+  const exportsrc = readwanixzedcafeexportsrc(taskrid)
+  const deadline = Date.now() + timeoutms
+  while (Date.now() < deadline) {
+    if (await readzedcafeexportstatsready(root, exportsrc)) {
+      return true
+    }
+    await new Promise<void>((resolve) =>
+      setTimeout(resolve, WANIX_ZEDCAFE_EXPORT_READY_POLL_MS),
+    )
+  }
+  return false
+}
+
 async function spawntask(taskid: string, cmd: string) {
   if (!system?.isReady) {
     throw new Error('wanix room not ready')
@@ -750,15 +826,30 @@ async function spawntask(taskid: string, cmd: string) {
     return { ok: true, already: true, taskid }
   }
 
+  const driver = await readwasmdriverforcmd(cmd)
   const task = document.createElement('wanix-task')
   setwanixattrs(task, {
     id: taskid,
-    type: 'wasi',
+    type: driver,
     term: true,
     cmd,
   })
   task.setAttribute('data-zss-target-id', taskid)
   task.setAttribute('data-zss-target-kind', 'task')
+  if (driver === 'gojs' && isfindplayerswasmcmd(cmd)) {
+    const taskrid = await waitlocalzedcafetaskrid()
+    if (!taskrid) {
+      throw new Error(
+        'zedcafe export not ready — start wanix with zedcafe warm before findplayers',
+      )
+    }
+    if (!(await waitzedcafeexportstatsatroot(readroot(), taskrid))) {
+      throw new Error(
+        'zedcafe export not ready — stats.json missing from export tree',
+      )
+    }
+    appendfindplayersexportbind(task, taskrid)
+  }
   system.appendChild(task)
 
   if (typeof task.allocate === 'function') {
@@ -948,19 +1039,51 @@ async function handlerrpc(
         break
       }
       case 'synczedcafe': {
-        const [cmd, generation, inboxbytes] = args as [
-          string,
-          number,
-          number[]?,
-        ]
-        synczedcafestate(
-          String(cmd),
-          Number(generation),
-          Array.isArray(inboxbytes) ? inboxbytes : undefined,
-        )
+        const [cmd, generation] = args as [string, number]
+        synczedcafestate(String(cmd), Number(generation))
         if (system) {
           haltzedcafetask(system)
         }
+        result = { ok: true }
+        break
+      }
+      case 'waitzedcafemount': {
+        const [timeoutms] = args as [number?]
+        if (!system?.isReady) {
+          result = null
+          break
+        }
+        result = await waitzedcafemountrpc(
+          system,
+          readroot(),
+          Number(timeoutms ?? 90_000),
+        )
+        break
+      }
+      case 'waitzedcafecontentready': {
+        const [taskrid, timeoutms] = args as [string, number?]
+        if (!system?.isReady) {
+          result = false
+          break
+        }
+        result = await waitzedcafeexportcontentready(
+          readroot(),
+          String(taskrid),
+          Number(timeoutms ?? WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS),
+        )
+        break
+      }
+      case 'finalizezedcafeexport': {
+        const [taskrid, vmmode] = args as [string, boolean?]
+        if (!system?.isReady) {
+          throw new Error('wanix room not ready')
+        }
+        await finalizezedcafeexportcontent(
+          system,
+          readroot(),
+          String(taskrid),
+          !!vmmode,
+        )
         result = { ok: true }
         break
       }
@@ -974,7 +1097,6 @@ async function handlerrpc(
           system,
           readroot(),
           Number(timeoutms ?? 90_000),
-          roomconfig.mode === 'vm',
         )
         break
       }

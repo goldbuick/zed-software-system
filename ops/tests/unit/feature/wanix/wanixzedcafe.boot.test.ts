@@ -1,0 +1,32 @@
+jest.mock('zss/feature/wanix/wanixbridge', () => ({
+  callwanixrpc: jest.fn(),
+}))
+
+jest.mock('zss/feature/wanix/wanixroom', () => ({
+  readwanixroomconfig: jest.fn(() => ({ mode: 'idle' })),
+}))
+
+jest.mock('zss/feature/wanix/wanixstateexport', () => ({
+  buildzedcafeexportfiles: jest.fn(() => [
+    {
+      path: 'stats.json',
+      bytes: new TextEncoder().encode('{"bookCount":0,"books":[]}\n'),
+    },
+  ]),
+  primezedcafeexportshadow: jest.fn(),
+}))
+
+import { readwanixbootzedcafestatefrommemory } from 'zss/feature/wanix/wanixzedcafe'
+import { WANIX_ZEDCAFE_WASM_CMD } from 'zss/feature/wanix/wanixzedcafeconstants'
+
+describe('wanixzedcafe boot state', () => {
+  it('returns boot spec without inboxbytes', () => {
+    const state = readwanixbootzedcafestatefrommemory()
+    expect(state.cmd).toBe(WANIX_ZEDCAFE_WASM_CMD)
+    expect(state.generation).toBe(1)
+    expect(state.ready).toBe(false)
+    expect(state.taskrid).toBeNull()
+    expect(state).not.toHaveProperty('inboxbytes')
+    expect(state.guestfiles?.[0]?.path).toBe('stats.json')
+  })
+})

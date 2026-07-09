@@ -211,4 +211,12 @@ describe('wanixtermgridstate', () => {
     expect(grid.cursorx).toBe(5)
     expect(grid.cursory).toBe(0)
   })
+
+  it('tracks bracketed paste mode in snapshot', () => {
+    const grid = createwanixtermgrid(10, 3)
+    wanixtermgridwritebytes(grid, new TextEncoder().encode('\x1b[?2004h'))
+    expect(readwanixtermgridsnapshot(grid).bracketedpaste).toBe(true)
+    wanixtermgridwritebytes(grid, new TextEncoder().encode('\x1b[?2004l'))
+    expect(readwanixtermgridsnapshot(grid).bracketedpaste).toBe(false)
+  })
 })

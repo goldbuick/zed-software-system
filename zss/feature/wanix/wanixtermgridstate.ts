@@ -49,6 +49,7 @@ export type WanixTermCellsSnapshot = {
   scrollbackchar: number[]
   scrollbackcolor: number[]
   scrollbackbg: number[]
+  bracketedpaste: boolean
   digest: string
 }
 
@@ -93,6 +94,7 @@ export type WANIX_TERM_GRID = {
   altactive: boolean
   savednormal: WanixTermNormalSave | null
   savedcursor: WanixSavedCursor | null
+  bracketedpaste: boolean
 }
 
 type WanixTermCell = {
@@ -616,6 +618,14 @@ function restorecursor(grid: WANIX_TERM_GRID) {
 }
 
 function parsecsi(grid: WANIX_TERM_GRID, seq: string) {
+  if (seq === '?2004h') {
+    grid.bracketedpaste = true
+    return
+  }
+  if (seq === '?2004l') {
+    grid.bracketedpaste = false
+    return
+  }
   if (seq === '?1049h' || seq === '?47h' || seq === '?1047h') {
     enteraltscreen(grid)
     return
@@ -995,6 +1005,7 @@ export function createwanixtermgrid(
     altactive: false,
     savednormal: null,
     savedcursor: null,
+    bracketedpaste: false,
   }
   return grid
 }
@@ -1051,6 +1062,7 @@ export function readwanixtermgridsnapshot(
     scrollbackchar: scrollback.scrollbackchar,
     scrollbackcolor: scrollback.scrollbackcolor,
     scrollbackbg: scrollback.scrollbackbg,
+    bracketedpaste: grid.bracketedpaste,
     digest: '',
   }
   snapshot.digest = digestwanixtermcells(snapshot)
@@ -1063,6 +1075,7 @@ export function digestwanixtermcells(snapshot: WanixTermCellsSnapshot): string {
   hash = hash * 31 + snapshot.cursory
   hash = hash * 31 + (snapshot.cursorvisible ? 1 : 0)
   hash = hash * 31 + snapshot.scrollbackrows
+  hash = hash * 31 + (snapshot.bracketedpaste ? 1 : 0)
   for (let i = 0; i < snapshot.char.length; i++) {
     hash = (hash * 33 + snapshot.char[i]) | 0
     hash = (hash * 33 + snapshot.color[i]) | 0

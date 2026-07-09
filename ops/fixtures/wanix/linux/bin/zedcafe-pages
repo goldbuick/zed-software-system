@@ -1,0 +1,38 @@
+#!/bin/sh
+. /usr/lib/zedcafe/common.sh
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -r|--root)
+      ZEDCAFE_ROOT=$2
+      shift 2
+      ;;
+    -h|--help)
+      zedcafe_usage "$0"
+      exit 0
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+bookdir=$1
+if [ -z "$bookdir" ]; then
+  echo "zedcafe-pages: missing book directory name" >&2
+  zedcafe_usage "$0"
+  exit 1
+fi
+
+bookstats="$ZEDCAFE_ROOT/books/$bookdir/stats.json"
+if [ ! -f "$bookstats" ]; then
+  echo "zedcafe-pages: missing $bookstats" >&2
+  exit 1
+fi
+
+echo "type	name	id"
+jq -r '.pages[]? | [
+  .type,
+  (.name // "?"),
+  .id
+] | @tsv' "$bookstats"

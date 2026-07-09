@@ -73,6 +73,9 @@ export type WanixDropPayload = {
 export const WANIX_LINUX_ARCHIVE_URL =
   'https://cdn.jsdelivr.net/npm/wanix-extras@0.4.0-rc1/dist/wanix-linux.tgz'
 
+export const WANIX_ZEDCAFE_LINUX_OVERLAY_URL =
+  '/wanix/zedcafe-linux-overlay.tgz'
+
 export const WANIX_V86_ARCHIVE_URL =
   'https://cdn.jsdelivr.net/npm/wanix-extras@0.4.0-rc1/dist/v86.tgz'
 

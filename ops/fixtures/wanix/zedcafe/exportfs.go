@@ -22,6 +22,10 @@ type ExportFS struct {
 	*schemaGuardFS
 }
 
+func NewEmptyExport() *ExportFS {
+	return &ExportFS{schemaGuardFS: newSchemaGuardFS(memfs.New())}
+}
+
 func NewExportFromInboxJSON(raw []byte) (*ExportFS, error) {
 	var payload inboxpayload
 	if err := json.Unmarshal(raw, &payload); err != nil {

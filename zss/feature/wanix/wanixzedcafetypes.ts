@@ -9,12 +9,10 @@ export type WanixZedCafeHostState = {
   ready: boolean
   taskrid: string | null
   guestfiles?: WanixZedCafeGuestFile[]
-  inboxbytes?: number[]
 }
 
 export type WanixZedCafeRoomSpec = {
   cmd: string
   generation: number
-  inboxbytes?: number[]
   guestfiles?: WanixZedCafeGuestFile[]
 }

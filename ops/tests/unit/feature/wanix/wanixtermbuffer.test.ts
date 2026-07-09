@@ -24,6 +24,7 @@ function readsnapshot(text: string): WanixTermCellsSnapshot {
     scrollbackchar: [],
     scrollbackcolor: [],
     scrollbackbg: [],
+    bracketedpaste: false,
     digest: '',
   }
   snapshot.digest = digestwanixtermcells(snapshot)

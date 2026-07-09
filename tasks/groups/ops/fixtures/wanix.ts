@@ -13,10 +13,21 @@ export const OPS_FIXTURES_WANIX_TASKS: TaskDef[] = [
   }),
   def('ops:fixtures:wanix:zedcafe:build', {
     description:
-      'Build the zed-cafe export daemon (Go js/wasm) into ops/public/wanix/ and cafe/public/wanix/ (needs Go + submodules/wanix)',
+      'Build zed-cafe export daemon and findplayers scanner (Go js/wasm) into ops/public/wanix/ and cafe/public/wanix/ (needs Go + submodules/wanix)',
     run: handler(async () => {
       const { buildwanixzedcafe } = await import('ops/lib/wanix/buildzedcafe')
       buildwanixzedcafe()
+      return 0
+    }),
+  }),
+  def('ops:fixtures:wanix:linux:overlay:build', {
+    description:
+      'Build zedcafe-linux-overlay.tgz (Alpine i386 jq/curl/wget + zedcafe shell tools) into ops/public/wanix/ and cafe/public/wanix/ (needs Docker)',
+    run: handler(async () => {
+      const { buildwanixlinuxoverlay } = await import(
+        'ops/lib/wanix/buildlinuxoverlay'
+      )
+      buildwanixlinuxoverlay()
       return 0
     }),
   }),

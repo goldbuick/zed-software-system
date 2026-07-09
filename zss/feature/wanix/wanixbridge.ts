@@ -20,6 +20,8 @@ import type { WanixTermCellsSnapshot } from 'zss/feature/wanix/wanixtermgridstat
 
 const WANIX_RPC_TIMEOUT_MS = 30_000
 const WANIX_READY_TIMEOUT_MS = 180_000
+const WANIX_RPC_PING_TIMEOUT_MS = 15_000
+const WANIX_RPC_PING_POLL_MS = 100
 
 type RpcWaiter = {
   resolve: (value: unknown) => void
@@ -172,6 +174,27 @@ export function setwanixchildwindow(next: Window | null) {
   notifychildwindow()
 }
 
+export async function waitwanixrpcping(
+  timeoutms = WANIX_RPC_PING_TIMEOUT_MS,
+): Promise<void> {
+  await waitwanixiframe(timeoutms)
+  const deadline = Date.now() + timeoutms
+  while (Date.now() < deadline) {
+    try {
+      const pong = await callwanixrpc<{ ok: boolean }>('ping', [], 2_000)
+      if (pong?.ok) {
+        return
+      }
+    } catch {
+      // iframe module may still be loading
+    }
+    await new Promise<void>((resolve) =>
+      setTimeout(resolve, WANIX_RPC_PING_POLL_MS),
+    )
+  }
+  throw new Error('wanix rpc handler not ready')
+}
+
 export function waitwanixready(
   timeoutms = WANIX_READY_TIMEOUT_MS,
 ): Promise<void> {
@@ -260,5 +283,6 @@ export async function callwanixrpc<T>(
 if (import.meta.env.DEV) {
   const g = globalThis as Record<string, unknown>
   g.waitwanixready = waitwanixready
+  g.waitwanixrpcping = waitwanixrpcping
   g.callwanixrpc = callwanixrpc
 }

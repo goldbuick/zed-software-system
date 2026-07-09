@@ -6,6 +6,7 @@ import { syncterminalbookmarkpins } from 'zss/device/register/helpers/bootstrap'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { rundeeplinks } from 'zss/feature/deeplink'
 import { isclimode } from 'zss/feature/detect'
+import { warmwanixzedcafe } from 'zss/feature/wanix/wanixroom'
 import {
   storagereadhistorybuffer,
   storagewatchcontent,
@@ -31,6 +32,7 @@ export function handleready(device: DEVICE, message: MESSAGE): void {
     apilog(device, registerreadplayer(), `player ${registerreadplayer()}`)
     vmoperator(device, registerreadplayer())
     if (!isclimode()) {
+      await warmwanixzedcafe(device, registerreadplayer())
       await waitfor(512)
       await rundeeplinks({
         player: registerreadplayer(),

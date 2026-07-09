@@ -1,0 +1,32 @@
+#!/bin/sh
+. /usr/lib/zedcafe/common.sh
+
+depth=4
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -r|--root)
+      ZEDCAFE_ROOT=$2
+      shift 2
+      ;;
+    -h|--help)
+      zedcafe_usage "$0"
+      exit 0
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+target=$1
+if [ -z "$target" ]; then
+  target="$ZEDCAFE_ROOT"
+fi
+
+if [ ! -d "$target" ]; then
+  echo "zedcafe-ls: not a directory: $target" >&2
+  exit 1
+fi
+
+find "$target" -maxdepth "$depth" \( -type f -o -type d \) | sort

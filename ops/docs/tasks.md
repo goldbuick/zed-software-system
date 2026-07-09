@@ -68,7 +68,7 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task cafe dev`).
 | Task | Description | Tags | Deps | Env |
 |------|-------------|------|------|-----|
 | `yarn task run ops:ci:pages:copy-404` | Copy GitHub Pages 404.html into cafe/dist | `ci` | — | — |
-| `yarn task run ops:ci:pages:copy-cname` | Copy GitHub Pages CNAME into cafe/dist | `ci` | — | — |
+| `yarn task run ops:ci:pages:copy-cname` | Copy GitHub Pages CNAME into cafe/dist and write .nojekyll (skip Jekyll; required for Vite _commonjsHelpers chunks) | `ci` | — | — |
 
 
 ### daisy
@@ -203,7 +203,8 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task cafe dev`).
 | Task | Description | Tags | Deps | Env |
 |------|-------------|------|------|-----|
 | `yarn task run ops:fixtures:wanix:build` | Build WASI .wasm and .tgz drag-drop fixtures into ops/public/wanix/ (needs wabt wat2wasm) | — | — | — |
-| `yarn task run ops:fixtures:wanix:zedcafe:build` | Build the zed-cafe export daemon (Go js/wasm) into ops/public/wanix/ and cafe/public/wanix/ (needs Go + submodules/wanix) | — | — | — |
+| `yarn task run ops:fixtures:wanix:linux:overlay:build` | Build zedcafe-linux-overlay.tgz (Alpine i386 jq/curl/wget + zedcafe shell tools) into ops/public/wanix/ and cafe/public/wanix/ (needs Docker) | — | — | — |
+| `yarn task run ops:fixtures:wanix:zedcafe:build` | Build zed-cafe export daemon and findplayers scanner (Go js/wasm) into ops/public/wanix/ and cafe/public/wanix/ (needs Go + submodules/wanix) | — | — | — |
 
 
 #### fixtures/zzt

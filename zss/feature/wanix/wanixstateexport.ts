@@ -208,6 +208,14 @@ export function buildzedcafeexportfiles(): WANIX_ZED_CAFE_EXPORT_FILE[] {
   return files
 }
 
+export function synczedcafeexportafterbooksload(
+  device: DEVICELIKE,
+  player: string,
+) {
+  primezedcafeexportshadow()
+  runzedcafeexport(device, player)
+}
+
 export function runzedcafeexport(device: DEVICELIKE, player: string) {
   const files = buildzedcafeexportfiles()
   const check = validatezedcafeexportpaths(files)

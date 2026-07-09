@@ -4,9 +4,7 @@ import {
   WANIX_ZEDCAFE_EXPORT_READY_POLL_MS,
   WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS,
   WANIX_ZEDCAFE_GUEST_MOUNT,
-  WANIX_ZEDCAFE_INBOX_RAMFS,
   WANIX_ZEDCAFE_TASK_ID,
-  WANIX_ZEDCAFE_TASK_INBOX,
   WANIX_ZEDCAFE_TASK_WASM,
   WANIX_ZEDCAFE_WASM_RAMFS,
   WANIX_ZEDCAFE_WASM_URL,
@@ -33,7 +31,6 @@ let zedcafetaskrid: string | null = null
 let zedcafeready = false
 let zedcafebootgen = 0
 let zedcafebootpromise: Promise<string | null> | null = null
-let staginginboxbytes: number[] = []
 
 function setwanixattrs(el: HTMLElement, attrs: Record<string, unknown>) {
   for (const [key, value] of Object.entries(attrs)) {
@@ -79,7 +76,6 @@ export function resetzedcafestate() {
   zedcafeready = false
   zedcafebootgen = 0
   zedcafebootpromise = null
-  staginginboxbytes = []
 }
 
 export function readzedcafetaskridlocal(): string | null {
@@ -90,19 +86,12 @@ export function readzedcafereadylocal(): boolean {
   return zedcafeready
 }
 
-export function synczedcafestate(
-  cmd: string,
-  generation: number,
-  inboxbytes?: number[],
-) {
+export function synczedcafestate(cmd: string, generation: number) {
   zedcafecmd = cmd
   zedcafegen = generation
   zedcafeready = false
   zedcafetaskrid = null
   zedcafebootpromise = null
-  if (inboxbytes?.length) {
-    staginginboxbytes = [...inboxbytes]
-  }
 }
 
 export function setzedcafereadylocal(ready: boolean) {
@@ -124,28 +113,6 @@ function appendzedcafewasmbind(task: WanixTaskElement) {
   task.appendChild(bind)
 }
 
-function appendzedcafeinboxbind(task: WanixTaskElement, inboxbytes: number[]) {
-  revokebindbloburls(
-    task,
-    'wanix-bind[data-zss-zedcafe-inbox-file]',
-    'data-zss-inbox-blob-url',
-  )
-  if (!inboxbytes.length) {
-    return
-  }
-  const bloburl = URL.createObjectURL(new Blob([new Uint8Array(inboxbytes)]))
-  const bind = createbind(
-    {
-      type: 'file',
-      dst: WANIX_ZEDCAFE_TASK_INBOX,
-      src: bloburl,
-    },
-    'data-zss-zedcafe-inbox-file',
-  )
-  bind.setAttribute('data-zss-inbox-blob-url', bloburl)
-  task.appendChild(bind)
-}
-
 function appendgojstask(
   sys: WanixSystemElement,
   cmd: string,
@@ -162,6 +129,18 @@ function appendgojstask(
   return task
 }
 
+async function readzedcafeexportmountready(
+  root: WanixRoot,
+  base: string,
+): Promise<boolean> {
+  try {
+    await root.readDir(base)
+    return true
+  } catch {
+    return false
+  }
+}
+
 async function readzedcafeexportstatsready(
   root: WanixRoot,
   base: string,
@@ -170,16 +149,29 @@ async function readzedcafeexportstatsready(
     await root.readFile(`${base}/stats.json`)
     return true
   } catch {
-    try {
-      const entries = await root.readDir(base)
-      return entries.some((entry) => entry.replace(/\/$/, '') === 'stats.json')
-    } catch {
-      return false
-    }
+    return false
   }
 }
 
-export async function waitzedcafeexportready(
+export async function waitzedcafeexportmountready(
+  root: WanixRoot,
+  taskrid: string,
+  timeoutms = WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS,
+): Promise<boolean> {
+  const exportsrc = readwanixzedcafeexportsrc(taskrid)
+  const deadline = Date.now() + timeoutms
+  while (Date.now() < deadline) {
+    if (await readzedcafeexportmountready(root, exportsrc)) {
+      return true
+    }
+    await new Promise<void>((resolve) =>
+      setTimeout(resolve, WANIX_ZEDCAFE_EXPORT_READY_POLL_MS),
+    )
+  }
+  return false
+}
+
+export async function waitzedcafeexportcontentready(
   root: WanixRoot,
   taskrid: string,
   timeoutms = WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS,
@@ -316,11 +308,6 @@ export function haltzedcafetask(sys: WanixSystemElement) {
     `wanix-task[id="${WANIX_ZEDCAFE_TASK_ID}"]`,
   ) as WanixTaskElement | null
   if (task) {
-    revokebindbloburls(
-      task,
-      'wanix-bind[data-zss-zedcafe-inbox-file]',
-      'data-zss-inbox-blob-url',
-    )
     task.querySelectorAll('wanix-bind[data-zss-zedcafe-wasm]').forEach((el) =>
       el.remove(),
     )
@@ -431,29 +418,19 @@ async function scrubzedcafestaging(
   sys: WanixSystemElement,
   root: WanixRoot,
 ) {
-  revokebindbloburls(
-    task,
-    'wanix-bind[data-zss-zedcafe-inbox-file]',
-    'data-zss-inbox-blob-url',
-  )
   task.querySelectorAll('wanix-bind[data-zss-zedcafe-wasm]').forEach((el) =>
     el.remove(),
   )
   revokebindbloburls(
     sys,
-    'wanix-bind[data-zss-zedcafe-wasm], wanix-bind[data-zss-zedcafe-inbox-file]',
-    'data-zss-inbox-blob-url',
+    'wanix-bind[data-zss-zedcafe-wasm]',
+    'data-zss-guest-blob-url',
   )
 
-  for (const path of [
-    WANIX_ZEDCAFE_INBOX_RAMFS,
-    WANIX_ZEDCAFE_WASM_RAMFS,
-  ]) {
-    try {
-      await root.writeFile(path, new Uint8Array())
-    } catch {
-      // staging path may never have been written
-    }
+  try {
+    await root.writeFile(WANIX_ZEDCAFE_WASM_RAMFS, new Uint8Array())
+  } catch {
+    // staging path may never have been written
   }
 }
 
@@ -461,17 +438,11 @@ export async function bootzedcafegojs(
   sys: WanixSystemElement,
   root: WanixRoot,
   cmd: string,
-  inboxbytes: number[],
-  vmmode: boolean,
 ): Promise<string | null> {
   const launchgen = zedcafegen
-  if (inboxbytes.length) {
-    staginginboxbytes = [...inboxbytes]
-  }
 
   const task = appendgojstask(sys, cmd)
   appendzedcafewasmbind(task)
-  appendzedcafeinboxbind(task, inboxbytes)
 
   await task.allocate?.()
   if (launchgen !== zedcafegen) {
@@ -487,13 +458,21 @@ export async function bootzedcafegojs(
     return null
   }
 
-  const exportready = await waitzedcafeexportready(root, taskrid)
-  if (!exportready) {
-    throw new Error('zedcafe export: stats.json missing from export tree')
+  const mountready = await waitzedcafeexportmountready(root, taskrid)
+  if (!mountready) {
+    throw new Error('zedcafe export: export mount missing')
   }
 
   await scrubzedcafestaging(task, sys, root)
+  return taskrid
+}
 
+export async function finalizezedcafeexportcontent(
+  sys: WanixSystemElement,
+  root: WanixRoot,
+  taskrid: string,
+  vmmode: boolean,
+): Promise<void> {
   if (vmmode) {
     appendzedcafeexportramfsbind(sys, taskrid)
     const guestfiles = await collectzedcafeexportfiles(root, taskrid)
@@ -501,32 +480,25 @@ export async function bootzedcafegojs(
   } else {
     appendzedcafeexportguestbind(sys, taskrid)
   }
-
   zedcafeready = true
-  return taskrid
 }
 
 export async function ensurezedcafeboot(
   sys: WanixSystemElement,
   root: WanixRoot,
   cmd: string,
-  inboxbytes: number[],
-  vmmode: boolean,
 ): Promise<string | null> {
-  if (zedcafeready && zedcafetaskrid && zedcafecmd === cmd) {
-    return zedcafetaskrid
+  if (zedcafetaskrid && zedcafecmd === cmd) {
+    const mountready = await waitzedcafeexportmountready(root, zedcafetaskrid)
+    if (mountready) {
+      return zedcafetaskrid
+    }
   }
   if (zedcafebootpromise && zedcafebootgen === zedcafegen) {
     return zedcafebootpromise
   }
   zedcafebootgen = zedcafegen
-  zedcafebootpromise = bootzedcafegojs(
-    sys,
-    root,
-    cmd,
-    inboxbytes,
-    vmmode,
-  ).finally(() => {
+  zedcafebootpromise = bootzedcafegojs(sys, root, cmd).finally(() => {
     if (zedcafebootgen === zedcafegen) {
       zedcafebootpromise = null
     }
@@ -534,29 +506,28 @@ export async function ensurezedcafeboot(
   return zedcafebootpromise
 }
 
-export async function waitzedcafereadyrpc(
+export async function waitzedcafemountrpc(
   sys: WanixSystemElement,
   root: WanixRoot,
   timeoutms: number,
-  vmmode: boolean,
 ): Promise<string | null> {
   if (!zedcafecmd) {
     return null
   }
-  const inboxbytes = staginginboxbytes.length ? [...staginginboxbytes] : []
   const deadline = Date.now() + timeoutms
   while (Date.now() < deadline) {
-    if (zedcafetaskrid && zedcafeready) {
-      return zedcafetaskrid
+    if (zedcafetaskrid) {
+      const mountready = await waitzedcafeexportmountready(
+        root,
+        zedcafetaskrid,
+        Math.max(0, deadline - Date.now()),
+      )
+      if (mountready) {
+        return zedcafetaskrid
+      }
     }
     try {
-      const taskrid = await ensurezedcafeboot(
-        sys,
-        root,
-        zedcafecmd,
-        inboxbytes,
-        vmmode,
-      )
+      const taskrid = await ensurezedcafeboot(sys, root, zedcafecmd)
       if (taskrid) {
         return taskrid
       }
@@ -568,4 +539,24 @@ export async function waitzedcafereadyrpc(
     )
   }
   return zedcafetaskrid
+}
+
+export async function waitzedcafereadyrpc(
+  sys: WanixSystemElement,
+  root: WanixRoot,
+  timeoutms: number,
+): Promise<string | null> {
+  if (!zedcafecmd) {
+    return null
+  }
+  const deadline = Date.now() + timeoutms
+  while (Date.now() < deadline) {
+    if (zedcafetaskrid && zedcafeready) {
+      return zedcafetaskrid
+    }
+    await new Promise<void>((resolve) =>
+      setTimeout(resolve, WANIX_ZEDCAFE_EXPORT_READY_POLL_MS),
+    )
+  }
+  return zedcafetaskrid && zedcafeready ? zedcafetaskrid : null
 }

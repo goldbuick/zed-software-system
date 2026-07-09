@@ -8,6 +8,7 @@ import {
   registerwanixsessioncloseprune,
   waitwanixiframe,
   waitwanixready,
+  waitwanixrpcping,
 } from 'zss/feature/wanix/wanixbridge'
 import {
   listwanixwasmentries,
@@ -41,6 +42,7 @@ const WANIX_ROOM_TIMEOUT_MS = 180_000
 const WANIX_MENU_TIMEOUT_MS = 3_000
 
 let roomconfig: WanixRoomConfig = createidleroomconfig()
+let warminflight: Promise<void> | null = null
 
 function bumpmountkey(config: WanixRoomConfig): WanixRoomConfig {
   return { ...config, mountkey: config.mountkey + 1 }
@@ -63,6 +65,29 @@ export async function applywanixroom(
   return result
 }
 
+export async function warmwanixzedcafe(
+  device: DEVICELIKE,
+  player: string,
+): Promise<void> {
+  if (!player) {
+    return
+  }
+  if (roomconfig.mode !== 'idle') {
+    await ensurewanixzedcafedaemon(device, player)
+    return
+  }
+  if (warminflight) {
+    return warminflight
+  }
+  warminflight = (async () => {
+    await waitwanixrpcping()
+    await ensurewanixtaskroom(device, player)
+  })().finally(() => {
+    warminflight = null
+  })
+  return warminflight
+}
+
 export async function ensurewanixtaskroom(
   device?: DEVICELIKE,
   player?: string,
@@ -74,15 +99,12 @@ export async function ensurewanixtaskroom(
     return
   }
   let zedcafe: WanixZedCafeRoomSpec | null | undefined
-  if (device && player) {
-    const boot = await readwanixbootzedcafestate(device, player)
-    if (boot) {
-      zedcafe = {
-        cmd: boot.cmd,
-        generation: boot.generation,
-        inboxbytes: boot.inboxbytes,
-        guestfiles: boot.guestfiles,
-      }
+  const boot = await readwanixbootzedcafestate(device, player)
+  if (boot) {
+    zedcafe = {
+      cmd: boot.cmd,
+      generation: boot.generation,
+      guestfiles: boot.guestfiles,
     }
   }
   const next: WanixRoomConfig = {
@@ -392,7 +414,6 @@ export async function startwanixvm(
       zedcafe = {
         cmd: boot.cmd,
         generation: boot.generation,
-        inboxbytes: boot.inboxbytes,
         guestfiles: boot.guestfiles,
       }
     }
