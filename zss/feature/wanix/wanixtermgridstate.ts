@@ -447,8 +447,12 @@ function clampcursory(grid: WANIX_TERM_GRID, y: number) {
   return Math.min(Math.max(0, y), Math.max(0, grid.rows - 1))
 }
 
-function readcsiparam(seq: string, final: string, defaultparam = 1): number | null {
-  if (seq.length === 0 || seq[seq.length - 1] !== final) {
+function readcsiparam(
+  seq: string,
+  final: string,
+  defaultparam = 1,
+): number | null {
+  if (seq.length === 0 || !seq.endsWith(final)) {
     return null
   }
   const body = seq.slice(0, -1)

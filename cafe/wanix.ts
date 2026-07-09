@@ -2,8 +2,10 @@ import type {
   WanixSystemElement,
   WanixVmElement,
 } from 'zss/feature/wanix/wanixelements.d.ts'
-import type { WanixRoomConfig } from 'zss/feature/wanix/wanixroomtypes'
-import type { WanixBindDropPayload } from 'zss/feature/wanix/wanixroomtypes'
+import type {
+  WanixBindDropPayload,
+  WanixRoomConfig,
+} from 'zss/feature/wanix/wanixroomtypes'
 import {
   WANIX_LINUX_ARCHIVE_URL,
   WANIX_V86_ARCHIVE_URL,
@@ -17,6 +19,10 @@ import {
   WANIX_MSG_RPC_RES,
   WANIX_MSG_SESSION,
 } from 'zss/feature/wanix/wanixrpcmessages'
+import {
+  WANIX_TERM_BRIDGE_PONG,
+  trackwanixtermlinebuf,
+} from 'zss/feature/wanix/wanixtermbridgesmoke'
 import type { WANIX_TERM_GRID } from 'zss/feature/wanix/wanixtermgridstate'
 import {
   createwanixtermgrid,
@@ -29,11 +35,6 @@ import {
   WANIX_ZEDCAFE_EXPORT_RAMFS,
   WANIX_ZEDCAFE_GUEST_MOUNT,
 } from 'zss/feature/wanix/wanixzedcafeconstants'
-import {
-  WANIX_TERM_BRIDGE_PONG,
-  trackwanixtermlinebuf,
-} from 'zss/feature/wanix/wanixtermbridgesmoke'
-
 import {
   bootzedcafegojs,
   collectzedcafeexportfiles,
@@ -283,7 +284,7 @@ function removedropbindwithdst(root: ParentNode, dst: string) {
 
 function appenddropbind(parent: ParentNode, spec: WanixBindDropPayload) {
   removedropbindwithdst(parent, spec.dst)
-  const bloburl = URL.createObjectURL(new Blob([spec.bytes]))
+  const bloburl = URL.createObjectURL(new Blob([Uint8Array.from(spec.bytes)]))
   const bind = createbind(
     {
       type: spec.kind,
@@ -339,7 +340,9 @@ function binddropvm(sessionkey: string, spec: WanixBindDropPayload) {
   }
   if (!isvmstarted(vm)) {
     removedropbindwithdst(vm, spec.dst)
-    const index = vmpendingdropbinds.findIndex((entry) => entry.dst === spec.dst)
+    const index = vmpendingdropbinds.findIndex(
+      (entry) => entry.dst === spec.dst,
+    )
     if (index >= 0) {
       vmpendingdropbinds.splice(index, 1, spec)
     } else {

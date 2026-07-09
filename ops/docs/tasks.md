@@ -68,7 +68,7 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task cafe dev`).
 | Task | Description | Tags | Deps | Env |
 |------|-------------|------|------|-----|
 | `yarn task run ops:ci:pages:copy-404` | Copy GitHub Pages 404.html into cafe/dist | `ci` | — | — |
-| `yarn task run ops:ci:pages:copy-cname` | Copy GitHub Pages CNAME into cafe/dist | `ci` | — | — |
+| `yarn task run ops:ci:pages:copy-cname` | Copy GitHub Pages CNAME into cafe/dist and write .nojekyll (skip Jekyll; required for Vite _commonjsHelpers chunks) | `ci` | — | — |
 
 
 ### daisy

@@ -249,11 +249,11 @@ function guardzedcafeexportpush(
   return true
 }
 
-async function writzedcafeinbox(
+function writzedcafeinbox(
   device: DEVICELIKE,
   player: string,
   files: WANIX_ZED_CAFE_EXPORT_FILE[],
-): Promise<number[] | null> {
+): number[] | null {
   const encoded = encodezedcafeinboxjson(files)
   if (!encoded) {
     apilog(
@@ -297,7 +297,7 @@ export async function synczedcafeexportinbox(
   player: string,
   files: WANIX_ZED_CAFE_EXPORT_FILE[],
 ): Promise<boolean> {
-  const inboxbytes = await writzedcafeinbox(device, player, files)
+  const inboxbytes = writzedcafeinbox(device, player, files)
   if (!inboxbytes) {
     return false
   }

@@ -118,8 +118,8 @@ function invercursorcellcolors(fg: number, bg: number) {
     swapfg = swapfg % 16
   }
   let swapbg = bg
-  if (swapbg >= COLOR.ONBLACK && swapbg <= COLOR.ONWHITE) {
-    swapbg = swapbg - COLOR.ONBLACK
+  if (swapbg >= Number(COLOR.ONBLACK) && swapbg <= Number(COLOR.ONWHITE)) {
+    swapbg = swapbg - Number(COLOR.ONBLACK)
   }
   return { color: swapbg, bg: swapfg }
 }

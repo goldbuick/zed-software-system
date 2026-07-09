@@ -227,7 +227,7 @@ const explaincmd = defineCommand({
       if (task.env && Object.keys(task.env).length > 0) {
         console.log(
           `     env: ${Object.entries(task.env)
-            .map(([k, v]) => `${k}=${v}`)
+            .map(([k, v]) => `${k}=${String(v)}`)
             .join(', ')}`,
         )
       }
