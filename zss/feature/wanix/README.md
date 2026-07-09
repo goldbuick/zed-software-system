@@ -240,8 +240,8 @@ flowchart LR
 | `wasi_snapshot_preview1` | `wasi` | WASI worker |
 
 For drops, driver is taken from **drop bytes** (not re-read from `#ramfs`) — large gojs
-binaries (~4 MB) were failing silent re-read and defaulting to `wasi` (LinkError on
-`gojs.runtime.scheduleTimeoutEvent`). `findplayers.wasm` is always forced to `gojs`.
+binaries must use driver from drop bytes via [`wanixspawndriver.ts`](wanixspawndriver.ts).
+Re-read from `#ramfs` throws on failure; unknown wasm throws (no wasi default).
 
 ---
 
@@ -296,6 +296,10 @@ own `wanix-bind` from `#task/{rid}/export` → `zedcafe/`.
 
 **Spawn gate:** Iframe blocks until export content ready — guest never starts with an empty
 tree (fail loud in terminal, not silent empty scan).
+
+**Drop order (task-only):** Drop `findplayers.wasm` from idle — export is built in the **sim
+worker** (where cafe books live), pushed to the zedcafe daemon, then findplayers binds
+`./zedcafe/`. **VM is optional** (Linux `/zedcafe/` consumer only).
 
 ---
 
@@ -383,7 +387,7 @@ Defined in [`wanixrpcmessages.ts`](wanixrpcmessages.ts).
 | [`wanixbridge.ts`](wanixbridge.ts) | Parent RPC + message dispatch |
 | [`wanixhost.tsx`](wanixhost.tsx) | Ghost iframe mount |
 | [`wanixdropparse.ts`](wanixdropparse.ts) | Drag-drop → `wanixdrop` device message |
-| [`wanixwasmdriver.ts`](wanixwasmdriver.ts) | gojs vs wasi from wasm bytes |
+| [`wanixspawndriver.ts`](wanixspawndriver.ts) | Wasm driver resolution from bytes / hint |
 | [`wanixbundle.ts`](wanixbundle.ts) / [`wanixtgzextract.ts`](wanixtgzextract.ts) | `.tgz` bundle drops |
 | [`wanixexportevents.ts`](wanixexportevents.ts) / [`wanixexportwait.ts`](wanixexportwait.ts) | Export-ready event + parent waiters |
 | [`wanixattachstate.ts`](wanixattachstate.ts) | Attached session + auto-attach |
@@ -416,8 +420,8 @@ Staging stays internal; user/guest surface is `./zedcafe/` or `/zedcafe/` via ex
 
 ### gojs vs wasi
 
-Wrong driver → `LinkError: Import "gojs" "runtime.scheduleTimeoutEvent"`. Always pass driver
-from drop bytes for wasm drops; force `gojs` for `findplayers.wasm`.
+Wrong driver → `LinkError` on gojs imports in wasi worker. Driver comes from wasm bytes
+at drop/bundle staging; failures throw instead of defaulting to wasi.
 
 ### Export push must complete in iframe
 
@@ -452,6 +456,31 @@ Report: `/tmp/wanix-zedcafe-export-report.json` — timeline + export trace.
 
 **Unit tests:** `yarn jest ops/tests/unit/feature/wanix/ --config ops/jest.config.ts --no-coverage`
 
+For drops, driver is taken from **drop bytes** (not re-read from `#ramfs`) — large gojs
+binaries must not fall back to wasi. Bundle drops pass per-file drivers from tgz bytes.
+Unknown wasm (no gojs/wasi import) throws.
+
+---
+
+## Failure semantics
+
+Paths that **throw or fail loud** (no silent alternate behavior):
+
+| Failure | Owner | Behavior |
+|---------|--------|----------|
+| Unknown wasm driver | [`wanixwasmdriver.ts`](wanixwasmdriver.ts) | Throws — no default to wasi |
+| Missing `#ramfs` bytes at spawn | [`wanixspawndriver.ts`](wanixspawndriver.ts) | Throws |
+| Zedcafe daemon not ready | [`wanixzedcafe.ts`](wanixzedcafe.ts) `ensurewanixzedcafedaemon` | Throws — drop/activate aborts |
+| Export build from memory | [`readhostexportfilesfrommemory`](wanixzedcafe.ts) | `buildzedcafeexportfiles()` errors propagate |
+| Menu iframe RPC timeout | [`wanixroom.ts`](wanixroom.ts) | `stalled: true`, `vm: null` — no invented VM |
+| Import poll error | `tickzedcafepoll` | `apilog` + `stopzedcafepoll()` |
+
+**Intentional reuse (not fallbacks):** `synczedcafeexportifstale`, soft idle warm apply,
+`tryreuselivezedcafeexport`, `content-ready` event with bounded RPC poll backup (Bucket 2).
+
+**VM export fetch:** only in `finalizewanixzedcafeaftervmboot` when memory `bookCount === 0`
+and VM is running — explicit branch, errors propagate.
+
 ---
 
 ## What works today (and why)
@@ -459,7 +488,7 @@ Report: `/tmp/wanix-zedcafe-export-report.json` — timeline + export trace.
 | Capability | Why it works |
 |------------|--------------|
 | **`#wanix vm` + `/zedcafe/`** | VM room → zedcafe gojs boot → host pushes memory export → `wirezedcafeexport` binds `#task/rid/export` into Linux at `/zedcafe/` |
-| **Wasm task drops** | `handlewanixdrop` stands task room, stages `#ramfs/{file}`, spawns with correct gojs/wasi driver |
+| **Wasm task drops** | `handlewanixdrop` stands task room, stages `#ramfs/{file}`, spawns with driver from wasm bytes |
 | **findplayers JSON output** | gojs task + per-task export bind + spawn gate on `stats.json`; scanner walks `./zedcafe/books/…` |
 | **Live export updates** | `wanixstateexport` jsonpipe rebuilds tree; debounced push while room active; `synczedcafeexportifstale` on reuse |
 | **Auto-attach new sessions** | `WANIX_MSG_SESSION open` → reveal tape → attach when user had nothing focused |

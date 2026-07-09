@@ -43,7 +43,9 @@ export function buildwanixmenutape(state: WanixMenuState): string {
 
   // notice line
   if (state.stalled) {
-    parts.push(zsstextline('$graywanix starting...'))
+    parts.push(
+      zsstextline('$red   menu stale — iframe RPC timeout, retry #wanix'),
+    )
   }
 
   // list vm state

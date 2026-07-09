@@ -83,13 +83,8 @@ export function resetzedcafestate() {
   zedcafebootpromise = null
 }
 
-export function readzedcafetaskridlocal(): string | null {
-  return zedcafetaskrid
-}
-
-/** Reconcile host rid when sync cleared state but the gojs task is still mounted. */
-export function recoverzedcafetaskrid(
-  sys: WanixSystemElement | null | undefined,
+export function readzedcafetaskridlocal(
+  sys?: WanixSystemElement | null,
 ): string | null {
   if (zedcafetaskrid) {
     return zedcafetaskrid
@@ -127,17 +122,10 @@ export function readzedcafereadylocal(): boolean {
   return zedcafeready
 }
 
-export function synczedcafestate(
-  cmd: string,
-  generation: number,
-  opts?: { keeptaskrid?: boolean },
-) {
+export function synczedcafestate(cmd: string, generation: number) {
   zedcafecmd = cmd
   zedcafegen = generation
   zedcafeready = false
-  if (!opts?.keeptaskrid) {
-    zedcafetaskrid = null
-  }
   zedcafebootpromise = null
 }
 

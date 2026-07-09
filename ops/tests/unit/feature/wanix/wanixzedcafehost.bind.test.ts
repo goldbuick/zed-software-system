@@ -1,5 +1,9 @@
 /** @jest-environment jsdom */
 
+jest.mock('zss/feature/wanix/wanixstateexport', () => ({
+  readzedcafeexportstatscontentready: jest.fn(() => false),
+}))
+
 import {
   resetzedcafestate,
   wirezedcafeexportbinds,

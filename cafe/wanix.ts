@@ -36,6 +36,7 @@ import {
   trackwanixtermlinebuf,
 } from 'zss/feature/wanix/wanixtermbridgesmoke'
 import { wanixperfmark } from 'zss/feature/wanix/wanixperf'
+import { resolvedriverforwasm } from 'zss/feature/wanix/wanixspawndriver'
 
 import {
   finalizezedcafeexportcontent,
@@ -48,7 +49,6 @@ import {
   readzedcafeexporthasbooks,
   readzedcafeexportcontentready,
   readzedcafetaskridlocal,
-  recoverzedcafetaskrid,
   resetzedcafestate,
   setzedcafereadylocal,
   synczedcafewasmversionifneeded,
@@ -847,27 +847,15 @@ function removetargetpair(taskid: string) {
   roomconfig.tasks = roomconfig.tasks.filter((entry) => entry.id !== taskid)
 }
 
-async function readwasmdriverforcmd(cmd: string): Promise<WanixTaskDriver> {
-  try {
-    const bytes = await readroot().readFile(cmd)
-    return readwanixwasmdriver(bytes)
-  } catch (err) {
-    console.error(`[wanix] readwasmdriver failed cmd=${cmd}`, err)
-    return 'wasi'
-  }
-}
-
-function resolvedriverforcmd(
+async function resolvedriverforcmd(
   cmd: string,
   driverhint?: WanixTaskDriver | null,
 ): Promise<WanixTaskDriver> {
   if (driverhint) {
-    return Promise.resolve(driverhint)
+    return driverhint
   }
-  if (isfindplayerswasmcmd(cmd)) {
-    return Promise.resolve('gojs')
-  }
-  return readwasmdriverforcmd(cmd)
+  const bytes = await readroot().readFile(cmd)
+  return resolvedriverforwasm(cmd, null, bytes)
 }
 
 function isfindplayerswasmcmd(cmd: string): boolean {
@@ -876,9 +864,8 @@ function isfindplayerswasmcmd(cmd: string): boolean {
 }
 
 async function waitlocalzedcafetaskrid(): Promise<string | null> {
-  recoverzedcafetaskrid(system)
-  if (readzedcafetaskridlocal()) {
-    return readzedcafetaskridlocal()
+  if (readzedcafetaskridlocal(system)) {
+    return readzedcafetaskridlocal(system)
   }
   if (!system) {
     return null
@@ -949,11 +936,10 @@ async function spawntask(
   task.setAttribute('data-zss-target-id', taskid)
   task.setAttribute('data-zss-target-kind', 'task')
   if (driver === 'gojs' && isfindplayerswasmcmd(cmd)) {
-    recoverzedcafetaskrid(system)
     const taskrid = await waitlocalzedcafetaskrid()
     if (!taskrid) {
       throw new Error(
-        'zedcafe export not ready — boot wanix VM or drop a task before findplayers',
+        'zedcafe export not ready — drop a wasm task after books are loaded in memory',
       )
     }
     const exportsrc = readwanixzedcafeexportsrc(taskrid)
@@ -1166,16 +1152,13 @@ async function handlerrpc(
       case 'synczedcafe': {
         const [cmd, generation] = args as [string, number]
         if (system?.isReady) {
-          const rid =
-            recoverzedcafetaskrid(system) ?? readzedcafetaskridlocal()
+          const rid = readzedcafetaskridlocal(system)
           if (
             rid &&
             (await readzedcafeexportlive(readroot(), rid)) &&
             (await readzedcafeexporthasbooks(readroot(), rid))
           ) {
-            synczedcafestate(String(cmd), Number(generation), {
-              keeptaskrid: true,
-            })
+            synczedcafestate(String(cmd), Number(generation))
             console.info(
               `[zedcafe-export] synczedcafe skip-halt taskrid=${rid} generation=${generation}`,
             )
@@ -1258,8 +1241,7 @@ async function handlerrpc(
         break
       }
       case 'readzedcafetaskrid': {
-        result =
-          recoverzedcafetaskrid(system) ?? readzedcafetaskridlocal()
+        result = readzedcafetaskridlocal(system)
         break
       }
       case 'readzedcafeexportfiles': {
@@ -1268,8 +1250,7 @@ async function handlerrpc(
           break
         }
         const root = readroot()
-        const taskrid =
-          recoverzedcafetaskrid(system) ?? readzedcafetaskridlocal()
+        const taskrid = readzedcafetaskridlocal(system)
         if (!taskrid) {
           result = []
           break
@@ -1296,7 +1277,7 @@ async function handlerrpc(
           result = false
           break
         }
-        const rid = String(taskrid ?? readzedcafetaskridlocal() ?? '')
+        const rid = String(taskrid ?? readzedcafetaskridlocal(system) ?? '')
         if (!rid) {
           result = false
           break
@@ -1317,7 +1298,7 @@ async function handlerrpc(
         if (!system?.isReady) {
           throw new Error('wanix room not ready')
         }
-        const rid = String(taskrid ?? readzedcafetaskridlocal() ?? '')
+        const rid = String(taskrid ?? readzedcafetaskridlocal(system) ?? '')
         if (!rid) {
           throw new Error('zedcafe export: missing task rid')
         }

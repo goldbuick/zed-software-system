@@ -37,8 +37,10 @@ import {
   runzedcafeexport,
 } from 'zss/feature/wanix/wanixstateexport'
 import {
+  assertfindplayersexportready,
   ensurewanixzedcafedaemon,
   finalizewanixzedcafeaftervmboot,
+  readhostexportfilesasync,
   readwanixbootzedcafestate,
   resetwanixzedcafeonidle,
   wanixdrainpendingzedcafeexport,
@@ -76,17 +78,10 @@ async function activatezedcafeexport(
   device: DEVICELIKE,
   player: string,
 ): Promise<void> {
-  apilog(device, player, 'zedcafe: preparing export from memory…')
+  apilog(device, player, 'zedcafe: preparing export from sim…')
   primezedcafeexportshadow()
-  const ready = await ensurewanixzedcafedaemon(device, player)
-  if (!ready) {
-    apilog(
-      device,
-      player,
-      'zedcafe: export daemon did not become ready — drop may fail until #wanix vm or retry',
-    )
-    return
-  }
+  const files = await readhostexportfilesasync(device, player)
+  await ensurewanixzedcafedaemon(device, player, files)
   runzedcafeexport(device, player)
   wanixdrainpendingzedcafeexport(device, player)
   apilog(device, player, 'zedcafe: export sync complete')
@@ -273,19 +268,6 @@ function readwanixmenusessionfields() {
   }
 }
 
-function readwanixmenufallbackvm(): WanixMenuVmStatus | null {
-  const vm = roomconfig.vm
-  if (!vm?.active) {
-    return null
-  }
-  return {
-    running: true,
-    vmid: vm.id,
-    vrid: null,
-    mem: vm.mem,
-  }
-}
-
 export async function readwanixmenustate(
   timeoutms = WANIX_MENU_TIMEOUT_MS,
 ): Promise<WanixMenuState> {
@@ -327,12 +309,11 @@ export async function readwanixmenustate(
       ...readwanixmenusessionfields(),
     }
   } catch {
-    const fallbackvm = readwanixmenufallbackvm()
     return {
       config,
       ready: false,
-      vmrunning: !!fallbackvm?.running,
-      vm: fallbackvm,
+      vmrunning: false,
+      vm: null,
       stalled: true,
       ...readwanixmenusessionfields(),
     }
@@ -381,16 +362,10 @@ export async function handlewanixdrop(
     await Promise.all([exportready, stagewasm])
     wanixperfmark('wasm-write-end', { path, bytes: payload.bytes.length })
     const isfindplayers = payload.label.toLowerCase().includes('findplayers')
-    if (device && player) {
-      if (isfindplayers) {
-        apilog(
-          device,
-          player,
-          'findplayers: spawning — waits for zedcafe export, then scans books (often a few seconds)…',
-        )
-      } else {
-        apilog(device, player, `wanix: spawning task ${taskid}…`)
-      }
+    if (isfindplayers && device && player) {
+      await assertfindplayersexportready(device, player)
+    } else if (device && player) {
+      apilog(device, player, `wanix: spawning task ${taskid}…`)
     }
     await spawntaskinroom(taskid, path, readwanixwasmdriver(payload.bytes))
     wanixperfmark('spawntask-return', { taskid, cmd: path })
@@ -410,9 +385,14 @@ export async function handlewanixdrop(
   }
   const prefix = `bundle-${taskid}`
   const files = await extractwanixtgz(payload.bytes, prefix)
+  const driverbycmd = new Map<string, WanixTaskDriver>()
   for (const file of files) {
     const flatpath = readbundleflatpath(prefix, file.path)
-    await putwanixroomfile(normalizewanixpath(flatpath), file.bytes)
+    const cmd = normalizewanixpath(flatpath)
+    if (file.path.toLowerCase().endsWith('.wasm')) {
+      driverbycmd.set(cmd, readwanixwasmdriver(file.bytes))
+    }
+    await putwanixroomfile(cmd, file.bytes)
   }
 
   const wasmpaths = listwanixwasmentries(files, prefix)
@@ -429,7 +409,7 @@ export async function handlewanixdrop(
     const basename = relpath.split('/').pop() ?? relpath
     const subtaskid = uniquewanixtaskid(`${taskid}-${basename}`, usedids)
     usedids.add(subtaskid)
-    await spawntaskinroom(subtaskid, cmd)
+    await spawntaskinroom(subtaskid, cmd, driverbycmd.get(cmd))
     spawns.push({ taskid: subtaskid, cmd })
     if (!firstcmd) {
       firstcmd = cmd

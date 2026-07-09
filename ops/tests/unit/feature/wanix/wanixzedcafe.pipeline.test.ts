@@ -35,6 +35,7 @@ jest.mock('zss/feature/wanix/wanixstateexport', () => ({
 
 import { callwanixrpc } from 'zss/feature/wanix/wanixbridge'
 import {
+  ensurewanixzedcafedaemon,
   ensurezedcafeexportready,
   resetwanixzedcafefortest,
 } from 'zss/feature/wanix/wanixzedcafe'
@@ -96,6 +97,7 @@ describe('ensurezedcafeexportready pipeline', () => {
     expect(order).toEqual([
       'readzedcafetaskrid',
       'readzedcafetaskrid',
+      'readzedcafetaskrid',
       'synczedcafe',
       'waitzedcafemount',
     ])
@@ -155,6 +157,57 @@ describe('ensurezedcafeexportready pipeline', () => {
       'setzedcafeready',
       'readzedcafeexportfiles',
     ])
+  })
+
+  it('pushes books onto existing mount without rebooting daemon', async () => {
+    const order: string[] = []
+    const bookfiles = [
+      {
+        path: 'stats.json',
+        bytes: new TextEncoder().encode(
+          '{"exportedAt":"t","bookCount":1,"books":[]}\n',
+        ),
+      },
+      {
+        path: 'books/demo-sid_book/stats.json',
+        bytes: new TextEncoder().encode('{"exportedAt":"t","bookCount":1}\n'),
+      },
+    ]
+    mockrpc.mockImplementation(async (method: string) => {
+      order.push(method)
+      switch (method) {
+        case 'readzedcafetaskrid':
+          return '7'
+        case 'iszedcafeexportlive':
+          return false
+        case 'pushzedcafeexport':
+          return { ok: true }
+        case 'waitzedcafecontentready':
+          return true
+        case 'finalizezedcafeexport':
+          return { ok: true }
+        case 'setzedcafeready':
+          return { ok: true }
+        case 'readzedcafeexportfiles':
+          return [{ path: 'stats.json', data: [...bookfiles[0].bytes] }]
+        default:
+          return null
+      }
+    })
+
+    const taskrid = await ensurezedcafeexportready(device, player, bookfiles)
+
+    expect(taskrid).toBe('7')
+    expect(order).toEqual([
+      'readzedcafetaskrid',
+      'iszedcafeexportlive',
+      'pushzedcafeexport',
+      'waitzedcafecontentready',
+      'finalizezedcafeexport',
+      'setzedcafeready',
+      'readzedcafeexportfiles',
+    ])
+    expect(mockrpc).not.toHaveBeenCalledWith('synczedcafe', expect.anything())
   })
 
   it('skips boot when iframe export is already live', async () => {
@@ -252,5 +305,26 @@ describe('ensurezedcafeexportready pipeline', () => {
       expect.anything(),
       expect.anything(),
     )
+  })
+
+  it('ensurewanixzedcafedaemon throws when boot pipeline returns null', async () => {
+    mockrpc.mockImplementation(async (method: string) => {
+      switch (method) {
+        case 'readzedcafetaskrid':
+          return null
+        case 'iszedcafeexportlive':
+          return false
+        case 'synczedcafe':
+          return { ok: true }
+        case 'waitzedcafemount':
+          return null
+        default:
+          return null
+      }
+    })
+
+    await expect(
+      ensurewanixzedcafedaemon(device, player, files),
+    ).rejects.toThrow(/daemon not ready/)
   })
 })

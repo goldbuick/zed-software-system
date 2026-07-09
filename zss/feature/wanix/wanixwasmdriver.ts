@@ -26,5 +26,7 @@ export function readwanixwasmdriver(bytes: Uint8Array): WanixTaskDriver {
   if (bytescontain(bytes, WASI_IMPORT)) {
     return 'wasi'
   }
-  return 'wasi'
+  throw new Error(
+    'wanix wasm driver unknown: no gojs or wasi_snapshot_preview1 import',
+  )
 }

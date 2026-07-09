@@ -168,7 +168,7 @@ describe('wanixmenu', () => {
         attachedsessionkey: null,
         activesessionkey: null,
       })
-      expect(tape).toContain('wanix starting')
+      expect(tape).toContain('menu stale')
       expect(tape).toContain('!wanix stop "hello-wasm";')
     })
   })

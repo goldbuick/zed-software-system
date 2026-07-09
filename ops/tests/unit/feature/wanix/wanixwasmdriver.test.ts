@@ -39,4 +39,9 @@ describe('wanixwasmdriver', () => {
     const bytes = readFileSync(path.join(WANIX_PUBLIC, 'zedcafe.wasm'))
     expect(readwanixwasmdriver(bytes)).toBe('gojs')
   })
+
+  it('throws for unknown wasm bytes', () => {
+    const bytes = new TextEncoder().encode('not-a-wasm-module')
+    expect(() => readwanixwasmdriver(bytes)).toThrow(/driver unknown/)
+  })
 })
