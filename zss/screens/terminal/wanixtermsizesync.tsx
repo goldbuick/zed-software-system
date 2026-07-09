@@ -10,7 +10,8 @@ const TERM_FIT_DEBOUNCE_MS = 100
 function readwanixtermgridsize(edge: { width: number; height: number }) {
   return {
     cols: Math.max(1, edge.width),
-    rows: Math.max(1, edge.height),
+    // Bottom row is the hint bar in WanixTermScreen — guest rows must match visible height.
+    rows: Math.max(1, edge.height - 1),
   }
 }
 
