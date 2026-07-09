@@ -149,4 +149,66 @@ describe('wanixtermgridstate', () => {
     const snapshot = readwanixtermgridsnapshot(grid)
     expect(readwanixtermgridpreview(snapshot)).toContain('Hello from wanix!')
   })
+
+  it('moves cursor left on BS without erasing cells', () => {
+    const grid = createwanixtermgrid(10, 2)
+    wanixtermgridwritebytes(grid, new TextEncoder().encode('hello'))
+    expect(grid.cursorx).toBe(5)
+    wanixtermgridwritebytes(grid, new TextEncoder().encode('\b\b'))
+    const snapshot = readwanixtermgridsnapshot(grid)
+    expect(snapshot.cursorx).toBe(3)
+    expect(String.fromCharCode(snapshot.char[3])).toBe('l')
+    expect(String.fromCharCode(snapshot.char[4])).toBe('o')
+  })
+
+  it('erases cell on DEL', () => {
+    const grid = createwanixtermgrid(10, 2)
+    wanixtermgridwritebytes(grid, new TextEncoder().encode('hello'))
+    wanixtermgridwritebytes(grid, new TextEncoder().encode('\x7f'))
+    const snapshot = readwanixtermgridsnapshot(grid)
+    expect(snapshot.cursorx).toBe(4)
+    expect(snapshot.char[4]).toBe(32)
+    expect(String.fromCharCode(snapshot.char[3])).toBe('l')
+  })
+
+  it('moves cursor left on CUB without erasing cells', () => {
+    const grid = createwanixtermgrid(10, 2)
+    wanixtermgridwritebytes(grid, new TextEncoder().encode('hello'))
+    wanixtermgridwritebytes(grid, new TextEncoder().encode('\x1b[2D'))
+    const snapshot = readwanixtermgridsnapshot(grid)
+    expect(snapshot.cursorx).toBe(3)
+    expect(String.fromCharCode(snapshot.char[3])).toBe('l')
+    expect(String.fromCharCode(snapshot.char[4])).toBe('o')
+  })
+
+  it('moves cursor home on bare CUP H', () => {
+    const grid = createwanixtermgrid(10, 2)
+    wanixtermgridwritebytes(grid, new TextEncoder().encode('hello'))
+    wanixtermgridwritebytes(grid, new TextEncoder().encode('\x1b[H'))
+    expect(grid.cursorx).toBe(0)
+    expect(grid.cursory).toBe(0)
+    expect(String.fromCharCode(grid.char[0])).toBe('h')
+  })
+
+  it('clears from cursor to end of line with EL 0', () => {
+    const grid = createwanixtermgrid(10, 2)
+    wanixtermgridwritebytes(grid, new TextEncoder().encode('hello'))
+    wanixtermgridwritebytes(grid, new TextEncoder().encode('\x1b[1D\x1b[K'))
+    const snapshot = readwanixtermgridsnapshot(grid)
+    expect(snapshot.cursorx).toBe(4)
+    expect(String.fromCharCode(snapshot.char[3])).toBe('l')
+    expect(snapshot.char[4]).toBe(32)
+  })
+
+  it('saves and restores cursor with DECSC/DECRC', () => {
+    const grid = createwanixtermgrid(10, 3)
+    wanixtermgridwritebytes(grid, new TextEncoder().encode('hello'))
+    wanixtermgridwritebytes(grid, new TextEncoder().encode('\x1b[s'))
+    wanixtermgridwritebytes(grid, new TextEncoder().encode('\x1b[1;1H'))
+    expect(grid.cursorx).toBe(0)
+    expect(grid.cursory).toBe(0)
+    wanixtermgridwritebytes(grid, new TextEncoder().encode('\x1b[u'))
+    expect(grid.cursorx).toBe(5)
+    expect(grid.cursory).toBe(0)
+  })
 })

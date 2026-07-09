@@ -112,6 +112,18 @@ function encodekeyboard(event: KeyboardEvent): string | null {
   return null
 }
 
+function invercursorcellcolors(fg: number, bg: number) {
+  let swapfg = fg >= 33 ? fg - 33 : fg
+  if (swapfg > 15) {
+    swapfg = swapfg % 16
+  }
+  let swapbg = bg
+  if (swapbg >= COLOR.ONBLACK && swapbg <= COLOR.ONWHITE) {
+    swapbg = swapbg - COLOR.ONBLACK
+  }
+  return { color: swapbg, bg: swapfg }
+}
+
 function drawhintbar(
   context: ReturnType<typeof useWriteText>,
   edge: ReturnType<typeof textformatreadedges>,
@@ -181,10 +193,9 @@ export function WanixTermScreen() {
         lineindex === scrollbackrows + frame.cursory &&
         x === frame.cursorx
       ) {
-        const swapfg = color >= 33 ? color - 33 : color
-        const swapbg = bg
-        color = swapbg
-        bg = swapfg
+        const inverted = invercursorcellcolors(color, bg)
+        color = inverted.color
+        bg = inverted.bg
       }
       writetile(context, context.width, context.height, drawx, drawy, {
         char,

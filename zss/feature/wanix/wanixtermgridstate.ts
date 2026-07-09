@@ -69,6 +69,12 @@ export type WanixTermNormalSave = {
   scrollback: WanixTermScrollbackLine[]
 }
 
+export type WanixSavedCursor = {
+  cursorx: number
+  cursory: number
+  cursorvisible: boolean
+}
+
 export type WANIX_TERM_GRID = {
   cols: number
   rows: number
@@ -86,6 +92,7 @@ export type WANIX_TERM_GRID = {
   scrollback: WanixTermScrollbackLine[]
   altactive: boolean
   savednormal: WanixTermNormalSave | null
+  savedcursor: WanixSavedCursor | null
 }
 
 type WanixTermCell = {
@@ -292,7 +299,13 @@ function writechar(grid: WANIX_TERM_GRID, ch: number) {
     grid.cursorx = 0
     return
   }
-  if (ch === 8 || ch === 127) {
+  if (ch === 8) {
+    if (grid.cursorx > 0) {
+      grid.cursorx -= 1
+    }
+    return
+  }
+  if (ch === 127) {
     if (grid.cursorx > 0) {
       grid.cursorx -= 1
       putcell(grid, grid.cursorx, grid.cursory, SPACE)
@@ -426,6 +439,182 @@ function exitaltscreen(grid: WANIX_TERM_GRID) {
   grid.savednormal = null
 }
 
+function clampcursorx(grid: WANIX_TERM_GRID, x: number) {
+  return Math.min(Math.max(0, x), Math.max(0, grid.cols - 1))
+}
+
+function clampcursory(grid: WANIX_TERM_GRID, y: number) {
+  return Math.min(Math.max(0, y), Math.max(0, grid.rows - 1))
+}
+
+function readcsiparam(seq: string, final: string, defaultparam = 1): number | null {
+  if (seq.length === 0 || seq[seq.length - 1] !== final) {
+    return null
+  }
+  const body = seq.slice(0, -1)
+  if (body.includes(';') || body.includes('?')) {
+    return null
+  }
+  if (body === '') {
+    return defaultparam
+  }
+  const parsed = parseInt(body, 10)
+  if (Number.isNaN(parsed)) {
+    return defaultparam
+  }
+  return Math.max(0, parsed)
+}
+
+function clearcellat(grid: WANIX_TERM_GRID, x: number, y: number) {
+  putcell(grid, x, y, SPACE)
+}
+
+function eraseline(grid: WANIX_TERM_GRID, mode: number) {
+  const y = grid.cursory
+  const x = grid.cursorx
+  if (mode === 0) {
+    for (let col = x; col < grid.cols; ++col) {
+      clearcellat(grid, col, y)
+    }
+    return
+  }
+  if (mode === 1) {
+    for (let col = 0; col <= x && col < grid.cols; ++col) {
+      clearcellat(grid, col, y)
+    }
+    return
+  }
+  if (mode === 2) {
+    for (let col = 0; col < grid.cols; ++col) {
+      clearcellat(grid, col, y)
+    }
+  }
+}
+
+function erasedisplay(grid: WANIX_TERM_GRID, mode: number) {
+  if (mode === 2) {
+    resetgridcells(grid)
+    return
+  }
+  if (mode === 0) {
+    for (let row = grid.cursory; row < grid.rows; ++row) {
+      const startcol = row === grid.cursory ? grid.cursorx : 0
+      for (let col = startcol; col < grid.cols; ++col) {
+        clearcellat(grid, col, row)
+      }
+    }
+    return
+  }
+  if (mode === 1) {
+    for (let row = 0; row <= grid.cursory && row < grid.rows; ++row) {
+      const endcol = row === grid.cursory ? grid.cursorx : grid.cols - 1
+      for (let col = 0; col <= endcol; ++col) {
+        clearcellat(grid, col, row)
+      }
+    }
+  }
+}
+
+function erasechars(grid: WANIX_TERM_GRID, count: number) {
+  const n = Math.max(1, count)
+  const y = grid.cursory
+  for (let i = 0; i < n; ++i) {
+    const x = grid.cursorx + i
+    if (x >= grid.cols) {
+      break
+    }
+    clearcellat(grid, x, y)
+  }
+}
+
+function insertchars(grid: WANIX_TERM_GRID, count: number) {
+  const n = Math.max(1, count)
+  const y = grid.cursory
+  const offset = y * grid.cols
+  const x = grid.cursorx
+  const shift = Math.min(n, grid.cols - x)
+  if (shift <= 0) {
+    return
+  }
+  for (let col = grid.cols - 1; col >= x + shift; --col) {
+    const from = offset + col - shift
+    const to = offset + col
+    grid.char[to] = grid.char[from]
+    grid.color[to] = grid.color[from]
+    grid.bg[to] = grid.bg[from]
+  }
+  for (let col = x; col < x + shift; ++col) {
+    clearcellat(grid, col, y)
+  }
+}
+
+function deletechars(grid: WANIX_TERM_GRID, count: number) {
+  const n = Math.max(1, count)
+  const y = grid.cursory
+  const offset = y * grid.cols
+  const x = grid.cursorx
+  const shift = Math.min(n, grid.cols - x)
+  if (shift <= 0) {
+    return
+  }
+  for (let col = x; col < grid.cols - shift; ++col) {
+    const from = offset + col + shift
+    const to = offset + col
+    grid.char[to] = grid.char[from]
+    grid.color[to] = grid.color[from]
+    grid.bg[to] = grid.bg[from]
+  }
+  for (let col = grid.cols - shift; col < grid.cols; ++col) {
+    clearcellat(grid, col, y)
+  }
+}
+
+function parsecup(seq: string): { row: number; col: number } | null {
+  if (!seq.endsWith('H') || seq.startsWith('?')) {
+    return null
+  }
+  const body = seq.slice(0, -1)
+  if (body.includes('?')) {
+    return null
+  }
+  if (body === '') {
+    return { row: 0, col: 0 }
+  }
+  const parts = body.split(';')
+  if (parts.length === 1) {
+    const row = Math.max(0, (parseInt(parts[0] || '1', 10) || 1) - 1)
+    return { row, col: 0 }
+  }
+  if (parts.length === 2) {
+    const row = Math.max(0, (parseInt(parts[0] || '1', 10) || 1) - 1)
+    const col = Math.max(0, (parseInt(parts[1] || '1', 10) || 1) - 1)
+    return { row, col }
+  }
+  return null
+}
+
+function applycup(grid: WANIX_TERM_GRID, row: number, col: number) {
+  grid.cursory = clampcursory(grid, row)
+  grid.cursorx = clampcursorx(grid, col)
+}
+
+function savecursor(grid: WANIX_TERM_GRID) {
+  grid.savedcursor = {
+    cursorx: grid.cursorx,
+    cursory: grid.cursory,
+    cursorvisible: grid.cursorvisible,
+  }
+}
+
+function restorecursor(grid: WANIX_TERM_GRID) {
+  if (!grid.savedcursor) {
+    return
+  }
+  grid.cursorx = clampcursorx(grid, grid.savedcursor.cursorx)
+  grid.cursory = clampcursory(grid, grid.savedcursor.cursory)
+  grid.cursorvisible = grid.savedcursor.cursorvisible
+}
+
 function parsecsi(grid: WANIX_TERM_GRID, seq: string) {
   if (seq === '?1049h' || seq === '?47h' || seq === '?1047h') {
     enteraltscreen(grid)
@@ -435,16 +624,12 @@ function parsecsi(grid: WANIX_TERM_GRID, seq: string) {
     exitaltscreen(grid)
     return
   }
-  if (seq === '2J' || seq === 'H') {
-    resetgridcells(grid)
+  if (seq === 's') {
+    savecursor(grid)
     return
   }
-  const cursor = /^(\d*);(\d*)H$/.exec(seq)
-  if (cursor) {
-    const row = Math.max(0, (parseInt(cursor[1] || '1', 10) || 1) - 1)
-    const col = Math.max(0, (parseInt(cursor[2] || '1', 10) || 1) - 1)
-    grid.cursory = Math.min(row, Math.max(0, grid.rows - 1))
-    grid.cursorx = Math.min(col, Math.max(0, grid.cols - 1))
+  if (seq === 'u') {
+    restorecursor(grid)
     return
   }
   const sgr = /^([\d;]*)m$/.exec(seq)
@@ -456,6 +641,66 @@ function parsecsi(grid: WANIX_TERM_GRID, seq: string) {
         applysgrcode(grid, code)
       }
     }
+    return
+  }
+  const cup = parsecup(seq)
+  if (cup) {
+    applycup(grid, cup.row, cup.col)
+    return
+  }
+  const cha = readcsiparam(seq, 'G', 1)
+  if (cha != null) {
+    grid.cursorx = clampcursorx(grid, cha - 1)
+    return
+  }
+  const vpa = readcsiparam(seq, 'd', 1)
+  if (vpa != null) {
+    grid.cursory = clampcursory(grid, vpa - 1)
+    return
+  }
+  const cub = readcsiparam(seq, 'D', 1)
+  if (cub != null) {
+    grid.cursorx = clampcursorx(grid, grid.cursorx - cub)
+    return
+  }
+  const cuf = readcsiparam(seq, 'C', 1)
+  if (cuf != null) {
+    grid.cursorx = clampcursorx(grid, grid.cursorx + cuf)
+    return
+  }
+  const cuu = readcsiparam(seq, 'A', 1)
+  if (cuu != null) {
+    grid.cursory = clampcursory(grid, grid.cursory - cuu)
+    return
+  }
+  const cud = readcsiparam(seq, 'B', 1)
+  if (cud != null) {
+    grid.cursory = clampcursory(grid, grid.cursory + cud)
+    return
+  }
+  const el = readcsiparam(seq, 'K', 0)
+  if (el != null) {
+    eraseline(grid, el)
+    return
+  }
+  const ed = readcsiparam(seq, 'J', 0)
+  if (ed != null) {
+    erasedisplay(grid, ed)
+    return
+  }
+  const ech = readcsiparam(seq, 'X', 1)
+  if (ech != null) {
+    erasechars(grid, ech)
+    return
+  }
+  const ich = readcsiparam(seq, '@', 1)
+  if (ich != null) {
+    insertchars(grid, ich)
+    return
+  }
+  const dch = readcsiparam(seq, 'P', 1)
+  if (dch != null) {
+    deletechars(grid, dch)
   }
 }
 
@@ -749,6 +994,7 @@ export function createwanixtermgrid(
     scrollback: [],
     altactive: false,
     savednormal: null,
+    savedcursor: null,
   }
   return grid
 }
