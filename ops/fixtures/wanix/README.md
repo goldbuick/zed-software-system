@@ -2,6 +2,38 @@
 
 WASI `.wasm` and `.tgz` bundles for manual wanix testing (`#wanix`, file drop, paste).
 
+## Tooling setup
+
+Check which compilers are installed and get install hints:
+
+```bash
+yarn task run ops:fixtures:wanix:toolchains
+```
+
+Install anything reported missing, then regenerate fixtures:
+
+```bash
+yarn task run ops:fixtures:wanix:build
+```
+
+Use `--strict` to fail when any per-lang hello toolchain is missing (full regen before commit):
+
+```bash
+yarn task run ops:fixtures:wanix:build --strict
+```
+
+| Toolchain | Required for | Install (macOS) |
+|-----------|--------------|-----------------|
+| wabt | WAT fixtures (`wat2wasm`) | `brew install wabt` |
+| go + `submodules/wanix` | Go WASI, Go gojs, zedcafe | `brew install go` |
+| rust + `wasm32-wasip1` | `hello-rust.wasm` | `brew install rust` + `rustup target add wasm32-wasip1` |
+| zig | `hello-zig.wasm` | `brew install zig` |
+| tinygo | `hello-tinygo.wasm` | `brew tap tinygo-org/tools && brew trust tinygo-org/tools && brew install tinygo` |
+| wasi-sdk | `hello-c.wasm` | install to `/opt/wasi-sdk` or set `WASI_SDK_PATH` |
+| docker | Linux VM overlay | `brew install --cask docker` |
+
+Sources for per-lang hellos live in `hello/` (see `hello/manifest.json`). WAT sources for greet/alpha/beta/termbridge remain in `src/*.wat`.
+
 ## Quick use
 
 1. `yarn task cafe dev`
@@ -9,16 +41,23 @@ WASI `.wasm` and `.tgz` bundles for manual wanix testing (`#wanix`, file drop, p
 
 | File | Tests |
 |------|--------|
-| `hello.wasm` | First / incremental `.wasm` drop; prints `Hello from wanix!` |
+| `hello-wat.wasm` | WAT hello — first / incremental `.wasm` drop; prints `Hello from wanix!` |
+| `hello-rust.wasm` | Rust WASI hello |
+| `hello-zig.wasm` | Zig WASI hello |
+| `hello-gowasi.wasm` | Go WASI (`wasip1`) hello |
+| `hello-tinygo.wasm` | TinyGo WASI hello |
+| `hello-c.wasm` | C WASI hello |
+| `hello-gojs.wasm` | Go js/wasm hello |
+| `hello-all.tgz` | All `hello-*.wasm` files in one bundle |
 | `greet.wasm` | Second `.wasm` drop while a room is already running |
-| `bundle-one.tgz` | Single `.wasm` inside a gzip tar |
+| `bundle-one.tgz` | Single `hello-wat.wasm` inside a gzip tar |
 | `bundle-two.tgz` | Two `.wasm` files (`alpha.wasm`, `beta.wasm`) — spawns both tasks |
 | `bundle-empty.tgz` | No `.wasm` — expect `wanix bundle … has no .wasm entries` warning |
 | `termbridge.wasm` | Term bridge smoke — banner on stdout, stays running; type `ping` + Enter → `-> pong` on the tile |
 
 ## GoJS zedcafe tools
 
-Built with `yarn task run ops:fixtures:wanix:zedcafe:build` (needs Go + `submodules/wanix`):
+Built with `yarn task run ops:fixtures:wanix:zedcafe:build` (run `ops:fixtures:wanix:toolchains` first):
 
 | File | Role |
 |------|------|
@@ -47,16 +86,21 @@ Guest prints a banner via WASI `fd_write` only (no stdin). Input and the `ping` 
 
 ## Suggested flows
 
+**Per-lang hello smoke**
+
+1. Drop any `hello-<lang>.wasm` → task room boots, prints `Hello from wanix!`.
+2. Drop `hello-all.tgz` → spawns every hello task.
+
 **Task room**
 
-1. Drop `hello.wasm` → task room boots, one task runs.
+1. Drop `hello-wat.wasm` → task room boots, one task runs.
 2. Drop `greet.wasm` → second task appended (no iframe rebuild flash).
 3. Drop `bundle-two.tgz` → alpha + beta tasks spawn.
 
 **VM room**
 
 1. `#wanix vm` → Linux boots (stock `wanix-linux.tgz` + local `zedcafe-linux-overlay.tgz`).
-2. Drop `hello.wasm` → WASI task runs alongside VM.
+2. Drop `hello-wat.wasm` → WASI task runs alongside VM.
 3. Drop `bundle-one.tgz` → bundle task runs; VM still up.
 4. `#wanix vm stop` → VM stops; tasks keep running.
 
@@ -89,10 +133,9 @@ Sources: `linux/` (this directory). Output: `ops/public/wanix/zedcafe-linux-over
 
 ## Regenerate
 
-Requires [WABT](https://github.com/WebAssembly/wabt) (`wat2wasm`, `wasm-validate`):
-
 ```bash
+yarn task run ops:fixtures:wanix:toolchains
 yarn task run ops:fixtures:wanix:build
 ```
 
-Sources live in `src/*.wat` (this directory). Built artifacts land in `ops/public/wanix/` — drag-drop from there or fetch at `/fixtures/wanix/` in dev.
+Built artifacts land in `ops/public/wanix/` — drag-drop from there or fetch at `/fixtures/wanix/` in dev.

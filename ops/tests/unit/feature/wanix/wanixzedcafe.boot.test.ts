@@ -27,6 +27,6 @@ describe('wanixzedcafe boot state', () => {
     expect(state.ready).toBe(false)
     expect(state.taskrid).toBeNull()
     expect(state).not.toHaveProperty('inboxbytes')
-    expect(state.guestfiles?.[0]?.path).toBe('stats.json')
+    expect(state).not.toHaveProperty('guestfiles')
   })
 })

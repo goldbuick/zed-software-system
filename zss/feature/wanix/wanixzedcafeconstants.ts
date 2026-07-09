@@ -4,8 +4,6 @@ export const WANIX_ZEDCAFE_GUEST_MOUNT = 'zedcafe'
 export const WANIX_ZEDCAFE_WASM_RAMFS = '#ramfs/zedcafe.wasm'
 /** Task-namespace wasm path (wanix-task child file bind only). */
 export const WANIX_ZEDCAFE_TASK_WASM = 'zedcafe.wasm'
-/** Internal export staging tree under `#ramfs` — not exposed at guest `/`. */
-export const WANIX_ZEDCAFE_EXPORT_RAMFS = '#ramfs/zedcafe'
 export const WANIX_ZEDCAFE_WASM_URL = '/wanix/zedcafe.wasm'
 export const WANIX_ZEDCAFE_WASM_CMD = WANIX_ZEDCAFE_TASK_WASM
 export const WANIX_ZEDCAFE_EXPORT_DEBOUNCE_MS = 2000

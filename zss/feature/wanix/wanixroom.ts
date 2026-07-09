@@ -104,7 +104,6 @@ export async function ensurewanixtaskroom(
     zedcafe = {
       cmd: boot.cmd,
       generation: boot.generation,
-      guestfiles: boot.guestfiles,
     }
   }
   const next: WanixRoomConfig = {
@@ -414,7 +413,6 @@ export async function startwanixvm(
       zedcafe = {
         cmd: boot.cmd,
         generation: boot.generation,
-        guestfiles: boot.guestfiles,
       }
     }
   }

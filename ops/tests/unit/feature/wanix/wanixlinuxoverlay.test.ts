@@ -19,5 +19,7 @@ describe('zedcafe linux overlay tarball', () => {
     expect(listing).toContain('usr/bin/jq')
     expect(listing).toContain('usr/bin/curl')
     expect(listing).toContain('usr/bin/wget')
+    expect(listing).not.toContain('./dev/console')
+    expect(listing).not.toMatch(/^\.\/dev\//m)
   })
 })

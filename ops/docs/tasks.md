@@ -202,9 +202,10 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task cafe dev`).
 
 | Task | Description | Tags | Deps | Env |
 |------|-------------|------|------|-----|
-| `yarn task run ops:fixtures:wanix:build` | Build WASI .wasm and .tgz drag-drop fixtures into ops/public/wanix/ (needs wabt wat2wasm) | — | — | — |
-| `yarn task run ops:fixtures:wanix:linux:overlay:build` | Build zedcafe-linux-overlay.tgz (Alpine i386 jq/curl/wget + zedcafe shell tools) into ops/public/wanix/ and cafe/public/wanix/ (needs Docker) | — | — | — |
-| `yarn task run ops:fixtures:wanix:zedcafe:build` | Build zed-cafe export daemon and findplayers scanner (Go js/wasm) into ops/public/wanix/ and cafe/public/wanix/ (needs Go + submodules/wanix) | — | — | — |
+| `yarn task run ops:fixtures:wanix:build` | Build WASI .wasm, per-lang hello-*.wasm, and .tgz drag-drop fixtures into ops/public/wanix/ (run ops:fixtures:wanix:toolchains first; optional langs skip unless --strict) | — | — | — |
+| `yarn task run ops:fixtures:wanix:linux:overlay:build` | Build zedcafe-linux-overlay.tgz (Alpine i386 jq/curl/wget + zedcafe shell tools) into ops/public/wanix/ and cafe/public/wanix/ (needs Docker — run ops:fixtures:wanix:toolchains first) | — | — | — |
+| `yarn task run ops:fixtures:wanix:toolchains` | Check wanix fixture build toolchains (wabt, go, rust, zig, tinygo, clang, docker) and print install hints — see ops/fixtures/wanix/README.md | — | — | — |
+| `yarn task run ops:fixtures:wanix:zedcafe:build` | Build zed-cafe export daemon and findplayers scanner (Go js/wasm) into ops/public/wanix/ and cafe/public/wanix/ (needs Go + submodules/wanix — run ops:fixtures:wanix:toolchains first) | — | — | — |
 
 
 #### fixtures/zzt

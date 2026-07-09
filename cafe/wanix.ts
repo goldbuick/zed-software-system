@@ -25,7 +25,6 @@ import {
   wanixtermgridwritebytes,
 } from 'zss/feature/wanix/wanixtermgridstate'
 import {
-  WANIX_ZEDCAFE_EXPORT_RAMFS,
   WANIX_ZEDCAFE_EXPORT_READY_POLL_MS,
   WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS,
   WANIX_ZEDCAFE_GUEST_MOUNT,
@@ -41,11 +40,10 @@ import {
   finalizezedcafeexportcontent,
   haltzedcafetask,
   collectzedcafeexportfiles,
-  collectzedcafeexportramfsfiles,
   pushzedcafeexportlive,
   readzedcafereadylocal,
   readzedcafetaskridlocal,
-  refreshvmzedcafeguestfiles,
+  refreshzedcafeexportbinds,
   resetzedcafestate,
   setzedcafereadylocal,
   synczedcafestate,
@@ -503,18 +501,8 @@ async function connectvmtermsession() {
   await connecttermsession(vm.id, readvmtermpath(vmel), 'vm')
 }
 
-function appendzedcafestagingbinds(sys: WanixSystemElement) {
-  const guestfiles = roomconfig.zedcafe?.guestfiles
-  if (guestfiles?.some((file) => file.path === 'stats.json')) {
-    refreshvmzedcafeguestfiles(sys, guestfiles)
-  }
-}
-
 function appendtaskroombinds(sys: WanixSystemElement, config: WanixRoomConfig) {
   // Never bind `#ramfs` at `.` — staging stays internal; user surface is `./zedcafe/` only.
-  if (config.zedcafe) {
-    appendzedcafestagingbinds(sys)
-  }
   for (const archive of config.archives) {
     const bind = createbind({
       type: 'archive',
@@ -536,9 +524,6 @@ function appendtaskroombinds(sys: WanixSystemElement, config: WanixRoomConfig) {
 }
 
 function appendvmroombinds(sys: WanixSystemElement) {
-  if (roomconfig.zedcafe) {
-    appendzedcafestagingbinds(sys)
-  }
   sys.appendChild(
     createbind(
       { type: 'archive', dst: '.', src: WANIX_LINUX_ARCHIVE_URL },
@@ -585,14 +570,6 @@ function buildroomtree(config: WanixRoomConfig) {
         mem: vm.mem,
         term: true,
       })
-      if (config.zedcafe?.guestfiles?.length) {
-        const bind = createbind({
-          dst: WANIX_ZEDCAFE_GUEST_MOUNT,
-          src: WANIX_ZEDCAFE_EXPORT_RAMFS,
-        })
-        bind.setAttribute('data-zss-zedcafe-export', 'vm-staging')
-        vmel.appendChild(bind)
-      }
       sys.appendChild(vmel)
     }
   }
@@ -718,11 +695,7 @@ async function applyroom(config: WanixRoomConfig) {
       if (readzedcafereadylocal()) {
         const taskrid = readzedcafetaskridlocal()
         if (taskrid) {
-          const guestfiles = await collectzedcafeexportfiles(
-            readroot(),
-            taskrid,
-          )
-          refreshvmzedcafeguestfiles(system, guestfiles)
+          refreshzedcafeexportbinds(system, taskrid)
         }
       }
     }
@@ -763,7 +736,7 @@ function isfindplayerswasmcmd(cmd: string): boolean {
 }
 
 async function waitlocalzedcafetaskrid(): Promise<string | null> {
-  if (readzedcafereadylocal() && readzedcafetaskridlocal()) {
+  if (readzedcafetaskridlocal()) {
     return readzedcafetaskridlocal()
   }
   if (!system) {
@@ -773,7 +746,6 @@ async function waitlocalzedcafetaskrid(): Promise<string | null> {
     system,
     readroot(),
     WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS,
-    roomconfig.mode === 'vm',
   )
 }
 
@@ -1124,10 +1096,6 @@ async function handlerrpc(
           break
         }
         const root = readroot()
-        if (roomconfig.mode === 'vm' && readzedcafereadylocal()) {
-          result = await collectzedcafeexportramfsfiles(root)
-          break
-        }
         const taskrid = readzedcafetaskridlocal()
         if (!taskrid) {
           result = []
@@ -1149,11 +1117,15 @@ async function handlerrpc(
         break
       }
       case 'refreshvmzedcafeexport': {
-        const [guestfiles] = args as [{ path: string; data: number[] }[]?]
+        const [taskrid] = args as [string?]
         if (!system) {
           throw new Error('wanix system missing')
         }
-        const count = refreshvmzedcafeguestfiles(system, guestfiles ?? [])
+        const rid = String(taskrid ?? readzedcafetaskridlocal() ?? '')
+        if (!rid) {
+          throw new Error('zedcafe export: missing task rid')
+        }
+        const count = refreshzedcafeexportbinds(system, rid)
         result = { ok: true, count }
         break
       }

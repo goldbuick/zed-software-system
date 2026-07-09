@@ -16,4 +16,8 @@ COPY boot/rc /overlay/boot/rc
 
 RUN chmod +x /overlay/usr/bin/zedcafe-* /overlay/boot/rc
 
+# apk --initdb creates char devices; wanix archive copy rejects them.
+# Base wanix-linux.tgz already provides /dev for the guest.
+RUN rm -rf /overlay/dev
+
 RUN tar -czf /zedcafe-linux-overlay.tgz -C /overlay .

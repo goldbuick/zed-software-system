@@ -1,0 +1,54 @@
+{
+  "message": "Hello from wanix!\\n",
+  "fixtures": [
+    {
+      "lang": "wat",
+      "output": "hello-wat.wasm",
+      "driver": "wasi",
+      "toolchain": "wabt",
+      "required": true
+    },
+    {
+      "lang": "rust",
+      "output": "hello-rust.wasm",
+      "driver": "wasi",
+      "toolchain": "rust",
+      "required": false
+    },
+    {
+      "lang": "zig",
+      "output": "hello-zig.wasm",
+      "driver": "wasi",
+      "toolchain": "zig",
+      "required": false
+    },
+    {
+      "lang": "gowasi",
+      "output": "hello-gowasi.wasm",
+      "driver": "wasi",
+      "toolchain": "go",
+      "required": false
+    },
+    {
+      "lang": "tinygo",
+      "output": "hello-tinygo.wasm",
+      "driver": "wasi",
+      "toolchain": "tinygo",
+      "required": false
+    },
+    {
+      "lang": "c",
+      "output": "hello-c.wasm",
+      "driver": "wasi",
+      "toolchain": "clang",
+      "required": false
+    },
+    {
+      "lang": "gojs",
+      "output": "hello-gojs.wasm",
+      "driver": "gojs",
+      "toolchain": "go",
+      "required": false
+    }
+  ]
+}
