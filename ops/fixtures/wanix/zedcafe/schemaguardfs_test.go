@@ -122,6 +122,50 @@ func TestSchemaGuardAllowsBookPrefixMkdir(t *testing.T) {
 	}
 }
 
+func TestIsAllowedExportDir(t *testing.T) {
+	book := "books/coolregionsbow-sid_vuYEPNKWWAPd"
+	page := book + "/pages/player-sid_q8uHjK2to8P"
+	cases := []struct {
+		dir     string
+		allowed bool
+	}{
+		{"books", true},
+		{book, true},
+		{book + "/pages", true},
+		{page, true},
+		{page + "/board", true},
+		{page + "/board/objects", true},
+		{page + "/object", true},
+		{page + "/terrain", true},
+		{page + "/charset", true},
+		{page + "/palette", true},
+		{"totally/invalid", false},
+	}
+	for _, tc := range cases {
+		got := isallowedexportdir(tc.dir)
+		if got != tc.allowed {
+			t.Fatalf("isallowedexportdir(%q) = %v, want %v", tc.dir, got, tc.allowed)
+		}
+	}
+}
+
+func TestSchemaGuardP9WritePageObjectAfterMkdirAll(t *testing.T) {
+	export := NewEmptyExport()
+	fsys, cleanup := p9exportsetup(t, export)
+	defer cleanup()
+
+	book := "books/coolregionsbow-sid_vuYEPNKWWAPd"
+	page := book + "/pages/player-sid_q8uHjK2to8P"
+	objectpath := page + "/object/element.json"
+	if err := fs.MkdirAll(fsys, page+"/object", 0o755); err != nil {
+		t.Fatalf("mkdirAll object dir: %v", err)
+	}
+	payload := `{"kind":"object"}` + "\n"
+	if err := fs.WriteFile(fsys, objectpath, []byte(payload), 0o644); err != nil {
+		t.Fatalf("write object element.json: %v", err)
+	}
+}
+
 func TestIsAllowedExportPath(t *testing.T) {
 	if !isallowedexportpath("stats.json") {
 		t.Fatal("stats.json should be allowed")

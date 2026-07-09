@@ -3,6 +3,7 @@ import {
   buildzedcafecodepagefiles,
   buildzedcafeexportfiles,
   buildzedcafestats,
+  readzedcafeexportstatscontentready,
   resetwanixstateexportfortest,
   schedulewanixexport,
   splitboardexport,
@@ -70,6 +71,19 @@ describe('wanixstateexport', () => {
     expect(stats.bookCount).toBe(0)
     expect(stats.books).toEqual([])
     expect(typeof stats.exportedAt).toBe('string')
+  })
+
+  it('readzedcafeexportstatscontentready rejects empty and accepts host stats', () => {
+    expect(readzedcafeexportstatscontentready(new Uint8Array())).toBe(false)
+    expect(
+      readzedcafeexportstatscontentready(
+        new TextEncoder().encode('{"bookCount":0}\n'),
+      ),
+    ).toBe(false)
+    const ready = new TextEncoder().encode(
+      `${JSON.stringify(buildzedcafestats([]), null, 2)}\n`,
+    )
+    expect(readzedcafeexportstatscontentready(ready)).toBe(true)
   })
 
   it('splitboardexport peels terrain, objects, and stats', () => {

@@ -44,6 +44,7 @@ import {
   pushzedcafeexportlive,
   readzedcafeguestbound,
   readzedcafeexportlive,
+  readzedcafeexportcontentready,
   readzedcafetaskridlocal,
   resetzedcafestate,
   setzedcafereadylocal,
@@ -767,12 +768,7 @@ async function readzedcafeexportstatsready(
   root: ReturnType<typeof readroot>,
   base: string,
 ): Promise<boolean> {
-  try {
-    await root.readFile(`${base}/stats.json`)
-    return true
-  } catch {
-    return false
-  }
+  return readzedcafeexportcontentready(root, base)
 }
 
 async function waitzedcafeexportstatsatroot(

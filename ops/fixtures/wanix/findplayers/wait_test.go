@@ -10,7 +10,7 @@ import (
 func TestResolveExportRootReady(t *testing.T) {
 	fsys := fstest.MapFS{
 		"zedcafe/stats.json": &fstest.MapFile{
-			Data: []byte(`{"bookCount":0}` + "\n"),
+			Data: []byte(`{"exportedAt":"test","bookCount":0}` + "\n"),
 		},
 	}
 	root, err := ResolveExportRoot(fsys, DefaultExportRoots)
@@ -25,10 +25,10 @@ func TestResolveExportRootReady(t *testing.T) {
 func TestResolveExportRootPrefersFirstCandidate(t *testing.T) {
 	fsys := fstest.MapFS{
 		"#ramfs/zedcafe/stats.json": &fstest.MapFile{
-			Data: []byte(`{"bookCount":0}` + "\n"),
+			Data: []byte(`{"exportedAt":"ram","bookCount":0}` + "\n"),
 		},
 		"zedcafe/stats.json": &fstest.MapFile{
-			Data: []byte(`{"bookCount":1}` + "\n"),
+			Data: []byte(`{"exportedAt":"live","bookCount":1}` + "\n"),
 		},
 	}
 	root, err := ResolveExportRoot(fsys, DefaultExportRoots)
@@ -50,7 +50,7 @@ func TestResolveExportRootNotReady(t *testing.T) {
 func TestWaitExportRootImmediate(t *testing.T) {
 	fsys := fstest.MapFS{
 		"zedcafe/stats.json": &fstest.MapFile{
-			Data: []byte(`{"bookCount":0}` + "\n"),
+			Data: []byte(`{"exportedAt":"test","bookCount":0}` + "\n"),
 		},
 	}
 	root, err := WaitExportRoot(fsys, DefaultExportRoots, time.Second, time.Millisecond)
@@ -59,6 +59,15 @@ func TestWaitExportRootImmediate(t *testing.T) {
 	}
 	if root != "zedcafe" {
 		t.Fatalf("root: %q", root)
+	}
+}
+
+func TestExportRootReadyRejectsEmptyStats(t *testing.T) {
+	fsys := fstest.MapFS{
+		"zedcafe/stats.json": &fstest.MapFile{Data: []byte{}},
+	}
+	if ExportRootReady(fsys, "zedcafe") {
+		t.Fatal("expected empty stats.json to be not ready")
 	}
 }
 

@@ -63,6 +63,49 @@ export function buildzedcafestats(books: BOOK[]) {
   }
 }
 
+export function readbookcountfromexportfiles(
+  files: WANIX_ZED_CAFE_EXPORT_FILE[],
+): number {
+  const stats = files.find((file) => file.path === 'stats.json')
+  if (!stats) {
+    return -1
+  }
+  try {
+    const parsed = JSON.parse(new TextDecoder().decode(stats.bytes)) as {
+      bookCount?: unknown
+    }
+    return typeof parsed.bookCount === 'number' ? parsed.bookCount : -1
+  } catch {
+    return -1
+  }
+}
+
+export function readexporthasbooktree(
+  files: WANIX_ZED_CAFE_EXPORT_FILE[],
+): boolean {
+  return files.some((file) => file.path.startsWith('books/'))
+}
+
+/** Host/guest export content-ready: non-empty stats.json with exportedAt + bookCount. */
+export function readzedcafeexportstatscontentready(bytes: Uint8Array): boolean {
+  if (bytes.byteLength === 0) {
+    return false
+  }
+  try {
+    const parsed = JSON.parse(new TextDecoder().decode(bytes)) as {
+      exportedAt?: unknown
+      bookCount?: unknown
+    }
+    return (
+      typeof parsed.exportedAt === 'string' &&
+      parsed.exportedAt.length > 0 &&
+      typeof parsed.bookCount === 'number'
+    )
+  } catch {
+    return false
+  }
+}
+
 export function buildzedcafebookmeta(book: BOOK) {
   const flagsout: Record<string, unknown> = {}
   const names = Object.keys(book.flags ?? {})
@@ -220,11 +263,9 @@ export function runzedcafeexport(device: DEVICELIKE, player: string) {
   const files = buildzedcafeexportfiles()
   const check = validatezedcafeexportpaths(files)
   if (!check.ok) {
-    apilog(
-      device,
-      player,
-      `zedcafe export: invalid tree — ${check.errors[0] ?? 'unknown'}`,
-    )
+    const detail = check.errors[0] ?? 'unknown'
+    apilog(device, player, `zedcafe export: invalid tree — ${detail}`)
+    console.error(`zedcafe export: invalid tree — ${detail}`)
     return
   }
   wanixexportstate(device, player, { files })

@@ -285,6 +285,12 @@ const wanix = createdevice('wanix', [], (message) => {
     case 'export-state': {
       const payload = readwanixexportstatepayload(message.data)
       if (!payload) {
+        apierror(
+          wanix,
+          message.player,
+          'wanix',
+          'zedcafe export-state payload rejected',
+        )
         break
       }
       doasync(wanix, message.player, async () => {

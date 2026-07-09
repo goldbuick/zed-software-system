@@ -16,6 +16,7 @@ import {
   readwanixzedcafeguestpath,
   readwanixzedcafewasmurl,
 } from './wanixzedcafeconstants'
+import { readzedcafeexportstatscontentready } from 'zss/feature/wanix/wanixstateexport'
 import type { WanixZedCafeGuestFile } from './wanixzedcafetypes'
 
 type WanixTaskElement = HTMLElement & {
@@ -175,8 +176,14 @@ export async function readzedcafeguestbound(
 ): Promise<boolean> {
   const statspath = readwanixzedcafeguestpath('stats.json')
   try {
-    await root.readFile(statspath)
-    return true
+    const raw = await root.readFile(statspath)
+    const bytes =
+      raw instanceof Uint8Array
+        ? raw
+        : new TextEncoder().encode(String(raw))
+    if (readzedcafeexportstatscontentready(bytes)) {
+      return true
+    }
   } catch {
     // fall through
   }
@@ -184,8 +191,12 @@ export async function readzedcafeguestbound(
   const vmtask = vm?.task
   if (vmtask?.root) {
     try {
-      await vmtask.root.readFile(statspath)
-      return true
+      const raw = await vmtask.root.readFile(statspath)
+      const bytes =
+        raw instanceof Uint8Array
+          ? raw
+          : new TextEncoder().encode(String(raw))
+      return readzedcafeexportstatscontentready(bytes)
     } catch {
       return false
     }
@@ -210,11 +221,22 @@ async function readzedcafeexportstatsready(
   base: string,
 ): Promise<boolean> {
   try {
-    await root.readFile(`${base}/stats.json`)
-    return true
+    const raw = await root.readFile(`${base}/stats.json`)
+    const bytes =
+      raw instanceof Uint8Array
+        ? raw
+        : new TextEncoder().encode(String(raw))
+    return readzedcafeexportstatscontentready(bytes)
   } catch {
     return false
   }
+}
+
+export async function readzedcafeexportcontentready(
+  root: WanixRoot,
+  base: string,
+): Promise<boolean> {
+  return readzedcafeexportstatsready(root, base)
 }
 
 export async function waitzedcafeexportmountready(
@@ -341,22 +363,58 @@ export async function collectzedcafeexportfiles(
   return collectexporttreefiles(root, readwanixzedcafeexportsrc(taskrid))
 }
 
+function readguestfilebookcount(files: WanixZedCafeGuestFile[]): number {
+  const stats = files.find((file) => file.path === 'stats.json')
+  if (!stats) {
+    return -1
+  }
+  try {
+    const parsed = JSON.parse(new TextDecoder().decode(new Uint8Array(stats.data))) as {
+      bookCount?: unknown
+    }
+    return typeof parsed.bookCount === 'number' ? parsed.bookCount : -1
+  } catch {
+    return -1
+  }
+}
+
 export async function pushzedcafeexportlive(
   root: WanixRoot,
   taskrid: string,
   files: WanixZedCafeGuestFile[],
 ) {
   const base = readwanixzedcafeexportsrc(taskrid)
+  const sorted = [...files].sort((a, b) => {
+    if (a.path === 'stats.json') {
+      return 1
+    }
+    if (b.path === 'stats.json') {
+      return -1
+    }
+    return a.path.localeCompare(b.path)
+  })
   // Export writes cross the p9 client, which walks parent dirs before Create.
   // Materialize allowlisted prefix dirs on the export mount first.
-  for (let i = 0; i < files.length; ++i) {
-    const file = files[i]
+  for (let i = 0; i < sorted.length; ++i) {
+    const file = sorted[i]
     const full = `${base}/${file.path}`
     const parentdir = full.slice(0, full.lastIndexOf('/'))
     if (parentdir.length > base.length) {
       await root.makeDirAll(parentdir)
     }
     await root.writeFile(full, new Uint8Array(file.data))
+  }
+  const bookcount = readguestfilebookcount(sorted)
+  if (bookcount > 0) {
+    const entries = await root.readDir(base)
+    const hasbooks = entries.some(
+      (entry) => entry.replace(/\/$/, '') === 'books',
+    )
+    if (!hasbooks) {
+      throw new Error(
+        `zedcafe export incomplete: bookCount=${bookcount} but books/ missing after push (${sorted.length} files)`,
+      )
+    }
   }
 }
 

@@ -15,8 +15,8 @@ zedcafe_statsfile() {
 
 zedcafe_requirestats() {
   stats=$(zedcafe_statsfile)
-  if [ ! -f "$stats" ]; then
-    echo "$0: missing $stats (try: zedcafe-ready)" >&2
+  if [ ! -s "$stats" ] || ! grep -q '"exportedAt"' "$stats" 2>/dev/null; then
+    echo "$0: missing or empty $stats (try: zedcafe-ready)" >&2
     return 1
   fi
   return 0

@@ -21,7 +21,7 @@ stats=$(zedcafe_statsfile)
 deadline=$(($(date +%s) + ZEDCAFE_READY_TIMEOUT_SEC))
 
 while [ "$(date +%s)" -lt "$deadline" ]; do
-  if [ -f "$stats" ]; then
+  if [ -s "$stats" ] && grep -q '"exportedAt"' "$stats" 2>/dev/null; then
     echo "ready: $ZEDCAFE_ROOT"
     exit 0
   fi

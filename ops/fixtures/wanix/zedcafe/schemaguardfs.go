@@ -77,6 +77,34 @@ func isallowedexportpath(name string) bool {
 	return false
 }
 
+// probeSeg is a placeholder path segment that satisfies export DIR_SEG allowlist patterns.
+const probeSeg = "_probe_"
+
+// exportdirsuffixprobes returns relative file suffixes such that rel+suffix is allowlisted
+// when rel is a permitted export directory prefix (including intermediate dirs).
+func exportdirsuffixprobes() []string {
+	return []string{
+		"/stats.json",
+		"/board/stats.json",
+		"/board/terrain.json",
+		"/board/objects/_.json",
+		"/object/element.json",
+		"/terrain/element.json",
+		"/charset/bitmap.json",
+		"/palette/bitmap.json",
+		"/element.json",
+		"/bitmap.json",
+		"/" + probeSeg + "/stats.json",
+		"/" + probeSeg + "/board/stats.json",
+		"/" + probeSeg + "/board/terrain.json",
+		"/" + probeSeg + "/board/objects/_.json",
+		"/" + probeSeg + "/object/element.json",
+		"/" + probeSeg + "/terrain/element.json",
+		"/" + probeSeg + "/charset/bitmap.json",
+		"/" + probeSeg + "/palette/bitmap.json",
+	}
+}
+
 // isallowedexportdir permits mkdir on directory prefixes of allowlisted leaf paths.
 // Host push uses p9 Create/WriteFile on the client, which walks parents before the
 // server Create handler can materialize implicit dirs.
@@ -88,16 +116,7 @@ func isallowedexportdir(name string) bool {
 	if strings.Contains(rel, "..") || strings.HasPrefix(rel, "/") {
 		return false
 	}
-	suffixes := []string{
-		"/stats.json",
-		"/board/stats.json",
-		"/board/terrain.json",
-		"/board/objects/_.json",
-		"/object/element.json",
-		"/terrain/element.json",
-		"/charset/bitmap.json",
-		"/palette/bitmap.json",
-	}
+	suffixes := exportdirsuffixprobes()
 	for _, suffix := range suffixes {
 		if isallowedexportpath(rel + suffix) {
 			return true

@@ -14,6 +14,23 @@ jest.mock('zss/feature/wanix/wanixstateexport', () => ({
     },
   ]),
   primezedcafeexportshadow: jest.fn(),
+  readbookcountfromexportfiles: jest.fn((files: { path: string; bytes: Uint8Array }[]) => {
+    const stats = files.find((file) => file.path === 'stats.json')
+    if (!stats) {
+      return -1
+    }
+    try {
+      const parsed = JSON.parse(new TextDecoder().decode(stats.bytes)) as {
+        bookCount?: number
+      }
+      return typeof parsed.bookCount === 'number' ? parsed.bookCount : -1
+    } catch {
+      return -1
+    }
+  }),
+  readexporthasbooktree: jest.fn((files: { path: string }[]) =>
+    files.some((file) => file.path.startsWith('books/')),
+  ),
 }))
 
 import { callwanixrpc } from 'zss/feature/wanix/wanixbridge'
@@ -109,5 +126,43 @@ describe('ensurezedcafeexportready pipeline', () => {
     expect(taskrid).toBe('9')
     expect(mockrpc).not.toHaveBeenCalledWith('synczedcafe', expect.anything())
     expect(mockrpc).not.toHaveBeenCalledWith('waitzedcafemount', expect.anything())
+    expect(mockrpc).not.toHaveBeenCalledWith('pushzedcafeexport', expect.anything())
+  })
+
+  it('pushes when iframe export is live but stale vs memory', async () => {
+    const bookstats = new TextEncoder().encode(
+      '{"id":"sid_book","name":"demo","pages":[]}\n',
+    )
+    mockrpc.mockImplementation(async (method: string) => {
+      switch (method) {
+        case 'readzedcafetaskrid':
+          return '9'
+        case 'iszedcafeexportlive':
+          return true
+        case 'readzedcafeexportfiles':
+          return [{ path: 'stats.json', data: [...files[0].bytes] }]
+        case 'pushzedcafeexport':
+          return { ok: true }
+        case 'setzedcafeready':
+          return { ok: true }
+        default:
+          return null
+      }
+    })
+
+    const taskrid = await ensurezedcafeexportready(device, player, [
+      ...files,
+      {
+        path: 'books/demo-sid_book/stats.json',
+        bytes: bookstats,
+      },
+    ])
+
+    expect(taskrid).toBe('9')
+    expect(mockrpc).toHaveBeenCalledWith(
+      'pushzedcafeexport',
+      expect.anything(),
+      expect.anything(),
+    )
   })
 })
