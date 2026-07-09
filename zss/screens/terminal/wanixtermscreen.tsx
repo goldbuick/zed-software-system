@@ -125,9 +125,8 @@ function inverseselectioncellcolors(fg: number, bg: number) {
     swapfg = swapfg % 16
   }
   let swapbg = bg
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
-  if (swapbg >= COLOR.ONBLACK && swapbg <= COLOR.ONWHITE) {
-    swapbg = swapbg - COLOR.ONBLACK
+  if (swapbg >= Number(COLOR.ONBLACK) && swapbg <= Number(COLOR.ONWHITE)) {
+    swapbg = swapbg - Number(COLOR.ONBLACK)
   }
   return { color: swapbg, bg: swapfg }
 }

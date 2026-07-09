@@ -4,8 +4,10 @@ import type {
   WanixVmElement,
 } from 'zss/feature/wanix/wanixelements.d.ts'
 import { wanixperfmark } from 'zss/feature/wanix/wanixperf'
-import type { WanixRoomConfig } from 'zss/feature/wanix/wanixroomtypes'
-import type { WanixBindDropPayload } from 'zss/feature/wanix/wanixroomtypes'
+import type {
+  WanixBindDropPayload,
+  WanixRoomConfig,
+} from 'zss/feature/wanix/wanixroomtypes'
 import {
   WANIX_LINUX_ARCHIVE_URL,
   WANIX_V86_ARCHIVE_URL,
@@ -38,7 +40,6 @@ import {
   WANIX_INPUT_MOUNT,
   WANIX_ZEDCAFE_EXPORT_READY_POLL_MS,
   WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS,
-  WANIX_ZEDCAFE_GUEST_MOUNT,
   WANIX_ZEDCAFE_TASK_ID,
   readwanixzedcafeexportsrc,
 } from 'zss/feature/wanix/wanixzedcafeconstants'

@@ -8,7 +8,7 @@ import {
   readwanixbinddropperm,
 } from 'zss/feature/wanix/wanixbindpaths'
 import { iswanixgzipmagic } from 'zss/feature/wanix/wanixdropparse'
-import { readwanixroomconfig } from 'zss/feature/wanix/wanixroom'
+import { readwanixroomconfig } from 'zss/feature/wanix/wanixroomstate'
 import type { WanixBindDropPayload } from 'zss/feature/wanix/wanixroomtypes'
 
 export {
