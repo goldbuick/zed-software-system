@@ -1,140 +1,499 @@
-# Wanix terminal integration
+# Wanix in ZSS — full guide
 
-Runs [wanix](https://github.com/tractordev/wanix) (a browser OS with a Linux
-v86 VM and WASI tasks) inside ZSS and renders its terminal sessions as colored
-tiles in the ZSS terminal screen.
+Runs [wanix](https://github.com/tractordev/wanix) (browser OS: Linux v86 VM + WASI/gojs
+tasks) inside ZSS. Guest terminals render as colored tiles on the tape terminal screen.
+Live game books export from sim memory into a guest-visible **`/zedcafe/`** tree so tools
+like `findplayers.wasm` and VM shell helpers can read world state.
 
-## Architecture
+**Fixture testing:** [`ops/fixtures/wanix/README.md`](../../../ops/fixtures/wanix/README.md)
 
-Two halves talk over `postMessage` RPC across an iframe boundary:
+---
 
-- **Child (iframe): [`cafe/wanix.ts`](../../../cafe/wanix.ts)** — loads
-  `wanix.min.js`, owns the `<wanix-system>` element, allocates VMs/tasks, opens
-  each term's `data` pipe, parses the byte stream into a cell grid, and posts
-  grid snapshots to the parent. Zed-cafe export daemon boot/bind logic lives in
-  [`wanixzedcafehost.ts`](wanixzedcafehost.ts) (imported by `cafe/wanix.ts`).
-  Served at `/wanix.html` via a hidden ("ghost") iframe mounted by
-  [`wanixhost.tsx`](wanixhost.tsx).
-- **Parent (ZSS): [`wanixbridge.ts`](wanixbridge.ts)** — sends RPC calls
-  (`applyroom`, `startvm`, `spawntask`, `termwrite`, `termfit`, …), receives
-  `cells` snapshots into [`wanixtermbuffer.ts`](wanixtermbuffer.ts), and tracks
-  which session is attached in [`wanixattachstate.ts`](wanixattachstate.ts).
+## Table of contents
 
-The grid engine ([`wanixtermgridstate.ts`](wanixtermgridstate.ts)) is shared by
-both sides: the child writes bytes into it (ANSI SGR color, scrollback,
-alt-screen), the parent renders snapshots from it.
+1. [Big picture](#big-picture)
+2. [Parent vs iframe](#parent-vs-iframe)
+3. [Room modes & lifecycle](#room-modes--lifecycle)
+4. [How you start wanix](#how-you-start-wanix)
+5. [Zedcafe export (the core loop)](#zedcafe-export-the-core-loop)
+6. [Wasm drop path (task room)](#wasm-drop-path-task-room)
+7. [VM path](#vm-path)
+8. [findplayers flow](#findplayers-flow)
+9. [Terminal attach & input](#terminal-attach--input)
+10. [Performance: soft idle & warm reuse](#performance-soft-idle--warm-reuse)
+11. [Message protocol](#message-protocol)
+12. [Module map](#module-map)
+13. [Gotchas & invariants](#gotchas--invariants)
+14. [Debugging & validation](#debugging--validation)
+15. [What works today (and why)](#what-works-today-and-why)
 
+---
+
+## Big picture
+
+```mermaid
+flowchart TB
+  subgraph zss_main["ZSS main thread"]
+    UI["Tape terminal / WanixTermScreen"]
+    Mem["Sim memory — books, pages, objects"]
+    Parent["wanixroom.ts · wanixzedcafe.ts · wanixbridge.ts"]
+    UI <-- attach / keystrokes --> Parent
+    Mem -->|"jsonpipe + export builder"| Parent
+  end
+
+  subgraph iframe["Hidden iframe /wanix.html"]
+    Cafe["cafe/wanix.ts"]
+    Sys["wanix-system"]
+    Host["wanixzedcafehost.ts"]
+    Cafe --> Sys
+    Host --> Sys
+    Sys --> VM["wanix-vm — Linux guest"]
+    Sys --> Tasks["wanix-task — WASI / gojs"]
+    Sys --> ZTask["wanix-task id=zedcafe — export daemon"]
+  end
+
+  Parent <-->|"postMessage RPC + cells + export events"| Cafe
+  ZTask -->|"bind #task/rid/export → zedcafe/"| Tasks
+  ZTask -->|"bind → VM /zedcafe/"| VM
 ```
-ZSS terminal screen ─┐                          ┌─ <wanix-system>
-                     │  postMessage RPC + cells │    ├─ <wanix-vm> / <wanix-task>
-                     │  + session lifecycle     │
-  wanixbridge.ts ◄───┼──────────────────────────┼──► cafe/wanix.ts
-  wanixtermbuffer ◄──┘                          └─   term data pipe → grid
+
+**Why this split:** Wanix owns its own WASM runtime, p9 filesystem, and worker threads.
+ZSS owns game memory, UI, and CLI. The iframe is a sandbox; the parent is the control
+plane. Only `postMessage` crosses the boundary — no shared DOM.
+
+---
+
+## Parent vs iframe
+
+| Side | Entry | Owns |
+|------|--------|------|
+| **Parent** | `wanixhost.tsx` mounts ghost iframe; `wanixbridge.ts` RPC client | Room config, drop routing, export file tree from memory, attach state, term grid snapshots |
+| **Iframe** | `cafe/wanix.ts` on `/wanix.html` | `<wanix-system>`, VM/task elements, term byte pumps, zedcafe gojs boot, `#ramfs` writes |
+
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│  ZSS terminal screen (parent)                                   │
+│    wanixtermbuffer  ←  WANIX_MSG_CELLS snapshots                │
+│    wanixattachstate ←  WANIX_MSG_SESSION open/active/close      │
+└────────────────────────────▲────────────────────────────────────┘
+                             │ postMessage (same origin)
+┌────────────────────────────┴────────────────────────────────────┐
+│  cafe/wanix.ts (iframe)                                         │
+│    handlerrpc: applyroom, spawntask, writefile, pushzedcafe…    │
+│    <wanix-system>                                               │
+│      ├─ wanix-bind  (linux, v86, export mounts)                 │
+│      ├─ wanix-vm    (optional Linux)                            │
+│      ├─ wanix-task  zedcafe  (gojs export daemon)               │
+│      └─ wanix-task  user tasks (hello.wasm, findplayers.wasm)   │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-## Key decisions & gotchas
+**Grid engine:** [`wanixtermgridstate.ts`](wanixtermgridstate.ts) is shared — iframe
+parses ANSI into cells; parent renders snapshots from [`wanixtermbuffer.ts`](wanixtermbuffer.ts).
 
-### Full-Go wasm, not the published TinyGo build
-The npm `wanix@0.4.0-alpha8` dist ships a **TinyGo**-compiled `wanix.wasm`
-whose `syscall/js` runtime corrupts under heavy terminal I/O (upstream
-[tractordev/wanix#171](https://github.com/tractordev/wanix/issues/171)) —
-symptom was `RangeError: Offset is outside the bounds of the DataView` /
-`Value.Set on undefined` panics after running e.g. `ls -la` a few times.
+---
 
-Fix: a **full-Go** build from the matching commit (`b21f64d4`, npm `gitHead`
-for alpha8) is hosted at
-[`cafe/public/wanix/wanix.wasm`](../../../cafe/public/wanix/wanix.wasm)
-and selected via the `wasm` attribute on `<wanix-system>`. The wanix loader
-sniffs the binary: no `asyncify_start_unwind` marker → it logs "Go WASM
-detected" and uses the stable Go glue.
+## Room modes & lifecycle
 
-To rebuild (must match the `wanix.min.js` version's commit for ABI parity):
+Three modes in [`wanixroomtypes.ts`](wanixroomtypes.ts):
 
-```sh
-git clone https://github.com/tractordev/wanix && cd wanix
-git checkout <gitHead of the wanix npm version in cafe/wanix.html>
-GOOS=js GOARCH=wasm go build -o wanix.wasm ./wasm
-# verify it is NOT tinygo: `rg -c asyncify_start_unwind wanix.wasm` → no match
+| Mode | Meaning | Guest workloads |
+|------|---------|-----------------|
+| `idle` | Wanix inactive; no VM/tasks (or soft-idle: warm system kept) | — |
+| `task` | Task room only | WASI/gojs tasks + zedcafe daemon |
+| `vm` | Linux VM (+ optional tasks) | v86 Linux + zedcafe bind at `/zedcafe/` |
+
+```mermaid
+stateDiagram-v2
+  [*] --> idle
+
+  idle --> task: wasm/tgz drop
+  idle --> vm: #wanix vm
+
+  task --> task: another drop (append tasks)
+  task --> vm: #wanix vm
+  task --> idle: #wanix stop (soft)
+
+  vm --> task: #wanix vm stop
+  vm --> idle: #wanix stop (soft)
+
+  idle --> idle_hard: stopwanixroom(true) / hardreset
+  idle_hard --> task: drop (cold remount)
+  idle_hard --> vm: #wanix vm (cold remount)
+
+  note right of idle
+    Soft idle: keep wanix-system,
+    halt tasks, clear host session
+  end note
 ```
 
-### `<wanix-vm>` auto-allocates — do not call `allocate()`
-The element's `_awake()` runs on the system `ready` event and calls
-`allocate()` itself. Calling `vmel.allocate()` from `applyroom` a second time
-throws `VM already allocated`. Only `connectvmtermsession()` (which waits on the
-term `data` path) then `vmel.start()` are needed.
+**`mountkey`** — monotonic counter on [`WanixRoomConfig`](wanixroomtypes.ts). Unchanged
+`mountkey` + ready system → **warm apply** (no iframe rebuild). Bumped on hard reset →
+**cold remount** (`host.replaceChildren()`).
 
-### Resize
-`termfit` RPC forwards `{cols, rows}` to the child, which drives wanix's
-terminal winsize and reflows the local grid. The primary buffer preserves and
-rewraps scrollback on resize; the alternate buffer is cleared/resized and the
-guest repaints. See resize handling in `wanixtermgridstate.ts`.
+---
 
-### Attach / detach
-The worker ([`cafe/wanix.ts`](../../../cafe/wanix.ts)) owns which terminal is
-**active** and posts `zss-wanix-session` messages (`open`, `active`, `close`) to
-the parent.
+## How you start wanix
 
-On **`open`** (new session term connected), when nothing is attached yet,
-[`wanixbridge.ts`](wanixbridge.ts):
+| Action | Path |
+|--------|------|
+| `#wanix vm` | CLI → `startwanixvm` → `wanixroom.startwanixvmroom` → iframe `applyroom` mode `vm` |
+| Drag `.wasm` / `.tgz` | `emitwanixdropfile` → device `wanixdrop` → `handlewanixdrop` |
+| `#wanix stop` | `stopwanixroom()` — soft idle by default |
+| `#wanix attach [session]` | Focus a task/VM term tile |
+| `#wanix` menu | [`wanixmenu.ts`](wanixmenu.ts) — sessions, attach, VM controls |
 
-1. Reveals the tape terminal if it was closed ([`wanixtapevisibility.ts`](wanixtapevisibility.ts) — `WanixTermScreen` only mounts when the tape is visible).
-2. Auto-attaches to the new session ([`onwanixtermsessionopen`](wanixattachstate.ts)), including after a manual detach.
+**Lazy stand-up:** Books load into sim at login only. Zedcafe export daemon and host push
+run when the **first** VM or task room activates — not at login.
 
-On **`active`** (focus change among live sessions), auto-attach runs only when
-nothing is attached and the user has not manually detached
-(`maybeattachactivesession`). A new `active` alone does not steal focus from an
-already-attached session.
+---
 
-Manual attach/detach via `#wanix attach` / `#wanix detach` or the menu still
-works. When a non-attached session ends, its buffer and task entry are pruned
-from the menu; if the attached session ends, the parent does nothing until the
-user acts via the menu.
+## Zedcafe export (the core loop)
 
-### Keyboard shortcuts (attached terminal)
+Zedcafe mirrors live sim books into a read-only tree guests can walk.
 
-The bottom row of the terminal screen is a hint bar. `Ctrl+\` is a prefix key
-(tmux-style); the next keystroke is a command:
+### Mount layout (iframe)
 
-| After `Ctrl+\` | Action |
-|---|---|
-| `n` or `Right` | next session |
-| `p` or `Left` | previous session |
-| `d` or `Ctrl+\` | detach |
-| `Esc` | cancel prefix |
-| other key | cancel prefix, forward key to guest |
+```text
+wanix-system
+  wanix-task[id=zedcafe, type=gojs]     ← export daemon (gojs wasm)
+    #task/{rid}/export/                 ← host pushes JSON tree here
+      stats.json
+      books/{book-id}/pages/…/object/element.json
+    bind: export → zedcafe/             ← guest path ./zedcafe/ (tasks)
 
-While attached, the hint bar shows `Ctrl+\ : detach / switch`. After arming the
-prefix it shows `Ctrl+\  n next  p prev  d detach  Esc cancel`.
+  wanix-vm (when running)
+    bind: #task/{rid}/export → /zedcafe/   ← Linux guest sees /zedcafe/
+```
 
-Scrollback: `PageUp` / `PageDown` (hold `Shift` for 10 lines; Mac: `Fn+↑/↓`, 10 lines: `Shift+Fn+↑/↓`). All other typing
-forwards to the guest when the viewport is at the live line.
+Constants: [`wanixzedcafeconstants.ts`](wanixzedcafeconstants.ts).
 
-## Files
+### Export pipeline
 
-| File | Role |
-|---|---|
-| `cafe/wanix.ts` | iframe orchestrator: system, VM/task lifecycle, term read loop, RPC handler |
-| `wanixzedcafehost.ts` | iframe-side zed-cafe: `<wanix-bind>` setup, Go wasm boot, export tree I/O |
-| `wanixzedcafe.ts` | parent-side zed-cafe: export/import, daemon lifecycle, device API |
-| `wanixhost.tsx` | mounts the hidden `/wanix.html` iframe |
-| `wanixbridge.ts` | parent RPC client + ready/cells message handling |
-| `wanixtermgridstate.ts` | shared cell-grid engine (ANSI parse, scrollback, alt-screen, resize) |
-| `wanixtermbuffer.ts` | parent-side snapshot store per session |
-| `wanixattachstate.ts` | which session is attached; auto-attach on open |
-| `wanixtapevisibility.ts` | reveal tape terminal before auto-attach when hidden |
-| `wanixroom.ts` / `wanixroomtypes.ts` | room config (archives, remotes, tasks, vm) + VM start/stop |
-| `wanixmenu.ts` | terminal menu tape (`#wanix`) |
-| `wanixrpcmessages.ts` | shared `postMessage` type constants (parent + iframe) |
-| `wanixexportevents.ts` / `wanixexportwait.ts` | iframe → parent export-ready events; parent-side waiters |
-| `wanixperf.ts` | dev/validator `[wanix-perf]` timeline marks |
+```mermaid
+sequenceDiagram
+  participant Mem as Sim memory
+  participant Host as wanixstateexport
+  participant Parent as wanixzedcafe.ts
+  participant Iframe as wanixzedcafehost.ts
+  participant Guest as VM or task
 
-## Room lifecycle (soft idle)
+  Mem->>Host: book edits (jsonpipe, debounced 2s when room active)
+  Host->>Parent: WANIX_ZED_CAFE_EXPORT_FILE[]
+  Note over Parent: Room activation or drop triggers push
 
-Returning to idle via `#wanix stop` or `stopwanixroom()` uses **soft idle** by default: the iframe keeps a warm `<wanix-system>` (no `replaceChildren`), halts tasks/zedcafe, and disconnects terms. The next wasm drop or `#wanix vm` **reuses** that system when `mountkey` is unchanged — avoiding a full wasm remount.
+  Parent->>Iframe: RPC pushzedcafeexport (files[])
+  Iframe->>Iframe: writeFile #task/rid/export/…
+  Iframe->>Iframe: verify stats.json + books/
+  Iframe-->>Parent: WANIX_MSG_EXPORT content-ready
+  Parent->>Iframe: wirezedcafeexport (binds)
+  Guest->>Guest: read /zedcafe/stats.json
+```
 
-**Hard reset** (`stopwanixroom(true)` or `hardreset: true` on `applyroom`) bumps `mountkey` and destroys the iframe system tree (cold path). Use after wasm version changes or corruption.
+**Readiness contract (two gates):**
 
-Export push completion is signaled with `WANIX_MSG_EXPORT` (`content-ready`) instead of polling alone; parent `waitzedcafecontentready` waits on the event first, then falls back to RPC poll.
+1. **Mount ready** — gojs daemon running; `#task/{rid}/export` exists (`waitzedcafemount`).
+2. **Content ready** — `stats.json` present with `exportedAt` + `bookCount` after host push.
 
-Perf phases log as `[wanix-perf] <label> {json}` in dev and headed validators (`drop-start`, `applyroom-warm-reuse`, `export-push-start/end`, `wasm-write-start/end`, `spawntask-return`).
-| `wanixcmd.ts` | `#wanix` CLI command wiring |
+**Why `stats.json`:** Single cheap probe for “export tree is populated.” findplayers and
+VM `zedcafe-ready` both poll it.
+
+**Event-driven wait (perf fix):** After push, iframe posts
+[`WANIX_MSG_EXPORT`](wanixrpcmessages.ts) `{ event: 'content-ready', taskrid }`.
+Parent [`waitwanixexportwait.ts`](wanixexportwait.ts) resolves waiters; RPC poll is fallback
+only (250 ms budget, 30 s ceiling).
+
+---
+
+## Wasm drop path (task room)
+
+```mermaid
+flowchart LR
+  Drop["Drag findplayers.wasm"]
+  Room["ensurewanixtaskroom"]
+  Parallel["Promise.all"]
+  Export["activatezedcafeexport"]
+  Stage["putwanixroomfile #ramfs/…"]
+  Spawn["spawntask gojs + export bind"]
+  Out["JSON on task term"]
+
+  Drop --> Room
+  Room --> Parallel
+  Parallel --> Export
+  Parallel --> Stage
+  Export --> Spawn
+  Stage --> Spawn
+  Spawn --> Out
+```
+
+**Steps (parent [`wanixroom.ts`](wanixroom.ts)):**
+
+1. **`ensurewanixtaskroom`** — if idle, `applyroom` → task mode (+ zedcafe spec from boot state).
+2. **Parallel staging** — export activation overlaps wasm write to `#ramfs/` (saves wall time).
+3. **`spawntaskinroom`** — iframe creates `<wanix-task>`, connects term, `start()`.
+
+**Driver selection ([`wanixwasmdriver.ts`](wanixwasmdriver.ts)):**
+
+| Wasm import module | Driver | Runtime |
+|--------------------|--------|---------|
+| `gojs` | `gojs` | Go js/wasm worker |
+| `wasi_snapshot_preview1` | `wasi` | WASI worker |
+
+For drops, driver is taken from **drop bytes** (not re-read from `#ramfs`) — large gojs
+binaries (~4 MB) were failing silent re-read and defaulting to `wasi` (LinkError on
+`gojs.runtime.scheduleTimeoutEvent`). `findplayers.wasm` is always forced to `gojs`.
+
+---
+
+## VM path
+
+```mermaid
+flowchart TB
+  CLI["#wanix vm"]
+  Apply["applyroom mode=vm"]
+  Linux["waitvmlinuxmount + vm.start"]
+  Boot["ensurezedcafeboot in iframe"]
+  Final["finalizewanixzedcafeaftervmboot"]
+  Bind["wirezedcafeexport → /zedcafe/"]
+  Shell["zedcafe-books, zedcafe-stats in VM"]
+
+  CLI --> Apply --> Linux --> Boot --> Final --> Bind --> Shell
+```
+
+**Why VM feels faster than cold drop from idle (before perf work):** VM path booted zedcafe
+inside iframe `applyroom` immediately; task-only path deferred boot to extra parent RPC
+chain. Now task `applyroom` also calls `ensurezedcafeboot` when `zedcafe` spec is present.
+
+**Overlay:** `#wanix vm` mounts stock `wanix-linux.tgz` plus local
+`zedcafe-linux-overlay.tgz` (jq, curl, `zedcafe-*` shell helpers). Live content still
+comes from host export bind — not baked into the overlay.
+
+---
+
+## findplayers flow
+
+Gojs one-shot scanner — prints one JSON line of export paths containing player elements.
+
+```mermaid
+sequenceDiagram
+  participant User
+  participant Parent as wanixroom
+  participant Iframe as spawntask
+  participant FP as findplayers gojs task
+
+  User->>Parent: drop findplayers.wasm
+  Parent->>Parent: export push + stage wasm (parallel)
+  Parent->>Iframe: spawntask(driver=gojs)
+  Iframe->>Iframe: wait stats.json on #task/rid/export
+  Iframe->>Iframe: append bind zedcafe/ per-task
+  Iframe->>FP: allocate + start
+  FP->>FP: poll ./zedcafe/stats.json, scan books/
+  FP-->>User: stdout JSON array (~5s guest CPU)
+```
+
+**Why per-task bind:** Child tasks do not inherit system-level binds; findplayers gets its
+own `wanix-bind` from `#task/{rid}/export` → `zedcafe/`.
+
+**Spawn gate:** Iframe blocks until export content ready — guest never starts with an empty
+tree (fail loud in terminal, not silent empty scan).
+
+---
+
+## Terminal attach & input
+
+Iframe posts `WANIX_MSG_SESSION`:
+
+| Event | Parent behavior |
+|-------|-----------------|
+| `open` | Register session; if nothing attached → reveal tape → auto-attach |
+| `active` | Update focus hint; no steal if user already attached |
+| `close` | Prune buffer/menu unless it was the attached session |
+
+Manual: `#wanix attach` / `#wanix detach` / menu. See
+[`wanixattachstate.ts`](wanixattachstate.ts), [`wanixtapevisibility.ts`](wanixtapevisibility.ts).
+
+**Keyboard (attached):** `Ctrl+\` prefix — `n`/`p` switch session, `d` detach, `Esc` cancel.
+Scrollback: PageUp/PageDown. Details unchanged from prior docs.
+
+---
+
+## Performance: soft idle & warm reuse
+
+### Problem (cold drop from idle)
+
+```text
+idle → drop  ≈  remount wanix.wasm  +  full export push (~114 files)
+              +  large #ramfs write  +  poll slack  +  findplayers scan
+```
+
+Warm path (`#wanix vm` first, or second drop after soft idle) skipped remount and most export.
+
+### Solution
+
+| Technique | What it does |
+|-----------|----------------|
+| **Soft idle** | `#wanix stop` keeps `<wanix-system>`; halts tasks/zedcafe; same `mountkey` |
+| **Warm applyroom** | idle→task/vm reuses system; `ensurezedcafeboot` in iframe |
+| **Export event** | `content-ready` postMessage; parent waits on event not 250 ms polls |
+| **Parallel staging** | `activatezedcafeexport` ∥ `putwanixroomfile` on wasm drop |
+| **No mountkey bump** | First task drop from soft idle does not force remount |
+
+```text
+                    COLD                         WARM (soft idle → drop)
+                    ────                         ───────────────────────
+applyroom           replaceChildren              warmactivateroom (reuse)
+wanix.wasm reload   yes                          no
+zedcafe boot        full                         reuse daemon if live
+export push         full (~114 files)            sync-if-stale only
+```
+
+**Hard reset:** `stopwanixroom(true)` or `hardreset: true` — use after wasm build change or
+corruption.
+
+**Perf marks:** [`wanixperf.ts`](wanixperf.ts) logs `[wanix-perf] label {json}` in dev console
+— `drop-start`, `applyroom-warm-reuse`, `export-push-end`, `wasm-write-end`, `spawntask-return`.
+
+---
+
+## Message protocol
+
+| Constant | Direction | Purpose |
+|----------|-----------|---------|
+| `WANIX_MSG_READY` | iframe → parent | System ready |
+| `WANIX_MSG_IDLE` | iframe → parent | Soft/hard idle |
+| `WANIX_MSG_RPC` / `_RES` | both | Request/response (`applyroom`, `spawntask`, …) |
+| `WANIX_MSG_CELLS` | iframe → parent | Term grid snapshot |
+| `WANIX_MSG_SESSION` | iframe → parent | Session open/active/close |
+| `WANIX_MSG_EXPORT` | iframe → parent | `{ event: 'content-ready', taskrid, … }` |
+
+Defined in [`wanixrpcmessages.ts`](wanixrpcmessages.ts).
+
+---
+
+## Module map
+
+| Module | Role |
+|--------|------|
+| [`cafe/wanix.ts`](../../../cafe/wanix.ts) | Iframe orchestrator: `applyroom`, RPC handler, term loops |
+| [`wanixzedcafehost.ts`](wanixzedcafehost.ts) | Iframe zedcafe: gojs boot, push export, binds, halt |
+| [`wanixzedcafe.ts`](wanixzedcafe.ts) | Parent zedcafe: daemon lifecycle, push/wire, import poll |
+| [`wanixstateexport.ts`](wanixstateexport.ts) | Build export file tree from sim memory |
+| [`wanixstateimport.ts`](wanixstateimport.ts) | Guest → host import path |
+| [`wanixroom.ts`](wanixroom.ts) | Room config, drop handler, VM/task API |
+| [`wanixbridge.ts`](wanixbridge.ts) | Parent RPC + message dispatch |
+| [`wanixhost.tsx`](wanixhost.tsx) | Ghost iframe mount |
+| [`wanixdropparse.ts`](wanixdropparse.ts) | Drag-drop → `wanixdrop` device message |
+| [`wanixwasmdriver.ts`](wanixwasmdriver.ts) | gojs vs wasi from wasm bytes |
+| [`wanixbundle.ts`](wanixbundle.ts) / [`wanixtgzextract.ts`](wanixtgzextract.ts) | `.tgz` bundle drops |
+| [`wanixexportevents.ts`](wanixexportevents.ts) / [`wanixexportwait.ts`](wanixexportwait.ts) | Export-ready event + parent waiters |
+| [`wanixattachstate.ts`](wanixattachstate.ts) | Attached session + auto-attach |
+| [`wanixtapevisibility.ts`](wanixtapevisibility.ts) | Reveal tape before auto-attach |
+| [`wanixtermbuffer.ts`](wanixtermbuffer.ts) / [`wanixtermgridstate.ts`](wanixtermgridstate.ts) | Term rendering |
+| [`wanixmenu.ts`](wanixmenu.ts) | `#wanix` menu tape |
+| [`wanixcmd.ts`](wanixcmd.ts) | Device-facing `#wanix` helpers |
+| [`zss/device/wanix.ts`](../../device/wanix.ts) | Device handler: drop, export state, CLI bridge |
+| [`zedcafetreeschema.ts`](zedcafetreeschema.ts) | Export path validation |
+| [`wanixperf.ts`](wanixperf.ts) | Dev/validator timeline marks |
+
+---
+
+## Gotchas & invariants
+
+### Full-Go wanix.wasm (not npm TinyGo build)
+
+npm `wanix@0.4.0-alpha8` TinyGo build corrupts under heavy terminal I/O
+([tractordev/wanix#171](https://github.com/tractordev/wanix/issues/171)). ZSS ships full-Go
+build at [`cafe/public/wanix/wanix.wasm`](../../../cafe/public/wanix/wanix.wasm).
+
+### Do not call `vm.allocate()` twice
+
+`<wanix-vm>` auto-allocates on system `ready`. Second call throws. Use
+`connectvmtermsession()` + `start()` only.
+
+### Never bind `#ramfs` at `.`
+
+Staging stays internal; user/guest surface is `./zedcafe/` or `/zedcafe/` via export binds.
+
+### gojs vs wasi
+
+Wrong driver → `LinkError: Import "gojs" "runtime.scheduleTimeoutEvent"`. Always pass driver
+from drop bytes for wasm drops; force `gojs` for `findplayers.wasm`.
+
+### Export push must complete in iframe
+
+`pushzedcafeexportlive` must import [`postwanixexportmessage`](wanixexportevents.ts) and
+[`wanixperfmark`](wanixperf.ts) — missing imports silently broke `/zedcafe` mounts.
+
+### Debounce vs drop path
+
+`WANIX_ZEDCAFE_EXPORT_DEBOUNCE_MS` (2 s) applies to **book tick** updates while room is
+active — not the drop/VM activation push path.
+
+---
+
+## Debugging & validation
+
+**Console tags:**
+
+| Tag | Meaning |
+|-----|---------|
+| `[zedcafe-export]` | Parent export decisions (push, sync-stale, finalize) |
+| `[wanix-perf]` | Phase timing for perf work |
+| `[wanix] readwasmdriver failed` | Ramfs re-read failed; check path/size |
+
+**Headed validator:**
+
+```bash
+ZEDCAFE_VALIDATE_FIXTURE=1 yarn task run cafe:playwright:headed \
+  --url https://localhost:7777/ tasks/lib/wanix/validate-zedcafe-vm-export.ts
+```
+
+Report: `/tmp/wanix-zedcafe-export-report.json` — timeline + export trace.
+
+**Unit tests:** `yarn jest ops/tests/unit/feature/wanix/ --config ops/jest.config.ts --no-coverage`
+
+---
+
+## What works today (and why)
+
+| Capability | Why it works |
+|------------|--------------|
+| **`#wanix vm` + `/zedcafe/`** | VM room → zedcafe gojs boot → host pushes memory export → `wirezedcafeexport` binds `#task/rid/export` into Linux at `/zedcafe/` |
+| **Wasm task drops** | `handlewanixdrop` stands task room, stages `#ramfs/{file}`, spawns with correct gojs/wasi driver |
+| **findplayers JSON output** | gojs task + per-task export bind + spawn gate on `stats.json`; scanner walks `./zedcafe/books/…` |
+| **Live export updates** | `wanixstateexport` jsonpipe rebuilds tree; debounced push while room active; `synczedcafeexportifstale` on reuse |
+| **Auto-attach new sessions** | `WANIX_MSG_SESSION open` → reveal tape → attach when user had nothing focused |
+| **Soft idle → faster second drop** | Warm `<wanix-system>` + unchanged `mountkey` skips wanix.wasm reload; daemon reuse + sync-if-stale |
+| **Export wait without poll slack** | `content-ready` event wakes parent waiters immediately after iframe push completes |
+
+### Success signals you can eyeball
+
+**VM terminal:**
+
+```text
+~ # zedcafe-books
+  name: coolregionsbow
+  pageCount: 51
+~ # ls -la /zedcafe
+  books/
+  stats.json
+```
+
+**findplayers task term:** one line JSON array starting with `["books/…/objects/pid_…json",…]`
+
+**Dev console:** `[wanix-perf] export-push-end` then `[wanix-perf] spawntask-return` with no
+`LinkError` or `postwanixexportmessage is not defined`.
+
+---
+
+## Rebuild references
+
+| Asset | Task |
+|-------|------|
+| wanix.wasm (full-Go) | Manual — see gotcha section; match `wanix.min.js` commit |
+| zedcafe.wasm / findplayers.wasm | `yarn task run ops:fixtures:wanix:zedcafe:build` / `ops:fixtures:wanix:findplayers:build` |
+| Linux overlay | `yarn task run ops:fixtures:wanix:linux:overlay:build` |
+| Hello fixtures | `yarn task run ops:fixtures:wanix:build` |
+
+Dev server: `yarn task run cafe:dev` — no separate build step; committed assets under
+`cafe/public/wanix/` and `ops/public/wanix/`.
