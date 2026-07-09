@@ -649,6 +649,9 @@ async function applyroom(config: WanixRoomConfig) {
   }
 
   if (roomconfig.mode === 'idle') {
+    if (system) {
+      haltzedcafetask(system)
+    }
     disconnectalltermsessions()
     host.replaceChildren()
     system = null

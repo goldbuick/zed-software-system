@@ -802,6 +802,13 @@ export function wanixdrainpendingzedcafeexport(
   vmexportzedcafe(device, player)
 }
 
+/** Clear host export session when wanix room returns to idle. */
+export function resetwanixzedcafeonidle() {
+  bootinflight = null
+  clearwanixzedcafependingexport()
+  clearzedcafeexportsession()
+}
+
 /** Test hook — reset pending flag. */
 export function resetwanixzedcafefortest() {
   if (pendingexportwait) {

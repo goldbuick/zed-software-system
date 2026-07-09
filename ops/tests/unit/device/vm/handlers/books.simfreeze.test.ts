@@ -1,15 +1,10 @@
 import { DEVICE } from 'zss/device'
-import { MESSAGE, registerloginready, registerwarmwanix, workstatus } from 'zss/device/api'
+import { MESSAGE, registerloginready, workstatus } from 'zss/device/api'
 import { handlebooks } from 'zss/device/vm/handlers/books'
 import { tracking } from 'zss/device/vm/state'
 import * as session from 'zss/memory/session'
 import type { BOOK } from 'zss/memory/types'
-import { synczedcafeexportafterbooksload } from 'zss/feature/wanix/wanixstateexport'
 import { memorydecompressbooks } from 'zss/memory/utilities'
-
-jest.mock('zss/feature/wanix/wanixstateexport', () => ({
-  synczedcafeexportafterbooksload: jest.fn(),
-}))
 
 jest.mock('zss/memory/utilities', () => ({
   memorydecompressbooks: jest.fn(),
@@ -18,7 +13,6 @@ jest.mock('zss/memory/utilities', () => ({
 jest.mock('zss/device/api', () => ({
   apilog: jest.fn(),
   registerloginready: jest.fn(),
-  registerwarmwanix: jest.fn(),
   apierror: jest.fn(),
   workstatus: jest.fn(),
 }))
@@ -87,10 +81,8 @@ describe('handlebooks sim freeze', () => {
 
     expect(session.memoryreadfrozen()).toBe(false)
     expect(registerloginready).toHaveBeenCalledWith(vm, player)
-    expect(registerwarmwanix).toHaveBeenCalledWith(vm, player)
     expect(workstatus).toHaveBeenCalledWith(vm, player, 'load books')
     expect(session.memoryresetbooks).toHaveBeenCalledWith([minimalbook])
-    expect(synczedcafeexportafterbooksload).toHaveBeenCalledWith(vm, player)
   })
 
   it('clears simfreeze in finally when decompress rejects', async () => {

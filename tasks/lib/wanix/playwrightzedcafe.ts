@@ -290,21 +290,6 @@ export async function triggerzedcafeexportinpage(
   }, root)
 }
 
-export async function warmwanixinpage(
-  page: import('@playwright/test').Page,
-  root: string,
-): Promise<void> {
-  await page.evaluate(async (projectroot) => {
-    const { register, registerreadplayer } = await import(
-      `/@fs${projectroot}/zss/device/register.ts`
-    )
-    const { warmwanixzedcafe } = await import(
-      `/@fs${projectroot}/zss/feature/wanix/wanixroom.ts`
-    )
-    await warmwanixzedcafe(register, registerreadplayer())
-  }, root)
-}
-
 export async function readhostexportstats(
   page: import('@playwright/test').Page,
   taskrid: string,

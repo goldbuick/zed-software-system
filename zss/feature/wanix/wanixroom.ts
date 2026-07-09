@@ -8,7 +8,6 @@ import {
   registerwanixsessioncloseprune,
   waitwanixiframe,
   waitwanixready,
-  waitwanixrpcping,
 } from 'zss/feature/wanix/wanixbridge'
 import {
   listwanixwasmentries,
@@ -31,9 +30,14 @@ import {
 import { readwanixtermbufferkeys } from 'zss/feature/wanix/wanixtermbuffer'
 import { extractwanixtgz } from 'zss/feature/wanix/wanixtgzextract'
 import {
+  primezedcafeexportshadow,
+  runzedcafeexport,
+} from 'zss/feature/wanix/wanixstateexport'
+import {
   ensurewanixzedcafedaemon,
   finalizewanixzedcafeaftervmboot,
   readwanixbootzedcafestate,
+  resetwanixzedcafeonidle,
   wanixdrainpendingzedcafeexport,
 } from 'zss/feature/wanix/wanixzedcafe'
 import type { WanixZedCafeRoomSpec } from 'zss/feature/wanix/wanixzedcafetypes'
@@ -42,7 +46,6 @@ const WANIX_ROOM_TIMEOUT_MS = 180_000
 const WANIX_MENU_TIMEOUT_MS = 3_000
 
 let roomconfig: WanixRoomConfig = createidleroomconfig()
-let warminflight: Promise<void> | null = null
 
 function bumpmountkey(config: WanixRoomConfig): WanixRoomConfig {
   return { ...config, mountkey: config.mountkey + 1 }
@@ -65,27 +68,14 @@ export async function applywanixroom(
   return result
 }
 
-export async function warmwanixzedcafe(
+async function activatezedcafeexport(
   device: DEVICELIKE,
   player: string,
 ): Promise<void> {
-  if (!player) {
-    return
-  }
-  if (roomconfig.mode !== 'idle') {
-    await ensurewanixzedcafedaemon(device, player)
-    return
-  }
-  if (warminflight) {
-    return warminflight
-  }
-  warminflight = (async () => {
-    await waitwanixrpcping()
-    await ensurewanixtaskroom(device, player)
-  })().finally(() => {
-    warminflight = null
-  })
-  return warminflight
+  primezedcafeexportshadow()
+  await ensurewanixzedcafedaemon(device, player)
+  runzedcafeexport(device, player)
+  wanixdrainpendingzedcafeexport(device, player)
 }
 
 export async function ensurewanixtaskroom(
@@ -94,7 +84,7 @@ export async function ensurewanixtaskroom(
 ): Promise<void> {
   if (roomconfig.mode !== 'idle') {
     if (device && player) {
-      await ensurewanixzedcafedaemon(device, player)
+      await activatezedcafeexport(device, player)
     }
     return
   }
@@ -117,8 +107,7 @@ export async function ensurewanixtaskroom(
   }
   await applywanixroom(next)
   if (device && player) {
-    await ensurewanixzedcafedaemon(device, player)
-    wanixdrainpendingzedcafeexport(device, player)
+    await activatezedcafeexport(device, player)
   }
 }
 
@@ -164,6 +153,7 @@ export async function stopwanixvmroom(): Promise<unknown> {
 }
 
 export async function stopwanixroom(): Promise<unknown> {
+  resetwanixzedcafeonidle()
   const next = createidleroomconfig()
   next.mountkey = roomconfig.mountkey + 1
   return applywanixroom(next)
@@ -425,7 +415,9 @@ export async function startwanixvm(
     already?: boolean
   }
   if (device && player) {
+    primezedcafeexportshadow()
     await finalizewanixzedcafeaftervmboot(device, player)
+    runzedcafeexport(device, player)
     wanixdrainpendingzedcafeexport(device, player)
   }
   if (result.running) {

@@ -24,9 +24,7 @@ import {
   readplaywrightlogs,
   readtermbuffertext,
   sendwanixcli,
-  triggerzedcafeexportinpage,
   waitwanixrpcping,
-  warmwanixinpage,
   writededcafefailurereport,
   type ZedcafeStatsSnapshot,
   type ZedcafeTimelineEntry,
@@ -212,43 +210,45 @@ const validatezedcafevmexport: HeadedPlaywrightScript = async ({
     if (membookcount < 1) {
       fail('fixture-book-loaded', { membookcount })
     }
-    await warmwanixinpage(page, root)
-    record('fixture-wanix-warm')
-    await triggerzedcafeexportinpage(page, root)
-    record('fixture-export-triggered')
   } else {
-    const exportready = await polluntil(
+    const booksloaded = await polluntil(
       'login-books-loaded',
       EXPORT_BUDGET_MS,
       EXPORT_POLL_MS,
       async () => {
-        const rid = await callwanixrpcinpage<string | null>(
-          page,
-          'readzedcafetaskrid',
-          [],
-          10_000,
-        )
-        if (!rid) {
-          return { ready: false, taskrid: null as string | null, bookcount: 0 }
-        }
-        const stats = await readhostexportstats(page, rid)
-        return {
-          ready: (stats?.bookCount ?? 0) >= 1,
-          taskrid: rid,
-          bookcount: stats?.bookCount ?? 0,
-        }
+        const bookcount = await readmembookcountinpage(page, root)
+        return { ready: bookcount >= 1, bookcount }
       },
       (snap) => snap.ready === true,
     )
-    membookcount = exportready.bookcount
-    taskrid = exportready.taskrid
-    record('login-books-loaded', { membookcount, mode: 'login', taskrid })
+    membookcount = booksloaded.bookcount
+    record('login-books-loaded', { membookcount, mode: 'login' })
     if (membookcount < 1) {
       fail('login-books-loaded', {
         membookcount,
-        hint: 'storage has no books or export did not push after login — import content or run with ZEDCAFE_VALIDATE_FIXTURE=1',
+        hint: 'storage has no books in sim memory — import content or run with ZEDCAFE_VALIDATE_FIXTURE=1',
       })
     }
+  }
+
+  await sendwanixcli(page, root, '#wanix vm')
+
+  const vmstatus = await polluntil(
+    'wanix-vm-started',
+    VALIDATE_TIMEOUT_MS,
+    EXPORT_POLL_MS,
+    async () =>
+      callwanixrpcinpage<{
+        running?: boolean
+        vrid?: string | null
+      }>(page, 'readvmstatus', [], 10_000),
+    (status) => !!status?.vrid,
+  )
+  record('wanix-vm-started', vmstatus)
+
+  if (!vmstatus?.vrid) {
+    const logs = await readplaywrightlogs(page)
+    fail('wanix-vm-started', { vmstatus, logs })
   }
 
   const exportlive = await polluntil(
@@ -323,26 +323,6 @@ const validatezedcafevmexport: HeadedPlaywrightScript = async ({
     fail('export-stats', { exportdir })
   }
   record('task-export-stats', { exportdir })
-
-  await sendwanixcli(page, root, '#wanix vm')
-
-  const vmstatus = await polluntil(
-    'wanix-vm-started',
-    VALIDATE_TIMEOUT_MS,
-    EXPORT_POLL_MS,
-    async () =>
-      callwanixrpcinpage<{
-        running?: boolean
-        vrid?: string | null
-      }>(page, 'readvmstatus', [], 10_000),
-    (status) => !!status?.vrid,
-  )
-  record('wanix-vm-started', vmstatus)
-
-  if (!vmstatus?.vrid) {
-    const logs = await readplaywrightlogs(page)
-    fail('wanix-vm-started', { vmstatus, logs })
-  }
 
   let guestbound = false
   let lastdiag: Record<string, unknown> = {}
@@ -486,24 +466,13 @@ const validatezedcafevmexport: HeadedPlaywrightScript = async ({
     })
   }
 
-  await callwanixtermwriteinpage(
-    page,
-    root,
-    'find /zedcafe/books -name stats.json 2>/dev/null | head -n 3\n',
-    WANIX_ZEDCAFE_VM_SESSION,
-  )
+  record('vm-books-tree', { guestbookcount })
 
-  const findtext = await polluntil(
-    'vm-books-tree',
-    EXPORT_BUDGET_MS,
-    EXPORT_POLL_MS,
-    async () => readtermbuffertext(page, root, WANIX_ZEDCAFE_VM_SESSION),
-    (text) => /\/zedcafe\/books\/.+\/stats\.json/.test(text),
-  )
-  record('vm-books-tree')
-
-  if (!/\/zedcafe\/books\/.+\/stats\.json/.test(findtext)) {
-    fail('vm-books-tree', { findtext: findtext.slice(-800) })
+  if (guestbookcount === null || guestbookcount < 1) {
+    fail('vm-books-tree', {
+      guestbookcount,
+      statstext: statstext.slice(-800),
+    })
   }
 
   const fixturepath = path.join(WANIX_PUBLIC_FIXTURES_DIR, 'findplayers.wasm')
@@ -513,7 +482,13 @@ const validatezedcafevmexport: HeadedPlaywrightScript = async ({
   await withscripttimeout('findplayers-run', VALIDATE_TIMEOUT_MS, async () => {
     for (;;) {
       const logs = await readplaywrightlogs(page)
-      if (logs.some((line) => /^\[.*"books\//.test(line.trim()) || line.trim() === '[]')) {
+      const lines = [...logs, ...consolelines]
+      if (
+        lines.some(
+          (line) =>
+            /^\[.*"books\//.test(line.trim()) || line.trim() === '[]',
+        )
+      ) {
         break
       }
       await page.waitForTimeout(EXPORT_POLL_MS)
