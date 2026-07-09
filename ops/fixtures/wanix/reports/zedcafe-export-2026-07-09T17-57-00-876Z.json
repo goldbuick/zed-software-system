@@ -2,70 +2,31 @@
   "failedgate": "pass",
   "timeline": [
     {
-      "ms": 633,
+      "ms": 768,
       "label": "page-loaded"
     },
     {
-      "ms": 719,
+      "ms": 878,
       "label": "wanix-boot"
     },
     {
-      "ms": 1628,
+      "ms": 1845,
       "label": "register-session"
     },
     {
-      "ms": 1631,
+      "ms": 1847,
       "label": "wanix-rpc-ping"
     },
     {
-      "ms": 1668,
+      "ms": 1883,
       "label": "fixture-book-loaded",
       "extra": {
-        "membookcount": 1
+        "membookcount": 1,
+        "mode": "fixture"
       }
     },
     {
-      "ms": 1683,
-      "label": "fixture-export-triggered"
-    },
-    {
-      "ms": 3022,
-      "label": "host-export-books",
-      "extra": {
-        "taskrid": "2",
-        "live": true,
-        "hoststats": {
-          "bookCount": 1,
-          "exportedAt": "2026-07-09T16:01:51.241Z",
-          "bytes": 181
-        },
-        "hasbooks": true
-      }
-    },
-    {
-      "ms": 4466,
-      "label": "task-export-live",
-      "extra": {
-        "taskrid": "2",
-        "hoststats": {
-          "bookCount": 1,
-          "exportedAt": "2026-07-09T16:01:51.241Z",
-          "bytes": 181
-        }
-      }
-    },
-    {
-      "ms": 4473,
-      "label": "task-export-stats",
-      "extra": {
-        "exportdir": [
-          "books/",
-          "stats.json/"
-        ]
-      }
-    },
-    {
-      "ms": 5151,
+      "ms": 2569,
       "label": "wanix-vm-started",
       "extra": {
         "running": true,
@@ -75,7 +36,43 @@
       }
     },
     {
-      "ms": 5994,
+      "ms": 3416,
+      "label": "host-export-books",
+      "extra": {
+        "taskrid": "3",
+        "live": true,
+        "hoststats": {
+          "bookCount": 1,
+          "exportedAt": "2026-07-09T17:56:45.366Z",
+          "bytes": 181
+        },
+        "hasbooks": true
+      }
+    },
+    {
+      "ms": 6270,
+      "label": "task-export-live",
+      "extra": {
+        "taskrid": "3",
+        "hoststats": {
+          "bookCount": 1,
+          "exportedAt": "2026-07-09T17:56:45.366Z",
+          "bytes": 181
+        }
+      }
+    },
+    {
+      "ms": 6275,
+      "label": "task-export-stats",
+      "extra": {
+        "exportdir": [
+          "books/",
+          "stats.json/"
+        ]
+      }
+    },
+    {
+      "ms": 6285,
       "label": "vm-guest-bound",
       "extra": {
         "guestbound": true,
@@ -88,106 +85,101 @@
         },
         "hoststats": {
           "bookCount": 1,
-          "exportedAt": "2026-07-09T16:01:51.241Z",
+          "exportedAt": "2026-07-09T17:56:45.366Z",
           "bytes": 181
         }
       }
     },
     {
-      "ms": 6501,
+      "ms": 6788,
       "label": "vm-attached"
     },
     {
-      "ms": 8824,
+      "ms": 7045,
       "label": "vm-term-zedcafe-ready"
     },
     {
-      "ms": 9590,
+      "ms": 7555,
       "label": "vm-term-zedcafe-stats"
     },
     {
-      "ms": 9847,
+      "ms": 7810,
       "label": "vm-term-ls-zedcafe"
     },
     {
-      "ms": 10104,
-      "label": "vm-books-tree"
-    },
-    {
-      "ms": 17186,
+      "ms": 14341,
       "label": "findplayers-drop"
     },
     {
-      "ms": 17195,
-      "label": "findplayers-run"
+      "ms": 18249,
+      "label": "findplayers-run",
+      "extra": {
+        "sample": "[\"books/coolregionsbow-sid_vuYEPNKWWAPd/pages/title-sid_.HhnwpAAMwgO/board/obje\ncts/pid_7170_a2vd3bdyu2njnuqi.json\",\"books/coolregionsbow-sid_vuYEPNKWWAPd/stat\ns.json\"]\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+      }
     },
     {
-      "ms": 17195,
+      "ms": 18250,
       "label": "pass",
       "extra": {
         "hoststats": {
           "bookCount": 1,
-          "exportedAt": "2026-07-09T16:01:51.241Z",
+          "exportedAt": "2026-07-09T17:56:45.366Z",
           "bytes": 181
         },
         "gueststats": {
           "bookCount": 1,
-          "exportedAt": "2026-07-09T16:01:51.241Z",
+          "exportedAt": "2026-07-09T17:56:45.366Z",
           "bytes": 181
         },
         "membookcount": 1,
         "exporttrace": [
-          "[info] [zedcafe-export] pending-export mark memcount=1",
-          "[info] [zedcafe-export] warm start memcount=1",
-          "[info] [zedcafe-export] boot-export start memcount=1 paths=113",
-          "[info] [zedcafe-export] push taskrid=2 memcount=1 paths=113",
-          "[info] [zedcafe-export] finalize-vmboot branch=pushwire memcount=1 live=true guestbound=false",
+          "[info] [zedcafe-export] finalize-vmboot memcount=1 paths=113 taskrid=3 guestbound=false",
+          "[info] [zedcafe-export] finalize-vmboot branch=pushwire memcount=1",
           "[info] [zedcafe-export] push taskrid=3 memcount=1 paths=113",
-          "[info] [zedcafe-export] pending-export drain memcount=1",
-          "[info] [zedcafe-export] push taskrid=3 memcount=1 paths=2",
-          "[info] [zedcafe-export] handleexportstate memcount=1 treecount=1 pushed=true wired=true",
-          "[info] [zedcafe-export] warm start memcount=2"
+          "[info] [zedcafe-export] daemon start memcount=1",
+          "[info] [zedcafe-export] push taskrid=3 memcount=1 paths=113",
+          "[info] [zedcafe-export] sync-stale needed=true pushed=true memcount=1 paths=113"
         ]
       }
     }
   ],
-  "taskrid": "2",
+  "taskrid": "3",
   "rpc": {
     "ok": true
   },
   "readdirerrors": [],
   "walkbookserrors": [],
-  "termdump": "cafe-pages <dir>    pages in a book\n    zedcafe-ls [path]      export tree listing\n\n  also: jq, curl, wget\n\n~ # zedcafe-ready\nready: /zedcafe\n~ # zedcafe-stats\n{\n  \"exportedAt\": \"2026-07-09T16:01:56.143Z\",\n  \"bookCount\": 1,\n  \"books\": [\n    {\n      \"id\": \"sid_enOMejxqOGop\",\n      \"name\": \"allghostsbow\",\n      \"pageCount\": 0\n    }\n  ]\n}\n~ # ls -la /zedcafe\ntotal 0\ndrwxr-xr-x    0 root     root             4 Jul  9 16:01 books\n-rw-rw-rw-    0 root     root           178 Jul  9 16:01 stats.json\n~ #",
+  "termdump": "e-pages <dir>    pages in a book\n    zedcafe-ls [path]      export tree listing\n\n  also: jq, curl, wget\n\n~ # zedcafe-ready\nready: /zedcafe\n~ # zedcafe-stats\n{\n  \"exportedAt\": \"2026-07-09T17:56:45.366Z\",\n  \"bookCount\": 1,\n  \"books\": [\n    {\n      \"id\": \"sid_vuYEPNKWWAPd\",\n      \"name\": \"coolregionsbow\",\n      \"pageCount\": 51\n    }\n  ]\n}\n~ # ls -la /zedcafe\ntotal 0\ndrwxr-xr-x    0 root     root             3 Jul  9 17:56 books\n-rw-rw-rw-    0 root     root           181 Jul  9 17:56 stats.json\n~ #",
   "recentlogs": [
     "[debug] [vite] connecting...",
     "[debug] [vite] connected.",
-    "[info] [zedcafe-export] pending-export mark memcount=1",
-    "[info] [zedcafe-export] warm start memcount=1",
-    "[info] [zedcafe-export] boot-export start memcount=1 paths=113",
-    "[log] gojs worker started",
-    "[log] readdir.go:18: err: #task/2/export/books open #task/2/export/books: file does not exist",
-    "[info] [zedcafe-export] push taskrid=2 memcount=1 paths=113",
-    "[timeEnd] compile-cli: 2.27197265625 ms",
+    "[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold",
+    "[debug] [vite] connecting...",
+    "[debug] [vite] connected.",
+    "[timeEnd] compile-cli: 2.26904296875 ms",
     "[log] vm started 1 linux-vm",
     "[log] gojs worker started",
     "[log] gojs worker started",
-    "[info] [zedcafe-export] finalize-vmboot branch=pushwire memcount=1 live=true guestbound=false",
+    "[log] readdir.go:18: err: #task/3/export/books open #task/3/export/books: file does not exist",
+    "[info] [zedcafe-export] finalize-vmboot memcount=1 paths=113 taskrid=3 guestbound=false",
+    "[info] [zedcafe-export] finalize-vmboot branch=pushwire memcount=1",
     "[info] [zedcafe-export] push taskrid=3 memcount=1 paths=113",
-    "[timeEnd] compile-cli: 0.7041015625 ms",
+    "[timeEnd] compile-cli: 0.652099609375 ms",
     "[error] Error: Invalid arg, expected: optional string but got null\n    at didexpect (https://localhost:7777/@fs/Users/goldbuick/Development/zed-software-system/zss/words/reader.ts:38:11)\n    at readargs (https://localhost:7777/@fs/Users/goldbuick/Development/zed-software-system/zss/words/reader.ts:210:25)\n    at https://localhost:7777/@fs/Users/goldbuick/Development/zed-software-system/zss/firmware/cli/commands/wanix.ts:20:31\n    at invokecommand (https://localhost:7777/@fs/Users/goldbuick/Development/zed-software-system/zss/chip.ts:61:16)\n    at Object.command (https://localhost:7777/@fs/Users/goldbuick/Development/zed-software-system/zss/chip.ts:323:20)\n    at eval (zss.js:11:11)\n    at Object.once (https://localhost:7777/@fs/Users/goldbuick/Development/zed-software-system/zss/chip.ts:94:29)\n    at Object.once (https://localhost:7777/@fs/Users/goldbuick/Development/zed-software-system/zss/os.ts:141:22)\n    at memoryruncli (https://localhost:7777/@fs/Users/goldbuick/Development/zed-software-system/zss/memory/runtime.ts:231:8)\n    at https://localhost:7777/@fs/Users/goldbuick/Development/zed-software-system/zss/device/vm/handlers/cli.ts:12:9",
-    "[info] [zedcafe-export] pending-export drain memcount=1",
-    "[info] [zedcafe-export] push taskrid=3 memcount=1 paths=2",
-    "[info] [zedcafe-export] handleexportstate memcount=1 treecount=1 pushed=true wired=true",
-    "[info] [zedcafe-export] warm start memcount=2"
+    "[info] [zedcafe-export] daemon start memcount=1",
+    "[info] [zedcafe-export] push taskrid=3 memcount=1 paths=113",
+    "[info] [zedcafe-export] sync-stale needed=true pushed=true memcount=1 paths=113",
+    "[log] gojs worker started",
+    "[log] gojs execution took 2361.560000002384ms"
   ],
   "hoststats": {
     "bookCount": 1,
-    "exportedAt": "2026-07-09T16:01:51.241Z",
+    "exportedAt": "2026-07-09T17:56:45.366Z",
     "bytes": 181
   },
   "gueststats": {
     "bookCount": 1,
-    "exportedAt": "2026-07-09T16:01:51.241Z",
+    "exportedAt": "2026-07-09T17:56:45.366Z",
     "bytes": 181
   },
   "hostexportpaths": [
@@ -234,15 +226,11 @@
   ],
   "membookcount": 1,
   "exporttrace": [
-    "[info] [zedcafe-export] pending-export mark memcount=1",
-    "[info] [zedcafe-export] warm start memcount=1",
-    "[info] [zedcafe-export] boot-export start memcount=1 paths=113",
-    "[info] [zedcafe-export] push taskrid=2 memcount=1 paths=113",
-    "[info] [zedcafe-export] finalize-vmboot branch=pushwire memcount=1 live=true guestbound=false",
+    "[info] [zedcafe-export] finalize-vmboot memcount=1 paths=113 taskrid=3 guestbound=false",
+    "[info] [zedcafe-export] finalize-vmboot branch=pushwire memcount=1",
     "[info] [zedcafe-export] push taskrid=3 memcount=1 paths=113",
-    "[info] [zedcafe-export] pending-export drain memcount=1",
-    "[info] [zedcafe-export] push taskrid=3 memcount=1 paths=2",
-    "[info] [zedcafe-export] handleexportstate memcount=1 treecount=1 pushed=true wired=true",
-    "[info] [zedcafe-export] warm start memcount=2"
+    "[info] [zedcafe-export] daemon start memcount=1",
+    "[info] [zedcafe-export] push taskrid=3 memcount=1 paths=113",
+    "[info] [zedcafe-export] sync-stale needed=true pushed=true memcount=1 paths=113"
   ]
 }

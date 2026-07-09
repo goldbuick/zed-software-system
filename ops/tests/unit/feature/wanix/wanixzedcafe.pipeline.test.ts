@@ -42,7 +42,7 @@ import { resetwanixzedcafesessionfortest } from 'zss/feature/wanix/wanixzedcafes
 
 const mockrpc = callwanixrpc as jest.Mock
 
-const device = { id: 'dev' } as never
+const device = { id: 'dev', emit: jest.fn() } as never
 const player = 'p1'
 const files = [
   {

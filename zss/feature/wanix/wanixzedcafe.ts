@@ -280,6 +280,11 @@ async function tryreuselivezedcafeexport(
   tracezedcafeexport(
     `boot-export reuse-live taskrid=${taskrid} treecount=${treecount}`,
   )
+  apilog(
+    device,
+    player,
+    `zedcafe: reusing live export mount (${treecount} books already in guest)…`,
+  )
   if (!(await iszedcafeguestbound())) {
     await callwanixrpc(
       'wirezedcafeexport',
@@ -316,6 +321,11 @@ async function synczedcafeexportifstale(
     return false
   }
   const memcount = readbookcountfromexportfiles(files)
+  apilog(
+    device,
+    player,
+    `zedcafe: syncing stale export to guest (${memcount} books)…`,
+  )
   await pushzedcafeexportfiles(device, player, taskrid, files)
   setlasthostpushfingerprint(memfp)
   tracezedcafeexport(
@@ -499,7 +509,15 @@ async function bootzedcafeexportinner(
   if (reused) {
     return reused
   }
+  apilog(
+    device,
+    player,
+    memcount > 0
+      ? `zedcafe: booting export daemon (${memcount} books, ${files.length} files)…`
+      : 'zedcafe: booting export mount (no books in memory yet)…',
+  )
   await synczedcafedaemoncmd()
+  apilog(device, player, 'zedcafe: waiting for gojs export mount…')
   const taskrid = await waitzedcafemount()
   if (!taskrid) {
     apilog(
@@ -511,8 +529,14 @@ async function bootzedcafeexportinner(
   }
   if (memcount === 0) {
     tracezedcafeexport(`boot-export mount-only taskrid=${taskrid}`)
+    apilog(device, player, 'zedcafe: export mount ready (no book push)')
     return taskrid
   }
+  apilog(
+    device,
+    player,
+    `zedcafe: pushing ${files.length} export files to guest — may take a moment…`,
+  )
   if (!(await pushzedcafeexportfiles(device, player, taskrid, files))) {
     return null
   }
@@ -526,6 +550,11 @@ async function bootzedcafeexportinner(
   }
   await finalizezedcafeexport(taskrid, haswanixvms())
   await markzedcafepollready(device, player)
+  apilog(
+    device,
+    player,
+    `zedcafe: export ready (${memcount} books) — tasks can bind /zedcafe`,
+  )
   return taskrid
 }
 
@@ -551,22 +580,13 @@ async function bootzedcafeexport(
   files: WANIX_ZED_CAFE_EXPORT_FILE[],
 ): Promise<string | null> {
   if (bootinflight) {
+    apilog(device, player, 'zedcafe: export boot in progress — waiting…')
     return bootinflight
   }
   bootinflight = bootzedcafeexportinner(device, player, files).finally(() => {
     bootinflight = null
   })
   return bootinflight
-}
-
-async function recoverzedcafeexport(
-  device: DEVICELIKE,
-  player: string,
-  files: WANIX_ZED_CAFE_EXPORT_FILE[],
-): Promise<string | null> {
-  clearzedcafeexportsession()
-  await callwanixrpc('haltzedcafe', [])
-  return bootzedcafeexport(device, player, files)
 }
 
 function clearzedcafeexportsession() {
@@ -687,10 +707,18 @@ export async function ensurewanixzedcafedaemon(
 ): Promise<boolean> {
   const files = await resolvehostexportfiles(device, player)
   const memcount = readbookcountfromexportfiles(files)
-  tracezedcafeexport(`warm start memcount=${memcount}`)
+  tracezedcafeexport(`daemon start memcount=${memcount}`)
   const taskrid = await readtaskrid()
   if (taskrid && (await iszedcafeexportlive(taskrid))) {
+    apilog(
+      device,
+      player,
+      `zedcafe: reusing live export daemon (${memcount} books)…`,
+    )
     await synczedcafeexportifstale(device, player, taskrid, files)
+    if (memcount > 0) {
+      await waitzedcafecontentready(taskrid)
+    }
     if (!readzedcafepollactive()) {
       await markzedcafepollready(device, player)
     }
@@ -720,6 +748,11 @@ export async function wanixhandleexportstate(
   if (!iswanixspaceactive()) {
     tracezedcafeexport(
       `pending-export mark memcount=${readbookcountfromexportfiles(files)}`,
+    )
+    apilog(
+      device,
+      player,
+      'zedcafe: export saved — will apply when wanix starts (#wanix vm or drop a task)',
     )
     markwanixzedcafependingexport()
     return
@@ -781,12 +814,8 @@ export async function wanixhandleexportstate(
     )
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err)
-    apilog(
-      device,
-      player,
-      `zedcafe export: live push failed (${detail}) — recovering`,
-    )
-    await recoverzedcafeexport(device, player, files)
+    apilog(device, player, `zedcafe export: live push failed (${detail})`)
+    throw err instanceof Error ? err : new Error(detail)
   }
 }
 
@@ -799,6 +828,13 @@ export function wanixdrainpendingzedcafeexport(
   }
   const memcount = readbookcountfromexportfiles(buildzedcafeexportfiles())
   tracezedcafeexport(`pending-export drain memcount=${memcount}`)
+  apilog(
+    device,
+    player,
+    memcount > 0
+      ? `zedcafe: applying queued export (${memcount} books)…`
+      : 'zedcafe: applying queued export…',
+  )
   vmexportzedcafe(device, player)
 }
 

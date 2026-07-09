@@ -818,7 +818,7 @@ async function spawntask(taskid: string, cmd: string) {
     const taskrid = await waitlocalzedcafetaskrid()
     if (!taskrid) {
       throw new Error(
-        'zedcafe export not ready — start wanix with zedcafe warm before findplayers',
+        'zedcafe export not ready — boot wanix VM or drop a task before findplayers',
       )
     }
     if (!(await waitzedcafeexportstatsatroot(readroot(), taskrid))) {

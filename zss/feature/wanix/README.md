@@ -72,13 +72,21 @@ guest repaints. See resize handling in `wanixtermgridstate.ts`.
 ### Attach / detach
 The worker ([`cafe/wanix.ts`](../../../cafe/wanix.ts)) owns which terminal is
 **active** and posts `zss-wanix-session` messages (`open`, `active`, `close`) to
-the parent. Auto-attach happens only when the worker sends `active` and nothing
-is attached yet (and the user has not manually detached). The parent never
-guesses a target from buffer order.
+the parent.
 
-Manual attach/detach via `#wanix attach` / `#wanix detach` or the menu takes
-precedence. A new `active` message does not steal focus from an already-attached
-session. When a non-attached session ends, its buffer and task entry are pruned
+On **`open`** (new session term connected), when nothing is attached yet,
+[`wanixbridge.ts`](wanixbridge.ts):
+
+1. Reveals the tape terminal if it was closed ([`wanixtapevisibility.ts`](wanixtapevisibility.ts) — `WanixTermScreen` only mounts when the tape is visible).
+2. Auto-attaches to the new session ([`onwanixtermsessionopen`](wanixattachstate.ts)), including after a manual detach.
+
+On **`active`** (focus change among live sessions), auto-attach runs only when
+nothing is attached and the user has not manually detached
+(`maybeattachactivesession`). A new `active` alone does not steal focus from an
+already-attached session.
+
+Manual attach/detach via `#wanix attach` / `#wanix detach` or the menu still
+works. When a non-attached session ends, its buffer and task entry are pruned
 from the menu; if the attached session ends, the parent does nothing until the
 user acts via the menu.
 
@@ -112,7 +120,8 @@ forwards to the guest when the viewport is at the live line.
 | `wanixbridge.ts` | parent RPC client + ready/cells message handling |
 | `wanixtermgridstate.ts` | shared cell-grid engine (ANSI parse, scrollback, alt-screen, resize) |
 | `wanixtermbuffer.ts` | parent-side snapshot store per session |
-| `wanixattachstate.ts` | which session is attached; auto-attach |
+| `wanixattachstate.ts` | which session is attached; auto-attach on open |
+| `wanixtapevisibility.ts` | reveal tape terminal before auto-attach when hidden |
 | `wanixroom.ts` / `wanixroomtypes.ts` | room config (archives, remotes, tasks, vm) + VM start/stop |
 | `wanixmenu.ts` | terminal menu tape (`#wanix`) |
 | `wanixrpcmessages.ts` | shared `postMessage` type constants (parent + iframe) |

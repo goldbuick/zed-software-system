@@ -150,8 +150,13 @@ const wanix = createdevice('wanix', [], (message) => {
       }
       doasync(wanix, message.player, async () => {
         try {
-          if (readwanixroomconfig().mode === 'idle') {
-            apilog(wanix, message.player, 'wanix task room starting…')
+          const idle = readwanixroomconfig().mode === 'idle'
+          if (!idle) {
+            apilog(
+              wanix,
+              message.player,
+              'wanix: drop on active room (export sync if needed)…',
+            )
           }
           const result = await handlewanixdrop(payload, wanix, message.player)
           if (result.spawns.length) {
@@ -215,6 +220,11 @@ const wanix = createdevice('wanix', [], (message) => {
           const vmid = isstring(message.data)
             ? message.data
             : DEFAULT_WANIX_VM_ID
+          apilog(
+            wanix,
+            message.player,
+            'wanix: vm booting — zedcafe export finalizes after guest is ready…',
+          )
           const result = await startwanixvm(
             DEFAULT_WANIX_VM_MEM,
             vmid,
@@ -229,7 +239,6 @@ const wanix = createdevice('wanix', [], (message) => {
             )
             return
           }
-          apilog(wanix, message.player, 'wanix vm starting…')
           apilog(
             wanix,
             message.player,

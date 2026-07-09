@@ -31,6 +31,21 @@ export function setwanixactivesession(sessionkey: string | null) {
   maybeattachactivesession()
 }
 
+/** Auto-attach when a new session opens and nothing is attached yet. */
+export function onwanixtermsessionopen(sessionkey: string) {
+  const key = sessionkey.trim()
+  if (!key) {
+    return
+  }
+  activesessionkey = key
+  if (attachedsessionkey != null) {
+    return
+  }
+  attachedsessionkey = key
+  userdetached = false
+  bump()
+}
+
 export function readattachedsession(): string | null {
   return attachedsessionkey
 }

@@ -6,6 +6,7 @@ export type WanixTermTileBuffer = WanixTermCellsSnapshot & {
 }
 
 const buffers = new Map<string, WanixTermTileBuffer>()
+const opensessions = new Set<string>()
 const listeners = new Set<() => void>()
 let notifyversion = 0
 
@@ -17,11 +18,30 @@ function bump() {
 }
 
 export function clearwanixtermbuffers() {
-  if (buffers.size === 0) {
+  if (buffers.size === 0 && opensessions.size === 0) {
     return
   }
   buffers.clear()
+  opensessions.clear()
   bump()
+}
+
+export function registerwanixtermsessionopen(sessionkey: string) {
+  if (opensessions.has(sessionkey)) {
+    return
+  }
+  opensessions.add(sessionkey)
+  bump()
+}
+
+export function unregisterwanixtermsession(sessionkey: string) {
+  let changed = opensessions.delete(sessionkey)
+  if (buffers.delete(sessionkey)) {
+    changed = true
+  }
+  if (changed) {
+    bump()
+  }
 }
 
 export function removewanixtermbuffer(sessionkey: string): boolean {
@@ -57,7 +77,7 @@ export function readwanixtermbuffer(
 }
 
 export function readwanixtermbufferkeys(): string[] {
-  return [...buffers.keys()]
+  return [...new Set([...opensessions, ...buffers.keys()])]
 }
 
 export function readwanixtermnotifyversion() {
@@ -74,6 +94,7 @@ export function subscribewanixtermbuffer(listener: () => void) {
 /** Test hook */
 export function resetwanixtermbufferfortest() {
   buffers.clear()
+  opensessions.clear()
   listeners.clear()
   notifyversion = 0
 }

@@ -1,8 +1,10 @@
 import {
+  onwanixtermsessionopen,
   readattachedsession,
   resetwanixattachforidle,
   setwanixactivesession,
 } from 'zss/feature/wanix/wanixattachstate'
+import { revealwanixtapeifhidden } from 'zss/feature/wanix/wanixtapevisibility'
 import {
   WANIX_MSG_CELLS,
   WANIX_MSG_IDLE,
@@ -14,7 +16,8 @@ import {
 import {
   applywanixtermread,
   clearwanixtermbuffers,
-  removewanixtermbuffer,
+  registerwanixtermsessionopen,
+  unregisterwanixtermsession,
 } from 'zss/feature/wanix/wanixtermbuffer'
 import type { WanixTermCellsSnapshot } from 'zss/feature/wanix/wanixtermgridstate'
 
@@ -96,6 +99,16 @@ function handleparentmessage(event: MessageEvent) {
       return
     }
     const sessionkey = payload.sessionkey
+    if (payload.event === 'open') {
+      registerwanixtermsessionopen(sessionkey)
+      if (readattachedsession() == null) {
+        revealwanixtapeifhidden()
+        onwanixtermsessionopen(sessionkey)
+      } else {
+        setwanixactivesession(sessionkey)
+      }
+      return
+    }
     if (payload.event === 'active') {
       setwanixactivesession(sessionkey)
       return
@@ -104,7 +117,7 @@ function handleparentmessage(event: MessageEvent) {
       if (sessionkey === readattachedsession()) {
         return
       }
-      removewanixtermbuffer(sessionkey)
+      unregisterwanixtermsession(sessionkey)
       onwanixsessioncloseprune?.(sessionkey)
       return
     }

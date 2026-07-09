@@ -275,19 +275,50 @@ export async function importfixturebookinpage(
   )
 }
 
-export async function triggerzedcafeexportinpage(
+export function readfindplayersbookspaths(text: string): boolean {
+  return /\["books\/[^"]+"/.test(text.replace(/\s+/g, ''))
+}
+
+export async function readwanixtermbufferkeysinpage(
   page: import('@playwright/test').Page,
   root: string,
-): Promise<void> {
-  await page.evaluate(async (projectroot) => {
-    const { register, registerreadplayer } = await import(
-      `/@fs${projectroot}/zss/device/register.ts`
+): Promise<string[]> {
+  return page.evaluate(async (projectroot) => {
+    const { readwanixtermbufferkeys } = await import(
+      `/@fs${projectroot}/zss/feature/wanix/wanixtermbuffer.ts`
     )
-    const { runzedcafeexport } = await import(
-      `/@fs${projectroot}/zss/feature/wanix/wanixstateexport.ts`
-    )
-    runzedcafeexport(register, registerreadplayer())
+    return readwanixtermbufferkeys()
   }, root)
+}
+
+export async function pollfindplayersoutput(
+  page: import('@playwright/test').Page,
+  root: string,
+  consolelines: string[],
+  budgetms: number,
+  pollms: number,
+): Promise<string> {
+  return polluntil(
+    'findplayers-run',
+    budgetms,
+    pollms,
+    async () => {
+      for (const line of consolelines) {
+        if (readfindplayersbookspaths(line)) {
+          return line
+        }
+      }
+      const keys = await readwanixtermbufferkeysinpage(page, root)
+      for (const key of keys) {
+        const text = await readtermbuffertext(page, root, key)
+        if (readfindplayersbookspaths(text)) {
+          return text
+        }
+      }
+      return ''
+    },
+    (text) => readfindplayersbookspaths(text),
+  )
 }
 
 export async function readhostexportstats(

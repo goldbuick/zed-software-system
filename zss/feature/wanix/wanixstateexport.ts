@@ -1,5 +1,5 @@
 import type { DEVICELIKE } from 'zss/device/api'
-import { apilog, vmexportzedcafe, wanixexportstate } from 'zss/device/api'
+import { apilog, wanixexportstate } from 'zss/device/api'
 import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
 import { WANIX_ZEDCAFE_EXPORT_DEBOUNCE_MS } from 'zss/feature/wanix/wanixzedcafeconstants'
 import { readzedcafepollactive } from 'zss/feature/wanix/wanixzedcafesession'
@@ -41,7 +41,6 @@ export type WANIX_ZED_CAFE_EXPORT_PAYLOAD = {
 const encoder = new TextEncoder()
 
 let debouncetimer: ReturnType<typeof setTimeout> | undefined
-let pendingwhileidle = false
 
 function encodetext(text: string): Uint8Array {
   return encoder.encode(text)
@@ -251,14 +250,6 @@ export function buildzedcafeexportfiles(): WANIX_ZED_CAFE_EXPORT_FILE[] {
   return files
 }
 
-export function synczedcafeexportafterbooksload(
-  device: DEVICELIKE,
-  player: string,
-) {
-  primezedcafeexportshadow()
-  runzedcafeexport(device, player)
-}
-
 export function runzedcafeexport(device: DEVICELIKE, player: string) {
   const files = buildzedcafeexportfiles()
   const check = validatezedcafeexportpaths(files)
@@ -281,21 +272,6 @@ export function schedulewanixexport(device: DEVICELIKE, player: string) {
   }, WANIX_ZEDCAFE_EXPORT_DEBOUNCE_MS)
 }
 
-export function requestzedcafeexportonwarm(device: DEVICELIKE, player: string) {
-  if (pendingwhileidle) {
-    pendingwhileidle = false
-  }
-  vmexportzedcafe(device, player)
-}
-
-export function markzedcafeexportpendingwhileidle() {
-  pendingwhileidle = true
-}
-
-export function readzedcafeexportpendingwhileidle(): boolean {
-  return pendingwhileidle
-}
-
 export function primezedcafeexportshadow() {
   zedcafebookspipe.applyfullsync(memoryreadroot().books)
 }
@@ -316,6 +292,5 @@ export function resetwanixstateexportfortest() {
     clearTimeout(debouncetimer)
     debouncetimer = undefined
   }
-  pendingwhileidle = false
   primezedcafeexportshadow()
 }

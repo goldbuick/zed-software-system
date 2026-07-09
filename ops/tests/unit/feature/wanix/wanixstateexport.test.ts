@@ -7,7 +7,6 @@ import {
   resetwanixstateexportfortest,
   schedulewanixexport,
   splitboardexport,
-  synczedcafeexportafterbooksload,
 } from 'zss/feature/wanix/wanixstateexport'
 import type { BOOK, CODE_PAGE } from 'zss/memory/types'
 
@@ -218,11 +217,6 @@ describe('wanixstateexport', () => {
     schedulewanixexport({ emit: jest.fn() } as any, 'player1')
     expect(exportmock).not.toHaveBeenCalled()
     jest.advanceTimersByTime(2000)
-    expect(exportmock).toHaveBeenCalledTimes(1)
-  })
-
-  it('synczedcafeexportafterbooksload emits export immediately', () => {
-    synczedcafeexportafterbooksload({ emit: jest.fn() } as any, 'player1')
     expect(exportmock).toHaveBeenCalledTimes(1)
   })
 })

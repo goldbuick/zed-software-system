@@ -1,4 +1,5 @@
 import type { DEVICELIKE } from 'zss/device/api'
+import { apilog } from 'zss/device/api'
 import {
   readattachedsession,
   readwanixactivesession,
@@ -72,10 +73,20 @@ async function activatezedcafeexport(
   device: DEVICELIKE,
   player: string,
 ): Promise<void> {
+  apilog(device, player, 'zedcafe: preparing export from memory…')
   primezedcafeexportshadow()
-  await ensurewanixzedcafedaemon(device, player)
+  const ready = await ensurewanixzedcafedaemon(device, player)
+  if (!ready) {
+    apilog(
+      device,
+      player,
+      'zedcafe: export daemon did not become ready — drop may fail until #wanix vm or retry',
+    )
+    return
+  }
   runzedcafeexport(device, player)
   wanixdrainpendingzedcafeexport(device, player)
+  apilog(device, player, 'zedcafe: export sync complete')
 }
 
 export async function ensurewanixtaskroom(
@@ -84,9 +95,21 @@ export async function ensurewanixtaskroom(
 ): Promise<void> {
   if (roomconfig.mode !== 'idle') {
     if (device && player) {
+      apilog(
+        device,
+        player,
+        'zedcafe: syncing export on active wanix room (no remount)…',
+      )
       await activatezedcafeexport(device, player)
     }
     return
+  }
+  if (device && player) {
+    apilog(
+      device,
+      player,
+      'wanix: standing up task room + zedcafe export (first drop — may take a moment)…',
+    )
   }
   let zedcafe: WanixZedCafeRoomSpec | null | undefined
   const boot = await readwanixbootzedcafestate(device, player)
@@ -336,8 +359,34 @@ export async function handlewanixdrop(
   if (payload.kind === 'wasm') {
     await ensurewanixtaskroom(device, player)
     const path = normalizewanixpath(payload.label)
+    if (device && player) {
+      apilog(
+        device,
+        player,
+        `wanix: staging ${payload.label} (${payload.bytes.length} bytes)…`,
+      )
+    }
     await putwanixroomfile(path, payload.bytes)
+    const isfindplayers = payload.label.toLowerCase().includes('findplayers')
+    if (device && player) {
+      if (isfindplayers) {
+        apilog(
+          device,
+          player,
+          'findplayers: spawning — waits for zedcafe export, then scans books (often a few seconds)…',
+        )
+      } else {
+        apilog(device, player, `wanix: spawning task ${taskid}…`)
+      }
+    }
     await spawntaskinroom(taskid, path)
+    if (device && player && isfindplayers) {
+      apilog(
+        device,
+        player,
+        `findplayers: task ${taskid} running — attach via #wanix or check task term for JSON output`,
+      )
+    }
     return { taskid, cmd: path, spawns: [{ taskid, cmd: path }] }
   }
 
@@ -415,9 +464,9 @@ export async function startwanixvm(
     already?: boolean
   }
   if (device && player) {
+    apilog(device, player, 'zedcafe: finalizing export after vm boot…')
     primezedcafeexportshadow()
     await finalizewanixzedcafeaftervmboot(device, player)
-    runzedcafeexport(device, player)
     wanixdrainpendingzedcafeexport(device, player)
   }
   if (result.running) {

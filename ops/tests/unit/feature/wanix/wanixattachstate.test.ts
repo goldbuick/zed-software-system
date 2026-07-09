@@ -1,6 +1,7 @@
 import {
   cyclewanixattachedsession,
   detachwanixterm,
+  onwanixtermsessionopen,
   readattachedsession,
   readwanixactivesession,
   resetwanixattachforidle,
@@ -56,6 +57,27 @@ describe('wanixattachstate', () => {
     detachwanixterm()
     setwanixactivesession('task-b')
     expect(readattachedsession()).toBeNull()
+  })
+
+  it('open auto-attaches when not attached', () => {
+    onwanixtermsessionopen('task-a')
+    expect(readattachedsession()).toBe('task-a')
+    expect(readwanixactivesession()).toBe('task-a')
+  })
+
+  it('open auto-attaches after manual detach when a new session connects', () => {
+    onwanixtermsessionopen('task-a')
+    detachwanixterm()
+    onwanixtermsessionopen('task-b')
+    expect(readattachedsession()).toBe('task-b')
+    expect(readwanixactivesession()).toBe('task-b')
+  })
+
+  it('open does not steal focus when already attached', () => {
+    setattachedsession('task-a')
+    onwanixtermsessionopen('task-b')
+    expect(readattachedsession()).toBe('task-a')
+    expect(readwanixactivesession()).toBe('task-b')
   })
 
   it('allows auto-attach again after idle reset', () => {

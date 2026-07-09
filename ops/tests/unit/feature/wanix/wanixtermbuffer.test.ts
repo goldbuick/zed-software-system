@@ -3,6 +3,7 @@ import {
   clearwanixtermbuffers,
   readwanixtermbuffer,
   readwanixtermbufferkeys,
+  registerwanixtermsessionopen,
   removewanixtermbuffer,
   resetwanixtermbufferfortest,
 } from 'zss/feature/wanix/wanixtermbuffer'
@@ -62,6 +63,12 @@ describe('wanixtermbuffer', () => {
     applywanixtermread('task-b', readsnapshot('b'))
     clearwanixtermbuffers()
     expect(readwanixtermbufferkeys()).toEqual([])
+  })
+
+  it('lists open sessions before first term snapshot', () => {
+    registerwanixtermsessionopen('task-a')
+    expect(readwanixtermbufferkeys()).toEqual(['task-a'])
+    expect(readwanixtermbuffer('task-a')).toBeNull()
   })
 
   it('removes one session buffer', () => {
