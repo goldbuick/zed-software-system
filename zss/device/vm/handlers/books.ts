@@ -1,6 +1,6 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
-import { registerloginready, workstatus } from 'zss/device/api'
+import { registerloginready, registerwarmwanix, workstatus } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
 import { synczedcafeexportafterbooksload } from 'zss/feature/wanix/wanixstateexport'
 import { tracking } from 'zss/device/vm/state'
@@ -37,6 +37,7 @@ export function handlebooks(vm: DEVICE, message: MESSAGE): void {
       }
       memoryresetbooks(books)
       synczedcafeexportafterbooksload(vm, message.player)
+      registerwarmwanix(vm, message.player)
       registerloginready(vm, message.player)
     } finally {
       memorywritefrozen(false)

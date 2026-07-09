@@ -76,6 +76,22 @@ Zedcafe warms on **register ready** (sim + memory up), not on wasm drop or `#wan
 
 If zedcafe is not ready, spawn is blocked with a terminal error (the guest does not start).
 
+### Headed export validator
+
+With `cafe:dev` running:
+
+```bash
+# login path (requires books in storage — matches manual dev login)
+yarn task run cafe:playwright:headed --url https://localhost:7777/ \
+  tasks/lib/wanix/validate-zedcafe-vm-export.ts
+
+# deterministic fixture inject (empty storage / CI)
+ZEDCAFE_VALIDATE_FIXTURE=1 yarn task run cafe:playwright:headed --url https://localhost:7777/ \
+  tasks/lib/wanix/validate-zedcafe-vm-export.ts
+```
+
+Default login path waits for host export with `bookCount >= 1` after storage books load. Fixture mode injects `example-coolregionsbow.book.json` in-page. On failure, see `/tmp/wanix-zedcafe-export-report.json` and timestamped copies under `ops/fixtures/wanix/reports/`. Console lines tagged `[zedcafe-export]` trace push/sync/finalize decisions.
+
 ## Term bridge (`termbridge.wasm`)
 
 Guest prints a banner via WASI `fd_write` only (no stdin). Input and the `ping` → `pong` reply use the ZSS tile term bridge (`#task/…/term/data`), not WASI `fd_read(0)`.

@@ -12,12 +12,23 @@ import {
   callwanixrpcinpage,
   callwanixtermwriteinpage,
   collectexportconsoleerrors,
+  collectexporttrace,
   failzedcafegate,
+  importfixturebookinpage,
+  parsebookcountfromterm,
   polluntil,
+  readhostexportpaths,
+  readhostexportstats,
+  readlslistsbooksdir,
+  readmembookcountinpage,
   readplaywrightlogs,
   readtermbuffertext,
   sendwanixcli,
+  triggerzedcafeexportinpage,
   waitwanixrpcping,
+  warmwanixinpage,
+  writededcafefailurereport,
+  type ZedcafeStatsSnapshot,
   type ZedcafeTimelineEntry,
 } from 'tasks/lib/wanix/playwrightzedcafe'
 import { waitforregistersession } from 'tasks/lib/wanix/playwrightwaits'
@@ -26,6 +37,11 @@ import { WANIX_ZEDCAFE_EXPORT_READY_POLL_MS } from 'zss/feature/wanix/wanixzedca
 const VALIDATE_TIMEOUT_MS = PLAYWRIGHT_SCENARIO_TIMEOUT_MS
 const EXPORT_POLL_MS = WANIX_ZEDCAFE_EXPORT_READY_POLL_MS
 const EXPORT_BUDGET_MS = 90_000
+const FIXTURE_BOOK_PATH = path.join(
+  process.cwd(),
+  'ops/fixtures/books/example-coolregionsbow.book.json',
+)
+const USE_FIXTURE_BOOK = process.env.ZEDCAFE_VALIDATE_FIXTURE === '1'
 
 async function dropwanixwasm(
   page: import('@playwright/test').Page,
@@ -51,6 +67,36 @@ async function dropwanixwasm(
   )
 }
 
+function buildfailcontext(
+  timeline: ZedcafeTimelineEntry[],
+  taskrid: string | null,
+  rpc: Record<string, unknown>,
+  consolelines: string[],
+  pagelogs: string[],
+  termdump: string,
+  hoststats: ZedcafeStatsSnapshot | null,
+  gueststats: ZedcafeStatsSnapshot | null,
+  hostexportpaths: string[],
+  membookcount: number,
+) {
+  const { readdirerrors, walkbookserrors } =
+    collectexportconsoleerrors(consolelines)
+  return {
+    timeline,
+    taskrid,
+    rpc,
+    readdirerrors,
+    walkbookserrors,
+    termdump,
+    recentlogs: pagelogs.slice(-80),
+    hoststats,
+    gueststats,
+    hostexportpaths,
+    membookcount,
+    exporttrace: collectexporttrace(consolelines),
+  }
+}
+
 const validatezedcafevmexport: HeadedPlaywrightScript = async ({
   page,
   baseurl,
@@ -60,9 +106,41 @@ const validatezedcafevmexport: HeadedPlaywrightScript = async ({
   const timeline: ZedcafeTimelineEntry[] = []
   const consolelines: string[] = []
   const pagelogs: string[] = []
+  let taskrid: string | null = null
+  let hoststats: ZedcafeStatsSnapshot | null = null
+  let gueststats: ZedcafeStatsSnapshot | null = null
+  let hostexportpaths: string[] = []
+  let membookcount = 0
+  let termdump = ''
 
   const record = (label: string, extra?: Record<string, unknown>) => {
     timeline.push({ ms: Date.now() - start, label, extra })
+  }
+
+  const fail = (gate: string, rpc: Record<string, unknown> = {}): never => {
+    return failzedcafegate(
+      gate,
+      buildfailcontext(
+        timeline,
+        taskrid,
+        rpc,
+        consolelines,
+        pagelogs,
+        termdump,
+        hoststats,
+        gueststats,
+        hostexportpaths,
+        membookcount,
+      ),
+      root,
+    )
+  }
+
+  const failpoll = (gate: string, err: unknown, rpc: Record<string, unknown> = {}): never => {
+    return fail(gate, {
+      ...rpc,
+      pollerror: err instanceof Error ? err.message : String(err),
+    })
   }
 
   await page.addInitScript(() => {
@@ -88,25 +166,6 @@ const validatezedcafevmexport: HeadedPlaywrightScript = async ({
       wanixbooted = true
     }
   })
-
-  const fail = (
-    gate: string,
-    taskrid: string | null,
-    rpc: Record<string, unknown>,
-    termdump = '',
-  ): never => {
-    const { readdirerrors, walkbookserrors } =
-      collectexportconsoleerrors(consolelines)
-    return failzedcafegate(gate, {
-      timeline,
-      taskrid,
-      rpc,
-      readdirerrors,
-      walkbookserrors,
-      termdump,
-      recentlogs: pagelogs.slice(-80),
-    })
-  }
 
   await page.goto(baseurl, {
     waitUntil: 'load',
@@ -138,19 +197,70 @@ const validatezedcafevmexport: HeadedPlaywrightScript = async ({
   await waitwanixrpcping(page, VALIDATE_TIMEOUT_MS)
   record('wanix-rpc-ping')
 
+  if (USE_FIXTURE_BOOK) {
+    const bookjson = readFileSync(FIXTURE_BOOK_PATH, 'utf8')
+    membookcount = await importfixturebookinpage(page, root, bookjson)
+    record('fixture-book-loaded', { membookcount, mode: 'fixture' })
+    if (membookcount < 1) {
+      fail('fixture-book-loaded', { membookcount })
+    }
+    await warmwanixinpage(page, root)
+    record('fixture-wanix-warm')
+    await triggerzedcafeexportinpage(page, root)
+    record('fixture-export-triggered')
+  } else {
+    const exportready = await polluntil(
+      'login-books-loaded',
+      EXPORT_BUDGET_MS,
+      EXPORT_POLL_MS,
+      async () => {
+        const rid = await callwanixrpcinpage<string | null>(
+          page,
+          'readzedcafetaskrid',
+          [],
+          10_000,
+        )
+        if (!rid) {
+          return { ready: false, taskrid: null as string | null, bookcount: 0 }
+        }
+        const stats = await readhostexportstats(page, rid)
+        return {
+          ready: (stats?.bookCount ?? 0) >= 1,
+          taskrid: rid,
+          bookcount: stats?.bookCount ?? 0,
+        }
+      },
+      (snap) => snap.ready === true,
+    )
+    membookcount = exportready.bookcount
+    taskrid = exportready.taskrid
+    record('login-books-loaded', { membookcount, mode: 'login', taskrid })
+    if (membookcount < 1) {
+      fail('login-books-loaded', {
+        membookcount,
+        hint: 'storage has no books or export did not push after login — import content or run with ZEDCAFE_VALIDATE_FIXTURE=1',
+      })
+    }
+  }
+
   const exportlive = await polluntil(
-    'task-export-live',
+    'host-export-books',
     EXPORT_BUDGET_MS,
     EXPORT_POLL_MS,
     async () => {
-      const taskrid = await callwanixrpcinpage<string | null>(
+      taskrid = await callwanixrpcinpage<string | null>(
         page,
         'readzedcafetaskrid',
         [],
         10_000,
       )
       if (!taskrid) {
-        return { taskrid: null as string | null, live: false }
+        return {
+          taskrid: null as string | null,
+          live: false,
+          hoststats: null as ZedcafeStatsSnapshot | null,
+          hasbooks: false,
+        }
       }
       const live = await callwanixrpcinpage<boolean>(
         page,
@@ -158,16 +268,31 @@ const validatezedcafevmexport: HeadedPlaywrightScript = async ({
         [taskrid],
         10_000,
       )
-      return { taskrid, live: !!live }
+      hoststats = await readhostexportstats(page, taskrid)
+      const booksdir = await callwanixrpcinpage<string[]>(
+        page,
+        'listdir',
+        [`#task/${taskrid}/export/books`],
+        10_000,
+      ).catch(() => [])
+      const hasbooks =
+        Array.isArray(booksdir) &&
+        booksdir.length > 0 &&
+        (hoststats?.bookCount ?? 0) >= 1
+      return { taskrid, live: !!live, hoststats, hasbooks }
     },
-    (snap) => snap.live === true && !!snap.taskrid,
+    (snap) => snap.live === true && snap.hasbooks === true && !!snap.taskrid,
   )
-  record('task-export-live', exportlive)
+  record('host-export-books', exportlive)
 
-  const taskrid = exportlive.taskrid
-  if (!taskrid || !exportlive.live) {
-    fail('export-live', taskrid, { exportlive })
+  taskrid = exportlive.taskrid
+  hoststats = exportlive.hoststats
+  hostexportpaths = await readhostexportpaths(page)
+  if (!taskrid || !exportlive.hasbooks || (hoststats?.bookCount ?? 0) < 1) {
+    fail('host-export-books', { exportlive, hostexportpaths })
   }
+
+  record('task-export-live', { taskrid, hoststats })
 
   const postliveconsolestart = consolelines.length
 
@@ -181,13 +306,13 @@ const validatezedcafevmexport: HeadedPlaywrightScript = async ({
     consolelines.slice(postliveconsolestart),
   )
   if (readdirprobe.readdirerrors.length > 0) {
-    fail('export-readdir', taskrid, { exportdir, ...readdirprobe })
+    fail('export-readdir', { exportdir, ...readdirprobe })
   }
   if (
     !Array.isArray(exportdir) ||
     !exportdir.some((entry) => entry.replace(/\/$/, '') === 'stats.json')
   ) {
-    fail('export-stats', taskrid, { exportdir })
+    fail('export-stats', { exportdir })
   }
   record('task-export-stats', { exportdir })
 
@@ -208,7 +333,7 @@ const validatezedcafevmexport: HeadedPlaywrightScript = async ({
 
   if (!vmstatus?.vrid) {
     const logs = await readplaywrightlogs(page)
-    fail('wanix-vm-started', taskrid, { vmstatus, logs })
+    fail('wanix-vm-started', { vmstatus, logs })
   }
 
   let guestbound = false
@@ -224,22 +349,17 @@ const validatezedcafevmexport: HeadedPlaywrightScript = async ({
     const live = rid
       ? await callwanixrpcinpage<boolean>(
           page,
-          'iszedcafeexportlive',
-          [rid],
+          'iszedcafeguestbound',
+          [],
           10_000,
         )
       : false
-    guestbound = await callwanixrpcinpage<boolean>(
-      page,
-      'iszedcafeguestbound',
-      [],
-      10_000,
-    )
-    lastdiag = { guestbound, rid, live, vmstatus }
+    guestbound = live
+    lastdiag = { guestbound, rid, vmstatus, hoststats }
     if (guestbound) {
       break
     }
-    if (rid && live) {
+    if (rid) {
       await callwanixrpcinpage<{ ok: boolean; count?: number }>(
         page,
         'wirezedcafeexport',
@@ -252,7 +372,7 @@ const validatezedcafevmexport: HeadedPlaywrightScript = async ({
   record('vm-guest-bound', lastdiag)
 
   if (!guestbound) {
-    fail('guestbound', taskrid, lastdiag)
+    fail('guestbound', lastdiag)
   }
 
   await sendwanixcli(page, root, `#wanix attach ${WANIX_ZEDCAFE_VM_SESSION}`)
@@ -270,11 +390,33 @@ const validatezedcafevmexport: HeadedPlaywrightScript = async ({
   await callwanixtermwriteinpage(
     page,
     root,
+    'zedcafe-ready\n',
+    WANIX_ZEDCAFE_VM_SESSION,
+  )
+
+  const readytext = await polluntil(
+    'vm-term-zedcafe-ready',
+    EXPORT_BUDGET_MS,
+    EXPORT_POLL_MS,
+    async () => {
+      termdump = await readtermbuffertext(page, root, WANIX_ZEDCAFE_VM_SESSION)
+      return termdump
+    },
+    (text) => /ready:\s*\/zedcafe/.test(text),
+  )
+  record('vm-term-zedcafe-ready')
+
+  if (!/ready:\s*\/zedcafe/.test(readytext)) {
+    fail('vm-term-zedcafe-ready', { readytext: readytext.slice(-500) })
+  }
+
+  await callwanixtermwriteinpage(
+    page,
+    root,
     'zedcafe-stats\n',
     WANIX_ZEDCAFE_VM_SESSION,
   )
 
-  let termdump = ''
   const statstext = await polluntil(
     'vm-term-zedcafe-stats',
     EXPORT_BUDGET_MS,
@@ -283,32 +425,77 @@ const validatezedcafevmexport: HeadedPlaywrightScript = async ({
       termdump = await readtermbuffertext(page, root, WANIX_ZEDCAFE_VM_SESSION)
       return termdump
     },
-    (text) => /bookCount|"exportedAt"/.test(text),
+    (text) => /"bookCount"\s*:\s*\d+/.test(text),
   )
   record('vm-term-zedcafe-stats')
 
-  if (!/bookCount|"exportedAt"/.test(statstext)) {
-    fail('vm-term-zedcafe', taskrid, { statstext: statstext.slice(-500) }, termdump)
+  const guestbookcount = parsebookcountfromterm(statstext)
+  gueststats =
+    guestbookcount !== null && hoststats
+      ? {
+          bookCount: guestbookcount,
+          exportedAt: hoststats.exportedAt,
+          bytes: hoststats.bytes,
+        }
+      : null
+
+  if (guestbookcount === null || guestbookcount < 1) {
+    fail('vm-stats-bookcount', {
+      guestbookcount,
+      hoststats,
+      statstext: statstext.slice(-800),
+    })
+  }
+  if (hoststats && guestbookcount !== hoststats.bookCount) {
+    fail('host-guest-parity', { guestbookcount, hoststats })
   }
 
   await callwanixtermwriteinpage(
     page,
     root,
-    'ls /zedcafe\n',
+    'ls -la /zedcafe\n',
     WANIX_ZEDCAFE_VM_SESSION,
   )
 
-  termdump = await polluntil(
-    'vm-term-ls-zedcafe',
+  try {
+    termdump = await polluntil(
+      'vm-term-ls-zedcafe',
+      EXPORT_BUDGET_MS,
+      EXPORT_POLL_MS,
+      async () => readtermbuffertext(page, root, WANIX_ZEDCAFE_VM_SESSION),
+      (text) => /stats\.json/.test(text) && readlslistsbooksdir(text),
+    )
+  } catch (err) {
+    termdump = await readtermbuffertext(page, root, WANIX_ZEDCAFE_VM_SESSION)
+    failpoll('vm-term-ls-zedcafe', err, { termdump: termdump.slice(-1200) })
+  }
+  record('vm-term-ls-zedcafe')
+
+  if (!/stats\.json/.test(termdump) || !readlslistsbooksdir(termdump)) {
+    fail('vm-term-ls-zedcafe', {
+      statstext: statstext.slice(-500),
+      termdump: termdump.slice(-800),
+    })
+  }
+
+  await callwanixtermwriteinpage(
+    page,
+    root,
+    'find /zedcafe/books -name stats.json 2>/dev/null | head -n 3\n',
+    WANIX_ZEDCAFE_VM_SESSION,
+  )
+
+  const findtext = await polluntil(
+    'vm-books-tree',
     EXPORT_BUDGET_MS,
     EXPORT_POLL_MS,
     async () => readtermbuffertext(page, root, WANIX_ZEDCAFE_VM_SESSION),
-    (text) => /stats\.json/.test(text) && /books/.test(text),
+    (text) => /\/zedcafe\/books\/.+\/stats\.json/.test(text),
   )
-  record('vm-term-ls-zedcafe')
+  record('vm-books-tree')
 
-  if (!/stats\.json/.test(termdump) || !/books/.test(termdump)) {
-    fail('vm-term-ls-zedcafe', taskrid, { statstext: statstext.slice(-500) }, termdump)
+  if (!/\/zedcafe\/books\/.+\/stats\.json/.test(findtext)) {
+    fail('vm-books-tree', { findtext: findtext.slice(-800) })
   }
 
   const fixturepath = path.join(WANIX_PUBLIC_FIXTURES_DIR, 'findplayers.wasm')
@@ -328,10 +515,33 @@ const validatezedcafevmexport: HeadedPlaywrightScript = async ({
 
   const walkprobe = collectexportconsoleerrors(consolelines)
   if (walkprobe.walkbookserrors.length > 0) {
-    fail('findplayers-walk', taskrid, { walkprobe }, termdump)
+    fail('findplayers-walk', { walkprobe })
   }
 
-  record('pass')
+  record('pass', {
+    hoststats,
+    gueststats,
+    membookcount,
+    exporttrace: collectexporttrace(consolelines).slice(-20),
+  })
+  writededcafefailurereport(
+    {
+      failedgate: 'pass',
+      timeline,
+      taskrid,
+      rpc: { ok: true },
+      readdirerrors: [],
+      walkbookserrors: [],
+      termdump: termdump.slice(-500),
+      recentlogs: pagelogs.slice(-20),
+      hoststats,
+      gueststats,
+      hostexportpaths,
+      membookcount,
+      exporttrace: collectexporttrace(consolelines).slice(-20),
+    },
+    root,
+  )
 }
 
 export default validatezedcafevmexport

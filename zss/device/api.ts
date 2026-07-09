@@ -346,6 +346,10 @@ export function registerloginready(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:loginready', true)
 }
 
+export function registerwarmwanix(device: DEVICELIKE, player: string) {
+  device.emit(player, 'register:wanixwarm')
+}
+
 export function registersavemem(
   device: DEVICELIKE,
   player: string,

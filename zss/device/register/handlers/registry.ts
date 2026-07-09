@@ -37,6 +37,7 @@ import {
 } from './memory'
 import { handleready } from './ready'
 import { handlesecond } from './second'
+import { handlewanixwarm } from './wanixwarm'
 import { handletoken } from './storage'
 import { handlechat, handlelog, handletoast, handleworkstatus } from './tape'
 import {
@@ -55,6 +56,7 @@ export const registerhandlers: Record<string, REGISTER_HANDLER> = {
   sessionreset: handlesessionreset,
   ackoperator: handleackoperator,
   loginready: handleloginready,
+  wanixwarm: handlewanixwarm,
   acklogin: handleacklogin,
   ackzsswords: handleackzsswords,
   bookmarkscroll: handlebookmarkscroll,

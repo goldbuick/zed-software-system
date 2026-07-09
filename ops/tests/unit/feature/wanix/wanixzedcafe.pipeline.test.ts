@@ -97,6 +97,56 @@ describe('ensurezedcafeexportready pipeline', () => {
       'readzedcafetaskrid',
       'synczedcafe',
       'waitzedcafemount',
+    ])
+  })
+
+  it('runs full push pipeline when export is not live and books exist', async () => {
+    const order: string[] = []
+    const bookfiles = [
+      {
+        path: 'stats.json',
+        bytes: new TextEncoder().encode(
+          '{"exportedAt":"t","bookCount":1,"books":[]}\n',
+        ),
+      },
+      {
+        path: 'books/demo-sid_book/stats.json',
+        bytes: new TextEncoder().encode('{"exportedAt":"t","bookCount":1}\n'),
+      },
+    ]
+    mockrpc.mockImplementation(async (method: string) => {
+      order.push(method)
+      switch (method) {
+        case 'readzedcafetaskrid':
+          return null
+        case 'iszedcafeexportlive':
+          return false
+        case 'synczedcafe':
+          return { ok: true }
+        case 'waitzedcafemount':
+          return '7'
+        case 'pushzedcafeexport':
+          return { ok: true }
+        case 'waitzedcafecontentready':
+          return true
+        case 'finalizezedcafeexport':
+          return { ok: true }
+        case 'setzedcafeready':
+          return { ok: true }
+        case 'readzedcafeexportfiles':
+          return [{ path: 'stats.json', data: [...bookfiles[0].bytes] }]
+        default:
+          return null
+      }
+    })
+
+    const taskrid = await ensurezedcafeexportready(device, player, bookfiles)
+
+    expect(taskrid).toBe('7')
+    expect(order).toEqual([
+      'readzedcafetaskrid',
+      'synczedcafe',
+      'waitzedcafemount',
       'pushzedcafeexport',
       'waitzedcafecontentready',
       'finalizezedcafeexport',

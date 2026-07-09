@@ -170,10 +170,7 @@ export async function readzedcafeexportlive(
   return readzedcafeexportstatsready(root, exportsrc)
 }
 
-export async function readzedcafeguestbound(
-  root: WanixRoot,
-  sys?: WanixSystemElement | null,
-): Promise<boolean> {
+async function readzedcafeguestboundatroot(root: WanixRoot): Promise<boolean> {
   const statspath = readwanixzedcafeguestpath('stats.json')
   try {
     const raw = await root.readFile(statspath)
@@ -181,27 +178,36 @@ export async function readzedcafeguestbound(
       raw instanceof Uint8Array
         ? raw
         : new TextEncoder().encode(String(raw))
-    if (readzedcafeexportstatscontentready(bytes)) {
-      return true
+    if (!readzedcafeexportstatscontentready(bytes)) {
+      return false
     }
-  } catch {
-    // fall through
-  }
-  const vm = sys?.querySelector('wanix-vm') as WanixVmWithTask | null
-  const vmtask = vm?.task
-  if (vmtask?.root) {
     try {
-      const raw = await vmtask.root.readFile(statspath)
-      const bytes =
-        raw instanceof Uint8Array
-          ? raw
-          : new TextEncoder().encode(String(raw))
-      return readzedcafeexportstatscontentready(bytes)
+      const parsed = JSON.parse(new TextDecoder().decode(bytes)) as {
+        bookCount?: unknown
+      }
+      if (typeof parsed.bookCount === 'number' && parsed.bookCount > 0) {
+        const entries = await root.readDir(WANIX_ZEDCAFE_GUEST_MOUNT)
+        return entries.some((entry) => entry.replace(/\/$/, '') === 'books')
+      }
     } catch {
       return false
     }
+    return true
+  } catch {
+    return false
   }
-  return false
+}
+
+export async function readzedcafeguestbound(
+  root: WanixRoot,
+  sys?: WanixSystemElement | null,
+): Promise<boolean> {
+  const vm = sys?.querySelector('wanix-vm') as WanixVmWithTask | null
+  const vmtask = vm?.task
+  if (vmtask?.root) {
+    return readzedcafeguestboundatroot(vmtask.root)
+  }
+  return readzedcafeguestboundatroot(root)
 }
 
 async function readzedcafeexportmountready(
@@ -411,6 +417,9 @@ export async function pushzedcafeexportlive(
       (entry) => entry.replace(/\/$/, '') === 'books',
     )
     if (!hasbooks) {
+      console.error(
+        `[zedcafe-export] push verify failed: bookCount=${bookcount} but books/ missing after push (${sorted.length} files)`,
+      )
       throw new Error(
         `zedcafe export incomplete: bookCount=${bookcount} but books/ missing after push (${sorted.length} files)`,
       )
