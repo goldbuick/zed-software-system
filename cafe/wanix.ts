@@ -5,6 +5,7 @@ import type {
 } from 'zss/feature/wanix/wanixelements.d.ts'
 import { wanixperfmark } from 'zss/feature/wanix/wanixperf'
 import type { WanixRoomConfig } from 'zss/feature/wanix/wanixroomtypes'
+import type { WanixBindDropPayload } from 'zss/feature/wanix/wanixroomtypes'
 import {
   WANIX_LINUX_ARCHIVE_URL,
   WANIX_V86_ARCHIVE_URL,
@@ -34,8 +35,10 @@ import {
   wanixtermgridwritebytes,
 } from 'zss/feature/wanix/wanixtermgridstate'
 import {
+  WANIX_INPUT_MOUNT,
   WANIX_ZEDCAFE_EXPORT_READY_POLL_MS,
   WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS,
+  WANIX_ZEDCAFE_GUEST_MOUNT,
   WANIX_ZEDCAFE_TASK_ID,
   readwanixzedcafeexportsrc,
 } from 'zss/feature/wanix/wanixzedcafeconstants'
@@ -143,6 +146,7 @@ const parentrpcwaiters = new Map<
   number,
   { resolve: (value: unknown) => void; reject: (error: Error) => void }
 >()
+const vmpendingdropbinds: WanixBindDropPayload[] = []
 
 function callparentrpc<T>(
   method: string,
@@ -378,6 +382,123 @@ function createbind(attrs: Record<string, unknown>, markerattr?: string) {
   return bind
 }
 
+function revokedropbindbloburls(root: ParentNode) {
+  root.querySelectorAll('wanix-bind[data-zss-drop-bind]').forEach((el) => {
+    const url = el.getAttribute('data-zss-drop-blob-url')
+    if (url?.startsWith('blob:')) {
+      URL.revokeObjectURL(url)
+    }
+    el.remove()
+  })
+}
+
+function removedropbindwithdst(root: ParentNode, dst: string) {
+  root.querySelectorAll('wanix-bind[data-zss-drop-bind]').forEach((el) => {
+    if (el.getAttribute('dst') !== dst) {
+      return
+    }
+    const url = el.getAttribute('data-zss-drop-blob-url')
+    if (url?.startsWith('blob:')) {
+      URL.revokeObjectURL(url)
+    }
+    el.remove()
+  })
+}
+
+function appenddropbind(parent: ParentNode, spec: WanixBindDropPayload) {
+  removedropbindwithdst(parent, spec.dst)
+  const bloburl = URL.createObjectURL(new Blob([Uint8Array.from(spec.bytes)]))
+  const bind = createbind(
+    {
+      type: spec.kind,
+      dst: spec.dst,
+      src: bloburl,
+      perm: spec.perm,
+    },
+    'data-zss-drop-bind',
+  )
+  bind.setAttribute('data-zss-drop-blob-url', bloburl)
+  parent.appendChild(bind)
+}
+
+function isvmstarted(vm: HTMLElement): boolean {
+  return vm.hasAttribute('start')
+}
+
+function flushvmpendingdropbinds(vm: HTMLElement) {
+  if (!vmpendingdropbinds.length) {
+    return
+  }
+  const pending = [...vmpendingdropbinds]
+  vmpendingdropbinds.length = 0
+  for (let i = 0; i < pending.length; ++i) {
+    appenddropbind(vm, pending[i])
+  }
+}
+
+function binddroptask(sessionkey: string, spec: WanixBindDropPayload) {
+  if (!system?.isReady) {
+    throw new Error('wanix room not ready')
+  }
+  const task = system.querySelector(`wanix-task[id="${sessionkey}"]`)
+  if (!task) {
+    throw new Error(`wanix task missing: ${sessionkey}`)
+  }
+  appenddropbind(task, spec)
+  return {
+    ok: true,
+    sessionkey,
+    kind: 'task' as const,
+    dst: spec.dst,
+  }
+}
+
+function binddropvm(sessionkey: string, spec: WanixBindDropPayload) {
+  if (!system?.isReady) {
+    throw new Error('wanix room not ready')
+  }
+  const vm = system.querySelector('wanix-vm')
+  if (!vm) {
+    throw new Error(`wanix vm missing: ${sessionkey}`)
+  }
+  if (!isvmstarted(vm)) {
+    removedropbindwithdst(vm, spec.dst)
+    const index = vmpendingdropbinds.findIndex(
+      (entry) => entry.dst === spec.dst,
+    )
+    if (index >= 0) {
+      vmpendingdropbinds.splice(index, 1, spec)
+    } else {
+      vmpendingdropbinds.push(spec)
+    }
+    return {
+      ok: true,
+      sessionkey,
+      kind: 'vm' as const,
+      dst: spec.dst,
+      staged: true,
+    }
+  }
+  appenddropbind(vm, spec)
+  return {
+    ok: true,
+    sessionkey,
+    kind: 'vm' as const,
+    dst: spec.dst,
+  }
+}
+
+function binddrop(sessionkey: string, spec: WanixBindDropPayload) {
+  if (!spec.dst.startsWith(`${WANIX_INPUT_MOUNT}/`)) {
+    throw new Error(`wanix bind dst must be under ${WANIX_INPUT_MOUNT}/`)
+  }
+  const sessionkind = readsessionsessionkind(sessionkey)
+  if (sessionkind === 'vm') {
+    return binddropvm(sessionkey, spec)
+  }
+  return binddroptask(sessionkey, spec)
+}
+
 function readroot() {
   if (!system?.isReady) {
     throw new Error('wanix-system not ready')
@@ -517,6 +638,18 @@ function disconnecttermsession(
   session.disconnect()
   termsessions.delete(sessionkey)
   termlinebufs.delete(sessionkey)
+  if (readsessionsessionkind(sessionkey) === 'task') {
+    const task = system?.querySelector(`wanix-task[id="${sessionkey}"]`)
+    if (task) {
+      revokedropbindbloburls(task)
+    }
+  } else if (readsessionsessionkind(sessionkey) === 'vm') {
+    vmpendingdropbinds.length = 0
+    const vm = system?.querySelector('wanix-vm')
+    if (vm) {
+      revokedropbindbloburls(vm)
+    }
+  }
   if (opts?.notifyclose && wasalive) {
     notifytermsessionclose(sessionkey)
   } else {
@@ -881,6 +1014,7 @@ async function applyroom(config: WanixRoomConfig) {
       haltzedcafetask(system)
     }
     disconnectalltermsessions()
+    vmpendingdropbinds.length = 0
     host.replaceChildren()
     system = null
     lastmountkey = roomconfig.mountkey
@@ -930,6 +1064,7 @@ async function applyroom(config: WanixRoomConfig) {
       if (typeof vmel.start === 'function') {
         await vmel.start()
       }
+      flushvmpendingdropbinds(vmel)
     }
     const vrid = vmel
       ? await waitforvmrid(vmel, Date.now() + VM_RID_WAIT_MS)
@@ -1216,6 +1351,14 @@ async function handlerrpc(
         const [path, bytes] = args as [string, number[]?]
         await readroot().writeFile(String(path), new Uint8Array(bytes ?? []))
         result = { ok: true }
+        break
+      }
+      case 'binddrop': {
+        const [sessionkey, spec] = args as [string, WanixBindDropPayload?]
+        if (!spec || typeof sessionkey !== 'string') {
+          throw new Error('wanix binddrop args invalid')
+        }
+        result = binddrop(sessionkey, spec)
         break
       }
       case 'termwrite': {

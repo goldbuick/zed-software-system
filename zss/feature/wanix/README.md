@@ -103,6 +103,15 @@ Three modes in [`wanixroomtypes.ts`](wanixroomtypes.ts):
 | `task` | Task room only | WASI/gojs tasks + zedcafe daemon |
 | `vm` | Linux VM (+ optional tasks) | v86 Linux + zedcafe bind at `/zedcafe/` |
 
+### Bind-on-drop (`input/`)
+
+While **attached** to a Wanix term session, file drops bind under **`input/<name>`**
+(task: `./input/…`, VM guest: `/input/…`) instead of spawning tasks or hitting
+book/image parsers. User-written processors (WASI tasks or VM guest scripts) read
+`input/` and write zedcafe export paths under `zedcafe/…` so the host import poll
+can sync boards and terrain. See `ops/fixtures/wanix/README.md` for
+`input2terrain.wasm` and `png2terrain.sh` examples.
+
 ```mermaid
 stateDiagram-v2
   [*] --> idle

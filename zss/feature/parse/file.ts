@@ -14,6 +14,7 @@ import {
   iswanixdropfilename,
   iswanixgzipmagic,
 } from 'zss/feature/wanix/wanixdropparse'
+import { routewanixattachedfiledrop } from 'zss/feature/wanix/wanixbinddrop'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
@@ -496,24 +497,42 @@ export function parsewebfile(player: string, file: File | undefined) {
   if (!ispresent(file)) {
     return
   }
-  if (iswanixdropfilename(file.name)) {
-    emitwanixdropfileroute(player, file)
-    return
-  }
-  const type = file.type ?? ''
-  if (type === 'application/gzip' || type === 'application/x-gzip') {
-    void file
-      .slice(0, 2)
-      .arrayBuffer()
-      .then((buffer) => {
-        if (iswanixgzipmagic(new Uint8Array(buffer))) {
-          emitwanixdropfileroute(player, file)
-          return
-        }
-        handlefiletype(player, type, file)
-      })
-      .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
-    return
-  }
-  handlefiletype(player, type, file)
+  void routewanixattachedfiledrop(SOFTWARE, player, file)
+    .then((route) => {
+      if (route === 'bind') {
+        return
+      }
+      if (route === 'gzip-probe') {
+        handlefiletype(player, file.type ?? '', file)
+        return
+      }
+      if (iswanixdropfilename(file.name)) {
+        emitwanixdropfileroute(player, file)
+        return
+      }
+      const type = file.type ?? ''
+      if (type === 'application/gzip' || type === 'application/x-gzip') {
+        void file
+          .slice(0, 2)
+          .arrayBuffer()
+          .then((buffer) => {
+            if (iswanixgzipmagic(new Uint8Array(buffer))) {
+              emitwanixdropfileroute(player, file)
+              return
+            }
+            handlefiletype(player, type, file)
+          })
+          .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
+        return
+      }
+      handlefiletype(player, type, file)
+    })
+    .catch((err) =>
+      apierror(
+        SOFTWARE,
+        player,
+        'crash',
+        err instanceof Error ? err.message : String(err),
+      ),
+    )
 }

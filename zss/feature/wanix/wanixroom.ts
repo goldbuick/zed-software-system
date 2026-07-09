@@ -19,6 +19,7 @@ import { uniquewanixtaskid } from 'zss/feature/wanix/wanixcmd'
 import type { WanixTaskDriver } from 'zss/feature/wanix/wanixelements.d.ts'
 import { wanixperfmark, wanixperfreset } from 'zss/feature/wanix/wanixperf'
 import type {
+  WanixBindDropPayload,
   WanixDropPayload,
   WanixMenuState,
   WanixMenuVmStatus,
@@ -217,6 +218,20 @@ export async function putwanixroomfile(
 ): Promise<void> {
   await waitwanixready()
   await callwanixrpc('writefile', [path, Array.from(bytes)])
+}
+
+export async function handlewanixbinddrop(
+  payload: WanixBindDropPayload,
+  sessionkey: string,
+): Promise<{ ok: boolean; sessionkey: string; kind: 'task' | 'vm'; dst: string }> {
+  await waitwanixready()
+  const result = await callwanixrpc<{
+    ok: boolean
+    sessionkey: string
+    kind: 'task' | 'vm'
+    dst: string
+  }>('binddrop', [sessionkey, payload])
+  return result
 }
 
 function withwanixtimeout<T>(

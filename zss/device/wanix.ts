@@ -4,19 +4,24 @@ import { doasync } from 'zss/device/doasync'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import {
   detachwanixterm,
+  readattachedsession,
   readwanixactivesession,
   setattachedsession,
 } from 'zss/feature/wanix/wanixattachstate'
 import { showwanixmenu } from 'zss/feature/wanix/wanixmenu'
 import {
   halttaskinroom,
+  handlewanixbinddrop,
   handlewanixdrop,
   readwanixroomconfig,
   startwanixvm,
   stopwanixroom,
   stopwanixvm,
 } from 'zss/feature/wanix/wanixroom'
-import type { WanixDropPayload } from 'zss/feature/wanix/wanixroomtypes'
+import type {
+  WanixBindDropPayload,
+  WanixDropPayload,
+} from 'zss/feature/wanix/wanixroomtypes'
 import {
   DEFAULT_WANIX_VM_ID,
   DEFAULT_WANIX_VM_MEM,
@@ -69,6 +74,41 @@ function readwanixdroppayload(data: unknown): {
       label: raw.label,
       kind: raw.kind,
       bytes,
+    },
+  }
+}
+
+function readwanixbinddroppayload(data: unknown): {
+  payload?: WanixBindDropPayload
+  reject?: string
+} {
+  if (!ispresent(data) || typeof data !== 'object') {
+    return { reject: 'bind-drop payload missing' }
+  }
+  const raw = data as WanixBindDropPayload
+  if (!isstring(raw.label) || !raw.label.trim()) {
+    return { reject: 'bind-drop label missing' }
+  }
+  if (raw.kind !== 'file' && raw.kind !== 'archive') {
+    return { reject: `bind-drop kind invalid: ${String(raw.kind)}` }
+  }
+  if (!isstring(raw.dst) || !raw.dst.trim()) {
+    return { reject: 'bind-drop dst missing' }
+  }
+  if (!isstring(raw.perm) || !raw.perm.trim()) {
+    return { reject: 'bind-drop perm missing' }
+  }
+  const bytes = normalizewanixdropbytes(raw.bytes)
+  if (!bytes) {
+    return { reject: 'bind-drop bytes invalid' }
+  }
+  return {
+    payload: {
+      label: raw.label,
+      kind: raw.kind,
+      bytes,
+      dst: raw.dst.trim(),
+      perm: raw.perm.trim(),
     },
   }
 }
@@ -177,6 +217,46 @@ const wanix = createdevice('wanix', [], (message) => {
               `wanix bundle ${result.taskid} has no .wasm entries`,
             )
           }
+        } catch (err) {
+          apierror(
+            wanix,
+            message.player,
+            'wanix',
+            err instanceof Error ? err.message : String(err),
+          )
+        }
+      })
+      break
+    }
+    case 'bind-drop': {
+      const parsed = readwanixbinddroppayload(message.data)
+      if (!parsed.payload) {
+        apierror(
+          wanix,
+          message.player,
+          'wanix',
+          parsed.reject ?? 'bind-drop payload rejected',
+        )
+        break
+      }
+      const sessionkey = readattachedsession()
+      if (!sessionkey) {
+        apilog(wanix, message.player, 'wanix bind failed: no attached session')
+        break
+      }
+      if (readwanixroomconfig().mode === 'idle') {
+        apilog(wanix, message.player, 'wanix bind failed: room idle')
+        break
+      }
+      const payload = parsed.payload
+      doasync(wanix, message.player, async () => {
+        try {
+          const result = await handlewanixbinddrop(payload, sessionkey)
+          apilog(
+            wanix,
+            message.player,
+            `wanix bind ${payload.label} → ${result.sessionkey} at ${result.dst}`,
+          )
         } catch (err) {
           apierror(
             wanix,

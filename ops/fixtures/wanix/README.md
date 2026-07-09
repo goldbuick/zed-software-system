@@ -54,6 +54,31 @@ Sources for per-lang hellos live in `hello/` (see `hello/manifest.json`). WAT so
 | `bundle-two.tgz` | Two `.wasm` files (`alpha.wasm`, `beta.wasm`) — spawns both tasks |
 | `bundle-empty.tgz` | No `.wasm` — expect `wanix bundle … has no .wasm entries` warning |
 | `termbridge.wasm` | Term bridge smoke — banner on stdout, stays running; type `ping` + Enter → `-> pong` on the tile |
+| `input2terrain.wasm` | Task bind-on-drop example — reads `input/stamp.png`, writes `zedcafe/…/board/terrain.json` |
+| `png2terrain.sh` | VM bind-on-drop example — same pipeline from Linux guest (`sh input/png2terrain.sh`) |
+| `stamp.png` | Shared 1×1 PNG input for pipeline examples |
+
+## Bind-on-drop pipeline (`input/`)
+
+While **attached** to a Wanix term session, file drops bind under **`input/<name>`** (not spawn tasks). Processors read `input/` and write zedcafe export paths under `zedcafe/…` so the host import poll can sync boards/terrain.
+
+**Prerequisite:** a book with a board page loaded so `zedcafe/…/board/terrain.json` exists in the export tree.
+
+### Task example (`input2terrain.wasm`)
+
+1. Drop `input2terrain.wasm` (idle) → task spawns.
+2. `#wanix attach <task-id>`.
+3. Drop `stamp.png` → binds to `input/stamp.png`.
+4. Run `input2terrain.wasm` in the attached terminal.
+5. Expect apilog: `zedcafe import: synced …`.
+
+### VM example (`png2terrain.sh`)
+
+1. `#wanix vm` → attach to `linux-vm`.
+2. Drop `png2terrain.sh` → `input/png2terrain.sh` (executable).
+3. Drop `stamp.png` → `input/stamp.png`.
+4. In VM terminal: `sh input/png2terrain.sh`.
+5. Expect apilog: `zedcafe import: synced …`.
 
 ## GoJS zedcafe tools
 
