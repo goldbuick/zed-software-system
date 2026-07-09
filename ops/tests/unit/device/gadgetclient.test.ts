@@ -1,5 +1,6 @@
-jest.mock('zss/device/register', () => ({
+jest.mock('zss/device/registerplayer', () => ({
   registerreadplayer: jest.fn(() => 'p1'),
+  registerwriteplayer: jest.fn(),
 }))
 
 jest.mock('zss/gadget/fx/crtanim', () => ({

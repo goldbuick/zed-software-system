@@ -2,7 +2,6 @@ jest.mock('zss/device/api', () => ({
   apierror: jest.fn(),
   ttsinfo: jest.fn(),
   ttsrequest: jest.fn(),
-  registerstore: jest.fn(),
   synthaudiobuffer: jest.fn(),
 }))
 
@@ -31,7 +30,7 @@ jest.mock('zss/device', () => ({
 }))
 
 import { synthaudiobuffer, ttsrequest } from 'zss/device/api'
-import { ttsqueue, ttsclearqueue } from 'zss/feature/tts'
+import { ttsqueue, ttsclearqueue } from 'zss/feature/tts/client'
 
 describe('tts worker waiter', () => {
   beforeEach(() => {

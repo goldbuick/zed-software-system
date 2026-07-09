@@ -1,12 +1,12 @@
 import { apierror } from 'zss/device/api'
-import { doasync } from 'zss/mapping/func'
+import { doasync } from 'zss/device/doasync'
 
 // Mock the apierror function
 jest.mock('zss/device/api', () => ({
   apierror: jest.fn(),
 }))
 
-describe('func', () => {
+describe('doasync', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     jest.spyOn(console, 'error').mockImplementation(() => {})

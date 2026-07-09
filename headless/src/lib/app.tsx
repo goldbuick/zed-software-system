@@ -179,7 +179,7 @@ export async function runApp(flags: RunAppFlags): Promise<void> {
     addLog(`Using Vite dev server at ${baseUrl}`)
   } else {
     if (!fs.existsSync(distDir)) {
-      console.error('cafe/dist not found. Run: yarn task run app:build')
+      console.error('cafe/dist not found. Run: yarn task run cafe:build')
       process.exit(1)
     }
     await createstaticserver(distDir, port)
@@ -283,20 +283,24 @@ export async function runApp(flags: RunAppFlags): Promise<void> {
     },
   )
 
+  const systemPath = path.join(dataDir, 'system.json')
+
+  await page.exposeFunction('__nodeDurableReadSnapshot', async () =>
+    readJsonFile<Record<string, unknown>>(systemPath, {}),
+  )
+
+  await page.exposeFunction(
+    '__nodeDurableWriteSnapshot',
+    async (snapshot: Record<string, unknown>) => {
+      writeJsonFile(systemPath, snapshot, dataDir)
+    },
+  )
+
   const configPath = path.join(dataDir, 'config.json')
   await page.exposeFunction('__nodeStorageReadConfig', async (name: string) => {
     const config = readJsonFile<Record<string, string>>(configPath, {})
     return config[`config_${name}`] || (name === 'crt' ? 'on' : 'off')
   })
-
-  await page.exposeFunction(
-    '__nodeStorageWriteConfig',
-    async (name: string, value: string) => {
-      const config = readJsonFile<Record<string, string>>(configPath, {})
-      config[`config_${name}`] = value
-      writeJsonFile(configPath, config, dataDir)
-    },
-  )
 
   const configKeys = [
     'config_crt',
@@ -304,7 +308,6 @@ export async function runApp(flags: RunAppFlags): Promise<void> {
     'config_scanlines',
     'config_voice2text',
     'config_loaderlogging',
-    'config_promptlogging',
     'config_dev',
     'config_gadget',
   ]
@@ -326,15 +329,6 @@ export async function runApp(flags: RunAppFlags): Promise<void> {
     readJsonFile<Record<string, unknown>>(varsPath, {}),
   )
 
-  await page.exposeFunction(
-    '__nodeStorageWriteVar',
-    async (name: string, value: unknown) => {
-      const vars = readJsonFile<Record<string, unknown>>(varsPath, {})
-      vars[name] = value
-      writeJsonFile(varsPath, vars, dataDir)
-    },
-  )
-
   const historyPath = path.join(dataDir, 'history.json')
   await page.exposeFunction('__nodeStorageReadHistoryBuffer', async () => {
     const data = readJsonFile<{ buffer?: unknown[] }>(historyPath, {
@@ -342,13 +336,6 @@ export async function runApp(flags: RunAppFlags): Promise<void> {
     })
     return Array.isArray(data.buffer) ? data.buffer : []
   })
-
-  await page.exposeFunction(
-    '__nodeStorageWriteHistoryBuffer',
-    async (buf: unknown[]) => {
-      writeJsonFile(historyPath, { buffer: buf }, dataDir)
-    },
-  )
 
   await page.exposeFunction('__nodeStorageNukeContent', () => {
     try {

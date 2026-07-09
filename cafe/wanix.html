@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Wanix — ZSS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/x-icon" href="./favicon.ico" />
+  <script type="module" crossorigin src="https://cdn.jsdelivr.net/npm/wanix@0.4.0-alpha8/dist/wanix.min.js"></script>
+  <style>
+    html,
+    body, #wanix-host {
+      height: 100vh;
+      margin: 0;
+    }
+    #wanix-host wanix-system {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 8px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="wanix-host"></div>
+  <script type="module" src="./wanix.ts"></script>
+</body>
+
+</html>

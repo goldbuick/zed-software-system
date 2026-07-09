@@ -2,10 +2,6 @@ jest.mock('zss/memory/runtime', () => ({
   memorytickloaders: jest.fn(),
 }))
 
-jest.mock('zss/device/vm/handlers/pilot', () => ({
-  pilottick: jest.fn(),
-}))
-
 jest.mock('zss/device/api', () => ({
   boardrunnertick: jest.fn(),
 }))
@@ -40,7 +36,6 @@ import type { MESSAGE } from 'zss/device/api'
 import { boardrunnertick } from 'zss/device/api'
 import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
 import { gadgetsynctick } from 'zss/device/vm/gadgetsynctick'
-import { pilottick } from 'zss/device/vm/handlers/pilot'
 import { handleticktock } from 'zss/device/vm/handlers/ticktock'
 import { boardrunners } from 'zss/device/vm/state'
 import { memorytickloaders } from 'zss/memory/runtime'
@@ -74,7 +69,6 @@ describe('handleticktock orchestration', () => {
     boardrunners['board-1'] = 'runner-a'
     handleticktock(vm, msg)
 
-    expect(pilottick).toHaveBeenCalledWith(vm)
     expect(memorytickloaders).toHaveBeenCalled()
     expect(boardrunnerpushupdates).toHaveBeenCalledWith(vm)
     expect(boardrunnertick).toHaveBeenCalled()

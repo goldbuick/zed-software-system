@@ -155,7 +155,7 @@ const listcmd = defineCommand({
   args: {
     group: {
       type: 'string',
-      description: 'Filter by task group (e.g. app, daisy)',
+      description: 'Filter by task group (e.g. cafe, headless, ops)',
     },
     tag: {
       type: 'string',
@@ -184,7 +184,7 @@ const listcmd = defineCommand({
 const runcmd = defineCommand({
   meta: {
     name: 'run',
-    description: 'Run a task by id (e.g. app:dev)',
+    description: 'Run a task by id (e.g. cafe:dev)',
   },
   args: {
     id: {

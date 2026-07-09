@@ -1,24 +1,31 @@
-import { useLayoutEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { chipmessage, vmcli } from 'zss/device/api'
+import { doasync } from 'zss/device/doasync'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { storagereadconfig } from 'zss/feature/storage'
+import {
+  readattachedsession,
+  subscribewanixattach,
+} from 'zss/feature/wanix/wanixattachstate'
 import { useTape, useTerminal } from 'zss/gadget/data/zustandstores'
 import { useWriteText } from 'zss/gadget/writetext'
-import { doasync } from 'zss/mapping/func'
 import { totarget } from 'zss/mapping/string'
 import { MAYBE } from 'zss/mapping/types'
 import { perfmeasure } from 'zss/perf/ui'
 import { TapeBackPlate } from 'zss/screens/tape/backplate'
 import { TapeTerminalContext } from 'zss/screens/tape/common'
-import { measurerowcached } from 'zss/screens/terminal/measurerowcache'
+import {
+  readlogrowtotalheight,
+  readterminallayout,
+} from 'zss/screens/terminal/terminallayout'
 import { textformatreadedges } from 'zss/words/textformat'
 import { useShallow } from 'zustand/react/shallow'
 
 import { TerminalInput } from './input'
 import { TerminalRows } from './rows'
-import { WanixTermInput } from './wanixinput'
-import { WanixTermScreen } from './wanixscreen'
+import { WanixTermScreen } from './wanixtermscreen'
+import { WanixTermSizeSync } from './wanixtermsizesync'
 
 export function TerminalComponent() {
   const player = registerreadplayer()
@@ -26,12 +33,13 @@ export function TerminalComponent() {
   const terminalmode = useTape((state) => state.terminalmode)
   const pinlines = useTape((state) => state.terminal.pinlines)
   const sessionlogs = useTape((state) => state.terminal.logs)
-  const terminallogs = useMemo(
-    () => [...pinlines, ...sessionlogs],
-    [pinlines, sessionlogs],
-  )
 
   const [voice2text, setvoice2text] = useState<MAYBE<boolean>>(undefined)
+  const [attachedsession, setattachedsession] = useState(readattachedsession)
+  useEffect(
+    () => subscribewanixattach(() => setattachedsession(readattachedsession())),
+    [],
+  )
   useLayoutEffect(() => {
     doasync(SOFTWARE, registerreadplayer(), async () => {
       const voice2text = await storagereadconfig('voice2text')
@@ -48,20 +56,27 @@ export function TerminalComponent() {
   )
 
   const edge = textformatreadedges(context)
-
   const logsrowmaxwidth = context.width - 1
-  const logsrowheights: number[] = useMemo(() => {
-    const logs = terminallogs ?? []
-    return perfmeasure('terminal:measurerows', () =>
-      logs.map((item) => measurerowcached(item, logsrowmaxwidth, edge.height)),
-    )
-  }, [edge.height, logsrowmaxwidth, terminallogs])
 
-  let logsrowtotalheight = 0
-  logsrowheights.forEach((rowheight) => {
-    logsrowtotalheight += rowheight
-  })
-  ++logsrowtotalheight
+  const layout = useMemo(
+    () =>
+      readterminallayout({
+        pinlines,
+        sessionlogs,
+        maxwidth: logsrowmaxwidth,
+        edge,
+        editoropen,
+      }),
+    [pinlines, sessionlogs, logsrowmaxwidth, edge, editoropen],
+  )
+
+  const logrowtotalheight = useMemo(
+    () =>
+      perfmeasure('terminal:measurerows', () =>
+        readlogrowtotalheight(layout.pinheights, layout.sessionheights),
+      ),
+    [layout.pinheights, layout.sessionheights],
+  )
 
   const tapeycursor = edge.bottom - tapeterminal.ycursor + tapeterminal.scroll
 
@@ -80,29 +95,20 @@ export function TerminalComponent() {
     [player],
   )
 
-  const attached = terminalmode === 'attached'
-
   return (
     <>
+      <WanixTermSizeSync />
       <TapeBackPlate />
       <TapeTerminalContext.Provider value={tapecontextvalue}>
-        {attached ? (
-          <>
-            <WanixTermScreen />
-            <WanixTermInput />
-          </>
-        ) : (
-          <>
-            <TerminalRows />
-            {!editoropen && voice2text !== undefined && (
-              <TerminalInput
-                terminalmode={terminalmode}
-                voice2text={voice2text}
-                tapeycursor={tapeycursor}
-                logrowtotalheight={logsrowtotalheight}
-              />
-            )}
-          </>
+        {attachedsession ? <WanixTermScreen /> : <TerminalRows />}
+        {!editoropen && !attachedsession && voice2text !== undefined && (
+          <TerminalInput
+            terminalmode={terminalmode}
+            voice2text={voice2text}
+            tapeycursor={tapeycursor}
+            logrowtotalheight={logrowtotalheight}
+            logzoneheight={layout.logzoneheight}
+          />
         )}
       </TapeTerminalContext.Provider>
     </>

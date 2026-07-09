@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build ZSS DaisySP synth → cafe/public/wasm/daisy/
+# Build ZSS DaisySP synth → cafe/public/daisy/
 # Requires Emscripten on PATH (source emsdk_env.sh).
 set -e
 
@@ -22,7 +22,7 @@ ZSS_CPPS=(
   "$ZSS_DIR/zss_sosvoices.cpp"
   "$ZSS_DIR/zss_engine.cpp"
 )
-OUT_DIR="$REPO_ROOT/cafe/public/wasm/daisy"
+OUT_DIR="$REPO_ROOT/cafe/public/daisy"
 
 mkdir -p "$OUT_DIR"
 
@@ -51,7 +51,7 @@ ensureemscripten() {
   echo "error: emcc not found — install Emscripten and retry:" >&2
   echo "  git clone https://github.com/emscripten-core/emsdk.git .emsdk" >&2
   echo "  cd .emsdk && ./emsdk install latest && ./emsdk activate latest" >&2
-  echo "  source .emsdk/emsdk_env.sh && yarn task run daisy:build" >&2
+  echo "  source .emsdk/emsdk_env.sh && yarn task run ops:daisy:build" >&2
   return 1
 }
 
@@ -138,7 +138,7 @@ emcc \
 sed -i.bak 's/var wasmExports=createWasm()/var wasmExports;createWasm()/g' "$OUT_DIR/zss_daisy.js"
 rm -f "$OUT_DIR/zss_daisy.js.bak"
 
-(cd "$REPO_ROOT" && yarn task run daisy:bundle:processor)
+(cd "$REPO_ROOT" && yarn task run ops:daisy:bundle:processor)
 
 echo "✓ Build successful"
 echo "  $OUT_DIR/zss_daisy.js"

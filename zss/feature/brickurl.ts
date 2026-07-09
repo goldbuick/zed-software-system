@@ -1,15 +1,8 @@
+import { utf8tobase64url } from 'zss/mapping/encode'
+
 /** brick proxy: remote http(s) URLs reach upstream via BRICK_BASE/?brick=base64url */
 
 export const BRICK_BASE = 'https://brick.zed.cafe'
-
-function base64urlencode(text: string): string {
-  const bytes = new TextEncoder().encode(text)
-  let binary = ''
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i])
-  }
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-}
 
 /** Load remote http(s) resources via brick `?brick=`; safe for web workers. */
 export function brickproxiedurl(url: string): string {
@@ -40,5 +33,5 @@ export function brickproxiedurl(url: string): string {
   if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
     return trimmed
   }
-  return `${BRICK_BASE}/?brick=${base64urlencode(absolute)}`
+  return `${BRICK_BASE}/?brick=${utf8tobase64url(absolute)}`
 }

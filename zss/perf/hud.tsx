@@ -1,20 +1,13 @@
 import { useFrame, useThree } from '@react-three/fiber'
-import { useEffect, useRef } from 'react'
-import { PERF_UI } from 'zss/config'
+import { useRef } from 'react'
+import { useTape } from 'zss/gadget/data/zustandstores'
 
 const LOG_INTERVAL_S = 1
 
-/** PERF_UI-only console logging of renderer.info (no StatsGl / stats-gl UI). */
+/** Perf-monitor console logging of GPU resource footprint (no StatsGl / stats-gl UI). */
 function PerfHudConsoleLogger() {
   const gl = useThree((state) => state.gl)
   const acc = useRef(0)
-  const lastrender = useRef(0)
-
-  useEffect(() => {
-    if (gl?.info) {
-      gl.info.autoReset = true
-    }
-  }, [gl])
 
   useFrame((_, delta) => {
     acc.current += delta
@@ -26,15 +19,12 @@ function PerfHudConsoleLogger() {
     if (!info) {
       return
     }
-    const r = info.render
     const m = info.memory
     const p = info.programs?.length ?? 0
-    const delta_calls = r.calls - lastrender.current
-    lastrender.current = r.calls
 
-    // eslint-disable-next-line no-console -- intentional perf logging when ZSS_DEBUG_PERF_UI is on
+    // eslint-disable-next-line no-console -- intentional perf logging when perf monitor is on
     console.log(
-      `[zss perf] calls=${r.calls} (+${delta_calls}/s) tris=${r.triangles} lines=${r.lines} pts=${r.points} geos=${m.geometries} texs=${m.textures} programs=${p}`,
+      `[zss perf] geos=${m.geometries} texs=${m.textures} programs=${p}`,
     )
   })
 
@@ -42,7 +32,8 @@ function PerfHudConsoleLogger() {
 }
 
 export function PerfHud() {
-  if (!PERF_UI) {
+  const perfmonitor = useTape((s) => s.perfmonitor)
+  if (!perfmonitor) {
     return null
   }
   return <PerfHudConsoleLogger />

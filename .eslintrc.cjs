@@ -211,6 +211,7 @@ module.exports = {
       },
       rules: {
         'no-console': 'off',
+        'no-inner-declarations': 'off',
         '@typescript-eslint/require-await': 'off',
         '@typescript-eslint/no-unused-vars': 'off',
         '@typescript-eslint/prefer-optional-chain': 'off',
@@ -224,7 +225,12 @@ module.exports = {
       },
     },
     {
-      files: ['zss/simspace.ts', 'zss/heavyspace.ts'],
+      files: [
+        'zss/simspace.ts',
+        'zss/boardrunnerspace.ts',
+        'zss/sttspace.ts',
+        'zss/ttsspace.ts',
+      ],
       rules: {
         'no-restricted-imports': [
           'error',
@@ -233,34 +239,39 @@ module.exports = {
               {
                 name: 'react',
                 message:
-                  'Do not import react in worker entry files; keep simspace/heavyspace worker-safe.',
+                  'Do not import react in worker entry files; keep worker entrypoints worker-safe.',
               },
               {
                 name: 'react-dom',
                 message:
-                  'Do not import react-dom in worker entry files; keep simspace/heavyspace worker-safe.',
+                  'Do not import react-dom in worker entry files; keep worker entrypoints worker-safe.',
               },
               {
                 name: 'react-dom/client',
                 message:
-                  'Do not import react-dom/client in worker entry files; keep simspace/heavyspace worker-safe.',
+                  'Do not import react-dom/client in worker entry files; keep worker entrypoints worker-safe.',
               },
               {
                 name: 'react/jsx-runtime',
                 message:
-                  'Do not import react/jsx-runtime in worker entry files; keep simspace/heavyspace worker-safe.',
+                  'Do not import react/jsx-runtime in worker entry files; keep worker entrypoints worker-safe.',
               },
               {
                 name: 'three',
                 message:
-                  'Do not import three in worker entry files; keep simspace/heavyspace worker-safe.',
+                  'Do not import three in worker entry files; keep worker entrypoints worker-safe.',
+              },
+              {
+                name: 'idb-keyval',
+                message:
+                  'Use zss/feature/durable.ts for IndexedDB KV access; do not import idb-keyval directly.',
               },
             ],
             patterns: [
               {
                 group: ['@react-three/*'],
                 message:
-                  'Do not import @react-three/* in worker entry files; keep simspace/heavyspace worker-safe.',
+                  'Do not import @react-three/* in worker entry files; keep worker entrypoints worker-safe.',
               },
             ],
           },
@@ -314,6 +325,30 @@ module.exports = {
                 allowTypeImports: true,
                 message:
                   'device/api is POD emit helpers only; use import type for signatures.',
+              },
+            ],
+          },
+        ],
+      },
+    },
+    {
+      files: ['zss/**/*.{ts,tsx}', 'cafe/**/*.{ts,tsx}'],
+      excludedFiles: [
+        'zss/feature/durable.ts',
+        'zss/simspace.ts',
+        'zss/boardrunnerspace.ts',
+        'zss/sttspace.ts',
+        'zss/ttsspace.ts',
+      ],
+      rules: {
+        'no-restricted-imports': [
+          'error',
+          {
+            paths: [
+              {
+                name: 'idb-keyval',
+                message:
+                  'Use zss/feature/durable.ts for IndexedDB KV access; do not import idb-keyval directly.',
               },
             ],
           },

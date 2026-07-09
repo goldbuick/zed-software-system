@@ -2,13 +2,13 @@ jest.mock('zss/device/api', () => ({
   apierror: jest.fn(),
 }))
 
-jest.mock('zss/feature/heavy/tts', () => ({
+jest.mock('zss/feature/tts/inference', () => ({
   requestinfo: jest.fn(),
   requestaudiobytes: jest.fn(),
 }))
 
 import { apierror } from 'zss/device/api'
-import { requestaudiobytes, requestinfo } from 'zss/feature/heavy/tts'
+import { requestaudiobytes, requestinfo } from 'zss/feature/tts/inference'
 
 type TtsHandler = (message: {
   target: string

@@ -3,7 +3,7 @@ import {
   FISH_TTS_BRICK_URL,
   FISH_TTS_UPSTREAM,
   requestfishaudiobytes,
-} from 'zss/feature/fishaudio'
+} from 'zss/feature/tts/fishaudio'
 
 const fetchmock = jest.fn()
 

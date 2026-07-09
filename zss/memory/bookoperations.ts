@@ -1,5 +1,4 @@
 import { FORMAT_OBJECT, formatobject, unformatobject } from 'zss/feature/format'
-import { notifyzedcafebookschanged } from 'zss/feature/wanix/wanixstateexport'
 import { createnameid, createshortnameid, createsid } from 'zss/mapping/guid'
 import { randominteger } from 'zss/mapping/number'
 import { MAYBE, ispresent } from 'zss/mapping/types'
@@ -7,6 +6,7 @@ import { COLOR, NAME, WORD } from 'zss/words/types'
 
 import {
   memoryboundaryalloc,
+  memoryboundarydelete,
   memoryboundaryget,
   memoryboundaryset,
 } from './boundaries'
@@ -21,9 +21,9 @@ import {
   memoryreadcodepagename,
   memoryreadcodepagestats,
   memoryreadcodepagetype,
+  memoryresetcodepagestats,
 } from './codepageoperations'
 import { memoryreadboardelementruntime } from './runtimeboundary'
-import { memoryreadoperator } from './session'
 import {
   BOARD_ELEMENT,
   BOOK,
@@ -414,7 +414,6 @@ export function memoryupdatebookname(book: MAYBE<BOOK>) {
 export function memoryupdatebooktoken(book: MAYBE<BOOK>) {
   if (ispresent(book)) {
     book.token = `${createshortnameid()}${randominteger(1111, 9999)}`
-    notifyzedcafebookschanged(memoryreadoperator())
   }
 }
 
@@ -431,6 +430,45 @@ export function memorywritecodepage(
   }
   book.pages.push(codepage)
   memoryupdatebooktoken(book)
+  return true
+}
+
+export function memoryupsertcodepage(
+  book: MAYBE<BOOK>,
+  flat: {
+    id: string
+    code: string
+    board?: Record<string, unknown>
+    object?: Record<string, unknown>
+    terrain?: Record<string, unknown>
+    charset?: Record<string, unknown>
+    palette?: Record<string, unknown>
+  },
+): boolean {
+  if (!ispresent(book)) {
+    return false
+  }
+  const existing = memoryreadcodepage(book, flat.id)
+  if (!ispresent(existing)) {
+    const page = memoryimportcodepagefromjson(flat)
+    if (!page) {
+      return false
+    }
+    return memorywritecodepage(book, page)
+  }
+  memoryboundarydelete(flat.id)
+  existing.code = flat.code
+  memoryboundaryalloc(
+    {
+      board: flat.board,
+      object: flat.object,
+      terrain: flat.terrain,
+      charset: flat.charset,
+      palette: flat.palette,
+    },
+    flat.id,
+  )
+  memoryresetcodepagestats(existing)
   return true
 }
 

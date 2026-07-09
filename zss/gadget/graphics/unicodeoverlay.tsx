@@ -17,6 +17,7 @@ import {
 } from 'zss/gadget/display/unicodeoverlay'
 import { useMedia } from 'zss/gadget/media'
 import { noraycastmesh } from 'zss/gadget/noraycastmesh'
+import { indextox, indextoy } from 'zss/mapping/2d'
 
 const defaultpalette = palettetothreecolors(
   convertpalettetocolors(loadpalettefrombytes(PALETTE)),
@@ -132,8 +133,8 @@ export function UnicodeOverlay({
           continue
         }
         const cell = cells[i]
-        const cx = cell.index % width
-        const cy = Math.floor(cell.index / width)
+        const cx = indextox(cell.index, width)
+        const cy = indextoy(cell.index, width)
         const halfpadx = (basew - cellsize) * 0.5
         offsetarray[n * 2] = cx * basew + halfpadx
         offsetarray[n * 2 + 1] =

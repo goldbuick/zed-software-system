@@ -18,7 +18,7 @@ function decodeanswer(answer: string): RTCSessionDescriptionInit {
 }
 
 function mapconnectionstate(pc: RTCPeerConnection): ConnectionState {
-  const state = pc.connectionState || pc.iceConnectionState
+  const state = String(pc.connectionState || pc.iceConnectionState)
   switch (state) {
     case 'new':
       return 'new'
@@ -42,7 +42,9 @@ function mapconnectionstate(pc: RTCPeerConnection): ConnectionState {
 export class IvsLowLatencyTransport {
   private peerconnection: RTCPeerConnection | undefined
   private ingestsessionid: string | undefined
-  private onconnectionstatechange: ((state: ConnectionState) => void) | undefined
+  private onconnectionstatechange:
+    | ((state: ConnectionState) => void)
+    | undefined
   private onerror: ((message: string) => void) | undefined
 
   sethandlers(handlers: {
@@ -93,7 +95,8 @@ export class IvsLowLatencyTransport {
     })
     await pc.setLocalDescription(offer)
 
-    const ingestendpoint = start.ingestEndpoint ?? DEFAULT_IVS_LOW_LATENCY_INGEST
+    const ingestendpoint =
+      start.ingestEndpoint ?? DEFAULT_IVS_LOW_LATENCY_INGEST
     const response = await fetch(`${ingestendpoint}/v1/offer`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

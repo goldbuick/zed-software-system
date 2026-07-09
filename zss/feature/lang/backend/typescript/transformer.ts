@@ -1,4 +1,5 @@
 import { CodeWithSourceMap, SourceNode } from 'source-map'
+import { escapesinglequoted } from 'zss/mapping/string'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { MaybeFlag, tokenize } from 'zss/words/textformat'
 import { NAME } from 'zss/words/types'
@@ -35,12 +36,8 @@ export function write(
   )
 }
 
-function escapestring(value: string): string {
-  return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
-}
-
 function writestring(value: string): string {
-  return `'${escapestring(value)}'`
+  return `'${escapesinglequoted(value)}'`
 }
 
 function writetemplatestring(value: string): string {
@@ -51,13 +48,13 @@ function writetemplatestring(value: string): string {
 
   const template = result.tokens.map((token) => {
     if (token.tokenType === MaybeFlag) {
-      const name = escapestring(token.image.substring(1))
+      const name = escapesinglequoted(token.image.substring(1))
       if (NAME(name) === 'center') {
         return `$CENTER`
       }
       return `', api.print(api.get('${name}')), '`
     }
-    return escapestring(token.image)
+    return escapesinglequoted(token.image)
   })
 
   return `['${template.join('')}'].join('')`

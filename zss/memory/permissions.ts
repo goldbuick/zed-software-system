@@ -75,8 +75,6 @@ export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
   share: 'persist',
 
   access: 'risk',
-  agent: 'risk',
-  wanix: 'risk',
   zns: 'risk',
   bookallexport: 'risk',
   bookexport: 'risk',
@@ -652,7 +650,7 @@ export function memoryapplypermissionconfig(name: PERMISSION_CONFIG_NAME) {
   recomputeallowlistbyrole()
 }
 
-/** Serialize for storage / registerstore. */
+/** Serialize for durable storage vars blob. */
 export function memoryserializepermissions(): {
   rolebytoken: Record<string, string>
   bannedtokens: string[]

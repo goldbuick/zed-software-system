@@ -1,6 +1,8 @@
 import { CHIP } from 'zss/chip'
-import { apitoast, registerstore, vmlogout } from 'zss/device/api'
+import { apitoast, vmlogout } from 'zss/device/api'
+import { doasync } from 'zss/device/doasync'
 import { SOFTWARE } from 'zss/device/session'
+import { storagewritevar } from 'zss/feature/storage'
 import { createfirmware } from 'zss/firmware'
 import { firmwarewaitforboard } from 'zss/firmware/boardwaitsync'
 import {
@@ -716,7 +718,9 @@ export const ELEMENT_FIRMWARE = createfirmware({
       // sticky flags
       switch (name) {
         case 'user': {
-          registerstore(SOFTWARE, player, name, value)
+          doasync(SOFTWARE, player, async () => {
+            await storagewritevar(name, value)
+          })
           break
         }
       }

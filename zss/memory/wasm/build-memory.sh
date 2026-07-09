@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Build zss_memory → cafe/public/wasm/memory/
+# Build zss_memory → cafe/public/memory/
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
-OUT_DIR="$REPO_ROOT/cafe/public/wasm/memory"
+OUT_DIR="$REPO_ROOT/cafe/public/memory"
 SRC="$SCRIPT_DIR/zss_memory.cpp"
 
 mkdir -p "$OUT_DIR"

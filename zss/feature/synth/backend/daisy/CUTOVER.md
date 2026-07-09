@@ -7,14 +7,14 @@
 Parity gates use **archived Tone.js** as ground truth (`parity-metrics-tone.json`). Regenerate Tone reference after any Tone archive change:
 
 ```bash
-yarn parity-fixtures:regen:tone
+yarn task run ops:fixtures:synth:regen:tone
 ```
 
 Daisy drum fixtures (after DaisySP drum migration or preset changes):
 
 ```bash
-yarn daisy:build
-yarn parity-fixtures:regen:daisy-drums
+yarn task run ops:daisy:build
+yarn task run ops:fixtures:synth:regen:drums
 ```
 
 ### Tone-excluded patches
@@ -37,23 +37,23 @@ Manual parity criteria:
 4. Master parity: play/bgplay/tts mix fixtures pass
 5. Record parity: offline render matches Tone fixture expectations
 6. E2E smoke: `#play`, `#bgplay`, `#synth`, FX commands, TTS, `synthrecord`
-7. Bench: `yarn daisy:bench:synth`
+7. Bench: `yarn task run ops:daisy:bench:synth`
 
 ## Build
 
 ```bash
-yarn daisy:build   # requires Emscripten (source emsdk_env.sh)
+yarn task run ops:daisy:build   # requires Emscripten (source emsdk_env.sh)
 ```
 
-Rebuild and commit `cafe/public/wasm/daisy/*` after any C++ change. `yarn daisy:build` is **manual only** — not wired into default `yarn app:build`.
+Rebuild and commit `cafe/public/daisy/*` after any C++ change. `yarn task run ops:daisy:build` is **manual only** — not wired into default `yarn task run cafe:build`.
 
-`yarn daisy:bundle:processor` injects SAB offsets from `daisycontrol.ts` into the worklet (must match `kVoiceCfgStride` in `zss_daisy_synth.cpp`).
+`yarn task run ops:daisy:bundle:processor` injects SAB offsets from `daisycontrol.ts` into the worklet (must match `kVoiceCfgStride` in `zss_daisy_synth.cpp`).
 
 ## Manual parity
 
 ```bash
 # Daisy vs Tone reference (primary gate)
-ZSS_PARITY_RENDER=1 ZSS_DAISY_PARITY=1 ZSS_TONE_REFERENCE=1 yarn app:test wasmparity
+ZSS_PARITY_RENDER=1 ZSS_DAISY_PARITY=1 ZSS_TONE_REFERENCE=1 yarn ops:test wasmparity
 ```
 
 Drum patches compare against `parity-metrics-daisy.json`; voice/FX use Tone reference with `ZSS_TONE_REFERENCE=1`.
@@ -74,8 +74,8 @@ Metrics include RMS, peak, spectral centroid, and 3-band energy ratios (`paritym
 
 | Artifact | Size |
 |----------|------|
-| `cafe/public/wasm/daisy/zss_daisy.wasm` | ~75 KB (4× ReverbSc delay storage) |
-| `cafe/public/wasm/daisy/zss_daisy.js` | ~12 KB |
-| `cafe/public/wasm/daisy/daisy-processor.js` | ~5 KB |
+| `cafe/public/daisy/zss_daisy.wasm` | ~75 KB (4× ReverbSc delay storage) |
+| `cafe/public/daisy/zss_daisy.js` | ~12 KB |
+| `cafe/public/daisy/daisy-processor.js` | ~5 KB |
 
-Only Daisy WASM ships in production builds. Maximilian assets live under `cafe/public/wasm/archive/maximilian/` (reference only).
+Only Daisy WASM ships in production builds. Maximilian assets live under `ops/archive/wasm/maximilian/` (reference only).

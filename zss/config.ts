@@ -8,7 +8,6 @@ function zssjsonbool(key: string): boolean {
 // cli config (Jest uses `process.env`; Vite inlines via `define` in vite.config.ts)
 const LANG_DEV = zssjsonbool('ZSS_DEBUG_LANG_DEV')
 const LANG_TYPES = zssjsonbool('ZSS_DEBUG_LANG_TYPES')
-const PERF_UI = zssjsonbool('ZSS_DEBUG_PERF_UI')
 const SHOW_CODE = zssjsonbool('ZSS_DEBUG_SHOW_CODE')
 const TRACE_CODE = `${process.env.ZSS_DEBUG_TRACE_CODE ?? ''}`
 const LOG_DEBUG = zssjsonbool('ZSS_DEBUG_LOG')
@@ -70,7 +69,6 @@ export const RUNTIME = {
 export {
   LANG_DEV,
   LANG_TYPES,
-  PERF_UI,
   SHOW_CODE,
   TRACE_CODE,
   LOG_DEBUG,

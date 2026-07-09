@@ -1,6 +1,7 @@
 import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import { coercenumberorstringtoken } from 'zss/mapping/value'
 import { memoryevaldir } from 'zss/memory/boarddirection'
 import { memoryreadoperator } from 'zss/memory/session'
 import { BOARD, BOARD_ELEMENT, BOOK } from 'zss/memory/types'
@@ -78,14 +79,6 @@ function didexpect(msg: string, value: any, words: WORD[]) {
   throw new Error(
     `Invalid arg, expected: ${msg} but got ${JSON.stringify(value)}`,
   )
-}
-
-/** Coerce only pure digit tokens; keep hex ids and mixed alnum as strings. */
-function coercenumberorstringtoken(value: string): number | string {
-  if (/^\d+$/.test(value)) {
-    return parseInt(value, 10)
-  }
-  return value
 }
 
 function readdestfromdir(dir: STR_DIR) {

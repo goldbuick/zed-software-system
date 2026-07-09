@@ -32,9 +32,9 @@ This document categorizes and summarizes all exported functions from the `featur
 
 ## Text-to-Speech (TTS)
 
-**Files:** `tts.ts`, `heavy/tts.ts`
+**Files:** `tts/client.ts`, `tts/inference.ts`
 
-Text-to-speech functionality with support for multiple engines (Edge, Piper, Supertonic).
+Text-to-speech functionality with support for Piper, Supertonic, and Fish engines.
 
 ### Engine Configuration
 - `selectttsengine(engine, config)` - Select TTS engine ('edge' | 'piper' | 'supertonic') with config
@@ -311,11 +311,11 @@ Various utility functions for browser APIs and external services.
 
 ---
 
-## Heavy Processing Module
+## TTS Worker Module
 
-**Files:** `heavy/tts.ts`, `heavy/pipertts.ts`, `heavy/supertonictts.ts`, `heavy/utils.ts`, `heavy/textcleaner.ts`, `heavy/modelcache.ts`
+**Files:** `tts/inference.ts`, `tts/pipertts.ts`, `tts/supertonictts.ts`, `tts/ttsfish.ts`, `tts/utils.ts`, `tts/textcleaner.ts`, `tts/modelcache.ts`, `tts/fishaudio.ts`, `tts/engine.ts`
 
-Heavy processing functions for TTS engines that run in workers or use heavy computations.
+TTS inference and engine implementations that run in the ttsspace worker.
 
 ### TTS Functions
 - `requestinfo(player, engine, info)` - Request TTS engine information (e.g., list of available voices)

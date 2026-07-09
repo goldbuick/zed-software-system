@@ -1,6 +1,5 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
-import { pilottick } from 'zss/device/vm/handlers/pilot'
 import { handleticktock } from 'zss/device/vm/handlers/ticktock'
 import { memorytickloaders } from 'zss/memory/runtime'
 import * as session from 'zss/memory/session'
@@ -8,10 +7,6 @@ import type { BOOK } from 'zss/memory/types'
 
 jest.mock('zss/memory/runtime', () => ({
   memorytickloaders: jest.fn(),
-}))
-
-jest.mock('zss/device/vm/handlers/pilot', () => ({
-  pilottick: jest.fn(),
 }))
 
 jest.mock('zss/device/vm/boardrunnermemorysync', () => ({
@@ -40,7 +35,6 @@ describe('handletick sim freeze', () => {
   afterEach(() => {
     session.memorywritefrozen(false)
     jest.mocked(memorytickloaders).mockClear()
-    jest.mocked(pilottick).mockClear()
     jest.restoreAllMocks()
   })
 
@@ -51,11 +45,10 @@ describe('handletick sim freeze', () => {
     session.memorywritefrozen(true)
     handleticktock(vm, msg)
 
-    expect(pilottick).not.toHaveBeenCalled()
     expect(memorytickloaders).not.toHaveBeenCalled()
   })
 
-  it('runs pilottick and loader tick when simfreeze is off', () => {
+  it('runs loader tick when simfreeze is off', () => {
     jest
       .spyOn(session, 'memoryreadbookbysoftware')
       .mockReturnValue(stubmainbook)
@@ -63,7 +56,6 @@ describe('handletick sim freeze', () => {
 
     handleticktock(vm, msg)
 
-    expect(pilottick).toHaveBeenCalledWith(vm)
     expect(memorytickloaders).toHaveBeenCalled()
   })
 })

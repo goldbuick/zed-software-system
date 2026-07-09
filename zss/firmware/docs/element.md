@@ -4,7 +4,7 @@
 
 ## Dependencies
 
-- `zss/device/api` — apitoast, registerstore, vmlogout
+- `zss/device/api` — apitoast, vmlogout
 - `zss/gadget/data/types` — INPUT, INPUT_ALT, INPUT_CTRL, INPUT_SHIFT
 - `zss/memory/*` — element/board operations, movement, spatial queries
 - `zss/words/*` — category, collision, color, dir, kind, reader
@@ -29,7 +29,7 @@ Writes stats:
 - **Board** — isdark, startx/y, over, under, palette, charset, exits, timelimit, etc.
 - **Element** — color, bg, displaycolor/bg, displayname, standard stats (`displayname` affects the name shown before `#ticker` text in the gadget ticker strip only; chat/log prefix still uses the logical name)
 - **senderid** — Writes to element.sender
-- **Fallback** — Player flags; `user` is persisted via registerstore
+- **Fallback** — Player flags; `user` is persisted via `storagewritevar`
 
 ### everytick(chip)
 

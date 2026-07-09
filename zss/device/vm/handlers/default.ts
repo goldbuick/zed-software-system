@@ -7,6 +7,7 @@ import {
   vmloader,
   vmplayermovetoboard,
 } from 'zss/device/api'
+import { doasync } from 'zss/device/doasync'
 import { SOFTWARE } from 'zss/device/session'
 import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
 import { lastinputtime } from 'zss/device/vm/state'
@@ -16,7 +17,6 @@ import { scrollwritemarkdownlines } from 'zss/feature/parse/markdownscroll'
 import { zsstextline, zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
 import { gadgetstate } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
-import { doasync } from 'zss/mapping/func'
 import { isarray, ispresent } from 'zss/mapping/types'
 import { memoryreadobject } from 'zss/memory/boardaccess'
 import { memoryreadcodepagename } from 'zss/memory/codepageoperations'

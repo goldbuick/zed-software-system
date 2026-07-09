@@ -10,20 +10,17 @@ import { MESSAGE, sessionreset } from './device/api'
 import {
   createforward,
   shouldforwardclienttoboardrunner,
-  shouldforwardclienttoheavy,
   shouldforwardclienttoserver,
   shouldforwardclienttostt,
   shouldforwardclienttotts,
 } from './device/forward'
 import { SOFTWARE } from './device/session'
-import heavyspace from './heavyspace??worker'
 import { MAYBE, ispresent } from './mapping/types'
 import simspace from './simspace??worker'
 import sttspace from './sttspace??worker'
 import stubspace from './stubspace??worker'
 import ttsspace from './ttsspace??worker'
 
-let heavy: MAYBE<Worker>
 let boardrunner: MAYBE<Worker>
 let platform: MAYBE<Worker>
 let stt: MAYBE<Worker>
@@ -50,7 +47,7 @@ export function ensuresttworker(): Worker | undefined {
     stt.addEventListener('message', sttmessagehandler)
   }
   postreadytoworker(stt)
-  setplatformgpuworkers({ heavy, stt })
+  setplatformgpuworkers({ stt })
   return stt
 }
 
@@ -75,9 +72,7 @@ export function createplatform(isstub = false, climode = false) {
 
   void bootgpucoordinator()
 
-  // create heavy worker
-  heavy = new heavyspace({ name: 'heavy' })
-  setplatformgpuworkers({ heavy, stt })
+  setplatformgpuworkers({ stt })
 
   // create boardrunner worker
   boardrunner = new boardrunnerspace({ name: 'boardrunner' })
@@ -93,9 +88,6 @@ export function createplatform(isstub = false, climode = false) {
 
   // create bridge
   const { forward, disconnect } = createforward((message) => {
-    if (shouldforwardclienttoheavy(message) && ispresent(heavy)) {
-      heavy.postMessage(message)
-    }
     if (shouldforwardclienttoboardrunner(message) && ispresent(boardrunner)) {
       boardrunner.postMessage(message)
     }
@@ -110,34 +102,9 @@ export function createplatform(isstub = false, climode = false) {
     }
   })
 
-  // handle messages from heavy
-  function heavymessages(event: MessageEvent<any>) {
-    const message = event.data as MESSAGE
-    if (ispresent(heavy) && handleplatformgpurequest(message, heavy)) {
-      return
-    }
-    if (shouldforwardclienttoboardrunner(message) && ispresent(boardrunner)) {
-      boardrunner.postMessage(message)
-    }
-    if (shouldforwardclienttoserver(message) && ispresent(platform)) {
-      platform.postMessage(message)
-    }
-    if (shouldforwardclienttostt(message) && ispresent(stt)) {
-      stt.postMessage(message)
-    }
-    if (shouldforwardclienttotts(message) && ispresent(tts)) {
-      tts.postMessage(message)
-    }
-    return forward(message)
-  }
-  heavy.addEventListener('message', heavymessages)
-
   // handle messages from boardrunner
   function boardrunnermessages(event: MessageEvent<any>) {
     const message = event.data as MESSAGE
-    if (shouldforwardclienttoheavy(message) && ispresent(heavy)) {
-      heavy.postMessage(message)
-    }
     if (shouldforwardclienttoserver(message) && ispresent(platform)) {
       platform.postMessage(message)
     }
@@ -154,9 +121,6 @@ export function createplatform(isstub = false, climode = false) {
   // handle messages from  platform
   function platformmessages(event: MessageEvent<any>) {
     const message = event.data as MESSAGE
-    if (shouldforwardclienttoheavy(message) && ispresent(heavy)) {
-      heavy.postMessage(message)
-    }
     if (shouldforwardclienttoboardrunner(message) && ispresent(boardrunner)) {
       boardrunner.postMessage(message)
     }
@@ -175,9 +139,6 @@ export function createplatform(isstub = false, climode = false) {
     if (ispresent(stt) && handleplatformgpurequest(message, stt)) {
       return
     }
-    if (shouldforwardclienttoheavy(message) && ispresent(heavy)) {
-      heavy.postMessage(message)
-    }
     if (shouldforwardclienttoboardrunner(message) && ispresent(boardrunner)) {
       boardrunner.postMessage(message)
     }
@@ -193,9 +154,6 @@ export function createplatform(isstub = false, climode = false) {
 
   function ttsmessages(event: MessageEvent<any>) {
     const message = event.data as MESSAGE
-    if (shouldforwardclienttoheavy(message) && ispresent(heavy)) {
-      heavy.postMessage(message)
-    }
     if (shouldforwardclienttoboardrunner(message) && ispresent(boardrunner)) {
       boardrunner.postMessage(message)
     }
@@ -211,11 +169,6 @@ export function createplatform(isstub = false, climode = false) {
 
   platformhalt = () => {
     disconnect()
-    if (ispresent(heavy)) {
-      heavy.removeEventListener('message', heavymessages)
-      heavy.terminate()
-    }
-    heavy = undefined
     if (ispresent(boardrunner)) {
       boardrunner.removeEventListener('message', boardrunnermessages)
       boardrunner.terminate()

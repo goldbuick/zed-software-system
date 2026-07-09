@@ -3,7 +3,7 @@ import {
   describefishconfig,
   isknownfishmodel,
   maskfishapikey,
-} from 'zss/feature/fishaudio'
+} from 'zss/feature/tts/fishaudio'
 
 describe('fish config describe', () => {
   it('maskfishapikey redacts middle of long keys', () => {

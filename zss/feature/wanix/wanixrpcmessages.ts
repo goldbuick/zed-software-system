@@ -1,0 +1,6 @@
+export const WANIX_MSG_READY = 'zss-wanix-ready'
+export const WANIX_MSG_IDLE = 'zss-wanix-idle'
+export const WANIX_MSG_RPC = 'zss-wanix-rpc'
+export const WANIX_MSG_RPC_RES = 'zss-wanix-rpc-res'
+export const WANIX_MSG_CELLS = 'zss-wanix-cells'
+export const WANIX_MSG_SESSION = 'zss-wanix-session'

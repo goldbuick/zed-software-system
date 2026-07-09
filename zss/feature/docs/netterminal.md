@@ -10,7 +10,7 @@
 - `zss/device/forward` — createforward, shouldforward helpers
 - `zss/device/register` — registerreadplayer
 - `zss/device/session` — SOFTWARE
-- `zss/mapping/func` — doasync
+- `zss/device/doasync` — doasync
 - `zss/mapping/guid` — createinfohash
 - `zss/mapping/types` — MAYBE, ispresent
 

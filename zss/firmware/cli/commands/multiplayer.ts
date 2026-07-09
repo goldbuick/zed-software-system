@@ -11,20 +11,24 @@ import {
   vmadmin,
 } from 'zss/device/api'
 import { normalizechatkind } from 'zss/device/bridge/chattypes'
+import { doasync } from 'zss/device/doasync'
 import { SOFTWARE } from 'zss/device/session'
 import {
-  listwhipendpointaliases,
-  resolvewhipendpoint,
-} from 'zss/feature/broadcast/webbroadcastwhipaliases'
-import { showbroadcastmenu } from 'zss/feature/broadcastmenu'
+  buildchatstartforkind,
+  resolvechatstartwords,
+} from 'zss/feature/bridgechatcli'
 import {
   bridgedeleteprofile,
   bridgereadallprofiles,
   bridgereadprofile,
   bridgewriteprofile,
 } from 'zss/feature/bridgeprofiles'
+import {
+  listwhipendpointaliases,
+  resolvewhipendpoint,
+} from 'zss/feature/broadcast/webbroadcastwhipaliases'
+import { showbroadcastmenu } from 'zss/feature/broadcastmenu'
 import { FIRMWARE } from 'zss/firmware'
-import { doasync } from 'zss/mapping/func'
 import { ispresent } from 'zss/mapping/types'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
@@ -240,7 +244,10 @@ export function registermultiplayercommands(fw: FIRMWARE): FIRMWARE {
     )
     .command(
       'broadcast',
-      [ARG_TYPE.MAYBE_NAME, 'stream broadcast menu, stop, or start (operator only)'],
+      [
+        ARG_TYPE.MAYBE_NAME,
+        'stream broadcast menu, stop, or start (operator only)',
+      ],
       (_, words) => {
         const [first, endpoint, bearer] = readargs(words, 0, [
           ARG_TYPE.MAYBE_NAME,

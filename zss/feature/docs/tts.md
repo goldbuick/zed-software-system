@@ -1,20 +1,31 @@
-# tts.ts
+# tts/
 
-**Purpose**: Engine-agnostic text-to-speech orchestration. All engines use ttsspace; main thread holds opaque state and generic worker emit/wait.
+**Purpose**: Engine-agnostic text-to-speech. Main thread holds opaque state and playback queue; inference runs in **ttsspace**.
 
-## Dependencies
+## Layout
+
+| File | Role |
+|------|------|
+| [`client.ts`](../tts/client.ts) | Main-thread playback, queue, worker RPC (`ttsqueue`, `restorettsenginefromstorage`, …) |
+| [`inference.ts`](../tts/inference.ts) | Worker: `requestinfo`, `requestaudiobytes` |
+| [`engine.ts`](../tts/engine.ts) | `TTS_ENGINE`, `normalizettsengine` |
+| [`pipertts.ts`](../tts/pipertts.ts), [`supertonictts.ts`](../tts/supertonictts.ts), [`ttsfish.ts`](../tts/ttsfish.ts) | Engine implementations |
+| [`fishaudio.ts`](../tts/fishaudio.ts) | Fish API (worker-only via `ttsfish`) |
+| [`modelcache.ts`](../tts/modelcache.ts), [`utils.ts`](../tts/utils.ts), [`textcleaner.ts`](../tts/textcleaner.ts), [`phonemizerparser.ts`](../tts/phonemizerparser.ts) | Shared helpers |
+
+## Dependencies (client)
 
 - `@henrygd/queue` — newQueue
 - `zss/device` — createdevice
 - `zss/device/api` — ttsinfo, ttsrequest, synthaudiobuffer
 - `zss/device/messagetypes` — isttsvalidatereply
 - `zss/device/session` — SOFTWARE
-- `zss/feature/ttsengine` — normalizettsengine, TTS_ENGINE
+- `zss/feature/tts/engine` — normalizettsengine, TTS_ENGINE
 - `zss/mapping/guid` — createsid
 - `zss/mapping/tick` — waitfor
 - `zss/mapping/types` — MAYBE, ispresent
 
-Main thread does **not** import `fishaudio.ts`. Engine-specific behavior lives in ttsspace (`heavy/tts.ts`, `heavy/ttsfish.ts`).
+Main thread does **not** import `fishaudio.ts`. Engine-specific behavior lives in ttsspace (`inference.ts`, `ttsfish.ts`).
 
 ## Main-thread state (opaque)
 
@@ -24,7 +35,7 @@ Main thread does **not** import `fishaudio.ts`. Engine-specific behavior lives i
 | `ttsconfig` | `config_ttsengineconfig` | Engine config (HF path, API key, etc.) |
 | `ttsmodel` | `config_ttsenginemodel` | Secondary slot (Fish model, etc.) |
 
-## Exports
+## Exports (client)
 
 | Function | Args | Description |
 |----------|------|-------------|
@@ -47,18 +58,10 @@ All engines persist engine choice across refresh.
 
 Info kinds (worker): `voices`, `config`, `status`, `validate`.
 
-## Worker modules
-
-| Engine | Module |
-|--------|--------|
-| Piper | [`heavy/pipertts.ts`](../heavy/pipertts.ts) |
-| Supertonic | [`heavy/supertonictts.ts`](../heavy/supertonictts.ts) |
-| Fish | [`heavy/ttsfish.ts`](../heavy/ttsfish.ts) → [`fishaudio.ts`](../fishaudio.ts) |
-
 ## Worker wiring
 
 - Lazy spawn: `ensurettsworker()` in `zss/platform.ts`
-- Entry: `zss/ttsspace.ts` → `zss/device/ttsworker.ts` → `zss/feature/heavy/tts.ts`
+- Entry: `zss/ttsspace.ts` → `zss/device/ttsworker.ts` → `zss/feature/tts/inference.ts`
 
 ## Consumed by
 

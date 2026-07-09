@@ -1,6 +1,6 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import { type MutableRefObject, useEffect, useRef } from 'react'
-import { PERF_UI, RUNTIME } from 'zss/config'
+import { RUNTIME } from 'zss/config'
 import { CHAT_KIND } from 'zss/device/bridge/chattypes'
 import { useTape } from 'zss/gadget/data/zustandstores'
 import { writetile } from 'zss/gadget/tiles'
@@ -44,10 +44,6 @@ type PeerWireSnapshot = {
 
 type GlSnap = {
   fps: number
-  calls: number
-  triangles: number
-  lines: number
-  points: number
   geometries: number
   textures: number
   programs: number
@@ -56,10 +52,6 @@ type GlSnap = {
 function defaultGlSnap(): GlSnap {
   return {
     fps: 0,
-    calls: 0,
-    triangles: 0,
-    lines: 0,
-    points: 0,
     geometries: 0,
     textures: 0,
     programs: 0,
@@ -93,24 +85,13 @@ function PerfGlCapture({ snapRef }: { snapRef: MutableRefObject<GlSnap> }) {
   const gl = useThree((s) => s.gl)
   const smoothFps = useRef(0)
 
-  useEffect(() => {
-    if (gl?.info) {
-      gl.info.autoReset = true
-    }
-  }, [gl])
-
   useFrame((_, dt) => {
     const instant = 1 / Math.max(dt, 1e-6)
     smoothFps.current = smoothFps.current * 0.92 + instant * 0.08
     const info = gl.info
-    const r = info.render
     const m = info.memory
     snapRef.current = {
       fps: Math.round(smoothFps.current),
-      calls: r.calls,
-      triangles: r.triangles,
-      lines: r.lines,
-      points: r.points,
       geometries: m.geometries,
       textures: m.textures,
       programs: info.programs?.length ?? 0,
@@ -497,10 +478,10 @@ function PerfMonitorDraw({ glRef }: PerfMonitorDrawProps) {
         true,
       )
 
-      // gl detail
+      // gpu resource footprint (renderer.info.memory + compiled programs)
       setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
       tokenizeandwritetextformat(
-        `$yellow gl calls$white${gl.calls}$yellow tri$white${gl.triangles}$yellow tex$white${gl.textures}`,
+        `$yellow gpu geos$white${gl.geometries}$yellow tex$white${gl.textures}$yellow prog$white${gl.programs}`,
         context,
         true,
       )
@@ -519,7 +500,7 @@ export function PerfMonitorTiles() {
   const screensize = useScreenSize()
   const glRef = useRef<GlSnap>(defaultGlSnap())
 
-  if (!perfmonitor && !PERF_UI) {
+  if (!perfmonitor) {
     return null
   }
 

@@ -6,7 +6,7 @@ export type WhipStart = {
 }
 
 function mapconnectionstate(pc: RTCPeerConnection): ConnectionState {
-  const state = pc.connectionState || pc.iceConnectionState
+  const state = String(pc.connectionState || pc.iceConnectionState)
   switch (state) {
     case 'new':
       return 'new'
@@ -37,13 +37,13 @@ function parseiceserversfromlink(header: string | null): RTCIceServer[] {
     if (!part.includes('rel="ice-server"')) {
       continue
     }
-    const urlmatch = part.match(/<([^>]+)>/)
+    const urlmatch = /<([^>]+)>/.exec(part)
     if (!urlmatch) {
       continue
     }
     const server: RTCIceServer = { urls: urlmatch[1] }
-    const user = part.match(/username="([^"]+)"/)
-    const cred = part.match(/credential="([^"]+)"/)
+    const user = /username="([^"]+)"/.exec(part)
+    const cred = /credential="([^"]+)"/.exec(part)
     if (user) {
       server.username = user[1]
     }
@@ -75,7 +75,9 @@ export class WhipTransport {
   private peerconnection: RTCPeerConnection | undefined
   private sessionurl: string | undefined
   private bearer: string | undefined
-  private onconnectionstatechange: ((state: ConnectionState) => void) | undefined
+  private onconnectionstatechange:
+    | ((state: ConnectionState) => void)
+    | undefined
   private onerror: ((message: string) => void) | undefined
 
   sethandlers(handlers: {
@@ -102,7 +104,7 @@ export class WhipTransport {
   }
 
   async start(start: WhipStart, tracks: MediaStreamTrack[]) {
-    this.stop()
+    void this.stop()
     this.bearer = start.bearer
     const pc = new RTCPeerConnection({ bundlePolicy: 'max-bundle' })
     this.peerconnection = pc
@@ -146,7 +148,7 @@ export class WhipTransport {
       } catch {
         /* ignore */
       }
-      this.stop()
+      void this.stop()
       this.onerror?.(message)
       throw new Error(message)
     }

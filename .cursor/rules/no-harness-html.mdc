@@ -1,0 +1,29 @@
+---
+description: No test harness HTML — headed Playwright only for browser debugging and parity
+alwaysApply: true
+---
+
+# No harness HTML
+
+Do not add committed test harness HTML pages. Browser debugging and parity use **headed Playwright** only.
+
+## Prohibited
+
+- New files under `ops/fixtures/harness/` (directory removed)
+- `harnesshtmlmiddleware` or serving `*.html` test fixtures from `ops/fixtures/`
+- Standalone debug HTML outside `cafe/` (e.g. `ops/fixtures/**/**.html` for Playwright hosts)
+
+## Required instead
+
+| Use case | Approach |
+|----------|----------|
+| Daisy/synth offline parity | Headed Playwright → `GET /parity-host` (inline COEP blank page) → `page.evaluate` + `ops/lib/daisy-parity/*-runner.ts` |
+
+Shared helpers: [`tasks/lib/parity/parity-playwright.ts`](../../tasks/lib/parity/parity-playwright.ts) (`launchparitybrowser`, `parityhosturl`), [`tasks/lib/parity/harness-middleware.ts`](../../tasks/lib/parity/harness-middleware.ts) (`parityblankhostmiddleware` only).
+
+## Examples
+
+```text
+❌ BAD — harnesshtmlmiddleware serving parity-regen.html
+✅ GOOD — page.goto(parityhosturl(port)) + import runner in page.evaluate
+```

@@ -9,7 +9,7 @@
 - `zss/feature/writeui` — write
 - `zss/feature/zsstextui` — zsstexttape, zsszedlinkline
 - `zss/gadget/data/scrollwritelines` — scrollwritelines
-- `zss/mapping/func` — doasync
+- `zss/device/doasync` — doasync
 - `zss/mapping/tick` — waitfor
 - `zss/mapping/types` — MAYBE, ispresent
 - `zss/words/stats` — statformat, stattypestring

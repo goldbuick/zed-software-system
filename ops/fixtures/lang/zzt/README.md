@@ -5,17 +5,17 @@ Committed samples for `ZSS ⊃ ZZT-OOP` parser hardening. Full Museum corpus out
 | Path | Role |
 |------|------|
 | [`raw_zzt/`](raw_zzt/) | Verbatim ZZT-OOP (`stat.code` / LANGREF shapes) — no `zztoop` |
-| [`failure-report.json`](failure-report.json) | Latest `lang:zzt:corpus:analyze` summary |
+| [`failure-report.json`](failure-report.json) | Latest `ops:fixtures:lang:zztoop:corpus:analyze` summary |
 | [`../zzt-ref/`](../zzt-ref/) | RoZZT LANGREF + ZSS extension rules |
 
 ## Tasks
 
 ```bash
-yarn task run lang:zzt:corpus:analyze
-yarn task run lang:zzt:corpus:analyze limit 50
+yarn task run ops:fixtures:lang:zztoop:corpus:analyze
+yarn task run ops:fixtures:lang:zztoop:corpus:analyze limit 50
 ```
 
-Requires local `ops/fixtures/zzt/corpus/extracted/` from `content:zzt:corpus:extract`.
+Requires local `ops/fixtures/zzt/corpus/extracted/` from `ops:fixtures:zzt:corpus:extract`.
 
 ## Latest full-corpus snapshot (2026-06-20)
 
@@ -33,7 +33,7 @@ After parser fixes: **~740** fewer fixable failures (`fixable_fail` **6,429**). 
 | raw `stat.code` (latest) | 1,066,774 / 1,108,500 | **96.24%** |
 
 ```bash
-yarn task run lang:zzt:corpus:analyze raw-only   # faster: skip wrapped walk
+yarn task run ops:fixtures:lang:zztoop:corpus:analyze raw-only   # faster: skip wrapped walk
 ```
 
 Tests: `ops/tests/unit/feature/lang/backend/typescript/zztcorpusparse.test.ts`, `zztlangrefsmoke.test.ts`, `zztfixableparser.test.ts`.

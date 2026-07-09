@@ -1,34 +1,31 @@
-import { pickwanixbundleentry } from 'zss/feature/wanix/wanixbundle'
+import { listwanixwasmentries, readbundleflatpath } from 'zss/feature/wanix/wanixbundle'
 
-describe('pickwanixbundleentry', () => {
-  it('prefers single wasm in bundle/', () => {
-    expect(pickwanixbundleentry(['README'], ['hello.wasm'])).toBe(
-      'bundle/hello.wasm',
-    )
+describe('wanixbundle', () => {
+  describe('readbundleflatpath', () => {
+    it('flattens single wasm under bundle prefix', () => {
+      expect(readbundleflatpath('bundle-a', 'bundle-a/hello.wasm')).toBe(
+        'bundle-a-hello.wasm',
+      )
+    })
+
+    it('flattens nested wasm paths', () => {
+      expect(readbundleflatpath('bundle-a', 'bundle-a/sub/b.wasm')).toBe(
+        'bundle-a-sub-b.wasm',
+      )
+    })
   })
 
-  it('keeps bundle/ prefix when already present', () => {
-    expect(pickwanixbundleentry([], ['bundle/hello.wasm'])).toBe(
-      'bundle/hello.wasm',
-    )
-  })
-
-  it('uses custom bundle prefix', () => {
-    expect(
-      pickwanixbundleentry(['README'], ['hello.wasm'], 'bundle-hold-wasm'),
-    ).toBe('bundle-hold-wasm/hello.wasm')
-  })
-
-  it('falls back to single root wasm', () => {
-    expect(pickwanixbundleentry(['solo.wasm'], null)).toBe('solo.wasm')
-  })
-
-  it('errors when no single entry wasm', () => {
-    expect(() => pickwanixbundleentry(['a.wasm', 'b.wasm'], null)).toThrow(
-      'bundle has no single entry wasm',
-    )
-    expect(() => pickwanixbundleentry([], ['a.wasm', 'b.wasm'])).toThrow(
-      'bundle has no single entry wasm',
-    )
+  describe('listwanixwasmentries', () => {
+    it('lists wasm paths under bundle prefix', () => {
+      const files = [
+        { path: 'bundle-a/a.wasm', bytes: new Uint8Array([1]) },
+        { path: 'bundle-a/readme.txt', bytes: new Uint8Array([2]) },
+        { path: 'bundle-a/sub/b.wasm', bytes: new Uint8Array([3]) },
+      ]
+      expect(listwanixwasmentries(files, 'bundle-a')).toEqual([
+        'bundle-a/a.wasm',
+        'bundle-a/sub/b.wasm',
+      ])
+    })
   })
 })

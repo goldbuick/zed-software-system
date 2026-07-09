@@ -68,7 +68,11 @@ export function Tiles({
     if (width === 0 || height === 0) {
       return
     }
-    material.uniforms.data.value = createTilemapDataTexture(width, height)
+    const texture = createTilemapDataTexture(width, height)
+    material.uniforms.data.value = texture
+    return () => {
+      texture.dispose()
+    }
   }, [material.uniforms.data, width, height])
 
   // set data texture

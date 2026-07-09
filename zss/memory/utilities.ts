@@ -1,16 +1,19 @@
 import { compress, decompress } from '@bokuweb/zstd-wasm'
 import JSZip, { JSZipObject } from 'jszip'
-import { registerinspector, registerstore } from 'zss/device/api'
+import { registerinspector } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { getclimode } from 'zss/feature/detect'
 import { packformat, unpackformat } from 'zss/feature/format'
+import { storagewriteconfig } from 'zss/feature/storage'
+import { CONFIG_KEYS } from 'zss/feature/storagekeys'
 import { isjoin } from 'zss/feature/url'
 import { DIVIDER, zsstexttape, zsszedlinklinechip } from 'zss/feature/zsstextui'
 import { ensurezstdwasm } from 'zss/feature/zstdwasm'
 import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
+import { base64tobase64url, base64urltobase64 } from 'zss/mapping/encode'
 import { qrlines } from 'zss/mapping/qr'
-import { scrolllinkescapefrag } from 'zss/mapping/string'
+import { escapedoublequoted, scrolllinkescapefrag } from 'zss/mapping/string'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { COLOR } from 'zss/words/types'
 
@@ -34,24 +37,12 @@ import {
 import { trimformatobject, trimmemoryexport } from './trimexport'
 import { BOOK, FIXED_DATE, MEMORY_LABEL } from './types'
 
-// In-memory config (register sends at login; utilities render/emit only)
-export const CONFIG_KEYS = [
-  'crt',
-  'lowrez',
-  'scanlines',
-  'voice2text',
-  'loaderlogging',
-  'promptlogging',
-  'dev',
-  'gadget',
-] as const
 const CONFIG_DEFAULTS: Record<string, string> = {
   crt: 'on',
   lowrez: 'off',
   scanlines: 'off',
   voice2text: 'off',
   loaderlogging: 'off',
-  promptlogging: 'off',
   dev: 'off',
   gadget: 'off',
 }
@@ -99,16 +90,7 @@ function parseadminselecttarget(
 }
 
 function quotescrollarg(s: string): string {
-  let buf = ''
-  for (let i = 0; i < s.length; ++i) {
-    const c = s.charAt(i)
-    if (c === '\\' || c === '"') {
-      buf += `\\${c}`
-    } else {
-      buf += c
-    }
-  }
-  return `"${buf}"`
+  return `"${escapedoublequoted(s)}"`
 }
 
 registerhyperlinksharedbridge(
@@ -128,7 +110,7 @@ registerhyperlinksharedbridge(
     }
     const newval = val ? 'on' : 'off'
     memorywriteconfig(p.key, newval)
-    registerstore(SOFTWARE, p.player, `config_${p.key}`, newval)
+    void storagewriteconfig(p.key, newval)
     if (p.key === 'dev') {
       memorywritehalt(newval === 'on')
     } else if (p.key === 'gadget') {
@@ -136,21 +118,6 @@ registerhyperlinksharedbridge(
     }
   },
 )
-
-// data encoding for urls
-function base64urltobase64(base64UrlString: string) {
-  // Replace non-url compatible chars with base64 standard chars
-  const base64 = base64UrlString.replace(/-/g, '+').replace(/_/g, '/')
-  // Pad out with standard base64 required padding characters if missing
-  const missingpadding = '='.repeat((4 - (base64.length % 4)) % 4)
-  // return full str
-  return base64 + missingpadding
-}
-
-function base64tobase64url(base64String: string) {
-  // Replace base64 standard chars with url compatible chars
-  return base64String.replace(/\+/g, '-').replace(/\//g, '_')
-}
 
 function formatidleseconds(ms: number | undefined): string {
   if (ms === undefined) {

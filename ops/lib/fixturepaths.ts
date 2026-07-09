@@ -33,11 +33,22 @@ export const LANG_ZZTOOP_REPORT_PATH = fixturepath(
 
 export const PARSE_FIXTURES_DIR = fixturepath('parse')
 export const WANIX_FIXTURES_DIR = fixturepath('wanix')
-export const HARNESS_FIXTURES_DIR = fixturepath('harness')
-/** Dev-served static assets at /fixtures/ (not shipped in cafe/public). */
-export const PUBLIC_FIXTURES_DIR = fixturepath('public')
-/** Offline Daisy/synth render outputs (wav/json/txt); served at /renders/ in dev only. */
-export const RENDERS_FIXTURES_DIR = fixturepath('renders')
+/** Built wanix binaries; dev-served at /fixtures/wanix/ via ops/public/ */
+export const WANIX_PUBLIC_FIXTURES_DIR = path.join(
+  process.cwd(),
+  'ops',
+  'public',
+  'wanix',
+)
+/** Dev-served static assets at /fixtures/ (ops/public/, not cafe/public). */
+export const PUBLIC_FIXTURES_DIR = path.join(process.cwd(), 'ops', 'public')
+/** Offline Daisy/synth render outputs (wav/json/txt); dev-served at /renders/ */
+export const RENDERS_FIXTURES_DIR = path.join(
+  process.cwd(),
+  'ops',
+  'public',
+  'renders',
+)
 export const TRAINING_CORPUS_DIR = fixturepath('generated', 'training')
 
 export const COOLREGIONSBOW_BOOK_JSON_PATH = fixturepath(
@@ -63,7 +74,13 @@ export const LANG_COOLREGIONSBOW_MANIFEST_PATH = fixturepath(
 
 export const CONTENT_FIXTURES_DIR = fixturepath('content')
 export const CONTENT_TEMPLATES_DIR = fixturepath('content', 'templates')
-export const CONTENT_DIST_DIR = fixturepath('content', 'dist')
+/** Built importable book JSON; drag-drop from ops/public/books/ */
+export const CONTENT_DIST_DIR = path.join(
+  process.cwd(),
+  'ops',
+  'public',
+  'books',
+)
 
 export const ZZT_CORPUS_DIR = fixturepath('zzt', 'corpus')
 export const ZZT_CORPUS_EXTRACTED_DIR = fixturepath(

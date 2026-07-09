@@ -1,4 +1,4 @@
-# speechtotext.ts
+# stt/speechtotext.ts
 
 **Purpose**: Local speech recognition via `@huggingface/transformers` (Moonshine ONNX) in an on-demand **sttspace** worker. Mic capture runs on the main thread; model load and transcribe run in the worker (WebGPU).
 
@@ -32,10 +32,6 @@ Configured in `zss/feature/stt/sttpreset.ts`.
 ## UX
 
 Pause-based (not live partials): terminal shows listening status while you speak; transcript is sent after ~750ms silence.
-
-## GPU
-
-STT shares WebGPU with the Gemma agent (heavy worker). Both may be resident during voice + agent use; VRAM contention is possible on low-end GPUs.
 
 ## Requirements
 

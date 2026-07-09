@@ -2,7 +2,11 @@ import fs from 'node:fs'
 import type http from 'node:http'
 import path from 'node:path'
 
-const HARNESS_FIXTURES_DIR = path.join(process.cwd(), 'ops/fixtures/harness')
+type ConnectMiddleware = (
+  req: http.IncomingMessage,
+  res: http.ServerResponse,
+  next: (err?: unknown) => void,
+) => void
 
 const MIMES: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -11,12 +15,16 @@ const MIMES: Record<string, string> = {
   '.txt': 'text/plain; charset=utf-8',
 }
 
-/** Lets same-origin harness HTML load in iframes under the app COEP require-corp. */
+/** Lets same-origin parity host load in iframes under the app COEP require-corp. */
 const COEP_IFRAME_HTML_HEADERS: Record<string, string> = {
   'Cross-Origin-Opener-Policy': 'same-origin',
   'Cross-Origin-Embedder-Policy': 'require-corp',
   'Cross-Origin-Resource-Policy': 'same-origin',
 }
+
+const PARITY_BLANK_HOST_PATH = '/parity-host'
+const PARITY_BLANK_HOST_HTML =
+  '<!doctype html><html><head><meta charset="UTF-8"></head><body></body></html>'
 
 function applycoepiframehtmlheaders(
   res: http.ServerResponse,
@@ -38,7 +46,7 @@ function contenttype(filepath: string): string | undefined {
 export function fixtureprefixmiddleware(
   prefix: string,
   rootdir: string,
-): http.RequestListener {
+): ConnectMiddleware {
   const prefixwithslash = prefix.endsWith('/') ? prefix : `${prefix}/`
   return (req, res, next) => {
     if (req.method !== 'GET' && req.method !== 'HEAD') {
@@ -83,33 +91,28 @@ export function fixtureprefixmiddleware(
   }
 }
 
-/** Serve ops/fixtures/harness/*.html at /{name}.html (dev + parity Playwright only). */
-export function harnesshtmlmiddleware(
-  harnessdir = HARNESS_FIXTURES_DIR,
-): http.RequestListener {
+/** Inline blank COEP host for Playwright page.evaluate (no committed HTML file). */
+export function parityblankhostmiddleware(): ConnectMiddleware {
   return (req, res, next) => {
     if (req.method !== 'GET' && req.method !== 'HEAD') {
       next()
       return
     }
     const pathname = (req.url ?? '').split('?')[0]
-    if (!pathname.endsWith('.html') || pathname.includes('..')) {
-      next()
-      return
-    }
-    const basename = path.basename(pathname)
-    const file = path.join(harnessdir, basename)
-    if (!file.startsWith(harnessdir) || !fs.existsSync(file)) {
+    if (pathname !== PARITY_BLANK_HOST_PATH) {
       next()
       return
     }
     res.setHeader('Content-Type', 'text/html; charset=utf-8')
-    applycoepiframehtmlheaders(res, file)
+    for (const [key, value] of Object.entries(COEP_IFRAME_HTML_HEADERS)) {
+      res.setHeader(key, value)
+    }
     if (req.method === 'HEAD') {
       res.statusCode = 200
       res.end()
       return
     }
-    fs.createReadStream(file).pipe(res)
+    res.statusCode = 200
+    res.end(PARITY_BLANK_HOST_HTML)
   }
 }

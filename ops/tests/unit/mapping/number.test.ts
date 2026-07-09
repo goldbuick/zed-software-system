@@ -1,6 +1,7 @@
 import {
   clamp,
   makeeven,
+  modpositive,
   randominteger,
   randomintegerwith,
   randomnumber,
@@ -71,6 +72,14 @@ describe('number', () => {
       // But Math.round(-1.5) = -1 (rounds towards positive infinity)
       // So: Math.round(-15/10) = -1, -1 * 10 = -10
       expect(snap(-15, 10)).toBe(-10)
+    })
+  })
+
+  describe('modpositive', () => {
+    it('normalizes values into [0, modulus)', () => {
+      expect(modpositive(370, 360)).toBe(10)
+      expect(modpositive(-10, 360)).toBe(350)
+      expect(modpositive(0, 360)).toBe(0)
     })
   })
 

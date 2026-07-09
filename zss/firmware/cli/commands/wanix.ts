@@ -1,5 +1,6 @@
 import {
   apierror,
+  apilog,
   wanixattach,
   wanixdetach,
   wanixshow,
@@ -12,6 +13,10 @@ import { FIRMWARE } from 'zss/firmware'
 import { ispresent } from 'zss/mapping/types'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE, NAME } from 'zss/words/types'
+
+function wanixstublog(player: string, message: string) {
+  apilog(SOFTWARE, player, `wanix stub: ${message}`)
+}
 
 export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
   return fw.command(
@@ -49,21 +54,85 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
           }
           break
         }
-        case 'stop':
-          wanixstop(SOFTWARE, player, ispresent(arg) ? NAME(arg) : undefined)
+        case 'stop': {
+          const [stoparg] = readargs(words, 1, [ARG_TYPE.MAYBE_NAME])
+          wanixstop(
+            SOFTWARE,
+            player,
+            ispresent(stoparg) ? NAME(stoparg) : undefined,
+          )
           break
+        }
         case 'detach':
           wanixdetach(SOFTWARE, player)
           break
         case 'attach':
           wanixattach(SOFTWARE, player, ispresent(arg) ? NAME(arg) : undefined)
           break
+        case 'pull':
+          wanixstublog(player, 'pull zed-cafe export (not wired)')
+          break
+        case 'bridge': {
+          const [urlorstop] = readargs(words, 1, [ARG_TYPE.MAYBE_STRING])
+          if (!ispresent(urlorstop) || !urlorstop.trim()) {
+            apierror(
+              SOFTWARE,
+              player,
+              'wanix',
+              'usage: #wanix bridge <ws-url> | #wanix bridge stop',
+            )
+            break
+          }
+          const trimmed = urlorstop.trim()
+          if (trimmed.toLowerCase() === 'stop') {
+            wanixstublog(player, 'bridge stop (not wired)')
+            break
+          }
+          wanixstublog(player, `bridge start ${trimmed} (not wired)`)
+          break
+        }
+        case 'remote': {
+          const sub = ispresent(arg) ? NAME(arg) : undefined
+          if (!ispresent(sub)) {
+            wanixstublog(player, 'remote menu (not wired)')
+            break
+          }
+          if (NAME(sub) === 'connect') {
+            const [url, mountdst] = readargs(words, 2, [
+              ARG_TYPE.STRING,
+              ARG_TYPE.MAYBE_NAME,
+            ])
+            if (!ispresent(url) || !url.trim()) {
+              apierror(
+                SOFTWARE,
+                player,
+                'wanix',
+                'usage: #wanix remote connect <wss-url> [dst]',
+              )
+              break
+            }
+            wanixstublog(
+              player,
+              ispresent(mountdst)
+                ? `remote connect ${url.trim()} dst=${NAME(mountdst)} (not wired)`
+                : `remote connect ${url.trim()} (not wired)`,
+            )
+            break
+          }
+          apierror(
+            SOFTWARE,
+            player,
+            'wanix',
+            'usage: #wanix remote | #wanix remote connect <wss-url> [dst]',
+          )
+          break
+        }
         default:
           apierror(
             SOFTWARE,
             player,
             'wanix',
-            'drop .wasm/.tgz — #wanix menu, vm, attach, stop, detach',
+            'drop .wasm/.tgz — #wanix menu, vm, remote, bridge, attach, pull, stop, detach',
           )
           break
       }

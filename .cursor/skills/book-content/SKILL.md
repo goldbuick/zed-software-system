@@ -18,11 +18,11 @@ description: >-
 ## Workflow
 
 1. Create a folder under `ops/fixtures/content/templates/` with `manifest.json` and `pages/*.json`.
-2. Run `yarn task run content:book:build ops/fixtures/content/templates/<yourbook>`.
-3. Validate: `yarn task run content:book:validate ops/fixtures/content/dist/<name>.book.json`.
-4. Drag `ops/fixtures/content/dist/<name>.book.json` into zed.cafe.
+2. Run `yarn task run ops:fixtures:content:book:build ops/fixtures/content/templates/<yourbook>`.
+3. Validate: `yarn task run ops:fixtures:content:book:validate ops/public/books/<name>.book.json`.
+4. Drag `ops/public/books/<name>.book.json` into zed.cafe.
 
-Validate a single page: `yarn task run content:codepage:validate ops/fixtures/content/templates/.../pages/player.object.json`.
+Validate a single page: `yarn task run ops:fixtures:content:codepage:validate ops/fixtures/content/templates/.../pages/player.object.json`.
 
 ## Folder layout
 

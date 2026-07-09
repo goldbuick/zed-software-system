@@ -90,11 +90,6 @@ Firmware command signatures stay short. Longer inline help for autocomplete hint
 |---------|------|-------------|
 | `zns` | … | Bare `#zns` → menu (login guide, or publish/import when logged in). Login: `#zns <email> <namespace>`, then `#zns <code>`. Subcommands: `login`, `restart`, `publish bytes\|book\|code`, `import code <key>`, `del`/`delete`. Peer auto-published on multiplayer connect. |
 
-### Agent
-
-| Command | Args | Description |
-|---------|------|-------------|
-| `agent` | [action] [args…] | start, stop &lt;id&gt;, list (prompt agents via in-world chat only) |
 
 ## Internal State
 

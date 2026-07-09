@@ -52,9 +52,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `role` | Assign role for a player id |
 | `ban` | Ban player by id (session token; blocks login) or list active players |
 | `unban` | Unban player by id or list banned tokens |
-| `agent` | start/stop/list AI agents; prompt agents via in-world chat only |
 | `userinput` | Inject player input (`up` / `down` / `left` / `right` / `ok` / `cancel` / `shoot*`…) |
-| `pilot` | Walk player toward coordinates (`#pilot x y`) or `#pilot stop` |
 | `screenshot` | Screenshot for capture |
 | `zns` | Login/publish actions |
 
@@ -170,7 +168,7 @@ All firmware commands and their descriptions. Commands are available depending o
 
 ### Bridge chat (Twitch, feeds)
 
-- **Route key:** `routekey` is the suffix for VM events `chat:message:<routekey>`, `chat:action:<routekey>`, `chat:connect:<routekey>`, and `chat:disconnect:<routekey>`. Match it to a **board address** (or other routing key your loader expects) so `vmloader` and agent routing resolve correctly.
+- **Route key:** `routekey` is the suffix for VM events `chat:message:<routekey>`, `chat:action:<routekey>`, `chat:connect:<routekey>`, and `chat:disconnect:<routekey>`. Match it to a **board address** (or other routing key your loader expects) so `vmloader` resolves chat correctly.
 - **Twitch:** `#chat <channel>` or `#chat start twitch <channel> [routekey]` — Twurple uses ambient auth from the environment; do not commit tokens.
 - **Status:** `#bridge` or `#bridge status` prints chat slot state and IVS broadcast summary **without** secrets.
 - **Saved profiles (IndexedDB):** `#chat profile` (same as `#chat profile list`) prints profile names; `#chat profile show <name>` prints one profile (secrets redacted); `#chat profile save …` / `#chat profile delete <name>` manage them. Use `#chat start <kind> @profilename` to apply a profile.

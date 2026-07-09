@@ -1,5 +1,4 @@
 import { createfirmware } from 'zss/firmware'
-import { registeragentcommands } from 'zss/firmware/cli/commands/agent'
 import { registerbookscommands } from 'zss/firmware/cli/commands/books'
 import { registereditorcommands } from 'zss/firmware/cli/commands/editor'
 import { registerexportcommands } from 'zss/firmware/cli/commands/export'
@@ -21,10 +20,9 @@ const REGISTER_COMMANDS = [
   registerzztcommands,
   registermultiplayercommands,
   registerpermissionscommands,
-  registeragentcommands,
-  registerwanixcommands,
   registerinputcommands,
   registermisccommands,
+  registerwanixcommands,
 ]
 
 export const CLI_FIRMWARE = REGISTER_COMMANDS.reduce(

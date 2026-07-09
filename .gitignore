@@ -16,6 +16,7 @@ dist-bin
 dist-server
 oclif.manifest.json
 *.local
+*.tsbuildinfo
 
 # Editor directories and files
 .vscode/*
@@ -29,7 +30,7 @@ oclif.manifest.json
 *.sw?
 
 # content build output
-ops/fixtures/content/dist
+ops/public/books
 
 # runtime data
 .zss-data
@@ -37,36 +38,30 @@ ops/fixtures/content/dist
 # vosk speech recognition models (large binaries)
 cafe/public/models/
 
-# wanix smoke wasm scratch (regenerate with yarn task run wanix:wasm:build)
-ops/fixtures/wanix/*.wasm
-# wanix harness guests (regenerate with yarn task run wanix:gojs:build / wanix:ensure)
-cafe/public/wanix/gojscheck.wasm
-cafe/public/wanix/wanix.debug.wasm
-cafe/public/wanix/zed-cafe.wasm
 
-# Museum of ZZT vanilla corpus archives (yarn task run content:zzt:corpus:sync)
+# Museum of ZZT vanilla corpus archives (yarn task run ops:fixtures:zzt:corpus:sync)
 ops/fixtures/zzt/corpus/archives/
-# unpacked .zzt/.brd from archives (yarn task run content:zzt:corpus:extract)
+# unpacked .zzt/.brd from archives (yarn task run ops:fixtures:zzt:corpus:extract)
 ops/fixtures/zzt/corpus/extracted/
-# profanity/slur scan reports (yarn task run content:zzt:corpus:profanity:scan)
+# profanity/slur scan reports (yarn task run ops:fixtures:zzt:corpus:profanity:scan)
 ops/fixtures/zzt/corpus/profanity-report.json
 ops/fixtures/zzt/corpus/sanitize-report.json
-# extracted zzt-oop from .zzt/.brd files (yarn task run content:zzt:corpus:zss)
+# extracted zzt-oop from .zzt/.brd files (yarn task run ops:fixtures:zzt:corpus:zss)
 ops/fixtures/zzt/corpus/zss/
-# board PNG renders from extracted worlds (yarn task run content:zzt:corpus:screenshots)
+# board PNG renders from extracted worlds (yarn task run ops:fixtures:zzt:corpus:screenshots)
 ops/fixtures/zzt/corpus/screenshots/
 
 # offline song renders (regenerate with yarn level-issue-song:render)
-ops/fixtures/renders/*.wav
-ops/fixtures/renders/*.json
-ops/fixtures/renders/*.txt
-ops/fixtures/renders/env-parity/
-ops/fixtures/renders/synth-env-parity/
+ops/public/renders/*.wav
+ops/public/renders/*.json
+ops/public/renders/*.txt
+ops/public/renders/env-parity/
+ops/public/renders/synth-env-parity/
 
 # local Emscripten SDK (yarn daisy:build)
 .emsdk/
 
-# Jest coverage (yarn task run app:test:coverage)
+# Jest coverage (yarn task run ops:test:coverage)
 ops/coverage/
 
 # Playwright
@@ -76,7 +71,7 @@ playwright-report/
 # stray wrangler cache at repo root (deploy configs live in ops/infra/)
 /infra/
 
-# ZNS generated previews (yarn task run zns:email:preview / zns:grid:preview)
+# ZNS generated previews (yarn task run ops:zns:email:preview / zns:grid:preview)
 ops/infra/generated/
 
 

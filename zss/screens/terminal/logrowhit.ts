@@ -1,37 +1,49 @@
-import { textformatreadedges } from 'zss/words/textformat'
+import {
+  type TextEdge,
+  readpinrowycoords,
+  readsesslogrowycoords,
+  readterminallayout,
+} from 'zss/screens/terminal/terminallayout'
 
-type TextEdge = ReturnType<typeof textformatreadedges>
+import { findterminalrowindexfromcoords } from './logrowhitcoords'
 
 /** Which merged log row (pins first, then session logs) contains the tape Y cursor. */
 export function findterminalrowindexforcursor(args: {
   tapeycursor: number
   scroll: number
-  terminallogs: string[]
-  logsrowheights: number[]
+  pinlines: string[]
+  sessionlogs: string[]
+  maxwidth: number
   edge: TextEdge
   editoropen: boolean
 }): number | undefined {
   const {
     tapeycursor,
     scroll,
-    terminallogs,
-    logsrowheights,
+    pinlines,
+    sessionlogs,
+    maxwidth,
     edge,
     editoropen,
   } = args
-  const baseline = edge.bottom - edge.top - (editoropen ? 0 : 2)
-  let logsrowycoord = baseline + 1
-  const logsrowycoords: number[] = logsrowheights.map((rowheight) => {
-    logsrowycoord -= rowheight
-    return logsrowycoord
+  const layout = readterminallayout({
+    pinlines,
+    sessionlogs,
+    maxwidth,
+    edge,
+    editoropen,
   })
-  for (let index = 0; index < terminallogs.length; ++index) {
-    const y = logsrowycoords[index] + scroll
-    const yheight = logsrowheights[index]
-    const ybottom = y + yheight
-    if (tapeycursor >= y && tapeycursor < ybottom) {
-      return index
-    }
-  }
-  return undefined
+  const pinycoords = readpinrowycoords(layout.pinheights, layout.pinstarty)
+  const sessionycoords = readsesslogrowycoords(
+    layout.sessionheights,
+    layout.logzonebottom,
+  )
+  return findterminalrowindexfromcoords({
+    tapeycursor,
+    scroll,
+    pinycoords,
+    pinheights: layout.pinheights,
+    sessionycoords,
+    sessionheights: layout.sessionheights,
+  })
 }
