@@ -98,7 +98,7 @@ The bottom row of the terminal screen is a hint bar. `Ctrl+\` is a prefix key
 While attached, the hint bar shows `Ctrl+\ : detach / switch`. After arming the
 prefix it shows `Ctrl+\  n next  p prev  d detach  Esc cancel`.
 
-Scrollback: `PageUp` / `PageDown` (hold `Ctrl` for 10 lines). All other typing
+Scrollback: `PageUp` / `PageDown` (hold `Shift` for 10 lines; Mac: `Fn+↑/↓`, 10 lines: `Shift+Fn+↑/↓`). All other typing
 forwards to the guest when the viewport is at the live line.
 
 ## Files

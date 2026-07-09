@@ -16,13 +16,15 @@ import type { WanixTermTileBuffer } from 'zss/feature/wanix/wanixtermbuffer'
 import { writetile } from 'zss/gadget/tiles'
 import { UserInput } from 'zss/gadget/userinput.bridge'
 import { useWriteText } from 'zss/gadget/writetext'
+import { ismac } from 'zss/words/system'
 import { textformatreadedges } from 'zss/words/textformat'
-import { NAME } from 'zss/words/types'
+import { COLOR, NAME } from 'zss/words/types'
 
-const HINT_IDLE = 'Ctrl+\\ : detach / switch'
-const HINT_ARMED = 'Ctrl+\\  n next  p prev  d detach  Esc cancel'
-const HINT_COLOR = 0
-const HINT_BG = 7
+const HINT_SCROLLBACK_ROWS = ismac ? `Fn+Up/Down` : `PgUp/PgDown`
+const HINT_IDLE = `Ctrl+\\ open detach menu, ${HINT_SCROLLBACK_ROWS} scrollback rows`
+const HINT_ARMED = `Ctrl+\\ to detach, left/right to switch sessions`
+const HINT_COLOR = COLOR.BLACK
+const HINT_BG = COLOR.DKPURPLE
 
 function useWanixAttachSessionKey() {
   const [sessionkey, setsessionkey] = useState(readattachedsession)
@@ -193,7 +195,16 @@ export function WanixTermScreen() {
   }
 
   if (edge.height >= 1) {
-    drawhintbar(context, edge, prefixarmed ? HINT_ARMED : HINT_IDLE)
+    // how many different sessions are there?
+    const sessions = readwanixtermbufferkeys()
+    const sessioncount = sessions.length
+    const sessionindex = sessions.indexOf(sessionkey ?? '')
+    const sessionhint = `session ${sessionindex + 1} of ${sessioncount}`
+    drawhintbar(
+      context,
+      edge,
+      `${prefixarmed ? HINT_ARMED : HINT_IDLE}, ${sessionhint}`,
+    )
   }
 
   context.changed()
@@ -241,14 +252,14 @@ export function WanixTermScreen() {
         if (key === 'pageup') {
           event.preventDefault()
           setscrolloffset((prev) =>
-            Math.min(maxscrolloffset, prev + (event.ctrlKey ? 10 : 1)),
+            Math.min(maxscrolloffset, prev + (event.shiftKey ? 10 : 1)),
           )
           return
         }
         if (key === 'pagedown') {
           event.preventDefault()
           setscrolloffset((prev) =>
-            Math.max(0, prev - (event.ctrlKey ? 10 : 1)),
+            Math.max(0, prev - (event.shiftKey ? 10 : 1)),
           )
           return
         }
