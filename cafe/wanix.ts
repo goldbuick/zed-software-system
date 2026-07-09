@@ -38,6 +38,7 @@ import { readwanixwasmdriver } from 'zss/feature/wanix/wanixwasmdriver'
 
 import {
   finalizezedcafeexportcontent,
+  ensurezedcafeboot,
   haltzedcafetask,
   collectzedcafeexportfiles,
   pushzedcafeexportlive,
@@ -697,6 +698,9 @@ async function applyroom(config: WanixRoomConfig) {
     const vrid = vmel
       ? await waitforvmrid(vmel, Date.now() + VM_RID_WAIT_MS)
       : null
+    if (roomconfig.zedcafe?.cmd) {
+      await ensurezedcafeboot(system, readroot(), roomconfig.zedcafe.cmd)
+    }
     return {
       ok: true,
       mode: 'vm',
@@ -1130,7 +1134,7 @@ async function handlerrpc(
           result = false
           break
         }
-        result = await readzedcafeguestbound(readroot())
+        result = await readzedcafeguestbound(readroot(), system)
         break
       }
       case 'wirezedcafeexport': {

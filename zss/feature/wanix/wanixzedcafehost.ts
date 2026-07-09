@@ -137,34 +137,37 @@ export async function readzedcafeexportlive(
     return false
   }
   const exportsrc = readwanixzedcafeexportsrc(taskrid)
-  try {
-    await root.readDir(exportsrc)
-  } catch {
-    return false
-  }
   return readzedcafeexportstatsready(root, exportsrc)
 }
 
-export async function readzedcafeguestbound(root: WanixRoot): Promise<boolean> {
+export async function readzedcafeguestbound(
+  root: WanixRoot,
+  sys?: WanixSystemElement | null,
+): Promise<boolean> {
+  const statspath = readwanixzedcafeguestpath('stats.json')
   try {
-    await root.readFile(readwanixzedcafeguestpath('stats.json'))
+    await root.readFile(statspath)
     return true
   } catch {
-    return false
+    // fall through
   }
+  const vm = sys?.querySelector('wanix-vm') as WanixVmWithTask | null
+  const vmtask = vm?.task
+  if (vmtask?.root) {
+    try {
+      await vmtask.root.readFile(statspath)
+      return true
+    } catch {
+      return false
+    }
+  }
+  return false
 }
 
 async function readzedcafeexportmountready(
   root: WanixRoot,
   taskrid: string,
 ): Promise<boolean> {
-  const exportsrc = readwanixzedcafeexportsrc(taskrid)
-  try {
-    await root.readDir(exportsrc)
-    return true
-  } catch {
-    // fall through
-  }
   try {
     const entries = await root.readDir(`#task/${taskrid}`)
     return entries.some((entry) => entry.replace(/\/$/, '') === 'export')
@@ -229,12 +232,19 @@ export async function wirezedcafeexportbinds(
   await tryunbindexport(sys.root, src, dst)
   await sys.root.bind(src, dst)
   let count = 1
-  const vm = sys.querySelector('wanix-vm') as WanixVmWithTask | null
-  const vmtask = vm?.task
-  if (vmtask?.root) {
-    await tryunbindexport(vmtask.root, src, dst)
-    await vmtask.root.bind(src, dst)
-    count = 2
+  const deadline = Date.now() + WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS
+  while (Date.now() < deadline) {
+    const vm = sys.querySelector('wanix-vm') as WanixVmWithTask | null
+    const vmtask = vm?.task
+    if (vmtask?.root) {
+      await tryunbindexport(vmtask.root, src, dst)
+      await vmtask.root.bind(src, dst)
+      count = 2
+      break
+    }
+    await new Promise<void>((resolve) =>
+      setTimeout(resolve, WANIX_ZEDCAFE_EXPORT_READY_POLL_MS),
+    )
   }
   return count
 }
@@ -368,7 +378,11 @@ export async function bootzedcafegojs(
     return null
   }
 
-  const mountready = await waitzedcafeexportmountready(root, taskrid, 5_000)
+  const mountready = await waitzedcafeexportmountready(
+    root,
+    taskrid,
+    WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS,
+  )
   if (!mountready) {
     return null
   }

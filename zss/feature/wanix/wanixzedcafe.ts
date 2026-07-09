@@ -280,7 +280,57 @@ async function finalizezedcafeexport(
   taskrid: string,
   vmmode: boolean,
 ): Promise<void> {
-  await callwanixrpc('finalizezedcafeexport', [taskrid, vmmode])
+  await callwanixrpc(
+    'finalizezedcafeexport',
+    [taskrid, vmmode],
+    WANIX_ZEDCAFE_EXPORT_WAIT_MS + 30_000,
+  )
+}
+
+async function pushwirezedcafeaftervmboot(
+  device: DEVICELIKE,
+  player: string,
+  taskrid: string,
+  files: WANIX_ZED_CAFE_EXPORT_FILE[],
+): Promise<boolean> {
+  if (!(await pushzedcafeexportfiles(device, player, taskrid, files))) {
+    return false
+  }
+  if (!(await waitzedcafecontentready(taskrid))) {
+    apilog(device, player, 'zedcafe export: stats.json missing after vm push')
+    return false
+  }
+  await finalizezedcafeexport(taskrid, true)
+  await markzedcafepollready(device, player)
+  if (!(await iszedcafeguestbound())) {
+    await callwanixrpc('wirezedcafeexport', [taskrid], WANIX_ZEDCAFE_EXPORT_WAIT_MS)
+  }
+  return true
+}
+
+export async function finalizewanixzedcafeaftervmboot(
+  device: DEVICELIKE,
+  player: string,
+): Promise<boolean> {
+  const files = buildzedcafeexportfiles()
+  const existing = await readtaskrid()
+  if (existing && (await iszedcafeexportlive(existing))) {
+    if (!(await iszedcafeguestbound())) {
+      await callwanixrpc('wirezedcafeexport', [existing], WANIX_ZEDCAFE_EXPORT_WAIT_MS)
+    }
+    return true
+  }
+  if (existing) {
+    return pushwirezedcafeaftervmboot(device, player, existing, files)
+  }
+  const taskrid = await ensurezedcafeexportready(device, player, files)
+  if (!taskrid) {
+    return false
+  }
+  if (!(await iszedcafeguestbound())) {
+    await callwanixrpc('wirezedcafeexport', [taskrid], WANIX_ZEDCAFE_EXPORT_WAIT_MS)
+  }
+  return true
 }
 
 async function markzedcafepollready(device: DEVICELIKE, player: string) {
@@ -342,15 +392,6 @@ export async function ensurezedcafeexportready(
     return existing
   }
   return bootzedcafeexport(device, player, files)
-}
-
-export async function finalizewanixzedcafeaftervmboot(
-  device: DEVICELIKE,
-  player: string,
-): Promise<boolean> {
-  const files = await fetchzedcafeexportfiles(device, player)
-  const taskrid = await ensurezedcafeexportready(device, player, files)
-  return taskrid !== null
 }
 
 async function bootzedcafeexport(
@@ -500,7 +541,7 @@ export async function ensurewanixzedcafedaemon(
     }
     return true
   }
-  if (iswanixspaceactive()) {
+  if (iswanixspaceactive() && taskrid) {
     if (await waitzedcafereadyafterboot(device, player)) {
       return true
     }

@@ -424,7 +424,7 @@ export async function startwanixvm(
     vrid?: string | null
     already?: boolean
   }
-  if (device && player && !result.already) {
+  if (device && player) {
     await finalizewanixzedcafeaftervmboot(device, player)
     wanixdrainpendingzedcafeexport(device, player)
   }
