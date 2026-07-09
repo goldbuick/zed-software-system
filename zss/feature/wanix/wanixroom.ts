@@ -41,6 +41,7 @@ import {
   resetwanixzedcafeonidle,
   wanixdrainpendingzedcafeexport,
 } from 'zss/feature/wanix/wanixzedcafe'
+import { wanixperfmark } from 'zss/feature/wanix/wanixperf'
 import type { WanixZedCafeRoomSpec } from 'zss/feature/wanix/wanixzedcafetypes'
 
 const WANIX_ROOM_TIMEOUT_MS = 180_000
@@ -49,7 +50,7 @@ const WANIX_MENU_TIMEOUT_MS = 3_000
 let roomconfig: WanixRoomConfig = createidleroomconfig()
 
 function bumpmountkey(config: WanixRoomConfig): WanixRoomConfig {
-  return { ...config, mountkey: config.mountkey + 1 }
+  return { ...config, mountkey: config.mountkey + 1, hardreset: true }
 }
 
 export function readwanixroomconfig(): WanixRoomConfig {
@@ -120,7 +121,7 @@ export async function ensurewanixtaskroom(
     }
   }
   const next: WanixRoomConfig = {
-    ...bumpmountkey(roomconfig),
+    ...roomconfig,
     mode: 'task',
     archives: [],
     remotes: [],
@@ -128,10 +129,9 @@ export async function ensurewanixtaskroom(
     vm: undefined,
     zedcafe,
   }
+  wanixperfmark('drop-start', { label: 'ensurewanixtaskroom' })
   await applywanixroom(next)
-  if (device && player) {
-    await activatezedcafeexport(device, player)
-  }
+  wanixperfmark('applyroom-return', { mode: 'task' })
 }
 
 export async function startwanixvmroom(
@@ -175,10 +175,13 @@ export async function stopwanixvmroom(): Promise<unknown> {
   return result
 }
 
-export async function stopwanixroom(): Promise<unknown> {
+export async function stopwanixroom(hard = false): Promise<unknown> {
   resetwanixzedcafeonidle()
   const next = createidleroomconfig()
-  next.mountkey = roomconfig.mountkey + 1
+  next.mountkey = hard ? roomconfig.mountkey + 1 : roomconfig.mountkey
+  if (hard) {
+    next.hardreset = true
+  }
   return applywanixroom(next)
 }
 
@@ -366,7 +369,14 @@ export async function handlewanixdrop(
         `wanix: staging ${payload.label} (${payload.bytes.length} bytes)…`,
       )
     }
-    await putwanixroomfile(path, payload.bytes)
+    wanixperfmark('wasm-write-start', { path, bytes: payload.bytes.length })
+    const exportready =
+      device && player
+        ? activatezedcafeexport(device, player)
+        : Promise.resolve()
+    const stagewasm = putwanixroomfile(path, payload.bytes)
+    await Promise.all([exportready, stagewasm])
+    wanixperfmark('wasm-write-end', { path, bytes: payload.bytes.length })
     const isfindplayers = payload.label.toLowerCase().includes('findplayers')
     if (device && player) {
       if (isfindplayers) {
@@ -380,6 +390,7 @@ export async function handlewanixdrop(
       }
     }
     await spawntaskinroom(taskid, path)
+    wanixperfmark('spawntask-return', { taskid, cmd: path })
     if (device && player && isfindplayers) {
       apilog(
         device,
@@ -391,6 +402,9 @@ export async function handlewanixdrop(
   }
 
   await ensurewanixtaskroom(device, player)
+  if (device && player) {
+    await activatezedcafeexport(device, player)
+  }
   const prefix = `bundle-${taskid}`
   const files = await extractwanixtgz(payload.bytes, prefix)
   for (const file of files) {

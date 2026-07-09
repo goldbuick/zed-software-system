@@ -34,7 +34,7 @@ import {
   WANIX_TERM_BRIDGE_PONG,
   trackwanixtermlinebuf,
 } from 'zss/feature/wanix/wanixtermbridgesmoke'
-import { readwanixwasmdriver } from 'zss/feature/wanix/wanixwasmdriver'
+import { wanixperfmark } from 'zss/feature/wanix/wanixperf'
 
 import {
   finalizezedcafeexportcontent,
@@ -129,6 +129,7 @@ let roomconfig: WanixRoomConfig = {
 }
 let lastmountkey = -1
 let system: WanixSystemElement | null = null
+let systemsoftidle = false
 let lastfitcols = DEFAULT_TERM_COLS
 let lastfitrows = DEFAULT_TERM_ROWS
 
@@ -637,6 +638,108 @@ async function waitforvmrid(vm: WanixVmElement, deadline: number) {
   return vm.rid ?? null
 }
 
+function pruneusertasks(sys: WanixSystemElement) {
+  for (const task of [...sys.querySelectorAll('wanix-task')]) {
+    task.remove()
+  }
+  roomconfig.tasks = []
+}
+
+function prunevmfromsystem(sys: WanixSystemElement) {
+  sys.querySelector('wanix-vm')?.remove()
+  sys.querySelector('[data-zss-linux-bind]')?.remove()
+  sys.querySelector('[data-zss-zedcafe-linux-overlay-bind]')?.remove()
+  sys.querySelector('[data-zss-v86-bind]')?.remove()
+  for (const bind of sys.querySelectorAll('wanix-bind')) {
+    if (bind.getAttribute('dst') === 'vm') {
+      bind.remove()
+    }
+  }
+  roomconfig.vm = undefined
+}
+
+function softidlewanixsystem(sys: WanixSystemElement) {
+  haltzedcafetask(sys)
+  pruneusertasks(sys)
+  haltzedcafetask(sys)
+  prunevmfromsystem(sys)
+  disconnectalltermsessions()
+  resetzedcafestate()
+  systemsoftidle = true
+  wanixperfmark('applyroom-soft-idle')
+}
+
+async function warmstartvm(): Promise<{
+  vmid: string
+  vrid: string | null
+  mem: string
+} | null> {
+  const vm = roomconfig.vm
+  if (!system?.isReady || !vm?.active) {
+    return null
+  }
+  if (!system.querySelector('wanix-vm')) {
+    appendvmroombinds(system)
+    const vmel = document.createElement('wanix-vm')
+    setwanixattrs(vmel, {
+      id: vm.id,
+      export: 'ttyS0',
+      mem: vm.mem,
+      term: true,
+    })
+    system.appendChild(vmel)
+  }
+  await waitvmlinuxmount()
+  await connectvmtermsession()
+  const vmel = system.querySelector('wanix-vm')
+  if (vmel && typeof vmel.start === 'function') {
+    await vmel.start()
+  }
+  const vrid = vmel
+    ? await waitforvmrid(vmel, Date.now() + VM_RID_WAIT_MS)
+    : null
+  return { vmid: vm.id, vrid, mem: vm.mem }
+}
+
+async function warmactivateroom(): Promise<Record<string, unknown>> {
+  if (!system?.isReady) {
+    throw new Error('wanix warm apply: system not ready')
+  }
+  systemsoftidle = false
+  wanixperfmark('applyroom-warm-reuse', { mode: roomconfig.mode })
+  if (roomconfig.zedcafe?.cmd) {
+    const spec = roomconfig.zedcafe
+    synczedcafestate(spec.cmd, spec.generation)
+    synczedcafewasmversionifneeded(system)
+  }
+  if (roomconfig.mode === 'vm' && roomconfig.vm?.active) {
+    const vmstatus = await warmstartvm()
+    if (roomconfig.zedcafe?.cmd) {
+      await ensurezedcafeboot(system, readroot(), roomconfig.zedcafe.cmd)
+    }
+    postready()
+    return {
+      ok: true,
+      mode: 'vm',
+      mountkey: lastmountkey,
+      warm: true,
+      vmid: vmstatus?.vmid,
+      vrid: vmstatus?.vrid ?? null,
+      mem: vmstatus?.mem,
+    }
+  }
+  if (roomconfig.mode === 'task' && roomconfig.zedcafe?.cmd) {
+    await ensurezedcafeboot(system, readroot(), roomconfig.zedcafe.cmd)
+  }
+  postready()
+  return {
+    ok: true,
+    mode: roomconfig.mode,
+    mountkey: lastmountkey,
+    warm: true,
+  }
+}
+
 async function applyroom(config: WanixRoomConfig) {
   roomconfig = {
     mode: config.mode ?? 'idle',
@@ -649,19 +752,30 @@ async function applyroom(config: WanixRoomConfig) {
   }
 
   if (roomconfig.mode === 'idle') {
+    if (system?.isReady && !roomconfig.hardreset) {
+      softidlewanixsystem(system)
+      lastmountkey = roomconfig.mountkey
+      postidle()
+      wanixperfmark('applyroom-return', { mode: 'idle', soft: true })
+      return { ok: true, mode: 'idle', mountkey: lastmountkey, soft: true }
+    }
     if (system) {
       haltzedcafetask(system)
     }
     disconnectalltermsessions()
     host.replaceChildren()
     system = null
+    systemsoftidle = false
     lastmountkey = roomconfig.mountkey
     resetzedcafestate()
     postidle()
-    return { ok: true, mode: 'idle', mountkey: lastmountkey }
+    wanixperfmark('applyroom-remount', { mode: 'idle', hard: true })
+    wanixperfmark('applyroom-return', { mode: 'idle', hard: true })
+    return { ok: true, mode: 'idle', mountkey: lastmountkey, hard: true }
   }
 
   if (
+    !roomconfig.hardreset &&
     lastmountkey === roomconfig.mountkey &&
     system?.isConnected &&
     system.isReady
@@ -669,12 +783,9 @@ async function applyroom(config: WanixRoomConfig) {
     if (roomconfig.zedcafe?.cmd) {
       synczedcafewasmversionifneeded(system)
     }
-    return {
-      ok: true,
-      mode: roomconfig.mode,
-      mountkey: lastmountkey,
-      already: true,
-    }
+    const warm = await warmactivateroom()
+    wanixperfmark('applyroom-return', { mode: roomconfig.mode, warm: true })
+    return warm
   }
 
   await customElements.whenDefined('wanix-system')
@@ -683,7 +794,9 @@ async function applyroom(config: WanixRoomConfig) {
   host.replaceChildren()
   host.appendChild(next)
   system = next
+  systemsoftidle = false
   lastmountkey = roomconfig.mountkey
+  wanixperfmark('applyroom-remount', { mode: roomconfig.mode })
 
   await waitsystemready(system)
   postready()
@@ -697,9 +810,6 @@ async function applyroom(config: WanixRoomConfig) {
     await waitvmlinuxmount()
     const vmel = system.querySelector('wanix-vm')
     if (vmel) {
-      // wanix-vm auto-allocates itself via _awake() on the system 'ready'
-      // event, so calling allocate() here would throw 'VM already allocated'.
-      // connectvmtermsession() waits on the term data path, covering timing.
       await connectvmtermsession()
       if (typeof vmel.start === 'function') {
         await vmel.start()
@@ -711,6 +821,7 @@ async function applyroom(config: WanixRoomConfig) {
     if (roomconfig.zedcafe?.cmd) {
       await ensurezedcafeboot(system, readroot(), roomconfig.zedcafe.cmd)
     }
+    wanixperfmark('applyroom-return', { mode: 'vm', remount: true })
     return {
       ok: true,
       mode: 'vm',
@@ -721,6 +832,11 @@ async function applyroom(config: WanixRoomConfig) {
     }
   }
 
+  if (roomconfig.mode === 'task' && roomconfig.zedcafe?.cmd) {
+    await ensurezedcafeboot(system, readroot(), roomconfig.zedcafe.cmd)
+  }
+
+  wanixperfmark('applyroom-return', { mode: roomconfig.mode, remount: true })
   return { ok: true, mode: roomconfig.mode, mountkey: lastmountkey }
 }
 
@@ -821,10 +937,13 @@ async function spawntask(taskid: string, cmd: string) {
         'zedcafe export not ready — boot wanix VM or drop a task before findplayers',
       )
     }
-    if (!(await waitzedcafeexportstatsatroot(readroot(), taskrid))) {
-      throw new Error(
-        'zedcafe export not ready — stats.json missing from export tree',
-      )
+    const exportsrc = readwanixzedcafeexportsrc(taskrid)
+    if (!(await readzedcafeexportstatsready(readroot(), exportsrc))) {
+      if (!(await waitzedcafeexportstatsatroot(readroot(), taskrid))) {
+        throw new Error(
+          'zedcafe export not ready — stats.json missing from export tree',
+        )
+      }
     }
     appendfindplayersexportbind(task, taskrid)
   }
@@ -880,7 +999,8 @@ function stopvm() {
 function stoproom() {
   return applyroom({
     mode: 'idle',
-    mountkey: roomconfig.mountkey + 1,
+    mountkey: roomconfig.mountkey,
+    hardreset: false,
     archives: [],
     remotes: [],
     tasks: [],
@@ -1139,6 +1259,7 @@ async function handlerrpc(
           throw new Error('wanix room not ready')
         }
         await pushzedcafeexportlive(readroot(), String(taskrid), files ?? [])
+        setzedcafereadylocal(true)
         result = { ok: true }
         break
       }

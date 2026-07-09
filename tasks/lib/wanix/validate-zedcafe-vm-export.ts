@@ -13,6 +13,7 @@ import {
   callwanixtermwriteinpage,
   collectexportconsoleerrors,
   collectexporttrace,
+  collectwanixperf,
   failzedcafegate,
   importfixturebookinpage,
   parsebookcountfromterm,
@@ -166,10 +167,27 @@ const validatezedcafevmexport: HeadedPlaywrightScript = async ({
     consolelines.push(`[pageerror] ${err.message}`)
   })
   page.on('console', (msg) => {
-    const line = `[${msg.type()}] ${msg.text()}`
+    const text = msg.text()
+    const line = `[${msg.type()}] ${text}`
     consolelines.push(line)
     pagelogs.push(line)
-    if (msg.text().includes('[wanix] idle') || msg.text().includes('[wanix] ready')) {
+    const perfmatch = text.match(/\[wanix-perf\] (\S+)(?: (.+))?$/)
+    if (perfmatch) {
+      let extra: Record<string, unknown> | undefined
+      if (perfmatch[2]) {
+        try {
+          extra = JSON.parse(perfmatch[2]) as Record<string, unknown>
+        } catch {
+          extra = { raw: perfmatch[2] }
+        }
+      }
+      timeline.push({
+        ms: Date.now() - start,
+        label: perfmatch[1],
+        extra,
+      })
+    }
+    if (text.includes('[wanix] idle') || text.includes('[wanix] ready')) {
       wanixbooted = true
     }
   })
@@ -489,6 +507,7 @@ const validatezedcafevmexport: HeadedPlaywrightScript = async ({
     gueststats,
     membookcount,
     exporttrace: collectexporttrace(consolelines).slice(-20),
+    perftrace: collectwanixperf(consolelines, 0).map((entry) => entry.label),
   })
   writededcafefailurereport(
     {

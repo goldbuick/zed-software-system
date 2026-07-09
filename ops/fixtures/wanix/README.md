@@ -66,9 +66,9 @@ Built with `yarn task run ops:fixtures:wanix:zedcafe:build` (run `ops:fixtures:w
 
 **findplayers flow**
 
-Readiness contract: **mount ready** (`readDir` on export root) then **content ready** (`stats.json` after host push). Content signal matches [`waitzedcafeexportcontentready`](../../../zss/feature/wanix/wanixzedcafehost.ts). Poll budget **30s / 250ms** (`WANIX_ZEDCAFE_EXPORT_READY_*` in [`wanixzedcafeconstants.ts`](../../../zss/feature/wanix/wanixzedcafeconstants.ts)).
+Zedcafe stands up **lazily** on first `#wanix vm` or wasm/tgz drop — not at login. Books load into sim memory only; the export daemon, shadow prime, and host push run when the task or VM room activates. Returning to idle **soft-idles** the wanix iframe (keeps warm `<wanix-system>`; halts zedcafe task and clears host export session). The next VM/task boot reuses the system when possible and rebuilds export from sim. Use hard stop (`stopwanixroom(true)`) to force a full remount.
 
-Zedcafe stands up **lazily** on first `#wanix vm` or wasm/tgz drop — not at login. Books load into sim memory only; the export daemon, shadow prime, and host push run when the task or VM room activates. Returning to idle **halts** the zedcafe task and clears the host export session; the next VM/task boot rebuilds export from sim.
+Readiness contract: **mount ready** (`readDir` on export root) then **content ready** (`stats.json` after host push). Content signal uses `WANIX_MSG_EXPORT` `content-ready` postMessage (parent waits on event, then RPC poll fallback). Poll budget **30s / 250ms** (`WANIX_ZEDCAFE_EXPORT_READY_*` in [`wanixzedcafeconstants.ts`](../../../zss/feature/wanix/wanixzedcafeconstants.ts)).
 
 1. `#wanix vm` or drop a wasm/tgz bundle boots the wanix task room and zedcafe export daemon from live memory.
 2. Drop `findplayers.wasm` as a gojs task. The iframe **blocks spawn** until `#task/{rid}/export/stats.json` is readable, attaches a per-task `zedcafe/` bind (child tasks do not inherit system binds), then `allocate()` / `start()`.
@@ -90,7 +90,7 @@ ZEDCAFE_VALIDATE_FIXTURE=1 yarn task run cafe:playwright:headed --url https://lo
   tasks/lib/wanix/validate-zedcafe-vm-export.ts
 ```
 
-Default login path waits for books in sim memory, then `#wanix vm`, then host export with `bookCount >= 1`. Fixture mode injects `example-coolregionsbow.book.json` in-page before VM boot. On failure, see `/tmp/wanix-zedcafe-export-report.json` and timestamped copies under `ops/fixtures/wanix/reports/`. Console lines tagged `[zedcafe-export]` trace push/sync/finalize decisions.
+Default login path waits for books in sim memory, then `#wanix vm`, then host export with `bookCount >= 1`. Fixture mode injects `example-coolregionsbow.book.json` in-page before VM boot. On failure, see `/tmp/wanix-zedcafe-export-report.json` and timestamped copies under `ops/fixtures/wanix/reports/`. Console lines tagged `[zedcafe-export]` trace push/sync/finalize decisions; `[wanix-perf]` marks phase timing (`drop-start`, `applyroom-warm-reuse`, `export-push-end`, `wasm-write-end`, `spawntask-return`).
 
 ## Term bridge (`termbridge.wasm`)
 

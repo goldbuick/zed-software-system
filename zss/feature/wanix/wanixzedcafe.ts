@@ -1,6 +1,7 @@
 import type { DEVICELIKE } from 'zss/device/api'
 import { apilog, vmexportzedcafe } from 'zss/device/api'
-import { callwanixrpc } from 'zss/feature/wanix/wanixbridge'
+import { callwanixrpc, waitwanixexportcontentready } from 'zss/feature/wanix/wanixbridge'
+import { wanixperfmark } from 'zss/feature/wanix/wanixperf'
 import { readwanixroomconfig } from 'zss/feature/wanix/wanixroom'
 import {
   type WANIX_ZED_CAFE_EXPORT_FILE,
@@ -11,6 +12,7 @@ import {
 } from 'zss/feature/wanix/wanixstateexport'
 import {
   WANIX_VM_ZEDCAFE_EXPORT_FETCH_MS,
+  WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS,
   WANIX_ZEDCAFE_EXPORT_WAIT_MS,
   WANIX_ZEDCAFE_IMPORT_POLL_MS,
   WANIX_ZEDCAFE_WASM_CMD,
@@ -344,6 +346,11 @@ async function pushzedcafeexportfiles(
     return false
   }
   const memcount = readbookcountfromexportfiles(files)
+  wanixperfmark('export-push-start', {
+    taskrid,
+    memcount,
+    paths: files.length,
+  })
   await callwanixrpc(
     'pushzedcafeexport',
     [taskrid, exportfilestoguestfiles(files)],
@@ -376,12 +383,28 @@ async function waitzedcafecontentready(
   taskrid: string,
   timeoutms = WANIX_ZEDCAFE_EXPORT_WAIT_MS,
 ): Promise<boolean> {
-  const result = await callwanixrpc<boolean>(
+  const quick = await callwanixrpc<boolean>(
     'waitzedcafecontentready',
-    [taskrid, timeoutms],
-    timeoutms + 5_000,
+    [taskrid, 0],
+    5_000,
   )
-  return !!result
+  if (quick) {
+    return true
+  }
+  try {
+    await waitwanixexportcontentready(
+      taskrid,
+      Math.min(timeoutms, WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS),
+    )
+    return true
+  } catch {
+    const result = await callwanixrpc<boolean>(
+      'waitzedcafecontentready',
+      [taskrid, timeoutms],
+      timeoutms + 5_000,
+    )
+    return !!result
+  }
 }
 
 async function finalizezedcafeexport(

@@ -11,6 +11,7 @@ export const WANIX_ZEDCAFE_VM_SESSION = 'linux-vm'
 export const WANIX_ZEDCAFE_REPORT_PATH = '/tmp/wanix-zedcafe-export-report.json'
 export const WANIX_ZEDCAFE_REPORTS_DIR = 'ops/fixtures/wanix/reports'
 export const EXPORT_TRACE_RE = /\[zedcafe-export\]/
+export const WANIX_PERF_RE = /\[wanix-perf\] (\S+)(?: (.+))?/
 
 export type ZedcafeStatsSnapshot = {
   bookCount: number
@@ -380,6 +381,31 @@ export function collectexporttrace(lines: string[]): string[] {
     }
   }
   return trace
+}
+
+export function collectwanixperf(
+  lines: string[],
+  startms: number,
+): ZedcafeTimelineEntry[] {
+  const entries: ZedcafeTimelineEntry[] = []
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    const match = line.match(WANIX_PERF_RE)
+    if (!match) {
+      continue
+    }
+    const label = match[1]
+    let extra: Record<string, unknown> | undefined
+    if (match[2]) {
+      try {
+        extra = JSON.parse(match[2]) as Record<string, unknown>
+      } catch {
+        extra = { raw: match[2] }
+      }
+    }
+    entries.push({ ms: startms, label, extra })
+  }
+  return entries
 }
 
 /** True when ls -la output lists a books directory entry under /zedcafe. */

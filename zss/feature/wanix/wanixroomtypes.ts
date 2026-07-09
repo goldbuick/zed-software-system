@@ -34,6 +34,8 @@ export type WanixRoomConfig = {
   tasks: WanixTaskSpec[]
   vm?: WanixVmSpec
   zedcafe?: WanixZedCafeRoomSpec | null
+  /** Force full iframe remount (hard idle). */
+  hardreset?: boolean
 }
 
 export type WanixRoomStatus = WanixRoomConfig & {

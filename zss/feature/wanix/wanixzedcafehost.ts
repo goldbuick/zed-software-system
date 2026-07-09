@@ -16,6 +16,8 @@ import {
   readwanixzedcafeguestpath,
   readwanixzedcafewasmurl,
 } from './wanixzedcafeconstants'
+import { postwanixexportmessage } from 'zss/feature/wanix/wanixexportevents'
+import { wanixperfmark } from 'zss/feature/wanix/wanixperf'
 import { readzedcafeexportstatscontentready } from 'zss/feature/wanix/wanixstateexport'
 import type { WanixZedCafeGuestFile } from './wanixzedcafetypes'
 
@@ -310,6 +312,12 @@ export async function waitzedcafeexportcontentready(
   timeoutms = WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS,
 ): Promise<boolean> {
   const exportsrc = readwanixzedcafeexportsrc(taskrid)
+  if (timeoutms <= 0) {
+    return readzedcafeexportstatsready(root, exportsrc)
+  }
+  if (zedcafeready && (await readzedcafeexportstatsready(root, exportsrc))) {
+    return true
+  }
   const deadline = Date.now() + timeoutms
   while (Date.now() < deadline) {
     if (await readzedcafeexportstatsready(root, exportsrc)) {
@@ -467,6 +475,16 @@ export async function pushzedcafeexportlive(
       )
     }
   }
+  postwanixexportmessage('content-ready', taskrid, {
+    bookcount,
+    paths: sorted.length,
+  })
+  setzedcafereadylocal(true)
+  wanixperfmark('export-push-end', {
+    taskrid,
+    bookcount,
+    paths: sorted.length,
+  })
 }
 
 export function haltzedcafetask(sys: WanixSystemElement) {

@@ -4,6 +4,10 @@ import {
   resetwanixattachforidle,
   setwanixactivesession,
 } from 'zss/feature/wanix/wanixattachstate'
+import {
+  handlewanixexportmessage,
+  waitwanixexportcontentready,
+} from 'zss/feature/wanix/wanixexportwait'
 import { revealwanixtapeifhidden } from 'zss/feature/wanix/wanixtapevisibility'
 import {
   WANIX_MSG_CELLS,
@@ -123,6 +127,9 @@ function handleparentmessage(event: MessageEvent) {
     }
     return
   }
+  if (handlewanixexportmessage(data as Record<string, unknown>)) {
+    return
+  }
   if (data.type !== WANIX_MSG_RPC_RES) {
     return
   }
@@ -231,6 +238,8 @@ export function waitwanixready(
     )
   })
 }
+
+export { waitwanixexportcontentready }
 
 export type WanixTermFitResult = {
   ok: boolean

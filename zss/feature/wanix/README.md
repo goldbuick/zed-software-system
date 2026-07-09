@@ -125,4 +125,16 @@ forwards to the guest when the viewport is at the live line.
 | `wanixroom.ts` / `wanixroomtypes.ts` | room config (archives, remotes, tasks, vm) + VM start/stop |
 | `wanixmenu.ts` | terminal menu tape (`#wanix`) |
 | `wanixrpcmessages.ts` | shared `postMessage` type constants (parent + iframe) |
+| `wanixexportevents.ts` / `wanixexportwait.ts` | iframe → parent export-ready events; parent-side waiters |
+| `wanixperf.ts` | dev/validator `[wanix-perf]` timeline marks |
+
+## Room lifecycle (soft idle)
+
+Returning to idle via `#wanix stop` or `stopwanixroom()` uses **soft idle** by default: the iframe keeps a warm `<wanix-system>` (no `replaceChildren`), halts tasks/zedcafe, and disconnects terms. The next wasm drop or `#wanix vm` **reuses** that system when `mountkey` is unchanged — avoiding a full wasm remount.
+
+**Hard reset** (`stopwanixroom(true)` or `hardreset: true` on `applyroom`) bumps `mountkey` and destroys the iframe system tree (cold path). Use after wasm version changes or corruption.
+
+Export push completion is signaled with `WANIX_MSG_EXPORT` (`content-ready`) instead of polling alone; parent `waitzedcafecontentready` waits on the event first, then falls back to RPC poll.
+
+Perf phases log as `[wanix-perf] <label> {json}` in dev and headed validators (`drop-start`, `applyroom-warm-reuse`, `export-push-start/end`, `wasm-write-start/end`, `spawntask-return`).
 | `wanixcmd.ts` | `#wanix` CLI command wiring |
