@@ -160,8 +160,14 @@ function validatestructure(
   }
 }
 
+export type ValidateZedCafeExportOptions = {
+  /** Upsert subset — allowlisted paths only; skip full-tree structure checks. */
+  partial?: boolean
+}
+
 export function validatezedcafeexportpaths(
   files: ZED_CAFE_EXPORT_PATH_FILE[],
+  options?: ValidateZedCafeExportOptions,
 ): ZED_CAFE_EXPORT_VALIDATION {
   const errors: string[] = []
   const seen = new Set<string>()
@@ -176,7 +182,9 @@ export function validatezedcafeexportpaths(
       errors.push(`path outside schema: ${path}`)
     }
   }
-  validatestructure(files, errors)
+  if (!options?.partial) {
+    validatestructure(files, errors)
+  }
   return { ok: errors.length === 0, errors }
 }
 

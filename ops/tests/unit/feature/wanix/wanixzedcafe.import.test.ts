@@ -14,17 +14,23 @@ jest.mock('zss/device/api', () => ({
   vmimportzedcafe: jest.fn(),
 }))
 
-jest.mock('zss/feature/wanix/wanixstateexport', () => ({
-  buildzedcafeexportfiles: jest.fn(() => []),
-  primezedcafeexportshadow: jest.fn(),
-  readbookcountfromexportfiles: jest.fn((files: { path: string }[]) => {
-    const stats = files.find((file) => file.path === 'stats.json')
-    if (!stats) {
-      return 0
-    }
-    return 1
-  }),
-}))
+jest.mock('zss/feature/wanix/wanixstateexport', () => {
+  const actual = jest.requireActual(
+    'zss/feature/wanix/wanixstateexport',
+  ) as typeof import('zss/feature/wanix/wanixstateexport')
+  return {
+    ...actual,
+    buildzedcafeexportfiles: jest.fn(() => []),
+    primezedcafeexportshadow: jest.fn(),
+    readbookcountfromexportfiles: jest.fn((files: { path: string }[]) => {
+      const stats = files.find((file) => file.path === 'stats.json')
+      if (!stats) {
+        return 0
+      }
+      return 1
+    }),
+  }
+})
 
 jest.mock('zss/feature/wanix/zedcafetreeschema', () => ({
   validatezedcafeexportpaths: jest.fn(() => ({ ok: true, errors: [] })),
@@ -44,7 +50,7 @@ import {
 import {
   readzedcafeguestdirty,
   resetwanixzedcafesessionfortest,
-  setlasthostpushfingerprint,
+  setlasthostpushdoc,
   setzedcafeguestdirty,
 } from 'zss/feature/wanix/wanixzedcafesession'
 
@@ -195,7 +201,7 @@ describe('zedcafe sim import orchestration', () => {
       }
       return null
     })
-    setlasthostpushfingerprint('stale')
+    setlasthostpushdoc({})
     mockvmimport.mockImplementation(() => {
       resolvevmzedcafeimportwaiter({ ok: true, changed: true, bookcount: 1 })
     })

@@ -13,7 +13,9 @@ jest.mock('zss/feature/wanix/wanixstateexport', () => ({
       bytes: new TextEncoder().encode('{"bookCount":0,"books":[]}\n'),
     },
   ]),
-  primezedcafeexportshadow: jest.fn(),
+  readbookcountfromexportfiles: jest.fn(() => 0),
+  zedcafeexportfilestodoc: jest.fn(() => ({})),
+  zedcafeexportdocsdiffer: jest.fn(() => false),
 }))
 
 import { readwanixbootzedcafestatefrommemory } from 'zss/feature/wanix/wanixzedcafe'

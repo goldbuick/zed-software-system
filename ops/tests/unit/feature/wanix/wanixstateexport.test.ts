@@ -3,12 +3,21 @@ import {
   buildzedcafecodepagefiles,
   buildzedcafeexportfiles,
   buildzedcafestats,
+  checkzedcafeexportontick,
+  decodezedcafejsonpointer,
+  primezedcafeexportshadow,
   readzedcafeexportstatscontentready,
+  readzedcafeexportupsertpaths,
   resetwanixstateexportfortest,
-  schedulewanixexport,
   splitboardexport,
+  zedcafeexportfilestodoc,
 } from 'zss/feature/wanix/wanixstateexport'
+import {
+  resetwanixzedcafesessionfortest,
+  setzedcafepollactive,
+} from 'zss/feature/wanix/wanixzedcafesession'
 import type { BOOK, CODE_PAGE } from 'zss/memory/types'
+import { compare } from 'fast-json-patch'
 
 jest.mock('zss/device/api', () => ({
   apilog: jest.fn(),
@@ -61,30 +70,42 @@ jest.mock('zss/memory/codepageoperations', () => ({
   }),
 }))
 
-import { wanixexportstate } from 'zss/device/api'
 import { memoryreadbooklist } from 'zss/memory/session'
-import {
-  pushzedcafesynctoiframe,
-  readhostexportfilesasync,
-} from 'zss/feature/wanix/wanixzedcafe'
+import { pushzedcafesynctoiframe } from 'zss/feature/wanix/wanixzedcafe'
 
-const exportmock = wanixexportstate as jest.Mock
 const mocksync = pushzedcafesynctoiframe as jest.Mock
-const mockfetch = readhostexportfilesasync as jest.Mock
 
 function decodefilebytes(bytes: Uint8Array): unknown {
   return JSON.parse(new TextDecoder().decode(bytes))
 }
 
+function makeboardbook(terrain: unknown[] = []): BOOK {
+  const boardpage = {
+    id: 'page1',
+    code: '@board demo',
+    board: {
+      terrain,
+      objects: {},
+      startx: 10,
+      starty: 12,
+    },
+  } as CODE_PAGE & { board: Record<string, unknown> }
+  return {
+    id: 'book1',
+    name: 'demo',
+    token: 'tok',
+    timestamp: 1,
+    activelist: [],
+    pages: [boardpage],
+    flags: {},
+  } as BOOK
+}
+
 describe('wanixstateexport', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    resetwanixzedcafesessionfortest()
     resetwanixstateexportfortest()
-    jest.useFakeTimers()
-  })
-
-  afterEach(() => {
-    jest.useRealTimers()
   })
 
   it('builds session stats for empty book list', () => {
@@ -234,13 +255,83 @@ describe('wanixstateexport', () => {
     ])
   })
 
-  it('debounces export requests', async () => {
-    schedulewanixexport({ emit: jest.fn() } as any, 'player1')
-    schedulewanixexport({ emit: jest.fn() } as any, 'player1')
+  it('decodezedcafejsonpointer unescapes path keys with slashes', () => {
+    expect(decodezedcafejsonpointer('/demo-book1~1page~1board~1terrain.json/0')).toEqual([
+      'demo-book1/page/board/terrain.json',
+      '0',
+    ])
+  })
+
+  it('readzedcafeexportupsertpaths maps nested ops to file paths', () => {
+    const paths = readzedcafeexportupsertpaths([
+      {
+        op: 'replace',
+        path: '/demo-book1~1demo-page1~1board~1terrain.json/0/char',
+        value: 177,
+      },
+      { op: 'remove', path: '/gone.json' },
+    ])
+    expect([...paths]).toEqual([
+      'demo-book1/demo-page1/board/terrain.json',
+    ])
+  })
+
+  it('checkzedcafeexportontick no-ops when poll inactive or shadow matches', () => {
+    ;(memoryreadbooklist as jest.Mock).mockReturnValue([])
+    checkzedcafeexportontick({ emit: jest.fn() } as never)
     expect(mocksync).not.toHaveBeenCalled()
-    await jest.runAllTimersAsync()
-    expect(mockfetch).toHaveBeenCalledTimes(1)
+
+    setzedcafepollactive(true)
+    primezedcafeexportshadow(buildzedcafeexportfiles())
+    checkzedcafeexportontick({ emit: jest.fn() } as never)
+    expect(mocksync).not.toHaveBeenCalled()
+  })
+
+  it('checkzedcafeexportontick pushes only changed files', async () => {
+    const book = makeboardbook([])
+    ;(memoryreadbooklist as jest.Mock).mockReturnValue([book])
+    setzedcafepollactive(true)
+    primezedcafeexportshadow(buildzedcafeexportfiles())
+
+    const terrainpath = 'demo-book1/demo-page1/board/terrain.json'
+    ;(memoryreadbooklist as jest.Mock).mockReturnValue([
+      makeboardbook([{ kind: 'solid', char: 177 }]),
+    ])
+
+    checkzedcafeexportontick({ emit: jest.fn() } as never)
+    await Promise.resolve()
+    await Promise.resolve()
+
     expect(mocksync).toHaveBeenCalledTimes(1)
-    expect(exportmock).not.toHaveBeenCalled()
+    const pushed = mocksync.mock.calls[0][2] as { path: string }[]
+    const options = mocksync.mock.calls[0][3] as {
+      partial?: boolean
+      nextdoc?: Record<string, unknown>
+    }
+    expect(options.partial).toBe(true)
+    expect(pushed.map((file) => file.path)).toEqual([terrainpath])
+    expect(options.nextdoc?.[terrainpath]).toEqual([
+      { kind: 'solid', char: 177 },
+    ])
+  })
+
+  it('zedcafeexportfilestodoc strips volatile exportedAt for compare', () => {
+    const a = zedcafeexportfilestodoc([
+      {
+        path: 'stats.json',
+        bytes: new TextEncoder().encode(
+          '{"exportedAt":"t1","bookCount":0,"books":[]}\n',
+        ),
+      },
+    ])
+    const b = zedcafeexportfilestodoc([
+      {
+        path: 'stats.json',
+        bytes: new TextEncoder().encode(
+          '{"exportedAt":"t2","bookCount":0,"books":[]}\n',
+        ),
+      },
+    ])
+    expect(compare(a, b)).toEqual([])
   })
 })

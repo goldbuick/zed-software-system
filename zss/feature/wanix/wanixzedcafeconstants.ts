@@ -17,7 +17,6 @@ export function readwanixzedcafewasmurl(): string {
   return `${WANIX_ZEDCAFE_WASM_URL}?v=${WANIX_ZEDCAFE_WASM_BUILD_ID}`
 }
 
-export const WANIX_ZEDCAFE_EXPORT_DEBOUNCE_MS = 2000
 export const WANIX_ZEDCAFE_IMPORT_POLL_MS = 3000
 export const WANIX_VM_ZEDCAFE_EXPORT_FETCH_MS = 10_000
 export const WANIX_VM_ZEDCAFE_IMPORT_MS = 10_000

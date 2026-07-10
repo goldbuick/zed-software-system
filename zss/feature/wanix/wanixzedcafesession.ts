@@ -1,9 +1,11 @@
 import { WANIX_ZEDCAFE_TASK_ID } from 'zss/feature/wanix/wanixzedcafeconstants'
+import { deepcopy } from 'zss/mapping/types'
 
 let zedcaferestart = 0
 let zedcafeready = false
 let zedcafetaskrid: string | null = null
-let lasthostpushfingerprint = ''
+/** Last successfully pushed export doc (path → parsed JSON). */
+let lasthostpushdoc: Record<string, unknown> = {}
 let pollactive = false
 let guestdirty = false
 
@@ -35,12 +37,16 @@ export function setwanixzedcafetaskrid(taskrid: string | null) {
   zedcafetaskrid = taskrid
 }
 
-export function readlasthostpushfingerprint(): string {
-  return lasthostpushfingerprint
+export function readlasthostpushdoc(): Record<string, unknown> {
+  return lasthostpushdoc
 }
 
-export function setlasthostpushfingerprint(fingerprint: string) {
-  lasthostpushfingerprint = fingerprint
+export function setlasthostpushdoc(doc: Record<string, unknown>) {
+  lasthostpushdoc = deepcopy(doc)
+}
+
+export function clearlasthostpushdoc() {
+  lasthostpushdoc = {}
 }
 
 export function readzedcafepollactive(): boolean {
@@ -63,7 +69,7 @@ export function resetwanixzedcafesessionfortest() {
   zedcaferestart = 0
   zedcafeready = false
   zedcafetaskrid = null
-  lasthostpushfingerprint = ''
+  lasthostpushdoc = {}
   pollactive = false
   guestdirty = false
 }

@@ -38,7 +38,7 @@ flowchart TB
     Mem["Sim memory — books, pages, objects"]
     Parent["wanixroom.ts · wanixzedcafe.ts · wanixbridge.ts"]
     UI <-- attach / keystrokes --> Parent
-    Mem -->|"jsonpipe + export builder"| Parent
+    Mem -->|"end-of-tick export compare"| Parent
   end
 
   subgraph iframe["Hidden iframe /wanix.html"]
@@ -187,11 +187,11 @@ sequenceDiagram
   participant Iframe as wanixzedcafehost.ts
   participant Guest as VM or task
 
-  Mem->>Host: book edits (jsonpipe, debounced 2s when room active)
-  Host->>Parent: WANIX_ZED_CAFE_EXPORT_FILE[]
-  Note over Parent: Room activation or drop triggers push
+  Mem->>Host: end-of-tick build + fast-json-patch vs last push
+  Host->>Parent: changed WANIX_ZED_CAFE_EXPORT_FILE[] (partial upsert)
+  Note over Parent: Room activation or drop triggers full push
 
-  Parent->>Iframe: RPC pushzedcafeexport (files[])
+  Parent->>Iframe: RPC synczedcafeexport (files[])
   Iframe->>Iframe: writeFile #task/rid/export/…
   Iframe->>Iframe: verify stats.json + bookCount / book stats
   Iframe-->>Parent: WANIX_MSG_EXPORT content-ready
@@ -210,7 +210,7 @@ sequenceDiagram
 
   Guest->>Memfs: Write or delete allowlisted JSON
   Parent->>Memfs: Poll every 3s
-  Note over Parent: tree fingerprint != last host push
+  Note over Parent: export doc compare != last host push
   Parent->>Parent: guestdirty — suppress stale host push
   Parent->>Sim: vm:import-zedcafe
   Sim->>Sim: applyzedcafetomemory upserts + deletes
@@ -558,10 +558,12 @@ at drop/bundle staging; failures throw instead of defaulting to wasi.
 `pushzedcafeexportlive` must import [`postwanixexportmessage`](wanixexportevents.ts) and
 [`wanixperfmark`](wanixperf.ts) — missing imports silently broke `/zedcafe` mounts.
 
-### Debounce vs drop path
+### Tick export vs drop path
 
-`WANIX_ZEDCAFE_EXPORT_DEBOUNCE_MS` (2 s) applies to **book tick** updates while room is
-active — not the drop/VM activation push path.
+While the import poll is active, each sim tick rebuilds the export doc and
+`fast-json-patch` `compare`s it to the last successful host push. Only changed
+paths are upserted (guest file delete is not available yet). Drop/VM activation
+still does a full tree push.
 
 ---
 
@@ -621,8 +623,8 @@ and VM is running — explicit branch, errors propagate.
 | **Wasm task drops** | `handlewanixdrop` stands task room, stages `#ramfs/{file}`, spawns with driver from wasm bytes |
 | **findplayers JSON output** | gojs task + per-task export bind + spawn gate on `stats.json`; scanner walks `./zedcafe/{book}/…` |
 | **greenring board paint** | Same bind; writes allowlisted `board/terrain.json`; import poll → `vm:import-zedcafe` → sim apply + re-export |
-| **Guest FS → sim writeback** | 3s fingerprint poll; guest-dirty suppresses stale host push; deletes mirror guest tree |
-| **Live export updates** | `wanixstateexport` jsonpipe rebuilds tree; debounced push while room active; `synczedcafeexportifstale` on reuse |
+| **Guest FS → sim writeback** | 3s export-doc compare poll; guest-dirty suppresses stale host push; deletes mirror guest tree |
+| **Live export updates** | End-of-tick `compare` of path-keyed export doc; partial upsert of changed files while poll active |
 | **Auto-attach new sessions** | `WANIX_MSG_SESSION open` → reveal tape → attach when user had nothing focused |
 | **Task idle auto-halt** | Dropped wasm tasks halt after 5 minutes with no term input/output (VM + zedcafe daemon exempt) |
 | **Soft idle → faster second drop** | Warm `<wanix-system>` + unchanged `mountkey` skips wanix.wasm reload; daemon reuse + sync-if-stale |

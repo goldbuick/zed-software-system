@@ -9,7 +9,6 @@ jest.mock('zss/feature/wanix/wanixzedcafe', () => ({
 }))
 
 jest.mock('zss/feature/wanix/wanixstateexport', () => ({
-  primezedcafeexportshadow: jest.fn(),
   readbookcountfromexportfiles: jest.fn((files: { path: string; bytes: Uint8Array }[]) => {
     const stats = files.find((file) => file.path === 'stats.json')
     if (!stats) {

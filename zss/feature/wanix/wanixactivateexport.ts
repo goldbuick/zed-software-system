@@ -5,10 +5,7 @@ import {
   wanixperfmark,
   wanixperfnow,
 } from 'zss/feature/wanix/wanixperf'
-import {
-  primezedcafeexportshadow,
-  readbookcountfromexportfiles,
-} from 'zss/feature/wanix/wanixstateexport'
+import { readbookcountfromexportfiles } from 'zss/feature/wanix/wanixstateexport'
 import {
   pushzedcafesynctoiframe,
   readhostexportfilesasync,
@@ -21,7 +18,6 @@ export async function activatewanixzedcafeexport(
 ): Promise<void> {
   apilog(device, player, 'zedcafe: preparing export from sim…')
   wanixperfmark('activate-export-start')
-  primezedcafeexportshadow()
 
   const fetchstart = wanixperfnow()
   const files = await readhostexportfilesasync(device, player)

@@ -8,15 +8,15 @@ jest.mock('zss/feature/wanix/wanixroom', () => ({
 }))
 
 import { callwanixrpc } from 'zss/feature/wanix/wanixbridge'
+import { zedcafeexportfilestodoc } from 'zss/feature/wanix/wanixstateexport'
 import {
   ensurewanixzedcafedaemon,
   ensurezedcafeexportready,
-  fingerprintzedcafeexportfiles,
   resetwanixzedcafefortest,
 } from 'zss/feature/wanix/wanixzedcafe'
 import {
   resetwanixzedcafesessionfortest,
-  setlasthostpushfingerprint,
+  setlasthostpushdoc,
 } from 'zss/feature/wanix/wanixzedcafesession'
 
 const mockrpc = callwanixrpc as jest.Mock
@@ -84,7 +84,7 @@ describe('pushzedcafesynctoiframe pipeline', () => {
   it('syncs books to iframe via synczedcafeexport RPC', async () => {
     const order: string[] = []
     // Guest matches last host push so pre-sync import is skipped.
-    setlasthostpushfingerprint(fingerprintzedcafeexportfiles(emptyfiles))
+    setlasthostpushdoc(zedcafeexportfilestodoc(emptyfiles))
     mockrpc.mockImplementation(async (method: string) => {
       order.push(method)
       switch (method) {
@@ -115,8 +115,8 @@ describe('pushzedcafesynctoiframe pipeline', () => {
     ])
   })
 
-  it('skips sync when host fingerprint is unchanged', async () => {
-    setlasthostpushfingerprint(fingerprintzedcafeexportfiles(bookfiles))
+  it('skips sync when host export doc is unchanged', async () => {
+    setlasthostpushdoc(zedcafeexportfilestodoc(bookfiles))
     mocksyncpipeline('9', bookfiles)
 
     const taskrid = await ensurezedcafeexportready(device, player, bookfiles)
@@ -130,7 +130,7 @@ describe('pushzedcafesynctoiframe pipeline', () => {
   })
 
   it('pushes when iframe export is stale vs memory', async () => {
-    setlasthostpushfingerprint(fingerprintzedcafeexportfiles(emptyfiles))
+    setlasthostpushdoc(zedcafeexportfilestodoc(emptyfiles))
     mocksyncpipeline('9', emptyfiles)
 
     const taskrid = await ensurezedcafeexportready(device, player, bookfiles)
@@ -144,7 +144,7 @@ describe('pushzedcafesynctoiframe pipeline', () => {
   })
 
   it('ensurewanixzedcafedaemon throws when sync fails with books', async () => {
-    setlasthostpushfingerprint(fingerprintzedcafeexportfiles(emptyfiles))
+    setlasthostpushdoc(zedcafeexportfilestodoc(emptyfiles))
     mockrpc.mockImplementation(async (method: string) => {
       switch (method) {
         case 'readzedcafeexportfiles':

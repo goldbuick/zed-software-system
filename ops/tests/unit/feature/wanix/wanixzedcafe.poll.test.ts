@@ -13,11 +13,17 @@ jest.mock('zss/device/api', () => ({
   vmimportzedcafe: jest.fn(),
 }))
 
-jest.mock('zss/feature/wanix/wanixstateexport', () => ({
-  primezedcafeexportshadow: jest.fn(),
-  buildzedcafeexportfiles: jest.fn(() => []),
-  readbookcountfromexportfiles: jest.fn(() => 1),
-}))
+jest.mock('zss/feature/wanix/wanixstateexport', () => {
+  const actual = jest.requireActual(
+    'zss/feature/wanix/wanixstateexport',
+  ) as typeof import('zss/feature/wanix/wanixstateexport')
+  return {
+    ...actual,
+    primezedcafeexportshadow: jest.fn(),
+    buildzedcafeexportfiles: jest.fn(() => []),
+    readbookcountfromexportfiles: jest.fn(() => 1),
+  }
+})
 
 jest.mock('zss/feature/wanix/zedcafetreeschema', () => ({
   validatezedcafeexportpaths: jest.fn(() => ({ ok: true, errors: [] })),
@@ -34,7 +40,6 @@ import {
 import {
   readzedcafepollactive,
   resetwanixzedcafesessionfortest,
-  setlasthostpushfingerprint,
 } from 'zss/feature/wanix/wanixzedcafesession'
 
 const mockrpc = callwanixrpc as jest.Mock
@@ -59,7 +64,6 @@ describe('zedcafe import poll', () => {
     mockrpc.mockReset()
     mockapilog.mockReset()
     mockvmimport.mockReset()
-    setlasthostpushfingerprint('different')
     mockrpc.mockImplementation(async (method: string) => {
       switch (method) {
         case 'readzedcafetaskrid':
