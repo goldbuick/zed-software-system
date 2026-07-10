@@ -1,7 +1,7 @@
 import type { DEVICELIKE } from 'zss/device/api'
 import { apilog, vmexportzedcafe } from 'zss/device/api'
 import { callwanixrpc, waitwanixexportcontentready } from 'zss/feature/wanix/wanixbridge'
-import { wanixperfmark } from 'zss/feature/wanix/wanixperf'
+import { wanixperfmark, wanixperfnow, wanixperfdelta } from 'zss/feature/wanix/wanixperf'
 import { readwanixroomconfig } from 'zss/feature/wanix/wanixroom'
 import {
   type WANIX_ZED_CAFE_EXPORT_FILE,
@@ -346,10 +346,13 @@ async function pushzedcafeexportfiles(
 }
 
 async function synczedcafedaemoncmd() {
+  wanixperfmark('sync-zedcafe-halt-start')
+  const haltstart = wanixperfnow()
   clearzedcafeexportsession()
   const restart = readwanixzedcaferestart() + 1
   setwanixzedcaferestart(restart)
   await callwanixrpc('synczedcafe', [WANIX_ZEDCAFE_WASM_CMD, restart])
+  wanixperfmark('sync-zedcafe-halt-end', wanixperfdelta(haltstart))
 }
 
 async function waitzedcafemount(
@@ -366,12 +369,14 @@ async function waitzedcafecontentready(
   taskrid: string,
   timeoutms = WANIX_ZEDCAFE_EXPORT_WAIT_MS,
 ): Promise<boolean> {
+  const waitstart = wanixperfnow()
   const quick = await callwanixrpc<boolean>(
     'waitzedcafecontentready',
     [taskrid, 0],
     5_000,
   )
   if (quick) {
+    wanixperfmark('content-ready-end', { taskrid, path: 'rpc-quick', ...wanixperfdelta(waitstart) })
     return true
   }
   try {
@@ -379,6 +384,7 @@ async function waitzedcafecontentready(
       taskrid,
       Math.min(timeoutms, WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS),
     )
+    wanixperfmark('content-ready-end', { taskrid, path: 'event', ...wanixperfdelta(waitstart) })
     return true
   } catch {
     const result = await callwanixrpc<boolean>(
@@ -386,6 +392,12 @@ async function waitzedcafecontentready(
       [taskrid, timeoutms],
       timeoutms + 5_000,
     )
+    wanixperfmark('content-ready-end', {
+      taskrid,
+      path: 'rpc-poll',
+      ok: !!result,
+      ...wanixperfdelta(waitstart),
+    })
     return !!result
   }
 }
@@ -436,7 +448,15 @@ export async function readhostexportfilesasync(
     return memoryfiles
   }
   tracezedcafeexport('host-export source=sim-worker fetch')
-  return requestvmzedcafeexportfiles(device, player)
+  const fetchstart = wanixperfnow()
+  const files = await requestvmzedcafeexportfiles(device, player)
+  wanixperfmark('sim-export-fetch-end', {
+    memcount: readbookcountfromexportfiles(files),
+    paths: files.length,
+    source: 'sim-worker',
+    ...wanixperfdelta(fetchstart),
+  })
+  return files
 }
 
 export async function fetchhostexportfilesfromvm(
@@ -534,18 +554,49 @@ async function bootzedcafeexportinner(
   if (reused) {
     return reused
   }
-  const prevmountrid = memcount === 0 ? await readtaskrid() : null
-  if (prevmountrid) {
-    const mounted = await callwanixrpc<string | null>(
-      'waitzedcafemount',
-      [3_000],
-      8_000,
-    )
-    if (mounted) {
-      tracezedcafeexport(`boot-export reuse-mount taskrid=${mounted}`)
+  const quickmount = await callwanixrpc<string | null>(
+    'waitzedcafemount',
+    [3_000],
+    8_000,
+  )
+  if (quickmount) {
+    if (memcount === 0) {
+      tracezedcafeexport(`boot-export reuse-mount taskrid=${quickmount}`)
       apilog(device, player, 'zedcafe: export mount ready (no book push)')
-      return mounted
+      return quickmount
     }
+    tracezedcafeexport(
+      `boot-export reuse-mount-push taskrid=${quickmount} memcount=${memcount}`,
+    )
+    wanixperfmark('boot-export-reuse-mount-push', {
+      taskrid: quickmount,
+      memcount,
+      paths: files.length,
+    })
+    apilog(
+      device,
+      player,
+      `zedcafe: pushing ${files.length} export files onto applyroom mount (${memcount} books)…`,
+    )
+    if (!(await pushzedcafeexportfiles(device, player, quickmount, files))) {
+      return null
+    }
+    if (!(await waitzedcafecontentready(quickmount))) {
+      apilog(
+        device,
+        player,
+        'zedcafe export: stats.json missing after push onto applyroom mount',
+      )
+      return null
+    }
+    await finalizezedcafeexport(quickmount, haswanixvms())
+    await markzedcafepollready(device, player)
+    apilog(
+      device,
+      player,
+      `zedcafe: export ready (${memcount} books) — tasks can bind /zedcafe`,
+    )
+    return quickmount
   }
   apilog(
     device,

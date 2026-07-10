@@ -321,6 +321,96 @@ Scrollback: PageUp/PageDown. Details unchanged from prior docs.
 
 ---
 
+## Performance: VM boot vs task drop
+
+### Observed timings
+
+| Path | Wall clock | Finish line |
+|------|------------|-------------|
+| **VM boot** (`#wanix vm` → `zedcafe-books`) | ~seconds | Export live at `/zedcafe/`, books listed |
+| **Cold task drop** (findplayers from idle) | ~30s (before perf trim) | Export sync + findplayers JSON |
+| **Warm task drop** (findplayers while wanix active) | ~seconds + ~6s scan | `sync-stale needed=false` |
+
+Cold task stalls often hit `WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS` (30_000) when
+`content-ready` is delayed after halt/reboot or duplicate export work.
+
+### VM boot path (fast)
+
+```mermaid
+sequenceDiagram
+  participant User
+  participant Parent as wanixroom
+  participant Iframe as cafe_wanix
+  participant ZC as zedcafe_gojs
+  participant VM as linux_vm
+
+  User->>Parent: "#wanix vm"
+  Parent->>Iframe: applyroom mode=vm remount
+  Iframe->>ZC: ensurezedcafeboot
+  Iframe-->>Parent: applyroom-return
+  Parent->>Parent: finalizewanixzedcafeaftervmboot
+  Parent->>Iframe: pushwire 114 files
+  Iframe-->>Parent: content-ready event
+  Parent->>Iframe: wirezedcafeexport
+  Iframe->>VM: bind /zedcafe/
+  User->>VM: zedcafe-books
+```
+
+VM path: one zedcafe boot, one push, `content-ready` event, no findplayers wasm.
+
+**Perf marks:** `vm-boot-finalize-start` → `export-push-end` → `vm-boot-finalize-end`
+
+### Task drop path (heavier)
+
+```mermaid
+sequenceDiagram
+  participant User
+  participant Parent as wanixroom
+  participant Iframe as cafe_wanix
+  participant FP as findplayers
+
+  User->>Parent: drop findplayers.wasm
+  Parent->>Iframe: ensurewanixtaskroom applyroom
+  par Parallel
+    Parent->>Parent: activatewanixzedcafeexport
+    Parent->>Iframe: putwanixroomfile 3.7MB
+  end
+  Parent->>Iframe: spawntask findplayers
+  FP-->>User: JSON array ~6s scan
+```
+
+Task path adds: sim export fetch, daemon RPCs (avoid `sync-zedcafe-halt` when applyroom
+mount is live), wasm staging, second gojs task, findplayers CPU.
+
+**Perf marks:** `drop-start` → `sim-export-fetch-end` → `daemon-export-end` →
+`activate-export-end` → `wasm-write-end` → `spawntask-return`
+
+### Non-regression gates (mandatory before perf merges)
+
+Defined in [`wanixbootregression.ts`](wanixbootregression.ts). Any perf change must pass:
+
+| Path | Success signal |
+|------|----------------|
+| VM boot | `finalize-vmboot branch=pushwire`, `export-push-end`, `zedcafe-books` lists books |
+| Cold task | `daemon start memcount=1`, findplayers JSON `["books/…` |
+| Warm task | `sync-stale needed=false`, fast findplayers JSON |
+
+**Jest:** `ops/tests/unit/feature/wanix/wanixbootregression.test.ts` +
+`wanixactivateexport.test.ts` + full wanix suite.
+
+**Manual:** idle → `#wanix vm` → `zedcafe-books`; idle → drop findplayers → JSON line;
+VM active → drop findplayers → fast JSON.
+
+### Perf trims (task-only; VM finalize frozen)
+
+| Trim | Owner | Effect |
+|------|-------|--------|
+| Skip redundant `runzedcafeexport` | [`wanixactivateexport.ts`](wanixactivateexport.ts) | Sim-fetched books already pushed by daemon |
+| Push onto applyroom mount | [`wanixzedcafe.ts`](wanixzedcafe.ts) `bootzedcafeexportinner` | Avoid `sync-zedcafe-halt` when mount already up |
+| Phase timing | [`wanixperf.ts`](wanixperf.ts) | `sinceanchor` + `elapsedms` on every mark |
+
+---
+
 ## Performance: soft idle & warm reuse
 
 ### Problem (cold drop from idle)
@@ -397,7 +487,9 @@ Defined in [`wanixrpcmessages.ts`](wanixrpcmessages.ts).
 | [`wanixcmd.ts`](wanixcmd.ts) | Device-facing `#wanix` helpers |
 | [`zss/device/wanix.ts`](../../device/wanix.ts) | Device handler: drop, export state, CLI bridge |
 | [`zedcafetreeschema.ts`](zedcafetreeschema.ts) | Export path validation |
-| [`wanixperf.ts`](wanixperf.ts) | Dev/validator timeline marks |
+| [`wanixactivateexport.ts`](wanixactivateexport.ts) | Task export activation (sim fetch + daemon; skips redundant shadow export) |
+| [`wanixbootregression.ts`](wanixbootregression.ts) | Mandatory VM/task boot regression gate definitions |
+| [`wanixperf.ts`](wanixperf.ts) | Dev/validator timeline marks (`sinceanchor`, `elapsedms`) |
 
 ---
 

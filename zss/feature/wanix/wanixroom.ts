@@ -32,20 +32,16 @@ import {
 } from 'zss/feature/wanix/wanixroomtypes'
 import { readwanixtermbufferkeys } from 'zss/feature/wanix/wanixtermbuffer'
 import { extractwanixtgz } from 'zss/feature/wanix/wanixtgzextract'
-import {
-  primezedcafeexportshadow,
-  runzedcafeexport,
-} from 'zss/feature/wanix/wanixstateexport'
+import { activatewanixzedcafeexport } from 'zss/feature/wanix/wanixactivateexport'
+import { primezedcafeexportshadow } from 'zss/feature/wanix/wanixstateexport'
 import {
   assertfindplayersexportready,
-  ensurewanixzedcafedaemon,
   finalizewanixzedcafeaftervmboot,
-  readhostexportfilesasync,
   readwanixbootzedcafestate,
   resetwanixzedcafeonidle,
   wanixdrainpendingzedcafeexport,
 } from 'zss/feature/wanix/wanixzedcafe'
-import { wanixperfmark } from 'zss/feature/wanix/wanixperf'
+import { wanixperfmark, wanixperfreset } from 'zss/feature/wanix/wanixperf'
 import type { WanixZedCafeRoomSpec } from 'zss/feature/wanix/wanixzedcafetypes'
 
 const WANIX_ROOM_TIMEOUT_MS = 180_000
@@ -74,19 +70,6 @@ export async function applywanixroom(
   return result
 }
 
-async function activatezedcafeexport(
-  device: DEVICELIKE,
-  player: string,
-): Promise<void> {
-  apilog(device, player, 'zedcafe: preparing export from sim…')
-  primezedcafeexportshadow()
-  const files = await readhostexportfilesasync(device, player)
-  await ensurewanixzedcafedaemon(device, player, files)
-  runzedcafeexport(device, player)
-  wanixdrainpendingzedcafeexport(device, player)
-  apilog(device, player, 'zedcafe: export sync complete')
-}
-
 export async function ensurewanixtaskroom(
   device?: DEVICELIKE,
   player?: string,
@@ -98,7 +81,7 @@ export async function ensurewanixtaskroom(
         player,
         'zedcafe: syncing export on active wanix room (no remount)…',
       )
-      await activatezedcafeexport(device, player)
+      await activatewanixzedcafeexport(device, player)
     }
     return
   }
@@ -344,6 +327,7 @@ export async function handlewanixdrop(
   )
 
   if (payload.kind === 'wasm') {
+    wanixperfreset()
     await ensurewanixtaskroom(device, player)
     const path = normalizewanixpath(payload.label)
     if (device && player) {
@@ -356,7 +340,7 @@ export async function handlewanixdrop(
     wanixperfmark('wasm-write-start', { path, bytes: payload.bytes.length })
     const exportready =
       device && player
-        ? activatezedcafeexport(device, player)
+        ? activatewanixzedcafeexport(device, player)
         : Promise.resolve()
     const stagewasm = putwanixroomfile(path, payload.bytes)
     await Promise.all([exportready, stagewasm])
@@ -381,7 +365,7 @@ export async function handlewanixdrop(
 
   await ensurewanixtaskroom(device, player)
   if (device && player) {
-    await activatezedcafeexport(device, player)
+    await activatewanixzedcafeexport(device, player)
   }
   const prefix = `bundle-${taskid}`
   const files = await extractwanixtgz(payload.bytes, prefix)
@@ -444,6 +428,7 @@ export async function startwanixvm(
 ): Promise<WanixVmStartResult> {
   let zedcafe: WanixZedCafeRoomSpec | null | undefined
   if (device && player) {
+    wanixperfreset()
     const boot = await readwanixbootzedcafestate(device, player)
     if (boot) {
       zedcafe = {
@@ -461,10 +446,12 @@ export async function startwanixvm(
     already?: boolean
   }
   if (device && player) {
+    wanixperfmark('vm-boot-finalize-start')
     apilog(device, player, 'zedcafe: finalizing export after vm boot…')
     primezedcafeexportshadow()
     await finalizewanixzedcafeaftervmboot(device, player)
     wanixdrainpendingzedcafeexport(device, player)
+    wanixperfmark('vm-boot-finalize-end')
   }
   if (result.running) {
     return {

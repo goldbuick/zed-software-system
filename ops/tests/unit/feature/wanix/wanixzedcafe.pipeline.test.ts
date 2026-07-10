@@ -97,8 +97,6 @@ describe('ensurezedcafeexportready pipeline', () => {
     expect(order).toEqual([
       'readzedcafetaskrid',
       'readzedcafetaskrid',
-      'readzedcafetaskrid',
-      'synczedcafe',
       'waitzedcafemount',
     ])
   })
@@ -149,7 +147,6 @@ describe('ensurezedcafeexportready pipeline', () => {
     expect(order).toEqual([
       'readzedcafetaskrid',
       'readzedcafetaskrid',
-      'synczedcafe',
       'waitzedcafemount',
       'pushzedcafeexport',
       'waitzedcafecontentready',
@@ -157,6 +154,7 @@ describe('ensurezedcafeexportready pipeline', () => {
       'setzedcafeready',
       'readzedcafeexportfiles',
     ])
+    expect(mockrpc).not.toHaveBeenCalledWith('synczedcafe', expect.anything())
   })
 
   it('pushes books onto existing mount without rebooting daemon', async () => {
@@ -305,6 +303,104 @@ describe('ensurezedcafeexportready pipeline', () => {
       expect.anything(),
       expect.anything(),
     )
+  })
+
+  it('pushes onto applyroom mount without sync halt when mount is already up', async () => {
+    const order: string[] = []
+    const bookfiles = [
+      {
+        path: 'stats.json',
+        bytes: new TextEncoder().encode(
+          '{"exportedAt":"t","bookCount":1,"books":[]}\n',
+        ),
+      },
+      {
+        path: 'books/demo-sid_book/stats.json',
+        bytes: new TextEncoder().encode('{"exportedAt":"t","bookCount":1}\n'),
+      },
+    ]
+    mockrpc.mockImplementation(async (method: string) => {
+      order.push(method)
+      switch (method) {
+        case 'readzedcafetaskrid':
+          return null
+        case 'iszedcafeexportlive':
+          return false
+        case 'waitzedcafemount':
+          return '7'
+        case 'pushzedcafeexport':
+          return { ok: true }
+        case 'waitzedcafecontentready':
+          return true
+        case 'finalizezedcafeexport':
+          return { ok: true }
+        case 'setzedcafeready':
+          return { ok: true }
+        case 'readzedcafeexportfiles':
+          return [{ path: 'stats.json', data: [...bookfiles[0].bytes] }]
+        default:
+          return null
+      }
+    })
+
+    const taskrid = await ensurezedcafeexportready(device, player, bookfiles)
+
+    expect(taskrid).toBe('7')
+    expect(order).toEqual([
+      'readzedcafetaskrid',
+      'readzedcafetaskrid',
+      'waitzedcafemount',
+      'pushzedcafeexport',
+      'waitzedcafecontentready',
+      'finalizezedcafeexport',
+      'setzedcafeready',
+      'readzedcafeexportfiles',
+    ])
+    expect(mockrpc).not.toHaveBeenCalledWith('synczedcafe', expect.anything())
+  })
+
+  it('falls back to sync halt when applyroom mount is not up yet', async () => {
+    const order: string[] = []
+    const bookfiles = [
+      {
+        path: 'stats.json',
+        bytes: new TextEncoder().encode(
+          '{"exportedAt":"t","bookCount":1,"books":[]}\n',
+        ),
+      },
+    ]
+    mockrpc.mockImplementation(async (method: string) => {
+      order.push(method)
+      switch (method) {
+        case 'readzedcafetaskrid':
+          return null
+        case 'iszedcafeexportlive':
+          return false
+        case 'synczedcafe':
+          return { ok: true }
+        case 'waitzedcafemount':
+          return order.filter((item) => item === 'waitzedcafemount').length > 1
+            ? '7'
+            : null
+        case 'pushzedcafeexport':
+          return { ok: true }
+        case 'waitzedcafecontentready':
+          return true
+        case 'finalizezedcafeexport':
+          return { ok: true }
+        case 'setzedcafeready':
+          return { ok: true }
+        case 'readzedcafeexportfiles':
+          return [{ path: 'stats.json', data: [...bookfiles[0].bytes] }]
+        default:
+          return null
+      }
+    })
+
+    const taskrid = await ensurezedcafeexportready(device, player, bookfiles)
+
+    expect(taskrid).toBe('7')
+    expect(order).toContain('synczedcafe')
   })
 
   it('ensurewanixzedcafedaemon throws when boot pipeline returns null', async () => {

@@ -403,7 +403,18 @@ export function collectwanixperf(
         extra = { raw: match[2] }
       }
     }
-    entries.push({ ms: startms, label, extra })
+    const sinceanchor =
+      typeof extra?.sinceanchor === 'number' ? extra.sinceanchor : undefined
+    const elapsedms =
+      typeof extra?.elapsedms === 'number' ? extra.elapsedms : undefined
+    entries.push({
+      ms:
+        sinceanchor ??
+        elapsedms ??
+        startms,
+      label,
+      extra,
+    })
   }
   return entries
 }
