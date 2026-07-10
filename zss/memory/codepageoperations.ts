@@ -298,6 +298,9 @@ export function memoryimportcodepagefromjson(flat: any): MAYBE<CODE_PAGE> {
   if (!ispresent(flat)) {
     return undefined
   }
+  if (flat.board && typeof flat.board === 'object') {
+    ;(flat.board as { id?: string }).id = flat.id
+  }
   memoryboundaryalloc(
     {
       board: flat.board,

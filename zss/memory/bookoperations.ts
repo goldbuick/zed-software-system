@@ -458,6 +458,9 @@ export function memoryupsertcodepage(
   }
   memoryboundarydelete(flat.id)
   existing.code = flat.code
+  if (flat.board && typeof flat.board === 'object') {
+    ;(flat.board as { id?: string }).id = flat.id
+  }
   memoryboundaryalloc(
     {
       board: flat.board,

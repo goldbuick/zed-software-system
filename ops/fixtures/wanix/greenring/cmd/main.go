@@ -45,14 +45,22 @@ func main() {
 
 	targets := make([]greenring.PlayerXY, 0)
 	for _, p := range report.Players {
-		if !p.Onboard || p.X == nil || p.Y == nil || p.Book == "" || p.Page == "" {
+		if !p.Onboard || p.X == nil || p.Y == nil || p.Book == "" {
+			continue
+		}
+		pagedir := p.Page
+		if p.Board != "" {
+			pagedir = p.Board
+		}
+		if pagedir == "" {
 			continue
 		}
 		targets = append(targets, greenring.PlayerXY{
-			Book: p.Book,
-			Page: p.Page,
-			X:    *p.X,
-			Y:    *p.Y,
+			Book:     p.Book,
+			Page:     pagedir,
+			PlayerID: p.ID,
+			X:        *p.X,
+			Y:        *p.Y,
 		})
 	}
 	if len(targets) == 0 {
@@ -61,7 +69,11 @@ func main() {
 	}
 
 	writeroot := strings.TrimPrefix(root, "./")
-	painted, err := greenring.ApplyRingsForPlayers(writeroot, targets)
+	painted, writelogs, err := greenring.ApplyRingsForPlayers(writeroot, targets)
+	for _, line := range writelogs {
+		fmt.Fprintln(os.Stderr, "greenring:", line)
+		fmt.Println("greenring:", line)
+	}
 	if err != nil {
 		fmt.Printf("greenring: write failed: %v\n", err)
 		os.Exit(1)

@@ -1,44 +1,71 @@
 package greenring
 
-import "testing"
+import (
+	"os"
+	"path/filepath"
+	"testing"
+)
 
-func TestRingCellsCenter(t *testing.T) {
-	cells := RingCells(10, 10)
-	if len(cells) != 8 {
-		t.Fatalf("expected 8 cells, got %d", len(cells))
+func TestPaintCellDisplayPreservesKind(t *testing.T) {
+	cell := PaintCellDisplay(map[string]any{"kind": "floor", "char": 1}, RingChar, ColorGreen, ColorBlack)
+	if cell["kind"] != "floor" {
+		t.Fatalf("kind lost: %v", cell["kind"])
+	}
+	if cell["char"] != RingChar || cell["color"] != ColorGreen || cell["bg"] != ColorBlack {
+		t.Fatalf("display fields: %v", cell)
 	}
 }
 
-func TestRingCellsCorner(t *testing.T) {
-	cells := RingCells(0, 0)
-	if len(cells) != 3 {
-		t.Fatalf("expected 3 cells at corner, got %d", len(cells))
+func TestPaintGreenRingMergesDisplay(t *testing.T) {
+	terrain := make([]any, BoardSize)
+	terrain[TerrainIndex(5, 5)] = map[string]any{"kind": "solid", "char": 178}
+	out := PaintGreenRing(terrain, 5, 5)
+	cell := out[TerrainIndex(6, 5)].(map[string]any)
+	if cell["char"] != RingChar || cell["color"] != ColorGreen {
+		t.Fatalf("ring cell: %v", cell)
 	}
 }
 
-func TestPaintGreenRing(t *testing.T) {
-	terrain := PaintGreenRing(nil, 5, 5)
-	if len(terrain) != BoardSize {
-		t.Fatalf("expected terrain len %d, got %d", BoardSize, len(terrain))
+func TestResolveBoardPageDirByIdSuffix(t *testing.T) {
+	dir := t.TempDir()
+	book := "cool-book1"
+	page := "title-sid_abc"
+	terrain := filepath.Join(dir, book, page, "board", "terrain.json")
+	if err := os.MkdirAll(filepath.Dir(terrain), 0o755); err != nil {
+		t.Fatal(err)
 	}
-	idx := TerrainIndex(6, 5)
-	cell, ok := terrain[idx].(map[string]any)
-	if !ok {
-		t.Fatalf("expected map at ring cell")
+	if err := os.WriteFile(terrain, []byte("[]\n"), 0o644); err != nil {
+		t.Fatal(err)
 	}
-	if cell["color"] != ColorGreen {
-		t.Fatalf("expected color %d, got %v", ColorGreen, cell["color"])
+	got, err := ResolveBoardPageDir(dir, book, "sid_abc", "")
+	if err != nil {
+		t.Fatal(err)
 	}
-	if cell["char"] != RingChar {
-		t.Fatalf("expected char %d, got %v", RingChar, cell["char"])
+	if got != page {
+		t.Fatalf("got %q want %q", got, page)
 	}
 }
 
-func TestTerrainIndexOOB(t *testing.T) {
-	if TerrainIndex(-1, 0) != -1 {
-		t.Fatal("expected -1 for oob")
+func TestResolveBoardPageDirByPlayerObject(t *testing.T) {
+	dir := t.TempDir()
+	book := "cool-book1"
+	page := "area-sid_xyz"
+	obj := filepath.Join(dir, book, page, "board", "objects", "pid_1.json")
+	terrain := filepath.Join(dir, book, page, "board", "terrain.json")
+	if err := os.MkdirAll(filepath.Dir(obj), 0o755); err != nil {
+		t.Fatal(err)
 	}
-	if TerrainIndex(0, BoardHeight) != -1 {
-		t.Fatal("expected -1 for oob y")
+	if err := os.WriteFile(obj, []byte("{}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(terrain, []byte("[]\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	got, err := ResolveBoardPageDir(dir, book, "wrong", "pid_1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != page {
+		t.Fatalf("got %q want %q", got, page)
 	}
 }

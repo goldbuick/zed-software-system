@@ -62,6 +62,9 @@ func TestScanActiveListOnly(t *testing.T) {
 	if p.Board != "title-page1" {
 		t.Fatalf("board flag: %q", p.Board)
 	}
+	if p.Book != "main-book1" {
+		t.Fatalf("book dir: %q (want main-book1, not stats.json)", p.Book)
+	}
 	if len(report.PlayerPaths) != 1 || report.PlayerPaths[0] != "main-book1/stats.json" {
 		t.Fatalf("player paths: %v", report.PlayerPaths)
 	}
@@ -130,8 +133,48 @@ func TestScanMergedActiveAndOnboard(t *testing.T) {
 	if p.Page != "title-page1" {
 		t.Fatalf("page: %q", p.Page)
 	}
+	if p.Book != "main-book1" {
+		t.Fatalf("book dir corrupted: %q", p.Book)
+	}
 	if len(report.PlayerPaths) != 2 {
 		t.Fatalf("player paths: %v", report.PlayerPaths)
+	}
+}
+
+func TestScanObjectElementDoesNotClobberBoardPage(t *testing.T) {
+	// Board page name sorts before "player-" so object/element is walked last.
+	fsys := fstest.MapFS{
+		"stats.json": &fstest.MapFile{
+			Data: []byte(`{"books":[{"id":"book1","name":"main"}]}` + "\n"),
+		},
+		"main-book1/stats.json": &fstest.MapFile{
+			Data: []byte(`{
+  "activelist": ["pid_4444_dddd"],
+  "flags": {
+    "pid_4444_dddd": {"board": "area-page1"}
+  }
+}` + "\n"),
+		},
+		"main-book1/area-page1/board/objects/pid_4444_dddd.json": &fstest.MapFile{
+			Data: []byte(`{"kind":"player","id":"pid_4444_dddd","x":3,"y":5}` + "\n"),
+		},
+		"main-book1/player-sid_xxxx/object/element.json": &fstest.MapFile{
+			Data: []byte(`{"kind":"player","id":"pid_4444_dddd","x":99,"y":99}` + "\n"),
+		},
+	}
+	report, err := Scan(fsys, "zedcafe")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.PlayerCount != 1 {
+		t.Fatalf("player count: %d", report.PlayerCount)
+	}
+	p := report.Players[0]
+	if p.Page != "area-page1" {
+		t.Fatalf("page clobbered: %q", p.Page)
+	}
+	if p.X == nil || *p.X != 3 || p.Y == nil || *p.Y != 5 {
+		t.Fatalf("coords clobbered: %+v", p)
 	}
 }
 

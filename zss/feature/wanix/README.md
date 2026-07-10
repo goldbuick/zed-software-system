@@ -354,7 +354,7 @@ Manual: `#wanix attach` / `#wanix detach` / menu. See
 [`wanixattachstate.ts`](wanixattachstate.ts), [`wanixtapevisibility.ts`](wanixtapevisibility.ts).
 
 **Keyboard (attached):** `Ctrl+\` prefix — `n`/`p` switch session, `d` detach, `Esc` cancel.
-Scrollback: PageUp/PageDown. Details unchanged from prior docs.
+`Ctrl+Esc` closes the tape terminal (session stays attached). Scrollback: PageUp/PageDown.
 
 ---
 

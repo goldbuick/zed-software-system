@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { registerterminalclose } from 'zss/device/api'
+import { registerreadplayer } from 'zss/device/register'
+import { SOFTWARE } from 'zss/device/session'
 import { withclipboard } from 'zss/feature/keyboard'
 import {
   cyclewanixattachedsession,
@@ -45,7 +48,7 @@ const HINT_SCROLLBACK_ROWS = ismac ? `Fn+Up/Down` : `PgUp/PgDown`
 const HINT_CLIPBOARD = ismac
   ? `shift+arrows select, ${metakey}+c/v`
   : `shift+arrows select, ctrl+shift+c/v`
-const HINT_IDLE = `Ctrl+\\ open detach menu, ${HINT_SCROLLBACK_ROWS}, ${HINT_CLIPBOARD}`
+const HINT_IDLE = `Ctrl+\\ open detach menu, Ctrl+Esc close tape, ${HINT_SCROLLBACK_ROWS}, ${HINT_CLIPBOARD}`
 const HINT_ARMED = `Ctrl+\\ to detach, left/right to switch sessions`
 const HINT_COLOR = COLOR.BLACK
 const HINT_BG = COLOR.DKPURPLE
@@ -146,6 +149,14 @@ function drawhintbar(
 
 function isctrlbackslash(event: KeyboardEvent) {
   return event.ctrlKey && event.key === '\\'
+}
+
+function isctrlescape(event: KeyboardEvent) {
+  return event.ctrlKey && NAME(event.key) === 'escape'
+}
+
+function closeattachedtape() {
+  registerterminalclose(SOFTWARE, registerreadplayer())
 }
 
 function iscopyshortcut(event: KeyboardEvent, hasselection: boolean) {
@@ -472,6 +483,13 @@ export function WanixTermScreen() {
       <UserInput
         keydown={(event) => {
           const key = NAME(event.key)
+
+          if (isctrlescape(event)) {
+            event.preventDefault()
+            setprefixarmed(false)
+            closeattachedtape()
+            return
+          }
 
           if (prefixarmed) {
             event.preventDefault()

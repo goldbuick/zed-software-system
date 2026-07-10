@@ -1,6 +1,7 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { waniximportresult } from 'zss/device/api'
+import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
 import {
   applyzedcafetomemory,
   parsezedcafeexportfiles,
@@ -66,6 +67,9 @@ export function handleimportzedcafe(vm: DEVICE, message: MESSAGE): void {
     const parsed = parsezedcafeexportfiles(files)
     const changed = applyzedcafetomemory(parsed)
     primezedcafeexportshadow()
+    if (changed) {
+      boardrunnerpushupdates(vm)
+    }
     waniximportresult(vm, message.player, {
       ok: true,
       changed,

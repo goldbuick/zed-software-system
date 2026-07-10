@@ -4,8 +4,10 @@ const (
 	BoardWidth  = 60
 	BoardHeight = 25
 	BoardSize   = BoardWidth * BoardHeight
-	// ColorGreen matches zss COLOR.GREEN.
+	// ColorGreen matches zss COLOR.GREEN (fg).
 	ColorGreen = 10
+	// ColorBlack matches zss COLOR.BLACK (bg).
+	ColorBlack = 0
 	// RingChar is a filled circle glyph.
 	RingChar = 9
 )
@@ -49,7 +51,20 @@ func EnsureTerrainLen(terrain []any) []any {
 	return grown
 }
 
-// PaintGreenRing mutates terrain in place, painting ring cells green.
+// PaintCellDisplay sets char / color (fg) / bg on a terrain cell, keeping other fields.
+func PaintCellDisplay(cell any, char int, fg int, bg int) map[string]any {
+	out, ok := cell.(map[string]any)
+	if !ok || out == nil {
+		out = map[string]any{}
+	}
+	out["char"] = char
+	out["color"] = fg
+	out["bg"] = bg
+	return out
+}
+
+// PaintGreenRing mutates terrain in place: writes char/fg/bg on ring cells only.
+// Does not inspect collision / blocked — only display fields.
 func PaintGreenRing(terrain []any, cx, cy int) []any {
 	terrain = EnsureTerrainLen(terrain)
 	for _, cell := range RingCells(cx, cy) {
@@ -57,10 +72,7 @@ func PaintGreenRing(terrain []any, cx, cy int) []any {
 		if idx < 0 {
 			continue
 		}
-		terrain[idx] = map[string]any{
-			"char":  RingChar,
-			"color": ColorGreen,
-		}
+		terrain[idx] = PaintCellDisplay(terrain[idx], RingChar, ColorGreen, ColorBlack)
 	}
 	return terrain
 }

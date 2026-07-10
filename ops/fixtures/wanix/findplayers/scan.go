@@ -112,7 +112,11 @@ func scanbookstats(
 	if err := json.Unmarshal(data, &stats); err != nil {
 		return fmt.Errorf("parse %s: %w", rel, err)
 	}
-	bookdir := strings.Split(rel, "/")[1]
+	parts := strings.Split(rel, "/")
+	if len(parts) < 2 {
+		return fmt.Errorf("unexpected book stats path: %s", rel)
+	}
+	bookdir := parts[0]
 	found := false
 	for _, id := range stats.ActiveList {
 		if !ispid(id) {
@@ -121,7 +125,9 @@ func scanbookstats(
 		found = true
 		p := ensureplayer(players, id)
 		p.Active = true
-		p.Book = bookdir
+		if p.Book == "" {
+			p.Book = bookdir
+		}
 		if raw, ok := stats.Flags[id]; ok {
 			var flags map[string]any
 			if err := json.Unmarshal(raw, &flags); err == nil {
@@ -239,13 +245,23 @@ func scanobjectelement(
 	}
 	p := ensureplayer(players, id)
 	p.Onboard = true
-	p.Book = bookdir
-	p.Page = pagedir
+	if p.Book == "" {
+		p.Book = bookdir
+	}
+	// Prefer board/objects placement for Page; object/element.json often lives
+	// under player-* codepages that are not the walkable board.
+	if p.Page == "" {
+		p.Page = pagedir
+	}
 	if obj.Kind != "" {
 		p.Kind = obj.Kind
 	}
-	p.X = intfromcoord(obj.X)
-	p.Y = intfromcoord(obj.Y)
+	if p.X == nil {
+		p.X = intfromcoord(obj.X)
+	}
+	if p.Y == nil {
+		p.Y = intfromcoord(obj.Y)
+	}
 	markplayerpath(playerpaths, rel)
 	return nil
 }
