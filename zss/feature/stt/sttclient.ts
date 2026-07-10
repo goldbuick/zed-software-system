@@ -1,5 +1,5 @@
 import { createdevice } from 'zss/device'
-import { registerreadplayer } from 'zss/device/register'
+import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import { STT_MODEL_ID } from 'zss/feature/stt/sttpreset'
 import { createsid } from 'zss/mapping/guid'

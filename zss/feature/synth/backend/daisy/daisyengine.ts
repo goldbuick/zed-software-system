@@ -412,10 +412,3 @@ export function rewiredaisyoutput() {
     wireoutput(engine)
   }
 }
-
-export {
-  initwasmsabchannels,
-  pushwasmsabvalues,
-  resetwasmsabregistry,
-  wasmsabsnapshot,
-} from 'zss/feature/synth/backend/wasm/sabpush'

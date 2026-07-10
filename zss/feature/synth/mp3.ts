@@ -1,6 +1,6 @@
 import { Mp3Encoder } from '@breezystack/lamejs'
 import { workstatus } from 'zss/device/api'
-import { registerreadplayer } from 'zss/device/register'
+import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import { write } from 'zss/feature/writeui'
 import { waitfor } from 'zss/mapping/tick'

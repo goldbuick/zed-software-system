@@ -1,8 +1,8 @@
 import {
-  COOLREGIONSBOW_BOOK_JSON_PATH,
   readcoolregionsbowbookexport,
   readcoolregionsbowbooks,
 } from 'ops/lib/coolregionsbowbook'
+import { COOLREGIONSBOW_BOOK_JSON_PATH } from 'ops/lib/fixturepaths'
 
 describe('coolregionsbow book fixture', () => {
   it('loads exported book json from repo fixtures', () => {

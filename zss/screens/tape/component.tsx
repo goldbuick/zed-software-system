@@ -1,6 +1,6 @@
 import { Profiler, type ProfilerOnRenderCallback } from 'react'
 import { registerterminalopen } from 'zss/device/api'
-import { registerreadplayer } from 'zss/device/register'
+import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/zustandstores'
 import { ShadeBoxDither } from 'zss/gadget/graphics/dither'

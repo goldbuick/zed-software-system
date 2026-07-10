@@ -1,6 +1,6 @@
 import { useCallback, useContext } from 'react'
 import { registerterminalquickopen } from 'zss/device/api'
-import { registerreadplayer } from 'zss/device/register'
+import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import { UserInput } from 'zss/gadget/userinput.bridge'
 import { extractcontentfromargs } from 'zss/screens/inputcommon'

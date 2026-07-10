@@ -5,10 +5,7 @@ import {
   resetwanixattachforidle,
   setwanixactivesession,
 } from 'zss/feature/wanix/wanixattachstate'
-import {
-  handlewanixexportmessage,
-  waitwanixexportcontentready,
-} from 'zss/feature/wanix/wanixexportwait'
+import { handlewanixexportmessage } from 'zss/feature/wanix/wanixexportwait'
 import {
   WANIX_MSG_CELLS,
   WANIX_MSG_IDLE,
@@ -295,8 +292,6 @@ export function waitwanixready(
     )
   })
 }
-
-export { waitwanixexportcontentready }
 
 export type WanixTermFitResult = {
   ok: boolean

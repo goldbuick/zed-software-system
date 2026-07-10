@@ -1,11 +1,9 @@
 import { createRoot } from 'react-dom/client'
 import 'zss/rom/vitepopulate'
 import { vmcli } from 'zss/device/api'
-import {
-  register,
-  registerreadplayer,
-  registersetmyplayerid,
-} from 'zss/device/register'
+import { register } from 'zss/device/register'
+import { registersetmyplayerid } from 'zss/device/register/player'
+import { registerreadplayer } from 'zss/device/registerplayer'
 import { isclimode } from 'zss/feature/detect'
 import {
   durablehydratefromdisk,

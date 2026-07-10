@@ -8,8 +8,6 @@ import { createpid } from 'zss/mapping/guid'
 import { deepcopy, ispresent, isstring } from 'zss/mapping/types'
 import { metakey } from 'zss/words/system'
 
-export { terminalbookmarkpindisplaylabel }
-
 export const ZSS_BOOKMARKS_KEY = 'zss_bookmarks'
 
 export const BOOKMARK_SCROLL_SCROLLNAME = 'bookmarks'

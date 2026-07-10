@@ -387,6 +387,3 @@ export const MAIN_DYNAMICS_PARITY_PATCHES: MAIN_DYNAMICS_PARITY_PATCH[] = [
     ticks: [...fastarpticks(3, true), [1, [4, '4n', 'E4']]],
   },
 ]
-
-/** Re-export for Tone gate documentation. */
-export { TONE_PARITY_EXCLUDED } from './paritytolerances'

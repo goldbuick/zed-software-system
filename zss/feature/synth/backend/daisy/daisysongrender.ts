@@ -5,8 +5,6 @@ import {
 } from 'zss/feature/synth/backend/wasm/levelstabilitymetrics'
 import { arraybuffertobase64 } from 'zss/mapping/encode'
 
-export { arraybuffertobase64 }
-
 import {
   type LEVEL_STABILITY_RENDER,
   renderdaisylevelscenario,

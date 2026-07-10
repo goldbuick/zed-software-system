@@ -1,4 +1,4 @@
-import { registerreadplayer } from 'zss/device/register'
+import { registerreadplayer } from 'zss/device/registerplayer'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
 import { useWriteText } from 'zss/gadget/writetext'
 import { isarray, isstring } from 'zss/mapping/types'

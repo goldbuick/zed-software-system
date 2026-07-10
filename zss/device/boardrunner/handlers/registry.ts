@@ -1,7 +1,6 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 
-import { handleboardrunnerdefault } from './default'
 import { handleidle } from './idle'
 import { handleinput } from './input'
 import { handlelinkdead } from './linkdead'
@@ -21,5 +20,3 @@ export const boardrunnerhandlers: Record<string, BOARDRUNNER_HANDLER> = {
   paint: handlepaint,
   patch: handlepatch,
 }
-
-export { handleboardrunnerdefault }

@@ -1,5 +1,5 @@
 import { apierror } from 'zss/device/api'
-import { registerreadplayer } from 'zss/device/register'
+import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import type { SabEngine } from 'zss/feature/synth/backend/shared/sabengine'
 import type { WASM_REPLAY_STATE } from 'zss/feature/synth/backend/wasm/wasmreplaystate'

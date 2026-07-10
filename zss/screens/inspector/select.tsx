@@ -13,7 +13,7 @@ import { LineSegments2 } from 'three/addons/lines/LineSegments2.js'
 import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js'
 import { RAYCAST_DEBUG_DOT, RAYCAST_DEBUG_PICKSHEET, RUNTIME } from 'zss/config'
 import { vminspect } from 'zss/device/api'
-import { registerreadplayer } from 'zss/device/register'
+import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import { layersreadcontrol } from 'zss/gadget/data/types'
 import {

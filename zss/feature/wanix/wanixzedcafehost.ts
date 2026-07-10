@@ -1,6 +1,7 @@
 import { postwanixexportmessage } from 'zss/feature/wanix/wanixexportevents'
 import { wanixperfmark } from 'zss/feature/wanix/wanixperf'
 import { readzedcafeexportstatscontentready } from 'zss/feature/wanix/wanixstateexport'
+import { WANIX_ZEDCAFE_WASM_BUILD_ID } from 'zss/feature/wanix/wanixzedcafewasmversion'
 import {
   isallowedexportpath,
   kebabcasezedcafedirname,
@@ -17,7 +18,6 @@ import {
   WANIX_ZEDCAFE_GUEST_MOUNT,
   WANIX_ZEDCAFE_TASK_ID,
   WANIX_ZEDCAFE_TASK_WASM,
-  WANIX_ZEDCAFE_WASM_BUILD_ID,
   WANIX_ZEDCAFE_WASM_BUILD_STORAGE_KEY,
   WANIX_ZEDCAFE_WASM_RAMFS,
   readwanixzedcafeexportsrc,

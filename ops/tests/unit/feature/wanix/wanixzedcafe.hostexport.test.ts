@@ -1,5 +1,8 @@
 jest.mock('zss/feature/wanix/wanixbridge', () => ({
   callwanixrpc: jest.fn(),
+}))
+
+jest.mock('zss/feature/wanix/wanixexportwait', () => ({
   waitwanixexportcontentready: jest.fn(),
 }))
 

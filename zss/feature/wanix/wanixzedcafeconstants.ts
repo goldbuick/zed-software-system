@@ -13,8 +13,6 @@ export const WANIX_ZEDCAFE_WASM_BUILD_STORAGE_KEY =
   'wanix-zedcafe-wasm-build-id'
 export const WANIX_ZEDCAFE_WASM_CMD = WANIX_ZEDCAFE_TASK_WASM
 
-export { WANIX_ZEDCAFE_WASM_BUILD_ID }
-
 export function readwanixzedcafewasmurl(): string {
   return `${WANIX_ZEDCAFE_WASM_URL}?v=${WANIX_ZEDCAFE_WASM_BUILD_ID}`
 }

@@ -6,8 +6,6 @@ import { CODE_PAGE_TYPE } from 'zss/memory/types'
 
 import { COOLREGIONSBOW_BOOK_JSON_PATH } from './fixturepaths'
 
-export { COOLREGIONSBOW_BOOK_JSON_PATH } from './fixturepaths'
-
 export type COOLREGIONSBOW_BOOK_EXPORT = {
   exported?: string
   data: BOOK

@@ -1,9 +1,7 @@
 import type { DEVICELIKE, WANIX_ZED_CAFE_IMPORT_RESULT } from 'zss/device/api'
 import { apilog, vmexportzedcafe, vmimportzedcafe } from 'zss/device/api'
-import {
-  callwanixrpc,
-  waitwanixexportcontentready,
-} from 'zss/feature/wanix/wanixbridge'
+import { callwanixrpc } from 'zss/feature/wanix/wanixbridge'
+import { waitwanixexportcontentready } from 'zss/feature/wanix/wanixexportwait'
 import {
   wanixperfdelta,
   wanixperfmark,
@@ -27,7 +25,6 @@ import {
 } from 'zss/feature/wanix/wanixzedcafeconstants'
 import {
   clearlasthostpushdoc,
-  iswanixzedcafetask,
   readlasthostpushdoc,
   readzedcafeguestdirty,
   readzedcafepollactive,
@@ -782,5 +779,3 @@ export function resetwanixzedcafefortest() {
   pendingexport = false
   clearzedcafeexportsession()
 }
-
-export { iswanixzedcafetask }

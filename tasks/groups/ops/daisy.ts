@@ -1359,7 +1359,7 @@ async function rundaisyrunenvparity(ctx: TaskContext): Promise<number> {
               const { runenvparityscenario, envparitytimelinesmatchsamples } =
                 await import('/ops/lib/daisy-parity/envparityrender.ts')
               const { arraybuffertobase64 } =
-                await import('/zss/feature/synth/backend/daisy/daisysongrender.ts')
+                await import('/zss/mapping/encode.ts')
               const { envparityscenario, envparityretriggerscenario } =
                 await import('/ops/lib/daisy-parity/envparityscenario.ts')
 
@@ -3608,7 +3608,7 @@ async function rundaisyrunsynthenvparity(ctx: TaskContext): Promise<number> {
               const { runenvparityscenario } =
                 await import('/ops/lib/daisy-parity/envparityrender.ts')
               const { arraybuffertobase64 } =
-                await import('/zss/feature/synth/backend/daisy/daisysongrender.ts')
+                await import('/zss/mapping/encode.ts')
               const { SYNTH_ENV_PARITY_SCENARIOS } =
                 await import('/ops/lib/daisy-parity/synthenvparityscenario.ts')
               const { analyzesynthenvparity } =
