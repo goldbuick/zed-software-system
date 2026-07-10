@@ -6,6 +6,7 @@ import {
   checkzedcafeexportontick,
   decodezedcafejsonpointer,
   primezedcafeexportshadow,
+  readzedcafeexportremovepaths,
   readzedcafeexportstatscontentready,
   readzedcafeexportupsertpaths,
   resetwanixstateexportfortest,
@@ -14,6 +15,7 @@ import {
 } from 'zss/feature/wanix/wanixstateexport'
 import {
   resetwanixzedcafesessionfortest,
+  setlasthostpushdoc,
   setzedcafepollactive,
 } from 'zss/feature/wanix/wanixzedcafesession'
 import type { BOOK, CODE_PAGE } from 'zss/memory/types'
@@ -276,6 +278,20 @@ describe('wanixstateexport', () => {
     ])
   })
 
+  it('readzedcafeexportremovepaths collects top-level removes only', () => {
+    const paths = readzedcafeexportremovepaths([
+      { op: 'remove', path: '/demo-book1~1demo-page1~1board~1objects~1oid.json' },
+      {
+        op: 'remove',
+        path: '/demo-book1~1demo-page1~1board~1terrain.json/0',
+      },
+      { op: 'replace', path: '/stats.json/bookCount', value: 0 },
+    ])
+    expect([...paths]).toEqual([
+      'demo-book1/demo-page1/board/objects/oid.json',
+    ])
+  })
+
   it('checkzedcafeexportontick no-ops when poll inactive or shadow matches', () => {
     ;(memoryreadbooklist as jest.Mock).mockReturnValue([])
     checkzedcafeexportontick({ emit: jest.fn() } as never)
@@ -313,6 +329,32 @@ describe('wanixstateexport', () => {
     expect(options.nextdoc?.[terrainpath]).toEqual([
       { kind: 'solid', char: 177 },
     ])
+  })
+
+  it('checkzedcafeexportontick pushes removepaths when files disappear', async () => {
+    ;(memoryreadbooklist as jest.Mock).mockReturnValue([])
+    setzedcafepollactive(true)
+    const emptyfiles = buildzedcafeexportfiles()
+    const emptydoc = zedcafeexportfilestodoc(emptyfiles)
+    const orphan = 'demo-book1/demo-page1/board/objects/oid.json'
+    setlasthostpushdoc({
+      ...emptydoc,
+      [orphan]: { id: 'oid' },
+    })
+
+    checkzedcafeexportontick({ emit: jest.fn() } as never)
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(mocksync).toHaveBeenCalledTimes(1)
+    const pushed = mocksync.mock.calls[0][2] as { path: string }[]
+    const options = mocksync.mock.calls[0][3] as {
+      partial?: boolean
+      removepaths?: string[]
+    }
+    expect(pushed).toEqual([])
+    expect(options.partial).toBe(true)
+    expect(options.removepaths).toEqual([orphan])
   })
 
   it('zedcafeexportfilestodoc strips volatile exportedAt for compare', () => {

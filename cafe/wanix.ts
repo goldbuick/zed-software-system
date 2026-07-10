@@ -174,12 +174,13 @@ function callparentrpc<T>(
 
 async function synczedcafeexportlocal(
   guestfiles?: WanixZedCafeGuestFile[] | null,
+  removepaths: string[] = [],
 ): Promise<{ ok: boolean; taskrid: string | null }> {
   if (!system?.isReady || !roomconfig.zedcafe?.cmd) {
     return { ok: false, taskrid: null }
   }
   let files = guestfiles ?? null
-  if (!files?.length) {
+  if (!files?.length && removepaths.length === 0) {
     files = await callparentrpc<WanixZedCafeGuestFile[]>(
       'requestzedcafestate',
       [],
@@ -191,8 +192,8 @@ async function synczedcafeexportlocal(
     return { ok: false, taskrid: null }
   }
   const bookcount = readguestfilebookcount(files ?? [])
-  if (files?.length) {
-    await pushzedcafeexportlive(readroot(), taskrid, files)
+  if ((files?.length ?? 0) > 0 || removepaths.length > 0) {
+    await pushzedcafeexportlive(readroot(), taskrid, files ?? [], removepaths)
   }
   if (bookcount > 0) {
     await wireallguestroots(system, taskrid)
@@ -202,6 +203,7 @@ async function synczedcafeexportlocal(
     taskrid,
     bookcount,
     paths: files?.length ?? 0,
+    removed: removepaths.length,
   })
   return { ok: true, taskrid }
 }
@@ -1295,8 +1297,9 @@ async function handlerrpc(
         break
       }
       case 'synczedcafeexport': {
-        const [files] = args as [
+        const [files, removepaths] = args as [
           { path: string; data: number[] }[] | null | undefined,
+          string[] | null | undefined,
         ]
         if (!system?.isReady) {
           throw new Error('wanix room not ready')
@@ -1306,7 +1309,10 @@ async function handlerrpc(
             path: file.path,
             data: file.data,
           })) ?? null
-        result = await synczedcafeexportlocal(guestfiles)
+        result = await synczedcafeexportlocal(
+          guestfiles,
+          Array.isArray(removepaths) ? removepaths : [],
+        )
         break
       }
       case 'iszedcafeexportlive': {

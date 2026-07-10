@@ -1,7 +1,10 @@
 import { postwanixexportmessage } from 'zss/feature/wanix/wanixexportevents'
 import { wanixperfmark } from 'zss/feature/wanix/wanixperf'
 import { readzedcafeexportstatscontentready } from 'zss/feature/wanix/wanixstateexport'
-import { kebabcasezedcafedirname } from 'zss/feature/wanix/zedcafetreeschema'
+import {
+  isallowedexportpath,
+  kebabcasezedcafedirname,
+} from 'zss/feature/wanix/zedcafetreeschema'
 
 import type {
   WanixRoot,
@@ -520,12 +523,46 @@ export function readguestfilebookcount(files: WanixZedCafeGuestFile[]): number {
   }
 }
 
+export async function removezedcafeexportpaths(
+  root: WanixRoot,
+  taskrid: string,
+  removepaths: string[],
+): Promise<number> {
+  const base = readwanixzedcafeexportsrc(taskrid)
+  let removed = 0
+  for (let i = 0; i < removepaths.length; ++i) {
+    const relpath = removepaths[i]
+    if (!isallowedexportpath(relpath)) {
+      console.error(
+        `[zedcafe-export] skip remove: path outside schema: ${relpath}`,
+      )
+      continue
+    }
+    const full = `${base}/${relpath}`
+    try {
+      await root.remove(full)
+      removed += 1
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : String(err)
+      // Missing path is fine — guest may already lack the orphan.
+      if (!/not exist|no such|enoent|not found/i.test(detail)) {
+        console.error(`[zedcafe-export] remove failed ${relpath}: ${detail}`)
+      }
+    }
+  }
+  return removed
+}
+
 export async function pushzedcafeexportlive(
   root: WanixRoot,
   taskrid: string,
   files: WanixZedCafeGuestFile[],
+  removepaths: string[] = [],
 ) {
   const base = readwanixzedcafeexportsrc(taskrid)
+  if (removepaths.length > 0) {
+    await removezedcafeexportpaths(root, taskrid, removepaths)
+  }
   const sorted = [...files].sort((a, b) => {
     if (a.path === 'stats.json') {
       return 1
@@ -567,15 +604,22 @@ export async function pushzedcafeexportlive(
       )
     }
   }
-  postwanixexportmessage('content-ready', taskrid, {
-    bookcount,
-    paths: sorted.length,
-  })
-  setzedcafereadylocal(true)
+  // Removals-only: still signal content-ready so parent waiters unblock.
+  if (sorted.length > 0 || removepaths.length > 0) {
+    postwanixexportmessage('content-ready', taskrid, {
+      bookcount,
+      paths: sorted.length,
+      removed: removepaths.length,
+    })
+  }
+  if (sorted.length > 0 || bookcount > 0) {
+    setzedcafereadylocal(true)
+  }
   wanixperfmark('export-push-end', {
     taskrid,
     bookcount,
     paths: sorted.length,
+    removed: removepaths.length,
   })
 }
 

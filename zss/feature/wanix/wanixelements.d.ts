@@ -20,6 +20,7 @@ export type WanixRoot = {
   writeFile: (path: string, data: string | Uint8Array) => Promise<void>
   makeDirAll: (path: string) => Promise<void>
   appendFile: (path: string, data: string | Uint8Array) => Promise<void>
+  remove: (path: string) => Promise<void>
   bind: (name: string, newname: string) => Promise<void>
   unbind: (name: string, newname: string) => Promise<void>
   waitFor: (path: string, timeoutms?: number) => Promise<void>

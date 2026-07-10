@@ -84,7 +84,7 @@ export function readzedcafepagestatspath(book: BOOK, page: CODE_PAGE): string {
   return `${readzedcafepageprefix(book, page)}/stats.json`
 }
 
-function isallowedexportpath(path: string): boolean {
+export function isallowedexportpath(path: string): boolean {
   if (!path || path.includes('..') || path.startsWith('/')) {
     return false
   }

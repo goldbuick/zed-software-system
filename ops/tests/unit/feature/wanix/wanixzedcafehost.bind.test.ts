@@ -40,6 +40,7 @@ function mockroot(): WanixRoot & {
     writeFile: async () => {},
     makeDirAll: async () => {},
     appendFile: async () => {},
+    remove: async () => {},
     bind: async (name, newname) => {
       bindcalls.push([name, newname])
     },

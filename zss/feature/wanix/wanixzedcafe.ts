@@ -251,6 +251,9 @@ function guardzedcafeexportpush(
   files: WANIX_ZED_CAFE_EXPORT_FILE[],
   partial?: boolean,
 ): boolean {
+  if (files.length === 0 && partial) {
+    return true
+  }
   const check = validatezedcafeexportpaths(files, { partial })
   if (!check.ok) {
     const detail = check.errors[0] ?? 'unknown'
@@ -259,6 +262,24 @@ function guardzedcafeexportpush(
     return false
   }
   return true
+}
+
+function readorphanremovepaths(
+  guesttree: WANIX_ZED_CAFE_EXPORT_FILE[],
+  files: WANIX_ZED_CAFE_EXPORT_FILE[],
+): string[] {
+  const nextpaths = new Set<string>()
+  for (let i = 0; i < files.length; ++i) {
+    nextpaths.add(files[i].path)
+  }
+  const orphans: string[] = []
+  for (let i = 0; i < guesttree.length; ++i) {
+    const path = guesttree[i].path
+    if (!nextpaths.has(path)) {
+      orphans.push(path)
+    }
+  }
+  return orphans
 }
 
 async function readexporttree(): Promise<WANIX_ZED_CAFE_EXPORT_FILE[]> {
@@ -277,6 +298,8 @@ export type PushZedCafeSyncOptions = {
   partial?: boolean
   /** Full next export doc after a partial upsert (path → parsed JSON). */
   nextdoc?: Record<string, unknown>
+  /** Export-relative paths to delete on guest before upserts. */
+  removepaths?: string[]
 }
 
 export async function pushzedcafesynctoiframe(
@@ -285,7 +308,11 @@ export async function pushzedcafesynctoiframe(
   files: WANIX_ZED_CAFE_EXPORT_FILE[],
   options?: PushZedCafeSyncOptions,
 ): Promise<boolean> {
-  if (!guardzedcafeexportpush(device, player, files, options?.partial)) {
+  const optionremoves = options?.removepaths ?? []
+  if (
+    !guardzedcafeexportpush(device, player, files, options?.partial) ||
+    (files.length === 0 && optionremoves.length === 0)
+  ) {
     return false
   }
   if (!iswanixspaceactive()) {
@@ -301,13 +328,14 @@ export async function pushzedcafesynctoiframe(
     )
     return false
   }
+  let guesttree: WANIX_ZED_CAFE_EXPORT_FILE[] | null = null
   // Pull guest FS edits into sim before overwriting the tree. Tick-driven host
   // export otherwise stomps terrain.json writes (greenring) before the poll.
   if (!options?.fromimport) {
     try {
-      const tree = await readexporttree()
-      if (guestdiffersfromlastpush(tree)) {
-        const imported = await runzedcafeimport(device, player, tree)
+      guesttree = await readexporttree()
+      if (guestdiffersfromlastpush(guesttree)) {
+        const imported = await runzedcafeimport(device, player, guesttree)
         if (imported) {
           return true
         }
@@ -323,16 +351,22 @@ export async function pushzedcafesynctoiframe(
       return false
     }
   }
+  let removepaths = optionremoves
+  if (!options?.partial && guesttree) {
+    const orphans = readorphanremovepaths(guesttree, files)
+    if (orphans.length > 0) {
+      removepaths = [...new Set([...removepaths, ...orphans])]
+    }
+  }
   const memcount = readbookcountfromexportfiles(files)
   const pushdoc =
     options?.nextdoc ??
-    (options?.partial
-      ? undefined
-      : zedcafeexportfilestodoc(files))
+    (options?.partial ? undefined : zedcafeexportfilestodoc(files))
   if (
     !options?.partial &&
     !options?.fromimport &&
     pushdoc &&
+    removepaths.length === 0 &&
     !zedcafeexportdocsdiffer(readlasthostpushdoc(), pushdoc)
   ) {
     tracezedcafeexport(`sync-stale needed=false memcount=${memcount}`)
@@ -341,6 +375,7 @@ export async function pushzedcafesynctoiframe(
   wanixperfmark('export-push-start', {
     memcount,
     paths: files.length,
+    removed: removepaths.length,
     partial: !!options?.partial,
   })
   const syncresult = await callwanixrpc<{
@@ -348,16 +383,23 @@ export async function pushzedcafesynctoiframe(
     taskrid: string | null
   }>(
     'synczedcafeexport',
-    [exportfilestoguestfiles(files)],
+    [exportfilestoguestfiles(files), removepaths],
     WANIX_ZEDCAFE_EXPORT_WAIT_MS,
   )
   if (!syncresult?.ok) {
     return false
   }
   const shadowdoc = options?.nextdoc ?? zedcafeexportfilestodoc(files)
-  if (memcount > 0 || (options?.partial && Object.keys(shadowdoc).length > 0)) {
+  if (
+    memcount > 0 ||
+    (options?.partial && Object.keys(shadowdoc).length > 0) ||
+    removepaths.length > 0
+  ) {
     const taskrid = syncresult.taskrid ?? (await readtaskrid())
-    if (taskrid && (memcount > 0 || files.some((f) => f.path === 'stats.json'))) {
+    if (
+      taskrid &&
+      (memcount > 0 || files.some((file) => file.path === 'stats.json'))
+    ) {
       await waitzedcafecontentready(taskrid)
     }
     if (!readzedcafepollactive() && memcount > 0) {
@@ -369,7 +411,7 @@ export async function pushzedcafesynctoiframe(
     setlasthostpushdoc(shadowdoc)
   }
   tracezedcafeexport(
-    `sync-to-iframe memcount=${memcount} paths=${files.length} taskrid=${syncresult.taskrid ?? 'none'} partial=${!!options?.partial}`,
+    `sync-to-iframe memcount=${memcount} paths=${files.length} removed=${removepaths.length} taskrid=${syncresult.taskrid ?? 'none'} partial=${!!options?.partial}`,
   )
   return true
 }

@@ -15,7 +15,7 @@ import {
   readzedcafepageprefix,
   validatezedcafeexportpaths,
 } from 'zss/feature/wanix/zedcafetreeschema'
-import { deepcopy, ispresent } from 'zss/mapping/types'
+import { ispresent } from 'zss/mapping/types'
 import { memoryreadbookflags } from 'zss/memory/bookoperations'
 import {
   memoryexportcodepageasjson,
@@ -72,7 +72,8 @@ function stripstatsexportedat(value: unknown): unknown {
   if (!('exportedAt' in record)) {
     return value
   }
-  const { exportedAt: _exportedat, ...rest } = record
+  const rest: Record<string, unknown> = { ...record }
+  delete rest.exportedAt
   return rest
 }
 
@@ -120,6 +121,22 @@ export function readzedcafeexportupsertpaths(ops: Operation[]): Set<string> {
     }
   }
   return upsert
+}
+
+/** Top-level remove ops → export-relative file paths to delete on guest. */
+export function readzedcafeexportremovepaths(ops: Operation[]): Set<string> {
+  const remove = new Set<string>()
+  for (let i = 0; i < ops.length; ++i) {
+    const op = ops[i]
+    if (op.op !== 'remove') {
+      continue
+    }
+    const parts = decodezedcafejsonpointer(op.path)
+    if (parts.length === 1) {
+      remove.add(parts[0])
+    }
+  }
+  return remove
 }
 
 export function zedcafeexportdocsdiffer(
@@ -350,9 +367,7 @@ export async function runzedcafeexport(device: DEVICELIKE, player: string) {
 }
 
 /** Set last-pushed export shadow from files (or current memory export). */
-export function primezedcafeexportshadow(
-  files?: WANIX_ZED_CAFE_EXPORT_FILE[],
-) {
+export function primezedcafeexportshadow(files?: WANIX_ZED_CAFE_EXPORT_FILE[]) {
   const source = files ?? buildzedcafeexportfiles()
   setlasthostpushdoc(zedcafeexportfilestodoc(source))
 }
@@ -362,7 +377,7 @@ export function clearzedcafeexportshadow() {
 }
 
 /**
- * End of tick: rebuild export, compare to last push shadow, upsert changed files.
+ * End of tick: rebuild export, compare to last push shadow, upsert/remove files.
  */
 export function checkzedcafeexportontick(device: DEVICELIKE) {
   if (!readzedcafepollactive() || exportinflight) {
@@ -375,6 +390,7 @@ export function checkzedcafeexportontick(device: DEVICELIKE) {
     return
   }
   const upsertpaths = readzedcafeexportupsertpaths(ops)
+  const removepaths = [...readzedcafeexportremovepaths(ops)]
   const subset: WANIX_ZED_CAFE_EXPORT_FILE[] = []
   for (let i = 0; i < files.length; ++i) {
     const file = files[i]
@@ -382,9 +398,7 @@ export function checkzedcafeexportontick(device: DEVICELIKE) {
       subset.push(file)
     }
   }
-  if (subset.length === 0) {
-    // Removals only — guest has no delete API; update shadow so host matches.
-    setlasthostpushdoc(nextdoc)
+  if (subset.length === 0 && removepaths.length === 0) {
     return
   }
   exportinflight = true
@@ -394,6 +408,7 @@ export function checkzedcafeexportontick(device: DEVICELIKE) {
       pushzedcafesynctoiframe(device, player, subset, {
         partial: true,
         nextdoc,
+        removepaths,
       }),
     )
     .finally(() => {

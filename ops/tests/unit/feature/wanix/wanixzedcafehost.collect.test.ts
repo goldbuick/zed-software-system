@@ -66,6 +66,7 @@ describe('collectzedcafeexportfiles', () => {
       writeFile: async () => {},
       makeDirAll: async () => {},
       appendFile: async () => {},
+      remove: async () => {},
       bind: async () => {},
       unbind: async () => {},
     }

@@ -561,9 +561,9 @@ at drop/bundle staging; failures throw instead of defaulting to wasi.
 ### Tick export vs drop path
 
 While the import poll is active, each sim tick rebuilds the export doc and
-`fast-json-patch` `compare`s it to the last successful host push. Only changed
-paths are upserted (guest file delete is not available yet). Drop/VM activation
-still does a full tree push.
+`fast-json-patch` `compare`s it to the last successful host push. Changed paths
+are upserted and removed paths are deleted via Wanix `root.remove`. Drop/VM
+activation still does a full tree push (and reconciles guest orphans).
 
 ---
 
