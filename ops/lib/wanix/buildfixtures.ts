@@ -5,6 +5,7 @@ import {
   mkdirSync,
   mkdtempSync,
   rmSync,
+  unlinkSync,
   writeFileSync,
 } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -21,6 +22,22 @@ const WASM_SOURCES = ['hello', 'greet', 'alpha', 'beta', 'termbridge'] as const
 
 type BuildwanixfixturesOptions = {
   strict?: boolean
+}
+
+/** 8×8 solid PNGs with distinct tEXt padding → pairwise-different byte lengths. */
+const STAMP_PNG_BY_NAME: Record<string, Buffer> = {
+  'stamp-red.png': Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAACXRFWHRDb21tZW50AHI3IZ0WAAAAEUlEQVR42mO4o6GBFTEMLQkAe3tLAYZNzu4AAAAASUVORK5CYII=',
+    'base64',
+  ),
+  'stamp-green.png': Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAACnRFWHRDb21tZW50AGdnwoJprgAAABFJREFUeNpj0NhigxUxDC0JAFVdRgHSIbPlAAAAAElFTkSuQmCC',
+    'base64',
+  ),
+  'stamp-blue.png': Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAADHRFWHRDb21tZW50AGJiYmKAUaNuAAAAEUlEQVR42mPQCLiDFTEMLQkACbdVAYkL2PAAAAAASUVORK5CYII=',
+    'base64',
+  ),
 }
 
 function requirecommand(name: string): string {
@@ -59,32 +76,43 @@ function maketarball(output: string, cwd: string): void {
   }
 }
 
-/** Minimal 1x1 PNG for bind-on-drop pipeline demos. */
-const STAMP_PNG_BYTES = Buffer.from(
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
-  'base64',
-)
-
-function buildinput2terrainwasm(output: string): void {
-  const maindir = path.join(WANIX_FIXTURES_DIR, 'input2terrain')
+function buildgowasiwasm(maindir: string, output: string, label: string): void {
   if (!existsSync(path.join(maindir, 'main.go'))) {
-    throw new Error(`input2terrain source missing: ${maindir}`)
+    throw new Error(`${label} source missing: ${maindir}`)
   }
-  const result = spawnSync(
-    'go',
-    ['build', '-o', output, '.'],
-    {
-      cwd: maindir,
-      stdio: 'inherit',
-      env: {
-        ...process.env,
-        GOOS: 'wasip1',
-        GOARCH: 'wasm',
-      },
+  const result = spawnSync('go', ['build', '-o', output, '.'], {
+    cwd: maindir,
+    stdio: 'inherit',
+    env: {
+      ...process.env,
+      GOOS: 'wasip1',
+      GOARCH: 'wasm',
     },
-  )
+  })
   if (result.status !== 0) {
-    throw new Error('go build input2terrain.wasm failed')
+    throw new Error(`go build ${label} failed`)
+  }
+}
+
+function writestamppngs(outdir: string): void {
+  const names = Object.keys(STAMP_PNG_BY_NAME)
+  for (let i = 0; i < names.length; ++i) {
+    const name = names[i]
+    writeFileSync(path.join(outdir, name), STAMP_PNG_BY_NAME[name])
+  }
+  const legacy = path.join(outdir, 'stamp.png')
+  if (existsSync(legacy)) {
+    unlinkSync(legacy)
+  }
+  const lengths = names.map((name) => STAMP_PNG_BY_NAME[name].length)
+  if (
+    lengths[0] === lengths[1] ||
+    lengths[0] === lengths[2] ||
+    lengths[1] === lengths[2]
+  ) {
+    throw new Error(
+      `stamp png byte lengths must be pairwise distinct (got ${lengths.join(',')})`,
+    )
   }
 }
 
@@ -149,14 +177,21 @@ export function buildwanixfixtures(
   }
 
   buildwanixhellolangs({ strict: options.strict, probes })
-  buildinput2terrainwasm(
+  buildgowasiwasm(
+    path.join(WANIX_FIXTURES_DIR, 'input2terrain'),
     path.join(WANIX_PUBLIC_FIXTURES_DIR, 'input2terrain.wasm'),
+    'input2terrain.wasm',
+  )
+  buildgowasiwasm(
+    path.join(WANIX_FIXTURES_DIR, 'listinput'),
+    path.join(WANIX_PUBLIC_FIXTURES_DIR, 'listinput.wasm'),
+    'listinput.wasm',
   )
   cpSync(
     path.join(srcdir, 'png2terrain.sh'),
     path.join(WANIX_PUBLIC_FIXTURES_DIR, 'png2terrain.sh'),
   )
-  writeFileSync(path.join(WANIX_PUBLIC_FIXTURES_DIR, 'stamp.png'), STAMP_PNG_BYTES)
+  writestamppngs(WANIX_PUBLIC_FIXTURES_DIR)
 
   process.stdout.write(
     `wanix drag-drop fixtures built in ${WANIX_PUBLIC_FIXTURES_DIR}\n`,

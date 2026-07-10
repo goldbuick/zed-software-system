@@ -110,7 +110,8 @@ While **attached** to a Wanix term session, file drops bind under **`input/<name
 book/image parsers. User-written processors (WASI tasks or VM guest scripts) read
 `input/` and write zedcafe export paths under `zedcafe/…` so the host import poll
 can sync boards and terrain. See `ops/fixtures/wanix/README.md` for
-`input2terrain.wasm` and `png2terrain.sh` examples.
+`listinput.wasm`, `input2terrain.wasm`, `png2terrain.sh`, and the three 8×8
+`stamp-{red,green,blue}.png` inputs (distinct byte sizes for read validation).
 
 ```mermaid
 stateDiagram-v2

@@ -111,9 +111,6 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
           )
           break
         }
-        case 'pull':
-          wanixstublog(player, 'pull zed-cafe export (not wired)')
-          break
         case 'bridge': {
           const [urlorstop] = readargs(words, 1, [ARG_TYPE.MAYBE_STRING])
           if (!ispresent(urlorstop) || !urlorstop.trim()) {
@@ -174,7 +171,7 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
             SOFTWARE,
             player,
             'wanix',
-            'drop .wasm/.tgz — #wanix menu, vm, remote, bridge, attach, term, pull, stop, detach',
+            'drop .wasm/.tgz — #wanix menu, vm, remote, bridge, attach, term, stop, detach',
           )
           break
       }

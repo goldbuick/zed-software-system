@@ -54,31 +54,57 @@ Sources for per-lang hellos live in `hello/` (see `hello/manifest.json`). WAT so
 | `bundle-two.tgz` | Two `.wasm` files (`alpha.wasm`, `beta.wasm`) — spawns both tasks |
 | `bundle-empty.tgz` | No `.wasm` — expect `wanix bundle … has no .wasm entries` warning |
 | `termbridge.wasm` | Term bridge smoke — banner on stdout, stays running; type `ping` + Enter → `-> pong` on the tile |
-| `input2terrain.wasm` | Task bind-on-drop example — reads `input/stamp.png`, writes `zedcafe/…/board/terrain.json` |
-| `png2terrain.sh` | VM bind-on-drop example — same pipeline from Linux guest (`sh input/png2terrain.sh`) |
-| `stamp.png` | Shared 1×1 PNG input for pipeline examples |
+| `listinput.wasm` | Bind-on-drop smoke — polls `input/` every 500ms; prints on change (`once` argv = one-shot) |
+| `input2terrain.wasm` | Task bind-on-drop — reads `input/*.png` (or argv), writes `zedcafe/…/board/terrain.json` |
+| `png2terrain.sh` | VM bind-on-drop — same pipeline (`sh input/png2terrain.sh [name.png]`) |
+| `stamp-red.png` | 8×8 red input (95 bytes → 16 cells) |
+| `stamp-green.png` | 8×8 green input (96 bytes → 17 cells) |
+| `stamp-blue.png` | 8×8 blue input (98 bytes → 19 cells) |
 
 ## Bind-on-drop pipeline (`input/`)
 
 While **attached** to a Wanix term session, file drops bind under **`input/<name>`** (not spawn tasks). Processors read `input/` and write zedcafe export paths under `zedcafe/…` so the host import poll can sync boards/terrain.
 
-**Prerequisite:** a book with a board page loaded so `zedcafe/…/board/terrain.json` exists in the export tree.
+**Stamps:** three 8×8 PNGs with different byte lengths. Cell count is `bytes % 40 + 1`, so swapping stamps changes stdout and proves the guest read the real file.
+
+| File | Bytes | Cells (`% 40 + 1`) |
+|------|------:|-------------------:|
+| `stamp-red.png` | 95 | 16 |
+| `stamp-green.png` | 96 | 17 |
+| `stamp-blue.png` | 98 | 19 |
+
+**Prerequisite (full pipeline):** a book with a board page loaded so `zedcafe/…/board/terrain.json` exists in the export tree.
+
+### Smoke (`listinput.wasm` — live poll)
+
+Default mode is a **long-running watch** (500ms `ReadDir` poll). Leave it attached and drop stamps; do not re-run the task for each file.
+
+1. Drop `listinput.wasm` (idle) → task spawns and starts watching.
+2. `#wanix attach <task-id>` (keep the tile focused so stdout stays visible).
+3. Expect `listinput: initial` then `listinput: empty` (or existing files if any).
+4. Drop `stamp-red.png` → binds to `input/stamp-red.png`.
+5. Within ~500ms expect `listinput: change` then `listinput: ok stamp-red.png (95 bytes)`.
+6. Drop `stamp-green.png` → expect another `change` with `96 bytes` (basename must update).
+7. Optional one-shot: spawn with argv `once` to list and exit.
+
+Note: wanix task idle auto-halt (~5 minutes with no term I/O) may stop the watcher; attached typing/stdout activity resets that timer.
 
 ### Task example (`input2terrain.wasm`)
 
 1. Drop `input2terrain.wasm` (idle) → task spawns.
 2. `#wanix attach <task-id>`.
-3. Drop `stamp.png` → binds to `input/stamp.png`.
-4. Run `input2terrain.wasm` in the attached terminal.
-5. Expect apilog: `zedcafe import: synced …`.
+3. Drop `stamp-red.png` → binds to `input/stamp-red.png`.
+4. Run `input2terrain` in the attached terminal (optional argv: basename).
+5. Expect stdout mentioning `stamp-red.png`, `16 cells`, `95 bytes`, then apilog: `zedcafe import: synced …`.
+6. Drop `stamp-blue.png`, run again — expect `19 cells` / `98 bytes`.
 
 ### VM example (`png2terrain.sh`)
 
 1. `#wanix vm` → attach to `linux-vm`.
 2. Drop `png2terrain.sh` → `input/png2terrain.sh` (executable).
-3. Drop `stamp.png` → `input/stamp.png`.
-4. In VM terminal: `sh input/png2terrain.sh`.
-5. Expect apilog: `zedcafe import: synced …`.
+3. Drop `stamp-green.png` → `input/stamp-green.png`.
+4. In VM terminal: `sh input/png2terrain.sh` (or `sh input/png2terrain.sh stamp-green.png`).
+5. Expect stdout with basename + cell count; apilog: `zedcafe import: synced …`.
 
 ## GoJS zedcafe tools
 

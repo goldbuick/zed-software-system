@@ -11,9 +11,12 @@ import (
 	"strings"
 )
 
-const inputpath = "input/stamp.png"
-
 func main() {
+	inputpath, err := resolveinputpng(os.Args[1:])
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "input2terrain: %v\n", err)
+		os.Exit(1)
+	}
 	info, err := os.Stat(inputpath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "input2terrain: missing %s: %v\n", inputpath, err)
@@ -40,11 +43,33 @@ func main() {
 		os.Exit(1)
 	}
 	fmt.Printf(
-		"input2terrain: wrote %s (%d cells from %d byte png)\n",
+		"input2terrain: wrote %s (%d cells from %s, %d bytes)\n",
 		terrainpath,
 		n,
+		filepath.Base(inputpath),
 		info.Size(),
 	)
+}
+
+func resolveinputpng(args []string) (string, error) {
+	if len(args) > 0 && strings.TrimSpace(args[0]) != "" {
+		base := filepath.Base(strings.TrimSpace(args[0]))
+		return filepath.Join("input", base), nil
+	}
+	entries, err := os.ReadDir("input")
+	if err != nil {
+		return "", fmt.Errorf("read input/: %w", err)
+	}
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		name := entry.Name()
+		if strings.HasSuffix(strings.ToLower(name), ".png") {
+			return filepath.Join("input", name), nil
+		}
+	}
+	return "", fmt.Errorf("no .png under input/ (drop stamp-red/green/blue.png while attached)")
 }
 
 func findterrainpath(root string) (string, error) {
