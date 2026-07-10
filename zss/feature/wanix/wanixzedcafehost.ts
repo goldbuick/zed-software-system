@@ -1,3 +1,8 @@
+import { postwanixexportmessage } from 'zss/feature/wanix/wanixexportevents'
+import { wanixperfmark } from 'zss/feature/wanix/wanixperf'
+import { readzedcafeexportstatscontentready } from 'zss/feature/wanix/wanixstateexport'
+import { kebabcasezedcafedirname } from 'zss/feature/wanix/zedcafetreeschema'
+
 import type {
   WanixRoot,
   WanixSystemElement,
@@ -16,10 +21,6 @@ import {
   readwanixzedcafeguestpath,
   readwanixzedcafewasmurl,
 } from './wanixzedcafeconstants'
-import { postwanixexportmessage } from 'zss/feature/wanix/wanixexportevents'
-import { wanixperfmark } from 'zss/feature/wanix/wanixperf'
-import { readzedcafeexportstatscontentready } from 'zss/feature/wanix/wanixstateexport'
-import { kebabcasezedcafedirname } from 'zss/feature/wanix/zedcafetreeschema'
 import type { WanixZedCafeGuestFile } from './wanixzedcafetypes'
 
 type WanixTaskElement = HTMLElement & {
@@ -84,6 +85,13 @@ export function resetzedcafestate() {
   zedcafebootpromise = null
 }
 
+function readtaskrid(task: Element | null): string | null {
+  if (!task) {
+    return null
+  }
+  return (task as WanixTaskElement).rid ?? null
+}
+
 export function readzedcafetaskridlocal(
   sys?: WanixSystemElement | null,
 ): string | null {
@@ -93,10 +101,9 @@ export function readzedcafetaskridlocal(
   if (!sys) {
     return null
   }
-  const task = sys.querySelector(
-    `wanix-task[id="${WANIX_ZEDCAFE_TASK_ID}"]`,
-  ) as WanixTaskElement | null
-  const rid = task?.rid ?? null
+  const rid = readtaskrid(
+    sys.querySelector(`wanix-task[id="${WANIX_ZEDCAFE_TASK_ID}"]`),
+  )
   if (rid) {
     zedcafetaskrid = rid
   }
@@ -153,9 +160,7 @@ export async function readzedcafeexporthasbooks(
   try {
     const raw = await root.readFile(`${base}/stats.json`)
     const bytes =
-      raw instanceof Uint8Array
-        ? raw
-        : new TextEncoder().encode(String(raw))
+      raw instanceof Uint8Array ? raw : new TextEncoder().encode(String(raw))
     const meta = readbookstatspathsfromstatsbytes(bytes)
     if (!meta || meta.bookcount < 1) {
       return false
@@ -255,9 +260,7 @@ async function readzedcafeguestboundatroot(root: WanixRoot): Promise<boolean> {
   try {
     const raw = await root.readFile(statspath)
     const bytes =
-      raw instanceof Uint8Array
-        ? raw
-        : new TextEncoder().encode(String(raw))
+      raw instanceof Uint8Array ? raw : new TextEncoder().encode(String(raw))
     if (!readzedcafeexportstatscontentready(bytes)) {
       return false
     }
@@ -346,9 +349,7 @@ async function readzedcafeexportstatsready(
   try {
     const raw = await root.readFile(`${base}/stats.json`)
     const bytes =
-      raw instanceof Uint8Array
-        ? raw
-        : new TextEncoder().encode(String(raw))
+      raw instanceof Uint8Array ? raw : new TextEncoder().encode(String(raw))
     return readzedcafeexportstatscontentready(bytes)
   } catch {
     return false
@@ -508,7 +509,9 @@ export function readguestfilebookcount(files: WanixZedCafeGuestFile[]): number {
     return -1
   }
   try {
-    const parsed = JSON.parse(new TextDecoder().decode(new Uint8Array(stats.data))) as {
+    const parsed = JSON.parse(
+      new TextDecoder().decode(new Uint8Array(stats.data)),
+    ) as {
       bookCount?: unknown
     }
     return typeof parsed.bookCount === 'number' ? parsed.bookCount : -1
@@ -577,13 +580,11 @@ export async function pushzedcafeexportlive(
 }
 
 export function haltzedcafetask(sys: WanixSystemElement) {
-  const task = sys.querySelector(
-    `wanix-task[id="${WANIX_ZEDCAFE_TASK_ID}"]`,
-  ) as WanixTaskElement | null
+  const task = sys.querySelector(`wanix-task[id="${WANIX_ZEDCAFE_TASK_ID}"]`)
   if (task) {
-    task.querySelectorAll('wanix-bind[data-zss-zedcafe-wasm]').forEach((el) =>
-      el.remove(),
-    )
+    task
+      .querySelectorAll('wanix-bind[data-zss-zedcafe-wasm]')
+      .forEach((el) => el.remove())
     task.remove()
   }
   zedcafetaskrid = null
@@ -595,9 +596,9 @@ async function scrubzedcafestaging(
   _sys: WanixSystemElement,
   root: WanixRoot,
 ) {
-  task.querySelectorAll('wanix-bind[data-zss-zedcafe-wasm]').forEach((el) =>
-    el.remove(),
-  )
+  task
+    .querySelectorAll('wanix-bind[data-zss-zedcafe-wasm]')
+    .forEach((el) => el.remove())
 
   try {
     await root.writeFile(WANIX_ZEDCAFE_WASM_RAMFS, new Uint8Array())
@@ -712,8 +713,8 @@ export async function waitzedcafemountrpc(
 }
 
 export async function waitzedcafereadyrpc(
-  sys: WanixSystemElement,
-  root: WanixRoot,
+  _sys: WanixSystemElement,
+  _root: WanixRoot,
   timeoutms: number,
 ): Promise<string | null> {
   if (!zedcafecmd) {

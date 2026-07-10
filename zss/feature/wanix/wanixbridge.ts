@@ -8,7 +8,6 @@ import {
   handlewanixexportmessage,
   waitwanixexportcontentready,
 } from 'zss/feature/wanix/wanixexportwait'
-import { revealwanixtapeifhidden } from 'zss/feature/wanix/wanixtapevisibility'
 import {
   WANIX_MSG_CELLS,
   WANIX_MSG_IDLE,
@@ -19,6 +18,7 @@ import {
   WANIX_MSG_RPC_RES,
   WANIX_MSG_SESSION,
 } from 'zss/feature/wanix/wanixrpcmessages'
+import { revealwanixtapeifhidden } from 'zss/feature/wanix/wanixtapevisibility'
 import {
   applywanixtermread,
   clearwanixtermbuffers,
@@ -188,10 +188,8 @@ async function handleiframeparentrpc(
     if (method === 'requestzedcafestate') {
       const { SOFTWARE } = await import('zss/device/session')
       const { memoryreadoperator } = await import('zss/memory/session')
-      const {
-        exportfilestoguestfiles,
-        readhostexportfilesasync,
-      } = await import('zss/feature/wanix/wanixzedcafe')
+      const { exportfilestoguestfiles, readhostexportfilesasync } =
+        await import('zss/feature/wanix/wanixzedcafe')
       const files = await readhostexportfilesasync(
         SOFTWARE,
         memoryreadoperator(),

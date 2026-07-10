@@ -253,16 +253,13 @@ export function buildzedcafeexportfiles(): WANIX_ZED_CAFE_EXPORT_FILE[] {
 
 export async function runzedcafeexport(device: DEVICELIKE, player: string) {
   if (readwanixroomconfig().mode === 'idle') {
-    const { markwanixzedcafependingexport } = await import(
-      'zss/feature/wanix/wanixzedcafe'
-    )
+    const { markwanixzedcafependingexport } =
+      await import('zss/feature/wanix/wanixzedcafe')
     markwanixzedcafependingexport()
     return
   }
-  const {
-    pushzedcafesynctoiframe,
-    readhostexportfilesasync,
-  } = await import('zss/feature/wanix/wanixzedcafe')
+  const { pushzedcafesynctoiframe, readhostexportfilesasync } =
+    await import('zss/feature/wanix/wanixzedcafe')
   const hostfiles = await readhostexportfilesasync(device, player)
   const check = validatezedcafeexportpaths(hostfiles)
   if (!check.ok) {

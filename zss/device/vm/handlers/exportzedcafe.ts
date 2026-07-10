@@ -1,9 +1,7 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { wanixexportstate } from 'zss/device/api'
-import {
-  buildzedcafeexportfiles,
-} from 'zss/feature/wanix/wanixstateexport'
+import { buildzedcafeexportfiles } from 'zss/feature/wanix/wanixstateexport'
 import { validatezedcafeexportpaths } from 'zss/feature/wanix/zedcafetreeschema'
 
 export function handleexportzedcafe(vm: DEVICE, message: MESSAGE): void {

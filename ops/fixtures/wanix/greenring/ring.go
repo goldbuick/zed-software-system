@@ -8,8 +8,8 @@ const (
 	ColorGreen = 10
 	// ColorBlack matches zss COLOR.BLACK (bg).
 	ColorBlack = 0
-	// RingChar is a filled circle glyph.
-	RingChar = 9
+	// RingChar is CP437 medium shade (░).
+	RingChar = 177
 )
 
 // RingOffsets are the eight neighbors around a cell (Chebyshev ring radius 1).

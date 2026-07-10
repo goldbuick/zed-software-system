@@ -1,9 +1,10 @@
 import { readdirSync } from 'node:fs'
 import path from 'node:path'
 
+import { runjest, spawntask } from 'tasks/shellutil'
+
 import { def, handler, jestexec } from '../../../helpers'
 import type { TaskContext, TaskDef } from '../../../types'
-import { runjest, spawntask } from 'tasks/shellutil'
 
 function runcontentcli(ctx: TaskContext): number {
   const task = ctx.args[0]

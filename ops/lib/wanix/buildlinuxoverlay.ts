@@ -1,5 +1,11 @@
 import { execFileSync } from 'node:child_process'
-import { accessSync, constants, copyFileSync, existsSync, mkdirSync } from 'node:fs'
+import {
+  accessSync,
+  constants,
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+} from 'node:fs'
 import path from 'node:path'
 
 import { CAFE_PUBLIC_WANIX_DIR } from 'ops/lib/cafepublicpaths'
@@ -19,16 +25,15 @@ const DOCKER_CANDIDATES = [
   '/usr/local/bin/docker',
   '/Applications/Docker.app/Contents/Resources/bin/docker',
   'docker',
-].filter((value): value is string => typeof value === 'string' && value.length > 0)
+].filter(
+  (value): value is string => typeof value === 'string' && value.length > 0,
+)
 
 const STAGING_OVERLAY = path.join(
   WANIX_PUBLIC_FIXTURES_DIR,
   LINUX_OVERLAY_FILENAME,
 )
-const PUBLIC_OVERLAY = path.join(
-  CAFE_PUBLIC_WANIX_DIR,
-  LINUX_OVERLAY_FILENAME,
-)
+const PUBLIC_OVERLAY = path.join(CAFE_PUBLIC_WANIX_DIR, LINUX_OVERLAY_FILENAME)
 
 function readdocker(): string {
   for (const candidate of DOCKER_CANDIDATES) {
@@ -98,7 +103,12 @@ export function buildwanixlinuxoverlay(): void {
   execFileSync(docker, ['rm', '-f', LINUX_OVERLAY_CONTAINER], {
     stdio: 'ignore',
   })
-  execFileSync(docker, ['create', '--name', LINUX_OVERLAY_CONTAINER, LINUX_OVERLAY_IMAGE])
+  execFileSync(docker, [
+    'create',
+    '--name',
+    LINUX_OVERLAY_CONTAINER,
+    LINUX_OVERLAY_IMAGE,
+  ])
 
   try {
     execFileSync(docker, [

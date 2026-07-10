@@ -9,6 +9,17 @@ import {
 import { COLOR } from 'zss/words/types'
 
 describe('wanixtermgridstate', () => {
+  it('seeds new grids with black-and-white noise', () => {
+    const noisechars = [32, 176, 177, 178, 219, 249, 250]
+    const grid = createwanixtermgrid(8, 4)
+    expect(grid.char.length).toBe(32)
+    for (let i = 0; i < grid.char.length; ++i) {
+      expect(noisechars).toContain(grid.char[i])
+      expect([COLOR.WHITE, COLOR.BLACK]).toContain(grid.color[i])
+      expect(grid.bg[i]).toBe(COLOR.BLACK)
+    }
+  })
+
   it('writes plain text into the grid', () => {
     const grid = createwanixtermgrid(40, 5)
     wanixtermgridwritebytes(grid, new TextEncoder().encode('Hello'))

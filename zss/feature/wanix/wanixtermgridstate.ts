@@ -1,8 +1,11 @@
+import { randominteger } from 'zss/mapping/number'
 import { COLOR } from 'zss/words/types'
 
 const DEFAULT_FG = COLOR.WHITE
 const DEFAULT_BG = COLOR.BLACK
 const SPACE = 32
+/** CP437 glyphs used for initial static (space + shades + dots + block). */
+const NOISE_CHARS = [32, 176, 177, 178, 219, 249, 250] as const
 const BLINK_FG_OFFSET = 33
 const BRIGHT_FG_OFFSET = 8
 const SCROLLBACK_MAX = 500
@@ -96,6 +99,8 @@ export type WANIX_TERM_GRID = {
   savednormal: WanixTermNormalSave | null
   savedcursor: WanixSavedCursor | null
   bracketedpaste: boolean
+  /** True until first write/clear — initial cells are B&W noise, not blank. */
+  pristine: boolean
 }
 
 type WanixTermCell = {
@@ -214,6 +219,7 @@ function copysavenormal(grid: WANIX_TERM_GRID): WanixTermNormalSave {
 
 function gridfromsaved(save: WanixTermNormalSave): WANIX_TERM_GRID {
   const grid = createwanixtermgrid(save.cols, save.rows)
+  grid.pristine = false
   grid.char = [...save.char]
   grid.color = [...save.color]
   grid.bg = [...save.bg]
@@ -391,6 +397,7 @@ function applysgrcode(grid: WANIX_TERM_GRID, code: number) {
 }
 
 function resetgridcells(grid: WANIX_TERM_GRID) {
+  grid.pristine = false
   grid.char.fill(SPACE)
   grid.color.fill(DEFAULT_FG)
   grid.bg.fill(DEFAULT_BG)
@@ -450,8 +457,12 @@ function clampcursory(grid: WANIX_TERM_GRID, y: number) {
   return Math.min(Math.max(0, y), Math.max(0, grid.rows - 1))
 }
 
-function readcsiparam(seq: string, final: string, defaultparam = 1): number | null {
-  if (seq.length === 0 || seq[seq.length - 1] !== final) {
+function readcsiparam(
+  seq: string,
+  final: string,
+  defaultparam = 1,
+): number | null {
+  if (seq.length === 0 || !seq.endsWith(final)) {
     return null
   }
   const body = seq.slice(0, -1)
@@ -981,6 +992,31 @@ function flattenscrollback(grid: WANIX_TERM_GRID) {
   }
 }
 
+function createnoisecellbuffers(size: number): {
+  char: number[]
+  color: number[]
+  bg: number[]
+} {
+  const char = new Array(size)
+  const color = new Array(size)
+  const bg = new Array(size)
+  for (let i = 0; i < size; ++i) {
+    char[i] = NOISE_CHARS[randominteger(0, NOISE_CHARS.length - 1)]!
+    color[i] = randominteger(0, 1) ? COLOR.WHITE : COLOR.BLACK
+    bg[i] = COLOR.BLACK
+  }
+  return { char, color, bg }
+}
+
+function applynoisebuffers(grid: WANIX_TERM_GRID) {
+  const noise = createnoisecellbuffers(grid.cols * grid.rows)
+  grid.char = noise.char
+  grid.color = noise.color
+  grid.bg = noise.bg
+  grid.wrapped = new Array(grid.rows).fill(false)
+  grid.pristine = true
+}
+
 export function createwanixtermgrid(
   cols: number,
   rows: number,
@@ -988,12 +1024,13 @@ export function createwanixtermgrid(
   const nextcols = Math.max(1, cols)
   const nextrows = Math.max(1, rows)
   const size = nextcols * nextrows
+  const noise = createnoisecellbuffers(size)
   const grid: WANIX_TERM_GRID = {
     cols: nextcols,
     rows: nextrows,
-    char: new Array(size).fill(SPACE),
-    color: new Array(size).fill(DEFAULT_FG),
-    bg: new Array(size).fill(DEFAULT_BG),
+    char: noise.char,
+    color: noise.color,
+    bg: noise.bg,
     wrapped: new Array(nextrows).fill(false),
     cursorx: 0,
     cursory: 0,
@@ -1007,6 +1044,7 @@ export function createwanixtermgrid(
     savednormal: null,
     savedcursor: null,
     bracketedpaste: false,
+    pristine: true,
   }
   return grid
 }
@@ -1019,6 +1057,14 @@ export function wanixtermgridresize(
   const nextcols = Math.max(1, cols)
   const nextrows = Math.max(1, rows)
   if (grid.cols === nextcols && grid.rows === nextrows) {
+    return grid
+  }
+  if (grid.pristine && !grid.altactive) {
+    grid.cols = nextcols
+    grid.rows = nextrows
+    applynoisebuffers(grid)
+    grid.cursorx = 0
+    grid.cursory = 0
     return grid
   }
   if (grid.altactive) {
@@ -1041,6 +1087,13 @@ export function wanixtermgridwritebytes(
 ) {
   if (!bytes.length) {
     return
+  }
+  if (grid.pristine) {
+    grid.pristine = false
+    grid.char.fill(SPACE)
+    grid.color.fill(DEFAULT_FG)
+    grid.bg.fill(DEFAULT_BG)
+    grid.wrapped.fill(false)
   }
   const textdecoder = decoder ?? new TextDecoder()
   writechunkinternal(grid, textdecoder.decode(bytes))

@@ -3,6 +3,7 @@ import type {
   WanixTaskDriver,
   WanixVmElement,
 } from 'zss/feature/wanix/wanixelements.d.ts'
+import { wanixperfmark } from 'zss/feature/wanix/wanixperf'
 import type { WanixRoomConfig } from 'zss/feature/wanix/wanixroomtypes'
 import {
   WANIX_LINUX_ARCHIVE_URL,
@@ -20,6 +21,11 @@ import {
   WANIX_MSG_RPC_RES,
   WANIX_MSG_SESSION,
 } from 'zss/feature/wanix/wanixrpcmessages'
+import { resolvedriverforwasm } from 'zss/feature/wanix/wanixspawndriver'
+import {
+  WANIX_TERM_BRIDGE_PONG,
+  trackwanixtermlinebuf,
+} from 'zss/feature/wanix/wanixtermbridgesmoke'
 import type { WANIX_TERM_GRID } from 'zss/feature/wanix/wanixtermgridstate'
 import {
   createwanixtermgrid,
@@ -30,36 +36,28 @@ import {
 import {
   WANIX_ZEDCAFE_EXPORT_READY_POLL_MS,
   WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS,
-  WANIX_ZEDCAFE_GUEST_MOUNT,
   readwanixzedcafeexportsrc,
 } from 'zss/feature/wanix/wanixzedcafeconstants'
 import {
-  WANIX_TERM_BRIDGE_PONG,
-  trackwanixtermlinebuf,
-} from 'zss/feature/wanix/wanixtermbridgesmoke'
-import { wanixperfmark } from 'zss/feature/wanix/wanixperf'
-import { resolvedriverforwasm } from 'zss/feature/wanix/wanixspawndriver'
-
-import type { WanixZedCafeGuestFile } from 'zss/feature/wanix/wanixzedcafetypes'
-import {
   appendguestexportbind,
+  collectzedcafeexportfiles,
   ensurezedcafeboot,
   haltzedcafetask,
-  collectzedcafeexportfiles,
   pushzedcafeexportlive,
   readguestfilebookcount,
-  readzedcafeguestbound,
-  readzedcafeexportlive,
   readzedcafeexportcontentready,
+  readzedcafeexportlive,
+  readzedcafeguestbound,
   readzedcafetaskridlocal,
   resetzedcafestate,
   setzedcafereadylocal,
-  synczedcafewasmversionifneeded,
   synczedcafestate,
+  synczedcafewasmversionifneeded,
   waitzedcafeexportcontentready,
   waitzedcafereadyrpc,
   wireallguestroots,
 } from 'zss/feature/wanix/wanixzedcafehost'
+import type { WanixZedCafeGuestFile } from 'zss/feature/wanix/wanixzedcafetypes'
 
 type WanixSessionKind = 'vm' | 'task'
 type WanixSessionEvent = 'open' | 'active' | 'close'
@@ -132,7 +130,6 @@ let roomconfig: WanixRoomConfig = {
 }
 let lastmountkey = -1
 let system: WanixSystemElement | null = null
-let systemsoftidle = false
 let lastfitcols = DEFAULT_TERM_COLS
 let lastfitrows = DEFAULT_TERM_ROWS
 
@@ -736,7 +733,6 @@ function softidlewanixsystem(sys: WanixSystemElement) {
   prunevmfromsystem(sys)
   disconnectalltermsessions()
   resetzedcafestate()
-  systemsoftidle = true
   wanixperfmark('applyroom-soft-idle')
 }
 
@@ -776,7 +772,6 @@ async function warmactivateroom(): Promise<Record<string, unknown>> {
   if (!system?.isReady) {
     throw new Error('wanix warm apply: system not ready')
   }
-  systemsoftidle = false
   wanixperfmark('applyroom-warm-reuse', { mode: roomconfig.mode })
   if (roomconfig.zedcafe?.cmd) {
     const spec = roomconfig.zedcafe
@@ -836,7 +831,6 @@ async function applyroom(config: WanixRoomConfig) {
     disconnectalltermsessions()
     host.replaceChildren()
     system = null
-    systemsoftidle = false
     lastmountkey = roomconfig.mountkey
     resetzedcafestate()
     postidle()
@@ -865,7 +859,6 @@ async function applyroom(config: WanixRoomConfig) {
   host.replaceChildren()
   host.appendChild(next)
   system = next
-  systemsoftidle = false
   lastmountkey = roomconfig.mountkey
   wanixperfmark('applyroom-remount', { mode: roomconfig.mode })
 
@@ -926,11 +919,6 @@ async function resolvedriverforcmd(
   }
   const bytes = await readroot().readFile(cmd)
   return resolvedriverforwasm(cmd, null, bytes)
-}
-
-function isfindplayerswasmcmd(cmd: string): boolean {
-  const base = cmd.split('/').pop() ?? cmd
-  return base === 'findplayers.wasm'
 }
 
 async function waitlocalzedcafetaskrid(): Promise<string | null> {
@@ -1121,7 +1109,7 @@ async function handlerrpc(
         const [taskid, cmd, driverhint] = args as [
           string,
           string,
-          WanixTaskDriver | null?,
+          WanixTaskDriver | null | undefined,
         ]
         result = await spawntask(
           String(taskid),

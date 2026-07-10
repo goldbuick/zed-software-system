@@ -18,7 +18,6 @@ jest.mock('zss/device/vm/state', () => ({
 jest.mock('zss/feature/wanix/wanixstateimport', () => ({
   applyzedcafetomemory: jest.fn(() => true),
   parsezedcafeexportfiles: jest.fn(() => ({ books: [{ id: 'b1' }] })),
-  countgreenringterraincells: jest.fn(() => 0),
 }))
 
 jest.mock('zss/feature/wanix/wanixstateexport', () => ({

@@ -280,12 +280,12 @@ export function WanixTermScreen() {
   const scrollbackrows = frame.scrollbackrows ?? 0
   const cols = Math.min(frame.cols, edge.width)
   const visibleheight = Math.max(0, edge.height - 1)
-  const scrollstate = readwanixtermscrollstate(frame, visibleheight, scrolloffset)
-  const {
-    maxoffset: maxscrolloffset,
-    startline,
-    atliveline,
-  } = scrollstate
+  const scrollstate = readwanixtermscrollstate(
+    frame,
+    visibleheight,
+    scrolloffset,
+  )
+  const { maxoffset: maxscrolloffset, startline, atliveline } = scrollstate
   const hasselection = haswanixtermselection(selanchor, selactive)
 
   atlivelineref.current = atliveline

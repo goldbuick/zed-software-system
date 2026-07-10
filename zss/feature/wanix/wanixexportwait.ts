@@ -1,5 +1,5 @@
-import { WANIX_MSG_EXPORT } from 'zss/feature/wanix/wanixrpcmessages'
 import type { WanixExportEventKind } from 'zss/feature/wanix/wanixexportevents'
+import { WANIX_MSG_EXPORT } from 'zss/feature/wanix/wanixrpcmessages'
 
 type ExportWaiter = {
   resolve: () => void
@@ -40,7 +40,9 @@ export function waitwanixexportcontentready(
           contentwaiters.delete(taskrid)
         }
       }
-      reject(new Error(`zedcafe export content-ready timeout taskrid=${taskrid}`))
+      reject(
+        new Error(`zedcafe export content-ready timeout taskrid=${taskrid}`),
+      )
     }, timeoutms)
     const waiter: ExportWaiter = {
       resolve: () => resolve(),

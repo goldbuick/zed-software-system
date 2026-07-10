@@ -17,7 +17,7 @@ function envcell(task: TaskDef): string {
     return '—'
   }
   return Object.entries(task.env)
-    .map(([key, val]) => `\`${key}=${val}\``)
+    .map(([key, val]) => `\`${key}=${String(val)}\``)
     .join(', ')
 }
 
@@ -71,7 +71,9 @@ function opssubsection(tasks: TaskDef[], segment: string): string[] {
       }
     }
     for (const folder of [...folders].sort()) {
-      const subtasks = filtered.filter((task) => task.id.split(':')[2] === folder)
+      const subtasks = filtered.filter(
+        (task) => task.id.split(':')[2] === folder,
+      )
       parts.push(`#### fixtures/${folder}`, '', rendertable(subtasks), '')
     }
     return parts

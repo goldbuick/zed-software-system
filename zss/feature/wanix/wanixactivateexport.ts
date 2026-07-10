@@ -1,7 +1,14 @@
 import type { DEVICELIKE } from 'zss/device/api'
 import { apilog } from 'zss/device/api'
-import { wanixperfmark, wanixperfnow, wanixperfdelta } from 'zss/feature/wanix/wanixperf'
-import { primezedcafeexportshadow, readbookcountfromexportfiles } from 'zss/feature/wanix/wanixstateexport'
+import {
+  wanixperfdelta,
+  wanixperfmark,
+  wanixperfnow,
+} from 'zss/feature/wanix/wanixperf'
+import {
+  primezedcafeexportshadow,
+  readbookcountfromexportfiles,
+} from 'zss/feature/wanix/wanixstateexport'
 import {
   pushzedcafesynctoiframe,
   readhostexportfilesasync,
@@ -32,7 +39,7 @@ export async function activatewanixzedcafeexport(
     ...wanixperfdelta(syncstart),
   })
 
-  wanixdrainpendingzedcafeexport(device, player)
+  await wanixdrainpendingzedcafeexport(device, player)
   wanixperfmark('activate-export-end', { memcount })
   apilog(device, player, 'zedcafe: export sync complete')
 }

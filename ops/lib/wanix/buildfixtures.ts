@@ -10,11 +10,11 @@ import {
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 
-import { buildwanixhellolangs } from 'ops/lib/wanix/buildhellolangs'
 import {
   WANIX_FIXTURES_DIR,
   WANIX_PUBLIC_FIXTURES_DIR,
 } from 'ops/lib/fixturepaths'
+import { buildwanixhellolangs } from 'ops/lib/wanix/buildhellolangs'
 import { probewanixtoolchains } from 'ops/lib/wanix/wanixtoolchains'
 
 const WASM_SOURCES = ['hello', 'greet', 'alpha', 'beta', 'termbridge'] as const
@@ -27,7 +27,9 @@ function requirecommand(name: string): string {
   try {
     return execFileSync('which', [name], { encoding: 'utf8' }).trim()
   } catch {
-    throw new Error(`${name} not found (run yarn task run ops:fixtures:wanix:toolchains)`)
+    throw new Error(
+      `${name} not found (run yarn task run ops:fixtures:wanix:toolchains)`,
+    )
   }
 }
 
@@ -58,10 +60,12 @@ function maketarball(output: string, cwd: string): void {
 }
 
 /** Build drag-drop wanix fixtures from ops/fixtures/wanix/src/*.wat into ops/public/wanix/ */
-export function buildwanixfixtures(options: BuildwanixfixturesOptions = {}): void {
+export function buildwanixfixtures(
+  options: BuildwanixfixturesOptions = {},
+): void {
   const probes = probewanixtoolchains()
   const wabt = probes.find((row) => row.id === 'wabt')
-  if (!wabt || wabt.status !== 'ok') {
+  if (wabt?.status !== 'ok') {
     throw new Error(
       'wabt required (wat2wasm, wasm-validate) — run yarn task run ops:fixtures:wanix:toolchains',
     )
@@ -110,10 +114,7 @@ export function buildwanixfixtures(options: BuildwanixfixturesOptions = {}): voi
 
     maketarball(path.join(WANIX_PUBLIC_FIXTURES_DIR, 'bundle-one.tgz'), single)
     maketarball(path.join(WANIX_PUBLIC_FIXTURES_DIR, 'bundle-two.tgz'), two)
-    maketarball(
-      path.join(WANIX_PUBLIC_FIXTURES_DIR, 'bundle-empty.tgz'),
-      empty,
-    )
+    maketarball(path.join(WANIX_PUBLIC_FIXTURES_DIR, 'bundle-empty.tgz'), empty)
   } finally {
     rmSync(stage, { recursive: true, force: true })
   }

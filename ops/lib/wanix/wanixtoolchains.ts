@@ -2,10 +2,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import path from 'node:path'
 
-import {
-  WANIX_FIXTURES_DIR,
-  WANIX_PUBLIC_FIXTURES_DIR,
-} from 'ops/lib/fixturepaths'
+import { WANIX_FIXTURES_DIR } from 'ops/lib/fixturepaths'
 
 export type WanixProbeStatus = 'ok' | 'missing' | 'partial'
 
@@ -56,7 +53,11 @@ function defaultdeps(): WanixToolchainDeps {
   }
 }
 
-function readversion(deps: WanixToolchainDeps, cmd: string, args: string[]): string {
+function readversion(
+  deps: WanixToolchainDeps,
+  cmd: string,
+  args: string[],
+): string {
   const out = deps.exec(cmd, args)
   if (!out) {
     return ''
@@ -81,10 +82,9 @@ function readwasip1clangargs(deps: WanixToolchainDeps): string[] | undefined {
 }
 
 function readwasip1clangbin(deps: WanixToolchainDeps): string | undefined {
-  const wasisdkpaths = [
-    process.env.WASI_SDK_PATH,
-    '/opt/wasi-sdk',
-  ].filter((value): value is string => Boolean(value))
+  const wasisdkpaths = [process.env.WASI_SDK_PATH, '/opt/wasi-sdk'].filter(
+    (value): value is string => Boolean(value),
+  )
 
   for (const wasisdk of wasisdkpaths) {
     const clang = path.join(wasisdk, 'bin', 'clang')
@@ -330,7 +330,10 @@ export function readhellolangready(
   return { ready: false, reason: probe.detail }
 }
 
-function readinstallhints(probe: WanixProbeResult, platform: NodeJS.Platform): string[] {
+function readinstallhints(
+  probe: WanixProbeResult,
+  platform: NodeJS.Platform,
+): string[] {
   if (platform === 'darwin') {
     return probe.installdarwin
   }

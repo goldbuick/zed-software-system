@@ -8,11 +8,11 @@ import {
   WANIX_PUBLIC_FIXTURES_DIR,
 } from 'ops/lib/fixturepaths'
 import {
+  type WanixProbeResult,
   probewanixtoolchains,
   readhellolangready,
   readwasip1clangcompileargs,
   readwasip1clangcompilebin,
-  type WanixProbeResult,
 } from 'ops/lib/wanix/wanixtoolchains'
 
 const HELLO_DIR = path.join(WANIX_FIXTURES_DIR, 'hello')
@@ -26,7 +26,10 @@ type BuildhellolangsOptions = {
   probes?: WanixProbeResult[]
 }
 
-function validatewasm(wasmvalidatebin: string | undefined, output: string): void {
+function validatewasm(
+  wasmvalidatebin: string | undefined,
+  output: string,
+): void {
   if (!wasmvalidatebin) {
     return
   }
@@ -41,22 +44,15 @@ function skiporfail(
   if (strict) {
     throw new Error(`${lang}: ${reason}`)
   }
-  process.stdout.write(
-    `skipped ${lang}: ${reason} (run ${TOOLCHAINS_HINT})\n`,
-  )
+  process.stdout.write(`skipped ${lang}: ${reason} (run ${TOOLCHAINS_HINT})\n`)
   return 'skip'
 }
 
-function runhellobuild(
-  lang: string,
-  strict: boolean,
-  fn: () => void,
-): void {
+function runhellobuild(lang: string, strict: boolean, fn: () => void): void {
   try {
     fn()
   } catch (err) {
-    const reason =
-      err instanceof Error ? err.message : 'build failed'
+    const reason = err instanceof Error ? err.message : 'build failed'
     if (skiporfail(lang, reason, strict) === 'fail') {
       throw err
     }
@@ -76,11 +72,9 @@ function buildrust(
   }
   const input = path.join(HELLO_DIR, 'rust', 'main.rs')
   process.stdout.write(`rustc hello-rust -> ${path.basename(output)}\n`)
-  execFileSync(
-    'rustc',
-    ['--target', 'wasm32-wasip1', '-o', output, input],
-    { stdio: 'inherit' },
-  )
+  execFileSync('rustc', ['--target', 'wasm32-wasip1', '-o', output, input], {
+    stdio: 'inherit',
+  })
   validatewasm(wasmvalidatebin, output)
 }
 
@@ -175,11 +169,9 @@ function buildc(
   }
   const input = path.join(HELLO_DIR, 'c', 'main.c')
   process.stdout.write(`clang hello-c -> ${path.basename(output)}\n`)
-  execFileSync(
-    clangbin,
-    [...clangargs, '-o', output, input],
-    { stdio: 'inherit' },
-  )
+  execFileSync(clangbin, [...clangargs, '-o', output, input], {
+    stdio: 'inherit',
+  })
   validatewasm(wasmvalidatebin, output)
 }
 
@@ -221,10 +213,7 @@ function makehelloalltarball(): void {
   const stage = mkdtempSync(path.join(tmpdir(), 'wanix-hello-all-'))
   try {
     for (const name of present) {
-      cpSync(
-        path.join(WANIX_PUBLIC_FIXTURES_DIR, name),
-        path.join(stage, name),
-      )
+      cpSync(path.join(WANIX_PUBLIC_FIXTURES_DIR, name), path.join(stage, name))
     }
     const output = path.join(WANIX_PUBLIC_FIXTURES_DIR, 'hello-all.tgz')
     execFileSync('tar', ['-czf', output, '-C', stage, '.'], {
@@ -237,7 +226,9 @@ function makehelloalltarball(): void {
 }
 
 /** Build per-language hello wasm fixtures into ops/public/wanix/. */
-export function buildwanixhellolangs(options: BuildhellolangsOptions = {}): void {
+export function buildwanixhellolangs(
+  options: BuildhellolangsOptions = {},
+): void {
   const strict = options.strict ?? false
   const probes = options.probes ?? probewanixtoolchains()
   const wasmvalidatebin = probes.find((row) => row.id === 'wabt')

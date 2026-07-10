@@ -17,10 +17,7 @@ export function extractcontentfromargs(words: unknown, skip = 1): string {
 
 import type { MAYBE } from 'zss/mapping/types'
 import { ispresent } from 'zss/mapping/types'
-import {
-  ZSS_CURSOR_BG,
-  ZSS_CURSOR_FG,
-} from 'zss/screens/tape/colors'
+import { ZSS_CURSOR_BG, ZSS_CURSOR_FG } from 'zss/screens/tape/colors'
 import {
   type WRITE_TEXT_CONTEXT,
   applycolortoindexes,
@@ -91,7 +88,7 @@ const CURSOR_SPACE_CHAR_CODE = 32
 
 export function cursorcellvalues(
   ch: number,
-  fg: number,
+  _fg: number,
   bg: number,
   options?: { cursorfg?: number; cursorbg?: number },
 ): { char: number; color: number; bg: number } {

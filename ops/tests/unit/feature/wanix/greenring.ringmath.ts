@@ -4,7 +4,7 @@ export const BoardHeight = 25
 export const BoardSize = BoardWidth * BoardHeight
 export const ColorGreen = 10
 export const ColorBlack = 0
-export const RingChar = 9
+export const RingChar = 177
 
 export const RingOffsets: [number, number][] = [
   [-1, -1],

@@ -1,5 +1,6 @@
 import type { DEVICELIKE } from 'zss/device/api'
 import { apilog } from 'zss/device/api'
+import { activatewanixzedcafeexport } from 'zss/feature/wanix/wanixactivateexport'
 import {
   readattachedsession,
   readwanixactivesession,
@@ -16,7 +17,7 @@ import {
 } from 'zss/feature/wanix/wanixbundle'
 import { uniquewanixtaskid } from 'zss/feature/wanix/wanixcmd'
 import type { WanixTaskDriver } from 'zss/feature/wanix/wanixelements.d.ts'
-import { readwanixwasmdriver } from 'zss/feature/wanix/wanixwasmdriver'
+import { wanixperfmark, wanixperfreset } from 'zss/feature/wanix/wanixperf'
 import type {
   WanixDropPayload,
   WanixMenuState,
@@ -32,13 +33,12 @@ import {
 } from 'zss/feature/wanix/wanixroomtypes'
 import { readwanixtermbufferkeys } from 'zss/feature/wanix/wanixtermbuffer'
 import { extractwanixtgz } from 'zss/feature/wanix/wanixtgzextract'
-import { activatewanixzedcafeexport } from 'zss/feature/wanix/wanixactivateexport'
+import { readwanixwasmdriver } from 'zss/feature/wanix/wanixwasmdriver'
 import {
   assertfindplayersexportready,
   readwanixbootzedcafestate,
   resetwanixzedcafeonidle,
 } from 'zss/feature/wanix/wanixzedcafe'
-import { wanixperfmark, wanixperfreset } from 'zss/feature/wanix/wanixperf'
 import type { WanixZedCafeRoomSpec } from 'zss/feature/wanix/wanixzedcafetypes'
 
 const WANIX_ROOM_TIMEOUT_MS = 180_000
@@ -90,7 +90,7 @@ export async function ensurewanixtaskroom(
     )
   }
   let zedcafe: WanixZedCafeRoomSpec | null | undefined
-  const boot = await readwanixbootzedcafestate(device, player)
+  const boot = readwanixbootzedcafestate()
   if (boot) {
     zedcafe = {
       cmd: boot.cmd,
@@ -426,7 +426,7 @@ export async function startwanixvm(
   let zedcafe: WanixZedCafeRoomSpec | null | undefined
   if (device && player) {
     wanixperfreset()
-    const boot = await readwanixbootzedcafestate(device, player)
+    const boot = readwanixbootzedcafestate()
     if (boot) {
       zedcafe = {
         cmd: boot.cmd,

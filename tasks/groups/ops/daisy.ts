@@ -163,7 +163,10 @@ async function rundaisycalibrateplaydrumbalance(
     }
 
     function builddaisy() {
-      execSync('yarn task run ops:daisy:build', { cwd: PROJECT, stdio: 'inherit' })
+      execSync('yarn task run ops:daisy:build', {
+        cwd: PROJECT,
+        stdio: 'inherit',
+      })
     }
 
     function renderandmeasure(): PLAY_DRUM_BALANCE_METRICS {
@@ -342,7 +345,10 @@ async function rundaisycalibratesidechainparity(
     }
 
     function builddaisy() {
-      execSync('yarn task run ops:daisy:build', { cwd: PROJECT, stdio: 'inherit' })
+      execSync('yarn task run ops:daisy:build', {
+        cwd: PROJECT,
+        stdio: 'inherit',
+      })
     }
 
     function measure(): SIDECHAIN_PARITY_RESULT {
@@ -4065,7 +4071,11 @@ export const OPS_DAISY_TASKS: TaskDef[] = [
   tasksonly(
     'ops:daisy:sos-voices:test:full',
     'Regenerate SOS voice fixtures and run gates',
-    ['ops:daisy:build', 'ops:fixtures:synth:regen:sos-voice', 'ops:daisy:sos-voices:test'],
+    [
+      'ops:daisy:build',
+      'ops:fixtures:synth:regen:sos-voice',
+      'ops:daisy:sos-voices:test',
+    ],
     { tags: ['slow'] },
   ),
   def('ops:daisy:synth-env:calibrate', {

@@ -1,6 +1,6 @@
 import { apierror, apilog, wanixdrop } from 'zss/device/api'
-import { isdevbuild } from 'zss/feature/devbuild'
 import type { DEVICELIKE } from 'zss/device/api'
+import { isdevbuild } from 'zss/feature/devbuild'
 import type { WanixDropPayload } from 'zss/feature/wanix/wanixroomtypes'
 
 export function iswanixgzipmagic(bytes: Uint8Array): boolean {

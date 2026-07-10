@@ -18,10 +18,7 @@ export const WANIX_BOOT_REGRESSION_GATES: WanixBootRegressionGate[] = [
   {
     path: 'vm',
     label: 'VM boot: #wanix vm → zedcafe-books lists books',
-    signals: [
-      '[wanix-perf] synczedcafeexport-end',
-      'zedcafe-books',
-    ],
+    signals: ['[wanix-perf] synczedcafeexport-end', 'zedcafe-books'],
     maxphasems: {
       'synczedcafeexport-end': 15_000,
     },
@@ -29,11 +26,7 @@ export const WANIX_BOOT_REGRESSION_GATES: WanixBootRegressionGate[] = [
   {
     path: 'coldtask',
     label: 'Cold task: idle drop findplayers → JSON array line',
-    signals: [
-      'daemon start memcount=1',
-      '[wanix-perf] spawntask-return',
-      '["',
-    ],
+    signals: ['daemon start memcount=1', '[wanix-perf] spawntask-return', '["'],
     maxphasems: {
       'activate-export-end': 20_000,
       'synczedcafeexport-end': 15_000,
@@ -42,11 +35,7 @@ export const WANIX_BOOT_REGRESSION_GATES: WanixBootRegressionGate[] = [
   {
     path: 'warmtask',
     label: 'Warm task: findplayers while wanix active → sync-stale skip',
-    signals: [
-      'sync-stale needed=false',
-      '[wanix-perf] spawntask-return',
-      '["',
-    ],
+    signals: ['sync-stale needed=false', '[wanix-perf] spawntask-return', '["'],
   },
 ]
 
@@ -61,7 +50,7 @@ export function parsewanixperflines(lines: string[]): WanixPerfTimelineEntry[] {
   const entries: WanixPerfTimelineEntry[] = []
   const re = /\[wanix-perf\] (\S+)(?: (.+))?$/
   for (let i = 0; i < lines.length; i++) {
-    const match = lines[i].match(re)
+    const match = re.exec(lines[i])
     if (!match) {
       continue
     }

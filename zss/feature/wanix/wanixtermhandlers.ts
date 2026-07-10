@@ -18,7 +18,9 @@ import { ispresent } from 'zss/mapping/types'
 
 const DEFAULT_TERM_DUMP_TAIL = 40
 
-export function resolvewanixtermdumpsession(sessionkey?: string): string | null {
+export function resolvewanixtermdumpsession(
+  sessionkey?: string,
+): string | null {
   if (ispresent(sessionkey) && sessionkey.trim()) {
     return sessionkey.trim()
   }
@@ -36,7 +38,9 @@ export function writewanixtermstatus(device: DEVICELIKE, player: string) {
     apilog(device, player, 'wanix no terminal sessions')
     return
   }
-  const lines = sessions.map((meta) => `$cyan${formatwanixtermstatusline(meta)}`)
+  const lines = sessions.map(
+    (meta) => `$cyan${formatwanixtermstatusline(meta)}`,
+  )
   terminalwritelines(device, player, lines.join('\n'))
 }
 

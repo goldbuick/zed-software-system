@@ -72,6 +72,21 @@ describe('wanixstateimport', () => {
     })
   })
 
+  it('assembleboardjson always includes objects even when empty', () => {
+    const boardfiles = splitboardexport({
+      terrain: [{ kind: 'solid' }],
+      startx: 1,
+      starty: 2,
+    })
+    const index = new Map<string, Uint8Array>()
+    for (let i = 0; i < boardfiles.length; ++i) {
+      const file = boardfiles[i]!
+      index.set(`b1/p1/${file.path}`, file.bytes)
+    }
+    const board = assembleboardjson(index, 'b1/p1')
+    expect(board.objects).toEqual({})
+  })
+
   it('round-trips granular export layout', () => {
     const boardpage = {
       id: 'page1',
@@ -113,6 +128,7 @@ describe('wanixstateimport', () => {
       startx: 10,
       starty: 12,
       terrain: [],
+      objects: {},
     })
 
     const page2 = assemblecodepagejson(

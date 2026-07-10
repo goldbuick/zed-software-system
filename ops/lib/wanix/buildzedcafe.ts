@@ -1,6 +1,12 @@
-import { createHash } from 'node:crypto'
 import { execFileSync } from 'node:child_process'
-import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  writeFileSync,
+} from 'node:fs'
 import path from 'node:path'
 
 import { CAFE_PUBLIC_ZEDCAFE_WASM } from 'ops/lib/cafepublicpaths'
@@ -11,7 +17,10 @@ import {
 
 const WANIX_SUBMODULE_DIR = path.join(process.cwd(), 'submodules', 'wanix')
 const ZEDCAFE_PACKAGE = path.join(WANIX_FIXTURES_DIR, 'zedcafe', 'main.go')
-const ZEDCAFE_STAGING_WASM = path.join(WANIX_PUBLIC_FIXTURES_DIR, 'zedcafe.wasm')
+const ZEDCAFE_STAGING_WASM = path.join(
+  WANIX_PUBLIC_FIXTURES_DIR,
+  'zedcafe.wasm',
+)
 const ZEDCAFE_PUBLIC_WASM = CAFE_PUBLIC_ZEDCAFE_WASM
 const ZEDCAFE_WASM_VERSION_TS = path.join(
   process.cwd(),

@@ -1,7 +1,14 @@
 import type { DEVICELIKE, WANIX_ZED_CAFE_IMPORT_RESULT } from 'zss/device/api'
 import { apilog, vmexportzedcafe, vmimportzedcafe } from 'zss/device/api'
-import { callwanixrpc, waitwanixexportcontentready } from 'zss/feature/wanix/wanixbridge'
-import { wanixperfmark, wanixperfnow, wanixperfdelta } from 'zss/feature/wanix/wanixperf'
+import {
+  callwanixrpc,
+  waitwanixexportcontentready,
+} from 'zss/feature/wanix/wanixbridge'
+import {
+  wanixperfdelta,
+  wanixperfmark,
+  wanixperfnow,
+} from 'zss/feature/wanix/wanixperf'
 import { readwanixroomconfig } from 'zss/feature/wanix/wanixroom'
 import {
   type WANIX_ZED_CAFE_EXPORT_FILE,
@@ -104,10 +111,7 @@ export function readwanixbootzedcafestatefrommemory(): WanixZedCafeHostState {
   return buildwanixbootzedcafestate()
 }
 
-export async function readwanixbootzedcafestate(
-  _device?: DEVICELIKE | null,
-  _player?: string | null,
-): Promise<WanixZedCafeHostState> {
+export function readwanixbootzedcafestate(): WanixZedCafeHostState {
   return readwanixbootzedcafestatefrommemory()
 }
 
@@ -290,13 +294,6 @@ export async function pushzedcafesynctoiframe(
       const tree = await readexporttree()
       const treefp = fingerprintzedcafeexportfiles(tree)
       if (treefp !== readlasthostpushfingerprint()) {
-        console.info(
-          '[zedcafe-import] host-push blocked — importing guest first',
-          {
-            treefp,
-            lasthost: readlasthostpushfingerprint(),
-          },
-        )
         const imported = await runzedcafeimport(device, player, tree)
         if (imported) {
           return true
@@ -324,7 +321,10 @@ export async function pushzedcafesynctoiframe(
     memcount,
     paths: files.length,
   })
-  const syncresult = await callwanixrpc<{ ok: boolean; taskrid: string | null }>(
+  const syncresult = await callwanixrpc<{
+    ok: boolean
+    taskrid: string | null
+  }>(
     'synczedcafeexport',
     [exportfilestoguestfiles(files)],
     WANIX_ZEDCAFE_EXPORT_WAIT_MS,
@@ -480,26 +480,15 @@ export async function runzedcafeimport(
   player: string,
   files: WANIX_ZED_CAFE_EXPORT_FILE[],
 ): Promise<boolean> {
-  const terrainpaths = files
-    .filter((file) => file.path.endsWith('/board/terrain.json'))
-    .map((file) => ({ path: file.path, bytes: file.bytes.length }))
-  console.info('[zedcafe-import] main run start', {
-    player,
-    files: files.length,
-    terrainpaths,
-    fingerprint: fingerprintzedcafeexportfiles(files),
-  })
   const check = validatezedcafeexportpaths(files)
   if (!check.ok) {
     const detail = check.errors[0] ?? 'unknown'
     apilog(device, player, `zedcafe import: invalid tree — ${detail}`)
-    console.info('[zedcafe-import] main run invalid tree', { detail })
     return false
   }
   setzedcafeguestdirty(true)
   try {
     const result = await requestvmzedcafeimport(device, player, files)
-    console.info('[zedcafe-import] main vm result', result)
     if (!result.ok) {
       apilog(
         device,
@@ -525,10 +514,6 @@ export async function runzedcafeimport(
     const pushed = await pushzedcafesynctoiframe(device, player, applied, {
       fromimport: true,
     })
-    console.info('[zedcafe-import] main re-export push', {
-      pushed,
-      appliedfiles: applied.length,
-    })
     if (pushed) {
       setzedcafeguestdirty(false)
     }
@@ -536,7 +521,6 @@ export async function runzedcafeimport(
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err)
     apilog(device, player, `zedcafe import: ${detail}`)
-    console.info('[zedcafe-import] main run error', { detail })
     return false
   }
 }
@@ -585,13 +569,6 @@ async function tickzedcafepoll() {
   if (fingerprint === readlasthostpushfingerprint()) {
     return
   }
-  console.info('[zedcafe-import] poll fingerprint mismatch — importing', {
-    fingerprint,
-    lasthost: readlasthostpushfingerprint(),
-    files: tree.length,
-    terrain: tree.filter((file) => file.path.endsWith('/board/terrain.json'))
-      .length,
-  })
   try {
     await runzedcafeimport(device, player, tree)
   } catch (err) {
@@ -640,8 +617,7 @@ export async function ensurewanixzedcafedaemon(
   player: string,
   files?: WANIX_ZED_CAFE_EXPORT_FILE[],
 ): Promise<void> {
-  const exportfiles =
-    files ?? (await readhostexportfilesasync(device, player))
+  const exportfiles = files ?? (await readhostexportfilesasync(device, player))
   const memcount = readbookcountfromexportfiles(exportfiles)
   tracezedcafeexport(`daemon start memcount=${memcount}`)
   const ok = await pushzedcafesynctoiframe(device, player, exportfiles)

@@ -7,8 +7,11 @@ import {
   withscripttimeout,
 } from 'tasks/lib/parity/parity-timeouts'
 import type { HeadedPlaywrightScript } from 'tasks/lib/playwright/runheadedscript'
+import { waitforregistersession } from 'tasks/lib/wanix/playwrightwaits'
 import {
   WANIX_ZEDCAFE_VM_SESSION,
+  type ZedcafeStatsSnapshot,
+  type ZedcafeTimelineEntry,
   callwanixrpcinpage,
   callwanixtermwriteinpage,
   collectexportconsoleerrors,
@@ -29,10 +32,7 @@ import {
   sendwanixcli,
   waitwanixrpcping,
   writededcafefailurereport,
-  type ZedcafeStatsSnapshot,
-  type ZedcafeTimelineEntry,
 } from 'tasks/lib/wanix/playwrightzedcafe'
-import { waitforregistersession } from 'tasks/lib/wanix/playwrightwaits'
 import { WANIX_ZEDCAFE_EXPORT_READY_POLL_MS } from 'zss/feature/wanix/wanixzedcafeconstants'
 
 const VALIDATE_TIMEOUT_MS = PLAYWRIGHT_SCENARIO_TIMEOUT_MS
@@ -153,7 +153,11 @@ const validatezedcafevmexport: HeadedPlaywrightScript = async ({
     )
   }
 
-  const failpoll = (gate: string, err: unknown, rpc: Record<string, unknown> = {}): never => {
+  const failpoll = (
+    gate: string,
+    err: unknown,
+    rpc: Record<string, unknown> = {},
+  ): never => {
     return fail(gate, {
       ...rpc,
       pollerror: err instanceof Error ? err.message : String(err),
@@ -180,7 +184,7 @@ const validatezedcafevmexport: HeadedPlaywrightScript = async ({
     const line = `[${msg.type()}] ${text}`
     consolelines.push(line)
     pagelogs.push(line)
-    const perfmatch = text.match(/\[wanix-perf\] (\S+)(?: (.+))?$/)
+    const perfmatch = /\[wanix-perf\] (\S+)(?: (.+))?$/.exec(text)
     if (perfmatch) {
       let extra: Record<string, unknown> | undefined
       if (perfmatch[2]) {
@@ -317,8 +321,7 @@ const validatezedcafevmexport: HeadedPlaywrightScript = async ({
             return name.length > 0 && name !== 'stats.json'
           })
         : []
-      const hasbooks =
-        bookdirs.length > 0 && (hoststats?.bookCount ?? 0) >= 1
+      const hasbooks = bookdirs.length > 0 && (hoststats?.bookCount ?? 0) >= 1
       return { taskrid, live: !!live, hoststats, hasbooks }
     },
     (snap) => snap.live === true && snap.hasbooks === true && !!snap.taskrid,
@@ -474,7 +477,7 @@ const validatezedcafevmexport: HeadedPlaywrightScript = async ({
       EXPORT_BUDGET_MS,
       EXPORT_POLL_MS,
       async () => readtermbuffertext(page, root, WANIX_ZEDCAFE_VM_SESSION),
-      (text) => /stats\.json/.test(text) && readlslistsbooksdir(text),
+      (text) => text.includes('stats.json') && readlslistsbooksdir(text),
     )
   } catch (err) {
     termdump = await readtermbuffertext(page, root, WANIX_ZEDCAFE_VM_SESSION)
@@ -482,7 +485,7 @@ const validatezedcafevmexport: HeadedPlaywrightScript = async ({
   }
   record('vm-term-ls-zedcafe')
 
-  if (!/stats\.json/.test(termdump) || !readlslistsbooksdir(termdump)) {
+  if (!termdump.includes('stats.json') || !readlslistsbooksdir(termdump)) {
     fail('vm-term-ls-zedcafe', {
       statstext: statstext.slice(-500),
       termdump: termdump.slice(-800),

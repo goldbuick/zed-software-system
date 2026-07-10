@@ -8,7 +8,11 @@ export const HEADLESS_TASKS: TaskDef[] = [
   }),
   def('headless:build:all', {
     description: 'Production app + CLI build and pack tarballs',
-    deps: ['headless:build:all:app', 'headless:build:all:cli', 'headless:build:all:pack'],
+    deps: [
+      'headless:build:all:app',
+      'headless:build:all:cli',
+      'headless:build:all:pack',
+    ],
     run: { kind: 'tasks' },
   }),
   def('headless:build:all:app', {

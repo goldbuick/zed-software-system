@@ -4,12 +4,12 @@ import {
 } from 'zss/feature/wanix/wanixattachstate'
 import { readwanixtasklabel } from 'zss/feature/wanix/wanixmenu'
 import { readwanixroomconfig } from 'zss/feature/wanix/wanixroom'
+import { DEFAULT_WANIX_VM_ID } from 'zss/feature/wanix/wanixroomtypes'
 import {
   readwanixtermbuffer,
   readwanixtermbufferkeys,
 } from 'zss/feature/wanix/wanixtermbuffer'
 import type { WanixTermTileBuffer } from 'zss/feature/wanix/wanixtermbuffer'
-import { DEFAULT_WANIX_VM_ID } from 'zss/feature/wanix/wanixroomtypes'
 
 export type WanixSessionMeta = {
   sessionkey: string

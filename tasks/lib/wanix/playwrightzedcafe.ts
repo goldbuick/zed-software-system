@@ -255,7 +255,9 @@ export async function callwanixtermwriteinpage(
   )
 }
 
-export function parsestatsjsonbytes(data: number[]): ZedcafeStatsSnapshot | null {
+export function parsestatsjsonbytes(
+  data: number[],
+): ZedcafeStatsSnapshot | null {
   if (data.length === 0) {
     return null
   }
@@ -407,7 +409,7 @@ export function collectexporttrace(lines: string[]): string[] {
   const trace: string[] = []
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
-    if (EXPORT_TRACE_RE.test(line)) {
+    if (line.includes('[zedcafe-export]')) {
       trace.push(line)
     }
   }
@@ -421,7 +423,7 @@ export function collectwanixperf(
   const entries: ZedcafeTimelineEntry[] = []
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
-    const match = line.match(WANIX_PERF_RE)
+    const match = WANIX_PERF_RE.exec(line)
     if (!match) {
       continue
     }
@@ -439,10 +441,7 @@ export function collectwanixperf(
     const elapsedms =
       typeof extra?.elapsedms === 'number' ? extra.elapsedms : undefined
     entries.push({
-      ms:
-        sinceanchor ??
-        elapsedms ??
-        startms,
+      ms: sinceanchor ?? elapsedms ?? startms,
       label,
       extra,
     })
@@ -487,7 +486,10 @@ export function readlslistsbooksdir(text: string): boolean {
   return hasstats && hasbookdir
 }
 
-export function parsebookcountfromterm(text: string, aftercommand = 'zedcafe-stats'): number | null {
+export function parsebookcountfromterm(
+  text: string,
+  aftercommand = 'zedcafe-stats',
+): number | null {
   const lines = text.split('\n')
   let aftercmd = aftercommand.length === 0
   for (let i = 0; i < lines.length; i++) {
@@ -498,7 +500,7 @@ export function parsebookcountfromterm(text: string, aftercommand = 'zedcafe-sta
     if (!aftercmd) {
       continue
     }
-    const match = lines[i].match(/"bookCount"\s*:\s*(\d+)/)
+    const match = /"bookCount"\s*:\s*(\d+)/.exec(lines[i])
     if (match) {
       return Number(match[1])
     }

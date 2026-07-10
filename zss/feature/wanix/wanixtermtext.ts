@@ -72,7 +72,10 @@ export function searchwanixtermbuffer(
       }
       continue
     }
-    const re = new RegExp(pattern.source, pattern.flags.includes('g') ? pattern.flags : `${pattern.flags}g`)
+    const re = new RegExp(
+      pattern.source,
+      pattern.flags.includes('g') ? pattern.flags : `${pattern.flags}g`,
+    )
     let match: RegExpExecArray | null
     while ((match = re.exec(text)) != null) {
       matches.push({ line, col: match.index, match: match[0] })

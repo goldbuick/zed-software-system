@@ -36,9 +36,8 @@ export const OPS_FIXTURES_WANIX_TASKS: TaskDef[] = [
     description:
       'Build findplayers + greenring gojs tools into ops/public/wanix/ only (needs Go + submodules/wanix — run ops:fixtures:wanix:toolchains first)',
     run: handler(async () => {
-      const { buildwanixfindplayers } = await import(
-        'ops/lib/wanix/buildfindplayers'
-      )
+      const { buildwanixfindplayers } =
+        await import('ops/lib/wanix/buildfindplayers')
       buildwanixfindplayers()
       return 0
     }),
@@ -47,9 +46,8 @@ export const OPS_FIXTURES_WANIX_TASKS: TaskDef[] = [
     description:
       'Build zedcafe-linux-overlay.tgz (Alpine i386 jq/curl/wget + zedcafe shell tools) into ops/public/wanix/ and cafe/public/wanix/ (needs Docker — run ops:fixtures:wanix:toolchains first)',
     run: handler(async () => {
-      const { buildwanixlinuxoverlay } = await import(
-        'ops/lib/wanix/buildlinuxoverlay'
-      )
+      const { buildwanixlinuxoverlay } =
+        await import('ops/lib/wanix/buildlinuxoverlay')
       buildwanixlinuxoverlay()
       return 0
     }),
