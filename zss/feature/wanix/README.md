@@ -624,6 +624,7 @@ and VM is running — explicit branch, errors propagate.
 | **Guest FS → sim writeback** | 3s fingerprint poll; guest-dirty suppresses stale host push; deletes mirror guest tree |
 | **Live export updates** | `wanixstateexport` jsonpipe rebuilds tree; debounced push while room active; `synczedcafeexportifstale` on reuse |
 | **Auto-attach new sessions** | `WANIX_MSG_SESSION open` → reveal tape → attach when user had nothing focused |
+| **Task idle auto-halt** | Dropped wasm tasks halt after 5 minutes with no term input/output (VM + zedcafe daemon exempt) |
 | **Soft idle → faster second drop** | Warm `<wanix-system>` + unchanged `mountkey` skips wanix.wasm reload; daemon reuse + sync-if-stale |
 | **Export wait without poll slack** | `content-ready` event wakes parent waiters immediately after iframe push completes |
 

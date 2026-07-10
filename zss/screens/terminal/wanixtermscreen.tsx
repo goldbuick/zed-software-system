@@ -40,6 +40,7 @@ import { UserInput } from 'zss/gadget/userinput.bridge'
 import { useWriteText } from 'zss/gadget/writetext'
 import { ispresent } from 'zss/mapping/types'
 import { cursorcellvalues } from 'zss/screens/inputcommon'
+import { ScrollMarquee } from 'zss/screens/scroll/marquee'
 import { ismac, metakey } from 'zss/words/system'
 import { textformatreadedges } from 'zss/words/textformat'
 import { COLOR, NAME } from 'zss/words/types'
@@ -52,6 +53,7 @@ const HINT_IDLE = `Ctrl+\\ open detach menu, Ctrl+Esc close tape, ${HINT_SCROLLB
 const HINT_ARMED = `Ctrl+\\ to detach, left/right to switch sessions`
 const HINT_COLOR = COLOR.BLACK
 const HINT_BG = COLOR.DKPURPLE
+const HINT_MARQUEE_GAP = '   ·   '
 
 const SELECTION_ARROW_KEYS = new Set([
   'arrowleft',
@@ -130,17 +132,14 @@ function inverseselectioncellcolors(fg: number, bg: number) {
   return { color: swapbg, bg: swapfg }
 }
 
-function drawhintbar(
+function fillhintbarbg(
   context: ReturnType<typeof useWriteText>,
   edge: ReturnType<typeof textformatreadedges>,
-  text: string,
 ) {
-  const width = edge.width
   const drawy = edge.top + edge.height - 1
-  const padded = text.padEnd(width, ' ').slice(0, width)
-  for (let x = 0; x < width; x++) {
+  for (let x = 0; x < edge.width; x++) {
     writetile(context, context.width, context.height, edge.left + x, drawy, {
-      char: padded.charCodeAt(x),
+      char: 32,
       color: HINT_COLOR,
       bg: HINT_BG,
     })
@@ -328,6 +327,7 @@ export function WanixTermScreen() {
     }
   }
 
+  let hintline = ''
   if (edge.height >= 1) {
     const sessions = readwanixtermbufferkeys()
     const sessioncount = sessions.length
@@ -336,11 +336,8 @@ export function WanixTermScreen() {
     const altbadge = frame.altactive ? ' alt' : ''
     const newoutputbadge = hasnewoutput ? ' new output' : ''
     const sessionhint = `${label} (${sessionindex + 1}/${sessioncount})${altbadge}${newoutputbadge}`
-    drawhintbar(
-      context,
-      edge,
-      `${prefixarmed ? HINT_ARMED : HINT_IDLE}, ${sessionhint}`,
-    )
+    hintline = `${prefixarmed ? HINT_ARMED : HINT_IDLE}, ${sessionhint}${HINT_MARQUEE_GAP}`
+    fillhintbarbg(context, edge)
   }
 
   context.changed()
@@ -470,6 +467,16 @@ export function WanixTermScreen() {
 
   return (
     <>
+      {hintline !== '' && (
+        <ScrollMarquee
+          margin={0}
+          color={HINT_COLOR}
+          y={edge.top + edge.height - 1}
+          leftedge={edge.left}
+          rightedge={edge.left + edge.width}
+          line={`$ondkpurple${hintline}`}
+        />
+      )}
       <Scrollable
         blocking
         x={edge.left}

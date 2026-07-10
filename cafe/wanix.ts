@@ -36,6 +36,7 @@ import {
 import {
   WANIX_ZEDCAFE_EXPORT_READY_POLL_MS,
   WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS,
+  WANIX_ZEDCAFE_TASK_ID,
   readwanixzedcafeexportsrc,
 } from 'zss/feature/wanix/wanixzedcafeconstants'
 import {
@@ -79,6 +80,8 @@ const BIND_MOUNT_TIMEOUT_MS = 120_000
 const VM_RID_WAIT_MS = 120_000
 const TERM_CONNECT_TIMEOUT_MS = 30_000
 const POLL_MS = 250
+/** Auto-halt dropped wasm tasks after this much quiet (no term in/out). */
+const TASK_IDLE_HALT_MS = 5 * 60 * 1000
 
 type WanixSystemWithTerminals = WanixSystemElement & {
   _updateTerminals: (shim: {
@@ -89,10 +92,12 @@ type WanixSystemWithTerminals = WanixSystemElement & {
 
 type TermSession = {
   alive: boolean
+  kind: WanixSessionKind
   termpath: string
   lastcols: number
   lastrows: number
   lastcelldigest: string
+  idletimer: ReturnType<typeof setTimeout> | null
   grid: WANIX_TERM_GRID
   reader: ReadableStreamDefaultReader<Uint8Array> | null
   writer: WritableStreamDefaultWriter<Uint8Array> | null
@@ -311,6 +316,43 @@ function handletermsessioneof(sessionkey: string) {
   notifytermsessionclose(sessionkey)
 }
 
+function cleartaskidletimer(session: TermSession) {
+  if (session.idletimer == null) {
+    return
+  }
+  clearTimeout(session.idletimer)
+  session.idletimer = null
+}
+
+function shouldautohalttask(sessionkey: string, session: TermSession) {
+  return session.kind === 'task' && sessionkey !== WANIX_ZEDCAFE_TASK_ID
+}
+
+function scheduletaskidlehalt(sessionkey: string, session: TermSession) {
+  cleartaskidletimer(session)
+  if (!shouldautohalttask(sessionkey, session) || !session.alive) {
+    return
+  }
+  session.idletimer = setTimeout(() => {
+    session.idletimer = null
+    if (!session.alive || !termsessions.has(sessionkey)) {
+      return
+    }
+    wanixperfmark('task-idle-halt', {
+      taskid: sessionkey,
+      idlems: TASK_IDLE_HALT_MS,
+    })
+    halttask(sessionkey)
+  }, TASK_IDLE_HALT_MS)
+}
+
+function touchtaskio(sessionkey: string, session: TermSession) {
+  if (!shouldautohalttask(sessionkey, session)) {
+    return
+  }
+  scheduletaskidlehalt(sessionkey, session)
+}
+
 function setwanixattrs(el: HTMLElement, attrs: Record<string, unknown>) {
   for (const [key, value] of Object.entries(attrs)) {
     if (value === undefined || value === false) {
@@ -381,6 +423,7 @@ async function readtermloop(sessionkey: string, session: TermSession) {
         break
       }
       if (value?.length && session.grid) {
+        touchtaskio(sessionkey, session)
         wanixtermgridwritebytes(session.grid, value, termdecoder)
         postcells(sessionkey, session)
       }
@@ -468,6 +511,7 @@ function disconnecttermsession(
     return
   }
   const wasalive = session.alive
+  cleartaskidletimer(session)
   session.disconnect()
   termsessions.delete(sessionkey)
   termlinebufs.delete(sessionkey)
@@ -506,10 +550,12 @@ async function connecttermsession(
   const sessionkind = kind ?? readsessionsessionkind(sessionkey)
   const session: TermSession = {
     alive: true,
+    kind: sessionkind,
     termpath,
     lastcols: WINCH_SENTINEL,
     lastrows: WINCH_SENTINEL,
     lastcelldigest: '',
+    idletimer: null,
     grid: createwanixtermgrid(lastfitcols, lastfitrows),
     reader,
     writer,
@@ -524,6 +570,7 @@ async function connecttermsession(
         return
       }
       this.alive = false
+      cleartaskidletimer(this)
       if (this.reader) {
         this.reader.cancel().catch(() => {})
         this.reader = null
@@ -540,6 +587,7 @@ async function connecttermsession(
   postcells(sessionkey, session)
   postsession('open', sessionkey, sessionkind)
   setactivesession(sessionkey)
+  scheduletaskidlehalt(sessionkey, session)
   void readtermloop(sessionkey, session)
   return session
 }
@@ -1178,6 +1226,9 @@ async function handlerrpc(
         const text = String(linedata ?? '')
         await session.write(text)
         if (key) {
+          if (text.length > 0) {
+            touchtaskio(key, session)
+          }
           maybeapplytermbridgesmokereply(key, session, text)
         }
         result = { ok: true }
