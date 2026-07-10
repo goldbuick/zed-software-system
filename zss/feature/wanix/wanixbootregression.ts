@@ -19,12 +19,11 @@ export const WANIX_BOOT_REGRESSION_GATES: WanixBootRegressionGate[] = [
     path: 'vm',
     label: 'VM boot: #wanix vm → zedcafe-books lists books',
     signals: [
-      'finalize-vmboot branch=pushwire',
-      '[wanix-perf] export-push-end',
+      '[wanix-perf] synczedcafeexport-end',
       'zedcafe-books',
     ],
     maxphasems: {
-      'export-push-end': 15_000,
+      'synczedcafeexport-end': 15_000,
     },
   },
   {
@@ -37,7 +36,7 @@ export const WANIX_BOOT_REGRESSION_GATES: WanixBootRegressionGate[] = [
     ],
     maxphasems: {
       'activate-export-end': 20_000,
-      'export-push-end': 15_000,
+      'synczedcafeexport-end': 15_000,
     },
   },
   {

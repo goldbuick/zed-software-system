@@ -13,6 +13,8 @@ import {
 import {
   WANIX_MSG_CELLS,
   WANIX_MSG_IDLE,
+  WANIX_MSG_PARENT_RPC,
+  WANIX_MSG_PARENT_RPC_RES,
   WANIX_MSG_READY,
   WANIX_MSG_RPC,
   WANIX_MSG_RPC_RES,
@@ -38,15 +40,16 @@ import {
 import { wanixperfmark } from 'zss/feature/wanix/wanixperf'
 import { resolvedriverforwasm } from 'zss/feature/wanix/wanixspawndriver'
 
+import type { WanixZedCafeGuestFile } from 'zss/feature/wanix/wanixzedcafetypes'
 import {
-  finalizezedcafeexportcontent,
+  appendguestexportbind,
   ensurezedcafeboot,
   haltzedcafetask,
   collectzedcafeexportfiles,
   pushzedcafeexportlive,
+  readguestfilebookcount,
   readzedcafeguestbound,
   readzedcafeexportlive,
-  readzedcafeexporthasbooks,
   readzedcafeexportcontentready,
   readzedcafetaskridlocal,
   resetzedcafestate,
@@ -54,9 +57,8 @@ import {
   synczedcafewasmversionifneeded,
   synczedcafestate,
   waitzedcafeexportcontentready,
-  waitzedcafemountrpc,
   waitzedcafereadyrpc,
-  wirezedcafeexportbinds,
+  wireallguestroots,
 } from 'zss/feature/wanix/wanixzedcafehost'
 
 type WanixSessionKind = 'vm' | 'task'
@@ -133,6 +135,86 @@ let system: WanixSystemElement | null = null
 let systemsoftidle = false
 let lastfitcols = DEFAULT_TERM_COLS
 let lastfitrows = DEFAULT_TERM_ROWS
+
+let parentrpcseq = 0
+const parentrpcwaiters = new Map<
+  number,
+  { resolve: (value: unknown) => void; reject: (error: Error) => void }
+>()
+
+function callparentrpc<T>(
+  method: string,
+  args?: unknown[],
+  timeoutms = 30_000,
+): Promise<T> {
+  const id = ++parentrpcseq
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      parentrpcwaiters.delete(id)
+      reject(new Error(`wanix parent rpc timeout: ${method}`))
+    }, timeoutms)
+    parentrpcwaiters.set(id, {
+      resolve: (value) => {
+        clearTimeout(timer)
+        resolve(value as T)
+      },
+      reject: (err) => {
+        clearTimeout(timer)
+        reject(err)
+      },
+    })
+    window.parent.postMessage(
+      { type: WANIX_MSG_PARENT_RPC, id, method, args },
+      window.location.origin,
+    )
+  })
+}
+
+async function synczedcafeexportlocal(
+  guestfiles?: WanixZedCafeGuestFile[] | null,
+): Promise<{ ok: boolean; taskrid: string | null }> {
+  if (!system?.isReady || !roomconfig.zedcafe?.cmd) {
+    return { ok: false, taskrid: null }
+  }
+  let files = guestfiles ?? null
+  if (!files?.length) {
+    files = await callparentrpc<WanixZedCafeGuestFile[]>(
+      'requestzedcafestate',
+      [],
+    )
+  }
+  const cmd = roomconfig.zedcafe.cmd
+  const taskrid = await ensurezedcafeboot(system, readroot(), cmd)
+  if (!taskrid) {
+    return { ok: false, taskrid: null }
+  }
+  const bookcount = readguestfilebookcount(files ?? [])
+  if (files?.length) {
+    await pushzedcafeexportlive(readroot(), taskrid, files)
+  }
+  if (bookcount > 0) {
+    await wireallguestroots(system, taskrid)
+    setzedcafereadylocal(true)
+  }
+  wanixperfmark('synczedcafeexport-end', {
+    taskrid,
+    bookcount,
+    paths: files?.length ?? 0,
+  })
+  return { ok: true, taskrid }
+}
+
+async function bootstrapzedcafeexportafterroom(): Promise<void> {
+  if (!roomconfig.zedcafe?.cmd) {
+    return
+  }
+  try {
+    await synczedcafeexportlocal(null)
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err)
+    console.error(`[zedcafe-export] bootstrap sync failed: ${detail}`)
+  }
+}
 
 function recordtermfit(cols: number, rows: number) {
   const nextcols = Math.max(1, Number(cols) || 1)
@@ -717,6 +799,7 @@ async function warmactivateroom(): Promise<Record<string, unknown>> {
     const vmstatus = await warmstartvm()
     if (roomconfig.zedcafe?.cmd) {
       await ensurezedcafeboot(system, readroot(), roomconfig.zedcafe.cmd)
+      await bootstrapzedcafeexportafterroom()
     }
     postready()
     return {
@@ -731,6 +814,7 @@ async function warmactivateroom(): Promise<Record<string, unknown>> {
   }
   if (roomconfig.mode === 'task' && roomconfig.zedcafe?.cmd) {
     await ensurezedcafeboot(system, readroot(), roomconfig.zedcafe.cmd)
+    await bootstrapzedcafeexportafterroom()
   }
   postready()
   return {
@@ -822,6 +906,7 @@ async function applyroom(config: WanixRoomConfig) {
     if (roomconfig.zedcafe?.cmd) {
       await ensurezedcafeboot(system, readroot(), roomconfig.zedcafe.cmd)
     }
+    await bootstrapzedcafeexportafterroom()
     wanixperfmark('applyroom-return', { mode: 'vm', remount: true })
     return {
       ok: true,
@@ -835,6 +920,7 @@ async function applyroom(config: WanixRoomConfig) {
 
   if (roomconfig.mode === 'task' && roomconfig.zedcafe?.cmd) {
     await ensurezedcafeboot(system, readroot(), roomconfig.zedcafe.cmd)
+    await bootstrapzedcafeexportafterroom()
   }
 
   wanixperfmark('applyroom-return', { mode: roomconfig.mode, remount: true })
@@ -875,17 +961,6 @@ async function waitlocalzedcafetaskrid(): Promise<string | null> {
     readroot(),
     WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS,
   )
-}
-
-function appendfindplayersexportbind(task: HTMLElement, taskrid: string) {
-  const bind = createbind(
-    {
-      dst: WANIX_ZEDCAFE_GUEST_MOUNT,
-      src: readwanixzedcafeexportsrc(taskrid),
-    },
-    'data-zss-findplayers-export',
-  )
-  task.appendChild(bind)
 }
 
 async function readzedcafeexportstatsready(
@@ -935,7 +1010,7 @@ async function spawntask(
   })
   task.setAttribute('data-zss-target-id', taskid)
   task.setAttribute('data-zss-target-kind', 'task')
-  if (driver === 'gojs' && isfindplayerswasmcmd(cmd)) {
+  if (driver === 'gojs') {
     const taskrid = await waitlocalzedcafetaskrid()
     if (!taskrid) {
       throw new Error(
@@ -950,7 +1025,7 @@ async function spawntask(
         )
       }
     }
-    appendfindplayersexportbind(task, taskrid)
+    appendguestexportbindontask(task, taskrid)
   }
   system.appendChild(task)
 
@@ -1149,43 +1224,6 @@ async function handlerrpc(
         }
         break
       }
-      case 'synczedcafe': {
-        const [cmd, generation] = args as [string, number]
-        if (system?.isReady) {
-          const rid = readzedcafetaskridlocal(system)
-          if (
-            rid &&
-            (await readzedcafeexportlive(readroot(), rid)) &&
-            (await readzedcafeexporthasbooks(readroot(), rid))
-          ) {
-            synczedcafestate(String(cmd), Number(generation))
-            console.info(
-              `[zedcafe-export] synczedcafe skip-halt taskrid=${rid} generation=${generation}`,
-            )
-            result = { ok: true, skippedhalt: true }
-            break
-          }
-        }
-        synczedcafestate(String(cmd), Number(generation))
-        if (system) {
-          haltzedcafetask(system)
-        }
-        result = { ok: true }
-        break
-      }
-      case 'waitzedcafemount': {
-        const [timeoutms] = args as [number?]
-        if (!system?.isReady) {
-          result = null
-          break
-        }
-        result = await waitzedcafemountrpc(
-          system,
-          readroot(),
-          Number(timeoutms ?? 90_000),
-        )
-        break
-      }
       case 'waitzedcafecontentready': {
         const [taskrid, timeoutms] = args as [string, number?]
         if (!system?.isReady) {
@@ -1196,33 +1234,6 @@ async function handlerrpc(
           readroot(),
           String(taskrid),
           Number(timeoutms ?? WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS),
-        )
-        break
-      }
-      case 'finalizezedcafeexport': {
-        const [taskrid, vmmode] = args as [string, boolean?]
-        if (!system?.isReady) {
-          throw new Error('wanix room not ready')
-        }
-        await finalizezedcafeexportcontent(
-          system,
-          readroot(),
-          String(taskrid),
-          !!vmmode,
-        )
-        result = { ok: true }
-        break
-      }
-      case 'waitzedcafeready': {
-        const [timeoutms] = args as [number?]
-        if (!system?.isReady) {
-          result = null
-          break
-        }
-        result = await waitzedcafereadyrpc(
-          system,
-          readroot(),
-          Number(timeoutms ?? 90_000),
         )
         break
       }
@@ -1258,17 +1269,19 @@ async function handlerrpc(
         result = await collectzedcafeexportfiles(root, taskrid)
         break
       }
-      case 'pushzedcafeexport': {
-        const [taskrid, files] = args as [
-          string,
-          { path: string; data: number[] }[],
+      case 'synczedcafeexport': {
+        const [files] = args as [
+          { path: string; data: number[] }[] | null | undefined,
         ]
         if (!system?.isReady) {
           throw new Error('wanix room not ready')
         }
-        await pushzedcafeexportlive(readroot(), String(taskrid), files ?? [])
-        setzedcafereadylocal(true)
-        result = { ok: true }
+        const guestfiles =
+          files?.map((file) => ({
+            path: file.path,
+            data: file.data,
+          })) ?? null
+        result = await synczedcafeexportlocal(guestfiles)
         break
       }
       case 'iszedcafeexportlive': {
@@ -1293,19 +1306,6 @@ async function handlerrpc(
         result = await readzedcafeguestbound(readroot(), system)
         break
       }
-      case 'wirezedcafeexport': {
-        const [taskrid] = args as [string?]
-        if (!system?.isReady) {
-          throw new Error('wanix room not ready')
-        }
-        const rid = String(taskrid ?? readzedcafetaskridlocal(system) ?? '')
-        if (!rid) {
-          throw new Error('zedcafe export: missing task rid')
-        }
-        const count = await wirezedcafeexportbinds(system, rid)
-        result = { ok: true, count }
-        break
-      }
       default:
         replyrpc(source, id, { error: `unknown rpc: ${method}` })
         return
@@ -1323,7 +1323,29 @@ window.addEventListener('message', (event) => {
   if (event.origin !== window.location.origin) {
     return
   }
-  const data = event.data as WanixRpcMessage
+  const data = event.data as WanixRpcMessage & {
+    type?: string
+    id?: number
+    error?: string
+    result?: unknown
+  }
+  if (data?.type === WANIX_MSG_PARENT_RPC_RES) {
+    const id = data.id
+    if (typeof id !== 'number') {
+      return
+    }
+    const waiter = parentrpcwaiters.get(id)
+    if (!waiter) {
+      return
+    }
+    parentrpcwaiters.delete(id)
+    if (typeof data.error === 'string' && data.error.length > 0) {
+      waiter.reject(new Error(data.error))
+      return
+    }
+    waiter.resolve(data.result)
+    return
+  }
   if (data?.type !== WANIX_MSG_RPC) {
     return
   }

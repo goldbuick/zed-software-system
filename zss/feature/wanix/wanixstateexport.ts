@@ -1,6 +1,7 @@
 import type { DEVICELIKE } from 'zss/device/api'
-import { apilog, wanixexportstate } from 'zss/device/api'
+import { apilog } from 'zss/device/api'
 import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
+import { readwanixroomconfig } from 'zss/feature/wanix/wanixroom'
 import { WANIX_ZEDCAFE_EXPORT_DEBOUNCE_MS } from 'zss/feature/wanix/wanixzedcafeconstants'
 import { readzedcafepollactive } from 'zss/feature/wanix/wanixzedcafesession'
 import {
@@ -250,16 +251,27 @@ export function buildzedcafeexportfiles(): WANIX_ZED_CAFE_EXPORT_FILE[] {
   return files
 }
 
-export function runzedcafeexport(device: DEVICELIKE, player: string) {
-  const files = buildzedcafeexportfiles()
-  const check = validatezedcafeexportpaths(files)
+export async function runzedcafeexport(device: DEVICELIKE, player: string) {
+  if (readwanixroomconfig().mode === 'idle') {
+    const { markwanixzedcafependingexport } = await import(
+      'zss/feature/wanix/wanixzedcafe'
+    )
+    markwanixzedcafependingexport()
+    return
+  }
+  const {
+    pushzedcafesynctoiframe,
+    readhostexportfilesasync,
+  } = await import('zss/feature/wanix/wanixzedcafe')
+  const hostfiles = await readhostexportfilesasync(device, player)
+  const check = validatezedcafeexportpaths(hostfiles)
   if (!check.ok) {
     const detail = check.errors[0] ?? 'unknown'
     apilog(device, player, `zedcafe export: invalid tree — ${detail}`)
     console.error(`zedcafe export: invalid tree — ${detail}`)
     return
   }
-  wanixexportstate(device, player, { files })
+  await pushzedcafesynctoiframe(device, player, hostfiles)
 }
 
 export function schedulewanixexport(device: DEVICELIKE, player: string) {
@@ -268,7 +280,7 @@ export function schedulewanixexport(device: DEVICELIKE, player: string) {
   }
   debouncetimer = setTimeout(() => {
     debouncetimer = undefined
-    runzedcafeexport(device, player)
+    void runzedcafeexport(device, player)
   }, WANIX_ZEDCAFE_EXPORT_DEBOUNCE_MS)
 }
 

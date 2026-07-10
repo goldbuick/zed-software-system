@@ -11,7 +11,23 @@ import {
 import type { BOOK, CODE_PAGE } from 'zss/memory/types'
 
 jest.mock('zss/device/api', () => ({
+  apilog: jest.fn(),
   wanixexportstate: jest.fn(),
+}))
+
+jest.mock('zss/feature/wanix/wanixroom', () => ({
+  readwanixroomconfig: jest.fn(() => ({ mode: 'task' })),
+}))
+
+jest.mock('zss/feature/wanix/wanixzedcafe', () => ({
+  pushzedcafesynctoiframe: jest.fn().mockResolvedValue(true),
+  readhostexportfilesasync: jest.fn().mockResolvedValue([
+    {
+      path: 'stats.json',
+      bytes: new TextEncoder().encode('{"bookCount":0,"books":[]}\n'),
+    },
+  ]),
+  markwanixzedcafependingexport: jest.fn(),
 }))
 
 jest.mock('zss/memory/session', () => ({
@@ -47,8 +63,14 @@ jest.mock('zss/memory/codepageoperations', () => ({
 
 import { wanixexportstate } from 'zss/device/api'
 import { memoryreadbooklist } from 'zss/memory/session'
+import {
+  pushzedcafesynctoiframe,
+  readhostexportfilesasync,
+} from 'zss/feature/wanix/wanixzedcafe'
 
 const exportmock = wanixexportstate as jest.Mock
+const mocksync = pushzedcafesynctoiframe as jest.Mock
+const mockfetch = readhostexportfilesasync as jest.Mock
 
 function decodefilebytes(bytes: Uint8Array): unknown {
   return JSON.parse(new TextDecoder().decode(bytes))
@@ -212,11 +234,13 @@ describe('wanixstateexport', () => {
     ])
   })
 
-  it('debounces export requests', () => {
+  it('debounces export requests', async () => {
     schedulewanixexport({ emit: jest.fn() } as any, 'player1')
     schedulewanixexport({ emit: jest.fn() } as any, 'player1')
+    expect(mocksync).not.toHaveBeenCalled()
+    await jest.runAllTimersAsync()
+    expect(mockfetch).toHaveBeenCalledTimes(1)
+    expect(mocksync).toHaveBeenCalledTimes(1)
     expect(exportmock).not.toHaveBeenCalled()
-    jest.advanceTimersByTime(2000)
-    expect(exportmock).toHaveBeenCalledTimes(1)
   })
 })

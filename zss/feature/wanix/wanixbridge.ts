@@ -12,6 +12,8 @@ import { revealwanixtapeifhidden } from 'zss/feature/wanix/wanixtapevisibility'
 import {
   WANIX_MSG_CELLS,
   WANIX_MSG_IDLE,
+  WANIX_MSG_PARENT_RPC,
+  WANIX_MSG_PARENT_RPC_RES,
   WANIX_MSG_READY,
   WANIX_MSG_RPC,
   WANIX_MSG_RPC_RES,
@@ -130,6 +132,10 @@ function handleparentmessage(event: MessageEvent) {
   if (handlewanixexportmessage(data as Record<string, unknown>)) {
     return
   }
+  if (data.type === WANIX_MSG_PARENT_RPC) {
+    void handleiframeparentrpc(data as Record<string, unknown>, event.source)
+    return
+  }
   if (data.type !== WANIX_MSG_RPC_RES) {
     return
   }
@@ -148,6 +154,58 @@ function handleparentmessage(event: MessageEvent) {
     return
   }
   waiter.resolve((data as { result?: unknown }).result)
+}
+
+function replyiframeparentrpc(
+  source: MessageEventSource | null,
+  id: unknown,
+  payload: Record<string, unknown>,
+) {
+  if (
+    !source ||
+    typeof id !== 'number' ||
+    typeof (source as Window).postMessage !== 'function'
+  ) {
+    return
+  }
+  ;(source as Window).postMessage(
+    { type: WANIX_MSG_PARENT_RPC_RES, id, ...payload },
+    window.location.origin,
+  )
+}
+
+async function handleiframeparentrpc(
+  data: Record<string, unknown>,
+  source: MessageEventSource | null,
+) {
+  const id = data.id
+  const method = data.method
+  if (typeof method !== 'string') {
+    replyiframeparentrpc(source, id, { error: 'parent rpc: missing method' })
+    return
+  }
+  try {
+    if (method === 'requestzedcafestate') {
+      const { SOFTWARE } = await import('zss/device/session')
+      const { memoryreadoperator } = await import('zss/memory/session')
+      const {
+        exportfilestoguestfiles,
+        readhostexportfilesasync,
+      } = await import('zss/feature/wanix/wanixzedcafe')
+      const files = await readhostexportfilesasync(
+        SOFTWARE,
+        memoryreadoperator(),
+      )
+      replyiframeparentrpc(source, id, {
+        result: exportfilestoguestfiles(files),
+      })
+      return
+    }
+    replyiframeparentrpc(source, id, { error: `unknown parent rpc: ${method}` })
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err)
+    replyiframeparentrpc(source, id, { error: detail })
+  }
 }
 
 function notifychildwindow() {

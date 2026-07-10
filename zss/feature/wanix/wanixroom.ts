@@ -36,10 +36,8 @@ import { activatewanixzedcafeexport } from 'zss/feature/wanix/wanixactivateexpor
 import { primezedcafeexportshadow } from 'zss/feature/wanix/wanixstateexport'
 import {
   assertfindplayersexportready,
-  finalizewanixzedcafeaftervmboot,
   readwanixbootzedcafestate,
   resetwanixzedcafeonidle,
-  wanixdrainpendingzedcafeexport,
 } from 'zss/feature/wanix/wanixzedcafe'
 import { wanixperfmark, wanixperfreset } from 'zss/feature/wanix/wanixperf'
 import type { WanixZedCafeRoomSpec } from 'zss/feature/wanix/wanixzedcafetypes'
@@ -446,12 +444,11 @@ export async function startwanixvm(
     already?: boolean
   }
   if (device && player) {
-    wanixperfmark('vm-boot-finalize-start')
-    apilog(device, player, 'zedcafe: finalizing export after vm boot…')
     primezedcafeexportshadow()
-    await finalizewanixzedcafeaftervmboot(device, player)
-    wanixdrainpendingzedcafeexport(device, player)
-    wanixperfmark('vm-boot-finalize-end')
+    const { wanixdrainpendingzedcafeexport } = await import(
+      'zss/feature/wanix/wanixzedcafe'
+    )
+    await wanixdrainpendingzedcafeexport(device, player)
   }
   if (result.running) {
     return {

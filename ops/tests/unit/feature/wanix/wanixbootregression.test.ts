@@ -10,14 +10,13 @@ describe('wanix boot regression gates', () => {
     expect(paths).toEqual(['vm', 'coldtask', 'warmtask'])
   })
 
-  it('passes vm gate when pushwire and export marks are present', () => {
+  it('passes vm gate when iframe sync and export marks are present', () => {
     const logs = [
-      '[zedcafe-export] finalize-vmboot branch=pushwire memcount=1',
       '~ # zedcafe-books',
       '  name: coolregionsbow',
     ]
     const perf = [
-      '[wanix-perf] export-push-end {"bookcount":1,"sinceanchor":4200}',
+      '[wanix-perf] synczedcafeexport-end {"bookcount":1,"sinceanchor":4200}',
     ]
     const result = assesswanixbootregression('vm', logs, perf)
     expect(result.ok).toBe(true)

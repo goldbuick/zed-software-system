@@ -10,6 +10,10 @@ import {
 } from 'zss/feature/wanix/wanixstateexport'
 import type { CODE_PAGE } from 'zss/memory/types'
 
+jest.mock('zss/feature/wanix/wanixroom', () => ({
+  readwanixroomconfig: jest.fn(() => ({ mode: 'task' })),
+}))
+
 jest.mock('zss/memory/session', () => ({
   memoryreadbooklist: jest.fn(() => []),
   memoryreadoperator: jest.fn(() => 'player1'),
