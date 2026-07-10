@@ -75,21 +75,25 @@ function paintboardrunnersafterimport(vm: DEVICE) {
 export function handleimportzedcafe(vm: DEVICE, message: MESSAGE): void {
   const files = readimportfiles(message.data)
   if (!files) {
-    waniximportresult(vm, message.player, {
-      ok: false,
-      changed: false,
-      error: 'import-zedcafe payload rejected',
-    })
+    waniximportresult(
+      vm,
+      message.player,
+      false,
+      false,
+      'import-zedcafe payload rejected',
+    )
     return
   }
   const check = validatezedcafeexportpaths(files)
   if (!check.ok) {
     const detail = check.errors[0] ?? 'unknown'
-    waniximportresult(vm, message.player, {
-      ok: false,
-      changed: false,
-      error: `invalid tree — ${detail}`,
-    })
+    waniximportresult(
+      vm,
+      message.player,
+      false,
+      false,
+      `invalid tree — ${detail}`,
+    )
     return
   }
   memorywritefrozen(true)
@@ -102,18 +106,17 @@ export function handleimportzedcafe(vm: DEVICE, message: MESSAGE): void {
       // paint so the live boardrunner gets terrain immediately.
       paintboardrunnersafterimport(vm)
     }
-    waniximportresult(vm, message.player, {
-      ok: true,
+    waniximportresult(
+      vm,
+      message.player,
+      true,
       changed,
-      bookcount: parsed.books.length,
-    })
+      undefined,
+      parsed.books.length,
+    )
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err)
-    waniximportresult(vm, message.player, {
-      ok: false,
-      changed: false,
-      error: detail,
-    })
+    waniximportresult(vm, message.player, false, false, detail)
   } finally {
     memorywritefrozen(false)
   }

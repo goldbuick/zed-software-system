@@ -8,7 +8,7 @@ import type {
   MESSAGE as MESSAGE_TYPE,
 } from 'zss/device/messagetypes'
 import { ismessage as ismessage_fn } from 'zss/device/messagetypes'
-import type { WANIX_ZED_CAFE_EXPORT_PAYLOAD } from 'zss/feature/wanix/wanixstateexport'
+import type { WANIX_ZED_CAFE_EXPORT_FILE } from 'zss/feature/wanix/wanixstateexport'
 import type { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import type { BOOK } from 'zss/memory/types'
@@ -192,23 +192,15 @@ export function wanixvmstop(device: DEVICELIKE, player: string, vmid?: string) {
 export function wanixdrop(
   device: DEVICELIKE,
   player: string,
-  payload: { label: string; kind: 'wasm' | 'bundle'; bytes: Uint8Array },
+  label: string,
+  kind: 'wasm' | 'bundle',
+  bytes: Uint8Array,
 ) {
-  device.emit(player, 'wanix:drop', payload)
+  device.emit(player, 'wanix:drop', { label, kind, bytes })
 }
 
-export function wanixbinddrop(
-  device: DEVICELIKE,
-  player: string,
-  payload: {
-    label: string
-    kind: 'file' | 'archive'
-    bytes: Uint8Array
-    dst: string
-    perm: string
-  },
-) {
-  device.emit(player, 'wanix:bind-drop', payload)
+export function wanixbinddrop(device: DEVICELIKE, player: string, file: File) {
+  device.emit(player, 'wanix:bind-drop', file)
 }
 
 export function wanixstop(device: DEVICELIKE, player: string, taskid?: string) {
@@ -227,6 +219,14 @@ export function wanixdetach(device: DEVICELIKE, player: string) {
   device.emit(player, 'wanix:detach')
 }
 
+export function vmwanixattach(
+  device: DEVICELIKE,
+  player: string,
+  sessionkey: string | null,
+) {
+  device.emit(player, 'vm:wanix-attach', sessionkey)
+}
+
 export function wanixtermdump(
   device: DEVICELIKE,
   player: string,
@@ -243,9 +243,9 @@ export function wanixtermstatus(device: DEVICELIKE, player: string) {
 export function wanixexportstate(
   device: DEVICELIKE,
   player: string,
-  payload: WANIX_ZED_CAFE_EXPORT_PAYLOAD,
+  files: WANIX_ZED_CAFE_EXPORT_FILE[],
 ) {
-  device.emit(player, 'wanix:export-state', payload)
+  device.emit(player, 'wanix:export-state', { files })
 }
 
 export type WANIX_ZED_CAFE_IMPORT_RESULT = {
@@ -258,15 +258,18 @@ export type WANIX_ZED_CAFE_IMPORT_RESULT = {
 export function waniximportresult(
   device: DEVICELIKE,
   player: string,
-  payload: WANIX_ZED_CAFE_IMPORT_RESULT,
+  ok: boolean,
+  changed: boolean,
+  error?: string,
+  bookcount?: number,
 ) {
-  device.emit(player, 'wanix:import-result', payload)
+  device.emit(player, 'wanix:import-result', { ok, changed, error, bookcount })
 }
 
 export function vmimportzedcafe(
   device: DEVICELIKE,
   player: string,
-  files: WANIX_ZED_CAFE_EXPORT_PAYLOAD['files'],
+  files: WANIX_ZED_CAFE_EXPORT_FILE[],
 ) {
   device.emit(player, 'vm:import-zedcafe', { files })
 }

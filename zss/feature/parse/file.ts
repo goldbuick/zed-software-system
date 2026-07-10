@@ -5,18 +5,13 @@ import {
   apilog,
   vmloader,
   vmreadzipfilelist,
+  wanixbinddrop,
   workstatus,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { isdevbuild } from 'zss/feature/devbuild'
-import {
-  emitwanixdropfile,
-  iswanixdropfilename,
-  iswanixgzipmagic,
-} from 'zss/feature/wanix/wanixdropparse'
-import { routewanixattachedfiledrop } from 'zss/feature/wanix/wanixbinddrop'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
+import { memoryreadwanixattached } from 'zss/memory/session'
 
 import { parseansi } from './ansi'
 import { parsechr } from './chr'
@@ -482,57 +477,16 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
   }
 }
 
-function emitwanixdropfileroute(player: string, file: File) {
-  if (isdevbuild()) {
-    apilog(
-      SOFTWARE,
-      player,
-      `wanix drop route: name=${file.name} type=${file.type ?? ''}`,
-    )
-  }
-  emitwanixdropfile(SOFTWARE, player, file)
-}
-
 export function parsewebfile(player: string, file: File | undefined) {
   if (!ispresent(file)) {
     return
   }
-  void routewanixattachedfiledrop(SOFTWARE, player, file)
-    .then((route) => {
-      if (route === 'bind') {
-        return
-      }
-      if (route === 'gzip-probe') {
-        handlefiletype(player, file.type ?? '', file)
-        return
-      }
-      if (iswanixdropfilename(file.name)) {
-        emitwanixdropfileroute(player, file)
-        return
-      }
-      const type = file.type ?? ''
-      if (type === 'application/gzip' || type === 'application/x-gzip') {
-        void file
-          .slice(0, 2)
-          .arrayBuffer()
-          .then((buffer) => {
-            if (iswanixgzipmagic(new Uint8Array(buffer))) {
-              emitwanixdropfileroute(player, file)
-              return
-            }
-            handlefiletype(player, type, file)
-          })
-          .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
-        return
-      }
-      handlefiletype(player, type, file)
-    })
-    .catch((err) =>
-      apierror(
-        SOFTWARE,
-        player,
-        'crash',
-        err instanceof Error ? err.message : String(err),
-      ),
-    )
+  if (memoryreadwanixattached()) {
+    // forward to wanix as a device api message.
+    // not some weird fuck-ass promise thing.
+    wanixbinddrop(SOFTWARE, player, file)
+  } else {
+    const type = file.type ?? ''
+    handlefiletype(player, type, file)
+  }
 }

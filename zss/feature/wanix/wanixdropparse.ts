@@ -46,7 +46,7 @@ export function emitwanixdropfile(
           `wanix drop parse: kind=${payload.kind} bytes=${payload.bytes.length} label=${payload.label}`,
         )
       }
-      wanixdrop(device, player, payload)
+      wanixdrop(device, player, payload.label, payload.kind, payload.bytes)
     })
     .catch((err) =>
       apierror(

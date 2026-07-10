@@ -47,6 +47,7 @@ import { handleticktock } from './ticktock'
 import { handletopic } from './topic'
 import { handlereadzipfilelist } from './zipfile'
 import { handlezsswords } from './zsswords'
+import { handlewanixattach } from './wanixattach'
 import { handlezztrandom, handlezztsearch } from './zzt'
 
 export type VM_HANDLER = (vm: DEVICE, message: MESSAGE) => void
@@ -93,6 +94,7 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   editorbookmarkscroll: handleeditorbookmarkscroll,
   'export-zedcafe': handleexportzedcafe,
   'import-zedcafe': handleimportzedcafe,
+  'wanix-attach': handlewanixattach,
   cli: handlecli,
   clirepeatlast: handleclirepeatlast,
   restart: handlerestart,

@@ -12,5 +12,5 @@ export function handleexportzedcafe(vm: DEVICE, message: MESSAGE): void {
     console.error(`zedcafe export: invalid tree — ${detail}`)
     return
   }
-  wanixexportstate(vm, message.player, { files })
+  wanixexportstate(vm, message.player, files)
 }

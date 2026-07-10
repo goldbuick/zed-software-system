@@ -83,7 +83,10 @@ describe('handleimportzedcafe', () => {
     expect(waniximportresult).toHaveBeenCalledWith(
       vm,
       'p1',
-      expect.objectContaining({ ok: true, changed: true }),
+      true,
+      true,
+      undefined,
+      1,
     )
   })
 
@@ -95,7 +98,10 @@ describe('handleimportzedcafe', () => {
     expect(waniximportresult).toHaveBeenCalledWith(
       vm,
       'p1',
-      expect.objectContaining({ ok: true, changed: false }),
+      true,
+      false,
+      undefined,
+      1,
     )
   })
 })

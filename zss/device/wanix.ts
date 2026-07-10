@@ -1,12 +1,14 @@
 import { createdevice } from 'zss/device'
-import { apierror, apilog } from 'zss/device/api'
+import { apierror, apilog, vmwanixattach } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
 import { registerreadplayer } from 'zss/device/registerplayer'
+import { SOFTWARE } from 'zss/device/session'
 import {
   detachwanixterm,
   readattachedsession,
   readwanixactivesession,
   setattachedsession,
+  subscribewanixattach,
 } from 'zss/feature/wanix/wanixattachstate'
 import { showwanixmenu } from 'zss/feature/wanix/wanixmenu'
 import {
@@ -446,6 +448,10 @@ const wanix = createdevice('wanix', [], (message) => {
     default:
       break
   }
+})
+
+subscribewanixattach(() => {
+  vmwanixattach(SOFTWARE, registerreadplayer(), readattachedsession())
 })
 
 export { wanix }
