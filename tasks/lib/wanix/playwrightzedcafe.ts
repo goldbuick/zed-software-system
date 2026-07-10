@@ -32,6 +32,9 @@ export type ZedcafeFailureReport = {
   rpc: Record<string, unknown>
   readdirerrors: string[]
   walkbookserrors: string[]
+  bootstrapsyncerrors?: string[]
+  undefinedreferrors?: string[]
+  vmexporttimeouterrors?: string[]
   termdump: string
   termdumptail: string
   recentlogs: string[]
@@ -44,6 +47,48 @@ export type ZedcafeFailureReport = {
 
 const EXPORT_READDIR_RE = /#task\/\d+\/export.*file does not exist/i
 const WALK_BOOKS_RE = /walk books\/.*file does not exist/i
+const BOOTSTRAP_SYNC_FAIL_RE = /\[zedcafe-export\] bootstrap sync failed/i
+const UNDEFINED_REF_RE = /appendguestexportbind\w* is not defined/i
+const VM_EXPORT_FETCH_TIMEOUT_RE = /zedcafe export: vm export fetch timed out/i
+
+export function collectexportconsoleerrors(lines: string[]): {
+  readdirerrors: string[]
+  walkbookserrors: string[]
+  bootstrapsyncerrors: string[]
+  undefinedreferrors: string[]
+  vmexporttimeouterrors: string[]
+} {
+  const readdirerrors: string[] = []
+  const walkbookserrors: string[] = []
+  const bootstrapsyncerrors: string[] = []
+  const undefinedreferrors: string[] = []
+  const vmexporttimeouterrors: string[] = []
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    if (EXPORT_READDIR_RE.test(line)) {
+      readdirerrors.push(line)
+    }
+    if (WALK_BOOKS_RE.test(line)) {
+      walkbookserrors.push(line)
+    }
+    if (BOOTSTRAP_SYNC_FAIL_RE.test(line)) {
+      bootstrapsyncerrors.push(line)
+    }
+    if (UNDEFINED_REF_RE.test(line)) {
+      undefinedreferrors.push(line)
+    }
+    if (VM_EXPORT_FETCH_TIMEOUT_RE.test(line)) {
+      vmexporttimeouterrors.push(line)
+    }
+  }
+  return {
+    readdirerrors,
+    walkbookserrors,
+    bootstrapsyncerrors,
+    undefinedreferrors,
+    vmexporttimeouterrors,
+  }
+}
 
 export async function readplaywrightlogs(
   page: import('@playwright/test').Page,
@@ -352,24 +397,6 @@ export async function readhostexportpaths(
     return []
   }
   return files.slice(0, limit).map((file) => file.path)
-}
-
-export function collectexportconsoleerrors(lines: string[]): {
-  readdirerrors: string[]
-  walkbookserrors: string[]
-} {
-  const readdirerrors: string[] = []
-  const walkbookserrors: string[] = []
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]
-    if (EXPORT_READDIR_RE.test(line)) {
-      readdirerrors.push(line)
-    }
-    if (WALK_BOOKS_RE.test(line)) {
-      walkbookserrors.push(line)
-    }
-  }
-  return { readdirerrors, walkbookserrors }
 }
 
 export function collectexporttrace(lines: string[]): string[] {

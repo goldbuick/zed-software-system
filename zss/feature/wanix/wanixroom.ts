@@ -33,7 +33,6 @@ import {
 import { readwanixtermbufferkeys } from 'zss/feature/wanix/wanixtermbuffer'
 import { extractwanixtgz } from 'zss/feature/wanix/wanixtgzextract'
 import { activatewanixzedcafeexport } from 'zss/feature/wanix/wanixactivateexport'
-import { primezedcafeexportshadow } from 'zss/feature/wanix/wanixstateexport'
 import {
   assertfindplayersexportready,
   readwanixbootzedcafestate,
@@ -444,11 +443,9 @@ export async function startwanixvm(
     already?: boolean
   }
   if (device && player) {
-    primezedcafeexportshadow()
-    const { wanixdrainpendingzedcafeexport } = await import(
-      'zss/feature/wanix/wanixzedcafe'
-    )
-    await wanixdrainpendingzedcafeexport(device, player)
+    // Parent owns the book push after applyroom. Iframe must not pull
+    // requestzedcafestate during applyroom — that raced VM boot and timed out.
+    await activatewanixzedcafeexport(device, player)
   }
   if (result.running) {
     return {

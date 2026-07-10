@@ -204,18 +204,6 @@ async function synczedcafeexportlocal(
   return { ok: true, taskrid }
 }
 
-async function bootstrapzedcafeexportafterroom(): Promise<void> {
-  if (!roomconfig.zedcafe?.cmd) {
-    return
-  }
-  try {
-    await synczedcafeexportlocal(null)
-  } catch (err) {
-    const detail = err instanceof Error ? err.message : String(err)
-    console.error(`[zedcafe-export] bootstrap sync failed: ${detail}`)
-  }
-}
-
 function recordtermfit(cols: number, rows: number) {
   const nextcols = Math.max(1, Number(cols) || 1)
   const nextrows = Math.max(1, Number(rows) || 1)
@@ -799,7 +787,6 @@ async function warmactivateroom(): Promise<Record<string, unknown>> {
     const vmstatus = await warmstartvm()
     if (roomconfig.zedcafe?.cmd) {
       await ensurezedcafeboot(system, readroot(), roomconfig.zedcafe.cmd)
-      await bootstrapzedcafeexportafterroom()
     }
     postready()
     return {
@@ -814,7 +801,6 @@ async function warmactivateroom(): Promise<Record<string, unknown>> {
   }
   if (roomconfig.mode === 'task' && roomconfig.zedcafe?.cmd) {
     await ensurezedcafeboot(system, readroot(), roomconfig.zedcafe.cmd)
-    await bootstrapzedcafeexportafterroom()
   }
   postready()
   return {
@@ -906,7 +892,6 @@ async function applyroom(config: WanixRoomConfig) {
     if (roomconfig.zedcafe?.cmd) {
       await ensurezedcafeboot(system, readroot(), roomconfig.zedcafe.cmd)
     }
-    await bootstrapzedcafeexportafterroom()
     wanixperfmark('applyroom-return', { mode: 'vm', remount: true })
     return {
       ok: true,
@@ -920,7 +905,6 @@ async function applyroom(config: WanixRoomConfig) {
 
   if (roomconfig.mode === 'task' && roomconfig.zedcafe?.cmd) {
     await ensurezedcafeboot(system, readroot(), roomconfig.zedcafe.cmd)
-    await bootstrapzedcafeexportafterroom()
   }
 
   wanixperfmark('applyroom-return', { mode: roomconfig.mode, remount: true })
@@ -1025,7 +1009,7 @@ async function spawntask(
         )
       }
     }
-    appendguestexportbindontask(task, taskrid)
+    appendguestexportbind(task, taskrid)
   }
   system.appendChild(task)
 

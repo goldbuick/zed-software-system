@@ -81,8 +81,13 @@ function buildfailcontext(
   hostexportpaths: string[],
   membookcount: number,
 ) {
-  const { readdirerrors, walkbookserrors } =
-    collectexportconsoleerrors(consolelines)
+  const {
+    readdirerrors,
+    walkbookserrors,
+    bootstrapsyncerrors,
+    undefinedreferrors,
+    vmexporttimeouterrors,
+  } = collectexportconsoleerrors(consolelines)
   const termlines = termdump.length ? termdump.split('\n') : []
   const termdumptail =
     termlines.length > TERM_DUMP_TAIL_LINES
@@ -94,6 +99,9 @@ function buildfailcontext(
     rpc,
     readdirerrors,
     walkbookserrors,
+    bootstrapsyncerrors,
+    undefinedreferrors,
+    vmexporttimeouterrors,
     termdump,
     termdumptail,
     recentlogs: pagelogs.slice(-80),
@@ -500,6 +508,15 @@ const validatezedcafevmexport: HeadedPlaywrightScript = async ({
   const walkprobe = collectexportconsoleerrors(consolelines)
   if (walkprobe.walkbookserrors.length > 0) {
     fail('findplayers-walk', { walkprobe })
+  }
+  if (walkprobe.bootstrapsyncerrors.length > 0) {
+    fail('bootstrap-sync', { walkprobe })
+  }
+  if (walkprobe.undefinedreferrors.length > 0) {
+    fail('undefined-ref', { walkprobe })
+  }
+  if (walkprobe.vmexporttimeouterrors.length > 0) {
+    fail('vm-export-timeout', { walkprobe })
   }
 
   record('pass', {
