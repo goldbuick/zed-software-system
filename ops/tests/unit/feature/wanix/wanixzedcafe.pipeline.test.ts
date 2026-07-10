@@ -42,7 +42,16 @@ const bookfiles = [
   },
 ]
 
-function mocksyncpipeline(taskrid = '7') {
+function guestpayload(
+  files: { path: string; bytes: Uint8Array }[],
+): { path: string; data: number[] }[] {
+  return files.map((file) => ({ path: file.path, data: [...file.bytes] }))
+}
+
+function mocksyncpipeline(
+  taskrid = '7',
+  guestfiles: { path: string; bytes: Uint8Array }[] = emptyfiles,
+) {
   mockrpc.mockImplementation(async (method: string) => {
     switch (method) {
       case 'synczedcafeexport':
@@ -54,7 +63,7 @@ function mocksyncpipeline(taskrid = '7') {
       case 'setzedcafeready':
         return { ok: true }
       case 'readzedcafeexportfiles':
-        return [{ path: 'stats.json', data: [...bookfiles[0].bytes] }]
+        return guestpayload(guestfiles)
       default:
         return null
     }
@@ -74,6 +83,8 @@ describe('pushzedcafesynctoiframe pipeline', () => {
 
   it('syncs books to iframe via synczedcafeexport RPC', async () => {
     const order: string[] = []
+    // Guest matches last host push so pre-sync import is skipped.
+    setlasthostpushfingerprint(fingerprintzedcafeexportfiles(emptyfiles))
     mockrpc.mockImplementation(async (method: string) => {
       order.push(method)
       switch (method) {
@@ -86,7 +97,7 @@ describe('pushzedcafesynctoiframe pipeline', () => {
         case 'setzedcafeready':
           return { ok: true }
         case 'readzedcafeexportfiles':
-          return [{ path: 'stats.json', data: [...bookfiles[0].bytes] }]
+          return guestpayload(emptyfiles)
         default:
           return null
       }
@@ -96,6 +107,7 @@ describe('pushzedcafesynctoiframe pipeline', () => {
 
     expect(taskrid).toBe('7')
     expect(order).toEqual([
+      'readzedcafeexportfiles',
       'synczedcafeexport',
       'waitzedcafecontentready',
       'setzedcafeready',
@@ -105,7 +117,7 @@ describe('pushzedcafesynctoiframe pipeline', () => {
 
   it('skips sync when host fingerprint is unchanged', async () => {
     setlasthostpushfingerprint(fingerprintzedcafeexportfiles(bookfiles))
-    mocksyncpipeline('9')
+    mocksyncpipeline('9', bookfiles)
 
     const taskrid = await ensurezedcafeexportready(device, player, bookfiles)
 
@@ -119,7 +131,7 @@ describe('pushzedcafesynctoiframe pipeline', () => {
 
   it('pushes when iframe export is stale vs memory', async () => {
     setlasthostpushfingerprint(fingerprintzedcafeexportfiles(emptyfiles))
-    mocksyncpipeline('9')
+    mocksyncpipeline('9', emptyfiles)
 
     const taskrid = await ensurezedcafeexportready(device, player, bookfiles)
 
@@ -132,8 +144,11 @@ describe('pushzedcafesynctoiframe pipeline', () => {
   })
 
   it('ensurewanixzedcafedaemon throws when sync fails with books', async () => {
+    setlasthostpushfingerprint(fingerprintzedcafeexportfiles(emptyfiles))
     mockrpc.mockImplementation(async (method: string) => {
       switch (method) {
+        case 'readzedcafeexportfiles':
+          return guestpayload(emptyfiles)
         case 'synczedcafeexport':
           return { ok: false, taskrid: null }
         default:

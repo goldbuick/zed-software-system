@@ -1,3 +1,4 @@
+import { isdevbuild } from 'zss/feature/devbuild'
 import {
   onwanixtermsessionopen,
   readattachedsession,
@@ -358,7 +359,7 @@ export async function callwanixrpc<T>(
   })
 }
 
-if (import.meta.env.DEV) {
+if (isdevbuild()) {
   const g = globalThis as Record<string, unknown>
   g.waitwanixready = waitwanixready
   g.waitwanixrpcping = waitwanixrpcping

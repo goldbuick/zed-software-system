@@ -4,6 +4,13 @@ jest.mock('zss/feature/wanix/wanixstateexport', () => ({
   readzedcafeexportstatscontentready: jest.fn(() => false),
 }))
 
+jest.mock('zss/feature/wanix/zedcafetreeschema', () => ({
+  kebabcasezedcafedirname: jest.fn(
+    (name: string | undefined, id: string) =>
+      name ? `${String(name).toLowerCase()}-${id}` : id,
+  ),
+}))
+
 import {
   haltzedcafetask,
   readzedcafetaskridlocal,
