@@ -14,9 +14,19 @@ const FINDPLAYERS_PACKAGE = path.join(
   'cmd',
   'main.go',
 )
+const GREENRING_PACKAGE = path.join(
+  WANIX_FIXTURES_DIR,
+  'greenring',
+  'cmd',
+  'main.go',
+)
 const FINDPLAYERS_STAGING_WASM = path.join(
   WANIX_PUBLIC_FIXTURES_DIR,
   'findplayers.wasm',
+)
+const GREENRING_STAGING_WASM = path.join(
+  WANIX_PUBLIC_FIXTURES_DIR,
+  'greenring.wasm',
 )
 
 const GOJS_ENV = { ...process.env, GOOS: 'js', GOARCH: 'wasm' }
@@ -47,25 +57,35 @@ function requiregomod(): void {
   }
 }
 
-/** Build findplayers gojs scanner into ops/public/wanix/ (fixture only). */
+function buildgojswasm(label: string, packagepath: string, outwasm: string) {
+  if (!existsSync(packagepath)) {
+    throw new Error(`missing ${packagepath}`)
+  }
+  process.stdout.write(`go build ${label} -> ${path.basename(outwasm)}\n`)
+  const pkgdir = path.dirname(packagepath)
+  const rel = path.relative(WANIX_FIXTURES_DIR, pkgdir)
+  execFileSync('go', ['build', '-o', outwasm, `./${rel}`], {
+    cwd: WANIX_FIXTURES_DIR,
+    stdio: 'inherit',
+    env: GOJS_ENV,
+  })
+}
+
+/** Build findplayers + greenring gojs tools into ops/public/wanix/ (fixture only). */
 export function buildwanixfindplayers(): void {
   requirego()
   requiregomod()
   requirewanixsubmodule()
 
-  if (!existsSync(FINDPLAYERS_PACKAGE)) {
-    throw new Error(`missing ${FINDPLAYERS_PACKAGE}`)
-  }
-
   mkdirSync(WANIX_PUBLIC_FIXTURES_DIR, { recursive: true })
 
-  process.stdout.write('go build findplayers -> findplayers.wasm\n')
-  execFileSync('go', ['build', '-o', FINDPLAYERS_STAGING_WASM, './findplayers/cmd'], {
-    cwd: WANIX_FIXTURES_DIR,
-    stdio: 'inherit',
-    env: GOJS_ENV,
-  })
+  buildgojswasm('findplayers', FINDPLAYERS_PACKAGE, FINDPLAYERS_STAGING_WASM)
   process.stdout.write(
     `findplayers.wasm written to ${FINDPLAYERS_STAGING_WASM} (fixture only — not copied to cafe/public)\n`,
+  )
+
+  buildgojswasm('greenring', GREENRING_PACKAGE, GREENRING_STAGING_WASM)
+  process.stdout.write(
+    `greenring.wasm written to ${GREENRING_STAGING_WASM} (fixture only — not copied to cafe/public)\n`,
   )
 }

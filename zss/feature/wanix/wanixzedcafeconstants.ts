@@ -19,6 +19,7 @@ export function readwanixzedcafewasmurl(): string {
 export const WANIX_ZEDCAFE_EXPORT_DEBOUNCE_MS = 2000
 export const WANIX_ZEDCAFE_IMPORT_POLL_MS = 3000
 export const WANIX_VM_ZEDCAFE_EXPORT_FETCH_MS = 10_000
+export const WANIX_VM_ZEDCAFE_IMPORT_MS = 10_000
 export const WANIX_ZEDCAFE_EXPORT_WAIT_MS = 90_000
 export const WANIX_ZEDCAFE_EXPORT_READY_POLL_MS = 250
 export const WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS = 30_000

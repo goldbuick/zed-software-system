@@ -3,7 +3,7 @@
 Runs [wanix](https://github.com/tractordev/wanix) (browser OS: Linux v86 VM + WASI/gojs
 tasks) inside ZSS. Guest terminals render as colored tiles on the tape terminal screen.
 Live game books export from sim memory into a guest-visible **`/zedcafe/`** tree so tools
-like `findplayers.wasm` and VM shell helpers can read world state.
+like `findplayers.wasm` and `greenring.wasm` can read (and write allowlisted) world state.
 
 **Fixture testing:** [`ops/fixtures/wanix/README.md`](../../../ops/fixtures/wanix/README.md)
 
@@ -150,7 +150,10 @@ run when the **first** VM or task room activates — not at login.
 
 ## Zedcafe export (the core loop)
 
-Zedcafe mirrors live sim books into a read-only tree guests can walk.
+Zedcafe mirrors live sim books into a guest-visible tree at `./zedcafe/` (tasks) or
+`/zedcafe/` (VM). Guests may **read and write** allowlisted JSON paths; the host polls
+for guest changes and imports them into the **sim worker**, then re-exports so the tree
+matches sim again.
 
 ### Mount layout (iframe)
 
@@ -159,12 +162,18 @@ wanix-system
   wanix-task[id=zedcafe, type=gojs]     ← export daemon (gojs wasm)
     #task/{rid}/export/                 ← host pushes JSON tree here
       stats.json
-      {book-id}/{page-id}/object/element.json
+      {kebab-book-name}-{bookId}/{kebab-page-name}-{pageId}/board/terrain.json
+      {bookDir}/{pageDir}/board/objects/{id}.json
+      …
     bind: export → zedcafe/             ← guest path ./zedcafe/ (tasks)
 
   wanix-vm (when running)
     bind: #task/{rid}/export → /zedcafe/   ← Linux guest sees /zedcafe/
 ```
+
+Path layout uses `{kebab-name}-{id}` directories (no `books/` or `pages/` segments).
+Allowlist: [`zedcafetreeschema.ts`](zedcafetreeschema.ts) /
+[`allowed-path-patterns.json`](../../../ops/fixtures/wanix/zedcafe/allowed-path-patterns.json).
 
 Constants: [`wanixzedcafeconstants.ts`](wanixzedcafeconstants.ts).
 
@@ -190,13 +199,41 @@ sequenceDiagram
   Guest->>Guest: read /zedcafe/stats.json
 ```
 
+### Guest write → sim import
+
+```mermaid
+sequenceDiagram
+  participant Guest
+  participant Memfs
+  participant Parent as wanixzedcafe.ts
+  participant Sim
+
+  Guest->>Memfs: Write or delete allowlisted JSON
+  Parent->>Memfs: Poll every 3s
+  Note over Parent: tree fingerprint != last host push
+  Parent->>Parent: guestdirty — suppress stale host push
+  Parent->>Sim: vm:import-zedcafe
+  Sim->>Sim: applyzedcafetomemory upserts + deletes
+  Sim->>Parent: wanix:import-result
+  Parent->>Sim: vm:export-zedcafe
+  Parent->>Memfs: push post-import tree
+```
+
+- Import runs in the **sim worker** (`handleimportzedcafe`), not main-thread memory.
+- **Deletes mirror the guest tree:** books/pages absent from the guest export are cleared
+  in sim; missing `board/objects/*.json` disappear when the board page is upserted.
+  A valid empty tree (`bookCount: 0`) clears all sim books.
+- While `guestdirty`, host pushes of pre-import snapshots are skipped.
+- Apply failures log and **leave the poll running** (retry next tick). Hard iframe RPC
+  failures still stop the poll.
+
 **Readiness contract (two gates):**
 
 1. **Mount ready** — gojs daemon running; `#task/{rid}/export` exists (`waitzedcafemount`).
 2. **Content ready** — `stats.json` present with `exportedAt` + `bookCount` after host push.
 
-**Why `stats.json`:** Single cheap probe for “export tree is populated.” findplayers and
-VM `zedcafe-ready` both poll it.
+**Why `stats.json`:** Single cheap probe for “export tree is populated.” findplayers,
+greenring, and VM `zedcafe-ready` all poll it.
 
 **Event-driven wait (perf fix):** After push, iframe posts
 [`WANIX_MSG_EXPORT`](wanixrpcmessages.ts) `{ event: 'content-ready', taskrid }`.
@@ -470,9 +507,10 @@ Defined in [`wanixrpcmessages.ts`](wanixrpcmessages.ts).
 |--------|------|
 | [`cafe/wanix.ts`](../../../cafe/wanix.ts) | Iframe orchestrator: `applyroom`, RPC handler, term loops |
 | [`wanixzedcafehost.ts`](wanixzedcafehost.ts) | Iframe zedcafe: gojs boot, push export, binds, halt |
-| [`wanixzedcafe.ts`](wanixzedcafe.ts) | Parent zedcafe: daemon lifecycle, push/wire, import poll |
+| [`wanixzedcafe.ts`](wanixzedcafe.ts) | Parent zedcafe: daemon lifecycle, push/wire, import poll → `vm:import-zedcafe` |
 | [`wanixstateexport.ts`](wanixstateexport.ts) | Build export file tree from sim memory |
-| [`wanixstateimport.ts`](wanixstateimport.ts) | Guest → host import path |
+| [`wanixstateimport.ts`](wanixstateimport.ts) | Parse guest tree + `applyzedcafetomemory` (upserts + deletes) |
+| [`zss/device/vm/handlers/importzedcafe.ts`](../../device/vm/handlers/importzedcafe.ts) | Sim-worker import handler |
 | [`wanixroom.ts`](wanixroom.ts) | Room config, drop handler, VM/task API |
 | [`wanixbridge.ts`](wanixbridge.ts) | Parent RPC + message dispatch |
 | [`wanixhost.tsx`](wanixhost.tsx) | Ghost iframe mount |
@@ -582,6 +620,8 @@ and VM is running — explicit branch, errors propagate.
 | **`#wanix vm` + `/zedcafe/`** | VM room → zedcafe gojs boot → host pushes memory export → `wirezedcafeexport` binds `#task/rid/export` into Linux at `/zedcafe/` |
 | **Wasm task drops** | `handlewanixdrop` stands task room, stages `#ramfs/{file}`, spawns with driver from wasm bytes |
 | **findplayers JSON output** | gojs task + per-task export bind + spawn gate on `stats.json`; scanner walks `./zedcafe/{book}/…` |
+| **greenring board paint** | Same bind; writes allowlisted `board/terrain.json`; import poll → `vm:import-zedcafe` → sim apply + re-export |
+| **Guest FS → sim writeback** | 3s fingerprint poll; guest-dirty suppresses stale host push; deletes mirror guest tree |
 | **Live export updates** | `wanixstateexport` jsonpipe rebuilds tree; debounced push while room active; `synczedcafeexportifstale` on reuse |
 | **Auto-attach new sessions** | `WANIX_MSG_SESSION open` → reveal tape → attach when user had nothing focused |
 | **Soft idle → faster second drop** | Warm `<wanix-system>` + unchanged `mountkey` skips wanix.wasm reload; daemon reuse + sync-if-stale |
@@ -602,6 +642,8 @@ and VM is running — explicit branch, errors propagate.
 
 **findplayers task term:** one line JSON array starting with `["{book}/{page}/…/objects/pid_…json",…]`
 
+**greenring task term:** `{"painted":N}` after writing terrain rings; board tiles update after import poll.
+
 **Dev console:** `[wanix-perf] export-push-end` then `[wanix-perf] spawntask-return` with no
 `LinkError` or `postwanixexportmessage is not defined`.
 
@@ -612,7 +654,7 @@ and VM is running — explicit branch, errors propagate.
 | Asset | Task |
 |-------|------|
 | wanix.wasm (full-Go) | Manual — see gotcha section; match `wanix.min.js` commit |
-| zedcafe.wasm / findplayers.wasm | `yarn task run ops:fixtures:wanix:zedcafe:build` / `ops:fixtures:wanix:findplayers:build` |
+| zedcafe.wasm / findplayers + greenring | `yarn task run ops:fixtures:wanix:zedcafe:build` / `ops:fixtures:wanix:findplayers:build` |
 | Linux overlay | `yarn task run ops:fixtures:wanix:linux:overlay:build` |
 | Hello fixtures | `yarn task run ops:fixtures:wanix:build` |
 

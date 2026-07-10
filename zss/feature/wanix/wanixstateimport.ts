@@ -4,10 +4,15 @@ import type { WANIX_ZED_CAFE_EXPORT_FILE } from 'zss/feature/wanix/wanixstateexp
 import { kebabcasezedcafedirname } from 'zss/feature/wanix/zedcafetreeschema'
 import { ispresent } from 'zss/mapping/types'
 import {
+  memoryclearbookcodepage,
   memoryimportbookfromjson,
   memoryupsertcodepage,
 } from 'zss/memory/bookoperations'
-import { memoryreadbooklist, memorywritebook } from 'zss/memory/session'
+import {
+  memoryclearbook,
+  memoryreadbooklist,
+  memorywritebook,
+} from 'zss/memory/session'
 import type { BOOK } from 'zss/memory/types'
 
 export type WANIX_ZED_CAFE_PARSED_PAGE = {
@@ -218,9 +223,14 @@ function applybookmeta(book: BOOK, flat: WANIX_ZED_CAFE_PARSED_BOOK) {
 
 export function applyzedcafetomemory(parsed: WANIX_ZED_CAFE_PARSED): boolean {
   let changed = false
+  const keepbookids = new Set<string>()
+  for (let i = 0; i < parsed.books.length; ++i) {
+    keepbookids.add(parsed.books[i].id)
+  }
+
   for (let i = 0; i < parsed.books.length; ++i) {
     const flat = parsed.books[i]
-    const book = readbookbyid(flat.id)
+    let book = readbookbyid(flat.id)
     if (!book) {
       const imported = memoryimportbookfromjson(flat)
       if (imported) {
@@ -235,7 +245,39 @@ export function applyzedcafetomemory(parsed: WANIX_ZED_CAFE_PARSED): boolean {
         changed = true
       }
     }
+    const keeppageids = new Set<string>()
+    for (let j = 0; j < flat.pages.length; ++j) {
+      keeppageids.add(flat.pages[j].id)
+    }
+    book = readbookbyid(flat.id)
+    if (!book) {
+      continue
+    }
+    const pageids: string[] = []
+    for (let j = 0; j < book.pages.length; ++j) {
+      pageids.push(book.pages[j].id)
+    }
+    for (let j = 0; j < pageids.length; ++j) {
+      const pageid = pageids[j]
+      if (keeppageids.has(pageid)) {
+        continue
+      }
+      if (memoryclearbookcodepage(book, pageid)) {
+        changed = true
+      }
+    }
   }
+
+  const simbooks = memoryreadbooklist()
+  for (let i = 0; i < simbooks.length; ++i) {
+    const book = simbooks[i]
+    if (keepbookids.has(book.id)) {
+      continue
+    }
+    memoryclearbook(book.id)
+    changed = true
+  }
+
   if (parsed.guestTouch) {
     changed = true
   }

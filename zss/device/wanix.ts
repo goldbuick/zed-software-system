@@ -27,7 +27,10 @@ import {
   writewanixtermdump,
   writewanixtermstatus,
 } from 'zss/feature/wanix/wanixtermhandlers'
-import { wanixhandleexportstate } from 'zss/feature/wanix/wanixzedcafe'
+import {
+  resolvevmzedcafeimportwaiter,
+  wanixhandleexportstate,
+} from 'zss/feature/wanix/wanixzedcafe'
 import { ispresent, isstring } from 'zss/mapping/types'
 
 function normalizewanixdropbytes(data: unknown): Uint8Array | undefined {
@@ -327,6 +330,36 @@ const wanix = createdevice('wanix', [], (message) => {
       }
       doasync(wanix, message.player, async () => {
         await wanixhandleexportstate(wanix, message.player, payload.files)
+      })
+      break
+    }
+    case 'import-result': {
+      const data = message.data
+      if (
+        !ispresent(data) ||
+        typeof data !== 'object' ||
+        typeof (data as { ok?: unknown }).ok !== 'boolean'
+      ) {
+        apierror(
+          wanix,
+          message.player,
+          'wanix',
+          'zedcafe import-result payload rejected',
+        )
+        break
+      }
+      const payload = data as {
+        ok: boolean
+        changed?: boolean
+        error?: string
+        bookcount?: number
+      }
+      resolvevmzedcafeimportwaiter({
+        ok: payload.ok,
+        changed: !!payload.changed,
+        error: typeof payload.error === 'string' ? payload.error : undefined,
+        bookcount:
+          typeof payload.bookcount === 'number' ? payload.bookcount : undefined,
       })
       break
     }

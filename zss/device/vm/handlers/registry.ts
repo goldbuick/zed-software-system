@@ -22,6 +22,7 @@ import { handlecoderelease, handlecodewatch } from './codewatch'
 import { handledoot } from './doot'
 import { handleeditorbookmarkscroll } from './editorbookmarkscroll'
 import { handleexportzedcafe } from './exportzedcafe'
+import { handleimportzedcafe } from './importzedcafe'
 import { handleflush } from './flush'
 import { handlefork } from './fork'
 import { handlehalt } from './halt'
@@ -91,6 +92,7 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   bookmarkscroll: handlebookmarkscroll,
   editorbookmarkscroll: handleeditorbookmarkscroll,
   'export-zedcafe': handleexportzedcafe,
+  'import-zedcafe': handleimportzedcafe,
   cli: handlecli,
   clirepeatlast: handleclirepeatlast,
   restart: handlerestart,

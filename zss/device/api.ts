@@ -234,6 +234,29 @@ export function wanixexportstate(
   device.emit(player, 'wanix:export-state', payload)
 }
 
+export type WANIX_ZED_CAFE_IMPORT_RESULT = {
+  ok: boolean
+  changed: boolean
+  error?: string
+  bookcount?: number
+}
+
+export function waniximportresult(
+  device: DEVICELIKE,
+  player: string,
+  payload: WANIX_ZED_CAFE_IMPORT_RESULT,
+) {
+  device.emit(player, 'wanix:import-result', payload)
+}
+
+export function vmimportzedcafe(
+  device: DEVICELIKE,
+  player: string,
+  files: WANIX_ZED_CAFE_EXPORT_PAYLOAD['files'],
+) {
+  device.emit(player, 'vm:import-zedcafe', { files })
+}
+
 export function bridgejoin(device: DEVICELIKE, player: string, topic: string) {
   device.emit(player, 'bridge:join', topic)
 }

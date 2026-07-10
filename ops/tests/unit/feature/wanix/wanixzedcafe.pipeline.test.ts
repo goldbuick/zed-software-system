@@ -99,7 +99,6 @@ describe('pushzedcafesynctoiframe pipeline', () => {
       'synczedcafeexport',
       'waitzedcafecontentready',
       'setzedcafeready',
-      'readzedcafeexportfiles',
       'readzedcafetaskrid',
     ])
   })

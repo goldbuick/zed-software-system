@@ -5,6 +5,7 @@ let zedcafeready = false
 let zedcafetaskrid: string | null = null
 let lasthostpushfingerprint = ''
 let pollactive = false
+let guestdirty = false
 
 export function readwanixzedcaferestart(): number {
   return zedcaferestart
@@ -50,10 +51,19 @@ export function setzedcafepollactive(active: boolean) {
   pollactive = active
 }
 
+export function readzedcafeguestdirty(): boolean {
+  return guestdirty
+}
+
+export function setzedcafeguestdirty(dirty: boolean) {
+  guestdirty = dirty
+}
+
 export function resetwanixzedcafesessionfortest() {
   zedcaferestart = 0
   zedcafeready = false
   zedcafetaskrid = null
   lasthostpushfingerprint = ''
   pollactive = false
+  guestdirty = false
 }
