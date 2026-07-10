@@ -71,7 +71,6 @@ func main() {
 	writeroot := strings.TrimPrefix(root, "./")
 	painted, writelogs, err := greenring.ApplyRingsForPlayers(writeroot, targets)
 	for _, line := range writelogs {
-		fmt.Fprintln(os.Stderr, "greenring:", line)
 		fmt.Println("greenring:", line)
 	}
 	if err != nil {

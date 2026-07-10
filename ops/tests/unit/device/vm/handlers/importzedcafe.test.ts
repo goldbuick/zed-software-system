@@ -1,9 +1,18 @@
 jest.mock('zss/device/api', () => ({
   waniximportresult: jest.fn(),
+  boardrunnerpaint: jest.fn(),
 }))
 
-jest.mock('zss/device/vm/boardrunnerpushupdates', () => ({
-  boardrunnerpushupdates: jest.fn(),
+jest.mock('zss/device/vm/boardrunnerboundarysync', () => ({
+  boardrunnerboundarypaint: jest.fn(),
+}))
+
+jest.mock('zss/device/vm/boardrunnermanagement', () => ({
+  boardrunneraccessfor: jest.fn((board: string) => [board]),
+}))
+
+jest.mock('zss/device/vm/state', () => ({
+  boardrunners: { 'page-1': 'player-1' },
 }))
 
 jest.mock('zss/feature/wanix/wanixstateimport', () => ({
@@ -19,14 +28,23 @@ jest.mock('zss/feature/wanix/zedcafetreeschema', () => ({
   validatezedcafeexportpaths: jest.fn(() => ({ ok: true, errors: [] })),
 }))
 
+jest.mock('zss/memory/boardwait', () => ({
+  memorycollecttickboundaries: jest.fn(() => ['page-1']),
+}))
+
+jest.mock('zss/memory/boundaries', () => ({
+  memoryboundaryget: jest.fn(() => ({ board: { id: 'page-1', terrain: [] } })),
+}))
+
 jest.mock('zss/memory/session', () => ({
   memorywritefrozen: jest.fn(),
+  memoryreadbookbysoftware: jest.fn(() => ({ id: 'main', pages: [] })),
 }))
 
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
-import { waniximportresult } from 'zss/device/api'
-import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
+import { boardrunnerpaint, waniximportresult } from 'zss/device/api'
+import { boardrunnerboundarypaint } from 'zss/device/vm/boardrunnerboundarysync'
 import { handleimportzedcafe } from 'zss/device/vm/handlers/importzedcafe'
 import { applyzedcafetomemory } from 'zss/feature/wanix/wanixstateimport'
 
@@ -44,14 +62,24 @@ describe('handleimportzedcafe', () => {
   }
 
   beforeEach(() => {
-    jest.mocked(boardrunnerpushupdates).mockClear()
+    jest.mocked(boardrunnerpaint).mockClear()
+    jest.mocked(boardrunnerboundarypaint).mockClear()
     jest.mocked(waniximportresult).mockClear()
     jest.mocked(applyzedcafetomemory).mockReturnValue(true)
   })
 
-  it('pushes boardrunner updates when apply changed', () => {
+  it('paints boardrunner boundaries when apply changed', () => {
     handleimportzedcafe(vm, message)
-    expect(boardrunnerpushupdates).toHaveBeenCalledWith(vm)
+    expect(boardrunnerboundarypaint).toHaveBeenCalledWith(
+      'page-1',
+      expect.any(Object),
+    )
+    expect(boardrunnerpaint).toHaveBeenCalledWith(
+      vm,
+      'player-1',
+      expect.any(Object),
+      'page-1',
+    )
     expect(waniximportresult).toHaveBeenCalledWith(
       vm,
       'p1',
@@ -59,10 +87,11 @@ describe('handleimportzedcafe', () => {
     )
   })
 
-  it('skips boardrunner push when apply did not change', () => {
+  it('skips boardrunner paint when apply did not change', () => {
     jest.mocked(applyzedcafetomemory).mockReturnValue(false)
     handleimportzedcafe(vm, message)
-    expect(boardrunnerpushupdates).not.toHaveBeenCalled()
+    expect(boardrunnerpaint).not.toHaveBeenCalled()
+    expect(boardrunnerboundarypaint).not.toHaveBeenCalled()
     expect(waniximportresult).toHaveBeenCalledWith(
       vm,
       'p1',

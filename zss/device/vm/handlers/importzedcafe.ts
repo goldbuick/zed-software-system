@@ -1,7 +1,9 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
-import { waniximportresult } from 'zss/device/api'
-import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
+import { boardrunnerpaint, waniximportresult } from 'zss/device/api'
+import { boardrunnerboundarypaint } from 'zss/device/vm/boardrunnerboundarysync'
+import { boardrunneraccessfor } from 'zss/device/vm/boardrunnermanagement'
+import { boardrunners } from 'zss/device/vm/state'
 import {
   applyzedcafetomemory,
   parsezedcafeexportfiles,
@@ -10,7 +12,13 @@ import type { WANIX_ZED_CAFE_EXPORT_FILE } from 'zss/feature/wanix/wanixstateexp
 import { primezedcafeexportshadow } from 'zss/feature/wanix/wanixstateexport'
 import { validatezedcafeexportpaths } from 'zss/feature/wanix/zedcafetreeschema'
 import { ispresent } from 'zss/mapping/types'
-import { memorywritefrozen } from 'zss/memory/session'
+import { memorycollecttickboundaries } from 'zss/memory/boardwait'
+import { memoryboundaryget } from 'zss/memory/boundaries'
+import {
+  memoryreadbookbysoftware,
+  memorywritefrozen,
+} from 'zss/memory/session'
+import { MEMORY_LABEL } from 'zss/memory/types'
 
 function readimportfiles(data: unknown): WANIX_ZED_CAFE_EXPORT_FILE[] | undefined {
   if (!ispresent(data) || typeof data !== 'object') {
@@ -42,6 +50,29 @@ function readimportfiles(data: unknown): WANIX_ZED_CAFE_EXPORT_FILE[] | undefine
   return files
 }
 
+/** Full-paint active boardrunner boundaries after a bulk codepage replace. */
+function paintboardrunnersafterimport(vm: DEVICE) {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return
+  }
+  const ids = Object.keys(boardrunners)
+  for (let i = 0; i < ids.length; ++i) {
+    const board = ids[i]
+    const player = boardrunners[board]
+    const bounds = memorycollecttickboundaries(
+      mainbook,
+      boardrunneraccessfor(board),
+    )
+    for (let j = 0; j < bounds.length; ++j) {
+      const id = bounds[j]
+      const doc = memoryboundaryget(id) ?? {}
+      boardrunnerboundarypaint(id, doc)
+      boardrunnerpaint(vm, player, doc, id)
+    }
+  }
+}
+
 export function handleimportzedcafe(vm: DEVICE, message: MESSAGE): void {
   const files = readimportfiles(message.data)
   if (!files) {
@@ -68,7 +99,9 @@ export function handleimportzedcafe(vm: DEVICE, message: MESSAGE): void {
     const changed = applyzedcafetomemory(parsed)
     primezedcafeexportshadow()
     if (changed) {
-      boardrunnerpushupdates(vm)
+      // Full replace of codepage runtimes — emitdiff alone can miss or desync;
+      // paint so the live boardrunner gets terrain immediately.
+      paintboardrunnersafterimport(vm)
     }
     waniximportresult(vm, message.player, {
       ok: true,

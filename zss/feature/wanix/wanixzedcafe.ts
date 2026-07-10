@@ -283,6 +283,29 @@ export async function pushzedcafesynctoiframe(
     )
     return false
   }
+  // Pull guest FS edits into sim before overwriting the tree. Tick-driven host
+  // export otherwise stomps terrain.json writes (greenring) before the poll.
+  if (!options?.fromimport) {
+    try {
+      const tree = await readexporttree()
+      const treefp = fingerprintzedcafeexportfiles(tree)
+      if (treefp !== readlasthostpushfingerprint()) {
+        const imported = await runzedcafeimport(device, player, tree)
+        if (imported) {
+          return true
+        }
+      }
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : String(err)
+      tracezedcafeexport(`sync-guest-import-skip ${detail}`)
+    }
+    if (readzedcafeguestdirty()) {
+      tracezedcafeexport(
+        `sync-skip guest-dirty-after-import memcount=${readbookcountfromexportfiles(files)}`,
+      )
+      return false
+    }
+  }
   const memcount = readbookcountfromexportfiles(files)
   const memfp = fingerprintzedcafeexportfiles(files)
   const lastfp = readlasthostpushfingerprint()
