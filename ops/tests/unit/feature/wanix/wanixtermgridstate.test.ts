@@ -13,11 +13,24 @@ describe('wanixtermgridstate', () => {
     const noisechars = [32, 176, 177, 178, 219, 249, 250]
     const grid = createwanixtermgrid(8, 4)
     expect(grid.char.length).toBe(32)
+    expect(grid.pristine).toBe(true)
     for (let i = 0; i < grid.char.length; ++i) {
       expect(noisechars).toContain(grid.char[i])
       expect([COLOR.WHITE, COLOR.BLACK]).toContain(grid.color[i])
       expect(grid.bg[i]).toBe(COLOR.BLACK)
     }
+  })
+
+  it('clears noise on first write then paints output', () => {
+    const grid = createwanixtermgrid(8, 2)
+    expect(grid.pristine).toBe(true)
+    wanixtermgridwritebytes(grid, new TextEncoder().encode('Hi'))
+    expect(grid.pristine).toBe(false)
+    expect(String.fromCharCode(grid.char[0])).toBe('H')
+    expect(String.fromCharCode(grid.char[1])).toBe('i')
+    expect(grid.char[2]).toBe(32)
+    expect(grid.color[2]).toBe(COLOR.WHITE)
+    expect(grid.bg[2]).toBe(COLOR.BLACK)
   })
 
   it('writes plain text into the grid', () => {

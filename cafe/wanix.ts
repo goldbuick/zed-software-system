@@ -536,6 +536,8 @@ async function connecttermsession(
   }
   termsessions.set(sessionkey, session)
   recordtermsessionconnect(sessionkey)
+  // Post noise cells before open so the host has a frame when it attaches.
+  postcells(sessionkey, session)
   postsession('open', sessionkey, sessionkind)
   setactivesession(sessionkey)
   void readtermloop(sessionkey, session)

@@ -13,6 +13,9 @@ cat <<'EOF'
     zedcafe-books          list books
     zedcafe-book <dir>     book stats.json
     zedcafe-pages <dir>    pages in a book
+    zedcafe-players        list onboard players (id, book, page, x, y)
+    zedcafe-code <pat>     search page code for a substring
+    zedcafe-find …         find terrain/objects on boards (--kind/--char/--name)
     zedcafe-ls [path]      export tree listing
 
   also: jq, curl, wget

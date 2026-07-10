@@ -138,7 +138,7 @@ Built with `yarn task run ops:fixtures:wanix:linux:overlay:build` (needs Docker)
 | Path in guest | Role |
 |---------------|------|
 | `/boot/rc` | MOTD listing zedcafe tools |
-| `/usr/bin/zedcafe-*` | Export introspection (`zedcafe-ready`, `zedcafe-stats`, `zedcafe-books`, …) |
+| `/usr/bin/zedcafe-*` | Export introspection (`zedcafe-ready`, `zedcafe-stats`, `zedcafe-books`, `zedcafe-players`, `zedcafe-code`, `zedcafe-find`, …) |
 | `/usr/bin/jq`, `curl`, `wget` | JSON and network utilities |
 
 Live game content still mounts at **`/zedcafe/`** from the host export daemon (not baked into the overlay).
@@ -147,7 +147,7 @@ Live game content still mounts at **`/zedcafe/`** from the host export daemon (n
 
 1. Build overlay (once): `yarn task run ops:fixtures:wanix:linux:overlay:build`
 2. `yarn task cafe dev` → `#wanix vm`
-3. MOTD appears at boot; after export is ready: `zedcafe-stats`, `zedcafe-books`
+3. MOTD appears at boot; after export is ready: `zedcafe-stats`, `zedcafe-books`, `zedcafe-players`, `zedcafe-code`, `zedcafe-find`
 4. `curl -I https://example.com` — network sanity
 
 Sources: `linux/` (this directory). Output: `ops/public/wanix/zedcafe-linux-overlay.tgz` and `cafe/public/wanix/`.

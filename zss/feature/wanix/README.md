@@ -635,6 +635,15 @@ and VM is running — explicit branch, errors propagate.
 ~ # zedcafe-books
   name: coolregionsbow
   pageCount: 51
+~ # zedcafe-players
+  id	book	page	x	y	kind	path
+  pid_…	coolregionsbow-sid_…	…	12	8	player	…/board/objects/pid_….json
+~ # zedcafe-code send
+  book	page	type	name	id	line	text
+  …	…	object	…	…	3	#send touch
+~ # zedcafe-find --kind gem
+  layer	book	page	id	x	y	kind	char	name	path
+  object	…	…	…	10	5	gem	…	…	…/board/objects/….json
 ~ # ls -la /zedcafe
   coolregionsbow-sid_…
   stats.json
