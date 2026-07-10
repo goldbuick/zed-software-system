@@ -83,7 +83,7 @@ export function readbookcountfromexportfiles(
 export function readexporthasbooktree(
   files: WANIX_ZED_CAFE_EXPORT_FILE[],
 ): boolean {
-  return files.some((file) => file.path.startsWith('books/'))
+  return readbookcountfromexportfiles(files) > 0
 }
 
 /** Host/guest export content-ready: non-empty stats.json with exportedAt + bookCount. */

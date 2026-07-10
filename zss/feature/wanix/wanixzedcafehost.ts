@@ -19,6 +19,7 @@ import {
 import { postwanixexportmessage } from 'zss/feature/wanix/wanixexportevents'
 import { wanixperfmark } from 'zss/feature/wanix/wanixperf'
 import { readzedcafeexportstatscontentready } from 'zss/feature/wanix/wanixstateexport'
+import { kebabcasezedcafedirname } from 'zss/feature/wanix/zedcafetreeschema'
 import type { WanixZedCafeGuestFile } from './wanixzedcafetypes'
 
 type WanixTaskElement = HTMLElement & {
@@ -102,6 +103,45 @@ export function readzedcafetaskridlocal(
   return rid
 }
 
+function readbookstatspathsfromstatsbytes(
+  bytes: Uint8Array,
+): { bookcount: number; bookstatspaths: string[] } | null {
+  try {
+    const parsed = JSON.parse(new TextDecoder().decode(bytes)) as {
+      bookCount?: unknown
+      books?: { id: string; name?: string }[]
+    }
+    const bookcount =
+      typeof parsed.bookCount === 'number' ? parsed.bookCount : -1
+    const bookrefs = parsed.books ?? []
+    const bookstatspaths: string[] = []
+    for (let i = 0; i < bookrefs.length; ++i) {
+      const bookref = bookrefs[i]
+      bookstatspaths.push(
+        `${kebabcasezedcafedirname(bookref.name, bookref.id)}/stats.json`,
+      )
+    }
+    return { bookcount, bookstatspaths }
+  } catch {
+    return null
+  }
+}
+
+async function readbookstatsreadyatbase(
+  root: WanixRoot,
+  base: string,
+  bookstatspaths: string[],
+): Promise<boolean> {
+  for (let i = 0; i < bookstatspaths.length; ++i) {
+    try {
+      await root.readFile(`${base}/${bookstatspaths[i]}`)
+    } catch {
+      return false
+    }
+  }
+  return bookstatspaths.length > 0
+}
+
 export async function readzedcafeexporthasbooks(
   root: WanixRoot,
   taskrid: string,
@@ -111,8 +151,16 @@ export async function readzedcafeexporthasbooks(
   }
   const base = readwanixzedcafeexportsrc(taskrid)
   try {
-    const entries = await root.readDir(base)
-    return entries.some((entry) => entry.replace(/\/$/, '') === 'books')
+    const raw = await root.readFile(`${base}/stats.json`)
+    const bytes =
+      raw instanceof Uint8Array
+        ? raw
+        : new TextEncoder().encode(String(raw))
+    const meta = readbookstatspathsfromstatsbytes(bytes)
+    if (!meta || meta.bookcount < 1) {
+      return false
+    }
+    return readbookstatsreadyatbase(root, base, meta.bookstatspaths)
   } catch {
     return false
   }
@@ -214,12 +262,16 @@ async function readzedcafeguestboundatroot(root: WanixRoot): Promise<boolean> {
       return false
     }
     try {
-      const parsed = JSON.parse(new TextDecoder().decode(bytes)) as {
-        bookCount?: unknown
+      const meta = readbookstatspathsfromstatsbytes(bytes)
+      if (!meta) {
+        return false
       }
-      if (typeof parsed.bookCount === 'number' && parsed.bookCount > 0) {
-        const entries = await root.readDir(WANIX_ZEDCAFE_GUEST_MOUNT)
-        return entries.some((entry) => entry.replace(/\/$/, '') === 'books')
+      if (meta.bookcount > 0) {
+        return readbookstatsreadyatbase(
+          root,
+          WANIX_ZEDCAFE_GUEST_MOUNT,
+          meta.bookstatspaths,
+        )
       }
     } catch {
       return false
@@ -491,16 +543,22 @@ export async function pushzedcafeexportlive(
   }
   const bookcount = readguestfilebookcount(sorted)
   if (bookcount > 0) {
-    const entries = await root.readDir(base)
-    const hasbooks = entries.some(
-      (entry) => entry.replace(/\/$/, '') === 'books',
-    )
-    if (!hasbooks) {
+    const statsfile = sorted.find((file) => file.path === 'stats.json')
+    const meta = statsfile
+      ? readbookstatspathsfromstatsbytes(new Uint8Array(statsfile.data))
+      : null
+    const missing =
+      !meta ||
+      meta.bookstatspaths.length === 0 ||
+      meta.bookstatspaths.some(
+        (bookpath) => !sorted.some((file) => file.path === bookpath),
+      )
+    if (missing) {
       console.error(
-        `[zedcafe-export] push verify failed: bookCount=${bookcount} but books/ missing after push (${sorted.length} files)`,
+        `[zedcafe-export] push verify failed: bookCount=${bookcount} but book stats missing after push (${sorted.length} files)`,
       )
       throw new Error(
-        `zedcafe export incomplete: bookCount=${bookcount} but books/ missing after push (${sorted.length} files)`,
+        `zedcafe export incomplete: bookCount=${bookcount} but book stats missing after push (${sorted.length} files)`,
       )
     }
   }

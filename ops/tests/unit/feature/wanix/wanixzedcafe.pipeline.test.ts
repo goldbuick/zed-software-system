@@ -37,7 +37,7 @@ const bookfiles = [
     ),
   },
   {
-    path: 'books/demo-sid_book/stats.json',
+    path: 'demo-sid_book/stats.json',
     bytes: new TextEncoder().encode('{"exportedAt":"t","bookCount":1}\n'),
   },
 ]

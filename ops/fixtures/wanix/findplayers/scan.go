@@ -166,11 +166,11 @@ func scanboardobject(
 	playerpaths map[string]struct{},
 ) error {
 	parts := strings.Split(rel, "/")
-	if len(parts) < 6 {
+	if len(parts) < 5 {
 		return nil
 	}
-	bookdir := parts[1]
-	pagedir := parts[3]
+	bookdir := parts[0]
+	pagedir := parts[1]
 	filename := parts[len(parts)-1]
 	objid := strings.TrimSuffix(filename, ".json")
 
@@ -216,11 +216,11 @@ func scanobjectelement(
 	playerpaths map[string]struct{},
 ) error {
 	parts := strings.Split(rel, "/")
-	if len(parts) < 5 {
+	if len(parts) < 4 {
 		return nil
 	}
-	bookdir := parts[1]
-	pagedir := parts[3]
+	bookdir := parts[0]
+	pagedir := parts[1]
 
 	var obj boardObject
 	if err := json.Unmarshal(data, &obj); err != nil {
@@ -274,7 +274,7 @@ func Scan(fsys fs.FS, exportroot string) (Report, error) {
 			return nil
 		}
 		switch {
-		case strings.HasSuffix(rel, "/stats.json") && strings.Count(rel, "/") == 2 && strings.HasPrefix(rel, "books/"):
+		case strings.HasSuffix(rel, "/stats.json") && strings.Count(rel, "/") == 1:
 			if err := scanbookstats(fsys, rel, players, playerpaths); err != nil {
 				walkerr = err
 			}
@@ -287,7 +287,7 @@ func Scan(fsys fs.FS, exportroot string) (Report, error) {
 			if err := scanboardobject(rel, data, players, playerpaths); err != nil {
 				walkerr = err
 			}
-		case strings.HasSuffix(rel, "/object/element.json") && strings.HasPrefix(rel, "books/"):
+		case strings.HasSuffix(rel, "/object/element.json"):
 			data, err := readfile(fsys, rel)
 			if err != nil {
 				walkerr = err

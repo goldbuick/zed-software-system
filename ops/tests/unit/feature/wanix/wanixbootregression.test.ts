@@ -26,7 +26,7 @@ describe('wanix boot regression gates', () => {
   it('passes cold task gate when daemon synced and findplayers json appears', () => {
     const logs = [
       '[zedcafe-export] daemon start memcount=1',
-      '["books/demo-sid_x/objects/pid_1.json"]',
+      '["demo-sid_x/objects/pid_1.json"]',
     ]
     const perf = [
       '[wanix-perf] activate-export-end {"memcount":1,"sinceanchor":9000}',
@@ -39,7 +39,7 @@ describe('wanix boot regression gates', () => {
   it('fails cold task gate when export-ready exceeds budget', () => {
     const logs = [
       '[zedcafe-export] daemon start memcount=1',
-      '["books/demo-sid_x/objects/pid_1.json"]',
+      '["demo-sid_x/objects/pid_1.json"]',
     ]
     const perf = [
       '[wanix-perf] activate-export-end {"memcount":1,"sinceanchor":25000}',

@@ -32,7 +32,7 @@ const bookfiles = [
     ),
   },
   {
-    path: 'books/demo-sid_x/stats.json',
+    path: 'demo-sid_x/stats.json',
     bytes: new TextEncoder().encode('{"exportedAt":"t","bookCount":1}\n'),
   },
 ]
@@ -51,6 +51,6 @@ describe('readhostexportfilesasync', () => {
 
     expect(mockvmexport).toHaveBeenCalledWith(device, player)
     expect(readbookcountfromexportfiles(files)).toBe(1)
-    expect(files.some((file) => file.path.startsWith('books/'))).toBe(true)
+    expect(files.some((file) => file.path === 'demo-sid_x/stats.json')).toBe(true)
   })
 })

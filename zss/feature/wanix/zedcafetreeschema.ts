@@ -13,17 +13,15 @@ const OBJ_ID = '[^/]+'
 
 export const ZED_CAFE_EXPORT_ALLOWED_PATH: RegExp[] = [
   /^stats\.json$/,
-  new RegExp(`^books/${DIR_SEG}/stats\\.json$`),
-  new RegExp(`^books/${DIR_SEG}/pages/${DIR_SEG}/stats\\.json$`),
-  new RegExp(`^books/${DIR_SEG}/pages/${DIR_SEG}/board/stats\\.json$`),
-  new RegExp(`^books/${DIR_SEG}/pages/${DIR_SEG}/board/terrain\\.json$`),
-  new RegExp(
-    `^books/${DIR_SEG}/pages/${DIR_SEG}/board/objects/${OBJ_ID}\\.json$`,
-  ),
-  new RegExp(`^books/${DIR_SEG}/pages/${DIR_SEG}/object/element\\.json$`),
-  new RegExp(`^books/${DIR_SEG}/pages/${DIR_SEG}/terrain/element\\.json$`),
-  new RegExp(`^books/${DIR_SEG}/pages/${DIR_SEG}/charset/bitmap\\.json$`),
-  new RegExp(`^books/${DIR_SEG}/pages/${DIR_SEG}/palette/bitmap\\.json$`),
+  new RegExp(`^${DIR_SEG}/stats\\.json$`),
+  new RegExp(`^${DIR_SEG}/${DIR_SEG}/stats\\.json$`),
+  new RegExp(`^${DIR_SEG}/${DIR_SEG}/board/stats\\.json$`),
+  new RegExp(`^${DIR_SEG}/${DIR_SEG}/board/terrain\\.json$`),
+  new RegExp(`^${DIR_SEG}/${DIR_SEG}/board/objects/${OBJ_ID}\\.json$`),
+  new RegExp(`^${DIR_SEG}/${DIR_SEG}/object/element\\.json$`),
+  new RegExp(`^${DIR_SEG}/${DIR_SEG}/terrain/element\\.json$`),
+  new RegExp(`^${DIR_SEG}/${DIR_SEG}/charset/bitmap\\.json$`),
+  new RegExp(`^${DIR_SEG}/${DIR_SEG}/palette/bitmap\\.json$`),
 ]
 
 export type ZED_CAFE_EXPORT_VALIDATION = {
@@ -67,7 +65,7 @@ export function readzedcafebookdirname(book: BOOK): string {
 }
 
 export function readzedcafebookprefix(book: BOOK): string {
-  return `books/${readzedcafebookdirname(book)}`
+  return readzedcafebookdirname(book)
 }
 
 export function readzedcafepagedirname(page: CODE_PAGE): string {
@@ -75,7 +73,7 @@ export function readzedcafepagedirname(page: CODE_PAGE): string {
 }
 
 export function readzedcafepageprefix(book: BOOK, page: CODE_PAGE): string {
-  return `${readzedcafebookprefix(book)}/pages/${readzedcafepagedirname(page)}`
+  return `${readzedcafebookprefix(book)}/${readzedcafepagedirname(page)}`
 }
 
 export function readzedcafebookstatspath(book: BOOK): string {
@@ -133,7 +131,8 @@ function validatestructure(
   const bookrefs = rootstats.books ?? []
   for (let i = 0; i < bookrefs.length; ++i) {
     const bookref = bookrefs[i]
-    const bookpath = `books/${kebabcasezedcafedirname(bookref.name, bookref.id)}/stats.json`
+    const bookdirname = kebabcasezedcafedirname(bookref.name, bookref.id)
+    const bookpath = `${bookdirname}/stats.json`
     const bookbytes = index.get(bookpath)
     if (!bookbytes) {
       errors.push(`missing book stats for ${bookref.id}: ${bookpath}`)
@@ -153,7 +152,7 @@ function validatestructure(
     const pagerefs = bookmeta.pages ?? []
     for (let j = 0; j < pagerefs.length; ++j) {
       const pageref = pagerefs[j]
-      const pagepath = `books/${kebabcasezedcafedirname(bookref.name, bookref.id)}/pages/${kebabcasezedcafedirname(pageref.name, pageref.id)}/stats.json`
+      const pagepath = `${bookdirname}/${kebabcasezedcafedirname(pageref.name, pageref.id)}/stats.json`
       if (!index.has(pagepath)) {
         errors.push(`missing page stats for ${pageref.id}: ${pagepath}`)
       }

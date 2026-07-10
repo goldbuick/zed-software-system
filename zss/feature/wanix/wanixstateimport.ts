@@ -156,7 +156,7 @@ export function parsezedcafeexportfiles(
     const bookref = bookrefs[i]
     const bookid = bookref.id
     const bookdirname = kebabcasezedcafedirname(bookref.name, bookid)
-    const bookmeta = parsejsonfile(index, `books/${bookdirname}/stats.json`) as
+    const bookmeta = parsejsonfile(index, `${bookdirname}/stats.json`) as
       | {
           id?: string
           name?: string
@@ -176,7 +176,7 @@ export function parsezedcafeexportfiles(
       const pageref = pagerefs[j]
       const pageid = pageref.id
       const pagedirname = kebabcasezedcafedirname(pageref.name, pageid)
-      const pageprefix = `books/${bookdirname}/pages/${pagedirname}`
+      const pageprefix = `${bookdirname}/${pagedirname}`
       const page = assemblecodepagejson(index, pageprefix)
       if (page) {
         pages.push(page)

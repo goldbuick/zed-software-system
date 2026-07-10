@@ -159,7 +159,7 @@ wanix-system
   wanix-task[id=zedcafe, type=gojs]     ← export daemon (gojs wasm)
     #task/{rid}/export/                 ← host pushes JSON tree here
       stats.json
-      books/{book-id}/pages/…/object/element.json
+      {book-id}/{page-id}/object/element.json
     bind: export → zedcafe/             ← guest path ./zedcafe/ (tasks)
 
   wanix-vm (when running)
@@ -184,7 +184,7 @@ sequenceDiagram
 
   Parent->>Iframe: RPC pushzedcafeexport (files[])
   Iframe->>Iframe: writeFile #task/rid/export/…
-  Iframe->>Iframe: verify stats.json + books/
+  Iframe->>Iframe: verify stats.json + bookCount / book stats
   Iframe-->>Parent: WANIX_MSG_EXPORT content-ready
   Parent->>Iframe: wirezedcafeexport (binds)
   Guest->>Guest: read /zedcafe/stats.json
@@ -287,7 +287,7 @@ sequenceDiagram
   Iframe->>Iframe: wait stats.json on #task/rid/export
   Iframe->>Iframe: append bind zedcafe/ per-task
   Iframe->>FP: allocate + start
-  FP->>FP: poll ./zedcafe/stats.json, scan books/
+  FP->>FP: poll ./zedcafe/stats.json, scan book dirs
   FP-->>User: stdout JSON array (~5s guest CPU)
 ```
 
@@ -392,7 +392,7 @@ Defined in [`wanixbootregression.ts`](wanixbootregression.ts). Any perf change m
 | Path | Success signal |
 |------|----------------|
 | VM boot | `finalize-vmboot branch=pushwire`, `export-push-end`, `zedcafe-books` lists books |
-| Cold task | `daemon start memcount=1`, findplayers JSON `["books/…` |
+| Cold task | `daemon start memcount=1`, findplayers JSON `["{book}/…` |
 | Warm task | `sync-stale needed=false`, fast findplayers JSON |
 
 **Jest:** `ops/tests/unit/feature/wanix/wanixbootregression.test.ts` +
@@ -581,7 +581,7 @@ and VM is running — explicit branch, errors propagate.
 |------------|--------------|
 | **`#wanix vm` + `/zedcafe/`** | VM room → zedcafe gojs boot → host pushes memory export → `wirezedcafeexport` binds `#task/rid/export` into Linux at `/zedcafe/` |
 | **Wasm task drops** | `handlewanixdrop` stands task room, stages `#ramfs/{file}`, spawns with driver from wasm bytes |
-| **findplayers JSON output** | gojs task + per-task export bind + spawn gate on `stats.json`; scanner walks `./zedcafe/books/…` |
+| **findplayers JSON output** | gojs task + per-task export bind + spawn gate on `stats.json`; scanner walks `./zedcafe/{book}/…` |
 | **Live export updates** | `wanixstateexport` jsonpipe rebuilds tree; debounced push while room active; `synczedcafeexportifstale` on reuse |
 | **Auto-attach new sessions** | `WANIX_MSG_SESSION open` → reveal tape → attach when user had nothing focused |
 | **Soft idle → faster second drop** | Warm `<wanix-system>` + unchanged `mountkey` skips wanix.wasm reload; daemon reuse + sync-if-stale |
@@ -596,11 +596,11 @@ and VM is running — explicit branch, errors propagate.
   name: coolregionsbow
   pageCount: 51
 ~ # ls -la /zedcafe
-  books/
+  coolregionsbow-sid_…
   stats.json
 ```
 
-**findplayers task term:** one line JSON array starting with `["books/…/objects/pid_…json",…]`
+**findplayers task term:** one line JSON array starting with `["{book}/{page}/…/objects/pid_…json",…]`
 
 **Dev console:** `[wanix-perf] export-push-end` then `[wanix-perf] spawntask-return` with no
 `LinkError` or `postwanixexportmessage is not defined`.

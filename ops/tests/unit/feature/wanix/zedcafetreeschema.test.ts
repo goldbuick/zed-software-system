@@ -67,7 +67,7 @@ describe('zedcafetreeschema', () => {
   it('rejects paths outside schema', () => {
     const result = validatezedcafeexportpaths([
       { path: '../stats.json', bytes: encodetext('{}') },
-      { path: 'books/foo/bar.json', bytes: encodetext('{}') },
+      { path: 'foo/bar.json', bytes: encodetext('{}') },
     ])
     expect(result.ok).toBe(false)
     expect(result.errors.some((err) => err.includes('path outside schema'))).toBe(
@@ -99,10 +99,10 @@ describe('zedcafetreeschema', () => {
     expect(patterns.length).toBe(ZED_CAFE_EXPORT_ALLOWED_PATH.length)
     const probes = [
       'stats.json',
-      'books/demo-book1/stats.json',
-      'books/demo-book1/pages/demo-page1/board/objects/obj1.json',
+      'demo-book1/stats.json',
+      'demo-book1/demo-page1/board/objects/obj1.json',
       'evil.txt',
-      'books/foo/bar.json',
+      'foo/bar.json',
     ]
     for (let i = 0; i < patterns.length; ++i) {
       const ts = ZED_CAFE_EXPORT_ALLOWED_PATH[i]!

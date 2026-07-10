@@ -19,6 +19,7 @@ import {
   parsebookcountfromterm,
   pollfindplayersoutput,
   polluntil,
+  readfindplayersbookspaths,
   readhostexportpaths,
   readhostexportstats,
   readlslistsbooksdir,
@@ -304,16 +305,20 @@ const validatezedcafevmexport: HeadedPlaywrightScript = async ({
         10_000,
       )
       hoststats = await readhostexportstats(page, taskrid)
-      const booksdir = await callwanixrpcinpage<string[]>(
+      const exportentries = await callwanixrpcinpage<string[]>(
         page,
         'listdir',
-        [`#task/${taskrid}/export/books`],
+        [`#task/${taskrid}/export`],
         10_000,
       ).catch(() => [])
+      const bookdirs = Array.isArray(exportentries)
+        ? exportentries.filter((entry) => {
+            const name = entry.replace(/\/$/, '')
+            return name.length > 0 && name !== 'stats.json'
+          })
+        : []
       const hasbooks =
-        Array.isArray(booksdir) &&
-        booksdir.length > 0 &&
-        (hoststats?.bookCount ?? 0) >= 1
+        bookdirs.length > 0 && (hoststats?.bookCount ?? 0) >= 1
       return { taskrid, live: !!live, hoststats, hasbooks }
     },
     (snap) => snap.live === true && snap.hasbooks === true && !!snap.taskrid,
@@ -497,7 +502,7 @@ const validatezedcafevmexport: HeadedPlaywrightScript = async ({
   )
   record('findplayers-run', { sample: findplayerstext.slice(-400) })
 
-  if (!findplayerstext || !/\["books\/[^"]+"/.test(findplayerstext.replace(/\s+/g, ''))) {
+  if (!findplayerstext || !readfindplayersbookspaths(findplayerstext)) {
     fail('findplayers-run', {
       findplayerstext: findplayerstext.slice(-800),
       membookcount,

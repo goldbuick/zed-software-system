@@ -153,7 +153,7 @@ describe('wanixstateexport', () => {
     expect(files[0]?.path).toBe('stats.json')
 
     const bookmeta = files.find(
-      (file) => file.path === 'books/demo-book1/stats.json',
+      (file) => file.path === 'demo-book1/stats.json',
     )
     expect(bookmeta).toBeDefined()
     const bookjson = decodefilebytes(bookmeta!.bytes) as {
@@ -168,31 +168,31 @@ describe('wanixstateexport', () => {
 
     expect(
       files.some(
-        (file) => file.path === 'books/demo-book1/pages/demo-page1/stats.json',
+        (file) => file.path === 'demo-book1/demo-page1/stats.json',
       ),
     ).toBe(true)
     expect(
       files.some(
         (file) =>
-          file.path === 'books/demo-book1/pages/demo-page1/board/terrain.json',
+          file.path === 'demo-book1/demo-page1/board/terrain.json',
       ),
     ).toBe(true)
     expect(
       files.some(
         (file) =>
-          file.path === 'books/demo-book1/pages/demo-page1/board/stats.json',
+          file.path === 'demo-book1/demo-page1/board/stats.json',
       ),
     ).toBe(true)
     expect(
       files.some(
         (file) =>
-          file.path === 'books/demo-book1/pages/player-page2/object/element.json',
+          file.path === 'demo-book1/player-page2/object/element.json',
       ),
     ).toBe(true)
     expect(
-      files.some((file) => file.path === 'books/demo-book1/pages/demo-page1.json'),
+      files.some((file) => file.path === 'demo-book1/demo-page1.json'),
     ).toBe(false)
-    expect(files.some((file) => file.path === 'books/demo-book1/book.json')).toBe(
+    expect(files.some((file) => file.path === 'demo-book1/book.json')).toBe(
       false,
     )
   })
@@ -229,8 +229,8 @@ describe('wanixstateexport', () => {
     } as CODE_PAGE & { object: Record<string, unknown> }
     const files = buildzedcafecodepagefiles(book, page)
     expect(files.map((file) => file.path)).toEqual([
-      'books/demo-book1/pages/gem-page2/stats.json',
-      'books/demo-book1/pages/gem-page2/object/element.json',
+      'demo-book1/gem-page2/stats.json',
+      'demo-book1/gem-page2/object/element.json',
     ])
   })
 

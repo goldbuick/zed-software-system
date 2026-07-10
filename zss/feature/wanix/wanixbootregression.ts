@@ -32,7 +32,7 @@ export const WANIX_BOOT_REGRESSION_GATES: WanixBootRegressionGate[] = [
     signals: [
       'daemon start memcount=1',
       '[wanix-perf] spawntask-return',
-      '["books/',
+      '["',
     ],
     maxphasems: {
       'activate-export-end': 20_000,
@@ -45,7 +45,7 @@ export const WANIX_BOOT_REGRESSION_GATES: WanixBootRegressionGate[] = [
     signals: [
       'sync-stale needed=false',
       '[wanix-perf] spawntask-return',
-      '["books/',
+      '["',
     ],
   },
 ]

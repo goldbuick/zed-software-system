@@ -61,9 +61,9 @@ describe('wanixstateimport', () => {
     const index = new Map<string, Uint8Array>()
     for (let i = 0; i < boardfiles.length; ++i) {
       const file = boardfiles[i]!
-      index.set(`books/b1/pages/p1/${file.path}`, file.bytes)
+      index.set(`b1/p1/${file.path}`, file.bytes)
     }
-    const board = assembleboardjson(index, 'books/b1/pages/p1')
+    const board = assembleboardjson(index, 'b1/p1')
     expect(board).toEqual({
       startx: 3,
       starty: 4,
@@ -106,7 +106,7 @@ describe('wanixstateimport', () => {
 
     const page1 = assemblecodepagejson(
       new Map(exported.map((file) => [file.path, file.bytes])),
-      'books/demo-book1/pages/demo-page1',
+      'demo-book1/demo-page1',
     )
     expect(page1?.code).toBe('@board demo')
     expect(page1?.board).toEqual({
@@ -117,7 +117,7 @@ describe('wanixstateimport', () => {
 
     const page2 = assemblecodepagejson(
       new Map(exported.map((file) => [file.path, file.bytes])),
-      'books/demo-book1/pages/player-page2',
+      'demo-book1/player-page2',
     )
     expect(page2?.object).toEqual({ kind: 'player', char: 2 })
   })

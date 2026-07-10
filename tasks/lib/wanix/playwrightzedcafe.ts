@@ -322,7 +322,11 @@ export async function importfixturebookinpage(
 }
 
 export function readfindplayersbookspaths(text: string): boolean {
-  return /\["books\/[^"]+"/.test(text.replace(/\s+/g, ''))
+  const compact = text.replace(/\s+/g, '')
+  if (/\/books\/|\/pages\//.test(compact) || compact.includes('["books/')) {
+    return false
+  }
+  return /\["[a-zA-Z0-9._-]+\/[^"]+\.json"/.test(compact)
 }
 
 export async function readwanixtermbufferkeysinpage(
@@ -446,10 +450,12 @@ export function collectwanixperf(
   return entries
 }
 
-/** True when ls -la output lists a books directory entry under /zedcafe. */
+/** True when ls -la /zedcafe lists root stats.json and at least one book dir. */
 export function readlslistsbooksdir(text: string): boolean {
   const lines = text.split('\n')
   let afterls = false
+  let hasstats = false
+  let hasbookdir = false
   for (let i = 0; i < lines.length; i++) {
     const trimmed = lines[i].trim()
     if (/ls\s+(-la\s+)?\/zedcafe/.test(trimmed)) {
@@ -462,14 +468,23 @@ export function readlslistsbooksdir(text: string): boolean {
     if (trimmed.length === 0) {
       continue
     }
-    if (/^books\/?$/.test(trimmed)) {
-      return true
+    if (/^stats\.json$/.test(trimmed) || /\sstats\.json$/.test(trimmed)) {
+      hasstats = true
     }
-    if (/\sbooks\/?$/.test(trimmed)) {
-      return true
+    // Book dirs are kebab name-id siblings of stats.json (not the old books/ wrapper).
+    if (
+      !/^stats\.json$/.test(trimmed) &&
+      !/\sstats\.json$/.test(trimmed) &&
+      (/^[a-zA-Z0-9._-]+\/?$/.test(trimmed) ||
+        /\s[a-zA-Z0-9._-]+\/?$/.test(trimmed))
+    ) {
+      const name = trimmed.split(/\s+/).pop()?.replace(/\/$/, '') ?? ''
+      if (name && name !== '.' && name !== '..' && name !== 'stats.json') {
+        hasbookdir = true
+      }
     }
   }
-  return false
+  return hasstats && hasbookdir
 }
 
 export function parsebookcountfromterm(text: string, aftercommand = 'zedcafe-stats'): number | null {

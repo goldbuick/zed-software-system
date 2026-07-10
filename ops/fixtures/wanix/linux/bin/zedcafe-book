@@ -24,7 +24,7 @@ if [ -z "$bookdir" ]; then
   exit 1
 fi
 
-bookstats="$ZEDCAFE_ROOT/books/$bookdir/stats.json"
+bookstats="$ZEDCAFE_ROOT/$bookdir/stats.json"
 if [ ! -f "$bookstats" ]; then
   echo "zedcafe-book: missing $bookstats" >&2
   exit 1

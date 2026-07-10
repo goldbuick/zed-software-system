@@ -39,7 +39,7 @@ func TestScanActiveListOnly(t *testing.T) {
 		"stats.json": &fstest.MapFile{
 			Data: []byte(`{"books":[{"id":"book1","name":"main"}]}` + "\n"),
 		},
-		"books/main-book1/stats.json": &fstest.MapFile{
+		"main-book1/stats.json": &fstest.MapFile{
 			Data: []byte(`{
   "activelist": ["pid_1111_aaaa"],
   "flags": {
@@ -62,7 +62,7 @@ func TestScanActiveListOnly(t *testing.T) {
 	if p.Board != "title-page1" {
 		t.Fatalf("board flag: %q", p.Board)
 	}
-	if len(report.PlayerPaths) != 1 || report.PlayerPaths[0] != "books/main-book1/stats.json" {
+	if len(report.PlayerPaths) != 1 || report.PlayerPaths[0] != "main-book1/stats.json" {
 		t.Fatalf("player paths: %v", report.PlayerPaths)
 	}
 }
@@ -72,10 +72,10 @@ func TestScanBoardOrphanOnly(t *testing.T) {
 		"stats.json": &fstest.MapFile{
 			Data: []byte(`{"books":[]}` + "\n"),
 		},
-		"books/main-book1/stats.json": &fstest.MapFile{
+		"main-book1/stats.json": &fstest.MapFile{
 			Data: []byte(`{"activelist":[],"flags":{}}` + "\n"),
 		},
-		"books/main-book1/pages/title-page1/board/objects/pid_2222_bbbb.json": &fstest.MapFile{
+		"main-book1/title-page1/board/objects/pid_2222_bbbb.json": &fstest.MapFile{
 			Data: []byte(`{"kind":"player","id":"pid_2222_bbbb","x":4,"y":7}` + "\n"),
 		},
 	}
@@ -93,7 +93,7 @@ func TestScanBoardOrphanOnly(t *testing.T) {
 	if p.X == nil || *p.X != 4 || p.Y == nil || *p.Y != 7 {
 		t.Fatalf("position: %+v", p)
 	}
-	wantpath := "books/main-book1/pages/title-page1/board/objects/pid_2222_bbbb.json"
+	wantpath := "main-book1/title-page1/board/objects/pid_2222_bbbb.json"
 	if len(report.PlayerPaths) != 1 || report.PlayerPaths[0] != wantpath {
 		t.Fatalf("player paths: %v", report.PlayerPaths)
 	}
@@ -104,7 +104,7 @@ func TestScanMergedActiveAndOnboard(t *testing.T) {
 		"stats.json": &fstest.MapFile{
 			Data: []byte(`{"books":[{"id":"book1","name":"main"}]}` + "\n"),
 		},
-		"books/main-book1/stats.json": &fstest.MapFile{
+		"main-book1/stats.json": &fstest.MapFile{
 			Data: []byte(`{
   "activelist": ["pid_3333_cccc"],
   "flags": {
@@ -112,7 +112,7 @@ func TestScanMergedActiveAndOnboard(t *testing.T) {
   }
 }` + "\n"),
 		},
-		"books/main-book1/pages/title-page1/board/objects/pid_3333_cccc.json": &fstest.MapFile{
+		"main-book1/title-page1/board/objects/pid_3333_cccc.json": &fstest.MapFile{
 			Data: []byte(`{"kind":"player","id":"pid_3333_cccc","x":10,"y":12}` + "\n"),
 		},
 	}
@@ -140,10 +140,10 @@ func TestScanObjectElementPlayer(t *testing.T) {
 		"stats.json": &fstest.MapFile{
 			Data: []byte(`{"exportedAt":"t","bookCount":1,"books":[]}` + "\n"),
 		},
-		"books/main-book1/stats.json": &fstest.MapFile{
+		"main-book1/stats.json": &fstest.MapFile{
 			Data: []byte(`{"activelist":[],"flags":{}}` + "\n"),
 		},
-		"books/main-book1/pages/player-sid_q8uHjK2to8P/object/element.json": &fstest.MapFile{
+		"main-book1/player-sid_q8uHjK2to8P/object/element.json": &fstest.MapFile{
 			Data: []byte(`{"kind":"player","id":"pid_7294_4alo8kn5141bhen2","x":0,"y":0}` + "\n"),
 		},
 	}
@@ -151,7 +151,7 @@ func TestScanObjectElementPlayer(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantpath := "books/main-book1/pages/player-sid_q8uHjK2to8P/object/element.json"
+	wantpath := "main-book1/player-sid_q8uHjK2to8P/object/element.json"
 	if len(report.PlayerPaths) != 1 || report.PlayerPaths[0] != wantpath {
 		t.Fatalf("player paths: %v", report.PlayerPaths)
 	}
@@ -163,7 +163,7 @@ func TestScanObjectElementPlayer(t *testing.T) {
 func TestScanMultiplePlayersSorted(t *testing.T) {
 	fsys := fstest.MapFS{
 		"stats.json": &fstest.MapFile{Data: []byte(`{"books":[]}` + "\n")},
-		"books/demo-book1/stats.json": &fstest.MapFile{
+		"demo-book1/stats.json": &fstest.MapFile{
 			Data: []byte(`{"activelist":["pid_zzz_zzz","pid_aaa_aaa"],"flags":{}}` + "\n"),
 		},
 	}

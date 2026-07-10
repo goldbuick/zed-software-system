@@ -37,7 +37,7 @@ func TestSchemaGuardP9WriteNestedBookFailsWithoutMkdir(t *testing.T) {
 	fsys, cleanup := p9exportsetup(t, export)
 	defer cleanup()
 
-	bookpath := "books/coolregionsbow-sid_vuYEPNKWWAPd/stats.json"
+	bookpath := "coolregionsbow-sid_vuYEPNKWWAPd/stats.json"
 	err := fs.WriteFile(fsys, bookpath, []byte(`{"id":"sid_vuYEPNKWWAPd"}`+"\n"), 0o644)
 	if err == nil {
 		t.Fatal("expected p9 write without mkdir to fail")
@@ -52,7 +52,7 @@ func TestSchemaGuardP9WriteNestedBookAfterMkdirAll(t *testing.T) {
 	fsys, cleanup := p9exportsetup(t, export)
 	defer cleanup()
 
-	bookdir := "books/coolregionsbow-sid_vuYEPNKWWAPd"
+	bookdir := "coolregionsbow-sid_vuYEPNKWWAPd"
 	bookpath := bookdir + "/stats.json"
 	bookstats := `{"id":"sid_vuYEPNKWWAPd","name":"coolregionsbow","pages":[]}` + "\n"
 	if err := fs.MkdirAll(fsys, bookdir, 0o755); err != nil {
