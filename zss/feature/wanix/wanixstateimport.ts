@@ -8,6 +8,7 @@ import {
   memoryimportbookfromjson,
   memoryupsertcodepage,
 } from 'zss/memory/bookoperations'
+import { memoryboundaryget } from 'zss/memory/boundaries'
 import {
   memoryclearbook,
   memoryreadbooklist,
@@ -43,8 +44,38 @@ export type WANIX_ZED_CAFE_PARSED = {
 
 const decoder = new TextDecoder()
 
+/** Greenring paints char=9 color=10 (COLOR.GREEN) bg=0 — used only for import diagnostics. */
+const GREENRING_CHAR = 9
+const GREENRING_COLOR = 10
+
 function decodejson(bytes: Uint8Array): unknown {
   return JSON.parse(decoder.decode(bytes))
+}
+
+export function countgreenringterraincells(terrain: unknown): number {
+  if (!Array.isArray(terrain)) {
+    return 0
+  }
+  let count = 0
+  for (let i = 0; i < terrain.length; ++i) {
+    const cell = terrain[i]
+    if (!cell || typeof cell !== 'object') {
+      continue
+    }
+    const row = cell as { char?: unknown; color?: unknown }
+    if (row.char === GREENRING_CHAR && row.color === GREENRING_COLOR) {
+      count += 1
+    }
+  }
+  return count
+}
+
+function tracezedcafeimport(message: string, detail?: Record<string, unknown>) {
+  if (detail) {
+    console.info(`[zedcafe-import] ${message}`, detail)
+  } else {
+    console.info(`[zedcafe-import] ${message}`)
+  }
 }
 
 function buildindex(
@@ -236,14 +267,33 @@ export function applyzedcafetomemory(parsed: WANIX_ZED_CAFE_PARSED): boolean {
       if (imported) {
         memorywritebook(imported)
         changed = true
+        tracezedcafeimport('sim-memory new-book', {
+          bookid: flat.id,
+          pages: flat.pages.length,
+        })
       }
       continue
     }
     applybookmeta(book, flat)
     for (let j = 0; j < flat.pages.length; ++j) {
-      if (memoryupsertcodepage(book, flat.pages[j])) {
+      const page = flat.pages[j]
+      const greencells = countgreenringterraincells(page.board?.terrain)
+      const ok = memoryupsertcodepage(book, page)
+      if (ok) {
         changed = true
       }
+      const rt = memoryboundaryget<{ board?: { id?: string; terrain?: unknown } }>(
+        page.id,
+      )
+      const memgreen = countgreenringterraincells(rt?.board?.terrain)
+      tracezedcafeimport('sim-memory upsert-page', {
+        bookid: flat.id,
+        pageid: page.id,
+        boardid: rt?.board?.id ?? null,
+        guestgreencells: greencells,
+        memgreencells: memgreen,
+        upsertok: ok,
+      })
     }
     const keeppageids = new Set<string>()
     for (let j = 0; j < flat.pages.length; ++j) {
@@ -281,6 +331,10 @@ export function applyzedcafetomemory(parsed: WANIX_ZED_CAFE_PARSED): boolean {
   if (parsed.guestTouch) {
     changed = true
   }
+  tracezedcafeimport('sim-memory apply-done', {
+    changed,
+    books: parsed.books.length,
+  })
   return changed
 }
 

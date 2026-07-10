@@ -443,9 +443,11 @@ async function collectexporttreefiles(
 ): Promise<WanixZedCafeGuestFile[]> {
   const files: WanixZedCafeGuestFile[] = []
 
+  // Leaf export files are always `*.json`. Directory segments may contain `.`
+  // inside page/book ids (e.g. `key-sid_8FzEX.FvcYV1`) — those must be walked.
   function isleafpath(rel: string): boolean {
     const name = rel.split('/').pop() ?? rel
-    return name.includes('.')
+    return name.endsWith('.json')
   }
 
   async function ingest(rel: string) {
