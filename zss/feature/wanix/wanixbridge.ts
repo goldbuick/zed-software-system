@@ -1,3 +1,7 @@
+import { createmessage } from 'zss/device'
+import { ismessage, type MESSAGE } from 'zss/device/api'
+import { registerreadplayer } from 'zss/device/registerplayer'
+import { SOFTWARE } from 'zss/device/session'
 import { isdevbuild } from 'zss/feature/devbuild'
 import {
   onwanixtermsessionopen,
@@ -5,15 +9,12 @@ import {
   resetwanixattachforidle,
   setwanixactivesession,
 } from 'zss/feature/wanix/wanixattachstate'
+import { awaitwanixreply } from 'zss/feature/wanix/wanixdeviceclient'
 import { handlewanixexportmessage } from 'zss/feature/wanix/wanixexportwait'
 import {
   WANIX_MSG_CELLS,
   WANIX_MSG_IDLE,
-  WANIX_MSG_PARENT_RPC,
-  WANIX_MSG_PARENT_RPC_RES,
   WANIX_MSG_READY,
-  WANIX_MSG_RPC,
-  WANIX_MSG_RPC_RES,
   WANIX_MSG_SESSION,
 } from 'zss/feature/wanix/wanixrpcmessages'
 import { revealwanixtapeifhidden } from 'zss/feature/wanix/wanixtapevisibility'
@@ -30,15 +31,8 @@ const WANIX_READY_TIMEOUT_MS = 180_000
 const WANIX_RPC_PING_TIMEOUT_MS = 15_000
 const WANIX_RPC_PING_POLL_MS = 100
 
-type RpcWaiter = {
-  resolve: (value: unknown) => void
-  reject: (error: Error) => void
-}
-
 let childwindow: Window | null = null
 let childwindowwaiters: (() => void)[] = []
-let rpcseq = 0
-const rpcwaiters = new Map<number, RpcWaiter>()
 
 let wanixisready = false
 let readyresolve: (() => void) | null = null
@@ -54,11 +48,39 @@ function resetready() {
 resetready()
 
 let onwanixsessioncloseprune: ((sessionkey: string) => void) | null = null
+let deliverwanixmessage: ((message: MESSAGE) => void) | null = null
 
 export function registerwanixsessioncloseprune(
   fn: (sessionkey: string) => void,
 ) {
   onwanixsessioncloseprune = fn
+}
+
+export function setwanixmessagedeliver(fn: ((message: MESSAGE) => void) | null) {
+  deliverwanixmessage = fn
+}
+
+export function readwanixchildwindow(): Window | null {
+  return childwindow
+}
+
+export function postmessagetowanixiframe(message: MESSAGE): boolean {
+  if (!childwindow) {
+    return false
+  }
+  childwindow.postMessage(message, window.location.origin)
+  return true
+}
+
+export function postreadytowanixiframe(): void {
+  const session = SOFTWARE.session()
+  if (!session || !childwindow) {
+    return
+  }
+  childwindow.postMessage(
+    createmessage(session, '', 'platform', 'ready', undefined),
+    window.location.origin,
+  )
 }
 
 function handleparentmessage(event: MessageEvent) {
@@ -67,6 +89,10 @@ function handleparentmessage(event: MessageEvent) {
   }
   const data = event.data
   if (!data || typeof data !== 'object') {
+    return
+  }
+  if (ismessage(data)) {
+    deliverwanixmessage?.(data)
     return
   }
   if (data.type === WANIX_MSG_READY) {
@@ -130,78 +156,6 @@ function handleparentmessage(event: MessageEvent) {
   if (handlewanixexportmessage(data as Record<string, unknown>)) {
     return
   }
-  if (data.type === WANIX_MSG_PARENT_RPC) {
-    void handleiframeparentrpc(data as Record<string, unknown>, event.source)
-    return
-  }
-  if (data.type !== WANIX_MSG_RPC_RES) {
-    return
-  }
-  const id = (data as { id?: unknown }).id
-  if (typeof id !== 'number') {
-    return
-  }
-  const waiter = rpcwaiters.get(id)
-  if (!waiter) {
-    return
-  }
-  rpcwaiters.delete(id)
-  const error = (data as { error?: unknown }).error
-  if (typeof error === 'string' && error.length > 0) {
-    waiter.reject(new Error(error))
-    return
-  }
-  waiter.resolve((data as { result?: unknown }).result)
-}
-
-function replyiframeparentrpc(
-  source: MessageEventSource | null,
-  id: unknown,
-  payload: Record<string, unknown>,
-) {
-  if (
-    !source ||
-    typeof id !== 'number' ||
-    typeof (source as Window).postMessage !== 'function'
-  ) {
-    return
-  }
-  ;(source as Window).postMessage(
-    { type: WANIX_MSG_PARENT_RPC_RES, id, ...payload },
-    window.location.origin,
-  )
-}
-
-async function handleiframeparentrpc(
-  data: Record<string, unknown>,
-  source: MessageEventSource | null,
-) {
-  const id = data.id
-  const method = data.method
-  if (typeof method !== 'string') {
-    replyiframeparentrpc(source, id, { error: 'parent rpc: missing method' })
-    return
-  }
-  try {
-    if (method === 'requestzedcafestate') {
-      const { SOFTWARE } = await import('zss/device/session')
-      const { memoryreadoperator } = await import('zss/memory/session')
-      const { exportfilestoguestfiles, readhostexportfilesasync } =
-        await import('zss/feature/wanix/wanixzedcafe')
-      const files = await readhostexportfilesasync(
-        SOFTWARE,
-        memoryreadoperator(),
-      )
-      replyiframeparentrpc(source, id, {
-        result: exportfilestoguestfiles(files),
-      })
-      return
-    }
-    replyiframeparentrpc(source, id, { error: `unknown parent rpc: ${method}` })
-  } catch (err) {
-    const detail = err instanceof Error ? err.message : String(err)
-    replyiframeparentrpc(source, id, { error: detail })
-  }
 }
 
 function notifychildwindow() {
@@ -246,6 +200,7 @@ export function setwanixchildwindow(next: Window | null) {
   childwindow = next
   resetready()
   notifychildwindow()
+  postreadytowanixiframe()
 }
 
 export async function waitwanixrpcping(
@@ -330,28 +285,9 @@ export async function callwanixrpc<T>(
   args?: unknown[],
   timeoutms = WANIX_RPC_TIMEOUT_MS,
 ): Promise<T> {
-  const target = await waitwanixiframe()
-  const id = ++rpcseq
-  return new Promise<T>((resolve, reject) => {
-    const timer = setTimeout(() => {
-      rpcwaiters.delete(id)
-      reject(new Error(`wanix rpc timeout: ${method}`))
-    }, timeoutms)
-    rpcwaiters.set(id, {
-      resolve: (value) => {
-        clearTimeout(timer)
-        resolve(value as T)
-      },
-      reject: (err) => {
-        clearTimeout(timer)
-        reject(err)
-      },
-    })
-    target.postMessage(
-      { type: WANIX_MSG_RPC, id, method, args },
-      window.location.origin,
-    )
-  })
+  await waitwanixiframe()
+  postreadytowanixiframe()
+  return awaitwanixreply<T>(registerreadplayer(), method, args, timeoutms)
 }
 
 if (isdevbuild()) {

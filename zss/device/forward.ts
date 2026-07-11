@@ -71,6 +71,7 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
         case 'modem':
         case 'bridge':
         case 'wanix':
+        case 'wanixui':
         case 'register':
         case 'boardrunner':
         case 'gadgetclient':
@@ -181,5 +182,37 @@ export function shouldforwardclienttotts(message: MESSAGE): boolean {
 
 // create tts -> client forward
 export function shouldforwardttstoclient(): boolean {
+  return true
+}
+
+// wanix iframe messages
+
+// create client -> wanix iframe forward
+export function shouldforwardclienttowanix(message: MESSAGE): boolean {
+  switch (message.target) {
+    case 'ticktock':
+      return false
+    case 'second':
+    case 'ready':
+      return true
+    default: {
+      const route = parsetarget(message.target)
+      if (route.target === 'wanix') {
+        return true
+      }
+      // once-device replies: `<id>:wanix:…` / `<id>:wanixui:…`
+      if (
+        route.path.startsWith('wanix:') ||
+        route.path.startsWith('wanixui:')
+      ) {
+        return true
+      }
+      return false
+    }
+  }
+}
+
+// create wanix iframe -> client forward
+export function shouldforwardwanixtoclient(): boolean {
   return true
 }

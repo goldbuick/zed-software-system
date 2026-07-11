@@ -174,7 +174,7 @@ export function bridgefetch(
 }
 
 export function wanixshow(device: DEVICELIKE, player: string) {
-  device.emit(player, 'wanix:show')
+  device.emit(player, 'wanixui:show')
 }
 
 export function wanixvmstart(
@@ -182,11 +182,11 @@ export function wanixvmstart(
   player: string,
   vmid?: string,
 ) {
-  device.emit(player, 'wanix:vm-start', vmid)
+  device.emit(player, 'wanixui:vm-start', vmid)
 }
 
 export function wanixvmstop(device: DEVICELIKE, player: string, vmid?: string) {
-  device.emit(player, 'wanix:vm-stop', vmid)
+  device.emit(player, 'wanixui:vm-stop', vmid)
 }
 
 export function wanixdrop(
@@ -204,7 +204,7 @@ export function wanixbinddrop(device: DEVICELIKE, player: string, file: File) {
 }
 
 export function wanixstop(device: DEVICELIKE, player: string, taskid?: string) {
-  device.emit(player, 'wanix:stop', taskid)
+  device.emit(player, 'wanixui:stop', taskid)
 }
 
 export function wanixattach(
@@ -212,11 +212,11 @@ export function wanixattach(
   player: string,
   sessionkey?: string,
 ) {
-  device.emit(player, 'wanix:attach', sessionkey)
+  device.emit(player, 'wanixui:attach', sessionkey)
 }
 
 export function wanixdetach(device: DEVICELIKE, player: string) {
-  device.emit(player, 'wanix:detach')
+  device.emit(player, 'wanixui:detach')
 }
 
 export function vmwanixattach(
@@ -233,11 +233,11 @@ export function wanixtermdump(
   sessionkey?: string,
   tail?: number,
 ) {
-  device.emit(player, 'wanix:term-dump', { sessionkey, tail })
+  device.emit(player, 'wanixui:term-dump', { sessionkey, tail })
 }
 
 export function wanixtermstatus(device: DEVICELIKE, player: string) {
-  device.emit(player, 'wanix:term-status')
+  device.emit(player, 'wanixui:term-status')
 }
 
 export function wanixexportstate(
@@ -245,7 +245,7 @@ export function wanixexportstate(
   player: string,
   files: WANIX_ZED_CAFE_EXPORT_FILE[],
 ) {
-  device.emit(player, 'wanix:export-state', { files })
+  device.emit(player, 'wanixui:export-state', { files })
 }
 
 export type WANIX_ZED_CAFE_IMPORT_RESULT = {
@@ -263,7 +263,12 @@ export function waniximportresult(
   error?: string,
   bookcount?: number,
 ) {
-  device.emit(player, 'wanix:import-result', { ok, changed, error, bookcount })
+  device.emit(player, 'wanixui:import-result', {
+    ok,
+    changed,
+    error,
+    bookcount,
+  })
 }
 
 export function vmimportzedcafe(

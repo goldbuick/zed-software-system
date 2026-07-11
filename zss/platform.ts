@@ -7,8 +7,14 @@ import {
   shouldforwardclienttoserver,
   shouldforwardclienttostt,
   shouldforwardclienttotts,
+  shouldforwardclienttowanix,
 } from './device/forward'
 import { SOFTWARE } from './device/session'
+import {
+  postmessagetowanixiframe,
+  postreadytowanixiframe,
+  setwanixmessagedeliver,
+} from './feature/wanix/wanixbridge'
 import { MAYBE, ispresent } from './mapping/types'
 import simspace from './simspace??worker'
 import sttspace from './sttspace??worker'
@@ -89,20 +95,52 @@ export function createplatform(isstub = false, climode = false) {
     if (shouldforwardclienttotts(message)) {
       ensurettsworker()?.postMessage(message)
     }
+    if (shouldforwardclienttowanix(message)) {
+      postmessagetowanixiframe(message)
+      if (message.target === 'ready') {
+        postreadytowanixiframe()
+      }
+    }
+  })
+
+  function fanoutfromspoke(
+    message: MESSAGE,
+    skip?: 'boardrunner' | 'platform' | 'stt' | 'tts' | 'wanix',
+  ) {
+    if (
+      skip !== 'boardrunner' &&
+      shouldforwardclienttoboardrunner(message) &&
+      ispresent(boardrunner)
+    ) {
+      boardrunner.postMessage(message)
+    }
+    if (
+      skip !== 'platform' &&
+      shouldforwardclienttoserver(message) &&
+      ispresent(platform)
+    ) {
+      platform.postMessage(message)
+    }
+    if (skip !== 'stt' && shouldforwardclienttostt(message) && ispresent(stt)) {
+      stt.postMessage(message)
+    }
+    if (skip !== 'tts' && shouldforwardclienttotts(message) && ispresent(tts)) {
+      tts.postMessage(message)
+    }
+    if (skip !== 'wanix' && shouldforwardclienttowanix(message)) {
+      postmessagetowanixiframe(message)
+    }
+  }
+
+  setwanixmessagedeliver((message) => {
+    fanoutfromspoke(message, 'wanix')
+    return forward(message)
   })
 
   // handle messages from boardrunner
   function boardrunnermessages(event: MessageEvent<any>) {
     const message = event.data as MESSAGE
-    if (shouldforwardclienttoserver(message) && ispresent(platform)) {
-      platform.postMessage(message)
-    }
-    if (shouldforwardclienttostt(message) && ispresent(stt)) {
-      stt.postMessage(message)
-    }
-    if (shouldforwardclienttotts(message) && ispresent(tts)) {
-      tts.postMessage(message)
-    }
+    fanoutfromspoke(message, 'boardrunner')
     return forward(message)
   }
   boardrunner.addEventListener('message', boardrunnermessages)
@@ -110,50 +148,27 @@ export function createplatform(isstub = false, climode = false) {
   // handle messages from  platform
   function platformmessages(event: MessageEvent<any>) {
     const message = event.data as MESSAGE
-    if (shouldforwardclienttoboardrunner(message) && ispresent(boardrunner)) {
-      boardrunner.postMessage(message)
-    }
-    if (shouldforwardclienttostt(message) && ispresent(stt)) {
-      stt.postMessage(message)
-    }
-    if (shouldforwardclienttotts(message) && ispresent(tts)) {
-      tts.postMessage(message)
-    }
+    fanoutfromspoke(message, 'platform')
     return forward(message)
   }
   platform.addEventListener('message', platformmessages)
 
   function sttmessages(event: MessageEvent<any>) {
     const message = event.data as MESSAGE
-    if (shouldforwardclienttoboardrunner(message) && ispresent(boardrunner)) {
-      boardrunner.postMessage(message)
-    }
-    if (shouldforwardclienttoserver(message) && ispresent(platform)) {
-      platform.postMessage(message)
-    }
-    if (shouldforwardclienttotts(message) && ispresent(tts)) {
-      tts.postMessage(message)
-    }
+    fanoutfromspoke(message, 'stt')
     return forward(message)
   }
   sttmessagehandler = sttmessages
 
   function ttsmessages(event: MessageEvent<any>) {
     const message = event.data as MESSAGE
-    if (shouldforwardclienttoboardrunner(message) && ispresent(boardrunner)) {
-      boardrunner.postMessage(message)
-    }
-    if (shouldforwardclienttoserver(message) && ispresent(platform)) {
-      platform.postMessage(message)
-    }
-    if (shouldforwardclienttostt(message) && ispresent(stt)) {
-      stt.postMessage(message)
-    }
+    fanoutfromspoke(message, 'tts')
     return forward(message)
   }
   ttsmessagehandler = ttsmessages
 
   platformhalt = () => {
+    setwanixmessagedeliver(null)
     disconnect()
     if (ispresent(boardrunner)) {
       boardrunner.removeEventListener('message', boardrunnermessages)

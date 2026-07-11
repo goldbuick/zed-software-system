@@ -1,15 +1,17 @@
 import JSZip, { JSZipObject } from 'jszip'
 import mime from 'mime/lite'
-import {
-  apierror,
-  apilog,
-  vmloader,
-  vmreadzipfilelist,
-  wanixbinddrop,
-  wanixdrop,
-  workstatus,
-} from 'zss/device/api'
+import { apierror, apilog, vmloader, vmreadzipfilelist, workstatus } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { readattachedsession } from 'zss/feature/wanix/wanixattachstate'
+import {
+  readwanixbinddropdst,
+  readwanixbinddropkind,
+  readwanixbinddropperm,
+} from 'zss/feature/wanix/wanixbindpaths'
+import {
+  handlewanixbinddrop,
+  handlewanixdrop,
+} from 'zss/feature/wanix/wanixroom'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { memoryreadwanixattached } from 'zss/memory/session'
@@ -377,12 +379,14 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
       file
         .arrayBuffer()
         .then((arraybuffer) => {
-          wanixdrop(
+          return handlewanixdrop(
+            {
+              label: file.name,
+              kind: 'wasm',
+              bytes: new Uint8Array(arraybuffer),
+            },
             SOFTWARE,
             player,
-            file.name,
-            'wasm',
-            new Uint8Array(arraybuffer),
           )
         })
         .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
@@ -391,12 +395,14 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
       file
         .arrayBuffer()
         .then((arraybuffer) => {
-          wanixdrop(
+          return handlewanixdrop(
+            {
+              label: file.name,
+              kind: 'bundle',
+              bytes: new Uint8Array(arraybuffer),
+            },
             SOFTWARE,
             player,
-            file.name,
-            'bundle',
-            new Uint8Array(arraybuffer),
           )
         })
         .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
@@ -439,7 +445,27 @@ export function parsewebfile(player: string, file: File | undefined) {
     return
   }
   if (memoryreadwanixattached()) {
-    wanixbinddrop(SOFTWARE, player, file)
+    const sessionkey = readattachedsession()
+    if (!sessionkey) {
+      apierror(SOFTWARE, player, 'wanix', 'bind-drop: no attached session')
+      return
+    }
+    file
+      .arrayBuffer()
+      .then((arraybuffer) => {
+        const kind = readwanixbinddropkind(file.name)
+        return handlewanixbinddrop(
+          {
+            label: file.name,
+            kind,
+            bytes: new Uint8Array(arraybuffer),
+            dst: readwanixbinddropdst(file.name, kind),
+            perm: readwanixbinddropperm(file.name),
+          },
+          sessionkey,
+        )
+      })
+      .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
   } else {
     handlefiletype(player, file.type ?? '', file)
   }
