@@ -45,9 +45,9 @@ import {
 import { handlesecond } from './second'
 import { handleticktock } from './ticktock'
 import { handletopic } from './topic'
+import { handlewanixattach } from './wanixattach'
 import { handlereadzipfilelist } from './zipfile'
 import { handlezsswords } from './zsswords'
-import { handlewanixattach } from './wanixattach'
 import { handlezztrandom, handlezztsearch } from './zzt'
 
 export type VM_HANDLER = (vm: DEVICE, message: MESSAGE) => void

@@ -3,22 +3,22 @@ import { registerterminalclose } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import { withclipboard } from 'zss/feature/keyboard'
+import { callwanixtermwrite } from 'zss/device/register/handlers/wanix/wanixbridge'
 import {
   cyclewanixattachedsession,
   detachwanixterm,
   readattachedsession,
   subscribewanixattach,
-} from 'zss/feature/wanix/wanixattachstate'
-import { callwanixtermwrite } from 'zss/feature/wanix/wanixbridge'
-import { readwanixsessionlabel } from 'zss/feature/wanix/wanixsessionmeta'
+} from 'zss/device/register/handlers/wanix/wanixdisplay'
+import { readwanixsessionlabel } from 'zss/device/register/handlers/wanix/wanixsessionmeta'
 import {
   readwanixtermbuffer,
   readwanixtermbufferkeys,
   readwanixtermnotifyversion,
   subscribewanixtermbuffer,
-} from 'zss/feature/wanix/wanixtermbuffer'
-import type { WanixTermTileBuffer } from 'zss/feature/wanix/wanixtermbuffer'
-import type { WanixTermCellPos } from 'zss/feature/wanix/wanixtermclipboard'
+} from 'zss/device/register/handlers/wanix/wanixtermbuffer'
+import type { WanixTermTileBuffer } from 'zss/device/register/handlers/wanix/wanixtermbuffer'
+import type { WanixTermCellPos } from 'zss/device/register/handlers/wanix/wanixtermclipboard'
 import {
   cellinwanixtermselection,
   extractwanixtermselectiontext,
@@ -27,12 +27,12 @@ import {
   movewanixtermselection,
   readwanixtermguestcursor,
   readwanixtermlinecell,
-} from 'zss/feature/wanix/wanixtermclipboard'
+} from 'zss/device/register/handlers/wanix/wanixtermclipboard'
 import {
   readwanixtermscrollstate,
   scrollwanixtermby,
   scrollwanixtermto,
-} from 'zss/feature/wanix/wanixtermscroll'
+} from 'zss/device/register/handlers/wanix/wanixtermscroll'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { writetile } from 'zss/gadget/tiles'
 import { modsfromevent } from 'zss/gadget/userinput'

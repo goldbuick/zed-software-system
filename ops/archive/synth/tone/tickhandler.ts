@@ -1,6 +1,6 @@
 import { Note } from 'tonal'
 import { Part } from 'tone'
-import { registerreadplayer } from 'zss/device/register'
+import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import { write } from 'zss/feature/writeui'
 import { randominteger } from 'zss/mapping/number'

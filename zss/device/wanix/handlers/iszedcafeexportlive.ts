@@ -1,12 +1,19 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
-import { readhost, runwanixhost } from './hostutil'
+import { iszedcafeexportlive } from 'zss/device/wanix/runtime'
 
-export function handleiszedcafeexportlive(wanix: DEVICE, message: MESSAGE): void {
+import { runwanixhost } from './hostutil'
+
+export function handleiszedcafeexportlive(
+  wanix: DEVICE,
+  message: MESSAGE,
+): void {
   const taskrid = Array.isArray(message.data)
-    ? (message.data[0] != null ? String(message.data[0]) : undefined)
+    ? message.data[0] != null
+      ? String(message.data[0])
+      : undefined
     : undefined
   runwanixhost(wanix, message, 'iszedcafeexportlive', () =>
-    readhost().iszedcafeexportlive(taskrid),
+    iszedcafeexportlive(taskrid),
   )
 }

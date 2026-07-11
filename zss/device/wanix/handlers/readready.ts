@@ -1,7 +1,9 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
-import { readhost, runwanixhost } from './hostutil'
+import { readready } from 'zss/device/wanix/runtime'
+
+import { runwanixhost } from './hostutil'
 
 export function handlereadready(wanix: DEVICE, message: MESSAGE): void {
-  runwanixhost(wanix, message, 'readready', () => readhost().readready())
+  runwanixhost(wanix, message, 'readready', () => readready())
 }

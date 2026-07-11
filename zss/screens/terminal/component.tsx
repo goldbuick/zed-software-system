@@ -7,7 +7,7 @@ import { storagereadconfig } from 'zss/feature/storage'
 import {
   readattachedsession,
   subscribewanixattach,
-} from 'zss/feature/wanix/wanixattachstate'
+} from 'zss/device/register/handlers/wanix/wanixdisplay'
 import { useTape, useTerminal } from 'zss/gadget/data/zustandstores'
 import { useWriteText } from 'zss/gadget/writetext'
 import { totarget } from 'zss/mapping/string'

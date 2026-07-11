@@ -17,7 +17,7 @@ import {
   resetwanixzedcafesessionfortest,
   setlasthostpushdoc,
   setzedcafepollactive,
-} from 'zss/feature/wanix/wanixzedcafesession'
+} from 'zss/device/register/handlers/wanix/wanixzedcafesession'
 import type { BOOK, CODE_PAGE } from 'zss/memory/types'
 import { compare } from 'fast-json-patch'
 
@@ -26,11 +26,11 @@ jest.mock('zss/device/api', () => ({
   wanixexportstate: jest.fn(),
 }))
 
-jest.mock('zss/feature/wanix/wanixroom', () => ({
+jest.mock('zss/device/register/handlers/wanix/wanixroom', () => ({
   readwanixroomconfig: jest.fn(() => ({ mode: 'task' })),
 }))
 
-jest.mock('zss/feature/wanix/wanixzedcafe', () => ({
+jest.mock('zss/device/register/handlers/wanix/wanixzedcafe', () => ({
   pushzedcafesynctoiframe: jest.fn().mockResolvedValue(true),
   readhostexportfilesasync: jest.fn().mockResolvedValue([
     {
@@ -73,7 +73,7 @@ jest.mock('zss/memory/codepageoperations', () => ({
 }))
 
 import { memoryreadbooklist } from 'zss/memory/session'
-import { pushzedcafesynctoiframe } from 'zss/feature/wanix/wanixzedcafe'
+import { pushzedcafesynctoiframe } from 'zss/device/register/handlers/wanix/wanixzedcafe'
 
 const mocksync = pushzedcafesynctoiframe as jest.Mock
 

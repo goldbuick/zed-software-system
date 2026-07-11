@@ -1,8 +1,12 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
-import { readhost, runwanixhost } from './hostutil'
+import { readtext } from 'zss/device/wanix/runtime'
+
+import { runwanixhost } from './hostutil'
 
 export function handlereadtext(wanix: DEVICE, message: MESSAGE): void {
-  const path = Array.isArray(message.data) ? String(message.data[0] ?? '') : String(message.data ?? '')
-  runwanixhost(wanix, message, 'readtext', () => readhost().readtext(path))
+  const path = String(
+    Array.isArray(message.data) ? message.data[0] : (message.data ?? ''),
+  )
+  runwanixhost(wanix, message, 'readtext', () => readtext(path))
 }

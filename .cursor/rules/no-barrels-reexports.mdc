@@ -74,7 +74,7 @@ import { registerreadplayer } from 'zss/device/registerplayer'
 export { waitwanixexportcontentready } from './wanixexportwait'
 
 // ✅ GOOD
-import { waitwanixexportcontentready } from 'zss/feature/wanix/wanixexportwait'
+import { waitwanixexportcontentready } from 'zss/device/register/handlers/wanix/wanixexportwait'
 ```
 
 When a symbol must be public, export it **once** from its implementation file and import that path everywhere.

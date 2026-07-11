@@ -50,6 +50,8 @@ export type WanixTermCellsSnapshot = {
   scrollbackcolor: number[]
   scrollbackbg: number[]
   digest: string
+  altactive: boolean
+  bracketedpaste: boolean
 }
 
 export type WanixTermNormalSave = {
@@ -1056,6 +1058,8 @@ export function readwanixtermgridsnapshot(
     scrollbackcolor: scrollback.scrollbackcolor,
     scrollbackbg: scrollback.scrollbackbg,
     digest: '',
+    altactive: grid.altactive,
+    bracketedpaste: false,
   }
   snapshot.digest = digestwanixtermcells(snapshot)
   return snapshot

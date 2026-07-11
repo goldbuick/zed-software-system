@@ -27,7 +27,7 @@ describe('forward wanix', () => {
     ).toBe(true)
   })
 
-  it('forwards once-device wanix and wanixui replies', () => {
+  it('forwards once-device wanix replies', () => {
     expect(
       shouldforwardclienttowanix(
         createmessage('s', 'p', 'x', 'abc123:wanix:ping'),
@@ -35,7 +35,7 @@ describe('forward wanix', () => {
     ).toBe(true)
     expect(
       shouldforwardclienttowanix(
-        createmessage('s', 'p', 'x', 'abc123:wanixui:requestzedcafestate'),
+        createmessage('s', 'p', 'x', 'abc123:wanix:requestzedcafestate'),
       ),
     ).toBe(true)
   })
@@ -49,6 +49,19 @@ describe('forward wanix', () => {
   it('does not forward unrelated targets', () => {
     expect(
       shouldforwardclienttowanix(createmessage('s', 'p', 'x', 'register:log')),
+    ).toBe(false)
+  })
+
+  it('does not forward register wanix cells/session to iframe', () => {
+    expect(
+      shouldforwardclienttowanix(
+        createmessage('s', '', 'x', 'register:wanix:cells'),
+      ),
+    ).toBe(false)
+    expect(
+      shouldforwardclienttowanix(
+        createmessage('s', '', 'x', 'register:wanix:session'),
+      ),
     ).toBe(false)
   })
 })

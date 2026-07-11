@@ -1,17 +1,23 @@
 import JSZip, { JSZipObject } from 'jszip'
 import mime from 'mime/lite'
-import { apierror, apilog, vmloader, vmreadzipfilelist, workstatus } from 'zss/device/api'
+import {
+  apierror,
+  apilog,
+  vmloader,
+  vmreadzipfilelist,
+  workstatus,
+} from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { readattachedsession } from 'zss/feature/wanix/wanixattachstate'
 import {
   readwanixbinddropdst,
   readwanixbinddropkind,
   readwanixbinddropperm,
-} from 'zss/feature/wanix/wanixbindpaths'
+} from 'zss/device/register/handlers/wanix/wanixbindpaths'
+import { readattachedsession } from 'zss/device/register/handlers/wanix/wanixdisplay'
 import {
   handlewanixbinddrop,
   handlewanixdrop,
-} from 'zss/feature/wanix/wanixroom'
+} from 'zss/device/register/handlers/wanix/wanixroom'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { memoryreadwanixattached } from 'zss/memory/session'

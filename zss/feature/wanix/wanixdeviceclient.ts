@@ -6,9 +6,7 @@ import { ispresent } from 'zss/mapping/types'
 
 const DEFAULT_TIMEOUT_MS = 30_000
 
-function iswanixerrorpayload(
-  data: unknown,
-): data is { __wanixerror: string } {
+function iswanixerrorpayload(data: unknown): data is { __wanixerror: string } {
   return (
     ispresent(data) &&
     typeof data === 'object' &&
@@ -64,18 +62,18 @@ export async function awaitwanixreply<T>(
   )
 }
 
-/** Iframe → parent wanixui device request/response. */
+/** Iframe → parent register wanix request/response. */
 export async function awaitwanixuireply<T>(
   player: string,
   method: string,
   data?: unknown,
   timeoutms = DEFAULT_TIMEOUT_MS,
 ): Promise<T> {
-  const replytarget = `wanixui:${method}`
+  const replytarget = `wanix:${method}`
   return awaitdevicereply<T>(
     replytarget,
     (device) => {
-      device.emit(player, replytarget, data)
+      device.emit(player, `register:wanix:${method}`, data)
     },
     timeoutms,
   )

@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react'
-import { subscribewanixattach } from 'zss/feature/wanix/wanixattachstate'
-import { callwanixtermfit, waitwanixready } from 'zss/feature/wanix/wanixbridge'
+import { callwanixtermfit, waitwanixready } from 'zss/device/register/handlers/wanix/wanixbridge'
+import { subscribewanixattach } from 'zss/device/register/handlers/wanix/wanixdisplay'
 import { useTape } from 'zss/gadget/data/zustandstores'
 import { useWriteText } from 'zss/gadget/writetext'
 import { textformatreadedges } from 'zss/words/textformat'

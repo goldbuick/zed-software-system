@@ -1,12 +1,14 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
-import type { WanixBindDropPayload } from 'zss/feature/wanix/wanixroomtypes'
 import { doasync } from 'zss/device/doasync'
+import { binddrop } from 'zss/device/wanix/runtime'
+import type { WanixBindDropPayload } from 'zss/feature/wanix/wanixroomtypes'
 import { ispresent } from 'zss/mapping/types'
-import { readhost, replywanix, replywanixerror } from './hostutil'
+
+import { replywanix, replywanixerror } from './hostutil'
 
 export function handlebinddrop(wanix: DEVICE, message: MESSAGE): void {
-  doasync(wanix, message.player, async () => {
+  doasync(wanix, message.player, () => {
     try {
       const args = Array.isArray(message.data) ? message.data : null
       let sessionkey: string
@@ -26,10 +28,11 @@ export function handlebinddrop(wanix: DEVICE, message: MESSAGE): void {
       if (!sessionkey || !spec) {
         throw new Error('binddrop args invalid')
       }
-      const result = readhost().binddrop(sessionkey, spec)
+      const result = binddrop(sessionkey, spec)
       replywanix(wanix, message, 'binddrop', result)
     } catch (err) {
       replywanixerror(wanix, message, 'binddrop', err)
     }
+    return Promise.resolve()
   })
 }

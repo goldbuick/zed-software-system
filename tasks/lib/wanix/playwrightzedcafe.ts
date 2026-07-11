@@ -206,10 +206,10 @@ export async function readtermbuffertext(
   return page.evaluate(
     async ({ projectroot, key, dumpopts }) => {
       const { readwanixtermbuffer } = await import(
-        `/@fs${projectroot}/zss/feature/wanix/wanixtermbuffer.ts`
+        `/@fs${projectroot}/zss/device/register/handlers/wanix/wanixtermbuffer.ts`
       )
       const { dumpwanixtermbuffertext } = await import(
-        `/@fs${projectroot}/zss/feature/wanix/wanixtermtext.ts`
+        `/@fs${projectroot}/zss/device/register/handlers/wanix/wanixtermtext.ts`
       )
       const buffer = readwanixtermbuffer(key)
       if (!buffer) {
@@ -247,7 +247,7 @@ export async function callwanixtermwriteinpage(
   await page.evaluate(
     async ({ projectroot, payload, key }) => {
       const { callwanixtermwrite } = await import(
-        `/@fs${projectroot}/zss/feature/wanix/wanixbridge.ts`
+        `/@fs${projectroot}/zss/device/register/handlers/wanix/wanixbridge.ts`
       )
       await callwanixtermwrite(payload, key)
     },
@@ -337,7 +337,7 @@ export async function readwanixtermbufferkeysinpage(
 ): Promise<string[]> {
   return page.evaluate(async (projectroot) => {
     const { readwanixtermbufferkeys } = await import(
-      `/@fs${projectroot}/zss/feature/wanix/wanixtermbuffer.ts`
+      `/@fs${projectroot}/zss/device/register/handlers/wanix/wanixtermbuffer.ts`
     )
     return readwanixtermbufferkeys()
   }, root)

@@ -36,15 +36,15 @@ flowchart TB
   subgraph zss_main["ZSS main thread"]
     UI["Tape terminal / WanixTermScreen"]
     Mem["Sim memory — books, pages, objects"]
-    Parent["wanixroom.ts · wanixzedcafe.ts · wanixbridge.ts"]
+    Parent["register/handlers/wanix — room · zedcafe · bridge"]
     UI <-- attach / keystrokes --> Parent
     Mem -->|"end-of-tick export compare"| Parent
   end
 
   subgraph iframe["Hidden iframe /wanix.html"]
-    Cafe["cafe/wanix.ts"]
+    Cafe["cafe/wanix.ts → device/wanix/runtime"]
     Sys["wanix-system"]
-    Host["wanixzedcafehost.ts"]
+    Host["device/wanix/zedcafehost"]
     Cafe --> Sys
     Host --> Sys
     Sys --> VM["wanix-vm — Linux guest"]
@@ -59,7 +59,8 @@ flowchart TB
 
 **Why this split:** Wanix owns its own WASM runtime, p9 filesystem, and worker threads.
 ZSS owns game memory, UI, and CLI. The iframe is a sandbox; the parent is the control
-plane. Only `postMessage` crosses the boundary — no shared DOM.
+plane. Shared code lives in `feature/wanix`; only `postMessage` / device bus crosses the
+boundary — no shared DOM.
 
 ---
 
@@ -67,19 +68,19 @@ plane. Only `postMessage` crosses the boundary — no shared DOM.
 
 | Side | Entry | Owns |
 |------|--------|------|
-| **Parent** | `wanixhost.tsx` mounts ghost iframe; `wanixbridge.ts` RPC client | Room config, drop routing, export file tree from memory, attach state, term grid snapshots |
-| **Iframe** | `cafe/wanix.ts` on `/wanix.html` | `<wanix-system>`, VM/task elements, term byte pumps, zedcafe gojs boot, `#ramfs` writes |
+| **Parent** | `register/handlers/wanix/wanixhost` mounts ghost iframe; `wanixbridge` RPC client | Room config, drop routing, export file tree from memory, attach state, term grid snapshots |
+| **Iframe** | `cafe/wanix.ts` → `device/wanix/runtime` on `/wanix.html` | `<wanix-system>`, VM/task elements, term byte pumps, zedcafe gojs boot, `#ramfs` writes |
 
 ```text
 ┌─────────────────────────────────────────────────────────────────┐
 │  ZSS terminal screen (parent)                                   │
-│    wanixtermbuffer  ←  WANIX_MSG_CELLS snapshots                │
-│    wanixattachstate ←  WANIX_MSG_SESSION open/active/close      │
+│    register/handlers/wanix/wanixtermbuffer  ← cells snapshots   │
+│    register/handlers/wanix/wanixdisplay     ← session/attach    │
 └────────────────────────────▲────────────────────────────────────┘
-                             │ postMessage (same origin)
+                             │ postMessage / device bus
 ┌────────────────────────────┴────────────────────────────────────┐
-│  cafe/wanix.ts (iframe)                                         │
-│    handlerrpc: applyroom, spawntask, writefile, pushzedcafe…    │
+│  cafe/wanix.ts → device/wanix/runtime (iframe)                  │
+│    applyroom, spawntask, writefile, pushzedcafe…                │
 │    <wanix-system>                                               │
 │      ├─ wanix-bind  (linux, v86, export mounts)                 │
 │      ├─ wanix-vm    (optional Linux)                            │
@@ -89,7 +90,8 @@ plane. Only `postMessage` crosses the boundary — no shared DOM.
 ```
 
 **Grid engine:** [`wanixtermgridstate.ts`](wanixtermgridstate.ts) is shared — iframe
-parses ANSI into cells; parent renders snapshots from [`wanixtermbuffer.ts`](wanixtermbuffer.ts).
+parses ANSI into cells; parent renders snapshots from
+[`wanixtermbuffer.ts`](../../device/register/handlers/wanix/wanixtermbuffer.ts).
 
 ---
 
@@ -511,33 +513,46 @@ Defined in [`wanixrpcmessages.ts`](wanixrpcmessages.ts).
 
 ---
 
-## Module map
+## Module map (three homes)
+
+### Parent — [`zss/device/register/handlers/wanix/`](../../device/register/handlers/wanix/)
 
 | Module | Role |
 |--------|------|
-| [`cafe/wanix.ts`](../../../cafe/wanix.ts) | Iframe orchestrator: `applyroom`, RPC handler, term loops |
-| [`wanixzedcafehost.ts`](wanixzedcafehost.ts) | Iframe zedcafe: gojs boot, push export, binds, halt |
-| [`wanixzedcafe.ts`](wanixzedcafe.ts) | Parent zedcafe: daemon lifecycle, push/wire, import poll → `vm:import-zedcafe` |
-| [`wanixstateexport.ts`](wanixstateexport.ts) | Build export file tree from sim memory |
-| [`wanixstateimport.ts`](wanixstateimport.ts) | Parse guest tree + `applyzedcafetomemory` (upserts + deletes) |
+| Message handlers (`attach`, `cells`, `show`, …) | `register:wanix:*` adapters |
+| [`wanixdisplay.ts`](../../device/register/handlers/wanix/wanixdisplay.ts) | Attach / active session / tape reveal |
+| [`wanixtermbuffer.ts`](../../device/register/handlers/wanix/wanixtermbuffer.ts) (+ clipboard/scroll/text/handlers) | Parent term UI |
+| [`wanixhost.tsx`](../../device/register/handlers/wanix/wanixhost.tsx) / [`wanixbridge.ts`](../../device/register/handlers/wanix/wanixbridge.ts) | Ghost iframe + parent RPC |
+| [`wanixroom.ts`](../../device/register/handlers/wanix/wanixroom.ts) | Room config, drop handler, VM/task API |
+| [`wanixzedcafe.ts`](../../device/register/handlers/wanix/wanixzedcafe.ts) | Parent zedcafe daemon / push / import poll |
+| [`wanixexportwait.ts`](../../device/register/handlers/wanix/wanixexportwait.ts) | Parent export-ready waiters |
+| [`wanixmenu.ts`](../../device/register/handlers/wanix/wanixmenu.ts) / [`wanixcmd.ts`](../../device/register/handlers/wanix/wanixcmd.ts) | `#wanix` menu / CLI helpers |
+| [`wanixbundle.ts`](../../device/register/handlers/wanix/wanixbundle.ts) / [`wanixtgzextract.ts`](../../device/register/handlers/wanix/wanixtgzextract.ts) / [`wanixbindpaths.ts`](../../device/register/handlers/wanix/wanixbindpaths.ts) | Parent drop helpers |
+
+### Iframe — [`zss/device/wanix/`](../../device/wanix/)
+
+| Module | Role |
+|--------|------|
+| [`cafe/wanix.ts`](../../../cafe/wanix.ts) | Thin boot: `runtime` + wanix device |
+| [`runtime.ts`](../../device/wanix/runtime.ts) | System DOM, applyroom, terms, FS RPCs |
+| [`zedcafehost.ts`](../../device/wanix/zedcafehost.ts) | Iframe zedcafe boot / push / binds |
+| [`spawndriver.ts`](../../device/wanix/spawndriver.ts) / [`termbridgesmoke.ts`](../../device/wanix/termbridgesmoke.ts) | Spawn driver + term smoke |
+| [`exportevents.ts`](../../device/wanix/exportevents.ts) | Iframe `content-ready` postMessage |
+| [`state.ts`](../../device/wanix/state.ts) + `handlers/*` | Iframe mutable state + device adapters |
+| [`zss/device/wanix.ts`](../../device/wanix.ts) | Wanix device factory |
+
+### Shared — this folder (`zss/feature/wanix/`)
+
+| Module | Role |
+|--------|------|
+| [`wanixrpcmessages.ts`](wanixrpcmessages.ts) / [`wanixroomtypes.ts`](wanixroomtypes.ts) | Protocol constants + room types |
+| [`wanixzedcafeconstants.ts`](wanixzedcafeconstants.ts) / [`wanixzedcafetypes.ts`](wanixzedcafetypes.ts) / [`wanixzedcafewasmversion.ts`](wanixzedcafewasmversion.ts) | Zedcafe shared constants/types |
+| [`wanixelements.d.ts`](wanixelements.d.ts) | Custom-element typings |
+| [`wanixtermgridstate.ts`](wanixtermgridstate.ts) | ANSI → cell grid (iframe writes; parent renders) |
+| [`wanixwasmdriver.ts`](wanixwasmdriver.ts) / [`wanixdeviceclient.ts`](wanixdeviceclient.ts) | Driver detect + reply helpers |
+| [`zedcafetreeschema.ts`](zedcafetreeschema.ts) / [`wanixstateexport.ts`](wanixstateexport.ts) / [`wanixstateimport.ts`](wanixstateimport.ts) | Export tree build/parse/validate |
+| [`wanixperf.ts`](wanixperf.ts) / [`wanixbootregression.ts`](wanixbootregression.ts) | Perf marks / regression gate defs |
 | [`zss/device/vm/handlers/importzedcafe.ts`](../../device/vm/handlers/importzedcafe.ts) | Sim-worker import handler |
-| [`wanixroom.ts`](wanixroom.ts) | Room config, drop handler, VM/task API |
-| [`wanixbridge.ts`](wanixbridge.ts) | Parent RPC + message dispatch |
-| [`wanixhost.tsx`](wanixhost.tsx) | Ghost iframe mount |
-| [`wanixdropparse.ts`](wanixdropparse.ts) | Drag-drop → `wanixdrop` device message |
-| [`wanixspawndriver.ts`](wanixspawndriver.ts) | Wasm driver resolution from bytes / hint |
-| [`wanixbundle.ts`](wanixbundle.ts) / [`wanixtgzextract.ts`](wanixtgzextract.ts) | `.tgz` bundle drops |
-| [`wanixexportevents.ts`](wanixexportevents.ts) / [`wanixexportwait.ts`](wanixexportwait.ts) | Export-ready event + parent waiters |
-| [`wanixattachstate.ts`](wanixattachstate.ts) | Attached session + auto-attach |
-| [`wanixtapevisibility.ts`](wanixtapevisibility.ts) | Reveal tape before auto-attach |
-| [`wanixtermbuffer.ts`](wanixtermbuffer.ts) / [`wanixtermgridstate.ts`](wanixtermgridstate.ts) | Term rendering |
-| [`wanixmenu.ts`](wanixmenu.ts) | `#wanix` menu tape |
-| [`wanixcmd.ts`](wanixcmd.ts) | Device-facing `#wanix` helpers |
-| [`zss/device/wanix.ts`](../../device/wanix.ts) | Device handler: drop, export state, CLI bridge |
-| [`zedcafetreeschema.ts`](zedcafetreeschema.ts) | Export path validation |
-| [`wanixactivateexport.ts`](wanixactivateexport.ts) | Task export activation (sim fetch + daemon; skips redundant shadow export) |
-| [`wanixbootregression.ts`](wanixbootregression.ts) | Mandatory VM/task boot regression gate definitions |
-| [`wanixperf.ts`](wanixperf.ts) | Dev/validator timeline marks (`sinceanchor`, `elapsedms`) |
 
 ---
 
@@ -565,7 +580,7 @@ at drop/bundle staging; failures throw instead of defaulting to wasi.
 
 ### Export push must complete in iframe
 
-`pushzedcafeexportlive` must import [`postwanixexportmessage`](wanixexportevents.ts) and
+`pushzedcafeexportlive` must import [`postwanixexportmessage`](../../device/wanix/exportevents.ts) and
 [`wanixperfmark`](wanixperf.ts) — missing imports silently broke `/zedcafe` mounts.
 
 ### Tick export vs drop path
@@ -596,7 +611,8 @@ ZEDCAFE_VALIDATE_FIXTURE=1 yarn task run cafe:playwright:headed \
 
 Report: `/tmp/wanix-zedcafe-export-report.json` — timeline + export trace.
 
-**Unit tests:** `yarn jest ops/tests/unit/feature/wanix/ --config ops/jest.config.ts --no-coverage`
+**Unit tests:**
+`yarn jest ops/tests/unit/device/register ops/tests/unit/device/wanix ops/tests/unit/feature/wanix --config ops/jest.config.ts --no-coverage`
 
 For drops, driver is taken from **drop bytes** (not re-read from `#ramfs`) — large gojs
 binaries must not fall back to wasi. Bundle drops pass per-file drivers from tgz bytes.

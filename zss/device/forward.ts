@@ -71,7 +71,6 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
         case 'modem':
         case 'bridge':
         case 'wanix':
-        case 'wanixui':
         case 'register':
         case 'boardrunner':
         case 'gadgetclient':
@@ -200,11 +199,8 @@ export function shouldforwardclienttowanix(message: MESSAGE): boolean {
       if (route.target === 'wanix') {
         return true
       }
-      // once-device replies: `<id>:wanix:…` / `<id>:wanixui:…`
-      if (
-        route.path.startsWith('wanix:') ||
-        route.path.startsWith('wanixui:')
-      ) {
+      // once-device replies: `<id>:wanix:…` (not register:wanix:…)
+      if (route.target !== 'register' && route.path.startsWith('wanix:')) {
         return true
       }
       return false

@@ -1,5 +1,3 @@
 export const WANIX_MSG_READY = 'zss-wanix-ready'
 export const WANIX_MSG_IDLE = 'zss-wanix-idle'
-export const WANIX_MSG_CELLS = 'zss-wanix-cells'
-export const WANIX_MSG_SESSION = 'zss-wanix-session'
 export const WANIX_MSG_EXPORT = 'zss-wanix-export'

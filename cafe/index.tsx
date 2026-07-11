@@ -10,7 +10,7 @@ import {
   startdurableclisync,
 } from 'zss/feature/durablecli'
 import { isjoin } from 'zss/feature/url'
-import { WanixHost } from 'zss/feature/wanix/wanixhost'
+import { WanixHost } from 'zss/device/register/handlers/wanix/wanixhost'
 import { createplatform } from 'zss/platform'
 
 import { CafeCanvas } from './cafecanvas'
