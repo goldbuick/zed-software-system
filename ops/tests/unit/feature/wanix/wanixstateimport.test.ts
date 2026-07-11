@@ -10,7 +10,7 @@ import {
 } from 'zss/feature/wanix/wanixstateexport'
 import type { CODE_PAGE } from 'zss/memory/types'
 
-jest.mock('zss/device/register/handlers/wanix/wanixroom', () => ({
+jest.mock('zss/device/wanixclient/wanixroom', () => ({
   readwanixroomconfig: jest.fn(() => ({ mode: 'task' })),
 }))
 

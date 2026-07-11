@@ -1,24 +1,21 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { registerterminalclose } from 'zss/device/api'
-import { registerreadplayer } from 'zss/device/registerplayer'
-import { SOFTWARE } from 'zss/device/session'
-import { withclipboard } from 'zss/feature/keyboard'
-import { callwanixtermwrite } from 'zss/device/register/handlers/wanix/wanixbridge'
+import { callwanixtermwrite } from 'zss/device/wanixclient/wanixbridge'
 import {
   cyclewanixattachedsession,
   detachwanixterm,
   readattachedsession,
   subscribewanixattach,
-} from 'zss/device/register/handlers/wanix/wanixdisplay'
-import { readwanixsessionlabel } from 'zss/device/register/handlers/wanix/wanixsessionmeta'
+} from 'zss/device/wanixclient/wanixdisplay'
+import { readwanixsessionlabel } from 'zss/device/wanixclient/wanixsessionmeta'
 import {
   readwanixtermbuffer,
   readwanixtermbufferkeys,
   readwanixtermnotifyversion,
   subscribewanixtermbuffer,
-} from 'zss/device/register/handlers/wanix/wanixtermbuffer'
-import type { WanixTermTileBuffer } from 'zss/device/register/handlers/wanix/wanixtermbuffer'
-import type { WanixTermCellPos } from 'zss/device/register/handlers/wanix/wanixtermclipboard'
+} from 'zss/device/wanixclient/wanixtermbuffer'
+import type { WanixTermTileBuffer } from 'zss/device/wanixclient/wanixtermbuffer'
+import type { WanixTermCellPos } from 'zss/device/wanixclient/wanixtermclipboard'
 import {
   cellinwanixtermselection,
   extractwanixtermselectiontext,
@@ -27,12 +24,15 @@ import {
   movewanixtermselection,
   readwanixtermguestcursor,
   readwanixtermlinecell,
-} from 'zss/device/register/handlers/wanix/wanixtermclipboard'
+} from 'zss/device/wanixclient/wanixtermclipboard'
 import {
   readwanixtermscrollstate,
   scrollwanixtermby,
   scrollwanixtermto,
-} from 'zss/device/register/handlers/wanix/wanixtermscroll'
+} from 'zss/device/wanixclient/wanixtermscroll'
+import { registerreadplayer } from 'zss/device/registerplayer'
+import { SOFTWARE } from 'zss/device/session'
+import { withclipboard } from 'zss/feature/keyboard'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { writetile } from 'zss/gadget/tiles'
 import { modsfromevent } from 'zss/gadget/userinput'

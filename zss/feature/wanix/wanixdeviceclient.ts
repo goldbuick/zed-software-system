@@ -45,14 +45,14 @@ export async function awaitdevicereply<T>(
   })
 }
 
-/** Parent → iframe wanix device request/response. */
+/** Parent → iframe wanixserver request/response. */
 export async function awaitwanixreply<T>(
   player: string,
   method: string,
   data?: unknown,
   timeoutms = DEFAULT_TIMEOUT_MS,
 ): Promise<T> {
-  const replytarget = `wanix:${method}`
+  const replytarget = `wanixserver:${method}`
   return awaitdevicereply<T>(
     replytarget,
     (device) => {
@@ -62,18 +62,18 @@ export async function awaitwanixreply<T>(
   )
 }
 
-/** Iframe → parent register wanix request/response. */
+/** Iframe → parent wanixclient request/response. */
 export async function awaitwanixuireply<T>(
   player: string,
   method: string,
   data?: unknown,
   timeoutms = DEFAULT_TIMEOUT_MS,
 ): Promise<T> {
-  const replytarget = `wanix:${method}`
+  const replytarget = `wanixclient:${method}`
   return awaitdevicereply<T>(
     replytarget,
     (device) => {
-      device.emit(player, `register:wanix:${method}`, data)
+      device.emit(player, `wanixclient:${method}`, data)
     },
     timeoutms,
   )

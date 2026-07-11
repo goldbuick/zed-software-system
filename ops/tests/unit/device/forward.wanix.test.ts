@@ -18,24 +18,33 @@ describe('forward wanix', () => {
     ).toBe(true)
   })
 
-  it('forwards wanix targets', () => {
-    expect(
-      shouldforwardclienttowanix(createmessage('s', 'p', 'x', 'wanix:ping')),
-    ).toBe(true)
-    expect(
-      shouldforwardclienttowanix(createmessage('s', 'p', 'x', 'wanix:applyroom')),
-    ).toBe(true)
-  })
-
-  it('forwards once-device wanix replies', () => {
+  it('forwards wanixserver targets', () => {
     expect(
       shouldforwardclienttowanix(
-        createmessage('s', 'p', 'x', 'abc123:wanix:ping'),
+        createmessage('s', 'p', 'x', 'wanixserver:ping'),
       ),
     ).toBe(true)
     expect(
       shouldforwardclienttowanix(
-        createmessage('s', 'p', 'x', 'abc123:wanix:requestzedcafestate'),
+        createmessage('s', 'p', 'x', 'wanixserver:applyroom'),
+      ),
+    ).toBe(true)
+  })
+
+  it('forwards once-device wanixserver replies', () => {
+    expect(
+      shouldforwardclienttowanix(
+        createmessage('s', 'p', 'x', 'abc123:wanixserver:ping'),
+      ),
+    ).toBe(true)
+    expect(
+      shouldforwardclienttowanix(
+        createmessage(
+          's',
+          'p',
+          'x',
+          'abc123:wanixserver:requestzedcafestate',
+        ),
       ),
     ).toBe(true)
   })
@@ -52,15 +61,15 @@ describe('forward wanix', () => {
     ).toBe(false)
   })
 
-  it('does not forward register wanix cells/session to iframe', () => {
+  it('does not forward wanixclient cells/session to iframe', () => {
     expect(
       shouldforwardclienttowanix(
-        createmessage('s', '', 'x', 'register:wanix:cells'),
+        createmessage('s', '', 'x', 'wanixclient:cells'),
       ),
     ).toBe(false)
     expect(
       shouldforwardclienttowanix(
-        createmessage('s', '', 'x', 'register:wanix:session'),
+        createmessage('s', '', 'x', 'wanixclient:session'),
       ),
     ).toBe(false)
   })

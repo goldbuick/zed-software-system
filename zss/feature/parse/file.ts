@@ -7,17 +7,17 @@ import {
   vmreadzipfilelist,
   workstatus,
 } from 'zss/device/api'
-import { SOFTWARE } from 'zss/device/session'
 import {
   readwanixbinddropdst,
   readwanixbinddropkind,
   readwanixbinddropperm,
-} from 'zss/device/register/handlers/wanix/wanixbindpaths'
-import { readattachedsession } from 'zss/device/register/handlers/wanix/wanixdisplay'
+} from 'zss/device/wanixclient/wanixbindpaths'
+import { readattachedsession } from 'zss/device/wanixclient/wanixdisplay'
 import {
   handlewanixbinddrop,
   handlewanixdrop,
-} from 'zss/device/register/handlers/wanix/wanixroom'
+} from 'zss/device/wanixclient/wanixroom'
+import { SOFTWARE } from 'zss/device/session'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { memoryreadwanixattached } from 'zss/memory/session'

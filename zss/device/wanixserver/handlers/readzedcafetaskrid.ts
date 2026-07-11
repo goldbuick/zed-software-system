@@ -1,0 +1,12 @@
+import type { DEVICE } from 'zss/device'
+import type { MESSAGE } from 'zss/device/api'
+import { readzedcafetaskrid } from 'zss/device/wanixserver/runtime'
+
+import { runwanixhost } from './hostutil'
+
+export function handlereadzedcafetaskrid(
+  wanix: DEVICE,
+  message: MESSAGE,
+): void {
+  runwanixhost(wanix, message, 'readzedcafetaskrid', () => readzedcafetaskrid())
+}

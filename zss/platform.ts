@@ -14,7 +14,7 @@ import {
   postmessagetowanixiframe,
   postreadytowanixiframe,
   setwanixmessagedeliver,
-} from './feature/wanix/wanixbridge'
+} from './device/wanixclient/wanixbridge'
 import { MAYBE, ispresent } from './mapping/types'
 import simspace from './simspace??worker'
 import sttspace from './sttspace??worker'
@@ -105,7 +105,7 @@ export function createplatform(isstub = false, climode = false) {
 
   function fanoutfromspoke(
     message: MESSAGE,
-    skip?: 'boardrunner' | 'platform' | 'stt' | 'tts' | 'wanix',
+    skip?: 'boardrunner' | 'platform' | 'stt' | 'tts' | 'wanixserver',
   ) {
     if (
       skip !== 'boardrunner' &&
@@ -127,13 +127,13 @@ export function createplatform(isstub = false, climode = false) {
     if (skip !== 'tts' && shouldforwardclienttotts(message) && ispresent(tts)) {
       tts.postMessage(message)
     }
-    if (skip !== 'wanix' && shouldforwardclienttowanix(message)) {
+    if (skip !== 'wanixserver' && shouldforwardclienttowanix(message)) {
       postmessagetowanixiframe(message)
     }
   }
 
   setwanixmessagedeliver((message) => {
-    fanoutfromspoke(message, 'wanix')
+    fanoutfromspoke(message, 'wanixserver')
     return forward(message)
   })
 
@@ -168,7 +168,6 @@ export function createplatform(isstub = false, climode = false) {
   ttsmessagehandler = ttsmessages
 
   platformhalt = () => {
-    setwanixmessagedeliver(null)
     disconnect()
     if (ispresent(boardrunner)) {
       boardrunner.removeEventListener('message', boardrunnermessages)
@@ -192,6 +191,7 @@ export function createplatform(isstub = false, climode = false) {
     }
     tts = undefined
     ttsmessagehandler = undefined
+    setwanixmessagedeliver(null)
   }
 }
 

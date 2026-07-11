@@ -2,13 +2,13 @@ import type { Operation } from 'fast-json-patch'
 import { compare } from 'fast-json-patch'
 import type { DEVICELIKE } from 'zss/device/api'
 import { apilog } from 'zss/device/api'
-import { readwanixroomconfig } from 'zss/device/register/handlers/wanix/wanixroom'
+import { readwanixroomconfig } from 'zss/device/wanixclient/wanixroom'
 import {
   clearlasthostpushdoc,
   readlasthostpushdoc,
   readzedcafepollactive,
   setlasthostpushdoc,
-} from 'zss/device/register/handlers/wanix/wanixzedcafesession'
+} from 'zss/device/wanixclient/wanixzedcafesession'
 import {
   assertzedcafeexportvalid,
   readzedcafebookstatspath,
@@ -349,12 +349,12 @@ export function buildzedcafeexportfiles(): WANIX_ZED_CAFE_EXPORT_FILE[] {
 export async function runzedcafeexport(device: DEVICELIKE, player: string) {
   if (readwanixroomconfig().mode === 'idle') {
     const { markwanixzedcafependingexport } =
-      await import('zss/device/register/handlers/wanix/wanixzedcafe')
+      await import('zss/device/wanixclient/wanixzedcafe')
     markwanixzedcafependingexport()
     return
   }
   const { pushzedcafesynctoiframe, readhostexportfilesasync } =
-    await import('zss/device/register/handlers/wanix/wanixzedcafe')
+    await import('zss/device/wanixclient/wanixzedcafe')
   const hostfiles = await readhostexportfilesasync(device, player)
   const check = validatezedcafeexportpaths(hostfiles)
   if (!check.ok) {
@@ -403,7 +403,7 @@ export function checkzedcafeexportontick(device: DEVICELIKE) {
   }
   exportinflight = true
   const player = memoryreadoperator()
-  void import('zss/device/register/handlers/wanix/wanixzedcafe')
+  void import('zss/device/wanixclient/wanixzedcafe')
     .then(({ pushzedcafesynctoiframe }) =>
       pushzedcafesynctoiframe(device, player, subset, {
         partial: true,

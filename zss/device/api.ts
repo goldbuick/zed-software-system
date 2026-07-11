@@ -174,7 +174,7 @@ export function bridgefetch(
 }
 
 export function wanixshow(device: DEVICELIKE, player: string) {
-  device.emit(player, 'register:wanix:show')
+  device.emit(player, 'wanixclient:show')
 }
 
 export function wanixvmstart(
@@ -182,11 +182,11 @@ export function wanixvmstart(
   player: string,
   vmid?: string,
 ) {
-  device.emit(player, 'register:wanix:vm-start', vmid)
+  device.emit(player, 'wanixclient:vm-start', vmid)
 }
 
 export function wanixvmstop(device: DEVICELIKE, player: string, vmid?: string) {
-  device.emit(player, 'register:wanix:vm-stop', vmid)
+  device.emit(player, 'wanixclient:vm-stop', vmid)
 }
 
 export function wanixdrop(
@@ -196,15 +196,15 @@ export function wanixdrop(
   kind: 'wasm' | 'bundle',
   bytes: Uint8Array,
 ) {
-  device.emit(player, 'wanix:drop', { label, kind, bytes })
+  device.emit(player, 'wanixserver:drop', { label, kind, bytes })
 }
 
 export function wanixbinddrop(device: DEVICELIKE, player: string, file: File) {
-  device.emit(player, 'wanix:bind-drop', file)
+  device.emit(player, 'wanixserver:bind-drop', file)
 }
 
 export function wanixstop(device: DEVICELIKE, player: string, taskid?: string) {
-  device.emit(player, 'register:wanix:stop', taskid)
+  device.emit(player, 'wanixclient:stop', taskid)
 }
 
 export function wanixattach(
@@ -212,11 +212,11 @@ export function wanixattach(
   player: string,
   sessionkey?: string,
 ) {
-  device.emit(player, 'register:wanix:attach', sessionkey)
+  device.emit(player, 'wanixclient:attach', sessionkey)
 }
 
 export function wanixdetach(device: DEVICELIKE, player: string) {
-  device.emit(player, 'register:wanix:detach')
+  device.emit(player, 'wanixclient:detach')
 }
 
 export function vmwanixattach(
@@ -233,11 +233,11 @@ export function wanixtermdump(
   sessionkey?: string,
   tail?: number,
 ) {
-  device.emit(player, 'register:wanix:term-dump', { sessionkey, tail })
+  device.emit(player, 'wanixclient:term-dump', { sessionkey, tail })
 }
 
 export function wanixtermstatus(device: DEVICELIKE, player: string) {
-  device.emit(player, 'register:wanix:term-status')
+  device.emit(player, 'wanixclient:term-status')
 }
 
 export function wanixexportstate(
@@ -245,7 +245,7 @@ export function wanixexportstate(
   player: string,
   files: WANIX_ZED_CAFE_EXPORT_FILE[],
 ) {
-  device.emit(player, 'register:wanix:export-state', { files })
+  device.emit(player, 'wanixclient:export-state', { files })
 }
 
 export type WANIX_ZED_CAFE_IMPORT_RESULT = {
@@ -263,7 +263,7 @@ export function waniximportresult(
   error?: string,
   bookcount?: number,
 ) {
-  device.emit(player, 'register:wanix:import-result', {
+  device.emit(player, 'wanixclient:import-result', {
     ok,
     changed,
     error,

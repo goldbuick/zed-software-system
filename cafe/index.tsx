@@ -4,13 +4,14 @@ import { vmcli } from 'zss/device/api'
 import { register } from 'zss/device/register'
 import { registersetmyplayerid } from 'zss/device/register/player'
 import { registerreadplayer } from 'zss/device/registerplayer'
+import 'zss/device/wanixclient'
+import { WanixHost } from 'zss/device/wanixclient/wanixhost'
 import { isclimode } from 'zss/feature/detect'
 import {
   durablehydratefromdisk,
   startdurableclisync,
 } from 'zss/feature/durablecli'
 import { isjoin } from 'zss/feature/url'
-import { WanixHost } from 'zss/device/register/handlers/wanix/wanixhost'
 import { createplatform } from 'zss/platform'
 
 import { CafeCanvas } from './cafecanvas'

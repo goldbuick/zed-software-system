@@ -70,7 +70,8 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
         case 'synth':
         case 'modem':
         case 'bridge':
-        case 'wanix':
+        case 'wanixserver':
+        case 'wanixclient':
         case 'register':
         case 'boardrunner':
         case 'gadgetclient':
@@ -186,7 +187,7 @@ export function shouldforwardttstoclient(): boolean {
 
 // wanix iframe messages
 
-// create client -> wanix iframe forward
+// create client -> wanixserver iframe forward
 export function shouldforwardclienttowanix(message: MESSAGE): boolean {
   switch (message.target) {
     case 'ticktock':
@@ -196,11 +197,14 @@ export function shouldforwardclienttowanix(message: MESSAGE): boolean {
       return true
     default: {
       const route = parsetarget(message.target)
-      if (route.target === 'wanix') {
+      if (route.target === 'wanixserver') {
         return true
       }
-      // once-device replies: `<id>:wanix:…` (not register:wanix:…)
-      if (route.target !== 'register' && route.path.startsWith('wanix:')) {
+      // once-device replies: `<id>:wanixserver:…` (not wanixclient:…)
+      if (
+        route.target !== 'wanixclient' &&
+        route.path.startsWith('wanixserver:')
+      ) {
         return true
       }
       return false
@@ -208,7 +212,7 @@ export function shouldforwardclienttowanix(message: MESSAGE): boolean {
   }
 }
 
-// create wanix iframe -> client forward
+// create wanixserver iframe -> client forward
 export function shouldforwardwanixtoclient(): boolean {
   return true
 }
