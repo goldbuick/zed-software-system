@@ -107,8 +107,11 @@ export async function sendwanixcli(
   await page.evaluate(
     async ({ projectroot, line }) => {
       const { vmcli } = await import(`/@fs${projectroot}/zss/device/api.ts`)
-      const { register, registerreadplayer } = await import(
+      const { register } = await import(
         `/@fs${projectroot}/zss/device/register.ts`
+      )
+      const { registerreadplayer } = await import(
+        `/@fs${projectroot}/zss/device/registerplayer.ts`
       )
       vmcli(register, registerreadplayer(), line)
     },

@@ -1,10 +1,8 @@
 import type { WanixTermTileBuffer } from 'zss/device/wanixclient/wanixtermbuffer'
 import {
-  assertwanixtermcontains,
   dumpwanixtermbuffertext,
   readwanixtermlinestring,
   readwanixtermtotallines,
-  searchwanixtermbuffer,
 } from 'zss/device/wanixclient/wanixtermtext'
 
 function makebuffer(
@@ -47,6 +45,23 @@ function makebuffer(
   }
 }
 
+function searchwanixtermbuffer(
+  buffer: WanixTermTileBuffer,
+  pattern: string,
+): { line: number; col: number; match: string }[] {
+  const matches: { line: number; col: number; match: string }[] = []
+  const totallines = readwanixtermtotallines(buffer)
+  for (let line = 0; line < totallines; line++) {
+    const text = readwanixtermlinestring(buffer, line)
+    let index = text.indexOf(pattern)
+    while (index >= 0) {
+      matches.push({ line, col: index, match: pattern })
+      index = text.indexOf(pattern, index + 1)
+    }
+  }
+  return matches
+}
+
 describe('wanixtermtext', () => {
   it('counts total lines across scrollback and viewport', () => {
     const buffer = makebuffer(['live'], { scrollbacklines: ['old', 'older'] })
@@ -81,7 +96,7 @@ describe('wanixtermtext', () => {
 
   it('asserts buffer contains text', () => {
     const buffer = makebuffer(['export ready'])
-    expect(assertwanixtermcontains(buffer, 'ready')).toBe(true)
-    expect(assertwanixtermcontains(buffer, 'missing')).toBe(false)
+    expect(dumpwanixtermbuffertext(buffer).includes('ready')).toBe(true)
+    expect(dumpwanixtermbuffertext(buffer).includes('missing')).toBe(false)
   })
 })

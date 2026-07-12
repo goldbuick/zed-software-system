@@ -28,7 +28,7 @@ export async function launchparitybrowser(
   timeoutms = 60_000,
 ): Promise<Browser> {
   return chromium.launch({
-    headless: false,
+    headless: process.env.PLAYWRIGHT_HEADLESS === '1',
     channel: 'chrome',
     timeout: timeoutms,
   })

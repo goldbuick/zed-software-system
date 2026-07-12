@@ -68,18 +68,18 @@ boundary — no shared DOM.
 
 | Side | Entry | Owns |
 |------|--------|------|
-| **Parent** | `register/handlers/wanix/wanixhost` mounts ghost iframe; `wanixbridge` RPC client | Room config, drop routing, export file tree from memory, attach state, term grid snapshots |
+| **Parent** | `wanixclient/wanixhost` mounts ghost iframe; `wanixbridge` RPC client | Room config, drop routing, export file tree from memory, attach state, term grid snapshots |
 | **Iframe** | `cafe/wanix.ts` → `device/wanixserver/runtime` on `/wanix.html` | `<wanix-system>`, VM/task elements, term byte pumps, zedcafe gojs boot, `#ramfs` writes |
 
 ```text
 ┌─────────────────────────────────────────────────────────────────┐
 │  ZSS terminal screen (parent)                                   │
-│    register/handlers/wanix/wanixtermbuffer  ← cells snapshots   │
-│    register/handlers/wanix/wanixdisplay     ← session/attach    │
+│    wanixclient/wanixtermbuffer  ← cells snapshots               │
+│    wanixclient/wanixdisplay     ← session/attach                │
 └────────────────────────────▲────────────────────────────────────┘
                              │ postMessage / device bus
 ┌────────────────────────────┴────────────────────────────────────┐
-│  cafe/wanix.ts → device/wanixserver/runtime (iframe)                  │
+│  cafe/wanix.ts → device/wanixserver/runtime (iframe)            │
 │    applyroom, spawntask, writefile, pushzedcafe…                │
 │    <wanix-system>                                               │
 │      ├─ wanix-bind  (linux, v86, export mounts)                 │
@@ -150,7 +150,7 @@ stateDiagram-v2
 | Action | Path |
 |--------|------|
 | `#wanix vm` | CLI → `startwanixvm` → `wanixroom.startwanixvmroom` → iframe `applyroom` mode `vm` |
-| Drag `.wasm` / `.tgz` | `emitwanixdropfile` → device `wanixdrop` → `handlewanixdrop` |
+| Drag `.wasm` / `.tgz` | `parse/file` → `handlewanixdrop` |
 | `#wanix stop` | `stopwanixroom()` — soft idle by default |
 | `#wanix attach [session]` | Focus a task/VM term tile |
 | `#wanix` menu | [`wanixmenu.ts`](wanixmenu.ts) — sessions, attach, VM controls |
@@ -363,7 +363,7 @@ Iframe posts `WANIX_MSG_SESSION`:
 | `close` | Prune buffer/menu unless it was the attached session |
 
 Manual: `#wanix attach` / `#wanix detach` / menu. See
-[`wanixattachstate.ts`](wanixattachstate.ts), [`wanixtapevisibility.ts`](wanixtapevisibility.ts).
+[`wanixdisplay.ts`](../../device/wanixclient/wanixdisplay.ts).
 
 **Keyboard (attached):** `Ctrl+\` prefix — `n`/`p` switch session, `d` detach, `Esc` cancel.
 `Ctrl+Esc` closes the tape terminal (session stays attached). Scrollback: PageUp/PageDown.
@@ -454,7 +454,7 @@ VM active → drop findplayers → fast JSON.
 
 | Trim | Owner | Effect |
 |------|-------|--------|
-| Skip redundant `runzedcafeexport` | [`wanixactivateexport.ts`](wanixactivateexport.ts) | Sim-fetched books already pushed by daemon |
+| Skip redundant host push when already synced | [`wanixactivateexport.ts`](../../device/wanixclient/wanixactivateexport.ts) | Sim-fetched books already pushed by daemon |
 | Push onto applyroom mount | [`wanixzedcafe.ts`](wanixzedcafe.ts) `bootzedcafeexportinner` | Avoid `sync-zedcafe-halt` when mount already up |
 | Phase timing | [`wanixperf.ts`](wanixperf.ts) | `sinceanchor` + `elapsedms` on every mark |
 

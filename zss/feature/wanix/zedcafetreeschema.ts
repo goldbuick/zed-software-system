@@ -80,10 +80,6 @@ export function readzedcafebookstatspath(book: BOOK): string {
   return `${readzedcafebookprefix(book)}/stats.json`
 }
 
-export function readzedcafepagestatspath(book: BOOK, page: CODE_PAGE): string {
-  return `${readzedcafepageprefix(book, page)}/stats.json`
-}
-
 export function isallowedexportpath(path: string): boolean {
   if (!path || path.includes('..') || path.startsWith('/')) {
     return false

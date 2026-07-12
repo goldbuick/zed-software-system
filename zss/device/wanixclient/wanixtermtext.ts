@@ -7,12 +7,6 @@ export type DumpWanixTermBufferOpts = {
   includescrollback?: boolean
 }
 
-export type WanixTermSearchMatch = {
-  line: number
-  col: number
-  match: string
-}
-
 function trimtrailinglinechars(line: string) {
   return line.replace(/ +$/, '')
 }
@@ -54,42 +48,4 @@ export function dumpwanixtermbuffertext(
     return lines.slice(-opts.tail).join('\n')
   }
   return lines.join('\n')
-}
-
-export function searchwanixtermbuffer(
-  buffer: WanixTermTileBuffer,
-  pattern: string | RegExp,
-): WanixTermSearchMatch[] {
-  const matches: WanixTermSearchMatch[] = []
-  const totallines = readwanixtermtotallines(buffer)
-  for (let line = 0; line < totallines; line++) {
-    const text = readwanixtermlinestring(buffer, line)
-    if (typeof pattern === 'string') {
-      let index = text.indexOf(pattern)
-      while (index >= 0) {
-        matches.push({ line, col: index, match: pattern })
-        index = text.indexOf(pattern, index + 1)
-      }
-      continue
-    }
-    const re = new RegExp(
-      pattern.source,
-      pattern.flags.includes('g') ? pattern.flags : `${pattern.flags}g`,
-    )
-    let match: RegExpExecArray | null
-    while ((match = re.exec(text)) != null) {
-      matches.push({ line, col: match.index, match: match[0] })
-      if (match[0].length === 0) {
-        re.lastIndex += 1
-      }
-    }
-  }
-  return matches
-}
-
-export function assertwanixtermcontains(
-  buffer: WanixTermTileBuffer,
-  text: string,
-): boolean {
-  return dumpwanixtermbuffertext(buffer).includes(text)
 }

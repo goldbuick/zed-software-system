@@ -151,32 +151,6 @@ async function readbookstatsreadyatbase(
   return bookstatspaths.length > 0
 }
 
-export async function readzedcafeexporthasbooks(
-  root: WanixRoot,
-  taskrid: string,
-): Promise<boolean> {
-  if (!taskrid) {
-    return false
-  }
-  const base = readwanixzedcafeexportsrc(taskrid)
-  try {
-    const raw = await root.readFile(`${base}/stats.json`)
-    const bytes =
-      raw instanceof Uint8Array ? raw : new TextEncoder().encode(String(raw))
-    const meta = readbookstatspathsfromstatsbytes(bytes)
-    if (!meta || meta.bookcount < 1) {
-      return false
-    }
-    return readbookstatsreadyatbase(root, base, meta.bookstatspaths)
-  } catch {
-    return false
-  }
-}
-
-export function readzedcafereadylocal(): boolean {
-  return zedcafeready
-}
-
 export function synczedcafestate(cmd: string, generation: number) {
   zedcafecmd = cmd
   zedcafegen = generation
@@ -432,14 +406,6 @@ export async function wireallguestroots(
   return count
 }
 
-/** @deprecated use wireallguestroots */
-export async function wirezedcafeexportbinds(
-  sys: WanixSystemElement,
-  taskrid: string,
-): Promise<number> {
-  return wireallguestroots(sys, taskrid)
-}
-
 async function collectexporttreefiles(
   root: WanixRoot,
   base: string,
@@ -687,15 +653,6 @@ export async function bootzedcafegojs(
   return taskrid
 }
 
-export async function finalizezedcafeexportcontent(
-  sys: WanixSystemElement,
-  _root: WanixRoot,
-  taskrid: string,
-): Promise<void> {
-  await wireallguestroots(sys, taskrid)
-  zedcafeready = true
-}
-
 export async function ensurezedcafeboot(
   sys: WanixSystemElement,
   root: WanixRoot,
@@ -718,41 +675,6 @@ export async function ensurezedcafeboot(
     }
   })
   return zedcafebootpromise
-}
-
-export async function waitzedcafemountrpc(
-  sys: WanixSystemElement,
-  root: WanixRoot,
-  timeoutms: number,
-): Promise<string | null> {
-  if (!zedcafecmd) {
-    return null
-  }
-  const deadline = Date.now() + timeoutms
-  while (Date.now() < deadline) {
-    if (zedcafetaskrid) {
-      const mountready = await waitzedcafeexportmountready(
-        root,
-        zedcafetaskrid,
-        Math.max(0, deadline - Date.now()),
-      )
-      if (mountready) {
-        return zedcafetaskrid
-      }
-    }
-    try {
-      const taskrid = await ensurezedcafeboot(sys, root, zedcafecmd)
-      if (taskrid) {
-        return taskrid
-      }
-    } catch {
-      // retry until deadline
-    }
-    await new Promise<void>((resolve) =>
-      setTimeout(resolve, WANIX_ZEDCAFE_EXPORT_READY_POLL_MS),
-    )
-  }
-  return zedcafetaskrid
 }
 
 export async function waitzedcafereadyrpc(

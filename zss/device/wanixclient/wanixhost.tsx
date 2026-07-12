@@ -1,6 +1,10 @@
 import { useEffect, useRef } from 'react'
 
-import { bindwanixparentmessage, setwanixchildwindow } from './wanixbridge'
+import {
+  bindwanixparentmessage,
+  clearwanixchildwindowifcurrent,
+  setwanixchildwindow,
+} from './wanixbridge'
 
 const SHOW = false
 const GHOST = true
@@ -10,16 +14,33 @@ export function WanixHost() {
 
   useEffect(() => bindwanixparentmessage(), [])
 
-  const onload = () => {
-    setwanixchildwindow(iframeref.current?.contentWindow ?? null)
-  }
+  // Bind contentWindow on mount and on every load. Cached /wanix.html can finish
+  // before React attaches onLoad, leaving childwindow null while the iframe is
+  // visible — drops then crash with "wanix iframe not loaded".
+  useEffect(() => {
+    const el = iframeref.current
+    if (!el) {
+      return
+    }
+    const bind = () => {
+      const win = el.contentWindow
+      if (win) {
+        setwanixchildwindow(win)
+      }
+    }
+    bind()
+    el.addEventListener('load', bind)
+    return () => {
+      el.removeEventListener('load', bind)
+      clearwanixchildwindowifcurrent(el.contentWindow)
+    }
+  }, [])
 
   return (
     <iframe
       ref={iframeref}
       title="wanix"
       src="/wanix.html"
-      onLoad={onload}
       style={{
         border: 0,
         position: 'fixed',

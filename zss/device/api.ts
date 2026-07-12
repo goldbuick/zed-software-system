@@ -189,20 +189,6 @@ export function wanixvmstop(device: DEVICELIKE, player: string, vmid?: string) {
   device.emit(player, 'wanixclient:vm-stop', vmid)
 }
 
-export function wanixdrop(
-  device: DEVICELIKE,
-  player: string,
-  label: string,
-  kind: 'wasm' | 'bundle',
-  bytes: Uint8Array,
-) {
-  device.emit(player, 'wanixserver:drop', { label, kind, bytes })
-}
-
-export function wanixbinddrop(device: DEVICELIKE, player: string, file: File) {
-  device.emit(player, 'wanixserver:bind-drop', file)
-}
-
 export function wanixstop(device: DEVICELIKE, player: string, taskid?: string) {
   device.emit(player, 'wanixclient:stop', taskid)
 }

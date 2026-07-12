@@ -24,10 +24,6 @@ export const WANIX_ZEDCAFE_EXPORT_WAIT_MS = 90_000
 export const WANIX_ZEDCAFE_EXPORT_READY_POLL_MS = 250
 export const WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS = 30_000
 
-export function readwanixzedcafetaskwasmpath(taskrid: string): string {
-  return `#task/${taskrid}/${WANIX_ZEDCAFE_TASK_WASM}`
-}
-
 export function readwanixzedcafeexportsrc(taskrid: string): string {
   return `#task/${taskrid}/export`
 }

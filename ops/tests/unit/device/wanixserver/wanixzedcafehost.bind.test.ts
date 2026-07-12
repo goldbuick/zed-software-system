@@ -13,7 +13,7 @@ jest.mock('zss/feature/wanix/zedcafetreeschema', () => ({
 
 import {
   resetzedcafestate,
-  wirezedcafeexportbinds,
+  wireallguestroots,
 } from 'zss/device/wanixserver/zedcafehost'
 import {
   WANIX_ZEDCAFE_GUEST_MOUNT,
@@ -53,7 +53,7 @@ function mockroot(): WanixRoot & {
   }
 }
 
-describe('wirezedcafeexportbinds', () => {
+describe('wireallguestroots', () => {
   beforeEach(() => {
     resetzedcafestate()
     document.body.replaceChildren()
@@ -72,7 +72,7 @@ describe('wirezedcafeexportbinds', () => {
     document.body.appendChild(sys)
     const taskrid = 'task-wire'
 
-    const count = await wirezedcafeexportbinds(sys, taskrid)
+    const count = await wireallguestroots(sys, taskrid)
 
     const src = readwanixzedcafeexportsrc(taskrid)
     expect(count).toBe(2)

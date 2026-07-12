@@ -77,12 +77,6 @@ function guestfilestoexport(
   return out
 }
 
-export function guestfilestoexportfiles(
-  files: WanixZedCafeGuestFile[],
-): WANIX_ZED_CAFE_EXPORT_FILE[] {
-  return guestfilestoexport(files)
-}
-
 export function exportfilestoguestfiles(
   files: WANIX_ZED_CAFE_EXPORT_FILE[],
 ): WanixZedCafeGuestFile[] {
@@ -113,23 +107,6 @@ export function readwanixbootzedcafestatefrommemory(): WanixZedCafeHostState {
 
 export function readwanixbootzedcafestate(): WanixZedCafeHostState {
   return readwanixbootzedcafestatefrommemory()
-}
-
-export function readzedcafeexportbookcount(
-  files: WANIX_ZED_CAFE_EXPORT_FILE[],
-): number {
-  const stats = files.find((file) => file.path === 'stats.json')
-  if (!stats) {
-    return 0
-  }
-  try {
-    const parsed = JSON.parse(new TextDecoder().decode(stats.bytes)) as {
-      bookCount?: unknown
-    }
-    return typeof parsed.bookCount === 'number' ? parsed.bookCount : 0
-  } catch {
-    return 0
-  }
 }
 
 export function resolvevmzedcafeexportwaiter(
@@ -502,14 +479,6 @@ export async function readhostexportfilesasync(
     ...wanixperfdelta(fetchstart),
   })
   return files
-}
-
-export async function fetchhostexportfilesfromvm(
-  device: DEVICELIKE,
-  player: string,
-  timeoutms = WANIX_VM_ZEDCAFE_EXPORT_FETCH_MS,
-): Promise<WANIX_ZED_CAFE_EXPORT_FILE[]> {
-  return fetchzedcafeexportfiles(device, player, timeoutms)
 }
 
 async function markzedcafepollready(

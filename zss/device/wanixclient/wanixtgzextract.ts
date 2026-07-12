@@ -57,7 +57,7 @@ export function iswanixtarjunkpath(name: string): boolean {
   return normalized.startsWith('__MACOSX/')
 }
 
-export function sanitizewanixtarpath(name: string): string {
+function sanitizewanixtarpath(name: string): string {
   const normalized = name.replace(/\\/g, '/').replace(/^\/+/, '')
   const parts = normalized
     .split('/')

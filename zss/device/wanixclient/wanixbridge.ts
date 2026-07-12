@@ -21,21 +21,42 @@ const WANIX_READY_TIMEOUT_MS = 180_000
 const WANIX_RPC_PING_TIMEOUT_MS = 15_000
 const WANIX_RPC_PING_POLL_MS = 100
 
-let childwindow: Window | null = null
-let childwindowwaiters: (() => void)[] = []
+const WANIX_BRIDGE_STATE_KEY = '__zss_wanix_bridge_state__'
 
-let wanixisready = false
-let readyresolve: (() => void) | null = null
-let readypromise: Promise<void> | null = null
-
-function resetready() {
-  wanixisready = false
-  readypromise = new Promise<void>((resolve) => {
-    readyresolve = resolve
-  })
+type WanixBridgeState = {
+  childwindow: Window | null
+  childwindowwaiters: (() => void)[]
+  wanixisready: boolean
+  readyresolve: (() => void) | null
+  readypromise: Promise<void> | null
 }
 
-resetready()
+function readbridgestate(): WanixBridgeState {
+  const g = globalThis as Record<string, unknown>
+  let state = g[WANIX_BRIDGE_STATE_KEY] as WanixBridgeState | undefined
+  if (!state) {
+    state = {
+      childwindow: null,
+      childwindowwaiters: [],
+      wanixisready: false,
+      readyresolve: null,
+      readypromise: null,
+    }
+    g[WANIX_BRIDGE_STATE_KEY] = state
+    state.readypromise = new Promise<void>((resolve) => {
+      state!.readyresolve = resolve
+    })
+  }
+  return state
+}
+
+function resetready() {
+  const state = readbridgestate()
+  state.wanixisready = false
+  state.readypromise = new Promise<void>((resolve) => {
+    state.readyresolve = resolve
+  })
+}
 
 let deliverwanixmessage: ((message: MESSAGE) => void) | null = null
 
@@ -51,11 +72,8 @@ export function setwanixmessagedeliver(
   deliverwanixmessage = fn
 }
 
-export function readwanixchildwindow(): Window | null {
-  return childwindow
-}
-
 export function postmessagetowanixiframe(message: MESSAGE): boolean {
+  const { childwindow } = readbridgestate()
   if (!childwindow) {
     return false
   }
@@ -65,6 +83,7 @@ export function postmessagetowanixiframe(message: MESSAGE): boolean {
 
 export function postreadytowanixiframe(): void {
   const session = SOFTWARE.session()
+  const { childwindow } = readbridgestate()
   if (!session || !childwindow) {
     return
   }
@@ -86,9 +105,10 @@ function handleparentmessage(event: MessageEvent) {
     deliverwanixmessage?.(data)
     return
   }
+  const state = readbridgestate()
   if (data.type === WANIX_MSG_READY) {
-    wanixisready = true
-    readyresolve?.()
+    state.wanixisready = true
+    state.readyresolve?.()
     return
   }
   if (data.type === WANIX_MSG_IDLE) {
@@ -103,33 +123,43 @@ function handleparentmessage(event: MessageEvent) {
 }
 
 function notifychildwindow() {
-  const waiters = childwindowwaiters
-  childwindowwaiters = []
+  const state = readbridgestate()
+  const waiters = state.childwindowwaiters
+  state.childwindowwaiters = []
   for (const notify of waiters) {
     notify()
   }
 }
 
 export function waitwanixiframe(timeoutms = 30_000): Promise<Window> {
-  if (childwindow) {
-    return Promise.resolve(childwindow)
+  const state = readbridgestate()
+  if (state.childwindow) {
+    return Promise.resolve(state.childwindow)
   }
   return new Promise<Window>((resolve, reject) => {
     const timer = setTimeout(() => {
-      childwindowwaiters = childwindowwaiters.filter(
-        (notify) => notify !== onload,
+      const current = readbridgestate()
+      current.childwindowwaiters = current.childwindowwaiters.filter(
+        (notify) => notify !== onready,
       )
       reject(new Error('wanix iframe not loaded'))
     }, timeoutms)
-    const onload = () => {
-      clearTimeout(timer)
-      if (childwindow) {
-        resolve(childwindow)
+    // Only resolve when a window is bound. A null bind must not reject waiters.
+    const onready = () => {
+      const current = readbridgestate()
+      if (!current.childwindow) {
         return
       }
-      reject(new Error('wanix iframe not loaded'))
+      clearTimeout(timer)
+      current.childwindowwaiters = current.childwindowwaiters.filter(
+        (notify) => notify !== onready,
+      )
+      resolve(current.childwindow)
     }
-    childwindowwaiters.push(onload)
+    state.childwindowwaiters.push(onready)
+    if (state.childwindow) {
+      onready()
+    }
   })
 }
 
@@ -141,10 +171,22 @@ export function bindwanixparentmessage() {
 }
 
 export function setwanixchildwindow(next: Window | null) {
-  childwindow = next
+  const state = readbridgestate()
+  state.childwindow = next
   resetready()
-  notifychildwindow()
-  postreadytowanixiframe()
+  if (next) {
+    notifychildwindow()
+    postreadytowanixiframe()
+  }
+}
+
+/** Clear only if the singleton still points at this iframe window (HMR-safe). */
+export function clearwanixchildwindowifcurrent(expected: Window | null) {
+  const state = readbridgestate()
+  if (expected && state.childwindow === expected) {
+    state.childwindow = null
+    resetready()
+  }
 }
 
 export async function waitwanixrpcping(
@@ -171,10 +213,11 @@ export async function waitwanixrpcping(
 export function waitwanixready(
   timeoutms = WANIX_READY_TIMEOUT_MS,
 ): Promise<void> {
-  if (wanixisready) {
+  const state = readbridgestate()
+  if (state.wanixisready) {
     return Promise.resolve()
   }
-  const promise = readypromise ?? Promise.resolve()
+  const promise = state.readypromise ?? Promise.resolve()
   return new Promise<void>((resolve, reject) => {
     const timer = setTimeout(() => {
       reject(new Error('wanix ready timeout'))

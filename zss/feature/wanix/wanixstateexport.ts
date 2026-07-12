@@ -1,8 +1,6 @@
 import type { Operation } from 'fast-json-patch'
 import { compare } from 'fast-json-patch'
 import type { DEVICELIKE } from 'zss/device/api'
-import { apilog } from 'zss/device/api'
-import { readwanixroomconfig } from 'zss/device/wanixclient/wanixroom'
 import {
   clearlasthostpushdoc,
   readlasthostpushdoc,
@@ -13,7 +11,6 @@ import {
   assertzedcafeexportvalid,
   readzedcafebookstatspath,
   readzedcafepageprefix,
-  validatezedcafeexportpaths,
 } from 'zss/feature/wanix/zedcafetreeschema'
 import { ispresent } from 'zss/mapping/types'
 import { memoryreadbookflags } from 'zss/memory/bookoperations'
@@ -173,12 +170,6 @@ export function readbookcountfromexportfiles(
   } catch {
     return -1
   }
-}
-
-export function readexporthasbooktree(
-  files: WANIX_ZED_CAFE_EXPORT_FILE[],
-): boolean {
-  return readbookcountfromexportfiles(files) > 0
 }
 
 /** Host/guest export content-ready: non-empty stats.json with exportedAt + bookCount. */
@@ -344,26 +335,6 @@ export function buildzedcafeexportfiles(): WANIX_ZED_CAFE_EXPORT_FILE[] {
 
   assertzedcafeexportvalid(files)
   return files
-}
-
-export async function runzedcafeexport(device: DEVICELIKE, player: string) {
-  if (readwanixroomconfig().mode === 'idle') {
-    const { markwanixzedcafependingexport } =
-      await import('zss/device/wanixclient/wanixzedcafe')
-    markwanixzedcafependingexport()
-    return
-  }
-  const { pushzedcafesynctoiframe, readhostexportfilesasync } =
-    await import('zss/device/wanixclient/wanixzedcafe')
-  const hostfiles = await readhostexportfilesasync(device, player)
-  const check = validatezedcafeexportpaths(hostfiles)
-  if (!check.ok) {
-    const detail = check.errors[0] ?? 'unknown'
-    apilog(device, player, `zedcafe export: invalid tree — ${detail}`)
-    console.error(`zedcafe export: invalid tree — ${detail}`)
-    return
-  }
-  await pushzedcafesynctoiframe(device, player, hostfiles)
 }
 
 /** Set last-pushed export shadow from files (or current memory export). */

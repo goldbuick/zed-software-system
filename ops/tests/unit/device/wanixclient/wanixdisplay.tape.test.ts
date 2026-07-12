@@ -4,7 +4,7 @@ import {
 } from 'zss/device/wanixclient/wanixdisplay'
 import { useTape } from 'zss/gadget/data/zustandstores'
 
-describe('wanixtapevisibility', () => {
+describe('wanixdisplay tape', () => {
   afterEach(() => {
     useTape.getState().reset()
   })

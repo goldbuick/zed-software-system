@@ -1,5 +1,3 @@
-import type { DEVICELIKE } from 'zss/device/api'
-import { apilog } from 'zss/device/api'
 import type { WANIX_ZED_CAFE_EXPORT_FILE } from 'zss/feature/wanix/wanixstateexport'
 import { kebabcasezedcafedirname } from 'zss/feature/wanix/zedcafetreeschema'
 import { ispresent } from 'zss/mapping/types'
@@ -282,25 +280,4 @@ export function applyzedcafetomemory(parsed: WANIX_ZED_CAFE_PARSED): boolean {
     changed = true
   }
   return changed
-}
-
-export function logzedcafeimportresult(
-  device: DEVICELIKE,
-  player: string,
-  parsed: WANIX_ZED_CAFE_PARSED,
-  changed: boolean,
-) {
-  if (!changed) {
-    apilog(
-      device,
-      player,
-      'zedcafe import: guest tree matched memory (no diff)',
-    )
-    return
-  }
-  apilog(
-    device,
-    player,
-    `zedcafe import: synced ${parsed.books.length} book(s) from guest tree`,
-  )
 }

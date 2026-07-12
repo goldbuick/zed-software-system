@@ -11,7 +11,7 @@ import {
   subscribewanixattach,
 } from 'zss/device/wanixclient/wanixdisplay'
 
-describe('wanixattachstate', () => {
+describe('wanixdisplay attach', () => {
   afterEach(() => {
     resetwanixattachstatefortest()
   })

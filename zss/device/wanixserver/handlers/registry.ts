@@ -3,7 +3,6 @@ import type { MESSAGE } from 'zss/device/api'
 
 import { handleapplyroom } from './applyroom'
 import { handlebinddrop } from './binddrop'
-import { handledrop } from './drop'
 import { handlehalttask } from './halttask'
 import { handlehaltzedcafe } from './haltzedcafe'
 import { handleiszedcafeexportlive } from './iszedcafeexportlive'
@@ -46,8 +45,6 @@ export const wanixhandlers: Record<string, WANIX_HANDLER> = {
   readfile: handlereadfile,
   writefile: handlewritefile,
   binddrop: handlebinddrop,
-  'bind-drop': handlebinddrop,
-  drop: handledrop,
   termwrite: handletermwrite,
   termfit: handletermfit,
   waitzedcafecontentready: handlewaitzedcafecontentready,

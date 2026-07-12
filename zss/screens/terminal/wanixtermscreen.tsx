@@ -52,7 +52,6 @@ const HINT_CLIPBOARD = ismac
 const HINT_IDLE = `Ctrl+\\ open detach menu, Ctrl+Esc close tape, ${HINT_SCROLLBACK_ROWS}, ${HINT_CLIPBOARD}`
 const HINT_ARMED = `Ctrl+\\ to detach, left/right to switch sessions`
 const HINT_COLOR = COLOR.BLACK
-const HINT_BG = COLOR.DKPURPLE
 const HINT_MARQUEE_GAP = '   ·   '
 
 const SELECTION_ARROW_KEYS = new Set([
@@ -129,20 +128,6 @@ function inverseselectioncellcolors(fg: number, bg: number) {
     swapbg = swapbg - Number(COLOR.ONBLACK)
   }
   return { color: swapbg, bg: swapfg }
-}
-
-function fillhintbarbg(
-  context: ReturnType<typeof useWriteText>,
-  edge: ReturnType<typeof textformatreadedges>,
-) {
-  const drawy = edge.top + edge.height - 1
-  for (let x = 0; x < edge.width; x++) {
-    writetile(context, context.width, context.height, edge.left + x, drawy, {
-      char: 32,
-      color: HINT_COLOR,
-      bg: HINT_BG,
-    })
-  }
 }
 
 function isctrlbackslash(event: KeyboardEvent) {
@@ -336,7 +321,6 @@ export function WanixTermScreen() {
     const newoutputbadge = hasnewoutput ? ' new output' : ''
     const sessionhint = `${label} (${sessionindex + 1}/${sessioncount})${altbadge}${newoutputbadge}`
     hintline = `${prefixarmed ? HINT_ARMED : HINT_IDLE}, ${sessionhint}${HINT_MARQUEE_GAP}`
-    fillhintbarbg(context, edge)
   }
 
   context.changed()
