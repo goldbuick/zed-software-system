@@ -1,38 +1,46 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/messagetypes'
 
-import { handleattach } from './attach'
+import { handleapplyroom } from './applyroom'
 import { handlebinddrop } from './binddrop'
 import { handlewanixcells } from './cells'
-import { handledetach } from './detach'
-import { handledrop } from './drop'
+import { handledropdone } from './dropdone'
+import { handleexportready } from './exportready'
 import { handleexportstate } from './exportstate'
+import { handleidle } from './idle'
 import { handleimportresult } from './importresult'
+import { handleiszedcafeexportlive } from './iszedcafeexportlive'
+import { handleping } from './ping'
+import { handlereadroomstatus } from './readroomstatus'
+import { handlereadvmstatus } from './readvmstatus'
+import { handleready } from './ready'
+import { handlereadzedcafeexportfiles } from './readzedcafeexportfiles'
+import { handlereadzedcafetaskrid } from './readzedcafetaskrid'
 import { handlerequestzedcafestate } from './requestzedcafestate'
 import { handlewanixsession } from './session'
-import { handleshow } from './show'
-import { handlestop } from './stop'
-import { handletermdump } from './termdump'
-import { handletermstatus } from './termstatus'
-import { handlevmstart } from './vmstart'
-import { handlevmstop } from './vmstop'
+import { handlespawntask } from './spawntask'
+import { handlesynczedcafeexport } from './synczedcafeexport'
 
 export type WANIXCLIENT_HANDLER = (device: DEVICE, message: MESSAGE) => void
 
 export const wanixclienthandlers: Record<string, WANIXCLIENT_HANDLER> = {
-  show: handleshow,
-  attach: handleattach,
-  detach: handledetach,
-  drop: handledrop,
+  ready: handleready,
+  idle: handleidle,
+  exportready: handleexportready,
+  ping: handleping,
+  applyroom: handleapplyroom,
+  spawntask: handlespawntask,
   binddrop: handlebinddrop,
-  termdump: handletermdump,
-  termstatus: handletermstatus,
+  dropdone: handledropdone,
+  readroomstatus: handlereadroomstatus,
+  readvmstatus: handlereadvmstatus,
+  synczedcafeexport: handlesynczedcafeexport,
+  readzedcafeexportfiles: handlereadzedcafeexportfiles,
+  readzedcafetaskrid: handlereadzedcafetaskrid,
+  iszedcafeexportlive: handleiszedcafeexportlive,
   requestzedcafestate: handlerequestzedcafestate,
   exportstate: handleexportstate,
   importresult: handleimportresult,
-  stop: handlestop,
-  vmstart: handlevmstart,
-  vmstop: handlevmstop,
   cells: handlewanixcells,
   session: handlewanixsession,
 }

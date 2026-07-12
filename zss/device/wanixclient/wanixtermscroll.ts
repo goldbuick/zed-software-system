@@ -1,15 +1,9 @@
-import type { WanixTermTileBuffer } from './wanixtermbuffer'
-import { readwanixtermtotallines } from './wanixtermtext'
-
-export type WanixTermScrollState = {
-  totallines: number
-  maxoffset: number
-  startline: number
-  atliveline: boolean
-  clampedoffset: number
-}
-
-export type WanixTermScrollTarget = 'top' | 'live'
+import type {
+  WanixTermScrollState,
+  WanixTermScrollTarget,
+  WanixTermTileBuffer,
+} from 'zss/device/wanixclient/state'
+import { readwanixtermtotallines } from 'zss/device/wanixclient/wanixtermtext'
 
 export function readwanixtermscrollstate(
   buffer: WanixTermTileBuffer,

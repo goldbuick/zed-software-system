@@ -1,17 +1,27 @@
 jest.mock('zss/device/wanixclient/wanixbridge', () => ({
-  callwanixrpc: jest.fn(),
   registerwanixsessioncloseprune: jest.fn(),
+  iswanixready: jest.fn(() => true),
+  onwanixready: jest.fn((cb: () => void) => cb()),
 }))
 
 jest.mock('zss/device/wanixclient/wanixroom', () => ({
   readwanixroomconfig: jest.fn(() => ({ mode: 'task' })),
 }))
 
-jest.mock('zss/device/api', () => ({
-  apilog: jest.fn(),
-  vmexportzedcafe: jest.fn(),
-  vmimportzedcafe: jest.fn(),
-}))
+jest.mock('zss/device/api', () => {
+  const actual = jest.requireActual('zss/device/api')
+  return {
+    ...actual,
+    apilog: jest.fn(),
+    vmexportzedcafe: jest.fn(),
+    vmimportzedcafe: jest.fn(),
+    wanixserverreadzedcafetaskrid: jest.fn(),
+    wanixserveriszedcafeexportlive: jest.fn(),
+    wanixserverreadzedcafeexportfiles: jest.fn(),
+    wanixserversynczedcafeexport: jest.fn(),
+    wanixserversetzedcafeready: jest.fn(),
+  }
+})
 
 jest.mock('zss/feature/wanix/wanixstateexport', () => {
   const actual = jest.requireActual(
@@ -29,59 +39,28 @@ jest.mock('zss/feature/wanix/zedcafetreeschema', () => ({
   validatezedcafeexportpaths: jest.fn(() => ({ ok: true, errors: [] })),
 }))
 
-import { apilog, vmimportzedcafe } from 'zss/device/api'
-import { callwanixrpc } from 'zss/device/wanixclient/wanixbridge'
+import { wanixserverreadzedcafetaskrid } from 'zss/device/api'
 import {
   resetwanixzedcafefortest,
-  resolvevmzedcafeimportwaiter,
   startzedcafepoll,
   stopzedcafepoll,
 } from 'zss/device/wanixclient/wanixzedcafe'
 import {
   readzedcafepollactive,
   resetwanixzedcafesessionfortest,
-} from 'zss/device/wanixclient/wanixzedcafesession'
+} from 'zss/device/wanixclient/state'
 
-const mockrpc = callwanixrpc as jest.Mock
-const mockapilog = apilog as jest.Mock
-const mockvmimport = vmimportzedcafe as jest.Mock
+const mockreadrid = wanixserverreadzedcafetaskrid as jest.Mock
 
 const device = { id: 'dev', emit: jest.fn() } as never
 const player = 'p1'
-
-const exportfiles = [
-  {
-    path: 'stats.json',
-    data: [...new TextEncoder().encode('{"bookCount":1,"books":[],"exportedAt":"x"}\n')],
-  },
-]
 
 describe('zedcafe import poll', () => {
   beforeEach(() => {
     jest.useFakeTimers()
     resetwanixzedcafefortest()
     resetwanixzedcafesessionfortest()
-    mockrpc.mockReset()
-    mockapilog.mockReset()
-    mockvmimport.mockReset()
-    mockrpc.mockImplementation(async (method: string) => {
-      switch (method) {
-        case 'readzedcafetaskrid':
-          return '7'
-        case 'iszedcafeexportlive':
-          return true
-        case 'readzedcafeexportfiles':
-          return exportfiles
-        case 'synczedcafeexport':
-          return { ok: true, taskrid: '7' }
-        case 'waitzedcafecontentready':
-          return true
-        case 'setzedcafeready':
-          return true
-        default:
-          return null
-      }
-    })
+    mockreadrid.mockReset()
   })
 
   afterEach(() => {
@@ -91,48 +70,11 @@ describe('zedcafe import poll', () => {
     resetwanixzedcafesessionfortest()
   })
 
-  it('keeps poll running when import apply fails', async () => {
-    mockvmimport.mockImplementation(() => {
-      resolvevmzedcafeimportwaiter({
-        ok: false,
-        changed: false,
-        error: 'import failed',
-      })
-    })
+  it('emits readzedcafetaskrid on poll tick', async () => {
     startzedcafepoll(device, player)
     expect(readzedcafepollactive()).toBe(true)
-
     await jest.advanceTimersByTimeAsync(3_000)
-
+    expect(mockreadrid).toHaveBeenCalledWith(device, player)
     expect(readzedcafepollactive()).toBe(true)
-    expect(mockapilog).toHaveBeenCalledWith(
-      device,
-      player,
-      expect.stringMatching(/sim apply failed|import/),
-    )
-  })
-
-  it('stops poll and logs when export tree RPC fails', async () => {
-    mockrpc.mockImplementation(async (method: string) => {
-      if (method === 'readzedcafetaskrid') {
-        return '7'
-      }
-      if (method === 'iszedcafeexportlive') {
-        return true
-      }
-      if (method === 'readzedcafeexportfiles') {
-        throw new Error('rpc down')
-      }
-      return null
-    })
-    startzedcafepoll(device, player)
-    await jest.advanceTimersByTimeAsync(3_000)
-
-    expect(readzedcafepollactive()).toBe(false)
-    expect(mockapilog).toHaveBeenCalledWith(
-      device,
-      player,
-      expect.stringMatching(/import poll failed/),
-    )
   })
 })

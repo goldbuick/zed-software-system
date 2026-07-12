@@ -1,4 +1,4 @@
-import type { WanixTermTileBuffer } from 'zss/device/wanixclient/wanixtermbuffer'
+import type { WanixTermTileBuffer } from 'zss/device/wanixclient/state'
 import {
   readwanixtermscrollstate,
   scrollwanixtermby,

@@ -1,11 +1,10 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
+import { wanixclientmethodresult } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
 import { binddrop } from 'zss/device/wanixserver/runtime'
 import type { WanixBindDropPayload } from 'zss/feature/wanix/wanixroomtypes'
 import { ispresent } from 'zss/mapping/types'
-
-import { replywanix, replywanixerror } from './hostutil'
 
 export function handlebinddrop(wanix: DEVICE, message: MESSAGE): void {
   doasync(wanix, message.player, () => {
@@ -29,9 +28,12 @@ export function handlebinddrop(wanix: DEVICE, message: MESSAGE): void {
         throw new Error('binddrop args invalid')
       }
       const result = binddrop(sessionkey, spec)
-      replywanix(wanix, message, 'binddrop', result)
+      wanixclientmethodresult(wanix, message.player, 'binddrop', result)
     } catch (err) {
-      replywanixerror(wanix, message, 'binddrop', err)
+      wanixclientmethodresult(wanix, message.player, 'binddrop', {
+        ok: false,
+        error: err instanceof Error ? err.message : String(err),
+      })
     }
     return Promise.resolve()
   })

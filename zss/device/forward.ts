@@ -198,17 +198,7 @@ export function shouldforwardclienttowanix(message: MESSAGE): boolean {
       return true
     default: {
       const route = parsetarget(message.target)
-      if (route.target === 'wanixserver') {
-        return true
-      }
-      // once-device replies: `<id>:wanixserver:…` (not wanixclient:…)
-      if (
-        route.target !== 'wanixclient' &&
-        route.path.startsWith('wanixserver:')
-      ) {
-        return true
-      }
-      return false
+      return route.target === 'wanixserver'
     }
   }
 }

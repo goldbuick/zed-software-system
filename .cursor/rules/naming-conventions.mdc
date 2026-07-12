@@ -73,10 +73,12 @@ Device message targets use `device:action` (optional further `:segments`). Each 
 - **No `-` (kebab)** in `device.emit(...)` target strings or handler registry keys.
 - Prefer matching the `api.ts` helper name to the action segment (`vmexportzedcafe` → `vm:exportzedcafe`).
 - Emit in `zss/device/api.ts` and the owning device’s `handlers/registry.ts` key must stay in lockstep.
+- **Wanix:** all `wanixserver:*` / `wanixclient:*` emits live in `api.ts` only. Command/response pairs use the same action segment (`wanixserver:applyroom` → `wanixclient:applyroom`). Do not invent raw `postMessage` lifecycle constants for Wanix — use `wanixclient:ready`, `wanixclient:idle`, `wanixclient:exportready`.
 
 ```typescript
 // ✅ GOOD
 device.emit(player, 'vm:exportzedcafe')
+device.emit(player, 'wanixserver:binddrop')
 device.emit(player, 'wanixclient:binddrop')
 // registry: { exportzedcafe: handle…, binddrop: handle… }
 

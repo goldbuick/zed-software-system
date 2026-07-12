@@ -1,12 +1,12 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { chipmessage, vmcli } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
+import { registerreadplayer } from 'zss/device/registerplayer'
+import { SOFTWARE } from 'zss/device/session'
 import {
   readattachedsession,
   subscribewanixattach,
 } from 'zss/device/wanixclient/wanixdisplay'
-import { registerreadplayer } from 'zss/device/registerplayer'
-import { SOFTWARE } from 'zss/device/session'
 import { storagereadconfig } from 'zss/feature/storage'
 import { useTape, useTerminal } from 'zss/gadget/data/zustandstores'
 import { useWriteText } from 'zss/gadget/writetext'

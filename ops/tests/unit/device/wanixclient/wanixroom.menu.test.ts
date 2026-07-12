@@ -1,9 +1,12 @@
-jest.mock('zss/device/wanixclient/wanixbridge', () => ({
-  callwanixrpc: jest.fn(),
-  registerwanixsessioncloseprune: jest.fn(),
-  waitwanixiframe: jest.fn(async () => {}),
-  waitwanixready: jest.fn(async () => {}),
-}))
+jest.mock('zss/device/api', () => {
+  const actual = jest.requireActual('zss/device/api')
+  return {
+    ...actual,
+    wanixserverapplyroom: jest.fn(),
+    wanixserverreadroomstatus: jest.fn(),
+    wanixserverreadvmstatus: jest.fn(),
+  }
+})
 
 jest.mock('zss/device/wanixclient/wanixtermbuffer', () => ({
   readwanixtermbufferkeys: jest.fn(() => []),
@@ -14,10 +17,16 @@ jest.mock('zss/device/wanixclient/wanixdisplay', () => ({
   readwanixactivesession: jest.fn(() => null),
 }))
 
-import { callwanixrpc } from 'zss/device/wanixclient/wanixbridge'
-import { applywanixroom, readwanixmenustate } from 'zss/device/wanixclient/wanixroom'
+jest.mock('zss/device/wanixclient/wanixbridge', () => ({
+  registerwanixsessioncloseprune: jest.fn(),
+  iswanixready: jest.fn(() => true),
+  onwanixready: jest.fn((cb: () => void) => cb()),
+}))
 
-const mockrpc = callwanixrpc as jest.Mock
+import {
+  applywanixroom,
+  readwanixmenustate,
+} from 'zss/device/wanixclient/wanixroom'
 
 const taskconfig = {
   mode: 'task' as const,
@@ -28,18 +37,14 @@ const taskconfig = {
 }
 
 describe('readwanixmenustate', () => {
-  beforeEach(async () => {
-    mockrpc.mockReset()
-    mockrpc.mockResolvedValue(null)
-    await applywanixroom(taskconfig)
+  beforeEach(() => {
+    applywanixroom(taskconfig)
   })
 
-  it('returns stalled menu state without inventing vm status on rpc failure', async () => {
-    mockrpc.mockRejectedValue(new Error('wanix menu timeout'))
-    const state = await readwanixmenustate(50)
-    expect(state.stalled).toBe(true)
+  it('returns local menu snapshot without inventing vm status', () => {
+    const state = readwanixmenustate()
+    expect(state.stalled).toBe(false)
     expect(state.ready).toBe(false)
-    expect(state.vmrunning).toBe(false)
-    expect(state.vm).toBeNull()
+    expect(state.config.mode).toBe('task')
   })
 })

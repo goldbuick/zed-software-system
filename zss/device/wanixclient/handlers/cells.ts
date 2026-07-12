@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import { applywanixtermread } from 'zss/device/wanixclient/wanixtermbuffer'
 import type { WanixTermCellsSnapshot } from 'zss/feature/wanix/wanixtermgridstate'
 import { ispresent } from 'zss/mapping/types'

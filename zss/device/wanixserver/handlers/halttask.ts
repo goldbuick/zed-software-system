@@ -8,5 +8,7 @@ export function handlehalttask(wanix: DEVICE, message: MESSAGE): void {
   const taskid = String(
     Array.isArray(message.data) ? message.data[0] : (message.data ?? ''),
   )
-  runwanixhost(wanix, message, 'halttask', () => halttask(taskid))
+  runwanixhost(wanix, message, 'halttask', () => halttask(taskid), {
+    reply: false,
+  })
 }

@@ -1,63 +1,54 @@
 import { createmessage } from 'zss/device'
-import { type MESSAGE, ismessage } from 'zss/device/api'
-import { registerreadplayer } from 'zss/device/registerplayer'
+import type { MESSAGE } from 'zss/device/messagetypes'
+import { ismessage } from 'zss/device/messagetypes'
 import { SOFTWARE } from 'zss/device/session'
 import { isdevbuild } from 'zss/feature/devbuild'
-import { awaitwanixreply } from 'zss/feature/wanix/wanixdeviceclient'
 import {
-  WANIX_MSG_IDLE,
-  WANIX_MSG_READY,
-} from 'zss/feature/wanix/wanixrpcmessages'
-
-import {
+  readbridgestate,
   registerwanixsessioncloseprune as registersessioncloseprune,
   resetwanixattachforidle,
-} from './wanixdisplay'
-import { handlewanixexportmessage } from './wanixexportwait'
-import { clearwanixtermbuffers } from './wanixtermbuffer'
-
-const WANIX_RPC_TIMEOUT_MS = 30_000
-const WANIX_READY_TIMEOUT_MS = 180_000
-const WANIX_RPC_PING_TIMEOUT_MS = 15_000
-const WANIX_RPC_PING_POLL_MS = 100
-
-const WANIX_BRIDGE_STATE_KEY = '__zss_wanix_bridge_state__'
-
-type WanixBridgeState = {
-  childwindow: Window | null
-  childwindowwaiters: (() => void)[]
-  wanixisready: boolean
-  readyresolve: (() => void) | null
-  readypromise: Promise<void> | null
-  deliverwanixmessage: ((message: MESSAGE) => void) | null
-}
-
-function readbridgestate(): WanixBridgeState {
-  const g = globalThis as Record<string, unknown>
-  let state = g[WANIX_BRIDGE_STATE_KEY] as WanixBridgeState | undefined
-  if (!state) {
-    state = {
-      childwindow: null,
-      childwindowwaiters: [],
-      wanixisready: false,
-      readyresolve: null,
-      readypromise: null,
-      deliverwanixmessage: null,
-    }
-    g[WANIX_BRIDGE_STATE_KEY] = state
-    state.readypromise = new Promise<void>((resolve) => {
-      state!.readyresolve = resolve
-    })
-  }
-  return state
-}
+  type WanixReadyCallback,
+} from 'zss/device/wanixclient/state'
+import { clearwanixtermbuffers } from 'zss/device/wanixclient/wanixtermbuffer'
 
 function resetready() {
   const state = readbridgestate()
   state.wanixisready = false
-  state.readypromise = new Promise<void>((resolve) => {
-    state.readyresolve = resolve
-  })
+}
+
+function notifyreadylisteners() {
+  const state = readbridgestate()
+  const listeners = state.readylisteners
+  state.readylisteners = []
+  for (const cb of listeners) {
+    cb()
+  }
+}
+
+export function iswanixready(): boolean {
+  return readbridgestate().wanixisready
+}
+
+/** Register a one-shot callback when iframe becomes ready (not a Promise API). */
+export function onwanixready(cb: WanixReadyCallback): void {
+  const state = readbridgestate()
+  if (state.wanixisready) {
+    cb()
+    return
+  }
+  state.readylisteners.push(cb)
+}
+
+export function markwanixready(): void {
+  const state = readbridgestate()
+  state.wanixisready = true
+  notifyreadylisteners()
+}
+
+export function markwanixidle(): void {
+  resetready()
+  clearwanixtermbuffers()
+  resetwanixattachforidle()
 }
 
 export function registerwanixsessioncloseprune(
@@ -103,22 +94,6 @@ function handleparentmessage(event: MessageEvent) {
   }
   if (ismessage(data)) {
     readbridgestate().deliverwanixmessage?.(data)
-    return
-  }
-  const state = readbridgestate()
-  if (data.type === WANIX_MSG_READY) {
-    state.wanixisready = true
-    state.readyresolve?.()
-    return
-  }
-  if (data.type === WANIX_MSG_IDLE) {
-    resetready()
-    clearwanixtermbuffers()
-    resetwanixattachforidle()
-    return
-  }
-  if (handlewanixexportmessage(data as Record<string, unknown>)) {
-    return
   }
 }
 
@@ -144,7 +119,6 @@ export function waitwanixiframe(timeoutms = 30_000): Promise<Window> {
       )
       reject(new Error('wanix iframe not loaded'))
     }, timeoutms)
-    // Only resolve when a window is bound. A null bind must not reject waiters.
     const onready = () => {
       const current = readbridgestate()
       if (!current.childwindow) {
@@ -189,97 +163,8 @@ export function clearwanixchildwindowifcurrent(expected: Window | null) {
   }
 }
 
-export async function waitwanixrpcping(
-  timeoutms = WANIX_RPC_PING_TIMEOUT_MS,
-): Promise<void> {
-  await waitwanixiframe(timeoutms)
-  const deadline = Date.now() + timeoutms
-  while (Date.now() < deadline) {
-    try {
-      const pong = await callwanixrpc<{ ok: boolean }>('ping', [], 2_000)
-      if (pong?.ok) {
-        return
-      }
-    } catch {
-      // iframe module may still be loading
-    }
-    await new Promise<void>((resolve) =>
-      setTimeout(resolve, WANIX_RPC_PING_POLL_MS),
-    )
-  }
-  throw new Error('wanix rpc handler not ready')
-}
-
-export function waitwanixready(
-  timeoutms = WANIX_READY_TIMEOUT_MS,
-): Promise<void> {
-  const state = readbridgestate()
-  if (state.wanixisready) {
-    return Promise.resolve()
-  }
-  const promise = state.readypromise ?? Promise.resolve()
-  return new Promise<void>((resolve, reject) => {
-    const timer = setTimeout(() => {
-      reject(new Error('wanix ready timeout'))
-    }, timeoutms)
-    void promise.then(
-      () => {
-        clearTimeout(timer)
-        resolve()
-      },
-      (err: unknown) => {
-        clearTimeout(timer)
-        reject(err instanceof Error ? err : new Error(String(err)))
-      },
-    )
-  })
-}
-
-export type WanixTermFitResult = {
-  ok: boolean
-  cols?: number
-  rows?: number
-  noop?: boolean
-}
-
-export async function callwanixtermfit(
-  cols: number,
-  rows: number,
-  sessionkey?: string,
-): Promise<WanixTermFitResult> {
-  await waitwanixready()
-  const args: unknown[] = [cols, rows]
-  if (sessionkey != null && sessionkey !== '') {
-    args.push(sessionkey)
-  }
-  return callwanixrpc<WanixTermFitResult>('termfit', args)
-}
-
-export async function callwanixtermwrite(
-  data: string,
-  sessionkey?: string,
-): Promise<{ ok: boolean }> {
-  await waitwanixready()
-  const args: unknown[] = [data]
-  if (sessionkey != null && sessionkey !== '') {
-    args.push(sessionkey)
-  }
-  return callwanixrpc<{ ok: boolean }>('termwrite', args)
-}
-
-export async function callwanixrpc<T>(
-  method: string,
-  args?: unknown[],
-  timeoutms = WANIX_RPC_TIMEOUT_MS,
-): Promise<T> {
-  await waitwanixiframe()
-  postreadytowanixiframe()
-  return awaitwanixreply<T>(registerreadplayer(), method, args, timeoutms)
-}
-
 if (isdevbuild()) {
   const g = globalThis as Record<string, unknown>
-  g.waitwanixready = waitwanixready
-  g.waitwanixrpcping = waitwanixrpcping
-  g.callwanixrpc = callwanixrpc
+  g.iswanixready = iswanixready
+  g.onwanixready = onwanixready
 }

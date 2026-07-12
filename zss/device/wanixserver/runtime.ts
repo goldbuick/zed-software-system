@@ -1,5 +1,12 @@
-import { ismessage } from 'zss/device/api'
+import {
+  wanixclientcells,
+  wanixclientidle,
+  wanixclientready,
+  wanixclientrequestzedcafestate,
+  wanixclientsession,
+} from 'zss/device/api'
 import { createforward, shouldforwardwanixtoclient } from 'zss/device/forward'
+import { ismessage } from 'zss/device/messagetypes'
 import { SOFTWARE } from 'zss/device/session'
 import { resolvedriverforwasm } from 'zss/device/wanixserver/spawndriver'
 import {
@@ -58,7 +65,6 @@ import {
   waitzedcafereadyrpc,
   wireallguestroots,
 } from 'zss/device/wanixserver/zedcafehost'
-import { awaitwanixuireply } from 'zss/feature/wanix/wanixdeviceclient'
 import type {
   WanixSystemElement,
   WanixTaskDriver,
@@ -74,10 +80,6 @@ import {
   WANIX_V86_ARCHIVE_URL,
   WANIX_ZEDCAFE_LINUX_OVERLAY_URL,
 } from 'zss/feature/wanix/wanixroomtypes'
-import {
-  WANIX_MSG_IDLE,
-  WANIX_MSG_READY,
-} from 'zss/feature/wanix/wanixrpcmessages'
 import {
   createwanixtermgrid,
   readwanixtermgridsnapshot,
@@ -128,19 +130,20 @@ const host: HTMLElement = hostel
 const termencoder = new TextEncoder()
 const termdecoder = new TextDecoder()
 
+let pendingsynczedcaferemovepaths: string[] | null = null
+
 async function synczedcafeexportlocal(
   guestfiles?: WanixZedCafeGuestFile[] | null,
   removepaths: string[] = [],
-): Promise<{ ok: boolean; taskrid: string | null }> {
+): Promise<{ ok: boolean; taskrid: string | null; pending?: boolean }> {
   if (!system?.isReady || !roomconfig.zedcafe?.cmd) {
     return { ok: false, taskrid: null }
   }
-  let files = guestfiles ?? null
+  const files = guestfiles ?? null
   if (!files?.length && removepaths.length === 0) {
-    files = await awaitwanixuireply<WanixZedCafeGuestFile[]>(
-      '',
-      'requestzedcafestate',
-    )
+    pendingsynczedcaferemovepaths = removepaths
+    wanixclientrequestzedcafestate(SOFTWARE, '')
+    return { ok: false, taskrid: null, pending: true }
   }
   const cmd = roomconfig.zedcafe.cmd
   const taskrid = await ensurezedcafeboot(system, readroot(), cmd)
@@ -164,12 +167,21 @@ async function synczedcafeexportlocal(
   return { ok: true, taskrid }
 }
 
+/** Parent answered wanixclient:requestzedcafestate with file payload. */
+export async function continuerequestzedcafestate(
+  files: WanixZedCafeGuestFile[],
+) {
+  const removepaths = pendingsynczedcaferemovepaths ?? []
+  pendingsynczedcaferemovepaths = null
+  return synczedcafeexportlocal(files, removepaths)
+}
+
 function postready() {
-  window.parent.postMessage({ type: WANIX_MSG_READY }, window.location.origin)
+  wanixclientready(SOFTWARE, '')
 }
 
 function postidle() {
-  window.parent.postMessage({ type: WANIX_MSG_IDLE }, window.location.origin)
+  wanixclientidle(SOFTWARE, '')
 }
 
 function postsession(
@@ -177,7 +189,7 @@ function postsession(
   sessionkey: string,
   kind?: WanixSessionKind,
 ) {
-  SOFTWARE.emit('', 'wanixclient:session', {
+  wanixclientsession(SOFTWARE, '', {
     event,
     sessionkey,
     kind,
@@ -402,7 +414,7 @@ function postcells(sessionkey: string, session: TermSession) {
     return
   }
   session.lastcelldigest = snapshot.digest
-  SOFTWARE.emit('', 'wanixclient:cells', {
+  wanixclientcells(SOFTWARE, '', {
     sessionkey,
     snapshot,
   })
@@ -1302,5 +1314,125 @@ export async function iszedcafeguestbound() {
   return readzedcafeguestbound(readroot(), system)
 }
 
+function makewanixtaskid(label: string): string {
+  const base = (label || 'task')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  return base || 'task'
+}
+
+function uniquewanixtaskid(label: string, existing: Iterable<string>): string {
+  const base = makewanixtaskid(label)
+  const used = new Set(existing)
+  let candidate = base
+  let seq = 2
+  while (used.has(candidate)) {
+    candidate = `${base}-${seq}`
+    seq += 1
+  }
+  return candidate
+}
+
+function normalizewanixpath(label: string): string {
+  const trimmed = label.replace(/^\/+/, '')
+  return trimmed.startsWith('#ramfs/') ? trimmed : `#ramfs/${trimmed}`
+}
+
+async function ensuretaskroomfordrop() {
+  if (roomconfig.mode !== 'idle') {
+    return
+  }
+  const next: WanixRoomConfig = {
+    ...roomconfig,
+    mode: 'task',
+    mountkey: roomconfig.mountkey + 1,
+    hardreset: true,
+    archives: [],
+    remotes: [],
+    tasks: [],
+    vm: undefined,
+  }
+  await applyroom(next)
+}
+
+/** Parent → iframe wasm/bundle drop staging + spawn. */
+export async function drop(
+  label: string,
+  kind: 'wasm' | 'bundle',
+  bytes: Uint8Array,
+) {
+  if (!system?.isReady) {
+    throw new Error('wanix room not ready')
+  }
+  await ensuretaskroomfordrop()
+  const taskid = uniquewanixtaskid(
+    label,
+    roomconfig.tasks.map((task) => task.id),
+  )
+  if (kind === 'wasm') {
+    const path = normalizewanixpath(label)
+    await writefile(path, Array.from(bytes))
+    const { readwanixwasmdriver } =
+      await import('zss/feature/wanix/wanixwasmdriver')
+    const result = await spawntask(taskid, path, readwanixwasmdriver(bytes))
+    return {
+      ...result,
+      taskid,
+      cmd: path,
+      spawns: [{ taskid, cmd: path }],
+    }
+  }
+  const { extractwanixtgz } =
+    await import('zss/device/wanixclient/wanixtgzextract')
+  const { listwanixwasmentries, readbundleflatpath } =
+    await import('zss/device/wanixclient/wanixbundle')
+  const { readwanixwasmdriver } =
+    await import('zss/feature/wanix/wanixwasmdriver')
+  const prefix = `bundle-${taskid}`
+  const files = await extractwanixtgz(bytes, prefix)
+  const driverbycmd = new Map<string, WanixTaskDriver>()
+  for (const file of files) {
+    const flatpath = readbundleflatpath(prefix, file.path)
+    const cmd = normalizewanixpath(flatpath)
+    if (file.path.toLowerCase().endsWith('.wasm')) {
+      driverbycmd.set(cmd, readwanixwasmdriver(file.bytes))
+    }
+    await writefile(cmd, Array.from(file.bytes))
+  }
+  const wasmpaths = listwanixwasmentries(files, prefix)
+  const usedids = new Set(roomconfig.tasks.map((task) => task.id))
+  const spawns: { taskid: string; cmd: string }[] = []
+  let firstcmd = ''
+  for (const relpath of wasmpaths) {
+    const flatpath = readbundleflatpath(prefix, relpath)
+    const cmd = normalizewanixpath(flatpath)
+    const basename = relpath.split('/').pop() ?? relpath
+    const subtaskid = uniquewanixtaskid(`${taskid}-${basename}`, usedids)
+    usedids.add(subtaskid)
+    await spawntask(subtaskid, cmd, driverbycmd.get(cmd))
+    spawns.push({ taskid: subtaskid, cmd })
+    if (!firstcmd) {
+      firstcmd = cmd
+    }
+  }
+  return { taskid, cmd: firstcmd, spawns }
+}
+
 await customElements.whenDefined('wanix-system')
 postidle()
+
+const g = globalThis as Record<string, unknown>
+g.__zss_wanix_host__ = {
+  ping,
+  readready,
+  readroomstatus,
+  readvmstatus,
+  listdir,
+  readtext,
+  readfile,
+  readzedcafetaskrid,
+  readzedcafeexportfiles,
+  iszedcafeexportlive,
+  iszedcafeguestbound,
+}

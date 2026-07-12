@@ -1,7 +1,3 @@
-jest.mock('zss/device/wanixclient/wanixbridge', () => ({
-  callwanixrpc: jest.fn(),
-}))
-
 jest.mock('zss/device/wanixclient/wanixroom', () => ({
   readwanixroomconfig: jest.fn(() => ({ mode: 'idle' })),
 }))

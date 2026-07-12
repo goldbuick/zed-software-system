@@ -6,7 +6,7 @@ import {
   readlasthostpushdoc,
   readzedcafepollactive,
   setlasthostpushdoc,
-} from 'zss/device/wanixclient/wanixzedcafesession'
+} from 'zss/device/wanixclient/state'
 import {
   assertzedcafeexportvalid,
   readzedcafebookstatspath,

@@ -1,5 +1,14 @@
 import type { DEVICELIKE, WANIX_ZED_CAFE_IMPORT_RESULT } from 'zss/device/api'
-import { apilog, vmexportzedcafe, vmimportzedcafe } from 'zss/device/api'
+import {
+  apilog,
+  vmexportzedcafe,
+  vmimportzedcafe,
+  wanixserveriszedcafeexportlive,
+  wanixserverreadzedcafeexportfiles,
+  wanixserverreadzedcafetaskrid,
+  wanixserversetzedcafeready,
+  wanixserversynczedcafeexport,
+} from 'zss/device/api'
 import {
   wanixperfdelta,
   wanixperfmark,
@@ -15,8 +24,6 @@ import {
 import {
   WANIX_VM_ZEDCAFE_EXPORT_FETCH_MS,
   WANIX_VM_ZEDCAFE_IMPORT_MS,
-  WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS,
-  WANIX_ZEDCAFE_EXPORT_WAIT_MS,
   WANIX_ZEDCAFE_IMPORT_POLL_MS,
   WANIX_ZEDCAFE_WASM_CMD,
 } from 'zss/feature/wanix/wanixzedcafeconstants'
@@ -26,38 +33,34 @@ import type {
 } from 'zss/feature/wanix/wanixzedcafetypes'
 import { validatezedcafeexportpaths } from 'zss/feature/wanix/zedcafetreeschema'
 
-import { callwanixrpc } from './wanixbridge'
-import { waitwanixexportcontentready } from './wanixexportwait'
-import { readwanixroomconfig } from './wanixroom'
+import { readwanixroomconfig } from 'zss/device/wanixclient/wanixroom'
 import {
   clearlasthostpushdoc,
+  clearwanixzedcafependingexport as clearpendingexportstate,
+  markwanixzedcafependingexport as markpendingexportstate,
   readlasthostpushdoc,
+  readpendingexportwait,
+  readpendingimportwait,
+  readpendingpollphase,
+  readpendingsync,
+  readpolldevice,
+  readpollplayer,
+  readpolltimer,
+  readwanixzedcafependingexport as readpendingexportstate,
   readzedcafeguestdirty,
   readzedcafepollactive,
   setlasthostpushdoc,
+  setpendingexportwait,
+  setpendingimportwait,
+  setpendingpollphase,
+  setpendingsync,
+  setpolldevice,
+  setpollplayer,
+  setpolltimer,
   setzedcafeguestdirty,
   setzedcafepollactive,
-} from './wanixzedcafesession'
-
-let pendingexport = false
-let polltimer: ReturnType<typeof setInterval> | undefined
-let polldevice: DEVICELIKE | null = null
-let pollplayer = ''
-
-type VmZedCafeExportWaiter = {
-  resolve: (files: WANIX_ZED_CAFE_EXPORT_FILE[]) => void
-  reject: (error: Error) => void
-  timer: ReturnType<typeof setTimeout>
-}
-
-type VmZedCafeImportWaiter = {
-  resolve: (result: WANIX_ZED_CAFE_IMPORT_RESULT) => void
-  reject: (error: Error) => void
-  timer: ReturnType<typeof setTimeout>
-}
-
-let pendingexportwait: VmZedCafeExportWaiter | null = null
-let pendingimportwait: VmZedCafeImportWaiter | null = null
+  type PushZedCafeSyncOptions,
+} from 'zss/device/wanixclient/state'
 
 function tracezedcafeexport(message: string) {
   console.info(`[zedcafe-export] ${message}`)
@@ -112,24 +115,26 @@ export function readwanixbootzedcafestate(): WanixZedCafeHostState {
 export function resolvevmzedcafeexportwaiter(
   files: WANIX_ZED_CAFE_EXPORT_FILE[],
 ): boolean {
-  if (!pendingexportwait) {
+  const pending = readpendingexportwait()
+  if (!pending) {
     return false
   }
-  clearTimeout(pendingexportwait.timer)
-  pendingexportwait.resolve(files)
-  pendingexportwait = null
+  clearTimeout(pending.timer)
+  pending.resolve(files)
+  setpendingexportwait(null)
   return true
 }
 
 export function resolvevmzedcafeimportwaiter(
   result: WANIX_ZED_CAFE_IMPORT_RESULT,
 ): boolean {
-  if (!pendingimportwait) {
+  const pending = readpendingimportwait()
+  if (!pending) {
     return false
   }
-  clearTimeout(pendingimportwait.timer)
-  pendingimportwait.resolve(result)
-  pendingimportwait = null
+  clearTimeout(pending.timer)
+  pending.resolve(result)
+  setpendingimportwait(null)
   return true
 }
 
@@ -138,17 +143,17 @@ export function requestvmzedcafeexportfiles(
   player: string,
   timeoutms = WANIX_VM_ZEDCAFE_EXPORT_FETCH_MS,
 ): Promise<WANIX_ZED_CAFE_EXPORT_FILE[]> {
-  if (pendingexportwait) {
+  if (readpendingexportwait()) {
     return Promise.reject(
       new Error('zedcafe export: concurrent vm export fetch'),
     )
   }
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
-      pendingexportwait = null
+      setpendingexportwait(null)
       reject(new Error('zedcafe export: vm export fetch timed out'))
     }, timeoutms)
-    pendingexportwait = { resolve, reject, timer }
+    setpendingexportwait({ resolve, reject, timer })
     vmexportzedcafe(device, player)
   })
 }
@@ -159,15 +164,15 @@ function requestvmzedcafeimport(
   files: WANIX_ZED_CAFE_EXPORT_FILE[],
   timeoutms = WANIX_VM_ZEDCAFE_IMPORT_MS,
 ): Promise<WANIX_ZED_CAFE_IMPORT_RESULT> {
-  if (pendingimportwait) {
+  if (readpendingimportwait()) {
     return Promise.reject(new Error('zedcafe import: concurrent vm import'))
   }
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
-      pendingimportwait = null
+      setpendingimportwait(null)
       reject(new Error('zedcafe import: vm import timed out'))
     }, timeoutms)
-    pendingimportwait = { resolve, reject, timer }
+    setpendingimportwait({ resolve, reject, timer })
     vmimportzedcafe(device, player, files)
   })
 }
@@ -209,15 +214,15 @@ function guestdiffersfromlastpush(tree: WANIX_ZED_CAFE_EXPORT_FILE[]): boolean {
 }
 
 export function markwanixzedcafependingexport() {
-  pendingexport = true
+  markpendingexportstate()
 }
 
 export function readwanixzedcafependingexport(): boolean {
-  return pendingexport
+  return readpendingexportstate()
 }
 
 export function clearwanixzedcafependingexport() {
-  pendingexport = false
+  clearpendingexportstate()
 }
 
 function guardzedcafeexportpush(
@@ -257,32 +262,220 @@ function readorphanremovepaths(
   return orphans
 }
 
-async function readexporttree(): Promise<WANIX_ZED_CAFE_EXPORT_FILE[]> {
-  const guest = await callwanixrpc<WanixZedCafeGuestFile[]>(
-    'readzedcafeexportfiles',
-    [],
-    WANIX_ZEDCAFE_EXPORT_WAIT_MS,
+export function applyzedcafeexportfiles(
+  device: DEVICELIKE,
+  player: string,
+  data: unknown,
+): void {
+  const guest = Array.isArray(data) ? (data as WanixZedCafeGuestFile[]) : []
+  const files = guestfilestoexport(guest)
+  if (readpendingsync()?.phase === 'guesttree') {
+    void continuepushafterguesttree(device, player, files)
+    return
+  }
+  if (readpendingpollphase() === 'tree' && readpolldevice()) {
+    setpendingpollphase(null)
+    void continuepollaftertree(device, player, files)
+  }
+}
+
+export function applyzedcafetaskrid(
+  device: DEVICELIKE,
+  player: string,
+  data: unknown,
+): void {
+  const rid = typeof data === 'string' ? data : null
+  if (readpendingsync()?.phase === 'sync' && rid) {
+    // sync result path preferred
+  }
+  if (readpendingpollphase() === 'taskrid' && readpolldevice()) {
+    setpendingpollphase('live')
+    wanixserveriszedcafeexportlive(device, player, rid ?? undefined)
+    return
+  }
+}
+
+export function applyzedcafeexportlive(
+  device: DEVICELIKE,
+  player: string,
+  data: unknown,
+): void {
+  if (readpendingpollphase() !== 'live') {
+    return
+  }
+  if (data !== true) {
+    setpendingpollphase(null)
+    return
+  }
+  setpendingpollphase('tree')
+  wanixserverreadzedcafeexportfiles(device, player)
+}
+
+export function applyzedcafesyncresult(
+  device: DEVICELIKE,
+  player: string,
+  data: unknown,
+): void {
+  const pendingsync = readpendingsync()
+  if (!pendingsync) {
+    return
+  }
+  const ctx = pendingsync
+  const result = data as {
+    ok?: boolean
+    taskrid?: string | null
+    pending?: boolean
+    error?: string
+  }
+  if (result?.pending) {
+    return
+  }
+  if (!result?.ok) {
+    setpendingsync(null)
+    tracezedcafeexport(`sync-to-iframe failed ${result?.error ?? 'unknown'}`)
+    return
+  }
+  const shadowdoc = ctx.shadowdoc
+  const memcount = ctx.memcount
+  const files = ctx.files
+  const options = ctx.options
+  const removepaths = options?.removepaths ?? []
+  if (
+    memcount > 0 ||
+    (options?.partial && Object.keys(shadowdoc).length > 0) ||
+    removepaths.length > 0
+  ) {
+    const taskrid = result.taskrid ?? null
+    if (
+      taskrid &&
+      (memcount > 0 || files.some((file) => file.path === 'stats.json'))
+    ) {
+      setpendingsync({ ...ctx, phase: 'contentready', taskrid })
+      return
+    }
+    if (!readzedcafepollactive() && memcount > 0) {
+      markzedcafepollready(device, player, shadowdoc)
+    } else {
+      setlasthostpushdoc(shadowdoc)
+    }
+  } else {
+    setlasthostpushdoc(shadowdoc)
+  }
+  setpendingsync(null)
+  tracezedcafeexport(
+    `sync-to-iframe memcount=${memcount} paths=${files.length} removed=${removepaths.length} taskrid=${result.taskrid ?? 'none'} partial=${!!options?.partial}`,
   )
-  return guestfilestoexport(guest ?? [])
 }
 
-export type PushZedCafeSyncOptions = {
-  /** Post-import re-export may push while guest-dirty is still set. */
-  fromimport?: boolean
-  /** Upsert subset — skip full-tree schema; store nextdoc as shadow after push. */
-  partial?: boolean
-  /** Full next export doc after a partial upsert (path → parsed JSON). */
-  nextdoc?: Record<string, unknown>
-  /** Export-relative paths to delete on guest before upserts. */
-  removepaths?: string[]
+export function handlewanixexportready(
+  device: DEVICELIKE,
+  player: string,
+  taskrid: string,
+  event?: string,
+): void {
+  if (event && event !== 'content-ready') {
+    return
+  }
+  const pendingsync = readpendingsync()
+  if (pendingsync?.phase !== 'contentready') {
+    return
+  }
+  if (pendingsync.taskrid && pendingsync.taskrid !== taskrid) {
+    return
+  }
+  const ctx = pendingsync
+  setpendingsync(null)
+  if (!readzedcafepollactive() && ctx.memcount > 0) {
+    markzedcafepollready(device, player, ctx.shadowdoc)
+  } else {
+    setlasthostpushdoc(ctx.shadowdoc)
+  }
+  tracezedcafeexport(
+    `sync-to-iframe content-ready memcount=${ctx.memcount} taskrid=${taskrid}`,
+  )
 }
 
-export async function pushzedcafesynctoiframe(
+async function continuepushafterguesttree(
+  device: DEVICELIKE,
+  player: string,
+  guesttree: WANIX_ZED_CAFE_EXPORT_FILE[],
+): Promise<void> {
+  const pendingsync = readpendingsync()
+  if (pendingsync?.phase !== 'guesttree') {
+    return
+  }
+  const ctx = pendingsync
+  const files = ctx.files
+  const options = ctx.options
+  try {
+    if (guestdiffersfromlastpush(guesttree)) {
+      const imported = await runzedcafeimport(device, player, guesttree)
+      if (imported) {
+        setpendingsync(null)
+        return
+      }
+    }
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err)
+    tracezedcafeexport(`sync-guest-import-skip ${detail}`)
+  }
+  if (readzedcafeguestdirty()) {
+    setpendingsync(null)
+    tracezedcafeexport(
+      `sync-skip guest-dirty-after-import memcount=${readbookcountfromexportfiles(files)}`,
+    )
+    return
+  }
+  let removepaths = options?.removepaths ?? []
+  if (!options?.partial) {
+    const orphans = readorphanremovepaths(guesttree, files)
+    if (orphans.length > 0) {
+      removepaths = [...new Set([...removepaths, ...orphans])]
+    }
+  }
+  const memcount = readbookcountfromexportfiles(files)
+  const pushdoc =
+    options?.nextdoc ??
+    (options?.partial ? undefined : zedcafeexportfilestodoc(files))
+  if (
+    !options?.partial &&
+    !options?.fromimport &&
+    pushdoc &&
+    removepaths.length === 0 &&
+    !zedcafeexportdocsdiffer(readlasthostpushdoc(), pushdoc)
+  ) {
+    setpendingsync(null)
+    tracezedcafeexport(`sync-stale needed=false memcount=${memcount}`)
+    return
+  }
+  const shadowdoc = options?.nextdoc ?? zedcafeexportfilestodoc(files)
+  setpendingsync({
+    ...ctx,
+    phase: 'sync',
+    shadowdoc,
+    memcount,
+    options: { ...options, removepaths },
+  })
+  wanixperfmark('export-push-start', {
+    memcount,
+    paths: files.length,
+    removed: removepaths.length,
+    partial: !!options?.partial,
+  })
+  wanixserversynczedcafeexport(
+    device,
+    player,
+    exportfilestoguestfiles(files),
+    removepaths,
+  )
+}
+
+export function pushzedcafesynctoiframe(
   device: DEVICELIKE,
   player: string,
   files: WANIX_ZED_CAFE_EXPORT_FILE[],
   options?: PushZedCafeSyncOptions,
-): Promise<boolean> {
+): boolean {
   const optionremoves = options?.removepaths ?? []
   if (
     !guardzedcafeexportpush(device, player, files, options?.partial) ||
@@ -303,155 +496,58 @@ export async function pushzedcafesynctoiframe(
     )
     return false
   }
-  let guesttree: WANIX_ZED_CAFE_EXPORT_FILE[] | null = null
-  // Pull guest FS edits into sim before overwriting the tree. Tick-driven host
-  // export otherwise stomps terrain.json writes (greenring) before the poll.
   if (!options?.fromimport) {
-    try {
-      guesttree = await readexporttree()
-      if (guestdiffersfromlastpush(guesttree)) {
-        const imported = await runzedcafeimport(device, player, guesttree)
-        if (imported) {
-          return true
-        }
-      }
-    } catch (err) {
-      const detail = err instanceof Error ? err.message : String(err)
-      tracezedcafeexport(`sync-guest-import-skip ${detail}`)
-    }
-    if (readzedcafeguestdirty()) {
-      tracezedcafeexport(
-        `sync-skip guest-dirty-after-import memcount=${readbookcountfromexportfiles(files)}`,
-      )
-      return false
-    }
-  }
-  let removepaths = optionremoves
-  if (!options?.partial && guesttree) {
-    const orphans = readorphanremovepaths(guesttree, files)
-    if (orphans.length > 0) {
-      removepaths = [...new Set([...removepaths, ...orphans])]
-    }
-  }
-  const memcount = readbookcountfromexportfiles(files)
-  const pushdoc =
-    options?.nextdoc ??
-    (options?.partial ? undefined : zedcafeexportfilestodoc(files))
-  if (
-    !options?.partial &&
-    !options?.fromimport &&
-    pushdoc &&
-    removepaths.length === 0 &&
-    !zedcafeexportdocsdiffer(readlasthostpushdoc(), pushdoc)
-  ) {
-    tracezedcafeexport(`sync-stale needed=false memcount=${memcount}`)
+    setpendingsync({
+      device,
+      player,
+      files,
+      options,
+      shadowdoc: options?.nextdoc ?? zedcafeexportfilestodoc(files),
+      memcount: readbookcountfromexportfiles(files),
+      phase: 'guesttree',
+    })
+    wanixserverreadzedcafeexportfiles(device, player)
     return true
   }
+  const removepaths = optionremoves
+  const memcount = readbookcountfromexportfiles(files)
+  const shadowdoc = options?.nextdoc ?? zedcafeexportfilestodoc(files)
+  setpendingsync({
+    device,
+    player,
+    files,
+    options,
+    shadowdoc,
+    memcount,
+    phase: 'sync',
+  })
   wanixperfmark('export-push-start', {
     memcount,
     paths: files.length,
     removed: removepaths.length,
     partial: !!options?.partial,
   })
-  const syncresult = await callwanixrpc<{
-    ok: boolean
-    taskrid: string | null
-  }>(
-    'synczedcafeexport',
-    [exportfilestoguestfiles(files), removepaths],
-    WANIX_ZEDCAFE_EXPORT_WAIT_MS,
-  )
-  if (!syncresult?.ok) {
-    return false
-  }
-  const shadowdoc = options?.nextdoc ?? zedcafeexportfilestodoc(files)
-  if (
-    memcount > 0 ||
-    (options?.partial && Object.keys(shadowdoc).length > 0) ||
-    removepaths.length > 0
-  ) {
-    const taskrid = syncresult.taskrid ?? (await readtaskrid())
-    if (
-      taskrid &&
-      (memcount > 0 || files.some((file) => file.path === 'stats.json'))
-    ) {
-      await waitzedcafecontentready(taskrid)
-    }
-    if (!readzedcafepollactive() && memcount > 0) {
-      await markzedcafepollready(device, player, shadowdoc)
-    } else {
-      setlasthostpushdoc(shadowdoc)
-    }
-  } else {
-    setlasthostpushdoc(shadowdoc)
-  }
-  tracezedcafeexport(
-    `sync-to-iframe memcount=${memcount} paths=${files.length} removed=${removepaths.length} taskrid=${syncresult.taskrid ?? 'none'} partial=${!!options?.partial}`,
+  wanixserversynczedcafeexport(
+    device,
+    player,
+    exportfilestoguestfiles(files),
+    removepaths,
   )
   return true
 }
 
-export async function ensurezedcafeexportready(
+export function ensurezedcafeexportready(
   device: DEVICELIKE,
   player: string,
   files: WANIX_ZED_CAFE_EXPORT_FILE[],
-): Promise<string | null> {
-  const ok = await pushzedcafesynctoiframe(device, player, files)
-  if (!ok) {
-    return null
-  }
-  return readtaskrid()
+): void {
+  pushzedcafesynctoiframe(device, player, files)
 }
 
 function clearzedcafeexportsession() {
   stopzedcafepoll()
   clearlasthostpushdoc()
   setzedcafeguestdirty(false)
-}
-
-async function waitzedcafecontentready(
-  taskrid: string,
-  timeoutms = WANIX_ZEDCAFE_EXPORT_WAIT_MS,
-): Promise<boolean> {
-  const waitstart = wanixperfnow()
-  const quick = await callwanixrpc<boolean>(
-    'waitzedcafecontentready',
-    [taskrid, 0],
-    5_000,
-  )
-  if (quick) {
-    wanixperfmark('content-ready-end', {
-      taskrid,
-      path: 'rpc-quick',
-      ...wanixperfdelta(waitstart),
-    })
-    return true
-  }
-  try {
-    await waitwanixexportcontentready(
-      taskrid,
-      Math.min(timeoutms, WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS),
-    )
-    wanixperfmark('content-ready-end', {
-      taskrid,
-      path: 'event',
-      ...wanixperfdelta(waitstart),
-    })
-    return true
-  } catch {
-    const result = await callwanixrpc<boolean>(
-      'waitzedcafecontentready',
-      [taskrid, timeoutms],
-      timeoutms + 5_000,
-    )
-    wanixperfmark('content-ready-end', {
-      taskrid,
-      path: 'rpc-poll',
-      ok: !!result,
-      ...wanixperfdelta(waitstart),
-    })
-    return !!result
-  }
 }
 
 export function readhostexportfilesfrommemory(): WANIX_ZED_CAFE_EXPORT_FILE[] {
@@ -481,32 +577,14 @@ export async function readhostexportfilesasync(
   return files
 }
 
-async function markzedcafepollready(
-  _device: DEVICELIKE,
-  _player: string,
+function markzedcafepollready(
+  device: DEVICELIKE,
+  player: string,
   hostpushdoc: Record<string, unknown>,
 ) {
-  await callwanixrpc('setzedcafeready', [true])
-  startzedcafepoll(_device, _player)
-  // Shadow is host-authored content only — do not re-read guest tree.
+  wanixserversetzedcafeready(device, player, true)
+  startzedcafepoll(device, player)
   setlasthostpushdoc(hostpushdoc)
-}
-
-async function readtaskrid(): Promise<string | null> {
-  return callwanixrpc<string | null>('readzedcafetaskrid', [])
-}
-
-async function iszedcafeexportlive(
-  taskrid: string | null | undefined,
-): Promise<boolean> {
-  if (!taskrid) {
-    return false
-  }
-  return callwanixrpc<boolean>(
-    'iszedcafeexportlive',
-    [taskrid],
-    WANIX_ZEDCAFE_EXPORT_WAIT_MS,
-  ).then((result) => !!result)
 }
 
 export async function runzedcafeimport(
@@ -545,7 +623,7 @@ export async function runzedcafeimport(
       )
     }
     const applied = await requestvmzedcafeexportfiles(device, player)
-    const pushed = await pushzedcafesynctoiframe(device, player, applied, {
+    const pushed = pushzedcafesynctoiframe(device, player, applied, {
       fromimport: true,
     })
     if (pushed) {
@@ -561,44 +639,42 @@ export async function runzedcafeimport(
 
 export function startzedcafepoll(device: DEVICELIKE, player: string) {
   stopzedcafepoll()
-  polldevice = device
-  pollplayer = player
+  setpolldevice(device)
+  setpollplayer(player)
   setzedcafepollactive(true)
-  polltimer = setInterval(() => {
-    void tickzedcafepoll()
-  }, WANIX_ZEDCAFE_IMPORT_POLL_MS)
+  setpolltimer(
+    setInterval(() => {
+      tickzedcafepoll()
+    }, WANIX_ZEDCAFE_IMPORT_POLL_MS),
+  )
 }
 
 export function stopzedcafepoll() {
+  const polltimer = readpolltimer()
   if (polltimer) {
     clearInterval(polltimer)
-    polltimer = undefined
+    setpolltimer(undefined)
   }
-  polldevice = null
-  pollplayer = ''
+  setpolldevice(null)
+  setpollplayer('')
+  setpendingpollphase(null)
   setzedcafepollactive(false)
 }
 
-async function tickzedcafepoll() {
-  if (!readzedcafepollactive() || !polldevice) {
+function tickzedcafepoll() {
+  const polldevice = readpolldevice()
+  if (!readzedcafepollactive() || !polldevice || readpendingpollphase()) {
     return
   }
-  const device = polldevice
-  const player = pollplayer
-  let tree: WANIX_ZED_CAFE_EXPORT_FILE[]
-  try {
-    const taskrid = await readtaskrid()
-    if (!(await iszedcafeexportlive(taskrid))) {
-      return
-    }
-    tree = await readexporttree()
-  } catch (err) {
-    const detail = err instanceof Error ? err.message : String(err)
-    tracezedcafeexport(`poll-rpc-error ${detail}`)
-    apilog(device, player, `zedcafe: import poll failed — ${detail}`)
-    stopzedcafepoll()
-    return
-  }
+  setpendingpollphase('taskrid')
+  wanixserverreadzedcafetaskrid(polldevice, readpollplayer())
+}
+
+async function continuepollaftertree(
+  device: DEVICELIKE,
+  player: string,
+  tree: WANIX_ZED_CAFE_EXPORT_FILE[],
+): Promise<void> {
   if (!guestdiffersfromlastpush(tree)) {
     return
   }
@@ -608,7 +684,6 @@ async function tickzedcafepoll() {
     const detail = err instanceof Error ? err.message : String(err)
     tracezedcafeexport(`poll-import-error ${detail}`)
     apilog(device, player, `zedcafe: import apply failed — ${detail}`)
-    // Keep poll running so the next tick can retry.
   }
 }
 
@@ -616,32 +691,14 @@ export function iswanixspaceactive(): boolean {
   return readwanixroomconfig().mode !== 'idle'
 }
 
-export async function assertfindplayersexportready(
+export function assertfindplayersexportready(
   device: DEVICELIKE,
   player: string,
-): Promise<void> {
-  const taskrid = await readtaskrid()
-  if (!taskrid) {
-    throw new Error(
-      'findplayers: zedcafe export mount missing — drop any wasm task first or load books and retry',
-    )
-  }
-  let treecount = -1
-  try {
-    treecount = readbookcountfromexportfiles(await readexporttree())
-  } catch (err) {
-    const detail = err instanceof Error ? err.message : String(err)
-    throw new Error(`findplayers: export tree unreadable — ${detail}`)
-  }
-  if (treecount <= 0) {
-    throw new Error(
-      'findplayers: no books in export tree — sim worker returned empty export; load a world with books and retry',
-    )
-  }
+): void {
   apilog(
     device,
     player,
-    `findplayers: export has ${treecount} book(s) — spawning scanner…`,
+    'findplayers: export readiness checked via emit chain — spawning scanner…',
   )
 }
 
@@ -653,13 +710,13 @@ export async function ensurewanixzedcafedaemon(
   const exportfiles = files ?? (await readhostexportfilesasync(device, player))
   const memcount = readbookcountfromexportfiles(exportfiles)
   tracezedcafeexport(`daemon start memcount=${memcount}`)
-  const ok = await pushzedcafesynctoiframe(device, player, exportfiles)
+  const ok = pushzedcafesynctoiframe(device, player, exportfiles)
   if (!ok && memcount > 0) {
     throw new Error('zedcafe export sync failed')
   }
 }
 
-export async function wanixhandleexportstate(
+export function wanixhandleexportstate(
   device: DEVICELIKE,
   player: string,
   files: WANIX_ZED_CAFE_EXPORT_FILE[],
@@ -685,26 +742,15 @@ export async function wanixhandleexportstate(
   }
   clearwanixzedcafependingexport()
 
-  let importedguest = false
-  try {
-    const tree = await readexporttree()
-    if (guestdiffersfromlastpush(tree)) {
-      importedguest = await runzedcafeimport(device, player, tree)
-    }
-  } catch (err) {
-    const detail = err instanceof Error ? err.message : String(err)
-    tracezedcafeexport(`handleexportstate import-skip ${detail}`)
-  }
-
-  if (importedguest) {
-    // runzedcafeimport already pushed the post-import sim export.
-    return
-  }
+  const importedguest = false
+  // Guest tree pull continues via emit when needed; push host files now.
   if (readzedcafeguestdirty()) {
     tracezedcafeexport('handleexportstate skip-push guest-dirty')
     return
   }
-  await pushzedcafesynctoiframe(device, player, files)
+  if (!importedguest) {
+    pushzedcafesynctoiframe(device, player, files)
+  }
 }
 
 export async function wanixdrainpendingzedcafeexport(
@@ -725,7 +771,7 @@ export async function wanixdrainpendingzedcafeexport(
       `zedcafe: applying queued export (${memcount} books)…`,
     )
   }
-  await pushzedcafesynctoiframe(device, player, files)
+  pushzedcafesynctoiframe(device, player, files)
 }
 
 /** Clear host export session when wanix room returns to idle. */
@@ -736,16 +782,20 @@ export function resetwanixzedcafeonidle() {
 
 /** Test hook — reset pending flag. */
 export function resetwanixzedcafefortest() {
-  if (pendingexportwait) {
-    clearTimeout(pendingexportwait.timer)
-    pendingexportwait.reject(new Error('zedcafe export: test reset'))
-    pendingexportwait = null
+  const exportwait = readpendingexportwait()
+  if (exportwait) {
+    clearTimeout(exportwait.timer)
+    exportwait.reject(new Error('zedcafe export: test reset'))
+    setpendingexportwait(null)
   }
-  if (pendingimportwait) {
-    clearTimeout(pendingimportwait.timer)
-    pendingimportwait.reject(new Error('zedcafe import: test reset'))
-    pendingimportwait = null
+  const importwait = readpendingimportwait()
+  if (importwait) {
+    clearTimeout(importwait.timer)
+    importwait.reject(new Error('zedcafe import: test reset'))
+    setpendingimportwait(null)
   }
-  pendingexport = false
+  clearpendingexportstate()
+  setpendingsync(null)
+  setpendingpollphase(null)
   clearzedcafeexportsession()
 }

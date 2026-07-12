@@ -1,48 +1,50 @@
 import type { DEVICELIKE } from 'zss/device/api'
-import { apilog } from 'zss/device/api'
+import {
+  apilog,
+  wanixserverapplyroom,
+  wanixserverbinddrop,
+  wanixserverhalttask,
+  wanixserverreadroomstatus,
+  wanixserverreadvmstatus,
+  wanixserverspawntask,
+  wanixserverstopvm,
+  wanixserverwritefile,
+} from 'zss/device/api'
+import { registerreadplayer } from 'zss/device/registerplayer'
+import { SOFTWARE } from 'zss/device/session'
 import type { WanixTaskDriver } from 'zss/feature/wanix/wanixelements.d.ts'
-import { wanixperfmark, wanixperfreset } from 'zss/feature/wanix/wanixperf'
 import type {
   WanixBindDropPayload,
-  WanixDropPayload,
   WanixMenuState,
   WanixMenuVmStatus,
   WanixRoomConfig,
   WanixRoomStatus,
-  WanixSpawnTaskResult,
 } from 'zss/feature/wanix/wanixroomtypes'
 import {
   DEFAULT_WANIX_VM_ID,
   DEFAULT_WANIX_VM_MEM,
   createidleroomconfig,
 } from 'zss/feature/wanix/wanixroomtypes'
-import { readwanixwasmdriver } from 'zss/feature/wanix/wanixwasmdriver'
 import type { WanixZedCafeRoomSpec } from 'zss/feature/wanix/wanixzedcafetypes'
 
-import { activatewanixzedcafeexport } from './wanixactivateexport'
+import { activatewanixzedcafeexport } from 'zss/device/wanixclient/wanixactivateexport'
+import { registerwanixsessioncloseprune } from 'zss/device/wanixclient/wanixbridge'
+import { readattachedsession, readwanixactivesession } from 'zss/device/wanixclient/wanixdisplay'
 import {
-  callwanixrpc,
-  registerwanixsessioncloseprune,
-  waitwanixiframe,
-  waitwanixready,
-} from './wanixbridge'
-import { listwanixwasmentries, readbundleflatpath } from './wanixbundle'
-import { uniquewanixtaskid } from './wanixcmd'
-import { readattachedsession, readwanixactivesession } from './wanixdisplay'
-import {
+  readpendingapplyconfig,
+  readpendingmenu,
+  readpendingspawn,
   readwanixroomconfig as readwanixroomconfigstate,
+  setpendingapplyconfig,
+  setpendingmenu,
+  setpendingspawn,
   wanixroomconfigbox,
-} from './wanixroomstate'
-import { readwanixtermbufferkeys } from './wanixtermbuffer'
-import { extractwanixtgz } from './wanixtgzextract'
+} from 'zss/device/wanixclient/state'
+import { readwanixtermbufferkeys } from 'zss/device/wanixclient/wanixtermbuffer'
 import {
-  assertfindplayersexportready,
   readwanixbootzedcafestate,
   resetwanixzedcafeonidle,
-} from './wanixzedcafe'
-
-const WANIX_ROOM_TIMEOUT_MS = 180_000
-const WANIX_MENU_TIMEOUT_MS = 3_000
+} from 'zss/device/wanixclient/wanixzedcafe'
 
 function bumpmountkey(config: WanixRoomConfig): WanixRoomConfig {
   return { ...config, mountkey: config.mountkey + 1, hardreset: true }
@@ -52,23 +54,24 @@ export function readwanixroomconfig(): WanixRoomConfig {
   return readwanixroomconfigstate()
 }
 
-export async function applywanixroom(
-  config: WanixRoomConfig,
-): Promise<unknown> {
-  await waitwanixiframe(WANIX_ROOM_TIMEOUT_MS)
-  const result = await callwanixrpc<unknown>(
-    'applyroom',
-    [config],
-    WANIX_ROOM_TIMEOUT_MS,
-  )
+export function applywanixroom(config: WanixRoomConfig): void {
+  setpendingapplyconfig(config)
   wanixroomconfigbox.current = config
-  return result
+  wanixserverapplyroom(SOFTWARE, registerreadplayer(), config)
 }
 
-export async function ensurewanixtaskroom(
+export function applywanixroomresult(): void {
+  const pending = readpendingapplyconfig()
+  if (pending) {
+    wanixroomconfigbox.current = pending
+    setpendingapplyconfig(null)
+  }
+}
+
+export function ensurewanixtaskroom(
   device?: DEVICELIKE,
   player?: string,
-): Promise<void> {
+): void {
   if (wanixroomconfigbox.current.mode !== 'idle') {
     if (device && player) {
       apilog(
@@ -76,7 +79,7 @@ export async function ensurewanixtaskroom(
         player,
         'zedcafe: syncing export on active wanix room (no remount)…',
       )
-      await activatewanixzedcafeexport(device, player)
+      void activatewanixzedcafeexport(device, player)
     }
     return
   }
@@ -104,24 +107,25 @@ export async function ensurewanixtaskroom(
     vm: undefined,
     zedcafe,
   }
-  wanixperfmark('drop-start', { label: 'ensurewanixtaskroom' })
-  await applywanixroom(next)
-  wanixperfmark('applyroom-return', { mode: 'task' })
+  applywanixroom(next)
+  if (device && player) {
+    void activatewanixzedcafeexport(device, player)
+  }
 }
 
-export async function startwanixvmroom(
+export function startwanixvmroom(
   vmid = DEFAULT_WANIX_VM_ID,
   mem = DEFAULT_WANIX_VM_MEM,
   zedcafe?: WanixZedCafeRoomSpec | null,
-): Promise<unknown> {
+): void {
   if (
     wanixroomconfigbox.current.mode === 'vm' &&
     wanixroomconfigbox.current.vm?.active &&
     wanixroomconfigbox.current.vm.id === vmid &&
     wanixroomconfigbox.current.vm.mem === mem
   ) {
-    await waitwanixready(WANIX_ROOM_TIMEOUT_MS)
-    return callwanixrpc('readvmstatus')
+    wanixserverreadvmstatus(SOFTWARE, registerreadplayer())
+    return
   }
   const next: WanixRoomConfig = {
     ...bumpmountkey(wanixroomconfigbox.current),
@@ -132,25 +136,19 @@ export async function startwanixvmroom(
     vm: { id: vmid, mem, active: true },
     zedcafe: zedcafe ?? wanixroomconfigbox.current.zedcafe,
   }
-  return applywanixroom(next)
+  applywanixroom(next)
 }
 
-export async function stopwanixvmroom(): Promise<unknown> {
-  await waitwanixready(WANIX_ROOM_TIMEOUT_MS)
-  const result = await callwanixrpc<unknown>(
-    'stopvm',
-    [],
-    WANIX_ROOM_TIMEOUT_MS,
-  )
+export function stopwanixvmroom(): void {
+  wanixserverstopvm(SOFTWARE, registerreadplayer())
   wanixroomconfigbox.current = {
     ...wanixroomconfigbox.current,
     mode: 'task',
     vm: undefined,
   }
-  return result
 }
 
-export async function stopwanixroom(hard = false): Promise<unknown> {
+export function stopwanixroom(hard = false): void {
   resetwanixzedcafeonidle()
   const next = createidleroomconfig()
   next.mountkey = hard
@@ -159,20 +157,15 @@ export async function stopwanixroom(hard = false): Promise<unknown> {
   if (hard) {
     next.hardreset = true
   }
-  return applywanixroom(next)
+  applywanixroom(next)
 }
 
-export async function spawntaskinroom(
+export function spawntaskinroom(
   taskid: string,
   cmd: string,
   driver?: WanixTaskDriver,
-): Promise<WanixSpawnTaskResult> {
-  await waitwanixready(WANIX_ROOM_TIMEOUT_MS)
-  const result = await callwanixrpc<WanixSpawnTaskResult>(
-    'spawntask',
-    [taskid, cmd, driver ?? null],
-    WANIX_ROOM_TIMEOUT_MS,
-  )
+): void {
+  setpendingspawn({ taskid, cmd })
   wanixroomconfigbox.current = {
     ...wanixroomconfigbox.current,
     tasks: [
@@ -180,27 +173,43 @@ export async function spawntaskinroom(
       { id: taskid, cmd, running: true },
     ],
   }
-  return result
+  wanixserverspawntask(SOFTWARE, registerreadplayer(), taskid, cmd, driver)
 }
 
-export async function halttaskinroom(
-  taskid: string,
-): Promise<{ ok: boolean; idle?: boolean }> {
+export function applywanixtaskspawnresult(data: unknown): void {
+  if (
+    data &&
+    typeof data === 'object' &&
+    (data as { ok?: unknown }).ok === false
+  ) {
+    const pending = readpendingspawn()
+    if (pending) {
+      const { taskid } = pending
+      wanixroomconfigbox.current = {
+        ...wanixroomconfigbox.current,
+        tasks: wanixroomconfigbox.current.tasks.filter(
+          (task) => task.id !== taskid,
+        ),
+      }
+    }
+  }
+  setpendingspawn(null)
+}
+
+export function halttaskinroom(taskid: string): void {
   if (wanixroomconfigbox.current.mode === 'idle') {
-    return { ok: true, idle: true }
+    return
   }
   if (!wanixroomconfigbox.current.tasks.some((task) => task.id === taskid)) {
-    return { ok: true, idle: true }
+    return
   }
-  await waitwanixready()
-  const result = await callwanixrpc<{ ok: boolean }>('halttask', [taskid])
+  wanixserverhalttask(SOFTWARE, registerreadplayer(), taskid)
   wanixroomconfigbox.current = {
     ...wanixroomconfigbox.current,
     tasks: wanixroomconfigbox.current.tasks.filter(
       (task) => task.id !== taskid,
     ),
   }
-  return result
 }
 
 export function removewanixroomtask(taskid: string) {
@@ -215,52 +224,15 @@ export function removewanixroomtask(taskid: string) {
   }
 }
 
-export async function putwanixroomfile(
-  path: string,
-  bytes: Uint8Array,
-): Promise<void> {
-  await waitwanixready()
-  await callwanixrpc('writefile', [path, Array.from(bytes)])
+export function putwanixroomfile(path: string, bytes: Uint8Array): void {
+  wanixserverwritefile(SOFTWARE, registerreadplayer(), path, Array.from(bytes))
 }
 
-export async function handlewanixbinddrop(
+export function handlewanixbinddrop(
   payload: WanixBindDropPayload,
   sessionkey: string,
-): Promise<{
-  ok: boolean
-  sessionkey: string
-  kind: 'task' | 'vm'
-  dst: string
-}> {
-  await waitwanixready()
-  const result = await callwanixrpc<{
-    ok: boolean
-    sessionkey: string
-    kind: 'task' | 'vm'
-    dst: string
-  }>('binddrop', [sessionkey, payload])
-  return result
-}
-
-function withwanixtimeout<T>(
-  promise: Promise<T>,
-  timeoutms: number,
-): Promise<T> {
-  return new Promise<T>((resolve, reject) => {
-    const timer = setTimeout(() => {
-      reject(new Error('wanix menu timeout'))
-    }, timeoutms)
-    void promise.then(
-      (value) => {
-        clearTimeout(timer)
-        resolve(value)
-      },
-      (err: unknown) => {
-        clearTimeout(timer)
-        reject(err instanceof Error ? err : new Error(String(err)))
-      },
-    )
-  })
+): void {
+  wanixserverbinddrop(SOFTWARE, registerreadplayer(), sessionkey, payload)
 }
 
 function readwanixmenusessionfields() {
@@ -284,9 +256,138 @@ function readwanixmenufallbackvm(): WanixMenuVmStatus | null {
   }
 }
 
-export async function readwanixmenustate(
-  timeoutms = WANIX_MENU_TIMEOUT_MS,
-): Promise<WanixMenuState> {
+function buildmenufrompending(): WanixMenuState {
+  const config = readwanixroomconfig()
+  const pending = readpendingmenu()
+  const roomstatus = pending?.roomstatus
+  const vmstatus = pending?.vmstatus
+  if (pending?.stalled || (!roomstatus && !vmstatus)) {
+    const fallbackvm = readwanixmenufallbackvm()
+    return {
+      config,
+      ready: false,
+      vmrunning: !!fallbackvm?.running,
+      vm: fallbackvm,
+      stalled: true,
+      ...readwanixmenusessionfields(),
+    }
+  }
+  const vmrunning = roomstatus?.vmrunning ?? vmstatus?.running ?? false
+  return {
+    config: {
+      ...config,
+      mode: roomstatus?.mode ?? config.mode,
+      tasks: roomstatus?.tasks ?? config.tasks,
+      vm: roomstatus?.vm ?? config.vm,
+    },
+    ready: roomstatus?.ready ?? false,
+    vmrunning,
+    vm: vmrunning || vmstatus?.running ? (vmstatus ?? null) : null,
+    stalled: false,
+    ...readwanixmenusessionfields(),
+  }
+}
+
+function maybeflushmenu() {
+  const pending = readpendingmenu()
+  if (!pending?.player) {
+    return
+  }
+  if (!pending.roomstatus || !pending.vmstatus) {
+    return
+  }
+  const player = pending.player
+  const state = buildmenufrompending()
+  setpendingmenu(null)
+  void import('zss/device/wanixclient/wanixmenu').then(
+    ({ buildwanixmenutape }) => {
+      void import('zss/feature/terminalwritelines').then(
+        ({ terminalwritelines }) => {
+          terminalwritelines(SOFTWARE, player, buildwanixmenutape(state))
+        },
+      )
+    },
+  )
+}
+
+export function requestwanixmenustate(player: string): void {
+  const config = readwanixroomconfig()
+  if (config.mode === 'idle') {
+    void import('zss/device/wanixclient/wanixmenu').then(
+      ({ buildwanixmenutape }) => {
+        void import('zss/feature/terminalwritelines').then(
+          ({ terminalwritelines }) => {
+            terminalwritelines(
+              SOFTWARE,
+              player,
+              buildwanixmenutape({
+                config,
+                ready: false,
+                vmrunning: false,
+                vm: null,
+                stalled: false,
+                ...readwanixmenusessionfields(),
+              }),
+            )
+          },
+        )
+      },
+    )
+    return
+  }
+  setpendingmenu({ player })
+  wanixserverreadroomstatus(SOFTWARE, player)
+  wanixserverreadvmstatus(SOFTWARE, player)
+}
+
+export function applywanixroomstatus(data: unknown): void {
+  const pending = readpendingmenu()
+  if (!pending) {
+    return
+  }
+  if (
+    data &&
+    typeof data === 'object' &&
+    (data as { ok?: unknown }).ok === false
+  ) {
+    pending.stalled = true
+    pending.roomstatus = {
+      ...readwanixroomconfig(),
+      ready: false,
+    }
+    maybeflushmenu()
+    return
+  }
+  pending.roomstatus = data as WanixRoomStatus & { vmrunning?: boolean }
+  maybeflushmenu()
+}
+
+export function applywanixvmstatus(data: unknown): void {
+  const pending = readpendingmenu()
+  if (!pending) {
+    return
+  }
+  if (
+    data &&
+    typeof data === 'object' &&
+    (data as { ok?: unknown }).ok === false
+  ) {
+    pending.stalled = true
+    pending.vmstatus = {
+      running: false,
+      vmid: null,
+      vrid: null,
+      mem: null,
+    }
+    maybeflushmenu()
+    return
+  }
+  pending.vmstatus = data as WanixMenuVmStatus
+  maybeflushmenu()
+}
+
+/** Sync snapshot for tests / callers that still need local menu fields. */
+export function readwanixmenustate(): WanixMenuState {
   const config = readwanixroomconfig()
   if (config.mode === 'idle') {
     return {
@@ -298,171 +399,63 @@ export async function readwanixmenustate(
       ...readwanixmenusessionfields(),
     }
   }
-  try {
-    const [roomstatus, vmstatus] = await withwanixtimeout(
-      Promise.all([
-        callwanixrpc<WanixRoomStatus & { vmrunning?: boolean }>(
-          'readroomstatus',
-          [],
-          timeoutms,
+  const fallbackvm = readwanixmenufallbackvm()
+  return {
+    config,
+    ready: false,
+    vmrunning: !!fallbackvm?.running,
+    vm: fallbackvm,
+    stalled: false,
+    ...readwanixmenusessionfields(),
+  }
+}
+
+export function applywanixdropdone(
+  device: DEVICELIKE,
+  player: string,
+  result: {
+    taskid?: unknown
+    cmd?: unknown
+    spawns?: unknown
+  },
+): void {
+  const spawns = Array.isArray(result.spawns) ? result.spawns : []
+  for (const spawn of spawns) {
+    if (!spawn || typeof spawn !== 'object') {
+      continue
+    }
+    const entry = spawn as { taskid?: unknown; cmd?: unknown }
+    if (typeof entry.taskid !== 'string' || typeof entry.cmd !== 'string') {
+      continue
+    }
+    wanixroomconfigbox.current = {
+      ...wanixroomconfigbox.current,
+      mode:
+        wanixroomconfigbox.current.mode === 'idle'
+          ? 'task'
+          : wanixroomconfigbox.current.mode,
+      tasks: [
+        ...wanixroomconfigbox.current.tasks.filter(
+          (task) => task.id !== entry.taskid,
         ),
-        callwanixrpc<WanixMenuVmStatus>('readvmstatus', [], timeoutms),
-      ]),
-      timeoutms,
-    )
-    const vmrunning = roomstatus.vmrunning ?? vmstatus.running ?? false
-    return {
-      config: {
-        ...config,
-        mode: roomstatus.mode ?? config.mode,
-        tasks: roomstatus.tasks ?? config.tasks,
-        vm: roomstatus.vm ?? config.vm,
-      },
-      ready: roomstatus.ready ?? false,
-      vmrunning,
-      vm: vmrunning || vmstatus.running ? vmstatus : null,
-      stalled: false,
-      ...readwanixmenusessionfields(),
-    }
-  } catch {
-    const fallbackvm = readwanixmenufallbackvm()
-    return {
-      config,
-      ready: false,
-      vmrunning: !!fallbackvm?.running,
-      vm: fallbackvm,
-      stalled: true,
-      ...readwanixmenusessionfields(),
+        { id: entry.taskid, cmd: entry.cmd, running: true },
+      ],
     }
   }
-}
-
-function normalizewanixpath(label: string): string {
-  const trimmed = label.replace(/^\/+/, '')
-  return trimmed.startsWith('#ramfs/') ? trimmed : `#ramfs/${trimmed}`
-}
-
-function readtaskidset(): Set<string> {
-  return new Set(wanixroomconfigbox.current.tasks.map((task) => task.id))
-}
-
-export async function handlewanixdrop(
-  payload: WanixDropPayload,
-  device?: DEVICELIKE,
-  player?: string,
-): Promise<{
-  taskid: string
-  cmd: string
-  spawns: { taskid: string; cmd: string }[]
-}> {
-  const taskid = uniquewanixtaskid(
-    payload.label,
-    wanixroomconfigbox.current.tasks.map((task) => task.id),
-  )
-
-  if (payload.kind === 'wasm') {
-    wanixperfreset()
-    await ensurewanixtaskroom(device, player)
-    const path = normalizewanixpath(payload.label)
-    if (device && player) {
-      apilog(
-        device,
-        player,
-        `wanix: staging ${payload.label} (${payload.bytes.length} bytes)…`,
-      )
-    }
-    wanixperfmark('wasm-write-start', { path, bytes: payload.bytes.length })
-    const exportready =
-      device && player
-        ? activatewanixzedcafeexport(device, player)
-        : Promise.resolve()
-    const stagewasm = putwanixroomfile(path, payload.bytes)
-    await Promise.all([exportready, stagewasm])
-    wanixperfmark('wasm-write-end', { path, bytes: payload.bytes.length })
-    const isfindplayers = payload.label.toLowerCase().includes('findplayers')
-    if (isfindplayers && device && player) {
-      await assertfindplayersexportready(device, player)
-    } else if (device && player) {
-      apilog(device, player, `wanix: spawning task ${taskid}…`)
-    }
-    await spawntaskinroom(taskid, path, readwanixwasmdriver(payload.bytes))
-    wanixperfmark('spawntask-return', { taskid, cmd: path })
-    if (device && player && isfindplayers) {
-      apilog(
-        device,
-        player,
-        `findplayers: task ${taskid} running — attach via #wanix or check task term for JSON output`,
-      )
-    }
-    return { taskid, cmd: path, spawns: [{ taskid, cmd: path }] }
+  if (typeof result.taskid === 'string') {
+    apilog(device, player, `wanix drop done task=${result.taskid}`)
   }
-
-  await ensurewanixtaskroom(device, player)
-  if (device && player) {
-    await activatewanixzedcafeexport(device, player)
-  }
-  const prefix = `bundle-${taskid}`
-  const files = await extractwanixtgz(payload.bytes, prefix)
-  const driverbycmd = new Map<string, WanixTaskDriver>()
-  for (const file of files) {
-    const flatpath = readbundleflatpath(prefix, file.path)
-    const cmd = normalizewanixpath(flatpath)
-    if (file.path.toLowerCase().endsWith('.wasm')) {
-      driverbycmd.set(cmd, readwanixwasmdriver(file.bytes))
-    }
-    await putwanixroomfile(cmd, file.bytes)
-  }
-
-  const wasmpaths = listwanixwasmentries(files, prefix)
-  if (!wasmpaths.length) {
-    return { taskid, cmd: '', spawns: [] }
-  }
-
-  const usedids = readtaskidset()
-  const spawns: { taskid: string; cmd: string }[] = []
-  let firstcmd = ''
-  for (const relpath of wasmpaths) {
-    const flatpath = readbundleflatpath(prefix, relpath)
-    const cmd = normalizewanixpath(flatpath)
-    const basename = relpath.split('/').pop() ?? relpath
-    const subtaskid = uniquewanixtaskid(`${taskid}-${basename}`, usedids)
-    usedids.add(subtaskid)
-    await spawntaskinroom(subtaskid, cmd, driverbycmd.get(cmd))
-    spawns.push({ taskid: subtaskid, cmd })
-    if (!firstcmd) {
-      firstcmd = cmd
-    }
-  }
-
-  return { taskid, cmd: firstcmd, spawns }
+  void activatewanixzedcafeexport(device, player)
 }
 
-registerwanixsessioncloseprune(removewanixroomtask)
-
-export type WanixVmStatus = {
-  running: boolean
-  vmid: string | null
-  vrid: string | null
-  mem: string | null
-}
-
-export type WanixVmStartResult = {
-  ok: boolean
-  already?: boolean
-  vmid: string
-  vrid?: string | null
-  mem?: string | null
-}
-
-export async function startwanixvm(
+export function startwanixvm(
   mem = DEFAULT_WANIX_VM_MEM,
   vmid = DEFAULT_WANIX_VM_ID,
   device?: DEVICELIKE,
   player?: string,
-): Promise<WanixVmStartResult> {
+): void {
   let zedcafe: WanixZedCafeRoomSpec | null | undefined
   if (device && player) {
-    wanixperfreset()
     const boot = readwanixbootzedcafestate()
     if (boot) {
       zedcafe = {
@@ -471,46 +464,21 @@ export async function startwanixvm(
       }
     }
   }
-  const result = (await startwanixvmroom(
-    vmid,
-    mem,
-    zedcafe,
-  )) as WanixVmStatus & {
-    vrid?: string | null
-    already?: boolean
-  }
+  startwanixvmroom(vmid, mem, zedcafe)
   if (device && player) {
-    // Parent owns the book push after applyroom. Iframe must not pull
-    // requestzedcafestate during applyroom — that raced VM boot and timed out.
-    await activatewanixzedcafeexport(device, player)
-  }
-  if (result.running) {
-    return {
-      ok: true,
-      already: true,
-      vmid: result.vmid ?? vmid,
-      vrid: result.vrid ?? null,
-      mem: result.mem ?? mem,
-    }
-  }
-  return {
-    ok: true,
-    vmid: result.vmid ?? vmid,
-    vrid: result.vrid ?? null,
-    mem: result.mem ?? mem,
+    void activatewanixzedcafeexport(device, player)
   }
 }
 
-export async function stopwanixvm(
-  vmid = DEFAULT_WANIX_VM_ID,
-): Promise<{ ok: boolean }> {
+export function stopwanixvm(vmid = DEFAULT_WANIX_VM_ID): void {
   const config = readwanixroomconfig()
   if (config.mode !== 'vm') {
-    return { ok: true }
+    return
   }
   if (config.vm?.id && config.vm.id !== vmid) {
-    return { ok: true }
+    return
   }
-  await stopwanixvmroom()
-  return { ok: true }
+  stopwanixvmroom()
 }
+
+registerwanixsessioncloseprune(removewanixroomtask)

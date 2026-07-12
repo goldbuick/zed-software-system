@@ -571,11 +571,7 @@ export async function pushzedcafeexportlive(
   }
   // Removals-only: still signal content-ready so parent waiters unblock.
   if (sorted.length > 0 || removepaths.length > 0) {
-    postwanixexportmessage('content-ready', taskrid, {
-      bookcount,
-      paths: sorted.length,
-      removed: removepaths.length,
-    })
+    postwanixexportmessage('content-ready', taskrid)
   }
   if (sorted.length > 0 || bookcount > 0) {
     setzedcafereadylocal(true)

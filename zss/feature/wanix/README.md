@@ -52,7 +52,7 @@ flowchart TB
     Sys --> ZTask["wanix-task id=zedcafe — export daemon"]
   end
 
-  Parent <-->|"postMessage RPC + cells + export events"| Cafe
+  Parent <-->|"device messages via postMessage bridge"| Cafe
   ZTask -->|"bind #task/rid/export → zedcafe/"| Tasks
   ZTask -->|"bind → VM /zedcafe/"| VM
 ```
@@ -68,7 +68,7 @@ boundary — no shared DOM.
 
 | Side | Entry | Owns |
 |------|--------|------|
-| **Parent** | `wanixclient/wanixhost` mounts ghost iframe; `wanixbridge` RPC client | Room config, drop routing, export file tree from memory, attach state, term grid snapshots |
+| **Parent** | `wanixclient/wanixhost` mounts ghost iframe; `wanixbridge` message bridge | Room config, drop routing, export file tree from memory, attach state, term grid snapshots |
 | **Iframe** | `cafe/wanix.ts` → `device/wanixserver/runtime` on `/wanix.html` | `<wanix-system>`, VM/task elements, term byte pumps, zedcafe gojs boot, `#ramfs` writes |
 
 ```text
@@ -203,11 +203,11 @@ sequenceDiagram
   Host->>Parent: changed WANIX_ZED_CAFE_EXPORT_FILE[] (partial upsert)
   Note over Parent: Room activation or drop triggers full push
 
-  Parent->>Iframe: RPC synczedcafeexport (files[])
+  Parent->>Iframe: wanixserver:synczedcafeexport (files[])
   Iframe->>Iframe: writeFile #task/rid/export/…
   Iframe->>Iframe: verify stats.json + bookCount / book stats
-  Iframe-->>Parent: WANIX_MSG_EXPORT content-ready
-  Parent->>Iframe: wirezedcafeexport (binds)
+  Iframe-->>Parent: wanixclient:exportready content-ready
+  Iframe-->>Parent: wanixclient:synczedcafeexport
   Guest->>Guest: read /zedcafe/stats.json
 ```
 
@@ -236,8 +236,8 @@ sequenceDiagram
   in sim; missing `board/objects/*.json` disappear when the board page is upserted.
   A valid empty tree (`bookCount: 0`) clears all sim books.
 - While `guestdirty`, host pushes of pre-import snapshots are skipped.
-- Apply failures log and **leave the poll running** (retry next tick). Hard iframe RPC
-  failures still stop the poll.
+- Apply failures log and **leave the poll running** (retry next tick). Hard iframe
+  message failures still stop the poll.
 
 **Readiness contract (two gates):**
 
@@ -248,9 +248,8 @@ sequenceDiagram
 greenring, and VM `zedcafe-ready` all poll it.
 
 **Event-driven wait (perf fix):** After push, iframe posts
-[`WANIX_MSG_EXPORT`](wanixrpcmessages.ts) `{ event: 'content-ready', taskrid }`.
-Parent [`waitwanixexportwait.ts`](wanixexportwait.ts) resolves waiters; RPC poll is fallback
-only (250 ms budget, 30 s ceiling).
+[`wanixclient:exportready`](api.ts (wanix helpers)) `{ event: 'content-ready', taskrid }`.
+Parent [`handlers/exportready.ts`](../../device/wanixclient/handlers/exportready.ts) continues the zedcafe pipeline on `wanixclient:exportready`.
 
 ---
 
@@ -354,7 +353,7 @@ worker** (where cafe books live), pushed to the zedcafe daemon, then findplayers
 
 ## Terminal attach & input
 
-Iframe posts `WANIX_MSG_SESSION`:
+Iframe posts `wanixclient:session`:
 
 | Event | Parent behavior |
 |-------|-----------------|
@@ -477,7 +476,7 @@ Warm path (`#wanix vm` first, or second drop after soft idle) skipped remount an
 |-----------|----------------|
 | **Soft idle** | `#wanix stop` keeps `<wanix-system>`; halts tasks/zedcafe; same `mountkey` |
 | **Warm applyroom** | idle→task/vm reuses system; `ensurezedcafeboot` in iframe |
-| **Export event** | `content-ready` postMessage; parent waits on event not 250 ms polls |
+| **Export event** | `wanixclient:exportready` after host push; parent continues pipeline |
 | **Parallel staging** | `activatezedcafeexport` ∥ `putwanixroomfile` on wasm drop |
 | **No mountkey bump** | First task drop from soft idle does not force remount |
 
@@ -500,16 +499,20 @@ corruption.
 
 ## Message protocol
 
-| Constant | Direction | Purpose |
-|----------|-----------|---------|
-| `WANIX_MSG_READY` | iframe → parent | System ready |
-| `WANIX_MSG_IDLE` | iframe → parent | Soft/hard idle |
-| `WANIX_MSG_RPC` / `_RES` | both | Request/response (`applyroom`, `spawntask`, …) |
-| `WANIX_MSG_CELLS` | iframe → parent | Term grid snapshot |
-| `WANIX_MSG_SESSION` | iframe → parent | Session open/active/close |
-| `WANIX_MSG_EXPORT` | iframe → parent | `{ event: 'content-ready', taskrid, … }` |
+All Wanix device messages are emitted only via [`zss/device/api.ts`](../../device/api.ts) helpers. Parent ↔ iframe is emit → handler → emit (no Promise RPC / once-device replies).
 
-Defined in [`wanixrpcmessages.ts`](wanixrpcmessages.ts).
+| Message | Direction | Purpose |
+|---------|-----------|---------|
+| `wanixclient:ready` | iframe → parent | System ready |
+| `wanixclient:idle` | iframe → parent | Soft/hard idle |
+| `wanixserver:<method>` | parent → iframe | Commands (`applyroom`, `spawntask`, `synczedcafeexport`, `drop`, …) |
+| `wanixclient:<method>` | iframe → parent | Completions / pushes for the same action segment |
+| `wanixclient:cells` | iframe → parent | Term grid snapshot |
+| `wanixclient:session` | iframe → parent | Session open/active/close |
+| `wanixclient:exportready` | iframe → parent | `{ event: 'content-ready', taskrid, … }` |
+| `wanixclient:exportstate` / `importresult` | sim → parent | Zedcafe export/import loop |
+
+Helpers: `wanixserver*` / `wanixclient*` in [`api.ts`](../../device/api.ts).
 
 ---
 
@@ -519,13 +522,13 @@ Defined in [`wanixrpcmessages.ts`](wanixrpcmessages.ts).
 
 | Module | Role |
 |--------|------|
-| [`handlers/`](../../device/wanixclient/handlers/) (`registry.ts`, `attach`, `cells`, `show`, …) | `wanixclient:*` device handlers |
+| [`handlers/`](../../device/wanixclient/handlers/) (`registry.ts`, `cells`, `ready`, `exportready`, …) | `wanixclient:*` device handlers |
 | [`wanixdisplay.ts`](../../device/wanixclient/wanixdisplay.ts) | Attach / active session / tape reveal |
 | [`wanixtermbuffer.ts`](../../device/wanixclient/wanixtermbuffer.ts) (+ clipboard/scroll/text/handlers) | Parent term UI |
-| [`wanixhost.tsx`](../../device/wanixclient/wanixhost.tsx) / [`wanixbridge.ts`](../../device/wanixclient/wanixbridge.ts) | Ghost iframe + parent RPC |
-| [`wanixroom.ts`](../../device/wanixclient/wanixroom.ts) | Room config, drop handler, VM/task API |
+| [`wanixhost.tsx`](../../device/wanixclient/wanixhost.tsx) / [`wanixbridge.ts`](../../device/wanixclient/wanixbridge.ts) | Ghost iframe + parent message bridge |
+| [`wanixroom.ts`](../../device/wanixclient/wanixroom.ts) | Room config, drop emit wrappers, VM/task API |
 | [`wanixzedcafe.ts`](../../device/wanixclient/wanixzedcafe.ts) | Parent zedcafe daemon / push / import poll |
-| [`wanixexportwait.ts`](../../device/wanixclient/wanixexportwait.ts) | Parent export-ready waiters |
+| [`handlers/exportready.ts`](../../device/wanixclient/handlers/exportready.ts) | Parent export-ready continuation |
 | [`wanixmenu.ts`](../../device/wanixclient/wanixmenu.ts) / [`wanixcmd.ts`](../../device/wanixclient/wanixcmd.ts) | `#wanix` menu / CLI helpers |
 | [`wanixbundle.ts`](../../device/wanixclient/wanixbundle.ts) / [`wanixtgzextract.ts`](../../device/wanixclient/wanixtgzextract.ts) / [`wanixbindpaths.ts`](../../device/wanixclient/wanixbindpaths.ts) | Parent drop helpers |
 
@@ -534,10 +537,10 @@ Defined in [`wanixrpcmessages.ts`](wanixrpcmessages.ts).
 | Module | Role |
 |--------|------|
 | [`cafe/wanix.ts`](../../../cafe/wanix.ts) | Thin boot: `runtime` + wanix device |
-| [`runtime.ts`](../../device/wanixserver/runtime.ts) | System DOM, applyroom, terms, FS RPCs |
+| [`runtime.ts`](../../device/wanixserver/runtime.ts) | System DOM, applyroom, terms, FS handlers |
 | [`zedcafehost.ts`](../../device/wanixserver/zedcafehost.ts) | Iframe zedcafe boot / push / binds |
 | [`spawndriver.ts`](../../device/wanixserver/spawndriver.ts) / [`termbridgesmoke.ts`](../../device/wanixserver/termbridgesmoke.ts) | Spawn driver + term smoke |
-| [`exportevents.ts`](../../device/wanixserver/exportevents.ts) | Iframe `content-ready` postMessage |
+| [`exportevents.ts`](../../device/wanixserver/exportevents.ts) | Iframe `wanixclient:exportready` emit |
 | [`state.ts`](../../device/wanixserver/state.ts) + `handlers/*` | Iframe mutable state + device adapters |
 | [`zss/device/wanixserver.ts`](../../device/wanixserver.ts) | `wanixserver` device factory |
 
@@ -545,13 +548,14 @@ Defined in [`wanixrpcmessages.ts`](wanixrpcmessages.ts).
 
 | Module | Role |
 |--------|------|
-| [`wanixrpcmessages.ts`](wanixrpcmessages.ts) / [`wanixroomtypes.ts`](wanixroomtypes.ts) | Protocol constants + room types |
+| [`wanixroomtypes.ts`](wanixroomtypes.ts) | Room / drop / menu types |
 | [`wanixzedcafeconstants.ts`](wanixzedcafeconstants.ts) / [`wanixzedcafetypes.ts`](wanixzedcafetypes.ts) / [`wanixzedcafewasmversion.ts`](wanixzedcafewasmversion.ts) | Zedcafe shared constants/types |
 | [`wanixelements.d.ts`](wanixelements.d.ts) | Custom-element typings |
 | [`wanixtermgridstate.ts`](wanixtermgridstate.ts) | ANSI → cell grid (iframe writes; parent renders) |
-| [`wanixwasmdriver.ts`](wanixwasmdriver.ts) / [`wanixdeviceclient.ts`](wanixdeviceclient.ts) | Driver detect + reply helpers |
+| [`wanixwasmdriver.ts`](wanixwasmdriver.ts) | Driver detect from wasm bytes |
 | [`zedcafetreeschema.ts`](zedcafetreeschema.ts) / [`wanixstateexport.ts`](wanixstateexport.ts) / [`wanixstateimport.ts`](wanixstateimport.ts) | Export tree build/parse/validate |
 | [`wanixperf.ts`](wanixperf.ts) / [`wanixbootregression.ts`](wanixbootregression.ts) | Perf marks / regression gate defs |
+| [`zss/device/api.ts`](../../device/api.ts) | `wanixserver*` / `wanixclient*` emit helpers |
 | [`zss/device/vm/handlers/importzedcafe.ts`](../../device/vm/handlers/importzedcafe.ts) | Sim-worker import handler |
 
 ---
@@ -630,11 +634,11 @@ Paths that **throw or fail loud** (no silent alternate behavior):
 | Missing `#ramfs` bytes at spawn | [`wanixspawndriver.ts`](wanixspawndriver.ts) | Throws |
 | Zedcafe daemon not ready | [`wanixzedcafe.ts`](wanixzedcafe.ts) `ensurewanixzedcafedaemon` | Throws — drop/activate aborts |
 | Export build from memory | [`readhostexportfilesfrommemory`](wanixzedcafe.ts) | `buildzedcafeexportfiles()` errors propagate |
-| Menu iframe RPC timeout | [`wanixroom.ts`](wanixroom.ts) | `stalled: true`, `vm: null` — no invented VM |
+| Menu iframe timeout | [`wanixroom.ts`](../../device/wanixclient/wanixroom.ts) | `stalled: true`, `vm: null` — no invented VM |
 | Import poll error | `tickzedcafepoll` | `apilog` + `stopzedcafepoll()` |
 
 **Intentional reuse (not fallbacks):** `synczedcafeexportifstale`, soft idle warm apply,
-`tryreuselivezedcafeexport`, `content-ready` event with bounded RPC poll backup (Bucket 2).
+`tryreuselivezedcafeexport`, `wanixclient:exportready` event (Bucket 2).
 
 **VM export fetch:** only in `finalizewanixzedcafeaftervmboot` when memory `bookCount === 0`
 and VM is running — explicit branch, errors propagate.
@@ -651,7 +655,7 @@ and VM is running — explicit branch, errors propagate.
 | **greenring board paint** | Same bind; writes allowlisted `board/terrain.json`; import poll → `vm:importzedcafe` → sim apply + re-export |
 | **Guest FS → sim writeback** | 3s export-doc compare poll; guest-dirty suppresses stale host push; deletes mirror guest tree |
 | **Live export updates** | End-of-tick `compare` of path-keyed export doc; partial upsert of changed files while poll active |
-| **Auto-attach new sessions** | `WANIX_MSG_SESSION open` → reveal tape → attach when user had nothing focused |
+| **Auto-attach new sessions** | `wanixclient:session open` → reveal tape → attach when user had nothing focused |
 | **Task idle auto-halt** | Dropped wasm tasks halt after 5 minutes with no term input/output (VM + zedcafe daemon exempt) |
 | **Soft idle → faster second drop** | Warm `<wanix-system>` + unchanged `mountkey` skips wanix.wasm reload; daemon reuse + sync-if-stale |
 | **Export wait without poll slack** | `content-ready` event wakes parent waiters immediately after iframe push completes |

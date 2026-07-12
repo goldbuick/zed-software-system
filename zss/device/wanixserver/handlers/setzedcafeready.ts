@@ -6,5 +6,11 @@ import { runwanixhost } from './hostutil'
 
 export function handlesetzedcafeready(wanix: DEVICE, message: MESSAGE): void {
   const ready = !!(Array.isArray(message.data) ? message.data[0] : message.data)
-  runwanixhost(wanix, message, 'setzedcafeready', () => setzedcafeready(ready))
+  runwanixhost(
+    wanix,
+    message,
+    'setzedcafeready',
+    () => setzedcafeready(ready),
+    { reply: false },
+  )
 }

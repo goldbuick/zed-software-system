@@ -4,7 +4,7 @@ import {
   formatwanixtermpaste,
   haswanixtermselection,
 } from 'zss/device/wanixclient/wanixtermclipboard'
-import type { WanixTermTileBuffer } from 'zss/device/wanixclient/wanixtermbuffer'
+import type { WanixTermTileBuffer } from 'zss/device/wanixclient/state'
 
 function makebuffer(
   lines: string[],

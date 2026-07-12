@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { registerterminalclose } from 'zss/device/api'
-import { callwanixtermwrite } from 'zss/device/wanixclient/wanixbridge'
+import { registerterminalclose, wanixservertermwrite } from 'zss/device/api'
+import { registerreadplayer } from 'zss/device/registerplayer'
+import { SOFTWARE } from 'zss/device/session'
 import {
   cyclewanixattachedsession,
   detachwanixterm,
@@ -14,8 +15,10 @@ import {
   readwanixtermnotifyversion,
   subscribewanixtermbuffer,
 } from 'zss/device/wanixclient/wanixtermbuffer'
-import type { WanixTermTileBuffer } from 'zss/device/wanixclient/wanixtermbuffer'
-import type { WanixTermCellPos } from 'zss/device/wanixclient/wanixtermclipboard'
+import type {
+  WanixTermCellPos,
+  WanixTermTileBuffer,
+} from 'zss/device/wanixclient/state'
 import {
   cellinwanixtermselection,
   extractwanixtermselectiontext,
@@ -30,8 +33,6 @@ import {
   scrollwanixtermby,
   scrollwanixtermto,
 } from 'zss/device/wanixclient/wanixtermscroll'
-import { registerreadplayer } from 'zss/device/registerplayer'
-import { SOFTWARE } from 'zss/device/session'
 import { withclipboard } from 'zss/feature/keyboard'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { writetile } from 'zss/gadget/tiles'
@@ -232,7 +233,9 @@ export function WanixTermScreen() {
     if (!targetkey) {
       return
     }
-    void callwanixtermwrite(
+    wanixservertermwrite(
+      SOFTWARE,
+      registerreadplayer(),
       formatwanixtermpaste(text, bracketedpasteref.current),
       targetkey,
     )
@@ -408,7 +411,7 @@ export function WanixTermScreen() {
     const targetkey = sessionkey ?? readattachedsession()
     if (payload != null && targetkey) {
       event.preventDefault()
-      void callwanixtermwrite(payload, targetkey)
+      wanixservertermwrite(SOFTWARE, registerreadplayer(), payload, targetkey)
     }
   }
 

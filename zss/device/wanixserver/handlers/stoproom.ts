@@ -5,5 +5,5 @@ import { stoproom } from 'zss/device/wanixserver/runtime'
 import { runwanixhost } from './hostutil'
 
 export function handlestoproom(wanix: DEVICE, message: MESSAGE): void {
-  runwanixhost(wanix, message, 'stoproom', () => stoproom())
+  runwanixhost(wanix, message, 'stoproom', () => stoproom(), { reply: false })
 }

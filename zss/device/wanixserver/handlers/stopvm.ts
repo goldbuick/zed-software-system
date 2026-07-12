@@ -5,5 +5,5 @@ import { stopvm } from 'zss/device/wanixserver/runtime'
 import { runwanixhost } from './hostutil'
 
 export function handlestopvm(wanix: DEVICE, message: MESSAGE): void {
-  runwanixhost(wanix, message, 'stopvm', () => stopvm())
+  runwanixhost(wanix, message, 'stopvm', () => stopvm(), { reply: false })
 }

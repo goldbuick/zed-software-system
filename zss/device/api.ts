@@ -3,10 +3,8 @@ what is api? a set of common helper functions to send messages to devices
 without having to include device code
 */
 import type { BRIDGE_CHAT_START_OBJECT } from 'zss/device/bridge/chattypes'
-import type {
-  DEVICELIKE as DEVICELIKE_TYPE,
-  MESSAGE as MESSAGE_TYPE,
-} from 'zss/device/messagetypes'
+import type { DEVICELIKE } from 'zss/device/messagetypes'
+import type { WanixRoomConfig } from 'zss/feature/wanix/wanixroomtypes'
 import type { WANIX_ZED_CAFE_EXPORT_FILE } from 'zss/feature/wanix/wanixstateexport'
 import type { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
 import { MAYBE, ispresent } from 'zss/mapping/types'
@@ -22,8 +20,6 @@ export type BINARY_READER = {
   dataview: DataView
 }
 
-export type DEVICELIKE = DEVICELIKE_TYPE
-
 export type GADGET_SCROLL_LINES = {
   scrollname: string
   content: string
@@ -34,8 +30,6 @@ export type JSON_READER = {
   filename: string
   json: string
 }
-
-export type MESSAGE = MESSAGE_TYPE
 
 export type TEXT_READER = {
   filename: string
@@ -962,35 +956,238 @@ export function vmzztsearch(
   device.emit(player, 'vm:zztsearch', [field, text])
 }
 
-export function wanixclientattach(
+// --- wanixserver:* (parent → iframe) ---
+
+export function wanixserverping(device: DEVICELIKE, player: string) {
+  device.emit(player, 'wanixserver:ping')
+}
+
+export function wanixserverreadready(device: DEVICELIKE, player: string) {
+  device.emit(player, 'wanixserver:readready')
+}
+
+export function wanixserverreadroomstatus(device: DEVICELIKE, player: string) {
+  device.emit(player, 'wanixserver:readroomstatus')
+}
+
+export function wanixserverreadvmstatus(device: DEVICELIKE, player: string) {
+  device.emit(player, 'wanixserver:readvmstatus')
+}
+
+export function wanixserverapplyroom(
   device: DEVICELIKE,
   player: string,
-  sessionkey?: string,
+  config: WanixRoomConfig,
 ) {
-  device.emit(player, 'wanixclient:attach', sessionkey)
+  device.emit(player, 'wanixserver:applyroom', [config])
 }
 
-export function wanixclientbinddrop(
+export function wanixserverspawntask(
   device: DEVICELIKE,
   player: string,
-  label: string,
-  bytes: Uint8Array,
+  taskid: string,
+  cmd: string,
+  driver?: any,
 ) {
-  device.emit(player, 'wanixclient:binddrop', [label, bytes])
+  device.emit(player, 'wanixserver:spawntask', [taskid, cmd, driver ?? null])
 }
 
-export function wanixclientdetach(device: DEVICELIKE, player: string) {
-  device.emit(player, 'wanixclient:detach')
+export function wanixserverhalttask(
+  device: DEVICELIKE,
+  player: string,
+  taskid: string,
+) {
+  device.emit(player, 'wanixserver:halttask', [taskid])
 }
 
-export function wanixclientdrop(
+export function wanixserverstoproom(device: DEVICELIKE, player: string) {
+  device.emit(player, 'wanixserver:stoproom')
+}
+
+export function wanixserverstartvm(
+  device: DEVICELIKE,
+  player: string,
+  mem?: string,
+  vmid?: string,
+) {
+  device.emit(player, 'wanixserver:startvm', [mem, vmid])
+}
+
+export function wanixserverstopvm(device: DEVICELIKE, player: string) {
+  device.emit(player, 'wanixserver:stopvm')
+}
+
+export function wanixserverlistdir(
+  device: DEVICELIKE,
+  player: string,
+  path?: string,
+) {
+  device.emit(player, 'wanixserver:listdir', [path])
+}
+
+export function wanixserverreadtext(
+  device: DEVICELIKE,
+  player: string,
+  path: string,
+) {
+  device.emit(player, 'wanixserver:readtext', [path])
+}
+
+export function wanixserverreadfile(
+  device: DEVICELIKE,
+  player: string,
+  path: string,
+) {
+  device.emit(player, 'wanixserver:readfile', [path])
+}
+
+export function wanixserverwritefile(
+  device: DEVICELIKE,
+  player: string,
+  path: string,
+  bytes: number[],
+) {
+  device.emit(player, 'wanixserver:writefile', [path, bytes])
+}
+
+export function wanixserverbinddrop(
+  device: DEVICELIKE,
+  player: string,
+  sessionkey: string,
+  payload: any,
+) {
+  device.emit(player, 'wanixserver:binddrop', [sessionkey, payload])
+}
+
+export function wanixserverdrop(
   device: DEVICELIKE,
   player: string,
   label: string,
   kind: 'wasm' | 'bundle',
   bytes: Uint8Array,
 ) {
-  device.emit(player, 'wanixclient:drop', [label, kind, bytes])
+  device.emit(player, 'wanixserver:drop', [label, kind, bytes])
+}
+
+export function wanixservertermwrite(
+  device: DEVICELIKE,
+  player: string,
+  data: string,
+  sessionkey?: string,
+) {
+  device.emit(player, 'wanixserver:termwrite', [data, sessionkey])
+}
+
+export function wanixservertermfit(
+  device: DEVICELIKE,
+  player: string,
+  cols: number,
+  rows: number,
+  sessionkey?: string,
+) {
+  device.emit(player, 'wanixserver:termfit', [cols, rows, sessionkey])
+}
+
+export function wanixserversetzedcafeready(
+  device: DEVICELIKE,
+  player: string,
+  ready: boolean,
+) {
+  device.emit(player, 'wanixserver:setzedcafeready', [ready])
+}
+
+export function wanixserverhaltzedcafe(device: DEVICELIKE, player: string) {
+  device.emit(player, 'wanixserver:haltzedcafe')
+}
+
+export function wanixserverreadzedcafetaskrid(
+  device: DEVICELIKE,
+  player: string,
+) {
+  device.emit(player, 'wanixserver:readzedcafetaskrid')
+}
+
+export function wanixserverreadzedcafeexportfiles(
+  device: DEVICELIKE,
+  player: string,
+) {
+  device.emit(player, 'wanixserver:readzedcafeexportfiles')
+}
+
+export function wanixserversynczedcafeexport(
+  device: DEVICELIKE,
+  player: string,
+  files: any,
+  removepaths?: string[],
+) {
+  device.emit(player, 'wanixserver:synczedcafeexport', [
+    files,
+    removepaths ?? [],
+  ])
+}
+
+export function wanixserveriszedcafeexportlive(
+  device: DEVICELIKE,
+  player: string,
+  taskrid?: string,
+) {
+  device.emit(player, 'wanixserver:iszedcafeexportlive', [taskrid])
+}
+
+export function wanixserveriszedcafeguestbound(
+  device: DEVICELIKE,
+  player: string,
+) {
+  device.emit(player, 'wanixserver:iszedcafeguestbound')
+}
+
+export function wanixserverrequestzedcafestate(
+  device: DEVICELIKE,
+  player: string,
+  files: any,
+) {
+  device.emit(player, 'wanixserver:requestzedcafestate', files)
+}
+
+// --- wanixclient:* (iframe/sim → parent) ---
+
+export function wanixclientready(device: DEVICELIKE, player: string) {
+  device.emit(player, 'wanixclient:ready')
+}
+
+export function wanixclientidle(device: DEVICELIKE, player: string) {
+  device.emit(player, 'wanixclient:idle')
+}
+
+export function wanixclientexportready(
+  device: DEVICELIKE,
+  player: string,
+  payload: { taskrid: string; event?: string },
+) {
+  device.emit(player, 'wanixclient:exportready', payload)
+}
+
+export function wanixclientcells(
+  device: DEVICELIKE,
+  player: string,
+  payload: any,
+) {
+  device.emit(player, 'wanixclient:cells', payload)
+}
+
+export function wanixclientsession(
+  device: DEVICELIKE,
+  player: string,
+  payload: any,
+) {
+  device.emit(player, 'wanixclient:session', payload)
+}
+
+export function wanixclientrequestzedcafestate(
+  device: DEVICELIKE,
+  player: string,
+) {
+  device.emit(player, 'wanixclient:requestzedcafestate')
 }
 
 export function wanixclientexportstate(
@@ -1017,45 +1214,102 @@ export function wanixclientimportresult(
   })
 }
 
-export function wanixclientshow(device: DEVICELIKE, player: string) {
-  device.emit(player, 'wanixclient:show')
-}
-
-export function wanixclientstop(
+/** Generic completion: emits `wanixclient:${method}` with data. */
+export function wanixclientmethodresult(
   device: DEVICELIKE,
   player: string,
-  taskid?: string,
+  method: string,
+  data: unknown,
 ) {
-  device.emit(player, 'wanixclient:stop', taskid)
+  device.emit(player, `wanixclient:${method}`, data)
 }
 
-export function wanixclienttermdump(
+export function wanixclientping(
   device: DEVICELIKE,
   player: string,
-  sessionkey?: string,
-  tail?: number,
+  data: unknown,
 ) {
-  device.emit(player, 'wanixclient:termdump', { sessionkey, tail })
+  wanixclientmethodresult(device, player, 'ping', data)
 }
 
-export function wanixclienttermstatus(device: DEVICELIKE, player: string) {
-  device.emit(player, 'wanixclient:termstatus')
-}
-
-export function wanixclientvmstart(
+export function wanixclientapplyroom(
   device: DEVICELIKE,
   player: string,
-  vmid?: string,
+  data: unknown,
 ) {
-  device.emit(player, 'wanixclient:vmstart', vmid)
+  wanixclientmethodresult(device, player, 'applyroom', data)
 }
 
-export function wanixclientvmstop(
+export function wanixclientspawntask(
   device: DEVICELIKE,
   player: string,
-  vmid?: string,
+  data: unknown,
 ) {
-  device.emit(player, 'wanixclient:vmstop', vmid)
+  wanixclientmethodresult(device, player, 'spawntask', data)
+}
+
+export function wanixclientbinddrop(
+  device: DEVICELIKE,
+  player: string,
+  data: unknown,
+) {
+  wanixclientmethodresult(device, player, 'binddrop', data)
+}
+
+export function wanixclientreadroomstatus(
+  device: DEVICELIKE,
+  player: string,
+  data: unknown,
+) {
+  wanixclientmethodresult(device, player, 'readroomstatus', data)
+}
+
+export function wanixclientreadvmstatus(
+  device: DEVICELIKE,
+  player: string,
+  data: unknown,
+) {
+  wanixclientmethodresult(device, player, 'readvmstatus', data)
+}
+
+export function wanixclientsynczedcafeexport(
+  device: DEVICELIKE,
+  player: string,
+  data: unknown,
+) {
+  wanixclientmethodresult(device, player, 'synczedcafeexport', data)
+}
+
+export function wanixclientreadzedcafeexportfiles(
+  device: DEVICELIKE,
+  player: string,
+  data: unknown,
+) {
+  wanixclientmethodresult(device, player, 'readzedcafeexportfiles', data)
+}
+
+export function wanixclientreadzedcafetaskrid(
+  device: DEVICELIKE,
+  player: string,
+  data: unknown,
+) {
+  wanixclientmethodresult(device, player, 'readzedcafetaskrid', data)
+}
+
+export function wanixclientiszedcafeexportlive(
+  device: DEVICELIKE,
+  player: string,
+  data: unknown,
+) {
+  wanixclientmethodresult(device, player, 'iszedcafeexportlive', data)
+}
+
+export function wanixclientdropdone(
+  device: DEVICELIKE,
+  player: string,
+  data: unknown,
+) {
+  wanixclientmethodresult(device, player, 'dropdone', data)
 }
 
 export function workstatus(device: DEVICELIKE, player: string, status: string) {

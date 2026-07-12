@@ -1,47 +1,61 @@
 /**
- * Types and state the register device / parent UI use to display wanix
- * and interact with wanix sessions (attach, tape, session MESSAGE).
+ * Parent UI display for wanix sessions (attach, tape, session MESSAGE).
  */
 
 import { useTape } from 'zss/gadget/data/zustandstores'
-
+import {
+  bumpattach,
+  readattachedsession as readattachedsessionstate,
+  readonsessioncloseprune,
+  readuserdetached,
+  readwanixactivesession as readwanixactivesessionstate,
+  registerwanixsessioncloseprune as registersessioncloseprune,
+  setattachedsessionkey,
+  setuserdetached,
+  setwanixactivesessionkey,
+  resetwanixattachforidle as resetattachforidle,
+  resetwanixattachstatefortest as resetattachstatefortest,
+  subscribewanixattach as subscribeattach,
+} from 'zss/device/wanixclient/state'
 import {
   registerwanixtermsessionopen,
   unregisterwanixtermsession,
-} from './wanixtermbuffer'
+} from 'zss/device/wanixclient/wanixtermbuffer'
 
-// --- attach / active session ---
+export function readwanixactivesession(): string | null {
+  return readwanixactivesessionstate()
+}
 
-let attachedsessionkey: string | null = null
-let activesessionkey: string | null = null
-let userdetached = false
-const attachlisteners = new Set<() => void>()
+export function readattachedsession(): string | null {
+  return readattachedsessionstate()
+}
 
-function bumpattach() {
-  for (const listener of attachlisteners) {
-    listener()
-  }
+export function registerwanixsessioncloseprune(
+  fn: (sessionkey: string) => void,
+): void {
+  registersessioncloseprune(fn)
 }
 
 function maybeattachactivesession() {
-  if (activesessionkey == null || attachedsessionkey != null || userdetached) {
+  const activesessionkey = readwanixactivesessionstate()
+  if (
+    activesessionkey == null ||
+    readattachedsessionstate() != null ||
+    readuserdetached()
+  ) {
     return
   }
-  attachedsessionkey = activesessionkey
+  setattachedsessionkey(activesessionkey)
   bumpattach()
-}
-
-export function readwanixactivesession(): string | null {
-  return activesessionkey
 }
 
 export function setwanixactivesession(sessionkey: string | null) {
   const next = sessionkey?.trim() ? sessionkey.trim() : null
-  if (activesessionkey === next) {
+  if (readwanixactivesessionstate() === next) {
     maybeattachactivesession()
     return
   }
-  activesessionkey = next
+  setwanixactivesessionkey(next)
   maybeattachactivesession()
 }
 
@@ -51,38 +65,34 @@ export function onwanixtermsessionopen(sessionkey: string) {
   if (!key) {
     return
   }
-  activesessionkey = key
-  if (attachedsessionkey != null) {
+  setwanixactivesessionkey(key)
+  if (readattachedsessionstate() != null) {
     return
   }
-  attachedsessionkey = key
-  userdetached = false
+  setattachedsessionkey(key)
+  setuserdetached(false)
   bumpattach()
-}
-
-export function readattachedsession(): string | null {
-  return attachedsessionkey
 }
 
 export function setattachedsession(sessionkey: string | null) {
   const next = sessionkey?.trim() ? sessionkey.trim() : null
-  if (attachedsessionkey === next) {
+  if (readattachedsessionstate() === next) {
     return
   }
-  attachedsessionkey = next
+  setattachedsessionkey(next)
   if (next != null) {
-    userdetached = false
+    setuserdetached(false)
   }
   bumpattach()
 }
 
 export function detachwanixterm() {
-  if (attachedsessionkey == null) {
-    userdetached = true
+  if (readattachedsessionstate() == null) {
+    setuserdetached(true)
     return
   }
-  attachedsessionkey = null
-  userdetached = true
+  setattachedsessionkey(null)
+  setuserdetached(true)
   bumpattach()
 }
 
@@ -93,7 +103,7 @@ export function cyclewanixattachedsession(
   if (orderedkeys.length === 0) {
     return
   }
-  const current = attachedsessionkey
+  const current = readattachedsessionstate()
   const index = current != null ? orderedkeys.indexOf(current) : -1
   let nextindex = 0
   if (index >= 0) {
@@ -106,25 +116,16 @@ export function cyclewanixattachedsession(
 
 /** Clears attach state when the wanix iframe goes idle (new room boot). */
 export function resetwanixattachforidle() {
-  attachedsessionkey = null
-  activesessionkey = null
-  userdetached = false
-  bumpattach()
+  resetattachforidle()
 }
 
 export function subscribewanixattach(listener: () => void) {
-  attachlisteners.add(listener)
-  return () => {
-    attachlisteners.delete(listener)
-  }
+  return subscribeattach(listener)
 }
 
 /** Test hook */
 export function resetwanixattachstatefortest() {
-  attachedsessionkey = null
-  activesessionkey = null
-  userdetached = false
-  attachlisteners.clear()
+  resetattachstatefortest()
 }
 
 // --- tape visibility ---
@@ -146,14 +147,6 @@ export function revealwanixtapeifhidden(): boolean {
 
 // --- session MESSAGE (iframe → register) ---
 
-let onsessioncloseprune: ((sessionkey: string) => void) | null = null
-
-export function registerwanixsessioncloseprune(
-  fn: (sessionkey: string) => void,
-): void {
-  onsessioncloseprune = fn
-}
-
 export function applywanixsessionmessage(payload: {
   event?: unknown
   sessionkey?: unknown
@@ -164,7 +157,7 @@ export function applywanixsessionmessage(payload: {
   const sessionkey = payload.sessionkey
   if (payload.event === 'open') {
     registerwanixtermsessionopen(sessionkey)
-    if (readattachedsession() == null) {
+    if (readattachedsessionstate() == null) {
       revealwanixtapeifhidden()
       onwanixtermsessionopen(sessionkey)
     } else {
@@ -177,25 +170,10 @@ export function applywanixsessionmessage(payload: {
     return
   }
   if (payload.event === 'close') {
-    if (sessionkey === readattachedsession()) {
+    if (sessionkey === readattachedsessionstate()) {
       return
     }
     unregisterwanixtermsession(sessionkey)
-    onsessioncloseprune?.(sessionkey)
+    readonsessioncloseprune()?.(sessionkey)
   }
-}
-
-/** Display snapshot for one wanix term session. */
-export type WanixSessionMeta = {
-  sessionkey: string
-  attached: boolean
-  active: boolean
-  cols: number
-  rows: number
-  scrollbackrows: number
-  digest: string
-  version: number
-  altactive: boolean
-  bracketedpaste: boolean
-  label: string
 }

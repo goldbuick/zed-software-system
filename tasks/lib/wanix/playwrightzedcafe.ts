@@ -141,30 +141,15 @@ export async function polluntil<T>(
   })
 }
 
-export async function waitwanixrpcping(
+export async function polliswanixready(
   page: import('@playwright/test').Page,
   budgetms = PLAYWRIGHT_SCENARIO_TIMEOUT_MS,
 ): Promise<void> {
-  await withscripttimeout('wanix-rpc-ping', budgetms, async () => {
+  await withscripttimeout('wanix-ready-flag', budgetms, async () => {
     for (;;) {
-      const ready = await page.evaluate(async () => {
-        const g = globalThis as {
-          waitwanixrpcping?: (ms?: number) => Promise<void>
-          callwanixrpc?: (
-            method: string,
-            args?: unknown[],
-            timeoutms?: number,
-          ) => Promise<unknown>
-        }
-        if (typeof g.callwanixrpc !== 'function') {
-          return false
-        }
-        if (typeof g.waitwanixrpcping === 'function') {
-          await g.waitwanixrpcping(15_000)
-          return true
-        }
-        const pong = await g.callwanixrpc('ping', [], 2_000).catch(() => null)
-        return !!(pong as { ok?: boolean } | null)?.ok
+      const ready = await page.evaluate(() => {
+        const g = globalThis as { iswanixready?: () => boolean }
+        return typeof g.iswanixready === 'function' && g.iswanixready()
       })
       if (ready) {
         return
@@ -176,27 +161,32 @@ export async function waitwanixrpcping(
   })
 }
 
-export async function callwanixrpcinpage<T>(
+/** Evaluate a wanixserver runtime export inside the wanix iframe. */
+export async function evalwaniixhost<T>(
   page: import('@playwright/test').Page,
-  method: string,
+  exportname: string,
   args: unknown[] = [],
-  timeoutms = 30_000,
+  _timeoutms?: number,
 ): Promise<T> {
-  return page.evaluate(
-    async ({ rpcmethod, rpcargs, rpctimeoutms }) => {
-      const g = globalThis as {
-        callwanixrpc?: (
-          method: string,
-          args?: unknown[],
-          timeoutms?: number,
-        ) => Promise<unknown>
+  const frame = page.frames().find((f) => f.url().includes('wanix.html'))
+  if (!frame) {
+    throw new Error('wanix iframe frame not found')
+  }
+  return frame.evaluate(
+    async ({ name, fnargs }) => {
+      const host = (
+        globalThis as { __zss_wanix_host__?: Record<string, unknown> }
+      ).__zss_wanix_host__
+      if (!host) {
+        throw new Error('wanix host helpers missing on iframe')
       }
-      if (typeof g.callwanixrpc !== 'function') {
-        throw new Error('callwanixrpc missing on page')
+      const fn = host[name]
+      if (typeof fn !== 'function') {
+        throw new Error(`wanix host export missing: ${name}`)
       }
-      return g.callwanixrpc(rpcmethod, rpcargs, rpctimeoutms)
+      return (fn as (...a: unknown[]) => unknown)(...fnargs)
     },
-    { rpcmethod: method, rpcargs: args, rpctimeoutms: timeoutms },
+    { name: exportname, fnargs: args },
   ) as Promise<T>
 }
 
@@ -241,7 +231,7 @@ export async function waitwanixtermcontains(
   )
 }
 
-export async function callwanixtermwriteinpage(
+export async function writewaniixterminpage(
   page: import('@playwright/test').Page,
   root: string,
   data: string,
@@ -249,14 +239,23 @@ export async function callwanixtermwriteinpage(
 ): Promise<void> {
   await page.evaluate(
     async ({ projectroot, payload, key }) => {
-      const { callwanixtermwrite } = await import(
-        `/@fs${projectroot}/zss/device/wanixclient/wanixbridge.ts`
+      const { wanixservertermwrite } = await import(
+        `/@fs${projectroot}/zss/device/api.ts`
       )
-      await callwanixtermwrite(payload, key)
+      const { SOFTWARE } = await import(
+        `/@fs${projectroot}/zss/device/session.ts`
+      )
+      const { registerreadplayer } = await import(
+        `/@fs${projectroot}/zss/device/registerplayer.ts`
+      )
+      wanixservertermwrite(SOFTWARE, registerreadplayer(), payload, key)
     },
     { projectroot: root, payload: data, key: sessionkey },
   )
 }
+
+/** @deprecated use writewaniixterminpage */
+export const callwanixtermwriteinpage = writewaniixterminpage
 
 export function parsestatsjsonbytes(
   data: number[],
@@ -380,12 +379,9 @@ export async function readhostexportstats(
   page: import('@playwright/test').Page,
   taskrid: string,
 ): Promise<ZedcafeStatsSnapshot | null> {
-  const data = await callwanixrpcinpage<number[]>(
-    page,
-    'readfile',
-    [`#task/${taskrid}/export/stats.json`],
-    10_000,
-  ).catch(() => [])
+  const data = await evalwaniixhost<number[]>(page, 'readfile', [
+    `#task/${taskrid}/export/stats.json`,
+  ]).catch(() => [])
   if (!Array.isArray(data)) {
     return null
   }
@@ -396,11 +392,10 @@ export async function readhostexportpaths(
   page: import('@playwright/test').Page,
   limit = 40,
 ): Promise<string[]> {
-  const files = await callwanixrpcinpage<{ path: string; data: number[] }[]>(
+  const files = await evalwaniixhost<{ path: string; data: number[] }[]>(
     page,
     'readzedcafeexportfiles',
     [],
-    30_000,
   ).catch(() => [])
   if (!Array.isArray(files)) {
     return []

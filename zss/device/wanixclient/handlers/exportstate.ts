@@ -1,7 +1,6 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import { apierror } from 'zss/device/api'
-import { doasync } from 'zss/device/doasync'
 import { wanixhandleexportstate } from 'zss/device/wanixclient/wanixzedcafe'
 import type { WANIX_ZED_CAFE_EXPORT_FILE } from 'zss/feature/wanix/wanixstateexport'
 import { ispresent } from 'zss/mapping/types'
@@ -48,7 +47,5 @@ export function handleexportstate(device: DEVICE, message: MESSAGE): void {
     )
     return
   }
-  doasync(device, message.player, async () => {
-    await wanixhandleexportstate(device, message.player, payload.files)
-  })
+  wanixhandleexportstate(device, message.player, payload.files)
 }

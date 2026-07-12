@@ -1,54 +1,56 @@
-import type { WanixTermCellsSnapshot } from 'zss/feature/wanix/wanixtermgridstate'
 import { digestwanixtermcells } from 'zss/feature/wanix/wanixtermgridstate'
-
-export type WanixTermTileBuffer = WanixTermCellsSnapshot & {
-  version: number
-}
-
-const buffers = new Map<string, WanixTermTileBuffer>()
-const opensessions = new Set<string>()
-const listeners = new Set<() => void>()
-let notifyversion = 0
-
-function bump() {
-  notifyversion += 1
-  for (const listener of listeners) {
-    listener()
-  }
-}
+import type { WanixTermCellsSnapshot } from 'zss/feature/wanix/wanixtermgridstate'
+import {
+  addopensession,
+  bumptermbuffer,
+  clearwanixtermbuffersstore,
+  deleteopensession,
+  deletewanixtermbuffer,
+  hasopensession,
+  readopensessions,
+  readtermbuffers,
+  readwanixtermbuffer as readtermbufferstate,
+  readwanixtermbufferkeys as readtermbufferkeysstate,
+  readwanixtermnotifyversion as readtermnotifyversionstate,
+  resetwanixtermbufferfortest as resettermbufferfortest,
+  setwanixtermbuffer,
+  subscribewanixtermbuffer as subscribetermbuffer,
+  type WanixTermTileBuffer,
+} from 'zss/device/wanixclient/state'
 
 export function clearwanixtermbuffers() {
+  const buffers = readtermbuffers()
+  const opensessions = readopensessions()
   if (buffers.size === 0 && opensessions.size === 0) {
     return
   }
-  buffers.clear()
-  opensessions.clear()
-  bump()
+  clearwanixtermbuffersstore()
+  bumptermbuffer()
 }
 
 export function registerwanixtermsessionopen(sessionkey: string) {
-  if (opensessions.has(sessionkey)) {
+  if (hasopensession(sessionkey)) {
     return
   }
-  opensessions.add(sessionkey)
-  bump()
+  addopensession(sessionkey)
+  bumptermbuffer()
 }
 
 export function unregisterwanixtermsession(sessionkey: string) {
-  let changed = opensessions.delete(sessionkey)
-  if (buffers.delete(sessionkey)) {
+  let changed = deleteopensession(sessionkey)
+  if (deletewanixtermbuffer(sessionkey)) {
     changed = true
   }
   if (changed) {
-    bump()
+    bumptermbuffer()
   }
 }
 
 export function removewanixtermbuffer(sessionkey: string): boolean {
-  if (!buffers.delete(sessionkey)) {
+  if (!deletewanixtermbuffer(sessionkey)) {
     return false
   }
-  bump()
+  bumptermbuffer()
   return true
 }
 
@@ -60,41 +62,35 @@ export function applywanixtermread(
     snapshot.digest.length > 0
       ? snapshot.digest
       : digestwanixtermcells(snapshot)
-  const prev = buffers.get(sessionkey)
+  const prev = readtermbufferstate(sessionkey)
   if (prev?.digest === digest) {
     return false
   }
   const version = (prev?.version ?? 0) + 1
-  buffers.set(sessionkey, { ...snapshot, digest, version })
-  bump()
+  setwanixtermbuffer(sessionkey, { ...snapshot, digest, version })
+  bumptermbuffer()
   return true
 }
 
 export function readwanixtermbuffer(
   sessionkey: string,
 ): WanixTermTileBuffer | null {
-  return buffers.get(sessionkey) ?? null
+  return readtermbufferstate(sessionkey)
 }
 
 export function readwanixtermbufferkeys(): string[] {
-  return [...new Set([...opensessions, ...buffers.keys()])]
+  return readtermbufferkeysstate()
 }
 
 export function readwanixtermnotifyversion() {
-  return notifyversion
+  return readtermnotifyversionstate()
 }
 
 export function subscribewanixtermbuffer(listener: () => void) {
-  listeners.add(listener)
-  return () => {
-    listeners.delete(listener)
-  }
+  return subscribetermbuffer(listener)
 }
 
 /** Test hook */
 export function resetwanixtermbufferfortest() {
-  buffers.clear()
-  opensessions.clear()
-  listeners.clear()
-  notifyversion = 0
+  resettermbufferfortest()
 }

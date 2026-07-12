@@ -6,7 +6,11 @@ import { runwanixhost } from './hostutil'
 
 export function handlewritefile(wanix: DEVICE, message: MESSAGE): void {
   const args = Array.isArray(message.data) ? message.data : []
-  runwanixhost(wanix, message, 'writefile', () =>
-    writefile(String(args[0] ?? ''), args[1] as number[] | undefined),
+  runwanixhost(
+    wanix,
+    message,
+    'writefile',
+    () => writefile(String(args[0] ?? ''), args[1] as number[] | undefined),
+    { reply: false },
   )
 }

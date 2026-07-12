@@ -1,8 +1,8 @@
 import { useLayoutEffect, useRef, useState } from 'react'
-import {
-  callwanixtermfit,
-  waitwanixready,
-} from 'zss/device/wanixclient/wanixbridge'
+import { wanixservertermfit } from 'zss/device/api'
+import { registerreadplayer } from 'zss/device/registerplayer'
+import { SOFTWARE } from 'zss/device/session'
+import { iswanixready, onwanixready } from 'zss/device/wanixclient/wanixbridge'
 import { subscribewanixattach } from 'zss/device/wanixclient/wanixdisplay'
 import { useTape } from 'zss/gadget/data/zustandstores'
 import { useWriteText } from 'zss/gadget/writetext'
@@ -44,12 +44,15 @@ export function WanixTermSizeSync() {
       if (lastpush.current?.cols === cols && lastpush.current?.rows === rows) {
         return
       }
-      void waitwanixready()
-        .then(() => callwanixtermfit(cols, rows))
-        .then(() => {
-          lastpush.current = { cols, rows }
-        })
-        .catch(() => {})
+      const pushfit = () => {
+        wanixservertermfit(SOFTWARE, registerreadplayer(), cols, rows)
+        lastpush.current = { cols, rows }
+      }
+      if (iswanixready()) {
+        pushfit()
+      } else {
+        onwanixready(pushfit)
+      }
     }, TERM_FIT_DEBOUNCE_MS)
     return () => clearTimeout(timer)
   }, [cols, rows, terminalopen, editoropen, attachversion])

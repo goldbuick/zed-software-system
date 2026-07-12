@@ -12,15 +12,16 @@ import {
   WANIX_ZEDCAFE_VM_SESSION,
   type ZedcafeStatsSnapshot,
   type ZedcafeTimelineEntry,
-  callwanixrpcinpage,
   callwanixtermwriteinpage,
   collectexportconsoleerrors,
   collectexporttrace,
   collectwanixperf,
+  evalwaniixhost,
   failzedcafegate,
   importfixturebookinpage,
   parsebookcountfromterm,
   pollfindplayersoutput,
+  polliswanixready,
   polluntil,
   readfindplayersbookspaths,
   readhostexportpaths,
@@ -30,7 +31,6 @@ import {
   readplaywrightlogs,
   readtermbuffertext,
   sendwanixcli,
-  waitwanixrpcping,
   writededcafefailurereport,
 } from 'tasks/lib/wanix/playwrightzedcafe'
 import { WANIX_ZEDCAFE_EXPORT_READY_POLL_MS } from 'zss/feature/wanix/wanixzedcafeconstants'
@@ -221,14 +221,14 @@ const validatezedcafevmexport: HeadedPlaywrightScript = async ({
 
   await withscripttimeout('wanix-boot', VALIDATE_TIMEOUT_MS, async () => {
     while (!wanixbooted) {
-      const rpcready = await page
+      const ready = await page
         .evaluate(
           () =>
-            typeof (globalThis as { callwanixrpc?: unknown }).callwanixrpc ===
-            'function',
+            typeof (globalThis as { iswanixready?: () => boolean })
+              .iswanixready === 'function',
         )
         .catch(() => false)
-      if (rpcready) {
+      if (ready) {
         wanixbooted = true
         break
       }
@@ -240,8 +240,8 @@ const validatezedcafevmexport: HeadedPlaywrightScript = async ({
   await waitforregistersession(page, root)
   record('register-session')
 
-  await waitwanixrpcping(page, VALIDATE_TIMEOUT_MS)
-  record('wanix-rpc-ping')
+  await polliswanixready(page, VALIDATE_TIMEOUT_MS)
+  record('wanix-ready')
 
   if (USE_FIXTURE_BOOK) {
     const bookjson = readFileSync(FIXTURE_BOOK_PATH, 'utf8')
@@ -278,10 +278,10 @@ const validatezedcafevmexport: HeadedPlaywrightScript = async ({
     VALIDATE_TIMEOUT_MS,
     EXPORT_POLL_MS,
     async () =>
-      callwanixrpcinpage<{
+      evalwaniixhost<{
         running?: boolean
         vrid?: string | null
-      }>(page, 'readvmstatus', [], 10_000),
+      }>(page, 'readvmstatus', []),
     (status) => !!status?.vrid,
   )
   record('wanix-vm-started', vmstatus)
@@ -296,7 +296,7 @@ const validatezedcafevmexport: HeadedPlaywrightScript = async ({
     EXPORT_BUDGET_MS,
     EXPORT_POLL_MS,
     async () => {
-      taskrid = await callwanixrpcinpage<string | null>(
+      taskrid = await evalwaniixhost<string | null>(
         page,
         'readzedcafetaskrid',
         [],
@@ -310,14 +310,14 @@ const validatezedcafevmexport: HeadedPlaywrightScript = async ({
           hasbooks: false,
         }
       }
-      const live = await callwanixrpcinpage<boolean>(
+      const live = await evalwaniixhost<boolean>(
         page,
         'iszedcafeexportlive',
         [taskrid],
         10_000,
       )
       hoststats = await readhostexportstats(page, taskrid)
-      const exportentries = await callwanixrpcinpage<string[]>(
+      const exportentries = await evalwaniixhost<string[]>(
         page,
         'listdir',
         [`#task/${taskrid}/export`],
@@ -347,7 +347,7 @@ const validatezedcafevmexport: HeadedPlaywrightScript = async ({
 
   const postliveconsolestart = consolelines.length
 
-  const exportdir = await callwanixrpcinpage<string[]>(
+  const exportdir = await evalwaniixhost<string[]>(
     page,
     'listdir',
     [`#task/${taskrid}/export`],
@@ -372,7 +372,7 @@ const validatezedcafevmexport: HeadedPlaywrightScript = async ({
     EXPORT_BUDGET_MS,
     EXPORT_POLL_MS,
     async () => {
-      const rid = await callwanixrpcinpage<string | null>(
+      const rid = await evalwaniixhost<string | null>(
         page,
         'readzedcafetaskrid',
         [],
@@ -381,7 +381,7 @@ const validatezedcafevmexport: HeadedPlaywrightScript = async ({
       if (!rid) {
         return { guestbound: false, rid: null as string | null }
       }
-      const live = await callwanixrpcinpage<boolean>(
+      const live = await evalwaniixhost<boolean>(
         page,
         'iszedcafeguestbound',
         [],
@@ -517,7 +517,7 @@ const validatezedcafevmexport: HeadedPlaywrightScript = async ({
     fail('findplayers-run', {
       findplayerstext: findplayerstext.slice(-800),
       membookcount,
-      hostexportpaths: hostexportpaths.slice(0, 10),
+      hostexportpaths: hostexportpaths.slice(0),
     })
   }
 

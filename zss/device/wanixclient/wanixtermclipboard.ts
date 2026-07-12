@@ -1,9 +1,7 @@
-import type { WanixTermTileBuffer } from './wanixtermbuffer'
-
-export type WanixTermCellPos = {
-  line: number
-  col: number
-}
+import type {
+  WanixTermCellPos,
+  WanixTermTileBuffer,
+} from 'zss/device/wanixclient/state'
 
 const BRACKETED_PASTE_START = '\x1b[200~'
 const BRACKETED_PASTE_END = '\x1b[201~'

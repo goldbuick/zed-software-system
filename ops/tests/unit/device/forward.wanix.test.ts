@@ -31,22 +31,12 @@ describe('forward wanix', () => {
     ).toBe(true)
   })
 
-  it('forwards once-device wanixserver replies', () => {
+  it('does not forward once-device wanixserver reply paths', () => {
     expect(
       shouldforwardclienttowanix(
         createmessage('s', 'p', 'x', 'abc123:wanixserver:ping'),
       ),
-    ).toBe(true)
-    expect(
-      shouldforwardclienttowanix(
-        createmessage(
-          's',
-          'p',
-          'x',
-          'abc123:wanixserver:requestzedcafestate',
-        ),
-      ),
-    ).toBe(true)
+    ).toBe(false)
   })
 
   it('does not forward ticktock', () => {

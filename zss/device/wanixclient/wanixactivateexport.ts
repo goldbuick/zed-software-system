@@ -30,7 +30,7 @@ export async function activatewanixzedcafeexport(
   })
 
   const syncstart = wanixperfnow()
-  await pushzedcafesynctoiframe(device, player, files)
+  pushzedcafesynctoiframe(device, player, files)
   wanixperfmark('daemon-export-end', {
     memcount,
     ...wanixperfdelta(syncstart),
@@ -38,5 +38,5 @@ export async function activatewanixzedcafeexport(
 
   await wanixdrainpendingzedcafeexport(device, player)
   wanixperfmark('activate-export-end', { memcount })
-  apilog(device, player, 'zedcafe: export sync complete')
+  apilog(device, player, 'zedcafe: export sync started')
 }

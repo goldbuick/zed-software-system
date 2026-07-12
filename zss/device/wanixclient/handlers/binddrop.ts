@@ -1,54 +1,32 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
-import { apierror } from 'zss/device/api'
-import { doasync } from 'zss/device/doasync'
-import {
-  readwanixbinddropdst,
-  readwanixbinddropkind,
-  readwanixbinddropperm,
-} from 'zss/device/wanixclient/wanixbindpaths'
-import { readattachedsession } from 'zss/device/wanixclient/wanixdisplay'
-import { handlewanixbinddrop } from 'zss/device/wanixclient/wanixroom'
-import { isarray, isstring } from 'zss/mapping/types'
+import type { MESSAGE } from 'zss/device/messagetypes'
+import { apilog } from 'zss/device/api'
+import { ispresent } from 'zss/mapping/types'
 
+/** Iframe RESULT after binddrop — updates parent display/logs. */
 export function handlebinddrop(device: DEVICE, message: MESSAGE): void {
-  if (!isarray(message.data) || message.data.length < 2) {
+  const data = message.data
+  if (!ispresent(data) || typeof data !== 'object') {
     return
   }
-  const [label, bytes] = message.data
-  if (!isstring(label) || !(bytes instanceof Uint8Array)) {
+  const result = data as {
+    ok?: unknown
+    error?: unknown
+    sessionkey?: unknown
+    dst?: unknown
+  }
+  if (result.ok === false) {
+    const detail = typeof result.error === 'string' ? result.error : 'unknown'
+    apilog(device, message.player, `wanix binddrop failed: ${detail}`)
     return
   }
-  doasync(device, message.player, async () => {
-    try {
-      const sessionkey = readattachedsession()
-      if (!sessionkey) {
-        apierror(
-          device,
-          message.player,
-          'wanix',
-          'binddrop: no attached session',
-        )
-        return
-      }
-      const kind = readwanixbinddropkind(label)
-      await handlewanixbinddrop(
-        {
-          label,
-          kind,
-          bytes,
-          dst: readwanixbinddropdst(label, kind),
-          perm: readwanixbinddropperm(label),
-        },
-        sessionkey,
-      )
-    } catch (err) {
-      apierror(
-        device,
-        message.player,
-        'wanix',
-        err instanceof Error ? err.message : String(err),
-      )
-    }
-  })
+  if (typeof result.dst === 'string') {
+    apilog(
+      device,
+      message.player,
+      `wanix binddrop ok → ${result.dst}${
+        typeof result.sessionkey === 'string' ? ` (${result.sessionkey})` : ''
+      }`,
+    )
+  }
 }

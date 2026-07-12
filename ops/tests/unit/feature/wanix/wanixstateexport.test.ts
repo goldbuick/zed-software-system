@@ -17,7 +17,7 @@ import {
   resetwanixzedcafesessionfortest,
   setlasthostpushdoc,
   setzedcafepollactive,
-} from 'zss/device/wanixclient/wanixzedcafesession'
+} from 'zss/device/wanixclient/state'
 import type { BOOK, CODE_PAGE } from 'zss/memory/types'
 import { compare } from 'fast-json-patch'
 

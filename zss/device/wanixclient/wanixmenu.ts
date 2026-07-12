@@ -15,7 +15,7 @@ import {
 } from 'zss/feature/zsstextui'
 import { ispresent } from 'zss/mapping/types'
 
-import { readwanixmenustate } from './wanixroom'
+import { requestwanixmenustate } from './wanixroom'
 
 function readwanixcmdbasename(cmd: string): string {
   const trimmed = cmd.replace(/^#ramfs\//, '')
@@ -44,7 +44,7 @@ export function buildwanixmenutape(state: WanixMenuState): string {
   // notice line
   if (state.stalled) {
     parts.push(
-      zsstextline('$red   menu stale — iframe RPC timeout, retry #wanix'),
+      zsstextline('$red   menu stale — iframe status timeout, retry #wanix'),
     )
   }
 
@@ -106,7 +106,14 @@ export function buildwanixmenutape(state: WanixMenuState): string {
   return zsstexttape(...parts)
 }
 
-export async function showwanixmenu(player: string): Promise<void> {
-  const state = await readwanixmenustate()
+export function showwanixmenu(player: string): void {
+  requestwanixmenustate(player)
+}
+
+/** Test helper: render a menu state immediately. */
+export function writewanixmenustate(
+  player: string,
+  state: WanixMenuState,
+): void {
   terminalwritelines(SOFTWARE, player, buildwanixmenutape(state))
 }

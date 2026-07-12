@@ -5,11 +5,17 @@ import {
   apilog,
   vmloader,
   vmreadzipfilelist,
-  wanixclientbinddrop,
-  wanixclientdrop,
+  wanixserverbinddrop,
+  wanixserverdrop,
   workstatus,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import {
+  readwanixbinddropdst,
+  readwanixbinddropkind,
+  readwanixbinddropperm,
+} from 'zss/device/wanixclient/wanixbindpaths'
+import { readattachedsession } from 'zss/device/wanixclient/wanixdisplay'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { memoryreadwanixattached } from 'zss/memory/session'
@@ -388,7 +394,7 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
       file
         .arrayBuffer()
         .then((arraybuffer) => {
-          wanixclientdrop(
+          wanixserverdrop(
             SOFTWARE,
             player,
             file.name,
@@ -402,7 +408,7 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
       file
         .arrayBuffer()
         .then((arraybuffer) => {
-          wanixclientdrop(
+          wanixserverdrop(
             SOFTWARE,
             player,
             file.name,
@@ -453,12 +459,21 @@ export function parsewebfile(player: string, file: File | undefined) {
     file
       .arrayBuffer()
       .then((arraybuffer) => {
-        wanixclientbinddrop(
-          SOFTWARE,
-          player,
-          file.name,
-          new Uint8Array(arraybuffer),
-        )
+        const sessionkey = readattachedsession()
+        if (!sessionkey) {
+          apierror(SOFTWARE, player, 'wanix', 'binddrop: no attached session')
+          return
+        }
+        const label = file.name
+        const kind = readwanixbinddropkind(label)
+        const bytes = new Uint8Array(arraybuffer)
+        wanixserverbinddrop(SOFTWARE, player, sessionkey, {
+          label,
+          kind,
+          bytes,
+          dst: readwanixbinddropdst(label, kind),
+          perm: readwanixbinddropperm(label),
+        })
       })
       .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
   } else {

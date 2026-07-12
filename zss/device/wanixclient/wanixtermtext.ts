@@ -1,4 +1,4 @@
-import type { WanixTermTileBuffer } from './wanixtermbuffer'
+import type { WanixTermTileBuffer } from 'zss/device/wanixclient/state'
 import { readwanixtermlinecell } from './wanixtermclipboard'
 
 export type DumpWanixTermBufferOpts = {

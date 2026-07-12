@@ -1,28 +1,41 @@
-jest.mock('zss/device/wanixclient/wanixbridge', () => ({
-  callwanixrpc: jest.fn(),
-}))
-
-jest.mock('zss/device/wanixclient/wanixexportwait', () => ({
-  waitwanixexportcontentready: jest.fn(),
-}))
+jest.mock('zss/device/api', () => {
+  const actual = jest.requireActual('zss/device/api')
+  return {
+    ...actual,
+    wanixserverreadzedcafeexportfiles: jest.fn(),
+    wanixserversynczedcafeexport: jest.fn(),
+    wanixserversetzedcafeready: jest.fn(),
+    wanixserverreadzedcafetaskrid: jest.fn(),
+    wanixserveriszedcafeexportlive: jest.fn(),
+    apilog: jest.fn(),
+    vmexportzedcafe: jest.fn(),
+    vmimportzedcafe: jest.fn(),
+  }
+})
 
 jest.mock('zss/device/wanixclient/wanixroom', () => ({
   readwanixroomconfig: jest.fn(() => ({ mode: 'task' })),
 }))
 
-import { callwanixrpc } from 'zss/device/wanixclient/wanixbridge'
+import {
+  wanixserverreadzedcafeexportfiles,
+  wanixserversynczedcafeexport,
+} from 'zss/device/api'
 import { zedcafeexportfilestodoc } from 'zss/feature/wanix/wanixstateexport'
 import {
-  ensurewanixzedcafedaemon,
+  applyzedcafeexportfiles,
+  applyzedcafesyncresult,
   ensurezedcafeexportready,
+  pushzedcafesynctoiframe,
   resetwanixzedcafefortest,
 } from 'zss/device/wanixclient/wanixzedcafe'
 import {
   resetwanixzedcafesessionfortest,
   setlasthostpushdoc,
-} from 'zss/device/wanixclient/wanixzedcafesession'
+} from 'zss/device/wanixclient/state'
 
-const mockrpc = callwanixrpc as jest.Mock
+const mockreadfiles = wanixserverreadzedcafeexportfiles as jest.Mock
+const mocksync = wanixserversynczedcafeexport as jest.Mock
 
 const device = { id: 'dev', emit: jest.fn() } as never
 const player = 'p1'
@@ -51,116 +64,41 @@ function guestpayload(
   return files.map((file) => ({ path: file.path, data: [...file.bytes] }))
 }
 
-function mocksyncpipeline(
-  taskrid = '7',
-  guestfiles: { path: string; bytes: Uint8Array }[] = emptyfiles,
-) {
-  mockrpc.mockImplementation(async (method: string) => {
-    switch (method) {
-      case 'synczedcafeexport':
-        return { ok: true, taskrid }
-      case 'readzedcafetaskrid':
-        return taskrid
-      case 'waitzedcafecontentready':
-        return true
-      case 'setzedcafeready':
-        return { ok: true }
-      case 'readzedcafeexportfiles':
-        return guestpayload(guestfiles)
-      default:
-        return null
-    }
-  })
-}
-
 describe('pushzedcafesynctoiframe pipeline', () => {
   beforeEach(() => {
     resetwanixzedcafefortest()
     resetwanixzedcafesessionfortest()
-    mockrpc.mockReset()
+    mockreadfiles.mockReset()
+    mocksync.mockReset()
   })
 
   afterEach(() => {
     resetwanixzedcafefortest()
   })
 
-  it('syncs books to iframe via synczedcafeexport RPC', async () => {
-    const order: string[] = []
-    // Guest matches last host push so pre-sync import is skipped.
+  it('emits read then sync when guest tree matches last push', () => {
     setlasthostpushdoc(zedcafeexportfilestodoc(emptyfiles))
-    mockrpc.mockImplementation(async (method: string) => {
-      order.push(method)
-      switch (method) {
-        case 'synczedcafeexport':
-          return { ok: true, taskrid: '7' }
-        case 'readzedcafetaskrid':
-          return '7'
-        case 'waitzedcafecontentready':
-          return true
-        case 'setzedcafeready':
-          return { ok: true }
-        case 'readzedcafeexportfiles':
-          return guestpayload(emptyfiles)
-        default:
-          return null
-      }
-    })
+    ensurezedcafeexportready(device, player, bookfiles)
+    expect(mockreadfiles).toHaveBeenCalledWith(device, player)
 
-    const taskrid = await ensurezedcafeexportready(device, player, bookfiles)
+    applyzedcafeexportfiles(device, player, guestpayload(emptyfiles))
+    expect(mocksync).toHaveBeenCalled()
 
-    expect(taskrid).toBe('7')
-    expect(order).toEqual([
-      'readzedcafeexportfiles',
-      'synczedcafeexport',
-      'waitzedcafecontentready',
-      'setzedcafeready',
-      'readzedcafetaskrid',
-    ])
+    applyzedcafesyncresult(device, player, { ok: true, taskrid: '7' })
   })
 
-  it('skips sync when host export doc is unchanged', async () => {
+  it('skips sync emit when host export doc is unchanged', () => {
     setlasthostpushdoc(zedcafeexportfilestodoc(bookfiles))
-    mocksyncpipeline('9', bookfiles)
-
-    const taskrid = await ensurezedcafeexportready(device, player, bookfiles)
-
-    expect(taskrid).toBe('9')
-    expect(mockrpc).not.toHaveBeenCalledWith(
-      'synczedcafeexport',
-      expect.anything(),
-      expect.anything(),
-    )
+    const ok = pushzedcafesynctoiframe(device, player, bookfiles)
+    expect(ok).toBe(true)
+    expect(mockreadfiles).toHaveBeenCalled()
+    applyzedcafeexportfiles(device, player, guestpayload(bookfiles))
+    expect(mocksync).not.toHaveBeenCalled()
   })
 
-  it('pushes when iframe export is stale vs memory', async () => {
+  it('ensurezedcafeexportready is fire-and-forget emit', () => {
     setlasthostpushdoc(zedcafeexportfilestodoc(emptyfiles))
-    mocksyncpipeline('9', emptyfiles)
-
-    const taskrid = await ensurezedcafeexportready(device, player, bookfiles)
-
-    expect(taskrid).toBe('9')
-    expect(mockrpc).toHaveBeenCalledWith(
-      'synczedcafeexport',
-      expect.anything(),
-      expect.anything(),
-    )
-  })
-
-  it('ensurewanixzedcafedaemon throws when sync fails with books', async () => {
-    setlasthostpushdoc(zedcafeexportfilestodoc(emptyfiles))
-    mockrpc.mockImplementation(async (method: string) => {
-      switch (method) {
-        case 'readzedcafeexportfiles':
-          return guestpayload(emptyfiles)
-        case 'synczedcafeexport':
-          return { ok: false, taskrid: null }
-        default:
-          return null
-      }
-    })
-
-    await expect(
-      ensurewanixzedcafedaemon(device, player, bookfiles),
-    ).rejects.toThrow(/export sync failed/)
+    ensurezedcafeexportready(device, player, bookfiles)
+    expect(mockreadfiles).toHaveBeenCalledWith(device, player)
   })
 })
