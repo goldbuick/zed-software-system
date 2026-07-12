@@ -5,18 +5,10 @@ import {
   apilog,
   vmloader,
   vmreadzipfilelist,
+  wanixclientbinddrop,
+  wanixclientdrop,
   workstatus,
 } from 'zss/device/api'
-import {
-  readwanixbinddropdst,
-  readwanixbinddropkind,
-  readwanixbinddropperm,
-} from 'zss/device/wanixclient/wanixbindpaths'
-import { readattachedsession } from 'zss/device/wanixclient/wanixdisplay'
-import {
-  handlewanixbinddrop,
-  handlewanixdrop,
-} from 'zss/device/wanixclient/wanixroom'
 import { SOFTWARE } from 'zss/device/session'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
@@ -396,14 +388,12 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
       file
         .arrayBuffer()
         .then((arraybuffer) => {
-          return handlewanixdrop(
-            {
-              label: file.name,
-              kind: 'wasm',
-              bytes: new Uint8Array(arraybuffer),
-            },
+          wanixclientdrop(
             SOFTWARE,
             player,
+            file.name,
+            'wasm',
+            new Uint8Array(arraybuffer),
           )
         })
         .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
@@ -412,14 +402,12 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
       file
         .arrayBuffer()
         .then((arraybuffer) => {
-          return handlewanixdrop(
-            {
-              label: file.name,
-              kind: 'bundle',
-              bytes: new Uint8Array(arraybuffer),
-            },
+          wanixclientdrop(
             SOFTWARE,
             player,
+            file.name,
+            'bundle',
+            new Uint8Array(arraybuffer),
           )
         })
         .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
@@ -462,24 +450,14 @@ export function parsewebfile(player: string, file: File | undefined) {
     return
   }
   if (memoryreadwanixattached()) {
-    const sessionkey = readattachedsession()
-    if (!sessionkey) {
-      apierror(SOFTWARE, player, 'wanix', 'bind-drop: no attached session')
-      return
-    }
     file
       .arrayBuffer()
       .then((arraybuffer) => {
-        const kind = readwanixbinddropkind(file.name)
-        return handlewanixbinddrop(
-          {
-            label: file.name,
-            kind,
-            bytes: new Uint8Array(arraybuffer),
-            dst: readwanixbinddropdst(file.name, kind),
-            perm: readwanixbinddropperm(file.name),
-          },
-          sessionkey,
+        wanixclientbinddrop(
+          SOFTWARE,
+          player,
+          file.name,
+          new Uint8Array(arraybuffer),
         )
       })
       .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))

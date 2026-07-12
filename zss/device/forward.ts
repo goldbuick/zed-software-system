@@ -1,7 +1,8 @@
 import { createdevice, parsetarget } from 'zss/device'
 import { hub } from 'zss/hub'
 
-import { MESSAGE, ismessage } from './api'
+import { MESSAGE } from './api'
+import { ismessage } from './messagetypes'
 
 export function createforward(handler: (message: MESSAGE) => void) {
   const syncids = new Set<string>()

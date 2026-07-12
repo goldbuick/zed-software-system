@@ -1,6 +1,6 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
-import { boardrunnerpaint, waniximportresult } from 'zss/device/api'
+import { boardrunnerpaint, wanixclientimportresult } from 'zss/device/api'
 import { boardrunnerboundarypaint } from 'zss/device/vm/boardrunnerboundarysync'
 import { boardrunneraccessfor } from 'zss/device/vm/boardrunnermanagement'
 import { boardrunners } from 'zss/device/vm/state'
@@ -75,19 +75,19 @@ function paintboardrunnersafterimport(vm: DEVICE) {
 export function handleimportzedcafe(vm: DEVICE, message: MESSAGE): void {
   const files = readimportfiles(message.data)
   if (!files) {
-    waniximportresult(
+    wanixclientimportresult(
       vm,
       message.player,
       false,
       false,
-      'import-zedcafe payload rejected',
+      'importzedcafe payload rejected',
     )
     return
   }
   const check = validatezedcafeexportpaths(files)
   if (!check.ok) {
     const detail = check.errors[0] ?? 'unknown'
-    waniximportresult(
+    wanixclientimportresult(
       vm,
       message.player,
       false,
@@ -106,7 +106,7 @@ export function handleimportzedcafe(vm: DEVICE, message: MESSAGE): void {
       // paint so the live boardrunner gets terrain immediately.
       paintboardrunnersafterimport(vm)
     }
-    waniximportresult(
+    wanixclientimportresult(
       vm,
       message.player,
       true,
@@ -116,7 +116,7 @@ export function handleimportzedcafe(vm: DEVICE, message: MESSAGE): void {
     )
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err)
-    waniximportresult(vm, message.player, false, false, detail)
+    wanixclientimportresult(vm, message.player, false, false, detail)
   } finally {
     memorywritefrozen(false)
   }

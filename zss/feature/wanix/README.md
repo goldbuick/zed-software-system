@@ -224,10 +224,10 @@ sequenceDiagram
   Parent->>Memfs: Poll every 3s
   Note over Parent: export doc compare != last host push
   Parent->>Parent: guestdirty — suppress stale host push
-  Parent->>Sim: vm:import-zedcafe
+  Parent->>Sim: vm:importzedcafe
   Sim->>Sim: applyzedcafetomemory upserts + deletes
-  Sim->>Parent: wanix:import-result
-  Parent->>Sim: vm:export-zedcafe
+  Sim->>Parent: wanix:importresult
+  Parent->>Sim: vm:exportzedcafe
   Parent->>Memfs: push post-import tree
 ```
 
@@ -648,7 +648,7 @@ and VM is running — explicit branch, errors propagate.
 | **`#wanix vm` + `/zedcafe/`** | VM room → zedcafe gojs boot → host pushes memory export → `wirezedcafeexport` binds `#task/rid/export` into Linux at `/zedcafe/` |
 | **Wasm task drops** | `handlewanixdrop` stands task room, stages `#ramfs/{file}`, spawns with driver from wasm bytes |
 | **findplayers JSON output** | gojs task + per-task export bind + spawn gate on `stats.json`; scanner walks `./zedcafe/{book}/…` |
-| **greenring board paint** | Same bind; writes allowlisted `board/terrain.json`; import poll → `vm:import-zedcafe` → sim apply + re-export |
+| **greenring board paint** | Same bind; writes allowlisted `board/terrain.json`; import poll → `vm:importzedcafe` → sim apply + re-export |
 | **Guest FS → sim writeback** | 3s export-doc compare poll; guest-dirty suppresses stale host push; deletes mirror guest tree |
 | **Live export updates** | End-of-tick `compare` of path-keyed export doc; partial upsert of changed files while poll active |
 | **Auto-attach new sessions** | `WANIX_MSG_SESSION open` → reveal tape → attach when user had nothing focused |

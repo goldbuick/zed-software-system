@@ -2,8 +2,10 @@ import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 
 import { handleattach } from './attach'
+import { handlebinddrop } from './binddrop'
 import { handlewanixcells } from './cells'
 import { handledetach } from './detach'
+import { handledrop } from './drop'
 import { handleexportstate } from './exportstate'
 import { handleimportresult } from './importresult'
 import { handlerequestzedcafestate } from './requestzedcafestate'
@@ -21,14 +23,16 @@ export const wanixclienthandlers: Record<string, WANIXCLIENT_HANDLER> = {
   show: handleshow,
   attach: handleattach,
   detach: handledetach,
-  'term-dump': handletermdump,
-  'term-status': handletermstatus,
+  drop: handledrop,
+  binddrop: handlebinddrop,
+  termdump: handletermdump,
+  termstatus: handletermstatus,
   requestzedcafestate: handlerequestzedcafestate,
-  'export-state': handleexportstate,
-  'import-result': handleimportresult,
+  exportstate: handleexportstate,
+  importresult: handleimportresult,
   stop: handlestop,
-  'vm-start': handlevmstart,
-  'vm-stop': handlevmstop,
+  vmstart: handlevmstart,
+  vmstop: handlevmstop,
   cells: handlewanixcells,
   session: handlewanixsession,
 }

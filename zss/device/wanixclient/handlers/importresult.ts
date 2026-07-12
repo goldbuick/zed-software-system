@@ -15,7 +15,7 @@ export function handleimportresult(device: DEVICE, message: MESSAGE): void {
       device,
       message.player,
       'wanix',
-      'zedcafe import-result payload rejected',
+      'zedcafe importresult payload rejected',
     )
     return
   }

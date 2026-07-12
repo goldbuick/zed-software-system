@@ -1,14 +1,14 @@
 import {
   apierror,
   apilog,
-  wanixattach,
-  wanixdetach,
-  wanixshow,
-  wanixstop,
-  wanixtermdump,
-  wanixtermstatus,
-  wanixvmstart,
-  wanixvmstop,
+  wanixclientattach,
+  wanixclientdetach,
+  wanixclientshow,
+  wanixclientstop,
+  wanixclienttermdump,
+  wanixclienttermstatus,
+  wanixclientvmstart,
+  wanixclientvmstop,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { FIRMWARE } from 'zss/firmware'
@@ -34,7 +34,7 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
       ])
       const player = READ_CONTEXT.elementfocus
       if (!ispresent(action)) {
-        wanixshow(SOFTWARE, player)
+        wanixclientshow(SOFTWARE, player)
         return 0
       }
       switch (NAME(action)) {
@@ -42,13 +42,13 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
           const sub = ispresent(arg) ? NAME(arg) : undefined
           if (sub === 'stop') {
             const [stoparg] = readargs(words, 2, [ARG_TYPE.MAYBE_NAME])
-            wanixvmstop(
+            wanixclientvmstop(
               SOFTWARE,
               player,
               ispresent(stoparg) ? NAME(stoparg) : undefined,
             )
           } else {
-            wanixvmstart(
+            wanixclientvmstart(
               SOFTWARE,
               player,
               ispresent(arg) ? NAME(arg) : undefined,
@@ -58,7 +58,7 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
         }
         case 'stop': {
           const [stoparg] = readargs(words, 1, [ARG_TYPE.MAYBE_NAME])
-          wanixstop(
+          wanixclientstop(
             SOFTWARE,
             player,
             ispresent(stoparg) ? NAME(stoparg) : undefined,
@@ -66,10 +66,10 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
           break
         }
         case 'detach':
-          wanixdetach(SOFTWARE, player)
+          wanixclientdetach(SOFTWARE, player)
           break
         case 'attach':
-          wanixattach(SOFTWARE, player, ispresent(arg) ? NAME(arg) : undefined)
+          wanixclientattach(SOFTWARE, player, ispresent(arg) ? NAME(arg) : undefined)
           break
         case 'term': {
           const sub = ispresent(arg) ? NAME(arg) : undefined
@@ -91,7 +91,7 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
               typeof tailraw === 'number' && tailraw > 0
                 ? Math.floor(tailraw)
                 : undefined
-            wanixtermdump(
+            wanixclienttermdump(
               SOFTWARE,
               player,
               ispresent(sessionkey) ? NAME(sessionkey) : undefined,
@@ -100,7 +100,7 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
             break
           }
           if (NAME(sub) === 'status') {
-            wanixtermstatus(SOFTWARE, player)
+            wanixclienttermstatus(SOFTWARE, player)
             break
           }
           apierror(

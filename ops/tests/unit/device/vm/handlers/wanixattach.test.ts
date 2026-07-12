@@ -19,7 +19,7 @@ describe('handlewanixattach', () => {
       player: 'p1',
       id: 'id',
       sender: '',
-      target: 'wanix-attach',
+      target: 'wanixattach',
       data,
     }
   }

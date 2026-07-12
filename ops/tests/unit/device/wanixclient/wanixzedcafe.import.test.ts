@@ -122,7 +122,7 @@ describe('zedcafe sim import orchestration', () => {
     resetwanixzedcafesessionfortest()
   })
 
-  it('routes import through vm:import-zedcafe then re-exports', async () => {
+  it('routes import through vm:importzedcafe then re-exports', async () => {
     const guest = makefiles('guest')
     const applied = makefiles('applied')
     mockvmimport.mockImplementation((_d, _p, _files) => {

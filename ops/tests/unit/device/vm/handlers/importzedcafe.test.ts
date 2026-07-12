@@ -1,5 +1,5 @@
 jest.mock('zss/device/api', () => ({
-  waniximportresult: jest.fn(),
+  wanixclientimportresult: jest.fn(),
   boardrunnerpaint: jest.fn(),
 }))
 
@@ -43,7 +43,7 @@ jest.mock('zss/memory/session', () => ({
 
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
-import { boardrunnerpaint, waniximportresult } from 'zss/device/api'
+import { boardrunnerpaint, wanixclientimportresult } from 'zss/device/api'
 import { boardrunnerboundarypaint } from 'zss/device/vm/boardrunnerboundarysync'
 import { handleimportzedcafe } from 'zss/device/vm/handlers/importzedcafe'
 import { applyzedcafetomemory } from 'zss/feature/wanix/wanixstateimport'
@@ -55,7 +55,7 @@ describe('handleimportzedcafe', () => {
     player: 'p1',
     id: 'id',
     sender: '',
-    target: 'import-zedcafe',
+    target: 'importzedcafe',
     data: {
       files: [{ path: 'stats.json', bytes: new Uint8Array([1]) }],
     },
@@ -64,7 +64,7 @@ describe('handleimportzedcafe', () => {
   beforeEach(() => {
     jest.mocked(boardrunnerpaint).mockClear()
     jest.mocked(boardrunnerboundarypaint).mockClear()
-    jest.mocked(waniximportresult).mockClear()
+    jest.mocked(wanixclientimportresult).mockClear()
     jest.mocked(applyzedcafetomemory).mockReturnValue(true)
   })
 
@@ -80,7 +80,7 @@ describe('handleimportzedcafe', () => {
       expect.any(Object),
       'page-1',
     )
-    expect(waniximportresult).toHaveBeenCalledWith(
+    expect(wanixclientimportresult).toHaveBeenCalledWith(
       vm,
       'p1',
       true,
@@ -95,7 +95,7 @@ describe('handleimportzedcafe', () => {
     handleimportzedcafe(vm, message)
     expect(boardrunnerpaint).not.toHaveBeenCalled()
     expect(boardrunnerboundarypaint).not.toHaveBeenCalled()
-    expect(waniximportresult).toHaveBeenCalledWith(
+    expect(wanixclientimportresult).toHaveBeenCalledWith(
       vm,
       'p1',
       true,

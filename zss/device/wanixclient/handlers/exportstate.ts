@@ -44,7 +44,7 @@ export function handleexportstate(device: DEVICE, message: MESSAGE): void {
       device,
       message.player,
       'wanix',
-      'zedcafe export-state payload rejected',
+      'zedcafe exportstate payload rejected',
     )
     return
   }
