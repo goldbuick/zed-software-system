@@ -32,6 +32,17 @@ import { parsebrd, parseszt, parsezzt } from './zzt'
 import { isszztworldbytes, iszztworldbytes } from './zztmagic'
 import { parsezztobj } from './zztobj'
 
+/** Wanix host drops must run on the UI thread (iframe bridge), not the VM worker. */
+export function iswanixdropfilename(filename: string): boolean {
+  const name = filename.toLowerCase()
+  return (
+    name.endsWith('.wasm') ||
+    name.endsWith('.tgz') ||
+    name.endsWith('.tar.gz') ||
+    name.endsWith('.tar')
+  )
+}
+
 export function mimetypeofbytesread(filename: string, filebytes: Uint8Array) {
   // ZZT/SZT magic is a signed int16 LE at offset 0 (−1 / −2), not a fixed 4-byte tag.
   if (iszztworldbytes(filebytes)) {

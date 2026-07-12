@@ -29,6 +29,7 @@ type WanixBridgeState = {
   wanixisready: boolean
   readyresolve: (() => void) | null
   readypromise: Promise<void> | null
+  deliverwanixmessage: ((message: MESSAGE) => void) | null
 }
 
 function readbridgestate(): WanixBridgeState {
@@ -41,6 +42,7 @@ function readbridgestate(): WanixBridgeState {
       wanixisready: false,
       readyresolve: null,
       readypromise: null,
+      deliverwanixmessage: null,
     }
     g[WANIX_BRIDGE_STATE_KEY] = state
     state.readypromise = new Promise<void>((resolve) => {
@@ -58,8 +60,6 @@ function resetready() {
   })
 }
 
-let deliverwanixmessage: ((message: MESSAGE) => void) | null = null
-
 export function registerwanixsessioncloseprune(
   fn: (sessionkey: string) => void,
 ) {
@@ -69,7 +69,7 @@ export function registerwanixsessioncloseprune(
 export function setwanixmessagedeliver(
   fn: ((message: MESSAGE) => void) | null,
 ) {
-  deliverwanixmessage = fn
+  readbridgestate().deliverwanixmessage = fn
 }
 
 export function postmessagetowanixiframe(message: MESSAGE): boolean {
@@ -102,7 +102,7 @@ function handleparentmessage(event: MessageEvent) {
     return
   }
   if (ismessage(data)) {
-    deliverwanixmessage?.(data)
+    readbridgestate().deliverwanixmessage?.(data)
     return
   }
   const state = readbridgestate()

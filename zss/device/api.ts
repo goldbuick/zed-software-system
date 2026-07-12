@@ -1018,6 +1018,32 @@ export function vmloader(
   idoreventname: string,
   content: any,
 ) {
+  // Wanix iframe RPC lives on the UI thread. Routing .wasm/.tgz through the VM
+  // worker leaves applyroom hung on waitwanixiframe (no childwindow there).
+  if (
+    format === 'file' &&
+    typeof window !== 'undefined' &&
+    content instanceof File
+  ) {
+    const fromid =
+      typeof idoreventname === 'string' ? idoreventname.replace(/^file:/, '') : ''
+    const candidates = [fromid, content.name]
+    const iswanix = candidates.some((filename) => {
+      const name = filename.toLowerCase()
+      return (
+        name.endsWith('.wasm') ||
+        name.endsWith('.tgz') ||
+        name.endsWith('.tar.gz') ||
+        name.endsWith('.tar')
+      )
+    })
+    if (iswanix) {
+      void import('zss/feature/parse/file').then(({ parsewebfile }) => {
+        parsewebfile(player, content)
+      })
+      return
+    }
+  }
   let withcontent: any
   switch (format) {
     case 'file':
