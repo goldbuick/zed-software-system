@@ -379,6 +379,8 @@ let pendingexportwait: VmZedCafeExportWaiter | null = null
 let pendingimportwait: VmZedCafeImportWaiter | null = null
 let pendingsync: Pendingsync | null = null
 let pendingpollphase: PendingPollPhase = null
+/** True when a kick arrived while poll inactive or a phase was already in flight. */
+let pendingpollkick = false
 
 export function readpolltimer(): ReturnType<typeof setInterval> | undefined {
   return polltimer
@@ -438,6 +440,14 @@ export function setpendingpollphase(next: PendingPollPhase): void {
   pendingpollphase = next
 }
 
+export function readpendingpollkick(): boolean {
+  return pendingpollkick
+}
+
+export function setpendingpollkick(next: boolean): void {
+  pendingpollkick = next
+}
+
 export function resetwanixzedcafesessionfortest(): void {
   useWanixClient.setState({
     lasthostpushdoc: {},
@@ -464,6 +474,7 @@ export function resetwanixzedcafependingfortest(): void {
   pendingimportwait = null
   pendingsync = null
   pendingpollphase = null
+  pendingpollkick = false
 }
 
 /** Test hook — resets all wanixclient device state. */

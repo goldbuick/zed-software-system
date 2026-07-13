@@ -69,3 +69,29 @@ func TestSchemaGuardP9WriteNestedBookAfterMkdirAll(t *testing.T) {
 		t.Fatalf("book stats unexpected: %q", string(got))
 	}
 }
+
+func TestSchemaGuardP9ReadLargeFileRoundTrip(t *testing.T) {
+	export := NewEmptyExport()
+	fsys, cleanup := p9exportsetup(t, export)
+	defer cleanup()
+
+	// Payloads >512 bytes force multi-chunk p9 ReadAt through dirtyfile.
+	var builder strings.Builder
+	builder.WriteString(`{"exportedAt":"test","bookCount":0,"pad":"`)
+	for builder.Len() < 2000 {
+		builder.WriteByte('x')
+	}
+	builder.WriteString(`"}` + "\n")
+	payload := builder.String()
+
+	if err := fs.WriteFile(fsys, "stats.json", []byte(payload), 0o644); err != nil {
+		t.Fatalf("write large stats.json: %v", err)
+	}
+	got, err := fs.ReadFile(fsys, "stats.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != payload {
+		t.Fatalf("large read truncated or corrupted: got %d bytes want %d", len(got), len(payload))
+	}
+}

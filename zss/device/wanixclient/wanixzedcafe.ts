@@ -23,12 +23,14 @@ import {
   readpendingsync,
   readpolldevice,
   readpollplayer,
+  readpendingpollkick,
   readzedcafeguestdirty,
   readzedcafepollactive,
   setlasthostpushdoc,
   setpendingexportwait,
   setpendingimportwait,
   setpendingpollphase,
+  setpendingpollkick,
   setpendingsync,
   setpolldevice,
   setpollplayer,
@@ -76,6 +78,35 @@ function guestfilestoexport(
     })
   }
   return out
+}
+
+/** content-ready may arrive before sync result promotes phase to contentready. */
+let earlyexportreadytaskrid: string | null = null
+
+function clearearlyexportready(): void {
+  earlyexportreadytaskrid = null
+}
+
+function finalizeexportcontentsync(
+  device: DEVICELIKE,
+  player: string,
+  ctx: {
+    shadowdoc: Record<string, unknown>
+    memcount: number
+    taskrid?: string | null
+  },
+): void {
+  setpendingsync(null)
+  clearearlyexportready()
+  if (!readzedcafepollactive() && ctx.memcount > 0) {
+    markzedcafepollready(device, player, ctx.shadowdoc)
+  } else {
+    setlasthostpushdoc(ctx.shadowdoc)
+    flushpendingpollkick()
+  }
+  tracezedcafeexport(
+    `sync-to-iframe content-ready memcount=${ctx.memcount} taskrid=${ctx.taskrid ?? 'none'}`,
+  )
 }
 
 export function exportfilestoguestfiles(
@@ -272,13 +303,22 @@ export function applyzedcafeexportfiles(
 ): void {
   const guest = Array.isArray(data) ? (data as WanixZedCafeGuestFile[]) : []
   const files = guestfilestoexport(guest)
+  // Prefer import poll completion: host guesttree must not steal this reply and
+  // leave pendingpollphase stuck at 'tree' (kicks would no-op forever).
+  if (readpendingpollphase() === 'tree' && readpolldevice()) {
+    const needguesttreereread = readpendingsync()?.phase === 'guesttree'
+    setpendingpollphase(null)
+    void continuepollaftertree(device, player, files).finally(() => {
+      flushpendingpollkick()
+    })
+    if (needguesttreereread) {
+      wanixserverreadzedcafeexportfiles(device, player)
+    }
+    return
+  }
   if (readpendingsync()?.phase === 'guesttree') {
     void continuepushafterguesttree(device, player, files)
     return
-  }
-  if (readpendingpollphase() === 'tree' && readpolldevice()) {
-    setpendingpollphase(null)
-    void continuepollaftertree(device, player, files)
   }
 }
 
@@ -308,6 +348,7 @@ export function applyzedcafeexportlive(
   }
   if (data !== true) {
     setpendingpollphase(null)
+    flushpendingpollkick()
     return
   }
   setpendingpollphase('tree')
@@ -353,6 +394,19 @@ export function applyzedcafesyncresult(
       taskrid &&
       (memcount > 0 || files.some((file) => file.path === 'stats.json'))
     ) {
+      // Iframe posts content-ready before the sync reply; if it already landed,
+      // arm import now instead of waiting forever in phase=contentready.
+      if (
+        earlyexportreadytaskrid !== null &&
+        String(earlyexportreadytaskrid) === String(taskrid)
+      ) {
+        finalizeexportcontentsync(device, player, {
+          shadowdoc,
+          memcount,
+          taskrid,
+        })
+        return
+      }
       setpendingsync({ ...ctx, phase: 'contentready', taskrid })
       return
     }
@@ -380,21 +434,50 @@ export function handlewanixexportready(
     return
   }
   const pendingsync = readpendingsync()
-  if (pendingsync?.phase !== 'contentready') {
+  if (pendingsync?.phase === 'contentready') {
+    if (
+      pendingsync.taskrid &&
+      String(pendingsync.taskrid) !== String(taskrid)
+    ) {
+      return
+    }
+    finalizeexportcontentsync(device, player, {
+      shadowdoc: pendingsync.shadowdoc,
+      memcount: pendingsync.memcount,
+      taskrid: pendingsync.taskrid ?? taskrid,
+    })
     return
   }
-  if (pendingsync.taskrid && pendingsync.taskrid !== taskrid) {
+  if (
+    pendingsync?.phase === 'sync' ||
+    pendingsync?.phase === 'guesttree'
+  ) {
+    // content-ready beat sync result — remember so applyzedcafesyncresult can arm poll.
+    earlyexportreadytaskrid = taskrid
+    tracezedcafeexport(
+      `exportready-early taskrid=${taskrid} phase=${pendingsync.phase}`,
+    )
     return
   }
-  const ctx = pendingsync
-  setpendingsync(null)
-  if (!readzedcafepollactive() && ctx.memcount > 0) {
-    markzedcafepollready(device, player, ctx.shadowdoc)
-  } else {
-    setlasthostpushdoc(ctx.shadowdoc)
+  // Iframe drop-pull / local sync: no parent push in flight. Still arm import poll.
+  if (!readzedcafepollactive()) {
+    const hostfiles = readhostexportfilesfrommemory()
+    const memcount = readbookcountfromexportfiles(hostfiles)
+    if (memcount > 0) {
+      markzedcafepollready(
+        device,
+        player,
+        zedcafeexportfilestodoc(hostfiles),
+      )
+      tracezedcafeexport(
+        `sync-to-iframe content-ready pull-arm memcount=${memcount} taskrid=${taskrid}`,
+      )
+      return
+    }
   }
+  earlyexportreadytaskrid = taskrid
   tracezedcafeexport(
-    `sync-to-iframe content-ready memcount=${ctx.memcount} taskrid=${taskrid}`,
+    `exportready-early taskrid=${taskrid} phase=${pendingsync?.phase ?? 'none'}`,
   )
 }
 
@@ -613,6 +696,31 @@ function markzedcafepollready(
   wanixserversetzedcafeready(device, player, true)
   startzedcafepoll(device, player)
   setlasthostpushdoc(hostpushdoc)
+  flushpendingpollkick()
+}
+
+/**
+ * Drop-pull answers export via iframe-local sync (no parent pendingsync).
+ * Arm import poll from the host files we just handed the iframe.
+ */
+export function armzedcafepollfromhostfiles(
+  device: DEVICELIKE,
+  player: string,
+  files: WANIX_ZED_CAFE_EXPORT_FILE[],
+): void {
+  const memcount = readbookcountfromexportfiles(files)
+  if (memcount < 1) {
+    return
+  }
+  if (readzedcafepollactive()) {
+    setlasthostpushdoc(zedcafeexportfilestodoc(files))
+    flushpendingpollkick()
+    return
+  }
+  markzedcafepollready(device, player, zedcafeexportfilestodoc(files))
+  tracezedcafeexport(
+    `poll-arm host-pull memcount=${memcount} paths=${files.length}`,
+  )
 }
 
 export async function runzedcafeimport(
@@ -666,22 +774,45 @@ export async function runzedcafeimport(
 }
 
 export function startzedcafepoll(device: DEVICELIKE, player: string) {
+  const queued = readpendingpollkick()
   stopzedcafepoll()
   setpolldevice(device)
   setpollplayer(player)
   setzedcafepollactive(true)
+  if (queued) {
+    setpendingpollkick(true)
+  }
 }
 
 export function stopzedcafepoll() {
   setpolldevice(null)
   setpollplayer('')
   setpendingpollphase(null)
+  setpendingpollkick(false)
   setzedcafepollactive(false)
+}
+
+function flushpendingpollkick(): void {
+  if (!readpendingpollkick()) {
+    return
+  }
+  setpendingpollkick(false)
+  kickzedcafepoll('queued')
 }
 
 function tickzedcafepoll() {
   const polldevice = readpolldevice()
-  if (!readzedcafepollactive() || !polldevice || readpendingpollphase()) {
+  const phase = readpendingpollphase()
+  if (!readzedcafepollactive() || !polldevice) {
+    setpendingpollkick(true)
+    tracezedcafeexport(
+      `poll-kick-skip active=${readzedcafepollactive()} device=${!!polldevice} phase=${phase ?? 'none'}`,
+    )
+    return
+  }
+  if (phase) {
+    setpendingpollkick(true)
+    tracezedcafeexport(`poll-kick-skip phase=${phase}`)
     return
   }
   setpendingpollphase('taskrid')
@@ -823,5 +954,7 @@ export function resetwanixzedcafefortest() {
   clearpendingexportstate()
   setpendingsync(null)
   setpendingpollphase(null)
+  setpendingpollkick(false)
+  clearearlyexportready()
   clearzedcafeexportsession()
 }

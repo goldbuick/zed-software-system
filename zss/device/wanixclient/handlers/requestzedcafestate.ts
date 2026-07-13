@@ -12,9 +12,15 @@ export function handlerequestzedcafestate(
 ): void {
   const player = message.player || registerreadplayer() || memoryreadoperator()
   doasync(device, player, async () => {
-    const { exportfilestoguestfiles, readhostexportfilesasync } =
-      await import('zss/device/wanixclient/wanixzedcafe')
+    const {
+      armzedcafepollfromhostfiles,
+      exportfilestoguestfiles,
+      readhostexportfilesasync,
+    } = await import('zss/device/wanixclient/wanixzedcafe')
     const files = await readhostexportfilesasync(SOFTWARE, player)
+    // Drop-pull syncs inside the iframe and never runs parent pushzedcafesync —
+    // arm import poll here so guest writebacks are not skipped (active=false).
+    armzedcafepollfromhostfiles(device, player, files)
     wanixserverrequestzedcafestate(
       device,
       player,

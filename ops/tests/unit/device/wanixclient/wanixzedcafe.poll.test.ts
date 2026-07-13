@@ -39,21 +39,29 @@ jest.mock('zss/feature/wanix/zedcafetreeschema', () => ({
   validatezedcafeexportpaths: jest.fn(() => ({ ok: true, errors: [] })),
 }))
 
-import { wanixserverreadzedcafetaskrid } from 'zss/device/api'
-import { handlezedcafefilechange } from 'zss/device/wanixclient/handlers/zedcafefilechange'
-import { shouldprocesswanixclientmessage } from 'zss/device/wanixclient/filter'
 import {
+  wanixserverreadzedcafeexportfiles,
+  wanixserverreadzedcafetaskrid,
+} from 'zss/device/api'
+import { shouldprocesswanixclientmessage } from 'zss/device/wanixclient/filter'
+import { handlezedcafefilechange } from 'zss/device/wanixclient/handlers/zedcafefilechange'
+import {
+  applyzedcafeexportfiles,
   kickzedcafepoll,
   resetwanixzedcafefortest,
   startzedcafepoll,
   stopzedcafepoll,
 } from 'zss/device/wanixclient/wanixzedcafe'
 import {
+  readpendingpollkick,
   readzedcafepollactive,
   resetwanixzedcafesessionfortest,
+  setpendingpollphase,
+  setpendingsync,
 } from 'zss/device/wanixclient/state'
 
 const mockreadrid = wanixserverreadzedcafetaskrid as jest.Mock
+const mockreadfiles = wanixserverreadzedcafeexportfiles as jest.Mock
 
 const device = { id: 'dev', emit: jest.fn() } as never
 const player = 'p1'
@@ -63,6 +71,7 @@ describe('zedcafe import poll', () => {
     resetwanixzedcafefortest()
     resetwanixzedcafesessionfortest()
     mockreadrid.mockReset()
+    mockreadfiles.mockReset()
   })
 
   afterEach(() => {
@@ -83,9 +92,32 @@ describe('zedcafe import poll', () => {
     expect(mockreadrid).toHaveBeenCalledWith(device, player)
   })
 
-  it('kickzedcafepoll no-ops when poll inactive', () => {
+  it('kickzedcafepoll queues when poll inactive', () => {
     kickzedcafepoll()
     expect(mockreadrid).not.toHaveBeenCalled()
+    expect(readpendingpollkick()).toBe(true)
+  })
+
+  it('kickzedcafepoll queues when phase in flight', () => {
+    startzedcafepoll(device, player)
+    setpendingpollphase('tree')
+    kickzedcafepoll('file-change')
+    expect(mockreadrid).not.toHaveBeenCalled()
+    expect(readpendingpollkick()).toBe(true)
+  })
+
+  it('applyzedcafeexportfiles prefers poll tree over host guesttree', () => {
+    startzedcafepoll(device, player)
+    setpendingpollphase('tree')
+    setpendingsync({
+      phase: 'guesttree',
+      files: [],
+      shadowdoc: {},
+      memcount: 1,
+      options: undefined,
+    } as never)
+    applyzedcafeexportfiles(device, player, [])
+    expect(mockreadfiles).toHaveBeenCalledWith(device, player)
   })
 
   it('handlezedcafefilechange kicks import', () => {

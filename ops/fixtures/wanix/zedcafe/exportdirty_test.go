@@ -106,3 +106,24 @@ func TestExportDirtyRemoveNotifies(t *testing.T) {
 	}
 	waitfornotify(t, &count, 1)
 }
+
+func TestExportReadDirRootSucceeds(t *testing.T) {
+	exportfs := NewEmptyExport()
+	if err := fs.WriteFile(exportfs, "stats.json", []byte("{}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	entries, err := fs.ReadDir(exportfs, ".")
+	if err != nil {
+		t.Fatal(err)
+	}
+	found := false
+	for _, entry := range entries {
+		if entry.Name() == "stats.json" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("expected stats.json in ReadDir(.), got %#v", entries)
+	}
+}

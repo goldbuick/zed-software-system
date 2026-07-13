@@ -44,7 +44,25 @@ func (f *dirtyfile) Close() error {
 	return err
 }
 
+func (f *dirtyfile) ReadDir(n int) ([]fs.DirEntry, error) {
+	if rd, ok := f.File.(fs.ReadDirFile); ok {
+		return rd.ReadDir(n)
+	}
+	return nil, &fs.PathError{Op: "readdir", Path: f.name, Err: fs.ErrInvalid}
+}
+
+func (f *dirtyfile) ReadAt(p []byte, off int64) (int, error) {
+	return fs.ReadAt(f.File, p, off)
+}
+
+func (f *dirtyfile) Seek(offset int64, whence int) (int64, error) {
+	return fs.Seek(f.File, offset, whence)
+}
+
 var (
-	_ io.Writer   = (*dirtyfile)(nil)
-	_ io.WriterAt = (*dirtyfile)(nil)
+	_ io.Writer      = (*dirtyfile)(nil)
+	_ io.WriterAt    = (*dirtyfile)(nil)
+	_ io.ReaderAt    = (*dirtyfile)(nil)
+	_ io.Seeker      = (*dirtyfile)(nil)
+	_ fs.ReadDirFile = (*dirtyfile)(nil)
 )
