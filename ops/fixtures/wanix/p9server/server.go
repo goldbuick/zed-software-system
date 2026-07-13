@@ -3,11 +3,13 @@
 package p9server
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io"
 	"log"
 	"net"
 	"net/http"
+	"os"
 	"path/filepath"
 
 	"github.com/gorilla/websocket"
@@ -24,16 +26,33 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-// Server serves a directory over WebSocket 9P (wanix serve compatible).
+// Options configures Start (TLS required — wss:// only).
+type Options struct {
+	// CertFile + KeyFile — same pair cafe:dev uses via mkcert.
+	CertFile string
+	KeyFile  string
+}
+
+// Server serves a directory over wss:// 9P (wanix import compatible).
 type Server struct {
 	httpServer *http.Server
 	listener   net.Listener
 	RootDir    string
-	URL        string // ws://127.0.0.1:<port>/
+	URL        string // wss://localhost:<port>/
 }
 
-// Start listens on 127.0.0.1:0 and serves rootdir via WS→9P.
-func Start(rootdir string) (*Server, error) {
+// Start listens on 127.0.0.1:0 and serves rootdir via wss→9P.
+func Start(rootdir string, opts Options) (*Server, error) {
+	if opts.CertFile == "" || opts.KeyFile == "" {
+		return nil, fmt.Errorf("p9server: TLS cert and key required (wss only)")
+	}
+	if _, err := os.Stat(opts.CertFile); err != nil {
+		return nil, fmt.Errorf("p9server cert: %w", err)
+	}
+	if _, err := os.Stat(opts.KeyFile); err != nil {
+		return nil, fmt.Errorf("p9server key: %w", err)
+	}
+
 	abs, err := filepath.Abs(rootdir)
 	if err != nil {
 		return nil, err
@@ -57,14 +76,29 @@ func Start(rootdir string) (*Server, error) {
 		http.Error(w, "expecting websocket upgrade", http.StatusBadRequest)
 	})
 	hs := &http.Server{Handler: mux}
+
+	cert, err := tls.LoadX509KeyPair(opts.CertFile, opts.KeyFile)
+	if err != nil {
+		_ = ln.Close()
+		return nil, fmt.Errorf("p9server tls load: %w", err)
+	}
+	tlsconfig := &tls.Config{Certificates: []tls.Certificate{cert}}
+	serveLN := tls.NewListener(ln, tlsconfig)
+
+	// Prefer localhost in the printed URL so it matches mkcert SAN (DNS:localhost).
+	_, port, err := net.SplitHostPort(ln.Addr().String())
+	if err != nil {
+		_ = ln.Close()
+		return nil, err
+	}
 	s := &Server{
 		httpServer: hs,
 		listener:   ln,
 		RootDir:    abs,
-		URL:        fmt.Sprintf("ws://%s/", ln.Addr().String()),
+		URL:        fmt.Sprintf("wss://localhost:%s/", port),
 	}
 	go func() {
-		if err := hs.Serve(ln); err != nil && err != http.ErrServerClosed {
+		if err := hs.Serve(serveLN); err != nil && err != http.ErrServerClosed {
 			log.Println("p9server:", err)
 		}
 	}()

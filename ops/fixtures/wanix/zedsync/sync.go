@@ -183,7 +183,9 @@ func InitialSeed(remote, zedcafe string, r, z Snapshot) (copied int, err error) 
 	return copied, nil
 }
 
-// SteadyTick applies creates/updates/deletes both ways vs baseline.
+// SteadyTick applies creates/updates both ways vs baseline.
+// Deletes on remote are ignored: the file is restored from zedcafe.
+// Deletes on zedcafe still remove the peer on remote.
 // Returns the next baseline snapshot (unified view after apply).
 func SteadyTick(remote, zedcafe string, baseline Snapshot) (Snapshot, []string, error) {
 	r, err := WalkFiles(remote)
@@ -238,17 +240,17 @@ func SteadyTick(remote, zedcafe string, baseline Snapshot) (Snapshot, []string, 
 		case binbase && !rinremote && !rinzed:
 			// already gone both sides
 		case binbase && !rinremote && rinzed:
-			// deleted on remote → delete zedcafe
-			if err := removefile(zedcafe, rel); err != nil {
+			// deleted on remote → restore from zedcafe (remote deletes do not wipe zedcafe)
+			if err := copyfile(zedcafe, remote, rel); err != nil {
 				return baseline, logs, err
 			}
-			logs = append(logs, fmt.Sprintf("delete zedcafe %s", rel))
+			logs = append(logs, fmt.Sprintf("restore remote ← zedcafe %s", rel))
 		case binbase && rinremote && !rinzed:
 			// deleted on zedcafe → delete remote
 			if err := removefile(remote, rel); err != nil {
 				return baseline, logs, err
 			}
-			logs = append(logs, fmt.Sprintf("delete remote %s", rel))
+			logs = append(logs, fmt.Sprintf("delete remote ← gone on zedcafe %s", rel))
 		case binbase && rinremote && rinzed:
 			remotechanged := newer(rm, bm) || rm.Size != bm.Size || !rm.Mtime.Equal(bm.Mtime)
 			zedchanged := newer(zm, bm) || zm.Size != bm.Size || !zm.Mtime.Equal(bm.Mtime)

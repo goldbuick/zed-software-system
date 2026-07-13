@@ -192,7 +192,7 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
               apilog(
                 SOFTWARE,
                 player,
-                'usage: #wanix remote connect <ws-url> [dst] | #wanix remote disconnect [dst|id]',
+                'usage: #wanix remote connect <wss-url> [dst] | #wanix remote disconnect [dst|id]',
               )
               break
             }
@@ -215,7 +215,7 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
                 SOFTWARE,
                 player,
                 'wanix',
-                'usage: #wanix remote connect <ws-url> [dst]',
+                'usage: #wanix remote connect <wss-url> [dst]',
               )
               break
             }
@@ -257,7 +257,7 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
             SOFTWARE,
             player,
             'wanix',
-            'usage: #wanix remote | #wanix remote connect <ws-url> [dst] | #wanix remote disconnect [dst|id]',
+            'usage: #wanix remote | #wanix remote connect <wss-url> [dst] | #wanix remote disconnect [dst|id]',
           )
           break
         }

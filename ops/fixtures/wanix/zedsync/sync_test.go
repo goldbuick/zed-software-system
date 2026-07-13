@@ -80,7 +80,7 @@ func TestInitialSeedEmptyDoesNotWipePeer(t *testing.T) {
 	}
 }
 
-func TestSteadyTickDeleteBothWays(t *testing.T) {
+func TestSteadyTickRemoteDeleteRestoresFromZedcafe(t *testing.T) {
 	dir := t.TempDir()
 	remote := filepath.Join(dir, "remote")
 	zedcafe := filepath.Join(dir, "zedcafe")
@@ -89,14 +89,14 @@ func TestSteadyTickDeleteBothWays(t *testing.T) {
 	mtime := time.Now().Add(-time.Minute)
 	writefile(t, remote, "x.json", `1`, mtime)
 	writefile(t, zedcafe, "x.json", `1`, mtime)
-	writefile(t, remote, "y.json", `2`, mtime)
-	writefile(t, zedcafe, "y.json", `2`, mtime)
+	writefile(t, remote, "y.json", `keep-me`, mtime)
+	writefile(t, zedcafe, "y.json", `keep-me`, mtime)
 
 	baseline, err := WalkFiles(remote)
 	if err != nil {
 		t.Fatal(err)
 	}
-	// delete y on remote
+	// delete y on remote — should come back from zedcafe
 	if err := os.Remove(filepath.Join(remote, "y.json")); err != nil {
 		t.Fatal(err)
 	}
@@ -104,8 +104,44 @@ func TestSteadyTickDeleteBothWays(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := os.Stat(filepath.Join(zedcafe, "y.json")); !os.IsNotExist(err) {
-		t.Fatalf("expected y deleted on zedcafe, logs=%v", logs)
+	body, err := os.ReadFile(filepath.Join(remote, "y.json"))
+	if err != nil {
+		t.Fatalf("expected y restored on remote, logs=%v err=%v", logs, err)
+	}
+	if string(body) != "keep-me" {
+		t.Fatalf("body=%q logs=%v", body, logs)
+	}
+	if _, err := os.Stat(filepath.Join(zedcafe, "y.json")); err != nil {
+		t.Fatal("zedcafe y.json should remain")
+	}
+	if _, ok := baseline["y.json"]; !ok {
+		t.Fatal("baseline should still have y.json")
+	}
+}
+
+func TestSteadyTickZedcafeDeleteRemovesRemote(t *testing.T) {
+	dir := t.TempDir()
+	remote := filepath.Join(dir, "remote")
+	zedcafe := filepath.Join(dir, "zedcafe")
+	_ = os.MkdirAll(remote, 0o755)
+	_ = os.MkdirAll(zedcafe, 0o755)
+	mtime := time.Now().Add(-time.Minute)
+	writefile(t, remote, "y.json", `2`, mtime)
+	writefile(t, zedcafe, "y.json", `2`, mtime)
+
+	baseline, err := WalkFiles(remote)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Remove(filepath.Join(zedcafe, "y.json")); err != nil {
+		t.Fatal(err)
+	}
+	baseline, logs, err := SteadyTick(remote, zedcafe, baseline)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(remote, "y.json")); !os.IsNotExist(err) {
+		t.Fatalf("expected y deleted on remote, logs=%v", logs)
 	}
 	if _, ok := baseline["y.json"]; ok {
 		t.Fatal("baseline still has y.json")

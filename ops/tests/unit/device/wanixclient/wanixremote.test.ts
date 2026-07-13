@@ -44,31 +44,36 @@ describe('wanix remote connect', () => {
   })
 
   it('connectwanixremote stores remotes while idle', () => {
-    const remote = connectwanixremote('ws://127.0.0.1:7654/', 'host')
+    const remote = connectwanixremote('wss://127.0.0.1:7654/', 'host')
     expect(remote.dst).toBe('host')
-    expect(remote.url).toBe('ws://127.0.0.1:7654/')
+    expect(remote.url).toBe('wss://127.0.0.1:7654/')
     expect(readwanixremotes()).toEqual([remote])
     expect(readwanixroomconfig().mode).toBe('idle')
   })
 
   it('connectwanixremote defaults dst to remote', () => {
-    const remote = connectwanixremote('ws://127.0.0.1:9/')
+    const remote = connectwanixremote('wss://127.0.0.1:9/')
     expect(remote.dst).toBe(DEFAULT_WANIX_REMOTE_DST)
   })
 
+  it('connectwanixremote rejects non-wss urls', () => {
+    expect(() => connectwanixremote('ws://127.0.0.1:9/')).toThrow(/wss:\/\//)
+    expect(() => connectwanixremote('http://example/')).toThrow(/wss:\/\//)
+  })
+
   it('connectwanixremote rejects spaces in dst', () => {
-    expect(() => connectwanixremote('ws://x/', 'bad dst')).toThrow(/spaces/)
+    expect(() => connectwanixremote('wss://x/', 'bad dst')).toThrow(/spaces/)
   })
 
   it('disconnectwanixremote removes by dst', () => {
-    connectwanixremote('ws://127.0.0.1:1/', 'a')
-    connectwanixremote('ws://127.0.0.1:2/', 'b')
+    connectwanixremote('wss://127.0.0.1:1/', 'a')
+    connectwanixremote('wss://127.0.0.1:2/', 'b')
     disconnectwanixremote('a')
     expect(readwanixremotes().map((r) => r.dst)).toEqual(['b'])
   })
 
   it('soft stopwanixroom preserves remotes', () => {
-    connectwanixremote('ws://127.0.0.1:1/')
+    connectwanixremote('wss://127.0.0.1:1/')
     setwanixroomconfig({
       ...readwanixroomconfig(),
       mode: 'task',
@@ -79,7 +84,7 @@ describe('wanix remote connect', () => {
   })
 
   it('hard stopwanixroom clears remotes', () => {
-    connectwanixremote('ws://127.0.0.1:1/')
+    connectwanixremote('wss://127.0.0.1:1/')
     setwanixroomconfig({
       ...readwanixroomconfig(),
       mode: 'task',

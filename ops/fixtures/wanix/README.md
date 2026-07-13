@@ -67,36 +67,36 @@ Browser Wanix cannot export its namespace to an external folder. Workaround:
 
 1. Serve a host folder over WebSocket 9P
 2. `#wanix remote connect` imports that mount
-3. `#wanix zedsync <dst>` mirrors it with `zedcafe/` (r/w, including deletes after initial seed)
+3. `#wanix zedsync <dst>` mirrors it with `zedcafe/` (r/w; remote deletes are restored from zedcafe)
 
 ### Start a 9P WebSocket server
 
-**Upstream Wanix CLI** ([serve.go](https://github.com/tractordev/wanix/blob/main/cmd/wanix/serve.go), [import docs](https://github.com/tractordev/wanix#export-and-import-namespaces)):
+Cafe only accepts **`wss://`** remotes. Use the local fixture (TLS via cafe mkcert):
 
 ```bash
-# build CLI from submodule, then:
-./wanix serve /path/to/folder --listen :7654
-# connect URL: ws://localhost:7654/
-```
+# empty default root under ops/fixtures/wanix/p9server/serve-root
+yarn task run ops:fixtures:wanix:p9server:dev
 
-**Local fixture** (same protocol; for tests / quick local serve):
+# or pick a folder
+yarn task run ops:fixtures:wanix:p9server:dev -- ~/Desktop/zedcafe-sync
 
-```bash
-cd ops/fixtures/wanix
-go run ./p9server/cmd -dir /path/to/folder
-# prints ws://127.0.0.1:<port>/
-go test ./p9server/ ./zedsync/ -count=1
+# prints wss://localhost:<port>/ — then in cafe:
+#wanix remote connect wss://localhost:<port>/ remote
+#wanix zedsync remote
+
+go test ./p9server/ ./zedsync/ -count=1   # from ops/fixtures/wanix
 ```
 
 ### Cafe commands
 
 ```text
-#wanix remote connect ws://127.0.0.1:7654/ remote
+#wanix remote connect wss://localhost:<port>/ remote
 #wanix zedsync remote
 ```
 
 - Target path must **not contain spaces** (Wanix splits `cmd` on spaces).
 - Empty remote is seeded from `zedcafe/` first (never wipes zedcafe because remote started empty).
+- After ready: deleting a file on the **remote** restores it from `zedcafe/`; deleting from **zedcafe** still removes the remote peer.
 - Import poll pauses until `<target>/.zedsync-ready`, then resumes.
 - Soft idle / `#wanix stop` ends the zedsync task — look for `zedsync: stopped`.
 - Build guest: `yarn task run ops:fixtures:wanix:findplayers:build` → `cafe/public/wanix/zedsync.wasm` (also staged under `ops/public/wanix/`)

@@ -42,6 +42,17 @@ export const OPS_FIXTURES_WANIX_TASKS: TaskDef[] = [
       return 0
     }),
   }),
+  def('ops:fixtures:wanix:p9server:dev', {
+    description:
+      'Serve a folder over wss:// 9P for #wanix remote connect / zedsync (TLS via cafe mkcert; optional dir argv; default ops/fixtures/wanix/p9server/serve-root). Opens the folder in Finder. Ctrl+C to stop.',
+    tags: ['dev'],
+    run: handler(async (ctx) => {
+      const { resolvewanixp9serverdir, runwanixp9server } =
+        await import('ops/lib/wanix/p9server')
+      const dir = resolvewanixp9serverdir(ctx.args)
+      return runwanixp9server(dir, ctx.env)
+    }),
+  }),
   def('ops:fixtures:wanix:linux:overlay:build', {
     description:
       'Build zedcafe-linux-overlay.tgz (Alpine i386 jq/curl/wget + zedcafe shell tools) into ops/public/wanix/ and cafe/public/wanix/ (needs Docker — run ops:fixtures:wanix:toolchains first)',

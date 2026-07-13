@@ -196,6 +196,9 @@ export function readwanixremotes(): WanixRemoteSpec[] {
 /** Append or replace a WSS 9P remote import; remounts when room is active. */
 export function connectwanixremote(url: string, dst?: string): WanixRemoteSpec {
   const trimmedurl = url.trim()
+  if (!trimmedurl.toLowerCase().startsWith('wss://')) {
+    throw new Error('wanix remote url must be wss://')
+  }
   const mountdst = normalizeremotedst(dst ?? DEFAULT_WANIX_REMOTE_DST)
   if (!mountdst) {
     throw new Error('wanix remote dst empty')

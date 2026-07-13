@@ -89,7 +89,7 @@ export function buildwanixmenutape(state: WanixMenuState): string {
   parts.push(zsszedlinkline('wanix remote', 'list remote imports (WSS 9P)'))
   parts.push(
     zsstextline(
-      '$cyan   #wanix remote connect <ws-url> [dst] — import namespace',
+      '$cyan   #wanix remote connect <wss-url> [dst] — import namespace',
     ),
   )
   parts.push(
