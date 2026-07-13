@@ -3,6 +3,12 @@
  * (MessagePort exchange). It never opens ws:// / wss:// — that path exists in
  * submodule elements/bind.js but is not in the published dist yet.
  * Patch connectedCallback so WSS remotes actually dial the 9P server.
+ *
+ * IMPORTANT (Go wasm): never fully settle bind.import *before* wanix.wasm
+ * calls AwaitErr(...Get("import")). Awaiting an already-resolved Promise from
+ * Go parks the goroutine waiting on a microtask that may never run →
+ * wanix-system ready timeout. Dial early, but resolve asynchronously (setTimeout 0)
+ * and do not await open before appendChild + waitsystemready.
  */
 
 import { wanixperfmark } from 'zss/feature/wanix/wanixperf'
@@ -28,22 +34,21 @@ function websockettomessageport(ws: WebSocket): MessagePort {
   ws.onmessage = (event) => {
     if (event.data instanceof ArrayBuffer) {
       const buf = new Uint8Array(event.data)
-      port1.postMessage(buf, [buf.buffer])
+      // No transfer list — match jsutil.PortReadWriter (reuse-safe clone).
+      port1.postMessage(buf)
       return
     }
     if (event.data instanceof Blob) {
       void event.data.arrayBuffer().then((arr) => {
-        const buf = new Uint8Array(arr)
-        port1.postMessage(buf, [buf.buffer])
+        port1.postMessage(new Uint8Array(arr))
       })
       return
     }
     if (ArrayBuffer.isView(event.data)) {
       const view = event.data as ArrayBufferView
-      const buf = new Uint8Array(view.buffer, view.byteOffset, view.byteLength)
-      const copy = new Uint8Array(buf.byteLength)
-      copy.set(buf)
-      port1.postMessage(copy, [copy.buffer])
+      const copy = new Uint8Array(view.byteLength)
+      copy.set(new Uint8Array(view.buffer, view.byteOffset, view.byteLength))
+      port1.postMessage(copy)
       return
     }
     console.warn('wanix remote: unsupported websocket data', event.data)
@@ -52,7 +57,11 @@ function websockettomessageport(ws: WebSocket): MessagePort {
 
   port1.onmessage = (event) => {
     const data = event.data
-    if (data instanceof ArrayBuffer || ArrayBuffer.isView(data) || typeof data === 'string') {
+    if (
+      data instanceof ArrayBuffer ||
+      ArrayBuffer.isView(data) ||
+      typeof data === 'string'
+    ) {
       ws.send(data)
       return
     }
@@ -69,15 +78,27 @@ function websockettomessageport(ws: WebSocket): MessagePort {
   return port2
 }
 
-/** Open a wanix-compatible MessagePort bridge over a remote 9P WebSocket. */
+/**
+ * Open a wanix-compatible MessagePort bridge over a remote 9P WebSocket.
+ * Resolution is deferred by a macrotask so Go wasm AwaitErr can register
+ * .then before the fulfill runs (avoids settled-promise park deadlock).
+ */
 export function openwssimport(src: string): Promise<MessagePort> {
   return new Promise((resolve, reject) => {
     const ws = new WebSocket(src)
     let settled = false
     ws.onopen = () => {
-      settled = true
-      wanixperfmark('remote-wss-open', { url: src })
-      resolve(websockettomessageport(ws))
+      wanixperfmark('remote-wss-socket-open', { url: src })
+      const port = websockettomessageport(ws)
+      // Macrotask yield: Go AwaitErr must Call("then") before we fulfill.
+      setTimeout(() => {
+        if (settled) {
+          return
+        }
+        settled = true
+        wanixperfmark('remote-wss-open', { url: src })
+        resolve(port)
+      }, 0)
     }
     ws.onerror = () => {
       if (settled) {
@@ -124,8 +145,7 @@ export function patchwanixbindwss(): void {
       this.dst = this.getAttribute('dst')
       this.src = src
       this.type = type
-      // Prefer an import already opened by preparewssremoteimports (before
-      // append). Never fall through to CDN iframe import for wss://.
+      // Prefer an import already started by preparewssremoteimports.
       if (!this.import) {
         wanixperfmark('remote-wss-dial', { url: src, dst: this.dst })
         this.import = openwssimport(src)

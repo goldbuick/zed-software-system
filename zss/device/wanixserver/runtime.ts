@@ -120,8 +120,6 @@ const ROOM_READY_TIMEOUT_MS = 180_000
 const BIND_MOUNT_TIMEOUT_MS = 120_000
 const VM_RID_WAIT_MS = 120_000
 const TERM_CONNECT_TIMEOUT_MS = 30_000
-/** Time until we log remote-import-timeout if the WSS bind never opens. */
-const REMOTE_IMPORT_OPEN_TIMEOUT_MS = 10_000
 const POLL_MS = 250
 /** Auto-halt dropped wasm tasks after this much quiet (no term in/out). */
 const TASK_IDLE_HALT_MS = 5 * 60 * 1000
@@ -732,66 +730,59 @@ function readremotebindel(
 }
 
 /**
- * Open wss:// remotes on detached wanix-bind elements BEFORE the system is
- * appended. CDN alpha8 import binds only create a hung iframe; if wasm starts
- * waiting on that promise then we later open a second WebSocket, 9P traffic
- * never uses the live socket (p9 session stays idle; serve-root stays empty).
+ * Start wss:// dials on detached wanix-bind elements BEFORE appendChild so CDN
+ * connectedCallback never creates an iframe import. Do not await open — settling
+ * bind.import before wanix.wasm AwaitErr deadlocks Go wasm (ready timeout).
  */
-async function preparewssremoteimports(
+function preparewssremoteimports(
   sys: HTMLElement,
   remotes: WanixRemoteSpec[],
-): Promise<void> {
+  openwssimport: (src: string) => Promise<MessagePort>,
+  iswssremoteurl: (src: string) => boolean,
+): void {
   if (remotes.length === 0) {
     return
   }
-  const { iswssremoteurl, openwssimport } = await import(
-    'zss/device/wanixserver/patchwanixbindwss'
-  )
   wanixperfmark('remote-import-prepare', {
     count: remotes.length,
     urls: remotes.map((remote) => remote.url),
   })
-
-  await Promise.all(
-    remotes.map(async (remote) => {
-      const el = readremotebindel(sys, remote)
-      if (!el) {
-        throw new Error(
-          `wanix remote bind missing for ${remote.dst} (${remote.url})`,
-        )
-      }
-      if (!iswssremoteurl(remote.url)) {
-        throw new Error(
-          `wanix remote url must be wss:// (got ${remote.url} for ${remote.dst})`,
-        )
-      }
-      wanixperfmark('remote-wss-force-dial', {
-        dst: remote.dst,
-        url: remote.url,
-        reason: 'pre-append',
-      })
-      const imp = openwssimport(remote.url)
-      el.import = imp
-      await Promise.race([
-        imp.then(() => {
-          wanixperfmark('remote-import-open', {
-            dst: remote.dst,
-            url: remote.url,
-            via: 'pre-append',
-          })
-        }),
-        new Promise<never>((_resolve, reject) => {
-          setTimeout(() => {
-            reject(
-              new Error(
-                `wanix remote wss timeout (${REMOTE_IMPORT_OPEN_TIMEOUT_MS}ms): ${remote.url}`,
-              ),
-            )
-          }, REMOTE_IMPORT_OPEN_TIMEOUT_MS)
-        }),
-      ])
-    }),
-  )
+  for (const remote of remotes) {
+    const el = readremotebindel(sys, remote)
+    if (!el) {
+      throw new Error(
+        `wanix remote bind missing for ${remote.dst} (${remote.url})`,
+      )
+    }
+    if (!iswssremoteurl(remote.url)) {
+      throw new Error(
+        `wanix remote url must be wss:// (got ${remote.url} for ${remote.dst})`,
+      )
+    }
+    wanixperfmark('remote-wss-force-dial', {
+      dst: remote.dst,
+      url: remote.url,
+      reason: 'pre-append-start',
+    })
+    const imp = openwssimport(remote.url)
+    el.import = imp
+    void imp.then(
+      () => {
+        wanixperfmark('remote-import-open', {
+          dst: remote.dst,
+          url: remote.url,
+          via: 'pre-append',
+        })
+      },
+      (err: unknown) => {
+        wanixperfmark('remote-import-failed', {
+          dst: remote.dst,
+          url: remote.url,
+          error: err instanceof Error ? err.message : String(err),
+        })
+      },
+    )
+  }
 }
 
 function appendvmroombinds(sys: WanixSystemElement) {
@@ -1060,17 +1051,19 @@ export async function applyroom(config: WanixRoomConfig) {
 
   await customElements.whenDefined('wanix-system')
   await customElements.whenDefined('wanix-bind')
-  const { patchwanixbindwss } = await import(
+  const { patchwanixbindwss, openwssimport, iswssremoteurl } = await import(
     'zss/device/wanixserver/patchwanixbindwss'
   )
   patchwanixbindwss()
   disconnectalltermsessions()
   const next = buildroomtree(roomconfig)
   try {
-    // Must open WSS and resolve bind.import before appendChild — appending
-    // starts wanix.wasm which awaits import; a post-append retry leaves wasm
-    // on a hung CDN iframe promise while a second dead socket looks "open".
-    await preparewssremoteimports(next, roomconfig.remotes)
+    preparewssremoteimports(
+      next,
+      roomconfig.remotes,
+      openwssimport,
+      iswssremoteurl,
+    )
   } catch (err) {
     wanixperfmark('remote-import-failed', {
       error: err instanceof Error ? err.message : String(err),
@@ -1090,6 +1083,8 @@ export async function applyroom(config: WanixRoomConfig) {
     remoteurls: roomconfig.remotes.map((remote) => remote.url),
   })
 
+  // Race: WSS connect + wasm load. Import Promise must still be pending (or
+  // resolving via setTimeout 0) when setupNamespace AwaitErr attaches .then.
   await waitsystemready(next)
   postready()
 

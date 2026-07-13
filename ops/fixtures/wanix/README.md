@@ -91,8 +91,8 @@ go test ./p9server/ ./zedsync/ -count=1   # from ops/fixtures/wanix
 
 - p9server stdout should log `p9server: new connection from …` on each browser connect (and closed / 9p session lines).
 - DevTools Network → Socket: select the **wanix iframe** context (or enable “frames”). Parent-page `?token=…` Pending sockets are Vite HMR, not the 9P remote.
-- Console `[wanix-perf]`: `remote-wss-bind-patched`, then on connect `remote-import-prepare` / `remote-wss-force-dial` (`pre-append`) → `remote-import-open`. Remount **fails** with `wanix room apply failed: …` if WSS never opens. WSS is opened **before** the wanix system is appended so wasm cannot latch onto CDN’s hung iframe import.
-- `#wanix zedsync remote` requires a matching remote mount and an active room; guest prints `waiting for target dir …` before seed.
+- Console `[wanix-perf]`: `remote-import-prepare` / `remote-wss-force-dial` (`pre-append-start`) → `remote-wss-socket-open` → `remote-wss-open` / `remote-import-open`, then room ready. Do **not** await WSS before append (that settled the import Promise early and deadlocked Go wasm → `wanix-system ready timeout`).
+- `#wanix zedsync remote` requires a matching remote mount and an active room; guest prints `waiting for target dir ...` before seed.
 
 ### Cafe commands
 
