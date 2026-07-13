@@ -675,7 +675,7 @@ export function startzedcafepoll(device: DEVICELIKE, player: string) {
   setzedcafepollactive(true)
   setpolltimer(
     setInterval(() => {
-      tickzedcafepoll()
+      kickzedcafepoll('interval')
     }, WANIX_ZEDCAFE_IMPORT_POLL_MS),
   )
 }
@@ -701,8 +701,9 @@ function tickzedcafepoll() {
   wanixserverreadzedcafetaskrid(polldevice, readpollplayer())
 }
 
-/** One-shot import poll tick after guest writers (e.g. greenring drop). No-ops if idle or already mid-poll. */
-export function kickzedcafepoll(): void {
+/** One-shot import poll tick (e.g. after guest-writer task session close). */
+export function kickzedcafepoll(reason = 'manual'): void {
+  tracezedcafeexport(`poll-kick reason=${reason}`)
   tickzedcafepoll()
 }
 
@@ -711,7 +712,9 @@ async function continuepollaftertree(
   player: string,
   tree: WANIX_ZED_CAFE_EXPORT_FILE[],
 ): Promise<void> {
-  if (!guestdiffersfromlastpush(tree)) {
+  const differs = guestdiffersfromlastpush(tree)
+  tracezedcafeexport(`poll-guest-diff=${differs}`)
+  if (!differs) {
     return
   }
   try {

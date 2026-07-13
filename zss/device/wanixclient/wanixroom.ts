@@ -40,6 +40,7 @@ import {
   DEFAULT_WANIX_VM_MEM,
   createidleroomconfig,
 } from 'zss/feature/wanix/wanixroomtypes'
+import { WANIX_ZEDCAFE_TASK_ID } from 'zss/feature/wanix/wanixzedcafeconstants'
 import type { WanixZedCafeRoomSpec } from 'zss/feature/wanix/wanixzedcafetypes'
 
 function normalizeremotedst(dst: string): string {
@@ -364,6 +365,11 @@ function onwanixsessionclose(sessionkey: string) {
     })
   }
   removewanixroomtask(sessionkey)
+  // Kick after task exit (not dropdone): spawntask returns at start(), so guest
+  // writers like greenring finish only when the term session closes.
+  if (sessionkey !== WANIX_ZEDCAFE_TASK_ID) {
+    kickzedcafepoll('session-close')
+  }
 }
 
 registerwanixsessioncloseprune(onwanixsessionclose)
@@ -414,9 +420,8 @@ export function applywanixdropdone(
   if (typeof result.taskid === 'string') {
     apilog(device, player, `wanix drop done task=${result.taskid}`)
   }
-  // Guest writers (greenring) update zedcafe on the guest; a host activate-export
-  // here would push unpainted sim memory and wipe those paints. Kick import poll instead.
-  kickzedcafepoll()
+  // Do not kick import poll here: spawntask returns after task.start(), before
+  // gojs main exits. Guest writers (greenring) paint later; session-close kicks.
 }
 
 export function startwanixvm(
