@@ -80,35 +80,6 @@ function guestfilestoexport(
   return out
 }
 
-/** content-ready may arrive before sync result promotes phase to contentready. */
-let earlyexportreadytaskrid: string | null = null
-
-function clearearlyexportready(): void {
-  earlyexportreadytaskrid = null
-}
-
-function finalizeexportcontentsync(
-  device: DEVICELIKE,
-  player: string,
-  ctx: {
-    shadowdoc: Record<string, unknown>
-    memcount: number
-    taskrid?: string | null
-  },
-): void {
-  setpendingsync(null)
-  clearearlyexportready()
-  if (!readzedcafepollactive() && ctx.memcount > 0) {
-    markzedcafepollready(device, player, ctx.shadowdoc)
-  } else {
-    setlasthostpushdoc(ctx.shadowdoc)
-    flushpendingpollkick()
-  }
-  tracezedcafeexport(
-    `sync-to-iframe content-ready memcount=${ctx.memcount} taskrid=${ctx.taskrid ?? 'none'}`,
-  )
-}
-
 export function exportfilestoguestfiles(
   files: WANIX_ZED_CAFE_EXPORT_FILE[],
 ): WanixZedCafeGuestFile[] {
@@ -384,39 +355,13 @@ export function applyzedcafesyncresult(
   const files = ctx.files
   const options = ctx.options
   const removepaths = options?.removepaths ?? []
-  if (
-    memcount > 0 ||
-    (options?.partial && Object.keys(shadowdoc).length > 0) ||
-    removepaths.length > 0
-  ) {
-    const taskrid = result.taskrid ?? null
-    if (
-      taskrid &&
-      (memcount > 0 || files.some((file) => file.path === 'stats.json'))
-    ) {
-      // Iframe posts content-ready before the sync reply; if it already landed,
-      // arm import now instead of waiting forever in phase=contentready.
-      if (
-        earlyexportreadytaskrid !== null &&
-        String(earlyexportreadytaskrid) === String(taskrid)
-      ) {
-        finalizeexportcontentsync(device, player, {
-          shadowdoc,
-          memcount,
-          taskrid,
-        })
-        return
-      }
-      setpendingsync({ ...ctx, phase: 'contentready', taskrid })
-      return
-    }
-    if (!readzedcafepollactive() && memcount > 0) {
-      markzedcafepollready(device, player, shadowdoc)
-    } else {
-      setlasthostpushdoc(shadowdoc)
-    }
+  // Iframe only returns sync ok after pushzedcafeexportlive finishes — arm here.
+  // (Do not wait on a separate content-ready race; that path was redundant.)
+  if (!readzedcafepollactive() && memcount > 0) {
+    markzedcafepollready(device, player, shadowdoc)
   } else {
     setlasthostpushdoc(shadowdoc)
+    flushpendingpollkick()
   }
   setpendingsync(null)
   tracezedcafeexport(
@@ -424,61 +369,16 @@ export function applyzedcafesyncresult(
   )
 }
 
+/** Guest mount content-ready — poll arming is owned by sync result / drop-pull. */
 export function handlewanixexportready(
-  device: DEVICELIKE,
-  player: string,
-  taskrid: string,
+  _device: DEVICELIKE,
+  _player: string,
+  _taskrid: string,
   event?: string,
 ): void {
   if (event && event !== 'content-ready') {
     return
   }
-  const pendingsync = readpendingsync()
-  if (pendingsync?.phase === 'contentready') {
-    if (
-      pendingsync.taskrid &&
-      String(pendingsync.taskrid) !== String(taskrid)
-    ) {
-      return
-    }
-    finalizeexportcontentsync(device, player, {
-      shadowdoc: pendingsync.shadowdoc,
-      memcount: pendingsync.memcount,
-      taskrid: pendingsync.taskrid ?? taskrid,
-    })
-    return
-  }
-  if (
-    pendingsync?.phase === 'sync' ||
-    pendingsync?.phase === 'guesttree'
-  ) {
-    // content-ready beat sync result — remember so applyzedcafesyncresult can arm poll.
-    earlyexportreadytaskrid = taskrid
-    tracezedcafeexport(
-      `exportready-early taskrid=${taskrid} phase=${pendingsync.phase}`,
-    )
-    return
-  }
-  // Iframe drop-pull / local sync: no parent push in flight. Still arm import poll.
-  if (!readzedcafepollactive()) {
-    const hostfiles = readhostexportfilesfrommemory()
-    const memcount = readbookcountfromexportfiles(hostfiles)
-    if (memcount > 0) {
-      markzedcafepollready(
-        device,
-        player,
-        zedcafeexportfilestodoc(hostfiles),
-      )
-      tracezedcafeexport(
-        `sync-to-iframe content-ready pull-arm memcount=${memcount} taskrid=${taskrid}`,
-      )
-      return
-    }
-  }
-  earlyexportreadytaskrid = taskrid
-  tracezedcafeexport(
-    `exportready-early taskrid=${taskrid} phase=${pendingsync?.phase ?? 'none'}`,
-  )
 }
 
 async function continuepushafterguesttree(
@@ -599,9 +499,7 @@ export function pushzedcafesynctoiframe(
     const pending = readpendingsync()
     if (
       pending &&
-      (pending.phase === 'guesttree' ||
-        pending.phase === 'sync' ||
-        pending.phase === 'contentready')
+      (pending.phase === 'guesttree' || pending.phase === 'sync')
     ) {
       tracezedcafeexport(
         `sync-skip pending-inflight phase=${pending.phase} memcount=${readbookcountfromexportfiles(files)}`,
@@ -955,6 +853,5 @@ export function resetwanixzedcafefortest() {
   setpendingsync(null)
   setpendingpollphase(null)
   setpendingpollkick(false)
-  clearearlyexportready()
   clearzedcafeexportsession()
 }

@@ -11,13 +11,7 @@ export function handleexportready(device: DEVICE, message: MESSAGE): void {
     return
   }
   const payload = data as { taskrid?: unknown; event?: unknown }
-  const taskrid =
-    typeof payload.taskrid === 'string'
-      ? payload.taskrid
-      : typeof payload.taskrid === 'number'
-        ? String(payload.taskrid)
-        : ''
-  if (!taskrid) {
+  if (typeof payload.taskrid !== 'string') {
     return
   }
   const player =
@@ -25,7 +19,7 @@ export function handleexportready(device: DEVICE, message: MESSAGE): void {
   handlewanixexportready(
     device,
     player,
-    taskrid,
+    payload.taskrid,
     typeof payload.event === 'string' ? payload.event : undefined,
   )
 }

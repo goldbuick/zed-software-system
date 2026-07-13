@@ -19,6 +19,7 @@ jest.mock('zss/device/wanixclient/wanixroom', () => ({
 
 import {
   applyzedcafesyncresult,
+  armzedcafepollfromhostfiles,
   handlewanixexportready,
   resetwanixzedcafefortest,
 } from 'zss/device/wanixclient/wanixzedcafe'
@@ -41,7 +42,7 @@ const bookfiles = [
   },
 ]
 
-describe('zedcafe content-ready race', () => {
+describe('zedcafe poll arm', () => {
   beforeEach(() => {
     resetwanixzedcafefortest()
     resetwanixzedcafesessionfortest()
@@ -52,7 +53,7 @@ describe('zedcafe content-ready race', () => {
     resetwanixzedcafesessionfortest()
   })
 
-  it('arms import poll when content-ready arrives before sync result', () => {
+  it('arms import poll on parent sync result (iframe push already finished)', () => {
     setpendingsync({
       device,
       player,
@@ -63,6 +64,7 @@ describe('zedcafe content-ready race', () => {
     })
     expect(readzedcafepollactive()).toBe(false)
 
+    // content-ready is informational; sync result owns arming
     handlewanixexportready(device, player, '3', 'content-ready')
     expect(readzedcafepollactive()).toBe(false)
 
@@ -70,26 +72,7 @@ describe('zedcafe content-ready race', () => {
     expect(readzedcafepollactive()).toBe(true)
   })
 
-  it('arms import poll when content-ready arrives after sync promotes phase', () => {
-    setpendingsync({
-      device,
-      player,
-      files: bookfiles,
-      shadowdoc: zedcafeexportfilestodoc(bookfiles),
-      memcount: 1,
-      phase: 'sync',
-    })
-    applyzedcafesyncresult(device, player, { ok: true, taskrid: '3' })
-    expect(readzedcafepollactive()).toBe(false)
-
-    handlewanixexportready(device, player, '3', 'content-ready')
-    expect(readzedcafepollactive()).toBe(true)
-  })
-
-  it('arms import poll from host files after drop-pull (no parent pendingsync)', () => {
-    const { armzedcafepollfromhostfiles } = jest.requireActual(
-      'zss/device/wanixclient/wanixzedcafe',
-    ) as typeof import('zss/device/wanixclient/wanixzedcafe')
+  it('arms import poll from host files after drop-pull', () => {
     expect(readzedcafepollactive()).toBe(false)
     armzedcafepollfromhostfiles(device, player, bookfiles)
     expect(readzedcafepollactive()).toBe(true)

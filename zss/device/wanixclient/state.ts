@@ -73,7 +73,7 @@ export type Pendingsync = {
   options?: PushZedCafeSyncOptions
   shadowdoc: Record<string, unknown>
   memcount: number
-  phase: 'guesttree' | 'sync' | 'contentready'
+  phase: 'guesttree' | 'sync'
   taskrid?: string | null
 }
 
