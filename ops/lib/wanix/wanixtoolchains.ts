@@ -3,6 +3,12 @@ import { existsSync } from 'node:fs'
 import path from 'node:path'
 
 import { WANIX_FIXTURES_DIR } from 'ops/lib/fixturepaths'
+import {
+  haswanixzedcafedirtyforward,
+  WANIX_SUBMODULE_DIR,
+  WANIX_ZEDCAFE_DIRTY_FORWARD_MARKER,
+  WANIX_ZEDCAFE_DIRTY_FORWARD_PATCH,
+} from 'ops/lib/wanix/wanixsubmodule'
 
 export type WanixProbeStatus = 'ok' | 'missing' | 'partial'
 
@@ -26,7 +32,8 @@ export type WanixToolchainDeps = {
   platform: NodeJS.Platform
 }
 
-const WANIX_SUBMODULE_DIR = path.join(process.cwd(), 'submodules', 'wanix')
+const WANIX_ZEDCAFE_DIRTY_APPLY =
+  'git -C submodules/wanix apply ../../ops/patches/wanix-worker-zedcafeexportdirty.patch'
 
 function defaultwhich(name: string): string | undefined {
   try {
@@ -151,6 +158,19 @@ function probego(deps: WanixToolchainDeps): WanixProbeResult {
     status = 'partial'
     detail = 'submodules/wanix not initialized'
     nextsteps.push('git submodule update --init submodules/wanix')
+  } else if (!haswanixzedcafedirtyforward()) {
+    status = 'partial'
+    detail = `submodules/wanix missing ${WANIX_ZEDCAFE_DIRTY_FORWARD_MARKER}`
+    if (deps.exists(WANIX_ZEDCAFE_DIRTY_FORWARD_PATCH)) {
+      nextsteps.push(WANIX_ZEDCAFE_DIRTY_APPLY)
+      nextsteps.push(
+        'commit in submodules/wanix, rebuild cafe/public/wanix/wanix.wasm, bump parent gitlink, push the submodule commit to a durable remote',
+      )
+    } else {
+      nextsteps.push(
+        `restore ${path.relative(process.cwd(), WANIX_ZEDCAFE_DIRTY_FORWARD_PATCH)} from git`,
+      )
+    }
   }
   return {
     id: 'go',

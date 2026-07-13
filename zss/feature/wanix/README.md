@@ -614,6 +614,12 @@ Until something like (1)–(3) lands upstream, keep the submodule patch + rebuil
 `cafe/public/wanix/wanix.wasm`, and bump the `submodules/wanix` gitlink after
 committing inside the submodule.
 
+**Do not leave that submodule commit only on one machine.** Parent
+[`ops/patches/wanix-worker-zedcafeexportdirty.patch`](../../../ops/patches/wanix-worker-zedcafeexportdirty.patch)
+is the recoverable source of the delta; push the patched commit to a fetchable
+remote (fork) so `git submodule update` can resolve the gitlink. See
+[`submodules/README.md`](../../../submodules/README.md).
+
 ### Do not call `vm.allocate()` twice
 
 `<wanix-vm>` auto-allocates on system `ready`. Second call throws. Use

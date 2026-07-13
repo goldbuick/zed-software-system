@@ -7,8 +7,8 @@ import {
   WANIX_FIXTURES_DIR,
   WANIX_PUBLIC_FIXTURES_DIR,
 } from 'ops/lib/fixturepaths'
+import { requirewanixsubmodule } from 'ops/lib/wanix/wanixsubmodule'
 
-const WANIX_SUBMODULE_DIR = path.join(process.cwd(), 'submodules', 'wanix')
 const FINDPLAYERS_PACKAGE = path.join(
   WANIX_FIXTURES_DIR,
   'findplayers',
@@ -49,15 +49,6 @@ function requirego(): void {
   } catch {
     throw new Error(
       'go not found — install Go (brew install go) to build wanix wasm binaries',
-    )
-  }
-}
-
-function requirewanixsubmodule(): void {
-  const wanixgomod = path.join(WANIX_SUBMODULE_DIR, 'go.mod')
-  if (!existsSync(wanixgomod)) {
-    throw new Error(
-      `missing ${wanixgomod} — run: git submodule update --init submodules/wanix`,
     )
   }
 }

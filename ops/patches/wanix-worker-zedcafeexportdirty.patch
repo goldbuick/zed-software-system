@@ -1,0 +1,38 @@
+diff --git a/web/worker/worker.go b/web/worker/worker.go
+index 5c3972c..5b887fc 100644
+--- a/web/worker/worker.go
++++ b/web/worker/worker.go
+@@ -85,8 +85,19 @@ func (r *Resource) Start(args ...string) error {
+ 
+ 	r.worker.Call("addEventListener", "message", js.FuncOf(func(this js.Value, args []js.Value) any {
+ 		go func() {
++			data := args[0].Get("data")
++			// ZSS fork: forward guest export-dirty notify to iframe host hook.
++			// Remove when wanix gains a generic gojs→host message bridge.
++			// See ops/patches/wanix-worker-zedcafeexportdirty.patch in zed-software-system.
++			if data.Get("zedcafeexportdirty").Truthy() {
++				hook := js.Global().Get("__wanixOnZedcafeExportDirty")
++				if hook.Type() == js.TypeFunction {
++					hook.Invoke(r.task.ID())
++				}
++				return
++			}
+ 			// all we handle are ns exports for now
+-			exportPort := args[0].Get("data").Get("export")
++			exportPort := data.Get("export")
+ 			if exportPort.IsUndefined() {
+ 				return
+ 			}
+@@ -102,10 +113,10 @@ func (r *Resource) Start(args ...string) error {
+ 					wanix.Export(r.task, exportFS)
+ 
+ 					// vm guest is still special cased for now
+-					if args[0].Get("data").Get("vm").IsUndefined() {
++					if data.Get("vm").IsUndefined() {
+ 						return
+ 					}
+-					vmID := args[0].Get("data").Get("vm").String()
++					vmID := data.Get("vm").String()
+ 					rfsys, _, err := fs.Resolve(r.task.Root().NS(), context.Background(), path.Join("#vm", vmID))
+ 					if err != nil {
+ 						log.Println("error resolving vm", vmID, err)

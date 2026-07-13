@@ -4,10 +4,15 @@ import {
   type WanixProbeResult,
   type WanixToolchainDeps,
 } from 'ops/lib/wanix/wanixtoolchains'
+import {
+  haswanixzedcafedirtyforward,
+  WANIX_ZEDCAFE_DIRTY_FORWARD_MARKER,
+} from 'ops/lib/wanix/wanixsubmodule'
 
 function mockdeps(
   whichmap: Record<string, string | undefined>,
   execmap: Record<string, string> = {},
+  exists?: (filepath: string) => boolean,
 ): WanixToolchainDeps {
   return {
     which: (name) => whichmap[name],
@@ -15,7 +20,9 @@ function mockdeps(
       const key = `${cmd} ${args.join(' ')}`
       return execmap[key]
     },
-    exists: (filepath) => filepath.includes('go.mod') || filepath.includes('wasi-sdk'),
+    exists:
+      exists ??
+      ((filepath) => filepath.includes('go.mod') || filepath.includes('wasi-sdk')),
     platform: 'darwin',
   }
 }
@@ -34,7 +41,8 @@ describe('wanixtoolchains', () => {
     const results = probewanixtoolchains(
       mockdeps(
         { rustc: '/usr/bin/rustc', rustup: '/usr/bin/rustup' },
-        { 'rustup target list --installed': 'aarch64-apple-darwin',
+        {
+          'rustup target list --installed': 'aarch64-apple-darwin',
         },
       ),
     )
@@ -69,5 +77,15 @@ describe('wanixtoolchains', () => {
     const docker = results.find((row) => row.id === 'docker')
     expect(docker?.required).toBe(false)
     expect(docker?.covers).toContain('zedcafe-linux-overlay')
+  })
+
+  it('detects zedcafe dirty-forward marker in current wanix checkout', () => {
+    expect(haswanixzedcafedirtyforward()).toBe(true)
+  })
+
+  it('exports the dirty-forward marker used by go probe messaging', () => {
+    expect(WANIX_ZEDCAFE_DIRTY_FORWARD_MARKER).toBe(
+      '__wanixOnZedcafeExportDirty',
+    )
   })
 })

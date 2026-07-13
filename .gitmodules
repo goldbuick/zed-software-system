@@ -3,4 +3,5 @@
 	url = https://github.com/electro-smith/DaisySP.git
 [submodule "submodules/wanix"]
 	path = submodules/wanix
-	url = https://github.com/tractordev/wanix.git
+	url = https://github.com/goldbuick/wanix.git
+	branch = zss-zedcafe-dirty-forward

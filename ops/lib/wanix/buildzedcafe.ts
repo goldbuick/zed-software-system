@@ -14,8 +14,8 @@ import {
   WANIX_FIXTURES_DIR,
   WANIX_PUBLIC_FIXTURES_DIR,
 } from 'ops/lib/fixturepaths'
+import { requirewanixzedcafedirtyforward } from 'ops/lib/wanix/wanixsubmodule'
 
-const WANIX_SUBMODULE_DIR = path.join(process.cwd(), 'submodules', 'wanix')
 const ZEDCAFE_PACKAGE = path.join(WANIX_FIXTURES_DIR, 'zedcafe', 'main.go')
 const ZEDCAFE_STAGING_WASM = path.join(
   WANIX_PUBLIC_FIXTURES_DIR,
@@ -53,15 +53,6 @@ function requirego(): void {
   }
 }
 
-function requirewanixsubmodule(): void {
-  const wanixgomod = path.join(WANIX_SUBMODULE_DIR, 'go.mod')
-  if (!existsSync(wanixgomod)) {
-    throw new Error(
-      `missing ${wanixgomod} — run: git submodule update --init submodules/wanix`,
-    )
-  }
-}
-
 function requiregomod(): void {
   const gomod = path.join(WANIX_FIXTURES_DIR, 'go.mod')
   if (!existsSync(gomod)) {
@@ -85,7 +76,7 @@ function buildgojspackage(label: string, pkg: string, outfile: string): void {
 export function buildwanixzedcafe(): void {
   requirego()
   requiregomod()
-  requirewanixsubmodule()
+  requirewanixzedcafedirtyforward()
 
   if (!existsSync(ZEDCAFE_PACKAGE)) {
     throw new Error(`missing ${ZEDCAFE_PACKAGE}`)
