@@ -1,7 +1,7 @@
 import type { DEVICE } from 'zss/device'
 import { apierror, apitoast, workstatus } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import { withclipboard } from 'zss/feature/keyboard'
 import { storagesharecontent } from 'zss/feature/storage'
 import { capturecurrentboardtopng } from 'zss/gadget/capture'

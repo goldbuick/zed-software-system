@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import { applyroom } from 'zss/device/wanixserver/runtime'
 import type { WanixRoomConfig } from 'zss/feature/wanix/wanixroomtypes'
 import { createidleroomconfig } from 'zss/feature/wanix/wanixroomtypes'

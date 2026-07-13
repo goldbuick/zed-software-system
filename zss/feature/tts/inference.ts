@@ -1,5 +1,5 @@
 import { workstatus } from 'zss/device/api'
-import type { DEVICELIKE } from 'zss/device/messagetypes'
+import type { DEVICELIKE } from 'zss/device/types'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import { PiperTTS } from './pipertts'

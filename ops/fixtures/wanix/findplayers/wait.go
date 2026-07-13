@@ -2,8 +2,10 @@ package findplayers
 
 import (
 	"encoding/json"
+	"errors"
 	"io/fs"
 	"path"
+	"strings"
 	"time"
 )
 
@@ -86,6 +88,42 @@ func WaitExportRoot(
 		}
 		if !time.Now().Before(deadline) {
 			return "", ErrExportNotReady
+		}
+		time.Sleep(poll)
+	}
+}
+
+func exportrootbasename(root string) string {
+	cleaned := strings.TrimPrefix(root, "./")
+	return path.Base(cleaned)
+}
+
+// WaitExportScan polls until stats.json is ready and Scan succeeds.
+// Incomplete leaf JSON (mid-push empty files) is treated as not ready and retried.
+func WaitExportScan(
+	fsys fs.FS,
+	roots []string,
+	timeout time.Duration,
+	poll time.Duration,
+) (string, Report, error) {
+	deadline := time.Now().Add(timeout)
+	for {
+		root, err := ResolveExportRoot(fsys, roots)
+		if err == nil {
+			exportfs, openerr := OpenExportFS(fsys, root)
+			if openerr != nil {
+				return "", Report{}, openerr
+			}
+			report, scanerr := Scan(exportfs, exportrootbasename(root))
+			if scanerr == nil {
+				return root, report, nil
+			}
+			if !errors.Is(scanerr, ErrExportNotReady) {
+				return "", Report{}, scanerr
+			}
+		}
+		if !time.Now().Before(deadline) {
+			return "", Report{}, ErrExportNotReady
 		}
 		time.Sleep(poll)
 	}

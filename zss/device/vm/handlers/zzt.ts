@@ -1,6 +1,6 @@
 import type { DEVICE } from 'zss/device'
 import { doasync } from 'zss/device/doasync'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import {
   writezztcontentlinks,
   writezztcontentwait,

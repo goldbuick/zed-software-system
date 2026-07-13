@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import { useTape, useTerminal } from 'zss/gadget/data/zustandstores'
 import { isstring } from 'zss/mapping/types'
 export function handleterminalopen(_device: DEVICE, message: MESSAGE): void {

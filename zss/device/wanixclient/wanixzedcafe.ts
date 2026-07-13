@@ -9,7 +9,7 @@ import {
   wanixserversetzedcafeready,
   wanixserversynczedcafeexport,
 } from 'zss/device/api'
-import type { DEVICELIKE } from 'zss/device/messagetypes'
+import type { DEVICELIKE } from 'zss/device/types'
 import {
   type PushZedCafeSyncOptions,
   clearlasthostpushdoc,
@@ -413,17 +413,29 @@ async function continuepushafterguesttree(
   const ctx = pendingsync
   const files = ctx.files
   const options = ctx.options
-  try {
-    if (guestdiffersfromlastpush(guesttree)) {
+  if (guestdiffersfromlastpush(guesttree)) {
+    // Keep guest writes until import lands — never fall through to host wipe.
+    setzedcafeguestdirty(true)
+    try {
       const imported = await runzedcafeimport(device, player, guesttree)
       if (imported) {
-        setpendingsync(null)
+        // fromimport push may own pendingsync (phase sync); only clear our guesttree.
+        if (readpendingsync()?.phase === 'guesttree') {
+          setpendingsync(null)
+        }
         return
       }
+      setpendingsync(null)
+      tracezedcafeexport(
+        `sync-skip guest-dirty-import-failed memcount=${readbookcountfromexportfiles(files)}`,
+      )
+      return
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : String(err)
+      setpendingsync(null)
+      tracezedcafeexport(`sync-guest-import-skip ${detail}`)
+      return
     }
-  } catch (err) {
-    const detail = err instanceof Error ? err.message : String(err)
-    tracezedcafeexport(`sync-guest-import-skip ${detail}`)
   }
   if (readzedcafeguestdirty()) {
     setpendingsync(null)
@@ -504,6 +516,18 @@ export function pushzedcafesynctoiframe(
     return false
   }
   if (!options?.fromimport) {
+    const pending = readpendingsync()
+    if (
+      pending &&
+      (pending.phase === 'guesttree' ||
+        pending.phase === 'sync' ||
+        pending.phase === 'contentready')
+    ) {
+      tracezedcafeexport(
+        `sync-skip pending-inflight phase=${pending.phase} memcount=${readbookcountfromexportfiles(files)}`,
+      )
+      return false
+    }
     setpendingsync({
       device,
       player,

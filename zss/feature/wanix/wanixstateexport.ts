@@ -1,6 +1,6 @@
 import type { Operation } from 'fast-json-patch'
 import { compare } from 'fast-json-patch'
-import type { DEVICELIKE } from 'zss/device/messagetypes'
+import type { DEVICELIKE } from 'zss/device/types'
 import {
   clearlasthostpushdoc,
   readlasthostpushdoc,

@@ -86,3 +86,49 @@ func TestWaitExportRootTimeout(t *testing.T) {
 		t.Fatalf("expected to wait, elapsed %v", elapsed)
 	}
 }
+
+func TestWaitExportScanImmediate(t *testing.T) {
+	fsys := fstest.MapFS{
+		"zedcafe/stats.json": &fstest.MapFile{
+			Data: []byte(`{"exportedAt":"test","bookCount":0,"books":[]}` + "\n"),
+		},
+	}
+	root, report, err := WaitExportScan(
+		fsys,
+		DefaultExportRoots,
+		time.Second,
+		time.Millisecond,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if root != "zedcafe" {
+		t.Fatalf("root: %q", root)
+	}
+	if report.PlayerCount != 0 {
+		t.Fatalf("player count: %d", report.PlayerCount)
+	}
+}
+
+func TestWaitExportScanIncompleteLeafTimeout(t *testing.T) {
+	fsys := fstest.MapFS{
+		"zedcafe/stats.json": &fstest.MapFile{
+			Data: []byte(`{"exportedAt":"test","bookCount":1,"books":[]}` + "\n"),
+		},
+		"zedcafe/main-book1/stats.json": &fstest.MapFile{
+			Data: []byte(`{"activelist":[],"flags":{}}` + "\n"),
+		},
+		"zedcafe/main-book1/lion-sid_x/object/element.json": &fstest.MapFile{
+			Data: []byte{},
+		},
+	}
+	_, _, err := WaitExportScan(
+		fsys,
+		DefaultExportRoots,
+		40*time.Millisecond,
+		10*time.Millisecond,
+	)
+	if !errors.Is(err, ErrExportNotReady) {
+		t.Fatalf("expected ErrExportNotReady, got %v", err)
+	}
+}

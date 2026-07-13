@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import {
   IMAGE_IMPORT_MAX_COLS,
   IMAGE_IMPORT_MAX_ROWS,

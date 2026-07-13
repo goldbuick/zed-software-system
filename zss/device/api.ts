@@ -3,7 +3,7 @@ what is api? a set of common helper functions to send messages to devices
 without having to include device code
 */
 import type { BRIDGE_CHAT_START_OBJECT } from 'zss/device/bridge/chattypes'
-import type { DEVICELIKE } from 'zss/device/messagetypes'
+import type { DEVICELIKE } from 'zss/device/types'
 import type { WanixRoomConfig } from 'zss/feature/wanix/wanixroomtypes'
 import type { WANIX_ZED_CAFE_EXPORT_FILE } from 'zss/feature/wanix/wanixstateexport'
 import type { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"path"
 	"sort"
@@ -11,6 +12,32 @@ import (
 )
 
 var ErrExportNotReady = errors.New("zedcafe export not ready")
+
+// isincompletejson reports empty/truncated JSON typical of mid-push Create-then-Write.
+func isincompletejson(err error) bool {
+	if err == nil {
+		return false
+	}
+	if errors.Is(err, io.ErrUnexpectedEOF) {
+		return true
+	}
+	return strings.Contains(err.Error(), "unexpected end of JSON input")
+}
+
+// UnmarshalJSONOrNotReady unmarshals data into dest. Empty or truncated JSON
+// returns ErrExportNotReady so callers can retry during host export push.
+func UnmarshalJSONOrNotReady(rel string, data []byte, dest any) error {
+	if len(data) == 0 {
+		return fmt.Errorf("parse %s: %w", rel, ErrExportNotReady)
+	}
+	if err := json.Unmarshal(data, dest); err != nil {
+		if isincompletejson(err) {
+			return fmt.Errorf("parse %s: %w", rel, ErrExportNotReady)
+		}
+		return fmt.Errorf("parse %s: %w", rel, err)
+	}
+	return nil
+}
 
 // Player is one discovered pid_* identity in the export tree.
 type Player struct {
@@ -109,8 +136,8 @@ func scanbookstats(
 		return err
 	}
 	var stats bookStats
-	if err := json.Unmarshal(data, &stats); err != nil {
-		return fmt.Errorf("parse %s: %w", rel, err)
+	if err := UnmarshalJSONOrNotReady(rel, data, &stats); err != nil {
+		return err
 	}
 	parts := strings.Split(rel, "/")
 	if len(parts) < 2 {
@@ -181,8 +208,8 @@ func scanboardobject(
 	objid := strings.TrimSuffix(filename, ".json")
 
 	var obj boardObject
-	if err := json.Unmarshal(data, &obj); err != nil {
-		return fmt.Errorf("parse %s: %w", rel, err)
+	if err := UnmarshalJSONOrNotReady(rel, data, &obj); err != nil {
+		return err
 	}
 	if !isplayerelement(obj.Kind, obj.ID) && !isplayerelement(obj.Kind, objid) {
 		return nil
@@ -229,8 +256,8 @@ func scanobjectelement(
 	pagedir := parts[1]
 
 	var obj boardObject
-	if err := json.Unmarshal(data, &obj); err != nil {
-		return fmt.Errorf("parse %s: %w", rel, err)
+	if err := UnmarshalJSONOrNotReady(rel, data, &obj); err != nil {
+		return err
 	}
 	id := obj.ID
 	if !isplayerelement(obj.Kind, id) {
@@ -293,6 +320,9 @@ func Scan(fsys fs.FS, exportroot string) (Report, error) {
 		case strings.HasSuffix(rel, "/stats.json") && strings.Count(rel, "/") == 1:
 			if err := scanbookstats(fsys, rel, players, playerpaths); err != nil {
 				walkerr = err
+				if errors.Is(err, ErrExportNotReady) {
+					return err
+				}
 			}
 		case strings.Contains(rel, "/board/objects/") && strings.HasSuffix(rel, ".json"):
 			data, err := readfile(fsys, rel)
@@ -302,6 +332,9 @@ func Scan(fsys fs.FS, exportroot string) (Report, error) {
 			}
 			if err := scanboardobject(rel, data, players, playerpaths); err != nil {
 				walkerr = err
+				if errors.Is(err, ErrExportNotReady) {
+					return err
+				}
 			}
 		case strings.HasSuffix(rel, "/object/element.json"):
 			data, err := readfile(fsys, rel)
@@ -311,6 +344,9 @@ func Scan(fsys fs.FS, exportroot string) (Report, error) {
 			}
 			if err := scanobjectelement(rel, data, players, playerpaths); err != nil {
 				walkerr = err
+				if errors.Is(err, ErrExportNotReady) {
+					return err
+				}
 			}
 		}
 		return nil

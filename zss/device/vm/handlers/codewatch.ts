@@ -1,6 +1,6 @@
 import type { DEVICE } from 'zss/device'
 import { vmcodeaddress } from 'zss/device/api'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import { modemobservevaluestring } from 'zss/device/modem'
 import { observers, watching } from 'zss/device/vm/state'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'

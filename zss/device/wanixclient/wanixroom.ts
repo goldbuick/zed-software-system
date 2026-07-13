@@ -8,7 +8,7 @@ import {
   wanixserverstopvm,
   wanixserverwritefile,
 } from 'zss/device/api'
-import type { DEVICELIKE } from 'zss/device/messagetypes'
+import type { DEVICELIKE } from 'zss/device/types'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import {
@@ -30,14 +30,25 @@ import type { WanixTaskDriver } from 'zss/feature/wanix/wanixelements.d.ts'
 import { wanixperfmark } from 'zss/feature/wanix/wanixperf'
 import type {
   WanixBindDropPayload,
+  WanixRemoteSpec,
   WanixRoomConfig,
 } from 'zss/feature/wanix/wanixroomtypes'
 import {
+  DEFAULT_WANIX_REMOTE_DST,
   DEFAULT_WANIX_VM_ID,
   DEFAULT_WANIX_VM_MEM,
   createidleroomconfig,
 } from 'zss/feature/wanix/wanixroomtypes'
 import type { WanixZedCafeRoomSpec } from 'zss/feature/wanix/wanixzedcafetypes'
+
+function normalizeremotedst(dst: string): string {
+  return dst.replace(/^\/+/, '').trim()
+}
+
+function remotematches(remote: WanixRemoteSpec, key: string): boolean {
+  const needle = key.trim()
+  return remote.id === needle || remote.dst === normalizeremotedst(needle)
+}
 
 function bumpmountkey(config: WanixRoomConfig): WanixRoomConfig {
   return { ...config, mountkey: config.mountkey + 1, hardreset: true }
@@ -165,16 +176,74 @@ export function ensurewanixtaskroom(
       generation: boot.generation,
     }
   }
+  const current = readwanixroomconfig()
   const next: WanixRoomConfig = {
-    ...bumpmountkey(readwanixroomconfig()),
+    ...bumpmountkey(current),
     mode: 'task',
     archives: [],
-    remotes: [],
+    remotes: current.remotes,
     tasks: [],
     vm: undefined,
     zedcafe,
   }
   applywanixroom(next)
+}
+
+export function readwanixremotes(): WanixRemoteSpec[] {
+  return readwanixroomconfig().remotes
+}
+
+/** Append or replace a WSS 9P remote import; remounts when room is active. */
+export function connectwanixremote(url: string, dst?: string): WanixRemoteSpec {
+  const trimmedurl = url.trim()
+  const mountdst = normalizeremotedst(dst ?? DEFAULT_WANIX_REMOTE_DST)
+  if (!mountdst) {
+    throw new Error('wanix remote dst empty')
+  }
+  if (/\s/.test(mountdst)) {
+    throw new Error('wanix remote dst must not contain spaces')
+  }
+  const remote: WanixRemoteSpec = {
+    id: `remote-${mountdst}`,
+    dst: mountdst,
+    url: trimmedurl,
+  }
+  const current = readwanixroomconfig()
+  const remotes = [
+    ...current.remotes.filter((entry) => entry.dst !== mountdst),
+    remote,
+  ]
+  if (current.mode === 'idle') {
+    setwanixroomconfig({ ...current, remotes })
+    return remote
+  }
+  applywanixroom({
+    ...bumpmountkey(current),
+    remotes,
+    hardreset: true,
+  })
+  return remote
+}
+
+/** Remove a remote by id or dst; remounts when room is active. */
+export function disconnectwanixremote(key?: string): WanixRemoteSpec[] {
+  const current = readwanixroomconfig()
+  let remotes = current.remotes
+  if (!key || !key.trim()) {
+    remotes = []
+  } else {
+    remotes = current.remotes.filter((entry) => !remotematches(entry, key))
+  }
+  if (current.mode === 'idle') {
+    setwanixroomconfig({ ...current, remotes })
+    return remotes
+  }
+  applywanixroom({
+    ...bumpmountkey(current),
+    remotes,
+    hardreset: true,
+  })
+  return remotes
 }
 
 export function startwanixvmroom(
@@ -215,10 +284,10 @@ export function stopwanixvmroom(): void {
 
 export function stopwanixroom(hard = false): void {
   resetwanixzedcafeonidle()
+  const current = readwanixroomconfig()
   const next = createidleroomconfig()
-  next.mountkey = hard
-    ? readwanixroomconfig().mountkey + 1
-    : readwanixroomconfig().mountkey
+  next.mountkey = hard ? current.mountkey + 1 : current.mountkey
+  next.remotes = hard ? [] : current.remotes
   if (hard) {
     next.hardreset = true
   }
@@ -282,6 +351,18 @@ export function removewanixroomtask(taskid: string) {
     tasks: readwanixroomconfig().tasks.filter((task) => task.id !== taskid),
   })
 }
+
+function onwanixsessionclose(sessionkey: string) {
+  if (sessionkey === 'zedsync' || sessionkey.startsWith('zedsync-')) {
+    apilog(SOFTWARE, registerreadplayer(), 'zedsync stopped')
+    void import('zss/device/wanixclient/wanixzedsync').then((mod) => {
+      mod.cancelzedsyncreadywait()
+    })
+  }
+  removewanixroomtask(sessionkey)
+}
+
+registerwanixsessioncloseprune(onwanixsessionclose)
 
 export function putwanixroomfile(path: string, bytes: Uint8Array): void {
   wanixserverwritefile(SOFTWARE, registerreadplayer(), path, Array.from(bytes))
@@ -361,5 +442,3 @@ export function stopwanixvm(vmid = DEFAULT_WANIX_VM_ID): void {
   }
   stopwanixvmroom()
 }
-
-registerwanixsessioncloseprune(removewanixroomtask)

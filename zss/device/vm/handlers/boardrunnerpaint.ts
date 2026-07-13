@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import { boardrunnerboundarypaint } from 'zss/device/vm/boardrunnerboundarysync'
 import { MAYBE, isarray, isstring } from 'zss/mapping/types'
 export function handleboardrunnerpaint(_vm: DEVICE, message: MESSAGE): void {

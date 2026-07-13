@@ -34,7 +34,7 @@ export const OPS_FIXTURES_WANIX_TASKS: TaskDef[] = [
   }),
   def('ops:fixtures:wanix:findplayers:build', {
     description:
-      'Build findplayers + greenring gojs tools into ops/public/wanix/ only (needs Go + submodules/wanix — run ops:fixtures:wanix:toolchains first)',
+      'Build findplayers + greenring (ops/public/wanix/) and zedsync (ops/public + cafe/public/wanix/) gojs tools (needs Go + submodules/wanix — run ops:fixtures:wanix:toolchains first)',
     run: handler(async () => {
       const { buildwanixfindplayers } =
         await import('ops/lib/wanix/buildfindplayers')

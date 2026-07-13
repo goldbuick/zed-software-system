@@ -5,7 +5,7 @@ import {
   registerbookmarkurlsave,
   vmclearscroll,
 } from 'zss/device/api'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import { SOFTWARE } from 'zss/device/session'
 import { normalizebookmarks } from 'zss/feature/bookmarks'
 import { isarray, isstring } from 'zss/mapping/types'

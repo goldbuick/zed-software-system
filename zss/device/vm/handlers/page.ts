@@ -1,6 +1,6 @@
 import type { DEVICE } from 'zss/device'
 import { apitoast } from 'zss/device/api'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import { ispresent } from 'zss/mapping/types'
 import { memorywritecodepage } from 'zss/memory/bookoperations'
 import {

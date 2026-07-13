@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 
 import { handleapplyroom } from './applyroom'
 import { handlebinddrop } from './binddrop'
@@ -13,6 +13,7 @@ import { handleiszedcafeexportlive } from './iszedcafeexportlive'
 import { handlemenu } from './menu'
 import { handleping } from './ping'
 import { handleready } from './ready'
+import { handlereadfile } from './readfile'
 import { handlereadzedcafeexportfiles } from './readzedcafeexportfiles'
 import { handlereadzedcafetaskrid } from './readzedcafetaskrid'
 import { handlerequestzedcafestate } from './requestzedcafestate'
@@ -39,6 +40,7 @@ export const wanixclienthandlers: Record<string, WANIXCLIENT_HANDLER> = {
   requestzedcafestate: handlerequestzedcafestate,
   exportstate: handleexportstate,
   importresult: handleimportresult,
+  readfile: handlereadfile,
   cells: handlewanixcells,
   session: handlewanixsession,
 }

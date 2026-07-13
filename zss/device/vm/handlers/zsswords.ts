@@ -1,6 +1,6 @@
 import { objectKeys } from 'ts-extras'
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import {
   STATS_BOARD,
   STATS_BOOLEAN,

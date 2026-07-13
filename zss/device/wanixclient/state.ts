@@ -4,7 +4,7 @@
  */
 
 import type { WANIX_ZED_CAFE_IMPORT_RESULT } from 'zss/device/api'
-import type { DEVICELIKE, MESSAGE } from 'zss/device/messagetypes'
+import type { DEVICELIKE, MESSAGE } from 'zss/device/types'
 import {
   resetwanixclientstore,
   useWanixClient,

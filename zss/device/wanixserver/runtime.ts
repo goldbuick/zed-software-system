@@ -6,7 +6,7 @@ import {
   wanixclientsession,
 } from 'zss/device/api'
 import { createforward, shouldforwardwanixtoclient } from 'zss/device/forward'
-import { ismessage } from 'zss/device/messagetypes'
+import { ismessage } from 'zss/device/types'
 import { SOFTWARE } from 'zss/device/session'
 import { resolvedriverforwasm } from 'zss/device/wanixserver/spawndriver'
 import {
@@ -1053,8 +1053,9 @@ async function resolvedriverforcmd(
   if (driverhint) {
     return driverhint
   }
-  const bytes = await readroot().readFile(cmd)
-  return resolvedriverforwasm(cmd, null, bytes)
+  const binpath = cmd.trim().split(/\s+/)[0] ?? cmd
+  const bytes = await readroot().readFile(binpath)
+  return resolvedriverforwasm(binpath, null, bytes)
 }
 
 async function waitlocalzedcafetaskrid(): Promise<string | null> {
@@ -1198,7 +1199,7 @@ export function stoproom() {
     mountkey: roomconfig.mountkey,
     hardreset: false,
     archives: [],
-    remotes: [],
+    remotes: roomconfig.remotes,
     tasks: [],
   })
 }
@@ -1401,7 +1402,7 @@ async function ensuretaskroomfordrop() {
     mountkey: roomconfig.mountkey + 1,
     hardreset: true,
     archives: [],
-    remotes: [],
+    remotes: roomconfig.remotes,
     tasks: [],
     vm: undefined,
     zedcafe: {

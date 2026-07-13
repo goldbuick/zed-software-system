@@ -9,7 +9,7 @@ import {
   shouldforwardonpeerserver,
   shouldforwardservertoclient,
 } from 'zss/device/forward'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import {

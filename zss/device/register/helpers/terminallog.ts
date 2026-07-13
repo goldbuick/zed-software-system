@@ -1,4 +1,4 @@
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import {
   TAPE_MAX_LINES,
   useTape,

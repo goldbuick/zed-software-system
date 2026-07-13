@@ -221,3 +221,52 @@ func TestScanMultiplePlayersSorted(t *testing.T) {
 		t.Fatalf("sort order: %+v", report.Players)
 	}
 }
+
+func TestScanEmptyObjectElementNotReady(t *testing.T) {
+	fsys := fstest.MapFS{
+		"stats.json": &fstest.MapFile{
+			Data: []byte(`{"exportedAt":"t","bookCount":1,"books":[]}` + "\n"),
+		},
+		"main-book1/stats.json": &fstest.MapFile{
+			Data: []byte(`{"activelist":[],"flags":{}}` + "\n"),
+		},
+		"main-book1/lion-sid_x/object/element.json": &fstest.MapFile{
+			Data: []byte{},
+		},
+	}
+	_, err := Scan(fsys, "zedcafe")
+	if !errors.Is(err, ErrExportNotReady) {
+		t.Fatalf("expected ErrExportNotReady, got %v", err)
+	}
+}
+
+func TestScanTruncatedObjectElementNotReady(t *testing.T) {
+	fsys := fstest.MapFS{
+		"stats.json": &fstest.MapFile{
+			Data: []byte(`{"exportedAt":"t","bookCount":1,"books":[]}` + "\n"),
+		},
+		"main-book1/stats.json": &fstest.MapFile{
+			Data: []byte(`{"activelist":[],"flags":{}}` + "\n"),
+		},
+		"main-book1/lion-sid_x/object/element.json": &fstest.MapFile{
+			Data: []byte(`{"kind":"player"`),
+		},
+	}
+	_, err := Scan(fsys, "zedcafe")
+	if !errors.Is(err, ErrExportNotReady) {
+		t.Fatalf("expected ErrExportNotReady, got %v", err)
+	}
+}
+
+func TestUnmarshalJSONOrNotReady(t *testing.T) {
+	var dest map[string]any
+	if err := UnmarshalJSONOrNotReady("x.json", nil, &dest); !errors.Is(err, ErrExportNotReady) {
+		t.Fatalf("empty: %v", err)
+	}
+	if err := UnmarshalJSONOrNotReady("x.json", []byte(`{"a":`), &dest); !errors.Is(err, ErrExportNotReady) {
+		t.Fatalf("truncated: %v", err)
+	}
+	if err := UnmarshalJSONOrNotReady("x.json", []byte(`{"a":1}`), &dest); err != nil {
+		t.Fatal(err)
+	}
+}

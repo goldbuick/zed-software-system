@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
 import { memoryrepeatclilast, memoryruncli } from 'zss/memory/runtime'
 import { perfmeasure } from 'zss/perf/ui'

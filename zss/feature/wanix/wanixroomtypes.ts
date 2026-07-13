@@ -92,6 +92,8 @@ export const WANIX_V86_ARCHIVE_URL =
 
 export const DEFAULT_WANIX_VM_ID = 'linux-vm'
 export const DEFAULT_WANIX_VM_MEM = '512M'
+/** Default mount dst for `#wanix remote connect` (no leading `/`, no spaces). */
+export const DEFAULT_WANIX_REMOTE_DST = 'remote'
 
 export function createidleroomconfig(): WanixRoomConfig {
   return {

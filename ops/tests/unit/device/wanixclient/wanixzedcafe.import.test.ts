@@ -43,8 +43,16 @@ jest.mock('zss/feature/wanix/zedcafetreeschema', () => ({
   validatezedcafeexportpaths: jest.fn(() => ({ ok: true, errors: [] })),
 }))
 
-import { apilog, vmexportzedcafe, vmimportzedcafe } from 'zss/device/api'
 import {
+  apilog,
+  vmexportzedcafe,
+  vmimportzedcafe,
+  wanixserverreadzedcafeexportfiles,
+  wanixserversynczedcafeexport,
+} from 'zss/device/api'
+import {
+  applyzedcafeexportfiles,
+  exportfilestoguestfiles,
   fingerprintzedcafeexportfiles,
   pushzedcafesynctoiframe,
   resetwanixzedcafefortest,
@@ -59,10 +67,13 @@ import {
   setlasthostpushdoc,
   setzedcafeguestdirty,
 } from 'zss/device/wanixclient/state'
+import { zedcafeexportfilestodoc } from 'zss/feature/wanix/wanixstateexport'
 
 const mockapilog = apilog as jest.Mock
 const mockvmimport = vmimportzedcafe as jest.Mock
 const mockvmexport = vmexportzedcafe as jest.Mock
+const mocksync = wanixserversynczedcafeexport as jest.Mock
+const mockreadexport = wanixserverreadzedcafeexportfiles as jest.Mock
 
 const device = { id: 'dev', emit: jest.fn() } as never
 const player = 'p1'
@@ -95,6 +106,8 @@ describe('zedcafe import', () => {
     mockapilog.mockReset()
     mockvmimport.mockReset()
     mockvmexport.mockReset()
+    mocksync.mockReset()
+    mockreadexport.mockReset()
   })
 
   afterEach(() => {
@@ -127,6 +140,32 @@ describe('zedcafe import', () => {
     setlasthostpushdoc({})
     const ok = pushzedcafesynctoiframe(device, player, makefiles('x'))
     expect(ok).toBe(true)
+    expect(mockreadexport).toHaveBeenCalled()
+  })
+
+  it('pushzedcafesynctoiframe skips when sync already in flight', () => {
+    setlasthostpushdoc({})
+    expect(pushzedcafesynctoiframe(device, player, makefiles('a'))).toBe(true)
+    expect(pushzedcafesynctoiframe(device, player, makefiles('b'))).toBe(false)
+    expect(mockreadexport).toHaveBeenCalledTimes(1)
+  })
+
+  it('guest-diff failed import does not host-push wipe', async () => {
+    const hostfiles = makefiles('host')
+    const guestfiles = makefiles('guest-painted')
+    setlasthostpushdoc(zedcafeexportfilestodoc(hostfiles))
+    mockvmimport.mockImplementation(() => {
+      resolvevmzedcafeimportwaiter({
+        ok: false,
+        changed: false,
+        error: 'sim down',
+      })
+    })
+    expect(pushzedcafesynctoiframe(device, player, hostfiles)).toBe(true)
+    applyzedcafeexportfiles(device, player, exportfilestoguestfiles(guestfiles))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(readzedcafeguestdirty()).toBe(true)
+    expect(mocksync).not.toHaveBeenCalled()
   })
 
   it('wanixhandleexportstate marks pending when idle', async () => {

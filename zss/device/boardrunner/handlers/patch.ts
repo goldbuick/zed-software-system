@@ -4,7 +4,7 @@ import {
   memorysyncpipe,
   readworkerboundarypipe,
 } from 'zss/device/boardrunner/state'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import { decodepatchwire } from 'zss/feature/jsonpipe/wire'
 import { isarray, ispresent } from 'zss/mapping/types'
 import { memoryboundaryget, memoryboundaryset } from 'zss/memory/boundaries'

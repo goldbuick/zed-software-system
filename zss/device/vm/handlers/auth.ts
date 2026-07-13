@@ -5,7 +5,7 @@ import {
   registerinspector,
   registerloginready,
 } from 'zss/device/api'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import {
   boardrunnerassignmentvalid,
   boardrunnerelect,

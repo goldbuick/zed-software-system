@@ -694,12 +694,24 @@ apply cannot leave `mode: idle` and skip the push (`pending-export mark`).
 
 ---
 
+## Remote imports + zedsync
+
+Browser Wanix cannot export its namespace outward. Import a remote 9P mount instead, then sync it with `zedcafe/`:
+
+1. Serve a folder over WebSocket 9P — [wanix serve](https://github.com/tractordev/wanix/blob/main/cmd/wanix/serve.go) / [import docs](https://github.com/tractordev/wanix#export-and-import-namespaces), or the local fixture `ops/fixtures/wanix/p9server`
+2. `#wanix remote connect ws://localhost:7654/ remote`
+3. `#wanix zedsync remote` — guest task; argv path must not contain spaces
+
+Empty remote is seeded from `zedcafe/` (no wipe). After `.zedsync-ready`, steady-state sync includes deletes. Soft idle stops zedsync (`zedsync: stopped`). See [`ops/fixtures/wanix/README.md`](../../../ops/fixtures/wanix/README.md).
+
+---
+
 ## Rebuild references
 
 | Asset | Task |
 |-------|------|
 | wanix.wasm (full-Go) | Manual — see gotcha section; match `wanix.min.js` commit |
-| zedcafe.wasm / findplayers + greenring | `yarn task run ops:fixtures:wanix:zedcafe:build` / `ops:fixtures:wanix:findplayers:build` |
+| zedcafe.wasm / findplayers + greenring + **zedsync** | `ops:fixtures:wanix:zedcafe:build` / `ops:fixtures:wanix:findplayers:build` (zedsync copies to `cafe/public/wanix/`) |
 | Linux overlay | `yarn task run ops:fixtures:wanix:linux:overlay:build` |
 | Hello fixtures | `yarn task run ops:fixtures:wanix:build` |
 

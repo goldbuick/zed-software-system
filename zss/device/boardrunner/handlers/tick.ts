@@ -15,7 +15,7 @@ import {
   resetfirsttick,
 } from 'zss/device/boardrunner/state'
 import { pushworkerupdates, waitformemory } from 'zss/device/boardrunner/sync'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import { normalizelayerzvariant } from 'zss/gadget/graphics/layerz'
 import { MAYBE, isarray, ispresent } from 'zss/mapping/types'
 import { memoryreadplayersonboard } from 'zss/memory/boardaccess'

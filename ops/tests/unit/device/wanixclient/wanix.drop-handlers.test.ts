@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 
 describe('wanixclient drop handlers', () => {
   it('registry wires dropdone and binddrop result handlers', async () => {

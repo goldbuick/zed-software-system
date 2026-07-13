@@ -1,7 +1,7 @@
 import type { DEVICE } from 'zss/device'
 import { apilog } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import { storagewriteconfig } from 'zss/feature/storage'
 import {
   memoryreadhalt,

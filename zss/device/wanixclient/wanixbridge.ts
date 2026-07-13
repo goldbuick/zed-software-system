@@ -1,6 +1,6 @@
 import { createmessage } from 'zss/device'
-import type { MESSAGE } from 'zss/device/messagetypes'
-import { ismessage } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
+import { ismessage } from 'zss/device/types'
 import { SOFTWARE } from 'zss/device/session'
 import {
   type WanixReadyCallback,

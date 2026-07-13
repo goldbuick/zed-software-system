@@ -1,6 +1,6 @@
 import ErrorStackParser from 'error-stack-parser'
 import { debugingest } from 'zss/debugingest'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import {
   type GeneratorBuild,
   type GeneratorFunc,

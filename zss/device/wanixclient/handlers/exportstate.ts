@@ -1,6 +1,6 @@
 import type { DEVICE } from 'zss/device'
 import { apierror } from 'zss/device/api'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import { wanixhandleexportstate } from 'zss/device/wanixclient/wanixzedcafe'
 import type { WANIX_ZED_CAFE_EXPORT_FILE } from 'zss/feature/wanix/wanixstateexport'
 import { ispresent } from 'zss/mapping/types'

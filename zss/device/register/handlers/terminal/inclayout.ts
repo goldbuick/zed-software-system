@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import { terminalinclayout } from 'zss/device/register/helpers/layout'
 import { isboolean } from 'zss/mapping/types'
 export function handleterminalinclayout(

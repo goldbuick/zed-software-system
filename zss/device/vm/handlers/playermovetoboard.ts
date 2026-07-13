@@ -1,6 +1,6 @@
 import type { DEVICE } from 'zss/device'
 import { boardrunneridle, boardrunnerthud } from 'zss/device/api'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import {
   boardrunnerassign,
   boardrunnerassignmentvalid,

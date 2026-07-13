@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import { spawntask } from 'zss/device/wanixserver/runtime'
 import type { WanixTaskDriver } from 'zss/feature/wanix/wanixelements.d.ts'
 

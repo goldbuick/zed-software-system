@@ -4,7 +4,7 @@ import {
   assignedboundaries,
   resetmemorysyncaccess,
 } from 'zss/device/boardrunner/state'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import { isstring } from 'zss/mapping/types'
 import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {

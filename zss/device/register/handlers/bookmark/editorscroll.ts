@@ -1,7 +1,7 @@
 import type { DEVICE } from 'zss/device'
 import { vmeditorbookmarkscroll } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { readbookmarksfromstorage } from 'zss/feature/bookmarks'
 import { isarray, isstring } from 'zss/mapping/types'

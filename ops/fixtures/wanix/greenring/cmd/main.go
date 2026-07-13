@@ -6,8 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
+	"time"
 
 	"zed.cafe/wanix-fixtures/findplayers"
 	"zed.cafe/wanix-fixtures/greenring"
@@ -18,22 +18,13 @@ func main() {
 	if _, err := findplayers.ResolveExportRoot(fsys, findplayers.DefaultExportRoots); err != nil {
 		fmt.Fprintln(os.Stderr, "waiting for zedcafe export...")
 	}
-	root, err := findplayers.WaitExportRoot(
+	deadline := time.Now().Add(findplayers.ExportReadyTimeout)
+	root, report, err := findplayers.WaitExportScan(
 		fsys,
 		findplayers.DefaultExportRoots,
 		findplayers.ExportReadyTimeout,
 		findplayers.ExportReadyPoll,
 	)
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
-	}
-	exportfs, err := findplayers.OpenExportFS(fsys, root)
-	if err != nil {
-		fmt.Printf("greenring: open export root: %v\n", err)
-		os.Exit(1)
-	}
-	report, err := findplayers.Scan(exportfs, filepath.Base(root))
 	if err != nil {
 		if errors.Is(err, findplayers.ErrExportNotReady) {
 			fmt.Println(err.Error())
@@ -69,7 +60,18 @@ func main() {
 	}
 
 	writeroot := strings.TrimPrefix(root, "./")
-	painted, writelogs, err := greenring.ApplyRingsForPlayers(writeroot, targets)
+	var painted int
+	var writelogs []string
+	for {
+		painted, writelogs, err = greenring.ApplyRingsForPlayers(writeroot, targets)
+		if err == nil || !errors.Is(err, findplayers.ErrExportNotReady) {
+			break
+		}
+		if !time.Now().Before(deadline) {
+			break
+		}
+		time.Sleep(findplayers.ExportReadyPoll)
+	}
 	for _, line := range writelogs {
 		fmt.Println("greenring:", line)
 	}

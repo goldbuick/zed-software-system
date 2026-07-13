@@ -11,7 +11,14 @@ import {
   readwanixactivesession,
   setattachedsession,
 } from 'zss/device/wanixclient/wanixdisplay'
-import { startwanixvm, stopwanixvm } from 'zss/device/wanixclient/wanixroom'
+import {
+  connectwanixremote,
+  disconnectwanixremote,
+  readwanixremotes,
+  startwanixvm,
+  stopwanixvm,
+} from 'zss/device/wanixclient/wanixroom'
+import { startwanixzedsync } from 'zss/device/wanixclient/wanixzedsync'
 import { readwanixtermbufferkeys } from 'zss/device/wanixclient/wanixtermbuffer'
 import {
   writewanixtermdump,
@@ -134,6 +141,29 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
           )
           break
         }
+        case 'zedsync': {
+          const [targetpath] = readargs(words, 1, [ARG_TYPE.MAYBE_STRING])
+          if (!ispresent(targetpath) || !String(targetpath).trim()) {
+            apierror(
+              SOFTWARE,
+              player,
+              'wanix',
+              'usage: #wanix zedsync <targetpath> (no spaces in path)',
+            )
+            break
+          }
+          void startwanixzedsync(SOFTWARE, player, String(targetpath).trim()).catch(
+            (err) => {
+              apierror(
+                SOFTWARE,
+                player,
+                'wanix',
+                err instanceof Error ? err.message : String(err),
+              )
+            },
+          )
+          break
+        }
         case 'bridge': {
           const [urlorstop] = readargs(words, 1, [ARG_TYPE.MAYBE_STRING])
           if (!ispresent(urlorstop) || !urlorstop.trim()) {
@@ -156,7 +186,23 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
         case 'remote': {
           const sub = ispresent(arg) ? NAME(arg) : undefined
           if (!ispresent(sub)) {
-            wanixstublog(player, 'remote menu (not wired)')
+            const remotes = readwanixremotes()
+            if (remotes.length === 0) {
+              apilog(SOFTWARE, player, 'wanix remotes: (none)')
+              apilog(
+                SOFTWARE,
+                player,
+                'usage: #wanix remote connect <ws-url> [dst] | #wanix remote disconnect [dst|id]',
+              )
+              break
+            }
+            for (const remote of remotes) {
+              apilog(
+                SOFTWARE,
+                player,
+                `wanix remote ${remote.dst} id=${remote.id} ${remote.url}`,
+              )
+            }
             break
           }
           if (NAME(sub) === 'connect') {
@@ -169,15 +215,41 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
                 SOFTWARE,
                 player,
                 'wanix',
-                'usage: #wanix remote connect <wss-url> [dst]',
+                'usage: #wanix remote connect <ws-url> [dst]',
               )
               break
             }
-            wanixstublog(
+            try {
+              const remote = connectwanixremote(
+                url.trim(),
+                ispresent(mountdst) ? NAME(mountdst) : undefined,
+              )
+              apilog(
+                SOFTWARE,
+                player,
+                `wanix remote connected ${remote.url} → ${remote.dst}`,
+              )
+            } catch (err) {
+              apierror(
+                SOFTWARE,
+                player,
+                'wanix',
+                err instanceof Error ? err.message : String(err),
+              )
+            }
+            break
+          }
+          if (NAME(sub) === 'disconnect') {
+            const [key] = readargs(words, 2, [ARG_TYPE.MAYBE_NAME])
+            const remaining = disconnectwanixremote(
+              ispresent(key) ? NAME(key) : undefined,
+            )
+            apilog(
+              SOFTWARE,
               player,
-              ispresent(mountdst)
-                ? `remote connect ${url.trim()} dst=${NAME(mountdst)} (not wired)`
-                : `remote connect ${url.trim()} (not wired)`,
+              remaining.length === 0
+                ? 'wanix remote disconnected (none left)'
+                : `wanix remote disconnected (${remaining.length} left)`,
             )
             break
           }
@@ -185,7 +257,7 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
             SOFTWARE,
             player,
             'wanix',
-            'usage: #wanix remote | #wanix remote connect <wss-url> [dst]',
+            'usage: #wanix remote | #wanix remote connect <ws-url> [dst] | #wanix remote disconnect [dst|id]',
           )
           break
         }
@@ -194,7 +266,7 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
             SOFTWARE,
             player,
             'wanix',
-            'drop .wasm/.tgz — #wanix menu, vm, remote, bridge, attach, term, stop, detach',
+            'drop .wasm/.tgz — #wanix menu, vm, remote, zedsync, bridge, attach, term, stop, detach',
           )
           break
       }

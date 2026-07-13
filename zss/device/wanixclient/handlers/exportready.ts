@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import { handlewanixexportready } from 'zss/device/wanixclient/wanixzedcafe'
 import { ispresent } from 'zss/mapping/types'
 

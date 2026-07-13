@@ -1,4 +1,4 @@
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 
 import { DEVICE, createmessage, parsetarget } from './device'
 import { runtickbatched } from './gadget/runtickbatched'

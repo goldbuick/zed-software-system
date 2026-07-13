@@ -1,6 +1,6 @@
 import { parsetarget } from 'zss/device'
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import { memorysendtoboards } from 'zss/memory/gamesend'
 import { memoryreadbookplayerboards } from 'zss/memory/playermanagement'
 import { memorymessagechip } from 'zss/memory/runtime'

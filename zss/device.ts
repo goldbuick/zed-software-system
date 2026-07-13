@@ -1,4 +1,4 @@
-import { MESSAGE } from './device/messagetypes'
+import { MESSAGE } from './device/types'
 import { hub } from './hub'
 import { createsid } from './mapping/guid'
 import { ispresent, noop } from './mapping/types'

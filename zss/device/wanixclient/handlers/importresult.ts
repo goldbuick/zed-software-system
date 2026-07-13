@@ -1,6 +1,6 @@
 import type { DEVICE } from 'zss/device'
 import { apierror } from 'zss/device/api'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import { resolvevmzedcafeimportwaiter } from 'zss/device/wanixclient/wanixzedcafe'
 import { ispresent } from 'zss/mapping/types'
 

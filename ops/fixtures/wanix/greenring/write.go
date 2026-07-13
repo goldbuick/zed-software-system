@@ -8,6 +8,8 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+
+	"zed.cafe/wanix-fixtures/findplayers"
 )
 
 // PlayerXY is the minimal player location needed to paint a ring.
@@ -110,8 +112,8 @@ func ApplyRingToBoard(exportroot string, bookdir, pagedir string, x, y int) erro
 		return fmt.Errorf("read %s: %w", full, err)
 	}
 	var terrain []any
-	if err := json.Unmarshal(data, &terrain); err != nil {
-		return fmt.Errorf("parse %s: %w", full, err)
+	if err := findplayers.UnmarshalJSONOrNotReady(rel, data, &terrain); err != nil {
+		return err
 	}
 	terrain = PaintGreenRing(terrain, x, y)
 	out, err := json.Marshal(terrain)

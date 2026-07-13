@@ -1,5 +1,5 @@
 import { createdevice, createmessage } from 'zss/device'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import {
   disposesttengine,
   ensuresttengine,

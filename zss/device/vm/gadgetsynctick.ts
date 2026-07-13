@@ -1,6 +1,6 @@
 import type { DEVICE } from 'zss/device'
 import { gadgetclientpaint } from 'zss/device/api'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import { gadgetclientpatch } from 'zss/device/patchapi'
 import type { JSON_PIPE_HANDLE } from 'zss/feature/jsonpipe/observe'
 import { createjsonpipe } from 'zss/feature/jsonpipe/observe'

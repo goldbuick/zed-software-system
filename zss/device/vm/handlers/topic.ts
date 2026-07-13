@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import { isstring } from 'zss/mapping/types'
 import { memorywritetopic } from 'zss/memory/session'
 export function handletopic(_vm: DEVICE, message: MESSAGE): void {

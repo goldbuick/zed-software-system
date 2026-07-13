@@ -1,6 +1,6 @@
 import type { DEVICE } from 'zss/device'
 import { vmdoot } from 'zss/device/api'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import {
   DOOT_RATE,
   deckeepaliveby,

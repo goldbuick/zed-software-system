@@ -5,7 +5,7 @@ import {
   readworkerboundarypipe,
 } from 'zss/device/boardrunner/state'
 import { pushworkerupdates, waitformemory } from 'zss/device/boardrunner/sync'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import { INPUT } from 'zss/gadget/data/types'
 import { isarray, ispresent } from 'zss/mapping/types'
 import { memoryboundaryget } from 'zss/memory/boundaries'

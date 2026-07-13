@@ -1,6 +1,6 @@
 import type { DEVICE } from 'zss/device'
 import { apilog } from 'zss/device/api'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import { tracking, trackinglastlog } from 'zss/device/vm/state'
 
 export function handledoot(vm: DEVICE, message: MESSAGE): void {

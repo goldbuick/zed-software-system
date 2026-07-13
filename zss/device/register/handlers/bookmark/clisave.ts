@@ -1,7 +1,7 @@
 import type { DEVICE } from 'zss/device'
 import { apitoast, vmclearscroll } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import { syncterminalbookmarkpins } from 'zss/device/register/helpers/bootstrap'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { appendterminalbookmark } from 'zss/feature/bookmarks'

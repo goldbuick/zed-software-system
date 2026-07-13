@@ -86,7 +86,22 @@ export function buildwanixmenutape(state: WanixMenuState): string {
 
   parts.push('$32')
   parts.push(zsssectionlines('externals'))
-  parts.push(zsszedlinkline('wanix remote', 'Remote imports (WSS 9P)'))
+  parts.push(zsszedlinkline('wanix remote', 'list remote imports (WSS 9P)'))
+  parts.push(
+    zsstextline(
+      '$cyan   #wanix remote connect <ws-url> [dst] — import namespace',
+    ),
+  )
+  parts.push(
+    zsstextline(
+      '$cyan   #wanix remote disconnect [dst|id] — remove import',
+    ),
+  )
+  parts.push(
+    zsstextline(
+      '$cyan   #wanix zedsync <dst> — sync remote mount ↔ zedcafe (no spaces)',
+    ),
+  )
   parts.push(
     zsstextline(
       '$cyan   #wanix bridge <ws-url> — export namespace (not wired yet)',

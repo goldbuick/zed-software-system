@@ -61,6 +61,46 @@ Sources for per-lang hellos live in `hello/` (see `hello/manifest.json`). WAT so
 | `stamp-green.png` | 8×8 green input (96 bytes → 17 cells) |
 | `stamp-blue.png` | 8×8 blue input (98 bytes → 19 cells) |
 
+## Remote import + zedsync
+
+Browser Wanix cannot export its namespace to an external folder. Workaround:
+
+1. Serve a host folder over WebSocket 9P
+2. `#wanix remote connect` imports that mount
+3. `#wanix zedsync <dst>` mirrors it with `zedcafe/` (r/w, including deletes after initial seed)
+
+### Start a 9P WebSocket server
+
+**Upstream Wanix CLI** ([serve.go](https://github.com/tractordev/wanix/blob/main/cmd/wanix/serve.go), [import docs](https://github.com/tractordev/wanix#export-and-import-namespaces)):
+
+```bash
+# build CLI from submodule, then:
+./wanix serve /path/to/folder --listen :7654
+# connect URL: ws://localhost:7654/
+```
+
+**Local fixture** (same protocol; for tests / quick local serve):
+
+```bash
+cd ops/fixtures/wanix
+go run ./p9server/cmd -dir /path/to/folder
+# prints ws://127.0.0.1:<port>/
+go test ./p9server/ ./zedsync/ -count=1
+```
+
+### Cafe commands
+
+```text
+#wanix remote connect ws://127.0.0.1:7654/ remote
+#wanix zedsync remote
+```
+
+- Target path must **not contain spaces** (Wanix splits `cmd` on spaces).
+- Empty remote is seeded from `zedcafe/` first (never wipes zedcafe because remote started empty).
+- Import poll pauses until `<target>/.zedsync-ready`, then resumes.
+- Soft idle / `#wanix stop` ends the zedsync task — look for `zedsync: stopped`.
+- Build guest: `yarn task run ops:fixtures:wanix:findplayers:build` → `cafe/public/wanix/zedsync.wasm` (also staged under `ops/public/wanix/`)
+
 ## Bind-on-drop pipeline (`input/`)
 
 While **attached** to a Wanix term session, file drops bind under **`input/<name>`** (not spawn tasks). Processors read `input/` and write zedcafe export paths under `zedcafe/…` so the host import poll can sync boards/terrain.

@@ -1,6 +1,6 @@
 import type { DEVICE } from 'zss/device'
 import { doasync } from 'zss/device/doasync'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { runterminalbookmarkclibyid } from 'zss/feature/bookmarks'
 import { MAYBE, isarray, isstring } from 'zss/mapping/types'

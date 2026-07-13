@@ -36,8 +36,8 @@ export { registerreadplayer } // ❌ device facade
 ### 3. Type / value alias facades that only forward another module
 
 ```typescript
-import type { DEVICELIKE as DEVICELIKE_TYPE } from './messagetypes'
-export type DEVICELIKE = DEVICELIKE_TYPE // ❌ prefer importing messagetypes directly
+import type { DEVICELIKE as DEVICELIKE_TYPE } from './types'
+export type DEVICELIKE = DEVICELIKE_TYPE // ❌ prefer importing zss/device/types directly
 ```
 
 Do **not** grow this pattern. When touching such a file, prefer pointing call sites at the defining module instead of adding more aliases.

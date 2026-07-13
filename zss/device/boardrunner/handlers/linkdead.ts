@@ -6,7 +6,7 @@ import {
   vmclearscroll,
 } from 'zss/device/api'
 import { pushworkerupdates } from 'zss/device/boardrunner/sync'
-import type { MESSAGE } from 'zss/device/messagetypes'
+import type { MESSAGE } from 'zss/device/types'
 import { ispresent, isstring } from 'zss/mapping/types'
 import {
   memorylogoutplayer,
