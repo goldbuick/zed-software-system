@@ -12,6 +12,7 @@ import {
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import {
+  clearlasthostpushdoc,
   readpendingapplyconfig,
   readpendingspawn,
   readwanixroomconfig as readwanixroomconfigstate,
@@ -35,6 +36,7 @@ import {
   DEFAULT_WANIX_VM_MEM,
   createidleroomconfig,
 } from 'zss/feature/wanix/wanixroomtypes'
+import { wanixperfmark } from 'zss/feature/wanix/wanixperf'
 import type { WanixZedCafeRoomSpec } from 'zss/feature/wanix/wanixzedcafetypes'
 
 function bumpmountkey(config: WanixRoomConfig): WanixRoomConfig {
@@ -46,16 +48,87 @@ export function readwanixroomconfig(): WanixRoomConfig {
 }
 
 export function applywanixroom(config: WanixRoomConfig): void {
+  if (config.hardreset) {
+    clearlasthostpushdoc()
+  }
   setpendingapplyconfig(config)
   wanixroomconfigbox.current = config
   wanixserverapplyroom(SOFTWARE, registerreadplayer(), config)
 }
 
-export function applywanixroomresult(): void {
+export function applywanixroomresult(
+  device?: DEVICELIKE,
+  player?: string,
+  result?: unknown,
+): void {
+  const res =
+    result && typeof result === 'object'
+      ? (result as {
+          ok?: boolean
+          mode?: string
+          mountkey?: number
+          vmid?: string
+          mem?: string
+        })
+      : undefined
+  if (res?.ok === false) {
+    return
+  }
   const pending = readpendingapplyconfig()
   if (pending) {
-    wanixroomconfigbox.current = pending
-    setpendingapplyconfig(null)
+    const mountmatches =
+      typeof res?.mountkey !== 'number' || pending.mountkey === res.mountkey
+    if (mountmatches) {
+      wanixroomconfigbox.current = pending
+      setpendingapplyconfig(null)
+    }
+  }
+  // Pending can be overwritten by a later applyroom; restore from iframe result
+  // before activate so iswanixspaceactive() is true and push is not deferred.
+  if (res?.mode === 'vm' || res?.mode === 'task') {
+    const boot = readwanixbootzedcafestate()
+    const base = wanixroomconfigbox.current
+    if (base.mode !== res.mode || !base.zedcafe?.cmd) {
+      wanixroomconfigbox.current = {
+        ...base,
+        mode: res.mode,
+        mountkey:
+          typeof res.mountkey === 'number' ? res.mountkey : base.mountkey,
+        hardreset: false,
+        zedcafe: base.zedcafe ?? {
+          cmd: boot.cmd,
+          generation: boot.generation,
+        },
+        ...(res.mode === 'vm'
+          ? {
+              vm: {
+                id: res.vmid ?? DEFAULT_WANIX_VM_ID,
+                mem: res.mem ?? DEFAULT_WANIX_VM_MEM,
+                active: true,
+              },
+              tasks: [],
+            }
+          : {}),
+      }
+    }
+  }
+  const config = wanixroomconfigbox.current
+  const mode = typeof res?.mode === 'string' ? res.mode : config.mode
+  // Iframe applyroom replies often arrive with empty player (see filter.ts).
+  const activateplayer = player || registerreadplayer()
+  const activatedevice = device ?? SOFTWARE
+  const zedcafecmd =
+    config.zedcafe?.cmd ??
+    ((mode === 'vm' || mode === 'task') && activateplayer
+      ? readwanixbootzedcafestate().cmd
+      : undefined)
+  if (activateplayer && zedcafecmd && (mode === 'vm' || mode === 'task')) {
+    wanixperfmark('applyroom-activate', {
+      mode,
+      mountkey: res?.mountkey ?? null,
+      hadpending: !!pending,
+    })
+    void activatewanixzedcafeexport(activatedevice, activateplayer)
   }
 }
 
@@ -99,9 +172,6 @@ export function ensurewanixtaskroom(
     zedcafe,
   }
   applywanixroom(next)
-  if (device && player) {
-    void activatewanixzedcafeexport(device, player)
-  }
 }
 
 export function startwanixvmroom(
@@ -281,9 +351,6 @@ export function startwanixvm(
     }
   }
   startwanixvmroom(vmid, mem, zedcafe)
-  if (device && player) {
-    void activatewanixzedcafeexport(device, player)
-  }
 }
 
 export function stopwanixvm(vmid = DEFAULT_WANIX_VM_ID): void {

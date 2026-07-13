@@ -46,6 +46,7 @@ import {
   type WANIX_ZED_CAFE_EXPORT_FILE,
   buildzedcafeexportfiles,
   readbookcountfromexportfiles,
+  readzedcafeexportstatscontentready,
   zedcafeexportdocsdiffer,
   zedcafeexportfilestodoc,
 } from 'zss/feature/wanix/wanixstateexport'
@@ -241,6 +242,11 @@ function guardzedcafeexportpush(
     return false
   }
   return true
+}
+
+function guesttreestatsready(guesttree: WANIX_ZED_CAFE_EXPORT_FILE[]): boolean {
+  const stats = guesttree.find((file) => file.path === 'stats.json')
+  return !!stats && readzedcafeexportstatscontentready(stats.bytes)
 }
 
 function readorphanremovepaths(
@@ -441,7 +447,8 @@ async function continuepushafterguesttree(
     !options?.fromimport &&
     pushdoc &&
     removepaths.length === 0 &&
-    !zedcafeexportdocsdiffer(readlasthostpushdoc(), pushdoc)
+    !zedcafeexportdocsdiffer(readlasthostpushdoc(), pushdoc) &&
+    (memcount === 0 || guesttreestatsready(guesttree))
   ) {
     setpendingsync(null)
     tracezedcafeexport(`sync-stale needed=false memcount=${memcount}`)

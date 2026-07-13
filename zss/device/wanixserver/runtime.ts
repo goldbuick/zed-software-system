@@ -91,6 +91,7 @@ import {
   WANIX_ZEDCAFE_EXPORT_READY_POLL_MS,
   WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS,
   WANIX_ZEDCAFE_TASK_ID,
+  WANIX_ZEDCAFE_WASM_CMD,
   readwanixzedcafeexportsrc,
 } from 'zss/feature/wanix/wanixzedcafeconstants'
 import type { WanixZedCafeGuestFile } from 'zss/feature/wanix/wanixzedcafetypes'
@@ -131,6 +132,28 @@ const termencoder = new TextEncoder()
 const termdecoder = new TextDecoder()
 
 let pendingsynczedcaferemovepaths: string[] | null = null
+let pendingrequestzedcafeexport:
+  | {
+      resolve: (result: {
+        ok: boolean
+        taskrid: string | null
+      }) => void
+      timer: ReturnType<typeof setTimeout>
+    }
+  | null = null
+
+function settlependingrequestzedcafeexport(result: {
+  ok: boolean
+  taskrid: string | null
+}) {
+  const waiter = pendingrequestzedcafeexport
+  if (!waiter) {
+    return
+  }
+  clearTimeout(waiter.timer)
+  pendingrequestzedcafeexport = null
+  waiter.resolve(result)
+}
 
 async function synczedcafeexportlocal(
   guestfiles?: WanixZedCafeGuestFile[] | null,
@@ -139,20 +162,21 @@ async function synczedcafeexportlocal(
   if (!system?.isReady || !roomconfig.zedcafe?.cmd) {
     return { ok: false, taskrid: null }
   }
-  const files = guestfiles ?? null
-  if (!files?.length && removepaths.length === 0) {
+  // null = need parent pull; [] = parent answered with empty tree (do not re-request)
+  if (guestfiles == null && removepaths.length === 0) {
     pendingsynczedcaferemovepaths = removepaths
     wanixclientrequestzedcafestate(SOFTWARE, '')
     return { ok: false, taskrid: null, pending: true }
   }
+  const files = guestfiles ?? []
   const cmd = roomconfig.zedcafe.cmd
   const taskrid = await ensurezedcafeboot(system, readroot(), cmd)
   if (!taskrid) {
     return { ok: false, taskrid: null }
   }
-  const bookcount = readguestfilebookcount(files ?? [])
-  if ((files?.length ?? 0) > 0 || removepaths.length > 0) {
-    await pushzedcafeexportlive(readroot(), taskrid, files ?? [], removepaths)
+  const bookcount = readguestfilebookcount(files)
+  if (files.length > 0 || removepaths.length > 0) {
+    await pushzedcafeexportlive(readroot(), taskrid, files, removepaths)
   }
   if (bookcount > 0) {
     await wireallguestroots(system, taskrid)
@@ -161,7 +185,7 @@ async function synczedcafeexportlocal(
   wanixperfmark('synczedcafeexport-end', {
     taskrid,
     bookcount,
-    paths: files?.length ?? 0,
+    paths: files.length,
     removed: removepaths.length,
   })
   return { ok: true, taskrid }
@@ -173,7 +197,37 @@ export async function continuerequestzedcafestate(
 ) {
   const removepaths = pendingsynczedcaferemovepaths ?? []
   pendingsynczedcaferemovepaths = null
-  return synczedcafeexportlocal(files, removepaths)
+  const result = await synczedcafeexportlocal(files, removepaths)
+  settlependingrequestzedcafeexport(result)
+  return result
+}
+
+async function pullzedcafeexportfromparent(): Promise<{
+  ok: boolean
+  taskrid: string | null
+}> {
+  if (!system?.isReady || !roomconfig.zedcafe?.cmd) {
+    return { ok: false, taskrid: null }
+  }
+  settlependingrequestzedcafeexport({ ok: false, taskrid: null })
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      if (pendingrequestzedcafeexport) {
+        pendingrequestzedcafeexport = null
+        reject(new Error('zedcafe export request timed out'))
+      }
+    }, WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS)
+    pendingrequestzedcafeexport = {
+      resolve: (result) => {
+        clearTimeout(timer)
+        pendingrequestzedcafeexport = null
+        resolve(result)
+      },
+      timer,
+    }
+    pendingsynczedcaferemovepaths = []
+    wanixclientrequestzedcafestate(SOFTWARE, '')
+  })
 }
 
 function postready() {
@@ -850,7 +904,14 @@ async function warmactivateroom(): Promise<Record<string, unknown>> {
   if (roomconfig.mode === 'vm' && roomconfig.vm?.active) {
     const vmstatus = await warmstartvm()
     if (roomconfig.zedcafe?.cmd) {
-      await ensurezedcafeboot(system, readroot(), roomconfig.zedcafe.cmd)
+      const taskrid = await ensurezedcafeboot(
+        system,
+        readroot(),
+        roomconfig.zedcafe.cmd,
+      )
+      if (taskrid) {
+        await wireallguestroots(system, taskrid)
+      }
     }
     postready()
     return {
@@ -955,7 +1016,14 @@ export async function applyroom(config: WanixRoomConfig) {
       ? await waitforvmrid(vmel, Date.now() + VM_RID_WAIT_MS)
       : null
     if (roomconfig.zedcafe?.cmd) {
-      await ensurezedcafeboot(next, readroot(), roomconfig.zedcafe.cmd)
+      const taskrid = await ensurezedcafeboot(
+        next,
+        readroot(),
+        roomconfig.zedcafe.cmd,
+      )
+      if (taskrid) {
+        await wireallguestroots(next, taskrid)
+      }
     }
     wanixperfmark('applyroom-return', { mode: 'vm', remount: true })
     return {
@@ -1055,6 +1123,7 @@ export async function spawntask(
   task.setAttribute('data-zss-target-id', taskid)
   task.setAttribute('data-zss-target-kind', 'task')
   if (driver === 'gojs') {
+    wanixperfmark('spawntask-gojs-gate-start', { taskid })
     const taskrid = await waitlocalzedcafetaskrid()
     if (!taskrid) {
       throw new Error(
@@ -1070,21 +1139,28 @@ export async function spawntask(
       }
     }
     appendguestexportbind(task, taskrid)
+    wanixperfmark('spawntask-gojs-gate-end', { taskid, taskrid })
   }
   system.appendChild(task)
 
   if (typeof task.allocate === 'function') {
+    wanixperfmark('spawntask-allocate-start', { taskid, driver })
     await task.allocate()
+    wanixperfmark('spawntask-allocate-end', { taskid })
   }
 
   const termpath =
     typeof task.term === 'string' && task.term.length > 0
       ? task.term
       : `#task/${taskid}/term`
+  wanixperfmark('spawntask-term-start', { taskid, termpath })
   await connecttermsession(taskid, termpath, 'task')
+  wanixperfmark('spawntask-term-end', { taskid })
 
   if (typeof task.start === 'function') {
+    wanixperfmark('spawntask-start-start', { taskid })
     await task.start()
+    wanixperfmark('spawntask-start-end', { taskid })
   }
 
   const entry = { id: taskid, cmd, running: true }
@@ -1352,6 +1428,10 @@ async function ensuretaskroomfordrop() {
     remotes: [],
     tasks: [],
     vm: undefined,
+    zedcafe: {
+      cmd: WANIX_ZEDCAFE_WASM_CMD,
+      generation: roomconfig.zedcafe?.generation ?? 1,
+    },
   }
   await applyroom(next)
 }
@@ -1362,20 +1442,31 @@ export async function drop(
   kind: 'wasm' | 'bundle',
   bytes: Uint8Array,
 ) {
+  await ensuretaskroomfordrop()
   if (!system?.isReady) {
     throw new Error('wanix room not ready')
   }
-  await ensuretaskroomfordrop()
+  if (roomconfig.zedcafe?.cmd) {
+    wanixperfmark('drop-export-pull-start')
+    await pullzedcafeexportfromparent()
+    wanixperfmark('drop-export-pull-end')
+  }
+  wanixperfmark('drop-spawn-start', { label, kind })
   const taskid = uniquewanixtaskid(
     label,
     roomconfig.tasks.map((task) => task.id),
   )
   if (kind === 'wasm') {
     const path = normalizewanixpath(label)
+    wanixperfmark('drop-writefile-start', { path })
     await writefile(path, Array.from(bytes))
+    wanixperfmark('drop-writefile-end', { path })
     const { readwanixwasmdriver } =
       await import('zss/feature/wanix/wanixwasmdriver')
-    const result = await spawntask(taskid, path, readwanixwasmdriver(bytes))
+    const driver = readwanixwasmdriver(bytes)
+    wanixperfmark('drop-spawntask-start', { taskid, path, driver })
+    const result = await spawntask(taskid, path, driver)
+    wanixperfmark('drop-spawntask-end', { taskid })
     return {
       ...result,
       taskid,

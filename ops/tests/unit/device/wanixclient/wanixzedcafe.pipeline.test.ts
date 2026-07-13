@@ -96,6 +96,22 @@ describe('pushzedcafesynctoiframe pipeline', () => {
     expect(mocksync).not.toHaveBeenCalled()
   })
 
+  it('emits sync when lasthostpushdoc matches but guest lacks ready stats', () => {
+    const unreadystats = [
+      {
+        path: 'stats.json',
+        bytes: new TextEncoder().encode('{"bookCount":1,"books":[]}\n'),
+      },
+      bookfiles[1],
+    ]
+    setlasthostpushdoc(zedcafeexportfilestodoc(bookfiles))
+    const ok = pushzedcafesynctoiframe(device, player, bookfiles)
+    expect(ok).toBe(true)
+    expect(mockreadfiles).toHaveBeenCalled()
+    applyzedcafeexportfiles(device, player, guestpayload(unreadystats))
+    expect(mocksync).toHaveBeenCalled()
+  })
+
   it('ensurezedcafeexportready is fire-and-forget emit', () => {
     setlasthostpushdoc(zedcafeexportfilestodoc(emptyfiles))
     ensurezedcafeexportready(device, player, bookfiles)

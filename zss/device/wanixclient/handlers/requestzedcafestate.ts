@@ -2,6 +2,7 @@ import type { DEVICE } from 'zss/device'
 import { wanixserverrequestzedcafestate } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
 import type { MESSAGE } from 'zss/device/messagetypes'
+import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import { memoryreadoperator } from 'zss/memory/session'
 
@@ -9,13 +10,14 @@ export function handlerequestzedcafestate(
   device: DEVICE,
   message: MESSAGE,
 ): void {
-  doasync(device, message.player, async () => {
+  const player = message.player || registerreadplayer() || memoryreadoperator()
+  doasync(device, player, async () => {
     const { exportfilestoguestfiles, readhostexportfilesasync } =
       await import('zss/device/wanixclient/wanixzedcafe')
-    const files = await readhostexportfilesasync(SOFTWARE, memoryreadoperator())
+    const files = await readhostexportfilesasync(SOFTWARE, player)
     wanixserverrequestzedcafestate(
       device,
-      message.player,
+      player,
       exportfilestoguestfiles(files),
     )
   })

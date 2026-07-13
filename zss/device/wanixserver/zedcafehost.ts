@@ -380,6 +380,30 @@ export async function waitzedcafeexportcontentready(
   return false
 }
 
+async function waitvmtaskroot(
+  sys: WanixSystemElement,
+  timeoutms = WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS,
+): Promise<WanixRoot | null> {
+  const vm = sys.querySelector('wanix-vm') as WanixVmWithTask | null
+  if (!vm) {
+    return null
+  }
+  if (vm.task?.root) {
+    return vm.task.root
+  }
+  const deadline = Date.now() + timeoutms
+  while (Date.now() < deadline) {
+    await new Promise<void>((resolve) =>
+      setTimeout(resolve, WANIX_ZEDCAFE_EXPORT_READY_POLL_MS),
+    )
+    const current = sys.querySelector('wanix-vm') as WanixVmWithTask | null
+    if (current?.task?.root) {
+      return current.task.root
+    }
+  }
+  return null
+}
+
 export async function wireallguestroots(
   sys: WanixSystemElement,
   taskrid: string,
@@ -389,11 +413,10 @@ export async function wireallguestroots(
   await tryunbindexport(sys.root, src, dst)
   await sys.root.bind(src, dst)
   let count = 1
-  const vm = sys.querySelector('wanix-vm') as WanixVmWithTask | null
-  const vmtask = vm?.task
-  if (vmtask?.root) {
-    await tryunbindexport(vmtask.root, src, dst)
-    await vmtask.root.bind(src, dst)
+  const vmroot = await waitvmtaskroot(sys)
+  if (vmroot) {
+    await tryunbindexport(vmroot, src, dst)
+    await vmroot.bind(src, dst)
     count++
   }
   const tasks = sys.querySelectorAll(

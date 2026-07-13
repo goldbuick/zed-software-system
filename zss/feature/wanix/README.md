@@ -150,7 +150,7 @@ stateDiagram-v2
 | Action | Path |
 |--------|------|
 | `#wanix vm` | CLI → `startwanixvm` → `wanixroom.startwanixvmroom` → iframe `applyroom` mode `vm` |
-| Drag `.wasm` / `.tgz` | `parse/file` → `handlewanixdrop` |
+| Drag `.wasm` / `.tgz` | `parse/file` → `wanixserverdrop` → iframe `drop()` |
 | `#wanix stop` | `stopwanixroom()` — soft idle by default |
 | `#wanix attach [session]` | Focus a task/VM term tile |
 | `#wanix` menu | CLI → `wanixservermenu` → iframe builds tape → `wanixclient:menu` print-only |
@@ -258,27 +258,26 @@ Parent [`handlers/exportready.ts`](../../device/wanixclient/handlers/exportready
 ```mermaid
 flowchart LR
   Drop["Drag findplayers.wasm"]
-  Room["ensurewanixtaskroom"]
-  Parallel["Promise.all"]
-  Export["activatezedcafeexport"]
-  Stage["putwanixroomfile #ramfs/…"]
+  Server["wanixserverdrop"]
+  Remount["ensuretaskroomfordrop"]
+  Pull["requestzedcafestate pull"]
+  Stage["writefile #ramfs/…"]
   Spawn["spawntask gojs + export bind"]
   Out["JSON on task term"]
 
-  Drop --> Room
-  Room --> Parallel
-  Parallel --> Export
-  Parallel --> Stage
-  Export --> Spawn
+  Drop --> Server
+  Server --> Remount
+  Remount --> Pull
+  Pull --> Stage
   Stage --> Spawn
   Spawn --> Out
 ```
 
-**Steps (parent [`wanixroom.ts`](wanixroom.ts)):**
+**Steps (iframe [`runtime.ts`](../../device/wanixserver/runtime.ts) `drop`):**
 
-1. **`ensurewanixtaskroom`** — if idle, `applyroom` → task mode (+ zedcafe spec from boot state).
-2. **Parallel staging** — export activation overlaps wasm write to `#ramfs/` (saves wall time).
-3. **`spawntaskinroom`** — iframe creates `<wanix-task>`, connects term, `start()`.
+1. **`ensuretaskroomfordrop`** — if idle, cold `applyroom` → task mode (+ zedcafe boot cmd). Ready check runs **after** remount (cold idle has no system yet).
+2. **Export pull** — `wanixclient:requestzedcafestate` → parent answers → `continuerequestzedcafestate` push/wire (awaited before spawn).
+3. **Stage + spawn** — write drop bytes to `#ramfs/`, then `spawntask` (gojs waits on `stats.json`).
 
 **Driver selection ([`wanixwasmdriver.ts`](wanixwasmdriver.ts)):**
 
@@ -301,11 +300,11 @@ flowchart TB
   Apply["applyroom mode=vm"]
   Linux["waitvmlinuxmount + vm.start"]
   Boot["ensurezedcafeboot in iframe"]
-  Final["finalizewanixzedcafeaftervmboot"]
-  Bind["wirezedcafeexport → /zedcafe/"]
+  Bind["wireallguestroots → /zedcafe/"]
+  Activate["activate export after applyroom"]
   Shell["zedcafe-books, zedcafe-stats in VM"]
 
-  CLI --> Apply --> Linux --> Boot --> Final --> Bind --> Shell
+  CLI --> Apply --> Linux --> Boot --> Bind --> Activate --> Shell
 ```
 
 **Why VM feels faster than cold drop from idle (before perf work):** VM path booted zedcafe
@@ -395,43 +394,41 @@ sequenceDiagram
   User->>Parent: "#wanix vm"
   Parent->>Iframe: applyroom mode=vm remount
   Iframe->>ZC: ensurezedcafeboot
+  Iframe->>VM: wireallguestroots always
   Iframe-->>Parent: applyroom-return
-  Parent->>Parent: finalizewanixzedcafeaftervmboot
-  Parent->>Iframe: pushwire 114 files
+  Parent->>Parent: activatewanixzedcafeexport
+  Parent->>Iframe: synczedcafeexport push
   Iframe-->>Parent: content-ready event
-  Parent->>Iframe: wirezedcafeexport
-  Iframe->>VM: bind /zedcafe/
   User->>VM: zedcafe-books
 ```
 
-VM path: one zedcafe boot, one push, `content-ready` event, no findplayers wasm.
+VM path: zedcafe boot + guest bind in iframe `applyroom`, then parent re-activates export so content lands after VM root exists.
 
-**Perf marks:** `vm-boot-finalize-start` → `export-push-end` → `vm-boot-finalize-end`
+**Perf marks:** `applyroom-return` → `export-push-end` → `synczedcafeexport-end`
 
 ### Task drop path (heavier)
 
 ```mermaid
 sequenceDiagram
   participant User
-  participant Parent as wanixroom
+  participant Parent as parse_file
   participant Iframe as cafe_wanix
   participant FP as findplayers
 
   User->>Parent: drop findplayers.wasm
-  Parent->>Iframe: ensurewanixtaskroom applyroom
-  par Parallel
-    Parent->>Parent: activatewanixzedcafeexport
-    Parent->>Iframe: putwanixroomfile 3.7MB
-  end
-  Parent->>Iframe: spawntask findplayers
+  Parent->>Iframe: wanixserverdrop
+  Iframe->>Iframe: ensuretaskroomfordrop applyroom
+  Iframe->>Parent: wanixclient requestzedcafestate
+  Parent->>Iframe: wanixserver requestzedcafestate files
+  Iframe->>Iframe: synczedcafeexport push
+  Iframe->>Iframe: writefile plus spawntask
   FP-->>User: JSON array ~6s scan
 ```
 
-Task path adds: sim export fetch, daemon RPCs (avoid `sync-zedcafe-halt` when applyroom
-mount is live), wasm staging, second gojs task, findplayers CPU.
+Task path: iframe owns cold remount + server-initiated export pull, then wasm staging and
+spawn. Parent does not restore `handlewanixdrop`.
 
-**Perf marks:** `drop-start` → `sim-export-fetch-end` → `daemon-export-end` →
-`activate-export-end` → `wasm-write-end` → `spawntask-return`
+**Perf marks:** `applyroom-remount` → `drop-export-pull-end` → `drop-spawntask-end` (soft second drop skips remount)
 
 ### Non-regression gates (mandatory before perf merges)
 
@@ -477,7 +474,7 @@ Warm path (`#wanix vm` first, or second drop after soft idle) skipped remount an
 | **Soft idle** | `#wanix stop` keeps `<wanix-system>`; halts tasks/zedcafe; same `mountkey` |
 | **Warm applyroom** | idle→task/vm reuses system; `ensurezedcafeboot` in iframe |
 | **Export event** | `wanixclient:exportready` after host push; parent continues pipeline |
-| **Parallel staging** | `activatezedcafeexport` ∥ `putwanixroomfile` on wasm drop |
+| **Post-applyroom activate** | `activatewanixzedcafeexport` only after `applyroom` result on cold remount |
 | **No mountkey bump** | First task drop from soft idle does not force remount |
 
 ```text
@@ -640,11 +637,14 @@ Paths that **throw or fail loud** (no silent alternate behavior):
 | Menu iframe timeout | [`wanixroom.ts`](../../device/wanixclient/wanixroom.ts) | `stalled: true`, `vm: null` — no invented VM |
 | Import poll error | `tickzedcafepoll` | `apilog` + `stopzedcafepoll()` |
 
-**Intentional reuse (not fallbacks):** `synczedcafeexportifstale`, soft idle warm apply,
-`tryreuselivezedcafeexport`, `wanixclient:exportready` event (Bucket 2).
+**Intentional reuse (not fallbacks):** soft idle warm apply, daemon reuse via
+`ensurezedcafeboot`, `wanixclient:exportready` event (Bucket 2).
 
-**VM export fetch:** only in `finalizewanixzedcafeaftervmboot` when memory `bookCount === 0`
-and VM is running — explicit branch, errors propagate.
+**VM export fetch:** `activatewanixzedcafeexport` after `applyroom` result pulls sim books
+when main-thread memory is empty — errors propagate. Cold remount clears `lasthostpushdoc`
+so a prior push cannot `sync-stale` skip against an empty remounted guest tree. The parent
+commits room config from the iframe result (`mode` / `mountkey`) so a stomped pending
+apply cannot leave `mode: idle` and skip the push (`pending-export mark`).
 
 ---
 
@@ -652,8 +652,8 @@ and VM is running — explicit branch, errors propagate.
 
 | Capability | Why it works |
 |------------|--------------|
-| **`#wanix vm` + `/zedcafe/`** | VM room → zedcafe gojs boot → host pushes memory export → `wirezedcafeexport` binds `#task/rid/export` into Linux at `/zedcafe/` |
-| **Wasm task drops** | `handlewanixdrop` stands task room, stages `#ramfs/{file}`, spawns with driver from wasm bytes |
+| **`#wanix vm` + `/zedcafe/`** | VM room → zedcafe gojs boot → `wireallguestroots` binds `#task/rid/export` into Linux at `/zedcafe/` → parent activates export push |
+| **Wasm task drops** | iframe `drop` remounts task room if idle, pulls export via `requestzedcafestate`, stages `#ramfs/{file}`, spawns with driver from wasm bytes |
 | **findplayers JSON output** | gojs task + per-task export bind + spawn gate on `stats.json`; scanner walks `./zedcafe/{book}/…` |
 | **greenring board paint** | Same bind; writes allowlisted `board/terrain.json`; import poll → `vm:importzedcafe` → sim apply + re-export |
 | **Guest FS → sim writeback** | 3s export-doc compare poll; guest-dirty suppresses stale host push; deletes mirror guest tree |

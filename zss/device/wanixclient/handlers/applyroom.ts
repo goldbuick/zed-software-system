@@ -2,7 +2,6 @@ import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/messagetypes'
 import { applywanixroomresult } from 'zss/device/wanixclient/wanixroom'
 
-export function handleapplyroom(_device: DEVICE, message: MESSAGE): void {
-  void message
-  applywanixroomresult()
+export function handleapplyroom(device: DEVICE, message: MESSAGE): void {
+  applywanixroomresult(device, message.player, message.data)
 }

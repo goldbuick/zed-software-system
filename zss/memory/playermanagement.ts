@@ -97,8 +97,13 @@ export function memorymoveplayertoboard(
 
   // remove from current board lookups
   memorydeleteboardobjectnamedlookup(currentboard, element)
+
   // hard remove player element
-  delete currentboard.objects[element.id]
+  memorydeleteboardobject(currentboard, element.id)
+
+  // what are we missing here?
+  // need to figure out why we're getting lingering player elements
+  // ?? at least when moving a player to a new board
 
   // add to dest board
   element.x = dest.x
