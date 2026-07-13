@@ -1,6 +1,6 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
 import { vmtapeeditorclose } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import { useEditor, useTape } from 'zss/gadget/data/zustandstores'
 import { isarray } from 'zss/mapping/types'
 

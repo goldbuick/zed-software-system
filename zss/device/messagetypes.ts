@@ -23,29 +23,3 @@ export function ismessage(value: any): value is MESSAGE {
     isstring(value.target)
   )
 }
-
-/** Terminal error line via device emit — worker-safe (no device/api import). */
-export function workerlogerror(
-  device: DEVICELIKE,
-  player: string,
-  kind: string,
-  ...message: any[]
-) {
-  device.emit(player, 'log', [`$red${kind}$blue>>`, ...message])
-  return false
-}
-
-export type TTS_VALIDATE_REPLY =
-  | { ok: true; model: string }
-  | { ok: false; errormsg: string }
-
-export function isttsvalidatereply(
-  value: unknown,
-): value is TTS_VALIDATE_REPLY {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'ok' in value &&
-    typeof (value as TTS_VALIDATE_REPLY).ok === 'boolean'
-  )
-}

@@ -1,5 +1,5 @@
-import type { DEVICELIKE } from 'zss/device/api'
 import { apitoast, vmcli } from 'zss/device/api'
+import type { DEVICELIKE } from 'zss/device/messagetypes'
 import { SOFTWARE } from 'zss/device/session'
 import { storagereadvars, storagewritevar } from 'zss/feature/storage'
 import { terminalbookmarkpindisplaylabel } from 'zss/feature/terminalbookmarkline'

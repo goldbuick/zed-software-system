@@ -1,7 +1,7 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
 import { apitoast, vmclearscroll } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import { modemreadtextsync } from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import {

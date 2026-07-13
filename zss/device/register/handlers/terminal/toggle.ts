@@ -1,7 +1,6 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import { useTape } from 'zss/gadget/data/zustandstores'
-
 export function handleterminaltoggle(device: DEVICE, message: MESSAGE): void {
   void device
   void message

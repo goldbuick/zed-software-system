@@ -1,6 +1,5 @@
 import type { DEVICE } from 'zss/device'
 import {
-  type MESSAGE,
   vmboardrunneraccess,
   vmboardrunnerack,
   vmboardrunnerpaint,
@@ -16,6 +15,7 @@ import {
   resetfirsttick,
 } from 'zss/device/boardrunner/state'
 import { pushworkerupdates, waitformemory } from 'zss/device/boardrunner/sync'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import { normalizelayerzvariant } from 'zss/gadget/graphics/layerz'
 import { MAYBE, isarray, ispresent } from 'zss/mapping/types'
 import { memoryreadplayersonboard } from 'zss/memory/boardaccess'

@@ -1,7 +1,7 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
 import { apierror, registerpublishmem } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import { compressedbookstate } from 'zss/device/vm/helpers'
 import { storageshorturl } from 'zss/feature/storage'
 import { isarray } from 'zss/mapping/types'

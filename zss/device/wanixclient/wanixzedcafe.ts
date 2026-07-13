@@ -1,4 +1,4 @@
-import type { DEVICELIKE, WANIX_ZED_CAFE_IMPORT_RESULT } from 'zss/device/api'
+import type { WANIX_ZED_CAFE_IMPORT_RESULT } from 'zss/device/api'
 import {
   apilog,
   vmexportzedcafe,
@@ -9,6 +9,7 @@ import {
   wanixserversetzedcafeready,
   wanixserversynczedcafeexport,
 } from 'zss/device/api'
+import type { DEVICELIKE } from 'zss/device/messagetypes'
 import {
   type PushZedCafeSyncOptions,
   clearlasthostpushdoc,

@@ -4,8 +4,8 @@ import { ismessage } from 'zss/device/messagetypes'
 import { SOFTWARE } from 'zss/device/session'
 import {
   type WanixReadyCallback,
-  iswanixready as readwanixreadyflag,
   readbridgestate,
+  iswanixready as readwanixreadyflag,
   registerwanixsessioncloseprune as registersessioncloseprune,
   resetwanixattachforidle,
   setwanixreadyflag,

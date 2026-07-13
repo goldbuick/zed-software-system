@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/messagetypes'
 
 import { handleidle } from './idle'
 import { handleinput } from './input'

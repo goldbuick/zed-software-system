@@ -6,12 +6,12 @@ import {
   readattachedsession,
   readwanixactivesession,
 } from 'zss/device/wanixclient/wanixdisplay'
-import { readwanixtasklabel } from 'zss/feature/wanix/wanixmenu'
 import { readwanixroomconfig } from 'zss/device/wanixclient/wanixroom'
 import {
   readwanixtermbuffer,
   readwanixtermbufferkeys,
 } from 'zss/device/wanixclient/wanixtermbuffer'
+import { readwanixtasklabel } from 'zss/feature/wanix/wanixmenu'
 import { DEFAULT_WANIX_VM_ID } from 'zss/feature/wanix/wanixroomtypes'
 
 export function readwanixsessionlabel(sessionkey: string): string {

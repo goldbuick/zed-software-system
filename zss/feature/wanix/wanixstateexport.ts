@@ -1,6 +1,6 @@
 import type { Operation } from 'fast-json-patch'
 import { compare } from 'fast-json-patch'
-import type { DEVICELIKE } from 'zss/device/api'
+import type { DEVICELIKE } from 'zss/device/messagetypes'
 import {
   clearlasthostpushdoc,
   readlasthostpushdoc,
@@ -21,7 +21,6 @@ import {
 } from 'zss/memory/codepageoperations'
 import { memoryreadbooklist, memoryreadoperator } from 'zss/memory/session'
 import type { BOOK, CODE_PAGE } from 'zss/memory/types'
-
 export type WANIX_ZED_CAFE_EXPORT_FILE = {
   path: string
   bytes: Uint8Array

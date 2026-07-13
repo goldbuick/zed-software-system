@@ -1,7 +1,7 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
 import { wanixclientmethodresult } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import { binddrop } from 'zss/device/wanixserver/runtime'
 import type { WanixBindDropPayload } from 'zss/feature/wanix/wanixroomtypes'
 import { ispresent } from 'zss/mapping/types'

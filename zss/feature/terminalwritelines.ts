@@ -1,4 +1,4 @@
-import type { DEVICELIKE } from 'zss/device/api'
+import type { DEVICELIKE } from 'zss/device/messagetypes'
 import { write, writehyperlink } from 'zss/feature/writeui'
 import { iszedlinkline } from 'zss/feature/zsstextui'
 import { scrolllinkunescapefrag } from 'zss/mapping/string'

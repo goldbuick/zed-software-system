@@ -1,12 +1,5 @@
 import Peer, { DataConnection } from 'peerjs'
-import {
-  MESSAGE,
-  apierror,
-  apilog,
-  vmsearch,
-  vmtopic,
-  workstatus,
-} from 'zss/device/api'
+import { apierror, apilog, vmsearch, vmtopic, workstatus } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
 import {
   createforward,
@@ -16,6 +9,7 @@ import {
   shouldforwardonpeerserver,
   shouldforwardservertoclient,
 } from 'zss/device/forward'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import {

@@ -1,5 +1,5 @@
-import { DEVICELIKE, apierror } from 'zss/device/api'
-
+import { apierror } from 'zss/device/api'
+import type { DEVICELIKE } from 'zss/device/messagetypes'
 export function doasync(
   device: DEVICELIKE,
   player: string,

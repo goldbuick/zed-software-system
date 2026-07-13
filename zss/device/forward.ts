@@ -1,7 +1,7 @@
 import { createdevice, parsetarget } from 'zss/device'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import { hub } from 'zss/hub'
 
-import { MESSAGE } from './api'
 import { ismessage } from './messagetypes'
 
 export function createforward(handler: (message: MESSAGE) => void) {

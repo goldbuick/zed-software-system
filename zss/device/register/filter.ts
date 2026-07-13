@@ -1,4 +1,4 @@
-import type { MESSAGE } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import { registerreadplayer } from 'zss/device/registerplayer'
 
 const BROADCAST_TARGETS = new Set([

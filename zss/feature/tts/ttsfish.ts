@@ -1,5 +1,5 @@
-import type { DEVICELIKE, TTS_VALIDATE_REPLY } from 'zss/device/messagetypes'
-import { workerlogerror } from 'zss/device/messagetypes'
+import { apierror } from 'zss/device/api'
+import type { DEVICELIKE } from 'zss/device/messagetypes'
 import {
   FISH_DEFAULT_MODEL,
   describefishconfig,
@@ -8,6 +8,10 @@ import {
   requestfishaudiobytes,
 } from 'zss/feature/tts/fishaudio'
 import { MAYBE, ispresent } from 'zss/mapping/types'
+
+type TTS_VALIDATE_REPLY =
+  | { ok: true; model: string }
+  | { ok: false; errormsg: string }
 
 export const FISH_VOICE_HELP =
   'fish voice = reference_id from fish.audio (use as #tts <id> <phrase>)'
@@ -82,7 +86,7 @@ export async function requestfishaudiobytesforworker(
     model.trim() ? model : FISH_DEFAULT_MODEL,
   )
   if (!result.ok) {
-    workerlogerror(device, player, 'fish tts', result.errormsg)
+    apierror(device, player, 'fish tts', result.errormsg)
     return undefined
   }
   return ispresent(result.bytes) ? result.bytes : undefined

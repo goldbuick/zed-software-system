@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import { boardrunnerboundarypatch } from 'zss/device/vm/boardrunnerboundarysync'
 import {
   boardrunneremitpatch,
@@ -7,7 +7,6 @@ import {
 } from 'zss/device/vm/boardrunnermemorysync'
 import { decodepatchwire } from 'zss/feature/jsonpipe/wire'
 import { isarray } from 'zss/mapping/types'
-
 export function handleboardrunnerpatch(vm: DEVICE, message: MESSAGE): void {
   if (!isarray(message.data)) {
     return

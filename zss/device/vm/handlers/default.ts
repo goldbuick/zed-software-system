@@ -1,6 +1,5 @@
 import { parsetarget } from 'zss/device'
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
 import {
   registercopy,
   vmcli,
@@ -8,6 +7,7 @@ import {
   vmplayermovetoboard,
 } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import { SOFTWARE } from 'zss/device/session'
 import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
 import { lastinputtime } from 'zss/device/vm/state'

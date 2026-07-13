@@ -1,10 +1,10 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
 import {
   type BOUNDARY_DOC,
   memorysyncpipe,
   readworkerboundarypipe,
 } from 'zss/device/boardrunner/state'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import { decodepatchwire } from 'zss/feature/jsonpipe/wire'
 import { isarray, ispresent } from 'zss/mapping/types'
 import { memoryboundaryget, memoryboundaryset } from 'zss/memory/boundaries'

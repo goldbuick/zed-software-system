@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import {
   markzipfilelistitem,
   readzipfilelist,
@@ -9,7 +9,6 @@ import { zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
 import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { NAME } from 'zss/words/types'
-
 registerhyperlinksharedbridge(
   'zipfilelist',
   'select',

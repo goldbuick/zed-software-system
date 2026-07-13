@@ -1,5 +1,5 @@
 import { createdevice, createmessage } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import {
   disposesttengine,
   ensuresttengine,
@@ -8,7 +8,6 @@ import {
 import { enqueuesttjob } from 'zss/feature/stt/sttjobqueue'
 import { STT_MODEL_ID } from 'zss/feature/stt/sttpreset'
 import { isarray, isnumber } from 'zss/mapping/types'
-
 function replydisposeack(message: MESSAGE, requestid?: string) {
   if (typeof requestid === 'string') {
     self.postMessage(

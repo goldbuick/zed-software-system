@@ -1,5 +1,6 @@
+import type { MESSAGE } from 'zss/device/messagetypes'
+
 import { DEVICE, createmessage, parsetarget } from './device'
-import { MESSAGE } from './device/api'
 import { runtickbatched } from './gadget/runtickbatched'
 import { NAME } from './words/types'
 

@@ -1,6 +1,8 @@
+import type { MESSAGE } from 'zss/device/messagetypes'
+
 import boardrunnerspace from './boardrunnerspace??worker'
 import { createmessage } from './device'
-import { MESSAGE, sessionreset } from './device/api'
+import { sessionreset } from './device/api'
 import {
   createforward,
   shouldforwardclienttoboardrunner,

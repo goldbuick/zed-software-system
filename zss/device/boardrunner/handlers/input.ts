@@ -1,11 +1,11 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
 import {
   assignedboundaries,
   playersonassignedboard,
   readworkerboundarypipe,
 } from 'zss/device/boardrunner/state'
 import { pushworkerupdates, waitformemory } from 'zss/device/boardrunner/sync'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import { INPUT } from 'zss/gadget/data/types'
 import { isarray, ispresent } from 'zss/mapping/types'
 import { memoryboundaryget } from 'zss/memory/boundaries'

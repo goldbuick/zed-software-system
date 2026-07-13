@@ -1,6 +1,6 @@
 import { objectKeys } from 'ts-extras'
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import {
   STATS_BOARD,
   STATS_BOOLEAN,
@@ -26,7 +26,6 @@ import { collisionconsts } from 'zss/words/collision'
 import { colorconsts } from 'zss/words/colorconsts'
 import { DIR_CONSTS } from 'zss/words/dir'
 import { ARG_TYPE } from 'zss/words/types'
-
 const dirmods = [
   'cw',
   'ccw',

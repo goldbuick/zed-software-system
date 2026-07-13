@@ -1,6 +1,6 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
 import { wanixclientexportstate } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import { buildzedcafeexportfiles } from 'zss/feature/wanix/wanixstateexport'
 import { validatezedcafeexportpaths } from 'zss/feature/wanix/zedcafetreeschema'
 

@@ -1,11 +1,11 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
 import {
   apilog,
   boardrunnerlinkdead,
   registerinspector,
   registerloginready,
 } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import {
   boardrunnerassignmentvalid,
   boardrunnerelect,

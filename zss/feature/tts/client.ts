@@ -8,7 +8,6 @@ import {
   synthaudiobuffer,
 } from 'zss/device/api'
 import type { DEVICELIKE } from 'zss/device/messagetypes'
-import { isttsvalidatereply } from 'zss/device/messagetypes'
 import { SOFTWARE } from 'zss/device/session'
 import { storagewritekey } from 'zss/feature/loginstorage'
 import { storagereadconfigstring } from 'zss/feature/storage'
@@ -25,6 +24,19 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 let ttsengine: TTS_ENGINE = 'piper'
 let ttsconfig = ''
 let ttsmodel = ''
+
+type TTS_VALIDATE_REPLY =
+  | { ok: true; model: string }
+  | { ok: false; errormsg: string }
+
+function isttsvalidatereply(value: unknown): value is TTS_VALIDATE_REPLY {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'ok' in value &&
+    typeof (value as TTS_VALIDATE_REPLY).ok === 'boolean'
+  )
+}
 
 async function awaitworkerreply<T>(
   _player: string,

@@ -1,5 +1,6 @@
 import ErrorStackParser from 'error-stack-parser'
 import { debugingest } from 'zss/debugingest'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import {
   type GeneratorBuild,
   type GeneratorFunc,
@@ -7,7 +8,7 @@ import {
 import { GENERATED_FILENAME } from 'zss/feature/lang/backend/typescript/transformer'
 
 import { RUNTIME } from './config'
-import { MESSAGE, apierror, chipmessage } from './device/api'
+import { apierror, chipmessage } from './device/api'
 import { SOFTWARE } from './device/session'
 import {
   DRIVER_TYPE,

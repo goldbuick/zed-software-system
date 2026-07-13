@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import { handlegadgetdesync } from 'zss/device/vm/gadgetsynctick'
 
 import { handleadmin } from './admin'

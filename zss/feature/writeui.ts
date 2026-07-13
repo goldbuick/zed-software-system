@@ -1,4 +1,5 @@
-import { DEVICELIKE, apilog, registerterminalfull } from 'zss/device/api'
+import { apilog, registerterminalfull } from 'zss/device/api'
+import type { DEVICELIKE } from 'zss/device/messagetypes'
 import { qrlines } from 'zss/mapping/qr'
 
 /**

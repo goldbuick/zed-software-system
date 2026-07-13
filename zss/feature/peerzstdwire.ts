@@ -1,7 +1,6 @@
 import { compress, decompress } from '@bokuweb/zstd-wasm'
 import { pack, unpack } from 'msgpackr'
-import type { MESSAGE } from 'zss/device/api'
-
+import type { MESSAGE } from 'zss/device/messagetypes'
 /** Interactive peer wire; books use 15 in memorycompressbooks. */
 const PEER_WIRE_ZSTD_LEVEL = 3
 

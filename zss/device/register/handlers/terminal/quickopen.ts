@@ -1,12 +1,11 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import {
   TAPE_DISPLAY,
   useTape,
   useTerminal,
 } from 'zss/gadget/data/zustandstores'
 import { isstring } from 'zss/mapping/types'
-
 export function handleterminalquickopen(
   _device: DEVICE,
   message: MESSAGE,

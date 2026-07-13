@@ -1,11 +1,11 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
 import {
   registerbookmarkdelete,
   registerbookmarkurlnavigate,
   registerbookmarkurlsave,
   vmclearscroll,
 } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import { SOFTWARE } from 'zss/device/session'
 import { normalizebookmarks } from 'zss/feature/bookmarks'
 import { isarray, isstring } from 'zss/mapping/types'

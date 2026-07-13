@@ -1,9 +1,8 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import { boardrunnertrackaccess } from 'zss/device/vm/boardrunnermanagement'
 import { isarray, ispresent } from 'zss/mapping/types'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
-
 export function handleboardrunneraccess(_vm: DEVICE, message: MESSAGE): void {
   if (!isarray(message.data)) {
     return

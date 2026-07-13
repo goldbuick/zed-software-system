@@ -1,6 +1,6 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
 import { boardrunnerpaint, wanixclientimportresult } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import { boardrunnerboundarypaint } from 'zss/device/vm/boardrunnerboundarysync'
 import { boardrunneraccessfor } from 'zss/device/vm/boardrunnermanagement'
 import { boardrunners } from 'zss/device/vm/state'

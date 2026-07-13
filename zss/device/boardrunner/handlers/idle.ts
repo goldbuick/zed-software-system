@@ -1,9 +1,10 @@
 import type { DEVICE } from 'zss/device'
-import { type MESSAGE, workstatus } from 'zss/device/api'
+import { workstatus } from 'zss/device/api'
 import {
   assignedboundaries,
   resetmemorysyncaccess,
 } from 'zss/device/boardrunner/state'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import { isstring } from 'zss/mapping/types'
 import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {

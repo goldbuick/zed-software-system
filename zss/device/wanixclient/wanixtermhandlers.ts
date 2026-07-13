@@ -1,5 +1,5 @@
-import type { DEVICELIKE } from 'zss/device/api'
 import { apilog } from 'zss/device/api'
+import type { DEVICELIKE } from 'zss/device/messagetypes'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import { ispresent } from 'zss/mapping/types'
 

@@ -1,9 +1,9 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
 import {
   memorysyncpipe,
   readworkerboundarypipe,
 } from 'zss/device/boardrunner/state'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import { isarray } from 'zss/mapping/types'
 import { memoryboundaryset } from 'zss/memory/boundaries'
 import { memoryreadroot } from 'zss/memory/session'

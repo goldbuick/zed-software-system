@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import { terminaladdlog } from 'zss/device/register/helpers/terminallog'
 import {
   readtoasttimer,
@@ -9,7 +9,6 @@ import {
 } from 'zss/device/register/state'
 import { useGadgetClient, useTape } from 'zss/gadget/data/zustandstores'
 import { ispresent, isstring } from 'zss/mapping/types'
-
 export function handlelog(_device: DEVICE, message: MESSAGE): void {
   terminaladdlog(message)
 }

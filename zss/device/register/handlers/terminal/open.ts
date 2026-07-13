@@ -1,8 +1,7 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import { useTape, useTerminal } from 'zss/gadget/data/zustandstores'
 import { isstring } from 'zss/mapping/types'
-
 export function handleterminalopen(_device: DEVICE, message: MESSAGE): void {
   if (isstring(message.data)) {
     const buffer = useTerminal.getState().buffer

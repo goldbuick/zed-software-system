@@ -1,12 +1,12 @@
 import type { DEVICE } from 'zss/device'
 import {
-  type MESSAGE,
   apilog,
   boardrunneridle,
   registerloginready,
   vmclearscroll,
 } from 'zss/device/api'
 import { pushworkerupdates } from 'zss/device/boardrunner/sync'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import { ispresent, isstring } from 'zss/mapping/types'
 import {
   memorylogoutplayer,

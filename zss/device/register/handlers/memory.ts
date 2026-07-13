@@ -1,7 +1,7 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
 import { apierror, workstatus } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import { itchiopublish } from 'zss/feature/itchiopublish'
 import { storagenukecontent, storagewritecontent } from 'zss/feature/storage'
 import { znsset } from 'zss/feature/url'

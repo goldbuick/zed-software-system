@@ -9,7 +9,6 @@ import { createforward, shouldforwardwanixtoclient } from 'zss/device/forward'
 import { ismessage } from 'zss/device/messagetypes'
 import { SOFTWARE } from 'zss/device/session'
 import { resolvedriverforwasm } from 'zss/device/wanixserver/spawndriver'
-import { uniquewanixtaskid } from 'zss/device/wanixserver/wanixcmd'
 import {
   type TermSession,
   type WanixSessionEvent,
@@ -47,6 +46,7 @@ import {
   WANIX_TERM_BRIDGE_PONG,
   trackwanixtermlinebuf,
 } from 'zss/device/wanixserver/termbridgesmoke'
+import { uniquewanixtaskid } from 'zss/device/wanixserver/wanixcmd'
 import {
   appendguestexportbind,
   collectzedcafeexportfiles,
@@ -133,15 +133,10 @@ const termencoder = new TextEncoder()
 const termdecoder = new TextDecoder()
 
 let pendingsynczedcaferemovepaths: string[] | null = null
-let pendingrequestzedcafeexport:
-  | {
-      resolve: (result: {
-        ok: boolean
-        taskrid: string | null
-      }) => void
-      timer: ReturnType<typeof setTimeout>
-    }
-  | null = null
+let pendingrequestzedcafeexport: {
+  resolve: (result: { ok: boolean; taskrid: string | null }) => void
+  timer: ReturnType<typeof setTimeout>
+} | null = null
 
 function settlependingrequestzedcafeexport(result: {
   ok: boolean

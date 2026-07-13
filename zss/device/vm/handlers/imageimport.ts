@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import {
   IMAGE_IMPORT_MAX_COLS,
   IMAGE_IMPORT_MAX_ROWS,
@@ -13,7 +13,6 @@ import {
 } from 'zss/feature/parse/image'
 import { zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
-
 export function handlereadimageimport(_vm: DEVICE, message: MESSAGE): void {
   const pending = readstagedimage()
   const lines: string[] = []

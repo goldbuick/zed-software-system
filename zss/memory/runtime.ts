@@ -1,5 +1,6 @@
 import { objectKeys } from 'ts-extras'
-import { MESSAGE, synthplay } from 'zss/device/api'
+import { synthplay } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import { SOFTWARE } from 'zss/device/session'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
 import { createchipid, ispid } from 'zss/mapping/guid'

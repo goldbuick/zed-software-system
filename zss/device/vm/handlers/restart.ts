@@ -1,6 +1,6 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
 import { vmflush } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
 import { memoryrestartallchipsandflags } from 'zss/memory/runtime'
 import { memoryreadoperator } from 'zss/memory/session'

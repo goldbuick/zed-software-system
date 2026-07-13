@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import { continuerequestzedcafestate } from 'zss/device/wanixserver/runtime'
 import type { WanixZedCafeGuestFile } from 'zss/feature/wanix/wanixzedcafetypes'
 

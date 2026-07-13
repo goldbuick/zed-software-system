@@ -115,7 +115,10 @@ export function applywanixroomresult(
   const config = readwanixroomconfig()
   const mode = typeof res?.mode === 'string' ? res.mode : config.mode
   // Iframe applyroom replies often arrive with empty player (see filter.ts).
-  const activateplayer = player || registerreadplayer()
+  const activateplayer =
+    typeof player === 'string' && player.length > 0
+      ? player
+      : registerreadplayer()
   const activatedevice = device ?? SOFTWARE
   const zedcafecmd =
     config.zedcafe?.cmd ??

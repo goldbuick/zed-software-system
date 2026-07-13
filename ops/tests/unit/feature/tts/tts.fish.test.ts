@@ -16,8 +16,8 @@ jest.mock('zss/feature/tts/fishaudio', () => ({
   requestfishaudiobytes: jest.fn(),
 }))
 
-jest.mock('zss/device/messagetypes', () => ({
-  workerlogerror: jest.fn(),
+jest.mock('zss/device/api', () => ({
+  apierror: jest.fn(),
 }))
 
 describe('tts fish', () => {

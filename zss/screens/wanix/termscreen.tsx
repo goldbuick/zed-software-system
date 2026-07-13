@@ -6,11 +6,11 @@ import type {
   WanixTermCellPos,
   WanixTermTileBuffer,
 } from 'zss/device/wanixclient/state'
+import { useWanixClient } from 'zss/device/wanixclient/wanixclientstore'
 import {
   cyclewanixattachedsession,
   detachwanixterm,
 } from 'zss/device/wanixclient/wanixdisplay'
-import { useWanixClient } from 'zss/device/wanixclient/wanixclientstore'
 import { readwanixsessionlabel } from 'zss/device/wanixclient/wanixsessionmeta'
 import {
   readwanixtermbuffer,
@@ -387,8 +387,7 @@ export function WanixTermScreen() {
       clearsel()
     }
     const payload = encodekeyboard(event)
-    const targetkey =
-      sessionkey ?? useWanixClient.getState().attachedsessionkey
+    const targetkey = sessionkey ?? useWanixClient.getState().attachedsessionkey
     if (payload != null && targetkey) {
       event.preventDefault()
       wanixservertermwrite(SOFTWARE, registerreadplayer(), payload, targetkey)
