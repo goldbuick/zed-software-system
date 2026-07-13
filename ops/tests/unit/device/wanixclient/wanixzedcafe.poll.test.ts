@@ -41,6 +41,7 @@ jest.mock('zss/feature/wanix/zedcafetreeschema', () => ({
 
 import { wanixserverreadzedcafetaskrid } from 'zss/device/api'
 import {
+  kickzedcafepoll,
   resetwanixzedcafefortest,
   startzedcafepoll,
   stopzedcafepoll,
@@ -76,5 +77,16 @@ describe('zedcafe import poll', () => {
     await jest.advanceTimersByTimeAsync(3_000)
     expect(mockreadrid).toHaveBeenCalledWith(device, player)
     expect(readzedcafepollactive()).toBe(true)
+  })
+
+  it('kickzedcafepoll emits immediately when idle mid-interval', () => {
+    startzedcafepoll(device, player)
+    kickzedcafepoll()
+    expect(mockreadrid).toHaveBeenCalledWith(device, player)
+  })
+
+  it('kickzedcafepoll no-ops when poll inactive', () => {
+    kickzedcafepoll()
+    expect(mockreadrid).not.toHaveBeenCalled()
   })
 })

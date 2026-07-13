@@ -687,9 +687,9 @@ apply cannot leave `mode: idle` and skip the push (`pending-export mark`).
 
 **findplayers task term:** one line JSON array starting with `["{book}/{page}/…/objects/pid_…json",…]`
 
-**greenring task term:** `{"painted":N}` after writing terrain rings; board tiles update after import poll.
+**greenring task term:** `{"painted":N}` after writing terrain rings; board tiles update via the import poll after drop (dropdone kicks one poll cycle — it does **not** host-push activate-export, which would wipe guest paints).
 
-**Dev console:** `[wanix-perf] export-push-end` then `[wanix-perf] spawntask-return` with no
+**Dev console:** after greenring, expect `zedcafe import: synced …` (not an immediate post-drop `activate-export-start` wipe). `[wanix-perf] export-push-end` then `[wanix-perf] spawntask-return` with no
 `LinkError` or `postwanixexportmessage is not defined`.
 
 ---

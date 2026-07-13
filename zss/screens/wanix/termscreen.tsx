@@ -50,7 +50,7 @@ const HINT_CLIPBOARD = ismac
 const HINT_IDLE = `Ctrl+\\ open detach menu, Ctrl+Esc close tape, ${HINT_SCROLLBACK_ROWS}, ${HINT_CLIPBOARD}`
 const HINT_ARMED = `Ctrl+\\ to detach, left/right to switch sessions`
 const HINT_COLOR = COLOR.BLACK
-const HINT_MARQUEE_GAP = '   ·   '
+const HINT_MARQUEE_GAP = '$32$7$32'
 
 const SELECTION_ARROW_KEYS = new Set([
   'arrowleft',

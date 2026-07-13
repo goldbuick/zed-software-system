@@ -23,6 +23,7 @@ import {
 import { activatewanixzedcafeexport } from 'zss/device/wanixclient/wanixactivateexport'
 import { registerwanixsessioncloseprune } from 'zss/device/wanixclient/wanixbridge'
 import {
+  kickzedcafepoll,
   readwanixbootzedcafestate,
   resetwanixzedcafeonidle,
 } from 'zss/device/wanixclient/wanixzedcafe'
@@ -413,7 +414,9 @@ export function applywanixdropdone(
   if (typeof result.taskid === 'string') {
     apilog(device, player, `wanix drop done task=${result.taskid}`)
   }
-  void activatewanixzedcafeexport(device, player)
+  // Guest writers (greenring) update zedcafe on the guest; a host activate-export
+  // here would push unpainted sim memory and wipe those paints. Kick import poll instead.
+  kickzedcafepoll()
 }
 
 export function startwanixvm(

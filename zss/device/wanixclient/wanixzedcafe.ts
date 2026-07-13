@@ -701,6 +701,11 @@ function tickzedcafepoll() {
   wanixserverreadzedcafetaskrid(polldevice, readpollplayer())
 }
 
+/** One-shot import poll tick after guest writers (e.g. greenring drop). No-ops if idle or already mid-poll. */
+export function kickzedcafepoll(): void {
+  tickzedcafepoll()
+}
+
 async function continuepollaftertree(
   device: DEVICELIKE,
   player: string,

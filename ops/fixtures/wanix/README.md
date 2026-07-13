@@ -174,7 +174,7 @@ Same stand-up as findplayers. Drop `greenring.wasm` with players on a board:
 
 1. Waits for export content, scans for onboard players with coordinates.
 2. Writes allowlisted `board/terrain.json` cells (green ring, Chebyshev radius 1) under each player’s book/page.
-3. Within ~one import poll cycle (`WANIX_ZEDCAFE_IMPORT_POLL_MS` = 3s), the host imports into the sim worker and the board updates in cafe.
+3. Dropdone kicks one import-poll cycle (no host activate-export wipe). Host imports into the sim worker and the board updates in cafe.
 
 ### Headed export validator
 
