@@ -52,7 +52,7 @@ Separate document (iframe or navigation to `/wanix.html`) = clean `window` per r
 | Iframe boot | [`cafe/wanix.ts`](../../cafe/wanix.ts) → `zss/device/wanixserver/runtime` + `zss/device/wanixserver` |
 | Term I/O | `#task/<id>/term/data` and `#vm/…/term/data` **streams** (`openReadable` / `openWritable`) — not `<wanix-term>` |
 | Term sizing | `_updateTerminals` shim + `termfit` RPC from parent (`WanixTermSizeSync`) |
-| Cafe ↔ Wanix bridge | Parent: `wanixclient/wanixbridge` + `wanixhost`; child: `wanixserver` device bus / `postMessage` |
+| Cafe ↔ Wanix bridge | Parent: `screens/wanix/host` + `wanixclient/wanixbridge`; child: `wanixserver` device bus / `postMessage` |
 | JSX types for Wanix tags | [`zss/feature/wanix/wanixelements.d.ts`](../../zss/feature/wanix/wanixelements.d.ts) — upstream typings only; runtime does not use `<wanix-term>` |
 
 ## Examples

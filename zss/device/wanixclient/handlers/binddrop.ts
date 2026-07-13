@@ -1,6 +1,6 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/messagetypes'
 import { apilog } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import { ispresent } from 'zss/mapping/types'
 
 /** Iframe RESULT after binddrop — updates parent display/logs. */

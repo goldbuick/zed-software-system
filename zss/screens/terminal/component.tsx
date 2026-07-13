@@ -1,12 +1,8 @@
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import { useLayoutEffect, useMemo, useState } from 'react'
 import { chipmessage, vmcli } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
-import {
-  readattachedsession,
-  subscribewanixattach,
-} from 'zss/device/wanixclient/wanixdisplay'
 import { storagereadconfig } from 'zss/feature/storage'
 import { useTape, useTerminal } from 'zss/gadget/data/zustandstores'
 import { useWriteText } from 'zss/gadget/writetext'
@@ -19,13 +15,12 @@ import {
   readlogrowtotalheight,
   readterminallayout,
 } from 'zss/screens/terminal/terminallayout'
+import { WanixTerminalLayer } from 'zss/screens/wanix/terminallayer'
 import { textformatreadedges } from 'zss/words/textformat'
 import { useShallow } from 'zustand/react/shallow'
 
 import { TerminalInput } from './input'
 import { TerminalRows } from './rows'
-import { WanixTermScreen } from './wanixtermscreen'
-import { WanixTermSizeSync } from './wanixtermsizesync'
 
 export function TerminalComponent() {
   const player = registerreadplayer()
@@ -35,11 +30,6 @@ export function TerminalComponent() {
   const sessionlogs = useTape((state) => state.terminal.logs)
 
   const [voice2text, setvoice2text] = useState<MAYBE<boolean>>(undefined)
-  const [attachedsession, setattachedsession] = useState(readattachedsession)
-  useEffect(
-    () => subscribewanixattach(() => setattachedsession(readattachedsession())),
-    [],
-  )
   useLayoutEffect(() => {
     doasync(SOFTWARE, registerreadplayer(), async () => {
       const voice2text = await storagereadconfig('voice2text')
@@ -97,19 +87,24 @@ export function TerminalComponent() {
 
   return (
     <>
-      <WanixTermSizeSync />
       <TapeBackPlate />
       <TapeTerminalContext.Provider value={tapecontextvalue}>
-        {attachedsession ? <WanixTermScreen /> : <TerminalRows />}
-        {!editoropen && !attachedsession && voice2text !== undefined && (
-          <TerminalInput
-            terminalmode={terminalmode}
-            voice2text={voice2text}
-            tapeycursor={tapeycursor}
-            logrowtotalheight={logrowtotalheight}
-            logzoneheight={layout.logzoneheight}
-          />
-        )}
+        <WanixTerminalLayer
+          unattached={(attached) => (
+            <>
+              <TerminalRows />
+              {!editoropen && !attached && voice2text !== undefined && (
+                <TerminalInput
+                  terminalmode={terminalmode}
+                  voice2text={voice2text}
+                  tapeycursor={tapeycursor}
+                  logrowtotalheight={logrowtotalheight}
+                  logzoneheight={layout.logzoneheight}
+                />
+              )}
+            </>
+          )}
+        />
       </TapeTerminalContext.Provider>
     </>
   )

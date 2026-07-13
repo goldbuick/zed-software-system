@@ -2,6 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { registerterminalclose, wanixservertermwrite } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
+import type {
+  WanixTermCellPos,
+  WanixTermTileBuffer,
+} from 'zss/device/wanixclient/state'
 import {
   cyclewanixattachedsession,
   detachwanixterm,
@@ -15,10 +19,6 @@ import {
   readwanixtermnotifyversion,
   subscribewanixtermbuffer,
 } from 'zss/device/wanixclient/wanixtermbuffer'
-import type {
-  WanixTermCellPos,
-  WanixTermTileBuffer,
-} from 'zss/device/wanixclient/state'
 import {
   cellinwanixtermselection,
   extractwanixtermselectiontext,

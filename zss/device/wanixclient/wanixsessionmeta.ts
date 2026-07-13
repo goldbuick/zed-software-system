@@ -1,5 +1,3 @@
-import { DEFAULT_WANIX_VM_ID } from 'zss/feature/wanix/wanixroomtypes'
-
 import type {
   WanixSessionMeta,
   WanixTermTileBuffer,
@@ -14,6 +12,7 @@ import {
   readwanixtermbuffer,
   readwanixtermbufferkeys,
 } from 'zss/device/wanixclient/wanixtermbuffer'
+import { DEFAULT_WANIX_VM_ID } from 'zss/feature/wanix/wanixroomtypes'
 
 export function readwanixsessionlabel(sessionkey: string): string {
   const room = readwanixroomconfig()

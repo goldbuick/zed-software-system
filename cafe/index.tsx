@@ -5,7 +5,6 @@ import { register } from 'zss/device/register'
 import { registersetmyplayerid } from 'zss/device/register/player'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import 'zss/device/wanixclient'
-import { WanixHost } from 'zss/device/wanixclient/wanixhost'
 import { isclimode } from 'zss/feature/detect'
 import {
   durablehydratefromdisk,
@@ -13,6 +12,7 @@ import {
 } from 'zss/feature/durablecli'
 import { isjoin } from 'zss/feature/url'
 import { createplatform } from 'zss/platform'
+import { WanixHost } from 'zss/screens/wanix/host'
 
 import { CafeCanvas } from './cafecanvas'
 import { WebGLCheck } from './webglcheck'

@@ -2,7 +2,6 @@
  * Parent UI display for wanix sessions (attach, tape, session MESSAGE).
  */
 
-import { useTape } from 'zss/gadget/data/zustandstores'
 import {
   bumpattach,
   readattachedsession as readattachedsessionstate,
@@ -10,17 +9,18 @@ import {
   readuserdetached,
   readwanixactivesession as readwanixactivesessionstate,
   registerwanixsessioncloseprune as registersessioncloseprune,
+  resetwanixattachforidle as resetattachforidle,
+  resetwanixattachstatefortest as resetattachstatefortest,
   setattachedsessionkey,
   setuserdetached,
   setwanixactivesessionkey,
-  resetwanixattachforidle as resetattachforidle,
-  resetwanixattachstatefortest as resetattachstatefortest,
   subscribewanixattach as subscribeattach,
 } from 'zss/device/wanixclient/state'
 import {
   registerwanixtermsessionopen,
   unregisterwanixtermsession,
 } from 'zss/device/wanixclient/wanixtermbuffer'
+import { useTape } from 'zss/gadget/data/zustandstores'
 
 export function readwanixactivesession(): string | null {
   return readwanixactivesessionstate()

@@ -1,10 +1,9 @@
 import { useEffect, useRef } from 'react'
-
 import {
   bindwanixparentmessage,
   clearwanixchildwindowifcurrent,
   setwanixchildwindow,
-} from './wanixbridge'
+} from 'zss/device/wanixclient/wanixbridge'
 
 const SHOW = false
 const GHOST = true

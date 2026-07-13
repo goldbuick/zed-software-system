@@ -169,6 +169,36 @@ This document categorizes and summarizes all exported functions, types, constant
 
 ---
 
+## Wanix Screen Components
+
+Parent-realm React UI for the Wanix iframe bridge and attached terminal mirror.
+
+### `wanix/host.tsx`
+
+- **`WanixHost()`**
+  - Ghost iframe mounting `/wanix.html`
+  - Binds `contentWindow` to `wanixclient/wanixbridge` on load
+
+### `wanix/termscreen.tsx`
+
+- **`WanixTermScreen()`**
+  - Attached-session term mirror (tiles, scrollback, selection, hint bar)
+  - Keyboard input and clipboard routed to guest via `wanixservertermwrite`
+
+### `wanix/termsizesync.tsx`
+
+- **`WanixTermSizeSync()`**
+  - Debounced `termfit` push when tape layout changes
+  - Renders nothing (`null`)
+
+### `wanix/terminallayer.tsx`
+
+- **`WanixTerminalLayer(props)`**
+  - Attach subscription, size sync, and attached/unattached switch
+  - Props: `unattached(attached: boolean) => ReactNode` for log rows + input when detached
+
+---
+
 ## 4. Editor Components
 
 See **`editor/syntax-highlighting.md`** for how colored syntax highlighting is implemented (token pipeline, ZSS_COLOR_MAP, word/music coloring, and index-based clipping).
@@ -503,6 +533,10 @@ See **`editor/syntax-highlighting.md`** for how colored syntax highlighting is i
 | **Terminal** | `terminal/component.tsx` | `TapeTerminal()` - Terminal container |
 | | `terminal/item.tsx` | `TapeTerminalItem()`, `TapeTerminalActiveItem()` |
 | | `terminal/*.tsx` | Terminal action components (runit, copyit, openit, etc.) |
+| **Wanix** | `wanix/host.tsx` | `WanixHost()` - Ghost iframe host |
+| | `wanix/termscreen.tsx` | `WanixTermScreen()` - Attached term mirror |
+| | `wanix/termsizesync.tsx` | `WanixTermSizeSync()` - Term grid size sync |
+| | `wanix/terminallayer.tsx` | `WanixTerminalLayer()` - Terminal attach wrapper |
 | **Editor** | `editor/component.tsx` | `TapeEditor()` - Code editor |
 | | `editor/*.tsx` | Editor UI components (rows, input, frame) |
 | **Tape** | `tape/layout.tsx` | `TapeLayout()` - Layout component |

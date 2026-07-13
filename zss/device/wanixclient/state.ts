@@ -5,14 +5,14 @@
 
 import type { WANIX_ZED_CAFE_IMPORT_RESULT } from 'zss/device/api'
 import type { DEVICELIKE, MESSAGE } from 'zss/device/messagetypes'
-import type { WANIX_ZED_CAFE_EXPORT_FILE } from 'zss/feature/wanix/wanixstateexport'
-import type { WanixTermCellsSnapshot } from 'zss/feature/wanix/wanixtermgridstate'
 import type {
   WanixMenuVmStatus,
   WanixRoomConfig,
   WanixRoomStatus,
 } from 'zss/feature/wanix/wanixroomtypes'
 import { createidleroomconfig } from 'zss/feature/wanix/wanixroomtypes'
+import type { WANIX_ZED_CAFE_EXPORT_FILE } from 'zss/feature/wanix/wanixstateexport'
+import type { WanixTermCellsSnapshot } from 'zss/feature/wanix/wanixtermgridstate'
 import { deepcopy } from 'zss/mapping/types'
 
 // --- types ---
@@ -427,9 +427,7 @@ export function readpendingexportwait(): VmZedCafeExportWaiter | null {
   return pendingexportwait
 }
 
-export function setpendingexportwait(
-  next: VmZedCafeExportWaiter | null,
-): void {
+export function setpendingexportwait(next: VmZedCafeExportWaiter | null): void {
   pendingexportwait = next
 }
 
@@ -437,9 +435,7 @@ export function readpendingimportwait(): VmZedCafeImportWaiter | null {
   return pendingimportwait
 }
 
-export function setpendingimportwait(
-  next: VmZedCafeImportWaiter | null,
-): void {
+export function setpendingimportwait(next: VmZedCafeImportWaiter | null): void {
   pendingimportwait = next
 }
 

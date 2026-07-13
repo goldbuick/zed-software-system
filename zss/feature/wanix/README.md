@@ -68,7 +68,7 @@ boundary — no shared DOM.
 
 | Side | Entry | Owns |
 |------|--------|------|
-| **Parent** | `wanixclient/wanixhost` mounts ghost iframe; `wanixbridge` message bridge | Room config, drop routing, export file tree from memory, attach state, term grid snapshots |
+| **Parent** | `screens/wanix/host` mounts ghost iframe; `wanixclient/wanixbridge` message bridge | Room config, drop routing, export file tree from memory, attach state, term grid snapshots |
 | **Iframe** | `cafe/wanix.ts` → `device/wanixserver/runtime` on `/wanix.html` | `<wanix-system>`, VM/task elements, term byte pumps, zedcafe gojs boot, `#ramfs` writes |
 
 ```text
@@ -525,7 +525,7 @@ Helpers: `wanixserver*` / `wanixclient*` in [`api.ts`](../../device/api.ts).
 | [`handlers/`](../../device/wanixclient/handlers/) (`registry.ts`, `cells`, `ready`, `exportready`, …) | `wanixclient:*` device handlers |
 | [`wanixdisplay.ts`](../../device/wanixclient/wanixdisplay.ts) | Attach / active session / tape reveal |
 | [`wanixtermbuffer.ts`](../../device/wanixclient/wanixtermbuffer.ts) (+ clipboard/scroll/text/handlers) | Parent term UI |
-| [`wanixhost.tsx`](../../device/wanixclient/wanixhost.tsx) / [`wanixbridge.ts`](../../device/wanixclient/wanixbridge.ts) | Ghost iframe + parent message bridge |
+| [`host.tsx`](../../screens/wanix/host.tsx) / [`wanixbridge.ts`](../../device/wanixclient/wanixbridge.ts) | Ghost iframe + parent message bridge |
 | [`wanixroom.ts`](../../device/wanixclient/wanixroom.ts) | Room config, drop emit wrappers, VM/task API |
 | [`wanixzedcafe.ts`](../../device/wanixclient/wanixzedcafe.ts) | Parent zedcafe daemon / push / import poll |
 | [`handlers/exportready.ts`](../../device/wanixclient/handlers/exportready.ts) | Parent export-ready continuation |

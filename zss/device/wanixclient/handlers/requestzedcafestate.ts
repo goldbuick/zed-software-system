@@ -1,7 +1,7 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/messagetypes'
 import { wanixserverrequestzedcafestate } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
+import type { MESSAGE } from 'zss/device/messagetypes'
 import { SOFTWARE } from 'zss/device/session'
 import { memoryreadoperator } from 'zss/memory/session'
 

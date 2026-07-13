@@ -2,14 +2,14 @@ import { createmessage } from 'zss/device'
 import type { MESSAGE } from 'zss/device/messagetypes'
 import { ismessage } from 'zss/device/messagetypes'
 import { SOFTWARE } from 'zss/device/session'
-import { isdevbuild } from 'zss/feature/devbuild'
 import {
+  type WanixReadyCallback,
   readbridgestate,
   registerwanixsessioncloseprune as registersessioncloseprune,
   resetwanixattachforidle,
-  type WanixReadyCallback,
 } from 'zss/device/wanixclient/state'
 import { clearwanixtermbuffers } from 'zss/device/wanixclient/wanixtermbuffer'
+import { isdevbuild } from 'zss/feature/devbuild'
 
 function resetready() {
   const state = readbridgestate()

@@ -1,6 +1,5 @@
-import { digestwanixtermcells } from 'zss/feature/wanix/wanixtermgridstate'
-import type { WanixTermCellsSnapshot } from 'zss/feature/wanix/wanixtermgridstate'
 import {
+  type WanixTermTileBuffer,
   addopensession,
   bumptermbuffer,
   clearwanixtermbuffersstore,
@@ -8,15 +7,16 @@ import {
   deletewanixtermbuffer,
   hasopensession,
   readopensessions,
+  readwanixtermbufferkeys as readtermbufferkeysstate,
   readtermbuffers,
   readwanixtermbuffer as readtermbufferstate,
-  readwanixtermbufferkeys as readtermbufferkeysstate,
   readwanixtermnotifyversion as readtermnotifyversionstate,
   resetwanixtermbufferfortest as resettermbufferfortest,
   setwanixtermbuffer,
   subscribewanixtermbuffer as subscribetermbuffer,
-  type WanixTermTileBuffer,
 } from 'zss/device/wanixclient/state'
+import { digestwanixtermcells } from 'zss/feature/wanix/wanixtermgridstate'
+import type { WanixTermCellsSnapshot } from 'zss/feature/wanix/wanixtermgridstate'
 
 export function clearwanixtermbuffers() {
   const buffers = readtermbuffers()
