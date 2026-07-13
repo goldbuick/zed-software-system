@@ -56,7 +56,6 @@ export type WanixMenuState = {
   vm: WanixMenuVmStatus | null
   stalled: boolean
   sessionkeys: string[]
-  attachedsessionkey: string | null
   activesessionkey: string | null
 }
 

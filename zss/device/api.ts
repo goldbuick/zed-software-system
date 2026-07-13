@@ -974,6 +974,10 @@ export function wanixserverreadvmstatus(device: DEVICELIKE, player: string) {
   device.emit(player, 'wanixserver:readvmstatus')
 }
 
+export function wanixservermenu(device: DEVICELIKE, player: string) {
+  device.emit(player, 'wanixserver:menu')
+}
+
 export function wanixserverapplyroom(
   device: DEVICELIKE,
   player: string,
@@ -1270,6 +1274,14 @@ export function wanixclientreadvmstatus(
   data: unknown,
 ) {
   wanixclientmethodresult(device, player, 'readvmstatus', data)
+}
+
+export function wanixclientmenu(
+  device: DEVICELIKE,
+  player: string,
+  data: unknown,
+) {
+  wanixclientmethodresult(device, player, 'menu', data)
 }
 
 export function wanixclientsynczedcafeexport(

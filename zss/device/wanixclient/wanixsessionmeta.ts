@@ -6,7 +6,7 @@ import {
   readattachedsession,
   readwanixactivesession,
 } from 'zss/device/wanixclient/wanixdisplay'
-import { readwanixtasklabel } from 'zss/device/wanixclient/wanixmenu'
+import { readwanixtasklabel } from 'zss/feature/wanix/wanixmenu'
 import { readwanixroomconfig } from 'zss/device/wanixclient/wanixroom'
 import {
   readwanixtermbuffer,

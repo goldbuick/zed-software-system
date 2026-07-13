@@ -153,7 +153,7 @@ stateDiagram-v2
 | Drag `.wasm` / `.tgz` | `parse/file` → `handlewanixdrop` |
 | `#wanix stop` | `stopwanixroom()` — soft idle by default |
 | `#wanix attach [session]` | Focus a task/VM term tile |
-| `#wanix` menu | [`wanixmenu.ts`](wanixmenu.ts) — sessions, attach, VM controls |
+| `#wanix` menu | CLI → `wanixservermenu` → iframe builds tape → `wanixclient:menu` print-only |
 
 **Lazy stand-up:** Books load into sim at login only. Zedcafe export daemon and host push
 run when the **first** VM or task room activates — not at login.
@@ -529,7 +529,8 @@ Helpers: `wanixserver*` / `wanixclient*` in [`api.ts`](../../device/api.ts).
 | [`wanixroom.ts`](../../device/wanixclient/wanixroom.ts) | Room config, drop emit wrappers, VM/task API |
 | [`wanixzedcafe.ts`](../../device/wanixclient/wanixzedcafe.ts) | Parent zedcafe daemon / push / import poll |
 | [`handlers/exportready.ts`](../../device/wanixclient/handlers/exportready.ts) | Parent export-ready continuation |
-| [`wanixmenu.ts`](../../device/wanixclient/wanixmenu.ts) / [`wanixcmd.ts`](../../device/wanixclient/wanixcmd.ts) | `#wanix` menu / CLI helpers |
+| [`handlers/menu.ts`](../../device/wanixclient/handlers/menu.ts) | Print-only `#wanix` menu tape (`wanixclient:menu`) |
+| [`wanixcmd.ts`](../../device/wanixclient/wanixcmd.ts) | Parent CLI helpers (display-side) |
 | [`wanixbundle.ts`](../../device/wanixclient/wanixbundle.ts) / [`wanixtgzextract.ts`](../../device/wanixclient/wanixtgzextract.ts) / [`wanixbindpaths.ts`](../../device/wanixclient/wanixbindpaths.ts) | Parent drop helpers |
 
 ### Iframe — [`zss/device/wanixserver/`](../../device/wanixserver/)
@@ -537,6 +538,7 @@ Helpers: `wanixserver*` / `wanixclient*` in [`api.ts`](../../device/api.ts).
 | Module | Role |
 |--------|------|
 | [`cafe/wanix.ts`](../../../cafe/wanix.ts) | Thin boot: `runtime` + wanix device |
+| [`wanixmenu.ts`](../../device/wanixserver/wanixmenu.ts) / [`handlers/menu.ts`](../../device/wanixserver/handlers/menu.ts) | Operational `#wanix` menu tape from iframe state |
 | [`runtime.ts`](../../device/wanixserver/runtime.ts) | System DOM, applyroom, terms, FS handlers |
 | [`zedcafehost.ts`](../../device/wanixserver/zedcafehost.ts) | Iframe zedcafe boot / push / binds |
 | [`spawndriver.ts`](../../device/wanixserver/spawndriver.ts) / [`termbridgesmoke.ts`](../../device/wanixserver/termbridgesmoke.ts) | Spawn driver + term smoke |
@@ -549,6 +551,7 @@ Helpers: `wanixserver*` / `wanixclient*` in [`api.ts`](../../device/api.ts).
 | Module | Role |
 |--------|------|
 | [`wanixroomtypes.ts`](wanixroomtypes.ts) | Room / drop / menu types |
+| [`wanixmenu.ts`](wanixmenu.ts) | Pure `#wanix` menu tape builder (server assembles state) |
 | [`wanixzedcafeconstants.ts`](wanixzedcafeconstants.ts) / [`wanixzedcafetypes.ts`](wanixzedcafetypes.ts) / [`wanixzedcafewasmversion.ts`](wanixzedcafewasmversion.ts) | Zedcafe shared constants/types |
 | [`wanixelements.d.ts`](wanixelements.d.ts) | Custom-element typings |
 | [`wanixtermgridstate.ts`](wanixtermgridstate.ts) | ANSI → cell grid (iframe writes; parent renders) |

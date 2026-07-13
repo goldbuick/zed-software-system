@@ -1,7 +1,3 @@
-jest.mock('zss/device/wanixclient/wanixroom', () => ({
-  readwanixmenustate: jest.fn(),
-}))
-
 jest.mock('zss/feature/zsstextui', () => ({
   zssheaderlines: (header: string) => [`HEADER:${header}`],
   zsssectionlines: (section: string) => [`SECTION:${section}`],
@@ -23,7 +19,7 @@ jest.mock('zss/feature/zsstextui', () => ({
 import {
   buildwanixmenutape,
   readwanixtasklabel,
-} from 'zss/device/wanixclient/wanixmenu'
+} from 'zss/feature/wanix/wanixmenu'
 import type { WanixMenuState } from 'zss/feature/wanix/wanixroomtypes'
 import { createidleroomconfig } from 'zss/feature/wanix/wanixroomtypes'
 
@@ -35,7 +31,6 @@ function idlestate(): WanixMenuState {
     vm: null,
     stalled: false,
     sessionkeys: [],
-    attachedsessionkey: null,
     activesessionkey: null,
   }
 }
@@ -72,12 +67,12 @@ describe('wanixmenu', () => {
         },
         ready: true,
         sessionkeys: ['hello-wasm', 'other-wasm'],
-        attachedsessionkey: 'hello-wasm',
-        activesessionkey: 'other-wasm',
+        activesessionkey: 'hello-wasm',
       })
       expect(tape).toContain('SECTION:attach to session')
       expect(tape).toContain('!wanix attach "hello-wasm";hello-wasm')
       expect(tape).toContain('!wanix attach "other-wasm";other-wasm')
+      expect(tape).toContain('drop files → input/')
       expect(tape).not.toContain('wanix detach')
     })
 
@@ -93,7 +88,6 @@ describe('wanixmenu', () => {
         vm: null,
         stalled: false,
         sessionkeys: [],
-        attachedsessionkey: null,
         activesessionkey: null,
       })
       expect(tape).toContain('HEADER:WANIX $YELLOWtask')
@@ -118,7 +112,6 @@ describe('wanixmenu', () => {
         vm: null,
         stalled: false,
         sessionkeys: [],
-        attachedsessionkey: null,
         activesessionkey: null,
       })
       expect(tape).toContain('!wanix stop "hello-wasm";')
@@ -143,7 +136,6 @@ describe('wanixmenu', () => {
         },
         stalled: false,
         sessionkeys: [],
-        attachedsessionkey: null,
         activesessionkey: null,
       })
       expect(tape).toContain('HEADER:WANIX $YELLOWvm')
@@ -165,7 +157,6 @@ describe('wanixmenu', () => {
         vm: null,
         stalled: true,
         sessionkeys: [],
-        attachedsessionkey: null,
         activesessionkey: null,
       })
       expect(tape).toContain('menu stale')

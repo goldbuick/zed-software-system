@@ -5,11 +5,7 @@
 
 import type { WANIX_ZED_CAFE_IMPORT_RESULT } from 'zss/device/api'
 import type { DEVICELIKE, MESSAGE } from 'zss/device/messagetypes'
-import type {
-  WanixMenuVmStatus,
-  WanixRoomConfig,
-  WanixRoomStatus,
-} from 'zss/feature/wanix/wanixroomtypes'
+import type { WanixRoomConfig } from 'zss/feature/wanix/wanixroomtypes'
 import { createidleroomconfig } from 'zss/feature/wanix/wanixroomtypes'
 import type { WANIX_ZED_CAFE_EXPORT_FILE } from 'zss/feature/wanix/wanixstateexport'
 import type { WanixTermCellsSnapshot } from 'zss/feature/wanix/wanixtermgridstate'
@@ -58,13 +54,6 @@ export type WanixBridgeState = {
   wanixisready: boolean
   readylisteners: WanixReadyCallback[]
   deliverwanixmessage: ((message: MESSAGE) => void) | null
-}
-
-export type PendingMenu = {
-  player: string
-  roomstatus?: WanixRoomStatus & { vmrunning?: boolean }
-  vmstatus?: WanixMenuVmStatus
-  stalled?: boolean
 }
 
 export type PushZedCafeSyncOptions = {
@@ -304,19 +293,10 @@ export function resetwanixbridgefortest(): void {
   state.deliverwanixmessage = null
 }
 
-// --- room pending (menu / apply / spawn) ---
+// --- room pending (apply / spawn) ---
 
-let pendingmenu: PendingMenu | null = null
 let pendingapplyconfig: WanixRoomConfig | null = null
 let pendingspawn: { taskid: string; cmd: string } | null = null
-
-export function readpendingmenu(): PendingMenu | null {
-  return pendingmenu
-}
-
-export function setpendingmenu(next: PendingMenu | null): void {
-  pendingmenu = next
-}
 
 export function readpendingapplyconfig(): WanixRoomConfig | null {
   return pendingapplyconfig
@@ -337,7 +317,6 @@ export function setpendingspawn(
 }
 
 export function resetwanixroompendingfortest(): void {
-  pendingmenu = null
   pendingapplyconfig = null
   pendingspawn = null
 }

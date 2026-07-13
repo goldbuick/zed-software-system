@@ -10,9 +10,8 @@ import { handleexportstate } from './exportstate'
 import { handleidle } from './idle'
 import { handleimportresult } from './importresult'
 import { handleiszedcafeexportlive } from './iszedcafeexportlive'
+import { handlemenu } from './menu'
 import { handleping } from './ping'
-import { handlereadroomstatus } from './readroomstatus'
-import { handlereadvmstatus } from './readvmstatus'
 import { handleready } from './ready'
 import { handlereadzedcafeexportfiles } from './readzedcafeexportfiles'
 import { handlereadzedcafetaskrid } from './readzedcafetaskrid'
@@ -28,12 +27,11 @@ export const wanixclienthandlers: Record<string, WANIXCLIENT_HANDLER> = {
   idle: handleidle,
   exportready: handleexportready,
   ping: handleping,
+  menu: handlemenu,
   applyroom: handleapplyroom,
   spawntask: handlespawntask,
   binddrop: handlebinddrop,
   dropdone: handledropdone,
-  readroomstatus: handlereadroomstatus,
-  readvmstatus: handlereadvmstatus,
   synczedcafeexport: handlesynczedcafeexport,
   readzedcafeexportfiles: handlereadzedcafeexportfiles,
   readzedcafetaskrid: handlereadzedcafetaskrid,

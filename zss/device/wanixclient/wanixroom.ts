@@ -4,7 +4,6 @@ import {
   wanixserverapplyroom,
   wanixserverbinddrop,
   wanixserverhalttask,
-  wanixserverreadroomstatus,
   wanixserverreadvmstatus,
   wanixserverspawntask,
   wanixserverstopvm,
@@ -14,21 +13,14 @@ import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import {
   readpendingapplyconfig,
-  readpendingmenu,
   readpendingspawn,
   readwanixroomconfig as readwanixroomconfigstate,
   setpendingapplyconfig,
-  setpendingmenu,
   setpendingspawn,
   wanixroomconfigbox,
 } from 'zss/device/wanixclient/state'
 import { activatewanixzedcafeexport } from 'zss/device/wanixclient/wanixactivateexport'
 import { registerwanixsessioncloseprune } from 'zss/device/wanixclient/wanixbridge'
-import {
-  readattachedsession,
-  readwanixactivesession,
-} from 'zss/device/wanixclient/wanixdisplay'
-import { readwanixtermbufferkeys } from 'zss/device/wanixclient/wanixtermbuffer'
 import {
   readwanixbootzedcafestate,
   resetwanixzedcafeonidle,
@@ -36,10 +28,7 @@ import {
 import type { WanixTaskDriver } from 'zss/feature/wanix/wanixelements.d.ts'
 import type {
   WanixBindDropPayload,
-  WanixMenuState,
-  WanixMenuVmStatus,
   WanixRoomConfig,
-  WanixRoomStatus,
 } from 'zss/feature/wanix/wanixroomtypes'
 import {
   DEFAULT_WANIX_VM_ID,
@@ -235,181 +224,6 @@ export function handlewanixbinddrop(
   sessionkey: string,
 ): void {
   wanixserverbinddrop(SOFTWARE, registerreadplayer(), sessionkey, payload)
-}
-
-function readwanixmenusessionfields() {
-  return {
-    sessionkeys: readwanixtermbufferkeys(),
-    attachedsessionkey: readattachedsession(),
-    activesessionkey: readwanixactivesession(),
-  }
-}
-
-function readwanixmenufallbackvm(): WanixMenuVmStatus | null {
-  const vm = wanixroomconfigbox.current.vm
-  if (!vm?.active) {
-    return null
-  }
-  return {
-    running: true,
-    vmid: vm.id,
-    vrid: null,
-    mem: vm.mem,
-  }
-}
-
-function buildmenufrompending(): WanixMenuState {
-  const config = readwanixroomconfig()
-  const pending = readpendingmenu()
-  const roomstatus = pending?.roomstatus
-  const vmstatus = pending?.vmstatus
-  if (pending?.stalled || (!roomstatus && !vmstatus)) {
-    const fallbackvm = readwanixmenufallbackvm()
-    return {
-      config,
-      ready: false,
-      vmrunning: !!fallbackvm?.running,
-      vm: fallbackvm,
-      stalled: true,
-      ...readwanixmenusessionfields(),
-    }
-  }
-  const vmrunning = roomstatus?.vmrunning ?? vmstatus?.running ?? false
-  return {
-    config: {
-      ...config,
-      mode: roomstatus?.mode ?? config.mode,
-      tasks: roomstatus?.tasks ?? config.tasks,
-      vm: roomstatus?.vm ?? config.vm,
-    },
-    ready: roomstatus?.ready ?? false,
-    vmrunning,
-    vm: vmrunning || vmstatus?.running ? (vmstatus ?? null) : null,
-    stalled: false,
-    ...readwanixmenusessionfields(),
-  }
-}
-
-function maybeflushmenu() {
-  const pending = readpendingmenu()
-  if (!pending?.player) {
-    return
-  }
-  if (!pending.roomstatus || !pending.vmstatus) {
-    return
-  }
-  const player = pending.player
-  const state = buildmenufrompending()
-  setpendingmenu(null)
-  void import('zss/device/wanixclient/wanixmenu').then(
-    ({ buildwanixmenutape }) => {
-      void import('zss/feature/terminalwritelines').then(
-        ({ terminalwritelines }) => {
-          terminalwritelines(SOFTWARE, player, buildwanixmenutape(state))
-        },
-      )
-    },
-  )
-}
-
-export function requestwanixmenustate(player: string): void {
-  const config = readwanixroomconfig()
-  if (config.mode === 'idle') {
-    void import('zss/device/wanixclient/wanixmenu').then(
-      ({ buildwanixmenutape }) => {
-        void import('zss/feature/terminalwritelines').then(
-          ({ terminalwritelines }) => {
-            terminalwritelines(
-              SOFTWARE,
-              player,
-              buildwanixmenutape({
-                config,
-                ready: false,
-                vmrunning: false,
-                vm: null,
-                stalled: false,
-                ...readwanixmenusessionfields(),
-              }),
-            )
-          },
-        )
-      },
-    )
-    return
-  }
-  setpendingmenu({ player })
-  wanixserverreadroomstatus(SOFTWARE, player)
-  wanixserverreadvmstatus(SOFTWARE, player)
-}
-
-export function applywanixroomstatus(data: unknown): void {
-  const pending = readpendingmenu()
-  if (!pending) {
-    return
-  }
-  if (
-    data &&
-    typeof data === 'object' &&
-    (data as { ok?: unknown }).ok === false
-  ) {
-    pending.stalled = true
-    pending.roomstatus = {
-      ...readwanixroomconfig(),
-      ready: false,
-    }
-    maybeflushmenu()
-    return
-  }
-  pending.roomstatus = data as WanixRoomStatus & { vmrunning?: boolean }
-  maybeflushmenu()
-}
-
-export function applywanixvmstatus(data: unknown): void {
-  const pending = readpendingmenu()
-  if (!pending) {
-    return
-  }
-  if (
-    data &&
-    typeof data === 'object' &&
-    (data as { ok?: unknown }).ok === false
-  ) {
-    pending.stalled = true
-    pending.vmstatus = {
-      running: false,
-      vmid: null,
-      vrid: null,
-      mem: null,
-    }
-    maybeflushmenu()
-    return
-  }
-  pending.vmstatus = data as WanixMenuVmStatus
-  maybeflushmenu()
-}
-
-/** Sync snapshot for tests / callers that still need local menu fields. */
-export function readwanixmenustate(): WanixMenuState {
-  const config = readwanixroomconfig()
-  if (config.mode === 'idle') {
-    return {
-      config,
-      ready: false,
-      vmrunning: false,
-      vm: null,
-      stalled: false,
-      ...readwanixmenusessionfields(),
-    }
-  }
-  const fallbackvm = readwanixmenufallbackvm()
-  return {
-    config,
-    ready: false,
-    vmrunning: !!fallbackvm?.running,
-    vm: fallbackvm,
-    stalled: false,
-    ...readwanixmenusessionfields(),
-  }
 }
 
 export function applywanixdropdone(

@@ -393,17 +393,18 @@ Emit catalog for parent ↔ iframe Wanix control. All `wanixserver:` / `wanixcli
 - `wanixserverstartvm`, `wanixserverstopvm`, `wanixserverdrop`, `wanixserverbinddrop`
 - `wanixservertermwrite`, `wanixservertermfit`, `wanixserverwritefile`
 - `wanixserversynczedcafeexport`, `wanixserversetzedcafeready`, `wanixserverhaltzedcafe`
+- `wanixservermenu` — bare `#wanix`; iframe builds tape from operational state
 - `wanixserverreadroomstatus`, `wanixserverreadvmstatus`, `wanixserverreadzedcafeexportfiles`, …
 - `wanixserverrequestzedcafestate` — parent delivers export files after iframe pull
 
 ### Iframe / sim → parent (`wanixclient*`)
 - Lifecycle: `wanixclientready`, `wanixclientidle`, `wanixclientexportready`
-- Completions: `wanixclientmethodresult`, `wanixclientapplyroom`, `wanixclientspawntask`, `wanixclientbinddrop`, `wanixclientdropdone`, …
+- Completions: `wanixclientmethodresult`, `wanixclientmenu` (print-only tape), `wanixclientapplyroom`, `wanixclientspawntask`, `wanixclientbinddrop`, `wanixclientdropdone`, …
 - Pushes: `wanixclientcells`, `wanixclientsession`
 - Zedcafe: `wanixclientexportstate`, `wanixclientimportresult`, `wanixclientrequestzedcafestate`
 
 ### Parent-local (no device message)
-`#wanix attach` / `detach` / `term dump|status` call `wanixdisplay` / `wanixtermhandlers` directly.
+`#wanix attach` / `detach` / `term dump|status` call `wanixdisplay` / `wanixtermhandlers` directly (screens/wanix display state).
 
 ---
 

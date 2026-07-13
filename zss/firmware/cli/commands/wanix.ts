@@ -2,6 +2,7 @@ import {
   apierror,
   apilog,
   wanixserverhalttask,
+  wanixservermenu,
   wanixserverstoproom,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
@@ -10,11 +11,7 @@ import {
   readwanixactivesession,
   setattachedsession,
 } from 'zss/device/wanixclient/wanixdisplay'
-import {
-  requestwanixmenustate,
-  startwanixvm,
-  stopwanixvm,
-} from 'zss/device/wanixclient/wanixroom'
+import { startwanixvm, stopwanixvm } from 'zss/device/wanixclient/wanixroom'
 import { readwanixtermbufferkeys } from 'zss/device/wanixclient/wanixtermbuffer'
 import {
   writewanixtermdump,
@@ -43,7 +40,7 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
       ])
       const player = READ_CONTEXT.elementfocus
       if (!ispresent(action)) {
-        requestwanixmenustate(player)
+        wanixservermenu(SOFTWARE, player)
         return 0
       }
       switch (NAME(action)) {
