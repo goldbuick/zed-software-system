@@ -583,6 +583,37 @@ GOOS=js GOARCH=wasm go build -o dist/wanix.full.go.wasm ./wasm
 cp dist/wanix.full.go.wasm ../../cafe/public/wanix/wanix.wasm
 ```
 
+### Upstream Wanix: replace the worker.go dirty forward
+
+Today gojs tasks may `postMessage` arbitrary payloads, but
+[`submodules/wanix/web/worker/worker.go`](../../../submodules/wanix/web/worker/worker.go)
+only handles `{ export: MessagePort }` and **drops everything else**. ZSS therefore
+patches that listener to forward `{ zedcafeexportdirty: true }` to a host global
+`__wanixOnZedcafeExportDirty(taskId)` (see iframe
+[`zedcafehost.ts`](../../device/wanixserver/zedcafehost.ts)).
+
+That is a ZSS fork of Wanix, not an API. Prefer one of these upstream affordances
+(best → acceptable):
+
+1. **Generic gojs → host message bridge**  
+   Host registers a callback (element attribute, `wanix-system` method, or
+   `globalThis` hook with a stable name) for non-`export` worker messages.
+   Payload + `taskId` are delivered as-is. ZSS would register once and map
+   `zedcafeexportdirty` without touching `worker.go`.
+
+2. **Allowlisted custom message kinds**  
+   Documented keys besides `export` (e.g. `notify` / `app`) forwarded the same
+   way. Still a denylist of silence for unknown keys is fine.
+
+3. **ExportFS mutation notify**  
+   First-class “export tree changed” signal from `gojs.Export` / p9 export mounts
+   (coalesced). Guests would not need `postMessage` for writeback; hosts would
+   not need a zedcafe-specific dirty key.
+
+Until something like (1)–(3) lands upstream, keep the submodule patch + rebuild
+`cafe/public/wanix/wanix.wasm`, and bump the `submodules/wanix` gitlink after
+committing inside the submodule.
+
 ### Do not call `vm.allocate()` twice
 
 `<wanix-vm>` auto-allocates on system `ready`. Second call throws. Use
