@@ -1,4 +1,7 @@
-import { postwanixexportmessage } from 'zss/device/wanixserver/exportevents'
+import {
+  postwanixexportmessage,
+  postzedcafefilechangemessage,
+} from 'zss/device/wanixserver/exportevents'
 import type {
   WanixRoot,
   WanixSystemElement,
@@ -42,6 +45,40 @@ let zedcafetaskrid: string | null = null
 let zedcafeready = false
 let zedcafebootgen = 0
 let zedcafebootpromise: Promise<string | null> | null = null
+let hostpushinflight = false
+let hostpushgen = 0
+/** Longer than Go `exportdirtydebounce` (150ms) so host-push dirties settle before kicks. */
+const HOST_PUSH_DIRTY_SUPPRESS_MS = 200
+
+type ZedcafeDirtyHook = (taskrid?: string) => void
+
+function readglobaldirtyhook(): ZedcafeDirtyHook | undefined {
+  return (globalThis as { __wanixOnZedcafeExportDirty?: ZedcafeDirtyHook })
+    .__wanixOnZedcafeExportDirty
+}
+
+function setglobaldirtyhook(hook: ZedcafeDirtyHook | undefined): void {
+  ;(globalThis as { __wanixOnZedcafeExportDirty?: ZedcafeDirtyHook }).__wanixOnZedcafeExportDirty =
+    hook
+}
+
+function registerzedcafedirtyhook(): void {
+  setglobaldirtyhook((taskrid?: string) => {
+    if (hostpushinflight) {
+      return
+    }
+    if (taskrid && zedcafetaskrid && taskrid !== zedcafetaskrid) {
+      return
+    }
+    postzedcafefilechangemessage(taskrid ?? zedcafetaskrid ?? undefined)
+  })
+}
+
+function clearzedcafedirtyhook(): void {
+  if (readglobaldirtyhook()) {
+    setglobaldirtyhook(undefined)
+  }
+}
 
 function setwanixattrs(el: HTMLElement, attrs: Record<string, unknown>) {
   for (const [key, value] of Object.entries(attrs)) {
@@ -547,67 +584,79 @@ export async function pushzedcafeexportlive(
   files: WanixZedCafeGuestFile[],
   removepaths: string[] = [],
 ) {
-  const base = readwanixzedcafeexportsrc(taskrid)
-  if (removepaths.length > 0) {
-    await removezedcafeexportpaths(root, taskrid, removepaths)
-  }
-  const sorted = [...files].sort((a, b) => {
-    if (a.path === 'stats.json') {
-      return 1
+  hostpushinflight = true
+  const pushgen = ++hostpushgen
+  try {
+    const base = readwanixzedcafeexportsrc(taskrid)
+    if (removepaths.length > 0) {
+      await removezedcafeexportpaths(root, taskrid, removepaths)
     }
-    if (b.path === 'stats.json') {
-      return -1
+    const sorted = [...files].sort((a, b) => {
+      if (a.path === 'stats.json') {
+        return 1
+      }
+      if (b.path === 'stats.json') {
+        return -1
+      }
+      return a.path.localeCompare(b.path)
+    })
+    // Export writes cross the p9 client, which walks parent dirs before Create.
+    // Materialize allowlisted prefix dirs on the export mount first.
+    for (let i = 0; i < sorted.length; ++i) {
+      const file = sorted[i]
+      const full = `${base}/${file.path}`
+      const parentdir = full.slice(0, full.lastIndexOf('/'))
+      if (parentdir.length > base.length) {
+        await root.makeDirAll(parentdir)
+      }
+      await root.writeFile(full, new Uint8Array(file.data))
     }
-    return a.path.localeCompare(b.path)
-  })
-  // Export writes cross the p9 client, which walks parent dirs before Create.
-  // Materialize allowlisted prefix dirs on the export mount first.
-  for (let i = 0; i < sorted.length; ++i) {
-    const file = sorted[i]
-    const full = `${base}/${file.path}`
-    const parentdir = full.slice(0, full.lastIndexOf('/'))
-    if (parentdir.length > base.length) {
-      await root.makeDirAll(parentdir)
+    const bookcount = readguestfilebookcount(sorted)
+    if (bookcount > 0) {
+      const statsfile = sorted.find((file) => file.path === 'stats.json')
+      const meta = statsfile
+        ? readbookstatspathsfromstatsbytes(new Uint8Array(statsfile.data))
+        : null
+      const missing =
+        !meta ||
+        meta.bookstatspaths.length === 0 ||
+        meta.bookstatspaths.some(
+          (bookpath) => !sorted.some((file) => file.path === bookpath),
+        )
+      if (missing) {
+        console.error(
+          `[zedcafe-export] push verify failed: bookCount=${bookcount} but book stats missing after push (${sorted.length} files)`,
+        )
+        throw new Error(
+          `zedcafe export incomplete: bookCount=${bookcount} but book stats missing after push (${sorted.length} files)`,
+        )
+      }
     }
-    await root.writeFile(full, new Uint8Array(file.data))
-  }
-  const bookcount = readguestfilebookcount(sorted)
-  if (bookcount > 0) {
-    const statsfile = sorted.find((file) => file.path === 'stats.json')
-    const meta = statsfile
-      ? readbookstatspathsfromstatsbytes(new Uint8Array(statsfile.data))
-      : null
-    const missing =
-      !meta ||
-      meta.bookstatspaths.length === 0 ||
-      meta.bookstatspaths.some(
-        (bookpath) => !sorted.some((file) => file.path === bookpath),
-      )
-    if (missing) {
-      console.error(
-        `[zedcafe-export] push verify failed: bookCount=${bookcount} but book stats missing after push (${sorted.length} files)`,
-      )
-      throw new Error(
-        `zedcafe export incomplete: bookCount=${bookcount} but book stats missing after push (${sorted.length} files)`,
-      )
+    // Removals-only: still signal content-ready so parent waiters unblock.
+    if (sorted.length > 0 || removepaths.length > 0) {
+      postwanixexportmessage('content-ready', taskrid)
     }
+    if (sorted.length > 0 || bookcount > 0) {
+      setzedcafereadylocal(true)
+    }
+    wanixperfmark('export-push-end', {
+      taskrid,
+      bookcount,
+      paths: sorted.length,
+      removed: removepaths.length,
+    })
+  } finally {
+    // Hold suppress until Go dirty debounce from these writes can no longer fire.
+    setTimeout(() => {
+      if (pushgen === hostpushgen) {
+        hostpushinflight = false
+      }
+    }, HOST_PUSH_DIRTY_SUPPRESS_MS)
   }
-  // Removals-only: still signal content-ready so parent waiters unblock.
-  if (sorted.length > 0 || removepaths.length > 0) {
-    postwanixexportmessage('content-ready', taskrid)
-  }
-  if (sorted.length > 0 || bookcount > 0) {
-    setzedcafereadylocal(true)
-  }
-  wanixperfmark('export-push-end', {
-    taskrid,
-    bookcount,
-    paths: sorted.length,
-    removed: removepaths.length,
-  })
 }
 
 export function haltzedcafetask(sys: WanixSystemElement) {
+  clearzedcafedirtyhook()
   const task = sys.querySelector(`wanix-task[id="${WANIX_ZEDCAFE_TASK_ID}"]`)
   if (task) {
     task
@@ -668,6 +717,7 @@ export async function bootzedcafegojs(
     return null
   }
 
+  registerzedcafedirtyhook()
   await scrubzedcafestaging(task, sys, root)
   return taskrid
 }
@@ -681,6 +731,7 @@ export async function ensurezedcafeboot(
   if (zedcafetaskrid && zedcafecmd === cmd) {
     const mountready = await waitzedcafeexportmountready(root, zedcafetaskrid)
     if (mountready) {
+      registerzedcafedirtyhook()
       return zedcafetaskrid
     }
   }

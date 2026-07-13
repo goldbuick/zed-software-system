@@ -401,7 +401,7 @@ Emit catalog for parent ↔ iframe Wanix control. All `wanixserver:` / `wanixcli
 - Lifecycle: `wanixclientready`, `wanixclientidle`, `wanixclientexportready`
 - Completions: `wanixclientmethodresult`, `wanixclientmenu` (print-only tape), `wanixclientapplyroom`, `wanixclientspawntask`, `wanixclientbinddrop`, `wanixclientdropdone`, …
 - Pushes: `wanixclientcells`, `wanixclientsession`
-- Zedcafe: `wanixclientexportstate`, `wanixclientimportresult`, `wanixclientrequestzedcafestate`
+- Zedcafe: `wanixclientexportstate`, `wanixclientimportresult`, `wanixclientrequestzedcafestate`, `wanixclientzedcafefilechange`
 
 ### Parent-local (no device message)
 `#wanix attach` / `detach` / `term dump|status` call `wanixdisplay` / `wanixtermhandlers` directly (screens/wanix display state).

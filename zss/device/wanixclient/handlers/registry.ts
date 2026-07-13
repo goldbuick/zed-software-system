@@ -20,6 +20,7 @@ import { handlerequestzedcafestate } from './requestzedcafestate'
 import { handlewanixsession } from './session'
 import { handlespawntask } from './spawntask'
 import { handlesynczedcafeexport } from './synczedcafeexport'
+import { handlezedcafefilechange } from './zedcafefilechange'
 
 export type WANIXCLIENT_HANDLER = (device: DEVICE, message: MESSAGE) => void
 
@@ -43,4 +44,5 @@ export const wanixclienthandlers: Record<string, WANIXCLIENT_HANDLER> = {
   readfile: handlereadfile,
   cells: handlewanixcells,
   session: handlewanixsession,
+  zedcafefilechange: handlezedcafefilechange,
 }

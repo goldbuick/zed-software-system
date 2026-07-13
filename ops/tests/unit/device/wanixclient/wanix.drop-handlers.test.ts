@@ -8,6 +8,7 @@ describe('wanixclient drop handlers', () => {
     )
     expect(typeof wanixclienthandlers.dropdone).toBe('function')
     expect(typeof wanixclienthandlers.binddrop).toBe('function')
+    expect(typeof wanixclienthandlers.zedcafefilechange).toBe('function')
     expect(wanixclienthandlers.drop).toBeUndefined()
   })
 

@@ -110,7 +110,7 @@ Three modes in [`wanixroomtypes.ts`](wanixroomtypes.ts):
 While **attached** to a Wanix term session, file drops bind under **`input/<name>`**
 (task: `./input/…`, VM guest: `/input/…`) instead of spawning tasks or hitting
 book/image parsers. User-written processors (WASI tasks or VM guest scripts) read
-`input/` and write zedcafe export paths under `zedcafe/…` so the host import poll
+`input/` and write zedcafe export paths under `zedcafe/…` so the host import cycle
 can sync boards and terrain. See `ops/fixtures/wanix/README.md` for
 `listinput.wasm`, `input2terrain.wasm`, `png2terrain.sh`, and the three 8×8
 `stamp-{red,green,blue}.png` inputs (distinct byte sizes for read validation).
@@ -163,9 +163,9 @@ run when the **first** VM or task room activates — not at login.
 ## Zedcafe export (the core loop)
 
 Zedcafe mirrors live sim books into a guest-visible tree at `./zedcafe/` (tasks) or
-`/zedcafe/` (VM). Guests may **read and write** allowlisted JSON paths; the host polls
-for guest changes and imports them into the **sim worker**, then re-exports so the tree
-matches sim again.
+`/zedcafe/` (VM). Guests may **read and write** allowlisted JSON paths; the export FS
+emits a coalesced dirty signal on mutating ops, the parent imports into the **sim
+worker**, then re-exports so the tree matches sim again.
 
 ### Mount layout (iframe)
 
@@ -221,8 +221,9 @@ sequenceDiagram
   participant Sim
 
   Guest->>Memfs: Write or delete allowlisted JSON
-  Parent->>Memfs: Poll every 3s
-  Note over Parent: export doc compare != last host push
+  Memfs->>Memfs: debounce_150ms dirty
+  Memfs-->>Parent: wanixclient:zedcafefilechange
+  Note over Parent: kickzedcafepoll collect + doc compare
   Parent->>Parent: guestdirty — suppress stale host push
   Parent->>Sim: vm:importzedcafe
   Sim->>Sim: applyzedcafetomemory upserts + deletes
@@ -231,13 +232,19 @@ sequenceDiagram
   Parent->>Memfs: push post-import tree
 ```
 
+- Dirty path: Go `schemaGuardFS` → gojs `postMessage({zedcafeexportdirty})` → Wanix
+  `worker.go` → `__wanixOnZedcafeExportDirty` → `wanixclient:zedcafefilechange` →
+  `kickzedcafepoll('file-change')`. Host pushes set `hostpushinflight` so sync batches
+  do not kick import mid-write.
+- Session-close still kicks import (greenring exit-after-write). **No continuous
+  interval poll.**
 - Import runs in the **sim worker** (`handleimportzedcafe`), not main-thread memory.
 - **Deletes mirror the guest tree:** books/pages absent from the guest export are cleared
   in sim; missing `board/objects/*.json` disappear when the board page is upserted.
   A valid empty tree (`bookCount: 0`) clears all sim books.
 - While `guestdirty`, host pushes of pre-import snapshots are skipped.
-- Apply failures log and **leave the poll running** (retry next tick). Hard iframe
-  message failures still stop the poll.
+- Apply failures log and leave import-ready active so the next dirty/session-close kick
+  can retry. Hard iframe message failures still stop the import runner.
 
 **Readiness contract (two gates):**
 
@@ -524,7 +531,7 @@ Helpers: `wanixserver*` / `wanixclient*` in [`api.ts`](../../device/api.ts).
 | [`wanixtermbuffer.ts`](../../device/wanixclient/wanixtermbuffer.ts) (+ clipboard/scroll/text/handlers) | Parent term UI |
 | [`host.tsx`](../../screens/wanix/host.tsx) / [`wanixbridge.ts`](../../device/wanixclient/wanixbridge.ts) | Ghost iframe + parent message bridge |
 | [`wanixroom.ts`](../../device/wanixclient/wanixroom.ts) | Room config, drop emit wrappers, VM/task API |
-| [`wanixzedcafe.ts`](../../device/wanixclient/wanixzedcafe.ts) | Parent zedcafe daemon / push / import poll |
+| [`wanixzedcafe.ts`](../../device/wanixclient/wanixzedcafe.ts) | Parent zedcafe daemon / push / import kicks |
 | [`handlers/exportready.ts`](../../device/wanixclient/handlers/exportready.ts) | Parent export-ready continuation |
 | [`handlers/menu.ts`](../../device/wanixclient/handlers/menu.ts) | Print-only `#wanix` menu tape (`wanixclient:menu`) |
 | [`wanixbindpaths.ts`](../../device/wanixclient/wanixbindpaths.ts) | Parent bind-drop path helpers (`parse/file`) |
@@ -567,6 +574,14 @@ Helpers: `wanixserver*` / `wanixclient*` in [`api.ts`](../../device/api.ts).
 npm `wanix@0.4.0-alpha8` TinyGo build corrupts under heavy terminal I/O
 ([tractordev/wanix#171](https://github.com/tractordev/wanix/issues/171)). ZSS ships full-Go
 build at [`cafe/public/wanix/wanix.wasm`](../../../cafe/public/wanix/wanix.wasm).
+Rebuild after `submodules/wanix/web/worker/worker.go` changes (forwards
+`zedcafeexportdirty` to `__wanixOnZedcafeExportDirty`):
+
+```bash
+cd submodules/wanix
+GOOS=js GOARCH=wasm go build -o dist/wanix.full.go.wasm ./wasm
+cp dist/wanix.full.go.wasm ../../cafe/public/wanix/wanix.wasm
+```
 
 ### Do not call `vm.allocate()` twice
 
@@ -589,7 +604,7 @@ at drop/bundle staging; failures throw instead of defaulting to wasi.
 
 ### Tick export vs drop path
 
-While the import poll is active, each sim tick rebuilds the export doc and
+While import is active (`startzedcafepoll`), each sim tick rebuilds the export doc and
 `fast-json-patch` `compare`s it to the last successful host push. Changed paths
 are upserted and removed paths are deleted via Wanix `root.remove`. Drop/VM
 activation still does a full tree push (and reconciles guest orphans).
@@ -655,8 +670,8 @@ apply cannot leave `mode: idle` and skip the push (`pending-export mark`).
 | **`#wanix vm` + `/zedcafe/`** | VM room → zedcafe gojs boot → `wireallguestroots` binds `#task/rid/export` into Linux at `/zedcafe/` → parent activates export push |
 | **Wasm task drops** | iframe `drop` remounts task room if idle, pulls export via `requestzedcafestate`, stages `#ramfs/{file}`, spawns with driver from wasm bytes |
 | **findplayers JSON output** | gojs task + per-task export bind + spawn gate on `stats.json`; scanner walks `./zedcafe/{book}/…` |
-| **greenring board paint** | Same bind; writes allowlisted `board/terrain.json`; import poll → `vm:importzedcafe` → sim apply + re-export |
-| **Guest FS → sim writeback** | 3s export-doc compare poll; guest-dirty suppresses stale host push; deletes mirror guest tree |
+| **greenring board paint** | Same bind; writes allowlisted `board/terrain.json`; dirty emit / session-close → `vm:importzedcafe` → sim apply + re-export |
+| **Guest FS → sim writeback** | Coalesced `zedcafeexportdirty` → `wanixclient:zedcafefilechange` → import kick; guest-dirty suppresses stale host push; deletes mirror guest tree |
 | **Live export updates** | End-of-tick `compare` of path-keyed export doc; partial upsert of changed files while poll active |
 | **Auto-attach new sessions** | `wanixclient:session open` → reveal tape → attach when user had nothing focused |
 | **Task idle auto-halt** | Dropped wasm tasks halt after 5 minutes with no term input/output (VM + zedcafe daemon exempt) |
@@ -689,7 +704,7 @@ apply cannot leave `mode: idle` and skip the push (`pending-export mark`).
 
 **greenring task term:** `{"painted":N}` after writing terrain rings; board tiles update when the task term session closes (EOF after gojs exit) — that kicks one import-poll cycle. Dropdone does **not** kick (spawn returns before paint) and does **not** host-push activate-export (which would wipe guest paints).
 
-**Dev console:** after greenring exits, expect `[zedcafe-export] poll-kick reason=session-close`, `poll-guest-diff=true`, then `zedcafe import: synced …`. Not an immediate post-drop `activate-export-start` wipe. Also no `LinkError` or `postwanixexportmessage is not defined`.
+**Dev console:** after greenring exits, expect `[zedcafe-export] poll-kick reason=file-change` and/or `reason=session-close`, `poll-guest-diff=true`, then `zedcafe import: synced …`. Not an immediate post-drop `activate-export-start` wipe. Also no `LinkError` or `postwanixexportmessage is not defined`.
 
 ---
 

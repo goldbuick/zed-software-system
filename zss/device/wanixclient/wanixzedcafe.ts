@@ -23,7 +23,6 @@ import {
   readpendingsync,
   readpolldevice,
   readpollplayer,
-  readpolltimer,
   readzedcafeguestdirty,
   readzedcafepollactive,
   setlasthostpushdoc,
@@ -33,7 +32,6 @@ import {
   setpendingsync,
   setpolldevice,
   setpollplayer,
-  setpolltimer,
   setzedcafeguestdirty,
   setzedcafepollactive,
 } from 'zss/device/wanixclient/state'
@@ -54,7 +52,6 @@ import {
 import {
   WANIX_VM_ZEDCAFE_EXPORT_FETCH_MS,
   WANIX_VM_ZEDCAFE_IMPORT_MS,
-  WANIX_ZEDCAFE_IMPORT_POLL_MS,
   WANIX_ZEDCAFE_WASM_CMD,
 } from 'zss/feature/wanix/wanixzedcafeconstants'
 import type {
@@ -673,19 +670,9 @@ export function startzedcafepoll(device: DEVICELIKE, player: string) {
   setpolldevice(device)
   setpollplayer(player)
   setzedcafepollactive(true)
-  setpolltimer(
-    setInterval(() => {
-      kickzedcafepoll('interval')
-    }, WANIX_ZEDCAFE_IMPORT_POLL_MS),
-  )
 }
 
 export function stopzedcafepoll() {
-  const polltimer = readpolltimer()
-  if (polltimer) {
-    clearInterval(polltimer)
-    setpolltimer(undefined)
-  }
   setpolldevice(null)
   setpollplayer('')
   setpendingpollphase(null)

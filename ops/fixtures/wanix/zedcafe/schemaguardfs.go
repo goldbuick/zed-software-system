@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	_ "embed"
 	"encoding/json"
 	"errors"
@@ -186,6 +187,22 @@ func (g *schemaGuardFS) ensureimplicitparents(name string) error {
 	return nil
 }
 
+func (g *schemaGuardFS) Open(name string) (fs.File, error) {
+	file, err := g.FS.Open(name)
+	if err != nil {
+		return nil, err
+	}
+	return wrapdirtyfile(name, file), nil
+}
+
+func (g *schemaGuardFS) OpenContext(ctx context.Context, name string) (fs.File, error) {
+	file, err := g.FS.OpenContext(ctx, name)
+	if err != nil {
+		return nil, err
+	}
+	return wrapdirtyfile(name, file), nil
+}
+
 func (g *schemaGuardFS) Create(name string) (fs.File, error) {
 	if err := guardexportpath("create", name); err != nil {
 		return nil, err
@@ -193,7 +210,11 @@ func (g *schemaGuardFS) Create(name string) (fs.File, error) {
 	if err := g.ensureimplicitparents(name); err != nil {
 		return nil, err
 	}
-	return g.FS.Create(name)
+	file, err := g.FS.Create(name)
+	if err != nil {
+		return nil, err
+	}
+	return wrapdirtyfile(name, file), nil
 }
 
 func (g *schemaGuardFS) WriteFile(name string, data []byte, perm fs.FileMode) error {
@@ -203,7 +224,11 @@ func (g *schemaGuardFS) WriteFile(name string, data []byte, perm fs.FileMode) er
 	if err := g.ensureimplicitparents(name); err != nil {
 		return err
 	}
-	return fs.WriteFile(g.FS, name, data, perm)
+	if err := fs.WriteFile(g.FS, name, data, perm); err != nil {
+		return err
+	}
+	markexportdirty(name)
+	return nil
 }
 
 func (g *schemaGuardFS) Mkdir(name string, perm fs.FileMode) error {
@@ -217,7 +242,11 @@ func (g *schemaGuardFS) Rename(oldname, newname string) error {
 	if err := guardexportpath("rename", newname); err != nil {
 		return err
 	}
-	return g.FS.Rename(oldname, newname)
+	if err := g.FS.Rename(oldname, newname); err != nil {
+		return err
+	}
+	markexportdirty(newname)
+	return nil
 }
 
 func (g *schemaGuardFS) Symlink(oldname, newname string) error {
@@ -237,5 +266,17 @@ func (g *schemaGuardFS) Truncate(name string, size int64) error {
 			return err
 		}
 	}
-	return g.FS.Truncate(name, size)
+	if err := g.FS.Truncate(name, size); err != nil {
+		return err
+	}
+	markexportdirty(name)
+	return nil
+}
+
+func (g *schemaGuardFS) Remove(name string) error {
+	if err := g.FS.Remove(name); err != nil {
+		return err
+	}
+	markexportdirty(name)
+	return nil
 }

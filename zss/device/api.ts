@@ -1171,6 +1171,14 @@ export function wanixclientexportready(
   device.emit(player, 'wanixclient:exportready', payload)
 }
 
+export function wanixclientzedcafefilechange(
+  device: DEVICELIKE,
+  player: string,
+  payload?: { taskrid?: string },
+) {
+  device.emit(player, 'wanixclient:zedcafefilechange', payload)
+}
+
 export function wanixclientcells(
   device: DEVICELIKE,
   player: string,

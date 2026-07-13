@@ -103,7 +103,7 @@ go test ./p9server/ ./zedsync/ -count=1   # from ops/fixtures/wanix
 
 ## Bind-on-drop pipeline (`input/`)
 
-While **attached** to a Wanix term session, file drops bind under **`input/<name>`** (not spawn tasks). Processors read `input/` and write zedcafe export paths under `zedcafe/…` so the host import poll can sync boards/terrain.
+While **attached** to a Wanix term session, file drops bind under **`input/<name>`** (not spawn tasks). Processors read `input/` and write zedcafe export paths under `zedcafe/…` so the host import cycle can sync boards/terrain.
 
 **Stamps:** three 8×8 PNGs with different byte lengths. Cell count is `bytes % 40 + 1`, so swapping stamps changes stdout and proves the guest read the real file.
 

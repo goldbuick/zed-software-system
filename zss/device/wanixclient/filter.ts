@@ -20,6 +20,7 @@ const WANIX_IFRAME_TARGETS = new Set([
   'readzedcafetaskrid',
   'iszedcafeexportlive',
   'readfile',
+  'zedcafefilechange',
 ])
 
 export function shouldprocesswanixclientmessage(message: MESSAGE): boolean {

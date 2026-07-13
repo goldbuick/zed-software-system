@@ -40,6 +40,8 @@ jest.mock('zss/feature/wanix/zedcafetreeschema', () => ({
 }))
 
 import { wanixserverreadzedcafetaskrid } from 'zss/device/api'
+import { handlezedcafefilechange } from 'zss/device/wanixclient/handlers/zedcafefilechange'
+import { shouldprocesswanixclientmessage } from 'zss/device/wanixclient/filter'
 import {
   kickzedcafepoll,
   resetwanixzedcafefortest,
@@ -58,7 +60,6 @@ const player = 'p1'
 
 describe('zedcafe import poll', () => {
   beforeEach(() => {
-    jest.useFakeTimers()
     resetwanixzedcafefortest()
     resetwanixzedcafesessionfortest()
     mockreadrid.mockReset()
@@ -66,27 +67,43 @@ describe('zedcafe import poll', () => {
 
   afterEach(() => {
     stopzedcafepoll()
-    jest.useRealTimers()
     resetwanixzedcafefortest()
     resetwanixzedcafesessionfortest()
   })
 
-  it('emits readzedcafetaskrid on poll tick', async () => {
+  it('startzedcafepoll marks active without interval tick', () => {
     startzedcafepoll(device, player)
     expect(readzedcafepollactive()).toBe(true)
-    await jest.advanceTimersByTimeAsync(3_000)
-    expect(mockreadrid).toHaveBeenCalledWith(device, player)
-    expect(readzedcafepollactive()).toBe(true)
+    expect(mockreadrid).not.toHaveBeenCalled()
   })
 
-  it('kickzedcafepoll emits immediately when idle mid-interval', () => {
+  it('kickzedcafepoll emits when import-ready', () => {
     startzedcafepoll(device, player)
-    kickzedcafepoll()
+    kickzedcafepoll('file-change')
     expect(mockreadrid).toHaveBeenCalledWith(device, player)
   })
 
   it('kickzedcafepoll no-ops when poll inactive', () => {
     kickzedcafepoll()
     expect(mockreadrid).not.toHaveBeenCalled()
+  })
+
+  it('handlezedcafefilechange kicks import', () => {
+    startzedcafepoll(device, player)
+    handlezedcafefilechange(device, {
+      target: 'zedcafefilechange',
+      player: '',
+      data: undefined,
+    } as never)
+    expect(mockreadrid).toHaveBeenCalledWith(device, player)
+  })
+
+  it('allows empty-player zedcafefilechange through filter', () => {
+    expect(
+      shouldprocesswanixclientmessage({
+        target: 'zedcafefilechange',
+        player: '',
+      } as never),
+    ).toBe(true)
   })
 })
