@@ -1,5 +1,5 @@
 $ltgrey 12 natural minors; harmonic &
-$ltgrey melodic too on piano —
+$ltgrey melodic too on piano -
 $ltgrey pianoscales.org
 
 !istargetless copyit #play cde!fga!b!+c;$greenC natural minor

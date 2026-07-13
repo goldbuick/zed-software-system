@@ -81,7 +81,7 @@ export function runwanixp9server(dir: string, env?: NodeJS.ProcessEnv): number {
       tls
         ? `  TLS: ${tls.cert}`
         : `  ERROR: no ~/.vite-plugin-mkcert — run cafe:dev once (or pass -cert/-key to the Go cmd)`,
-      `  #wanix remote connect <printed-wss-url> remote`,
+      `  #wanix remote connect wss://localhost:8765/ remote`,
       `  #wanix zedsync remote`,
       '',
     ].join('\n'),

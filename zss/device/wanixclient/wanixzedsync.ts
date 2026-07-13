@@ -3,10 +3,12 @@ import type { DEVICELIKE } from 'zss/device/types'
 import {
   ensurewanixtaskroom,
   putwanixroomfile,
+  readwanixremotes,
   readwanixroomconfig,
   spawntaskinroom,
 } from 'zss/device/wanixclient/wanixroom'
 import {
+  iswanixspaceactive,
   startzedcafepoll,
   stopzedcafepoll,
 } from 'zss/device/wanixclient/wanixzedcafe'
@@ -45,13 +47,25 @@ function resumepollandclear(device: DEVICELIKE, player: string) {
 }
 
 /** Cancel seed wait and resume poll (e.g. session closed mid-seed). */
-export function cancelzedsyncreadywait(): void {
+export function cancelzedsyncreadywait(reason?: string): void {
   if (!pendingready) {
     pollwasactive = false
     return
   }
-  const { device, player } = pendingready
+  const { device, player, path } = pendingready
+  if (reason) {
+    apilog(
+      device,
+      player,
+      `zedsync: seed wait cancelled (${reason}) before ${path}`,
+    )
+  }
   resumepollandclear(device, player)
+}
+
+/** True while parent is polling for `.zedsync-ready`. */
+export function iszedsyncreadywaitpending(): boolean {
+  return pendingready !== null
 }
 
 /** Parent handler for wanixclient:readfile while waiting for zedsync seed sentinel. */
@@ -69,6 +83,7 @@ export function applyzedsyncreadfileresult(data: unknown): void {
   if (Array.isArray(data)) {
     const { device, player, path } = pendingready
     apilog(device, player, `zedsync: seed ready (${path})`)
+    apilog(device, player, `zedsync: watching ${path.replace(/\/\.zedsync-ready$/, '')}`)
     resumepollandclear(device, player)
   }
 }
@@ -119,6 +134,19 @@ export async function startwanixzedsync(
     throw new Error('zedsync targetpath must not be zedcafe')
   }
 
+  const remotes = readwanixremotes()
+  const matched = remotes.find((remote) => remote.dst === target)
+  if (!matched) {
+    throw new Error(
+      `zedsync: no remote mount for "${target}" — run #wanix remote connect <wss-url> ${target} first`,
+    )
+  }
+  if (!iswanixspaceactive()) {
+    throw new Error(
+      `zedsync: remote mount missing — reconnect ${matched.url} (room idle after failed import)`,
+    )
+  }
+
   ensurewanixtaskroom(device, player)
   pollwasactive = true
   stopzedcafepoll()
@@ -146,7 +174,11 @@ export async function startwanixzedsync(
 
   const cmd = `${ramfspath} ${target}`
   spawntaskinroom(WANIX_ZEDSYNC_TASK_ID, cmd, 'gojs')
-  apilog(device, player, `zedsync: started watching ${target}`)
+  apilog(
+    device,
+    player,
+    `zedsync: spawned; waiting for ${target}/${WANIX_ZEDSYNC_READY_NAME}`,
+  )
 
   clearreadywait()
   pendingready = {

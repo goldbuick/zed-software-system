@@ -1,6 +1,6 @@
 !helpcontrols hk c " C " next;read help on controls
 !helptext hk t " T " next;read help on text and inputs
-!helpdeveloper hk 3 " 3 " next;$greenDeveloper — books & pages
+!helpdeveloper hk 3 " 3 " next;$greenDeveloper - books & pages
 !helpplayer hk 4 " 4 " next;$greenPlayer settings
 
 ## keyboard input

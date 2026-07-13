@@ -41,6 +41,7 @@ func TestStartRequiresTLS(t *testing.T) {
 
 func TestStartServesDirectory(t *testing.T) {
 	opts := mkcertopts(t)
+	opts.Port = 0 // ephemeral — do not fight the fixed-port dev server
 	dir := t.TempDir()
 	want := []byte("hello-p9")
 	if err := os.WriteFile(filepath.Join(dir, "note.txt"), want, 0o644); err != nil {

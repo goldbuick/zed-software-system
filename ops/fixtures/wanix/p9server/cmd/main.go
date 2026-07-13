@@ -16,11 +16,13 @@ func main() {
 	dir := flag.String("dir", ".", "directory to serve over wss:// 9P")
 	cert := flag.String("cert", "", "TLS certificate PEM (default: ~/.vite-plugin-mkcert/cert.pem)")
 	key := flag.String("key", "", "TLS private key PEM (default: ~/.vite-plugin-mkcert/dev.pem)")
+	port := flag.Int("port", p9server.DefaultPort, "listen port (wss://localhost:<port>/)")
 	flag.Parse()
 
 	opts := p9server.Options{
 		CertFile: *cert,
 		KeyFile:  *key,
+		Port:     *port,
 	}
 	if opts.CertFile == "" && opts.KeyFile == "" {
 		home, err := os.UserHomeDir()

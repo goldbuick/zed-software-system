@@ -66,7 +66,7 @@ Sources for per-lang hellos live in `hello/` (see `hello/manifest.json`). WAT so
 Browser Wanix cannot export its namespace to an external folder. Workaround:
 
 1. Serve a host folder over WebSocket 9P
-2. `#wanix remote connect` imports that mount
+2. `#wanix remote connect` imports that mount (idle → stands up a task room and mounts immediately; no prior wasm drop needed)
 3. `#wanix zedsync <dst>` mirrors it with `zedcafe/` (r/w; remote deletes are restored from zedcafe)
 
 ### Start a 9P WebSocket server
@@ -80,17 +80,24 @@ yarn task run ops:fixtures:wanix:p9server:dev
 # or pick a folder
 yarn task run ops:fixtures:wanix:p9server:dev -- ~/Desktop/zedcafe-sync
 
-# prints wss://localhost:<port>/ — then in cafe:
-#wanix remote connect wss://localhost:<port>/ remote
+# always wss://localhost:8765/ (override with -port); then in cafe:
+#wanix remote connect wss://localhost:8765/ remote
 #wanix zedsync remote
 
 go test ./p9server/ ./zedsync/ -count=1   # from ops/fixtures/wanix
 ```
 
+**How to confirm the WSS is alive**
+
+- p9server stdout should log `p9server: new connection from …` on each browser connect (and closed / 9p session lines).
+- DevTools Network → Socket: select the **wanix iframe** context (or enable “frames”). Parent-page `?token=…` Pending sockets are Vite HMR, not the 9P remote.
+- Console `[wanix-perf]`: `remote-wss-bind-patched`, then on connect `remote-import-prepare` / `remote-wss-force-dial` (`pre-append`) → `remote-import-open`. Remount **fails** with `wanix room apply failed: …` if WSS never opens. WSS is opened **before** the wanix system is appended so wasm cannot latch onto CDN’s hung iframe import.
+- `#wanix zedsync remote` requires a matching remote mount and an active room; guest prints `waiting for target dir …` before seed.
+
 ### Cafe commands
 
 ```text
-#wanix remote connect wss://localhost:<port>/ remote
+#wanix remote connect wss://localhost:8765/ remote
 #wanix zedsync remote
 ```
 

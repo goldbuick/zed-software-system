@@ -1,4 +1,4 @@
-$ltgrey Dorian — mode 2 of major
+$ltgrey Dorian - mode 2 of major
 $ltgrey scale; 12 keys.
 
 !istargetless copyit #play cde!fgab!+c;$greenC Dorian

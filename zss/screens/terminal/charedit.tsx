@@ -36,7 +36,7 @@ export function TerminalCharEdit({
 
   setuplogitem(!!active, 0, y, context)
   tokenizeandwritetextformat(
-    `$green$20 ${tcolor}${tlabel} $white${tvalue} $7(←→±1 ↑↓±${EDIT_WIDTH})`,
+    `$green$20 ${tcolor}${tlabel} $white${tvalue} $7($27$26$2411 $24$25$241${EDIT_WIDTH})`,
     context,
     false,
   )

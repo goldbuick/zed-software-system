@@ -47,7 +47,7 @@ export function TerminalColorEdit({
 
   setuplogitem(!!active, 0, y, context)
   tokenizeandwritetextformat(
-    `$green$20 ${tcolor}${tlabel} $${colorname}$219$white ${tvalue} $7(←→)`,
+    `$green$20 ${tcolor}${tlabel} $${colorname}$219$white ${tvalue} $7($27$26)`,
     context,
     false,
   )

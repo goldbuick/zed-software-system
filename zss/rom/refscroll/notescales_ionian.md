@@ -1,4 +1,4 @@
-$ltgrey Ionian — same as major;
+$ltgrey Ionian - same as major;
 $ltgrey first mode, 12 keys.
 
 !istargetless copyit #play cdefgab+c;$greenC Ionian

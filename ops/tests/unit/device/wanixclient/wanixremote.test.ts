@@ -1,3 +1,4 @@
+import { wanixserverapplyroom } from 'zss/device/api'
 import {
   connectwanixremote,
   disconnectwanixremote,
@@ -38,17 +39,27 @@ jest.mock('zss/device/wanixclient/wanixzedcafe', () => ({
   resetwanixzedcafeonidle: jest.fn(),
 }))
 
+const mockapplyroom = wanixserverapplyroom as jest.Mock
+
 describe('wanix remote connect', () => {
   beforeEach(() => {
     setwanixroomconfig(createidleroomconfig())
+    mockapplyroom.mockClear()
   })
 
-  it('connectwanixremote stores remotes while idle', () => {
+  it('connectwanixremote stands up task room when idle', () => {
     const remote = connectwanixremote('wss://127.0.0.1:7654/', 'host')
     expect(remote.dst).toBe('host')
     expect(remote.url).toBe('wss://127.0.0.1:7654/')
     expect(readwanixremotes()).toEqual([remote])
-    expect(readwanixroomconfig().mode).toBe('idle')
+    expect(readwanixroomconfig().mode).toBe('task')
+    expect(mockapplyroom).toHaveBeenCalled()
+    const applied = mockapplyroom.mock.calls[0][2] as {
+      mode?: string
+      remotes?: { dst: string }[]
+    }
+    expect(applied.mode).toBe('task')
+    expect(applied.remotes?.map((entry) => entry.dst)).toEqual(['host'])
   })
 
   it('connectwanixremote defaults dst to remote', () => {
@@ -74,10 +85,7 @@ describe('wanix remote connect', () => {
 
   it('soft stopwanixroom preserves remotes', () => {
     connectwanixremote('wss://127.0.0.1:1/')
-    setwanixroomconfig({
-      ...readwanixroomconfig(),
-      mode: 'task',
-    })
+    expect(readwanixroomconfig().mode).toBe('task')
     stopwanixroom(false)
     expect(readwanixroomconfig().mode).toBe('idle')
     expect(readwanixremotes()).toHaveLength(1)
@@ -85,11 +93,27 @@ describe('wanix remote connect', () => {
 
   it('hard stopwanixroom clears remotes', () => {
     connectwanixremote('wss://127.0.0.1:1/')
-    setwanixroomconfig({
-      ...readwanixroomconfig(),
-      mode: 'task',
-    })
+    expect(readwanixroomconfig().mode).toBe('task')
     stopwanixroom(true)
     expect(readwanixremotes()).toHaveLength(0)
+  })
+
+  it('applywanixroomresult demotes to idle on apply failure', async () => {
+    const { applywanixroomresult } = await import(
+      'zss/device/wanixclient/wanixroom'
+    )
+    setwanixroomconfig({
+      ...createidleroomconfig(),
+      mode: 'task',
+      remotes: [
+        { id: 'remote-remote', dst: 'remote', url: 'wss://localhost:8765/' },
+      ],
+    })
+    applywanixroomresult(undefined, 'test-player', {
+      ok: false,
+      error: 'wanix remote wss timeout',
+    })
+    expect(readwanixroomconfig().mode).toBe('idle')
+    expect(readwanixremotes()).toHaveLength(1)
   })
 })

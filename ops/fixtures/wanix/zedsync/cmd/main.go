@@ -46,10 +46,12 @@ func main() {
 	}
 	fmt.Printf("zedsync: zedcafe ready at %s\n", zedroot)
 
+	fmt.Printf("zedsync: waiting for target dir %s...\n", target)
 	if err := zedsync.WaitDirExists(target, findplayers.ExportReadyTimeout, findplayers.ExportReadyPoll); err != nil {
 		fmt.Fprintf(os.Stderr, "zedsync: target %s: %v\n", target, err)
 		os.Exit(1)
 	}
+	fmt.Printf("zedsync: target dir ready: %s\n", target)
 
 	r, err := zedsync.WalkFiles(target)
 	if err != nil {

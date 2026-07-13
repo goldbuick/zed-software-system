@@ -1,5 +1,5 @@
 $ltgrey Major & minor pentatonic
-$ltgrey — 12 keys each.
+$ltgrey - 12 keys each.
 
 !notescales_majorpent hk 1 " 1 " next;$greenMajor pentatonic (12 keys)
 !notescales_minorpent hk 2 " 2 " next;$greenMinor pentatonic (12 keys)

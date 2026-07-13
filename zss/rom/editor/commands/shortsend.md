@@ -1,3 +1,3 @@
 ---
-hint: $DKGRAY#shortsend — label and message without the TO keyword
+hint: $DKGRAY#shortsend - label and message without the TO keyword
 ---

@@ -1,4 +1,4 @@
-$ltgrey Locrian — mode 7 of major
+$ltgrey Locrian - mode 7 of major
 $ltgrey scale; 12 keys.
 
 !istargetless copyit #play cd!e!fg!a!b!+c;$greenC Locrian

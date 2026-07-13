@@ -26,11 +26,17 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
+// DefaultPort is the stable listen port for ops:fixtures:wanix:p9server:dev.
+// Tests may pass Port: 0 for an ephemeral port.
+const DefaultPort = 8765
+
 // Options configures Start (TLS required — wss:// only).
 type Options struct {
 	// CertFile + KeyFile — same pair cafe:dev uses via mkcert.
 	CertFile string
 	KeyFile  string
+	// Port is 127.0.0.1 listen port. 0 = ephemeral (tests).
+	Port int
 }
 
 // Server serves a directory over wss:// 9P (wanix import compatible).
@@ -41,7 +47,7 @@ type Server struct {
 	URL        string // wss://localhost:<port>/
 }
 
-// Start listens on 127.0.0.1:0 and serves rootdir via wss→9P.
+// Start listens on 127.0.0.1:<Port> (or ephemeral when Port==0) and serves rootdir via wss→9P.
 func Start(rootdir string, opts Options) (*Server, error) {
 	if opts.CertFile == "" || opts.KeyFile == "" {
 		return nil, fmt.Errorf("p9server: TLS cert and key required (wss only)")
@@ -63,9 +69,13 @@ func Start(rootdir string, opts Options) (*Server, error) {
 	}
 	p9srv := p9.NewServer(p9kit.Attacher(dirfs, p9kit.WithXattrAttrStore()))
 
-	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	addr := "127.0.0.1:0"
+	if opts.Port > 0 {
+		addr = fmt.Sprintf("127.0.0.1:%d", opts.Port)
+	}
+	ln, err := net.Listen("tcp", addr)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("p9server listen %s: %w", addr, err)
 	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -73,6 +83,7 @@ func Start(rootdir string, opts Options) (*Server, error) {
 			handlep9(p9srv, w, r)
 			return
 		}
+		log.Printf("p9server: non-websocket %s %s from %s", r.Method, r.URL.Path, r.RemoteAddr)
 		http.Error(w, "expecting websocket upgrade", http.StatusBadRequest)
 	})
 	hs := &http.Server{Handler: mux}
@@ -114,12 +125,18 @@ func (s *Server) Close() error {
 }
 
 func handlep9(srv *p9.Server, w http.ResponseWriter, r *http.Request) {
+	remote := r.RemoteAddr
+	log.Printf("p9server: new connection from %s", remote)
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
+		log.Printf("p9server: upgrade failed from %s: %v", remote, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	defer ws.Close()
+	defer func() {
+		log.Printf("p9server: connection closed from %s", remote)
+		_ = ws.Close()
+	}()
 
 	inR, inW := io.Pipe()
 	outR, outW := io.Pipe()
@@ -161,5 +178,11 @@ func handlep9(srv *p9.Server, w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	_ = srv.Handle(inR, outW)
+	log.Printf("p9server: 9p session start from %s", remote)
+	err = srv.Handle(inR, outW)
+	if err != nil {
+		log.Printf("p9server: 9p session end from %s: %v", remote, err)
+		return
+	}
+	log.Printf("p9server: 9p session end from %s", remote)
 }

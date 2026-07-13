@@ -1,4 +1,4 @@
-$ltgrey Exotic — modal & parent
+$ltgrey Exotic - modal & parent
 $ltgrey modes, one tonic each.
 
 !notescales_modal hk 1 " 1 " next;$greenModes of C major (diatonic)

@@ -72,7 +72,7 @@ describe('wanixmenu', () => {
       expect(tape).toContain('SECTION:attach to session')
       expect(tape).toContain('!wanix attach "hello-wasm";hello-wasm')
       expect(tape).toContain('!wanix attach "other-wasm";other-wasm')
-      expect(tape).toContain('drop files → input/')
+      expect(tape).toContain('drop files $26 input/')
       expect(tape).not.toContain('wanix detach')
     })
 

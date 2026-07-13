@@ -79,7 +79,7 @@ export function buildwanixmenutape(state: WanixMenuState): string {
     parts.push('$32')
     parts.push(
       zsstextline(
-        '$gray drop files → input/ for attached processor (see ops/fixtures/wanix README)',
+        '$gray drop files $26 input/ for attached processor (see ops/fixtures/wanix README)',
       ),
     )
   }
@@ -89,22 +89,22 @@ export function buildwanixmenutape(state: WanixMenuState): string {
   parts.push(zsszedlinkline('wanix remote', 'list remote imports (WSS 9P)'))
   parts.push(
     zsstextline(
-      '$cyan   #wanix remote connect <wss-url> [dst] — import namespace',
+      '$cyan   #wanix remote connect <wss-url> [dst] - import namespace',
     ),
   )
   parts.push(
     zsstextline(
-      '$cyan   #wanix remote disconnect [dst|id] — remove import',
+      '$cyan   #wanix remote disconnect [dst|id] - remove import',
     ),
   )
   parts.push(
     zsstextline(
-      '$cyan   #wanix zedsync <dst> — sync remote mount ↔ zedcafe (no spaces)',
+      '$cyan   #wanix zedsync <dst> - sync remote mount $29 zedcafe (no spaces)',
     ),
   )
   parts.push(
     zsstextline(
-      '$cyan   #wanix bridge <ws-url> — export namespace (not wired yet)',
+      '$cyan   #wanix bridge <ws-url> - export namespace (not wired yet)',
     ),
   )
 

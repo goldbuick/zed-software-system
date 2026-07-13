@@ -1,4 +1,4 @@
-$ltgrey Lydian — mode 4 of major
+$ltgrey Lydian - mode 4 of major
 $ltgrey scale; 12 keys.
 
 !istargetless copyit #play cdef#gab+c;$greenC Lydian

@@ -44,7 +44,7 @@ export const OPS_FIXTURES_WANIX_TASKS: TaskDef[] = [
   }),
   def('ops:fixtures:wanix:p9server:dev', {
     description:
-      'Serve a folder over wss:// 9P for #wanix remote connect / zedsync (TLS via cafe mkcert; optional dir argv; default ops/fixtures/wanix/p9server/serve-root). Opens the folder in Finder. Ctrl+C to stop.',
+      'Serve a folder over wss:// 9P for #wanix remote connect / zedsync (TLS via cafe mkcert; default port 8765; optional dir argv; default ops/fixtures/wanix/p9server/serve-root). Opens the folder in Finder. Ctrl+C to stop.',
     tags: ['dev'],
     run: handler(async (ctx) => {
       const { resolvewanixp9serverdir, runwanixp9server } =

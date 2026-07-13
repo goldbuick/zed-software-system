@@ -82,9 +82,32 @@ export function applywanixroomresult(
           mountkey?: number
           vmid?: string
           mem?: string
+          error?: string
         })
       : undefined
   if (res?.ok === false) {
+    const detail =
+      typeof res.error === 'string' && res.error.length > 0
+        ? res.error
+        : 'unknown error'
+    const logplayer =
+      typeof player === 'string' && player.length > 0
+        ? player
+        : registerreadplayer()
+    const logdevice = device ?? SOFTWARE
+    apilog(logdevice, logplayer, `wanix room apply failed: ${detail}`)
+    setpendingapplyconfig(null)
+    // Optimistic config already applied; demote to idle so zedsync cannot
+    // assume remotes are mounted after a failed WSS/import remount.
+    const current = readwanixroomconfig()
+    setwanixroomconfig({
+      ...current,
+      mode: 'idle',
+      hardreset: false,
+      zedcafe: undefined,
+      tasks: [],
+      vm: undefined,
+    })
     return
   }
   const pending = readpendingapplyconfig()
@@ -220,6 +243,7 @@ export function connectwanixremote(url: string, dst?: string): WanixRemoteSpec {
   ]
   if (current.mode === 'idle') {
     setwanixroomconfig({ ...current, remotes })
+    ensurewanixtaskroom(SOFTWARE, registerreadplayer())
     return remote
   }
   applywanixroom({
@@ -361,7 +385,11 @@ function onwanixsessionclose(sessionkey: string) {
   if (sessionkey === 'zedsync' || sessionkey.startsWith('zedsync-')) {
     apilog(SOFTWARE, registerreadplayer(), 'zedsync stopped')
     void import('zss/device/wanixclient/wanixzedsync').then((mod) => {
-      mod.cancelzedsyncreadywait()
+      if (mod.iszedsyncreadywaitpending()) {
+        mod.cancelzedsyncreadywait('guest session closed')
+      } else {
+        mod.cancelzedsyncreadywait()
+      }
     })
   }
   removewanixroomtask(sessionkey)

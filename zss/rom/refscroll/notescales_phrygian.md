@@ -1,4 +1,4 @@
-$ltgrey Phrygian — mode 3 of
+$ltgrey Phrygian - mode 3 of
 $ltgrey major scale; 12 keys.
 
 !istargetless copyit #play cd!e!fga!b!+c;$greenC Phrygian

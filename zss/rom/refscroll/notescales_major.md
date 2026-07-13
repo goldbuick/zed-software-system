@@ -1,4 +1,4 @@
-$ltgrey Major scales — Ionian —
+$ltgrey Major scales - Ionian -
 $ltgrey twelve keys in all.
 
 !istargetless copyit #play cdefgab+c;$greenC major
