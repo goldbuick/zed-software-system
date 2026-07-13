@@ -4,7 +4,7 @@ import {
   extractwanixtarbytes,
   extractwanixtgz,
   iswanixtarjunkpath,
-} from 'zss/device/wanixclient/wanixtgzextract'
+} from 'zss/device/wanixserver/wanixtgzextract'
 
 function writeoctalfield(header: Uint8Array, offset: number, length: number, value: number) {
   const text = value.toString(8).padStart(length - 1, '0') + '\0'

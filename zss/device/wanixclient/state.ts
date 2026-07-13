@@ -1,12 +1,15 @@
 /**
  * Shared mutable state for the wanixclient (parent) device.
- * Used by wanixclient handlers and parent coordinators (room, zedcafe, display, bridge).
+ * Store-backed fields live in wanixclientstore; waiters / bridge Window stay here.
  */
 
 import type { WANIX_ZED_CAFE_IMPORT_RESULT } from 'zss/device/api'
 import type { DEVICELIKE, MESSAGE } from 'zss/device/messagetypes'
+import {
+  resetwanixclientstore,
+  useWanixClient,
+} from 'zss/device/wanixclient/wanixclientstore'
 import type { WanixRoomConfig } from 'zss/feature/wanix/wanixroomtypes'
-import { createidleroomconfig } from 'zss/feature/wanix/wanixroomtypes'
 import type { WANIX_ZED_CAFE_EXPORT_FILE } from 'zss/feature/wanix/wanixstateexport'
 import type { WanixTermCellsSnapshot } from 'zss/feature/wanix/wanixtermgridstate'
 import { deepcopy } from 'zss/mapping/types'
@@ -88,68 +91,54 @@ export type VmZedCafeImportWaiter = {
 
 export type PendingPollPhase = 'taskrid' | 'live' | 'tree' | null
 
-// --- room config ---
-
-export const wanixroomconfigbox: { current: WanixRoomConfig } = {
-  current: createidleroomconfig(),
-}
+// --- room config (zustand) ---
 
 export function readwanixroomconfig(): WanixRoomConfig {
-  return wanixroomconfigbox.current
+  return useWanixClient.getState().roomconfig
 }
 
 export function setwanixroomconfig(next: WanixRoomConfig): void {
-  wanixroomconfigbox.current = next
+  useWanixClient.setState({ roomconfig: next })
 }
 
-// --- attach / session display keys ---
-
-let attachedsessionkey: string | null = null
-let activesessionkey: string | null = null
-let userdetached = false
-const attachlisteners = new Set<() => void>()
-let onsessioncloseprune: ((sessionkey: string) => void) | null = null
-
-export function bumpattach(): void {
-  for (const listener of attachlisteners) {
-    listener()
-  }
-}
+// --- attach / session display keys (zustand) ---
 
 export function readwanixactivesession(): string | null {
-  return activesessionkey
+  return useWanixClient.getState().activesessionkey
 }
 
 export function setwanixactivesessionkey(next: string | null): void {
-  activesessionkey = next
+  useWanixClient.setState({ activesessionkey: next })
 }
 
 export function readattachedsession(): string | null {
-  return attachedsessionkey
+  return useWanixClient.getState().attachedsessionkey
 }
 
 export function setattachedsessionkey(next: string | null): void {
-  attachedsessionkey = next
+  useWanixClient.setState({ attachedsessionkey: next })
 }
 
 export function readuserdetached(): boolean {
-  return userdetached
+  return useWanixClient.getState().userdetached
 }
 
 export function setuserdetached(next: boolean): void {
-  userdetached = next
+  useWanixClient.setState({ userdetached: next })
 }
 
 export function subscribewanixattach(listener: () => void) {
-  attachlisteners.add(listener)
-  return () => {
-    attachlisteners.delete(listener)
-  }
+  let prev = useWanixClient.getState().attachedsessionkey
+  return useWanixClient.subscribe((state) => {
+    if (state.attachedsessionkey === prev) {
+      return
+    }
+    prev = state.attachedsessionkey
+    listener()
+  })
 }
 
-export function clearattachlisteners(): void {
-  attachlisteners.clear()
-}
+let onsessioncloseprune: ((sessionkey: string) => void) | null = null
 
 export function registerwanixsessioncloseprune(
   fn: (sessionkey: string) => void,
@@ -164,99 +153,118 @@ export function readonsessioncloseprune():
 }
 
 export function resetwanixattachforidle(): void {
-  attachedsessionkey = null
-  activesessionkey = null
-  userdetached = false
-  bumpattach()
+  useWanixClient.setState({
+    attachedsessionkey: null,
+    activesessionkey: null,
+    userdetached: false,
+  })
 }
 
 export function resetwanixattachstatefortest(): void {
-  attachedsessionkey = null
-  activesessionkey = null
-  userdetached = false
-  attachlisteners.clear()
+  useWanixClient.setState({
+    attachedsessionkey: null,
+    activesessionkey: null,
+    userdetached: false,
+  })
   onsessioncloseprune = null
 }
 
-// --- term tile buffers ---
-
-const termbuffers = new Map<string, WanixTermTileBuffer>()
-const opensessions = new Set<string>()
-const termbufferlisteners = new Set<() => void>()
-let termnotifyversion = 0
+// --- term tile buffers (zustand) ---
 
 export function bumptermbuffer(): void {
-  termnotifyversion += 1
-  for (const listener of termbufferlisteners) {
-    listener()
-  }
+  useWanixClient.setState((state) => ({
+    termnotifyversion: state.termnotifyversion + 1,
+  }))
 }
 
 export function readtermbuffers(): Map<string, WanixTermTileBuffer> {
-  return termbuffers
+  return useWanixClient.getState().termbuffers
 }
 
 export function readopensessions(): Set<string> {
-  return opensessions
+  return useWanixClient.getState().opensessions
 }
 
 export function readwanixtermbuffer(
   sessionkey: string,
 ): WanixTermTileBuffer | null {
-  return termbuffers.get(sessionkey) ?? null
+  return useWanixClient.getState().termbuffers.get(sessionkey) ?? null
 }
 
 export function setwanixtermbuffer(
   sessionkey: string,
   buffer: WanixTermTileBuffer,
 ): void {
+  const termbuffers = new Map(useWanixClient.getState().termbuffers)
   termbuffers.set(sessionkey, buffer)
+  useWanixClient.setState({ termbuffers })
 }
 
 export function deletewanixtermbuffer(sessionkey: string): boolean {
-  return termbuffers.delete(sessionkey)
+  const termbuffers = new Map(useWanixClient.getState().termbuffers)
+  if (!termbuffers.delete(sessionkey)) {
+    return false
+  }
+  useWanixClient.setState({ termbuffers })
+  return true
 }
 
 export function clearwanixtermbuffersstore(): void {
-  termbuffers.clear()
-  opensessions.clear()
+  useWanixClient.setState({
+    termbuffers: new Map(),
+    opensessions: new Set(),
+  })
 }
 
 export function hasopensession(sessionkey: string): boolean {
-  return opensessions.has(sessionkey)
+  return useWanixClient.getState().opensessions.has(sessionkey)
 }
 
 export function addopensession(sessionkey: string): void {
+  const opensessions = new Set(useWanixClient.getState().opensessions)
   opensessions.add(sessionkey)
+  useWanixClient.setState({ opensessions })
 }
 
 export function deleteopensession(sessionkey: string): boolean {
-  return opensessions.delete(sessionkey)
+  const opensessions = new Set(useWanixClient.getState().opensessions)
+  if (!opensessions.delete(sessionkey)) {
+    return false
+  }
+  useWanixClient.setState({ opensessions })
+  return true
 }
 
 export function readwanixtermbufferkeys(): string[] {
+  const { opensessions, termbuffers } = useWanixClient.getState()
   return [...new Set([...opensessions, ...termbuffers.keys()])]
 }
 
 export function readwanixtermnotifyversion(): number {
-  return termnotifyversion
+  return useWanixClient.getState().termnotifyversion
 }
 
 export function subscribewanixtermbuffer(listener: () => void) {
-  termbufferlisteners.add(listener)
-  return () => {
-    termbufferlisteners.delete(listener)
-  }
+  let prev = useWanixClient.getState().termnotifyversion
+  return useWanixClient.subscribe((state) => {
+    if (state.termnotifyversion === prev) {
+      return
+    }
+    prev = state.termnotifyversion
+    listener()
+  })
 }
 
 export function resetwanixtermbufferfortest(): void {
-  termbuffers.clear()
-  opensessions.clear()
-  termbufferlisteners.clear()
-  termnotifyversion = 0
+  useWanixClient.setState({
+    termbuffers: new Map(),
+    opensessions: new Set(),
+    termnotifyversion: 0,
+  })
 }
 
 // --- bridge ready / iframe window ---
+// wanixisready is mirrored in zustand for React; Window/waiters stay on globalThis.
 
 const WANIX_BRIDGE_STATE_KEY = '__zss_wanix_bridge_state__'
 
@@ -277,11 +285,12 @@ export function readbridgestate(): WanixBridgeState {
 }
 
 export function iswanixready(): boolean {
-  return readbridgestate().wanixisready
+  return useWanixClient.getState().wanixisready
 }
 
 export function setwanixreadyflag(ready: boolean): void {
   readbridgestate().wanixisready = ready
+  useWanixClient.setState({ wanixisready: ready })
 }
 
 export function resetwanixbridgefortest(): void {
@@ -291,43 +300,78 @@ export function resetwanixbridgefortest(): void {
   state.wanixisready = false
   state.readylisteners = []
   state.deliverwanixmessage = null
+  useWanixClient.setState({ wanixisready: false })
 }
 
-// --- room pending (apply / spawn) ---
-
-let pendingapplyconfig: WanixRoomConfig | null = null
-let pendingspawn: { taskid: string; cmd: string } | null = null
+// --- room pending (apply / spawn) (zustand) ---
 
 export function readpendingapplyconfig(): WanixRoomConfig | null {
-  return pendingapplyconfig
+  return useWanixClient.getState().pendingapplyconfig
 }
 
 export function setpendingapplyconfig(next: WanixRoomConfig | null): void {
-  pendingapplyconfig = next
+  useWanixClient.setState({ pendingapplyconfig: next })
 }
 
 export function readpendingspawn(): { taskid: string; cmd: string } | null {
-  return pendingspawn
+  return useWanixClient.getState().pendingspawn
 }
 
 export function setpendingspawn(
   next: { taskid: string; cmd: string } | null,
 ): void {
-  pendingspawn = next
+  useWanixClient.setState({ pendingspawn: next })
 }
 
 export function resetwanixroompendingfortest(): void {
-  pendingapplyconfig = null
-  pendingspawn = null
+  useWanixClient.setState({
+    pendingapplyconfig: null,
+    pendingspawn: null,
+  })
 }
 
-// --- zedcafe session + pending sync/poll/waiters ---
+// --- zedcafe session flags (zustand) + pending sync/poll/waiters (module) ---
 
-let lasthostpushdoc: Record<string, unknown> = {}
-let pollactive = false
-let guestdirty = false
+export function readlasthostpushdoc(): Record<string, unknown> {
+  return useWanixClient.getState().lasthostpushdoc
+}
 
-let pendingexport = false
+export function setlasthostpushdoc(doc: Record<string, unknown>): void {
+  useWanixClient.setState({ lasthostpushdoc: deepcopy(doc) })
+}
+
+export function clearlasthostpushdoc(): void {
+  useWanixClient.setState({ lasthostpushdoc: {} })
+}
+
+export function readzedcafepollactive(): boolean {
+  return useWanixClient.getState().pollactive
+}
+
+export function setzedcafepollactive(active: boolean): void {
+  useWanixClient.setState({ pollactive: active })
+}
+
+export function readzedcafeguestdirty(): boolean {
+  return useWanixClient.getState().guestdirty
+}
+
+export function setzedcafeguestdirty(dirty: boolean): void {
+  useWanixClient.setState({ guestdirty: dirty })
+}
+
+export function readwanixzedcafependingexport(): boolean {
+  return useWanixClient.getState().pendingexport
+}
+
+export function markwanixzedcafependingexport(): void {
+  useWanixClient.setState({ pendingexport: true })
+}
+
+export function clearwanixzedcafependingexport(): void {
+  useWanixClient.setState({ pendingexport: false })
+}
+
 let polltimer: ReturnType<typeof setInterval> | undefined
 let polldevice: DEVICELIKE | null = null
 let pollplayer = ''
@@ -335,46 +379,6 @@ let pendingexportwait: VmZedCafeExportWaiter | null = null
 let pendingimportwait: VmZedCafeImportWaiter | null = null
 let pendingsync: Pendingsync | null = null
 let pendingpollphase: PendingPollPhase = null
-
-export function readlasthostpushdoc(): Record<string, unknown> {
-  return lasthostpushdoc
-}
-
-export function setlasthostpushdoc(doc: Record<string, unknown>): void {
-  lasthostpushdoc = deepcopy(doc)
-}
-
-export function clearlasthostpushdoc(): void {
-  lasthostpushdoc = {}
-}
-
-export function readzedcafepollactive(): boolean {
-  return pollactive
-}
-
-export function setzedcafepollactive(active: boolean): void {
-  pollactive = active
-}
-
-export function readzedcafeguestdirty(): boolean {
-  return guestdirty
-}
-
-export function setzedcafeguestdirty(dirty: boolean): void {
-  guestdirty = dirty
-}
-
-export function readwanixzedcafependingexport(): boolean {
-  return pendingexport
-}
-
-export function markwanixzedcafependingexport(): void {
-  pendingexport = true
-}
-
-export function clearwanixzedcafependingexport(): void {
-  pendingexport = false
-}
 
 export function readpolltimer(): ReturnType<typeof setInterval> | undefined {
   return polltimer
@@ -435,13 +439,15 @@ export function setpendingpollphase(next: PendingPollPhase): void {
 }
 
 export function resetwanixzedcafesessionfortest(): void {
-  lasthostpushdoc = {}
-  pollactive = false
-  guestdirty = false
+  useWanixClient.setState({
+    lasthostpushdoc: {},
+    pollactive: false,
+    guestdirty: false,
+  })
 }
 
 export function resetwanixzedcafependingfortest(): void {
-  pendingexport = false
+  useWanixClient.setState({ pendingexport: false })
   if (polltimer) {
     clearInterval(polltimer)
   }
@@ -462,11 +468,8 @@ export function resetwanixzedcafependingfortest(): void {
 
 /** Test hook — resets all wanixclient device state. */
 export function resetwanixclientstatefortest(): void {
-  wanixroomconfigbox.current = createidleroomconfig()
-  resetwanixattachstatefortest()
-  resetwanixtermbufferfortest()
+  resetwanixclientstore()
+  onsessioncloseprune = null
   resetwanixbridgefortest()
-  resetwanixroompendingfortest()
-  resetwanixzedcafesessionfortest()
   resetwanixzedcafependingfortest()
 }

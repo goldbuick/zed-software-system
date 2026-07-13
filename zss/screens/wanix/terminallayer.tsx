@@ -1,8 +1,5 @@
-import { type ReactNode, useEffect, useState } from 'react'
-import {
-  readattachedsession,
-  subscribewanixattach,
-} from 'zss/device/wanixclient/wanixdisplay'
+import { type ReactNode } from 'react'
+import { useWanixClient } from 'zss/device/wanixclient/wanixclientstore'
 import { WanixTermScreen } from 'zss/screens/wanix/termscreen'
 import { WanixTermSizeSync } from 'zss/screens/wanix/termsizesync'
 
@@ -11,11 +8,7 @@ export function WanixTerminalLayer({
 }: {
   unattached: (attached: boolean) => ReactNode
 }) {
-  const [attachedsession, setattachedsession] = useState(readattachedsession)
-  useEffect(
-    () => subscribewanixattach(() => setattachedsession(readattachedsession())),
-    [],
-  )
+  const attachedsession = useWanixClient((state) => state.attachedsessionkey)
   return (
     <>
       <WanixTermSizeSync />

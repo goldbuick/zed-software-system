@@ -4,16 +4,17 @@ import { ismessage } from 'zss/device/messagetypes'
 import { SOFTWARE } from 'zss/device/session'
 import {
   type WanixReadyCallback,
+  iswanixready as readwanixreadyflag,
   readbridgestate,
   registerwanixsessioncloseprune as registersessioncloseprune,
   resetwanixattachforidle,
+  setwanixreadyflag,
 } from 'zss/device/wanixclient/state'
 import { clearwanixtermbuffers } from 'zss/device/wanixclient/wanixtermbuffer'
 import { isdevbuild } from 'zss/feature/devbuild'
 
 function resetready() {
-  const state = readbridgestate()
-  state.wanixisready = false
+  setwanixreadyflag(false)
 }
 
 function notifyreadylisteners() {
@@ -26,22 +27,20 @@ function notifyreadylisteners() {
 }
 
 export function iswanixready(): boolean {
-  return readbridgestate().wanixisready
+  return readwanixreadyflag()
 }
 
 /** Register a one-shot callback when iframe becomes ready (not a Promise API). */
 export function onwanixready(cb: WanixReadyCallback): void {
-  const state = readbridgestate()
-  if (state.wanixisready) {
+  if (readwanixreadyflag()) {
     cb()
     return
   }
-  state.readylisteners.push(cb)
+  readbridgestate().readylisteners.push(cb)
 }
 
 export function markwanixready(): void {
-  const state = readbridgestate()
-  state.wanixisready = true
+  setwanixreadyflag(true)
   notifyreadylisteners()
 }
 

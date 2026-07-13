@@ -1,9 +1,9 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import { wanixservertermfit } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import { iswanixready, onwanixready } from 'zss/device/wanixclient/wanixbridge'
-import { subscribewanixattach } from 'zss/device/wanixclient/wanixdisplay'
+import { useWanixClient } from 'zss/device/wanixclient/wanixclientstore'
 import { useTape } from 'zss/gadget/data/zustandstores'
 import { useWriteText } from 'zss/gadget/writetext'
 import { textformatreadedges } from 'zss/words/textformat'
@@ -21,20 +21,15 @@ function readwanixtermgridsize(edge: { width: number; height: number }) {
 export function WanixTermSizeSync() {
   const terminalopen = useTape((state) => state.terminal.open)
   const editoropen = useTape((state) => state.editor.open)
+  const attachedsessionkey = useWanixClient((state) => state.attachedsessionkey)
   const context = useWriteText()
   const edge = textformatreadedges(context)
   const lastpush = useRef<{ cols: number; rows: number } | null>(null)
-  const [attachversion, setattachversion] = useState(0)
   const { cols, rows } = readwanixtermgridsize(edge)
 
-  useLayoutEffect(
-    () =>
-      subscribewanixattach(() => {
-        lastpush.current = null
-        setattachversion((prev) => prev + 1)
-      }),
-    [],
-  )
+  useLayoutEffect(() => {
+    lastpush.current = null
+  }, [attachedsessionkey])
 
   useLayoutEffect(() => {
     if (!terminalopen || editoropen) {
@@ -55,7 +50,7 @@ export function WanixTermSizeSync() {
       }
     }, TERM_FIT_DEBOUNCE_MS)
     return () => clearTimeout(timer)
-  }, [cols, rows, terminalopen, editoropen, attachversion])
+  }, [cols, rows, terminalopen, editoropen, attachedsessionkey])
 
   return null
 }

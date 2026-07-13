@@ -1,4 +1,4 @@
-import { listwanixwasmentries, readbundleflatpath } from 'zss/device/wanixclient/wanixbundle'
+import { listwanixwasmentries, readbundleflatpath } from 'zss/device/wanixserver/wanixbundle'
 
 describe('wanixbundle', () => {
   describe('readbundleflatpath', () => {

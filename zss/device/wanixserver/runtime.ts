@@ -9,6 +9,7 @@ import { createforward, shouldforwardwanixtoclient } from 'zss/device/forward'
 import { ismessage } from 'zss/device/messagetypes'
 import { SOFTWARE } from 'zss/device/session'
 import { resolvedriverforwasm } from 'zss/device/wanixserver/spawndriver'
+import { uniquewanixtaskid } from 'zss/device/wanixserver/wanixcmd'
 import {
   type TermSession,
   type WanixSessionEvent,
@@ -1390,26 +1391,6 @@ export async function iszedcafeguestbound() {
   return readzedcafeguestbound(readroot(), system)
 }
 
-function makewanixtaskid(label: string): string {
-  const base = (label || 'task')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-  return base || 'task'
-}
-
-function uniquewanixtaskid(label: string, existing: Iterable<string>): string {
-  const base = makewanixtaskid(label)
-  const used = new Set(existing)
-  let candidate = base
-  let seq = 2
-  while (used.has(candidate)) {
-    candidate = `${base}-${seq}`
-    seq += 1
-  }
-  return candidate
-}
-
 function normalizewanixpath(label: string): string {
   const trimmed = label.replace(/^\/+/, '')
   return trimmed.startsWith('#ramfs/') ? trimmed : `#ramfs/${trimmed}`
@@ -1475,9 +1456,9 @@ export async function drop(
     }
   }
   const { extractwanixtgz } =
-    await import('zss/device/wanixclient/wanixtgzextract')
+    await import('zss/device/wanixserver/wanixtgzextract')
   const { listwanixwasmentries, readbundleflatpath } =
-    await import('zss/device/wanixclient/wanixbundle')
+    await import('zss/device/wanixserver/wanixbundle')
   const { readwanixwasmdriver } =
     await import('zss/feature/wanix/wanixwasmdriver')
   const prefix = `bundle-${taskid}`

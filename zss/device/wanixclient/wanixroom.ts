@@ -1,4 +1,3 @@
-import type { DEVICELIKE } from 'zss/device/api'
 import {
   apilog,
   wanixserverapplyroom,
@@ -9,6 +8,7 @@ import {
   wanixserverstopvm,
   wanixserverwritefile,
 } from 'zss/device/api'
+import type { DEVICELIKE } from 'zss/device/messagetypes'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import {
@@ -18,7 +18,7 @@ import {
   readwanixroomconfig as readwanixroomconfigstate,
   setpendingapplyconfig,
   setpendingspawn,
-  wanixroomconfigbox,
+  setwanixroomconfig,
 } from 'zss/device/wanixclient/state'
 import { activatewanixzedcafeexport } from 'zss/device/wanixclient/wanixactivateexport'
 import { registerwanixsessioncloseprune } from 'zss/device/wanixclient/wanixbridge'
@@ -27,6 +27,7 @@ import {
   resetwanixzedcafeonidle,
 } from 'zss/device/wanixclient/wanixzedcafe'
 import type { WanixTaskDriver } from 'zss/feature/wanix/wanixelements.d.ts'
+import { wanixperfmark } from 'zss/feature/wanix/wanixperf'
 import type {
   WanixBindDropPayload,
   WanixRoomConfig,
@@ -36,7 +37,6 @@ import {
   DEFAULT_WANIX_VM_MEM,
   createidleroomconfig,
 } from 'zss/feature/wanix/wanixroomtypes'
-import { wanixperfmark } from 'zss/feature/wanix/wanixperf'
 import type { WanixZedCafeRoomSpec } from 'zss/feature/wanix/wanixzedcafetypes'
 
 function bumpmountkey(config: WanixRoomConfig): WanixRoomConfig {
@@ -52,7 +52,7 @@ export function applywanixroom(config: WanixRoomConfig): void {
     clearlasthostpushdoc()
   }
   setpendingapplyconfig(config)
-  wanixroomconfigbox.current = config
+  setwanixroomconfig(config)
   wanixserverapplyroom(SOFTWARE, registerreadplayer(), config)
 }
 
@@ -79,7 +79,7 @@ export function applywanixroomresult(
     const mountmatches =
       typeof res?.mountkey !== 'number' || pending.mountkey === res.mountkey
     if (mountmatches) {
-      wanixroomconfigbox.current = pending
+      setwanixroomconfig(pending)
       setpendingapplyconfig(null)
     }
   }
@@ -87,9 +87,9 @@ export function applywanixroomresult(
   // before activate so iswanixspaceactive() is true and push is not deferred.
   if (res?.mode === 'vm' || res?.mode === 'task') {
     const boot = readwanixbootzedcafestate()
-    const base = wanixroomconfigbox.current
+    const base = readwanixroomconfig()
     if (base.mode !== res.mode || !base.zedcafe?.cmd) {
-      wanixroomconfigbox.current = {
+      setwanixroomconfig({
         ...base,
         mode: res.mode,
         mountkey:
@@ -109,10 +109,10 @@ export function applywanixroomresult(
               tasks: [],
             }
           : {}),
-      }
+      })
     }
   }
-  const config = wanixroomconfigbox.current
+  const config = readwanixroomconfig()
   const mode = typeof res?.mode === 'string' ? res.mode : config.mode
   // Iframe applyroom replies often arrive with empty player (see filter.ts).
   const activateplayer = player || registerreadplayer()
@@ -136,7 +136,7 @@ export function ensurewanixtaskroom(
   device?: DEVICELIKE,
   player?: string,
 ): void {
-  if (wanixroomconfigbox.current.mode !== 'idle') {
+  if (readwanixroomconfig().mode !== 'idle') {
     if (device && player) {
       apilog(
         device,
@@ -163,7 +163,7 @@ export function ensurewanixtaskroom(
     }
   }
   const next: WanixRoomConfig = {
-    ...bumpmountkey(wanixroomconfigbox.current),
+    ...bumpmountkey(readwanixroomconfig()),
     mode: 'task',
     archives: [],
     remotes: [],
@@ -179,42 +179,43 @@ export function startwanixvmroom(
   mem = DEFAULT_WANIX_VM_MEM,
   zedcafe?: WanixZedCafeRoomSpec | null,
 ): void {
+  const current = readwanixroomconfig()
   if (
-    wanixroomconfigbox.current.mode === 'vm' &&
-    wanixroomconfigbox.current.vm?.active &&
-    wanixroomconfigbox.current.vm.id === vmid &&
-    wanixroomconfigbox.current.vm.mem === mem
+    current.mode === 'vm' &&
+    current.vm?.active &&
+    current.vm.id === vmid &&
+    current.vm.mem === mem
   ) {
     wanixserverreadvmstatus(SOFTWARE, registerreadplayer())
     return
   }
   const next: WanixRoomConfig = {
-    ...bumpmountkey(wanixroomconfigbox.current),
+    ...bumpmountkey(current),
     mode: 'vm',
-    archives: wanixroomconfigbox.current.archives,
-    remotes: wanixroomconfigbox.current.remotes,
+    archives: current.archives,
+    remotes: current.remotes,
     tasks: [],
     vm: { id: vmid, mem, active: true },
-    zedcafe: zedcafe ?? wanixroomconfigbox.current.zedcafe,
+    zedcafe: zedcafe ?? current.zedcafe,
   }
   applywanixroom(next)
 }
 
 export function stopwanixvmroom(): void {
   wanixserverstopvm(SOFTWARE, registerreadplayer())
-  wanixroomconfigbox.current = {
-    ...wanixroomconfigbox.current,
+  setwanixroomconfig({
+    ...readwanixroomconfig(),
     mode: 'task',
     vm: undefined,
-  }
+  })
 }
 
 export function stopwanixroom(hard = false): void {
   resetwanixzedcafeonidle()
   const next = createidleroomconfig()
   next.mountkey = hard
-    ? wanixroomconfigbox.current.mountkey + 1
-    : wanixroomconfigbox.current.mountkey
+    ? readwanixroomconfig().mountkey + 1
+    : readwanixroomconfig().mountkey
   if (hard) {
     next.hardreset = true
   }
@@ -227,13 +228,13 @@ export function spawntaskinroom(
   driver?: WanixTaskDriver,
 ): void {
   setpendingspawn({ taskid, cmd })
-  wanixroomconfigbox.current = {
-    ...wanixroomconfigbox.current,
+  setwanixroomconfig({
+    ...readwanixroomconfig(),
     tasks: [
-      ...wanixroomconfigbox.current.tasks.filter((task) => task.id !== taskid),
+      ...readwanixroomconfig().tasks.filter((task) => task.id !== taskid),
       { id: taskid, cmd, running: true },
     ],
-  }
+  })
   wanixserverspawntask(SOFTWARE, registerreadplayer(), taskid, cmd, driver)
 }
 
@@ -246,43 +247,37 @@ export function applywanixtaskspawnresult(data: unknown): void {
     const pending = readpendingspawn()
     if (pending) {
       const { taskid } = pending
-      wanixroomconfigbox.current = {
-        ...wanixroomconfigbox.current,
-        tasks: wanixroomconfigbox.current.tasks.filter(
-          (task) => task.id !== taskid,
-        ),
-      }
+      setwanixroomconfig({
+        ...readwanixroomconfig(),
+        tasks: readwanixroomconfig().tasks.filter((task) => task.id !== taskid),
+      })
     }
   }
   setpendingspawn(null)
 }
 
 export function halttaskinroom(taskid: string): void {
-  if (wanixroomconfigbox.current.mode === 'idle') {
+  if (readwanixroomconfig().mode === 'idle') {
     return
   }
-  if (!wanixroomconfigbox.current.tasks.some((task) => task.id === taskid)) {
+  if (!readwanixroomconfig().tasks.some((task) => task.id === taskid)) {
     return
   }
   wanixserverhalttask(SOFTWARE, registerreadplayer(), taskid)
-  wanixroomconfigbox.current = {
-    ...wanixroomconfigbox.current,
-    tasks: wanixroomconfigbox.current.tasks.filter(
-      (task) => task.id !== taskid,
-    ),
-  }
+  setwanixroomconfig({
+    ...readwanixroomconfig(),
+    tasks: readwanixroomconfig().tasks.filter((task) => task.id !== taskid),
+  })
 }
 
 export function removewanixroomtask(taskid: string) {
-  if (!wanixroomconfigbox.current.tasks.some((task) => task.id === taskid)) {
+  if (!readwanixroomconfig().tasks.some((task) => task.id === taskid)) {
     return
   }
-  wanixroomconfigbox.current = {
-    ...wanixroomconfigbox.current,
-    tasks: wanixroomconfigbox.current.tasks.filter(
-      (task) => task.id !== taskid,
-    ),
-  }
+  setwanixroomconfig({
+    ...readwanixroomconfig(),
+    tasks: readwanixroomconfig().tasks.filter((task) => task.id !== taskid),
+  })
 }
 
 export function putwanixroomfile(path: string, bytes: Uint8Array): void {
@@ -314,19 +309,19 @@ export function applywanixdropdone(
     if (typeof entry.taskid !== 'string' || typeof entry.cmd !== 'string') {
       continue
     }
-    wanixroomconfigbox.current = {
-      ...wanixroomconfigbox.current,
+    setwanixroomconfig({
+      ...readwanixroomconfig(),
       mode:
-        wanixroomconfigbox.current.mode === 'idle'
+        readwanixroomconfig().mode === 'idle'
           ? 'task'
-          : wanixroomconfigbox.current.mode,
+          : readwanixroomconfig().mode,
       tasks: [
-        ...wanixroomconfigbox.current.tasks.filter(
+        ...readwanixroomconfig().tasks.filter(
           (task) => task.id !== entry.taskid,
         ),
         { id: entry.taskid, cmd: entry.cmd, running: true },
       ],
-    }
+    })
   }
   if (typeof result.taskid === 'string') {
     apilog(device, player, `wanix drop done task=${result.taskid}`)

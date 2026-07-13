@@ -3,7 +3,6 @@
  */
 
 import {
-  bumpattach,
   readattachedsession as readattachedsessionstate,
   readonsessioncloseprune,
   readuserdetached,
@@ -16,6 +15,7 @@ import {
   setwanixactivesessionkey,
   subscribewanixattach as subscribeattach,
 } from 'zss/device/wanixclient/state'
+import { useWanixClient } from 'zss/device/wanixclient/wanixclientstore'
 import {
   registerwanixtermsessionopen,
   unregisterwanixtermsession,
@@ -46,7 +46,6 @@ function maybeattachactivesession() {
     return
   }
   setattachedsessionkey(activesessionkey)
-  bumpattach()
 }
 
 export function setwanixactivesession(sessionkey: string | null) {
@@ -65,13 +64,15 @@ export function onwanixtermsessionopen(sessionkey: string) {
   if (!key) {
     return
   }
-  setwanixactivesessionkey(key)
   if (readattachedsessionstate() != null) {
+    setwanixactivesessionkey(key)
     return
   }
-  setattachedsessionkey(key)
-  setuserdetached(false)
-  bumpattach()
+  useWanixClient.setState({
+    activesessionkey: key,
+    attachedsessionkey: key,
+    userdetached: false,
+  })
 }
 
 export function setattachedsession(sessionkey: string | null) {
@@ -79,11 +80,14 @@ export function setattachedsession(sessionkey: string | null) {
   if (readattachedsessionstate() === next) {
     return
   }
-  setattachedsessionkey(next)
   if (next != null) {
-    setuserdetached(false)
+    useWanixClient.setState({
+      attachedsessionkey: next,
+      userdetached: false,
+    })
+    return
   }
-  bumpattach()
+  setattachedsessionkey(next)
 }
 
 export function detachwanixterm() {
@@ -91,9 +95,10 @@ export function detachwanixterm() {
     setuserdetached(true)
     return
   }
-  setattachedsessionkey(null)
-  setuserdetached(true)
-  bumpattach()
+  useWanixClient.setState({
+    attachedsessionkey: null,
+    userdetached: true,
+  })
 }
 
 export function cyclewanixattachedsession(

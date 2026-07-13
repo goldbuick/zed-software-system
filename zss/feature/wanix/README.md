@@ -527,8 +527,7 @@ Helpers: `wanixserver*` / `wanixclient*` in [`api.ts`](../../device/api.ts).
 | [`wanixzedcafe.ts`](../../device/wanixclient/wanixzedcafe.ts) | Parent zedcafe daemon / push / import poll |
 | [`handlers/exportready.ts`](../../device/wanixclient/handlers/exportready.ts) | Parent export-ready continuation |
 | [`handlers/menu.ts`](../../device/wanixclient/handlers/menu.ts) | Print-only `#wanix` menu tape (`wanixclient:menu`) |
-| [`wanixcmd.ts`](../../device/wanixclient/wanixcmd.ts) | Parent CLI helpers (display-side) |
-| [`wanixbundle.ts`](../../device/wanixclient/wanixbundle.ts) / [`wanixtgzextract.ts`](../../device/wanixclient/wanixtgzextract.ts) / [`wanixbindpaths.ts`](../../device/wanixclient/wanixbindpaths.ts) | Parent drop helpers |
+| [`wanixbindpaths.ts`](../../device/wanixclient/wanixbindpaths.ts) | Parent bind-drop path helpers (`parse/file`) |
 
 ### Iframe — [`zss/device/wanixserver/`](../../device/wanixserver/)
 
@@ -538,6 +537,7 @@ Helpers: `wanixserver*` / `wanixclient*` in [`api.ts`](../../device/api.ts).
 | [`wanixmenu.ts`](../../device/wanixserver/wanixmenu.ts) / [`handlers/menu.ts`](../../device/wanixserver/handlers/menu.ts) | Operational `#wanix` menu tape from iframe state |
 | [`runtime.ts`](../../device/wanixserver/runtime.ts) | System DOM, applyroom, terms, FS handlers |
 | [`zedcafehost.ts`](../../device/wanixserver/zedcafehost.ts) | Iframe zedcafe boot / push / binds |
+| [`wanixtgzextract.ts`](../../device/wanixserver/wanixtgzextract.ts) / [`wanixbundle.ts`](../../device/wanixserver/wanixbundle.ts) / [`wanixcmd.ts`](../../device/wanixserver/wanixcmd.ts) | Iframe drop staging (tgz extract, bundle flatten, task ids) |
 | [`spawndriver.ts`](../../device/wanixserver/spawndriver.ts) / [`termbridgesmoke.ts`](../../device/wanixserver/termbridgesmoke.ts) | Spawn driver + term smoke |
 | [`exportevents.ts`](../../device/wanixserver/exportevents.ts) | Iframe `wanixclient:exportready` emit |
 | [`state.ts`](../../device/wanixserver/state.ts) + `handlers/*` | Iframe mutable state + device adapters |

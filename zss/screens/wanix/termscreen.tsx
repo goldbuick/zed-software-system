@@ -9,15 +9,12 @@ import type {
 import {
   cyclewanixattachedsession,
   detachwanixterm,
-  readattachedsession,
-  subscribewanixattach,
 } from 'zss/device/wanixclient/wanixdisplay'
+import { useWanixClient } from 'zss/device/wanixclient/wanixclientstore'
 import { readwanixsessionlabel } from 'zss/device/wanixclient/wanixsessionmeta'
 import {
   readwanixtermbuffer,
   readwanixtermbufferkeys,
-  readwanixtermnotifyversion,
-  subscribewanixtermbuffer,
 } from 'zss/device/wanixclient/wanixtermbuffer'
 import {
   cellinwanixtermselection,
@@ -61,25 +58,6 @@ const SELECTION_ARROW_KEYS = new Set([
   'arrowup',
   'arrowdown',
 ])
-
-function useWanixAttachSessionKey() {
-  const [sessionkey, setsessionkey] = useState(readattachedsession)
-  useEffect(
-    () => subscribewanixattach(() => setsessionkey(readattachedsession())),
-    [],
-  )
-  return sessionkey
-}
-
-function useWanixTermBufferVersion() {
-  const [version, setversion] = useState(readwanixtermnotifyversion)
-  useEffect(
-    () =>
-      subscribewanixtermbuffer(() => setversion(readwanixtermnotifyversion())),
-    [],
-  )
-  return version
-}
 
 function encodekeyboard(event: KeyboardEvent): string | null {
   const rawkey = event.key
@@ -182,8 +160,8 @@ function ispasteshortcut(event: KeyboardEvent) {
 export function WanixTermScreen() {
   const context = useWriteText()
   const edge = textformatreadedges(context)
-  const sessionkey = useWanixAttachSessionKey()
-  useWanixTermBufferVersion()
+  const sessionkey = useWanixClient((state) => state.attachedsessionkey)
+  useWanixClient((state) => state.termnotifyversion)
   const lastframe = useRef<WanixTermTileBuffer | null>(null)
   const [scrolloffset, setscrolloffset] = useState(0)
   const [prefixarmed, setprefixarmed] = useState(false)
@@ -229,7 +207,8 @@ export function WanixTermScreen() {
   }, [frame?.version, scrolloffset, frame])
 
   const pastetext = useCallback((text: string) => {
-    const targetkey = sessionkeyref.current ?? readattachedsession()
+    const targetkey =
+      sessionkeyref.current ?? useWanixClient.getState().attachedsessionkey
     if (!targetkey) {
       return
     }
@@ -408,7 +387,8 @@ export function WanixTermScreen() {
       clearsel()
     }
     const payload = encodekeyboard(event)
-    const targetkey = sessionkey ?? readattachedsession()
+    const targetkey =
+      sessionkey ?? useWanixClient.getState().attachedsessionkey
     if (payload != null && targetkey) {
       event.preventDefault()
       wanixservertermwrite(SOFTWARE, registerreadplayer(), payload, targetkey)
