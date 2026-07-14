@@ -108,6 +108,9 @@ export function applywanixroomresult(
       tasks: [],
       vm: undefined,
     })
+    void import('zss/device/wanixclient/wanixzedcafe').then((mod) => {
+      mod.resetwanixzedcafeonidle()
+    })
     return
   }
   const pending = readpendingapplyconfig()
@@ -175,15 +178,29 @@ export function ensurewanixtaskroom(
   device?: DEVICELIKE,
   player?: string,
 ): void {
+  const boot = readwanixbootzedcafestate()
+  const zedcafe: WanixZedCafeRoomSpec = {
+    cmd: boot.cmd,
+    generation: boot.generation,
+  }
   if (readwanixroomconfig().mode !== 'idle') {
+    const current = readwanixroomconfig()
+    // Warm re-apply (same mountkey, no hardreset): iframe bootzedcafeforactiveroom
+    // recreates wanix-task#zedcafe when missing. Hard remount races WSS import
+    // settle vs AwaitErr → wanix-system ready timeout.
     if (device && player) {
       apilog(
         device,
         player,
-        'zedcafe: syncing export on active wanix room (no remount)…',
+        'zedcafe: syncing export on active wanix room (ensure daemon)…',
       )
-      void activatewanixzedcafeexport(device, player)
     }
+    applywanixroom({
+      ...current,
+      mode: current.mode === 'vm' ? 'vm' : 'task',
+      hardreset: false,
+      zedcafe: current.zedcafe?.cmd ? current.zedcafe : zedcafe,
+    })
     return
   }
   if (device && player) {
@@ -192,14 +209,6 @@ export function ensurewanixtaskroom(
       player,
       'wanix: standing up task room + zedcafe export (first drop — may take a moment)…',
     )
-  }
-  let zedcafe: WanixZedCafeRoomSpec | null | undefined
-  const boot = readwanixbootzedcafestate()
-  if (boot) {
-    zedcafe = {
-      cmd: boot.cmd,
-      generation: boot.generation,
-    }
   }
   const current = readwanixroomconfig()
   const next: WanixRoomConfig = {

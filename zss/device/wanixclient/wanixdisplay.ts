@@ -175,10 +175,11 @@ export function applywanixsessionmessage(payload: {
     return
   }
   if (payload.event === 'close') {
-    if (sessionkey === readattachedsessionstate()) {
-      return
+    // Always prune room/zedsync wait. Keep buffer only when this tile is still
+    // attached so the user can read guest stdout after exit.
+    if (sessionkey !== readattachedsessionstate()) {
+      unregisterwanixtermsession(sessionkey)
     }
-    unregisterwanixtermsession(sessionkey)
     readonsessioncloseprune()?.(sessionkey)
   }
 }

@@ -108,6 +108,17 @@ go test ./p9server/ ./zedsync/ -count=1   # from ops/fixtures/wanix
 - Soft idle / `#wanix stop` ends the zedsync task — look for `zedsync: stopped`.
 - Build guest: `yarn task run ops:fixtures:wanix:findplayers:build` → `cafe/public/wanix/zedsync.wasm` (also staged under `ops/public/wanix/`)
 
+### Headed remote-mount validator
+
+With `cafe:dev` and `ops:fixtures:wanix:p9server:dev` running:
+
+```bash
+yarn task run cafe:playwright:headed --url https://localhost:7777/ \
+  tasks/lib/wanix/validate-wanix-remote-mount.ts
+```
+
+Optional: `WANIX_P9_WSS_URL=wss://localhost:8765/` (default). Gates: session ready → `#wanix remote connect …` → `[wanix-perf]` `remote-wss-then` → `remote-wss-fulfill-allowed` → `remote-wss-open` → iframe `readDir('remote')`. On failure, see `/tmp/wanix-remote-mount-report.json`.
+
 ## Bind-on-drop pipeline (`input/`)
 
 While **attached** to a Wanix term session, file drops bind under **`input/<name>`** (not spawn tasks). Processors read `input/` and write zedcafe export paths under `zedcafe/…` so the host import cycle can sync boards/terrain.

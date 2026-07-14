@@ -728,11 +728,24 @@ export async function ensurezedcafeboot(
   cmd: string,
 ): Promise<string | null> {
   synczedcafewasmversionifneeded(sys)
-  if (zedcafetaskrid && zedcafecmd === cmd) {
-    const mountready = await waitzedcafeexportmountready(root, zedcafetaskrid)
-    if (mountready) {
-      registerzedcafedirtyhook()
-      return zedcafetaskrid
+  const existing = sys.querySelector(
+    `wanix-task[id="${WANIX_ZEDCAFE_TASK_ID}"]`,
+  ) as WanixTaskElement | null
+  // Remount replaces <wanix-system> but module state can keep a stale rid. Never
+  // treat export as ready unless this sys still has wanix-task#zedcafe.
+  if (!existing) {
+    zedcafetaskrid = null
+    zedcafebootpromise = null
+  } else {
+    const rid = existing.rid ?? zedcafetaskrid
+    if (rid && (zedcafecmd === cmd || !zedcafecmd)) {
+      const mountready = await waitzedcafeexportmountready(root, rid)
+      if (mountready) {
+        zedcafetaskrid = rid
+        zedcafecmd = cmd
+        registerzedcafedirtyhook()
+        return rid
+      }
     }
   }
   if (zedcafebootpromise && zedcafebootgen === zedcafegen) {

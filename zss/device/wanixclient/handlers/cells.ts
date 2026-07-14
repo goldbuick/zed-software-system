@@ -1,6 +1,10 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/types'
-import { applywanixtermread } from 'zss/device/wanixclient/wanixtermbuffer'
+import {
+  applywanixtermread,
+  readwanixtermbuffer,
+} from 'zss/device/wanixclient/wanixtermbuffer'
+import { mirrorzedsynctermlines } from 'zss/device/wanixclient/wanixzedsync'
 import type { WanixTermCellsSnapshot } from 'zss/feature/wanix/wanixtermgridstate'
 import { ispresent } from 'zss/mapping/types'
 
@@ -21,4 +25,8 @@ export function handlewanixcells(_device: DEVICE, message: MESSAGE): void {
     return
   }
   applywanixtermread(payload.sessionkey, payload.snapshot)
+  const buffer = readwanixtermbuffer(payload.sessionkey)
+  if (buffer) {
+    mirrorzedsynctermlines(payload.sessionkey, buffer)
+  }
 }

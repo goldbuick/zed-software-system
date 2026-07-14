@@ -1,5 +1,6 @@
 import { apilog, wanixserverreadfile } from 'zss/device/api'
 import type { DEVICELIKE } from 'zss/device/types'
+import type { WanixTermTileBuffer } from 'zss/device/wanixclient/state'
 import {
   ensurewanixtaskroom,
   putwanixroomfile,
@@ -7,6 +8,7 @@ import {
   readwanixroomconfig,
   spawntaskinroom,
 } from 'zss/device/wanixclient/wanixroom'
+import { dumpwanixtermbuffertext } from 'zss/device/wanixclient/wanixtermtext'
 import {
   iswanixspaceactive,
   startzedcafepoll,
@@ -26,6 +28,7 @@ type ZedsyncReadyWait = {
   player: string
   deadline: number
   timer?: ReturnType<typeof setInterval>
+  mirroredguestlines: Set<string>
 }
 
 let pendingready: ZedsyncReadyWait | null = null
@@ -68,6 +71,32 @@ export function iszedsyncreadywaitpending(): boolean {
   return pendingready !== null
 }
 
+/**
+ * Mirror guest zedsync:* stdout into the host wanix log while seed wait is
+ * pending (so WaitExportRoot / WaitDirExists / seed failures show without
+ * attaching to the task tile).
+ */
+export function mirrorzedsynctermlines(
+  sessionkey: string,
+  buffer: WanixTermTileBuffer,
+): void {
+  if (!pendingready || !iszedsynctaskid(sessionkey)) {
+    return
+  }
+  const text = dumpwanixtermbuffertext(buffer, { includescrollback: true })
+  for (const line of text.split('\n')) {
+    const trimmed = line.trim()
+    if (!trimmed.startsWith('zedsync:')) {
+      continue
+    }
+    if (pendingready.mirroredguestlines.has(trimmed)) {
+      continue
+    }
+    pendingready.mirroredguestlines.add(trimmed)
+    apilog(pendingready.device, pendingready.player, trimmed)
+  }
+}
+
 /** Parent handler for wanixclient:readfile while waiting for zedsync seed sentinel. */
 export function applyzedsyncreadfileresult(data: unknown): void {
   if (!pendingready) {
@@ -83,7 +112,11 @@ export function applyzedsyncreadfileresult(data: unknown): void {
   if (Array.isArray(data)) {
     const { device, player, path } = pendingready
     apilog(device, player, `zedsync: seed ready (${path})`)
-    apilog(device, player, `zedsync: watching ${path.replace(/\/\.zedsync-ready$/, '')}`)
+    apilog(
+      device,
+      player,
+      `zedsync: watching ${path.replace(/\/\.zedsync-ready$/, '')}`,
+    )
     resumepollandclear(device, player)
   }
 }
@@ -186,6 +219,7 @@ export async function startwanixzedsync(
     device,
     player,
     deadline: Date.now() + WANIX_ZEDSYNC_READY_TIMEOUT_MS,
+    mirroredguestlines: new Set(),
   }
   pendingready.timer = setInterval(tickreadywait, WANIX_ZEDSYNC_READY_POLL_MS)
   tickreadywait()

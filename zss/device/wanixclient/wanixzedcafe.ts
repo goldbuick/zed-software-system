@@ -832,6 +832,9 @@ export async function wanixdrainpendingzedcafeexport(
 /** Clear host export session when wanix room returns to idle. */
 export function resetwanixzedcafeonidle() {
   clearwanixzedcafependingexport()
+  setpendingsync(null)
+  setpendingpollphase(null)
+  setpendingpollkick(false)
   clearzedcafeexportsession()
 }
 

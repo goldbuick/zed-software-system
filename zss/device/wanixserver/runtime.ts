@@ -118,6 +118,7 @@ const DEFAULT_VM_MEM = '512M'
 const WANIX_WASM_URL = '/wanix/wanix.wasm'
 const ROOM_READY_TIMEOUT_MS = 180_000
 const BIND_MOUNT_TIMEOUT_MS = 120_000
+const REMOTE_MOUNT_TIMEOUT_MS = 60_000
 const VM_RID_WAIT_MS = 120_000
 const TERM_CONNECT_TIMEOUT_MS = 30_000
 const POLL_MS = 250
@@ -718,70 +719,160 @@ function appendtaskroombinds(sys: WanixSystemElement, config: WanixRoomConfig) {
   }
 }
 
-type BindImportHost = HTMLElement & { import?: Promise<unknown> }
+type BindImportHost = HTMLElement & {
+  import?: PromiseLike<unknown>
+  dst?: string | null
+  src?: string | null
+  type?: string | null
+}
 
-function readremotebindel(
-  sys: HTMLElement,
-  remote: WanixRemoteSpec,
-): BindImportHost | null {
-  return sys.querySelector(
-    `wanix-bind[data-zss-remote-id="${CSS.escape(remote.id)}"]`,
-  ) as BindImportHost | null
+type WanixSystemSetup = WanixSystemElement & {
+  _setupNamespace: (
+    tid: string,
+    basefs: string,
+    bindings: Element[] | NodeListOf<Element>,
+  ) => Promise<unknown>
 }
 
 /**
- * Start wss:// dials on detached wanix-bind elements BEFORE appendChild so CDN
- * connectedCallback never creates an iframe import. Do not await open — settling
- * bind.import before wanix.wasm AwaitErr deadlocks Go wasm (ready timeout).
+ * Mount remotes AFTER wanix-system is ready so import AwaitErr cannot block
+ * initial ready / zedcafe boot. Keep import Promises pending until after
+ * `_setupNamespace` starts (Go Call("then")), then allowfulfill.
  */
-function preparewssremoteimports(
-  sys: HTMLElement,
+async function mountremotesafterready(
+  sys: WanixSystemElement,
   remotes: WanixRemoteSpec[],
-  openwssimport: (src: string) => Promise<MessagePort>,
-  iswssremoteurl: (src: string) => boolean,
-): void {
+): Promise<void> {
   if (remotes.length === 0) {
     return
   }
-  wanixperfmark('remote-import-prepare', {
-    count: remotes.length,
-    urls: remotes.map((remote) => remote.url),
-  })
+  const {
+    patchwanixbindwss,
+    opengatedwssimport,
+    iswssremoteurl,
+    WSS_IMPORT_FULFILL_DELAY_MS,
+  } = await import('zss/device/wanixserver/patchwanixbindwss')
+  patchwanixbindwss()
+  for (const el of [
+    ...sys.querySelectorAll('wanix-bind[data-zss-remote-id]'),
+  ]) {
+    el.remove()
+  }
+
+  const gates: Array<ReturnType<typeof opengatedwssimport>> = []
   for (const remote of remotes) {
-    const el = readremotebindel(sys, remote)
-    if (!el) {
-      throw new Error(
-        `wanix remote bind missing for ${remote.dst} (${remote.url})`,
-      )
-    }
     if (!iswssremoteurl(remote.url)) {
       throw new Error(
         `wanix remote url must be wss:// (got ${remote.url} for ${remote.dst})`,
       )
     }
-    wanixperfmark('remote-wss-force-dial', {
+    const gated = opengatedwssimport(remote.url)
+    gated.dial()
+    const bind = createbind({
+      type: 'import',
+      dst: remote.dst,
+      src: remote.url,
+    }) as BindImportHost
+    bind.setAttribute('data-zss-remote-id', remote.id)
+    bind.type = 'import'
+    bind.dst = remote.dst
+    bind.src = remote.url
+    // Thenable (not Promise) so Go Call("then") hits our forwarder first.
+    // Assign before and after appendChild: connectedCallback (CDN or a missed
+    // WSS patch) can replace import with an iframe Promise during connect.
+    bind.import = gated.thenable
+    sys.appendChild(bind)
+    bind.import = gated.thenable
+    gates.push(gated)
+    wanixperfmark('remote-wss-import-assigned', {
       dst: remote.dst,
       url: remote.url,
-      reason: 'pre-append-start',
+      hasImport: !!bind.import,
+      isPromise: bind.import instanceof Promise,
+      hasThen: typeof bind.import?.then,
     })
-    const imp = openwssimport(remote.url)
-    el.import = imp
-    void imp.then(
-      () => {
-        wanixperfmark('remote-import-open', {
-          dst: remote.dst,
-          url: remote.url,
-          via: 'pre-append',
-        })
-      },
-      (err: unknown) => {
-        wanixperfmark('remote-import-failed', {
-          dst: remote.dst,
-          url: remote.url,
-          error: err instanceof Error ? err.message : String(err),
-        })
-      },
-    )
+  }
+
+  wanixperfmark('remote-import-post-ready', {
+    count: remotes.length,
+    urls: remotes.map((remote) => remote.url),
+  })
+
+  // Prefer a live NodeList like wanix-system ready path (not a plain Array).
+  const bindlist = sys.querySelectorAll('wanix-bind[data-zss-remote-id]')
+  wanixperfmark('remote-import-pre-setup', {
+    bindCount: bindlist.length,
+    imports: [...bindlist].map((el) => ({
+      dst: el.getAttribute('dst'),
+      hasImport: !!(el as BindImportHost).import,
+      isPromise: (el as BindImportHost).import instanceof Promise,
+      hasThen: typeof (el as BindImportHost).import?.then,
+    })),
+  })
+
+  // Go Call("then") on thenable while gated promise still pending — then release.
+  const setup = (sys as WanixSystemSetup)._setupNamespace('1', '', bindlist)
+  try {
+    await Promise.all(gates.map((gate) => gate.waitforthen(10_000)))
+  } catch (err) {
+    wanixperfmark('remote-import-then-timeout', {
+      error: err instanceof Error ? err.message : String(err),
+      thencounts: gates.map((gate) => gate.readthencount()),
+    })
+    throw err instanceof Error
+      ? err
+      : new Error(`wanix remote import then wait failed: ${String(err)}`)
+  }
+  // Small yield after Call("then") before fulfill (park-safety).
+  await new Promise<void>((resolve) =>
+    setTimeout(resolve, WSS_IMPORT_FULFILL_DELAY_MS),
+  )
+  for (let i = 0; i < gates.length; ++i) {
+    gates[i].allowfulfill()
+  }
+
+  let timer: ReturnType<typeof setTimeout> | undefined
+  try {
+    await Promise.race([
+      setup,
+      new Promise<never>((_resolve, reject) => {
+        timer = setTimeout(() => {
+          reject(new Error('wanix remote mount timeout'))
+        }, REMOTE_MOUNT_TIMEOUT_MS)
+      }),
+    ])
+  } finally {
+    if (timer !== undefined) {
+      clearTimeout(timer)
+    }
+  }
+
+  await verifyremotemounts(sys, remotes)
+  wanixperfmark('remote-import-bound', { count: remotes.length })
+}
+
+/** Fail applyroom if Go never bound the remote import into the root NS. */
+async function verifyremotemounts(
+  sys: WanixSystemElement,
+  remotes: WanixRemoteSpec[],
+): Promise<void> {
+  const root = sys.root
+  for (const remote of remotes) {
+    try {
+      await root.readDir(remote.dst)
+      wanixperfmark('remote-verify-ok', { dst: remote.dst, url: remote.url })
+    } catch (err) {
+      wanixperfmark('remote-verify-failed', {
+        dst: remote.dst,
+        url: remote.url,
+        error: err instanceof Error ? err.message : String(err),
+      })
+      throw new Error(
+        `wanix remote not mounted at "${remote.dst}" (${remote.url}): ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      )
+    }
   }
 }
 
@@ -955,27 +1046,65 @@ async function warmstartvm(): Promise<{
   return { vmid: vm.id, vrid, mem: vm.mem }
 }
 
+/** Task/vm rooms always need a zedcafe export daemon cmd. */
+function ensurezedcafespecinroom(): { cmd: string; generation: number } | null {
+  if (roomconfig.mode !== 'task' && roomconfig.mode !== 'vm') {
+    return null
+  }
+  const cmd = roomconfig.zedcafe?.cmd?.trim() || WANIX_ZEDCAFE_WASM_CMD
+  const generation = roomconfig.zedcafe?.generation ?? 1
+  if (!roomconfig.zedcafe?.cmd || roomconfig.zedcafe.cmd !== cmd) {
+    setroomconfig({
+      ...roomconfig,
+      zedcafe: { cmd, generation },
+    })
+  }
+  return { cmd, generation }
+}
+
+async function bootzedcafeforactiveroom(
+  sys: WanixSystemElement,
+): Promise<string | null> {
+  const spec = ensurezedcafespecinroom()
+  if (!spec) {
+    return null
+  }
+  synczedcafestate(spec.cmd, spec.generation)
+  // Drop cache if the element is gone (soft-idle / remount left remotes only).
+  if (!sys.querySelector(`wanix-task[id="${WANIX_ZEDCAFE_TASK_ID}"]`)) {
+    resetzedcafestate()
+    synczedcafestate(spec.cmd, spec.generation)
+  }
+  const taskrid = await ensurezedcafeboot(sys, readroot(), spec.cmd)
+  if (!taskrid) {
+    wanixperfmark('zedcafe-boot-failed', { mode: roomconfig.mode })
+    console.error(
+      '[wanix] zedcafe export task failed to boot — <wanix-task id="zedcafe"> missing',
+    )
+    return null
+  }
+  if (!sys.querySelector(`wanix-task[id="${WANIX_ZEDCAFE_TASK_ID}"]`)) {
+    wanixperfmark('zedcafe-boot-missing-dom', { taskrid })
+    console.error(
+      '[wanix] zedcafe boot returned rid but wanix-task#zedcafe is absent — forcing reboot',
+    )
+    resetzedcafestate()
+    synczedcafestate(spec.cmd, spec.generation)
+    return ensurezedcafeboot(sys, readroot(), spec.cmd)
+  }
+  return taskrid
+}
+
 async function warmactivateroom(): Promise<Record<string, unknown>> {
   if (!system?.isReady) {
     throw new Error('wanix warm apply: system not ready')
   }
   wanixperfmark('applyroom-warm-reuse', { mode: roomconfig.mode })
-  if (roomconfig.zedcafe?.cmd) {
-    const spec = roomconfig.zedcafe
-    synczedcafestate(spec.cmd, spec.generation)
-    synczedcafewasmversionifneeded(system)
-  }
   if (roomconfig.mode === 'vm' && roomconfig.vm?.active) {
     const vmstatus = await warmstartvm()
-    if (roomconfig.zedcafe?.cmd) {
-      const taskrid = await ensurezedcafeboot(
-        system,
-        readroot(),
-        roomconfig.zedcafe.cmd,
-      )
-      if (taskrid) {
-        await wireallguestroots(system, taskrid)
-      }
+    const taskrid = await bootzedcafeforactiveroom(system)
+    if (taskrid) {
+      await wireallguestroots(system, taskrid)
     }
     postready()
     return {
@@ -988,8 +1117,8 @@ async function warmactivateroom(): Promise<Record<string, unknown>> {
       mem: vmstatus?.mem,
     }
   }
-  if (roomconfig.mode === 'task' && roomconfig.zedcafe?.cmd) {
-    await ensurezedcafeboot(system, readroot(), roomconfig.zedcafe.cmd)
+  if (roomconfig.mode === 'task') {
+    await bootzedcafeforactiveroom(system)
   }
   postready()
   return {
@@ -1051,48 +1180,32 @@ export async function applyroom(config: WanixRoomConfig) {
 
   await customElements.whenDefined('wanix-system')
   await customElements.whenDefined('wanix-bind')
-  const { patchwanixbindwss, openwssimport, iswssremoteurl } = await import(
+  const { patchwanixbindwss } = await import(
     'zss/device/wanixserver/patchwanixbindwss'
   )
   patchwanixbindwss()
   disconnectalltermsessions()
-  const next = buildroomtree(roomconfig)
-  try {
-    preparewssremoteimports(
-      next,
-      roomconfig.remotes,
-      openwssimport,
-      iswssremoteurl,
-    )
-  } catch (err) {
-    wanixperfmark('remote-import-failed', {
-      error: err instanceof Error ? err.message : String(err),
-      remotes: roomconfig.remotes.length,
-    })
-    throw err instanceof Error
-      ? err
-      : new Error(`wanix remote import failed: ${String(err)}`)
-  }
+  // Remotes mount AFTER ready — putting WSS import on the initial bind path
+  // parks AwaitErr / never fires ready (empty remote NS + ready timeout).
+  const remotes = roomconfig.remotes
+  const next = buildroomtree({ ...roomconfig, remotes: [] })
   host.replaceChildren()
   host.appendChild(next)
   setwanixsystem(next)
   setlastmountkey(roomconfig.mountkey)
+  // Old <wanix-system> is gone — drop stale zedcafe rid so we recreate
+  // wanix-task#zedcafe on this document instead of pretending the old rid works.
+  resetzedcafestate()
   wanixperfmark('applyroom-remount', {
     mode: roomconfig.mode,
-    remotes: roomconfig.remotes.length,
-    remoteurls: roomconfig.remotes.map((remote) => remote.url),
+    remotes: remotes.length,
+    remoteurls: remotes.map((remote) => remote.url),
   })
 
-  // Race: WSS connect + wasm load. Import Promise must still be pending (or
-  // resolving via setTimeout 0) when setupNamespace AwaitErr attaches .then.
   await waitsystemready(next)
-  postready()
 
-  if (roomconfig.zedcafe?.cmd) {
-    const spec = roomconfig.zedcafe
-    synczedcafestate(spec.cmd, spec.generation)
-  }
-
+  // Boot zedcafe BEFORE postready so parent activate/export never races an
+  // empty DOM (missing <wanix-task id="zedcafe">).
   if (roomconfig.mode === 'vm' && roomconfig.vm?.active) {
     await waitvmlinuxmount()
     const vmel = next.querySelector('wanix-vm')
@@ -1106,16 +1219,12 @@ export async function applyroom(config: WanixRoomConfig) {
     const vrid = vmel
       ? await waitforvmrid(vmel, Date.now() + VM_RID_WAIT_MS)
       : null
-    if (roomconfig.zedcafe?.cmd) {
-      const taskrid = await ensurezedcafeboot(
-        next,
-        readroot(),
-        roomconfig.zedcafe.cmd,
-      )
-      if (taskrid) {
-        await wireallguestroots(next, taskrid)
-      }
+    const taskrid = await bootzedcafeforactiveroom(next)
+    if (taskrid) {
+      await wireallguestroots(next, taskrid)
     }
+    await mountremotesafterready(next, remotes)
+    postready()
     wanixperfmark('applyroom-return', { mode: 'vm', remount: true })
     return {
       ok: true,
@@ -1127,10 +1236,13 @@ export async function applyroom(config: WanixRoomConfig) {
     }
   }
 
-  if (roomconfig.mode === 'task' && roomconfig.zedcafe?.cmd) {
-    await ensurezedcafeboot(next, readroot(), roomconfig.zedcafe.cmd)
+  if (roomconfig.mode === 'task') {
+    await bootzedcafeforactiveroom(next)
   }
 
+  await mountremotesafterready(next, remotes)
+
+  postready()
   wanixperfmark('applyroom-return', { mode: roomconfig.mode, remount: true })
   return { ok: true, mode: roomconfig.mode, mountkey: lastmountkey }
 }

@@ -25,12 +25,45 @@ import {
   writewanixtermstatus,
 } from 'zss/device/wanixclient/wanixtermhandlers'
 import { FIRMWARE } from 'zss/firmware'
-import { ispresent } from 'zss/mapping/types'
+import { ispresent, isstring } from 'zss/mapping/types'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
-import { ARG_TYPE, NAME } from 'zss/words/types'
+import { ARG_TYPE, NAME, WORD } from 'zss/words/types'
 
 function wanixstublog(player: string, message: string) {
   apilog(SOFTWARE, player, `wanix stub: ${message}`)
+}
+
+/**
+ * Lang lexer splits bare `wss://host/` into `wss` + `://host/` (label token).
+ * Rejoin that pair; quoted URLs arrive as a single word.
+ */
+/**
+ * Lang lexer splits bare `wss://host/` into `wss` + `://host/` (label token).
+ * Rejoin that pair; quoted URLs arrive as a single word.
+ */
+function readwssremotewords(
+  words: WORD[],
+  start: number,
+): [string | undefined, string | undefined] {
+  const first = words[start]
+  const second = words[start + 1]
+  if (
+    isstring(first) &&
+    isstring(second) &&
+    /^(wss?)$/i.test(first) &&
+    second.startsWith('://')
+  ) {
+    const [mountdst] = readargs(words, start + 2, [ARG_TYPE.MAYBE_NAME])
+    return [`${first}${second}`, ispresent(mountdst) ? NAME(mountdst) : undefined]
+  }
+  const [url, mountdst] = readargs(words, start, [
+    ARG_TYPE.STRING,
+    ARG_TYPE.MAYBE_NAME,
+  ])
+  return [
+    isstring(url) ? url : undefined,
+    ispresent(mountdst) ? NAME(mountdst) : undefined,
+  ]
 }
 
 export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
@@ -206,10 +239,19 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
             break
           }
           if (NAME(sub) === 'connect') {
-            const [url, mountdst] = readargs(words, 2, [
-              ARG_TYPE.STRING,
-              ARG_TYPE.MAYBE_NAME,
-            ])
+            let url: string | undefined
+            let mountdst: string | undefined
+            try {
+              ;[url, mountdst] = readwssremotewords(words, 2)
+            } catch (err) {
+              apierror(
+                SOFTWARE,
+                player,
+                'wanix',
+                err instanceof Error ? err.message : String(err),
+              )
+              break
+            }
             if (!ispresent(url) || !url.trim()) {
               apierror(
                 SOFTWARE,
@@ -220,10 +262,7 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
               break
             }
             try {
-              const remote = connectwanixremote(
-                url.trim(),
-                ispresent(mountdst) ? NAME(mountdst) : undefined,
-              )
+              const remote = connectwanixremote(url.trim(), mountdst)
               apilog(
                 SOFTWARE,
                 player,
