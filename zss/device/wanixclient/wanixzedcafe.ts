@@ -174,18 +174,22 @@ function requestvmzedcafeimport(
   device: DEVICELIKE,
   player: string,
   files: WANIX_ZED_CAFE_EXPORT_FILE[],
-  timeoutms = WANIX_VM_ZEDCAFE_IMPORT_MS,
+  options?: { partial?: boolean; removepaths?: string[]; timeoutms?: number },
 ): Promise<WANIX_ZED_CAFE_IMPORT_RESULT> {
   if (readpendingimportwait()) {
     return Promise.reject(new Error('zedcafe import: concurrent vm import'))
   }
+  const timeoutms = options?.timeoutms ?? WANIX_VM_ZEDCAFE_IMPORT_MS
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
       setpendingimportwait(null)
       reject(new Error('zedcafe import: vm import timed out'))
     }, timeoutms)
     setpendingimportwait({ resolve, reject, timer })
-    vmimportzedcafe(device, player, files)
+    vmimportzedcafe(device, player, files, {
+      partial: options?.partial,
+      removepaths: options?.removepaths,
+    })
   })
 }
 
@@ -687,7 +691,40 @@ export async function runzedcafeimport(
   setzedcafeguestdirty(true)
   try {
     const guestdoc = zedcafeexportfilestodoc(files)
-    const result = await requestvmzedcafeimport(device, player, files)
+    const shadow = readlasthostpushdoc()
+    const shadowempty = Object.keys(shadow).length === 0
+    let result: WANIX_ZED_CAFE_IMPORT_RESULT
+    if (shadowempty) {
+      // Initial activation / empty shadow — full structural reconcile.
+      result = await requestvmzedcafeimport(device, player, files)
+    } else {
+      const deltaops = compare(shadow, guestdoc)
+      if (deltaops.length === 0) {
+        acknowledgezedcafeexportpush()
+        acknowledgezedcafeguestdirtygen()
+        setzedcafeguestdirty(false)
+        wanixperfmark('export-import-noop', { paths: files.length })
+        apilog(
+          device,
+          player,
+          'zedcafe import: guest tree matched host shadow (no VM apply)',
+        )
+        return true
+      }
+      const upsertpaths = readzedcafeexportupsertpaths(deltaops)
+      const removepaths = [...readzedcafeexportremovepaths(deltaops)]
+      const subset = zedcafeexportdoctofiles(guestdoc, upsertpaths)
+      const partialcheck = validatezedcafeexportpaths(subset, { partial: true })
+      if (!partialcheck.ok) {
+        const detail = partialcheck.errors[0] ?? 'unknown'
+        apilog(device, player, `zedcafe import: invalid delta — ${detail}`)
+        return false
+      }
+      result = await requestvmzedcafeimport(device, player, subset, {
+        partial: true,
+        removepaths,
+      })
+    }
     if (!result.ok) {
       apilog(
         device,

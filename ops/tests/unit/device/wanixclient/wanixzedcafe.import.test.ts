@@ -136,6 +136,53 @@ describe('zedcafe import', () => {
     expect(readzedcafeguestdirty()).toBe(true)
   })
 
+  it('runzedcafeimport skips VM when guest matches host shadow', async () => {
+    const files = makefiles('same')
+    setlasthostpushdoc(zedcafeexportfilestodoc(files))
+    const ok = await runzedcafeimport(device, player, files)
+    expect(ok).toBe(true)
+    expect(mockvmimport).not.toHaveBeenCalled()
+    expect(readzedcafeguestdirty()).toBe(false)
+    expect(mockapilog).toHaveBeenCalledWith(
+      device,
+      player,
+      expect.stringMatching(/matched host shadow/),
+    )
+  })
+
+  it('runzedcafeimport sends partial payload when one guest path differs', async () => {
+    const hostfiles = makefiles('host')
+    const guestfiles = makefiles('guest')
+    setlasthostpushdoc(zedcafeexportfilestodoc(hostfiles))
+    mockvmimport.mockImplementation(() => {
+      resolvevmzedcafeimportwaiter({
+        ok: true,
+        changed: true,
+        bookcount: 1,
+      })
+    })
+    mockvmexport.mockImplementation(() => {
+      resolvevmzedcafeexportwaiter(guestfiles)
+    })
+    mockreadexport.mockImplementation(() => undefined)
+    const ok = await runzedcafeimport(device, player, guestfiles)
+    expect(ok).toBe(true)
+    expect(mockvmimport).toHaveBeenCalled()
+    const call = mockvmimport.mock.calls[0]
+    expect(call[3]).toEqual({
+      partial: true,
+      removepaths: [],
+    })
+    const sentfiles = call[2] as { path: string }[]
+    expect(sentfiles.length).toBeGreaterThan(0)
+    expect(sentfiles.every((file) => typeof file.path === 'string')).toBe(true)
+    // Full tree was not sent — only the changed book stats path.
+    expect(sentfiles.some((file) => file.path === 'demo-b1/stats.json')).toBe(
+      true,
+    )
+    expect(sentfiles.some((file) => file.path === 'stats.json')).toBe(false)
+  })
+
   it('pushzedcafesynctoiframe emits when space active', () => {
     setlasthostpushdoc({})
     const ok = pushzedcafesynctoiframe(device, player, makefiles('x'))

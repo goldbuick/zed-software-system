@@ -7,6 +7,7 @@ import { boardrunners } from 'zss/device/vm/state'
 import type { WANIX_ZED_CAFE_EXPORT_FILE } from 'zss/feature/wanix/wanixstateexport'
 import { primezedcafeexportshadow } from 'zss/feature/wanix/wanixstateexport'
 import {
+  applyzedcafepartialtomemory,
   applyzedcafetomemory,
   parsezedcafeexportfiles,
 } from 'zss/feature/wanix/wanixstateimport'
@@ -17,13 +18,21 @@ import { memoryboundaryget } from 'zss/memory/boundaries'
 import { memoryreadbookbysoftware, memorywritefrozen } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
 
-function readimportfiles(
-  data: unknown,
-): WANIX_ZED_CAFE_EXPORT_FILE[] | undefined {
+function readimportpayload(data: unknown):
+  | {
+      files: WANIX_ZED_CAFE_EXPORT_FILE[]
+      partial: boolean
+      removepaths: string[]
+    }
+  | undefined {
   if (!ispresent(data) || typeof data !== 'object') {
     return undefined
   }
-  const payload = data as { files?: unknown }
+  const payload = data as {
+    files?: unknown
+    partial?: unknown
+    removepaths?: unknown
+  }
   if (!Array.isArray(payload.files)) {
     return undefined
   }
@@ -46,7 +55,21 @@ function readimportfiles(
     }
     files.push({ path: file.path, bytes })
   }
-  return files
+  const removepaths: string[] = []
+  if (Array.isArray(payload.removepaths)) {
+    for (let i = 0; i < payload.removepaths.length; ++i) {
+      const path = payload.removepaths[i]
+      if (typeof path !== 'string') {
+        return undefined
+      }
+      removepaths.push(path)
+    }
+  }
+  return {
+    files,
+    partial: payload.partial === true,
+    removepaths,
+  }
 }
 
 /** Full-paint active boardrunner boundaries after a bulk codepage replace. */
@@ -72,9 +95,44 @@ function paintboardrunnersafterimport(vm: DEVICE) {
   }
 }
 
+/** Paint only boundaries touched by a partial import. */
+function paintboardrunnersforids(vm: DEVICE, paintids: string[]) {
+  if (paintids.length === 0) {
+    return
+  }
+  const paintset = new Set(paintids)
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return
+  }
+  const ids = Object.keys(boardrunners)
+  for (let i = 0; i < ids.length; ++i) {
+    const board = ids[i]
+    const player = boardrunners[board]
+    if (paintset.has(board)) {
+      const doc = memoryboundaryget(board) ?? {}
+      boardrunnerboundarypaint(board, doc)
+      boardrunnerpaint(vm, player, doc, board)
+    }
+    const bounds = memorycollecttickboundaries(
+      mainbook,
+      boardrunneraccessfor(board),
+    )
+    for (let j = 0; j < bounds.length; ++j) {
+      const id = bounds[j]
+      if (!paintset.has(id)) {
+        continue
+      }
+      const doc = memoryboundaryget(id) ?? {}
+      boardrunnerboundarypaint(id, doc)
+      boardrunnerpaint(vm, player, doc, id)
+    }
+  }
+}
+
 export function handleimportzedcafe(vm: DEVICE, message: MESSAGE): void {
-  const files = readimportfiles(message.data)
-  if (!files) {
+  const payload = readimportpayload(message.data)
+  if (!payload) {
     wanixclientimportresult(
       vm,
       message.player,
@@ -84,7 +142,9 @@ export function handleimportzedcafe(vm: DEVICE, message: MESSAGE): void {
     )
     return
   }
-  const check = validatezedcafeexportpaths(files)
+  const check = validatezedcafeexportpaths(payload.files, {
+    partial: payload.partial,
+  })
   if (!check.ok) {
     const detail = check.errors[0] ?? 'unknown'
     wanixclientimportresult(
@@ -98,7 +158,26 @@ export function handleimportzedcafe(vm: DEVICE, message: MESSAGE): void {
   }
   memorywritefrozen(true)
   try {
-    const parsed = parsezedcafeexportfiles(files)
+    if (payload.partial) {
+      const result = applyzedcafepartialtomemory(
+        payload.files,
+        payload.removepaths,
+      )
+      primezedcafeexportshadow()
+      if (result.changed) {
+        paintboardrunnersforids(vm, result.paintids)
+      }
+      wanixclientimportresult(
+        vm,
+        message.player,
+        true,
+        result.changed,
+        undefined,
+        result.bookcount,
+      )
+      return
+    }
+    const parsed = parsezedcafeexportfiles(payload.files)
     const changed = applyzedcafetomemory(parsed)
     primezedcafeexportshadow()
     if (changed) {

@@ -17,6 +17,11 @@ jest.mock('zss/device/vm/state', () => ({
 
 jest.mock('zss/feature/wanix/wanixstateimport', () => ({
   applyzedcafetomemory: jest.fn(() => true),
+  applyzedcafepartialtomemory: jest.fn(() => ({
+    changed: true,
+    paintids: ['page-1'],
+    bookcount: 1,
+  })),
   parsezedcafeexportfiles: jest.fn(() => ({ books: [{ id: 'b1' }] })),
 }))
 
@@ -46,7 +51,10 @@ import type { MESSAGE } from 'zss/device/api'
 import { boardrunnerpaint, wanixclientimportresult } from 'zss/device/api'
 import { boardrunnerboundarypaint } from 'zss/device/vm/boardrunnerboundarysync'
 import { handleimportzedcafe } from 'zss/device/vm/handlers/importzedcafe'
-import { applyzedcafetomemory } from 'zss/feature/wanix/wanixstateimport'
+import {
+  applyzedcafepartialtomemory,
+  applyzedcafetomemory,
+} from 'zss/feature/wanix/wanixstateimport'
 
 describe('handleimportzedcafe', () => {
   const vm = {} as DEVICE
@@ -65,7 +73,14 @@ describe('handleimportzedcafe', () => {
     jest.mocked(boardrunnerpaint).mockClear()
     jest.mocked(boardrunnerboundarypaint).mockClear()
     jest.mocked(wanixclientimportresult).mockClear()
+    jest.mocked(applyzedcafetomemory).mockClear()
+    jest.mocked(applyzedcafepartialtomemory).mockClear()
     jest.mocked(applyzedcafetomemory).mockReturnValue(true)
+    jest.mocked(applyzedcafepartialtomemory).mockReturnValue({
+      changed: true,
+      paintids: ['page-1'],
+      bookcount: 1,
+    })
   })
 
   it('paints boardrunner boundaries when apply changed', () => {
@@ -102,6 +117,36 @@ describe('handleimportzedcafe', () => {
       false,
       undefined,
       1,
+    )
+  })
+
+  it('paints only touched boundaries for partial import', () => {
+    jest.mocked(applyzedcafepartialtomemory).mockReturnValue({
+      changed: true,
+      paintids: ['page-1'],
+      bookcount: 2,
+    })
+    handleimportzedcafe(vm, {
+      ...message,
+      data: {
+        files: [{ path: 'demo-b1/p/board/terrain.json', bytes: new Uint8Array([1]) }],
+        partial: true,
+        removepaths: [],
+      },
+    })
+    expect(applyzedcafepartialtomemory).toHaveBeenCalled()
+    expect(applyzedcafetomemory).not.toHaveBeenCalled()
+    expect(boardrunnerboundarypaint).toHaveBeenCalledWith(
+      'page-1',
+      expect.any(Object),
+    )
+    expect(wanixclientimportresult).toHaveBeenCalledWith(
+      vm,
+      'p1',
+      true,
+      true,
+      undefined,
+      2,
     )
   })
 })

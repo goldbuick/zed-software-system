@@ -26,6 +26,7 @@ like `findplayers.wasm` and `greenring.wasm` can read (and write allowlisted) wo
 13. [Gotchas & invariants](#gotchas--invariants)
 14. [Debugging & validation](#debugging--validation)
 15. [What works today (and why)](#what-works-today-and-why)
+16. [TODO (deferred / out-of-scope)](#todo-deferred--out-of-scope)
 
 ---
 
@@ -756,6 +757,16 @@ Browser Wanix cannot export its namespace outward. Import a remote 9P mount inst
 3. `#wanix zedsync remote` — guest task; argv path must not contain spaces
 
 Empty remote is seeded from `zedcafe/` (no wipe). After `.zedsync-ready`, steady-state sync mirrors creates/updates; deleting a file on the remote restores it from `zedcafe/`. Soft idle stops zedsync (`zedsync: stopped`). See [`ops/fixtures/wanix/README.md`](../../../ops/fixtures/wanix/README.md).
+
+---
+
+## TODO (deferred / out-of-scope)
+
+Follow-ups from the **less disruptive zedcafe imports** work — intentionally not shipped yet:
+
+- **`_cli_chip` flag protection** — import guards `*_gadget` flag bags only (`isimportprotectedflagowner` in [`wanixstateimport.ts`](wanixstateimport.ts)). Extend the same sim-owned skip to `*_cli_chip` if those bags are also runtime-written and should not be wiped by guest FS import.
+- **Transferable `ArrayBuffer` bridge / further export coalesce** — guest↔host file payloads still copy; coalesce window is 500 ms on export tick. Optional perf pass: transferable buffers across the iframe bridge and tighter batching of host pushes.
+- **RFC 6902 as inbound transport** — inbound import uses path-keyed docs + selective apply (`applyzedcafepartialtomemory`), not boardrunner boundary patches. Revisit only if path-doc deltas are insufficient for a use case.
 
 ---
 

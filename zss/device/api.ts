@@ -800,8 +800,13 @@ export function vmimportzedcafe(
   device: DEVICELIKE,
   player: string,
   files: WANIX_ZED_CAFE_EXPORT_FILE[],
+  options?: { partial?: boolean; removepaths?: string[] },
 ) {
-  device.emit(player, 'vm:importzedcafe', { files })
+  device.emit(player, 'vm:importzedcafe', {
+    files,
+    partial: options?.partial === true,
+    removepaths: options?.removepaths ?? [],
+  })
 }
 
 export function vminspect(device: DEVICELIKE, player: string, p1: PT, p2: PT) {

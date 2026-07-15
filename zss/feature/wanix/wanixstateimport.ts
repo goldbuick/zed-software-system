@@ -1,21 +1,35 @@
 import type { WANIX_ZED_CAFE_EXPORT_FILE } from 'zss/feature/wanix/wanixstateexport'
-import { kebabcasezedcafedirname } from 'zss/feature/wanix/zedcafetreeschema'
-import { isequal, ispresent } from 'zss/mapping/types'
+import {
+  kebabcasezedcafedirname,
+  readzedcafebookdirname,
+  readzedcafepageprefix,
+} from 'zss/feature/wanix/zedcafetreeschema'
+import { deepcopy, isequal, ispresent } from 'zss/mapping/types'
 import { memoryboundarydelete } from 'zss/memory/boundaries'
+import {
+  memorycreateboardobject,
+  memorydeleteboardobject,
+} from 'zss/memory/boardlifecycle'
 import {
   memoryclearbookcodepage,
   memoryclearbookflags,
   memoryimportbookfromjson,
   memoryreadbookflags,
+  memoryreadcodepage,
   memoryupsertcodepage,
 } from 'zss/memory/bookoperations'
+import {
+  memoryreadcodepagedata,
+  memoryreadcodepageruntime,
+} from 'zss/memory/codepageoperations'
+import { memoryreadboardruntime } from 'zss/memory/runtimeboundary'
 import {
   memoryclearbook,
   memoryreadbooklist,
   memorywritebook,
 } from 'zss/memory/session'
-import { BOARD_SIZE } from 'zss/memory/types'
-import type { BOOK } from 'zss/memory/types'
+import { BOARD_SIZE, CODE_PAGE_TYPE } from 'zss/memory/types'
+import type { BOARD, BOARD_ELEMENT, BOOK, CODE_PAGE } from 'zss/memory/types'
 
 export type WANIX_ZED_CAFE_PARSED_PAGE = {
   id: string
@@ -43,7 +57,18 @@ export type WANIX_ZED_CAFE_PARSED = {
   books: WANIX_ZED_CAFE_PARSED_BOOK[]
 }
 
+export type APPLY_ZEDCAFE_PARTIAL_RESULT = {
+  changed: boolean
+  paintids: string[]
+  bookcount: number
+}
+
 const decoder = new TextDecoder()
+
+/** Player chip gadget bags are sim-owned; never import-delete or overwrite. */
+export function isimportprotectedflagowner(owner: string): boolean {
+  return owner.endsWith('_gadget')
+}
 
 function decodejson(bytes: Uint8Array): unknown {
   return JSON.parse(decoder.decode(bytes))
@@ -273,10 +298,49 @@ function readbookbyid(bookid: string): BOOK | undefined {
   return undefined
 }
 
+function findbookbydirname(bookdirname: string): BOOK | undefined {
+  const books = memoryreadbooklist()
+  for (let i = 0; i < books.length; ++i) {
+    if (readzedcafebookdirname(books[i]) === bookdirname) {
+      return books[i]
+    }
+  }
+  return undefined
+}
+
+function findpageinbook(
+  book: BOOK,
+  pageprefix: string,
+): CODE_PAGE | undefined {
+  for (let i = 0; i < book.pages.length; ++i) {
+    if (readzedcafepageprefix(book, book.pages[i]) === pageprefix) {
+      return book.pages[i]
+    }
+  }
+  return undefined
+}
+
 function applybookmeta(book: BOOK, flat: WANIX_ZED_CAFE_PARSED_BOOK) {
   book.name = flat.name
   book.token = flat.token
   book.activelist = flat.activelist
+}
+
+function applyoneflagowner(
+  book: BOOK,
+  owner: string,
+  incoming: unknown,
+): boolean {
+  if (isimportprotectedflagowner(owner)) {
+    return false
+  }
+  const current = memoryreadbookflags(book, owner)
+  if (isequal(current, incoming)) {
+    return false
+  }
+  memoryclearbookflags(book, owner)
+  Object.assign(memoryreadbookflags(book, owner), incoming as object)
+  return true
 }
 
 function applybookflags(
@@ -288,7 +352,7 @@ function applybookflags(
   const existing = Object.keys(book.flags ?? {})
   for (let i = 0; i < existing.length; ++i) {
     const id = existing[i]
-    if (keep.has(id)) {
+    if (keep.has(id) || isimportprotectedflagowner(id)) {
       continue
     }
     const bid = book.flags[id]
@@ -299,16 +363,401 @@ function applybookflags(
   const owners = Object.keys(flatflags)
   for (let i = 0; i < owners.length; ++i) {
     const id = owners[i]
-    const incoming = flatflags[id]
-    const current = memoryreadbookflags(book, id)
-    if (isequal(current, incoming)) {
-      continue
+    if (applyoneflagowner(book, id, flatflags[id])) {
+      changed = true
     }
-    memoryclearbookflags(book, id)
-    Object.assign(memoryreadbookflags(book, id), incoming as object)
-    changed = true
   }
   return changed
+}
+
+function readboardforpage(page: CODE_PAGE): BOARD | undefined {
+  return memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(page)
+}
+
+function markboardpaint(paintids: Set<string>, page: CODE_PAGE) {
+  paintids.add(page.id)
+}
+
+function applyterraininplace(
+  page: CODE_PAGE,
+  terrain: unknown[],
+  path: string,
+): boolean {
+  if (terrain.length !== BOARD_SIZE) {
+    throw new Error(
+      `board terrain length ${terrain.length} != ${BOARD_SIZE}: ${path}`,
+    )
+  }
+  const board = readboardforpage(page)
+  if (!ispresent(board)) {
+    return false
+  }
+  board.terrain = terrain as BOARD['terrain']
+  const boardruntime = memoryreadboardruntime(board)
+  if (ispresent(boardruntime)) {
+    delete boardruntime.distmaps
+  }
+  return true
+}
+
+function applyobjectinplace(
+  page: CODE_PAGE,
+  objid: string,
+  data: Record<string, unknown>,
+): boolean {
+  const board = readboardforpage(page)
+  if (!ispresent(board)) {
+    return false
+  }
+  if (!board.objects || typeof board.objects !== 'object') {
+    board.objects = {}
+  }
+  const existing = board.objects[objid]
+  if (ispresent(existing)) {
+    memorydeleteboardobject(board, objid)
+  }
+  const created = memorycreateboardobject(board, {
+    ...(data as BOARD_ELEMENT),
+    id: objid,
+  })
+  return ispresent(created)
+}
+
+function applyboardstatsinplace(
+  page: CODE_PAGE,
+  stats: Record<string, unknown>,
+): boolean {
+  const board = readboardforpage(page)
+  if (!ispresent(board)) {
+    return false
+  }
+  const { terrain: _t, objects: _o, id: _id, ...rest } = stats
+  let changed = false
+  const keys = Object.keys(rest)
+  for (let i = 0; i < keys.length; ++i) {
+    const key = keys[i]
+    const next = rest[key]
+    if (!isequal((board as Record<string, unknown>)[key], next)) {
+      ;(board as Record<string, unknown>)[key] = next
+      changed = true
+    }
+  }
+  return changed
+}
+
+function applypageelementfield(
+  page: CODE_PAGE,
+  field: 'object' | 'terrain' | 'charset' | 'palette',
+  value: unknown,
+): boolean {
+  const rt = memoryreadcodepageruntime(page)
+  if (!ispresent(rt)) {
+    return false
+  }
+  if (isequal(rt[field], value)) {
+    return false
+  }
+  ;(rt as Record<string, unknown>)[field] = deepcopy(value)
+  return true
+}
+
+function pathpriority(path: string): number {
+  if (path === 'stats.json') {
+    return 0
+  }
+  const segments = path.split('/')
+  if (segments.length === 2 && segments[1] === 'stats.json') {
+    return 1
+  }
+  if (segments.length === 3 && segments[1] === 'flags') {
+    return 2
+  }
+  if (segments.length === 3 && segments[2] === 'stats.json') {
+    return 3
+  }
+  if (segments.length === 4 && segments[2] === 'board' && segments[3] === 'stats.json') {
+    return 4
+  }
+  if (
+    segments.length === 4 &&
+    segments[2] === 'board' &&
+    segments[3] === 'terrain.json'
+  ) {
+    return 5
+  }
+  if (
+    segments.length === 5 &&
+    segments[2] === 'board' &&
+    segments[3] === 'objects'
+  ) {
+    return 6
+  }
+  return 7
+}
+
+function applypartialupsertpath(
+  path: string,
+  bytes: Uint8Array,
+  paintids: Set<string>,
+): boolean {
+  if (path === 'stats.json') {
+    return false
+  }
+  const segments = path.split('/')
+  if (segments.length < 2) {
+    return false
+  }
+  const bookdirname = segments[0]
+  const book = findbookbydirname(bookdirname)
+  if (!book) {
+    throw new Error(`zedcafe partial import: unknown book dir ${bookdirname}`)
+  }
+  if (segments.length === 2 && segments[1] === 'stats.json') {
+    const meta = decodejson(bytes) as {
+      name?: string
+      token?: string
+      activelist?: string[]
+      flags?: unknown
+      timestamp?: unknown
+    }
+    if ('flags' in meta) {
+      throw new Error(`book stats.json must not embed flags: ${path}`)
+    }
+    if ('timestamp' in meta) {
+      throw new Error(`book stats.json must not include timestamp: ${path}`)
+    }
+    let changed = false
+    if (typeof meta.name === 'string' && book.name !== meta.name) {
+      book.name = meta.name
+      changed = true
+    }
+    if (typeof meta.token === 'string' && book.token !== meta.token) {
+      book.token = meta.token
+      changed = true
+    }
+    if (Array.isArray(meta.activelist) && !isequal(book.activelist, meta.activelist)) {
+      book.activelist = meta.activelist
+      changed = true
+    }
+    return changed
+  }
+  if (segments.length === 3 && segments[1] === 'flags') {
+    const owner = segments[2].replace(/\.json$/, '')
+    return applyoneflagowner(book, owner, decodejson(bytes))
+  }
+  if (segments.length < 3) {
+    return false
+  }
+  const pageprefix = `${segments[0]}/${segments[1]}`
+  const page = findpageinbook(book, pageprefix)
+  if (segments.length === 3 && segments[2] === 'stats.json') {
+    const stats = decodejson(bytes) as { id?: string; code?: string }
+    const pageid = stats.id ?? segments[1]
+    const flat = { id: pageid, code: stats.code ?? '' }
+    if (!page) {
+      if (memoryupsertcodepage(book, flat)) {
+        const created = memoryreadcodepage(book, pageid)
+        if (created) {
+          markboardpaint(paintids, created)
+        }
+        return true
+      }
+      return false
+    }
+    if (page.code === flat.code) {
+      return false
+    }
+    page.code = flat.code
+    markboardpaint(paintids, page)
+    return true
+  }
+  if (!page) {
+    throw new Error(`zedcafe partial import: unknown page ${pageprefix}`)
+  }
+  if (
+    segments.length === 4 &&
+    segments[2] === 'board' &&
+    segments[3] === 'terrain.json'
+  ) {
+    const terrain = decodejson(bytes)
+    if (!Array.isArray(terrain)) {
+      throw new Error(`board terrain must be an array: ${path}`)
+    }
+    if (applyterraininplace(page, terrain, path)) {
+      markboardpaint(paintids, page)
+      return true
+    }
+    // Fall back to page upsert with terrain only merge of existing board
+    const board = readboardforpage(page)
+    const flatboard: Record<string, unknown> = {
+      terrain,
+      objects: board?.objects ?? {},
+    }
+    if (board) {
+      const { terrain: _t, objects: _o, ...stats } = board as BOARD &
+        Record<string, unknown>
+      Object.assign(flatboard, stats)
+    }
+    if (
+      memoryupsertcodepage(book, {
+        id: page.id,
+        code: page.code,
+        board: flatboard,
+      })
+    ) {
+      markboardpaint(paintids, page)
+      return true
+    }
+    return false
+  }
+  if (
+    segments.length === 4 &&
+    segments[2] === 'board' &&
+    segments[3] === 'stats.json'
+  ) {
+    const stats = decodejson(bytes) as Record<string, unknown>
+    if (applyboardstatsinplace(page, stats)) {
+      markboardpaint(paintids, page)
+      return true
+    }
+    return false
+  }
+  if (
+    segments.length === 5 &&
+    segments[2] === 'board' &&
+    segments[3] === 'objects'
+  ) {
+    const objid = segments[4].replace(/\.json$/, '')
+    const data = decodejson(bytes) as Record<string, unknown>
+    if (applyobjectinplace(page, objid, data)) {
+      markboardpaint(paintids, page)
+      return true
+    }
+    return false
+  }
+  if (segments.length === 4 && segments[2] === 'object' && segments[3] === 'element.json') {
+    if (applypageelementfield(page, 'object', decodejson(bytes))) {
+      markboardpaint(paintids, page)
+      return true
+    }
+    return false
+  }
+  if (segments.length === 4 && segments[2] === 'terrain' && segments[3] === 'element.json') {
+    if (applypageelementfield(page, 'terrain', decodejson(bytes))) {
+      markboardpaint(paintids, page)
+      return true
+    }
+    return false
+  }
+  if (segments.length === 4 && segments[2] === 'charset' && segments[3] === 'bitmap.json') {
+    if (applypageelementfield(page, 'charset', decodejson(bytes))) {
+      markboardpaint(paintids, page)
+      return true
+    }
+    return false
+  }
+  if (segments.length === 4 && segments[2] === 'palette' && segments[3] === 'bitmap.json') {
+    if (applypageelementfield(page, 'palette', decodejson(bytes))) {
+      markboardpaint(paintids, page)
+      return true
+    }
+    return false
+  }
+  return false
+}
+
+function applypartialremovepath(path: string, paintids: Set<string>): boolean {
+  if (path === 'stats.json') {
+    return false
+  }
+  const segments = path.split('/')
+  if (segments.length < 2) {
+    return false
+  }
+  const bookdirname = segments[0]
+  const book = findbookbydirname(bookdirname)
+  if (!book) {
+    return false
+  }
+  if (segments.length === 2 && segments[1] === 'stats.json') {
+    memoryclearbook(book.id)
+    return true
+  }
+  if (segments.length === 3 && segments[1] === 'flags') {
+    const owner = segments[2].replace(/\.json$/, '')
+    if (isimportprotectedflagowner(owner)) {
+      return false
+    }
+    if (!(owner in (book.flags ?? {}))) {
+      return false
+    }
+    const bid = book.flags[owner]
+    memoryboundarydelete(bid)
+    delete book.flags[owner]
+    return true
+  }
+  if (segments.length < 3) {
+    return false
+  }
+  const pageprefix = `${segments[0]}/${segments[1]}`
+  const page = findpageinbook(book, pageprefix)
+  if (!page) {
+    return false
+  }
+  if (segments.length === 3 && segments[2] === 'stats.json') {
+    if (memoryclearbookcodepage(book, page.id)) {
+      return true
+    }
+    return false
+  }
+  if (
+    segments.length === 5 &&
+    segments[2] === 'board' &&
+    segments[3] === 'objects'
+  ) {
+    const objid = segments[4].replace(/\.json$/, '')
+    const board = readboardforpage(page)
+    if (!ispresent(board)) {
+      return false
+    }
+    if (memorydeleteboardobject(board, objid)) {
+      markboardpaint(paintids, page)
+      return true
+    }
+    return false
+  }
+  return false
+}
+
+/** Path-scoped apply: only listed upserts/removes; never sparse-tree deletes. */
+export function applyzedcafepartialtomemory(
+  files: WANIX_ZED_CAFE_EXPORT_FILE[],
+  removepaths: string[] = [],
+): APPLY_ZEDCAFE_PARTIAL_RESULT {
+  let changed = false
+  const paintids = new Set<string>()
+  const sortedfiles = [...files].sort(
+    (a, b) => pathpriority(a.path) - pathpriority(b.path) || a.path.localeCompare(b.path),
+  )
+  for (let i = 0; i < sortedfiles.length; ++i) {
+    const file = sortedfiles[i]
+    if (applypartialupsertpath(file.path, file.bytes, paintids)) {
+      changed = true
+    }
+  }
+  const sortedremoves = [...removepaths].sort(
+    (a, b) => pathpriority(b) - pathpriority(a) || a.localeCompare(b),
+  )
+  for (let i = 0; i < sortedremoves.length; ++i) {
+    if (applypartialremovepath(sortedremoves[i], paintids)) {
+      changed = true
+    }
+  }
+  return {
+    changed,
+    paintids: [...paintids],
+    bookcount: memoryreadbooklist().length,
+  }
 }
 
 export function applyzedcafetomemory(parsed: WANIX_ZED_CAFE_PARSED): boolean {
