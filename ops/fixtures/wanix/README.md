@@ -55,7 +55,7 @@ Sources for per-lang hellos live in `hello/` (see `hello/manifest.json`). WAT so
 | `bundle-empty.tgz` | No `.wasm` — expect `wanix bundle … has no .wasm entries` warning |
 | `termbridge.wasm` | Term bridge smoke — banner on stdout, stays running; type `ping` + Enter → `-> pong` on the tile |
 | `listinput.wasm` | Bind-on-drop smoke — polls `input/` every 500ms; prints on change (`once` argv = one-shot) |
-| `input2terrain.wasm` | Task bind-on-drop — reads `input/*.png` (or argv), writes `zedcafe/…/board/terrain.json` |
+| `input2terrain.wasm` | Task bind-on-drop — reads `input/*.png` (or argv), writes `zedcafe/…/board/terrain/<index>.json` cells |
 | `png2terrain.sh` | VM bind-on-drop — same pipeline (`sh input/png2terrain.sh [name.png]`) |
 | `stamp-red.png` | 8×8 red input (95 bytes → 16 cells) |
 | `stamp-green.png` | 8×8 green input (96 bytes → 17 cells) |
@@ -132,7 +132,7 @@ While **attached** to a Wanix term session, file drops bind under **`input/<name
 | `stamp-green.png` | 96 | 17 |
 | `stamp-blue.png` | 98 | 19 |
 
-**Prerequisite (full pipeline):** a book with a board page loaded so `zedcafe/…/board/terrain.json` exists in the export tree.
+**Prerequisite (full pipeline):** a book with a board page loaded so `zedcafe/…/board/terrain/0.json` (cell files) exists in the export tree.
 
 ### Smoke (`listinput.wasm` — live poll)
 
@@ -173,7 +173,7 @@ Built with `yarn task run ops:fixtures:wanix:zedcafe:build` (run `ops:fixtures:w
 |------|------|
 | `zedcafe.wasm` | Export daemon — mounts schema-guarded export FS; host pushes game state via `writeFile` at guest mount `zedcafe/` |
 | `findplayers.wasm` | One-shot scanner — prints a JSON array of export paths containing player elements |
-| `greenring.wasm` | Finds onboard players, writes a green terrain ring around each into `board/terrain.json` (imported into sim on the next poll) |
+| `greenring.wasm` | Finds onboard players, writes a green terrain ring around each into `board/terrain/<index>.json` cells (imported into sim on the next poll) |
 
 **findplayers flow**
 
@@ -192,7 +192,7 @@ If zedcafe is not ready, spawn is blocked with a terminal error (the guest does 
 Same stand-up as findplayers. Drop `greenring.wasm` with players on a board:
 
 1. Waits for export content, scans for onboard players with coordinates.
-2. Writes allowlisted `board/terrain.json` cells (green ring, Chebyshev radius 1) under each player’s book/page.
+2. Writes allowlisted `board/terrain/<index>.json` cells (green ring, Chebyshev radius 1) under each player’s book/page.
 3. When the task term closes (after gojs exit), host kicks one import-poll cycle, imports into the sim worker, and the board updates in cafe.
 
 ### Headed export validator

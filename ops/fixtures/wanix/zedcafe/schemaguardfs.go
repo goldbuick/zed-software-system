@@ -86,8 +86,11 @@ const probeSeg = "_probe_"
 func exportdirsuffixprobes() []string {
 	return []string{
 		"/stats.json",
+		"/flags/_.json",
+		"/_.json",
+		"/0.json",
 		"/board/stats.json",
-		"/board/terrain.json",
+		"/board/terrain/0.json",
 		"/board/objects/_.json",
 		"/object/element.json",
 		"/terrain/element.json",
@@ -96,8 +99,9 @@ func exportdirsuffixprobes() []string {
 		"/element.json",
 		"/bitmap.json",
 		"/" + probeSeg + "/stats.json",
+		"/" + probeSeg + "/flags/_.json",
 		"/" + probeSeg + "/board/stats.json",
-		"/" + probeSeg + "/board/terrain.json",
+		"/" + probeSeg + "/board/terrain/0.json",
 		"/" + probeSeg + "/board/objects/_.json",
 		"/" + probeSeg + "/object/element.json",
 		"/" + probeSeg + "/terrain/element.json",

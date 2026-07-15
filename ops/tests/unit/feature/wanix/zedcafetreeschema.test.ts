@@ -100,6 +100,9 @@ describe('zedcafetreeschema', () => {
     const probes = [
       'stats.json',
       'demo-book1/stats.json',
+      'demo-book1/flags/pid_1.json',
+      'demo-book1/demo-page1/board/terrain/0.json',
+      'demo-book1/demo-page1/board/terrain.json',
       'demo-book1/demo-page1/board/objects/obj1.json',
       'evil.txt',
       'foo/bar.json',

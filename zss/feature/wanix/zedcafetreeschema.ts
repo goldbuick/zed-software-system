@@ -1,4 +1,5 @@
 import { memoryreadcodepagename } from 'zss/memory/codepageoperations'
+import { BOARD_SIZE } from 'zss/memory/types'
 import type { BOOK, CODE_PAGE } from 'zss/memory/types'
 
 export type ZED_CAFE_EXPORT_PATH_FILE = {
@@ -14,9 +15,10 @@ const OBJ_ID = '[^/]+'
 export const ZED_CAFE_EXPORT_ALLOWED_PATH: RegExp[] = [
   /^stats\.json$/,
   new RegExp(`^${DIR_SEG}/stats\\.json$`),
+  new RegExp(`^${DIR_SEG}/flags/${OBJ_ID}\\.json$`),
   new RegExp(`^${DIR_SEG}/${DIR_SEG}/stats\\.json$`),
   new RegExp(`^${DIR_SEG}/${DIR_SEG}/board/stats\\.json$`),
-  new RegExp(`^${DIR_SEG}/${DIR_SEG}/board/terrain\\.json$`),
+  new RegExp(`^${DIR_SEG}/${DIR_SEG}/board/terrain/[0-9]+\\.json$`),
   new RegExp(`^${DIR_SEG}/${DIR_SEG}/board/objects/${OBJ_ID}\\.json$`),
   new RegExp(`^${DIR_SEG}/${DIR_SEG}/object/element\\.json$`),
   new RegExp(`^${DIR_SEG}/${DIR_SEG}/terrain/element\\.json$`),
@@ -136,21 +138,58 @@ function validatestructure(
     }
     let bookmeta: {
       pages?: { id: string; name?: string }[]
+      flags?: unknown
+      timestamp?: unknown
     }
     try {
       bookmeta = decodejson(bookbytes) as {
         pages?: { id: string; name?: string }[]
+        flags?: unknown
+        timestamp?: unknown
       }
     } catch {
       errors.push(`book stats.json is not valid JSON: ${bookpath}`)
       continue
     }
+    if ('flags' in bookmeta) {
+      errors.push(`book stats.json must not embed flags: ${bookpath}`)
+    }
+    if ('timestamp' in bookmeta) {
+      errors.push(`book stats.json must not include timestamp: ${bookpath}`)
+    }
     const pagerefs = bookmeta.pages ?? []
     for (let j = 0; j < pagerefs.length; ++j) {
       const pageref = pagerefs[j]
-      const pagepath = `${bookdirname}/${kebabcasezedcafedirname(pageref.name, pageref.id)}/stats.json`
+      const pageprefix = `${bookdirname}/${kebabcasezedcafedirname(pageref.name, pageref.id)}`
+      const pagepath = `${pageprefix}/stats.json`
       if (!index.has(pagepath)) {
         errors.push(`missing page stats for ${pageref.id}: ${pagepath}`)
+      }
+      const legacyterrain = `${pageprefix}/board/terrain.json`
+      if (index.has(legacyterrain)) {
+        errors.push(`legacy board/terrain.json is not allowed: ${legacyterrain}`)
+      }
+      const terrainprefix = `${pageprefix}/board/terrain/`
+      let terraincount = 0
+      for (const path of index.keys()) {
+        if (path.startsWith(terrainprefix) && path.endsWith('.json')) {
+          terraincount += 1
+        }
+      }
+      if (terraincount === 0) {
+        continue
+      }
+      if (terraincount !== BOARD_SIZE) {
+        errors.push(
+          `board terrain cell count ${terraincount} != ${BOARD_SIZE} under ${terrainprefix}`,
+        )
+      }
+      for (let cell = 0; cell < BOARD_SIZE; ++cell) {
+        const cellpath = `${terrainprefix}${cell}.json`
+        if (!index.has(cellpath)) {
+          errors.push(`missing terrain cell: ${cellpath}`)
+          break
+        }
       }
     }
   }

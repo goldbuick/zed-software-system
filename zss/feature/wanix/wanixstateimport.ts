@@ -1,9 +1,12 @@
 import type { WANIX_ZED_CAFE_EXPORT_FILE } from 'zss/feature/wanix/wanixstateexport'
 import { kebabcasezedcafedirname } from 'zss/feature/wanix/zedcafetreeschema'
-import { ispresent } from 'zss/mapping/types'
+import { isequal, ispresent } from 'zss/mapping/types'
+import { memoryboundarydelete } from 'zss/memory/boundaries'
 import {
   memoryclearbookcodepage,
+  memoryclearbookflags,
   memoryimportbookfromjson,
+  memoryreadbookflags,
   memoryupsertcodepage,
 } from 'zss/memory/bookoperations'
 import {
@@ -11,6 +14,7 @@ import {
   memoryreadbooklist,
   memorywritebook,
 } from 'zss/memory/session'
+import { BOARD_SIZE } from 'zss/memory/types'
 import type { BOOK } from 'zss/memory/types'
 
 export type WANIX_ZED_CAFE_PARSED_PAGE = {
@@ -67,15 +71,68 @@ function parsejsonfile(
   return decodejson(bytes)
 }
 
+function readbookflagsfromindex(
+  index: Map<string, Uint8Array>,
+  bookdirname: string,
+): Record<string, unknown> {
+  const flags: Record<string, unknown> = {}
+  const prefix = `${bookdirname}/flags/`
+  for (const [path, bytes] of index) {
+    if (!path.startsWith(prefix) || !path.endsWith('.json')) {
+      continue
+    }
+    const owner = path.slice(prefix.length, -'.json'.length)
+    if (!owner || owner.includes('/')) {
+      continue
+    }
+    flags[owner] = decodejson(bytes)
+  }
+  return flags
+}
+
+function assembleterraincells(
+  index: Map<string, Uint8Array>,
+  prefix: string,
+): unknown[] | undefined {
+  const terrainprefix = `${prefix}/board/terrain/`
+  const legacy = `${prefix}/board/terrain.json`
+  if (index.has(legacy)) {
+    throw new Error(`legacy board/terrain.json is not allowed: ${legacy}`)
+  }
+  let present = 0
+  for (const path of index.keys()) {
+    if (path.startsWith(terrainprefix) && path.endsWith('.json')) {
+      present += 1
+    }
+  }
+  if (present === 0) {
+    return undefined
+  }
+  if (present !== BOARD_SIZE) {
+    throw new Error(
+      `board terrain cell count ${present} != ${BOARD_SIZE} under ${terrainprefix}`,
+    )
+  }
+  const terrain: unknown[] = new Array(BOARD_SIZE)
+  for (let i = 0; i < BOARD_SIZE; ++i) {
+    const cellpath = `${terrainprefix}${i}.json`
+    const bytes = index.get(cellpath)
+    if (!bytes) {
+      throw new Error(`missing terrain cell: ${cellpath}`)
+    }
+    terrain[i] = decodejson(bytes)
+  }
+  return terrain
+}
+
 export function assembleboardjson(
   index: Map<string, Uint8Array>,
   prefix: string,
 ): Record<string, unknown> | undefined {
   const statspath = `${prefix}/board/stats.json`
-  const terrainpath = `${prefix}/board/terrain.json`
   const objectprefix = `${prefix}/board/objects/`
   const statsbytes = index.get(statspath)
-  const terrainbytes = index.get(terrainpath)
+  const terrain = assembleterraincells(index, prefix)
   const objects: Record<string, unknown> = {}
   for (const [path, bytes] of index) {
     if (!path.startsWith(objectprefix) || !path.endsWith('.json')) {
@@ -84,15 +141,15 @@ export function assembleboardjson(
     const objid = path.slice(objectprefix.length, -'.json'.length)
     objects[objid] = decodejson(bytes)
   }
-  if (!statsbytes && !terrainbytes && Object.keys(objects).length === 0) {
+  if (!statsbytes && terrain === undefined && Object.keys(objects).length === 0) {
     return undefined
   }
   const board: Record<string, unknown> = {}
   if (statsbytes) {
     Object.assign(board, decodejson(statsbytes))
   }
-  if (terrainbytes) {
-    board.terrain = decodejson(terrainbytes)
+  if (terrain !== undefined) {
+    board.terrain = terrain
   }
   // Always set objects — omitting it leaves board.objects undefined after upsert
   // and crashes movement (memoryreadobject → objects['404']).
@@ -164,14 +221,24 @@ export function parsezedcafeexportfiles(
           id?: string
           name?: string
           token?: string
-          timestamp?: number
+          flags?: unknown
+          timestamp?: unknown
           activelist?: string[]
-          flags?: Record<string, unknown>
           pages?: { id: string; name?: string }[]
         }
       | undefined
     if (!ispresent(bookmeta)) {
       continue
+    }
+    if ('flags' in bookmeta) {
+      throw new Error(
+        `book stats.json must not embed flags: ${bookdirname}/stats.json`,
+      )
+    }
+    if ('timestamp' in bookmeta) {
+      throw new Error(
+        `book stats.json must not include timestamp: ${bookdirname}/stats.json`,
+      )
     }
     const pages: WANIX_ZED_CAFE_PARSED_PAGE[] = []
     const pagerefs = bookmeta.pages ?? []
@@ -189,9 +256,9 @@ export function parsezedcafeexportfiles(
       id: bookmeta.id ?? bookid,
       name: bookmeta.name ?? bookid,
       token: bookmeta.token ?? '',
-      timestamp: bookmeta.timestamp ?? 0,
+      timestamp: 0,
       activelist: bookmeta.activelist ?? [],
-      flags: bookmeta.flags ?? {},
+      flags: readbookflagsfromindex(index, bookdirname),
       pages,
     })
   }
@@ -215,8 +282,39 @@ function readbookbyid(bookid: string): BOOK | undefined {
 function applybookmeta(book: BOOK, flat: WANIX_ZED_CAFE_PARSED_BOOK) {
   book.name = flat.name
   book.token = flat.token
-  book.timestamp = flat.timestamp
   book.activelist = flat.activelist
+}
+
+function applybookflags(
+  book: BOOK,
+  flatflags: Record<string, unknown>,
+): boolean {
+  let changed = false
+  const keep = new Set(Object.keys(flatflags))
+  const existing = Object.keys(book.flags ?? {})
+  for (let i = 0; i < existing.length; ++i) {
+    const id = existing[i]
+    if (keep.has(id)) {
+      continue
+    }
+    const bid = book.flags[id]
+    memoryboundarydelete(bid)
+    delete book.flags[id]
+    changed = true
+  }
+  const owners = Object.keys(flatflags)
+  for (let i = 0; i < owners.length; ++i) {
+    const id = owners[i]
+    const incoming = flatflags[id]
+    const current = memoryreadbookflags(book, id)
+    if (isequal(current, incoming)) {
+      continue
+    }
+    memoryclearbookflags(book, id)
+    Object.assign(memoryreadbookflags(book, id), incoming as object)
+    changed = true
+  }
+  return changed
 }
 
 export function applyzedcafetomemory(parsed: WANIX_ZED_CAFE_PARSED): boolean {
@@ -238,6 +336,9 @@ export function applyzedcafetomemory(parsed: WANIX_ZED_CAFE_PARSED): boolean {
       continue
     }
     applybookmeta(book, flat)
+    if (applybookflags(book, flat.flags)) {
+      changed = true
+    }
     for (let j = 0; j < flat.pages.length; ++j) {
       if (memoryupsertcodepage(book, flat.pages[j])) {
         changed = true

@@ -1,3 +1,11 @@
+const flagbags = new Map<string, Record<string, unknown>>()
+
+jest.mock('zss/memory/boundaries', () => ({
+  memoryboundarydelete: jest.fn((id: string) => {
+    flagbags.delete(id)
+  }),
+}))
+
 jest.mock('zss/memory/bookoperations', () => ({
   memoryimportbookfromjson: jest.fn((flat: { id: string; pages: unknown[] }) => ({
     id: flat.id,
@@ -10,6 +18,15 @@ jest.mock('zss/memory/bookoperations', () => ({
   })),
   memoryupsertcodepage: jest.fn(() => true),
   memoryclearbookcodepage: jest.fn(() => ({ id: 'removed' })),
+  memoryclearbookflags: jest.fn((_book: unknown, id: string) => {
+    flagbags.set(id, {})
+  }),
+  memoryreadbookflags: jest.fn((_book: unknown, id: string) => {
+    if (!flagbags.has(id)) {
+      flagbags.set(id, {})
+    }
+    return flagbags.get(id)!
+  }),
 }))
 
 jest.mock('zss/memory/session', () => ({
@@ -21,6 +38,7 @@ jest.mock('zss/memory/session', () => ({
 import {
   memoryclearbookcodepage,
   memoryimportbookfromjson,
+  memoryreadbookflags,
   memoryupsertcodepage,
 } from 'zss/memory/bookoperations'
 import {
@@ -39,6 +57,7 @@ const mockimport = memoryimportbookfromjson as jest.Mock
 
 describe('applyzedcafetomemory', () => {
   beforeEach(() => {
+    flagbags.clear()
     mockreadlist.mockReset()
     mockwritebook.mockReset()
     mockclearbook.mockReset()
@@ -121,6 +140,39 @@ describe('applyzedcafetomemory', () => {
     expect(mockclearpage).toHaveBeenCalledWith(book, 'drop')
     expect(book.activelist).toEqual(['pid_1'])
     expect(book.token).toBe('t2')
+  })
+
+  it('applies folderized player flags onto an existing book', () => {
+    const book = {
+      id: 'b1',
+      name: 'b1',
+      token: 't',
+      timestamp: 5,
+      activelist: ['pid_1'],
+      flags: { pid_1: 'pid_1' },
+      pages: [],
+    }
+    flagbags.set('pid_1', { ammo: 0, health: 100 })
+    mockreadlist.mockReturnValue([book])
+    const changed = applyzedcafetomemory({
+      books: [
+        {
+          id: 'b1',
+          name: 'b1',
+          token: 't',
+          timestamp: 0,
+          activelist: ['pid_1'],
+          flags: { pid_1: { ammo: 3333, health: 100 } },
+          pages: [],
+        },
+      ],
+    })
+    expect(changed).toBe(true)
+    expect(memoryreadbookflags(book, 'pid_1')).toEqual({
+      ammo: 3333,
+      health: 100,
+    })
+    expect(book.timestamp).toBe(5)
   })
 
   it('clears all books when guest tree has empty books list', () => {

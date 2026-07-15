@@ -3,6 +3,8 @@ package greenring
 import (
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -26,17 +28,22 @@ func TestPaintGreenRingMergesDisplay(t *testing.T) {
 	}
 }
 
+func writeterraincell(t *testing.T, dir, book, page string, index int, body string) {
+	t.Helper()
+	path := filepath.Join(dir, book, page, "board", "terrain", strconv.Itoa(index)+".json")
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, []byte(body), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestResolveBoardPageDirByIdSuffix(t *testing.T) {
 	dir := t.TempDir()
 	book := "cool-book1"
 	page := "title-sid_abc"
-	terrain := filepath.Join(dir, book, page, "board", "terrain.json")
-	if err := os.MkdirAll(filepath.Dir(terrain), 0o755); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.WriteFile(terrain, []byte("[]\n"), 0o644); err != nil {
-		t.Fatal(err)
-	}
+	writeterraincell(t, dir, book, page, 0, "{}\n")
 	got, err := ResolveBoardPageDir(dir, book, "sid_abc", "")
 	if err != nil {
 		t.Fatal(err)
@@ -51,21 +58,40 @@ func TestResolveBoardPageDirByPlayerObject(t *testing.T) {
 	book := "cool-book1"
 	page := "area-sid_xyz"
 	obj := filepath.Join(dir, book, page, "board", "objects", "pid_1.json")
-	terrain := filepath.Join(dir, book, page, "board", "terrain.json")
 	if err := os.MkdirAll(filepath.Dir(obj), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(obj, []byte("{}\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(terrain, []byte("[]\n"), 0o644); err != nil {
-		t.Fatal(err)
-	}
+	writeterraincell(t, dir, book, page, 0, "{}\n")
 	got, err := ResolveBoardPageDir(dir, book, "wrong", "pid_1")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if got != page {
 		t.Fatalf("got %q want %q", got, page)
+	}
+}
+
+func TestApplyRingToBoardWritesCells(t *testing.T) {
+	dir := t.TempDir()
+	book := "cool-book1"
+	page := "title-sid_abc"
+	cx, cy := 5, 5
+	for _, cell := range RingCells(cx, cy) {
+		idx := TerrainIndex(cell[0], cell[1])
+		writeterraincell(t, dir, book, page, idx, "{\"kind\":\"fake\"}\n")
+	}
+	if err := ApplyRingToBoard(dir, book, page, cx, cy); err != nil {
+		t.Fatal(err)
+	}
+	idx := TerrainIndex(6, 5)
+	data, err := os.ReadFile(filepath.Join(dir, book, page, "board", "terrain", strconv.Itoa(idx)+".json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(data), `"char":177`) {
+		t.Fatalf("expected painted cell, got %s", data)
 	}
 }

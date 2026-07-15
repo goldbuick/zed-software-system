@@ -7,9 +7,8 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
-
-	"zed.cafe/wanix-fixtures/findplayers"
 )
 
 // PlayerXY is the minimal player location needed to paint a ring.
@@ -21,23 +20,24 @@ type PlayerXY struct {
 	Y        int
 }
 
-func terrainpath(exportroot, bookdir, pagedir string) string {
+func terraincellpath(exportroot, bookdir, pagedir string, index int) string {
 	return filepath.Join(
 		exportroot,
 		filepath.FromSlash(bookdir),
 		filepath.FromSlash(pagedir),
 		"board",
-		"terrain.json",
+		"terrain",
+		strconv.Itoa(index)+".json",
 	)
 }
 
 func hasterrain(exportroot, bookdir, pagedir string) bool {
-	_, err := os.Stat(terrainpath(exportroot, bookdir, pagedir))
+	_, err := os.Stat(terraincellpath(exportroot, bookdir, pagedir, 0))
 	return err == nil
 }
 
 // ResolveBoardPageDir finds the export page directory under bookdir that holds
-// board/terrain.json. boardhint may be a full dir name or a bare page/board id.
+// board/terrain/*.json. boardhint may be a full dir name or a bare page/board id.
 func ResolveBoardPageDir(exportroot, bookdir, boardhint, playerid string) (string, error) {
 	bookpath := filepath.Join(exportroot, filepath.FromSlash(bookdir))
 
@@ -96,33 +96,56 @@ func ResolveBoardPageDir(exportroot, bookdir, boardhint, playerid string) (strin
 		}
 	}
 	return "", fmt.Errorf(
-		"no board/terrain.json under %s (hint=%q player=%q)",
+		"no board/terrain/ under %s (hint=%q player=%q)",
 		bookdir,
 		boardhint,
 		playerid,
 	)
 }
 
-// ApplyRingToBoard reads board/terrain.json, paints char/fg/bg on ring cells, writes back.
-func ApplyRingToBoard(exportroot string, bookdir, pagedir string, x, y int) error {
-	rel := path.Join(bookdir, pagedir, "board", "terrain.json")
-	full := filepath.Join(exportroot, filepath.FromSlash(rel))
+func readcell(full string) (any, error) {
 	data, err := os.ReadFile(full)
 	if err != nil {
-		return fmt.Errorf("read %s: %w", full, err)
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		return nil, err
 	}
-	var terrain []any
-	if err := findplayers.UnmarshalJSONOrNotReady(rel, data, &terrain); err != nil {
+	var cell any
+	if err := json.Unmarshal(data, &cell); err != nil {
+		return nil, err
+	}
+	return cell, nil
+}
+
+func writecell(full string, cell any) error {
+	if err := os.MkdirAll(filepath.Dir(full), 0o755); err != nil {
 		return err
 	}
-	terrain = PaintGreenRing(terrain, x, y)
-	out, err := json.Marshal(terrain)
+	out, err := json.Marshal(cell)
 	if err != nil {
 		return err
 	}
 	out = append(out, '\n')
-	if err := os.WriteFile(full, out, 0o644); err != nil {
-		return fmt.Errorf("write %s: %w", full, err)
+	return os.WriteFile(full, out, 0o644)
+}
+
+// ApplyRingToBoard paints char/fg/bg on ring cells as board/terrain/<index>.json.
+func ApplyRingToBoard(exportroot string, bookdir, pagedir string, x, y int) error {
+	for _, cellxy := range RingCells(x, y) {
+		idx := TerrainIndex(cellxy[0], cellxy[1])
+		if idx < 0 {
+			continue
+		}
+		full := terraincellpath(exportroot, bookdir, pagedir, idx)
+		cell, err := readcell(full)
+		if err != nil {
+			return fmt.Errorf("read %s: %w", full, err)
+		}
+		painted := PaintCellDisplay(cell, RingChar, ColorGreen, ColorBlack)
+		if err := writecell(full, painted); err != nil {
+			return fmt.Errorf("write %s: %w", full, err)
+		}
 	}
 	return nil
 }
@@ -137,9 +160,9 @@ func ApplyRingsForPlayers(exportroot string, players []PlayerXY) (int, []string,
 		if err != nil {
 			return painted, logs, err
 		}
-		rel := path.Join(p.Book, pagedir, "board", "terrain.json")
+		rel := path.Join(p.Book, pagedir, "board", "terrain")
 		logs = append(logs, fmt.Sprintf(
-			"write book=%s page=%s (hint=%s) player=%s x=%d y=%d path=%s",
+			"write book=%s page=%s (hint=%s) player=%s x=%d y=%d path=%s/",
 			p.Book,
 			pagedir,
 			p.Page,
@@ -156,15 +179,15 @@ func ApplyRingsForPlayers(exportroot string, players []PlayerXY) (int, []string,
 	return painted, logs, nil
 }
 
-// ReadTerrainJSON is a test helper for parsing terrain bytes.
-func ReadTerrainJSON(fsys fs.FS, name string) ([]any, error) {
+// ReadTerrainJSON is a test helper for parsing a terrain cell file.
+func ReadTerrainJSON(fsys fs.FS, name string) (any, error) {
 	data, err := fs.ReadFile(fsys, name)
 	if err != nil {
 		return nil, err
 	}
-	var terrain []any
-	if err := json.Unmarshal(data, &terrain); err != nil {
+	var cell any
+	if err := json.Unmarshal(data, &cell); err != nil {
 		return nil, err
 	}
-	return terrain, nil
+	return cell, nil
 }

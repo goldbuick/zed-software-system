@@ -130,19 +130,23 @@ describe('wanixstateexport', () => {
     expect(readzedcafeexportstatscontentready(ready)).toBe(true)
   })
 
-  it('splitboardexport peels terrain, objects, and stats', () => {
+  it('splitboardexport peels terrain cells, objects, and stats', () => {
+    const terrain = Array.from({ length: 1500 }, () => ({ kind: 'solid' }))
+    terrain[0] = { kind: 'fake' }
     const files = splitboardexport({
-      terrain: [{ kind: 'solid' }],
+      terrain,
       objects: { obj1: { kind: 'player', id: 'obj1' } },
       startx: 1,
       starty: 2,
     })
-    expect(files.map((file) => file.path)).toEqual([
-      'board/terrain.json',
-      'board/stats.json',
-      'board/objects/obj1.json',
-    ])
-    expect(decodefilebytes(files[1]!.bytes)).toEqual({ startx: 1, starty: 2 })
+    expect(files[0]?.path).toBe('board/terrain/0.json')
+    expect(files[1499]?.path).toBe('board/terrain/1499.json')
+    expect(files.some((file) => file.path === 'board/terrain.json')).toBe(false)
+    expect(files.some((file) => file.path === 'board/stats.json')).toBe(true)
+    expect(files.some((file) => file.path === 'board/objects/obj1.json')).toBe(
+      true,
+    )
+    expect(decodefilebytes(files[0]!.bytes)).toEqual({ kind: 'fake' })
   })
 
   it('builds granular export paths from books', () => {
@@ -199,7 +203,7 @@ describe('wanixstateexport', () => {
         (file) =>
           file.path === 'demo-book1/demo-page1/board/terrain.json',
       ),
-    ).toBe(true)
+    ).toBe(false)
     expect(
       files.some(
         (file) =>
@@ -220,7 +224,7 @@ describe('wanixstateexport', () => {
     )
   })
 
-  it('buildzedcafebookmeta indexes pages without code bodies', () => {
+  it('buildzedcafebookmeta indexes pages without code, flags, or timestamp', () => {
     const book = {
       id: 'book1',
       name: 'demo',
@@ -228,11 +232,13 @@ describe('wanixstateexport', () => {
       timestamp: 1,
       activelist: [],
       pages: [{ id: 'page1', code: '@board title' }],
-      flags: {},
+      flags: { pid_1: 'boundary' },
     } as BOOK
     const meta = buildzedcafebookmeta(book)
     expect(meta.pages).toEqual([{ id: 'page1', type: 'board', name: 'title' }])
     expect(meta).not.toHaveProperty('code')
+    expect(meta).not.toHaveProperty('flags')
+    expect(meta).not.toHaveProperty('timestamp')
   })
 
   it('buildzedcafecodepagefiles emits page stats and object payload', () => {
@@ -258,23 +264,22 @@ describe('wanixstateexport', () => {
   })
 
   it('decodezedcafejsonpointer unescapes path keys with slashes', () => {
-    expect(decodezedcafejsonpointer('/demo-book1~1page~1board~1terrain.json/0')).toEqual([
-      'demo-book1/page/board/terrain.json',
-      '0',
-    ])
+    expect(
+      decodezedcafejsonpointer('/demo-book1~1page~1board~1terrain~10.json/char'),
+    ).toEqual(['demo-book1/page/board/terrain/0.json', 'char'])
   })
 
   it('readzedcafeexportupsertpaths maps nested ops to file paths', () => {
     const paths = readzedcafeexportupsertpaths([
       {
         op: 'replace',
-        path: '/demo-book1~1demo-page1~1board~1terrain.json/0/char',
+        path: '/demo-book1~1demo-page1~1board~1terrain~10.json/char',
         value: 177,
       },
       { op: 'remove', path: '/gone.json' },
     ])
     expect([...paths]).toEqual([
-      'demo-book1/demo-page1/board/terrain.json',
+      'demo-book1/demo-page1/board/terrain/0.json',
     ])
   })
 
@@ -283,12 +288,13 @@ describe('wanixstateexport', () => {
       { op: 'remove', path: '/demo-book1~1demo-page1~1board~1objects~1oid.json' },
       {
         op: 'remove',
-        path: '/demo-book1~1demo-page1~1board~1terrain.json/0',
+        path: '/demo-book1~1demo-page1~1board~1terrain~10.json',
       },
       { op: 'replace', path: '/stats.json/bookCount', value: 0 },
     ])
-    expect([...paths]).toEqual([
+    expect([...paths].sort()).toEqual([
       'demo-book1/demo-page1/board/objects/oid.json',
+      'demo-book1/demo-page1/board/terrain/0.json',
     ])
   })
 
@@ -303,16 +309,17 @@ describe('wanixstateexport', () => {
     expect(mocksync).not.toHaveBeenCalled()
   })
 
-  it('checkzedcafeexportontick pushes only changed files', async () => {
-    const book = makeboardbook([])
+  it('checkzedcafeexportontick pushes only changed terrain cells', async () => {
+    const terrain = Array.from({ length: 1500 }, () => ({ kind: 'fake' }))
+    const book = makeboardbook(terrain)
     ;(memoryreadbooklist as jest.Mock).mockReturnValue([book])
     setzedcafepollactive(true)
     primezedcafeexportshadow(buildzedcafeexportfiles())
 
-    const terrainpath = 'demo-book1/demo-page1/board/terrain.json'
-    ;(memoryreadbooklist as jest.Mock).mockReturnValue([
-      makeboardbook([{ kind: 'solid', char: 177 }]),
-    ])
+    const next = Array.from({ length: 1500 }, () => ({ kind: 'fake' }))
+    next[0] = { kind: 'solid', char: 177 }
+    const terrainpath = 'demo-book1/demo-page1/board/terrain/0.json'
+    ;(memoryreadbooklist as jest.Mock).mockReturnValue([makeboardbook(next)])
 
     checkzedcafeexportontick({ emit: jest.fn() } as never)
     await Promise.resolve()
@@ -326,9 +333,29 @@ describe('wanixstateexport', () => {
     }
     expect(options.partial).toBe(true)
     expect(pushed.map((file) => file.path)).toEqual([terrainpath])
-    expect(options.nextdoc?.[terrainpath]).toEqual([
-      { kind: 'solid', char: 177 },
-    ])
+    expect(options.nextdoc?.[terrainpath]).toEqual({
+      kind: 'solid',
+      char: 177,
+    })
+  })
+
+  it('timestamp-only book ticks do not upsert book stats.json', async () => {
+    const book = {
+      id: 'book1',
+      name: 'demo',
+      token: 'tok',
+      timestamp: 1,
+      activelist: [],
+      pages: [],
+      flags: {},
+    } as BOOK
+    ;(memoryreadbooklist as jest.Mock).mockReturnValue([book])
+    setzedcafepollactive(true)
+    primezedcafeexportshadow(buildzedcafeexportfiles())
+    book.timestamp = 999
+    checkzedcafeexportontick({ emit: jest.fn() } as never)
+    await Promise.resolve()
+    expect(mocksync).not.toHaveBeenCalled()
   })
 
   it('checkzedcafeexportontick pushes removepaths when files disappear', async () => {
