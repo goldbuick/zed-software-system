@@ -4,9 +4,17 @@ import type { DEVICELIKE } from 'zss/device/types'
 import {
   clearlasthostpushdoc,
   readlasthostpushdoc,
+  readpendingsync,
+  readzedcafeguestdirty,
   readzedcafepollactive,
   setlasthostpushdoc,
 } from 'zss/device/wanixclient/state'
+import {
+  wanixperfdelta,
+  wanixperfmark,
+  wanixperfnow,
+} from 'zss/feature/wanix/wanixperf'
+import { WANIX_ZEDCAFE_EXPORT_COALESCE_MS } from 'zss/feature/wanix/wanixzedcafeconstants'
 import {
   assertzedcafeexportvalid,
   readzedcafebookprefix,
@@ -23,6 +31,7 @@ import {
 import { memoryreadbooklist, memoryreadoperator } from 'zss/memory/session'
 import { BOARD_SIZE } from 'zss/memory/types'
 import type { BOOK, CODE_PAGE } from 'zss/memory/types'
+
 export type WANIX_ZED_CAFE_EXPORT_FILE = {
   path: string
   bytes: Uint8Array
@@ -36,6 +45,17 @@ const encoder = new TextEncoder()
 const decoder = new TextDecoder()
 
 let exportinflight = false
+/** Generation of queued host dirty; advances on every mark. */
+let exportdirtygen = 0
+/** Generation last successfully synced to guest. */
+let exportackgen = 0
+/** When true, next flush rebuilds the full path document from memory. */
+let structuraldirty = true
+/** Narrow dirty export paths (when structuraldirty is false). */
+const dirtypaths = new Set<string>()
+let lastflushms = 0
+/** Build generation captured for the in-flight push. */
+let inflightbuildgen = 0
 
 function encodetext(text: string): Uint8Array {
   return encoder.encode(text)
@@ -43,6 +63,10 @@ function encodetext(text: string): Uint8Array {
 
 function encodejson(value: unknown): Uint8Array {
   return encodetext(`${JSON.stringify(value, null, 2)}\n`)
+}
+
+function bumpdirtygen() {
+  exportdirtygen += 1
 }
 
 /** Decode RFC 6902 JSON Pointer into path segments (`~1` → `/`, `~0` → `~`). */
@@ -91,6 +115,34 @@ export function zedcafeexportfilestodoc(
     }
   }
   return doc
+}
+
+/** Encode a path document into files; optionally restrict to changed paths. */
+export function zedcafeexportdoctofiles(
+  doc: Record<string, unknown>,
+  onlypaths?: Set<string>,
+): WANIX_ZED_CAFE_EXPORT_FILE[] {
+  const files: WANIX_ZED_CAFE_EXPORT_FILE[] = []
+  const paths = onlypaths ? [...onlypaths] : Object.keys(doc)
+  for (let i = 0; i < paths.length; ++i) {
+    const path = paths[i]
+    if (!(path in doc)) {
+      continue
+    }
+    const value = doc[path]
+    files.push({
+      path,
+      bytes: encodejson(
+        path === 'stats.json' && value && typeof value === 'object'
+          ? {
+              ...(value as Record<string, unknown>),
+              exportedAt: new Date().toISOString(),
+            }
+          : value,
+      ),
+    })
+  }
+  return files
 }
 
 /** File paths that need upsert from a compare(shadow, next) patch. */
@@ -226,10 +278,11 @@ export function buildzedcafebookflagfiles(book: BOOK): WANIX_ZED_CAFE_EXPORT_FIL
   return files
 }
 
-export function splitboardexport(
+function splitboarddoc(
   boardjson: Record<string, unknown>,
-): WANIX_ZED_CAFE_EXPORT_FILE[] {
-  const files: WANIX_ZED_CAFE_EXPORT_FILE[] = []
+  prefix: string,
+  doc: Record<string, unknown>,
+) {
   const { terrain, objects, ...stats } = boardjson
   if (Array.isArray(terrain) && terrain.length > 0) {
     if (terrain.length !== BOARD_SIZE) {
@@ -237,120 +290,225 @@ export function splitboardexport(
         `zedcafe board terrain length ${terrain.length} != ${BOARD_SIZE}`,
       )
     }
-    for (let i = 0; i < BOARD_SIZE; ++i) {
-      files.push({
-        path: `board/terrain/${i}.json`,
-        bytes: encodejson(terrain[i] ?? null),
-      })
-    }
+    doc[`${prefix}/board/terrain.json`] = terrain
   }
   if (Object.keys(stats).length > 0) {
-    files.push({
-      path: 'board/stats.json',
-      bytes: encodejson(stats),
-    })
+    doc[`${prefix}/board/stats.json`] = stats
   }
   if (ispresent(objects) && typeof objects === 'object') {
     const entries = Object.entries(objects as Record<string, unknown>)
     for (let i = 0; i < entries.length; ++i) {
       const [objid, obj] = entries[i]
-      files.push({
-        path: `board/objects/${objid}.json`,
-        bytes: encodejson(obj),
-      })
+      doc[`${prefix}/board/objects/${objid}.json`] = obj
     }
   }
+}
+
+export function splitboardexport(
+  boardjson: Record<string, unknown>,
+): WANIX_ZED_CAFE_EXPORT_FILE[] {
+  const doc: Record<string, unknown> = {}
+  splitboarddoc(boardjson, '', doc)
+  // strip leading slash keys from empty prefix
+  const files: WANIX_ZED_CAFE_EXPORT_FILE[] = []
+  const keys = Object.keys(doc)
+  for (let i = 0; i < keys.length; ++i) {
+    const path = keys[i].replace(/^\//, '')
+    files.push({ path, bytes: encodejson(doc[keys[i]]) })
+  }
   return files
+}
+
+function buildcodepagedoc(
+  book: BOOK,
+  page: CODE_PAGE,
+  doc: Record<string, unknown>,
+) {
+  const pagejson = memoryexportcodepageasjson(page)
+  if (pagejson === undefined) {
+    return
+  }
+  const prefix = readzedcafepageprefix(book, page)
+  doc[`${prefix}/stats.json`] = {
+    id: page.id,
+    code: page.code,
+    type: memoryreadcodepagetypeasstring(page),
+    name: memoryreadcodepagename(page),
+  }
+  if (ispresent(pagejson.board)) {
+    splitboarddoc(pagejson.board as Record<string, unknown>, prefix, doc)
+  }
+  if (ispresent(pagejson.object)) {
+    doc[`${prefix}/object/element.json`] = pagejson.object
+  }
+  if (ispresent(pagejson.terrain)) {
+    doc[`${prefix}/terrain/element.json`] = pagejson.terrain
+  }
+  if (ispresent(pagejson.charset)) {
+    doc[`${prefix}/charset/bitmap.json`] = pagejson.charset
+  }
+  if (ispresent(pagejson.palette)) {
+    doc[`${prefix}/palette/bitmap.json`] = pagejson.palette
+  }
 }
 
 export function buildzedcafecodepagefiles(
   book: BOOK,
   page: CODE_PAGE,
 ): WANIX_ZED_CAFE_EXPORT_FILE[] {
-  const pagejson = memoryexportcodepageasjson(page)
-  if (pagejson === undefined) {
-    return []
-  }
-  const prefix = readzedcafepageprefix(book, page)
-  const files: WANIX_ZED_CAFE_EXPORT_FILE[] = []
+  const doc: Record<string, unknown> = {}
+  buildcodepagedoc(book, page, doc)
+  return zedcafeexportdoctofiles(doc)
+}
 
-  files.push({
-    path: `${prefix}/stats.json`,
-    bytes: encodejson({
-      id: page.id,
-      code: page.code,
-      type: memoryreadcodepagetypeasstring(page),
-      name: memoryreadcodepagename(page),
-    }),
-  })
-
-  if (ispresent(pagejson.board)) {
-    const boardfiles = splitboardexport(
-      pagejson.board as Record<string, unknown>,
-    )
-    for (let i = 0; i < boardfiles.length; ++i) {
-      const file = boardfiles[i]
-      files.push({
-        path: `${prefix}/${file.path}`,
-        bytes: file.bytes,
-      })
+/** Build path→value document from current sim memory (primary representation). */
+export function buildzedcafeexportdoc(): Record<string, unknown> {
+  const books = memoryreadbooklist()
+  const doc: Record<string, unknown> = {}
+  doc['stats.json'] = stripstatsexportedat(buildzedcafestats(books))
+  for (let i = 0; i < books.length; ++i) {
+    const book = books[i]
+    doc[readzedcafebookstatspath(book)] = buildzedcafebookmeta(book)
+    const names = Object.keys(book.flags ?? {})
+    const prefix = readzedcafebookprefix(book)
+    for (let j = 0; j < names.length; ++j) {
+      const name = names[j]
+      doc[`${prefix}/flags/${name}.json`] = memoryreadbookflags(book, name)
+    }
+    for (let j = 0; j < book.pages.length; ++j) {
+      buildcodepagedoc(book, book.pages[j], doc)
     }
   }
-  if (ispresent(pagejson.object)) {
-    files.push({
-      path: `${prefix}/object/element.json`,
-      bytes: encodejson(pagejson.object),
-    })
-  }
-  if (ispresent(pagejson.terrain)) {
-    files.push({
-      path: `${prefix}/terrain/element.json`,
-      bytes: encodejson(pagejson.terrain),
-    })
-  }
-  if (ispresent(pagejson.charset)) {
-    files.push({
-      path: `${prefix}/charset/bitmap.json`,
-      bytes: encodejson(pagejson.charset),
-    })
-  }
-  if (ispresent(pagejson.palette)) {
-    files.push({
-      path: `${prefix}/palette/bitmap.json`,
-      bytes: encodejson(pagejson.palette),
-    })
-  }
+  return doc
+}
 
-  return files
+/**
+ * Rebuild only named paths into `base` from memory.
+ * Unknown paths fall through as structural (caller should full rebuild).
+ */
+export function rebuildzedcafeexportpaths(
+  base: Record<string, unknown>,
+  paths: Iterable<string>,
+): boolean {
+  const books = memoryreadbooklist()
+  const bybook = new Map<string, BOOK>()
+  for (let i = 0; i < books.length; ++i) {
+    bybook.set(readzedcafebookprefix(books[i]), books[i])
+  }
+  const pathlist = [...paths]
+  for (let i = 0; i < pathlist.length; ++i) {
+    const path = pathlist[i]
+    if (path === 'stats.json') {
+      base[path] = stripstatsexportedat(buildzedcafestats(books))
+      continue
+    }
+    const segments = path.split('/')
+    if (segments.length < 2) {
+      return false
+    }
+    const bookprefix = segments[0]
+    const book = bybook.get(bookprefix)
+    if (!book) {
+      return false
+    }
+    if (segments[1] === 'stats.json' && segments.length === 2) {
+      base[path] = buildzedcafebookmeta(book)
+      continue
+    }
+    if (segments[1] === 'flags' && segments.length === 3) {
+      const owner = segments[2].replace(/\.json$/, '')
+      base[path] = memoryreadbookflags(book, owner)
+      continue
+    }
+    if (segments.length < 3) {
+      return false
+    }
+    const pageprefix = `${segments[0]}/${segments[1]}`
+    let page: CODE_PAGE | undefined
+    for (let j = 0; j < book.pages.length; ++j) {
+      if (readzedcafepageprefix(book, book.pages[j]) === pageprefix) {
+        page = book.pages[j]
+        break
+      }
+    }
+    if (!page) {
+      return false
+    }
+    const pagejson = memoryexportcodepageasjson(page)
+    if (!pagejson) {
+      return false
+    }
+    if (segments[2] === 'stats.json' && segments.length === 3) {
+      base[path] = {
+        id: page.id,
+        code: page.code,
+        type: memoryreadcodepagetypeasstring(page),
+        name: memoryreadcodepagename(page),
+      }
+      continue
+    }
+    if (
+      segments[2] === 'board' &&
+      segments[3] === 'terrain.json' &&
+      segments.length === 4
+    ) {
+      const board = pagejson.board as Record<string, unknown> | undefined
+      if (!board || !Array.isArray(board.terrain)) {
+        delete base[path]
+        continue
+      }
+      if (board.terrain.length !== BOARD_SIZE) {
+        throw new Error(
+          `zedcafe board terrain length ${board.terrain.length} != ${BOARD_SIZE}`,
+        )
+      }
+      base[path] = board.terrain
+      continue
+    }
+    if (
+      segments[2] === 'board' &&
+      segments[3] === 'stats.json' &&
+      segments.length === 4
+    ) {
+      const board = pagejson.board as Record<string, unknown> | undefined
+      if (!board) {
+        delete base[path]
+        continue
+      }
+      const { terrain: _t, objects: _o, ...stats } = board
+      base[path] = stats
+      continue
+    }
+    if (
+      segments[2] === 'board' &&
+      segments[3] === 'objects' &&
+      segments.length === 5
+    ) {
+      const board = pagejson.board as Record<string, unknown> | undefined
+      const objid = segments[4].replace(/\.json$/, '')
+      const objects = board?.objects as Record<string, unknown> | undefined
+      if (!objects || !(objid in objects)) {
+        delete base[path]
+        continue
+      }
+      base[path] = objects[objid]
+      continue
+    }
+    // Fall back: rebuild whole page subtree then keep only this path.
+    const pagedoc: Record<string, unknown> = {}
+    buildcodepagedoc(book, page, pagedoc)
+    if (!(path in pagedoc)) {
+      delete base[path]
+      continue
+    }
+    base[path] = pagedoc[path]
+  }
+  return true
 }
 
 export function buildzedcafeexportfiles(): WANIX_ZED_CAFE_EXPORT_FILE[] {
-  const books = memoryreadbooklist()
-  const files: WANIX_ZED_CAFE_EXPORT_FILE[] = []
-
-  files.push({
-    path: 'stats.json',
-    bytes: encodejson(buildzedcafestats(books)),
-  })
-
-  for (let i = 0; i < books.length; ++i) {
-    const book = books[i]
-    files.push({
-      path: readzedcafebookstatspath(book),
-      bytes: encodejson(buildzedcafebookmeta(book)),
-    })
-    const flagfiles = buildzedcafebookflagfiles(book)
-    for (let j = 0; j < flagfiles.length; ++j) {
-      files.push(flagfiles[j])
-    }
-    for (let j = 0; j < book.pages.length; ++j) {
-      const pagefiles = buildzedcafecodepagefiles(book, book.pages[j])
-      for (let k = 0; k < pagefiles.length; ++k) {
-        files.push(pagefiles[k])
-      }
-    }
-  }
-
+  const doc = buildzedcafeexportdoc()
+  const files = zedcafeexportdoctofiles(doc)
   assertzedcafeexportvalid(files)
   return files
 }
@@ -359,38 +517,170 @@ export function buildzedcafeexportfiles(): WANIX_ZED_CAFE_EXPORT_FILE[] {
 export function primezedcafeexportshadow(files?: WANIX_ZED_CAFE_EXPORT_FILE[]) {
   const source = files ?? buildzedcafeexportfiles()
   setlasthostpushdoc(zedcafeexportfilestodoc(source))
+  exportackgen = exportdirtygen
+  structuraldirty = false
+  dirtypaths.clear()
 }
 
 export function clearzedcafeexportshadow() {
   clearlasthostpushdoc()
 }
 
+export function markzedcafeexportstructuraldirty() {
+  structuraldirty = true
+  bumpdirtygen()
+}
+
+export function markzedcafeexportpathdirty(path: string) {
+  dirtypaths.add(path)
+  bumpdirtygen()
+}
+
+function findboardpageforboundary(
+  boundary: string,
+): { book: BOOK; page: CODE_PAGE } | undefined {
+  const books = memoryreadbooklist()
+  for (let i = 0; i < books.length; ++i) {
+    const book = books[i]
+    for (let j = 0; j < book.pages.length; ++j) {
+      const page = book.pages[j]
+      if (page.id === boundary) {
+        return { book, page }
+      }
+      const pagejson = memoryexportcodepageasjson(page)
+      const board = pagejson?.board as { id?: string } | undefined
+      if (board?.id === boundary) {
+        return { book, page }
+      }
+    }
+  }
+  return undefined
+}
+
+/** Conservative dirty feed from root memory RFC 6902 ops. */
+export function markzedcafeexportfromrootops(ops: Operation[]) {
+  if (ops.length === 0) {
+    return
+  }
+  markzedcafeexportstructuraldirty()
+}
+
+/** Conservative dirty feed from boundary RFC 6902 ops. */
+export function markzedcafeexportfromboundaryops(
+  boundary: string,
+  ops: Operation[],
+) {
+  if (ops.length === 0) {
+    return
+  }
+  let terrainonly = true
+  for (let i = 0; i < ops.length; ++i) {
+    const parts = decodezedcafejsonpointer(ops[i].path)
+    if (parts[0] !== 'terrain') {
+      terrainonly = false
+      break
+    }
+  }
+  const resolved = findboardpageforboundary(boundary)
+  if (terrainonly && resolved) {
+    markzedcafeexportpathdirty(
+      `${readzedcafepageprefix(resolved.book, resolved.page)}/board/terrain.json`,
+    )
+    return
+  }
+  markzedcafeexportstructuraldirty()
+}
+
+/** Advance ack generation after iframe sync success for an in-flight build. */
+export function acknowledgezedcafeexportpush() {
+  if (inflightbuildgen > 0) {
+    exportackgen = inflightbuildgen
+    inflightbuildgen = 0
+  }
+  if (exportdirtygen === exportackgen) {
+    structuraldirty = false
+    dirtypaths.clear()
+  }
+}
+
 /**
- * End of tick: rebuild export, compare to last push shadow, upsert/remove files.
+ * End of tick: O(1) gate, 500 ms coalesce, path-doc compare, encode changed only.
  */
 export function checkzedcafeexportontick(device: DEVICELIKE) {
   if (!readzedcafepollactive() || exportinflight) {
     return
   }
-  const files = buildzedcafeexportfiles()
-  const nextdoc = zedcafeexportfilestodoc(files)
-  const ops = compare(readlasthostpushdoc(), nextdoc)
-  if (ops.length === 0) {
+  if (readzedcafeguestdirty()) {
     return
   }
-  const upsertpaths = readzedcafeexportupsertpaths(ops)
-  const removepaths = [...readzedcafeexportremovepaths(ops)]
-  const subset: WANIX_ZED_CAFE_EXPORT_FILE[] = []
-  for (let i = 0; i < files.length; ++i) {
-    const file = files[i]
-    if (upsertpaths.has(file.path)) {
-      subset.push(file)
+  if (readpendingsync()) {
+    return
+  }
+  if (exportdirtygen === exportackgen && !structuraldirty && dirtypaths.size === 0) {
+    return
+  }
+  const now = wanixperfnow()
+  if (
+    lastflushms > 0 &&
+    now - lastflushms < WANIX_ZEDCAFE_EXPORT_COALESCE_MS
+  ) {
+    return
+  }
+
+  const buildgen = exportdirtygen
+  const buildstart = wanixperfnow()
+  let nextdoc: Record<string, unknown>
+  if (structuraldirty || dirtypaths.size === 0) {
+    nextdoc = buildzedcafeexportdoc()
+  } else {
+    nextdoc = { ...readlasthostpushdoc() }
+    const ok = rebuildzedcafeexportpaths(nextdoc, dirtypaths)
+    if (!ok) {
+      nextdoc = buildzedcafeexportdoc()
+      structuraldirty = true
     }
   }
-  if (subset.length === 0 && removepaths.length === 0) {
+  const buildms = wanixperfdelta(buildstart).elapsedms
+
+  const comparestart = wanixperfnow()
+  const ops = compare(readlasthostpushdoc(), nextdoc)
+  const comparems = wanixperfdelta(comparestart).elapsedms
+  if (ops.length === 0) {
+    exportackgen = buildgen
+    structuraldirty = false
+    dirtypaths.clear()
+    lastflushms = now
+    wanixperfmark('export-check-noop', { buildms, comparems, buildgen })
     return
   }
+
+  const upsertpaths = readzedcafeexportupsertpaths(ops)
+  const removepaths = [...readzedcafeexportremovepaths(ops)]
+  const encodestart = wanixperfnow()
+  const subset = zedcafeexportdoctofiles(nextdoc, upsertpaths)
+  assertzedcafeexportvalid(subset, { partial: true })
+  const encodems = wanixperfdelta(encodestart).elapsedms
+  if (subset.length === 0 && removepaths.length === 0) {
+    exportackgen = buildgen
+    structuraldirty = false
+    dirtypaths.clear()
+    lastflushms = now
+    return
+  }
+
+  wanixperfmark('export-check', {
+    buildms,
+    comparems,
+    encodems,
+    upserts: subset.length,
+    removes: removepaths.length,
+    structural: structuraldirty,
+    buildgen,
+  })
+
   exportinflight = true
+  inflightbuildgen = buildgen
+  lastflushms = now
   const player = memoryreadoperator()
   void import('zss/device/wanixclient/wanixzedcafe')
     .then(({ pushzedcafesynctoiframe }) =>
@@ -407,5 +697,31 @@ export function checkzedcafeexportontick(device: DEVICELIKE) {
 
 export function resetwanixstateexportfortest() {
   exportinflight = false
+  exportdirtygen = 0
+  exportackgen = 0
+  structuraldirty = true
+  dirtypaths.clear()
+  lastflushms = 0
+  inflightbuildgen = 0
   clearzedcafeexportshadow()
+}
+
+/** Test helper: force coalesce window open. */
+export function forcezedcafeexportcoalesceopenfortest() {
+  lastflushms = 0
+}
+
+/** Test helper: force coalesce window closed (need wait / reopen). */
+export function forcezedcafeexportcoalesceclosedfortest() {
+  lastflushms = wanixperfnow()
+}
+
+/** Test helper: read dirty generation state. */
+export function readzedcafeexportdirtygensfortest() {
+  return {
+    dirty: exportdirtygen,
+    ack: exportackgen,
+    structural: structuraldirty,
+    paths: [...dirtypaths],
+  }
 }

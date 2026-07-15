@@ -1,6 +1,6 @@
 export type WanixZedCafeGuestFile = {
   path: string
-  data: number[]
+  data: Uint8Array
 }
 
 export type WanixZedCafeHostState = {

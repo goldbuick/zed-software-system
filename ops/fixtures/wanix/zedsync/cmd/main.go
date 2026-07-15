@@ -95,7 +95,8 @@ func main() {
 	sigc := make(chan os.Signal, 1)
 	signal.Notify(sigc, syscall.SIGINT, syscall.SIGTERM)
 
-	ticker := time.NewTicker(zedsync.PollInterval)
+	interval := zedsync.PollInterval
+	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 	for {
 		select {
@@ -110,6 +111,20 @@ func main() {
 			baseline = next
 			for _, line := range logs {
 				fmt.Printf("zedsync: %s\n", line)
+			}
+			// Adaptive poll: 500ms after changes, back off to 4s idle.
+			nextinterval := interval
+			if len(logs) > 0 {
+				nextinterval = zedsync.PollInterval
+			} else if interval < zedsync.PollIdleMax {
+				nextinterval = interval * 2
+				if nextinterval > zedsync.PollIdleMax {
+					nextinterval = zedsync.PollIdleMax
+				}
+			}
+			if nextinterval != interval {
+				interval = nextinterval
+				ticker.Reset(interval)
 			}
 		}
 	}

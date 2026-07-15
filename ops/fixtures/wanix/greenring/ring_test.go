@@ -1,41 +1,28 @@
 package greenring
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"testing"
 )
 
-func TestPaintCellDisplayPreservesKind(t *testing.T) {
-	cell := PaintCellDisplay(map[string]any{"kind": "floor", "char": 1}, RingChar, ColorGreen, ColorBlack)
-	if cell["kind"] != "floor" {
-		t.Fatalf("kind lost: %v", cell["kind"])
+func TestPaintGreenRingMergesDisplay(t *testing.T) {
+	terrain := []any{
+		map[string]any{"kind": "fake", "char": 1},
+	}
+	terrain = PaintGreenRing(terrain, 0, 0)
+	cell, ok := terrain[TerrainIndex(1, 0)].(map[string]any)
+	if !ok {
+		t.Fatalf("expected painted neighbor map, got %T", terrain[TerrainIndex(1, 0)])
 	}
 	if cell["char"] != RingChar || cell["color"] != ColorGreen || cell["bg"] != ColorBlack {
-		t.Fatalf("display fields: %v", cell)
+		t.Fatalf("unexpected paint %#v", cell)
 	}
-}
-
-func TestPaintGreenRingMergesDisplay(t *testing.T) {
-	terrain := make([]any, BoardSize)
-	terrain[TerrainIndex(5, 5)] = map[string]any{"kind": "solid", "char": 178}
-	out := PaintGreenRing(terrain, 5, 5)
-	cell := out[TerrainIndex(6, 5)].(map[string]any)
-	if cell["char"] != RingChar || cell["color"] != ColorGreen {
-		t.Fatalf("ring cell: %v", cell)
-	}
-}
-
-func writeterraincell(t *testing.T, dir, book, page string, index int, body string) {
-	t.Helper()
-	path := filepath.Join(dir, book, page, "board", "terrain", strconv.Itoa(index)+".json")
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.WriteFile(path, []byte(body), 0o644); err != nil {
-		t.Fatal(err)
+	origin, ok := terrain[0].(map[string]any)
+	if !ok || origin["kind"] != "fake" {
+		t.Fatalf("origin should keep kind, got %#v", terrain[0])
 	}
 }
 
@@ -43,7 +30,13 @@ func TestResolveBoardPageDirByIdSuffix(t *testing.T) {
 	dir := t.TempDir()
 	book := "cool-book1"
 	page := "title-sid_abc"
-	writeterraincell(t, dir, book, page, 0, "{}\n")
+	terrain := filepath.Join(dir, book, page, "board", "terrain.json")
+	if err := os.MkdirAll(filepath.Dir(terrain), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(terrain, []byte("[]\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
 	got, err := ResolveBoardPageDir(dir, book, "sid_abc", "")
 	if err != nil {
 		t.Fatal(err)
@@ -58,13 +51,16 @@ func TestResolveBoardPageDirByPlayerObject(t *testing.T) {
 	book := "cool-book1"
 	page := "area-sid_xyz"
 	obj := filepath.Join(dir, book, page, "board", "objects", "pid_1.json")
+	terrain := filepath.Join(dir, book, page, "board", "terrain.json")
 	if err := os.MkdirAll(filepath.Dir(obj), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(obj, []byte("{}\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	writeterraincell(t, dir, book, page, 0, "{}\n")
+	if err := os.WriteFile(terrain, []byte("[]\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
 	got, err := ResolveBoardPageDir(dir, book, "wrong", "pid_1")
 	if err != nil {
 		t.Fatal(err)
@@ -74,20 +70,28 @@ func TestResolveBoardPageDirByPlayerObject(t *testing.T) {
 	}
 }
 
-func TestApplyRingToBoardWritesCells(t *testing.T) {
+func TestApplyRingToBoardWritesArray(t *testing.T) {
 	dir := t.TempDir()
 	book := "cool-book1"
 	page := "title-sid_abc"
-	cx, cy := 5, 5
-	for _, cell := range RingCells(cx, cy) {
-		idx := TerrainIndex(cell[0], cell[1])
-		writeterraincell(t, dir, book, page, idx, "{\"kind\":\"fake\"}\n")
-	}
-	if err := ApplyRingToBoard(dir, book, page, cx, cy); err != nil {
+	terrain := filepath.Join(dir, book, page, "board", "terrain.json")
+	if err := os.MkdirAll(filepath.Dir(terrain), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	idx := TerrainIndex(6, 5)
-	data, err := os.ReadFile(filepath.Join(dir, book, page, "board", "terrain", strconv.Itoa(idx)+".json"))
+	cells := make([]any, BoardSize)
+	cells[0] = map[string]any{"kind": "fake"}
+	raw, err := json.Marshal(cells)
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw = append(raw, '\n')
+	if err := os.WriteFile(terrain, raw, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := ApplyRingToBoard(dir, book, page, 5, 5); err != nil {
+		t.Fatal(err)
+	}
+	data, err := os.ReadFile(terrain)
 	if err != nil {
 		t.Fatal(err)
 	}

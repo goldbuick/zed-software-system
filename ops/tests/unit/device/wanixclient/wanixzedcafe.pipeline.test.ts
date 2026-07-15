@@ -60,8 +60,8 @@ const bookfiles = [
 
 function guestpayload(
   files: { path: string; bytes: Uint8Array }[],
-): { path: string; data: number[] }[] {
-  return files.map((file) => ({ path: file.path, data: [...file.bytes] }))
+): { path: string; data: Uint8Array }[] {
+  return files.map((file) => ({ path: file.path, data: file.bytes }))
 }
 
 describe('pushzedcafesynctoiframe pipeline', () => {
@@ -116,5 +116,16 @@ describe('pushzedcafesynctoiframe pipeline', () => {
     setlasthostpushdoc(zedcafeexportfilestodoc(emptyfiles))
     ensurezedcafeexportready(device, player, bookfiles)
     expect(mockreadfiles).toHaveBeenCalledWith(device, player)
+  })
+
+  it('clean partial host push skips guest-tree collection', () => {
+    setlasthostpushdoc(zedcafeexportfilestodoc(emptyfiles))
+    const ok = pushzedcafesynctoiframe(device, player, bookfiles, {
+      partial: true,
+      nextdoc: zedcafeexportfilestodoc(bookfiles),
+    })
+    expect(ok).toBe(true)
+    expect(mockreadfiles).not.toHaveBeenCalled()
+    expect(mocksync).toHaveBeenCalledTimes(1)
   })
 })

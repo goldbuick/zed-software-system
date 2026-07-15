@@ -488,7 +488,7 @@ async function collectexporttreefiles(
           raw instanceof Uint8Array
             ? raw
             : new TextEncoder().encode(String(raw))
-        files.push({ path: rel, data: [...bytes] })
+        files.push({ path: rel, data: bytes })
       } catch {
         // skip missing leaf
       }
@@ -507,7 +507,7 @@ async function collectexporttreefiles(
           raw instanceof Uint8Array
             ? raw
             : new TextEncoder().encode(String(raw))
-        files.push({ path: rel, data: [...bytes] })
+        files.push({ path: rel, data: bytes })
       } catch {
         // skip missing path
       }
@@ -537,9 +537,11 @@ export function readguestfilebookcount(files: WanixZedCafeGuestFile[]): number {
     return -1
   }
   try {
-    const parsed = JSON.parse(
-      new TextDecoder().decode(new Uint8Array(stats.data)),
-    ) as {
+    const bytes =
+      stats.data instanceof Uint8Array
+        ? stats.data
+        : new Uint8Array(stats.data as ArrayLike<number>)
+    const parsed = JSON.parse(new TextDecoder().decode(bytes)) as {
       bookCount?: unknown
     }
     return typeof parsed.bookCount === 'number' ? parsed.bookCount : -1
@@ -601,21 +603,49 @@ export async function pushzedcafeexportlive(
       return a.path.localeCompare(b.path)
     })
     // Export writes cross the p9 client, which walks parent dirs before Create.
-    // Materialize allowlisted prefix dirs on the export mount first.
+    // Materialize allowlisted prefix dirs once (flags/objects share parents).
+    const PUSH_PROGRESS_EVERY = 100
+    const pushtotal = sorted.length
+    const pushstart = Date.now()
+    const madedirs = new Set<string>()
     for (let i = 0; i < sorted.length; ++i) {
       const file = sorted[i]
       const full = `${base}/${file.path}`
       const parentdir = full.slice(0, full.lastIndexOf('/'))
-      if (parentdir.length > base.length) {
+      if (parentdir.length > base.length && !madedirs.has(parentdir)) {
         await root.makeDirAll(parentdir)
+        madedirs.add(parentdir)
       }
-      await root.writeFile(full, new Uint8Array(file.data))
+      await root.writeFile(
+        full,
+        file.data instanceof Uint8Array
+          ? file.data
+          : new Uint8Array(file.data as ArrayLike<number>),
+      )
+      const written = i + 1
+      if (
+        written === pushtotal ||
+        (pushtotal >= PUSH_PROGRESS_EVERY &&
+          written % PUSH_PROGRESS_EVERY === 0)
+      ) {
+        wanixperfmark('export-push-progress', {
+          taskrid,
+          written,
+          total: pushtotal,
+          parents: madedirs.size,
+          elapsedms: Date.now() - pushstart,
+        })
+      }
     }
     const bookcount = readguestfilebookcount(sorted)
     if (bookcount > 0) {
       const statsfile = sorted.find((file) => file.path === 'stats.json')
       const meta = statsfile
-        ? readbookstatspathsfromstatsbytes(new Uint8Array(statsfile.data))
+        ? readbookstatspathsfromstatsbytes(
+            statsfile.data instanceof Uint8Array
+              ? statsfile.data
+              : new Uint8Array(statsfile.data as ArrayLike<number>),
+          )
         : null
       const missing =
         !meta ||
@@ -644,6 +674,8 @@ export async function pushzedcafeexportlive(
       bookcount,
       paths: sorted.length,
       removed: removepaths.length,
+      parents: madedirs.size,
+      elapsedms: Date.now() - pushstart,
     })
   } finally {
     // Hold suppress until Go dirty debounce from these writes can no longer fire.

@@ -18,7 +18,7 @@ export const ZED_CAFE_EXPORT_ALLOWED_PATH: RegExp[] = [
   new RegExp(`^${DIR_SEG}/flags/${OBJ_ID}\\.json$`),
   new RegExp(`^${DIR_SEG}/${DIR_SEG}/stats\\.json$`),
   new RegExp(`^${DIR_SEG}/${DIR_SEG}/board/stats\\.json$`),
-  new RegExp(`^${DIR_SEG}/${DIR_SEG}/board/terrain/[0-9]+\\.json$`),
+  new RegExp(`^${DIR_SEG}/${DIR_SEG}/board/terrain\\.json$`),
   new RegExp(`^${DIR_SEG}/${DIR_SEG}/board/objects/${OBJ_ID}\\.json$`),
   new RegExp(`^${DIR_SEG}/${DIR_SEG}/object/element\\.json$`),
   new RegExp(`^${DIR_SEG}/${DIR_SEG}/terrain/element\\.json$`),
@@ -165,31 +165,31 @@ function validatestructure(
       if (!index.has(pagepath)) {
         errors.push(`missing page stats for ${pageref.id}: ${pagepath}`)
       }
-      const legacyterrain = `${pageprefix}/board/terrain.json`
-      if (index.has(legacyterrain)) {
-        errors.push(`legacy board/terrain.json is not allowed: ${legacyterrain}`)
-      }
       const terrainprefix = `${pageprefix}/board/terrain/`
-      let terraincount = 0
       for (const path of index.keys()) {
         if (path.startsWith(terrainprefix) && path.endsWith('.json')) {
-          terraincount += 1
-        }
-      }
-      if (terraincount === 0) {
-        continue
-      }
-      if (terraincount !== BOARD_SIZE) {
-        errors.push(
-          `board terrain cell count ${terraincount} != ${BOARD_SIZE} under ${terrainprefix}`,
-        )
-      }
-      for (let cell = 0; cell < BOARD_SIZE; ++cell) {
-        const cellpath = `${terrainprefix}${cell}.json`
-        if (!index.has(cellpath)) {
-          errors.push(`missing terrain cell: ${cellpath}`)
+          errors.push(
+            `per-cell board/terrain/<index>.json is not allowed (wipe/re-seed remotes): ${path}`,
+          )
           break
         }
+      }
+      const terrainpath = `${pageprefix}/board/terrain.json`
+      const terrainbytes = index.get(terrainpath)
+      if (!terrainbytes) {
+        continue
+      }
+      try {
+        const terrain = decodejson(terrainbytes)
+        if (!Array.isArray(terrain)) {
+          errors.push(`board terrain must be an array: ${terrainpath}`)
+        } else if (terrain.length !== BOARD_SIZE) {
+          errors.push(
+            `board terrain length ${terrain.length} != ${BOARD_SIZE}: ${terrainpath}`,
+          )
+        }
+      } catch {
+        errors.push(`board terrain.json is not valid JSON: ${terrainpath}`)
       }
     }
   }
@@ -223,8 +223,11 @@ export function validatezedcafeexportpaths(
   return { ok: errors.length === 0, errors }
 }
 
-export function assertzedcafeexportvalid(files: ZED_CAFE_EXPORT_PATH_FILE[]) {
-  const result = validatezedcafeexportpaths(files)
+export function assertzedcafeexportvalid(
+  files: ZED_CAFE_EXPORT_PATH_FILE[],
+  options?: ValidateZedCafeExportOptions,
+) {
+  const result = validatezedcafeexportpaths(files, options)
   if (!result.ok) {
     throw new Error(`zedcafe export schema: ${result.errors.join('; ')}`)
   }

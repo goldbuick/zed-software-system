@@ -1560,7 +1560,7 @@ export async function readzedcafeexportfiles() {
 }
 
 export async function synczedcafeexport(
-  files?: { path: string; data: number[] }[] | null,
+  files?: { path: string; data: Uint8Array | number[] }[] | null,
   removepaths?: string[] | null,
 ) {
   if (!system?.isReady) {
@@ -1569,7 +1569,10 @@ export async function synczedcafeexport(
   const guestfiles =
     files?.map((file) => ({
       path: file.path,
-      data: file.data,
+      data:
+        file.data instanceof Uint8Array
+          ? file.data
+          : new Uint8Array(file.data),
     })) ?? null
   return synczedcafeexportlocal(
     guestfiles,

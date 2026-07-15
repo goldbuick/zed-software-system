@@ -360,6 +360,37 @@ export function setzedcafeguestdirty(dirty: boolean): void {
   useWanixClient.setState({ guestdirty: dirty })
 }
 
+/** Guest-dirty generation: bumps on guest-originated change; ack after reconciled sync. */
+let guestdirtygen = 0
+let guestdirtyackgen = 0
+
+export function bumpzedcafeguestdirtygen(): number {
+  guestdirtygen += 1
+  return guestdirtygen
+}
+
+export function readzedcafeguestdirtygen(): number {
+  return guestdirtygen
+}
+
+export function readzedcafeguestdirtyackgen(): number {
+  return guestdirtyackgen
+}
+
+export function acknowledgezedcafeguestdirtygen(): void {
+  guestdirtyackgen = guestdirtygen
+}
+
+export function resetzedcafeguestdirtygenfortest(): void {
+  guestdirtygen = 0
+  guestdirtyackgen = 0
+}
+
+/** True when guest tree has not changed since last acknowledged host shadow. */
+export function readzedcafeguesttreeclean(): boolean {
+  return guestdirtygen === guestdirtyackgen && !readzedcafeguestdirty()
+}
+
 export function readwanixzedcafependingexport(): boolean {
   return useWanixClient.getState().pendingexport
 }
@@ -483,4 +514,5 @@ export function resetwanixclientstatefortest(): void {
   onsessioncloseprune = null
   resetwanixbridgefortest()
   resetwanixzedcafependingfortest()
+  resetzedcafeguestdirtygenfortest()
 }

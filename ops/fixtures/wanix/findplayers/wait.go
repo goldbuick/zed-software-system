@@ -18,7 +18,7 @@ var DefaultExportRoots = []string{
 
 const (
 	// ExportReadyTimeout matches WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS.
-	ExportReadyTimeout = 30 * time.Second
+	ExportReadyTimeout = 600 * time.Second
 	// ExportReadyPoll matches WANIX_ZEDCAFE_EXPORT_READY_POLL_MS.
 	ExportReadyPoll = 250 * time.Millisecond
 )

@@ -90,37 +90,31 @@ function readbookflagsfromindex(
   return flags
 }
 
-function assembleterraincells(
+function assembleterrain(
   index: Map<string, Uint8Array>,
   prefix: string,
 ): unknown[] | undefined {
   const terrainprefix = `${prefix}/board/terrain/`
-  const legacy = `${prefix}/board/terrain.json`
-  if (index.has(legacy)) {
-    throw new Error(`legacy board/terrain.json is not allowed: ${legacy}`)
-  }
-  let present = 0
   for (const path of index.keys()) {
     if (path.startsWith(terrainprefix) && path.endsWith('.json')) {
-      present += 1
+      throw new Error(
+        `per-cell board/terrain/<index>.json is not allowed (wipe/re-seed remotes): ${path}`,
+      )
     }
   }
-  if (present === 0) {
+  const terrainpath = `${prefix}/board/terrain.json`
+  const bytes = index.get(terrainpath)
+  if (!bytes) {
     return undefined
   }
-  if (present !== BOARD_SIZE) {
-    throw new Error(
-      `board terrain cell count ${present} != ${BOARD_SIZE} under ${terrainprefix}`,
-    )
+  const terrain = decodejson(bytes)
+  if (!Array.isArray(terrain)) {
+    throw new Error(`board terrain must be an array: ${terrainpath}`)
   }
-  const terrain: unknown[] = new Array(BOARD_SIZE)
-  for (let i = 0; i < BOARD_SIZE; ++i) {
-    const cellpath = `${terrainprefix}${i}.json`
-    const bytes = index.get(cellpath)
-    if (!bytes) {
-      throw new Error(`missing terrain cell: ${cellpath}`)
-    }
-    terrain[i] = decodejson(bytes)
+  if (terrain.length !== BOARD_SIZE) {
+    throw new Error(
+      `board terrain length ${terrain.length} != ${BOARD_SIZE}: ${terrainpath}`,
+    )
   }
   return terrain
 }
@@ -132,7 +126,7 @@ export function assembleboardjson(
   const statspath = `${prefix}/board/stats.json`
   const objectprefix = `${prefix}/board/objects/`
   const statsbytes = index.get(statspath)
-  const terrain = assembleterraincells(index, prefix)
+  const terrain = assembleterrain(index, prefix)
   const objects: Record<string, unknown> = {}
   for (const [path, bytes] of index) {
     if (!path.startsWith(objectprefix) || !path.endsWith('.json')) {

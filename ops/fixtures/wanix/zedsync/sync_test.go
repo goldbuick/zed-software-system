@@ -80,6 +80,45 @@ func TestInitialSeedEmptyDoesNotWipePeer(t *testing.T) {
 	}
 }
 
+func TestSteadyTickIdleUsesTwoWalks(t *testing.T) {
+	dir := t.TempDir()
+	remote := filepath.Join(dir, "remote")
+	zedcafe := filepath.Join(dir, "zedcafe")
+	_ = os.MkdirAll(remote, 0o755)
+	_ = os.MkdirAll(zedcafe, 0o755)
+	mtime := time.Now().Add(-time.Minute)
+	writefile(t, remote, "stats.json", `{"bookCount":1}`, mtime)
+	writefile(t, zedcafe, "stats.json", `{"bookCount":1}`, mtime)
+	writefile(t, remote, "demo-book1/demo-page1/board/terrain.json", `[]`, mtime)
+	writefile(t, zedcafe, "demo-book1/demo-page1/board/terrain.json", `[]`, mtime)
+	baseline, err := WalkFiles(remote)
+	if err != nil {
+		t.Fatal(err)
+	}
+	z, err := WalkFiles(zedcafe)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for rel, m := range z {
+		if _, ok := baseline[rel]; !ok {
+			baseline[rel] = m
+		}
+	}
+	next, logs, err := SteadyTick(remote, zedcafe, baseline)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if LastWalkCount != 2 {
+		t.Fatalf("walks=%d want 2", LastWalkCount)
+	}
+	if len(logs) != 0 {
+		t.Fatalf("idle logs=%v", logs)
+	}
+	if len(next) != len(baseline) {
+		t.Fatalf("baseline size %d != next %d", len(baseline), len(next))
+	}
+}
+
 func TestSteadyTickRemoteDeleteRestoresFromZedcafe(t *testing.T) {
 	dir := t.TempDir()
 	remote := filepath.Join(dir, "remote")
@@ -189,6 +228,49 @@ func TestWalkSkipsReadySentinel(t *testing.T) {
 	}
 	if _, ok := snap["a.json"]; !ok {
 		t.Fatal("missing a.json")
+	}
+}
+
+func TestInitialSeedMonolithicTerrain(t *testing.T) {
+	dir := t.TempDir()
+	remote := filepath.Join(dir, "remote")
+	zedcafe := filepath.Join(dir, "zedcafe")
+	if err := os.MkdirAll(remote, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(zedcafe, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	writefile(t, zedcafe, "stats.json", `{"exportedAt":"t","bookCount":1}`, time.Now())
+	writefile(
+		t,
+		zedcafe,
+		"demo-book1/demo-page1/board/terrain.json",
+		`[{"kind":"empty"}]`,
+		time.Now(),
+	)
+	writefile(t, zedcafe, "demo-book1/flags/pid_1.json", `{"ammo":1}`, time.Now())
+	r, err := WalkFiles(remote)
+	if err != nil {
+		t.Fatal(err)
+	}
+	z, err := WalkFiles(zedcafe)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(z) != 3 {
+		t.Fatalf("zedcafe files=%d want 3", len(z))
+	}
+	n, err := InitialSeed(remote, zedcafe, r, z)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n != 3 {
+		t.Fatalf("copied=%d want 3", n)
+	}
+	terrainpath := filepath.Join(remote, "demo-book1", "demo-page1", "board", "terrain.json")
+	if _, err := os.Stat(terrainpath); err != nil {
+		t.Fatal(err)
 	}
 }
 

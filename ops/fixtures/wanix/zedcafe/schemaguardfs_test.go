@@ -130,7 +130,7 @@ func TestIsAllowedExportDir(t *testing.T) {
 		{book + "/flags", true},
 		{page, true},
 		{page + "/board", true},
-		{page + "/board/terrain", true},
+		{page + "/board/terrain", false},
 		{page + "/board/objects", true},
 		{page + "/object", true},
 		{page + "/terrain", true},

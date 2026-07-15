@@ -51,7 +51,7 @@ function decodefilebytes(bytes: Uint8Array): unknown {
 }
 
 describe('wanixstateimport', () => {
-  it('assembleboardjson merges split board cell files', () => {
+  it('assembleboardjson merges board terrain array and objects', () => {
     const terrain = Array.from({ length: 1500 }, () => ({ kind: 'solid' }))
     terrain[0] = { kind: 'fake' }
     const boardfiles = splitboardexport({
@@ -71,6 +71,18 @@ describe('wanixstateimport', () => {
     expect(board?.objects).toEqual({ obj1: { kind: 'player', id: 'obj1' } })
     expect((board?.terrain as unknown[])[0]).toEqual({ kind: 'fake' })
     expect((board?.terrain as unknown[]).length).toBe(1500)
+  })
+
+  it('assembleboardjson rejects per-cell terrain files', () => {
+    const index = new Map<string, Uint8Array>([
+      [
+        'b1/p1/board/terrain/0.json',
+        new TextEncoder().encode('{"kind":"solid"}\n'),
+      ],
+    ])
+    expect(() => assembleboardjson(index, 'b1/p1')).toThrow(
+      /wipe\/re-seed remotes/,
+    )
   })
 
   it('assembleboardjson always includes objects even when empty', () => {

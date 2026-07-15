@@ -1,3 +1,4 @@
+import { compare } from 'fast-json-patch'
 import type { WANIX_ZED_CAFE_IMPORT_RESULT } from 'zss/device/api'
 import {
   apilog,
@@ -12,6 +13,8 @@ import {
 import type { DEVICELIKE } from 'zss/device/types'
 import {
   type PushZedCafeSyncOptions,
+  acknowledgezedcafeguestdirtygen,
+  bumpzedcafeguestdirtygen,
   clearlasthostpushdoc,
   clearwanixzedcafependingexport as clearpendingexportstate,
   markwanixzedcafependingexport as markpendingexportstate,
@@ -25,6 +28,7 @@ import {
   readpollplayer,
   readpendingpollkick,
   readzedcafeguestdirty,
+  readzedcafeguesttreeclean,
   readzedcafepollactive,
   setlasthostpushdoc,
   setpendingexportwait,
@@ -45,10 +49,14 @@ import {
 } from 'zss/feature/wanix/wanixperf'
 import {
   type WANIX_ZED_CAFE_EXPORT_FILE,
+  acknowledgezedcafeexportpush,
   buildzedcafeexportfiles,
   readbookcountfromexportfiles,
+  readzedcafeexportremovepaths,
   readzedcafeexportstatscontentready,
+  readzedcafeexportupsertpaths,
   zedcafeexportdocsdiffer,
+  zedcafeexportdoctofiles,
   zedcafeexportfilestodoc,
 } from 'zss/feature/wanix/wanixstateexport'
 import {
@@ -72,9 +80,13 @@ function guestfilestoexport(
   const out: WANIX_ZED_CAFE_EXPORT_FILE[] = []
   for (let i = 0; i < files.length; ++i) {
     const file = files[i]
+    const data = file.data
     out.push({
       path: file.path,
-      bytes: new Uint8Array(file.data),
+      bytes:
+        data instanceof Uint8Array
+          ? data
+          : new Uint8Array(data as ArrayLike<number>),
     })
   }
   return out
@@ -88,7 +100,7 @@ export function exportfilestoguestfiles(
     const file = files[i]
     out.push({
       path: file.path,
-      data: [...file.bytes],
+      data: file.bytes,
     })
   }
   return out
@@ -363,7 +375,17 @@ export function applyzedcafesyncresult(
     setlasthostpushdoc(shadowdoc)
     flushpendingpollkick()
   }
+  acknowledgezedcafeexportpush()
+  if (options?.fromimport || readzedcafeguesttreeclean()) {
+    acknowledgezedcafeguestdirtygen()
+  }
   setpendingsync(null)
+  wanixperfmark('export-push-ack', {
+    memcount,
+    paths: files.length,
+    removed: removepaths.length,
+    partial: !!options?.partial,
+  })
   tracezedcafeexport(
     `sync-to-iframe memcount=${memcount} paths=${files.length} removed=${removepaths.length} taskrid=${result.taskrid ?? 'none'} partial=${!!options?.partial}`,
   )
@@ -506,13 +528,42 @@ export function pushzedcafesynctoiframe(
       )
       return false
     }
+    const shadowdoc = options?.nextdoc ?? zedcafeexportfilestodoc(files)
+    const memcount = readbookcountfromexportfiles(files)
+    // Clean guest: skip full-tree read; write host partial directly.
+    if (options?.partial && readzedcafeguesttreeclean()) {
+      const removepaths = options?.removepaths ?? []
+      setpendingsync({
+        device,
+        player,
+        files,
+        options,
+        shadowdoc,
+        memcount,
+        phase: 'sync',
+      })
+      wanixperfmark('export-push-start', {
+        memcount,
+        paths: files.length,
+        removed: removepaths.length,
+        partial: true,
+        skipguesttree: true,
+      })
+      wanixserversynczedcafeexport(
+        device,
+        player,
+        exportfilestoguestfiles(files),
+        removepaths,
+      )
+      return true
+    }
     setpendingsync({
       device,
       player,
       files,
       options,
-      shadowdoc: options?.nextdoc ?? zedcafeexportfilestodoc(files),
-      memcount: readbookcountfromexportfiles(files),
+      shadowdoc,
+      memcount,
       phase: 'guesttree',
     })
     wanixserverreadzedcafeexportfiles(device, player)
@@ -632,8 +683,10 @@ export async function runzedcafeimport(
     apilog(device, player, `zedcafe import: invalid tree — ${detail}`)
     return false
   }
+  bumpzedcafeguestdirtygen()
   setzedcafeguestdirty(true)
   try {
+    const guestdoc = zedcafeexportfilestodoc(files)
     const result = await requestvmzedcafeimport(device, player, files)
     if (!result.ok) {
       apilog(
@@ -657,8 +710,24 @@ export async function runzedcafeimport(
       )
     }
     const applied = await requestvmzedcafeexportfiles(device, player)
-    const pushed = pushzedcafesynctoiframe(device, player, applied, {
+    const applieddoc = zedcafeexportfilestodoc(applied)
+    const ops = compare(guestdoc, applieddoc)
+    if (ops.length === 0) {
+      setlasthostpushdoc(applieddoc)
+      acknowledgezedcafeexportpush()
+      acknowledgezedcafeguestdirtygen()
+      setzedcafeguestdirty(false)
+      wanixperfmark('export-import-noop', { paths: files.length })
+      return true
+    }
+    const upsertpaths = readzedcafeexportupsertpaths(ops)
+    const removepaths = [...readzedcafeexportremovepaths(ops)]
+    const subset = zedcafeexportdoctofiles(applieddoc, upsertpaths)
+    const pushed = pushzedcafesynctoiframe(device, player, subset, {
       fromimport: true,
+      partial: true,
+      nextdoc: applieddoc,
+      removepaths,
     })
     if (pushed) {
       setzedcafeguestdirty(false)
@@ -719,6 +788,9 @@ function tickzedcafepoll() {
 
 /** One-shot import poll tick (e.g. after guest-writer task session close). */
 export function kickzedcafepoll(reason = 'manual'): void {
+  if (reason === 'file-change') {
+    bumpzedcafeguestdirtygen()
+  }
   tracezedcafeexport(`poll-kick reason=${reason}`)
   tickzedcafepoll()
 }

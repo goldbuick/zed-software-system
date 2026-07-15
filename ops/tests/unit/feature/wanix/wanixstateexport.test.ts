@@ -5,7 +5,12 @@ import {
   buildzedcafestats,
   checkzedcafeexportontick,
   decodezedcafejsonpointer,
+  forcezedcafeexportcoalesceclosedfortest,
+  forcezedcafeexportcoalesceopenfortest,
+  markzedcafeexportpathdirty,
+  markzedcafeexportstructuraldirty,
   primezedcafeexportshadow,
+  readzedcafeexportdirtygensfortest,
   readzedcafeexportremovepaths,
   readzedcafeexportstatscontentready,
   readzedcafeexportupsertpaths,
@@ -130,7 +135,7 @@ describe('wanixstateexport', () => {
     expect(readzedcafeexportstatscontentready(ready)).toBe(true)
   })
 
-  it('splitboardexport peels terrain cells, objects, and stats', () => {
+  it('splitboardexport peels terrain array, objects, and stats', () => {
     const terrain = Array.from({ length: 1500 }, () => ({ kind: 'solid' }))
     terrain[0] = { kind: 'fake' }
     const files = splitboardexport({
@@ -139,14 +144,15 @@ describe('wanixstateexport', () => {
       startx: 1,
       starty: 2,
     })
-    expect(files[0]?.path).toBe('board/terrain/0.json')
-    expect(files[1499]?.path).toBe('board/terrain/1499.json')
-    expect(files.some((file) => file.path === 'board/terrain.json')).toBe(false)
+    expect(files[0]?.path).toBe('board/terrain.json')
+    expect(files.some((file) => file.path === 'board/terrain/0.json')).toBe(
+      false,
+    )
     expect(files.some((file) => file.path === 'board/stats.json')).toBe(true)
     expect(files.some((file) => file.path === 'board/objects/obj1.json')).toBe(
       true,
     )
-    expect(decodefilebytes(files[0]!.bytes)).toEqual({ kind: 'fake' })
+    expect(decodefilebytes(files[0]!.bytes)).toEqual(terrain)
   })
 
   it('builds granular export paths from books', () => {
@@ -265,21 +271,21 @@ describe('wanixstateexport', () => {
 
   it('decodezedcafejsonpointer unescapes path keys with slashes', () => {
     expect(
-      decodezedcafejsonpointer('/demo-book1~1page~1board~1terrain~10.json/char'),
-    ).toEqual(['demo-book1/page/board/terrain/0.json', 'char'])
+      decodezedcafejsonpointer('/demo-book1~1page~1board~1terrain.json/0/char'),
+    ).toEqual(['demo-book1/page/board/terrain.json', '0', 'char'])
   })
 
   it('readzedcafeexportupsertpaths maps nested ops to file paths', () => {
     const paths = readzedcafeexportupsertpaths([
       {
         op: 'replace',
-        path: '/demo-book1~1demo-page1~1board~1terrain~10.json/char',
+        path: '/demo-book1~1demo-page1~1board~1terrain.json/0/char',
         value: 177,
       },
       { op: 'remove', path: '/gone.json' },
     ])
     expect([...paths]).toEqual([
-      'demo-book1/demo-page1/board/terrain/0.json',
+      'demo-book1/demo-page1/board/terrain.json',
     ])
   })
 
@@ -288,13 +294,13 @@ describe('wanixstateexport', () => {
       { op: 'remove', path: '/demo-book1~1demo-page1~1board~1objects~1oid.json' },
       {
         op: 'remove',
-        path: '/demo-book1~1demo-page1~1board~1terrain~10.json',
+        path: '/demo-book1~1demo-page1~1board~1terrain.json',
       },
       { op: 'replace', path: '/stats.json/bookCount', value: 0 },
     ])
     expect([...paths].sort()).toEqual([
       'demo-book1/demo-page1/board/objects/oid.json',
-      'demo-book1/demo-page1/board/terrain/0.json',
+      'demo-book1/demo-page1/board/terrain.json',
     ])
   })
 
@@ -309,7 +315,17 @@ describe('wanixstateexport', () => {
     expect(mocksync).not.toHaveBeenCalled()
   })
 
-  it('checkzedcafeexportontick pushes only changed terrain cells', async () => {
+  it('checkzedcafeexportontick skips build when dirty generation unchanged', () => {
+    ;(memoryreadbooklist as jest.Mock).mockReturnValue([])
+    setzedcafepollactive(true)
+    primezedcafeexportshadow(buildzedcafeexportfiles())
+    const before = readzedcafeexportdirtygensfortest()
+    checkzedcafeexportontick({ emit: jest.fn() } as never)
+    expect(mocksync).not.toHaveBeenCalled()
+    expect(readzedcafeexportdirtygensfortest()).toEqual(before)
+  })
+
+  it('checkzedcafeexportontick pushes changed terrain array once', async () => {
     const terrain = Array.from({ length: 1500 }, () => ({ kind: 'fake' }))
     const book = makeboardbook(terrain)
     ;(memoryreadbooklist as jest.Mock).mockReturnValue([book])
@@ -318,8 +334,10 @@ describe('wanixstateexport', () => {
 
     const next = Array.from({ length: 1500 }, () => ({ kind: 'fake' }))
     next[0] = { kind: 'solid', char: 177 }
-    const terrainpath = 'demo-book1/demo-page1/board/terrain/0.json'
+    const terrainpath = 'demo-book1/demo-page1/board/terrain.json'
     ;(memoryreadbooklist as jest.Mock).mockReturnValue([makeboardbook(next)])
+    markzedcafeexportpathdirty(terrainpath)
+    forcezedcafeexportcoalesceopenfortest()
 
     checkzedcafeexportontick({ emit: jest.fn() } as never)
     await Promise.resolve()
@@ -333,10 +351,50 @@ describe('wanixstateexport', () => {
     }
     expect(options.partial).toBe(true)
     expect(pushed.map((file) => file.path)).toEqual([terrainpath])
-    expect(options.nextdoc?.[terrainpath]).toEqual({
-      kind: 'solid',
-      char: 177,
-    })
+    expect(options.nextdoc?.[terrainpath]).toEqual(next)
+  })
+
+  it('coalesces repeated terrain dirties into one flush', async () => {
+    const terrain = Array.from({ length: 1500 }, () => ({ kind: 'fake' }))
+    ;(memoryreadbooklist as jest.Mock).mockReturnValue([makeboardbook(terrain)])
+    setzedcafepollactive(true)
+    primezedcafeexportshadow(buildzedcafeexportfiles())
+    forcezedcafeexportcoalesceclosedfortest()
+
+    const mid = Array.from({ length: 1500 }, () => ({ kind: 'fake' }))
+    mid[0] = { kind: 'mid' }
+    const next = Array.from({ length: 1500 }, () => ({ kind: 'fake' }))
+    next[0] = { kind: 'final', char: 177 }
+    const terrainpath = 'demo-book1/demo-page1/board/terrain.json'
+
+    ;(memoryreadbooklist as jest.Mock).mockReturnValue([makeboardbook(mid)])
+    markzedcafeexportpathdirty(terrainpath)
+    checkzedcafeexportontick({ emit: jest.fn() } as never)
+    expect(mocksync).not.toHaveBeenCalled()
+
+    ;(memoryreadbooklist as jest.Mock).mockReturnValue([makeboardbook(next)])
+    markzedcafeexportpathdirty(terrainpath)
+    forcezedcafeexportcoalesceopenfortest()
+    checkzedcafeexportontick({ emit: jest.fn() } as never)
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(mocksync).toHaveBeenCalledTimes(1)
+    const options = mocksync.mock.calls[0][3] as {
+      nextdoc?: Record<string, unknown>
+    }
+    expect(options.nextdoc?.[terrainpath]).toEqual(next)
+  })
+
+  it('structural dirty survives in-flight rejection until next open window', async () => {
+    ;(memoryreadbooklist as jest.Mock).mockReturnValue([])
+    setzedcafepollactive(true)
+    primezedcafeexportshadow(buildzedcafeexportfiles())
+    markzedcafeexportstructuraldirty()
+    forcezedcafeexportcoalesceopenfortest()
+    const gens = readzedcafeexportdirtygensfortest()
+    expect(gens.structural).toBe(true)
+    expect(gens.dirty).toBeGreaterThan(gens.ack)
   })
 
   it('timestamp-only book ticks do not upsert book stats.json', async () => {

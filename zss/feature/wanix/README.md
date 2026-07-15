@@ -176,7 +176,7 @@ wanix-system
       stats.json
       {bookDir}/stats.json               ← slim meta (no timestamp/flags)
       {bookDir}/flags/{ownerId}.json
-      {bookDir}/{pageDir}/board/terrain/{0..1499}.json
+      {bookDir}/{pageDir}/board/terrain.json
       {bookDir}/{pageDir}/board/objects/{id}.json
       …
     bind: export → zedcafe/             ← guest path ./zedcafe/ (tasks)
@@ -387,7 +387,7 @@ Manual: `#wanix attach` / `#wanix detach` / menu. See
 | **Cold task drop** (findplayers from idle) | ~30s (before perf trim) | Export sync + findplayers JSON |
 | **Warm task drop** (findplayers while wanix active) | ~seconds + ~6s scan | `sync-stale needed=false` |
 
-Cold task stalls often hit `WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS` (30_000) when
+Cold task stalls often hit `WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS` (600_000) when
 `content-ready` is delayed after halt/reboot or duplicate export work.
 
 ### VM boot path (fast)
@@ -709,7 +709,7 @@ apply cannot leave `mode: idle` and skip the push (`pending-export mark`).
 | **`#wanix vm` + `/zedcafe/`** | VM room → zedcafe gojs boot → `wireallguestroots` binds `#task/rid/export` into Linux at `/zedcafe/` → parent activates export push |
 | **Wasm task drops** | iframe `drop` remounts task room if idle, pulls export via `requestzedcafestate`, stages `#ramfs/{file}`, spawns with driver from wasm bytes |
 | **findplayers JSON output** | gojs task + per-task export bind + spawn gate on `stats.json`; scanner walks `./zedcafe/{book}/…` |
-| **greenring board paint** | Same bind; writes allowlisted `board/terrain/<index>.json` cells; dirty emit / session-close → `vm:importzedcafe` → sim apply + re-export |
+| **greenring board paint** | Same bind; writes allowlisted `board/terrain.json`; dirty emit / session-close → `vm:importzedcafe` → sim apply + re-export |
 | **Guest FS → sim writeback** | Coalesced `zedcafeexportdirty` → `wanixclient:zedcafefilechange` → import kick; guest-dirty suppresses stale host push; deletes mirror guest tree |
 | **Live export updates** | End-of-tick `compare` of path-keyed export doc; partial upsert of changed files while poll active |
 | **Auto-attach new sessions** | `wanixclient:session open` → reveal tape → attach when user had nothing focused |

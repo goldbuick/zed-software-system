@@ -23,7 +23,12 @@ export const WANIX_VM_ZEDCAFE_EXPORT_FETCH_MS = 10_000
 export const WANIX_VM_ZEDCAFE_IMPORT_MS = 10_000
 export const WANIX_ZEDCAFE_EXPORT_WAIT_MS = 90_000
 export const WANIX_ZEDCAFE_EXPORT_READY_POLL_MS = 250
-export const WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS = 30_000
+/** Coalesce sim→zedcafe export checks (terrain mutations collapse within this window). */
+export const WANIX_ZEDCAFE_EXPORT_COALESCE_MS = 500
+/** Host + guest wait for content-ready stats.json. */
+export const WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS = 600_000
+/** Parent wait for `<target>/.zedsync-ready` after seeding a large remote tree. */
+export const WANIX_ZEDSYNC_READY_TIMEOUT_MS = 900_000
 
 export function readwanixzedcafeexportsrc(taskrid: string): string {
   return `#task/${taskrid}/export`
