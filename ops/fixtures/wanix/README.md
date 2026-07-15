@@ -103,9 +103,10 @@ go test ./p9server/ ./zedsync/ -count=1   # from ops/fixtures/wanix
 
 - Target path must **not contain spaces** (Wanix splits `cmd` on spaces).
 - Empty remote is seeded from `zedcafe/` first (never wipes zedcafe because remote started empty).
+- Sync skips any path with a `.`-prefixed segment (dotfiles, hidden dirs, `.zedsync-ready`).
 - After ready: deleting a file on the **remote** restores it from `zedcafe/`; deleting from **zedcafe** still removes the remote peer.
 - Import poll pauses until `<target>/.zedsync-ready`, then resumes.
-- Soft idle / `#wanix stop` ends the zedsync task — look for `zedsync: stopped`.
+- `#wanix stop` / soft idle ends the zedsync task — look for `zedsync: stopped`. The 5‑minute term idle auto-halt applies to one-shot dropped wasm tasks only; **zedsync** (like **zedcafe**) is exempt so a quiet watch loop stays alive.
 - Build guest: `yarn task run ops:fixtures:wanix:findplayers:build` → `cafe/public/wanix/zedsync.wasm` (also staged under `ops/public/wanix/`)
 
 ### Headed remote-mount validator

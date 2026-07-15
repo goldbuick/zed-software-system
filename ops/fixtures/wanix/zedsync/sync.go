@@ -27,9 +27,15 @@ type FileMeta struct {
 // Snapshot maps relative slash paths to file metadata (files only).
 type Snapshot map[string]FileMeta
 
+// shouldskip reports whether a slash-normalized relative path is non-content
+// (any path segment starts with '.' — dotfiles, hidden dirs, ready sentinel).
 func shouldskip(rel string) bool {
-	base := filepath.Base(rel)
-	return base == SkipSentinel || strings.HasPrefix(base, ".zedsync")
+	for _, seg := range strings.Split(rel, "/") {
+		if strings.HasPrefix(seg, ".") {
+			return true
+		}
+	}
+	return false
 }
 
 // WalkFiles walks root and returns a snapshot of regular files.
@@ -39,14 +45,18 @@ func WalkFiles(root string) (Snapshot, error) {
 		if err != nil {
 			return err
 		}
-		if d.IsDir() {
-			return nil
-		}
 		rel, rerr := filepath.Rel(root, path)
 		if rerr != nil {
 			return rerr
 		}
 		rel = filepath.ToSlash(rel)
+		if d.IsDir() {
+			// Never SkipDir the walk root (rel == "."); still skip hidden children.
+			if rel != "." && shouldskip(rel) {
+				return filepath.SkipDir
+			}
+			return nil
+		}
 		if shouldskip(rel) {
 			return nil
 		}

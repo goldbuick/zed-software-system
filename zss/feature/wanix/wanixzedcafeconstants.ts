@@ -1,6 +1,8 @@
 import { WANIX_ZEDCAFE_WASM_BUILD_ID } from 'zss/feature/wanix/wanixzedcafewasmversion'
 
 export const WANIX_ZEDCAFE_TASK_ID = 'zedcafe'
+/** Long-running remote↔zedcafe sync daemon (`#wanix zedsync`). */
+export const WANIX_ZEDSYNC_TASK_ID = 'zedsync'
 /** Attached-session drop mount: `input/<file>` (task `./input/…`, VM guest `/input/…`). */
 export const WANIX_INPUT_MOUNT = 'input'
 /** User-visible mount: `./zedcafe/` (task) or `/zedcafe/` (VM guest). */

@@ -191,3 +191,35 @@ func TestWalkSkipsReadySentinel(t *testing.T) {
 		t.Fatal("missing a.json")
 	}
 }
+
+func TestWalkSkipsDotPaths(t *testing.T) {
+	dir := t.TempDir()
+	writefile(t, dir, ".DS_Store", "finder", time.Now())
+	writefile(t, dir, ".gitignore", "ignore", time.Now())
+	writefile(t, dir, ReadySentinel, "ok", time.Now())
+	writefile(t, dir, "book/._stats.json", "appledouble", time.Now())
+	writefile(t, dir, "book/stats.json", `{}`, time.Now())
+	writefile(t, dir, "a.json", `1`, time.Now())
+	writefile(t, dir, ".git/config", "git", time.Now())
+	snap, err := WalkFiles(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, path := range []string{
+		".DS_Store",
+		".gitignore",
+		ReadySentinel,
+		"book/._stats.json",
+		".git/config",
+	} {
+		if _, ok := snap[path]; ok {
+			t.Fatalf("%s should be skipped", path)
+		}
+	}
+	if _, ok := snap["book/stats.json"]; !ok {
+		t.Fatal("missing book/stats.json")
+	}
+	if _, ok := snap["a.json"]; !ok {
+		t.Fatal("missing a.json")
+	}
+}

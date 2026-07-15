@@ -14,9 +14,11 @@ import {
   startzedcafepoll,
   stopzedcafepoll,
 } from 'zss/device/wanixclient/wanixzedcafe'
-import { WANIX_ZEDCAFE_GUEST_MOUNT } from 'zss/feature/wanix/wanixzedcafeconstants'
+import {
+  WANIX_ZEDCAFE_GUEST_MOUNT,
+  WANIX_ZEDSYNC_TASK_ID,
+} from 'zss/feature/wanix/wanixzedcafeconstants'
 
-export const WANIX_ZEDSYNC_TASK_ID = 'zedsync'
 export const WANIX_ZEDSYNC_WASM_URL = '/wanix/zedsync.wasm'
 export const WANIX_ZEDSYNC_READY_NAME = '.zedsync-ready'
 const WANIX_ZEDSYNC_READY_TIMEOUT_MS = 60_000

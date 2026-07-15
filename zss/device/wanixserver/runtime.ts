@@ -88,6 +88,7 @@ import {
   wanixtermgridresize,
   wanixtermgridwritebytes,
 } from 'zss/feature/wanix/wanixtermgridstate'
+import { shouldautohalttasksession } from 'zss/device/wanixserver/taskidlepolicy'
 import {
   WANIX_INPUT_MOUNT,
   WANIX_ZEDCAFE_EXPORT_READY_POLL_MS,
@@ -293,7 +294,7 @@ function cleartaskidletimer(session: TermSession) {
 }
 
 function shouldautohalttask(sessionkey: string, session: TermSession) {
-  return session.kind === 'task' && sessionkey !== WANIX_ZEDCAFE_TASK_ID
+  return shouldautohalttasksession(session.kind, sessionkey)
 }
 
 function scheduletaskidlehalt(sessionkey: string, session: TermSession) {
