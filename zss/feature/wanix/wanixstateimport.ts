@@ -65,9 +65,22 @@ export type APPLY_ZEDCAFE_PARTIAL_RESULT = {
 
 const decoder = new TextDecoder()
 
-/** Player chip gadget bags are sim-owned; never import-delete or overwrite. */
+/** Sim-owned flag bags — never import-delete or overwrite (mirrors boundaryrouting). */
+const IMPORT_PROTECTED_FLAG_SUFFIXES = [
+  '_gadget',
+  '_chip',
+  '_synth',
+  '_layers',
+  '_tracking',
+] as const
+
 export function isimportprotectedflagowner(owner: string): boolean {
-  return owner.endsWith('_gadget')
+  for (let i = 0; i < IMPORT_PROTECTED_FLAG_SUFFIXES.length; ++i) {
+    if (owner.endsWith(IMPORT_PROTECTED_FLAG_SUFFIXES[i])) {
+      return true
+    }
+  }
+  return false
 }
 
 function decodejson(bytes: Uint8Array): unknown {

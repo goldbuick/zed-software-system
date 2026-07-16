@@ -26,7 +26,8 @@ like `findplayers.wasm` and `greenring.wasm` can read (and write allowlisted) wo
 13. [Gotchas & invariants](#gotchas--invariants)
 14. [Debugging & validation](#debugging--validation)
 15. [What works today (and why)](#what-works-today-and-why)
-16. [TODO (deferred / out-of-scope)](#todo-deferred--out-of-scope)
+16. [In-browser zedcafe agent](#in-browser-zedcafe-agent)
+17. [TODO (deferred / out-of-scope)](#todo-deferred--out-of-scope)
 
 ---
 
@@ -106,6 +107,11 @@ Three modes in [`wanixroomtypes.ts`](wanixroomtypes.ts):
 | `task` | Task room only | WASI/gojs tasks + zedcafe daemon |
 | `vm` | Linux VM (+ optional tasks) | v86 Linux + zedcafe bind at `/zedcafe/` |
 
+The iframe readiness handshake starts a `task` room by default, so the zedcafe
+filesystem is available without first dropping a task or running `#wanix vm`.
+`#wanix stop` still moves the room to soft `idle`; it remains idle until the next
+session/iframe startup or an operation explicitly ensures a task/VM room.
+
 ### Bind-on-drop (`input/`)
 
 While **attached** to a Wanix term session, file drops bind under **`input/<name>`**
@@ -118,7 +124,7 @@ can sync boards and terrain. See `ops/fixtures/wanix/README.md` for
 
 ```mermaid
 stateDiagram-v2
-  [*] --> idle
+  [*] --> task: iframe ready / zedcafe default
 
   idle --> task: wasm/tgz drop
   idle --> vm: #wanix vm
@@ -760,13 +766,41 @@ Empty remote is seeded from `zedcafe/` (no wipe). After `.zedsync-ready`, steady
 
 ---
 
+## In-browser zedcafe agent
+
+An optional in-browser LLM copilot edits the **same schema-guarded `zedcafe/` export tree**
+you edit by hand (or via zedsync/`serve-root`), then applies through the existing import poll.
+It is **not** a boardrunner identity and does **not** need player ticks to mutate world JSON.
+
+| Surface | Owner |
+|---------|--------|
+| Tools | `list_zedcafe` / `read_zedcafe` / `write_zedcafe` / `apply_zedcafe_batch` / `run_cli_command` in [`zss/feature/agent/`](../agent/) |
+| CLI | `#agent "prompt"`; `#agent model <best\|light\|experimental>` |
+| Feedback | `workstatus` for live progress; `apichat` for start / tool milestones / final / errors |
+| Inference | Lazy [`agentspace`](../../agentspace.ts) worker — WebGPU only; main thread owns Wanix I/O + `vm:cli` |
+| Permissions | `run_cli_command` calls `vmcli` as the **register player** — same `memorycanruncommand` / role allowlists as the human terminal (no second agent allowlist) |
+
+**vs zedsync / serve-root:** remote and filesystem editors write guest JSON and rely on dirty → import.
+The agent writes allowlisted export paths through `wanixserver:agentexportwrite`, then
+`apply_zedcafe_batch` → `vm:importzedcafe` (partial) + `kickzedcafepoll`. The model may still
+run firmware CLI via `run_cli_command` when needed (e.g. `#query`, `#wanix`).
+
+**Model presets** (`#agent model`): `best` = Gemma 4 E4B, `light` = E2B, `experimental` = Qwen3.5 4B OPT.
+Requires `@huggingface/transformers` ^4.2 (native `tools` on text-generation).
+
+---
+
 ## TODO (deferred / out-of-scope)
 
-Follow-ups from the **less disruptive zedcafe imports** work — intentionally not shipped yet:
+Follow-ups from the **less disruptive zedcafe imports** work:
 
-- **`_cli_chip` flag protection** — import guards `*_gadget` flag bags only (`isimportprotectedflagowner` in [`wanixstateimport.ts`](wanixstateimport.ts)). Extend the same sim-owned skip to `*_cli_chip` if those bags are also runtime-written and should not be wiped by guest FS import.
-- **Transferable `ArrayBuffer` bridge / further export coalesce** — guest↔host file payloads still copy; coalesce window is 500 ms on export tick. Optional perf pass: transferable buffers across the iframe bridge and tighter batching of host pushes.
-- **RFC 6902 as inbound transport** — inbound import uses path-keyed docs + selective apply (`applyzedcafepartialtomemory`), not boardrunner boundary patches. Revisit only if path-doc deltas are insufficient for a use case.
+- **Sim-owned flag protection (shipped)** — `isimportprotectedflagowner` in [`wanixstateimport.ts`](wanixstateimport.ts) skips overwrite/delete for owners ending in `_gadget`, `_chip`, `_synth`, `_layers`, or `_tracking`. Player/`pid_*` and other world flags stay importable.
+- **Transferable `ArrayBuffer` bridge / further export coalesce (deferred)** — Measured baseline (2026-07): greenring-style partial terrain sync is ~61 KB pretty-printed JSON (`BOARD_SIZE` cells); fixture book source is ~1.7 MB. Same-origin structured-clone of ~61 KB is not a measured bottleneck; coalesce remains **500 ms**. Revisit transferables / tighter coalesce when `[wanix-perf] export-push-*` marks show large `bytes` with high `elapsedms` (full-tree activate / multi-board floods), not for greenring alone. Marks now include `bytes`.
+- **RFC 6902 as inbound transport (open)** — inbound import uses path-keyed docs + selective apply (`applyzedcafepartialtomemory`), not boardrunner boundary patches. **Spike criteria (revisit when any of these is a named repro):**
+  1. Very large multi-book structural deletes where full guest-tree compare + path apply is too slow or lossy
+  2. Cross-book moves/renames (kebab dirname identity changes) that path-doc delta cannot express safely
+  3. Profiles showing `compare` + path rebuild cost exceed applying inbound `Operation[]` via existing `applypartialupsertpath` / `applypartialremovepath` (still not boardrunner patches)
+  Until a failing scenario exists, keep path-doc partial apply; do not prototype RFC 6902 inbound transport.
 
 ---
 

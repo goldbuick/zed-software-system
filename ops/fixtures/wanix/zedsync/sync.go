@@ -23,6 +23,9 @@ const (
 // LastWalkCount is the number of WalkFiles calls in the most recent SteadyTick.
 var LastWalkCount int
 
+// steadyticktesthook runs at the start of SteadyTick (tests only).
+var steadyticktesthook func()
+
 func reportseedprogress(copied, total int) {
 	if total <= 0 || copied <= 0 {
 		return
@@ -58,6 +61,13 @@ func WalkFiles(root string) (Snapshot, error) {
 	out := Snapshot{}
 	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
+			rel, rerr := filepath.Rel(root, path)
+			if rerr == nil && shouldskip(filepath.ToSlash(rel)) {
+				if d != nil && d.IsDir() {
+					return filepath.SkipDir
+				}
+				return nil
+			}
 			return err
 		}
 		rel, rerr := filepath.Rel(root, path)
@@ -105,27 +115,29 @@ func copyfilecached(srcroot, dstroot, rel string, madedirs map[string]struct{}) 
 	parent := filepath.Dir(dst)
 	if madedirs == nil {
 		if err := os.MkdirAll(parent, 0o755); err != nil {
-			return err
+			return fmt.Errorf("mkdir %s: %w", parent, err)
 		}
 	} else if _, ok := madedirs[parent]; !ok {
 		if err := os.MkdirAll(parent, 0o755); err != nil {
-			return err
+			return fmt.Errorf("mkdir %s: %w", parent, err)
 		}
 		madedirs[parent] = struct{}{}
 	}
 	in, err := os.Open(src)
 	if err != nil {
-		return err
+		return fmt.Errorf("open %s: %w", src, err)
 	}
 	defer in.Close()
 	out, err := os.OpenFile(dst, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o644)
 	if err != nil {
-		return err
+		return fmt.Errorf("create %s: %w", dst, err)
 	}
 	defer out.Close()
 	if _, err := io.Copy(out, in); err != nil {
-		return err
+		return fmt.Errorf("copy %s → %s: %w", src, dst, err)
 	}
+	// Best-effort mtime preserve. Browser/gojs mounts often cannot Chtimes;
+	// SteadyTick treats equal-size mtime-only drift as idle to avoid churn.
 	info, err := os.Stat(src)
 	if err == nil {
 		_ = os.Chtimes(dst, info.ModTime(), info.ModTime())
@@ -153,7 +165,7 @@ func removefile(root, rel string) error {
 func removefiledeferred(root, rel string, prune *[]string) error {
 	path := filepath.Join(root, filepath.FromSlash(rel))
 	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
-		return err
+		return fmt.Errorf("remove %s: %w", rel, err)
 	}
 	if prune != nil {
 		dir := filepath.Dir(path)
@@ -174,7 +186,7 @@ func removefiledeferred(root, rel string, prune *[]string) error {
 }
 
 func pruneemptydirs(dirs []string) {
-	// deepest-first
+	// deepest-first; ENOTEMPTY / non-empty is ignored (best-effort).
 	sort.Slice(dirs, func(i, j int) bool {
 		return len(dirs[i]) > len(dirs[j])
 	})
@@ -196,6 +208,12 @@ func newer(a, b FileMeta) bool {
 		return a.Size != b.Size
 	}
 	return false
+}
+
+// sizealigned reports same length — used to ignore mtime-only drift after
+// copies onto FS backends that cannot Chtimes (gojs export mounts).
+func sizealigned(a, b FileMeta) bool {
+	return a.Size == b.Size
 }
 
 // InitialSeed copies between remote and zedcafe without deletes.
@@ -238,26 +256,26 @@ func InitialSeed(remote, zedcafe string, r, z Snapshot) (copied int, err error) 
 			switch {
 			case rok && !zok:
 				if err := copyfile(remote, zedcafe, rel); err != nil {
-					return copied, err
+					return copied, fmt.Errorf("seed copytoz %s: %w", rel, err)
 				}
 				copied++
 				reportseedprogress(copied, total)
 			case zok && !rok:
 				if err := copyfile(zedcafe, remote, rel); err != nil {
-					return copied, err
+					return copied, fmt.Errorf("seed copytor %s: %w", rel, err)
 				}
 				copied++
 				reportseedprogress(copied, total)
 			case rok && zok:
 				if rm.Mtime.After(zm.Mtime) || (rm.Mtime.Equal(zm.Mtime) && rm.Size != zm.Size) {
 					if err := copyfile(remote, zedcafe, rel); err != nil {
-						return copied, err
+						return copied, fmt.Errorf("seed copytoz %s: %w", rel, err)
 					}
 					copied++
 					reportseedprogress(copied, total)
 				} else if zm.Mtime.After(rm.Mtime) {
 					if err := copyfile(zedcafe, remote, rel); err != nil {
-						return copied, err
+						return copied, fmt.Errorf("seed copytor %s: %w", rel, err)
 					}
 					copied++
 					reportseedprogress(copied, total)
@@ -279,16 +297,31 @@ type syncop struct {
 // Deletes on zedcafe still remove the peer on remote.
 // Performs two WalkFiles (remote + zedcafe); next baseline is built from
 // in-memory side snapshots updated after successful mutations.
-func SteadyTick(remote, zedcafe string, baseline Snapshot) (Snapshot, []string, error) {
+// Go/WASM JS FS panics are recovered into an error so the watcher keeps running.
+func SteadyTick(remote, zedcafe string, baseline Snapshot) (snap Snapshot, logs []string, err error) {
+	defer func() {
+		if rec := recover(); rec != nil {
+			snap = baseline
+			logs = nil
+			err = fmt.Errorf("zedsync panic during tick (will retry): %v", rec)
+		}
+	}()
+	if steadyticktesthook != nil {
+		steadyticktesthook()
+	}
+	return steadytickbody(remote, zedcafe, baseline)
+}
+
+func steadytickbody(remote, zedcafe string, baseline Snapshot) (Snapshot, []string, error) {
 	LastWalkCount = 0
 	r, err := WalkFiles(remote)
 	if err != nil {
-		return baseline, nil, err
+		return baseline, nil, fmt.Errorf("walk remote: %w", err)
 	}
 	LastWalkCount++
 	z, err := WalkFiles(zedcafe)
 	if err != nil {
-		return baseline, nil, err
+		return baseline, nil, fmt.Errorf("walk zedcafe: %w", err)
 	}
 	LastWalkCount++
 
@@ -338,6 +371,11 @@ func SteadyTick(remote, zedcafe string, baseline Snapshot) (Snapshot, []string, 
 			} else if remotechanged {
 				ops = append(ops, syncop{rel, "copytoz", fmt.Sprintf("update zedcafe ← %s", rel)})
 			} else if zedchanged {
+				// Mtime-only drift with equal size: browser FS after copytoz often
+				// cannot Chtimes; do not churn remote ← zedcafe.
+				if sizealigned(rm, zm) {
+					continue
+				}
 				ops = append(ops, syncop{rel, "copytor", fmt.Sprintf("update remote ← %s", rel)})
 			}
 		}
@@ -360,25 +398,25 @@ func SteadyTick(remote, zedcafe string, baseline Snapshot) (Snapshot, []string, 
 		switch op.kind {
 		case "copytoz":
 			if err := copyfilecached(remote, zedcafe, op.rel, madedirs); err != nil {
-				return baseline, logs, err
+				return baseline, logs, fmt.Errorf("copytoz %s: %w", op.rel, err)
 			}
 			meta, serr := statmeta(zedcafe, op.rel)
 			if serr != nil {
-				return baseline, logs, serr
+				return baseline, logs, fmt.Errorf("copytoz stat %s: %w", op.rel, serr)
 			}
 			z[op.rel] = meta
 		case "copytor":
 			if err := copyfilecached(zedcafe, remote, op.rel, madedirs); err != nil {
-				return baseline, logs, err
+				return baseline, logs, fmt.Errorf("copytor %s: %w", op.rel, err)
 			}
 			meta, serr := statmeta(remote, op.rel)
 			if serr != nil {
-				return baseline, logs, serr
+				return baseline, logs, fmt.Errorf("copytor stat %s: %w", op.rel, serr)
 			}
 			r[op.rel] = meta
 		case "deleteremote":
 			if err := removefiledeferred(remote, op.rel, &prunedirs); err != nil {
-				return baseline, logs, err
+				return baseline, logs, fmt.Errorf("deleteremote %s: %w", op.rel, err)
 			}
 			delete(r, op.rel)
 		}

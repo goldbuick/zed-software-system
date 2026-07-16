@@ -3,6 +3,7 @@ package zedsync
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -303,5 +304,144 @@ func TestWalkSkipsDotPaths(t *testing.T) {
 	}
 	if _, ok := snap["a.json"]; !ok {
 		t.Fatal("missing a.json")
+	}
+}
+
+func TestSteadyTickRemoteFlagEdit(t *testing.T) {
+	dir := t.TempDir()
+	remote := filepath.Join(dir, "remote")
+	zedcafe := filepath.Join(dir, "zedcafe")
+	_ = os.MkdirAll(remote, 0o755)
+	_ = os.MkdirAll(zedcafe, 0o755)
+	mtime := time.Now().Add(-time.Minute)
+	flagpath := "demo-book1/flags/pid_1.json"
+	writefile(t, remote, flagpath, `{"ammo":0}`, mtime)
+	writefile(t, zedcafe, flagpath, `{"ammo":0}`, mtime)
+	baseline, err := WalkFiles(remote)
+	if err != nil {
+		t.Fatal(err)
+	}
+	newer := time.Now()
+	writefile(t, remote, flagpath, `{"ammo":500}`, newer)
+
+	next, logs, err := SteadyTick(remote, zedcafe, baseline)
+	if err != nil {
+		t.Fatal(err)
+	}
+	body, err := os.ReadFile(filepath.Join(zedcafe, filepath.FromSlash(flagpath)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(body) != `{"ammo":500}` {
+		t.Fatalf("zedcafe body=%q logs=%v", body, logs)
+	}
+	found := false
+	for _, line := range logs {
+		if strings.Contains(line, "update zedcafe") && strings.Contains(line, flagpath) {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("expected update zedcafe log, got %v", logs)
+	}
+	if _, ok := next[flagpath]; !ok {
+		t.Fatal("baseline missing flag path")
+	}
+}
+
+func TestSteadyTickRemoteTerrainEdit(t *testing.T) {
+	dir := t.TempDir()
+	remote := filepath.Join(dir, "remote")
+	zedcafe := filepath.Join(dir, "zedcafe")
+	_ = os.MkdirAll(remote, 0o755)
+	_ = os.MkdirAll(zedcafe, 0o755)
+	mtime := time.Now().Add(-time.Minute)
+	terrain := "demo-book1/demo-page1/board/terrain.json"
+	writefile(t, remote, terrain, `[{"kind":"empty"}]`, mtime)
+	writefile(t, zedcafe, terrain, `[{"kind":"empty"}]`, mtime)
+	baseline, err := WalkFiles(remote)
+	if err != nil {
+		t.Fatal(err)
+	}
+	painted := `[{"kind":"fake","char":3,"color":12}]`
+	writefile(t, remote, terrain, painted, time.Now())
+
+	_, logs, err := SteadyTick(remote, zedcafe, baseline)
+	if err != nil {
+		t.Fatal(err)
+	}
+	body, err := os.ReadFile(filepath.Join(zedcafe, filepath.FromSlash(terrain)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(body) != painted {
+		t.Fatalf("zedcafe terrain=%q logs=%v", body, logs)
+	}
+}
+
+func TestSteadyTickIgnoresEqualSizeMtimeDrift(t *testing.T) {
+	dir := t.TempDir()
+	remote := filepath.Join(dir, "remote")
+	zedcafe := filepath.Join(dir, "zedcafe")
+	_ = os.MkdirAll(remote, 0o755)
+	_ = os.MkdirAll(zedcafe, 0o755)
+	old := time.Now().Add(-time.Hour)
+	body := `{"ammo":1}`
+	writefile(t, remote, "flags/pid_1.json", body, old)
+	writefile(t, zedcafe, "flags/pid_1.json", body, old)
+	baseline, err := WalkFiles(remote)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Same content/size, newer mtime only on zedcafe (simulates failed Chtimes).
+	writefile(t, zedcafe, "flags/pid_1.json", body, time.Now())
+
+	_, logs, err := SteadyTick(remote, zedcafe, baseline)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(logs) != 0 {
+		t.Fatalf("expected idle for mtime-only drift, logs=%v", logs)
+	}
+}
+
+func TestPruneEmptyDirsNonemptyIsNonfatal(t *testing.T) {
+	dir := t.TempDir()
+	child := filepath.Join(dir, "board", "objects")
+	if err := os.MkdirAll(child, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	writefile(t, dir, "board/objects/keep.json", `{}`, time.Now())
+	pruneemptydirs([]string{child, filepath.Join(dir, "board")})
+	if _, err := os.Stat(filepath.Join(dir, "board", "objects", "keep.json")); err != nil {
+		t.Fatal("non-empty objects dir should not be removed")
+	}
+}
+
+func TestSteadyTickRecoversPanic(t *testing.T) {
+	dir := t.TempDir()
+	remote := filepath.Join(dir, "remote")
+	zedcafe := filepath.Join(dir, "zedcafe")
+	_ = os.MkdirAll(remote, 0o755)
+	_ = os.MkdirAll(zedcafe, 0o755)
+	baseline := Snapshot{}
+	steadyticktesthook = func() {
+		panic("simulated js fs error")
+	}
+	defer func() { steadyticktesthook = nil }()
+
+	next, logs, err := SteadyTick(remote, zedcafe, baseline)
+	if err == nil {
+		t.Fatal("expected recovered panic error")
+	}
+	if !strings.Contains(err.Error(), "panic during tick") {
+		t.Fatalf("err=%v", err)
+	}
+	if logs != nil && len(logs) != 0 {
+		t.Fatalf("logs=%v", logs)
+	}
+	if len(next) != 0 {
+		t.Fatalf("expected original baseline, got %v", next)
 	}
 }

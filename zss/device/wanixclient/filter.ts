@@ -21,6 +21,8 @@ const WANIX_IFRAME_TARGETS = new Set([
   'iszedcafeexportlive',
   'readfile',
   'zedcafefilechange',
+  'agentexporttree',
+  'agentexportwrite',
 ])
 
 export function shouldprocesswanixclientmessage(message: MESSAGE): boolean {

@@ -305,6 +305,83 @@ describe('applyzedcafetomemory', () => {
     })
   })
 
+  it('preserves *_chip flag bags when absent from guest tree', () => {
+    const clichip = 'pid_1_cli_chip'
+    const objchip = 'obj_chip'
+    const book = {
+      id: 'b1',
+      name: 'b1',
+      token: 't',
+      timestamp: 1,
+      activelist: ['pid_1'],
+      flags: {
+        pid_1: 'pid_1',
+        [clichip]: clichip,
+        [objchip]: objchip,
+      },
+      pages: [],
+    }
+    flagbags.set('pid_1', { ammo: 1 })
+    flagbags.set(clichip, { ec: 1, ys: 0 })
+    flagbags.set(objchip, { lb: [], es: 0 })
+    mockreadlist.mockReturnValue([book])
+    const changed = applyzedcafetomemory({
+      books: [
+        {
+          id: 'b1',
+          name: 'b1',
+          token: 't',
+          timestamp: 0,
+          activelist: ['pid_1'],
+          flags: { pid_1: { ammo: 9 } },
+          pages: [],
+        },
+      ],
+    })
+    expect(changed).toBe(true)
+    expect(book.flags[clichip]).toBe(clichip)
+    expect(book.flags[objchip]).toBe(objchip)
+    expect(memoryreadbookflags(book, clichip)).toEqual({ ec: 1, ys: 0 })
+    expect(memoryreadbookflags(book, objchip)).toEqual({ lb: [], es: 0 })
+    expect(memoryreadbookflags(book, 'pid_1')).toEqual({ ammo: 9 })
+  })
+
+  it('ignores guest overwrite of *_chip flag bags', () => {
+    const clichip = 'pid_1_cli_chip'
+    const objchip = 'obj_chip'
+    const book = {
+      id: 'b1',
+      name: 'b1',
+      token: 't',
+      timestamp: 1,
+      activelist: ['pid_1'],
+      flags: { [clichip]: clichip, [objchip]: objchip },
+      pages: [],
+    }
+    flagbags.set(clichip, { ec: 1 })
+    flagbags.set(objchip, { es: 0 })
+    mockreadlist.mockReturnValue([book])
+    const changed = applyzedcafetomemory({
+      books: [
+        {
+          id: 'b1',
+          name: 'b1',
+          token: 't',
+          timestamp: 0,
+          activelist: ['pid_1'],
+          flags: {
+            [clichip]: { ec: 99 },
+            [objchip]: { es: 1 },
+          },
+          pages: [],
+        },
+      ],
+    })
+    expect(changed).toBe(false)
+    expect(memoryreadbookflags(book, clichip)).toEqual({ ec: 1 })
+    expect(memoryreadbookflags(book, objchip)).toEqual({ es: 0 })
+  })
+
   it('clears all books when guest tree has empty books list', () => {
     mockreadlist.mockReturnValue([
       {
@@ -348,6 +425,26 @@ describe('applyzedcafepartialtomemory', () => {
     pages: [page],
   }
 
+  const PROTECTED_PARTIAL_OWNERS = [
+    { owner: 'pid_1_cli_chip', keep: { ec: 1, ys: 0 }, wipe: { ec: 99 } },
+    { owner: 'obj_chip', keep: { lb: [], es: 0 }, wipe: { es: 1 } },
+    {
+      owner: 'board1_synth',
+      keep: { voices: { 0: 'tone' } },
+      wipe: { voices: { 0: 'noise' } },
+    },
+    {
+      owner: 'board1_layers',
+      keep: { normal: { layers: [] } },
+      wipe: { normal: { layers: ['x'] } },
+    },
+    {
+      owner: 'board1_tracking',
+      keep: { ids: ['a', 'b'] },
+      wipe: { ids: ['z'] },
+    },
+  ] as const
+
   beforeEach(() => {
     flagbags.clear()
     boards.clear()
@@ -356,6 +453,11 @@ describe('applyzedcafepartialtomemory', () => {
     book.flags = {
       pid_1: 'pid_1',
       pid_1_gadget: 'pid_1_gadget',
+    }
+    for (let i = 0; i < PROTECTED_PARTIAL_OWNERS.length; ++i) {
+      const { owner, keep } = PROTECTED_PARTIAL_OWNERS[i]
+      book.flags[owner] = owner
+      flagbags.set(owner, { ...keep })
     }
     book.pages = [page]
     flagbags.set('pid_1', { ammo: 1 })
@@ -402,6 +504,46 @@ describe('applyzedcafepartialtomemory', () => {
     expect(result.changed).toBe(false)
     expect(memoryreadbookflags(book, 'pid_1_gadget')).toEqual({
       state: { sidebar: [['text', 'hello']] },
+    })
+  })
+
+  it.each(PROTECTED_PARTIAL_OWNERS)(
+    'ignores partial upsert of $owner',
+    ({ owner, keep, wipe }) => {
+      const result = applyzedcafepartialtomemory([
+        {
+          path: `demo-b1/flags/${owner}.json`,
+          bytes: encoder.encode(JSON.stringify(wipe)),
+        },
+      ])
+      expect(result.changed).toBe(false)
+      expect(memoryreadbookflags(book, owner)).toEqual(keep)
+    },
+  )
+
+  it.each(PROTECTED_PARTIAL_OWNERS)(
+    'skips partial remove of $owner',
+    ({ owner, keep }) => {
+      const result = applyzedcafepartialtomemory([], [
+        `demo-b1/flags/${owner}.json`,
+      ])
+      expect(result.changed).toBe(false)
+      expect(book.flags[owner]).toBe(owner)
+      expect(memoryreadbookflags(book, owner)).toEqual(keep)
+    },
+  )
+
+  it('still applies pid_* player flags from guest on partial upsert', () => {
+    const result = applyzedcafepartialtomemory([
+      {
+        path: 'demo-b1/flags/pid_1.json',
+        bytes: encoder.encode(JSON.stringify({ ammo: 42, health: 100 })),
+      },
+    ])
+    expect(result.changed).toBe(true)
+    expect(memoryreadbookflags(book, 'pid_1')).toEqual({
+      ammo: 42,
+      health: 100,
     })
   })
 

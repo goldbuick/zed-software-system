@@ -102,4 +102,38 @@ describe('pushzedcafeexportlive removepaths', () => {
       ]),
     ).resolves.toBeUndefined()
   })
+
+  it('treats directory-not-empty remove as benign', async () => {
+    const errors: unknown[] = []
+    const spy = jest.spyOn(console, 'error').mockImplementation((...args) => {
+      errors.push(args)
+    })
+    const taskrid = '7'
+    const root: WanixRoot = {
+      readDir: async () => [],
+      readFile: async () => new Uint8Array(),
+      readText: async () => '',
+      writeFile: async () => {},
+      makeDirAll: async () => {},
+      appendFile: async () => {},
+      remove: async () => {
+        throw new Error(
+          'remove demo-book1/demo-page1/board/objects: directory not empty',
+        )
+      },
+      bind: async () => {},
+      unbind: async () => {},
+      waitFor: async () => {},
+      openReadable: async () => new ReadableStream(),
+      openWritable: async () => new WritableStream(),
+    }
+
+    await expect(
+      pushzedcafeexportlive(root, taskrid, [], [
+        'demo-book1/demo-page1/board/objects/oid.json',
+      ]),
+    ).resolves.toBeUndefined()
+    expect(errors).toEqual([])
+    spy.mockRestore()
+  })
 })

@@ -1,6 +1,7 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/types'
 
+import { handleagentask } from './agentask'
 import {
   handleacklogin,
   handleackoperator,
@@ -53,6 +54,7 @@ export const registerhandlers: Record<string, REGISTER_HANDLER> = {
   loginready: handleloginready,
   acklogin: handleacklogin,
   ackzsswords: handleackzsswords,
+  agentask: handleagentask,
   bookmarkscroll: handlebookmarkscroll,
   editorbookmarkscroll: handleeditorbookmarkscroll,
   'bookmark:clisave': handlebookmarkclisave,

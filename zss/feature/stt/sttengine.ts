@@ -76,13 +76,18 @@ export async function ensuresttengine(
     }
 
     onprogress('load', modelid)
-    const pipe = await pipeline('automatic-speech-recognition', modelid, {
-      device: STT_MODEL_DEVICE,
-      dtype: STT_DTYPE,
-      progress_callback,
-    })
-    transcriber = pipe
-    return pipe
+    try {
+      const pipe = await pipeline('automatic-speech-recognition', modelid, {
+        device: STT_MODEL_DEVICE,
+        dtype: STT_DTYPE,
+        progress_callback,
+      })
+      transcriber = pipe
+      return pipe
+    } catch (error) {
+      transcriberpromise = undefined
+      throw error
+    }
   })()
 
   return transcriberpromise

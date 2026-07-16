@@ -1,6 +1,8 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/types'
 
+import { handleagentexporttree } from './agentexporttree'
+import { handleagentexportwrite } from './agentexportwrite'
 import { handleapplyroom } from './applyroom'
 import { handlebinddrop } from './binddrop'
 import { handledrop } from './drop'
@@ -16,6 +18,7 @@ import { handlereadready } from './readready'
 import { handlereadroomstatus } from './readroomstatus'
 import { handlereadtext } from './readtext'
 import { handlereadvmstatus } from './readvmstatus'
+import { handleready } from './ready'
 import { handlereadzedcafeexportfiles } from './readzedcafeexportfiles'
 import { handlereadzedcafetaskrid } from './readzedcafetaskrid'
 import { handlerequestzedcafestate } from './requestzedcafestate'
@@ -32,6 +35,7 @@ import { handlewritefile } from './writefile'
 export type WANIX_HANDLER = (wanix: DEVICE, message: MESSAGE) => void
 
 export const wanixhandlers: Record<string, WANIX_HANDLER> = {
+  ready: handleready,
   ping: handleping,
   menu: handlemenu,
   readready: handlereadready,
@@ -59,4 +63,6 @@ export const wanixhandlers: Record<string, WANIX_HANDLER> = {
   iszedcafeexportlive: handleiszedcafeexportlive,
   iszedcafeguestbound: handleiszedcafeguestbound,
   requestzedcafestate: handlerequestzedcafestate,
+  agentexporttree: handleagentexporttree,
+  agentexportwrite: handleagentexportwrite,
 }

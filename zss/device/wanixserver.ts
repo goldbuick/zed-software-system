@@ -1,7 +1,7 @@
 import { createdevice } from 'zss/device'
 import { wanixhandlers } from 'zss/device/wanixserver/handlers/registry'
 
-const wanixserver = createdevice('wanixserver', [], (message) => {
+const wanixserver = createdevice('wanixserver', ['ready'], (message) => {
   if (!wanixserver.session(message)) {
     return
   }

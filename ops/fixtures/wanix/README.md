@@ -93,6 +93,7 @@ go test ./p9server/ ./zedsync/ -count=1   # from ops/fixtures/wanix
 - DevTools Network → Socket: select the **wanix iframe** context (or enable “frames”). Parent-page `?token=…` Pending sockets are Vite HMR, not the 9P remote.
 - Console `[wanix-perf]`: `remote-import-prepare` / `remote-wss-force-dial` (`pre-append-start`) → `remote-wss-socket-open` → `remote-wss-open` / `remote-import-open`, then room ready. Do **not** await WSS before append (that settled the import Promise early and deadlocked Go wasm → `wanix-system ready timeout`).
 - `#wanix zedsync remote` requires a matching remote mount and an active room; guest prints `waiting for target dir ...` before seed, then `seed progress N/M` while copying. Guest export-ready wait is 600s; host `.zedsync-ready` wait is 900s. Per-cell `board/terrain/<index>.json` trees are rejected — wipe/re-seed remotes after schema changes.
+- **Live flat-file edits** (flags, `board/terrain.json`, etc. under the served folder) are supported while zedsync is running. `SteadyTick` recovers gojs FS panics into a retryable tick error (watcher stays up). Host export **defers removes** during guest-dirty/import so concurrent remote→zedcafe writes are not racing `directory not empty` deletes; benign ENOTEMPTY on remove is soft-logged.
 
 ### Cafe commands
 

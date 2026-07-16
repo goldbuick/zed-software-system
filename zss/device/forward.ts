@@ -68,6 +68,8 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
       const route = parsetarget(message.target)
       switch (route.target) {
         case 'tts':
+        case 'stt':
+        case 'agent':
         case 'synth':
         case 'modem':
         case 'bridge':
@@ -183,6 +185,26 @@ export function shouldforwardclienttotts(message: MESSAGE): boolean {
 
 // create tts -> client forward
 export function shouldforwardttstoclient(): boolean {
+  return true
+}
+
+// agent worker messages
+
+export function shouldforwardclienttoagent(message: MESSAGE): boolean {
+  switch (message.target) {
+    case 'ticktock':
+      return false
+    case 'second':
+    case 'ready':
+      return true
+    default: {
+      const route = parsetarget(message.target)
+      return route.target === 'agent'
+    }
+  }
+}
+
+export function shouldforwardagenttoclient(): boolean {
   return true
 }
 

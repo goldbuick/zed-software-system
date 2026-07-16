@@ -531,6 +531,27 @@ export async function collectzedcafeexportfiles(
   return collectexporttreefiles(root, readwanixzedcafeexportsrc(taskrid))
 }
 
+export async function writezedcafeagentexportfile(
+  root: WanixRoot,
+  taskrid: string,
+  relpath: string,
+  bytes: Uint8Array | number[],
+): Promise<void> {
+  if (!isallowedexportpath(relpath)) {
+    throw new Error(`path outside schema: ${relpath}`)
+  }
+  const base = readwanixzedcafeexportsrc(taskrid)
+  const full = `${base}/${relpath}`
+  const parentdir = full.slice(0, full.lastIndexOf('/'))
+  if (parentdir.length > base.length) {
+    await root.makeDirAll(parentdir)
+  }
+  await root.writeFile(
+    full,
+    bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes),
+  )
+}
+
 export function readguestfilebookcount(files: WanixZedCafeGuestFile[]): number {
   const stats = files.find((file) => file.path === 'stats.json')
   if (!stats) {
@@ -572,7 +593,12 @@ export async function removezedcafeexportpaths(
     } catch (err) {
       const detail = err instanceof Error ? err.message : String(err)
       // Missing path is fine — guest may already lack the orphan.
-      if (!/not exist|no such|enoent|not found/i.test(detail)) {
+      // Directory-not-empty is a benign prune race while zedsync writes peers.
+      if (
+        !/not exist|no such|enoent|not found|directory not empty|enotempty|not empty/i.test(
+          detail,
+        )
+      ) {
         console.error(`[zedcafe-export] remove failed ${relpath}: ${detail}`)
       }
     }
@@ -676,6 +702,14 @@ export async function pushzedcafeexportlive(
       removed: removepaths.length,
       parents: madedirs.size,
       elapsedms: Date.now() - pushstart,
+      bytes: sorted.reduce(
+        (sum, file) =>
+          sum +
+          (file.data instanceof Uint8Array
+            ? file.data.byteLength
+            : (file.data as ArrayLike<number>).length),
+        0,
+      ),
     })
   } finally {
     // Hold suppress until Go dirty debounce from these writes can no longer fire.

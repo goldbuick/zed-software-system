@@ -65,6 +65,7 @@ import {
   waitzedcafeexportcontentready,
   waitzedcafereadyrpc,
   wireallguestroots,
+  writezedcafeagentexportfile,
 } from 'zss/device/wanixserver/zedcafehost'
 import type {
   WanixSystemElement,
@@ -1557,6 +1558,45 @@ export async function readzedcafeexportfiles() {
     return []
   }
   return collectzedcafeexportfiles(root, taskrid)
+}
+
+export async function agentexporttree() {
+  if (!system?.isReady) {
+    throw new Error('wanix room not ready')
+  }
+  const taskrid = readzedcafetaskridlocal(system)
+  if (!taskrid) {
+    throw new Error('zedcafe task not ready')
+  }
+  const files = await collectzedcafeexportfiles(readroot(), taskrid)
+  return {
+    ok: true,
+    files: files.map((file) => ({
+      path: file.path,
+      data: Array.from(
+        file.data instanceof Uint8Array
+          ? file.data
+          : new Uint8Array(file.data as ArrayLike<number>),
+      ),
+    })),
+  }
+}
+
+export async function agentexportwrite(path: string, bytes?: number[]) {
+  if (!system?.isReady) {
+    throw new Error('wanix room not ready')
+  }
+  const taskrid = readzedcafetaskridlocal(system)
+  if (!taskrid) {
+    throw new Error('zedcafe task not ready')
+  }
+  await writezedcafeagentexportfile(
+    readroot(),
+    taskrid,
+    String(path ?? ''),
+    bytes ?? [],
+  )
+  return { ok: true, path: String(path ?? '') }
 }
 
 export async function synczedcafeexport(

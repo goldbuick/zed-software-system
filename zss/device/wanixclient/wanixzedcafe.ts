@@ -106,6 +106,22 @@ export function exportfilestoguestfiles(
   return out
 }
 
+function readzedcafepayloadbytes(
+  files: { bytes?: Uint8Array; data?: Uint8Array | ArrayLike<number> }[],
+): number {
+  let total = 0
+  for (let i = 0; i < files.length; ++i) {
+    const file = files[i]
+    const payload = file.bytes ?? file.data
+    if (payload instanceof Uint8Array) {
+      total += payload.byteLength
+    } else if (payload) {
+      total += payload.length
+    }
+  }
+  return total
+}
+
 function buildwanixbootzedcafestate(): WanixZedCafeHostState {
   return {
     cmd: WANIX_ZEDCAFE_WASM_CMD,
@@ -199,6 +215,19 @@ export async function fetchzedcafeexportfiles(
   timeoutms = WANIX_VM_ZEDCAFE_EXPORT_FETCH_MS,
 ): Promise<WANIX_ZED_CAFE_EXPORT_FILE[]> {
   return requestvmzedcafeexportfiles(device, player, timeoutms)
+}
+
+/** Agent tool path: partial import of explicit file bytes (register-player scoped). */
+export async function runzedcafeagentimport(
+  device: DEVICELIKE,
+  player: string,
+  files: WANIX_ZED_CAFE_EXPORT_FILE[],
+  timeoutms = WANIX_VM_ZEDCAFE_IMPORT_MS,
+): Promise<WANIX_ZED_CAFE_IMPORT_RESULT> {
+  return requestvmzedcafeimport(device, player, files, {
+    partial: true,
+    timeoutms,
+  })
 }
 
 export function fingerprintzedcafeexportfiles(
@@ -389,6 +418,7 @@ export function applyzedcafesyncresult(
     paths: files.length,
     removed: removepaths.length,
     partial: !!options?.partial,
+    bytes: readzedcafepayloadbytes(files),
   })
   tracezedcafeexport(
     `sync-to-iframe memcount=${memcount} paths=${files.length} removed=${removepaths.length} taskrid=${result.taskrid ?? 'none'} partial=${!!options?.partial}`,
@@ -451,11 +481,16 @@ async function continuepushafterguesttree(
     return
   }
   let removepaths = options?.removepaths ?? []
-  if (!options?.partial) {
+  // Serialize removes vs live remote→zedcafe writers (zedsync): never prune
+  // orphans while guest-dirty, and skip orphan sweep on fromimport (upsert first).
+  if (!options?.partial && !options?.fromimport && !readzedcafeguestdirty()) {
     const orphans = readorphanremovepaths(guesttree, files)
     if (orphans.length > 0) {
       removepaths = [...new Set([...removepaths, ...orphans])]
     }
+  }
+  if (readzedcafeguestdirty() && !options?.fromimport) {
+    removepaths = []
   }
   const memcount = readbookcountfromexportfiles(files)
   const pushdoc =
@@ -486,6 +521,7 @@ async function continuepushafterguesttree(
     paths: files.length,
     removed: removepaths.length,
     partial: !!options?.partial,
+    bytes: readzedcafepayloadbytes(files),
   })
   wanixserversynczedcafeexport(
     device,
@@ -552,6 +588,7 @@ export function pushzedcafesynctoiframe(
         removed: removepaths.length,
         partial: true,
         skipguesttree: true,
+        bytes: readzedcafepayloadbytes(files),
       })
       wanixserversynczedcafeexport(
         device,
@@ -590,6 +627,7 @@ export function pushzedcafesynctoiframe(
     paths: files.length,
     removed: removepaths.length,
     partial: !!options?.partial,
+    bytes: readzedcafepayloadbytes(files),
   })
   wanixserversynczedcafeexport(
     device,
@@ -758,13 +796,14 @@ export async function runzedcafeimport(
       return true
     }
     const upsertpaths = readzedcafeexportupsertpaths(ops)
-    const removepaths = [...readzedcafeexportremovepaths(ops)]
     const subset = zedcafeexportdoctofiles(applieddoc, upsertpaths)
+    // Upsert-only after import: defer host removes until guest-dirty clears so
+    // concurrent zedsync flat-file writes are not racing export-tree deletes.
     const pushed = pushzedcafesynctoiframe(device, player, subset, {
       fromimport: true,
       partial: true,
       nextdoc: applieddoc,
-      removepaths,
+      removepaths: [],
     })
     if (pushed) {
       setzedcafeguestdirty(false)

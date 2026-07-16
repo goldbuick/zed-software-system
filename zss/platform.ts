@@ -1,10 +1,12 @@
 import type { MESSAGE } from 'zss/device/types'
 
+import agentspace from './agentspace??worker'
 import boardrunnerspace from './boardrunnerspace??worker'
 import { createmessage } from './device'
 import { sessionreset } from './device/api'
 import {
   createforward,
+  shouldforwardclienttoagent,
   shouldforwardclienttoboardrunner,
   shouldforwardclienttoserver,
   shouldforwardclienttostt,
@@ -23,13 +25,23 @@ import sttspace from './sttspace??worker'
 import stubspace from './stubspace??worker'
 import ttsspace from './ttsspace??worker'
 
+type SpokeSkip =
+  | 'boardrunner'
+  | 'platform'
+  | 'stt'
+  | 'tts'
+  | 'agent'
+  | 'wanixserver'
+
 let boardrunner: MAYBE<Worker>
 let platform: MAYBE<Worker>
 let stt: MAYBE<Worker>
 let tts: MAYBE<Worker>
+let agent: MAYBE<Worker>
 let platformhalt: MAYBE<() => void>
 let sttmessagehandler: MAYBE<(event: MessageEvent<any>) => void>
 let ttsmessagehandler: MAYBE<(event: MessageEvent<any>) => void>
+let agentmessagehandler: MAYBE<(event: MessageEvent<any>) => void>
 
 function postreadytoworker(worker: Worker) {
   const session = SOFTWARE.session()
@@ -62,6 +74,18 @@ export function ensurettsworker(): Worker | undefined {
   }
   postreadytoworker(tts)
   return tts
+}
+
+export function ensureagentworker(): Worker | undefined {
+  if (ispresent(agent)) {
+    return agent
+  }
+  agent = new agentspace({ name: 'agent' })
+  if (agentmessagehandler) {
+    agent.addEventListener('message', agentmessagehandler)
+  }
+  postreadytoworker(agent)
+  return agent
 }
 
 export function createplatform(isstub = false, climode = false) {
@@ -97,6 +121,9 @@ export function createplatform(isstub = false, climode = false) {
     if (shouldforwardclienttotts(message)) {
       ensurettsworker()?.postMessage(message)
     }
+    if (shouldforwardclienttoagent(message)) {
+      ensureagentworker()?.postMessage(message)
+    }
     if (shouldforwardclienttowanix(message)) {
       postmessagetowanixiframe(message)
       if (message.target === 'ready') {
@@ -105,10 +132,7 @@ export function createplatform(isstub = false, climode = false) {
     }
   })
 
-  function fanoutfromspoke(
-    message: MESSAGE,
-    skip?: 'boardrunner' | 'platform' | 'stt' | 'tts' | 'wanixserver',
-  ) {
+  function fanoutfromspoke(message: MESSAGE, skip?: SpokeSkip) {
     if (
       skip !== 'boardrunner' &&
       shouldforwardclienttoboardrunner(message) &&
@@ -128,6 +152,13 @@ export function createplatform(isstub = false, climode = false) {
     }
     if (skip !== 'tts' && shouldforwardclienttotts(message) && ispresent(tts)) {
       tts.postMessage(message)
+    }
+    if (
+      skip !== 'agent' &&
+      shouldforwardclienttoagent(message) &&
+      ispresent(agent)
+    ) {
+      agent.postMessage(message)
     }
     if (skip !== 'wanixserver' && shouldforwardclienttowanix(message)) {
       postmessagetowanixiframe(message)
@@ -169,6 +200,13 @@ export function createplatform(isstub = false, climode = false) {
   }
   ttsmessagehandler = ttsmessages
 
+  function agentmessages(event: MessageEvent<any>) {
+    const message = event.data as MESSAGE
+    fanoutfromspoke(message, 'agent')
+    return forward(message)
+  }
+  agentmessagehandler = agentmessages
+
   platformhalt = () => {
     disconnect()
     if (ispresent(boardrunner)) {
@@ -193,6 +231,12 @@ export function createplatform(isstub = false, climode = false) {
     }
     tts = undefined
     ttsmessagehandler = undefined
+    if (ispresent(agent)) {
+      agent.removeEventListener('message', agentmessages)
+      agent.terminate()
+    }
+    agent = undefined
+    agentmessagehandler = undefined
     setwanixmessagedeliver(null)
   }
 }
