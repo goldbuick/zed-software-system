@@ -450,27 +450,35 @@ async function continuepushafterguesttree(
   const files = ctx.files
   const options = ctx.options
   if (guestdiffersfromlastpush(guesttree)) {
-    // Keep guest writes until import lands — never fall through to host wipe.
-    setzedcafeguestdirty(true)
-    try {
-      const imported = await runzedcafeimport(device, player, guesttree)
-      if (imported) {
-        // fromimport push may own pendingsync (phase sync); only clear our guesttree.
-        if (readpendingsync()?.phase === 'guesttree') {
-          setpendingsync(null)
+    if (!guesttreestatsready(guesttree)) {
+      // Remount / not content-ready — do not import incomplete tree; fall through
+      // to host push so activate can repopulate stats.json.
+      tracezedcafeexport(
+        `sync-skip guest-not-ready memcount=${readbookcountfromexportfiles(files)}`,
+      )
+    } else {
+      // Keep guest writes until import lands — never fall through to host wipe.
+      setzedcafeguestdirty(true)
+      try {
+        const imported = await runzedcafeimport(device, player, guesttree)
+        if (imported) {
+          // fromimport push may own pendingsync (phase sync); only clear our guesttree.
+          if (readpendingsync()?.phase === 'guesttree') {
+            setpendingsync(null)
+          }
+          return
         }
+        setpendingsync(null)
+        tracezedcafeexport(
+          `sync-skip guest-dirty-import-failed memcount=${readbookcountfromexportfiles(files)}`,
+        )
+        return
+      } catch (err) {
+        const detail = err instanceof Error ? err.message : String(err)
+        setpendingsync(null)
+        tracezedcafeexport(`sync-guest-import-skip ${detail}`)
         return
       }
-      setpendingsync(null)
-      tracezedcafeexport(
-        `sync-skip guest-dirty-import-failed memcount=${readbookcountfromexportfiles(files)}`,
-      )
-      return
-    } catch (err) {
-      const detail = err instanceof Error ? err.message : String(err)
-      setpendingsync(null)
-      tracezedcafeexport(`sync-guest-import-skip ${detail}`)
-      return
     }
   }
   if (readzedcafeguestdirty()) {
@@ -650,6 +658,12 @@ function clearzedcafeexportsession() {
   stopzedcafepoll()
   clearlasthostpushdoc()
   setzedcafeguestdirty(false)
+}
+
+/** Drop in-flight export guesttree/poll work (hardreset remount). */
+export function resetzedcafeexportinflight(): void {
+  stopzedcafepoll()
+  setpendingsync(null)
 }
 
 export function readhostexportfilesfrommemory(): WANIX_ZED_CAFE_EXPORT_FILE[] {
@@ -879,6 +893,10 @@ async function continuepollaftertree(
   const differs = guestdiffersfromlastpush(tree)
   tracezedcafeexport(`poll-guest-diff=${differs}`)
   if (!differs) {
+    return
+  }
+  if (!guesttreestatsready(tree)) {
+    tracezedcafeexport('poll-skip guest-not-ready')
     return
   }
   try {

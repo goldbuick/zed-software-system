@@ -35,6 +35,7 @@ import {
   STAT_TYPE,
 } from 'zss/words/types'
 
+import { remapcodepageidsforfilenamesafety } from './bookidremap'
 import {
   memorycreateboardelement,
   memoryexportboardelement,
@@ -298,26 +299,27 @@ export function memoryimportcodepagefromjson(flat: any): MAYBE<CODE_PAGE> {
   if (!ispresent(flat)) {
     return undefined
   }
-  if (flat.board && typeof flat.board === 'object') {
-    const board = flat.board as { id?: string; objects?: unknown }
-    board.id = flat.id
+  const page = remapcodepageidsforfilenamesafety(flat)
+  if (page.board && typeof page.board === 'object') {
+    const board = page.board as { id?: string; objects?: unknown }
+    board.id = page.id
     if (!board.objects || typeof board.objects !== 'object') {
       board.objects = {}
     }
   }
   memoryboundaryalloc(
     {
-      board: flat.board,
-      object: flat.object,
-      terrain: flat.terrain,
-      charset: flat.charset,
-      palette: flat.palette,
+      board: page.board,
+      object: page.object,
+      terrain: page.terrain,
+      charset: page.charset,
+      palette: page.palette,
     },
-    flat.id,
+    page.id,
   )
   return {
-    id: flat.id,
-    code: flat.code,
+    id: page.id,
+    code: page.code,
   }
 }
 

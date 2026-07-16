@@ -37,6 +37,8 @@ jest.mock('zss/device/wanixclient/wanixzedcafe', () => ({
     generation: 1,
   }),
   resetwanixzedcafeonidle: jest.fn(),
+  resetzedcafeexportinflight: jest.fn(),
+  kickzedcafepoll: jest.fn(),
 }))
 
 const mockapplyroom = wanixserverapplyroom as jest.Mock
@@ -47,18 +49,27 @@ describe('wanix remote connect', () => {
     mockapplyroom.mockClear()
   })
 
-  it('connectwanixremote stands up task room when idle', () => {
+  it('connectwanixremote stands up task room when idle', async () => {
+    const { resetzedcafeexportinflight } = await import(
+      'zss/device/wanixclient/wanixzedcafe'
+    )
     const remote = connectwanixremote('wss://127.0.0.1:7654/', 'host')
     expect(remote.dst).toBe('host')
     expect(remote.url).toBe('wss://127.0.0.1:7654/')
     expect(readwanixremotes()).toEqual([remote])
     expect(readwanixroomconfig().mode).toBe('task')
+    expect(readwanixroomconfig().zedcafe?.cmd).toBe('zedcafe.wasm')
     expect(mockapplyroom).toHaveBeenCalled()
+    expect(resetzedcafeexportinflight).toHaveBeenCalled()
     const applied = mockapplyroom.mock.calls[0][2] as {
       mode?: string
       remotes?: { dst: string }[]
+      zedcafe?: { cmd?: string }
+      hardreset?: boolean
     }
     expect(applied.mode).toBe('task')
+    expect(applied.hardreset).toBe(true)
+    expect(applied.zedcafe?.cmd).toBe('zedcafe.wasm')
     expect(applied.remotes?.map((entry) => entry.dst)).toEqual(['host'])
   })
 

@@ -59,12 +59,14 @@ import {
   resolvevmzedcafeexportwaiter,
   resolvevmzedcafeimportwaiter,
   runzedcafeimport,
+  startzedcafepoll,
   wanixhandleexportstate,
 } from 'zss/device/wanixclient/wanixzedcafe'
 import {
   readzedcafeguestdirty,
   resetwanixzedcafesessionfortest,
   setlasthostpushdoc,
+  setpendingpollphase,
   setzedcafeguestdirty,
 } from 'zss/device/wanixclient/state'
 import { zedcafeexportfilestodoc } from 'zss/feature/wanix/wanixstateexport'
@@ -213,6 +215,48 @@ describe('zedcafe import', () => {
     await new Promise((resolve) => setTimeout(resolve, 0))
     expect(readzedcafeguestdirty()).toBe(true)
     expect(mocksync).not.toHaveBeenCalled()
+  })
+
+  it('incomplete guesttree skips import and host-pushes', async () => {
+    const hostfiles = makefiles('host')
+    setlasthostpushdoc(zedcafeexportfilestodoc(hostfiles))
+    expect(pushzedcafesynctoiframe(device, player, hostfiles)).toBe(true)
+    applyzedcafeexportfiles(device, player, [])
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(mockvmimport).not.toHaveBeenCalled()
+    expect(readzedcafeguestdirty()).toBe(false)
+    expect(mocksync).toHaveBeenCalled()
+  })
+
+  it('incomplete poll tree skips import', async () => {
+    const hostfiles = makefiles('host')
+    setlasthostpushdoc(zedcafeexportfilestodoc(hostfiles))
+    startzedcafepoll(device, player)
+    setpendingpollphase('tree')
+    applyzedcafeexportfiles(device, player, [])
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(mockvmimport).not.toHaveBeenCalled()
+    expect(readzedcafeguestdirty()).toBe(false)
+  })
+
+  it('stats-ready guesttree still imports when guest differs', async () => {
+    const hostfiles = makefiles('host')
+    const guestfiles = makefiles('guest-painted')
+    setlasthostpushdoc(zedcafeexportfilestodoc(hostfiles))
+    mockvmimport.mockImplementation(() => {
+      resolvevmzedcafeimportwaiter({
+        ok: true,
+        changed: true,
+        bookcount: 1,
+      })
+    })
+    mockvmexport.mockImplementation(() => {
+      resolvevmzedcafeexportwaiter(guestfiles)
+    })
+    expect(pushzedcafesynctoiframe(device, player, hostfiles)).toBe(true)
+    applyzedcafeexportfiles(device, player, exportfilestoguestfiles(guestfiles))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(mockvmimport).toHaveBeenCalled()
   })
 
   it('wanixhandleexportstate marks pending when idle', async () => {

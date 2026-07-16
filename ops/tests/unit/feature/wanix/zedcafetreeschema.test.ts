@@ -64,6 +64,18 @@ describe('zedcafetreeschema', () => {
     expect(kebabcasezedcafedirname('', 'sid_abc')).toBe('sid_abc')
   })
 
+  it('rejects dirname ids that contain .. or end with a dot', () => {
+    expect(() => kebabcasezedcafedirname('key', 'sid_zSjwtyZcRFN.')).toThrow(
+      /filename-safe/,
+    )
+    expect(() => kebabcasezedcafedirname('key', 'sid_a..b')).toThrow(
+      /filename-safe/,
+    )
+    expect(kebabcasezedcafedirname('key', 'sid_8FzEX_FvcYV1')).toBe(
+      'key-sid_8FzEX_FvcYV1',
+    )
+  })
+
   it('rejects paths outside schema', () => {
     const result = validatezedcafeexportpaths([
       { path: '../stats.json', bytes: encodetext('{}') },

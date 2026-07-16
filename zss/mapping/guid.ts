@@ -5,12 +5,49 @@ import { lowercase, numbers } from 'nanoid-dictionary'
 
 import { MAYBE } from './types'
 
+const SID_CHARS = customAlphabet(
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_',
+  12,
+)
+
 export function createsid() {
-  return `sid_${nanoid(12).replaceAll('-', '.')}`
+  return `sid_${SID_CHARS()}`
 }
 
 export function issid(id: MAYBE<string>): id is string {
   return typeof id === 'string' && id.startsWith('sid_')
+}
+
+/** True when `id` is safe as a single path segment / `{id}.json` stem. */
+export function isfilenamesafeid(id: string): boolean {
+  if (!id) {
+    return false
+  }
+  if (id.includes('.') || id.includes('/') || id.includes('\\')) {
+    return false
+  }
+  return true
+}
+
+/**
+ * Deterministic filename-safe rewrite: `.` → `_`.
+ * When `taken` is provided, append `_1`, `_2`, … until the candidate is unique.
+ */
+export function sanitizesidid(id: string, taken?: Set<string>): string {
+  if (isfilenamesafeid(id)) {
+    return id
+  }
+  const base = id.replaceAll('.', '_')
+  if (!taken) {
+    return base
+  }
+  let candidate = base
+  let n = 0
+  while (taken.has(candidate)) {
+    n += 1
+    candidate = `${base}_${n}`
+  }
+  return candidate
 }
 
 const JUST_NUMBER_CHARS = customAlphabet(numbers, 4)

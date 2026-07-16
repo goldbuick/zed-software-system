@@ -346,11 +346,11 @@
         }
       },
       {
-        "id": "sid_8FzEX.FvcYV1",
+        "id": "sid_8FzEX_FvcYV1",
         "code": "@key\n@cycle 1\n@isitem\n@ispushable\n@char 12\n#end\n:touch\n#set p1 \"#$%@!\"\n#if color is 9 set p1 blue\n#if color is 10 set p1 green\n#if color is 11 set p1 cyan\n#if color is 12 set p1 red\n#if color is 13 set p1 purple\n#if color is 14 set p1 yellow\n#if color is 15 set p1 white\n#if \"key$color\" do\n You already have a $p1 key!\n #bgplay sc-c\n #end\n#else do\n You now have the $p1 key.\n #set \"key$color\"\n #bgplay t+cegcegceg+sc\n #die \n#done",
         "object": {
           "item": 1,
-          "id": "sid_8FzEX.FvcYV1",
+          "id": "sid_8FzEX_FvcYV1",
           "name": "key",
           "pushable": 1,
           "char": 12,
@@ -367,10 +367,10 @@
         }
       },
       {
-        "id": "sid_eNpw0.AFierq",
+        "id": "sid_eNpw0_AFierq",
         "code": "@door\n@isitem\n@char 10\n@displaycolor white\n#set displaybg color % 8\n#end\n:touch\n#set p1 \"#$$%@!\"\n#if color is 9 set p1 blue\n#if color is 10 set p1 green\n#if color is 11 set p1 cyan\n#if color is 12 set p1 red\n#if color is 13 set p1 purple\n#if color is 14 set p1 yellow\n#if color is 15 set p1 white\n#if \"key$color\" do\n The $p1 door is now open.\n #clear \"key$color\"\n #bgplay tcgbcgb+ic\n #die\n#else do\n The $p1 door is locked!\n #bgplay t--gc\n#done",
         "object": {
-          "id": "sid_eNpw0.AFierq",
+          "id": "sid_eNpw0_AFierq",
           "name": "door",
           "char": 10,
           "code": "@door\n@isitem\n@char 10\n@displaycolor white\n#set displaybg color % 8\n#end\n:touch\n#set p1 \"#$$%@!\"\n#if color is 9 set p1 blue\n#if color is 10 set p1 green\n#if color is 11 set p1 cyan\n#if color is 12 set p1 red\n#if color is 13 set p1 purple\n#if color is 14 set p1 yellow\n#if color is 15 set p1 white\n#if \"key$color\" do\n The $p1 door is now open.\n #clear \"key$color\"\n #bgplay tcgbcgb+ic\n #die\n#else do\n The $p1 door is locked!\n #bgplay t--gc\n#done\n",
@@ -608,10 +608,10 @@
         }
       },
       {
-        "id": "sid_wG.XV_VD57jG",
+        "id": "sid_wG_XV_VD57jG",
         "code": "@head\n@char 233\n@cycle 2\n@isbreakable\n:think\n?rnd\n#think\n:touch\n#shoot seek\n#think\n:shot\n:bombed\n#die",
         "object": {
-          "id": "sid_wG.XV_VD57jG",
+          "id": "sid_wG_XV_VD57jG",
           "name": "head",
           "code": "@head\n"
         },
@@ -733,10 +733,10 @@
         }
       },
       {
-        "id": "sid_ZQLMQH7oD.9v",
+        "id": "sid_ZQLMQH7oD_9v",
         "code": "@blinkwall\n@cycle 1\n@char 206\n@p1 range;starting time\n@p2 range;period\n@shootx number -1 1\n@shooty number -1 1\n:think \n#if p3 is 0 do\n #set p3 p1 + 1\n#else if p3 is 1 do\n ' either clear or shoot\n #if shooty is 0 do\n  #set p4 blinkew\n #else do\n  #set p4 blinkns\n #done\n #set p5 thisx + shootx\n #set p6 thisy + shooty\n #set p7 p5\n #set p8 p6\n ' clear blink walls\n #while any at p5 p6 \"$color\" \"$p4\" do\n  #put at p5 p6 empty\n  #give p5 shootx\n  #give p6 shooty\n #done \n ' write blink walls\n #if p5 is p7 and p6 is p8 do\n  #while not blocked at p5 p6 do\n   #put at p5 p6 \"$color\" \"$p4\"\n   #give p5 shootx\n   #give p6 shooty\n  #done\n  #send at p5 p6 shot\n #done\n #set p3 p2 * 2 + 1\n#else do\n #take p3\n#done\n#idle\n#think",
         "object": {
-          "id": "sid_ZQLMQH7oD.9v",
+          "id": "sid_ZQLMQH7oD_9v",
           "name": "blinkwall",
           "char": 206,
           "code": "@blinkwall\n@cycle 1\n@char 206\n@p1 range;starting time\n@p2 range;period\n@shootx number\n@shooty number\n:think \n#if p3 is 0 do\n #give p3\n#else if p3 is 1 do\n ' either clear or shoot\n #if shootx not equal 0 do\n  #set p4 blinkew\n #else do\n  #set p4 blinkns\n #done\n #set p5 thisx + shootx\n #set p6 thisy + shooty\n #set p7 p5\n #set p8 p6\n ' clear blink walls\n #while any at p5 p6 \"$color\" \"$p4\" do\n  #put at p5 p6 empty\n  #give p5 shootx\n  #give p6 shooty\n #done \n ' write blink walls\n #if p5 is p7 and p6 is p8 do\n  #while not blocked at p5 p6 do\n   #put at p5 p6 \"$color\" \"$p4\"\n   #give p5 shootx\n   #give p6 shooty\n  #done\n #done\n #set p3 p2 * 2 + 1\n#else do\n #take p3\n#done\n#idle\n#think",
@@ -928,10 +928,10 @@
         }
       },
       {
-        "id": "sid_dC.QxbuKO59P",
+        "id": "sid_dC_QxbuKO59P",
         "code": "@bombsmoke\n@isghost\n@cycle 1\n@char 176\n@color white\n@bg onclear\n#char pick 176 177 178\n#color pick dkgrey yellow red ltgrey\n#die",
         "object": {
-          "id": "sid_dC.QxbuKO59P",
+          "id": "sid_dC_QxbuKO59P",
           "code": "@bombsmoke\n@isghost\n@cycle 1\n@char 176\n@color white\n@bg onclear\n#char pick 176 177 178\n#color pick dkgrey yellow red ltgrey\n#die",
           "name": "bombsmoke",
           "collision": 4,
@@ -951,7 +951,7 @@
         }
       },
       {
-        "id": "sid_.HhnwpAAMwgO",
+        "id": "sid__HhnwpAAMwgO",
         "code": "@board title\n@exitnorth room1x0\n@exitsouth room1x2\n@exitwest room0x1\n@exiteast room2x1\n@startx 30\n@starty 11",
         "board": {
           "terrain": [
@@ -23807,7 +23807,7 @@
           "exiteast": "room2x1",
           "startx": 30,
           "starty": 11,
-          "id": "sid_.HhnwpAAMwgO",
+          "id": "sid__HhnwpAAMwgO",
           "name": "title",
           "drawneedfull": false,
           "drawlastfp": {
@@ -26849,7 +26849,7 @@
         }
       },
       {
-        "id": "sid_ztrEjcBUS.HF",
+        "id": "sid_ztrEjcBUS_HF",
         "code": "@board room1x0\n@exitsouth title",
         "board": {
           "terrain": [
@@ -32678,7 +32678,7 @@
             }
           },
           "exitsouth": "title",
-          "id": "sid_ztrEjcBUS.HF",
+          "id": "sid_ztrEjcBUS_HF",
           "name": "room1x0"
         },
         "stats": {
@@ -50975,7 +50975,7 @@
         }
       },
       {
-        "id": "sid_rl.Yne_7_Fg9",
+        "id": "sid_rl_Yne_7_Fg9",
         "code": "@board room2x2\n@exitwest room1x2\n@exitnorth room2x1\n@isdark",
         "board": {
           "terrain": [
@@ -56997,11 +56997,11 @@
               "sender": "sid_RgJAV8CzKUW9",
               "player": "pid_4783_qhlmnjzhnf5jfrh7"
             },
-            "sid_D13V0.4E_hZa": {
+            "sid_D13V0_4E_hZa": {
               "x": 12,
               "y": 12,
               "kind": "lantern",
-              "id": "sid_D13V0.4E_hZa",
+              "id": "sid_D13V0_4E_hZa",
               "lx": 12,
               "ly": 12
             },
@@ -57017,7 +57017,7 @@
           "exitwest": "room1x2",
           "exitnorth": "room2x1",
           "isdark": 1,
-          "id": "sid_rl.Yne_7_Fg9",
+          "id": "sid_rl_Yne_7_Fg9",
           "name": "room2x2"
         },
         "stats": {
@@ -64647,9 +64647,9 @@
           "under": [],
           "tickers": [],
           "boardname": "room1x2",
-          "exiteast": "sid_rl.Yne_7_Fg9",
+          "exiteast": "sid_rl_Yne_7_Fg9",
           "exitwest": "",
-          "exitnorth": "sid_.HhnwpAAMwgO",
+          "exitnorth": "sid__HhnwpAAMwgO",
           "exitsouth": "",
           "exitne": "sid_wXwcdovEJuFk",
           "exitnw": "sid_rU21D16c_fTP",
@@ -64661,12 +64661,12 @@
           }
         },
         "pid_7170_a2vd3bdyu2njnuqi": {
-          "id": "pid_7170_a2vd3bdyu2njnuqi|sid_.HhnwpAAMwgO|m:pid_7170_a2vd3bdyu2njnuqi:sid_.HhnwpAAMwgO:3|bright|m:pid_7170_a2vd3bdyu2njnuqi:sid_.HhnwpAAMwgO:4|pid_7170_a2vd3bdyu2njnuqi",
-          "board": "sid_.HhnwpAAMwgO",
+          "id": "pid_7170_a2vd3bdyu2njnuqi|sid__HhnwpAAMwgO|m:pid_7170_a2vd3bdyu2njnuqi:sid__HhnwpAAMwgO:3|bright|m:pid_7170_a2vd3bdyu2njnuqi:sid__HhnwpAAMwgO:4|pid_7170_a2vd3bdyu2njnuqi",
+          "board": "sid__HhnwpAAMwgO",
           "boardname": "title",
           "layers": [
             {
-              "id": "t:pid_7170_a2vd3bdyu2njnuqi:sid_.HhnwpAAMwgO:0",
+              "id": "t:pid_7170_a2vd3bdyu2njnuqi:sid__HhnwpAAMwgO:0",
               "type": 1,
               "width": 60,
               "height": 25,
@@ -70680,11 +70680,11 @@
               ]
             },
             {
-              "id": "pid_7170_a2vd3bdyu2njnuqi:sid_.HhnwpAAMwgO:1",
+              "id": "pid_7170_a2vd3bdyu2njnuqi:sid__HhnwpAAMwgO:1",
               "type": 2,
               "sprites": [
                 {
-                  "id": "sprites:pid_7170_a2vd3bdyu2njnuqi:sid_.HhnwpAAMwgO:1:pid_7170_a2vd3bdyu2njnuqi",
+                  "id": "sprites:pid_7170_a2vd3bdyu2njnuqi:sid__HhnwpAAMwgO:1:pid_7170_a2vd3bdyu2njnuqi",
                   "x": 13,
                   "y": 4,
                   "char": 2,
@@ -70696,7 +70696,7 @@
               ]
             },
             {
-              "id": "d:pid_7170_a2vd3bdyu2njnuqi:sid_.HhnwpAAMwgO:2",
+              "id": "d:pid_7170_a2vd3bdyu2njnuqi:sid__HhnwpAAMwgO:2",
               "type": 3,
               "width": 60,
               "height": 25,
@@ -72204,13 +72204,13 @@
               ]
             },
             {
-              "id": "m:pid_7170_a2vd3bdyu2njnuqi:sid_.HhnwpAAMwgO:3",
+              "id": "m:pid_7170_a2vd3bdyu2njnuqi:sid__HhnwpAAMwgO:3",
               "type": 4,
               "mime": "text/mood",
               "media": "bright"
             },
             {
-              "id": "m:pid_7170_a2vd3bdyu2njnuqi:sid_.HhnwpAAMwgO:4",
+              "id": "m:pid_7170_a2vd3bdyu2njnuqi:sid__HhnwpAAMwgO:4",
               "type": 4,
               "mime": "text/players",
               "media": "pid_7170_a2vd3bdyu2njnuqi"
@@ -72254,11 +72254,11 @@
           ],
           "exiteast": "sid_wXwcdovEJuFk",
           "exitwest": "sid_rU21D16c_fTP",
-          "exitnorth": "sid_ztrEjcBUS.HF",
+          "exitnorth": "sid_ztrEjcBUS_HF",
           "exitsouth": "sid_eAR_QUoJhqJQ",
           "exitne": "",
           "exitnw": "",
-          "exitse": "sid_rl.Yne_7_Fg9",
+          "exitse": "sid_rl_Yne_7_Fg9",
           "exitsw": "",
           "over": [],
           "under": [],
@@ -72326,7 +72326,7 @@
         "ps": 96557,
         "es": 0
       },
-      "sid_D13V0.4E_hZa_chip": {
+      "sid_D13V0_4E_hZa_chip": {
         "lb": [
           [
             "restart",
@@ -72394,7 +72394,7 @@
         "entery": 11,
         "deaths": 0,
         "highscore": 0,
-        "board": "sid_.HhnwpAAMwgO",
+        "board": "sid__HhnwpAAMwgO",
         "hint": 1,
         "camera": "far",
         "health": 100,

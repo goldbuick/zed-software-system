@@ -25,6 +25,7 @@ import { registerwanixsessioncloseprune } from 'zss/device/wanixclient/wanixbrid
 import {
   kickzedcafepoll,
   readwanixbootzedcafestate,
+  resetzedcafeexportinflight,
   resetwanixzedcafeonidle,
 } from 'zss/device/wanixclient/wanixzedcafe'
 import type { WanixTaskDriver } from 'zss/feature/wanix/wanixelements.d.ts'
@@ -63,6 +64,7 @@ export function readwanixroomconfig(): WanixRoomConfig {
 export function applywanixroom(config: WanixRoomConfig): void {
   if (config.hardreset) {
     clearlasthostpushdoc()
+    resetzedcafeexportinflight()
   }
   setpendingapplyconfig(config)
   setwanixroomconfig(config)
@@ -251,6 +253,7 @@ export function connectwanixremote(url: string, dst?: string): WanixRemoteSpec {
     remote,
   ]
   if (current.mode === 'idle') {
+    // Cold start: task room + zedcafe export (no #wanix vm required).
     setwanixroomconfig({ ...current, remotes })
     ensurewanixtaskroom(SOFTWARE, registerreadplayer())
     return remote

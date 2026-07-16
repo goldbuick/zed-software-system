@@ -473,7 +473,8 @@ async function collectexporttreefiles(
   const files: WanixZedCafeGuestFile[] = []
 
   // Leaf export files are always `*.json`. Directory segments may contain `.`
-  // inside page/book ids (e.g. `key-sid_8FzEX.FvcYV1`) — those must be walked.
+  // inside legacy page/book ids (e.g. `key-sid_8FzEX.FvcYV1`) — those must be
+  // walked. New ids from createsid() are underscore-safe only.
   function isleafpath(rel: string): boolean {
     const name = rel.split('/').pop() ?? rel
     return name.endsWith('.json')

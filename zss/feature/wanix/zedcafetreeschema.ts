@@ -55,6 +55,11 @@ export function kebabcasezedcafedirname(
   name: string | undefined,
   id: string,
 ): string {
+  if (id.includes('..') || id.endsWith('.')) {
+    throw new Error(
+      `zedcafe dirname id is not filename-safe (contains ".." or ends with "."): ${id}`,
+    )
+  }
   const portion = kebabcasezedcafenameportion(name)
   if (!portion) {
     return id
