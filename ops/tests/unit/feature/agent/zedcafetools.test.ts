@@ -100,6 +100,10 @@ describe('agent preset + tool names', () => {
   it('recognizes tool names', () => {
     expect(isagenttoolname(AGENT_TOOL_LIST_ZEDCAFE)).toBe(true)
     expect(isagenttoolname(AGENT_TOOL_RUN_CLI_COMMAND)).toBe(true)
+    expect(isagenttoolname('fill_terrain')).toBe(true)
+    expect(isagenttoolname('replace_kind')).toBe(true)
+    expect(isagenttoolname('read_player_state')).toBe(true)
+    expect(isagenttoolname('summarize_board')).toBe(true)
     expect(isagenttoolname('delete_everything')).toBe(false)
   })
 

@@ -34,6 +34,12 @@ export function handleagentask(device: DEVICE, message: MESSAGE): void {
           ontool: (name) => {
             feedback.tool(name)
           },
+          onthinkingstart: () => {
+            feedback.startthinking()
+          },
+          onthinkingstop: () => {
+            feedback.stopthinking()
+          },
         },
         preset,
       )

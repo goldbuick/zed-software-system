@@ -4,10 +4,15 @@ import {
   agentwritezedcafefile,
 } from 'zss/feature/agent/agentio'
 import {
+  buildkindcatalogfrombookstats,
+  type AGENT_KIND_REF,
+} from 'zss/feature/agent/agentcontext'
+import { compactagentreadresult } from 'zss/feature/agent/agentreadcompact'
+import {
   kickzedcafepoll,
   runzedcafeagentimport,
 } from 'zss/device/wanixclient/wanixzedcafe'
-import { isallowedexportpath } from 'zss/feature/wanix/zedcafetreeschema'
+import { isallowedexportpath, kebabcasezedcafedirname } from 'zss/feature/wanix/zedcafetreeschema'
 import { BOARD_SIZE } from 'zss/memory/types'
 
 const encoder = new TextEncoder()
@@ -34,6 +39,10 @@ export function clearagentpendingwritesfortest() {
   clearpendingwrites()
 }
 
+export function agentpendingwritecount(): number {
+  return pendingwrites.length
+}
+
 function utf8tobytes(text: string): number[] {
   return Array.from(encoder.encode(text))
 }
@@ -43,7 +52,85 @@ function bytestoutf8(bytes: number[] | Uint8Array): string {
   return decoder.decode(u8)
 }
 
-function validatewritepayload(path: string, content: string): string | undefined {
+export function readagentpendingbytes(path: string): Uint8Array | undefined {
+  const hit = pendingwrites.find((row) => row.path === path)
+  return hit?.bytes
+}
+
+export async function agentqueuezedcafewrite(
+  player: string,
+  path: string,
+  content: string,
+): Promise<AGENT_TOOL_RESULT> {
+  return agentwritezedcafe(player, path, content)
+}
+
+function readbookdirfrompath(path: string): string | undefined {
+  const parts = path.split('/')
+  return parts[0] || undefined
+}
+
+async function loadkindcatalogforpath(
+  player: string,
+  path: string,
+): Promise<AGENT_KIND_REF[]> {
+  const bookDir = readbookdirfrompath(path)
+  if (!bookDir) {
+    return []
+  }
+  const files = await agentfetchzedcafetree(player)
+  const hit = files.find((file) => file.path === `${bookDir}/stats.json`)
+  if (!hit) {
+    return []
+  }
+  let bookstats: unknown
+  try {
+    bookstats = JSON.parse(bytestoutf8(hit.data))
+  } catch {
+    return []
+  }
+  return buildkindcatalogfrombookstats(bookDir, bookstats)
+}
+
+export function validatekindagainstcatalog(
+  kind: string,
+  expecttype: 'terrain' | 'object',
+  catalog: AGENT_KIND_REF[],
+): string | undefined {
+  const name = String(kind ?? '').trim()
+  if (!name) {
+    return undefined
+  }
+  const known = catalog.filter((row) => row.type === expecttype)
+  if (known.some((row) => row.name === name)) {
+    return undefined
+  }
+  const list = known.map((row) => row.name).slice(0, 30).join(', ')
+  return `unknown kind "${name}"; known ${expecttype}: ${list || '(none)'}`
+}
+
+function collectkindsfromterrain(parsed: unknown): string[] {
+  if (!Array.isArray(parsed)) {
+    return []
+  }
+  const set = new Set<string>()
+  for (let i = 0; i < parsed.length; ++i) {
+    const cell = parsed[i]
+    if (cell && typeof cell === 'object' && !Array.isArray(cell)) {
+      const kind = (cell as { kind?: unknown }).kind
+      if (typeof kind === 'string' && kind.length > 0) {
+        set.add(kind)
+      }
+    }
+  }
+  return Array.from(set)
+}
+
+async function validatewritepayload(
+  player: string,
+  path: string,
+  content: string,
+): Promise<string | undefined> {
   if (!isallowedexportpath(path)) {
     return `path outside schema: ${path}`
   }
@@ -57,6 +144,30 @@ function validatewritepayload(path: string, content: string): string | undefined
     if (!Array.isArray(parsed) || parsed.length !== BOARD_SIZE) {
       return `terrain.json must be an array of length ${BOARD_SIZE}`
     }
+    const catalog = await loadkindcatalogforpath(player, path)
+    if (catalog.length > 0) {
+      const kinds = collectkindsfromterrain(parsed)
+      for (let i = 0; i < kinds.length; ++i) {
+        const err = validatekindagainstcatalog(kinds[i]!, 'terrain', catalog)
+        if (err) {
+          return err
+        }
+      }
+    }
+  }
+  if (path.includes('/board/objects/') && path.endsWith('.json')) {
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      const kind = (parsed as { kind?: unknown }).kind
+      if (typeof kind === 'string' && kind.length > 0) {
+        const catalog = await loadkindcatalogforpath(player, path)
+        if (catalog.length > 0) {
+          const err = validatekindagainstcatalog(kind, 'object', catalog)
+          if (err) {
+            return err
+          }
+        }
+      }
+    }
   }
   return undefined
 }
@@ -64,10 +175,45 @@ function validatewritepayload(path: string, content: string): string | undefined
 export async function agentlistzedcafe(
   player: string,
   prefix = '',
+  mode = '',
 ): Promise<AGENT_TOOL_RESULT> {
   try {
     const files = await agentfetchzedcafetree(player)
     const pref = String(prefix ?? '')
+    if (mode === 'kinds') {
+      let bookDir = pref.replace(/\/$/, '').split('/')[0] ?? ''
+      if (!bookDir) {
+        const roothit = files.find((file) => file.path === 'stats.json')
+        if (roothit) {
+          try {
+            const root = JSON.parse(bytestoutf8(roothit.data)) as {
+              books?: { id: string; name?: string }[]
+            }
+            const book = root.books?.[0]
+            if (book) {
+              bookDir = kebabcasezedcafedirname(book.name, book.id)
+            }
+          } catch {
+            bookDir = ''
+          }
+        }
+      }
+      if (!bookDir) {
+        return { ok: false, error: 'no bookDir for kinds listing' }
+      }
+      const stats = files.find((file) => file.path === `${bookDir}/stats.json`)
+      if (!stats) {
+        return { ok: false, error: `missing ${bookDir}/stats.json` }
+      }
+      let bookstats: unknown
+      try {
+        bookstats = JSON.parse(bytestoutf8(stats.data))
+      } catch {
+        return { ok: false, error: 'book stats.json is not valid JSON' }
+      }
+      const kinds = buildkindcatalogfrombookstats(bookDir, bookstats)
+      return { ok: true, result: { bookDir, kinds, count: kinds.length } }
+    }
     const paths = files
       .map((file) => file.path)
       .filter((path) => isallowedexportpath(path))
@@ -92,7 +238,10 @@ export async function agentreadzedcafe(
   }
   try {
     const files = await agentfetchzedcafetree(player)
-    const hit = files.find((file) => file.path === relpath)
+    const pending = readagentpendingbytes(relpath)
+    const hit = pending
+      ? { path: relpath, data: pending }
+      : files.find((file) => file.path === relpath)
     if (!hit) {
       return { ok: false, error: `file not found: ${relpath}` }
     }
@@ -103,14 +252,11 @@ export async function agentreadzedcafe(
     } catch {
       json = undefined
     }
+    const bytes =
+      hit.data instanceof Uint8Array ? hit.data.length : hit.data.length
     return {
       ok: true,
-      result: {
-        path: relpath,
-        text,
-        json,
-        bytes: hit.data.length,
-      },
+      result: compactagentreadresult(relpath, text, json, bytes),
     }
   } catch (err) {
     return {
@@ -127,7 +273,7 @@ export async function agentwritezedcafe(
 ): Promise<AGENT_TOOL_RESULT> {
   const relpath = String(path ?? '')
   const body = String(content ?? '')
-  const err = validatewritepayload(relpath, body)
+  const err = await validatewritepayload(player, relpath, body)
   if (err) {
     return { ok: false, error: err }
   }
@@ -143,7 +289,11 @@ export async function agentwritezedcafe(
     }
     return {
       ok: true,
-      result: { path: relpath, bytes: bytes.length, pending: pendingwrites.length },
+      result: {
+        path: relpath,
+        bytes: bytes.length,
+        pending: pendingwrites.length,
+      },
     }
   } catch (error) {
     return {
@@ -158,7 +308,10 @@ export async function agentapplyzedcafebatch(
 ): Promise<AGENT_TOOL_RESULT> {
   if (pendingwrites.length === 0) {
     kickzedcafepoll('file-change')
-    return { ok: true, result: { applied: 0, note: 'no pending writes; poll kicked' } }
+    return {
+      ok: true,
+      result: { applied: 0, note: 'no pending writes; poll kicked' },
+    }
   }
   const files = pendingwrites.map((row) => ({
     path: row.path,
@@ -185,9 +338,27 @@ export async function agentapplyzedcafebatch(
   }
 }
 
+/** Sync path/schema checks only (no kind catalog). */
 export function agentvalidatewritepayloadfortest(
   path: string,
   content: string,
 ): string | undefined {
-  return validatewritepayload(path, content)
+  if (!isallowedexportpath(path)) {
+    return `path outside schema: ${path}`
+  }
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(content)
+  } catch {
+    return `invalid JSON for ${path}`
+  }
+  if (path.endsWith('/board/terrain.json') || path === 'board/terrain.json') {
+    if (!Array.isArray(parsed) || parsed.length !== BOARD_SIZE) {
+      return `terrain.json must be an array of length ${BOARD_SIZE}`
+    }
+  }
+  return undefined
 }
+
+export { validatekindagainstcatalog as agentvalidatekindagainstcatalogfortest }
+export { loadkindcatalogforpath as agentloadkindcatalogforpath }

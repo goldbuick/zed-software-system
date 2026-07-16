@@ -161,7 +161,7 @@ export async function agentgeneratestep(
   const output = await pipe(messages as never, {
     max_new_tokens: MAX_NEW_TOKENS,
     do_sample: true,
-    temperature: 1.0,
+    temperature: 0.3,
     top_p: 0.95,
     top_k: 64,
     tools: AGENT_TOOL_SCHEMAS as unknown as never[],

@@ -31,11 +31,40 @@ describe('agentfeedback', () => {
 
   it('maps tool names to human statuses', () => {
     expect(humanizeagenttoolname('read_zedcafe')).toBe('reading board')
-    expect(humanizeagenttoolname('write_zedcafe')).toBe('writing terrain')
+    expect(humanizeagenttoolname('write_zedcafe')).toBe('writing files')
+    expect(humanizeagenttoolname('fill_terrain')).toBe('painting terrain')
+    expect(humanizeagenttoolname('replace_kind')).toBe('replacing kind')
+    expect(humanizeagenttoolname('summarize_board')).toBe('summarizing board')
+    expect(humanizeagenttoolname('read_player_state')).toBe('reading player')
     expect(humanizeagenttoolname('apply_zedcafe_batch')).toBe(
       'applying changes',
     )
     expect(humanizeagenttoolname('run_cli_command')).toBe('running command')
+  })
+
+  it('pulses thinking on workstatus only without chat spam', () => {
+    jest.useFakeTimers()
+    const feedback = createagentfeedback(
+      { emit: jest.fn() } as never,
+      'pid_1',
+    )
+    feedback.startthinking()
+    expect(mockworkstatus).toHaveBeenCalledWith(
+      expect.anything(),
+      'pid_1',
+      'agent thinking…',
+    )
+    expect(mockapichat).not.toHaveBeenCalled()
+    mockworkstatus.mockClear()
+    jest.advanceTimersByTime(4000)
+    expect(mockworkstatus).toHaveBeenCalledWith(
+      expect.anything(),
+      'pid_1',
+      'agent thinking… 4s',
+    )
+    expect(mockapichat).not.toHaveBeenCalled()
+    feedback.stopthinking()
+    jest.useRealTimers()
   })
 
   it('detects download percentages for workstatus-only path', () => {

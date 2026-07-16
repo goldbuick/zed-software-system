@@ -5,6 +5,10 @@ export const AGENT_TOOL_READ_ZEDCAFE = 'read_zedcafe'
 export const AGENT_TOOL_WRITE_ZEDCAFE = 'write_zedcafe'
 export const AGENT_TOOL_APPLY_ZEDCAFE_BATCH = 'apply_zedcafe_batch'
 export const AGENT_TOOL_RUN_CLI_COMMAND = 'run_cli_command'
+export const AGENT_TOOL_FILL_TERRAIN = 'fill_terrain'
+export const AGENT_TOOL_REPLACE_KIND = 'replace_kind'
+export const AGENT_TOOL_READ_PLAYER_STATE = 'read_player_state'
+export const AGENT_TOOL_SUMMARIZE_BOARD = 'summarize_board'
 
 export type AGENT_TOOL_NAME =
   | typeof AGENT_TOOL_LIST_ZEDCAFE
@@ -12,6 +16,10 @@ export type AGENT_TOOL_NAME =
   | typeof AGENT_TOOL_WRITE_ZEDCAFE
   | typeof AGENT_TOOL_APPLY_ZEDCAFE_BATCH
   | typeof AGENT_TOOL_RUN_CLI_COMMAND
+  | typeof AGENT_TOOL_FILL_TERRAIN
+  | typeof AGENT_TOOL_REPLACE_KIND
+  | typeof AGENT_TOOL_READ_PLAYER_STATE
+  | typeof AGENT_TOOL_SUMMARIZE_BOARD
 
 export type AGENT_TOOL_CALL = {
   name: AGENT_TOOL_NAME
@@ -25,14 +33,17 @@ export const AGENT_TOOL_SCHEMAS = [
     function: {
       name: AGENT_TOOL_LIST_ZEDCAFE,
       description:
-        'List allowlisted zedcafe JSON paths under an optional prefix. Use book prefix to find kind pages (*/object/element.json, */terrain/element.json) and boards.',
+        'List allowlisted zedcafe paths, or mode=kinds for object/terrain kind catalog from book stats.',
       parameters: {
         type: 'object',
         properties: {
           prefix: {
             type: 'string',
-            description:
-              'Path prefix filter, e.g. coolregionsbow-…/ or coolregionsbow-…/title-',
+            description: 'Path or bookDir prefix filter',
+          },
+          mode: {
+            type: 'string',
+            description: 'Use "kinds" to return kind catalog instead of paths',
           },
         },
       },
@@ -43,14 +54,13 @@ export const AGENT_TOOL_SCHEMAS = [
     function: {
       name: AGENT_TOOL_READ_ZEDCAFE,
       description:
-        'Read one allowlisted zedcafe JSON file. Prefer {bookDir}/stats.json for the kind catalog (pages type object|terrain); read page stats.json or object|terrain/element.json for kind behavior.',
+        'Read one zedcafe JSON file (terrain returns summary only). Prefer book stats for kinds; use fill_terrain to edit boards.',
       parameters: {
         type: 'object',
         properties: {
           path: {
             type: 'string',
-            description:
-              'Relative export path, e.g. stats.json or bookDir/stats.json',
+            description: 'Relative export path',
           },
         },
         required: ['path'],
@@ -62,7 +72,7 @@ export const AGENT_TOOL_SCHEMAS = [
     function: {
       name: AGENT_TOOL_WRITE_ZEDCAFE,
       description:
-        'Write one allowlisted zedcafe JSON file. Prefer for terrain/objects; call apply_zedcafe_batch after.',
+        'Write one allowlisted JSON file (objects/flags). Prefer fill_terrain for boards. Call apply_zedcafe_batch after.',
       parameters: {
         type: 'object',
         properties: {
@@ -79,9 +89,75 @@ export const AGENT_TOOL_SCHEMAS = [
   {
     type: 'function',
     function: {
+      name: AGENT_TOOL_FILL_TERRAIN,
+      description:
+        'Fill a board terrain.json with a kind (full board or x,y,w,h rect). Prefer over rewriting full arrays.',
+      parameters: {
+        type: 'object',
+        properties: {
+          path: {
+            type: 'string',
+            description: 'board/terrain.json path or board page prefix',
+          },
+          kind: { type: 'string', description: 'Terrain kind page name' },
+          x: { type: 'number' },
+          y: { type: 'number' },
+          w: { type: 'number' },
+          h: { type: 'number' },
+        },
+        required: ['path', 'kind'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: AGENT_TOOL_REPLACE_KIND,
+      description: 'Replace all terrain cells of one kind with another on a board.',
+      parameters: {
+        type: 'object',
+        properties: {
+          path: { type: 'string' },
+          from: { type: 'string' },
+          to: { type: 'string' },
+        },
+        required: ['path', 'from', 'to'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: AGENT_TOOL_SUMMARIZE_BOARD,
+      description:
+        'Kind histogram + ASCII map of a board terrain.json (verify after apply).',
+      parameters: {
+        type: 'object',
+        properties: {
+          path: { type: 'string' },
+        },
+        required: ['path'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: AGENT_TOOL_READ_PLAYER_STATE,
+      description:
+        'Read current player book/board/xy and kind catalog from zedcafe export (use instead of #query).',
+      parameters: {
+        type: 'object',
+        properties: {},
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: AGENT_TOOL_APPLY_ZEDCAFE_BATCH,
       description:
-        'Apply pending zedcafe writes into sim via import poll. Call after write_zedcafe.',
+        'Apply pending zedcafe writes into sim. Call after write/fill/replace.',
       parameters: {
         type: 'object',
         properties: {},
@@ -93,13 +169,13 @@ export const AGENT_TOOL_SCHEMAS = [
     function: {
       name: AGENT_TOOL_RUN_CLI_COMMAND,
       description:
-        'Run one ZSS CLI line as the human player (permissions apply). Prefer for #query, #wanix, #set.',
+        'Run one ZSS CLI line as the player (#set, #give, #wanix). No stdout — use read_player_state for location.',
       parameters: {
         type: 'object',
         properties: {
           command: {
             type: 'string',
-            description: 'CLI line, e.g. #set ammo 500 or #query …',
+            description: 'CLI line, e.g. #set ammo 500',
           },
         },
         required: ['command'],
@@ -114,6 +190,10 @@ export function isagenttoolname(name: string): name is AGENT_TOOL_NAME {
     name === AGENT_TOOL_READ_ZEDCAFE ||
     name === AGENT_TOOL_WRITE_ZEDCAFE ||
     name === AGENT_TOOL_APPLY_ZEDCAFE_BATCH ||
-    name === AGENT_TOOL_RUN_CLI_COMMAND
+    name === AGENT_TOOL_RUN_CLI_COMMAND ||
+    name === AGENT_TOOL_FILL_TERRAIN ||
+    name === AGENT_TOOL_REPLACE_KIND ||
+    name === AGENT_TOOL_READ_PLAYER_STATE ||
+    name === AGENT_TOOL_SUMMARIZE_BOARD
   )
 }

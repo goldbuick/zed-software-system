@@ -35,7 +35,7 @@ export function handleworkstatus(_device: DEVICE, message: MESSAGE): void {
     clearTimeout(readworkstatustimer())
     useTape.setState({ workstatus: message.data })
     if (message.data) {
-      const holdms = /agent dl/i.test(message.data) ? 15_000 : 2_000
+      const holdms = /^agent\b/i.test(message.data) ? 15_000 : 2_000
       setworkstatustimer(
         setTimeout(() => useTape.setState({ workstatus: '' }), holdms),
       )

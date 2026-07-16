@@ -5,19 +5,37 @@ import {
   agentgeneraterequest,
 } from 'zss/feature/agent/agentclient'
 import {
+  type AGENT_KIND_REF,
+  buildagentsessioncontextfromfiles,
+} from 'zss/feature/agent/agentcontext'
+import { agentfetchzedcafetree } from 'zss/feature/agent/agentio'
+import {
   AGENT_LLM_DEFAULT_PRESET,
   type AGENT_LLM_PRESET,
   AGENT_PLAYER_PRESET_FLAG,
   normalizeagentllmpreset,
 } from 'zss/feature/agent/agentpreset'
+import { truncateagenttoolhistorycontent } from 'zss/feature/agent/agentreadcompact'
 import { readagentsystemprompt } from 'zss/feature/agent/agentsystemprompt'
 import { executeagenttoolcall } from 'zss/feature/agent/toolexecutor'
+import {
+  agentapplyzedcafebatch,
+  agentpendingwritecount,
+} from 'zss/feature/agent/zedcafetools'
 import { write } from 'zss/feature/writeui'
 import { memoryreadflags } from 'zss/memory/flags'
 
-export const MAX_AGENT_REPROMPT = 6
+export const MAX_AGENT_REPROMPT = 12
 
-let runningsession: { player: string; preset: AGENT_LLM_PRESET } | null = null
+type AGENT_SESSION = {
+  player: string
+  preset: AGENT_LLM_PRESET
+  bookDir?: string
+  boardPath?: string
+  kinds?: AGENT_KIND_REF[]
+}
+
+let runningsession: AGENT_SESSION | null = null
 
 export type AGENT_ASK_RESULT = {
   finaltext: string
@@ -27,6 +45,8 @@ export type AGENT_ASK_RESULT = {
 export type AGENT_ASK_HOOKS = {
   onstatus?: (msg: string) => void
   ontool?: (name: string) => void
+  onthinkingstart?: () => void
+  onthinkingstop?: () => void
 }
 
 export function agenthassession(player: string): boolean {
@@ -53,9 +73,14 @@ export function agentstartsession(
   } catch {
     fromflag = undefined
   }
+  const prev =
+    runningsession?.player === player ? runningsession : undefined
   runningsession = {
     player,
     preset: preset ?? fromflag ?? AGENT_LLM_DEFAULT_PRESET,
+    bookDir: prev?.bookDir,
+    boardPath: prev?.boardPath,
+    kinds: prev?.kinds,
   }
 }
 
@@ -77,6 +102,36 @@ export function agentsetsessionpreset(
   }
 }
 
+async function buildsystemprompt(player: string): Promise<string> {
+  const base = readagentsystemprompt()
+  try {
+    const files = await agentfetchzedcafetree(player)
+    const ctx = buildagentsessioncontextfromfiles(player, files, {
+      bookDir: runningsession?.bookDir,
+      boardPath: runningsession?.boardPath,
+      kinds: runningsession?.kinds,
+    })
+    if (runningsession?.player === player) {
+      runningsession.bookDir = ctx.bookDir
+      runningsession.boardPath = ctx.boardTerrainPath
+      runningsession.kinds = ctx.kinds
+    }
+    return `${base}\n\n${ctx.promptblock}`
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error)
+    const last = runningsession?.player === player ? runningsession : undefined
+    const fallback = [
+      '## Current session',
+      last?.bookDir ? `Last focus bookDir: ${last.bookDir}` : '',
+      last?.boardPath ? `Last focus board: ${last.boardPath}` : '',
+      `(export context unavailable: ${msg})`,
+    ]
+      .filter((line) => line.length > 0)
+      .join('\n')
+    return `${base}\n\n${fallback}`
+  }
+}
+
 export async function runagentask(
   player: string,
   prompt: string,
@@ -94,19 +149,43 @@ export async function runagentask(
   const report = (msg: string) => {
     hooks?.onstatus?.(msg)
   }
+  const systemprompt = await buildsystemprompt(player)
 
   for (let i = 0; i < MAX_AGENT_REPROMPT; ++i) {
-    report('agent thinking')
-    const step = await agentgeneraterequest(
-      activepreset,
-      readagentsystemprompt(),
-      history,
-      (msg) => {
-        report(msg)
-      },
-    )
+    hooks?.onthinkingstart?.()
+    report('agent thinking…')
+    let step
+    try {
+      step = await agentgeneraterequest(
+        activepreset,
+        systemprompt,
+        history,
+        (msg) => {
+          report(msg)
+        },
+      )
+    } finally {
+      hooks?.onthinkingstop?.()
+    }
     history.push({ role: 'assistant', content: step.raw })
     if (step.toolcalls.length === 0) {
+      if (agentpendingwritecount() > 0) {
+        report('agent applying changes')
+        hooks?.ontool?.('apply_zedcafe_batch')
+        const applied = await agentapplyzedcafebatch(player)
+        history.push({
+          role: 'tool',
+          name: 'apply_zedcafe_batch',
+          content: truncateagenttoolhistorycontent(applied),
+        })
+        write(
+          SOFTWARE,
+          player,
+          applied.ok
+            ? '$greenagent apply_zedcafe_batch ok'
+            : `$redagent apply_zedcafe_batch: ${applied.error ?? 'failed'}`,
+        )
+      }
       const finaltext = step.text.trim()
       if (finaltext) {
         write(SOFTWARE, player, finaltext.slice(0, 2000))
@@ -122,7 +201,7 @@ export async function runagentask(
       history.push({
         role: 'tool',
         name: call.name,
-        content: JSON.stringify(result),
+        content: truncateagenttoolhistorycontent(result),
       })
       write(
         SOFTWARE,
@@ -132,6 +211,10 @@ export async function runagentask(
           : `$redagent ${call.name}: ${result.error ?? 'failed'}`,
       )
     }
+  }
+  if (agentpendingwritecount() > 0) {
+    report('agent applying changes')
+    await agentapplyzedcafebatch(player)
   }
   write(SOFTWARE, player, '$yellowagent stopped after max tool rounds')
   return { finaltext: 'stopped after max tool rounds', toolnames }

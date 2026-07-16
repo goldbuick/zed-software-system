@@ -27,7 +27,7 @@ export async function agentrunclicommand(
       ok: true,
       result: {
         command: normalized,
-        note: 'dispatched via vm:cli as player (permissions apply)',
+        note: 'dispatched via vm:cli as player (no stdout; use read_player_state for location)',
       },
     }
   } catch (error) {
