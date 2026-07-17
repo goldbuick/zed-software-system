@@ -28,6 +28,7 @@ export function ScreenUIScrollProvider({
       didclose() {
         sethasscroll(false)
       },
+      setcursor() {},
     }),
     [player],
   )

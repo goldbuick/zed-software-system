@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useRef } from 'react'
 import { Vector3 } from 'three'
 import { RUNTIME } from 'zss/config'
 import { registercopy } from 'zss/device/api'
@@ -10,12 +10,15 @@ import { readcharfrombytes } from 'zss/feature/bytes'
 import { useHyperlinkSharedSync } from 'zss/gadget/data/usehyperlinksharedsync'
 import { useMedia } from 'zss/gadget/media'
 import { Rect } from 'zss/gadget/rect'
-import { UserFocus } from 'zss/gadget/userinput'
+import { UserFocus, UserHotkey } from 'zss/gadget/userinput'
 import { UserInput } from 'zss/gadget/userinput.bridge'
 import { pttoindex } from 'zss/mapping/2d'
+import { ispresent } from 'zss/mapping/types'
 import { maptovalue } from 'zss/mapping/value'
+import { uselinkeditcanceloninactive } from 'zss/screens/linkui/linkeditcancel'
 import {
   clearlinkeditingkey,
+  readlinkeditingkey,
   setlinkeditingkey,
   uselinkeditingkey,
 } from 'zss/screens/linkui/linkediting'
@@ -25,6 +28,7 @@ import { tokenizeandwritetextformat } from 'zss/words/textformat'
 import { linkbegin, linkmodemaddress } from './surface'
 import type { LinkWidgetProps } from './types'
 
+const SHORTCUT = 'a'
 const EDIT_WIDTH = 32
 const EDIT_HEIGHT = 8
 
@@ -59,12 +63,19 @@ export function LinkCharEdit({ surface }: LinkWidgetProps) {
   const tvalue = `${state}`.padStart(3, '0')
   const tlabel = surface.label.trim()
   const tcolor = inputcolor(!!surface.active)
-  const summary = `$green$20 ${tcolor}${tlabel} $${state}$white ${tvalue}`
+  const badgetext = ` ${SHORTCUT.toUpperCase()} `
+  const badgebg = surface.context.iseven ? '$black$onltgray' : '$black$ondkcyan'
+  const summary = `${badgebg}${badgetext}${tcolor}$onclear ${tlabel} $${state}$white ${tvalue}${
+    surface.layout === 'panel' && ispresent(surface.row) ? `\n` : ''
+  }`
 
   const editing = uselinkeditingkey() === address
   const snapshot = useRef(state)
 
   const cancelediting = useCallback(() => {
+    if (readlinkeditingkey() !== address) {
+      return
+    }
     modemwritevaluenumber(address, snapshot.current)
     clearlinkeditingkey(address)
   }, [address])
@@ -78,11 +89,12 @@ export function LinkCharEdit({ surface }: LinkWidgetProps) {
     setlinkeditingkey(address)
   }, [address, state])
 
-  useEffect(() => {
-    if (!surface.active && editing) {
-      cancelediting()
-    }
-  }, [surface.active, editing, cancelediting])
+  const invokeediting = useCallback(() => {
+    surface.setcursor?.(surface.striperow)
+    enterediting()
+  }, [surface, enterediting])
+
+  uselinkeditcanceloninactive(!!surface.active, cancelediting)
 
   if (editing) {
     const chars: string[] = [`${summary}\n$white`]
@@ -204,5 +216,34 @@ export function LinkCharEdit({ surface }: LinkWidgetProps) {
     )
   }
 
-  return surface.active ? <UserInput OK_BUTTON={enterediting} /> : null
+  if (surface.layout === 'panel') {
+    const cx = surface.context.x - 0.25
+    const cy = surface.context.y - 0.25
+    return (
+      <group
+        position={[
+          cx * RUNTIME.DRAW_CHAR_WIDTH(),
+          cy * RUNTIME.DRAW_CHAR_HEIGHT(),
+          1,
+        ]}
+      >
+        <Rect
+          visible={false}
+          width={badgetext.length + 0.5}
+          height={1.5}
+          blocking
+          onClick={invokeediting}
+        />
+        {surface.active && <UserInput OK_BUTTON={enterediting} />}
+        <UserHotkey hotkey={SHORTCUT}>{invokeediting}</UserHotkey>
+      </group>
+    )
+  }
+
+  return (
+    <>
+      {surface.active && <UserInput OK_BUTTON={enterediting} />}
+      <UserHotkey hotkey={SHORTCUT}>{invokeediting}</UserHotkey>
+    </>
+  )
 }

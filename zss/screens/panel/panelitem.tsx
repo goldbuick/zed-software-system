@@ -71,6 +71,7 @@ export function PanelItem({
     context,
     sendmessage: scroll.sendmessage,
     sendclose: scroll.sendclose,
+    setcursor: scroll.setcursor,
   }
 
   return <LinkRouter linktype={linktype} surface={surface} />

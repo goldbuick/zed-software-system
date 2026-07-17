@@ -1,5 +1,6 @@
 import { vmplayermovetoboard } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { memorytryjoindestination } from 'zss/feature/joinurlflow'
 import { ptwithin } from 'zss/mapping/2d'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 import { PT } from 'zss/words/types'
@@ -9,6 +10,22 @@ import { memoryreadboardbyaddress } from './boards'
 import { memoryreadbookflag } from './bookoperations'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH, BOOK } from './types'
 
+function memorytryexitaddress(
+  elementid: string,
+  address: string,
+  destpt: PT,
+): boolean {
+  if (memorytryjoindestination(elementid, address)) {
+    return true
+  }
+  const destboard = memoryreadboardbyaddress(address)
+  if (!ispresent(destboard)) {
+    return false
+  }
+  vmplayermovetoboard(SOFTWARE, elementid, elementid, destboard.id, destpt)
+  return true
+}
+
 export function memoryplayerblockedbyedge(
   board: MAYBE<BOARD>,
   element: BOARD_ELEMENT,
@@ -16,41 +33,28 @@ export function memoryplayerblockedbyedge(
 ) {
   const elementid = element.id ?? ''
   if (dest.x < 0) {
-    const destboard = memoryreadboardbyaddress(board?.exitwest ?? '')
-    if (ispresent(destboard)) {
-      vmplayermovetoboard(SOFTWARE, elementid, elementid, destboard.id, {
-        x: BOARD_WIDTH - 1,
-        y: dest.y,
-      })
-      return true
-    }
-  } else if (dest.x >= BOARD_WIDTH) {
-    const destboard = memoryreadboardbyaddress(board?.exiteast ?? '')
-    if (ispresent(destboard)) {
-      vmplayermovetoboard(SOFTWARE, elementid, elementid, destboard.id, {
-        x: 0,
-        y: dest.y,
-      })
-      return true
-    }
-  } else if (dest.y < 0) {
-    const destboard = memoryreadboardbyaddress(board?.exitnorth ?? '')
-    if (ispresent(destboard)) {
-      vmplayermovetoboard(SOFTWARE, elementid, elementid, destboard.id, {
-        x: dest.x,
-        y: BOARD_HEIGHT - 1,
-      })
-      return true
-    }
-  } else if (dest.y >= BOARD_HEIGHT) {
-    const destboard = memoryreadboardbyaddress(board?.exitsouth ?? '')
-    if (ispresent(destboard)) {
-      vmplayermovetoboard(SOFTWARE, elementid, elementid, destboard.id, {
-        x: dest.x,
-        y: 0,
-      })
-      return true
-    }
+    return memorytryexitaddress(elementid, board?.exitwest ?? '', {
+      x: BOARD_WIDTH - 1,
+      y: dest.y,
+    })
+  }
+  if (dest.x >= BOARD_WIDTH) {
+    return memorytryexitaddress(elementid, board?.exiteast ?? '', {
+      x: 0,
+      y: dest.y,
+    })
+  }
+  if (dest.y < 0) {
+    return memorytryexitaddress(elementid, board?.exitnorth ?? '', {
+      x: dest.x,
+      y: BOARD_HEIGHT - 1,
+    })
+  }
+  if (dest.y >= BOARD_HEIGHT) {
+    return memorytryexitaddress(elementid, board?.exitsouth ?? '', {
+      x: dest.x,
+      y: 0,
+    })
   }
   return false
 }

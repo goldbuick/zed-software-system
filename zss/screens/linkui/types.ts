@@ -19,6 +19,7 @@ export type LinkSurface = {
   context: WRITE_TEXT_CONTEXT
   sendmessage: (chip: string, target: string, data: unknown[]) => void
   sendclose: () => void
+  setcursor?: (index: number) => void
 }
 
 export type LinkWidgetProps = {

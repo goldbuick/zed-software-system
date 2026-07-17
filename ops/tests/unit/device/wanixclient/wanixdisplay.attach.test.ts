@@ -16,6 +16,11 @@ import {
 } from 'zss/device/wanixclient/wanixdisplay'
 import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/zustandstores'
 
+jest.mock('zss/feature/durable', () => ({
+  durableget: jest.fn(),
+  durableset: jest.fn().mockResolvedValue(undefined),
+}))
+
 describe('wanixdisplay attach', () => {
   afterEach(() => {
     resetwanixattachstatefortest()
@@ -174,7 +179,14 @@ describe('wanixdisplay attach', () => {
   })
 
   it('cyclewanixattachlayout is independent of tape layout', () => {
-    useTape.setState({ layout: TAPE_DISPLAY.FULL })
+    useTape.setState({
+      layout: TAPE_DISPLAY.FULL,
+      layoutby: {
+        quick: TAPE_DISPLAY.TOP,
+        cli: TAPE_DISPLAY.FULL,
+        editor: TAPE_DISPLAY.TOP,
+      },
+    })
     expect(readwanixattachlayout()).toBe(TAPE_DISPLAY.TOP)
     cyclewanixattachlayout(true)
     expect(readwanixattachlayout()).toBe(TAPE_DISPLAY.FULL)

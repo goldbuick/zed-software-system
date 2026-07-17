@@ -20,6 +20,7 @@ import {
   unregisterwanixtermsession,
 } from 'zss/device/wanixclient/wanixtermbuffer'
 import { iswanixdaemontaskid } from 'zss/device/wanixserver/taskidlepolicy'
+import { synctapeactivelayout } from 'zss/feature/tapelayout'
 import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/zustandstores'
 
 export function readwanixactivesession(): string | null {
@@ -102,6 +103,7 @@ function closetapeterminalforattach() {
       terminal: { ...state.terminal, open: false },
     }))
   }
+  synctapeactivelayout()
 }
 
 export function setattachedsession(sessionkey: string | null) {

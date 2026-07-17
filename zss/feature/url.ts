@@ -96,6 +96,67 @@ export const ZNS_DOCS_NAMESPACE = 'docs'
 
 export const ZNS_PEER_KEY = 'peer'
 
+/** PeerJS topic ids stored under ZNS peer key / join hash. */
+export const PEER_ID_RE = /^[a-zA-Z0-9_-]{4,256}$/
+
+export type JOIN_DESTINATION =
+  | { kind: 'znspeer'; namespace: string; raw: string }
+  | { kind: 'joinhash'; peerid: string; raw: string }
+
+/**
+ * Parse a board exit / #goto address as a join destination.
+ * Accepts `wil.at.zed.cafe/peer`, `https://…/peer`, and `/join/#{peerId}` URLs.
+ */
+export function parsejoindestination(
+  raw: string,
+): JOIN_DESTINATION | undefined {
+  const trimmed = `${raw ?? ''}`.trim()
+  if (!trimmed) {
+    return undefined
+  }
+
+  let urlstr = trimmed
+  if (!/^https?:\/\//i.test(urlstr)) {
+    if (!urlstr.includes('.') && !urlstr.includes('/join')) {
+      return undefined
+    }
+    urlstr = `https://${urlstr.replace(/^\/+/, '')}`
+  }
+
+  try {
+    const u = new URL(urlstr)
+    const pathname = u.pathname.replace(/\/+$/, '') || '/'
+    if (pathname === '/join' || pathname.endsWith('/join')) {
+      const peerid = u.hash.replace(/^#/, '').trim()
+      if (PEER_ID_RE.test(peerid)) {
+        return { kind: 'joinhash', peerid, raw: trimmed }
+      }
+      return undefined
+    }
+
+    const host = u.hostname.toLowerCase()
+    const suffix = `.${ZNS_TENANT_SUFFIX}`
+    if (!host.endsWith(suffix)) {
+      return undefined
+    }
+    const namespace = host.slice(0, -suffix.length)
+    if (!namespace || !ZNS_LOGIN_NAMESPACE_RE.test(namespace)) {
+      return undefined
+    }
+    const key = pathname.replace(/^\//, '').split('/')[0] ?? ''
+    if (key !== ZNS_PEER_KEY) {
+      return undefined
+    }
+    return { kind: 'znspeer', namespace, raw: trimmed }
+  } catch {
+    return undefined
+  }
+}
+
+export function isjoindestination(raw: string): boolean {
+  return parsejoindestination(raw) !== undefined
+}
+
 export const ZNS_LOGIN_CODE_PARAM = 'zns-code'
 export const ZNS_LOGIN_EMAIL_PARAM = 'zns-email'
 export const ZNS_LOGIN_NAMESPACE_PARAM = 'zns-namespace'
@@ -156,7 +217,6 @@ export function clearznslogincodefromurl(): void {
   clearznsloginparamsfromurl()
 }
 
-const PEER_ID_RE = /^[a-zA-Z0-9_-]{4,256}$/
 const ZNS_PATH_KEY_RE = /^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?$/
 
 let lastpublishedpeerid = ''

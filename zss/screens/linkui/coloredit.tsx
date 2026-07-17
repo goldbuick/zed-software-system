@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
 import { Vector3 } from 'three'
 import { RUNTIME } from 'zss/config'
 import { registercopy } from 'zss/device/api'
@@ -9,14 +9,17 @@ import { SOFTWARE } from 'zss/device/session'
 import { useHyperlinkSharedSync } from 'zss/gadget/data/usehyperlinksharedsync'
 import { useMedia } from 'zss/gadget/media'
 import { Rect } from 'zss/gadget/rect'
-import { UserFocus } from 'zss/gadget/userinput'
+import { UserFocus, UserHotkey } from 'zss/gadget/userinput'
 import { UserInput } from 'zss/gadget/userinput.bridge'
 import { pttoindex } from 'zss/mapping/2d'
 import { range } from 'zss/mapping/array'
 import { clamp } from 'zss/mapping/number'
+import { ispresent } from 'zss/mapping/types'
 import { maptovalue } from 'zss/mapping/value'
+import { uselinkeditcanceloninactive } from 'zss/screens/linkui/linkeditcancel'
 import {
   clearlinkeditingkey,
+  readlinkeditingkey,
   setlinkeditingkey,
   uselinkeditingkey,
 } from 'zss/screens/linkui/linkediting'
@@ -51,6 +54,7 @@ type LinkColorEditProps = LinkWidgetProps & { isbg?: boolean }
 export function LinkColorEdit({ surface, isbg = false }: LinkColorEditProps) {
   linkbegin(surface)
 
+  const shortcut = isbg ? 'b' : 'c'
   const target = maptovalue(surface.words[0], '')
 
   useHyperlinkSharedSync(
@@ -73,12 +77,19 @@ export function LinkColorEdit({ surface, isbg = false }: LinkColorEditProps) {
   const tlabel = surface.label.trim()
   const tcolor = inputcolor(!!surface.active)
   const colorname = (COLOR[state] || COLOR[COLOR.BLACK]).toLowerCase()
-  const summary = `$green$20 ${tcolor}${tlabel} $${colorname}$219$white ${tvalue} ${colorname}`
+  const badgetext = ` ${shortcut.toUpperCase()} `
+  const badgebg = surface.context.iseven ? '$black$onltgray' : '$black$ondkcyan'
+  const summary = `${badgebg}${badgetext}${tcolor}$onclear ${tlabel} $${colorname}$219$white ${tvalue} ${colorname}${
+    surface.layout === 'panel' && ispresent(surface.row) ? `\n` : ''
+  }`
 
   const editing = uselinkeditingkey() === address
   const snapshot = useRef(state)
 
   const cancelediting = useCallback(() => {
+    if (readlinkeditingkey() !== address) {
+      return
+    }
     modemwritevaluenumber(address, snapshot.current)
     clearlinkeditingkey(address)
   }, [address])
@@ -92,11 +103,12 @@ export function LinkColorEdit({ surface, isbg = false }: LinkColorEditProps) {
     setlinkeditingkey(address)
   }, [address, state])
 
-  useEffect(() => {
-    if (!surface.active && editing) {
-      cancelediting()
-    }
-  }, [surface.active, editing, cancelediting])
+  const invokeediting = useCallback(() => {
+    surface.setcursor?.(surface.striperow)
+    enterediting()
+  }, [surface, enterediting])
+
+  uselinkeditcanceloninactive(!!surface.active, cancelediting)
 
   if (editing) {
     const colors: string[] = [`${summary}\n$white`]
@@ -235,5 +247,34 @@ export function LinkColorEdit({ surface, isbg = false }: LinkColorEditProps) {
     )
   }
 
-  return surface.active ? <UserInput OK_BUTTON={enterediting} /> : null
+  if (surface.layout === 'panel') {
+    const cx = surface.context.x - 0.25
+    const cy = surface.context.y - 0.25
+    return (
+      <group
+        position={[
+          cx * RUNTIME.DRAW_CHAR_WIDTH(),
+          cy * RUNTIME.DRAW_CHAR_HEIGHT(),
+          1,
+        ]}
+      >
+        <Rect
+          visible={false}
+          width={badgetext.length + 0.5}
+          height={1.5}
+          blocking
+          onClick={invokeediting}
+        />
+        {surface.active && <UserInput OK_BUTTON={enterediting} />}
+        <UserHotkey hotkey={shortcut}>{invokeediting}</UserHotkey>
+      </group>
+    )
+  }
+
+  return (
+    <>
+      {surface.active && <UserInput OK_BUTTON={enterediting} />}
+      <UserHotkey hotkey={shortcut}>{invokeediting}</UserHotkey>
+    </>
+  )
 }

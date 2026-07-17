@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { modemwritevaluenumber } from 'zss/device/modem'
 import { useWaitForValueNumber } from 'zss/device/modemhooks'
 import { useHyperlinkSharedSync } from 'zss/gadget/data/usehyperlinksharedsync'
@@ -6,6 +6,7 @@ import { UserFocus } from 'zss/gadget/userinput'
 import { UserInput } from 'zss/gadget/userinput.bridge'
 import { UserInputHandler } from 'zss/gadget/userinputtypes'
 import { maptonumber } from 'zss/mapping/value'
+import { uselinkeditcanceloninactive } from 'zss/screens/linkui/linkeditcancel'
 import { inputcolor } from 'zss/screens/panel/common'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
@@ -56,8 +57,13 @@ export function LinkNumber({ surface }: LinkWidgetProps) {
 
   const [editing, setediting] = useState(false)
   const snapshot = useRef(clamped)
+  const editingref = useRef(editing)
+  editingref.current = editing
 
   const cancelediting = useCallback(() => {
+    if (!editingref.current) {
+      return
+    }
     modemwritevaluenumber(address, snapshot.current)
     setediting(false)
   }, [address])
@@ -71,11 +77,7 @@ export function LinkNumber({ surface }: LinkWidgetProps) {
     setediting(true)
   }, [clamped])
 
-  useEffect(() => {
-    if (!surface.active && editing) {
-      cancelediting()
-    }
-  }, [surface.active, editing, cancelediting])
+  uselinkeditcanceloninactive(!!surface.active, cancelediting)
 
   if (surface.layout === 'terminal') {
     tokenizeandwritetextformat(

@@ -29,6 +29,7 @@ import {
   storagereadvars,
 } from 'zss/feature/storage'
 import { restorettsenginefromstorage } from 'zss/feature/tts/client'
+import { takecrossloginflags } from 'zss/feature/crosslogin'
 import { isjoin } from 'zss/feature/url'
 import { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
@@ -60,8 +61,10 @@ export function handleloginready(device: DEVICE, message: MESSAGE): void {
     const { [ZSS_BOOKMARKS_KEY]: _bookmarks, ...storageforlogin } = storage
     const config = await storagereadconfigall()
     const token = await getfingerprint()
+    const crossloginflags = takecrossloginflags() ?? {}
     vmlogin(device, registerreadplayer(), {
       ...storageforlogin,
+      ...crossloginflags,
       config,
       token,
     })

@@ -1,6 +1,7 @@
 import type { DEVICE } from 'zss/device'
 import { vmtapeeditorclose } from 'zss/device/api'
 import type { MESSAGE } from 'zss/device/types'
+import { synctapeactivelayout } from 'zss/feature/tapelayout'
 import { useEditor, useTape } from 'zss/gadget/data/zustandstores'
 import { isarray } from 'zss/mapping/types'
 
@@ -18,6 +19,7 @@ export function handleeditoropen(_device: DEVICE, message: MESSAGE): void {
         title,
       },
     }))
+    synctapeactivelayout()
   }
 }
 
@@ -28,5 +30,6 @@ export function handleeditorclose(device: DEVICE, message: MESSAGE): void {
       open: false,
     },
   }))
+  synctapeactivelayout()
   vmtapeeditorclose(device, message.player)
 }

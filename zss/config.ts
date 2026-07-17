@@ -56,6 +56,8 @@ const PERF_TILE_SUBIMAGE = zssjsonboolwithdefault(
 export const RUNTIME = {
   // adjust time spent on code
   YIELD_AT_COUNT: 512,
+  // consecutive max-iteration ticks before chip is banned
+  YIELD_STRIKE_LIMIT: 3,
   // render
   DRAW_CHAR_SCALE: 2,
   DRAW_CHAR_WIDTH() {

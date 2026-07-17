@@ -471,3 +471,14 @@ export function netterminaljoin(topicpeerid: string) {
   const selfpeerid = netterminaltopic(player)
   netterminalcreate(topicpeerid, selfpeerid)
 }
+
+/** Tear down active peer so a soft join can start without page reload. */
+export function netterminalhalt() {
+  netterminalsessionserial += 1
+  netterminalclearallschedule()
+  if (ispresent(networkpeer)) {
+    networkpeer.destroy()
+    networkpeer = undefined
+  }
+  subscribetopic = ''
+}

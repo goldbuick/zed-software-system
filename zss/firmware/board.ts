@@ -3,6 +3,7 @@ import { CHIP } from 'zss/chip'
 import { vmplayermovetoboard } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { boardcopy, mapelementcopy } from 'zss/feature/boardcopy'
+import { memorytryjoindestination } from 'zss/feature/joinurlflow'
 import { createfirmware } from 'zss/firmware'
 import { firmwarewaitforboard } from 'zss/firmware/boardwaitsync'
 import { celltorendervalue } from 'zss/gadget/display/cellvalue'
@@ -482,7 +483,7 @@ export const BOARD_FIRMWARE = createfirmware()
       ARG_TYPE.STRING,
       ARG_TYPE.MAYBE_NUMBER,
       ARG_TYPE.MAYBE_NUMBER,
-      'player to board by name or address with optional x, y',
+      'player to board by name, address, or join url with optional x, y',
     ],
     (_, words) => {
       if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
@@ -495,6 +496,10 @@ export const BOARD_FIRMWARE = createfirmware()
         ARG_TYPE.MAYBE_NUMBER,
         ARG_TYPE.MAYBE_NUMBER,
       ])
+
+      if (memorytryjoindestination(READ_CONTEXT.elementfocus, stat)) {
+        return 0
+      }
 
       const targetboard = memoryreadboardbyaddress(stat)
       if (!ispresent(targetboard)) {

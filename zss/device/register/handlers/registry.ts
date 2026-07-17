@@ -8,6 +8,7 @@ import {
   handleloginready,
   handlesessionreset,
 } from './auth'
+import { handlejoincrosslogin } from './joincrosslogin'
 import { handlebookmarkclirun } from './bookmark/clirun'
 import { handlebookmarkclisave } from './bookmark/clisave'
 import { handlebookmarkcodepagecopytogame } from './bookmark/codepagecopytogame'
@@ -51,6 +52,7 @@ export const registerhandlers: Record<string, REGISTER_HANDLER> = {
   sessionreset: handlesessionreset,
   ackoperator: handleackoperator,
   loginready: handleloginready,
+  joincrosslogin: handlejoincrosslogin,
   acklogin: handleacklogin,
   ackzsswords: handleackzsswords,
   bookmarkscroll: handlebookmarkscroll,

@@ -4,6 +4,10 @@
  */
 
 import { ZNS_VGA_FONT_DATA_URI } from './generated/zns-vga-font.js'
+import {
+  buildapireadpeerbody,
+  buildpeerjoinlocation,
+} from './zns-peer-url.js'
 import { buildznsdotbkgcss } from './zns-dotbkg.js'
 import {
   pngbytestobase64,
@@ -1203,15 +1207,10 @@ async function handleread(request, env) {
       headers: corsheaders,
     })
   }
-  return new Response(
-    JSON.stringify({
-      success: true,
-      key: pathkey,
-      value: row.stored,
-      metadata: row.metadata,
-    }),
-    { status: 200, headers: corsheaders },
-  )
+  return new Response(JSON.stringify(buildapireadpeerbody(pathkey, row)), {
+    status: 200,
+    headers: corsheaders,
+  })
 }
 
 async function handletenantread(request, env, namespace) {
@@ -1241,7 +1240,7 @@ async function handletenantread(request, env, namespace) {
     }
     let location
     if (kind === 'peer') {
-      location = `${joinorigin(env)}/join/#${stored}`
+      location = buildpeerjoinlocation(joinorigin(env), stored)
     } else if (kind === 'bytes') {
       location = `${bytesorigin(env)}/${stored}`
     } else {

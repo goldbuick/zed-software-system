@@ -1,6 +1,8 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/types'
+import { synctapeactivelayout } from 'zss/feature/tapelayout'
 import { useTape } from 'zss/gadget/data/zustandstores'
+
 export function handleterminalclose(device: DEVICE, message: MESSAGE): void {
   void device
   void message
@@ -11,4 +13,5 @@ export function handleterminalclose(device: DEVICE, message: MESSAGE): void {
       open: false,
     },
   }))
+  synctapeactivelayout()
 }

@@ -84,6 +84,21 @@ export function ScrollComponent({
     )
   }, [text])
 
+  const setcursor = useCallback(
+    (index: number) => {
+      setCursor(clamp(index, 0, totalrows))
+    },
+    [totalrows],
+  )
+
+  const scrollcontextvalue = useMemo(
+    () => ({
+      ...scroll,
+      setcursor,
+    }),
+    [scroll, setcursor],
+  )
+
   const scrollwindow = useMemo(
     () => scrollvisiblewindow(text, cursor, panelheight, editingkey),
     [text, cursor, panelheight, editingkey],
@@ -151,57 +166,59 @@ export function ScrollComponent({
   )
 
   return (
-    <group ref={groupref} position-y={1000000}>
-      {/* Wheel hit target outside UserFocus so trackpad scroll works without nesting focus. */}
-      <Scrollable
-        blocking
-        x={0}
-        y={0}
-        width={width}
-        height={height}
-        onScroll={(ydelta: number) => movecursor(ydelta * 0.5)}
-      />
-      <UserFocus>
-        <UserInput
-          MOVE_UP={up}
-          MOVE_DOWN={down}
-          CANCEL_BUTTON={scroll.sendclose}
+    <ScrollContext.Provider value={scrollcontextvalue}>
+      <group ref={groupref} position-y={1000000}>
+        {/* Wheel hit target outside UserFocus so trackpad scroll works without nesting focus. */}
+        <Scrollable
+          blocking
+          x={0}
+          y={0}
+          width={width}
+          height={height}
+          onScroll={(ydelta: number) => movecursor(ydelta * 0.5)}
         />
-        <TilesData store={tilesstore}>
-          <WriteTextContext.Provider value={context}>
-            <ScrollBackPlate name={scrollname} width={width} height={height} />
-            <ScrollControls
-              row={scrollwindow.selectedrowy}
-              width={width}
-              height={height}
-              panelwidth={panelwidth}
-              panelheight={panelheight}
-            >
-              <ScrollMarquee
-                margin={3}
-                color={COLOR.BLUE}
-                y={0}
-                leftedge={0}
-                rightedge={width}
-                line={SCROLL_KEY_HINTS_LINE}
-              />
-              <ScrollCursor row={scrollwindow.selectedrowy} />
-              <PanelComponent
-                width={panelwidth}
-                height={panelheight}
-                xmargin={0}
-                ymargin={0}
-                color={color}
-                bg={COLOR.ONCLEAR}
-                text={scrollwindow.visible}
-                selected={selectedInView}
-                striperowbase={scrollwindow.striperowbase}
-                rowys={scrollwindow.rowys}
-              />
-            </ScrollControls>
-          </WriteTextContext.Provider>
-        </TilesData>
-      </UserFocus>
-    </group>
+        <UserFocus>
+          <UserInput
+            MOVE_UP={up}
+            MOVE_DOWN={down}
+            CANCEL_BUTTON={scroll.sendclose}
+          />
+          <TilesData store={tilesstore}>
+            <WriteTextContext.Provider value={context}>
+              <ScrollBackPlate name={scrollname} width={width} height={height} />
+              <ScrollControls
+                row={scrollwindow.selectedrowy}
+                width={width}
+                height={height}
+                panelwidth={panelwidth}
+                panelheight={panelheight}
+              >
+                <ScrollMarquee
+                  margin={3}
+                  color={COLOR.BLUE}
+                  y={0}
+                  leftedge={0}
+                  rightedge={width}
+                  line={SCROLL_KEY_HINTS_LINE}
+                />
+                <ScrollCursor row={scrollwindow.selectedrowy} />
+                <PanelComponent
+                  width={panelwidth}
+                  height={panelheight}
+                  xmargin={0}
+                  ymargin={0}
+                  color={color}
+                  bg={COLOR.ONCLEAR}
+                  text={scrollwindow.visible}
+                  selected={selectedInView}
+                  striperowbase={scrollwindow.striperowbase}
+                  rowys={scrollwindow.rowys}
+                />
+              </ScrollControls>
+            </WriteTextContext.Provider>
+          </TilesData>
+        </UserFocus>
+      </group>
+    </ScrollContext.Provider>
   )
 }

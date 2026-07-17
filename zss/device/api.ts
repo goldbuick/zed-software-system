@@ -312,6 +312,14 @@ export function registerbookmarkurlnavigate(
   device.emit(player, 'register:bookmark:urlnavigate', href)
 }
 
+export function registerjoincrosslogin(
+  device: DEVICELIKE,
+  player: string,
+  payload: { peerid: string; flags: Record<string, unknown> },
+) {
+  device.emit(player, 'register:joincrosslogin', payload)
+}
+
 export function registerbookmarkurlsave(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:bookmark:urlsave', true)
 }

@@ -10,6 +10,7 @@ import {
   storagereadhistorybuffer,
   storagewatchcontent,
 } from 'zss/feature/storage'
+import { hydratetapelayoutby } from 'zss/feature/tapelayout'
 import { useTerminal } from 'zss/gadget/data/zustandstores'
 import { waitfor } from 'zss/mapping/tick'
 import { ispresent } from 'zss/mapping/types'
@@ -26,6 +27,7 @@ export function handleready(device: DEVICE, message: MESSAGE): void {
         }),
       })
     }
+    await hydratetapelayoutby()
     await syncterminalbookmarkpins()
     await waitfor(256)
     apilog(device, registerreadplayer(), `player ${registerreadplayer()}`)
