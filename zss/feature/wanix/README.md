@@ -380,11 +380,11 @@ Iframe posts `wanixclient:session`:
 
 | Event | Parent behavior |
 |-------|-----------------|
-| `open` | Register session; if nothing attached and not user-detached → open **attach panel** + auto-attach |
-| `active` | Update focus hint; no steal if user already attached or user-detached |
+| `open` | Register session; if nothing attached and not user-detached → soft-attach (bind session; open **attach panel** only if tape is already hidden) |
+| `active` | Update focus hint; soft-attach same as open; no steal if user already attached or user-detached |
 | `close` | Prune buffer/menu unless it was the attached session |
 
-The **attach panel** is separate from the **tape CLI**. Tape always shows ZSS logs + input; attach never hijacks it.
+The **attach panel** is separate from the **tape CLI**. Tape always shows ZSS logs + input; attach never hijacks it. Soft auto-attach never closes an open tape.
 
 Manual: `#wanix attach` / `#wanix detach` / menu. See
 [`wanixdisplay.ts`](../../device/wanixclient/wanixdisplay.ts).

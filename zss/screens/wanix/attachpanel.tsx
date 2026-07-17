@@ -1,7 +1,10 @@
+import { registerterminalopen } from 'zss/device/api'
+import { registerreadplayer } from 'zss/device/registerplayer'
+import { SOFTWARE } from 'zss/device/session'
 import { useWanixClient } from 'zss/device/wanixclient/wanixclientstore'
 import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/zustandstores'
 import { ShadeBoxDither } from 'zss/gadget/graphics/dither'
-import { UserFocus } from 'zss/gadget/userinput'
+import { UserFocus, UserHotkey } from 'zss/gadget/userinput'
 import { useScreenSize } from 'zss/gadget/userscreen'
 import { TapeLayoutTiles } from 'zss/screens/tape/layouttiles'
 import { WanixTermScreen } from 'zss/screens/wanix/termscreen'
@@ -62,6 +65,16 @@ export function WanixAttachPanel() {
           alpha={0.333}
         />
         <UserFocus blockhotkeys>
+          <UserHotkey hotkey="`">
+            {() =>
+              registerterminalopen(SOFTWARE, registerreadplayer())
+            }
+          </UserHotkey>
+          <UserHotkey hotkey="Shift+?" althotkey="/">
+            {() =>
+              registerterminalopen(SOFTWARE, registerreadplayer())
+            }
+          </UserHotkey>
           <TapeLayoutTiles
             label="wanixattach"
             terminalmode={terminalmode}

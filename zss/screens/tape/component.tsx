@@ -94,16 +94,14 @@ export function TapeComponent() {
           </UserFocus>
         </group>
       ) : (
-        !showattach && (
-          <>
-            <UserHotkey hotkey="Shift+?" althotkey="/">
-              {() => registerterminalopen(SOFTWARE, player)}
-            </UserHotkey>
-            <UserHotkey hotkey="`">
-              {() => registerterminalopen(SOFTWARE, player)}
-            </UserHotkey>
-          </>
-        )
+        <>
+          <UserHotkey hotkey="Shift+?" althotkey="/">
+            {() => registerterminalopen(SOFTWARE, player)}
+          </UserHotkey>
+          <UserHotkey hotkey="`">
+            {() => registerterminalopen(SOFTWARE, player)}
+          </UserHotkey>
+        </>
       )}
     </>
   )

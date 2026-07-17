@@ -235,8 +235,86 @@ export function WanixTermScreen() {
     }
   }, [pastetext])
 
+  function handleattachchromekeys(event: KeyboardEvent) {
+    const key = NAME(event.key)
+
+    if (isctrltab(event)) {
+      event.preventDefault()
+      setprefixarmed(false)
+      cyclewanixattachlayout(!event.shiftKey)
+      return true
+    }
+
+    // Open tape CLI (detaches attach panel via terminal:open handler).
+    if (event.key === '`' || (event.shiftKey && event.key === '?')) {
+      event.preventDefault()
+      setprefixarmed(false)
+      registerterminalopen(SOFTWARE, registerreadplayer())
+      return true
+    }
+
+    if (prefixarmed) {
+      event.preventDefault()
+      setprefixarmed(false)
+      if (key === 'p' || key === 'arrowleft') {
+        cyclewanixattachedsession(readwanixtermbufferkeys(), -1)
+        return true
+      }
+      if (key === 'n' || key === 'arrowright') {
+        cyclewanixattachedsession(readwanixtermbufferkeys(), 1)
+        return true
+      }
+      if (key === 'd' || isctrlbackslash(event)) {
+        detachwanixterm()
+        return true
+      }
+      if (key === 'escape') {
+        return true
+      }
+      return false
+    }
+
+    if (isctrlbackslash(event)) {
+      event.preventDefault()
+      setprefixarmed(true)
+      return true
+    }
+
+    return false
+  }
+
+  // No guest frame yet: still show chrome + keyboard so the user is never trapped
+  // behind an empty dither with no way to detach / open the tape CLI.
   if (!frame) {
-    return null
+    const waitinghint = prefixarmed
+      ? HINT_ARMED
+      : `waiting for guest terminal... ${HINT_IDLE}`
+    const waithint =
+      edge.height >= 1
+        ? `${waitinghint}${HINT_MARQUEE_GAP}`
+        : ''
+    if (edge.height >= 1) {
+      context.changed()
+    }
+    return (
+      <>
+        {waithint !== '' && (
+          <ScrollMarquee
+            margin={0}
+            color={HINT_COLOR}
+            y={edge.top + edge.height - 1}
+            leftedge={edge.left}
+            rightedge={edge.left + edge.width}
+            line={`$ondkpurple${waithint}`}
+          />
+        )}
+        <UserInput
+          keydown={(event) => {
+            handleattachchromekeys(event)
+          }}
+        />
+      </>
+    )
   }
 
   const scrollbackrows = frame.scrollbackrows ?? 0
@@ -453,49 +531,7 @@ export function WanixTermScreen() {
         keydown={(event) => {
           const key = NAME(event.key)
 
-          if (isctrltab(event)) {
-            event.preventDefault()
-            setprefixarmed(false)
-            cyclewanixattachlayout(!event.shiftKey)
-            return
-          }
-
-          // Open tape CLI (detaches attach panel via terminal:open handler).
-          if (event.key === '`' || (event.shiftKey && event.key === '?')) {
-            event.preventDefault()
-            setprefixarmed(false)
-            registerterminalopen(SOFTWARE, registerreadplayer())
-            return
-          }
-
-          if (prefixarmed) {
-            event.preventDefault()
-            setprefixarmed(false)
-            if (key === 'p' || key === 'arrowleft') {
-              cyclewanixattachedsession(readwanixtermbufferkeys(), -1)
-              return
-            }
-            if (key === 'n' || key === 'arrowright') {
-              cyclewanixattachedsession(readwanixtermbufferkeys(), 1)
-              return
-            }
-            if (key === 'd' || isctrlbackslash(event)) {
-              detachwanixterm()
-              return
-            }
-            if (key === 'escape') {
-              return
-            }
-            if (!atliveline) {
-              return
-            }
-            handleliveinput(event, key)
-            return
-          }
-
-          if (isctrlbackslash(event)) {
-            event.preventDefault()
-            setprefixarmed(true)
+          if (handleattachchromekeys(event)) {
             return
           }
 

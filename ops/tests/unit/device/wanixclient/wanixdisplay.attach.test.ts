@@ -49,10 +49,23 @@ describe('wanixdisplay attach', () => {
   })
 
   it('auto-attaches when worker sets active and nothing is attached', () => {
+    useTape.setState((state) => ({
+      terminal: { ...state.terminal, open: false },
+    }))
     setwanixactivesession('linux-vm')
     expect(readattachedsession()).toBe('linux-vm')
     expect(readwanixactivesession()).toBe('linux-vm')
     expect(readwanixattachpanelopen()).toBe(true)
+  })
+
+  it('soft auto-attach does not close an open tape or open the panel', () => {
+    useTape.setState((state) => ({
+      terminal: { ...state.terminal, open: true },
+    }))
+    setwanixactivesession('linux-vm')
+    expect(readattachedsession()).toBe('linux-vm')
+    expect(readwanixattachpanelopen()).toBe(false)
+    expect(useTape.getState().terminal.open).toBe(true)
   })
 
   it('does not steal focus when already attached', () => {
@@ -71,10 +84,23 @@ describe('wanixdisplay attach', () => {
   })
 
   it('open auto-attaches when not attached', () => {
+    useTape.setState((state) => ({
+      terminal: { ...state.terminal, open: false },
+    }))
     onwanixtermsessionopen('task-a')
     expect(readattachedsession()).toBe('task-a')
     expect(readwanixactivesession()).toBe('task-a')
     expect(readwanixattachpanelopen()).toBe(true)
+  })
+
+  it('open soft-attaches without opening panel when tape is visible', () => {
+    useTape.setState((state) => ({
+      terminal: { ...state.terminal, open: true },
+    }))
+    onwanixtermsessionopen('task-a')
+    expect(readattachedsession()).toBe('task-a')
+    expect(readwanixattachpanelopen()).toBe(false)
+    expect(useTape.getState().terminal.open).toBe(true)
   })
 
   it('open does not auto-attach after manual detach when a new session connects', () => {
@@ -94,6 +120,9 @@ describe('wanixdisplay attach', () => {
   })
 
   it('allows auto-attach again after idle reset', () => {
+    useTape.setState((state) => ({
+      terminal: { ...state.terminal, open: false },
+    }))
     setwanixactivesession('task-a')
     detachwanixterm()
     resetwanixattachforidle()

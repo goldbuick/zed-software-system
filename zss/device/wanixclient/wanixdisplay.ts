@@ -45,11 +45,13 @@ function maybeattachactivesession() {
   ) {
     return
   }
-  closetapeterminalforattach()
+  // Soft auto-attach: bind session for drops, open panel only if tape is already closed.
+  // Never yank the tape CLI closed behind the user's back.
+  const tapevisible = readwanixtapevisible()
   useWanixClient.setState({
     attachedsessionkey: activesessionkey,
-    attachpanelopen: true,
     userdetached: false,
+    ...(tapevisible ? {} : { attachpanelopen: true }),
   })
 }
 
@@ -78,12 +80,14 @@ export function onwanixtermsessionopen(sessionkey: string) {
     setwanixactivesessionkey(key)
     return
   }
-  closetapeterminalforattach()
+  // Soft auto-attach: do not close an open tape CLI. Open the attach panel only
+  // when the tape is already hidden so we never leave a blank dither trap.
+  const tapevisible = readwanixtapevisible()
   useWanixClient.setState({
     activesessionkey: key,
     attachedsessionkey: key,
     userdetached: false,
-    attachpanelopen: true,
+    ...(tapevisible ? {} : { attachpanelopen: true }),
   })
 }
 
