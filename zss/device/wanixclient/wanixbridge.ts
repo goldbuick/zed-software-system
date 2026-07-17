@@ -1,7 +1,7 @@
 import { createmessage } from 'zss/device'
+import { SOFTWARE } from 'zss/device/session'
 import type { MESSAGE } from 'zss/device/types'
 import { ismessage } from 'zss/device/types'
-import { SOFTWARE } from 'zss/device/session'
 import {
   type WanixReadyCallback,
   readbridgestate,
@@ -53,6 +53,11 @@ export function markwanixidle(): void {
   resetready()
   clearwanixtermbuffers()
   resetwanixattachforidle()
+  void import('zss/device/wanixclient/wanixzedsync').then((mod) => {
+    if (mod.iszedsyncreadywaitpending()) {
+      mod.cancelzedsyncreadywait('wanix idle')
+    }
+  })
 }
 
 export function registerwanixsessioncloseprune(

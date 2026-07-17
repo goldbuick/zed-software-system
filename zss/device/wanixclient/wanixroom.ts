@@ -8,9 +8,9 @@ import {
   wanixserverstopvm,
   wanixserverwritefile,
 } from 'zss/device/api'
-import type { DEVICELIKE } from 'zss/device/types'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
+import type { DEVICELIKE } from 'zss/device/types'
 import {
   clearlasthostpushdoc,
   readpendingapplyconfig,
@@ -29,9 +29,10 @@ import { clearwanixfsamounts } from 'zss/device/wanixclient/wanixfsamounts'
 import {
   kickzedcafepoll,
   readwanixbootzedcafestate,
-  resetzedcafeexportinflight,
   resetwanixzedcafeonidle,
+  resetzedcafeexportinflight,
 } from 'zss/device/wanixclient/wanixzedcafe'
+import { iswanixdaemontaskid } from 'zss/device/wanixserver/taskidlepolicy'
 import type { WanixTaskDriver } from 'zss/feature/wanix/wanixelements.d.ts'
 import { wanixperfmark } from 'zss/feature/wanix/wanixperf'
 import type {
@@ -279,7 +280,7 @@ export function connectwanixremote(url: string, dst?: string): WanixRemoteSpec {
 export function disconnectwanixremote(key?: string): WanixRemoteSpec[] {
   const current = readwanixroomconfig()
   let remotes = current.remotes
-  if (!key || !key.trim()) {
+  if (!key?.trim()) {
     remotes = []
   } else {
     remotes = current.remotes.filter((entry) => !remotematches(entry, key))
@@ -457,15 +458,17 @@ export function removewanixroomtask(taskid: string) {
 }
 
 function onwanixsessionclose(sessionkey: string) {
-  if (sessionkey === 'zedsync' || sessionkey.startsWith('zedsync-')) {
-    apilog(SOFTWARE, registerreadplayer(), 'zedsync stopped')
-    void import('zss/device/wanixclient/wanixzedsync').then((mod) => {
-      if (mod.iszedsyncreadywaitpending()) {
-        mod.cancelzedsyncreadywait('guest session closed')
-      } else {
-        mod.cancelzedsyncreadywait()
-      }
-    })
+  // Daemon term EOF is not halt — keep room task so re-attach / menu stay valid.
+  // Soft idle / explicit halt clear tasks via applyroom / halttaskinroom.
+  if (iswanixdaemontaskid(sessionkey)) {
+    if (sessionkey === 'zedsync' || sessionkey.startsWith('zedsync-')) {
+      void import('zss/device/wanixclient/wanixzedsync').then((mod) => {
+        if (mod.iszedsyncreadywaitpending()) {
+          mod.cancelzedsyncreadywait('guest session closed')
+        }
+      })
+    }
+    return
   }
   removewanixroomtask(sessionkey)
   // Kick after task exit (not dropdone): spawntask returns at start(), so guest

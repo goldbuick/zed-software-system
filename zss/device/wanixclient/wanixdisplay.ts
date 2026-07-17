@@ -20,6 +20,7 @@ import {
   registerwanixtermsessionopen,
   unregisterwanixtermsession,
 } from 'zss/device/wanixclient/wanixtermbuffer'
+import { iswanixdaemontaskid } from 'zss/device/wanixserver/taskidlepolicy'
 import { useTape } from 'zss/gadget/data/zustandstores'
 
 export function readwanixactivesession(): string | null {
@@ -175,9 +176,13 @@ export function applywanixsessionmessage(payload: {
     return
   }
   if (payload.event === 'close') {
-    // Always prune room/zedsync wait. Keep buffer only when this tile is still
-    // attached so the user can read guest stdout after exit.
-    if (sessionkey !== readattachedsessionstate()) {
+    // One-shot tasks: keep buffer only while attached (read after exit).
+    // Daemons (zedsync/zedcafe): term EOF is not process death — keep keys so
+    // `#wanix attach` still works after detach + quiet/EOF close.
+    if (
+      !iswanixdaemontaskid(sessionkey) &&
+      sessionkey !== readattachedsessionstate()
+    ) {
       unregisterwanixtermsession(sessionkey)
     }
     readonsessioncloseprune()?.(sessionkey)

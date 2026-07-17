@@ -1,284 +1,398 @@
-# Wanix drag-drop fixtures
+# Wanix integration fixtures + scenario playbook
 
-WASI `.wasm` and `.tgz` bundles for manual wanix testing (`#wanix`, file drop, paste).
+WASI/gojs drop binaries, peer sync roots, and headed Playwright validators for
+wanix integration. Architecture: [`zss/feature/wanix/README.md`](../../../zss/feature/wanix/README.md).
+
+Built artifacts live in **`ops/public/wanix/`** (dev URL `/fixtures/wanix/`).
+Validators run only via existing `cafe:playwright:headed` — no new citty tasks.
+
+---
+
+## Scenario index
+
+| # | Scenario | Automator | Deps |
+|---|----------|-----------|------|
+| 1 | Idle default after login | manual | `cafe:dev` |
+| 2 | Soft idle then warm reuse on active room | [`validate-warm-reuse.ts`](../../../tasks/lib/wanix/validate-warm-reuse.ts) | `cafe:dev` |
+| 3 | Hard remount bumps `mountkey` | same as #2 | `cafe:dev` |
+| 4 | Idle drop → task room | [`validate-idle-drop.ts`](../../../tasks/lib/wanix/validate-idle-drop.ts) | `cafe:dev` |
+| 5 | Idle VM boot | [`validate-idle-boot.ts`](../../../tasks/lib/wanix/validate-idle-boot.ts) | `cafe:dev` |
+| 6 | Multi-task append (`greet`, `bundle-two`) | manual | `cafe:dev` + builds |
+| 7 | Empty bundle warning | manual | `bundle-empty.tgz` |
+| 8 | VM + host export `bookCount >= 1` | [`validate-zedcafe-vm-export.ts`](../../../tasks/lib/wanix/validate-zedcafe-vm-export.ts) | `cafe:dev` |
+| 9 | findplayers after content-ready | covered by #8 / manual | builds |
+| 10 | greenring writeback import | [`validate-greenring-drop.ts`](../../../tasks/lib/wanix/validate-greenring-drop.ts) | `cafe:dev` |
+| 11 | Linux overlay helpers | manual | overlay build + `#wanix vm` |
+| 12 | Remote WSS mount | [`validate-wanix-remote-mount.ts`](../../../tasks/lib/wanix/validate-wanix-remote-mount.ts) | `cafe:dev` + `p9server:dev` |
+| 13 | Remote zedsync seed + `.zedsync-ready` | [`validate-zedsync-remote.ts`](../../../tasks/lib/wanix/validate-zedsync-remote.ts) | #12 deps + empty peer |
+| 14 | Zedsync peer delete restore | same as #13 | empty peer root |
+| 15 | FSA folder drop + zedsync | **manual** (Chromium) | folder on disk |
+| 16 | listinput stamp poll | [`validate-binddrop-listinput.ts`](../../../tasks/lib/wanix/validate-binddrop-listinput.ts) | `cafe:dev` |
+| 17 | input2terrain → import synced | [`validate-binddrop-input2terrain.ts`](../../../tasks/lib/wanix/validate-binddrop-input2terrain.ts) | `cafe:dev` + book |
+| 18 | VM `png2terrain.sh` | manual | `#wanix vm` |
+| 19 | termbridge ping → pong | [`validate-termbridge.ts`](../../../tasks/lib/wanix/validate-termbridge.ts) | `cafe:dev` |
+| 20 | Content-ready race | unit [`wanixzedcafe.contentready-race.test.ts`](../../tests/unit/device/wanixclient/wanixzedcafe.contentready-race.test.ts) | Jest |
+| 21 | Soft idle ends zedsync; auto-halt exempt | #13 stop phase | zedsync running |
+| 22 | Hard remount wipes FSA binds | manual (see #15) | FSA mount |
+| 23 | Zedsync path with spaces rejected | unit + manual one-liner | — |
+
+Each scenario below uses: **Setup / Fixture assets / Steps / Expected signals / Automator / Failure dump**.
+
+---
 
 ## Tooling setup
 
-Check which compilers are installed and get install hints:
-
 ```bash
 yarn task run ops:fixtures:wanix:toolchains
-```
-
-Install anything reported missing, then regenerate fixtures:
-
-```bash
 yarn task run ops:fixtures:wanix:build
-```
-
-Use `--strict` to fail when any per-lang hello toolchain is missing (full regen before commit):
-
-```bash
-yarn task run ops:fixtures:wanix:build --strict
+# optional guests:
+yarn task run ops:fixtures:wanix:zedcafe:build
+yarn task run ops:fixtures:wanix:findplayers:build   # findplayers, greenring, zedsync
+yarn task run ops:fixtures:wanix:linux:overlay:build # needs Docker
 ```
 
 | Toolchain | Required for | Install (macOS) |
 |-----------|--------------|-----------------|
-| wabt | WAT fixtures (`wat2wasm`) | `brew install wabt` |
-| go + `submodules/wanix` | Go WASI, Go gojs, zedcafe | `brew install go` |
-| rust + `wasm32-wasip1` | `hello-rust.wasm` | `brew install rust` + `rustup target add wasm32-wasip1` |
+| wabt | WAT fixtures | `brew install wabt` |
+| go + `submodules/wanix` | Go WASI/gojs, zedcafe, zedsync | `brew install go` |
+| rust + `wasm32-wasip1` | `hello-rust.wasm` | `brew install rust` + target |
 | zig | `hello-zig.wasm` | `brew install zig` |
-| tinygo | `hello-tinygo.wasm` | `brew tap tinygo-org/tools && brew trust tinygo-org/tools && brew install tinygo` |
-| wasi-sdk | `hello-c.wasm` | install to `/opt/wasi-sdk` or set `WASI_SDK_PATH` |
-| docker | Linux VM overlay | `brew install --cask docker` |
+| tinygo | `hello-tinygo.wasm` | tinygo tap |
+| wasi-sdk | `hello-c.wasm` | `/opt/wasi-sdk` or `WASI_SDK_PATH` |
+| docker | Linux VM overlay | Docker Desktop |
 
-Sources for per-lang hellos live in `hello/` (see `hello/manifest.json`). WAT sources for greet/alpha/beta/termbridge remain in `src/*.wat`.
+Sources: `hello/`, `src/*.wat`, `zedcafe/`, `findplayers/`, `greenring/`, `zedsync/`, `listinput/`, `input2terrain/`, `linux/`, `p9server/`.
 
-## Quick use
-
-1. `yarn task cafe dev`
-2. Drag files from **`ops/public/wanix/`** onto the cafe page (or paste from Finder).
+### Quick drag-drop table
 
 | File | Tests |
 |------|--------|
-| `hello-wat.wasm` | WAT hello — first / incremental `.wasm` drop; prints `Hello from wanix!` |
-| `hello-rust.wasm` | Rust WASI hello |
-| `hello-zig.wasm` | Zig WASI hello |
-| `hello-gowasi.wasm` | Go WASI (`wasip1`) hello |
-| `hello-tinygo.wasm` | TinyGo WASI hello |
-| `hello-c.wasm` | C WASI hello |
-| `hello-gojs.wasm` | Go js/wasm hello |
-| `hello-all.tgz` | All `hello-*.wasm` files in one bundle |
-| `greet.wasm` | Second `.wasm` drop while a room is already running |
-| `bundle-one.tgz` | Single `hello-wat.wasm` inside a gzip tar |
-| `bundle-two.tgz` | Two `.wasm` files (`alpha.wasm`, `beta.wasm`) — spawns both tasks |
-| `bundle-empty.tgz` | No `.wasm` — expect `wanix bundle … has no .wasm entries` warning |
-| `termbridge.wasm` | Term bridge smoke — banner on stdout, stays running; type `ping` + Enter → `-> pong` on the tile |
-| `listinput.wasm` | Bind-on-drop smoke — polls `input/` every 500ms; prints on change (`once` argv = one-shot) |
-| `input2terrain.wasm` | Task bind-on-drop — reads `input/*.png` (or argv), writes `zedcafe/…/board/terrain.json` |
-| `png2terrain.sh` | VM bind-on-drop — same pipeline (`sh input/png2terrain.sh [name.png]`) |
-| `stamp-red.png` | 8×8 red input (95 bytes → 16 cells) |
-| `stamp-green.png` | 8×8 green input (96 bytes → 17 cells) |
-| `stamp-blue.png` | 8×8 blue input (98 bytes → 19 cells) |
+| `hello-*.wasm` / `hello-all.tgz` | Per-lang hello |
+| `greet.wasm` | Second wasm while room running |
+| `bundle-one.tgz` / `bundle-two.tgz` / `bundle-empty.tgz` | Bundle spawn / empty warn |
+| `termbridge.wasm` | Term ping → pong |
+| `listinput.wasm` | Bind-on-drop poll |
+| `input2terrain.wasm` / `png2terrain.sh` | Stamp → terrain |
+| `stamp-{red,green,blue}.png` | Distinct byte lengths (95/96/98) |
+| `findplayers.wasm` / `greenring.wasm` / `zedsync.wasm` / `zedcafe.wasm` | Export guests |
+| `zedcafe-linux-overlay.tgz` | VM PATH helpers |
 
-## Peer sync (zedsync) + remote import
+---
 
-`#wanix zedsync <path>` mirrors any gojs-visible peer directory with `zedcafe/`
-(WSS remote dst, dropped FSA folder, etc.).
+## Automators (copy-paste)
 
-Browser Wanix cannot export its namespace to an external folder. For host folders:
-
-1. Serve a host folder over WebSocket 9P
-2. `#wanix remote connect` imports that mount (idle → stands up a task room and mounts immediately; no prior wasm drop needed)
-3. `#wanix zedsync <path>` mirrors it with `zedcafe/` (r/w; peer deletes are restored from zedcafe)
-
-Or drop a folder onto cafe, then `#wanix zedsync <foldername>`.
-
-### Start a 9P WebSocket server
-
-Cafe only accepts **`wss://`** remotes. Use the local fixture (TLS via cafe mkcert):
+Prerequisite for all headed scripts: cafe listening (usually `yarn task cafe:dev` on `https://localhost:7777/`).
 
 ```bash
-# empty default root under ops/fixtures/wanix/p9server/serve-root
-yarn task run ops:fixtures:wanix:p9server:dev
+# Room / boot
+yarn task run cafe:playwright:headed --url https://localhost:7777/ \
+  tasks/lib/wanix/validate-idle-drop.ts
 
-# or pick a folder
-yarn task run ops:fixtures:wanix:p9server:dev -- ~/Desktop/zedcafe-sync
+yarn task run cafe:playwright:headed --url https://localhost:7777/ \
+  tasks/lib/wanix/validate-idle-boot.ts
 
-# always wss://localhost:8765/ (override with -port); then in cafe:
-#wanix remote connect wss://localhost:8765/ remote
-#wanix zedsync remote
+yarn task run cafe:playwright:headed --url https://localhost:7777/ \
+  tasks/lib/wanix/validate-warm-reuse.ts
 
-go test ./p9server/ ./zedsync/ -count=1   # from ops/fixtures/wanix
-```
+# Zedcafe / guests
+ZEDCAFE_VALIDATE_FIXTURE=1 yarn task run cafe:playwright:headed --url https://localhost:7777/ \
+  tasks/lib/wanix/validate-zedcafe-vm-export.ts
 
-**How to confirm the WSS is alive**
+ZEDCAFE_VALIDATE_FIXTURE=1 yarn task run cafe:playwright:headed --url https://localhost:7777/ \
+  tasks/lib/wanix/validate-greenring-drop.ts
 
-- p9server stdout should log `p9server: new connection from ...` on each browser connect (and closed / 9p session lines).
-- DevTools Network → Socket: select the **wanix iframe** context (or enable "frames"). Parent-page `?token=...` Pending sockets are Vite HMR, not the 9P remote.
-- Console `[wanix-perf]`: `remote-import-prepare` / `remote-wss-force-dial` (`pre-append-start`) → `remote-wss-socket-open` → `remote-wss-open` / `remote-import-open`, then room ready. Do **not** await WSS before append (that settled the import Promise early and deadlocked Go wasm → `wanix-system ready timeout`).
-- `#wanix zedsync <path>` needs an active wanix room and a peer directory visible to gojs; guest prints `waiting for target dir ...` before seed, then `seed progress N/M` while copying. Guest export-ready wait is 600s; host `.zedsync-ready` wait is 900s. Per-cell `board/terrain/<index>.json` trees are rejected — wipe/re-seed peers after schema changes.
-- **Live flat-file edits** (flags, `board/terrain.json`, etc. under the served folder) are supported while zedsync is running. `SteadyTick` recovers gojs FS panics into a retryable tick error (watcher stays up). Host export **defers removes** during guest-dirty/import so concurrent peer→zedcafe writes are not racing `directory not empty` deletes; benign ENOTEMPTY on remove is soft-logged.
+# Remote + zedsync (start p9 first — empty peer for seed/delete-restore)
+yarn task run ops:fixtures:wanix:p9server:dev -- ops/fixtures/wanix/scenarios/zedsync-peer
 
-### Cafe commands
-
-```text
-#wanix remote connect wss://localhost:8765/ remote
-#wanix zedsync remote
-# after dropping a folder named MyProject onto cafe:
-#wanix zedsync MyProject
-```
-
-- Target path must **not contain spaces** (Wanix splits `cmd` on spaces).
-- Empty peer is seeded from `zedcafe/` first (never wipes zedcafe because peer started empty).
-- Sync skips any path with a `.`-prefixed segment (dotfiles, hidden dirs, `.zedsync-ready`).
-- After ready: deleting a file on the **peer** restores it from `zedcafe/`; deleting from **zedcafe** still removes the peer copy.
-- Import poll pauses until `<target>/.zedsync-ready`, then resumes.
-- `#wanix stop` / soft idle ends the zedsync task — look for `zedsync: stopped`. The 5-minute term idle auto-halt applies to one-shot dropped wasm tasks only; **zedsync** (like **zedcafe**) is exempt so a quiet watch loop stays alive.
-- Build guest: `yarn task run ops:fixtures:wanix:findplayers:build` → `cafe/public/wanix/zedsync.wasm` (also staged under `ops/public/wanix/`)
-
-### Headed remote-mount validator
-
-With `cafe:dev` and `ops:fixtures:wanix:p9server:dev` running:
-
-```bash
 yarn task run cafe:playwright:headed --url https://localhost:7777/ \
   tasks/lib/wanix/validate-wanix-remote-mount.ts
+
+ZEDCAFE_VALIDATE_FIXTURE=1 WANIX_P9_SERVE_ROOT=$PWD/ops/fixtures/wanix/scenarios/zedsync-peer \
+  yarn task run cafe:playwright:headed --url https://localhost:7777/ \
+  tasks/lib/wanix/validate-zedsync-remote.ts
+
+# Bind-on-drop / term
+yarn task run cafe:playwright:headed --url https://localhost:7777/ \
+  tasks/lib/wanix/validate-binddrop-listinput.ts
+
+ZEDCAFE_VALIDATE_FIXTURE=1 yarn task run cafe:playwright:headed --url https://localhost:7777/ \
+  tasks/lib/wanix/validate-binddrop-input2terrain.ts
+
+yarn task run cafe:playwright:headed --url https://localhost:7777/ \
+  tasks/lib/wanix/validate-termbridge.ts
 ```
 
-Optional: `WANIX_P9_WSS_URL=wss://localhost:8765/` (default). Gates: session ready → `#wanix remote connect …` → `[wanix-perf]` `remote-wss-then` → `remote-wss-fulfill-allowed` → `remote-wss-open` → iframe `readDir('remote')`. On failure, see `/tmp/wanix-remote-mount-report.json`.
+| Env | Default | Meaning |
+|-----|---------|---------|
+| `ZEDCAFE_VALIDATE_FIXTURE` | unset | `1` injects `ops/fixtures/books/example-coolregionsbow.book.json` |
+| `WANIX_P9_WSS_URL` | `wss://localhost:8765/` | Remote connect URL |
+| `WANIX_P9_SERVE_ROOT` | `ops/fixtures/wanix/scenarios/zedsync-peer` | Host path zedsync validator deletes/restores |
 
-## Bind-on-drop pipeline (`input/`)
+| Report | Path |
+|--------|------|
+| idle/export/greenring | `/tmp/wanix-*-report.json` + copies under `ops/fixtures/wanix/reports/` |
+| remote mount | `/tmp/wanix-remote-mount-report.json` |
+| zedsync | `/tmp/wanix-zedsync-remote-report.json` |
+| listinput | `/tmp/wanix-binddrop-listinput-report.json` |
+| input2terrain | `/tmp/wanix-binddrop-input2terrain-report.json` |
+| termbridge | `/tmp/wanix-termbridge-report.json` |
+| warm reuse | `/tmp/wanix-warm-reuse-report.json` |
 
-While **attached** to a Wanix term session, file drops bind under **`input/<name>`** (not spawn tasks). Processors read `input/` and write zedcafe export paths under `zedcafe/…` so the host import cycle can sync boards/terrain.
+Script budget: `PLAYWRIGHT_SCENARIO_TIMEOUT_MS` (180s) via `withscripttimeout`.
 
-**Stamps:** three 8×8 PNGs with different byte lengths. Cell count is `bytes % 40 + 1`, so swapping stamps changes stdout and proves the guest read the real file.
+---
 
-| File | Bytes | Cells (`% 40 + 1`) |
-|------|------:|-------------------:|
+## Scenarios
+
+### 1. Idle default after login
+
+| | |
+|--|--|
+| **Setup** | `yarn task cafe:dev` |
+| **Fixture assets** | — |
+| **Steps** | 1. Open cafe and complete register/login. 2. Do **not** run `#wanix vm` or drop wasm. |
+| **Expected signals** | Console may show `[wanix] idle` / ready flag; **no** automatic task/VM `applyroom` for workloads. `#wanix` menu shows idle mode. |
+| **Automator** | manual |
+| **Failure dump** | — |
+
+### 2–3. Soft idle, warm reuse, hard remount
+
+| | |
+|--|--|
+| **Setup** | `cafe:dev`; fixtures built (`bundle-one.tgz`) |
+| **Fixture assets** | `ops/public/wanix/bundle-one.tgz` |
+| **Steps** | 1. Drop `bundle-one.tgz` (task room). 2. Warm path: `ensurewanixtaskroom` while still task (validator). 3. `#wanix stop` → soft idle (same `mountkey`, warm `<wanix-system>`). 4. Hard stop (`stopwanixroom(true)`) bumps `mountkey` and remounts. |
+| **Expected signals** | `[wanix-perf] applyroom-warm-reuse`; soft: `applyroom-soft-idle`; hard: `applyroom-remount` / higher `mountkey`. Tape: `wanix stop room`. |
+| **Automator** | `tasks/lib/wanix/validate-warm-reuse.ts` |
+| **Failure dump** | `/tmp/wanix-warm-reuse-report.json` |
+
+Note: dropping wasm **from idle** remounts the task room (`hardreset`); warm reuse applies to re-activate on an **already active** room.
+
+### 4. Idle drop → task room
+
+| | |
+|--|--|
+| **Setup** | `cafe:dev` |
+| **Fixture assets** | `bundle-one.tgz` |
+| **Steps** | Drop bundle onto cafe (or run validator). |
+| **Expected signals** | `wanix task room starting` → `wanix run` → ready; iframe `wanix-task[id]` count >= 1 |
+| **Automator** | `validate-idle-drop.ts` |
+| **Failure dump** | script throw / console |
+
+### 5. Idle VM boot
+
+| | |
+|--|--|
+| **Setup** | `cafe:dev` |
+| **Fixture assets** | stock linux + overlay URLs |
+| **Steps** | `#wanix vm` |
+| **Expected signals** | `wanix vm starting` / `started` |
+| **Automator** | `validate-idle-boot.ts` |
+| **Failure dump** | console |
+
+### 6. Multi-task append
+
+| | |
+|--|--|
+| **Setup** | `cafe:dev` |
+| **Fixture assets** | `hello-wat.wasm`, `greet.wasm`, `bundle-two.tgz` |
+| **Steps** | 1. Drop `hello-wat.wasm`. 2. Drop `greet.wasm` (second task, no iframe flash). 3. Drop `bundle-two.tgz` (alpha + beta). |
+| **Expected signals** | Multiple `wanix-task` elements; greet/alpha/beta stdout |
+| **Automator** | manual |
+| **Failure dump** | — |
+
+### 7. Empty bundle
+
+| | |
+|--|--|
+| **Setup** | `cafe:dev` |
+| **Fixture assets** | `bundle-empty.tgz` |
+| **Steps** | Drop empty bundle. |
+| **Expected signals** | Warning `wanix bundle … has no .wasm entries`; no crash |
+| **Automator** | manual |
+| **Failure dump** | — |
+
+### 8–9. VM export + findplayers
+
+| | |
+|--|--|
+| **Setup** | `cafe:dev`; books in storage **or** `ZEDCAFE_VALIDATE_FIXTURE=1` |
+| **Fixture assets** | `example-coolregionsbow.book.json`; optional `findplayers.wasm` |
+| **Steps** | 1. `#wanix vm` (validator). 2. Wait host export `bookCount >= 1`. 3. Optional: drop `findplayers.wasm` after content-ready. |
+| **Expected signals** | `[zedcafe-export]` / `[wanix-perf]` push marks; findplayers JSON path array on stdout |
+| **Automator** | `validate-zedcafe-vm-export.ts` |
+| **Failure dump** | `/tmp/wanix-zedcafe-export-report.json`, `ops/fixtures/wanix/reports/` |
+
+### 10. greenring writeback
+
+| | |
+|--|--|
+| **Setup** | `cafe:dev` + book (`ZEDCAFE_VALIDATE_FIXTURE=1` recommended) |
+| **Fixture assets** | `greenring.wasm` |
+| **Steps** | Drop `greenring.wasm` with onboard players. |
+| **Expected signals** | `{"painted":N}`; `poll-guest-diff=true`; `zedcafe import: synced` |
+| **Automator** | `validate-greenring-drop.ts` |
+| **Failure dump** | zedcafe report helpers |
+
+### 11. Linux overlay helpers
+
+| | |
+|--|--|
+| **Setup** | `ops:fixtures:wanix:linux:overlay:build` then `cafe:dev` |
+| **Fixture assets** | `zedcafe-linux-overlay.tgz` |
+| **Steps** | 1. `#wanix vm`. 2. After export ready: `zedcafe-stats`, `zedcafe-books`, `zedcafe-players`. 3. Optional `curl -I https://example.com`. |
+| **Expected signals** | MOTD at boot; helper stdout; live data under `/zedcafe/` |
+| **Automator** | manual (overlay contents gated by unit `wanixlinuxoverlay.test.ts`) |
+| **Failure dump** | — |
+
+### 12. Remote WSS mount
+
+| | |
+|--|--|
+| **Setup** | `cafe:dev` + `ops:fixtures:wanix:p9server:dev` (any root) |
+| **Fixture assets** | p9 TLS on `wss://localhost:8765/` |
+| **Steps** | `#wanix remote connect wss://localhost:8765/ remote` |
+| **Expected signals** | `[wanix-perf]` `remote-wss-then` → `remote-wss-fulfill-allowed` → `remote-wss-open`; iframe `readDir('remote')` |
+| **Automator** | `validate-wanix-remote-mount.ts` |
+| **Failure dump** | `/tmp/wanix-remote-mount-report.json` |
+
+### 13–14. Remote zedsync seed + delete restore
+
+| | |
+|--|--|
+| **Setup** | `cafe:dev`; **empty** peer: `p9server:dev -- ops/fixtures/wanix/scenarios/zedsync-peer`; book via fixture env |
+| **Fixture assets** | `zedsync.wasm` (findplayers build); empty peer README under `scenarios/zedsync-peer/` |
+| **Steps** | 1. `#wanix remote connect … remote`. 2. `#wanix zedsync remote`. 3. Wait seed/ready. 4. Delete a peer JSON on disk; wait restore. 5. `#wanix stop` → `zedsync: stopped`. |
+| **Expected signals** | Host: `zedsync: seed ready` / `watching`; peer files appear under serve root; deleted file returns; soft stop ends task |
+| **Automator** | `validate-zedsync-remote.ts` |
+| **Failure dump** | `/tmp/wanix-zedsync-remote-report.json` |
+
+Rules: target path **no spaces**; empty peer seeds from `zedcafe/` (never wipe); skips `.`-prefixed segments; import poll pauses until `<target>/.zedsync-ready`; zedsync exempt from 5‑min task auto-halt.
+
+### 15. FSA folder drop + zedsync (manual)
+
+| | |
+|--|--|
+| **Setup** | Chromium; `cafe:dev`; folder **without spaces** in the name |
+| **Fixture assets** | empty or existing project folder on disk |
+| **Steps** | 1. Drop folder onto cafe → mount `/<name>`, menu “externals”. 2. Wait folder mount OK. 3. `#wanix zedsync <foldername>`. |
+| **Expected signals** | `wanix folder mount ok $26 /…`; same zedsync seed/ready lines as #13 |
+| **Automator** | **manual** (Playwright cannot drive `showDirectoryPicker`; automated peer proof is #13) |
+| **Failure dump** | — |
+
+**Hard remount (#22):** `stopwanixroom(true)` clears ephemeral FSA binds — re-drop the folder after hard remount. Prefer soft `#wanix stop` only when you do not need the mount.
+
+### 16. listinput stamp poll
+
+| | |
+|--|--|
+| **Setup** | `cafe:dev` |
+| **Fixture assets** | `listinput.wasm`, `stamp-red.png` |
+| **Steps** | 1. Drop `listinput.wasm`. 2. Stay attached. 3. Drop/bind `stamp-red.png` under `input/`. |
+| **Expected signals** | `listinput: initial` / `empty`; then `listinput: ok stamp-red.png (95 bytes)` |
+| **Automator** | `validate-binddrop-listinput.ts` |
+| **Failure dump** | `/tmp/wanix-binddrop-listinput-report.json` |
+
+### 17. input2terrain → import
+
+| | |
+|--|--|
+| **Setup** | `cafe:dev` + book (`ZEDCAFE_VALIDATE_FIXTURE=1`) |
+| **Fixture assets** | `input2terrain.wasm`, `stamp-red.png` |
+| **Steps** | Drop `input2terrain.wasm`; validator binddrops stamp as soon as the task element appears so `input/` exists before the guest reads. Manual UX: attach, drop stamp, re-run from term if needed. |
+| **Expected signals** | `input2terrain: wrote … (16 cells … 95 bytes)`; `zedcafe import: synced` |
+| **Automator** | `validate-binddrop-input2terrain.ts` |
+| **Failure dump** | `/tmp/wanix-binddrop-input2terrain-report.json` |
+
+### 18. VM png2terrain
+
+| | |
+|--|--|
+| **Setup** | `cafe:dev`; `#wanix vm`; attach `linux-vm` |
+| **Fixture assets** | `png2terrain.sh`, stamps |
+| **Steps** | Drop script + stamp while attached; `sh input/png2terrain.sh`. |
+| **Expected signals** | cell count stdout; `zedcafe import: synced` |
+| **Automator** | manual |
+| **Failure dump** | — |
+
+### 19. termbridge
+
+| | |
+|--|--|
+| **Setup** | `cafe:dev` |
+| **Fixture assets** | `termbridge.wasm` |
+| **Steps** | Drop; wait banner; type `ping` + Enter (validator uses `termwrite`). |
+| **Expected signals** | `wanix term bridge ready`; `-> pong` (tile bridge, not WASI stdin) |
+| **Automator** | `validate-termbridge.ts` |
+| **Failure dump** | `/tmp/wanix-termbridge-report.json` |
+
+### 20. Content-ready race
+
+Mount ready (`readDir` export) then content ready (`stats.json` / `exportready`). Spawn of findplayers blocks until content ready. Covered by unit test; headed coverage via #8/#9.
+
+### 21. Soft idle ends zedsync
+
+After #13 steady state, `#wanix stop` → guest/`zedsync: stopped`. Quiet watch loop is **not** killed by 5‑min term idle auto-halt (exempt like zedcafe).
+
+### 22. Hard remount wipes FSA
+
+See #15. Soft idle keeps warm system + remotes; hard reset clears FSA binds.
+
+### 23. Path with spaces
+
+`#wanix zedsync My Folder` fails (Wanix splits `cmd` on spaces). Use a path without spaces. Unit coverage in client/guest tests.
+
+---
+
+## Peer sync notes (remote / FSA)
+
+Browser Wanix cannot export its namespace to an arbitrary host folder. Options:
+
+1. **WSS 9P** — `p9server:dev` + `#wanix remote connect` + `#wanix zedsync remote`
+2. **FSA** — drop folder + `#wanix zedsync <name>` (Chromium)
+
+Empty peer seed root for automators: [`scenarios/zedsync-peer/`](scenarios/zedsync-peer/). Pre-populated sample: [`p9server/serve-root/`](p9server/serve-root/).
+
+```bash
+yarn task run ops:fixtures:wanix:p9server:dev -- ops/fixtures/wanix/scenarios/zedsync-peer
+#wanix remote connect wss://localhost:8765/ remote
+#wanix zedsync remote
+```
+
+Confirm WSS: p9server logs connections; DevTools Network on **wanix iframe** (not parent Vite HMR). Perf order must not await WSS before append (ready timeout).
+
+---
+
+## Bind-on-drop (`input/`)
+
+While **attached**, file drops bind under `input/<name>` (not task spawn).
+
+| Stamp | Bytes | Cells (`% 40 + 1`) |
+|-------|------:|-------------------:|
 | `stamp-red.png` | 95 | 16 |
 | `stamp-green.png` | 96 | 17 |
 | `stamp-blue.png` | 98 | 19 |
 
-**Prerequisite (full pipeline):** a book with a board page loaded so `zedcafe/…/board/terrain.json` exists in the export tree.
-
-### Smoke (`listinput.wasm` — live poll)
-
-Default mode is a **long-running watch** (500ms `ReadDir` poll). Leave it attached and drop stamps; do not re-run the task for each file.
-
-1. Drop `listinput.wasm` (idle) → task spawns and starts watching.
-2. `#wanix attach <task-id>` (keep the tile focused so stdout stays visible).
-3. Expect `listinput: initial` then `listinput: empty` (or existing files if any).
-4. Drop `stamp-red.png` → binds to `input/stamp-red.png`.
-5. Within ~500ms expect `listinput: change` then `listinput: ok stamp-red.png (95 bytes)`.
-6. Drop `stamp-green.png` → expect another `change` with `96 bytes` (basename must update).
-7. Optional one-shot: spawn with argv `once` to list and exit.
-
-Note: wanix task idle auto-halt (~5 minutes with no term I/O) may stop the watcher; attached typing/stdout activity resets that timer.
-
-### Task example (`input2terrain.wasm`)
-
-1. Drop `input2terrain.wasm` (idle) → task spawns.
-2. `#wanix attach <task-id>`.
-3. Drop `stamp-red.png` → binds to `input/stamp-red.png`.
-4. Run `input2terrain` in the attached terminal (optional argv: basename).
-5. Expect stdout mentioning `stamp-red.png`, `16 cells`, `95 bytes`, then apilog: `zedcafe import: synced …`.
-6. Drop `stamp-blue.png`, run again — expect `19 cells` / `98 bytes`.
-
-### VM example (`png2terrain.sh`)
-
-1. `#wanix vm` → attach to `linux-vm`.
-2. Drop `png2terrain.sh` → `input/png2terrain.sh` (executable).
-3. Drop `stamp-green.png` → `input/stamp-green.png`.
-4. In VM terminal: `sh input/png2terrain.sh` (or `sh input/png2terrain.sh stamp-green.png`).
-5. Expect stdout with basename + cell count; apilog: `zedcafe import: synced …`.
+---
 
 ## GoJS zedcafe tools
 
-Built with `yarn task run ops:fixtures:wanix:zedcafe:build` (run `ops:fixtures:wanix:toolchains` first). `findplayers.wasm` and `greenring.wasm` share: `yarn task run ops:fixtures:wanix:findplayers:build`.
-
 | File | Role |
 |------|------|
-| `zedcafe.wasm` | Export daemon — mounts schema-guarded export FS; host pushes game state via `writeFile` at guest mount `zedcafe/` |
-| `findplayers.wasm` | One-shot scanner — prints a JSON array of export paths containing player elements |
-| `greenring.wasm` | Finds onboard players, writes a green terrain ring around each into `board/terrain.json` (imported into sim on the next poll) |
+| `zedcafe.wasm` | Export daemon at guest `zedcafe/` |
+| `findplayers.wasm` | Scan export for player paths |
+| `greenring.wasm` | Paint green terrain ring → import |
 
-**findplayers flow**
+Zedcafe stands up **lazily** on first VM or wasm/tgz drop. Soft idle clears export session; next boot rebuilds from sim.
 
-Zedcafe stands up **lazily** on first `#wanix vm` or wasm/tgz drop — not at login. Books load into sim memory only; the export daemon, shadow prime, and host push run when the task or VM room activates. Returning to idle **soft-idles** the wanix iframe (keeps warm `<wanix-system>`; halts zedcafe task and clears host export session). The next VM/task boot reuses the system when possible and rebuilds export from sim. Use hard stop (`stopwanixroom(true)`) to force a full remount.
-
-Readiness contract: **mount ready** (`readDir` on export root) then **content ready** (`stats.json` after host push). Content signal uses `WANIX_MSG_EXPORT` `content-ready` postMessage (parent waits on event, then RPC poll fallback). Poll budget **30s / 250ms** (`WANIX_ZEDCAFE_EXPORT_READY_*` in [`wanixzedcafeconstants.ts`](../../../zss/feature/wanix/wanixzedcafeconstants.ts)).
-
-1. `#wanix vm` or drop a wasm/tgz bundle boots the wanix task room and zedcafe export daemon from live memory.
-2. Drop `findplayers.wasm` as a gojs task. The iframe **blocks spawn** until `#task/{rid}/export/stats.json` is readable, attaches a per-task `zedcafe/` bind (child tasks do not inherit system binds), then `allocate()` / `start()`.
-3. The guest polls `zedcafe/stats.json` in its own task namespace (defense-in-depth) and prints one JSON stdout line: a sorted array of export-relative paths.
-
-If zedcafe is not ready, spawn is blocked with a terminal error (the guest does not start).
-
-**greenring flow**
-
-Same stand-up as findplayers. Drop `greenring.wasm` with players on a board:
-
-1. Waits for export content, scans for onboard players with coordinates.
-2. Writes allowlisted `board/terrain.json` (green ring, Chebyshev radius 1) under each player’s book/page.
-3. When the task term closes (after gojs exit), host kicks one import-poll cycle, imports into the sim worker, and the board updates in cafe.
-
-### Headed export validator
-
-With `cafe:dev` running:
-
-```bash
-# login path (requires books in storage — matches manual dev login)
-yarn task run cafe:playwright:headed --url https://localhost:7777/ \
-  tasks/lib/wanix/validate-zedcafe-vm-export.ts
-
-# deterministic fixture inject (empty storage / CI)
-ZEDCAFE_VALIDATE_FIXTURE=1 yarn task run cafe:playwright:headed --url https://localhost:7777/ \
-  tasks/lib/wanix/validate-zedcafe-vm-export.ts
-```
-
-Default login path waits for books in sim memory, then `#wanix vm`, then host export with `bookCount >= 1`. Fixture mode injects `example-coolregionsbow.book.json` in-page before VM boot. On failure, see `/tmp/wanix-zedcafe-export-report.json` and timestamped copies under `ops/fixtures/wanix/reports/`. Console lines tagged `[zedcafe-export]` trace push/sync/finalize decisions; `[wanix-perf]` marks phase timing (`drop-start`, `applyroom-warm-reuse`, `export-push-end`, `wasm-write-end`, `spawntask-return`).
-
-## Term bridge (`termbridge.wasm`)
-
-Guest prints a banner via WASI `fd_write` only (no stdin). Input and the `ping` → `pong` reply use the ZSS tile term bridge (`#task/…/term/data`), not WASI `fd_read(0)`.
-
-1. Drop `termbridge.wasm` onto the app (or attach from `#wanix` after drop).
-2. Confirm scrollback shows `wanix term bridge ready`.
-3. Type `ping` and press Enter — tile should show `-> pong`.
-
-## Suggested flows
-
-**Per-lang hello smoke**
-
-1. Drop any `hello-<lang>.wasm` → task room boots, prints `Hello from wanix!`.
-2. Drop `hello-all.tgz` → spawns every hello task.
-
-**Task room**
-
-1. Drop `hello-wat.wasm` → task room boots, one task runs.
-2. Drop `greet.wasm` → second task appended (no iframe rebuild flash).
-3. Drop `bundle-two.tgz` → alpha + beta tasks spawn.
-
-**VM room**
-
-1. `#wanix vm` → Linux boots (stock `wanix-linux.tgz` + local `zedcafe-linux-overlay.tgz`).
-2. Drop `hello-wat.wasm` → WASI task runs alongside VM.
-3. Drop `bundle-one.tgz` → bundle task runs; VM still up.
-4. `#wanix vm stop` → VM stops; tasks keep running.
-
-## VM overlay (`zedcafe-linux-overlay.tgz`)
-
-Layers jq, curl, wget, and zedcafe shell helpers on top of the stock Wanix Linux rootfs when `#wanix vm` boots.
-
-Built with `yarn task run ops:fixtures:wanix:linux:overlay:build` (needs Docker):
-
-| Path in guest | Role |
-|---------------|------|
-| `/boot/rc` | MOTD listing zedcafe tools |
-| `/usr/bin/zedcafe-*` | Export introspection (`zedcafe-ready`, `zedcafe-stats`, `zedcafe-books`, `zedcafe-players`, `zedcafe-code`, `zedcafe-find`, …) |
-| `/usr/bin/jq`, `curl`, `wget` | JSON and network utilities |
-
-Live game content still mounts at **`/zedcafe/`** from the host export daemon (not baked into the overlay).
-
-**VM smoke**
-
-1. Build overlay (once): `yarn task run ops:fixtures:wanix:linux:overlay:build`
-2. `yarn task cafe dev` → `#wanix vm`
-3. MOTD appears at boot; after export is ready: `zedcafe-stats`, `zedcafe-books`, `zedcafe-players`, `zedcafe-code`, `zedcafe-find`
-4. `curl -I https://example.com` — network sanity
-
-Sources: `linux/` (this directory). Output: `ops/public/wanix/zedcafe-linux-overlay.tgz` and `cafe/public/wanix/`.
-
-**Empty bundle**
-
-1. Drop `bundle-empty.tgz` → warning in log, no crash.
+---
 
 ## Regenerate
 
 ```bash
 yarn task run ops:fixtures:wanix:toolchains
 yarn task run ops:fixtures:wanix:build
+yarn task run ops:fixtures:wanix:findplayers:build
 ```
 
-Built artifacts land in `ops/public/wanix/` — drag-drop from there or fetch at `/fixtures/wanix/` in dev.
+Artifacts: `ops/public/wanix/` (and staged under `cafe/public/wanix/` where builds copy).
