@@ -56,11 +56,11 @@ export async function dropwanixfsadirectory(
     apilog(
       SOFTWARE,
       player,
-      `wanix: mounting folder ${mountdst} (standing up room)…`,
+      `wanix: mounting folder ${mountdst} (standing up room)...`,
     )
     ensurewanixtaskroom(SOFTWARE, player)
   } else {
-    apilog(SOFTWARE, player, `wanix: mounting folder → /${mountdst}…`)
+    apilog(SOFTWARE, player, `wanix: mounting folder $26 /${mountdst}...`)
   }
 
   try {

@@ -57,44 +57,77 @@ describe('startwanixzedsync gates', () => {
     mockhalttask.mockClear()
     setwanixroomconfig(createidleroomconfig())
     global.fetch = jest.fn() as unknown as typeof fetch
+    const { iswanixspaceactive } = jest.requireMock(
+      'zss/device/wanixclient/wanixzedcafe',
+    ) as { iswanixspaceactive: jest.Mock }
+    iswanixspaceactive.mockReturnValue(true)
   })
 
   afterEach(() => {
     cancelzedsyncreadywait()
   })
 
-  it('rejects when no remote matches target', async () => {
-    setwanixroomconfig({
-      ...createidleroomconfig(),
-      mode: 'task',
-      remotes: [{ id: 'remote-other', dst: 'other', url: 'wss://localhost:8765/' }],
-    })
-    await expect(startwanixzedsync(device, player, 'remote')).rejects.toThrow(
-      /no remote mount for "remote"/,
+  it('rejects empty targetpath', async () => {
+    await expect(startwanixzedsync(device, player, '  ')).rejects.toThrow(
+      /usage: #wanix zedsync/,
     )
     expect(mockspawntask).not.toHaveBeenCalled()
-    expect(iszedsyncreadywaitpending()).toBe(false)
   })
 
-  it('rejects when room is idle after failed import', async () => {
+  it('rejects spaces in targetpath', async () => {
+    await expect(
+      startwanixzedsync(device, player, 'my folder'),
+    ).rejects.toThrow(/must not contain spaces/)
+    expect(mockspawntask).not.toHaveBeenCalled()
+  })
+
+  it('rejects zedcafe as targetpath', async () => {
+    await expect(startwanixzedsync(device, player, 'zedcafe')).rejects.toThrow(
+      /must not be zedcafe/,
+    )
+    expect(mockspawntask).not.toHaveBeenCalled()
+  })
+
+  it('rejects when wanix room is not active', async () => {
     const { iswanixspaceactive } = await import(
       'zss/device/wanixclient/wanixzedcafe'
     )
-    ;(iswanixspaceactive as jest.Mock).mockReturnValueOnce(false)
+    ;(iswanixspaceactive as jest.Mock).mockReturnValue(false)
     setwanixroomconfig({
       ...createidleroomconfig(),
-      mode: 'idle',
-      remotes: [
-        { id: 'remote-remote', dst: 'remote', url: 'wss://localhost:8765/' },
-      ],
+      mode: 'task',
+      zedcafe: { cmd: 'zedcafe.wasm', generation: 1 },
     })
-    await expect(startwanixzedsync(device, player, 'remote')).rejects.toThrow(
-      /remote mount missing/,
+    await expect(startwanixzedsync(device, player, 'MyFolder')).rejects.toThrow(
+      /wanix room not active/,
     )
     expect(mockspawntask).not.toHaveBeenCalled()
   })
 
-  it('spawns and waits for ready sentinel when remote is mounted', async () => {
+  it('spawns for any peer path without a remotes list entry', async () => {
+    ;(global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      arrayBuffer: async () => new ArrayBuffer(8),
+    })
+    setwanixroomconfig({
+      ...createidleroomconfig(),
+      mode: 'task',
+      remotes: [],
+      zedcafe: { cmd: 'zedcafe.wasm', generation: 1 },
+    })
+    await startwanixzedsync(device, player, 'MyFolder')
+    expect(mockspawntask).toHaveBeenCalled()
+    expect(iszedsyncreadywaitpending()).toBe(true)
+    expect(mockapilog).toHaveBeenCalledWith(
+      device,
+      player,
+      expect.stringContaining('spawned; waiting for MyFolder/.zedsync-ready'),
+    )
+    cancelzedsyncreadywait('test cleanup')
+    expect(iszedsyncreadywaitpending()).toBe(false)
+  })
+
+  it('spawns when a remote dst is the peer path', async () => {
     ;(global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       arrayBuffer: async () => new ArrayBuffer(8),

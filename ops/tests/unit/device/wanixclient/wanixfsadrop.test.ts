@@ -3,7 +3,11 @@ import {
   readwanixfsahandlekind,
   sanitizewanixfsadst,
 } from 'zss/feature/wanix/wanixfsapaths'
-import { partitioncafedrop } from 'zss/device/wanixclient/wanixfsadropitems'
+import {
+  capturecafedropitems,
+  partitioncafedrop,
+  resolvecafedropitems,
+} from 'zss/device/wanixclient/wanixfsadropitems'
 
 describe('wanixfsapaths', () => {
   describe('sanitizewanixfsadst', () => {
@@ -39,7 +43,30 @@ describe('wanixfsapaths', () => {
   })
 })
 
-describe('partitioncafedrop', () => {
+describe('capturecafedropitems / resolvecafedropitems', () => {
+  it('invokes getAsFileSystemHandle synchronously during capture', async () => {
+    const dirhandle = { kind: 'directory', name: 'Assets' }
+    let called = false
+    const item = {
+      kind: 'file',
+      getAsFileSystemHandle: () => {
+        called = true
+        return Promise.resolve(dirhandle as FileSystemHandle)
+      },
+      getAsFile: () => new File(['x'], 'Assets'),
+    }
+    const dt = {
+      items: [item],
+      files: [],
+    } as unknown as DataTransfer
+    const pending = capturecafedropitems(dt)
+    expect(called).toBe(true)
+    const part = await resolvecafedropitems(pending)
+    expect(part.directories).toHaveLength(1)
+    expect(part.directories[0]).toBe(dirhandle)
+    expect(part.files).toHaveLength(0)
+  })
+
   it('routes directory handles away from the file list', async () => {
     const dirhandle = { kind: 'directory', name: 'Assets' }
     const item = {
@@ -62,7 +89,11 @@ describe('partitioncafedrop', () => {
     const file = new File(['hi'], 'note.txt')
     const item = {
       kind: 'file',
-      getAsFileSystemHandle: async () => ({ kind: 'file', name: 'note.txt' }),
+      getAsFileSystemHandle: async () => ({
+        kind: 'file',
+        name: 'note.txt',
+        getFile: async () => file,
+      }),
       getAsFile: () => file,
     }
     const dt = {

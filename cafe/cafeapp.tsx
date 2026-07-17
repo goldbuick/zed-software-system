@@ -1,6 +1,11 @@
-import { vmloader } from 'zss/device/api'
+import { apierror, vmloader } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
+import {
+  applycafedroppartition,
+  capturecafedropitems,
+  resolvecafedropitems,
+} from 'zss/device/wanixclient/wanixfsadropitems'
 import { enableaudio } from 'zss/device/synth'
 import { clearwasmcoepserviceworkers } from 'zss/feature/synth/backend/wasm/coopcoep'
 import { useDeviceData } from 'zss/gadget/device'
@@ -64,21 +69,29 @@ if (typeof window !== 'undefined') {
       return
     }
 
+    // Chrome: getAsFileSystemHandle must be invoked in this tick — no await before.
+    const pending = capturecafedropitems(dt)
     void (async () => {
-      const { applycafedroppartition, partitioncafedrop } = await import(
-        'zss/device/wanixclient/wanixfsadropitems'
-      )
-      const partition = await partitioncafedrop(dt)
-      await applycafedroppartition(partition, (file) => {
-        vmloader(
+      try {
+        const partition = await resolvecafedropitems(pending)
+        await applycafedroppartition(partition, (file) => {
+          vmloader(
+            SOFTWARE,
+            registerreadplayer(),
+            undefined,
+            'file',
+            file.name,
+            file,
+          )
+        })
+      } catch (err) {
+        apierror(
           SOFTWARE,
           registerreadplayer(),
-          undefined,
-          'file',
-          file.name,
-          file,
+          'wanix',
+          err instanceof Error ? err.message : String(err),
         )
-      })
+      }
     })()
   })
 }

@@ -1,7 +1,7 @@
 import { WANIX_ZEDCAFE_WASM_BUILD_ID } from 'zss/feature/wanix/wanixzedcafewasmversion'
 
 export const WANIX_ZEDCAFE_TASK_ID = 'zedcafe'
-/** Long-running remote↔zedcafe sync daemon (`#wanix zedsync`). */
+/** Long-running peer↔zedcafe sync daemon (`#wanix zedsync <path>`). */
 export const WANIX_ZEDSYNC_TASK_ID = 'zedsync'
 /** Attached-session drop mount: `input/<file>` (task `./input/…`, VM guest `/input/…`). */
 export const WANIX_INPUT_MOUNT = 'input'
@@ -27,7 +27,7 @@ export const WANIX_ZEDCAFE_EXPORT_READY_POLL_MS = 250
 export const WANIX_ZEDCAFE_EXPORT_COALESCE_MS = 500
 /** Host + guest wait for content-ready stats.json. */
 export const WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS = 600_000
-/** Parent wait for `<target>/.zedsync-ready` after seeding a large remote tree. */
+/** Parent wait for `<target>/.zedsync-ready` after seeding a large peer tree. */
 export const WANIX_ZEDSYNC_READY_TIMEOUT_MS = 900_000
 
 export function readwanixzedcafeexportsrc(taskrid: string): string {

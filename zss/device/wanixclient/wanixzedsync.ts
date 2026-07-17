@@ -4,7 +4,6 @@ import type { WanixTermTileBuffer } from 'zss/device/wanixclient/state'
 import {
   ensurewanixtaskroom,
   putwanixroomfile,
-  readwanixremotes,
   readwanixroomconfig,
   spawntaskinroom,
 } from 'zss/device/wanixclient/wanixroom'
@@ -169,20 +168,11 @@ export async function startwanixzedsync(
     throw new Error('zedsync targetpath must not be zedcafe')
   }
 
-  const remotes = readwanixremotes()
-  const matched = remotes.find((remote) => remote.dst === target)
-  if (!matched) {
-    throw new Error(
-      `zedsync: no remote mount for "${target}" — run #wanix remote connect <wss-url> ${target} first`,
-    )
-  }
+  ensurewanixtaskroom(device, player)
   if (!iswanixspaceactive()) {
-    throw new Error(
-      `zedsync: remote mount missing — reconnect ${matched.url} (room idle after failed import)`,
-    )
+    throw new Error('zedsync: wanix room not active')
   }
 
-  ensurewanixtaskroom(device, player)
   pollwasactive = true
   stopzedcafepoll()
   apilog(device, player, 'zedsync: paused import poll for seed')

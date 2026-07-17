@@ -20,6 +20,6 @@ export function handlebindfsa(device: DEVICE, message: MESSAGE): void {
     return
   }
   if (typeof result.dst === 'string') {
-    apilog(device, message.player, `wanix folder mount ok → /${result.dst}`)
+    apilog(device, message.player, `wanix folder mount ok $26 /${result.dst}`)
   }
 }

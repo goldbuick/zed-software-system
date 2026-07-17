@@ -61,13 +61,18 @@ Sources for per-lang hellos live in `hello/` (see `hello/manifest.json`). WAT so
 | `stamp-green.png` | 8×8 green input (96 bytes → 17 cells) |
 | `stamp-blue.png` | 8×8 blue input (98 bytes → 19 cells) |
 
-## Remote import + zedsync
+## Peer sync (zedsync) + remote import
 
-Browser Wanix cannot export its namespace to an external folder. Workaround:
+`#wanix zedsync <path>` mirrors any gojs-visible peer directory with `zedcafe/`
+(WSS remote dst, dropped FSA folder, etc.).
+
+Browser Wanix cannot export its namespace to an external folder. For host folders:
 
 1. Serve a host folder over WebSocket 9P
 2. `#wanix remote connect` imports that mount (idle → stands up a task room and mounts immediately; no prior wasm drop needed)
-3. `#wanix zedsync <dst>` mirrors it with `zedcafe/` (r/w; remote deletes are restored from zedcafe)
+3. `#wanix zedsync <path>` mirrors it with `zedcafe/` (r/w; peer deletes are restored from zedcafe)
+
+Or drop a folder onto cafe, then `#wanix zedsync <foldername>`.
 
 ### Start a 9P WebSocket server
 
@@ -89,25 +94,27 @@ go test ./p9server/ ./zedsync/ -count=1   # from ops/fixtures/wanix
 
 **How to confirm the WSS is alive**
 
-- p9server stdout should log `p9server: new connection from …` on each browser connect (and closed / 9p session lines).
-- DevTools Network → Socket: select the **wanix iframe** context (or enable “frames”). Parent-page `?token=…` Pending sockets are Vite HMR, not the 9P remote.
+- p9server stdout should log `p9server: new connection from ...` on each browser connect (and closed / 9p session lines).
+- DevTools Network → Socket: select the **wanix iframe** context (or enable "frames"). Parent-page `?token=...` Pending sockets are Vite HMR, not the 9P remote.
 - Console `[wanix-perf]`: `remote-import-prepare` / `remote-wss-force-dial` (`pre-append-start`) → `remote-wss-socket-open` → `remote-wss-open` / `remote-import-open`, then room ready. Do **not** await WSS before append (that settled the import Promise early and deadlocked Go wasm → `wanix-system ready timeout`).
-- `#wanix zedsync remote` requires a matching remote mount and an active room; guest prints `waiting for target dir ...` before seed, then `seed progress N/M` while copying. Guest export-ready wait is 600s; host `.zedsync-ready` wait is 900s. Per-cell `board/terrain/<index>.json` trees are rejected — wipe/re-seed remotes after schema changes.
-- **Live flat-file edits** (flags, `board/terrain.json`, etc. under the served folder) are supported while zedsync is running. `SteadyTick` recovers gojs FS panics into a retryable tick error (watcher stays up). Host export **defers removes** during guest-dirty/import so concurrent remote→zedcafe writes are not racing `directory not empty` deletes; benign ENOTEMPTY on remove is soft-logged.
+- `#wanix zedsync <path>` needs an active wanix room and a peer directory visible to gojs; guest prints `waiting for target dir ...` before seed, then `seed progress N/M` while copying. Guest export-ready wait is 600s; host `.zedsync-ready` wait is 900s. Per-cell `board/terrain/<index>.json` trees are rejected — wipe/re-seed peers after schema changes.
+- **Live flat-file edits** (flags, `board/terrain.json`, etc. under the served folder) are supported while zedsync is running. `SteadyTick` recovers gojs FS panics into a retryable tick error (watcher stays up). Host export **defers removes** during guest-dirty/import so concurrent peer→zedcafe writes are not racing `directory not empty` deletes; benign ENOTEMPTY on remove is soft-logged.
 
 ### Cafe commands
 
 ```text
 #wanix remote connect wss://localhost:8765/ remote
 #wanix zedsync remote
+# after dropping a folder named MyProject onto cafe:
+#wanix zedsync MyProject
 ```
 
 - Target path must **not contain spaces** (Wanix splits `cmd` on spaces).
-- Empty remote is seeded from `zedcafe/` first (never wipes zedcafe because remote started empty).
+- Empty peer is seeded from `zedcafe/` first (never wipes zedcafe because peer started empty).
 - Sync skips any path with a `.`-prefixed segment (dotfiles, hidden dirs, `.zedsync-ready`).
-- After ready: deleting a file on the **remote** restores it from `zedcafe/`; deleting from **zedcafe** still removes the remote peer.
+- After ready: deleting a file on the **peer** restores it from `zedcafe/`; deleting from **zedcafe** still removes the peer copy.
 - Import poll pauses until `<target>/.zedsync-ready`, then resumes.
-- `#wanix stop` / soft idle ends the zedsync task — look for `zedsync: stopped`. The 5‑minute term idle auto-halt applies to one-shot dropped wasm tasks only; **zedsync** (like **zedcafe**) is exempt so a quiet watch loop stays alive.
+- `#wanix stop` / soft idle ends the zedsync task — look for `zedsync: stopped`. The 5-minute term idle auto-halt applies to one-shot dropped wasm tasks only; **zedsync** (like **zedcafe**) is exempt so a quiet watch loop stays alive.
 - Build guest: `yarn task run ops:fixtures:wanix:findplayers:build` → `cafe/public/wanix/zedsync.wasm` (also staged under `ops/public/wanix/`)
 
 ### Headed remote-mount validator

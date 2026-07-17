@@ -111,7 +111,7 @@ export function buildwanixmenutape(state: WanixMenuState): string {
   )
   parts.push(
     zsstextline(
-      '$cyan   #wanix zedsync <dst> - sync remote mount $29 zedcafe (no spaces)',
+      '$cyan   #wanix zedsync <path> - sync peer dir $29 zedcafe (no spaces)',
     ),
   )
   parts.push(

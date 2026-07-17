@@ -1,0 +1,42 @@
+---
+description: ASCII-only apilog/apierror/tape strings; use $NN char codes for arrows
+alwaysApply: true
+---
+
+# ASCII logs and tape text
+
+User-facing strings (`apilog`, `apierror`, `apitoast`, terminal/tape lines, CLI help) must be **ASCII**. Do not paste Unicode punctuation or arrows into those strings.
+
+## Prohibited in user-facing strings
+
+- Unicode arrows / dashes / ellipsis: `→` `←` `↑` `↓` `—` `–` `…`
+- Fancy quotes or other non-ASCII symbols meant as UI chrome
+
+Comments in source may use ASCII `--` / `->` / `...`; prefer those over Unicode there too when easy.
+
+## Required instead
+
+| Meaning | Use |
+|---------|-----|
+| Right arrow | `$26` |
+| Left arrow | `$27` (or `$29` where existing menu copy already uses it) |
+| Up arrow | `$24` |
+| Down arrow | `$25` |
+| Ellipsis | `...` |
+| Em/en dash | `-` or `--` |
+
+These `$NN` tokens are ZSS text format codes (same as `drop files $26 input/`).
+
+```typescript
+// ❌ BAD
+apilog(device, player, `wanix folder mount ok → /${dst}`)
+apilog(device, player, `standing up room…`)
+
+// ✅ GOOD
+apilog(device, player, `wanix folder mount ok $26 /${dst}`)
+apilog(device, player, `standing up room...`)
+```
+
+## Scope
+
+Applies to any string that can reach the player tape, toast, CLI help, or scroll UI. Does not ban Unicode inside book content, fixtures, or third-party data the player authored.

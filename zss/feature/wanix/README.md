@@ -762,15 +762,27 @@ apply cannot leave `mode: idle` and skip the push (`pending-export mark`).
 
 ---
 
-## Remote imports + zedsync
+## Peer sync (zedsync) + remote imports
 
-Browser Wanix cannot export its namespace outward. Import a remote 9P mount instead, then sync it with `zedcafe/`:
+`#wanix zedsync <path>` mirrors any **gojs-visible peer directory** with `zedcafe/`
+(WSS remote mount, Chromium folder drop / FSA, archive bind, etc.). Paths that
+exist only inside the Linux VM are not visible to the gojs guest unless bound
+into the root NS.
+
+### Folder drop (FSA)
+
+1. Drop a folder onto cafe (mounts at `/<name>`)
+2. `#wanix zedsync <name>` — no spaces in path
+
+### Remote 9P
+
+Browser Wanix cannot export its namespace outward. Import a remote 9P mount, then sync:
 
 1. Serve a folder over WebSocket 9P — `yarn task run ops:fixtures:wanix:p9server:dev -- <folder>` (defaults to **wss://** using cafe mkcert certs; [wanix serve](https://github.com/tractordev/wanix/blob/main/cmd/wanix/serve.go) / [import docs](https://github.com/tractordev/wanix#export-and-import-namespaces))
 2. `#wanix remote connect wss://localhost:<port>/ remote` — use the printed URL; `wss://` is required from `cafe:dev` https
 3. `#wanix zedsync remote` — guest task; argv path must not contain spaces
 
-Empty remote is seeded from `zedcafe/` (no wipe). After `.zedsync-ready`, steady-state sync mirrors creates/updates; deleting a file on the remote restores it from `zedcafe/`. Soft idle stops zedsync (`zedsync: stopped`). See [`ops/fixtures/wanix/README.md`](../../../ops/fixtures/wanix/README.md).
+Empty peer is seeded from `zedcafe/` (no wipe). After `.zedsync-ready`, steady-state sync mirrors creates/updates; deleting a file on the peer restores it from `zedcafe/`. Soft idle stops zedsync (`zedsync: stopped`). See [`ops/fixtures/wanix/README.md`](../../../ops/fixtures/wanix/README.md).
 
 ---
 
