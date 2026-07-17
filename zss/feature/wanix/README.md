@@ -111,9 +111,18 @@ filesystem is available without first dropping a task or running `#wanix vm`.
 `#wanix stop` still moves the room to soft `idle`; it remains idle until the next
 session/iframe startup or an operation explicitly ensures a task/VM room.
 
+### Folder drop (live FSA mount)
+
+On Chromium, dropping a **directory** onto cafe mounts it live via `#web/fsa/new`
+at `/<foldername>` (no attach required). The mount uses the browser File System
+Access handle from the drop gesture. Live mounts appear under **externals** in
+the `#wanix` menu. Re-dropping the same name replaces the prior mount. Browsers
+without `DataTransferItem.getAsFileSystemHandle` cannot mount folders this way
+(clear error; no recursive copy fallback).
+
 ### Bind-on-drop (`input/`)
 
-While **attached** to a Wanix term session, file drops bind under **`input/<name>`**
+While **attached** to a Wanix term session, **file** drops bind under **`input/<name>`**
 (task: `./input/…`, VM guest: `/input/…`) instead of spawning tasks or hitting
 book/image parsers. User-written processors (WASI tasks or VM guest scripts) read
 `input/` and write zedcafe export paths under `zedcafe/…` so the host import cycle

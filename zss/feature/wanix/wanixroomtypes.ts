@@ -57,6 +57,8 @@ export type WanixMenuState = {
   stalled: boolean
   sessionkeys: string[]
   activesessionkey: string | null
+  /** Live cafe folder mounts (dst names under `/`). */
+  fsabinds: string[]
 }
 
 export type WanixSpawnTaskResult = {

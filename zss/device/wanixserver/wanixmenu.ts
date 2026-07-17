@@ -1,4 +1,4 @@
-import { readvmstatus } from 'zss/device/wanixserver/runtime'
+import { readfsabinds, readvmstatus } from 'zss/device/wanixserver/runtime'
 import {
   readactivesessionkey,
   readliveconnectorder,
@@ -21,6 +21,7 @@ export function readwanixmenustate(): WanixMenuState {
     stalled: false,
     sessionkeys: readliveconnectorder(),
     activesessionkey: readactivesessionkey(),
+    fsabinds: readfsabinds(),
   }
 }
 

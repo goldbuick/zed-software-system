@@ -32,6 +32,7 @@ function idlestate(): WanixMenuState {
     stalled: false,
     sessionkeys: [],
     activesessionkey: null,
+    fsabinds: [],
   }
 }
 
@@ -89,6 +90,7 @@ describe('wanixmenu', () => {
         stalled: false,
         sessionkeys: [],
         activesessionkey: null,
+        fsabinds: [],
       })
       expect(tape).toContain('HEADER:WANIX $YELLOWtask')
       expect(tape).toContain(
@@ -113,6 +115,7 @@ describe('wanixmenu', () => {
         stalled: false,
         sessionkeys: [],
         activesessionkey: null,
+        fsabinds: [],
       })
       expect(tape).toContain('!wanix stop "hello-wasm";')
       expect(tape).toContain('!wanix stop "greet-wasm";')
@@ -137,6 +140,7 @@ describe('wanixmenu', () => {
         stalled: false,
         sessionkeys: [],
         activesessionkey: null,
+        fsabinds: [],
       })
       expect(tape).toContain('HEADER:WANIX $YELLOWvm')
       expect(tape).toContain('linux-vm 512M vrid=vm-42')
@@ -158,9 +162,24 @@ describe('wanixmenu', () => {
         stalled: true,
         sessionkeys: [],
         activesessionkey: null,
+        fsabinds: [],
       })
       expect(tape).toContain('menu stale')
       expect(tape).toContain('!wanix stop "hello-wasm";')
+    })
+
+    it('lists live folder mounts under externals', () => {
+      const empty = buildwanixmenutape(idlestate())
+      expect(empty).toContain('drop a folder onto cafe to mount live')
+      expect(empty).toContain('(no folder mounts)')
+
+      const tape = buildwanixmenutape({
+        ...idlestate(),
+        fsabinds: ['MyProject', 'assets'],
+      })
+      expect(tape).toContain('TEXT:$green   /MyProject')
+      expect(tape).toContain('TEXT:$green   /assets')
+      expect(tape).not.toContain('(no folder mounts)')
     })
   })
 })

@@ -5,7 +5,6 @@ import { enableaudio } from 'zss/device/synth'
 import { clearwasmcoepserviceworkers } from 'zss/feature/synth/backend/wasm/coopcoep'
 import { useDeviceData } from 'zss/gadget/device'
 import { Engine } from 'zss/gadget/engine'
-import { ispresent } from 'zss/mapping/types'
 
 if (typeof window !== 'undefined') {
   if (import.meta.env.DEV) {
@@ -65,30 +64,22 @@ if (typeof window !== 'undefined') {
       return
     }
 
-    const dropped: File[] = []
-    if (dt.items?.length) {
-      for (const item of [...dt.items]) {
-        if (item.kind === 'file') {
-          const file = item.getAsFile()
-          if (ispresent(file)) {
-            dropped.push(file)
-          }
-        }
-      }
-    }
-    if (!dropped.length && dt.files?.length) {
-      dropped.push(...dt.files)
-    }
-    for (const file of dropped) {
-      vmloader(
-        SOFTWARE,
-        registerreadplayer(),
-        undefined,
-        'file',
-        file.name,
-        file,
+    void (async () => {
+      const { applycafedroppartition, partitioncafedrop } = await import(
+        'zss/device/wanixclient/wanixfsadropitems'
       )
-    }
+      const partition = await partitioncafedrop(dt)
+      await applycafedroppartition(partition, (file) => {
+        vmloader(
+          SOFTWARE,
+          registerreadplayer(),
+          undefined,
+          'file',
+          file.name,
+          file,
+        )
+      })
+    })()
   })
 }
 

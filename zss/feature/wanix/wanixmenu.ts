@@ -86,6 +86,18 @@ export function buildwanixmenutape(state: WanixMenuState): string {
 
   parts.push('$32')
   parts.push(zsssectionlines('externals'))
+  parts.push(
+    zsstextline(
+      '$cyan   drop a folder onto cafe to mount live (Chromium FSA)',
+    ),
+  )
+  if (state.fsabinds.length === 0) {
+    parts.push(zsstextline('$cyan   (no folder mounts)'))
+  } else {
+    for (const dst of state.fsabinds) {
+      parts.push(zsstextline(`$green   /${dst}`))
+    }
+  }
   parts.push(zsszedlinkline('wanix remote', 'list remote imports (WSS 9P)'))
   parts.push(
     zsstextline(

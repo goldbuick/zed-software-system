@@ -14,6 +14,7 @@ const WANIX_IFRAME_TARGETS = new Set([
   'applyroom',
   'spawntask',
   'binddrop',
+  'bindfsa',
   'dropdone',
   'synczedcafeexport',
   'readzedcafeexportfiles',

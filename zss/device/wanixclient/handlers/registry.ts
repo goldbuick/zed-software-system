@@ -3,6 +3,7 @@ import type { MESSAGE } from 'zss/device/types'
 
 import { handleapplyroom } from './applyroom'
 import { handlebinddrop } from './binddrop'
+import { handlebindfsa } from './bindfsa'
 import { handlewanixcells } from './cells'
 import { handledropdone } from './dropdone'
 import { handleexportready } from './exportready'
@@ -33,6 +34,7 @@ export const wanixclienthandlers: Record<string, WANIXCLIENT_HANDLER> = {
   applyroom: handleapplyroom,
   spawntask: handlespawntask,
   binddrop: handlebinddrop,
+  bindfsa: handlebindfsa,
   dropdone: handledropdone,
   synczedcafeexport: handlesynczedcafeexport,
   readzedcafeexportfiles: handlereadzedcafeexportfiles,

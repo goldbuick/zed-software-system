@@ -1,4 +1,5 @@
 import {
+  wanixclientbindfsa,
   wanixclientcells,
   wanixclientidle,
   wanixclientready,
@@ -89,6 +90,11 @@ import {
   wanixtermgridwritebytes,
 } from 'zss/feature/wanix/wanixtermgridstate'
 import { shouldautohalttasksession } from 'zss/device/wanixserver/taskidlepolicy'
+import {
+  WANIX_FSA_BIND_REQUEST,
+  WANIX_FSA_HANDLE_GLOBAL,
+  sanitizewanixfsadst,
+} from 'zss/feature/wanix/wanixfsapaths'
 import {
   WANIX_INPUT_MOUNT,
   WANIX_ZEDCAFE_EXPORT_READY_POLL_MS,
@@ -449,6 +455,78 @@ export function binddrop(sessionkey: string, spec: WanixBindDropPayload) {
     return binddropvm(sessionkey, spec)
   }
   return binddroptask(sessionkey, spec)
+}
+
+async function tryunbindroot(
+  root: { unbind: (src: string, dst: string) => Promise<void> },
+  src: string,
+  dst: string,
+): Promise<void> {
+  try {
+    await root.unbind(src, dst)
+  } catch {
+    // dst may not be bound yet
+  }
+}
+
+function removefsabindmarkers(sys: ParentNode, dst: string) {
+  sys.querySelectorAll('wanix-bind[data-zss-fsa-bind]').forEach((el) => {
+    if (el.getAttribute('data-zss-fsa-dst') === dst || el.getAttribute('dst') === dst) {
+      el.remove()
+    }
+  })
+}
+
+/** Live-mount a FileSystemDirectoryHandle at dst via #web/fsa/new. */
+export async function bindfsadirectory(
+  handle: FileSystemDirectoryHandle,
+  dst: string,
+): Promise<{ ok: boolean; dst: string }> {
+  const mountdst = sanitizewanixfsadst(dst)
+  if (!mountdst) {
+    throw new Error(`wanix fsa dst invalid: ${dst}`)
+  }
+  if (!system?.isReady) {
+    throw new Error('wanix room not ready')
+  }
+  const root = system.root
+  removefsabindmarkers(system, mountdst)
+  await tryunbindroot(root, '#web/fsa/new', mountdst)
+  ;(window as unknown as Record<string, unknown>)[WANIX_FSA_HANDLE_GLOBAL] =
+    handle
+  try {
+    await root.bind('#web/fsa/new', mountdst)
+  } catch (err) {
+    ;(window as unknown as Record<string, unknown>)[WANIX_FSA_HANDLE_GLOBAL] =
+      undefined
+    throw err
+  }
+  const bind = createbind(
+    {
+      dst: mountdst,
+      src: '#web/fsa/new',
+    },
+    'data-zss-fsa-bind',
+  )
+  bind.setAttribute('data-zss-fsa-dst', mountdst)
+  system.appendChild(bind)
+  return { ok: true, dst: mountdst }
+}
+
+/** Dsts currently tracked as cafe folder mounts. */
+export function readfsabinds(): string[] {
+  if (!system) {
+    return []
+  }
+  const out: string[] = []
+  system.querySelectorAll('wanix-bind[data-zss-fsa-bind]').forEach((el) => {
+    const dst =
+      el.getAttribute('data-zss-fsa-dst') || el.getAttribute('dst') || ''
+    if (dst && !out.includes(dst)) {
+      out.push(dst)
+    }
+  })
+  return out
 }
 
 function readroot() {
@@ -1437,6 +1515,34 @@ window.addEventListener('message', (event) => {
   const data = event.data
   if (ismessage(data)) {
     forwardmessage(data)
+    return
+  }
+  if (
+    data &&
+    typeof data === 'object' &&
+    (data as { request?: unknown }).request === WANIX_FSA_BIND_REQUEST
+  ) {
+    const payload = data as {
+      handle?: FileSystemDirectoryHandle
+      dst?: unknown
+    }
+    const dst = typeof payload.dst === 'string' ? payload.dst : ''
+    const handle = payload.handle
+    void (async () => {
+      try {
+        if (!handle || handle.kind !== 'directory') {
+          throw new Error('wanix fsa bind requires a directory handle')
+        }
+        const result = await bindfsadirectory(handle, dst)
+        wanixclientbindfsa(SOFTWARE, '', result)
+      } catch (err) {
+        wanixclientbindfsa(SOFTWARE, '', {
+          ok: false,
+          dst,
+          error: err instanceof Error ? err.message : String(err),
+        })
+      }
+    })()
   }
 })
 

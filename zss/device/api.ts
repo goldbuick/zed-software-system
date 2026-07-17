@@ -1277,6 +1277,14 @@ export function wanixclientbinddrop(
   wanixclientmethodresult(device, player, 'binddrop', data)
 }
 
+export function wanixclientbindfsa(
+  device: DEVICELIKE,
+  player: string,
+  data: unknown,
+) {
+  wanixclientmethodresult(device, player, 'bindfsa', data)
+}
+
 export function wanixclientreadroomstatus(
   device: DEVICELIKE,
   player: string,
