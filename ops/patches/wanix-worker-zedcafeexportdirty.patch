@@ -1,5 +1,5 @@
 diff --git a/web/worker/worker.go b/web/worker/worker.go
-index 5c3972c..5b887fc 100644
+index 16b2a43..622cf70 100644
 --- a/web/worker/worker.go
 +++ b/web/worker/worker.go
 @@ -85,8 +85,19 @@ func (r *Resource) Start(args ...string) error {

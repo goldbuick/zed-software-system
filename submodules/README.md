@@ -45,7 +45,7 @@ If the pin SHA is unreachable (common after a local-only submodule commit):
 
 ```bash
 git -C submodules/wanix fetch origin
-git -C submodules/wanix checkout f6cdb212453d9df7628d45a41dd852da0bc3e016   # or current upstream base in the patch header
+git -C submodules/wanix checkout 6740d57d4cd6f13128fc59c50db5fc42d06e8522   # or current upstream base in the patch header
 git -C submodules/wanix apply ../../ops/patches/wanix-worker-zedcafeexportdirty.patch
 cd submodules/wanix && git add web/worker/worker.go && git commit -m "ZSS: forward zedcafeexportdirty to host hook"
 cd ../..
