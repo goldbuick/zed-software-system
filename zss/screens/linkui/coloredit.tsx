@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { Vector3 } from 'three'
 import { RUNTIME } from 'zss/config'
 import { registercopy } from 'zss/device/api'
@@ -15,6 +15,11 @@ import { pttoindex } from 'zss/mapping/2d'
 import { range } from 'zss/mapping/array'
 import { clamp } from 'zss/mapping/number'
 import { maptovalue } from 'zss/mapping/value'
+import {
+  clearlinkeditingkey,
+  setlinkeditingkey,
+  uselinkeditingkey,
+} from 'zss/screens/linkui/linkediting'
 import { inputcolor } from 'zss/screens/panel/common'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
@@ -41,30 +46,6 @@ function coords() {
   }
 }
 
-function listaltnames(color: string) {
-  switch (color) {
-    case 'dkyellow':
-      return ', brown'
-    case 'ltgray':
-      return ', ltgrey, gray, grey'
-    case 'dkgray':
-      return ', dkgrey, ltblack'
-    case 'ondkyellow':
-      return ', onbrown'
-    case 'onltgray':
-      return ', onltgrey, ongray, ongrey'
-    case 'ondkgray':
-      return ', ondkgrey, onltblack'
-    case 'bldkyellow':
-      return ', blbrown'
-    case 'blltgray':
-      return ', blltgrey, blgray, blgrey'
-    case 'bldkgray':
-      return ', bldkgrey, blltblack'
-  }
-  return ''
-}
-
 type LinkColorEditProps = LinkWidgetProps & { isbg?: boolean }
 
 export function LinkColorEdit({ surface, isbg = false }: LinkColorEditProps) {
@@ -74,7 +55,7 @@ export function LinkColorEdit({ surface, isbg = false }: LinkColorEditProps) {
 
   useHyperlinkSharedSync(
     isbg ? 'bgedit' : 'coloredit',
-    surface.layout === 'terminal'
+    surface.layout === 'terminal' && surface.modemprefix.trim().length > 0
       ? { modemprefix: surface.modemprefix }
       : { chip: surface.chip, target },
   )
@@ -92,26 +73,33 @@ export function LinkColorEdit({ surface, isbg = false }: LinkColorEditProps) {
   const tlabel = surface.label.trim()
   const tcolor = inputcolor(!!surface.active)
   const colorname = (COLOR[state] || COLOR[COLOR.BLACK]).toLowerCase()
+  const summary = `$green$20 ${tcolor}${tlabel} $${colorname}$219$white ${tvalue} ${colorname}`
 
-  const [focus, setfocus] = useState(surface.layout === 'panel')
+  const editing = uselinkeditingkey() === address
+  const snapshot = useRef(state)
 
-  useLayoutEffect(() => {
-    if (surface.layout === 'panel') {
-      setfocus(true)
+  const cancelediting = useCallback(() => {
+    modemwritevaluenumber(address, snapshot.current)
+    clearlinkeditingkey(address)
+  }, [address])
+
+  const acceptediting = useCallback(() => {
+    clearlinkeditingkey(address)
+  }, [address])
+
+  const enterediting = useCallback(() => {
+    snapshot.current = state
+    setlinkeditingkey(address)
+  }, [address, state])
+
+  useEffect(() => {
+    if (!surface.active && editing) {
+      cancelediting()
     }
-  }, [surface.layout])
+  }, [surface.active, editing, cancelediting])
 
-  if (surface.layout === 'terminal') {
-    tokenizeandwritetextformat(
-      `$green$20 ${tcolor}${tlabel} $${colorname}$219$white ${tvalue} $7($27$26)`,
-      surface.context,
-      false,
-    )
-  } else {
-    const tcoloralts = listaltnames(colorname).padEnd(32, ' ')
-    const colors: string[] = [
-      `$green${tlabel} ${tvalue} ${colorname}${tcoloralts}\n$white`,
-    ]
+  if (editing) {
+    const colors: string[] = [`${summary}\n$white`]
     for (let i = 0; i < withlist.length; ++i) {
       if (i % EDIT_WIDTH === 0) {
         colors.push(`\n`)
@@ -120,30 +108,31 @@ export function LinkColorEdit({ surface, isbg = false }: LinkColorEditProps) {
       const ccolor = (COLOR[c] || COLOR[COLOR.BLACK]).toLowerCase()
       if (c > (COLOR.ONCLEAR as number)) {
         if (c === state) {
-          colors.push(`$onwhite$${ccolor}$219`)
+          colors.push(`$onwhite$${ccolor}$219$ondkblue$white`)
         } else {
-          colors.push(`$onblack$${ccolor}$219`)
+          colors.push(`$onblack$${ccolor}$219$ondkblue$white`)
         }
       } else if (c === (COLOR.ONCLEAR as number)) {
         if (c === state) {
-          colors.push(`$onyellow$blwhite$219`)
+          colors.push(`$onyellow$blwhite$219$ondkblue$white`)
         } else {
-          colors.push(`$onyellow$blblack$219`)
+          colors.push(`$onyellow$blblack$219$ondkblue$white`)
         }
       } else {
         if (c === state) {
-          colors.push(`$onwhite$bl${ccolor}$219`)
+          colors.push(`$onwhite$bl${ccolor}$219$ondkblue$white`)
         } else {
-          colors.push(`$onblack$${ccolor}$219`)
+          colors.push(`$onblack$${ccolor}$219$ondkblue$white`)
         }
       }
     }
-    colors.push(`$ondkblue$white`)
     colors.push(`\n\n`)
     colors.push(`$greenpress C to copy ${tvalue}`)
     colors.push(`\n\n`)
     colors.push(`$greenpress B to copy bits of ${tvalue}`)
     tokenizeandwritetextformat(colors.join(''), surface.context, true)
+  } else {
+    tokenizeandwritetextformat(summary, surface.context, false)
   }
 
   const update = useCallback(
@@ -170,10 +159,6 @@ export function LinkColorEdit({ surface, isbg = false }: LinkColorEditProps) {
     update(idx + EDIT_WIDTH)
   }, [update, idx])
 
-  const done = useCallback(() => {
-    surface.sendclose()
-  }, [surface])
-
   const copybits = useCallback(() => {
     if (state === (COLOR.ONCLEAR as number)) {
       return
@@ -196,22 +181,16 @@ export function LinkColorEdit({ surface, isbg = false }: LinkColorEditProps) {
       switch (lkey) {
         case 'c':
           registercopy(SOFTWARE, registerreadplayer(), `${state}`)
-          if (surface.layout === 'panel') {
-            surface.sendclose()
-          }
           break
         case 'b':
           copybits()
-          if (surface.layout === 'panel') {
-            surface.sendclose()
-          }
           break
       }
     },
-    [state, surface, copybits],
+    [state, copybits],
   )
 
-  if (surface.layout === 'panel') {
+  if (editing) {
     const cx = surface.context.x - 1
     const cy = surface.context.y + 2
     return (
@@ -222,43 +201,39 @@ export function LinkColorEdit({ surface, isbg = false }: LinkColorEditProps) {
           1,
         ]}
       >
-        {focus && (
-          <UserFocus blockhotkeys>
-            <Rect
-              x={1}
-              blocking
-              visible={false}
-              cursor="pointer"
-              width={EDIT_WIDTH}
-              height={EDIT_HEIGHT}
-              onClick={(e: any) => {
-                e.intersections[0].object.worldToLocal(
-                  point.copy(e.intersections[0].point),
-                )
-                const pt = coords()
-                const clickidx = pttoindex(pt, EDIT_WIDTH)
-                if (clickidx >= 0 && clickidx <= 16) {
-                  modemwritevaluenumber(address, clickidx)
-                  surface.sendclose()
-                }
-              }}
-            />
-            <UserInput
-              MOVE_LEFT={left}
-              MOVE_UP={up}
-              MOVE_RIGHT={right}
-              MOVE_DOWN={down}
-              OK_BUTTON={done}
-              CANCEL_BUTTON={done}
-              keydown={keydown}
-            />
-          </UserFocus>
-        )}
+        <UserFocus blockhotkeys>
+          <Rect
+            x={1}
+            blocking
+            visible={false}
+            cursor="pointer"
+            width={EDIT_WIDTH}
+            height={EDIT_HEIGHT}
+            onClick={(e: any) => {
+              e.intersections[0].object.worldToLocal(
+                point.copy(e.intersections[0].point),
+              )
+              const pt = coords()
+              const clickidx = pttoindex(pt, EDIT_WIDTH)
+              if (clickidx >= 0 && clickidx < withlist.length) {
+                modemwritevaluenumber(address, withlist[clickidx])
+                acceptediting()
+              }
+            }}
+          />
+          <UserInput
+            MOVE_LEFT={left}
+            MOVE_UP={up}
+            MOVE_RIGHT={right}
+            MOVE_DOWN={down}
+            OK_BUTTON={acceptediting}
+            CANCEL_BUTTON={cancelediting}
+            keydown={keydown}
+          />
+        </UserFocus>
       </group>
     )
   }
 
-  return surface.active ? (
-    <UserInput MOVE_LEFT={left} MOVE_RIGHT={right} keydown={keydown} />
-  ) : null
+  return surface.active ? <UserInput OK_BUTTON={enterediting} /> : null
 }

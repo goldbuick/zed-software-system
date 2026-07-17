@@ -9,6 +9,7 @@ import { useWriteText } from 'zss/gadget/writetext'
 import { totarget } from 'zss/mapping/string'
 import { MAYBE } from 'zss/mapping/types'
 import { perfmeasure } from 'zss/perf/ui'
+import { uselinkeditingkey } from 'zss/screens/linkui/linkediting'
 import { TapeBackPlate } from 'zss/screens/tape/backplate'
 import { TapeTerminalContext } from 'zss/screens/tape/common'
 import {
@@ -27,6 +28,7 @@ export function TerminalComponent() {
   const terminalmode = useTape((state) => state.terminalmode)
   const pinlines = useTape((state) => state.terminal.pinlines)
   const sessionlogs = useTape((state) => state.terminal.logs)
+  const editingkey = uselinkeditingkey()
 
   const [voice2text, setvoice2text] = useState<MAYBE<boolean>>(undefined)
   useLayoutEffect(() => {
@@ -56,7 +58,7 @@ export function TerminalComponent() {
         edge,
         editoropen,
       }),
-    [pinlines, sessionlogs, logsrowmaxwidth, edge, editoropen],
+    [pinlines, sessionlogs, logsrowmaxwidth, edge, editoropen, editingkey],
   )
 
   const logrowtotalheight = useMemo(

@@ -4,9 +4,9 @@
 !adminscroll hk 4 " 4 " next;cpu #admin
 !cliscroll hk t " T " next;cli commands
 !commandsscroll hk d " D " next;dictionary of all commands
-!charscroll hk a " A " next;char
-!colorscroll hk c " C " next;color
-!bgscroll hk b " B " next;bg
+!char charedit;char
+!color coloredit;color
+!bg bgedit;bg
 !notesscroll hk n " N " next;notes
 !synthscroll hk s " S " next;synth
 !effectsscroll hk e " E " next;effects

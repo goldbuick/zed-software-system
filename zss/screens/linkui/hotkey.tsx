@@ -21,30 +21,18 @@ export function LinkHotkey({ surface }: LinkWidgetProps) {
     [surface.modemprefix],
   )
 
-  let shortcut: string
-  let maybetext: string
-  let maybenoclose = ''
-  let routetarget: string
-  let target: string
-  let data: string[]
+  // Panel-shaped words after resolvelinktypeandwords:
+  // [target, shortcut, maybetext, maybenoclose?, ...data]
+  const target = rawwords[0] ?? ''
+  const shortcut = rawwords[1] ?? ''
+  const maybetext = rawwords[2] ?? ''
+  const maybenoclose = rawwords[3] ?? ''
+  const data = rawwords.slice(4)
 
-  if (surface.layout === 'terminal') {
-    routetarget =
-      surface.modemprefix.trim().length > 0
-        ? surface.modemprefix
-        : (rawwords[1] ?? '').trim()
-    shortcut = rawwords[2] ?? ''
-    maybetext = rawwords[3] ?? ''
-    data = rawwords.slice(4)
-    target = routetarget
-  } else {
-    target = rawwords[0] ?? ''
-    shortcut = rawwords[1] ?? ''
-    maybetext = rawwords[2] ?? ''
-    maybenoclose = rawwords[3] ?? ''
-    data = rawwords.slice(4)
-    routetarget = target
-  }
+  const routetarget =
+    surface.layout === 'terminal' && surface.modemprefix.trim().length > 0
+      ? surface.modemprefix
+      : target
 
   const altshortcut =
     surface.layout === 'panel' &&

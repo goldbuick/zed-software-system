@@ -1,4 +1,5 @@
 import { BOARD_WIDTH } from 'zss/memory/types'
+import { banglineexpandheight } from 'zss/screens/linkui/banglineheight'
 import { tokenizeandmeasuretextformat } from 'zss/words/textformat'
 
 export function measureminwidth(width: number) {
@@ -10,7 +11,7 @@ export function measurerow(item: string, width: number, height: number) {
     return 1
   }
   if (item.startsWith('!')) {
-    return 1
+    return banglineexpandheight(item)
   }
   const measure = tokenizeandmeasuretextformat(item, width, height)
   return measure?.y ?? 1

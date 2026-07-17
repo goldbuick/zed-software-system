@@ -2,10 +2,10 @@ import { useContext } from 'react'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
 import { useWriteText } from 'zss/gadget/writetext'
-import { isarray, isstring } from 'zss/mapping/types'
+import { isarray } from 'zss/mapping/types'
+import { resolvelinktypeandwords } from 'zss/screens/linkui/linktypes'
 import { LinkRouter } from 'zss/screens/linkui/router'
 import type { LinkSurface } from 'zss/screens/linkui/types'
-import { NAME } from 'zss/words/types'
 
 import { ScrollContext, setuppanelitem } from './common'
 import { PanelContent } from './content'
@@ -47,22 +47,15 @@ export function PanelItem({
     return null
   }
 
-  const [chip, label, target, maybetype, ...args] = item
+  const [chip, label, ...rest] = item
 
-  if (
-    typeof chip !== 'string' ||
-    typeof label !== 'string' ||
-    typeof target !== 'string'
-  ) {
+  if (typeof chip !== 'string' || typeof label !== 'string') {
     return null
   }
 
-  const type = isstring(maybetype) ? maybetype : ''
-  const linktype = NAME(type) || 'hyperlink'
-  const words =
-    type.length > 0
-      ? [target, ...args.map((a) => `${a}`)]
-      : [target, ...args.map((a) => `${a}`)]
+  const { linktype, words } = resolvelinktypeandwords(
+    rest.map((w) => `${w}`),
+  )
 
   const drawrow = row ?? 0
   const surface: LinkSurface = {

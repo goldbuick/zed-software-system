@@ -4,6 +4,7 @@ import { useTape, useTerminal } from 'zss/gadget/data/zustandstores'
 import { useScreenSize } from 'zss/gadget/userscreen'
 import { useWriteText } from 'zss/gadget/writetext'
 import { clamp } from 'zss/mapping/number'
+import { uselinkeditingkey } from 'zss/screens/linkui/linkediting'
 import {
   readpinrowycoords,
   readsesslogrowycoords,
@@ -18,6 +19,7 @@ export function TerminalRows() {
   const editoropen = useTape(useEqual((state) => state.editor.open))
   const pinlines = useTape(useEqual((state) => state.terminal.pinlines))
   const sessionlogs = useTape(useEqual((state) => state.terminal.logs))
+  const editingkey = uselinkeditingkey()
 
   const context = useWriteText()
   const scroll = useTerminal(useEqual((state) => state.scroll))
@@ -36,7 +38,7 @@ export function TerminalRows() {
         edge,
         editoropen,
       }),
-    [pinlines, sessionlogs, logsrowmaxwidth, edge, editoropen],
+    [pinlines, sessionlogs, logsrowmaxwidth, edge, editoropen, editingkey],
   )
 
   const pinycoords = useMemo(

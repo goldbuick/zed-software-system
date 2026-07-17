@@ -20,7 +20,8 @@ import { TilesData } from 'zss/gadget/usetiles'
 import { WriteTextContext } from 'zss/gadget/writetext'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
-import { perfmeasure } from 'zss/perf/ui'
+import { uselinkeditingkey } from 'zss/screens/linkui/linkediting'
+import { scrollvisiblewindow } from 'zss/screens/linkui/scrolllayout'
 import { ScrollContext } from 'zss/screens/panel/common'
 import { PanelComponent } from 'zss/screens/panel/component'
 import { animpositiontotarget } from 'zss/screens/scroll/anim'
@@ -62,6 +63,7 @@ export function ScrollComponent({
   const tilesstore = useTiles(width, height, 0, color, bg)
   const scroll = useContext(ScrollContext)
   const totalrows = text.length - 1
+  const editingkey = uselinkeditingkey()
 
   const scrollname = useGadgetClient((state) => state.gadget.scrollname ?? '')
   const boardname = useGadgetClient((state) => state.gadget.boardname ?? '')
@@ -82,19 +84,12 @@ export function ScrollComponent({
     )
   }, [text])
 
-  let offset = cursor - Math.floor(panelheight * 0.5)
-  offset = Math.min(text.length - panelheight, offset)
-  offset = Math.max(0, offset)
-
-  const visibletext = useMemo(
-    () =>
-      perfmeasure('scroll:visibletext', () =>
-        text.slice(offset, offset + panelheight),
-      ),
-    [text, offset, panelheight],
+  const scrollwindow = useMemo(
+    () => scrollvisiblewindow(text, cursor, panelheight, editingkey),
+    [text, cursor, panelheight, editingkey],
   )
 
-  const row = cursor - offset
+  const selectedInView = cursor - scrollwindow.offset
 
   const groupref = useRef<Group>(null)
 
@@ -176,7 +171,7 @@ export function ScrollComponent({
           <WriteTextContext.Provider value={context}>
             <ScrollBackPlate name={scrollname} width={width} height={height} />
             <ScrollControls
-              row={row}
+              row={scrollwindow.selectedrowy}
               width={width}
               height={height}
               panelwidth={panelwidth}
@@ -190,7 +185,7 @@ export function ScrollComponent({
                 rightedge={width}
                 line={SCROLL_KEY_HINTS_LINE}
               />
-              <ScrollCursor row={row} />
+              <ScrollCursor row={scrollwindow.selectedrowy} />
               <PanelComponent
                 width={panelwidth}
                 height={panelheight}
@@ -198,9 +193,10 @@ export function ScrollComponent({
                 ymargin={0}
                 color={color}
                 bg={COLOR.ONCLEAR}
-                text={visibletext}
-                selected={row}
-                striperowbase={offset}
+                text={scrollwindow.visible}
+                selected={selectedInView}
+                striperowbase={scrollwindow.striperowbase}
+                rowys={scrollwindow.rowys}
               />
             </ScrollControls>
           </WriteTextContext.Provider>

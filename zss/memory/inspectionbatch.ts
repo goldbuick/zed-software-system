@@ -19,9 +19,6 @@ import {
 import { memoryreadelementdisplay } from './bookoperations'
 import { memoryensuresoftwarebook } from './books'
 import {
-  memoryinspectbgarea,
-  memoryinspectchararea,
-  memoryinspectcolorarea,
   memoryinspectempty,
   memoryinspectemptymenu,
 } from './inspection'
@@ -194,15 +191,6 @@ export async function memoryinspectbatchcommand(path: string, player: string) {
     case 'emptyobjects':
     case 'emptyterrain':
       memoryinspectempty(player, p1, p2, batch.target)
-      break
-    case 'chars':
-      memoryinspectchararea(player, p1, p2, 'char')
-      break
-    case 'colors':
-      memoryinspectcolorarea(player, p1, p2, 'color')
-      break
-    case 'bgs':
-      memoryinspectbgarea(player, p1, p2, 'bg')
       break
     case 'copycoords':
       registercopy(SOFTWARE, player, [x1, y1, x2, y2].join(' '))

@@ -111,11 +111,10 @@ Special paths (not necessarily ROM filenames) in [`handledefault`](../../device/
 | `adminscroll` | `cpu #admin` | [`memoryadminmenu`](../../memory/utilities.ts). |
 | `objectlistscroll` | `object list` | `!istargetless copyit …` lines + `scrollwritelines`; chip `list`. |
 | `terrainlistscroll` | `terrain list` | Same; chip `list`. |
-| `charscroll` | `chars` | Zed `!` line + `scrollwritelines`; chip `refscroll`. |
-| `colorscroll` | `colors` | Same. |
-| `bgscroll` | `bgs` | Same. |
 | `notescalesscroll` | `notescalesscroll` | ROM [`notescalesscroll.md`](../../rom/refscroll/notescalesscroll.md); drill-down `notescales_*`; `parsemarkdownforscroll`; chip `refscroll` (default). |
 | *(any other)* | `path` | Bundled `.md` or ZNS docs; see below. |
+
+Char / color / bg editors are **inline** on [`menu.md`](../../rom/refscroll/menu.md) (`!char charedit`, etc.) — compact until ENTER. Dedicated `charscroll` / `colorscroll` / `bgscroll` paths were removed.
 
 **Default branch:** loading scroll, then [`fetchrefscrolltext`](../../feature/fetchrefscrolltext.ts) (ZNS first, ROM fallback) + `parsemarkdownforscroll`, or error scroll. Final `scrollname` is `path` once content is ready.
 

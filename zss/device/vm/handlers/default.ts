@@ -126,33 +126,6 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
           )
           break
         }
-        case 'charscroll': {
-          scrollwritelines(
-            message.player,
-            'chars',
-            zsszedlinkline('char charedit', 'char'),
-            'refscroll',
-          )
-          break
-        }
-        case 'colorscroll': {
-          scrollwritelines(
-            message.player,
-            'colors',
-            zsszedlinkline('color coloredit', 'color'),
-            'refscroll',
-          )
-          break
-        }
-        case 'bgscroll': {
-          scrollwritelines(
-            message.player,
-            'bgs',
-            zsszedlinkline('bg bgedit', 'bg'),
-            'refscroll',
-          )
-          break
-        }
         default: {
           doasync(vm, message.player, async () => {
             scrollwritelines(

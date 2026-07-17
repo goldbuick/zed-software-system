@@ -25,8 +25,10 @@ Authors should build lines with [`zsszedlinkline`](../../feature/zsstextui.ts) /
 
 Control widgets live once under [`zss/screens/linkui/`](../../screens/linkui/). Thin routers:
 
-- Tape: [`TerminalItem`](../../screens/terminal/item.tsx) → `parsezedlinkline` → [`LinkRouter`](../../screens/linkui/router.tsx)
-- Scroll: [`PanelItem`](../../screens/panel/panelitem.tsx) → unpack `PANEL_ITEM` → `LinkRouter`
+- Tape: [`TerminalItem`](../../screens/terminal/item.tsx) → `parsezedlinkline` → [`resolvelinktypeandwords`](../../screens/linkui/linktypes.ts) → [`LinkRouter`](../../screens/linkui/router.tsx)
+- Scroll: [`PanelItem`](../../screens/panel/panelitem.tsx) → unpack `PANEL_ITEM` → same resolve → `LinkRouter`
+
+`charedit` / `coloredit` / `bgedit` stay **compact** until ENTER enters edit focus (BIG grid). `number` / `nm` uses the same ENTER enter / ENTER accept / ESC cancel cycle (ESC reverts the value from edit start). Expanded visual editors reserve height via [`linkediting`](../../screens/linkui/linkediting.ts) + [`linkexpandrowheight`](../../screens/linkui/linktypes.ts); scroll does **not** pin the expanded row to the top.
 
 Surface adapters (`LinkSurface`) carry layout (`terminal` | `panel`), `sendmessage` / `sendclose`, modem prefix / chip, and write-text context. Panel simple links still `sendclose()`; terminal `runit` uses `registerterminalopen` while panel uses `sendclose` + `registerterminalquickopen`.
 

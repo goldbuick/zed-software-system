@@ -173,21 +173,25 @@ describe('handledefault refscroll', () => {
     jest.mocked(memoryreadcodepagename).mockReset()
   })
 
-  it.each([
-    ['refscroll:charscroll', `!char charedit;char`, 'chars', 'refscroll'],
-    ['refscroll:colorscroll', `!color coloredit;color`, 'colors', 'refscroll'],
-    ['refscroll:bgscroll', `!bg bgedit;bg`, 'bgs', 'refscroll'],
-  ] as const)('%s applies zed scroll', (target, body, title, chip) => {
-    handledefault(vm, {
-      session: '',
-      player: 'p1',
-      id: 'id',
-      sender: '',
-      target,
-      data: undefined,
-    })
-    expect(scrollwritelines).toHaveBeenCalledWith('p1', title, body, chip)
-  })
+  it.each(['charscroll', 'colorscroll', 'bgscroll'] as const)(
+    'refscroll:%s no longer opens a dedicated editor scroll',
+    (name) => {
+      handledefault(vm, {
+        session: '',
+        player: 'p1',
+        id: 'id',
+        sender: '',
+        target: `refscroll:${name}`,
+        data: undefined,
+      })
+      expect(scrollwritelines).not.toHaveBeenCalledWith(
+        'p1',
+        expect.stringMatching(/^(chars|colors|bgs)$/),
+        expect.anything(),
+        'refscroll',
+      )
+    },
+  )
 
   it('refscroll:adminscroll opens admin menu', () => {
     handledefault(vm, {

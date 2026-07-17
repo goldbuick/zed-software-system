@@ -30,16 +30,13 @@ export function linkactionprefix(surface: LinkSurface): string {
   return '  '
 }
 
-/** Normalize target + trailing args across terminal (type at [1]) vs panel layouts. */
+/** Target + trailing args after `resolvelinktypeandwords` (panel-shaped words). */
 export function linktargetargs(surface: LinkSurface): {
   target: string
   rest: string[]
 } {
   const words = surface.words
   const target = `${words[0] ?? ''}`
-  if (surface.layout === 'terminal') {
-    return { target, rest: words.slice(2).map((w) => `${w}`) }
-  }
   return { target, rest: words.slice(1).map((w) => `${w}`) }
 }
 
@@ -47,10 +44,14 @@ export function linkmodemaddress(
   surface: LinkSurface,
   target?: string,
 ): string {
-  if (surface.layout === 'terminal') {
-    return surface.modemprefix
-  }
   const t = target ?? `${surface.words[0] ?? ''}`
+  if (surface.layout === 'terminal') {
+    const prefix = surface.modemprefix.trim()
+    if (prefix.length > 0) {
+      return prefix
+    }
+    return paneladdress(surface.chip, t)
+  }
   return paneladdress(surface.chip, t)
 }
 

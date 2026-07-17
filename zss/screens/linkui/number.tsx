@@ -1,7 +1,8 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { modemwritevaluenumber } from 'zss/device/modem'
 import { useWaitForValueNumber } from 'zss/device/modemhooks'
 import { useHyperlinkSharedSync } from 'zss/gadget/data/usehyperlinksharedsync'
+import { UserFocus } from 'zss/gadget/userinput'
 import { UserInput } from 'zss/gadget/userinput.bridge'
 import { UserInputHandler } from 'zss/gadget/userinputtypes'
 import { maptonumber } from 'zss/mapping/value'
@@ -53,6 +54,29 @@ export function LinkNumber({ surface }: LinkWidgetProps) {
   const tlabel = surface.label.trim()
   const tcolor = inputcolor(!!surface.active)
 
+  const [editing, setediting] = useState(false)
+  const snapshot = useRef(clamped)
+
+  const cancelediting = useCallback(() => {
+    modemwritevaluenumber(address, snapshot.current)
+    setediting(false)
+  }, [address])
+
+  const acceptediting = useCallback(() => {
+    setediting(false)
+  }, [])
+
+  const enterediting = useCallback(() => {
+    snapshot.current = clamped
+    setediting(true)
+  }, [clamped])
+
+  useEffect(() => {
+    if (!surface.active && editing) {
+      cancelediting()
+    }
+  }, [surface.active, editing, cancelediting])
+
   if (surface.layout === 'terminal') {
     tokenizeandwritetextformat(
       `$red $29 ${tcolor}${tlabel} $green${clamped}`,
@@ -83,7 +107,18 @@ export function LinkNumber({ surface }: LinkWidgetProps) {
     [address, clamped, min],
   )
 
-  return surface.active ? (
-    <UserInput MOVE_LEFT={down} MOVE_RIGHT={up} />
-  ) : null
+  if (editing) {
+    return (
+      <UserFocus blockhotkeys>
+        <UserInput
+          MOVE_LEFT={down}
+          MOVE_RIGHT={up}
+          OK_BUTTON={acceptediting}
+          CANCEL_BUTTON={cancelediting}
+        />
+      </UserFocus>
+    )
+  }
+
+  return surface.active ? <UserInput OK_BUTTON={enterediting} /> : null
 }

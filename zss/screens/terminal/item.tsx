@@ -4,6 +4,7 @@ import { useTape } from 'zss/gadget/data/zustandstores'
 import { useWriteText } from 'zss/gadget/writetext'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
+import { resolvelinktypeandwords } from 'zss/screens/linkui/linktypes'
 import { LinkRouter } from 'zss/screens/linkui/router'
 import type { LinkSurface } from 'zss/screens/linkui/types'
 import { BG_ACTIVE, bgcolorformode } from 'zss/screens/tape/colors'
@@ -18,7 +19,6 @@ import {
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
-import { NAME } from 'zss/words/types'
 
 export function TerminalItem({ active, text, y }: TapeTerminalItemProps) {
   const context = useWriteText()
@@ -59,34 +59,13 @@ export function TerminalItem({ active, text, y }: TapeTerminalItemProps) {
     return null
   }
 
-  const [input] = parsed.words
-  const linktype = NAME(input)
-  const known =
-    linktype === 'copyit' ||
-    linktype === 'openit' ||
-    linktype === 'viewit' ||
-    linktype === 'runit' ||
-    linktype === 'hk' ||
-    linktype === 'hotkey' ||
-    linktype === 'rn' ||
-    linktype === 'range' ||
-    linktype === 'sl' ||
-    linktype === 'select' ||
-    linktype === 'nm' ||
-    linktype === 'number' ||
-    linktype === 'tx' ||
-    linktype === 'text' ||
-    linktype === 'zssedit' ||
-    linktype === 'charedit' ||
-    linktype === 'coloredit' ||
-    linktype === 'bgedit' ||
-    linktype === 'hyperlink'
+  const { linktype, words } = resolvelinktypeandwords(parsed.words)
 
   const surface: LinkSurface = {
     layout: 'terminal',
     active: !!active,
     label: parsed.label,
-    words: parsed.words,
+    words,
     chip: parsed.chip,
     modemprefix: parsed.modemprefix,
     row: y,
@@ -97,12 +76,7 @@ export function TerminalItem({ active, text, y }: TapeTerminalItemProps) {
     sendclose: () => {},
   }
 
-  return (
-    <LinkRouter
-      linktype={known ? linktype : 'hyperlink'}
-      surface={surface}
-    />
-  )
+  return <LinkRouter linktype={linktype} surface={surface} />
 }
 
 export function TapeTerminalActiveItem({

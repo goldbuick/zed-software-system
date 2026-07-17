@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useState } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { Vector3 } from 'three'
 import { RUNTIME } from 'zss/config'
 import { registercopy } from 'zss/device/api'
@@ -14,6 +14,11 @@ import { UserFocus } from 'zss/gadget/userinput'
 import { UserInput } from 'zss/gadget/userinput.bridge'
 import { pttoindex } from 'zss/mapping/2d'
 import { maptovalue } from 'zss/mapping/value'
+import {
+  clearlinkeditingkey,
+  setlinkeditingkey,
+  uselinkeditingkey,
+} from 'zss/screens/linkui/linkediting'
 import { inputcolor } from 'zss/screens/panel/common'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
@@ -43,7 +48,7 @@ export function LinkCharEdit({ surface }: LinkWidgetProps) {
 
   useHyperlinkSharedSync(
     'charedit',
-    surface.layout === 'terminal'
+    surface.layout === 'terminal' && surface.modemprefix.trim().length > 0
       ? { modemprefix: surface.modemprefix }
       : { chip: surface.chip, target },
   )
@@ -54,23 +59,33 @@ export function LinkCharEdit({ surface }: LinkWidgetProps) {
   const tvalue = `${state}`.padStart(3, '0')
   const tlabel = surface.label.trim()
   const tcolor = inputcolor(!!surface.active)
+  const summary = `$green$20 ${tcolor}${tlabel} $${state}$white ${tvalue}`
 
-  const [focus, setfocus] = useState(surface.layout === 'panel')
+  const editing = uselinkeditingkey() === address
+  const snapshot = useRef(state)
 
-  useLayoutEffect(() => {
-    if (surface.layout === 'panel') {
-      setfocus(true)
+  const cancelediting = useCallback(() => {
+    modemwritevaluenumber(address, snapshot.current)
+    clearlinkeditingkey(address)
+  }, [address])
+
+  const acceptediting = useCallback(() => {
+    clearlinkeditingkey(address)
+  }, [address])
+
+  const enterediting = useCallback(() => {
+    snapshot.current = state
+    setlinkeditingkey(address)
+  }, [address, state])
+
+  useEffect(() => {
+    if (!surface.active && editing) {
+      cancelediting()
     }
-  }, [surface.layout])
+  }, [surface.active, editing, cancelediting])
 
-  if (surface.layout === 'terminal') {
-    tokenizeandwritetextformat(
-      `$green$20 ${tcolor}${tlabel} $white${tvalue} $7($27$26$2411 $24$25$241${EDIT_WIDTH})`,
-      surface.context,
-      false,
-    )
-  } else {
-    const chars: string[] = [`$green${tlabel} ${tvalue}\n$white`]
+  if (editing) {
+    const chars: string[] = [`${summary}\n$white`]
     for (let i = 0; i < 256; ++i) {
       if (i % EDIT_WIDTH === 0) {
         chars.push(`\n`)
@@ -86,6 +101,8 @@ export function LinkCharEdit({ surface }: LinkWidgetProps) {
     chars.push(`\n\n`)
     chars.push(`$greenpress B to copy bits of ${tvalue}`)
     tokenizeandwritetextformat(chars.join(''), surface.context, true)
+  } else {
+    tokenizeandwritetextformat(summary, surface.context, false)
   }
 
   const left = useCallback(() => {
@@ -112,10 +129,6 @@ export function LinkCharEdit({ surface }: LinkWidgetProps) {
     }
   }, [address, state])
 
-  const done = useCallback(() => {
-    surface.sendclose()
-  }, [surface])
-
   const copybits = useCallback(() => {
     const { charset } = useMedia.getState()
     let content = ''
@@ -138,22 +151,16 @@ export function LinkCharEdit({ surface }: LinkWidgetProps) {
       switch (lkey) {
         case 'c':
           registercopy(SOFTWARE, registerreadplayer(), `${state}`)
-          if (surface.layout === 'panel') {
-            surface.sendclose()
-          }
           break
         case 'b':
           copybits()
-          if (surface.layout === 'panel') {
-            surface.sendclose()
-          }
           break
       }
     },
-    [state, surface, copybits],
+    [state, copybits],
   )
 
-  if (surface.layout === 'panel') {
+  if (editing) {
     const cx = surface.context.x - 1
     const cy = surface.context.y + 2
     return (
@@ -164,48 +171,38 @@ export function LinkCharEdit({ surface }: LinkWidgetProps) {
           1,
         ]}
       >
-        {focus && (
-          <UserFocus blockhotkeys>
-            <Rect
-              x={1}
-              blocking
-              visible={false}
-              cursor="pointer"
-              width={EDIT_WIDTH}
-              height={EDIT_HEIGHT}
-              onClick={(e: any) => {
-                e.intersections[0].object.worldToLocal(
-                  point.copy(e.intersections[0].point),
-                )
-                const idx = pttoindex(coords(), EDIT_WIDTH)
-                if (idx >= 0 && idx <= 255) {
-                  modemwritevaluenumber(address, idx)
-                  surface.sendclose()
-                }
-              }}
-            />
-            <UserInput
-              MOVE_LEFT={left}
-              MOVE_UP={up}
-              MOVE_RIGHT={right}
-              MOVE_DOWN={down}
-              OK_BUTTON={done}
-              CANCEL_BUTTON={done}
-              keydown={keydown}
-            />
-          </UserFocus>
-        )}
+        <UserFocus blockhotkeys>
+          <Rect
+            x={1}
+            blocking
+            visible={false}
+            cursor="pointer"
+            width={EDIT_WIDTH}
+            height={EDIT_HEIGHT}
+            onClick={(e: any) => {
+              e.intersections[0].object.worldToLocal(
+                point.copy(e.intersections[0].point),
+              )
+              const idx = pttoindex(coords(), EDIT_WIDTH)
+              if (idx >= 0 && idx <= 255) {
+                modemwritevaluenumber(address, idx)
+                acceptediting()
+              }
+            }}
+          />
+          <UserInput
+            MOVE_LEFT={left}
+            MOVE_UP={up}
+            MOVE_RIGHT={right}
+            MOVE_DOWN={down}
+            OK_BUTTON={acceptediting}
+            CANCEL_BUTTON={cancelediting}
+            keydown={keydown}
+          />
+        </UserFocus>
       </group>
     )
   }
 
-  return surface.active ? (
-    <UserInput
-      MOVE_LEFT={left}
-      MOVE_RIGHT={right}
-      MOVE_UP={up}
-      MOVE_DOWN={down}
-      keydown={keydown}
-    />
-  ) : null
+  return surface.active ? <UserInput OK_BUTTON={enterediting} /> : null
 }
