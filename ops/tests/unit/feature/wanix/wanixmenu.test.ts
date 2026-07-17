@@ -177,8 +177,9 @@ describe('wanixmenu', () => {
         ...idlestate(),
         fsabinds: ['MyProject', 'assets'],
       })
-      expect(tape).toContain('TEXT:$green   /MyProject')
-      expect(tape).toContain('TEXT:$green   /assets')
+      expect(tape).toContain('TEXT:$green   MyProject')
+      expect(tape).toContain('TEXT:$green   assets')
+      expect(tape).not.toContain('TEXT:$green   /MyProject')
       expect(tape).not.toContain('(no folder mounts)')
     })
   })

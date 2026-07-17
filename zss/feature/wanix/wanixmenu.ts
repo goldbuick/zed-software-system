@@ -95,7 +95,7 @@ export function buildwanixmenutape(state: WanixMenuState): string {
     parts.push(zsstextline('$cyan   (no folder mounts)'))
   } else {
     for (const dst of state.fsabinds) {
-      parts.push(zsstextline(`$green   /${dst}`))
+      parts.push(zsstextline(`$green   ${dst}`))
     }
   }
   parts.push(zsszedlinkline('wanix remote', 'list remote imports (WSS 9P)'))

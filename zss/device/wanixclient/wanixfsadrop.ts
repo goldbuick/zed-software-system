@@ -35,6 +35,8 @@ function waitwanixready(timeoutms = WANIX_FSA_READY_TIMEOUT_MS): Promise<void> {
 /**
  * Live-mount a dropped directory handle into the wanix iframe via #web/fsa/new.
  * Must run on the cafe main thread (drop gesture + structured-clone handle).
+ *
+ * Order: stand up task room (if idle), wait for remount ready, then bind FSA.
  */
 export async function dropwanixfsadirectory(
   handle: FileSystemDirectoryHandle,
@@ -52,17 +54,6 @@ export async function dropwanixfsadirectory(
     return
   }
 
-  if (readwanixroomconfig().mode === 'idle') {
-    apilog(
-      SOFTWARE,
-      player,
-      `wanix: mounting folder ${mountdst} (standing up room)...`,
-    )
-    ensurewanixtaskroom(SOFTWARE, player)
-  } else {
-    apilog(SOFTWARE, player, `wanix: mounting folder $26 /${mountdst}...`)
-  }
-
   try {
     const reqperm = (
       handle as FileSystemDirectoryHandle & {
@@ -78,19 +69,36 @@ export async function dropwanixfsadirectory(
           SOFTWARE,
           player,
           'wanix',
-          `folder mount permission denied for /${mountdst}`,
+          `folder mount permission denied for ${mountdst}`,
         )
         return
       }
     }
 
-    await waitwanixready()
+    // Need the iframe document before applyroom / bind.
+    await waitwanixiframe()
+
+    if (readwanixroomconfig().mode === 'idle') {
+      apilog(
+        SOFTWARE,
+        player,
+        `wanix: standing up task room for folder ${mountdst}...`,
+      )
+      ensurewanixtaskroom(SOFTWARE, player)
+      // hardreset clears ready; wait for applyroom remount postready.
+      await waitwanixready()
+    } else if (!iswanixready()) {
+      await waitwanixready()
+    }
+
+    apilog(SOFTWARE, player, `wanix: mounting folder $26 ${mountdst}...`)
     const child = await waitwanixiframe()
     child.postMessage(
       {
         request: WANIX_FSA_BIND_REQUEST,
         handle,
         dst: mountdst,
+        player,
       },
       window.location.origin,
     )

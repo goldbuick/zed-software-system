@@ -2,14 +2,11 @@ import { apilog, wanixserverreadfile } from 'zss/device/api'
 import type { DEVICELIKE } from 'zss/device/types'
 import type { WanixTermTileBuffer } from 'zss/device/wanixclient/state'
 import {
-  ensurewanixtaskroom,
-  putwanixroomfile,
   readwanixroomconfig,
   spawntaskinroom,
 } from 'zss/device/wanixclient/wanixroom'
 import { dumpwanixtermbuffertext } from 'zss/device/wanixclient/wanixtermtext'
 import {
-  iswanixspaceactive,
   startzedcafepoll,
   stopzedcafepoll,
 } from 'zss/device/wanixclient/wanixzedcafe'
@@ -20,6 +17,7 @@ import {
 } from 'zss/feature/wanix/wanixzedcafeconstants'
 
 export const WANIX_ZEDSYNC_WASM_URL = '/wanix/zedsync.wasm'
+export const WANIX_ZEDSYNC_TASK_WASM = `${WANIX_ZEDSYNC_TASK_ID}.wasm`
 export const WANIX_ZEDSYNC_READY_NAME = '.zedsync-ready'
 const WANIX_ZEDSYNC_READY_POLL_MS = 500
 
@@ -150,6 +148,42 @@ export function iszedsynctaskid(sessionkey: string): boolean {
   )
 }
 
+/**
+ * Start host poll for `<target>/.zedsync-ready`. Must run on cafe main
+ * (wanixclient readfile replies land here, not in the sim worker).
+ */
+export function beginzedsyncreadywait(
+  device: DEVICELIKE,
+  player: string,
+  targetpath: string,
+): void {
+  const target = targetpath.trim().replace(/^\/+/, '')
+  if (!target) {
+    return
+  }
+  pollwasactive = true
+  stopzedcafepoll()
+  clearreadywait()
+  pendingready = {
+    path: `${target}/${WANIX_ZEDSYNC_READY_NAME}`,
+    device,
+    player,
+    deadline: Date.now() + WANIX_ZEDSYNC_READY_TIMEOUT_MS,
+    mirroredguestlines: new Set(),
+  }
+  apilog(
+    device,
+    player,
+    `zedsync: spawned; waiting for ${pendingready.path}`,
+  )
+  pendingready.timer = setInterval(tickreadywait, WANIX_ZEDSYNC_READY_POLL_MS)
+  tickreadywait()
+}
+
+/**
+ * Emit iframe spawntask only. Ready-wait starts on main when spawn succeeds
+ * (see applywanixtaskspawnresult) -- sim cannot own pendingready.
+ */
 export async function startwanixzedsync(
   device: DEVICELIKE,
   player: string,
@@ -168,25 +202,11 @@ export async function startwanixzedsync(
     throw new Error('zedsync targetpath must not be zedcafe')
   }
 
-  ensurewanixtaskroom(device, player)
-  if (!iswanixspaceactive()) {
-    throw new Error('zedsync: wanix room not active')
-  }
-
-  pollwasactive = true
-  stopzedcafepoll()
-  apilog(device, player, 'zedsync: paused import poll for seed')
-
-  const response = await fetch(WANIX_ZEDSYNC_WASM_URL)
-  if (!response.ok) {
-    resumepollandclear(device, player)
-    throw new Error(
-      `zedsync: failed to fetch ${WANIX_ZEDSYNC_WASM_URL} (${response.status})`,
-    )
-  }
-  const bytes = new Uint8Array(await response.arrayBuffer())
-  const ramfspath = `#ramfs/${WANIX_ZEDSYNC_TASK_ID}.wasm`
-  putwanixroomfile(ramfspath, bytes)
+  // Do not call ensurewanixtaskroom here: #wanix zedsync runs in the sim
+  // worker, whose roomconfig lags main and often stays idle. ensure on idle
+  // hard-remounts and wipes ephemeral FSA binds. Room standup belongs on main
+  // (folder drop / #wanix vm / remote connect). Peer presence is checked in
+  // the iframe spawntask before gojs starts.
 
   if (
     readwanixroomconfig().tasks.some(
@@ -197,22 +217,8 @@ export async function startwanixzedsync(
     halttaskinroom(WANIX_ZEDSYNC_TASK_ID)
   }
 
-  const cmd = `${ramfspath} ${target}`
-  spawntaskinroom(WANIX_ZEDSYNC_TASK_ID, cmd, 'gojs')
-  apilog(
-    device,
-    player,
-    `zedsync: spawned; waiting for ${target}/${WANIX_ZEDSYNC_READY_NAME}`,
-  )
-
-  clearreadywait()
-  pendingready = {
-    path: `${target}/${WANIX_ZEDSYNC_READY_NAME}`,
-    device,
-    player,
-    deadline: Date.now() + WANIX_ZEDSYNC_READY_TIMEOUT_MS,
-    mirroredguestlines: new Set(),
-  }
-  pendingready.timer = setInterval(tickreadywait, WANIX_ZEDSYNC_READY_POLL_MS)
-  tickreadywait()
+  const cmd = `${WANIX_ZEDSYNC_TASK_WASM} ${target}`
+  apilog(device, player, 'zedsync: pausing import poll; spawning guest...')
+  // URL file-bind inside iframe (zedcafe pattern) -- not #ramfs writeFile.
+  spawntaskinroom(WANIX_ZEDSYNC_TASK_ID, cmd, 'gojs', WANIX_ZEDSYNC_WASM_URL)
 }

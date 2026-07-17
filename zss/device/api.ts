@@ -997,8 +997,14 @@ export function wanixserverspawntask(
   taskid: string,
   cmd: string,
   driver?: any,
+  stageurl?: string | null,
 ) {
-  device.emit(player, 'wanixserver:spawntask', [taskid, cmd, driver ?? null])
+  device.emit(player, 'wanixserver:spawntask', [
+    taskid,
+    cmd,
+    driver ?? null,
+    stageurl ?? null,
+  ])
 }
 
 export function wanixserverhalttask(

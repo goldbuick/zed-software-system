@@ -21,7 +21,11 @@ import {
   setwanixroomconfig,
 } from 'zss/device/wanixclient/state'
 import { activatewanixzedcafeexport } from 'zss/device/wanixclient/wanixactivateexport'
-import { registerwanixsessioncloseprune } from 'zss/device/wanixclient/wanixbridge'
+import {
+  invalidatewanixready,
+  registerwanixsessioncloseprune,
+} from 'zss/device/wanixclient/wanixbridge'
+import { clearwanixfsamounts } from 'zss/device/wanixclient/wanixfsamounts'
 import {
   kickzedcafepoll,
   readwanixbootzedcafestate,
@@ -65,6 +69,11 @@ export function applywanixroom(config: WanixRoomConfig): void {
   if (config.hardreset) {
     clearlasthostpushdoc()
     resetzedcafeexportinflight()
+    // Sync clear before remount -- async clear raced past bind and wiped
+    // mounts recorded during the same first-drop standup.
+    clearwanixfsamounts()
+    // Remount drops system.isReady; folder drop must wait for postready.
+    invalidatewanixready()
   }
   setpendingapplyconfig(config)
   setwanixroomconfig(config)
@@ -339,6 +348,7 @@ export function spawntaskinroom(
   taskid: string,
   cmd: string,
   driver?: WanixTaskDriver,
+  stageurl?: string | null,
 ): void {
   setpendingspawn({ taskid, cmd })
   setwanixroomconfig({
@@ -348,15 +358,31 @@ export function spawntaskinroom(
       { id: taskid, cmd, running: true },
     ],
   })
-  wanixserverspawntask(SOFTWARE, registerreadplayer(), taskid, cmd, driver)
+  wanixserverspawntask(
+    SOFTWARE,
+    registerreadplayer(),
+    taskid,
+    cmd,
+    driver,
+    stageurl,
+  )
 }
 
-export function applywanixtaskspawnresult(data: unknown): void {
-  if (
-    data &&
-    typeof data === 'object' &&
-    (data as { ok?: unknown }).ok === false
-  ) {
+export function applywanixtaskspawnresult(
+  data: unknown,
+  device?: DEVICELIKE,
+  player?: string,
+): void {
+  const res =
+    data && typeof data === 'object'
+      ? (data as {
+          ok?: unknown
+          error?: unknown
+          taskid?: unknown
+          cmd?: unknown
+        })
+      : undefined
+  if (res?.ok === false) {
     const pending = readpendingspawn()
     if (pending) {
       const { taskid } = pending
@@ -365,8 +391,45 @@ export function applywanixtaskspawnresult(data: unknown): void {
         tasks: readwanixroomconfig().tasks.filter((task) => task.id !== taskid),
       })
     }
+    const detail =
+      typeof res.error === 'string' && res.error.length > 0
+        ? res.error
+        : 'spawntask failed'
+    const logplayer =
+      typeof player === 'string' && player.length > 0
+        ? player
+        : registerreadplayer()
+    const logdevice = device ?? SOFTWARE
+    apilog(logdevice, logplayer, `wanix spawntask FAILED: ${detail}`)
+    void import('zss/device/wanixclient/wanixzedsync').then((mod) => {
+      if (mod.iszedsyncreadywaitpending()) {
+        mod.cancelzedsyncreadywait(detail)
+      }
+    })
+    setpendingspawn(null)
+    return
   }
   setpendingspawn(null)
+  const taskid = typeof res?.taskid === 'string' ? res.taskid : ''
+  const cmd = typeof res?.cmd === 'string' ? res.cmd : ''
+  if (!taskid || !cmd) {
+    return
+  }
+  void import('zss/device/wanixclient/wanixzedsync').then((mod) => {
+    if (!mod.iszedsynctaskid(taskid)) {
+      return
+    }
+    const target = cmd.trim().split(/\s+/)[1] ?? ''
+    if (!target) {
+      return
+    }
+    const logplayer =
+      typeof player === 'string' && player.length > 0
+        ? player
+        : registerreadplayer()
+    const logdevice = device ?? SOFTWARE
+    mod.beginzedsyncreadywait(logdevice, logplayer, target)
+  })
 }
 
 export function halttaskinroom(taskid: string): void {

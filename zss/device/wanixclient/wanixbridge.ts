@@ -44,6 +44,11 @@ export function markwanixready(): void {
   notifyreadylisteners()
 }
 
+/** Clear ready without tearing down term UI — hard remount invalidates system.isReady. */
+export function invalidatewanixready(): void {
+  resetready()
+}
+
 export function markwanixidle(): void {
   resetready()
   clearwanixtermbuffers()

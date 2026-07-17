@@ -101,6 +101,7 @@ import {
   WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS,
   WANIX_ZEDCAFE_TASK_ID,
   WANIX_ZEDCAFE_WASM_CMD,
+  WANIX_ZEDSYNC_TASK_ID,
   readwanixzedcafeexportsrc,
 } from 'zss/feature/wanix/wanixzedcafeconstants'
 import type { WanixZedCafeGuestFile } from 'zss/feature/wanix/wanixzedcafetypes'
@@ -1387,37 +1388,90 @@ export async function spawntask(
   taskid: string,
   cmd: string,
   driverhint?: WanixTaskDriver | null,
+  stageurl?: string | null,
 ) {
   if (!system?.isReady) {
     throw new Error('wanix room not ready')
   }
   if (system.querySelector(`wanix-task[id="${taskid}"]`)) {
-    return { ok: true, already: true, taskid }
+    return { ok: true, already: true, taskid, cmd }
   }
 
-  const driver = await resolvedriverforcmd(cmd, driverhint)
+  // Normalize `#ramfs/foo.wasm args` -> `foo.wasm args` when staging via URL bind
+  // (same pattern as zedcafe: task-child file bind, not root writeFile).
+  let runcmd = cmd.trim()
+  const cmdparts = runcmd.split(/\s+/)
+  if (typeof stageurl === 'string' && stageurl.length > 0) {
+    const wasmdst = (cmdparts[0] ?? '').replace(/^#ramfs\//, '')
+    runcmd = [wasmdst, ...cmdparts.slice(1)].filter(Boolean).join(' ')
+  }
+
+  // zedsync peer must exist on root NS before gojs clones it (late FSA binds
+  // after allocate are invisible to the guest).
+  if (
+    taskid === WANIX_ZEDSYNC_TASK_ID ||
+    taskid.startsWith(`${WANIX_ZEDSYNC_TASK_ID}-`)
+  ) {
+    const peertarget = runcmd.trim().split(/\s+/)[1] ?? ''
+    if (!peertarget) {
+      throw new Error('zedsync: missing peer path in cmd')
+    }
+    try {
+      await readroot().readDir(peertarget)
+    } catch (err) {
+      throw new Error(
+        `zedsync: peer "${peertarget}" not mounted on wanix root -- drop the folder, wait for folder mount OK, then retry (${
+          err instanceof Error ? err.message : String(err)
+        })`,
+      )
+    }
+  }
+
+  const driver = await resolvedriverforcmd(runcmd, driverhint)
   const task = document.createElement('wanix-task')
   setwanixattrs(task, {
     id: taskid,
     type: driver,
     term: true,
-    cmd,
+    cmd: runcmd,
   })
   task.setAttribute('data-zss-target-id', taskid)
   task.setAttribute('data-zss-target-kind', 'task')
+
+  // Stage large wasm via URL file bind on the task (zedcafe pattern). Do not
+  // fetch+writeFile into #ramfs -- multi-MB writeFile hangs the iframe.
+  if (typeof stageurl === 'string' && stageurl.length > 0) {
+    const wasmdst = runcmd.trim().split(/\s+/)[0] ?? `${taskid}.wasm`
+    wanixperfmark('spawntask-stage-start', {
+      taskid,
+      path: wasmdst,
+      url: stageurl,
+    })
+    const bind = createbind(
+      {
+        type: 'file',
+        dst: wasmdst,
+        src: stageurl,
+      },
+      'data-zss-stage-wasm',
+    )
+    task.appendChild(bind)
+    wanixperfmark('spawntask-stage-end', { taskid, path: wasmdst, url: stageurl })
+  }
+
   if (driver === 'gojs') {
     wanixperfmark('spawntask-gojs-gate-start', { taskid })
     const taskrid = await waitlocalzedcafetaskrid()
     if (!taskrid) {
       throw new Error(
-        'zedcafe export not ready — drop a wasm task after books are loaded in memory',
+        'zedcafe export not ready -- drop a wasm task after books are loaded in memory',
       )
     }
     const exportsrc = readwanixzedcafeexportsrc(taskrid)
     if (!(await readzedcafeexportstatsready(readroot(), exportsrc))) {
       if (!(await waitzedcafeexportstatsatroot(readroot(), taskrid))) {
         throw new Error(
-          'zedcafe export not ready — stats.json missing from export tree',
+          'zedcafe export not ready -- stats.json missing from export tree',
         )
       }
     }
@@ -1446,10 +1500,10 @@ export async function spawntask(
     wanixperfmark('spawntask-start-end', { taskid })
   }
 
-  const entry = { id: taskid, cmd, running: true }
+  const entry = { id: taskid, cmd: runcmd, running: true }
   roomconfig.tasks = [...roomconfig.tasks.filter((t) => t.id !== taskid), entry]
 
-  return { ok: true, taskid, rid: task.rid ?? null }
+  return { ok: true, taskid, rid: task.rid ?? null, cmd: runcmd }
 }
 
 export function halttask(taskid: string) {
@@ -1525,18 +1579,23 @@ window.addEventListener('message', (event) => {
     const payload = data as {
       handle?: FileSystemDirectoryHandle
       dst?: unknown
+      player?: unknown
     }
     const dst = typeof payload.dst === 'string' ? payload.dst : ''
     const handle = payload.handle
+    const player =
+      typeof payload.player === 'string' && payload.player.length > 0
+        ? payload.player
+        : ''
     void (async () => {
       try {
         if (!handle || handle.kind !== 'directory') {
           throw new Error('wanix fsa bind requires a directory handle')
         }
         const result = await bindfsadirectory(handle, dst)
-        wanixclientbindfsa(SOFTWARE, '', result)
+        wanixclientbindfsa(SOFTWARE, player, result)
       } catch (err) {
-        wanixclientbindfsa(SOFTWARE, '', {
+        wanixclientbindfsa(SOFTWARE, player, {
           ok: false,
           dst,
           error: err instanceof Error ? err.message : String(err),
