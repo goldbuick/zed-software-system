@@ -1,11 +1,15 @@
+import { useContext } from 'react'
+import { parsezedlinkline } from 'zss/feature/zedlinkparse'
 import { useTape } from 'zss/gadget/data/zustandstores'
 import { useWriteText } from 'zss/gadget/writetext'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
+import { LinkRouter } from 'zss/screens/linkui/router'
+import type { LinkSurface } from 'zss/screens/linkui/types'
 import { BG_ACTIVE, bgcolorformode } from 'zss/screens/tape/colors'
 import {
-  TapeTerminalItemInputProps,
-  TapeTerminalItemProps as TapeTerminalItemProps,
+  TapeTerminalContext,
+  TapeTerminalItemProps,
   setuplogitem,
 } from 'zss/screens/tape/common'
 import {
@@ -16,33 +20,17 @@ import {
 } from 'zss/words/textformat'
 import { NAME } from 'zss/words/types'
 
-import { TerminalCharEdit } from './charedit'
-import { TerminalColorEdit } from './coloredit'
-import { TerminalCopyIt } from './copyit'
-import { TerminalHotkey } from './hotkey'
-import { TerminalHyperlink } from './hyperlink'
-import { TerminalNumber } from './number'
-import { TerminalOpenIt } from './openit'
-import { parseloghyperlink } from './parseloghyperlink'
-import { TerminalRange } from './range'
-import { TerminalRunIt } from './runit'
-import { TerminalSelect } from './select'
-import { TerminalText } from './text'
-import { TerminalViewIt } from './viewit'
-import { TerminalZSSEdit } from './zssedit'
-
 export function TerminalItem({ active, text, y }: TapeTerminalItemProps) {
   const context = useWriteText()
+  const cc = useContext(TapeTerminalContext)
   const terminalmode = useTape((state) => state.terminalmode)
   const edge = textformatreadedges(context)
   const ishyperlink = text.startsWith('!')
 
-  // write text or clear line for ui
   setuplogitem(!!active, 0, y, context)
   context.reset.bg = active ? BG_ACTIVE : bgcolorformode(terminalmode)
   context.active.bottomedge = edge.bottom
 
-  // detect $CENTER
   const centertext = hascenter(text)
   if (ispresent(centertext)) {
     const widthmax = edge.width - 3
@@ -62,64 +50,59 @@ export function TerminalItem({ active, text, y }: TapeTerminalItemProps) {
     tokenizeandwritetextformat(ishyperlink ? '' : text, context, true)
   }
 
-  // hyperlinks
-  if (ishyperlink) {
-    // parse hyperlink
-    const [prefix, ...content] = text.slice(1).split('!')
-    const hyperlink = `${content.join('!')}`
-
-    const { label, words } = parseloghyperlink(hyperlink)
-
-    // setup input props
-    const [input, ...args] = words
-    const props: TapeTerminalItemInputProps = {
-      active,
-      prefix,
-      label,
-      words: args,
-      y,
-    }
-
-    // render hyperlink
-    switch (NAME(input)) {
-      case 'copyit':
-        return <TerminalCopyIt {...props} words={words} />
-      case 'openit':
-        return <TerminalOpenIt {...props} words={words} />
-      case 'viewit':
-        return <TerminalViewIt {...props} words={words} />
-      case 'runit':
-        return <TerminalRunIt {...props} words={words} />
-      default:
-      case 'hyperlink':
-        return <TerminalHyperlink {...props} words={words} />
-      case 'hk':
-      case 'hotkey':
-        return <TerminalHotkey {...props} words={words} />
-      case 'rn':
-      case 'range':
-        return <TerminalRange {...props} words={words} />
-      case 'sl':
-      case 'select':
-        return <TerminalSelect {...props} words={words} />
-      case 'nm':
-      case 'number':
-        return <TerminalNumber {...props} words={words} />
-      case 'tx':
-      case 'text':
-        return <TerminalText {...props} words={words} />
-      case 'zssedit':
-        return <TerminalZSSEdit {...props} words={words} />
-      case 'charedit':
-        return <TerminalCharEdit {...props} words={words} />
-      case 'coloredit':
-        return <TerminalColorEdit {...props} words={words} />
-      case 'bgedit':
-        return <TerminalColorEdit {...props} words={words} isbg />
-    }
+  if (!ishyperlink) {
+    return null
   }
 
-  return null
+  const parsed = parsezedlinkline(text)
+  if (!parsed) {
+    return null
+  }
+
+  const [input] = parsed.words
+  const linktype = NAME(input)
+  const known =
+    linktype === 'copyit' ||
+    linktype === 'openit' ||
+    linktype === 'viewit' ||
+    linktype === 'runit' ||
+    linktype === 'hk' ||
+    linktype === 'hotkey' ||
+    linktype === 'rn' ||
+    linktype === 'range' ||
+    linktype === 'sl' ||
+    linktype === 'select' ||
+    linktype === 'nm' ||
+    linktype === 'number' ||
+    linktype === 'tx' ||
+    linktype === 'text' ||
+    linktype === 'zssedit' ||
+    linktype === 'charedit' ||
+    linktype === 'coloredit' ||
+    linktype === 'bgedit' ||
+    linktype === 'hyperlink'
+
+  const surface: LinkSurface = {
+    layout: 'terminal',
+    active: !!active,
+    label: parsed.label,
+    words: parsed.words,
+    chip: parsed.chip,
+    modemprefix: parsed.modemprefix,
+    row: y,
+    striperow: y,
+    sidebar: false,
+    context,
+    sendmessage: cc.sendmessage,
+    sendclose: () => {},
+  }
+
+  return (
+    <LinkRouter
+      linktype={known ? linktype : 'hyperlink'}
+      surface={surface}
+    />
+  )
 }
 
 export function TapeTerminalActiveItem({

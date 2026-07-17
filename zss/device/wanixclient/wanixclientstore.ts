@@ -6,6 +6,7 @@
 import type { WanixRoomConfig } from 'zss/feature/wanix/wanixroomtypes'
 import { createidleroomconfig } from 'zss/feature/wanix/wanixroomtypes'
 import type { WanixTermCellsSnapshot } from 'zss/feature/wanix/wanixtermgridstate'
+import { TAPE_DISPLAY } from 'zss/gadget/data/zustandstores'
 import { create } from 'zustand'
 
 export type WanixClientState = {
@@ -15,6 +16,10 @@ export type WanixClientState = {
   attachedsessionkey: string | null
   activesessionkey: string | null
   userdetached: boolean
+  /** Guest attach panel visibility (independent of tape terminal). */
+  attachpanelopen: boolean
+  /** Guest attach panel TOP/FULL/BOTTOM (independent of useTape.layout). */
+  attachlayout: TAPE_DISPLAY
   termbuffers: Map<string, WanixTermCellsSnapshot & { version: number }>
   opensessions: Set<string>
   termnotifyversion: number
@@ -33,6 +38,8 @@ function emptywanixclientstate(): WanixClientState {
     attachedsessionkey: null,
     activesessionkey: null,
     userdetached: false,
+    attachpanelopen: false,
+    attachlayout: TAPE_DISPLAY.TOP,
     termbuffers: new Map(),
     opensessions: new Set(),
     termnotifyversion: 0,

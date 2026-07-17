@@ -5,38 +5,55 @@ import { NAME, WORD } from 'zss/words/types'
 
 import {
   applyhyperlinksharedmodemsync,
+  clearpanelsharedsync,
   parseterminalmodemprefix,
   resolvehyperlinksharedbridge,
 } from './api'
 
 /**
- * When a tape line’s prefix is `chip:target` (first `:` only; `target` must not
- * contain `:`), registers the same modem observe/init + bridge get/set path as
- * scroll `gadgethyperlink` for shared hyperlink types. No-op if prefix is invalid.
+ * Shared modem observe/init + bridge get/set for hyperlink widgets on tape or
+ * scroll. Pass either a tape `chip:target` modem prefix, or explicit chip/target.
  */
-export function useHyperlinkSharedSync(prefix: string, type: string): void {
-  const parsed = useMemo(() => parseterminalmodemprefix(prefix), [prefix])
+export function useHyperlinkSharedSync(
+  type: string,
+  opts: { modemprefix: string } | { chip: string; target: string },
+): void {
   const typ = NAME(type)
+  const parsedprefix =
+    'modemprefix' in opts
+      ? parseterminalmodemprefix(opts.modemprefix)
+      : undefined
+  const chip =
+    'modemprefix' in opts ? (parsedprefix?.chip ?? '') : NAME(opts.chip)
+  const target =
+    'modemprefix' in opts ? (parsedprefix?.target ?? '') : opts.target
 
-  useLayoutEffect(() => {
-    if (!parsed) {
-      return
-    }
-    const bridge = resolvehyperlinksharedbridge(parsed.chip, typ)
-    const getforchip = bridge?.get ?? (() => 0 as WORD)
-    const setforchip = bridge?.set ?? noop
-    const readcontextcache = {
+  const readcontextcache = useMemo(
+    () => ({
       board: READ_CONTEXT.board,
       element: READ_CONTEXT.element,
       elementfocus: READ_CONTEXT.elementfocus,
+    }),
+    [],
+  )
+
+  useLayoutEffect(() => {
+    if (!chip || !target) {
+      return
     }
+    const bridge = resolvehyperlinksharedbridge(chip, typ)
+    const getforchip = bridge?.get ?? (() => 0 as WORD)
+    const setforchip = bridge?.set ?? noop
     applyhyperlinksharedmodemsync(
-      parsed.chip,
+      chip,
       typ,
-      parsed.target,
+      target,
       getforchip,
       setforchip,
       readcontextcache,
     )
-  }, [parsed, typ])
+    return () => {
+      clearpanelsharedsync(chip, target)
+    }
+  }, [chip, typ, target, readcontextcache])
 }

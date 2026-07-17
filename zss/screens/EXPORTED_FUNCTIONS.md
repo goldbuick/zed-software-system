@@ -184,18 +184,19 @@ Parent-realm React UI for the Wanix iframe bridge and attached terminal mirror.
 - **`WanixTermScreen()`**
   - Attached-session term mirror (tiles, scrollback, selection, hint bar)
   - Keyboard input and clipboard routed to guest via `wanixservertermwrite`
+  - `Ctrl+Tab` cycles attach panel size; `Ctrl+\` detach prefix; backtick opens tape CLI
 
 ### `wanix/termsizesync.tsx`
 
-- **`WanixTermSizeSync()`**
-  - Debounced `termfit` push when tape layout changes
+- **`WanixTermSizeSync(props?)`**
+  - Debounced `termfit` push from attach panel geometry only (independent of tape)
   - Renders nothing (`null`)
 
-### `wanix/terminallayer.tsx`
+### `wanix/attachpanel.tsx`
 
-- **`WanixTerminalLayer(props)`**
-  - Attach subscription, size sync, and attached/unattached switch
-  - Props: `unattached(attached: boolean) => ReactNode` for log rows + input when detached
+- **`WanixAttachPanel()`**
+  - Independent guest attach overlay (own TOP/FULL/BOTTOM layout)
+  - Mutually exclusive with tape CLI chrome; mounted from `TapeComponent`
 
 ---
 
@@ -534,9 +535,9 @@ See **`editor/syntax-highlighting.md`** for how colored syntax highlighting is i
 | | `terminal/item.tsx` | `TapeTerminalItem()`, `TapeTerminalActiveItem()` |
 | | `terminal/*.tsx` | Terminal action components (runit, copyit, openit, etc.) |
 | **Wanix** | `wanix/host.tsx` | `WanixHost()` - Ghost iframe host |
+| | `wanix/attachpanel.tsx` | `WanixAttachPanel()` - Independent guest attach overlay |
 | | `wanix/termscreen.tsx` | `WanixTermScreen()` - Attached term mirror |
-| | `wanix/termsizesync.tsx` | `WanixTermSizeSync()` - Term grid size sync |
-| | `wanix/terminallayer.tsx` | `WanixTerminalLayer()` - Terminal attach wrapper |
+| | `wanix/termsizesync.tsx` | `WanixTermSizeSync()` - Debounced termfit from attach geometry |
 | **Editor** | `editor/component.tsx` | `TapeEditor()` - Code editor |
 | | `editor/*.tsx` | Editor UI components (rows, input, frame) |
 | **Tape** | `tape/layout.tsx` | `TapeLayout()` - Layout component |

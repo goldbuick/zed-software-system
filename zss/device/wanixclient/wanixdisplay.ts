@@ -1,5 +1,5 @@
 /**
- * Parent UI display for wanix sessions (attach, tape, session MESSAGE).
+ * Parent UI display for wanix sessions (attach panel, session MESSAGE).
  */
 
 import {
@@ -11,7 +11,6 @@ import {
   resetwanixattachforidle as resetattachforidle,
   resetwanixattachstatefortest as resetattachstatefortest,
   setattachedsessionkey,
-  setuserdetached,
   setwanixactivesessionkey,
   subscribewanixattach as subscribeattach,
 } from 'zss/device/wanixclient/state'
@@ -21,7 +20,7 @@ import {
   unregisterwanixtermsession,
 } from 'zss/device/wanixclient/wanixtermbuffer'
 import { iswanixdaemontaskid } from 'zss/device/wanixserver/taskidlepolicy'
-import { useTape } from 'zss/gadget/data/zustandstores'
+import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/zustandstores'
 
 export function readwanixactivesession(): string | null {
   return readwanixactivesessionstate()
@@ -46,7 +45,12 @@ function maybeattachactivesession() {
   ) {
     return
   }
-  setattachedsessionkey(activesessionkey)
+  closetapeterminalforattach()
+  useWanixClient.setState({
+    attachedsessionkey: activesessionkey,
+    attachpanelopen: true,
+    userdetached: false,
+  })
 }
 
 export function setwanixactivesession(sessionkey: string | null) {
@@ -69,36 +73,97 @@ export function onwanixtermsessionopen(sessionkey: string) {
     setwanixactivesessionkey(key)
     return
   }
+  // After manual detach, re-attach is always explicit (#wanix attach / menu).
+  if (readuserdetached()) {
+    setwanixactivesessionkey(key)
+    return
+  }
+  closetapeterminalforattach()
   useWanixClient.setState({
     activesessionkey: key,
     attachedsessionkey: key,
     userdetached: false,
+    attachpanelopen: true,
   })
+}
+
+/** Hide tape CLI chrome so attach panel can take the slot (does not close editor). */
+function closetapeterminalforattach() {
+  const { terminalmode, terminal } = useTape.getState()
+  if (terminalmode === 'quick') {
+    useTape.setState({ terminalmode: 'cli' })
+  }
+  if (terminal.open) {
+    useTape.setState((state) => ({
+      terminal: { ...state.terminal, open: false },
+    }))
+  }
 }
 
 export function setattachedsession(sessionkey: string | null) {
   const next = sessionkey?.trim() ? sessionkey.trim() : null
   if (readattachedsessionstate() === next) {
+    if (next != null) {
+      closetapeterminalforattach()
+      useWanixClient.setState({ attachpanelopen: true })
+    }
     return
   }
   if (next != null) {
+    closetapeterminalforattach()
     useWanixClient.setState({
       attachedsessionkey: next,
       userdetached: false,
+      attachpanelopen: true,
     })
     return
   }
   setattachedsessionkey(next)
 }
 
+export function openwanixattachpanel() {
+  closetapeterminalforattach()
+  useWanixClient.setState({ attachpanelopen: true })
+}
+
+export function closewanixattachpanel() {
+  useWanixClient.setState({ attachpanelopen: false })
+}
+
+export function readwanixattachpanelopen(): boolean {
+  return useWanixClient.getState().attachpanelopen
+}
+
+export function readwanixattachlayout(): TAPE_DISPLAY {
+  return useWanixClient.getState().attachlayout
+}
+
+/** Cycle attach panel TOP/FULL/BOTTOM; does not touch useTape.layout. */
+export function cyclewanixattachlayout(inc: boolean) {
+  const { attachlayout } = useWanixClient.getState()
+  const step = inc ? 1 : -1
+  let nextlayout = (attachlayout as number) + step
+  if (nextlayout < 0) {
+    nextlayout += TAPE_DISPLAY.MAX
+  }
+  if (nextlayout >= (TAPE_DISPLAY.MAX as number)) {
+    nextlayout -= TAPE_DISPLAY.MAX
+  }
+  useWanixClient.setState({ attachlayout: nextlayout })
+}
+
 export function detachwanixterm() {
   if (readattachedsessionstate() == null) {
-    setuserdetached(true)
+    useWanixClient.setState({
+      userdetached: true,
+      attachpanelopen: false,
+    })
     return
   }
   useWanixClient.setState({
     attachedsessionkey: null,
     userdetached: true,
+    attachpanelopen: false,
   })
 }
 
@@ -134,7 +199,7 @@ export function resetwanixattachstatefortest() {
   resetattachstatefortest()
 }
 
-// --- tape visibility ---
+// --- tape visibility (CLI tape; independent of attach panel) ---
 
 export function readwanixtapevisible(): boolean {
   const { terminalmode, terminal, editor } = useTape.getState()
@@ -164,7 +229,6 @@ export function applywanixsessionmessage(payload: {
   if (payload.event === 'open') {
     registerwanixtermsessionopen(sessionkey)
     if (readattachedsessionstate() == null) {
-      revealwanixtapeifhidden()
       onwanixtermsessionopen(sessionkey)
     } else {
       setwanixactivesession(sessionkey)

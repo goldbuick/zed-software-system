@@ -4,26 +4,31 @@ import { useWaitForValueNumber } from 'zss/device/modemhooks'
 import { useHyperlinkSharedSync } from 'zss/gadget/data/usehyperlinksharedsync'
 import { UserInput } from 'zss/gadget/userinput.bridge'
 import { UserInputHandler } from 'zss/gadget/userinputtypes'
-import { useWriteText } from 'zss/gadget/writetext'
 import { maptovalue } from 'zss/mapping/value'
 import { inputcolor, strsplice } from 'zss/screens/panel/common'
-import {
-  TapeTerminalItemInputProps,
-  setuplogitem,
-} from 'zss/screens/tape/common'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
-export function TerminalRange({
-  active,
-  prefix,
-  label,
-  words,
-  y,
-}: TapeTerminalItemInputProps) {
-  const context = useWriteText()
-  useHyperlinkSharedSync(prefix, 'range')
-  const maybelabelmin = maptovalue(words[2], '')
-  const maybelabelmax = maptovalue(words[3], '')
+import {
+  linkbegin,
+  linkmodemaddress,
+  linkpanelstripe,
+  linktargetargs,
+} from './surface'
+import type { LinkWidgetProps } from './types'
+
+export function LinkRange({ surface }: LinkWidgetProps) {
+  linkbegin(surface)
+  const { target, rest } = linktargetargs(surface)
+
+  useHyperlinkSharedSync(
+    'range',
+    surface.layout === 'terminal'
+      ? { modemprefix: surface.modemprefix }
+      : { chip: surface.chip, target },
+  )
+
+  const maybelabelmin = maptovalue(rest[0], '')
+  const maybelabelmax = maptovalue(rest[1], '')
 
   let labelmin: string
   let labelmax: string
@@ -40,24 +45,35 @@ export function TerminalRange({
 
   const min = 0
   const max = 8
-  const address = prefix
+  const address = linkmodemaddress(surface, target)
   const value = useWaitForValueNumber(address)
   const state = value ?? 0
 
-  const tlabel = label.trim()
-  const tcolor = inputcolor(!!active)
+  const tlabel = surface.label.trim()
+  const tcolor = inputcolor(!!surface.active)
 
-  setuplogitem(!!active, 0, y, context)
-  tokenizeandwritetextformat(`$red $29 ${tcolor}${tlabel} `, context, false)
+  if (surface.layout === 'terminal') {
+    tokenizeandwritetextformat(
+      `$red $29 ${tcolor}${tlabel} `,
+      surface.context,
+      false,
+    )
+  } else {
+    tokenizeandwritetextformat(
+      `${linkpanelstripe(surface)} $29 ${tcolor}${tlabel} `,
+      surface.context,
+      false,
+    )
+  }
 
-  const knob = active ? '$BLWHITE$26$WHITE' : '$4'
+  const knob = surface.active ? '$BLWHITE$26$WHITE' : '$4'
   const bar = strsplice('----:----', state, 1, `$green${knob}${tcolor}`)
     .replaceAll('-', '$7')
     .replaceAll(':', '$9')
 
   tokenizeandwritetextformat(
     `${tcolor}${labelmin}${bar}${labelmax} $green${state + 1}`,
-    context,
+    surface.context,
     false,
   )
 
@@ -77,5 +93,7 @@ export function TerminalRange({
     [min, state, address],
   )
 
-  return <>{active && <UserInput MOVE_LEFT={down} MOVE_RIGHT={up} />}</>
+  return surface.active ? (
+    <UserInput MOVE_LEFT={down} MOVE_RIGHT={up} />
+  ) : null
 }

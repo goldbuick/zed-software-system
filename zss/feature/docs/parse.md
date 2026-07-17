@@ -39,4 +39,4 @@
 
 - `zss/device/vm.ts` — parsewebfile, parsemarkdownforscroll
 - `zss/firmware/*` — loader commands
-- `zss/device/register.ts`, `zss/firmware/cli/commands/books.ts`, `zss/screens/panel/openit.tsx`, `zss/screens/terminal/openit.tsx` — `terminalwritemarkdownlines`
+- `zss/device/register.ts`, `zss/firmware/cli/commands/books.ts`, `zss/screens/linkui/openit.tsx` — `terminalwritemarkdownlines`

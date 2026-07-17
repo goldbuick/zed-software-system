@@ -20,7 +20,7 @@ registerhyperlinksharedbridge(
 // `!zipfilelist:<filename>!select;…` (second `!` separates `paneladdress` prefix
 // from the command). Targets must not contain `:`.
 //
-// Select rows quote the filename so `scrolllinksplittokens` keeps one target token
+// Select rows quote the filename so `zedlinksplittokens` keeps one target token
 // (spaces, multiple words) for `PanelSelect` and for `readzipfilelistitem` keys.
 
 function quotezipscrollselecttarget(name: string): string {

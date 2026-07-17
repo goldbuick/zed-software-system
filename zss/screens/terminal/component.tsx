@@ -15,7 +15,6 @@ import {
   readlogrowtotalheight,
   readterminallayout,
 } from 'zss/screens/terminal/terminallayout'
-import { WanixTerminalLayer } from 'zss/screens/wanix/terminallayer'
 import { textformatreadedges } from 'zss/words/textformat'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -89,22 +88,16 @@ export function TerminalComponent() {
     <>
       <TapeBackPlate />
       <TapeTerminalContext.Provider value={tapecontextvalue}>
-        <WanixTerminalLayer
-          unattached={(attached) => (
-            <>
-              <TerminalRows />
-              {!editoropen && !attached && voice2text !== undefined && (
-                <TerminalInput
-                  terminalmode={terminalmode}
-                  voice2text={voice2text}
-                  tapeycursor={tapeycursor}
-                  logrowtotalheight={logrowtotalheight}
-                  logzoneheight={layout.logzoneheight}
-                />
-              )}
-            </>
-          )}
-        />
+        <TerminalRows />
+        {!editoropen && voice2text !== undefined && (
+          <TerminalInput
+            terminalmode={terminalmode}
+            voice2text={voice2text}
+            tapeycursor={tapeycursor}
+            logrowtotalheight={logrowtotalheight}
+            logzoneheight={layout.logzoneheight}
+          />
+        )}
       </TapeTerminalContext.Provider>
     </>
   )

@@ -6,21 +6,19 @@ import { fetchrefscrolltext } from 'zss/feature/fetchrefscrolltext'
 import { terminalwritemarkdownlines } from 'zss/feature/parse/markdownterminal'
 import { UserInput } from 'zss/gadget/userinput.bridge'
 import { extractcontentfromargs } from 'zss/screens/inputcommon'
+import { inputcolor } from 'zss/screens/panel/common'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
-import { PanelItemProps, inputcolor, setuppanelitem } from './common'
+import { linkactionprefix, linkbegin } from './surface'
+import type { LinkWidgetProps } from './types'
 
-export function PanelOpenIt({
-  sidebar,
-  row,
-  active,
-  label,
-  args,
-  context,
-}: PanelItemProps) {
+export function LinkOpenIt({ surface }: LinkWidgetProps) {
+  linkbegin(surface)
+  const words = surface.words
+
   const invoke = useCallback(() => {
-    const [, openmethod] = args
-    const content = extractcontentfromargs(args, 2)
+    const [, openmethod] = words
+    const content = extractcontentfromargs(words, 2)
     const player = registerreadplayer()
     setTimeout(() => {
       switch (openmethod) {
@@ -40,17 +38,14 @@ export function PanelOpenIt({
           break
       }
     }, 100)
-  }, [args])
+  }, [words])
 
-  const tcolor = inputcolor(!!active)
-
-  // render output
-  setuppanelitem(sidebar, row, context)
+  const tcolor = inputcolor(!!surface.active)
   tokenizeandwritetextformat(
-    `  $purple$16 $yellowOPENIT ${tcolor}${label}`,
-    context,
+    `${linkactionprefix(surface)}$purple$16 $yellowOPENIT ${tcolor}${surface.label}`,
+    surface.context,
     true,
   )
 
-  return active && <UserInput OK_BUTTON={invoke} />
+  return surface.active ? <UserInput OK_BUTTON={invoke} /> : null
 }

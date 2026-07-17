@@ -12,6 +12,7 @@ import {
 import type { WanixRoomConfig } from 'zss/feature/wanix/wanixroomtypes'
 import type { WANIX_ZED_CAFE_EXPORT_FILE } from 'zss/feature/wanix/wanixstateexport'
 import type { WanixTermCellsSnapshot } from 'zss/feature/wanix/wanixtermgridstate'
+import { TAPE_DISPLAY } from 'zss/gadget/data/zustandstores'
 import { deepcopy } from 'zss/mapping/types'
 
 // --- types ---
@@ -152,11 +153,28 @@ export function readonsessioncloseprune():
   return onsessioncloseprune
 }
 
+export function readattachpanelopen(): boolean {
+  return useWanixClient.getState().attachpanelopen
+}
+
+export function setattachpanelopen(next: boolean): void {
+  useWanixClient.setState({ attachpanelopen: next })
+}
+
+export function readattachlayout(): TAPE_DISPLAY {
+  return useWanixClient.getState().attachlayout
+}
+
+export function setattachlayout(next: TAPE_DISPLAY): void {
+  useWanixClient.setState({ attachlayout: next })
+}
+
 export function resetwanixattachforidle(): void {
   useWanixClient.setState({
     attachedsessionkey: null,
     activesessionkey: null,
     userdetached: false,
+    attachpanelopen: false,
   })
 }
 
@@ -165,6 +183,8 @@ export function resetwanixattachstatefortest(): void {
     attachedsessionkey: null,
     activesessionkey: null,
     userdetached: false,
+    attachpanelopen: false,
+    attachlayout: TAPE_DISPLAY.TOP,
   })
   onsessioncloseprune = null
 }

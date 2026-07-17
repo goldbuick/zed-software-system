@@ -4,36 +4,40 @@ import { useWaitForValueNumber } from 'zss/device/modemhooks'
 import { useHyperlinkSharedSync } from 'zss/gadget/data/usehyperlinksharedsync'
 import { UserInput } from 'zss/gadget/userinput.bridge'
 import { UserInputHandler } from 'zss/gadget/userinputtypes'
-import { useWriteText } from 'zss/gadget/writetext'
 import { inputcolor } from 'zss/screens/panel/common'
-import {
-  TapeTerminalItemInputProps,
-  setuplogitem,
-} from 'zss/screens/tape/common'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 import { WORD } from 'zss/words/types'
 
-export function TerminalSelect({
-  active,
-  prefix,
-  label,
-  words,
-  y,
-}: TapeTerminalItemInputProps) {
-  const context = useWriteText()
-  useHyperlinkSharedSync(prefix, 'select')
+import {
+  linkbegin,
+  linkmodemaddress,
+  linkpanelstripe,
+  linktargetargs,
+} from './surface'
+import type { LinkWidgetProps } from './types'
+
+export function LinkSelect({ surface }: LinkWidgetProps) {
+  linkbegin(surface)
+  const { target, rest } = linktargetargs(surface)
+
+  useHyperlinkSharedSync(
+    'select',
+    surface.layout === 'terminal'
+      ? { modemprefix: surface.modemprefix }
+      : { chip: surface.chip, target },
+  )
+
   const { valuelabels, values } = useMemo(() => {
-    const pairs = words.slice(2)
     const valuelabels: WORD[] = []
     const values: WORD[] = []
-    for (let i = 0; i < pairs.length; i += 2) {
-      valuelabels.push(pairs[i])
-      values.push(pairs[i + 1])
+    for (let i = 0; i < rest.length; i += 2) {
+      valuelabels.push(rest[i])
+      values.push(rest[i + 1])
     }
     return { valuelabels, values }
-  }, [words])
+  }, [rest])
 
-  const address = prefix
+  const address = linkmodemaddress(surface, target)
   const value = useWaitForValueNumber(address)
   const tvalue = `${value ?? 0}`
   let stateindex = values.indexOf(tvalue)
@@ -41,26 +45,39 @@ export function TerminalSelect({
     stateindex = 0
   }
 
-  const tlabel = label.trim()
-  const tcolor = inputcolor(!!active)
+  const tlabel = surface.label.trim()
+  const tcolor = inputcolor(!!surface.active)
+  const stripe =
+    surface.layout === 'panel' ? linkpanelstripe(surface) : ''
 
-  setuplogitem(!!active, 0, y, context)
-  tokenizeandwritetextformat(`$dkred ? ${tcolor}${tlabel} `, context, false)
+  if (surface.layout === 'terminal') {
+    tokenizeandwritetextformat(
+      `$dkred ? ${tcolor}${tlabel} `,
+      surface.context,
+      false,
+    )
+  } else {
+    tokenizeandwritetextformat(
+      `${stripe} ? ${tcolor}${tlabel} `,
+      surface.context,
+      false,
+    )
+  }
 
-  const knob = active ? '$BLWHITE$26$WHITE' : '/'
+  const knob = surface.active ? '$BLWHITE$26$WHITE' : '/'
   tokenizeandwritetextformat(
     `${stateindex + 1}$green${knob}${tcolor}${values.length}`,
-    context,
+    surface.context,
     false,
   )
 
-  context.writefullwidth = 32
+  surface.context.writefullwidth = 32
   tokenizeandwritetextformat(
-    ` $green${valuelabels[stateindex] as string}`,
-    context,
+    `${stripe} $green${valuelabels[stateindex] as string}`,
+    surface.context,
     false,
   )
-  context.writefullwidth = undefined
+  surface.context.writefullwidth = undefined
 
   const up = useCallback<UserInputHandler>(() => {
     const next = Math.max(0, stateindex - 1)
@@ -78,5 +95,7 @@ export function TerminalSelect({
     }
   }, [stateindex, address, values])
 
-  return <>{active && <UserInput MOVE_LEFT={up} MOVE_RIGHT={down} />}</>
+  return surface.active ? (
+    <UserInput MOVE_LEFT={up} MOVE_RIGHT={down} />
+  ) : null
 }

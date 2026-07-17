@@ -3,37 +3,32 @@ import { registercopy } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import { UserInput } from 'zss/gadget/userinput.bridge'
-import { useWriteText } from 'zss/gadget/writetext'
 import { extractcontentfromargs } from 'zss/screens/inputcommon'
 import { inputcolor } from 'zss/screens/panel/common'
-import {
-  TapeTerminalItemInputProps,
-  setuplogitem,
-} from 'zss/screens/tape/common'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
-export function TerminalCopyIt({
-  active,
-  prefix,
-  label,
-  words,
-  y,
-}: TapeTerminalItemInputProps) {
-  const context = useWriteText()
+import {
+  linkactionprefix,
+  linkafterinvoke,
+  linkbegin,
+} from './surface'
+import type { LinkWidgetProps } from './types'
+
+export function LinkCopyIt({ surface }: LinkWidgetProps) {
+  linkbegin(surface)
+  const words = surface.words
 
   const invoke = useCallback(() => {
     registercopy(SOFTWARE, registerreadplayer(), extractcontentfromargs(words))
-  }, [words])
+    linkafterinvoke(surface)
+  }, [words, surface])
 
-  const tcolor = inputcolor(!!active)
-
-  // render output
-  setuplogitem(!!active, 0, y, context)
+  const tcolor = inputcolor(!!surface.active)
   tokenizeandwritetextformat(
-    `${prefix} $purple$16 $yellowCOPYIT ${tcolor}${label}`,
-    context,
+    `${linkactionprefix(surface)}$purple$16 $yellowCOPYIT ${tcolor}${surface.label}`,
+    surface.context,
     true,
   )
 
-  return active && <UserInput OK_BUTTON={invoke} />
+  return surface.active ? <UserInput OK_BUTTON={invoke} /> : null
 }

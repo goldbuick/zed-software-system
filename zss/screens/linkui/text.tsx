@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useWaitForValueString } from 'zss/device/modemhooks'
 import { withclipboard } from 'zss/feature/keyboard'
-import { paneladdress } from 'zss/gadget/data/types'
+import { useHyperlinkSharedSync } from 'zss/gadget/data/usehyperlinksharedsync'
 import { useDeviceData } from 'zss/gadget/device'
 import {
   getmobiletextelement,
@@ -15,6 +15,7 @@ import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { maptovalue } from 'zss/mapping/value'
 import { drawblockcursor } from 'zss/screens/inputcommon'
+import { inputcolor } from 'zss/screens/panel/common'
 import { ismac } from 'zss/words/system'
 import {
   applycolortoindexes,
@@ -23,72 +24,82 @@ import {
 } from 'zss/words/textformat'
 import { NAME } from 'zss/words/types'
 
-import { PanelItemProps, inputcolor, setuppanelitem } from './common'
+import {
+  linkbegin,
+  linkmodemaddress,
+  linkpanelstripe,
+} from './surface'
+import type { LinkWidgetProps } from './types'
 
-export function PanelText({
-  sidebar,
-  chip,
-  row,
-  active,
-  label,
-  args,
-  context,
-}: PanelItemProps) {
-  setuppanelitem(sidebar, row, context)
+export function LinkText({ surface }: LinkWidgetProps) {
+  linkbegin(surface)
 
-  const target = maptovalue(args[0], '')
+  const target = maptovalue(surface.words[0], '')
 
-  // state
-  const address = paneladdress(chip, target)
+  useHyperlinkSharedSync(
+    'text',
+    surface.layout === 'terminal'
+      ? { modemprefix: surface.modemprefix }
+      : { chip: surface.chip, target },
+  )
+
+  const address = linkmodemaddress(surface, target)
   const value = useWaitForValueString(address)
   const state = value?.toJSON() ?? ''
 
-  const [cursor, setCursor] = useState(0)
-  const [focus, setFocus] = useState(false)
-  const [selection, setSelection] = useState<number | undefined>(undefined)
+  const [cursor, setcursor] = useState(0)
+  const [focus, setfocus] = useState(false)
+  const [selection, setselection] = useState<number | undefined>(undefined)
   const usemobiletextcapture = useDeviceData((s) => s.usemobiletextcapture)
   const editfocusopened = useRef(false)
 
   const tvalue = `${state} `
-  const tlabel = label.trim()
-  const tcolor = inputcolor(active)
+  const tlabel = surface.label.trim()
+  const tcolor = inputcolor(!!surface.active)
+  const stripe =
+    surface.layout === 'panel' ? linkpanelstripe(surface) : ''
 
-  // prefix
-  const prefix = context.iseven ? '$dkgreen$onblack' : '$green$ondkgrey'
-  tokenizeandwritetextformat(
-    `${prefix} $20 $ondkblue ${tcolor}${tlabel} $green`,
-    context,
-    false,
-  )
-  const tx = context.x
-  const ty = context.y
-  const tyw = ty * context.width
+  if (surface.layout === 'terminal') {
+    tokenizeandwritetextformat(
+      `$green $20 ${tcolor}${tlabel} $green`,
+      surface.context,
+      false,
+    )
+  } else {
+    tokenizeandwritetextformat(
+      `${stripe} $20 ${tcolor}${tlabel} $green`,
+      surface.context,
+      false,
+    )
+  }
 
-  // content
-  context.writefullwidth = 32
-  tokenizeandwritetextformat(`${tvalue}`, context, false)
-  context.writefullwidth = undefined
+  const tx = surface.context.x
+  const ty = surface.context.y
+  const tyw = ty * surface.context.width
 
-  // input state
+  surface.context.writefullwidth = 32
+  tokenizeandwritetextformat(`${stripe}${tvalue}`, surface.context, false)
+  surface.context.writefullwidth = undefined
+
   const hasselection = ispresent(selection)
-  const visiblerange = context.width - tx - 2
+  const visiblerange = surface.context.width - tx - 2
   const left = hasselection ? Math.min(selection, cursor) : cursor
   let right = hasselection ? Math.max(selection, cursor) : cursor
   if (hasselection) {
     if (right !== left && right === cursor) {
       --right
     }
-    applycolortoindexes(tx + left + tyw, tx + right + tyw, 15, 8, context)
+    applycolortoindexes(tx + left + tyw, tx + right + tyw, 15, 8, surface.context)
   }
   if (focus) {
-    const edge = textformatreadedges(context)
-    drawblockcursor(cursor, 0, { ...edge, left: tx, top: ty }, context)
+    const edge = textformatreadedges(surface.context)
+    drawblockcursor(cursor, 0, { ...edge, left: tx, top: ty }, surface.context)
   }
 
   function deleteselection() {
     if (ispresent(value)) {
-      setCursor(left)
-      setSelection(undefined)
+      setcursor(left)
+      setselection(undefined)
       value.delete(left, right - left + 1)
     }
   }
@@ -124,8 +135,8 @@ export function PanelText({
       const capped = newstr.slice(0, visiblerange)
       const prev = value.toJSON()
       value.splice(0, prev.length, capped)
-      setCursor(clamp(sel, 0, capped.length))
-      setSelection(undefined)
+      setcursor(clamp(sel, 0, capped.length))
+      setselection(undefined)
     })
   }, [focus, usemobiletextcapture, value, visiblerange])
 
@@ -153,13 +164,13 @@ export function PanelText({
 
   return (
     <>
-      {active && (
+      {surface.active && (
         <UserInput
           OK_BUTTON={() => {
             if (value) {
-              setFocus(true)
-              setCursor(value.length)
-              setSelection(undefined)
+              setfocus(true)
+              setcursor(value.length)
+              setselection(undefined)
             }
           }}
         />
@@ -170,29 +181,29 @@ export function PanelText({
             MOVE_LEFT={(mods) => {
               if (mods.shift) {
                 if (!ispresent(selection)) {
-                  setSelection(clamp(cursor - 1, 0, state.length))
+                  setselection(clamp(cursor - 1, 0, state.length))
                 }
               } else {
-                setSelection(undefined)
+                setselection(undefined)
               }
-              setCursor((c) => clamp(c - 1, 0, state.length))
+              setcursor((c) => clamp(c - 1, 0, state.length))
             }}
             MOVE_RIGHT={(mods) => {
               if (mods.shift) {
                 if (!ispresent(selection)) {
-                  setSelection(cursor)
+                  setselection(cursor)
                 }
               } else {
-                setSelection(undefined)
+                setselection(undefined)
               }
-              setCursor((c) => clamp(c + 1, 0, state.length))
+              setcursor((c) => clamp(c + 1, 0, state.length))
             }}
             CANCEL_BUTTON={() => {
-              setFocus(false)
-              setCursor(state.length)
-              setSelection(undefined)
+              setfocus(false)
+              setcursor(state.length)
+              setselection(undefined)
             }}
-            OK_BUTTON={() => setFocus(false)}
+            OK_BUTTON={() => setfocus(false)}
             keydown={(event) => {
               if (!value) {
                 return
@@ -205,13 +216,13 @@ export function PanelText({
                 ctrl: ismac ? event.metaKey : event.ctrlKey,
                 shift: event.shiftKey,
               }
-              const state = value.toJSON()
+              const statelen = value.toJSON().length
 
               switch (lkey) {
                 case 'delete':
                   if (hasselection) {
                     deleteselection()
-                  } else if (state.length > 0) {
+                  } else if (statelen > 0) {
                     value.delete(cursor, 1)
                   }
                   break
@@ -220,15 +231,15 @@ export function PanelText({
                     deleteselection()
                   } else if (cursor > 0) {
                     value.delete(cursor - 1, 1)
-                    setCursor((state) => Math.max(0, state - 1))
+                    setcursor((c) => Math.max(0, c - 1))
                   }
                   break
                 default:
                   if (mods.ctrl) {
                     switch (lkey) {
                       case 'a':
-                        setSelection(0)
-                        setCursor(state.length)
+                        setselection(0)
+                        setcursor(statelen)
                         break
                       case 'c': {
                         const clipboard = withclipboard()
@@ -249,7 +260,7 @@ export function PanelText({
                                 deleteselection()
                               }
                               value.insert(cursor, text)
-                              setCursor(cursor + text.length)
+                              setcursor(cursor + text.length)
                             })
                             .catch((err) => console.error(err))
                         }
@@ -266,14 +277,17 @@ export function PanelText({
                         break
                       }
                     }
-                  } else if (mods.alt) {
+                  } else if (
+                    surface.layout === 'panel' &&
+                    mods.alt
+                  ) {
                     // no-op ?? - could this shove text around ??
                   } else if (
                     event.key.length === 1 &&
-                    state.length < visiblerange
+                    statelen < visiblerange
                   ) {
                     value.insert(cursor, event.key)
-                    setCursor((state) => state + 1)
+                    setcursor((c) => c + 1)
                   }
                   break
               }

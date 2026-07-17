@@ -2,11 +2,13 @@ import { Profiler, type ProfilerOnRenderCallback } from 'react'
 import { registerterminalopen } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
+import { useWanixClient } from 'zss/device/wanixclient/wanixclientstore'
 import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/zustandstores'
 import { ShadeBoxDither } from 'zss/gadget/graphics/dither'
 import { UserFocus, UserHotkey } from 'zss/gadget/userinput'
 import { useScreenSize } from 'zss/gadget/userscreen'
 import { PerfMonitorTiles } from 'zss/perf/perfmonitortiles'
+import { WanixAttachPanel } from 'zss/screens/wanix/attachpanel'
 import { useShallow } from 'zustand/react/shallow'
 
 import { TapeLayout } from './layout'
@@ -31,6 +33,10 @@ export function TapeComponent() {
       state.perfmonitor,
     ]),
   )
+  const attachpanelopen = useWanixClient((state) => state.attachpanelopen)
+  const attachedsessionkey = useWanixClient((state) => state.attachedsessionkey)
+  const showattach =
+    attachpanelopen && attachedsessionkey != null && !editoropen
 
   let top = 0
   let height = screensize.rows
@@ -54,11 +60,13 @@ export function TapeComponent() {
   }
 
   const player = registerreadplayer()
-  const showterminal = terminalmode === 'quick' || terminalopen || editoropen
+  const showterminal =
+    !showattach && (terminalmode === 'quick' || terminalopen || editoropen)
 
   const body = (
     <>
       <PerfMonitorTiles />
+      <WanixAttachPanel />
       {showterminal ? (
         <group
           position={[
@@ -86,14 +94,16 @@ export function TapeComponent() {
           </UserFocus>
         </group>
       ) : (
-        <>
-          <UserHotkey hotkey="Shift+?" althotkey="/">
-            {() => registerterminalopen(SOFTWARE, player)}
-          </UserHotkey>
-          <UserHotkey hotkey="`">
-            {() => registerterminalopen(SOFTWARE, player)}
-          </UserHotkey>
-        </>
+        !showattach && (
+          <>
+            <UserHotkey hotkey="Shift+?" althotkey="/">
+              {() => registerterminalopen(SOFTWARE, player)}
+            </UserHotkey>
+            <UserHotkey hotkey="`">
+              {() => registerterminalopen(SOFTWARE, player)}
+            </UserHotkey>
+          </>
+        )
       )}
     </>
   )

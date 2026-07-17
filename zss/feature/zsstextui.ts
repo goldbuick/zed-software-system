@@ -86,9 +86,9 @@ export function zsszedlinkline(command: string, label: string): string {
 }
 
 /**
- * Scroll tape only: one line `!@chip command;label` with `;` escaped in the command
- * and label fragments. Not for terminal logs — `terminalwritelines` does not apply
- * per-line chip routing (its `chip` argument is reserved / unused).
+ * One line `!@chip command;label` with `;` escaped in the command and label
+ * fragments. Honored by both `scrollwritelines` and `terminalwritelines` via
+ * shared `parsezedlinkline`.
  */
 export function zsszedlinklinechip(
   chip: string,

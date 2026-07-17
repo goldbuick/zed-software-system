@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { registerterminalclose, wanixservertermwrite } from 'zss/device/api'
+import { registerterminalopen, wanixservertermwrite } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import type {
@@ -8,6 +8,7 @@ import type {
 } from 'zss/device/wanixclient/state'
 import { useWanixClient } from 'zss/device/wanixclient/wanixclientstore'
 import {
+  cyclewanixattachlayout,
   cyclewanixattachedsession,
   detachwanixterm,
 } from 'zss/device/wanixclient/wanixdisplay'
@@ -47,8 +48,8 @@ const HINT_SCROLLBACK_ROWS = ismac ? `Fn+Up/Down` : `PgUp/PgDown`
 const HINT_CLIPBOARD = ismac
   ? `shift+arrows select, ${metakey}+c/v`
   : `shift+arrows select, ctrl+shift+c/v`
-const HINT_IDLE = `Ctrl+\\ open detach menu, Ctrl+Esc close tape, ${HINT_SCROLLBACK_ROWS}, ${HINT_CLIPBOARD}`
-const HINT_ARMED = `Ctrl+\\ to detach, left/right to switch sessions`
+const HINT_IDLE = `Ctrl+\\ detach, Ctrl+Tab size, backtick open tape, ${HINT_SCROLLBACK_ROWS}, ${HINT_CLIPBOARD}`
+const HINT_ARMED = `Ctrl+\\ detach, left/right switch sessions, Esc cancel`
 const HINT_COLOR = COLOR.BLACK
 const HINT_MARQUEE_GAP = '$32$7$32'
 
@@ -113,12 +114,8 @@ function isctrlbackslash(event: KeyboardEvent) {
   return event.ctrlKey && event.key === '\\'
 }
 
-function isctrlescape(event: KeyboardEvent) {
-  return event.ctrlKey && NAME(event.key) === 'escape'
-}
-
-function closeattachedtape() {
-  registerterminalclose(SOFTWARE, registerreadplayer())
+function isctrltab(event: KeyboardEvent) {
+  return event.ctrlKey && NAME(event.key) === 'tab'
 }
 
 function iscopyshortcut(event: KeyboardEvent, hasselection: boolean) {
@@ -456,10 +453,18 @@ export function WanixTermScreen() {
         keydown={(event) => {
           const key = NAME(event.key)
 
-          if (isctrlescape(event)) {
+          if (isctrltab(event)) {
             event.preventDefault()
             setprefixarmed(false)
-            closeattachedtape()
+            cyclewanixattachlayout(!event.shiftKey)
+            return
+          }
+
+          // Open tape CLI (detaches attach panel via terminal:open handler).
+          if (event.key === '`' || (event.shiftKey && event.key === '?')) {
+            event.preventDefault()
+            setprefixarmed(false)
+            registerterminalopen(SOFTWARE, registerreadplayer())
             return
           }
 

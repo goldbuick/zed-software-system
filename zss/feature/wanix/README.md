@@ -380,15 +380,20 @@ Iframe posts `wanixclient:session`:
 
 | Event | Parent behavior |
 |-------|-----------------|
-| `open` | Register session; if nothing attached → reveal tape → auto-attach |
-| `active` | Update focus hint; no steal if user already attached |
+| `open` | Register session; if nothing attached and not user-detached → open **attach panel** + auto-attach |
+| `active` | Update focus hint; no steal if user already attached or user-detached |
 | `close` | Prune buffer/menu unless it was the attached session |
+
+The **attach panel** is separate from the **tape CLI**. Tape always shows ZSS logs + input; attach never hijacks it.
 
 Manual: `#wanix attach` / `#wanix detach` / menu. See
 [`wanixdisplay.ts`](../../device/wanixclient/wanixdisplay.ts).
 
-**Keyboard (attached):** `Ctrl+\` prefix — `n`/`p` switch session, `d` detach, `Esc` cancel.
-`Ctrl+Esc` closes the tape terminal (session stays attached). Scrollback: PageUp/PageDown.
+**Keyboard (attach panel):** `Ctrl+\` prefix — `n`/`p` switch session, `d` detach, `Esc` cancel.
+`Ctrl+Tab` / `Ctrl+Shift+Tab` cycle attach panel size (TOP/FULL/BOTTOM; independent of tape Tab layout).
+Backtick (or `Shift+?`) opens the tape CLI and detaches. Scrollback: PageUp/PageDown.
+
+After manual detach, re-attach is always explicit (`#wanix attach` / menu / idle room reset).
 
 ---
 

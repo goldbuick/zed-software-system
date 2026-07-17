@@ -17,6 +17,8 @@ type PanelProps = {
   xmargin?: number
   ymargin?: number
   selected?: number
+  /** Content index base for even/odd striping (scroll offset); draw Y stays index + ymargin */
+  striperowbase?: number
   width: number
   height: number
   color: number
@@ -29,6 +31,7 @@ export function PanelComponent({
   xmargin = 1,
   ymargin = 1,
   selected = -1,
+  striperowbase = 0,
   width,
   height,
   color,
@@ -76,6 +79,7 @@ export function PanelComponent({
             <PanelItem
               key={index}
               row={inline ? undefined : index + ymargin}
+              striperow={striperowbase + index}
               item={item}
               active={index === selected}
               sidebar={xmargin !== 0}

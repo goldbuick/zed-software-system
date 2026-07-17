@@ -61,10 +61,10 @@ describe('terminalwritelines', () => {
     expect(logemissions[0].payload).toEqual(['!mypath arg;$greenTap'])
   })
 
-  it('ignores custom chip for output (parity arg)', () => {
+  it('applies custom chip as !@chip when not already present', () => {
     const { device, logemissions } = createdevicelogrecorder()
     terminalwritelines(device, 'p1', '!x y;$lbl', 'mychip')
-    expect(logemissions[0].payload).toEqual(['!x y;$lbl'])
+    expect(logemissions[0].payload).toEqual(['!@mychip x y;$lbl'])
   })
 
   it('treats ! without semicolon as plain text', () => {
@@ -85,10 +85,10 @@ describe('terminalwritelines', () => {
     expect(logemissions[0].payload).toEqual(['!copyit one two;$greenLbl'])
   })
 
-  it('decodes $59 to semicolon inside copyit payload token', () => {
+  it('preserves $59 escape in copyit payload', () => {
     const { device, logemissions } = createdevicelogrecorder()
     terminalwritelines(device, 'p1', '!copyit foo$59bar;$greenLbl')
-    expect(logemissions[0].payload).toEqual(['!copyit foo;bar;$greenLbl'])
+    expect(logemissions[0].payload).toEqual(['!copyit foo$59bar;$greenLbl'])
   })
 
   it('does not treat $590 as semicolon escape', () => {

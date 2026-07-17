@@ -200,6 +200,7 @@ export function ScrollComponent({
                 bg={COLOR.ONCLEAR}
                 text={visibletext}
                 selected={row}
+                striperowbase={offset}
               />
             </ScrollControls>
           </WriteTextContext.Provider>

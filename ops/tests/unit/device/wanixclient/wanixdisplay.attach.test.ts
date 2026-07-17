@@ -1,31 +1,40 @@
+import { terminalinclayout } from 'zss/device/register/helpers/layout'
 import {
+  cyclewanixattachlayout,
   cyclewanixattachedsession,
   detachwanixterm,
   onwanixtermsessionopen,
   readattachedsession,
   readwanixactivesession,
+  readwanixattachlayout,
+  readwanixattachpanelopen,
   resetwanixattachforidle,
   resetwanixattachstatefortest,
   setattachedsession,
   setwanixactivesession,
   subscribewanixattach,
 } from 'zss/device/wanixclient/wanixdisplay'
+import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/zustandstores'
 
 describe('wanixdisplay attach', () => {
   afterEach(() => {
     resetwanixattachstatefortest()
+    useTape.getState().reset()
   })
 
   it('starts detached with no active session', () => {
     expect(readattachedsession()).toBeNull()
     expect(readwanixactivesession()).toBeNull()
+    expect(readwanixattachpanelopen()).toBe(false)
   })
 
   it('sets and detaches a session', () => {
     setattachedsession('task-a')
     expect(readattachedsession()).toBe('task-a')
+    expect(readwanixattachpanelopen()).toBe(true)
     detachwanixterm()
     expect(readattachedsession()).toBeNull()
+    expect(readwanixattachpanelopen()).toBe(false)
   })
 
   it('notifies subscribers', () => {
@@ -43,6 +52,7 @@ describe('wanixdisplay attach', () => {
     setwanixactivesession('linux-vm')
     expect(readattachedsession()).toBe('linux-vm')
     expect(readwanixactivesession()).toBe('linux-vm')
+    expect(readwanixattachpanelopen()).toBe(true)
   })
 
   it('does not steal focus when already attached', () => {
@@ -57,20 +67,23 @@ describe('wanixdisplay attach', () => {
     detachwanixterm()
     setwanixactivesession('task-b')
     expect(readattachedsession()).toBeNull()
+    expect(readwanixattachpanelopen()).toBe(false)
   })
 
   it('open auto-attaches when not attached', () => {
     onwanixtermsessionopen('task-a')
     expect(readattachedsession()).toBe('task-a')
     expect(readwanixactivesession()).toBe('task-a')
+    expect(readwanixattachpanelopen()).toBe(true)
   })
 
-  it('open auto-attaches after manual detach when a new session connects', () => {
+  it('open does not auto-attach after manual detach when a new session connects', () => {
     onwanixtermsessionopen('task-a')
     detachwanixterm()
     onwanixtermsessionopen('task-b')
-    expect(readattachedsession()).toBe('task-b')
+    expect(readattachedsession()).toBeNull()
     expect(readwanixactivesession()).toBe('task-b')
+    expect(readwanixattachpanelopen()).toBe(false)
   })
 
   it('open does not steal focus when already attached', () => {
@@ -86,6 +99,7 @@ describe('wanixdisplay attach', () => {
     resetwanixattachforidle()
     setwanixactivesession('task-b')
     expect(readattachedsession()).toBe('task-b')
+    expect(readwanixattachpanelopen()).toBe(true)
   })
 
   it('cyclewanixattachedsession no-ops on empty list', () => {
@@ -127,5 +141,25 @@ describe('wanixdisplay attach', () => {
     expect(readattachedsession()).toBeNull()
     cyclewanixattachedsession(['task-a', 'task-b'], 1)
     expect(readattachedsession()).toBe('task-a')
+    expect(readwanixattachpanelopen()).toBe(true)
+  })
+
+  it('cyclewanixattachlayout is independent of tape layout', () => {
+    useTape.setState({ layout: TAPE_DISPLAY.FULL })
+    expect(readwanixattachlayout()).toBe(TAPE_DISPLAY.TOP)
+    cyclewanixattachlayout(true)
+    expect(readwanixattachlayout()).toBe(TAPE_DISPLAY.FULL)
+    expect(useTape.getState().layout).toBe(TAPE_DISPLAY.FULL)
+    terminalinclayout(true)
+    expect(useTape.getState().layout).toBe(TAPE_DISPLAY.BOTTOM)
+    expect(readwanixattachlayout()).toBe(TAPE_DISPLAY.FULL)
+  })
+
+  it('detach preserves attachlayout', () => {
+    cyclewanixattachlayout(true)
+    expect(readwanixattachlayout()).toBe(TAPE_DISPLAY.FULL)
+    setattachedsession('task-a')
+    detachwanixterm()
+    expect(readwanixattachlayout()).toBe(TAPE_DISPLAY.FULL)
   })
 })
