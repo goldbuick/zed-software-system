@@ -1,8 +1,6 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/types'
 
-import { handleagentexporttree } from './agentexporttree'
-import { handleagentexportwrite } from './agentexportwrite'
 import { handleapplyroom } from './applyroom'
 import { handlebinddrop } from './binddrop'
 import { handlewanixcells } from './cells'
@@ -47,6 +45,4 @@ export const wanixclienthandlers: Record<string, WANIXCLIENT_HANDLER> = {
   cells: handlewanixcells,
   session: handlewanixsession,
   zedcafefilechange: handlezedcafefilechange,
-  agentexporttree: handleagentexporttree,
-  agentexportwrite: handleagentexportwrite,
 }

@@ -1,6 +1,6 @@
 # Devices and messaging
 
-How **devices** talk to each other in ZSS: **main thread**, **simulation worker**, **boardrunner worker**, and on-demand **TTS/STT/agent workers**, each with its own **`hub`**, plus **`forward`** bridging over `postMessage`, and the `SOFTWARE` emit surface.
+How **devices** talk to each other in ZSS: **main thread**, **simulation worker**, **boardrunner worker**, and on-demand **TTS/STT workers**, each with its own **`hub`**, plus **`forward`** bridging over `postMessage`, and the `SOFTWARE` emit surface.
 
 **Context:** [zss/ARCHITECTURE.md](../../ARCHITECTURE.md) (full stack: cafe → Engine → platform → workers).
 
@@ -45,7 +45,7 @@ ZSS does not spawn OS threads; it uses the **browser main thread** and **dedicat
 | **Main-hub devices** | `import('zss/userspace')` runs side effects that register **`register`**, **`gadgetclient`**, **`modem`**, **`bridge`**, **`synth`** ([`userspace.ts`](../../userspace.ts)). |
 | **Worker construction** | [`createplatform(isstub, climode)`](../../platform.ts) runs **only here**. It calls `new simspace()` / `new stubspace()` and `new boardrunnerspace()` (see below), installs `message` listeners, and wraps [`createforward`](../forward.ts) so the main hub and workers exchange `MESSAGE`s. **ttsspace** / **sttspace** start on demand via `ensurettsworker()` / `ensuresttworker()`. |
 | **Who calls `createplatform`** | [`zss/gadget/engine.tsx`](../../gadget/engine.tsx) — `useEffect` on mount (browser UI, passes `isjoin()` and `isclimode()`). [`cafe/index.tsx`](../../../cafe/index.tsx) — `bootheadless()` after `userspace` (CLI). |
-| **Teardown** | [`haltplatform()`](../../platform.ts) terminates sim/stub, boardrunner, and any TTS/STT/agent workers, removes listeners, and disconnects the main-thread forward device (Engine `useEffect` cleanup). |
+| **Teardown** | [`haltplatform()`](../../platform.ts) terminates sim/stub, boardrunner, and any TTS/STT workers, removes listeners, and disconnects the main-thread forward device (Engine `useEffect` cleanup). |
 
 ### Simulation worker (`simspace` or `stubspace`)
 
@@ -267,7 +267,6 @@ flowchart TB
 - **Main thread** — `register`, `gadgetclient`, `userinput`, `bridge`, `synth`, second **`modem`** instance ([`userspace.ts`](../../userspace.ts)), and `api`-driven emits (**`apihelpers`**); chips/UI often use **`SOFTWARE`** on whichever hub loaded them (sim for game logic).
 - **TTS worker** — `tts` device ([`ttsspace.ts`](../../ttsspace.ts), [`ttsworker.ts`](../ttsworker.ts)); lazy spawn via `ensurettsworker()` on first `tts:info` / `tts:request`.
 - **STT worker** — `stt` device ([`sttspace.ts`](../../sttspace.ts), [`sttworker.ts`](../sttworker.ts)); lazy spawn via `ensuresttworker()` on first `stt:*`.
-- **Agent worker** — `agent` device ([`agentspace.ts`](../../agentspace.ts), [`agentworker.ts`](../agentworker.ts)); lazy spawn via `ensureagentworker()` on first `agent:*`. Inference only (Gemma 4 / transformers.js). Zedcafe FS tools and `vm:cli` stay on the main thread ([`zss/feature/agent/`](../../feature/agent/)).
 - **Boardrunner worker** — `boardrunner` device ([`boardrunnerspace.ts`](../../boardrunnerspace.ts), [`boardrunner.ts`](../boardrunner.ts), [`boardrunner/handlers/`](../boardrunner/handlers/)). The sim VM elects one player per active board to be its runner each tick ([`boardrunnermanagement.ts`](../vm/boardrunnermanagement.ts)). The runner receives memory + per-boundary jsonpipe paint/patch plus `boardrunner:tick`, runs [`memorytickmain`](../../memory/runtime.ts) for that board, and replies with `vm:boardrunnerack` and one `vm:boardrunnerpatch` per dirty boundary.
 - **`second`** — `clock` runs on sim; **`register`**, **main `modem`**, **`boardrunner`**, and on-demand **tts/stt** workers receive **`second`** after **sim → main** forward (and main → worker where applicable), same tick as sim-local `vm` / `modemSim`.
 
@@ -289,7 +288,6 @@ Notes:
 | `second` | `boardrunner` | Boardrunner worker | `clock` / main forward | Sim / main → boardrunner |
 | `second` | `tts` | TTS worker (lazy) | `clock` / main forward | Main → ttsspace |
 | `second` | `stt` | STT worker (lazy) | `clock` / main forward | Main → sttspace |
-| `second` | `agent` | Agent worker (lazy) | `clock` / main forward | Main → agentspace |
 | `boardrunner` | `boardrunner` | Boardrunner worker | `vm` (`boardrunner:paint`, `boardrunner:patch`, `boardrunner:tick`, `boardrunner:idle`, `boardrunner:thud`, `boardrunner:start`), `userinput` (`boardrunner:input`) | Sim / main → boardrunner |
 | `ready` | all devices | per hub | `vm` / stub, [`platformready`](../api.ts) | Sim (or stub worker) |
 | `sessionreset` | all devices | per hub | [`sessionreset`](../api.ts) | usually main (`SOFTWARE`) |
@@ -298,7 +296,6 @@ Notes:
 | `gadgetclient` | `gadgetclient` | Main thread | `vm` ([`gadgetsynctick`](../vm/gadgetsynctick.ts) → `gadgetclient:paint` / `gadgetclient:patch`), `api` | Sim → main / main |
 | `tts` | `tts` | TTS worker (lazy) | `synth` / [`feature/tts/client.ts`](../../feature/tts/client.ts) via **`tts:info`**, **`tts:request`** | Main → ttsspace |
 | `stt` | `stt` | STT worker (lazy) | terminal mic / [`sttclient.ts`](../../feature/stt/sttclient.ts) via **`stt:*`** | Main → sttspace |
-| `agent` | `agent` | Agent worker (lazy) | [`agentclient.ts`](../../feature/agent/agentclient.ts) via **`agent:generate`**, **`agent:dispose`** | Main → agentspace |
 | `synth` | `synth` | Main thread | `api` / firmware | Sim → main / main |
 | `bridge` | `bridge` | Main thread | `api` | Main |
 | `log` | `register` (topic) | Main thread | `api` `apilog`, firmware | any hub → often main |
@@ -312,7 +309,7 @@ Nested paths (`register:terminal:open`, `gadgetclient:paint`) still belong to th
 
 ### Machine-readable source
 
-Stable names for **`vm:*`**, **`register:*`**, **`synth:*`**, **`bridge:*`**, **`tts:*`**, **`stt:*`**, **`agent:*`**, **`gadgetclient:*`**, **`boardrunner:*`** are the string literals passed to `device.emit` in [`device/api.ts`](../api.ts). `vm` subtargets are dispatched in [`vm/handlers/registry.ts`](../vm/handlers/registry.ts).
+Stable names for **`vm:*`**, **`register:*`**, **`synth:*`**, **`bridge:*`**, **`tts:*`**, **`stt:*`**, **`gadgetclient:*`**, **`boardrunner:*`** are the string literals passed to `device.emit` in [`device/api.ts`](../api.ts). `vm` subtargets are dispatched in [`vm/handlers/registry.ts`](../vm/handlers/registry.ts).
 
 ---
 
@@ -326,9 +323,9 @@ Stable names for **`vm:*`**, **`register:*`**, **`synth:*`**, **`bridge:*`**, **
 
 **Server → client** ([`shouldforwardservertoclient`](../forward.ts)) covers `tts`, `synth`, `modem`, `bridge`, `register`, `boardrunner`, `gadgetclient`, `perfreport`, plus topics `log`, `chat`, `ready`, `toast`, `second`, and the composite path suffixes `sync`, `joinack`, `acklook`, `acklogin`, `ackoperator`, `ackzsswords`, `boardrunner`, `gadgetclient`.
 
-**TTS/STT/agent** and **second** / **ready** follow [`shouldforwardclienttotts`](../forward.ts), [`shouldforwardclienttostt`](../forward.ts), [`shouldforwardclienttoagent`](../forward.ts). `ticktock` is **not** forwarded to inference workers.
+**TTS/STT** and **second** / **ready** follow [`shouldforwardclienttotts`](../forward.ts), [`shouldforwardclienttostt`](../forward.ts). `ticktock` is **not** forwarded to inference workers.
 
-**Boardrunner** follows [`shouldforwardclienttoboardrunner`](../forward.ts) (`boardrunner:*`, `second`, `ready`; not `ticktock`). [`platform.ts`](../../platform.ts) additionally re-applies the `shouldforwardclienttoserver` / `shouldforwardclienttotts` / `shouldforwardclienttostt` / `shouldforwardclienttoagent` / `shouldforwardclienttoboardrunner` predicates to messages **received from** workers, so worker → worker traffic (e.g. boardrunner → sim VM) is relayed through main without entering main's hub.
+**Boardrunner** follows [`shouldforwardclienttoboardrunner`](../forward.ts) (`boardrunner:*`, `second`, `ready`; not `ticktock`). [`platform.ts`](../../platform.ts) additionally re-applies the `shouldforwardclienttoserver` / `shouldforwardclienttotts` / `shouldforwardclienttostt` / `shouldforwardclienttoboardrunner` predicates to messages **received from** workers, so worker → worker traffic (e.g. boardrunner → sim VM) is relayed through main without entering main's hub.
 
 ---
 
@@ -384,11 +381,10 @@ flowchart TB
 
 - **Sim vs stub** — Only one platform worker runs per session (`createplatform` chooses [`simspace`](../../simspace.ts) or [`stubspace`](../../stubspace.ts)). **simspace** boots **`clock`**, sim **`modem`**, and **`vm`**. **stubspace** boots **`stub`** (device name **`vm`**) and **`forward`** only—no **`clock`** or sim **`modem`**. Labels **`clock_sim_only`** / **`modem_sim_only`** apply only when **`simspace`** is active.
 - **TTS/STT** — On-demand workers ([`ttsspace`](../../ttsspace.ts), [`sttspace`](../../sttspace.ts)).
-- **Agent** — On-demand worker ([`agentspace`](../../agentspace.ts)); scoped zedcafe FS copilot (main-thread tools + worker inference). Not a boardrunner hub.
 
 ### Diagram: `postMessage` bridges and predicates
 
-Solid arrows are **`postMessage`** between workers and the main thread. [`platform.ts`](../../platform.ts) installs listeners on **sim/stub**, **boardrunner**, and on-demand **tts/stt/agent** workers; each listener **fan-outs** using the listed predicates (a single inbound message may satisfy multiple and hit multiple workers). Worker → worker routes **relay through main** and never enter main’s hub.
+Solid arrows are **`postMessage`** between workers and the main thread. [`platform.ts`](../../platform.ts) installs listeners on **sim/stub**, **boardrunner**, and on-demand **tts/stt** workers; each listener **fan-outs** using the listed predicates (a single inbound message may satisfy multiple and hit multiple workers). Worker → worker routes **relay through main** and never enter main’s hub.
 
 ```mermaid
 flowchart LR
@@ -404,9 +400,6 @@ flowchart LR
   subgraph STT_worker [STT_worker lazy]
     Fs2[forward]
   end
-  subgraph Agent_worker [Agent_worker lazy]
-    Fa[forward]
-  end
   subgraph Boardrunner_worker [Boardrunner_worker]
     Fb[forward]
   end
@@ -416,15 +409,13 @@ flowchart LR
   Ft -->|"shouldforwardttstoclient_true"| Fm
   Fm -->|"shouldforwardclienttostt"| Fs2
   Fs2 -->|"shouldforwardstttoclient_true"| Fm
-  Fm -->|"shouldforwardclienttoagent"| Fa
-  Fa -->|"shouldforwardagenttoclient_true"| Fm
   Fm -->|"shouldforwardclienttoboardrunner"| Fb
   Fb -->|"shouldforwardboardrunnertoclient_true"| Fm
 ```
 
 **Stub vs sim outbound** — **[`stubspace`](../../stubspace.ts)** posts **every** message from the worker hub to main (`postMessage(message)` with no `shouldforwardservertoclient`). **[`simspace`](../../simspace.ts)** only posts when [`shouldforwardservertoclient`](../forward.ts) returns true. The edge label **`shouldforwardservertoclient_sim_only`** applies only when the platform worker is **simspace**; replace mentally with **all targets** when **stubspace** is active.
 
-**Inbound on main** — When main’s `createforward` receives a message from any worker, it may forward to **other** workers using **`shouldforwardclienttoserver`**, **`shouldforwardclienttotts`**, **`shouldforwardclienttostt`**, **`shouldforwardclienttoagent`**, and **`shouldforwardclienttoboardrunner`** together ([`platform.ts`](../../platform.ts)), enabling paths such as boardrunner → sim **`vm:*`** without the message being handled on the main hub first.
+**Inbound on main** — When main’s `createforward` receives a message from any worker, it may forward to **other** workers using **`shouldforwardclienttoserver`**, **`shouldforwardclienttotts`**, **`shouldforwardclienttostt`**, and **`shouldforwardclienttoboardrunner`** together ([`platform.ts`](../../platform.ts)), enabling paths such as boardrunner → sim **`vm:*`** without the message being handled on the main hub first.
 
 ### Diagram: PeerJS net-terminal overlay
 
@@ -491,15 +482,6 @@ Predicates use [`parsetarget`](../../device.ts): first `:` segment is **`route.t
 
 **Blocked:** **`ticktock`** and all other targets.
 
-#### Main → agent (`shouldforwardclienttoagent`)
-
-| Allowed | Details |
-|---------|---------|
-| Whole-target | **`second`**, **`ready`** (**`ticktock`** explicitly false) |
-| `route.target` | **`agent`** |
-
-**Blocked:** **`ticktock`** and all other targets.
-
 #### Main → boardrunner (`shouldforwardclienttoboardrunner`)
 
 | Allowed | Details |
@@ -514,10 +496,6 @@ Predicates use [`parsetarget`](../../device.ts): first `:` segment is **`route.t
 Always **`true`** — no per-target filter at postMessage; further routing to sim/boardrunner uses main’s outbound predicates when the message arrives.
 
 #### STT → main (`shouldforwardstttoclient`)
-
-Always **`true`** — same pattern as tts → main.
-
-#### Agent → main (`shouldforwardagenttoclient`)
 
 Always **`true`** — same pattern as tts → main.
 

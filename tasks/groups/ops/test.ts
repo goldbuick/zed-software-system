@@ -73,7 +73,7 @@ function runapplint(ctx: TaskContext): number {
     'sh',
     [
       '-c',
-      "depcruise zss/simspace.ts zss/boardrunnerspace.ts zss/sttspace.ts zss/ttsspace.ts zss/agentspace.ts --validate --config ops/depcruise.cjs && eslint . --ext ts,tsx --fix --report-unused-disable-directives --max-warnings 0 && eslint 'ops/infra/net-*-worker.js' --fix --report-unused-disable-directives --max-warnings 0 && tsc --noEmit",
+      "depcruise zss/simspace.ts zss/boardrunnerspace.ts zss/sttspace.ts zss/ttsspace.ts --validate --config ops/depcruise.cjs && eslint . --ext ts,tsx --fix --report-unused-disable-directives --max-warnings 0 && eslint 'ops/infra/net-*-worker.js' --fix --report-unused-disable-directives --max-warnings 0 && tsc --noEmit",
     ],
     ctx,
     { inherit: true },

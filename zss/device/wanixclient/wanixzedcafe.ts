@@ -217,19 +217,6 @@ export async function fetchzedcafeexportfiles(
   return requestvmzedcafeexportfiles(device, player, timeoutms)
 }
 
-/** Agent tool path: partial import of explicit file bytes (register-player scoped). */
-export async function runzedcafeagentimport(
-  device: DEVICELIKE,
-  player: string,
-  files: WANIX_ZED_CAFE_EXPORT_FILE[],
-  timeoutms = WANIX_VM_ZEDCAFE_IMPORT_MS,
-): Promise<WANIX_ZED_CAFE_IMPORT_RESULT> {
-  return requestvmzedcafeimport(device, player, files, {
-    partial: true,
-    timeoutms,
-  })
-}
-
 export function fingerprintzedcafeexportfiles(
   files: WANIX_ZED_CAFE_EXPORT_FILE[],
 ): string {

@@ -26,8 +26,7 @@ like `findplayers.wasm` and `greenring.wasm` can read (and write allowlisted) wo
 13. [Gotchas & invariants](#gotchas--invariants)
 14. [Debugging & validation](#debugging--validation)
 15. [What works today (and why)](#what-works-today-and-why)
-16. [In-browser zedcafe agent](#in-browser-zedcafe-agent)
-17. [TODO (deferred / out-of-scope)](#todo-deferred--out-of-scope)
+16. [TODO (deferred / out-of-scope)](#todo-deferred--out-of-scope)
 
 ---
 
@@ -766,27 +765,7 @@ Empty remote is seeded from `zedcafe/` (no wipe). After `.zedsync-ready`, steady
 
 ---
 
-## In-browser zedcafe agent
-
-An optional in-browser LLM copilot edits the **same schema-guarded `zedcafe/` export tree**
-you edit by hand (or via zedsync/`serve-root`), then applies through the existing import poll.
-It is **not** a boardrunner identity and does **not** need player ticks to mutate world JSON.
-
-| Surface | Owner |
-|---------|--------|
-| Tools | `list_zedcafe` / `read_zedcafe` / `write_zedcafe` / `apply_zedcafe_batch` / `run_cli_command` in [`zss/feature/agent/`](../agent/) |
-| CLI | `#agent "prompt"`; `#agent model <best\|light\|experimental>` |
-| Feedback | `workstatus` for live progress; `apichat` for start / tool milestones / final / errors |
-| Inference | Lazy [`agentspace`](../../agentspace.ts) worker — WebGPU only; main thread owns Wanix I/O + `vm:cli` |
-| Permissions | `run_cli_command` calls `vmcli` as the **register player** — same `memorycanruncommand` / role allowlists as the human terminal (no second agent allowlist) |
-
-**vs zedsync / serve-root:** remote and filesystem editors write guest JSON and rely on dirty → import.
-The agent writes allowlisted export paths through `wanixserver:agentexportwrite`, then
-`apply_zedcafe_batch` → `vm:importzedcafe` (partial) + `kickzedcafepoll`. The model may still
-run firmware CLI via `run_cli_command` when needed (e.g. `#query`, `#wanix`).
-
-**Model presets** (`#agent model`): `best` = Gemma 4 E4B, `light` = E2B, `experimental` = Qwen3.5 4B OPT.
-Requires `@huggingface/transformers` ^4.2 (native `tools` on text-generation).
+The in-browser `#agent` LLM feature was removed on purpose — see [`.cursor/rules/no-agent-feature.mdc`](../../../.cursor/rules/no-agent-feature.mdc).
 
 ---
 

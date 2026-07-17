@@ -532,27 +532,6 @@ export async function collectzedcafeexportfiles(
   return collectexporttreefiles(root, readwanixzedcafeexportsrc(taskrid))
 }
 
-export async function writezedcafeagentexportfile(
-  root: WanixRoot,
-  taskrid: string,
-  relpath: string,
-  bytes: Uint8Array | number[],
-): Promise<void> {
-  if (!isallowedexportpath(relpath)) {
-    throw new Error(`path outside schema: ${relpath}`)
-  }
-  const base = readwanixzedcafeexportsrc(taskrid)
-  const full = `${base}/${relpath}`
-  const parentdir = full.slice(0, full.lastIndexOf('/'))
-  if (parentdir.length > base.length) {
-    await root.makeDirAll(parentdir)
-  }
-  await root.writeFile(
-    full,
-    bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes),
-  )
-}
-
 export function readguestfilebookcount(files: WanixZedCafeGuestFile[]): number {
   const stats = files.find((file) => file.path === 'stats.json')
   if (!stats) {

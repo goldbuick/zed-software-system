@@ -394,15 +394,6 @@ export function registerforkmem(
   device.emit(player, 'register:forkmem', [books, transfer])
 }
 
-export function registeragentask(
-  device: DEVICELIKE,
-  player: string,
-  prompt: string,
-  preset?: string,
-) {
-  device.emit(player, 'register:agentask', [prompt, preset ?? ''])
-}
-
 export function registerinput(
   device: DEVICELIKE,
   player: string,
@@ -1130,19 +1121,6 @@ export function wanixserverreadzedcafeexportfiles(
   player: string,
 ) {
   device.emit(player, 'wanixserver:readzedcafeexportfiles')
-}
-
-export function wanixserveragentexporttree(device: DEVICELIKE, player: string) {
-  device.emit(player, 'wanixserver:agentexporttree')
-}
-
-export function wanixserveragentexportwrite(
-  device: DEVICELIKE,
-  player: string,
-  path: string,
-  bytes: number[],
-) {
-  device.emit(player, 'wanixserver:agentexportwrite', [path, bytes])
 }
 
 export function wanixserversynczedcafeexport(

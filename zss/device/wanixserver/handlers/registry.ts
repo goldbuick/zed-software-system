@@ -1,8 +1,6 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/types'
 
-import { handleagentexporttree } from './agentexporttree'
-import { handleagentexportwrite } from './agentexportwrite'
 import { handleapplyroom } from './applyroom'
 import { handlebinddrop } from './binddrop'
 import { handledrop } from './drop'
@@ -63,6 +61,4 @@ export const wanixhandlers: Record<string, WANIX_HANDLER> = {
   iszedcafeexportlive: handleiszedcafeexportlive,
   iszedcafeguestbound: handleiszedcafeguestbound,
   requestzedcafestate: handlerequestzedcafestate,
-  agentexporttree: handleagentexporttree,
-  agentexportwrite: handleagentexportwrite,
 }

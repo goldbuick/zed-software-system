@@ -188,26 +188,6 @@ export function shouldforwardttstoclient(): boolean {
   return true
 }
 
-// agent worker messages
-
-export function shouldforwardclienttoagent(message: MESSAGE): boolean {
-  switch (message.target) {
-    case 'ticktock':
-      return false
-    case 'second':
-    case 'ready':
-      return true
-    default: {
-      const route = parsetarget(message.target)
-      return route.target === 'agent'
-    }
-  }
-}
-
-export function shouldforwardagenttoclient(): boolean {
-  return true
-}
-
 // wanix iframe messages
 
 // create client -> wanixserver iframe forward
