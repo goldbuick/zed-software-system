@@ -1,7 +1,6 @@
 import { useLayoutEffect, useMemo } from 'react'
-import { noop } from 'zss/mapping/types'
 import { READ_CONTEXT } from 'zss/words/reader'
-import { NAME, WORD } from 'zss/words/types'
+import { NAME } from 'zss/words/types'
 
 import {
   applyhyperlinksharedmodemsync,
@@ -13,6 +12,8 @@ import {
 /**
  * Shared modem observe/init + bridge get/set for hyperlink widgets on tape or
  * scroll. Pass either a tape `chip:target` modem prefix, or explicit chip/target.
+ * Skips when no bridge exists in this realm (e.g. main-thread inspect UI) so a
+ * fake get of 0 cannot seed modem and wipe the board via modem:sync.
  */
 export function useHyperlinkSharedSync(
   type: string,
@@ -42,14 +43,15 @@ export function useHyperlinkSharedSync(
       return
     }
     const bridge = resolvehyperlinksharedbridge(chip, typ)
-    const getforchip = bridge?.get ?? (() => 0 as WORD)
-    const setforchip = bridge?.set ?? noop
+    if (!bridge) {
+      return
+    }
     applyhyperlinksharedmodemsync(
       chip,
       typ,
       target,
-      getforchip,
-      setforchip,
+      bridge.get,
+      bridge.set,
       readcontextcache,
     )
     return () => {

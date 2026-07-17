@@ -1,6 +1,7 @@
 import { CHIP } from 'zss/chip'
-import { modemwritevaluenumber } from 'zss/device/modem'
+import { modemwriteinitnumber, modemwritevaluenumber } from 'zss/device/modem'
 import {
+  applyhyperlinksharedmodemsync,
   gadgetaddcenterpadding,
   gadgetcheckqueue,
   gadgetcheckset,
@@ -209,6 +210,56 @@ describe('api', () => {
     // Note: gadgethyperlink is complex and requires proper setup
     // We'll test it through integration with other functions
     // or with mocked modem functions
+  })
+
+  describe('applyhyperlinksharedmodemsync', () => {
+    const cache = {
+      board: undefined,
+      element: undefined,
+      elementfocus: '',
+    }
+
+    it('uses init-only writes for inspect chips', () => {
+      applyhyperlinksharedmodemsync(
+        'inspect:42',
+        'charedit',
+        'char',
+        () => 178,
+        noop,
+        cache,
+      )
+      expect(modemwriteinitnumber).toHaveBeenCalledWith('inspect:42:char', 178)
+      expect(modemwritevaluenumber).not.toHaveBeenCalled()
+    })
+
+    it('uses init-only writes for groups chips', () => {
+      applyhyperlinksharedmodemsync(
+        'groups:1,2,3,4',
+        'coloredit',
+        'color',
+        () => 14,
+        noop,
+        cache,
+      )
+      expect(modemwriteinitnumber).toHaveBeenCalledWith(
+        'groups:1,2,3,4:color',
+        14,
+      )
+      expect(modemwritevaluenumber).not.toHaveBeenCalled()
+    })
+
+    it('keeps init-only writes for non-inspect chips', () => {
+      applyhyperlinksharedmodemsync(
+        'admin',
+        'select',
+        'player:crt',
+        () => 1,
+        noop,
+        cache,
+      )
+      expect(modemwriteinitnumber).toHaveBeenCalledWith('admin:player:crt', 1)
+      expect(modemwritevaluenumber).not.toHaveBeenCalled()
+    })
   })
 
   describe('parseterminalmodemprefix', () => {

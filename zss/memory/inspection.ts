@@ -8,7 +8,7 @@ import {
   vmcodeaddress,
 } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
-import { modemwriteinitstring } from 'zss/device/modem'
+import { modemdeletekeyswithprefix, modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
 import {
   DIVIDER,
@@ -36,7 +36,7 @@ import {
 } from 'zss/mapping/types'
 import { maptonumber, maptostring } from 'zss/mapping/value'
 import { ispt } from 'zss/words/dir'
-import { CATEGORY, COLLISION, PT, WORD } from 'zss/words/types'
+import { CATEGORY, COLLISION, NAME, PT, WORD } from 'zss/words/types'
 
 import {
   memoryboardelementindex,
@@ -318,6 +318,8 @@ function registerhyperlinksforelement(
   }
   // remove any shared bridges that are no longer needed
   registerhyperlinksharedcleanup()
+  // drop stale modem values for this chip so worker apply can init from get()
+  modemdeletekeyswithprefix(`${NAME(chip)}:`)
   // register new shared bridges
   for (const type of elementhyperlinktypes) {
     const shared = resolvehyperlinksharedbridge(chip, type)

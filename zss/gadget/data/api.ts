@@ -45,7 +45,9 @@ export function registerhyperlinksharedcleanup() {
       case 'zipfilelist':
         break
       default:
-        // clear out any other bridges
+        // detach modem observers before dropping bridges so a late observe
+        // cannot set() against a newly selected inspect element
+        clearpanelsharedchip(key)
         delete hyperlinksharedbridges[key]
         break
     }
@@ -187,6 +189,19 @@ export function clearpanelsharedsync(chip: string, target: string): void {
   delete panelshared[chipname]?.[target]
 }
 
+export function clearpanelsharedchip(chip: string): void {
+  const chipname = NAME(chip)
+  const shared = panelshared[chipname]
+  if (!shared) {
+    return
+  }
+  const targets = Object.keys(shared)
+  for (let i = 0; i < targets.length; ++i) {
+    shared[targets[i]]?.()
+  }
+  delete panelshared[chipname]
+}
+
 export function initstate(): GADGET_STATE {
   return {
     id: createsid(),
@@ -233,8 +248,8 @@ const HYPERLINK_WITH_SHARED_DEFAULTS = {
   tx: '',
   text: '',
   zssedit: '',
-  charedit: '',
-  coloredit: '',
+  charedit: 0,
+  coloredit: 0,
   bgedit: 0,
 }
 

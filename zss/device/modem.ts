@@ -297,6 +297,35 @@ export function modemwritevaluenumber(key: string, value: number) {
   }, LOCAL_ORIGIN)
 }
 
+export function modemdeletekey(key: string): void {
+  if (!ROOT.has(key)) {
+    return
+  }
+  SYNC_DOC.transact(() => {
+    ROOT.delete(key)
+  }, LOCAL_ORIGIN)
+}
+
+export function modemdeletekeyswithprefix(prefix: string): void {
+  if (!prefix) {
+    return
+  }
+  const keys: string[] = []
+  ROOT.forEach((_value, key) => {
+    if (key.startsWith(prefix)) {
+      keys.push(key)
+    }
+  })
+  if (keys.length === 0) {
+    return
+  }
+  SYNC_DOC.transact(() => {
+    for (let i = 0; i < keys.length; ++i) {
+      ROOT.delete(keys[i])
+    }
+  }, LOCAL_ORIGIN)
+}
+
 export function modemwritevaluestring(key: string, value: string) {
   if (!ROOT.has(key)) {
     SYNC_DOC.transact(() => {
