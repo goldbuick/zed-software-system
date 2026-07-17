@@ -5,14 +5,14 @@ import {
   withscripttimeout,
 } from 'tasks/lib/parity/parity-timeouts'
 import type { HeadedPlaywrightScript } from 'tasks/lib/playwright/runheadedscript'
+import { waitforregistersession } from 'tasks/lib/wanix/playwrightwaits'
 import {
+  type ZedcafeTimelineEntry,
   collectwanixperf,
   polliswanixready,
   readplaywrightlogs,
   sendwanixcli,
-  type ZedcafeTimelineEntry,
 } from 'tasks/lib/wanix/playwrightzedcafe'
-import { waitforregistersession } from 'tasks/lib/wanix/playwrightwaits'
 import { WANIX_ZEDCAFE_EXPORT_READY_POLL_MS } from 'zss/feature/wanix/wanixzedcafeconstants'
 
 const VALIDATE_TIMEOUT_MS = PLAYWRIGHT_SCENARIO_TIMEOUT_MS
@@ -93,9 +93,7 @@ async function readdirremote(
     if (typeof entries === 'object' && Symbol.iterator in entries) {
       return [...(entries as Iterable<unknown>)].map((entry) => String(entry))
     }
-    throw new Error(
-      `readDir(${mountdst}) unexpected type ${typeof entries}`,
-    )
+    throw new Error(`readDir(${mountdst}) unexpected type ${typeof entries}`)
   }, dst)
 }
 
@@ -125,10 +123,7 @@ const validateremotemount: HeadedPlaywrightScript = async ({
     timeline.push({ ms: Date.now() - start, label, extra })
   }
 
-  const fail = (
-    gate: string,
-    extra: Record<string, unknown> = {},
-  ): never => {
+  const fail = (gate: string, extra: Record<string, unknown> = {}): never => {
     const applyerrors = collectapplyerrors(consolelines)
     const perf = collectwanixperf(consolelines, start)
     writemountreport({

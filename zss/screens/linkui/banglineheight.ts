@@ -1,11 +1,11 @@
 import { parsezedlinkline } from 'zss/feature/zedlinkparse'
 import { paneladdress } from 'zss/gadget/data/types'
+import { readlinkeditingkey } from 'zss/screens/linkui/linkediting'
 import {
   isexpandablelinktype,
   linkexpandrowheight,
   resolvelinktypeandwords,
 } from 'zss/screens/linkui/linktypes'
-import { readlinkeditingkey } from 'zss/screens/linkui/linkediting'
 
 /** Modem / panel address for an expandable bang line, if any. */
 export function banglineeditkey(line: string): string | undefined {

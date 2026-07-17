@@ -88,9 +88,7 @@ export function buildwanixmenutape(state: WanixMenuState): string {
   parts.push('$32')
   parts.push(zsssectionlines('externals'))
   parts.push(
-    zsstextline(
-      '$cyan   drop a folder onto cafe to mount live (Chromium FSA)',
-    ),
+    zsstextline('$cyan   drop a folder onto cafe to mount live (Chromium FSA)'),
   )
   if (state.fsabinds.length === 0) {
     parts.push(zsstextline('$cyan   (no folder mounts)'))
@@ -106,9 +104,7 @@ export function buildwanixmenutape(state: WanixMenuState): string {
     ),
   )
   parts.push(
-    zsstextline(
-      '$cyan   #wanix remote disconnect [dst|id] - remove import',
-    ),
+    zsstextline('$cyan   #wanix remote disconnect [dst|id] - remove import'),
   )
   parts.push(
     zsstextline(

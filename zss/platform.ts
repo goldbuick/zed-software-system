@@ -23,12 +23,7 @@ import sttspace from './sttspace??worker'
 import stubspace from './stubspace??worker'
 import ttsspace from './ttsspace??worker'
 
-type SpokeSkip =
-  | 'boardrunner'
-  | 'platform'
-  | 'stt'
-  | 'tts'
-  | 'wanixserver'
+type SpokeSkip = 'boardrunner' | 'platform' | 'stt' | 'tts' | 'wanixserver'
 
 let boardrunner: MAYBE<Worker>
 let platform: MAYBE<Worker>

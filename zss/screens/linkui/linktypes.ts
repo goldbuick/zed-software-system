@@ -1,12 +1,7 @@
 import { NAME } from 'zss/words/types'
 
 /** Targetless action types (gadgethyperlink pads `istargetless`). */
-const TARGETLESS_LINK_TYPES = new Set([
-  'copyit',
-  'openit',
-  'viewit',
-  'runit',
-])
+const TARGETLESS_LINK_TYPES = new Set(['copyit', 'openit', 'viewit', 'runit'])
 
 /** All widget types LinkRouter / TerminalItem recognize (including aliases). */
 const KNOWN_LINK_TYPES = new Set([
@@ -82,7 +77,7 @@ export type ResolvedLinkWords = {
  * (`char charedit`, `menu hk 1`).
  */
 export function resolvelinktypeandwords(
-  rawwords: Array<string | number | boolean>,
+  rawwords: (string | number | boolean)[],
 ): ResolvedLinkWords {
   const words = rawwords.map((w) => `${w}`)
   if (words.length === 0) {

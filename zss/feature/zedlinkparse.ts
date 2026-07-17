@@ -105,7 +105,7 @@ export function parsezedlinkline(
     return parselegacynosemi(rest, defaultchip)
   }
 
-  let head = scrolllinkunescapefrag(rest.slice(0, semi).trimEnd())
+  const head = scrolllinkunescapefrag(rest.slice(0, semi).trimEnd())
   const label = scrolllinkunescapefrag(rest.slice(semi + 1).trim())
 
   let chip = defaultchip

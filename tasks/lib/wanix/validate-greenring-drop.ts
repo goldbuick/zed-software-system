@@ -220,23 +220,19 @@ const validategreenringdrop: HeadedPlaywrightScript = async ({
           async () => {
             const tapelogs = await readplaywrightlogs(page)
             const termdump = await readalltermtext(page, root)
-            const joined = [
-              ...consolelines,
-              ...tapelogs,
-              termdump,
-            ].join('\n')
+            const joined = [...consolelines, ...tapelogs, termdump].join('\n')
             const painted = PAINTED_RE.test(joined)
             const kickskipinactive = consolelines.some((line) =>
-              KICK_SKIP_INACTIVE_RE.test(line),
+              line.includes('poll-kick-skip active=false'),
             )
             const guestdiff = consolelines.some((line) =>
-              GUEST_DIFF_RE.test(line),
+              line.includes('poll-guest-diff=true'),
             )
             const imported = [...consolelines, ...tapelogs].some((line) =>
-              IMPORT_SYNCED_RE.test(line),
+              line.includes('zedcafe import: synced'),
             )
             const pollarmpull = consolelines.some((line) =>
-              /poll-arm host-pull/.test(line),
+              line.includes('poll-arm host-pull'),
             )
             return {
               ready: painted && guestdiff && imported && !kickskipinactive,

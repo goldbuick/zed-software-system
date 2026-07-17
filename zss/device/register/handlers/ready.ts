@@ -1,9 +1,9 @@
 import type { DEVICE } from 'zss/device'
 import { apilog, boardrunnerstart, vmoperator } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
-import type { MESSAGE } from 'zss/device/types'
 import { syncterminalbookmarkpins } from 'zss/device/register/helpers/bootstrap'
 import { registerreadplayer } from 'zss/device/registerplayer'
+import type { MESSAGE } from 'zss/device/types'
 import { rundeeplinks } from 'zss/feature/deeplink'
 import { isclimode } from 'zss/feature/detect'
 import {

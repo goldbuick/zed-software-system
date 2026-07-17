@@ -37,6 +37,6 @@ function subscribe(listener: () => void): () => void {
   }
 }
 
-export function uselinkeditingkey(): string {
+export function useLinkEditingKey(): string {
   return useSyncExternalStore(subscribe, readlinkeditingkey, readlinkeditingkey)
 }

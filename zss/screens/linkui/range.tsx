@@ -93,7 +93,5 @@ export function LinkRange({ surface }: LinkWidgetProps) {
     [min, state, address],
   )
 
-  return surface.active ? (
-    <UserInput MOVE_LEFT={down} MOVE_RIGHT={up} />
-  ) : null
+  return surface.active ? <UserInput MOVE_LEFT={down} MOVE_RIGHT={up} /> : null
 }

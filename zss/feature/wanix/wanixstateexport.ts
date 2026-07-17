@@ -264,7 +264,9 @@ export function buildzedcafebookmeta(book: BOOK) {
   }
 }
 
-export function buildzedcafebookflagfiles(book: BOOK): WANIX_ZED_CAFE_EXPORT_FILE[] {
+export function buildzedcafebookflagfiles(
+  book: BOOK,
+): WANIX_ZED_CAFE_EXPORT_FILE[] {
   const prefix = readzedcafebookprefix(book)
   const files: WANIX_ZED_CAFE_EXPORT_FILE[] = []
   const names = Object.keys(book.flags ?? {})
@@ -475,7 +477,9 @@ export function rebuildzedcafeexportpaths(
         delete base[path]
         continue
       }
-      const { terrain: _t, objects: _o, ...stats } = board
+      const stats = { ...board }
+      delete stats.terrain
+      delete stats.objects
       base[path] = stats
       continue
     }
@@ -616,14 +620,15 @@ export function checkzedcafeexportontick(device: DEVICELIKE) {
   if (readpendingsync()) {
     return
   }
-  if (exportdirtygen === exportackgen && !structuraldirty && dirtypaths.size === 0) {
+  if (
+    exportdirtygen === exportackgen &&
+    !structuraldirty &&
+    dirtypaths.size === 0
+  ) {
     return
   }
   const now = wanixperfnow()
-  if (
-    lastflushms > 0 &&
-    now - lastflushms < WANIX_ZEDCAFE_EXPORT_COALESCE_MS
-  ) {
+  if (lastflushms > 0 && now - lastflushms < WANIX_ZEDCAFE_EXPORT_COALESCE_MS) {
     return
   }
 

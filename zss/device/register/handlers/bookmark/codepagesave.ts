@@ -1,8 +1,8 @@
 import type { DEVICE } from 'zss/device'
 import { apitoast, vmclearscroll } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
-import type { MESSAGE } from 'zss/device/types'
 import { registerreadplayer } from 'zss/device/registerplayer'
+import type { MESSAGE } from 'zss/device/types'
 import { appendeditorbookmark } from 'zss/feature/bookmarks'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
 

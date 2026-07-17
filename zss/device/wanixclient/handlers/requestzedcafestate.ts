@@ -1,9 +1,9 @@
 import type { DEVICE } from 'zss/device'
 import { wanixserverrequestzedcafestate } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
-import type { MESSAGE } from 'zss/device/types'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
+import type { MESSAGE } from 'zss/device/types'
 import { memoryreadoperator } from 'zss/memory/session'
 
 export function handlerequestzedcafestate(

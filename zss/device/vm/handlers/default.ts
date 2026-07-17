@@ -7,8 +7,8 @@ import {
   vmplayermovetoboard,
 } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
-import type { MESSAGE } from 'zss/device/types'
 import { SOFTWARE } from 'zss/device/session'
+import type { MESSAGE } from 'zss/device/types'
 import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
 import { lastinputtime } from 'zss/device/vm/state'
 import { fetchrefscrolltext } from 'zss/feature/fetchrefscrolltext'

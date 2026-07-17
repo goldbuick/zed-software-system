@@ -656,10 +656,7 @@ export function createchip(
     shouldtick() {
       const flags = chipflags()
       // sticky ban after consecutive max-iteration strikes
-      if (
-        isnumber(flags.sc) &&
-        flags.sc >= RUNTIME.YIELD_STRIKE_LIMIT
-      ) {
+      if (isnumber(flags.sc) && flags.sc >= RUNTIME.YIELD_STRIKE_LIMIT) {
         return false
       }
       return !flags.sk && (flags.es === 0 || chip.hm() !== 0)

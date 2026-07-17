@@ -58,8 +58,9 @@ function readglobaldirtyhook(): ZedcafeDirtyHook | undefined {
 }
 
 function setglobaldirtyhook(hook: ZedcafeDirtyHook | undefined): void {
-  ;(globalThis as { __wanixOnZedcafeExportDirty?: ZedcafeDirtyHook }).__wanixOnZedcafeExportDirty =
-    hook
+  ;(
+    globalThis as { __wanixOnZedcafeExportDirty?: ZedcafeDirtyHook }
+  ).__wanixOnZedcafeExportDirty = hook
 }
 
 function registerzedcafedirtyhook(): void {
@@ -776,14 +777,14 @@ export async function ensurezedcafeboot(
   synczedcafewasmversionifneeded(sys)
   const existing = sys.querySelector(
     `wanix-task[id="${WANIX_ZEDCAFE_TASK_ID}"]`,
-  ) as WanixTaskElement | null
+  )
   // Remount replaces <wanix-system> but module state can keep a stale rid. Never
   // treat export as ready unless this sys still has wanix-task#zedcafe.
   if (!existing) {
     zedcafetaskrid = null
     zedcafebootpromise = null
   } else {
-    const rid = existing.rid ?? zedcafetaskrid
+    const rid = (existing as WanixTaskElement).rid ?? zedcafetaskrid
     if (rid && (zedcafecmd === cmd || !zedcafecmd)) {
       const mountready = await waitzedcafeexportmountready(root, rid)
       if (mountready) {

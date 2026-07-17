@@ -3,6 +3,7 @@ import { registerreadplayer } from 'zss/device/registerplayer'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
 import { useWriteText } from 'zss/gadget/writetext'
 import { isarray } from 'zss/mapping/types'
+import { maptostring } from 'zss/mapping/value'
 import { resolvelinktypeandwords } from 'zss/screens/linkui/linktypes'
 import { LinkRouter } from 'zss/screens/linkui/router'
 import type { LinkSurface } from 'zss/screens/linkui/types'
@@ -54,7 +55,7 @@ export function PanelItem({
   }
 
   const { linktype, words } = resolvelinktypeandwords(
-    rest.map((w) => `${w}`),
+    rest.map((w) => maptostring(w)),
   )
 
   const drawrow = row ?? 0

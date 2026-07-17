@@ -1,9 +1,9 @@
 import type { DEVICE } from 'zss/device'
 import { vmclearscroll } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
-import type { MESSAGE } from 'zss/device/types'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { runbookmarkcopytogame } from 'zss/device/runbookmark'
+import type { MESSAGE } from 'zss/device/types'
 import { isstring } from 'zss/mapping/types'
 
 export function handlebookmarkcodepagecopytogame(

@@ -18,12 +18,12 @@ import {
   startwanixvm,
   stopwanixvm,
 } from 'zss/device/wanixclient/wanixroom'
-import { startwanixzedsync } from 'zss/device/wanixclient/wanixzedsync'
 import { readwanixtermbufferkeys } from 'zss/device/wanixclient/wanixtermbuffer'
 import {
   writewanixtermdump,
   writewanixtermstatus,
 } from 'zss/device/wanixclient/wanixtermhandlers'
+import { startwanixzedsync } from 'zss/device/wanixclient/wanixzedsync'
 import { FIRMWARE } from 'zss/firmware'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
@@ -54,7 +54,10 @@ function readwssremotewords(
     second.startsWith('://')
   ) {
     const [mountdst] = readargs(words, start + 2, [ARG_TYPE.MAYBE_NAME])
-    return [`${first}${second}`, ispresent(mountdst) ? NAME(mountdst) : undefined]
+    return [
+      `${first}${second}`,
+      ispresent(mountdst) ? NAME(mountdst) : undefined,
+    ]
   }
   const [url, mountdst] = readargs(words, start, [
     ARG_TYPE.STRING,
@@ -185,16 +188,18 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
             )
             break
           }
-          void startwanixzedsync(SOFTWARE, player, String(targetpath).trim()).catch(
-            (err) => {
-              apierror(
-                SOFTWARE,
-                player,
-                'wanix',
-                err instanceof Error ? err.message : String(err),
-              )
-            },
-          )
+          void startwanixzedsync(
+            SOFTWARE,
+            player,
+            String(targetpath).trim(),
+          ).catch((err) => {
+            apierror(
+              SOFTWARE,
+              player,
+              'wanix',
+              err instanceof Error ? err.message : String(err),
+            )
+          })
           break
         }
         case 'bridge': {

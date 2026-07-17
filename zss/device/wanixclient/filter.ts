@@ -1,5 +1,5 @@
-import type { MESSAGE } from 'zss/device/types'
 import { registerreadplayer } from 'zss/device/registerplayer'
+import type { MESSAGE } from 'zss/device/types'
 
 /** Iframe emits with empty player — allow these wanixclient paths through. */
 const WANIX_IFRAME_TARGETS = new Set([

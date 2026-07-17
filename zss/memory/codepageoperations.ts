@@ -35,7 +35,6 @@ import {
   STAT_TYPE,
 } from 'zss/words/types'
 
-import { remapcodepageidsforfilenamesafety } from './bookidremap'
 import {
   memorycreateboardelement,
   memoryexportboardelement,
@@ -49,6 +48,7 @@ import {
   memoryimportboard,
 } from './boardlifecycle'
 import { memoryfreeboardelementsruntime } from './boardoperations'
+import { remapcodepageidsforfilenamesafety } from './bookidremap'
 import {
   memoryboundaryalloc,
   memoryboundarydelete,

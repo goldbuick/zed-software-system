@@ -34,7 +34,7 @@ export function LinkOpenIt({ surface }: LinkWidgetProps) {
           window.location.href = content
           break
         default:
-          window.open(`${openmethod as string} ${content}`.trim(), '_blank')
+          window.open(`${openmethod} ${content}`.trim(), '_blank')
           break
       }
     }, 100)

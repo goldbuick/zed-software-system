@@ -1,6 +1,6 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/types'
 import { SOFTWARE } from 'zss/device/session'
+import type { MESSAGE } from 'zss/device/types'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import { ispresent } from 'zss/mapping/types'
 

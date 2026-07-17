@@ -6,7 +6,7 @@ import { UserFocus } from 'zss/gadget/userinput'
 import { UserInput } from 'zss/gadget/userinput.bridge'
 import { UserInputHandler } from 'zss/gadget/userinputtypes'
 import { maptonumber } from 'zss/mapping/value'
-import { uselinkeditcanceloninactive } from 'zss/screens/linkui/linkeditcancel'
+import { useLinkEditCancelOnInactive } from 'zss/screens/linkui/linkeditcancel'
 import { inputcolor } from 'zss/screens/panel/common'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
@@ -77,7 +77,7 @@ export function LinkNumber({ surface }: LinkWidgetProps) {
     setediting(true)
   }, [clamped])
 
-  uselinkeditcanceloninactive(!!surface.active, cancelediting)
+  useLinkEditCancelOnInactive(!!surface.active, cancelediting)
 
   if (surface.layout === 'terminal') {
     tokenizeandwritetextformat(

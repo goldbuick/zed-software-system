@@ -7,13 +7,13 @@ import {
   waitwanixiframe,
 } from 'zss/device/wanixclient/wanixbridge'
 import {
-  WANIX_FSA_BIND_REQUEST,
-  sanitizewanixfsadst,
-} from 'zss/feature/wanix/wanixfsapaths'
-import {
   ensurewanixtaskroom,
   readwanixroomconfig,
 } from 'zss/device/wanixclient/wanixroom'
+import {
+  WANIX_FSA_BIND_REQUEST,
+  sanitizewanixfsadst,
+} from 'zss/feature/wanix/wanixfsapaths'
 
 const WANIX_FSA_READY_TIMEOUT_MS = 60_000
 

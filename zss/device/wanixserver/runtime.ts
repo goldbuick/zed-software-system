@@ -7,8 +7,8 @@ import {
   wanixclientsession,
 } from 'zss/device/api'
 import { createforward, shouldforwardwanixtoclient } from 'zss/device/forward'
-import { ismessage } from 'zss/device/types'
 import { SOFTWARE } from 'zss/device/session'
+import { ismessage } from 'zss/device/types'
 import { resolvedriverforwasm } from 'zss/device/wanixserver/spawndriver'
 import {
   type TermSession,
@@ -43,6 +43,7 @@ import {
   takependingdropbinds,
   termsessions,
 } from 'zss/device/wanixserver/state'
+import { shouldautohalttasksession } from 'zss/device/wanixserver/taskidlepolicy'
 import {
   WANIX_TERM_BRIDGE_PONG,
   trackwanixtermlinebuf,
@@ -72,6 +73,11 @@ import type {
   WanixTaskDriver,
   WanixVmElement,
 } from 'zss/feature/wanix/wanixelements.d.ts'
+import {
+  WANIX_FSA_BIND_REQUEST,
+  WANIX_FSA_HANDLE_GLOBAL,
+  sanitizewanixfsadst,
+} from 'zss/feature/wanix/wanixfsapaths'
 import { wanixperfmark } from 'zss/feature/wanix/wanixperf'
 import type {
   WanixBindDropPayload,
@@ -89,12 +95,6 @@ import {
   wanixtermgridresize,
   wanixtermgridwritebytes,
 } from 'zss/feature/wanix/wanixtermgridstate'
-import { shouldautohalttasksession } from 'zss/device/wanixserver/taskidlepolicy'
-import {
-  WANIX_FSA_BIND_REQUEST,
-  WANIX_FSA_HANDLE_GLOBAL,
-  sanitizewanixfsadst,
-} from 'zss/feature/wanix/wanixfsapaths'
 import {
   WANIX_INPUT_MOUNT,
   WANIX_ZEDCAFE_EXPORT_READY_POLL_MS,
@@ -472,7 +472,10 @@ async function tryunbindroot(
 
 function removefsabindmarkers(sys: ParentNode, dst: string) {
   sys.querySelectorAll('wanix-bind[data-zss-fsa-bind]').forEach((el) => {
-    if (el.getAttribute('data-zss-fsa-dst') === dst || el.getAttribute('dst') === dst) {
+    if (
+      el.getAttribute('data-zss-fsa-dst') === dst ||
+      el.getAttribute('dst') === dst
+    ) {
       el.remove()
     }
   })
@@ -522,7 +525,7 @@ export function readfsabinds(): string[] {
   const out: string[] = []
   system.querySelectorAll('wanix-bind[data-zss-fsa-bind]').forEach((el) => {
     const dst =
-      el.getAttribute('data-zss-fsa-dst') || el.getAttribute('dst') || ''
+      el.getAttribute('data-zss-fsa-dst') ?? el.getAttribute('dst') ?? ''
     if (dst && !out.includes(dst)) {
       out.push(dst)
     }
@@ -839,7 +842,7 @@ async function mountremotesafterready(
     el.remove()
   }
 
-  const gates: Array<ReturnType<typeof opengatedwssimport>> = []
+  const gates: ReturnType<typeof opengatedwssimport>[] = []
   for (const remote of remotes) {
     if (!iswssremoteurl(remote.url)) {
       throw new Error(
@@ -867,7 +870,7 @@ async function mountremotesafterready(
     wanixperfmark('remote-wss-import-assigned', {
       dst: remote.dst,
       url: remote.url,
-      hasImport: !!bind.import,
+      hasImport: bind.import != null,
       isPromise: bind.import instanceof Promise,
       hasThen: typeof bind.import?.then,
     })
@@ -1131,7 +1134,10 @@ function ensurezedcafespecinroom(): { cmd: string; generation: number } | null {
   if (roomconfig.mode !== 'task' && roomconfig.mode !== 'vm') {
     return null
   }
-  const cmd = roomconfig.zedcafe?.cmd?.trim() || WANIX_ZEDCAFE_WASM_CMD
+  const trimmedcmd = roomconfig.zedcafe?.cmd?.trim()
+  // Empty trimmed cmd must fall back; ?? would keep "".
+  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- empty string
+  const cmd = trimmedcmd || WANIX_ZEDCAFE_WASM_CMD
   const generation = roomconfig.zedcafe?.generation ?? 1
   if (!roomconfig.zedcafe?.cmd || roomconfig.zedcafe.cmd !== cmd) {
     setroomconfig({
@@ -1260,9 +1266,8 @@ export async function applyroom(config: WanixRoomConfig) {
 
   await customElements.whenDefined('wanix-system')
   await customElements.whenDefined('wanix-bind')
-  const { patchwanixbindwss } = await import(
-    'zss/device/wanixserver/patchwanixbindwss'
-  )
+  const { patchwanixbindwss } =
+    await import('zss/device/wanixserver/patchwanixbindwss')
   patchwanixbindwss()
   disconnectalltermsessions()
   // Remotes mount AFTER ready — putting WSS import on the initial bind path
@@ -1456,7 +1461,11 @@ export async function spawntask(
       'data-zss-stage-wasm',
     )
     task.appendChild(bind)
-    wanixperfmark('spawntask-stage-end', { taskid, path: wasmdst, url: stageurl })
+    wanixperfmark('spawntask-stage-end', {
+      taskid,
+      path: wasmdst,
+      url: stageurl,
+    })
   }
 
   if (driver === 'gojs') {
@@ -1589,7 +1598,7 @@ window.addEventListener('message', (event) => {
         : ''
     void (async () => {
       try {
-        if (!handle || handle.kind !== 'directory') {
+        if (handle?.kind !== 'directory') {
           throw new Error('wanix fsa bind requires a directory handle')
         }
         const result = await bindfsadirectory(handle, dst)
@@ -1735,9 +1744,7 @@ export async function synczedcafeexport(
     files?.map((file) => ({
       path: file.path,
       data:
-        file.data instanceof Uint8Array
-          ? file.data
-          : new Uint8Array(file.data),
+        file.data instanceof Uint8Array ? file.data : new Uint8Array(file.data),
     })) ?? null
   return synczedcafeexportlocal(
     guestfiles,

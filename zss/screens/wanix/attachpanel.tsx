@@ -66,14 +66,10 @@ export function WanixAttachPanel() {
         />
         <UserFocus blockhotkeys>
           <UserHotkey hotkey="`">
-            {() =>
-              registerterminalopen(SOFTWARE, registerreadplayer())
-            }
+            {() => registerterminalopen(SOFTWARE, registerreadplayer())}
           </UserHotkey>
           <UserHotkey hotkey="Shift+?" althotkey="/">
-            {() =>
-              registerterminalopen(SOFTWARE, registerreadplayer())
-            }
+            {() => registerterminalopen(SOFTWARE, registerreadplayer())}
           </UserHotkey>
           <TapeLayoutTiles
             label="wanixattach"

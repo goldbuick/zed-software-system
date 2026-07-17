@@ -15,12 +15,12 @@ import { UserInput } from 'zss/gadget/userinput.bridge'
 import { pttoindex } from 'zss/mapping/2d'
 import { ispresent } from 'zss/mapping/types'
 import { maptovalue } from 'zss/mapping/value'
-import { uselinkeditcanceloninactive } from 'zss/screens/linkui/linkeditcancel'
+import { useLinkEditCancelOnInactive } from 'zss/screens/linkui/linkeditcancel'
 import {
   clearlinkeditingkey,
   readlinkeditingkey,
   setlinkeditingkey,
-  uselinkeditingkey,
+  useLinkEditingKey,
 } from 'zss/screens/linkui/linkediting'
 import { inputcolor } from 'zss/screens/panel/common'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
@@ -69,7 +69,7 @@ export function LinkCharEdit({ surface }: LinkWidgetProps) {
     surface.layout === 'panel' && ispresent(surface.row) ? `\n` : ''
   }`
 
-  const editing = uselinkeditingkey() === address
+  const editing = useLinkEditingKey() === address
   const snapshot = useRef(state)
 
   const cancelediting = useCallback(() => {
@@ -94,7 +94,7 @@ export function LinkCharEdit({ surface }: LinkWidgetProps) {
     enterediting()
   }, [surface, enterediting])
 
-  uselinkeditcanceloninactive(!!surface.active, cancelediting)
+  useLinkEditCancelOnInactive(!!surface.active, cancelediting)
 
   if (editing) {
     const chars: string[] = [`${summary}\n$white`]

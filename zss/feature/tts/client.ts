@@ -7,8 +7,8 @@ import {
   ttsrequest as emitttsrequest,
   synthaudiobuffer,
 } from 'zss/device/api'
-import type { DEVICELIKE } from 'zss/device/types'
 import { SOFTWARE } from 'zss/device/session'
+import type { DEVICELIKE } from 'zss/device/types'
 import { storagewritekey } from 'zss/feature/loginstorage'
 import { storagereadconfigstring } from 'zss/feature/storage'
 import {

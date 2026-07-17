@@ -8,7 +8,6 @@ import {
   handleloginready,
   handlesessionreset,
 } from './auth'
-import { handlejoincrosslogin } from './joincrosslogin'
 import { handlebookmarkclirun } from './bookmark/clirun'
 import { handlebookmarkclisave } from './bookmark/clisave'
 import { handlebookmarkcodepagecopytogame } from './bookmark/codepagecopytogame'
@@ -28,6 +27,7 @@ import {
 } from './files'
 import { handleinput } from './input'
 import { handlefindany, handleinspector, handleperfmonitor } from './inspector'
+import { handlejoincrosslogin } from './joincrosslogin'
 import {
   handleforkmem,
   handlenuke,

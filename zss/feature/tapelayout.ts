@@ -21,8 +21,8 @@ function isvalidtapdisplay(value: unknown): value is TAPE_DISPLAY {
   return (
     typeof value === 'number' &&
     Number.isInteger(value) &&
-    value >= TAPE_DISPLAY.TOP &&
-    value < TAPE_DISPLAY.MAX
+    value >= (TAPE_DISPLAY.TOP as number) &&
+    value < (TAPE_DISPLAY.MAX as number)
   )
 }
 

@@ -171,11 +171,7 @@ export function beginzedsyncreadywait(
     deadline: Date.now() + WANIX_ZEDSYNC_READY_TIMEOUT_MS,
     mirroredguestlines: new Set(),
   }
-  apilog(
-    device,
-    player,
-    `zedsync: spawned; waiting for ${pendingready.path}`,
-  )
+  apilog(device, player, `zedsync: spawned; waiting for ${pendingready.path}`)
   pendingready.timer = setInterval(tickreadywait, WANIX_ZEDSYNC_READY_POLL_MS)
   tickreadywait()
 }

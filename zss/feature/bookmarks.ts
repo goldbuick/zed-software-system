@@ -1,6 +1,6 @@
 import { apitoast, vmcli } from 'zss/device/api'
-import type { DEVICELIKE } from 'zss/device/types'
 import { SOFTWARE } from 'zss/device/session'
+import type { DEVICELIKE } from 'zss/device/types'
 import { storagereadvars, storagewritevar } from 'zss/feature/storage'
 import { terminalbookmarkpindisplaylabel } from 'zss/feature/terminalbookmarkline'
 import { useTape } from 'zss/gadget/data/zustandstores'

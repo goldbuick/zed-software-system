@@ -41,9 +41,7 @@ export function readwanixp9serverdir(argv: string[]): string | undefined {
  */
 export function resolvewanixp9serverdir(argv: string[]): string {
   const fromargv = readwanixp9serverdir(argv)
-  const dir = fromargv
-    ? path.resolve(fromargv)
-    : WANIX_P9SERVER_DEFAULT_DIR
+  const dir = fromargv ? path.resolve(fromargv) : WANIX_P9SERVER_DEFAULT_DIR
   if (!existsSync(dir)) {
     mkdirSync(dir, { recursive: true })
   }
@@ -86,15 +84,11 @@ export function runwanixp9server(dir: string, env?: NodeJS.ProcessEnv): number {
       '',
     ].join('\n'),
   )
-  const result = spawnSync(
-    'go',
-    ['run', './p9server/cmd', '-dir', dir],
-    {
-      cwd: WANIX_FIXTURES_DIR,
-      stdio: 'inherit',
-      env: { ...process.env, ...env },
-    },
-  )
+  const result = spawnSync('go', ['run', './p9server/cmd', '-dir', dir], {
+    cwd: WANIX_FIXTURES_DIR,
+    stdio: 'inherit',
+    env: { ...process.env, ...env },
+  })
   if (result.error) {
     throw result.error
   }

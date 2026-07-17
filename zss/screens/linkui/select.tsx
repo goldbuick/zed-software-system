@@ -47,8 +47,7 @@ export function LinkSelect({ surface }: LinkWidgetProps) {
 
   const tlabel = surface.label.trim()
   const tcolor = inputcolor(!!surface.active)
-  const stripe =
-    surface.layout === 'panel' ? linkpanelstripe(surface) : ''
+  const stripe = surface.layout === 'panel' ? linkpanelstripe(surface) : ''
 
   if (surface.layout === 'terminal') {
     tokenizeandwritetextformat(
@@ -95,7 +94,5 @@ export function LinkSelect({ surface }: LinkWidgetProps) {
     }
   }, [stateindex, address, values])
 
-  return surface.active ? (
-    <UserInput MOVE_LEFT={up} MOVE_RIGHT={down} />
-  ) : null
+  return surface.active ? <UserInput MOVE_LEFT={up} MOVE_RIGHT={down} /> : null
 }

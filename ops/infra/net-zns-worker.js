@@ -4,10 +4,6 @@
  */
 
 import { ZNS_VGA_FONT_DATA_URI } from './generated/zns-vga-font.js'
-import {
-  buildapireadpeerbody,
-  buildpeerjoinlocation,
-} from './zns-peer-url.js'
 import { buildznsdotbkgcss } from './zns-dotbkg.js'
 import {
   pngbytestobase64,
@@ -16,6 +12,7 @@ import {
 } from './zns-email-card-png-wasm.js'
 import { buildznsemailcardsvg } from './zns-email-card-svg.js'
 import { buildznscodeemailhtml, buildznscodemeta } from './zns-email-card.js'
+import { buildapireadpeerbody, buildpeerjoinlocation } from './zns-peer-url.js'
 import {
   measuredrawnwidth,
   scrollsourceisrawzss,

@@ -4,10 +4,10 @@ import path from 'node:path'
 
 import { WANIX_FIXTURES_DIR } from 'ops/lib/fixturepaths'
 import {
-  haswanixzedcafedirtyforward,
   WANIX_SUBMODULE_DIR,
   WANIX_ZEDCAFE_DIRTY_FORWARD_MARKER,
   WANIX_ZEDCAFE_DIRTY_FORWARD_PATCH,
+  haswanixzedcafedirtyforward,
 } from 'ops/lib/wanix/wanixsubmodule'
 
 export type WanixProbeStatus = 'ok' | 'missing' | 'partial'

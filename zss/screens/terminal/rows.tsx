@@ -4,7 +4,7 @@ import { useTape, useTerminal } from 'zss/gadget/data/zustandstores'
 import { useScreenSize } from 'zss/gadget/userscreen'
 import { useWriteText } from 'zss/gadget/writetext'
 import { clamp } from 'zss/mapping/number'
-import { uselinkeditingkey } from 'zss/screens/linkui/linkediting'
+import { useLinkEditingKey } from 'zss/screens/linkui/linkediting'
 import {
   readpinrowycoords,
   readsesslogrowycoords,
@@ -20,7 +20,7 @@ export function TerminalRows() {
   const editoropen = useTape(useEqual((state) => state.editor.open))
   const pinlines = useTape(useEqual((state) => state.terminal.pinlines))
   const sessionlogs = useTape(useEqual((state) => state.terminal.logs))
-  const editingkey = uselinkeditingkey()
+  const editingkey = useLinkEditingKey()
 
   const context = useWriteText()
   const scroll = useTerminal(useEqual((state) => state.scroll))
@@ -30,25 +30,21 @@ export function TerminalRows() {
   const edge = textformatreadedges(context)
   const logsrowmaxwidth = context.width - 1
 
-  const layout = useMemo(
-    () =>
-      readterminallayout({
-        pinlines,
-        sessionlogs,
-        maxwidth: logsrowmaxwidth,
-        edge,
-        editoropen,
-      }),
-    [pinlines, sessionlogs, logsrowmaxwidth, edge, editoropen, editingkey],
-  )
+  const layout = useMemo(() => {
+    // editingkey invalidates row heights (measurerowcached reads it)
+    void editingkey
+    return readterminallayout({
+      pinlines,
+      sessionlogs,
+      maxwidth: logsrowmaxwidth,
+      edge,
+      editoropen,
+    })
+  }, [pinlines, sessionlogs, logsrowmaxwidth, edge, editoropen, editingkey])
 
   const drawpinstarty = useMemo(
     () =>
-      readstickypinstarty(
-        layout.naturalpinstarty,
-        scroll,
-        layout.logzonetop,
-      ),
+      readstickypinstarty(layout.naturalpinstarty, scroll, layout.logzonetop),
     [layout.naturalpinstarty, scroll, layout.logzonetop],
   )
 

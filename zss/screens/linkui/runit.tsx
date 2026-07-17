@@ -1,8 +1,5 @@
 import { useCallback } from 'react'
-import {
-  registerterminalopen,
-  registerterminalquickopen,
-} from 'zss/device/api'
+import { registerterminalopen, registerterminalquickopen } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import { UserInput } from 'zss/gadget/userinput.bridge'

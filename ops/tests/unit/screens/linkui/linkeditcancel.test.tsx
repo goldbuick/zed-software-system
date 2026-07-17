@@ -5,7 +5,7 @@
 import { useCallback } from 'react'
 import { act } from 'react'
 import { type Root, createRoot } from 'react-dom/client'
-import { uselinkeditcanceloninactive } from 'zss/screens/linkui/linkeditcancel'
+import { useLinkEditCancelOnInactive } from 'zss/screens/linkui/linkeditcancel'
 import {
   clearlinkeditingkey,
   readlinkeditingkey,
@@ -27,7 +27,7 @@ function CancelHarness({
     }
     clearlinkeditingkey(address)
   }, [address])
-  uselinkeditcanceloninactive(active, cancelediting)
+  useLinkEditCancelOnInactive(active, cancelediting)
   return null
 }
 
@@ -51,7 +51,7 @@ function InvokeHarness({
   )
 }
 
-describe('uselinkeditcanceloninactive', () => {
+describe('useLinkEditCancelOnInactive', () => {
   let container: HTMLDivElement
   let root: Root
 

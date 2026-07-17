@@ -24,11 +24,7 @@ import {
 } from 'zss/words/textformat'
 import { NAME } from 'zss/words/types'
 
-import {
-  linkbegin,
-  linkmodemaddress,
-  linkpanelstripe,
-} from './surface'
+import { linkbegin, linkmodemaddress, linkpanelstripe } from './surface'
 import type { LinkWidgetProps } from './types'
 
 export function LinkText({ surface }: LinkWidgetProps) {
@@ -56,8 +52,7 @@ export function LinkText({ surface }: LinkWidgetProps) {
   const tvalue = `${state} `
   const tlabel = surface.label.trim()
   const tcolor = inputcolor(!!surface.active)
-  const stripe =
-    surface.layout === 'panel' ? linkpanelstripe(surface) : ''
+  const stripe = surface.layout === 'panel' ? linkpanelstripe(surface) : ''
 
   if (surface.layout === 'terminal') {
     tokenizeandwritetextformat(
@@ -89,7 +84,13 @@ export function LinkText({ surface }: LinkWidgetProps) {
     if (right !== left && right === cursor) {
       --right
     }
-    applycolortoindexes(tx + left + tyw, tx + right + tyw, 15, 8, surface.context)
+    applycolortoindexes(
+      tx + left + tyw,
+      tx + right + tyw,
+      15,
+      8,
+      surface.context,
+    )
   }
   if (focus) {
     const edge = textformatreadedges(surface.context)
@@ -277,10 +278,7 @@ export function LinkText({ surface }: LinkWidgetProps) {
                         break
                       }
                     }
-                  } else if (
-                    surface.layout === 'panel' &&
-                    mods.alt
-                  ) {
+                  } else if (surface.layout === 'panel' && mods.alt) {
                     // no-op ?? - could this shove text around ??
                   } else if (
                     event.key.length === 1 &&

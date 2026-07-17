@@ -1,9 +1,9 @@
 import type { DEVICE } from 'zss/device'
 import { apitoast, vmclearscroll } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
-import type { MESSAGE } from 'zss/device/types'
 import { modemreadtextsync } from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/registerplayer'
+import type { MESSAGE } from 'zss/device/types'
 import {
   BOOKMARK_NAME_TARGET,
   BOOKMARK_SCROLL_CHIP,

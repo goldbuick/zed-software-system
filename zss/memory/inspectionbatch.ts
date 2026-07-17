@@ -18,10 +18,7 @@ import {
 } from './boardlifecycle'
 import { memoryreadelementdisplay } from './bookoperations'
 import { memoryensuresoftwarebook } from './books'
-import {
-  memoryinspectempty,
-  memoryinspectemptymenu,
-} from './inspection'
+import { memoryinspectempty, memoryinspectemptymenu } from './inspection'
 import { memoryinspectstyle, memoryinspectstylemenu } from './inspectionstyle'
 import { memoryreadplayerboard } from './playermanagement'
 import { memoryreadboardelementruntime } from './runtimeboundary'

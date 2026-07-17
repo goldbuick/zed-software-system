@@ -1,12 +1,12 @@
 import { apierror, vmloader } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
+import { enableaudio } from 'zss/device/synth'
 import {
   applycafedroppartition,
   capturecafedropitems,
   resolvecafedropitems,
 } from 'zss/device/wanixclient/wanixfsadropitems'
-import { enableaudio } from 'zss/device/synth'
 import { clearwasmcoepserviceworkers } from 'zss/feature/synth/backend/wasm/coopcoep'
 import { useDeviceData } from 'zss/gadget/device'
 import { Engine } from 'zss/gadget/engine'

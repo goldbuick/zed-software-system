@@ -16,12 +16,12 @@ import { range } from 'zss/mapping/array'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { maptovalue } from 'zss/mapping/value'
-import { uselinkeditcanceloninactive } from 'zss/screens/linkui/linkeditcancel'
+import { useLinkEditCancelOnInactive } from 'zss/screens/linkui/linkeditcancel'
 import {
   clearlinkeditingkey,
   readlinkeditingkey,
   setlinkeditingkey,
-  uselinkeditingkey,
+  useLinkEditingKey,
 } from 'zss/screens/linkui/linkediting'
 import { inputcolor } from 'zss/screens/panel/common'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
@@ -83,7 +83,7 @@ export function LinkColorEdit({ surface, isbg = false }: LinkColorEditProps) {
     surface.layout === 'panel' && ispresent(surface.row) ? `\n` : ''
   }`
 
-  const editing = uselinkeditingkey() === address
+  const editing = useLinkEditingKey() === address
   const snapshot = useRef(state)
 
   const cancelediting = useCallback(() => {
@@ -108,7 +108,7 @@ export function LinkColorEdit({ surface, isbg = false }: LinkColorEditProps) {
     enterediting()
   }, [surface, enterediting])
 
-  uselinkeditcanceloninactive(!!surface.active, cancelediting)
+  useLinkEditCancelOnInactive(!!surface.active, cancelediting)
 
   if (editing) {
     const colors: string[] = [`${summary}\n$white`]

@@ -5,7 +5,6 @@ import {
   readzedcafepageprefix,
 } from 'zss/feature/wanix/zedcafetreeschema'
 import { deepcopy, isequal, ispresent } from 'zss/mapping/types'
-import { memoryboundarydelete } from 'zss/memory/boundaries'
 import {
   memorycreateboardobject,
   memorydeleteboardobject,
@@ -18,6 +17,7 @@ import {
   memoryreadcodepage,
   memoryupsertcodepage,
 } from 'zss/memory/bookoperations'
+import { memoryboundarydelete } from 'zss/memory/boundaries'
 import {
   memoryreadcodepagedata,
   memoryreadcodepageruntime,
@@ -173,7 +173,11 @@ export function assembleboardjson(
     const objid = path.slice(objectprefix.length, -'.json'.length)
     objects[objid] = decodejson(bytes)
   }
-  if (!statsbytes && terrain === undefined && Object.keys(objects).length === 0) {
+  if (
+    !statsbytes &&
+    terrain === undefined &&
+    Object.keys(objects).length === 0
+  ) {
     return undefined
   }
   const board: Record<string, unknown> = {}
@@ -321,10 +325,7 @@ function findbookbydirname(bookdirname: string): BOOK | undefined {
   return undefined
 }
 
-function findpageinbook(
-  book: BOOK,
-  pageprefix: string,
-): CODE_PAGE | undefined {
+function findpageinbook(book: BOOK, pageprefix: string): CODE_PAGE | undefined {
   for (let i = 0; i < book.pages.length; ++i) {
     if (readzedcafepageprefix(book, book.pages[i]) === pageprefix) {
       return book.pages[i]
@@ -444,7 +445,10 @@ function applyboardstatsinplace(
   if (!ispresent(board)) {
     return false
   }
-  const { terrain: _t, objects: _o, id: _id, ...rest } = stats
+  const rest = { ...stats }
+  delete rest.terrain
+  delete rest.objects
+  delete rest.id
   let changed = false
   const keys = Object.keys(rest)
   for (let i = 0; i < keys.length; ++i) {
@@ -488,7 +492,11 @@ function pathpriority(path: string): number {
   if (segments.length === 3 && segments[2] === 'stats.json') {
     return 3
   }
-  if (segments.length === 4 && segments[2] === 'board' && segments[3] === 'stats.json') {
+  if (
+    segments.length === 4 &&
+    segments[2] === 'board' &&
+    segments[3] === 'stats.json'
+  ) {
     return 4
   }
   if (
@@ -548,7 +556,10 @@ function applypartialupsertpath(
       book.token = meta.token
       changed = true
     }
-    if (Array.isArray(meta.activelist) && !isequal(book.activelist, meta.activelist)) {
+    if (
+      Array.isArray(meta.activelist) &&
+      !isequal(book.activelist, meta.activelist)
+    ) {
       book.activelist = meta.activelist
       changed = true
     }
@@ -607,8 +618,11 @@ function applypartialupsertpath(
       objects: board?.objects ?? {},
     }
     if (board) {
-      const { terrain: _t, objects: _o, ...stats } = board as BOARD &
-        Record<string, unknown>
+      const stats: Record<string, unknown> = {
+        ...(board as unknown as Record<string, unknown>),
+      }
+      delete stats.terrain
+      delete stats.objects
       Object.assign(flatboard, stats)
     }
     if (
@@ -648,28 +662,44 @@ function applypartialupsertpath(
     }
     return false
   }
-  if (segments.length === 4 && segments[2] === 'object' && segments[3] === 'element.json') {
+  if (
+    segments.length === 4 &&
+    segments[2] === 'object' &&
+    segments[3] === 'element.json'
+  ) {
     if (applypageelementfield(page, 'object', decodejson(bytes))) {
       markboardpaint(paintids, page)
       return true
     }
     return false
   }
-  if (segments.length === 4 && segments[2] === 'terrain' && segments[3] === 'element.json') {
+  if (
+    segments.length === 4 &&
+    segments[2] === 'terrain' &&
+    segments[3] === 'element.json'
+  ) {
     if (applypageelementfield(page, 'terrain', decodejson(bytes))) {
       markboardpaint(paintids, page)
       return true
     }
     return false
   }
-  if (segments.length === 4 && segments[2] === 'charset' && segments[3] === 'bitmap.json') {
+  if (
+    segments.length === 4 &&
+    segments[2] === 'charset' &&
+    segments[3] === 'bitmap.json'
+  ) {
     if (applypageelementfield(page, 'charset', decodejson(bytes))) {
       markboardpaint(paintids, page)
       return true
     }
     return false
   }
-  if (segments.length === 4 && segments[2] === 'palette' && segments[3] === 'bitmap.json') {
+  if (
+    segments.length === 4 &&
+    segments[2] === 'palette' &&
+    segments[3] === 'bitmap.json'
+  ) {
     if (applypageelementfield(page, 'palette', decodejson(bytes))) {
       markboardpaint(paintids, page)
       return true
@@ -750,7 +780,9 @@ export function applyzedcafepartialtomemory(
   let changed = false
   const paintids = new Set<string>()
   const sortedfiles = [...files].sort(
-    (a, b) => pathpriority(a.path) - pathpriority(b.path) || a.path.localeCompare(b.path),
+    (a, b) =>
+      pathpriority(a.path) - pathpriority(b.path) ||
+      a.path.localeCompare(b.path),
   )
   for (let i = 0; i < sortedfiles.length; ++i) {
     const file = sortedfiles[i]

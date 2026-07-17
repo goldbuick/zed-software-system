@@ -1,20 +1,18 @@
 import { NAME } from 'zss/words/types'
 
+import { LinkCharEdit } from './charedit'
+import { LinkColorEdit } from './coloredit'
 import { LinkCopyIt } from './copyit'
+import { LinkHotkey } from './hotkey'
 import { LinkHyperlink } from './hyperlink'
 import { LinkNumber } from './number'
 import { LinkOpenIt } from './openit'
 import { LinkRange } from './range'
 import { LinkRunIt } from './runit'
 import { LinkSelect } from './select'
+import { LinkText } from './text'
 import type { LinkSurface } from './types'
 import { LinkViewIt } from './viewit'
-
-// Complex widgets — imported after they land in linkui/
-import { LinkCharEdit } from './charedit'
-import { LinkColorEdit } from './coloredit'
-import { LinkHotkey } from './hotkey'
-import { LinkText } from './text'
 import { LinkZSSEdit } from './zssedit'
 
 type LinkRouterProps = {

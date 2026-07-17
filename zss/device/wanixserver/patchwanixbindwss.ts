@@ -60,7 +60,7 @@ function websockettomessageport(ws: WebSocket): MessagePort {
       return
     }
     if (ArrayBuffer.isView(event.data)) {
-      const view = event.data as ArrayBufferView
+      const view = event.data
       const copy = new Uint8Array(view.byteLength)
       copy.set(new Uint8Array(view.buffer, view.byteOffset, view.byteLength))
       port1.postMessage(copy, [copy.buffer])
@@ -82,7 +82,10 @@ function websockettomessageport(ws: WebSocket): MessagePort {
     }
     console.warn('wanix remote: unsupported port data', data)
   }
-  port1.onclose = () => {
+  const portwithclose = port1 as MessagePort & {
+    onclose: ((this: MessagePort, ev: Event) => void) | null
+  }
+  portwithclose.onclose = () => {
     try {
       ws.close()
     } catch {
@@ -122,7 +125,7 @@ export function opengatedwssimport(src: string): GatedWssImport {
       url: src,
       thencount,
     })
-    setTimeout(() => settle(port as MessagePort), 0)
+    setTimeout(() => settle(port!), 0)
   }
 
   const dial = () => {
@@ -179,7 +182,7 @@ export function opengatedwssimport(src: string): GatedWssImport {
     tryfulfill()
   }
 
-  const thenwaiters: Array<() => void> = []
+  const thenwaiters: (() => void)[] = []
 
   const thenable: PromiseLike<MessagePort> = {
     then(onfulfilled, onrejected) {
@@ -201,9 +204,7 @@ export function opengatedwssimport(src: string): GatedWssImport {
       }
       const timer = setTimeout(() => {
         reject(
-          new Error(
-            `wanix remote import: AwaitErr never called then (${src})`,
-          ),
+          new Error(`wanix remote import: AwaitErr never called then (${src})`),
         )
       }, timeoutms)
       thenwaiters.push(() => {
@@ -250,12 +251,12 @@ export function patchwanixbindwss(): void {
     this: BindImportElement,
   ) {
     const src =
-      this.getAttribute('src') ||
-      (typeof this.src === 'string' ? this.src : '') ||
+      this.getAttribute('src') ??
+      (typeof this.src === 'string' ? this.src : '') ??
       ''
     const type =
-      this.getAttribute('type') ||
-      (typeof this.type === 'string' ? this.type : '') ||
+      this.getAttribute('type') ??
+      (typeof this.type === 'string' ? this.type : '') ??
       'ns'
     if (type === 'import' && iswssremoteurl(src)) {
       this.style.display = 'none'

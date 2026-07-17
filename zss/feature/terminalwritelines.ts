@@ -67,7 +67,11 @@ export function terminalwritelines(
           `!${scrolllinkescapefrag(parsed.modemprefix)}!${scrolllinkescapefrag(cmd)};${scrolllinkescapefrag(parsed.label)}`,
         )
       } else if (chip !== 'refscroll' || line.trimStart().startsWith('!@')) {
-        write(device, player, zsszedlinklinechip(parsed.chip, cmd, parsed.label))
+        write(
+          device,
+          player,
+          zsszedlinklinechip(parsed.chip, cmd, parsed.label),
+        )
       } else {
         write(device, player, zsszedlinkline(cmd, parsed.label))
       }

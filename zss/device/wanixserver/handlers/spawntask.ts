@@ -13,7 +13,9 @@ export function handlespawntask(wanix: DEVICE, message: MESSAGE): void {
       String(args[0] ?? ''),
       String(args[1] ?? ''),
       (args[2] as WanixTaskDriver | null | undefined) ?? undefined,
-      typeof stageurl === 'string' && stageurl.length > 0 ? stageurl : undefined,
+      typeof stageurl === 'string' && stageurl.length > 0
+        ? stageurl
+        : undefined,
     ),
   )
 }

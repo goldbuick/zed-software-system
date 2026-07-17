@@ -61,7 +61,12 @@ function collectidsfrompage(page: any, ids: string[]) {
     const key = keys[i]
     ids.push(key)
     const obj = objects[key]
-    if (obj && typeof obj === 'object' && typeof obj.id === 'string' && obj.id) {
+    if (
+      obj &&
+      typeof obj === 'object' &&
+      typeof obj.id === 'string' &&
+      obj.id
+    ) {
       ids.push(obj.id)
     }
   }
@@ -167,7 +172,10 @@ function remappageids(page: any, map: Map<string, string>) {
   return page
 }
 
-function rewriteidsubstrings(value: unknown, map: Map<string, string>): unknown {
+function rewriteidsubstrings(
+  value: unknown,
+  map: Map<string, string>,
+): unknown {
   if (typeof value === 'string') {
     let next = value
     const oldids = [...map.keys()].sort((a, b) => b.length - a.length)

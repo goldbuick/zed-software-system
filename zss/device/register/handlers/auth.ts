@@ -10,7 +10,6 @@ import {
   vmzsswords,
 } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
-import type { MESSAGE } from 'zss/device/types'
 import {
   loadmem,
   writeclilink,
@@ -19,7 +18,9 @@ import {
 } from 'zss/device/register/helpers/bootstrap'
 import { setloggedin } from 'zss/device/register/state'
 import { registerreadplayer } from 'zss/device/registerplayer'
+import type { MESSAGE } from 'zss/device/types'
 import { ZSS_BOOKMARKS_KEY } from 'zss/feature/bookmarks'
+import { takecrossloginflags } from 'zss/feature/crosslogin'
 import { rundeeplinks } from 'zss/feature/deeplink'
 import { isclimode } from 'zss/feature/detect'
 import { getfingerprint } from 'zss/feature/fingerprint'
@@ -29,7 +30,6 @@ import {
   storagereadvars,
 } from 'zss/feature/storage'
 import { restorettsenginefromstorage } from 'zss/feature/tts/client'
-import { takecrossloginflags } from 'zss/feature/crosslogin'
 import { isjoin } from 'zss/feature/url'
 import { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'

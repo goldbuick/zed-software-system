@@ -5,11 +5,7 @@ import { maptovalue } from 'zss/mapping/value'
 import { inputcolor } from 'zss/screens/panel/common'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
-import {
-  linkactionprefix,
-  linkafterinvoke,
-  linkbegin,
-} from './surface'
+import { linkactionprefix, linkafterinvoke, linkbegin } from './surface'
 import type { LinkWidgetProps } from './types'
 
 export function LinkHyperlink({ surface }: LinkWidgetProps) {

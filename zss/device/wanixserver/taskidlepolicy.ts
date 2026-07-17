@@ -1,8 +1,8 @@
+import type { WanixSessionKind } from 'zss/device/wanixserver/state'
 import {
   WANIX_ZEDCAFE_TASK_ID,
   WANIX_ZEDSYNC_TASK_ID,
 } from 'zss/feature/wanix/wanixzedcafeconstants'
-import type { WanixSessionKind } from 'zss/device/wanixserver/state'
 
 /** Daemons that may go quiet on the term while still doing work. */
 export function iswanixdaemontaskid(sessionkey: string): boolean {

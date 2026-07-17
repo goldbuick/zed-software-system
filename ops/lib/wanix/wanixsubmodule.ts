@@ -1,7 +1,11 @@
 import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 
-export const WANIX_SUBMODULE_DIR = path.join(process.cwd(), 'submodules', 'wanix')
+export const WANIX_SUBMODULE_DIR = path.join(
+  process.cwd(),
+  'submodules',
+  'wanix',
+)
 
 export const WANIX_ZEDCAFE_DIRTY_FORWARD_PATCH = path.join(
   process.cwd(),

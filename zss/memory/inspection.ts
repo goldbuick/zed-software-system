@@ -8,7 +8,10 @@ import {
   vmcodeaddress,
 } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
-import { modemdeletekeyswithprefix, modemwriteinitstring } from 'zss/device/modem'
+import {
+  modemdeletekeyswithprefix,
+  modemwriteinitstring,
+} from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
 import {
   DIVIDER,

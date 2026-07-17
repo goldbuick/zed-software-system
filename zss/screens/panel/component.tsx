@@ -81,11 +81,7 @@ export function PanelComponent({
           text.map((item, index) => (
             <PanelItem
               key={striperowbase + index}
-              row={
-                inline
-                  ? undefined
-                  : (rowys?.[index] ?? index) + ymargin
-              }
+              row={inline ? undefined : (rowys?.[index] ?? index) + ymargin}
               striperow={striperowbase + index}
               item={item}
               active={index === selected}

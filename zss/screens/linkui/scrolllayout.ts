@@ -1,18 +1,21 @@
 import { PANEL_ITEM, paneladdress } from 'zss/gadget/data/types'
 import { isarray, isstring } from 'zss/mapping/types'
+import { maptostring } from 'zss/mapping/value'
+import { readlinkeditingkey } from 'zss/screens/linkui/linkediting'
 import {
   isexpandablelinktype,
   linkexpandrowheight,
   resolvelinktypeandwords,
 } from 'zss/screens/linkui/linktypes'
-import { readlinkeditingkey } from 'zss/screens/linkui/linkediting'
 
-export function panelitemlinkmeta(item: PANEL_ITEM): {
-  linktype: string
-  words: string[]
-  chip: string
-  editkey: string
-} | undefined {
+export function panelitemlinkmeta(item: PANEL_ITEM):
+  | {
+      linktype: string
+      words: string[]
+      chip: string
+      editkey: string
+    }
+  | undefined {
   if (!isarray(item)) {
     return undefined
   }
@@ -21,7 +24,7 @@ export function panelitemlinkmeta(item: PANEL_ITEM): {
     return undefined
   }
   const { linktype, words } = resolvelinktypeandwords(
-    rest.map((w) => `${w}`),
+    rest.map((w) => maptostring(w)),
   )
   const target = words[0] ?? ''
   return {

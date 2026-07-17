@@ -8,8 +8,8 @@ import type {
 } from 'zss/device/wanixclient/state'
 import { useWanixClient } from 'zss/device/wanixclient/wanixclientstore'
 import {
-  cyclewanixattachlayout,
   cyclewanixattachedsession,
+  cyclewanixattachlayout,
   detachwanixterm,
 } from 'zss/device/wanixclient/wanixdisplay'
 import { readwanixsessionlabel } from 'zss/device/wanixclient/wanixsessionmeta'
@@ -289,10 +289,7 @@ export function WanixTermScreen() {
     const waitinghint = prefixarmed
       ? HINT_ARMED
       : `waiting for guest terminal... ${HINT_IDLE}`
-    const waithint =
-      edge.height >= 1
-        ? `${waitinghint}${HINT_MARQUEE_GAP}`
-        : ''
+    const waithint = edge.height >= 1 ? `${waitinghint}${HINT_MARQUEE_GAP}` : ''
     if (edge.height >= 1) {
       context.changed()
     }

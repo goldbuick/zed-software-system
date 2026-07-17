@@ -20,7 +20,7 @@ import { TilesData } from 'zss/gadget/usetiles'
 import { WriteTextContext } from 'zss/gadget/writetext'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
-import { uselinkeditingkey } from 'zss/screens/linkui/linkediting'
+import { useLinkEditingKey } from 'zss/screens/linkui/linkediting'
 import { scrollvisiblewindow } from 'zss/screens/linkui/scrolllayout'
 import { ScrollContext } from 'zss/screens/panel/common'
 import { PanelComponent } from 'zss/screens/panel/component'
@@ -63,7 +63,7 @@ export function ScrollComponent({
   const tilesstore = useTiles(width, height, 0, color, bg)
   const scroll = useContext(ScrollContext)
   const totalrows = text.length - 1
-  const editingkey = uselinkeditingkey()
+  const editingkey = useLinkEditingKey()
 
   const scrollname = useGadgetClient((state) => state.gadget.scrollname ?? '')
   const boardname = useGadgetClient((state) => state.gadget.boardname ?? '')
@@ -185,7 +185,11 @@ export function ScrollComponent({
           />
           <TilesData store={tilesstore}>
             <WriteTextContext.Provider value={context}>
-              <ScrollBackPlate name={scrollname} width={width} height={height} />
+              <ScrollBackPlate
+                name={scrollname}
+                width={width}
+                height={height}
+              />
               <ScrollControls
                 row={scrollwindow.selectedrowy}
                 width={width}

@@ -1,15 +1,13 @@
 import type { DEVICE } from 'zss/device'
 import { bridgejoin } from 'zss/device/api'
-import type { MESSAGE } from 'zss/device/types'
 import { registerreadplayer } from 'zss/device/registerplayer'
+import type { MESSAGE } from 'zss/device/types'
 import { setcrossloginflags } from 'zss/feature/crosslogin'
 import { netterminalhalt } from 'zss/feature/netterminal'
 import { ispresent, isstring } from 'zss/mapping/types'
 
 export function handlejoincrosslogin(device: DEVICE, message: MESSAGE): void {
-  const data = message.data as
-    | { peerid?: unknown; flags?: unknown }
-    | undefined
+  const data = message.data as { peerid?: unknown; flags?: unknown } | undefined
   const peerid = isstring(data?.peerid) ? data.peerid.trim() : ''
   if (!peerid) {
     return
