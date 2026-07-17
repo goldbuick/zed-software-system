@@ -132,7 +132,7 @@ export const useTape = create<{
   terminal: {
     open: boolean
     logs: string[]
-    /** Terminal bookmarks from IDB; prepended when rendering logs. */
+    /** Terminal bookmarks from IDB; sticky-top after session logs in list; last merged indices. */
     pinlines: string[]
     /** Same order / length as `pinlines`; used to remove pins from the tape. */
     pinids: string[]

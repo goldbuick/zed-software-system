@@ -705,13 +705,15 @@ export function TerminalInput({
                     break
                   case 'b': {
                     const rowi = activerowindex
+                    const sessioncount = sessionlogs.length
                     const pincount = pinlines.length
                     if (
                       !inputstateactive &&
                       rowi !== undefined &&
-                      rowi < pincount
+                      rowi >= sessioncount &&
+                      rowi < sessioncount + pincount
                     ) {
-                      const id = pinids[rowi]
+                      const id = pinids[rowi - sessioncount]
                       if (id) {
                         registerbookmarkdelete(SOFTWARE, player, id)
                       }
@@ -725,10 +727,10 @@ export function TerminalInput({
                     // save to bookmarks
                     if (
                       rowi !== undefined &&
-                      rowi >= pincount &&
-                      rowi < pincount + sessionlogs.length
+                      rowi >= 0 &&
+                      rowi < sessioncount
                     ) {
-                      const logline = sessionlogs[rowi - pincount] ?? ''
+                      const logline = sessionlogs[rowi] ?? ''
                       registerbookmarkclisave(SOFTWARE, player, logline)
                       break
                     }

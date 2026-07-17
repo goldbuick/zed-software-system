@@ -1,31 +1,33 @@
 import { findterminalrowindexfromcoords } from 'zss/screens/terminal/logrowhitcoords'
 
 describe('findterminalrowindexfromcoords', () => {
-  it('returns pin index when cursor is on a fixed top pin row', () => {
+  it('returns sessioncount + pin index on sticky pin row', () => {
     const index = findterminalrowindexfromcoords({
       tapeycursor: 0,
       scroll: 0,
       pinycoords: [0],
       pinheights: [1],
-      sessionycoords: [],
-      sessionheights: [],
+      sessionycoords: [22],
+      sessionheights: [1],
+      pinbandbottom: 1,
     })
-    expect(index).toBe(0)
+    expect(index).toBe(1)
   })
 
-  it('pin hit-test is unaffected by scroll', () => {
+  it('pin band wins over overlapped session row', () => {
     const index = findterminalrowindexfromcoords({
       tapeycursor: 0,
       scroll: 8,
       pinycoords: [0],
       pinheights: [1],
-      sessionycoords: [22],
+      sessionycoords: [-8],
       sessionheights: [1],
+      pinbandbottom: 1,
     })
-    expect(index).toBe(0)
+    expect(index).toBe(1)
   })
 
-  it('returns pincount + session index for session log rows', () => {
+  it('returns session index for session log rows below the pin band', () => {
     const index = findterminalrowindexfromcoords({
       tapeycursor: 22,
       scroll: 0,
@@ -33,6 +35,20 @@ describe('findterminalrowindexfromcoords', () => {
       pinheights: [1],
       sessionycoords: [22],
       sessionheights: [1],
+      pinbandbottom: 1,
+    })
+    expect(index).toBe(0)
+  })
+
+  it('skips session rows clipped under the sticky pin band', () => {
+    const index = findterminalrowindexfromcoords({
+      tapeycursor: 0,
+      scroll: 0,
+      pinycoords: [0],
+      pinheights: [1],
+      sessionycoords: [0],
+      sessionheights: [1],
+      pinbandbottom: 1,
     })
     expect(index).toBe(1)
   })
@@ -45,6 +61,7 @@ describe('findterminalrowindexfromcoords', () => {
       pinheights: [1],
       sessionycoords: [],
       sessionheights: [],
+      pinbandbottom: 1,
     })
     expect(index).toBeUndefined()
   })
