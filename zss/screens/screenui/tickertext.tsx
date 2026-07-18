@@ -1,9 +1,8 @@
-import { useMemo } from 'react'
+import { useLayoutEffect } from 'react'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { resettiles, useTiles } from 'zss/gadget/tiles'
 import { TilesData, TilesRender } from 'zss/gadget/usetiles'
 import {
-  WRITE_TEXT_CONTEXT,
   createwritetextcontext,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
@@ -17,31 +16,25 @@ type ScreenUITickerTextProps = {
 export function ScreenUITickerText({ width, height }: ScreenUITickerTextProps) {
   const store = useTiles(width, height, 0, COLOR.WHITE, COLOR.ONCLEAR)
   const tickers = useGadgetClient((state) => state.gadget.tickers)
-  const context: WRITE_TEXT_CONTEXT = useMemo(() => {
-    return {
+
+  useLayoutEffect(() => {
+    const withtickers = tickers ?? []
+    const state = store.getState()
+    const context = {
       ...createwritetextcontext(width, height, COLOR.WHITE, COLOR.BLACK),
-      ...store.getState(),
+      ...state,
+      x: 0,
+      y: height - 1,
+      disablewrap: true,
     }
-  }, [width, height, store])
-
-  const withtickers = tickers ?? []
-
-  context.x = 0
-  context.y = height - 1
-  context.disablewrap = true
-
-  const state = store.getState()
-  resettiles(state, 0, COLOR.WHITE, COLOR.ONCLEAR)
-
-  for (let i = 0; i < withtickers.length; ++i) {
-    const line = withtickers[i]
-    tokenizeandwritetextformat(line, context, false)
-    context.x = 0
-    context.y--
-  }
-
-  // ensure re-render
-  state.changed()
+    resettiles(state, 0, COLOR.WHITE, COLOR.ONCLEAR)
+    for (let i = 0; i < withtickers.length; ++i) {
+      tokenizeandwritetextformat(withtickers[i], context, false)
+      context.x = 0
+      context.y--
+    }
+    state.changed()
+  }, [tickers, width, height, store])
 
   return (
     <TilesData store={store}>

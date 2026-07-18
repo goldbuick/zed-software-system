@@ -14,6 +14,8 @@ export type WanixClientState = {
   pendingapplyconfig: WanixRoomConfig | null
   pendingspawn: { taskid: string; cmd: string } | null
   attachedsessionkey: string | null
+  /** Last hard/soft attached session; used by re-attach hotkey after detach. */
+  lastattachedsessionkey: string | null
   activesessionkey: string | null
   userdetached: boolean
   /** Guest attach panel visibility (independent of tape terminal). */
@@ -36,6 +38,7 @@ function emptywanixclientstate(): WanixClientState {
     pendingapplyconfig: null,
     pendingspawn: null,
     attachedsessionkey: null,
+    lastattachedsessionkey: null,
     activesessionkey: null,
     userdetached: false,
     attachpanelopen: false,

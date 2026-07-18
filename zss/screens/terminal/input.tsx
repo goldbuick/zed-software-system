@@ -13,6 +13,7 @@ import {
 } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
+import { reattachwanixterm } from 'zss/device/wanixclient/wanixdisplay'
 import { withclipboard } from 'zss/feature/keyboard'
 import { storagewritehistorybuffer } from 'zss/feature/storage'
 import { SpeechToText } from 'zss/feature/stt/speechtotext'
@@ -670,6 +671,12 @@ export function TerminalInput({
           const { key } = event
           const lkey = NAME(key)
           const mods = modsfromevent(event)
+          // Physical Ctrl+\ (not Cmd): re-attach guest term when panel is closed.
+          if (event.ctrlKey && key === '\\') {
+            event.preventDefault()
+            reattachwanixterm()
+            return
+          }
           switch (lkey) {
             case 'delete':
               // single line only

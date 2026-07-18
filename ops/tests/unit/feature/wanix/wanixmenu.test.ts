@@ -171,7 +171,8 @@ describe('wanixmenu', () => {
     it('lists live folder mounts under externals', () => {
       const empty = buildwanixmenutape(idlestate())
       expect(empty).toContain('drop a folder onto cafe to mount live')
-      expect(empty).toContain('(no folder mounts)')
+      expect(empty).not.toContain('(no folder mounts)')
+      expect(empty).not.toContain('list remote imports')
 
       const tape = buildwanixmenutape({
         ...idlestate(),
@@ -180,7 +181,23 @@ describe('wanixmenu', () => {
       expect(tape).toContain('TEXT:$green   MyProject')
       expect(tape).toContain('TEXT:$green   assets')
       expect(tape).not.toContain('TEXT:$green   /MyProject')
-      expect(tape).not.toContain('(no folder mounts)')
+    })
+
+    it('shows list remotes only when remotes exist', () => {
+      expect(buildwanixmenutape(idlestate())).not.toContain(
+        '!wanix remote;list remote imports',
+      )
+      const tape = buildwanixmenutape({
+        ...idlestate(),
+        config: {
+          ...createidleroomconfig(),
+          remotes: [
+            { id: 'r1', dst: 'host', url: 'wss://example.test/' },
+          ],
+        },
+      })
+      expect(tape).toContain('!wanix remote;list remote imports (WSS 9P)')
+      expect(tape).not.toContain('#wanix remote connect')
     })
   })
 })

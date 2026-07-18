@@ -6,9 +6,10 @@ import {
   wanixclientrequestzedcafestate,
   wanixclientsession,
 } from 'zss/device/api'
-import { createforward, shouldforwardwanixtoclient } from 'zss/device/forward'
+import { createmessage } from 'zss/device'
+import { hub } from 'zss/hub'
+import { isstring } from 'zss/mapping/types'
 import { SOFTWARE } from 'zss/device/session'
-import { ismessage } from 'zss/device/types'
 import { resolvedriverforwasm } from 'zss/device/wanixserver/spawndriver'
 import {
   type TermSession,
@@ -108,11 +109,17 @@ import type { WanixZedCafeGuestFile } from 'zss/feature/wanix/wanixzedcafetypes'
 
 import 'zss/device/wanixserver'
 
-const { forward: forwardmessage } = createforward((message) => {
-  if (shouldforwardwanixtoclient()) {
-    window.parent.postMessage(message, window.location.origin)
+let wanixhubjoined = false
+
+function joinwanixhub(session: string) {
+  if (!session || wanixhubjoined) {
+    return
   }
-})
+  wanixhubjoined = true
+  hub.join(session)
+  // Latch device sessions without rebroadcasting ready to the cafe tab.
+  hub.invokelocal(createmessage(session, '', 'platform', 'ready'))
+}
 
 const WINCH_SENTINEL = -1
 
@@ -1576,8 +1583,14 @@ window.addEventListener('message', (event) => {
     return
   }
   const data = event.data
-  if (ismessage(data)) {
-    forwardmessage(data)
+  if (
+    data &&
+    typeof data === 'object' &&
+    (data as { target?: unknown }).target === 'config'
+  ) {
+    const cfg = (data as { data?: { session?: unknown } }).data
+    const session = cfg && isstring(cfg.session) ? cfg.session : ''
+    joinwanixhub(session)
     return
   }
   if (

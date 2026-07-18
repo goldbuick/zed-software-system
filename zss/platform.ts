@@ -1,56 +1,89 @@
-import type { MESSAGE } from 'zss/device/types'
+import { createdevice, parsetarget } from 'zss/device'
+import { sessionreset } from 'zss/device/api'
+import { startjoinvm } from 'zss/device/joinvm'
+import { SOFTWARE } from 'zss/device/session'
+import { postsessiontowanixiframe } from 'zss/device/wanixclient/wanixbridge'
+import { hub } from 'zss/hub'
+import { createsid } from 'zss/mapping/guid'
+import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import boardrunnerspace from './boardrunnerspace??worker'
-import { createmessage } from './device'
-import { sessionreset } from './device/api'
-import {
-  createforward,
-  shouldforwardclienttoboardrunner,
-  shouldforwardclienttoserver,
-  shouldforwardclienttostt,
-  shouldforwardclienttotts,
-  shouldforwardclienttowanix,
-} from './device/forward'
-import { SOFTWARE } from './device/session'
-import {
-  postmessagetowanixiframe,
-  postreadytowanixiframe,
-  setwanixmessagedeliver,
-} from './device/wanixclient/wanixbridge'
-import { MAYBE, ispresent } from './mapping/types'
 import simspace from './simspace??worker'
 import sttspace from './sttspace??worker'
-import stubspace from './stubspace??worker'
 import ttsspace from './ttsspace??worker'
 
-type SpokeSkip = 'boardrunner' | 'platform' | 'stt' | 'tts' | 'wanixserver'
+const WORKER_CONFIG_ACK_TIMEOUT_MS = 10_000
 
 let boardrunner: MAYBE<Worker>
 let platform: MAYBE<Worker>
 let stt: MAYBE<Worker>
 let tts: MAYBE<Worker>
 let platformhalt: MAYBE<() => void>
-let sttmessagehandler: MAYBE<(event: MessageEvent<any>) => void>
-let ttsmessagehandler: MAYBE<(event: MessageEvent<any>) => void>
+let platformsession = ''
+let joinvmdevice: MAYBE<ReturnType<typeof startjoinvm>>
+let workerbootdevice: MAYBE<ReturnType<typeof createdevice>>
+let platformbooting = false
 
-function postreadytoworker(worker: Worker) {
-  const session = SOFTWARE.session()
-  if (session) {
-    worker.postMessage(
-      createmessage(session, '', 'platform', 'ready', undefined),
-    )
+function postworkercfg(
+  worker: Worker,
+  data: { session: string; climode?: boolean },
+) {
+  worker.postMessage({
+    target: 'config',
+    data,
+  })
+}
+
+function waitworkerconfigack(worker: Worker, label: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      worker.removeEventListener('message', onmessage)
+      reject(new Error(`${label} config ack timeout`))
+    }, WORKER_CONFIG_ACK_TIMEOUT_MS)
+    function onmessage(event: MessageEvent) {
+      if (event.data?.target !== 'configack') {
+        return
+      }
+      clearTimeout(timer)
+      worker.removeEventListener('message', onmessage)
+      resolve()
+    }
+    worker.addEventListener('message', onmessage)
+  })
+}
+
+function ensureworkerbootdevice() {
+  if (ispresent(workerbootdevice)) {
+    return
   }
+  workerbootdevice = createdevice('workerboot', ['all'], (message) => {
+    const route = parsetarget(message.target)
+    if (route.target === 'tts') {
+      const existed = ispresent(tts)
+      const worker = ensurettsworker()
+      // First message may race hub.join on the new worker; deliver once via port.
+      if (!existed && worker) {
+        worker.postMessage(message)
+      }
+    } else if (route.target === 'stt') {
+      const existed = ispresent(stt)
+      const worker = ensuresttworker()
+      if (!existed && worker) {
+        worker.postMessage(message)
+      }
+    }
+  })
 }
 
 export function ensuresttworker(): Worker | undefined {
   if (ispresent(stt)) {
     return stt
   }
-  stt = new sttspace({ name: 'stt' })
-  if (sttmessagehandler) {
-    stt.addEventListener('message', sttmessagehandler)
+  if (!platformsession) {
+    return undefined
   }
-  postreadytoworker(stt)
+  stt = new sttspace({ name: 'stt' })
+  postworkercfg(stt, { session: platformsession })
   return stt
 }
 
@@ -58,145 +91,87 @@ export function ensurettsworker(): Worker | undefined {
   if (ispresent(tts)) {
     return tts
   }
-  tts = new ttsspace({ name: 'tts' })
-  if (ttsmessagehandler) {
-    tts.addEventListener('message', ttsmessagehandler)
+  if (!platformsession) {
+    return undefined
   }
-  postreadytoworker(tts)
+  tts = new ttsspace({ name: 'tts' })
+  postworkercfg(tts, { session: platformsession })
   return tts
 }
 
 export function createplatform(isstub = false, climode = false) {
-  if (ispresent(platform)) {
+  if (ispresent(platform) || ispresent(joinvmdevice) || platformbooting) {
     return
   }
-  // reset session
+  platformbooting = true
+  hub.leave()
   sessionreset(SOFTWARE)
 
-  // create boardrunner worker
+  platformsession = createsid()
+  hub.join(platformsession)
+  ensureworkerbootdevice()
+
   boardrunner = new boardrunnerspace({ name: 'boardrunner' })
+  postworkercfg(boardrunner, { session: platformsession })
 
-  // create sim/stub worker
-  platform = isstub
-    ? new stubspace({ name: 'stub' })
-    : new simspace({ name: 'sim' })
-  platform.postMessage({
-    target: 'config',
-    data: { climode },
-  })
-
-  // create bridge
-  const { forward, disconnect } = createforward((message) => {
-    if (shouldforwardclienttoboardrunner(message) && ispresent(boardrunner)) {
-      boardrunner.postMessage(message)
-    }
-    if (shouldforwardclienttoserver(message) && ispresent(platform)) {
-      platform.postMessage(message)
-    }
-    if (shouldforwardclienttostt(message)) {
-      ensuresttworker()?.postMessage(message)
-    }
-    if (shouldforwardclienttotts(message)) {
-      ensurettsworker()?.postMessage(message)
-    }
-    if (shouldforwardclienttowanix(message)) {
-      postmessagetowanixiframe(message)
-      if (message.target === 'ready') {
-        postreadytowanixiframe()
+  void (async () => {
+    try {
+      if (!ispresent(boardrunner)) {
+        return
       }
+      await waitworkerconfigack(boardrunner, 'boardrunner')
+      if (isstub) {
+        joinvmdevice = startjoinvm(platformsession)
+      } else {
+        platform = new simspace({ name: 'sim' })
+        postworkercfg(platform, { climode, session: platformsession })
+      }
+      postsessiontowanixiframe(platformsession)
+    } catch (err) {
+      platformbooting = false
+      console.error(
+        'createplatform worker boot',
+        err instanceof Error ? err.message : String(err),
+      )
     }
-  })
-
-  function fanoutfromspoke(message: MESSAGE, skip?: SpokeSkip) {
-    if (
-      skip !== 'boardrunner' &&
-      shouldforwardclienttoboardrunner(message) &&
-      ispresent(boardrunner)
-    ) {
-      boardrunner.postMessage(message)
-    }
-    if (
-      skip !== 'platform' &&
-      shouldforwardclienttoserver(message) &&
-      ispresent(platform)
-    ) {
-      platform.postMessage(message)
-    }
-    if (skip !== 'stt' && shouldforwardclienttostt(message) && ispresent(stt)) {
-      stt.postMessage(message)
-    }
-    if (skip !== 'tts' && shouldforwardclienttotts(message) && ispresent(tts)) {
-      tts.postMessage(message)
-    }
-    if (skip !== 'wanixserver' && shouldforwardclienttowanix(message)) {
-      postmessagetowanixiframe(message)
-    }
-  }
-
-  setwanixmessagedeliver((message) => {
-    fanoutfromspoke(message, 'wanixserver')
-    return forward(message)
-  })
-
-  // handle messages from boardrunner
-  function boardrunnermessages(event: MessageEvent<any>) {
-    const message = event.data as MESSAGE
-    fanoutfromspoke(message, 'boardrunner')
-    return forward(message)
-  }
-  boardrunner.addEventListener('message', boardrunnermessages)
-
-  // handle messages from  platform
-  function platformmessages(event: MessageEvent<any>) {
-    const message = event.data as MESSAGE
-    fanoutfromspoke(message, 'platform')
-    return forward(message)
-  }
-  platform.addEventListener('message', platformmessages)
-
-  function sttmessages(event: MessageEvent<any>) {
-    const message = event.data as MESSAGE
-    fanoutfromspoke(message, 'stt')
-    return forward(message)
-  }
-  sttmessagehandler = sttmessages
-
-  function ttsmessages(event: MessageEvent<any>) {
-    const message = event.data as MESSAGE
-    fanoutfromspoke(message, 'tts')
-    return forward(message)
-  }
-  ttsmessagehandler = ttsmessages
+  })()
 
   platformhalt = () => {
-    disconnect()
+    platformbooting = false
+    hub.leave()
+    platformsession = ''
+    if (ispresent(joinvmdevice)) {
+      joinvmdevice.disconnect()
+    }
+    joinvmdevice = undefined
+    if (ispresent(workerbootdevice)) {
+      workerbootdevice.disconnect()
+    }
+    workerbootdevice = undefined
     if (ispresent(boardrunner)) {
-      boardrunner.removeEventListener('message', boardrunnermessages)
       boardrunner.terminate()
     }
     boardrunner = undefined
     if (ispresent(platform)) {
-      platform.removeEventListener('message', platformmessages)
       platform.terminate()
     }
     platform = undefined
     if (ispresent(stt)) {
-      stt.removeEventListener('message', sttmessages)
       stt.terminate()
     }
     stt = undefined
-    sttmessagehandler = undefined
     if (ispresent(tts)) {
-      tts.removeEventListener('message', ttsmessages)
       tts.terminate()
     }
     tts = undefined
-    ttsmessagehandler = undefined
-    setwanixmessagedeliver(null)
   }
 }
 
 export function haltplatform() {
   platformhalt?.()
   platformhalt = undefined
+}
+
+export function readplatformsessionsid(): string {
+  return platformsession
 }

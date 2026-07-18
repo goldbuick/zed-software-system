@@ -48,8 +48,8 @@ const HINT_SCROLLBACK_ROWS = ismac ? `Fn+Up/Down` : `PgUp/PgDown`
 const HINT_CLIPBOARD = ismac
   ? `shift+arrows select, ${metakey}+c/v`
   : `shift+arrows select, ctrl+shift+c/v`
-const HINT_IDLE = `Ctrl+\\ detach, Ctrl+Tab size, backtick open tape, ${HINT_SCROLLBACK_ROWS}, ${HINT_CLIPBOARD}`
-const HINT_ARMED = `Ctrl+\\ detach, left/right switch sessions, Esc cancel`
+const HINT_IDLE = `Ctrl+\\ prefix, backtick open tape, ${HINT_SCROLLBACK_ROWS}, ${HINT_CLIPBOARD}`
+const HINT_ARMED = `Ctrl+\\ detach, Esc cancel, Tab layout, left/right switch`
 const HINT_COLOR = COLOR.BLACK
 const HINT_MARQUEE_GAP = '$32$7$32'
 
@@ -80,7 +80,8 @@ function encodekeyboard(event: KeyboardEvent): string | null {
     case 'delete':
       return '\x7f'
     case 'tab':
-      return '\t'
+      // Shift+Tab is back-tab for most terminals.
+      return event.shiftKey ? '\x1b[Z' : '\t'
     case 'arrowup':
       return '\x1b[A'
     case 'arrowdown':
@@ -112,10 +113,6 @@ function inverseselectioncellcolors(fg: number, bg: number) {
 
 function isctrlbackslash(event: KeyboardEvent) {
   return event.ctrlKey && event.key === '\\'
-}
-
-function isctrltab(event: KeyboardEvent) {
-  return event.ctrlKey && NAME(event.key) === 'tab'
 }
 
 function iscopyshortcut(event: KeyboardEvent, hasselection: boolean) {
@@ -238,13 +235,6 @@ export function WanixTermScreen() {
   function handleattachchromekeys(event: KeyboardEvent) {
     const key = NAME(event.key)
 
-    if (isctrltab(event)) {
-      event.preventDefault()
-      setprefixarmed(false)
-      cyclewanixattachlayout(!event.shiftKey)
-      return true
-    }
-
     // Open tape CLI (detaches attach panel via terminal:open handler).
     if (event.key === '`' || (event.shiftKey && event.key === '?')) {
       event.preventDefault()
@@ -255,23 +245,37 @@ export function WanixTermScreen() {
 
     if (prefixarmed) {
       event.preventDefault()
-      setprefixarmed(false)
-      if (key === 'p' || key === 'arrowleft') {
+
+      // Stay armed until Esc so Tab/n/p can repeat.
+      if (key === 'escape') {
+        setprefixarmed(false)
+        return true
+      }
+
+      // Layout after Ctrl+\ so bare Tab reaches the guest PTY.
+      if (key === 'tab') {
+        cyclewanixattachlayout(!event.shiftKey)
+        return true
+      }
+
+      // Switch to previous/next session.
+      if (key === 'arrowleft') {
         cyclewanixattachedsession(readwanixtermbufferkeys(), -1)
         return true
       }
-      if (key === 'n' || key === 'arrowright') {
+      if (key === 'arrowright') {
         cyclewanixattachedsession(readwanixtermbufferkeys(), 1)
         return true
       }
-      if (key === 'd' || isctrlbackslash(event)) {
+
+      // Detach via Ctrl+\.
+      if (isctrlbackslash(event)) {
         detachwanixterm()
+        setprefixarmed(false)
         return true
       }
-      if (key === 'escape') {
-        return true
-      }
-      return false
+
+      return true
     }
 
     if (isctrlbackslash(event)) {
@@ -557,6 +561,7 @@ export function WanixTermScreen() {
             scrollto('live')
             return
           }
+
           handleliveinput(event, key)
         }}
       />

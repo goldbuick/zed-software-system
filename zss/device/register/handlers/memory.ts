@@ -4,7 +4,7 @@ import { doasync } from 'zss/device/doasync'
 import type { MESSAGE } from 'zss/device/types'
 import { itchiopublish } from 'zss/feature/itchiopublish'
 import { storagenukecontent, storagewritecontent } from 'zss/feature/storage'
-import { znsset } from 'zss/feature/url'
+import { shorturl, znsset } from 'zss/feature/url'
 import { write } from 'zss/feature/writeui'
 import {
   zssheaderlines,
@@ -103,6 +103,29 @@ export function handlepublishmem(device: DEVICE, message: MESSAGE): void {
                 device,
                 message.player,
                 zsstextline(`$green${key} has been published to zns`),
+              )
+            }
+          }
+          break
+        }
+        case 'zns-bytes': {
+          const [, znsemail, znstoken, key, content] = message.data
+          if (
+            isstring(znsemail) &&
+            isstring(znstoken) &&
+            isstring(key) &&
+            isstring(content)
+          ) {
+            workstatus(device, message.player, `publishing ${key}`)
+            const shareurl = new URL(location.href)
+            shareurl.hash = content
+            const short = await shorturl(shareurl.href)
+            const result = await znsset(znsemail, znstoken, key, short)
+            if (result.success) {
+              write(
+                device,
+                message.player,
+                zsstextline(`$green${key} has been published to zns ${short}`),
               )
             }
           }

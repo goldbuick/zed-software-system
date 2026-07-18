@@ -1,7 +1,4 @@
-import { createmessage } from 'zss/device'
 import { SOFTWARE } from 'zss/device/session'
-import type { MESSAGE } from 'zss/device/types'
-import { ismessage } from 'zss/device/types'
 import {
   type WanixReadyCallback,
   readbridgestate,
@@ -12,6 +9,8 @@ import {
 } from 'zss/device/wanixclient/state'
 import { clearwanixtermbuffers } from 'zss/device/wanixclient/wanixtermbuffer'
 import { isdevbuild } from 'zss/feature/devbuild'
+
+let pendingwanixsession = ''
 
 function resetready() {
   setwanixreadyflag(false)
@@ -66,44 +65,24 @@ export function registerwanixsessioncloseprune(
   registersessioncloseprune(fn)
 }
 
-export function setwanixmessagedeliver(
-  fn: ((message: MESSAGE) => void) | null,
-) {
-  readbridgestate().deliverwanixmessage = fn
-}
-
-export function postmessagetowanixiframe(message: MESSAGE): boolean {
+/** Bootstrap session so the wanix iframe can hub.join (MESSAGE bus is BroadcastChannel). */
+export function postsessiontowanixiframe(session: string): boolean {
+  if (session) {
+    pendingwanixsession = session
+  }
   const { childwindow } = readbridgestate()
-  if (!childwindow) {
+  const sid = session || pendingwanixsession || SOFTWARE.session()
+  if (!sid || !childwindow) {
     return false
   }
-  childwindow.postMessage(message, window.location.origin)
-  return true
-}
-
-export function postreadytowanixiframe(): void {
-  const session = SOFTWARE.session()
-  const { childwindow } = readbridgestate()
-  if (!session || !childwindow) {
-    return
-  }
   childwindow.postMessage(
-    createmessage(session, '', 'platform', 'ready', undefined),
+    {
+      target: 'config',
+      data: { session: sid },
+    },
     window.location.origin,
   )
-}
-
-function handleparentmessage(event: MessageEvent) {
-  if (event.origin !== window.location.origin) {
-    return
-  }
-  const data = event.data
-  if (!data || typeof data !== 'object') {
-    return
-  }
-  if (ismessage(data)) {
-    readbridgestate().deliverwanixmessage?.(data)
-  }
+  return true
 }
 
 function notifychildwindow() {
@@ -147,10 +126,9 @@ export function waitwanixiframe(timeoutms = 30_000): Promise<Window> {
 }
 
 export function bindwanixparentmessage() {
-  window.addEventListener('message', handleparentmessage)
-  return () => {
-    window.removeEventListener('message', handleparentmessage)
-  }
+  // FSA bind responses and other non-MESSAGE traffic use dedicated listeners
+  // in wanix feature code; device MESSAGE bus is BroadcastChannel.
+  return () => {}
 }
 
 export function setwanixchildwindow(next: Window | null) {
@@ -159,7 +137,7 @@ export function setwanixchildwindow(next: Window | null) {
   resetready()
   if (next) {
     notifychildwindow()
-    postreadytowanixiframe()
+    postsessiontowanixiframe(pendingwanixsession || SOFTWARE.session())
   }
 }
 

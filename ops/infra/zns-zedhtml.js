@@ -261,26 +261,26 @@ export function zedtapehtml(markdown, opts = {}) {
   return `<div class="zns-tape">${zedtaperowshtml(rows.join('\n'), opts)}</div>`
 }
 
-/** Scroll codepage (`@scroll <name>` first line): markdown body, no ZSS lexer highlight. */
-export function scrollsourceisscrollcodepage(source) {
+/** Txt codepage (`@txt <name>` first line): markdown body, no ZSS lexer highlight. */
+export function scrollsourceistxtcodepage(source) {
   const lines = String(source ?? '').split('\n')
   for (const line of lines) {
     const t = line.trim()
     if (!t) {
       continue
     }
-    return /^@scroll\s+\S/i.test(t)
+    return /^@txt\s+\S/i.test(t)
   }
   return false
 }
 
-export function stripscrollcodepageheader(source) {
+export function striptxtcodepageheader(source) {
   const lines = String(source ?? '').split('\n')
   let skippedheader = false
   const out = []
   for (const line of lines) {
     const t = line.trim()
-    if (!skippedheader && t && /^@scroll\s+\S/i.test(t)) {
+    if (!skippedheader && t && /^@txt\s+\S/i.test(t)) {
       skippedheader = true
       continue
     }
@@ -292,8 +292,8 @@ export function stripscrollcodepageheader(source) {
   return out.join('\n')
 }
 
-export function zedscrollhtml(source, opts = {}) {
-  return zedtapehtml(stripscrollcodepageheader(source), opts)
+export function zedtxthtml(source, opts = {}) {
+  return zedtapehtml(striptxtcodepageheader(source), opts)
 }
 
 /** Raw ZSS codepage (text-kind tenant scrolls) with editor-style syntax colors. */
@@ -302,9 +302,9 @@ export function zedzsshtml(source, opts = {}) {
   return `<div class="zns-tape">${zedtaperowshtml(tape, opts)}</div>`
 }
 
-/** Route text-kind scrolls: scroll codepage vs raw ZSS vs markdown+tape scrolls. */
+/** Route text-kind scrolls: txt codepage vs raw ZSS vs markdown+tape scrolls. */
 export function scrollsourceisrawzss(source) {
-  if (scrollsourceisscrollcodepage(source)) {
+  if (scrollsourceistxtcodepage(source)) {
     return false
   }
   const lines = String(source ?? '').split('\n')

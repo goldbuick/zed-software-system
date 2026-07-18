@@ -3,6 +3,7 @@ import { SOFTWARE } from 'zss/device/session'
 import { brickproxiedurl } from 'zss/feature/brickurl'
 import { clearqueryparams } from 'zss/feature/deeplink'
 import {
+  storageclearznstoken,
   storagereadznssession,
   storagewriteznsclear,
   storagewriteznsemail,
@@ -287,8 +288,32 @@ export async function znsread(
   }
 }
 
+export async function znsisauthed(): Promise<boolean> {
+  return !!(await storagereadznssession())
+}
+
+async function znscleartokenonforbidden(): Promise<void> {
+  lastpublishedpeerid = ''
+  await storageclearznstoken()
+}
+
+async function znsparsejsonresponse(response: Response): Promise<any> {
+  try {
+    return await response.json()
+  } catch {
+    return { success: false }
+  }
+}
+
+function znsauthtokenpresent(email: string, token: string): boolean {
+  return !!email && !!token
+}
+
 export async function znsautopublishpeer(peerid: string, player: string) {
   if (!peerid || !PEER_ID_RE.test(peerid)) {
+    return
+  }
+  if (!(await znsisauthed())) {
     return
   }
   const session = await storagereadznssession()
@@ -360,6 +385,9 @@ export async function znslogincode(email: string, code: string) {
 }
 
 export async function znslist(email: string, token: string) {
+  if (!znsauthtokenpresent(email, token)) {
+    return { success: false }
+  }
   const formdata = new FormData()
   formdata.append('email', email)
   formdata.append('token', token)
@@ -368,8 +396,11 @@ export async function znslist(email: string, token: string) {
     body: formdata,
   })
   const response = await fetch(request)
-  const result = await response.json()
-  return result
+  if (response.status === 403) {
+    await znscleartokenonforbidden()
+    return { success: false }
+  }
+  return znsparsejsonresponse(response)
 }
 
 export async function znsset(
@@ -378,6 +409,9 @@ export async function znsset(
   key: string,
   value: string,
 ) {
+  if (!znsauthtokenpresent(email, token)) {
+    return { success: false }
+  }
   const formdata = new FormData()
   formdata.append('email', email)
   formdata.append('token', token)
@@ -388,11 +422,17 @@ export async function znsset(
     body: formdata,
   })
   const response = await fetch(request)
-  const result = await response.json()
-  return result
+  if (response.status === 403) {
+    await znscleartokenonforbidden()
+    return { success: false }
+  }
+  return znsparsejsonresponse(response)
 }
 
 export async function znsdelete(email: string, token: string, key: string) {
+  if (!znsauthtokenpresent(email, token)) {
+    return { success: false }
+  }
   const formdata = new FormData()
   formdata.append('email', email)
   formdata.append('token', token)
@@ -402,6 +442,9 @@ export async function znsdelete(email: string, token: string, key: string) {
     body: formdata,
   })
   const response = await fetch(request)
-  const result = await response.json()
-  return result
+  if (response.status === 403) {
+    await znscleartokenonforbidden()
+    return { success: false }
+  }
+  return znsparsejsonresponse(response)
 }

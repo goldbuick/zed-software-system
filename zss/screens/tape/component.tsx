@@ -1,7 +1,8 @@
-import { Profiler, type ProfilerOnRenderCallback } from 'react'
+import { Profiler, type ProfilerOnRenderCallback, useEffect } from 'react'
 import { registerterminalopen } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
+import { reattachwanixterm } from 'zss/device/wanixclient/wanixdisplay'
 import { useWanixClient } from 'zss/device/wanixclient/wanixclientstore'
 import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/zustandstores'
 import { ShadeBoxDither } from 'zss/gadget/graphics/dither'
@@ -12,6 +13,26 @@ import { WanixAttachPanel } from 'zss/screens/wanix/attachpanel'
 import { useShallow } from 'zustand/react/shallow'
 
 import { TapeLayout } from './layout'
+
+/** is-hotkey cannot parse `\`; use a raw keydown for game-only re-attach. */
+function WanixReattachHotkey() {
+  useEffect(() => {
+    function onkeydown(event: KeyboardEvent) {
+      if (!event.ctrlKey || event.key !== '\\') {
+        return
+      }
+      // Attach panel owns Ctrl+\ while open; do not fight detach/prefix.
+      if (useWanixClient.getState().attachpanelopen) {
+        return
+      }
+      event.preventDefault()
+      reattachwanixterm()
+    }
+    document.addEventListener('keydown', onkeydown)
+    return () => document.removeEventListener('keydown', onkeydown)
+  }, [])
+  return null
+}
 
 const tapeprofileronrender: ProfilerOnRenderCallback = (
   id,
@@ -93,7 +114,7 @@ export function TapeComponent() {
             />
           </UserFocus>
         </group>
-      ) : (
+      ) : showattach ? null : (
         <>
           <UserHotkey hotkey="Shift+?" althotkey="/">
             {() => registerterminalopen(SOFTWARE, player)}
@@ -101,6 +122,9 @@ export function TapeComponent() {
           <UserHotkey hotkey="`">
             {() => registerterminalopen(SOFTWARE, player)}
           </UserHotkey>
+          {/* Only when attach is closed: same Ctrl+\ while attached was
+              re-attaching immediately after termscreen detached. */}
+          <WanixReattachHotkey />
         </>
       )}
     </>

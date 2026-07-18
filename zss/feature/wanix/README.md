@@ -389,11 +389,12 @@ The **attach panel** is separate from the **tape CLI**. Tape always shows ZSS lo
 Manual: `#wanix attach` / `#wanix detach` / menu. See
 [`wanixdisplay.ts`](../../device/wanixclient/wanixdisplay.ts).
 
-**Keyboard (attach panel):** `Ctrl+\` prefix — `n`/`p` switch session, `d` detach, `Esc` cancel.
-`Ctrl+Tab` / `Ctrl+Shift+Tab` cycle attach panel size (TOP/FULL/BOTTOM; independent of tape Tab layout).
+**Keyboard (attach panel):** `Ctrl+\` prefix stays armed until `Esc` or `Ctrl+\` again —
+`Tab`/`Shift+Tab` cycle size (TOP/FULL/BOTTOM), `n`/`p` switch session, `d` detach.
+Bare `Tab` goes to the guest PTY when the prefix is not armed.
 Backtick (or `Shift+?`) opens the tape CLI and detaches. Scrollback: PageUp/PageDown.
 
-After manual detach, re-attach is always explicit (`#wanix attach` / menu / idle room reset).
+After manual detach, re-attach with `Ctrl+\` (tape CLI or game), or `#wanix attach` / menu. Idle room reset also clears the detach latch.
 
 ---
 

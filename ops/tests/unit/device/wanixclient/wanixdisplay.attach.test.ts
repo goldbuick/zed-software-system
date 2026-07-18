@@ -1,5 +1,7 @@
 import { terminalinclayout } from 'zss/device/register/helpers/layout'
+import { useWanixClient } from 'zss/device/wanixclient/wanixclientstore'
 import {
+  applywanixsessionmessage,
   cyclewanixattachlayout,
   cyclewanixattachedsession,
   detachwanixterm,
@@ -8,6 +10,7 @@ import {
   readwanixactivesession,
   readwanixattachlayout,
   readwanixattachpanelopen,
+  reattachwanixterm,
   resetwanixattachforidle,
   resetwanixattachstatefortest,
   setattachedsession,
@@ -202,5 +205,83 @@ describe('wanixdisplay attach', () => {
     setattachedsession('task-a')
     detachwanixterm()
     expect(readwanixattachlayout()).toBe(TAPE_DISPLAY.FULL)
+  })
+
+  it('reattachwanixterm no-ops when no sessions', () => {
+    expect(reattachwanixterm()).toBe(false)
+    expect(readattachedsession()).toBeNull()
+  })
+
+  it('reattachwanixterm restores last attached session after detach', () => {
+    useWanixClient.setState({
+      opensessions: new Set(['task-a', 'task-b']),
+    })
+    setattachedsession('task-b')
+    detachwanixterm()
+    expect(readattachedsession()).toBeNull()
+    expect(reattachwanixterm()).toBe(true)
+    expect(readattachedsession()).toBe('task-b')
+    expect(readwanixattachpanelopen()).toBe(true)
+  })
+
+  it('reattachwanixterm opens panel when soft-attached with tape open', () => {
+    useTape.setState((state) => ({
+      terminal: { ...state.terminal, open: true },
+    }))
+    useWanixClient.setState({
+      opensessions: new Set(['task-a']),
+      attachedsessionkey: 'task-a',
+      lastattachedsessionkey: 'task-a',
+      attachpanelopen: false,
+    })
+    expect(reattachwanixterm()).toBe(true)
+    expect(readattachedsession()).toBe('task-a')
+    expect(readwanixattachpanelopen()).toBe(true)
+    expect(useTape.getState().terminal.open).toBe(false)
+  })
+
+  it('vm session open hard-attaches even when tape is visible', () => {
+    useTape.setState((state) => ({
+      terminal: { ...state.terminal, open: true },
+    }))
+    applywanixsessionmessage({
+      event: 'open',
+      sessionkey: 'linux-vm',
+      kind: 'vm',
+    })
+    expect(readattachedsession()).toBe('linux-vm')
+    expect(readwanixattachpanelopen()).toBe(true)
+    expect(useTape.getState().terminal.open).toBe(false)
+  })
+
+  it('vm session open hard-attaches after manual detach', () => {
+    useTape.setState((state) => ({
+      terminal: { ...state.terminal, open: true },
+    }))
+    onwanixtermsessionopen('task-a')
+    detachwanixterm()
+    expect(readattachedsession()).toBeNull()
+    applywanixsessionmessage({
+      event: 'open',
+      sessionkey: 'linux-vm',
+      kind: 'vm',
+    })
+    expect(readattachedsession()).toBe('linux-vm')
+    expect(readwanixattachpanelopen()).toBe(true)
+    expect(useTape.getState().terminal.open).toBe(false)
+  })
+
+  it('task session open still soft-attaches when tape is visible', () => {
+    useTape.setState((state) => ({
+      terminal: { ...state.terminal, open: true },
+    }))
+    applywanixsessionmessage({
+      event: 'open',
+      sessionkey: 'hello-wasm',
+      kind: 'task',
+    })
+    expect(readattachedsession()).toBe('hello-wasm')
+    expect(readwanixattachpanelopen()).toBe(false)
+    expect(useTape.getState().terminal.open).toBe(true)
   })
 })

@@ -116,7 +116,7 @@ export enum STAT_TYPE {
   TERRAIN,
   CHARSET,
   PALETTE,
-  SCROLL,
+  TXT, //       @txt notes - plain text notes codepage
   //            all subsequent @ are key -> value paris
   CONST, //     @char 2 - @cycle 1 - the first @ is name,
   RANGE, //     @gooble range R HUH; help text for stat

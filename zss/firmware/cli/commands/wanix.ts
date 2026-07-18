@@ -11,6 +11,7 @@ import {
   readwanixactivesession,
   setattachedsession,
 } from 'zss/device/wanixclient/wanixdisplay'
+import { setuserdetached } from 'zss/device/wanixclient/state'
 import {
   connectwanixremote,
   disconnectwanixremote,
@@ -94,6 +95,8 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
             stopwanixvm(ispresent(stoparg) ? NAME(stoparg) : undefined)
             apilog(SOFTWARE, player, 'wanix vm stop')
           } else {
+            // Explicit VM boot clears detach latch so session open can auto-attach.
+            setuserdetached(false)
             startwanixvm(
               undefined,
               ispresent(arg) ? NAME(arg) : undefined,

@@ -117,7 +117,18 @@ export function readattachedsession(): string | null {
 }
 
 export function setattachedsessionkey(next: string | null): void {
-  useWanixClient.setState({ attachedsessionkey: next })
+  if (next != null) {
+    useWanixClient.setState({
+      attachedsessionkey: next,
+      lastattachedsessionkey: next,
+    })
+    return
+  }
+  useWanixClient.setState({ attachedsessionkey: null })
+}
+
+export function readlastattachedsession(): string | null {
+  return useWanixClient.getState().lastattachedsessionkey
 }
 
 export function readuserdetached(): boolean {
@@ -172,6 +183,7 @@ export function setattachlayout(next: TAPE_DISPLAY): void {
 export function resetwanixattachforidle(): void {
   useWanixClient.setState({
     attachedsessionkey: null,
+    lastattachedsessionkey: null,
     activesessionkey: null,
     userdetached: false,
     attachpanelopen: false,
@@ -181,6 +193,7 @@ export function resetwanixattachforidle(): void {
 export function resetwanixattachstatefortest(): void {
   useWanixClient.setState({
     attachedsessionkey: null,
+    lastattachedsessionkey: null,
     activesessionkey: null,
     userdetached: false,
     attachpanelopen: false,

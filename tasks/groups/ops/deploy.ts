@@ -474,8 +474,8 @@ async function runznsscrollpreview(ctx: TaskContext): Promise<number> {
   const dest = join(root, 'ops/infra/generated/zns-scroll-preview.html')
   const {
     scrollsourceisrawzss,
-    scrollsourceisscrollcodepage,
-    zedscrollhtml,
+    scrollsourceistxtcodepage,
+    zedtxthtml,
     zedtapehtml,
     zedtaperowshtml,
     zedzsshtml,
@@ -516,30 +516,20 @@ async function runznsscrollpreview(ctx: TaskContext): Promise<number> {
     validatecp437webchars().length === 0,
     'all cp437 0-255 must be web-safe',
   )
-  const scrollcodepage = '@scroll notes\n## heading\n$RED hi'
+  const txtcodepage = '@txt notes\n## heading\n$RED hi'
+  assertok(scrollsourceistxtcodepage(txtcodepage), 'txt codepage detected')
+  assertok(!scrollsourceisrawzss(txtcodepage), 'txt codepage is not raw ZSS')
+  const txthtml = zedtxthtml(txtcodepage, { tenantbase: '/' })
+  assertok(!txthtml.includes('@txt notes'), 'txt header stripped from html')
   assertok(
-    scrollsourceisscrollcodepage(scrollcodepage),
-    'scroll codepage detected',
+    !txthtml.includes('## heading'),
+    'txt heading rendered via markdown',
   )
+  assertok(txthtml.includes('heading'), 'txt heading text present')
+  assertok(!txthtml.includes('$RED'), 'txt $RED should not show literal')
   assertok(
-    !scrollsourceisrawzss(scrollcodepage),
-    'scroll codepage is not raw ZSS',
-  )
-  const scrollhtml = zedscrollhtml(scrollcodepage, { tenantbase: '/' })
-  assertok(
-    !scrollhtml.includes('@scroll notes'),
-    'scroll header stripped from html',
-  )
-  assertok(
-    !scrollhtml.includes('## heading'),
-    'scroll heading rendered via markdown',
-  )
-  assertok(scrollhtml.includes('heading'), 'scroll heading text present')
-  assertok(!scrollhtml.includes('$RED'), 'scroll $RED should not show literal')
-  assertok(
-    scrollhtml.toLowerCase().includes('color:#') &&
-      !scrollhtml.includes('$RED'),
-    'scroll $RED should render as colored span',
+    txthtml.toLowerCase().includes('color:#') && !txthtml.includes('$RED'),
+    'txt $RED should render as colored span',
   )
   assertok(clhtml.includes('OPENIT'), 'cliscroll should render OPENIT rows')
   assertok(
@@ -641,7 +631,7 @@ section { margin-bottom: 32px; }
 <section><h1>helptext</h1>${helhtml}</section>
 <section><h1>algoscroll</h1>${algohtml}</section>
 <section><h1>passage</h1>${passagehtml}</section>
-<section><h1>scroll codepage</h1>${scrollhtml}</section>
+<section><h1>txt codepage</h1>${txthtml}</section>
 </body>
 </html>`
   writeFileSync(dest, html)

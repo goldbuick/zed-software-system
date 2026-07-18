@@ -47,11 +47,11 @@ describe('contentbook', () => {
     expect(memoryreadcodepagename(cp)).toBe('solid')
   })
 
-  it('imports scroll page json from code', () => {
+  it('imports txt page json from code', () => {
     const cp = codepagefromjson({
-      code: '@scroll notes\nhello',
+      code: '@txt notes\nhello',
     })
-    expect(memoryreadcodepagetype(cp)).toBe(CODE_PAGE_TYPE.SCROLL)
+    expect(memoryreadcodepagetype(cp)).toBe(CODE_PAGE_TYPE.TXT)
     expect(memoryreadcodepagename(cp)).toBe('notes')
   })
 

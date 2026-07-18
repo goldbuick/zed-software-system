@@ -39,6 +39,10 @@ export function memoryreadsession() {
   return MEMORY.session
 }
 
+export function memorywritesession(session: string) {
+  MEMORY.session = session
+}
+
 export function memoryreadoperator() {
   return MEMORY.operator
 }

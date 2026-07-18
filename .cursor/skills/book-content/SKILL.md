@@ -50,7 +50,7 @@ ops/fixtures/content/templates/mygame/
 
 ## Page JSON format
 
-Each file is `{name}.{type}.json` where `type` is `board`, `object`, `terrain`, `charset`, `palette`, or `loader`.
+Each file is `{name}.{type}.json` where `type` is `board`, `object`, `terrain`, `charset`, `palette`, `loader`, or `txt`.
 
 **Omit `id`** — the build script assigns `sid_*` values.
 

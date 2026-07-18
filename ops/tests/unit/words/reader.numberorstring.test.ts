@@ -65,3 +65,43 @@ describe('readargs NUMBER_OR_STRING coercion', () => {
     expect(phrase).toBe('Hello')
   })
 })
+
+describe('readargs MAYBE_NAME / MAYBE_STRING absent junk', () => {
+  it('treats null and NaN as absent for MAYBE_NAME', () => {
+    READ_CONTEXT.words = ['attach', NaN]
+    const [action, arg] = readargs(READ_CONTEXT.words, 0, [
+      ARG_TYPE.MAYBE_NAME,
+      ARG_TYPE.MAYBE_NAME,
+    ])
+    expect(action).toBe('attach')
+    expect(arg).toBeUndefined()
+
+    READ_CONTEXT.words = ['attach', null as unknown as string]
+    const [action2, arg2] = readargs(READ_CONTEXT.words, 0, [
+      ARG_TYPE.MAYBE_NAME,
+      ARG_TYPE.MAYBE_NAME,
+    ])
+    expect(action2).toBe('attach')
+    expect(arg2).toBeUndefined()
+  })
+
+  it('treats null and NaN as absent for MAYBE_STRING', () => {
+    READ_CONTEXT.words = [NaN]
+    const [value] = readargs(READ_CONTEXT.words, 0, [ARG_TYPE.MAYBE_STRING])
+    expect(value).toBeUndefined()
+
+    READ_CONTEXT.words = [null as unknown as string]
+    const [value2] = readargs(READ_CONTEXT.words, 0, [ARG_TYPE.MAYBE_STRING])
+    expect(value2).toBeUndefined()
+  })
+
+  it('still rejects finite numbers for MAYBE_NAME', () => {
+    READ_CONTEXT.words = ['attach', 42]
+    expect(() =>
+      readargs(READ_CONTEXT.words, 0, [
+        ARG_TYPE.MAYBE_NAME,
+        ARG_TYPE.MAYBE_NAME,
+      ]),
+    ).toThrow(/optional string/)
+  })
+})

@@ -8,5 +8,7 @@ export function handlewanixsession(_device: DEVICE, message: MESSAGE): void {
   if (!ispresent(data) || typeof data !== 'object') {
     return
   }
-  applywanixsessionmessage(data as { event?: unknown; sessionkey?: unknown })
+  applywanixsessionmessage(
+    data as { event?: unknown; sessionkey?: unknown; kind?: unknown },
+  )
 }

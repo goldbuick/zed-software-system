@@ -16,11 +16,11 @@ import { buildapireadpeerbody, buildpeerjoinlocation } from './zns-peer-url.js'
 import {
   measuredrawnwidth,
   scrollsourceisrawzss,
-  scrollsourceisscrollcodepage,
+  scrollsourceistxtcodepage,
   textformatlinehtml,
   zederrorlinehtml,
   zedopenitznslinkrowhtml,
-  zedscrollhtml,
+  zedtxthtml,
   zedtapehtml,
   zedtaperowshtml,
   zedzsshtml,
@@ -682,7 +682,7 @@ function buildznstenantscrollhtml({
   key,
   markdown,
   zss,
-  scrollcodepage,
+  txtcodepage,
   notfound,
   tenantsuffix: suffix,
 }) {
@@ -706,8 +706,8 @@ ${framehtml}
 </article>`
   const content = notfound
     ? zederrorlinehtml('doc not found', key)
-    : scrollcodepage
-      ? zedscrollhtml(markdown, { tenantbase: '/' })
+    : txtcodepage
+      ? zedtxthtml(markdown, { tenantbase: '/' })
       : zss
         ? zedzsshtml(markdown, { tenantbase: '/' })
         : zedtapehtml(markdown, { tenantbase: '/' })
@@ -1109,7 +1109,7 @@ function tenantscrollresponse(request, env, namespace, pathkey, opts) {
     key: pathkey,
     markdown: opts.markdown,
     zss: opts.zss,
-    scrollcodepage: opts.scrollcodepage,
+    txtcodepage: opts.txtcodepage,
     notfound: opts.notfound,
     tenantsuffix: tenantsuffix(env),
   })
@@ -1229,7 +1229,7 @@ async function handletenantread(request, env, namespace) {
     if (kind === 'text') {
       return tenantscrollresponse(request, env, namespace, pathkey, {
         markdown: stored,
-        scrollcodepage: scrollsourceisscrollcodepage(stored),
+        txtcodepage: scrollsourceistxtcodepage(stored),
         zss: scrollsourceisrawzss(stored),
         notfound: false,
         status: 200,

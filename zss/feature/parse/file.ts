@@ -24,6 +24,7 @@ import { parseansi } from './ansi'
 import { parsechr } from './chr'
 import { stageimageimport } from './image'
 import { parsemidi } from './midi'
+import { parsetxt } from './parsetxt'
 import { parsepetscii } from './petscii'
 import { parsezzm } from './zzm'
 import { parsebrd, parseszt, parsezzt } from './zzt'
@@ -83,8 +84,12 @@ export function mapmimetype(mimetype: string, file: File | undefined) {
     case 'model/obj':
       return 'obj'
     case 'text/plain':
+    case 'text/x-ini':
       if (/.nfo$/i.test(file.name)) {
         return 'nfotext'
+      }
+      if (/.ini$/i.test(file.name)) {
+        return 'ini'
       }
       return 'txt'
     case 'application/json':
@@ -122,6 +127,10 @@ export function mapmimetype(mimetype: string, file: File | undefined) {
         return 'xb'
       } else if (/.diz$/i.test(file.name)) {
         return 'diz'
+      } else if (/.txt$/i.test(file.name)) {
+        return 'txt'
+      } else if (/.ini$/i.test(file.name)) {
+        return 'ini'
       } else if (/.nfo$/i.test(file.name)) {
         return 'nfotext'
       } else if (/.szt$/i.test(file.name)) {
@@ -274,18 +283,10 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
         .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
       break
     case 'txt':
+    case 'ini':
       file
         .text()
-        .then((content) =>
-          vmloader(
-            SOFTWARE,
-            player,
-            undefined,
-            'text',
-            `file:${file.name}`,
-            content,
-          ),
-        )
+        .then((content) => parsetxt(player, file.name, content))
         .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
       break
     case 'json':

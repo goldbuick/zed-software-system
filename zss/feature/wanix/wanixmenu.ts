@@ -90,32 +90,13 @@ export function buildwanixmenutape(state: WanixMenuState): string {
   parts.push(
     zsstextline('$cyan   drop a folder onto cafe to mount live (Chromium FSA)'),
   )
-  if (state.fsabinds.length === 0) {
-    parts.push(zsstextline('$cyan   (no folder mounts)'))
-  } else {
-    for (const dst of state.fsabinds) {
-      parts.push(zsstextline(`$green   ${dst}`))
-    }
+  for (const dst of state.fsabinds) {
+    parts.push(zsstextline(`$green   ${dst}`))
   }
-  parts.push(zsszedlinkline('wanix remote', 'list remote imports (WSS 9P)'))
-  parts.push(
-    zsstextline(
-      '$cyan   #wanix remote connect <wss-url> [dst] - import namespace',
-    ),
-  )
-  parts.push(
-    zsstextline('$cyan   #wanix remote disconnect [dst|id] - remove import'),
-  )
-  parts.push(
-    zsstextline(
-      '$cyan   #wanix zedsync <path> - sync peer dir $29 zedcafe (no spaces)',
-    ),
-  )
-  parts.push(
-    zsstextline(
-      '$cyan   #wanix bridge <ws-url> - export namespace (not wired yet)',
-    ),
-  )
+  // Only offer list when imports exist — empty list + usage dump is tape noise.
+  if (state.config.remotes.length > 0) {
+    parts.push(zsszedlinkline('wanix remote', 'list remote imports (WSS 9P)'))
+  }
 
   return zsstexttape(...parts)
 }

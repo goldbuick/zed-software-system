@@ -4,9 +4,11 @@
 
 import {
   readattachedsession as readattachedsessionstate,
+  readlastattachedsession,
   readonsessioncloseprune,
   readuserdetached,
   readwanixactivesession as readwanixactivesessionstate,
+  readwanixtermbufferkeys,
   registerwanixsessioncloseprune as registersessioncloseprune,
   resetwanixattachforidle as resetattachforidle,
   resetwanixattachstatefortest as resetattachstatefortest,
@@ -51,6 +53,7 @@ function maybeattachactivesession() {
   const tapevisible = readwanixtapevisible()
   useWanixClient.setState({
     attachedsessionkey: activesessionkey,
+    lastattachedsessionkey: activesessionkey,
     userdetached: false,
     ...(tapevisible ? {} : { attachpanelopen: true }),
   })
@@ -87,6 +90,7 @@ export function onwanixtermsessionopen(sessionkey: string) {
   useWanixClient.setState({
     activesessionkey: key,
     attachedsessionkey: key,
+    lastattachedsessionkey: key,
     userdetached: false,
     ...(tapevisible ? {} : { attachpanelopen: true }),
   })
@@ -111,7 +115,10 @@ export function setattachedsession(sessionkey: string | null) {
   if (readattachedsessionstate() === next) {
     if (next != null) {
       closetapeterminalforattach()
-      useWanixClient.setState({ attachpanelopen: true })
+      useWanixClient.setState({
+        attachpanelopen: true,
+        lastattachedsessionkey: next,
+      })
     }
     return
   }
@@ -119,12 +126,45 @@ export function setattachedsession(sessionkey: string | null) {
     closetapeterminalforattach()
     useWanixClient.setState({
       attachedsessionkey: next,
+      lastattachedsessionkey: next,
       userdetached: false,
       attachpanelopen: true,
     })
     return
   }
   setattachedsessionkey(next)
+}
+
+/**
+ * Re-open attach panel for the last/active/available session.
+ * Used by Ctrl+\ when the panel is closed (tape CLI or game).
+ * Returns true when a session was attached or the panel was opened.
+ */
+export function reattachwanixterm(): boolean {
+  const keys = readwanixtermbufferkeys()
+  if (keys.length === 0) {
+    return false
+  }
+  const current = readattachedsessionstate()
+  if (current != null) {
+    setattachedsession(current)
+    return true
+  }
+  const last = readlastattachedsession()
+  const active = readwanixactivesessionstate()
+  let target: string | null = null
+  if (last != null && keys.includes(last)) {
+    target = last
+  } else if (active != null && keys.includes(active)) {
+    target = active
+  } else {
+    target = keys[0] ?? null
+  }
+  if (target == null) {
+    return false
+  }
+  setattachedsession(target)
+  return true
 }
 
 export function openwanixattachpanel() {
@@ -227,6 +267,7 @@ export function revealwanixtapeifhidden(): boolean {
 export function applywanixsessionmessage(payload: {
   event?: unknown
   sessionkey?: unknown
+  kind?: unknown
 }): void {
   if (typeof payload.sessionkey !== 'string') {
     return
@@ -234,6 +275,11 @@ export function applywanixsessionmessage(payload: {
   const sessionkey = payload.sessionkey
   if (payload.event === 'open') {
     registerwanixtermsessionopen(sessionkey)
+    // VM term should take the attach panel (not soft-attach behind an open tape).
+    if (payload.kind === 'vm') {
+      setattachedsession(sessionkey)
+      return
+    }
     if (readattachedsessionstate() == null) {
       onwanixtermsessionopen(sessionkey)
     } else {
