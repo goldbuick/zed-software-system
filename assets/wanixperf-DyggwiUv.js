@@ -1,0 +1,1 @@
+function o(){return Date.now()}function r(n){return{elapsedms:Date.now()-n}}function i(n,a){const e={...a??{}},t=Object.keys(e).length>0?` ${JSON.stringify(e)}`:"";console.info(`[wanix-perf] ${n}${t}`)}export{r as a,o as b,i as w};

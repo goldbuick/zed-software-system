@@ -11,7 +11,7 @@ Static assets served at site root by Vite (`public/`). Do not add ad-hoc trees h
 | `coep/` | COOP/COEP helper scripts for threaded WASM |
 | `daisy/` | Built Daisy synth WASM + worklet (`yarn task run ops:daisy:build`) |
 | `memory/` | Built memory WASM |
-| `wanix/` | Full-Go Wanix host (`wanix.wasm`) + zed-cafe export daemon (`zedcafe.wasm`) |
+| `wanix/` | Full-Go Wanix host (`wanix.wasm`) + zed-cafe export daemon (`zedcafe.wasm`) + zedsync guest (`zedsync.wasm`) |
 | `lang/` | Lang compiler WASM (when built) |
 | `runtime/` | Planned full sim WASM (see `ops/docs/wasm-sim-port.md`) |
 
