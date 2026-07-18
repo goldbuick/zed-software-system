@@ -161,7 +161,7 @@ Script budget: `PLAYWRIGHT_SCENARIO_TIMEOUT_MS` (180s) via `withscripttimeout`.
 |--|--|
 | **Setup** | `cafe:dev`; fixtures built (`bundle-one.tgz`) |
 | **Fixture assets** | `ops/public/wanix/bundle-one.tgz` |
-| **Steps** | 1. Drop `bundle-one.tgz` (task room). 2. Warm path: `ensurewanixtaskroom` while still task (validator). 3. `#wanix stop` → soft idle (same `mountkey`, warm `<wanix-system>`). 4. Hard stop (`stopwanixroom(true)`) bumps `mountkey` and remounts. |
+| **Steps** | 1. Drop `bundle-one.tgz` (task room). 2. Warm path: `ensurewanixtaskroom` while still task (validator). 3. `#wanix stop` → soft idle (same `mountkey`, warm `<wanix-namespace>`). 4. Hard stop (`stopwanixroom(true)`) bumps `mountkey` and remounts. |
 | **Expected signals** | `[wanix-perf] applyroom-warm-reuse`; soft: `applyroom-soft-idle`; hard: `applyroom-remount` / higher `mountkey`. Tape: `wanix stop room`. |
 | **Automator** | `tasks/lib/wanix/validate-warm-reuse.ts` |
 | **Failure dump** | `/tmp/wanix-warm-reuse-report.json` |

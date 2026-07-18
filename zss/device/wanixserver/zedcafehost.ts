@@ -258,6 +258,40 @@ function appendgojstask(
   return task
 }
 
+type WanixTaskConnect = WanixTaskElement & {
+  _kernel?: unknown
+  _nsReady?: Promise<void>
+}
+
+/**
+ * WanixElement queues `_connect` on a microtask. Calling `allocate()` in the
+ * same turn hits `_kernel.root` while `_kernel` is still null.
+ * Prefer awaiting `_nsReady` (runs `_awake` → `allocate`).
+ */
+async function waitwanixtaskallocated(task: WanixTaskElement): Promise<void> {
+  const connected = task as WanixTaskConnect
+  if (connected.rid) {
+    return
+  }
+  if (connected._nsReady) {
+    await connected._nsReady
+    if (connected.rid) {
+      return
+    }
+  } else {
+    await Promise.resolve()
+  }
+  if (connected.rid) {
+    return
+  }
+  if (typeof task.allocate === 'function') {
+    await task.allocate()
+  }
+  if (!connected.rid) {
+    throw new Error('wanix-task allocate missing rid')
+  }
+}
+
 export async function readzedcafeexportlive(
   root: WanixRoot,
   taskrid: string,
@@ -741,7 +775,7 @@ export async function bootzedcafegojs(
   const task = appendgojstask(sys, cmd)
   appendzedcafewasmbind(task)
 
-  await task.allocate?.()
+  await waitwanixtaskallocated(task)
   if (launchgen !== zedcafegen) {
     return null
   }
@@ -755,12 +789,17 @@ export async function bootzedcafegojs(
     return null
   }
 
+  // Bound wait — a stuck gojs export handshake must not block applyroom / remotes.
+  const ZEDCAFE_EXPORT_MOUNT_BOOT_MS = 15_000
   const mountready = await waitzedcafeexportmountready(
     root,
     taskrid,
-    WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS,
+    ZEDCAFE_EXPORT_MOUNT_BOOT_MS,
   )
   if (!mountready) {
+    console.error(
+      '[wanix] zedcafe export mount not ready within boot budget — task left running',
+    )
     return null
   }
 
@@ -778,7 +817,7 @@ export async function ensurezedcafeboot(
   const existing = sys.querySelector(
     `wanix-task[id="${WANIX_ZEDCAFE_TASK_ID}"]`,
   )
-  // Remount replaces <wanix-system> but module state can keep a stale rid. Never
+  // Remount replaces <wanix-namespace> but module state can keep a stale rid. Never
   // treat export as ready unless this sys still has wanix-task#zedcafe.
   if (!existing) {
     zedcafetaskrid = null
@@ -786,7 +825,14 @@ export async function ensurezedcafeboot(
   } else {
     const rid = (existing as WanixTaskElement).rid ?? zedcafetaskrid
     if (rid && (zedcafecmd === cmd || !zedcafecmd)) {
-      const mountready = await waitzedcafeexportmountready(root, rid)
+      // Bound wait — same budget as cold boot. Do not park drop/applyroom for
+      // WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS when export never appears.
+      const ZEDCAFE_EXPORT_MOUNT_BOOT_MS = 15_000
+      const mountready = await waitzedcafeexportmountready(
+        root,
+        rid,
+        ZEDCAFE_EXPORT_MOUNT_BOOT_MS,
+      )
       if (mountready) {
         zedcafetaskrid = rid
         zedcafecmd = cmd

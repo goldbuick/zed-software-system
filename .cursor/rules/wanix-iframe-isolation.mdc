@@ -40,7 +40,7 @@ Separate document (iframe or navigation to `/wanix.html`) = clean `window` per r
 ## Prohibited
 
 - `<script src="…/wanix.min.js">` in [`cafe/index.html`](../../cafe/index.html) or any cafe React entry
-- `<wanix-system>` (or other Wanix custom elements) in React/TSX under `cafe/`
+- `<wanix-namespace>` (or other Wanix custom elements) in React/TSX under `cafe/`
 - Importing Wanix iframe runtime (`zss/device/wanixserver/runtime`) into the Vite bundle for the main app
 - **`<wanix-term>` elements** in [`cafe/wanix.html`](../../cafe/wanix.html) child orchestration — do not create, connect, or poll xterm via this tag
 
@@ -48,7 +48,7 @@ Separate document (iframe or navigation to `/wanix.html`) = clean `window` per r
 
 | Piece | Location |
 |-------|----------|
-| Canonical Wanix host | [`cafe/wanix.html`](../../cafe/wanix.html) — kernel, `<wanix-system>` tree, `<wanix-task>` / `<wanix-vm>` only |
+| Canonical Wanix host | [`cafe/wanix.html`](../../cafe/wanix.html) — kernel, `<wanix-namespace>` tree, `<wanix-task>` / `<wanix-vm>` only |
 | Iframe boot | [`cafe/wanix.ts`](../../cafe/wanix.ts) → `zss/device/wanixserver/runtime` + `zss/device/wanixserver` |
 | Term I/O | `#task/<id>/term/data` and `#vm/…/term/data` **streams** (`openReadable` / `openWritable`) — not `<wanix-term>` |
 | Term sizing | `_updateTerminals` shim + `termfit` RPC from parent (`WanixTermSizeSync`) |

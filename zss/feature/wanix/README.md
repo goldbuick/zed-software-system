@@ -44,7 +44,7 @@ flowchart TB
 
   subgraph iframe["Hidden iframe /wanix.html"]
     Cafe["cafe/wanix.ts → device/wanixserver/runtime"]
-    Sys["wanix-system"]
+    Sys["wanix-namespace"]
     Host["device/wanixserver/zedcafehost"]
     Cafe --> Sys
     Host --> Sys
@@ -70,7 +70,7 @@ boundary — no shared DOM.
 | Side | Entry | Owns |
 |------|--------|------|
 | **Parent** | `screens/wanix/host` mounts ghost iframe; `wanixclient/wanixbridge` message bridge | Room config, drop routing, export file tree from memory, attach state, term grid snapshots |
-| **Iframe** | `cafe/wanix.ts` → `device/wanixserver/runtime` on `/wanix.html` | `<wanix-system>`, VM/task elements, term byte pumps, zedcafe gojs boot, `#ramfs` writes |
+| **Iframe** | `cafe/wanix.ts` → `device/wanixserver/runtime` on `/wanix.html` | `<wanix-namespace>`, VM/task elements, term byte pumps, zedcafe gojs boot, `#ramfs` writes |
 
 ```text
 ┌─────────────────────────────────────────────────────────────────┐
@@ -82,7 +82,7 @@ boundary — no shared DOM.
 ┌────────────────────────────┴────────────────────────────────────┐
 │  cafe/wanix.ts → device/wanixserver/runtime (iframe)            │
 │    applyroom, spawntask, writefile, pushzedcafe…                │
-│    <wanix-system>                                               │
+│    <wanix-namespace>                                               │
 │      ├─ wanix-bind  (linux, v86, export mounts)                 │
 │      ├─ wanix-vm    (optional Linux)                            │
 │      ├─ wanix-task  zedcafe  (gojs export daemon)               │
@@ -149,7 +149,7 @@ stateDiagram-v2
   idle_hard --> vm: #wanix vm (cold remount)
 
   note right of idle
-    Soft idle: keep wanix-system,
+    Soft idle: keep wanix-namespace,
     halt tasks, clear host session
   end note
 ```
@@ -185,7 +185,7 @@ worker**, then re-exports so the tree matches sim again.
 ### Mount layout (iframe)
 
 ```text
-wanix-system
+wanix-namespace
   wanix-task[id=zedcafe, type=gojs]     ← export daemon (gojs wasm)
     #task/{rid}/export/                 ← host pushes JSON tree here
       stats.json
@@ -504,7 +504,7 @@ Warm path (`#wanix vm` first, or second drop after soft idle) skipped remount an
 
 | Technique | What it does |
 |-----------|----------------|
-| **Soft idle** | `#wanix stop` keeps `<wanix-system>`; halts tasks/zedcafe; same `mountkey` |
+| **Soft idle** | `#wanix stop` keeps `<wanix-namespace>`; halts tasks/zedcafe; same `mountkey` |
 | **Warm applyroom** | idle→task/vm reuses system; `ensurezedcafeboot` in iframe |
 | **Export event** | `wanixclient:exportready` after host push; parent continues pipeline |
 | **Post-applyroom activate** | `activatewanixzedcafeexport` only after `applyroom` result on cold remount |
@@ -597,16 +597,20 @@ Helpers: `wanixserver*` / `wanixclient*` in [`api.ts`](../../device/api.ts).
 
 ### Full-Go wanix.wasm (not npm TinyGo build)
 
-npm `wanix@0.4.0-alpha8` TinyGo build corrupts under heavy terminal I/O
+npm TinyGo `wanix.wasm` corrupts under heavy terminal I/O
 ([tractordev/wanix#171](https://github.com/tractordev/wanix/issues/171)). ZSS ships full-Go
-build at [`cafe/public/wanix/wanix.wasm`](../../../cafe/public/wanix/wanix.wasm).
-Rebuild after `submodules/wanix/web/worker/worker.go` changes (forwards
-`zedcafeexportdirty` to `__wanixOnZedcafeExportDirty`):
+build at [`cafe/public/wanix/wanix.wasm`](../../../cafe/public/wanix/wanix.wasm) and a
+matching submodule-built [`cafe/public/wanix/wanix.min.js`](../../../cafe/public/wanix/wanix.min.js)
+(loaded from `/wanix/wanix.min.js` in [`cafe/wanix.html`](../../../cafe/wanix.html)).
+Rebuild both after `submodules/wanix` changes (especially
+`web/worker/worker.go` dirty-forward):
 
 ```bash
 cd submodules/wanix
 GOOS=js GOARCH=wasm go build -o dist/wanix.full.go.wasm ./wasm
 cp dist/wanix.full.go.wasm ../../cafe/public/wanix/wanix.wasm
+make js
+cp dist/wanix.min.js ../../cafe/public/wanix/wanix.min.js
 ```
 
 ### Upstream Wanix: replace the worker.go dirty forward
@@ -622,7 +626,7 @@ That is a ZSS fork of Wanix, not an API. Prefer one of these upstream affordance
 (best → acceptable):
 
 1. **Generic gojs → host message bridge**  
-   Host registers a callback (element attribute, `wanix-system` method, or
+   Host registers a callback (element attribute, `wanix-namespace` method, or
    `globalThis` hook with a stable name) for non-`export` worker messages.
    Payload + `taskId` are delivered as-is. ZSS would register once and map
    `zedcafeexportdirty` without touching `worker.go`.
@@ -738,7 +742,7 @@ apply cannot leave `mode: idle` and skip the push (`pending-export mark`).
 | **Live export updates** | End-of-tick `compare` of path-keyed export doc; partial upsert of changed files while poll active |
 | **Auto-attach new sessions** | `wanixclient:session open` → reveal tape → attach when user had nothing focused |
 | **Task idle auto-halt** | Dropped wasm tasks halt after 5 minutes with no term input/output (VM + zedcafe daemon exempt) |
-| **Soft idle → faster second drop** | Warm `<wanix-system>` + unchanged `mountkey` skips wanix.wasm reload; daemon reuse + sync-if-stale |
+| **Soft idle → faster second drop** | Warm `<wanix-namespace>` + unchanged `mountkey` skips wanix.wasm reload; daemon reuse + sync-if-stale |
 | **Export wait without poll slack** | `content-ready` event wakes parent waiters immediately after iframe push completes |
 
 ### Success signals you can eyeball

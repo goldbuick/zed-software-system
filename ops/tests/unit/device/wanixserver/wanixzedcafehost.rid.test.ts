@@ -23,7 +23,7 @@ import type { WanixSystemElement } from 'zss/feature/wanix/wanixelements.d.ts'
 type MockTask = HTMLElement & { rid?: string | null }
 
 function mocksystem(): WanixSystemElement {
-  const sys = document.createElement('wanix-system') as WanixSystemElement
+  const sys = document.createElement('wanix-namespace') as WanixSystemElement
   document.body.appendChild(sys)
   return sys
 }

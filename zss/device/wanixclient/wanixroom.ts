@@ -199,7 +199,7 @@ export function ensurewanixtaskroom(
     const current = readwanixroomconfig()
     // Warm re-apply (same mountkey, no hardreset): iframe bootzedcafeforactiveroom
     // recreates wanix-task#zedcafe when missing. Hard remount races WSS import
-    // settle vs AwaitErr → wanix-system ready timeout.
+    // settle vs AwaitErr → wanix-namespace ready timeout.
     if (device && player) {
       apilog(
         device,
@@ -498,9 +498,21 @@ export function applywanixdropdone(
     taskid?: unknown
     cmd?: unknown
     spawns?: unknown
+    mode?: unknown
+    mountkey?: unknown
   },
 ): void {
   const spawns = Array.isArray(result.spawns) ? result.spawns : []
+  const nextmode =
+    typeof result.mode === 'string' && result.mode.length > 0
+      ? result.mode
+      : readwanixroomconfig().mode === 'idle'
+        ? 'task'
+        : readwanixroomconfig().mode
+  const nextmountkey =
+    typeof result.mountkey === 'number'
+      ? result.mountkey
+      : readwanixroomconfig().mountkey
   for (const spawn of spawns) {
     if (!spawn || typeof spawn !== 'object') {
       continue
@@ -511,16 +523,24 @@ export function applywanixdropdone(
     }
     setwanixroomconfig({
       ...readwanixroomconfig(),
-      mode:
-        readwanixroomconfig().mode === 'idle'
-          ? 'task'
-          : readwanixroomconfig().mode,
+      mode: nextmode === 'idle' ? 'task' : nextmode,
+      mountkey: nextmountkey,
       tasks: [
         ...readwanixroomconfig().tasks.filter(
           (task) => task.id !== entry.taskid,
         ),
         { id: entry.taskid, cmd: entry.cmd, running: true },
       ],
+    })
+  }
+  if (
+    spawns.length === 0 &&
+    (typeof result.mountkey === 'number' || typeof result.mode === 'string')
+  ) {
+    setwanixroomconfig({
+      ...readwanixroomconfig(),
+      mode: nextmode === 'idle' ? 'task' : nextmode,
+      mountkey: nextmountkey,
     })
   }
   if (typeof result.taskid === 'string') {

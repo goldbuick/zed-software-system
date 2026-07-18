@@ -122,8 +122,8 @@ export async function dropwanixbundle(
   const bytes = readFileSync(fixturepath)
   await page.evaluate(
     async ({ projectroot, filebytes, label }) => {
-      const { handlewanixdrop } = await import(
-        `/@fs${projectroot}/zss/device/wanixclient/wanixroom.ts`
+      const { wanixserverdrop } = await import(
+        `/@fs${projectroot}/zss/device/api.ts`
       )
       const { SOFTWARE } = await import(
         `/@fs${projectroot}/zss/device/session.ts`
@@ -131,14 +131,12 @@ export async function dropwanixbundle(
       const { registerreadplayer } = await import(
         `/@fs${projectroot}/zss/device/registerplayer.ts`
       )
-      await handlewanixdrop(
-        {
-          label,
-          kind: 'bundle',
-          bytes: new Uint8Array(filebytes),
-        },
+      wanixserverdrop(
         SOFTWARE,
         registerreadplayer(),
+        label,
+        'bundle',
+        new Uint8Array(filebytes),
       )
     },
     {

@@ -1,6 +1,6 @@
 module zed.cafe/wanix-fixtures
 
-go 1.25.0
+go 1.26
 
 replace tractor.dev/wanix => ../../../submodules/wanix
 
@@ -18,6 +18,6 @@ require (
 
 require (
 	github.com/u-root/uio v0.0.0-20240224005618-d2acac8f3701 // indirect
-	golang.org/x/sys v0.43.0 // indirect
+	golang.org/x/sys v0.45.0 // indirect
 	tractor.dev/toolkit-go v0.0.0-20250103001615-9a6753936c19 // indirect
 )

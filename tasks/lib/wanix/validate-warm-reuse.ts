@@ -1,4 +1,4 @@
-import { PLAYWRIGHT_SCENARIO_TIMEOUT_MS } from 'tasks/lib/parity/parity-timeouts'
+import { PLAYWRIGHT_SCENARIO_TIMEOUT_MS, withscripttimeout } from 'tasks/lib/parity/parity-timeouts'
 import type { HeadedPlaywrightScript } from 'tasks/lib/playwright/runheadedscript'
 import {
   attachconsolecapture,
@@ -81,11 +81,27 @@ const validatewarmreuse: HeadedPlaywrightScript = async ({
   await waitforlogsubstring(
     page,
     consolelines,
-    'wanix run',
+    'drop-spawn',
     VALIDATE_TIMEOUT_MS,
     'first-run',
   )
   record('first-run')
+  // ensuretaskroomfordrop emits applyroom; wait until parent config matches.
+  await withscripttimeout('parent-task-room', VALIDATE_TIMEOUT_MS, async () => {
+    for (;;) {
+      const mode = await page.evaluate(async (projectroot) => {
+        const { readwanixroomconfig } = await import(
+          `/@fs${projectroot}/zss/device/wanixclient/wanixroom.ts`
+        )
+        return readwanixroomconfig().mode
+      }, root)
+      if (mode === 'task') {
+        return
+      }
+      await page.waitForTimeout(50)
+    }
+  })
+  record('parent-task-room')
   const mountkey1 = await readroommountkey(page, root)
   record('mountkey-after-first', { mountkey1 })
 

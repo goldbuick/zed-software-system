@@ -53,8 +53,8 @@ async function dropwanixwasm(
   const bytes = readFileSync(fixturepath)
   await page.evaluate(
     async ({ projectroot, filebytes, label }) => {
-      const { handlewanixdrop } = await import(
-        `/@fs${projectroot}/zss/device/wanixclient/wanixroom.ts`
+      const { wanixserverdrop } = await import(
+        `/@fs${projectroot}/zss/device/api.ts`
       )
       const { SOFTWARE } = await import(
         `/@fs${projectroot}/zss/device/session.ts`
@@ -62,14 +62,12 @@ async function dropwanixwasm(
       const { registerreadplayer } = await import(
         `/@fs${projectroot}/zss/device/registerplayer.ts`
       )
-      await handlewanixdrop(
-        {
-          label,
-          kind: 'wasm',
-          bytes: new Uint8Array(filebytes),
-        },
+      wanixserverdrop(
         SOFTWARE,
         registerreadplayer(),
+        label,
+        'wasm',
+        new Uint8Array(filebytes),
       )
     },
     { projectroot: root, filebytes: Array.from(bytes), label: filename },

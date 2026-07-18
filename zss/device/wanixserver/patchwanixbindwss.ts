@@ -1,13 +1,10 @@
 /**
- * CDN wanix@0.4.0-alpha8 wanix-bind type=import only loads an iframe
- * (MessagePort exchange). It never opens ws:// / wss:// — that path exists in
- * submodule elements/bind.js but is not in the published dist yet.
- * Patch connectedCallback so WSS remotes actually dial the 9P server.
- *
- * Go wasm AwaitErr parks forever if Call("then") hits an already-resolved
- * Promise. Assign a plain thenable as bind.import (so Call always hits our
- * then), forward to a gated native Promise, and only allowfulfill after
- * setupNamespace has had time to Call("then").
+ * Prefer submodule-built `/wanix/wanix.min.js` (lockstep with full-Go wanix.wasm).
+ * CDN wanix@0.4.0-rc2 includes native ws:// / wss:// in wanix-bind type=import;
+ * keep this patch anyway: Go wasm AwaitErr parks forever if Call("then") hits an
+ * already-resolved Promise. Assign a plain thenable as bind.import (so Call
+ * always hits our then), forward to a gated native Promise, and only
+ * allowfulfill after setupNamespace has had time to Call("then").
  */
 
 import { wanixperfmark } from 'zss/feature/wanix/wanixperf'

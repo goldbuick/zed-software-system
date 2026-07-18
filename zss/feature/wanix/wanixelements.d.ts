@@ -12,7 +12,7 @@ type WanixElementProps<
   A extends Record<string, unknown>,
 > = DetailedHTMLProps<HTMLAttributes<T> & A, T>
 
-/** Filesystem handle on `wanix-system` after `ready`. */
+/** Filesystem handle on `wanix-namespace` after `ready`. */
 export type WanixRoot = {
   readDir: (path: string) => Promise<string[]>
   readFile: (path: string) => Promise<Uint8Array>
@@ -197,7 +197,7 @@ declare module 'react' {
   namespace JSX {
     // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- JSX intrinsic merge requires interface
     interface IntrinsicElements {
-      'wanix-system': WanixSystemIntrinsicProps
+      'wanix-namespace': WanixSystemIntrinsicProps
       'wanix-bind': WanixBindIntrinsicProps
       'wanix-task': WanixTaskIntrinsicProps
       'wanix-vm': WanixVmIntrinsicProps
@@ -215,7 +215,7 @@ declare global {
 
   // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- tag map augmentation requires interface
   interface HTMLElementTagNameMap {
-    'wanix-system': WanixSystemElement
+    'wanix-namespace': WanixSystemElement
     'wanix-bind': HTMLElement
     'wanix-task': WanixTaskElement
     'wanix-vm': WanixVmElement

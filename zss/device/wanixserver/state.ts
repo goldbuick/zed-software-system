@@ -13,7 +13,7 @@ import type { WANIX_TERM_GRID } from 'zss/feature/wanix/wanixtermgridstate'
 export type WanixSessionKind = 'vm' | 'task'
 export type WanixSessionEvent = 'open' | 'active' | 'close'
 
-export type WanixSystemWithTerminals = WanixSystemElement & {
+export type WanixSystemWithTerminals = {
   _updateTerminals: (shim: {
     path: string
     _term: { cols: number; rows: number }
@@ -74,6 +74,48 @@ export function setwanixsystem(next: WanixSystemElement | null): void {
 
 export function readwanixsystem(): WanixSystemElement | null {
   return system
+}
+
+type WanixKernelReady = {
+  isReady?: boolean
+  instanceID?: number
+}
+
+/** Kernel readiness — element.isReady is unset on current Wanix elements. */
+function readwanixkernel(
+  sys: WanixSystemElement | null | undefined,
+): WanixKernelReady | null {
+  if (!sys) {
+    return null
+  }
+  const kernel = (sys as WanixSystemElement & { _kernel?: WanixKernelReady })
+    ._kernel
+  return kernel ?? null
+}
+
+/** True when the namespace element or its kernel reports ready. */
+export function iswanixelementready(
+  sys: WanixSystemElement | null | undefined,
+): boolean {
+  if (!sys) {
+    return false
+  }
+  if (sys.isReady) {
+    return true
+  }
+  return !!readwanixkernel(sys)?.isReady
+}
+
+export function readwanixelementinstanceid(
+  sys: WanixSystemElement | null | undefined,
+): number | null {
+  if (!sys) {
+    return null
+  }
+  if (sys.instanceID != null) {
+    return sys.instanceID
+  }
+  return readwanixkernel(sys)?.instanceID ?? null
 }
 
 export function readroomconfig(): WanixRoomConfig {

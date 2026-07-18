@@ -83,13 +83,13 @@ async function readdirremote(
     throw new Error('wanix iframe frame not found')
   }
   return frame.evaluate(async (mountdst) => {
-    const sys = document.querySelector('wanix-system') as
+    const sys = document.querySelector('wanix-namespace') as
       | (HTMLElement & {
           root?: { readDir: (path: string) => Promise<unknown> }
         })
       | null
     if (!sys?.root?.readDir) {
-      throw new Error('wanix-system.root.readDir missing')
+      throw new Error('wanix-namespace.root.readDir missing')
     }
     const entries = await sys.root.readDir(mountdst)
     if (entries == null) {

@@ -1,5 +1,6 @@
 import { readfsabinds, readvmstatus } from 'zss/device/wanixserver/runtime'
 import {
+  iswanixelementready,
   readactivesessionkey,
   readliveconnectorder,
   readroomconfig,
@@ -15,7 +16,7 @@ export function readwanixmenustate(): WanixMenuState {
   const vmrunning = !!vmstatus.running
   return {
     config,
-    ready: !!system?.isReady,
+    ready: iswanixelementready(system),
     vmrunning,
     vm: vmrunning ? vmstatus : null,
     stalled: false,
