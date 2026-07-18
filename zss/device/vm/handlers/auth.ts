@@ -1,3 +1,4 @@
+import { debugingest } from 'zss/debugingest'
 import type { DEVICE } from 'zss/device'
 import {
   apilog,
@@ -18,7 +19,6 @@ import {
   lastinputtime,
   tracking,
 } from 'zss/device/vm/state'
-import { debugingest } from 'zss/debugingest'
 import { sanitizeloginflags } from 'zss/feature/loginflags'
 import { ispresent, isstring } from 'zss/mapping/types'
 import {

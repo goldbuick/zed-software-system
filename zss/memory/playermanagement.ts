@@ -1,6 +1,6 @@
+import { debugingest } from 'zss/debugingest'
 import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { debugingest } from 'zss/debugingest'
 import { getclimode } from 'zss/feature/detect'
 import { unique } from 'zss/mapping/array'
 import { ispid } from 'zss/mapping/guid'
@@ -83,10 +83,7 @@ export function memorypurgeplayerboardcopies(
     if (!ispresent(board.objects[player])) {
       continue
     }
-    memorydeleteboardobjectnamedlookup(
-      board,
-      memoryreadobject(board, player),
-    )
+    memorydeleteboardobjectnamedlookup(board, memoryreadobject(board, player))
     memorydeleteboardobject(board, player)
   }
 }

@@ -2,8 +2,8 @@ import { execFileSync } from 'node:child_process'
 import {
   existsSync,
   mkdirSync,
-  readdirSync,
   readFileSync,
+  readdirSync,
   writeFileSync,
 } from 'node:fs'
 import { dirname, join } from 'node:path'

@@ -155,8 +155,7 @@ export function ensurewanixattachablesession(sessionkey: string): boolean {
   const room = readwanixroomconfig()
   const intasks = room.tasks.some((task) => task.id === key)
   const isvm =
-    !!room.vm?.active &&
-    (room.vm.id === key || iswanixvmsessionkey(key))
+    !!room.vm?.active && (room.vm.id === key || iswanixvmsessionkey(key))
   const isactive = readwanixactivesessionstate() === key
   if (!intasks && !isvm && !isactive) {
     return false

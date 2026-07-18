@@ -1,3 +1,4 @@
+import { debugingest } from 'zss/debugingest'
 import type { DEVICE } from 'zss/device'
 import { workstatus } from 'zss/device/api'
 import {
@@ -5,7 +6,6 @@ import {
   resetmemorysyncaccess,
 } from 'zss/device/boardrunner/state'
 import type { MESSAGE } from 'zss/device/types'
-import { debugingest } from 'zss/debugingest'
 import { isstring } from 'zss/mapping/types'
 import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {

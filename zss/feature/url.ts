@@ -369,7 +369,9 @@ export type ZNS_API_RESULT = {
 }
 
 async function znsparseapiresult(response: Response): Promise<ZNS_API_RESULT> {
-  const result = (await response.json().catch(() => null)) as ZNS_API_RESULT | null
+  const result = (await response
+    .json()
+    .catch(() => null)) as ZNS_API_RESULT | null
   if (result && typeof result === 'object') {
     return result
   }

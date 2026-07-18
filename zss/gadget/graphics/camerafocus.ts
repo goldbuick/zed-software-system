@@ -18,7 +18,7 @@ export type FocusUserData = {
   lfocusx?: number
   lfocusy?: number
   focussmooth?: number
-  currentboard?: unknown
+  currentboard?: string
   [key: string]: unknown
 }
 
@@ -31,7 +31,7 @@ const ANIMRATE = FOCUS_ANIM_RATE
 export function initfocusifneeded(
   userData: FocusUserData,
   control: LayerControl,
-  currentboard: unknown,
+  currentboard: string,
 ): boolean {
   if (!ispresent(userData.focusx)) {
     userData.focusx = control.focusx
@@ -52,7 +52,7 @@ export function initfocusifneeded(
 export function stepfocuswithboardtransition(
   userdata: FocusUserData,
   control: LayerControl,
-  currentboard: unknown,
+  currentboard: string,
   tfocusx: number,
   tfocusy: number,
   delta: number,
@@ -83,8 +83,8 @@ export function stepfocuswithboardtransition(
       'camerafocus.ts:stepfocuswithboardtransition',
       'camera board transition',
       {
-        prevboard: String(prevboard ?? ''),
-        currentboard: String(currentboard ?? ''),
+        prevboard: prevboard ?? '',
+        currentboard,
         dx,
         dy,
         shouldsnap,

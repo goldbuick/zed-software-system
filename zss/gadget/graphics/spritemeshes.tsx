@@ -15,11 +15,12 @@ import {
   createBillboardsMaterial,
   createSpritesMaterial,
 } from 'zss/gadget/display/sprites'
-import { spriteshouldsnapposition } from './spritesboardsnap'
 import { useMedia } from 'zss/gadget/media'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_SIZE } from 'zss/memory/types'
 import { recordspriteeffectrun } from 'zss/perf/renderupdatestats'
+
+import { spriteshouldsnapposition } from './spritesboardsnap'
 
 type SpritesProps = {
   sprites: SPRITE[]

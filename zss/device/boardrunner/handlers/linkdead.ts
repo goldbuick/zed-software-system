@@ -1,3 +1,4 @@
+import { debugingest } from 'zss/debugingest'
 import type { DEVICE } from 'zss/device'
 import {
   apilog,
@@ -7,7 +8,6 @@ import {
 } from 'zss/device/api'
 import { pushworkerupdates } from 'zss/device/boardrunner/sync'
 import type { MESSAGE } from 'zss/device/types'
-import { debugingest } from 'zss/debugingest'
 import { ispresent, isstring } from 'zss/mapping/types'
 import {
   memorydebugcountplayerboards,

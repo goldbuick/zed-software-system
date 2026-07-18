@@ -1,8 +1,8 @@
+import { debugingest } from 'zss/debugingest'
 import type { DEVICE } from 'zss/device'
 import { gadgetclientpaint } from 'zss/device/api'
 import { gadgetclientpatch } from 'zss/device/patchapi'
 import type { MESSAGE } from 'zss/device/types'
-import { debugingest } from 'zss/debugingest'
 import type { JSON_PIPE_HANDLE } from 'zss/feature/jsonpipe/observe'
 import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
 import {
@@ -265,16 +265,11 @@ function gadgetsynctickbody(vm: DEVICE) {
     const boardchanged = lastflags !== undefined && lastflags !== boardid
     const layersappeared = lasthas === false && haslayerstore === true
     const hostobj = ispid(player) ? memoryreadobject(board, player) : undefined
-    const { spritex, spritey } = readplayerspritexy(
-      gadget.layers ?? [],
-      player,
-    )
+    const { spritex, spritey } = readplayerspritexy(gadget.layers ?? [], player)
     const hostx = hostobj?.x ?? -1
     const hosty = hostobj?.y ?? -1
     const stale =
-      spritex !== -1 &&
-      hostx !== -1 &&
-      (spritex !== hostx || spritey !== hosty)
+      spritex !== -1 && hostx !== -1 && (spritex !== hostx || spritey !== hosty)
     const spritexykey = `${spritex},${spritey}`
     const lastspritexy = gadgetbclastspritexy.get(player)
     const spriterefreshed =

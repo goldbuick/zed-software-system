@@ -1,3 +1,4 @@
+import { debugingest } from 'zss/debugingest'
 import type { DEVICE } from 'zss/device'
 import { boardrunneridle, boardrunnerthud } from 'zss/device/api'
 import type { MESSAGE } from 'zss/device/types'
@@ -7,7 +8,6 @@ import {
   boardrunnerelect,
 } from 'zss/device/vm/boardrunnermanagement'
 import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
-import { debugingest } from 'zss/debugingest'
 import type { LAYER } from 'zss/gadget/data/types'
 import { LAYER_TYPE } from 'zss/gadget/data/types'
 import { normalizelayerzvariant } from 'zss/gadget/graphics/layerz'
