@@ -21,6 +21,7 @@ import {
   deletetermlinebuf,
   deletetermsession,
   forgettermsessionconnect,
+  iswanixelementready,
   lastfitcols,
   lastfitrows,
   lastmountkey,
@@ -30,8 +31,10 @@ import {
   readsessionsessionkind,
   readtermlinebuf,
   readtermsession,
+  readwanixelementinstanceid,
   recordtermfit,
   recordtermsessionconnect,
+  requirewanixsystem,
   roomconfig,
   setactivesessionkey,
   setlastmountkey,
@@ -42,8 +45,6 @@ import {
   system,
   takependingdropbinds,
   termsessions,
-  iswanixelementready,
-  readwanixelementinstanceid,
 } from 'zss/device/wanixserver/state'
 import { shouldautohalttasksession } from 'zss/device/wanixserver/taskidlepolicy'
 import {
@@ -175,7 +176,8 @@ async function synczedcafeexportlocal(
   guestfiles?: WanixZedCafeGuestFile[] | null,
   removepaths: string[] = [],
 ): Promise<{ ok: boolean; taskrid: string | null; pending?: boolean }> {
-  if (!iswanixelementready(system) || !roomconfig.zedcafe?.cmd) {
+  const sys = system
+  if (!sys || !iswanixelementready(sys) || !roomconfig.zedcafe?.cmd) {
     return { ok: false, taskrid: null }
   }
   // null = need parent pull; [] = parent answered with empty tree (do not re-request)
@@ -186,7 +188,7 @@ async function synczedcafeexportlocal(
   }
   const files = guestfiles ?? []
   const cmd = roomconfig.zedcafe.cmd
-  const taskrid = await ensurezedcafeboot(system, readroot(), cmd)
+  const taskrid = await ensurezedcafeboot(sys, readroot(), cmd)
   if (!taskrid) {
     return { ok: false, taskrid: null }
   }
@@ -195,7 +197,7 @@ async function synczedcafeexportlocal(
     await pushzedcafeexportlive(readroot(), taskrid, files, removepaths)
   }
   if (bookcount > 0) {
-    await wireallguestroots(system, taskrid)
+    await wireallguestroots(sys, taskrid)
     setzedcafereadylocal(true)
   }
   wanixperfmark('synczedcafeexport-end', {
@@ -416,10 +418,8 @@ function flushvmpendingdropbinds(vm: HTMLElement) {
 }
 
 function binddroptask(sessionkey: string, spec: WanixBindDropPayload) {
-  if (!iswanixelementready(system)) {
-    throw new Error('wanix room not ready')
-  }
-  const task = system.querySelector(`wanix-task[id="${sessionkey}"]`)
+  const sys = requirewanixsystem()
+  const task = sys.querySelector(`wanix-task[id="${sessionkey}"]`)
   if (!task) {
     throw new Error(`wanix task missing: ${sessionkey}`)
   }
@@ -433,10 +433,8 @@ function binddroptask(sessionkey: string, spec: WanixBindDropPayload) {
 }
 
 function binddropvm(sessionkey: string, spec: WanixBindDropPayload) {
-  if (!iswanixelementready(system)) {
-    throw new Error('wanix room not ready')
-  }
-  const vm = system.querySelector('wanix-vm')
+  const sys = requirewanixsystem()
+  const vm = sys.querySelector('wanix-vm')
   if (!vm) {
     throw new Error(`wanix vm missing: ${sessionkey}`)
   }
@@ -503,11 +501,9 @@ export async function bindfsadirectory(
   if (!mountdst) {
     throw new Error(`wanix fsa dst invalid: ${dst}`)
   }
-  if (!iswanixelementready(system)) {
-    throw new Error('wanix room not ready')
-  }
-  const root = system.root
-  removefsabindmarkers(system, mountdst)
+  const sys = requirewanixsystem()
+  const root = sys.root
+  removefsabindmarkers(sys, mountdst)
   await tryunbindroot(root, '#web/fsa/new', mountdst)
   ;(window as unknown as Record<string, unknown>)[WANIX_FSA_HANDLE_GLOBAL] =
     handle
@@ -526,7 +522,7 @@ export async function bindfsadirectory(
     'data-zss-fsa-bind',
   )
   bind.setAttribute('data-zss-fsa-dst', mountdst)
-  system.appendChild(bind)
+  sys.appendChild(bind)
   return { ok: true, dst: mountdst }
 }
 
@@ -547,10 +543,7 @@ export function readfsabinds(): string[] {
 }
 
 function readroot() {
-  if (!iswanixelementready(system)) {
-    throw new Error('wanix-namespace not ready')
-  }
-  return system.root
+  return requirewanixsystem().root
 }
 
 function postcells(sessionkey: string, session: TermSession) {
@@ -607,13 +600,11 @@ async function readtermloop(sessionkey: string, session: TermSession) {
 }
 
 function readupdateterminals() {
-  if (!iswanixelementready(system)) {
-    throw new Error('wanix-namespace not ready')
-  }
+  const sys = requirewanixsystem()
   // Wasm attaches _updateTerminals on the kernel (window.__wanix[id]), not the
   // host element — same split as _setupNamespace / isReady.
   const kernel = (
-    system as WanixSystemElement & {
+    sys as WanixSystemElement & {
       _kernel?: WanixSystemWithTerminals | null
     }
   )._kernel
@@ -791,10 +782,11 @@ function readvmtermpath(vmel: WanixVmElement) {
 
 async function connectvmtermsession() {
   const vm = roomconfig.vm
-  if (!vm?.active || !iswanixelementready(system)) {
+  const sys = system
+  if (!vm?.active || !sys || !iswanixelementready(sys)) {
     return
   }
-  const vmel = system.querySelector('wanix-vm')
+  const vmel = sys.querySelector('wanix-vm')
   if (!vmel) {
     return
   }
@@ -1140,11 +1132,12 @@ async function warmstartvm(): Promise<{
   mem: string
 } | null> {
   const vm = roomconfig.vm
-  if (!iswanixelementready(system) || !vm?.active) {
+  const sys = system
+  if (!sys || !iswanixelementready(sys) || !vm?.active) {
     return null
   }
-  if (!system.querySelector('wanix-vm')) {
-    appendvmroombinds(system)
+  if (!sys.querySelector('wanix-vm')) {
+    appendvmroombinds(sys)
     const vmel = document.createElement('wanix-vm')
     setwanixattrs(vmel, {
       id: vm.id,
@@ -1152,11 +1145,11 @@ async function warmstartvm(): Promise<{
       mem: vm.mem,
       term: true,
     })
-    system.appendChild(vmel)
+    sys.appendChild(vmel)
   }
   await waitvmlinuxmount()
   await connectvmtermsession()
-  const vmel = system.querySelector('wanix-vm')
+  const vmel = sys.querySelector('wanix-vm')
   if (vmel && typeof vmel.start === 'function') {
     await vmel.start()
   }
@@ -1219,15 +1212,16 @@ async function bootzedcafeforactiveroom(
 }
 
 async function warmactivateroom(): Promise<Record<string, unknown>> {
-  if (!iswanixelementready(system)) {
+  const sys = system
+  if (!sys || !iswanixelementready(sys)) {
     throw new Error('wanix warm apply: system not ready')
   }
   wanixperfmark('applyroom-warm-reuse', { mode: roomconfig.mode })
   if (roomconfig.mode === 'vm' && roomconfig.vm?.active) {
     const vmstatus = await warmstartvm()
-    const taskrid = await bootzedcafeforactiveroom(system)
+    const taskrid = await bootzedcafeforactiveroom(sys)
     if (taskrid) {
-      await wireallguestroots(system, taskrid)
+      await wireallguestroots(sys, taskrid)
     }
     postready()
     return {
@@ -1241,7 +1235,7 @@ async function warmactivateroom(): Promise<Record<string, unknown>> {
     }
   }
   if (roomconfig.mode === 'task') {
-    await bootzedcafeforactiveroom(system)
+    await bootzedcafeforactiveroom(sys)
   }
   postready()
   return {
@@ -1265,15 +1259,16 @@ export async function applyroom(config: WanixRoomConfig) {
   })
 
   if (roomconfig.mode === 'idle') {
-    if (iswanixelementready(system) && !roomconfig.hardreset) {
-      softidlewanixsystem(system)
+    const sys = system
+    if (sys && iswanixelementready(sys) && !roomconfig.hardreset) {
+      softidlewanixsystem(sys)
       setlastmountkey(roomconfig.mountkey)
       postidle()
       wanixperfmark('applyroom-return', { mode: 'idle', soft: true })
       return { ok: true, mode: 'idle', mountkey: lastmountkey, soft: true }
     }
-    if (system) {
-      haltzedcafetask(system)
+    if (sys) {
+      haltzedcafetask(sys)
     }
     disconnectalltermsessions()
     clearvmpendingdropbinds()
@@ -1434,10 +1429,8 @@ export async function spawntask(
   driverhint?: WanixTaskDriver | null,
   stageurl?: string | null,
 ) {
-  if (!iswanixelementready(system)) {
-    throw new Error('wanix room not ready')
-  }
-  if (system.querySelector(`wanix-task[id="${taskid}"]`)) {
+  const sys = requirewanixsystem()
+  if (sys.querySelector(`wanix-task[id="${taskid}"]`)) {
     return { ok: true, already: true, taskid, cmd }
   }
 
@@ -1526,7 +1519,7 @@ export async function spawntask(
     appendguestexportbind(task, taskrid)
     wanixperfmark('spawntask-gojs-gate-end', { taskid, taskrid })
   }
-  system.appendChild(task)
+  sys.appendChild(task)
 
   // `_connect` is queued on append; wait for `_nsReady`/`allocate` before start.
   const connected = task as HTMLElement & {
@@ -1575,15 +1568,13 @@ export function halttask(taskid: string) {
 }
 
 export function stopvm() {
-  if (!iswanixelementready(system)) {
-    throw new Error('wanix room not ready')
-  }
+  const sys = requirewanixsystem()
   const vmid = roomconfig.vm?.id ?? DEFAULT_VM_ID
   disconnecttermsession(vmid, { notifyclose: true })
-  system.querySelector('wanix-vm')?.remove()
-  system.querySelector('[data-zss-linux-bind]')?.remove()
-  system.querySelector('[data-zss-v86-bind]')?.remove()
-  for (const bind of system.querySelectorAll('wanix-bind')) {
+  sys.querySelector('wanix-vm')?.remove()
+  sys.querySelector('[data-zss-linux-bind]')?.remove()
+  sys.querySelector('[data-zss-v86-bind]')?.remove()
+  for (const bind of sys.querySelectorAll('wanix-bind')) {
     if (bind.getAttribute('dst') === 'vm') {
       bind.remove()
     }
@@ -1824,10 +1815,11 @@ export async function iszedcafeexportlive(taskrid?: string) {
 }
 
 export async function iszedcafeguestbound() {
-  if (!iswanixelementready(system)) {
+  const sys = system
+  if (!sys || !iswanixelementready(sys)) {
     return false
   }
-  return readzedcafeguestbound(readroot(), system)
+  return readzedcafeguestbound(readroot(), sys)
 }
 
 function normalizewanixpath(label: string): string {

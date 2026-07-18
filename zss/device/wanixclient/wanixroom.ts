@@ -39,6 +39,7 @@ import type {
   WanixBindDropPayload,
   WanixRemoteSpec,
   WanixRoomConfig,
+  WanixRoomMode,
 } from 'zss/feature/wanix/wanixroomtypes'
 import {
   DEFAULT_WANIX_REMOTE_DST,
@@ -503,12 +504,16 @@ export function applywanixdropdone(
   },
 ): void {
   const spawns = Array.isArray(result.spawns) ? result.spawns : []
-  const nextmode =
+  const rawmode =
     typeof result.mode === 'string' && result.mode.length > 0
       ? result.mode
-      : readwanixroomconfig().mode === 'idle'
-        ? 'task'
-        : readwanixroomconfig().mode
+      : undefined
+  const fallbackmode: WanixRoomMode =
+    readwanixroomconfig().mode === 'idle' ? 'task' : readwanixroomconfig().mode
+  const nextmode: WanixRoomMode =
+    rawmode === 'idle' || rawmode === 'task' || rawmode === 'vm'
+      ? rawmode
+      : fallbackmode
   const nextmountkey =
     typeof result.mountkey === 'number'
       ? result.mountkey

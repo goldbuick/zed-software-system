@@ -106,6 +106,14 @@ export function iswanixelementready(
   return !!readwanixkernel(sys)?.isReady
 }
 
+/** Ready system element, or throw. Prefer local const over the mutable `system` export. */
+export function requirewanixsystem(): WanixSystemElement {
+  if (!system || !iswanixelementready(system)) {
+    throw new Error('wanix room not ready')
+  }
+  return system
+}
+
 export function readwanixelementinstanceid(
   sys: WanixSystemElement | null | undefined,
 ): number | null {

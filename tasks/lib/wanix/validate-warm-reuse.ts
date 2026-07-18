@@ -1,4 +1,7 @@
-import { PLAYWRIGHT_SCENARIO_TIMEOUT_MS, withscripttimeout } from 'tasks/lib/parity/parity-timeouts'
+import {
+  PLAYWRIGHT_SCENARIO_TIMEOUT_MS,
+  withscripttimeout,
+} from 'tasks/lib/parity/parity-timeouts'
 import type { HeadedPlaywrightScript } from 'tasks/lib/playwright/runheadedscript'
 import {
   attachconsolecapture,
