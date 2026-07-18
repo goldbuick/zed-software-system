@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { modemwriteinitstring } from 'zss/device/modem'
 import { useWaitForValueString } from 'zss/device/modemhooks'
 import { withclipboard } from 'zss/feature/keyboard'
 import { useHyperlinkSharedSync } from 'zss/gadget/data/usehyperlinksharedsync'
@@ -105,6 +106,15 @@ export function LinkText({ surface }: LinkWidgetProps) {
     }
   }
 
+  // Entering edit requires a Y.Text handle. If sync is late or the key was
+  // missing, create it here (same realm as the UI) so OK is never a no-op.
+  useLayoutEffect(() => {
+    if (!focus || ispresent(value)) {
+      return
+    }
+    modemwriteinitstring(address, '')
+  }, [focus, value, address])
+
   useEffect(() => {
     if (!focus) {
       editfocusopened.current = false
@@ -168,12 +178,12 @@ export function LinkText({ surface }: LinkWidgetProps) {
       {surface.active && (
         <UserInput
           OK_BUTTON={() => {
-            // Y.Text handle may exist with empty content; only skip when missing
-            if (ispresent(value)) {
-              setfocus(true)
-              setcursor(value.length)
-              setselection(undefined)
+            if (!ispresent(value)) {
+              modemwriteinitstring(address, '')
             }
+            setfocus(true)
+            setcursor(ispresent(value) ? value.length : state.length)
+            setselection(undefined)
           }}
         />
       )}

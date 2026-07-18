@@ -288,6 +288,21 @@ describe('api', () => {
       )
       expect(modemwriteinitstring).toHaveBeenCalledWith('inspect:pid2:p3', '')
     })
+
+    it('normalizes mixed-case inspect chip to lowercase modem address', () => {
+      applyhyperlinksharedmodemsync(
+        'inspect:sid_AbC9XyZ',
+        'text',
+        'p3',
+        () => '',
+        noop,
+        cache,
+      )
+      expect(modemwriteinitstring).toHaveBeenCalledWith(
+        'inspect:sid_abc9xyz:p3',
+        '',
+      )
+    })
   })
 
   describe('parseterminalmodemprefix', () => {

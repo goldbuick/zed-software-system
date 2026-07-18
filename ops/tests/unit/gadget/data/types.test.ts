@@ -244,5 +244,11 @@ describe('types', () => {
       expect(paneladdress('chip1', 'target1')).toBe('chip1:target1')
       expect(paneladdress('abc', 'xyz')).toBe('abc:xyz')
     })
+
+    it('lowercases chip so UI matches worker NAME(chip) modem keys', () => {
+      expect(paneladdress('inspect:sid_AbC9XyZ', 'p3')).toBe(
+        'inspect:sid_abc9xyz:p3',
+      )
+    })
   })
 })
