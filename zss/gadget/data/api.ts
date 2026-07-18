@@ -161,9 +161,9 @@ export function applyhyperlinksharedmodemsync(
 
   const address = paneladdress(chipname, target)
   if (HYPERLINK_WITH_SHARED_TEXT.has(typ)) {
-    if (isstring(current)) {
-      modemwriteinitstring(address, current)
-    }
+    // Always init a Y.Text — non-string get() (e.g. default 0) must not skip
+    // init or LinkText never becomes editable.
+    modemwriteinitstring(address, maptostring(current))
     panelshared[chipname][target] = modemobservevaluestring(
       address,
       (value) => {

@@ -640,9 +640,11 @@ export function memoryinspectelement(
         break
       default:
         if (isarray(stats[target])) {
+          // @p3 text  →  stats.p3 = ['text', '']  →  !p3 text;p3
           const [type, label, ...args] = stats[target]
-          if (isstring(label)) {
-            const linklabel = label || target
+          if (isstring(type)) {
+            const linklabel =
+              isstring(label) && label.length > 0 ? label : target
             const words: WORD[] = [target, type, ...args]
             lines.push(
               zsszedlinkline(memoryinspectjoinlinkwords(words), linklabel),

@@ -8,6 +8,8 @@ import {
 } from 'zss/device/vm/boardrunnermanagement'
 import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
 import { debugingest } from 'zss/debugingest'
+import type { LAYER } from 'zss/gadget/data/types'
+import { LAYER_TYPE } from 'zss/gadget/data/types'
 import { normalizelayerzvariant } from 'zss/gadget/graphics/layerz'
 import { ispresent } from 'zss/mapping/types'
 import { memoryreadobject } from 'zss/memory/boardaccess'
@@ -17,10 +19,31 @@ import {
   memorymoveplayertoboard,
   memoryreadplayerboard,
 } from 'zss/memory/playermanagement'
-import { memoryreadgraphics } from 'zss/memory/rendering'
+import {
+  memoryreadgadgetlayers,
+  memoryreadgraphics,
+} from 'zss/memory/rendering'
 import { memoryreadbookbysoftware } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
 import type { PT } from 'zss/words/types'
+
+function readplayerspritexyfromlayers(
+  layers: LAYER[],
+  player: string,
+): { x: number; y: number } {
+  for (let i = 0; i < layers.length; ++i) {
+    const layer = layers[i]
+    if (layer.type !== LAYER_TYPE.SPRITES) {
+      continue
+    }
+    for (let s = 0; s < layer.sprites.length; ++s) {
+      if (layer.sprites[s].pid === player) {
+        return { x: layer.sprites[s].x, y: layer.sprites[s].y }
+      }
+    }
+  }
+  return { x: -1, y: -1 }
+}
 
 export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
   const [targetplayer, targetboard, targetpt] = message.data as [
@@ -65,14 +88,29 @@ export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
   const destboard = memoryreadplayerboard(targetplayer)
   const hostobj = memoryreadobject(destboard, targetplayer)
   let destlayerstorepresent = false
+  let hostrebuiltlayers = false
+  let stalestorespritex = -1
+  let stalestorespritey = -1
   if (moved && ispresent(destboard) && ispresent(mainbook)) {
     const { graphics } = memoryreadgraphics(targetplayer, destboard)
-    const mode = normalizelayerzvariant(graphics.graphics)
+    const mode = normalizelayerzvariant(graphics)
     const layerstore = memoryreadbookgadgetlayersforboard(
       mainbook,
       destboard.id,
     )
-    destlayerstorepresent = ispresent(layerstore[mode])
+    const stale = layerstore[mode]
+    destlayerstorepresent = ispresent(stale)
+    // Capture stale player sprite before rebuild (runner handoff gap evidence).
+    if (ispresent(stale)) {
+      const xy = readplayerspritexyfromlayers(stale.layers, targetplayer)
+      stalestorespritex = xy.x
+      stalestorespritey = xy.y
+    }
+    // Host one-shot rebuild: close runner desync gap so gadgetsynctick does not
+    // serve leave-cell sprites while the worker waits on forcedesync.
+    layerstore[mode] = memoryreadgadgetlayers(mode, destboard)
+    hostrebuiltlayers = true
+    destlayerstorepresent = true
   }
   debugingest(
     'playermovetoboard.ts:handleplayermovetoboard',
@@ -88,6 +126,13 @@ export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
       hostx: hostobj?.x ?? -1,
       hosty: hostobj?.y ?? -1,
       destlayerstorepresent,
+      hostrebuiltlayers,
+      stalestorespritex,
+      stalestorespritey,
+      stale:
+        stalestorespritex !== -1 &&
+        ispresent(hostobj) &&
+        (stalestorespritex !== hostobj.x || stalestorespritey !== hostobj.y),
     },
     'BC1',
   )

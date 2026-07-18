@@ -168,7 +168,8 @@ export function LinkText({ surface }: LinkWidgetProps) {
       {surface.active && (
         <UserInput
           OK_BUTTON={() => {
-            if (value) {
+            // Y.Text handle may exist with empty content; only skip when missing
+            if (ispresent(value)) {
               setfocus(true)
               setcursor(value.length)
               setselection(undefined)

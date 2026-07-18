@@ -81,6 +81,8 @@ const gadgetvoidfallbackcache = new Map<string, GADGET_VOID_FALLBACK>()
 /** Transition-only BC1 traces: last flags.board and layerstore presence per player. */
 const gadgetbclastflagsboard = new Map<string, string>()
 const gadgetbclasthaslayers = new Map<string, boolean>()
+/** Last SPRITES layer pid coords (detect stale->fresh layerstore refresh). */
+const gadgetbclastspritexy = new Map<string, string>()
 
 function readcontrolfocus(layers: LAYER[]): {
   focusx: number
@@ -93,6 +95,25 @@ function readcontrolfocus(layers: LAYER[]): {
     }
   }
   return { focusx: -1, focusy: -1 }
+}
+
+function readplayerspritexy(
+  layers: LAYER[],
+  player: string,
+): { spritex: number; spritey: number } {
+  for (let i = 0; i < layers.length; ++i) {
+    const layer = layers[i]
+    if (layer.type !== LAYER_TYPE.SPRITES) {
+      continue
+    }
+    const sprites = layer.sprites
+    for (let s = 0; s < sprites.length; ++s) {
+      if (sprites[s].pid === player) {
+        return { spritex: sprites[s].x, spritey: sprites[s].y }
+      }
+    }
+  }
+  return { spritex: -1, spritey: -1 }
 }
 
 function applyblankgadget(gadget: GADGET_STATE) {
@@ -243,11 +264,32 @@ function gadgetsynctickbody(vm: DEVICE) {
     const lasthas = gadgetbclasthaslayers.get(player)
     const boardchanged = lastflags !== undefined && lastflags !== boardid
     const layersappeared = lasthas === false && haslayerstore === true
+    const hostobj = ispid(player) ? memoryreadobject(board, player) : undefined
+    const { spritex, spritey } = readplayerspritexy(
+      gadget.layers ?? [],
+      player,
+    )
+    const hostx = hostobj?.x ?? -1
+    const hosty = hostobj?.y ?? -1
+    const stale =
+      spritex !== -1 &&
+      hostx !== -1 &&
+      (spritex !== hostx || spritey !== hosty)
+    const spritexykey = `${spritex},${spritey}`
+    const lastspritexy = gadgetbclastspritexy.get(player)
+    const spriterefreshed =
+      lastspritexy !== undefined &&
+      lastspritexy !== spritexykey &&
+      !boardchanged
     const shouldtrace =
-      boardchanged || usedfallback || layersappeared || lastflags === undefined
+      boardchanged ||
+      usedfallback ||
+      layersappeared ||
+      spriterefreshed ||
+      stale ||
+      lastflags === undefined
 
     if (shouldtrace && ispid(player)) {
-      const hostobj = memoryreadobject(board, player)
       const focus = readcontrolfocus(gadget.layers ?? [])
       debugingest(
         'gadgetsynctick.ts:gadgetsynctickbody',
@@ -260,16 +302,23 @@ function gadgetsynctickbody(vm: DEVICE) {
           gadgetboard: gadget.board,
           focusx: focus.focusx,
           focusy: focus.focusy,
-          hostx: hostobj?.x ?? -1,
-          hosty: hostobj?.y ?? -1,
+          hostx,
+          hosty,
+          spritex,
+          spritey,
+          stale,
           boardchanged,
           layersappeared,
+          spriterefreshed,
         },
         'BC1',
       )
     }
     gadgetbclastflagsboard.set(player, boardid)
     gadgetbclasthaslayers.set(player, haslayerstore)
+    if (ispid(player)) {
+      gadgetbclastspritexy.set(player, spritexykey)
+    }
 
     gadget.synthstate = memoryreadsynth(boardid)
 

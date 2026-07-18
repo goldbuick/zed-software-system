@@ -351,7 +351,7 @@ Browser Wanix cannot export its namespace to an arbitrary host folder. Options:
 1. **WSS 9P** — `p9server:dev` + `#wanix remote connect` + `#wanix zedsync remote`
 2. **FSA** — drop folder + `#wanix zedsync <name>` (Chromium)
 
-Empty peer seed root for automators: [`scenarios/zedsync-peer/`](scenarios/zedsync-peer/). Pre-populated sample: [`p9server/serve-root/`](p9server/serve-root/).
+Empty peer seed root for automators: [`scenarios/zedsync-peer/`](scenarios/zedsync-peer/). Pre-populated sample (gitignored local default for `p9server:dev`): `p9server/serve-root/`.
 
 ```bash
 yarn task run ops:fixtures:wanix:p9server:dev -- ops/fixtures/wanix/scenarios/zedsync-peer

@@ -1,5 +1,9 @@
 import { CHIP } from 'zss/chip'
-import { modemwriteinitnumber, modemwritevaluenumber } from 'zss/device/modem'
+import {
+  modemwriteinitnumber,
+  modemwriteinitstring,
+  modemwritevaluenumber,
+} from 'zss/device/modem'
 import {
   applyhyperlinksharedmodemsync,
   gadgetaddcenterpadding,
@@ -259,6 +263,30 @@ describe('api', () => {
       )
       expect(modemwriteinitnumber).toHaveBeenCalledWith('admin:player:crt', 1)
       expect(modemwritevaluenumber).not.toHaveBeenCalled()
+    })
+
+    it('inits text modem even when get returns a non-string', () => {
+      applyhyperlinksharedmodemsync(
+        'inspect:pid',
+        'text',
+        'p3',
+        () => 0,
+        noop,
+        cache,
+      )
+      expect(modemwriteinitstring).toHaveBeenCalledWith('inspect:pid:p3', '0')
+    })
+
+    it('inits text modem with empty string default', () => {
+      applyhyperlinksharedmodemsync(
+        'inspect:pid2',
+        'text',
+        'p3',
+        () => undefined,
+        noop,
+        cache,
+      )
+      expect(modemwriteinitstring).toHaveBeenCalledWith('inspect:pid2:p3', '')
     })
   })
 
