@@ -25,7 +25,9 @@ export function parsetxt(player: string, filename: string, content: string) {
 
   const stats = memoryreadcodepagestatsfromtext(content)
   const alreadytxt =
-    stats.type === CODE_PAGE_TYPE.TXT && ispresent(stats.name) && stats.name !== ''
+    stats.type === CODE_PAGE_TYPE.TXT &&
+    ispresent(stats.name) &&
+    stats.name !== ''
   const withcode = alreadytxt
     ? content
     : `@txt ${txtbasename(filename)}\n${content}`

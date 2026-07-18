@@ -7,8 +7,8 @@ import {
 import { registerterminalopen } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
-import { reattachwanixterm } from 'zss/device/wanixclient/wanixdisplay'
 import { useWanixClient } from 'zss/device/wanixclient/wanixclientstore'
+import { reattachwanixterm } from 'zss/device/wanixclient/wanixdisplay'
 import {
   TAPE_DISPLAY,
   TERMINAL_MODE,
@@ -20,8 +20,8 @@ import { useScreenSize } from 'zss/gadget/userscreen'
 import { PerfMonitorTiles } from 'zss/perf/perfmonitortiles'
 import { PanelSlide } from 'zss/screens/scroll/panelslide'
 import {
-  readwanixattachslideactive,
   WanixAttachPanel,
+  readwanixattachslideactive,
 } from 'zss/screens/wanix/attachpanel'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -133,6 +133,8 @@ export function TapeComponent() {
     if (panelactive) {
       setshouldclose(true)
     }
+    // livegeom is a new object each render; track primitive fields instead.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- livegeom fields listed
   }, [
     wantopen,
     livegeom.top,

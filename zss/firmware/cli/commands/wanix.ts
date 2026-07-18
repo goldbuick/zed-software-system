@@ -6,12 +6,12 @@ import {
   wanixserverstoproom,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { setuserdetached } from 'zss/device/wanixclient/state'
 import {
   detachwanixterm,
   readwanixactivesession,
   setattachedsession,
 } from 'zss/device/wanixclient/wanixdisplay'
-import { setuserdetached } from 'zss/device/wanixclient/state'
 import {
   connectwanixremote,
   disconnectwanixremote,

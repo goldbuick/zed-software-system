@@ -1,6 +1,6 @@
 import { createdevice, parsetarget } from 'zss/device'
-import type { MESSAGE } from 'zss/device/types'
 import { createrecentmessageids } from 'zss/device/recentmessageids'
+import type { MESSAGE } from 'zss/device/types'
 import { hub } from 'zss/hub'
 
 import { ismessage } from './types'

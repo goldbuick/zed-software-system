@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { useEffect, useState } from 'react'
 import { useWanixClient } from 'zss/device/wanixclient/wanixclientstore'
 import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/zustandstores'
@@ -57,8 +58,7 @@ export function WanixAttachPanel() {
   const terminalmode = useTape((state) => state.terminalmode)
   const editoropen = useTape((state) => state.editor.open)
 
-  const wantopen =
-    attachpanelopen && attachedsessionkey != null && !editoropen
+  const wantopen = attachpanelopen && attachedsessionkey != null && !editoropen
 
   const [panelactive, setpanelactive] = useState(false)
   const [shouldclose, setshouldclose] = useState(false)
@@ -83,6 +83,8 @@ export function WanixAttachPanel() {
     if (panelactive) {
       setshouldclose(true)
     }
+    // livegeom is a new object each render; track primitive fields instead.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- livegeom fields listed
   }, [
     wantopen,
     attachedsessionkey,
@@ -154,11 +156,7 @@ export function WanixAttachPanel() {
             bottom={geom.top + geom.height - 1}
             alpha={0.333}
           />
-          {shouldclose ? (
-            tiles
-          ) : (
-            <UserFocus blockhotkeys>{tiles}</UserFocus>
-          )}
+          {shouldclose ? tiles : <UserFocus blockhotkeys>{tiles}</UserFocus>}
         </PanelSlide>
       </group>
     </>

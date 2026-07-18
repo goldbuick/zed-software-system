@@ -1,6 +1,6 @@
+import { createrecentmessageids } from 'zss/device/recentmessageids'
 import type { MESSAGE } from 'zss/device/types'
 import { ismessage } from 'zss/device/types'
-import { createrecentmessageids } from 'zss/device/recentmessageids'
 
 import { DEVICE, createmessage, parsetarget } from './device'
 import { runtickbatched } from './gadget/runtickbatched'

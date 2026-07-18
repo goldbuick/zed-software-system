@@ -1,5 +1,5 @@
 import { useFrame, useThree } from '@react-three/fiber'
-import { useLayoutEffect, useRef, type ReactNode } from 'react'
+import { type ReactNode, useLayoutEffect, useRef } from 'react'
 import { Group } from 'three'
 import { ispresent } from 'zss/mapping/types'
 import {
@@ -99,9 +99,7 @@ export function PanelSlide({
     }
     const target = shouldclose ? edgeoffref.current : 0
     const velocity = shouldclose ? SLIDE_CLOSE_VELOCITY : SLIDE_OPEN_VELOCITY
-    if (
-      animpositiontotarget(groupref.current, axis, target, delta, velocity)
-    ) {
+    if (animpositiontotarget(groupref.current, axis, target, delta, velocity)) {
       if (shouldclose) {
         finishclose()
       }

@@ -521,10 +521,7 @@ async function runznsscrollpreview(ctx: TaskContext): Promise<number> {
   assertok(!scrollsourceisrawzss(txtcodepage), 'txt codepage is not raw ZSS')
   const txthtml = zedtxthtml(txtcodepage, { tenantbase: '/' })
   assertok(!txthtml.includes('@txt notes'), 'txt header stripped from html')
-  assertok(
-    !txthtml.includes('## heading'),
-    'txt heading rendered via markdown',
-  )
+  assertok(!txthtml.includes('## heading'), 'txt heading rendered via markdown')
   assertok(txthtml.includes('heading'), 'txt heading text present')
   assertok(!txthtml.includes('$RED'), 'txt $RED should not show literal')
   assertok(
