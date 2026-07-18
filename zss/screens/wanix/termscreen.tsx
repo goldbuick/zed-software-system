@@ -151,10 +151,21 @@ function ispasteshortcut(event: KeyboardEvent) {
   return false
 }
 
-export function WanixTermScreen() {
+type WanixTermScreenProps = {
+  /** False while the attach panel is sliding out. */
+  inputenabled?: boolean
+  /** Draw this session while store attach key is already cleared (slide-out). */
+  displaysessionkey?: string | null
+}
+
+export function WanixTermScreen({
+  inputenabled = true,
+  displaysessionkey = null,
+}: WanixTermScreenProps) {
   const context = useWriteText()
   const edge = textformatreadedges(context)
-  const sessionkey = useWanixClient((state) => state.attachedsessionkey)
+  const attachedsessionkey = useWanixClient((state) => state.attachedsessionkey)
+  const sessionkey = displaysessionkey ?? attachedsessionkey
   useWanixClient((state) => state.termnotifyversion)
   const lastframe = useRef<WanixTermTileBuffer | null>(null)
   const [scrolloffset, setscrolloffset] = useState(0)
@@ -309,11 +320,13 @@ export function WanixTermScreen() {
             line={`$ondkpurple${waithint}`}
           />
         )}
-        <UserInput
-          keydown={(event) => {
-            handleattachchromekeys(event)
-          }}
-        />
+        {inputenabled && (
+          <UserInput
+            keydown={(event) => {
+              handleattachchromekeys(event)
+            }}
+          />
+        )}
       </>
     )
   }
@@ -518,53 +531,57 @@ export function WanixTermScreen() {
           line={`$ondkpurple${hintline}`}
         />
       )}
-      <Scrollable
-        blocking
-        x={edge.left}
-        y={edge.top}
-        width={edge.width}
-        height={Math.max(0, edge.height - 1)}
-        onScroll={(deltay) => {
-          scrollby(-deltay)
-        }}
-      />
-      <UserInput
-        keydown={(event) => {
-          const key = NAME(event.key)
+      {inputenabled && (
+        <Scrollable
+          blocking
+          x={edge.left}
+          y={edge.top}
+          width={edge.width}
+          height={Math.max(0, edge.height - 1)}
+          onScroll={(deltay) => {
+            scrollby(-deltay)
+          }}
+        />
+      )}
+      {inputenabled && (
+        <UserInput
+          keydown={(event) => {
+            const key = NAME(event.key)
 
-          if (handleattachchromekeys(event)) {
-            return
-          }
+            if (handleattachchromekeys(event)) {
+              return
+            }
 
-          if (!atliveline) {
-            handlescrolledinput(event, key)
-            return
-          }
+            if (!atliveline) {
+              handlescrolledinput(event, key)
+              return
+            }
 
-          if (key === 'pageup') {
-            event.preventDefault()
-            scrollby(event.shiftKey ? 10 : 1)
-            return
-          }
-          if (key === 'pagedown') {
-            event.preventDefault()
-            scrollby(event.shiftKey ? -10 : -1)
-            return
-          }
-          if (key === 'home') {
-            event.preventDefault()
-            scrollto('top')
-            return
-          }
-          if (key === 'end' || (key === 'g' && event.ctrlKey)) {
-            event.preventDefault()
-            scrollto('live')
-            return
-          }
+            if (key === 'pageup') {
+              event.preventDefault()
+              scrollby(event.shiftKey ? 10 : 1)
+              return
+            }
+            if (key === 'pagedown') {
+              event.preventDefault()
+              scrollby(event.shiftKey ? -10 : -1)
+              return
+            }
+            if (key === 'home') {
+              event.preventDefault()
+              scrollto('top')
+              return
+            }
+            if (key === 'end' || (key === 'g' && event.ctrlKey)) {
+              event.preventDefault()
+              scrollto('live')
+              return
+            }
 
-          handleliveinput(event, key)
-        }}
-      />
+            handleliveinput(event, key)
+          }}
+        />
+      )}
     </>
   )
 }

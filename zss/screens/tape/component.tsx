@@ -9,7 +9,10 @@ import { ShadeBoxDither } from 'zss/gadget/graphics/dither'
 import { UserFocus, UserHotkey } from 'zss/gadget/userinput'
 import { useScreenSize } from 'zss/gadget/userscreen'
 import { PerfMonitorTiles } from 'zss/perf/perfmonitortiles'
-import { WanixAttachPanel } from 'zss/screens/wanix/attachpanel'
+import {
+  readwanixattachslideactive,
+  WanixAttachPanel,
+} from 'zss/screens/wanix/attachpanel'
 import { useShallow } from 'zustand/react/shallow'
 
 import { TapeLayout } from './layout'
@@ -21,8 +24,11 @@ function WanixReattachHotkey() {
       if (!event.ctrlKey || event.key !== '\\') {
         return
       }
-      // Attach panel owns Ctrl+\ while open; do not fight detach/prefix.
-      if (useWanixClient.getState().attachpanelopen) {
+      // Attach panel owns Ctrl+\ while open or sliding out.
+      if (
+        useWanixClient.getState().attachpanelopen ||
+        readwanixattachslideactive()
+      ) {
         return
       }
       event.preventDefault()
