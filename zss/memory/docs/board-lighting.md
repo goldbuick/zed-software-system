@@ -11,7 +11,7 @@ Shading rays use **cell center to cell center** in aspect-corrected tile space (
 
 ## Tests
 
-- [`__tests__/lightinggeometry.test.ts`](../__tests__/lightinggeometry.test.ts) — geometry merge + `lightingmixmaxrange`.
-- [`__tests__/boardlighting.test.ts`](../__tests__/boardlighting.test.ts) — `memoryboardlightingapplyobject` / `memoryboardlightingmarkplayer` with Jest mocks for the heavy memory graph (see file header).
+- [`__tests__/lightinggeometry.test.ts`](../../../ops/tests/unit/memory/lightinggeometry.test.ts) — geometry merge + `lightingmixmaxrange`.
+- [`__tests__/boardlighting.test.ts`](../../../ops/tests/unit/memory/boardlighting.test.ts) — `memoryboardlightingapplyobject` / `memoryboardlightingmarkplayer` with Jest mocks for the heavy memory graph (see file header).
 
 Dark-board **rendering** is still easiest to validate visually in the gadget.

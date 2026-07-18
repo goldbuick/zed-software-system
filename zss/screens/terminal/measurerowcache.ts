@@ -1,3 +1,4 @@
+import { readlinkeditingkey } from 'zss/screens/linkui/linkediting'
 import { measurerow } from 'zss/screens/tape/measure'
 
 const ROW_HEIGHT_CACHE_MAX = 512
@@ -10,7 +11,8 @@ export function measurerowcached(
   maxwidth: number,
   rowh: number,
 ): number {
-  const key = `${maxwidth}\0${rowh}\0${item}`
+  const editingkey = readlinkeditingkey()
+  const key = `${maxwidth}\0${rowh}\0${editingkey}\0${item}`
   const hit = rowheightcache.get(key)
   if (hit !== undefined) {
     return hit

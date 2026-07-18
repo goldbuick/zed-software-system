@@ -134,10 +134,14 @@ export function Tiles({
     [width, height],
   )
 
+  // key forces R3F to rebuild buffer attributes when cell dims change;
+  // swapping args alone can leave a stale GPU quad after resize.
+  const geokey = `${width}x${height}`
+
   return (
     <>
       <mesh raycast={skipraycast ? noraycastmesh : undefined}>
-        <bufferGeometry>
+        <bufferGeometry key={geokey}>
           <bufferAttribute attach="attributes-position" args={[position, 3]} />
           <bufferAttribute attach="attributes-uv" args={[uv, 2]} />
         </bufferGeometry>

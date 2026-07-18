@@ -2,7 +2,7 @@
 
 Web-based software synthesizer with a **front-end** (protocol, state, device routing) and **DaisySP WASM backend**.
 
-Legacy backends are preserved under [`archive/tone/`](archive/tone/README.md) and [`archive/maxi/`](archive/maxi/README.md) for reference only.
+Legacy backends are preserved under [`archive/tone/`](../../../ops/archive/synth/tone/README.md) and [`archive/maxi/`](../../../ops/archive/synth/maxi/README.md) for reference only.
 
 ## Documentation
 

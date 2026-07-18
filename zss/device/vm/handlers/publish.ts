@@ -1,9 +1,8 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
 import { apierror, registerpublishmem } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
+import type { MESSAGE } from 'zss/device/types'
 import { compressedbookstate } from 'zss/device/vm/helpers'
-import { storageshorturl } from 'zss/feature/storage'
 import { isarray } from 'zss/mapping/types'
 import { memoryreadoperator } from 'zss/memory/session'
 
@@ -36,11 +35,11 @@ export function handlepublish(vm: DEVICE, message: MESSAGE): void {
       }
       case 'zns-bytes': {
         const [, email, token, key] = message.data
-        const content = await storageshorturl(message.player)
+        const content = await compressedbookstate()
         registerpublishmem(
           vm,
           message.player,
-          'zns',
+          'zns-bytes',
           email,
           token,
           key,

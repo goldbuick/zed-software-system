@@ -10,7 +10,7 @@ const LANG_DEV = zssjsonbool('ZSS_DEBUG_LANG_DEV')
 const LANG_TYPES = zssjsonbool('ZSS_DEBUG_LANG_TYPES')
 const SHOW_CODE = zssjsonbool('ZSS_DEBUG_SHOW_CODE')
 const TRACE_CODE = `${process.env.ZSS_DEBUG_TRACE_CODE ?? ''}`
-const LOG_DEBUG = zssjsonbool('ZSS_DEBUG_LOG')
+const DEBUG_LOG = zssjsonbool('ZSS_DEBUG_LOG')
 const FORCE_CRT_OFF = zssjsonbool('ZSS_FORCE_CRT_OFF')
 const FORCE_LOW_REZ = zssjsonbool('ZSS_FORCE_LOW_REZ')
 const FORCE_TOUCH_UI = zssjsonbool('ZSS_FORCE_TOUCH_UI')
@@ -56,6 +56,8 @@ const PERF_TILE_SUBIMAGE = zssjsonboolwithdefault(
 export const RUNTIME = {
   // adjust time spent on code
   YIELD_AT_COUNT: 512,
+  // consecutive max-iteration ticks before chip is banned
+  YIELD_STRIKE_LIMIT: 3,
   // render
   DRAW_CHAR_SCALE: 2,
   DRAW_CHAR_WIDTH() {
@@ -71,7 +73,7 @@ export {
   LANG_TYPES,
   SHOW_CODE,
   TRACE_CODE,
-  LOG_DEBUG,
+  DEBUG_LOG,
   FORCE_CRT_OFF,
   FORCE_LOW_REZ,
   FORCE_TOUCH_UI,

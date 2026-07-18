@@ -1,6 +1,6 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
 import { boardrunnerpaint } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/types'
 import { isstring } from 'zss/mapping/types'
 import { memoryboundaryget } from 'zss/memory/boundaries'
 import { memoryreadroot } from 'zss/memory/session'

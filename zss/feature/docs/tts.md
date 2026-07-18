@@ -18,7 +18,6 @@
 - `@henrygd/queue` — newQueue
 - `zss/device` — createdevice
 - `zss/device/api` — ttsinfo, ttsrequest, synthaudiobuffer
-- `zss/device/messagetypes` — isttsvalidatereply
 - `zss/device/session` — SOFTWARE
 - `zss/feature/tts/engine` — normalizettsengine, TTS_ENGINE
 - `zss/mapping/guid` — createsid

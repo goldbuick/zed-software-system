@@ -1,11 +1,15 @@
-import { vmloader } from 'zss/device/api'
-import { registerreadplayer } from 'zss/device/register'
+import { apierror, vmloader } from 'zss/device/api'
+import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import { enableaudio } from 'zss/device/synth'
+import {
+  applycafedroppartition,
+  capturecafedropitems,
+  resolvecafedropitems,
+} from 'zss/device/wanixclient/wanixfsadropitems'
 import { clearwasmcoepserviceworkers } from 'zss/feature/synth/backend/wasm/coopcoep'
 import { useDeviceData } from 'zss/gadget/device'
 import { Engine } from 'zss/gadget/engine'
-import { ispresent } from 'zss/mapping/types'
 
 if (typeof window !== 'undefined') {
   if (import.meta.env.DEV) {
@@ -65,30 +69,30 @@ if (typeof window !== 'undefined') {
       return
     }
 
-    const dropped: File[] = []
-    if (dt.items?.length) {
-      for (const item of [...dt.items]) {
-        if (item.kind === 'file') {
-          const file = item.getAsFile()
-          if (ispresent(file)) {
-            dropped.push(file)
-          }
-        }
+    // Chrome: getAsFileSystemHandle must be invoked in this tick — no await before.
+    const pending = capturecafedropitems(dt)
+    void (async () => {
+      try {
+        const partition = await resolvecafedropitems(pending)
+        await applycafedroppartition(partition, (file) => {
+          vmloader(
+            SOFTWARE,
+            registerreadplayer(),
+            undefined,
+            'file',
+            file.name,
+            file,
+          )
+        })
+      } catch (err) {
+        apierror(
+          SOFTWARE,
+          registerreadplayer(),
+          'wanix',
+          err instanceof Error ? err.message : String(err),
+        )
       }
-    }
-    if (!dropped.length && dt.files?.length) {
-      dropped.push(...dt.files)
-    }
-    for (const file of dropped) {
-      vmloader(
-        SOFTWARE,
-        registerreadplayer(),
-        undefined,
-        'file',
-        file.name,
-        file,
-      )
-    }
+    })()
   })
 }
 

@@ -1,4 +1,5 @@
-import { type DEVICELIKE, apitoast, vmpage, workstatus } from 'zss/device/api'
+import { apitoast, vmpage, workstatus } from 'zss/device/api'
+import type { DEVICELIKE } from 'zss/device/types'
 import { readbookmarksfromstorage } from 'zss/feature/bookmarks'
 import { waitfor } from 'zss/mapping/tick'
 

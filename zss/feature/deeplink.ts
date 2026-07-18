@@ -1,4 +1,4 @@
-import type { DEVICELIKE } from 'zss/device/api'
+import type { DEVICELIKE } from 'zss/device/types'
 
 export type DEEPLINK_SURFACE = 'boot' | 'menu' | 'cli'
 

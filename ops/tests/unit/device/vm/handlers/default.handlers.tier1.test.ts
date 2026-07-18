@@ -22,7 +22,7 @@ jest.mock('zss/config', () => ({
   LANG_TYPES: false,
   SHOW_CODE: false,
   TRACE_CODE: '',
-  LOG_DEBUG: false,
+  DEBUG_LOG: false,
   FORCE_CRT_OFF: false,
   FORCE_LOW_REZ: false,
   FORCE_TOUCH_UI: false,
@@ -173,21 +173,25 @@ describe('handledefault refscroll', () => {
     jest.mocked(memoryreadcodepagename).mockReset()
   })
 
-  it.each([
-    ['refscroll:charscroll', `!char charedit;char`, 'chars', 'refscroll'],
-    ['refscroll:colorscroll', `!color coloredit;color`, 'colors', 'refscroll'],
-    ['refscroll:bgscroll', `!bg bgedit;bg`, 'bgs', 'refscroll'],
-  ] as const)('%s applies zed scroll', (target, body, title, chip) => {
-    handledefault(vm, {
-      session: '',
-      player: 'p1',
-      id: 'id',
-      sender: '',
-      target,
-      data: undefined,
-    })
-    expect(scrollwritelines).toHaveBeenCalledWith('p1', title, body, chip)
-  })
+  it.each(['charscroll', 'colorscroll', 'bgscroll'] as const)(
+    'refscroll:%s no longer opens a dedicated editor scroll',
+    (name) => {
+      handledefault(vm, {
+        session: '',
+        player: 'p1',
+        id: 'id',
+        sender: '',
+        target: `refscroll:${name}`,
+        data: undefined,
+      })
+      expect(scrollwritelines).not.toHaveBeenCalledWith(
+        'p1',
+        expect.stringMatching(/^(chars|colors|bgs)$/),
+        expect.anything(),
+        'refscroll',
+      )
+    },
+  )
 
   it('refscroll:adminscroll opens admin menu', () => {
     handledefault(vm, {
@@ -262,7 +266,7 @@ describe('handledefault refscroll', () => {
   it('refscroll:notescalesscroll uses parsemarkdownforscroll when fetch returns content', async () => {
     jest
       .mocked(fetchrefscrolltext)
-      .mockResolvedValue('$ltgrey intro\n\n[Major](<notescales_major>)\n')
+      .mockResolvedValue('$ltgrey intro\n\n[Major](<notescales-major>)\n')
     handledefault(vm, {
       session: '',
       player: 'p1',
@@ -281,12 +285,12 @@ describe('handledefault refscroll', () => {
     )
     expect(scrollwritemarkdownlines).toHaveBeenCalledWith(
       'p1',
-      expect.stringContaining('notescales_major'),
+      expect.stringContaining('notescales-major'),
       'notescalesscroll',
     )
   })
 
-  it('refscroll:notescales_major uses parsemarkdownforscroll when fetch returns content', async () => {
+  it('refscroll:notescales-major uses parsemarkdownforscroll when fetch returns content', async () => {
     jest
       .mocked(fetchrefscrolltext)
       .mockResolvedValue(
@@ -297,7 +301,7 @@ describe('handledefault refscroll', () => {
       player: 'p1',
       id: 'id',
       sender: '',
-      target: 'refscroll:notescales_major',
+      target: 'refscroll:notescales-major',
       data: undefined,
     })
     await Promise.resolve()
@@ -305,7 +309,7 @@ describe('handledefault refscroll', () => {
     expect(scrollwritemarkdownlines).toHaveBeenCalledWith(
       'p1',
       expect.stringContaining('!istargetless copyit'),
-      'notescales_major',
+      'notescales-major',
     )
   })
 })

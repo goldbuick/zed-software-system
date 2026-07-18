@@ -12,7 +12,7 @@ See also: [fx-types-reference.md](fx-types-reference.md), [voiceconfig.md](voice
 | `#synth1`–`#synth4` | 0–3 individually | Per play voice |
 | `#synth5 …` | 4–7 | `#bgplay` voices |
 
-Config path: `#synth` → [audio.ts](../../../firmware/audio.ts) `handlesynthvoice` → `synthvoice` → backend `setvoiceconfig` → WASM [wasmvoiceconfig.ts](../backend/wasm/wasmvoiceconfig.ts) or Tone [voiceconfig/index.ts](../archive/tone/voiceconfig/index.ts).
+Config path: `#synth` → [audio.ts](../../../firmware/audio.ts) `handlesynthvoice` → `synthvoice` → backend `setvoiceconfig` → WASM [wasmvoiceconfig.ts](../backend/wasm/wasmvoiceconfig.ts) or Tone [voiceconfig/index.ts](../../../../ops/archive/synth/tone/voiceconfig/index.ts).
 
 ---
 
@@ -46,7 +46,7 @@ Config path: `#synth` → [audio.ts](../../../firmware/audio.ts) `handlesynthvoi
 
 | Param | Aliases | Value | Tone default | WASM default | Notes |
 |-------|---------|-------|--------------|--------------|-------|
-| `restart` | — | — | Full `applyreset()` | Resets all 8 voices + osc + algo + FX SAB | Tone: [source.ts](../archive/tone/source.ts); Daisy: [daisysynth.ts](../backend/daisy/daisysynth.ts) |
+| `restart` | — | — | Full `applyreset()` | Resets all 8 voices + osc + algo + FX SAB | Tone: [source.ts](../../../../ops/archive/synth/tone/source.ts); Daisy: [daisysynth.ts](../backend/daisy/daisysynth.ts) |
 | `vol` / `volume` | — | number (dB) | **Tone**: instrument volume from `get()` snapshot | **`0` dB** | All 10 WASM voice types via `zss_voicecfg` slot 5 |
 | `port` / `portamento` | — | number (seconds) | **Tone**: `0` (Monophonic) | `0` | `SYNTH` + `ALGO_SYNTH` + `BOWED_VOICE`; error on retro in Tone |
 | `env` / `envelope` | — | `[a, d, s, r]` seconds + sustain 0–1 | See per-type below | `0.01, 0.01, 0.5, 0.01` (**Tone ZSS reset**) | SAB → [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp) **`ZssLinearEnv`** (linear ramps, note-on reset to 0, Tone `triggerAttack` parity). Archived Maxi used `zssenv` (ms) in play code. |
@@ -90,7 +90,7 @@ Selecting any validated wave name switches voice to `SYNTH`. Names validated by 
 
 WASM osc defaults: [wasmoscconfigsab.ts](../backend/wasm/wasmoscconfigsab.ts) `DEFAULT_WASM_OSC_CONFIG`.
 
-**Daisy C++ fallbacks** (when SAB value is 0): width `0.2`, modindex `2`, harmonicity `1`, fat count `3`, spread `20` (see [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp)). Archived Maxi play-code: [`archive/maxi/voiceplaycode.ts`](../archive/maxi/voiceplaycode.ts).
+**Daisy C++ fallbacks** (when SAB value is 0): width `0.2`, modindex `2`, harmonicity `1`, fat count `3`, spread `20` (see [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp)). Archived Maxi play-code: [`archive/maxi/voiceplaycode.ts`](../../../../ops/archive/synth/maxi/voiceplaycode.ts).
 
 ### WASM vs Tone — SYNTH summary
 
@@ -116,7 +116,7 @@ WASM osc defaults: [wasmoscconfigsab.ts](../backend/wasm/wasmoscconfigsab.ts) `D
 | `port` | Error on retro | Ignored (not applied) |
 | Osc/algo params | No | No |
 
-### Tone-only fixed params (at source creation, [source.ts](../archive/tone/source.ts))
+### Tone-only fixed params (at source creation, [source.ts](../../../../ops/archive/synth/tone/source.ts))
 
 | Param | retro/buzz/clang/metallic |
 |-------|---------------------------|
@@ -151,7 +151,7 @@ Default envelope: same WASM global `0.01/0.01/0.5/0.01`.
 | `env` / `envelope` | Yes (FMSynth carrier envelope) | Yes (drives `bellenvs` only) |
 | FM params | Via Tone FMSynth API, **not** exposed as `#synth` keys | **Not configurable** |
 
-### Tone fixed at creation + reset ([source.ts](../archive/tone/source.ts))
+### Tone fixed at creation + reset ([source.ts](../../../../ops/archive/synth/tone/source.ts))
 
 **Main FMSynth (after ZSS reset):** harmonicity `1.5`, modulationIndex `30`, carrier `sine`, modulator `square`, envelope `0.01/3/0.3/6`, modulationEnvelope `0.5/1/0.2/4`.
 
@@ -159,7 +159,7 @@ Default envelope: same WASM global `0.01/0.01/0.5/0.01`.
 
 **Tone FMSynth library baseline:** ModulationSynth defaults — harmonicity `3`, modulationIndex `10`.
 
-### WASM hardcoded in play code ([voiceplaycode.ts](../archive/maxi/voiceplaycode.ts))
+### WASM hardcoded in play code ([voiceplaycode.ts](../../../../ops/archive/synth/maxi/voiceplaycode.ts))
 
 Bell FM: harm `1.5`, modindex `30`, envelope init → **0.01/3/0.3/6** s. Sparkle: harm `5.1`, modindex `32`, envelope → **0.001/1.4/0/0.321** s. Output `× 0.35`.
 
@@ -399,6 +399,6 @@ Organ:      drawbar | click | leak | bright             (organ voices)
 | Command parsing | [firmware/audio.ts](../../../firmware/audio.ts) |
 | Type validation | [voiceconfig/validation.ts](../voiceconfig/validation.ts) |
 | WASM voice routing | [wasmvoiceconfig.ts](../backend/wasm/wasmvoiceconfig.ts) |
-| WASM play behavior | [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp) (archived: [`archive/maxi/voiceplaycode.ts`](../archive/maxi/voiceplaycode.ts)) |
-| Tone voice config | [archive/tone/voiceconfig/index.ts](../archive/tone/voiceconfig/index.ts) |
-| Tone source creation | [archive/tone/source.ts](../archive/tone/source.ts) |
+| WASM play behavior | [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp) (archived: [`archive/maxi/voiceplaycode.ts`](../../../../ops/archive/synth/maxi/voiceplaycode.ts)) |
+| Tone voice config | [archive/tone/voiceconfig/index.ts](../../../../ops/archive/synth/tone/voiceconfig/index.ts) |
+| Tone source creation | [archive/tone/source.ts](../../../../ops/archive/synth/tone/source.ts) |

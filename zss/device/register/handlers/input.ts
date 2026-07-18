@@ -1,9 +1,8 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/types'
 import { INPUT } from 'zss/gadget/data/types'
 import { inputdown, inputup } from 'zss/gadget/userinput'
 import { isarray } from 'zss/mapping/types'
-
 export function handleinput(_device: DEVICE, message: MESSAGE): void {
   if (isarray(message.data)) {
     const [input, shift] = message.data as [INPUT, boolean]

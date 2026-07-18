@@ -53,8 +53,8 @@ function makecodepagedesc(type: CODE_PAGE_TYPE, out: string[]) {
     case CODE_PAGE_TYPE.CHARSET:
       out.push('$greencharset - custom ascii font')
       break
-    case CODE_PAGE_TYPE.SCROLL:
-      out.push('$greenscroll - plain text notes (markdown in zns)')
+    case CODE_PAGE_TYPE.TXT:
+      out.push('$greentxt - plain text notes (markdown in zns)')
       break
   }
 }
@@ -205,11 +205,11 @@ export function memorymakeitcommand(
           openeditor(codepage, didcreate)
           break
         }
-        case stattypestring(STAT_TYPE.SCROLL): {
+        case stattypestring(STAT_TYPE.TXT): {
           const [codepage, didcreate] = memoryensuresoftwarecodepage(
             MEMORY_LABEL.MAIN,
             name,
-            CODE_PAGE_TYPE.SCROLL,
+            CODE_PAGE_TYPE.TXT,
           )
           openeditor(codepage, didcreate)
           break
@@ -247,8 +247,8 @@ export function memorymakeitscroll(makeit: string, player: string) {
       case STAT_TYPE.CHARSET:
         makecodepagedesc(CODE_PAGE_TYPE.CHARSET, out)
         break
-      case STAT_TYPE.SCROLL:
-        makecodepagedesc(CODE_PAGE_TYPE.SCROLL, out)
+      case STAT_TYPE.TXT:
+        makecodepagedesc(CODE_PAGE_TYPE.TXT, out)
         break
     }
     const tn = makeitlinktoken(typename)
@@ -302,11 +302,11 @@ export function memorymakeitscroll(makeit: string, player: string) {
           ),
         )
         break
-      case STAT_TYPE.SCROLL:
+      case STAT_TYPE.TXT:
         out.push(
           zsszedlinkline(
             `create hk s "" "" ${tn} ${nm}`,
-            `create$CYAN @scroll ${name}`,
+            `create$CYAN @txt ${name}`,
           ),
         )
         break
@@ -323,7 +323,7 @@ export function memorymakeitscroll(makeit: string, player: string) {
       case STAT_TYPE.TERRAIN:
       case STAT_TYPE.CHARSET:
       case STAT_TYPE.PALETTE:
-      case STAT_TYPE.SCROLL: {
+      case STAT_TYPE.TXT: {
         const value = statname.values.join(' ')
         createmakecodepage(statname.type, value, scrolllines)
         break
@@ -344,7 +344,7 @@ export function memorymakeitscroll(makeit: string, player: string) {
                 createmakecodepage(STAT_TYPE.LOADER, value, scrolllines)
                 createmakecodepage(STAT_TYPE.PALETTE, value, scrolllines)
                 createmakecodepage(STAT_TYPE.CHARSET, value, scrolllines)
-                createmakecodepage(STAT_TYPE.SCROLL, value, scrolllines)
+                createmakecodepage(STAT_TYPE.TXT, value, scrolllines)
               }
               scrolllines.push('$purple  if you typed in @char 12 or similar')
               scrolllines.push('$purple  try using #set <stat> <value> instead')

@@ -3,6 +3,8 @@ import { CHIP } from 'zss/chip'
 import { vmplayermovetoboard } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { boardcopy, mapelementcopy } from 'zss/feature/boardcopy'
+import { memorytrycontentdestination } from 'zss/feature/contenturlflow'
+import { memorytryjoindestination } from 'zss/feature/joinurlflow'
 import { createfirmware } from 'zss/firmware'
 import { firmwarewaitforboard } from 'zss/firmware/boardwaitsync'
 import { celltorendervalue } from 'zss/gadget/display/cellvalue'
@@ -38,6 +40,7 @@ import {
 import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
 import { memoryensuresoftwarecodepage } from 'zss/memory/books'
 import { memoryreadcodepagedata } from 'zss/memory/codepageoperations'
+import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
 import { memorytickobject } from 'zss/memory/runtime'
 import {
   memorylistboardelementsbykind,
@@ -420,10 +423,18 @@ export const BOARD_FIRMWARE = createfirmware()
 
       // attempt to clone existing board
       if (isstring(maybesource)) {
-        const sourceboard = memoryreadboardbyaddress(maybesource)
-        if (ispresent(sourceboard)) {
-          if (firmwarewaitforboard(sourceboard?.id)) {
+        // pick+wait before read so empty stub does not fake hydration
+        const sourcepage = memorypickcodepagewithtypeandstat(
+          CODE_PAGE_TYPE.BOARD,
+          maybesource,
+        )
+        if (ispresent(sourcepage)) {
+          if (firmwarewaitforboard(sourcepage.id)) {
             return 1
+          }
+          const sourceboard = memoryreadboardbyaddress(maybesource)
+          if (!ispresent(sourceboard)) {
+            return 0
           }
           boardcopy(sourceboard.id, createdboard.id, p1, p2, targetset)
           // make sure to copy board stats as well
@@ -482,7 +493,7 @@ export const BOARD_FIRMWARE = createfirmware()
       ARG_TYPE.STRING,
       ARG_TYPE.MAYBE_NUMBER,
       ARG_TYPE.MAYBE_NUMBER,
-      'player to board by name or address with optional x, y',
+      'player to board by name, address, or join url with optional x, y',
     ],
     (_, words) => {
       if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
@@ -496,13 +507,29 @@ export const BOARD_FIRMWARE = createfirmware()
         ARG_TYPE.MAYBE_NUMBER,
       ])
 
-      const targetboard = memoryreadboardbyaddress(stat)
-      if (!ispresent(targetboard)) {
+      if (memorytryjoindestination(READ_CONTEXT.elementfocus, stat)) {
+        return 0
+      }
+      if (memorytrycontentdestination(READ_CONTEXT.elementfocus, stat)) {
         return 0
       }
 
-      if (firmwarewaitforboard(targetboard.id)) {
+      // pick+wait before read so empty stub does not fake hydration
+      // (passage kind+color match needs the real painted board)
+      const targetpage = memorypickcodepagewithtypeandstat(
+        CODE_PAGE_TYPE.BOARD,
+        stat,
+      )
+      if (!ispresent(targetpage)) {
+        return 0
+      }
+      if (firmwarewaitforboard(targetpage.id)) {
         return 1
+      }
+
+      const targetboard = memoryreadboardbyaddress(stat)
+      if (!ispresent(targetboard)) {
+        return 0
       }
 
       // init board kinds

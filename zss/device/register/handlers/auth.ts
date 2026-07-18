@@ -1,5 +1,4 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
 import {
   bridgejoin,
   registerterminalclose,
@@ -19,7 +18,9 @@ import {
 } from 'zss/device/register/helpers/bootstrap'
 import { setloggedin } from 'zss/device/register/state'
 import { registerreadplayer } from 'zss/device/registerplayer'
+import type { MESSAGE } from 'zss/device/types'
 import { ZSS_BOOKMARKS_KEY } from 'zss/feature/bookmarks'
+import { takecrossloginflags } from 'zss/feature/crosslogin'
 import { rundeeplinks } from 'zss/feature/deeplink'
 import { isclimode } from 'zss/feature/detect'
 import { getfingerprint } from 'zss/feature/fingerprint'
@@ -60,8 +61,10 @@ export function handleloginready(device: DEVICE, message: MESSAGE): void {
     const { [ZSS_BOOKMARKS_KEY]: _bookmarks, ...storageforlogin } = storage
     const config = await storagereadconfigall()
     const token = await getfingerprint()
+    const crossloginflags = takecrossloginflags() ?? {}
     vmlogin(device, registerreadplayer(), {
       ...storageforlogin,
+      ...crossloginflags,
       config,
       token,
     })

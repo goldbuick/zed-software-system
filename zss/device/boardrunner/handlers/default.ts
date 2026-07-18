@@ -1,13 +1,12 @@
 import { parsetarget } from 'zss/device'
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/types'
 import { memorysendtoboards } from 'zss/memory/gamesend'
 import { memoryreadbookplayerboards } from 'zss/memory/playermanagement'
 import { memorymessagechip } from 'zss/memory/runtime'
 import { memoryreadbookbysoftware } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
 import { NAME } from 'zss/words/types'
-
 export function handleboardrunnerdefault(
   _device: DEVICE,
   message: MESSAGE,

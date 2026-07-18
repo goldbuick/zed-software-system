@@ -12,13 +12,15 @@ type WanixElementProps<
   A extends Record<string, unknown>,
 > = DetailedHTMLProps<HTMLAttributes<T> & A, T>
 
-/** Filesystem handle on `wanix-system` after `ready`. */
+/** Filesystem handle on `wanix-namespace` after `ready`. */
 export type WanixRoot = {
   readDir: (path: string) => Promise<string[]>
   readFile: (path: string) => Promise<Uint8Array>
   readText: (path: string) => Promise<string>
   writeFile: (path: string, data: string | Uint8Array) => Promise<void>
+  makeDirAll: (path: string) => Promise<void>
   appendFile: (path: string, data: string | Uint8Array) => Promise<void>
+  remove: (path: string) => Promise<void>
   bind: (name: string, newname: string) => Promise<void>
   unbind: (name: string, newname: string) => Promise<void>
   waitFor: (path: string, timeoutms?: number) => Promise<void>
@@ -43,6 +45,10 @@ export type WanixTaskElement = HTMLElement & {
   role: string | null
   cmd: string | null
   term: string | null
+  /** Kernel/system root (WanixElement) — not the task namespace. */
+  root: WanixRoot
+  /** Task namespace handle (`openHandle(rid)`). Linux virtfs / guest binds use this. */
+  taskRoot: WanixRoot
   allocate: (bindElements?: NodeListOf<Element> | null) => Promise<void>
   start: () => Promise<void>
 }
@@ -52,6 +58,7 @@ export type WanixVmElement = HTMLElement & {
   alias: string | null
   type: string
   term: string | null
+  task: WanixTaskElement
   allocate: () => Promise<void>
   start: () => Promise<void>
 }
@@ -193,7 +200,7 @@ declare module 'react' {
   namespace JSX {
     // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- JSX intrinsic merge requires interface
     interface IntrinsicElements {
-      'wanix-system': WanixSystemIntrinsicProps
+      'wanix-namespace': WanixSystemIntrinsicProps
       'wanix-bind': WanixBindIntrinsicProps
       'wanix-task': WanixTaskIntrinsicProps
       'wanix-vm': WanixVmIntrinsicProps
@@ -211,7 +218,7 @@ declare global {
 
   // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- tag map augmentation requires interface
   interface HTMLElementTagNameMap {
-    'wanix-system': WanixSystemElement
+    'wanix-namespace': WanixSystemElement
     'wanix-bind': HTMLElement
     'wanix-task': WanixTaskElement
     'wanix-vm': WanixVmElement

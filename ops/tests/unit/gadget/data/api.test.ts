@@ -1,6 +1,11 @@
 import { CHIP } from 'zss/chip'
-import { modemwritevaluenumber } from 'zss/device/modem'
 import {
+  modemwriteinitnumber,
+  modemwriteinitstring,
+  modemwritevaluenumber,
+} from 'zss/device/modem'
+import {
+  applyhyperlinksharedmodemsync,
   gadgetaddcenterpadding,
   gadgetcheckqueue,
   gadgetcheckset,
@@ -209,6 +214,95 @@ describe('api', () => {
     // Note: gadgethyperlink is complex and requires proper setup
     // We'll test it through integration with other functions
     // or with mocked modem functions
+  })
+
+  describe('applyhyperlinksharedmodemsync', () => {
+    const cache = {
+      board: undefined,
+      element: undefined,
+      elementfocus: '',
+    }
+
+    it('uses init-only writes for inspect chips', () => {
+      applyhyperlinksharedmodemsync(
+        'inspect:42',
+        'charedit',
+        'char',
+        () => 178,
+        noop,
+        cache,
+      )
+      expect(modemwriteinitnumber).toHaveBeenCalledWith('inspect:42:char', 178)
+      expect(modemwritevaluenumber).not.toHaveBeenCalled()
+    })
+
+    it('uses init-only writes for groups chips', () => {
+      applyhyperlinksharedmodemsync(
+        'groups:1,2,3,4',
+        'coloredit',
+        'color',
+        () => 14,
+        noop,
+        cache,
+      )
+      expect(modemwriteinitnumber).toHaveBeenCalledWith(
+        'groups:1,2,3,4:color',
+        14,
+      )
+      expect(modemwritevaluenumber).not.toHaveBeenCalled()
+    })
+
+    it('keeps init-only writes for non-inspect chips', () => {
+      applyhyperlinksharedmodemsync(
+        'admin',
+        'select',
+        'player:crt',
+        () => 1,
+        noop,
+        cache,
+      )
+      expect(modemwriteinitnumber).toHaveBeenCalledWith('admin:player:crt', 1)
+      expect(modemwritevaluenumber).not.toHaveBeenCalled()
+    })
+
+    it('inits text modem even when get returns a non-string', () => {
+      applyhyperlinksharedmodemsync(
+        'inspect:pid',
+        'text',
+        'p3',
+        () => 0,
+        noop,
+        cache,
+      )
+      expect(modemwriteinitstring).toHaveBeenCalledWith('inspect:pid:p3', '0')
+    })
+
+    it('inits text modem with empty string default', () => {
+      applyhyperlinksharedmodemsync(
+        'inspect:pid2',
+        'text',
+        'p3',
+        () => undefined,
+        noop,
+        cache,
+      )
+      expect(modemwriteinitstring).toHaveBeenCalledWith('inspect:pid2:p3', '')
+    })
+
+    it('normalizes mixed-case inspect chip to lowercase modem address', () => {
+      applyhyperlinksharedmodemsync(
+        'inspect:sid_AbC9XyZ',
+        'text',
+        'p3',
+        () => '',
+        noop,
+        cache,
+      )
+      expect(modemwriteinitstring).toHaveBeenCalledWith(
+        'inspect:sid_abc9xyz:p3',
+        '',
+      )
+    })
   })
 
   describe('parseterminalmodemprefix', () => {

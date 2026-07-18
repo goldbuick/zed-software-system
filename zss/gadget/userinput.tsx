@@ -16,7 +16,7 @@ import {
   vmlocal,
   vmrefscroll,
 } from 'zss/device/api'
-import { registerreadplayer } from 'zss/device/register'
+import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import {
   INPUT,
@@ -317,10 +317,9 @@ function handlekeydown(event: KeyboardEvent) {
         console.info('refscroll', player)
       }
       break
-    case '`':
-      if (mods.ctrl) {
-        registerperfmonitor(SOFTWARE, player, undefined)
-      }
+    case 'f9':
+      event.preventDefault()
+      registerperfmonitor(SOFTWARE, player, undefined)
       break
     case '1':
     case '2':

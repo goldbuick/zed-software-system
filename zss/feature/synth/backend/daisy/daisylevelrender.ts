@@ -1,7 +1,6 @@
 import {
   type LEVEL_STABILITY_METRICS,
   analyzelevelstability,
-  comparelevelstability,
   diagnoselevelstability,
   formatlevelstabilityline,
 } from 'zss/feature/synth/backend/wasm/levelstabilitymetrics'
@@ -261,10 +260,4 @@ export function formatlevelstabilityreport(
     lines.push(`  ${line}`)
   }
   return lines.join('\n')
-}
-
-export {
-  analyzelevelstability,
-  comparelevelstability,
-  formatlevelstabilityline,
 }

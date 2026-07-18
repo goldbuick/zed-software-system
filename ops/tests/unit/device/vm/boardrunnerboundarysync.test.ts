@@ -13,6 +13,7 @@ jest.mock('zss/device/patchapi', () => ({
 
 jest.mock('zss/memory/session', () => ({
   memoryreadbookbysoftware: jest.fn(),
+  memoryreadbooklist: jest.fn(() => []),
 }))
 
 jest.mock('zss/memory/boardwait', () => ({

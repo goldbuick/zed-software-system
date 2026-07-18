@@ -10,6 +10,10 @@ import {
 import { buildzedcafeexportfiles } from 'zss/feature/wanix/wanixstateexport'
 import type { BOOK, CODE_PAGE } from 'zss/memory/types'
 
+jest.mock('zss/device/wanixclient/wanixroom', () => ({
+  readwanixroomconfig: jest.fn(() => ({ mode: 'task' })),
+}))
+
 jest.mock('zss/memory/session', () => ({
   memoryreadbooklist: jest.fn(() => []),
   memoryreadoperator: jest.fn(() => 'player1'),
@@ -60,10 +64,22 @@ describe('zedcafetreeschema', () => {
     expect(kebabcasezedcafedirname('', 'sid_abc')).toBe('sid_abc')
   })
 
+  it('rejects dirname ids that contain .. or end with a dot', () => {
+    expect(() => kebabcasezedcafedirname('key', 'sid_zSjwtyZcRFN.')).toThrow(
+      /filename-safe/,
+    )
+    expect(() => kebabcasezedcafedirname('key', 'sid_a..b')).toThrow(
+      /filename-safe/,
+    )
+    expect(kebabcasezedcafedirname('key', 'sid_8FzEX_FvcYV1')).toBe(
+      'key-sid_8FzEX_FvcYV1',
+    )
+  })
+
   it('rejects paths outside schema', () => {
     const result = validatezedcafeexportpaths([
       { path: '../stats.json', bytes: encodetext('{}') },
-      { path: 'books/foo/bar.json', bytes: encodetext('{}') },
+      { path: 'foo/bar.json', bytes: encodetext('{}') },
     ])
     expect(result.ok).toBe(false)
     expect(result.errors.some((err) => err.includes('path outside schema'))).toBe(
@@ -95,10 +111,13 @@ describe('zedcafetreeschema', () => {
     expect(patterns.length).toBe(ZED_CAFE_EXPORT_ALLOWED_PATH.length)
     const probes = [
       'stats.json',
-      'books/demo-book1/stats.json',
-      'books/demo-book1/pages/demo-page1/board/objects/obj1.json',
+      'demo-book1/stats.json',
+      'demo-book1/flags/pid_1.json',
+      'demo-book1/demo-page1/board/terrain.json',
+      'demo-book1/demo-page1/board/terrain/0.json',
+      'demo-book1/demo-page1/board/objects/obj1.json',
       'evil.txt',
-      'books/foo/bar.json',
+      'foo/bar.json',
     ]
     for (let i = 0; i < patterns.length; ++i) {
       const ts = ZED_CAFE_EXPORT_ALLOWED_PATH[i]!

@@ -50,7 +50,7 @@ export function memoryreadobject(
   board: MAYBE<BOARD>,
   id: string,
 ): MAYBE<BOARD_ELEMENT> {
-  if (!board) {
+  if (!board?.objects) {
     return undefined
   }
   return board.objects[id]

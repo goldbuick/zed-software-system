@@ -7,10 +7,6 @@ export function readinputreservedrows(editoropen: boolean): number {
   return editoropen ? 0 : 2
 }
 
-export function readpinstarty(): number {
-  return 0
-}
-
 export function readpinrowheights(
   pinlines: string[],
   maxwidth: number,
@@ -35,60 +31,12 @@ export function readpinareaheight(pinheights: number[]): number {
   return pinheights.reduce((sum, rowheight) => sum + rowheight, 0)
 }
 
-export type TerminalLayout = {
-  pinstarty: number
-  pinheights: number[]
-  pinycoords: number[]
-  pinareaheight: number
-  logzonebottom: number
-  logzonetop: number
-  logzoneheight: number
-  visiblerows: number
-  inputreserved: number
-  sessionheights: number[]
-}
-
 export function readsessionrowheights(
   sessionlogs: string[],
   maxwidth: number,
   edgeheight: number,
 ): number[] {
   return sessionlogs.map((item) => measurerowcached(item, maxwidth, edgeheight))
-}
-
-export function readterminallayout(args: {
-  pinlines: string[]
-  sessionlogs: string[]
-  maxwidth: number
-  edge: TextEdge
-  editoropen: boolean
-}): TerminalLayout {
-  const { pinlines, sessionlogs, maxwidth, edge, editoropen } = args
-  const pinstarty = readpinstarty()
-  const inputreserved = readinputreservedrows(editoropen)
-  const pinheights = readpinrowheights(pinlines, maxwidth, edge.height)
-  const pinycoords = readpinrowycoords(pinheights, pinstarty)
-  const pinareaheight = readpinareaheight(pinheights)
-  const logzonebottom = edge.bottom - edge.top - inputreserved
-  const logzonetop = pinstarty + pinareaheight
-  const logzoneheight = Math.max(0, logzonebottom - logzonetop + 1)
-  const sessionheights = readsessionrowheights(
-    sessionlogs,
-    maxwidth,
-    edge.height,
-  )
-  return {
-    pinstarty,
-    pinheights,
-    pinycoords,
-    pinareaheight,
-    logzonebottom,
-    logzonetop,
-    logzoneheight,
-    visiblerows: logzoneheight,
-    inputreserved,
-    sessionheights,
-  }
 }
 
 export function readsesslogrowycoords(
@@ -100,6 +48,102 @@ export function readsesslogrowycoords(
     logsrowycoord -= rowheight
     return logsrowycoord
   })
+}
+
+export function readsessionstackheight(sessionheights: number[]): number {
+  return sessionheights.reduce((sum, rowheight) => sum + rowheight, 0)
+}
+
+/**
+ * Natural Y of the pin block: after session logs in the bottom-up list
+ * (farther from the input than session rows = last when navigating up).
+ */
+export function readnaturalpinstarty(
+  contentbottom: number,
+  sessionstackheight: number,
+  pinareaheight: number,
+): number {
+  if (pinareaheight <= 0) {
+    return contentbottom + 1
+  }
+  // Session occupies [contentbottom - sessionstackheight + 1 .. contentbottom]
+  // Pins continue upward after that block.
+  return contentbottom - sessionstackheight - pinareaheight + 1
+}
+
+/**
+ * CSS sticky-top clamp: pins scroll with content, then stick at the top of
+ * the log zone when they would scroll away above the viewport.
+ */
+export function readstickypinstarty(
+  naturalpinstarty: number,
+  scroll: number,
+  logzonetop: number,
+): number {
+  return Math.max(logzonetop, naturalpinstarty + scroll)
+}
+
+export type TerminalLayout = {
+  /** Natural (unscrolled) pin block start Y. */
+  naturalpinstarty: number
+  pinheights: number[]
+  /** Natural pin row Y coords (before scroll / sticky clamp). */
+  pinycoords: number[]
+  pinareaheight: number
+  contentbottom: number
+  logzonebottom: number
+  logzonetop: number
+  logzoneheight: number
+  visiblerows: number
+  inputreserved: number
+  sessionheights: number[]
+  /** Bottom edge used to stack session logs (full content bottom). */
+  sessionstackbottom: number
+}
+
+export function readterminallayout(args: {
+  pinlines: string[]
+  sessionlogs: string[]
+  maxwidth: number
+  edge: TextEdge
+  editoropen: boolean
+}): TerminalLayout {
+  const { pinlines, sessionlogs, maxwidth, edge, editoropen } = args
+  const inputreserved = readinputreservedrows(editoropen)
+  const contentbottom = edge.bottom - edge.top - inputreserved
+  const pinheights = readpinrowheights(pinlines, maxwidth, edge.height)
+  const pinareaheight = readpinareaheight(pinheights)
+  const sessionheights = readsessionrowheights(
+    sessionlogs,
+    maxwidth,
+    edge.height,
+  )
+  const sessionstackheight = readsessionstackheight(sessionheights)
+  const naturalpinstarty = readnaturalpinstarty(
+    contentbottom,
+    sessionstackheight,
+    pinareaheight,
+  )
+  const pinycoords = readpinrowycoords(pinheights, naturalpinstarty)
+  const logzonetop = 0
+  const logzonebottom = contentbottom
+  const logzoneheight = Math.max(0, logzonebottom - logzonetop + 1)
+  // Session stacks from the input upward; pins sit after (above) that stack
+  const sessionstackbottom = contentbottom
+  return {
+    naturalpinstarty,
+    pinheights,
+    pinycoords,
+    pinareaheight,
+    contentbottom,
+    logzonebottom,
+    logzonetop,
+    logzoneheight,
+    visiblerows: logzoneheight,
+    inputreserved,
+    sessionheights,
+    sessionstackbottom,
+  }
 }
 
 export function readlogrowtotalheight(

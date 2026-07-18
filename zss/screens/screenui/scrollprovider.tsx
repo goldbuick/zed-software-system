@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { chipmessage, vmclearscroll } from 'zss/device/api'
-import { registerreadplayer } from 'zss/device/register'
+import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import { ScrollContext } from 'zss/screens/panel/common'
 
@@ -28,6 +28,7 @@ export function ScreenUIScrollProvider({
       didclose() {
         sethasscroll(false)
       },
+      setcursor() {},
     }),
     [player],
   )

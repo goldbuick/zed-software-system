@@ -9,6 +9,16 @@ import {
 import { COLOR } from 'zss/words/types'
 
 describe('wanixtermgridstate', () => {
+  it('creates empty grids filled with spaces', () => {
+    const grid = createwanixtermgrid(8, 4)
+    expect(grid.char.length).toBe(32)
+    for (let i = 0; i < grid.char.length; ++i) {
+      expect(grid.char[i]).toBe(32)
+      expect(grid.color[i]).toBe(COLOR.WHITE)
+      expect(grid.bg[i]).toBe(COLOR.BLACK)
+    }
+  })
+
   it('writes plain text into the grid', () => {
     const grid = createwanixtermgrid(40, 5)
     wanixtermgridwritebytes(grid, new TextEncoder().encode('Hello'))

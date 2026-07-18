@@ -2,7 +2,7 @@
 
 The right-hand **scroll** panel shows a titled list (`scrollname` + `scroll` rows). This page lists every major code path that fills it.
 
-**State:** [`zss/gadget/data/state.ts`](../data/state.ts) (`GADGET_STATE.scrollname`, `scroll`).
+**State:** [`zss/gadget/data/state.ts`](../data/zustandstores.ts) (`GADGET_STATE.scrollname`, `scroll`).
 
 **Ways content is built:**
 
@@ -66,13 +66,13 @@ Hyperlink rows are `[chip, label, ...args]` (see [`gadgethyperlink`](../data/api
 
 ### Where scroll / sidebar messages go
 
-Panel items ([`zssedit`](../../screens/panel/zssedit.tsx), [`hyperlink`](../../screens/panel/hyperlink.tsx), [`hotkey`](../../screens/panel/hotkey.tsx), [`runit`](../../screens/panel/runit.tsx), [`copyit`](../../screens/panel/copyit.tsx), [`charedit`](../../screens/panel/charedit.tsx), [`coloredit`](../../screens/panel/coloredit.tsx), terminal `zssedit`) all build their target with [`chiptarget(chip, target)`](../../screens/panel/common.ts) → `vm:${chip}:${target}` and emit via [`SOFTWARE.emit`](../../device/session.ts) on the main thread. [`shouldforwardclienttoserver`](../../device/forward.ts) forwards these `vm:*` messages to the **sim VM** as before — that's where the registry-listed handlers (`refscroll`, `gadgetscroll`, `makeitscroll`, `clearscroll`, `bookmarkscroll`, `editorbookmarkscroll`, `readzipfilelist`, …) and `handledefault`'s `adminop` / `admingoto` / `inspect` / etc. branches run. [`shouldforwardclienttoboardrunner`](../../device/forward.ts) **also** forwards them to the boardrunner worker; the [`boardrunner` device](../../device/boardrunner.ts) (handlers in [`boardrunner/handlers/`](../../device/boardrunner/handlers/)) subscribes to topic `vm` and, when it sees a `vm:CHIP:LABEL` message, strips the `vm:` prefix and calls [`memorymessagechip`](../../memory/runtime.ts) so the originating chip — which actually runs on the boardrunner — receives the label. Both deliveries happen for the same message id; per-realm dedupe in [`forward.ts`](../../device/forward.ts) keeps it from looping.
+Panel / tape link widgets under [`zss/screens/linkui/`](../../screens/linkui/) (routed from [`PanelItem`](../../screens/panel/panelitem.tsx) and [`TerminalItem`](../../screens/terminal/item.tsx)) emit via `LinkSurface.sendmessage` → [`chipmessage`](../../device/api.ts) / `SOFTWARE.emit` on the main thread. [`shouldforwardclienttoserver`](../../device/forward.ts) forwards these `vm:*` messages to the **sim VM** as before — that's where the registry-listed handlers (`refscroll`, `gadgetscroll`, `makeitscroll`, `clearscroll`, `bookmarkscroll`, `editorbookmarkscroll`, `readzipfilelist`, …) and `handledefault`'s `adminop` / `admingoto` / `inspect` / etc. branches run. [`shouldforwardclienttoboardrunner`](../../device/forward.ts) **also** forwards them to the boardrunner worker; the [`boardrunner` device](../../device/boardrunner.ts) (handlers in [`boardrunner/handlers/`](../../device/boardrunner/handlers/)) subscribes to topic `vm` and, when it sees a `vm:CHIP:LABEL` message, strips the `vm:` prefix and calls [`memorymessagechip`](../../memory/runtime.ts) so the originating chip — which actually runs on the boardrunner — receives the label. Both deliveries happen for the same message id; per-realm dedupe in [`forward.ts`](../../device/forward.ts) keeps it from looping.
 
 ### Terminal tape vs scroll (shared hyperlinks)
 
-The bottom **tape** parses lines as `!{prefix}!{command…;$label}` (see [`TerminalItem`](../../screens/terminal/item.tsx)): a **second** `!` separates the modem key from the tokenized command. For `HYPERLINK_WITH_SHARED` widgets (`select`, `range`, `text`, edits, etc.), **`prefix` must equal `paneladdress(chip, target)`** — i.e. `chip:target` with **only the first `:`** as the separator (**`target` must not contain `:`**). [`usehyperlinksharedsync`](../data/usehyperlinksharedsync.ts) registers the same modem observe/init + bridge `get`/`set` path as `gadgethyperlink` when that prefix parses. [`registerterminalhyperlinksharedbridge`](../data/api.ts) adds tape-only defaults; merged lookup **prefers** `registerhyperlinksharedbridge` and uses the terminal registry only when the scroll bridge is missing for that `(chip, type)`.
+Both surfaces parse bang lines with [`parsezedlinkline`](../../feature/zedlinkparse.ts) (first `;`, `$59` escapes, optional `!@chip`). Widgets are shared under [`zss/screens/linkui/`](../../screens/linkui/). For `HYPERLINK_WITH_SHARED` types, the modem address is `paneladdress(chip, target)` (`chip:target`, target must not contain `:`). Tape lines may carry that key as `!chip:target!command;label` (or `!!…` after terminallog). [`useHyperlinkSharedSync`](../data/usehyperlinksharedsync.ts) registers the same modem observe/init + bridge path for both layouts. [`registerterminalhyperlinksharedbridge`](../data/api.ts) adds tape-only defaults; merged lookup **prefers** `registerhyperlinksharedbridge`.
 
-Full wiring diagram and Q&A: [scroll-vs-terminal-hyperlinks.md](./scroll-vs-terminal-hyperlinks.md).
+Full wiring: [scroll-vs-terminal-hyperlinks.md](./scroll-vs-terminal-hyperlinks.md).
 
 ### ZNS docs for `refscroll:<path>`
 
@@ -98,7 +98,7 @@ Panel-only actions for editor bookmarks go through [`handledefault`](../../devic
 
 **Tape editor close:** On [`register.ts`](../../device/register.ts) `editor:close`, the UI clears local editor state and calls [`vmtapeeditorclose`](../../device/api.ts), which emits `vm:tapeeditorclose` into the sim worker. There is no dedicated row for that target in [`vmhandlers`](../../device/vm/handlers/registry.ts); it falls through [`handledefault`](../../device/vm/handlers/default.ts) like other unmatched VM subtargets.
 
-**`snapshotcurrent` and `useTape`:** The sim worker does not share the main-thread Zustand [`useTape`](../../gadget/data/state.ts) store. `editorbookmarkscroll:snapshotcurrent` is handled in [`handleeditorbookmarkscrollpanel`](../../device/vm/handlers/editorbookmarkscroll.ts): with a code page id in `message.data`, it loads the page via [`memoryreadcodepagebyid`](../../memory/codepages.ts) and calls [`registerbookmarkcodepagesave`](../../device/api.ts). [`registereditoropen`](../../device/api.ts) still runs before `register:editor:open` for editor UI state; closing the editor uses `editor:close` → `vmtapeeditorclose` as above.
+**`snapshotcurrent` and `useTape`:** The sim worker does not share the main-thread Zustand [`useTape`](../data/zustandstores.ts) store. `editorbookmarkscroll:snapshotcurrent` is handled in [`handleeditorbookmarkscrollpanel`](../../device/vm/handlers/editorbookmarkscroll.ts): with a code page id in `message.data`, it loads the page via [`memoryreadcodepagebyid`](../../memory/codepages.ts) and calls [`registerbookmarkcodepagesave`](../../device/api.ts). [`registereditoropen`](../../device/api.ts) still runs before `register:editor:open` for editor UI state; closing the editor uses `editor:close` → `vmtapeeditorclose` as above.
 
 ---
 
@@ -111,11 +111,10 @@ Special paths (not necessarily ROM filenames) in [`handledefault`](../../device/
 | `adminscroll` | `cpu #admin` | [`memoryadminmenu`](../../memory/utilities.ts). |
 | `objectlistscroll` | `object list` | `!istargetless copyit …` lines + `scrollwritelines`; chip `list`. |
 | `terrainlistscroll` | `terrain list` | Same; chip `list`. |
-| `charscroll` | `chars` | Zed `!` line + `scrollwritelines`; chip `refscroll`. |
-| `colorscroll` | `colors` | Same. |
-| `bgscroll` | `bgs` | Same. |
-| `notescalesscroll` | `notescalesscroll` | ROM [`notescalesscroll.md`](../../rom/refscroll/notescalesscroll.md); drill-down `notescales_*`; `parsemarkdownforscroll`; chip `refscroll` (default). |
+| `notescalesscroll` | `notescalesscroll` | ROM [`notescalesscroll.md`](../../rom/refscroll/notescalesscroll.md); drill-down `notescales-*`; `parsemarkdownforscroll`; chip `refscroll` (default). |
 | *(any other)* | `path` | Bundled `.md` or ZNS docs; see below. |
+
+Char / color / bg editors are **inline** on [`menu.md`](../../rom/refscroll/menu.md) (`!char charedit`, etc.) — compact until ENTER. Dedicated `charscroll` / `colorscroll` / `bgscroll` paths were removed.
 
 **Default branch:** loading scroll, then [`fetchrefscrolltext`](../../feature/fetchrefscrolltext.ts) (ZNS first, ROM fallback) + `parsemarkdownforscroll`, or error scroll. Final `scrollname` is `path` once content is ready.
 
@@ -125,7 +124,7 @@ Special paths (not necessarily ROM filenames) in [`handledefault`](../../device/
 
 Bundled under [`zss/rom/refscroll/`](../../rom/refscroll/) as **`.md`** files. Address = `refscroll:<name>` where `<name>` is the filename without `.md`.
 
-`algoscroll`, `autofilterscroll`, `autowahscroll`, `cliscroll`, `commandsscroll`, `distortscroll`, `echoscroll`, `effectsscroll`, `fcrushscroll`, `helpcontrols`, `helpdeveloper`, `helpmenu`, `helpplayer`, `helptext`, `menu`, `notescalesscroll`, `notescales_aeolian`, `notescales_blues`, `notescales_dorian`, `notescales_exotic`, `notescales_harmonicminor_modal`, `notescales_ionian`, `notescales_jazzmodal`, `notescales_locrian`, `notescales_lydian`, `notescales_major`, `notescales_majorpent`, `notescales_melodicminor_modal`, `notescales_minorpent`, `notescales_mixolydian`, `notescales_modal`, `notescales_naturalminor`, `notescales_pentatonic`, `notescales_phrygian`, `notesscroll`, `oscscroll`, `pulsescroll`, `pwmscroll`, `reverbscroll`, `synthscroll`, `vibratoscroll`, `voicescroll`.
+`algoscroll`, `autofilterscroll`, `autowahscroll`, `cliscroll`, `commandsscroll`, `distortscroll`, `echoscroll`, `effectsscroll`, `fcrushscroll`, `helpcontrols`, `helpdeveloper`, `helpmenu`, `helpplayer`, `helptext`, `menu`, `notescalesscroll`, `notescales-aeolian`, `notescales-blues`, `notescales-dorian`, `notescales-exotic`, `notescales-harmonicminor-modal`, `notescales-ionian`, `notescales-jazzmodal`, `notescales-locrian`, `notescales-lydian`, `notescales-major`, `notescales-majorpent`, `notescales-melodicminor-modal`, `notescales-minorpent`, `notescales-mixolydian`, `notescales-modal`, `notescales-naturalminor`, `notescales-pentatonic`, `notescales-phrygian`, `notesscroll`, `oscscroll`, `pulsescroll`, `pwmscroll`, `reverbscroll`, `synthscroll`, `vibratoscroll`, `voicescroll`.
 
 ---
 

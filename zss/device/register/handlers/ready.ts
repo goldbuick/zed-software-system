@@ -1,15 +1,16 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
 import { apilog, boardrunnerstart, vmoperator } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
 import { syncterminalbookmarkpins } from 'zss/device/register/helpers/bootstrap'
 import { registerreadplayer } from 'zss/device/registerplayer'
+import type { MESSAGE } from 'zss/device/types'
 import { rundeeplinks } from 'zss/feature/deeplink'
 import { isclimode } from 'zss/feature/detect'
 import {
   storagereadhistorybuffer,
   storagewatchcontent,
 } from 'zss/feature/storage'
+import { hydratetapelayoutby } from 'zss/feature/tapelayout'
 import { useTerminal } from 'zss/gadget/data/zustandstores'
 import { waitfor } from 'zss/mapping/tick'
 import { ispresent } from 'zss/mapping/types'
@@ -26,6 +27,7 @@ export function handleready(device: DEVICE, message: MESSAGE): void {
         }),
       })
     }
+    await hydratetapelayoutby()
     await syncterminalbookmarkpins()
     await waitfor(256)
     apilog(device, registerreadplayer(), `player ${registerreadplayer()}`)

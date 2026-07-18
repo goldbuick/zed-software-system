@@ -160,6 +160,11 @@ describe('state', () => {
     it('should have initial state', () => {
       const state = useTape.getState()
       expect(state.layout).toBe(TAPE_DISPLAY.TOP)
+      expect(state.layoutby).toEqual({
+        quick: TAPE_DISPLAY.TOP,
+        cli: TAPE_DISPLAY.TOP,
+        editor: TAPE_DISPLAY.TOP,
+      })
       expect(state.inspector).toBe(false)
       expect(state.terminalmode).toBe('cli')
       expect(state.toast).toBe('')
@@ -188,6 +193,11 @@ describe('state', () => {
     it('should reset to initial state', () => {
       useTape.setState({
         layout: TAPE_DISPLAY.BOTTOM,
+        layoutby: {
+          quick: TAPE_DISPLAY.FULL,
+          cli: TAPE_DISPLAY.BOTTOM,
+          editor: TAPE_DISPLAY.FULL,
+        },
         inspector: true,
         perfmonitor: true,
         terminalmode: 'quick',
@@ -211,6 +221,11 @@ describe('state', () => {
 
       const state = useTape.getState()
       expect(state.layout).toBe(TAPE_DISPLAY.TOP)
+      expect(state.layoutby).toEqual({
+        quick: TAPE_DISPLAY.TOP,
+        cli: TAPE_DISPLAY.TOP,
+        editor: TAPE_DISPLAY.TOP,
+      })
       expect(state.inspector).toBe(false)
       expect(state.perfmonitor).toBe(false)
       expect(state.terminalmode).toBe('cli')

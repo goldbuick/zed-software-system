@@ -1,0 +1,24 @@
+#!/bin/sh
+. /usr/lib/zedcafe/common.sh
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -r|--root)
+      ZEDCAFE_ROOT=$2
+      shift 2
+      ;;
+    -h|--help)
+      zedcafe_usage "$0"
+      exit 0
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+if ! zedcafe_requirestats; then
+  exit 1
+fi
+
+jq . "$(zedcafe_statsfile)"

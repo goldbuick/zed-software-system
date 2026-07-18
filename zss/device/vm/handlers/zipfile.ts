@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/types'
 import {
   markzipfilelistitem,
   readzipfilelist,
@@ -9,7 +9,6 @@ import { zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
 import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { NAME } from 'zss/words/types'
-
 registerhyperlinksharedbridge(
   'zipfilelist',
   'select',
@@ -21,7 +20,7 @@ registerhyperlinksharedbridge(
 // `!zipfilelist:<filename>!select;…` (second `!` separates `paneladdress` prefix
 // from the command). Targets must not contain `:`.
 //
-// Select rows quote the filename so `scrolllinksplittokens` keeps one target token
+// Select rows quote the filename so `zedlinksplittokens` keeps one target token
 // (spaces, multiple words) for `PanelSelect` and for `readzipfilelistitem` keys.
 
 function quotezipscrollselecttarget(name: string): string {

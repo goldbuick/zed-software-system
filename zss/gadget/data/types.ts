@@ -248,8 +248,14 @@ export type PANEL_ITEM = WORD | WORD[]
 export type UNOBSERVE_FUNC = () => void
 export type PANEL_SHARED = Record<string, UNOBSERVE_FUNC>
 
+/**
+ * Modem / panel shared key. Chip is lowercased so worker `NAME(chip)` init
+ * matches main-thread UI reads (`inspect:sid_AbC` vs `inspect:sid_abc`).
+ */
 export function paneladdress(chip: string, target: string) {
-  return `${chip}:${target}`
+  return `${String(chip ?? '')
+    .toLowerCase()
+    .trim()}:${target}`
 }
 
 export type SYNTH_STATE = {

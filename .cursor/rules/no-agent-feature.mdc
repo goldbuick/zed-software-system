@@ -1,0 +1,32 @@
+---
+description: Do not re-add the in-browser #agent LLM feature — removed on purpose
+alwaysApply: true
+---
+
+# No in-browser `#agent` feature
+
+The cafe `#agent` LLM / zedcafe-tools product was **removed on purpose**. Do **not** reintroduce it.
+
+## Why it failed
+
+- Large on-device model download and WebGPU inference were slow and unreliable in cafe.
+- Main-thread tools plus a separate inference worker added zedcafe write/import sync complexity without a solid product loop.
+- Debugging spent more time on model load, tool errors, and zedsync path issues than on useful board edits.
+- Opportunity cost: time on `#agent` did not improve the game; rebuilding it repeats that waste.
+
+## Prohibited
+
+- `#agent` CLI / `registeragentcommands` / `zss/firmware/cli/commands/agent.ts`
+- `zss/feature/agent/` (or any replacement under another name with the same job)
+- `zss/agentspace.ts`, `zss/device/agentworker.ts`, lazy `ensureagentworker`
+- Device messages: `register:agentask`, `agent:generate`, `agent:dispose`, `agent:progress`, `agent:error`, `agent:disposed`
+- `wanixserver:agentexporttree` / `wanixserver:agentexportwrite` (and matching `wanixclient:*` handlers)
+
+## Allowed (unrelated)
+
+- STT / TTS using `@huggingface/transformers` / ONNX
+- Cursor agent-transcripts, IDE agents, FingerprintJS “agent” wording, Wanix submodule “Agent sandboxes”
+
+## Required instead
+
+Edit boards via existing authoring paths (in-sim `#make` / editor, serve-root zedcafe JSON, book templates) — not an in-browser LLM.

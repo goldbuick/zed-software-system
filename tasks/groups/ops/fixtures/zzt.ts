@@ -1074,7 +1074,9 @@ export function scanzztcorpusprofanity(argv: string[]): number {
   )
 
   if (opts.verify && report.stats.line_hits > 0) {
-    console.error('profanity verify failed — run ops:fixtures:zzt:corpus:sanitize')
+    console.error(
+      'profanity verify failed — run ops:fixtures:zzt:corpus:sanitize',
+    )
     return 1
   }
   return 0

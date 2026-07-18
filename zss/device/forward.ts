@@ -1,10 +1,12 @@
 import { createdevice, parsetarget } from 'zss/device'
+import { createrecentmessageids } from 'zss/device/recentmessageids'
+import type { MESSAGE } from 'zss/device/types'
 import { hub } from 'zss/hub'
 
-import { MESSAGE, ismessage } from './api'
+import { ismessage } from './types'
 
 export function createforward(handler: (message: MESSAGE) => void) {
-  const syncids = new Set<string>()
+  const syncids = createrecentmessageids()
 
   function forward(message: any) {
     if (
@@ -31,7 +33,7 @@ export function createforward(handler: (message: MESSAGE) => void) {
   return { forward, disconnect }
 }
 
-// outbound message server -> client
+// outbound message server -> client (peer host)
 export function shouldforwardonpeerserver(message: MESSAGE): boolean {
   switch (message.target) {
     case 'ready':
@@ -42,7 +44,7 @@ export function shouldforwardonpeerserver(message: MESSAGE): boolean {
   return true
 }
 
-// outbound message client -> server
+// outbound message client -> server (peer join)
 export function shouldforwardonpeerclient(message: MESSAGE): boolean {
   switch (message.target) {
     case 'ready':
@@ -53,7 +55,7 @@ export function shouldforwardonpeerclient(message: MESSAGE): boolean {
   return true
 }
 
-// create server -> client forward
+// create server -> client forward (peer host wire)
 export function shouldforwardservertoclient(message: MESSAGE): boolean {
   switch (message.target) {
     case 'log':
@@ -67,10 +69,12 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
       const route = parsetarget(message.target)
       switch (route.target) {
         case 'tts':
+        case 'stt':
         case 'synth':
         case 'modem':
         case 'bridge':
-        case 'wanix':
+        case 'wanixserver':
+        case 'wanixclient':
         case 'register':
         case 'boardrunner':
         case 'gadgetclient':
@@ -94,7 +98,7 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
   return false
 }
 
-// create client -> server forward
+// create client -> server forward (peer join wire)
 export function shouldforwardclienttoserver(message: MESSAGE): boolean {
   const route = parsetarget(message.target)
   switch (route.target) {
@@ -112,9 +116,7 @@ export function shouldforwardclienttoserver(message: MESSAGE): boolean {
   return false
 }
 
-// boardrunner worker messages
-
-// create client -> boardrunner forward
+// create client -> boardrunner forward (peer join wire)
 export function shouldforwardclienttoboardrunner(message: MESSAGE): boolean {
   switch (message.target) {
     case 'ticktock':
@@ -133,53 +135,4 @@ export function shouldforwardclienttoboardrunner(message: MESSAGE): boolean {
     }
   }
   return false
-}
-
-// create boardrunner -> client forward
-export function shouldforwardboardrunnertoclient(): boolean {
-  return true
-}
-
-// stt worker messages
-
-// create client -> stt forward
-export function shouldforwardclienttostt(message: MESSAGE): boolean {
-  switch (message.target) {
-    case 'ticktock':
-      return false
-    case 'second':
-    case 'ready':
-      return true
-    default: {
-      const route = parsetarget(message.target)
-      return route.target === 'stt'
-    }
-  }
-}
-
-// create stt -> client forward
-export function shouldforwardstttoclient(): boolean {
-  return true
-}
-
-// tts worker messages
-
-// create client -> tts forward
-export function shouldforwardclienttotts(message: MESSAGE): boolean {
-  switch (message.target) {
-    case 'ticktock':
-      return false
-    case 'second':
-    case 'ready':
-      return true
-    default: {
-      const route = parsetarget(message.target)
-      return route.target === 'tts'
-    }
-  }
-}
-
-// create tts -> client forward
-export function shouldforwardttstoclient(): boolean {
-  return true
 }

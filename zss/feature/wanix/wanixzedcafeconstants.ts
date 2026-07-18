@@ -1,31 +1,42 @@
+import { WANIX_ZEDCAFE_WASM_BUILD_ID } from 'zss/feature/wanix/wanixzedcafewasmversion'
+
 export const WANIX_ZEDCAFE_TASK_ID = 'zedcafe'
+/** Long-running peer↔zedcafe sync daemon (`#wanix zedsync <path>`). */
+export const WANIX_ZEDSYNC_TASK_ID = 'zedsync'
+/** Attached-session drop mount: `input/<file>` (task `./input/…`, VM guest `/input/…`). */
+export const WANIX_INPUT_MOUNT = 'input'
 /** User-visible mount: `./zedcafe/` (task) or `/zedcafe/` (VM guest). */
 export const WANIX_ZEDCAFE_GUEST_MOUNT = 'zedcafe'
-/** Internal gojs staging — never union-bind `#ramfs` at `.`. */
-export const WANIX_ZEDCAFE_INBOX_RAMFS = '#ramfs/zedcafeinbox.json'
-/** Task-namespace inbox path (wanix-task child file bind only). */
-export const WANIX_ZEDCAFE_TASK_INBOX = 'zedcafeinbox.json'
 export const WANIX_ZEDCAFE_WASM_RAMFS = '#ramfs/zedcafe.wasm'
 /** Task-namespace wasm path (wanix-task child file bind only). */
 export const WANIX_ZEDCAFE_TASK_WASM = 'zedcafe.wasm'
-/** Internal export staging tree under `#ramfs` — not exposed at guest `/`. */
-export const WANIX_ZEDCAFE_EXPORT_RAMFS = '#ramfs/zedcafe'
 export const WANIX_ZEDCAFE_WASM_URL = '/wanix/zedcafe.wasm'
+export const WANIX_ZEDCAFE_WASM_BUILD_STORAGE_KEY =
+  'wanix-zedcafe-wasm-build-id'
 export const WANIX_ZEDCAFE_WASM_CMD = WANIX_ZEDCAFE_TASK_WASM
-export const WANIX_ZEDCAFE_EXPORT_DEBOUNCE_MS = 2000
-export const WANIX_ZEDCAFE_IMPORT_POLL_MS = 3000
+
+export function readwanixzedcafewasmurl(): string {
+  return `${WANIX_ZEDCAFE_WASM_URL}?v=${WANIX_ZEDCAFE_WASM_BUILD_ID}`
+}
+
 export const WANIX_VM_ZEDCAFE_EXPORT_FETCH_MS = 10_000
+export const WANIX_VM_ZEDCAFE_IMPORT_MS = 10_000
 export const WANIX_ZEDCAFE_EXPORT_WAIT_MS = 90_000
 export const WANIX_ZEDCAFE_EXPORT_READY_POLL_MS = 250
-export const WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS = 30_000
-
-export function readwanixzedcafetaskinboxpath(taskrid: string): string {
-  return `#task/${taskrid}/${WANIX_ZEDCAFE_TASK_INBOX}`
-}
-
-export function readwanixzedcafetaskwasmpath(taskrid: string): string {
-  return `#task/${taskrid}/${WANIX_ZEDCAFE_TASK_WASM}`
-}
+/** Coalesce sim→zedcafe export checks for structural (non-terrain) changes. */
+export const WANIX_ZEDCAFE_EXPORT_COALESCE_MS = 500
+/** Narrower coalesce for terrain-only dirty (single board `terrain.json` path). */
+export const WANIX_ZEDCAFE_EXPORT_COALESCE_TERRAIN_MS = 75
+/** Immediate flush when exactly one dirty path is pending (no coalesce wait). */
+export const WANIX_ZEDCAFE_EXPORT_COALESCE_SINGLE_MS = 0
+/** Host + guest wait for content-ready stats.json. */
+export const WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS = 600_000
+/** Parent wait for `<target>/.zedsync-ready` after seeding a large peer tree. */
+export const WANIX_ZEDSYNC_READY_TIMEOUT_MS = 900_000
+/** Meta dir under the zedcafe export root for zedsync revision hints (peer-visible). */
+export const WANIX_ZEDSYNC_REVISION_DIR = '.zedsync'
+/** Revision hint written after each successful host push: `{ revision, paths }`. */
+export const WANIX_ZEDSYNC_REVISION_FILE = '.zedsync/revision'
 
 export function readwanixzedcafeexportsrc(taskrid: string): string {
   return `#task/${taskrid}/export`

@@ -1,5 +1,5 @@
 import { useThree } from '@react-three/fiber'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { BufferAttribute, BufferGeometry } from 'three'
 import { RUNTIME } from 'zss/config'
 import {
@@ -8,6 +8,7 @@ import {
   CHAR_WIDTH,
   SPRITE,
 } from 'zss/gadget/data/types'
+import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { time } from 'zss/gadget/display/anim'
 import { useSpritePool } from 'zss/gadget/display/spritepool'
 import {
@@ -18,6 +19,8 @@ import { useMedia } from 'zss/gadget/media'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_SIZE } from 'zss/memory/types'
 import { recordspriteeffectrun } from 'zss/perf/renderupdatestats'
+
+import { spriteshouldsnapposition } from './spritesboardsnap'
 
 type SpritesProps = {
   sprites: SPRITE[]
@@ -35,6 +38,10 @@ export function SpriteMeshes({
   const { viewport } = useThree()
   const palette = useMedia((state) => state.palettedata)
   const charset = useMedia((state) => state.spritecharsetdata)
+  const board = useGadgetClient((state) => state.gadget.board)
+  const lastboardref = useRef(board)
+  // Board id can update one frame before sprite coords; keep snapping briefly.
+  const boardsnapframesref = useRef(0)
   const material = useMemo(
     () =>
       withbillboards ? createBillboardsMaterial() : createSpritesMaterial(),
@@ -109,11 +116,28 @@ export function SpriteMeshes({
       return
     }
 
+    const boardchanged = lastboardref.current !== board
+    lastboardref.current = board
+    if (boardchanged) {
+      boardsnapframesref.current = 2
+    }
+    const boardsnap = boardchanged || boardsnapframesref.current > 0
+    if (boardsnapframesref.current > 0) {
+      boardsnapframesref.current -= 1
+    }
+
     for (let i = 0; i < spritepool.length; ++i) {
       const sprite = spritepool[i]
       if (sprite.id) {
-        // animate movement
-        const firstframe = visible.getX(i) === 0
+        // walk lerps; board/teleport snaps (camera edge glide is separate)
+        const deltax = sprite.x - position.getX(i)
+        const deltay = sprite.y - position.getY(i)
+        const firstframe = spriteshouldsnapposition(
+          visible.getX(i) === 0,
+          boardsnap,
+          deltax,
+          deltay,
+        )
         if (firstframe) {
           position.setXY(i, sprite.x, sprite.y)
           display.setXYZW(
@@ -123,9 +147,10 @@ export function SpriteMeshes({
             sprite.color,
             sprite.bg,
           )
-          lastposition.setXYZ(i, sprite.x, sprite.y, time.value)
-          lastcolor.setXY(i, sprite.color, time.value)
-          lastbg.setXY(i, sprite.bg, time.value)
+          // time in the past so shader animDelta is already complete
+          lastposition.setXYZ(i, sprite.x, sprite.y, time.value - 10)
+          lastcolor.setXY(i, sprite.color, time.value - 10)
+          lastbg.setXY(i, sprite.bg, time.value - 10)
           visible.setX(i, 1)
           visible.needsUpdate = true
           position.needsUpdate = true
@@ -183,6 +208,7 @@ export function SpriteMeshes({
     lastposition,
     lastcolor,
     lastbg,
+    board,
   ])
 
   return (

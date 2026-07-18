@@ -17,10 +17,8 @@ jest.mock('zss/memory/boundaries', () => ({
 
 import type { MESSAGE } from 'zss/device/api'
 import { shouldprocessboardrunnermessage } from 'zss/device/boardrunner/filter'
-import {
-  boardrunnerhandlers,
-  handleboardrunnerdefault,
-} from 'zss/device/boardrunner/handlers/registry'
+import { handleboardrunnerdefault } from 'zss/device/boardrunner/handlers/default'
+import { boardrunnerhandlers } from 'zss/device/boardrunner/handlers/registry'
 import { memoryreadboardrunner } from 'zss/memory/session'
 
 function makemessage(target: string, player = 'runner1'): MESSAGE {

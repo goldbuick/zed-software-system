@@ -635,11 +635,11 @@ export const GLOSSARY: GlossaryEntry[] = [
     related: 'LOADER driver, parse',
   },
   {
-    term: 'scroll page',
+    term: 'txt page',
     category: 'Codepage types',
     audience: 'Creator',
     definition:
-      'CODE_PAGE_TYPE.SCROLL — plain-text notes page (`@scroll <name>`). No ZSS execution; ZNS renders markdown and $ zsstext colors.',
+      'CODE_PAGE_TYPE.TXT — plain-text notes page (`@txt <name>`). No ZSS execution; ZNS renders markdown and $ zsstext colors.',
     related: 'refscroll, zns',
   },
   {
@@ -1011,15 +1011,6 @@ export const GLOSSARY: GlossaryEntry[] = [
     definition:
       'Permission preset allowing broad build and explore for all players.',
     related: 'lockdown, #access',
-  },
-  {
-    term: 'GPU coordinator',
-    category: 'Integrations',
-    audience: 'Dev',
-    definition:
-      'bootgpucoordinator() arbitrates WebGPU access for lazy STT worker inference.',
-    related: 'sttspace',
-    path: 'zss/feature/gpu/gpumain.ts',
   },
   {
     term: 'ttsspace',
@@ -1612,12 +1603,6 @@ export const FEATURE_DOMAINS: FeatureDomain[] = [
     title: 'Speech & TTS',
     color: 'purple',
     features: [
-      [
-        'GPU coordinator',
-        'Dev',
-        'Arbitrates WebGPU for lazy STT worker inference.',
-        'zss/feature/gpu/gpumain.ts',
-      ],
       [
         'TTS engines',
         'Creator',

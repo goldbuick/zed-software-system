@@ -9,8 +9,10 @@ import {
   createsynthid,
   createtopic,
   createtrackingid,
+  isfilenamesafeid,
   ispid,
   issid,
+  sanitizesidid,
 } from 'zss/mapping/guid'
 
 describe('guid', () => {
@@ -27,9 +29,56 @@ describe('guid', () => {
       expect(sid1).not.toBe(sid2)
     })
 
-    it('should not contain dashes', () => {
+    it('should not contain dashes or dots', () => {
       const sid = createsid()
       expect(sid).not.toContain('-')
+      expect(sid).not.toContain('.')
+    })
+
+    it('should match filename-safe shape', () => {
+      for (let i = 0; i < 200; ++i) {
+        const sid = createsid()
+        expect(sid).toMatch(/^sid_[A-Za-z0-9_]+$/)
+        expect(sid).not.toContain('..')
+        expect(sid.endsWith('.')).toBe(false)
+        expect(isfilenamesafeid(sid)).toBe(true)
+      }
+    })
+  })
+
+  describe('isfilenamesafeid', () => {
+    it('accepts alphanumeric and underscore ids', () => {
+      expect(isfilenamesafeid('sid_abc_123')).toBe(true)
+      expect(isfilenamesafeid('pid_1234_abcdefghijklmnop')).toBe(true)
+    })
+
+    it('rejects dots and path separators', () => {
+      expect(isfilenamesafeid('sid_8FzEX.FvcYV1')).toBe(false)
+      expect(isfilenamesafeid('sid_zSjwtyZcRFN.')).toBe(false)
+      expect(isfilenamesafeid('sid_a..b')).toBe(false)
+      expect(isfilenamesafeid('a/b')).toBe(false)
+      expect(isfilenamesafeid('a\\b')).toBe(false)
+      expect(isfilenamesafeid('')).toBe(false)
+    })
+  })
+
+  describe('sanitizesidid', () => {
+    it('leaves safe ids unchanged', () => {
+      expect(sanitizesidid('sid_abc_123')).toBe('sid_abc_123')
+    })
+
+    it('replaces dots with underscores', () => {
+      expect(sanitizesidid('sid_8FzEX.FvcYV1')).toBe('sid_8FzEX_FvcYV1')
+      expect(sanitizesidid('sid_.HhnwpAAMwgO')).toBe('sid__HhnwpAAMwgO')
+      expect(sanitizesidid('sid_zSjwtyZcRFN.')).toBe('sid_zSjwtyZcRFN_')
+      expect(sanitizesidid('sid_a..b')).toBe('sid_a__b')
+    })
+
+    it('avoids collisions using taken set', () => {
+      const taken = new Set(['sid_8FzEX_FvcYV1'])
+      expect(sanitizesidid('sid_8FzEX.FvcYV1', taken)).toBe(
+        'sid_8FzEX_FvcYV1_1',
+      )
     })
   })
 

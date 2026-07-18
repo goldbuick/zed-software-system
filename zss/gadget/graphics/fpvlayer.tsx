@@ -1,5 +1,5 @@
 import { RUNTIME } from 'zss/config'
-import { registerreadplayer } from 'zss/device/register'
+import { registerreadplayer } from 'zss/device/registerplayer'
 import { LAYER, LAYER_TYPE, layersreadcontrol } from 'zss/gadget/data/types'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { ispresent } from 'zss/mapping/types'

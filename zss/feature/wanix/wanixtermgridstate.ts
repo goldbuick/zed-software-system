@@ -50,6 +50,8 @@ export type WanixTermCellsSnapshot = {
   scrollbackcolor: number[]
   scrollbackbg: number[]
   digest: string
+  altactive: boolean
+  bracketedpaste: boolean
 }
 
 export type WanixTermNormalSave = {
@@ -447,8 +449,12 @@ function clampcursory(grid: WANIX_TERM_GRID, y: number) {
   return Math.min(Math.max(0, y), Math.max(0, grid.rows - 1))
 }
 
-function readcsiparam(seq: string, final: string, defaultparam = 1): number | null {
-  if (seq.length === 0 || seq[seq.length - 1] !== final) {
+function readcsiparam(
+  seq: string,
+  final: string,
+  defaultparam = 1,
+): number | null {
+  if (seq.length === 0 || !seq.endsWith(final)) {
     return null
   }
   const body = seq.slice(0, -1)
@@ -1052,6 +1058,8 @@ export function readwanixtermgridsnapshot(
     scrollbackcolor: scrollback.scrollbackcolor,
     scrollbackbg: scrollback.scrollbackbg,
     digest: '',
+    altactive: grid.altactive,
+    bracketedpaste: false,
   }
   snapshot.digest = digestwanixtermcells(snapshot)
   return snapshot

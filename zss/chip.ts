@@ -1,5 +1,6 @@
 import ErrorStackParser from 'error-stack-parser'
 import { debugingest } from 'zss/debugingest'
+import type { MESSAGE } from 'zss/device/types'
 import {
   type GeneratorBuild,
   type GeneratorFunc,
@@ -7,7 +8,7 @@ import {
 import { GENERATED_FILENAME } from 'zss/feature/lang/backend/typescript/transformer'
 
 import { RUNTIME } from './config'
-import { MESSAGE, apierror, chipmessage } from './device/api'
+import { apierror, chipmessage } from './device/api'
 import { SOFTWARE } from './device/session'
 import {
   DRIVER_TYPE,
@@ -599,6 +600,21 @@ export function createchip(
         if (!logic?.(chip)) {
           flags.es = 1
         }
+        // consecutive max-iteration strikes: halt after YIELD_STRIKE_LIMIT
+        if (isnumber(flags.lc) && flags.lc > RUNTIME.YIELD_AT_COUNT) {
+          flags.sc = (isnumber(flags.sc) ? flags.sc : 0) + 1
+          if (flags.sc >= RUNTIME.YIELD_STRIKE_LIMIT) {
+            apierror(
+              SOFTWARE,
+              READ_CONTEXT.elementfocus,
+              'slow',
+              `halted after ${RUNTIME.YIELD_STRIKE_LIMIT} max-iteration ticks`,
+            )
+            flags.es = 1
+          }
+        } else {
+          flags.sc = 0
+        }
       } catch (err: any) {
         apierror(SOFTWARE, READ_CONTEXT.elementfocus, 'crash', err.message)
         flags.es = 1
@@ -639,6 +655,10 @@ export function createchip(
     },
     shouldtick() {
       const flags = chipflags()
+      // sticky ban after consecutive max-iteration strikes
+      if (isnumber(flags.sc) && flags.sc >= RUNTIME.YIELD_STRIKE_LIMIT) {
+        return false
+      }
       return !flags.sk && (flags.es === 0 || chip.hm() !== 0)
     },
     checkcount() {

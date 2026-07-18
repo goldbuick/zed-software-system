@@ -1,5 +1,11 @@
 import { execFileSync } from 'node:child_process'
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  writeFileSync,
+} from 'node:fs'
 import { dirname, join } from 'node:path'
 import { inflateSync } from 'node:zlib'
 
@@ -468,14 +474,110 @@ async function runznsgridpreview(ctx: TaskContext): Promise<number> {
   return 0
 }
 
+const ZNS_PATH_KEY_RE = /^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?$/
+
+async function runznsdocspublish(ctx: TaskContext): Promise<number> {
+  const e = taskenv(ctx)
+  const dryrun =
+    ctx.args.includes('--dry-run') ||
+    ctx.args.includes('dry-run') ||
+    e.ZNS_DRY_RUN === '1'
+  const apex = (e.ZNS_APEX ?? 'https://at.zed.cafe').replace(/\/+$/, '')
+  const romdir = join(ctx.root, 'zss/rom/refscroll')
+  if (!existsSync(romdir)) {
+    console.error(`missing refscroll dir: ${romdir}`)
+    return 1
+  }
+  const files = readdirSync(romdir)
+    .filter((name) => name.endsWith('.md'))
+    .sort()
+  if (files.length === 0) {
+    console.error(`no .md files in ${romdir}`)
+    return 1
+  }
+  const keys: string[] = []
+  for (const name of files) {
+    const key = name.slice(0, -'.md'.length)
+    if (!ZNS_PATH_KEY_RE.test(key)) {
+      console.error(`invalid ZNS path key from ${name}: ${key}`)
+      return 1
+    }
+    keys.push(key)
+  }
+  console.log(`ops:zns:docs:publish ${keys.length} keys -> ${apex} (docs)`)
+  if (dryrun) {
+    for (const key of keys) {
+      console.log(`dry-run ${key}`)
+    }
+    return 0
+  }
+  const email = requiretaskenv(ctx, 'ZNS_EMAIL')
+  const token = requiretaskenv(ctx, 'ZNS_TOKEN')
+  if (!email || !token) {
+    return 1
+  }
+  for (let i = 0; i < files.length; ++i) {
+    const name = files[i]
+    const key = keys[i]
+    const value = readFileSync(join(romdir, name), 'utf8')
+    const formdata = new FormData()
+    formdata.append('email', email)
+    formdata.append('token', token)
+    formdata.append('key', key)
+    formdata.append('value', value)
+    const response = await fetch(`${apex}/api/set`, {
+      method: 'POST',
+      body: formdata,
+    })
+    const body = (await response.json().catch(() => null)) as {
+      success?: boolean
+      error?: string
+    } | null
+    if (!response.ok || !body?.success) {
+      console.error(
+        `FAIL ${key}: HTTP ${response.status} ${body?.error ?? JSON.stringify(body)}`,
+      )
+      return 1
+    }
+    console.log(`ok ${key}`)
+  }
+  const listform = new FormData()
+  listform.append('email', email)
+  listform.append('token', token)
+  const listresponse = await fetch(`${apex}/api/list`, {
+    method: 'POST',
+    body: listform,
+  })
+  const listbody = (await listresponse.json().catch(() => null)) as {
+    success?: boolean
+    list?: { key?: string }[]
+  } | null
+  if (!listresponse.ok || !listbody?.success || !Array.isArray(listbody.list)) {
+    console.error(`FAIL /api/list after publish: HTTP ${listresponse.status}`)
+    return 1
+  }
+  const listed = new Set(
+    listbody.list.map((row) => row.key).filter((k): k is string => !!k),
+  )
+  const missing = keys.filter((key) => !listed.has(key))
+  if (missing.length > 0) {
+    console.error(`FAIL list missing keys: ${missing.join(', ')}`)
+    return 1
+  }
+  console.log(
+    `published ${keys.length} keys; namespace list has ${listed.size} keys`,
+  )
+  return 0
+}
+
 async function runznsscrollpreview(ctx: TaskContext): Promise<number> {
   const root = ctx.root
   const romdir = join(root, 'zss/rom/refscroll')
   const dest = join(root, 'ops/infra/generated/zns-scroll-preview.html')
   const {
     scrollsourceisrawzss,
-    scrollsourceisscrollcodepage,
-    zedscrollhtml,
+    scrollsourceistxtcodepage,
+    zedtxthtml,
     zedtapehtml,
     zedtaperowshtml,
     zedzsshtml,
@@ -516,30 +618,17 @@ async function runznsscrollpreview(ctx: TaskContext): Promise<number> {
     validatecp437webchars().length === 0,
     'all cp437 0-255 must be web-safe',
   )
-  const scrollcodepage = '@scroll notes\n## heading\n$RED hi'
+  const txtcodepage = '@txt notes\n## heading\n$RED hi'
+  assertok(scrollsourceistxtcodepage(txtcodepage), 'txt codepage detected')
+  assertok(!scrollsourceisrawzss(txtcodepage), 'txt codepage is not raw ZSS')
+  const txthtml = zedtxthtml(txtcodepage, { tenantbase: '/' })
+  assertok(!txthtml.includes('@txt notes'), 'txt header stripped from html')
+  assertok(!txthtml.includes('## heading'), 'txt heading rendered via markdown')
+  assertok(txthtml.includes('heading'), 'txt heading text present')
+  assertok(!txthtml.includes('$RED'), 'txt $RED should not show literal')
   assertok(
-    scrollsourceisscrollcodepage(scrollcodepage),
-    'scroll codepage detected',
-  )
-  assertok(
-    !scrollsourceisrawzss(scrollcodepage),
-    'scroll codepage is not raw ZSS',
-  )
-  const scrollhtml = zedscrollhtml(scrollcodepage, { tenantbase: '/' })
-  assertok(
-    !scrollhtml.includes('@scroll notes'),
-    'scroll header stripped from html',
-  )
-  assertok(
-    !scrollhtml.includes('## heading'),
-    'scroll heading rendered via markdown',
-  )
-  assertok(scrollhtml.includes('heading'), 'scroll heading text present')
-  assertok(!scrollhtml.includes('$RED'), 'scroll $RED should not show literal')
-  assertok(
-    scrollhtml.toLowerCase().includes('color:#') &&
-      !scrollhtml.includes('$RED'),
-    'scroll $RED should render as colored span',
+    txthtml.toLowerCase().includes('color:#') && !txthtml.includes('$RED'),
+    'txt $RED should render as colored span',
   )
   assertok(clhtml.includes('OPENIT'), 'cliscroll should render OPENIT rows')
   assertok(
@@ -641,7 +730,7 @@ section { margin-bottom: 32px; }
 <section><h1>helptext</h1>${helhtml}</section>
 <section><h1>algoscroll</h1>${algohtml}</section>
 <section><h1>passage</h1>${passagehtml}</section>
-<section><h1>scroll codepage</h1>${scrollhtml}</section>
+<section><h1>txt codepage</h1>${txthtml}</section>
 </body>
 </html>`
   writeFileSync(dest, html)
@@ -983,6 +1072,12 @@ export const OPS_DEPLOY_TASKS: TaskDef[] = [
     tags: ['dev', 'ci'],
     group: 'deploy',
     run: handler(runznsscrollpreview),
+  }),
+  def('ops:zns:docs:publish', {
+    description:
+      'Publish zss/rom/refscroll/*.md to docs ZNS namespace (ZNS_EMAIL + ZNS_TOKEN; --dry-run)',
+    tags: ['deploy'],
+    run: handler(runznsdocspublish),
   }),
   def('ops:zns:landing:dev', {
     description:

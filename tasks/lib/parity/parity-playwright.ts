@@ -27,7 +27,11 @@ export async function startparityvitehost(
 export async function launchparitybrowser(
   timeoutms = 60_000,
 ): Promise<Browser> {
-  return chromium.launch({ headless: false, timeout: timeoutms })
+  return chromium.launch({
+    headless: process.env.PLAYWRIGHT_HEADLESS === '1',
+    channel: 'chrome',
+    timeout: timeoutms,
+  })
 }
 
 export async function openparitypage(

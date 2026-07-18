@@ -1,0 +1,530 @@
+import { mkdirSync, writeFileSync } from 'node:fs'
+import path from 'node:path'
+
+import {
+  PLAYWRIGHT_SCENARIO_TIMEOUT_MS,
+  withscripttimeout,
+} from 'tasks/lib/parity/parity-timeouts'
+import { WANIX_ZEDCAFE_EXPORT_READY_POLL_MS } from 'zss/feature/wanix/wanixzedcafeconstants'
+
+export const WANIX_ZEDCAFE_VM_SESSION = 'linux-vm'
+export const WANIX_ZEDCAFE_REPORT_PATH = '/tmp/wanix-zedcafe-export-report.json'
+export const WANIX_ZEDCAFE_REPORTS_DIR = 'ops/fixtures/wanix/reports'
+export const EXPORT_TRACE_RE = /\[zedcafe-export\]/
+export const WANIX_PERF_RE = /\[wanix-perf\] (\S+)(?: (.+))?/
+
+export type ZedcafeStatsSnapshot = {
+  bookCount: number
+  exportedAt: string
+  bytes: number
+}
+
+export type ZedcafeTimelineEntry = {
+  ms: number
+  label: string
+  extra?: Record<string, unknown>
+}
+
+export type ZedcafeFailureReport = {
+  failedgate: string
+  timeline: ZedcafeTimelineEntry[]
+  taskrid: string | null
+  rpc: Record<string, unknown>
+  readdirerrors: string[]
+  walkbookserrors: string[]
+  bootstrapsyncerrors?: string[]
+  undefinedreferrors?: string[]
+  vmexporttimeouterrors?: string[]
+  termdump: string
+  termdumptail: string
+  recentlogs: string[]
+  hoststats?: ZedcafeStatsSnapshot | null
+  gueststats?: ZedcafeStatsSnapshot | null
+  hostexportpaths?: string[]
+  membookcount?: number
+  exporttrace?: string[]
+}
+
+const EXPORT_READDIR_RE = /#task\/\d+\/export.*file does not exist/i
+const WALK_BOOKS_RE = /walk books\/.*file does not exist/i
+const BOOTSTRAP_SYNC_FAIL_RE = /\[zedcafe-export\] bootstrap sync failed/i
+const UNDEFINED_REF_RE = /appendguestexportbind\w* is not defined/i
+const VM_EXPORT_FETCH_TIMEOUT_RE = /zedcafe export: vm export fetch timed out/i
+
+export function collectexportconsoleerrors(lines: string[]): {
+  readdirerrors: string[]
+  walkbookserrors: string[]
+  bootstrapsyncerrors: string[]
+  undefinedreferrors: string[]
+  vmexporttimeouterrors: string[]
+} {
+  const readdirerrors: string[] = []
+  const walkbookserrors: string[] = []
+  const bootstrapsyncerrors: string[] = []
+  const undefinedreferrors: string[] = []
+  const vmexporttimeouterrors: string[] = []
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    if (EXPORT_READDIR_RE.test(line)) {
+      readdirerrors.push(line)
+    }
+    if (WALK_BOOKS_RE.test(line)) {
+      walkbookserrors.push(line)
+    }
+    if (BOOTSTRAP_SYNC_FAIL_RE.test(line)) {
+      bootstrapsyncerrors.push(line)
+    }
+    if (UNDEFINED_REF_RE.test(line)) {
+      undefinedreferrors.push(line)
+    }
+    if (VM_EXPORT_FETCH_TIMEOUT_RE.test(line)) {
+      vmexporttimeouterrors.push(line)
+    }
+  }
+  return {
+    readdirerrors,
+    walkbookserrors,
+    bootstrapsyncerrors,
+    undefinedreferrors,
+    vmexporttimeouterrors,
+  }
+}
+
+export async function readplaywrightlogs(
+  page: import('@playwright/test').Page,
+): Promise<string[]> {
+  return page.evaluate(() => {
+    const g = globalThis as { __playwrightLogs?: string[] }
+    return g.__playwrightLogs ?? []
+  })
+}
+
+export async function sendwanixcli(
+  page: import('@playwright/test').Page,
+  root: string,
+  cmd: string,
+): Promise<void> {
+  await page.evaluate(
+    async ({ projectroot, line }) => {
+      const { vmcli } = await import(`/@fs${projectroot}/zss/device/api.ts`)
+      const { register } = await import(
+        `/@fs${projectroot}/zss/device/register.ts`
+      )
+      const { registerreadplayer } = await import(
+        `/@fs${projectroot}/zss/device/registerplayer.ts`
+      )
+      vmcli(register, registerreadplayer(), line)
+    },
+    { projectroot: root, line: cmd },
+  )
+}
+
+export async function polluntil<T>(
+  label: string,
+  budgetms: number,
+  pollms: number,
+  read: () => Promise<T>,
+  ready: (value: T) => boolean,
+): Promise<T> {
+  const start = Date.now()
+  return withscripttimeout(label, budgetms, async () => {
+    for (;;) {
+      const value = await read()
+      if (ready(value)) {
+        return value
+      }
+      if (Date.now() - start >= budgetms) {
+        return value
+      }
+      await new Promise<void>((resolve) => setTimeout(resolve, pollms))
+    }
+  })
+}
+
+export async function polliswanixready(
+  page: import('@playwright/test').Page,
+  budgetms = PLAYWRIGHT_SCENARIO_TIMEOUT_MS,
+): Promise<void> {
+  await withscripttimeout('wanix-ready-flag', budgetms, async () => {
+    for (;;) {
+      const ready = await page.evaluate(() => {
+        const g = globalThis as { iswanixready?: () => boolean }
+        return typeof g.iswanixready === 'function' && g.iswanixready()
+      })
+      if (ready) {
+        return
+      }
+      await new Promise<void>((resolve) =>
+        setTimeout(resolve, WANIX_ZEDCAFE_EXPORT_READY_POLL_MS),
+      )
+    }
+  })
+}
+
+/** Evaluate a wanixserver runtime export inside the wanix iframe. */
+export async function evalwaniixhost<T>(
+  page: import('@playwright/test').Page,
+  exportname: string,
+  args: unknown[] = [],
+  _timeoutms?: number,
+): Promise<T> {
+  const frame = page.frames().find((f) => f.url().includes('wanix.html'))
+  if (!frame) {
+    throw new Error('wanix iframe frame not found')
+  }
+  return frame.evaluate(
+    async ({ name, fnargs }) => {
+      const host = (
+        globalThis as { __zss_wanix_host__?: Record<string, unknown> }
+      ).__zss_wanix_host__
+      if (!host) {
+        throw new Error('wanix host helpers missing on iframe')
+      }
+      const fn = host[name]
+      if (typeof fn !== 'function') {
+        throw new Error(`wanix host export missing: ${name}`)
+      }
+      return (fn as (...a: unknown[]) => unknown)(...fnargs)
+    },
+    { name: exportname, fnargs: args },
+  ) as Promise<T>
+}
+
+export async function readtermbuffertext(
+  page: import('@playwright/test').Page,
+  root: string,
+  sessionkey: string,
+  opts?: { tail?: number; viewportonly?: boolean },
+): Promise<string> {
+  return page.evaluate(
+    async ({ projectroot, key, dumpopts }) => {
+      const { readwanixtermbuffer } = await import(
+        `/@fs${projectroot}/zss/device/wanixclient/wanixtermbuffer.ts`
+      )
+      const { dumpwanixtermbuffertext } = await import(
+        `/@fs${projectroot}/zss/device/wanixclient/wanixtermtext.ts`
+      )
+      const buffer = readwanixtermbuffer(key)
+      if (!buffer) {
+        return ''
+      }
+      return dumpwanixtermbuffertext(buffer, dumpopts)
+    },
+    { projectroot: root, key: sessionkey, dumpopts: opts },
+  )
+}
+
+export async function waitwanixtermcontains(
+  page: import('@playwright/test').Page,
+  root: string,
+  sessionkey: string,
+  pattern: string,
+  budgetms = 30_000,
+  pollms = 250,
+): Promise<string> {
+  return polluntil(
+    `wanix-term-contains:${pattern}`,
+    budgetms,
+    pollms,
+    () => readtermbuffertext(page, root, sessionkey),
+    (text) => text.includes(pattern),
+  )
+}
+
+export async function writewaniixterminpage(
+  page: import('@playwright/test').Page,
+  root: string,
+  data: string,
+  sessionkey: string,
+): Promise<void> {
+  await page.evaluate(
+    async ({ projectroot, payload, key }) => {
+      const { wanixservertermwrite } = await import(
+        `/@fs${projectroot}/zss/device/api.ts`
+      )
+      const { SOFTWARE } = await import(
+        `/@fs${projectroot}/zss/device/session.ts`
+      )
+      const { registerreadplayer } = await import(
+        `/@fs${projectroot}/zss/device/registerplayer.ts`
+      )
+      wanixservertermwrite(SOFTWARE, registerreadplayer(), payload, key)
+    },
+    { projectroot: root, payload: data, key: sessionkey },
+  )
+}
+
+/** @deprecated use writewaniixterminpage */
+export const callwanixtermwriteinpage = writewaniixterminpage
+
+export function parsestatsjsonbytes(
+  data: number[],
+): ZedcafeStatsSnapshot | null {
+  if (data.length === 0) {
+    return null
+  }
+  try {
+    const parsed = JSON.parse(
+      new TextDecoder().decode(new Uint8Array(data)),
+    ) as {
+      exportedAt?: unknown
+      bookCount?: unknown
+    }
+    if (
+      typeof parsed.exportedAt !== 'string' ||
+      parsed.exportedAt.length === 0 ||
+      typeof parsed.bookCount !== 'number'
+    ) {
+      return null
+    }
+    return {
+      bookCount: parsed.bookCount,
+      exportedAt: parsed.exportedAt,
+      bytes: data.length,
+    }
+  } catch {
+    return null
+  }
+}
+
+export async function readmembookcountinpage(
+  page: import('@playwright/test').Page,
+  root: string,
+): Promise<number> {
+  return page.evaluate(async (projectroot) => {
+    const { memoryreadbooklist } = await import(
+      `/@fs${projectroot}/zss/memory/session.ts`
+    )
+    return memoryreadbooklist().length
+  }, root)
+}
+
+export async function importfixturebookinpage(
+  page: import('@playwright/test').Page,
+  root: string,
+  bookjson: string,
+): Promise<number> {
+  return page.evaluate(
+    async ({ projectroot, payload }) => {
+      const { memoryimportbookfromjson } = await import(
+        `/@fs${projectroot}/zss/memory/bookoperations.ts`
+      )
+      const { memoryreadbooklist, memoryresetbooks } = await import(
+        `/@fs${projectroot}/zss/memory/session.ts`
+      )
+      const parsed = JSON.parse(payload) as { data?: unknown }
+      const flat = parsed.data ?? parsed
+      const book = memoryimportbookfromjson(flat)
+      if (!book) {
+        throw new Error('memoryimportbookfromjson failed')
+      }
+      memoryresetbooks([book])
+      return memoryreadbooklist().length
+    },
+    { projectroot: root, payload: bookjson },
+  )
+}
+
+export function readfindplayersbookspaths(text: string): boolean {
+  const compact = text.replace(/\s+/g, '')
+  if (/\/books\/|\/pages\//.test(compact) || compact.includes('["books/')) {
+    return false
+  }
+  return /\["[a-zA-Z0-9._-]+\/[^"]+\.json"/.test(compact)
+}
+
+export async function readwanixtermbufferkeysinpage(
+  page: import('@playwright/test').Page,
+  root: string,
+): Promise<string[]> {
+  return page.evaluate(async (projectroot) => {
+    const { readwanixtermbufferkeys } = await import(
+      `/@fs${projectroot}/zss/device/wanixclient/wanixtermbuffer.ts`
+    )
+    return readwanixtermbufferkeys()
+  }, root)
+}
+
+export async function pollfindplayersoutput(
+  page: import('@playwright/test').Page,
+  root: string,
+  consolelines: string[],
+  budgetms: number,
+  pollms: number,
+): Promise<string> {
+  return polluntil(
+    'findplayers-run',
+    budgetms,
+    pollms,
+    async () => {
+      for (const line of consolelines) {
+        if (readfindplayersbookspaths(line)) {
+          return line
+        }
+      }
+      const keys = await readwanixtermbufferkeysinpage(page, root)
+      for (const key of keys) {
+        const text = await readtermbuffertext(page, root, key)
+        if (readfindplayersbookspaths(text)) {
+          return text
+        }
+      }
+      return ''
+    },
+    (text) => readfindplayersbookspaths(text),
+  )
+}
+
+export async function readhostexportstats(
+  page: import('@playwright/test').Page,
+  taskrid: string,
+): Promise<ZedcafeStatsSnapshot | null> {
+  const data = await evalwaniixhost<number[]>(page, 'readfile', [
+    `#task/${taskrid}/export/stats.json`,
+  ]).catch(() => [])
+  if (!Array.isArray(data)) {
+    return null
+  }
+  return parsestatsjsonbytes(data)
+}
+
+export async function readhostexportpaths(
+  page: import('@playwright/test').Page,
+  limit = 40,
+): Promise<string[]> {
+  const files = await evalwaniixhost<{ path: string; data: number[] }[]>(
+    page,
+    'readzedcafeexportfiles',
+    [],
+  ).catch(() => [])
+  if (!Array.isArray(files)) {
+    return []
+  }
+  return files.slice(0, limit).map((file) => file.path)
+}
+
+export function collectexporttrace(lines: string[]): string[] {
+  const trace: string[] = []
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    if (line.includes('[zedcafe-export]')) {
+      trace.push(line)
+    }
+  }
+  return trace
+}
+
+export function collectwanixperf(
+  lines: string[],
+  startms: number,
+): ZedcafeTimelineEntry[] {
+  const entries: ZedcafeTimelineEntry[] = []
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    const match = WANIX_PERF_RE.exec(line)
+    if (!match) {
+      continue
+    }
+    const label = match[1]
+    let extra: Record<string, unknown> | undefined
+    if (match[2]) {
+      try {
+        extra = JSON.parse(match[2]) as Record<string, unknown>
+      } catch {
+        extra = { raw: match[2] }
+      }
+    }
+    const sinceanchor =
+      typeof extra?.sinceanchor === 'number' ? extra.sinceanchor : undefined
+    const elapsedms =
+      typeof extra?.elapsedms === 'number' ? extra.elapsedms : undefined
+    entries.push({
+      ms: sinceanchor ?? elapsedms ?? startms,
+      label,
+      extra,
+    })
+  }
+  return entries
+}
+
+/** True when ls -la /zedcafe lists root stats.json and at least one book dir. */
+export function readlslistsbooksdir(text: string): boolean {
+  const lines = text.split('\n')
+  let afterls = false
+  let hasstats = false
+  let hasbookdir = false
+  for (let i = 0; i < lines.length; i++) {
+    const trimmed = lines[i].trim()
+    if (/ls\s+(-la\s+)?\/zedcafe/.test(trimmed)) {
+      afterls = true
+      continue
+    }
+    if (!afterls) {
+      continue
+    }
+    if (trimmed.length === 0) {
+      continue
+    }
+    if (/^stats\.json$/.test(trimmed) || /\sstats\.json$/.test(trimmed)) {
+      hasstats = true
+    }
+    // Book dirs are kebab name-id siblings of stats.json (not the old books/ wrapper).
+    if (
+      !/^stats\.json$/.test(trimmed) &&
+      !/\sstats\.json$/.test(trimmed) &&
+      (/^[a-zA-Z0-9._-]+\/?$/.test(trimmed) ||
+        /\s[a-zA-Z0-9._-]+\/?$/.test(trimmed))
+    ) {
+      const name = trimmed.split(/\s+/).pop()?.replace(/\/$/, '') ?? ''
+      if (name && name !== '.' && name !== '..' && name !== 'stats.json') {
+        hasbookdir = true
+      }
+    }
+  }
+  return hasstats && hasbookdir
+}
+
+export function parsebookcountfromterm(
+  text: string,
+  aftercommand = 'zedcafe-stats',
+): number | null {
+  const lines = text.split('\n')
+  let aftercmd = aftercommand.length === 0
+  for (let i = 0; i < lines.length; i++) {
+    if (aftercommand && lines[i].includes(aftercommand)) {
+      aftercmd = true
+      continue
+    }
+    if (!aftercmd) {
+      continue
+    }
+    const match = /"bookCount"\s*:\s*(\d+)/.exec(lines[i])
+    if (match) {
+      return Number(match[1])
+    }
+  }
+  return null
+}
+
+export function writededcafefailurereport(
+  report: ZedcafeFailureReport,
+  root?: string,
+): void {
+  const body = `${JSON.stringify(report, null, 2)}\n`
+  writeFileSync(WANIX_ZEDCAFE_REPORT_PATH, body)
+  if (root) {
+    const dir = path.join(root, WANIX_ZEDCAFE_REPORTS_DIR)
+    mkdirSync(dir, { recursive: true })
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-')
+    writeFileSync(path.join(dir, `zedcafe-export-${stamp}.json`), body)
+  }
+}
+
+export function failzedcafegate(
+  gate: string,
+  report: Omit<ZedcafeFailureReport, 'failedgate'>,
+  root?: string,
+): never {
+  writededcafefailurereport({ failedgate: gate, ...report }, root)
+  throw new Error(`zedcafe export validator failed at gate: ${gate}`)
+}

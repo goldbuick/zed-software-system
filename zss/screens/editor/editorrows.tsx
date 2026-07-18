@@ -52,7 +52,7 @@ export function EditorRows({
     })),
   )
   const terminalmode = useTape((state) => state.terminalmode)
-  const isscrollpage = useTape((state) => state.editor.type === 'scroll')
+  const istxtpage = useTape((state) => state.editor.type === 'txt')
 
   const withrows: EDITOR_CODE_ROW[] = useMemo(() => {
     if (rows.length) {
@@ -155,7 +155,7 @@ export function EditorRows({
     clippedapplybgtoindexes(index, edge.right, 46, 46, COLOR.DKCYAN, context)
 
     // apply token colors (line = code part; prefix = line number + space)
-    if (!isscrollpage) {
+    if (!istxtpage) {
       applycodetokencolors(
         xoffset,
         index,

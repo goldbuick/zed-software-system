@@ -1,44 +1,111 @@
 ---
-description: Ban barrel files and re-exports; import from defining modules only
+description: Ban barrels and all re-export facades; import only from defining modules
 globs: **/*.ts,**/*.tsx
 alwaysApply: true
 ---
 
 # No barrels or re-exports
 
-Do not add or extend barrel files or re-exports. Import symbols from the module where they are defined.
+Do not add or extend barrel files or re-exports. Import symbols from the module where they are **defined**. Shortening an import path is not a reason to re-export.
 
-## Prohibited
+Agents routinely miss this. Treat every new `export {` / `export type` / `export *` as a red flag until proven local.
 
-- **Re-export syntax** in any file:
-  - `export { ... } from '...'`
-  - `export * from '...'`
-  - `export type { ... } from '...'`
-- **Barrel files**: modules whose main job is forwarding exports (often `index.ts` / `index.tsx` that only re-export from siblings or subtrees).
-- **Re-exporting through a facade** to shorten import paths or hide internal layout.
+## Prohibited (all of these)
+
+### 1. Re-export syntax
+
+```typescript
+export { foo } from './foo'
+export * from './foo'
+export type { Foo } from './foo'
+```
+
+### 2. Import-then-export facades (same rule — do not use)
+
+```typescript
+import { foo } from './foo'
+export { foo } // ❌ still a re-export
+
+import { WANIX_ZEDCAFE_WASM_BUILD_ID } from './wanixzedcafewasmversion'
+export { WANIX_ZEDCAFE_WASM_BUILD_ID } // ❌
+
+import { registerreadplayer } from 'zss/device/registerplayer'
+export { registerreadplayer } // ❌ device facade
+```
+
+### 3. Type / value alias facades that only forward another module
+
+```typescript
+import type { DEVICELIKE as DEVICELIKE_TYPE } from './types'
+export type DEVICELIKE = DEVICELIKE_TYPE // ❌ prefer importing zss/device/types directly
+```
+
+Do **not** grow this pattern. When touching such a file, prefer pointing call sites at the defining module instead of adding more aliases.
+
+### 4. Barrel / aggregation modules
+
+- `index.ts` / `index.tsx` whose job is forwarding siblings or subtrees
+- “Convenience” modules that exist mainly to re-bundle exports from other files
+
+## Allowed
+
+| Pattern | Example |
+|---------|---------|
+| Export a symbol **defined in this file** | `export function foo() {}` / `const x = …; export { x }` |
+| Import for **local use only** (no re-export) | `import { foo } from './foo'; foo()` |
+| Third-party rename in a **dedicated mapping module** that owns the project name | `zss/mapping/types.ts`: `export { isEqual as isequal }` — that file **is** the defining module for `isequal` |
+
+`ops/archive/**` and `submodules/**` are out of scope for cleanup; still do not add new re-exports there.
 
 ## Required instead
 
-Import directly from the defining file:
-
 ```typescript
-// ❌ BAD — barrel / re-export
-export { createsynthbackend } from './backend/synthbackendfactory'
-import { createsynthbackend } from 'zss/feature/synth'
+// ❌ BAD — facade
+// zss/device/register.ts
+export { registerreadplayer } from 'zss/device/registerplayer'
+import { registerreadplayer } from 'zss/device/register'
 
-// ✅ GOOD — direct import
-import { createsynthbackend } from 'zss/feature/synth/backend/synthbackendfactory'
+// ✅ GOOD — defining module
+import { registerreadplayer } from 'zss/device/registerplayer'
 ```
 
-When a symbol must be public, export it once from its implementation file and import that path everywhere.
+```typescript
+// ❌ BAD — wanix convenience re-export
+export { waitwanixexportcontentready } from './wanixexportwait'
+
+// ✅ GOOD
+import { waitwanixexportcontentready } from 'zss/device/wanixclient/wanixexportwait'
+```
+
+When a symbol must be public, export it **once** from its implementation file and import that path everywhere.
+
+## Agent checklist (before finishing any TS/TSX edit)
+
+1. **Did this change add** `export {…} from`, `export * from`, `export type {…} from`, or `import X` + `export { X }`? → **Remove it** and update call sites.
+2. **Did this change add** a new `index.ts` that only re-exports? → **Do not ship it**.
+3. **Self-scan touched files** for `export {` / `export *` / `export type {` — if the symbol is not defined in that file, fix before done.
+4. Prefer a quick ripgrep over the diff:
+
+```bash
+rg -n "export\s+(\*|\{|type\s+\{).*from" path/to/changed
+```
+
+Also reject import-then-export:
+
+```bash
+# suspicious: export { name } where name was only imported
+rg -n "^export \{|^import \{[^}]*\}\s+from" path/to/changed
+```
 
 ## When editing existing code
 
-- Do **not** add new entries to existing barrel files.
-- Do **not** create new `index.ts` aggregation modules.
-- In changed files, replace barrel/re-export imports with direct imports when practical.
-- If removing a barrel, update call sites to the defining modules; do not replace one barrel with another.
+- Do **not** add new entries to existing barrels or facades.
+- Do **not** create new aggregation modules.
+- In changed files, replace facade imports with defining-module imports when you touch those call sites.
+- If removing a barrel/facade, update **all** call sites to the defining modules; do not replace one facade with another.
 
 ## Exceptions
 
-None for new or modified code. Legacy barrels may remain until touched; never grow them.
+**None** for new or modified code in `zss/`, `cafe/`, `ops/lib/`, `tasks/`, or tests.
+
+Legacy facades may remain until touched; **never grow them**. When the user asks to clean re-exports, remove facades and fix call sites in the same change.

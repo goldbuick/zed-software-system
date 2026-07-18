@@ -17,12 +17,12 @@ export function extractcontentfromargs(words: unknown, skip = 1): string {
 
 import type { MAYBE } from 'zss/mapping/types'
 import { ispresent } from 'zss/mapping/types'
+import { ZSS_CURSOR_BG, ZSS_CURSOR_FG } from 'zss/screens/tape/colors'
 import {
   type WRITE_TEXT_CONTEXT,
   applycolortoindexes,
   applystrtoindex,
 } from 'zss/words/textformat'
-import { COLOR } from 'zss/words/types'
 
 // ---------------------------------------------------------------------------
 // Selection range (editor + terminal)
@@ -83,8 +83,22 @@ export type TextEdge = {
 }
 
 /** CP437 full block — single glyph used for text cursors. */
-const CURSOR_BLOCK_CHAR_CODE = 219
-const CURSOR_BLOCK_CHAR = String.fromCharCode(CURSOR_BLOCK_CHAR_CODE)
+export const CURSOR_BLOCK_CHAR_CODE = 219
+const CURSOR_SPACE_CHAR_CODE = 32
+
+export function cursorcellvalues(
+  ch: number,
+  _fg: number,
+  bg: number,
+  options?: { cursorfg?: number; cursorbg?: number },
+): { char: number; color: number; bg: number } {
+  const cursorfg = options?.cursorfg ?? ZSS_CURSOR_FG
+  const cursorbg = options?.cursorbg ?? ZSS_CURSOR_BG
+  if (ch === CURSOR_SPACE_CHAR_CODE) {
+    return { char: CURSOR_BLOCK_CHAR_CODE, color: cursorfg, bg: cursorbg }
+  }
+  return { char: ch, color: cursorfg, bg }
+}
 
 /**
  * Draw cursor at (x, y) in screen coordinates relative to edge.
@@ -104,13 +118,26 @@ export function drawblockcursor(
     return
   }
   const atchar = px + py * context.width
-  const fg = options?.fg ?? COLOR.BLWHITE
-  const bg = options?.bg ?? COLOR.DKGRAY
-  const ch = context.char[atchar]
-  if (ch === ' ') {
-    applystrtoindex(atchar, CURSOR_BLOCK_CHAR, context)
+  const raw = context.char[atchar]
+  const chcode =
+    raw === ' ' || raw === ''
+      ? CURSOR_SPACE_CHAR_CODE
+      : typeof raw === 'number'
+        ? raw
+        : raw.charCodeAt(0)
+  const values = cursorcellvalues(
+    chcode,
+    context.color[atchar],
+    context.bg[atchar],
+    {
+      cursorfg: options?.fg ?? ZSS_CURSOR_FG,
+      cursorbg: options?.bg ?? ZSS_CURSOR_BG,
+    },
+  )
+  if (values.char !== chcode) {
+    applystrtoindex(atchar, String.fromCharCode(values.char), context)
   }
-  applycolortoindexes(atchar, atchar, fg, bg, context)
+  applycolortoindexes(atchar, atchar, values.color, values.bg, context)
 }
 
 // ---------------------------------------------------------------------------

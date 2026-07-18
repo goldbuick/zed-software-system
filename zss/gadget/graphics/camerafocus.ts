@@ -1,4 +1,5 @@
 import { damp } from 'maath/easing'
+import { debugingest } from 'zss/debugingest'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 
@@ -17,7 +18,7 @@ export type FocusUserData = {
   lfocusx?: number
   lfocusy?: number
   focussmooth?: number
-  currentboard?: unknown
+  currentboard?: string
   [key: string]: unknown
 }
 
@@ -30,7 +31,7 @@ const ANIMRATE = FOCUS_ANIM_RATE
 export function initfocusifneeded(
   userData: FocusUserData,
   control: LayerControl,
-  currentboard: unknown,
+  currentboard: string,
 ): boolean {
   if (!ispresent(userData.focusx)) {
     userData.focusx = control.focusx
@@ -51,7 +52,7 @@ export function initfocusifneeded(
 export function stepfocuswithboardtransition(
   userdata: FocusUserData,
   control: LayerControl,
-  currentboard: unknown,
+  currentboard: string,
   tfocusx: number,
   tfocusy: number,
   delta: number,
@@ -69,14 +70,33 @@ export function stepfocuswithboardtransition(
   userdata.tfocusx = tfocusx
   userdata.tfocusy = tfocusy
 
-  // board transition
+  // board transition: edge cross offsets focus by one board then glides
   if (currentboard !== userdata.currentboard) {
+    const prevboard = userdata.currentboard
     userdata.currentboard = currentboard
-    const dx = control.focusx - userdata.lfocusx
-    const dy = control.focusy - userdata.lfocusy
+    const dx = control.focusx - (userdata.lfocusx ?? 0)
+    const dy = control.focusy - (userdata.lfocusy ?? 0)
     const shouldsnap =
       (dx === 0 && Math.abs(dy) === BOARD_HEIGHT - 1) ||
       (Math.abs(dx) === BOARD_WIDTH - 1 && dy === 0)
+    debugingest(
+      'camerafocus.ts:stepfocuswithboardtransition',
+      'camera board transition',
+      {
+        prevboard: prevboard ?? '',
+        currentboard,
+        dx,
+        dy,
+        shouldsnap,
+        controlx: control.focusx,
+        controly: control.focusy,
+        lfocusx: userdata.lfocusx ?? -1,
+        lfocusy: userdata.lfocusy ?? -1,
+        tfocusx,
+        tfocusy,
+      },
+      'BC2',
+    )
     if (shouldsnap) {
       userdata.lfocusx = control.focusx
       userdata.lfocusy = control.focusy

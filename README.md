@@ -17,7 +17,7 @@ All workflows run through the task CLI. Full index: [ops/docs/tasks.md](ops/docs
 | `yarn task run ops:docs:check-links` | Check relative links in tracked `*.md` files. |
 | `yarn task list` | List all tasks by group. |
 
-Shorthand: `yarn task cafe dev` is equivalent to `yarn task run cafe:dev`.
+Shorthand: `./task cafe dev` (or `yarn task cafe dev`) is equivalent to `yarn task run cafe:dev`.
 
 Press **`Ctrl+I`** (or run `#perf` in the terminal) to toggle the in-game perf overlay; see [`zss/perf/README.md`](zss/perf/README.md).
 

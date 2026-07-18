@@ -8,7 +8,10 @@ import {
   vmcodeaddress,
 } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
-import { modemwriteinitstring } from 'zss/device/modem'
+import {
+  modemdeletekeyswithprefix,
+  modemwriteinitstring,
+} from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
 import {
   DIVIDER,
@@ -36,7 +39,7 @@ import {
 } from 'zss/mapping/types'
 import { maptonumber, maptostring } from 'zss/mapping/value'
 import { ispt } from 'zss/words/dir'
-import { CATEGORY, COLLISION, PT, WORD } from 'zss/words/types'
+import { CATEGORY, COLLISION, NAME, PT, WORD } from 'zss/words/types'
 
 import {
   memoryboardelementindex,
@@ -318,6 +321,8 @@ function registerhyperlinksforelement(
   }
   // remove any shared bridges that are no longer needed
   registerhyperlinksharedcleanup()
+  // drop stale modem values for this chip so worker apply can init from get()
+  modemdeletekeyswithprefix(`${NAME(chip)}:`)
   // register new shared bridges
   for (const type of elementhyperlinktypes) {
     const shared = resolvehyperlinksharedbridge(chip, type)
@@ -452,18 +457,14 @@ export function memoryinspectarea(
   }
   lines.push(
     zsszedlinklinechip(
-      'remix',
+      'batch',
       `remix:${area} hk r " R " next`,
       'remix coords',
     ),
     DIVIDER,
-    zsszedlinklinechip('batch', `chars:${area} hk a " A " next`, 'set chars:'),
-    zsszedlinklinechip(
-      'batch',
-      `colors:${area} hk c " C " next`,
-      'set colors:',
-    ),
-    zsszedlinklinechip('batch', `bgs:${area} hk b " B " next`, 'set bgs:'),
+    zsszedlinkline('char charedit', 'set chars:'),
+    zsszedlinkline('color coloredit', 'set colors:'),
+    zsszedlinkline('bg bgedit', 'set bgs:'),
     zsszedlinklinechip('batch', `empty:${area} hk 0 " 0 " next`, 'make empty'),
     DIVIDER,
     groupline,
@@ -500,156 +501,6 @@ export function memoryinspectarea(
   scrollwritelines(player, 'inspect', zsstexttape(lines), groupchip)
 }
 
-export function memoryinspectbgarea(
-  player: string,
-  p1: PT,
-  p2: PT,
-  name: string,
-) {
-  const board = memoryreadplayerboard(player)
-  if (!ispresent(board)) {
-    return
-  }
-
-  const batchchip = `batch:${ptstoarea(p1, p2)}`
-  registerhyperlinksforelement(batchchip, {
-    board: board.id,
-    elementsbypoints: rectpoints(p1.x, p1.y, p2.x, p2.y),
-  })
-
-  const lines = [
-    `batch chars: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
-    DIVIDER,
-    zsszedlinkline(`${name} bgedit`, 'bg'),
-  ]
-  scrollwritelines(player, 'bulk set bg', zsstexttape(lines), batchchip)
-}
-
-export function memoryinspectchar(
-  player: string,
-  element: BOARD_ELEMENT,
-  name: string,
-) {
-  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
-  if (!ispresent(mainbook)) {
-    return
-  }
-
-  const board = memoryreadplayerboard(player)
-  if (!ispresent(board)) {
-    return
-  }
-
-  const chip = chipfromelement(board, element)
-  registerhyperlinksforelement(chip, {
-    board: board.id,
-    elementbyid: element.id,
-    elementbyindex: memoryboardelementindex(board, element),
-  })
-
-  const strcategory =
-    memoryreadboardelementruntime(element)?.category === CATEGORY.ISTERRAIN
-      ? 'terrain'
-      : 'object'
-  const strname = element.name ?? element.kind ?? 'ERR'
-  const strpos = `${element.x ?? -1}, ${element.y ?? -1}`
-
-  const lines = [
-    `${strcategory}: ${strname} ${strpos}`,
-    DIVIDER,
-    zsszedlinkline(`${name} charedit`, 'char'),
-  ]
-  scrollwritelines(player, 'char', zsstexttape(lines), chip)
-}
-
-export function memoryinspectchararea(
-  player: string,
-  p1: PT,
-  p2: PT,
-  name: string,
-) {
-  const board = memoryreadplayerboard(player)
-  if (!ispresent(board)) {
-    return
-  }
-
-  const batchchip = `batch:${ptstoarea(p1, p2)}`
-  registerhyperlinksforelement(batchchip, {
-    board: board.id,
-    elementsbypoints: rectpoints(p1.x, p1.y, p2.x, p2.y),
-  })
-
-  const lines = [
-    `batch chars: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
-    DIVIDER,
-    zsszedlinkline(`${name} charedit`, 'char'),
-  ]
-  scrollwritelines(player, 'bulk set char', zsstexttape(lines), batchchip)
-}
-
-export function memoryinspectcolor(
-  player: string,
-  element: BOARD_ELEMENT,
-  name: string,
-) {
-  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
-  if (!ispresent(mainbook)) {
-    return
-  }
-
-  const board = memoryreadplayerboard(player)
-  if (!ispresent(board)) {
-    return
-  }
-
-  const chip = chipfromelement(board, element)
-  registerhyperlinksforelement(chip, {
-    board: board.id,
-    elementbyid: element.id,
-    elementbyindex: memoryboardelementindex(board, element),
-  })
-
-  const strcategory =
-    memoryreadboardelementruntime(element)?.category === CATEGORY.ISTERRAIN
-      ? 'terrain'
-      : 'object'
-  const strname = element.name ?? element.kind ?? 'ERR'
-  const strpos = `${element.x ?? -1}, ${element.y ?? -1}`
-  const edittype = name === 'bg' ? 'bgedit' : 'coloredit'
-
-  const lines = [
-    `${strcategory}: ${strname} ${strpos}`,
-    DIVIDER,
-    zsszedlinkline(`${name} ${edittype}`, 'color'),
-  ]
-  scrollwritelines(player, name, zsstexttape(lines), chip)
-}
-
-export function memoryinspectcolorarea(
-  player: string,
-  p1: PT,
-  p2: PT,
-  name: string,
-) {
-  const board = memoryreadplayerboard(player)
-  if (!ispresent(board)) {
-    return
-  }
-
-  const batchchip = `batch:${ptstoarea(p1, p2)}`
-  registerhyperlinksforelement(batchchip, {
-    board: board.id,
-    elementsbypoints: rectpoints(p1.x, p1.y, p2.x, p2.y),
-  })
-
-  const lines = [
-    `batch chars: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
-    DIVIDER,
-    zsszedlinkline(`${name} coloredit`, 'color'),
-  ]
-  scrollwritelines(player, 'bulk set color', zsstexttape(lines), batchchip)
-}
-
 export function memoryinspectcommand(path: string, player: string) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
@@ -667,13 +518,6 @@ export function memoryinspectcommand(path: string, player: string) {
   switch (inspect.path) {
     case 'copycoords':
       registercopy(SOFTWARE, player, [element.x ?? 0, element.y ?? 0].join(' '))
-      break
-    case 'bg':
-    case 'color':
-      memoryinspectcolor(player, element, inspect.path)
-      break
-    case 'char':
-      memoryinspectchar(player, element, inspect.path)
       break
     case 'empty':
       memorysafedeleteelement(board, element, mainbook.timestamp)
@@ -796,9 +640,11 @@ export function memoryinspectelement(
         break
       default:
         if (isarray(stats[target])) {
+          // @p3 text  →  stats.p3 = ['text', '']  →  !p3 text;p3
           const [type, label, ...args] = stats[target]
-          if (isstring(label)) {
-            const linklabel = label || target
+          if (isstring(type)) {
+            const linklabel =
+              isstring(label) && label.length > 0 ? label : target
             const words: WORD[] = [target, type, ...args]
             lines.push(
               zsszedlinkline(memoryinspectjoinlinkwords(words), linklabel),
@@ -818,7 +664,7 @@ export function memoryinspectelement(
   lines.push(DIVIDER)
   lines.push(
     zsszedlinkline(
-      memoryinspectjoinlinkwords(['char', 'hk', 'a', ' A ', 'next']),
+      'char charedit',
       `char: ${
         element.char ??
         memoryreadboardelementruntime(element)?.kinddata?.char ??
@@ -828,7 +674,7 @@ export function memoryinspectelement(
   )
   lines.push(
     zsszedlinkline(
-      memoryinspectjoinlinkwords(['color', 'hk', 'c', ' C ', 'next']),
+      'color coloredit',
       `color: ${
         element.color ??
         memoryreadboardelementruntime(element)?.kinddata?.color ??
@@ -838,7 +684,7 @@ export function memoryinspectelement(
   )
   lines.push(
     zsszedlinkline(
-      memoryinspectjoinlinkwords(['bg', 'hk', 'b', ' B ', 'next']),
+      'bg bgedit',
       `bg: ${element.bg ?? memoryreadboardelementruntime(element)?.kinddata?.bg ?? 0}`,
     ),
   )

@@ -75,3 +75,6 @@ playwright-report/
 ops/infra/generated/
 
 
+
+# wanix p9server:dev default empty root (user sync target)
+ops/fixtures/wanix/p9server/serve-root/

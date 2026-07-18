@@ -1,14 +1,12 @@
-import type { DEVICELIKE } from 'zss/device/api'
 import { apitoast, vmcli } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import type { DEVICELIKE } from 'zss/device/types'
 import { storagereadvars, storagewritevar } from 'zss/feature/storage'
 import { terminalbookmarkpindisplaylabel } from 'zss/feature/terminalbookmarkline'
 import { useTape } from 'zss/gadget/data/zustandstores'
 import { createpid } from 'zss/mapping/guid'
 import { deepcopy, ispresent, isstring } from 'zss/mapping/types'
 import { metakey } from 'zss/words/system'
-
-export { terminalbookmarkpindisplaylabel }
 
 export const ZSS_BOOKMARKS_KEY = 'zss_bookmarks'
 

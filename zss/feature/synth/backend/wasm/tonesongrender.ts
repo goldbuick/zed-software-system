@@ -2,10 +2,10 @@ import { rendertonelevelscenario } from 'ops/lib/daisy-parity/toneparityrender'
 import {
   type SONG_RENDER_PAYLOAD,
   type SONG_RENDER_RESULT,
-  arraybuffertobase64,
   encodewavmono16,
 } from 'zss/feature/synth/backend/daisy/daisysongrender'
 import type { LEVEL_STABILITY_SCENARIO } from 'zss/feature/synth/backend/daisy/levelstabilityscenarios'
+import { arraybuffertobase64 } from 'zss/mapping/encode'
 
 import {
   type LEVEL_STABILITY_METRICS,

@@ -169,6 +169,37 @@ This document categorizes and summarizes all exported functions, types, constant
 
 ---
 
+## Wanix Screen Components
+
+Parent-realm React UI for the Wanix iframe bridge and attached terminal mirror.
+
+### `wanix/host.tsx`
+
+- **`WanixHost()`**
+  - Ghost iframe mounting `/wanix.html`
+  - Binds `contentWindow` to `wanixclient/wanixbridge` on load
+
+### `wanix/termscreen.tsx`
+
+- **`WanixTermScreen()`**
+  - Attached-session term mirror (tiles, scrollback, selection, hint bar)
+  - Keyboard input and clipboard routed to guest via `wanixservertermwrite`
+  - `Ctrl+\` then `Tab`/`Shift+Tab` cycles attach panel size; `Ctrl+\` then backtick opens tape; bare Tab/backtick go to guest
+
+### `wanix/termsizesync.tsx`
+
+- **`WanixTermSizeSync(props?)`**
+  - Debounced `termfit` push from attach panel geometry only (independent of tape)
+  - Renders nothing (`null`)
+
+### `wanix/attachpanel.tsx`
+
+- **`WanixAttachPanel()`**
+  - Independent guest attach overlay (own TOP/FULL/BOTTOM layout)
+  - Mutually exclusive with tape CLI chrome; mounted from `TapeComponent`
+
+---
+
 ## 4. Editor Components
 
 See **`editor/syntax-highlighting.md`** for how colored syntax highlighting is implemented (token pipeline, ZSS_COLOR_MAP, word/music coloring, and index-based clipping).
@@ -503,6 +534,10 @@ See **`editor/syntax-highlighting.md`** for how colored syntax highlighting is i
 | **Terminal** | `terminal/component.tsx` | `TapeTerminal()` - Terminal container |
 | | `terminal/item.tsx` | `TapeTerminalItem()`, `TapeTerminalActiveItem()` |
 | | `terminal/*.tsx` | Terminal action components (runit, copyit, openit, etc.) |
+| **Wanix** | `wanix/host.tsx` | `WanixHost()` - Ghost iframe host |
+| | `wanix/attachpanel.tsx` | `WanixAttachPanel()` - Independent guest attach overlay |
+| | `wanix/termscreen.tsx` | `WanixTermScreen()` - Attached term mirror |
+| | `wanix/termsizesync.tsx` | `WanixTermSizeSync()` - Debounced termfit from attach geometry |
 | **Editor** | `editor/component.tsx` | `TapeEditor()` - Code editor |
 | | `editor/*.tsx` | Editor UI components (rows, input, frame) |
 | **Tape** | `tape/layout.tsx` | `TapeLayout()` - Layout component |

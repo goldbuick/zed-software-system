@@ -29,8 +29,8 @@ export function statformat(label: string, words: string[], first = true) {
         return codetypestat(STAT_TYPE.CHARSET, words, values)
       case 'palette':
         return codetypestat(STAT_TYPE.PALETTE, words, values)
-      case 'scroll':
-        return codetypestat(STAT_TYPE.SCROLL, words, values)
+      case 'txt':
+        return codetypestat(STAT_TYPE.TXT, words, values)
     }
   } else {
     const [target, maybetype, ...maybevalues] = words
@@ -125,8 +125,8 @@ export function stattypestring(type: STAT_TYPE) {
       return 'charset'
     case STAT_TYPE.PALETTE:
       return 'palette'
-    case STAT_TYPE.SCROLL:
-      return 'scroll'
+    case STAT_TYPE.TXT:
+      return 'txt'
     case STAT_TYPE.CONST:
       return 'const'
     case STAT_TYPE.RANGE:

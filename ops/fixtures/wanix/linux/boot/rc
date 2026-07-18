@@ -1,0 +1,23 @@
+#!/bin/sh
+# Sourced by /bin/init before the interactive shell (see wanix extras linux init).
+
+cat <<'EOF'
+
+  zed cafe linux vm
+  -----------------
+  Live game export mounts at /zedcafe/ when the host export is ready.
+
+  zedcafe tools:
+    zedcafe-ready          wait for /zedcafe/stats.json
+    zedcafe-stats          root export summary
+    zedcafe-books          list books
+    zedcafe-book <dir>     book stats.json
+    zedcafe-pages <dir>    pages in a book
+    zedcafe-players        list onboard players (id, book, page, x, y)
+    zedcafe-code <pat>     search page code for a substring
+    zedcafe-find …         find terrain/objects on boards (--kind/--char/--name)
+    zedcafe-ls [path]      export tree listing
+
+  also: jq, curl, wget
+
+EOF

@@ -60,17 +60,31 @@ describe('stats', () => {
         })
       })
 
-      it('returns OBJECT for scroll type alone', () => {
+      it('returns OBJECT for scroll type alone (ZZT object kind)', () => {
         expect(statformat('', ['scroll'], true)).toEqual({
           type: STAT_TYPE.OBJECT,
           values: ['scroll'],
         })
       })
 
-      it('returns SCROLL for scroll type with name', () => {
+      it('returns OBJECT for scroll with name (not a codepage type)', () => {
         expect(statformat('', ['scroll', 'notes'], true)).toEqual({
-          type: STAT_TYPE.SCROLL,
+          type: STAT_TYPE.OBJECT,
+          values: ['scroll', 'notes'],
+        })
+      })
+
+      it('returns TXT for txt type with name', () => {
+        expect(statformat('', ['txt', 'notes'], true)).toEqual({
+          type: STAT_TYPE.TXT,
           values: ['notes'],
+        })
+      })
+
+      it('returns OBJECT for txt type alone', () => {
+        expect(statformat('', ['txt'], true)).toEqual({
+          type: STAT_TYPE.OBJECT,
+          values: ['txt'],
         })
       })
 
@@ -169,7 +183,7 @@ describe('stats', () => {
       expect(stattypestring(STAT_TYPE.TERRAIN)).toBe('terrain')
       expect(stattypestring(STAT_TYPE.CHARSET)).toBe('charset')
       expect(stattypestring(STAT_TYPE.PALETTE)).toBe('palette')
-      expect(stattypestring(STAT_TYPE.SCROLL)).toBe('scroll')
+      expect(stattypestring(STAT_TYPE.TXT)).toBe('txt')
       expect(stattypestring(STAT_TYPE.CONST)).toBe('const')
       expect(stattypestring(STAT_TYPE.RANGE)).toBe('range')
       expect(stattypestring(STAT_TYPE.SELECT)).toBe('select')

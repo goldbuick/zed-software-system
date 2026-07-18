@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/types'
 
 import {
   handleacklogin,
@@ -8,17 +8,16 @@ import {
   handleloginready,
   handlesessionreset,
 } from './auth'
-import {
-  handlebookmarkclirun,
-  handlebookmarkclisave,
-  handlebookmarkcodepagecopytogame,
-  handlebookmarkcodepagesave,
-  handlebookmarkdelete,
-  handlebookmarkscroll,
-  handlebookmarkurlnavigate,
-  handlebookmarkurlsave,
-  handleeditorbookmarkscroll,
-} from './bookmarks'
+import { handlebookmarkclirun } from './bookmark/clirun'
+import { handlebookmarkclisave } from './bookmark/clisave'
+import { handlebookmarkcodepagecopytogame } from './bookmark/codepagecopytogame'
+import { handlebookmarkcodepagesave } from './bookmark/codepagesave'
+import { handlebookmarkdelete } from './bookmark/delete'
+import { handleeditorbookmarkscroll } from './bookmark/editorscroll'
+import { handlebookmarkscroll } from './bookmark/scroll'
+import { handlebookmarkurlnavigate } from './bookmark/urlnavigate'
+import { handlebookmarkurlsave } from './bookmark/urlsave'
+import { handlecontentcrosslogin } from './contentcrosslogin'
 import { handleeditorclose, handleeditoropen } from './editor'
 import {
   handlecopy,
@@ -29,6 +28,7 @@ import {
 } from './files'
 import { handleinput } from './input'
 import { handlefindany, handleinspector, handleperfmonitor } from './inspector'
+import { handlejoincrosslogin } from './joincrosslogin'
 import {
   handleforkmem,
   handlenuke,
@@ -39,14 +39,12 @@ import { handleready } from './ready'
 import { handlesecond } from './second'
 import { handletoken } from './storage'
 import { handlechat, handlelog, handletoast, handleworkstatus } from './tape'
-import {
-  handleterminalclose,
-  handleterminalfull,
-  handleterminalinclayout,
-  handleterminalopen,
-  handleterminalquickopen,
-  handleterminaltoggle,
-} from './terminal'
+import { handleterminalclose } from './terminal/close'
+import { handleterminalfull } from './terminal/full'
+import { handleterminalinclayout } from './terminal/inclayout'
+import { handleterminalopen } from './terminal/open'
+import { handleterminalquickopen } from './terminal/quickopen'
+import { handleterminaltoggle } from './terminal/toggle'
 
 export type REGISTER_HANDLER = (device: DEVICE, message: MESSAGE) => void
 
@@ -55,6 +53,8 @@ export const registerhandlers: Record<string, REGISTER_HANDLER> = {
   sessionreset: handlesessionreset,
   ackoperator: handleackoperator,
   loginready: handleloginready,
+  joincrosslogin: handlejoincrosslogin,
+  contentcrosslogin: handlecontentcrosslogin,
   acklogin: handleacklogin,
   ackzsswords: handleackzsswords,
   bookmarkscroll: handlebookmarkscroll,

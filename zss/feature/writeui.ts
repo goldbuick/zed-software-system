@@ -1,4 +1,6 @@
-import { DEVICELIKE, apilog, registerterminalfull } from 'zss/device/api'
+import { apilog, registerterminalfull } from 'zss/device/api'
+import type { DEVICELIKE } from 'zss/device/types'
+import { zsszedlinkline } from 'zss/feature/zsstextui'
 import { qrlines } from 'zss/mapping/qr'
 
 /**
@@ -16,7 +18,7 @@ export function writehyperlink(
   hyperlink: string,
   label: string,
 ) {
-  write(device, player, `!${hyperlink};${label}`)
+  write(device, player, zsszedlinkline(hyperlink, label))
 }
 
 function writeqr(device: DEVICELIKE, player: string, content: string) {
@@ -37,7 +39,7 @@ export function writecopyit(
     writeqr(device, player, content)
     setTimeout(() => registerterminalfull(device, player), 200)
   }
-  write(device, player, `!copyit ${content};${label}`)
+  write(device, player, zsszedlinkline(`copyit ${content}`, label))
 }
 
 export function writeopenit(
@@ -46,5 +48,5 @@ export function writeopenit(
   content: string,
   label: string,
 ) {
-  write(device, player, `!openit ${content};${label}`)
+  write(device, player, zsszedlinkline(`openit ${content}`, label))
 }

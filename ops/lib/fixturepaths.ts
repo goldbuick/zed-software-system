@@ -33,6 +33,12 @@ export const LANG_ZZTOOP_REPORT_PATH = fixturepath(
 
 export const PARSE_FIXTURES_DIR = fixturepath('parse')
 export const WANIX_FIXTURES_DIR = fixturepath('wanix')
+/** Empty peer root for headed zedsync seed / delete-restore scenarios. */
+export const WANIX_ZEDSYNC_PEER_DIR = fixturepath(
+  'wanix',
+  'scenarios',
+  'zedsync-peer',
+)
 /** Built wanix binaries; dev-served at /fixtures/wanix/ via ops/public/ */
 export const WANIX_PUBLIC_FIXTURES_DIR = path.join(
   process.cwd(),

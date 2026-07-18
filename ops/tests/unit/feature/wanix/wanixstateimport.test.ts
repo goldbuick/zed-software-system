@@ -10,6 +10,10 @@ import {
 } from 'zss/feature/wanix/wanixstateexport'
 import type { CODE_PAGE } from 'zss/memory/types'
 
+jest.mock('zss/device/wanixclient/wanixroom', () => ({
+  readwanixroomconfig: jest.fn(() => ({ mode: 'task' })),
+}))
+
 jest.mock('zss/memory/session', () => ({
   memoryreadbooklist: jest.fn(() => []),
   memoryreadoperator: jest.fn(() => 'player1'),
@@ -47,9 +51,11 @@ function decodefilebytes(bytes: Uint8Array): unknown {
 }
 
 describe('wanixstateimport', () => {
-  it('assembleboardjson merges split board files', () => {
+  it('assembleboardjson merges board terrain array and objects', () => {
+    const terrain = Array.from({ length: 1500 }, () => ({ kind: 'solid' }))
+    terrain[0] = { kind: 'fake' }
     const boardfiles = splitboardexport({
-      terrain: [{ kind: 'solid' }],
+      terrain,
       objects: { obj1: { kind: 'player', id: 'obj1' } },
       startx: 3,
       starty: 4,
@@ -57,15 +63,40 @@ describe('wanixstateimport', () => {
     const index = new Map<string, Uint8Array>()
     for (let i = 0; i < boardfiles.length; ++i) {
       const file = boardfiles[i]!
-      index.set(`books/b1/pages/p1/${file.path}`, file.bytes)
+      index.set(`b1/p1/${file.path}`, file.bytes)
     }
-    const board = assembleboardjson(index, 'books/b1/pages/p1')
-    expect(board).toEqual({
-      startx: 3,
-      starty: 4,
-      terrain: [{ kind: 'solid' }],
-      objects: { obj1: { kind: 'player', id: 'obj1' } },
+    const board = assembleboardjson(index, 'b1/p1')
+    expect(board?.startx).toBe(3)
+    expect(board?.starty).toBe(4)
+    expect(board?.objects).toEqual({ obj1: { kind: 'player', id: 'obj1' } })
+    expect((board?.terrain as unknown[])[0]).toEqual({ kind: 'fake' })
+    expect((board?.terrain as unknown[]).length).toBe(1500)
+  })
+
+  it('assembleboardjson rejects per-cell terrain files', () => {
+    const index = new Map<string, Uint8Array>([
+      [
+        'b1/p1/board/terrain/0.json',
+        new TextEncoder().encode('{"kind":"solid"}\n'),
+      ],
+    ])
+    expect(() => assembleboardjson(index, 'b1/p1')).toThrow(
+      /wipe\/re-seed remotes/,
+    )
+  })
+
+  it('assembleboardjson always includes objects even when empty', () => {
+    const boardfiles = splitboardexport({
+      startx: 1,
+      starty: 2,
     })
+    const index = new Map<string, Uint8Array>()
+    for (let i = 0; i < boardfiles.length; ++i) {
+      const file = boardfiles[i]!
+      index.set(`b1/p1/${file.path}`, file.bytes)
+    }
+    const board = assembleboardjson(index, 'b1/p1')
+    expect(board.objects).toEqual({})
   })
 
   it('round-trips granular export layout', () => {
@@ -102,18 +133,18 @@ describe('wanixstateimport', () => {
 
     const page1 = assemblecodepagejson(
       new Map(exported.map((file) => [file.path, file.bytes])),
-      'books/demo-book1/pages/demo-page1',
+      'demo-book1/demo-page1',
     )
     expect(page1?.code).toBe('@board demo')
     expect(page1?.board).toEqual({
       startx: 10,
       starty: 12,
-      terrain: [],
+      objects: {},
     })
 
     const page2 = assemblecodepagejson(
       new Map(exported.map((file) => [file.path, file.bytes])),
-      'books/demo-book1/pages/player-page2',
+      'demo-book1/player-page2',
     )
     expect(page2?.object).toEqual({ kind: 'player', char: 2 })
   })

@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react'
 import { objectKeys } from 'ts-extras'
 import { vmcodeaddress, vmcoderelease, vmcodewatch } from 'zss/device/api'
 import { useWaitForValueString } from 'zss/device/modemhooks'
-import { registerreadplayer } from 'zss/device/register'
+import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import { compileast } from 'zss/feature/lang/backend/typescript/ast'
 import * as lexer from 'zss/feature/lang/backend/typescript/lexer'
@@ -39,7 +39,7 @@ export function EditorComponent() {
   const zsswords = useGadgetClient(useEqual((state) => state.zsswords))
   const [editor] = useTape(useShallow((state) => [state.editor]))
   const autocompleteindex = useTape((state) => state.autocompleteindex)
-  const isscrollpage = editor.type === 'scroll'
+  const istxtpage = editor.type === 'txt'
 
   const tapeeditor = useEditor(
     useShallow((state) => ({
@@ -65,7 +65,7 @@ export function EditorComponent() {
   // tokenize, parse, and fold into rows (only re-run when text changes)
   const rows = useMemo(() => {
     const rows = splitcoderows(strvalue)
-    if (isscrollpage) {
+    if (istxtpage) {
       return rows
     }
     const parsed = compileast(strvalue)
@@ -177,7 +177,7 @@ export function EditorComponent() {
     }
 
     return rows
-  }, [strvalue, zsswords, isscrollpage])
+  }, [strvalue, zsswords, istxtpage])
 
   // cursor placement
   const ycursor = findcursorinrows(tapeeditor.cursor, rows)

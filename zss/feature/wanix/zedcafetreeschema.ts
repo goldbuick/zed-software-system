@@ -1,4 +1,5 @@
 import { memoryreadcodepagename } from 'zss/memory/codepageoperations'
+import { BOARD_SIZE } from 'zss/memory/types'
 import type { BOOK, CODE_PAGE } from 'zss/memory/types'
 
 export type ZED_CAFE_EXPORT_PATH_FILE = {
@@ -13,17 +14,18 @@ const OBJ_ID = '[^/]+'
 
 export const ZED_CAFE_EXPORT_ALLOWED_PATH: RegExp[] = [
   /^stats\.json$/,
-  new RegExp(`^books/${DIR_SEG}/stats\\.json$`),
-  new RegExp(`^books/${DIR_SEG}/pages/${DIR_SEG}/stats\\.json$`),
-  new RegExp(`^books/${DIR_SEG}/pages/${DIR_SEG}/board/stats\\.json$`),
-  new RegExp(`^books/${DIR_SEG}/pages/${DIR_SEG}/board/terrain\\.json$`),
-  new RegExp(
-    `^books/${DIR_SEG}/pages/${DIR_SEG}/board/objects/${OBJ_ID}\\.json$`,
-  ),
-  new RegExp(`^books/${DIR_SEG}/pages/${DIR_SEG}/object/element\\.json$`),
-  new RegExp(`^books/${DIR_SEG}/pages/${DIR_SEG}/terrain/element\\.json$`),
-  new RegExp(`^books/${DIR_SEG}/pages/${DIR_SEG}/charset/bitmap\\.json$`),
-  new RegExp(`^books/${DIR_SEG}/pages/${DIR_SEG}/palette/bitmap\\.json$`),
+  /** Host-written zedsync incremental revision hint (not guest content). */
+  /^\.zedsync\/revision$/,
+  new RegExp(`^${DIR_SEG}/stats\\.json$`),
+  new RegExp(`^${DIR_SEG}/flags/${OBJ_ID}\\.json$`),
+  new RegExp(`^${DIR_SEG}/${DIR_SEG}/stats\\.json$`),
+  new RegExp(`^${DIR_SEG}/${DIR_SEG}/board/stats\\.json$`),
+  new RegExp(`^${DIR_SEG}/${DIR_SEG}/board/terrain\\.json$`),
+  new RegExp(`^${DIR_SEG}/${DIR_SEG}/board/objects/${OBJ_ID}\\.json$`),
+  new RegExp(`^${DIR_SEG}/${DIR_SEG}/object/element\\.json$`),
+  new RegExp(`^${DIR_SEG}/${DIR_SEG}/terrain/element\\.json$`),
+  new RegExp(`^${DIR_SEG}/${DIR_SEG}/charset/bitmap\\.json$`),
+  new RegExp(`^${DIR_SEG}/${DIR_SEG}/palette/bitmap\\.json$`),
 ]
 
 export type ZED_CAFE_EXPORT_VALIDATION = {
@@ -55,6 +57,11 @@ export function kebabcasezedcafedirname(
   name: string | undefined,
   id: string,
 ): string {
+  if (id.includes('..') || id.endsWith('.')) {
+    throw new Error(
+      `zedcafe dirname id is not filename-safe (contains ".." or ends with "."): ${id}`,
+    )
+  }
   const portion = kebabcasezedcafenameportion(name)
   if (!portion) {
     return id
@@ -67,7 +74,7 @@ export function readzedcafebookdirname(book: BOOK): string {
 }
 
 export function readzedcafebookprefix(book: BOOK): string {
-  return `books/${readzedcafebookdirname(book)}`
+  return readzedcafebookdirname(book)
 }
 
 export function readzedcafepagedirname(page: CODE_PAGE): string {
@@ -75,18 +82,14 @@ export function readzedcafepagedirname(page: CODE_PAGE): string {
 }
 
 export function readzedcafepageprefix(book: BOOK, page: CODE_PAGE): string {
-  return `${readzedcafebookprefix(book)}/pages/${readzedcafepagedirname(page)}`
+  return `${readzedcafebookprefix(book)}/${readzedcafepagedirname(page)}`
 }
 
 export function readzedcafebookstatspath(book: BOOK): string {
   return `${readzedcafebookprefix(book)}/stats.json`
 }
 
-export function readzedcafepagestatspath(book: BOOK, page: CODE_PAGE): string {
-  return `${readzedcafepageprefix(book, page)}/stats.json`
-}
-
-function isallowedexportpath(path: string): boolean {
+export function isallowedexportpath(path: string): boolean {
   if (!path || path.includes('..') || path.startsWith('/')) {
     return false
   }
@@ -133,7 +136,8 @@ function validatestructure(
   const bookrefs = rootstats.books ?? []
   for (let i = 0; i < bookrefs.length; ++i) {
     const bookref = bookrefs[i]
-    const bookpath = `books/${kebabcasezedcafedirname(bookref.name, bookref.id)}/stats.json`
+    const bookdirname = kebabcasezedcafedirname(bookref.name, bookref.id)
+    const bookpath = `${bookdirname}/stats.json`
     const bookbytes = index.get(bookpath)
     if (!bookbytes) {
       errors.push(`missing book stats for ${bookref.id}: ${bookpath}`)
@@ -141,28 +145,71 @@ function validatestructure(
     }
     let bookmeta: {
       pages?: { id: string; name?: string }[]
+      flags?: unknown
+      timestamp?: unknown
     }
     try {
       bookmeta = decodejson(bookbytes) as {
         pages?: { id: string; name?: string }[]
+        flags?: unknown
+        timestamp?: unknown
       }
     } catch {
       errors.push(`book stats.json is not valid JSON: ${bookpath}`)
       continue
     }
+    if ('flags' in bookmeta) {
+      errors.push(`book stats.json must not embed flags: ${bookpath}`)
+    }
+    if ('timestamp' in bookmeta) {
+      errors.push(`book stats.json must not include timestamp: ${bookpath}`)
+    }
     const pagerefs = bookmeta.pages ?? []
     for (let j = 0; j < pagerefs.length; ++j) {
       const pageref = pagerefs[j]
-      const pagepath = `books/${kebabcasezedcafedirname(bookref.name, bookref.id)}/pages/${kebabcasezedcafedirname(pageref.name, pageref.id)}/stats.json`
+      const pageprefix = `${bookdirname}/${kebabcasezedcafedirname(pageref.name, pageref.id)}`
+      const pagepath = `${pageprefix}/stats.json`
       if (!index.has(pagepath)) {
         errors.push(`missing page stats for ${pageref.id}: ${pagepath}`)
+      }
+      const terrainprefix = `${pageprefix}/board/terrain/`
+      for (const path of index.keys()) {
+        if (path.startsWith(terrainprefix) && path.endsWith('.json')) {
+          errors.push(
+            `per-cell board/terrain/<index>.json is not allowed (wipe/re-seed remotes): ${path}`,
+          )
+          break
+        }
+      }
+      const terrainpath = `${pageprefix}/board/terrain.json`
+      const terrainbytes = index.get(terrainpath)
+      if (!terrainbytes) {
+        continue
+      }
+      try {
+        const terrain = decodejson(terrainbytes)
+        if (!Array.isArray(terrain)) {
+          errors.push(`board terrain must be an array: ${terrainpath}`)
+        } else if (terrain.length !== BOARD_SIZE) {
+          errors.push(
+            `board terrain length ${terrain.length} != ${BOARD_SIZE}: ${terrainpath}`,
+          )
+        }
+      } catch {
+        errors.push(`board terrain.json is not valid JSON: ${terrainpath}`)
       }
     }
   }
 }
 
+export type ValidateZedCafeExportOptions = {
+  /** Upsert subset — allowlisted paths only; skip full-tree structure checks. */
+  partial?: boolean
+}
+
 export function validatezedcafeexportpaths(
   files: ZED_CAFE_EXPORT_PATH_FILE[],
+  options?: ValidateZedCafeExportOptions,
 ): ZED_CAFE_EXPORT_VALIDATION {
   const errors: string[] = []
   const seen = new Set<string>()
@@ -177,12 +224,17 @@ export function validatezedcafeexportpaths(
       errors.push(`path outside schema: ${path}`)
     }
   }
-  validatestructure(files, errors)
+  if (!options?.partial) {
+    validatestructure(files, errors)
+  }
   return { ok: errors.length === 0, errors }
 }
 
-export function assertzedcafeexportvalid(files: ZED_CAFE_EXPORT_PATH_FILE[]) {
-  const result = validatezedcafeexportpaths(files)
+export function assertzedcafeexportvalid(
+  files: ZED_CAFE_EXPORT_PATH_FILE[],
+  options?: ValidateZedCafeExportOptions,
+) {
+  const result = validatezedcafeexportpaths(files, options)
   if (!result.ok) {
     throw new Error(`zedcafe export schema: ${result.errors.join('; ')}`)
   }

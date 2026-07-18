@@ -1,41 +1,45 @@
 import 'zss/rom/vitepopulate'
 import { debugingest } from 'zss/debugingest'
 import { setclimode } from 'zss/feature/detect'
+import { hub } from 'zss/hub'
+import { isstring } from 'zss/mapping/types'
+import { memorywritesession } from 'zss/memory/session'
 
-import { createforward, shouldforwardservertoclient } from './device/forward'
-import { started } from './device/vm'
-
-// these are all back-end devices that operate within the web worker
+// back-end devices that operate within the web worker (vm loads after config)
 import './device/clock'
 import './device/modem'
 import './perf/perfreport'
 
-const { forward } = createforward((message) => {
-  if (shouldforwardservertoclient(message)) {
-    postMessage(message)
-  }
-})
+let started = false
 
 onmessage = function handleMessage(
   event: MessageEvent<{ target?: string; data?: any }>,
 ) {
   const msg = event.data
-  if (msg?.target === 'config') {
-    const cfg = msg?.data
-    if (cfg && typeof cfg === 'object') {
-      setclimode(!!cfg.climode)
-    } else {
-      setclimode(!!cfg)
-    }
+  if (msg?.target !== 'config') {
     return
   }
-  forward(event.data)
-}
+  const cfg = msg?.data
+  const climode = cfg && typeof cfg === 'object' ? !!cfg.climode : !!cfg
+  setclimode(climode)
 
-debugingest(
-  'simspace.ts:started',
-  'worker starting vm',
-  { runId: 'post-fix' },
-  'G',
-)
-started()
+  const session =
+    cfg && typeof cfg === 'object' && isstring(cfg.session) ? cfg.session : ''
+  if (!session || started) {
+    return
+  }
+  started = true
+  memorywritesession(session)
+  hub.join(session)
+  postMessage({ target: 'configack' })
+
+  debugingest(
+    'simspace.ts:started',
+    'worker starting vm',
+    { runId: 'post-fix' },
+    'G',
+  )
+  void import('zss/device/vm').then(({ started: startvm }) => {
+    startvm()
+  })
+}

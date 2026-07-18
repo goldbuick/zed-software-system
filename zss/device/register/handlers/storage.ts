@@ -1,6 +1,6 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
 import { vmplayertoken } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/types'
 import { isstring } from 'zss/mapping/types'
 
 export function handletoken(device: DEVICE, message: MESSAGE): void {

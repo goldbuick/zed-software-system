@@ -1,10 +1,10 @@
 import type { DEVICE } from 'zss/device'
 import {
-  type MESSAGE,
   registerbookmarkcodepagecopytogame,
   registerbookmarkcodepagesave,
   registerbookmarkdelete,
 } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/types'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
 import {
   memoryreadcodepagename,

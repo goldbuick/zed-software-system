@@ -1,5 +1,4 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
 import { terminaladdlog } from 'zss/device/register/helpers/terminallog'
 import {
   readtoasttimer,
@@ -7,9 +6,9 @@ import {
   settoasttimer,
   setworkstatustimer,
 } from 'zss/device/register/state'
+import type { MESSAGE } from 'zss/device/types'
 import { useGadgetClient, useTape } from 'zss/gadget/data/zustandstores'
 import { ispresent, isstring } from 'zss/mapping/types'
-
 export function handlelog(_device: DEVICE, message: MESSAGE): void {
   terminaladdlog(message)
 }
@@ -37,7 +36,7 @@ export function handleworkstatus(_device: DEVICE, message: MESSAGE): void {
     useTape.setState({ workstatus: message.data })
     if (message.data) {
       setworkstatustimer(
-        setTimeout(() => useTape.setState({ workstatus: '' }), 2000),
+        setTimeout(() => useTape.setState({ workstatus: '' }), 2_000),
       )
     }
   }

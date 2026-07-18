@@ -4,6 +4,7 @@ import { randominteger } from 'zss/mapping/number'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { COLOR, NAME, WORD } from 'zss/words/types'
 
+import { remapbookidsforfilenamesafety } from './bookidremap'
 import {
   memoryboundaryalloc,
   memoryboundarydelete,
@@ -199,24 +200,26 @@ export function memoryimportbookfromjson(flat: any): MAYBE<BOOK> {
     return undefined
   }
 
+  const book = remapbookidsforfilenamesafety(flat)
+
   // import pages
-  const pagesout = flat.pages.map(memoryimportcodepagefromjson)
+  const pagesout = book.pages.map(memoryimportcodepagefromjson)
 
   // import flags
-  const names = Object.keys(flat.flags)
+  const names = Object.keys(book.flags ?? {})
   const flagsout: Record<string, string> = {}
   for (let i = 0; i < names.length; ++i) {
     const name = names[i]
-    flagsout[name] = memoryboundaryalloc(flat.flags[name], name)
+    flagsout[name] = memoryboundaryalloc(book.flags[name], name)
   }
 
   // return book
   return {
-    id: flat.id,
-    name: flat.name,
-    token: flat.token,
-    timestamp: flat.timestamp,
-    activelist: flat.activelist,
+    id: book.id,
+    name: book.name,
+    token: book.token,
+    timestamp: book.timestamp,
+    activelist: book.activelist,
     pages: pagesout,
     flags: flagsout,
   }
@@ -458,6 +461,13 @@ export function memoryupsertcodepage(
   }
   memoryboundarydelete(flat.id)
   existing.code = flat.code
+  if (flat.board && typeof flat.board === 'object') {
+    const board = flat.board as { id?: string; objects?: unknown }
+    board.id = flat.id
+    if (!board.objects || typeof board.objects !== 'object') {
+      board.objects = {}
+    }
+  }
   memoryboundaryalloc(
     {
       board: flat.board,

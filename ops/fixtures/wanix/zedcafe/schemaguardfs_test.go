@@ -27,6 +27,33 @@ func TestSchemaGuardRejectsInvalidCreate(t *testing.T) {
 	}
 }
 
+func TestSchemaGuardNestedBookPathFromEmptyExport(t *testing.T) {
+	export := NewEmptyExport()
+	rootstats := `{"exportedAt":"test","bookCount":1,"books":[{"id":"sid_vuYEPNKWWAPd","name":"coolregionsbow"}]}` + "\n"
+	if err := fs.WriteFile(export, "stats.json", []byte(rootstats), 0o644); err != nil {
+		t.Fatalf("write root stats.json: %v", err)
+	}
+	bookpath := "coolregionsbow-sid_vuYEPNKWWAPd/stats.json"
+	bookstats := `{"id":"sid_vuYEPNKWWAPd","name":"coolregionsbow","pages":[]}` + "\n"
+	if err := fs.WriteFile(export, bookpath, []byte(bookstats), 0o644); err != nil {
+		t.Fatalf("write nested book stats.json: %v", err)
+	}
+	gotroot, err := fs.ReadFile(export, "stats.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(gotroot), `"coolregionsbow"`) {
+		t.Fatalf("root stats unexpected: %q", string(gotroot))
+	}
+	gotbook, err := fs.ReadFile(export, bookpath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(gotbook), `"sid_vuYEPNKWWAPd"`) {
+		t.Fatalf("book stats unexpected: %q", string(gotbook))
+	}
+}
+
 func TestSchemaGuardAllowsStatsJsonCreateWrite(t *testing.T) {
 	guarded := newSchemaGuardFS(memfs.New())
 	written := `{"exportedAt":"guest","bookCount":0,"books":[],"guestTouch":true}` + "\n"
@@ -51,11 +78,11 @@ func TestSchemaGuardAllowsStatsJsonCreateWrite(t *testing.T) {
 
 func TestSchemaGuardAllowsDeepObjectPath(t *testing.T) {
 	inner := memfs.From(fskit.MapFS{
-		"books/demo-book1/pages/demo-page1/board/stats.json": fskit.RawNode([]byte("{}\n")),
-		"books/demo-book1/pages/demo-page1/board/objects/existing.json": fskit.RawNode([]byte("{}\n")),
+		"demo-book1/demo-page1/board/stats.json":           fskit.RawNode([]byte("{}\n")),
+		"demo-book1/demo-page1/board/objects/existing.json": fskit.RawNode([]byte("{}\n")),
 	})
 	guarded := newSchemaGuardFS(inner)
-	objectpath := "books/demo-book1/pages/demo-page1/board/objects/obj1.json"
+	objectpath := "demo-book1/demo-page1/board/objects/obj1.json"
 	file, err := fs.Create(guarded, objectpath)
 	if err != nil {
 		t.Fatalf("create object json: %v", err)
@@ -78,9 +105,63 @@ func TestSchemaGuardAllowsDeepObjectPath(t *testing.T) {
 
 func TestSchemaGuardRejectsInvalidMkdir(t *testing.T) {
 	guarded := newSchemaGuardFS(memfs.New())
-	err := fs.Mkdir(guarded, "books/evil-dir", 0o755)
+	err := fs.Mkdir(guarded, "totally/invalid", 0o755)
 	if err == nil {
-		t.Fatal("expected mkdir books/evil-dir to fail")
+		t.Fatal("expected mkdir totally/invalid to fail")
+	}
+}
+
+func TestSchemaGuardAllowsBookPrefixMkdir(t *testing.T) {
+	guarded := newSchemaGuardFS(memfs.New())
+	bookdir := "coolregionsbow-sid_vuYEPNKWWAPd"
+	if err := fs.Mkdir(guarded, bookdir, 0o755); err != nil {
+		t.Fatalf("mkdir book prefix: %v", err)
+	}
+}
+
+func TestIsAllowedExportDir(t *testing.T) {
+	book := "coolregionsbow-sid_vuYEPNKWWAPd"
+	page := book + "/player-sid_q8uHjK2to8P"
+	cases := []struct {
+		dir     string
+		allowed bool
+	}{
+		{book, true},
+		{book + "/flags", true},
+		{page, true},
+		{page + "/board", true},
+		{page + "/board/terrain", false},
+		{page + "/board/objects", true},
+		{page + "/object", true},
+		{page + "/terrain", true},
+		{page + "/charset", true},
+		{page + "/palette", true},
+		{".zedsync", true},
+		{"totally/invalid/extra", false},
+		{book + "/pages/player-sid_q8uHjK2to8P", false},
+	}
+	for _, tc := range cases {
+		got := isallowedexportdir(tc.dir)
+		if got != tc.allowed {
+			t.Fatalf("isallowedexportdir(%q) = %v, want %v", tc.dir, got, tc.allowed)
+		}
+	}
+}
+
+func TestSchemaGuardP9WritePageObjectAfterMkdirAll(t *testing.T) {
+	export := NewEmptyExport()
+	fsys, cleanup := p9exportsetup(t, export)
+	defer cleanup()
+
+	book := "coolregionsbow-sid_vuYEPNKWWAPd"
+	page := book + "/player-sid_q8uHjK2to8P"
+	objectpath := page + "/object/element.json"
+	if err := fs.MkdirAll(fsys, page+"/object", 0o755); err != nil {
+		t.Fatalf("mkdirAll object dir: %v", err)
+	}
+	payload := `{"kind":"object"}` + "\n"
+	if err := fs.WriteFile(fsys, objectpath, []byte(payload), 0o644); err != nil {
+		t.Fatalf("write object element.json: %v", err)
 	}
 }
 
@@ -88,10 +169,16 @@ func TestIsAllowedExportPath(t *testing.T) {
 	if !isallowedexportpath("stats.json") {
 		t.Fatal("stats.json should be allowed")
 	}
+	if !isallowedexportpath(".zedsync/revision") {
+		t.Fatal(".zedsync/revision should be allowed")
+	}
 	if isallowedexportpath("../stats.json") {
 		t.Fatal("../stats.json should be rejected")
 	}
 	if isallowedexportpath("books/foo/bar.json") {
 		t.Fatal("books/foo/bar.json should be rejected")
+	}
+	if isallowedexportpath("foo/pages/bar/stats.json") {
+		t.Fatal("legacy pages/ path should be rejected")
 	}
 }

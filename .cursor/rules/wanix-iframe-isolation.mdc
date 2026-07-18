@@ -4,7 +4,10 @@ globs:
   - cafe/wanix.html
   - cafe/index.html
   - cafe/index.tsx
+  - cafe/wanix.ts
   - zss/feature/wanix/**
+  - zss/device/wanixserver/**
+  - zss/device/wanixclient/**
 alwaysApply: false
 ---
 
@@ -26,21 +29,30 @@ Wanix **must** run in its own document, loaded via **iframe** (`src="/wanix.html
 
 Separate document (iframe or navigation to `/wanix.html`) = clean `window` per realm.
 
+## Three homes
+
+| Home | Owns |
+|------|------|
+| [`zss/device/wanixclient/`](../../zss/device/wanixclient/) | Parent `wanixclient` device — UI state, bridge, room, zedcafe export |
+| [`zss/device/wanixserver/`](../../zss/device/wanixserver/) | Iframe `wanixserver` device — handlers, `state.ts`, `runtime.ts`, `zedcafehost.ts` |
+| [`zss/feature/wanix/`](../../zss/feature/wanix/) | Shared protocol/types/helpers only |
+
 ## Prohibited
 
 - `<script src="…/wanix.min.js">` in [`cafe/index.html`](../../cafe/index.html) or any cafe React entry
-- `<wanix-system>` (or other Wanix custom elements) in React/TSX under `cafe/`
-- Importing Wanix runtime into the Vite bundle for the main app
+- `<wanix-namespace>` (or other Wanix custom elements) in React/TSX under `cafe/`
+- Importing Wanix iframe runtime (`zss/device/wanixserver/runtime`) into the Vite bundle for the main app
 - **`<wanix-term>` elements** in [`cafe/wanix.html`](../../cafe/wanix.html) child orchestration — do not create, connect, or poll xterm via this tag
 
 ## Required
 
 | Piece | Location |
 |-------|----------|
-| Canonical Wanix host | [`cafe/wanix.html`](../../cafe/wanix.html) — kernel, `<wanix-system>` tree, `<wanix-task>` / `<wanix-vm>` only |
+| Canonical Wanix host | [`cafe/wanix.html`](../../cafe/wanix.html) — kernel, `<wanix-namespace>` tree, `<wanix-task>` / `<wanix-vm>` only |
+| Iframe boot | [`cafe/wanix.ts`](../../cafe/wanix.ts) → `zss/device/wanixserver/runtime` + `zss/device/wanixserver` |
 | Term I/O | `#task/<id>/term/data` and `#vm/…/term/data` **streams** (`openReadable` / `openWritable`) — not `<wanix-term>` |
 | Term sizing | `_updateTerminals` shim + `termfit` RPC from parent (`WanixTermSizeSync`) |
-| Cafe ↔ Wanix bridge | `zss/feature/wanix/` — iframe host + `postMessage` RPC (parent on `/`, child in iframe) |
+| Cafe ↔ Wanix bridge | Parent: `screens/wanix/host` + `wanixclient/wanixbridge`; child: `wanixserver` device bus / `postMessage` |
 | JSX types for Wanix tags | [`zss/feature/wanix/wanixelements.d.ts`](../../zss/feature/wanix/wanixelements.d.ts) — upstream typings only; runtime does not use `<wanix-term>` |
 
 ## Examples
@@ -48,7 +60,7 @@ Separate document (iframe or navigation to `/wanix.html`) = clean `window` per r
 ```text
 ❌ BAD — wanix.min.js in index.html; WanixSystem in React tree
 ❌ BAD — createElement('wanix-term') + term.connect() for task/VM output
-✅ GOOD — hidden iframe src="/wanix.html"; bridge in zss/feature/wanix/
+✅ GOOD — hidden iframe src="/wanix.html"; parent bridge in wanixclient/
 ✅ GOOD — connecttermsession on #task/<id>/term/data; termwrite/termfit RPC
 ✅ GOOD — direct visit /wanix.html for Wanix-only debugging
 ```

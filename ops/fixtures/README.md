@@ -17,9 +17,9 @@ add co-located `__fixtures__` trees beside implementation code.
 | `synth/daisy/` | Daisy voice fixtures JSON |
 | `synth/maxi/` | Legacy Maxi parity JSON |
 | `parse/` | Parse test assets (e.g. `twomeasures.mid`) |
-| `wanix/` | Wanix sources (`src/*.wat`, zedcafe Go); built binaries in [`ops/public/wanix/`](../public/wanix/) |
+| `wanix/` | Wanix sources (`src/*.wat`, `hello/*`, zedcafe Go); built binaries in [`ops/public/wanix/`](../public/wanix/) |
 | `books/` | Shipped book JSON (npm `"files"`) |
-| `content/templates/` | Importable book templates (`manifest.json` + `pages/*.json`); built books in [`ops/public/books/`](../public/books/) |
+| `content/templates/` | Importable book templates (`manifest.json` + `pages/*.json`); built books in `ops/public/books/` (gitignored; regen via `ops:fixtures:content:book:build`) |
 | `zzt/corpus/` | Museum manifest + committed `zss/`; gitignored `archives/`, `extracted/`, `screenshots/` |
 
 ## Regen tasks
@@ -32,7 +32,7 @@ add co-located `__fixtures__` trees beside implementation code.
 | ZZT OOP corpus | `yarn task run ops:fixtures:zzt:corpus:build` |
 | ZZT board screenshots | `yarn task run ops:fixtures:zzt:corpus:screenshots` |
 | Content books | `yarn task run ops:fixtures:content:book:build` / `ops:fixtures:content:book:validate` |
-| Wanix drop fixtures | `yarn task run ops:fixtures:wanix:build` (needs WABT `wat2wasm`) |
+| Wanix drop fixtures | `yarn task run ops:fixtures:wanix:toolchains` then `ops:fixtures:wanix:build` (per-lang hellos need optional compilers; see `ops/fixtures/wanix/README.md`) |
 
 ## Parity / Playwright (not here)
 

@@ -1,11 +1,12 @@
+import { debugingest } from 'zss/debugingest'
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
 import {
   apilog,
   boardrunnerlinkdead,
   registerinspector,
   registerloginready,
 } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/types'
 import {
   boardrunnerassignmentvalid,
   boardrunnerelect,
@@ -27,6 +28,7 @@ import {
 } from 'zss/memory/permissions'
 import {
   memoryloginplayer,
+  memorylogoutplayer,
   memoryreadplayerboard,
 } from 'zss/memory/playermanagement'
 import {
@@ -42,26 +44,55 @@ export function handlesearch(vm: DEVICE, message: MESSAGE): void {
 }
 
 export function handlelogout(vm: DEVICE, message: MESSAGE): void {
-  // grab the current board the player is on
-  const currentboard = memoryreadplayerboard(message.player)
+  const player = message.player
+  const currentboard = memoryreadplayerboard(player)
+
+  function clearlogouttracking() {
+    delete tracking[player]
+    delete lastinputtime[player]
+    boardrunnerblocked[player] = true
+  }
+
+  // No flags.board: still tear down tracking and purge any board copies.
+  // Skipping this left tracking hot and handlesecond retried vmlogout forever.
   if (!ispresent(currentboard)) {
+    debugingest(
+      'auth.ts:handlelogout',
+      'logout no board host cleanup',
+      { player, hasrunner: false },
+      'H3',
+    )
+    memorylogoutplayer(player)
+    clearlogouttracking()
+    boardrunnerpushupdates(vm)
     return
   }
 
-  // grab the current boardrunner the player is on
   const priorelectionrunner = boardrunners[currentboard.id]
+  const hasrunner = isstring(priorelectionrunner) && !!priorelectionrunner
 
-  // notify the boardrunner worker that this is linkdead
-  boardrunnerlinkdead(vm, priorelectionrunner, message.player)
+  debugingest(
+    'auth.ts:handlelogout',
+    'logout linkdead dispatch',
+    {
+      player,
+      boardid: currentboard.id,
+      hasrunner,
+      runner: hasrunner ? priorelectionrunner : '',
+    },
+    'H3',
+  )
 
-  // clear tracking state
-  delete tracking[message.player]
-  delete lastinputtime[message.player]
+  if (hasrunner) {
+    boardrunnerlinkdead(vm, priorelectionrunner, player)
+  } else {
+    // No elected runner to run linkdead -- host deletes and syncs.
+    memorylogoutplayer(player)
+    boardrunnerpushupdates(vm)
+  }
 
-  // prevent logout player from being elected as a runner
-  boardrunnerblocked[message.player] = true
+  clearlogouttracking()
 
-  // grab the current board to validate runner assignment
   if (boardrunnerassignmentvalid(currentboard.id)) {
     boardrunnerelect(currentboard.id)
   }

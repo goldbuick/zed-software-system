@@ -10,6 +10,14 @@ import (
 	"tractor.dev/wanix/fs"
 )
 
+func TestNewEmptyExportRejectsInvalidCreate(t *testing.T) {
+	exportfs := NewEmptyExport()
+	_, err := fs.Create(exportfs, "evil.txt")
+	if err == nil {
+		t.Fatal("expected guarded ExportFS to reject evil.txt")
+	}
+}
+
 func TestExportFromPayloadRejectsInvalidCreate(t *testing.T) {
 	seed := `{"exportedAt":"test","bookCount":0,"books":[]}`
 	payload := inboxpayload{

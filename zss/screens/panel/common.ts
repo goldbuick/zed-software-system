@@ -18,12 +18,14 @@ type ScrollContextState = {
   sendmessage: (chip: string, target: string, data: any[]) => void
   sendclose: () => void
   didclose: () => void
+  setcursor: (index: number) => void
 }
 
 export const ScrollContext = createContext<ScrollContextState>({
   sendmessage() {},
   sendclose() {},
   didclose() {},
+  setcursor() {},
 })
 
 export const theme = {

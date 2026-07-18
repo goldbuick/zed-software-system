@@ -15,7 +15,8 @@ This document categorizes and summarizes all exported functions from the `device
 8. [Message Forwarding](#message-forwarding)
 9. [Modem (Shared State)](#modem-shared-state)
 10. [Session & Lifecycle](#session--lifecycle)
-11. [Types & Utilities](#types--utilities)
+11. [Wanix](#wanix)
+12. [Types & Utilities](#types--utilities)
 
 ---
 
@@ -378,6 +379,32 @@ Functions for session management and device lifecycle.
 
 ### Lifecycle
 - `started()` - Signal device has started (from vm.ts or stub.ts)
+
+---
+
+## Wanix
+
+**File:** `api.ts` (`wanixserver*` / `wanixclient*` helpers)
+
+Emit catalog for parent ↔ iframe Wanix control. All `wanixserver:` / `wanixclient:` target strings are defined here only. Pattern: parent emits `wanixserver:<action>`; iframe replies with `wanixclient:<action>` (or lifecycle pushes).
+
+### Parent → iframe (`wanixserver*`)
+- `wanixserverapplyroom`, `wanixserverspawntask`, `wanixserverhalttask`, `wanixserverstoproom`
+- `wanixserverstartvm`, `wanixserverstopvm`, `wanixserverdrop`, `wanixserverbinddrop`
+- `wanixservertermwrite`, `wanixservertermfit`, `wanixserverwritefile`
+- `wanixserversynczedcafeexport`, `wanixserversetzedcafeready`, `wanixserverhaltzedcafe`
+- `wanixservermenu` — bare `#wanix`; iframe builds tape from operational state
+- `wanixserverreadroomstatus`, `wanixserverreadvmstatus`, `wanixserverreadzedcafeexportfiles`, …
+- `wanixserverrequestzedcafestate` — parent delivers export files after iframe pull
+
+### Iframe / sim → parent (`wanixclient*`)
+- Lifecycle: `wanixclientready`, `wanixclientidle`, `wanixclientexportready`
+- Completions: `wanixclientmethodresult`, `wanixclientmenu` (print-only tape), `wanixclientapplyroom`, `wanixclientspawntask`, `wanixclientbinddrop`, `wanixclientdropdone`, …
+- Pushes: `wanixclientcells`, `wanixclientsession`
+- Zedcafe: `wanixclientexportstate`, `wanixclientimportresult`, `wanixclientrequestzedcafestate`, `wanixclientzedcafefilechange`
+
+### Parent-local (no device message)
+`#wanix attach` / `detach` / `term dump|status` call `wanixdisplay` / `wanixtermhandlers` directly (screens/wanix display state).
 
 ---
 

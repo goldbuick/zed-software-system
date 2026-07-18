@@ -1,12 +1,5 @@
 import Peer, { DataConnection } from 'peerjs'
-import {
-  MESSAGE,
-  apierror,
-  apilog,
-  vmsearch,
-  vmtopic,
-  workstatus,
-} from 'zss/device/api'
+import { apierror, apilog, vmsearch, vmtopic, workstatus } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
 import {
   createforward,
@@ -16,8 +9,9 @@ import {
   shouldforwardonpeerserver,
   shouldforwardservertoclient,
 } from 'zss/device/forward'
-import { registerreadplayer } from 'zss/device/register'
+import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
+import type { MESSAGE } from 'zss/device/types'
 import {
   decodepeerwire,
   encodepeerwire,
@@ -29,6 +23,7 @@ import { ensurezstdwasm } from 'zss/feature/zstdwasm'
 import { createinfohash } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { recordpeerwirereceived, recordpeerwiresent } from 'zss/perf/peerwire'
+import { readplatformsessionsid } from 'zss/platform'
 
 async function readpeerid(): Promise<string | undefined> {
   return await storagereadnetid()
@@ -134,9 +129,32 @@ function sendpeer(dataconnection: DataConnection, message: MESSAGE): void {
   void dataconnection.send(wire)
 }
 
+function peersessionforsessionrewrite(): string {
+  return SOFTWARE.session() || readplatformsessionsid()
+}
+
 function handledataconnection(dataconnection: DataConnection) {
   const player = registerreadplayer()
   let topicbridge: MAYBE<ReturnType<typeof createforward>>
+  let bridgeopened = false
+  const pendingincoming: MESSAGE[] = []
+
+  function deliverincoming(message: MESSAGE) {
+    if (!ispresent(topicbridge)) {
+      pendingincoming.push(message)
+      return
+    }
+    topicbridge.forward(message)
+  }
+
+  function flushpendingincoming() {
+    while (pendingincoming.length > 0 && ispresent(topicbridge)) {
+      const next = pendingincoming.shift()
+      if (ispresent(next)) {
+        topicbridge.forward(next)
+      }
+    }
+  }
 
   function hostbridge() {
     topicbridge = createforward((message) => {
@@ -166,16 +184,22 @@ function handledataconnection(dataconnection: DataConnection) {
   }
 
   async function runopen() {
-    if (!dataconnection.open) {
+    if (!dataconnection.open || bridgeopened) {
       return
     }
+    bridgeopened = true
     await ensurezstdwasm()
+    if (!dataconnection.open || !ispresent(networkpeer)) {
+      bridgeopened = false
+      return
+    }
     apilog(SOFTWARE, player, `connection ${dataconnection.peer} open`)
     if (ishost()) {
       hostbridge()
     } else {
       joinbridge()
     }
+    flushpendingincoming()
   }
 
   dataconnection.on('open', () => {
@@ -184,6 +208,8 @@ function handledataconnection(dataconnection: DataConnection) {
 
   dataconnection.on('close', () => {
     topicbridge?.disconnect()
+    topicbridge = undefined
+    pendingincoming.length = 0
     if (ispresent(networkpeer)) {
       apilog(SOFTWARE, player, `disconnection from ${dataconnection.peer}`)
     }
@@ -207,11 +233,12 @@ function handledataconnection(dataconnection: DataConnection) {
       try {
         await ensurezstdwasm()
         const message = decodepeerwire(bytes)
+        const session = peersessionforsessionrewrite()
         const incoming: MESSAGE = {
           ...message,
-          session: SOFTWARE.session(),
+          session,
         }
-        topicbridge?.forward(incoming)
+        deliverincoming(incoming)
       } catch (err) {
         apilog(
           SOFTWARE,
@@ -476,4 +503,15 @@ export function netterminaljoin(topicpeerid: string) {
   // startup peerjs
   const selfpeerid = netterminaltopic(player)
   netterminalcreate(topicpeerid, selfpeerid)
+}
+
+/** Tear down active peer so a soft join can start without page reload. */
+export function netterminalhalt() {
+  netterminalsessionserial += 1
+  netterminalclearallschedule()
+  if (ispresent(networkpeer)) {
+    networkpeer.destroy()
+    networkpeer = undefined
+  }
+  subscribetopic = ''
 }

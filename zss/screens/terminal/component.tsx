@@ -1,18 +1,15 @@
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import { useLayoutEffect, useMemo, useState } from 'react'
 import { chipmessage, vmcli } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
-import { registerreadplayer } from 'zss/device/register'
+import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import { storagereadconfig } from 'zss/feature/storage'
-import {
-  readattachedsession,
-  subscribewanixattach,
-} from 'zss/feature/wanix/wanixattachstate'
 import { useTape, useTerminal } from 'zss/gadget/data/zustandstores'
 import { useWriteText } from 'zss/gadget/writetext'
 import { totarget } from 'zss/mapping/string'
 import { MAYBE } from 'zss/mapping/types'
 import { perfmeasure } from 'zss/perf/ui'
+import { useLinkEditingKey } from 'zss/screens/linkui/linkediting'
 import { TapeBackPlate } from 'zss/screens/tape/backplate'
 import { TapeTerminalContext } from 'zss/screens/tape/common'
 import {
@@ -24,8 +21,6 @@ import { useShallow } from 'zustand/react/shallow'
 
 import { TerminalInput } from './input'
 import { TerminalRows } from './rows'
-import { WanixTermScreen } from './wanixtermscreen'
-import { WanixTermSizeSync } from './wanixtermsizesync'
 
 export function TerminalComponent() {
   const player = registerreadplayer()
@@ -33,13 +28,9 @@ export function TerminalComponent() {
   const terminalmode = useTape((state) => state.terminalmode)
   const pinlines = useTape((state) => state.terminal.pinlines)
   const sessionlogs = useTape((state) => state.terminal.logs)
+  const editingkey = useLinkEditingKey()
 
   const [voice2text, setvoice2text] = useState<MAYBE<boolean>>(undefined)
-  const [attachedsession, setattachedsession] = useState(readattachedsession)
-  useEffect(
-    () => subscribewanixattach(() => setattachedsession(readattachedsession())),
-    [],
-  )
   useLayoutEffect(() => {
     doasync(SOFTWARE, registerreadplayer(), async () => {
       const voice2text = await storagereadconfig('voice2text')
@@ -58,17 +49,17 @@ export function TerminalComponent() {
   const edge = textformatreadedges(context)
   const logsrowmaxwidth = context.width - 1
 
-  const layout = useMemo(
-    () =>
-      readterminallayout({
-        pinlines,
-        sessionlogs,
-        maxwidth: logsrowmaxwidth,
-        edge,
-        editoropen,
-      }),
-    [pinlines, sessionlogs, logsrowmaxwidth, edge, editoropen],
-  )
+  const layout = useMemo(() => {
+    // editingkey invalidates row heights (measurerowcached reads it)
+    void editingkey
+    return readterminallayout({
+      pinlines,
+      sessionlogs,
+      maxwidth: logsrowmaxwidth,
+      edge,
+      editoropen,
+    })
+  }, [pinlines, sessionlogs, logsrowmaxwidth, edge, editoropen, editingkey])
 
   const logrowtotalheight = useMemo(
     () =>
@@ -97,11 +88,10 @@ export function TerminalComponent() {
 
   return (
     <>
-      <WanixTermSizeSync />
       <TapeBackPlate />
       <TapeTerminalContext.Provider value={tapecontextvalue}>
-        {attachedsession ? <WanixTermScreen /> : <TerminalRows />}
-        {!editoropen && !attachedsession && voice2text !== undefined && (
+        <TerminalRows />
+        {!editoropen && voice2text !== undefined && (
           <TerminalInput
             terminalmode={terminalmode}
             voice2text={voice2text}

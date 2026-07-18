@@ -68,7 +68,7 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task cafe dev`).
 | Task | Description | Tags | Deps | Env |
 |------|-------------|------|------|-----|
 | `yarn task run ops:ci:pages:copy-404` | Copy GitHub Pages 404.html into cafe/dist | `ci` | — | — |
-| `yarn task run ops:ci:pages:copy-cname` | Copy GitHub Pages CNAME into cafe/dist | `ci` | — | — |
+| `yarn task run ops:ci:pages:copy-cname` | Copy GitHub Pages CNAME into cafe/dist and write .nojekyll (skip Jekyll; required for Vite _commonjsHelpers chunks) | `ci` | — | — |
 
 
 ### daisy
@@ -202,8 +202,12 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task cafe dev`).
 
 | Task | Description | Tags | Deps | Env |
 |------|-------------|------|------|-----|
-| `yarn task run ops:fixtures:wanix:build` | Build WASI .wasm and .tgz drag-drop fixtures into ops/public/wanix/ (needs wabt wat2wasm) | — | — | — |
-| `yarn task run ops:fixtures:wanix:zedcafe:build` | Build the zed-cafe export daemon (Go js/wasm) into ops/public/wanix/ and cafe/public/wanix/ (needs Go + submodules/wanix) | — | — | — |
+| `yarn task run ops:fixtures:wanix:build` | Build WASI .wasm, per-lang hello-*.wasm, and .tgz drag-drop fixtures into ops/public/wanix/ (run ops:fixtures:wanix:toolchains first; optional langs skip unless --strict) | — | — | — |
+| `yarn task run ops:fixtures:wanix:findplayers:build` | Build findplayers + greenring (ops/public/wanix/) and zedsync (ops/public + cafe/public/wanix/) gojs tools (needs Go + submodules/wanix — run ops:fixtures:wanix:toolchains first) | — | — | — |
+| `yarn task run ops:fixtures:wanix:linux:overlay:build` | Build zedcafe-linux-overlay.tgz (Alpine i386 jq/curl/wget + zedcafe shell tools) into ops/public/wanix/ and cafe/public/wanix/ (needs Docker — run ops:fixtures:wanix:toolchains first) | — | — | — |
+| `yarn task run ops:fixtures:wanix:p9server:dev` | Serve a folder over wss:// 9P for #wanix remote connect / zedsync (TLS via cafe mkcert; default port 8765; optional dir argv; default ops/fixtures/wanix/p9server/serve-root). Opens the folder in Finder. Ctrl+C to stop. | `dev` | — | — |
+| `yarn task run ops:fixtures:wanix:toolchains` | Check wanix fixture build toolchains (wabt, go, rust, zig, tinygo, clang, docker) and print install hints — see ops/fixtures/wanix/README.md | — | — | — |
+| `yarn task run ops:fixtures:wanix:zedcafe:build` | Build zed-cafe export daemon (Go js/wasm) into cafe/public/wanix/ (needs Go + submodules/wanix — run ops:fixtures:wanix:toolchains first) | — | — | — |
 
 
 #### fixtures/zzt
@@ -257,3 +261,10 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task cafe dev`).
 |------|-------------|------|------|-----|
 | `yarn task run ops:test` | Run Jest test suite | `ci` | — | — |
 | `yarn task run ops:test:coverage` | Jest with coverage on selected VM/gadget modules | — | — | — |
+
+
+### zns
+
+| Task | Description | Tags | Deps | Env |
+|------|-------------|------|------|-----|
+| `yarn task run ops:zns:docs:publish` | Publish zss/rom/refscroll/*.md to docs ZNS namespace (ZNS_EMAIL + ZNS_TOKEN; --dry-run) | `deploy` | — | — |

@@ -1,6 +1,9 @@
-import { SOFTWARE } from 'zss/device/session'
-import { terminalwritelines } from 'zss/feature/terminalwritelines'
-import { readwanixmenustate } from 'zss/feature/wanix/wanixroom'
+import type {
+  WanixMenuState,
+  WanixMenuVmStatus,
+  WanixRoomMode,
+  WanixTaskSpec,
+} from 'zss/feature/wanix/wanixroomtypes'
 import {
   zssheaderlines,
   zsssectionlines,
@@ -9,13 +12,6 @@ import {
   zsszedlinkline,
 } from 'zss/feature/zsstextui'
 import { ispresent } from 'zss/mapping/types'
-
-import type {
-  WanixMenuState,
-  WanixMenuVmStatus,
-  WanixRoomMode,
-  WanixTaskSpec,
-} from './wanixroomtypes'
 
 function readwanixcmdbasename(cmd: string): string {
   const trimmed = cmd.replace(/^#ramfs\//, '')
@@ -35,18 +31,18 @@ function readwanixvmstatusline(vm: WanixMenuVmStatus): string {
   return `${vm.vmid ?? '?'} ${vm.mem ?? '?'} vrid=${vm.vrid ?? '?'}`
 }
 
+/** Pure tape builder — wanixserver assembles WanixMenuState from iframe truth. */
 export function buildwanixmenutape(state: WanixMenuState): string {
   const parts: (string | string[])[] = []
 
-  // header
   parts.push(zssheaderlines(readwanixheadertitle(state.config.mode)))
 
-  // notice line
   if (state.stalled) {
-    parts.push(zsstextline('$graywanix starting...'))
+    parts.push(
+      zsstextline('$red   menu stale — iframe status timeout, retry #wanix'),
+    )
   }
 
-  // list vm state
   if (ispresent(state.vm)) {
     parts.push(
       zsszedlinkline(
@@ -59,10 +55,8 @@ export function buildwanixmenutape(state: WanixMenuState): string {
   }
 
   if (state.config.tasks.length === 0) {
-    // show notice line
     parts.push(zsstextline('$cyan   drop a .wasm or .tgz to start a task'))
   } else {
-    // list tasks state
     for (const task of state.config.tasks) {
       parts.push(
         zsszedlinkline(
@@ -73,7 +67,6 @@ export function buildwanixmenutape(state: WanixMenuState): string {
     }
   }
 
-  // list sessions
   if (state.sessionkeys.length > 0) {
     parts.push('$32')
     parts.push(zsssectionlines('attach to session'))
@@ -82,20 +75,27 @@ export function buildwanixmenutape(state: WanixMenuState): string {
     }
   }
 
-  // list remote imports
+  if (ispresent(state.activesessionkey)) {
+    parts.push('$32')
+    parts.push(
+      zsstextline(
+        '$gray drop files $26 input/ for attached processor (see ops/fixtures/wanix README)',
+      ),
+    )
+  }
+
   parts.push('$32')
   parts.push(zsssectionlines('externals'))
-  parts.push(zsszedlinkline('wanix remote', 'Remote imports (WSS 9P)'))
   parts.push(
-    zsstextline(
-      '$cyan   #wanix bridge <ws-url> — export namespace (not wired yet)',
-    ),
+    zsstextline('$cyan   drop a folder onto cafe to mount live (Chromium FSA)'),
   )
+  for (const dst of state.fsabinds) {
+    parts.push(zsstextline(`$green   ${dst}`))
+  }
+  // Only offer list when imports exist — empty list + usage dump is tape noise.
+  if (state.config.remotes.length > 0) {
+    parts.push(zsszedlinkline('wanix remote', 'list remote imports (WSS 9P)'))
+  }
 
   return zsstexttape(...parts)
-}
-
-export async function showwanixmenu(player: string): Promise<void> {
-  const state = await readwanixmenustate()
-  terminalwritelines(SOFTWARE, player, buildwanixmenutape(state))
 }

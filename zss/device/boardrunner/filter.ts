@@ -1,4 +1,4 @@
-import type { MESSAGE } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/types'
 import { memoryreadboardrunner } from 'zss/memory/session'
 
 const PLAYERSCOPED_TARGETS = new Set([

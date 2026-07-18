@@ -45,7 +45,9 @@ export function registerhyperlinksharedcleanup() {
       case 'zipfilelist':
         break
       default:
-        // clear out any other bridges
+        // detach modem observers before dropping bridges so a late observe
+        // cannot set() against a newly selected inspect element
+        clearpanelsharedchip(key)
         delete hyperlinksharedbridges[key]
         break
     }
@@ -159,9 +161,9 @@ export function applyhyperlinksharedmodemsync(
 
   const address = paneladdress(chipname, target)
   if (HYPERLINK_WITH_SHARED_TEXT.has(typ)) {
-    if (isstring(current)) {
-      modemwriteinitstring(address, current)
-    }
+    // Always init a Y.Text — non-string get() (e.g. default 0) must not skip
+    // init or LinkText never becomes editable.
+    modemwriteinitstring(address, maptostring(current))
     panelshared[chipname][target] = modemobservevaluestring(
       address,
       (value) => {
@@ -185,6 +187,19 @@ export function clearpanelsharedsync(chip: string, target: string): void {
   const chipname = NAME(chip)
   panelshared[chipname]?.[target]?.()
   delete panelshared[chipname]?.[target]
+}
+
+export function clearpanelsharedchip(chip: string): void {
+  const chipname = NAME(chip)
+  const shared = panelshared[chipname]
+  if (!shared) {
+    return
+  }
+  const targets = Object.keys(shared)
+  for (let i = 0; i < targets.length; ++i) {
+    shared[targets[i]]?.()
+  }
+  delete panelshared[chipname]
 }
 
 export function initstate(): GADGET_STATE {
@@ -233,8 +248,8 @@ const HYPERLINK_WITH_SHARED_DEFAULTS = {
   tx: '',
   text: '',
   zssedit: '',
-  charedit: '',
-  coloredit: '',
+  charedit: 0,
+  coloredit: 0,
   bgedit: 0,
 }
 
@@ -332,8 +347,12 @@ export function gadgethyperlink(
       break
   }
 
+  // Normalize chip once so PANEL_ITEM, modem keys, and sendmessage agree
+  // (sid_ mixes case; worker apply already uses NAME(chip)).
+  const chipname = NAME(chip)
+
   // package into a panel item
-  const hyperlink: WORD[] = [chip, label, ...words]
+  const hyperlink: WORD[] = [chipname, label, ...words]
   // chip, label, target, [type], [...args]
 
   // type of target value to track
@@ -341,7 +360,7 @@ export function gadgethyperlink(
     `${hyperlink[3] as string}`,
   ) as keyof typeof HYPERLINK_WITH_SHARED_DEFAULTS
 
-  const bridge = resolvehyperlinksharedbridge(chip, type)
+  const bridge = resolvehyperlinksharedbridge(chipname, type)
   const getforchip = bridge?.get ?? get
   const setforchip = bridge?.set ?? set
 
@@ -354,7 +373,7 @@ export function gadgethyperlink(
   if (HYPERLINK_WITH_SHARED.has(type)) {
     const target = `${hyperlink[2] as string}`
     applyhyperlinksharedmodemsync(
-      chip,
+      chipname,
       type,
       target,
       getforchip,

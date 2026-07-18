@@ -1,0 +1,32 @@
+import { registerreadplayer } from 'zss/device/registerplayer'
+import type { MESSAGE } from 'zss/device/types'
+
+/** Iframe emits with empty player — allow these wanixclient paths through. */
+const WANIX_IFRAME_TARGETS = new Set([
+  'ready',
+  'idle',
+  'exportready',
+  'requestzedcafestate',
+  'cells',
+  'session',
+  'ping',
+  'menu',
+  'applyroom',
+  'spawntask',
+  'binddrop',
+  'bindfsa',
+  'dropdone',
+  'synczedcafeexport',
+  'readzedcafeexportfiles',
+  'readzedcafetaskrid',
+  'iszedcafeexportlive',
+  'readfile',
+  'zedcafefilechange',
+])
+
+export function shouldprocesswanixclientmessage(message: MESSAGE): boolean {
+  if (!message.player && WANIX_IFRAME_TARGETS.has(message.target)) {
+    return true
+  }
+  return message.player === registerreadplayer()
+}

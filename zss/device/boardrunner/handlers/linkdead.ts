@@ -1,14 +1,16 @@
+import { debugingest } from 'zss/debugingest'
 import type { DEVICE } from 'zss/device'
 import {
-  type MESSAGE,
   apilog,
   boardrunneridle,
   registerloginready,
   vmclearscroll,
 } from 'zss/device/api'
 import { pushworkerupdates } from 'zss/device/boardrunner/sync'
+import type { MESSAGE } from 'zss/device/types'
 import { ispresent, isstring } from 'zss/mapping/types'
 import {
+  memorydebugcountplayerboards,
   memorylogoutplayer,
   memoryreadplayerboard,
 } from 'zss/memory/playermanagement'
@@ -23,11 +25,42 @@ export function handlelinkdead(device: DEVICE, message: MESSAGE): void {
   // grab the current board the player is on
   const currentboard = memoryreadplayerboard(linkdeadplayer)
   if (!ispresent(currentboard)) {
+    debugingest(
+      'linkdead.ts:handlelinkdead',
+      'linkdead early return no board',
+      { player: linkdeadplayer },
+      'H3',
+    )
     return
   }
 
+  debugingest(
+    'linkdead.ts:handlelinkdead',
+    'linkdead before logout',
+    {
+      player: linkdeadplayer,
+      boardid: currentboard.id,
+      ...memorydebugcountplayerboards(linkdeadplayer),
+    },
+    'H2',
+  )
+
   // boot em out !
   memorylogoutplayer(linkdeadplayer)
+
+  const after = memorydebugcountplayerboards(linkdeadplayer)
+  debugingest(
+    'linkdead.ts:handlelinkdead',
+    'linkdead after logout',
+    {
+      player: linkdeadplayer,
+      boardid: currentboard.id,
+      count: after.count,
+      boardids: after.boardids,
+      flagsboard: after.flagsboard,
+    },
+    'H2',
+  )
 
   // push jsonpipe changes
   pushworkerupdates(device)

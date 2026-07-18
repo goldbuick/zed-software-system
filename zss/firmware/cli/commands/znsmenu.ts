@@ -322,7 +322,11 @@ export async function znsconfirmotpfromdeeplink(
     await showznsmenu(player)
     return true
   }
-  write(SOFTWARE, player, zsstextline(`$red zns login failed`))
+  write(
+    SOFTWARE,
+    player,
+    zsstextline(`$red zns login failed: ${result.message ?? 'unknown error'}`),
+  )
   return false
 }
 

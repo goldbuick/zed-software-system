@@ -40,9 +40,13 @@ export function TapeLayoutTiles({
   const tilebg = platebg ?? bgcolorformode(terminalmode)
   const store = useTiles(width, height, 0, tilefg, tilebg)
   const context: WRITE_TEXT_CONTEXT = useMemo(() => {
+    const state = store.getState()
     return {
       ...createwritetextcontext(width, height, tilefg, tilebg),
-      ...store.getState(),
+      ...state,
+      // Props win: store dims can lag one frame on aspect-only resize.
+      width,
+      height,
     }
   }, [tilebg, tilefg, width, height, store])
   return (

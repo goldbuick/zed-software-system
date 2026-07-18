@@ -14,7 +14,7 @@
 
 If `OfflineAudioContext` or offline worklet boot fails, `#synthrecord` surfaces an error (no real-time fallback).
 
-Archived Maximilian path: [`archive/maxi/wasmrecordhandler.ts`](../archive/maxi/wasmrecordhandler.ts).
+Archived Maximilian path: [`archive/maxi/wasmrecordhandler.ts`](../../../../ops/archive/synth/maxi/wasmrecordhandler.ts).
 
 ---
 

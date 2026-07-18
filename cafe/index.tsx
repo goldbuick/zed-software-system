@@ -1,19 +1,18 @@
 import { createRoot } from 'react-dom/client'
 import 'zss/rom/vitepopulate'
 import { vmcli } from 'zss/device/api'
-import {
-  register,
-  registerreadplayer,
-  registersetmyplayerid,
-} from 'zss/device/register'
+import { register } from 'zss/device/register'
+import { registersetmyplayerid } from 'zss/device/register/player'
+import { registerreadplayer } from 'zss/device/registerplayer'
+import 'zss/device/wanixclient'
 import { isclimode } from 'zss/feature/detect'
 import {
   durablehydratefromdisk,
   startdurableclisync,
 } from 'zss/feature/durablecli'
 import { isjoin } from 'zss/feature/url'
-import { WanixHost } from 'zss/feature/wanix/wanixhost'
 import { createplatform } from 'zss/platform'
+import { WanixHost } from 'zss/screens/wanix/host'
 
 import { CafeCanvas } from './cafecanvas'
 import { WebGLCheck } from './webglcheck'

@@ -222,6 +222,10 @@ export async function storagewritznstoken(token: string) {
   return durableupdate('znstoken', () => token)
 }
 
+export async function storageclearznstoken() {
+  await durabledel('znstoken')
+}
+
 export async function storagereadznsnamespace(): Promise<string | undefined> {
   const namespace = await durableget<string>('znsnamespace')
   if (!namespace) {

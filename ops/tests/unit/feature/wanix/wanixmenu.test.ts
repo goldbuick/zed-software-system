@@ -1,7 +1,3 @@
-jest.mock('zss/feature/wanix/wanixroom', () => ({
-  readwanixmenustate: jest.fn(),
-}))
-
 jest.mock('zss/feature/zsstextui', () => ({
   zssheaderlines: (header: string) => [`HEADER:${header}`],
   zsssectionlines: (section: string) => [`SECTION:${section}`],
@@ -35,8 +31,8 @@ function idlestate(): WanixMenuState {
     vm: null,
     stalled: false,
     sessionkeys: [],
-    attachedsessionkey: null,
     activesessionkey: null,
+    fsabinds: [],
   }
 }
 
@@ -72,13 +68,13 @@ describe('wanixmenu', () => {
         },
         ready: true,
         sessionkeys: ['hello-wasm', 'other-wasm'],
-        attachedsessionkey: 'hello-wasm',
-        activesessionkey: 'other-wasm',
+        activesessionkey: 'hello-wasm',
       })
       expect(tape).toContain('SECTION:attach to session')
       expect(tape).toContain('!wanix attach "hello-wasm";hello-wasm')
       expect(tape).toContain('!wanix attach "other-wasm";other-wasm')
       expect(tape).not.toContain('wanix detach')
+      expect(tape).toContain('drop files $26 input/')
     })
 
     it('lists one task with per-task stop link', () => {
@@ -93,8 +89,8 @@ describe('wanixmenu', () => {
         vm: null,
         stalled: false,
         sessionkeys: [],
-        attachedsessionkey: null,
         activesessionkey: null,
+        fsabinds: [],
       })
       expect(tape).toContain('HEADER:WANIX $YELLOWtask')
       expect(tape).toContain(
@@ -118,8 +114,8 @@ describe('wanixmenu', () => {
         vm: null,
         stalled: false,
         sessionkeys: [],
-        attachedsessionkey: null,
         activesessionkey: null,
+        fsabinds: [],
       })
       expect(tape).toContain('!wanix stop "hello-wasm";')
       expect(tape).toContain('!wanix stop "greet-wasm";')
@@ -143,8 +139,8 @@ describe('wanixmenu', () => {
         },
         stalled: false,
         sessionkeys: [],
-        attachedsessionkey: null,
         activesessionkey: null,
+        fsabinds: [],
       })
       expect(tape).toContain('HEADER:WANIX $YELLOWvm')
       expect(tape).toContain('linux-vm 512M vrid=vm-42')
@@ -165,11 +161,43 @@ describe('wanixmenu', () => {
         vm: null,
         stalled: true,
         sessionkeys: [],
-        attachedsessionkey: null,
         activesessionkey: null,
+        fsabinds: [],
       })
-      expect(tape).toContain('wanix starting')
+      expect(tape).toContain('menu stale')
       expect(tape).toContain('!wanix stop "hello-wasm";')
+    })
+
+    it('lists live folder mounts under externals', () => {
+      const empty = buildwanixmenutape(idlestate())
+      expect(empty).toContain('drop a folder onto cafe to mount live')
+      expect(empty).not.toContain('(no folder mounts)')
+      expect(empty).not.toContain('list remote imports')
+
+      const tape = buildwanixmenutape({
+        ...idlestate(),
+        fsabinds: ['MyProject', 'assets'],
+      })
+      expect(tape).toContain('TEXT:$green   MyProject')
+      expect(tape).toContain('TEXT:$green   assets')
+      expect(tape).not.toContain('TEXT:$green   /MyProject')
+    })
+
+    it('shows list remotes only when remotes exist', () => {
+      expect(buildwanixmenutape(idlestate())).not.toContain(
+        '!wanix remote;list remote imports',
+      )
+      const tape = buildwanixmenutape({
+        ...idlestate(),
+        config: {
+          ...createidleroomconfig(),
+          remotes: [
+            { id: 'r1', dst: 'host', url: 'wss://example.test/' },
+          ],
+        },
+      })
+      expect(tape).toContain('!wanix remote;list remote imports (WSS 9P)')
+      expect(tape).not.toContain('#wanix remote connect')
     })
   })
 })

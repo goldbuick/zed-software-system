@@ -3,7 +3,7 @@ import {
   registerterminalquickopen,
   vmclirepeatlast,
 } from 'zss/device/api'
-import { registerreadplayer } from 'zss/device/register'
+import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import { INPUT } from 'zss/gadget/data/types'
 import { useDeviceData } from 'zss/gadget/device'

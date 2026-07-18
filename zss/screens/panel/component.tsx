@@ -17,6 +17,10 @@ type PanelProps = {
   xmargin?: number
   ymargin?: number
   selected?: number
+  /** Content index base for even/odd striping (scroll offset); draw Y stays index + ymargin */
+  striperowbase?: number
+  /** Per-visible-item draw Y within the panel (variable-height rows). */
+  rowys?: number[]
   width: number
   height: number
   color: number
@@ -29,6 +33,8 @@ export function PanelComponent({
   xmargin = 1,
   ymargin = 1,
   selected = -1,
+  striperowbase = 0,
+  rowys,
   width,
   height,
   color,
@@ -74,8 +80,9 @@ export function PanelComponent({
         {perfmeasure('panel:items', () =>
           text.map((item, index) => (
             <PanelItem
-              key={index}
-              row={inline ? undefined : index + ymargin}
+              key={striperowbase + index}
+              row={inline ? undefined : (rowys?.[index] ?? index) + ymargin}
+              striperow={striperowbase + index}
               item={item}
               active={index === selected}
               sidebar={xmargin !== 0}

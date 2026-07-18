@@ -36,7 +36,7 @@ Synthesized drum kit. Each file provides one or more drum sounds with trigger fu
 | Backend | Drum implementation |
 |---------|---------------------|
 | **DaisySP WASM** (active) | DaisySP `AnalogBassDrum` (ID 9), `SyntheticBassDrum` (ID 7); custom C++ for tick, tweet, snares, cowbell, clap, woodblocks |
-| **Maximilian WASM** (archived) | Tone-parity custom DSP in [`archive/maxi/drumplaycode.ts`](../archive/maxi/drumplaycode.ts) |
+| **Maximilian WASM** (archived) | Tone-parity custom DSP in [`archive/maxi/drumplaycode.ts`](../../../../ops/archive/synth/maxi/drumplaycode.ts) |
 
 See [implementation-matrix.md](implementation-matrix.md) Table 4.
 

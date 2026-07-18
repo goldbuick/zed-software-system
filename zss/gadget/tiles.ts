@@ -78,6 +78,27 @@ export function writetile(
 
 export const TilesContext = createContext(createtilesstore())
 
+function createtilesstoreatsizes(
+  width: number,
+  height: number,
+  char: number,
+  color: number,
+  bg: number,
+): StoreApi<TILE_DATA> {
+  const store = createtilesstore()
+  const size = width * height
+  // Fresh store: no subscribers yet, so setState during hook setup is safe.
+  store.setState({
+    width,
+    height,
+    char: new Array(size).fill(char),
+    color: new Array(size).fill(color),
+    bg: new Array(size).fill(bg),
+    render: 0,
+  })
+  return store
+}
+
 export function useTiles(
   width: number,
   height: number,
@@ -85,17 +106,23 @@ export function useTiles(
   color: number,
   bg: number,
 ): StoreApi<TILE_DATA> {
-  const [store] = useState(() => createtilesstore())
+  const [store, setstore] = useState(() =>
+    createtilesstoreatsizes(width, height, char, color, bg),
+  )
 
   const size = width * height
   const state = store.getState()
-  if (state.char.length !== size) {
-    state.width = width
-    state.height = height
-    state.char = new Array(size).fill(char)
-    state.color = new Array(size).fill(color)
-    state.bg = new Array(size).fill(bg)
-    state.render = 0
+  // Resize when cell count OR aspect changes (same area, different cols/rows).
+  // Replace the store via React setState (same component) -- do not zustand
+  // setState on the live store here; that notifies TilesRender mid-render.
+  if (
+    state.char.length !== size ||
+    state.width !== width ||
+    state.height !== height
+  ) {
+    const next = createtilesstoreatsizes(width, height, char, color, bg)
+    setstore(next)
+    return next
   }
 
   return store

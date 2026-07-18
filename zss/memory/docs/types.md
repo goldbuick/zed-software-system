@@ -27,7 +27,7 @@
 | BOARD_KEYS | terrain, objects, isdark, over, under, exits, etc. |
 | BOOK_KEYS | id, name, timestamp, activelist, pages, flags |
 | CODE_PAGE_KEYS | id, code, board, object, terrain, charset, palette |
-| CODE_PAGE_TYPE | ERROR, LOADER, BOARD, OBJECT, TERRAIN, CHARSET, PALETTE, SCROLL |
+| CODE_PAGE_TYPE | ERROR, LOADER, BOARD, OBJECT, TERRAIN, CHARSET, PALETTE, TXT |
 | MEMORY_LABEL | main, temp, title, player, gadgetstore |
 
 ## Types
@@ -39,5 +39,5 @@
 | BOOK | id, name, pages, flags, activelist |
 | CODE_PAGE | id, code, board/object/terrain/charset/palette, stats |
 
-First-line `@` rule: `@{type}` alone names an object; `@{type} <name>` declares that codepage type (including `scroll`).
+First-line `@` rule: `@{type}` alone names an object; `@{type} <name>` declares that codepage type (including `txt`).
 | BOOK_FLAGS | Record<string, WORD> |

@@ -1,9 +1,8 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
+import type { MESSAGE } from 'zss/device/types'
 import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
 import { memoryrepeatclilast, memoryruncli } from 'zss/memory/runtime'
 import { perfmeasure } from 'zss/perf/ui'
-
 export function handlecli(vm: DEVICE, message: MESSAGE): void {
   perfmeasure('vm:cli', () => {
     memoryruncli(message.player, message.data)

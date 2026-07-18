@@ -1,14 +1,44 @@
-import type { DEVICELIKE } from 'zss/device/api'
-import { write, writehyperlink } from 'zss/feature/writeui'
-import { iszedlinkline } from 'zss/feature/zsstextui'
-import { scrolllinkunescapefrag } from 'zss/mapping/string'
+import type { DEVICELIKE } from 'zss/device/types'
+import { write } from 'zss/feature/writeui'
+import { parsezedlinkline } from 'zss/feature/zedlinkparse'
+import {
+  iszedlinkline,
+  zsszedlinkline,
+  zsszedlinklinechip,
+} from 'zss/feature/zsstextui'
+import { scrolllinkescapefrag } from 'zss/mapping/string'
+
+function quotetoken(token: string): string {
+  if (!/[\s"]/.test(token)) {
+    return token
+  }
+  let buf = ''
+  for (let i = 0; i < token.length; ++i) {
+    const c = token.charAt(i)
+    if (c === '\\' || c === '"') {
+      buf += `\\${c}`
+    } else {
+      buf += c
+    }
+  }
+  return `"${buf}"`
+}
+
+function joincommandwords(words: string[]): string {
+  const parts: string[] = []
+  for (let i = 0; i < words.length; ++i) {
+    parts.push(quotetoken(words[i]))
+  }
+  return parts.join(' ')
+}
 
 /**
  * Terminal/write analogue of scrollwritelines: same newline handling,
- * blank lines (empty / whitespace-only physical lines) as empty log rows,
- * `scrolllinkunescapefrag` from `zss/mapping/string`, and !payload;label vs plain zsstext.
+ * blank lines as empty log rows, and `!payload;label` vs plain zsstext via
+ * shared `parsezedlinkline` (first `;`, `$59` escapes, optional `!@chip`).
  *
- * @param chip Reserved for API parity with scrollwritelines; currently unused.
+ * When `chip` is set and the line has no `!@chip`, the line is rewritten with
+ * `zsszedlinklinechip` so terminal render can resolve the chip.
  */
 export function terminalwritelines(
   device: DEVICELIKE,
@@ -16,7 +46,6 @@ export function terminalwritelines(
   content: string,
   chip = 'refscroll',
 ): void {
-  void chip
   const lines = content.split('\n')
   for (let i = 0; i < lines.length; ++i) {
     const line = lines[i].trim()
@@ -25,10 +54,27 @@ export function terminalwritelines(
       continue
     }
     if (iszedlinkline(line)) {
-      const semi = line.indexOf(';')
-      const left = scrolllinkunescapefrag(line.slice(0, semi).trimEnd())
-      const label = scrolllinkunescapefrag(line.slice(semi + 1).trim())
-      writehyperlink(device, player, left.trimStart().slice(1), label)
+      const parsed = parsezedlinkline(line, chip)
+      if (!parsed) {
+        write(device, player, line)
+        continue
+      }
+      const cmd = joincommandwords(parsed.words)
+      if (parsed.modemprefix) {
+        write(
+          device,
+          player,
+          `!${scrolllinkescapefrag(parsed.modemprefix)}!${scrolllinkescapefrag(cmd)};${scrolllinkescapefrag(parsed.label)}`,
+        )
+      } else if (chip !== 'refscroll' || line.trimStart().startsWith('!@')) {
+        write(
+          device,
+          player,
+          zsszedlinklinechip(parsed.chip, cmd, parsed.label),
+        )
+      } else {
+        write(device, player, zsszedlinkline(cmd, parsed.label))
+      }
     } else {
       write(device, player, line)
     }

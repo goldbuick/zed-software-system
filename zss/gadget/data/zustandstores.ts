@@ -121,8 +121,23 @@ export enum TAPE_DISPLAY {
 
 export type TERMINAL_MODE = 'cli' | 'quick'
 
+export type TAPE_LAYOUTBY = {
+  quick: TAPE_DISPLAY
+  cli: TAPE_DISPLAY
+  editor: TAPE_DISPLAY
+}
+
+const DEFAULT_TAPE_LAYOUTBY: TAPE_LAYOUTBY = {
+  quick: TAPE_DISPLAY.TOP,
+  cli: TAPE_DISPLAY.TOP,
+  editor: TAPE_DISPLAY.TOP,
+}
+
 export const useTape = create<{
+  /** Active tape panel layout for the current modality. */
   layout: TAPE_DISPLAY
+  /** Per-modality TOP/FULL/BOTTOM; persisted via durable `tapelayoutby`. */
+  layoutby: TAPE_LAYOUTBY
   inspector: boolean
   perfmonitor: boolean
   terminalmode: TERMINAL_MODE
@@ -132,7 +147,7 @@ export const useTape = create<{
   terminal: {
     open: boolean
     logs: string[]
-    /** Terminal bookmarks from IDB; prepended when rendering logs. */
+    /** Terminal bookmarks from IDB; sticky-top after session logs in list; last merged indices. */
     pinlines: string[]
     /** Same order / length as `pinlines`; used to remove pins from the tape. */
     pinids: string[]
@@ -147,6 +162,7 @@ export const useTape = create<{
   reset: () => void
 }>((set) => ({
   layout: TAPE_DISPLAY.TOP,
+  layoutby: { ...DEFAULT_TAPE_LAYOUTBY },
   inspector: false,
   perfmonitor: false,
   terminalmode: 'cli',
@@ -169,6 +185,7 @@ export const useTape = create<{
   reset() {
     set({
       layout: TAPE_DISPLAY.TOP,
+      layoutby: { ...DEFAULT_TAPE_LAYOUTBY },
       inspector: false,
       perfmonitor: false,
       terminalmode: 'cli',

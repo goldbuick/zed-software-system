@@ -20,7 +20,8 @@ import { TilesData } from 'zss/gadget/usetiles'
 import { WriteTextContext } from 'zss/gadget/writetext'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
-import { perfmeasure } from 'zss/perf/ui'
+import { useLinkEditingKey } from 'zss/screens/linkui/linkediting'
+import { scrollvisiblewindow } from 'zss/screens/linkui/scrolllayout'
 import { ScrollContext } from 'zss/screens/panel/common'
 import { PanelComponent } from 'zss/screens/panel/component'
 import { animpositiontotarget } from 'zss/screens/scroll/anim'
@@ -62,6 +63,7 @@ export function ScrollComponent({
   const tilesstore = useTiles(width, height, 0, color, bg)
   const scroll = useContext(ScrollContext)
   const totalrows = text.length - 1
+  const editingkey = useLinkEditingKey()
 
   const scrollname = useGadgetClient((state) => state.gadget.scrollname ?? '')
   const boardname = useGadgetClient((state) => state.gadget.boardname ?? '')
@@ -82,19 +84,27 @@ export function ScrollComponent({
     )
   }, [text])
 
-  let offset = cursor - Math.floor(panelheight * 0.5)
-  offset = Math.min(text.length - panelheight, offset)
-  offset = Math.max(0, offset)
-
-  const visibletext = useMemo(
-    () =>
-      perfmeasure('scroll:visibletext', () =>
-        text.slice(offset, offset + panelheight),
-      ),
-    [text, offset, panelheight],
+  const setcursor = useCallback(
+    (index: number) => {
+      setCursor(clamp(index, 0, totalrows))
+    },
+    [totalrows],
   )
 
-  const row = cursor - offset
+  const scrollcontextvalue = useMemo(
+    () => ({
+      ...scroll,
+      setcursor,
+    }),
+    [scroll, setcursor],
+  )
+
+  const scrollwindow = useMemo(
+    () => scrollvisiblewindow(text, cursor, panelheight, editingkey),
+    [text, cursor, panelheight, editingkey],
+  )
+
+  const selectedInView = cursor - scrollwindow.offset
 
   const groupref = useRef<Group>(null)
 
@@ -156,55 +166,63 @@ export function ScrollComponent({
   )
 
   return (
-    <group ref={groupref} position-y={1000000}>
-      {/* Wheel hit target outside UserFocus so trackpad scroll works without nesting focus. */}
-      <Scrollable
-        blocking
-        x={0}
-        y={0}
-        width={width}
-        height={height}
-        onScroll={(ydelta: number) => movecursor(ydelta * 0.5)}
-      />
-      <UserFocus>
-        <UserInput
-          MOVE_UP={up}
-          MOVE_DOWN={down}
-          CANCEL_BUTTON={scroll.sendclose}
+    <ScrollContext.Provider value={scrollcontextvalue}>
+      <group ref={groupref} position-y={1000000}>
+        {/* Wheel hit target outside UserFocus so trackpad scroll works without nesting focus. */}
+        <Scrollable
+          blocking
+          x={0}
+          y={0}
+          width={width}
+          height={height}
+          onScroll={(ydelta: number) => movecursor(ydelta * 0.5)}
         />
-        <TilesData store={tilesstore}>
-          <WriteTextContext.Provider value={context}>
-            <ScrollBackPlate name={scrollname} width={width} height={height} />
-            <ScrollControls
-              row={row}
-              width={width}
-              height={height}
-              panelwidth={panelwidth}
-              panelheight={panelheight}
-            >
-              <ScrollMarquee
-                margin={3}
-                color={COLOR.BLUE}
-                y={0}
-                leftedge={0}
-                rightedge={width}
-                line={SCROLL_KEY_HINTS_LINE}
+        <UserFocus>
+          <UserInput
+            MOVE_UP={up}
+            MOVE_DOWN={down}
+            CANCEL_BUTTON={scroll.sendclose}
+          />
+          <TilesData store={tilesstore}>
+            <WriteTextContext.Provider value={context}>
+              <ScrollBackPlate
+                name={scrollname}
+                width={width}
+                height={height}
               />
-              <ScrollCursor row={row} />
-              <PanelComponent
-                width={panelwidth}
-                height={panelheight}
-                xmargin={0}
-                ymargin={0}
-                color={color}
-                bg={COLOR.ONCLEAR}
-                text={visibletext}
-                selected={row}
-              />
-            </ScrollControls>
-          </WriteTextContext.Provider>
-        </TilesData>
-      </UserFocus>
-    </group>
+              <ScrollControls
+                row={scrollwindow.selectedrowy}
+                width={width}
+                height={height}
+                panelwidth={panelwidth}
+                panelheight={panelheight}
+              >
+                <ScrollMarquee
+                  margin={3}
+                  color={COLOR.BLUE}
+                  y={0}
+                  leftedge={0}
+                  rightedge={width}
+                  line={SCROLL_KEY_HINTS_LINE}
+                />
+                <ScrollCursor row={scrollwindow.selectedrowy} />
+                <PanelComponent
+                  width={panelwidth}
+                  height={panelheight}
+                  xmargin={0}
+                  ymargin={0}
+                  color={color}
+                  bg={COLOR.ONCLEAR}
+                  text={scrollwindow.visible}
+                  selected={selectedInView}
+                  striperowbase={scrollwindow.striperowbase}
+                  rowys={scrollwindow.rowys}
+                />
+              </ScrollControls>
+            </WriteTextContext.Provider>
+          </TilesData>
+        </UserFocus>
+      </group>
+    </ScrollContext.Provider>
   )
 }

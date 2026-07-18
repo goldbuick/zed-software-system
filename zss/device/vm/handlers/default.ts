@@ -1,6 +1,5 @@
 import { parsetarget } from 'zss/device'
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
 import {
   registercopy,
   vmcli,
@@ -9,6 +8,7 @@ import {
 } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
 import { SOFTWARE } from 'zss/device/session'
+import type { MESSAGE } from 'zss/device/types'
 import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
 import { lastinputtime } from 'zss/device/vm/state'
 import { fetchrefscrolltext } from 'zss/feature/fetchrefscrolltext'
@@ -123,33 +123,6 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
             'terrain list',
             zsstexttape(rows).trim(),
             'list',
-          )
-          break
-        }
-        case 'charscroll': {
-          scrollwritelines(
-            message.player,
-            'chars',
-            zsszedlinkline('char charedit', 'char'),
-            'refscroll',
-          )
-          break
-        }
-        case 'colorscroll': {
-          scrollwritelines(
-            message.player,
-            'colors',
-            zsszedlinkline('color coloredit', 'color'),
-            'refscroll',
-          )
-          break
-        }
-        case 'bgscroll': {
-          scrollwritelines(
-            message.player,
-            'bgs',
-            zsszedlinkline('bg bgedit', 'bg'),
-            'refscroll',
           )
           break
         }

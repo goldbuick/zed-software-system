@@ -1,7 +1,7 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
 import { vmlogout } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
+import type { MESSAGE } from 'zss/device/types'
 import { savestate } from 'zss/device/vm/helpers'
 import {
   FLUSH_RATE,

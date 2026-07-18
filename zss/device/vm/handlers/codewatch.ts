@@ -1,7 +1,7 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
 import { vmcodeaddress } from 'zss/device/api'
 import { modemobservevaluestring } from 'zss/device/modem'
+import type { MESSAGE } from 'zss/device/types'
 import { observers, watching } from 'zss/device/vm/state'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadobject } from 'zss/memory/boardaccess'

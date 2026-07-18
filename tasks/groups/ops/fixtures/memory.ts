@@ -203,7 +203,9 @@ function runmemoryparitycoverage(ctx: TaskContext): number {
   const root = ctx.root
   const fixturedir = path.join(root, FIXTUREDIR)
   if (!existsSync(fixturedir)) {
-    console.error('fixture dir missing; run yarn task run ops:fixtures:memory:parity:regen first')
+    console.error(
+      'fixture dir missing; run yarn task run ops:fixtures:memory:parity:regen first',
+    )
     return 1
   }
 

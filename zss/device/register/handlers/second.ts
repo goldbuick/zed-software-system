@@ -1,5 +1,4 @@
 import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
 import { vmdoot } from 'zss/device/api'
 import {
   DOOT_RATE,
@@ -8,6 +7,7 @@ import {
   readloggedin,
 } from 'zss/device/register/state'
 import { registerreadplayer } from 'zss/device/registerplayer'
+import type { MESSAGE } from 'zss/device/types'
 
 export function handlesecond(device: DEVICE, message: MESSAGE): void {
   void message

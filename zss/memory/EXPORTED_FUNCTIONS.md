@@ -278,8 +278,8 @@ Top-level inspector entry points.
 - **memoryinspectboardlines(board)**, **memoryinspectloaderlines(p1, p2)**
 - **memoryinspectelement(player, board, codepage, element, p1, isobject)**
 - **memoryinspectempty(player, p1, p2, mode)**, **memoryinspectemptymenu(player, p1, p2)**
-- **memoryinspectchar / chararea**, **memoryinspectcolor / colorarea**, **memoryinspectbgarea**
 - **memoryinspectcommand(path, player)**
+- Char / color / bg editors are **inline** on inspect (`charedit` / `coloredit` / `bgedit`); no nested editor scrolls.
 
 ## inspectionbatch.ts
 

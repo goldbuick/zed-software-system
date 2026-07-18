@@ -1,5 +1,5 @@
 import { useFrame, useThree } from '@react-three/fiber'
-import { type MutableRefObject, useEffect, useRef } from 'react'
+import { type MutableRefObject, useEffect, useRef, useState } from 'react'
 import { RUNTIME } from 'zss/config'
 import { CHAT_KIND } from 'zss/device/bridge/chattypes'
 import { useTape } from 'zss/gadget/data/zustandstores'
@@ -15,6 +15,7 @@ import { readjsonpipeapplyremotestats } from 'zss/perf/jsonpipeapplystats'
 import { readpeerwiretotals } from 'zss/perf/peerwire'
 import { readrenderupdatestats } from 'zss/perf/renderupdatestats'
 import { readtickstats } from 'zss/perf/ticktimingstats'
+import { PanelSlide } from 'zss/screens/scroll/panelslide'
 import {
   BKG_PTRN,
   BKG_PTRN_ALT,
@@ -499,12 +500,25 @@ export function PerfMonitorTiles() {
   const perfmonitor = useTape((s) => s.perfmonitor)
   const screensize = useScreenSize()
   const glRef = useRef<GlSnap>(defaultGlSnap())
+  const [panelactive, setpanelactive] = useState(false)
+  const [shouldclose, setshouldclose] = useState(false)
 
-  if (!perfmonitor) {
-    return null
-  }
+  useEffect(() => {
+    if (perfmonitor) {
+      setpanelactive(true)
+      setshouldclose(false)
+      return
+    }
+    if (panelactive) {
+      setshouldclose(true)
+    }
+  }, [perfmonitor, panelactive])
 
-  if (screensize.cols < PANEL_W + 4 || screensize.rows < PANEL_H + 4) {
+  if (
+    !panelactive ||
+    screensize.cols < PANEL_W + 4 ||
+    screensize.rows < PANEL_H + 4
+  ) {
     return null
   }
 
@@ -516,19 +530,28 @@ export function PerfMonitorTiles() {
         640,
       ]}
     >
-      <TapeLayoutTiles
-        label="perfmon"
-        terminalmode="cli"
-        top={0}
-        left={0}
-        width={PANEL_W}
-        height={PANEL_H}
-        framefg={PERF_FRAME_FG}
-        platebg={PERF_PLATE_BG}
+      <PanelSlide
+        shouldclose={shouldclose}
+        fromleft
+        onclosed={() => {
+          setpanelactive(false)
+          setshouldclose(false)
+        }}
       >
-        <PerfGlCapture snapRef={glRef} />
-        <PerfMonitorDraw glRef={glRef} />
-      </TapeLayoutTiles>
+        <TapeLayoutTiles
+          label="perfmon"
+          terminalmode="cli"
+          top={0}
+          left={0}
+          width={PANEL_W}
+          height={PANEL_H}
+          framefg={PERF_FRAME_FG}
+          platebg={PERF_PLATE_BG}
+        >
+          <PerfGlCapture snapRef={glRef} />
+          <PerfMonitorDraw glRef={glRef} />
+        </TapeLayoutTiles>
+      </PanelSlide>
     </group>
   )
 }

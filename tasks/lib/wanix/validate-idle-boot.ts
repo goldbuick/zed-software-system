@@ -1,105 +1,83 @@
-import {
-  PLAYWRIGHT_SCENARIO_TIMEOUT_MS,
-  withscripttimeout,
-} from 'tasks/lib/parity/parity-timeouts'
+import { PLAYWRIGHT_SCENARIO_TIMEOUT_MS } from 'tasks/lib/parity/parity-timeouts'
 import type { HeadedPlaywrightScript } from 'tasks/lib/playwright/runheadedscript'
+import {
+  attachconsolecapture,
+  installplaywrightlogcapture,
+  waitforlogsubstring,
+} from 'tasks/lib/wanix/playwrighthelpers'
 import { waitforregistersession } from 'tasks/lib/wanix/playwrightwaits'
+import {
+  type ZedcafeTimelineEntry,
+  polliswanixready,
+  sendwanixcli,
+} from 'tasks/lib/wanix/playwrightzedcafe'
 
-const WANIX_IDLE_BOOT_TIMEOUT_MS = PLAYWRIGHT_SCENARIO_TIMEOUT_MS
-
-async function readplaywrightlogs(
-  page: import('@playwright/test').Page,
-): Promise<string[]> {
-  return page.evaluate(() => {
-    const g = globalThis as { __playwrightLogs?: string[] }
-    return g.__playwrightLogs ?? []
-  })
-}
-
-async function sendwanixvmcli(
-  page: import('@playwright/test').Page,
-  root: string,
-) {
-  await page.evaluate(async (projectroot) => {
-    const { vmcli } = await import(`/@fs${projectroot}/zss/device/api.ts`)
-    const { register, registerreadplayer } = await import(
-      `/@fs${projectroot}/zss/device/register.ts`
-    )
-    vmcli(register, registerreadplayer(), '#wanix vm')
-  }, root)
-}
+const VALIDATE_TIMEOUT_MS = PLAYWRIGHT_SCENARIO_TIMEOUT_MS
 
 const validateidleboot: HeadedPlaywrightScript = async ({
   page,
   baseurl,
   root,
 }) => {
-  await page.addInitScript(() => {
-    const g = globalThis as {
-      __nodeLog?: (line: string) => void
-      __playwrightLogs?: string[]
-    }
-    g.__playwrightLogs = []
-    g.__nodeLog = (line: string) => {
-      g.__playwrightLogs?.push(line)
-    }
-  })
+  const start = Date.now()
+  const timeline: ZedcafeTimelineEntry[] = []
+  const consolelines: string[] = []
 
-  let wanixidle = false
-  page.on('console', (msg) => {
-    if (msg.text().includes('[wanix] idle')) {
-      wanixidle = true
-    }
-  })
-  page.on('pageerror', (err) => {
-    console.error(`pageerror: ${err.message}`)
-  })
+  const record = (label: string, extra?: Record<string, unknown>) => {
+    timeline.push({ ms: Date.now() - start, label, extra })
+  }
+
+  await installplaywrightlogcapture(page)
+  attachconsolecapture(page, consolelines, timeline, start)
 
   await page.goto(baseurl, {
     waitUntil: 'load',
-    timeout: WANIX_IDLE_BOOT_TIMEOUT_MS,
+    timeout: VALIDATE_TIMEOUT_MS,
   })
-
-  await withscripttimeout(
-    'wanix-idle',
-    WANIX_IDLE_BOOT_TIMEOUT_MS,
-    async () => {
-      while (!wanixidle) {
-        await page.waitForTimeout(250)
-      }
-    },
-  )
+  record('page-load')
 
   await waitforregistersession(page, root)
+  record('register-session')
+  await polliswanixready(page, VALIDATE_TIMEOUT_MS)
+  record('wanix-ready')
 
-  await sendwanixvmcli(page, root)
+  await sendwanixcli(page, root, '#wanix vm')
+  record('vm-cli-sent')
 
-  await withscripttimeout(
-    'wanix-vm-starting',
-    WANIX_IDLE_BOOT_TIMEOUT_MS,
-    async () => {
-      for (;;) {
-        const logs = await readplaywrightlogs(page)
-        if (logs.some((line) => line.includes('wanix vm starting'))) {
-          break
-        }
-        await page.waitForTimeout(250)
-      }
-    },
+  await waitforlogsubstring(
+    page,
+    consolelines,
+    'applyroom-remount',
+    VALIDATE_TIMEOUT_MS,
+    'vm-remount',
   )
+  record('vm-remount')
 
-  await withscripttimeout(
-    'wanix-vm-started',
-    WANIX_IDLE_BOOT_TIMEOUT_MS,
-    async () => {
-      for (;;) {
-        const logs = await readplaywrightlogs(page)
-        if (logs.some((line) => line.includes('wanix vm started'))) {
-          break
-        }
-        await page.waitForTimeout(500)
-      }
-    },
+  await page
+    .frameLocator('iframe[title="wanix"]')
+    .locator('wanix-vm')
+    .first()
+    .waitFor({ state: 'attached', timeout: VALIDATE_TIMEOUT_MS })
+  record('vm-attached')
+
+  await waitforlogsubstring(
+    page,
+    consolelines,
+    /applyroom-return.*"mode"\s*:\s*"vm"/,
+    VALIDATE_TIMEOUT_MS,
+    'vm-apply-return',
+  )
+  record('vm-apply-return')
+
+  console.log(
+    JSON.stringify(
+      {
+        ok: true,
+        timeline,
+      },
+      null,
+      2,
+    ),
   )
 }
 

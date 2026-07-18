@@ -2,12 +2,13 @@ import {
   type TextEdge,
   readpinrowycoords,
   readsesslogrowycoords,
+  readstickypinstarty,
   readterminallayout,
 } from 'zss/screens/terminal/terminallayout'
 
 import { findterminalrowindexfromcoords } from './logrowhitcoords'
 
-/** Which merged log row (pins first, then session logs) contains the tape Y cursor. */
+/** Which merged log row (session first, sticky-top pins last) contains the tape Y cursor. */
 export function findterminalrowindexforcursor(args: {
   tapeycursor: number
   scroll: number
@@ -33,11 +34,20 @@ export function findterminalrowindexforcursor(args: {
     edge,
     editoropen,
   })
-  const pinycoords = readpinrowycoords(layout.pinheights, layout.pinstarty)
+  const drawpinstarty = readstickypinstarty(
+    layout.naturalpinstarty,
+    scroll,
+    layout.logzonetop,
+  )
+  const pinycoords = readpinrowycoords(layout.pinheights, drawpinstarty)
   const sessionycoords = readsesslogrowycoords(
     layout.sessionheights,
-    layout.logzonebottom,
+    layout.sessionstackbottom,
   )
+  const pinbandbottom =
+    layout.pinareaheight > 0
+      ? drawpinstarty + layout.pinareaheight
+      : layout.logzonetop
   return findterminalrowindexfromcoords({
     tapeycursor,
     scroll,
@@ -45,5 +55,6 @@ export function findterminalrowindexforcursor(args: {
     pinheights: layout.pinheights,
     sessionycoords,
     sessionheights: layout.sessionheights,
+    pinbandbottom,
   })
 }

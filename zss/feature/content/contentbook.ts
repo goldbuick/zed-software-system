@@ -26,7 +26,7 @@ export const CODEPAGE_TYPES = [
   'charset',
   'palette',
   'loader',
-  'scroll',
+  'txt',
   'error',
 ] as const
 

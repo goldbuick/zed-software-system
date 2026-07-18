@@ -61,7 +61,7 @@ zss/feature/lang/       Script compiler (TS backend + native parity target)
 
 Boot flow:
 
-1. [`cafe/index.tsx`](../cafe/index.tsx) loads [`zss/userspace.ts`](userspace.ts) (side-effect imports of main-thread devices), then renders [`cafe/app.tsx`](../cafe/app.tsx) → [`zss/gadget/engine.tsx`](gadget/engine.tsx).
+1. [`cafe/index.tsx`](../cafe/index.tsx) loads [`zss/userspace.ts`](userspace.ts) (side-effect imports of main-thread devices), then renders [`cafe/app.tsx`](../cafe/cafeapp.tsx) → [`zss/gadget/engine.tsx`](gadget/engine.tsx).
 2. `Engine` calls [`createplatform()`](platform.ts): `sessionreset` on [`SOFTWARE`](device/session.ts), spawns **boardrunnerspace** (per-board sim) and **simspace** or **stubspace** (authoritative VM). **ttsspace** / **sttspace** workers start on demand for TTS/STT.
 
 [`zss/simspace.ts`](simspace.ts) runs **inside the sim worker**: imports `clock` and `modem`, wires `createforward` so messages that must reach the browser UI are `postMessage`’d out, then calls `started()` from [`zss/device/vm.ts`](device/vm.ts) which dispatches per-tick handlers (including the per-player gadget projection in [`gadgetsynctick`](device/vm/gadgetsynctick.ts)).
@@ -158,7 +158,7 @@ Memory APIs are consumed by the chip runtime, firmware (`send`, movement, etc.),
 
 ## Lang → chip → firmware (behavior)
 
-**Lang** ([`zss/feature/lang/docs/README.md`](feature/lang/docs/README.md)): lexer → Chevrotain parser → visitor (CST→AST) → transformer → `new Function('api', code)`. Entry: `compile()` via [`zss/feature/lang`](feature/lang/index.ts).
+**Lang** ([`zss/feature/lang/docs/README.md`](feature/lang/docs/README.md)): lexer → Chevrotain parser → visitor (CST→AST) → transformer → `new Function('api', code)`. Entry: `compile()` via [`zss/feature/lang`](feature/lang/langcompileclient.ts).
 
 **Chip** ([`zss/chip.ts`](chip.ts)): per-element **VM** with `get`/`set`, `tick`, generator execution, messaging, and integration with **firmware** via [`zss/firmware/runner.ts`](firmware/runner.ts).
 
@@ -179,7 +179,7 @@ Shared stdlib: `audio`, `board`, `network`, `transform`, `element`. Example runt
 Rough pipeline:
 
 1. **`gadgetsynctick`** (sim worker, called from the VM `ticktock` handler in [`device/vm/handlers/ticktock.ts`](device/vm/handlers/ticktock.ts)): for every active player, projects the cached per-board gadget layers ([`memoryreadbookgadgetlayersforboard`](memory/gadgetlayersflags.ts)) plus the live control layer into the player's gadget state, then emits **`gadgetclient:patch`** (or **`gadgetclient:paint`** when the player asks for a desync) via [`device/api.ts`](device/api.ts).
-2. **`gadgetclient`** (main, [`device/gadgetclient.ts`](device/gadgetclient.ts)): replays the jsonpipe paint/patch into the **zustand** store in [`zss/gadget/data/state.ts`](gadget/data/state.ts) (`useGadgetClient`, tape/editor/inspector stores). Bad patches reply `gadgetdesync` to the sim VM.
+2. **`gadgetclient`** (main, [`device/gadgetclient.ts`](device/gadgetclient.ts)): replays the jsonpipe paint/patch into the **zustand** store in [`zss/gadget/data/zustandstores.ts`](gadget/data/zustandstores.ts) (`useGadgetClient`, tape/editor/inspector stores). Bad patches reply `gadgetdesync` to the sim VM.
 3. **`Engine`** / [`zss/screens/`](screens/) / [`zss/gadget/display/`](gadget/display/): R3F orthographic scene, tiles/sprites, CRT-style effects, tape UI.
 
 Note that the previous `gadgetserver` device has been removed: the same paint/patch messages are now produced **inside the VM tick** (no separate device or `tock` topic), and the `boardrunner` worker handles the per-board chip simulation that used to share that hub.

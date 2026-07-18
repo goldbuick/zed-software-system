@@ -81,6 +81,21 @@ function didexpect(msg: string, value: any, words: WORD[]) {
   )
 }
 
+/** Optional string slots treat null/NaN as absent (not a type error). */
+function maybeabsentstring(value: unknown): string | undefined | 'invalid' {
+  if (
+    value === undefined ||
+    value === null ||
+    (typeof value === 'number' && Number.isNaN(value))
+  ) {
+    return undefined
+  }
+  if (isstring(value)) {
+    return value
+  }
+  return 'invalid'
+}
+
 function readdestfromdir(dir: STR_DIR) {
   const startpt: PT = {
     x: READ_CONTEXT.element?.x ?? 0,
@@ -255,11 +270,12 @@ export function readargs<T extends ARG_TYPES>(
       }
       case ARG_TYPE.MAYBE_NAME: {
         const value = READ_CONTEXT.words[ii]
-        if (value !== undefined && !isstring(value)) {
+        ++ii
+        const maybe = maybeabsentstring(value)
+        if (maybe === 'invalid') {
           didexpect('optional string', value, words)
         }
-        ++ii
-        values.push(value)
+        values.push(maybe)
         break
       }
       case ARG_TYPE.MAYBE_NUMBER: {
@@ -281,11 +297,12 @@ export function readargs<T extends ARG_TYPES>(
       }
       case ARG_TYPE.MAYBE_STRING: {
         const [value, iii] = readexpr(ii)
-        if (value !== undefined && !isstring(value)) {
+        ii = iii
+        const maybe = maybeabsentstring(value)
+        if (maybe === 'invalid') {
           didexpect('optional string', value, words)
         }
-        ii = iii
-        values.push(value)
+        values.push(maybe)
         break
       }
       case ARG_TYPE.MAYBE_NUMBER_OR_NAME: {

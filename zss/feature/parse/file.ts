@@ -5,32 +5,54 @@ import {
   apilog,
   vmloader,
   vmreadzipfilelist,
+  wanixserverbinddrop,
+  wanixserverdrop,
   workstatus,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { isdevbuild } from 'zss/feature/devbuild'
 import {
-  emitwanixdropfile,
-  iswanixdropfilename,
-  iswanixgzipmagic,
-} from 'zss/feature/wanix/wanixdropparse'
+  readwanixbinddropdst,
+  readwanixbinddropkind,
+  readwanixbinddropperm,
+} from 'zss/device/wanixclient/wanixbindpaths'
+import { readattachedsession } from 'zss/device/wanixclient/wanixdisplay'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
+import { memoryreadwanixattached } from 'zss/memory/session'
 
 import { parseansi } from './ansi'
 import { parsechr } from './chr'
 import { stageimageimport } from './image'
 import { parsemidi } from './midi'
+import { parsetxt } from './parsetxt'
 import { parsepetscii } from './petscii'
 import { parsezzm } from './zzm'
 import { parsebrd, parseszt, parsezzt } from './zzt'
 import { isszztworldbytes, iszztworldbytes } from './zztmagic'
 import { parsezztobj } from './zztobj'
 
+/** Wanix host drops must run on the UI thread (iframe bridge), not the VM worker. */
+export function iswanixdropfilename(filename: string): boolean {
+  const name = filename.toLowerCase()
+  return (
+    name.endsWith('.wasm') ||
+    name.endsWith('.tgz') ||
+    name.endsWith('.tar.gz') ||
+    name.endsWith('.tar')
+  )
+}
+
 export function mimetypeofbytesread(filename: string, filebytes: Uint8Array) {
+  // ZZT/SZT magic is a signed int16 LE at offset 0 (−1 / −2), not a fixed 4-byte tag.
+  if (iszztworldbytes(filebytes)) {
+    return 'application/x-zzt'
+  }
+  if (isszztworldbytes(filebytes)) {
+    return 'application/x-szt'
+  }
   const bytes = [...filebytes.slice(0, 4)]
   const signature = bytes
-    .map((item) => item.toString(16))
+    .map((item) => item.toString(16).padStart(2, '0'))
     .join('')
     .toUpperCase()
   switch (signature) {
@@ -48,39 +70,26 @@ export function mimetypeofbytesread(filename: string, filebytes: Uint8Array) {
       return 'image/jpeg'
     case '504B0304':
       return 'application/zip'
+    case '0061736D':
+      return 'application/wasm'
   }
   return mime.getType(filename) ?? 'application/octet-stream'
 }
 
-function sniffbinaryimport(bytes: Uint8Array): string {
-  if (bytes.byteLength >= 4) {
-    const b0 = bytes[0]
-    const b1 = bytes[1]
-    const b2 = bytes[2]
-    const b3 = bytes[3]
-    if (b0 === 0x4d && b1 === 0x54 && b2 === 0x68 && b3 === 0x64) {
-      return 'mid'
-    }
-  }
-  if (iszztworldbytes(bytes)) {
-    return 'zzt'
-  }
-  if (isszztworldbytes(bytes)) {
-    return 'szt'
-  }
-  return ''
-}
-
-export function mapfiletype(type: string, file: File | undefined) {
+export function mapmimetype(mimetype: string, file: File | undefined) {
   if (!ispresent(file)) {
     return ''
   }
-  switch (type) {
+  switch (mimetype) {
     case 'model/obj':
       return 'obj'
     case 'text/plain':
+    case 'text/x-ini':
       if (/.nfo$/i.test(file.name)) {
         return 'nfotext'
+      }
+      if (/.ini$/i.test(file.name)) {
+        return 'ini'
       }
       return 'txt'
     case 'application/json':
@@ -89,6 +98,9 @@ export function mapfiletype(type: string, file: File | undefined) {
       return 'zip'
     case 'application/gzip':
     case 'application/x-gzip':
+      if (/\.tgz$/i.test(file.name) || /\.tar\.gz$/i.test(file.name)) {
+        return 'bundle'
+      }
       break
     case 'application/octet-stream':
       if (/.zzt$/i.test(file.name)) {
@@ -115,6 +127,10 @@ export function mapfiletype(type: string, file: File | undefined) {
         return 'xb'
       } else if (/.diz$/i.test(file.name)) {
         return 'diz'
+      } else if (/.txt$/i.test(file.name)) {
+        return 'txt'
+      } else if (/.ini$/i.test(file.name)) {
+        return 'ini'
       } else if (/.nfo$/i.test(file.name)) {
         return 'nfotext'
       } else if (/.szt$/i.test(file.name)) {
@@ -131,6 +147,10 @@ export function mapfiletype(type: string, file: File | undefined) {
         return 'gif'
       } else if (/.webp$/i.test(file.name)) {
         return 'webp'
+      } else if (/.wasm$/i.test(file.name)) {
+        return 'wasm'
+      } else if (/\.tgz$/i.test(file.name) || /\.tar\.gz$/i.test(file.name)) {
+        return 'bundle'
       }
       break
     case 'image/png':
@@ -141,6 +161,12 @@ export function mapfiletype(type: string, file: File | undefined) {
       return 'gif'
     case 'image/webp':
       return 'webp'
+    case 'application/wasm':
+      return 'wasm'
+    case 'application/x-zzt':
+      return 'zzt'
+    case 'application/x-szt':
+      return 'szt'
     case 'audio/midi':
     case 'audio/mid':
     case 'audio/x-midi':
@@ -186,7 +212,7 @@ export function readzipfilelist() {
 
   for (let i = 0; i < zipfilelist.length; ++i) {
     const file = zipfilelist[i]
-    filelist.push([mapfiletype(file.type, file), file.name])
+    filelist.push([mapmimetype(file.type, file), file.name])
   }
 
   return filelist
@@ -208,52 +234,6 @@ export async function parsezipfilelist(player: string) {
       parsewebfile(player, item)
       await waitfor(2000)
     }
-  }
-}
-
-export async function parsebinaryfile(
-  file: File,
-  player: string,
-  onbuffer: (buffer: Uint8Array) => void,
-) {
-  try {
-    apilog(SOFTWARE, player, 'parsebinaryfile', file.name)
-    const arraybuffer = await file.arrayBuffer()
-    onbuffer(new Uint8Array(arraybuffer))
-  } catch (err: any) {
-    apierror(SOFTWARE, player, 'crash', err.message)
-  }
-}
-
-function handlebinarykind(
-  player: string,
-  kind: string,
-  file: File,
-  bytes: Uint8Array,
-) {
-  switch (kind) {
-    case 'zzt':
-      parsezzt(player, bytes)
-      break
-    case 'szt':
-      parseszt(player, bytes)
-      break
-    case 'brd':
-      parsebrd(player, bytes)
-      break
-    case 'mid':
-      parsemidi(player, file).catch((err) =>
-        apierror(SOFTWARE, player, 'crash', err.message),
-      )
-      break
-    case 'pet':
-      parsepetscii(player, file.name, bytes)
-      break
-    case 'chr':
-      parsechr(player, file.name, bytes)
-      break
-    default:
-      break
   }
 }
 
@@ -293,37 +273,8 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
   if (!ispresent(file)) {
     return
   }
-  const filetype = mapfiletype(type, file)
-  const sniffbyextension =
-    /\.mid$/i.test(file.name) || /\.midi$/i.test(file.name)
-  if (
-    !filetype &&
-    (type === 'application/octet-stream' || type === '' || sniffbyextension)
-  ) {
-    file
-      .arrayBuffer()
-      .then((arraybuffer) => {
-        const bytes = new Uint8Array(arraybuffer)
-        const sniffed = sniffbinaryimport(bytes)
-        if (sniffed) {
-          handlebinarykind(player, sniffed, file, bytes)
-          return
-        }
-        const guessed = mimetypeofbytesread(file.name, bytes)
-        if (guessed && guessed !== 'application/octet-stream') {
-          handlefiletype(player, guessed, file)
-          return
-        }
-        apierror(
-          SOFTWARE,
-          player,
-          'parsewebfile',
-          `unsupported file ${file.name}`,
-        )
-      })
-      .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
-    return
-  }
+  const filetype = mapmimetype(type, file)
+  console.info('handlefiletype !!!', filetype, type)
   switch (filetype) {
     case 'obj':
       file
@@ -332,18 +283,10 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
         .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
       break
     case 'txt':
+    case 'ini':
       file
         .text()
-        .then((content) =>
-          vmloader(
-            SOFTWARE,
-            player,
-            undefined,
-            'text',
-            `file:${file.name}`,
-            content,
-          ),
-        )
+        .then((content) => parsetxt(player, file.name, content))
         .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
       break
     case 'json':
@@ -448,6 +391,34 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
     case 'webp':
       stageimagefile(player, filetype, file)
       break
+    case 'wasm':
+      file
+        .arrayBuffer()
+        .then((arraybuffer) => {
+          wanixserverdrop(
+            SOFTWARE,
+            player,
+            file.name,
+            'wasm',
+            new Uint8Array(arraybuffer),
+          )
+        })
+        .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
+      break
+    case 'bundle':
+      file
+        .arrayBuffer()
+        .then((arraybuffer) => {
+          wanixserverdrop(
+            SOFTWARE,
+            player,
+            file.name,
+            'bundle',
+            new Uint8Array(arraybuffer),
+          )
+        })
+        .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
+      break
     default:
       if (!type) {
         file
@@ -481,39 +452,32 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
   }
 }
 
-function emitwanixdropfileroute(player: string, file: File) {
-  if (isdevbuild()) {
-    apilog(
-      SOFTWARE,
-      player,
-      `wanix drop route: name=${file.name} type=${file.type ?? ''}`,
-    )
-  }
-  emitwanixdropfile(SOFTWARE, player, file)
-}
-
 export function parsewebfile(player: string, file: File | undefined) {
   if (!ispresent(file)) {
     return
   }
-  if (iswanixdropfilename(file.name)) {
-    emitwanixdropfileroute(player, file)
-    return
-  }
-  const type = file.type ?? ''
-  if (type === 'application/gzip' || type === 'application/x-gzip') {
-    void file
-      .slice(0, 2)
+  if (memoryreadwanixattached()) {
+    file
       .arrayBuffer()
-      .then((buffer) => {
-        if (iswanixgzipmagic(new Uint8Array(buffer))) {
-          emitwanixdropfileroute(player, file)
+      .then((arraybuffer) => {
+        const sessionkey = readattachedsession()
+        if (!sessionkey) {
+          apierror(SOFTWARE, player, 'wanix', 'binddrop: no attached session')
           return
         }
-        handlefiletype(player, type, file)
+        const label = file.name
+        const kind = readwanixbinddropkind(label)
+        const bytes = new Uint8Array(arraybuffer)
+        wanixserverbinddrop(SOFTWARE, player, sessionkey, {
+          label,
+          kind,
+          bytes,
+          dst: readwanixbinddropdst(label, kind),
+          perm: readwanixbinddropperm(label),
+        })
       })
       .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
-    return
+  } else {
+    handlefiletype(player, file.type ?? '', file)
   }
-  handlefiletype(player, type, file)
 }
