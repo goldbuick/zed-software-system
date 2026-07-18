@@ -346,10 +346,14 @@ export async function znspersistlogin(
   namespace: string,
   token?: string,
 ) {
+  const ns = znsnormalizenamespace(namespace)
   await storagewriteznsemail(email)
-  await storagewriteznsnamespace(znsnormalizenamespace(namespace))
+  await storagewriteznsnamespace(ns)
   if (token) {
     await storagewritznstoken(token)
+    console.info(`[zns] login ok namespace=${ns} email=${email}`)
+    console.info(`[zns] ZNS_TOKEN=${token}`)
+    console.info(`[zns] export ZNS_EMAIL=${email} ZNS_TOKEN=${token}`)
   }
 }
 
@@ -358,7 +362,24 @@ export async function znspersistlogout() {
   await storagewriteznsclear()
 }
 
-export async function znslogin(email: string, namespace: string) {
+export type ZNS_API_RESULT = {
+  success?: boolean
+  token?: string
+  message?: string
+}
+
+async function znsparseapiresult(response: Response): Promise<ZNS_API_RESULT> {
+  const result = (await response.json().catch(() => null)) as ZNS_API_RESULT | null
+  if (result && typeof result === 'object') {
+    return result
+  }
+  return { message: `zns http ${response.status}` }
+}
+
+export async function znslogin(
+  email: string,
+  namespace: string,
+): Promise<ZNS_API_RESULT> {
   const formdata = new FormData()
   formdata.append('email', email)
   formdata.append('namespace', znsnormalizenamespace(namespace))
@@ -367,21 +388,23 @@ export async function znslogin(email: string, namespace: string) {
     body: formdata,
   })
   const response = await fetch(request)
-  const result = await response.json()
-  return result
+  return znsparseapiresult(response)
 }
 
-export async function znslogincode(email: string, code: string) {
+export async function znslogincode(
+  email: string,
+  code: string | number,
+): Promise<ZNS_API_RESULT> {
   const formdata = new FormData()
   formdata.append('email', email)
-  formdata.append('code', code)
+  // OTP is always digits; coerce so CLI number tokens still match KV metadata
+  formdata.append('code', String(code).trim())
   const request = new Request(`https://${ZNS_APEX}/api/code`, {
     method: 'POST',
     body: formdata,
   })
   const response = await fetch(request)
-  const result = await response.json()
-  return result
+  return znsparseapiresult(response)
 }
 
 export async function znslist(email: string, token: string) {

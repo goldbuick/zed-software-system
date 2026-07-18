@@ -13,4 +13,4 @@ $ltgrey Minor pentatonic (12 keys)
 !istargetless copyit #play b!d!e!fa!+b!;$greenBb minor pentatonic
 !istargetless copyit #play bdef#a+b;$greenB minor pentatonic
 
-!notescales_pentatonic hk b " B " next;$ltgreyBack to pentatonic scales
+!notescales-pentatonic hk b " B " next;$ltgreyBack to pentatonic scales

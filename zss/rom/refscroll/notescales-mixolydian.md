@@ -14,4 +14,4 @@ $ltgrey major scale; 12 keys.
 !istargetless copyit #play b!cde!fga!+b!;$greenBb Mixolydian
 !istargetless copyit #play bc#d#ef#g#a+b;$greenB Mixolydian
 
-!notescales_jazzmodal hk b " B " next;$ltgreyBack to modal scales
+!notescales-jazzmodal hk b " B " next;$ltgreyBack to modal scales

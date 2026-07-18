@@ -9,4 +9,4 @@ $ltgrey (jazz minor parent)
 !istargetless copyit #play abcde!fg+a;$greenA Locrian nat 9
 !istargetless copyit #play bcde!fga+b;$greenB Altered
 
-!notescales_exotic hk b " B " next;$ltgreyBack to exotic scales
+!notescales-exotic hk b " B " next;$ltgreyBack to exotic scales

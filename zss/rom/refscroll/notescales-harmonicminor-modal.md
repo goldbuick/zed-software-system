@@ -8,4 +8,4 @@ $ltgrey Modes of C harmonic minor
 !istargetless copyit #play a!bcde!fg+a!;$greenAb Lydian sharp 2
 !istargetless copyit #play bcde!fga!+b;$greenB Locrian bb7
 
-!notescales_exotic hk b " B " next;$ltgreyBack to exotic scales
+!notescales-exotic hk b " B " next;$ltgreyBack to exotic scales

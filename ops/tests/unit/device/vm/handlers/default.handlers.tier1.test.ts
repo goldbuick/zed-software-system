@@ -266,7 +266,7 @@ describe('handledefault refscroll', () => {
   it('refscroll:notescalesscroll uses parsemarkdownforscroll when fetch returns content', async () => {
     jest
       .mocked(fetchrefscrolltext)
-      .mockResolvedValue('$ltgrey intro\n\n[Major](<notescales_major>)\n')
+      .mockResolvedValue('$ltgrey intro\n\n[Major](<notescales-major>)\n')
     handledefault(vm, {
       session: '',
       player: 'p1',
@@ -285,12 +285,12 @@ describe('handledefault refscroll', () => {
     )
     expect(scrollwritemarkdownlines).toHaveBeenCalledWith(
       'p1',
-      expect.stringContaining('notescales_major'),
+      expect.stringContaining('notescales-major'),
       'notescalesscroll',
     )
   })
 
-  it('refscroll:notescales_major uses parsemarkdownforscroll when fetch returns content', async () => {
+  it('refscroll:notescales-major uses parsemarkdownforscroll when fetch returns content', async () => {
     jest
       .mocked(fetchrefscrolltext)
       .mockResolvedValue(
@@ -301,7 +301,7 @@ describe('handledefault refscroll', () => {
       player: 'p1',
       id: 'id',
       sender: '',
-      target: 'refscroll:notescales_major',
+      target: 'refscroll:notescales-major',
       data: undefined,
     })
     await Promise.resolve()
@@ -309,7 +309,7 @@ describe('handledefault refscroll', () => {
     expect(scrollwritemarkdownlines).toHaveBeenCalledWith(
       'p1',
       expect.stringContaining('!istargetless copyit'),
-      'notescales_major',
+      'notescales-major',
     )
   })
 })

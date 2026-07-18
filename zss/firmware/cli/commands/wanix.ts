@@ -1,6 +1,8 @@
 import {
   apierror,
   apilog,
+  wanixclientattachsession,
+  wanixclientdetachsession,
   wanixserverhalttask,
   wanixservermenu,
   wanixserverstoproom,
@@ -8,18 +10,12 @@ import {
 import { SOFTWARE } from 'zss/device/session'
 import { setuserdetached } from 'zss/device/wanixclient/state'
 import {
-  detachwanixterm,
-  readwanixactivesession,
-  setattachedsession,
-} from 'zss/device/wanixclient/wanixdisplay'
-import {
   connectwanixremote,
   disconnectwanixremote,
   readwanixremotes,
   startwanixvm,
   stopwanixvm,
 } from 'zss/device/wanixclient/wanixroom'
-import { readwanixtermbufferkeys } from 'zss/device/wanixclient/wanixtermbuffer'
 import {
   writewanixtermdump,
   writewanixtermstatus,
@@ -118,26 +114,13 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
           break
         }
         case 'detach':
-          detachwanixterm()
-          apilog(SOFTWARE, player, 'wanix detached')
+          // Main-thread store owns attach panel; do not mutate sim-local zustand.
+          wanixclientdetachsession(SOFTWARE, player)
           break
         case 'attach': {
-          const keys = readwanixtermbufferkeys()
-          const activesession = readwanixactivesession()
           const requested =
-            ispresent(arg) && NAME(arg).trim()
-              ? NAME(arg).trim()
-              : (activesession ?? keys[0])
-          if (!requested) {
-            apilog(SOFTWARE, player, 'wanix no session to attach')
-            break
-          }
-          if (!keys.includes(requested)) {
-            apilog(SOFTWARE, player, `wanix no such session ${requested}`)
-            break
-          }
-          setattachedsession(requested)
-          apilog(SOFTWARE, player, `wanix attached ${requested}`)
+            ispresent(arg) && NAME(arg).trim() ? NAME(arg).trim() : ''
+          wanixclientattachsession(SOFTWARE, player, requested)
           break
         }
         case 'term': {

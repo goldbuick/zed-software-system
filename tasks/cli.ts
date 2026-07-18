@@ -196,6 +196,17 @@ const runcmd = defineCommand({
   async run({ args }) {
     const positionals = (args._ as string[] | undefined) ?? []
     const extraargs = positionals.slice(1)
+    // citty claims unknown --flags on args; forward them to task handlers
+    for (const [key, value] of Object.entries(args)) {
+      if (key === '_' || key === 'id') {
+        continue
+      }
+      if (value === true) {
+        extraargs.push(`--${key}`)
+      } else if (typeof value === 'string' && value.length > 0) {
+        extraargs.push(`--${key}`, value)
+      }
+    }
     const code = await runtask(args.id, extraargs)
     process.exit(code)
   },

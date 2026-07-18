@@ -1,6 +1,6 @@
 # Play notation — ROM snippets
 
-From [zss/rom/refscroll/notescales_major.md](../../../zss/rom/refscroll/notescales_major.md):
+From [zss/rom/refscroll/notescales-major.md](../../../zss/rom/refscroll/notescales-major.md):
 
 ```
 #play cdefgab+c

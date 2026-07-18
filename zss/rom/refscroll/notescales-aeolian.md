@@ -14,4 +14,4 @@ $ltgrey mode 6; 12 keys.
 !istargetless copyit #play b!cde!fga+b!;$greenBb Aeolian
 !istargetless copyit #play bc#def#ga+b;$greenB Aeolian
 
-!notescales_jazzmodal hk b " B " next;$ltgreyBack to modal scales
+!notescales-jazzmodal hk b " B " next;$ltgreyBack to modal scales

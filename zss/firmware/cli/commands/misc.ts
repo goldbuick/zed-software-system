@@ -90,6 +90,14 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
                         READ_CONTEXT.elementfocus,
                         zsstextline(`check your email for #zns <code>`),
                       )
+                    } else {
+                      write(
+                        SOFTWARE,
+                        READ_CONTEXT.elementfocus,
+                        zsstextline(
+                          `$red zns login failed: ${result.message ?? 'unknown error'}`,
+                        ),
+                      )
                     }
                   } else {
                     write(
@@ -111,6 +119,14 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
                     const namespace = (await storagereadznsnamespace()) ?? ''
                     await znspersistlogin(pendingemail, namespace, result.token)
                     await showznsmenu(READ_CONTEXT.elementfocus)
+                  } else {
+                    write(
+                      SOFTWARE,
+                      READ_CONTEXT.elementfocus,
+                      zsstextline(
+                        `$red zns login failed: ${result.message ?? 'unknown error'}`,
+                      ),
+                    )
                   }
                 }
               } else {

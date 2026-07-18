@@ -14,4 +14,4 @@ $ltgrey scale; 12 keys.
 !istargetless copyit #play a#bc#d#ef#g#+a#;$greenBb Locrian
 !istargetless copyit #play bcdefga+b;$greenB Locrian
 
-!notescales_jazzmodal hk b " B " next;$ltgreyBack to modal scales
+!notescales-jazzmodal hk b " B " next;$ltgreyBack to modal scales

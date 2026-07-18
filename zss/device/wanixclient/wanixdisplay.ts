@@ -8,6 +8,7 @@ import {
   readonsessioncloseprune,
   readuserdetached,
   readwanixactivesession as readwanixactivesessionstate,
+  readwanixroomconfig,
   readwanixtermbufferkeys,
   registerwanixsessioncloseprune as registersessioncloseprune,
   resetwanixattachforidle as resetattachforidle,
@@ -21,6 +22,7 @@ import {
   registerwanixtermsessionopen,
   unregisterwanixtermsession,
 } from 'zss/device/wanixclient/wanixtermbuffer'
+import { iszedsynctaskid } from 'zss/device/wanixclient/wanixzedsync'
 import {
   iswanixdaemontaskid,
   iswanixvmsessionkey,
@@ -136,6 +138,53 @@ export function setattachedsession(sessionkey: string | null) {
     return
   }
   setattachedsessionkey(next)
+}
+
+/**
+ * True when the session is attachable on the main-thread wanixclient store.
+ * Recovers keys cleared by soft-idle while the iframe task/vm is still live.
+ */
+export function ensurewanixattachablesession(sessionkey: string): boolean {
+  const key = sessionkey.trim()
+  if (!key) {
+    return false
+  }
+  if (readwanixtermbufferkeys().includes(key)) {
+    return true
+  }
+  const room = readwanixroomconfig()
+  const intasks = room.tasks.some((task) => task.id === key)
+  const isvm =
+    !!room.vm?.active &&
+    (room.vm.id === key || iswanixvmsessionkey(key))
+  const isactive = readwanixactivesessionstate() === key
+  if (!intasks && !isvm && !isactive) {
+    return false
+  }
+  registerwanixtermsessionopen(key)
+  return true
+}
+
+export type TRY_ATTACH_WANIX_RESULT =
+  | { ok: true; sessionkey: string }
+  | { ok: false; errormsg: string }
+
+/** Main-thread attach used by `#wanix attach` (sim must not touch local store). */
+export function tryattachwanixsession(
+  maybesessionkey?: string | null,
+): TRY_ATTACH_WANIX_RESULT {
+  const keys = readwanixtermbufferkeys()
+  const requested = maybesessionkey?.trim()
+    ? maybesessionkey.trim()
+    : (readwanixactivesessionstate() ?? keys[0] ?? null)
+  if (!requested) {
+    return { ok: false, errormsg: 'wanix no session to attach' }
+  }
+  if (!ensurewanixattachablesession(requested)) {
+    return { ok: false, errormsg: `wanix no such session ${requested}` }
+  }
+  setattachedsession(requested)
+  return { ok: true, sessionkey: requested }
 }
 
 /**
@@ -278,8 +327,8 @@ export function applywanixsessionmessage(payload: {
   const sessionkey = payload.sessionkey
   if (payload.event === 'open') {
     registerwanixtermsessionopen(sessionkey)
-    // VM term should take the attach panel (not soft-attach behind an open tape).
-    if (payload.kind === 'vm') {
+    // VM + zedsync take the attach panel (not soft-attach behind an open tape).
+    if (payload.kind === 'vm' || iszedsynctaskid(sessionkey)) {
       setattachedsession(sessionkey)
       return
     }

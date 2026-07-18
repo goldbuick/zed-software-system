@@ -111,7 +111,7 @@ Special paths (not necessarily ROM filenames) in [`handledefault`](../../device/
 | `adminscroll` | `cpu #admin` | [`memoryadminmenu`](../../memory/utilities.ts). |
 | `objectlistscroll` | `object list` | `!istargetless copyit …` lines + `scrollwritelines`; chip `list`. |
 | `terrainlistscroll` | `terrain list` | Same; chip `list`. |
-| `notescalesscroll` | `notescalesscroll` | ROM [`notescalesscroll.md`](../../rom/refscroll/notescalesscroll.md); drill-down `notescales_*`; `parsemarkdownforscroll`; chip `refscroll` (default). |
+| `notescalesscroll` | `notescalesscroll` | ROM [`notescalesscroll.md`](../../rom/refscroll/notescalesscroll.md); drill-down `notescales-*`; `parsemarkdownforscroll`; chip `refscroll` (default). |
 | *(any other)* | `path` | Bundled `.md` or ZNS docs; see below. |
 
 Char / color / bg editors are **inline** on [`menu.md`](../../rom/refscroll/menu.md) (`!char charedit`, etc.) — compact until ENTER. Dedicated `charscroll` / `colorscroll` / `bgscroll` paths were removed.
@@ -124,7 +124,7 @@ Char / color / bg editors are **inline** on [`menu.md`](../../rom/refscroll/menu
 
 Bundled under [`zss/rom/refscroll/`](../../rom/refscroll/) as **`.md`** files. Address = `refscroll:<name>` where `<name>` is the filename without `.md`.
 
-`algoscroll`, `autofilterscroll`, `autowahscroll`, `cliscroll`, `commandsscroll`, `distortscroll`, `echoscroll`, `effectsscroll`, `fcrushscroll`, `helpcontrols`, `helpdeveloper`, `helpmenu`, `helpplayer`, `helptext`, `menu`, `notescalesscroll`, `notescales_aeolian`, `notescales_blues`, `notescales_dorian`, `notescales_exotic`, `notescales_harmonicminor_modal`, `notescales_ionian`, `notescales_jazzmodal`, `notescales_locrian`, `notescales_lydian`, `notescales_major`, `notescales_majorpent`, `notescales_melodicminor_modal`, `notescales_minorpent`, `notescales_mixolydian`, `notescales_modal`, `notescales_naturalminor`, `notescales_pentatonic`, `notescales_phrygian`, `notesscroll`, `oscscroll`, `pulsescroll`, `pwmscroll`, `reverbscroll`, `synthscroll`, `vibratoscroll`, `voicescroll`.
+`algoscroll`, `autofilterscroll`, `autowahscroll`, `cliscroll`, `commandsscroll`, `distortscroll`, `echoscroll`, `effectsscroll`, `fcrushscroll`, `helpcontrols`, `helpdeveloper`, `helpmenu`, `helpplayer`, `helptext`, `menu`, `notescalesscroll`, `notescales-aeolian`, `notescales-blues`, `notescales-dorian`, `notescales-exotic`, `notescales-harmonicminor-modal`, `notescales-ionian`, `notescales-jazzmodal`, `notescales-locrian`, `notescales-lydian`, `notescales-major`, `notescales-majorpent`, `notescales-melodicminor-modal`, `notescales-minorpent`, `notescales-mixolydian`, `notescales-modal`, `notescales-naturalminor`, `notescales-pentatonic`, `notescales-phrygian`, `notesscroll`, `oscscroll`, `pulsescroll`, `pwmscroll`, `reverbscroll`, `synthscroll`, `vibratoscroll`, `voicescroll`.
 
 ---
 

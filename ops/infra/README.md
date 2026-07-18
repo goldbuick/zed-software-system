@@ -171,6 +171,18 @@ Raw stored markdown is available via `POST /api/read` only (unchanged).
 
 Publish docs via `POST /api/set` after login (`#zns <email> <namespace>`). In-app help still loads from client ROM (`zss/rom/refscroll/`); ZNS serves only what is published to KV.
 
+Bulk (re)publish all ROM refscroll pages to the `docs` namespace:
+
+1. In cafe: `#zns <email> docs` then `#zns <code>`. DevTools console prints `export ZNS_EMAIL=... ZNS_TOKEN=...` (from `znspersistlogin`).
+2. Run:
+
+```bash
+yarn task run ops:zns:docs:publish --dry-run
+ZNS_EMAIL=... ZNS_TOKEN=... yarn task run ops:zns:docs:publish
+```
+
+Keys are the `.md` basenames under `zss/rom/refscroll/` (`[a-z0-9-]`, e.g. `notescales-major`). Re-running overwrites every ROM-backed key. Optional `ZNS_APEX` overrides the default `https://at.zed.cafe`.
+
 VGA font asset is generated via `yarn task run ops:zns:vga:sync` (runs automatically before `ops:deploy:cloudflare:zns`).
 
 ---

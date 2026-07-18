@@ -261,3 +261,10 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task cafe dev`).
 |------|-------------|------|------|-----|
 | `yarn task run ops:test` | Run Jest test suite | `ci` | — | — |
 | `yarn task run ops:test:coverage` | Jest with coverage on selected VM/gadget modules | — | — | — |
+
+
+### zns
+
+| Task | Description | Tags | Deps | Env |
+|------|-------------|------|------|-----|
+| `yarn task run ops:zns:docs:publish` | Publish zss/rom/refscroll/*.md to docs ZNS namespace (ZNS_EMAIL + ZNS_TOKEN; --dry-run) | `deploy` | — | — |

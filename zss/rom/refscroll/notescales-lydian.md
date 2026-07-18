@@ -14,4 +14,4 @@ $ltgrey scale; 12 keys.
 !istargetless copyit #play b!cdefga+b!;$greenBb Lydian
 !istargetless copyit #play bc#d#e#f#g#a#+b;$greenB Lydian
 
-!notescales_jazzmodal hk b " B " next;$ltgreyBack to modal scales
+!notescales-jazzmodal hk b " B " next;$ltgreyBack to modal scales

@@ -1218,6 +1218,20 @@ export function wanixclientsession(
   device.emit(player, 'wanixclient:session', payload)
 }
 
+/** Sim `#wanix attach` → main wanixclient store / attach panel. */
+export function wanixclientattachsession(
+  device: DEVICELIKE,
+  player: string,
+  sessionkey?: string,
+) {
+  device.emit(player, 'wanixclient:attachsession', sessionkey ?? '')
+}
+
+/** Sim `#wanix detach` → main wanixclient store / attach panel. */
+export function wanixclientdetachsession(device: DEVICELIKE, player: string) {
+  device.emit(player, 'wanixclient:detachsession')
+}
+
 export function wanixclientrequestzedcafestate(
   device: DEVICELIKE,
   player: string,

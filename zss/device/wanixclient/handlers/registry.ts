@@ -2,9 +2,11 @@ import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/types'
 
 import { handleapplyroom } from './applyroom'
+import { handleattachsession } from './attachsession'
 import { handlebinddrop } from './binddrop'
 import { handlebindfsa } from './bindfsa'
 import { handlewanixcells } from './cells'
+import { handledetachsession } from './detachsession'
 import { handledropdone } from './dropdone'
 import { handleexportready } from './exportready'
 import { handleexportstate } from './exportstate'
@@ -47,4 +49,6 @@ export const wanixclienthandlers: Record<string, WANIXCLIENT_HANDLER> = {
   cells: handlewanixcells,
   session: handlewanixsession,
   zedcafefilechange: handlezedcafefilechange,
+  attachsession: handleattachsession,
+  detachsession: handledetachsession,
 }

@@ -14,4 +14,4 @@ $ltgrey major scale; 12 keys.
 !istargetless copyit #play a#bc#d#e#f#g#+a#;$greenBb Phrygian
 !istargetless copyit #play bcdef#ga+b;$greenB Phrygian
 
-!notescales_jazzmodal hk b " B " next;$ltgreyBack to modal scales
+!notescales-jazzmodal hk b " B " next;$ltgreyBack to modal scales

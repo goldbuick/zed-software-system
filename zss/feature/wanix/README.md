@@ -386,8 +386,10 @@ Iframe posts `wanixclient:session`:
 
 The **attach panel** is separate from the **tape CLI**. Tape always shows ZSS logs + input; attach never hijacks it. Soft auto-attach never closes an open tape.
 
-Manual attach: `#wanix attach` or menu session row. Detach: `#wanix detach` or
-`Ctrl+\` (not on the menu). See
+Manual attach: `#wanix attach` or menu session row (routed to main-thread
+`wanixclient:attachsession` — sim must not touch the worker-local store). Detach:
+`#wanix detach` / `wanixclient:detachsession` or `Ctrl+\` (not on the menu).
+Zedsync hard-attaches on session open (like the VM). See
 [`wanixdisplay.ts`](../../device/wanixclient/wanixdisplay.ts).
 
 **Keyboard (attach panel):** `Ctrl+\` prefix stays armed until `Esc` or `Ctrl+\` again —

@@ -13,4 +13,4 @@ $ltgrey Major pentatonic (12 keys)
 !istargetless copyit #play b!cdfg+b!;$greenBb major pentatonic
 !istargetless copyit #play bc#d#f#g#+b;$greenB major pentatonic
 
-!notescales_pentatonic hk b " B " next;$ltgreyBack to pentatonic scales
+!notescales-pentatonic hk b " B " next;$ltgreyBack to pentatonic scales

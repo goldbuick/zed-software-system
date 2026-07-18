@@ -9,4 +9,4 @@ $ltgrey through Locrian)
 !istargetless copyit #play abcdefg+a;$greenA Aeolian
 !istargetless copyit #play bcdefga+b;$greenB Locrian
 
-!notescales_exotic hk b " B " next;$ltgreyBack to exotic scales
+!notescales-exotic hk b " B " next;$ltgreyBack to exotic scales

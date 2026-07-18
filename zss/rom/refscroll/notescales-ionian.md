@@ -14,4 +14,4 @@ $ltgrey first mode, 12 keys.
 !istargetless copyit #play b!cde!fga+b!;$greenBb Ionian
 !istargetless copyit #play bc#d#ef#g#a#+b;$greenB Ionian
 
-!notescales_jazzmodal hk b " B " next;$ltgreyBack to modal scales
+!notescales-jazzmodal hk b " B " next;$ltgreyBack to modal scales

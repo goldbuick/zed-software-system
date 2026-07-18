@@ -1,5 +1,8 @@
 import { terminalinclayout } from 'zss/device/register/helpers/layout'
-import { useWanixClient } from 'zss/device/wanixclient/wanixclientstore'
+import {
+  resetwanixclientstore,
+  useWanixClient,
+} from 'zss/device/wanixclient/wanixclientstore'
 import {
   applywanixsessionmessage,
   cyclewanixattachlayout,
@@ -15,8 +18,11 @@ import {
   resetwanixattachstatefortest,
   setattachedsession,
   setwanixactivesession,
+  tryattachwanixsession,
   subscribewanixattach,
 } from 'zss/device/wanixclient/wanixdisplay'
+import { createidleroomconfig } from 'zss/feature/wanix/wanixroomtypes'
+import { WANIX_ZEDSYNC_TASK_ID } from 'zss/feature/wanix/wanixzedcafeconstants'
 import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/zustandstores'
 
 jest.mock('zss/feature/durable', () => ({
@@ -27,6 +33,7 @@ jest.mock('zss/feature/durable', () => ({
 describe('wanixdisplay attach', () => {
   afterEach(() => {
     resetwanixattachstatefortest()
+    resetwanixclientstore()
     useTape.getState().reset()
   })
 
@@ -283,5 +290,41 @@ describe('wanixdisplay attach', () => {
     expect(readattachedsession()).toBe('hello-wasm')
     expect(readwanixattachpanelopen()).toBe(false)
     expect(useTape.getState().terminal.open).toBe(true)
+  })
+
+  it('zedsync session open hard-attaches even when tape is visible', () => {
+    useTape.setState((state) => ({
+      terminal: { ...state.terminal, open: true },
+    }))
+    applywanixsessionmessage({
+      event: 'open',
+      sessionkey: WANIX_ZEDSYNC_TASK_ID,
+      kind: 'task',
+    })
+    expect(readattachedsession()).toBe(WANIX_ZEDSYNC_TASK_ID)
+    expect(readwanixattachpanelopen()).toBe(true)
+    expect(useTape.getState().terminal.open).toBe(false)
+  })
+
+  it('tryattachwanixsession recovers key from room tasks after buffers cleared', () => {
+    useWanixClient.setState({
+      opensessions: new Set(),
+      termbuffers: new Map(),
+      roomconfig: {
+        ...createidleroomconfig(),
+        mode: 'task',
+        tasks: [
+          {
+            id: WANIX_ZEDSYNC_TASK_ID,
+            cmd: 'zedsync.wasm zed-workspace',
+            running: true,
+          },
+        ],
+      },
+    })
+    const result = tryattachwanixsession(WANIX_ZEDSYNC_TASK_ID)
+    expect(result).toEqual({ ok: true, sessionkey: WANIX_ZEDSYNC_TASK_ID })
+    expect(readattachedsession()).toBe(WANIX_ZEDSYNC_TASK_ID)
+    expect(readwanixattachpanelopen()).toBe(true)
   })
 })
