@@ -39,6 +39,7 @@ import {
 import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
 import { memoryensuresoftwarecodepage } from 'zss/memory/books'
 import { memoryreadcodepagedata } from 'zss/memory/codepageoperations'
+import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
 import { memorytickobject } from 'zss/memory/runtime'
 import {
   memorylistboardelementsbykind,
@@ -421,10 +422,18 @@ export const BOARD_FIRMWARE = createfirmware()
 
       // attempt to clone existing board
       if (isstring(maybesource)) {
-        const sourceboard = memoryreadboardbyaddress(maybesource)
-        if (ispresent(sourceboard)) {
-          if (firmwarewaitforboard(sourceboard?.id)) {
+        // pick+wait before read so empty stub does not fake hydration
+        const sourcepage = memorypickcodepagewithtypeandstat(
+          CODE_PAGE_TYPE.BOARD,
+          maybesource,
+        )
+        if (ispresent(sourcepage)) {
+          if (firmwarewaitforboard(sourcepage.id)) {
             return 1
+          }
+          const sourceboard = memoryreadboardbyaddress(maybesource)
+          if (!ispresent(sourceboard)) {
+            return 0
           }
           boardcopy(sourceboard.id, createdboard.id, p1, p2, targetset)
           // make sure to copy board stats as well
@@ -501,13 +510,22 @@ export const BOARD_FIRMWARE = createfirmware()
         return 0
       }
 
+      // pick+wait before read so empty stub does not fake hydration
+      // (passage kind+color match needs the real painted board)
+      const targetpage = memorypickcodepagewithtypeandstat(
+        CODE_PAGE_TYPE.BOARD,
+        stat,
+      )
+      if (!ispresent(targetpage)) {
+        return 0
+      }
+      if (firmwarewaitforboard(targetpage.id)) {
+        return 1
+      }
+
       const targetboard = memoryreadboardbyaddress(stat)
       if (!ispresent(targetboard)) {
         return 0
-      }
-
-      if (firmwarewaitforboard(targetboard.id)) {
-        return 1
       }
 
       // init board kinds
