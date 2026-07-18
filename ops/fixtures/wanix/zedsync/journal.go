@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	// JournalDir is the peer-side metadata directory (skipped by WalkFiles —
+	// JournalDir is the peer-side metadata directory (skipped by WalkFiles --
 	// any dot-prefixed path segment is excluded, see shouldskip).
 	JournalDir = ".zedsync"
 	// JournalFile is an append-only NDJSON log of copy ops, written before
@@ -101,7 +101,7 @@ func AppendJournal(remote string, entry JournalEntry) error {
 // remote, performs the copy, then appends a matching done entry. Returns the
 // journal revision used, for the caller to fold into SyncState.
 // srcroot/dstroot are (remote, zedcafe) for op="copytoz" or (zedcafe, remote)
-// for op="copytor" — the journal always lives under remote regardless of
+// for op="copytor" -- the journal always lives under remote regardless of
 // copy direction (peer-side journal).
 func journalcopy(remote, srcroot, dstroot, op, rel string, madedirs map[string]struct{}) (rev int, err error) {
 	src := filepath.Join(srcroot, filepath.FromSlash(rel))
@@ -197,7 +197,7 @@ func ReadJournalEntries(remote string) ([]JournalEntry, error) {
 }
 
 // ReplayIncompleteJournal best-effort re-copies ops whose last recorded
-// journal entry (by rev) is still "pending" — i.e. the process stopped
+// journal entry (by rev) is still "pending" -- i.e. the process stopped
 // between the pending append and the copy completing. Call on startup,
 // before InitialSeed. Individual copy failures are collected into logs and
 // do not abort the rest of the replay.

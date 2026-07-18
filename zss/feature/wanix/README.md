@@ -240,7 +240,7 @@ sequenceDiagram
   Guest->>Memfs: Write or delete allowlisted JSON
   Memfs->>Memfs: debounce_50ms dirty (coalesced path set)
   Memfs-->>Parent: wanixclient:zedcafefilechange {paths}
-  Note over Parent: kickzedcafepoll collect + path-scoped doc compare
+  Note over Parent: kickzedcafepoll collect + full guest-vs-shadow compare
   Parent->>Parent: guestdirty — suppress stale host push
   Parent->>Sim: vm:importzedcafe
   Sim->>Sim: applyzedcafetomemory upserts + deletes
@@ -254,9 +254,10 @@ sequenceDiagram
   legacy `__wanixOnZedcafeExportDirty(taskId)` hook) → `wanixclient:zedcafefilechange`
   → `kickzedcafepoll('file-change', paths)`. Host pushes set `hostpushinflight` so
   sync batches do not kick import mid-write. Dirty paths are accumulated
-  (`markpendingdirtypaths`) and drained on the next tree compare
-  (`guestdiffersfromlastpush`) to scope the compare to changed paths + `stats.json`
-  instead of the full document.
+  (`markpendingdirtypaths`) and drained for tracing only; import poll always
+  full-compares the guest tree vs host shadow (`guestdiffersfromlastpush`) so
+  peer edits outside the dirty-path hint (e.g. `board/terrain.json`) are not
+  skipped.
 - Session-close still kicks import (greenring exit-after-write). **No continuous
   interval poll.**
 - Import runs in the **sim worker** (`handleimportzedcafe`), not main-thread memory.
@@ -789,33 +790,26 @@ Browser Wanix cannot export its namespace outward. Import a remote 9P mount, the
 
 Empty peer is seeded from `zedcafe/` (no wipe). After `.zedsync-ready`, steady-state sync mirrors creates/updates; deleting a file on the peer restores it from `zedcafe/`. Soft idle stops zedsync (`zedsync: stopped`). See [`ops/fixtures/wanix/README.md`](../../../ops/fixtures/wanix/README.md).
 
-### Conflict policy: sim wins
+### Conflict policy: newer mtime wins
 
-The sim (`zedcafe/` export tree) is the **authoritative** side of every sync.
-When `SteadyTick` sees a path changed on **both** the peer and `zedcafe/`
-since the last baseline, it copies `zedcafe/` -> peer (`copytor`), discarding
-the peer-side edit — regardless of mtimes. A host push into `zedcafe/`
-always wins over a stale peer copy for the same reason: the peer is a mirror,
-not a second source of truth.
+When `SteadyTick` / `SteadyTickIncremental` sees a path changed on **both**
+the peer and `zedcafe/` since the last baseline, the side with the **newer
+mtime** wins (`copytoz` or `copytor`). Equal mtime ties prefer the peer
+(`copytoz`) so hand-edits are not silently discarded. There is **no merge**.
 
 Practical consequences for anything editing the peer directory directly
 (hand edits, another tool, a future agent):
 
-- There is **no merge**. A conflicting peer edit is silently overwritten on
-  the next `SteadyTick`, not rejected or queued.
-- Peer-side edits only "stick" if `zedcafe/` did not also change that path
-  since the last tick — i.e. the peer is a reliable place to make changes
-  only when the sim is idle on that path.
+- A peer edit sticks when its mtime is newer than the sim copy for that path.
+- If the sim pushes the same path with a newer mtime after your edit, the
+  next tick copies sim -> peer and your edit is overwritten.
 - **Single writer is assumed on the peer side.** Two peers (or a peer plus a
-  hand-editor) racing the same path have no coordination beyond "sim wins";
-  whichever peer write loses the race is silently discarded on the next tick,
-  same as a hand edit.
-- Before trusting a peer-side write took effect, check `stats.json`
-  `exportRevision` (bumped on every acknowledged host push, see
-  `bumpexportrevision` / `readexportrevision` in
-  [`wanixstateexport.ts`](wanixstateexport.ts)) — if it advanced past the
-  revision you observed before writing, the sim has since pushed and may
-  have overwritten your edit.
+  hand-editor) racing the same path have no coordination beyond newer-mtime;
+  the losing write is discarded on the next tick.
+- Before trusting a peer-side write took effect, wait for the next sync tick
+  and confirm the content (and `stats.json` `exportRevision` if the sim also
+  pushed — see `bumpexportrevision` / `readexportrevision` in
+  [`wanixstateexport.ts`](wanixstateexport.ts)).
 - Multi-writer coordination (per-path leases so concurrent peers don't stomp
   each other) is **deferred**, not implemented — see Phase 4 note below.
 
@@ -844,10 +838,11 @@ through `#wanix` commands), the recommended loop is:
    sim accepted.
 3. **Wait for the next sync tick** (peer sync is polling, not push — see
    `PollInterval`/`PollIdleMax`) and then re-read `stats.json`.
-4. **Compare `exportRevision`**: if it advanced, the sim pushed since your
-   edit (sim wins — assume your edit may have been superseded on any path the
-   sim also touched; re-diff before retrying). If it did not advance and
-   `bookCount`/content reflects your edit, the write landed cleanly.
+4. **Compare content / `exportRevision`**: if `exportRevision` advanced, the
+   sim pushed since your edit — re-diff any paths the sim also touched
+   (newer mtime wins; your edit may have been overwritten on those paths).
+   If revision did not advance and `bookCount`/content reflects your edit,
+   the write landed cleanly.
 5. **Treat `skippedpaths` as success, not failure** when importing
    programmatically through `vm:importzedcafe` directly (bypassing the peer
    tree) — a skipped path means the sim already had that exact content
@@ -855,9 +850,9 @@ through `#wanix` commands), the recommended loop is:
 
 **Deferred (not implemented):** per-path leases or any other multi-writer
 coordination for concurrent peers/agents editing the same peer tree. Today,
-"sim wins" plus single-writer-per-peer is the whole conflict story; do not
-build lease/lock infrastructure speculatively — revisit only when a real
-multi-agent-on-one-peer scenario exists.
+"newer mtime wins" plus single-writer-per-peer is the whole conflict story;
+do not build lease/lock infrastructure speculatively — revisit only when a
+real multi-agent-on-one-peer scenario exists.
 
 ---
 
@@ -881,9 +876,10 @@ Follow-ups from the **less disruptive zedcafe imports** work:
   accumulates a dirty-path set (50 ms debounce, was 150 ms) and
   `defaultdirtynotify` posts `{ zedcafeexportdirty, paths }`. The parent
   accumulates those paths (`markpendingdirtypaths` / `drainpendingdirtypaths`
-  in `zss/device/wanixclient/state.ts`) and scopes the next guest-tree compare
-  (`guestdiffersfromlastpush`) to just those paths + `stats.json` instead of
-  the full document. The tree read itself is still a full walk; see
+  in `zss/device/wanixclient/state.ts`) for tracing; import poll
+  full-compares the guest tree vs host shadow (path-scoped compare was
+  removed after it skipped peer `board/terrain.json` when notify listed
+  only `stats.json`). The tree read itself is still a full walk; see
   `zss/device/wanixclient/wanixzedcafe.ts`.
 - **Parallel export writes (shipped, Phase 1)** — `pushzedcafeexportlive`
   writes upserts with a bounded-concurrency pool (`PUSH_WRITE_CONCURRENCY =

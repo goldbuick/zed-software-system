@@ -8,7 +8,7 @@ const (
 	ColorGreen = 10
 	// ColorBlack matches zss COLOR.BLACK (bg).
 	ColorBlack = 0
-	// RingChar is CP437 medium shade (░).
+	// RingChar is CP437 medium shade (byte 177).
 	RingChar = 177
 )
 
@@ -64,7 +64,7 @@ func PaintCellDisplay(cell any, char int, fg int, bg int) map[string]any {
 }
 
 // PaintGreenRing mutates terrain in place: writes char/fg/bg on ring cells only.
-// Does not inspect collision / blocked — only display fields.
+// Does not inspect collision / blocked -- only display fields.
 func PaintGreenRing(terrain []any, cx, cy int) []any {
 	terrain = EnsureTerrainLen(terrain)
 	for _, cell := range RingCells(cx, cy) {

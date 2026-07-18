@@ -137,7 +137,7 @@ func TestSteadyTickRemoteDeleteRestoresFromZedcafe(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// delete y on remote — should come back from zedcafe
+	// delete y on remote -- should come back from zedcafe
 	if err := os.Remove(filepath.Join(remote, "y.json")); err != nil {
 		t.Fatal(err)
 	}
@@ -189,10 +189,10 @@ func TestSteadyTickZedcafeDeleteRemovesRemote(t *testing.T) {
 	}
 }
 
-// Conflict policy: sim (zedcafe) is authoritative. When both sides changed
-// since baseline, zedcafe always wins regardless of mtime — see "Peer sync
-// (zedsync)" > "Conflict policy: sim wins" in feature/wanix/README.md.
-func TestSteadyTickConflictSimWins(t *testing.T) {
+// Conflict policy: newer mtime wins. When both sides changed since baseline,
+// the side with the newer mtime is copied -- see "Peer sync (zedsync)" >
+// "Conflict policy: newer mtime wins" in feature/wanix/README.md.
+func TestSteadyTickConflictRemoteNewerWins(t *testing.T) {
 	dir := t.TempDir()
 	remote := filepath.Join(dir, "remote")
 	zedcafe := filepath.Join(dir, "zedcafe")
@@ -203,11 +203,39 @@ func TestSteadyTickConflictSimWins(t *testing.T) {
 	writefile(t, zedcafe, "c.json", `old`, base)
 	baseline, _ := WalkFiles(remote)
 
-	// zedcafe (sim) is older than remote — sim still wins the conflict.
 	older := time.Now()
 	newer := older.Add(time.Minute)
 	writefile(t, zedcafe, "c.json", `from-zedcafe`, older)
 	writefile(t, remote, "c.json", `from-remote`, newer)
+
+	_, logs, err := SteadyTick(remote, zedcafe, baseline)
+	if err != nil {
+		t.Fatal(err)
+	}
+	zedbody, err := os.ReadFile(filepath.Join(zedcafe, "c.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(zedbody) != "from-remote" {
+		t.Fatalf("zedcafe body=%q logs=%v", zedbody, logs)
+	}
+}
+
+func TestSteadyTickConflictZedcafeNewerWins(t *testing.T) {
+	dir := t.TempDir()
+	remote := filepath.Join(dir, "remote")
+	zedcafe := filepath.Join(dir, "zedcafe")
+	_ = os.MkdirAll(remote, 0o755)
+	_ = os.MkdirAll(zedcafe, 0o755)
+	base := time.Now().Add(-time.Hour)
+	writefile(t, remote, "c.json", `old`, base)
+	writefile(t, zedcafe, "c.json", `old`, base)
+	baseline, _ := WalkFiles(remote)
+
+	older := time.Now()
+	newer := older.Add(time.Minute)
+	writefile(t, remote, "c.json", `from-remote`, older)
+	writefile(t, zedcafe, "c.json", `from-zedcafe`, newer)
 
 	_, logs, err := SteadyTick(remote, zedcafe, baseline)
 	if err != nil {
@@ -219,13 +247,6 @@ func TestSteadyTickConflictSimWins(t *testing.T) {
 	}
 	if string(remotebody) != "from-zedcafe" {
 		t.Fatalf("remote body=%q logs=%v", remotebody, logs)
-	}
-	zedbody, err := os.ReadFile(filepath.Join(zedcafe, "c.json"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if string(zedbody) != "from-zedcafe" {
-		t.Fatalf("zedcafe body=%q logs=%v", zedbody, logs)
 	}
 }
 
@@ -483,8 +504,9 @@ func TestSteadyTickIncrementalScopedToRevisionPaths(t *testing.T) {
 	if newrev != 1 {
 		t.Fatalf("newrev=%d want 1", newrev)
 	}
-	if LastWalkCount != 0 {
-		t.Fatalf("walks=%d want 0 (scoped tick should not WalkFiles)", LastWalkCount)
+	// Scoped host paths avoid WalkFiles; peer-only pass walks remote once.
+	if LastWalkCount != 1 {
+		t.Fatalf("walks=%d want 1 (peer-only pass after scoped host tick)", LastWalkCount)
 	}
 	body, err := os.ReadFile(filepath.Join(remote, "flags", "pid_1.json"))
 	if err != nil {
@@ -569,9 +591,8 @@ func TestSteadyTickIncrementalUnparseableRevisionNeedsFullTick(t *testing.T) {
 	}
 }
 
-// Conflict policy: sim wins even on a scoped incremental tick, matching
-// TestSteadyTickConflictSimWins for the full-walk path.
-func TestSteadyTickIncrementalConflictSimWins(t *testing.T) {
+// Conflict policy: newer mtime wins on a scoped incremental tick.
+func TestSteadyTickIncrementalConflictRemoteNewerWins(t *testing.T) {
 	dir := t.TempDir()
 	remote := filepath.Join(dir, "remote")
 	zedcafe := filepath.Join(dir, "zedcafe")
@@ -595,12 +616,51 @@ func TestSteadyTickIncrementalConflictSimWins(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	remotebody, err := os.ReadFile(filepath.Join(remote, "c.json"))
+	zedbody, err := os.ReadFile(filepath.Join(zedcafe, "c.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if string(remotebody) != "from-zedcafe" {
-		t.Fatalf("remote body=%q logs=%v", remotebody, logs)
+	if string(zedbody) != "from-remote" {
+		t.Fatalf("zedcafe body=%q logs=%v", zedbody, logs)
+	}
+}
+
+// When host revision bumps with only stats.json, peer board/terrain.json
+// edits outside the revision list must still copytoz.
+func TestSteadyTickIncrementalPeerPassAfterRevisionBump(t *testing.T) {
+	dir := t.TempDir()
+	remote := filepath.Join(dir, "remote")
+	zedcafe := filepath.Join(dir, "zedcafe")
+	_ = os.MkdirAll(remote, 0o755)
+	_ = os.MkdirAll(zedcafe, 0o755)
+	mtime := time.Now().Add(-time.Minute)
+	writefile(t, remote, "stats.json", `{"exportRevision":0}`, mtime)
+	writefile(t, zedcafe, "stats.json", `{"exportRevision":0}`, mtime)
+	writefile(t, remote, "title/board/terrain.json", `old-terrain`, mtime)
+	writefile(t, zedcafe, "title/board/terrain.json", `old-terrain`, mtime)
+	baseline, err := WalkFiles(remote)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Host bump lists only stats; peer edited terrain outside that list.
+	writefile(t, zedcafe, "stats.json", `{"exportRevision":1}`, time.Now())
+	writefile(t, zedcafe, RevisionFile, `{"revision":1,"paths":["stats.json"]}`, time.Time{})
+	writefile(t, remote, "title/board/terrain.json", `peer-terrain`, time.Now())
+
+	_, logs, newrev, err := SteadyTickIncremental(remote, zedcafe, baseline, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if newrev != 1 {
+		t.Fatalf("newrev=%d want 1", newrev)
+	}
+	body, err := os.ReadFile(filepath.Join(zedcafe, "title", "board", "terrain.json"))
+	if err != nil {
+		t.Fatalf("read terrain: %v logs=%v", err, logs)
+	}
+	if string(body) != "peer-terrain" {
+		t.Fatalf("zedcafe terrain=%q logs=%v", body, logs)
 	}
 }
 

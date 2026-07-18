@@ -30,9 +30,9 @@ var upgrader = websocket.Upgrader{
 // Tests may pass Port: 0 for an ephemeral port.
 const DefaultPort = 8765
 
-// Options configures Start (TLS required — wss:// only).
+// Options configures Start (TLS required -- wss:// only).
 type Options struct {
-	// CertFile + KeyFile — same pair cafe:dev uses via mkcert.
+	// CertFile + KeyFile -- same pair cafe:dev uses via mkcert.
 	CertFile string
 	KeyFile  string
 	// Port is 127.0.0.1 listen port. 0 = ephemeral (tests).
@@ -47,7 +47,7 @@ type Server struct {
 	URL        string // wss://localhost:<port>/
 }
 
-// Start listens on 127.0.0.1:<Port> (or ephemeral when Port==0) and serves rootdir via wss→9P.
+// Start listens on 127.0.0.1:<Port> (or ephemeral when Port==0) and serves rootdir via wss->9P.
 func Start(rootdir string, opts Options) (*Server, error) {
 	if opts.CertFile == "" || opts.KeyFile == "" {
 		return nil, fmt.Errorf("p9server: TLS cert and key required (wss only)")

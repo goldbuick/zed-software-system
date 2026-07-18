@@ -12,7 +12,8 @@ import {
   WANIX_ZEDSYNC_TASK_ID,
 } from 'zss/feature/wanix/wanixzedcafeconstants'
 
-export const WANIX_ZEDSYNC_WASM_URL = '/wanix/zedsync.wasm'
+export const WANIX_ZEDSYNC_WASM_URL =
+  '/wanix/zedsync.wasm?v=ascii-logs-20260718'
 export const WANIX_ZEDSYNC_TASK_WASM = `${WANIX_ZEDSYNC_TASK_ID}.wasm`
 export const WANIX_ZEDSYNC_READY_NAME = '.zedsync-ready'
 const WANIX_ZEDSYNC_READY_POLL_MS = 500

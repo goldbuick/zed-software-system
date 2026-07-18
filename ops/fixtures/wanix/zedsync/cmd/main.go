@@ -138,7 +138,7 @@ func main() {
 			importkicks := 0
 			for _, line := range logs {
 				fmt.Printf("zedsync: %s\n", line)
-				if strings.Contains(line, "zedcafe \u2190") {
+				if strings.Contains(line, "zedcafe <-") {
 					importkicks++
 				}
 			}

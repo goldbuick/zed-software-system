@@ -40,6 +40,8 @@ jest.mock('zss/feature/wanix/zedcafetreeschema', () => ({
 }))
 
 import {
+  vmexportzedcafe,
+  vmimportzedcafe,
   wanixserverreadzedcafeexportfiles,
   wanixserverreadzedcafetaskrid,
 } from 'zss/device/api'
@@ -47,24 +49,43 @@ import { shouldprocesswanixclientmessage } from 'zss/device/wanixclient/filter'
 import { handlezedcafefilechange } from 'zss/device/wanixclient/handlers/zedcafefilechange'
 import {
   applyzedcafeexportfiles,
+  exportfilestoguestfiles,
   kickzedcafepoll,
   resetwanixzedcafefortest,
+  resolvevmzedcafeexportwaiter,
+  resolvevmzedcafeimportwaiter,
   startzedcafepoll,
   stopzedcafepoll,
 } from 'zss/device/wanixclient/wanixzedcafe'
 import {
+  markpendingdirtypaths,
   readpendingpollkick,
   readzedcafepollactive,
   resetwanixzedcafesessionfortest,
+  setlasthostpushdoc,
   setpendingpollphase,
   setpendingsync,
 } from 'zss/device/wanixclient/state'
+import { zedcafeexportfilestodoc } from 'zss/feature/wanix/wanixstateexport'
 
 const mockreadrid = wanixserverreadzedcafetaskrid as jest.Mock
 const mockreadfiles = wanixserverreadzedcafeexportfiles as jest.Mock
+const mockvmimport = vmimportzedcafe as jest.Mock
+const mockvmexport = vmexportzedcafe as jest.Mock
 
 const device = { id: 'dev', emit: jest.fn() } as never
 const player = 'p1'
+const encoder = new TextEncoder()
+
+function makestatsbytes(label: string) {
+  return encoder.encode(
+    JSON.stringify({
+      exportedAt: label,
+      bookCount: 1,
+      books: [{ id: 'b1', name: 'b1' }],
+    }) + '\n',
+  )
+}
 
 describe('zedcafe import poll', () => {
   beforeEach(() => {
@@ -72,6 +93,8 @@ describe('zedcafe import poll', () => {
     resetwanixzedcafesessionfortest()
     mockreadrid.mockReset()
     mockreadfiles.mockReset()
+    mockvmimport.mockReset()
+    mockvmexport.mockReset()
   })
 
   afterEach(() => {
@@ -137,5 +160,50 @@ describe('zedcafe import poll', () => {
         player: '',
       } as never),
     ).toBe(true)
+  })
+
+  it('imports when terrain differs even if dirty paths are stats-only', async () => {
+    const hostfiles = [
+      {
+        path: 'stats.json',
+        bytes: makestatsbytes('host'),
+      },
+      {
+        path: 'title/board/terrain.json',
+        bytes: encoder.encode('{"cells":"classic"}\n'),
+      },
+    ]
+    const guestfiles = [
+      {
+        path: 'stats.json',
+        bytes: makestatsbytes('host'),
+      },
+      {
+        path: 'title/board/terrain.json',
+        bytes: encoder.encode('{"cells":"dungeon"}\n'),
+      },
+    ]
+    setlasthostpushdoc(zedcafeexportfilestodoc(hostfiles))
+    startzedcafepoll(device, player)
+    // Dirty notify listed only stats — old scoped compare would skip terrain.
+    markpendingdirtypaths(['stats.json'])
+    setpendingpollphase('tree')
+    mockvmimport.mockImplementation(() => {
+      resolvevmzedcafeimportwaiter({
+        ok: true,
+        changed: true,
+        bookcount: 1,
+      })
+    })
+    mockvmexport.mockImplementation(() => {
+      resolvevmzedcafeexportwaiter(guestfiles)
+    })
+    applyzedcafeexportfiles(device, player, exportfilestoguestfiles(guestfiles))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(mockvmimport).toHaveBeenCalled()
+    const sent = mockvmimport.mock.calls[0][2] as { path: string }[]
+    expect(sent.some((file) => file.path === 'title/board/terrain.json')).toBe(
+      true,
+    )
   })
 })

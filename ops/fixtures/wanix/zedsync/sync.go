@@ -59,7 +59,7 @@ type FileMeta struct {
 type Snapshot map[string]FileMeta
 
 // shouldskip reports whether a slash-normalized relative path is non-content
-// (any path segment starts with '.' — dotfiles, hidden dirs, ready sentinel).
+// (any path segment starts with '.' -- dotfiles, hidden dirs, ready sentinel).
 func shouldskip(rel string) bool {
 	for _, seg := range strings.Split(rel, "/") {
 		if strings.HasPrefix(seg, ".") {
@@ -143,7 +143,7 @@ func copyfilecached(srcroot, dstroot, rel string, madedirs map[string]struct{}) 
 	}
 	defer out.Close()
 	if _, err := io.Copy(out, in); err != nil {
-		return fmt.Errorf("copy %s → %s: %w", src, dst, err)
+		return fmt.Errorf("copy %s -> %s: %w", src, dst, err)
 	}
 	// Best-effort mtime preserve. Browser/gojs mounts often cannot Chtimes;
 	// SteadyTick treats equal-size mtime-only drift as idle to avoid churn.
@@ -219,7 +219,7 @@ func newer(a, b FileMeta) bool {
 	return false
 }
 
-// sizealigned reports same length — used to ignore mtime-only drift after
+// sizealigned reports same length -- used to ignore mtime-only drift after
 // copies onto FS backends that cannot Chtimes (gojs export mounts).
 func sizealigned(a, b FileMeta) bool {
 	return a.Size == b.Size
@@ -274,7 +274,7 @@ func InitialSeed(remote, zedcafe string, r, z Snapshot) (copied int, err error) 
 	case len(r) == 0 && len(z) == 0:
 		return 0, nil
 	default:
-		// Union seed: unique paths both ways; shared → LWW (tie → remote wins).
+		// Union seed: unique paths both ways; shared -> LWW (tie -> remote wins).
 		all := map[string]struct{}{}
 		for rel := range r {
 			all[rel] = struct{}{}
@@ -336,10 +336,10 @@ type syncop struct {
 // planop derives the sync action (if any) for rel from baseline vs current
 // remote/zedcafe presence+metadata.
 //
-// sim-wins: zedcafe (sim export) is authoritative on any create/update
-// conflict (both sides changed since baseline) — zedcafe always wins,
-// regardless of mtime. See "Peer sync (zedsync)" > "Conflict policy: sim
-// wins" in feature/wanix/README.md.
+// newer-mtime-wins: on create/update conflict (both sides present/changed),
+// the side with the newer mtime wins. Equal mtime+size ties prefer peer
+// (copytoz) so hand-edits are not silently discarded. See "Peer sync
+// (zedsync)" > "Conflict policy: newer mtime wins" in feature/wanix/README.md.
 func planop(
 	rel string,
 	bm FileMeta, binbase bool,
@@ -348,36 +348,42 @@ func planop(
 ) (syncop, bool) {
 	switch {
 	case !binbase && rinremote && !rinzed:
-		return syncop{rel, "copytoz", fmt.Sprintf("create zedcafe ← %s", rel)}, true
+		return syncop{rel, "copytoz", fmt.Sprintf("create zedcafe <- %s", rel)}, true
 	case !binbase && rinzed && !rinremote:
-		return syncop{rel, "copytor", fmt.Sprintf("create remote ← %s", rel)}, true
+		return syncop{rel, "copytor", fmt.Sprintf("create remote <- %s", rel)}, true
 	case !binbase && rinremote && rinzed:
-		// sim-wins: zedcafe (sim export) is authoritative on any create conflict.
-		return syncop{rel, "copytor", fmt.Sprintf("create/conflict remote <- zedcafe (sim wins) %s", rel)}, true
+		// newer-mtime-wins; equal mtime ties prefer peer (copytoz).
+		if newer(zm, rm) {
+			return syncop{rel, "copytor", fmt.Sprintf("create/conflict remote <- zedcafe (newer) %s", rel)}, true
+		}
+		return syncop{rel, "copytoz", fmt.Sprintf("create/conflict zedcafe <- remote (newer) %s", rel)}, true
 	case binbase && !rinremote && !rinzed:
 		// already gone both sides
 		return syncop{}, false
 	case binbase && !rinremote && rinzed:
-		return syncop{rel, "copytor", fmt.Sprintf("restore remote ← zedcafe %s", rel)}, true
+		return syncop{rel, "copytor", fmt.Sprintf("restore remote <- zedcafe %s", rel)}, true
 	case binbase && rinremote && !rinzed:
-		return syncop{rel, "deleteremote", fmt.Sprintf("delete remote ← gone on zedcafe %s", rel)}, true
+		return syncop{rel, "deleteremote", fmt.Sprintf("delete remote <- gone on zedcafe %s", rel)}, true
 	case binbase && rinremote && rinzed:
 		remotechanged := newer(rm, bm) || rm.Size != bm.Size || !rm.Mtime.Equal(bm.Mtime)
 		zedchanged := newer(zm, bm) || zm.Size != bm.Size || !zm.Mtime.Equal(bm.Mtime)
 		if remotechanged && zedchanged {
-			// sim-wins: zedcafe (sim export) is authoritative on conflicts.
-			return syncop{rel, "copytor", fmt.Sprintf("conflict remote <- zedcafe (sim wins) %s", rel)}, true
+			// newer-mtime-wins; equal mtime ties prefer peer (copytoz).
+			if newer(zm, rm) {
+				return syncop{rel, "copytor", fmt.Sprintf("conflict remote <- zedcafe (newer) %s", rel)}, true
+			}
+			return syncop{rel, "copytoz", fmt.Sprintf("conflict zedcafe <- remote (newer) %s", rel)}, true
 		}
 		if remotechanged {
-			return syncop{rel, "copytoz", fmt.Sprintf("update zedcafe ← %s", rel)}, true
+			return syncop{rel, "copytoz", fmt.Sprintf("update zedcafe <- %s", rel)}, true
 		}
 		if zedchanged {
 			// Mtime-only drift with equal size: browser FS after copytoz often
-			// cannot Chtimes; do not churn remote ← zedcafe.
+			// cannot Chtimes; do not churn remote <- zedcafe.
 			if sizealigned(rm, zm) {
 				return syncop{}, false
 			}
-			return syncop{rel, "copytor", fmt.Sprintf("update remote ← %s", rel)}, true
+			return syncop{rel, "copytor", fmt.Sprintf("update remote <- %s", rel)}, true
 		}
 	}
 	return syncop{}, false
@@ -680,10 +686,13 @@ func steadytickincrementalpeeronly(
 
 // SteadyTickIncremental applies only zedcafe's revision-file dirty paths
 // (ReadRevision) when possible, skipping the full bidirectional WalkFiles
-// that SteadyTick performs. Returns ErrZedsyncNeedFullTick when the
-// revision file cannot be read/parsed, or bumped with an empty path list
-// (incomplete incremental state) -- the caller (cmd/main.go) falls back to
-// SteadyTick, the documented primary recovery path, not a silent retry.
+// that SteadyTick performs. When revision bumps, scoped host paths run
+// first, then a peer-only pass so peer edits outside the revision list are
+// not starved under host export churn. Returns ErrZedsyncNeedFullTick when
+// the revision file cannot be read/parsed, or bumped with an empty path
+// list (incomplete incremental state) -- the caller (cmd/main.go) falls
+// back to SteadyTick, the documented primary recovery path, not a silent
+// retry.
 func SteadyTickIncremental(
 	remote, zedcafe string, baseline Snapshot, lastrev int64,
 ) (snap Snapshot, logs []string, newrev int64, err error) {
@@ -700,7 +709,17 @@ func SteadyTickIncremental(
 		return nil, nil, rev, ErrZedsyncNeedFullTick
 	}
 	snap, logs, err = steadytickpaths(remote, zedcafe, baseline, paths)
-	return snap, logs, rev, err
+	if err != nil {
+		return snap, logs, rev, err
+	}
+	// Peer-only pass after host-scoped tick so peer edits outside revision
+	// paths still reach zedcafe while host export churn keeps bumping rev.
+	peersnap, peerlogs, peererr := steadytickincrementalpeeronly(remote, zedcafe, snap)
+	if peererr != nil {
+		return snap, logs, rev, peererr
+	}
+	logs = append(logs, peerlogs...)
+	return peersnap, logs, rev, nil
 }
 
 // WriteReadySentinel marks seed complete on the remote mount.

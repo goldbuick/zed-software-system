@@ -39,7 +39,7 @@ func main() {
 		}
 	}
 	if opts.CertFile == "" || opts.KeyFile == "" {
-		fmt.Fprintln(os.Stderr, "p9server: TLS required — need ~/.vite-plugin-mkcert from cafe:dev, or -cert and -key")
+		fmt.Fprintln(os.Stderr, "p9server: TLS required -- need ~/.vite-plugin-mkcert from cafe:dev, or -cert and -key")
 		os.Exit(1)
 	}
 

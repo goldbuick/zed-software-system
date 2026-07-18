@@ -247,38 +247,12 @@ export function fingerprintzedcafeexportfiles(
   return (hash >>> 0).toString(16)
 }
 
-/**
- * Path-scoped compare: when the caller knows exactly which export paths the
- * Go dirty tracker reported changed, restrict the compare() to those paths
- * (+ stats.json) instead of the full document. Falls back to a full compare
- * when there is no shadow yet or no scoped paths (e.g. first poll).
- */
-function guestdiffersfromlastpush(
-  tree: WANIX_ZED_CAFE_EXPORT_FILE[],
-  scopepaths?: string[],
-): boolean {
-  const shadow = readlasthostpushdoc()
-  const guestdoc = zedcafeexportfilestodoc(tree)
-  if (
-    !scopepaths ||
-    scopepaths.length === 0 ||
-    Object.keys(shadow).length === 0
-  ) {
-    return zedcafeexportdocsdiffer(shadow, guestdoc)
-  }
-  const scopekeys = new Set(scopepaths)
-  scopekeys.add('stats.json')
-  const scopedshadow: Record<string, unknown> = {}
-  const scopedguest: Record<string, unknown> = {}
-  for (const key of scopekeys) {
-    if (key in shadow) {
-      scopedshadow[key] = shadow[key]
-    }
-    if (key in guestdoc) {
-      scopedguest[key] = guestdoc[key]
-    }
-  }
-  return zedcafeexportdocsdiffer(scopedshadow, scopedguest)
+/** Full guest-vs-shadow compare (import poll must not path-scope). */
+function guestdiffersfromlastpush(tree: WANIX_ZED_CAFE_EXPORT_FILE[]): boolean {
+  return zedcafeexportdocsdiffer(
+    readlasthostpushdoc(),
+    zedcafeexportfilestodoc(tree),
+  )
 }
 
 export function markwanixzedcafependingexport() {
@@ -923,11 +897,13 @@ async function continuepollaftertree(
   player: string,
   tree: WANIX_ZED_CAFE_EXPORT_FILE[],
 ): Promise<void> {
+  // Drain dirty-path hints for tracing only -- never gate import on them.
+  // Scoped compare skipped peer board/terrain when notify listed stats only.
   const scopepaths = drainpendingdirtypaths()
   if (scopepaths.length > 0) {
     wanixperfmark('export-import-paths', { count: scopepaths.length })
   }
-  const differs = guestdiffersfromlastpush(tree, scopepaths)
+  const differs = guestdiffersfromlastpush(tree)
   tracezedcafeexport(`poll-guest-diff=${differs}`)
   if (!differs) {
     return
