@@ -73,7 +73,6 @@ export function buildwanixmenutape(state: WanixMenuState): string {
     for (const sessionkey of state.sessionkeys) {
       parts.push(zsszedlinkline(`wanix attach "${sessionkey}"`, sessionkey))
     }
-    parts.push(zsszedlinkline('wanix detach', 'detach guest terminal'))
   }
 
   if (ispresent(state.activesessionkey)) {

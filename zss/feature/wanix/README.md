@@ -386,7 +386,8 @@ Iframe posts `wanixclient:session`:
 
 The **attach panel** is separate from the **tape CLI**. Tape always shows ZSS logs + input; attach never hijacks it. Soft auto-attach never closes an open tape.
 
-Manual: `#wanix attach` / `#wanix detach` / menu. See
+Manual attach: `#wanix attach` or menu session row. Detach: `#wanix detach` or
+`Ctrl+\` (not on the menu). See
 [`wanixdisplay.ts`](../../device/wanixclient/wanixdisplay.ts).
 
 **Keyboard (attach panel):** `Ctrl+\` prefix stays armed until `Esc` or `Ctrl+\` again —

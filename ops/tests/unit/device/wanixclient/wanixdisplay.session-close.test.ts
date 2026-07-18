@@ -17,7 +17,10 @@ import {
   resetwanixtermbufferfortest,
 } from 'zss/device/wanixclient/wanixtermbuffer'
 import { iswanixdaemontaskid } from 'zss/device/wanixserver/taskidlepolicy'
-import { createidleroomconfig } from 'zss/feature/wanix/wanixroomtypes'
+import {
+  createidleroomconfig,
+  DEFAULT_WANIX_VM_ID,
+} from 'zss/feature/wanix/wanixroomtypes'
 import {
   WANIX_ZEDCAFE_TASK_ID,
   WANIX_ZEDSYNC_TASK_ID,
@@ -85,6 +88,22 @@ describe('wanixdisplay session close prune', () => {
       sessionkey: WANIX_ZEDCAFE_TASK_ID,
     })
     expect(readwanixtermbufferkeys()).toContain(WANIX_ZEDCAFE_TASK_ID)
+  })
+
+  it('keeps linux-vm attachable after detach then close', () => {
+    registerwanixtermsessionopen(DEFAULT_WANIX_VM_ID)
+    setattachedsession(DEFAULT_WANIX_VM_ID)
+    detachwanixterm()
+    expect(readattachedsession()).toBeNull()
+
+    applywanixsessionmessage({
+      event: 'close',
+      sessionkey: DEFAULT_WANIX_VM_ID,
+    })
+
+    expect(readwanixtermbufferkeys()).toContain(DEFAULT_WANIX_VM_ID)
+    setattachedsession(DEFAULT_WANIX_VM_ID)
+    expect(readattachedsession()).toBe(DEFAULT_WANIX_VM_ID)
   })
 
   it('unregisters one-shot session after detach then close', () => {

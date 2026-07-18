@@ -21,7 +21,10 @@ import {
   registerwanixtermsessionopen,
   unregisterwanixtermsession,
 } from 'zss/device/wanixclient/wanixtermbuffer'
-import { iswanixdaemontaskid } from 'zss/device/wanixserver/taskidlepolicy'
+import {
+  iswanixdaemontaskid,
+  iswanixvmsessionkey,
+} from 'zss/device/wanixserver/taskidlepolicy'
 import { synctapeactivelayout } from 'zss/feature/tapelayout'
 import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/zustandstores'
 
@@ -293,10 +296,11 @@ export function applywanixsessionmessage(payload: {
   }
   if (payload.event === 'close') {
     // One-shot tasks: keep buffer only while attached (read after exit).
-    // Daemons (zedsync/zedcafe): term EOF is not process death — keep keys so
-    // `#wanix attach` still works after detach + quiet/EOF close.
+    // Daemons (zedsync/zedcafe) and the v86 VM guest: term EOF is not process
+    // death — keep keys so `#wanix attach` still works after detach + quiet/EOF.
     if (
       !iswanixdaemontaskid(sessionkey) &&
+      !iswanixvmsessionkey(sessionkey) &&
       sessionkey !== readattachedsessionstate()
     ) {
       unregisterwanixtermsession(sessionkey)

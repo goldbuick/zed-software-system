@@ -189,14 +189,6 @@ function handlekeydown(event: KeyboardEvent) {
   const mods = modsfromevent(event)
   const player = registerreadplayer()
 
-  // Physical Control+Backquote toggles the perf panel. On Mac, mods.ctrl is
-  // Cmd, and Cmd+` is stolen by the OS (cycle windows of the same app).
-  if (event.code === 'Backquote' && event.ctrlKey) {
-    event.preventDefault()
-    registerperfmonitor(SOFTWARE, player, undefined)
-    return
-  }
-
   // block default browser behavior that messes with things
   switch (key) {
     case 's': // override default behavior
@@ -324,6 +316,10 @@ function handlekeydown(event: KeyboardEvent) {
         vmrefscroll(SOFTWARE, player)
         console.info('refscroll', player)
       }
+      break
+    case 'f9':
+      event.preventDefault()
+      registerperfmonitor(SOFTWARE, player, undefined)
       break
     case '1':
     case '2':

@@ -1,4 +1,5 @@
 import type { WanixSessionKind } from 'zss/device/wanixserver/state'
+import { DEFAULT_WANIX_VM_ID } from 'zss/feature/wanix/wanixroomtypes'
 import {
   WANIX_ZEDCAFE_TASK_ID,
   WANIX_ZEDSYNC_TASK_ID,
@@ -13,6 +14,11 @@ export function iswanixdaemontaskid(sessionkey: string): boolean {
     sessionkey === WANIX_ZEDSYNC_TASK_ID ||
     sessionkey.startsWith(`${WANIX_ZEDSYNC_TASK_ID}-`)
   )
+}
+
+/** v86 guest term — EOF/close is not VM death; keep attach keys after detach. */
+export function iswanixvmsessionkey(sessionkey: string): boolean {
+  return sessionkey === DEFAULT_WANIX_VM_ID
 }
 
 /**
