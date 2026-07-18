@@ -158,6 +158,94 @@ export function isjoindestination(raw: string): boolean {
   return parsejoindestination(raw) !== undefined
 }
 
+export const BYTES_ORIGIN_HOST = 'bytes.zed.cafe'
+/** Short keys from net-bytes worker / ZNS bytes values. */
+export const BYTES_KEY_RE = /^[A-Za-z0-9]{4,96}$/
+
+export type CONTENT_DESTINATION = {
+  kind: 'bytes'
+  key: string
+  raw: string
+}
+
+/**
+ * Parse a board exit / #goto address as shared content (bytes short URL).
+ * Accepts `bytes.zed.cafe/<key>` and `https://bytes.zed.cafe/<key>`.
+ */
+export function parsecontentdestination(
+  raw: string,
+): CONTENT_DESTINATION | undefined {
+  const trimmed = `${raw ?? ''}`.trim()
+  if (!trimmed) {
+    return undefined
+  }
+
+  let urlstr = trimmed
+  if (!/^https?:\/\//i.test(urlstr)) {
+    if (!urlstr.toLowerCase().includes(BYTES_ORIGIN_HOST)) {
+      return undefined
+    }
+    urlstr = `https://${urlstr.replace(/^\/+/, '')}`
+  }
+
+  try {
+    const u = new URL(urlstr)
+    if (u.hostname.toLowerCase() !== BYTES_ORIGIN_HOST) {
+      return undefined
+    }
+    const key = u.pathname.replace(/^\/+|\/+$/g, '').split('/')[0] ?? ''
+    if (!BYTES_KEY_RE.test(key)) {
+      return undefined
+    }
+    return { kind: 'bytes', key, raw: trimmed }
+  } catch {
+    return undefined
+  }
+}
+
+export function iscontentdestination(raw: string): boolean {
+  return parsecontentdestination(raw) !== undefined
+}
+
+/**
+ * Resolve a bytes short URL to its stored cafe redirect target.
+ * Bytes GET returns HTML with `location = 'https://zed.cafe/#...'`.
+ */
+export async function resolvebytesdestination(
+  dest: CONTENT_DESTINATION,
+): Promise<URL | undefined> {
+  const requesturl = `https://${BYTES_ORIGIN_HOST}/${dest.key}`
+  try {
+    const response = await fetch(requesturl)
+    if (!response.ok) {
+      return undefined
+    }
+    const html = await response.text()
+    const match = html.match(/location\s*=\s*['"]([^'"]+)['"]/i)
+    const target = match?.[1]?.trim()
+    if (!target) {
+      return undefined
+    }
+    return new URL(target)
+  } catch {
+    return undefined
+  }
+}
+
+/** True when URL is host content (hash books), not a multiplayer /join/ link. */
+export function ishostcontenturl(target: URL): boolean {
+  const host = target.hostname.toLowerCase()
+  if (host !== 'zed.cafe' && host !== 'localhost' && host !== '127.0.0.1') {
+    return false
+  }
+  const path = target.pathname.replace(/\/+$/, '') || '/'
+  if (path === '/join' || path.endsWith('/join')) {
+    return false
+  }
+  const hash = target.hash.replace(/^#/, '').trim()
+  return hash.length > 0
+}
+
 export const ZNS_LOGIN_CODE_PARAM = 'zns-code'
 export const ZNS_LOGIN_EMAIL_PARAM = 'zns-email'
 export const ZNS_LOGIN_NAMESPACE_PARAM = 'zns-namespace'

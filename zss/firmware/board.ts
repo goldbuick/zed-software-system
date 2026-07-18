@@ -3,6 +3,7 @@ import { CHIP } from 'zss/chip'
 import { vmplayermovetoboard } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { boardcopy, mapelementcopy } from 'zss/feature/boardcopy'
+import { memorytrycontentdestination } from 'zss/feature/contenturlflow'
 import { memorytryjoindestination } from 'zss/feature/joinurlflow'
 import { createfirmware } from 'zss/firmware'
 import { firmwarewaitforboard } from 'zss/firmware/boardwaitsync'
@@ -507,6 +508,9 @@ export const BOARD_FIRMWARE = createfirmware()
       ])
 
       if (memorytryjoindestination(READ_CONTEXT.elementfocus, stat)) {
+        return 0
+      }
+      if (memorytrycontentdestination(READ_CONTEXT.elementfocus, stat)) {
         return 0
       }
 

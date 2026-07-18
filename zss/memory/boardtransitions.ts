@@ -1,5 +1,6 @@
 import { vmplayermovetoboard } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { memorytrycontentdestination } from 'zss/feature/contenturlflow'
 import { memorytryjoindestination } from 'zss/feature/joinurlflow'
 import { ptwithin } from 'zss/mapping/2d'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
@@ -16,6 +17,9 @@ function memorytryexitaddress(
   destpt: PT,
 ): boolean {
   if (memorytryjoindestination(elementid, address)) {
+    return true
+  }
+  if (memorytrycontentdestination(elementid, address)) {
     return true
   }
   const destboard = memoryreadboardbyaddress(address)

@@ -323,6 +323,14 @@ export function registerjoincrosslogin(
   device.emit(player, 'register:joincrosslogin', payload)
 }
 
+export function registercontentcrosslogin(
+  device: DEVICELIKE,
+  player: string,
+  payload: { url: string; flags: Record<string, unknown> },
+) {
+  device.emit(player, 'register:contentcrosslogin', payload)
+}
+
 export function registerbookmarkurlsave(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:bookmark:urlsave', true)
 }

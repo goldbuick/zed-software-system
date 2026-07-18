@@ -27,6 +27,7 @@ import {
 } from './files'
 import { handleinput } from './input'
 import { handlefindany, handleinspector, handleperfmonitor } from './inspector'
+import { handlecontentcrosslogin } from './contentcrosslogin'
 import { handlejoincrosslogin } from './joincrosslogin'
 import {
   handleforkmem,
@@ -53,6 +54,7 @@ export const registerhandlers: Record<string, REGISTER_HANDLER> = {
   ackoperator: handleackoperator,
   loginready: handleloginready,
   joincrosslogin: handlejoincrosslogin,
+  contentcrosslogin: handlecontentcrosslogin,
   acklogin: handleacklogin,
   ackzsswords: handleackzsswords,
   bookmarkscroll: handlebookmarkscroll,
