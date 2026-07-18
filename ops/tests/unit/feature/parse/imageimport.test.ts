@@ -1,4 +1,4 @@
-import { mapfiletype } from 'zss/feature/parse/file'
+import { mapmimetype } from 'zss/feature/parse/file'
 import {
   IMAGE_IMPORT_MAX_COLS,
   IMAGE_IMPORT_MAX_ROWS,
@@ -67,15 +67,15 @@ function fillrect(
   }
 }
 
-describe('mapfiletype image routing', () => {
+describe('mapmimetype image routing', () => {
   it('maps image/png to png', () => {
     const file = new File([], 'image.png', { type: 'image/png' })
-    expect(mapfiletype('image/png', file)).toBe('png')
+    expect(mapmimetype('image/png', file)).toBe('png')
   })
 
   it('maps octet-stream with .png extension to png', () => {
     const file = new File([], 'photo.png', { type: 'application/octet-stream' })
-    expect(mapfiletype('application/octet-stream', file)).toBe('png')
+    expect(mapmimetype('application/octet-stream', file)).toBe('png')
   })
 })
 
