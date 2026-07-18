@@ -74,21 +74,34 @@ describe('anim', () => {
       object.userData = {}
 
       // Position snaps to multiples of DRAW_CHAR_HEIGHT * 0.5 = 14
-      // The function checks target - object.position.y (always checks y, not axis)
-      // So we need target to be close to a snapped position
-      // Let's use a target that's exactly on a snap point
       const CHAR_HEIGHT = 14
       const CHAR_SCALE = 2
       const DRAW_CHAR_HEIGHT = CHAR_HEIGHT * CHAR_SCALE
       const snapvalue = DRAW_CHAR_HEIGHT * 0.5 // 14
       const target = snapvalue * 7 // 98, which is a snap point
 
-      // Set position to target (which is a snap point)
       object.position.y = target
       object.userData.y = target
 
       const result = animpositiontotarget(object, 'y', target, 0.016, 1.235)
-      // Position should snap to target (or very close), so step should be < 0.1
+      expect(result).toBe(true)
+    })
+
+    it('should return true when close to target on x', () => {
+      const object = new Object3D()
+      object.position.set(0, 0, 0)
+      object.userData = {}
+
+      const CHAR_WIDTH = 8
+      const CHAR_SCALE = 2
+      const DRAW_CHAR_WIDTH = CHAR_WIDTH * CHAR_SCALE
+      const snapvalue = DRAW_CHAR_WIDTH * 0.5 // 8
+      const target = snapvalue * 7 // 56
+
+      object.position.x = target
+      object.userData.x = target
+
+      const result = animpositiontotarget(object, 'x', target, 0.016, 1.235)
       expect(result).toBe(true)
     })
   })

@@ -1,6 +1,4 @@
-import { useFrame, useThree } from '@react-three/fiber'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { Group } from 'three'
+import { useEffect, useState } from 'react'
 import { registerterminalopen } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
@@ -9,11 +7,7 @@ import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/zustandstores'
 import { ShadeBoxDither } from 'zss/gadget/graphics/dither'
 import { UserFocus, UserHotkey } from 'zss/gadget/userinput'
 import { useScreenSize } from 'zss/gadget/userscreen'
-import { ispresent } from 'zss/mapping/types'
-import {
-  animpositiontotarget,
-  animsnapy,
-} from 'zss/screens/scroll/anim'
+import { PanelSlide } from 'zss/screens/scroll/panelslide'
 import { TapeLayoutTiles } from 'zss/screens/tape/layouttiles'
 import { WanixTermScreen } from 'zss/screens/wanix/termscreen'
 import { WanixTermSizeSync } from 'zss/screens/wanix/termsizesync'
@@ -25,97 +19,11 @@ export function readwanixattachslideactive() {
   return attachslideactive
 }
 
-const SLIDE_CLOSE_FAILSAFE_MS = 2000
-
 type HeldAttachGeom = {
   top: number
   height: number
   cols: number
   layout: TAPE_DISPLAY
-}
-
-type WanixAttachSlideProps = {
-  shouldclose: boolean
-  /** BOTTOM enters/exits from below; TOP/FULL from above. */
-  frombottom: boolean
-  onclosed: () => void
-  children: ReactNode
-}
-
-function readoffscreeny(viewportheight: number, frombottom: boolean) {
-  // Match animpositiontotarget snap so completion can reach < 0.1.
-  return animsnapy(frombottom ? viewportheight : -viewportheight)
-}
-
-/** Layout-aware slide: top/full from top, bottom from bottom. */
-function WanixAttachSlide({
-  shouldclose,
-  frombottom,
-  onclosed,
-  children,
-}: WanixAttachSlideProps) {
-  const { viewport } = useThree()
-  const groupref = useRef<Group>(null)
-  const closedref = useRef(false)
-  const wasclosedref = useRef(true)
-  const edgeyref = useRef(0)
-  const onclosedref = useRef(onclosed)
-  onclosedref.current = onclosed
-  const offy = readoffscreeny(viewport.height, frombottom)
-
-  function finishclose() {
-    if (closedref.current) {
-      return
-    }
-    closedref.current = true
-    onclosedref.current()
-  }
-
-  // Seed off-screen only when opening (not when layout/edge changes mid-open).
-  useEffect(() => {
-    if (shouldclose) {
-      wasclosedref.current = true
-      closedref.current = false
-      // Exit along the edge for the layout at close time.
-      edgeyref.current = offy
-      return
-    }
-    if (wasclosedref.current && groupref.current) {
-      wasclosedref.current = false
-      edgeyref.current = offy
-      groupref.current.position.y = offy
-      groupref.current.userData.y = offy
-      groupref.current.userData.vy = 0
-    }
-  }, [shouldclose, offy])
-
-  // If damp never settles (or tab is backgrounded), do not leave UserFocus stuck.
-  useEffect(() => {
-    if (!shouldclose) {
-      return
-    }
-    const timer = setTimeout(finishclose, SLIDE_CLOSE_FAILSAFE_MS)
-    return () => clearTimeout(timer)
-  }, [shouldclose])
-
-  useFrame((_, delta) => {
-    if (!ispresent(groupref.current)) {
-      return
-    }
-    // Close uses the edge captured at open so direction stays stable.
-    const target = shouldclose ? edgeyref.current : 0
-    if (animpositiontotarget(groupref.current, 'y', target, delta)) {
-      if (shouldclose) {
-        finishclose()
-      }
-    }
-  })
-
-  return (
-    <group ref={groupref} position-y={offy}>
-      {children}
-    </group>
-  )
 }
 
 function readattachgeom(
@@ -184,6 +92,7 @@ export function WanixAttachPanel() {
     livegeom.top,
     livegeom.height,
     livegeom.cols,
+    livegeom.layout,
     panelactive,
   ])
 
@@ -228,7 +137,7 @@ export function WanixAttachPanel() {
           0,
         ]}
       >
-        <WanixAttachSlide
+        <PanelSlide
           shouldclose={shouldclose}
           frombottom={frombottom}
           onclosed={() => {
@@ -261,7 +170,7 @@ export function WanixAttachPanel() {
               {tiles}
             </UserFocus>
           )}
-        </WanixAttachSlide>
+        </PanelSlide>
       </group>
     </>
   )

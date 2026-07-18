@@ -37,9 +37,10 @@ export function animpositiontotarget(
     DRAW_CHAR_HEIGHT * 12,
     easing,
   )
-  object.position[axis] = animsnapy(object.userData[axis])
+  const snapfn = axis === 'x' ? animsnapx : animsnapy
+  object.position[axis] = snapfn(object.userData[axis])
 
   // signal completion
-  const step = target - object.position.y
+  const step = target - object.position[axis]
   return Math.abs(step) < 0.1
 }
