@@ -1,21 +1,17 @@
 import { registercontentcrosslogin } from 'zss/device/api'
-import { doasync } from 'zss/device/doasync'
 import { SOFTWARE } from 'zss/device/session'
 import {
   joinstatuslinkdead,
   joinstatusscroll,
 } from 'zss/feature/joinstatusscroll'
-import {
-  CONTENT_DESTINATION,
-  parsecontentdestination,
-} from 'zss/feature/url'
+import { CONTENT_DESTINATION, parsecontentdestination } from 'zss/feature/url'
 import { deepcopy } from 'zss/mapping/types'
 import { memoryreadflags } from 'zss/memory/flags'
 
-export async function runcontenturldestination(
+export function runcontenturldestination(
   player: string,
   dest: CONTENT_DESTINATION,
-): Promise<void> {
+): void {
   joinstatusscroll(player, 'loading content...', 'carrying flags')
   const flags = deepcopy(memoryreadflags(player)) as Record<string, unknown>
   registercontentcrosslogin(SOFTWARE, player, { url: dest.raw, flags })
@@ -31,9 +27,7 @@ export function memorytrycontentdestination(
     return false
   }
   joinstatusscroll(player, `loading bytes ${dest.key}...`)
-  doasync(SOFTWARE, player, async () => {
-    await runcontenturldestination(player, dest)
-  })
+  runcontenturldestination(player, dest)
   return true
 }
 

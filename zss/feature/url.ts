@@ -221,7 +221,7 @@ export async function resolvebytesdestination(
       return undefined
     }
     const html = await response.text()
-    const match = html.match(/location\s*=\s*['"]([^'"]+)['"]/i)
+    const match = /location\s*=\s*['"]([^'"]+)['"]/i.exec(html)
     const target = match?.[1]?.trim()
     if (!target) {
       return undefined

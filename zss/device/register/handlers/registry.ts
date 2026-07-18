@@ -17,6 +17,7 @@ import { handleeditorbookmarkscroll } from './bookmark/editorscroll'
 import { handlebookmarkscroll } from './bookmark/scroll'
 import { handlebookmarkurlnavigate } from './bookmark/urlnavigate'
 import { handlebookmarkurlsave } from './bookmark/urlsave'
+import { handlecontentcrosslogin } from './contentcrosslogin'
 import { handleeditorclose, handleeditoropen } from './editor'
 import {
   handlecopy,
@@ -27,7 +28,6 @@ import {
 } from './files'
 import { handleinput } from './input'
 import { handlefindany, handleinspector, handleperfmonitor } from './inspector'
-import { handlecontentcrosslogin } from './contentcrosslogin'
 import { handlejoincrosslogin } from './joincrosslogin'
 import {
   handleforkmem,
