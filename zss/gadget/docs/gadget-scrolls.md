@@ -2,7 +2,7 @@
 
 The right-hand **scroll** panel shows a titled list (`scrollname` + `scroll` rows). This page lists every major code path that fills it.
 
-**State:** [`zss/gadget/data/state.ts`](../data/state.ts) (`GADGET_STATE.scrollname`, `scroll`).
+**State:** [`zss/gadget/data/state.ts`](../data/zustandstores.ts) (`GADGET_STATE.scrollname`, `scroll`).
 
 **Ways content is built:**
 
@@ -98,7 +98,7 @@ Panel-only actions for editor bookmarks go through [`handledefault`](../../devic
 
 **Tape editor close:** On [`register.ts`](../../device/register.ts) `editor:close`, the UI clears local editor state and calls [`vmtapeeditorclose`](../../device/api.ts), which emits `vm:tapeeditorclose` into the sim worker. There is no dedicated row for that target in [`vmhandlers`](../../device/vm/handlers/registry.ts); it falls through [`handledefault`](../../device/vm/handlers/default.ts) like other unmatched VM subtargets.
 
-**`snapshotcurrent` and `useTape`:** The sim worker does not share the main-thread Zustand [`useTape`](../../gadget/data/state.ts) store. `editorbookmarkscroll:snapshotcurrent` is handled in [`handleeditorbookmarkscrollpanel`](../../device/vm/handlers/editorbookmarkscroll.ts): with a code page id in `message.data`, it loads the page via [`memoryreadcodepagebyid`](../../memory/codepages.ts) and calls [`registerbookmarkcodepagesave`](../../device/api.ts). [`registereditoropen`](../../device/api.ts) still runs before `register:editor:open` for editor UI state; closing the editor uses `editor:close` → `vmtapeeditorclose` as above.
+**`snapshotcurrent` and `useTape`:** The sim worker does not share the main-thread Zustand [`useTape`](../data/zustandstores.ts) store. `editorbookmarkscroll:snapshotcurrent` is handled in [`handleeditorbookmarkscrollpanel`](../../device/vm/handlers/editorbookmarkscroll.ts): with a code page id in `message.data`, it loads the page via [`memoryreadcodepagebyid`](../../memory/codepages.ts) and calls [`registerbookmarkcodepagesave`](../../device/api.ts). [`registereditoropen`](../../device/api.ts) still runs before `register:editor:open` for editor UI state; closing the editor uses `editor:close` → `vmtapeeditorclose` as above.
 
 ---
 

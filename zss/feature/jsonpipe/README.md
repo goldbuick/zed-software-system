@@ -41,8 +41,8 @@ Internally, pipes still use RFC 6902 `Operation[]` with **fast-json-patch** `com
 |------|------|
 | [`observe.ts`](observe.ts) | `filterpatch`, `createjsonpipe`, `JSON_PIPE_HANDLE<T>`, `Operation` |
 | [`wire.ts`](wire.ts) | `encodepatchwire`, `decodepatchwire`, `PATCH_WIRE_V2` |
-| [`__tests__/jsonpipe.test.ts`](__tests__/jsonpipe.test.ts) | Unit tests |
-| [`__tests__/wire.test.ts`](__tests__/wire.test.ts) | Wire codec tests |
+| [`../../../ops/tests/unit/feature/jsonpipe/jsonpipe.test.ts`](../../../ops/tests/unit/feature/jsonpipe/jsonpipe.test.ts) | Unit tests |
+| [`../../../ops/tests/unit/feature/jsonpipe/wire.test.ts`](../../../ops/tests/unit/feature/jsonpipe/wire.test.ts) | Wire codec tests |
 
 ## API
 

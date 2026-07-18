@@ -272,7 +272,7 @@ sequenceDiagram
 greenring, and VM `zedcafe-ready` all poll it.
 
 **Event-driven wait (perf fix):** After push, iframe posts
-[`wanixclient:exportready`](api.ts (wanix helpers)) `{ event: 'content-ready', taskrid }`.
+[`wanixclient:exportready`](../../device/api.ts) `{ event: 'content-ready', taskrid }`.
 Parent [`handlers/exportready.ts`](../../device/wanixclient/handlers/exportready.ts) continues the zedcafe pipeline on `wanixclient:exportready`.
 
 ---
@@ -311,7 +311,7 @@ flowchart LR
 | `wasi_snapshot_preview1` | `wasi` | WASI worker |
 
 For drops, driver is taken from **drop bytes** (not re-read from `#ramfs`) — large gojs
-binaries must use driver from drop bytes via [`wanixspawndriver.ts`](wanixspawndriver.ts).
+binaries must use driver from drop bytes via [`wanixspawndriver.ts`](../../device/wanixserver/spawndriver.ts).
 Re-read from `#ramfs` throws on failure; unknown wasm throws (no wasi default).
 
 ---
@@ -482,7 +482,7 @@ VM active → drop findplayers → fast JSON.
 | Trim | Owner | Effect |
 |------|-------|--------|
 | Skip redundant host push when already synced | [`wanixactivateexport.ts`](../../device/wanixclient/wanixactivateexport.ts) | Sim-fetched books already pushed by daemon |
-| Push onto applyroom mount | [`wanixzedcafe.ts`](wanixzedcafe.ts) `bootzedcafeexportinner` | Avoid `sync-zedcafe-halt` when mount already up |
+| Push onto applyroom mount | [`wanixzedcafe.ts`](../../device/wanixclient/wanixzedcafe.ts) `bootzedcafeexportinner` | Avoid `sync-zedcafe-halt` when mount already up |
 | Phase timing | [`wanixperf.ts`](wanixperf.ts) | `sinceanchor` + `elapsedms` on every mark |
 
 ---
@@ -707,9 +707,9 @@ Paths that **throw or fail loud** (no silent alternate behavior):
 | Failure | Owner | Behavior |
 |---------|--------|----------|
 | Unknown wasm driver | [`wanixwasmdriver.ts`](wanixwasmdriver.ts) | Throws — no default to wasi |
-| Missing `#ramfs` bytes at spawn | [`wanixspawndriver.ts`](wanixspawndriver.ts) | Throws |
-| Zedcafe daemon not ready | [`wanixzedcafe.ts`](wanixzedcafe.ts) `ensurewanixzedcafedaemon` | Throws — drop/activate aborts |
-| Export build from memory | [`readhostexportfilesfrommemory`](wanixzedcafe.ts) | `buildzedcafeexportfiles()` errors propagate |
+| Missing `#ramfs` bytes at spawn | [`wanixspawndriver.ts`](../../device/wanixserver/spawndriver.ts) | Throws |
+| Zedcafe daemon not ready | [`wanixzedcafe.ts`](../../device/wanixclient/wanixzedcafe.ts) `ensurewanixzedcafedaemon` | Throws — drop/activate aborts |
+| Export build from memory | [`readhostexportfilesfrommemory`](../../device/wanixclient/wanixzedcafe.ts) | `buildzedcafeexportfiles()` errors propagate |
 | Menu iframe timeout | [`wanixroom.ts`](../../device/wanixclient/wanixroom.ts) | `stalled: true`, `vm: null` — no invented VM |
 | Import poll error | `tickzedcafepoll` | `apilog` + `stopzedcafepoll()` |
 

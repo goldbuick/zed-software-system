@@ -130,7 +130,7 @@ Core hooks and state management utilities for tiles, dither, media, and device d
 ### Types
 - `DEVICE_DATA` - Type for device configuration state
 
-**File:** `data/state.ts`
+**File:** `data/zustandstores.ts`
 
 Tape and gadget client state management.
 
@@ -496,8 +496,8 @@ API for managing gadget state, panels, and hyperlinks.
 
 ### State Management
 - `initstate()` - Creates a new empty gadget state
-- `emptygadgetstate()` - Blank gadget snapshot used as paint/patch fallback ([`data/state.ts`](data/state.ts))
-- `applylayercacheupdate(layercachemap, board, layers)` - LRU layer cache update on gadget patch ([`data/state.ts`](data/state.ts))
+- `emptygadgetstate()` - Blank gadget snapshot used as paint/patch fallback ([`data/zustandstores.ts`](data/zustandstores.ts))
+- `applylayercacheupdate(layercachemap, board, layers)` - LRU layer cache update on gadget patch ([`data/zustandstores.ts`](data/zustandstores.ts))
 - `ismaybeblankgadgetstate(gadget)` - True when gadget is empty/void (skip flash on patch)
 - `gadgetstateprovider(provider)` - Sets the provider function for gadget state
 - `gadgetstate(element)` - Gets the gadget state for an element/player
@@ -538,7 +538,7 @@ Catalog of VM handlers, `refscroll:` routes, ROM keys, inspection flows, and beh
 
 ## Tape & Terminal State
 
-**File:** `data/state.ts`
+**File:** `data/zustandstores.ts`
 
 State management for tape display, terminal, editor, and inspector.
 

@@ -14,7 +14,7 @@ Shared pieces for the **terminal input line** and **code editor**: layout chrome
 
 ## Tests
 
-- [`__tests__/commandarghints.test.ts`](__tests__/commandarghints.test.ts) — `commandromhint` caching behavior.
+- [`../../../ops/tests/unit/screens/tape/commandarghints.test.ts`](../../../ops/tests/unit/screens/tape/commandarghints.test.ts) — `commandromhint` caching behavior.
 
 ## See also
 

@@ -21,8 +21,8 @@ Legacy Tone.js and Maximilian documentation paths refer to **archived** stacks u
 
 | Topic | File |
 | ----- | ---- |
-| [archive/tone/](../archive/tone/README.md) | Tone.js stack |
-| [archive/maxi/](../archive/maxi/README.md) | Maximilian WASM stack |
+| [archive/tone/](../../../../ops/archive/synth/tone/README.md) | Tone.js stack |
+| [archive/maxi/](../../../../ops/archive/synth/maxi/README.md) | Maximilian WASM stack |
 
 ## Quick Links (archived Tone.js detail)
 

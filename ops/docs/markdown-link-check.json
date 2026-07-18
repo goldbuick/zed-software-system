@@ -2,7 +2,9 @@
   "ignorePatterns": [
     { "pattern": "^(?!https?://)" },
     { "pattern": "^https://localhost" },
-    { "pattern": "^http://localhost" }
+    { "pattern": "^http://localhost" },
+    { "pattern": "^http://127\\.0\\.0\\.1" },
+    { "pattern": "^https?://([a-z0-9-]+\\.)*zed\\.cafe:8787" }
   ],
   "aliveStatusCodes": [200, 206, 403]
 }

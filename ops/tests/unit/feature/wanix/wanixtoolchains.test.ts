@@ -4,8 +4,11 @@ import {
   type WanixProbeResult,
   type WanixToolchainDeps,
 } from 'ops/lib/wanix/wanixtoolchains'
+import { existsSync } from 'node:fs'
+
 import {
   haswanixzedcafedirtyforward,
+  WANIX_WORKER_GO,
   WANIX_ZEDCAFE_DIRTY_FORWARD_MARKER,
 } from 'ops/lib/wanix/wanixsubmodule'
 
@@ -80,6 +83,11 @@ describe('wanixtoolchains', () => {
   })
 
   it('detects zedcafe dirty-forward marker in current wanix checkout', () => {
+    // PR CI checks out without submodules; build tasks still call
+    // requirewanixzedcafedirtyforward() when wanix.wasm is rebuilt.
+    if (!existsSync(WANIX_WORKER_GO)) {
+      return
+    }
     expect(haswanixzedcafedirtyforward()).toBe(true)
   })
 

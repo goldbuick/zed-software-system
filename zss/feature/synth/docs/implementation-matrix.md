@@ -20,8 +20,8 @@ flowchart LR
 ```
 
 - **DaisySP** (active): C++ under [`native/zss/`](../backend/daisy/native/zss/) + WASM API in [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp), [`daisyengine.ts`](../backend/daisy/daisyengine.ts)
-- **Maximilian** (archived): [`archive/maxi/`](../archive/maxi/) — generated play code, no longer selectable at runtime
-- **Tone** (archived): [`archive/tone/`](../archive/tone/) — parity ground truth; Daisy voice/FX Tone-gated, drums use Daisy-native fixtures
+- **Maximilian** (archived): [`archive/maxi/`](../../../../ops/archive/synth/maxi/) — generated play code, no longer selectable at runtime
+- **Tone** (archived): [`archive/tone/`](../../../../ops/archive/synth/tone/) — parity ground truth; Daisy voice/FX Tone-gated, drums use Daisy-native fixtures
 
 **DaisySP runtime usage:** `Oscillator`, `Adsr` (doot/sparkle/algo operators only), `Decimator`, `Overdrive`, `Svf`, `Phasor`, `DelayLine`, `Chorus`, `WhiteNoise`, `DcBlock`, `OnePole`, `Autowah`, `StringVoice` (`#synth pluck` strike), `ModalVoice` (bells), `Drip`, and (Daisy drums) `AnalogBassDrum`, `SyntheticBassDrum`. **`#synth env`** on play voices uses custom **`ZssLinearEnv`** (linear ADSR, note-on reset, behavioral Tone parity) — not DaisySP `Adsr`. **ADSR parity:** `yarn adsr-parity:test` (Jest `adsrenvcurve` + Playwright `env-parity:test`); wasmparity patches `env-adsr-sustain` / `env-adsr-retrigger` use `#play` notation `+hc` / `+icdeg` (see `.cursor/skills/play-notation/`). **`#synth string`** uses custom SOS ensemble DSP (saws + `Svf`/`OnePole`). **Voice FX bus:** **parallel sends** in `applyfxgroup()` (each FX from same dry; DAW additive mix); return-bus **compressor on wet sum** ([parallel-fx-bus.md](parallel-fx-bus.md)). **Main bus compressor:** Tone-shaped knee in `maincompressor()` (single 3/150 ms envelope). **Sidechain duck:** custom power-domain envelope on play bus (active). **`#reverb`** uses DaisySP-LGPL **ReverbSc** + predelay + `tanh(wet × kReverbPostGain)`.
 
@@ -29,7 +29,7 @@ flowchart LR
 
 ## Table 1 — Voice types (`SOURCE_TYPE`)
 
-Enum: [`shared/sourcetype.ts`](../shared/sourcetype.ts). Dispatch: `VoiceType` in [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp) (archived Maxi: [`archive/maxi/voiceplaycode.ts`](../archive/maxi/voiceplaycode.ts)).
+Enum: [`shared/sourcetype.ts`](../shared/sourcetype.ts). Dispatch: `VoiceType` in [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp) (archived Maxi: [`archive/maxi/voiceplaycode.ts`](../../../../ops/archive/synth/maxi/voiceplaycode.ts)).
 
 | ZSS name | Enum | Maxi (archived) | DaisySP WASM | Tone (archived) | Closest [DaisySP feature](https://github.com/electro-smith/DaisySP#-features) | Key files |
 |----------|------|------------|--------------|-----------------|-------------------------------------------------------------------------------|-----------|
@@ -112,7 +112,7 @@ flowchart LR
 
 ## Table 4 — Drums (12 IDs)
 
-**Daisy backend:** [DaisySP Drums](https://github.com/electro-smith/DaisySP/tree/master/Source/Drums/) where classes exist; unmatched IDs stay custom. **Maximilian** keeps Tone-parity kit in [`archive/maxi/drumplaycode.ts`](../archive/maxi/drumplaycode.ts).
+**Daisy backend:** [DaisySP Drums](https://github.com/electro-smith/DaisySP/tree/master/Source/Drums/) where classes exist; unmatched IDs stay custom. **Maximilian** keeps Tone-parity kit in [`archive/maxi/drumplaycode.ts`](../../../../ops/archive/synth/maxi/drumplaycode.ts).
 
 | ID | Drum | Maximilian | DaisySP WASM | Tone | DaisySP class | Swap status | Key files |
 |----|------|------------|--------------|------|---------------|-------------|-----------|
@@ -203,10 +203,10 @@ flowchart LR
 | Topic | Path |
 |-------|------|
 | Voice types | [`shared/sourcetype.ts`](../shared/sourcetype.ts), [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp) |
-| Archived Maxi voices | [`archive/maxi/voiceplaycode.ts`](../archive/maxi/voiceplaycode.ts) |
+| Archived Maxi voices | [`archive/maxi/voiceplaycode.ts`](../../../../ops/archive/synth/maxi/voiceplaycode.ts) |
 | Daisy FX | C++ FX modules in [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp), [`wasmfxstate.ts`](../backend/wasm/wasmfxstate.ts) |
 | Daisy master | C++ master chain in [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp) |
-| Archived Maxi drums | [`archive/maxi/drumplaycode.ts`](../archive/maxi/drumplaycode.ts) |
+| Archived Maxi drums | [`archive/maxi/drumplaycode.ts`](../../../../ops/archive/synth/maxi/drumplaycode.ts) |
 | Daisy DSP | [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp) |
 | Daisy build | [`build-daisy.sh`](../backend/daisy/native/build-daisy.sh) |
 | Backend factory | [`synthbackendfactory.ts`](../backend/synthbackendfactory.ts) |

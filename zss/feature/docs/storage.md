@@ -1,14 +1,14 @@
 # storage.ts
 
-**Purpose**: Domain storage API for config, history, content files, and variables. All IndexedDB access goes through [`durable.ts`](durable.ts).
+**Purpose**: Domain storage API for config, history, content files, and variables. All IndexedDB access goes through [`durable.ts`](../durable.ts).
 
 ## Layering
 
 | Module | Role |
 |--------|------|
-| [`durable.ts`](durable.ts) | Low-level KV (`durableget`, `durableset`, `durableupdate`, …) — only file that imports `idb-keyval` |
-| [`durablecli.ts`](durablecli.ts) | CLI/headless: hydrate/flush IDB ↔ `system.json` on disk (main thread only) |
-| [`loginstorage.ts`](loginstorage.ts) | `storagewritekey` routing + `sanitizeloginflags` (prevents config leaking into book flags) |
+| [`durable.ts`](../durable.ts) | Low-level KV (`durableget`, `durableset`, `durableupdate`, …) — only file that imports `idb-keyval` |
+| [`durablecli.ts`](../durablecli.ts) | CLI/headless: hydrate/flush IDB ↔ `system.json` on disk (main thread only) |
+| [`loginstorage.ts`](../loginstorage.ts) | `storagewritekey` routing + `sanitizeloginflags` (prevents config leaking into book flags) |
 | `storage.ts` | Domain helpers (`storagereadconfig`, `storagewritevar`, content URL/hash, ZNS, …) |
 
 ## Exports

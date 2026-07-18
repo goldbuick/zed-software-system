@@ -164,7 +164,7 @@ flowchart TB
 
 ### Chained comparisons
 
-The parser’s `comparison` rule repeats `comp_op` + `arith_expr`. The visitor’s [`comparison`](../backend/typescript/visitor.ts) lowers chains to **Python-style** semantics: `a < b < c` becomes `and(compare(a,b), compare(b,c))` (each compare uses its own operator). Single-operator comparisons still emit one `NODE.COMPARE`. Behavior is covered by [`comparisonchain.test.ts`](../backend/typescript/__tests__/comparisonchain.test.ts).
+The parser’s `comparison` rule repeats `comp_op` + `arith_expr`. The visitor’s [`comparison`](../backend/typescript/visitor.ts) lowers chains to **Python-style** semantics: `a < b < c` becomes `and(compare(a,b), compare(b,c))` (each compare uses its own operator). Single-operator comparisons still emit one `NODE.COMPARE`. Behavior is covered by [`comparisonchain.test.ts`](../../../../ops/tests/unit/feature/lang/backend/typescript/comparisonchain.test.ts).
 
 ## Error propagation
 
