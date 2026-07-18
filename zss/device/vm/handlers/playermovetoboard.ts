@@ -7,11 +7,17 @@ import {
   boardrunnerelect,
 } from 'zss/device/vm/boardrunnermanagement'
 import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
+import { debugingest } from 'zss/debugingest'
+import { normalizelayerzvariant } from 'zss/gadget/graphics/layerz'
 import { ispresent } from 'zss/mapping/types'
+import { memoryreadobject } from 'zss/memory/boardaccess'
+import { memoryreadbookgadgetlayersforboard } from 'zss/memory/gadgetlayersflags'
 import {
+  memorydebugcountplayerboards,
   memorymoveplayertoboard,
   memoryreadplayerboard,
 } from 'zss/memory/playermanagement'
+import { memoryreadgraphics } from 'zss/memory/rendering'
 import { memoryreadbookbysoftware } from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
 import type { PT } from 'zss/words/types'
@@ -24,12 +30,15 @@ export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
   ]
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const currentboard = memoryreadplayerboard(targetplayer)
+  const sourceboardid = currentboard?.id ?? ''
+  let moved = false
 
   // attempt to move the player to the destination board
   if (
     ispresent(currentboard) &&
     memorymoveplayertoboard(mainbook, targetplayer, targetboard, targetpt)
   ) {
+    moved = true
     // elect a new runner for the prior board
     if (!boardrunnerassignmentvalid(currentboard.id)) {
       // elect a new runner for the prior board
@@ -51,4 +60,35 @@ export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
 
   // push jsonpipe changes
   boardrunnerpushupdates(vm)
+
+  const scan = memorydebugcountplayerboards(targetplayer)
+  const destboard = memoryreadplayerboard(targetplayer)
+  const hostobj = memoryreadobject(destboard, targetplayer)
+  let destlayerstorepresent = false
+  if (moved && ispresent(destboard) && ispresent(mainbook)) {
+    const { graphics } = memoryreadgraphics(targetplayer, destboard)
+    const mode = normalizelayerzvariant(graphics.graphics)
+    const layerstore = memoryreadbookgadgetlayersforboard(
+      mainbook,
+      destboard.id,
+    )
+    destlayerstorepresent = ispresent(layerstore[mode])
+  }
+  debugingest(
+    'playermovetoboard.ts:handleplayermovetoboard',
+    'host after move push',
+    {
+      player: targetplayer,
+      sourceboardid,
+      destboardid: targetboard,
+      moved,
+      count: scan.count,
+      boardids: scan.boardids,
+      flagsboard: scan.flagsboard,
+      hostx: hostobj?.x ?? -1,
+      hosty: hostobj?.y ?? -1,
+      destlayerstorepresent,
+    },
+    'BC1',
+  )
 }

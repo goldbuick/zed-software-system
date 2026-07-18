@@ -52,6 +52,23 @@ function waitworkerconfigack(worker: Worker, label: string): Promise<void> {
   })
 }
 
+/** Forward worker debugingest payloads to the page console. */
+function attachworkerdebugforward(worker: Worker, label: string) {
+  worker.addEventListener('message', (event: MessageEvent) => {
+    if (event.data?.target !== 'debug') {
+      return
+    }
+    const payload = event.data.data
+    console.info(
+      `[debugingest ${label}]`,
+      payload?.hypothesisId,
+      payload?.location,
+      payload?.message,
+      payload?.data,
+    )
+  })
+}
+
 function ensureworkerbootdevice() {
   if (ispresent(workerbootdevice)) {
     return
@@ -112,6 +129,7 @@ export function createplatform(isstub = false, climode = false) {
   ensureworkerbootdevice()
 
   boardrunner = new boardrunnerspace({ name: 'boardrunner' })
+  attachworkerdebugforward(boardrunner, 'boardrunner')
   postworkercfg(boardrunner, { session: platformsession })
 
   void (async () => {
@@ -124,6 +142,7 @@ export function createplatform(isstub = false, climode = false) {
         joinvmdevice = startjoinvm(platformsession)
       } else {
         platform = new simspace({ name: 'sim' })
+        attachworkerdebugforward(platform, 'sim')
         postworkercfg(platform, { climode, session: platformsession })
       }
       postsessiontowanixiframe(platformsession)

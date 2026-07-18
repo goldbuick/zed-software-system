@@ -1,5 +1,6 @@
 import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { debugingest } from 'zss/debugingest'
 import { getclimode } from 'zss/feature/detect'
 import { unique } from 'zss/mapping/array'
 import { ispid } from 'zss/mapping/guid'
@@ -24,6 +25,7 @@ import { memoryreadboardbyaddress, memoryreadelementstat } from './boards'
 import { memoryupdateboardvisuals } from './boardvisuals'
 import {
   memoryclearbookflags,
+  memorylistcodepagebytype,
   memoryreadbookflag,
   memoryreadbookflags,
   memorywritebookflag,
@@ -45,6 +47,49 @@ import {
 } from './types'
 
 // Player Management Functions
+
+/** Read-only: boards where objects[player] exists (orphan evidence). */
+export function memorydebugcountplayerboards(player: string): {
+  count: number
+  boardids: string[]
+  flagsboard: string
+} {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const flagvalue = memoryreadbookflag(mainbook, player, 'board')
+  const flagsboard = isstring(flagvalue) ? flagvalue : ''
+  const boardids: string[] = []
+  const pages = memorylistcodepagebytype(mainbook, CODE_PAGE_TYPE.BOARD)
+  for (let i = 0; i < pages.length; ++i) {
+    const board = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(pages[i])
+    if (ispresent(board?.objects[player])) {
+      boardids.push(board.id)
+    }
+  }
+  return { count: boardids.length, boardids, flagsboard }
+}
+
+/** Remove player object from every board (optional keepboardid). */
+export function memorypurgeplayerboardcopies(
+  player: string,
+  keepboardid?: string,
+) {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const pages = memorylistcodepagebytype(mainbook, CODE_PAGE_TYPE.BOARD)
+  for (let i = 0; i < pages.length; ++i) {
+    const board = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(pages[i])
+    if (!ispresent(board) || board.id === keepboardid) {
+      continue
+    }
+    if (!ispresent(board.objects[player])) {
+      continue
+    }
+    memorydeleteboardobjectnamedlookup(
+      board,
+      memoryreadobject(board, player),
+    )
+    memorydeleteboardobject(board, player)
+  }
+}
 
 export function memorymoveplayertoboard(
   book: MAYBE<BOOK>,
@@ -118,6 +163,22 @@ export function memorymoveplayertoboard(
   memorywritebookflag(book, player, 'enterx', dest.x)
   memorywritebookflag(book, player, 'entery', dest.y)
   memorywritebookplayerboard(book, player, destboard.id)
+
+  const scan = memorydebugcountplayerboards(player)
+  debugingest(
+    'playermanagement.ts:memorymoveplayertoboard',
+    'player move board scan',
+    {
+      player,
+      sourceboardid: currentboard.id,
+      destboardid: destboard.id,
+      sourcestillhasobject: !!currentboard.objects[player],
+      count: scan.count,
+      boardids: scan.boardids,
+      flagsboard: scan.flagsboard,
+    },
+    'H1',
+  )
 
   // we did move
   return true
@@ -220,6 +281,20 @@ export function memoryloginplayer(
   if (ispresent(currentboard?.objects[player])) {
     const flags = memoryreadbookflags(mainbook, player)
     Object.assign(flags, stickyflags)
+    const scan = memorydebugcountplayerboards(player)
+    debugingest(
+      'playermanagement.ts:memoryloginplayer',
+      'player login reattach',
+      {
+        player,
+        placedboardid: currentboard.id,
+        creatednew: false,
+        count: scan.count,
+        boardids: scan.boardids,
+        flagsboard: scan.flagsboard,
+      },
+      'H4',
+    )
     return true
   }
 
@@ -295,6 +370,20 @@ export function memoryloginplayer(
 
     // track current board
     memorywritebookplayerboard(mainbook, player, currentboard.id)
+    const scan = memorydebugcountplayerboards(player)
+    debugingest(
+      'playermanagement.ts:memoryloginplayer',
+      'player login created',
+      {
+        player,
+        placedboardid: currentboard.id,
+        creatednew: true,
+        count: scan.count,
+        boardids: scan.boardids,
+        flagsboard: scan.flagsboard,
+      },
+      'H4',
+    )
     return true
   }
 
@@ -315,8 +404,13 @@ export function memorylogoutplayer(player: string) {
       removelist.push(mayberemove)
     }
   }
+  // Always process this pid even when activelist / flags.board are already empty
+  if (!removelist.includes(player)) {
+    removelist.push(player)
+  }
 
   const board = memoryreadplayerboard(player)
+  const flagsboardbefore = board?.id ?? ''
   for (let i = 0; i < removelist.length; ++i) {
     const remove = removelist[i]
 
@@ -335,9 +429,8 @@ export function memorylogoutplayer(player: string) {
     // clear from active list
     memorywritebookplayerboard(mainbook, remove, '')
 
-    // clear element
-    memorydeleteboardobjectnamedlookup(board, memoryreadobject(board, remove))
-    memorydeleteboardobject(board, remove)
+    // clear every board copy (not only flags.board)
+    memorypurgeplayerboardcopies(remove)
 
     // halt chip
     memoryhaltchip(remove)
@@ -349,6 +442,20 @@ export function memorylogoutplayer(player: string) {
     const newflags = memoryreadbookflags(mainbook, remove)
     Object.assign(newflags, saveflags)
   }
+
+  const scan = memorydebugcountplayerboards(player)
+  debugingest(
+    'playermanagement.ts:memorylogoutplayer',
+    'player logout board scan',
+    {
+      player,
+      flagsboardbefore,
+      count: scan.count,
+      boardids: scan.boardids,
+      flagsboard: scan.flagsboard,
+    },
+    'H2',
+  )
 }
 
 export function memoryscanplayers(players: Record<string, number>) {
@@ -377,6 +484,20 @@ export function memoryscanplayers(players: Record<string, number>) {
         // ensure tracking
         if (!ispresent(players[objectid])) {
           players[objectid] = 0
+        }
+        const scan = memorydebugcountplayerboards(objectid)
+        if (scan.count > 1) {
+          debugingest(
+            'playermanagement.ts:memoryscanplayers',
+            'player on multiple boards',
+            {
+              player: objectid,
+              count: scan.count,
+              boardids: scan.boardids,
+              flagsboard: scan.flagsboard,
+            },
+            'H1',
+          )
         }
       }
     }
