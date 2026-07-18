@@ -14,7 +14,11 @@ import {
   wanixperfmark,
   wanixperfnow,
 } from 'zss/feature/wanix/wanixperf'
-import { WANIX_ZEDCAFE_EXPORT_COALESCE_MS } from 'zss/feature/wanix/wanixzedcafeconstants'
+import {
+  WANIX_ZEDCAFE_EXPORT_COALESCE_MS,
+  WANIX_ZEDCAFE_EXPORT_COALESCE_SINGLE_MS,
+  WANIX_ZEDCAFE_EXPORT_COALESCE_TERRAIN_MS,
+} from 'zss/feature/wanix/wanixzedcafeconstants'
 import {
   assertzedcafeexportvalid,
   readzedcafebookprefix,
@@ -49,6 +53,8 @@ let exportinflight = false
 let exportdirtygen = 0
 /** Generation last successfully synced to guest. */
 let exportackgen = 0
+/** Monotonic counter surfaced as `stats.json` `exportRevision`; bumps on push ack. */
+let exportrevision = 0
 /** When true, next flush rebuilds the full path document from memory. */
 let structuraldirty = true
 /** Narrow dirty export paths (when structuraldirty is false). */
@@ -67,6 +73,17 @@ function encodejson(value: unknown): Uint8Array {
 
 function bumpdirtygen() {
   exportdirtygen += 1
+}
+
+/** Advance the export revision counter (called on each acknowledged push). */
+export function bumpexportrevision(): number {
+  exportrevision += 1
+  return exportrevision
+}
+
+/** Current export revision, surfaced in `stats.json` as `exportRevision`. */
+export function readexportrevision(): number {
+  return exportrevision
 }
 
 /** Decode RFC 6902 JSON Pointer into path segments (`~1` → `/`, `~0` → `~`). */
@@ -137,6 +154,7 @@ export function zedcafeexportdoctofiles(
           ? {
               ...(value as Record<string, unknown>),
               exportedAt: new Date().toISOString(),
+              exportRevision: readexportrevision(),
             }
           : value,
       ),
@@ -199,6 +217,7 @@ export function zedcafeexportdocsdiffer(
 export function buildzedcafestats(books: BOOK[]) {
   return {
     exportedAt: new Date().toISOString(),
+    exportRevision: readexportrevision(),
     bookCount: books.length,
     books: books.map((book) => ({
       id: book.id,
@@ -597,6 +616,7 @@ export function markzedcafeexportfromboundaryops(
 
 /** Advance ack generation after iframe sync success for an in-flight build. */
 export function acknowledgezedcafeexportpush() {
+  bumpexportrevision()
   if (inflightbuildgen > 0) {
     exportackgen = inflightbuildgen
     inflightbuildgen = 0
@@ -608,7 +628,27 @@ export function acknowledgezedcafeexportpush() {
 }
 
 /**
- * End of tick: O(1) gate, 500 ms coalesce, path-doc compare, encode changed only.
+ * Tiered coalesce window: a single dirty path flushes immediately, terrain-only
+ * dirty (any count) gets a short window, everything else (structural rebuild)
+ * keeps the wider structural window.
+ */
+function readzedcafeexportcoalescems(): number {
+  if (structuraldirty || dirtypaths.size === 0) {
+    return WANIX_ZEDCAFE_EXPORT_COALESCE_MS
+  }
+  if (dirtypaths.size === 1) {
+    return WANIX_ZEDCAFE_EXPORT_COALESCE_SINGLE_MS
+  }
+  for (const path of dirtypaths) {
+    if (!path.endsWith('/board/terrain.json')) {
+      return WANIX_ZEDCAFE_EXPORT_COALESCE_MS
+    }
+  }
+  return WANIX_ZEDCAFE_EXPORT_COALESCE_TERRAIN_MS
+}
+
+/**
+ * End of tick: O(1) gate, tiered coalesce, path-doc compare, encode changed only.
  */
 export function checkzedcafeexportontick(device: DEVICELIKE) {
   if (!readzedcafepollactive() || exportinflight) {
@@ -628,7 +668,8 @@ export function checkzedcafeexportontick(device: DEVICELIKE) {
     return
   }
   const now = wanixperfnow()
-  if (lastflushms > 0 && now - lastflushms < WANIX_ZEDCAFE_EXPORT_COALESCE_MS) {
+  const coalescems = readzedcafeexportcoalescems()
+  if (lastflushms > 0 && now - lastflushms < coalescems) {
     return
   }
 
@@ -687,6 +728,9 @@ export function checkzedcafeexportontick(device: DEVICELIKE) {
   inflightbuildgen = buildgen
   lastflushms = now
   const player = memoryreadoperator()
+  // partial: true here lets pushzedcafesynctoiframe take its guesttree-clean
+  // fast path (skip the guest tree read/diff round trip) when the guest
+  // hasn't written anything since the last sync — see pushzedcafesynctoiframe.
   void import('zss/device/wanixclient/wanixzedcafe')
     .then(({ pushzedcafesynctoiframe }) =>
       pushzedcafesynctoiframe(device, player, subset, {
@@ -704,6 +748,7 @@ export function resetwanixstateexportfortest() {
   exportinflight = false
   exportdirtygen = 0
   exportackgen = 0
+  exportrevision = 0
   structuraldirty = true
   dirtypaths.clear()
   lastflushms = 0

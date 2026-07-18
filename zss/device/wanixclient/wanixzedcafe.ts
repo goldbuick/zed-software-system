@@ -17,6 +17,8 @@ import {
   bumpzedcafeguestdirtygen,
   clearlasthostpushdoc,
   clearwanixzedcafependingexport as clearpendingexportstate,
+  drainpendingdirtypaths,
+  markpendingdirtypaths,
   markwanixzedcafependingexport as markpendingexportstate,
   readlasthostpushdoc,
   readwanixzedcafependingexport as readpendingexportstate,
@@ -42,6 +44,7 @@ import {
   setzedcafepollactive,
 } from 'zss/device/wanixclient/state'
 import { readwanixroomconfig } from 'zss/device/wanixclient/wanixroom'
+import { iszedsyncreadywaitpending } from 'zss/device/wanixclient/wanixzedsync'
 import {
   wanixperfdelta,
   wanixperfmark,
@@ -92,6 +95,12 @@ function guestfilestoexport(
   return out
 }
 
+/**
+ * These bytes travel to the wanix iframe via device.emit -> BroadcastChannel,
+ * which always structured-clones (no transfer list) — see
+ * zss/feature/wanix/wanixzedcafetransfer.ts for a transferable-ArrayBuffer
+ * helper that only applies on a direct Window/Worker postMessage call.
+ */
 export function exportfilestoguestfiles(
   files: WANIX_ZED_CAFE_EXPORT_FILE[],
 ): WanixZedCafeGuestFile[] {
@@ -238,11 +247,38 @@ export function fingerprintzedcafeexportfiles(
   return (hash >>> 0).toString(16)
 }
 
-function guestdiffersfromlastpush(tree: WANIX_ZED_CAFE_EXPORT_FILE[]): boolean {
-  return zedcafeexportdocsdiffer(
-    readlasthostpushdoc(),
-    zedcafeexportfilestodoc(tree),
-  )
+/**
+ * Path-scoped compare: when the caller knows exactly which export paths the
+ * Go dirty tracker reported changed, restrict the compare() to those paths
+ * (+ stats.json) instead of the full document. Falls back to a full compare
+ * when there is no shadow yet or no scoped paths (e.g. first poll).
+ */
+function guestdiffersfromlastpush(
+  tree: WANIX_ZED_CAFE_EXPORT_FILE[],
+  scopepaths?: string[],
+): boolean {
+  const shadow = readlasthostpushdoc()
+  const guestdoc = zedcafeexportfilestodoc(tree)
+  if (
+    !scopepaths ||
+    scopepaths.length === 0 ||
+    Object.keys(shadow).length === 0
+  ) {
+    return zedcafeexportdocsdiffer(shadow, guestdoc)
+  }
+  const scopekeys = new Set(scopepaths)
+  scopekeys.add('stats.json')
+  const scopedshadow: Record<string, unknown> = {}
+  const scopedguest: Record<string, unknown> = {}
+  for (const key of scopekeys) {
+    if (key in shadow) {
+      scopedshadow[key] = shadow[key]
+    }
+    if (key in guestdoc) {
+      scopedguest[key] = guestdoc[key]
+    }
+  }
+  return zedcafeexportdocsdiffer(scopedshadow, scopedguest)
 }
 
 export function markwanixzedcafependingexport() {
@@ -477,8 +513,15 @@ async function continuepushafterguesttree(
   }
   let removepaths = options?.removepaths ?? []
   // Serialize removes vs live remote→zedcafe writers (zedsync): never prune
-  // orphans while guest-dirty, and skip orphan sweep on fromimport (upsert first).
-  if (!options?.partial && !options?.fromimport && !readzedcafeguestdirty()) {
+  // orphans while guest-dirty, while a zedsync seed is still writing into the
+  // zedcafe export mount (iszedsyncreadywaitpending), or on fromimport
+  // (upsert first).
+  if (
+    !options?.partial &&
+    !options?.fromimport &&
+    !readzedcafeguestdirty() &&
+    !iszedsyncreadywaitpending()
+  ) {
     const orphans = readorphanremovepaths(guesttree, files)
     if (orphans.length > 0) {
       removepaths = [...new Set([...removepaths, ...orphans])]
@@ -864,9 +907,12 @@ function tickzedcafepoll() {
 }
 
 /** One-shot import poll tick (e.g. after guest-writer task session close). */
-export function kickzedcafepoll(reason = 'manual'): void {
+export function kickzedcafepoll(reason = 'manual', paths?: string[]): void {
   if (reason === 'file-change') {
     bumpzedcafeguestdirtygen()
+    if (paths && paths.length > 0) {
+      markpendingdirtypaths(paths)
+    }
   }
   tracezedcafeexport(`poll-kick reason=${reason}`)
   tickzedcafepoll()
@@ -877,7 +923,11 @@ async function continuepollaftertree(
   player: string,
   tree: WANIX_ZED_CAFE_EXPORT_FILE[],
 ): Promise<void> {
-  const differs = guestdiffersfromlastpush(tree)
+  const scopepaths = drainpendingdirtypaths()
+  if (scopepaths.length > 0) {
+    wanixperfmark('export-import-paths', { count: scopepaths.length })
+  }
+  const differs = guestdiffersfromlastpush(tree, scopepaths)
   tracezedcafeexport(`poll-guest-diff=${differs}`)
   if (!differs) {
     return

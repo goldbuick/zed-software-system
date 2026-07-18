@@ -3,6 +3,8 @@
 package main
 
 import (
+	"sort"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -25,7 +27,7 @@ func waitfornotify(t *testing.T, count *atomic.Int32, want int32) {
 func TestExportDirtyCoalescesWrites(t *testing.T) {
 	cleardirtytimerfortest()
 	var count atomic.Int32
-	setdirtynotify(func() {
+	setdirtynotify(func(paths []string) {
 		count.Add(1)
 	})
 	t.Cleanup(func() {
@@ -60,10 +62,64 @@ func TestExportDirtyCoalescesWrites(t *testing.T) {
 	}
 }
 
+func TestExportDirtyCoalescesPaths(t *testing.T) {
+	cleardirtytimerfortest()
+	var mu sync.Mutex
+	var notified [][]string
+	setdirtynotify(func(paths []string) {
+		mu.Lock()
+		defer mu.Unlock()
+		notified = append(notified, paths)
+	})
+	t.Cleanup(func() {
+		cleardirtytimerfortest()
+		setdirtynotify(nil)
+	})
+
+	exportfs := NewEmptyExport()
+	if err := fs.WriteFile(exportfs, "stats.json", []byte("{}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := fs.WriteFile(exportfs, "book1/stats.json", []byte("{}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := fs.WriteFile(exportfs, "stats.json", []byte(`{"n":1}`+"\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	deadline := time.Now().Add(exportdirtydebounce + 200*time.Millisecond)
+	for time.Now().Before(deadline) {
+		mu.Lock()
+		got := len(notified)
+		mu.Unlock()
+		if got >= 1 {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	mu.Lock()
+	defer mu.Unlock()
+	if len(notified) != 1 {
+		t.Fatalf("expected coalesced single notify, got %d", len(notified))
+	}
+	paths := append([]string{}, notified[0]...)
+	sort.Strings(paths)
+	expected := []string{"book1/stats.json", "stats.json"}
+	if len(paths) != len(expected) {
+		t.Fatalf("expected paths %v, got %v", expected, paths)
+	}
+	for i := range expected {
+		if paths[i] != expected[i] {
+			t.Fatalf("expected paths %v, got %v", expected, paths)
+		}
+	}
+}
+
 func TestExportDirtyRejectDoesNotNotify(t *testing.T) {
 	cleardirtytimerfortest()
 	var count atomic.Int32
-	setdirtynotify(func() {
+	setdirtynotify(func(paths []string) {
 		count.Add(1)
 	})
 	t.Cleanup(func() {
@@ -85,7 +141,7 @@ func TestExportDirtyRejectDoesNotNotify(t *testing.T) {
 func TestExportDirtyRemoveNotifies(t *testing.T) {
 	cleardirtytimerfortest()
 	var count atomic.Int32
-	setdirtynotify(func() {
+	setdirtynotify(func(paths []string) {
 		count.Add(1)
 	})
 	t.Cleanup(func() {

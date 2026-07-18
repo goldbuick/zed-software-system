@@ -45,7 +45,10 @@ export type WanixTaskElement = HTMLElement & {
   role: string | null
   cmd: string | null
   term: string | null
+  /** Kernel/system root (WanixElement) — not the task namespace. */
   root: WanixRoot
+  /** Task namespace handle (`openHandle(rid)`). Linux virtfs / guest binds use this. */
+  taskRoot: WanixRoot
   allocate: (bindElements?: NodeListOf<Element> | null) => Promise<void>
   start: () => Promise<void>
 }

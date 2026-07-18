@@ -143,6 +143,31 @@ function listpeerfiles(rootdir: string, limit = 40): string[] {
   return out
 }
 
+function findtimelinems(
+  timeline: ZedcafeTimelineEntry[],
+  label: string,
+): number | undefined {
+  return timeline.find((entry) => entry.label === label)?.ms
+}
+
+// Derived latency marks from the record() timeline -- seed latency is
+// zedsync-sent -> zedsync-ready, restore latency is peer-deleted ->
+// peer-restored. undefined when either endpoint was not recorded (e.g. an
+// earlier gate failure).
+function latencymarks(
+  timeline: ZedcafeTimelineEntry[],
+): Record<string, number | undefined> {
+  const sent = findtimelinems(timeline, 'zedsync-sent')
+  const ready = findtimelinems(timeline, 'zedsync-ready')
+  const deleted = findtimelinems(timeline, 'peer-deleted')
+  const restored = findtimelinems(timeline, 'peer-restored')
+  return {
+    seedlatencyms: sent != null && ready != null ? ready - sent : undefined,
+    restorelatencyms:
+      deleted != null && restored != null ? restored - deleted : undefined,
+  }
+}
+
 function finddeleterestoretarget(rootdir: string): string | null {
   const files = listpeerfiles(rootdir, 200)
   for (let i = 0; i < files.length; i++) {
@@ -319,6 +344,7 @@ const validatezedsyncremote: HeadedPlaywrightScript = async ({
       consolelines.push(`[nativelog] ${nativelogs[i]}`)
     }
 
+    const latency = latencymarks(timeline)
     console.log(
       JSON.stringify(
         {
@@ -327,6 +353,7 @@ const validatezedsyncremote: HeadedPlaywrightScript = async ({
           peerroot,
           peerfilecount: listpeerfiles(peerroot).length,
           restored: rel,
+          latency,
           timeline,
           reportpath: REPORT_PATH,
         },
@@ -341,6 +368,7 @@ const validatezedsyncremote: HeadedPlaywrightScript = async ({
           ok: true,
           wssurl,
           peerroot,
+          latency,
           timeline,
           perf: collectwanixperf(consolelines, start),
         },

@@ -66,7 +66,7 @@ describe('wireallguestroots', () => {
     const vm = document.createElement('wanix-vm') as WanixVmElement
     sys.root = sysroot
     ;(vm as WanixVmElement).task = {
-      root: vmroot,
+      taskRoot: vmroot,
     } as WanixVmElement['task']
     sys.appendChild(vm)
     document.body.appendChild(sys)
@@ -80,7 +80,7 @@ describe('wireallguestroots', () => {
     expect(vmroot.bindcalls).toEqual([[src, WANIX_ZEDCAFE_GUEST_MOUNT]])
   })
 
-  it('waits for late vm.task.root then binds', async () => {
+  it('waits for late vm.task.taskRoot then binds', async () => {
     const sysroot = mockroot()
     const vmroot = mockroot()
     const sys = document.createElement('wanix-namespace') as WanixSystemElement
@@ -93,7 +93,7 @@ describe('wireallguestroots', () => {
 
     setTimeout(() => {
       ;(vm as WanixVmElement).task = {
-        root: vmroot,
+        taskRoot: vmroot,
       } as WanixVmElement['task']
     }, 50)
 
@@ -103,5 +103,25 @@ describe('wireallguestroots', () => {
     expect(count).toBe(2)
     expect(sysroot.bindcalls).toEqual([[src, WANIX_ZEDCAFE_GUEST_MOUNT]])
     expect(vmroot.bindcalls).toEqual([[src, WANIX_ZEDCAFE_GUEST_MOUNT]])
+  })
+
+  it('does not treat task.root (kernel) as the vm guest namespace', async () => {
+    const sysroot = mockroot()
+    const kerneldup = mockroot()
+    const sys = document.createElement('wanix-namespace') as WanixSystemElement
+    const vm = document.createElement('wanix-vm') as WanixVmElement
+    sys.root = sysroot
+    ;(vm as WanixVmElement).task = {
+      rid: 'already-allocated',
+      root: kerneldup,
+    } as WanixVmElement['task']
+    sys.appendChild(vm)
+    document.body.appendChild(sys)
+
+    const count = await wireallguestroots(sys, 'task-kernel-only')
+
+    expect(count).toBe(1)
+    expect(kerneldup.bindcalls).toEqual([])
+    expect(sysroot.bindcalls).toHaveLength(1)
   })
 })

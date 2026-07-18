@@ -2,4 +2,4 @@
 
 package main
 
-func defaultdirtynotify() {}
+func defaultdirtynotify(paths []string) {}

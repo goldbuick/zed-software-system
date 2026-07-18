@@ -16,6 +16,20 @@ export function postwanixexportmessage(
   })
 }
 
-export function postzedcafefilechangemessage(taskrid?: string) {
-  wanixclientzedcafefilechange(SOFTWARE, '', taskrid ? { taskrid } : undefined)
+export function postzedcafefilechangemessage(
+  taskrid?: string,
+  paths?: string[],
+) {
+  const payload: { taskrid?: string; paths?: string[] } = {}
+  if (taskrid) {
+    payload.taskrid = taskrid
+  }
+  if (paths && paths.length > 0) {
+    payload.paths = paths
+  }
+  wanixclientzedcafefilechange(
+    SOFTWARE,
+    '',
+    Object.keys(payload).length > 0 ? payload : undefined,
+  )
 }

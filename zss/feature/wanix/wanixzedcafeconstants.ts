@@ -23,12 +23,20 @@ export const WANIX_VM_ZEDCAFE_EXPORT_FETCH_MS = 10_000
 export const WANIX_VM_ZEDCAFE_IMPORT_MS = 10_000
 export const WANIX_ZEDCAFE_EXPORT_WAIT_MS = 90_000
 export const WANIX_ZEDCAFE_EXPORT_READY_POLL_MS = 250
-/** Coalesce sim→zedcafe export checks (terrain mutations collapse within this window). */
+/** Coalesce sim→zedcafe export checks for structural (non-terrain) changes. */
 export const WANIX_ZEDCAFE_EXPORT_COALESCE_MS = 500
+/** Narrower coalesce for terrain-only dirty (single board `terrain.json` path). */
+export const WANIX_ZEDCAFE_EXPORT_COALESCE_TERRAIN_MS = 75
+/** Immediate flush when exactly one dirty path is pending (no coalesce wait). */
+export const WANIX_ZEDCAFE_EXPORT_COALESCE_SINGLE_MS = 0
 /** Host + guest wait for content-ready stats.json. */
 export const WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS = 600_000
 /** Parent wait for `<target>/.zedsync-ready` after seeding a large peer tree. */
 export const WANIX_ZEDSYNC_READY_TIMEOUT_MS = 900_000
+/** Meta dir under the zedcafe export root for zedsync revision hints (peer-visible). */
+export const WANIX_ZEDSYNC_REVISION_DIR = '.zedsync'
+/** Revision hint written after each successful host push: `{ revision, paths }`. */
+export const WANIX_ZEDSYNC_REVISION_FILE = '.zedsync/revision'
 
 export function readwanixzedcafeexportsrc(taskrid: string): string {
   return `#task/${taskrid}/export`

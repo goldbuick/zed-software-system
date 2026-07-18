@@ -61,6 +61,8 @@ export type APPLY_ZEDCAFE_PARTIAL_RESULT = {
   changed: boolean
   paintids: string[]
   bookcount: number
+  changedpaths: string[]
+  skippedpaths: string[]
 }
 
 const decoder = new TextDecoder()
@@ -779,6 +781,8 @@ export function applyzedcafepartialtomemory(
 ): APPLY_ZEDCAFE_PARTIAL_RESULT {
   let changed = false
   const paintids = new Set<string>()
+  const changedpaths: string[] = []
+  const skippedpaths: string[] = []
   const sortedfiles = [...files].sort(
     (a, b) =>
       pathpriority(a.path) - pathpriority(b.path) ||
@@ -788,20 +792,29 @@ export function applyzedcafepartialtomemory(
     const file = sortedfiles[i]
     if (applypartialupsertpath(file.path, file.bytes, paintids)) {
       changed = true
+      changedpaths.push(file.path)
+    } else {
+      skippedpaths.push(file.path)
     }
   }
   const sortedremoves = [...removepaths].sort(
     (a, b) => pathpriority(b) - pathpriority(a) || a.localeCompare(b),
   )
   for (let i = 0; i < sortedremoves.length; ++i) {
-    if (applypartialremovepath(sortedremoves[i], paintids)) {
+    const path = sortedremoves[i]
+    if (applypartialremovepath(path, paintids)) {
       changed = true
+      changedpaths.push(path)
+    } else {
+      skippedpaths.push(path)
     }
   }
   return {
     changed,
     paintids: [...paintids],
     bookcount: memoryreadbooklist().length,
+    changedpaths,
+    skippedpaths,
   }
 }
 

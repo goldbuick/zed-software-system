@@ -3,6 +3,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -53,6 +54,14 @@ func main() {
 	}
 	fmt.Printf("zedsync: target dir ready: %s\n", target)
 
+	replaylogs, err := zedsync.ReplayIncompleteJournal(target, zedroot)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "zedsync: replay journal: %v\n", err)
+	}
+	for _, line := range replaylogs {
+		fmt.Printf("zedsync: %s\n", line)
+	}
+
 	r, err := zedsync.WalkFiles(target)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "zedsync: walk remote: %v\n", err)
@@ -92,6 +101,15 @@ func main() {
 	}
 	fmt.Println("zedsync: seed complete; watching")
 
+	// Prefer incremental ticks keyed off the host's revision file (see
+	// SteadyTickIncremental); start from whatever revision is on disk so a
+	// push that landed during seed is not resynced as a full walk.
+	lastrev, _, rerr := zedsync.ReadRevision(zedroot)
+	if rerr != nil {
+		fmt.Fprintf(os.Stderr, "zedsync: read initial revision: %v\n", rerr)
+		lastrev = 0
+	}
+
 	sigc := make(chan os.Signal, 1)
 	signal.Notify(sigc, syscall.SIGINT, syscall.SIGTERM)
 
@@ -103,14 +121,29 @@ func main() {
 		case <-sigc:
 			return
 		case <-ticker.C:
-			next, logs, err := zedsync.SteadyTick(target, zedroot, baseline)
+			next, logs, newrev, err := zedsync.SteadyTickIncremental(target, zedroot, baseline, lastrev)
+			if errors.Is(err, zedsync.ErrZedsyncNeedFullTick) {
+				next, logs, err = zedsync.SteadyTick(target, zedroot, baseline)
+				newrev = lastrev
+				if rev, _, rrerr := zedsync.ReadRevision(zedroot); rrerr == nil {
+					newrev = rev
+				}
+			}
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "zedsync: tick: %v\n", err)
 				continue
 			}
 			baseline = next
+			lastrev = newrev
+			importkicks := 0
 			for _, line := range logs {
 				fmt.Printf("zedsync: %s\n", line)
+				if strings.Contains(line, "zedcafe \u2190") {
+					importkicks++
+				}
+			}
+			if importkicks > 0 {
+				fmt.Printf("zedsync: import-kick paths=%d\n", importkicks)
 			}
 			// Adaptive poll: 500ms after changes, back off to 4s idle.
 			nextinterval := interval

@@ -134,7 +134,7 @@ const DEFAULT_VM_MEM = '512M'
 // syscall/js runtime corrupts under load (upstream tractordev/wanix#171),
 // crashing the guest during heavy terminal I/O. Point <wanix-namespace> at a
 // full-Go build served from cafe/public so the loader uses the stable Go glue.
-const WANIX_WASM_URL = '/wanix/wanix.wasm?v=a129924'
+const WANIX_WASM_URL = '/wanix/wanix.wasm?v=closefd-unlock-20260718'
 const ROOM_READY_TIMEOUT_MS = 180_000
 const BIND_MOUNT_TIMEOUT_MS = 120_000
 const REMOTE_MOUNT_TIMEOUT_MS = 60_000

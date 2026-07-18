@@ -1,130 +1,95 @@
 diff --git a/gojs/export.go b/gojs/export.go
-index 233a3b7..e30bb6a 100644
+index e30bb6a..ee23658 100644
 --- a/gojs/export.go
 +++ b/gojs/export.go
-@@ -30,6 +30,8 @@ func Export(fsys fs.FS, debug bool) error {
+@@ -6,6 +6,7 @@ import (
+ 	"log"
+ 	"os"
+ 	"syscall/js"
++	"time"
+ 
+ 	"github.com/hugelgupf/p9/p9"
+ 	"tractor.dev/wanix/fs"
+@@ -15,6 +16,8 @@ import (
+ 
+ func Export(fsys fs.FS, debug bool) error {
+ 	msgch := js.Global().Get("MessageChannel").New()
++	// Hand port2 to the parent first so it can attach an onmessage ready
++	// listener before we signal. Parent must NOT ClientFS until it sees "!".
+ 	js.Global().Get("self").Call("postMessage", map[string]any{
+ 		"export": msgch.Get("port2"),
+ 	}, []any{msgch.Get("port2")})
+@@ -30,8 +33,10 @@ func Export(fsys fs.FS, debug bool) error {
  			log.Fatal(err)
  		}
  	}()
--	msgch.Get("port1").Call("postMessage", "!") // signal to worker that export is ready
-+	// Do not post a "!" handshake. The parent mounts the export port as soon as
-+	// it receives this MessageChannel; a string "!" would corrupt the p9 stream
-+	// if the parent already attached NewPortReadWriter.
+-	// Do not post a "!" handshake. The parent mounts the export port as soon as
+-	// it receives this MessageChannel; a string "!" would corrupt the p9 stream
+-	// if the parent already attached NewPortReadWriter.
++	// Yield so Handle is parked on Read before the ready signal. The string
++	// "!" is consumed by the parent's temporary onmessage handler and never
++	// enters the 9P stream (PortReadWriter is attached only after "!").
++	time.Sleep(50 * time.Millisecond)
++	msgch.Get("port1").Call("postMessage", "!")
  	return nil
  }
 diff --git a/web/worker/worker.go b/web/worker/worker.go
-index 16b2a43..58e376e 100644
+index 942a967..4ccb28c 100644
 --- a/web/worker/worker.go
 +++ b/web/worker/worker.go
-@@ -84,48 +84,72 @@ func (r *Resource) Start(args ...string) error {
- 	p9 := sys.Element().Call("_open9P", r.task.ID())
+@@ -8,6 +8,7 @@ import (
+ 	"path"
+ 	"strconv"
+ 	"strings"
++	"sync"
+ 	"syscall/js"
  
- 	r.worker.Call("addEventListener", "message", js.FuncOf(func(this js.Value, args []js.Value) any {
--		go func() {
--			// all we handle are ns exports for now
--			exportPort := args[0].Get("data").Get("export")
--			if exportPort.IsUndefined() {
-+		data := args[0].Get("data")
-+		if data.IsUndefined() || data.IsNull() {
-+			return nil
-+		}
-+		// ZSS fork: forward guest export-dirty notify to iframe host hook.
-+		// Remove when wanix gains a generic gojs→host message bridge.
-+		// See ops/patches/wanix-worker-zedcafeexportdirty.patch in zed-software-system.
-+		if data.Type() == js.TypeObject && data.Get("zedcafeexportdirty").Truthy() {
-+			hook := js.Global().Get("__wanixOnZedcafeExportDirty")
-+			if hook.Type() == js.TypeFunction {
-+				hook.Invoke(r.task.ID())
-+			}
-+			return nil
-+		}
-+		// all we handle are ns exports for now
-+		exportPort := data.Get("export")
-+		if exportPort.IsUndefined() || exportPort.IsNull() {
-+			return nil
-+		}
-+		vmValue := data.Get("vm")
-+		// Mount as soon as the export port arrives. The guest already started its
-+		// p9 server before postMessage returned; waiting for a "!" handshake is
-+		// racy under Go wasm scheduling and can leave #task/<rid>/export missing.
-+		mounted := false
-+		tryMount := func() {
-+			if mounted {
- 				return
+ 	"tractor.dev/toolkit-go/engine/cli"
+@@ -115,20 +116,28 @@ func (r *Resource) Start(args ...string) error {
+ 			return nil
+ 		}
+ 		vmValue := data.Get("vm")
+-		// Mount as soon as the export port arrives. The guest already started its
+-		// p9 server before postMessage returned; waiting for a "!" handshake is
+-		// racy under Go wasm scheduling and can leave #task/<rid>/export missing.
++		// Wait for the guest ready signal ("!") before ClientFS. Immediate
++		// dial races the p9 server and yields "buffer contained no valid
++		// message". The "!" is delivered on this temporary onmessage and is
++		// replaced by PortReadWriter once we mount -- it never enters 9P.
++		var mountmu sync.Mutex
+ 		mounted := false
+-		tryMount := func() {
++		exportPort.Set("onmessage", js.FuncOf(func(this js.Value, args []js.Value) any {
++			mountmu.Lock()
+ 			if mounted {
+-				return
++				mountmu.Unlock()
++				return nil
  			}
--			exportPort.Set("onmessage", js.FuncOf(func(this js.Value, _ []js.Value) any {
--				go func() {
--					// use initial signal message to mount export
--					conn := misc.NewFakeConn(jsutil.NewPortReadWriter(exportPort))
--					exportFS, err := p9kit.ClientFS(conn, "")
--					if err != nil {
--						log.Println("error creating client for export", err)
--						return
--					}
--					wanix.Export(r.task, exportFS)
--
--					// vm guest is still special cased for now
--					if args[0].Get("data").Get("vm").IsUndefined() {
--						return
--					}
--					vmID := args[0].Get("data").Get("vm").String()
--					rfsys, _, err := fs.Resolve(r.task.Root().NS(), context.Background(), path.Join("#vm", vmID))
--					if err != nil {
--						log.Println("error resolving vm", vmID, err)
--						return
--					}
--					vms := rfsys.(*vm.Device)
--					vm, err := vms.Lookup(vmID)
--					if err != nil {
--						log.Println("error looking up vm", vmID, err)
--						return
--					}
--					log.Println("mounting guest...")
--					if err := vm.SetGuest(metacache.New(exportFS)); err != nil {
--						log.Println("error setting guest", err)
--					}
--				}()
--				return nil
--			}))
-+			mounted = true
-+			go func() {
-+				conn := misc.NewFakeConn(jsutil.NewPortReadWriter(exportPort))
-+				exportFS, err := p9kit.ClientFS(conn, "")
-+				if err != nil {
-+					log.Println("error creating client for export", err)
-+					return
-+				}
-+				wanix.Export(r.task, exportFS)
- 
--		}()
-+				// vm guest is still special cased for now
-+				if vmValue.IsUndefined() {
-+					return
-+				}
-+				vmID := vmValue.String()
-+				rfsys, _, err := fs.Resolve(r.task.Root().NS(), context.Background(), path.Join("#vm", vmID))
-+				if err != nil {
-+					log.Println("error resolving vm", vmID, err)
-+					return
-+				}
-+				vms := rfsys.(*vm.Device)
-+				vm, err := vms.Lookup(vmID)
-+				if err != nil {
-+					log.Println("error looking up vm", vmID, err)
-+					return
-+				}
-+				log.Println("mounting guest...")
-+				if err := vm.SetGuest(metacache.New(exportFS)); err != nil {
-+					log.Println("error setting guest", err)
-+				}
-+			}()
-+		}
-+		// Prefer immediate mount; also accept a late guest "!" if one arrives.
-+		exportPort.Set("onmessage", js.FuncOf(func(this js.Value, _ []js.Value) any {
-+			tryMount()
-+			return nil
-+		}))
-+		tryMount()
+ 			mounted = true
++			mountmu.Unlock()
+ 			go func() {
+ 				conn := misc.NewFakeConn(jsutil.NewPortReadWriter(exportPort))
+ 				exportFS, err := p9kit.ClientFS(conn, "")
+ 				if err != nil {
+ 					log.Println("error creating client for export", err)
++					mountmu.Lock()
++					mounted = false
++					mountmu.Unlock()
+ 					return
+ 				}
+ 				wanix.Export(r.task, exportFS)
+@@ -154,13 +163,8 @@ func (r *Resource) Start(args ...string) error {
+ 					log.Println("error setting guest", err)
+ 				}
+ 			}()
+-		}
+-		// Prefer immediate mount; also accept a late guest "!" if one arrives.
+-		exportPort.Set("onmessage", js.FuncOf(func(this js.Value, _ []js.Value) any {
+-			tryMount()
+ 			return nil
+ 		}))
+-		tryMount()
  
  		return nil
  	}))

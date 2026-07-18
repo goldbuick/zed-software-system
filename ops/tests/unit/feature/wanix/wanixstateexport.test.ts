@@ -1,8 +1,10 @@
 import {
+  acknowledgezedcafeexportpush,
   buildzedcafebookmeta,
   buildzedcafecodepagefiles,
   buildzedcafeexportfiles,
   buildzedcafestats,
+  bumpexportrevision,
   checkzedcafeexportontick,
   decodezedcafejsonpointer,
   forcezedcafeexportcoalesceclosedfortest,
@@ -10,12 +12,14 @@ import {
   markzedcafeexportpathdirty,
   markzedcafeexportstructuraldirty,
   primezedcafeexportshadow,
+  readexportrevision,
   readzedcafeexportdirtygensfortest,
   readzedcafeexportremovepaths,
   readzedcafeexportstatscontentready,
   readzedcafeexportupsertpaths,
   resetwanixstateexportfortest,
   splitboardexport,
+  zedcafeexportdoctofiles,
   zedcafeexportfilestodoc,
 } from 'zss/feature/wanix/wanixstateexport'
 import {
@@ -104,6 +108,38 @@ function makeboardbook(terrain: unknown[] = []): BOOK {
     timestamp: 1,
     activelist: [],
     pages: [boardpage],
+    flags: {},
+  } as BOOK
+}
+
+function maketwoboardbook(terrain1: unknown[], terrain2: unknown[]): BOOK {
+  const boardpage1 = {
+    id: 'page1',
+    code: '@board demo',
+    board: {
+      terrain: terrain1,
+      objects: {},
+      startx: 10,
+      starty: 12,
+    },
+  } as CODE_PAGE & { board: Record<string, unknown> }
+  const boardpage2 = {
+    id: 'page2',
+    code: '@board demo2',
+    board: {
+      terrain: terrain2,
+      objects: {},
+      startx: 1,
+      starty: 1,
+    },
+  } as CODE_PAGE & { board: Record<string, unknown> }
+  return {
+    id: 'book1',
+    name: 'demo',
+    token: 'tok',
+    timestamp: 1,
+    activelist: [],
+    pages: [boardpage1, boardpage2],
     flags: {},
   } as BOOK
 }
@@ -354,27 +390,22 @@ describe('wanixstateexport', () => {
     expect(options.nextdoc?.[terrainpath]).toEqual(next)
   })
 
-  it('coalesces repeated terrain dirties into one flush', async () => {
+  it('single dirty terrain path flushes immediately (no coalesce wait)', async () => {
     const terrain = Array.from({ length: 1500 }, () => ({ kind: 'fake' }))
-    ;(memoryreadbooklist as jest.Mock).mockReturnValue([makeboardbook(terrain)])
+    const book = makeboardbook(terrain)
+    ;(memoryreadbooklist as jest.Mock).mockReturnValue([book])
     setzedcafepollactive(true)
     primezedcafeexportshadow(buildzedcafeexportfiles())
-    forcezedcafeexportcoalesceclosedfortest()
 
-    const mid = Array.from({ length: 1500 }, () => ({ kind: 'fake' }))
-    mid[0] = { kind: 'mid' }
     const next = Array.from({ length: 1500 }, () => ({ kind: 'fake' }))
-    next[0] = { kind: 'final', char: 177 }
+    next[0] = { kind: 'solid', char: 177 }
     const terrainpath = 'demo-book1/demo-page1/board/terrain.json'
-
-    ;(memoryreadbooklist as jest.Mock).mockReturnValue([makeboardbook(mid)])
-    markzedcafeexportpathdirty(terrainpath)
-    checkzedcafeexportontick({ emit: jest.fn() } as never)
-    expect(mocksync).not.toHaveBeenCalled()
-
     ;(memoryreadbooklist as jest.Mock).mockReturnValue([makeboardbook(next)])
     markzedcafeexportpathdirty(terrainpath)
-    forcezedcafeexportcoalesceopenfortest()
+    // Force the coalesce window "closed" — a single dirty path still flushes
+    // immediately (WANIX_ZEDCAFE_EXPORT_COALESCE_SINGLE_MS = 0).
+    forcezedcafeexportcoalesceclosedfortest()
+
     checkzedcafeexportontick({ emit: jest.fn() } as never)
     await Promise.resolve()
     await Promise.resolve()
@@ -384,6 +415,47 @@ describe('wanixstateexport', () => {
       nextdoc?: Record<string, unknown>
     }
     expect(options.nextdoc?.[terrainpath]).toEqual(next)
+  })
+
+  it('coalesces repeated multi-terrain dirties into one flush', async () => {
+    const terrain1 = Array.from({ length: 1500 }, () => ({ kind: 'fake' }))
+    const terrain2 = Array.from({ length: 1500 }, () => ({ kind: 'fake' }))
+    ;(memoryreadbooklist as jest.Mock).mockReturnValue([
+      maketwoboardbook(terrain1, terrain2),
+    ])
+    setzedcafepollactive(true)
+    primezedcafeexportshadow(buildzedcafeexportfiles())
+    forcezedcafeexportcoalesceclosedfortest()
+
+    const terrainpath1 = 'demo-book1/demo-page1/board/terrain.json'
+    const terrainpath2 = 'demo-book1/demo2-page2/board/terrain.json'
+
+    const mid1 = Array.from({ length: 1500 }, () => ({ kind: 'fake' }))
+    mid1[0] = { kind: 'mid' }
+    ;(memoryreadbooklist as jest.Mock).mockReturnValue([
+      maketwoboardbook(mid1, terrain2),
+    ])
+    markzedcafeexportpathdirty(terrainpath1)
+    markzedcafeexportpathdirty(terrainpath2)
+    checkzedcafeexportontick({ emit: jest.fn() } as never)
+    expect(mocksync).not.toHaveBeenCalled()
+
+    const next1 = Array.from({ length: 1500 }, () => ({ kind: 'fake' }))
+    next1[0] = { kind: 'final', char: 177 }
+    ;(memoryreadbooklist as jest.Mock).mockReturnValue([
+      maketwoboardbook(next1, terrain2),
+    ])
+    markzedcafeexportpathdirty(terrainpath1)
+    forcezedcafeexportcoalesceopenfortest()
+    checkzedcafeexportontick({ emit: jest.fn() } as never)
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(mocksync).toHaveBeenCalledTimes(1)
+    const options = mocksync.mock.calls[0][3] as {
+      nextdoc?: Record<string, unknown>
+    }
+    expect(options.nextdoc?.[terrainpath1]).toEqual(next1)
   })
 
   it('structural dirty survives in-flight rejection until next open window', async () => {
@@ -440,6 +512,63 @@ describe('wanixstateexport', () => {
     expect(pushed).toEqual([])
     expect(options.partial).toBe(true)
     expect(options.removepaths).toEqual([orphan])
+  })
+
+  it('exportRevision starts at 0, bumps monotonically, and resets for test', () => {
+    expect(readexportrevision()).toBe(0)
+    expect(bumpexportrevision()).toBe(1)
+    expect(bumpexportrevision()).toBe(2)
+    expect(readexportrevision()).toBe(2)
+    resetwanixstateexportfortest()
+    expect(readexportrevision()).toBe(0)
+  })
+
+  it('buildzedcafestats includes current exportRevision', () => {
+    bumpexportrevision()
+    bumpexportrevision()
+    const stats = buildzedcafestats([])
+    expect(stats.exportRevision).toBe(2)
+  })
+
+  it('acknowledgezedcafeexportpush bumps exportRevision', () => {
+    expect(readexportrevision()).toBe(0)
+    acknowledgezedcafeexportpush()
+    expect(readexportrevision()).toBe(1)
+    acknowledgezedcafeexportpush()
+    expect(readexportrevision()).toBe(2)
+  })
+
+  it('zedcafeexportdoctofiles stamps stats.json with current exportRevision', () => {
+    bumpexportrevision()
+    bumpexportrevision()
+    bumpexportrevision()
+    const files = zedcafeexportdoctofiles({
+      'stats.json': { bookCount: 0, books: [] },
+    })
+    const stats = decodefilebytes(files[0]!.bytes) as {
+      exportRevision?: number
+    }
+    expect(stats.exportRevision).toBe(3)
+  })
+
+  it('stripstatsexportedat-equivalent compare ignores exportedAt but keeps exportRevision diffs', () => {
+    const a = zedcafeexportfilestodoc([
+      {
+        path: 'stats.json',
+        bytes: new TextEncoder().encode(
+          '{"exportedAt":"t1","exportRevision":1,"bookCount":0,"books":[]}\n',
+        ),
+      },
+    ])
+    const b = zedcafeexportfilestodoc([
+      {
+        path: 'stats.json',
+        bytes: new TextEncoder().encode(
+          '{"exportedAt":"t2","exportRevision":2,"bookCount":0,"books":[]}\n',
+        ),
+      },
+    ])
+    expect(compare(a, b)).not.toEqual([])
   })
 
   it('zedcafeexportfilestodoc strips volatile exportedAt for compare', () => {

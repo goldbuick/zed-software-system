@@ -4,8 +4,8 @@ import path from 'node:path'
 
 import { WANIX_FIXTURES_DIR } from 'ops/lib/fixturepaths'
 import {
+  WANIX_GOJS_BRIDGE_MARKER,
   WANIX_SUBMODULE_DIR,
-  WANIX_ZEDCAFE_DIRTY_FORWARD_MARKER,
   WANIX_ZEDCAFE_DIRTY_FORWARD_PATCH,
   haswanixzedcafedirtyforward,
 } from 'ops/lib/wanix/wanixsubmodule'
@@ -160,7 +160,7 @@ function probego(deps: WanixToolchainDeps): WanixProbeResult {
     nextsteps.push('git submodule update --init submodules/wanix')
   } else if (!haswanixzedcafedirtyforward()) {
     status = 'partial'
-    detail = `submodules/wanix missing ${WANIX_ZEDCAFE_DIRTY_FORWARD_MARKER}`
+    detail = `submodules/wanix missing ${WANIX_GOJS_BRIDGE_MARKER}`
     if (deps.exists(WANIX_ZEDCAFE_DIRTY_FORWARD_PATCH)) {
       nextsteps.push(WANIX_ZEDCAFE_DIRTY_APPLY)
       nextsteps.push(

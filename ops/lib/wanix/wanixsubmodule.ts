@@ -21,7 +21,10 @@ export const WANIX_WORKER_GO = path.join(
   'worker.go',
 )
 
-/** Marker string the ZSS fork must contain in worker.go / wanix.wasm. */
+/** Primary marker: generic gojs->host message bridge in worker.go / wanix.wasm. */
+export const WANIX_GOJS_BRIDGE_MARKER = '__wanixOnGojsWorkerMessage'
+
+/** Legacy marker string the ZSS fork must contain in worker.go / wanix.wasm. */
 export const WANIX_ZEDCAFE_DIRTY_FORWARD_MARKER = '__wanixOnZedcafeExportDirty'
 
 const WANIX_ZEDCAFE_DIRTY_APPLY =
@@ -41,6 +44,8 @@ export function requirewanixsubmodule(): void {
 
 /**
  * True when the checked-out wanix worker forwards zedcafeexportdirty.
+ * Prefers the generic gojs->host bridge marker; the legacy zedcafe-specific
+ * marker is also accepted for older checkouts.
  */
 export function haswanixzedcafedirtyforward(
   workergo = WANIX_WORKER_GO,
@@ -48,8 +53,10 @@ export function haswanixzedcafedirtyforward(
   if (!existsSync(workergo)) {
     return false
   }
-  return readFileSync(workergo, 'utf8').includes(
-    WANIX_ZEDCAFE_DIRTY_FORWARD_MARKER,
+  const contents = readFileSync(workergo, 'utf8')
+  return (
+    contents.includes(WANIX_GOJS_BRIDGE_MARKER) ||
+    contents.includes(WANIX_ZEDCAFE_DIRTY_FORWARD_MARKER)
   )
 }
 
@@ -66,6 +73,6 @@ export function requirewanixzedcafedirtyforward(): void {
     ? `apply the recoverable patch, commit in the submodule, then rebuild cafe/public/wanix/wanix.wasm:\n  ${WANIX_ZEDCAFE_DIRTY_APPLY}`
     : 'missing ops/patches/wanix-worker-zedcafeexportdirty.patch — restore from git history'
   throw new Error(
-    `submodules/wanix/web/worker/worker.go is missing ${WANIX_ZEDCAFE_DIRTY_FORWARD_MARKER} — ${patchhint}`,
+    `submodules/wanix/web/worker/worker.go is missing ${WANIX_GOJS_BRIDGE_MARKER} — ${patchhint}`,
   )
 }

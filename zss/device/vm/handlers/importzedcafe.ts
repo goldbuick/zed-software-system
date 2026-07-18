@@ -5,7 +5,10 @@ import { boardrunnerboundarypaint } from 'zss/device/vm/boardrunnerboundarysync'
 import { boardrunneraccessfor } from 'zss/device/vm/boardrunnermanagement'
 import { boardrunners } from 'zss/device/vm/state'
 import type { WANIX_ZED_CAFE_EXPORT_FILE } from 'zss/feature/wanix/wanixstateexport'
-import { primezedcafeexportshadow } from 'zss/feature/wanix/wanixstateexport'
+import {
+  primezedcafeexportshadow,
+  readexportrevision,
+} from 'zss/feature/wanix/wanixstateexport'
 import {
   applyzedcafepartialtomemory,
   applyzedcafetomemory,
@@ -174,6 +177,11 @@ export function handleimportzedcafe(vm: DEVICE, message: MESSAGE): void {
         result.changed,
         undefined,
         result.bookcount,
+        {
+          revision: readexportrevision(),
+          changedpaths: result.changedpaths,
+          skippedpaths: result.skippedpaths,
+        },
       )
       return
     }
@@ -192,6 +200,7 @@ export function handleimportzedcafe(vm: DEVICE, message: MESSAGE): void {
       changed,
       undefined,
       parsed.books.length,
+      { revision: readexportrevision() },
     )
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err)

@@ -16,6 +16,10 @@ import {
   resetwanixzedcafesessionfortest,
   setwanixroomconfig,
 } from 'zss/device/wanixclient/state'
+import {
+  startzedcafepoll,
+  stopzedcafepoll,
+} from 'zss/device/wanixclient/wanixzedcafe'
 import { createidleroomconfig } from 'zss/feature/wanix/wanixroomtypes'
 
 jest.mock('zss/device/api', () => ({
@@ -53,6 +57,8 @@ const mockspawntask = wanixserverspawntask as jest.Mock
 const mockhalttask = wanixserverhalttask as jest.Mock
 const mockapplyroom = wanixserverapplyroom as jest.Mock
 const mockwritefile = wanixserverwritefile as jest.Mock
+const mockstartzedcafepoll = startzedcafepoll as jest.Mock
+const mockstopzedcafepoll = stopzedcafepoll as jest.Mock
 
 const device = { id: 'dev', emit: jest.fn() } as never
 const player = 'p1'
@@ -66,6 +72,8 @@ describe('startwanixzedsync gates', () => {
     mockhalttask.mockClear()
     mockapplyroom.mockClear()
     mockwritefile.mockClear()
+    mockstartzedcafepoll.mockClear()
+    mockstopzedcafepoll.mockClear()
     setwanixroomconfig(createidleroomconfig())
   })
 
@@ -125,5 +133,14 @@ describe('startwanixzedsync gates', () => {
     )
     cancelzedsyncreadywait('test cleanup')
     expect(iszedsyncreadywaitpending()).toBe(false)
+  })
+
+  it('does not pause or resume the import poll while seeding', () => {
+    beginzedsyncreadywait(device, player, 'MyFolder')
+    expect(iszedsyncreadywaitpending()).toBe(true)
+    expect(mockstopzedcafepoll).not.toHaveBeenCalled()
+    cancelzedsyncreadywait('test cleanup')
+    expect(mockstartzedcafepoll).not.toHaveBeenCalled()
+    expect(mockstopzedcafepoll).not.toHaveBeenCalled()
   })
 })

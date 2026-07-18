@@ -35,6 +35,7 @@ Validators run only via existing `cafe:playwright:headed` — no new citty tasks
 | 21 | Soft idle ends zedsync; auto-halt exempt | #13 stop phase | zedsync running |
 | 22 | Hard remount wipes FSA binds | manual (see #15) | FSA mount |
 | 23 | Zedsync path with spaces rejected | unit + manual one-liner | — |
+| 24 | Agent sync latency baseline (`singlefile`) | [`validate-zedcafe-agent-latency.ts`](../../../tasks/lib/wanix/validate-zedcafe-agent-latency.ts) | `cafe:dev` + book |
 
 Each scenario below uses: **Setup / Fixture assets / Steps / Expected signals / Automator / Failure dump**.
 
@@ -341,6 +342,42 @@ See #15. Soft idle keeps warm system + remotes; hard reset clears FSA binds.
 ### 23. Path with spaces
 
 `#wanix zedsync My Folder` fails (Wanix splits `cmd` on spaces). Use a path without spaces. Unit coverage in client/guest tests.
+
+---
+
+## Agent sync latency baseline
+
+SLO budgets and workload profiles live in
+[`WANIX_AGENT_LATENCY_SLOS`](../../../zss/feature/wanix/wanixbootregression.ts)
+(sim<->guest legs sub-200ms; `peer-to-sim` end-to-end sub-400ms) alongside the
+existing boot regression gates. `assessagentlatencyslos(samples)` and
+`percentilems(samples, p)` in the same module compute p50/p95 per path and
+flag any path with zero samples as missing.
+
+| Workload profile | Meaning |
+|---|---|
+| `singlefile` | One object write/read round trip |
+| `batchobjects` | Many objects touched in one sync tick |
+| `structuraldelete` | Board/layer structural removal (not a plain object write) |
+
+Baseline collector (drives the greenring `singlefile` workload; derives
+`sim-to-guest` / `guest-to-sim` samples from console-arrival timestamps of
+existing `[wanix-perf] drop-export-pull-*` and greenring paint/import marks):
+
+```bash
+ZEDCAFE_VALIDATE_FIXTURE=1 yarn task run cafe:playwright:headed --url https://localhost:7777/ \
+  tasks/lib/wanix/validate-zedcafe-agent-latency.ts
+```
+
+`sim-to-peer` / `peer-to-sim` require a running zedsync peer and are not
+driven by this script — run `validate-zedsync-remote.ts` (see #13-14 above)
+against a live `p9server:dev` peer to collect those legs; the report marks
+them `measured: false` until then.
+
+| Report | Path |
+|--------|------|
+| agent latency (tmp) | `/tmp/wanix-zedcafe-agent-latency-report.json` |
+| agent latency (baseline copy) | `ops/fixtures/wanix/reports/agent-latency-baseline.json` |
 
 ---
 

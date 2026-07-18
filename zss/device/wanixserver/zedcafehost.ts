@@ -17,6 +17,8 @@ import {
   WANIX_ZEDCAFE_TASK_WASM,
   WANIX_ZEDCAFE_WASM_BUILD_STORAGE_KEY,
   WANIX_ZEDCAFE_WASM_RAMFS,
+  WANIX_ZEDSYNC_REVISION_DIR,
+  WANIX_ZEDSYNC_REVISION_FILE,
   readwanixzedcafeexportsrc,
   readwanixzedcafeguestpath,
   readwanixzedcafewasmurl,
@@ -31,6 +33,8 @@ import {
 type WanixTaskElement = HTMLElement & {
   rid?: string | null
   root?: WanixRoot
+  /** Task NS handle — required for VM/guest binds (not `root`, which is kernel). */
+  taskRoot?: WanixRoot
   allocate?: () => Promise<void>
   start?: () => Promise<void>
 }
@@ -47,10 +51,28 @@ let zedcafebootgen = 0
 let zedcafebootpromise: Promise<string | null> | null = null
 let hostpushinflight = false
 let hostpushgen = 0
-/** Longer than Go `exportdirtydebounce` (150ms) so host-push dirties settle before kicks. */
-const HOST_PUSH_DIRTY_SUPPRESS_MS = 200
+/** Monotonic export revision, bumped after each successful host push. */
+let zedcafeexportrevision = 0
+/** Longer than Go `exportdirtydebounce` (50ms) so host-push dirties settle before kicks. */
+const HOST_PUSH_DIRTY_SUPPRESS_MS = 75
 
+/** Generic gojs->host bridge hook signature (worker.go forwards taskid + data). */
+type GojsWorkerMessageHook = (taskid: string, data: unknown) => void
+/** Legacy zedcafe-specific hook signature (pre-generic-bridge worker.go). */
 type ZedcafeDirtyHook = (taskrid?: string) => void
+
+function readglobalgojsbridgehook(): GojsWorkerMessageHook | undefined {
+  return (globalThis as { __wanixOnGojsWorkerMessage?: GojsWorkerMessageHook })
+    .__wanixOnGojsWorkerMessage
+}
+
+function setglobalgojsbridgehook(
+  hook: GojsWorkerMessageHook | undefined,
+): void {
+  ;(
+    globalThis as { __wanixOnGojsWorkerMessage?: GojsWorkerMessageHook }
+  ).__wanixOnGojsWorkerMessage = hook
+}
 
 function readglobaldirtyhook(): ZedcafeDirtyHook | undefined {
   return (globalThis as { __wanixOnZedcafeExportDirty?: ZedcafeDirtyHook })
@@ -63,19 +85,48 @@ function setglobaldirtyhook(hook: ZedcafeDirtyHook | undefined): void {
   ).__wanixOnZedcafeExportDirty = hook
 }
 
+function readdirtymessagepaths(data: unknown): string[] | undefined {
+  if (!data || typeof data !== 'object') {
+    return undefined
+  }
+  const paths = (data as { paths?: unknown }).paths
+  if (!Array.isArray(paths)) {
+    return undefined
+  }
+  return paths.filter((path): path is string => typeof path === 'string')
+}
+
+function handlezedcafedirtynotify(taskrid?: string, paths?: string[]): void {
+  if (hostpushinflight) {
+    return
+  }
+  if (taskrid && zedcafetaskrid && taskrid !== zedcafetaskrid) {
+    return
+  }
+  postzedcafefilechangemessage(taskrid ?? zedcafetaskrid ?? undefined, paths)
+}
+
 function registerzedcafedirtyhook(): void {
+  setglobalgojsbridgehook((taskid: string, data: unknown) => {
+    if (!data || typeof data !== 'object') {
+      return
+    }
+    if (!(data as { zedcafeexportdirty?: unknown }).zedcafeexportdirty) {
+      return
+    }
+    handlezedcafedirtynotify(taskid, readdirtymessagepaths(data))
+  })
+  // Backward compat: older worker.go checkouts (or tests) that only invoke
+  // the legacy zedcafe-specific hook without the generic bridge.
   setglobaldirtyhook((taskrid?: string) => {
-    if (hostpushinflight) {
-      return
-    }
-    if (taskrid && zedcafetaskrid && taskrid !== zedcafetaskrid) {
-      return
-    }
-    postzedcafefilechangemessage(taskrid ?? zedcafetaskrid ?? undefined)
+    handlezedcafedirtynotify(taskrid)
   })
 }
 
 function clearzedcafedirtyhook(): void {
+  if (readglobalgojsbridgehook()) {
+    setglobalgojsbridgehook(undefined)
+  }
   if (readglobaldirtyhook()) {
     setglobaldirtyhook(undefined)
   }
@@ -360,7 +411,10 @@ export async function readzedcafeguestbound(
   }
   const vm = sys?.querySelector('wanix-vm') as WanixVmWithTask | null
   const vmtask = vm?.task
-  if (vmtask?.root && (await readzedcafeguestboundatroot(vmtask.root))) {
+  if (
+    vmtask?.taskRoot &&
+    (await readzedcafeguestboundatroot(vmtask.taskRoot))
+  ) {
     return true
   }
   if (!sys) {
@@ -371,7 +425,7 @@ export async function readzedcafeguestbound(
   )
   for (let i = 0; i < tasks.length; ++i) {
     const el = tasks[i] as WanixTaskElement
-    if (el.root && (await readzedcafeguestboundatroot(el.root))) {
+    if (el.taskRoot && (await readzedcafeguestboundatroot(el.taskRoot))) {
       return true
     }
   }
@@ -460,8 +514,14 @@ async function waitvmtaskroot(
   if (!vm) {
     return null
   }
-  if (vm.task?.root) {
-    return vm.task.root
+  // Prefer taskRoot: TaskElement.root is the kernel root (WanixElement), so
+  // binding there never reaches the Linux virtfs namespace.
+  if (vm.task?.taskRoot) {
+    return vm.task.taskRoot
+  }
+  // Allocated without taskRoot cannot be fixed by waiting.
+  if (vm.task?.rid) {
+    return null
   }
   const deadline = Date.now() + timeoutms
   while (Date.now() < deadline) {
@@ -469,8 +529,11 @@ async function waitvmtaskroot(
       setTimeout(resolve, WANIX_ZEDCAFE_EXPORT_READY_POLL_MS),
     )
     const current = sys.querySelector('wanix-vm') as WanixVmWithTask | null
-    if (current?.task?.root) {
-      return current.task.root
+    if (current?.task?.taskRoot) {
+      return current.task.taskRoot
+    }
+    if (current?.task?.rid) {
+      return null
     }
   }
   return null
@@ -490,6 +553,11 @@ export async function wireallguestroots(
     await tryunbindexport(vmroot, src, dst)
     await vmroot.bind(src, dst)
     count++
+    wanixperfmark('zedcafe-guest-bind-vm', { taskrid, dst })
+  } else if (sys.querySelector('wanix-vm')) {
+    console.error(
+      '[zedcafe-export] vm present but taskRoot missing -- /zedcafe not bound into linux',
+    )
   }
   const tasks = sys.querySelectorAll(
     `wanix-task[type="gojs"]:not([id="${WANIX_ZEDCAFE_TASK_ID}"])`,
@@ -551,6 +619,12 @@ async function collectexporttreefiles(
     }
     for (const entry of entries) {
       const name = entry.replace(/\/$/, '')
+      // Meta dirs (e.g. WANIX_ZEDSYNC_REVISION_DIR) live alongside the export
+      // tree but are not part of the zedcafe JSON document — mirrors Go
+      // zedsync's shouldskip (dot-prefixed path segments).
+      if (name.startsWith('.')) {
+        continue
+      }
       const childrel = rel ? `${rel}/${name}` : name
       await ingest(childrel)
     }
@@ -621,6 +695,61 @@ export async function removezedcafeexportpaths(
   return removed
 }
 
+/** Bounded-concurrency pool: run `worker` over `items`, at most `limit` in flight. */
+async function runwithconcurrencylimit<T>(
+  items: T[],
+  limit: number,
+  worker: (item: T) => Promise<void>,
+): Promise<void> {
+  let cursor = 0
+  async function runnext(): Promise<void> {
+    for (;;) {
+      const index = cursor++
+      if (index >= items.length) {
+        return
+      }
+      await worker(items[index])
+    }
+  }
+  const runnercount = Math.max(1, Math.min(limit, items.length))
+  await Promise.all(Array.from({ length: runnercount }, () => runnext()))
+}
+
+const PUSH_WRITE_CONCURRENCY = 8
+
+/**
+ * Peer-visible dirty hint: bumps the export revision and records which
+ * export-relative paths this push touched, so zedsync's incremental tick
+ * (Go `ReadRevision` / `SteadyTickIncremental`) can sync just those paths
+ * instead of walking the whole zedcafe export tree.
+ */
+async function writezedcafeexportrevision(
+  root: WanixRoot,
+  base: string,
+  paths: string[],
+): Promise<void> {
+  zedcafeexportrevision += 1
+  const revision = zedcafeexportrevision
+  const payload = new TextEncoder().encode(
+    `${JSON.stringify({ revision, paths })}\n`,
+  )
+  try {
+    try {
+      await root.makeDirAll(`${base}/${WANIX_ZEDSYNC_REVISION_DIR}`)
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : String(err)
+      if (!/file already exists|already exists|EEXIST/i.test(detail)) {
+        throw err
+      }
+    }
+    await root.writeFile(`${base}/${WANIX_ZEDSYNC_REVISION_FILE}`, payload)
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err)
+    console.error(`[zedcafe-export] revision write failed: ${detail}`)
+  }
+  wanixperfmark('zedsync-delta-end', { revision, paths: paths.length })
+}
+
 export async function pushzedcafeexportlive(
   root: WanixRoot,
   taskrid: string,
@@ -644,39 +773,97 @@ export async function pushzedcafeexportlive(
       return a.path.localeCompare(b.path)
     })
     // Export writes cross the p9 client, which walks parent dirs before Create.
-    // Materialize allowlisted prefix dirs once (flags/objects share parents).
+    // Create all parent dirs first, shallowest-first and sequential -- concurrent
+    // makeDirAll on nested parents (board vs board/objects) races the p9 walk
+    // ("walk .../object: file does not exist"). File bytes may still write in
+    // parallel once dirs exist.
     const PUSH_PROGRESS_EVERY = 100
     const pushtotal = sorted.length
     const pushstart = Date.now()
     const madedirs = new Set<string>()
-    for (let i = 0; i < sorted.length; ++i) {
-      const file = sorted[i]
-      const full = `${base}/${file.path}`
-      const parentdir = full.slice(0, full.lastIndexOf('/'))
-      if (parentdir.length > base.length && !madedirs.has(parentdir)) {
-        await root.makeDirAll(parentdir)
+    let writtencount = 0
+
+    const isdiralreadyexists = (err: unknown): boolean => {
+      const detail = err instanceof Error ? err.message : String(err)
+      return /file already exists|already exists|EEXIST/i.test(detail)
+    }
+
+    const collectparentdirs = (paths: string[]): string[] => {
+      const parents = new Set<string>()
+      for (let i = 0; i < paths.length; ++i) {
+        const full = `${base}/${paths[i]}`
+        let parentdir = full.slice(0, full.lastIndexOf('/'))
+        while (parentdir.length > base.length) {
+          parents.add(parentdir)
+          parentdir = parentdir.slice(0, parentdir.lastIndexOf('/'))
+        }
+      }
+      return [...parents].sort((a, b) => {
+        const adepth = a.split('/').length
+        const bdepth = b.split('/').length
+        if (adepth !== bdepth) {
+          return adepth - bdepth
+        }
+        return a.localeCompare(b)
+      })
+    }
+
+    const materializeparentdirs = async (paths: string[]): Promise<void> => {
+      const parents = collectparentdirs(paths)
+      for (let i = 0; i < parents.length; ++i) {
+        const parentdir = parents[i]
+        if (madedirs.has(parentdir)) {
+          continue
+        }
+        try {
+          await root.makeDirAll(parentdir)
+        } catch (err) {
+          if (!isdiralreadyexists(err)) {
+            throw err
+          }
+        }
         madedirs.add(parentdir)
       }
+    }
+
+    const writeexportfile = async (
+      file: WanixZedCafeGuestFile,
+    ): Promise<void> => {
+      const full = `${base}/${file.path}`
       await root.writeFile(
         full,
         file.data instanceof Uint8Array
           ? file.data
           : new Uint8Array(file.data as ArrayLike<number>),
       )
-      const written = i + 1
+      writtencount += 1
       if (
-        written === pushtotal ||
+        writtencount === pushtotal ||
         (pushtotal >= PUSH_PROGRESS_EVERY &&
-          written % PUSH_PROGRESS_EVERY === 0)
+          writtencount % PUSH_PROGRESS_EVERY === 0)
       ) {
         wanixperfmark('export-push-progress', {
           taskrid,
-          written,
+          written: writtencount,
           total: pushtotal,
           parents: madedirs.size,
           elapsedms: Date.now() - pushstart,
         })
       }
+    }
+
+    // stats.json is the guest's content-ready signal — always land it last,
+    // after every other upsert in this push has settled.
+    const statsfile = sorted.find((file) => file.path === 'stats.json')
+    const upsertfiles = sorted.filter((file) => file.path !== 'stats.json')
+    await materializeparentdirs(upsertfiles.map((file) => file.path))
+    await runwithconcurrencylimit(
+      upsertfiles,
+      PUSH_WRITE_CONCURRENCY,
+      writeexportfile,
+    )
+    if (statsfile) {
+      await writeexportfile(statsfile)
     }
     const bookcount = readguestfilebookcount(sorted)
     if (bookcount > 0) {
@@ -705,6 +892,10 @@ export async function pushzedcafeexportlive(
     }
     // Removals-only: still signal content-ready so parent waiters unblock.
     if (sorted.length > 0 || removepaths.length > 0) {
+      await writezedcafeexportrevision(root, base, [
+        ...removepaths,
+        ...sorted.map((file) => file.path),
+      ])
       postwanixexportmessage('content-ready', taskrid)
     }
     if (sorted.length > 0 || bookcount > 0) {

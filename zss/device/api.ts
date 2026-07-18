@@ -42,6 +42,9 @@ export type WANIX_ZED_CAFE_IMPORT_RESULT = {
   changed: boolean
   error?: string
   bookcount?: number
+  revision?: number
+  changedpaths?: string[]
+  skippedpaths?: string[]
 }
 
 export function apichat(device: DEVICELIKE, board: string, ...message: any[]) {
@@ -1197,7 +1200,7 @@ export function wanixclientexportready(
 export function wanixclientzedcafefilechange(
   device: DEVICELIKE,
   player: string,
-  payload?: { taskrid?: string },
+  payload?: { taskrid?: string; paths?: string[] },
 ) {
   device.emit(player, 'wanixclient:zedcafefilechange', payload)
 }
@@ -1254,12 +1257,20 @@ export function wanixclientimportresult(
   changed: boolean,
   error?: string,
   bookcount?: number,
+  extra?: {
+    revision?: number
+    changedpaths?: string[]
+    skippedpaths?: string[]
+  },
 ) {
   device.emit(player, 'wanixclient:importresult', {
     ok,
     changed,
     error,
     bookcount,
+    revision: extra?.revision,
+    changedpaths: extra?.changedpaths,
+    skippedpaths: extra?.skippedpaths,
   })
 }
 

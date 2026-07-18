@@ -238,9 +238,9 @@ sequenceDiagram
   participant Sim
 
   Guest->>Memfs: Write or delete allowlisted JSON
-  Memfs->>Memfs: debounce_150ms dirty
-  Memfs-->>Parent: wanixclient:zedcafefilechange
-  Note over Parent: kickzedcafepoll collect + doc compare
+  Memfs->>Memfs: debounce_50ms dirty (coalesced path set)
+  Memfs-->>Parent: wanixclient:zedcafefilechange {paths}
+  Note over Parent: kickzedcafepoll collect + path-scoped doc compare
   Parent->>Parent: guestdirty — suppress stale host push
   Parent->>Sim: vm:importzedcafe
   Sim->>Sim: applyzedcafetomemory upserts + deletes
@@ -249,10 +249,14 @@ sequenceDiagram
   Parent->>Memfs: push post-import tree
 ```
 
-- Dirty path: Go `schemaGuardFS` → gojs `postMessage({zedcafeexportdirty})` → Wanix
-  `worker.go` → `__wanixOnZedcafeExportDirty` → `wanixclient:zedcafefilechange` →
-  `kickzedcafepoll('file-change')`. Host pushes set `hostpushinflight` so sync batches
-  do not kick import mid-write.
+- Dirty path: Go `schemaGuardFS` → gojs `postMessage({zedcafeexportdirty, paths})` →
+  Wanix `worker.go` generic bridge (`__wanixOnGojsWorkerMessage`, falls back to the
+  legacy `__wanixOnZedcafeExportDirty(taskId)` hook) → `wanixclient:zedcafefilechange`
+  → `kickzedcafepoll('file-change', paths)`. Host pushes set `hostpushinflight` so
+  sync batches do not kick import mid-write. Dirty paths are accumulated
+  (`markpendingdirtypaths`) and drained on the next tree compare
+  (`guestdiffersfromlastpush`) to scope the compare to changed paths + `stats.json`
+  instead of the full document.
 - Session-close still kicks import (greenring exit-after-write). **No continuous
   interval poll.**
 - Import runs in the **sim worker** (`handleimportzedcafe`), not main-thread memory.
@@ -613,34 +617,22 @@ make js
 cp dist/wanix.min.js ../../cafe/public/wanix/wanix.min.js
 ```
 
-### Upstream Wanix: replace the worker.go dirty forward
+### Upstream Wanix: generic gojs → host message bridge
 
-Today gojs tasks may `postMessage` arbitrary payloads, but
 [`submodules/wanix/web/worker/worker.go`](../../../submodules/wanix/web/worker/worker.go)
-only handles `{ export: MessagePort }` and **drops everything else**. ZSS therefore
-patches that listener to forward `{ zedcafeexportdirty: true }` to a host global
-`__wanixOnZedcafeExportDirty(taskId)` (see iframe
-[`zedcafehost.ts`](../../device/wanixserver/zedcafehost.ts)).
+now forwards **any** non-`export` object payload from a gojs task to a host
+global `__wanixOnGojsWorkerMessage(taskId, data)`, instead of only handling
+`{ export: MessagePort }` and dropping everything else. Iframe
+[`zedcafehost.ts`](../../device/wanixserver/zedcafehost.ts) registers that hook
+once and maps `data.zedcafeexportdirty` + `data.paths` internally — no more
+zedcafe-specific string key baked into `worker.go`. The legacy
+`__wanixOnZedcafeExportDirty(taskId)` hook (no payload, no paths) is still
+registered and still invoked by `worker.go` when `__wanixOnGojsWorkerMessage`
+is absent, for older checkouts / tests.
 
-That is a ZSS fork of Wanix, not an API. Prefer one of these upstream affordances
-(best → acceptable):
-
-1. **Generic gojs → host message bridge**  
-   Host registers a callback (element attribute, `wanix-namespace` method, or
-   `globalThis` hook with a stable name) for non-`export` worker messages.
-   Payload + `taskId` are delivered as-is. ZSS would register once and map
-   `zedcafeexportdirty` without touching `worker.go`.
-
-2. **Allowlisted custom message kinds**  
-   Documented keys besides `export` (e.g. `notify` / `app`) forwarded the same
-   way. Still a denylist of silence for unknown keys is fine.
-
-3. **ExportFS mutation notify**  
-   First-class “export tree changed” signal from `gojs.Export` / p9 export mounts
-   (coalesced). Guests would not need `postMessage` for writeback; hosts would
-   not need a zedcafe-specific dirty key.
-
-Until something like (1)–(3) lands upstream, keep the submodule patch + rebuild
+That is still a ZSS fork of Wanix, not an upstream API. If/when a generic
+bridge like this lands in `tractordev/wanix` itself, drop the fork and consume
+it directly; until then keep the submodule patch + rebuild
 `cafe/public/wanix/wanix.wasm`, and bump the `submodules/wanix` gitlink after
 committing inside the submodule.
 
@@ -797,6 +789,76 @@ Browser Wanix cannot export its namespace outward. Import a remote 9P mount, the
 
 Empty peer is seeded from `zedcafe/` (no wipe). After `.zedsync-ready`, steady-state sync mirrors creates/updates; deleting a file on the peer restores it from `zedcafe/`. Soft idle stops zedsync (`zedsync: stopped`). See [`ops/fixtures/wanix/README.md`](../../../ops/fixtures/wanix/README.md).
 
+### Conflict policy: sim wins
+
+The sim (`zedcafe/` export tree) is the **authoritative** side of every sync.
+When `SteadyTick` sees a path changed on **both** the peer and `zedcafe/`
+since the last baseline, it copies `zedcafe/` -> peer (`copytor`), discarding
+the peer-side edit — regardless of mtimes. A host push into `zedcafe/`
+always wins over a stale peer copy for the same reason: the peer is a mirror,
+not a second source of truth.
+
+Practical consequences for anything editing the peer directory directly
+(hand edits, another tool, a future agent):
+
+- There is **no merge**. A conflicting peer edit is silently overwritten on
+  the next `SteadyTick`, not rejected or queued.
+- Peer-side edits only "stick" if `zedcafe/` did not also change that path
+  since the last tick — i.e. the peer is a reliable place to make changes
+  only when the sim is idle on that path.
+- **Single writer is assumed on the peer side.** Two peers (or a peer plus a
+  hand-editor) racing the same path have no coordination beyond "sim wins";
+  whichever peer write loses the race is silently discarded on the next tick,
+  same as a hand edit.
+- Before trusting a peer-side write took effect, check `stats.json`
+  `exportRevision` (bumped on every acknowledged host push, see
+  `bumpexportrevision` / `readexportrevision` in
+  [`wanixstateexport.ts`](wanixstateexport.ts)) — if it advanced past the
+  revision you observed before writing, the sim has since pushed and may
+  have overwritten your edit.
+- Multi-writer coordination (per-path leases so concurrent peers don't stomp
+  each other) is **deferred**, not implemented — see Phase 4 note below.
+
+Peer-side crash recovery: `ops/fixtures/wanix/zedsync/journal.go` appends one
+NDJSON entry to `<remote>/.zedsync/journal.ndjson` immediately before each
+copy (`status: "pending"`, with the source file's `sha256`) and a matching
+`status: "done"` entry after the copy succeeds. `<remote>/.zedsync/state.json`
+tracks `{ lastRemoteRev, lastZedcafeRev }`. On startup, `main.go` calls
+`ReplayIncompleteJournal` before `InitialSeed`: any journal entry whose latest
+recorded status is still `"pending"` (process died between the journal write
+and the copy completing) is best-effort re-copied. `.zedsync/` is a
+dot-prefixed segment, so it is already excluded from `WalkFiles` snapshots —
+it never appears as a syncable path.
+
+### Agent platform contract (Phase 4, lightweight)
+
+For an external tool/agent driving the sim through the peer directory (not
+through `#wanix` commands), the recommended loop is:
+
+1. **Read `stats.json`** on the peer, note `exportRevision` and `bookCount`.
+2. **Make edits** on the peer under the book/page paths described in
+   [`zedcafetreeschema`](zedcafetreeschema.ts) — one file per unit of change
+   where possible, so `changedpaths`/`skippedpaths` on the resulting
+   `importresult` (see `WANIX_ZED_CAFE_IMPORT_RESULT` in
+   [`zss/device/api.ts`](../../device/api.ts)) can confirm exactly what the
+   sim accepted.
+3. **Wait for the next sync tick** (peer sync is polling, not push — see
+   `PollInterval`/`PollIdleMax`) and then re-read `stats.json`.
+4. **Compare `exportRevision`**: if it advanced, the sim pushed since your
+   edit (sim wins — assume your edit may have been superseded on any path the
+   sim also touched; re-diff before retrying). If it did not advance and
+   `bookCount`/content reflects your edit, the write landed cleanly.
+5. **Treat `skippedpaths` as success, not failure** when importing
+   programmatically through `vm:importzedcafe` directly (bypassing the peer
+   tree) — a skipped path means the sim already had that exact content
+   (no-op), not that the write was rejected.
+
+**Deferred (not implemented):** per-path leases or any other multi-writer
+coordination for concurrent peers/agents editing the same peer tree. Today,
+"sim wins" plus single-writer-per-peer is the whole conflict story; do not
+build lease/lock infrastructure speculatively — revisit only when a real
+multi-agent-on-one-peer scenario exists.
+
 ---
 
 The in-browser `#agent` LLM feature was removed on purpose — see [`.cursor/rules/no-agent-feature.mdc`](../../../.cursor/rules/no-agent-feature.mdc).
@@ -808,7 +870,38 @@ The in-browser `#agent` LLM feature was removed on purpose — see [`.cursor/rul
 Follow-ups from the **less disruptive zedcafe imports** work:
 
 - **Sim-owned flag protection (shipped)** — `isimportprotectedflagowner` in [`wanixstateimport.ts`](wanixstateimport.ts) skips overwrite/delete for owners ending in `_gadget`, `_chip`, `_synth`, `_layers`, or `_tracking`. Player/`pid_*` and other world flags stay importable.
-- **Transferable `ArrayBuffer` bridge / further export coalesce (deferred)** — Measured baseline (2026-07): greenring-style partial terrain sync is ~61 KB pretty-printed JSON (`BOARD_SIZE` cells); fixture book source is ~1.7 MB. Same-origin structured-clone of ~61 KB is not a measured bottleneck; coalesce remains **500 ms**. Revisit transferables / tighter coalesce when `[wanix-perf] export-push-*` marks show large `bytes` with high `elapsedms` (full-tree activate / multi-board floods), not for greenring alone. Marks now include `bytes`.
+- **Tiered export coalesce (shipped, Phase 1)** — `checkzedcafeexportontick` now
+  picks the coalesce window by dirty shape: a single dirty path flushes
+  immediately (`WANIX_ZEDCAFE_EXPORT_COALESCE_SINGLE_MS = 0`), terrain-only
+  dirty (any count of `board/terrain.json` paths) waits
+  `WANIX_ZEDCAFE_EXPORT_COALESCE_TERRAIN_MS` (75 ms), everything else
+  (structural rebuild) keeps `WANIX_ZEDCAFE_EXPORT_COALESCE_MS` (500 ms). See
+  `zss/feature/wanix/wanixzedcafeconstants.ts`.
+- **Path-aware guest dirty (shipped, Phase 1)** — Go `markexportdirty` now
+  accumulates a dirty-path set (50 ms debounce, was 150 ms) and
+  `defaultdirtynotify` posts `{ zedcafeexportdirty, paths }`. The parent
+  accumulates those paths (`markpendingdirtypaths` / `drainpendingdirtypaths`
+  in `zss/device/wanixclient/state.ts`) and scopes the next guest-tree compare
+  (`guestdiffersfromlastpush`) to just those paths + `stats.json` instead of
+  the full document. The tree read itself is still a full walk; see
+  `zss/device/wanixclient/wanixzedcafe.ts`.
+- **Parallel export writes (shipped, Phase 1)** — `pushzedcafeexportlive`
+  writes upserts with a bounded-concurrency pool (`PUSH_WRITE_CONCURRENCY =
+  8`) and always writes `stats.json` last, after every other write in the
+  batch settles, so guests never observe a content-ready signal before the
+  files it references land.
+- **Transferable `ArrayBuffer` bridge (documented, not wired)** — `zss/hub.ts`
+  tunnels `device.emit` (including the zedcafe export sync path) through
+  `BroadcastChannel`, whose `postMessage(message)` has no transfer-list
+  parameter and always structured-clones. `exportfilestotransferable` in
+  `zss/feature/wanix/wanixzedcafetransfer.ts` collects the ArrayBuffers for a
+  transfer list above `WANIX_ZEDCAFE_TRANSFER_THRESHOLD_BYTES` (64 KB), for
+  use if/when a direct `Window`/`Worker` `postMessage(message, target,
+  transfer)` path replaces the BroadcastChannel bus for this traffic. Measured
+  baseline (2026-07): greenring-style partial terrain sync is ~61 KB
+  pretty-printed JSON; fixture book source is ~1.7 MB — revisit wiring this in
+  when `[wanix-perf] export-push-*` marks show large `bytes` with high
+  `elapsedms` (full-tree activate / multi-board floods).
 - **RFC 6902 as inbound transport (open)** — inbound import uses path-keyed docs + selective apply (`applyzedcafepartialtomemory`), not boardrunner boundary patches. **Spike criteria (revisit when any of these is a named repro):**
   1. Very large multi-book structural deletes where full guest-tree compare + path apply is too slow or lossy
   2. Cross-book moves/renames (kebab dirname identity changes) that path-doc delta cannot express safely

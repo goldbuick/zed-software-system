@@ -86,6 +86,7 @@ const probeSeg = "_probe_"
 func exportdirsuffixprobes() []string {
 	return []string{
 		"/stats.json",
+		"/revision", // .zedsync host revision hint
 		"/flags/_.json",
 		"/_.json",
 		"/0.json",

@@ -136,6 +136,7 @@ func TestIsAllowedExportDir(t *testing.T) {
 		{page + "/terrain", true},
 		{page + "/charset", true},
 		{page + "/palette", true},
+		{".zedsync", true},
 		{"totally/invalid/extra", false},
 		{book + "/pages/player-sid_q8uHjK2to8P", false},
 	}
@@ -167,6 +168,9 @@ func TestSchemaGuardP9WritePageObjectAfterMkdirAll(t *testing.T) {
 func TestIsAllowedExportPath(t *testing.T) {
 	if !isallowedexportpath("stats.json") {
 		t.Fatal("stats.json should be allowed")
+	}
+	if !isallowedexportpath(".zedsync/revision") {
+		t.Fatal(".zedsync/revision should be allowed")
 	}
 	if isallowedexportpath("../stats.json") {
 		t.Fatal("../stats.json should be rejected")

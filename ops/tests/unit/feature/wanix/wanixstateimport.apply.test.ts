@@ -576,4 +576,52 @@ describe('applyzedcafepartialtomemory', () => {
     expect(objects.keep).toBeTruthy()
     expect(objects.dropme).toBeUndefined()
   })
+
+  it('reports changedpaths for an applied upsert', () => {
+    const terrain = maketerrain(7)
+    const path = 'demo-b1/title-page1/board/terrain.json'
+    const result = applyzedcafepartialtomemory([
+      { path, bytes: encoder.encode(JSON.stringify(terrain)) },
+    ])
+    expect(result.changed).toBe(true)
+    expect(result.changedpaths).toEqual([path])
+    expect(result.skippedpaths).toEqual([])
+  })
+
+  it('reports skippedpaths when content-equal upsert is a no-op', () => {
+    const path = 'demo-b1/flags/pid_1.json'
+    const result = applyzedcafepartialtomemory([
+      { path, bytes: encoder.encode(JSON.stringify({ ammo: 1 })) },
+    ])
+    expect(result.changed).toBe(false)
+    expect(result.changedpaths).toEqual([])
+    expect(result.skippedpaths).toEqual([path])
+  })
+
+  it('reports skippedpaths for protected owner upserts and removes', () => {
+    const upsertpath = 'demo-b1/flags/pid_1_gadget.json'
+    const upsertresult = applyzedcafepartialtomemory([
+      {
+        path: upsertpath,
+        bytes: encoder.encode(
+          JSON.stringify({ state: { sidebar: [['text', 'wipe']] } }),
+        ),
+      },
+    ])
+    expect(upsertresult.changed).toBe(false)
+    expect(upsertresult.skippedpaths).toEqual([upsertpath])
+
+    const removepath = 'demo-b1/flags/pid_1_gadget.json'
+    const removeresult = applyzedcafepartialtomemory([], [removepath])
+    expect(removeresult.changed).toBe(false)
+    expect(removeresult.skippedpaths).toEqual([removepath])
+  })
+
+  it('reports changedpaths for an applied remove', () => {
+    const path = 'demo-b1/title-page1/board/objects/dropme.json'
+    const result = applyzedcafepartialtomemory([], [path])
+    expect(result.changed).toBe(true)
+    expect(result.changedpaths).toEqual([path])
+    expect(result.skippedpaths).toEqual([])
+  })
 })

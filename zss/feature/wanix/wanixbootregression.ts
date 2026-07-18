@@ -113,3 +113,79 @@ export function assesswanixbootregression(
   }
   return { ok: missing.length === 0, gate, missing }
 }
+
+/**
+ * Agent sync latency paths and SLO budgets (ms), tracked separately from
+ * `WANIX_BOOT_REGRESSION_GATES` since these gate ongoing sync latency, not
+ * one-shot boot signals. Sim<->guest legs must stay sub-200ms; the
+ * peer->sim end-to-end leg (network hop included) budgets sub-400ms.
+ */
+export type WanixAgentLatencyPath =
+  | 'sim-to-guest'
+  | 'guest-to-sim'
+  | 'sim-to-peer'
+  | 'peer-to-sim'
+
+export const WANIX_AGENT_LATENCY_SLOS: Record<WanixAgentLatencyPath, number> = {
+  'sim-to-guest': 200,
+  'guest-to-sim': 200,
+  'sim-to-peer': 200,
+  'peer-to-sim': 400,
+}
+
+/**
+ * Agent workload profiles used to shape latency sample collection:
+ * - singlefile: one object write/read round trip
+ * - batchobjects: many objects touched in one sync tick
+ * - structuraldelete: board/layer structural removal (not a plain object write)
+ */
+export type WanixAgentWorkloadProfile =
+  | 'singlefile'
+  | 'batchobjects'
+  | 'structuraldelete'
+
+export const WANIX_AGENT_WORKLOAD_PROFILES: WanixAgentWorkloadProfile[] = [
+  'singlefile',
+  'batchobjects',
+  'structuraldelete',
+]
+
+/** Nearest-rank percentile (p in 0..100) over an unsorted ms sample array. */
+export function percentilems(samples: number[], p: number): number {
+  if (samples.length === 0) {
+    return 0
+  }
+  const sorted = [...samples].sort((a, b) => a - b)
+  const rank = Math.ceil((p / 100) * sorted.length)
+  const idx = Math.min(Math.max(rank - 1, 0), sorted.length - 1)
+  return sorted[idx]
+}
+
+/**
+ * Assess collected latency samples (ms, keyed by `WanixAgentLatencyPath`)
+ * against `WANIX_AGENT_LATENCY_SLOS`. A path with no samples is reported as
+ * missing rather than silently passing.
+ */
+export function assessagentlatencyslos(samples: Record<string, number[]>): {
+  ok: boolean
+  missing: string[]
+  report: Record<string, { p50: number; p95: number; budget: number }>
+} {
+  const missing: string[] = []
+  const report: Record<string, { p50: number; p95: number; budget: number }> =
+    {}
+  for (const [gatepath, budget] of Object.entries(WANIX_AGENT_LATENCY_SLOS)) {
+    const values = samples[gatepath] ?? []
+    if (values.length === 0) {
+      missing.push(`${gatepath}: no samples`)
+      continue
+    }
+    const p50 = percentilems(values, 50)
+    const p95 = percentilems(values, 95)
+    report[gatepath] = { p50, p95, budget }
+    if (p95 > budget) {
+      missing.push(`${gatepath} p95 exceeded ${budget}ms (was ${p95}ms)`)
+    }
+  }
+  return { ok: missing.length === 0, missing, report }
+}

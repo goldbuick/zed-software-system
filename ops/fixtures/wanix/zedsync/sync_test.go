@@ -1,6 +1,7 @@
 package zedsync
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -188,7 +189,10 @@ func TestSteadyTickZedcafeDeleteRemovesRemote(t *testing.T) {
 	}
 }
 
-func TestSteadyTickConflictRemoteWinsOnTie(t *testing.T) {
+// Conflict policy: sim (zedcafe) is authoritative. When both sides changed
+// since baseline, zedcafe always wins regardless of mtime — see "Peer sync
+// (zedsync)" > "Conflict policy: sim wins" in feature/wanix/README.md.
+func TestSteadyTickConflictSimWins(t *testing.T) {
 	dir := t.TempDir()
 	remote := filepath.Join(dir, "remote")
 	zedcafe := filepath.Join(dir, "zedcafe")
@@ -199,20 +203,29 @@ func TestSteadyTickConflictRemoteWinsOnTie(t *testing.T) {
 	writefile(t, zedcafe, "c.json", `old`, base)
 	baseline, _ := WalkFiles(remote)
 
-	same := time.Now()
-	writefile(t, remote, "c.json", `from-remote`, same)
-	writefile(t, zedcafe, "c.json", `from-zedcafe`, same)
+	// zedcafe (sim) is older than remote — sim still wins the conflict.
+	older := time.Now()
+	newer := older.Add(time.Minute)
+	writefile(t, zedcafe, "c.json", `from-zedcafe`, older)
+	writefile(t, remote, "c.json", `from-remote`, newer)
 
 	_, logs, err := SteadyTick(remote, zedcafe, baseline)
 	if err != nil {
 		t.Fatal(err)
 	}
-	body, err := os.ReadFile(filepath.Join(zedcafe, "c.json"))
+	remotebody, err := os.ReadFile(filepath.Join(remote, "c.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if string(body) != "from-remote" {
-		t.Fatalf("body=%q logs=%v", body, logs)
+	if string(remotebody) != "from-zedcafe" {
+		t.Fatalf("remote body=%q logs=%v", remotebody, logs)
+	}
+	zedbody, err := os.ReadFile(filepath.Join(zedcafe, "c.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(zedbody) != "from-zedcafe" {
+		t.Fatalf("zedcafe body=%q logs=%v", zedbody, logs)
 	}
 }
 
@@ -416,6 +429,178 @@ func TestPruneEmptyDirsNonemptyIsNonfatal(t *testing.T) {
 	pruneemptydirs([]string{child, filepath.Join(dir, "board")})
 	if _, err := os.Stat(filepath.Join(dir, "board", "objects", "keep.json")); err != nil {
 		t.Fatal("non-empty objects dir should not be removed")
+	}
+}
+
+func TestReadRevisionMissingFileReturnsZero(t *testing.T) {
+	dir := t.TempDir()
+	rev, paths, err := ReadRevision(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rev != 0 || paths != nil {
+		t.Fatalf("rev=%d paths=%v want 0/nil", rev, paths)
+	}
+}
+
+func TestReadRevisionParsesPayload(t *testing.T) {
+	dir := t.TempDir()
+	writefile(t, dir, RevisionFile, `{"revision":3,"paths":["a.json","b.json"]}`, time.Time{})
+	rev, paths, err := ReadRevision(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rev != 3 {
+		t.Fatalf("rev=%d want 3", rev)
+	}
+	if len(paths) != 2 || paths[0] != "a.json" || paths[1] != "b.json" {
+		t.Fatalf("paths=%v", paths)
+	}
+}
+
+func TestSteadyTickIncrementalScopedToRevisionPaths(t *testing.T) {
+	dir := t.TempDir()
+	remote := filepath.Join(dir, "remote")
+	zedcafe := filepath.Join(dir, "zedcafe")
+	_ = os.MkdirAll(remote, 0o755)
+	_ = os.MkdirAll(zedcafe, 0o755)
+	mtime := time.Now().Add(-time.Minute)
+	writefile(t, remote, "keep.json", `1`, mtime)
+	writefile(t, zedcafe, "keep.json", `1`, mtime)
+	baseline, err := WalkFiles(remote)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// New file on zedcafe, revision hint points at just this path -- an
+	// incremental tick should copy it without walking either tree.
+	writefile(t, zedcafe, "flags/pid_1.json", `{"ammo":9}`, time.Now())
+	writefile(t, zedcafe, RevisionFile, `{"revision":1,"paths":["flags/pid_1.json"]}`, time.Time{})
+
+	next, logs, newrev, err := SteadyTickIncremental(remote, zedcafe, baseline, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if newrev != 1 {
+		t.Fatalf("newrev=%d want 1", newrev)
+	}
+	if LastWalkCount != 0 {
+		t.Fatalf("walks=%d want 0 (scoped tick should not WalkFiles)", LastWalkCount)
+	}
+	body, err := os.ReadFile(filepath.Join(remote, "flags", "pid_1.json"))
+	if err != nil {
+		t.Fatalf("expected flag copied to remote, logs=%v err=%v", logs, err)
+	}
+	if string(body) != `{"ammo":9}` {
+		t.Fatalf("body=%q", body)
+	}
+	if _, ok := next["flags/pid_1.json"]; !ok {
+		t.Fatal("next snapshot missing scoped path")
+	}
+	if _, ok := next["keep.json"]; !ok {
+		t.Fatal("next snapshot should still carry unrelated baseline entries")
+	}
+}
+
+func TestSteadyTickIncrementalSameRevisionChecksRemoteOnly(t *testing.T) {
+	dir := t.TempDir()
+	remote := filepath.Join(dir, "remote")
+	zedcafe := filepath.Join(dir, "zedcafe")
+	_ = os.MkdirAll(remote, 0o755)
+	_ = os.MkdirAll(zedcafe, 0o755)
+	mtime := time.Now().Add(-time.Minute)
+	writefile(t, remote, "x.json", `1`, mtime)
+	writefile(t, zedcafe, "x.json", `1`, mtime)
+	writefile(t, zedcafe, RevisionFile, `{"revision":5,"paths":["x.json"]}`, time.Time{})
+	baseline, err := WalkFiles(remote)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Peer edits remote directly; revision file is unchanged (rev == lastrev).
+	writefile(t, remote, "x.json", `from-peer`, time.Now())
+
+	next, _, newrev, err := SteadyTickIncremental(remote, zedcafe, baseline, 5)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if newrev != 5 {
+		t.Fatalf("newrev=%d want 5 (unchanged)", newrev)
+	}
+	if LastWalkCount != 1 {
+		t.Fatalf("walks=%d want 1 (remote-only)", LastWalkCount)
+	}
+	body, err := os.ReadFile(filepath.Join(zedcafe, "x.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(body) != "from-peer" {
+		t.Fatalf("zedcafe body=%q", body)
+	}
+	if next["x.json"].Size != int64(len("from-peer")) {
+		t.Fatalf("next snapshot not updated for x.json: %v", next["x.json"])
+	}
+}
+
+func TestSteadyTickIncrementalEmptyPathsNeedsFullTick(t *testing.T) {
+	dir := t.TempDir()
+	remote := filepath.Join(dir, "remote")
+	zedcafe := filepath.Join(dir, "zedcafe")
+	_ = os.MkdirAll(remote, 0o755)
+	_ = os.MkdirAll(zedcafe, 0o755)
+	writefile(t, zedcafe, RevisionFile, `{"revision":2,"paths":[]}`, time.Time{})
+
+	_, _, _, err := SteadyTickIncremental(remote, zedcafe, Snapshot{}, 0)
+	if !errors.Is(err, ErrZedsyncNeedFullTick) {
+		t.Fatalf("err=%v want ErrZedsyncNeedFullTick", err)
+	}
+}
+
+func TestSteadyTickIncrementalUnparseableRevisionNeedsFullTick(t *testing.T) {
+	dir := t.TempDir()
+	remote := filepath.Join(dir, "remote")
+	zedcafe := filepath.Join(dir, "zedcafe")
+	_ = os.MkdirAll(remote, 0o755)
+	_ = os.MkdirAll(zedcafe, 0o755)
+	writefile(t, zedcafe, RevisionFile, `not json`, time.Time{})
+
+	_, _, _, err := SteadyTickIncremental(remote, zedcafe, Snapshot{}, 0)
+	if !errors.Is(err, ErrZedsyncNeedFullTick) {
+		t.Fatalf("err=%v want ErrZedsyncNeedFullTick", err)
+	}
+}
+
+// Conflict policy: sim wins even on a scoped incremental tick, matching
+// TestSteadyTickConflictSimWins for the full-walk path.
+func TestSteadyTickIncrementalConflictSimWins(t *testing.T) {
+	dir := t.TempDir()
+	remote := filepath.Join(dir, "remote")
+	zedcafe := filepath.Join(dir, "zedcafe")
+	_ = os.MkdirAll(remote, 0o755)
+	_ = os.MkdirAll(zedcafe, 0o755)
+	base := time.Now().Add(-time.Hour)
+	writefile(t, remote, "c.json", `old`, base)
+	writefile(t, zedcafe, "c.json", `old`, base)
+	baseline, err := WalkFiles(remote)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	older := time.Now()
+	newer := older.Add(time.Minute)
+	writefile(t, zedcafe, "c.json", `from-zedcafe`, older)
+	writefile(t, remote, "c.json", `from-remote`, newer)
+	writefile(t, zedcafe, RevisionFile, `{"revision":1,"paths":["c.json"]}`, time.Time{})
+
+	_, logs, _, err := SteadyTickIncremental(remote, zedcafe, baseline, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	remotebody, err := os.ReadFile(filepath.Join(remote, "c.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(remotebody) != "from-zedcafe" {
+		t.Fatalf("remote body=%q logs=%v", remotebody, logs)
 	}
 }
 

@@ -14,6 +14,8 @@ const OBJ_ID = '[^/]+'
 
 export const ZED_CAFE_EXPORT_ALLOWED_PATH: RegExp[] = [
   /^stats\.json$/,
+  /** Host-written zedsync incremental revision hint (not guest content). */
+  /^\.zedsync\/revision$/,
   new RegExp(`^${DIR_SEG}/stats\\.json$`),
   new RegExp(`^${DIR_SEG}/flags/${OBJ_ID}\\.json$`),
   new RegExp(`^${DIR_SEG}/${DIR_SEG}/stats\\.json$`),

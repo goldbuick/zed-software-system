@@ -445,6 +445,8 @@ let pendingsync: Pendingsync | null = null
 let pendingpollphase: PendingPollPhase = null
 /** True when a kick arrived while poll inactive or a phase was already in flight. */
 let pendingpollkick = false
+/** Dirty paths accumulated from file-change kicks since the last drain. */
+const pendingdirtypaths = new Set<string>()
 
 export function readpolltimer(): ReturnType<typeof setInterval> | undefined {
   return polltimer
@@ -512,6 +514,20 @@ export function setpendingpollkick(next: boolean): void {
   pendingpollkick = next
 }
 
+/** Accumulate dirty paths from file-change kicks until the next drain. */
+export function markpendingdirtypaths(paths: string[]): void {
+  for (let i = 0; i < paths.length; ++i) {
+    pendingdirtypaths.add(paths[i])
+  }
+}
+
+/** Read + clear accumulated dirty paths (empty array when none pending). */
+export function drainpendingdirtypaths(): string[] {
+  const drained = [...pendingdirtypaths]
+  pendingdirtypaths.clear()
+  return drained
+}
+
 export function resetwanixzedcafesessionfortest(): void {
   useWanixClient.setState({
     lasthostpushdoc: {},
@@ -539,6 +555,7 @@ export function resetwanixzedcafependingfortest(): void {
   pendingsync = null
   pendingpollphase = null
   pendingpollkick = false
+  pendingdirtypaths.clear()
 }
 
 /** Test hook — resets all wanixclient device state. */

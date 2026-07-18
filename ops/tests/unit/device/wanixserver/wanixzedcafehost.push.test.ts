@@ -74,7 +74,10 @@ describe('pushzedcafeexportlive removepaths', () => {
     expect(removed).toEqual([
       `${base}/demo-book1/demo-page1/board/objects/oid.json`,
     ])
-    expect(written).toEqual([`${base}/stats.json`])
+    expect(written).toEqual([
+      `${base}/stats.json`,
+      `${base}/.zedsync/revision`,
+    ])
   })
 
   it('ignores missing-file remove errors', async () => {
@@ -135,5 +138,73 @@ describe('pushzedcafeexportlive removepaths', () => {
     ).resolves.toBeUndefined()
     expect(errors).toEqual([])
     spy.mockRestore()
+  })
+
+  it('materializes parent dirs before parallel writes and tolerates EEXIST', async () => {
+    const taskrid = '7'
+    const base = readwanixzedcafeexportsrc(taskrid)
+    const mkdircalls: string[] = []
+    const written: string[] = []
+    const root: WanixRoot = {
+      readDir: async () => [],
+      readFile: async () => new Uint8Array(),
+      readText: async () => '',
+      writeFile: async (path) => {
+        written.push(path)
+      },
+      makeDirAll: async (path) => {
+        mkdircalls.push(path)
+        if (mkdircalls.length === 1) {
+          throw new Error(
+            'mkdir coolregionsbow-sid_x/ammo-sid_y: file already exists',
+          )
+        }
+      },
+      appendFile: async () => {},
+      remove: async () => {},
+      bind: async () => {},
+      unbind: async () => {},
+      waitFor: async () => {},
+      openReadable: async () => new ReadableStream(),
+      openWritable: async () => new WritableStream(),
+    }
+
+    await expect(
+      pushzedcafeexportlive(root, taskrid, [
+        {
+          path: 'coolregionsbow-sid_x/ammo-sid_y/board/terrain.json',
+          data: [...new TextEncoder().encode('[0]\n')],
+        },
+        {
+          path: 'coolregionsbow-sid_x/ammo-sid_y/board/objects/oid.json',
+          data: [...new TextEncoder().encode('{}\n')],
+        },
+        {
+          path: 'coolregionsbow-sid_x/ammo-sid_y/object/element.json',
+          data: [...new TextEncoder().encode('{}\n')],
+        },
+        {
+          path: 'stats.json',
+          data: [
+            ...new TextEncoder().encode(
+              '{"exportedAt":"t","bookCount":0,"books":[]}\n',
+            ),
+          ],
+        },
+      ]),
+    ).resolves.toBeUndefined()
+
+    // Shallow parents before nested (book before page before board/objects).
+    const boarddir = `${base}/coolregionsbow-sid_x/ammo-sid_y/board`
+    const objectsdir = `${base}/coolregionsbow-sid_x/ammo-sid_y/board/objects`
+    const objectdir = `${base}/coolregionsbow-sid_x/ammo-sid_y/object`
+    expect(mkdircalls.indexOf(boarddir)).toBeLessThan(
+      mkdircalls.indexOf(objectsdir),
+    )
+    expect(mkdircalls).toContain(objectdir)
+    expect(written).toContain(
+      `${base}/coolregionsbow-sid_x/ammo-sid_y/board/terrain.json`,
+    )
+    expect(written).toContain(`${base}/stats.json`)
   })
 })

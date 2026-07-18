@@ -21,12 +21,15 @@ jest.mock('zss/feature/wanix/wanixstateimport', () => ({
     changed: true,
     paintids: ['page-1'],
     bookcount: 1,
+    changedpaths: [],
+    skippedpaths: [],
   })),
   parsezedcafeexportfiles: jest.fn(() => ({ books: [{ id: 'b1' }] })),
 }))
 
 jest.mock('zss/feature/wanix/wanixstateexport', () => ({
   primezedcafeexportshadow: jest.fn(),
+  readexportrevision: jest.fn(() => 1),
 }))
 
 jest.mock('zss/feature/wanix/zedcafetreeschema', () => ({
@@ -80,6 +83,8 @@ describe('handleimportzedcafe', () => {
       changed: true,
       paintids: ['page-1'],
       bookcount: 1,
+      changedpaths: [],
+      skippedpaths: [],
     })
   })
 
@@ -102,6 +107,7 @@ describe('handleimportzedcafe', () => {
       true,
       undefined,
       1,
+      { revision: 1 },
     )
   })
 
@@ -117,6 +123,7 @@ describe('handleimportzedcafe', () => {
       false,
       undefined,
       1,
+      { revision: 1 },
     )
   })
 
@@ -125,6 +132,8 @@ describe('handleimportzedcafe', () => {
       changed: true,
       paintids: ['page-1'],
       bookcount: 2,
+      changedpaths: ['demo-b1/p/board/terrain.json'],
+      skippedpaths: [],
     })
     handleimportzedcafe(vm, {
       ...message,
@@ -147,6 +156,11 @@ describe('handleimportzedcafe', () => {
       true,
       undefined,
       2,
+      {
+        revision: 1,
+        changedpaths: ['demo-b1/p/board/terrain.json'],
+        skippedpaths: [],
+      },
     )
   })
 })

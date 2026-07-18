@@ -1,6 +1,8 @@
 package zedsync
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -18,7 +20,18 @@ const (
 	PollIdleMax       = 4 * time.Second
 	SkipSentinel      = ReadySentinel
 	SeedProgressEvery = 100
+	// RevisionDir/RevisionFile mirror WANIX_ZEDSYNC_REVISION_DIR /
+	// WANIX_ZEDSYNC_REVISION_FILE in wanixzedcafeconstants.ts -- the host
+	// (zedcafehost.ts pushzedcafeexportlive) writes this after each push.
+	RevisionDir  = ".zedsync"
+	RevisionFile = ".zedsync/revision"
 )
+
+// ErrZedsyncNeedFullTick signals that SteadyTickIncremental could not apply
+// a scoped update (revision file missing/unparseable, or bumped with no
+// path list) -- the documented primary recovery path is for the caller
+// (cmd/main.go) to fall back to the full SteadyTick, not a silent retry.
+var ErrZedsyncNeedFullTick = errors.New("zedsync: incremental state incomplete, need full tick")
 
 // LastWalkCount is the number of WalkFiles calls in the most recent SteadyTick.
 var LastWalkCount int
@@ -103,10 +116,6 @@ func WalkFiles(root string) (Snapshot, error) {
 		return nil, err
 	}
 	return out, nil
-}
-
-func copyfile(srcroot, dstroot, rel string) error {
-	return copyfilecached(srcroot, dstroot, rel, nil)
 }
 
 func copyfilecached(srcroot, dstroot, rel string, madedirs map[string]struct{}) error {
@@ -218,23 +227,47 @@ func sizealigned(a, b FileMeta) bool {
 
 // InitialSeed copies between remote and zedcafe without deletes.
 // Empty remote + non-empty zedcafe seeds remote from zedcafe.
+// Every copy is journaled on remote (see journal.go); state.json is updated
+// once at the end when at least one file copied.
 func InitialSeed(remote, zedcafe string, r, z Snapshot) (copied int, err error) {
+	state, serr := ReadSyncState(remote)
+	if serr != nil {
+		return 0, fmt.Errorf("read sync state: %w", serr)
+	}
+	madedirs := map[string]struct{}{}
+	updatestate := func(op string, rev int) {
+		if op == "copytor" {
+			state.LastRemoteRev = rev
+		} else {
+			state.LastZedcafeRev = rev
+		}
+	}
+	defer func() {
+		if err == nil && copied > 0 {
+			err = WriteSyncState(remote, state)
+		}
+	}()
+
 	switch {
 	case len(r) == 0 && len(z) > 0:
 		total := len(z)
 		for rel := range z {
-			if err := copyfile(zedcafe, remote, rel); err != nil {
-				return copied, fmt.Errorf("seed remote %s: %w", rel, err)
+			rev, cerr := journalcopy(remote, zedcafe, remote, "copytor", rel, madedirs)
+			if cerr != nil {
+				return copied, fmt.Errorf("seed remote %s: %w", rel, cerr)
 			}
+			updatestate("copytor", rev)
 			copied++
 			reportseedprogress(copied, total)
 		}
 	case len(z) == 0 && len(r) > 0:
 		total := len(r)
 		for rel := range r {
-			if err := copyfile(remote, zedcafe, rel); err != nil {
-				return copied, fmt.Errorf("seed zedcafe %s: %w", rel, err)
+			rev, cerr := journalcopy(remote, remote, zedcafe, "copytoz", rel, madedirs)
+			if cerr != nil {
+				return copied, fmt.Errorf("seed zedcafe %s: %w", rel, cerr)
 			}
+			updatestate("copytoz", rev)
 			copied++
 			reportseedprogress(copied, total)
 		}
@@ -255,28 +288,36 @@ func InitialSeed(remote, zedcafe string, r, z Snapshot) (copied int, err error) 
 			zm, zok := z[rel]
 			switch {
 			case rok && !zok:
-				if err := copyfile(remote, zedcafe, rel); err != nil {
-					return copied, fmt.Errorf("seed copytoz %s: %w", rel, err)
+				rev, cerr := journalcopy(remote, remote, zedcafe, "copytoz", rel, madedirs)
+				if cerr != nil {
+					return copied, fmt.Errorf("seed copytoz %s: %w", rel, cerr)
 				}
+				updatestate("copytoz", rev)
 				copied++
 				reportseedprogress(copied, total)
 			case zok && !rok:
-				if err := copyfile(zedcafe, remote, rel); err != nil {
-					return copied, fmt.Errorf("seed copytor %s: %w", rel, err)
+				rev, cerr := journalcopy(remote, zedcafe, remote, "copytor", rel, madedirs)
+				if cerr != nil {
+					return copied, fmt.Errorf("seed copytor %s: %w", rel, cerr)
 				}
+				updatestate("copytor", rev)
 				copied++
 				reportseedprogress(copied, total)
 			case rok && zok:
 				if rm.Mtime.After(zm.Mtime) || (rm.Mtime.Equal(zm.Mtime) && rm.Size != zm.Size) {
-					if err := copyfile(remote, zedcafe, rel); err != nil {
-						return copied, fmt.Errorf("seed copytoz %s: %w", rel, err)
+					rev, cerr := journalcopy(remote, remote, zedcafe, "copytoz", rel, madedirs)
+					if cerr != nil {
+						return copied, fmt.Errorf("seed copytoz %s: %w", rel, cerr)
 					}
+					updatestate("copytoz", rev)
 					copied++
 					reportseedprogress(copied, total)
 				} else if zm.Mtime.After(rm.Mtime) {
-					if err := copyfile(zedcafe, remote, rel); err != nil {
-						return copied, fmt.Errorf("seed copytor %s: %w", rel, err)
+					rev, cerr := journalcopy(remote, zedcafe, remote, "copytor", rel, madedirs)
+					if cerr != nil {
+						return copied, fmt.Errorf("seed copytor %s: %w", rel, cerr)
 					}
+					updatestate("copytor", rev)
 					copied++
 					reportseedprogress(copied, total)
 				}
@@ -290,6 +331,82 @@ type syncop struct {
 	rel    string
 	kind   string // copytoz, copytor, deleteremote
 	logmsg string
+}
+
+// planop derives the sync action (if any) for rel from baseline vs current
+// remote/zedcafe presence+metadata.
+//
+// sim-wins: zedcafe (sim export) is authoritative on any create/update
+// conflict (both sides changed since baseline) — zedcafe always wins,
+// regardless of mtime. See "Peer sync (zedsync)" > "Conflict policy: sim
+// wins" in feature/wanix/README.md.
+func planop(
+	rel string,
+	bm FileMeta, binbase bool,
+	rm FileMeta, rinremote bool,
+	zm FileMeta, rinzed bool,
+) (syncop, bool) {
+	switch {
+	case !binbase && rinremote && !rinzed:
+		return syncop{rel, "copytoz", fmt.Sprintf("create zedcafe ← %s", rel)}, true
+	case !binbase && rinzed && !rinremote:
+		return syncop{rel, "copytor", fmt.Sprintf("create remote ← %s", rel)}, true
+	case !binbase && rinremote && rinzed:
+		// sim-wins: zedcafe (sim export) is authoritative on any create conflict.
+		return syncop{rel, "copytor", fmt.Sprintf("create/conflict remote <- zedcafe (sim wins) %s", rel)}, true
+	case binbase && !rinremote && !rinzed:
+		// already gone both sides
+		return syncop{}, false
+	case binbase && !rinremote && rinzed:
+		return syncop{rel, "copytor", fmt.Sprintf("restore remote ← zedcafe %s", rel)}, true
+	case binbase && rinremote && !rinzed:
+		return syncop{rel, "deleteremote", fmt.Sprintf("delete remote ← gone on zedcafe %s", rel)}, true
+	case binbase && rinremote && rinzed:
+		remotechanged := newer(rm, bm) || rm.Size != bm.Size || !rm.Mtime.Equal(bm.Mtime)
+		zedchanged := newer(zm, bm) || zm.Size != bm.Size || !zm.Mtime.Equal(bm.Mtime)
+		if remotechanged && zedchanged {
+			// sim-wins: zedcafe (sim export) is authoritative on conflicts.
+			return syncop{rel, "copytor", fmt.Sprintf("conflict remote <- zedcafe (sim wins) %s", rel)}, true
+		}
+		if remotechanged {
+			return syncop{rel, "copytoz", fmt.Sprintf("update zedcafe ← %s", rel)}, true
+		}
+		if zedchanged {
+			// Mtime-only drift with equal size: browser FS after copytoz often
+			// cannot Chtimes; do not churn remote ← zedcafe.
+			if sizealigned(rm, zm) {
+				return syncop{}, false
+			}
+			return syncop{rel, "copytor", fmt.Sprintf("update remote ← %s", rel)}, true
+		}
+	}
+	return syncop{}, false
+}
+
+// sortops gives a deterministic plan: ordinary files before stats.json;
+// sorted otherwise.
+func sortops(ops []syncop) {
+	sort.SliceStable(ops, func(i, j int) bool {
+		istat := strings.HasSuffix(ops[i].rel, "/stats.json") || ops[i].rel == "stats.json"
+		jstat := strings.HasSuffix(ops[j].rel, "/stats.json") || ops[j].rel == "stats.json"
+		if istat != jstat {
+			return !istat
+		}
+		return ops[i].rel < ops[j].rel
+	})
+}
+
+// statmetaok stats rel under root; a missing file is reported as
+// (FileMeta{}, false, nil) rather than an error.
+func statmetaok(root, rel string) (FileMeta, bool, error) {
+	m, err := statmeta(root, rel)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return FileMeta{}, false, nil
+		}
+		return FileMeta{}, false, err
+	}
+	return m, true, nil
 }
 
 // SteadyTick applies creates/updates both ways vs baseline.
@@ -341,55 +458,21 @@ func steadytickbody(remote, zedcafe string, baseline Snapshot) (Snapshot, []stri
 		bm, binbase := baseline[rel]
 		rm, rinremote := r[rel]
 		zm, rinzed := z[rel]
-
-		switch {
-		case !binbase && rinremote && !rinzed:
-			ops = append(ops, syncop{rel, "copytoz", fmt.Sprintf("create zedcafe ← %s", rel)})
-		case !binbase && rinzed && !rinremote:
-			ops = append(ops, syncop{rel, "copytor", fmt.Sprintf("create remote ← %s", rel)})
-		case !binbase && rinremote && rinzed:
-			if rm.Mtime.After(zm.Mtime) || rm.Mtime.Equal(zm.Mtime) {
-				ops = append(ops, syncop{rel, "copytoz", fmt.Sprintf("create/conflict zedcafe ← %s", rel)})
-			} else {
-				ops = append(ops, syncop{rel, "copytor", fmt.Sprintf("create/conflict remote ← %s", rel)})
-			}
-		case binbase && !rinremote && !rinzed:
-			// already gone both sides
-		case binbase && !rinremote && rinzed:
-			ops = append(ops, syncop{rel, "copytor", fmt.Sprintf("restore remote ← zedcafe %s", rel)})
-		case binbase && rinremote && !rinzed:
-			ops = append(ops, syncop{rel, "deleteremote", fmt.Sprintf("delete remote ← gone on zedcafe %s", rel)})
-		case binbase && rinremote && rinzed:
-			remotechanged := newer(rm, bm) || rm.Size != bm.Size || !rm.Mtime.Equal(bm.Mtime)
-			zedchanged := newer(zm, bm) || zm.Size != bm.Size || !zm.Mtime.Equal(bm.Mtime)
-			if remotechanged && zedchanged {
-				if rm.Mtime.After(zm.Mtime) || rm.Mtime.Equal(zm.Mtime) {
-					ops = append(ops, syncop{rel, "copytoz", fmt.Sprintf("conflict zedcafe ← %s", rel)})
-				} else {
-					ops = append(ops, syncop{rel, "copytor", fmt.Sprintf("conflict remote ← %s", rel)})
-				}
-			} else if remotechanged {
-				ops = append(ops, syncop{rel, "copytoz", fmt.Sprintf("update zedcafe ← %s", rel)})
-			} else if zedchanged {
-				// Mtime-only drift with equal size: browser FS after copytoz often
-				// cannot Chtimes; do not churn remote ← zedcafe.
-				if sizealigned(rm, zm) {
-					continue
-				}
-				ops = append(ops, syncop{rel, "copytor", fmt.Sprintf("update remote ← %s", rel)})
-			}
+		if op, needed := planop(rel, bm, binbase, rm, rinremote, zm, rinzed); needed {
+			ops = append(ops, op)
 		}
 	}
+	sortops(ops)
 
-	// Deterministic plan: ordinary files before stats.json; sorted otherwise.
-	sort.SliceStable(ops, func(i, j int) bool {
-		istat := strings.HasSuffix(ops[i].rel, "/stats.json") || ops[i].rel == "stats.json"
-		jstat := strings.HasSuffix(ops[j].rel, "/stats.json") || ops[j].rel == "stats.json"
-		if istat != jstat {
-			return !istat
+	var state SyncState
+	statedirty := false
+	if len(ops) > 0 {
+		var serr error
+		state, serr = ReadSyncState(remote)
+		if serr != nil {
+			return baseline, nil, fmt.Errorf("read sync state: %w", serr)
 		}
-		return ops[i].rel < ops[j].rel
-	})
+	}
 
 	madedirs := map[string]struct{}{}
 	var prunedirs []string
@@ -397,18 +480,24 @@ func steadytickbody(remote, zedcafe string, baseline Snapshot) (Snapshot, []stri
 	for _, op := range ops {
 		switch op.kind {
 		case "copytoz":
-			if err := copyfilecached(remote, zedcafe, op.rel, madedirs); err != nil {
-				return baseline, logs, fmt.Errorf("copytoz %s: %w", op.rel, err)
+			rev, jerr := journalcopy(remote, remote, zedcafe, "copytoz", op.rel, madedirs)
+			if jerr != nil {
+				return baseline, logs, fmt.Errorf("copytoz %s: %w", op.rel, jerr)
 			}
+			state.LastZedcafeRev = rev
+			statedirty = true
 			meta, serr := statmeta(zedcafe, op.rel)
 			if serr != nil {
 				return baseline, logs, fmt.Errorf("copytoz stat %s: %w", op.rel, serr)
 			}
 			z[op.rel] = meta
 		case "copytor":
-			if err := copyfilecached(zedcafe, remote, op.rel, madedirs); err != nil {
-				return baseline, logs, fmt.Errorf("copytor %s: %w", op.rel, err)
+			rev, jerr := journalcopy(remote, zedcafe, remote, "copytor", op.rel, madedirs)
+			if jerr != nil {
+				return baseline, logs, fmt.Errorf("copytor %s: %w", op.rel, jerr)
 			}
+			state.LastRemoteRev = rev
+			statedirty = true
 			meta, serr := statmeta(remote, op.rel)
 			if serr != nil {
 				return baseline, logs, fmt.Errorf("copytor stat %s: %w", op.rel, serr)
@@ -423,6 +512,11 @@ func steadytickbody(remote, zedcafe string, baseline Snapshot) (Snapshot, []stri
 		logs = append(logs, op.logmsg)
 	}
 	pruneemptydirs(prunedirs)
+	if statedirty {
+		if werr := WriteSyncState(remote, state); werr != nil {
+			return baseline, logs, fmt.Errorf("write sync state: %w", werr)
+		}
+	}
 
 	// Prefer remote meta when both present after tick.
 	unified := Snapshot{}
@@ -433,6 +527,180 @@ func steadytickbody(remote, zedcafe string, baseline Snapshot) (Snapshot, []stri
 		unified[rel] = m
 	}
 	return unified, logs, nil
+}
+
+// applyscopedops executes ops (journaled + SyncState-tracked, same
+// durability pattern as steadytickbody's apply loop) against unified, for
+// callers that only stat individual rel paths rather than walking both
+// trees. unified is mutated in place and also returned.
+func applyscopedops(remote, zedcafe string, ops []syncop, unified Snapshot) (Snapshot, []string, error) {
+	var state SyncState
+	statedirty := false
+	if len(ops) > 0 {
+		var serr error
+		state, serr = ReadSyncState(remote)
+		if serr != nil {
+			return unified, nil, fmt.Errorf("read sync state: %w", serr)
+		}
+	}
+	madedirs := map[string]struct{}{}
+	var prunedirs []string
+	var logs []string
+	for _, op := range ops {
+		switch op.kind {
+		case "copytoz":
+			rev, jerr := journalcopy(remote, remote, zedcafe, "copytoz", op.rel, madedirs)
+			if jerr != nil {
+				return unified, logs, fmt.Errorf("copytoz %s: %w", op.rel, jerr)
+			}
+			state.LastZedcafeRev = rev
+			statedirty = true
+			meta, serr := statmeta(zedcafe, op.rel)
+			if serr != nil {
+				return unified, logs, fmt.Errorf("copytoz stat %s: %w", op.rel, serr)
+			}
+			unified[op.rel] = meta
+		case "copytor":
+			rev, jerr := journalcopy(remote, zedcafe, remote, "copytor", op.rel, madedirs)
+			if jerr != nil {
+				return unified, logs, fmt.Errorf("copytor %s: %w", op.rel, jerr)
+			}
+			state.LastRemoteRev = rev
+			statedirty = true
+			meta, serr := statmeta(remote, op.rel)
+			if serr != nil {
+				return unified, logs, fmt.Errorf("copytor stat %s: %w", op.rel, serr)
+			}
+			unified[op.rel] = meta
+		case "deleteremote":
+			if err := removefiledeferred(remote, op.rel, &prunedirs); err != nil {
+				return unified, logs, fmt.Errorf("deleteremote %s: %w", op.rel, err)
+			}
+			delete(unified, op.rel)
+		}
+		logs = append(logs, op.logmsg)
+	}
+	pruneemptydirs(prunedirs)
+	if statedirty {
+		if werr := WriteSyncState(remote, state); werr != nil {
+			return unified, logs, fmt.Errorf("write sync state: %w", werr)
+		}
+	}
+	return unified, logs, nil
+}
+
+// ReadRevision reads the host-written zedcafe/.zedsync/revision hint (see
+// RevisionFile / WANIX_ZEDSYNC_REVISION_FILE in wanixzedcafeconstants.ts,
+// written by zedcafehost.ts pushzedcafeexportlive). A missing file is
+// revision 0 with no paths, not an error.
+func ReadRevision(zedcafe string) (rev int64, paths []string, err error) {
+	path := filepath.Join(zedcafe, filepath.FromSlash(RevisionFile))
+	data, rerr := os.ReadFile(path)
+	if rerr != nil {
+		if os.IsNotExist(rerr) {
+			return 0, nil, nil
+		}
+		return 0, nil, fmt.Errorf("read revision %s: %w", path, rerr)
+	}
+	var payload struct {
+		Revision int64    `json:"revision"`
+		Paths    []string `json:"paths"`
+	}
+	if uerr := json.Unmarshal(data, &payload); uerr != nil {
+		return 0, nil, fmt.Errorf("parse revision %s: %w", path, uerr)
+	}
+	return payload.Revision, payload.Paths, nil
+}
+
+// steadytickpaths applies planop only for the given rel paths (from
+// ReadRevision), stat'ing each side directly instead of a full WalkFiles of
+// both trees.
+func steadytickpaths(remote, zedcafe string, baseline Snapshot, paths []string) (Snapshot, []string, error) {
+	unified := Snapshot{}
+	for rel, m := range baseline {
+		unified[rel] = m
+	}
+	ops := make([]syncop, 0, len(paths))
+	for _, rel := range paths {
+		bm, binbase := baseline[rel]
+		rm, rinremote, rerr := statmetaok(remote, rel)
+		if rerr != nil {
+			return baseline, nil, fmt.Errorf("stat remote %s: %w", rel, rerr)
+		}
+		zm, rinzed, zerr := statmetaok(zedcafe, rel)
+		if zerr != nil {
+			return baseline, nil, fmt.Errorf("stat zedcafe %s: %w", rel, zerr)
+		}
+		if op, needed := planop(rel, bm, binbase, rm, rinremote, zm, rinzed); needed {
+			ops = append(ops, op)
+		} else if !rinremote && !rinzed {
+			delete(unified, rel)
+		}
+	}
+	sortops(ops)
+	return applyscopedops(remote, zedcafe, ops, unified)
+}
+
+// steadytickincrementalpeeronly resyncs peer (remote)-only edits with a
+// single remote-side walk, skipping zedcafe entirely -- used when the
+// revision file has not bumped (zedcafe presumed unchanged since baseline).
+func steadytickincrementalpeeronly(
+	remote, zedcafe string, baseline Snapshot,
+) (Snapshot, []string, error) {
+	r, err := WalkFiles(remote)
+	if err != nil {
+		return baseline, nil, fmt.Errorf("walk remote: %w", err)
+	}
+	LastWalkCount = 1
+	all := map[string]struct{}{}
+	for rel := range baseline {
+		all[rel] = struct{}{}
+	}
+	for rel := range r {
+		all[rel] = struct{}{}
+	}
+	ops := make([]syncop, 0, len(all))
+	for rel := range all {
+		bm, binbase := baseline[rel]
+		rm, rinremote := r[rel]
+		// zedcafe assumed unchanged (revision unchanged) -- substitute
+		// baseline for the zedcafe side so only remote-originated changes
+		// surface as ops.
+		if op, needed := planop(rel, bm, binbase, rm, rinremote, bm, binbase); needed {
+			ops = append(ops, op)
+		}
+	}
+	sortops(ops)
+	unified := Snapshot{}
+	for rel, m := range baseline {
+		unified[rel] = m
+	}
+	return applyscopedops(remote, zedcafe, ops, unified)
+}
+
+// SteadyTickIncremental applies only zedcafe's revision-file dirty paths
+// (ReadRevision) when possible, skipping the full bidirectional WalkFiles
+// that SteadyTick performs. Returns ErrZedsyncNeedFullTick when the
+// revision file cannot be read/parsed, or bumped with an empty path list
+// (incomplete incremental state) -- the caller (cmd/main.go) falls back to
+// SteadyTick, the documented primary recovery path, not a silent retry.
+func SteadyTickIncremental(
+	remote, zedcafe string, baseline Snapshot, lastrev int64,
+) (snap Snapshot, logs []string, newrev int64, err error) {
+	LastWalkCount = 0
+	rev, paths, rerr := ReadRevision(zedcafe)
+	if rerr != nil {
+		return nil, nil, lastrev, fmt.Errorf("%w: %v", ErrZedsyncNeedFullTick, rerr)
+	}
+	if rev == lastrev {
+		snap, logs, err = steadytickincrementalpeeronly(remote, zedcafe, baseline)
+		return snap, logs, rev, err
+	}
+	if len(paths) == 0 {
+		return nil, nil, rev, ErrZedsyncNeedFullTick
+	}
+	snap, logs, err = steadytickpaths(remote, zedcafe, baseline, paths)
+	return snap, logs, rev, err
 }
 
 // WriteReadySentinel marks seed complete on the remote mount.
