@@ -48,8 +48,8 @@ const HINT_SCROLLBACK_ROWS = ismac ? `Fn+Up/Down` : `PgUp/PgDown`
 const HINT_CLIPBOARD = ismac
   ? `shift+arrows select, ${metakey}+c/v`
   : `shift+arrows select, ctrl+shift+c/v`
-const HINT_IDLE = `Ctrl+\\ prefix, backtick open tape, ${HINT_SCROLLBACK_ROWS}, ${HINT_CLIPBOARD}`
-const HINT_ARMED = `Ctrl+\\ detach, Esc cancel, Tab layout, left/right switch`
+const HINT_IDLE = `Ctrl+\\ prefix, ${HINT_SCROLLBACK_ROWS}, ${HINT_CLIPBOARD}`
+const HINT_ARMED = `Ctrl+\\ detach, \` tape, Esc cancel, Tab layout, left/right switch`
 const HINT_COLOR = COLOR.BLACK
 const HINT_MARQUEE_GAP = '$32$7$32'
 
@@ -246,14 +246,6 @@ export function WanixTermScreen({
   function handleattachchromekeys(event: KeyboardEvent) {
     const key = NAME(event.key)
 
-    // Open tape CLI (detaches attach panel via terminal:open handler).
-    if (event.key === '`' || (event.shiftKey && event.key === '?')) {
-      event.preventDefault()
-      setprefixarmed(false)
-      registerterminalopen(SOFTWARE, registerreadplayer())
-      return true
-    }
-
     if (prefixarmed) {
       event.preventDefault()
 
@@ -286,6 +278,13 @@ export function WanixTermScreen({
         return true
       }
 
+      // Open tape CLI (detaches attach panel via terminal:open handler).
+      if (event.key === '`') {
+        setprefixarmed(false)
+        registerterminalopen(SOFTWARE, registerreadplayer())
+        return true
+      }
+
       return true
     }
 
@@ -299,7 +298,7 @@ export function WanixTermScreen({
   }
 
   // No guest frame yet: still show chrome + keyboard so the user is never trapped
-  // behind an empty dither with no way to detach / open the tape CLI.
+  // behind an empty dither with no way to detach (Ctrl+\).
   if (!frame) {
     const waitinghint = prefixarmed
       ? HINT_ARMED

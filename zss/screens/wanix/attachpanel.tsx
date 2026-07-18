@@ -1,11 +1,8 @@
 import { useEffect, useState } from 'react'
-import { registerterminalopen } from 'zss/device/api'
-import { registerreadplayer } from 'zss/device/registerplayer'
-import { SOFTWARE } from 'zss/device/session'
 import { useWanixClient } from 'zss/device/wanixclient/wanixclientstore'
 import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/zustandstores'
 import { ShadeBoxDither } from 'zss/gadget/graphics/dither'
-import { UserFocus, UserHotkey } from 'zss/gadget/userinput'
+import { UserFocus } from 'zss/gadget/userinput'
 import { useScreenSize } from 'zss/gadget/userscreen'
 import { PanelSlide } from 'zss/screens/scroll/panelslide'
 import { TapeLayoutTiles } from 'zss/screens/tape/layouttiles'
@@ -160,15 +157,7 @@ export function WanixAttachPanel() {
           {shouldclose ? (
             tiles
           ) : (
-            <UserFocus blockhotkeys>
-              <UserHotkey hotkey="`">
-                {() => registerterminalopen(SOFTWARE, registerreadplayer())}
-              </UserHotkey>
-              <UserHotkey hotkey="Shift+?" althotkey="/">
-                {() => registerterminalopen(SOFTWARE, registerreadplayer())}
-              </UserHotkey>
-              {tiles}
-            </UserFocus>
+            <UserFocus blockhotkeys>{tiles}</UserFocus>
           )}
         </PanelSlide>
       </group>

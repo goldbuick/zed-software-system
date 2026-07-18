@@ -391,9 +391,9 @@ Manual attach: `#wanix attach` or menu session row. Detach: `#wanix detach` or
 [`wanixdisplay.ts`](../../device/wanixclient/wanixdisplay.ts).
 
 **Keyboard (attach panel):** `Ctrl+\` prefix stays armed until `Esc` or `Ctrl+\` again —
-`Tab`/`Shift+Tab` cycle size (TOP/FULL/BOTTOM), arrows switch session, second `Ctrl+\` detach.
-Bare `Tab` goes to the guest PTY when the prefix is not armed. Panel slides in/out like scroll.
-Backtick (or `Shift+?`) opens the tape CLI and detaches. Scrollback: PageUp/PageDown.
+`Tab`/`Shift+Tab` cycle size (TOP/FULL/BOTTOM), arrows switch session, second `Ctrl+\` detach,
+backtick opens the tape CLI. Bare backtick/`Tab` go to the guest PTY when the prefix is not armed.
+Panel slides in/out like scroll. Scrollback: PageUp/PageDown.
 
 After manual detach, re-attach with `Ctrl+\` (tape CLI or game), or `#wanix attach` / menu. Idle room reset also clears the detach latch.
 

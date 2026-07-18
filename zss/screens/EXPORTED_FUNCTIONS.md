@@ -184,7 +184,7 @@ Parent-realm React UI for the Wanix iframe bridge and attached terminal mirror.
 - **`WanixTermScreen()`**
   - Attached-session term mirror (tiles, scrollback, selection, hint bar)
   - Keyboard input and clipboard routed to guest via `wanixservertermwrite`
-  - `Ctrl+\` then `Tab`/`Shift+Tab` cycles attach panel size; bare Tab goes to guest; backtick opens tape CLI
+  - `Ctrl+\` then `Tab`/`Shift+Tab` cycles attach panel size; `Ctrl+\` then backtick opens tape; bare Tab/backtick go to guest
 
 ### `wanix/termsizesync.tsx`
 
