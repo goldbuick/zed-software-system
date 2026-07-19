@@ -5,6 +5,11 @@ import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { useDeviceData } from 'zss/gadget/device'
 import { useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
+import {
+  LANDSCAPE_TOUCH_RAIL_COLS,
+  PORTRAIT_SIDEBAR_OVERLAY_ROWS,
+  TOUCH_SIDEBAR_COLS,
+} from 'zss/screens/touchui/layout'
 import { useShallow } from 'zustand/react/shallow'
 
 export enum RECT_TYPE {
@@ -23,7 +28,7 @@ export type RECT = {
   text: PANEL_ITEM[]
 }
 
-const SIDEBAR_SIZE = 20
+const SIDEBAR_SIZE = TOUCH_SIDEBAR_COLS
 
 export type ScreenChromeLayout = {
   screensize: ReturnType<typeof useScreenSize>
@@ -98,32 +103,30 @@ export function useScreenChromeLayout(
         frame.width -= SIDEBAR_SIZE
         rects.push(rect)
       } else if (islandscape) {
-        const panelwidth = sidebaropen ? SIDEBAR_SIZE + 5 : SIDEBAR_SIZE
-        const inset = sidebaropen ? SIDEBAR_SIZE : 4
+        // Far right of screen: after game + shoot rail (userscreen reserved column).
+        // Screensize is game-only; place sidebar past the right rail gap.
         const rect = {
           name: 'sidebar',
           type: RECT_TYPE.PANEL,
-          x: frame.x + frame.width - inset,
+          x: frame.width + LANDSCAPE_TOUCH_RAIL_COLS,
           y: frame.y,
-          width: panelwidth,
+          width: SIDEBAR_SIZE,
           height: frame.height,
           text: sidebar,
         }
-        frame.width -= inset
         rects.push(rect)
-      } else {
-        const height = 15
-        const inset = sidebaropen ? height : 4
+      } else if (sidebaropen) {
+        // Portrait push band below game (userscreen reserved the rows).
+        const height = PORTRAIT_SIDEBAR_OVERLAY_ROWS
         const rect = {
           name: 'sidebar',
           type: RECT_TYPE.PANEL,
           x: 0,
-          y: frame.y + frame.height - inset,
+          y: frame.height,
           width: frame.width,
           height,
           text: sidebar,
         }
-        frame.height -= inset
         rects.push(rect)
       }
     }

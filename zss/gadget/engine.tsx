@@ -109,15 +109,18 @@ export function Engine() {
     (gputier.tier > 2 || gputier.gpu?.includes('apple gpu')) &&
     !gputier.isMobile
 
-  // update device config
+  // update device config + touch sidebar defaults
   useEffect(() => {
     useDeviceData.setState((state) => {
+      // Touch: stats always open (portrait push + landscape column). Desktop: open.
+      const sidebaropen = true
       return {
         ...state,
         islowrez,
         islandscape,
         showtouchcontrols,
         usemobiletextcapture,
+        sidebaropen,
       }
     })
   }, [islowrez, islandscape, showtouchcontrols, usemobiletextcapture])
