@@ -22,6 +22,7 @@ import {
 } from 'zss/gadget/graphics/flatcamerabounds'
 import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
 import { maptolayerz } from 'zss/gadget/graphics/layerz'
+import { clamp } from 'zss/mapping/number'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { InspectorComponent } from 'zss/screens/inspector/component'
 
@@ -40,6 +41,8 @@ export const FlatGraphics = memo(function FlatGraphics({
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
   const viewwidth = width * RUNTIME.DRAW_CHAR_WIDTH()
   const viewheight = height * RUNTIME.DRAW_CHAR_HEIGHT()
+  const boarddrawwidth = BOARD_WIDTH * drawwidth
+  const boarddrawheight = BOARD_HEIGHT * drawheight
   const centerx = viewwidth * -0.5
   const centery = viewheight * -0.5
 
@@ -49,6 +52,7 @@ export const FlatGraphics = memo(function FlatGraphics({
   )
   const cornerref = useRef<Group>(null)
   const zoomref = useRef<Group>(null)
+  const underref = useRef<Group>(null)
   const looktarget = useRef(new Vector3())
 
   const bindboardcamera = useCallback((c: OrthographicCameraImpl | null) => {
@@ -57,7 +61,12 @@ export const FlatGraphics = memo(function FlatGraphics({
   }, [])
 
   useFrame((_, delta) => {
-    if (!cameraref.current || !zoomref.current || !cornerref.current) {
+    if (
+      !cameraref.current ||
+      !zoomref.current ||
+      !cornerref.current ||
+      !underref.current
+    ) {
       return
     }
 
@@ -141,6 +150,16 @@ export const FlatGraphics = memo(function FlatGraphics({
     cam.position.set(0, 0, 1000)
     cam.lookAt(looktarget.current)
     cam.updateMatrixWorld()
+
+    // under board corner inset (same framing as iso / mode7 / fpv)
+    const xscale = clamp(viewwidth / boarddrawwidth, 1.0, 10.0)
+    const yscale = clamp(viewheight / boarddrawheight, 1.0, 10.0)
+    const rscale = Math.max(xscale, yscale)
+    const rwidth = boarddrawwidth * rscale
+    const rheight = boarddrawheight * rscale
+    underref.current.position.x = viewwidth - rwidth
+    underref.current.position.y = viewheight - rheight
+    underref.current.scale.setScalar(rscale)
   })
 
   // re-render when board or layer counts change (board change must trigger re-render)
@@ -169,12 +188,11 @@ export const FlatGraphics = memo(function FlatGraphics({
   // z of the topmost board layer (must stay in sync with FlatLayer z props below)
   const topoverz =
     over.length > 0
-      ? 1 + under.length + layers.length + (over.length - 1) * 2
+      ? 1 + layers.length + (over.length - 1) * 2
       : undefined
   const toplayersz =
-    layers.length > 0 ? 1 + under.length + (layers.length - 1) * 2 : undefined
-  const topunderz = under.length > 0 ? 1 + (under.length - 1) * 2 : undefined
-  const maintopz = topoverz ?? toplayersz ?? topunderz ?? 1
+    layers.length > 0 ? 1 + (layers.length - 1) * 2 : undefined
+  const maintopz = topoverz ?? toplayersz ?? 1
   const exitzbase = maintopz + 2
 
   let maxcornerz = maintopz
@@ -206,20 +224,12 @@ export const FlatGraphics = memo(function FlatGraphics({
         <group position={[centerx, centery, 0]}>
           <group ref={zoomref}>
             <group ref={cornerref}>
-              {under.map((layer, i) => (
-                <FlatLayer
-                  key={layer.id}
-                  from="under"
-                  id={layer.id}
-                  z={1 + i * 2}
-                />
-              ))}
               {layers.map((layer, i) => (
                 <FlatLayer
                   key={layer.id}
                   from="layers"
                   id={layer.id}
-                  z={1 + under.length + i * 2}
+                  z={1 + i * 2}
                 />
               ))}
               {over.map((layer, i) => (
@@ -227,7 +237,7 @@ export const FlatGraphics = memo(function FlatGraphics({
                   key={layer.id}
                   from="over"
                   id={layer.id}
-                  z={1 + under.length + layers.length + i * 2}
+                  z={1 + layers.length + i * 2}
                 />
               ))}
               {exitpreviewgroups.map(({ key, preview, position }) =>
@@ -249,6 +259,11 @@ export const FlatGraphics = memo(function FlatGraphics({
           </group>
         </group>
       </RenderLayer>
+      <group ref={underref}>
+        {under.map((layer, i) => (
+          <FlatLayer key={layer.id} from="under" id={layer.id} z={i * 2} />
+        ))}
+      </group>
     </>
   )
 })
