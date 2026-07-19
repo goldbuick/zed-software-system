@@ -48,9 +48,9 @@ hiss (pink noise) ───────┘
 
 ### Razzle Chain
 
-- **Vibrato:** Subtle pitch modulation (0.125 Hz, wet 0.1)
-- **Chorus:** Widening effect (7 ms base delay, wet 0.5)
-- **Tape hiss:** Pink noise modulated by oscillator, feeds chorus input
+- **Vibrato:** Subtle pitch modulation (0.125 Hz, wet 0.02)
+- **Chorus:** Widening effect (7 ms base delay, wet 0.1)
+- **Tape hiss:** Pink noise modulated by oscillator, feeds chorus input (very quiet bed)
 
 ### Daisy volume laws (match Tone)
 
@@ -58,7 +58,7 @@ hiss (pink noise) ───────┘
 |-----|------|-------|
 | Play into sidechain | `volumetodb(20)` | `kPlayBusGain` |
 | Drums | `volumetodb(100) + 10` dB | `kDrumBusGain` (calibrate: `yarn play-drum-balance:calibrate`) |
-| Main fader | `volumetodb(vol × 0.25)` on `mainvolume` | `readmainvolume()` |
+| Main fader | `volumetodb(vol × 0.25) + 20` on `mainvolume` (offset −15 dB) | `readmainvolume()` (`kMainFaderOffsetDb`) |
 
 ### Broadcast Destination
 

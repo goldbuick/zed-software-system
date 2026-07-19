@@ -124,7 +124,7 @@ function readmastervolume() {
     scprevlevelpow = 1e-6;
   }
   mastervolprev = vol;
-  var db = 20 * Math.log10(vol * 0.25) - 35 + MASTER_TRIM_DB + MASTER_MAKEUP_DB;
+  var db = 20 * Math.log10(vol * 0.25) - 15 + MASTER_TRIM_DB + MASTER_MAKEUP_DB;
   return Math.pow(10, db / 20);
 }
 

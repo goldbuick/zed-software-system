@@ -27,7 +27,6 @@ export function createwasmsynthadapter(synth: WASM_SYNTH): SynthBackend {
     synthflush: () => synth.synthflush(),
     playaudiobuffer: (buffer) => playwasmaudiobuffer(buffer),
     broadcastdestination: () => getwasmbroadcastdestination(),
-    warmdrums: () => synth.warmdrums(),
     destroy: () => synth.destroy(),
   }
 }

@@ -60,12 +60,6 @@ void initdaisydrums(float sr) {
   g_engine.tom_drum.SetTone(0.5f);
   g_engine.tom_drum.SetFmEnvelopeAmount(0.6f);
   g_engine.tom_drum.SetAccent(0.8f);
-
-  g_engine.bass_drum.Init(sr);
-  g_engine.bass_drum.SetFreq(50.f);
-  g_engine.bass_drum.SetDecay(0.5f);
-  g_engine.bass_drum.SetTone(0.4f);
-  g_engine.bass_drum.SetAccent(0.9f);
 }
 
 void initengine(float sr) {

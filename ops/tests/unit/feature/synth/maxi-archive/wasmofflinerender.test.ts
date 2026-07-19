@@ -48,7 +48,7 @@ describe('wasm record handler', () => {
       oscconfig: [],
       algoconfig: [],
       fxsab: [],
-      playvolume: 80,
+      playvolume: 100,
       bgplayvolume: 100,
     }
     const deps = {

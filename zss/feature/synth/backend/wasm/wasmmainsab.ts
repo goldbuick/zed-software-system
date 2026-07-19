@@ -15,7 +15,7 @@ export const WASM_MAIN_IDX = {
   SC_BYPASS: 4,
 } as const
 
-export const WASM_DEFAULT_PLAY_VOLUME = 80
+export const WASM_DEFAULT_PLAY_VOLUME = 100
 export const WASM_DEFAULT_BGPLAY_VOLUME = 100
 export const WASM_DEFAULT_TTS_VOLUME = 25
 

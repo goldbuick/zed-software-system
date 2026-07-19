@@ -24,18 +24,6 @@ describe('wasm drum scheduling', () => {
     jest.useRealTimers()
   })
 
-  it('warmdrums increments all drum strike counters', () => {
-    const { maxi, snapshot } = createmockmaxi()
-    const synth = createwasmsynth(maxi as any)
-    synth.warmdrums()
-    const drums = snapshot('zss_drums')
-    expect(drums).toHaveLength(WASM_DRUM_SAB_LEN)
-    for (let i = 0; i < WASM_DRUM_COUNT; i++) {
-      expect(drums[i]).toBe(1)
-    }
-    synth.destroy()
-  })
-
   it('schedules crash and ride from k and r play chars', () => {
     jest.useFakeTimers()
     const { maxi, snapshot } = createmockmaxi()

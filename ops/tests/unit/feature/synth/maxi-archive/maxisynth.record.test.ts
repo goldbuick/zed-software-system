@@ -49,7 +49,7 @@ describe('wasm replay state', () => {
         },
       ],
       fxsab: [1, 2, 3],
-      playvolume: 80,
+      playvolume: 100,
       bgplayvolume: 100,
     }
     const state = clonewasmreplaystate(original)

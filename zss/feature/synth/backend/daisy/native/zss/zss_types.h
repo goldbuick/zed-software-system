@@ -259,7 +259,6 @@ struct ZssEngine {
   float sample_rate = 44100.f;
   ZssVoice voices[kVoiceCount];
   ZssDrumState drums[kDrumCount];
-  AnalogBassDrum bass_drum;
   SyntheticBassDrum tom_drum;
   ZssFxGroup fx[kFxGroups];
   Oscillator drumoscA[kDrumCount], drumoscB[kDrumCount];
