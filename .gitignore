@@ -18,6 +18,9 @@ oclif.manifest.json
 *.local
 *.tsbuildinfo
 
+# tsc emit of vite.config.ts (Vite prefers .js over .ts — do not commit)
+vite.config.js
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
