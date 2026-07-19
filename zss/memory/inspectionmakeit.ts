@@ -66,7 +66,7 @@ function previewcodepage(codepage: CODE_PAGE, out: string[]) {
   const cpname = memoryreadcodepagename(codepage)
   out.push(
     zsszedlinkline(
-      `edit "" ${codepage.id}`,
+      `edit ${codepage.id}`,
       `edit$CYAN @${typelabel} ${cpname}`,
     ),
   )
