@@ -137,7 +137,8 @@ export function createsynth() {
   }
 
   function setplayvolume(volume: number) {
-    chain.mainvolume.volume.value = volumetodb(volume * 0.25)
+    // Match Daisy kMainFaderOffsetDb (-15): volumetodb uses -35, so +20.
+    chain.mainvolume.volume.value = volumetodb(volume * 0.25) + 20
   }
 
   function setbgplayvolume(volume: number) {
@@ -183,7 +184,7 @@ export function createsynth() {
 
   // defaults
   setttsvolume(25)
-  setplayvolume(80)
+  setplayvolume(100)
   setbgplayvolume(100)
   playback.pacer.start(0)
   FXCHAIN.autofilter.start()

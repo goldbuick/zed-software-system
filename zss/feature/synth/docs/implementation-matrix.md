@@ -23,7 +23,7 @@ flowchart LR
 - **Maximilian** (archived): [`archive/maxi/`](../../../../ops/archive/synth/maxi/) — generated play code, no longer selectable at runtime
 - **Tone** (archived): [`archive/tone/`](../../../../ops/archive/synth/tone/) — parity ground truth; Daisy voice/FX Tone-gated, drums use Daisy-native fixtures
 
-**DaisySP runtime usage:** `Oscillator`, `Adsr` (doot/sparkle/algo operators only), `Decimator`, `Overdrive`, `Svf`, `Phasor`, `DelayLine`, `Chorus`, `WhiteNoise`, `DcBlock`, `OnePole`, `Autowah`, `StringVoice` (`#synth pluck` strike), `ModalVoice` (bells), `Drip`, and (Daisy drums) `AnalogBassDrum`, `SyntheticBassDrum`. **`#synth env`** on play voices uses custom **`ZssLinearEnv`** (linear ADSR, note-on reset, behavioral Tone parity) — not DaisySP `Adsr`. **ADSR parity:** `yarn adsr-parity:test` (Jest `adsrenvcurve` + Playwright `env-parity:test`); wasmparity patches `env-adsr-sustain` / `env-adsr-retrigger` use `#play` notation `+hc` / `+icdeg` (see `.cursor/skills/play-notation/`). **`#synth string`** uses custom SOS ensemble DSP (saws + `Svf`/`OnePole`). **Voice FX bus:** **parallel sends** in `applyfxgroup()` (each FX from same dry; DAW additive mix); return-bus **compressor on wet sum** ([parallel-fx-bus.md](parallel-fx-bus.md)). **Main bus compressor:** Tone-shaped knee in `maincompressor()` (single 3/150 ms envelope). **Sidechain duck:** custom power-domain envelope on play bus (active). **`#reverb`** uses DaisySP-LGPL **ReverbSc** + predelay + `tanh(wet × kReverbPostGain)`.
+**DaisySP runtime usage:** `Oscillator`, `Adsr` (doot/sparkle/algo operators only), `Decimator`, `Overdrive`, `Svf`, `Phasor`, `DelayLine`, `Chorus`, `WhiteNoise`, `DcBlock`, `OnePole`, `Autowah`, `StringVoice` (`#synth pluck` strike), `ModalVoice` (bells), `Drip`, and (Daisy drums) `SyntheticBassDrum` (tom); bass is custom Membrane-style. **`#synth env`** on play voices uses custom **`ZssLinearEnv`** (linear ADSR, note-on reset, behavioral Tone parity) — not DaisySP `Adsr`. **ADSR parity:** `yarn adsr-parity:test` (Jest `adsrenvcurve` + Playwright `env-parity:test`); wasmparity patches `env-adsr-sustain` / `env-adsr-retrigger` use `#play` notation `+hc` / `+icdeg` (see `.cursor/skills/play-notation/`). **`#synth string`** uses custom SOS ensemble DSP (saws + `Svf`/`OnePole`). **Voice FX bus:** **parallel sends** in `applyfxgroup()` (each FX from same dry; DAW additive mix); return-bus **compressor on wet sum** ([parallel-fx-bus.md](parallel-fx-bus.md)). **Main bus compressor:** Tone-shaped knee in `maincompressor()` (single 3/150 ms envelope). **Sidechain duck:** custom power-domain envelope on play bus (active). **`#reverb`** uses DaisySP-LGPL **ReverbSc** + predelay + `tanh(wet × kReverbPostGain)`.
 
 ---
 
@@ -125,7 +125,7 @@ flowchart LR
 | 6 | Low snare | lower freq snare | Custom (WASM parity) | same | Custom | **Done** (Daisy) | same |
 | 7 | Low tom | pitch glide tom | `SyntheticBassDrum` tom substitute | saw/tri/noise glide | `SyntheticBassDrum` | Migrated | same |
 | 8 | Low woodblock | lower woodblock | Custom | same | — | Keep custom | `drumwoodblock(false)` |
-| 9 | Bass | membrane-style kick | `AnalogBassDrum` | `MembraneSynth` | `AnalogBassDrum` | Migrated | same; sidechain tap |
+| 9 | Bass | membrane-style kick | Custom sine + expo pitch (Tone Membrane) | `MembraneSynth` | Custom C++ | **Done** (Daisy) | `drumbass()`; sidechain tap |
 | 10 | Crash | — | Custom modal cymbal (`drumcrash`) | — | — | **New** | cpp `zss_drums.cpp` |
 | 11 | Ride | — | Custom modal cymbal + ping (`drumride`) | — | — | **New** | cpp `zss_drums.cpp` |
 
@@ -146,7 +146,7 @@ flowchart LR
 | `WhiteNoise` | Yes | Drum noise source (tick/tweet/clap paths via `drumnoise()`) |
 | `Limiter`, `DcBlock` | Yes | Master output chain |
 | `StringVoice` (`pluck` only) | Yes | `#synth pluck` strike mode; `#synth string` uses custom ensemble DSP |
-| `AnalogBassDrum`, `SyntheticBassDrum` | Yes | Daisy backend drums (bass + tom) |
+| `SyntheticBassDrum` | Yes | Daisy tom (7); bass (9) is custom Membrane |
 | `Compressor` (LGPL) | Yes | Daisy main bus only |
 | `HiHat` | No | Reverted — tick/tweet kept custom |
 | `SyntheticSnareDrum` | No | Fallback if AnalogSnare presets insufficient |
@@ -185,7 +185,7 @@ flowchart LR
 |----------|---------------|-------------|
 | 0–1 Tick/Tweet | — | **Keep custom** (HiHat reverted) |
 | 4, 6 Snares | `AnalogSnareDrum` | Migrated |
-| 9 Bass | `AnalogBassDrum` | Migrated |
+| 9 Bass | Custom Membrane (Tone) | **Done** |
 | 7 Tom | `SyntheticBassDrum` | Migrated |
 | 3 Clap noise source | `WhiteNoise` | **Done** (EQ chain kept) |
 | 2, 5, 8 | — | Keep custom |
@@ -222,7 +222,7 @@ flowchart LR
 |----------|-------------|----------------|--------|
 | Drums | Tick (0), Tweet (1) | — | **Keep custom** (HiHat reverted) |
 | Drums | Hi snare (4), Low snare (6) | `AnalogSnareDrum` | Migrated |
-| Drums | Bass (9) | `AnalogBassDrum` | Migrated |
+| Drums | Bass (9) | Custom Membrane (Tone) | **Done** |
 | Drums | Low tom (7) | `SyntheticBassDrum` | Migrated (tom substitute) |
 | Drums | Cowbell, woodblocks (2,5,8) | — | Keep custom |
 | Voices | Core 10 `SOURCE_TYPE` families | `Oscillator`, `Adsr` | Already in use |

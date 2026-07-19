@@ -30,6 +30,5 @@ export type SynthBackend = {
   synthflush(): void
   playaudiobuffer(buffer: AudioBuffer): void
   broadcastdestination(): MediaStreamAudioDestinationNode | undefined
-  warmdrums?(): void
   destroy(): void
 }

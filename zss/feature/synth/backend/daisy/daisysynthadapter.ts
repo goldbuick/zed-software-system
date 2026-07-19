@@ -27,7 +27,6 @@ export function createdaisysynthadapter(synth: DAISY_SYNTH): SynthBackend {
     synthflush: () => synth.synthflush(),
     playaudiobuffer: (buffer) => playdaisyaudiobuffer(buffer),
     broadcastdestination: () => getdaisybroadcastdestination(),
-    warmdrums: () => synth.warmdrums(),
     destroy: () => synth.destroy(),
   }
 }

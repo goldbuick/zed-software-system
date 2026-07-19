@@ -30,7 +30,7 @@ export const WASM_DRUM_VOICE_GAINS = [
   0.3, // 6 low snare
   0.28, // 7 tom
   0.26, // 8 low wood
-  0.67, // 9 bass
+  0.26, // 9 bass
   0.42, // k crash
   0.36, // r ride
 ]
@@ -77,10 +77,10 @@ export const WASM_FX_RETURN_WET_TRIM = 1.4
 export const WASM_FX_RETURN_COMP_THRESHOLD_DB = -24
 export const WASM_FX_RETURN_COMP_RATIO = 4
 
-/** Razzle wet sends — Tone is 0.1 / 0.5; trimmed slightly. Daisy: kRazzle* in cpp. */
-export const WASM_RAZZLE_VIBRATO_WET = 0.1
-export const WASM_RAZZLE_CHORUS_WET = 0.4
+/** Razzle wet sends — match Daisy kRazzle* (low mix). */
+export const WASM_RAZZLE_VIBRATO_WET = 0.02
+export const WASM_RAZZLE_CHORUS_WET = 0.1
 export const WASM_RAZZLE_CHORUS_DEPTH_SEC = 0.007
 
-/** Always-on tape bed — Tone pink noise ~−50 dB; white noise needs slight bump. */
-export const WASM_RAZZLE_HISS_GAIN = 0.0035
+/** Always-on tape bed — very quiet. */
+export const WASM_RAZZLE_HISS_GAIN = 0.0006

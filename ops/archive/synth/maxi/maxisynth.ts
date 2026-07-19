@@ -44,6 +44,10 @@ import {
   replaywasmfxfromstate,
 } from 'zss/feature/synth/backend/wasm/wasmfxstate'
 import {
+  WASM_DEFAULT_BGPLAY_VOLUME,
+  WASM_DEFAULT_PLAY_VOLUME,
+} from 'zss/feature/synth/backend/wasm/wasmmainsab'
+import {
   defaultwasmoscconfig,
   pushwasmoscconfigsab,
 } from 'zss/feature/synth/backend/wasm/wasmoscconfigsab'
@@ -321,13 +325,6 @@ export function createwasmsynth(
     pushdrumstate()
   }
 
-  function warmdrums() {
-    for (let i = 0; i < WASM_DRUM_COUNT; i++) {
-      drumstrikes[i]++
-    }
-    pushdrumstate()
-  }
-
   function scheduledrum(when: number, drumid: number, dursec: number) {
     if (drumid < 0 || drumid >= WASM_DRUM_COUNT) {
       return
@@ -511,8 +508,8 @@ export function createwasmsynth(
     pushdrumstate()
   }
 
-  setplayvolume(80)
-  setbgplayvolume(100)
+  setplayvolume(WASM_DEFAULT_PLAY_VOLUME)
+  setbgplayvolume(WASM_DEFAULT_BGPLAY_VOLUME)
   pushvoicestate()
 
   function defaultrecordflush() {
@@ -552,7 +549,6 @@ export function createwasmsynth(
     applyreset,
     getvoicecfg,
     resyncsabs,
-    warmdrums,
     getplayvolume: () => playvolume,
     getbgplayvolume: () => bgplayvolume,
     synthrecord,

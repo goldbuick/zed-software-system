@@ -4,7 +4,11 @@ import {
 } from 'zss/feature/synth/backend/wasm/audiometrics'
 import { defaultwasmalgoconfig } from 'zss/feature/synth/backend/wasm/wasmalgoconfigsab'
 import { defaultwasmfxsab } from 'zss/feature/synth/backend/wasm/wasmfxstate'
-import { WASM_DEFAULT_TTS_VOLUME } from 'zss/feature/synth/backend/wasm/wasmmainsab'
+import {
+  WASM_DEFAULT_BGPLAY_VOLUME,
+  WASM_DEFAULT_PLAY_VOLUME,
+  WASM_DEFAULT_TTS_VOLUME,
+} from 'zss/feature/synth/backend/wasm/wasmmainsab'
 import { defaultwasmoscconfig } from 'zss/feature/synth/backend/wasm/wasmoscconfigsab'
 import type { WASM_REPLAY_STATE } from 'zss/feature/synth/backend/wasm/wasmreplaystate'
 import { defaultwasmvoicestate } from 'zss/feature/synth/backend/wasm/wasmvoiceconfig'
@@ -28,8 +32,8 @@ function buildreplay(): WASM_REPLAY_STATE {
     oscconfig: defaultwasmoscconfig(),
     algoconfig: defaultwasmalgoconfig(),
     fxsab: defaultwasmfxsab(),
-    playvolume: 80,
-    bgplayvolume: 100,
+    playvolume: WASM_DEFAULT_PLAY_VOLUME,
+    bgplayvolume: WASM_DEFAULT_BGPLAY_VOLUME,
   }
 }
 
@@ -69,7 +73,12 @@ export async function rendersosvoicepatch(
   const length = Math.max(1, Math.ceil(rendersec * SOS_SAMPLERATE))
   const offlinectx = new OfflineAudioContext(1, length, SOS_SAMPLERATE)
   const engine = await bootisolateddaisyengine(offlinectx)
-  startisolateddaisydsp(engine, 80, 100, WASM_DEFAULT_TTS_VOLUME)
+  startisolateddaisydsp(
+    engine,
+    WASM_DEFAULT_PLAY_VOLUME,
+    WASM_DEFAULT_BGPLAY_VOLUME,
+    WASM_DEFAULT_TTS_VOLUME,
+  )
 
   const synth = createdaisysynth(engine)
   synth.applyreplay(buildreplay())
@@ -79,7 +88,7 @@ export async function rendersosvoicepatch(
       synth.setvoiceconfig(0, key, value)
     }
   }
-  synth.setplayvolume(80)
+  synth.setplayvolume(WASM_DEFAULT_PLAY_VOLUME)
   synth.synthreplay(ticks, patch.durationsec)
   synth.prepareofflinerender()
 

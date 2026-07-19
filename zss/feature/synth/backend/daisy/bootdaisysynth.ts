@@ -18,7 +18,6 @@ import {
 import { createdaisyrecordhandler } from './daisyrecordhandler'
 import { type DAISY_SYNTH, createdaisysynth } from './daisysynth'
 import { isdaisymaincompbypass, isdaisysidechainbypass } from './flags'
-import { schedulewarmdaisydrums } from './warmdaisydrums'
 
 export async function bootdaisysynth(): Promise<DAISY_SYNTH> {
   const engine = await ensuredaisysynthwasm()
@@ -43,6 +42,5 @@ export async function bootdaisysynth(): Promise<DAISY_SYNTH> {
   for (let i = 0; i < SYNTH_VOICE_COUNT; i++) {
     synth.setvoiceconfig(i, SYNTH_DEFAULT_WAVE, '')
   }
-  schedulewarmdaisydrums(synth)
   return synth
 }

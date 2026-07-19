@@ -9,7 +9,7 @@
 
 namespace zss_daisy {
 
-// --- Drums: Maxi-style voices + Daisy AnalogBassDrum / SyntheticBassDrum ---
+// --- Drums: custom voices + Daisy SyntheticBassDrum (tom); bass = Membrane-style ---
 
 int drumsamp(float sec) {
   return std::max(1, static_cast<int>(sec * g_engine.sample_rate + 0.5f));
@@ -94,7 +94,8 @@ int drumlength(int i, float dursec) {
       0.1f + 0.055f,
       0.01f + 0.1f + 0.08f,
       0.001f + 0.1f + 0.08f,
-      0.001f + 0.35f + drumnotelen(8),
+      // Tone MembraneSynth ADSR: 0.001 / 0.4 / sus / 1.4
+      0.001f + 0.4f + 1.4f,
       0.001f + 0.08f + 2.4f,
       0.001f + 0.06f + 3.2f,
   };
@@ -117,15 +118,8 @@ void retriggerdrum(int i, float dursec) {
   for (int q = 0; q < 3; ++q) {
     biquadreset(d.eq[q]);
   }
-  switch (i) {
-  case 7:
+  if (i == 7) {
     g_engine.tom_drum.Trig();
-    break;
-  case 9:
-    g_engine.bass_drum.Trig();
-    break;
-  default:
-    break;
   }
 }
 
@@ -341,10 +335,21 @@ float drumtom() {
 }
 
 float drumbass() {
-  if (drumadvance(9) < 0) {
+  const int age = drumadvance(9);
+  if (age < 0) {
     return 0.f;
   }
-  return g_engine.bass_drum.Process(false) * kDrumGains[9];
+  // Tone MembraneSynth: C1, octaves 8, pitchDecay 0.125; Synth ADSR defaults
+  constexpr float kRoot = 32.703f;
+  constexpr float kOctaves = 8.f;
+  const int pitchdec = drumsamp(0.125f);
+  const float fstart = kRoot * kOctaves;
+  const float hz =
+      age < pitchdec ? drumexpramp(age, pitchdec, fstart, kRoot) : kRoot;
+  const float amp = drumadsr(age, drumsamp(0.001f), drumsamp(0.4f), 0.01f,
+                             drumsamp(1.4f));
+  const float sig = drumoscwave(g_engine.drumoscA[9], 1, hz);
+  return sig * amp * kDrumGains[9];
 }
 
 float drumcymbalmodal(int idx, int age, int len, const float ratios[6],

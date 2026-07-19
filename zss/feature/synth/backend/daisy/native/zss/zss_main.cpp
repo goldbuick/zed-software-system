@@ -204,7 +204,7 @@ float readmainvolume() {
     initmainchain(g_engine.sample_rate);
   }
   g_engine.mainvolprev = vol;
-  float db = 20.f * std::log10(vol * 0.25f) - 35.f;
+  float db = 20.f * std::log10(vol * 0.25f) + kMainFaderOffsetDb;
   return std::pow(10.f, db / 20.f);
 }
 
