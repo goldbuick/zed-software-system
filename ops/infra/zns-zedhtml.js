@@ -341,6 +341,36 @@ function znsrowfromtape(rowtape, href, opts = {}) {
   return `<div class="zns-line">${textformatlinehtml(rowtape)}</div>`
 }
 
+/** Match LinkHotkey / scroll row parity (iseven -> ltgray, else dkcyan). */
+function hotkeybadgebg(iseven) {
+  return iseven ? '$black$onltgray' : '$black$ondkcyan'
+}
+
+function hotkeybadgetext(shortcut, maybetext) {
+  return maybetext || ` ${String(shortcut).toUpperCase()} `
+}
+
+/** Badge from trailing `hk`/`hotkey` args, or cafe widget defaults. */
+function editwidgetbadge(linktype, words) {
+  const defaults = {
+    charedit: ' A ',
+    coloredit: ' C ',
+    bgedit: ' B ',
+  }
+  let hki = -1
+  for (let i = 0; i < words.length; ++i) {
+    const w = namelower(words[i])
+    if (w === 'hk' || w === 'hotkey') {
+      hki = i
+      break
+    }
+  }
+  if (hki >= 0) {
+    return hotkeybadgetext(words[hki + 1] ?? '', words[hki + 2] ?? '')
+  }
+  return defaults[linktype] ?? ' ? '
+}
+
 /**
  * Render bang hyperlinks as label chrome (hotkey badge / purple bullet), not
  * raw `!cmd;label` source. Navigable scroll targets become tenant `<a href>`.
@@ -352,6 +382,8 @@ export function zedzedlinkrowhtml(line, opts = {}) {
   }
   const { linktype, words } = resolvelinktypeandwords(parsed.words)
   const label = parsed.label
+  const iseven = opts.iseven === true
+  const badgebg = hotkeybadgebg(iseven)
   switch (linktype) {
     case 'openit': {
       return zedopenitznslinkrowhtml(line, opts)
@@ -361,8 +393,8 @@ export function zedzedlinkrowhtml(line, opts = {}) {
       const target = words[0] ?? ''
       const shortcut = words[1] ?? ''
       const maybetext = words[2] ?? ''
-      const badge = maybetext || ` ${String(shortcut).toUpperCase()} `
-      const row = `$black$ondkcyan${badge}$cyan$onclear ${label}`
+      const badge = hotkeybadgetext(shortcut, maybetext)
+      const row = `${badgebg}${badge}$cyan$onclear ${label}`
       return znsrowfromtape(row, zedpathhref(target, opts), opts)
     }
     case 'copyit': {
@@ -384,7 +416,11 @@ export function zedzedlinkrowhtml(line, opts = {}) {
     }
     case 'charedit':
     case 'coloredit':
-    case 'bgedit':
+    case 'bgedit': {
+      const badge = editwidgetbadge(linktype, words)
+      const row = `${badgebg}${badge}$cyan$onclear ${label}`
+      return znsrowfromtape(row, '', opts)
+    }
     case 'text':
     case 'tx':
     case 'number':
@@ -409,6 +445,7 @@ export function zedzedlinkrowhtml(line, opts = {}) {
 export function zedtaperowshtml(tape, opts = {}) {
   const lines = String(tape ?? '').split('\n')
   const rows = []
+  let linkrowindex = 0
   for (const line of lines) {
     const trimmed = line.trim()
     if (!trimmed) {
@@ -420,7 +457,13 @@ export function zedtaperowshtml(tape, opts = {}) {
       continue
     }
     if (iszedlinkline(trimmed)) {
-      rows.push(zedzedlinkrowhtml(trimmed, opts))
+      rows.push(
+        zedzedlinkrowhtml(trimmed, {
+          ...opts,
+          iseven: linkrowindex % 2 === 0,
+        }),
+      )
+      linkrowindex += 1
       continue
     }
     rows.push(`<div class="zns-line">${textformatlinehtml(line)}</div>`)
