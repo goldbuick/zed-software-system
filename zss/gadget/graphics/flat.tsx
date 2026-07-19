@@ -187,11 +187,8 @@ export const FlatGraphics = memo(function FlatGraphics({
 
   // z of the topmost board layer (must stay in sync with FlatLayer z props below)
   const topoverz =
-    over.length > 0
-      ? 1 + layers.length + (over.length - 1) * 2
-      : undefined
-  const toplayersz =
-    layers.length > 0 ? 1 + (layers.length - 1) * 2 : undefined
+    over.length > 0 ? 1 + layers.length + (over.length - 1) * 2 : undefined
+  const toplayersz = layers.length > 0 ? 1 + (layers.length - 1) * 2 : undefined
   const maintopz = topoverz ?? toplayersz ?? 1
   const exitzbase = maintopz + 2
 
