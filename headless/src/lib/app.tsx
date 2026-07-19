@@ -310,6 +310,7 @@ export async function runApp(flags: RunAppFlags): Promise<void> {
     'config_loaderlogging',
     'config_dev',
     'config_gadget',
+    'config_touchui',
   ]
   await page.exposeFunction('__nodeStorageReadConfigAll', async () => {
     const config = readJsonFile<Record<string, string>>(configPath, {})

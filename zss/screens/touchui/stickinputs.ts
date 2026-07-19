@@ -83,7 +83,7 @@ export function handlestickclear() {
 }
 
 /**
- * Merged dual-thumbstick input. Left snap forces SHIFT while non-null; right uses keyboard shift only.
+ * Merged dual-thumbstick input. Right snap forces SHIFT while non-null; left is move-only.
  * Pass null when that stick is idle or inside its dead zone.
  * When `anypointerdown` is true and merged direction is null (all touches in dead zone), move keys are left unchanged — same as the legacy single-stick behavior.
  */
@@ -105,8 +105,9 @@ export function handlestickdirsmerged(
     inputup(0, INPUT.CTRL)
   }
 
-  const leftcontributing = leftsnap !== null
-  if (leftcontributing) {
+  // Right stick contributes SHIFT (shoot); matches MOVE-left / SHOOT-right chrome.
+  const rightcontributing = rightsnap !== null
+  if (rightcontributing) {
     inputdown(0, INPUT.SHIFT)
   } else if (keyboardshift) {
     inputdown(0, INPUT.SHIFT)

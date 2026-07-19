@@ -45,6 +45,7 @@ const CONFIG_DEFAULTS: Record<string, string> = {
   loaderlogging: 'off',
   dev: 'off',
   gadget: 'off',
+  touchui: 'off',
 }
 
 const CONFIG_STATE: Record<string, string> = {}

@@ -445,26 +445,36 @@ See **`editor/syntax-highlighting.md`** for how colored syntax highlighting is i
 
 ## 8. TouchUI Components
 
+Portrait dock below game; landscape side rails + always-on right stats column.
+Modes: `portrait-dock` | `landscape-rail-left` | `landscape-rail-right`.
+Minimal action keys: esc / ? / c (chat). Full `KeyboardGame` removed.
+
 ### `touchui/component.tsx`
 
 - **`TouchUIProps`** (type)
-  - Props: width, height
+  - Props: width, height, mode
 
 - **`TouchUI(props: TouchUIProps)`**
-  - Main touch UI component
-  - Manages touch interface elements
+  - Touch control chrome for one reserved region
+
+### `touchui/layout.ts`
+
+- Dock / rail / sidebar size constants
 
 ### `touchui/elements.tsx`
 
 - **`Elements(props: ElementsProps)`**
-  - Touch UI elements container
-  - Props: width, height, onReset
+  - Chrome only (rails / dock / action row); sticks via StickOverlay
+  - Props: mode, width, height
 
-### `touchui/thumbstick.tsx`
+### `touchui/actionrow.tsx`
 
-- **`ThumbStick(props)`**
-  - Thumbstick/virtual joystick component
-  - Handles directional input
+- **`ActionRow`** — esc / ? / c buttons
+
+### `touchui/stickoverlay.tsx`
+
+- **`StickOverlay`**
+  - One TouchPlane over MOVE+game+SHOOT (or portrait dock); half-X picks stick
 
 ### `touchui/togglekey.tsx`
 
@@ -478,22 +488,10 @@ See **`editor/syntax-highlighting.md`** for how colored syntax highlighting is i
   - Touch plane/area component
   - Handles touch input region
 
-### `touchui/keyboardgame.tsx`
-
-- **`KeyboardGame(props: KeyboardGameProps)`**
-  - Virtual keyboard game component
-  - Props: width, height
-
 ### `touchui/stickinputs.ts`
 
 - **`handlestickclear()`**
-  - Clears all directional stick inputs (up, down, left, right)
-
-- **`handlestickdir(snapdir: number)`**
-  - Handles thumbstick direction input
-  - Maps direction angle to input states
-  - Supports modifier keys (alt, ctrl, shift)
-  - Direction angles: 0, 45, 90, 135, 180, 225, 270, 315, 360
+- **`handlestickdirsmerged()`** — merge left/right snaps; right stick applies SHIFT (shoot)
 
 ### `touchui/common.ts`
 
@@ -573,10 +571,9 @@ ScreenUI
 │   │       ├── EditorRows
 │   │       └── EditorInput
 │   └── TapeTerminalInspector
-└── TouchUI (touch controls)
-    ├── Elements
-    ├── ThumbStick
-    └── KeyboardGame
+└── TouchUI (portrait dock / landscape rails) + StickOverlay
+    ├── Elements / ActionRow (esc / ? / c)
+    └── StickOverlay (one plane, half-X sticks)
 ```
 
 ---

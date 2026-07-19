@@ -55,6 +55,7 @@ export async function storagereadconfigall() {
     'config_loaderlogging',
     'config_dev',
     'config_gadget',
+    'config_touchui',
   ]
   const configs = await durablegetmany<string>(lookup)
   return configs.map((value, index) => {

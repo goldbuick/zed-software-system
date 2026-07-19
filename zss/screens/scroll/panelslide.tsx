@@ -9,8 +9,8 @@ import {
 } from 'zss/screens/scroll/anim'
 
 // 4th arg to animpositiontotarget / maath damp: higher is faster with our
-// maxSpeed + rsqw setup (open ~380ms at 1.235; close ~850ms at 0.7).
-const SLIDE_OPEN_VELOCITY = 1.235
+// maxSpeed + rsqw setup (open ~320ms at 1.4; close ~850ms at 0.7).
+const SLIDE_OPEN_VELOCITY = 1.4
 const SLIDE_CLOSE_VELOCITY = 0.7
 const SLIDE_CLOSE_FAILSAFE_MS = 5000
 

@@ -1,6 +1,6 @@
 import { objectKeys } from 'ts-extras'
 import { CHIP } from 'zss/chip'
-import { vmplayermovetoboard } from 'zss/device/api'
+import { vmplayergotoboard } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { boardcopy, mapelementcopy } from 'zss/feature/boardcopy'
 import { memorytrycontentdestination } from 'zss/feature/contenturlflow'
@@ -10,7 +10,7 @@ import { firmwarewaitforboard } from 'zss/firmware/boardwaitsync'
 import { celltorendervalue } from 'zss/gadget/display/cellvalue'
 import { createsid, ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
-import { deepcopy, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import { deepcopy, ispresent, isstring } from 'zss/mapping/types'
 import {
   memoryreadelement,
   memoryreadobject,
@@ -29,7 +29,6 @@ import {
   memorymoveobject,
 } from 'zss/memory/boardmovement'
 import {
-  memoryinitboard,
   memoryreadboardbyaddress,
   memoryreadboardbyevaldir,
   memoryreadelementkind,
@@ -514,81 +513,28 @@ export const BOARD_FIRMWARE = createfirmware()
         return 0
       }
 
-      // pick+wait before read so empty stub does not fake hydration
-      // (passage kind+color match needs the real painted board)
-      const targetpage = memorypickcodepagewithtypeandstat(
-        CODE_PAGE_TYPE.BOARD,
-        stat,
-      )
-      if (!ispresent(targetpage)) {
-        return 0
-      }
-      if (firmwarewaitforboard(targetpage.id)) {
-        return 1
-      }
-
-      const targetboard = memoryreadboardbyaddress(stat)
-      if (!ispresent(targetboard)) {
-        return 0
-      }
-
-      // init board kinds
-      memoryinitboard(targetboard)
-
-      // read entry pt
-      const destpt: PT = {
-        x: maybex ?? targetboard.startx ?? Math.round(BOARD_WIDTH * 0.5),
-        y: maybey ?? targetboard.starty ?? Math.round(BOARD_HEIGHT * 0.5),
-      }
-
+      // resolve dest coords on the VM (host codepage), not the board runner
       const display = memoryreadelementdisplay(READ_CONTEXT.element)
-      if (display.name !== 'player') {
-        const color = memoryreadelementstat(READ_CONTEXT.element, 'color')
-        const bg = memoryreadelementstat(READ_CONTEXT.element, 'bg')
-        const findcolor = mapcolortostrcolor(color, bg)
-        const gotoelements = memorylistboardelementsbykind(targetboard, [
-          display.name,
-          findcolor,
-        ])
+      const match =
+        display.name !== 'player'
+          ? {
+              name: display.name,
+              color: mapcolortostrcolor(
+                memoryreadelementstat(READ_CONTEXT.element, 'color'),
+                memoryreadelementstat(READ_CONTEXT.element, 'bg'),
+              ),
+            }
+          : undefined
 
-        // pick the first
-        const [gotoelement] = gotoelements.sort((a, b) => {
-          const ay = a.y ?? 10000
-          const by = b.y ?? 10000
-          const ydelta = ay - by
-          if (ydelta !== 0) {
-            return ydelta
-          }
-          const ax = a.x ?? 10000
-          const bx = b.x ?? 10000
-          return ax - bx
-        })
-
-        // got a match
-        if (
-          ispresent(gotoelement) &&
-          isnumber(gotoelement.x) &&
-          isnumber(gotoelement.y)
-        ) {
-          destpt.x = gotoelement.x
-          destpt.y = gotoelement.y
-        }
-      }
-
-      // yolo
-      vmplayermovetoboard(
+      vmplayergotoboard(
         SOFTWARE,
         READ_CONTEXT.elementfocus,
         READ_CONTEXT.elementfocus,
-        targetboard.id,
-        destpt,
+        stat,
+        maybex,
+        maybey,
+        match,
       )
-      // memorymoveplayertoboard(
-      //   READ_CONTEXT.book,
-      //   READ_CONTEXT.elementfocus,
-      //   targetboard.id,
-      //   destpt,
-      // )
 
       return 0
     },
@@ -810,62 +756,17 @@ export const BOARD_FIRMWARE = createfirmware()
         bg ?? COLOR.BLACK,
       )
       tokenizeandwritetextformat(text, context, false)
-      const last = measuredwidth - 1
 
-      const heading = dirfrompts(dir.startpt, dir.destpt)
-      switch (heading) {
-        case DIR.EAST:
-          for (let i = 0; i < measuredwidth; ++i) {
-            // create new terrain element
-            memorywriteterrain(board, {
-              x: dir.destpt.x + i,
-              y: dir.destpt.y,
-              name: 'text',
-              char: celltorendervalue(context.char[i]),
-              color: context.color[i],
-              bg: context.bg[i],
-            })
-          }
-          break
-        case DIR.WEST:
-          for (let i = 0; i < measuredwidth; ++i) {
-            // create new terrain element
-            memorywriteterrain(board, {
-              x: dir.destpt.x + i - last,
-              y: dir.destpt.y,
-              name: 'text',
-              char: celltorendervalue(context.char[i]),
-              color: context.color[i],
-              bg: context.bg[i],
-            })
-          }
-          break
-        case DIR.NORTH:
-          for (let i = 0; i < measuredwidth; ++i) {
-            // create new terrain element
-            memorywriteterrain(board, {
-              x: dir.destpt.x,
-              y: dir.destpt.y + i - last,
-              name: 'text',
-              char: celltorendervalue(context.char[i]),
-              color: context.color[i],
-              bg: context.bg[i],
-            })
-          }
-          break
-        case DIR.SOUTH:
-          for (let i = 0; i < measuredwidth; ++i) {
-            // create new terrain element
-            memorywriteterrain(board, {
-              x: dir.destpt.x,
-              y: dir.destpt.y + i,
-              name: 'text',
-              char: celltorendervalue(context.char[i]),
-              color: context.color[i],
-              bg: context.bg[i],
-            })
-          }
-          break
+      // always LTR from destpt; dir only picks start cell / board layer
+      for (let i = 0; i < measuredwidth; ++i) {
+        memorywriteterrain(board, {
+          x: dir.destpt.x + i,
+          y: dir.destpt.y,
+          name: 'text',
+          char: celltorendervalue(context.char[i]),
+          color: context.color[i],
+          bg: context.bg[i],
+        })
       }
       chip.set('didfail', 0)
       return 0

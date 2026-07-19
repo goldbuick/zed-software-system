@@ -10,6 +10,7 @@ import { handlestickdirsmerged } from './stickinputs'
 import { TouchPlane } from './touchplane'
 
 const INPUT_RATE_SECONDS = INPUT_RATE / 1000.0
+const DEAD_ZONE = 4
 
 const motion = new Vector2()
 const point = new Vector3()
@@ -47,25 +48,12 @@ function createstick(): MoveStick {
   }
 }
 
-type DualThumbSticksProps = {
+export type StickOverlayProps = {
   width: number
   height: number
-  leftedge: number
-  rightedge: number
-  onUp: () => void
-  /** When one finger lifts while the other stick is still active, clear that side’s stick art. */
-  onStickClear: (side: 'left' | 'right') => void
-  onDrawStick: (
-    side: 'left' | 'right',
-    startx: number,
-    starty: number,
-    tipx: number,
-    tipy: number,
-    tileoriginx: number,
-  ) => void
+  /** Top rows reserved for chrome (header / action keys). */
+  sticktop?: number
 }
-
-const DEAD_ZONE = 4
 
 function snapfromstick(stick: MoveStick): number | null {
   if (stick.pointerid === -1) {
@@ -78,26 +66,20 @@ function snapfromstick(stick: MoveStick): number | null {
   return snap(radToDeg(motion.angle()), 45)
 }
 
-export function DualThumbSticks({
+/**
+ * One TouchPlane over the stick region. Left half of the plane = MOVE stick;
+ * right half = SHOOT stick. Multi-touch via pointerId.
+ */
+export function StickOverlay({
   width,
   height,
-  leftedge,
-  rightedge,
-  onUp,
-  onStickClear,
-  onDrawStick,
-}: DualThumbSticksProps) {
-  const leftwidth = leftedge
-  const rightx = rightedge + 1
-  const rightwidth = width - rightx
+  sticktop = 0,
+}: StickOverlayProps) {
+  const stickheight = Math.max(1, height - sticktop)
+  const mid = Math.floor(width * 0.5)
 
   const [leftstick] = useState(createstick)
   const [rightstick] = useState(createstick)
-
-  function bothidle() {
-    return leftstick.pointerid === -1 && rightstick.pointerid === -1
-  }
-
   const [inputacc] = useState({ v: 0 })
 
   function applymerged() {
@@ -117,12 +99,17 @@ export function DualThumbSticks({
     stick.lastcx = -1
     stick.lastcy = -1
     stick.pointerid = -1
-    if (bothidle()) {
-      onUp()
-    } else {
-      onStickClear(which)
-    }
     applymerged()
+  }
+
+  function stickforpointer(pointerid: number): MoveStick | null {
+    if (leftstick.pointerid === pointerid) {
+      return leftstick
+    }
+    if (rightstick.pointerid === pointerid) {
+      return rightstick
+    }
+    return null
   }
 
   useFrame((_, delta) => {
@@ -137,76 +124,68 @@ export function DualThumbSticks({
     applymerged()
   })
 
-  function bindplane(
-    which: 'left' | 'right',
-    stick: MoveStick,
-    planewidth: number,
-    tileoriginx: number,
-  ) {
-    return {
-      onPointerDown: (e: any) => {
-        if (stick.pointerid !== -1) {
+  return (
+    <TouchPlane
+      x={0}
+      y={sticktop}
+      width={width}
+      height={stickheight}
+      onPointerDown={(e: any) => {
+        if (!e.intersections[0]) {
           return
         }
         e.intersections[0].object.worldToLocal(
           point.copy(e.intersections[0].point),
         )
-        const { cx, cy } = coords(planewidth, height)
+        const { cx, cy } = coords(width, stickheight)
+        const side: 'left' | 'right' = cx < mid ? 'left' : 'right'
+        const stick = side === 'left' ? leftstick : rightstick
+        if (stick.pointerid !== -1) {
+          return
+        }
         stick.startx = cx
-        stick.starty = cy
+        stick.starty = cy + sticktop
         stick.lastcx = cx
-        stick.lastcy = cy
+        stick.lastcy = cy + sticktop
         stick.tipx = -1
         stick.tipy = -1
         stick.pointerid = e.pointerId
         applymerged()
-      },
-      onPointerMove: (e: any) => {
-        if (e.pointerId !== stick.pointerid || !e.intersections[0]) {
+      }}
+      onPointerMove={(e: any) => {
+        const stick = stickforpointer(e.pointerId)
+        if (!stick || !e.intersections[0]) {
           return
         }
         e.intersections[0].object.worldToLocal(
           point.copy(e.intersections[0].point),
         )
-        const { cx, cy } = coords(planewidth, height)
+        const { cx, cy } = coords(width, stickheight)
         stick.lastcx = cx
-        stick.lastcy = cy
-        motion.set(stick.startx - cx, stick.starty - cy)
-        if (motion.length() > 2) {
-          stick.tipx = cx
-          stick.tipy = cy
-          onDrawStick(
-            which,
-            tileoriginx + stick.startx,
-            stick.starty,
-            tileoriginx + stick.tipx,
-            stick.tipy,
-            tileoriginx,
-          )
+        stick.lastcy = cy + sticktop
+        applymerged()
+      }}
+      onPointerUp={(e: any) => {
+        const stick = stickforpointer(e.pointerId)
+        if (!stick) {
+          return
         }
-      },
-      onPointerUp: () => clearmovestick(which),
-      onPointerLeave: () => clearmovestick(which),
-      onPointerCancel: () => clearmovestick(which),
-    }
-  }
-
-  return (
-    <>
-      <TouchPlane
-        x={0}
-        y={0}
-        width={leftwidth}
-        height={height}
-        {...bindplane('left', leftstick, leftwidth, 0)}
-      />
-      <TouchPlane
-        x={rightx}
-        y={0}
-        width={rightwidth}
-        height={height}
-        {...bindplane('right', rightstick, rightwidth, rightx)}
-      />
-    </>
+        clearmovestick(stick === leftstick ? 'left' : 'right')
+      }}
+      onPointerLeave={(e: any) => {
+        const stick = stickforpointer(e.pointerId)
+        if (!stick) {
+          return
+        }
+        clearmovestick(stick === leftstick ? 'left' : 'right')
+      }}
+      onPointerCancel={(e: any) => {
+        const stick = stickforpointer(e.pointerId)
+        if (!stick) {
+          return
+        }
+        clearmovestick(stick === leftstick ? 'left' : 'right')
+      }}
+    />
   )
 }
