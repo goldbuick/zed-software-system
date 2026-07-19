@@ -85,7 +85,7 @@ $whiteplace only if none with mark
 #oneofwith <arg> <mark> <dir> <kind>  
 $whiteoneof with arg  
 #write <dir> <color> text  
-$whitewrite colored text
+$whitewrite colored text LTR from dir cell
 
 ## board - projectiles
 

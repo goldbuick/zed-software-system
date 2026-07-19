@@ -756,62 +756,17 @@ export const BOARD_FIRMWARE = createfirmware()
         bg ?? COLOR.BLACK,
       )
       tokenizeandwritetextformat(text, context, false)
-      const last = measuredwidth - 1
 
-      const heading = dirfrompts(dir.startpt, dir.destpt)
-      switch (heading) {
-        case DIR.EAST:
-          for (let i = 0; i < measuredwidth; ++i) {
-            // create new terrain element
-            memorywriteterrain(board, {
-              x: dir.destpt.x + i,
-              y: dir.destpt.y,
-              name: 'text',
-              char: celltorendervalue(context.char[i]),
-              color: context.color[i],
-              bg: context.bg[i],
-            })
-          }
-          break
-        case DIR.WEST:
-          for (let i = 0; i < measuredwidth; ++i) {
-            // create new terrain element
-            memorywriteterrain(board, {
-              x: dir.destpt.x + i - last,
-              y: dir.destpt.y,
-              name: 'text',
-              char: celltorendervalue(context.char[i]),
-              color: context.color[i],
-              bg: context.bg[i],
-            })
-          }
-          break
-        case DIR.NORTH:
-          for (let i = 0; i < measuredwidth; ++i) {
-            // create new terrain element
-            memorywriteterrain(board, {
-              x: dir.destpt.x,
-              y: dir.destpt.y + i - last,
-              name: 'text',
-              char: celltorendervalue(context.char[i]),
-              color: context.color[i],
-              bg: context.bg[i],
-            })
-          }
-          break
-        case DIR.SOUTH:
-          for (let i = 0; i < measuredwidth; ++i) {
-            // create new terrain element
-            memorywriteterrain(board, {
-              x: dir.destpt.x,
-              y: dir.destpt.y + i,
-              name: 'text',
-              char: celltorendervalue(context.char[i]),
-              color: context.color[i],
-              bg: context.bg[i],
-            })
-          }
-          break
+      // always LTR from destpt; dir only picks start cell / board layer
+      for (let i = 0; i < measuredwidth; ++i) {
+        memorywriteterrain(board, {
+          x: dir.destpt.x + i,
+          y: dir.destpt.y,
+          name: 'text',
+          char: celltorendervalue(context.char[i]),
+          color: context.color[i],
+          bg: context.bg[i],
+        })
       }
       chip.set('didfail', 0)
       return 0
