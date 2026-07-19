@@ -61,6 +61,7 @@ export function Engine() {
 
   // read config
   const [forcelowrez, setforcelowrez] = useState(false)
+  const [forcetouchui, setforcetouchui] = useState(FORCE_TOUCH_UI)
   const [crt, setcrt] = useState(false)
   const [scanlines, setscanlines] = useState(false)
   useLayoutEffect(() => {
@@ -68,6 +69,10 @@ export function Engine() {
       const lowrez = await storagereadconfig('lowrez')
       if (lowrez === 'on') {
         setforcelowrez(true)
+      }
+      const touchui = await storagereadconfig('touchui')
+      if (touchui === 'on') {
+        setforcetouchui(true)
       }
       const crt = await storagereadconfig('crt')
       if (crt === 'on') {
@@ -88,10 +93,12 @@ export function Engine() {
   // config LAYOUT
   const islandscape = viewwidth > viewheight
   const showtouchcontrols =
-    deviceType === 'touchOnly' || primaryInput === 'touch'
-  /** True on touch-primary-only devices, or when ZSS_FORCE_TOUCH_UI=true (desktop smoke test for hidden input). */
+    deviceType === 'touchOnly' ||
+    primaryInput === 'touch' ||
+    forcetouchui
+  /** Touch-primary devices, durable touchui, or ZSS_FORCE_TOUCH_UI. */
   const usemobiletextcapture =
-    (deviceType === 'touchOnly' && primaryInput === 'touch') || FORCE_TOUCH_UI
+    (deviceType === 'touchOnly' && primaryInput === 'touch') || forcetouchui
 
   // config FX
   const shouldcrt =

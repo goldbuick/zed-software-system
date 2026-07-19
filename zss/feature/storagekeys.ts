@@ -7,6 +7,7 @@ export const CONFIG_KEYS = [
   'loaderlogging',
   'dev',
   'gadget',
+  'touchui',
 ] as const
 
 /** Arbitrary string config keys under `config_*`. */
