@@ -93,9 +93,7 @@ export function Engine() {
   // config LAYOUT
   const islandscape = viewwidth > viewheight
   const showtouchcontrols =
-    deviceType === 'touchOnly' ||
-    primaryInput === 'touch' ||
-    forcetouchui
+    deviceType === 'touchOnly' || primaryInput === 'touch' || forcetouchui
   /** Touch-primary devices, durable touchui, or ZSS_FORCE_TOUCH_UI. */
   const usemobiletextcapture =
     (deviceType === 'touchOnly' && primaryInput === 'touch') || forcetouchui

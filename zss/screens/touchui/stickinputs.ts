@@ -134,4 +134,3 @@ export function handlestickdirsmerged(
   handlestickclear()
   applymovedirection(merged)
 }
-

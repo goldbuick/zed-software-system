@@ -45,43 +45,36 @@ function readplayerspritexyfromlayers(
   return { x: -1, y: -1 }
 }
 
-export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
-  const [targetplayer, targetboard, targetpt] = message.data as [
-    string,
-    string,
-    PT,
-  ]
+/** Apply a resolved player board move on the VM (runner handoff + layer rebuild). */
+export function applyplayermovetoboard(
+  vm: DEVICE,
+  messageplayer: string,
+  targetplayer: string,
+  targetboard: string,
+  targetpt: PT,
+): boolean {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const currentboard = memoryreadplayerboard(targetplayer)
   const sourceboardid = currentboard?.id ?? ''
   let moved = false
 
-  // attempt to move the player to the destination board
   if (
     ispresent(currentboard) &&
     memorymoveplayertoboard(mainbook, targetplayer, targetboard, targetpt)
   ) {
     moved = true
-    // elect a new runner for the prior board
     if (!boardrunnerassignmentvalid(currentboard.id)) {
-      // elect a new runner for the prior board
-      // its possible the prior board has no runners eligible
       boardrunnerelect(currentboard.id)
     }
-    // check dest board to see if there's a valid runner
     if (boardrunnerassignmentvalid(targetboard)) {
-      // send a message to the target player's runner that it is idle now
       boardrunneridle(vm, targetplayer, targetboard)
     } else {
-      // switch assignment directly to the target player
       boardrunnerassign(targetboard, targetplayer)
     }
   } else {
-    // send a thud message back to the board runner
-    boardrunnerthud(vm, message.player, targetplayer)
+    boardrunnerthud(vm, messageplayer, targetplayer)
   }
 
-  // push jsonpipe changes
   boardrunnerpushupdates(vm)
 
   const scan = memorydebugcountplayerboards(targetplayer)
@@ -100,7 +93,6 @@ export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
     )
     const stale = layerstore[mode]
     destlayerstorepresent = ispresent(stale)
-    // Capture stale player sprite before rebuild (runner handoff gap evidence).
     if (ispresent(stale)) {
       const xy = readplayerspritexyfromlayers(stale.layers, targetplayer)
       stalestorespritex = xy.x
@@ -135,5 +127,21 @@ export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
         (stalestorespritex !== hostobj.x || stalestorespritey !== hostobj.y),
     },
     'BC1',
+  )
+  return moved
+}
+
+export function handleplayermovetoboard(vm: DEVICE, message: MESSAGE): void {
+  const [targetplayer, targetboard, targetpt] = message.data as [
+    string,
+    string,
+    PT,
+  ]
+  applyplayermovetoboard(
+    vm,
+    message.player,
+    targetplayer,
+    targetboard,
+    targetpt,
   )
 }

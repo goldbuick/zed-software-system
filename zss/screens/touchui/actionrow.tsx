@@ -1,7 +1,4 @@
-import {
-  registerterminalopen,
-  registerterminalquickopen,
-} from 'zss/device/api'
+import { registerterminalopen, registerterminalquickopen } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import { INPUT } from 'zss/gadget/data/types'

@@ -910,6 +910,24 @@ export function vmplayermovetoboard(
   device.emit(player, 'vm:playermovetoboard', [targetplayer, board, dest])
 }
 
+export function vmplayergotoboard(
+  device: DEVICELIKE,
+  player: string,
+  targetplayer: string,
+  address: string,
+  maybex?: number,
+  maybey?: number,
+  match?: { name: string; color: string[] },
+) {
+  device.emit(player, 'vm:playergotoboard', [
+    targetplayer,
+    address,
+    maybex,
+    maybey,
+    match,
+  ])
+}
+
 export function vmplayertoken(
   device: DEVICELIKE,
   player: string,

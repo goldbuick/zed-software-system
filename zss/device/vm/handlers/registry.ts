@@ -33,6 +33,7 @@ import { handlelastinputtouch } from './lastinputtouch'
 import { handleloader } from './loader'
 import { handleoperator } from './operator'
 import { handlepage } from './page'
+import { handleplayergotoboard } from './playergotoboard'
 import { handleplayermovetoboard } from './playermovetoboard'
 import { handlepublish } from './publish'
 import { handlerestart } from './restart'
@@ -78,6 +79,7 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   boardrunnerpaint: handleboardrunnerpaint,
   boardrunnerpatch: handleboardrunnerpatch,
   playermovetoboard: handleplayermovetoboard,
+  playergotoboard: handleplayergotoboard,
   desync: handleboardrunnerdesync,
   second: handlesecond,
   makeitscroll: handlemakeitscroll,
