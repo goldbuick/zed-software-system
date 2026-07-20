@@ -14,7 +14,7 @@ state), not one nested book blob. A **zedsync peer** (folder drop, 9P
 can read and write game state from disk.
 
 **Not this skill:** nested `.book.json` templates for drag-drop authoring —
-use [book-content](../book-content/SKILL.md).
+use [book-content](../../../.cursor/skills/book-content/SKILL.md).
 
 **Not gadget `/flat/...` patches** — those are internal boardrunner/gadget
 pointers, not export paths.
@@ -214,7 +214,7 @@ Serve a folder: `yarn task run ops:fixtures:wanix:p9server:dev -- <folder>`.
 - Edit import-protected `flags/*_gadget.json` (etc.) expecting the sim to accept overwrites
 - Invent `/flat/...` paths in the export tree
 - Reintroduce an in-browser `#agent` — peer JSON + existing `#make` / editor are the authoring paths
-- Add a new sync/notify layer when an edit "did not stick" — check mtime / `exportRevision` first ([`no-new-systems-for-bugs`](../../rules/no-new-systems-for-bugs.mdc))
+- Add a new sync/notify layer when an edit "did not stick" — check mtime / `exportRevision` first ([`no-new-systems-for-bugs`](../../../.cursor/rules/no-new-systems-for-bugs.mdc))
 
 ## Code map (if debugging import/export)
 
