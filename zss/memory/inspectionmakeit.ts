@@ -65,10 +65,7 @@ function previewcodepage(codepage: CODE_PAGE, out: string[]) {
   const typelabel = memoryreadcodepagetypeasstring(codepage)
   const cpname = memoryreadcodepagename(codepage)
   out.push(
-    zsszedlinkline(
-      `edit ${codepage.id}`,
-      `edit$CYAN @${typelabel} ${cpname}`,
-    ),
+    zsszedlinkline(`edit ${codepage.id}`, `edit$CYAN @${typelabel} ${cpname}`),
   )
   const codelines = codepage.code.split('\n').slice(1, 6)
   for (let i = 0; i < codelines.length; ++i) {

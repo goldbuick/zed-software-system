@@ -100,7 +100,8 @@ constexpr float kEnvReleaseTauScale = 0.060f;
 /** Drive into main compressor (~+3 dB vs prior 0.300 / 2.440). */
 constexpr float kPlayBusGain = 0.420f;
 constexpr float kDrumBusGain = 3.416f;
-/** Main fader: 20*log10(vol*0.25) + offset. Was -35; +20 dB (post-comp listen). */
+/** Main fader: 20*log10(vol*0.25) + offset. Was -35; +20 dB (post-comp listen).
+ */
 constexpr float kMainFaderOffsetDb = -15.f;
 
 constexpr float kScMakeupDb = 24.f;

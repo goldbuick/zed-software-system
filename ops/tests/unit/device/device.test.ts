@@ -41,6 +41,7 @@ describe('device', () => {
       expect(device.name()).toBe('testdev')
       expect(device.topics()).toEqual([])
       expect(typeof device.emit).toBe('function')
+      expect(typeof device.emitlocal).toBe('function')
       expect(typeof device.reply).toBe('function')
       expect(typeof device.replynext).toBe('function')
       expect(typeof device.handle).toBe('function')

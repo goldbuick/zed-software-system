@@ -2,6 +2,8 @@ import { isstring } from 'zss/mapping/types'
 
 export type DEVICELIKE = {
   emit: (player: string, target: string, data?: any) => void
+  /** Same-realm only; does not publish on BroadcastChannel. */
+  emitlocal: (player: string, target: string, data?: any) => void
 }
 
 export type MESSAGE = {

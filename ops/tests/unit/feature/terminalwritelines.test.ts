@@ -38,6 +38,7 @@ function createdevicelogrecorder() {
         logemissions.push({ player, payload: data as unknown[] })
       }
     },
+    emitlocal() {},
   }
   return { device, logemissions }
 }

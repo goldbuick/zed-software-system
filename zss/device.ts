@@ -22,6 +22,8 @@ export type DEVICE = {
   session: (check?: MESSAGE) => string
   topics: () => string[]
   emit: (player: string, target: string, data?: any) => void
+  /** Same-realm only; does not publish on BroadcastChannel. */
+  emitlocal: (player: string, target: string, data?: any) => void
   reply: (to: MESSAGE, target: string, data?: any) => void
   replynext: (to: MESSAGE, target: string, data?: any) => void
   handle: MESSAGE_FUNC
@@ -63,6 +65,9 @@ export function createdevice(
     },
     emit(player, target, data) {
       hub.emit(session, player, id, target, data)
+    },
+    emitlocal(player, target, data) {
+      hub.invokelocal(createmessage(session, player, id, target, data))
     },
     reply(to, target, data) {
       device.emit(to.player, `${to.sender}:${target}`, data)

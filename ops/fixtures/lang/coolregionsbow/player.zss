@@ -159,14 +159,24 @@
 'loop it
 #think
 :shot
-#bgplay t--c+c---c+d#
-#take health 10 do
- #ticker You died!
- #endgame
-#else do
- #ticker Ouch!
+#if energized above 0 do
  #think
+#else do
+ #bgplay t--c+c---c+d#
+ #take health 10 do
+  #ticker You died!
+  #endgame
+ #else do
+  #ticker Ouch!
+  #think
+ #done
 #done
+:thud
+#if any at senderx sendery water do
+ #ticker blocked by water
+#done
+#idle
+#think
 :lighttorch
 #if not isdark do
  #ticker Don't need torch - room is not dark!

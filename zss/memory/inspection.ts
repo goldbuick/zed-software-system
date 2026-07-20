@@ -688,9 +688,12 @@ export function memoryinspectelement(
       `bg: ${element.bg ?? memoryreadboardelementruntime(element)?.kinddata?.bg ?? 0}`,
     ),
   )
+  // Match area inspect: open empty submenu (terrain/objects/both), not instant delete
+  const emptyarea = ptstoarea(p1, p1)
   lines.push(
-    zsszedlinkline(
-      memoryinspectjoinlinkwords(['empty', 'hk', '0']),
+    zsszedlinklinechip(
+      'batch',
+      `empty:${emptyarea} hk 0 " 0 " next`,
       'make empty',
     ),
   )

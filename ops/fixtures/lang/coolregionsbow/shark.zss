@@ -1,5 +1,6 @@
 @shark
 @isswimming
+@notbreakable
 @cycle 3
 @char 94
 @color 7
@@ -10,5 +11,10 @@
 #else do
  ?seek
 #done
-#if contact shoot seek
+#think
+:thud
+#if any at senderx sendery player do
+ #shoot at senderx sendery
+#done
+#idle
 #think

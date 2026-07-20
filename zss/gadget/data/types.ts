@@ -266,6 +266,12 @@ export type SYNTH_STATE = {
   >
 }
 
+/** Object ticker for speech bubbles: identity + formatted text only. */
+export type TICKER = {
+  id: string
+  text: string
+}
+
 export type GADGET_STATE = {
   id: string
   board: string
@@ -281,7 +287,7 @@ export type GADGET_STATE = {
   over?: LAYER[]
   under?: LAYER[]
   layers?: LAYER[]
-  tickers?: string[]
+  tickers?: TICKER[]
   scrollname?: string
   scroll?: PANEL_ITEM[]
   sidebar?: PANEL_ITEM[]

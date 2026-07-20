@@ -20,11 +20,6 @@
   #done
  #done
 #done
-#if p1 below 1 do
- #char 11
-#else do
- #char 48 + p1
-#done
 #idle
 #think
 :shot
@@ -36,3 +31,10 @@
 #bgplay tcf+cf+c
 Bomb activated!
 #think
+:drawdisplay
+#if p1 below 1 do
+ #char 11
+#else do
+ #char 48 + p1
+#done
+#end

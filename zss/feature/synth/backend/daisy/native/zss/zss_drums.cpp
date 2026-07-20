@@ -9,7 +9,8 @@
 
 namespace zss_daisy {
 
-// --- Drums: custom voices + Daisy SyntheticBassDrum (tom); bass = Membrane-style ---
+// --- Drums: custom voices + Daisy SyntheticBassDrum (tom); bass =
+// Membrane-style ---
 
 int drumsamp(float sec) {
   return std::max(1, static_cast<int>(sec * g_engine.sample_rate + 0.5f));
@@ -346,8 +347,8 @@ float drumbass() {
   const float fstart = kRoot * kOctaves;
   const float hz =
       age < pitchdec ? drumexpramp(age, pitchdec, fstart, kRoot) : kRoot;
-  const float amp = drumadsr(age, drumsamp(0.001f), drumsamp(0.4f), 0.01f,
-                             drumsamp(1.4f));
+  const float amp =
+      drumadsr(age, drumsamp(0.001f), drumsamp(0.4f), 0.01f, drumsamp(1.4f));
   const float sig = drumoscwave(g_engine.drumoscA[9], 1, hz);
   return sig * amp * kDrumGains[9];
 }

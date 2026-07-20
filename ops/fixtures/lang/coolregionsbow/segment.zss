@@ -3,11 +3,46 @@
 @cycle 2
 @isbreakable
 :think
-?rnd
+#if not leader do
+ #become head
+#done
+#idle
 #think
+:trylink
+#if not leader do
+ #set leader senderid
+ #send sender :acceptlink
+#done
+#end
+:preparefollow
+#set destx senderx
+#set desty sendery
+#if follower do
+ #send "$follower" :preparefollow
+#done
+#end
+:dofollow
+#go toward destx desty
+#if follower do
+ #send "$follower" :dofollow
+#done
+#end
+:becomehead
+#become head
+:leaderdied
+#clear leader
+#become head
+:thud
 :touch
-#shoot seek
-#think
+#if any at senderx sendery player do
+ #shoot at senderx sendery
+#done
+#idle
+#end
 :shot
 :bombed
+#if follower do
+ #send "$follower" :leaderdied
+#done
+#give score 3
 #die

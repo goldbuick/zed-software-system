@@ -1,7 +1,20 @@
 import { FORMAT_OBJECT, formatobject, unformatobject } from 'zss/feature/format'
 import { MAYBE } from 'zss/mapping/types'
 
-import { GADGET_STATE, LAYER, SPRITE } from './types'
+import { GADGET_STATE, LAYER, SPRITE, TICKER } from './types'
+
+enum GADGET_TICKER_KEYS {
+  id,
+  text,
+}
+
+function exportticker(ticker: MAYBE<TICKER>): MAYBE<FORMAT_OBJECT> {
+  return formatobject(ticker, GADGET_TICKER_KEYS)
+}
+
+function importticker(ticker: MAYBE<FORMAT_OBJECT>): MAYBE<TICKER> {
+  return unformatobject(ticker, GADGET_TICKER_KEYS)
+}
 
 enum GADGET_SPRITE_KEYS {
   id,
@@ -83,6 +96,7 @@ export function exportgadgetstate(
 ): MAYBE<FORMAT_OBJECT> {
   return formatobject(gadget, GADGET_STATE_KEYS, {
     layers: (layers) => layers.map(exportlayer),
+    tickers: (tickers) => tickers.map(exportticker),
   })
 }
 
@@ -91,5 +105,6 @@ export function importgadgetstate(
 ): MAYBE<GADGET_STATE> {
   return unformatobject(gadget, GADGET_STATE_KEYS, {
     layers: (layers) => layers.map(importlayer),
+    tickers: (tickers) => tickers.map(importticker),
   })
 }

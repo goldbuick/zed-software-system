@@ -10,7 +10,12 @@ import {
   gadgetstateprovider,
   initstate,
 } from 'zss/gadget/data/api'
-import type { GADGET_STATE, LAYER, PANEL_ITEM } from 'zss/gadget/data/types'
+import type {
+  GADGET_STATE,
+  LAYER,
+  PANEL_ITEM,
+  TICKER,
+} from 'zss/gadget/data/types'
 import { LAYER_TYPE } from 'zss/gadget/data/types'
 import { normalizelayerzvariant } from 'zss/gadget/graphics/layerz'
 import { creategadgetid, ispid } from 'zss/mapping/guid'
@@ -72,7 +77,8 @@ type GADGET_VOID_FALLBACK = {
   over: LAYER[]
   under: LAYER[]
   layers: LAYER[]
-  tickers: string[]
+  /** Type-sync only; tickers are never restored from this cache. */
+  tickers: TICKER[]
   sidebar: PANEL_ITEM[]
 }
 
@@ -151,7 +157,7 @@ function writegadgetfallbackcache(player: string, gadget: GADGET_STATE) {
     over: gadget.over ?? [],
     under: gadget.under ?? [],
     layers: gadget.layers ?? [],
-    tickers: gadget.tickers ?? [],
+    tickers: [],
     sidebar: gadget.sidebar ?? [],
   })
 }
@@ -174,7 +180,8 @@ function applygadgetfallback(
   gadget.over = fallback?.over ?? []
   gadget.under = fallback?.under ?? []
   gadget.layers = fallback?.layers ?? []
-  gadget.tickers = fallback?.tickers ?? []
+  // Primary path only: never restore tickers from void/transition cache
+  gadget.tickers = []
   gadget.sidebar = fallback?.sidebar ?? []
 }
 

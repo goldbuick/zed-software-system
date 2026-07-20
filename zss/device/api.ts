@@ -518,7 +518,8 @@ export function synthaudiobuffer(
   board: MAYBE<string>,
   audiobuffer: AudioBuffer,
 ) {
-  device.emit(player, 'synth:audiobuffer', [board, audiobuffer])
+  // AudioBuffer is not structured-cloneable; keep on this hub only
+  device.emitlocal(player, 'synth:audiobuffer', [board, audiobuffer])
 }
 
 export function synthaudioenabled(device: DEVICELIKE, player: string) {

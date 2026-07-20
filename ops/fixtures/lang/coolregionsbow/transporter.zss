@@ -4,6 +4,13 @@
 @shootx number -1 1
 @shooty number -1 1
 :think
+#idle
+#think
+:bump
+:touch
+#transport senderid
+#think
+:drawdisplay
 #set p2 currenttick / cycle
 #set p2 intround p2 
 #if shootx not eq 0 do
@@ -31,9 +38,4 @@
 #else do
  #char 197
 #done
-#idle
-#think
-:bump
-:touch
-#transport senderid
-#think
+#end

@@ -5,16 +5,6 @@
 @p2 range;firing rate
 @p3 select bullet 0 star 1;firing type?
 :think
-#set p4 currenttick % 8
-#if p4 is 0 or p4 is 1 do
- #char 24
-#else if p4 is 2 or p4 is 3 do
- #char 26
-#else if p4 is 4 or p4 is 5 do
- #char 25
-#else do
- #char 27
-#done
 #if random 20 below p2 do
  #if p3 is 0 do
   #set p5 bullet
@@ -33,3 +23,15 @@
 #done
 #idle
 #think
+:drawdisplay
+#set p4 currenttick % 8
+#if p4 is 0 or p4 is 1 do
+ #char 24
+#else if p4 is 2 or p4 is 3 do
+ #char 26
+#else if p4 is 4 or p4 is 5 do
+ #char 25
+#else do
+ #char 27
+#done
+#end
