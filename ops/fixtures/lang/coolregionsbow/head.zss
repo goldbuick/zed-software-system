@@ -2,12 +2,62 @@
 @char 233
 @cycle 2
 @isbreakable
+@p1 range;Intelligence?
+@p2 range;Deviance?
 :think
-?rnd
+#if not follower do
+ #if any n segment do
+  #send n trylink
+ #else if any s segment do
+  #send s trylink
+ #else if any e segment do
+  #send e trylink
+ #else if any w segment do
+  #send w trylink
+ #done
+#done
+#set prevx thisx
+#set prevy thisy
+#if follower do
+ #send "$follower" :preparefollow
+#done
+#if p2 above random 10 do
+ ?rnd
+#else if p1 below random 10 do
+ ?rnd
+#else do
+ ?seek
+#done
+#if thisx is prevx and thisy is prevy do
+ ?rnd
+#done
+#if thisx is prevx and thisy is prevy do
+ #if follower do
+  #send "$follower" :becomehead
+  #become segment
+ #done
+#else do
+ #if follower do
+  #send "$follower" :dofollow
+ #done
+#done
 #think
+:acceptlink
+#if not follower do
+ #set follower senderid
+#done
+#think
+:thud
 :touch
-#shoot seek
+#if any at senderx sendery player do
+ #shoot at senderx sendery
+#done
+#idle
 #think
 :shot
 :bombed
+#if follower do
+ #send "$follower" :leaderdied
+#done
+#give score 1
 #die

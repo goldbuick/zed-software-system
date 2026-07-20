@@ -1,0 +1,15 @@
+@pusher
+@cycle 4
+@char 16
+:think
+#if stepx above 0 set char 16
+#if stepx below 0 set char 17
+#if stepy below 0 set char 30
+#if stepy above 0 set char 31
+#if stepx is 0 and stepy is 0 do
+ #idle
+ #think
+#done
+#push flow flow
+#go flow
+#think

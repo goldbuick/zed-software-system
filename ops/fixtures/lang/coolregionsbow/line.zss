@@ -1,13 +1,7 @@
 @line
 @cycle 1
 @char 249
-#send n calcdisplay
-#send s calcdisplay
-#send w calcdisplay
-#send e calcdisplay
-' n s w e
-' 1 2 4 8
-:calcdisplay
+:drawdisplay
 #set p1 1
 #if any n line give p1 1
 #if any s line give p1 2
@@ -29,3 +23,4 @@
 #if p1 is 14 char 202
 #if p1 is 15 char 203
 #if p1 is 16 char 206
+#end

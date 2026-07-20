@@ -25,10 +25,11 @@
   #give p5 shootx
   #give p6 shooty
  #done 
- ' write blink walls
+ ' write blink walls and damage along the ray
  #if p5 is p7 and p6 is p8 do
   #while not blocked at p5 p6 do
    #put at p5 p6 "$color" "$p4"
+   #send at p5 p6 shot
    #give p5 shootx
    #give p6 shooty
   #done
