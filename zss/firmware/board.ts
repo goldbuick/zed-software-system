@@ -573,10 +573,10 @@ export const BOARD_FIRMWARE = createfirmware()
           // transporters are one direction
           return 0
         }
+        // ZZT: search along step for first walkable landing, skipping transporters
         while (placing) {
           scan.x += deltax
           scan.y += deltay
-          // scan until board edge
           if (
             scan.x < 0 ||
             scan.x >= BOARD_WIDTH ||
@@ -585,27 +585,19 @@ export const BOARD_FIRMWARE = createfirmware()
           ) {
             break
           }
-          // scan until we find an opposite transporter
-          const maybetransporter = memoryreadelement(READ_CONTEXT.board, scan)
+          const maybetile = memoryreadelement(READ_CONTEXT.board, scan)
+          if (maybetile?.kind === READ_CONTEXT.element.kind) {
+            continue
+          }
           if (
-            maybetransporter?.kind === READ_CONTEXT.element.kind &&
-            memoryreadelementstat(maybetransporter, 'shootx') === -deltax &&
-            memoryreadelementstat(maybetransporter, 'shooty') === -deltay
+            memorymoveobject(
+              READ_CONTEXT.book,
+              READ_CONTEXT.board,
+              maybeobject,
+              { x: scan.x, y: scan.y },
+            )
           ) {
-            // if we can move the object here, we're done!
-            if (
-              memorymoveobject(
-                READ_CONTEXT.book,
-                READ_CONTEXT.board,
-                maybeobject,
-                {
-                  x: scan.x + deltax,
-                  y: scan.y + deltay,
-                },
-              )
-            ) {
-              placing = false
-            }
+            placing = false
           }
         }
         if (placing) {

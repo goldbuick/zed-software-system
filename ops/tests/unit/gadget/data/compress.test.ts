@@ -266,7 +266,10 @@ describe('compress', () => {
         over: [tiles],
         under: [tiles],
         layers: [tiles],
-        tickers: ['ticker1', 'ticker2'],
+        tickers: [
+          { id: 'obj-1', text: 'ticker1' },
+          { id: 'obj-2', text: 'ticker2' },
+        ],
         scrollname: 'scroll1',
         scroll: ['item1', 'item2'],
         sidebar: ['sidebar1'],
@@ -280,7 +283,10 @@ describe('compress', () => {
       expect(imported?.exitwest).toBe('west')
       expect(imported?.exitnorth).toBe('north')
       expect(imported?.exitsouth).toBe('south')
-      expect(imported?.tickers).toEqual(['ticker1', 'ticker2'])
+      expect(imported?.tickers).toEqual([
+        { id: 'obj-1', text: 'ticker1' },
+        { id: 'obj-2', text: 'ticker2' },
+      ])
       expect(imported?.scrollname).toBe('scroll1')
       expect(imported?.scroll).toEqual(['item1', 'item2'])
       expect(imported?.sidebar).toEqual(['sidebar1'])

@@ -22,6 +22,7 @@ import {
 } from 'zss/gadget/graphics/flatcamerabounds'
 import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
 import { maptolayerz } from 'zss/gadget/graphics/layerz'
+import { tickerpublishfromtickers } from 'zss/gadget/graphics/tickeranchors'
 import { clamp } from 'zss/mapping/number'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { InspectorComponent } from 'zss/screens/inspector/component'
@@ -150,6 +151,17 @@ export const FlatGraphics = memo(function FlatGraphics({
     cam.position.set(0, 0, 1000)
     cam.lookAt(looktarget.current)
     cam.updateMatrixWorld()
+
+    tickerpublishfromtickers({
+      tickers: gadget.tickers ?? [],
+      layers: gadget.layers ?? [],
+      boardgroup: cornerref.current,
+      camera: cam,
+      drawwidth,
+      drawheight,
+      cols: width,
+      rows: height,
+    })
 
     // under board corner inset (same framing as iso / mode7 / fpv)
     const xscale = clamp(viewwidth / boarddrawwidth, 1.0, 10.0)

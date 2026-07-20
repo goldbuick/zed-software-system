@@ -20,6 +20,7 @@ import { FPVLayer } from 'zss/gadget/graphics/fpvlayer'
 import { maptolayerz, maxspriteslayerz } from 'zss/gadget/graphics/layerz'
 import { PillarwMeshes } from 'zss/gadget/graphics/pillarmeshes'
 import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
+import { tickerpublishfromtickers } from 'zss/gadget/graphics/tickeranchors'
 import { useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
@@ -270,6 +271,20 @@ export const FPVGraphics = memo(function FPVGraphics({
       cameraref.current.getWorldPosition(dofcamworld.current)
       depthoffield.current.cocMaterial.focusDistance =
         dofcamworld.current.distanceTo(dofplayerworld.current)
+    }
+
+    if (dofboardref.current) {
+      tickerpublishfromtickers({
+        tickers: gadget.tickers ?? [],
+        layers,
+        boardgroup: dofboardref.current,
+        camera: cameraref.current,
+        drawwidth,
+        drawheight,
+        cols: width,
+        rows: height,
+        boardz: maxspriteslayerz(layers, 'fpv'),
+      })
     }
   })
 

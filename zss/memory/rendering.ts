@@ -2,6 +2,7 @@ import { PERF_INCREMENTAL_LAYERS } from 'zss/config'
 import {
   LAYER,
   LAYER_TYPE,
+  TICKER,
   VIEWSCALE,
   layersreadmedia,
 } from 'zss/gadget/data/types'
@@ -198,7 +199,7 @@ export function memoryconverttogadgetlayers(
   graphics: string,
   index: number,
   board: MAYBE<BOARD>,
-  tickers: string[],
+  tickers: TICKER[],
   whichlayer: DIR.UNDER | DIR.MID | DIR.OVER,
   multi = false,
 ): LAYER[] {
@@ -377,9 +378,13 @@ export function memoryconverttogadgetlayers(
     if (
       isstring(object.tickertext) &&
       isnumber(object.tickertime) &&
-      object.tickertext.length
+      object.tickertext.length &&
+      isstring(object.id)
     ) {
-      tickers.push(`${memoryelementtotickerprefix(object)}${object.tickertext}`)
+      tickers.push({
+        id: object.id,
+        text: `${memoryelementtotickerprefix(object)}${object.tickertext}`,
+      })
     }
   }
 
@@ -462,7 +467,7 @@ export type MEMORY_GADGET_LAYERS = {
   over: LAYER[]
   under: LAYER[]
   layers: LAYER[]
-  tickers: string[]
+  tickers: TICKER[]
 }
 
 export function memoryreadgraphics(player: string, board: BOARD) {
@@ -542,7 +547,7 @@ function memoryreadgadgetlayersbody(
   const over: LAYER[] = []
   const under: LAYER[] = []
   const layers: LAYER[] = []
-  const tickers: string[] = []
+  const tickers: TICKER[] = []
   if (!ispresent(board)) {
     return {
       id: '',

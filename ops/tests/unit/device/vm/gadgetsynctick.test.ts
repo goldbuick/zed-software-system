@@ -103,7 +103,7 @@ const stubgadgetlayers = {
   over: ['over-a'],
   under: ['under-a'],
   layers: ['layer-a'],
-  tickers: ['ticker-a'],
+  tickers: [{ id: 'ticker-a', text: 'hello' }],
 } as unknown as MEMORY_GADGET_LAYERS
 
 function createstubgadget(): GADGET_STATE {
@@ -192,7 +192,7 @@ describe('gadgetsynctick', () => {
     expect(stubgadget.over).toEqual(['over-a'])
     expect(stubgadget.under).toEqual(['under-a'])
     expect(stubgadget.layers).toEqual(['layer-a', 'control'])
-    expect(stubgadget.tickers).toEqual(['ticker-a'])
+    expect(stubgadget.tickers).toEqual([{ id: 'ticker-a', text: 'hello' }])
     expect(stubgadget.sidebar).toEqual(['sidebar-a'])
     expect(stubgadget.id).toBe('board-1')
     expect(stubgadget.board).toBe('board-1')
@@ -208,7 +208,8 @@ describe('gadgetsynctick', () => {
     expect(stubgadget.over).toEqual(['over-a'])
     expect(stubgadget.under).toEqual(['under-a'])
     expect(stubgadget.layers).toEqual(['layer-a', 'control'])
-    expect(stubgadget.tickers).toEqual(['ticker-a'])
+    // tickers are never restored from void/transition cache
+    expect(stubgadget.tickers).toEqual([])
     expect(stubgadget.sidebar).toEqual(['sidebar-a'])
     expect(memoryconverttogadgetcontrollayer).toHaveBeenCalledTimes(1)
   })

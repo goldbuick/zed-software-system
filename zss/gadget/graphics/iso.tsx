@@ -20,6 +20,7 @@ import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
 import { IsoLayer } from 'zss/gadget/graphics/isolayer'
 import { maptolayerz, maxspriteslayerz } from 'zss/gadget/graphics/layerz'
 import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
+import { tickerpublishfromtickers } from 'zss/gadget/graphics/tickeranchors'
 import { useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
@@ -177,7 +178,8 @@ export const IsoGraphics = memo(function IsoGraphics({
         break
     }
 
-    const gadgetlayers = useGadgetClient.getState().gadget.layers ?? []
+    const gadget = useGadgetClient.getState().gadget
+    const gadgetlayers = gadget.layers ?? []
     const playerspritez = maxspriteslayerz(gadgetlayers, 'iso')
     cornerref.current.updateMatrixWorld(true)
     dofplayerworld.current.set(
@@ -189,6 +191,18 @@ export const IsoGraphics = memo(function IsoGraphics({
     cameraref.current.getWorldPosition(dofcamworld.current)
     depthoffield.current.cocMaterial.focusDistance =
       dofcamworld.current.distanceTo(dofplayerworld.current)
+
+    tickerpublishfromtickers({
+      tickers: gadget.tickers ?? [],
+      layers: gadgetlayers,
+      boardgroup: cornerref.current,
+      camera: cameraref.current,
+      drawwidth,
+      drawheight,
+      cols: width,
+      rows: height,
+      boardz: playerspritez,
+    })
 
     // camera changes
     cameraref.current.updateProjectionMatrix()

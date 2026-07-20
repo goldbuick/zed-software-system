@@ -44,7 +44,7 @@ describe('tts fish', () => {
   it('requestfishaudiobytesforworker returns bytes on success', async () => {
     const bytes = new ArrayBuffer(8)
     jest.mocked(requestfishaudiobytes).mockResolvedValue({ ok: true, bytes })
-    const device = { emit: jest.fn() }
+    const device = { emit: jest.fn(), emitlocal: jest.fn() }
     const result = await requestfishaudiobytesforworker(
       device,
       'player1',
@@ -61,7 +61,7 @@ describe('tts fish', () => {
       ok: false,
       errormsg: 'unauthorized',
     })
-    const device = { emit: jest.fn() }
+    const device = { emit: jest.fn(), emitlocal: jest.fn() }
     const result = await requestfishaudiobytesforworker(
       device,
       'player1',
