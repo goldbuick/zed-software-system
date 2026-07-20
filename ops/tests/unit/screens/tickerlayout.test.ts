@@ -1,4 +1,5 @@
 import {
+  TICKER_BUBBLE_MAX_WIDTH,
   TICKER_CROWDED_THRESHOLD,
   layouttickers,
   tickeranchorsready,
@@ -76,6 +77,40 @@ describe('layouttickers', () => {
     expect(result.bubbles[0].tiley).toBeLessThan(15)
     expect(result.bubbles[0].tiley + result.bubbles[0].height).toBeLessThan(15)
     expect(result.slots.a).toBeDefined()
+  })
+
+  it('sizes a short one-liner bubble to stripped visible length and height 1', () => {
+    const text = 'gooby: howdy'
+    const result = layouttickers({
+      tickers: [{ id: 'a', text }],
+      anchors: { a: { sx: 20, sy: 15, visible: true } },
+      cols: 40,
+      rows: 25,
+    })
+    expect(result.bubbles).toHaveLength(1)
+    const bubble = result.bubbles[0]
+    const plain = tokenizeandstriptextformat(bubble.text)
+    expect(bubble.height).toBe(1)
+    expect(bubble.width).toBe(plain.length)
+    expect(bubble.width).toBeLessThanOrEqual(TICKER_BUBBLE_MAX_WIDTH)
+  })
+
+  it('wraps long ticker text within max width and height greater than 1', () => {
+    const text =
+      'goldbuick: Hello, hello everyone. This line must wrap past forty tiles.'
+    expect(tokenizeandstriptextformat(text).length).toBeGreaterThan(
+      TICKER_BUBBLE_MAX_WIDTH,
+    )
+    const result = layouttickers({
+      tickers: [{ id: 'a', text }],
+      anchors: { a: { sx: 30, sy: 15, visible: true } },
+      cols: 80,
+      rows: 25,
+    })
+    expect(result.bubbles).toHaveLength(1)
+    const bubble = result.bubbles[0]
+    expect(bubble.width).toBeLessThanOrEqual(TICKER_BUBBLE_MAX_WIDTH)
+    expect(bubble.height).toBeGreaterThan(1)
   })
 
   it('stores omitted icon prefix on bubbles but full text on strip', () => {

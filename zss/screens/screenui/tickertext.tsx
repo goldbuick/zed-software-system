@@ -3,9 +3,8 @@ import { RUNTIME } from 'zss/config'
 import type { TICKER_BUBBLE } from 'zss/gadget/data/tickerlayoutstore'
 import { useTickerLayout } from 'zss/gadget/data/tickerlayoutstore'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
-import { ShadeBoxDither } from 'zss/gadget/graphics/dither'
+import { StaticDither } from 'zss/gadget/graphics/dither'
 import { Tiles } from 'zss/gadget/graphics/tiles'
-import { Rect } from 'zss/gadget/rect'
 import { resettiles, useTiles } from 'zss/gadget/tiles'
 import { TilesData, TilesRender } from 'zss/gadget/usetiles'
 import {
@@ -37,7 +36,16 @@ function writebubbletext(
   context.x = bubble.tilex
   context.y = bubble.tiley
   context.disablewrap = false
+  // Match measureticker wrap: constrain to bubble tile rect, not full screen
+  context.active.leftedge = bubble.tilex
+  context.active.rightedge = bubble.tilex + bubble.width - 1
+  context.active.topedge = bubble.tiley
+  context.active.bottomedge = bubble.tiley + bubble.height - 1
   tokenizeandwritetextformat(bubble.text, context, false)
+  context.active.leftedge = undefined
+  context.active.rightedge = undefined
+  context.active.topedge = undefined
+  context.active.bottomedge = undefined
   // Tail is rendered as a sub-tile-positioned 1x1 mesh so it can sit on the
   // continuous speaker center (screen-center speakers land on tile boundaries).
 }
@@ -108,6 +116,10 @@ export function ScreenUITickerText({ width, height }: ScreenUITickerTextProps) {
     // Strip has no dither; solid black bg for readability
     context.active.color = COLOR.WHITE
     context.active.bg = COLOR.BLACK
+    context.active.leftedge = undefined
+    context.active.rightedge = undefined
+    context.active.topedge = undefined
+    context.active.bottomedge = undefined
     context.reset.color = COLOR.WHITE
     context.reset.bg = COLOR.BLACK
     context.disablewrap = true
@@ -135,24 +147,10 @@ export function ScreenUITickerText({ width, height }: ScreenUITickerTextProps) {
           key={`dither-${bubble.id}`}
           position={[bubble.tilex * cw, bubble.tiley * ch, -1]}
         >
-          <Rect
-            x={0}
-            y={0}
-            z={-1}
+          <StaticDither
             width={bubble.width}
             height={bubble.height}
-            color="black"
-            opacity={1}
-            skipraycast
-          />
-          <ShadeBoxDither
-            width={bubble.width}
-            height={bubble.height}
-            top={0}
-            left={0}
-            right={Math.max(0, bubble.width - 1)}
-            bottom={Math.max(0, bubble.height - 1)}
-            alpha={0.777}
+            alpha={0.5}
           />
         </group>
       ))}
