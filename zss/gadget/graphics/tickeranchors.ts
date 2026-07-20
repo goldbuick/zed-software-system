@@ -1,9 +1,9 @@
 import type { Camera, Object3D } from 'three'
 import { Vector3 } from 'three'
-import type { LAYER, SPRITE, TICKER } from 'zss/gadget/data/types'
-import { LAYER_TYPE } from 'zss/gadget/data/types'
 import type { TICKER_ANCHOR } from 'zss/gadget/data/tickerlayoutstore'
 import { useTickerLayout } from 'zss/gadget/data/tickerlayoutstore'
+import type { LAYER, SPRITE, TICKER } from 'zss/gadget/data/types'
+import { LAYER_TYPE } from 'zss/gadget/data/types'
 
 const scratch = new Vector3()
 
@@ -47,12 +47,7 @@ export function tickerprojectlocaltoscreentile(
   const sx = (ndcx * 0.5 + 0.5) * cols
   const sy = (ndcy * 0.5 + 0.5) * rows
   const visible =
-    ndcz >= -1 &&
-    ndcz <= 1 &&
-    sx >= -1 &&
-    sx <= cols &&
-    sy >= -1 &&
-    sy <= rows
+    ndcz >= -1 && ndcz <= 1 && sx >= -1 && sx <= cols && sy >= -1 && sy <= rows
   return { sx, sy, visible }
 }
 
@@ -79,7 +74,11 @@ export function tickerfindspritexy(
     for (let s = 0; s < sprites.length; ++s) {
       const sprite = sprites[s]
       // players use pid; objects use composite sprite.id ending in :objectid
-      if (sprite.pid === id || sprite.id === id || sprite.id.endsWith(idsuffix)) {
+      if (
+        sprite.pid === id ||
+        sprite.id === id ||
+        sprite.id.endsWith(idsuffix)
+      ) {
         return { x: sprite.x, y: sprite.y }
       }
     }

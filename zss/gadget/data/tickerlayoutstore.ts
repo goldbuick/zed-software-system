@@ -57,12 +57,7 @@ function anchorsequal(
     const key = akeys[i]
     const av = a[key]
     const bv = b[key]
-    if (
-      !bv ||
-      av.sx !== bv.sx ||
-      av.sy !== bv.sy ||
-      av.visible !== bv.visible
-    ) {
+    if (av.sx !== bv?.sx || av.sy !== bv.sy || av.visible !== bv.visible) {
       return false
     }
   }
@@ -82,7 +77,7 @@ function slotsequal(
     const key = akeys[i]
     const av = a[key]
     const bv = b[key]
-    if (!bv || av.tilex !== bv.tilex || av.tiley !== bv.tiley) {
+    if (av.tilex !== bv?.tilex || av.tiley !== bv.tiley) {
       return false
     }
   }

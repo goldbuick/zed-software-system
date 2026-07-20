@@ -1,11 +1,11 @@
 import type { IToken } from 'chevrotain'
-import type { TICKER } from 'zss/gadget/data/types'
 import type {
   TICKER_ANCHOR,
   TICKER_BUBBLE,
   TICKER_SLOT,
   TICKER_TAIL_DIR,
 } from 'zss/gadget/data/tickerlayoutstore'
+import type { TICKER } from 'zss/gadget/data/types'
 import { tickertileat } from 'zss/gadget/graphics/tickeranchors'
 import { graphemes } from 'zss/mapping/grapheme'
 import {
@@ -142,7 +142,11 @@ export function tickeromitleadingvisible(text: string, count = 2): string {
   const parts: string[] = []
   for (let i = 0; i < tokens.length; ++i) {
     // Format-only tokens before the first omitted cell only styled the prefix
-    if (firstomit >= 0 && i < firstomit && tickervisiblecells(tokens[i]) === 0) {
+    if (
+      firstomit >= 0 &&
+      i < firstomit &&
+      tickervisiblecells(tokens[i]) === 0
+    ) {
       continue
     }
     if (!omit.has(i)) {
@@ -158,10 +162,7 @@ export function tickeromitleadingvisible(text: string, count = 2): string {
 
 function rectsoverlap(a: Rect, b: Rect): boolean {
   return (
-    a.x < b.x + b.w &&
-    a.x + a.w > b.x &&
-    a.y < b.y + b.h &&
-    a.y + a.h > b.y
+    a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y
   )
 }
 
@@ -187,15 +188,14 @@ function measureticker(
     return { width: Math.min(text.length, maxwidth), height: 1 }
   }
   const width = Math.max(1, Math.min(maxwidth, measured.measuredwidth || 1))
-  const height = Math.max(1, Math.min(TICKER_BUBBLE_MAX_HEIGHT, measured.y || 1))
+  const height = Math.max(
+    1,
+    Math.min(TICKER_BUBBLE_MAX_HEIGHT, measured.y || 1),
+  )
   return { width, height }
 }
 
-function picktaildir(
-  box: Rect,
-  anchorsx: number,
-  anchorsy: number,
-): TICKER_TAIL_DIR {
+function picktaildir(box: Rect, anchorsy: number): TICKER_TAIL_DIR {
   // Only up/down -- left/right tails are hard to read against board art
   const cy = box.y + box.h * 0.5
   const dy = anchorsy - cy
@@ -458,7 +458,7 @@ export function layouttickers(args: {
 
     placed.push(placedrect)
     slots[ticker.id] = { tilex: placedrect.x, tiley: placedrect.y }
-    const taildir = picktaildir(placedrect, anchor.sx, anchor.sy)
+    const taildir = picktaildir(placedrect, anchor.sy)
     const tip = tailtip(placedrect, taildir, anchor.sx, anchor.sy)
     bubbles.push({
       id: ticker.id,
