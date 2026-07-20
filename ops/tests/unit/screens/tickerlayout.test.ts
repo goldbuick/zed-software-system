@@ -116,8 +116,7 @@ describe('layouttickers', () => {
     ).toBe(true)
   })
 
-  it('may cover another speaker while never covering its own', () => {
-    // b sits where a prefers to place (speakery - height - 2)
+  it('never covers any active speaker tile', () => {
     const result = layouttickers({
       tickers: [
         { id: 'a', text: 'hello there friend' },
@@ -131,18 +130,22 @@ describe('layouttickers', () => {
       rows: 25,
     })
     expect(result.bubbles.length).toBe(2)
-    const bubblea = result.bubbles.find((b) => b.id === 'a')
-    const bubbleb = result.bubbles.find((b) => b.id === 'b')
-    expect(bubblea).toBeDefined()
-    expect(bubbleb).toBeDefined()
-    expect(bubblea!.tiley + bubblea!.height).toBeLessThanOrEqual(14)
-    expect(bubbleb!.tiley + bubbleb!.height).toBeLessThanOrEqual(11)
-    const acoversb =
-      bubblea!.tilex <= 20 &&
-      bubblea!.tilex + bubblea!.width > 20 &&
-      bubblea!.tiley <= 12 &&
-      bubblea!.tiley + bubblea!.height > 12
-    expect(acoversb).toBe(true)
+    const speakers = [
+      { x: 20, y: 15 },
+      { x: 20, y: 12 },
+    ]
+    for (let i = 0; i < result.bubbles.length; ++i) {
+      const bubble = result.bubbles[i]
+      for (let s = 0; s < speakers.length; ++s) {
+        const sp = speakers[s]
+        const covers =
+          bubble.tilex <= sp.x &&
+          bubble.tilex + bubble.width > sp.x &&
+          bubble.tiley <= sp.y &&
+          bubble.tiley + bubble.height > sp.y
+        expect(covers).toBe(false)
+      }
+    }
   })
 
   it('pins the down-tail row below the bubble and keeps continuous anchor', () => {
@@ -313,6 +316,30 @@ describe('tickertailchar', () => {
     expect(tickertailchar('right')).toBe('$26')
     expect(tickertailchar('left')).toBe('$27')
     expect(tickertailchar('none')).toBe('')
+  })
+})
+
+describe('layouttickers taildir', () => {
+  it('only uses up or down, never left or right', () => {
+    const result = layouttickers({
+      tickers: [
+        { id: 'a', text: 'speaker to the side still gets vertical tail' },
+        { id: 'b', text: 'another wide message for packing' },
+      ],
+      anchors: {
+        // Far to the side of a narrow preferred pack -- used to pick left/right
+        a: { sx: 35, sy: 14, visible: true },
+        b: { sx: 5, sy: 14, visible: true },
+      },
+      cols: 40,
+      rows: 25,
+    })
+    expect(result.bubbles.length).toBeGreaterThan(0)
+    for (let i = 0; i < result.bubbles.length; ++i) {
+      const dir = result.bubbles[i].taildir
+      expect(dir === 'up' || dir === 'down' || dir === 'none').toBe(true)
+      expect(dir === 'left' || dir === 'right').toBe(false)
+    }
   })
 })
 

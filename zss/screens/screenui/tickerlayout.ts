@@ -196,17 +196,13 @@ function picktaildir(
   anchorsx: number,
   anchorsy: number,
 ): TICKER_TAIL_DIR {
-  const cx = box.x + box.w * 0.5
+  // Only up/down -- left/right tails are hard to read against board art
   const cy = box.y + box.h * 0.5
-  const dx = anchorsx - cx
   const dy = anchorsy - cy
-  if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) {
+  if (Math.abs(dy) < 0.5) {
     return 'none'
   }
-  if (Math.abs(dy) >= Math.abs(dx)) {
-    return dy > 0 ? 'down' : 'up'
-  }
-  return dx > 0 ? 'right' : 'left'
+  return dy > 0 ? 'down' : 'up'
 }
 
 function tailtip(
@@ -222,7 +218,7 @@ function tailtip(
   )
   const clampy = Math.max(
     box.y,
-    Math.min(box.y + box.h - 1, Math.round(anchorsy)),
+    Math.min(box.y + box.h - 1, tickertileat(anchorsy)),
   )
   switch (taildir) {
     case 'up':
@@ -385,10 +381,22 @@ export function layouttickers(args: {
   // place nearest-to-bottom first so stacking pushes upward
   candidates.sort((a, b) => b.anchor.sy - a.anchor.sy)
 
+  // Reserve every active speaker so no panel covers a talking sprite
+  for (let i = 0; i < candidates.length; ++i) {
+    const { anchor } = candidates[i]
+    placed.push({
+      x: tickertileat(anchor.sx),
+      y: tickertileat(anchor.sy),
+      w: 1,
+      h: 1,
+    })
+  }
+
   for (let i = 0; i < candidates.length; ++i) {
     const { ticker, anchor, width, height, bubbletext } = candidates[i]
     const prior = priorslots[ticker.id]
-    const speakery = Math.round(anchor.sy)
+    // Same floor mapping as sx -- Math.round(N+0.5) is N+1 in JS and shifts Y by +1
+    const speakery = tickertileat(anchor.sy)
 
     // Center the integer bubble on the continuous speaker x
     const speakerx = tickertileat(anchor.sx)
@@ -431,15 +439,10 @@ export function layouttickers(args: {
     for (let a = 0; a < attempts.length; ++a) {
       const clamped = clamprect(attempts[a], cols, rows)
       let hits = false
-      // Never cover own speaker; other speakers may sit under this panel
-      if (rectsoverlap(clamped, ownspeaker)) {
-        hits = true
-      } else {
-        for (let p = 0; p < placed.length; ++p) {
-          if (rectsoverlap(clamped, placed[p])) {
-            hits = true
-            break
-          }
+      for (let p = 0; p < placed.length; ++p) {
+        if (rectsoverlap(clamped, placed[p])) {
+          hits = true
+          break
         }
       }
       if (!hits) {
