@@ -23,7 +23,7 @@ import {
 } from 'zss/words/textformat'
 
 /** Max bubble width in tiles (wrap beyond this). */
-export const TICKER_BUBBLE_MAX_WIDTH = 28
+export const TICKER_BUBBLE_MAX_WIDTH = 40
 
 /** Max bubble height in lines. */
 export const TICKER_BUBBLE_MAX_HEIGHT = 4
