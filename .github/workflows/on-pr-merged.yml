@@ -10,10 +10,19 @@ jobs:
     if: github.event.pull_request.merged == true
     timeout-minutes: 2
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v5
-      - uses: emiliopedrollo/auto-merge@v1.2.0
         with:
-          github_token: ${{ github.token }}
-          target_branch: 'dev'
-          commit_message: 'ci: {target_branch} auto-merged {source_ref}'
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Merge main into dev
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin main dev
+          git checkout dev
+          git merge origin/main -m "ci: dev auto-merged main"
+          git push origin dev
