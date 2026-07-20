@@ -4,8 +4,10 @@ import {
   tickeranchorsready,
   tickeromitleadingvisible,
   tickertailchar,
+  tickertailoccluded,
 } from 'zss/screens/screenui/tickerlayout'
 import { tokenizeandstriptextformat } from 'zss/words/textformat'
+import type { TICKER_BUBBLE } from 'zss/gadget/data/tickerlayoutstore'
 
 describe('tickeranchorsready', () => {
   it('is true when anchors is empty and tickers is empty', () => {
@@ -112,6 +114,35 @@ describe('layouttickers', () => {
     expect(
       bubble.tilex <= 12 && bubble.tilex + bubble.width > 12,
     ).toBe(true)
+  })
+
+  it('may cover another speaker while never covering its own', () => {
+    // b sits where a prefers to place (speakery - height - 2)
+    const result = layouttickers({
+      tickers: [
+        { id: 'a', text: 'hello there friend' },
+        { id: 'b', text: 'hello there friend' },
+      ],
+      anchors: {
+        a: { sx: 20, sy: 15, visible: true },
+        b: { sx: 20, sy: 12, visible: true },
+      },
+      cols: 40,
+      rows: 25,
+    })
+    expect(result.bubbles.length).toBe(2)
+    const bubblea = result.bubbles.find((b) => b.id === 'a')
+    const bubbleb = result.bubbles.find((b) => b.id === 'b')
+    expect(bubblea).toBeDefined()
+    expect(bubbleb).toBeDefined()
+    expect(bubblea!.tiley + bubblea!.height).toBeLessThanOrEqual(14)
+    expect(bubbleb!.tiley + bubbleb!.height).toBeLessThanOrEqual(11)
+    const acoversb =
+      bubblea!.tilex <= 20 &&
+      bubblea!.tilex + bubblea!.width > 20 &&
+      bubblea!.tiley <= 12 &&
+      bubblea!.tiley + bubblea!.height > 12
+    expect(acoversb).toBe(true)
   })
 
   it('pins the down-tail row below the bubble and keeps continuous anchor', () => {
@@ -282,5 +313,69 @@ describe('tickertailchar', () => {
     expect(tickertailchar('right')).toBe('$26')
     expect(tickertailchar('left')).toBe('$27')
     expect(tickertailchar('none')).toBe('')
+  })
+})
+
+describe('tickertailoccluded', () => {
+  function bubble(
+    partial: Partial<TICKER_BUBBLE> & Pick<TICKER_BUBBLE, 'id'>,
+  ): TICKER_BUBBLE {
+    return {
+      tilex: 0,
+      tiley: 0,
+      width: 10,
+      height: 1,
+      text: 'hi',
+      taildir: 'down',
+      tailx: 5,
+      taily: 1,
+      anchorsx: 5,
+      anchorsy: 3,
+      ...partial,
+    }
+  }
+
+  it('is true when tip sits on another bubble panel', () => {
+    const upper = bubble({
+      id: 'upper',
+      tiley: 2,
+      height: 1,
+      taily: 3,
+      tailx: 5,
+    })
+    const lower = bubble({
+      id: 'lower',
+      tiley: 3,
+      height: 1,
+      width: 12,
+      tailx: 5,
+      taily: 4,
+    })
+    expect(tickertailoccluded(upper, [upper, lower])).toBe(true)
+  })
+
+  it('is false when tip is in the gap toward the speaker', () => {
+    const upper = bubble({
+      id: 'upper',
+      tiley: 2,
+      height: 1,
+      taily: 3,
+      tailx: 5,
+    })
+    const lower = bubble({
+      id: 'lower',
+      tiley: 4,
+      height: 1,
+      width: 12,
+      tailx: 5,
+      taily: 5,
+    })
+    // upper tip at y=3, lower panel at y=4 -- gap row is free
+    expect(tickertailoccluded(upper, [upper, lower])).toBe(false)
+  })
+
+  it('does not treat own panel as an occluder', () => {
+    const alone = bubble({ id: 'a', tiley: 5, height: 2, taily: 4, tailx: 5 })
+    expect(tickertailoccluded(alone, [alone])).toBe(false)
   })
 })

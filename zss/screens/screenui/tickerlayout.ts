@@ -271,6 +271,33 @@ export function tickertailcode(taildir: TICKER_TAIL_DIR): number {
 }
 
 /**
+ * True when this bubble's integer tip tile sits inside another bubble's panel.
+ * Occluded tips are left empty so stacked dialog stays readable.
+ */
+export function tickertailoccluded(
+  bubble: TICKER_BUBBLE,
+  others: TICKER_BUBBLE[],
+): boolean {
+  const tipx = bubble.tailx
+  const tipy = bubble.taily
+  for (let i = 0; i < others.length; ++i) {
+    const other = others[i]
+    if (other.id === bubble.id) {
+      continue
+    }
+    if (
+      tipx >= other.tilex &&
+      tipx < other.tilex + other.width &&
+      tipy >= other.tiley &&
+      tipy < other.tiley + other.height
+    ) {
+      return true
+    }
+  }
+  return false
+}
+
+/**
  * True when every ticker id has an entry in anchors (projector has published).
  * Missing keys mean "not ready yet" -- do not layout (avoids strip flash).
  */
@@ -358,17 +385,6 @@ export function layouttickers(args: {
   // place nearest-to-bottom first so stacking pushes upward
   candidates.sort((a, b) => b.anchor.sy - a.anchor.sy)
 
-  // Reserve speaker tiles so bubbles never cover the anchored sprite
-  for (let i = 0; i < candidates.length; ++i) {
-    const { anchor } = candidates[i]
-    placed.push({
-      x: tickertileat(anchor.sx),
-      y: Math.round(anchor.sy),
-      w: 1,
-      h: 1,
-    })
-  }
-
   for (let i = 0; i < candidates.length; ++i) {
     const { ticker, anchor, width, height, bubbletext } = candidates[i]
     const prior = priorslots[ticker.id]
@@ -376,6 +392,7 @@ export function layouttickers(args: {
 
     // Center the integer bubble on the continuous speaker x
     const speakerx = tickertileat(anchor.sx)
+    const ownspeaker: Rect = { x: speakerx, y: speakery, w: 1, h: 1 }
     let preferx = Math.round(anchor.sx - width * 0.5)
     let prefery = speakery - height - 2
 
@@ -383,12 +400,7 @@ export function layouttickers(args: {
       const dx = Math.abs(prior.tilex + width * 0.5 - anchor.sx)
       const dy = Math.abs(prior.tiley + height - anchor.sy)
       const priorrect = { x: prior.tilex, y: prior.tiley, w: width, h: height }
-      const overlapspeaker = rectsoverlap(priorrect, {
-        x: speakerx,
-        y: speakery,
-        w: 1,
-        h: 1,
-      })
+      const overlapspeaker = rectsoverlap(priorrect, ownspeaker)
       // Tight dx: stale slots from earlier offset bugs must not stick
       if (dx < 1.5 && dy < 5 && !overlapspeaker) {
         preferx = prior.tilex
@@ -419,10 +431,15 @@ export function layouttickers(args: {
     for (let a = 0; a < attempts.length; ++a) {
       const clamped = clamprect(attempts[a], cols, rows)
       let hits = false
-      for (let p = 0; p < placed.length; ++p) {
-        if (rectsoverlap(clamped, placed[p])) {
-          hits = true
-          break
+      // Never cover own speaker; other speakers may sit under this panel
+      if (rectsoverlap(clamped, ownspeaker)) {
+        hits = true
+      } else {
+        for (let p = 0; p < placed.length; ++p) {
+          if (rectsoverlap(clamped, placed[p])) {
+            hits = true
+            break
+          }
         }
       }
       if (!hits) {

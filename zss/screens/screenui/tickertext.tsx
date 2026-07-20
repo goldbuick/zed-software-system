@@ -5,12 +5,14 @@ import { useTickerLayout } from 'zss/gadget/data/tickerlayoutstore'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { ShadeBoxDither } from 'zss/gadget/graphics/dither'
 import { Tiles } from 'zss/gadget/graphics/tiles'
+import { Rect } from 'zss/gadget/rect'
 import { resettiles, useTiles } from 'zss/gadget/tiles'
 import { TilesData, TilesRender } from 'zss/gadget/usetiles'
 import {
   layouttickers,
   tickeranchorsready,
   tickertailcode,
+  tickertailoccluded,
 } from 'zss/screens/screenui/tickerlayout'
 import {
   createwritetextcontext,
@@ -133,6 +135,16 @@ export function ScreenUITickerText({ width, height }: ScreenUITickerTextProps) {
           key={`dither-${bubble.id}`}
           position={[bubble.tilex * cw, bubble.tiley * ch, -1]}
         >
+          <Rect
+            x={0}
+            y={0}
+            z={-1}
+            width={bubble.width}
+            height={bubble.height}
+            color="black"
+            opacity={1}
+            skipraycast
+          />
           <ShadeBoxDither
             width={bubble.width}
             height={bubble.height}
@@ -155,6 +167,9 @@ export function ScreenUITickerText({ width, height }: ScreenUITickerTextProps) {
           bubble.tailx < -1 ||
           bubble.tailx > width
         ) {
+          return null
+        }
+        if (tickertailoccluded(bubble, bubbles)) {
           return null
         }
         return (
