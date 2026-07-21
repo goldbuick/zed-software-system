@@ -9,13 +9,12 @@ jest.mock('zss/device/api', () => ({
 
 import {
   ensurewasmcoep,
-  hashcoepswbody,
+  readcoepbuildtoken,
   resetwasmcoepfortest,
   setwasmcoepreloadfortest,
 } from 'zss/feature/synth/backend/wasm/coopcoep'
 
 const SW_URL = '/coep/enable-threads.js'
-const SW_BODY = 'self.addEventListener("fetch", () => {});'
 
 describe('ensurewasmcoep', () => {
   const originalisolated = Object.getOwnPropertyDescriptor(
@@ -24,26 +23,19 @@ describe('ensurewasmcoep', () => {
   )
   let reloadmock: jest.Mock
   let registermock: jest.Mock
-  let fetchmock: jest.Mock
   let controller: ServiceWorker | null
+
+  const TEST_BUILD_TOKEN = 'test-commit-hash'
 
   beforeEach(() => {
     resetwasmcoepfortest()
     localStorage.clear()
+    process.env.ZSS_COMMIT_HASH = TEST_BUILD_TOKEN
     ;(apierror as jest.Mock).mockReset()
     reloadmock = jest.fn()
     setwasmcoepreloadfortest(reloadmock)
     controller = null
     registermock = jest.fn()
-    fetchmock = jest.fn(async () => ({
-      ok: true,
-      text: async () => SW_BODY,
-    }))
-    Object.defineProperty(globalThis, 'fetch', {
-      configurable: true,
-      writable: true,
-      value: fetchmock,
-    })
     Object.defineProperty(navigator, 'serviceWorker', {
       configurable: true,
       value: {
@@ -67,9 +59,8 @@ describe('ensurewasmcoep', () => {
     }
   })
 
-  it('hashcoepswbody is stable for the same body', () => {
-    expect(hashcoepswbody(SW_BODY)).toBe(hashcoepswbody(SW_BODY))
-    expect(hashcoepswbody(SW_BODY)).not.toBe(hashcoepswbody(`${SW_BODY}x`))
+  it('readcoepbuildtoken returns the cafe commit hash', () => {
+    expect(readcoepbuildtoken()).toBe(TEST_BUILD_TOKEN)
   })
 
   it('no-ops when already crossOriginIsolated', async () => {
@@ -90,8 +81,13 @@ describe('ensurewasmcoep', () => {
     controller = { scriptURL: SW_URL } as ServiceWorker
     registermock.mockResolvedValue({})
     await ensurewasmcoep()
-    expect(registermock).toHaveBeenCalledWith(SW_URL)
+    expect(registermock).toHaveBeenCalledWith(
+      `${SW_URL}?v=${readcoepbuildtoken()}`,
+    )
     expect(reloadmock).toHaveBeenCalledTimes(1)
+    expect(localStorage.getItem('zss_wasm_coep_reload')).toBe(
+      readcoepbuildtoken(),
+    )
   })
 
   it('reloads once when SW is active but not controlling', async () => {
@@ -102,16 +98,12 @@ describe('ensurewasmcoep', () => {
     registermock.mockResolvedValue({})
     await ensurewasmcoep()
     expect(reloadmock).toHaveBeenCalledTimes(1)
-    const guardkeys = Object.keys(localStorage).filter((key) =>
-      key.startsWith('zss_wasm_coep_reload:'),
-    )
-    expect(guardkeys.length).toBe(1)
-    expect(localStorage.getItem(guardkeys[0])).toContain(
-      hashcoepswbody(SW_BODY),
+    expect(localStorage.getItem('zss_wasm_coep_reload')).toBe(
+      readcoepbuildtoken(),
     )
   })
 
-  it('skips a second reload for the same SW version and reports error', async () => {
+  it('skips a second reload for the same build and reports error', async () => {
     Object.defineProperty(window, 'crossOriginIsolated', {
       configurable: true,
       value: false,
@@ -130,6 +122,20 @@ describe('ensurewasmcoep', () => {
       '',
       'wasm',
       'COOP/COEP isolation failed after reload - SharedArrayBuffer unavailable',
+    )
+  })
+
+  it('allows another reload when the build token changes', async () => {
+    Object.defineProperty(window, 'crossOriginIsolated', {
+      configurable: true,
+      value: false,
+    })
+    localStorage.setItem('zss_wasm_coep_reload', 'old-build-token')
+    registermock.mockResolvedValue({})
+    await ensurewasmcoep()
+    expect(reloadmock).toHaveBeenCalledTimes(1)
+    expect(localStorage.getItem('zss_wasm_coep_reload')).toBe(
+      readcoepbuildtoken(),
     )
   })
 })
