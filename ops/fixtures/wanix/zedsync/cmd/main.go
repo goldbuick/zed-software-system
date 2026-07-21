@@ -61,6 +61,9 @@ func main() {
 	for _, line := range replaylogs {
 		fmt.Printf("zedsync: %s\n", line)
 	}
+	if cerr := zedsync.CompactJournal(target); cerr != nil {
+		fmt.Fprintf(os.Stderr, "zedsync: compact journal: %v\n", cerr)
+	}
 
 	r, err := zedsync.WalkFiles(target)
 	if err != nil {
@@ -130,6 +133,9 @@ func main() {
 				}
 			}
 			if err != nil {
+				if len(next) > 0 {
+					baseline = next
+				}
 				fmt.Fprintf(os.Stderr, "zedsync: tick: %v\n", err)
 				continue
 			}
@@ -145,7 +151,7 @@ func main() {
 			if importkicks > 0 {
 				fmt.Printf("zedsync: import-kick paths=%d\n", importkicks)
 			}
-			// Adaptive poll: 500ms after changes, back off to 4s idle.
+			// Adaptive poll: 1000ms after changes, back off to 4s idle.
 			nextinterval := interval
 			if len(logs) > 0 {
 				nextinterval = zedsync.PollInterval

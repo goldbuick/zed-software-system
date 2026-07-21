@@ -56,6 +56,10 @@ let zedcafeexportrevision = 0
 /** Longer than Go `exportdirtydebounce` (50ms) so host-push dirties settle before kicks. */
 const HOST_PUSH_DIRTY_SUPPRESS_MS = 75
 
+const pendingdirtyduringpush = new Set<string>()
+let pendingdirtyfullkick = false
+let pendingdirtytaskrid: string | undefined
+
 /** Generic gojs->host bridge hook signature (worker.go forwards taskid + data). */
 type GojsWorkerMessageHook = (taskid: string, data: unknown) => void
 /** Legacy zedcafe-specific hook signature (pre-generic-bridge worker.go). */
@@ -96,14 +100,50 @@ function readdirtymessagepaths(data: unknown): string[] | undefined {
   return paths.filter((path): path is string => typeof path === 'string')
 }
 
+function flushpendingdirtynotify(): void {
+  if (pendingdirtyfullkick) {
+    const taskrid = pendingdirtytaskrid
+    pendingdirtyfullkick = false
+    pendingdirtyduringpush.clear()
+    pendingdirtytaskrid = undefined
+    postzedcafefilechangemessage(taskrid ?? zedcafetaskrid ?? undefined)
+    return
+  }
+  if (pendingdirtyduringpush.size > 0) {
+    const paths = [...pendingdirtyduringpush].sort()
+    const taskrid = pendingdirtytaskrid
+    pendingdirtyduringpush.clear()
+    pendingdirtytaskrid = undefined
+    postzedcafefilechangemessage(taskrid ?? zedcafetaskrid ?? undefined, paths)
+  }
+}
+
 function handlezedcafedirtynotify(taskrid?: string, paths?: string[]): void {
   if (hostpushinflight) {
+    if (taskrid) {
+      pendingdirtytaskrid = taskrid
+    }
+    if (!paths || paths.length === 0) {
+      pendingdirtyfullkick = true
+      return
+    }
+    for (let i = 0; i < paths.length; ++i) {
+      pendingdirtyduringpush.add(paths[i])
+    }
     return
   }
   if (taskrid && zedcafetaskrid && taskrid !== zedcafetaskrid) {
     return
   }
   postzedcafefilechangemessage(taskrid ?? zedcafetaskrid ?? undefined, paths)
+}
+
+/** Test-only: simulate gojs dirty notify during host push. */
+export function notifyzedcafeexportdirtyfortest(
+  taskrid?: string,
+  paths?: string[],
+): void {
+  handlezedcafedirtynotify(taskrid, paths)
 }
 
 function registerzedcafedirtyhook(): void {
@@ -757,6 +797,9 @@ export async function pushzedcafeexportlive(
   removepaths: string[] = [],
 ) {
   hostpushinflight = true
+  pendingdirtyduringpush.clear()
+  pendingdirtyfullkick = false
+  pendingdirtytaskrid = undefined
   const pushgen = ++hostpushgen
   try {
     const base = readwanixzedcafeexportsrc(taskrid)
@@ -921,6 +964,7 @@ export async function pushzedcafeexportlive(
     // Hold suppress until Go dirty debounce from these writes can no longer fire.
     setTimeout(() => {
       if (pushgen === hostpushgen) {
+        flushpendingdirtynotify()
         hostpushinflight = false
       }
     }, HOST_PUSH_DIRTY_SUPPRESS_MS)

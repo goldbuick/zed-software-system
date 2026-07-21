@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 )
@@ -61,6 +62,70 @@ func ResetJournalRevForTest() {
 	journalrevcounter = 0
 }
 
+// SeedJournalRevFromDisk sets the in-process journal revision counter to the
+// max rev already present in <remote>/.zedsync/journal.ndjson so a restart
+// never reuses old rev numbers (latestbyrev is last-wins per rev).
+func SeedJournalRevFromDisk(remote string) error {
+	entries, err := ReadJournalEntries(remote)
+	if err != nil {
+		return err
+	}
+	maxrev := 0
+	for _, entry := range entries {
+		if entry.Rev > maxrev {
+			maxrev = entry.Rev
+		}
+	}
+	journalrevcounter = maxrev
+	return nil
+}
+
+// CompactJournal rewrites <remote>/.zedsync/journal.ndjson keeping only
+// entries whose latest status (by rev) is still "pending". Fully resolved
+// pending/done pairs are dropped so the file cannot grow without bound.
+func CompactJournal(remote string) error {
+	entries, err := ReadJournalEntries(remote)
+	if err != nil {
+		return err
+	}
+	if len(entries) == 0 {
+		return nil
+	}
+	latestbyrev := map[int]JournalEntry{}
+	for _, entry := range entries {
+		latestbyrev[entry.Rev] = entry
+	}
+	pending := make([]JournalEntry, 0)
+	for _, entry := range latestbyrev {
+		if entry.Status == JournalStatusPending {
+			pending = append(pending, entry)
+		}
+	}
+	path := filepath.Join(remote, JournalFile)
+	if len(pending) == 0 {
+		if err := os.WriteFile(path, nil, 0o644); err != nil {
+			return fmt.Errorf("compact journal %s: %w", path, err)
+		}
+		return nil
+	}
+	sort.Slice(pending, func(i, j int) bool {
+		return pending[i].Rev < pending[j].Rev
+	})
+	var buf strings.Builder
+	for _, entry := range pending {
+		line, merr := json.Marshal(entry)
+		if merr != nil {
+			return fmt.Errorf("marshal journal entry: %w", merr)
+		}
+		buf.Write(line)
+		buf.WriteByte('\n')
+	}
+	if err := os.WriteFile(path, []byte(buf.String()), 0o644); err != nil {
+		return fmt.Errorf("compact journal %s: %w", path, err)
+	}
+	return nil
+}
+
 // filesha256 hashes the bytes of path (hex-encoded), for journal entries.
 func filesha256(path string) (string, error) {
 	f, err := os.Open(path)
@@ -103,7 +168,23 @@ func AppendJournal(remote string, entry JournalEntry) error {
 // srcroot/dstroot are (remote, zedcafe) for op="copytoz" or (zedcafe, remote)
 // for op="copytor" -- the journal always lives under remote regardless of
 // copy direction (peer-side journal).
+// journalcopyfailonrel makes journalcopy fail for rel (tests only).
+var journalcopyfailonrel string
+
+// SetJournalCopyFailOnRelForTest fails journalcopy for rel until cleared.
+func SetJournalCopyFailOnRelForTest(rel string) {
+	journalcopyfailonrel = rel
+}
+
+// ClearJournalCopyFailOnRelForTest clears the journalcopy test failure hook.
+func ClearJournalCopyFailOnRelForTest() {
+	journalcopyfailonrel = ""
+}
+
 func journalcopy(remote, srcroot, dstroot, op, rel string, madedirs map[string]struct{}) (rev int, err error) {
+	if journalcopyfailonrel != "" && rel == journalcopyfailonrel {
+		return 0, fmt.Errorf("journal copy fail on %s (test hook)", rel)
+	}
 	src := filepath.Join(srcroot, filepath.FromSlash(rel))
 	sum, err := filesha256(src)
 	if err != nil {
@@ -200,21 +281,27 @@ func ReadJournalEntries(remote string) ([]JournalEntry, error) {
 // journal entry (by rev) is still "pending" -- i.e. the process stopped
 // between the pending append and the copy completing. Call on startup,
 // before InitialSeed. Individual copy failures are collected into logs and
-// do not abort the rest of the replay.
+// do not abort the rest of the replay. After replay, the in-process rev
+// counter is seeded from the journal max rev so new copies never collide.
 func ReplayIncompleteJournal(remote, zedcafe string) (logs []string, err error) {
 	entries, rerr := ReadJournalEntries(remote)
 	if rerr != nil {
 		return nil, rerr
 	}
 	if len(entries) == 0 {
+		journalrevcounter = 0
 		return nil, nil
 	}
 	latestbyrev := map[int]JournalEntry{}
+	maxrev := 0
 	for _, entry := range entries {
 		latestbyrev[entry.Rev] = entry
+		if entry.Rev > maxrev {
+			maxrev = entry.Rev
+		}
 	}
 	madedirs := map[string]struct{}{}
-	for rev := 1; rev <= len(latestbyrev); rev++ {
+	for rev := 1; rev <= maxrev; rev++ {
 		entry, ok := latestbyrev[rev]
 		if !ok || entry.Status != JournalStatusPending {
 			continue
@@ -245,6 +332,10 @@ func ReplayIncompleteJournal(remote, zedcafe string) (logs []string, err error) 
 			continue
 		}
 		logs = append(logs, fmt.Sprintf("replay %s %s: recovered", entry.Op, entry.Path))
+	}
+	// Seed after replay so done-appends for recovered revs are included in max.
+	if serr := SeedJournalRevFromDisk(remote); serr != nil {
+		return logs, serr
 	}
 	return logs, nil
 }

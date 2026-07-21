@@ -25,6 +25,7 @@ import {
   readzedcafebookstatspath,
   readzedcafepageprefix,
 } from 'zss/feature/wanix/zedcafetreeschema'
+import { issimonlyflagowner } from 'zss/feature/wanix/zedcafeprotectedflags'
 import { ispresent } from 'zss/mapping/types'
 import { memoryreadbookflags } from 'zss/memory/bookoperations'
 import {
@@ -291,6 +292,9 @@ export function buildzedcafebookflagfiles(
   const names = Object.keys(book.flags ?? {})
   for (let i = 0; i < names.length; ++i) {
     const name = names[i]
+    if (issimonlyflagowner(name)) {
+      continue
+    }
     files.push({
       path: `${prefix}/flags/${name}.json`,
       bytes: encodejson(memoryreadbookflags(book, name)),
@@ -394,6 +398,9 @@ export function buildzedcafeexportdoc(): Record<string, unknown> {
     const prefix = readzedcafebookprefix(book)
     for (let j = 0; j < names.length; ++j) {
       const name = names[j]
+      if (issimonlyflagowner(name)) {
+        continue
+      }
       doc[`${prefix}/flags/${name}.json`] = memoryreadbookflags(book, name)
     }
     for (let j = 0; j < book.pages.length; ++j) {

@@ -15,7 +15,7 @@ import (
 
 const (
 	ZedcafeMount  = "zedcafe"
-	PollInterval  = 500 * time.Millisecond
+	PollInterval  = 1 * time.Second
 	PollIdleMax   = 4 * time.Second
 	SeedProgressEvery = 100
 	// RevisionDir mirrors WANIX_ZEDSYNC_REVISION_DIR in wanixzedcafeconstants.ts.
@@ -58,11 +58,26 @@ type FileMeta struct {
 type Snapshot map[string]FileMeta
 
 // shouldskip reports whether a slash-normalized relative path is non-content
-// (any path segment starts with '.' -- dotfiles, hidden dirs, ready sentinel).
+// (any path segment starts with '.' -- dotfiles, hidden dirs, ready sentinel;
+// sim-only flag bags under flags/ are never synced).
 func shouldskip(rel string) bool {
 	for _, seg := range strings.Split(rel, "/") {
 		if strings.HasPrefix(seg, ".") {
 			return true
+		}
+	}
+	if strings.Contains(rel, "/flags/") {
+		base := filepath.Base(rel)
+		for _, suf := range []string{
+			"_chip.json",
+			"_gadget.json",
+			"_synth.json",
+			"_layers.json",
+			"_tracking.json",
+		} {
+			if strings.HasSuffix(base, suf) {
+				return true
+			}
 		}
 	}
 	return false
@@ -146,12 +161,20 @@ func copyfilecached(srcroot, dstroot, rel string, madedirs map[string]struct{}) 
 	}
 	// Best-effort mtime preserve. Browser/gojs mounts often cannot Chtimes;
 	// SteadyTick treats equal-size mtime-only drift as idle to avoid churn.
-	info, err := os.Stat(src)
-	if err == nil {
-		_ = os.Chtimes(dst, info.ModTime(), info.ModTime())
+	// skipchtimesfortest simulates that failure so incremental baseline tests
+	// can assert we record the remote (source) meta, not the drifted dest.
+	if !skipchtimesfortest {
+		info, err := os.Stat(src)
+		if err == nil {
+			_ = os.Chtimes(dst, info.ModTime(), info.ModTime())
+		}
 	}
 	return nil
 }
+
+// skipchtimesfortest is set by tests to simulate FSA/gojs mounts that cannot
+// preserve source mtime after a copy (see TestIncrementalPeerOnlyIdleAfterCopytoz).
+var skipchtimesfortest bool
 
 func statmeta(root, rel string) (FileMeta, error) {
 	path := filepath.Join(root, filepath.FromSlash(rel))
@@ -469,61 +492,38 @@ func steadytickbody(remote, zedcafe string, baseline Snapshot) (Snapshot, []stri
 	}
 	sortops(ops)
 
-	var state SyncState
-	statedirty := false
-	if len(ops) > 0 {
-		var serr error
-		state, serr = ReadSyncState(remote)
-		if serr != nil {
-			return baseline, nil, fmt.Errorf("read sync state: %w", serr)
-		}
-	}
+	unified, logs, err := applyops(remote, zedcafe, ops, r, z, nil, false)
+	return unified, logs, err
+}
 
-	madedirs := map[string]struct{}{}
-	var prunedirs []string
-	var logs []string
-	for _, op := range ops {
-		switch op.kind {
-		case "copytoz":
-			rev, jerr := journalcopy(remote, remote, zedcafe, "copytoz", op.rel, madedirs)
-			if jerr != nil {
-				return baseline, logs, fmt.Errorf("copytoz %s: %w", op.rel, jerr)
-			}
-			state.LastZedcafeRev = rev
-			statedirty = true
-			meta, serr := statmeta(zedcafe, op.rel)
-			if serr != nil {
-				return baseline, logs, fmt.Errorf("copytoz stat %s: %w", op.rel, serr)
-			}
-			z[op.rel] = meta
-		case "copytor":
-			rev, jerr := journalcopy(remote, zedcafe, remote, "copytor", op.rel, madedirs)
-			if jerr != nil {
-				return baseline, logs, fmt.Errorf("copytor %s: %w", op.rel, jerr)
-			}
-			state.LastRemoteRev = rev
-			statedirty = true
-			meta, serr := statmeta(remote, op.rel)
-			if serr != nil {
-				return baseline, logs, fmt.Errorf("copytor stat %s: %w", op.rel, serr)
-			}
-			r[op.rel] = meta
-		case "deleteremote":
-			if err := removefiledeferred(remote, op.rel, &prunedirs); err != nil {
-				return baseline, logs, fmt.Errorf("deleteremote %s: %w", op.rel, err)
-			}
-			delete(r, op.rel)
-		}
-		logs = append(logs, op.logmsg)
+// filescontentequal reports whether rel has identical bytes under rootA and rootB.
+func filescontentequal(rootA, rootB, rel string) (bool, error) {
+	ma, okA, err := statmetaok(rootA, rel)
+	if err != nil {
+		return false, err
 	}
-	pruneemptydirs(prunedirs)
-	if statedirty {
-		if werr := WriteSyncState(remote, state); werr != nil {
-			return baseline, logs, fmt.Errorf("write sync state: %w", werr)
-		}
+	mb, okB, err := statmetaok(rootB, rel)
+	if err != nil {
+		return false, err
 	}
+	if !okA || !okB {
+		return false, nil
+	}
+	if ma.Size != mb.Size {
+		return false, nil
+	}
+	ha, err := filesha256(filepath.Join(rootA, filepath.FromSlash(rel)))
+	if err != nil {
+		return false, err
+	}
+	hb, err := filesha256(filepath.Join(rootB, filepath.FromSlash(rel)))
+	if err != nil {
+		return false, err
+	}
+	return ha == hb, nil
+}
 
-	// Prefer remote meta when both present after tick.
+func buildunifiedfromsides(r, z Snapshot) Snapshot {
 	unified := Snapshot{}
 	for rel, m := range z {
 		unified[rel] = m
@@ -531,21 +531,42 @@ func steadytickbody(remote, zedcafe string, baseline Snapshot) (Snapshot, []stri
 	for rel, m := range r {
 		unified[rel] = m
 	}
-	return unified, logs, nil
+	return unified
 }
 
-// applyscopedops executes ops (journaled + SyncState-tracked, same
-// durability pattern as steadytickbody's apply loop) against unified, for
-// callers that only stat individual rel paths rather than walking both
-// trees. unified is mutated in place and also returned.
-func applyscopedops(remote, zedcafe string, ops []syncop, unified Snapshot) (Snapshot, []string, error) {
+// applyops runs journaled sync ops. When scoped is false, r and z side
+// snapshots are updated and merged (remote meta wins). When scoped is true,
+// unified is updated in place. On error the current partial snapshot is
+// returned, never the input baseline.
+func applyops(
+	remote, zedcafe string,
+	ops []syncop,
+	r, z Snapshot,
+	unified Snapshot,
+	scoped bool,
+) (Snapshot, []string, error) {
+	partialsnap := func() Snapshot {
+		if scoped {
+			return unified
+		}
+		return buildunifiedfromsides(r, z)
+	}
+	setcopytozmeta := func(rel string, meta FileMeta) {
+		if scoped {
+			unified[rel] = meta
+			return
+		}
+		z[rel] = meta
+		r[rel] = meta
+	}
+
 	var state SyncState
 	statedirty := false
 	if len(ops) > 0 {
 		var serr error
 		state, serr = ReadSyncState(remote)
 		if serr != nil {
-			return unified, nil, fmt.Errorf("read sync state: %w", serr)
+			return partialsnap(), nil, fmt.Errorf("read sync state: %w", serr)
 		}
 	}
 	madedirs := map[string]struct{}{}
@@ -554,44 +575,90 @@ func applyscopedops(remote, zedcafe string, ops []syncop, unified Snapshot) (Sna
 	for _, op := range ops {
 		switch op.kind {
 		case "copytoz":
+			equal, eerr := filescontentequal(remote, zedcafe, op.rel)
+			if eerr != nil {
+				return partialsnap(), logs, fmt.Errorf("copytoz compare %s: %w", op.rel, eerr)
+			}
+			if equal {
+				meta, serr := statmeta(remote, op.rel)
+				if serr != nil {
+					return partialsnap(), logs, fmt.Errorf("copytoz stat %s: %w", op.rel, serr)
+				}
+				setcopytozmeta(op.rel, meta)
+				logs = append(logs, fmt.Sprintf("skip copytoz (unchanged) %s", op.rel))
+				continue
+			}
 			rev, jerr := journalcopy(remote, remote, zedcafe, "copytoz", op.rel, madedirs)
 			if jerr != nil {
-				return unified, logs, fmt.Errorf("copytoz %s: %w", op.rel, jerr)
+				return partialsnap(), logs, fmt.Errorf("copytoz %s: %w", op.rel, jerr)
 			}
 			state.LastZedcafeRev = rev
 			statedirty = true
-			meta, serr := statmeta(zedcafe, op.rel)
+			meta, serr := statmeta(remote, op.rel)
 			if serr != nil {
-				return unified, logs, fmt.Errorf("copytoz stat %s: %w", op.rel, serr)
+				return partialsnap(), logs, fmt.Errorf("copytoz stat %s: %w", op.rel, serr)
 			}
-			unified[op.rel] = meta
+			setcopytozmeta(op.rel, meta)
 		case "copytor":
+			equal, eerr := filescontentequal(zedcafe, remote, op.rel)
+			if eerr != nil {
+				return partialsnap(), logs, fmt.Errorf("copytor compare %s: %w", op.rel, eerr)
+			}
+			if equal {
+				meta, serr := statmeta(remote, op.rel)
+				if serr != nil {
+					return partialsnap(), logs, fmt.Errorf("copytor stat %s: %w", op.rel, serr)
+				}
+				if scoped {
+					unified[op.rel] = meta
+				} else {
+					r[op.rel] = meta
+				}
+				logs = append(logs, fmt.Sprintf("skip copytor (unchanged) %s", op.rel))
+				continue
+			}
 			rev, jerr := journalcopy(remote, zedcafe, remote, "copytor", op.rel, madedirs)
 			if jerr != nil {
-				return unified, logs, fmt.Errorf("copytor %s: %w", op.rel, jerr)
+				return partialsnap(), logs, fmt.Errorf("copytor %s: %w", op.rel, jerr)
 			}
 			state.LastRemoteRev = rev
 			statedirty = true
 			meta, serr := statmeta(remote, op.rel)
 			if serr != nil {
-				return unified, logs, fmt.Errorf("copytor stat %s: %w", op.rel, serr)
+				return partialsnap(), logs, fmt.Errorf("copytor stat %s: %w", op.rel, serr)
 			}
-			unified[op.rel] = meta
+			if scoped {
+				unified[op.rel] = meta
+			} else {
+				r[op.rel] = meta
+			}
 		case "deleteremote":
 			if err := removefiledeferred(remote, op.rel, &prunedirs); err != nil {
-				return unified, logs, fmt.Errorf("deleteremote %s: %w", op.rel, err)
+				return partialsnap(), logs, fmt.Errorf("deleteremote %s: %w", op.rel, err)
 			}
-			delete(unified, op.rel)
+			if scoped {
+				delete(unified, op.rel)
+			} else {
+				delete(r, op.rel)
+			}
 		}
 		logs = append(logs, op.logmsg)
 	}
 	pruneemptydirs(prunedirs)
 	if statedirty {
 		if werr := WriteSyncState(remote, state); werr != nil {
-			return unified, logs, fmt.Errorf("write sync state: %w", werr)
+			return partialsnap(), logs, fmt.Errorf("write sync state: %w", werr)
 		}
 	}
-	return unified, logs, nil
+	return partialsnap(), logs, nil
+}
+
+// applyscopedops executes ops (journaled + SyncState-tracked, same
+// durability pattern as steadytickbody's apply loop) against unified, for
+// callers that only stat individual rel paths rather than walking both
+// trees. unified is mutated in place and also returned.
+func applyscopedops(remote, zedcafe string, ops []syncop, unified Snapshot) (Snapshot, []string, error) {
+	return applyops(remote, zedcafe, ops, nil, nil, unified, true)
 }
 
 // ReadRevision reads the host-written zedcafe/.zedsync/revision hint (see

@@ -341,6 +341,34 @@ func TestWalkSkipsDotPaths(t *testing.T) {
 	}
 }
 
+func TestWalkSkipsSimOnlyFlags(t *testing.T) {
+	dir := t.TempDir()
+	writefile(t, dir, "book/flags/pid_1.json", `{"ammo":1}`, time.Now())
+	writefile(t, dir, "book/flags/pid_1_chip.json", `{"ec":1}`, time.Now())
+	writefile(t, dir, "book/flags/pid_1_gadget.json", `{}`, time.Now())
+	writefile(t, dir, "book/flags/board1_synth.json", `{}`, time.Now())
+	writefile(t, dir, "book/flags/board1_layers.json", `{}`, time.Now())
+	writefile(t, dir, "book/flags/board1_tracking.json", `{}`, time.Now())
+	snap, err := WalkFiles(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := snap["book/flags/pid_1.json"]; !ok {
+		t.Fatal("gameplay flag should be walked")
+	}
+	for _, path := range []string{
+		"book/flags/pid_1_chip.json",
+		"book/flags/pid_1_gadget.json",
+		"book/flags/board1_synth.json",
+		"book/flags/board1_layers.json",
+		"book/flags/board1_tracking.json",
+	} {
+		if _, ok := snap[path]; ok {
+			t.Fatalf("%s should be skipped", path)
+		}
+	}
+}
+
 func TestSteadyTickRemoteFlagEdit(t *testing.T) {
 	dir := t.TempDir()
 	remote := filepath.Join(dir, "remote")
@@ -437,6 +465,65 @@ func TestSteadyTickIgnoresEqualSizeMtimeDrift(t *testing.T) {
 	}
 	if len(logs) != 0 {
 		t.Fatalf("expected idle for mtime-only drift, logs=%v", logs)
+	}
+}
+
+// TestIncrementalPeerOnlyIdleAfterCopytoz reproduces the player-reset loop:
+// after copytoz, dest (zedcafe) mtime often cannot follow Chtimes. The
+// incremental apply must record remote (source) meta in the baseline so a
+// stable peer file does not re-copytoz every tick.
+func TestIncrementalPeerOnlyIdleAfterCopytoz(t *testing.T) {
+	ResetJournalRevForTest()
+	skipchtimesfortest = true
+	defer func() { skipchtimesfortest = false }()
+
+	dir := t.TempDir()
+	remote := filepath.Join(dir, "remote")
+	zedcafe := filepath.Join(dir, "zedcafe")
+	_ = os.MkdirAll(remote, 0o755)
+	_ = os.MkdirAll(zedcafe, 0o755)
+	mtime := time.Now().Add(-time.Minute)
+	flagpath := "flags/pid_1.json"
+	body := `{"ammo":0}`
+	writefile(t, remote, flagpath, body, mtime)
+	writefile(t, zedcafe, flagpath, body, mtime)
+	baseline, err := WalkFiles(remote)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	newer := time.Now()
+	edited := `{"ammo":500}`
+	writefile(t, remote, flagpath, edited, newer)
+
+	next, logs, err := steadytickincrementalpeeronly(remote, zedcafe, baseline)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(logs) != 1 || !strings.Contains(logs[0], "update zedcafe") {
+		t.Fatalf("first tick logs=%v want one copytoz", logs)
+	}
+	remotemeta, err := statmeta(remote, flagpath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	basemeta, ok := next[flagpath]
+	if !ok {
+		t.Fatal("baseline missing flag path after copytoz")
+	}
+	if !basemeta.Mtime.Equal(remotemeta.Mtime) {
+		t.Fatalf("baseline mtime=%v want remote=%v (must prefer source meta)", basemeta.Mtime, remotemeta.Mtime)
+	}
+
+	// Dest mtime drifted (failed Chtimes); peer file unchanged.
+	writefile(t, zedcafe, flagpath, edited, time.Now().Add(time.Hour))
+
+	_, logs2, err := steadytickincrementalpeeronly(remote, zedcafe, next)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(logs2) != 0 {
+		t.Fatalf("second tick must be idle after stable peer file, logs=%v", logs2)
 	}
 }
 
@@ -688,5 +775,157 @@ func TestSteadyTickRecoversPanic(t *testing.T) {
 	}
 	if len(next) != 0 {
 		t.Fatalf("expected original baseline, got %v", next)
+	}
+}
+
+func TestCopytozSkippedWhenContentEqualMtimeDrift(t *testing.T) {
+	ResetJournalRevForTest()
+	dir := t.TempDir()
+	remote := filepath.Join(dir, "remote")
+	zedcafe := filepath.Join(dir, "zedcafe")
+	_ = os.MkdirAll(remote, 0o755)
+	_ = os.MkdirAll(zedcafe, 0o755)
+	old := time.Now().Add(-time.Hour)
+	body := `{"ammo":1}`
+	rel := "flags/pid_1.json"
+	writefile(t, remote, rel, body, old)
+	writefile(t, zedcafe, rel, body, old)
+	baseline, err := WalkFiles(remote)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Peer mtime drift only; bytes unchanged on both sides.
+	remotepath := filepath.Join(remote, filepath.FromSlash(rel))
+	if err := os.Chtimes(remotepath, time.Now(), time.Now()); err != nil {
+		t.Fatal(err)
+	}
+
+	next, logs, err := SteadyTick(remote, zedcafe, baseline)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(logs) != 1 || !strings.Contains(logs[0], "skip copytoz (unchanged)") {
+		t.Fatalf("logs=%v want skip copytoz", logs)
+	}
+	journal, err := os.ReadFile(filepath.Join(remote, filepath.FromSlash(JournalFile)))
+	if err != nil && !os.IsNotExist(err) {
+		t.Fatal(err)
+	}
+	if len(journal) > 0 {
+		t.Fatalf("expected no journal lines on skip, got %q", journal)
+	}
+	remotemeta, err := statmeta(remote, rel)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !next[rel].Mtime.Equal(remotemeta.Mtime) {
+		t.Fatalf("baseline mtime=%v want remote=%v", next[rel].Mtime, remotemeta.Mtime)
+	}
+
+	_, logs2, err := SteadyTick(remote, zedcafe, next)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(logs2) != 0 {
+		t.Fatalf("second tick must be idle, logs=%v", logs2)
+	}
+}
+
+func TestCopytorSkippedWhenContentEqualMtimeDrift(t *testing.T) {
+	ResetJournalRevForTest()
+	dir := t.TempDir()
+	remote := filepath.Join(dir, "remote")
+	zedcafe := filepath.Join(dir, "zedcafe")
+	_ = os.MkdirAll(remote, 0o755)
+	_ = os.MkdirAll(zedcafe, 0o755)
+	old := time.Now().Add(-time.Hour)
+	body := `{"score":9}`
+	rel := "book/a.json"
+	writefile(t, remote, rel, body, old)
+	writefile(t, zedcafe, rel, body, old)
+	baseline, err := WalkFiles(remote)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Zedcafe newer than remote, but remote already has the same bytes.
+	edited := `{"score":99}`
+	remoteMtime := time.Now().Add(-time.Minute)
+	zedMtime := time.Now()
+	writefile(t, remote, rel, edited, remoteMtime)
+	writefile(t, zedcafe, rel, edited, zedMtime)
+
+	next, logs, err := SteadyTick(remote, zedcafe, baseline)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(logs) != 1 || !strings.Contains(logs[0], "skip copytor (unchanged)") {
+		t.Fatalf("logs=%v want skip copytor", logs)
+	}
+	journal, err := os.ReadFile(filepath.Join(remote, filepath.FromSlash(JournalFile)))
+	if err != nil && !os.IsNotExist(err) {
+		t.Fatal(err)
+	}
+	if len(journal) > 0 {
+		t.Fatalf("expected no journal lines on skip, got %q", journal)
+	}
+	if _, ok := next[rel]; !ok {
+		t.Fatal("baseline missing path after skip")
+	}
+}
+
+func TestPartialApplyUpdatesBaselineOnFailure(t *testing.T) {
+	ResetJournalRevForTest()
+	SetJournalCopyFailOnRelForTest("b.json")
+	defer ClearJournalCopyFailOnRelForTest()
+
+	dir := t.TempDir()
+	remote := filepath.Join(dir, "remote")
+	zedcafe := filepath.Join(dir, "zedcafe")
+	_ = os.MkdirAll(remote, 0o755)
+	_ = os.MkdirAll(zedcafe, 0o755)
+	mtime := time.Now().Add(-time.Minute)
+	writefile(t, remote, "a.json", `a`, mtime)
+	writefile(t, remote, "b.json", `b`, mtime)
+
+	ops := []syncop{
+		{rel: "a.json", kind: "copytoz", logmsg: "create zedcafe <- a.json"},
+		{rel: "b.json", kind: "copytoz", logmsg: "create zedcafe <- b.json"},
+	}
+	partial, logs, err := applyscopedops(remote, zedcafe, ops, Snapshot{})
+	if err == nil {
+		t.Fatal("expected error on second copytoz")
+	}
+	if !strings.Contains(err.Error(), "b.json") {
+		t.Fatalf("err=%v", err)
+	}
+	if _, ok := partial["a.json"]; !ok {
+		t.Fatalf("partial missing a.json logs=%v", logs)
+	}
+	if _, ok := partial["b.json"]; ok {
+		t.Fatal("b.json should not be in partial baseline")
+	}
+	abody, err := os.ReadFile(filepath.Join(zedcafe, "a.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(abody) != "a" {
+		t.Fatalf("a.json body=%q", abody)
+	}
+	if _, err := os.Stat(filepath.Join(zedcafe, "b.json")); !os.IsNotExist(err) {
+		t.Fatal("b.json should not have been copied")
+	}
+
+	ClearJournalCopyFailOnRelForTest()
+	_, logs2, err := SteadyTick(remote, zedcafe, partial)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(logs2) != 1 || !strings.Contains(logs2[0], "b.json") {
+		t.Fatalf("second tick should only copy b.json, logs=%v", logs2)
+	}
+	for _, line := range logs2 {
+		if strings.Contains(line, "a.json") {
+			t.Fatalf("must not re-schedule a.json, logs=%v", logs2)
+		}
 	}
 }

@@ -450,6 +450,7 @@ describe('applyzedcafepartialtomemory', () => {
     boards.clear()
     mockreadlist.mockReset()
     mockreadlist.mockReturnValue([book])
+    mockupsert.mockImplementation(() => true)
     book.flags = {
       pid_1: 'pid_1',
       pid_1_gadget: 'pid_1_gadget',
@@ -623,5 +624,112 @@ describe('applyzedcafepartialtomemory', () => {
     expect(result.changed).toBe(true)
     expect(result.changedpaths).toEqual([path])
     expect(result.skippedpaths).toEqual([])
+  })
+
+  it('creates stub page when new board terrain arrives without page stats', () => {
+    mockupsert.mockImplementation(
+      (
+        targetbook: { pages: { id: string; code: string }[] },
+        flat: { id: string; code: string; board?: Record<string, unknown> },
+      ) => {
+        if (!targetbook.pages.some((entry) => entry.id === flat.id)) {
+          targetbook.pages.push({ id: flat.id, code: flat.code })
+          boards.set(flat.id, {
+            id: flat.id,
+            terrain: maketerrain(0),
+            objects: {},
+          })
+        }
+        if (flat.board && Array.isArray(flat.board.terrain)) {
+          boards.set(flat.id, {
+            id: flat.id,
+            terrain: flat.board.terrain,
+            objects: flat.board.objects ?? {},
+          })
+        }
+        return true
+      },
+    )
+    const terrain = maketerrain(3)
+    const path = 'demo-b1/room2x0-sid_new/board/terrain.json'
+    const result = applyzedcafepartialtomemory([
+      { path, bytes: encoder.encode(JSON.stringify(terrain)) },
+    ])
+    expect(result.changed).toBe(true)
+    expect(result.paintids).toContain('sid_new')
+    expect(book.pages.some((entry) => entry.id === 'sid_new')).toBe(true)
+    expect(boards.get('sid_new')?.terrain[0]).toEqual({ char: 3, color: 0 })
+  })
+
+  it('registers pages from book stats.json pages list', () => {
+    mockupsert.mockImplementation(
+      (
+        targetbook: { pages: { id: string; code: string }[] },
+        flat: { id: string; code: string },
+      ) => {
+        if (!targetbook.pages.some((entry) => entry.id === flat.id)) {
+          targetbook.pages.push({ id: flat.id, code: flat.code })
+        }
+        return true
+      },
+    )
+    const result = applyzedcafepartialtomemory([
+      {
+        path: 'demo-b1/stats.json',
+        bytes: encoder.encode(
+          JSON.stringify({
+            pages: [{ id: 'sid_new', name: 'room2x0' }],
+          }),
+        ),
+      },
+    ])
+    expect(result.changed).toBe(true)
+    expect(book.pages.some((entry) => entry.id === 'sid_new')).toBe(true)
+  })
+
+  it('applies new board terrain after page stats in one batch', () => {
+    mockupsert.mockImplementation(
+      (
+        targetbook: { pages: { id: string; code: string }[] },
+        flat: { id: string; code: string; board?: Record<string, unknown> },
+      ) => {
+        let entry = targetbook.pages.find((page) => page.id === flat.id)
+        if (!entry) {
+          entry = { id: flat.id, code: flat.code }
+          targetbook.pages.push(entry)
+          boards.set(flat.id, {
+            id: flat.id,
+            terrain: maketerrain(0),
+            objects: {},
+          })
+        }
+        if (flat.board && Array.isArray(flat.board.terrain)) {
+          boards.set(flat.id, {
+            id: flat.id,
+            terrain: flat.board.terrain,
+            objects: flat.board.objects ?? {},
+          })
+        }
+        return true
+      },
+    )
+    const terrain = maketerrain(5)
+    const result = applyzedcafepartialtomemory([
+      {
+        path: 'demo-b1/room2x0-sid_new/stats.json',
+        bytes: encoder.encode(
+          JSON.stringify({
+            id: 'sid_new',
+            code: '@board room2x0\n',
+          }),
+        ),
+      },
+      {
+        path: 'demo-b1/room2x0-sid_new/board/terrain.json',
+        bytes: encoder.encode(JSON.stringify(terrain)),
+      },
+    ])
+    expect(result.changed).toBe(true)
+    expect(boards.get('sid_new')?.terrain[0]).toEqual({ char: 5, color: 0 })
   })
 })
