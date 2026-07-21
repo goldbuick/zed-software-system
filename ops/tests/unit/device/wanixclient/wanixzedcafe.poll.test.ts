@@ -60,13 +60,18 @@ import {
 import {
   markpendingdirtypaths,
   readpendingpollkick,
+  readzedcafeguestdirty,
   readzedcafepollactive,
   resetwanixzedcafesessionfortest,
   setlasthostpushdoc,
   setpendingpollphase,
   setpendingsync,
 } from 'zss/device/wanixclient/state'
-import { zedcafeexportfilestodoc } from 'zss/feature/wanix/wanixstateexport'
+import {
+  clearzedcafeexportpendingdirtyfortest,
+  resetwanixstateexportfortest,
+  zedcafeexportfilestodoc,
+} from 'zss/feature/wanix/wanixstateexport'
 
 const mockreadrid = wanixserverreadzedcafetaskrid as jest.Mock
 const mockreadfiles = wanixserverreadzedcafeexportfiles as jest.Mock
@@ -91,6 +96,8 @@ describe('zedcafe import poll', () => {
   beforeEach(() => {
     resetwanixzedcafefortest()
     resetwanixzedcafesessionfortest()
+    resetwanixstateexportfortest()
+    clearzedcafeexportpendingdirtyfortest()
     mockreadrid.mockReset()
     mockreadfiles.mockReset()
     mockvmimport.mockReset()
@@ -101,6 +108,7 @@ describe('zedcafe import poll', () => {
     stopzedcafepoll()
     resetwanixzedcafefortest()
     resetwanixzedcafesessionfortest()
+    resetwanixstateexportfortest()
   })
 
   it('startzedcafepoll marks active without interval tick', () => {
@@ -113,6 +121,7 @@ describe('zedcafe import poll', () => {
     startzedcafepoll(device, player)
     kickzedcafepoll('file-change')
     expect(mockreadrid).toHaveBeenCalledWith(device, player)
+    expect(readzedcafeguestdirty()).toBe(true)
   })
 
   it('kickzedcafepoll queues when poll inactive', () => {

@@ -186,7 +186,8 @@ DaisySP WASM backend with engine-agnostic front-end (`SynthBackend` interface). 
 
 ### Shared WASM helpers
 - `unlockaudiocontext()` - Create/resume shared `AudioContext` on user gesture
-- `ensurewasmcoep()` - Register COOP/COEP service worker for SharedArrayBuffer
+- `ensurewasmcoep()` - Register COOP/COEP service worker for SharedArrayBuffer (prod); no-op when already isolated or Vite dev
+- `clearwasmcoepserviceworkers()` - Unregister enable-threads service workers (dev HMR)
 
 ---
 

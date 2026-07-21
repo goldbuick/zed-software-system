@@ -207,5 +207,13 @@ export default defineConfig(({ mode }) => {
           }
         : undefined,
     },
+    preview: {
+      headers: usewasmheaders
+        ? {
+            'Cross-Origin-Opener-Policy': 'same-origin',
+            'Cross-Origin-Embedder-Policy': 'require-corp',
+          }
+        : undefined,
+    },
   }
 })

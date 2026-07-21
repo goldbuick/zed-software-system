@@ -166,7 +166,7 @@ export function handleimportzedcafe(vm: DEVICE, message: MESSAGE): void {
         payload.files,
         payload.removepaths,
       )
-      primezedcafeexportshadow()
+      primezedcafeexportshadow(undefined, { retainpendingdirty: true })
       if (result.changed) {
         paintboardrunnersforids(vm, result.paintids)
       }
@@ -187,7 +187,7 @@ export function handleimportzedcafe(vm: DEVICE, message: MESSAGE): void {
     }
     const parsed = parsezedcafeexportfiles(payload.files)
     const changed = applyzedcafetomemory(parsed)
-    primezedcafeexportshadow()
+    primezedcafeexportshadow(undefined, { retainpendingdirty: true })
     if (changed) {
       // Full replace of codepage runtimes — emitdiff alone can miss or desync;
       // paint so the live boardrunner gets terrain immediately.

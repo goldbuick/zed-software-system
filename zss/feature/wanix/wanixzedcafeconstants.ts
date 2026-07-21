@@ -31,10 +31,12 @@ export const WANIX_ZEDCAFE_EXPORT_COALESCE_TERRAIN_MS = 75
 export const WANIX_ZEDCAFE_EXPORT_COALESCE_SINGLE_MS = 0
 /** Host + guest wait for content-ready stats.json. */
 export const WANIX_ZEDCAFE_EXPORT_READY_TIMEOUT_MS = 600_000
-/** Parent wait for `<target>/.zedsync-ready` after seeding a large peer tree. */
+/** Parent wait for `<target>/.zedsync/ready` after seeding a large peer tree. */
 export const WANIX_ZEDSYNC_READY_TIMEOUT_MS = 900_000
-/** Meta dir under the zedcafe export root for zedsync revision hints (peer-visible). */
+/** Meta dir under the zedcafe export root for zedsync revision / ready / journal. */
 export const WANIX_ZEDSYNC_REVISION_DIR = '.zedsync'
+/** Seed-complete sentinel on the peer (under the meta dir, not top-level). */
+export const WANIX_ZEDSYNC_READY_FILE = '.zedsync/ready'
 /** Revision hint written after each successful host push: `{ revision, paths }`. */
 export const WANIX_ZEDSYNC_REVISION_FILE = '.zedsync/revision'
 

@@ -7,13 +7,17 @@ import {
   capturecafedropitems,
   resolvecafedropitems,
 } from 'zss/device/wanixclient/wanixfsadropitems'
-import { clearwasmcoepserviceworkers } from 'zss/feature/synth/backend/wasm/coopcoep'
+import { clearwasmcoepserviceworkers, ensurewasmcoep } from 'zss/feature/synth/backend/wasm/coopcoep'
 import { useDeviceData } from 'zss/gadget/device'
 import { Engine } from 'zss/gadget/engine'
 
 if (typeof window !== 'undefined') {
   if (import.meta.env.DEV) {
     void clearwasmcoepserviceworkers()
+  } else {
+    // Prod (GH Pages): establish isolation before the audio gesture so a
+    // required COEP SW reload is not tied to "enable audio".
+    void ensurewasmcoep()
   }
 
   window.addEventListener(

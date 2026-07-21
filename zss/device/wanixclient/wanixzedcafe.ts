@@ -54,7 +54,9 @@ import {
   type WANIX_ZED_CAFE_EXPORT_FILE,
   acknowledgezedcafeexportpush,
   buildzedcafeexportfiles,
+  filterzedcafeexportpathsagainstsimdirty,
   readbookcountfromexportfiles,
+  readzedcafeexportpendingdirty,
   readzedcafeexportremovepaths,
   readzedcafeexportstatscontentready,
   readzedcafeexportupsertpaths,
@@ -749,6 +751,7 @@ export async function runzedcafeimport(
     const guestdoc = zedcafeexportfilestodoc(files)
     const shadow = readlasthostpushdoc()
     const shadowempty = Object.keys(shadow).length === 0
+    const simdirty = readzedcafeexportpendingdirty()
     let result: WANIX_ZED_CAFE_IMPORT_RESULT
     if (shadowempty) {
       // Initial activation / empty shadow — full structural reconcile.
@@ -756,7 +759,8 @@ export async function runzedcafeimport(
     } else {
       const deltaops = compare(shadow, guestdoc)
       if (deltaops.length === 0) {
-        acknowledgezedcafeexportpush()
+        // Guest matches last host push. Do not ack export dirty gens — unpushed
+        // sim edits may still need a tick flush against this guest tree.
         acknowledgezedcafeguestdirtygen()
         setzedcafeguestdirty(false)
         wanixperfmark('export-import-noop', { paths: files.length })
@@ -769,7 +773,52 @@ export async function runzedcafeimport(
       }
       const upsertpaths = readzedcafeexportupsertpaths(deltaops)
       const removepaths = [...readzedcafeexportremovepaths(deltaops)]
-      const subset = zedcafeexportdoctofiles(guestdoc, upsertpaths)
+      const filteredupsert = filterzedcafeexportpathsagainstsimdirty(
+        upsertpaths,
+        simdirty,
+      )
+      const filteredremove = filterzedcafeexportpathsagainstsimdirty(
+        removepaths,
+        simdirty,
+      )
+      if (
+        filteredupsert.skipped.length > 0 ||
+        filteredremove.skipped.length > 0
+      ) {
+        const skippedn =
+          filteredupsert.skipped.length + filteredremove.skipped.length
+        apilog(
+          device,
+          player,
+          `zedcafe import: skipped ${skippedn} path(s) with unpushed sim dirty`,
+        )
+        wanixperfmark('export-import-skip-sim-dirty', {
+          skipped: skippedn,
+          keep:
+            filteredupsert.keep.length + filteredremove.keep.length,
+        })
+      }
+      if (
+        filteredupsert.keep.length === 0 &&
+        filteredremove.keep.length === 0
+      ) {
+        // Every guest delta collides with pending sim dirty — leave memory alone
+        // and clear guest-dirty so the host tick can republish sim truth.
+        acknowledgezedcafeguestdirtygen()
+        setzedcafeguestdirty(false)
+        wanixperfmark('export-import-noop', {
+          paths: files.length,
+          skippedall: true,
+        })
+        apilog(
+          device,
+          player,
+          'zedcafe import: all guest deltas deferred to unpushed sim dirty',
+        )
+        return true
+      }
+      const keepupsert = new Set(filteredupsert.keep)
+      const subset = zedcafeexportdoctofiles(guestdoc, keepupsert)
       const partialcheck = validatezedcafeexportpaths(subset, { partial: true })
       if (!partialcheck.ok) {
         const detail = partialcheck.errors[0] ?? 'unknown'
@@ -778,7 +827,7 @@ export async function runzedcafeimport(
       }
       result = await requestvmzedcafeimport(device, player, subset, {
         partial: true,
-        removepaths,
+        removepaths: filteredremove.keep,
       })
     }
     if (!result.ok) {
@@ -807,7 +856,7 @@ export async function runzedcafeimport(
     const ops = compare(guestdoc, applieddoc)
     if (ops.length === 0) {
       setlasthostpushdoc(applieddoc)
-      acknowledgezedcafeexportpush()
+      // Retain pending sim dirty — only ack guest side here.
       acknowledgezedcafeguestdirtygen()
       setzedcafeguestdirty(false)
       wanixperfmark('export-import-noop', { paths: files.length })
@@ -884,6 +933,9 @@ function tickzedcafepoll() {
 export function kickzedcafepoll(reason = 'manual', paths?: string[]): void {
   if (reason === 'file-change') {
     bumpzedcafeguestdirtygen()
+    // Gate host tick flush immediately — gen alone used to leave a window
+    // where checkzedcafeexportontick could push a pre-import snapshot.
+    setzedcafeguestdirty(true)
     if (paths && paths.length > 0) {
       markpendingdirtypaths(paths)
     }

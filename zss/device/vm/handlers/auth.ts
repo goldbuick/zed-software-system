@@ -98,6 +98,15 @@ export function handlelogout(vm: DEVICE, message: MESSAGE): void {
   }
 }
 
+function configlog(
+  vm: DEVICE,
+  player: string,
+  config: string,
+  enabled: boolean,
+) {
+  apilog(vm, player, `${config} ${enabled ? '$greenon' : '$redoff'}`)
+}
+
 export function handlelogin(vm: DEVICE, message: MESSAGE): void {
   const {
     bannedtokens,
@@ -126,8 +135,25 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
     )
     if (Array.isArray(config)) {
       memorysetconfig(config)
-      memorywritehalt(memoryreadconfig('dev') === 'on')
-      registerinspector(vm, message.player, memoryreadconfig('gadget') === 'on')
+
+      const shouldcrt = memoryreadconfig('crt') === 'on'
+      configlog(vm, message.player, 'crt', shouldcrt)
+
+      const shouldscanlines = memoryreadconfig('scanlines') === 'on'
+      configlog(vm, message.player, 'scanlines', shouldscanlines)
+
+      const shouldvoice2text = memoryreadconfig('voice2text') === 'on'
+      configlog(vm, message.player, 'voice2text', shouldvoice2text)
+
+      const shouldloaderlogging = memoryreadconfig('loaderlogging') === 'on'
+      configlog(vm, message.player, 'loaderlogging', shouldloaderlogging)
+
+      const shouldhalt = memoryreadconfig('dev') === 'on'
+      configlog(vm, message.player, 'dev', shouldhalt)
+      memorywritehalt(shouldhalt)
+
+      const shouldgadget = memoryreadconfig('gadget') === 'on'
+      registerinspector(vm, message.player, shouldgadget)
     }
   }
 

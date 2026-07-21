@@ -28,10 +28,9 @@ jobs:
           yarn task run ops:ci:pages:copy-cname
 
       - name: Push
-        uses: s0/git-publish-subdir-action@develop
-        env:
-          REPO: self
-          BRANCH: public # The branch name where you want to push the assets
-          FOLDER: ./cafe/dist # The directory where your assets are generated
-          MESSAGE: 'Build: ({sha}) {msg}' # The commit message
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # GitHub will automatically add this - you don't need to bother getting a token
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./cafe/dist
+          publish_branch: public
+          commit_message: 'Build: {sha} {msg}'

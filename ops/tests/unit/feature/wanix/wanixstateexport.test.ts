@@ -7,13 +7,17 @@ import {
   bumpexportrevision,
   checkzedcafeexportontick,
   decodezedcafejsonpointer,
+  filterzedcafeexportpathsagainstsimdirty,
   forcezedcafeexportcoalesceclosedfortest,
   forcezedcafeexportcoalesceopenfortest,
+  iszedcafeexportpathsimdirty,
   markzedcafeexportpathdirty,
   markzedcafeexportstructuraldirty,
   primezedcafeexportshadow,
   readexportrevision,
   readzedcafeexportdirtygensfortest,
+  readzedcafeexportpageprefix,
+  readzedcafeexportpendingdirty,
   readzedcafeexportremovepaths,
   readzedcafeexportstatscontentready,
   readzedcafeexportupsertpaths,
@@ -589,5 +593,72 @@ describe('wanixstateexport', () => {
       },
     ])
     expect(compare(a, b)).toEqual([])
+  })
+
+  it('readzedcafeexportpageprefix covers board and flags paths', () => {
+    expect(
+      readzedcafeexportpageprefix('demo-book1/demo-page1/board/terrain.json'),
+    ).toBe('demo-book1/demo-page1/')
+    expect(readzedcafeexportpageprefix('demo-book1/flags/pid_1.json')).toBe(
+      'demo-book1/flags/',
+    )
+    expect(readzedcafeexportpageprefix('stats.json')).toBeUndefined()
+  })
+
+  it('iszedcafeexportpathsimdirty protects page siblings of dirty terrain', () => {
+    const pending = {
+      structural: false,
+      paths: ['demo-book1/demo-page1/board/terrain.json'],
+    }
+    expect(
+      iszedcafeexportpathsimdirty(
+        'demo-book1/demo-page1/board/terrain.json',
+        pending,
+      ),
+    ).toBe(true)
+    expect(
+      iszedcafeexportpathsimdirty(
+        'demo-book1/demo-page1/board/stats.json',
+        pending,
+      ),
+    ).toBe(true)
+    expect(
+      iszedcafeexportpathsimdirty('demo-book1/other-page/board/terrain.json', pending),
+    ).toBe(false)
+    expect(
+      iszedcafeexportpathsimdirty('other.json', { structural: true, paths: [] }),
+    ).toBe(true)
+  })
+
+  it('filterzedcafeexportpathsagainstsimdirty drops protected paths', () => {
+    const { keep, skipped } = filterzedcafeexportpathsagainstsimdirty(
+      [
+        'demo-book1/demo-page1/board/terrain.json',
+        'demo-book1/other/stats.json',
+      ],
+      {
+        structural: false,
+        paths: ['demo-book1/demo-page1/board/terrain.json'],
+      },
+    )
+    expect(skipped).toEqual(['demo-book1/demo-page1/board/terrain.json'])
+    expect(keep).toEqual(['demo-book1/other/stats.json'])
+  })
+
+  it('primezedcafeexportshadow retainpendingdirty keeps dirty gens', () => {
+    ;(memoryreadbooklist as jest.Mock).mockReturnValue([])
+    primezedcafeexportshadow(buildzedcafeexportfiles())
+    markzedcafeexportpathdirty('demo-book1/demo-page1/board/terrain.json')
+    const before = readzedcafeexportpendingdirty()
+    expect(before.pending).toBe(true)
+    primezedcafeexportshadow(buildzedcafeexportfiles(), {
+      retainpendingdirty: true,
+    })
+    const after = readzedcafeexportpendingdirty()
+    expect(after.pending).toBe(true)
+    expect(after.paths).toEqual(before.paths)
+    expect(readzedcafeexportdirtygensfortest().dirty).toBe(
+      readzedcafeexportdirtygensfortest().dirty,
+    )
   })
 })

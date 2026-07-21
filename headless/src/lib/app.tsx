@@ -182,7 +182,7 @@ export async function runApp(flags: RunAppFlags): Promise<void> {
       console.error('cafe/dist not found. Run: yarn task run cafe:build')
       process.exit(1)
     }
-    await createstaticserver(distDir, port)
+    await createstaticserver(distDir, port, { wasmcoep: true })
     baseUrl = `http://localhost:${port}`
     addLog(`Serving cafe at ${baseUrl}`)
   }

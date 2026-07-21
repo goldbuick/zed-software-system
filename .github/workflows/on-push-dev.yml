@@ -8,19 +8,41 @@ on:
 jobs:
   bump-version:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: checkout
         uses: actions/checkout@v5
         with:
           set-safe-directory: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # Skip re-trigger when the bump commit is from this workflow
+          # (bot commits still trigger push; filter below)
 
-      - name: 'inc version'
+      - name: skip bot bump loops
+        id: should_bump
+        run: |
+          if [ "${{ github.actor }}" = "github-actions[bot]" ]; then
+            echo "bump=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "bump=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: inc version
+        if: steps.should_bump.outputs.bump == 'true'
         id: version-bump
-        uses: 'phips28/gh-action-bump-version@master'
-        with:
-          skip-tag:  'true'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          npm version patch --no-git-tag-version
+          git add package.json
+          if git diff --cached --quiet; then
+            echo "No version change to commit"
+            exit 0
+          fi
+          VERSION=$(node -p "require('./package.json').version")
+          git commit -m "ci: bump version to ${VERSION}"
+          git push
 
-      - name: 'cat package.json'
+      - name: cat package.json
         run: cat ./package.json

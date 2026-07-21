@@ -265,6 +265,12 @@ sequenceDiagram
   in sim; missing `board/objects/*.json` disappear when the board page is upserted.
   A valid empty tree (`bookCount: 0`) clears all sim books.
 - While `guestdirty`, host pushes of pre-import snapshots are skipped.
+  (`file-change` kicks set `guestdirty` immediately so mid-poll host flushes cannot race.)
+- Guest import deltas that collide with **unpushed sim export dirty** paths are skipped
+  (page-prefix protection, e.g. dirty `board/terrain.json` also blocks sibling
+  `board/stats.json`). Structural dirty skips all guest path applies until the host
+  flush acks. `primezedcafeexportshadow` after import retains pending dirty so the next
+  host push can republish sim truth.
 - Apply failures log and leave import-ready active so the next dirty/session-close kick
   can retry. Hard iframe message failures still stop the import runner.
 
@@ -788,7 +794,7 @@ Browser Wanix cannot export its namespace outward. Import a remote 9P mount, the
 2. `#wanix remote connect wss://localhost:<port>/ remote` — use the printed URL; `wss://` is required from `cafe:dev` https
 3. `#wanix zedsync remote` — guest task; argv path must not contain spaces
 
-Empty peer is seeded from `zedcafe/` (no wipe). After `.zedsync-ready`, steady-state sync mirrors creates/updates; deleting a file on the peer restores it from `zedcafe/`. Soft idle stops zedsync (`zedsync: stopped`). See [`ops/fixtures/wanix/README.md`](../../../ops/fixtures/wanix/README.md).
+Empty peer is seeded from `zedcafe/` (no wipe). After `.zedsync/ready`, steady-state sync mirrors creates/updates; deleting a file on the peer restores it from `zedcafe/`. Soft idle stops zedsync (`zedsync: stopped`). See [`ops/fixtures/wanix/README.md`](../../../ops/fixtures/wanix/README.md).
 
 ### Conflict policy: newer mtime wins
 

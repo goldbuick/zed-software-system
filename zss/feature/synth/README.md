@@ -77,4 +77,11 @@ Grid-search scripts rewrite [`zss_config.h`](backend/daisy/native/zss/zss_config
 
 **FX bus:** [parallel-fx-bus.md](docs/parallel-fx-bus.md). Offline matrix: `yarn task run ops:daisy:level-stability:test:fxmatrix`.
 
-COOP/COEP headers are enabled in Vite for SharedArrayBuffer.
+COOP/COEP headers are enabled in Vite **dev** and **preview** for SharedArrayBuffer.
+
+**Production (`zed.cafe` on GitHub Pages):** Pages cannot set those response headers.
+Cafe registers `/coep/enable-threads.js` via `ensurewasmcoep()` at boot (not only on
+first audio gesture). If Cloudflare proxies the CNAME, prefer Transform / Configuration
+Rules for `Cross-Origin-Opener-Policy: same-origin` and
+`Cross-Origin-Embedder-Policy: require-corp` on document responses — then the page is
+isolated without a service worker reload.
