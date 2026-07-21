@@ -80,8 +80,7 @@ Grid-search scripts rewrite [`zss_config.h`](backend/daisy/native/zss/zss_config
 COOP/COEP headers are enabled in Vite **dev** and **preview** for SharedArrayBuffer.
 
 **Production (`zed.cafe` on GitHub Pages):** Pages cannot set those response headers.
-Cafe registers `/coep/enable-threads.js` via `ensurewasmcoep()` at boot (not only on
-first audio gesture). If Cloudflare proxies the CNAME, prefer Transform / Configuration
-Rules for `Cross-Origin-Opener-Policy: same-origin` and
-`Cross-Origin-Embedder-Policy: require-corp` on document responses — then the page is
-isolated without a service worker reload.
+Cafe registers `/coep/enable-threads.js` via `ensurewasmcoep()` at boot and allows
+**one isolation reload per cafe deploy** (`ZSS_COMMIT_HASH` in localStorage). After
+that navigation, the SW can apply COOP/COEP so `SharedArrayBuffer` works for Daisy.
+Cloudflare document headers are optional; the SW reload path is the supported default.

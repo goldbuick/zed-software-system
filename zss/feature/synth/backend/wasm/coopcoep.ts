@@ -2,7 +2,7 @@ import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 
 const SW_URL = '/coep/enable-threads.js'
-const RELOAD_GUARD_PREFIX = 'zss_wasm_coep_reload:'
+const RELOAD_GUARD_KEY = 'zss_wasm_coep_reload'
 
 let coepinflight: Promise<void> | undefined
 let coepready = false
@@ -28,43 +28,29 @@ export async function clearwasmcoepserviceworkers() {
   )
 }
 
-/** Simple stable token for the SW script body (length + hash). */
-export function hashcoepswbody(text: string): string {
-  let hash = 2166136261
-  for (let i = 0; i < text.length; ++i) {
-    hash ^= text.charCodeAt(i)
-    hash = Math.imul(hash, 16777619)
+/** Cafe build token — one COEP isolation reload allowed per deploy. */
+export function readcoepbuildtoken(): string {
+  const commit = (process.env.ZSS_COMMIT_HASH ?? '').trim()
+  if (!commit || commit === 'false') {
+    return 'unknown'
   }
-  return `${text.length}:${hash >>> 0}`
+  return commit
 }
 
-function readreloadguardkey(swurl: string): string {
-  return `${RELOAD_GUARD_PREFIX}${swurl}`
-}
-
-function readreloadguard(swurl: string): string | null {
+function readreloadguard(): string | null {
   try {
-    return localStorage.getItem(readreloadguardkey(swurl))
+    return localStorage.getItem(RELOAD_GUARD_KEY)
   } catch {
     return null
   }
 }
 
-function writereloadguard(swurl: string, token: string): void {
+function writereloadguard(token: string): void {
   try {
-    localStorage.setItem(readreloadguardkey(swurl), token)
+    localStorage.setItem(RELOAD_GUARD_KEY, token)
   } catch {
     //
   }
-}
-
-async function readswversiontoken(swurl: string): Promise<string> {
-  const response = await fetch(swurl, { cache: 'no-store' })
-  if (!response.ok) {
-    return `${swurl}:unreadable`
-  }
-  const text = await response.text()
-  return `${swurl}:${hashcoepswbody(text)}`
 }
 
 /** Test helper — reset module latches between Jest cases. */
@@ -109,7 +95,9 @@ export async function ensurewasmcoep(): Promise<void> {
 
   coepinflight ??= (async () => {
     try {
-      await navigator.serviceWorker.register(SW_URL)
+      // Bust SW script URL per cafe deploy so each build can install/claim.
+      const buildtoken = readcoepbuildtoken()
+      await navigator.serviceWorker.register(`${SW_URL}?v=${buildtoken}`)
       const ready = await navigator.serviceWorker.ready
 
       // clients.claim() can set controller without a COEP navigation — only
@@ -124,10 +112,8 @@ export async function ensurewasmcoep(): Promise<void> {
         return
       }
 
-      // Need a document navigation under the SW so COOP/COEP apply — one
-      // reload per SW script version (localStorage), not per tab/session.
-      const versiontoken = await readswversiontoken(SW_URL)
-      if (readreloadguard(SW_URL) === versiontoken) {
+      // One reload per cafe build (localStorage), not per tab/session.
+      if (readreloadguard() === buildtoken) {
         apierror(
           SOFTWARE,
           '',
@@ -136,7 +122,7 @@ export async function ensurewasmcoep(): Promise<void> {
         )
         return
       }
-      writereloadguard(SW_URL, versiontoken)
+      writereloadguard(buildtoken)
       reloadpage()
     } catch (err) {
       apierror(
