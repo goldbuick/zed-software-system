@@ -82,7 +82,7 @@ describe('ensurewasmcoep', () => {
     expect(reloadmock).not.toHaveBeenCalled()
   })
 
-  it('does not reload when a controller already exists', async () => {
+  it('reloads when controller exists but page is not isolated', async () => {
     Object.defineProperty(window, 'crossOriginIsolated', {
       configurable: true,
       value: false,
@@ -91,7 +91,7 @@ describe('ensurewasmcoep', () => {
     registermock.mockResolvedValue({})
     await ensurewasmcoep()
     expect(registermock).toHaveBeenCalledWith(SW_URL)
-    expect(reloadmock).not.toHaveBeenCalled()
+    expect(reloadmock).toHaveBeenCalledTimes(1)
   })
 
   it('reloads once when SW is active but not controlling', async () => {
@@ -111,7 +111,7 @@ describe('ensurewasmcoep', () => {
     )
   })
 
-  it('skips a second reload for the same SW version', async () => {
+  it('skips a second reload for the same SW version and reports error', async () => {
     Object.defineProperty(window, 'crossOriginIsolated', {
       configurable: true,
       value: false,
@@ -125,5 +125,11 @@ describe('ensurewasmcoep', () => {
     setwasmcoepreloadfortest(reloadmock)
     await ensurewasmcoep()
     expect(reloadmock).not.toHaveBeenCalled()
+    expect(apierror).toHaveBeenCalledWith(
+      expect.anything(),
+      '',
+      'wasm',
+      'COOP/COEP isolation failed after reload - SharedArrayBuffer unavailable',
+    )
   })
 })

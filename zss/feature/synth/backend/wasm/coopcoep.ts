@@ -112,8 +112,10 @@ export async function ensurewasmcoep(): Promise<void> {
       await navigator.serviceWorker.register(SW_URL)
       const ready = await navigator.serviceWorker.ready
 
-      if (navigator.serviceWorker.controller) {
-        coepready = window.crossOriginIsolated
+      // clients.claim() can set controller without a COEP navigation — only
+      // crossOriginIsolated means SharedArrayBuffer is available.
+      if (window.crossOriginIsolated) {
+        coepready = true
         return
       }
 
@@ -122,10 +124,16 @@ export async function ensurewasmcoep(): Promise<void> {
         return
       }
 
-      // Active SW but this document is not controlled yet — one reload per SW
-      // script version (localStorage), not per tab/session.
+      // Need a document navigation under the SW so COOP/COEP apply — one
+      // reload per SW script version (localStorage), not per tab/session.
       const versiontoken = await readswversiontoken(SW_URL)
       if (readreloadguard(SW_URL) === versiontoken) {
+        apierror(
+          SOFTWARE,
+          '',
+          'wasm',
+          'COOP/COEP isolation failed after reload - SharedArrayBuffer unavailable',
+        )
         return
       }
       writereloadguard(SW_URL, versiontoken)

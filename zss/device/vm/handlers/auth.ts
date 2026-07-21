@@ -166,8 +166,6 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
     memorysetplayertotoken(message.player, token)
   }
 
-  // const reattach = memoryreadplayeractive(message.player)
-
   // attempt to login player
   if (
     memoryloginplayer(message.player, sanitizeloginflags(flags) as BOOK_FLAGS)
