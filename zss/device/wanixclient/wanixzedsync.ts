@@ -8,6 +8,7 @@ import {
 import { dumpwanixtermbuffertext } from 'zss/device/wanixclient/wanixtermtext'
 import {
   WANIX_ZEDCAFE_GUEST_MOUNT,
+  WANIX_ZEDSYNC_READY_FILE,
   WANIX_ZEDSYNC_READY_TIMEOUT_MS,
   WANIX_ZEDSYNC_TASK_ID,
 } from 'zss/feature/wanix/wanixzedcafeconstants'
@@ -15,7 +16,7 @@ import {
 export const WANIX_ZEDSYNC_WASM_URL =
   '/wanix/zedsync.wasm?v=ascii-logs-20260718'
 export const WANIX_ZEDSYNC_TASK_WASM = `${WANIX_ZEDSYNC_TASK_ID}.wasm`
-export const WANIX_ZEDSYNC_READY_NAME = '.zedsync-ready'
+export const WANIX_ZEDSYNC_READY_NAME = WANIX_ZEDSYNC_READY_FILE
 const WANIX_ZEDSYNC_READY_POLL_MS = 500
 
 type ZedsyncReadyWait = {
@@ -52,7 +53,7 @@ export function cancelzedsyncreadywait(reason?: string): void {
   clearreadywait()
 }
 
-/** True while parent is polling for `.zedsync-ready`. */
+/** True while parent is polling for `.zedsync/ready`. */
 export function iszedsyncreadywaitpending(): boolean {
   return pendingready !== null
 }
@@ -101,7 +102,7 @@ export function applyzedsyncreadfileresult(data: unknown): void {
     apilog(
       device,
       player,
-      `zedsync: watching ${path.replace(/\/\.zedsync-ready$/, '')}`,
+      `zedsync: watching ${path.replace(/\/\.zedsync\/ready$/, '')}`,
     )
     clearreadywait()
   }
@@ -132,7 +133,7 @@ export function iszedsynctaskid(sessionkey: string): boolean {
 }
 
 /**
- * Start host poll for `<target>/.zedsync-ready`. Must run on cafe main
+ * Start host poll for `<target>/.zedsync/ready`. Must run on cafe main
  * (wanixclient readfile replies land here, not in the sim worker). Does
  * NOT pause the zedcafe import poll -- seeding runs alongside it; see
  * `iszedsyncreadywaitpending` for the soft gate other code checks to avoid

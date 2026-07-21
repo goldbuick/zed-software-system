@@ -129,7 +129,7 @@ describe('startwanixzedsync gates', () => {
     expect(mockapilog).toHaveBeenCalledWith(
       device,
       player,
-      expect.stringContaining('spawned; waiting for MyFolder/.zedsync-ready'),
+      expect.stringContaining('spawned; waiting for MyFolder/.zedsync/ready'),
     )
     cancelzedsyncreadywait('test cleanup')
     expect(iszedsyncreadywaitpending()).toBe(false)

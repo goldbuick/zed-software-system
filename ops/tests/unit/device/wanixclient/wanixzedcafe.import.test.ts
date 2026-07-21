@@ -69,7 +69,12 @@ import {
   setpendingpollphase,
   setzedcafeguestdirty,
 } from 'zss/device/wanixclient/state'
-import { zedcafeexportfilestodoc } from 'zss/feature/wanix/wanixstateexport'
+import {
+  clearzedcafeexportpendingdirtyfortest,
+  markzedcafeexportpathdirty,
+  resetwanixstateexportfortest,
+  zedcafeexportfilestodoc,
+} from 'zss/feature/wanix/wanixstateexport'
 
 const mockapilog = apilog as jest.Mock
 const mockvmimport = vmimportzedcafe as jest.Mock
@@ -105,6 +110,10 @@ describe('zedcafe import', () => {
   beforeEach(() => {
     resetwanixzedcafefortest()
     resetwanixzedcafesessionfortest()
+    resetwanixstateexportfortest()
+    // reset leaves structuraldirty=true (cold start); clear so only explicit
+    // markzedcafeexportpathdirty protects paths in import tests.
+    clearzedcafeexportpendingdirtyfortest()
     mockapilog.mockReset()
     mockvmimport.mockReset()
     mockvmexport.mockReset()
@@ -115,6 +124,7 @@ describe('zedcafe import', () => {
   afterEach(() => {
     resetwanixzedcafefortest()
     resetwanixzedcafesessionfortest()
+    resetwanixstateexportfortest()
   })
 
   it('fingerprints export files stably', () => {
@@ -183,6 +193,75 @@ describe('zedcafe import', () => {
       true,
     )
     expect(sentfiles.some((file) => file.path === 'stats.json')).toBe(false)
+  })
+
+  it('runzedcafeimport skips guest terrain when sim export dirty covers it', async () => {
+    const terrainpath = 'demo-b1/title-sid/board/terrain.json'
+    const hostterrain = [{ kind: 'fake', color: 2 }]
+    const guestterrain = [{ kind: 'solid', color: 4 }]
+    const hostfiles = [
+      ...makefiles('host'),
+      {
+        path: terrainpath,
+        bytes: encoder.encode(JSON.stringify(hostterrain) + '\n'),
+      },
+    ]
+    const guestfiles = [
+      ...makefiles('host'),
+      {
+        path: terrainpath,
+        bytes: encoder.encode(JSON.stringify(guestterrain) + '\n'),
+      },
+    ]
+    setlasthostpushdoc(zedcafeexportfilestodoc(hostfiles))
+    markzedcafeexportpathdirty(terrainpath)
+    const ok = await runzedcafeimport(device, player, guestfiles)
+    expect(ok).toBe(true)
+    expect(mockvmimport).not.toHaveBeenCalled()
+    expect(readzedcafeguestdirty()).toBe(false)
+    expect(mockapilog).toHaveBeenCalledWith(
+      device,
+      player,
+      expect.stringMatching(/deferred to unpushed sim dirty/),
+    )
+  })
+
+  it('runzedcafeimport still applies non-dirty guest paths', async () => {
+    const terrainpath = 'demo-b1/title-sid/board/terrain.json'
+    const hostfiles = [
+      ...makefiles('host'),
+      {
+        path: terrainpath,
+        bytes: encoder.encode('[{"kind":"fake"}]\n'),
+      },
+    ]
+    const guestfiles = [
+      ...makefiles('guest'),
+      {
+        path: terrainpath,
+        bytes: encoder.encode('[{"kind":"solid"}]\n'),
+      },
+    ]
+    setlasthostpushdoc(zedcafeexportfilestodoc(hostfiles))
+    markzedcafeexportpathdirty(terrainpath)
+    mockvmimport.mockImplementation(() => {
+      resolvevmzedcafeimportwaiter({
+        ok: true,
+        changed: true,
+        bookcount: 1,
+      })
+    })
+    mockvmexport.mockImplementation(() => {
+      resolvevmzedcafeexportwaiter(hostfiles)
+    })
+    const ok = await runzedcafeimport(device, player, guestfiles)
+    expect(ok).toBe(true)
+    expect(mockvmimport).toHaveBeenCalled()
+    const sentfiles = mockvmimport.mock.calls[0][2] as { path: string }[]
+    expect(sentfiles.some((file) => file.path === terrainpath)).toBe(false)
+    expect(sentfiles.some((file) => file.path === 'demo-b1/stats.json')).toBe(
+      true,
+    )
   })
 
   it('pushzedcafesynctoiframe emits when space active', () => {

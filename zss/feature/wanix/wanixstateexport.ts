@@ -537,12 +537,101 @@ export function buildzedcafeexportfiles(): WANIX_ZED_CAFE_EXPORT_FILE[] {
 }
 
 /** Set last-pushed export shadow from files (or current memory export). */
-export function primezedcafeexportshadow(files?: WANIX_ZED_CAFE_EXPORT_FILE[]) {
+export function primezedcafeexportshadow(
+  files?: WANIX_ZED_CAFE_EXPORT_FILE[],
+  options?: { retainpendingdirty?: boolean },
+) {
   const source = files ?? buildzedcafeexportfiles()
   setlasthostpushdoc(zedcafeexportfilestodoc(source))
+  if (options?.retainpendingdirty) {
+    return
+  }
   exportackgen = exportdirtygen
   structuraldirty = false
   dirtypaths.clear()
+}
+
+export type ZEDCAFE_EXPORT_PENDING_DIRTY = {
+  structural: boolean
+  paths: string[]
+  pending: boolean
+}
+
+/** Snapshot of unpushed sim export dirty (gen ahead and/or path/structural marks). */
+export function readzedcafeexportpendingdirty(): ZEDCAFE_EXPORT_PENDING_DIRTY {
+  const pending =
+    exportdirtygen !== exportackgen ||
+    structuraldirty ||
+    dirtypaths.size > 0
+  return {
+    structural: structuraldirty,
+    paths: [...dirtypaths],
+    pending,
+  }
+}
+
+/** Page (or book/flags) prefix used to protect sibling paths on the same codepage. */
+export function readzedcafeexportpageprefix(path: string): string | undefined {
+  const segs = path.split('/')
+  if (segs.length < 2 || segs[0] === 'stats.json') {
+    return undefined
+  }
+  if (segs[1] === 'flags') {
+    return `${segs[0]}/flags/`
+  }
+  return `${segs[0]}/${segs[1]}/`
+}
+
+/**
+ * True when guest import must not apply `path` because sim has unpushed dirty
+ * covering that path (exact, page-prefix, or full structural dirty).
+ */
+export function iszedcafeexportpathsimdirty(
+  path: string,
+  pending: Pick<ZEDCAFE_EXPORT_PENDING_DIRTY, 'structural' | 'paths'>,
+): boolean {
+  if (pending.structural) {
+    return true
+  }
+  const dirties = pending.paths
+  if (dirties.length === 0) {
+    return false
+  }
+  for (let i = 0; i < dirties.length; ++i) {
+    const dirty = dirties[i]
+    if (dirty === path) {
+      return true
+    }
+    const prefix = readzedcafeexportpageprefix(dirty)
+    if (prefix && (path === prefix.slice(0, -1) || path.startsWith(prefix))) {
+      return true
+    }
+    const pathprefix = readzedcafeexportpageprefix(path)
+    if (
+      pathprefix &&
+      (dirty === pathprefix.slice(0, -1) || dirty.startsWith(pathprefix))
+    ) {
+      return true
+    }
+  }
+  return false
+}
+
+/** Drop guest upsert/remove paths that collide with pending sim export dirty. */
+export function filterzedcafeexportpathsagainstsimdirty(
+  paths: Iterable<string>,
+  pending: Pick<ZEDCAFE_EXPORT_PENDING_DIRTY, 'structural' | 'paths'>,
+): { keep: string[]; skipped: string[] } {
+  const keep: string[] = []
+  const skipped: string[] = []
+  for (const path of paths) {
+    if (iszedcafeexportpathsimdirty(path, pending)) {
+      skipped.push(path)
+    } else {
+      keep.push(path)
+    }
+  }
+  return { keep, skipped }
 }
 
 export function clearzedcafeexportshadow() {
@@ -754,6 +843,13 @@ export function resetwanixstateexportfortest() {
   lastflushms = 0
   inflightbuildgen = 0
   clearzedcafeexportshadow()
+}
+
+/** Test helper: clear pending dirty without rebuilding the export shadow. */
+export function clearzedcafeexportpendingdirtyfortest() {
+  exportackgen = exportdirtygen
+  structuraldirty = false
+  dirtypaths.clear()
 }
 
 /** Test helper: force coalesce window open. */

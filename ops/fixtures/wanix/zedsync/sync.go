@@ -14,17 +14,16 @@ import (
 )
 
 const (
-	ZedcafeMount      = "zedcafe"
-	ReadySentinel     = ".zedsync-ready"
-	PollInterval      = 500 * time.Millisecond
-	PollIdleMax       = 4 * time.Second
-	SkipSentinel      = ReadySentinel
+	ZedcafeMount  = "zedcafe"
+	PollInterval  = 500 * time.Millisecond
+	PollIdleMax   = 4 * time.Second
 	SeedProgressEvery = 100
-	// RevisionDir/RevisionFile mirror WANIX_ZEDSYNC_REVISION_DIR /
-	// WANIX_ZEDSYNC_REVISION_FILE in wanixzedcafeconstants.ts -- the host
-	// (zedcafehost.ts pushzedcafeexportlive) writes this after each push.
-	RevisionDir  = ".zedsync"
-	RevisionFile = ".zedsync/revision"
+	// RevisionDir mirrors WANIX_ZEDSYNC_REVISION_DIR in wanixzedcafeconstants.ts.
+	// Host (zedcafehost.ts pushzedcafeexportlive) writes RevisionFile after each
+	// push. ReadySentinel lives under the same meta dir (not a top-level peer file).
+	RevisionDir   = ".zedsync"
+	RevisionFile  = ".zedsync/revision"
+	ReadySentinel = ".zedsync/ready"
 )
 
 // ErrZedsyncNeedFullTick signals that SteadyTickIncremental could not apply
@@ -724,7 +723,10 @@ func SteadyTickIncremental(
 
 // WriteReadySentinel marks seed complete on the remote mount.
 func WriteReadySentinel(remote string) error {
-	path := filepath.Join(remote, ReadySentinel)
+	path := filepath.Join(remote, filepath.FromSlash(ReadySentinel))
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return err
+	}
 	return os.WriteFile(path, []byte("ok\n"), 0o644)
 }
 
