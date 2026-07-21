@@ -7,15 +7,6 @@ const RELOAD_GUARD_KEY = 'zss_wasm_coep_reload'
 let coepinflight: Promise<void> | undefined
 let coepready = false
 
-/** Overridable for Jest (jsdom cannot redefine window.location). */
-let reloadpage = () => {
-  window.location.reload()
-}
-
-export function setwasmcoepreloadfortest(fn: () => void) {
-  reloadpage = fn
-}
-
 export async function clearwasmcoepserviceworkers() {
   if (!('serviceWorker' in navigator)) {
     return
@@ -26,48 +17,6 @@ export async function clearwasmcoepserviceworkers() {
       .filter((reg) => reg.active?.scriptURL.includes('enable-threads'))
       .map((reg) => reg.unregister()),
   )
-}
-
-/** Cafe build token — one COEP isolation reload allowed per deploy. */
-export function readcoepbuildtoken(): string {
-  const commit = (process.env.ZSS_COMMIT_HASH ?? '').trim()
-  if (!commit || commit === 'false') {
-    return 'unknown'
-  }
-  return commit
-}
-
-function readreloadguard(): string | null {
-  try {
-    return localStorage.getItem(RELOAD_GUARD_KEY)
-  } catch {
-    return null
-  }
-}
-
-function writereloadguard(token: string): void {
-  try {
-    localStorage.setItem(RELOAD_GUARD_KEY, token)
-  } catch {
-    //
-  }
-}
-
-/** Test helper — reset module latches between Jest cases. */
-export function resetwasmcoepfortest() {
-  coepinflight = undefined
-  coepready = false
-  reloadpage = () => {
-    window.location.reload()
-  }
-}
-
-/**
- * Vite cafe:dev sets NODE_ENV=development (headers already isolate).
- * Jest uses NODE_ENV=test so the SW path remains testable.
- */
-function shouldskipcoepserviceworker(): boolean {
-  return process.env.NODE_ENV === 'development'
 }
 
 /** Register COOP/COEP service worker for SharedArrayBuffer. */
@@ -83,8 +32,8 @@ export async function ensurewasmcoep(): Promise<void> {
     return
   }
 
-  // Local Vite COOP/COEP headers — the SW reload loop breaks HMR.
-  if (shouldskipcoepserviceworker()) {
+  // Local dev uses Vite COOP/COEP headers — the SW reload loop breaks HMR.
+  if (import.meta.env.DEV) {
     await clearwasmcoepserviceworkers()
     return
   }
@@ -95,35 +44,16 @@ export async function ensurewasmcoep(): Promise<void> {
 
   coepinflight ??= (async () => {
     try {
-      // Bust SW script URL per cafe deploy so each build can install/claim.
-      const buildtoken = readcoepbuildtoken()
-      await navigator.serviceWorker.register(`${SW_URL}?v=${buildtoken}`)
-      const ready = await navigator.serviceWorker.ready
-
-      // clients.claim() can set controller without a COEP navigation — only
-      // crossOriginIsolated means SharedArrayBuffer is available.
-      if (window.crossOriginIsolated) {
-        coepready = true
+      const registration = await navigator.serviceWorker.register(SW_URL)
+      if (registration.active && !navigator.serviceWorker.controller) {
+        if (!sessionStorage.getItem(RELOAD_GUARD_KEY)) {
+          sessionStorage.setItem(RELOAD_GUARD_KEY, '1')
+          window.location.reload()
+        }
         return
       }
-
-      const active = ready.active
-      if (!active) {
-        return
-      }
-
-      // One reload per cafe build (localStorage), not per tab/session.
-      if (readreloadguard() === buildtoken) {
-        apierror(
-          SOFTWARE,
-          '',
-          'wasm',
-          'COOP/COEP isolation failed after reload - SharedArrayBuffer unavailable',
-        )
-        return
-      }
-      writereloadguard(buildtoken)
-      reloadpage()
+      sessionStorage.removeItem(RELOAD_GUARD_KEY)
+      coepready = window.crossOriginIsolated
     } catch (err) {
       apierror(
         SOFTWARE,
