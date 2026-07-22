@@ -97,20 +97,24 @@ constexpr float kVoiceOutGain = 1.f;
 constexpr float kEnvDecayTauScale = 0.700f;
 constexpr float kEnvReleaseTauScale = 0.060f;
 
-/** Drive into main compressor (~+3 dB vs prior 0.300 / 2.440). */
-constexpr float kPlayBusGain = 0.420f;
-constexpr float kDrumBusGain = 3.416f;
+/** Drive into main compressor. Quieter play vs prior 0.420; drum held so the
+ * peak gate sees ~3 dB drum−play (drum stem already parks at 0 dBFS).
+ */
+constexpr float kPlayBusGain = 0.238f;
+constexpr float kDrumBusGain = 2.440f;
 /** Main fader: 20*log10(vol*0.25) + offset. Was -35; +20 dB (post-comp listen).
  */
 constexpr float kMainFaderOffsetDb = -15.f;
+/** TTS and bgplay share the same SAB dB law (see readttsvolume /
+ * readbgplayvolume). */
 
 constexpr float kScMakeupDb = 24.f;
 constexpr float kScAttackSec = 0.005f;
 constexpr float kScReleaseSec = 0.06f;
 
 constexpr float kRazzleVibratoWet = 0.02f;
-constexpr float kRazzleChorusWet = 0.1f;
-constexpr float kRazzleHissGain = 0.0006f;
+constexpr float kRazzleChorusWet = 0.3f;
+constexpr float kRazzleHissGain = 0.001f;
 constexpr float kRazzleChorusBaseSec = 0.007f;
 constexpr float kRazzleChorusDepthSec = 0.007f;
 

@@ -58,7 +58,10 @@ hiss (pink noise) ───────┘
 |-----|------|-------|
 | Play into sidechain | `volumetodb(20)` | `kPlayBusGain` |
 | Drums | `volumetodb(100) + 10` dB | `kDrumBusGain` (calibrate: `yarn play-drum-balance:calibrate`) |
+| bgplay / TTS | `10^((20*log10(vol)-35)/20)` | `readbgplayvolume()` / `readttsvolume()` (same law) |
 | Main fader | `volumetodb(vol × 0.25) + 20` on `mainvolume` (offset −15 dB) | `readmainvolume()` (`kMainFaderOffsetDb`) |
+
+Boot SAB defaults: master/play fader **100**, bgplay **70**, TTS **100**.
 
 ### Broadcast Destination
 

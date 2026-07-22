@@ -73,6 +73,7 @@ export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
 
   save: 'persist',
   share: 'persist',
+  fork: 'persist',
 
   access: 'risk',
   zns: 'risk',
@@ -82,7 +83,6 @@ export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
   booktrash: 'risk',
   dev: 'risk',
   export: 'risk',
-  fork: 'risk',
   itchiopublish: 'risk',
   nuke: 'risk',
   pageexport: 'risk',

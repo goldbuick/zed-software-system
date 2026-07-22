@@ -290,7 +290,7 @@ struct ZssEngine {
   int sampleclock = 0;
   float cached_mainvol = 0.f, cached_bggain = 0.f;
   float cached_ttsgain = 0.f;
-  float cached_mainraw = 80.f, cached_bgraw = 100.f, cached_ttsraw = 25.f;
+  float cached_mainraw = 80.f, cached_bgraw = 70.f, cached_ttsraw = 100.f;
   float mainvolprev = 80.f;
   bool ready = false;
 };

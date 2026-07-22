@@ -25,8 +25,8 @@ All firmware commands and their descriptions. Commands are available depending o
 | `trash` | Books/codepages to delete (operator only) |
 | `dev` | Dev mode / halt execution (operator only) |
 | `share` | Share url (operator only) |
-| `save` | And persist current state (operator only) |
-| `fork` | Tab with copy of state (operator only) |
+| `save` | And persist current state |
+| `fork` | Tab with copy of state |
 | `nuke` | A countdown and reloads into an empty state (operator only) |
 | `endgame` | Health to 0 |
 | `restart` | Software, deletes all chip and player state (operator only) |

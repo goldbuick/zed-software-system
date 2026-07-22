@@ -4,19 +4,16 @@ switching voices
 #synth <retro, buzz, clang, metallic>  
 #synth <retro, buzz, clang, metallic>  
 #synth <algo0, algo1, ... ,algo7>   
+
 voice settings  
 #synth restart - resets voice to default  
 #synth vol <db> - control volume  
 #synth port <seconds>  
 #synth env <attack> <delay> <sustain> <release>  
+
 voice specific 
-
 !oscscroll hk o " O " next;sine, square, triangle, sawtooth
-
 !pwmscroll hk m " M " next;pwm
-
 !pulsescroll hk p " P " next;pulse
-
 !algoscroll hk a " A " next;algo0 -> algo7
-
 !menu hk b " B " next;$ltgreyBack to main menu

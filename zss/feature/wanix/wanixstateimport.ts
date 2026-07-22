@@ -658,9 +658,7 @@ function applypartialupsertpath(
     markboardpaint(paintids, page)
     return true
   }
-  if (!page) {
-    page = ensurepageinbook(book, pageprefix, paintids)
-  }
+  page ??= ensurepageinbook(book, pageprefix, paintids)
   if (!page) {
     return false
   }

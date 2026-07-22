@@ -7,7 +7,10 @@ import {
   capturecafedropitems,
   resolvecafedropitems,
 } from 'zss/device/wanixclient/wanixfsadropitems'
-import { clearwasmcoepserviceworkers, ensurewasmcoep } from 'zss/feature/synth/backend/wasm/coopcoep'
+import {
+  clearwasmcoepserviceworkers,
+  ensurewasmcoep,
+} from 'zss/feature/synth/backend/wasm/coopcoep'
 import { useDeviceData } from 'zss/gadget/device'
 import { Engine } from 'zss/gadget/engine'
 

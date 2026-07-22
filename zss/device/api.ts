@@ -335,6 +335,18 @@ export function registerbookmarkurlsave(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:bookmark:urlsave', true)
 }
 
+export function registerbookmarkcontentsave(
+  device: DEVICELIKE,
+  player: string,
+  bookmarkname: string,
+  compressed: string,
+) {
+  device.emit(player, 'register:bookmark:contentsave', [
+    bookmarkname,
+    compressed,
+  ])
+}
+
 export function registercopy(
   device: DEVICELIKE,
   player: string,

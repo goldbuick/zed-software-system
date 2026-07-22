@@ -12,6 +12,7 @@ import { handlebookmarkclirun } from './bookmark/clirun'
 import { handlebookmarkclisave } from './bookmark/clisave'
 import { handlebookmarkcodepagecopytogame } from './bookmark/codepagecopytogame'
 import { handlebookmarkcodepagesave } from './bookmark/codepagesave'
+import { handlebookmarkcontentsave } from './bookmark/contentsave'
 import { handlebookmarkdelete } from './bookmark/delete'
 import { handleeditorbookmarkscroll } from './bookmark/editorscroll'
 import { handlebookmarkscroll } from './bookmark/scroll'
@@ -64,6 +65,7 @@ export const registerhandlers: Record<string, REGISTER_HANDLER> = {
   'bookmark:codepagesave': handlebookmarkcodepagesave,
   'bookmark:codepagecopytogame': handlebookmarkcodepagecopytogame,
   'bookmark:urlsave': handlebookmarkurlsave,
+  'bookmark:contentsave': handlebookmarkcontentsave,
   'bookmark:urlnavigate': handlebookmarkurlnavigate,
   'bookmark:delete': handlebookmarkdelete,
   input: handleinput,

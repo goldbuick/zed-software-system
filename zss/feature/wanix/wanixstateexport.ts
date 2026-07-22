@@ -19,13 +19,13 @@ import {
   WANIX_ZEDCAFE_EXPORT_COALESCE_SINGLE_MS,
   WANIX_ZEDCAFE_EXPORT_COALESCE_TERRAIN_MS,
 } from 'zss/feature/wanix/wanixzedcafeconstants'
+import { issimonlyflagowner } from 'zss/feature/wanix/zedcafeprotectedflags'
 import {
   assertzedcafeexportvalid,
   readzedcafebookprefix,
   readzedcafebookstatspath,
   readzedcafepageprefix,
 } from 'zss/feature/wanix/zedcafetreeschema'
-import { issimonlyflagowner } from 'zss/feature/wanix/zedcafeprotectedflags'
 import { ispresent } from 'zss/mapping/types'
 import { memoryreadbookflags } from 'zss/memory/bookoperations'
 import {
@@ -567,9 +567,7 @@ export type ZEDCAFE_EXPORT_PENDING_DIRTY = {
 /** Snapshot of unpushed sim export dirty (gen ahead and/or path/structural marks). */
 export function readzedcafeexportpendingdirty(): ZEDCAFE_EXPORT_PENDING_DIRTY {
   const pending =
-    exportdirtygen !== exportackgen ||
-    structuraldirty ||
-    dirtypaths.size > 0
+    exportdirtygen !== exportackgen || structuraldirty || dirtypaths.size > 0
   return {
     structural: structuraldirty,
     paths: [...dirtypaths],
