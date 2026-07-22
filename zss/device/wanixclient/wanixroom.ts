@@ -3,8 +3,8 @@ import {
   wanixserverapplyroom,
   wanixserverbinddrop,
   wanixserverhalttask,
-  wanixserverreadvmstatus,
   wanixserverspawntask,
+  wanixserverstartvm,
   wanixserverstopvm,
   wanixserverwritefile,
 } from 'zss/device/api'
@@ -301,28 +301,11 @@ export function disconnectwanixremote(key?: string): WanixRemoteSpec[] {
 export function startwanixvmroom(
   vmid = DEFAULT_WANIX_VM_ID,
   mem = DEFAULT_WANIX_VM_MEM,
-  zedcafe?: WanixZedCafeRoomSpec | null,
+  _zedcafe?: WanixZedCafeRoomSpec | null,
 ): void {
-  const current = readwanixroomconfig()
-  if (
-    current.mode === 'vm' &&
-    current.vm?.active &&
-    current.vm.id === vmid &&
-    current.vm.mem === mem
-  ) {
-    wanixserverreadvmstatus(SOFTWARE, registerreadplayer())
-    return
-  }
-  const next: WanixRoomConfig = {
-    ...bumpmountkey(current),
-    mode: 'vm',
-    archives: current.archives,
-    remotes: current.remotes,
-    tasks: [],
-    vm: { id: vmid, mem, active: true },
-    zedcafe: zedcafe ?? current.zedcafe,
-  }
-  applywanixroom(next)
+  // Iframe owns warm vs cold (live roomconfig + system). Parent/sim copies of
+  // room config can be stale after stop/drop; never decide remount here.
+  wanixserverstartvm(SOFTWARE, registerreadplayer(), mem, vmid)
 }
 
 export function stopwanixvmroom(): void {
@@ -558,20 +541,10 @@ export function applywanixdropdone(
 export function startwanixvm(
   mem = DEFAULT_WANIX_VM_MEM,
   vmid = DEFAULT_WANIX_VM_ID,
-  device?: DEVICELIKE,
-  player?: string,
+  _device?: DEVICELIKE,
+  _player?: string,
 ): void {
-  let zedcafe: WanixZedCafeRoomSpec | null | undefined
-  if (device && player) {
-    const boot = readwanixbootzedcafestate()
-    if (boot) {
-      zedcafe = {
-        cmd: boot.cmd,
-        generation: boot.generation,
-      }
-    }
-  }
-  startwanixvmroom(vmid, mem, zedcafe)
+  startwanixvmroom(vmid, mem)
 }
 
 export function stopwanixvm(vmid = DEFAULT_WANIX_VM_ID): void {

@@ -182,19 +182,23 @@ export function requestvmzedcafeexportfiles(
   player: string,
   timeoutms = WANIX_VM_ZEDCAFE_EXPORT_FETCH_MS,
 ): Promise<WANIX_ZED_CAFE_EXPORT_FILE[]> {
-  if (readpendingexportwait()) {
-    return Promise.reject(
-      new Error('zedcafe export: concurrent vm export fetch'),
-    )
+  const pending = readpendingexportwait()
+  if (pending) {
+    return pending.promise
   }
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => {
-      setpendingexportwait(null)
-      reject(new Error('zedcafe export: vm export fetch timed out'))
-    }, timeoutms)
-    setpendingexportwait({ resolve, reject, timer })
-    vmexportzedcafe(device, player)
+  let resolve!: (files: WANIX_ZED_CAFE_EXPORT_FILE[]) => void
+  let reject!: (error: Error) => void
+  const promise = new Promise<WANIX_ZED_CAFE_EXPORT_FILE[]>((res, rej) => {
+    resolve = res
+    reject = rej
   })
+  const timer = setTimeout(() => {
+    setpendingexportwait(null)
+    reject(new Error('zedcafe export: vm export fetch timed out'))
+  }, timeoutms)
+  setpendingexportwait({ resolve, reject, timer, promise })
+  vmexportzedcafe(device, player)
+  return promise
 }
 
 function requestvmzedcafeimport(

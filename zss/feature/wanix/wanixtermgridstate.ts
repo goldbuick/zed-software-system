@@ -187,6 +187,15 @@ function emptyphysicalrow(cols: number): WanixTermPhysicalRow {
   }
 }
 
+function isphysicalrowempty(row: WanixTermPhysicalRow): boolean {
+  for (let i = 0; i < row.char.length; i++) {
+    if ((row.char[i] ?? SPACE) !== SPACE) {
+      return false
+    }
+  }
+  return true
+}
+
 function copysavenormal(grid: WANIX_TERM_GRID): WanixTermNormalSave {
   return {
     cols: grid.cols,
@@ -867,6 +876,17 @@ function reflowgridcontent(
       segmentinlogicalline += 1
       segmentabslrow += 1
     }
+  }
+
+  // Unused blank rows below the cursor are viewport padding, not content.
+  // Keeping them as logical lines shoves short stdout into scrollback on the
+  // first termfit shrink (default 80x24 -> attach panel) and leaves a blank
+  // gap between the text and the cursor.
+  while (
+    newphysrows.length > newcursorabslrow + 1 &&
+    isphysicalrowempty(newphysrows[newphysrows.length - 1]!)
+  ) {
+    newphysrows.pop()
   }
 
   const scrollbackcount = Math.max(0, newphysrows.length - newrows)

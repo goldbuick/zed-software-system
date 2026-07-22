@@ -296,8 +296,8 @@ flowchart LR
   Server["wanixserverdrop"]
   Remount["ensuretaskroomfordrop"]
   Pull["requestzedcafestate pull"]
-  Stage["writefile #ramfs/…"]
-  Spawn["spawntask gojs + export bind"]
+  Stage["blob file-bind on wanix-task"]
+  Spawn["spawntask + export bind"]
   Out["JSON on task term"]
 
   Drop --> Server
@@ -310,9 +310,11 @@ flowchart LR
 
 **Steps (iframe [`runtime.ts`](../../device/wanixserver/runtime.ts) `drop`):**
 
-1. **`ensuretaskroomfordrop`** — if idle, cold `applyroom` → task mode (+ zedcafe boot cmd). Ready check runs **after** remount (cold idle has no system yet).
+1. **`ensuretaskroomfordrop`** — if idle, cold `applyroom` → task mode (+ zedcafe boot cmd). Ready check runs **after** remount (cold idle has no system yet). No-op when already in `task` or `vm` mode.
 2. **Export pull** — `wanixclient:requestzedcafestate` → parent answers → `continuerequestzedcafestate` push/wire (awaited before spawn).
-3. **Stage + spawn** — write drop bytes to `#ramfs/`, then `spawntask` (gojs waits on `stats.json`).
+3. **Stage + spawn** — every dropped/bundled `.wasm` stages via a **task-child blob file-bind** (`createObjectURL` + `wanix-bind type=file` on the task; same pattern as zedcafe). No root `#ramfs` `writeFile` (fails under VM `fskit.UnionFS`; hangs on multi-MB gojs). Gojs waits on `stats.json`.
+
+**Start order:** `#wanix vm` then drop, or drop then `#wanix vm`, are both valid. From a live task room, `startwanixvmroom` warm-adds the VM (same `mountkey`, preserve `tasks`) so running tasks survive.
 
 **Driver selection ([`wanixwasmdriver.ts`](wanixwasmdriver.ts)):**
 
@@ -321,9 +323,9 @@ flowchart LR
 | `gojs` | `gojs` | Go js/wasm worker |
 | `wasi_snapshot_preview1` | `wasi` | WASI worker |
 
-For drops, driver is taken from **drop bytes** (not re-read from `#ramfs`) — large gojs
-binaries must use driver from drop bytes via [`wanixspawndriver.ts`](../../device/wanixserver/spawndriver.ts).
-Re-read from `#ramfs` throws on failure; unknown wasm throws (no wasi default).
+For drops, driver is taken from **drop bytes** (not re-read from disk) via
+[`wanixspawndriver.ts`](../../device/wanixserver/spawndriver.ts). Unknown wasm throws
+(no wasi default).
 
 ---
 
@@ -391,16 +393,15 @@ Iframe posts `wanixclient:session`:
 
 | Event | Parent behavior |
 |-------|-----------------|
-| `open` | Register session; if nothing attached and not user-detached → soft-attach (bind session; open **attach panel** only if tape is already hidden) |
-| `active` | Update focus hint; soft-attach same as open; no steal if user already attached or user-detached |
+| `open` | Register session; **hard-attach** when attach slot is free (tasks) or always (VM, zedsync, daemons). Bundle sibling opens only update active — no steal. |
+| `active` | Update focus hint; soft-attach only when nothing is attached and user has not detached |
 | `close` | Prune buffer/menu unless it was the attached session |
 
-The **attach panel** is separate from the **tape CLI**. Tape always shows ZSS logs + input; attach never hijacks it. Soft auto-attach never closes an open tape.
+The **attach panel** is separate from the **tape CLI**. Session `open` closes the tape when hard-attaching. Soft-attach remains only for the `active` hint path.
 
 Manual attach: `#wanix attach` or menu session row (routed to main-thread
 `wanixclient:attachsession` — sim must not touch the worker-local store). Detach:
-`#wanix detach` / `wanixclient:detachsession` or `Ctrl+\` (not on the menu).
-Zedsync hard-attaches on session open (like the VM). See
+`#wanix detach` / `wanixclient:detachsession` or `Ctrl+\` (not on the menu). See
 [`wanixdisplay.ts`](../../device/wanixclient/wanixdisplay.ts).
 
 **Keyboard (attach panel):** `Ctrl+\` prefix stays armed until `Esc` or `Ctrl+\` again —
@@ -739,7 +740,7 @@ apply cannot leave `mode: idle` and skip the push (`pending-export mark`).
 | **greenring board paint** | Same bind; writes allowlisted `board/terrain.json`; dirty emit / session-close → `vm:importzedcafe` → sim apply + re-export |
 | **Guest FS → sim writeback** | Coalesced `zedcafeexportdirty` → `wanixclient:zedcafefilechange` → import kick; guest-dirty suppresses stale host push; deletes mirror guest tree |
 | **Live export updates** | End-of-tick `compare` of path-keyed export doc; partial upsert of changed files while poll active |
-| **Auto-attach new sessions** | `wanixclient:session open` → reveal tape → attach when user had nothing focused |
+| **Hard-attach new sessions** | `wanixclient:session open` → close tape + open attach panel when free; VM/zedsync always steal |
 | **Task idle auto-halt** | Dropped wasm tasks halt after 5 minutes with no term input/output (VM + zedcafe daemon exempt) |
 | **Soft idle → faster second drop** | Warm `<wanix-namespace>` + unchanged `mountkey` skips wanix.wasm reload; daemon reuse + sync-if-stale |
 | **Export wait without poll slack** | `content-ready` event wakes parent waiters immediately after iframe push completes |

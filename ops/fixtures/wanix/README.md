@@ -19,6 +19,7 @@ Validators run only via existing `cafe:playwright:headed` — no new citty tasks
 | 5 | Idle VM boot | [`validate-idle-boot.ts`](../../../tasks/lib/wanix/validate-idle-boot.ts) | `cafe:dev` |
 | 6 | Multi-task append (`greet`, `bundle-two`) | manual | `cafe:dev` + builds |
 | 7 | Empty bundle warning | manual | `bundle-empty.tgz` |
+| 7b | Fixture stdout (task + VM + start order) | [`validate-fixtures-stdout.ts`](../../../tasks/lib/wanix/validate-fixtures-stdout.ts) | `cafe:dev` + builds |
 | 8 | VM + host export `bookCount >= 1` | [`validate-zedcafe-vm-export.ts`](../../../tasks/lib/wanix/validate-zedcafe-vm-export.ts) | `cafe:dev` |
 | 9 | findplayers after content-ready | covered by #8 / manual | builds |
 | 10 | greenring writeback import | [`validate-greenring-drop.ts`](../../../tasks/lib/wanix/validate-greenring-drop.ts) | `cafe:dev` |
@@ -38,6 +39,26 @@ Validators run only via existing `cafe:playwright:headed` — no new citty tasks
 | 24 | Agent sync latency baseline (`singlefile`) | [`validate-zedcafe-agent-latency.ts`](../../../tasks/lib/wanix/validate-zedcafe-agent-latency.ts) | `cafe:dev` + book |
 
 Each scenario below uses: **Setup / Fixture assets / Steps / Expected signals / Automator / Failure dump**.
+
+---
+
+## Drop staging + start order
+
+All dropped / bundled `.wasm` files stage via a **task-child blob file-bind**
+(`wanix-bind type=file` + blob URL on the `wanix-task` element). There is **no**
+root `#ramfs` `writeFile` for wasm — that path fails under the VM's
+`fskit.UnionFS` (`create … operation not supported`) and hangs on large gojs
+binaries. Staging is mode-independent (task room and `#wanix vm`).
+
+**Start order is free:**
+
+| Order | Behavior |
+|-------|----------|
+| VM then tasks | `#wanix vm` first; drops spawn `wanix-task` children on the live VM room |
+| Tasks then VM | Drop wasm first; `#wanix vm` **warm-adds** the VM (same `mountkey`, no hardreset) and **preserves** running tasks |
+
+Automator: [`validate-fixtures-stdout.ts`](../../../tasks/lib/wanix/validate-fixtures-stdout.ts)
+(`WANIX_VALIDATE_MODE=task|vm|both|order`).
 
 ---
 
@@ -91,6 +112,11 @@ yarn task run cafe:playwright:headed --url https://localhost:7777/ \
 
 yarn task run cafe:playwright:headed --url https://localhost:7777/ \
   tasks/lib/wanix/validate-idle-boot.ts
+
+# Fixture stdout (task + VM + order); books via fixture when needed
+WANIX_VALIDATE_MODE=both ZEDCAFE_VALIDATE_FIXTURE=1 \
+  yarn task run cafe:playwright:headed --url https://localhost:7777/ \
+  tasks/lib/wanix/validate-fixtures-stdout.ts
 
 yarn task run cafe:playwright:headed --url https://localhost:7777/ \
   tasks/lib/wanix/validate-warm-reuse.ts
@@ -402,7 +428,9 @@ Confirm WSS: p9server logs connections; DevTools Network on **wanix iframe** (no
 
 ## Bind-on-drop (`input/`)
 
-While **attached**, file drops bind under `input/<name>` (not task spawn).
+While **attached**, non-task file drops (stamps, scripts, etc.) bind under
+`input/<name>`. **`.wasm` / `.tgz` always spawn tasks** even when attached
+(they never go through bind-on-drop).
 
 | Stamp | Bytes | Cells (`% 40 + 1`) |
 |-------|------:|-------------------:|

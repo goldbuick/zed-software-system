@@ -1492,6 +1492,9 @@ export async function spawntask(
       },
       'data-zss-stage-wasm',
     )
+    if (stageurl.startsWith('blob:')) {
+      bind.setAttribute('data-zss-drop-blob-url', stageurl)
+    }
     task.appendChild(bind)
     wanixperfmark('spawntask-stage-end', {
       taskid,
@@ -1680,17 +1683,36 @@ export function readvmstatus() {
   return readvmstatelive()
 }
 
-export function startvm(mem?: string, vmid?: string) {
-  return applyroom({
-    ...roomconfig,
-    mode: 'vm',
-    mountkey: roomconfig.mountkey + 1,
-    vm: {
-      id: String(vmid ?? DEFAULT_VM_ID),
-      mem: String(mem ?? DEFAULT_VM_MEM),
-      active: true,
-    },
-  })
+export async function startvm(mem?: string, vmid?: string) {
+  const vmspec = {
+    id: String(vmid ?? DEFAULT_VM_ID),
+    mem: String(mem ?? DEFAULT_VM_MEM),
+    active: true,
+  }
+  // Warm-add when the namespace is already live (task or vm): same mountkey,
+  // keep tasks so start order is free. Cold remount only from idle / no system.
+  const live =
+    (roomconfig.mode === 'task' || roomconfig.mode === 'vm') &&
+    !!system?.isConnected &&
+    iswanixelementready(system)
+  const result = live
+    ? await applyroom({
+        ...roomconfig,
+        mode: 'vm',
+        hardreset: false,
+        vm: vmspec,
+      })
+    : await applyroom({
+        ...roomconfig,
+        mode: 'vm',
+        mountkey: roomconfig.mountkey + 1,
+        hardreset: true,
+        tasks: [],
+        vm: vmspec,
+      })
+  // Parent CLI used wanixserver:startvm (not applyroom) — push config result.
+  wanixclientapplyroom(SOFTWARE, '', result)
+  return result
 }
 
 export function listdir(path?: string) {
@@ -1827,6 +1849,10 @@ function normalizewanixpath(label: string): string {
   return trimmed.startsWith('#ramfs/') ? trimmed : `#ramfs/${trimmed}`
 }
 
+function createwasmstageurl(bytes: Uint8Array): string {
+  return URL.createObjectURL(new Blob([bytes]))
+}
+
 async function ensuretaskroomfordrop() {
   if (roomconfig.mode !== 'idle') {
     return
@@ -1880,14 +1906,19 @@ export async function drop(
   )
   if (kind === 'wasm') {
     const path = normalizewanixpath(label)
-    wanixperfmark('drop-writefile-start', { path })
-    await writefile(path, Array.from(bytes))
-    wanixperfmark('drop-writefile-end', { path })
     const { readwanixwasmdriver } =
       await import('zss/feature/wanix/wanixwasmdriver')
     const driver = readwanixwasmdriver(bytes)
-    wanixperfmark('drop-spawntask-start', { taskid, path, driver })
-    const result = await spawntask(taskid, path, driver)
+    // Always stage via task-child blob file-bind (zedcafe pattern). Root
+    // writeFile(#ramfs) fails under VM UnionFS and hangs on large gojs.
+    const stageurl = createwasmstageurl(bytes)
+    wanixperfmark('drop-spawntask-start', {
+      taskid,
+      path,
+      driver,
+      staged: 'blob',
+    })
+    const result = await spawntask(taskid, path, driver, stageurl)
     wanixperfmark('drop-spawntask-end', { taskid })
     return {
       ...result,
@@ -1907,13 +1938,19 @@ export async function drop(
   const prefix = `bundle-${taskid}`
   const files = await extractwanixtgz(bytes, prefix)
   const driverbycmd = new Map<string, WanixTaskDriver>()
+  const stageurlbycmd = new Map<string, string>()
   for (const file of files) {
     const flatpath = readbundleflatpath(prefix, file.path)
     const cmd = normalizewanixpath(flatpath)
     if (file.path.toLowerCase().endsWith('.wasm')) {
-      driverbycmd.set(cmd, readwanixwasmdriver(file.bytes))
+      const driver = readwanixwasmdriver(file.bytes)
+      driverbycmd.set(cmd, driver)
+      stageurlbycmd.set(cmd, createwasmstageurl(file.bytes))
+      continue
     }
-    await writefile(cmd, Array.from(file.bytes))
+    // Skip root writeFile for non-wasm bundle entries: VM UnionFS rejects
+    // create on #ramfs. Current fixtures' wasm do not read sibling data files;
+    // a future bundle that needs them would use a per-task bind, not root write.
   }
   const wasmpaths = listwanixwasmentries(files, prefix)
   const usedids = new Set(roomconfig.tasks.map((task) => task.id))
@@ -1925,7 +1962,12 @@ export async function drop(
     const basename = relpath.split('/').pop() ?? relpath
     const subtaskid = uniquewanixtaskid(`${taskid}-${basename}`, usedids)
     usedids.add(subtaskid)
-    await spawntask(subtaskid, cmd, driverbycmd.get(cmd))
+    await spawntask(
+      subtaskid,
+      cmd,
+      driverbycmd.get(cmd),
+      stageurlbycmd.get(cmd),
+    )
     spawns.push({ taskid: subtaskid, cmd })
     if (!firstcmd) {
       firstcmd = cmd
