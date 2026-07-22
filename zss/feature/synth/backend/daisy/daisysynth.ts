@@ -159,7 +159,7 @@ export function createdaisysynth(
   let pacercount = 0
   let bgplayindex = SYNTH_SFX_RESET
   let playvolume = 80
-  let bgplayvolume = 100
+  let bgplayvolume = WASM_DEFAULT_BGPLAY_VOLUME
   const beatgridepoch = maxi.audioContext.currentTime
   const recording: RECORDING_STATE = {
     recordedticks: [],

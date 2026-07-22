@@ -79,8 +79,8 @@ export const WASM_FX_RETURN_COMP_RATIO = 4
 
 /** Razzle wet sends — match Daisy kRazzle* (low mix). */
 export const WASM_RAZZLE_VIBRATO_WET = 0.02
-export const WASM_RAZZLE_CHORUS_WET = 0.1
+export const WASM_RAZZLE_CHORUS_WET = 0.3
 export const WASM_RAZZLE_CHORUS_DEPTH_SEC = 0.007
 
 /** Always-on tape bed — very quiet. */
-export const WASM_RAZZLE_HISS_GAIN = 0.0006
+export const WASM_RAZZLE_HISS_GAIN = 0.001
