@@ -3,11 +3,7 @@ import { apierror, workstatus } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
 import type { MESSAGE } from 'zss/device/types'
 import { itchiopublish } from 'zss/feature/itchiopublish'
-import {
-  contenttohashfragment,
-  storagenukecontent,
-  storagewritecontent,
-} from 'zss/feature/storage'
+import { storagenukecontent, storagewritecontent } from 'zss/feature/storage'
 import { isjoin, shorturl, znsset } from 'zss/feature/url'
 import { write } from 'zss/feature/writeui'
 import {
@@ -60,21 +56,22 @@ export function handlesavemem(device: DEVICE, message: MESSAGE): void {
   })
 }
 
-export function handleforkmem(device: DEVICE, message: MESSAGE): void {
-  doasync(device, message.player, async function () {
-    if (isarray(message.data)) {
-      const [maybecontent, maybeaddress] = message.data
-      if (isstring(maybecontent) && isstring(maybeaddress)) {
-        const fragment = await contenttohashfragment(maybecontent)
-        const url = maybeaddress
-          ? `https://${maybeaddress}/#${fragment}`
-          : isjoin()
-            ? `${location.origin}/#${fragment}`
-            : location.href.replace(/#.*/, `#${fragment}`)
-        window.open(url, '_blank')
-      }
-    }
-  })
+export function handleforkmem(_device: DEVICE, message: MESSAGE): void {
+  if (!isarray(message.data)) {
+    return
+  }
+  const [maybecontent, maybeaddress] = message.data
+  if (!isstring(maybecontent) || !isstring(maybeaddress)) {
+    return
+  }
+  // Embed full compressed content in the hash. Do not shorten: a short-id in a
+  // new tab is read as zip bytes when IndexedDB lookup misses (JSZip crash).
+  const url = maybeaddress
+    ? `https://${maybeaddress}/#${maybecontent}`
+    : isjoin()
+      ? `${location.origin}/#${maybecontent}`
+      : location.href.replace(/#.*/, `#${maybecontent}`)
+  window.open(url, '_blank')
 }
 
 export function handlepublishmem(device: DEVICE, message: MESSAGE): void {
