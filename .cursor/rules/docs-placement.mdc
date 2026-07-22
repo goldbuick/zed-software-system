@@ -1,0 +1,39 @@
+---
+description: Where to put documentation (Blume spine, colocated zss docs, ROM, ops)
+alwaysApply: true
+---
+
+# Docs placement
+
+Product/developer docs ship at **https://zed.cafe/docs/** (Blume project under [`docs-site/`](../../docs-site/)). In-game / ZNS help stays on **https://docs.at.zed.cafe** via ROM. Do not mix those surfaces.
+
+## Where content goes
+
+| Kind | Location | Rules |
+|------|----------|--------|
+| Module narrative | `zss/<area>/docs/<topic>.md` | Required area `README.md` index; optional YAML frontmatter (`title`, `description`); prefer repo-root links like ``[`joinvm.ts`](zss/device/joinvm.ts)`` over deep `../` chains when linking across areas |
+| Architecture spine | `docs-site/content/` + [`zss/ARCHITECTURE.md`](../../zss/ARCHITECTURE.md) | System map / glossary / feature overview live in `docs-site/content/` |
+| Ops / design | `ops/docs/` | Evergreen runbooks + labeled design notes; **never hand-edit** `tasks.md` (regenerate via `yarn task docs`) |
+| Player help | `zss/rom/{refscroll,editor,help}/` | In-game + ZNS only — **not** Blume sources |
+| Export catalogs | `zss/**/EXPORTED_FUNCTIONS.md` | Audit only — not Blume |
+| Agent policy | `.cursor/rules`, skills | Not product docs |
+
+## Colocation + Blume mounts
+
+Keep manuals next to code under `zss/**/docs/`. Blume ingests them via symlinks under `docs-site/content/<prefix>/` (e.g. `memory` → `zss/memory/docs`). Do not mass-move module docs into `docs-site/content/`.
+
+## Commands reference
+
+Canonical web list: [`zss/firmware/docs/commands.md`](../../zss/firmware/docs/commands.md) (mounted at `/docs/firmware/commands`). [`ops/docs/commands-summary.md`](../../ops/docs/commands-summary.md) is a short pointer only. ROM scrolls remain the in-game copy (no auto-sync required).
+
+## Authoring / build
+
+```bash
+# local docs site — Blume cwd must be docs-site/ (not repo-root yarn blume)
+cd docs-site && ../node_modules/.bin/blume dev
+
+# production: Blume + Vite merged into cafe/dist/docs/
+yarn task run cafe:build
+```
+
+Do not add a new citty task id for docs. Do not reintroduce `cafe/sys` or a `/sys` redirect.

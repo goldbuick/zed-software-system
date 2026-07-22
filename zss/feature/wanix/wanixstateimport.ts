@@ -1,5 +1,6 @@
 import type { WANIX_ZED_CAFE_EXPORT_FILE } from 'zss/feature/wanix/wanixstateexport'
 import { issimonlyflagowner } from 'zss/feature/wanix/zedcafeprotectedflags'
+import { ispid } from 'zss/mapping/guid'
 import {
   kebabcasezedcafedirname,
   readzedcafebookdirname,
@@ -161,6 +162,9 @@ export function assembleboardjson(
       continue
     }
     const objid = path.slice(objectprefix.length, -'.json'.length)
+    if (ispid(objid)) {
+      continue
+    }
     objects[objid] = decodejson(bytes)
   }
   if (
@@ -719,6 +723,9 @@ function applypartialupsertpath(
     segments[3] === 'objects'
   ) {
     const objid = segments[4].replace(/\.json$/, '')
+    if (ispid(objid)) {
+      return false
+    }
     const data = decodejson(bytes) as Record<string, unknown>
     if (applyobjectinplace(page, objid, data)) {
       markboardpaint(paintids, page)
@@ -823,6 +830,9 @@ function applypartialremovepath(path: string, paintids: Set<string>): boolean {
     segments[3] === 'objects'
   ) {
     const objid = segments[4].replace(/\.json$/, '')
+    if (ispid(objid)) {
+      return false
+    }
     const board = readboardforpage(page)
     if (!ispresent(board)) {
       return false

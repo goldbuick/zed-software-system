@@ -195,6 +195,23 @@ describe('wanixstateexport', () => {
     expect(decodefilebytes(files[0]!.bytes)).toEqual(terrain)
   })
 
+  it('splitboardexport omits pid_* player objects', () => {
+    const files = splitboardexport({
+      objects: {
+        pid_1: { kind: 'player', id: 'pid_1' },
+        npc1: { kind: 'object', id: 'npc1' },
+      },
+      startx: 1,
+      starty: 2,
+    })
+    expect(files.some((file) => file.path === 'board/objects/npc1.json')).toBe(
+      true,
+    )
+    expect(files.some((file) => file.path === 'board/objects/pid_1.json')).toBe(
+      false,
+    )
+  })
+
   it('builds granular export paths from books', () => {
     const boardpage = {
       id: 'page1',

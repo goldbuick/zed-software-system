@@ -32,6 +32,7 @@ import {
   resetwanixzedcafeonidle,
   resetzedcafeexportinflight,
 } from 'zss/device/wanixclient/wanixzedcafe'
+import { clearzedsynchalt } from 'zss/device/wanixclient/wanixzedsynchalt'
 import { iswanixdaemontaskid } from 'zss/device/wanixserver/taskidlepolicy'
 import type { WanixTaskDriver } from 'zss/feature/wanix/wanixelements.d.ts'
 import { wanixperfmark } from 'zss/feature/wanix/wanixperf'
@@ -47,8 +48,18 @@ import {
   DEFAULT_WANIX_VM_MEM,
   createidleroomconfig,
 } from 'zss/feature/wanix/wanixroomtypes'
-import { WANIX_ZEDCAFE_TASK_ID } from 'zss/feature/wanix/wanixzedcafeconstants'
+import {
+  WANIX_ZEDCAFE_TASK_ID,
+  WANIX_ZEDSYNC_TASK_ID,
+} from 'zss/feature/wanix/wanixzedcafeconstants'
 import type { WanixZedCafeRoomSpec } from 'zss/feature/wanix/wanixzedcafetypes'
+
+function iszedsynctaskidlocal(taskid: string): boolean {
+  return (
+    taskid === WANIX_ZEDSYNC_TASK_ID ||
+    taskid.startsWith(`${WANIX_ZEDSYNC_TASK_ID}-`)
+  )
+}
 
 function normalizeremotedst(dst: string): string {
   return dst.replace(/^\/+/, '').trim()
@@ -121,6 +132,7 @@ export function applywanixroomresult(
       tasks: [],
       vm: undefined,
     })
+    clearzedsynchalt()
     void import('zss/device/wanixclient/wanixzedcafe').then((mod) => {
       mod.resetwanixzedcafeonidle()
     })
@@ -319,6 +331,7 @@ export function stopwanixvmroom(): void {
 
 export function stopwanixroom(hard = false): void {
   resetwanixzedcafeonidle()
+  clearzedsynchalt()
   const current = readwanixroomconfig()
   const next = createidleroomconfig()
   next.mountkey = hard ? current.mountkey + 1 : current.mountkey
@@ -429,6 +442,9 @@ export function halttaskinroom(taskid: string): void {
     ...readwanixroomconfig(),
     tasks: readwanixroomconfig().tasks.filter((task) => task.id !== taskid),
   })
+  if (iszedsynctaskidlocal(taskid)) {
+    clearzedsynchalt()
+  }
 }
 
 export function removewanixroomtask(taskid: string) {

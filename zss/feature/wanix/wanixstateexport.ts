@@ -26,6 +26,7 @@ import {
   readzedcafebookstatspath,
   readzedcafepageprefix,
 } from 'zss/feature/wanix/zedcafetreeschema'
+import { ispid } from 'zss/mapping/guid'
 import { ispresent } from 'zss/mapping/types'
 import { memoryreadbookflags } from 'zss/memory/bookoperations'
 import {
@@ -324,6 +325,9 @@ function splitboarddoc(
     const entries = Object.entries(objects as Record<string, unknown>)
     for (let i = 0; i < entries.length; ++i) {
       const [objid, obj] = entries[i]
+      if (ispid(objid)) {
+        continue
+      }
       doc[`${prefix}/board/objects/${objid}.json`] = obj
     }
   }
@@ -516,6 +520,10 @@ export function rebuildzedcafeexportpaths(
     ) {
       const board = pagejson.board as Record<string, unknown> | undefined
       const objid = segments[4].replace(/\.json$/, '')
+      if (ispid(objid)) {
+        delete base[path]
+        continue
+      }
       const objects = board?.objects as Record<string, unknown> | undefined
       if (!objects || !(objid in objects)) {
         delete base[path]

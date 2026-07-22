@@ -62,7 +62,7 @@ zss/feature/lang/       Script compiler (TS backend + native parity target)
 Boot flow:
 
 1. [`cafe/index.tsx`](../cafe/index.tsx) loads [`zss/userspace.ts`](userspace.ts) (side-effect imports of main-thread devices), then renders [`cafe/app.tsx`](../cafe/cafeapp.tsx) → [`zss/gadget/engine.tsx`](gadget/engine.tsx).
-2. `Engine` calls [`createplatform()`](platform.ts): `sessionreset` on [`SOFTWARE`](device/session.ts), spawns **boardrunnerspace** (per-board sim) and **simspace** or **stubspace** (authoritative VM). **ttsspace** / **sttspace** workers start on demand for TTS/STT.
+2. `Engine` calls [`createplatform()`](platform.ts): `sessionreset` on [`SOFTWARE`](device/session.ts), spawns **boardrunnerspace** (per-board sim) and either **simspace** (authoritative VM worker) or **joinvm** on the main thread for `/join/` tabs ([`device/joinvm.ts`](device/joinvm.ts)). **ttsspace** / **sttspace** workers start on demand for TTS/STT.
 
 [`zss/simspace.ts`](simspace.ts) runs **inside the sim worker**: imports `clock` and `modem`, wires `createforward` so messages that must reach the browser UI are `postMessage`’d out, then calls `started()` from [`zss/device/vm.ts`](device/vm.ts) which dispatches per-tick handlers (including the per-player gadget projection in [`gadgetsynctick`](device/vm/gadgetsynctick.ts)).
 

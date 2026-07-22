@@ -12,6 +12,7 @@ import { setuserdetached } from 'zss/device/wanixclient/state'
 import {
   connectwanixremote,
   disconnectwanixremote,
+  halttaskinroom,
   readwanixremotes,
   startwanixvm,
   stopwanixvm,
@@ -20,7 +21,11 @@ import {
   writewanixtermdump,
   writewanixtermstatus,
 } from 'zss/device/wanixclient/wanixtermhandlers'
-import { startwanixzedsync } from 'zss/device/wanixclient/wanixzedsync'
+import {
+  iszedsynctaskid,
+  startwanixzedsync,
+} from 'zss/device/wanixclient/wanixzedsync'
+import { clearzedsynchalt } from 'zss/device/wanixclient/wanixzedsynchalt'
 import { FIRMWARE } from 'zss/firmware'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
@@ -105,9 +110,19 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
         case 'stop': {
           const [stoparg] = readargs(words, 1, [ARG_TYPE.MAYBE_NAME])
           if (ispresent(stoparg) && NAME(stoparg)) {
-            wanixserverhalttask(SOFTWARE, player, NAME(stoparg))
-            apilog(SOFTWARE, player, `wanix task stop ${NAME(stoparg)}`)
+            const taskid = NAME(stoparg)
+            if (iszedsynctaskid(taskid)) {
+              // Removes room task + clears soft-halt latch when present.
+              halttaskinroom(taskid)
+              // Idle room / missing task: still clear latch and halt guest.
+              clearzedsynchalt()
+              wanixserverhalttask(SOFTWARE, player, taskid)
+            } else {
+              wanixserverhalttask(SOFTWARE, player, taskid)
+            }
+            apilog(SOFTWARE, player, `wanix task stop ${taskid}`)
           } else {
+            clearzedsynchalt()
             wanixserverstoproom(SOFTWARE, player)
             apilog(SOFTWARE, player, 'wanix stop room')
           }

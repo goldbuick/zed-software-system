@@ -99,6 +99,25 @@ describe('wanixstateimport', () => {
     expect(board.objects).toEqual({})
   })
 
+  it('assembleboardjson omits pid_* player object files', () => {
+    const index = new Map<string, Uint8Array>([
+      [
+        'b1/p1/board/objects/npc1.json',
+        new TextEncoder().encode('{"id":"npc1","kind":"object"}\n'),
+      ],
+      [
+        'b1/p1/board/objects/pid_1.json',
+        new TextEncoder().encode('{"id":"pid_1","kind":"player"}\n'),
+      ],
+      [
+        'b1/p1/board/stats.json',
+        new TextEncoder().encode('{"startx":1,"starty":2}\n'),
+      ],
+    ])
+    const board = assembleboardjson(index, 'b1/p1')
+    expect(board?.objects).toEqual({ npc1: { id: 'npc1', kind: 'object' } })
+  })
+
   it('round-trips granular export layout', () => {
     const boardpage = {
       id: 'page1',

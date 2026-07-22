@@ -5,6 +5,10 @@ import {
   readwanixroomconfig,
   spawntaskinroom,
 } from 'zss/device/wanixclient/wanixroom'
+import {
+  clearzedsynchalt,
+  setzedsynchalt,
+} from 'zss/device/wanixclient/wanixzedsynchalt'
 import { dumpwanixtermbuffertext } from 'zss/device/wanixclient/wanixtermtext'
 import {
   WANIX_ZEDCAFE_GUEST_MOUNT,
@@ -14,7 +18,7 @@ import {
 } from 'zss/feature/wanix/wanixzedcafeconstants'
 
 export const WANIX_ZEDSYNC_WASM_URL =
-  '/wanix/zedsync.wasm?v=simonly-flags-partial-20260721'
+  '/wanix/zedsync.wasm?v=halt-exclude-players-20260722'
 export const WANIX_ZEDSYNC_TASK_WASM = `${WANIX_ZEDSYNC_TASK_ID}.wasm`
 export const WANIX_ZEDSYNC_READY_NAME = WANIX_ZEDSYNC_READY_FILE
 const WANIX_ZEDSYNC_READY_POLL_MS = 500
@@ -51,11 +55,30 @@ export function cancelzedsyncreadywait(reason?: string): void {
     )
   }
   clearreadywait()
+  // Soft halt stays while the room still lists the zedsync task (restart /
+  // daemon EOF). Clear only when the task is gone too.
+  if (
+    !readwanixroomconfig().tasks.some(
+      (task) => task.id === WANIX_ZEDSYNC_TASK_ID,
+    )
+  ) {
+    clearzedsynchalt()
+  }
 }
 
 /** True while parent is polling for `.zedsync/ready`. */
 export function iszedsyncreadywaitpending(): boolean {
   return pendingready !== null
+}
+
+/** True when room config lists zedsync or seed ready-wait is pending. */
+export function iszedsyncroomtaskactive(): boolean {
+  if (iszedsyncreadywaitpending()) {
+    return true
+  }
+  return readwanixroomconfig().tasks.some(
+    (task) => task.id === WANIX_ZEDSYNC_TASK_ID,
+  )
 }
 
 /**
@@ -189,13 +212,24 @@ export async function startwanixzedsync(
   // (folder drop / #wanix vm / remote connect). Peer presence is checked in
   // the iframe spawntask before gojs starts.
 
+  // Soft halt for the whole zedsync lifetime (NPCs pause; players still tick).
+  // Call before restart halt so a re-start keeps the existing hold/prior.
+  setzedsynchalt()
+
   if (
     readwanixroomconfig().tasks.some(
       (task) => task.id === WANIX_ZEDSYNC_TASK_ID,
     )
   ) {
-    const { halttaskinroom } = await import('zss/device/wanixclient/wanixroom')
-    halttaskinroom(WANIX_ZEDSYNC_TASK_ID)
+    // Restart: halt guest + drop room task without clearing the soft-halt hold.
+    const { wanixserverhalttask } = await import('zss/device/api')
+    const { registerreadplayer } = await import('zss/device/registerplayer')
+    const { SOFTWARE } = await import('zss/device/session')
+    const { removewanixroomtask } = await import(
+      'zss/device/wanixclient/wanixroom'
+    )
+    wanixserverhalttask(SOFTWARE, registerreadplayer(), WANIX_ZEDSYNC_TASK_ID)
+    removewanixroomtask(WANIX_ZEDSYNC_TASK_ID)
   }
 
   const cmd = `${WANIX_ZEDSYNC_TASK_WASM} ${target}`

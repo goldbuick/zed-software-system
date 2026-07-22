@@ -43,25 +43,25 @@ ZSS does not spawn OS threads; it uses the **browser main thread** and **dedicat
 |--------|------|
 | **Entry** | Vite loads [`cafe/index.tsx`](../../../cafe/index.tsx) as the SPA shell (normal UI) or runs the **`bootheadless`** path when [`isclimode()`](../../feature/detect.ts) (Playwright / CLI-driven session, no Canvas). |
 | **Main-hub devices** | `import('zss/userspace')` runs side effects that register **`register`**, **`gadgetclient`**, **`modem`**, **`bridge`**, **`synth`** ([`userspace.ts`](../../userspace.ts)). |
-| **Worker construction** | [`createplatform(isstub, climode)`](../../platform.ts) runs **only here**. It calls `new simspace()` / `new stubspace()` and `new boardrunnerspace()` (see below), installs `message` listeners, and wraps [`createforward`](../forward.ts) so the main hub and workers exchange `MESSAGE`s. **ttsspace** / **sttspace** start on demand via `ensurettsworker()` / `ensuresttworker()`. |
+| **Worker construction** | [`createplatform(isstub, climode)`](../../platform.ts) runs **only here**. It always starts **boardrunnerspace**; for a normal host it starts **simspace**, and for `/join/` it starts [`startjoinvm`](../joinvm.ts) on the **main thread** (no sim worker). It installs `message` listeners and wraps [`createforward`](../forward.ts) so the main hub and workers exchange `MESSAGE`s. **ttsspace** / **sttspace** start on demand via `ensurettsworker()` / `ensuresttworker()`. |
 | **Who calls `createplatform`** | [`zss/gadget/engine.tsx`](../../gadget/engine.tsx) — `useEffect` on mount (browser UI, passes `isjoin()` and `isclimode()`). [`cafe/index.tsx`](../../../cafe/index.tsx) — `bootheadless()` after `userspace` (CLI). |
-| **Teardown** | [`haltplatform()`](../../platform.ts) terminates sim/stub, boardrunner, and any TTS/STT workers, removes listeners, and disconnects the main-thread forward device (Engine `useEffect` cleanup). |
+| **Teardown** | [`haltplatform()`](../../platform.ts) disconnects joinvm (if any), terminates sim, boardrunner, and any TTS/STT workers, removes listeners, and disconnects the main-thread forward device (Engine `useEffect` cleanup). |
 
-### Simulation worker (`simspace` or `stubspace`)
+### Simulation worker (`simspace`) vs join VM (`joinvm`)
 
 | Piece | Role |
 |--------|------|
-| **Instantiation** | [`platform.ts`](../../platform.ts): `platform = isstub ? new stubspace() : new simspace()`. |
-| **`isstub` (1st arg to `createplatform`)** | **`isjoin()`** ([`feature/url.ts`](../../feature/url.ts)): if the page URL contains **`/join/`**, the **stub** worker is used; otherwise the full **sim** worker. |
-| **Bundler** | Vite worker entry: `./simspace??worker` or `./stubspace??worker` → [`simspace.ts`](../../simspace.ts) / [`stubspace.ts`](../joinvm.ts). |
-| **Boot inside worker** | **simspace** imports `clock`, `modem`, [`forward`](../forward.ts), and (via `started`) the real **`vm`** — the VM tick is what produces gadget paint/patch through [`gadgetsynctick`](../vm/gadgetsynctick.ts) (no separate `gadgetserver` device). **stubspace** imports only **`stub`** + `forward` (minimal `vm`-named device). Both assign `onmessage` → `forward(event.data)` into the **worker-local** hub. |
-| **Post-start config** | Main sends `platform.postMessage({ target: 'config', data: climode })`. **simspace** handles it and calls [`setclimode`](../../feature/detect.ts) with the 2nd arg to `createplatform`. **stubspace** does not special-case `config` (message is forwarded into the stub hub). |
+| **Instantiation** | [`platform.ts`](../../platform.ts): if `isstub`, `joinvmdevice = startjoinvm(session)` on the main hub; else `platform = new simspace()`. |
+| **`isstub` (1st arg to `createplatform`)** | **`isjoin()`** ([`feature/url.ts`](../../feature/url.ts)): if the page URL contains **`/join/`**, **joinvm** runs on main; otherwise the full **sim** worker. |
+| **Bundler** | Vite worker entry for sim only: `./simspace??worker` → [`simspace.ts`](../../simspace.ts). Join path is not a worker — [`joinvm.ts`](../joinvm.ts) registers a minimal `vm`-named device on the main hub. |
+| **Boot** | **simspace** imports `clock`, `modem`, [`forward`](../forward.ts), and (via `started`) the real **`vm`** — the VM tick is what produces gadget paint/patch through [`gadgetsynctick`](../vm/gadgetsynctick.ts). **joinvm** only acks `vm:operator` so register can bridge; host owns the real sim. |
+| **Post-start config** | Main sends `platform.postMessage({ target: 'config', data: climode })` to the **sim** worker when present. **simspace** handles it and calls [`setclimode`](../../feature/detect.ts). Join mode has no sim worker to configure. |
 
 ### Boardrunner worker (`boardrunnerspace`)
 
 | Piece | Role |
 |--------|------|
-| **Instantiation** | [`platform.ts`](../../platform.ts): `boardrunner = new boardrunnerspace()` whenever `createplatform` runs—**always**, alongside sim or stub. |
+| **Instantiation** | [`platform.ts`](../../platform.ts): `boardrunner = new boardrunnerspace()` whenever `createplatform` runs—**always**, alongside sim or joinvm. |
 | **Bundler** | `./boardrunnerspace??worker` → [`boardrunnerspace.ts`](../../boardrunnerspace.ts). |
 | **Boot inside worker** | Imports [`device/boardrunner`](../boardrunner.ts) (creates the **`boardrunner`** device on **this** hub only; handlers in [`boardrunner/`](../boardrunner/handlers/)), then `createforward` + `onmessage` per [`shouldforwardboardrunnertoclient`](../forward.ts). The boardrunner device receives **memory + boundary jsonpipe** snapshots/patches (`boardrunner:paint` / `boardrunner:patch`), runs [`memorytickmain`](../../memory/runtime.ts) for whichever board it is currently elected on, and emits boundary patches back to the sim VM as `vm:boardrunnerack` / `vm:boardrunnerpatch`. |
 
@@ -73,16 +73,16 @@ sequenceDiagram
   participant Main as Main_thread
   participant US as userspace
   participant CP as createplatform
-  participant Sim as sim_or_stub_Worker
+  participant Sim as sim_Worker_or_joinvm
   participant Br as boardrunner_Worker
   Vite->>Main: load bundle
   Main->>US: dynamic import
   US->>Main: register_gadgetclient_etc
   Main->>CP: Engine_useEffect
-  CP->>Sim: new_Worker
+  CP->>Sim: new_sim_Worker_or_startjoinvm
   CP->>Br: new_Worker
   CP->>Main: createforward_listeners
-  CP->>Sim: postMessage_config
+  CP->>Sim: postMessage_config_if_sim
 ```
 
 CLI **`bootheadless`** ([`cafe/index.tsx`](../../../cafe/index.tsx)) skips Canvas but still runs **`userspace`** then **`createplatform`** the same way; only the **`Engine` `useEffect`** trigger is replaced.
@@ -96,7 +96,7 @@ CLI **`bootheadless`** ([`cafe/index.tsx`](../../../cafe/index.tsx)) skips Canva
 | `forward` | main + each worker (one `createforward` instance per realm) | `all` | Copies messages across `postMessage`; dedupes by `message.id` |
 | `clock` | sim worker only | — | Emits `ticktock`, `second` |
 | `vm` | sim worker (real sim) | `ticktock`, `second` | Game VM. Handlers in [`vm/handlers/`](../vm/handlers/) (registry: [`registry.ts`](../vm/handlers/registry.ts)). On every `ticktock` it runs the player gadget projection ([`gadgetsynctick`](../vm/gadgetsynctick.ts)), elects/evicts boardrunners, jsonpipe-syncs memory + boundaries to the boardrunner worker ([`boardrunnermemorysync`](../vm/boardrunnermemorysync.ts), [`boardrunnerboundarysync`](../vm/boardrunnerboundarysync.ts)), and emits `boardrunner:tick` to each runner. |
-| `stub` (`name` **`vm`**) | stub worker only | — | Minimal stand-in for `vm` when using stubspace ([`stub.ts`](../joinvm.ts)) |
+| `vm` (join) | **main** hub when `/join/` | — | Minimal stand-in from [`startjoinvm`](../joinvm.ts): ready + `vm:operator` ack so register can bridge; host owns the real sim |
 | `modem` | **both** hubs (imported in sim + userspace) | `second` | Sync / presence (per-realm instance) |
 | `register` | main | `ready`, `second`, `log`, `chat`, `toast` | UI edge: storage, tape, VM calls via `api`; on `acklogin` triggers a `vm:gadgetdesync` so the worker repaints. |
 | `gadgetclient` | main | — | Applies `gadgetclient:paint` / `patch` (jsonpipe) to zustand state ([`gadget/data/state.ts`](../../gadget/data/zustandstores.ts)); replies `desync` on bad patches |
@@ -108,9 +108,9 @@ CLI **`bootheadless`** ([`cafe/index.tsx`](../../../cafe/index.tsx)) skips Canva
 | `SOFTWARE` | whichever hub loaded it | — | Session holder + `emit` helper |
 | **Ephemeral** `createdevice` | varies | — | e.g. one-off TTS in [`feature/tts.ts`](../../feature/tts/client.ts) |
 
-**stubspace** ([`stubspace.ts`](../joinvm.ts)) only boots **stub** + **forward** (no clock / modem imports there). **simspace** ([`simspace.ts`](../../simspace.ts)) boots clock, modem, vm, and forward — gadget paint/patch is produced by the VM tick directly (no `gadgetserver` device any more).
+**joinvm** ([`joinvm.ts`](../joinvm.ts)) runs on the **main** hub for `/join/` tabs (no sim worker, no clock / sim modem). **simspace** ([`simspace.ts`](../../simspace.ts)) boots clock, modem, vm, and forward — gadget paint/patch is produced by the VM tick directly (no `gadgetserver` device any more).
 
-> **Join / stub mode** — When the URL matches [`isjoin()`](../../feature/url.ts) (`/join/`), **`stubspace`** runs instead of **`simspace`**: there is **no** `clock` or sim **`modem`**, and the stub `vm` has no real handlers. The threaded diagrams below are **sim-first**; in stub mode rely on this table and [what creates each thread or worker](#what-creates-each-thread-or-worker).
+> **Join mode** — When the URL matches [`isjoin()`](../../feature/url.ts) (`/join/`), **`startjoinvm`** runs on main instead of spawning **`simspace`**: there is **no** local `clock` or sim **`modem`**, and joinvm only handles operator ack. The threaded diagrams below are **sim-first**; in join mode rely on this table and [what creates each thread or worker](#what-creates-each-thread-or-worker).
 
 ---
 
@@ -379,19 +379,19 @@ flowchart TB
 
 **Realm notes**
 
-- **Sim vs stub** — Only one platform worker runs per session (`createplatform` chooses [`simspace`](../../simspace.ts) or [`stubspace`](../joinvm.ts)). **simspace** boots **`clock`**, sim **`modem`**, and **`vm`**. **stubspace** boots **`stub`** (device name **`vm`**) and **`forward`** only—no **`clock`** or sim **`modem`**. Labels **`clock_sim_only`** / **`modem_sim_only`** apply only when **`simspace`** is active.
+- **Sim vs join** — Host sessions spawn [`simspace`](../../simspace.ts) (boots **`clock`**, sim **`modem`**, and **`vm`**). Join tabs (`/join/`) call [`startjoinvm`](../joinvm.ts) on the **main** hub instead — no sim worker, no local **`clock`** / sim **`modem`**. Labels **`clock_sim_only`** / **`modem_sim_only`** apply only when **`simspace`** is active.
 - **TTS/STT** — On-demand workers ([`ttsspace`](../../ttsspace.ts), [`sttspace`](../../sttspace.ts)).
 
 ### Diagram: `postMessage` bridges and predicates
 
-Solid arrows are **`postMessage`** between workers and the main thread. [`platform.ts`](../../platform.ts) installs listeners on **sim/stub**, **boardrunner**, and on-demand **tts/stt** workers; each listener **fan-outs** using the listed predicates (a single inbound message may satisfy multiple and hit multiple workers). Worker → worker routes **relay through main** and never enter main’s hub.
+Solid arrows are **`postMessage`** between workers and the main thread. [`platform.ts`](../../platform.ts) installs listeners on **sim** (when present), **boardrunner**, and on-demand **tts/stt** workers; each listener **fan-outs** using the listed predicates (a single inbound message may satisfy multiple and hit multiple workers). Worker → worker routes **relay through main** and never enter main’s hub.
 
 ```mermaid
 flowchart LR
   subgraph Main_thread [Main_thread]
     Fm[forward]
   end
-  subgraph Sim_or_stub [Sim_or_stub_worker]
+  subgraph Sim_or_stub [Sim_worker]
     Fs[forward]
   end
   subgraph TTS_worker [TTS_worker lazy]
@@ -413,7 +413,7 @@ flowchart LR
   Fb -->|"shouldforwardboardrunnertoclient_true"| Fm
 ```
 
-**Stub vs sim outbound** — **[`stubspace`](../joinvm.ts)** posts **every** message from the worker hub to main (`postMessage(message)` with no `shouldforwardservertoclient`). **[`simspace`](../../simspace.ts)** only posts when [`shouldforwardservertoclient`](../forward.ts) returns true. The edge label **`shouldforwardservertoclient_sim_only`** applies only when the platform worker is **simspace**; replace mentally with **all targets** when **stubspace** is active.
+**Sim outbound** — **[`simspace`](../../simspace.ts)** posts when [`shouldforwardservertoclient`](../forward.ts) returns true. Join mode has no sim worker hub; joinvm lives on main and does not use that postMessage edge. The edge label **`shouldforwardservertoclient_sim_only`** applies only when the platform worker is **simspace**.
 
 **Inbound on main** — When main’s `createforward` receives a message from any worker, it may forward to **other** workers using **`shouldforwardclienttoserver`**, **`shouldforwardclienttotts`**, **`shouldforwardclienttostt`**, and **`shouldforwardclienttoboardrunner`** together ([`platform.ts`](../../platform.ts)), enabling paths such as boardrunner → sim **`vm:*`** without the message being handled on the main hub first.
 

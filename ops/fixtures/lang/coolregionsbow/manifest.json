@@ -1,5 +1,6 @@
 [
   "ammo",
+  "arena",
   "bear",
   "blinkew",
   "blinkns",
@@ -9,6 +10,7 @@
   "boulder",
   "breakable",
   "bullet",
+  "cave",
   "chatvoices",
   "clockwise",
   "counter",
@@ -24,6 +26,7 @@
   "lantern",
   "line",
   "lion",
+  "marsh",
   "normal",
   "object",
   "passage",
@@ -50,5 +53,6 @@
   "title",
   "torch",
   "transporter",
+  "vault",
   "water"
 ]

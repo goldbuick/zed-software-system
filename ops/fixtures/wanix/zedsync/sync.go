@@ -59,7 +59,8 @@ type Snapshot map[string]FileMeta
 
 // shouldskip reports whether a slash-normalized relative path is non-content
 // (any path segment starts with '.' -- dotfiles, hidden dirs, ready sentinel;
-// sim-only flag bags under flags/ are never synced).
+// sim-only flag bags under flags/ are never synced; player board objects
+// board/objects/pid_*.json are never synced).
 func shouldskip(rel string) bool {
 	for _, seg := range strings.Split(rel, "/") {
 		if strings.HasPrefix(seg, ".") {
@@ -78,6 +79,12 @@ func shouldskip(rel string) bool {
 			if strings.HasSuffix(base, suf) {
 				return true
 			}
+		}
+	}
+	if strings.Contains(rel, "/board/objects/") {
+		base := filepath.Base(rel)
+		if strings.HasPrefix(base, "pid_") && strings.HasSuffix(base, ".json") {
+			return true
 		}
 	}
 	return false

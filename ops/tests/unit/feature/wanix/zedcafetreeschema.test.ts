@@ -93,6 +93,12 @@ describe('zedcafetreeschema', () => {
     expect(isallowedexportpath('demo-b1/flags/board1_synth.json')).toBe(false)
     expect(isallowedexportpath('demo-b1/flags/board1_layers.json')).toBe(false)
     expect(isallowedexportpath('demo-b1/flags/board1_tracking.json')).toBe(false)
+    expect(
+      isallowedexportpath('demo-b1/title-page1/board/objects/pid_1.json'),
+    ).toBe(false)
+    expect(
+      isallowedexportpath('demo-b1/title-page1/board/objects/npc1.json'),
+    ).toBe(true)
     const blocked = validatezedcafeexportpaths([
       {
         path: 'demo-b1/flags/pid_1_chip.json',

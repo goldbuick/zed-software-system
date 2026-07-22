@@ -1,4 +1,7 @@
-import { issimonlyflagpath } from 'zss/feature/wanix/zedcafeprotectedflags'
+import {
+  isplayerobjectpath,
+  issimonlyflagpath,
+} from 'zss/feature/wanix/zedcafeprotectedflags'
 import { memoryreadcodepagename } from 'zss/memory/codepageoperations'
 import { BOARD_SIZE } from 'zss/memory/types'
 import type { BOOK, CODE_PAGE } from 'zss/memory/types'
@@ -96,7 +99,7 @@ export function isallowedexportpath(path: string): boolean {
   }
   for (let i = 0; i < ZED_CAFE_EXPORT_ALLOWED_PATH.length; ++i) {
     if (ZED_CAFE_EXPORT_ALLOWED_PATH[i].test(path)) {
-      if (issimonlyflagpath(path)) {
+      if (issimonlyflagpath(path) || isplayerobjectpath(path)) {
         return false
       }
       return true

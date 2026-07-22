@@ -2,6 +2,15 @@
 
 A ZZT-inspired, web-based fantasy terminal — a creative-coding and game environment. Deep stack overview: [zss/ARCHITECTURE.md](zss/ARCHITECTURE.md).
 
+## Documentation
+
+| Surface | URL / path | Audience |
+|---------|------------|----------|
+| **System reference (this repo)** | [https://zed.cafe/docs/](https://zed.cafe/docs/) | Developers and creators — architecture, glossary, colocated `zss/**/docs` |
+| **In-game / ZNS help** | [https://docs.at.zed.cafe](https://docs.at.zed.cafe) | Players and authors via ROM refscrolls |
+
+Blume project root: [`docs-site/`](docs-site/). Module manuals stay colocated under `zss/**/docs/` (see [`.cursor/rules/docs-placement.mdc`](.cursor/rules/docs-placement.mdc)). Local preview: `yarn blume dev` from `docs-site/`. Production merge is part of `yarn task run cafe:build` → `cafe/dist/docs/`.
+
 ## Development
 
 From the repo root (requires [Yarn](https://yarnpkg.com/) and a current [Node.js](https://nodejs.org/) LTS):
@@ -21,4 +30,4 @@ Shorthand: `./task cafe dev` (or `yarn task cafe dev`) is equivalent to `yarn ta
 
 Press **`Ctrl+I`** (or run `#perf` in the terminal) to toggle the in-game perf overlay; see [`zss/perf/README.md`](zss/perf/README.md).
 
-Production build: `yarn task run cafe:build`. Chip scripts compile via the TypeScript lang backend. Per-area docs live under `zss/**/docs/` and `ops/docs/`.
+Production build: `yarn task run cafe:build` (Vite app + Blume docs at `cafe/dist/docs/`). Chip scripts compile via the TypeScript lang backend. Per-area docs live under `zss/**/docs/` and selected `ops/docs/` pages (mounted into the docs site).

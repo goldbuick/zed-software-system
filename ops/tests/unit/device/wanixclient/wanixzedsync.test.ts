@@ -13,6 +13,12 @@ import {
   WANIX_ZEDSYNC_WASM_URL,
 } from 'zss/device/wanixclient/wanixzedsync'
 import {
+  clearzedsynchalt,
+  iszedsynchaltholding,
+  resetzedsynchaltfortest,
+  setzedsynchalt,
+} from 'zss/device/wanixclient/wanixzedsynchalt'
+import {
   resetwanixzedcafesessionfortest,
   setwanixroomconfig,
 } from 'zss/device/wanixclient/state'
@@ -21,6 +27,7 @@ import {
   stopzedcafepoll,
 } from 'zss/device/wanixclient/wanixzedcafe'
 import { createidleroomconfig } from 'zss/feature/wanix/wanixroomtypes'
+import { memoryreadhalt, memorywritehalt } from 'zss/memory/session'
 
 jest.mock('zss/device/api', () => ({
   apilog: jest.fn(),
@@ -66,6 +73,8 @@ const player = 'p1'
 describe('startwanixzedsync gates', () => {
   beforeEach(() => {
     resetwanixzedcafesessionfortest()
+    resetzedsynchaltfortest()
+    memorywritehalt(false)
     cancelzedsyncreadywait()
     mockapilog.mockClear()
     mockspawntask.mockClear()
@@ -79,6 +88,9 @@ describe('startwanixzedsync gates', () => {
 
   afterEach(() => {
     cancelzedsyncreadywait()
+    clearzedsynchalt()
+    resetzedsynchaltfortest()
+    memorywritehalt(false)
   })
 
   it('rejects empty targetpath', async () => {
@@ -142,5 +154,47 @@ describe('startwanixzedsync gates', () => {
     cancelzedsyncreadywait('test cleanup')
     expect(mockstartzedcafepoll).not.toHaveBeenCalled()
     expect(mockstopzedcafepoll).not.toHaveBeenCalled()
+  })
+
+  it('sets soft halt while spawning zedsync', async () => {
+    expect(memoryreadhalt()).toBe(false)
+    await startwanixzedsync(device, player, 'MyFolder')
+    expect(iszedsynchaltholding()).toBe(true)
+    expect(memoryreadhalt()).toBe(true)
+  })
+})
+
+describe('zedsync halt latch', () => {
+  beforeEach(() => {
+    resetzedsynchaltfortest()
+    memorywritehalt(false)
+  })
+
+  afterEach(() => {
+    clearzedsynchalt()
+    resetzedsynchaltfortest()
+    memorywritehalt(false)
+  })
+
+  it('restores prior false across two start/stop cycles', () => {
+    expect(memoryreadhalt()).toBe(false)
+    setzedsynchalt()
+    expect(memoryreadhalt()).toBe(true)
+    clearzedsynchalt()
+    expect(memoryreadhalt()).toBe(false)
+    setzedsynchalt()
+    expect(memoryreadhalt()).toBe(true)
+    clearzedsynchalt()
+    expect(memoryreadhalt()).toBe(false)
+  })
+
+  it('keeps prior true after clear and does not re-sample on nested set', () => {
+    memorywritehalt(true)
+    setzedsynchalt()
+    expect(memoryreadhalt()).toBe(true)
+    setzedsynchalt()
+    expect(iszedsynchaltholding()).toBe(true)
+    clearzedsynchalt()
+    expect(memoryreadhalt()).toBe(true)
   })
 })

@@ -369,6 +369,28 @@ func TestWalkSkipsSimOnlyFlags(t *testing.T) {
 	}
 }
 
+func TestWalkSkipsPlayerObjects(t *testing.T) {
+	dir := t.TempDir()
+	writefile(t, dir, "book/page/board/objects/npc1.json", `{"kind":"object"}`, time.Now())
+	writefile(t, dir, "book/page/board/objects/pid_1.json", `{"kind":"player"}`, time.Now())
+	writefile(t, dir, "book/page/board/objects/pid_abcd.json", `{"kind":"player"}`, time.Now())
+	snap, err := WalkFiles(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := snap["book/page/board/objects/npc1.json"]; !ok {
+		t.Fatal("non-player object should be walked")
+	}
+	for _, path := range []string{
+		"book/page/board/objects/pid_1.json",
+		"book/page/board/objects/pid_abcd.json",
+	} {
+		if _, ok := snap[path]; ok {
+			t.Fatalf("%s should be skipped", path)
+		}
+	}
+}
+
 func TestSteadyTickRemoteFlagEdit(t *testing.T) {
 	dir := t.TempDir()
 	remote := filepath.Join(dir, "remote")
