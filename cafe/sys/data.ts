@@ -1170,7 +1170,7 @@ export const FEATURE_DOMAINS: FeatureDomain[] = [
       [
         '#dev / #save / #fork',
         'Both',
-        'Operator dev mode, flush changes, fork software slot.',
+        'Dev halt (operator); save and fork (persist) -- join players get a personal copy.',
         '#dev',
       ],
       [

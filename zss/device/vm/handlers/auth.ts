@@ -154,6 +154,12 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
 
       const shouldgadget = memoryreadconfig('gadget') === 'on'
       registerinspector(vm, message.player, shouldgadget)
+
+      apilog(
+        vm,
+        message.player,
+        `use $YELLOW#$GREENadmin $WHITEto change config`,
+      )
     }
   }
 

@@ -794,8 +794,7 @@ export async function runzedcafeimport(
         )
         wanixperfmark('export-import-skip-sim-dirty', {
           skipped: skippedn,
-          keep:
-            filteredupsert.keep.length + filteredremove.keep.length,
+          keep: filteredupsert.keep.length + filteredremove.keep.length,
         })
       }
       if (

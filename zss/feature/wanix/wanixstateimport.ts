@@ -1,4 +1,5 @@
 import type { WANIX_ZED_CAFE_EXPORT_FILE } from 'zss/feature/wanix/wanixstateexport'
+import { issimonlyflagowner } from 'zss/feature/wanix/zedcafeprotectedflags'
 import {
   kebabcasezedcafedirname,
   readzedcafebookdirname,
@@ -68,21 +69,8 @@ export type APPLY_ZEDCAFE_PARTIAL_RESULT = {
 const decoder = new TextDecoder()
 
 /** Sim-owned flag bags — never import-delete or overwrite (mirrors boundaryrouting). */
-const IMPORT_PROTECTED_FLAG_SUFFIXES = [
-  '_gadget',
-  '_chip',
-  '_synth',
-  '_layers',
-  '_tracking',
-] as const
-
 export function isimportprotectedflagowner(owner: string): boolean {
-  for (let i = 0; i < IMPORT_PROTECTED_FLAG_SUFFIXES.length; ++i) {
-    if (owner.endsWith(IMPORT_PROTECTED_FLAG_SUFFIXES[i])) {
-      return true
-    }
-  }
-  return false
+  return issimonlyflagowner(owner)
 }
 
 function decodejson(bytes: Uint8Array): unknown {
@@ -336,6 +324,75 @@ function findpageinbook(book: BOOK, pageprefix: string): CODE_PAGE | undefined {
   return undefined
 }
 
+function readpagedirsegment(pageprefix: string): string {
+  const slash = pageprefix.indexOf('/')
+  if (slash < 0) {
+    return pageprefix
+  }
+  return pageprefix.slice(slash + 1)
+}
+
+function stubcodefrompagedir(pagedir: string): { id: string; code: string } {
+  const marker = '-sid_'
+  const idx = pagedir.lastIndexOf(marker)
+  if (idx >= 0) {
+    const name = pagedir.slice(0, idx)
+    const id = pagedir.slice(idx + 1)
+    return { id, code: `@board ${name}\n` }
+  }
+  return { id: pagedir, code: `@board ${pagedir}\n` }
+}
+
+function ensurepageinbook(
+  book: BOOK,
+  pageprefix: string,
+  paintids: Set<string>,
+  code?: string,
+): CODE_PAGE | undefined {
+  const existing = findpageinbook(book, pageprefix)
+  if (existing) {
+    return existing
+  }
+  const stub = stubcodefrompagedir(readpagedirsegment(pageprefix))
+  const flat = { id: stub.id, code: code ?? stub.code }
+  if (!memoryupsertcodepage(book, flat)) {
+    return undefined
+  }
+  const created = memoryreadcodepage(book, flat.id)
+  if (created) {
+    markboardpaint(paintids, created)
+  }
+  return created
+}
+
+function mergebookpagesfrommeta(
+  book: BOOK,
+  bookdirname: string,
+  pages: { id: string; name?: string }[] | undefined,
+  paintids: Set<string>,
+): boolean {
+  if (!Array.isArray(pages) || pages.length === 0) {
+    return false
+  }
+  let changed = false
+  for (let i = 0; i < pages.length; ++i) {
+    const ref = pages[i]
+    const pagedir = kebabcasezedcafedirname(ref.name, ref.id)
+    const pageprefix = `${bookdirname}/${pagedir}`
+    if (findpageinbook(book, pageprefix)) {
+      continue
+    }
+    const name = ref.name ?? ref.id
+    if (
+      ensurepageinbook(book, pageprefix, paintids, `@board ${name}\n`) !==
+      undefined
+    ) {
+      changed = true
+    }
+  }
+  return changed
+}
+
 function applybookmeta(book: BOOK, flat: WANIX_ZED_CAFE_PARSED_BOOK) {
   book.name = flat.name
   book.token = flat.token
@@ -540,6 +597,7 @@ function applypartialupsertpath(
       name?: string
       token?: string
       activelist?: string[]
+      pages?: { id: string; name?: string }[]
       flags?: unknown
       timestamp?: unknown
     }
@@ -565,6 +623,9 @@ function applypartialupsertpath(
       book.activelist = meta.activelist
       changed = true
     }
+    if (mergebookpagesfrommeta(book, bookdirname, meta.pages, paintids)) {
+      changed = true
+    }
     return changed
   }
   if (segments.length === 3 && segments[1] === 'flags') {
@@ -575,7 +636,7 @@ function applypartialupsertpath(
     return false
   }
   const pageprefix = `${segments[0]}/${segments[1]}`
-  const page = findpageinbook(book, pageprefix)
+  let page = findpageinbook(book, pageprefix)
   if (segments.length === 3 && segments[2] === 'stats.json') {
     const stats = decodejson(bytes) as { id?: string; code?: string }
     const pageid = stats.id ?? segments[1]
@@ -597,8 +658,9 @@ function applypartialupsertpath(
     markboardpaint(paintids, page)
     return true
   }
+  page ??= ensurepageinbook(book, pageprefix, paintids)
   if (!page) {
-    throw new Error(`zedcafe partial import: unknown page ${pageprefix}`)
+    return false
   }
   if (
     segments.length === 4 &&

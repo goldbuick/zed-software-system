@@ -61,6 +61,8 @@ describe('permissions', () => {
     it('maps variant and base commands to families', () => {
       expect(memorymapcommandtofamily('access')).toBe('risk')
       expect(memorymapcommandtofamily('pageexport')).toBe('risk')
+      expect(memorymapcommandtofamily('fork')).toBe('persist')
+      expect(memorymapcommandtofamily('save')).toBe('persist')
       expect(memorymapcommandtofamily('synth1')).toBe('speaker')
       expect(memorymapcommandtofamily('run')).toBe('coder')
       expect(memorymapcommandtofamily('build')).toBe('build')

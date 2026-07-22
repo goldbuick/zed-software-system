@@ -36,8 +36,8 @@ extern "C" {
 void zss_init(float sample_rate) {
   std::memset(g_control, 0, sizeof(g_control));
   g_control[off_main()] = 80.0;
-  g_control[off_main() + 1] = 100.0;
-  g_control[off_main() + 2] = 25.0;
+  g_control[off_main() + 1] = 70.0;
+  g_control[off_main() + 2] = 100.0;
   g_control[off_main() + kMainCompBypassIdx] = 0.0;
   g_control[off_main() + kMainScBypassIdx] = 0.0;
   initengine(sample_rate > 0.f ? sample_rate : 44100.f);
@@ -45,8 +45,8 @@ void zss_init(float sample_rate) {
   g_engine.cached_bggain = readbgplayvolume();
   g_engine.cached_ttsgain = readttsvolume();
   g_engine.cached_mainraw = 80.f;
-  g_engine.cached_bgraw = 100.f;
-  g_engine.cached_ttsraw = 25.f;
+  g_engine.cached_bgraw = 70.f;
+  g_engine.cached_ttsraw = 100.f;
 }
 
 double* zss_control_ptr() { return g_control; }

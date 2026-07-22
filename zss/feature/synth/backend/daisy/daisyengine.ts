@@ -10,6 +10,7 @@ import { ensurewasmcoep } from 'zss/feature/synth/backend/wasm/coopcoep'
 import { initwasmfxsab } from 'zss/feature/synth/backend/wasm/wasmfxstate'
 import { wirewasmmainchain } from 'zss/feature/synth/backend/wasm/wasmmainchain'
 import {
+  WASM_DEFAULT_BGPLAY_VOLUME,
   WASM_DEFAULT_PLAY_VOLUME,
   WASM_DEFAULT_TTS_VOLUME,
   initwasmmainsab,
@@ -36,7 +37,7 @@ let daisyttssource: MAYBE<AudioBufferSourceNode>
 let daisykeepalive: MAYBE<ConstantSourceNode>
 
 let daisyplayvolume = WASM_DEFAULT_PLAY_VOLUME
-let daisybgplayvolume = 100
+let daisybgplayvolume = WASM_DEFAULT_BGPLAY_VOLUME
 let daisyttsvolume = WASM_DEFAULT_TTS_VOLUME
 let daisybootedbuildid = ''
 

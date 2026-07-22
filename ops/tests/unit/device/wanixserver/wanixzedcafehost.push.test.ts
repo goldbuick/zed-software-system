@@ -2,6 +2,7 @@
 
 jest.mock('zss/device/wanixserver/exportevents', () => ({
   postwanixexportmessage: jest.fn(),
+  postzedcafefilechangemessage: jest.fn(),
 }))
 
 jest.mock('zss/feature/wanix/wanixperf', () => ({
@@ -25,7 +26,11 @@ jest.mock('zss/feature/wanix/zedcafetreeschema', () => ({
   }),
 }))
 
-import { pushzedcafeexportlive } from 'zss/device/wanixserver/zedcafehost'
+import {
+  notifyzedcafeexportdirtyfortest,
+  pushzedcafeexportlive,
+} from 'zss/device/wanixserver/zedcafehost'
+import { postzedcafefilechangemessage } from 'zss/device/wanixserver/exportevents'
 import { readwanixzedcafeexportsrc } from 'zss/feature/wanix/wanixzedcafeconstants'
 import type { WanixRoot } from 'zss/feature/wanix/wanixelements.d.ts'
 import { TextEncoder } from 'util'
@@ -206,5 +211,115 @@ describe('pushzedcafeexportlive removepaths', () => {
       `${base}/coolregionsbow-sid_x/ammo-sid_y/board/terrain.json`,
     )
     expect(written).toContain(`${base}/stats.json`)
+  })
+})
+
+describe('pushzedcafeexportlive dirty queue', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    jest.useFakeTimers()
+  })
+
+  afterEach(() => {
+    jest.useRealTimers()
+  })
+
+  it('queues dirty notify during push and flushes after suppress window', async () => {
+    const taskrid = '7'
+    let releasewrite: (() => void) | undefined
+    const writestalled = new Promise<void>((resolve) => {
+      releasewrite = resolve
+    })
+    const root: WanixRoot = {
+      readDir: async () => [],
+      readFile: async () => new Uint8Array(),
+      readText: async () => '',
+      writeFile: async (path) => {
+        if (path.endsWith('stats.json')) {
+          await writestalled
+        }
+      },
+      makeDirAll: async () => {},
+      appendFile: async () => {},
+      remove: async () => {},
+      bind: async () => {},
+      unbind: async () => {},
+      waitFor: async () => {},
+      openReadable: async () => new ReadableStream(),
+      openWritable: async () => new WritableStream(),
+    }
+
+    const pushpromise = pushzedcafeexportlive(root, taskrid, [
+      {
+        path: 'stats.json',
+        data: [
+          ...new TextEncoder().encode(
+            '{"exportedAt":"t","bookCount":0,"books":[]}\n',
+          ),
+        ],
+      },
+    ])
+
+    notifyzedcafeexportdirtyfortest(taskrid, ['book/flags/pid_1.json'])
+    expect(postzedcafefilechangemessage).not.toHaveBeenCalled()
+
+    releasewrite?.()
+    await pushpromise
+    jest.advanceTimersByTime(75)
+
+    expect(postzedcafefilechangemessage).toHaveBeenCalledTimes(1)
+    expect(postzedcafefilechangemessage).toHaveBeenCalledWith(taskrid, [
+      'book/flags/pid_1.json',
+    ])
+  })
+
+  it('merges multiple dirty paths queued during push', async () => {
+    const taskrid = '7'
+    let releasewrite: (() => void) | undefined
+    const writestalled = new Promise<void>((resolve) => {
+      releasewrite = resolve
+    })
+    const root: WanixRoot = {
+      readDir: async () => [],
+      readFile: async () => new Uint8Array(),
+      readText: async () => '',
+      writeFile: async (path) => {
+        if (path.endsWith('stats.json')) {
+          await writestalled
+        }
+      },
+      makeDirAll: async () => {},
+      appendFile: async () => {},
+      remove: async () => {},
+      bind: async () => {},
+      unbind: async () => {},
+      waitFor: async () => {},
+      openReadable: async () => new ReadableStream(),
+      openWritable: async () => new WritableStream(),
+    }
+
+    const pushpromise = pushzedcafeexportlive(root, taskrid, [
+      {
+        path: 'stats.json',
+        data: [
+          ...new TextEncoder().encode(
+            '{"exportedAt":"t","bookCount":0,"books":[]}\n',
+          ),
+        ],
+      },
+    ])
+
+    notifyzedcafeexportdirtyfortest(taskrid, ['z.json', 'a.json'])
+    notifyzedcafeexportdirtyfortest(taskrid, ['m.json'])
+
+    releasewrite?.()
+    await pushpromise
+    jest.advanceTimersByTime(75)
+
+    expect(postzedcafefilechangemessage).toHaveBeenCalledWith(taskrid, [
+      'a.json',
+      'm.json',
+      'z.json',
+    ])
   })
 })

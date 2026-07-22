@@ -14,7 +14,7 @@ import {
 } from 'zss/feature/wanix/wanixzedcafeconstants'
 
 export const WANIX_ZEDSYNC_WASM_URL =
-  '/wanix/zedsync.wasm?v=ascii-logs-20260718'
+  '/wanix/zedsync.wasm?v=simonly-flags-partial-20260721'
 export const WANIX_ZEDSYNC_TASK_WASM = `${WANIX_ZEDSYNC_TASK_ID}.wasm`
 export const WANIX_ZEDSYNC_READY_NAME = WANIX_ZEDSYNC_READY_FILE
 const WANIX_ZEDSYNC_READY_POLL_MS = 500

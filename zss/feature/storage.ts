@@ -102,6 +102,16 @@ async function readlocalurl(shorturl: string) {
   return await durableget<string>(shorturl)
 }
 
+/** Hash fragment for a content URL; short-id in local IDB when over 2048 chars. */
+export async function contenttohashfragment(
+  compressed: string,
+): Promise<string> {
+  if (compressed.length > 2048) {
+    return await writelocalurl(compressed)
+  }
+  return compressed
+}
+
 // read / write from window url #hash
 
 function readurlhash(player: string) {
@@ -169,14 +179,14 @@ export async function storagewritecontent(
     }
     return
   }
-  if (compressed.length > 2048) {
-    const short = await writelocalurl(compressed)
-    return storagewritecontent(player, label, longcontent, short, books)
+  const fragment = await contenttohashfragment(compressed)
+  if (fragment !== compressed) {
+    return storagewritecontent(player, label, longcontent, fragment, books)
   }
-  const newurlhash = `#${compressed}`
+  const newurlhash = `#${fragment}`
   if (location.hash !== newurlhash) {
     // saving current state, don't interrupt the user
-    currenturlhash = compressed
+    currenturlhash = fragment
     location.hash = newurlhash
     const msg = `wrote ${longcontent.length} chars [${longcontent.slice(0, 8)}...${longcontent.slice(-8)}]`
     if (!label.includes('autosave')) {

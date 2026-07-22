@@ -2,16 +2,26 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import {
   assertzedcafeexportvalid,
+  isallowedexportpath,
   kebabcasezedcafedirname,
   kebabcasezedcafenameportion,
   validatezedcafeexportpaths,
   ZED_CAFE_EXPORT_ALLOWED_PATH,
 } from 'zss/feature/wanix/zedcafetreeschema'
-import { buildzedcafeexportfiles } from 'zss/feature/wanix/wanixstateexport'
+import {
+  buildzedcafebookflagfiles,
+  buildzedcafeexportfiles,
+} from 'zss/feature/wanix/wanixstateexport'
 import type { BOOK, CODE_PAGE } from 'zss/memory/types'
 
 jest.mock('zss/device/wanixclient/wanixroom', () => ({
   readwanixroomconfig: jest.fn(() => ({ mode: 'task' })),
+}))
+
+jest.mock('zss/memory/bookoperations', () => ({
+  memoryreadbookflags: jest.fn((_book: unknown, name: string) => ({
+    owner: name,
+  })),
 }))
 
 jest.mock('zss/memory/session', () => ({
@@ -74,6 +84,43 @@ describe('zedcafetreeschema', () => {
     expect(kebabcasezedcafedirname('key', 'sid_8FzEX_FvcYV1')).toBe(
       'key-sid_8FzEX_FvcYV1',
     )
+  })
+
+  it('rejects sim-only flag paths', () => {
+    expect(isallowedexportpath('demo-b1/flags/pid_1.json')).toBe(true)
+    expect(isallowedexportpath('demo-b1/flags/pid_1_chip.json')).toBe(false)
+    expect(isallowedexportpath('demo-b1/flags/pid_1_gadget.json')).toBe(false)
+    expect(isallowedexportpath('demo-b1/flags/board1_synth.json')).toBe(false)
+    expect(isallowedexportpath('demo-b1/flags/board1_layers.json')).toBe(false)
+    expect(isallowedexportpath('demo-b1/flags/board1_tracking.json')).toBe(false)
+    const blocked = validatezedcafeexportpaths([
+      {
+        path: 'demo-b1/flags/pid_1_chip.json',
+        bytes: encodetext('{}'),
+      },
+    ])
+    expect(blocked.ok).toBe(false)
+    expect(
+      blocked.errors.some((err) => err.includes('path outside schema')),
+    ).toBe(true)
+  })
+
+  it('omits sim-only flags from buildzedcafebookflagfiles', () => {
+    const book = {
+      id: 'book1',
+      name: 'demo',
+      token: 'tok',
+      timestamp: 1,
+      activelist: [],
+      pages: [],
+      flags: {
+        pid_1: 'pid_1',
+        pid_1_chip: 'pid_1_chip',
+        board1_synth: 'board1_synth',
+      },
+    } as BOOK
+    const files = buildzedcafebookflagfiles(book)
+    expect(files.map((file) => file.path)).toEqual(['demo-book1/flags/pid_1.json'])
   })
 
   it('rejects paths outside schema', () => {
