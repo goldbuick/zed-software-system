@@ -105,7 +105,8 @@ constexpr float kDrumBusGain = 2.440f;
 /** Main fader: 20*log10(vol*0.25) + offset. Was -35; +20 dB (post-comp listen).
  */
 constexpr float kMainFaderOffsetDb = -15.f;
-/** TTS and bgplay share the same SAB dB law (see readttsvolume / readbgplayvolume). */
+/** TTS and bgplay share the same SAB dB law (see readttsvolume /
+ * readbgplayvolume). */
 
 constexpr float kScMakeupDb = 24.f;
 constexpr float kScAttackSec = 0.005f;

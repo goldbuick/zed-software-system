@@ -97,7 +97,8 @@ void sidechainupdate(float signal) {
 float sidechaingain() { return 1.f + (g_engine.sc_gainlinear - 1.f) * kScMix; }
 
 float readttsvolume() {
-  // Same dB law as readbgplayvolume() so #ttsvol and #bgvol share the 0-100 scale.
+  // Same dB law as readbgplayvolume() so #ttsvol and #bgvol share the 0-100
+  // scale.
   float vol = readctrl(off_main() + 2);
   if (vol <= 0.001f) {
     return 0.f;
