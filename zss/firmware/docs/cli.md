@@ -44,8 +44,8 @@ Firmware command signatures stay short. Longer inline help for autocomplete hint
 |---------|-------------|
 | `dev` | Halt execution (operator) |
 | `share` | Share game (operator) |
-| `save` | Flush (operator) |
-| `fork` | Fork to new address (operator) |
+| `save` | Flush (persist); non-operator bookmarks a solo copy |
+| `fork` | Fork to new tab (persist); non-operator opens a solo copy |
 | `nuke` | Nuke game (operator) |
 | `endgame` | Logout |
 | `restart` | Restart game (operator) |

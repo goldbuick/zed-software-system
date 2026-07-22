@@ -1,4 +1,9 @@
-import { registerforkmem, registersavemem, workstatus } from 'zss/device/api'
+import {
+  registerbookmarkcontentsave,
+  registerforkmem,
+  registersavemem,
+  workstatus,
+} from 'zss/device/api'
 import type { DEVICELIKE } from 'zss/device/types'
 import { MOSTLY_ZZT_META, museumofzztscreenshoturl } from 'zss/feature/url'
 import { zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
@@ -15,6 +20,13 @@ import { memorycompressbooks } from 'zss/memory/utilities'
 
 export const ZZT_BRIDGE = `$176$176$177$177$178 ZZT BRIDGE $178$177$177$176$176`
 
+function localcalendardate(d = new Date()): string {
+  const y = d.getFullYear()
+  const m = `${d.getMonth() + 1}`.padStart(2, '0')
+  const day = `${d.getDate()}`.padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
 export async function savestate(vm: DEVICELIKE, autosave?: boolean) {
   const books = memoryreadbooklist()
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
@@ -27,14 +39,30 @@ export async function savestate(vm: DEVICELIKE, autosave?: boolean) {
   }
 }
 
-export async function forkstate(vm: DEVICELIKE, transfer: string) {
+/** Non-operator personal save: compress host books into a URL bookmark on the requester. */
+export async function savebookmarkstate(vm: DEVICELIKE, player: string) {
   const books = memoryreadbooklist()
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (books.length && ispresent(mainbook)) {
-    const operator = memoryreadoperator()
-    workstatus(vm, operator, 'compress url')
+    workstatus(vm, player, 'compress url')
+    const compressed = await memorycompressbooks(books)
+    const bookmarkname = `save of ${mainbook.name} on ${localcalendardate()}`
+    registerbookmarkcontentsave(vm, player, bookmarkname, compressed)
+  }
+}
+
+export async function forkstate(
+  vm: DEVICELIKE,
+  transfer: string,
+  player?: string,
+) {
+  const books = memoryreadbooklist()
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (books.length && ispresent(mainbook)) {
+    const target = player ?? memoryreadoperator()
+    workstatus(vm, target, 'compress url')
     const content = await memorycompressbooks(books)
-    registerforkmem(vm, operator, content, transfer)
+    registerforkmem(vm, target, content, transfer)
   }
 }
 

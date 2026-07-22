@@ -3,8 +3,12 @@ import { apierror, workstatus } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
 import type { MESSAGE } from 'zss/device/types'
 import { itchiopublish } from 'zss/feature/itchiopublish'
-import { storagenukecontent, storagewritecontent } from 'zss/feature/storage'
-import { shorturl, znsset } from 'zss/feature/url'
+import {
+  contenttohashfragment,
+  storagenukecontent,
+  storagewritecontent,
+} from 'zss/feature/storage'
+import { isjoin, shorturl, znsset } from 'zss/feature/url'
 import { write } from 'zss/feature/writeui'
 import {
   zssheaderlines,
@@ -56,16 +60,21 @@ export function handlesavemem(device: DEVICE, message: MESSAGE): void {
   })
 }
 
-export function handleforkmem(_device: DEVICE, message: MESSAGE): void {
-  if (isarray(message.data)) {
-    const [maybecontent, maybeaddress] = message.data
-    if (isstring(maybecontent) && isstring(maybeaddress)) {
-      const url = maybeaddress
-        ? `https://${maybeaddress}/#${maybecontent}`
-        : location.href.replace(/#.*/, `#${maybecontent}`)
-      window.open(url, '_blank')
+export function handleforkmem(device: DEVICE, message: MESSAGE): void {
+  doasync(device, message.player, async function () {
+    if (isarray(message.data)) {
+      const [maybecontent, maybeaddress] = message.data
+      if (isstring(maybecontent) && isstring(maybeaddress)) {
+        const fragment = await contenttohashfragment(maybecontent)
+        const url = maybeaddress
+          ? `https://${maybeaddress}/#${fragment}`
+          : isjoin()
+            ? `${location.origin}/#${fragment}`
+            : location.href.replace(/#.*/, `#${fragment}`)
+        window.open(url, '_blank')
+      }
     }
-  }
+  })
 }
 
 export function handlepublishmem(device: DEVICE, message: MESSAGE): void {
