@@ -1,0 +1,21 @@
+{
+  "artifacts": {
+    "markdown": {
+      "contentNegotiation": "text/markdown",
+      "pattern": "https://zed.cafe/docs/{route}.md"
+    },
+    "llmsFullTxt": "https://zed.cafe/docs/llms-full.txt",
+    "llmsTxt": "https://zed.cafe/docs/llms.txt",
+    "sitemap": "https://zed.cafe/docs/sitemap.xml"
+  },
+  "description": "Architecture, glossary, and developer docs for Zed Cafe / Zed Software System.",
+  "generator": "blume@1.1.3",
+  "name": "ZSS System Reference",
+  "site": "https://zed.cafe",
+  "contentUsage": {
+    "search": true,
+    "ai-input": true,
+    "ai-train": true
+  },
+  "repository": "https://github.com/goldbuick/zed-software-system"
+}

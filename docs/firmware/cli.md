@@ -1,0 +1,100 @@
+---
+title: cli.ts
+---
+
+**Purpose**: Defines `CLI_FIRMWARE` — command-line interface commands for system management, book/page operations, export, multiplayer, ZNS, and editing tools. Most commands are operator-only.
+
+## Command help in the editor / terminal
+
+Firmware command signatures stay short. Longer inline help for autocomplete hints can be added as Markdown under [`zss/rom/editor/commands/<command>.md`](../../rom/editor/commands/) (bundled via Vite `import.meta.glob` into [`zss/rom/contentmap.ts`](../../rom/contentmap.ts)). The UI reads these through [`commandromhint`](../../screens/tape/commandarghints.ts) (`editor:commands:<lowercase name>`).
+
+## Dependencies
+
+- `zss/device/api` — API layer (vm*, bridge*, register*, etc.)
+- `zss/device/modem` — modemwriteinitstring
+- `zss/rom` — romparse, romprint, romread
+- `zss/feature/url` — znslogin, znslist, znsdelete, etc.
+- `zss/feature/zsstextui` — layout lines; `zss/feature/writeui` — write, hyperlinks, QR, copy
+- `zss/memory/*` — book/page/board/codepage operations
+
+## Command Categories
+
+### Messaging
+
+| Command | Args | Description |
+|---------|------|-------------|
+| `help` | — | Open reference scroll |
+*(shortsend, send, stat, text, hyperlink are not documented here)*
+
+### Book & Page Management
+
+| Command | Description |
+|---------|-------------|
+| `bookrename` | Rename main book (operator) |
+| `booktrash` | Delete book by address (operator) |
+| `pages` | List pages in open book(s) |
+| `pageopen` | Open code editor for page; writes modem init string |
+| `pagetrash` | Delete page from main book (operator) |
+| `books` | List books |
+| `boards` | List boards |
+| `boardopen` | Teleport player to board by stat |
+| `trash` | Show trash menu (books + pages) |
+
+### Game State
+
+| Command | Description |
+|---------|-------------|
+| `dev` | Halt execution (operator) |
+| `share` | Share game (operator) |
+| `save` | Flush (persist); non-operator bookmarks a solo copy |
+| `fork` | Fork to new tab (persist); non-operator opens a solo copy |
+| `nuke` | Nuke game (operator) |
+| `endgame` | Logout |
+| `restart` | Restart game (operator) |
+
+### Export
+
+| Command | Description |
+|---------|-------------|
+| `export` | Show export menu |
+| `bookexport` | Show book export options |
+| `bookallexport` | Download full book JSON |
+| `pageexport` | Download page JSON |
+| `itchiopublish` | Publish to Itch.io |
+
+### Editing
+
+| Command | Description |
+|---------|-------------|
+| `gadget` | Toggle inspector |
+| `findany` | Find elements at points (optional selection) |
+
+### Discovery
+
+| Command | Args | Description |
+|---------|------|-------------|
+| `zztsearch` | [field] text | Search ZZT worlds |
+| `zztrandom` | — | Get random ZZT world |
+
+### Multiplayer
+
+| Command | Args | Description |
+|---------|------|-------------|
+| `admin` | — | Open admin panel |
+| `joincode` | [hidden] | Start multiplayer (operator) |
+| `jointab` | [hidden] | Join via tab |
+| `chat` | [channel] | Start/stop chat |
+| `broadcast` | [streamkey] | Start/stop stream |
+
+### ZNS (namespace redirects)
+
+| Command | Args | Description |
+|---------|------|-------------|
+| `zns` | … | Bare `#zns` → menu (login guide, or publish/import when logged in). Login: `#zns <email> <namespace>`, then `#zns <code>`. Subcommands: `login`, `restart`, `publish bytes\|book\|code`, `import code <key>`, `del`/`delete`. Peer auto-published on multiplayer connect. |
+
+
+## Internal State
+
+- `znstoken`, `znsemail` — ZNS login state (module-level)
+- `isoperator` — Checks if player === memoryreadoperator()
+- `vmflushop` — Flushes VM for operator

@@ -1,0 +1,6 @@
+/docs/*.md
+  Content-Type: text/markdown; charset=utf-8
+/docs/*.mdx
+  Content-Type: text/markdown; charset=utf-8
+/docs/*.txt
+  Content-Type: text/plain; charset=utf-8
