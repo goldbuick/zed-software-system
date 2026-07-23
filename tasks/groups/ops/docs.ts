@@ -7,6 +7,24 @@ import type { TaskContext, TaskDef } from '../../types'
 
 const LINKRE = /!?\[[^\]]*\]\(([^)]+)\)/g
 const SKIPSCHEMES = /^(https?:|mailto:|ftp:|tel:|data:|#)/i
+const CONTENTROOT = 'docs-site/content'
+
+function withinrepo(root: string, target: string): boolean {
+  return target === root || target.startsWith(`${root}/`)
+}
+
+/** Resolve Blume site paths (/wanix/zedsync) against docs-site/content. */
+function contentcandidates(root: string, sitopath: string): string[] {
+  const rel = sitopath.replace(/^\//, '')
+  const base = join(root, CONTENTROOT, rel)
+  return [
+    base,
+    `${base}.md`,
+    `${base}.mdx`,
+    join(base, 'index.md'),
+    join(base, 'index.mdx'),
+  ]
+}
 
 function checkrelative(
   root: string,
@@ -17,23 +35,39 @@ function checkrelative(
   if (!link) {
     return true
   }
+
+  if (link.startsWith('/')) {
+    for (const target of contentcandidates(root, link)) {
+      if (withinrepo(root, target) && existsSync(target)) {
+        return true
+      }
+    }
+    console.error(`  [✖] ${fromfile}: ${rawlink} → missing`)
+    return false
+  }
+
   const base = dirname(join(root, fromfile))
   let target: string
   try {
     target = join(base, decodeURIComponent(link))
-    if (!target.startsWith(root)) {
-      console.error(`  [✖] ${fromfile}: ${rawlink} (escapes repo)`)
-      return false
-    }
   } catch {
     console.error(`  [✖] ${fromfile}: ${rawlink} (invalid path)`)
     return false
   }
-  if (!existsSync(target)) {
-    console.error(`  [✖] ${fromfile}: ${rawlink} → missing`)
+  if (withinrepo(root, target) && existsSync(target)) {
+    return true
+  }
+  // Repo-root paths (docs-placement): ops/fixtures/… from any markdown file.
+  const fromroot = join(root, decodeURIComponent(link))
+  if (withinrepo(root, fromroot) && existsSync(fromroot)) {
+    return true
+  }
+  if (!withinrepo(root, target) && !withinrepo(root, fromroot)) {
+    console.error(`  [✖] ${fromfile}: ${rawlink} (escapes repo)`)
     return false
   }
-  return true
+  console.error(`  [✖] ${fromfile}: ${rawlink} → missing`)
+  return false
 }
 
 function rundoclinks(ctx: TaskContext): number {
