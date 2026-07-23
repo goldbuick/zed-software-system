@@ -178,4 +178,28 @@ describe('wanixstateimport', () => {
     const parsed = parsezedcafeexportfiles(files)
     expect(parsed.guestTouch).toBe(true)
   })
+
+  it('throws a clear error when book pages[] contains null', () => {
+    const files = [
+      {
+        path: 'stats.json',
+        bytes: new TextEncoder().encode(
+          JSON.stringify({ books: [{ id: 'book1', name: 'demo' }] }),
+        ),
+      },
+      {
+        path: 'demo-book1/stats.json',
+        bytes: new TextEncoder().encode(
+          JSON.stringify({
+            id: 'book1',
+            name: 'demo',
+            pages: [null],
+          }),
+        ),
+      },
+    ]
+    expect(() => parsezedcafeexportfiles(files)).toThrow(
+      /book stats pages\[0\] is null or not an object/,
+    )
+  })
 })

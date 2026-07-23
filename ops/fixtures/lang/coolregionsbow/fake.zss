@@ -1,4 +1,5 @@
 @terrain fake
 @iswalkable
-@char 178
-@color dkyellow
+@char 176
+@color brown
+@bg black

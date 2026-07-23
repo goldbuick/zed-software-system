@@ -33,8 +33,11 @@ Empty peer is seeded from `zedcafe/` (no wipe). After `.zedsync/ready`, steady-s
 
 When `SteadyTick` / `SteadyTickIncremental` sees a path changed on **both**
 the peer and `zedcafe/` since the last baseline, the side with the **newer
-mtime** wins (`copytoz` or `copytor`). Equal mtime ties prefer the peer
-(`copytoz`) so hand-edits are not silently discarded. There is **no merge**.
+mtime** wins (`copytoz` or `copytor`). Equal mtime ties prefer **zedcafe**
+(`copytor`) so remount/equalized peer mtimes cannot stomp live export. Peer
+still wins when its mtime is **strictly newer**. Live player flag bags
+(`flags/pid_*.json`) never `copytoz` into `zedcafe/` (peer can still receive
+updates via `copytor`). There is **no merge**.
 
 Practical consequences for anything editing the peer directory directly
 (hand edits, another tool, a future agent):
@@ -51,6 +54,10 @@ Practical consequences for anything editing the peer directory directly
   [`wanixstateexport.ts`](zss/feature/wanix/wanixstateexport.ts)).
 - Multi-writer coordination (per-path leases so concurrent peers don't stomp
   each other) is **deferred**, not implemented — see Phase 4 note below.
+
+After seed, zedsync runs one **post-seed full tick**, then mostly incremental
+ticks with a **periodic full tick** every 30 polls so peer↔`zedcafe/` drift
+heals without emptying the peer.
 
 Peer-side crash recovery: `ops/fixtures/wanix/zedsync/journal.go` appends one
 NDJSON entry to `<remote>/.zedsync/journal.ndjson` immediately before each

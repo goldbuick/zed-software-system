@@ -2,13 +2,13 @@
 @isitem
 @notbreakable
 @cycle 1
-@char 176
-@color black
-@bg dkgreen
+@char 220
+@color green
+@bg black
 #end
 :touch
 #bgplay ta
 #give forestnote do
- A path is cleared through the forest.
+ You push through the bushes.
 #done
 #die

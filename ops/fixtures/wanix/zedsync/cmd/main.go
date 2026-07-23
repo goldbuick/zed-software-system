@@ -98,6 +98,17 @@ func main() {
 		}
 	}
 
+	// Seed is a union without deletes -- one full tick heals orphans/deletes.
+	fmt.Println("zedsync: post-seed full tick")
+	baseline, postlogs, err := zedsync.SteadyTick(target, zedroot, baseline)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "zedsync: post-seed full tick: %v\n", err)
+		os.Exit(1)
+	}
+	for _, line := range postlogs {
+		fmt.Printf("zedsync: %s\n", line)
+	}
+
 	if err := zedsync.WriteReadySentinel(target); err != nil {
 		fmt.Fprintf(os.Stderr, "zedsync: ready sentinel: %v\n", err)
 		os.Exit(1)
@@ -119,17 +130,32 @@ func main() {
 	interval := zedsync.PollInterval
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
+	pollcount := 0
 	for {
 		select {
 		case <-sigc:
 			return
 		case <-ticker.C:
-			next, logs, newrev, err := zedsync.SteadyTickIncremental(target, zedroot, baseline, lastrev)
-			if errors.Is(err, zedsync.ErrZedsyncNeedFullTick) {
+			pollcount++
+			var next zedsync.Snapshot
+			var logs []string
+			var newrev int64
+			var err error
+			if zedsync.UseFullTick(pollcount) {
+				fmt.Println("zedsync: periodic full tick")
 				next, logs, err = zedsync.SteadyTick(target, zedroot, baseline)
 				newrev = lastrev
 				if rev, _, rrerr := zedsync.ReadRevision(zedroot); rrerr == nil {
 					newrev = rev
+				}
+			} else {
+				next, logs, newrev, err = zedsync.SteadyTickIncremental(target, zedroot, baseline, lastrev)
+				if errors.Is(err, zedsync.ErrZedsyncNeedFullTick) {
+					next, logs, err = zedsync.SteadyTick(target, zedroot, baseline)
+					newrev = lastrev
+					if rev, _, rrerr := zedsync.ReadRevision(zedroot); rrerr == nil {
+						newrev = rev
+					}
 				}
 			}
 			if err != nil {

@@ -391,7 +391,7 @@ func TestWalkSkipsPlayerObjects(t *testing.T) {
 	}
 }
 
-func TestSteadyTickRemoteFlagEdit(t *testing.T) {
+func TestSteadyTickRemoteFlagEditDoesNotCopytoz(t *testing.T) {
 	dir := t.TempDir()
 	remote := filepath.Join(dir, "remote")
 	zedcafe := filepath.Join(dir, "zedcafe")
@@ -408,7 +408,7 @@ func TestSteadyTickRemoteFlagEdit(t *testing.T) {
 	newer := time.Now()
 	writefile(t, remote, flagpath, `{"ammo":500}`, newer)
 
-	next, logs, err := SteadyTick(remote, zedcafe, baseline)
+	_, logs, err := SteadyTick(remote, zedcafe, baseline)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -416,21 +416,13 @@ func TestSteadyTickRemoteFlagEdit(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if string(body) != `{"ammo":500}` {
-		t.Fatalf("zedcafe body=%q logs=%v", body, logs)
+	if string(body) != `{"ammo":0}` {
+		t.Fatalf("zedcafe must keep live flags, body=%q logs=%v", body, logs)
 	}
-	found := false
 	for _, line := range logs {
-		if strings.Contains(line, "update zedcafe") && strings.Contains(line, flagpath) {
-			found = true
-			break
+		if strings.Contains(line, "zedcafe <-") && strings.Contains(line, flagpath) {
+			t.Fatalf("player flags must not copytoz, logs=%v", logs)
 		}
-	}
-	if !found {
-		t.Fatalf("expected update zedcafe log, got %v", logs)
-	}
-	if _, ok := next[flagpath]; !ok {
-		t.Fatal("baseline missing flag path")
 	}
 }
 
@@ -505,18 +497,18 @@ func TestIncrementalPeerOnlyIdleAfterCopytoz(t *testing.T) {
 	_ = os.MkdirAll(remote, 0o755)
 	_ = os.MkdirAll(zedcafe, 0o755)
 	mtime := time.Now().Add(-time.Minute)
-	flagpath := "flags/pid_1.json"
-	body := `{"ammo":0}`
-	writefile(t, remote, flagpath, body, mtime)
-	writefile(t, zedcafe, flagpath, body, mtime)
+	rel := "demo-book1/page/board/terrain.json"
+	body := `[{"kind":"empty"}]`
+	writefile(t, remote, rel, body, mtime)
+	writefile(t, zedcafe, rel, body, mtime)
 	baseline, err := WalkFiles(remote)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	newer := time.Now()
-	edited := `{"ammo":500}`
-	writefile(t, remote, flagpath, edited, newer)
+	edited := `[{"kind":"water"}]`
+	writefile(t, remote, rel, edited, newer)
 
 	next, logs, err := steadytickincrementalpeeronly(remote, zedcafe, baseline)
 	if err != nil {
@@ -525,20 +517,20 @@ func TestIncrementalPeerOnlyIdleAfterCopytoz(t *testing.T) {
 	if len(logs) != 1 || !strings.Contains(logs[0], "update zedcafe") {
 		t.Fatalf("first tick logs=%v want one copytoz", logs)
 	}
-	remotemeta, err := statmeta(remote, flagpath)
+	remotemeta, err := statmeta(remote, rel)
 	if err != nil {
 		t.Fatal(err)
 	}
-	basemeta, ok := next[flagpath]
+	basemeta, ok := next[rel]
 	if !ok {
-		t.Fatal("baseline missing flag path after copytoz")
+		t.Fatal("baseline missing path after copytoz")
 	}
 	if !basemeta.Mtime.Equal(remotemeta.Mtime) {
 		t.Fatalf("baseline mtime=%v want remote=%v (must prefer source meta)", basemeta.Mtime, remotemeta.Mtime)
 	}
 
 	// Dest mtime drifted (failed Chtimes); peer file unchanged.
-	writefile(t, zedcafe, flagpath, edited, time.Now().Add(time.Hour))
+	writefile(t, zedcafe, rel, edited, time.Now().Add(time.Hour))
 
 	_, logs2, err := steadytickincrementalpeeronly(remote, zedcafe, next)
 	if err != nil {
@@ -808,8 +800,8 @@ func TestCopytozSkippedWhenContentEqualMtimeDrift(t *testing.T) {
 	_ = os.MkdirAll(remote, 0o755)
 	_ = os.MkdirAll(zedcafe, 0o755)
 	old := time.Now().Add(-time.Hour)
-	body := `{"ammo":1}`
-	rel := "flags/pid_1.json"
+	body := `[{"kind":"empty"}]`
+	rel := "demo-book1/page/board/terrain.json"
 	writefile(t, remote, rel, body, old)
 	writefile(t, zedcafe, rel, body, old)
 	baseline, err := WalkFiles(remote)
@@ -949,5 +941,108 @@ func TestPartialApplyUpdatesBaselineOnFailure(t *testing.T) {
 		if strings.Contains(line, "a.json") {
 			t.Fatalf("must not re-schedule a.json, logs=%v", logs2)
 		}
+	}
+}
+
+func TestFullTickEveryConstant(t *testing.T) {
+	if FullTickEvery != 30 {
+		t.Fatalf("FullTickEvery=%d want 30", FullTickEvery)
+	}
+}
+
+func TestUseFullTick(t *testing.T) {
+	if UseFullTick(0) {
+		t.Fatal("poll 0 must not full-tick")
+	}
+	if UseFullTick(1) {
+		t.Fatal("poll 1 must be incremental")
+	}
+	if !UseFullTick(FullTickEvery) {
+		t.Fatalf("poll %d must full-tick", FullTickEvery)
+	}
+	if !UseFullTick(FullTickEvery * 2) {
+		t.Fatalf("poll %d must full-tick", FullTickEvery*2)
+	}
+	if UseFullTick(FullTickEvery + 1) {
+		t.Fatal("off-cycle poll must be incremental")
+	}
+}
+
+func TestIsPlayerFlagPath(t *testing.T) {
+	if !isplayerflagpath("book/flags/pid_1.json") {
+		t.Fatal("expected player flag path")
+	}
+	if isplayerflagpath("book/flags/pid_1_chip.json") {
+		t.Fatal("sim-only chip must not count as player flag for copytoz block")
+	}
+	if isplayerflagpath("book/page/board/objects/pid_1.json") {
+		t.Fatal("board objects are not flag paths")
+	}
+}
+
+func TestPlanopNeverCopytozPlayerFlags(t *testing.T) {
+	rel := "demo-book1/flags/pid_1.json"
+	now := time.Now().UTC()
+	older := now.Add(-time.Hour)
+	bm := FileMeta{Rel: rel, Size: 2, Mtime: older}
+	rm := FileMeta{Rel: rel, Size: 3, Mtime: now} // peer strictly newer
+	zm := FileMeta{Rel: rel, Size: 2, Mtime: older}
+	op, needed := planop(rel, bm, true, rm, true, zm, true)
+	if needed {
+		t.Fatalf("player flags must not copytoz, got %+v", op)
+	}
+	// copytor still allowed when zedcafe is the only change
+	rm2 := FileMeta{Rel: rel, Size: 2, Mtime: older}
+	zm2 := FileMeta{Rel: rel, Size: 9, Mtime: now}
+	op, needed = planop(rel, bm, true, rm2, true, zm2, true)
+	if !needed || op.kind != "copytor" {
+		t.Fatalf("want copytor when zedcafe newer, got needed=%v op=%+v", needed, op)
+	}
+}
+
+func TestPlanopEqualMtimePrefersZedcafe(t *testing.T) {
+	rel := "book/a.json"
+	now := time.Now().UTC()
+	older := now.Add(-time.Hour)
+	bm := FileMeta{Rel: rel, Size: 1, Mtime: older}
+	same := now
+	rm := FileMeta{Rel: rel, Size: 10, Mtime: same}
+	zm := FileMeta{Rel: rel, Size: 20, Mtime: same}
+	op, needed := planop(rel, bm, true, rm, true, zm, true)
+	if !needed || op.kind != "copytor" {
+		t.Fatalf("equal mtime conflict must prefer zedcafe copytor, got needed=%v op=%+v", needed, op)
+	}
+	// Peer strictly newer still copytoz
+	rm2 := FileMeta{Rel: rel, Size: 10, Mtime: now.Add(time.Minute)}
+	zm2 := FileMeta{Rel: rel, Size: 20, Mtime: now}
+	op, needed = planop(rel, bm, true, rm2, true, zm2, true)
+	if !needed || op.kind != "copytoz" {
+		t.Fatalf("strictly newer peer must copytoz, got needed=%v op=%+v", needed, op)
+	}
+}
+
+func TestSeedSkipsCopytozPlayerFlags(t *testing.T) {
+	ResetJournalRevForTest()
+	dir := t.TempDir()
+	remote := filepath.Join(dir, "remote")
+	zedcafe := filepath.Join(dir, "zedcafe")
+	_ = os.MkdirAll(filepath.Join(remote, "book", "flags"), 0o755)
+	_ = os.MkdirAll(zedcafe, 0o755)
+	mtime := time.Now()
+	writefile(t, remote, "book/flags/pid_1.json", `{"ammo":1}`, mtime)
+	r, err := WalkFiles(remote)
+	if err != nil {
+		t.Fatal(err)
+	}
+	z := Snapshot{}
+	n, err := InitialSeed(remote, zedcafe, r, z)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n != 0 {
+		t.Fatalf("seed copied %d files, want 0 (player flags blocked)", n)
+	}
+	if _, err := os.Stat(filepath.Join(zedcafe, "book", "flags", "pid_1.json")); !os.IsNotExist(err) {
+		t.Fatal("player flags must not land in zedcafe from empty-zedcafe seed")
 	}
 }

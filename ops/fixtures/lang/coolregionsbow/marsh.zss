@@ -1,3 +1,5 @@
 @board marsh
 @exitsouth room1x0
 @exiteast cave
+@startx 30
+@starty 20

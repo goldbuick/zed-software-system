@@ -1,0 +1,5 @@
+@board room0x0
+@exitsouth room0x1
+@exiteast room1x0
+@startx 30
+@starty 12

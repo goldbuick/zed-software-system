@@ -21,11 +21,9 @@ import {
   writewanixtermdump,
   writewanixtermstatus,
 } from 'zss/device/wanixclient/wanixtermhandlers'
-import {
-  iszedsynctaskid,
-  startwanixzedsync,
-} from 'zss/device/wanixclient/wanixzedsync'
+import { startwanixzedsync } from 'zss/device/wanixclient/wanixzedsync'
 import { clearzedsynchalt } from 'zss/device/wanixclient/wanixzedsynchalt'
+import { iszedsynctaskid } from 'zss/device/wanixclient/wanixzedsyncready'
 import { FIRMWARE } from 'zss/firmware'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
@@ -184,18 +182,16 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
             )
             break
           }
-          void startwanixzedsync(
-            SOFTWARE,
-            player,
-            String(targetpath).trim(),
-          ).catch((err) => {
+          try {
+            startwanixzedsync(SOFTWARE, player, String(targetpath).trim())
+          } catch (err) {
             apierror(
               SOFTWARE,
               player,
               'wanix',
               err instanceof Error ? err.message : String(err),
             )
-          })
+          }
           break
         }
         case 'bridge': {

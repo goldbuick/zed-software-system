@@ -6,12 +6,14 @@ import {
   wanixserverwritefile,
 } from 'zss/device/api'
 import {
-  beginzedsyncreadywait,
-  cancelzedsyncreadywait,
-  iszedsyncreadywaitpending,
   startwanixzedsync,
   WANIX_ZEDSYNC_WASM_URL,
 } from 'zss/device/wanixclient/wanixzedsync'
+import {
+  beginzedsyncreadywait,
+  cancelzedsyncreadywait,
+  iszedsyncreadywaitpending,
+} from 'zss/device/wanixclient/wanixzedsyncready'
 import {
   clearzedsynchalt,
   iszedsynchaltholding,
@@ -93,30 +95,30 @@ describe('startwanixzedsync gates', () => {
     memorywritehalt(false)
   })
 
-  it('rejects empty targetpath', async () => {
-    await expect(startwanixzedsync(device, player, '  ')).rejects.toThrow(
+  it('rejects empty targetpath', () => {
+    expect(() => startwanixzedsync(device, player, '  ')).toThrow(
       /usage: #wanix zedsync/,
     )
     expect(mockspawntask).not.toHaveBeenCalled()
   })
 
-  it('rejects spaces in targetpath', async () => {
-    await expect(
-      startwanixzedsync(device, player, 'my folder'),
-    ).rejects.toThrow(/must not contain spaces/)
+  it('rejects spaces in targetpath', () => {
+    expect(() => startwanixzedsync(device, player, 'my folder')).toThrow(
+      /must not contain spaces/,
+    )
     expect(mockspawntask).not.toHaveBeenCalled()
   })
 
-  it('rejects zedcafe as targetpath', async () => {
-    await expect(startwanixzedsync(device, player, 'zedcafe')).rejects.toThrow(
+  it('rejects zedcafe as targetpath', () => {
+    expect(() => startwanixzedsync(device, player, 'zedcafe')).toThrow(
       /must not be zedcafe/,
     )
     expect(mockspawntask).not.toHaveBeenCalled()
   })
 
-  it('emits spawn with stageurl and does not start ready wait yet', async () => {
+  it('emits spawn with stageurl and does not start ready wait yet', () => {
     setwanixroomconfig(createidleroomconfig())
-    await startwanixzedsync(device, player, 'MyFolder')
+    startwanixzedsync(device, player, 'MyFolder')
     expect(mockapplyroom).not.toHaveBeenCalled()
     expect(mockwritefile).not.toHaveBeenCalled()
     expect(mockspawntask).toHaveBeenCalledWith(
@@ -156,9 +158,9 @@ describe('startwanixzedsync gates', () => {
     expect(mockstopzedcafepoll).not.toHaveBeenCalled()
   })
 
-  it('sets soft halt while spawning zedsync', async () => {
+  it('sets soft halt while spawning zedsync', () => {
     expect(memoryreadhalt()).toBe(false)
-    await startwanixzedsync(device, player, 'MyFolder')
+    startwanixzedsync(device, player, 'MyFolder')
     expect(iszedsynchaltholding()).toBe(true)
     expect(memoryreadhalt()).toBe(true)
   })

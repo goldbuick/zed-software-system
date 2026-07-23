@@ -195,7 +195,7 @@ describe('wanixstateexport', () => {
     expect(decodefilebytes(files[0]!.bytes)).toEqual(terrain)
   })
 
-  it('splitboardexport omits pid_* player objects', () => {
+  it('splitboardexport includes pid_* player objects', () => {
     const files = splitboardexport({
       objects: {
         pid_1: { kind: 'player', id: 'pid_1' },
@@ -208,7 +208,7 @@ describe('wanixstateexport', () => {
       true,
     )
     expect(files.some((file) => file.path === 'board/objects/pid_1.json')).toBe(
-      false,
+      true,
     )
   })
 

@@ -1,0 +1,67 @@
+---
+description: Ban fallback / graceful-degradation paths as workarounds for bugs or missing data
+alwaysApply: true
+---
+
+# No fallbacks as a fix
+
+Do **not** add fallback logic to paper over a bug, missing data, a race, or a failing primary path. Fix the owner of the primary path. Do not ask to “ship a fallback to be safe.”
+
+## What counts as prohibited
+
+- **Alternate code paths** when the primary path fails (`try/catch` → different behavior, `if (!ready) useStale…`, retry-then-fallback).
+- **Silent defaults** that hide a real failure (`??` / `||` / empty sentinel when the value must exist; swallow errors and continue).
+- **Graceful degradation** that masks a broken owner instead of fixing that owner.
+- **Timeout-or-fallback** branches that substitute synthetic behavior when the real async path does not complete.
+- **Defense-in-depth stacks** — primary fix unclear, so add a second path “just in case.”
+
+```typescript
+// ❌ BAD — mask missing export with a hardcoded / stale bundle
+const bundle = await loadexport() ?? FALLBACK_BUNDLE
+
+// ✅ GOOD — fix the ready gate; fail loud if export is missing
+await waitzedcafeexportready()
+const bundle = await loadexport()
+```
+
+```typescript
+// ❌ BAD — catch sync failure and “resync” via unrelated paint/push
+onedit(() => {
+  try {
+    sync()
+  } catch {
+    boardrunnerpushupdates()
+    gadgetsynctick()
+  }
+})
+
+// ✅ GOOD — fix the edit path that skips invalidation at its owner
+```
+
+## Required instead
+
+1. **Root cause** — why the primary path fails (see `no-new-systems-for-bugs.mdc`).
+2. **Fix the owner** — smallest change in the module that should produce the correct value.
+3. **Fail loud** — throw, return an error channel, or surface to the tape — do not invent a quieter path.
+
+## Allowed (not workarounds)
+
+| Use | Why it is OK |
+|-----|----------------|
+| Optional config / absent **user** input | Empty collections, default flags when the feature is intentionally optional |
+| Domain sentinels that are the **real** empty state | e.g. no players yet — not “export failed so use yesterday’s tree” |
+| Instrumentation | Logs / traces to diagnose — no behavior substitute |
+| Explicit product request | User asked for a placeholder / offline mode in the task — note it as intentional product behavior, not a bug bandage |
+| Extending an **existing documented** pattern in the same module | Matching neighbors — not introducing a new fallback layer |
+
+## Agent checklist
+
+Before adding `??`, `||`, catch-and-continue, timeout-then-fake, or a second code path:
+
+1. Is this compensating for a **bug, race, or missing primary value**? → **Do not add it.** Fix the primary path.
+2. Is this optional user/config input with a real empty meaning? → OK.
+3. Unsure? Treat it as prohibited; fix the owner or stop and ask whether the product should **define** a deliberate alternate mode (not a silent workaround).
+
+Do not combine a speculative primary tweak **and** a fallback in the same change.
+
+Supersedes the former “ask before fallbacks” guidance: workarounds are banned, not negotiable by default.

@@ -1,0 +1,60 @@
+---
+description: Ban dynamic import as a workaround for cycles, load order, or soft deps
+alwaysApply: true
+---
+
+# No dynamic imports as a fix
+
+Do **not** use `import()`, `await import()`, or `void import().then(...)` to paper over a design problem (circular modules, init order, “soft” coupling). Break the graph instead.
+
+## What counts as prohibited
+
+Using dynamic import to:
+
+- **Break a circular dependency** between modules that call each other
+- **Defer a side-effect import** so “the other file finishes loading first”
+- **Hide a same-side call** that should be a static import after a leaf split or clearer ownership
+- **Avoid typing / bundler pain** from a cycle you have not fixed
+
+```typescript
+// ❌ BAD — room soft-imports zedsync to dodge a cycle
+void import('zss/device/wanixclient/wanixzedsync').then((mod) => {
+  if (mod.iszedsyncreadywaitpending()) {
+    mod.cancelzedsyncreadywait(reason)
+  }
+})
+
+// ✅ GOOD — leaf module both sides static-import (e.g. wanixzedsyncready.ts)
+import {
+  cancelzedsyncreadywait,
+  iszedsyncreadywaitpending,
+} from 'zss/device/wanixclient/wanixzedsyncready'
+```
+
+## Required instead
+
+1. **Name the cycle** — A imports B imports A (or longer).
+2. **Extract a leaf** — shared state/helpers that import neither orchestrator (see `wanixzedsynchalt` / `wanixzedsyncready`).
+3. **Or invert ownership** — register a callback; the lower layer never imports the higher one.
+4. **Static imports** once the graph is acyclic.
+
+Prefer fixing the module graph over async `import()` “just in case.”
+
+## Allowed (not workarounds)
+
+| Use | Where |
+|-----|--------|
+| **Citty task registry safety** | `await import(...)` **inside** `handler()` in `tasks/groups/` so `yarn task list` does not load `zss/*` at registry import time — see `task-manifest.mdc` |
+| **Lazy loaders shared by many tasks** | `tasks/lib/` patterns already documented (`loaddaisyparityruntime`, etc.) |
+| **True product code-splitting** | Explicit bundle/route split the user asked for — not a cycle bandage |
+| **Tests** | Dynamic import only when the test intentionally isolates module init |
+
+## Agent checklist
+
+Before adding `import(` / `await import(` in `zss/`, `cafe/`, or `ops/lib/`:
+
+1. Is this avoiding a **cycle or load-order** issue? → **Stop**; extract a leaf or invert deps.
+2. Is this a **documented task-handler lazy load**? → OK.
+3. Unsure? Treat it as prohibited and ask before shipping.
+
+Do not grow new dynamic-import edges next to existing static imports of the same module — that usually means the cycle is already half-fixed and needs a leaf, not another `await import`.

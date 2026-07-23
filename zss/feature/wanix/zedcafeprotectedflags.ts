@@ -27,7 +27,7 @@ export function issimonlyflagpath(path: string): boolean {
   return issimonlyflagowner(owner)
 }
 
-/** Player avatar objects under board/objects/pid_*.json — never peer-sync. */
+/** Player avatar objects under board/objects/pid_*.json — export mirror only; never peer-sync or import-overwrite. */
 export function isplayerobjectpath(path: string): boolean {
   const segments = path.split('/')
   if (

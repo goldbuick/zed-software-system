@@ -1,7 +1,5 @@
-import {
-  isplayerobjectpath,
-  issimonlyflagpath,
-} from 'zss/feature/wanix/zedcafeprotectedflags'
+import { issimonlyflagpath } from 'zss/feature/wanix/zedcafeprotectedflags'
+import { ispresent } from 'zss/mapping/types'
 import { memoryreadcodepagename } from 'zss/memory/codepageoperations'
 import { BOARD_SIZE } from 'zss/memory/types'
 import type { BOOK, CODE_PAGE } from 'zss/memory/types'
@@ -99,7 +97,7 @@ export function isallowedexportpath(path: string): boolean {
   }
   for (let i = 0; i < ZED_CAFE_EXPORT_ALLOWED_PATH.length; ++i) {
     if (ZED_CAFE_EXPORT_ALLOWED_PATH[i].test(path)) {
-      if (issimonlyflagpath(path) || isplayerobjectpath(path)) {
+      if (issimonlyflagpath(path)) {
         return false
       }
       return true
@@ -143,6 +141,14 @@ function validatestructure(
   const bookrefs = rootstats.books ?? []
   for (let i = 0; i < bookrefs.length; ++i) {
     const bookref = bookrefs[i]
+    if (!ispresent(bookref) || typeof bookref !== 'object') {
+      errors.push(`root stats books[${i}] is null or not an object`)
+      continue
+    }
+    if (typeof bookref.id !== 'string' || !bookref.id) {
+      errors.push(`root stats books[${i}] is null or missing id`)
+      continue
+    }
     const bookdirname = kebabcasezedcafedirname(bookref.name, bookref.id)
     const bookpath = `${bookdirname}/stats.json`
     const bookbytes = index.get(bookpath)
@@ -174,6 +180,16 @@ function validatestructure(
     const pagerefs = bookmeta.pages ?? []
     for (let j = 0; j < pagerefs.length; ++j) {
       const pageref = pagerefs[j]
+      if (!ispresent(pageref) || typeof pageref !== 'object') {
+        errors.push(
+          `book stats pages[${j}] is null or not an object: ${bookpath}`,
+        )
+        continue
+      }
+      if (typeof pageref.id !== 'string' || !pageref.id) {
+        errors.push(`book stats pages[${j}] is null or missing id: ${bookpath}`)
+        continue
+      }
       const pageprefix = `${bookdirname}/${kebabcasezedcafedirname(pageref.name, pageref.id)}`
       const pagepath = `${pageprefix}/stats.json`
       if (!index.has(pagepath)) {

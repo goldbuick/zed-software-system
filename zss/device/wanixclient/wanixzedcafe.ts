@@ -44,7 +44,7 @@ import {
   setzedcafepollactive,
 } from 'zss/device/wanixclient/state'
 import { readwanixroomconfig } from 'zss/device/wanixclient/wanixroom'
-import { iszedsyncreadywaitpending } from 'zss/device/wanixclient/wanixzedsync'
+import { iszedsyncreadywaitpending } from 'zss/device/wanixclient/wanixzedsyncready'
 import {
   wanixperfdelta,
   wanixperfmark,

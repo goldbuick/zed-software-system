@@ -244,6 +244,12 @@ export function parsezedcafeexportfiles(
   const bookrefs = rootstats?.books ?? []
   for (let i = 0; i < bookrefs.length; ++i) {
     const bookref = bookrefs[i]
+    if (!ispresent(bookref) || typeof bookref !== 'object') {
+      throw new Error(`root stats books[${i}] is null or not an object`)
+    }
+    if (typeof bookref.id !== 'string' || !bookref.id) {
+      throw new Error(`root stats books[${i}] is null or missing id`)
+    }
     const bookid = bookref.id
     const bookdirname = kebabcasezedcafedirname(bookref.name, bookid)
     const bookmeta = parsejsonfile(index, `${bookdirname}/stats.json`) as
@@ -274,6 +280,16 @@ export function parsezedcafeexportfiles(
     const pagerefs = bookmeta.pages ?? []
     for (let j = 0; j < pagerefs.length; ++j) {
       const pageref = pagerefs[j]
+      if (!ispresent(pageref) || typeof pageref !== 'object') {
+        throw new Error(
+          `book stats pages[${j}] is null or not an object: ${bookdirname}/stats.json`,
+        )
+      }
+      if (typeof pageref.id !== 'string' || !pageref.id) {
+        throw new Error(
+          `book stats pages[${j}] is null or missing id: ${bookdirname}/stats.json`,
+        )
+      }
       const pageid = pageref.id
       const pagedirname = kebabcasezedcafedirname(pageref.name, pageid)
       const pageprefix = `${bookdirname}/${pagedirname}`
@@ -381,6 +397,12 @@ function mergebookpagesfrommeta(
   let changed = false
   for (let i = 0; i < pages.length; ++i) {
     const ref = pages[i]
+    if (!ispresent(ref) || typeof ref !== 'object') {
+      throw new Error(`book stats pages[${i}] is null or not an object`)
+    }
+    if (typeof ref.id !== 'string' || !ref.id) {
+      throw new Error(`book stats pages[${i}] is null or missing id`)
+    }
     const pagedir = kebabcasezedcafedirname(ref.name, ref.id)
     const pageprefix = `${bookdirname}/${pagedir}`
     if (findpageinbook(book, pageprefix)) {
