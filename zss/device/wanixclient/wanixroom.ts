@@ -313,7 +313,6 @@ export function disconnectwanixremote(key?: string): WanixRemoteSpec[] {
 export function startwanixvmroom(
   vmid = DEFAULT_WANIX_VM_ID,
   mem = DEFAULT_WANIX_VM_MEM,
-  _zedcafe?: WanixZedCafeRoomSpec | null,
 ): void {
   // Iframe owns warm vs cold (live roomconfig + system). Parent/sim copies of
   // room config can be stale after stop/drop; never decide remount here.
@@ -557,8 +556,6 @@ export function applywanixdropdone(
 export function startwanixvm(
   mem = DEFAULT_WANIX_VM_MEM,
   vmid = DEFAULT_WANIX_VM_ID,
-  _device?: DEVICELIKE,
-  _player?: string,
 ): void {
   startwanixvmroom(vmid, mem)
 }

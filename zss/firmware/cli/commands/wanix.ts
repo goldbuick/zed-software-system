@@ -98,12 +98,7 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
           } else {
             // Explicit VM boot clears detach latch so session open can auto-attach.
             setuserdetached(false)
-            startwanixvm(
-              undefined,
-              ispresent(arg) ? NAME(arg) : undefined,
-              SOFTWARE,
-              player,
-            )
+            startwanixvm(undefined, ispresent(arg) ? NAME(arg) : undefined)
           }
           break
         }

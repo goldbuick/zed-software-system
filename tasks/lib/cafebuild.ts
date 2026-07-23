@@ -1,12 +1,15 @@
+import { spawnSync } from 'node:child_process'
 import { cpSync, existsSync, mkdirSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
-import { spawnSync } from 'node:child_process'
 
-import type { TaskContext } from 'tasks/types'
 import { taskenv } from 'tasks/shellutil'
+import type { TaskContext } from 'tasks/types'
 
 /** Blume static docs into cafe/dist/docs, then Vite cafe app. */
-export function runcafebuild(ctx: TaskContext, opts: { tsc?: boolean } = {}): number {
+export function runcafebuild(
+  ctx: TaskContext,
+  opts: { tsc?: boolean } = {},
+): number {
   const env = taskenv(ctx)
   const docsiteroot = join(ctx.root, 'docs-site')
   const blumebin = join(ctx.root, 'node_modules', '.bin', 'blume')

@@ -8,10 +8,10 @@ export const BLUME_TASKS: TaskDef[] = [
     tags: ['dev'],
     run: handler(async (ctx) => {
       const { spawnSync } = await import('node:child_process')
-      const { join } = await import('node:path')
+      const path = (await import('node:path')).default
       const { taskenv } = await import('tasks/shellutil')
-      const docsiteroot = join(ctx.root, 'docs-site')
-      const blumebin = join(ctx.root, 'node_modules', '.bin', 'blume')
+      const docsiteroot = path.join(ctx.root, 'docs-site')
+      const blumebin = path.join(ctx.root, 'node_modules', '.bin', 'blume')
       const result = spawnSync(blumebin, ['dev', ...ctx.args], {
         cwd: docsiteroot,
         env: taskenv(ctx),

@@ -1,11 +1,11 @@
 import type { WANIX_ZED_CAFE_EXPORT_FILE } from 'zss/feature/wanix/wanixstateexport'
 import { issimonlyflagowner } from 'zss/feature/wanix/zedcafeprotectedflags'
-import { ispid } from 'zss/mapping/guid'
 import {
   kebabcasezedcafedirname,
   readzedcafebookdirname,
   readzedcafepageprefix,
 } from 'zss/feature/wanix/zedcafetreeschema'
+import { ispid } from 'zss/mapping/guid'
 import { deepcopy, isequal, ispresent } from 'zss/mapping/types'
 import {
   memorycreateboardobject,

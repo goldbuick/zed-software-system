@@ -170,7 +170,7 @@ const FIXTURES: FixtureSpec[] = [
   },
 ]
 
-function readvalidatemodes(): Array<'task' | 'vm' | 'order'> {
+function readvalidatemodes(): ('task' | 'vm' | 'order')[] {
   const raw = (process.env.WANIX_VALIDATE_MODE ?? 'both').trim().toLowerCase()
   if (raw === 'task') {
     return ['task']
@@ -240,8 +240,10 @@ async function bootvmroom(
       const recent = consolelines.slice(logmark)
       const hit = recent.find(
         (line) =>
-          (/applyroom-return/.test(line) && /"mode"\s*:\s*"vm"/.test(line)) ||
-          (/applyroom-warm-reuse/.test(line) && /"mode"\s*:\s*"vm"/.test(line)),
+          (line.includes('applyroom-return') &&
+            /"mode"\s*:\s*"vm"/.test(line)) ||
+          (line.includes('applyroom-warm-reuse') &&
+            /"mode"\s*:\s*"vm"/.test(line)),
       )
       return hit ?? ''
     },
@@ -404,48 +406,44 @@ async function runonefixture(
       reason: 'fixture missing on disk',
     }
   }
-  return withscripttimeout(
-    `${mode}:${spec.file}`,
-    spec.budgetms,
-    async () => {
-      const known = new Set(await listwanixtaskids(page))
-      await dropfixture(page, root, spec)
-      let taskids: string[] = []
-      if (spec.expect.spawns > 0) {
-        taskids = await waitfornewtaskids(
-          page,
-          known,
-          spec.expect.spawns,
-          spec.budgetms,
-        )
-      } else {
-        // Empty bundle: confirm no new user tasks appear briefly, then drop-done.
-        await page.waitForTimeout(500)
-        const after = await listwanixtaskids(page)
-        const extras = after.filter((id) => !known.has(id) && id !== 'zedcafe')
-        if (extras.length > 0) {
-          throw new Error(
-            `bundle-empty spawned unexpected tasks: ${extras.join(',')}`,
-          )
-        }
-      }
-      const actual = await assertfixturestdout(
+  return withscripttimeout(`${mode}:${spec.file}`, spec.budgetms, async () => {
+    const known = new Set(await listwanixtaskids(page))
+    await dropfixture(page, root, spec)
+    let taskids: string[] = []
+    if (spec.expect.spawns > 0) {
+      taskids = await waitfornewtaskids(
         page,
-        root,
-        consolelines,
-        spec,
-        taskids,
+        known,
+        spec.expect.spawns,
         spec.budgetms,
       )
-      return {
-        mode,
-        fixture: spec.file,
-        ok: true,
-        taskids,
-        actualtail: actual.slice(-400),
+    } else {
+      // Empty bundle: confirm no new user tasks appear briefly, then drop-done.
+      await page.waitForTimeout(500)
+      const after = await listwanixtaskids(page)
+      const extras = after.filter((id) => !known.has(id) && id !== 'zedcafe')
+      if (extras.length > 0) {
+        throw new Error(
+          `bundle-empty spawned unexpected tasks: ${extras.join(',')}`,
+        )
       }
-    },
-  )
+    }
+    const actual = await assertfixturestdout(
+      page,
+      root,
+      consolelines,
+      spec,
+      taskids,
+      spec.budgetms,
+    )
+    return {
+      mode,
+      fixture: spec.file,
+      ok: true,
+      taskids,
+      actualtail: actual.slice(-400),
+    }
+  })
 }
 
 async function ensurebooks(
@@ -669,13 +667,7 @@ const validatefixturesstdout: HeadedPlaywrightScript = async ({
     await enterroommode(page, root, consolelines, mode, record)
     for (const spec of FIXTURES) {
       try {
-        const result = await runonefixture(
-          page,
-          root,
-          consolelines,
-          mode,
-          spec,
-        )
+        const result = await runonefixture(page, root, consolelines, mode, spec)
         results.push(result)
         record(`${mode}:${spec.file}`, {
           ok: result.ok,

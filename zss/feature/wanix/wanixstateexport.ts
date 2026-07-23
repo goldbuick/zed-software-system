@@ -325,7 +325,8 @@ function splitboarddoc(
     const entries = Object.entries(objects as Record<string, unknown>)
     for (let i = 0; i < entries.length; ++i) {
       const [objid, obj] = entries[i]
-      if (ispid(objid)) {
+      // Avoid ispid() here: its `id is string` predicate makes the false branch `never`.
+      if (objid.startsWith('pid_')) {
         continue
       }
       doc[`${prefix}/board/objects/${objid}.json`] = obj

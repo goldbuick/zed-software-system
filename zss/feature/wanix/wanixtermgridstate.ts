@@ -884,7 +884,7 @@ function reflowgridcontent(
   // gap between the text and the cursor.
   while (
     newphysrows.length > newcursorabslrow + 1 &&
-    isphysicalrowempty(newphysrows[newphysrows.length - 1]!)
+    isphysicalrowempty(newphysrows[newphysrows.length - 1])
   ) {
     newphysrows.pop()
   }

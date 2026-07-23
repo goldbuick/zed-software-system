@@ -1850,7 +1850,7 @@ function normalizewanixpath(label: string): string {
 }
 
 function createwasmstageurl(bytes: Uint8Array): string {
-  return URL.createObjectURL(new Blob([bytes]))
+  return URL.createObjectURL(new Blob([bytes as BlobPart]))
 }
 
 async function ensuretaskroomfordrop() {

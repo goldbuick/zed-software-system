@@ -5,11 +5,11 @@ import {
   readwanixroomconfig,
   spawntaskinroom,
 } from 'zss/device/wanixclient/wanixroom'
+import { dumpwanixtermbuffertext } from 'zss/device/wanixclient/wanixtermtext'
 import {
   clearzedsynchalt,
   setzedsynchalt,
 } from 'zss/device/wanixclient/wanixzedsynchalt'
-import { dumpwanixtermbuffertext } from 'zss/device/wanixclient/wanixtermtext'
 import {
   WANIX_ZEDCAFE_GUEST_MOUNT,
   WANIX_ZEDSYNC_READY_FILE,
@@ -225,9 +225,8 @@ export async function startwanixzedsync(
     const { wanixserverhalttask } = await import('zss/device/api')
     const { registerreadplayer } = await import('zss/device/registerplayer')
     const { SOFTWARE } = await import('zss/device/session')
-    const { removewanixroomtask } = await import(
-      'zss/device/wanixclient/wanixroom'
-    )
+    const { removewanixroomtask } =
+      await import('zss/device/wanixclient/wanixroom')
     wanixserverhalttask(SOFTWARE, registerreadplayer(), WANIX_ZEDSYNC_TASK_ID)
     removewanixroomtask(WANIX_ZEDSYNC_TASK_ID)
   }
