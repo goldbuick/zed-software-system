@@ -36,7 +36,7 @@ Architecture / sync: [`zss/feature/wanix/README.md`](../../../zss/feature/wanix/
 | `#task/{rid}/export/` | Host write root (gojs zedcafe daemon) |
 | Peer dir (e.g. `zed-workspace/`, `ops/fixtures/wanix/p9server/serve-root/`) | Disk mirror via `#wanix zedsync <path>` |
 
-Ready gate on the peer: `<peer>/.zedsync/ready`. Meta under `<peer>/.zedsync/` is **not** game content — do not edit it as state.
+Ready gate on the peer: `<peer>/zedsync/ready`. Meta under `<peer>/zedsync/` is **not** game content — do not edit it as state.
 
 Conflict policy: **newer mtime wins** (no merge). Assume a **single writer** on the peer for a given path.
 
@@ -46,8 +46,8 @@ Dirs are `{kebab-name}-{id}` (or bare `id` if the name is empty). No `books/` or
 
 ```text
 stats.json                                          # root catalog + exportRevision
-.zedsync/revision                                   # host revision hint (allowlisted)
-.zedsync/ready                                      # peer seed-complete sentinel (not game content)
+zedsync/revision                                   # host revision hint (allowlisted)
+zedsync/ready                                      # peer seed-complete sentinel (not game content)
 {bookDir}/stats.json                                # book meta (no embedded flags)
 {bookDir}/flags/{ownerId}.json                      # per-owner flag bag
 {bookDir}/{pageDir}/stats.json                      # page: id, code, type, name
@@ -171,7 +171,7 @@ Recommended loop (same as Wanix README agent contract):
 - Prefer rewriting whole small files atomically (write temp + rename) so readers never see half JSON.
 - Touch mtime by writing the file — zedsync uses mtime for conflicts.
 - Do not delete peer files expecting them to stay gone if `zedcafe/` still has them — zedsync restores deletes from export.
-- Do not edit `.zedsync/` or race structural deletes while the sim is mid-export.
+- Do not edit `zedsync/` or race structural deletes while the sim is mid-export.
 
 ## Root / book catalog shapes
 

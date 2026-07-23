@@ -1,4 +1,6 @@
-# types.ts
+---
+title: types.ts
+---
 
 **Purpose**: Defines BOARD, BOARD_ELEMENT, BOOK, CODE_PAGE, and related enums. Core data structures for the memory system.
 

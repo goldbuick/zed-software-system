@@ -1,4 +1,6 @@
-# expr.ts
+---
+title: expr.ts
+---
 
 **Purpose**: Evaluates expressions from word arrays. Handles categories, collisions, colors, directions, and built-in expressions (aligned, contact, blocked, any, countof, abs, min, max, pick, random, run, etc.). Delegates to memory for board queries. Used when commands need computed values.
 

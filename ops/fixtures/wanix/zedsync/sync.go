@@ -18,12 +18,16 @@ const (
 	PollInterval  = 1 * time.Second
 	PollIdleMax   = 4 * time.Second
 	SeedProgressEvery = 100
+	// FullTickEvery runs SteadyTick instead of incremental every N polls so
+	// peer↔zedcafe drift heals without emptying the peer.
+	FullTickEvery = 30
 	// RevisionDir mirrors WANIX_ZEDSYNC_REVISION_DIR in wanixzedcafeconstants.ts.
 	// Host (zedcafehost.ts pushzedcafeexportlive) writes RevisionFile after each
 	// push. ReadySentinel lives under the same meta dir (not a top-level peer file).
-	RevisionDir   = ".zedsync"
-	RevisionFile  = ".zedsync/revision"
-	ReadySentinel = ".zedsync/ready"
+	// Visible (no leading '.') so users can delete the folder to reset sync state.
+	RevisionDir   = "zedsync"
+	RevisionFile  = "zedsync/revision"
+	ReadySentinel = "zedsync/ready"
 )
 
 // ErrZedsyncNeedFullTick signals that SteadyTickIncremental could not apply
@@ -31,6 +35,12 @@ const (
 // path list) -- the documented primary recovery path is for the caller
 // (cmd/main.go) to fall back to the full SteadyTick, not a silent retry.
 var ErrZedsyncNeedFullTick = errors.New("zedsync: incremental state incomplete, need full tick")
+
+// UseFullTick reports whether this 1-based poll should run SteadyTick
+// (periodic drift heal) instead of SteadyTickIncremental.
+func UseFullTick(pollcount int) bool {
+	return pollcount > 0 && pollcount%FullTickEvery == 0
+}
 
 // LastWalkCount is the number of WalkFiles calls in the most recent SteadyTick.
 var LastWalkCount int
@@ -58,16 +68,17 @@ type FileMeta struct {
 type Snapshot map[string]FileMeta
 
 // shouldskip reports whether a slash-normalized relative path is non-content
-// (any path segment starts with '.' -- dotfiles, hidden dirs, ready sentinel;
-// sim-only flag bags under flags/ are never synced).
+// (any path segment starts with '.' -- dotfiles / hidden dirs; RevisionDir
+// meta folder; sim-only flag bags under flags/ are never synced).
+// board/objects/pid_*.json are walked so copytor + deleteremote can mirror /
+// prune the peer; they never copytoz (see allowcopytoz).
 func shouldskip(rel string) bool {
 	for _, seg := range strings.Split(rel, "/") {
-		if strings.HasPrefix(seg, ".") {
+		if strings.HasPrefix(seg, ".") || seg == RevisionDir {
 			return true
 		}
 	}
-	if strings.Contains(rel, "/flags/") {
-		base := filepath.Base(rel)
+	if base, ok := flagsbasename(rel); ok {
 		for _, suf := range []string{
 			"_chip.json",
 			"_gadget.json",
@@ -81,6 +92,58 @@ func shouldskip(rel string) bool {
 		}
 	}
 	return false
+}
+
+// flagsbasename returns the filename under a flags/ segment, if any.
+func flagsbasename(rel string) (string, bool) {
+	segments := strings.Split(rel, "/")
+	for i := 0; i < len(segments)-1; i++ {
+		if segments[i] == "flags" {
+			return segments[i+1], true
+		}
+	}
+	return "", false
+}
+
+// isplayerflagpath reports live player flag bags (flags/pid_*.json) that must
+// never copytoz into zedcafe (inbound-protected). Sim-only flag suffixes are
+// already shouldskip. Board objects/pid_*.json are separate.
+func isplayerflagpath(rel string) bool {
+	base, ok := flagsbasename(rel)
+	if !ok {
+		return false
+	}
+	if !strings.HasPrefix(base, "pid_") || !strings.HasSuffix(base, ".json") {
+		return false
+	}
+	for _, suf := range []string{
+		"_chip.json",
+		"_gadget.json",
+		"_synth.json",
+		"_layers.json",
+		"_tracking.json",
+	} {
+		if strings.HasSuffix(base, suf) {
+			return false
+		}
+	}
+	return true
+}
+
+// isplayerobjectpath reports board avatar objects (board/objects/pid_*.json).
+// Walked for copytor + deleteremote; never copytoz into zedcafe.
+func isplayerobjectpath(rel string) bool {
+	if !strings.Contains(rel, "/board/objects/") {
+		return false
+	}
+	base := filepath.Base(rel)
+	return strings.HasPrefix(base, "pid_") && strings.HasSuffix(base, ".json")
+}
+
+// allowcopytoz is false for player flag bags and board player objects
+// (peer must not overwrite live zedcafe / sim-mirrored state).
+func allowcopytoz(rel string) bool {
+	return !isplayerflagpath(rel) && !isplayerobjectpath(rel)
 }
 
 // WalkFiles walks root and returns a snapshot of regular files.
@@ -285,6 +348,9 @@ func InitialSeed(remote, zedcafe string, r, z Snapshot) (copied int, err error) 
 	case len(z) == 0 && len(r) > 0:
 		total := len(r)
 		for rel := range r {
+			if !allowcopytoz(rel) {
+				continue
+			}
 			rev, cerr := journalcopy(remote, remote, zedcafe, "copytoz", rel, madedirs)
 			if cerr != nil {
 				return copied, fmt.Errorf("seed zedcafe %s: %w", rel, cerr)
@@ -296,7 +362,7 @@ func InitialSeed(remote, zedcafe string, r, z Snapshot) (copied int, err error) 
 	case len(r) == 0 && len(z) == 0:
 		return 0, nil
 	default:
-		// Union seed: unique paths both ways; shared -> LWW (tie -> remote wins).
+		// Union seed: unique paths both ways; shared -> LWW (equal mtime prefers zedcafe).
 		all := map[string]struct{}{}
 		for rel := range r {
 			all[rel] = struct{}{}
@@ -310,6 +376,9 @@ func InitialSeed(remote, zedcafe string, r, z Snapshot) (copied int, err error) 
 			zm, zok := z[rel]
 			switch {
 			case rok && !zok:
+				if !allowcopytoz(rel) {
+					continue
+				}
 				rev, cerr := journalcopy(remote, remote, zedcafe, "copytoz", rel, madedirs)
 				if cerr != nil {
 					return copied, fmt.Errorf("seed copytoz %s: %w", rel, cerr)
@@ -326,7 +395,12 @@ func InitialSeed(remote, zedcafe string, r, z Snapshot) (copied int, err error) 
 				copied++
 				reportseedprogress(copied, total)
 			case rok && zok:
-				if rm.Mtime.After(zm.Mtime) || (rm.Mtime.Equal(zm.Mtime) && rm.Size != zm.Size) {
+				// Peer wins only when strictly newer. Equal mtime (+ size mismatch)
+				// prefers zedcafe so stale peer cannot stomp live export.
+				if rm.Mtime.After(zm.Mtime) {
+					if !allowcopytoz(rel) {
+						continue
+					}
 					rev, cerr := journalcopy(remote, remote, zedcafe, "copytoz", rel, madedirs)
 					if cerr != nil {
 						return copied, fmt.Errorf("seed copytoz %s: %w", rel, cerr)
@@ -334,7 +408,7 @@ func InitialSeed(remote, zedcafe string, r, z Snapshot) (copied int, err error) 
 					updatestate("copytoz", rev)
 					copied++
 					reportseedprogress(copied, total)
-				} else if zm.Mtime.After(rm.Mtime) {
+				} else if zm.Mtime.After(rm.Mtime) || (rm.Mtime.Equal(zm.Mtime) && rm.Size != zm.Size) {
 					rev, cerr := journalcopy(remote, zedcafe, remote, "copytor", rel, madedirs)
 					if cerr != nil {
 						return copied, fmt.Errorf("seed copytor %s: %w", rel, cerr)
@@ -359,26 +433,33 @@ type syncop struct {
 // remote/zedcafe presence+metadata.
 //
 // newer-mtime-wins: on create/update conflict (both sides present/changed),
-// the side with the newer mtime wins. Equal mtime+size ties prefer peer
-// (copytoz) so hand-edits are not silently discarded. See "Peer sync
-// (zedsync)" > "Conflict policy: newer mtime wins" in feature/wanix/README.md.
+// the side with the newer mtime wins. Equal mtime ties prefer zedcafe
+// (copytor) so remount/equalized peer mtimes cannot stomp live export.
+// Peer still wins when its mtime is strictly newer. Player flag bags never
+// copytoz. See wanix zedsync docs.
 func planop(
 	rel string,
 	bm FileMeta, binbase bool,
 	rm FileMeta, rinremote bool,
 	zm FileMeta, rinzed bool,
 ) (syncop, bool) {
+	copytoz := func(msg string) (syncop, bool) {
+		if !allowcopytoz(rel) {
+			return syncop{}, false
+		}
+		return syncop{rel, "copytoz", msg}, true
+	}
 	switch {
 	case !binbase && rinremote && !rinzed:
-		return syncop{rel, "copytoz", fmt.Sprintf("create zedcafe <- %s", rel)}, true
+		return copytoz(fmt.Sprintf("create zedcafe <- %s", rel))
 	case !binbase && rinzed && !rinremote:
 		return syncop{rel, "copytor", fmt.Sprintf("create remote <- %s", rel)}, true
 	case !binbase && rinremote && rinzed:
-		// newer-mtime-wins; equal mtime ties prefer peer (copytoz).
-		if newer(zm, rm) {
-			return syncop{rel, "copytor", fmt.Sprintf("create/conflict remote <- zedcafe (newer) %s", rel)}, true
+		// Strict mtime After only -- equal mtime (even with size mismatch) prefers zedcafe.
+		if rm.Mtime.After(zm.Mtime) {
+			return copytoz(fmt.Sprintf("create/conflict zedcafe <- remote (newer) %s", rel))
 		}
-		return syncop{rel, "copytoz", fmt.Sprintf("create/conflict zedcafe <- remote (newer) %s", rel)}, true
+		return syncop{rel, "copytor", fmt.Sprintf("create/conflict remote <- zedcafe (newer-or-equal) %s", rel)}, true
 	case binbase && !rinremote && !rinzed:
 		// already gone both sides
 		return syncop{}, false
@@ -390,14 +471,14 @@ func planop(
 		remotechanged := newer(rm, bm) || rm.Size != bm.Size || !rm.Mtime.Equal(bm.Mtime)
 		zedchanged := newer(zm, bm) || zm.Size != bm.Size || !zm.Mtime.Equal(bm.Mtime)
 		if remotechanged && zedchanged {
-			// newer-mtime-wins; equal mtime ties prefer peer (copytoz).
-			if newer(zm, rm) {
-				return syncop{rel, "copytor", fmt.Sprintf("conflict remote <- zedcafe (newer) %s", rel)}, true
+			// Strict mtime After only -- equal mtime (even with size mismatch) prefers zedcafe.
+			if rm.Mtime.After(zm.Mtime) {
+				return copytoz(fmt.Sprintf("conflict zedcafe <- remote (newer) %s", rel))
 			}
-			return syncop{rel, "copytoz", fmt.Sprintf("conflict zedcafe <- remote (newer) %s", rel)}, true
+			return syncop{rel, "copytor", fmt.Sprintf("conflict remote <- zedcafe (newer-or-equal) %s", rel)}, true
 		}
 		if remotechanged {
-			return syncop{rel, "copytoz", fmt.Sprintf("update zedcafe <- %s", rel)}, true
+			return copytoz(fmt.Sprintf("update zedcafe <- %s", rel))
 		}
 		if zedchanged {
 			// Mtime-only drift with equal size: browser FS after copytoz often
@@ -661,7 +742,7 @@ func applyscopedops(remote, zedcafe string, ops []syncop, unified Snapshot) (Sna
 	return applyops(remote, zedcafe, ops, nil, nil, unified, true)
 }
 
-// ReadRevision reads the host-written zedcafe/.zedsync/revision hint (see
+// ReadRevision reads the host-written zedcafe/zedsync/revision hint (see
 // RevisionFile / WANIX_ZEDSYNC_REVISION_FILE in wanixzedcafeconstants.ts,
 // written by zedcafehost.ts pushzedcafeexportlive). A missing file is
 // revision 0 with no paths, not an error.

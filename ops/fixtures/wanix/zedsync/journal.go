@@ -15,14 +15,14 @@ import (
 
 const (
 	// JournalDir is the peer-side metadata directory (skipped by WalkFiles --
-	// any dot-prefixed path segment is excluded, see shouldskip).
-	JournalDir = ".zedsync"
+	// RevisionDir / JournalDir segment, see shouldskip).
+	JournalDir = "zedsync"
 	// JournalFile is an append-only NDJSON log of copy ops, written before
 	// each copy so an interrupted sync can be replayed on restart.
-	JournalFile = ".zedsync/journal.ndjson"
+	JournalFile = "zedsync/journal.ndjson"
 	// StateFile tracks the last-seen revision on each side for restart
 	// recovery.
-	StateFile = ".zedsync/state.json"
+	StateFile = "zedsync/state.json"
 )
 
 // JournalEntryStatus values for JournalEntry.Status.
@@ -63,7 +63,7 @@ func ResetJournalRevForTest() {
 }
 
 // SeedJournalRevFromDisk sets the in-process journal revision counter to the
-// max rev already present in <remote>/.zedsync/journal.ndjson so a restart
+// max rev already present in <remote>/zedsync/journal.ndjson so a restart
 // never reuses old rev numbers (latestbyrev is last-wins per rev).
 func SeedJournalRevFromDisk(remote string) error {
 	entries, err := ReadJournalEntries(remote)
@@ -80,7 +80,7 @@ func SeedJournalRevFromDisk(remote string) error {
 	return nil
 }
 
-// CompactJournal rewrites <remote>/.zedsync/journal.ndjson keeping only
+// CompactJournal rewrites <remote>/zedsync/journal.ndjson keeping only
 // entries whose latest status (by rev) is still "pending". Fully resolved
 // pending/done pairs are dropped so the file cannot grow without bound.
 func CompactJournal(remote string) error {
@@ -140,7 +140,7 @@ func filesha256(path string) (string, error) {
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
-// AppendJournal appends one NDJSON entry to <remote>/.zedsync/journal.ndjson.
+// AppendJournal appends one NDJSON entry to <remote>/zedsync/journal.ndjson.
 func AppendJournal(remote string, entry JournalEntry) error {
 	dir := filepath.Join(remote, JournalDir)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
@@ -213,7 +213,7 @@ func journalcopy(remote, srcroot, dstroot, op, rel string, madedirs map[string]s
 	return rev, nil
 }
 
-// ReadSyncState reads <remote>/.zedsync/state.json, or the zero value if absent.
+// ReadSyncState reads <remote>/zedsync/state.json, or the zero value if absent.
 func ReadSyncState(remote string) (SyncState, error) {
 	path := filepath.Join(remote, StateFile)
 	data, err := os.ReadFile(path)
@@ -230,7 +230,7 @@ func ReadSyncState(remote string) (SyncState, error) {
 	return state, nil
 }
 
-// WriteSyncState writes <remote>/.zedsync/state.json.
+// WriteSyncState writes <remote>/zedsync/state.json.
 func WriteSyncState(remote string, state SyncState) error {
 	dir := filepath.Join(remote, JournalDir)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
@@ -247,7 +247,7 @@ func WriteSyncState(remote string, state SyncState) error {
 	return nil
 }
 
-// ReadJournalEntries reads all NDJSON lines from <remote>/.zedsync/journal.ndjson.
+// ReadJournalEntries reads all NDJSON lines from <remote>/zedsync/journal.ndjson.
 // A missing journal returns (nil, nil), not an error.
 func ReadJournalEntries(remote string) ([]JournalEntry, error) {
 	path := filepath.Join(remote, JournalFile)

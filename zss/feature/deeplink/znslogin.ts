@@ -1,4 +1,4 @@
-import { registerterminalfull, vmcli } from 'zss/device/api'
+import { registerterminalopen, vmcli } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import {
   type DEEPLINK_CONTEXT,
@@ -37,7 +37,7 @@ const znsloginhandler: DEEPLINK_HANDLER = {
     }
     const device = ctx.device ?? SOFTWARE
     if (ctx.openterminal) {
-      registerterminalfull(device, ctx.player)
+      registerterminalopen(device, ctx.player)
     }
     if (params.email && params.namespace) {
       const { znsconfirmotpfromdeeplink } =

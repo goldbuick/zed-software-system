@@ -1,4 +1,6 @@
-# format.ts
+---
+title: format.ts
+---
 
 **Purpose**: Object formatting and serialization for memory/gadget state. Uses key mapping and optional format transformers. Serializes to msgpack via `packformat`/`unpackformat`.
 

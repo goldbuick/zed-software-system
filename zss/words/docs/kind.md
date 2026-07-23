@@ -1,4 +1,6 @@
-# kind.ts
+---
+title: kind.ts
+---
 
 **Purpose**: Parses kind values — element name with optional color prefix. Validates names against memory (memoryreadelementkind). Used when commands target elements by kind (e.g. any, countof, find).
 

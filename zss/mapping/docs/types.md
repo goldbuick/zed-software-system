@@ -1,4 +1,6 @@
-# types.ts
+---
+title: types.ts
+---
 
 **Purpose**: Provides type guards, MAYBE type, deepcopy, and isbook. Re-exports isequal and ispresent from fast-json-patch and ts-extras. Core type utilities used throughout ZSS.
 

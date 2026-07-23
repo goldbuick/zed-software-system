@@ -11,6 +11,8 @@ import { vmexportzedcafe } from 'zss/device/api'
 import { readbookcountfromexportfiles } from 'zss/feature/wanix/wanixstateexport'
 import {
   readhostexportfilesasync,
+  requestvmzedcafeexportfiles,
+  resetwanixzedcafefortest,
   wanixhandleexportstate,
 } from 'zss/device/wanixclient/wanixzedcafe'
 
@@ -35,6 +37,28 @@ const bookfiles = [
 describe('readhostexportfilesasync', () => {
   beforeEach(() => {
     mockvmexport.mockReset()
+    resetwanixzedcafefortest()
+  })
+
+  afterEach(() => {
+    resetwanixzedcafefortest()
+  })
+
+  it('coalesces concurrent sim export fetches into one vm export', async () => {
+    mockvmexport.mockImplementation(() => {
+      // Leave export pending until test resolves it.
+    })
+
+    const first = readhostexportfilesasync(device, player)
+    const second = requestvmzedcafeexportfiles(device, player)
+
+    expect(mockvmexport).toHaveBeenCalledTimes(1)
+
+    void wanixhandleexportstate(device, player, bookfiles)
+
+    const [filesa, filesb] = await Promise.all([first, second])
+    expect(filesa).toBe(filesb)
+    expect(readbookcountfromexportfiles(filesa)).toBe(1)
   })
 
   it('fetches export from sim worker when main-thread memory has no books', async () => {

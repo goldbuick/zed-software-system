@@ -12,6 +12,7 @@ import { setuserdetached } from 'zss/device/wanixclient/state'
 import {
   connectwanixremote,
   disconnectwanixremote,
+  halttaskinroom,
   readwanixremotes,
   startwanixvm,
   stopwanixvm,
@@ -21,6 +22,8 @@ import {
   writewanixtermstatus,
 } from 'zss/device/wanixclient/wanixtermhandlers'
 import { startwanixzedsync } from 'zss/device/wanixclient/wanixzedsync'
+import { clearzedsynchalt } from 'zss/device/wanixclient/wanixzedsynchalt'
+import { iszedsynctaskid } from 'zss/device/wanixclient/wanixzedsyncready'
 import { FIRMWARE } from 'zss/firmware'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
@@ -93,21 +96,26 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
           } else {
             // Explicit VM boot clears detach latch so session open can auto-attach.
             setuserdetached(false)
-            startwanixvm(
-              undefined,
-              ispresent(arg) ? NAME(arg) : undefined,
-              SOFTWARE,
-              player,
-            )
+            startwanixvm(undefined, ispresent(arg) ? NAME(arg) : undefined)
           }
           break
         }
         case 'stop': {
           const [stoparg] = readargs(words, 1, [ARG_TYPE.MAYBE_NAME])
           if (ispresent(stoparg) && NAME(stoparg)) {
-            wanixserverhalttask(SOFTWARE, player, NAME(stoparg))
-            apilog(SOFTWARE, player, `wanix task stop ${NAME(stoparg)}`)
+            const taskid = NAME(stoparg)
+            if (iszedsynctaskid(taskid)) {
+              // Removes room task + clears soft-halt latch when present.
+              halttaskinroom(taskid)
+              // Idle room / missing task: still clear latch and halt guest.
+              clearzedsynchalt()
+              wanixserverhalttask(SOFTWARE, player, taskid)
+            } else {
+              wanixserverhalttask(SOFTWARE, player, taskid)
+            }
+            apilog(SOFTWARE, player, `wanix task stop ${taskid}`)
           } else {
+            clearzedsynchalt()
             wanixserverstoproom(SOFTWARE, player)
             apilog(SOFTWARE, player, 'wanix stop room')
           }
@@ -174,18 +182,16 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
             )
             break
           }
-          void startwanixzedsync(
-            SOFTWARE,
-            player,
-            String(targetpath).trim(),
-          ).catch((err) => {
+          try {
+            startwanixzedsync(SOFTWARE, player, String(targetpath).trim())
+          } catch (err) {
             apierror(
               SOFTWARE,
               player,
               'wanix',
               err instanceof Error ? err.message : String(err),
             )
-          })
+          }
           break
         }
         case 'bridge': {

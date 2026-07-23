@@ -1,0 +1,281 @@
+---
+/**
+ * Click-to-expand for Blume Mermaid diagrams (mirrors markdown image zoom).
+ * Wired as layout.PageFooter so it runs on every content page.
+ */
+---
+
+<style is:global>
+  blume-mermaid {
+    position: relative;
+    display: block;
+    width: 100%;
+  }
+
+  /* Keep diagrams at Mermaid's intrinsic size; scroll instead of crushing nodes. */
+  blume-mermaid svg {
+    max-width: none;
+    height: auto;
+  }
+
+  blume-mermaid[data-mermaid-ready] {
+    cursor: zoom-in;
+  }
+
+  .blume-mermaid-expand {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    z-index: 1;
+    margin: 0;
+    padding: 0.25rem 0.55rem;
+    border: 1px solid var(--blume-accent);
+    border-radius: 0;
+    background: var(--blume-code-background);
+    color: var(--blume-accent);
+    font: 0.75rem/1.2 var(--blume-font-mono);
+    cursor: pointer;
+  }
+
+  .blume-mermaid-expand:hover,
+  .blume-mermaid-expand:focus-visible {
+    color: var(--blume-action);
+    border-color: var(--blume-action);
+    outline: none;
+  }
+
+  .blume-mermaid-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: none;
+    padding: 1.25rem;
+    margin: 0;
+    border: 0;
+    background: color-mix(in oklab, var(--blume-background) 88%, #000 12%);
+    cursor: zoom-out;
+    opacity: 0;
+    transition: opacity 200ms ease;
+  }
+
+  .blume-mermaid-lightbox::backdrop {
+    background: transparent;
+  }
+
+  .blume-mermaid-lightbox[data-open] {
+    opacity: 1;
+  }
+
+  .blume-mermaid-lightbox__frame {
+    box-sizing: border-box;
+    width: min(96vw, 100%);
+    height: 92vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+    padding: 1rem;
+    border: 2px solid var(--blume-accent);
+    border-radius: 0;
+    background: var(--blume-code-background);
+    box-shadow: inset 0 0 0 1px #000066;
+    cursor: default;
+  }
+
+  .blume-mermaid-lightbox__frame svg {
+    display: block;
+    max-width: none;
+    max-height: none;
+    flex: 0 0 auto;
+  }
+
+  .blume-mermaid-lightbox__hint {
+    position: fixed;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    margin: 0;
+    padding: 0.35rem 0.75rem;
+    border: 1px solid var(--blume-border);
+    border-radius: 0;
+    background: var(--blume-muted);
+    color: var(--blume-foreground);
+    font: 0.75rem/1 var(--blume-font-mono);
+    pointer-events: none;
+  }
+</style>
+
+<script>
+  const ENHANCED = 'data-mermaid-enhanced'
+  const READY = 'data-mermaid-ready'
+
+  function svgfrom(host: Element): SVGSVGElement | null {
+    return host.querySelector('svg')
+  }
+
+  function enhance(host: HTMLElement) {
+    if (host.hasAttribute(ENHANCED)) {
+      return
+    }
+    host.setAttribute(ENHANCED, '')
+
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.className = 'blume-mermaid-expand'
+    button.textContent = 'Expand'
+    button.setAttribute('aria-label', 'Expand diagram')
+    button.addEventListener('click', (event) => {
+      event.stopPropagation()
+      openlightbox(host)
+    })
+    host.appendChild(button)
+
+    const markready = () => {
+      if (svgfrom(host)) {
+        host.setAttribute(READY, '')
+      }
+    }
+    markready()
+    const observer = new MutationObserver(markready)
+    observer.observe(host, { childList: true, subtree: true })
+  }
+
+  let active: HTMLDialogElement | null = null
+
+  function closelightbox() {
+    if (!active) {
+      return
+    }
+    const dialog = active
+    active = null
+    dialog.removeAttribute('data-open')
+    const remove = () => dialog.remove()
+    dialog.addEventListener('transitionend', remove, { once: true })
+    window.setTimeout(remove, 250)
+    document.removeEventListener('keydown', onkey)
+  }
+
+  function onkey(event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      closelightbox()
+    }
+  }
+
+  function svgnaturalsize(svg: SVGSVGElement): { width: number; height: number } {
+    const vb = svg.viewBox?.baseVal
+    if (vb && vb.width > 0 && vb.height > 0) {
+      return { width: vb.width, height: vb.height }
+    }
+    const attrw = Number(svg.getAttribute('width'))
+    const attrh = Number(svg.getAttribute('height'))
+    if (attrw > 0 && attrh > 0) {
+      return { width: attrw, height: attrh }
+    }
+    try {
+      const box = svg.getBBox()
+      if (box.width > 0 && box.height > 0) {
+        return { width: box.width, height: box.height }
+      }
+    } catch {
+      // getBBox can throw if the node is not in the document yet
+    }
+    return {
+      width: svg.clientWidth || 640,
+      height: svg.clientHeight || 360,
+    }
+  }
+
+  function fitsvgtoframe(clone: SVGSVGElement, frame: HTMLElement) {
+    // Mermaid stamps max-width:100% which keeps the clone at article size.
+    clone.style.maxWidth = 'none'
+    clone.style.maxHeight = 'none'
+    clone.removeAttribute('width')
+    clone.removeAttribute('height')
+    clone.setAttribute('preserveAspectRatio', 'xMidYMid meet')
+
+    const { width: natw, height: nath } = svgnaturalsize(clone)
+    const pad = 32
+    const maxw = Math.max(120, frame.clientWidth - pad)
+    const maxh = Math.max(120, frame.clientHeight - pad)
+    const scale = Math.min(maxw / natw, maxh / nath)
+    clone.style.width = `${Math.floor(natw * scale)}px`
+    clone.style.height = `${Math.floor(nath * scale)}px`
+  }
+
+  function openlightbox(host: HTMLElement) {
+    if (active) {
+      return
+    }
+    const svg = svgfrom(host)
+    if (!svg) {
+      return
+    }
+
+    const dialog = document.createElement('dialog')
+    dialog.className = 'blume-mermaid-lightbox'
+    dialog.setAttribute('aria-label', 'Expanded diagram')
+
+    const frame = document.createElement('div')
+    frame.className = 'blume-mermaid-lightbox__frame'
+    const clone = svg.cloneNode(true) as SVGSVGElement
+    frame.appendChild(clone)
+
+    const hint = document.createElement('p')
+    hint.className = 'blume-mermaid-lightbox__hint'
+    hint.textContent = 'Esc or click outside to close'
+
+    dialog.appendChild(frame)
+    dialog.appendChild(hint)
+    document.body.appendChild(dialog)
+    dialog.showModal()
+    active = dialog
+    // Size after layout so the frame has real clientWidth/Height.
+    requestAnimationFrame(() => {
+      fitsvgtoframe(clone, frame)
+      dialog.setAttribute('data-open', '')
+    })
+
+    dialog.addEventListener('click', (event) => {
+      if (event.target === dialog) {
+        closelightbox()
+      }
+    })
+    dialog.addEventListener('cancel', (event) => {
+      event.preventDefault()
+      closelightbox()
+    })
+    document.addEventListener('keydown', onkey)
+  }
+
+  function scan() {
+    for (const host of document.querySelectorAll<HTMLElement>('blume-mermaid')) {
+      enhance(host)
+    }
+  }
+
+  scan()
+  const rootobserver = new MutationObserver(scan)
+  rootobserver.observe(document.body, { childList: true, subtree: true })
+
+  document.addEventListener('click', (event) => {
+    const target = event.target
+    if (!(target instanceof Element)) {
+      return
+    }
+    if (target.closest('.blume-mermaid-expand')) {
+      return
+    }
+    const host = target.closest<HTMLElement>('blume-mermaid')
+    if (!host || !svgfrom(host)) {
+      return
+    }
+    openlightbox(host)
+  })
+</script>

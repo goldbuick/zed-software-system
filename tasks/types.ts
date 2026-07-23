@@ -1,1 +1,1 @@
-export const TASK_GROUPS = ['cafe', 'headless', 'ops'] as const
+export const TASK_GROUPS = ['cafe', 'blume', 'headless', 'ops'] as const

@@ -4,7 +4,7 @@ import {
   applywanixtermread,
   readwanixtermbuffer,
 } from 'zss/device/wanixclient/wanixtermbuffer'
-import { mirrorzedsynctermlines } from 'zss/device/wanixclient/wanixzedsync'
+import { mirrorzedsynctermlines } from 'zss/device/wanixclient/wanixzedsyncready'
 import type { WanixTermCellsSnapshot } from 'zss/feature/wanix/wanixtermgridstate'
 import { ispresent } from 'zss/mapping/types'
 

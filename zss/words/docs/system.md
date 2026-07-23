@@ -1,4 +1,6 @@
-# system.ts
+---
+title: system.ts
+---
 
 **Purpose**: Platform detection for UI and shortcuts. Exposes navigator-based flags and metakey for cross-platform key hints (Cmd on Mac, Ctrl elsewhere).
 

@@ -1,4 +1,6 @@
-# inspectionmakeit.ts
+---
+title: inspectionmakeit.ts
+---
 
 **Purpose**: Make codepage UI — create object/terrain/board/loader. Guides user through codepage creation with type-specific UI.
 

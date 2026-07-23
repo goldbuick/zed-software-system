@@ -1,4 +1,6 @@
-# keyboard.ts
+---
+title: keyboard.ts
+---
 
 **Purpose**: Clipboard and keyboard utilities. Exports `withclipboard` for browser Clipboard API access.
 

@@ -1,2 +1,4 @@
 @board room1x0
 @exitsouth title
+@exitnorth marsh
+@exitwest room0x0

@@ -118,6 +118,48 @@ describe('wanixdisplay attach', () => {
     expect(useTape.getState().terminal.open).toBe(true)
   })
 
+  it('session open hard-attaches tasks even when tape is visible', () => {
+    useTape.setState((state) => ({
+      terminal: { ...state.terminal, open: true },
+    }))
+    applywanixsessionmessage({
+      event: 'open',
+      sessionkey: 'hello-wasm',
+      kind: 'task',
+    })
+    expect(readattachedsession()).toBe('hello-wasm')
+    expect(readwanixattachpanelopen()).toBe(true)
+    expect(useTape.getState().terminal.open).toBe(false)
+  })
+
+  it('session open hard-attaches tasks after manual detach', () => {
+    useTape.setState((state) => ({
+      terminal: { ...state.terminal, open: true },
+    }))
+    setattachedsession('task-a')
+    detachwanixterm()
+    expect(readattachedsession()).toBeNull()
+    applywanixsessionmessage({
+      event: 'open',
+      sessionkey: 'hello-wasm',
+      kind: 'task',
+    })
+    expect(readattachedsession()).toBe('hello-wasm')
+    expect(readwanixattachpanelopen()).toBe(true)
+    expect(useTape.getState().terminal.open).toBe(false)
+  })
+
+  it('session open does not steal attach from sibling tasks', () => {
+    setattachedsession('task-a')
+    applywanixsessionmessage({
+      event: 'open',
+      sessionkey: 'task-b',
+      kind: 'task',
+    })
+    expect(readattachedsession()).toBe('task-a')
+    expect(readwanixactivesession()).toBe('task-b')
+  })
+
   it('open does not auto-attach after manual detach when a new session connects', () => {
     onwanixtermsessionopen('task-a')
     detachwanixterm()
@@ -276,20 +318,6 @@ describe('wanixdisplay attach', () => {
     expect(readattachedsession()).toBe('linux-vm')
     expect(readwanixattachpanelopen()).toBe(true)
     expect(useTape.getState().terminal.open).toBe(false)
-  })
-
-  it('task session open still soft-attaches when tape is visible', () => {
-    useTape.setState((state) => ({
-      terminal: { ...state.terminal, open: true },
-    }))
-    applywanixsessionmessage({
-      event: 'open',
-      sessionkey: 'hello-wasm',
-      kind: 'task',
-    })
-    expect(readattachedsession()).toBe('hello-wasm')
-    expect(readwanixattachpanelopen()).toBe(false)
-    expect(useTape.getState().terminal.open).toBe(true)
   })
 
   it('zedsync session open hard-attaches even when tape is visible', () => {

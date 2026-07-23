@@ -1,4 +1,6 @@
-# stt/speechtotext.ts
+---
+title: stt/speechtotext.ts
+---
 
 **Purpose**: Local speech recognition via `@huggingface/transformers` (Moonshine ONNX) in an on-demand **sttspace** worker. Mic capture runs on the main thread; model load and transcribe run in the worker (WebGPU).
 

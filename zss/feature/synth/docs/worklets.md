@@ -1,4 +1,6 @@
-# Audio Worklets
+---
+title: Audio Worklets
+---
 
 Custom AudioWorklet processors for effects not available in Tone.js.
 

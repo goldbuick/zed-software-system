@@ -1,4 +1,6 @@
-# algosynth.ts
+---
+title: algosynth.ts
+---
 
 FM-style algorithmic synthesizer with 4 operators and 8 modulation algorithms.
 

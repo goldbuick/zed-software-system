@@ -29,13 +29,21 @@ export const CAFE_TASKS: TaskDef[] = [
     },
   ),
   def('cafe:build', {
-    description: 'Production Vite build',
+    description:
+      'Production Vite build with Blume docs merged into cafe/dist/docs',
     tags: ['ci'],
-    run: exec(['vite', 'build']),
+    run: handler(async (ctx) => {
+      const { runcafebuild } = await import('tasks/lib/cafebuild')
+      return runcafebuild(ctx)
+    }),
   }),
   def('cafe:build:strict', {
-    description: 'Typecheck then production Vite build',
-    run: shell('tsc && vite build'),
+    description:
+      'Typecheck then production Vite build with Blume docs at cafe/dist/docs',
+    run: handler(async (ctx) => {
+      const { runcafebuild } = await import('tasks/lib/cafebuild')
+      return runcafebuild(ctx, { tsc: true })
+    }),
   }),
   def('cafe:analyze', {
     description: 'Production build with bundle analyzer',
@@ -48,7 +56,7 @@ export const CAFE_TASKS: TaskDef[] = [
   def('cafe:clear', {
     description: 'Remove build artifacts and Vite cache',
     run: shell(
-      'rimraf tmp && rimraf dist && rimraf headless/dist && rimraf cafe/dist && rimraf node_modules/.vite',
+      'rimraf tmp && rimraf dist && rimraf headless/dist && rimraf cafe/dist && rimraf docs-site/dist && rimraf docs-site/.blume && rimraf node_modules/.vite',
     ),
   }),
   def('cafe:preview', {

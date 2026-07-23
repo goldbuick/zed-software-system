@@ -1,4 +1,6 @@
-# element.ts
+---
+title: element.ts
+---
 
 **Purpose**: Defines `ELEMENT_FIRMWARE` — commands and hooks for element stats, movement, lifecycle, code execution, and player input. Provides the core vocabulary for object behavior.
 

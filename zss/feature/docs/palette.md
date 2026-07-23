@@ -1,4 +1,6 @@
-# palette.ts
+---
+title: palette.ts
+---
 
 **Purpose**: Exports `PALETTE` — default 16-color palette as hex array. Used by gadget display, parse (ANSI), and memory codepage operations.
 

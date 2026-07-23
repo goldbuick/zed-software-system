@@ -22,7 +22,6 @@ import {
   registerwanixtermsessionopen,
   unregisterwanixtermsession,
 } from 'zss/device/wanixclient/wanixtermbuffer'
-import { iszedsynctaskid } from 'zss/device/wanixclient/wanixzedsync'
 import {
   iswanixdaemontaskid,
   iswanixvmsessionkey,
@@ -326,13 +325,14 @@ export function applywanixsessionmessage(payload: {
   const sessionkey = payload.sessionkey
   if (payload.event === 'open') {
     registerwanixtermsessionopen(sessionkey)
-    // VM + zedsync take the attach panel (not soft-attach behind an open tape).
-    if (payload.kind === 'vm' || iszedsynctaskid(sessionkey)) {
+    const alwayshardattach =
+      payload.kind === 'vm' ||
+      iswanixvmsessionkey(sessionkey) ||
+      iswanixdaemontaskid(sessionkey)
+    if (alwayshardattach || readattachedsessionstate() == null) {
+      // VM/zedsync/daemons always steal. Tasks hard-attach only when free
+      // (first drop / after detach) so bundle spawns do not steal to empty terms.
       setattachedsession(sessionkey)
-      return
-    }
-    if (readattachedsessionstate() == null) {
-      onwanixtermsessionopen(sessionkey)
     } else {
       setwanixactivesession(sessionkey)
     }

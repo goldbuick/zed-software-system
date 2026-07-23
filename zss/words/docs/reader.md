@@ -1,4 +1,6 @@
-# reader.ts
+---
+title: reader.ts
+---
 
 **Purpose**: Defines READ_CONTEXT and readargs — the argument parsing engine. READ_CONTEXT holds runtime state (book, board, element, words, get). readargs parses a word array from an index given a sequence of ARG_TYPEs and returns typed values plus the next index.
 

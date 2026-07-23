@@ -1,4 +1,6 @@
-# send.ts
+---
+title: send.ts
+---
 
 **Purpose**: Parses send/message syntax from word arrays. Supports `target:label args`, `label args`, and directional send `dir :label args`. Used by loader and runtime for dispatching messages to elements.
 

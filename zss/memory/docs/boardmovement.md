@@ -1,4 +1,6 @@
-# boardmovement.ts
+---
+title: boardmovement.ts
+---
 
 **Purpose**: Movement and collision — check blocked, move object, push chain, send messages on touch/shot/thud. Orchestrates movement with gamesend and player exits.
 

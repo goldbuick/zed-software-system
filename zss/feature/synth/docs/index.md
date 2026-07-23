@@ -1,4 +1,6 @@
-# index.ts
+---
+title: index.ts
+---
 
 Main entry point and synth factory.
 

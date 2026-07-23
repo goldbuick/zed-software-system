@@ -79,6 +79,23 @@ describe('wanixtermgridstate', () => {
     expect(String.fromCharCode(snapshot.char[6] ?? 0)).toBe('c')
   })
 
+  it('keeps short stdout under the cursor after first termfit shrink', () => {
+    // First drop: connect at default 80x24, write, then attach panel termfit.
+    const grid = createwanixtermgrid(80, 24)
+    wanixtermgridwritebytes(grid, new TextEncoder().encode('Hello from wanix!\n'))
+    expect(grid.cursory).toBe(1)
+    const next = wanixtermgridresize(grid, 100, 22)
+    const snapshot = readwanixtermgridsnapshot(next)
+    expect(snapshot.scrollbackrows).toBe(0)
+    expect(snapshot.cursory).toBe(1)
+    expect(snapshot.cursorx).toBe(0)
+    let text = ''
+    for (let x = 0; x < snapshot.cols; x++) {
+      text += String.fromCharCode(snapshot.char[x] ?? 32)
+    }
+    expect(text.replace(/ +$/, '')).toBe('Hello from wanix!')
+  })
+
   it('digest changes when cells change', () => {
     const grid = createwanixtermgrid(10, 2)
     const before = readwanixtermgridsnapshot(grid)

@@ -2,7 +2,6 @@ import type { DEVICE } from 'zss/device'
 import {
   bridgejoin,
   registerterminalclose,
-  registerterminalfull,
   vmcli,
   vmgadgetdesync,
   vmloader,
@@ -95,7 +94,6 @@ export function handleacklogin(device: DEVICE, message: MESSAGE): void {
     doasync(device, message.player, async () => {
       await writeclilink(device)
       writepages(device)
-      registerterminalfull(device, registerreadplayer())
       vmloader(device, message.player, undefined, 'text', 'sim:load', '')
       await writehelphint(device)
     })

@@ -1,4 +1,6 @@
-# MEMORY: roots and module layout
+---
+title: "MEMORY: roots and module layout"
+---
 
 > **There is no `zss/memory/index.ts` any more.** The previous "everything" module was split into focused files. This page explains where each former responsibility lives. For the flat function catalog see [`../EXPORTED_FUNCTIONS.md`](../EXPORTED_FUNCTIONS.md).
 

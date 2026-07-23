@@ -1,4 +1,6 @@
-# Voice FX Module
+---
+title: Voice FX Module
+---
 
 Configures per-voice effect sends and effect parameters. For the full parameter/default catalog (WASM vs Tone), see [fx-types-reference.md](fx-types-reference.md).
 

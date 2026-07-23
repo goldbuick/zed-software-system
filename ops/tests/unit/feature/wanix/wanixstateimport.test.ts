@@ -99,6 +99,25 @@ describe('wanixstateimport', () => {
     expect(board.objects).toEqual({})
   })
 
+  it('assembleboardjson omits pid_* player object files', () => {
+    const index = new Map<string, Uint8Array>([
+      [
+        'b1/p1/board/objects/npc1.json',
+        new TextEncoder().encode('{"id":"npc1","kind":"object"}\n'),
+      ],
+      [
+        'b1/p1/board/objects/pid_1.json',
+        new TextEncoder().encode('{"id":"pid_1","kind":"player"}\n'),
+      ],
+      [
+        'b1/p1/board/stats.json',
+        new TextEncoder().encode('{"startx":1,"starty":2}\n'),
+      ],
+    ])
+    const board = assembleboardjson(index, 'b1/p1')
+    expect(board?.objects).toEqual({ npc1: { id: 'npc1', kind: 'object' } })
+  })
+
   it('round-trips granular export layout', () => {
     const boardpage = {
       id: 'page1',
@@ -158,5 +177,29 @@ describe('wanixstateimport', () => {
     root!.bytes = new TextEncoder().encode(`${JSON.stringify(stats)}\n`)
     const parsed = parsezedcafeexportfiles(files)
     expect(parsed.guestTouch).toBe(true)
+  })
+
+  it('throws a clear error when book pages[] contains null', () => {
+    const files = [
+      {
+        path: 'stats.json',
+        bytes: new TextEncoder().encode(
+          JSON.stringify({ books: [{ id: 'book1', name: 'demo' }] }),
+        ),
+      },
+      {
+        path: 'demo-book1/stats.json',
+        bytes: new TextEncoder().encode(
+          JSON.stringify({
+            id: 'book1',
+            name: 'demo',
+            pages: [null],
+          }),
+        ),
+      },
+    ]
+    expect(() => parsezedcafeexportfiles(files)).toThrow(
+      /book stats pages\[0\] is null or not an object/,
+    )
   })
 })

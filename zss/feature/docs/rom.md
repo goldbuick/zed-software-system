@@ -1,4 +1,6 @@
-# rom/
+---
+title: rom/
+---
 
 **Purpose**: ROM (read-only memory) for help and documentation content. Static **`.md`** files bundled via `import.meta.glob('./**/*.md')`; addressable by path (e.g. `editor:stats:player`, `help:nopages`, `refscroll:menu`).
 
@@ -27,7 +29,7 @@ Help snippets rendered through the terminal use **Markdown** and [`terminalwrite
 
 ## Reference scrolls (`refscroll/*.md`)
 
-Bundled with the same glob. May be CommonMark (parsed with `scrollwritemarkdownlines` in the gadget path) or raw zsstext lines (e.g. `menu.md` via `scrollwritelines`). See [`zss/gadget/docs/gadget-scrolls.md`](../../gadget/docs/gadget-scrolls.md).
+Bundled with the same glob. May be CommonMark (parsed with `scrollwritemarkdownlines` in the gadget path) or raw zsstext lines (e.g. `menu.md` via `scrollwritelines`). See [`zss/gadget/docs/gadget-scrolls.mdx`](../../gadget/docs/gadget-scrolls.mdx).
 
 ## Command helper format (historical note)
 

@@ -2,7 +2,7 @@ import { createdevice } from 'zss/device'
 import { apilog, platformready } from 'zss/device/api'
 
 /**
- * Join-tab stand-in for stubspace vm: emits ready and acks vm:operator so
+ * Join-tab stand-in for the sim vm: emits ready and acks vm:operator so
  * register can bridgejoin. Real vm:* after Peer is up go to the host.
  */
 export function startjoinvm(session: string) {

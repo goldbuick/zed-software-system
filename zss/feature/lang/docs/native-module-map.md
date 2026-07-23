@@ -1,4 +1,6 @@
-# C++ lang compiler modules
+---
+title: C++ lang compiler modules
+---
 
 C++ ZSS script compiler under `backend/wasm/`.
 

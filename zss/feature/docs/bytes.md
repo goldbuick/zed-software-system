@@ -1,4 +1,6 @@
-# bytes.ts
+---
+title: bytes.ts
+---
 
 **Purpose**: Load palette and charset bitmaps from byte arrays. Used by parse (ANSI, CHR), codepage operations, gadget display.
 

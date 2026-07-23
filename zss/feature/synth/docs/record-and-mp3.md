@@ -1,4 +1,6 @@
-# Recording & MP3 export
+---
+title: "Recording & MP3 export"
+---
 
 ## Active path — Daisy (`backend/daisy/daisyrecordhandler.ts` + `daisyofflinerender.ts`)
 

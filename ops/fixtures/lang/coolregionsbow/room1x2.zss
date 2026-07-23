@@ -1,3 +1,4 @@
 @board room1x2
 @exitnorth title
 @exiteast room2x2
+@exitwest arena

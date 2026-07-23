@@ -1,4 +1,6 @@
-# tts/
+---
+title: tts/
+---
 
 **Purpose**: Engine-agnostic text-to-speech. Main thread holds opaque state and playback queue; inference runs in **ttsspace**.
 

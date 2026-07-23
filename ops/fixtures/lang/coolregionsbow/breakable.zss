@@ -1,4 +1,6 @@
 @terrain breakable
 @issolid
 @isbreakable
-@char 177
+@char 254
+@color yellow
+@bg black

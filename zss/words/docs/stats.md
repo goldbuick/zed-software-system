@@ -1,4 +1,6 @@
-# stats.ts
+---
+title: stats.ts
+---
 
 **Purpose**: Parses and formats stat declarations from `@` lines. Maps stat types (loader, board, object, range, select, number, etc.) to STAT_TYPE and value arrays. Used when loading codepages and interpreting stat metadata.
 

@@ -1,4 +1,6 @@
-# netterminal.ts
+---
+title: netterminal.ts
+---
 
 **Purpose**: Peer-to-peer network terminal using PeerJS. Host or join sessions; bridge messages between peers. Used for multiplayer terminal sharing.
 

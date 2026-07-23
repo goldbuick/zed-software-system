@@ -44,7 +44,7 @@ import {
   setzedcafepollactive,
 } from 'zss/device/wanixclient/state'
 import { readwanixroomconfig } from 'zss/device/wanixclient/wanixroom'
-import { iszedsyncreadywaitpending } from 'zss/device/wanixclient/wanixzedsync'
+import { iszedsyncreadywaitpending } from 'zss/device/wanixclient/wanixzedsyncready'
 import {
   wanixperfdelta,
   wanixperfmark,
@@ -73,6 +73,7 @@ import type {
   WanixZedCafeGuestFile,
   WanixZedCafeHostState,
 } from 'zss/feature/wanix/wanixzedcafetypes'
+import { isplayerobjectpath } from 'zss/feature/wanix/zedcafeprotectedflags'
 import { validatezedcafeexportpaths } from 'zss/feature/wanix/zedcafetreeschema'
 
 function tracezedcafeexport(message: string) {
@@ -182,19 +183,23 @@ export function requestvmzedcafeexportfiles(
   player: string,
   timeoutms = WANIX_VM_ZEDCAFE_EXPORT_FETCH_MS,
 ): Promise<WANIX_ZED_CAFE_EXPORT_FILE[]> {
-  if (readpendingexportwait()) {
-    return Promise.reject(
-      new Error('zedcafe export: concurrent vm export fetch'),
-    )
+  const pending = readpendingexportwait()
+  if (pending) {
+    return pending.promise
   }
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => {
-      setpendingexportwait(null)
-      reject(new Error('zedcafe export: vm export fetch timed out'))
-    }, timeoutms)
-    setpendingexportwait({ resolve, reject, timer })
-    vmexportzedcafe(device, player)
+  let resolve!: (files: WANIX_ZED_CAFE_EXPORT_FILE[]) => void
+  let reject!: (error: Error) => void
+  const promise = new Promise<WANIX_ZED_CAFE_EXPORT_FILE[]>((res, rej) => {
+    resolve = res
+    reject = rej
   })
+  const timer = setTimeout(() => {
+    setpendingexportwait(null)
+    reject(new Error('zedcafe export: vm export fetch timed out'))
+  }, timeoutms)
+  setpendingexportwait({ resolve, reject, timer, promise })
+  vmexportzedcafe(device, player)
+  return promise
 }
 
 function requestvmzedcafeimport(
@@ -863,13 +868,18 @@ export async function runzedcafeimport(
     }
     const upsertpaths = readzedcafeexportupsertpaths(ops)
     const subset = zedcafeexportdoctofiles(applieddoc, upsertpaths)
-    // Upsert-only after import: defer host removes until guest-dirty clears so
-    // concurrent zedsync flat-file writes are not racing export-tree deletes.
+    // Defer non-player host removes until guest-dirty clears so concurrent
+    // zedsync flat-file writes are not racing export-tree deletes. Player
+    // object paths are export-mirror only (not peer-synced flat writes) — omit
+    // them here and orphan pid_*.json files stick in zedcafe forever.
+    const removepaths = [...readzedcafeexportremovepaths(ops)].filter(
+      isplayerobjectpath,
+    )
     const pushed = pushzedcafesynctoiframe(device, player, subset, {
       fromimport: true,
       partial: true,
       nextdoc: applieddoc,
-      removepaths: [],
+      removepaths,
     })
     if (pushed) {
       setzedcafeguestdirty(false)

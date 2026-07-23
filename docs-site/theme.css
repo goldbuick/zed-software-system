@@ -1,0 +1,277 @@
+/**
+ * Zed Cafe / ZNS aesthetic for Blume docs.
+ * Palette mirrors ops/infra/net-zns-worker.js + zss/feature/palette.ts (EGA/ZZT).
+ */
+
+:root {
+  /* Light mode: soft blue paper, same EGA accents */
+  --blume-background: #e8eefc;
+  --blume-foreground: #000066;
+  --blume-muted: #d0daf5;
+  --blume-muted-foreground: #5555aa;
+  --blume-border: #5555ff;
+  --blume-accent: #00aaaa;
+  --blume-accent-foreground: #ffffff;
+  --blume-action: #00aa00;
+  --blume-code-background: #dce4f8;
+  --blume-radius: 0;
+  --blume-font-display: 'IBM EGA 8x14', 'Space Mono', ui-monospace, monospace;
+  --blume-font-body: 'IBM EGA 8x14', 'Space Mono', ui-monospace, 'Courier New', monospace;
+  --blume-font-mono: 'IBM EGA 8x14', 'Space Mono', ui-monospace, 'Courier New', monospace;
+  /* Heading pens (EGA dark on paper) */
+  --zss-h1: #aaaa00;
+  --zss-h2: #00aaaa;
+  --zss-h3: #00aa00;
+  --zss-h4: #aa00aa;
+  --zss-h5: #aa0000;
+  --zss-h6: #aa5500;
+}
+
+:root[data-theme='dark'] {
+  /* Classic terminal blue field (docs.at.zed.cafe / tape backplate) */
+  --blume-background: #0000aa;
+  --blume-foreground: #ffffff;
+  --blume-muted: #000088;
+  /* Was #aaaaaa -- too dim on #0000aa (body + nav used this token). */
+  --blume-muted-foreground: #dddddd;
+  --blume-border: #7777ff;
+  --blume-accent: #55ffff;
+  --blume-accent-foreground: #0000aa;
+  --blume-action: #55ff55;
+  --blume-code-background: #000000;
+  /* Heading pens (EGA bright) */
+  --zss-h1: #ffff55;
+  --zss-h2: #55ffff;
+  --zss-h3: #55ff55;
+  --zss-h4: #ff55ff;
+  --zss-h5: #ff5555;
+  --zss-h6: #ffaa55;
+}
+
+@font-face {
+  font-family: 'IBM EGA 8x14';
+  src: url('/docs/fonts/IBMEGA8x14.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* CRT-ish bitmap type (parity with ZNS VGA page) */
+html {
+  font-kerning: none;
+  font-variant-ligatures: none;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: unset;
+}
+
+html[data-theme='dark'] body {
+  background-color: #0000aa;
+  background-image: url('/docs/zns-dot-tile.svg');
+  background-size: 16px 28px;
+  background-repeat: repeat;
+}
+
+html[data-theme='light'] body {
+  background-color: #e8eefc;
+  background-image: url('/docs/zns-dot-tile.svg');
+  background-size: 16px 28px;
+  background-repeat: repeat;
+}
+
+a {
+  text-underline-offset: 0.2em;
+}
+
+/*
+ * Fancy ZNS heading pens: each depth gets its own EGA color + tape chrome.
+ * Scoped to article/main so nav/chrome stay neutral.
+ */
+article.prose :is(h1, h2, h3, h4, h5, h6),
+main :is(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--blume-font-display);
+  font-weight: normal;
+  letter-spacing: 0.02em;
+  text-wrap: balance;
+  position: relative;
+  padding: 0.2rem 0.55rem 0.2rem 0.75rem;
+  border-left: 0.4rem solid currentColor;
+  scroll-margin-top: 5rem;
+}
+
+article.prose h1,
+main > article h1,
+main h1 {
+  color: var(--zss-h1);
+  background: color-mix(in srgb, var(--zss-h1) 12%, transparent);
+  border-bottom: 3px double currentColor;
+  padding-bottom: 0.4rem;
+  margin-bottom: 1rem;
+  text-shadow: 2px 2px 0 #000000;
+}
+
+html[data-theme='light'] article.prose h1,
+html[data-theme='light'] main h1 {
+  text-shadow: none;
+  background: color-mix(in srgb, var(--zss-h1) 18%, transparent);
+}
+
+article.prose h2,
+main h2 {
+  color: var(--zss-h2);
+  background: color-mix(in srgb, var(--zss-h2) 10%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--zss-h2) 50%, transparent);
+  padding-bottom: 0.3rem;
+}
+
+article.prose h3,
+main h3 {
+  color: var(--zss-h3);
+  background: color-mix(in srgb, var(--zss-h3) 8%, transparent);
+}
+
+article.prose h4,
+main h4 {
+  color: var(--zss-h4);
+  background: color-mix(in srgb, var(--zss-h4) 8%, transparent);
+}
+
+article.prose h5,
+main h5 {
+  color: var(--zss-h5);
+}
+
+article.prose h6,
+main h6 {
+  color: var(--zss-h6);
+}
+
+/* Heading anchor hashes Blume injects — match the pen color */
+article.prose :is(h1, h2, h3, h4, h5, h6) a,
+main :is(h1, h2, h3, h4, h5, h6) a {
+  color: inherit;
+}
+
+/* Blume maps prose to muted-foreground; keep body at full white on blue. */
+html[data-theme='dark'] main p,
+html[data-theme='dark'] main li,
+html[data-theme='dark'] main td,
+html[data-theme='dark'] main th,
+html[data-theme='dark'] article p,
+html[data-theme='dark'] article li {
+  color: var(--blume-foreground);
+}
+
+html[data-theme='dark'] main a,
+html[data-theme='dark'] article a {
+  color: var(--blume-accent);
+}
+
+html[data-theme='dark'] main a:hover,
+html[data-theme='dark'] article a:hover {
+  color: var(--blume-action);
+}
+
+/* Side nav: brighter idle links; active stays accent via Blume. */
+html[data-theme='dark'] nav a {
+  color: #cccccc;
+}
+
+html[data-theme='dark'] nav a:hover {
+  color: var(--blume-foreground);
+}
+
+/* Code / pre: black cmd box + bitmap mono via tokens */
+pre,
+code {
+  font-family: var(--blume-font-mono);
+}
+
+html[data-theme='dark'] :not(pre) > code {
+  color: #ffff55;
+  background: #000000;
+  border: 1px solid #5555ff;
+  padding: 0.05em 0.35em;
+}
+
+html[data-theme='dark'] pre {
+  color: #ffffff;
+  background: #000000;
+  border: 1px solid var(--blume-accent);
+}
+
+/* Sharper chrome — no soft cards */
+.rounded-blume {
+  border-radius: 0;
+}
+
+/* Mermaid: ZNS / tape cmd-box chrome (fills come from blume mermaid themeVariables patch) */
+blume-mermaid {
+  margin: 1.25rem 0;
+  padding: 0.75rem;
+  border: 1px solid var(--blume-border);
+  background: var(--blume-code-background);
+  overflow: auto;
+}
+
+html[data-theme='dark'] blume-mermaid {
+  border-color: var(--blume-accent);
+  box-shadow: inset 0 0 0 1px #000066;
+}
+
+blume-mermaid svg {
+  font-family: var(--blume-font-mono);
+}
+
+/*
+ * Readable EGA nodes on black panel:
+ * page-blue fill (#0000aa) + cyan stroke -- not navy-on-black (too close).
+ */
+html[data-theme='dark'] blume-mermaid .node rect,
+html[data-theme='dark'] blume-mermaid .node polygon,
+html[data-theme='dark'] blume-mermaid .node circle,
+html[data-theme='dark'] blume-mermaid .basic.label-container,
+html[data-theme='dark'] blume-mermaid .label-container {
+  fill: #0000aa !important;
+  stroke: #55ffff !important;
+  stroke-width: 2.5px !important;
+}
+
+html[data-theme='dark'] blume-mermaid .cluster rect {
+  fill: #000066 !important;
+  stroke: #7777ff !important;
+  stroke-width: 2px !important;
+}
+
+html[data-theme='dark'] blume-mermaid .edgePath path.path,
+html[data-theme='dark'] blume-mermaid .flowchart-link {
+  stroke: #ffffff !important;
+  stroke-width: 2px !important;
+}
+
+/* Edge markers + labels that themeVariables sometimes leave washed out */
+blume-mermaid .marker,
+blume-mermaid marker path {
+  fill: var(--blume-muted-foreground) !important;
+  stroke: var(--blume-muted-foreground) !important;
+}
+
+html[data-theme='dark'] blume-mermaid .marker,
+html[data-theme='dark'] blume-mermaid marker path {
+  fill: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+blume-mermaid .edgeLabel,
+blume-mermaid .edgeLabel rect {
+  color: var(--blume-accent) !important;
+}
+
+blume-mermaid .nodeLabel,
+blume-mermaid .label,
+blume-mermaid .cluster-label,
+blume-mermaid foreignObject,
+blume-mermaid foreignObject div,
+blume-mermaid foreignObject span {
+  font-family: var(--blume-font-mono) !important;
+  color: #ffffff !important;
+}

@@ -8,6 +8,10 @@ import {
   setwanixreadyflag,
 } from 'zss/device/wanixclient/state'
 import { clearwanixtermbuffers } from 'zss/device/wanixclient/wanixtermbuffer'
+import {
+  cancelzedsyncreadywait,
+  iszedsyncreadywaitpending,
+} from 'zss/device/wanixclient/wanixzedsyncready'
 import { isdevbuild } from 'zss/feature/devbuild'
 
 let pendingwanixsession = ''
@@ -52,11 +56,9 @@ export function markwanixidle(): void {
   resetready()
   clearwanixtermbuffers()
   resetwanixattachforidle()
-  void import('zss/device/wanixclient/wanixzedsync').then((mod) => {
-    if (mod.iszedsyncreadywaitpending()) {
-      mod.cancelzedsyncreadywait('wanix idle')
-    }
-  })
+  if (iszedsyncreadywaitpending()) {
+    cancelzedsyncreadywait('wanix idle')
+  }
 }
 
 export function registerwanixsessioncloseprune(

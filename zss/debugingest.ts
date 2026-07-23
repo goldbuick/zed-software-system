@@ -4,6 +4,30 @@ const DEBUG_INGEST =
   'http://127.0.0.1:7474/ingest/f2bfd0d8-5208-447d-9aef-a3f39f2dbf4e'
 const DEBUG_SESSION = 'player-orphan'
 
+/** Extract pid_* ids from json-patch paths containing /objects/pid_…. */
+export function extractpidsfromopspaths(
+  operations: { path?: string }[],
+): string[] {
+  const out: string[] = []
+  const seen = new Set<string>()
+  for (let i = 0; i < operations.length; ++i) {
+    const path = operations[i]?.path ?? ''
+    const marker = '/objects/pid_'
+    const idx = path.indexOf(marker)
+    if (idx < 0) {
+      continue
+    }
+    const rest = path.slice(idx + '/objects/'.length)
+    const slash = rest.indexOf('/')
+    const pid = slash >= 0 ? rest.slice(0, slash) : rest
+    if (pid.startsWith('pid_') && !seen.has(pid)) {
+      seen.add(pid)
+      out.push(pid)
+    }
+  }
+  return out
+}
+
 export function debugingest(
   location: string,
   message: string,

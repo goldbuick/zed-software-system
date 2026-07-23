@@ -1,4 +1,6 @@
-# loadertext.ts
+---
+title: loadertext.ts
+---
 
 **Purpose**: Implements `loadertext` — a `FIRMWARE_COMMAND` that reads from a text file line-by-line with optional regex capture. Used by `#readline` in loader context.
 

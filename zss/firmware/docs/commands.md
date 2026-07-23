@@ -1,4 +1,6 @@
-# Full command reference
+---
+title: Full command reference
+---
 
 All firmware commands and their descriptions. Commands are available depending on driver (CLI, RUNTIME, LOADER) and which firmware modules are registered.
 

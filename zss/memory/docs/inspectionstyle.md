@@ -1,4 +1,6 @@
-# inspectionstyle.ts
+---
+title: inspectionstyle.ts
+---
 
 **Purpose**: Style brush UI — apply chars/colors/bgs to region. Uses secret heap for style config.
 

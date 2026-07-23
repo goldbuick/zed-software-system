@@ -1,4 +1,6 @@
-# Built-in scroll validation
+---
+title: Built-in scroll validation
+---
 
 Tier 1 scrolls are covered by Jest (see below). Tier 2 is manual only.
 

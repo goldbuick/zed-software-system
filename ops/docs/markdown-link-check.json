@@ -4,7 +4,8 @@
     { "pattern": "^https://localhost" },
     { "pattern": "^http://localhost" },
     { "pattern": "^http://127\\.0\\.0\\.1" },
-    { "pattern": "^https?://([a-z0-9-]+\\.)*zed\\.cafe:8787" }
+    { "pattern": "^https?://([a-z0-9-]+\\.)*zed\\.cafe:8787" },
+    { "pattern": "^https://zed\\.cafe/docs(/|$)" }
   ],
   "aliveStatusCodes": [200, 206, 403]
 }

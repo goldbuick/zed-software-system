@@ -82,6 +82,7 @@ export type VmZedCafeExportWaiter = {
   resolve: (files: WANIX_ZED_CAFE_EXPORT_FILE[]) => void
   reject: (error: Error) => void
   timer: ReturnType<typeof setTimeout>
+  promise: Promise<WANIX_ZED_CAFE_EXPORT_FILE[]>
 }
 
 export type VmZedCafeImportWaiter = {

@@ -1,4 +1,6 @@
-# parser.ts
+---
+title: parser.ts
+---
 
 **Purpose**: Defines the CST grammar for the ZSS scripting language. Uses Chevrotain's CstParser to parse tokens into a Concrete Syntax Tree. Grammar rules map to CST node types consumed by the visitor.
 

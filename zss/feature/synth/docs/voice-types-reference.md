@@ -1,4 +1,6 @@
-# Voice types, config params, and WASM vs Tone defaults
+---
+title: "Voice types, config params, and WASM vs Tone defaults"
+---
 
 Reference catalog for all ZSS `#synth` voice types. **Origin legend:** **ZSS** = explicit in ZSS source; **Tone** = Tone.js `getDefaults()` / instrument defaults; **WASM-play** = hardcoded in generated play code, not `#synth`-settable.
 

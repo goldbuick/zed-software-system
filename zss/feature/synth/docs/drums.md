@@ -1,4 +1,6 @@
-# Drums Module
+---
+title: Drums Module
+---
 
 Synthesized drum kit. Each file provides one or more drum sounds with trigger functions.
 
@@ -38,7 +40,7 @@ Synthesized drum kit. Each file provides one or more drum sounds with trigger fu
 | **DaisySP WASM** (active) | Custom Membrane-style bass (ID 9), DaisySP `SyntheticBassDrum` (ID 7); custom C++ for tick, tweet, snares, cowbell, clap, woodblocks |
 | **Maximilian WASM** (archived) | Tone-parity custom DSP in [`archive/maxi/drumplaycode.ts`](../../../../ops/archive/synth/maxi/drumplaycode.ts) |
 
-See [implementation-matrix.md](implementation-matrix.md) Table 4.
+See [implementation-matrix.mdx](implementation-matrix.mdx) Table 4.
 
 ## Implementation Details
 

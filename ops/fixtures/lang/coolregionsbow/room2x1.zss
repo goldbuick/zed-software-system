@@ -1,3 +1,4 @@
 @board room2x1
 @exitwest title
 @exitsouth room2x2
+@exiteast vault

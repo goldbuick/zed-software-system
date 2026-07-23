@@ -1,4 +1,6 @@
-# guid.ts
+---
+title: guid.ts
+---
 
 **Purpose**: ID generation — session IDs, player IDs, topic IDs, human-readable names. Uses nanoid and human-id.
 

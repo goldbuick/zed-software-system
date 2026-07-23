@@ -1,4 +1,6 @@
-# firmware.ts (Core)
+---
+title: firmware.ts (Core)
+---
 
 **Location**: `zss/firmware.ts` (parent of firmware folder)
 

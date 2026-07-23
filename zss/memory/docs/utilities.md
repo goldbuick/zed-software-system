@@ -1,4 +1,6 @@
-# utilities.ts
+---
+title: utilities.ts
+---
 
 **Purpose**: Admin scroll, in-memory `CONFIG` (crt / lowrez / scanlines / voice2text / loaderlogging / promptlogging / dev / gadget) and zstd+zip book serialization.
 

@@ -1,4 +1,6 @@
-# inspectionremix.ts
+---
+title: inspectionremix.ts
+---
 
 **Purpose**: Remix UI — remix region with pattern/mirror. Uses boardremix feature, config in IndexedDB.
 

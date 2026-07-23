@@ -1,0 +1,6 @@
+@board vault
+@exitnorth cave
+@exitwest room2x1
+@isdark
+@startx 12
+@starty 12

@@ -1,4 +1,6 @@
-# audiochain.ts
+---
+title: audiochain.ts
+---
 
 Builds the global audio routing and processing chain for the synth.
 

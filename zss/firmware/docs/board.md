@@ -1,4 +1,6 @@
-# board.ts
+---
+title: board.ts
+---
 
 **Purpose**: Defines `BOARD_FIRMWARE` — commands for board creation, element placement, shooting, duplication, and text writing. Handles board-level and element-placement operations.
 

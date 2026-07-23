@@ -81,3 +81,6 @@ ops/infra/generated/
 
 # wanix p9server:dev default empty root (user sync target)
 ops/fixtures/wanix/p9server/serve-root/
+
+# Blume docs site (docs-site/)
+docs-site/.blume/

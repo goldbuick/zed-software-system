@@ -1,4 +1,6 @@
-# Memory Documentation
+---
+title: Memory Documentation
+---
 
 The memory system manages the ZSS game state — books, codepages, boards, elements, players, and runtime. It provides the in-memory data layer that the chip, firmware, and gadget systems operate on.
 

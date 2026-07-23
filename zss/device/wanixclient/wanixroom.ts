@@ -3,8 +3,8 @@ import {
   wanixserverapplyroom,
   wanixserverbinddrop,
   wanixserverhalttask,
-  wanixserverreadvmstatus,
   wanixserverspawntask,
+  wanixserverstartvm,
   wanixserverstopvm,
   wanixserverwritefile,
 } from 'zss/device/api'
@@ -32,6 +32,13 @@ import {
   resetwanixzedcafeonidle,
   resetzedcafeexportinflight,
 } from 'zss/device/wanixclient/wanixzedcafe'
+import { clearzedsynchalt } from 'zss/device/wanixclient/wanixzedsynchalt'
+import {
+  beginzedsyncreadywait,
+  cancelzedsyncreadywait,
+  iszedsyncreadywaitpending,
+  iszedsynctaskid,
+} from 'zss/device/wanixclient/wanixzedsyncready'
 import { iswanixdaemontaskid } from 'zss/device/wanixserver/taskidlepolicy'
 import type { WanixTaskDriver } from 'zss/feature/wanix/wanixelements.d.ts'
 import { wanixperfmark } from 'zss/feature/wanix/wanixperf'
@@ -121,6 +128,7 @@ export function applywanixroomresult(
       tasks: [],
       vm: undefined,
     })
+    clearzedsynchalt()
     void import('zss/device/wanixclient/wanixzedcafe').then((mod) => {
       mod.resetwanixzedcafeonidle()
     })
@@ -301,28 +309,10 @@ export function disconnectwanixremote(key?: string): WanixRemoteSpec[] {
 export function startwanixvmroom(
   vmid = DEFAULT_WANIX_VM_ID,
   mem = DEFAULT_WANIX_VM_MEM,
-  zedcafe?: WanixZedCafeRoomSpec | null,
 ): void {
-  const current = readwanixroomconfig()
-  if (
-    current.mode === 'vm' &&
-    current.vm?.active &&
-    current.vm.id === vmid &&
-    current.vm.mem === mem
-  ) {
-    wanixserverreadvmstatus(SOFTWARE, registerreadplayer())
-    return
-  }
-  const next: WanixRoomConfig = {
-    ...bumpmountkey(current),
-    mode: 'vm',
-    archives: current.archives,
-    remotes: current.remotes,
-    tasks: [],
-    vm: { id: vmid, mem, active: true },
-    zedcafe: zedcafe ?? current.zedcafe,
-  }
-  applywanixroom(next)
+  // Iframe owns warm vs cold (live roomconfig + system). Parent/sim copies of
+  // room config can be stale after stop/drop; never decide remount here.
+  wanixserverstartvm(SOFTWARE, registerreadplayer(), mem, vmid)
 }
 
 export function stopwanixvmroom(): void {
@@ -336,6 +326,7 @@ export function stopwanixvmroom(): void {
 
 export function stopwanixroom(hard = false): void {
   resetwanixzedcafeonidle()
+  clearzedsynchalt()
   const current = readwanixroomconfig()
   const next = createidleroomconfig()
   next.mountkey = hard ? current.mountkey + 1 : current.mountkey
@@ -403,11 +394,9 @@ export function applywanixtaskspawnresult(
         : registerreadplayer()
     const logdevice = device ?? SOFTWARE
     apilog(logdevice, logplayer, `wanix spawntask FAILED: ${detail}`)
-    void import('zss/device/wanixclient/wanixzedsync').then((mod) => {
-      if (mod.iszedsyncreadywaitpending()) {
-        mod.cancelzedsyncreadywait(detail)
-      }
-    })
+    if (iszedsyncreadywaitpending()) {
+      cancelzedsyncreadywait(detail)
+    }
     setpendingspawn(null)
     return
   }
@@ -417,21 +406,19 @@ export function applywanixtaskspawnresult(
   if (!taskid || !cmd) {
     return
   }
-  void import('zss/device/wanixclient/wanixzedsync').then((mod) => {
-    if (!mod.iszedsynctaskid(taskid)) {
-      return
-    }
-    const target = cmd.trim().split(/\s+/)[1] ?? ''
-    if (!target) {
-      return
-    }
-    const logplayer =
-      typeof player === 'string' && player.length > 0
-        ? player
-        : registerreadplayer()
-    const logdevice = device ?? SOFTWARE
-    mod.beginzedsyncreadywait(logdevice, logplayer, target)
-  })
+  if (!iszedsynctaskid(taskid)) {
+    return
+  }
+  const target = cmd.trim().split(/\s+/)[1] ?? ''
+  if (!target) {
+    return
+  }
+  const logplayer =
+    typeof player === 'string' && player.length > 0
+      ? player
+      : registerreadplayer()
+  const logdevice = device ?? SOFTWARE
+  beginzedsyncreadywait(logdevice, logplayer, target)
 }
 
 export function halttaskinroom(taskid: string): void {
@@ -446,6 +433,9 @@ export function halttaskinroom(taskid: string): void {
     ...readwanixroomconfig(),
     tasks: readwanixroomconfig().tasks.filter((task) => task.id !== taskid),
   })
+  if (iszedsynctaskid(taskid)) {
+    clearzedsynchalt()
+  }
 }
 
 export function removewanixroomtask(taskid: string) {
@@ -462,12 +452,10 @@ function onwanixsessionclose(sessionkey: string) {
   // Daemon term EOF is not halt — keep room task so re-attach / menu stay valid.
   // Soft idle / explicit halt clear tasks via applyroom / halttaskinroom.
   if (iswanixdaemontaskid(sessionkey)) {
-    if (sessionkey === 'zedsync' || sessionkey.startsWith('zedsync-')) {
-      void import('zss/device/wanixclient/wanixzedsync').then((mod) => {
-        if (mod.iszedsyncreadywaitpending()) {
-          mod.cancelzedsyncreadywait('guest session closed')
-        }
-      })
+    if (iszedsynctaskid(sessionkey)) {
+      if (iszedsyncreadywaitpending()) {
+        cancelzedsyncreadywait('guest session closed')
+      }
     }
     return
   }
@@ -558,20 +546,8 @@ export function applywanixdropdone(
 export function startwanixvm(
   mem = DEFAULT_WANIX_VM_MEM,
   vmid = DEFAULT_WANIX_VM_ID,
-  device?: DEVICELIKE,
-  player?: string,
 ): void {
-  let zedcafe: WanixZedCafeRoomSpec | null | undefined
-  if (device && player) {
-    const boot = readwanixbootzedcafestate()
-    if (boot) {
-      zedcafe = {
-        cmd: boot.cmd,
-        generation: boot.generation,
-      }
-    }
-  }
-  startwanixvmroom(vmid, mem, zedcafe)
+  startwanixvmroom(vmid, mem)
 }
 
 export function stopwanixvm(vmid = DEFAULT_WANIX_VM_ID): void {

@@ -15,7 +15,6 @@ import {
   readwanixbinddropkind,
   readwanixbinddropperm,
 } from 'zss/device/wanixclient/wanixbindpaths'
-import { readattachedsession } from 'zss/device/wanixclient/wanixdisplay'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { memoryreadwanixattached } from 'zss/memory/session'
@@ -456,15 +455,19 @@ export function parsewebfile(player: string, file: File | undefined) {
   if (!ispresent(file)) {
     return
   }
-  if (memoryreadwanixattached()) {
+  // .wasm / .tgz always spawn tasks (never bind-on-drop under input/).
+  if (iswanixdropfilename(file.name)) {
+    handlefiletype(player, file.type ?? '', file)
+    return
+  }
+  // Bind-on-drop uses sim MEMORY.wanixattached (synced from main via
+  // vm:wanixattach). Do not read main-thread readattachedsession() here --
+  // parsewebfile runs in the VM worker where that store is empty.
+  const sessionkey = memoryreadwanixattached()
+  if (sessionkey) {
     file
       .arrayBuffer()
       .then((arraybuffer) => {
-        const sessionkey = readattachedsession()
-        if (!sessionkey) {
-          apierror(SOFTWARE, player, 'wanix', 'binddrop: no attached session')
-          return
-        }
         const label = file.name
         const kind = readwanixbinddropkind(label)
         const bytes = new Uint8Array(arraybuffer)

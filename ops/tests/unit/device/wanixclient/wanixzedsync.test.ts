@@ -6,12 +6,20 @@ import {
   wanixserverwritefile,
 } from 'zss/device/api'
 import {
-  beginzedsyncreadywait,
-  cancelzedsyncreadywait,
-  iszedsyncreadywaitpending,
   startwanixzedsync,
   WANIX_ZEDSYNC_WASM_URL,
 } from 'zss/device/wanixclient/wanixzedsync'
+import {
+  beginzedsyncreadywait,
+  cancelzedsyncreadywait,
+  iszedsyncreadywaitpending,
+} from 'zss/device/wanixclient/wanixzedsyncready'
+import {
+  clearzedsynchalt,
+  iszedsynchaltholding,
+  resetzedsynchaltfortest,
+  setzedsynchalt,
+} from 'zss/device/wanixclient/wanixzedsynchalt'
 import {
   resetwanixzedcafesessionfortest,
   setwanixroomconfig,
@@ -21,6 +29,7 @@ import {
   stopzedcafepoll,
 } from 'zss/device/wanixclient/wanixzedcafe'
 import { createidleroomconfig } from 'zss/feature/wanix/wanixroomtypes'
+import { memoryreadhalt, memorywritehalt } from 'zss/memory/session'
 
 jest.mock('zss/device/api', () => ({
   apilog: jest.fn(),
@@ -66,6 +75,8 @@ const player = 'p1'
 describe('startwanixzedsync gates', () => {
   beforeEach(() => {
     resetwanixzedcafesessionfortest()
+    resetzedsynchaltfortest()
+    memorywritehalt(false)
     cancelzedsyncreadywait()
     mockapilog.mockClear()
     mockspawntask.mockClear()
@@ -79,32 +90,35 @@ describe('startwanixzedsync gates', () => {
 
   afterEach(() => {
     cancelzedsyncreadywait()
+    clearzedsynchalt()
+    resetzedsynchaltfortest()
+    memorywritehalt(false)
   })
 
-  it('rejects empty targetpath', async () => {
-    await expect(startwanixzedsync(device, player, '  ')).rejects.toThrow(
+  it('rejects empty targetpath', () => {
+    expect(() => startwanixzedsync(device, player, '  ')).toThrow(
       /usage: #wanix zedsync/,
     )
     expect(mockspawntask).not.toHaveBeenCalled()
   })
 
-  it('rejects spaces in targetpath', async () => {
-    await expect(
-      startwanixzedsync(device, player, 'my folder'),
-    ).rejects.toThrow(/must not contain spaces/)
+  it('rejects spaces in targetpath', () => {
+    expect(() => startwanixzedsync(device, player, 'my folder')).toThrow(
+      /must not contain spaces/,
+    )
     expect(mockspawntask).not.toHaveBeenCalled()
   })
 
-  it('rejects zedcafe as targetpath', async () => {
-    await expect(startwanixzedsync(device, player, 'zedcafe')).rejects.toThrow(
+  it('rejects zedcafe as targetpath', () => {
+    expect(() => startwanixzedsync(device, player, 'zedcafe')).toThrow(
       /must not be zedcafe/,
     )
     expect(mockspawntask).not.toHaveBeenCalled()
   })
 
-  it('emits spawn with stageurl and does not start ready wait yet', async () => {
+  it('emits spawn with stageurl and does not start ready wait yet', () => {
     setwanixroomconfig(createidleroomconfig())
-    await startwanixzedsync(device, player, 'MyFolder')
+    startwanixzedsync(device, player, 'MyFolder')
     expect(mockapplyroom).not.toHaveBeenCalled()
     expect(mockwritefile).not.toHaveBeenCalled()
     expect(mockspawntask).toHaveBeenCalledWith(
@@ -129,7 +143,7 @@ describe('startwanixzedsync gates', () => {
     expect(mockapilog).toHaveBeenCalledWith(
       device,
       player,
-      expect.stringContaining('spawned; waiting for MyFolder/.zedsync/ready'),
+      expect.stringContaining('spawned; waiting for MyFolder/zedsync/ready'),
     )
     cancelzedsyncreadywait('test cleanup')
     expect(iszedsyncreadywaitpending()).toBe(false)
@@ -142,5 +156,47 @@ describe('startwanixzedsync gates', () => {
     cancelzedsyncreadywait('test cleanup')
     expect(mockstartzedcafepoll).not.toHaveBeenCalled()
     expect(mockstopzedcafepoll).not.toHaveBeenCalled()
+  })
+
+  it('sets soft halt while spawning zedsync', () => {
+    expect(memoryreadhalt()).toBe(false)
+    startwanixzedsync(device, player, 'MyFolder')
+    expect(iszedsynchaltholding()).toBe(true)
+    expect(memoryreadhalt()).toBe(true)
+  })
+})
+
+describe('zedsync halt latch', () => {
+  beforeEach(() => {
+    resetzedsynchaltfortest()
+    memorywritehalt(false)
+  })
+
+  afterEach(() => {
+    clearzedsynchalt()
+    resetzedsynchaltfortest()
+    memorywritehalt(false)
+  })
+
+  it('restores prior false across two start/stop cycles', () => {
+    expect(memoryreadhalt()).toBe(false)
+    setzedsynchalt()
+    expect(memoryreadhalt()).toBe(true)
+    clearzedsynchalt()
+    expect(memoryreadhalt()).toBe(false)
+    setzedsynchalt()
+    expect(memoryreadhalt()).toBe(true)
+    clearzedsynchalt()
+    expect(memoryreadhalt()).toBe(false)
+  })
+
+  it('keeps prior true after clear and does not re-sample on nested set', () => {
+    memorywritehalt(true)
+    setzedsynchalt()
+    expect(memoryreadhalt()).toBe(true)
+    setzedsynchalt()
+    expect(iszedsynchaltholding()).toBe(true)
+    clearzedsynchalt()
+    expect(memoryreadhalt()).toBe(true)
   })
 })

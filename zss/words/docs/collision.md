@@ -1,4 +1,6 @@
-# collision.ts
+---
+title: collision.ts
+---
 
 **Purpose**: Parses collision values (iswalk, issolid, isswim, isbullet, isghost) from word arrays. Maps string names to STR_COLLISION_CONST and COLLISION enum. Used when commands check or set collision flags.
 

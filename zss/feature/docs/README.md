@@ -1,4 +1,6 @@
-# Feature Documentation
+---
+title: Feature Documentation
+---
 
 The feature system provides domain-specific capabilities for the Zed Software System (ZSS) — board operations, file parsing, TTS, networking, data formatting, ROM/help content, and more. These modules are consumed by firmware, device, memory, and UI layers.
 
@@ -12,7 +14,7 @@ Feature modules are **stateless utilities** and **domain logic** that:
 - **tts** — Text-to-speech (Piper, Supertonic, Fish) in ttsspace worker
 - **stt** — Speech-to-text (Moonshine ONNX) in sttspace worker
 - **ROM** — Embedded help/documentation content
-- **Synth** — Audio synthesis (see [synth/docs](../synth/docs/README.md))
+- **Synth** — Audio synthesis (see [synth/docs](../synth/docs/index.md))
 - **zsstextui / writeui** — zsstext layout lines; terminal log sinks (hyperlinks, QR, copy)
 
 ## Module Index
@@ -26,7 +28,7 @@ Feature modules are **stateless utilities** and **domain logic** that:
 | [boardweave.md](boardweave.md) | Shift/wrap board region |
 | [format.md](format.md) | Object formatting and msgpack serialization |
 | [netterminal.md](netterminal.md) | Peer-to-peer terminal via PeerJS |
-| [media-transport-layer.md](media-transport-layer.md) | PeerJS media transport design (canvas + synth capture, dual-plane fan-out) |
+| [media-transport-layer.mdx](media-transport-layer.mdx) | PeerJS media transport design (canvas + synth capture, dual-plane fan-out) |
 | [tts.md](tts.md) | Text-to-speech (Piper, Supertonic, Fish) |
 | [parse.md](parse.md) | File parsing (ZIP, ZZT, ANSI, CHR, ZZM, markdown) |
 | [rom.md](rom.md) | ROM/help content and scroll display |
@@ -40,11 +42,13 @@ Feature modules are **stateless utilities** and **domain logic** that:
 | [speechtotext.md](speechtotext.md) | Speech recognition |
 | [fetchrefscrolltext](../fetchrefscrolltext.ts) | `docs.at.zed.cafe` then ROM refscroll text |
 | [itchiopublish.md](itchiopublish.md) | itch.io publishing |
-| [synth/docs](../synth/docs/README.md) | Audio synthesis (full docs) |
+| [synth/docs](../synth/docs/index.md) | Audio synthesis (full docs) |
+| [wanix/docs](../wanix/docs/index.md) | Wanix iframe OS, zedcafe export, zedsync |
 
 ## Submodules
 
-- **synth** — Web-based synthesizer with Tone.js; see [synth/docs/README.md](../synth/docs/README.md)
+- **synth** — Daisy WASM synth (AudioWorklet); archived Tone.js parity refs under synth docs; see [synth/docs/index.md](../synth/docs/index.md)
+- **wanix** — Shared Wanix types/helpers; parent/iframe devices under `zss/device/wanix*`; docs [wanix/docs](../wanix/docs/index.md)
 - **tts** — Piper/Supertonic/Fish TTS in ttsspace worker; main-thread playback in `tts/client.ts`
 - **stt** — Moonshine speech recognition in sttspace worker; mic capture in `stt/speechtotext.ts`
 - **parse** — Format-specific parsers; dispatches from `parse/file.ts`

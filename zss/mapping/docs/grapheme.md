@@ -1,4 +1,6 @@
-# grapheme.ts
+---
+title: grapheme.ts
+---
 
 **Purpose**: Unicode grapheme cluster helpers using `Intl.Segmenter`. Shared by markdown rendering and lexer/display alignment so emoji and combining characters count as one cell.
 

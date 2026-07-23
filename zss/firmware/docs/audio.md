@@ -1,4 +1,6 @@
-# audio.ts
+---
+title: audio.ts
+---
 
 **Purpose**: Defines `AUDIO_FIRMWARE` — commands for audio synthesis, playback, text-to-speech (TTS), and effects. Wraps the synth device API for use from user codepages.
 

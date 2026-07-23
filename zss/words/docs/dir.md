@@ -1,4 +1,6 @@
-# dir.ts
+---
+title: dir.ts
+---
 
 **Purpose**: Parses direction values from word arrays. Supports cardinal directions, modifiers (cw, ccw, opp), pathfinding (away, toward, find, flee), and compound dirs with args (by x y, at x y, within n, awayby n). Used for movement and spatial queries.
 

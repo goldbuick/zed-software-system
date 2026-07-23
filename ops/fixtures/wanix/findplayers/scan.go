@@ -62,8 +62,7 @@ type Report struct {
 }
 
 type bookStats struct {
-	ActiveList []string                  `json:"activelist"`
-	Flags      map[string]json.RawMessage `json:"flags"`
+	ActiveList []string `json:"activelist"`
 }
 
 type boardObject struct {
@@ -92,15 +91,47 @@ func sortedplayerpaths(paths map[string]struct{}) []string {
 	return out
 }
 
-func isplayerelement(kind string, id string) bool {
-	if kind == "player" {
-		return true
-	}
+func ispid(id string) bool {
+	return strings.HasPrefix(id, "pid_")
+}
+
+// IsPID reports player identity ids (pid_*).
+func IsPID(id string) bool {
 	return ispid(id)
 }
 
-func ispid(id string) bool {
-	return strings.HasPrefix(id, "pid_")
+func issimonlyflagowner(owner string) bool {
+	for _, suf := range []string{
+		"_chip",
+		"_gadget",
+		"_synth",
+		"_layers",
+		"_tracking",
+	} {
+		if strings.HasSuffix(owner, suf) {
+			return true
+		}
+	}
+	return false
+}
+
+// isplayerflagpath reports live player flag bags ({book}/flags/pid_*.json).
+func isplayerflagpath(rel string) bool {
+	parts := strings.Split(path.Clean(rel), "/")
+	if len(parts) != 3 || parts[1] != "flags" || !strings.HasSuffix(parts[2], ".json") {
+		return false
+	}
+	owner := strings.TrimSuffix(parts[2], ".json")
+	return ispid(owner) && !issimonlyflagowner(owner)
+}
+
+// isplayerobjectpath reports board avatar files (board/objects/pid_*.json).
+func isplayerobjectpath(rel string) bool {
+	if !strings.Contains(rel, "/board/objects/") || !strings.HasSuffix(rel, ".json") {
+		return false
+	}
+	base := path.Base(rel)
+	return ispid(strings.TrimSuffix(base, ".json"))
 }
 
 func intfromcoord(v float64) *int {
@@ -118,11 +149,58 @@ func ensureplayer(players map[string]*Player, id string) *Player {
 }
 
 func readfile(fsys fs.FS, name string) ([]byte, error) {
-	data, err := fs.ReadFile(fsys, name)
-	if err != nil {
-		return nil, err
+	return fs.ReadFile(fsys, name)
+}
+
+func hasboardterrain(fsys fs.FS, bookdir, pagedir string) bool {
+	_, err := fs.Stat(fsys, path.Join(bookdir, pagedir, "board", "terrain.json"))
+	return err == nil
+}
+
+// ResolveBoardPageDirFS finds the export page directory under bookdir that holds
+// board/terrain.json. boardhint may be a full dir name or a bare page/board id.
+func ResolveBoardPageDirFS(fsys fs.FS, bookdir, boardhint string) (string, error) {
+	if boardhint != "" && hasboardterrain(fsys, bookdir, boardhint) {
+		return boardhint, nil
 	}
-	return data, nil
+
+	entries, err := fs.ReadDir(fsys, bookdir)
+	if err != nil {
+		return "", fmt.Errorf("list %s: %w", bookdir, err)
+	}
+	if boardhint != "" {
+		for _, ent := range entries {
+			if !ent.IsDir() {
+				continue
+			}
+			name := ent.Name()
+			if (name == boardhint || strings.HasSuffix(name, "-"+boardhint)) &&
+				hasboardterrain(fsys, bookdir, name) {
+				return name, nil
+			}
+		}
+	}
+	for _, ent := range entries {
+		if !ent.IsDir() || strings.HasPrefix(ent.Name(), "player-") {
+			continue
+		}
+		if hasboardterrain(fsys, bookdir, ent.Name()) {
+			return ent.Name(), nil
+		}
+	}
+	return "", fmt.Errorf("no board/terrain.json under %s (hint=%q)", bookdir, boardhint)
+}
+
+func applyplayerflags(p *Player, flags map[string]any) {
+	if len(flags) == 0 {
+		return
+	}
+	if p.Flags == nil {
+		p.Flags = flags
+	}
+	if board, ok := flags["board"].(string); ok && board != "" {
+		p.Board = board
+	}
 }
 
 func scanbookstats(
@@ -155,40 +233,36 @@ func scanbookstats(
 		if p.Book == "" {
 			p.Book = bookdir
 		}
-		if raw, ok := stats.Flags[id]; ok {
-			var flags map[string]any
-			if err := json.Unmarshal(raw, &flags); err == nil {
-				p.Flags = flags
-				if board, ok := flags["board"].(string); ok && board != "" {
-					p.Board = board
-				}
-			}
-		}
-	}
-	for id, raw := range stats.Flags {
-		if !ispid(id) {
-			continue
-		}
-		found = true
-		p := ensureplayer(players, id)
-		if p.Book == "" {
-			p.Book = bookdir
-		}
-		var flags map[string]any
-		if err := json.Unmarshal(raw, &flags); err == nil {
-			if p.Flags == nil {
-				p.Flags = flags
-			}
-			if p.Board == "" {
-				if board, ok := flags["board"].(string); ok {
-					p.Board = board
-				}
-			}
-		}
 	}
 	if found {
 		markplayerpath(playerpaths, rel)
 	}
+	return nil
+}
+
+func scanplayerflag(
+	rel string,
+	data []byte,
+	players map[string]*Player,
+	playerpaths map[string]struct{},
+) error {
+	if !isplayerflagpath(rel) {
+		return nil
+	}
+	parts := strings.Split(path.Clean(rel), "/")
+	bookdir := parts[0]
+	id := strings.TrimSuffix(parts[2], ".json")
+
+	var flags map[string]any
+	if err := UnmarshalJSONOrNotReady(rel, data, &flags); err != nil {
+		return err
+	}
+	p := ensureplayer(players, id)
+	if p.Book == "" {
+		p.Book = bookdir
+	}
+	applyplayerflags(p, flags)
+	markplayerpath(playerpaths, rel)
 	return nil
 }
 
@@ -198,35 +272,29 @@ func scanboardobject(
 	players map[string]*Player,
 	playerpaths map[string]struct{},
 ) error {
+	if !isplayerobjectpath(rel) {
+		return nil
+	}
 	parts := strings.Split(rel, "/")
 	if len(parts) < 5 {
 		return nil
 	}
 	bookdir := parts[0]
 	pagedir := parts[1]
-	filename := parts[len(parts)-1]
-	objid := strings.TrimSuffix(filename, ".json")
+	objid := strings.TrimSuffix(path.Base(rel), ".json")
 
 	var obj boardObject
 	if err := UnmarshalJSONOrNotReady(rel, data, &obj); err != nil {
 		return err
 	}
-	if !isplayerelement(obj.Kind, obj.ID) && !isplayerelement(obj.Kind, objid) {
-		return nil
-	}
-	markplayerpath(playerpaths, rel)
-
 	id := objid
-	if obj.ID != "" {
+	if ispid(obj.ID) {
 		id = obj.ID
 	}
 	if !ispid(id) {
-		if obj.Kind == "player" && ispid(objid) {
-			id = objid
-		} else {
-			return nil
-		}
+		return nil
 	}
+	markplayerpath(playerpaths, rel)
 	p := ensureplayer(players, id)
 	p.Onboard = true
 	p.Book = bookdir
@@ -242,58 +310,33 @@ func scanboardobject(
 	return nil
 }
 
-func scanobjectelement(
-	rel string,
-	data []byte,
+func loadplayerobject(
+	fsys fs.FS,
+	p *Player,
 	players map[string]*Player,
 	playerpaths map[string]struct{},
 ) error {
-	parts := strings.Split(rel, "/")
-	if len(parts) < 4 {
+	if p.Book == "" || p.Board == "" || !ispid(p.ID) {
 		return nil
 	}
-	bookdir := parts[0]
-	pagedir := parts[1]
-
-	var obj boardObject
-	if err := UnmarshalJSONOrNotReady(rel, data, &obj); err != nil {
+	pagedir, err := ResolveBoardPageDirFS(fsys, p.Book, p.Board)
+	if err != nil {
+		// Board flag may not match an exported page yet — leave as roster-only.
+		return nil
+	}
+	rel := path.Join(p.Book, pagedir, "board", "objects", p.ID+".json")
+	data, err := readfile(fsys, rel)
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return nil
+		}
 		return err
 	}
-	id := obj.ID
-	if !isplayerelement(obj.Kind, id) {
-		return nil
-	}
-	markplayerpath(playerpaths, rel)
-	if id == "" && strings.HasPrefix(pagedir, "player-") {
-		id = strings.TrimPrefix(pagedir, "player-")
-	}
-	if !ispid(id) {
-		return nil
-	}
-	p := ensureplayer(players, id)
-	p.Onboard = true
-	if p.Book == "" {
-		p.Book = bookdir
-	}
-	// Prefer board/objects placement for Page; object/element.json often lives
-	// under player-* codepages that are not the walkable board.
-	if p.Page == "" {
-		p.Page = pagedir
-	}
-	if obj.Kind != "" {
-		p.Kind = obj.Kind
-	}
-	if p.X == nil {
-		p.X = intfromcoord(obj.X)
-	}
-	if p.Y == nil {
-		p.Y = intfromcoord(obj.Y)
-	}
-	markplayerpath(playerpaths, rel)
-	return nil
+	return scanboardobject(rel, data, players, playerpaths)
 }
 
-// Scan walks a zedcafe export tree and merges roster + board avatars.
+// Scan walks a zedcafe export tree using book flags to locate player boards,
+// then reads only those boards' board/objects/pid_*.json avatars.
 func Scan(fsys fs.FS, exportroot string) (Report, error) {
 	if exportroot == "" {
 		exportroot = "zedcafe"
@@ -304,58 +347,54 @@ func Scan(fsys fs.FS, exportroot string) (Report, error) {
 
 	players := make(map[string]*Player)
 	playerpaths := make(map[string]struct{})
-	var walkerr error
-	err := fs.WalkDir(fsys, ".", func(rel string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if d.IsDir() {
-			return nil
-		}
-		rel = path.Clean(rel)
-		if rel == "stats.json" {
-			return nil
-		}
-		switch {
-		case strings.HasSuffix(rel, "/stats.json") && strings.Count(rel, "/") == 1:
-			if err := scanbookstats(fsys, rel, players, playerpaths); err != nil {
-				walkerr = err
-				if errors.Is(err, ErrExportNotReady) {
-					return err
-				}
-			}
-		case strings.Contains(rel, "/board/objects/") && strings.HasSuffix(rel, ".json"):
-			data, err := readfile(fsys, rel)
-			if err != nil {
-				walkerr = err
-				return nil
-			}
-			if err := scanboardobject(rel, data, players, playerpaths); err != nil {
-				walkerr = err
-				if errors.Is(err, ErrExportNotReady) {
-					return err
-				}
-			}
-		case strings.HasSuffix(rel, "/object/element.json"):
-			data, err := readfile(fsys, rel)
-			if err != nil {
-				walkerr = err
-				return nil
-			}
-			if err := scanobjectelement(rel, data, players, playerpaths); err != nil {
-				walkerr = err
-				if errors.Is(err, ErrExportNotReady) {
-					return err
-				}
-			}
-		}
-		return nil
-	})
+
+	entries, err := fs.ReadDir(fsys, ".")
 	if err != nil {
 		return Report{}, err
 	}
-	if walkerr != nil {
-		return Report{}, walkerr
+	for _, ent := range entries {
+		if !ent.IsDir() {
+			continue
+		}
+		bookdir := ent.Name()
+		statsrel := path.Join(bookdir, "stats.json")
+		if _, err := fs.Stat(fsys, statsrel); err != nil {
+			continue
+		}
+		if err := scanbookstats(fsys, statsrel, players, playerpaths); err != nil {
+			return Report{}, err
+		}
+
+		flagsdir := path.Join(bookdir, "flags")
+		flagents, err := fs.ReadDir(fsys, flagsdir)
+		if err != nil {
+			if errors.Is(err, fs.ErrNotExist) {
+				continue
+			}
+			return Report{}, err
+		}
+		for _, fent := range flagents {
+			if fent.IsDir() {
+				continue
+			}
+			rel := path.Join(flagsdir, fent.Name())
+			if !isplayerflagpath(rel) {
+				continue
+			}
+			data, err := readfile(fsys, rel)
+			if err != nil {
+				return Report{}, err
+			}
+			if err := scanplayerflag(rel, data, players, playerpaths); err != nil {
+				return Report{}, err
+			}
+		}
+	}
+
+	for _, p := range players {
+		if err := loadplayerobject(fsys, p, players, playerpaths); err != nil {
+			return Report{}, err
+		}
 	}
 
 	ids := make([]string, 0, len(players))

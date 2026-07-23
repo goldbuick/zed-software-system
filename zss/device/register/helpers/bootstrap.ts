@@ -1,7 +1,6 @@
 import type { DEVICE } from 'zss/device'
 import {
   apierror,
-  registerterminalfull,
   vmbooks,
   vmcli,
   vmzsswords,
@@ -71,7 +70,6 @@ export async function loadmem(
     apierror(device, player, 'content', 'no content found')
     await writeclilink(device)
     vmzsswords(device, player)
-    registerterminalfull(device, player)
     await writehelphint(device)
     return
   }

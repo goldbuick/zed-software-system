@@ -1,4 +1,6 @@
-# func.ts
+---
+title: func.ts
+---
 
 **Purpose**: Async error handling — doasync runs a promise and reports errors via apierror. Used when firing-and-forgetting async operations in device context.
 

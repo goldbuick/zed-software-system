@@ -93,6 +93,12 @@ describe('zedcafetreeschema', () => {
     expect(isallowedexportpath('demo-b1/flags/board1_synth.json')).toBe(false)
     expect(isallowedexportpath('demo-b1/flags/board1_layers.json')).toBe(false)
     expect(isallowedexportpath('demo-b1/flags/board1_tracking.json')).toBe(false)
+    expect(
+      isallowedexportpath('demo-b1/title-page1/board/objects/pid_1.json'),
+    ).toBe(true)
+    expect(
+      isallowedexportpath('demo-b1/title-page1/board/objects/npc1.json'),
+    ).toBe(true)
     const blocked = validatezedcafeexportpaths([
       {
         path: 'demo-b1/flags/pid_1_chip.json',
@@ -146,6 +152,98 @@ describe('zedcafetreeschema', () => {
     expect(result.ok).toBe(false)
     expect(
       result.errors.some((err) => err.includes('missing book stats')),
+    ).toBe(true)
+  })
+
+  it('rejects null pages[] entries with a clear error', () => {
+    const root = encodetext(
+      JSON.stringify({
+        books: [{ id: 'book1', name: 'demo' }],
+      }),
+    )
+    const book = encodetext(
+      JSON.stringify({
+        id: 'book1',
+        name: 'demo',
+        pages: [null, { id: 'sid_page1', name: 'title' }],
+      }),
+    )
+    const result = validatezedcafeexportpaths([
+      { path: 'stats.json', bytes: root },
+      { path: 'demo-book1/stats.json', bytes: book },
+      {
+        path: 'demo-book1/title-sid_page1/stats.json',
+        bytes: encodetext(
+          JSON.stringify({ id: 'sid_page1', type: 'board', name: 'title' }),
+        ),
+      },
+    ])
+    expect(result.ok).toBe(false)
+    expect(
+      result.errors.some((err) =>
+        err.includes('book stats pages[0] is null or not an object'),
+      ),
+    ).toBe(true)
+  })
+
+  it('rejects pages[] entries missing id', () => {
+    const root = encodetext(
+      JSON.stringify({
+        books: [{ id: 'book1', name: 'demo' }],
+      }),
+    )
+    const book = encodetext(
+      JSON.stringify({
+        id: 'book1',
+        name: 'demo',
+        pages: [{ name: 'title' }],
+      }),
+    )
+    const result = validatezedcafeexportpaths([
+      { path: 'stats.json', bytes: root },
+      { path: 'demo-book1/stats.json', bytes: book },
+    ])
+    expect(result.ok).toBe(false)
+    expect(
+      result.errors.some((err) =>
+        err.includes('book stats pages[0] is null or missing id'),
+      ),
+    ).toBe(true)
+  })
+
+  it('reports missing page stats when catalog name does not match dirname', () => {
+    const root = encodetext(
+      JSON.stringify({
+        books: [{ id: 'book1', name: 'demo' }],
+      }),
+    )
+    const book = encodetext(
+      JSON.stringify({
+        id: 'book1',
+        name: 'demo',
+        pages: [{ id: 'sid_chat1', name: 'loader' }],
+      }),
+    )
+    const result = validatezedcafeexportpaths([
+      { path: 'stats.json', bytes: root },
+      { path: 'demo-book1/stats.json', bytes: book },
+      {
+        path: 'demo-book1/chatvoices-sid_chat1/stats.json',
+        bytes: encodetext(
+          JSON.stringify({
+            id: 'sid_chat1',
+            type: 'loader',
+            name: 'chatvoices',
+          }),
+        ),
+      },
+    ])
+    expect(result.ok).toBe(false)
+    expect(
+      result.errors.some((err) =>
+        err.includes('missing page stats for sid_chat1') &&
+        err.includes('loader-sid_chat1/stats.json'),
+      ),
     ).toBe(true)
   })
 

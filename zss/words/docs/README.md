@@ -1,4 +1,6 @@
-# Words Documentation
+---
+title: Words Documentation
+---
 
 The words system provides parsing and evaluation for the ZSS scripting vocabulary — categories, colors, directions, kinds, expressions, stats, and send syntax. It is used at runtime when commands execute and need to read arguments from parsed word arrays.
 

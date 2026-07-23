@@ -578,6 +578,45 @@ describe('applyzedcafepartialtomemory', () => {
     expect(objects.dropme).toBeUndefined()
   })
 
+  it('skips partial upsert and remove of pid_* player objects', () => {
+    boards.set('page1', {
+      id: 'page1',
+      terrain: maketerrain(0),
+      objects: {
+        keep: { id: 'keep', kind: 'object', cycle: 1 },
+        pid_1: { id: 'pid_1', kind: 'player', x: 3, y: 4 },
+      },
+    })
+    const upsertpath = 'demo-b1/title-page1/board/objects/pid_1.json'
+    const upsertresult = applyzedcafepartialtomemory([
+      {
+        path: upsertpath,
+        bytes: encoder.encode(
+          JSON.stringify({ id: 'pid_1', kind: 'player', x: 99, y: 99 }),
+        ),
+      },
+    ])
+    expect(upsertresult.changed).toBe(false)
+    expect(upsertresult.skippedpaths).toEqual([upsertpath])
+    expect(boards.get('page1')?.objects.pid_1).toEqual({
+      id: 'pid_1',
+      kind: 'player',
+      x: 3,
+      y: 4,
+    })
+
+    const removepath = 'demo-b1/title-page1/board/objects/pid_1.json'
+    const removeresult = applyzedcafepartialtomemory([], [removepath])
+    expect(removeresult.changed).toBe(false)
+    expect(removeresult.skippedpaths).toEqual([removepath])
+    expect(boards.get('page1')?.objects.pid_1).toEqual({
+      id: 'pid_1',
+      kind: 'player',
+      x: 3,
+      y: 4,
+    })
+  })
+
   it('reports changedpaths for an applied upsert', () => {
     const terrain = maketerrain(7)
     const path = 'demo-b1/title-page1/board/terrain.json'

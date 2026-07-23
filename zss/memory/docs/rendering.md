@@ -1,4 +1,6 @@
-# rendering.ts
+---
+title: rendering.ts
+---
 
 **Purpose**: Convert memory state into the per-player gadget layer stack consumed by [`gadgetsynctick`](../../device/vm/gadgetsynctick.ts) (which then ships paint/patch to the main-thread `gadgetclient`). Sprite / dither / control / tile **caches** live in the sibling [`renderinglayercache.ts`](../renderinglayercache.ts).
 

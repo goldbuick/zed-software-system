@@ -1,4 +1,6 @@
-# inspectionbatch.ts
+---
+title: inspectionbatch.ts
+---
 
 **Purpose**: Copy/paste buffers, secret heap. IndexedDB-backed clipboard for board regions. Secret heap for style/remix config.
 

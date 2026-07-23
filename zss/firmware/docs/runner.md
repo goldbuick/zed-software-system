@@ -1,4 +1,6 @@
-# runner.ts
+---
+title: runner.ts
+---
 
 **Purpose**: Composes firmware modules into drivers and provides the orchestration API for command lookup, stat access, and tick hooks. The runner determines which firmwares are active for each execution context.
 

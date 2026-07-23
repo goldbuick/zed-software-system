@@ -1,6 +1,6 @@
 [
   "^stats\\.json$",
-  "^\\.zedsync/revision$",
+  "^zedsync/revision$",
   "^(?:[a-z0-9]+(?:-[a-z0-9]+)*-[a-zA-Z0-9._-]+|[a-zA-Z0-9._-]+)/stats\\.json$",
   "^(?:[a-z0-9]+(?:-[a-z0-9]+)*-[a-zA-Z0-9._-]+|[a-zA-Z0-9._-]+)/flags/[^/]+\\.json$",
   "^(?:[a-z0-9]+(?:-[a-z0-9]+)*-[a-zA-Z0-9._-]+|[a-zA-Z0-9._-]+)/(?:[a-z0-9]+(?:-[a-z0-9]+)*-[a-zA-Z0-9._-]+|[a-zA-Z0-9._-]+)/stats\\.json$",

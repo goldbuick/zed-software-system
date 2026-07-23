@@ -1,4 +1,6 @@
-# boardelement.ts
+---
+title: boardelement.ts
+---
 
 **Purpose**: BOARD_ELEMENT utilities — create, apply color, export/import, isobject check. Bridges elements with format and color systems.
 

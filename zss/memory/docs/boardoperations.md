@@ -1,4 +1,6 @@
-# boardoperations.ts (and friends)
+---
+title: boardoperations.ts (and friends)
+---
 
 > The original `boardoperations.ts` was split into smaller modules. This page is a per-area cross-reference.
 

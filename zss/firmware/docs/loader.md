@@ -1,4 +1,6 @@
-# loader.ts
+---
+title: loader.ts
+---
 
 **Purpose**: Defines `LOADER_FIRMWARE` — commands for loading and parsing external files (text, JSON, binary) and managing loader context. Used when importing content into books.
 

@@ -1,0 +1,5 @@
+@board crypt
+@exitnorth room2x2
+@isdark
+@startx 30
+@starty 4

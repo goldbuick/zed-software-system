@@ -1,4 +1,6 @@
-# types.ts
+---
+title: types.ts
+---
 
 **Purpose**: Defines shared enums and types for the words system — COLOR, COLLISION, CATEGORY, DIR, STAT_TYPE, and utility types (PT, WORD, WORD_RESULT). Used across all word parsers and the chip API.
 

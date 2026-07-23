@@ -1,4 +1,6 @@
-# textformat.ts
+---
+title: textformat.ts
+---
 
 **Purpose**: Tokenizes and renders formatted text with colors, `$name` flags, `$CENTER`, `$META`, and numeric char codes. Used for chat, ticker, hyperlinks, and any text display that supports inline formatting.
 

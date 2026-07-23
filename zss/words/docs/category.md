@@ -1,4 +1,6 @@
-# category.ts
+---
+title: category.ts
+---
 
 **Purpose**: Parses category values (isterrain, isobject) from word arrays. Maps string names to STR_CATEGORY_CONST. Used when commands need to filter by element category.
 

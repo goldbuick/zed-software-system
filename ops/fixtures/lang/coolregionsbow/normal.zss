@@ -1,3 +1,5 @@
 @terrain normal
 @issolid
-@char 178
+@char 219
+@color brown
+@bg black

@@ -1,4 +1,6 @@
-# encode.ts
+---
+title: encode.ts
+---
 
 **Purpose**: Base64 and base64url encoding helpers. Worker-safe (`btoa`, `TextEncoder` only).
 

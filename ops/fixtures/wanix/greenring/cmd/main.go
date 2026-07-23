@@ -36,6 +36,9 @@ func main() {
 
 	targets := make([]greenring.PlayerXY, 0)
 	for _, p := range report.Players {
+		if !findplayers.IsPID(p.ID) {
+			continue
+		}
 		if !p.Onboard || p.X == nil || p.Y == nil || p.Book == "" {
 			continue
 		}

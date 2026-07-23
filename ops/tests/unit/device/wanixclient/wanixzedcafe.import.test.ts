@@ -264,6 +264,42 @@ describe('zedcafe import', () => {
     )
   })
 
+  it('runzedcafeimport post-push removes orphan player object paths only', async () => {
+    const pidpath =
+      'demo-b1/title-sid/board/objects/pid_ABCDEFGHIJKLMN.json'
+    const terrainpath = 'demo-b1/title-sid/board/terrain.json'
+    const hostfiles = makefiles('host')
+    const guestfiles = [
+      ...makefiles('host'),
+      {
+        path: pidpath,
+        bytes: encoder.encode('{"id":"pid_ABCDEFGHIJKLMN","x":1,"y":2}\n'),
+      },
+      {
+        path: terrainpath,
+        bytes: encoder.encode('[{"kind":"solid"}]\n'),
+      },
+    ]
+    const appliedfiles = makefiles('host')
+    setlasthostpushdoc(zedcafeexportfilestodoc(hostfiles))
+    mockvmimport.mockImplementation(() => {
+      resolvevmzedcafeimportwaiter({
+        ok: true,
+        changed: true,
+        bookcount: 1,
+      })
+    })
+    mockvmexport.mockImplementation(() => {
+      resolvevmzedcafeexportwaiter(appliedfiles)
+    })
+    const ok = await runzedcafeimport(device, player, guestfiles)
+    expect(ok).toBe(true)
+    expect(mocksync).toHaveBeenCalled()
+    const syncremoves = mocksync.mock.calls[0][3] as string[]
+    expect(syncremoves).toContain(pidpath)
+    expect(syncremoves).not.toContain(terrainpath)
+  })
+
   it('pushzedcafesynctoiframe emits when space active', () => {
     setlasthostpushdoc({})
     const ok = pushzedcafesynctoiframe(device, player, makefiles('x'))

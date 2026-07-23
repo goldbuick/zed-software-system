@@ -1,4 +1,6 @@
-# boardremix.ts
+---
+title: boardremix.ts
+---
 
 **Purpose**: Exports `boardremix` — procedural board generation using wavefunction collapse. Uses source board as pattern/tileset to generate target region. Used by firmware `remix` command.
 
