@@ -1,4 +1,6 @@
-# parse/
+---
+title: parse/
+---
 
 **Purpose**: File format parsers. Dispatches from `file.ts` based on MIME/type. Supports ZZT, ANSI, CHR, ZZM, OBJ, markdown, ZIP archives.
 

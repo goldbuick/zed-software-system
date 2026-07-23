@@ -11,4 +11,4 @@ description: Inspector & gadget tools features in Zed Cafe / ZSS.
 | Make-it | Creator | Generate elements from inspector templates. | `inspectionmakeit.md` |
 | Find-any | Creator | Search and highlight elements across board. | `#findany` |
 | Style brush | Creator | Paint element char/color/style onto targets. | `inspectionstyle.md` |
-| Gadget scrolls | Creator | In-world UI panels driven by gadget layer. | `zss/gadget/docs/gadget-scrolls.md` |
+| Gadget scrolls | Creator | In-world UI panels driven by gadget layer. | `zss/gadget/docs/gadget-scrolls.mdx` |

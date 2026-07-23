@@ -1,4 +1,6 @@
-# inspectionfind.ts
+---
+title: inspectionfind.ts
+---
 
 **Purpose**: Find-any UI — configurable find expressions, runs #findany command. Stores config in IndexedDB.
 

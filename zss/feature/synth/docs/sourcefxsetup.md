@@ -1,4 +1,6 @@
-# sourcefxsetup.ts
+---
+title: sourcefxsetup.ts
+---
 
 Wires 8 sound sources and 4 FX channel groups into the audio chain.
 

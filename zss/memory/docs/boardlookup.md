@@ -1,4 +1,6 @@
-# boardlookup.ts
+---
+title: boardlookup.ts
+---
 
 **Purpose**: Board lookup tables — lookup (id at index) and named (name → Set<id|index>). Indexes objects and terrain for O(1) access and name resolution.
 

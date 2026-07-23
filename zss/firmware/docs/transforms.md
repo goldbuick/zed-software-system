@@ -1,4 +1,6 @@
-# transforms.ts
+---
+title: transforms.ts
+---
 
 **Purpose**: Defines `TRANSFORM_FIRMWARE` — commands for board-level transformations: snapshot/revert, copy, remix, weave, and pivot. Used for level editing and procedural generation.
 

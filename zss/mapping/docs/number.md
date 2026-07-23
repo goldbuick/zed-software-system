@@ -1,4 +1,6 @@
-# number.ts
+---
+title: number.ts
+---
 
 **Purpose**: Numeric utilities — clamp, snap, makeeven, and seeded/random number generation. Uses Alea PRNG for deterministic randomness.
 

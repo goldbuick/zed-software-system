@@ -1,4 +1,6 @@
-# qr.ts
+---
+title: qr.ts
+---
 
 **Purpose**: QR code to ZSS text format. Renders content as Unicode QR and maps blocks to `$char` codes for display.
 

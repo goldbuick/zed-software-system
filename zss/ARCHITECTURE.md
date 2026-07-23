@@ -6,7 +6,7 @@ From the [root README](../README.md): a **ZZT-inspired, web-based fantasy termin
 
 **Shipped today:** **Daisy synth WASM** in the AudioWorklet; chip scripts compile via the **TypeScript lang backend**. See [`zss/feature/lang/`](feature/lang/) and [`zss/feature/synth/`](feature/synth/).
 
-**Planned (design only):** port the **full game sim** and firmware execution to **`zss_runtime.wasm`** (C++ bytecode VM). Lang WASM covers script compile/run; full sim WASM is a separate migration. See [docs/wasm-sim-port.md](../ops/docs/wasm-sim-port.md) and [docs/multiplayer-wasm-architecture.md](../ops/docs/multiplayer-wasm-architecture.md).
+**Planned (design only):** port the **full game sim** and firmware execution to **`zss_runtime.wasm`** (C++ bytecode VM). Lang WASM covers script compile/run; full sim WASM is a separate migration. See [docs/wasm-sim-port.mdx](../ops/docs/wasm-sim-port.mdx) and [docs/multiplayer-wasm-architecture.mdx](../ops/docs/multiplayer-wasm-architecture.mdx).
 
 ---
 
@@ -109,7 +109,7 @@ flowchart LR
 
 CLI / headless mode ([`cafe/index.tsx`](../cafe/index.tsx) `bootheadless`) skips Canvas and calls `createplatform(..., true)` so Playwright drives the same stack without WebGL.
 
-**Planned worker layout:** one **wasm worker** (sim + synth coordinator + `zss_runtime`); retire sim, boardrunner, and stub workers. TTS/STT stay as on-demand workers. Multiplayer stays PeerJS on main; host MAIN book memory authoritative. Details: [docs/multiplayer-wasm-architecture.md](../ops/docs/multiplayer-wasm-architecture.md).
+**Planned worker layout:** one **wasm worker** (sim + synth coordinator + `zss_runtime`); retire sim, boardrunner, and stub workers. TTS/STT stay as on-demand workers. Multiplayer stays PeerJS on main; host MAIN book memory authoritative. Details: [docs/multiplayer-wasm-architecture.mdx](../ops/docs/multiplayer-wasm-architecture.mdx).
 
 ---
 
@@ -124,7 +124,7 @@ CLI / headless mode ([`cafe/index.tsx`](../cafe/index.tsx) `bootheadless`) skips
 - Devices match if: subscribed **topic** equals the message target (e.g. `ticktock`, `tock`, `second`), **or** message is addressed to device id / name / `all`.
 - **`reply` / `replynext`:** convenience for responses along `sender:subtarget`.
 
-Authoritative diagrams: [`zss/device/docs/message-flow.md`](device/docs/message-flow.md) (mermaid + ASCII) and [`zss/device/docs/devices-and-messaging.md`](device/docs/devices-and-messaging.md) (all devices, three realms, forwarding).
+Authoritative diagrams: [`zss/device/docs/message-flow.mdx`](device/docs/message-flow.mdx) (mermaid + ASCII) and [`zss/device/docs/devices-and-messaging.mdx`](device/docs/devices-and-messaging.mdx) (all devices, three realms, forwarding).
 
 ---
 
@@ -196,7 +196,7 @@ Scattered under [`zss/feature/`](feature/): storage (idb), TTS/STT, URL/multipla
 
 **`modem`**: networking / sync-related message handling (present on both sides as imported modules—routing distinguishes behavior).
 
-**`bridge`**: external-world actions (fetch, streams, chat bridges); see [`zss/device/docs/message-flow.md`](device/docs/message-flow.md).
+**`bridge`**: external-world actions (fetch, streams, chat bridges); see [`zss/device/docs/message-flow.mdx`](device/docs/message-flow.mdx).
 
 ---
 
@@ -214,4 +214,4 @@ Scattered under [`zss/feature/`](feature/): storage (idb), TTS/STT, URL/multipla
 
 **ZSS** keeps **game and engine state in memory**, runs **script as compiled code on chips** with **firmware** defining the command vocabulary, and uses a **session-scoped message hub** so the **VM (sim worker)**, the **boardrunner worker** (per-board chip ticks), on-demand **TTS/STT workers**, and the **React UI (main)** stay loosely coupled: UI sends `vm:*` messages, the VM mutates memory and elects a player on each active board to be its **boardrunner** (jsonpipe-synced board + boundary slices), each tick the VM also projects the per-player gadget state into **`gadgetclient:patch`** messages, and the **gadgetclient** store feeds the Three.js terminal aesthetic.
 
-**Planned:** same hub pattern, but sim ticks and firmware run inside **`zss_runtime.wasm`** in a single wasm worker; PeerJS carries **`vm:memorypatch`** (renamed from boardrunner patch targets) from host to joins. See [docs/wasm-sim-port.md](../ops/docs/wasm-sim-port.md).
+**Planned:** same hub pattern, but sim ticks and firmware run inside **`zss_runtime.wasm`** in a single wasm worker; PeerJS carries **`vm:memorypatch`** (renamed from boardrunner patch targets) from host to joins. See [docs/wasm-sim-port.mdx](../ops/docs/wasm-sim-port.mdx).

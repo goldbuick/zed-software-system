@@ -1,4 +1,6 @@
-# visitortypes.ts
+---
+title: visitortypes.ts
+---
 
 **Purpose**: Defines TypeScript types for the CST (Concrete Syntax Tree) produced by the parser. Each grammar rule has a corresponding `*CstNode` and `*CstChildren` type. Used by the visitor for type-safe CST traversal.
 

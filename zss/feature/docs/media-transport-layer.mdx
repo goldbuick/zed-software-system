@@ -1,4 +1,6 @@
-# Media transport layer (PeerJS)
+---
+title: Media transport layer (PeerJS)
+---
 
 **Purpose:** Design specification for a **peer-to-peer media transport** path in ZSS: encoded **canvas video** and **synth Web Audio** flow from a **single publisher player** to many **viewers**, using PeerJS `DataConnection`s with a **dual-plane** split (low-latency control vs throughput-oriented media fan-out). This document does **not** mandate a codec or a single playback API; it defines architecture, framing, topology, and integration touchpoints so implementation can follow in phases.
 
@@ -7,8 +9,8 @@
 | Topic | Location |
 |-------|----------|
 | PeerJS terminal (hub-and-spoke, `createforward`) | [netterminal.md](netterminal.md), [`zss/feature/netterminal.ts`](../netterminal.ts) |
-| Which messages cross PeerJS vs worker bridge | [`zss/device/docs/devices-and-messaging.md`](../../device/docs/devices-and-messaging.md) |
-| Web broadcast capture sources (canvas + synth) and IVS ingest | [web-broadcast-livekit.md](../../../ops/docs/web-broadcast-livekit.md), [`zss/device/bridge.ts`](../../device/bridge.ts) (`bridge:streamstart` / `bridge:streamstop`) |
+| Which messages cross PeerJS vs worker bridge | [`zss/device/docs/devices-and-messaging.mdx`](../../device/docs/devices-and-messaging.mdx) |
+| Web broadcast capture sources (canvas + synth) and IVS ingest | [web-broadcast-livekit.mdx](../../../ops/docs/web-broadcast-livekit.mdx), [`zss/device/bridge.ts`](../../device/bridge.ts) (`bridge:streamstart` / `bridge:streamstop`) |
 | Broadcast audio tap | [`synthbroadcastdestination()`](../../device/synth.ts) in [`zss/device/synth.ts`](../../device/synth.ts); WASM main bus in [`zss/feature/synth/backend/wasm/wasmmainchain.ts`](../synth/backend/wasm/wasmmainchain.ts) |
 | Feature exports index | [`zss/feature/EXPORTED_FUNCTIONS.md`](../EXPORTED_FUNCTIONS.md) |
 
@@ -37,7 +39,7 @@
 
 ### Capture intent (align with web broadcast)
 
-ZSS intends to use the **same conceptual capture sources** as today’s in-app **`#broadcast`** path (see [web-broadcast-livekit.md](../../../ops/docs/web-broadcast-livekit.md)):
+ZSS intends to use the **same conceptual capture sources** as today’s in-app **`#broadcast`** path (see [web-broadcast-livekit.mdx](../../../ops/docs/web-broadcast-livekit.mdx)):
 
 1. **Video:** the page’s main **`canvas`** element — today attached in [`zss/device/bridge.ts`](../../device/bridge.ts) via `document.querySelector('canvas')` and `addImageSource` on the IVS broadcast client.
 2. **Audio:** the **Web Audio** path exposed as [`synthbroadcastdestination()`](../../device/synth.ts) (`MediaStreamAudioDestinationNode` / `MediaStream`), today passed to `addAudioInputDevice` on the same client.
@@ -58,7 +60,7 @@ Web broadcast currently sends that capture to **Amazon IVS** ingest via `amazon-
 
 - Watch-party UI layout and branding.
 - Changing `#broadcast` CLI or operator flows unless a future ADR ties them together.
-- Deep LiveKit / IVS migration content (link [web-broadcast-livekit.md](../../../ops/docs/web-broadcast-livekit.md) only for “how capture works today”).
+- Deep LiveKit / IVS migration content (link [web-broadcast-livekit.mdx](../../../ops/docs/web-broadcast-livekit.mdx) only for “how capture works today”).
 
 ---
 
@@ -66,7 +68,7 @@ Web broadcast currently sends that capture to **Amazon IVS** ingest via `amazon-
 
 ### Net terminal (PeerJS)
 
-[`zss/feature/netterminal.ts`](../netterminal.ts) implements **hub-and-spoke**: the **host** peer accepts incoming `DataConnection`s from **guests**; each guest opens one connection to the host. Messages are bridged through [`createforward`](../../device/forward.ts) with predicates described in [`devices-and-messaging.md`](../../device/docs/devices-and-messaging.md) (Peer lane vs worker bridge).
+[`zss/feature/netterminal.ts`](../netterminal.ts) implements **hub-and-spoke**: the **host** peer accepts incoming `DataConnection`s from **guests**; each guest opens one connection to the host. Messages are bridged through [`createforward`](../../device/forward.ts) with predicates described in [`devices-and-messaging.mdx`](../../device/docs/devices-and-messaging.mdx) (Peer lane vs worker bridge).
 
 ### Risk of one pipe for everything
 

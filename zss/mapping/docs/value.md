@@ -1,4 +1,6 @@
-# value.ts
+---
+title: value.ts
+---
 
 **Purpose**: Coercion utilities — maptostring, maptonumber, maptovalue. Used when parsing or converting user input to typed values.
 

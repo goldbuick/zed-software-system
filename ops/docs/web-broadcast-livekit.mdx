@@ -1,4 +1,6 @@
-# Web broadcast → LiveKit migration (ZSS)
+---
+title: Web broadcast → LiveKit migration (ZSS)
+---
 
 How the in-app **stream broadcast** works today, why you cannot aim it at LiveKit by changing a URL alone, and what to change for a LiveKit-based path.
 
@@ -71,7 +73,7 @@ Connect to `wss://…` with a **JWT access token** that grants `canPublish` (and
 
 Your backend calls **`CreateIngress`** with `input_type` WHIP; LiveKit returns a **WHIP endpoint URL**. The browser replaces the IVS SDK with a **WHIP client** that exchanges SDP with that URL. Media still comes from the same canvas + synth audio sources, but encoding/signaling goes through WHIP instead of IVS.
 
-This aligns with server-side Ingress setup and with multi-hop flows such as [LiveKit Ingress WHIP → YouTube Live](./livekit-ingress-whip-youtube-live.md) (room → egress → RTMP).
+This aligns with server-side Ingress setup and with multi-hop flows such as [LiveKit Ingress WHIP → YouTube Live](./livekit-ingress-whip-youtube-live.mdx) (room → egress → RTMP).
 
 ## CLI and API shape (when you implement)
 
@@ -103,7 +105,7 @@ Consider extending `bridgestreamstart` to accept an object (while keeping a lega
 
 ## Related docs
 
-- [LiveKit Ingress (WHIP) → YouTube Live](./livekit-ingress-whip-youtube-live.md) — Ingress, egress, and YouTube RTMP.
+- [LiveKit Ingress (WHIP) → YouTube Live](./livekit-ingress-whip-youtube-live.mdx) — Ingress, egress, and YouTube RTMP.
 - [livekit/ingress](https://github.com/livekit/ingress) — WHIP/RTMP ingest into rooms.
 - [LiveKit client SDK (JS)](https://github.com/livekit/client-sdk-js) — Browser room connection and track publish.
 - [LiveKit docs](https://docs.livekit.io) — Tokens, server configuration, and APIs.

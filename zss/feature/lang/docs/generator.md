@@ -1,4 +1,6 @@
-# generator.ts
+---
+title: generator.ts
+---
 
 **Purpose**: Defines `compile` — the main compilation entry point. Orchestrates the full pipeline: tokenize → parse → AST → transform → JavaScript. Returns executable `GeneratorFunc` or errors.
 

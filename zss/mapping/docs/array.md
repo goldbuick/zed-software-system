@@ -1,4 +1,6 @@
-# array.ts
+---
+title: array.ts
+---
 
 **Purpose**: Array utilities — range, pick, pickwith, and immutable array helpers. Used for random selection, index manipulation, and iteration.
 

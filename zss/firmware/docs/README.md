@@ -1,4 +1,6 @@
-# Firmware Documentation
+---
+title: Firmware Documentation
+---
 
 The firmware system provides the command vocabulary for the Zed Software System (ZSS) — a game engine and creative coding environment. Each firmware module defines a set of commands that can be invoked from user-written code (codepages) or from the command-line interface.
 

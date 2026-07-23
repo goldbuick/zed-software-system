@@ -1,7 +1,8 @@
 # Wanix integration fixtures + scenario playbook
 
 WASI/gojs drop binaries, peer sync roots, and headed Playwright validators for
-wanix integration. Architecture: [`zss/feature/wanix/README.md`](../../../zss/feature/wanix/README.md).
+wanix integration. Architecture: [`zss/feature/wanix/docs/`](../../../zss/feature/wanix/docs/index.md)
+(Blume `/docs/wanix`).
 
 Built artifacts live in **`ops/public/wanix/`** (dev URL `/fixtures/wanix/`).
 Validators run only via existing `cafe:playwright:headed` — no new citty tasks.

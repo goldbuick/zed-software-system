@@ -1,0 +1,101 @@
+---
+title: Zedsync
+description: Mirror zedcafe export with a peer directory via FSA drop or remote 9P (`#wanix zedsync`).
+sidebar:
+  order: 2
+---
+
+`#wanix zedsync <path>` mirrors any **gojs-visible peer directory** with `zedcafe/`
+(WSS remote mount, Chromium folder drop / FSA, archive bind, etc.). Paths that
+exist only inside the Linux VM are not visible to the gojs guest unless bound
+into the root NS.
+
+**Owners:** [`wanixzedsync.ts`](zss/device/wanixclient/wanixzedsync.ts), guest `zedsync.wasm`.
+**Fixture playbook:** [`ops/fixtures/wanix/README.md`](ops/fixtures/wanix/README.md) (scenarios 12–15, 21, 23).
+**Integration overview:** [integration.mdx](integration.mdx).
+
+### Folder drop (FSA)
+
+1. Drop a folder onto cafe (mounts at `/<name>`)
+2. `#wanix zedsync <name>` — no spaces in path
+
+### Remote 9P
+
+Browser Wanix cannot export its namespace outward. Import a remote 9P mount, then sync:
+
+1. Serve a folder over WebSocket 9P — `yarn task run ops:fixtures:wanix:p9server:dev -- <folder>` (defaults to **wss://** using cafe mkcert certs; [wanix serve](https://github.com/tractordev/wanix/blob/main/cmd/wanix/serve.go) / [import docs](https://github.com/tractordev/wanix#export-and-import-namespaces))
+2. `#wanix remote connect wss://localhost:<port>/ remote` — use the printed URL; `wss://` is required from `cafe:dev` https
+3. `#wanix zedsync remote` — guest task; argv path must not contain spaces
+
+Empty peer is seeded from `zedcafe/` (no wipe). After `.zedsync/ready`, steady-state sync mirrors creates/updates; deleting a file on the peer restores it from `zedcafe/`. Soft idle stops zedsync (`zedsync: stopped`). See [`ops/fixtures/wanix/README.md`](ops/fixtures/wanix/README.md).
+
+### Conflict policy: newer mtime wins
+
+When `SteadyTick` / `SteadyTickIncremental` sees a path changed on **both**
+the peer and `zedcafe/` since the last baseline, the side with the **newer
+mtime** wins (`copytoz` or `copytor`). Equal mtime ties prefer the peer
+(`copytoz`) so hand-edits are not silently discarded. There is **no merge**.
+
+Practical consequences for anything editing the peer directory directly
+(hand edits, another tool, a future agent):
+
+- A peer edit sticks when its mtime is newer than the sim copy for that path.
+- If the sim pushes the same path with a newer mtime after your edit, the
+  next tick copies sim -> peer and your edit is overwritten.
+- **Single writer is assumed on the peer side.** Two peers (or a peer plus a
+  hand-editor) racing the same path have no coordination beyond newer-mtime;
+  the losing write is discarded on the next tick.
+- Before trusting a peer-side write took effect, wait for the next sync tick
+  and confirm the content (and `stats.json` `exportRevision` if the sim also
+  pushed — see `bumpexportrevision` / `readexportrevision` in
+  [`wanixstateexport.ts`](zss/feature/wanix/wanixstateexport.ts)).
+- Multi-writer coordination (per-path leases so concurrent peers don't stomp
+  each other) is **deferred**, not implemented — see Phase 4 note below.
+
+Peer-side crash recovery: `ops/fixtures/wanix/zedsync/journal.go` appends one
+NDJSON entry to `<remote>/.zedsync/journal.ndjson` immediately before each
+copy (`status: "pending"`, with the source file's `sha256`) and a matching
+`status: "done"` entry after the copy succeeds. `<remote>/.zedsync/state.json`
+tracks `{ lastRemoteRev, lastZedcafeRev }`. On startup, `main.go` calls
+`ReplayIncompleteJournal` before `InitialSeed`: any journal entry whose latest
+recorded status is still `"pending"` (process died between the journal write
+and the copy completing) is best-effort re-copied. `.zedsync/` is a
+dot-prefixed segment, so it is already excluded from `WalkFiles` snapshots —
+it never appears as a syncable path.
+
+### Agent platform contract (Phase 4, lightweight)
+
+For an external tool/agent driving the sim through the peer directory (not
+through `#wanix` commands), the recommended loop is:
+
+1. **Read `stats.json`** on the peer, note `exportRevision` and `bookCount`.
+2. **Make edits** on the peer under the book/page paths described in
+   [`zedcafetreeschema`](zss/feature/wanix/zedcafetreeschema.ts) — one file per unit of change
+   where possible, so `changedpaths`/`skippedpaths` on the resulting
+   `importresult` (see `WANIX_ZED_CAFE_IMPORT_RESULT` in
+   [`zss/device/api.ts`](zss/device/api.ts)) can confirm exactly what the
+   sim accepted.
+3. **Wait for the next sync tick** (peer sync is polling, not push — see
+   `PollInterval`/`PollIdleMax`) and then re-read `stats.json`.
+4. **Compare content / `exportRevision`**: if `exportRevision` advanced, the
+   sim pushed since your edit — re-diff any paths the sim also touched
+   (newer mtime wins; your edit may have been overwritten on those paths).
+   If revision did not advance and `bookCount`/content reflects your edit,
+   the write landed cleanly.
+5. **Treat `skippedpaths` as success, not failure** when importing
+   programmatically through `vm:importzedcafe` directly (bypassing the peer
+   tree) — a skipped path means the sim already had that exact content
+   (no-op), not that the write was rejected.
+
+**Deferred (not implemented):** per-path leases or any other multi-writer
+coordination for concurrent peers/agents editing the same peer tree. Today,
+"newer mtime wins" plus single-writer-per-peer is the whole conflict story;
+do not build lease/lock infrastructure speculatively — revisit only when a
+real multi-agent-on-one-peer scenario exists.
+
+---
+
+The in-browser `#agent` LLM feature was removed on purpose — see [`.cursor/rules/no-agent-feature.mdc`](.cursor/rules/no-agent-feature.mdc).
+
+---
+

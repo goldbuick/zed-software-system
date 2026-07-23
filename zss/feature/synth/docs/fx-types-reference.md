@@ -1,4 +1,6 @@
-# Voice FX types, config params, and WASM vs Tone defaults
+---
+title: "Voice FX types, config params, and WASM vs Tone defaults"
+---
 
 Reference catalog for all ZSS voice FX (`#echo`, `#reverb`, `#fcrush`, etc.). **Not in scope:** main-bus FX (sidechain, compressor, razzle).
 

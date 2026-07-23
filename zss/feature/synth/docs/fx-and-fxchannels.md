@@ -1,4 +1,6 @@
-# fx.ts & fxchannels.ts
+---
+title: "fx.ts & fxchannels.ts"
+---
 
 ## fx.ts
 

@@ -1,4 +1,6 @@
-# boardsnapshot.ts
+---
+title: boardsnapshot.ts
+---
 
 **Purpose**: Exports `boardsnapshot` and `boardrevert` — create and restore board state snapshots. Used by firmware `snapshot` and `revert` commands.
 

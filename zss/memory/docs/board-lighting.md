@@ -1,4 +1,6 @@
-# Board lighting (dark boards)
+---
+title: Board lighting (dark boards)
+---
 
 Runtime lighting for `board.isdark` lives outside [`rendering.ts`](../rendering.ts):
 

@@ -1,4 +1,6 @@
-# anim.ts
+---
+title: anim.ts
+---
 
 **Purpose**: Animation utilities — snapping to char grid and damped position movement. Uses Three.js Object3D and maath easing.
 

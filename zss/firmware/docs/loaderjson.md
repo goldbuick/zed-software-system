@@ -1,4 +1,6 @@
-# loaderjson.ts
+---
+title: loaderjson.ts
+---
 
 **Purpose**: Implements `loaderjson` — a `FIRMWARE_COMMAND` that queries JSON with JMESPath and stores the result in a stat. Used by `#readjson` in loader context.
 

@@ -1,4 +1,6 @@
-# validate.ts
+---
+title: validate.ts
+---
 
 **Purpose**: Small format validators with no domain dependencies.
 

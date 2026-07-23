@@ -1,4 +1,6 @@
-# bookoperations.ts
+---
+title: bookoperations.ts
+---
 
 **Purpose**: Book and codepage CRUD, flags, element display. Manages book structure and codepage lookup.
 

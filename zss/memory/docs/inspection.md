@@ -1,4 +1,6 @@
-# inspection.ts
+---
+title: inspection.ts
+---
 
 **Purpose**: Inspector UI entry — inspect element, empty/char/color/bg area menus. Gadget-based inspector for board editing.
 

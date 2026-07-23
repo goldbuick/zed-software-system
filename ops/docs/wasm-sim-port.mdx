@@ -1,12 +1,14 @@
-# WASM C++ port: game sim and execution
+---
+title: "WASM C++ port: game sim and execution"
+---
 
 **Status:** partial — **lang WASM** (compile + per-script run) and **Daisy synth WASM** are shipped; **full sim `zss_runtime.wasm`** remains design/planning.
 
 **Related:**
 
-- [Multiplayer, workers, PeerJS, and WASM](multiplayer-wasm-architecture.md)
+- [Multiplayer, workers, PeerJS, and WASM](multiplayer-wasm-architecture.mdx)
 - [ZSS architecture (current)](../../zss/ARCHITECTURE.md)
-- [Lang pipeline (today)](../../zss/feature/lang/docs/architecture.md)
+- [Lang pipeline (today)](../../zss/feature/lang/docs/architecture.mdx)
 
 ---
 
@@ -55,7 +57,7 @@ Enable with **`ZSS_WASM_SIM=true`** per page load during migration. Default **on
 | Golden fixtures | Start **minimal synthetic** board/scripts |
 | Default flag | **Phase 7** only |
 | CI | Native C++ + Node wasm + browser smokes + optional Playwright **3-tab** multiplayer |
-| Docs | This file + [multiplayer-wasm-architecture.md](multiplayer-wasm-architecture.md) |
+| Docs | This file + [multiplayer-wasm-architecture.mdx](multiplayer-wasm-architecture.mdx) |
 
 ---
 
@@ -72,7 +74,7 @@ Enable with **`ZSS_WASM_SIM=true`** per page load during migration. Default **on
 | Boardrunner worker | `zss/boardrunnerspace.ts`, `device/boardrunner/*` | **Retire**; logic in `zss_tick` |
 | UI / hub | `cafe/`, `zss/gadget/`, `zss/screens/`, `forward`, `bridge` | **Stay TS** |
 
-There is **no bytecode today**; the port introduces a new IR. See [lang architecture](../../zss/feature/lang/docs/architecture.md) for the current JS pipeline.
+There is **no bytecode today**; the port introduces a new IR. See [lang architecture](../../zss/feature/lang/docs/architecture.mdx) for the current JS pipeline.
 
 ---
 
@@ -173,7 +175,7 @@ flowchart TB
 - **Keep:** `boardrunnermanagement.ts` on **vm** for election/ack (peer/tab semantics).
 - **Non-elected boards:** no local `zss_tick_board`; updates via peer **`vm:memorypatch`** only.
 
-See [multiplayer-wasm-architecture.md](multiplayer-wasm-architecture.md) for host + 2 joins.
+See [multiplayer-wasm-architecture.mdx](multiplayer-wasm-architecture.mdx) for host + 2 joins.
 
 ---
 

@@ -1,4 +1,6 @@
-# Mapping Documentation
+---
+title: Mapping Documentation
+---
 
 The mapping system provides utilities for types, arrays, numbers, strings, encoding, grapheme clusters, validation, 2D geometry, GUIDs, and timing.
 

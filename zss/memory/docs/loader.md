@@ -1,4 +1,6 @@
-# loader.ts
+---
+title: loader.ts
+---
 
 **Purpose**: Loader dispatch — matches format and event to codepage loaders, runs them with arg/content/player. Used when importing files or handling events.
 

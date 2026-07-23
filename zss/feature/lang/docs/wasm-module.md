@@ -1,4 +1,6 @@
-# Per-script WASM module format
+---
+title: Per-script WASM module format
+---
 
 ZSS scripts compile to **standalone `.wasm` modules** executed via `WebAssembly.instantiate` with a fixed host import ABI. Each module exports `run() -> i32`.
 

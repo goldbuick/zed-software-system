@@ -1,10 +1,12 @@
-# Lang Documentation
+---
+title: Lang Documentation
+---
 
 The lang system provides the compiler pipeline for the ZSS scripting language — the language used in codepages and game logic. Source text is tokenized, parsed, transformed into an AST, and then compiled to JavaScript that runs against the CHIP API.
 
 ## Architecture Overview
 
-For a **single narrative** with diagrams (pipeline, parser / visitor / transformer, precedence, runtime OS–CHIP, errors, and footguns), see **[architecture.md](architecture.md)**.
+For a **single narrative** with diagrams (pipeline, parser / visitor / transformer, precedence, runtime OS–CHIP, errors, and footguns), see **[architecture.mdx](architecture.mdx)**.
 
 The compilation pipeline has four stages:
 
@@ -19,7 +21,7 @@ The main entry point is `compile()` in `generator.ts`, which orchestrates the fu
 
 | File | Purpose |
 |------|---------|
-| [architecture.md](architecture.md) | End-to-end lang architecture, diagrams, precedence, runtime |
+| [architecture.mdx](architecture.mdx) | End-to-end lang architecture, diagrams, precedence, runtime |
 | [ZZT-OOP reference](../../../../ops/fixtures/lang/zzt-ref/README.md) | RoZZT LANGREF baseline + ZSS extension rules (`ZSS ⊃ ZZT-OOP`) |
 | [ast.md](ast.md) | AST compilation entry point (`compileast`) |
 | [generator.md](generator.md) | Full compilation pipeline (`compile`) |

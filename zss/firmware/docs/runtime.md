@@ -1,4 +1,6 @@
-# runtime.ts
+---
+title: runtime.ts
+---
 
 **Purpose**: Defines `RUNTIME_FIRMWARE` — commands for runtime messaging, gadget UI, and scroll/text display. Handles the execution context when codepages run during gameplay.
 

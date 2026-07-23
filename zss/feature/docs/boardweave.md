@@ -1,4 +1,6 @@
-# boardweave.ts
+---
+title: boardweave.ts
+---
 
 **Purpose**: Exports `boardweave` and `boardweavegroup` — shift/wrap board region by delta. Used by firmware `weave` command.
 

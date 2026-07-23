@@ -1,4 +1,6 @@
-# visitor.ts
+---
+title: visitor.ts
+---
 
 **Purpose**: Transforms CST (Concrete Syntax Tree) into AST (Abstract Syntax Tree). Implements Chevrotain's visitor pattern; each grammar rule has a visitor method that produces `CodeNode`s. The visitor is the bridge between parser output and transformer input.
 

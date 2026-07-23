@@ -1,6 +1,8 @@
-# Scroll panel vs terminal tape hyperlinks
+---
+title: Scroll panel vs terminal tape hyperlinks
+---
 
-This page expands [gadget-scrolls.md § Terminal tape vs scroll](./gadget-scrolls.md#terminal-tape-vs-scroll-shared-hyperlinks).
+This page expands [gadget-scrolls.mdx § Terminal tape vs scroll](./gadget-scrolls.mdx#terminal-tape-vs-scroll-shared-hyperlinks).
 
 ## Shared parse model
 

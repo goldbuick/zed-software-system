@@ -1,4 +1,6 @@
-# storage.ts
+---
+title: storage.ts
+---
 
 **Purpose**: Domain storage API for config, history, content files, and variables. All IndexedDB access goes through [`durable.ts`](../durable.ts).
 

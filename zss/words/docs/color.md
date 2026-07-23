@@ -1,4 +1,6 @@
-# color.ts
+---
+title: color.ts
+---
 
 **Purpose**: Parses and maps color values from word arrays. Supports foreground, background (on*), numeric indices, and blink colors. Used for display attributes and matching elements by color.
 

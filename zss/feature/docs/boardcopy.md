@@ -1,4 +1,6 @@
-# boardcopy.ts
+---
+title: boardcopy.ts
+---
 
 **Purpose**: Exports `boardcopy`, `boardcopygroup`, and `mapelementcopy` — functions for copying board regions and element properties. Used by firmware transforms (copy, snapshot) and board operations.
 

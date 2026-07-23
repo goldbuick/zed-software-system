@@ -1,4 +1,6 @@
-# lexer.ts
+---
+title: lexer.ts
+---
 
 **Purpose**: Defines the tokenizer for the ZSS scripting language. Uses Chevrotain to tokenize source text into tokens for labels, commands, text, literals, colors, directions, operators, and structured commands.
 

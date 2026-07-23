@@ -1,4 +1,6 @@
-# string.ts
+---
+title: string.ts
+---
 
 **Purpose**: String utilities — splice, quoting, scroll-link escape, and send-target parsing for terminal UI.
 

@@ -1,4 +1,6 @@
-# tickhandler.ts
+---
+title: tickhandler.ts
+---
 
 Handles scheduled note events. Called by the Tone.js Part (pacer) for each scheduled tick.
 

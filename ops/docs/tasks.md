@@ -17,8 +17,8 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task cafe dev`).
 | Task | Description | Tags | Deps | Env |
 |------|-------------|------|------|-----|
 | `yarn task run cafe:analyze` | Production build with bundle analyzer | — | — | `NODE_OPTIONS=--max-old-space-size=8192`, `ZSS_ANALYZER=1` |
-| `yarn task run cafe:build` | Production Vite build | `ci` | — | — |
-| `yarn task run cafe:build:strict` | Typecheck then production Vite build | — | — | — |
+| `yarn task run cafe:build` | Production Vite build with Blume docs merged into cafe/dist/docs | `ci` | — | — |
+| `yarn task run cafe:build:strict` | Typecheck then production Vite build with Blume docs at cafe/dist/docs | — | — | — |
 | `yarn task run cafe:clear` | Remove build artifacts and Vite cache | — | — | — |
 | `yarn task run cafe:dev` | Install deps and start Vite dev server | `dev` | `cafe:install`, `cafe:vite:dev` | — |
 | `yarn task run cafe:dev:no-sc` | Dev server with play-bus sidechain bypassed | `dev` | `cafe:dev` | `ZSS_DAISY_NO_SIDECHAIN=1` |
@@ -26,6 +26,13 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task cafe dev`).
 | `yarn task run cafe:playwright:headed` | Run a headed Playwright script against an already-running dev server (--url required) | `dev` | — | — |
 | `yarn task run cafe:preview` | Preview production build on port 7777 | `dev` | — | — |
 | `yarn task run cafe:vite:dev` | Start Vite dev server on port 7777 | `dev` | — | — |
+
+
+## blume
+
+| Task | Description | Tags | Deps | Env |
+|------|-------------|------|------|-----|
+| `yarn task run blume:dev` | Start Blume docs site (docs-site/) — http://localhost:4321/docs/ | `dev` | — | — |
 
 
 ## headless

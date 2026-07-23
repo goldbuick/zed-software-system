@@ -1,4 +1,6 @@
-# loaderbinary.ts
+---
+title: loaderbinary.ts
+---
 
 **Purpose**: Implements `loaderbinary` — a `FIRMWARE_COMMAND` that reads typed binary data from a `BINARY_READER`. Used by `#readbin` in loader context.
 

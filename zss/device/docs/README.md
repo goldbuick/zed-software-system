@@ -1,4 +1,6 @@
-# Device documentation
+---
+title: Device documentation
+---
 
 Devices are the message-oriented edges of ZSS: register (UI), vm (sim), boardrunner, bridge, synth, modem, clock, forward, and lazy TTS/STT workers.
 
@@ -6,9 +8,9 @@ Devices are the message-oriented edges of ZSS: register (UI), vm (sim), boardrun
 
 | Doc | Purpose |
 |-----|---------|
-| [devices-and-messaging.md](devices-and-messaging.md) | Device table, worker construction, hub/forward realms |
-| [message-flow.md](message-flow.md) | Who emits what to whom (`device:action` targets) |
-| [feedback-channels-audit.md](feedback-channels-audit.md) | Feedback / ack channel inventory |
+| [devices-and-messaging.mdx](devices-and-messaging.mdx) | Device table, worker construction, hub/forward realms |
+| [message-flow.mdx](message-flow.mdx) | Who emits what to whom (`device:action` targets) |
+| [feedback-channels-audit.mdx](feedback-channels-audit.mdx) | Feedback / ack channel inventory |
 
 ## Related
 

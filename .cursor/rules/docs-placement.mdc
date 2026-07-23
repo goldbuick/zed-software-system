@@ -11,7 +11,7 @@ Product/developer docs ship at **https://zed.cafe/docs/** (Blume project under [
 
 | Kind | Location | Rules |
 |------|----------|--------|
-| Module narrative | `zss/<area>/docs/<topic>.md` | Required area `README.md` index; optional YAML frontmatter (`title`, `description`); prefer repo-root links like ``[`joinvm.ts`](zss/device/joinvm.ts)`` over deep `../` chains when linking across areas |
+| Module narrative | `zss/<area>/docs/<topic>.md` (use `.mdx` if the page needs Mermaid / `:::note` / math) | Required area `README.md` index; optional YAML frontmatter (`title`, `description`); prefer repo-root links like ``[`joinvm.ts`](zss/device/joinvm.ts)`` over deep `../` chains when linking across areas; Blume Mermaid is MDX-only |
 | Architecture spine | `docs-site/content/` + [`zss/ARCHITECTURE.md`](../../zss/ARCHITECTURE.md) | System map / glossary / feature overview live in `docs-site/content/` |
 | Ops / design | `ops/docs/` | Evergreen runbooks + labeled design notes; **never hand-edit** `tasks.md` (regenerate via `yarn task docs`) |
 | Player help | `zss/rom/{refscroll,editor,help}/` | In-game + ZNS only — **not** Blume sources |
@@ -29,11 +29,11 @@ Canonical web list: [`zss/firmware/docs/commands.md`](../../zss/firmware/docs/co
 ## Authoring / build
 
 ```bash
-# local docs site — Blume cwd must be docs-site/ (not repo-root yarn blume)
-cd docs-site && ../node_modules/.bin/blume dev
+# local docs site (Blume cwd is docs-site/)
+yarn task blume dev
 
 # production: Blume + Vite merged into cafe/dist/docs/
 yarn task run cafe:build
 ```
 
-Do not add a new citty task id for docs. Do not reintroduce `cafe/sys` or a `/sys` redirect.
+Do not reintroduce `cafe/sys` or a `/sys` redirect.

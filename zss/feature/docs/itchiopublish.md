@@ -1,4 +1,6 @@
-# itchiopublish.ts
+---
+title: itchiopublish.ts
+---
 
 **Purpose**: Create a ZIP file for itch.io publishing. Contains a single `index.html` that redirects to zed.cafe with the exported books hash.
 

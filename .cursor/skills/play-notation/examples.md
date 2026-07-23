@@ -8,7 +8,7 @@ From [zss/rom/refscroll/notescalesmajor.md](../../../zss/rom/refscroll/notescale
 #play def#gabc#+d
 ```
 
-MIDI import style ([midi-import.md](../../../zss/feature/parse/docs/midi-import.md)):
+MIDI import style ([midi-import.mdx](../../../zss/feature/parse/docs/midi-import.mdx)):
 
 ```
 #play +qcdef;wx

@@ -1,4 +1,6 @@
-# gamesend.ts
+---
+title: gamesend.ts
+---
 
 **Purpose**: Game message dispatch — send to element, send to boards, send to elements from chip. Handles target resolution (all, self, others, named) and directional send.
 

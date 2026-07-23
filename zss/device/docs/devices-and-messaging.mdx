@@ -1,4 +1,6 @@
-# Devices and messaging
+---
+title: Devices and messaging
+---
 
 How **devices** talk to each other in ZSS: **main thread**, **simulation worker**, **boardrunner worker**, and on-demand **TTS/STT workers**, each with its own **`hub`**, plus **`forward`** bridging over `postMessage`, and the `SOFTWARE` emit surface.
 
@@ -15,11 +17,11 @@ How **devices** talk to each other in ZSS: **main thread**, **simulation worker*
 - [Client → worker forwarding (reference)](#client--worker-forwarding-reference)
 - [Unified routing: workers, PEER, and blocked traffic](#unified-routing-workers-peer-and-blocked-traffic)
 - [Discovering message targets](#discovering-message-targets)
-- [Related: MIDI → `#play` import](../../feature/parse/docs/midi-import.md) (file loader → `parsemidi`, diagrams)
+- [Related: MIDI → `#play` import](../../feature/parse/docs/midi-import.mdx) (file loader → `parsemidi`, diagrams)
 
 ## Rules of the road
 
-1. **`hub.invoke(message)`** delivers every message to **every** connected device; each device ignores or handles based on [routing rules](message-flow.md#routing-rules-devicehandle) ([`createdevice`](../../device.ts) in `zss/device.ts`).
+1. **`hub.invoke(message)`** delivers every message to **every** connected device; each device ignores or handles based on [routing rules](message-flow.mdx#routing-rules-devicehandle) ([`createdevice`](../../device.ts) in `zss/device.ts`).
 2. **Topics** — e.g. `ticktock`, `tock`, `second`, `ready`, `log` — match broadcast-style targets so multiple devices can observe the same clock or log line.
 3. **Directed** targets use `deviceName:path` (e.g. `vm:cli` → the `vm` device sees `target === 'cli'`).
 4. **Multiple hubs** — The browser runs **main-thread** code plus **Web Workers** (see [what creates each realm](#what-creates-each-thread-or-worker)). Each realm has its **own** `hub` singleton; `postMessage` + **`forward`** sync selected traffic ([`forward.ts`](../forward.ts), [`platform.ts`](../../platform.ts)).
@@ -29,7 +31,7 @@ How **devices** talk to each other in ZSS: **main thread**, **simulation worker*
 8. **`message.id` deduplication** — [`createforward`](../forward.ts) records each `message.id` in a `syncids` set so the same message is not applied repeatedly when it crosses hubs (avoids ping-pong loops).
 9. **`registerplayer` vs `register`** — [`registerplayer.ts`](../registerplayer.ts) holds the current player id string only (worker-safe). [`register.ts`](../register.ts) is the thin main-thread device entry; handlers live under [`register/handlers/`](../register/handlers/registry.ts) (storage, UI, bookmarks). Workers and device modules that only need `registerreadplayer()` must import `registerplayer`, not `register`.
 
-See also: [message-flow.md](message-flow.md) (ASCII + first mermaid, boot sequence, flow table).
+See also: [message-flow.mdx](message-flow.mdx) (ASCII + first mermaid, boot sequence, flow table).
 
 ---
 
@@ -539,9 +541,9 @@ Join-side Peer outbound already intersects with **`shouldforwardclienttoserver`*
 
 ## Discovering message targets
 
-- **Tables** — [message-flow.md § Main message flows](message-flow.md#main-message-flows)
+- **Tables** — [message-flow.mdx § Main message flows](message-flow.mdx#main-message-flows)
 - **API helpers** — [`device/api.ts`](../api.ts) (`vmcli`, `gadgetclientpaint`, `ttsrequest`, …); patch emit helpers in [`device/patchapi.ts`](../patchapi.ts)
 - **Handlers** — [`vm/handlers/registry.ts`](../vm/handlers/registry.ts) maps `vm` subtargets to implementations
 - **Tests** — [`device/__tests__/device.test.ts`](../../../ops/tests/unit/device/device.test.ts) (`createdevice`, session, topics); [`device/__tests__/forward.boardrunner.test.ts`](../../../ops/tests/unit/device/forward.peer.test.ts) (`shouldforwardclienttoboardrunner`)
 
-**Maintenance** — When you change cross-realm routing, update [`forward.ts`](../forward.ts) `shouldforward*` helpers and keep this doc (and optionally [message-flow.md](message-flow.md)) in sync.
+**Maintenance** — When you change cross-realm routing, update [`forward.ts`](../forward.ts) `shouldforward*` helpers and keep this doc (and optionally [message-flow.mdx](message-flow.mdx)) in sync.

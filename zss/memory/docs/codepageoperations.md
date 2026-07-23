@@ -1,4 +1,6 @@
-# codepageoperations.ts
+---
+title: codepageoperations.ts
+---
 
 **Purpose**: Codepage parsing, stats, import/export. Parses @ stats from code text and applies to elements. Handles charset, palette, board, object, terrain.
 

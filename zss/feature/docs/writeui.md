@@ -1,4 +1,6 @@
-# writeui.ts and zsstextui.ts
+---
+title: writeui.ts and zsstextui.ts
+---
 
 **Purpose**
 

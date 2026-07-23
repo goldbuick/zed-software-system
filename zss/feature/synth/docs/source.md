@@ -1,4 +1,6 @@
-# source.ts
+---
+title: source.ts
+---
 
 Factory for creating sound sources. Defines all available synth types and their implementations.
 

@@ -1,4 +1,6 @@
-# transformer.ts
+---
+title: transformer.ts
+---
 
 **Purpose**: Transforms AST (`CodeNode`) into JavaScript with source maps. Emits code that calls `api.*` methods (command, text, hyperlink, isEq, opPlus, etc.) and uses `switch`/`case` + `jump` for line-based control flow.
 

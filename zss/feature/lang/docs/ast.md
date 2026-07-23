@@ -1,4 +1,6 @@
-# ast.ts
+---
+title: ast.ts
+---
 
 **Purpose**: Defines `compileast` — the AST compilation entry point. Tokenizes source text, parses it into a CST, and transforms the CST into an AST (`CodeNode`). Used for code completion and as the first stage of full compilation.
 

@@ -1,4 +1,6 @@
-# playermanagement.ts
+---
+title: playermanagement.ts
+---
 
 **Purpose**: Player lifecycle — spawn, login, move between boards. Manages player elements, the active list, and where each player currently lives.
 

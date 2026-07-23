@@ -44,7 +44,7 @@ Do not unify the `config` slot across engines without engine-specific emit logic
 | Move patch emit helpers to `zss/device/patchapi.ts` | `patchapi.ts`, sync module call sites |
 | Worker-safe types in `zss/device/messagetypes.ts` | `api.ts`, `hub.ts`, `forward.ts` |
 | ESLint guard on `api.ts` imports | `.eslintrc.cjs` |
-| Docs | `zss/device/docs/devices-and-messaging.md`, `EXPORTED_FUNCTIONS.md` |
+| Docs | `zss/device/docs/devices-and-messaging.mdx`, `EXPORTED_FUNCTIONS.md` |
 
 **Safer redo:** Land patchapi + messagetypes + ESLint **without touching `tts.ts` or `ttsworker.ts`**.
 

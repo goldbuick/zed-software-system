@@ -1,4 +1,6 @@
-# Firmware commands summary
+---
+title: Firmware commands summary
+---
 
 **Canonical web reference:** [zss/firmware/docs/commands.md](../../zss/firmware/docs/commands.md) (published at [https://zed.cafe/docs/firmware/commands/](https://zed.cafe/docs/firmware/commands/)).
 

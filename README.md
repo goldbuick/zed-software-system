@@ -9,7 +9,7 @@ A ZZT-inspired, web-based fantasy terminal — a creative-coding and game enviro
 | **System reference (this repo)** | [https://zed.cafe/docs/](https://zed.cafe/docs/) | Developers and creators — architecture, glossary, colocated `zss/**/docs` |
 | **In-game / ZNS help** | [https://docs.at.zed.cafe](https://docs.at.zed.cafe) | Players and authors via ROM refscrolls |
 
-Blume project root: [`docs-site/`](docs-site/). Module manuals stay colocated under `zss/**/docs/` (see [`.cursor/rules/docs-placement.mdc`](.cursor/rules/docs-placement.mdc)). Local preview: `yarn blume dev` from `docs-site/`. Production merge is part of `yarn task run cafe:build` → `cafe/dist/docs/`.
+Blume project root: [`docs-site/`](docs-site/). Module manuals stay colocated under `zss/**/docs/` (see [`.cursor/rules/docs-placement.mdc`](.cursor/rules/docs-placement.mdc)). Local preview: `yarn task blume dev`. Production merge is part of `yarn task run cafe:build` → `cafe/dist/docs/`.
 
 ## Development
 

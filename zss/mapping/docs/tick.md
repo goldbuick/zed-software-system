@@ -1,4 +1,6 @@
-# tick.ts
+---
+title: tick.ts
+---
 
 **Purpose**: Tick rate, default BPM, and timing constants. Defines game loop timing and waitfor promise.
 

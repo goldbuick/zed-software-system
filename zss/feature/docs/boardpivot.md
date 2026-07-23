@@ -1,4 +1,6 @@
-# boardpivot.ts
+---
+title: boardpivot.ts
+---
 
 **Purpose**: Exports `boardpivot` and `boardpivotgroup` — rotates board terrain/objects by angle (radians from firmware `degToRad`). Uses integer shear edges for a torus bijection. Used by firmware `pivot` command.
 

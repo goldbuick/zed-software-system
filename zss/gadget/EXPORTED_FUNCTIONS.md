@@ -530,7 +530,7 @@ Gadget state serialization utilities.
 
 ## Gadget scroll catalog
 
-**Doc:** [`docs/gadget-scrolls.md`](docs/gadget-scrolls.md)
+**Doc:** [`docs/gadget-scrolls.mdx`](docs/gadget-scrolls.mdx)
 
 Catalog of VM handlers, `refscroll:` routes, ROM keys, inspection flows, and behavior notes (clear vs unlock, scroll lock, hyperlink chips) for the right-hand scroll panel.
 

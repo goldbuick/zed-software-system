@@ -1,4 +1,6 @@
-# spatialqueries.ts
+---
+title: spatialqueries.ts
+---
 
 **Purpose**: Spatial queries — collision check, find player, list by color/kind, pathfinding. Used by expr (any, countof, blocked) and direction evaluation.
 

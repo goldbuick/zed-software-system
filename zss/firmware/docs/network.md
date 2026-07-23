@@ -1,4 +1,6 @@
-# network.ts
+---
+title: network.ts
+---
 
 **Purpose**: Defines `NETWORK_FIRMWARE` — commands for HTTP requests. Provides `#fetch` and `#fetchwith` to perform GET or POST requests and handle responses via callbacks.
 

@@ -1,4 +1,6 @@
-# runtime.ts
+---
+title: runtime.ts
+---
 
 **Purpose**: Chip OS, tick loop, CLI run. Manages the chip VM — message routing, codepage execution, loader execution, board ticks.
 

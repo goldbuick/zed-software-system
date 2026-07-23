@@ -1,4 +1,6 @@
-# charset.ts
+---
+title: charset.ts
+---
 
 **Purpose**: Exports `CHARSET` — default 8×8 character set bitmap as hex array. Used by gadget display, parse (CHR), and memory codepage operations.
 

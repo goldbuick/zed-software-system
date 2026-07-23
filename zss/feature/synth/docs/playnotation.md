@@ -1,4 +1,6 @@
-# playnotation.ts
+---
+title: playnotation.ts
+---
 
 Parses text-based notation and converts it to scheduled note events.
 

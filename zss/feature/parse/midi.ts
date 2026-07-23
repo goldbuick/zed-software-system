@@ -1,7 +1,7 @@
 /**
  * Standard MIDI (.mid) → #play codepage (same layout as imported .zzm: one `:song_0`, many `#play` lines).
  *
- * Diagrams and pipeline: [docs/midi-import.md](docs/midi-import.md).
+ * Diagrams and pipeline: [docs/midi-import.mdx](docs/midi-import.mdx).
  *
  * Each bar is one `#play`. Tracks are chosen in **global time order** (tick, track index, MIDI pitch): each track is taken the **first** time one of its notes appears, until four distinct tracks or end of file. Selected GM drum tracks (MIDI ch.10) merge into one drum layer at that order position. Output has at most four `;`-separated voices (`MAX_VOICES_PER_PLAY`).
  * Voices are joined with `"; "` (see `PLAY_VOICE_SEPARATOR` in midiplay). Drum-only files get a leading rest voice on **bar 0 only**

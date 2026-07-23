@@ -17,6 +17,7 @@ yarn task explain <task-id>
 yarn task docs              # regenerate ops/docs/tasks.md
 yarn task docs --check      # CI: fail if docs drift
 yarn task cafe dev           # nested shorthand for run cafe:dev
+yarn task blume dev          # nested shorthand for run blume:dev
 ```
 
 `package.json` scripts: `postinstall` and `task` only.
@@ -28,6 +29,7 @@ yarn task cafe dev           # nested shorthand for run cafe:dev
 | Subject | Example |
 |---------|---------|
 | `cafe` | `cafe:dev`, `cafe:build`, `cafe:vite:dev` |
+| `blume` | `blume:dev` |
 | `headless` | `headless:build`, `headless:server:dev` |
 | `ops` | `ops:lint`, `ops:daisy:build`, `ops:fixtures:lang:regression:test`, `ops:deploy:docker:build` |
 
@@ -36,6 +38,7 @@ yarn task cafe dev           # nested shorthand for run cafe:dev
 | Path | Role |
 |------|------|
 | `tasks/groups/cafe.ts` | Vite browser app tasks |
+| `tasks/groups/blume.ts` | Blume docs-site (`docs-site/`) |
 | `tasks/groups/headless.ts` | oclif CLI build/pack + server dev |
 | `tasks/groups/ops/` | Fixtures, Jest, parity, infra, deploy (`ops/fixtures/*` mirrors `ops/fixtures/`) |
 | `tasks/lib/` | Task-runner infrastructure (parity, Playwright, argv, lazy loaders) |

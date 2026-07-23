@@ -77,4 +77,4 @@ For parity patches, put the **raw** play string in `notation`.
 
 ## More examples
 
-See [examples.md](examples.md) and [midi-import.md](../../../zss/feature/parse/docs/midi-import.md).
+See [examples.md](examples.md) and [midi-import.mdx](../../../zss/feature/parse/docs/midi-import.mdx).

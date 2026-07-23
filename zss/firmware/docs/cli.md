@@ -1,4 +1,6 @@
-# cli.ts
+---
+title: cli.ts
+---
 
 **Purpose**: Defines `CLI_FIRMWARE` — command-line interface commands for system management, book/page operations, export, multiplayer, ZNS, and editing tools. Most commands are operator-only.
 
