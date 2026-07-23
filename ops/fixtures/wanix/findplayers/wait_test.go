@@ -116,9 +116,15 @@ func TestWaitExportScanIncompleteLeafTimeout(t *testing.T) {
 			Data: []byte(`{"exportedAt":"test","bookCount":1,"books":[]}` + "\n"),
 		},
 		"zedcafe/main-book1/stats.json": &fstest.MapFile{
-			Data: []byte(`{"activelist":[],"flags":{}}` + "\n"),
+			Data: []byte(`{"activelist":["pid_1"]}` + "\n"),
 		},
-		"zedcafe/main-book1/lion-sid_x/object/element.json": &fstest.MapFile{
+		"zedcafe/main-book1/flags/pid_1.json": &fstest.MapFile{
+			Data: []byte(`{"board":"title-page1"}` + "\n"),
+		},
+		"zedcafe/main-book1/title-page1/board/terrain.json": &fstest.MapFile{
+			Data: []byte(`[]` + "\n"),
+		},
+		"zedcafe/main-book1/title-page1/board/objects/pid_1.json": &fstest.MapFile{
 			Data: []byte{},
 		},
 	}

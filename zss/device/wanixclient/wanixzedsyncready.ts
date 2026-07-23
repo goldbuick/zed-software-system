@@ -65,7 +65,7 @@ export function cancelzedsyncreadywait(reason?: string): void {
   }
 }
 
-/** True while parent is polling for `.zedsync/ready`. */
+/** True while parent is polling for `zedsync/ready`. */
 export function iszedsyncreadywaitpending(): boolean {
   return pendingready !== null
 }
@@ -124,7 +124,7 @@ export function applyzedsyncreadfileresult(data: unknown): void {
     apilog(
       device,
       player,
-      `zedsync: watching ${path.replace(/\/\.zedsync\/ready$/, '')}`,
+      `zedsync: watching ${path.replace(/\/zedsync\/ready$/, '')}`,
     )
     clearreadywait()
   }
@@ -148,7 +148,7 @@ function tickreadywait() {
 }
 
 /**
- * Start host poll for `<target>/.zedsync/ready`. Must run on cafe main
+ * Start host poll for `<target>/zedsync/ready`. Must run on cafe main
  * (wanixclient readfile replies land here, not in the sim worker). Does
  * NOT pause the zedcafe import poll -- seeding runs alongside it; see
  * `iszedsyncreadywaitpending` for the soft gate other code checks to avoid

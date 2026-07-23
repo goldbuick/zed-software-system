@@ -14,7 +14,7 @@ import {
 } from 'zss/feature/wanix/wanixzedcafeconstants'
 
 export const WANIX_ZEDSYNC_WASM_URL =
-  '/wanix/zedsync.wasm?v=halt-exclude-players-20260722'
+  '/wanix/zedsync.wasm?v=meta-dir-zedsync-20260723'
 export const WANIX_ZEDSYNC_TASK_WASM = `${WANIX_ZEDSYNC_TASK_ID}.wasm`
 
 /**

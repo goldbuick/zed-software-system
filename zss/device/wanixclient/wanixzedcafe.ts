@@ -73,6 +73,7 @@ import type {
   WanixZedCafeGuestFile,
   WanixZedCafeHostState,
 } from 'zss/feature/wanix/wanixzedcafetypes'
+import { isplayerobjectpath } from 'zss/feature/wanix/zedcafeprotectedflags'
 import { validatezedcafeexportpaths } from 'zss/feature/wanix/zedcafetreeschema'
 
 function tracezedcafeexport(message: string) {
@@ -867,13 +868,18 @@ export async function runzedcafeimport(
     }
     const upsertpaths = readzedcafeexportupsertpaths(ops)
     const subset = zedcafeexportdoctofiles(applieddoc, upsertpaths)
-    // Upsert-only after import: defer host removes until guest-dirty clears so
-    // concurrent zedsync flat-file writes are not racing export-tree deletes.
+    // Defer non-player host removes until guest-dirty clears so concurrent
+    // zedsync flat-file writes are not racing export-tree deletes. Player
+    // object paths are export-mirror only (not peer-synced flat writes) — omit
+    // them here and orphan pid_*.json files stick in zedcafe forever.
+    const removepaths = [...readzedcafeexportremovepaths(ops)].filter(
+      isplayerobjectpath,
+    )
     const pushed = pushzedcafesynctoiframe(device, player, subset, {
       fromimport: true,
       partial: true,
       nextdoc: applieddoc,
-      removepaths: [],
+      removepaths,
     })
     if (pushed) {
       setzedcafeguestdirty(false)

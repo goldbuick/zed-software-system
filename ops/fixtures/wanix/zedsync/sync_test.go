@@ -369,7 +369,7 @@ func TestWalkSkipsSimOnlyFlags(t *testing.T) {
 	}
 }
 
-func TestWalkSkipsPlayerObjects(t *testing.T) {
+func TestWalkIncludesPlayerObjects(t *testing.T) {
 	dir := t.TempDir()
 	writefile(t, dir, "book/page/board/objects/npc1.json", `{"kind":"object"}`, time.Now())
 	writefile(t, dir, "book/page/board/objects/pid_1.json", `{"kind":"player"}`, time.Now())
@@ -378,16 +378,106 @@ func TestWalkSkipsPlayerObjects(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, ok := snap["book/page/board/objects/npc1.json"]; !ok {
-		t.Fatal("non-player object should be walked")
-	}
 	for _, path := range []string{
+		"book/page/board/objects/npc1.json",
 		"book/page/board/objects/pid_1.json",
 		"book/page/board/objects/pid_abcd.json",
 	} {
-		if _, ok := snap[path]; ok {
-			t.Fatalf("%s should be skipped", path)
+		if _, ok := snap[path]; !ok {
+			t.Fatalf("%s should be walked", path)
 		}
+	}
+}
+
+func TestPlanopNeverCopytozPlayerObjects(t *testing.T) {
+	rel := "book/page/board/objects/pid_1.json"
+	now := time.Now().UTC()
+	older := now.Add(-time.Hour)
+	bm := FileMeta{Rel: rel, Size: 2, Mtime: older}
+	rm := FileMeta{Rel: rel, Size: 3, Mtime: now} // peer strictly newer
+	zm := FileMeta{Rel: rel, Size: 2, Mtime: older}
+	op, needed := planop(rel, bm, true, rm, true, zm, true)
+	if needed {
+		t.Fatalf("player objects must not copytoz, got %+v", op)
+	}
+	// Peer-only create must not copytoz either
+	op, needed = planop(rel, FileMeta{}, false, rm, true, FileMeta{}, false)
+	if needed {
+		t.Fatalf("peer-only player object must not copytoz, got %+v", op)
+	}
+	// copytor still allowed when zedcafe is the only change
+	rm2 := FileMeta{Rel: rel, Size: 2, Mtime: older}
+	zm2 := FileMeta{Rel: rel, Size: 9, Mtime: now}
+	op, needed = planop(rel, bm, true, rm2, true, zm2, true)
+	if !needed || op.kind != "copytor" {
+		t.Fatalf("want copytor when zedcafe newer, got needed=%v op=%+v", needed, op)
+	}
+}
+
+func TestSteadyTickDeletesPeerPlayerObjectOrphan(t *testing.T) {
+	ResetJournalRevForTest()
+	dir := t.TempDir()
+	remote := filepath.Join(dir, "remote")
+	zedcafe := filepath.Join(dir, "zedcafe")
+	_ = os.MkdirAll(remote, 0o755)
+	_ = os.MkdirAll(zedcafe, 0o755)
+	mtime := time.Now().Add(-time.Minute)
+	rel := "book/page/board/objects/pid_1.json"
+	writefile(t, remote, rel, `{"kind":"player"}`, mtime)
+	writefile(t, zedcafe, rel, `{"kind":"player"}`, mtime)
+	baseline, err := WalkFiles(remote)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Export dropped the avatar; peer still has the orphan.
+	if err := os.Remove(filepath.Join(zedcafe, filepath.FromSlash(rel))); err != nil {
+		t.Fatal(err)
+	}
+	_, logs, err := SteadyTick(remote, zedcafe, baseline)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(remote, filepath.FromSlash(rel))); !os.IsNotExist(err) {
+		t.Fatalf("peer orphan must be deleted, logs=%v err=%v", logs, err)
+	}
+	found := false
+	for _, line := range logs {
+		if strings.Contains(line, "delete remote") && strings.Contains(line, rel) {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("expected deleteremote log, got %v", logs)
+	}
+}
+
+func TestSteadyTickCopytorPlayerObject(t *testing.T) {
+	ResetJournalRevForTest()
+	dir := t.TempDir()
+	remote := filepath.Join(dir, "remote")
+	zedcafe := filepath.Join(dir, "zedcafe")
+	_ = os.MkdirAll(remote, 0o755)
+	_ = os.MkdirAll(zedcafe, 0o755)
+	mtime := time.Now().Add(-time.Minute)
+	rel := "book/page/board/objects/pid_1.json"
+	writefile(t, zedcafe, rel, `{"kind":"player","x":1}`, time.Now())
+	// Peer empty for this path; baseline empty for rel
+	baseline, err := WalkFiles(remote)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = mtime
+	_, logs, err := SteadyTick(remote, zedcafe, baseline)
+	if err != nil {
+		t.Fatal(err)
+	}
+	body, err := os.ReadFile(filepath.Join(remote, filepath.FromSlash(rel)))
+	if err != nil {
+		t.Fatalf("copytor should create peer file: %v logs=%v", err, logs)
+	}
+	if !strings.Contains(string(body), `"player"`) {
+		t.Fatalf("body=%q", body)
 	}
 }
 
@@ -977,6 +1067,15 @@ func TestIsPlayerFlagPath(t *testing.T) {
 	}
 	if isplayerflagpath("book/page/board/objects/pid_1.json") {
 		t.Fatal("board objects are not flag paths")
+	}
+	if !isplayerobjectpath("book/page/board/objects/pid_1.json") {
+		t.Fatal("expected player object path")
+	}
+	if isplayerobjectpath("book/flags/pid_1.json") {
+		t.Fatal("flags are not board object paths")
+	}
+	if allowcopytoz("book/page/board/objects/pid_1.json") {
+		t.Fatal("player objects must not allow copytoz")
 	}
 }
 

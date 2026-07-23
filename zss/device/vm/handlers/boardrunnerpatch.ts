@@ -11,6 +11,7 @@ import {
   markzedcafeexportfromrootops,
 } from 'zss/feature/wanix/wanixstateexport'
 import { isarray } from 'zss/mapping/types'
+
 export function handleboardrunnerpatch(vm: DEVICE, message: MESSAGE): void {
   if (!isarray(message.data)) {
     return
@@ -18,6 +19,7 @@ export function handleboardrunnerpatch(vm: DEVICE, message: MESSAGE): void {
   // we need to afford board runners to patch MAIN MEMORY
   const [patchwire, boundary] = message.data as [unknown, string | undefined]
   const operations = decodepatchwire(patchwire)
+
   if (boundary) {
     if (!boardrunnerboundarypatch(boundary, operations)) {
       // bad patch, send a reset — boardrunnerpaint recovery deferred

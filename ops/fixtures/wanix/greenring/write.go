@@ -37,11 +37,24 @@ func hasterrain(exportroot, bookdir, pagedir string) bool {
 }
 
 // ResolveBoardPageDir finds the export page directory under bookdir that holds
-// board/terrain.json. boardhint may be a full dir name or a bare page/board id.
+// board/terrain.json. Prefer boardhint from player flags; fall back to locating
+// board/objects/pid_*.json when needed.
 func ResolveBoardPageDir(exportroot, bookdir, boardhint, playerid string) (string, error) {
 	bookpath := filepath.Join(exportroot, filepath.FromSlash(bookdir))
+	rootfs := os.DirFS(exportroot)
 
-	if playerid != "" {
+	if boardhint != "" {
+		if pagedir, err := findplayers.ResolveBoardPageDirFS(
+			rootfs,
+			bookdir,
+			boardhint,
+		); err == nil {
+			return pagedir, nil
+		}
+	}
+
+	// Player avatars are board/objects/pid_*.json only — ignore other object ids.
+	if findplayers.IsPID(playerid) {
 		suffix := filepath.ToSlash(filepath.Join("board", "objects", playerid+".json"))
 		var found string
 		_ = filepath.WalkDir(bookpath, func(p string, d fs.DirEntry, err error) error {
@@ -68,39 +81,7 @@ func ResolveBoardPageDir(exportroot, bookdir, boardhint, playerid string) (strin
 		}
 	}
 
-	if boardhint != "" && hasterrain(exportroot, bookdir, boardhint) {
-		return boardhint, nil
-	}
-
-	entries, err := os.ReadDir(bookpath)
-	if err != nil {
-		return "", fmt.Errorf("list %s: %w", bookpath, err)
-	}
-	for _, ent := range entries {
-		if !ent.IsDir() {
-			continue
-		}
-		name := ent.Name()
-		if boardhint != "" &&
-			(name == boardhint || strings.HasSuffix(name, "-"+boardhint)) &&
-			hasterrain(exportroot, bookdir, name) {
-			return name, nil
-		}
-	}
-	for _, ent := range entries {
-		if !ent.IsDir() || strings.HasPrefix(ent.Name(), "player-") {
-			continue
-		}
-		if hasterrain(exportroot, bookdir, ent.Name()) {
-			return ent.Name(), nil
-		}
-	}
-	return "", fmt.Errorf(
-		"no board/terrain.json under %s (hint=%q player=%q)",
-		bookdir,
-		boardhint,
-		playerid,
-	)
+	return findplayers.ResolveBoardPageDirFS(rootfs, bookdir, boardhint)
 }
 
 // ApplyRingToBoard reads board/terrain.json, paints char/fg/bg on ring cells, writes back.

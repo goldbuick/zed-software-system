@@ -33,9 +33,9 @@ func cleardirtytimerfortest() {
 
 func markexportdirty(name string) {
 	rel := normalizeexportpath(name)
-	// Host revision / journal meta under .zedsync -- not guest content; never
-	// kick the import poll for these writes.
-	if rel == ".zedsync" || strings.HasPrefix(rel, ".zedsync/") {
+  // Host revision / journal meta under zedsync/ -- not guest content; never
+  // kick the import poll for these writes.
+  if rel == "zedsync" || strings.HasPrefix(rel, "zedsync/") {
 		return
 	}
 	dirtymu.Lock()

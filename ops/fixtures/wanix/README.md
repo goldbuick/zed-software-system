@@ -26,7 +26,7 @@ Validators run only via existing `cafe:playwright:headed` — no new citty tasks
 | 10 | greenring writeback import | [`validate-greenring-drop.ts`](../../../tasks/lib/wanix/validate-greenring-drop.ts) | `cafe:dev` |
 | 11 | Linux overlay helpers | manual | overlay build + `#wanix vm` |
 | 12 | Remote WSS mount | [`validate-wanix-remote-mount.ts`](../../../tasks/lib/wanix/validate-wanix-remote-mount.ts) | `cafe:dev` + `p9server:dev` |
-| 13 | Remote zedsync seed + `.zedsync/ready` | [`validate-zedsync-remote.ts`](../../../tasks/lib/wanix/validate-zedsync-remote.ts) | #12 deps + empty peer |
+| 13 | Remote zedsync seed + `zedsync/ready` | [`validate-zedsync-remote.ts`](../../../tasks/lib/wanix/validate-zedsync-remote.ts) | #12 deps + empty peer |
 | 14 | Zedsync peer delete restore | same as #13 | empty peer root |
 | 15 | FSA folder drop + zedsync | **manual** (Chromium) | folder on disk |
 | 16 | listinput stamp poll | [`validate-binddrop-listinput.ts`](../../../tasks/lib/wanix/validate-binddrop-listinput.ts) | `cafe:dev` |
@@ -295,7 +295,7 @@ Note: dropping wasm **from idle** remounts the task room (`hardreset`); warm reu
 | **Automator** | `validate-zedsync-remote.ts` |
 | **Failure dump** | `/tmp/wanix-zedsync-remote-report.json` |
 
-Rules: target path **no spaces**; empty peer seeds from `zedcafe/` (never wipe); skips `.`-prefixed segments; import poll pauses until `<target>/.zedsync/ready`; zedsync exempt from 5‑min task auto-halt.
+Rules: target path **no spaces**; empty peer seeds from `zedcafe/` (never wipe); skips `.`-prefixed segments and the `zedsync/` meta dir; import poll pauses until `<target>/zedsync/ready`; zedsync exempt from 5‑min task auto-halt.
 
 ### 15. FSA folder drop + zedsync (manual)
 

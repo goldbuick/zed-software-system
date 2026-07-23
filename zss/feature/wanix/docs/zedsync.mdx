@@ -27,7 +27,7 @@ Browser Wanix cannot export its namespace outward. Import a remote 9P mount, the
 2. `#wanix remote connect wss://localhost:<port>/ remote` — use the printed URL; `wss://` is required from `cafe:dev` https
 3. `#wanix zedsync remote` — guest task; argv path must not contain spaces
 
-Empty peer is seeded from `zedcafe/` (no wipe). After `.zedsync/ready`, steady-state sync mirrors creates/updates; deleting a file on the peer restores it from `zedcafe/`. Soft idle stops zedsync (`zedsync: stopped`). See [`ops/fixtures/wanix/README.md`](ops/fixtures/wanix/README.md).
+Empty peer is seeded from `zedcafe/` (no wipe). After `zedsync/ready`, steady-state sync mirrors creates/updates; deleting a file on the peer restores it from `zedcafe/`. Soft idle stops zedsync (`zedsync: stopped`). See [`ops/fixtures/wanix/README.md`](ops/fixtures/wanix/README.md).
 
 ### Conflict policy: newer mtime wins
 
@@ -36,8 +36,11 @@ the peer and `zedcafe/` since the last baseline, the side with the **newer
 mtime** wins (`copytoz` or `copytor`). Equal mtime ties prefer **zedcafe**
 (`copytor`) so remount/equalized peer mtimes cannot stomp live export. Peer
 still wins when its mtime is **strictly newer**. Live player flag bags
-(`flags/pid_*.json`) never `copytoz` into `zedcafe/` (peer can still receive
-updates via `copytor`). There is **no merge**.
+(`flags/pid_*.json`) and board player objects (`board/objects/pid_*.json`)
+never `copytoz` into `zedcafe/` (peer can still receive updates via
+`copytor`). Board player objects **are** walked so when export drops an
+avatar, `SteadyTick` runs `deleteremote` and prunes the peer orphan. There
+is **no merge**.
 
 Practical consequences for anything editing the peer directory directly
 (hand edits, another tool, a future agent):
@@ -60,15 +63,16 @@ ticks with a **periodic full tick** every 30 polls so peer↔`zedcafe/` drift
 heals without emptying the peer.
 
 Peer-side crash recovery: `ops/fixtures/wanix/zedsync/journal.go` appends one
-NDJSON entry to `<remote>/.zedsync/journal.ndjson` immediately before each
+NDJSON entry to `<remote>/zedsync/journal.ndjson` immediately before each
 copy (`status: "pending"`, with the source file's `sha256`) and a matching
-`status: "done"` entry after the copy succeeds. `<remote>/.zedsync/state.json`
+`status: "done"` entry after the copy succeeds. `<remote>/zedsync/state.json`
 tracks `{ lastRemoteRev, lastZedcafeRev }`. On startup, `main.go` calls
 `ReplayIncompleteJournal` before `InitialSeed`: any journal entry whose latest
 recorded status is still `"pending"` (process died between the journal write
-and the copy completing) is best-effort re-copied. `.zedsync/` is a
-dot-prefixed segment, so it is already excluded from `WalkFiles` snapshots —
-it never appears as a syncable path.
+and the copy completing) is best-effort re-copied. `zedsync/` is skipped by
+name in `WalkFiles` (same as dot-prefixed segments) — it never appears as a
+syncable path. Delete the peer's `zedsync/` folder to clear journal / ready
+state and start fresh.
 
 ### Agent platform contract (Phase 4, lightweight)
 

@@ -70,6 +70,34 @@ func TestResolveBoardPageDirByPlayerObject(t *testing.T) {
 	}
 }
 
+func TestResolveBoardPageDirIgnoresNonPidObject(t *testing.T) {
+	dir := t.TempDir()
+	book := "cool-book1"
+	page := "area-sid_xyz"
+	obj := filepath.Join(dir, book, page, "board", "objects", "npc1.json")
+	hintpage := "title-sid_abc"
+	hintterrain := filepath.Join(dir, book, hintpage, "board", "terrain.json")
+	if err := os.MkdirAll(filepath.Dir(obj), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(obj, []byte("{}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Dir(hintterrain), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(hintterrain, []byte("[]\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	got, err := ResolveBoardPageDir(dir, book, hintpage, "npc1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != hintpage {
+		t.Fatalf("non-pid id should fall through to hint, got %q want %q", got, hintpage)
+	}
+}
+
 func TestApplyRingToBoardWritesArray(t *testing.T) {
 	dir := t.TempDir()
 	book := "cool-book1"

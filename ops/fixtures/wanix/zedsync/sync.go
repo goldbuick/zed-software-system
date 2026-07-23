@@ -24,9 +24,10 @@ const (
 	// RevisionDir mirrors WANIX_ZEDSYNC_REVISION_DIR in wanixzedcafeconstants.ts.
 	// Host (zedcafehost.ts pushzedcafeexportlive) writes RevisionFile after each
 	// push. ReadySentinel lives under the same meta dir (not a top-level peer file).
-	RevisionDir   = ".zedsync"
-	RevisionFile  = ".zedsync/revision"
-	ReadySentinel = ".zedsync/ready"
+	// Visible (no leading '.') so users can delete the folder to reset sync state.
+	RevisionDir   = "zedsync"
+	RevisionFile  = "zedsync/revision"
+	ReadySentinel = "zedsync/ready"
 )
 
 // ErrZedsyncNeedFullTick signals that SteadyTickIncremental could not apply
@@ -67,12 +68,13 @@ type FileMeta struct {
 type Snapshot map[string]FileMeta
 
 // shouldskip reports whether a slash-normalized relative path is non-content
-// (any path segment starts with '.' -- dotfiles, hidden dirs, ready sentinel;
-// sim-only flag bags under flags/ are never synced; player board objects
-// board/objects/pid_*.json are never synced).
+// (any path segment starts with '.' -- dotfiles / hidden dirs; RevisionDir
+// meta folder; sim-only flag bags under flags/ are never synced).
+// board/objects/pid_*.json are walked so copytor + deleteremote can mirror /
+// prune the peer; they never copytoz (see allowcopytoz).
 func shouldskip(rel string) bool {
 	for _, seg := range strings.Split(rel, "/") {
-		if strings.HasPrefix(seg, ".") {
+		if strings.HasPrefix(seg, ".") || seg == RevisionDir {
 			return true
 		}
 	}
@@ -87,12 +89,6 @@ func shouldskip(rel string) bool {
 			if strings.HasSuffix(base, suf) {
 				return true
 			}
-		}
-	}
-	if strings.Contains(rel, "/board/objects/") {
-		base := filepath.Base(rel)
-		if strings.HasPrefix(base, "pid_") && strings.HasSuffix(base, ".json") {
-			return true
 		}
 	}
 	return false
@@ -134,9 +130,20 @@ func isplayerflagpath(rel string) bool {
 	return true
 }
 
-// allowcopytoz is false for player flag bags (peer must not overwrite live flags).
+// isplayerobjectpath reports board avatar objects (board/objects/pid_*.json).
+// Walked for copytor + deleteremote; never copytoz into zedcafe.
+func isplayerobjectpath(rel string) bool {
+	if !strings.Contains(rel, "/board/objects/") {
+		return false
+	}
+	base := filepath.Base(rel)
+	return strings.HasPrefix(base, "pid_") && strings.HasSuffix(base, ".json")
+}
+
+// allowcopytoz is false for player flag bags and board player objects
+// (peer must not overwrite live zedcafe / sim-mirrored state).
 func allowcopytoz(rel string) bool {
-	return !isplayerflagpath(rel)
+	return !isplayerflagpath(rel) && !isplayerobjectpath(rel)
 }
 
 // WalkFiles walks root and returns a snapshot of regular files.
@@ -735,7 +742,7 @@ func applyscopedops(remote, zedcafe string, ops []syncop, unified Snapshot) (Sna
 	return applyops(remote, zedcafe, ops, nil, nil, unified, true)
 }
 
-// ReadRevision reads the host-written zedcafe/.zedsync/revision hint (see
+// ReadRevision reads the host-written zedcafe/zedsync/revision hint (see
 // RevisionFile / WANIX_ZEDSYNC_REVISION_FILE in wanixzedcafeconstants.ts,
 // written by zedcafehost.ts pushzedcafeexportlive). A missing file is
 // revision 0 with no paths, not an error.

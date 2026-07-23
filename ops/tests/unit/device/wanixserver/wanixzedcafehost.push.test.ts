@@ -81,7 +81,7 @@ describe('pushzedcafeexportlive removepaths', () => {
     ])
     expect(written).toEqual([
       `${base}/stats.json`,
-      `${base}/.zedsync/revision`,
+      `${base}/zedsync/revision`,
     ])
   })
 

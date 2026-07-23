@@ -9,7 +9,10 @@ import { DEVICE } from 'zss/device'
 import { boardrunnerlinkdead } from 'zss/device/api'
 import type { MESSAGE } from 'zss/device/types'
 import { handlelogout } from 'zss/device/vm/handlers/auth'
+import { handleboardrunnerpatch } from 'zss/device/vm/handlers/boardrunnerpatch'
 import { boardrunners, SECOND_TIMEOUT, tracking } from 'zss/device/vm/state'
+import { extractpidsfromopspaths } from 'zss/debugingest'
+import { encodepatchwire } from 'zss/feature/jsonpipe/wire'
 import { memoryboundariesclear } from 'zss/memory/boundaries'
 import { memorycreateboardobjectfromkind } from 'zss/memory/boardlifecycle'
 import {
@@ -281,5 +284,75 @@ describe('player orphan evidence (no fix)', () => {
 
     expect(ok).toBe(true)
     expect(after.count).toBeGreaterThan(1)
+  })
+
+  it('R5: stale source objects/pid patch after host move resurrects copy (H-C)', () => {
+    const src = placeplayer(boarda, player, 5, 5)
+    const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+    memorywritebookplayerboard(mainbook, player, boarda)
+    memorywritebookflag(mainbook, player, 'enterx', 5)
+    memorywritebookflag(mainbook, player, 'entery', 5)
+
+    const moved = memorymoveplayertoboard(mainbook, player, boardb, {
+      x: 3,
+      y: 3,
+    })
+    const aftermove = memorydebugcountplayerboards(player)
+    expect(moved).toBe(true)
+    expect(aftermove.count).toBe(1)
+    expect(src.objects[player]).toBeUndefined()
+
+    const ghost = {
+      id: player,
+      x: 5,
+      y: 5,
+      kind: MEMORY_LABEL.PLAYER,
+      category: CATEGORY.ISOBJECT,
+      player,
+    }
+    const patch = encodepatchwire([
+      { op: 'add' as const, path: `/board/objects/${player}`, value: ghost },
+    ])
+    const vm = { emit: jest.fn() } as unknown as DEVICE
+    handleboardrunnerpatch(vm, {
+      session: '',
+      player: 'runner-a',
+      id: 'm-patch',
+      sender: '',
+      target: 'boardrunner:patch',
+      data: [patch, boarda],
+    } as MESSAGE)
+
+    const afterpatch = memorydebugcountplayerboards(player)
+    evidencelog({
+      scenario: 'R5_stale_source_patch',
+      hypothesis: 'H-C',
+      aftermove,
+      afterpatch,
+      sourcehasobject: !!src.objects[player],
+      flagsboard: afterpatch.flagsboard,
+      boardids: afterpatch.boardids,
+      verdict:
+        afterpatch.count > 1
+          ? 'CONFIRMED_h_c_patch_resurrects'
+          : 'REJECTED_h_c_patch_no_orphan',
+    })
+
+    expect(afterpatch.count).toBeGreaterThan(1)
+    expect(afterpatch.boardids).toEqual(
+      expect.arrayContaining([boarda, boardb]),
+    )
+  })
+})
+
+describe('extractpidsfromopspaths', () => {
+  it('finds pid ids under /board/objects/', () => {
+    expect(
+      extractpidsfromopspaths([
+        { path: `/board/objects/pid_abc/x` },
+        { path: `/board/objects/pid_abc/y` },
+        { path: `/board/objects/npc1/x` },
+      ]),
+    ).toEqual(['pid_abc'])
   })
 })
