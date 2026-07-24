@@ -29,7 +29,7 @@ Configures per-voice effect sends and effect parameters. For the full parameter/
 
 | config | Effect |
 |--------|--------|
-| `on` | Sets send to **50** (vibrato/autofilter/distortion on WASM) or **18** (others). Tone: distortion `on` is **18**; WASM distortion `on` is **50**. |
+| `on` | Sets send to **50** (vibrato, autofilter) or **18** (echo, reverb, fc, distort, autowah). Matches archived Tone. |
 | `off` | Sets send to 0 |
 | number (0-100) | Sets send level (converted via volumetodb) |
 

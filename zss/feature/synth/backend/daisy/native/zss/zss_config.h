@@ -102,9 +102,8 @@ constexpr float kEnvReleaseTauScale = 0.060f;
  */
 constexpr float kPlayBusGain = 0.238f;
 constexpr float kDrumBusGain = 2.440f;
-/** Main fader: 20*log10(vol*0.25) + offset. Was -35; +20 dB (post-comp listen).
- */
-constexpr float kMainFaderOffsetDb = -15.f;
+/** Main fader: 20*log10(vol*0.25) + offset (see gain-levels.md). */
+constexpr float kMainFaderOffsetDb = -35.f;
 /** TTS and bgplay share the same SAB dB law (see readttsvolume /
  * readbgplayvolume). */
 

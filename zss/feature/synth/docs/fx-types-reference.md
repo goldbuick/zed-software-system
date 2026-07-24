@@ -37,8 +37,8 @@ Aliases: `fcrush`→`fc`, `distort`→`distortion`.
 | FX | Tone `on` | WASM `on` |
 |----|-----------|-----------|
 | `vibrato`, `autofilter` | **50** | **50** |
-| `distortion` | **18** | **50** |
-| `echo`, `reverb`, `fc`, `autowah` | **18** | **50** |
+| `distortion` | **18** | **18** |
+| `echo`, `reverb`, `fc`, `autowah` | **18** | **18** |
 
 Default send at boot: **0** (all FX off).
 
@@ -72,7 +72,7 @@ Archived Maxi used a **serial hybrid** chain ([wasmfxplaycode.ts](../../../../op
 
 | Layer | Control |
 |-------|---------|
-| Send level | SAB slot per FX (`#reverb on` → ~−21 dB linear; numeric 0–100 → `volumetodb`) |
+| Send level | SAB slot per FX (`#reverb on` -> ~-10 dB linear for time/drive FX; vibrato/autofilter ~-1 dB; numeric 0-100 -> `volumetodb`) |
 | Per-algorithm | e.g. reverb `tanh(wet × 1.6)` post-ReverbSc, echo feedback clamp, distortion `Overdrive` with ×3 drive |
 | Return bus | **`wet_sum` × 1.4** then compressor (−24 dB thresh, 4:1, 2 ms / 80 ms) — dry stays full; echo/reverb use send×wet ([parallel-fx-bus.md](parallel-fx-bus.md)) |
 | Main bus | Sidechain → compressor → razzle (unchanged) |
@@ -141,7 +141,7 @@ WASM/Daisy: **ReverbSc** (8 modulated delay lines, stereo internal, mono sum); p
 |-------|--------------|--------------|
 | `distortion` | **0.4** | **0.4** |
 | `oversample` | **`'none'`** | **N/A (Tone-only)** |
-| send `on` | **18** | **50** |
+| send `on` | **18** | **18** |
 
 ### 7. `autowah`
 
