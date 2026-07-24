@@ -31,18 +31,11 @@ jobs:
       - name: inc version
         if: steps.should_bump.outputs.bump == 'true'
         id: version-bump
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          npm version patch --no-git-tag-version
-          git add package.json
-          if git diff --cached --quiet; then
-            echo "No version change to commit"
-            exit 0
-          fi
-          VERSION=$(node -p "require('./package.json').version")
-          git commit -m "ci: bump version to ${VERSION}"
-          git push
+        uses: phips28/gh-action-bump-version@master
+        with:
+          skip-tag: 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: cat package.json
         run: cat ./package.json
