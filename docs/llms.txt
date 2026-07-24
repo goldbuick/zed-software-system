@@ -161,6 +161,7 @@
 - [audiochain.ts](https://zed.cafe/docs/synth/audiochain)
 - [Drums Module](https://zed.cafe/docs/synth/drums)
 - [fx.ts & fxchannels.ts](https://zed.cafe/docs/synth/fx-and-fxchannels)
+- [Gain and volume levels (Daisy)](https://zed.cafe/docs/synth/gain-levels): Reference chart of every tweakable volume/gain stage in the live Daisy synth path.
 - [Parallel voice FX bus (Daisy)](https://zed.cafe/docs/synth/parallel-fx-bus)
 - [playnotation.ts](https://zed.cafe/docs/synth/playnotation)
 - [Recording & MP3 export](https://zed.cafe/docs/synth/record-and-mp3)

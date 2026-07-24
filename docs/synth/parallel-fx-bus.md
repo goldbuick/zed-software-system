@@ -35,7 +35,7 @@ out = dry + wet_sum
 | Source | Range |
 |--------|--------|
 | `#fx off` | 0 |
-| `#fx on` | Preset via `volumetodb` — **50** for all FX (~−1 dB linear send) |
+| `#fx on` | Preset via `volumetodb` — **50** for vibrato/autofilter (~−1 dB); **18** for echo/reverb/fc/distort/autowah (~−10 dB) |
 | `#fx 0–100` | `volumetodb(v) = 20·log10(v) − 35` → linear send in SAB |
 
 ## Return-bus compressor
@@ -55,7 +55,7 @@ Per-group envelope follower in `ZssFxGroup::return_comp_env`. Detector still run
 
 ## Per-algorithm trims (unchanged)
 
-- Reverb: DaisySP-LGPL **ReverbSc** + predelay; `tanh(wet × kReverbPostGain)` (1.6)
+- Reverb: DaisySP-LGPL **ReverbSc** + predelay; `tanh(wet × kReverbPostGain)` (**1.5**)
 - Echo: feedback clamp 0–0.95
 - Distortion: `Overdrive` with ×3 input drive
 

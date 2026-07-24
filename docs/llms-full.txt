@@ -7900,8 +7900,10 @@ hiss (pink noise) ───────┘
 ### Razzle Chain
 
 - **Vibrato:** Subtle pitch modulation (0.125 Hz, wet 0.02)
-- **Chorus:** Widening effect (7 ms base delay, wet 0.1)
+- **Chorus:** Widening effect (7 ms base delay, wet **0.3**)
 - **Tape hiss:** Pink noise modulated by oscillator, feeds chorus input (very quiet bed)
+
+Full gain chart: [gain-levels.md](gain-levels.md).
 
 ### Daisy volume laws (match Tone)
 
@@ -7910,9 +7912,9 @@ hiss (pink noise) ───────┘
 | Play into sidechain | `volumetodb(20)` | `kPlayBusGain` |
 | Drums | `volumetodb(100) + 10` dB | `kDrumBusGain` (calibrate: `yarn play-drum-balance:calibrate`) |
 | bgplay / TTS | `10^((20*log10(vol)-35)/20)` | `readbgplayvolume()` / `readttsvolume()` (same law) |
-| Main fader | `volumetodb(vol × 0.25) + 20` on `mainvolume` (offset −15 dB) | `readmainvolume()` (`kMainFaderOffsetDb`) |
+| Main fader | `volumetodb(vol × 0.25)` on `mainvolume` (offset **−35 dB**) | `readmainvolume()` (`kMainFaderOffsetDb`) |
 
-Boot SAB defaults: master/play fader **100**, bgplay **70**, TTS **100**.
+Boot SAB defaults: master/play fader **50**, bgplay **50**, TTS **100**.
 
 ### Broadcast Destination
 
@@ -8094,8 +8096,8 @@ Aliases: `fcrush`→`fc`, `distort`→`distortion`.
 | FX | Tone `on` | WASM `on` |
 |----|-----------|-----------|
 | `vibrato`, `autofilter` | **50** | **50** |
-| `distortion` | **18** | **50** |
-| `echo`, `reverb`, `fc`, `autowah` | **18** | **50** |
+| `distortion` | **18** | **18** |
+| `echo`, `reverb`, `fc`, `autowah` | **18** | **18** |
 
 Default send at boot: **0** (all FX off).
 
@@ -8129,7 +8131,7 @@ Archived Maxi used a **serial hybrid** chain ([wasmfxplaycode.ts](../../../../op
 
 | Layer | Control |
 |-------|---------|
-| Send level | SAB slot per FX (`#reverb on` → ~−21 dB linear; numeric 0–100 → `volumetodb`) |
+| Send level | SAB slot per FX (`#reverb on` -> ~-10 dB linear for time/drive FX; vibrato/autofilter ~-1 dB; numeric 0-100 -> `volumetodb`) |
 | Per-algorithm | e.g. reverb `tanh(wet × 1.6)` post-ReverbSc, echo feedback clamp, distortion `Overdrive` with ×3 drive |
 | Return bus | **`wet_sum` × 1.4** then compressor (−24 dB thresh, 4:1, 2 ms / 80 ms) — dry stays full; echo/reverb use send×wet ([parallel-fx-bus.md](parallel-fx-bus.md)) |
 | Main bus | Sidechain → compressor → razzle (unchanged) |
@@ -8198,7 +8200,7 @@ WASM/Daisy: **ReverbSc** (8 modulated delay lines, stereo internal, mono sum); p
 |-------|--------------|--------------|
 | `distortion` | **0.4** | **0.4** |
 | `oversample` | **`'none'`** | **N/A (Tone-only)** |
-| send `on` | **18** | **50** |
+| send `on` | **18** | **18** |
 
 ### 7. `autowah`
 
@@ -8307,6 +8309,155 @@ Play-wide:    echo, reverb, fcrush, autofilter, distort, vibrato, autowah
 | Firmware commands | [firmware/audio.ts](../../../firmware/audio.ts) |
 | Tone FX chain | [archive/tone/fx.ts](../../../../ops/archive/synth/tone/fx.ts) |
 | Tone voicefx dispatch | [archive/tone/voicefx/index.ts](../../../../ops/archive/synth/tone/voicefx/index.ts) |
+
+---
+
+# Gain and volume levels (Daisy)
+Source: https://zed.cafe/docs/synth/gain-levels
+
+Canonical inventory for the active WASM/Daisy synth. For routing narrative see
+[audiochain.md](audiochain.md); for FX bus law see [parallel-fx-bus.md](parallel-fx-bus.md).
+
+## Signal chain
+
+```mermaid
+flowchart LR
+  subgraph voices [Voices]
+    V0[play 0-1]
+    V1[play 2-3]
+    VBG[bgplay 4-7]
+    DR[drums]
+    TTS[tts]
+  end
+
+  V0 --> FX0["applyfxgroup 0"]
+  V1 --> FX1["applyfxgroup 1"]
+  VBG --> FX2["applyfxgroup 2"]
+
+  FX0 --> PLAYSUM[play sum]
+  FX1 --> PLAYSUM
+  FX2 --> BG["bg x bggain"]
+
+  DR --> DRUM["drums x kDrumBusGain"]
+  TTS --> TTSL["tts x readttsvolume"]
+
+  PLAYSUM --> SC["sidechain duck"]
+  SC --> PB["play x kPlayBusGain"]
+  BG --> MIX
+  TTSL --> MIX
+  DRUM --> MIX
+  PB --> MIX
+
+  MIX --> MC[main compressor]
+  MC --> RZ[razzle]
+  RZ --> MV["x readmainvolume #vol"]
+  MV --> OUT["clamp +/-1"]
+```
+
+**Naming trap:** `#vol` / `playvolume` is the **post-chain master fader** (`readmainvolume()`),
+not a trim on the play bus into the mix. Play stem level is fixed at `kPlayBusGain`.
+
+## User faders (SAB `zss_main`, 0-100)
+
+Defined in [`wasmmainsab.ts`](../backend/wasm/wasmmainsab.ts). Mute floor: raw `<= 0.001` -> gain `0`.
+
+| Control | SAB slot | Default | dB law | Linear @ default | Notes |
+|---------|----------|---------|--------|------------------|-------|
+| `#vol` / playvolume | PLAY (0) | **50** | `20*log10(vol*0.25) + kMainFaderOffsetDb` | ~**0.22** @ offset -35 | Master after razzle |
+| `#bgvol` / bgplayvolume | BGPLAY (1) | **50** | `20*log10(vol) - 35` | ~**0.89** | bgplay stem |
+| `#ttsvol` / ttsvolume | TTS (2) | **100** | same as bg | ~**1.78** | TTS sample level |
+| Voice `vol` | voice cfg | **0 dB** | `dbtoamp(vol_db)` | **1.0** | Per-voice via `#synthN` |
+
+CLI: [`zss/firmware/audio.ts`](../../../firmware/audio.ts) (`#vol`, `#bgvol`, `#ttsvol`).
+
+## Master / bus constants (`zss_config.h`)
+
+Parity-tuned values -- change only with `yarn task run ops:daisy:*:calibrate` or intentional re-tune.
+
+| Constant | Value | Controls |
+|----------|-------|----------|
+| `kMainFaderOffsetDb` | **-35** | Added to play fader dB law |
+| `kPlayBusGain` | **0.238** | Fixed play stem into mix |
+| `kDrumBusGain` | **2.440** | Drum stem (calibrate: `ops:daisy:play-drum-balance:calibrate`) |
+| `kVoiceOutGain` | **1.0** | Post-FX voice output |
+| `kScMakeupDb` | **24** | Sidechain makeup |
+| `kScMix` | **0.75** | Duck depth (idle play boost ~12x with makeup) |
+| `kScAttackSec` / `kScReleaseSec` | 0.005 / 0.06 | Sidechain timing |
+| SC key trims | bg/tts **-12 dB**, drums **-28 dB** | Key bus only (`zss_main.cpp`) |
+| `kMainCompThresholdDb` | **-28** | Main compressor |
+| `kMainCompRatio` | **4** | |
+| `kMainCompKneeDb` | **30** | |
+| `kMainCompMix` | **0.55** | Parallel GR |
+| `kMainCompAttackSec` / `kMainCompReleaseSec` | 0.003 / 0.15 | |
+| `kRazzleVibratoWet` | **0.02** | Post-comp bed |
+| `kRazzleChorusWet` | **0.3** | |
+| `kRazzleHissGain` | **0.001** | |
+
+SAB bypass slots: COMP_BYPASS (3), SC_BYPASS (4) for offline A/B.
+
+## FX return bus (multi-FX)
+
+Bus law (`zss_fx.cpp` `applyfxgroup`):
+
+```text
+out = dry + compress( (Sigma send_i * contribution_i) * kFxReturnWetTrim )
+```
+
+| Knob | Value | File | Notes |
+|------|-------|------|-------|
+| `#fx on` vibrato, autofilter | send preset **50** (~0.89 linear) | `wasmfxstate.ts` | Tone archive match |
+| `#fx on` echo, reverb, fc, distort, autowah | send preset **18** (~0.32 linear) | same | Tone archive match |
+| `#fx 0-100` | `10^((20*log10(v)-35)/20)` | same | Player send |
+| `kFxReturnWetTrim` | **1.4** | `zss_config.h` | After wet sum |
+| `kReverbPostGain` | **1.5** | `zss_config.h` | `tanh(wet * gain)` |
+| FX return comp | **-24 dB / 4:1 / knee 6** | `zss_config.h` | On wet only |
+| Distortion drive | **dry x 3** | `zss_fx.cpp` | Into Overdrive |
+| Echo feedback default | **0.666** (clamp 0-0.95) | `wasmfxstate.ts` | |
+| Reverb decay default | **2.5** | same | |
+
+**Multi-FX loudness:** FX are parallel sends on **full dry**. Each enabled send adds wet energy; dry is never attenuated. Stacking echo+reverb+distort raises peak/RMS until return comp and main comp catch it.
+
+## Per-voice / drum trims (`zss_config.h`)
+
+| Constant | Value | Voice / use |
+|----------|-------|-------------|
+| `kSineVoiceGain` | 1.42 | Sine |
+| `kAlgoOpGain` | ~0.316 (-10 dB) | Algo ops |
+| `kAlgoOutGain` | 0.18 | Algo out |
+| `kNoiseVoiceGain` | 21 | Noise (with `kNoiseBaseExpr` 0.19) |
+| `kLfsrVoiceBoost` | 2.5 | Non-soft chip |
+| `kStringMachineGain` / `kStringPluckGain` | 0.42 / 0.38 | String |
+| `kWindVoiceGain` | 0.38 | Wind |
+| `kPianoVoiceGain` | 0.34 | Piano |
+| `kTimpaniVoiceGain` | 0.42 | Timpani |
+| `kBowedVoiceGain` / `kGuitarVoiceGain` | 0.36 | Bowed / guitar |
+| `kOrganVoiceGain` | 0.32 | Organ |
+| `kDrumTickTrim` / `kDrumTweetTrim` | 1.35 / 1.25 | Hi-hat family |
+| `kDrumGains[12]` | 0.24-0.42 | Per drum digit |
+
+Default per-voice volume dB: **0** (`wasmvoicecfgsab.ts` `DEFAULT_WASM_VOICE_VOLUME_DB`).
+
+## Web Audio shell
+
+| Stage | Gain | File |
+|-------|------|------|
+| Worklet -> destination | unity | `daisyengine.ts` |
+| Broadcast tap | `GainNode = 1` | same |
+| TTS into worklet | `GainNode = 1` | level in WASM `readttsvolume` |
+
+## What to tweak when
+
+| Symptom | First knobs | Calibrate task |
+|---------|-------------|----------------|
+| Too loud at boot | `kMainFaderOffsetDb`, `WASM_DEFAULT_PLAY_VOLUME` | -- |
+| Multi-FX pile-up | `#fx on` presets, `kFxReturnWetTrim` | `ops:daisy:level-stability:test:fxmatrix` |
+| Play vs drums balance | `kPlayBusGain`, `kDrumBusGain` | `ops:daisy:play-drum-balance:calibrate` |
+| Idle play too hot | `kScMakeupDb`, `kScMix` | `ops:daisy:sidechain:parity:calibrate` |
+| Player quick trim | `#vol`, `#bgvol`, `#ttsvol`, `#fx N` | -- |
+
+## Legacy / not live Daisy
+
+[`wasmlevels.ts`](../backend/wasm/wasmlevels.ts) exports Tone-parity constants (`WASM_PLAY_BUS_GAIN`, `WASM_DRUM_BUS_GAIN`, etc.) for archived Maxi/Tone math -- **not** the live Daisy bus gains in `zss_config.h`.
 
 ---
 
@@ -8628,7 +8779,7 @@ out = dry + wet_sum
 | Source | Range |
 |--------|--------|
 | `#fx off` | 0 |
-| `#fx on` | Preset via `volumetodb` — **50** for all FX (~−1 dB linear send) |
+| `#fx on` | Preset via `volumetodb` — **50** for vibrato/autofilter (~−1 dB); **18** for echo/reverb/fc/distort/autowah (~−10 dB) |
 | `#fx 0–100` | `volumetodb(v) = 20·log10(v) − 35` → linear send in SAB |
 
 ## Return-bus compressor
@@ -8648,7 +8799,7 @@ Per-group envelope follower in `ZssFxGroup::return_comp_env`. Detector still run
 
 ## Per-algorithm trims (unchanged)
 
-- Reverb: DaisySP-LGPL **ReverbSc** + predelay; `tanh(wet × kReverbPostGain)` (1.6)
+- Reverb: DaisySP-LGPL **ReverbSc** + predelay; `tanh(wet × kReverbPostGain)` (**1.5**)
 - Echo: feedback clamp 0–0.95
 - Distortion: `Overdrive` with ×3 input drive
 
@@ -8760,6 +8911,7 @@ Legacy Tone.js and Maximilian documentation paths refer to **archived** stacks u
 | [record & mp3](record-and-mp3.md) | Recording to MP3 (Daisy path) |
 | [voice-types-reference.md](voice-types-reference.md) | All voice types, params, Daisy vs Tone defaults |
 | [fx-types-reference.md](fx-types-reference.md) | All FX types, params, Daisy vs Tone defaults |
+| [gain-levels.md](gain-levels.md) | Every volume/gain constant and tweak guide |
 | [implementation-matrix.mdx](implementation-matrix.mdx) | Voice/FX/drum/master map (Daisy vs archived Maxi/Tone) |
 
 ## Quick Links (archived)
@@ -9611,7 +9763,7 @@ Configures per-voice effect sends and effect parameters. For the full parameter/
 
 | config | Effect |
 |--------|--------|
-| `on` | Sets send to **50** (vibrato/autofilter/distortion on WASM) or **18** (others). Tone: distortion `on` is **18**; WASM distortion `on` is **50**. |
+| `on` | Sets send to **50** (vibrato, autofilter) or **18** (echo, reverb, fc, distort, autowah). Matches archived Tone. |
 | `off` | Sets send to 0 |
 | number (0-100) | Sets send level (converted via volumetodb) |
 
