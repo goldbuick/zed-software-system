@@ -10,6 +10,7 @@ import {
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
+import { USERINPUT_ACTIONS } from 'zss/firmware/autocompleteconstants'
 import { INPUT } from 'zss/gadget/data/types'
 import { ispid } from 'zss/mapping/guid'
 import { randominteger } from 'zss/mapping/number'
@@ -166,27 +167,33 @@ export const LOADER_FIRMWARE = createfirmware({
       }
       return 0
     },
+    { lists: ['boards'] },
   )
-  .command('withobject', [ARG_TYPE.NAME, 'to target object id'], (_, words) => {
-    // the idea here is we can give an object id
-    // and it'll update the READ_CONTEXT to point to the given object
-    // the intent here is afford !chat to drive behavior of a __specific__ object
-    const [id] = readargs(words, 0, [ARG_TYPE.NAME])
-    const maybeobject = memoryreadobject(READ_CONTEXT.board, id)
-    // #oneof chatuser chatdroid
-    // #withobject chatuser
-    // #goup ' <- this code
-    if (ispresent(maybeobject)) {
-      // write context
-      READ_CONTEXT.element = maybeobject
-      READ_CONTEXT.elementid = maybeobject.id ?? ''
-      READ_CONTEXT.elementisplayer = ispid(READ_CONTEXT.elementid)
-      READ_CONTEXT.elementfocus = READ_CONTEXT.elementisplayer
-        ? READ_CONTEXT.elementid
-        : (READ_CONTEXT.element?.player ?? memoryreadoperator())
-    }
-    return 0
-  })
+  .command(
+    'withobject',
+    [ARG_TYPE.NAME, 'to target object id'],
+    (_, words) => {
+      // the idea here is we can give an object id
+      // and it'll update the READ_CONTEXT to point to the given object
+      // the intent here is afford !chat to drive behavior of a __specific__ object
+      const [id] = readargs(words, 0, [ARG_TYPE.NAME])
+      const maybeobject = memoryreadobject(READ_CONTEXT.board, id)
+      // #oneof chatuser chatdroid
+      // #withobject chatuser
+      // #goup ' <- this code
+      if (ispresent(maybeobject)) {
+        // write context
+        READ_CONTEXT.element = maybeobject
+        READ_CONTEXT.elementid = maybeobject.id ?? ''
+        READ_CONTEXT.elementisplayer = ispid(READ_CONTEXT.elementid)
+        READ_CONTEXT.elementfocus = READ_CONTEXT.elementisplayer
+          ? READ_CONTEXT.elementid
+          : (READ_CONTEXT.element?.player ?? memoryreadoperator())
+      }
+      return 0
+    },
+    { lists: ['objects'] },
+  )
   .command(
     'userinput',
     [ARG_TYPE.NAME, 'user input actions (up/down/left/right/etc)'],
@@ -227,4 +234,5 @@ export const LOADER_FIRMWARE = createfirmware({
       }
       return 0
     },
+    { byposition: [[...USERINPUT_ACTIONS]] },
   )

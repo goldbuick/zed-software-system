@@ -26,7 +26,20 @@ This document categorizes and summarizes all exported functions, types, enums, a
 - **`compileast(text: string)`**
   - Compiles text to AST representation
   - Returns: errors, tokens, CST, and AST
-  - Main AST compilation entry point
+  - Strict path: no AST when parser errors
+
+- **`compileastforeditor(text: string)`**
+  - Editor path: partial CST when parser recovery reports errors
+  - Returns formatted errors via `maplexererrors` / `mapparsererrors`
+
+### `formatlangerror.ts`
+
+- **`formatlangerror(input: FORMAT_LANG_ERROR_INPUT): FORMAT_LANG_ERROR_RESULT`**
+  - Rewrites Chevrotain lexer/parser messages into short ASCII copy (120 char cap)
+  - Used by `ast.ts` before errors reach editor or compile tape
+
+- **`linetokensbeforefault(input: IToken[], fault: IToken): IToken[]`**
+  - Same-line tokens before fault for context-aware error rules
 
 ---
 

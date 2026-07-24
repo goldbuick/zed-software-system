@@ -9,6 +9,7 @@ import {
   zsstexttape,
 } from 'zss/feature/zsstextui'
 import { FIRMWARE } from 'zss/firmware'
+import { PERMISSION_CONFIG_KEYWORDS } from 'zss/firmware/autocompleteconstants'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadflags } from 'zss/memory/flags'
 import {
@@ -146,6 +147,9 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
         )
         return 0
       },
+      {
+        byposition: [[...PERMISSION_CONFIG_KEYWORDS]],
+      },
     )
     .command(
       'allow',
@@ -185,6 +189,9 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
         )
         return 0
       },
+      {
+        lists: ['roles', 'commands'],
+      },
     )
     .command(
       'revoke',
@@ -223,6 +230,9 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
           `revoked command ${cmd} for role ${role}`,
         )
         return 0
+      },
+      {
+        lists: ['roles', 'commands'],
       },
     )
     .command(
@@ -264,6 +274,9 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
           `set role ${role} for player ${player}`,
         )
         return 0
+      },
+      {
+        lists: ['players', 'roles'],
       },
     )
     .command(
@@ -320,6 +333,9 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
         }
         return 0
       },
+      {
+        lists: ['players'],
+      },
     )
     .command(
       'unban',
@@ -373,6 +389,9 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
           )
         }
         return 0
+      },
+      {
+        lists: ['players'],
       },
     )
 }

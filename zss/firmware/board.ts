@@ -485,6 +485,9 @@ export const BOARD_FIRMWARE = createfirmware()
       chip.set(stat, createdboard.id)
       return 0
     },
+    {
+      lists: ['stats', 'boards'],
+    },
   )
   .command(
     'goto',
@@ -538,6 +541,7 @@ export const BOARD_FIRMWARE = createfirmware()
 
       return 0
     },
+    { lists: ['boards'] },
   )
   .command(
     'transport',

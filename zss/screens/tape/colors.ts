@@ -287,6 +287,9 @@ export type ZSS_WORD_LIST_KEY = keyof Pick<
   | 'dirs'
   | 'dirmods'
   | 'exprs'
+  | 'roles'
+  | 'permissionconfigs'
+  | 'players'
 >
 
 /** Maps each GADGET_ZSS_WORDS word-list category to its ZSS_TYPE_ color for highlighting. */
@@ -309,6 +312,9 @@ export const ZSS_WORD_LIST_COLOR_MAP: Record<ZSS_WORD_LIST_KEY, number> = {
   dirs: ZSS_TYPE_DIR,
   dirmods: ZSS_TYPE_DIR_MOD,
   exprs: ZSS_TYPE_SYMBOL,
+  roles: ZSS_TYPE_COMMAND,
+  permissionconfigs: ZSS_TYPE_COMMAND,
+  players: ZSS_TYPE_SYMBOL,
 }
 
 let ZSS_WORD_MAP = new Map<string, COLOR>()

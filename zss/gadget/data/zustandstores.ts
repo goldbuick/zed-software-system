@@ -104,6 +104,9 @@ export const useGadgetClient = create<{
     dirs: [],
     dirmods: [],
     exprs: [],
+    roles: [],
+    permissionconfigs: [],
+    players: [],
     commandargmeta: {},
   },
 }))

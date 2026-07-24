@@ -116,4 +116,12 @@ describe('compileast pipeline', () => {
     expect(code).toContain('api.if')
     expect(code).toContain('pick')
   })
+
+  it('returns human-readable parse errors without token_ names', () => {
+    const result = compileast('#put opp')
+    expect(result.errors?.length).toBeGreaterThan(0)
+    const message = result.errors?.[0]?.message ?? ''
+    expect(message).not.toContain('token_')
+    expect(message.length).toBeGreaterThan(0)
+  })
 })

@@ -1,6 +1,7 @@
 import { boardrunnerinput } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { FIRMWARE } from 'zss/firmware'
+import { USERINPUT_ACTIONS } from 'zss/firmware/autocompleteconstants'
 import { INPUT, INPUT_SHIFT } from 'zss/gadget/data/types'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE, NAME } from 'zss/words/types'
@@ -30,6 +31,9 @@ export function registerinputcommands(fw: FIRMWARE): FIRMWARE {
         boardrunnerinput(SOFTWARE, player, entry[0], entry[1])
       }
       return 0
+    },
+    {
+      byposition: [[...USERINPUT_ACTIONS]],
     },
   )
 }

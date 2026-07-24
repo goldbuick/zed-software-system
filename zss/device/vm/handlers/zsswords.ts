@@ -20,6 +20,11 @@ import { ispresent } from 'zss/mapping/types'
 import { memoryreadcodepagename } from 'zss/memory/codepageoperations'
 import { memorylistallcodepagewithtype } from 'zss/memory/codepages'
 import { memoryreadflags } from 'zss/memory/flags'
+import {
+  PERMISSION_CONFIG_NAMES,
+  PERMISSION_ROLES,
+  memoryreadplayertotoken,
+} from 'zss/memory/permissions'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import { CATEGORY_CONSTS } from 'zss/words/category'
 import { collisionconsts } from 'zss/words/collision'
@@ -142,6 +147,9 @@ export function handlezsswords(vm: DEVICE, message: MESSAGE): void {
       ),
     ],
     dirmods: [...dirmods, ...objectKeys(collisionconsts)],
+    roles: [...PERMISSION_ROLES],
+    permissionconfigs: [...PERMISSION_CONFIG_NAMES],
+    players: objectKeys(memoryreadplayertotoken()),
     commandargmeta,
     exprs: [
       'aligned',

@@ -214,7 +214,8 @@ Chip OS / tick loop.
 ## loader.ts
 
 - **memoryloader(arg, format, idoreventname, content, player)** - Runs every loader matching the format/event
-- **memoryloaderarg(id)**, **memoryloadercontent(id)**, **memoryloaderdone(id)**, **memoryloaderformat(id)**, **memoryloadermatches(format, idoreventname)**, **memoryloaderplayer(id)**
+- **memoryloaderarg(id)**, **memoryloadercontent(id)**, **memoryloaderformat(id)**, **memoryloadermatches(format, idoreventname)**
+- **memoryloaderreadcontextapply(id)**, **memoryloaderreadcontextsave(id)**, **memoryloaderrelease(id)** - Per-loader board/object targeting snapshot across ticks
 
 ## rendering.ts
 

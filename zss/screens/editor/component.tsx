@@ -4,7 +4,7 @@ import { vmcodeaddress, vmcoderelease, vmcodewatch } from 'zss/device/api'
 import { useWaitForValueString } from 'zss/device/modemhooks'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
-import { compileast } from 'zss/feature/lang/backend/typescript/ast'
+import { compileastforeditor } from 'zss/feature/lang/backend/typescript/ast'
 import * as lexer from 'zss/feature/lang/backend/typescript/lexer'
 import { createlineindexes } from 'zss/feature/lang/backend/typescript/transformer'
 import {
@@ -24,6 +24,7 @@ import { getautocomplete } from 'zss/screens/tape/autocomplete'
 import { TapeBackPlate } from 'zss/screens/tape/backplate'
 import { buildzsswordcolors } from 'zss/screens/tape/colors'
 import { findcursorinrows, splitcoderows } from 'zss/screens/tape/common'
+import { buildeditorcompletecontext } from 'zss/screens/tape/editorcomplete'
 import { ismac, metakey } from 'zss/words/system'
 import { textformatreadedges } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
@@ -68,7 +69,7 @@ export function EditorComponent() {
     if (istxtpage) {
       return rows
     }
-    const parsed = compileast(strvalue)
+    const parsed = compileastforeditor(strvalue)
 
     // fold tokens into lines
     if (ispresent(parsed.tokens)) {
@@ -188,10 +189,21 @@ export function EditorComponent() {
     [zsswords],
   )
 
+  const editorctx = useMemo(
+    () => (istxtpage ? undefined : buildeditorcompletecontext(rows)),
+    [rows, istxtpage],
+  )
+
   const autocomplete = useMemo(() => {
     const coderow = rows[ycursor]
-    return getautocomplete(coderow, tapeeditor.cursor, zsswords)
-  }, [rows, ycursor, tapeeditor.cursor, zsswords])
+    return getautocomplete(
+      coderow,
+      tapeeditor.cursor,
+      zsswords,
+      editorctx,
+      editor.type,
+    )
+  }, [rows, ycursor, tapeeditor.cursor, zsswords, editorctx, editor.type])
 
   const autocompleteactive =
     autocompleteindex >= 0 && autocomplete.suggestions.length > 0

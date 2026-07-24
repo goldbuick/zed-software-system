@@ -318,6 +318,9 @@ export type GADGET_ZSS_WORDS = {
   dirs: string[]
   dirmods: string[]
   exprs: string[]
+  roles: string[]
+  permissionconfigs: string[]
+  players: string[]
   /** Lowercase command name → optional per-arg keyword lists / first-arg variants (from firmware). */
   commandargmeta: Record<string, COMMAND_ARG_AUTOCOMPLETE>
 }

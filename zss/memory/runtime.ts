@@ -30,7 +30,12 @@ import { memoryboundarydelete } from './boundaries'
 import { memoryreadcodepagestats } from './codepageoperations'
 import { memorypickcodepagewithtypeandstat } from './codepages'
 import { memoryclearflags, memoryreadflags } from './flags'
-import { memoryloaderarg } from './loader'
+import {
+  memoryloaderarg,
+  memoryloaderreadcontextapply,
+  memoryloaderreadcontextsave,
+  memoryloaderrelease,
+} from './loader'
 import { memoryreadplayerboard } from './playermanagement'
 import {
   memoryreadboardelementruntime,
@@ -124,14 +129,10 @@ export function memorytickloaders() {
         // cache context
         const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
 
-        // write context, all blank except for book and timestamp
+        // write context: tick-owned fields + restored loader targeting
         READ_CONTEXT.timestamp = mainbook.timestamp
         READ_CONTEXT.book = mainbook
-        READ_CONTEXT.board = undefined
-        READ_CONTEXT.element = undefined
-        READ_CONTEXT.elementid = ''
-        READ_CONTEXT.elementisplayer = false
-        READ_CONTEXT.elementfocus = memoryreadoperator()
+        memoryloaderreadcontextapply(id)
 
         // set chip
         const maybearg = memoryloaderarg(id)
@@ -142,10 +143,13 @@ export function memorytickloaders() {
         // run code
         os.tick(id, DRIVER_TYPE.LOADER, 1, 'loader', code)
 
+        memoryloaderreadcontextsave(id)
+
         // teardown on ended
         if (os.isended(id)) {
           memoryhaltchip(id)
           delete loaders[id]
+          memoryloaderrelease(id)
         }
 
         // restore context

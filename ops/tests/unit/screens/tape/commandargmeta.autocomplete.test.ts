@@ -1,4 +1,120 @@
-import { keywordsforcommandargcomplete } from 'zss/screens/tape/autocomplete'
+import {
+  keywordsforcommandargcomplete,
+  listsforcommandargcomplete,
+  resolveargitems,
+} from 'zss/screens/tape/argcomplete'
+import { ARG_TYPE } from 'zss/words/types'
+
+describe('resolveargitems', () => {
+  const emptywords = {
+    langcommands: {},
+    clicommands: {},
+    loadercommands: {},
+    runtimecommands: {},
+    flags: [],
+    statsboard: [],
+    statshelper: [],
+    statssender: [],
+    statsinteraction: [],
+    statsboolean: [],
+    statsconfig: [],
+    objects: ['myobj'],
+    terrains: [],
+    boards: [],
+    palettes: [],
+    charsets: [],
+    loaders: [],
+    categories: [],
+    colors: [],
+    dirs: ['north', 'flow'],
+    dirmods: ['oop', 'cw'],
+    exprs: [],
+    roles: [],
+    permissionconfigs: [],
+    players: [],
+    commandargmeta: {},
+  }
+
+  it('uses lists metadata for objects', () => {
+    const items = resolveargitems({
+      words: emptywords,
+      meta: { lists: ['objects'] },
+      argindex: 0,
+      firstarglower: '',
+      maybesig: undefined,
+      prefix: 'my',
+    })
+    expect(items.map((i) => i.word)).toEqual(['myobj'])
+  })
+
+  it('uses dir phase after_mod for flow prefix', () => {
+    const items = resolveargitems({
+      words: emptywords,
+      meta: undefined,
+      argindex: 0,
+      firstarglower: '',
+      maybesig: [ARG_TYPE.DIR, 'dir hint'],
+      prefix: 'f',
+      dirphase: { kind: 'after_mod' },
+    })
+    expect(items.some((i) => i.word === 'flow')).toBe(true)
+  })
+
+  it('uses ARG_TYPE KIND fallback for objects and terrains', () => {
+    const items = resolveargitems({
+      words: {
+        ...emptywords,
+        objects: ['slime', 'bomb'],
+        terrains: ['block'],
+      },
+      meta: undefined,
+      argindex: 0,
+      firstarglower: '',
+      maybesig: [ARG_TYPE.KIND, 'become hint'],
+      prefix: 'b',
+    })
+    expect(items.map((i) => i.word).sort()).toEqual(['block', 'bomb', 'slime'])
+  })
+
+  it('uses kinds list metadata for become', () => {
+    const items = resolveargitems({
+      words: {
+        ...emptywords,
+        objects: ['slime'],
+        terrains: ['water'],
+      },
+      meta: { lists: ['kinds'] },
+      argindex: 0,
+      firstarglower: '',
+      maybesig: [ARG_TYPE.KIND, 'become hint'],
+      prefix: 's',
+    })
+    expect(items.map((i) => i.word).sort()).toEqual(['slime', 'water'])
+  })
+
+  it('returns empty past signature', () => {
+    const items = resolveargitems({
+      words: emptywords,
+      meta: undefined,
+      argindex: 3,
+      firstarglower: '',
+      maybesig: [ARG_TYPE.NAME, 'one arg'],
+      prefix: 'x',
+    })
+    expect(items).toEqual([])
+  })
+})
+
+describe('listsforcommandargcomplete', () => {
+  it('reads listswhenfirst branch', () => {
+    const meta = {
+      listswhenfirst: {
+        start: [[], ['objects']],
+      },
+    }
+    expect(listsforcommandargcomplete(meta, 1, 'start')).toEqual(['objects'])
+  })
+})
 
 describe('keywordsforcommandargcomplete', () => {
   it('uses byposition for arg index 1', () => {

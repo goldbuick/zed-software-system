@@ -1,6 +1,7 @@
-import { CstNode, IToken } from 'chevrotain'
+import { CstNode, ILexingResult, IToken } from 'chevrotain'
 import { isarray } from 'zss/mapping/types'
 
+import { formatlangerror, linetokensbeforefault } from './formatlangerror'
 import { LANG_ERROR, tokenize } from './lexer'
 import { parser } from './parser'
 import { type CodeNode, visitor } from './visitor'
@@ -44,6 +45,34 @@ function addRange(node: CodeNode | undefined): OffsetRange | undefined {
   return node.range
 }
 
+function maplexererrors(lexresult: ILexingResult): LANG_ERROR[] {
+  return lexresult.errors.map((error) => ({
+    offset: error.offset,
+    line: error.line,
+    column: error.column,
+    length: error.length,
+    message: formatlangerror({
+      kind: 'lexer',
+      raw: error.message,
+    }).message,
+  }))
+}
+
+function mapparsererrors(input: IToken[]): LANG_ERROR[] {
+  return parser.errors.map((error) => ({
+    offset: error.token.startOffset,
+    line: error.token.startLine,
+    column: error.token.startColumn,
+    length: error.token.image.length,
+    message: formatlangerror({
+      kind: 'parser',
+      raw: error.message,
+      token: error.token,
+      linetokens: linetokensbeforefault(input, error.token),
+    }).message,
+  }))
+}
+
 export function compileast(text: string): {
   errors?: LANG_ERROR[]
   tokens?: IToken[]
@@ -52,7 +81,10 @@ export function compileast(text: string): {
 } {
   const tokens = tokenize(`${text}\n`)
   if (tokens.errors.length > 0) {
-    return tokens
+    return {
+      tokens: tokens.tokens,
+      errors: maplexererrors(tokens),
+    }
   }
 
   parser.input = tokens.tokens
@@ -60,13 +92,7 @@ export function compileast(text: string): {
   if (parser.errors.length > 0) {
     return {
       tokens: tokens.tokens,
-      errors: parser.errors.map((error) => ({
-        offset: error.token.startOffset,
-        line: error.token.startLine,
-        column: error.token.startColumn,
-        length: error.token.image.length,
-        message: error.message,
-      })),
+      errors: mapparsererrors(tokens.tokens),
     }
   }
 
@@ -88,5 +114,42 @@ export function compileast(text: string): {
     tokens: tokens.tokens,
     cst,
     ast,
+  }
+}
+
+/** Editor path: keep partial CST when Chevrotain recovery reports errors. */
+export function compileastforeditor(text: string): {
+  errors?: LANG_ERROR[]
+  tokens?: IToken[]
+  cst?: CstNode
+  ast?: CodeNode
+} {
+  const tokens = tokenize(`${text}\n`)
+  if (tokens.errors.length > 0) {
+    return {
+      tokens: tokens.tokens,
+      errors: maplexererrors(tokens),
+    }
+  }
+
+  parser.input = tokens.tokens
+  const cst = parser.program()
+  const errors =
+    parser.errors.length > 0 ? mapparsererrors(tokens.tokens) : undefined
+
+  let ast: CodeNode | undefined
+  if (parser.errors.length === 0) {
+    const [maybeast] = visitor.go(cst) ?? []
+    if (maybeast) {
+      addRange(maybeast)
+      ast = maybeast
+    }
+  }
+
+  return {
+    tokens: tokens.tokens,
+    cst,
+    ast,
+    errors,
   }
 }
