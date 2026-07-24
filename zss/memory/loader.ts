@@ -1,20 +1,78 @@
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
+import { READ_CONTEXT } from 'zss/words/reader'
 import { WORD } from 'zss/words/types'
 
 import { memorylistcodepagebytype, memoryreadcodepage } from './bookoperations'
 import { memoryreadcodepagestats } from './codepageoperations'
-import { memoryreadbookbysoftware, memorystartloader } from './session'
-import { CODE_PAGE, CODE_PAGE_TYPE, MEMORY_LABEL } from './types'
+import { memoryreadbookbysoftware, memoryreadoperator, memorystartloader } from './session'
+import { BOARD, BOARD_ELEMENT, CODE_PAGE, CODE_PAGE_TYPE, MEMORY_LABEL } from './types'
+
+export type LOADER_READ_CONTEXT_SNAPSHOT = {
+  board: MAYBE<BOARD>
+  element: MAYBE<BOARD_ELEMENT>
+  elementid: string
+  elementisplayer: boolean
+  elementfocus: string
+}
 
 type LOADER_ENTRY = {
   arg: any
   format: string
   content: any
   player: string
+  readcontext?: LOADER_READ_CONTEXT_SNAPSHOT
 }
 
 const LOADER_REFS: Record<string, LOADER_ENTRY> = {}
+
+function defaultloaderreadcontext(): LOADER_READ_CONTEXT_SNAPSHOT {
+  return {
+    board: undefined,
+    element: undefined,
+    elementid: '',
+    elementisplayer: false,
+    elementfocus: memoryreadoperator(),
+  }
+}
+
+function snapshotfromreadcontext(): LOADER_READ_CONTEXT_SNAPSHOT {
+  return {
+    board: READ_CONTEXT.board,
+    element: READ_CONTEXT.element,
+    elementid: READ_CONTEXT.elementid,
+    elementisplayer: READ_CONTEXT.elementisplayer,
+    elementfocus: READ_CONTEXT.elementfocus,
+  }
+}
+
+function applyloadersnapshot(snapshot: LOADER_READ_CONTEXT_SNAPSHOT) {
+  READ_CONTEXT.board = snapshot.board
+  READ_CONTEXT.element = snapshot.element
+  READ_CONTEXT.elementid = snapshot.elementid
+  READ_CONTEXT.elementisplayer = snapshot.elementisplayer
+  READ_CONTEXT.elementfocus = snapshot.elementfocus
+}
+
+/** Restore per-loader board/object targeting fields (or first-tick defaults). */
+export function memoryloaderreadcontextapply(id: string) {
+  const snapshot = LOADER_REFS[id]?.readcontext ?? defaultloaderreadcontext()
+  applyloadersnapshot(snapshot)
+}
+
+/** Persist board/object targeting fields after a loader tick. */
+export function memoryloaderreadcontextsave(id: string) {
+  const entry = LOADER_REFS[id]
+  if (!ispresent(entry)) {
+    return
+  }
+  entry.readcontext = snapshotfromreadcontext()
+}
+
+/** Drop loader ref entry when chip ends. */
+export function memoryloaderrelease(id: string) {
+  delete LOADER_REFS[id]
+}
 
 export function memoryloader(
   arg: any,

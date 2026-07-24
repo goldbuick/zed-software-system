@@ -34,7 +34,7 @@ flowchart LR
 ```
 
 1. **`tokenize`** ([lexer.ts](../backend/typescript/lexer.ts)) — Chevrotain tokens + lexer errors.
-2. **`parser.program()`** ([parser.ts](../backend/typescript/parser.ts)) — Concrete syntax tree (`CstNode`). Parser errors map to [`LANG_ERROR`](../backend/typescript/lexer.ts)-shaped messages in [ast.ts](../backend/typescript/ast.ts).
+2. **`parser.program()`** ([parser.ts](../backend/typescript/parser.ts)) — Concrete syntax tree (`CstNode`). Parser errors map to [`LANG_ERROR`](../backend/typescript/lexer.ts) in [ast.ts](../backend/typescript/ast.ts) via [`formatlangerror`](../backend/typescript/formatlangerror.ts).
 3. **`visitor.go(cst)`** ([visitor.ts](../backend/typescript/visitor.ts)) — Abstract tree of [`CodeNode`](../backend/typescript/visitor.ts) with [`NODE`](../backend/typescript/visitor.ts) discriminants.
 4. **`addRange(ast)`** ([ast.ts](../backend/typescript/ast.ts)) — Fills `range` on nodes for editor / completion (full AST walk; runs on every [`compileast`](../backend/typescript/ast.ts), including editor tooling).
 5. **`transformast(ast)`** ([transformer.ts](../backend/typescript/transformer.ts)) — JS source + `source-map` output; mutates shared [`context`](../backend/typescript/transformer.ts) (labels, line indexes). The shared `context` is fine for today’s single-threaded compile path; parallel compilation would need isolation or a per-run context.
@@ -172,8 +172,8 @@ The parser’s `comparison` rule repeats `comp_op` + `arith_expr`. The visitor�
 
 | Failure | Where | What happens |
 | ------- | ----- | ------------ |
-| Lexical | `tokenize` | [ast.ts](../backend/typescript/ast.ts) returns `errors` from lexer; no parse |
-| Grammar | `parser.program()` | `parser.errors` mapped to offset/line/column; no AST |
+| Lexical | `tokenize` | [ast.ts](../backend/typescript/ast.ts) `maplexererrors` → formatted `errors`; no parse |
+| Grammar | `parser.program()` | [ast.ts](../backend/typescript/ast.ts) `mapparsererrors` → formatted offset/line/column; no AST (partial CST in editor path) |
 | Visitor | `visitor.go` | Missing AST yields `"no ast output"` in [ast.ts](../backend/typescript/ast.ts) |
 | Transform | `transformast` / empty code | [generator.ts](../backend/typescript/generator.ts) still returns a no-op `GeneratorFunc` in some paths |
 | `new Function` | Runtime compile | Caught; error string in `errors`; no-op function |
@@ -204,17 +204,19 @@ sequenceDiagram
 
 ## Editor tooling
 
-[editor component.tsx](../../../screens/editor/component.tsx) uses `compileast`, lexer, [`createlineindexes`](../backend/typescript/transformer.ts), and `CodeNode` / `NODE` for parsing and structure without always running full `compile` / `new Function` on every edit.
+[editor component.tsx](../../../screens/editor/component.tsx) uses [`compileastforeditor`](../backend/typescript/ast.ts), lexer, [`createlineindexes`](../backend/typescript/transformer.ts), and `CodeNode` / `NODE` for parsing and structure without always running full `compile` / `new Function` on every edit. Parse diagnostics use the same formatted [`LANG_ERROR.message`](../backend/typescript/lexer.ts) as strict compile.
 
 ```mermaid
 flowchart LR
   ed[Editor buffer]
-  tok[tokenize or lexer]
-  ast[compileast]
+  tok[tokenize]
+  ast[compileastforeditor]
+  fmt[formatlangerror]
   idx[createlineindexes optional]
   ed --> tok
   tok --> ast
-  ast --> idx
+  ast --> fmt
+  fmt --> idx
 ```
 
 ## Parsing footguns
@@ -224,11 +226,11 @@ flowchart LR
 - **Recovery** — Partial CST possible after errors; always check parser errors before using the tree.
 - **Statement `/`** — Token `divide` (`/`) at **statement** level is [`short_go`](../backend/typescript/parser.ts); inside `term_item` it is division. Context disambiguates.
 - **`token_expr` vs arithmetic** — First branch of `arith_expr` favors built-in token DSL over `+`/`-` term chains when both apply.
-- **Newlines and `#do` / `#done`** — Block forms ([`command_if_block`](../backend/typescript/parser.ts), etc.) expect specific newline/`#` structure; easy to get opaque parse errors.
+- **Newlines and `#do` / `#done`** — Block forms ([`command_if_block`](../backend/typescript/parser.ts), etc.) expect specific newline/`#` structure; see [human-readable parse errors](#human-readable-parse-errors) for editor hints when structure is wrong.
 
 ## Human-readable parse errors
 
-Chevrotain lexer/parser messages are rewritten in [`formatlangerror.ts`](../backend/typescript/formatlangerror.ts) before they reach the editor or compile tape. [`ast.ts`](../backend/typescript/ast.ts) calls the formatter from `maplexererrors` and `mapparsererrors` for both `compileast` and `compileastforeditor`.
+Chevrotain lexer/parser messages are rewritten in [`formatlangerror.ts`](../backend/typescript/formatlangerror.ts) (see [formatlangerror.md](formatlangerror.md)) before they reach the editor or compile tape. [`ast.ts`](../backend/typescript/ast.ts) calls the formatter from `maplexererrors` and `mapparsererrors` for both `compileast` and `compileastforeditor`.
 
 Context-aware rules (checked before generic token-set collapsing):
 
@@ -250,11 +252,12 @@ Editor display ([`editorrows.tsx`](../../../screens/editor/editorrows.tsx)) and 
 | AST / `NODE` | [visitor.md](visitor.md) |
 | CST TypeScript types | [visitortypes.md](visitortypes.md) |
 | `compileast` | [ast.md](ast.md) |
+| Error messages | [formatlangerror.md](formatlangerror.md) |
 | JS emission | [transformer.md](transformer.md) |
 | `compile` / `GeneratorBuild` | [generator.md](generator.md) |
 | Export catalog | [../EXPORTED_FUNCTIONS.md](../EXPORTED_FUNCTIONS.md) |
 
 ## See also
 
-- Grep tests: `compile(` / `compileast` under `zss/` for behavioral specs.
+- Grep tests: `compile(` / `compileast` under `zss/` for behavioral specs; [`formatlangerror.test.ts`](../../../../ops/tests/unit/feature/lang/backend/typescript/formatlangerror.test.ts) for error copy.
 - [README.md](README.md) — short pipeline summary and dependencies.
