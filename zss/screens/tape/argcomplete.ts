@@ -66,6 +66,10 @@ export function itemsfromwordlistref(
       case 'commands':
         out.push(...commandwords(words))
         break
+      case 'kinds':
+        out.push(...tagwords(words.objects, 'objects'))
+        out.push(...tagwords(words.terrains, 'terrains'))
+        break
       case 'flags':
       case 'objects':
       case 'terrains':
@@ -183,7 +187,10 @@ export function suggestionsfordirphase(
     case 'need_number':
       return []
     case 'need_kind':
-      return tagwords(words.categories, 'categories')
+      return [
+        ...tagwords(words.objects, 'objects'),
+        ...tagwords(words.terrains, 'terrains'),
+      ]
     case 'need_subdir':
       return [
         ...tagwords(words.dirs, 'dirs'),
@@ -217,7 +224,8 @@ export function itemsforargtype(
     case ARG_TYPE.COLOR_OR_KIND:
       return [
         ...tagwords(words.colors, 'colors'),
-        ...tagwords(words.categories, 'categories'),
+        ...tagwords(words.objects, 'objects'),
+        ...tagwords(words.terrains, 'terrains'),
       ]
     case ARG_TYPE.DIR:
       return [
@@ -226,7 +234,10 @@ export function itemsforargtype(
       ]
     case ARG_TYPE.KIND:
     case ARG_TYPE.MAYBE_KIND:
-      return tagwords(words.categories, 'categories')
+      return [
+        ...tagwords(words.objects, 'objects'),
+        ...tagwords(words.terrains, 'terrains'),
+      ]
     case ARG_TYPE.NUMBER:
     case ARG_TYPE.MAYBE_NUMBER:
       return []

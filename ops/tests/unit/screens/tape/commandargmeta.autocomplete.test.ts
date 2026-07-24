@@ -60,6 +60,38 @@ describe('resolveargitems', () => {
     expect(items.some((i) => i.word === 'flow')).toBe(true)
   })
 
+  it('uses ARG_TYPE KIND fallback for objects and terrains', () => {
+    const items = resolveargitems({
+      words: {
+        ...emptywords,
+        objects: ['slime', 'bomb'],
+        terrains: ['block'],
+      },
+      meta: undefined,
+      argindex: 0,
+      firstarglower: '',
+      maybesig: [ARG_TYPE.KIND, 'become hint'],
+      prefix: 'b',
+    })
+    expect(items.map((i) => i.word).sort()).toEqual(['block', 'bomb', 'slime'])
+  })
+
+  it('uses kinds list metadata for become', () => {
+    const items = resolveargitems({
+      words: {
+        ...emptywords,
+        objects: ['slime'],
+        terrains: ['water'],
+      },
+      meta: { lists: ['kinds'] },
+      argindex: 0,
+      firstarglower: '',
+      maybesig: [ARG_TYPE.KIND, 'become hint'],
+      prefix: 's',
+    })
+    expect(items.map((i) => i.word).sort()).toEqual(['slime', 'water'])
+  })
+
   it('returns empty past signature', () => {
     const items = resolveargitems({
       words: emptywords,

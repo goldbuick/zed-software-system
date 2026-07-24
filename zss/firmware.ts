@@ -29,6 +29,7 @@ export type AUTOCOMPLETE_WORDLIST =
   | 'exprs'
   | 'stats'
   | 'commands'
+  | 'kinds'
   | 'roles'
   | 'permissionconfigs'
   | 'players'

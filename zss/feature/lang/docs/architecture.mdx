@@ -226,6 +226,21 @@ flowchart LR
 - **`token_expr` vs arithmetic** — First branch of `arith_expr` favors built-in token DSL over `+`/`-` term chains when both apply.
 - **Newlines and `#do` / `#done`** — Block forms ([`command_if_block`](../backend/typescript/parser.ts), etc.) expect specific newline/`#` structure; easy to get opaque parse errors.
 
+## Human-readable parse errors
+
+Chevrotain lexer/parser messages are rewritten in [`formatlangerror.ts`](../backend/typescript/formatlangerror.ts) before they reach the editor or compile tape. [`ast.ts`](../backend/typescript/ast.ts) calls the formatter from `maplexererrors` and `mapparsererrors` for both `compileast` and `compileastforeditor`.
+
+Context-aware rules (checked before generic token-set collapsing):
+
+1. **Incomplete direction mod at EOL** — e.g. `#put opp` → `direction incomplete: opp needs a base dir (...)`
+2. **Unclosed block** — `#if` / `#while` / `#repeat` / `#foreach` / `#try` without `#do` on the line → `#if block needs #do ... #done`
+3. **Label vs command** — `:foo` where a `#foo` command was expected
+4. **Redundant input** — extra tokens after a complete statement
+5. **Direction / color / statement / value** — long `Expecting [token_*]` lists collapse to short category hints
+6. **Fallback** — `unexpected 'foo' here` or `syntax error near this spot` (capped at 120 chars, ASCII only)
+
+Editor display ([`editorrows.tsx`](../../../screens/editor/editorrows.tsx)) and compile failures ([`os.ts`](../../../os.ts) tape preamble) consume formatted `LANG_ERROR.message` unchanged.
+
 ## Cross-links
 
 | Topic | Doc |

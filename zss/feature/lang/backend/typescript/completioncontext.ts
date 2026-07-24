@@ -31,7 +31,7 @@ export type COMPLETION_ARG_CONTEXT = {
   firstarglower: string
 }
 
-const DIR_MOD_CONTINUES = new Set([
+export const DIR_MOD_CONTINUES = new Set([
   'cw',
   'ccw',
   'opp',
@@ -47,9 +47,9 @@ const DIR_MOD_CONTINUES = new Set([
   'awayby',
 ])
 
-const DIR_NEED_PAIR = new Set(['by', 'at', 'away', 'toward'])
-const DIR_NEED_KIND = new Set(['find', 'flee'])
-const DIR_NEED_SUBDIR = new Set(['to'])
+export const DIR_NEED_PAIR = new Set(['by', 'at', 'away', 'toward'])
+export const DIR_NEED_KIND = new Set(['find', 'flee'])
+export const DIR_NEED_SUBDIR = new Set(['to'])
 
 /** Normalize token images for readargs (oop alias, lowercase names). */
 export function wordimagesforreadargs(tokens: IToken[]): string[] {

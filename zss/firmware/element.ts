@@ -837,7 +837,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       chip.endofprogram()
       return 0
     },
-    { lists: ['categories'] },
+    { lists: ['kinds'] },
   )
   .command('bind', [ARG_TYPE.NAME, 'code from named element'], (_, words) => {
     // zed cafe simply copies the code from the given named element
