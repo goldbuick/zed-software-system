@@ -56,7 +56,7 @@ Defined in [`wasmmainsab.ts`](../backend/wasm/wasmmainsab.ts). Mute floor: raw `
 | `#ttsvol` / ttsvolume | TTS (2) | **100** | same as bg | ~**1.78** | TTS sample level |
 | Voice `vol` | voice cfg | **0 dB** | `dbtoamp(vol_db)` | **1.0** | Per-voice via `#synthN` |
 
-CLI: [`zss/firmware/audio.ts`](../../firmware/audio.ts) (`#vol`, `#bgvol`, `#ttsvol`).
+CLI: [`zss/firmware/audio.ts`](../../../firmware/audio.ts) (`#vol`, `#bgvol`, `#ttsvol`).
 
 ## Master / bus constants (`zss_config.h`)
 
