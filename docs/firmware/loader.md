@@ -55,5 +55,6 @@ Returns loader metadata based on format:
 ## Design Notes
 
 - `withobject` enables `#oneof chatuser … #withobject chatuser #goup '` patterns for chat-driven object behavior
+- `#withboard` / `#withobject` set board and object **targeting** on `READ_CONTEXT`; [`memorytickloaders`](../../memory/runtime.ts) persists those five fields per loader chip id across ticks (not whole `READ_CONTEXT`, not across separate loader invocations)
 - Loader context overrides runtime behavior for messaging/UI
 - `endgame` is no-op in loaders to avoid ending session during import

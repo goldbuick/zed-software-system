@@ -43,7 +43,7 @@ The same `memorytickmain` runs in two places:
 |----------|----------|-------|
 | Chip lifecycle | `memorygc()`, `memoryhaltchip(id)`, `memoryrestartallchipsandflags()`, `memorymessagechip(message)` | `memoryrestartallchipsandflags` also frees every flag-backed boundary |
 | CLI | `memoryrepeatclilast(player)`, `memoryruncli(player, cli, tracking?)` | `tracking=true` saves into `flags.playbuffer` |
-| Tick | `memorytickloaders()` | Increments `mainbook.timestamp` and runs every loader |
+| Tick | `memorytickloaders()` | Increments `mainbook.timestamp`, runs every loader; restores/saves per-loader board/object targeting via [`loader.ts`](loader.md) snapshot helpers |
 | Tick | `memorytickmain(timestamp, boards, playeronly?)` | Runs draw + update passes for every supplied board; called by the boardrunner with `[board]` and by the sim VM only for diagnostics |
 | Tick | `memorytickobject(book, board, object, code)` | One object's chip step |
 | Tick | `memorytickonce(book, board, element, code, id, label)` | One-shot draw / once execution |

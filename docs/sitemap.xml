@@ -63,6 +63,7 @@
   <url><loc>https://zed.cafe/docs/lang/README</loc></url>
   <url><loc>https://zed.cafe/docs/lang/architecture</loc></url>
   <url><loc>https://zed.cafe/docs/lang/ast</loc></url>
+  <url><loc>https://zed.cafe/docs/lang/formatlangerror</loc></url>
   <url><loc>https://zed.cafe/docs/lang/generator</loc></url>
   <url><loc>https://zed.cafe/docs/lang/lexer</loc></url>
   <url><loc>https://zed.cafe/docs/lang/native-module-map</loc></url>

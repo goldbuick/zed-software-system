@@ -86,6 +86,7 @@
 
 - [ast.ts](https://zed.cafe/docs/lang/ast)
 - [C++ lang compiler modules](https://zed.cafe/docs/lang/native-module-map)
+- [formatlangerror.ts](https://zed.cafe/docs/lang/formatlangerror): Rewrites Chevrotain lexer and parser errors into short, ASCII messages for the editor and compile tape.
 - [generator.ts](https://zed.cafe/docs/lang/generator)
 - [Lang architecture](https://zed.cafe/docs/lang/architecture)
 - [Lang Documentation](https://zed.cafe/docs/lang/README)

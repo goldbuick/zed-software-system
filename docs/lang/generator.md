@@ -33,7 +33,7 @@ title: generator.ts
 
 ## Error Handling
 
-- Lexer/parser errors: returned as `GeneratorBuild.errors`
+- Lexer/parser errors: returned as `GeneratorBuild.errors` with **formatted** messages from [`formatlangerror`](./formatlangerror.md) (via `compileast` → `maplexererrors` / `mapparsererrors`)
 - No AST: returns "no ast output" error
 - Transform returns no code: returns build with empty source and no-op `code`
 - Function constructor throws: returns error with `unexpected error` message; code is no-op

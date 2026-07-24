@@ -2189,6 +2189,7 @@ Source: https://zed.cafe/docs/features/code-editor-tape
 |---------|----------|-------------|---------|
 | Tape layout modes | Creator | TOP, FULL, BOTTOM, MAX — resize terminal/editor split. | `Tab / layout keys` |
 | Command autocomplete | Creator | Lexer-driven # command and word-list suggestions. | `zss/screens/tape/autocomplete.ts` |
+| Parse error messages | Creator | Chevrotain errors rewritten to short hints in editor and compile tape. | [`zss/feature/lang/docs/formatlangerror.md`](/docs/lang/formatlangerror) |
 | ROM command hints | Creator | Long-form help from editor:commands:<name> markdown. | `zss/screens/tape/commandarghints.ts` |
 | Collaborative editing | Both | Yjs CRDT sync with cursor/selection awareness. | `zss/device/modem.ts` |
 | Editor bookmarks | Creator | Save/run CLI lines, snippets, and URLs. | `#bookmark scroll handlers` |
@@ -3070,6 +3071,7 @@ Returns loader metadata based on format:
 ## Design Notes
 
 - `withobject` enables `#oneof chatuser … #withobject chatuser #goup '` patterns for chat-driven object behavior
+- `#withboard` / `#withobject` set board and object **targeting** on `READ_CONTEXT`; [`memorytickloaders`](../../memory/runtime.ts) persists those five fields per loader chip id across ticks (not whole `READ_CONTEXT`, not across separate loader invocations)
 - Loader context overrides runtime behavior for messaging/UI
 - `endgame` is no-op in loaders to avoid ending session during import
 
@@ -4390,7 +4392,7 @@ flowchart LR
 ```
 
 1. **`tokenize`** ([lexer.ts](../backend/typescript/lexer.ts)) — Chevrotain tokens + lexer errors.
-2. **`parser.program()`** ([parser.ts](../backend/typescript/parser.ts)) — Concrete syntax tree (`CstNode`). Parser errors map to [`LANG_ERROR`](../backend/typescript/lexer.ts)-shaped messages in [ast.ts](../backend/typescript/ast.ts).
+2. **`parser.program()`** ([parser.ts](../backend/typescript/parser.ts)) — Concrete syntax tree (`CstNode`). Parser errors map to [`LANG_ERROR`](../backend/typescript/lexer.ts) in [ast.ts](../backend/typescript/ast.ts) via [`formatlangerror`](../backend/typescript/formatlangerror.ts).
 3. **`visitor.go(cst)`** ([visitor.ts](../backend/typescript/visitor.ts)) — Abstract tree of [`CodeNode`](../backend/typescript/visitor.ts) with [`NODE`](../backend/typescript/visitor.ts) discriminants.
 4. **`addRange(ast)`** ([ast.ts](../backend/typescript/ast.ts)) — Fills `range` on nodes for editor / completion (full AST walk; runs on every [`compileast`](../backend/typescript/ast.ts), including editor tooling).
 5. **`transformast(ast)`** ([transformer.ts](../backend/typescript/transformer.ts)) — JS source + `source-map` output; mutates shared [`context`](../backend/typescript/transformer.ts) (labels, line indexes). The shared `context` is fine for today’s single-threaded compile path; parallel compilation would need isolation or a per-run context.
@@ -4528,8 +4530,8 @@ The parser’s `comparison` rule repeats `comp_op` + `arith_expr`. The visitor�
 
 | Failure | Where | What happens |
 | ------- | ----- | ------------ |
-| Lexical | `tokenize` | [ast.ts](../backend/typescript/ast.ts) returns `errors` from lexer; no parse |
-| Grammar | `parser.program()` | `parser.errors` mapped to offset/line/column; no AST |
+| Lexical | `tokenize` | [ast.ts](../backend/typescript/ast.ts) `maplexererrors` → formatted `errors`; no parse |
+| Grammar | `parser.program()` | [ast.ts](../backend/typescript/ast.ts) `mapparsererrors` → formatted offset/line/column; no AST (partial CST in editor path) |
 | Visitor | `visitor.go` | Missing AST yields `"no ast output"` in [ast.ts](../backend/typescript/ast.ts) |
 | Transform | `transformast` / empty code | [generator.ts](../backend/typescript/generator.ts) still returns a no-op `GeneratorFunc` in some paths |
 | `new Function` | Runtime compile | Caught; error string in `errors`; no-op function |
@@ -4560,17 +4562,19 @@ sequenceDiagram
 
 ## Editor tooling
 
-[editor component.tsx](../../../screens/editor/component.tsx) uses `compileast`, lexer, [`createlineindexes`](../backend/typescript/transformer.ts), and `CodeNode` / `NODE` for parsing and structure without always running full `compile` / `new Function` on every edit.
+[editor component.tsx](../../../screens/editor/component.tsx) uses [`compileastforeditor`](../backend/typescript/ast.ts), lexer, [`createlineindexes`](../backend/typescript/transformer.ts), and `CodeNode` / `NODE` for parsing and structure without always running full `compile` / `new Function` on every edit. Parse diagnostics use the same formatted [`LANG_ERROR.message`](../backend/typescript/lexer.ts) as strict compile.
 
 ```mermaid
 flowchart LR
   ed[Editor buffer]
-  tok[tokenize or lexer]
-  ast[compileast]
+  tok[tokenize]
+  ast[compileastforeditor]
+  fmt[formatlangerror]
   idx[createlineindexes optional]
   ed --> tok
   tok --> ast
-  ast --> idx
+  ast --> fmt
+  fmt --> idx
 ```
 
 ## Parsing footguns
@@ -4580,7 +4584,22 @@ flowchart LR
 - **Recovery** — Partial CST possible after errors; always check parser errors before using the tree.
 - **Statement `/`** — Token `divide` (`/`) at **statement** level is [`short_go`](../backend/typescript/parser.ts); inside `term_item` it is division. Context disambiguates.
 - **`token_expr` vs arithmetic** — First branch of `arith_expr` favors built-in token DSL over `+`/`-` term chains when both apply.
-- **Newlines and `#do` / `#done`** — Block forms ([`command_if_block`](../backend/typescript/parser.ts), etc.) expect specific newline/`#` structure; easy to get opaque parse errors.
+- **Newlines and `#do` / `#done`** — Block forms ([`command_if_block`](../backend/typescript/parser.ts), etc.) expect specific newline/`#` structure; see [human-readable parse errors](#human-readable-parse-errors) for editor hints when structure is wrong.
+
+## Human-readable parse errors
+
+Chevrotain lexer/parser messages are rewritten in [`formatlangerror.ts`](../backend/typescript/formatlangerror.ts) (see [formatlangerror.md](formatlangerror.md)) before they reach the editor or compile tape. [`ast.ts`](../backend/typescript/ast.ts) calls the formatter from `maplexererrors` and `mapparsererrors` for both `compileast` and `compileastforeditor`.
+
+Context-aware rules (checked before generic token-set collapsing):
+
+1. **Incomplete direction mod at EOL** — e.g. `#put opp` → `direction incomplete: opp needs a base dir (...)`
+2. **Unclosed block** — `#if` / `#while` / `#repeat` / `#foreach` / `#try` without `#do` on the line → `#if block needs #do ... #done`
+3. **Label vs command** — `:foo` where a `#foo` command was expected
+4. **Redundant input** — extra tokens after a complete statement
+5. **Direction / color / statement / value** — long `Expecting [token_*]` lists collapse to short category hints
+6. **Fallback** — `unexpected 'foo' here` or `syntax error near this spot` (capped at 120 chars, ASCII only)
+
+Editor display ([`editorrows.tsx`](../../../screens/editor/editorrows.tsx)) and compile failures ([`os.ts`](../../../os.ts) tape preamble) consume formatted `LANG_ERROR.message` unchanged.
 
 ## Cross-links
 
@@ -4591,13 +4610,14 @@ flowchart LR
 | AST / `NODE` | [visitor.md](visitor.md) |
 | CST TypeScript types | [visitortypes.md](visitortypes.md) |
 | `compileast` | [ast.md](ast.md) |
+| Error messages | [formatlangerror.md](formatlangerror.md) |
 | JS emission | [transformer.md](transformer.md) |
 | `compile` / `GeneratorBuild` | [generator.md](generator.md) |
 | Export catalog | [../EXPORTED_FUNCTIONS.md](../EXPORTED_FUNCTIONS.md) |
 
 ## See also
 
-- Grep tests: `compile(` / `compileast` under `zss/` for behavioral specs.
+- Grep tests: `compile(` / `compileast` under `zss/` for behavioral specs; [`formatlangerror.test.ts`](../../../../ops/tests/unit/feature/lang/backend/typescript/formatlangerror.test.ts) for error copy.
 - [README.md](README.md) — short pipeline summary and dependencies.
 
 ---
@@ -4605,12 +4625,13 @@ flowchart LR
 # ast.ts
 Source: https://zed.cafe/docs/lang/ast
 
-**Purpose**: Defines `compileast` — the AST compilation entry point. Tokenizes source text, parses it into a CST, and transforms the CST into an AST (`CodeNode`). Used for code completion and as the first stage of full compilation.
+**Purpose**: Defines `compileast` and `compileastforeditor` — AST compilation entry points. Tokenizes source text, parses into a CST, and (when clean) transforms the CST into an AST (`CodeNode`). Used for code completion, editor diagnostics, and as the first stage of full compilation.
 
 ## Dependencies
 
-- `chevrotain` — CstNode, IToken
+- `chevrotain` — CstNode, IToken, ILexingResult
 - `zss/mapping/types` — isarray
+- [`formatlangerror.ts`](../backend/typescript/formatlangerror.ts) — human-readable error messages
 - `./lexer` — LANG_ERROR, tokenize
 - `./parser` — parser
 - `./visitor` — CodeNode, visitor
@@ -4619,7 +4640,8 @@ Source: https://zed.cafe/docs/lang/ast
 
 | Export | Description |
 |--------|--------------|
-| `compileast(text)` | Compiles text to AST; returns errors, tokens, cst, ast |
+| `compileast(text)` | Strict compile: returns errors, tokens, cst, ast (no AST when parser errors) |
+| `compileastforeditor(text)` | Editor path: keeps partial CST on parser errors; AST only when `parser.errors.length === 0` |
 
 ## Return Type
 
@@ -4636,10 +4658,21 @@ Source: https://zed.cafe/docs/lang/ast
 
 1. Appends newline to input (required for line-based grammar)
 2. Tokenizes via `tokenize()`
-3. Parses via `parser.program()`
-4. Transforms CST → AST via `visitor.go(cst)`
-5. Adds `range` to AST nodes (for code completion)
-6. Returns first AST node or errors
+3. On lexer failure: `maplexererrors()` → formatted `LANG_ERROR[]`, no parse
+4. Parses via `parser.program()`
+5. On parser failure: `mapparsererrors(tokens)` → formatted `LANG_ERROR[]`
+6. Transforms CST → AST via `visitor.go(cst)` (strict path only when no parser errors)
+7. Adds `range` to AST nodes (for code completion)
+8. Returns first AST node or errors
+
+## Error formatting
+
+Raw Chevrotain messages are **not** copied verbatim. Internal helpers call [`formatlangerror`](../backend/typescript/formatlangerror.ts):
+
+- **`maplexererrors(lexresult)`** — lexer `ILexingError[]` → `LANG_ERROR[]`
+- **`mapparsererrors(input)`** — passes fault token plus same-line tokens before the fault for context rules
+
+See [formatlangerror.md](formatlangerror.md) for message categories and editor/compile surfaces.
 
 ## Internal Helpers
 
@@ -4647,9 +4680,69 @@ Source: https://zed.cafe/docs/lang/ast
 
 ## Error Handling
 
-- Lexer errors: returned immediately with `errors`
-- Parser errors: mapped to `LANG_ERROR` format (offset, line, column, length, message)
-- No AST output: returns generic "no ast output" error
+- Lexer errors: formatted and returned immediately (no CST/AST)
+- Parser errors: formatted; strict `compileast` skips AST; `compileastforeditor` still returns partial CST
+- No AST output: returns generic `"no ast output"` error
+
+## See also
+
+- [formatlangerror.md](formatlangerror.md)
+- [architecture.mdx](architecture.mdx#error-propagation)
+
+---
+
+# formatlangerror.ts
+Source: https://zed.cafe/docs/lang/formatlangerror
+
+**Purpose**: Converts raw Chevrotain `message` strings into human-readable copy before they are stored on [`LANG_ERROR`](../backend/typescript/lexer.ts). Called from [`ast.ts`](../backend/typescript/ast.ts) (`maplexererrors`, `mapparsererrors`) for both strict compile and editor paths.
+
+## Dependencies
+
+- `chevrotain` — `IToken`
+- [`completioncontext.ts`](../backend/typescript/completioncontext.ts) — `DIR_MOD_CONTINUES`, `DIR_NEED_PAIR`, `DIR_NEED_KIND`, `DIR_NEED_SUBDIR`
+- [`lexer.ts`](../backend/typescript/lexer.ts) — `newline` token type
+
+## Exports
+
+| Export | Description |
+|--------|-------------|
+| `formatlangerror(input)` | Returns `{ message: string }` (ASCII, capped at 120 chars) |
+| `linetokensbeforefault(input, fault)` | Same-line tokens before the fault token (parser context) |
+| `FORMAT_LANG_ERROR_INPUT` | Input type: `kind`, `raw`, optional `token`, `linetokens` |
+| `FORMAT_LANG_ERROR_RESULT` | Output type: `{ message: string }` |
+
+## Resolution order
+
+Context rules run first (using tokens on the fault line), then pattern-based collapsing, then fallback:
+
+1. **Incomplete direction mod at EOL** — `#put opp` → `direction incomplete: opp needs a base dir (flow, up, north, ...)`
+2. **Unclosed block** — `#if` / `#while` / `#repeat` / `#foreach` / `#try` without `#do` on the line
+3. **Label vs command** — `:foo` where `#foo` was expected
+4. **Redundant input** — extra tokens after a complete statement
+5. **Token-set collapse** — long `Expecting [token_*]` lists become category hints (direction, color, statement, value)
+6. **Fallback** — `unexpected 'foo' here` or `syntax error near this spot`
+
+Lexer-only: `unexpected character: ->X<-` → `invalid character 'X'`.
+
+## Surfaces
+
+| Surface | How it receives formatted text |
+|---------|--------------------------------|
+| Tape editor | [`editorrows.tsx`](../../../screens/editor/editorrows.tsx) shows `LANG_ERROR.message` on the line below the cursor |
+| Compile / run | [`os.ts`](../../../os.ts) prints the first error preamble via `apierror` when `compile` fails |
+| Strict compile | [`compileast`](../backend/typescript/ast.ts) and [`compile`](../backend/typescript/generator.ts) return formatted `errors` |
+
+[`compileastforeditor`](../backend/typescript/ast.ts) uses the same formatter but keeps a partial CST when `recoveryEnabled` reports parser errors (for highlighting and autocomplete).
+
+## Tests
+
+- [`formatlangerror.test.ts`](../../../../ops/tests/unit/feature/lang/backend/typescript/formatlangerror.test.ts) — pattern handlers, `#put opp` regression, failure-report bucket samples
+- [`pipeline.test.ts`](../../../../ops/tests/unit/feature/lang/backend/typescript/pipeline.test.ts) — compile errors must not contain `token_`
+
+## See also
+
+- [architecture.mdx](architecture.mdx#human-readable-parse-errors) — narrative and diagram
+- [ast.md](ast.md) — where errors are mapped
 
 ---
 
@@ -4687,7 +4780,7 @@ Source: https://zed.cafe/docs/lang/generator
 
 ## Error Handling
 
-- Lexer/parser errors: returned as `GeneratorBuild.errors`
+- Lexer/parser errors: returned as `GeneratorBuild.errors` with **formatted** messages from [`formatlangerror`](./formatlangerror.md) (via `compileast` → `maplexererrors` / `mapparsererrors`)
 - No AST: returns "no ast output" error
 - Transform returns no code: returns build with empty source and no-op `code`
 - Function constructor throws: returns error with `unexpected error` message; code is no-op
@@ -4974,7 +5067,8 @@ The main entry point is `compile()` in `generator.ts`, which orchestrates the fu
 |------|---------|
 | [architecture.mdx](architecture.mdx) | End-to-end lang architecture, diagrams, precedence, runtime |
 | [ZZT-OOP reference](../../../../ops/fixtures/lang/zzt-ref/README.md) | RoZZT LANGREF baseline + ZSS extension rules (`ZSS ⊃ ZZT-OOP`) |
-| [ast.md](ast.md) | AST compilation entry point (`compileast`) |
+| [ast.md](ast.md) | AST compilation (`compileast`, `compileastforeditor`) |
+| [formatlangerror.md](formatlangerror.md) | Human-readable lexer/parser error messages |
 | [generator.md](generator.md) | Full compilation pipeline (`compile`) |
 | [lexer.md](lexer.md) | Tokenization and token definitions |
 | [parser.md](parser.md) | CST grammar and parsing rules |
@@ -6398,9 +6492,21 @@ Source: https://zed.cafe/docs/memory/loader
 | `memoryloader(arg, format, idoreventname, content, player)` | Run matched loaders |
 | `memoryloaderarg(id)` | Get loader arg |
 | `memoryloadercontent(id)` | Get loader content |
-| `memoryloaderdone(id)` | Clear loader ref |
 | `memoryloaderformat(id)` | Get loader format |
 | `memoryloadermatches(format, idoreventname)` | Find matching loader codepages |
+| `memoryloaderreadcontextapply(id)` | Restore per-loader `board` / `element` targeting into `READ_CONTEXT` |
+| `memoryloaderreadcontextsave(id)` | Persist targeting fields after a loader tick |
+| `memoryloaderrelease(id)` | Delete loader ref when chip ends |
+
+## Loader READ_CONTEXT snapshot
+
+Loaders that survive multiple ticks (`#idle`, import loops) need `#withboard` / `#withobject` targeting to persist. [`memorytickloaders`](runtime.md) calls:
+
+1. `memoryloaderreadcontextapply(id)` before each tick (defaults on first tick)
+2. `memoryloaderreadcontextsave(id)` after each tick
+3. `memoryloaderrelease(id)` when the loader chip ends
+
+Snapshot fields (only board/object targeting — not whole `READ_CONTEXT`): `board`, `element`, `elementid`, `elementisplayer`, `elementfocus`.
 
 ---
 
@@ -6576,7 +6682,7 @@ The same `memorytickmain` runs in two places:
 |----------|----------|-------|
 | Chip lifecycle | `memorygc()`, `memoryhaltchip(id)`, `memoryrestartallchipsandflags()`, `memorymessagechip(message)` | `memoryrestartallchipsandflags` also frees every flag-backed boundary |
 | CLI | `memoryrepeatclilast(player)`, `memoryruncli(player, cli, tracking?)` | `tracking=true` saves into `flags.playbuffer` |
-| Tick | `memorytickloaders()` | Increments `mainbook.timestamp` and runs every loader |
+| Tick | `memorytickloaders()` | Increments `mainbook.timestamp`, runs every loader; restores/saves per-loader board/object targeting via [`loader.ts`](loader.md) snapshot helpers |
 | Tick | `memorytickmain(timestamp, boards, playeronly?)` | Runs draw + update passes for every supplied board; called by the boardrunner with `[board]` and by the sim VM only for diagnostics |
 | Tick | `memorytickobject(book, board, object, code)` | One object's chip step |
 | Tick | `memorytickonce(book, board, element, code, id, label)` | One-shot draw / once execution |
