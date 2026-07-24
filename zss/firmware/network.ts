@@ -1,6 +1,7 @@
 import { bridgefetch } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
+import { FETCH_METHOD_KEYWORDS } from 'zss/firmware/autocompleteconstants'
 import { isarray } from 'zss/mapping/types'
 import { isstrcategory } from 'zss/words/category'
 import { isstrcollision } from 'zss/words/collision'
@@ -70,6 +71,9 @@ export const NETWORK_FIRMWARE = createfirmware()
       fetchcommand(undefined, label, url, maybemethod, words, ii)
       return 0
     },
+    {
+      byposition: [[], [], [...FETCH_METHOD_KEYWORDS]],
+    },
   )
   .command(
     'fetchwith',
@@ -89,5 +93,8 @@ export const NETWORK_FIRMWARE = createfirmware()
       ])
       fetchcommand(arg, label, url, maybemethod, words, ii)
       return 0
+    },
+    {
+      byposition: [[], [], [], [...FETCH_METHOD_KEYWORDS]],
     },
   )

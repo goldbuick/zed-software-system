@@ -19,6 +19,7 @@ import {
   zsstexttape,
 } from 'zss/feature/zsstextui'
 import { FIRMWARE } from 'zss/firmware'
+import { CODEPAGE_NAME_LISTS } from 'zss/firmware/autocompleteconstants'
 import { codepagepicksuffix, vmflushop } from 'zss/firmware/cli/utils'
 import { randominteger } from 'zss/mapping/number'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
@@ -130,6 +131,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
         }
         return 0
       },
+      { lists: ['boards'] },
     )
     .command(
       'pageopen',
@@ -206,6 +208,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
         }
         return 0
       },
+      { lists: [CODEPAGE_NAME_LISTS] },
     )
     .command(
       'pagetrash',

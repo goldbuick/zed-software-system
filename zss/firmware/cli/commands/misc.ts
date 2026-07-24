@@ -18,6 +18,11 @@ import { write } from 'zss/feature/writeui'
 import { zsstextline, zsstexttape } from 'zss/feature/zsstextui'
 import { FIRMWARE } from 'zss/firmware'
 import {
+  ZNS_CODEPAGE_LISTS,
+  ZNS_IMPORT_MODES,
+  ZNS_SUBCOMMANDS,
+} from 'zss/firmware/autocompleteconstants'
+import {
   showznsloginguide,
   showznsmenu,
   znsreadsession,
@@ -210,18 +215,9 @@ export function registermisccommands(fw: FIRMWARE): FIRMWARE {
         return 0
       },
       {
-        byposition: [
-          [
-            'login',
-            'restart',
-            'book',
-            'bytes',
-            'code',
-            'import',
-            'del',
-            'delete',
-          ],
-        ],
+        byposition: [[...ZNS_SUBCOMMANDS]],
+        whenfirst: { import: [[], [...ZNS_IMPORT_MODES]] },
+        listswhenfirst: { code: [undefined, [...ZNS_CODEPAGE_LISTS]] },
       },
     )
 }

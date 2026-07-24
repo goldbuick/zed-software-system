@@ -29,6 +29,12 @@ import {
 } from 'zss/feature/broadcast/webbroadcastwhipaliases'
 import { showbroadcastmenu } from 'zss/feature/broadcastmenu'
 import { FIRMWARE } from 'zss/firmware'
+import {
+  BRIDGE_SUBCOMMANDS,
+  CHAT_FEED_KINDS,
+  CHAT_HEAD_KEYWORDS,
+  CHAT_PROFILE_KEYWORDS,
+} from 'zss/firmware/autocompleteconstants'
 import { ispresent } from 'zss/mapping/types'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
@@ -222,6 +228,14 @@ export function registermultiplayercommands(fw: FIRMWARE): FIRMWARE {
         bridgechatstart(SOFTWARE, player, w[0])
         return 0
       },
+      {
+        byposition: [[...CHAT_HEAD_KEYWORDS]],
+        whenfirst: {
+          start: [[], [...CHAT_FEED_KINDS]],
+          stop: [[], [...CHAT_FEED_KINDS]],
+          profile: [[], [...CHAT_PROFILE_KEYWORDS]],
+        },
+      },
     )
     .command(
       'bridge',
@@ -241,6 +255,7 @@ export function registermultiplayercommands(fw: FIRMWARE): FIRMWARE {
         }
         return 0
       },
+      { byposition: [[...BRIDGE_SUBCOMMANDS]] },
     )
     .command(
       'broadcast',

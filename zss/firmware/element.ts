@@ -776,7 +776,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       chip.set(names[i], 0)
     }
     return 0
-  })
+  }, { editor: ['variables'] })
   .command(
     'set',
     [ARG_TYPE.NAME, 'variable to value; multiple words joined with spaces'],
@@ -794,6 +794,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       chip.set(name, value)
       return 0
     },
+    { editor: ['variables'] },
   )
   .command(
     'become',
@@ -836,6 +837,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       chip.endofprogram()
       return 0
     },
+    { lists: ['categories'] },
   )
   .command('bind', [ARG_TYPE.NAME, 'code from named element'], (_, words) => {
     // zed cafe simply copies the code from the given named element
@@ -846,7 +848,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       memoryhaltchip(READ_CONTEXT.elementid)
     }
     return 0
-  })
+  }, { lists: ['objects'] })
   .command(
     'char',
     [ARG_TYPE.ANY, 'character (self or at direction)'],
@@ -1021,6 +1023,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       chip.restore(maptostring(words[0]))
       return 0
     },
+    { editor: ['labels'] },
   )
   .command('unlock', ['against messages from others'], (chip) => {
     chip.unlock()
@@ -1033,6 +1036,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       chip.zap(maptostring(words[0]))
       return 0
     },
+    { editor: ['labels'] },
   )
   .command(
     'cycle',
@@ -1082,7 +1086,9 @@ export const ELEMENT_FIRMWARE = createfirmware({
     }
     return 0
   })
-  .command('run', [ARG_TYPE.NAME, 'object codepage of given name'], commandrun)
+  .command('run', [ARG_TYPE.NAME, 'object codepage of given name'], commandrun, {
+    lists: ['objects'],
+  })
   .command(
     'runwith',
     [ARG_TYPE.ANY, 'function with argument'],
@@ -1096,7 +1102,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     const [values] = readargsuntilend(words, ii, ARG_TYPE.ANY)
     chip.set(name, values)
     return 0
-  })
+  }, { editor: ['variables'] })
   .command(
     'read',
     [
@@ -1117,6 +1123,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       }
       return 0
     },
+    { editor: [undefined, undefined, 'variables'] },
   )
   .command('toast', ['toast notification'], (_, words) => {
     const [textwords] = readargsuntilend(words, 0, ARG_TYPE.NUMBER_OR_NAME)

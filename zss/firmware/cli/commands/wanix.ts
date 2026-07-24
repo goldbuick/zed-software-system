@@ -25,6 +25,12 @@ import { startwanixzedsync } from 'zss/device/wanixclient/wanixzedsync'
 import { clearzedsynchalt } from 'zss/device/wanixclient/wanixzedsynchalt'
 import { iszedsynctaskid } from 'zss/device/wanixclient/wanixzedsyncready'
 import { FIRMWARE } from 'zss/firmware'
+import {
+  WANIX_ACTIONS,
+  WANIX_REMOTE_SUB,
+  WANIX_VM_SUB,
+  ZNS_SUBCOMMANDS,
+} from 'zss/firmware/autocompleteconstants'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE, NAME, WORD } from 'zss/words/types'
@@ -307,6 +313,15 @@ export function registerwanixcommands(fw: FIRMWARE): FIRMWARE {
           break
       }
       return 0
+    },
+    {
+      byposition: [[...WANIX_ACTIONS]],
+      whenfirst: {
+        vm: [[], [...WANIX_VM_SUB]],
+        term: [[], ['dump', 'status']],
+        remote: [[], [...WANIX_REMOTE_SUB]],
+        bridge: [[], ['stop']],
+      },
     },
   )
 }

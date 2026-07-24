@@ -1,8 +1,6 @@
 import * as lexer from 'zss/feature/lang/backend/typescript/lexer'
-import type {
-  COMMAND_ARGS_SIGNATURE,
-  COMMAND_ARG_AUTOCOMPLETE,
-} from 'zss/firmware'
+import { resolvecompletionargcontext } from 'zss/feature/lang/backend/typescript/completioncontext'
+import type { COMMAND_ARGS_SIGNATURE } from 'zss/firmware'
 import { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { romread } from 'zss/rom'
@@ -15,8 +13,18 @@ import {
 } from 'zss/words/textformat'
 import { ARG_TYPE, COLOR, NAME } from 'zss/words/types'
 
+import {
+  resolveargitems,
+  type AUTO_COMPLETE_SUGGESTION,
+} from './argcomplete'
 import { type ZSS_WORD_LIST_KEY, zsswordcolor } from './colors'
 import { EDITOR_CODE_ROW } from './common'
+import type { EDITOR_COMPLETE_CONTEXT } from './editorcomplete'
+import { builtingstatnamesforcodepagetype } from './statcompletenames'
+
+export { keywordsforcommandargcomplete, type AUTO_COMPLETE_SUGGESTION } from './argcomplete'
+export type { EDITOR_COMPLETE_CONTEXT } from './editorcomplete'
+export { buildeditorcompletecontext } from './editorcomplete'
 
 const WORD_LIST_KEYS: ZSS_WORD_LIST_KEY[] = [
   'flags',
@@ -31,6 +39,9 @@ const WORD_LIST_KEYS: ZSS_WORD_LIST_KEY[] = [
   'dirs',
   'dirmods',
   'exprs',
+  'roles',
+  'permissionconfigs',
+  'players',
 ]
 
 /**
@@ -59,12 +70,16 @@ function buildwordcategorymap(words: GADGET_ZSS_WORDS): Map<string, string> {
   ]) {
     map.set(k.toLowerCase(), 'stats')
   }
+  for (const k of words.roles) {
+    map.set(k.toLowerCase(), 'roles')
+  }
+  for (const k of words.permissionconfigs) {
+    map.set(k.toLowerCase(), 'permissionconfigs')
+  }
+  for (const k of words.players) {
+    map.set(k.toLowerCase(), 'players')
+  }
   return map
-}
-
-export type AUTO_COMPLETE_SUGGESTION = {
-  word: string
-  category: string
 }
 
 export type AUTO_COMPLETE = {
@@ -142,97 +157,6 @@ function tagrecordkeys(
   return Object.keys(rec).map((word) => ({ word, category }))
 }
 
-/** Resolve declared keyword list for `#cmd` argument position (exported for tests). */
-export function keywordsforcommandargcomplete(
-  meta: COMMAND_ARG_AUTOCOMPLETE | undefined,
-  argindex: number,
-  firstarglower: string,
-): string[] | undefined {
-  if (!meta) {
-    return undefined
-  }
-  if (argindex > 0 && firstarglower) {
-    const variant = meta.whenfirst?.[firstarglower]?.[argindex]
-    if (variant?.length) {
-      return variant
-    }
-  }
-  const bypos = meta.byposition?.[argindex]
-  if (bypos?.length) {
-    return bypos
-  }
-  return undefined
-}
-
-function commandargsnumeric(sig: COMMAND_ARGS_SIGNATURE): ARG_TYPE[] {
-  const out: ARG_TYPE[] = []
-  for (let i = 0; i < sig.length; i++) {
-    const x = sig[i]
-    if (typeof x === 'number') {
-      out.push(x)
-    }
-  }
-  return out
-}
-
-function alldefaultsuggestionitems(
-  words: GADGET_ZSS_WORDS,
-): AUTO_COMPLETE_SUGGESTION[] {
-  return [
-    ...tagwords(words.flags, 'flags'),
-    ...tagwords(words.statsboard, 'stats'),
-    ...tagwords(words.statshelper, 'stats'),
-    ...tagwords(words.statssender, 'stats'),
-    ...tagwords(words.statsinteraction, 'stats'),
-    ...tagwords(words.statsboolean, 'stats'),
-    ...tagwords(words.statsconfig, 'stats'),
-    ...tagwords(words.objects, 'objects'),
-    ...tagwords(words.terrains, 'terrains'),
-    ...tagwords(words.boards, 'boards'),
-    ...tagwords(words.palettes, 'palettes'),
-    ...tagwords(words.charsets, 'charsets'),
-    ...tagwords(words.loaders, 'loaders'),
-    ...tagwords(words.categories, 'categories'),
-    ...tagwords(words.colors, 'colors'),
-    ...tagwords(words.dirs, 'dirs'),
-    ...tagwords(words.dirmods, 'dirmods'),
-    ...tagwords(words.exprs, 'exprs'),
-  ]
-}
-
-function itemsforargtype(
-  words: GADGET_ZSS_WORDS,
-  t: ARG_TYPE,
-): AUTO_COMPLETE_SUGGESTION[] {
-  switch (t) {
-    case ARG_TYPE.COLOR:
-    case ARG_TYPE.COLOR_OR_KIND:
-      return tagwords(words.colors, 'colors')
-    case ARG_TYPE.DIR:
-      return [
-        ...tagwords(words.dirs, 'dirs'),
-        ...tagwords(words.dirmods, 'dirmods'),
-      ]
-    case ARG_TYPE.KIND:
-    case ARG_TYPE.MAYBE_KIND:
-      return tagwords(words.categories, 'categories')
-    case ARG_TYPE.ANY:
-    case ARG_TYPE.NUMBER:
-    case ARG_TYPE.MAYBE_NUMBER:
-    case ARG_TYPE.NAME:
-    case ARG_TYPE.MAYBE_NAME:
-    case ARG_TYPE.NUMBER_OR_NAME:
-    case ARG_TYPE.MAYBE_NUMBER_OR_NAME:
-    case ARG_TYPE.STRING:
-    case ARG_TYPE.MAYBE_STRING:
-    case ARG_TYPE.NUMBER_OR_STRING:
-    case ARG_TYPE.MAYBE_NUMBER_OR_STRING:
-      return []
-    default:
-      return alldefaultsuggestionitems(words)
-  }
-}
-
 function hintfromrom(category: string, word = ''): string {
   const rompath = word ? `editor:${category}:${word}` : `editor:${category}`
   const rom = romread(rompath)
@@ -247,10 +171,19 @@ function hintfromrom(category: string, word = ''): string {
   }
 }
 
+function statnameprefixfromtoken(image: string): string {
+  const trimmed = image.startsWith('@') ? image.slice(1) : image
+  const space = trimmed.indexOf(' ')
+  const name = space >= 0 ? trimmed.slice(0, space) : trimmed
+  return NAME(name)
+}
+
 function getautocompletefromtokens(
   row: EDITOR_CODE_ROW,
   col: number,
   words: GADGET_ZSS_WORDS,
+  editorctx?: EDITOR_COMPLETE_CONTEXT,
+  codepagetype?: string,
 ): MAYBE<AUTO_COMPLETE> {
   const tokens = row.tokens
   if (!tokens?.length) {
@@ -377,7 +310,24 @@ function getautocompletefromtokens(
           hintcommandname,
         }
       }
-      case 'stat':
+      case 'stat': {
+        endoflinehint = true
+        endoflineargs = [hintfromrom('stat')]
+        const statprefix = statnameprefixfromtoken(token.image ?? '')
+        const statnames = builtingstatnamesforcodepagetype(codepagetype)
+        const items = tagwords(statnames, 'stats')
+        const suggestions = filtersuggestions(statprefix, items)
+        return {
+          suggestions,
+          prefix: statprefix,
+          wordcol,
+          wordstart,
+          endoflinehint,
+          endoflineargs,
+          maxsuggestionwordlen: maxsuggestionwordlength(suggestions),
+          hintcommandname: '',
+        }
+      }
       case 'label':
       case 'comment':
       case 'hyperlink':
@@ -396,28 +346,29 @@ function getautocompletefromtokens(
         }
       }
       default: {
-        let items: AUTO_COMPLETE_SUGGESTION[]
+        let items: AUTO_COMPLETE_SUGGESTION[] = []
         if (cmdidx >= 0 && activetokenidx >= cmdidx + 2) {
-          const argindex = activetokenidx - cmdidx - 2
+          const argctx = resolvecompletionargcontext(
+            tokens,
+            cmdidx,
+            activetokenidx,
+            maybesig,
+          )
+          const argindex = argctx?.argslot ?? activetokenidx - cmdidx - 2
+          const firstarglower =
+            argctx?.firstarglower ??
+            NAME(tokens[cmdidx + 2]?.image ?? '').toLowerCase()
           const meta = words.commandargmeta?.[hintcommandname]
-          let firstlower = ''
-          if (argindex > 0 && cmdidx + 2 < tokens.length) {
-            firstlower = NAME(tokens[cmdidx + 2]?.image ?? '').toLowerCase()
-          }
-          const sub = keywordsforcommandargcomplete(meta, argindex, firstlower)
-          if (ispresent(sub) && sub.length > 0) {
-            items = tagwords(sub, 'commandargmeta')
-          } else {
-            const types = maybesig ? commandargsnumeric(maybesig) : []
-            const t = types[argindex]
-            if (ispresent(t)) {
-              items = itemsforargtype(words, t)
-            } else {
-              items = alldefaultsuggestionitems(words)
-            }
-          }
-        } else {
-          items = alldefaultsuggestionitems(words)
+          items = resolveargitems({
+            words,
+            meta,
+            argindex,
+            firstarglower,
+            maybesig,
+            prefix,
+            editorctx,
+            dirphase: argctx?.dirphase,
+          })
         }
         const suggestions = filtersuggestions(prefix, items)
         return {
@@ -441,13 +392,20 @@ export function getautocomplete(
   row: MAYBE<EDITOR_CODE_ROW>,
   cursor: number,
   words: GADGET_ZSS_WORDS,
+  editorctx?: EDITOR_COMPLETE_CONTEXT,
+  codepagetype?: string,
 ): AUTO_COMPLETE {
   if (!ispresent(row)) {
     return EMPTY_AUTOCOMPLETE
   }
   return (
-    getautocompletefromtokens(row, cursor - row.start, words) ??
-    EMPTY_AUTOCOMPLETE
+    getautocompletefromtokens(
+      row,
+      cursor - row.start,
+      words,
+      editorctx,
+      codepagetype,
+    ) ?? EMPTY_AUTOCOMPLETE
   )
 }
 

@@ -44,6 +44,16 @@ function addRange(node: CodeNode | undefined): OffsetRange | undefined {
   return node.range
 }
 
+function mapparsererrors(): LANG_ERROR[] {
+  return parser.errors.map((error) => ({
+    offset: error.token.startOffset,
+    line: error.token.startLine,
+    column: error.token.startColumn,
+    length: error.token.image.length,
+    message: error.message,
+  }))
+}
+
 export function compileast(text: string): {
   errors?: LANG_ERROR[]
   tokens?: IToken[]
@@ -60,13 +70,7 @@ export function compileast(text: string): {
   if (parser.errors.length > 0) {
     return {
       tokens: tokens.tokens,
-      errors: parser.errors.map((error) => ({
-        offset: error.token.startOffset,
-        line: error.token.startLine,
-        column: error.token.startColumn,
-        length: error.token.image.length,
-        message: error.message,
-      })),
+      errors: mapparsererrors(),
     }
   }
 
@@ -88,5 +92,39 @@ export function compileast(text: string): {
     tokens: tokens.tokens,
     cst,
     ast,
+  }
+}
+
+/** Editor path: keep partial CST when Chevrotain recovery reports errors. */
+export function compileastforeditor(text: string): {
+  errors?: LANG_ERROR[]
+  tokens?: IToken[]
+  cst?: CstNode
+  ast?: CodeNode
+} {
+  const tokens = tokenize(`${text}\n`)
+  if (tokens.errors.length > 0) {
+    return tokens
+  }
+
+  parser.input = tokens.tokens
+  const cst = parser.program()
+  const errors =
+    parser.errors.length > 0 ? mapparsererrors() : undefined
+
+  let ast: CodeNode | undefined
+  if (parser.errors.length === 0) {
+    const [maybeast] = visitor.go(cst) ?? []
+    if (maybeast) {
+      addRange(maybeast)
+      ast = maybeast
+    }
+  }
+
+  return {
+    tokens: tokens.tokens,
+    cst,
+    ast,
+    errors,
   }
 }

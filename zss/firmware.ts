@@ -13,6 +13,28 @@ export type FIRMWARE_COMMAND = (chip: CHIP, words: WORD[]) => 0 | 1
 /** One argument signature: zero or more ARG_TYPE (number) followed by a string (e.g. description). */
 export type COMMAND_ARGS_SIGNATURE = [...number[], string]
 
+/** VM word-list pool keys for autocomplete (GADGET_ZSS_WORDS fields + synthetic merges). */
+export type AUTOCOMPLETE_WORDLIST =
+  | 'flags'
+  | 'objects'
+  | 'terrains'
+  | 'boards'
+  | 'palettes'
+  | 'charsets'
+  | 'loaders'
+  | 'categories'
+  | 'colors'
+  | 'dirs'
+  | 'dirmods'
+  | 'exprs'
+  | 'stats'
+  | 'commands'
+  | 'roles'
+  | 'permissionconfigs'
+  | 'players'
+
+export type AUTOCOMPLETE_EDITOR_SOURCE = 'labels' | 'variables'
+
 /**
  * Optional tape autocomplete metadata per `#` command (firmware-adjacent).
  * `whenfirst` covers first-token peek variants; broader `wordsSoFar` dispatch can extend this type later.
@@ -22,6 +44,18 @@ export type COMMAND_ARG_AUTOCOMPLETE = {
   byposition?: string[][]
   /** When first arg matches key (lowercase NAME), use per-arg keyword lists at each index. */
   whenfirst?: Record<string, string[][]>
+  /** Per-arg VM list refs (single key or merged array). */
+  lists?: (AUTOCOMPLETE_WORDLIST | AUTOCOMPLETE_WORDLIST[] | undefined)[]
+  listswhenfirst?: Record<
+    string,
+    (AUTOCOMPLETE_WORDLIST | AUTOCOMPLETE_WORDLIST[] | undefined)[]
+  >
+  /** Per-arg editor-local pools (editor only; ignored in terminal). */
+  editor?: (AUTOCOMPLETE_EDITOR_SOURCE | undefined)[]
+  editorwhenfirst?: Record<
+    string,
+    (AUTOCOMPLETE_EDITOR_SOURCE | undefined)[]
+  >
 }
 
 export type FIRMWARE_EVENTS = {
