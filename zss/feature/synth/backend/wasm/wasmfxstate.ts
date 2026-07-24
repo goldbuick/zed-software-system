@@ -89,6 +89,17 @@ function sendlineargain(value: number): number {
   return Math.pow(10, volumetodb(value) / 20)
 }
 
+/** Tone-style `#fx on` preset: hotter sends for pitch/filter FX only. */
+function sendonpreset(fxname: WASM_FX_NAME): number {
+  switch (fxname) {
+    case 'vibrato':
+    case 'autofilter':
+      return sendlineargain(50)
+    default:
+      return sendlineargain(18)
+  }
+}
+
 function defaultfxparams(): number[] {
   return [
     tonenotationseconds('8n'),
@@ -200,7 +211,7 @@ export function applywasmfxconfig(
   const sendidx = sendindexfor(fx)
 
   if (config === 'on') {
-    sab[sendbase + sendidx] = sendlineargain(50)
+    sab[sendbase + sendidx] = sendonpreset(fx)
     return true
   }
   if (config === 'off') {

@@ -183,9 +183,11 @@ export function createsynth() {
   }
 
   // defaults
-  setttsvolume(25)
-  setplayvolume(100)
-  setbgplayvolume(100)
+  setttsvolume(100)
+  setplayvolume(50)
+  setbgplayvolume(50)
+
+  // start playback
   playback.pacer.start(0)
   FXCHAIN.autofilter.start()
 

@@ -17,6 +17,7 @@ Legacy Tone.js and Maximilian documentation paths refer to **archived** stacks u
 | [record & mp3](record-and-mp3.md) | Recording to MP3 (Daisy path) |
 | [voice-types-reference.md](voice-types-reference.md) | All voice types, params, Daisy vs Tone defaults |
 | [fx-types-reference.md](fx-types-reference.md) | All FX types, params, Daisy vs Tone defaults |
+| [gain-levels.md](gain-levels.md) | Every volume/gain constant and tweak guide |
 | [implementation-matrix.mdx](implementation-matrix.mdx) | Voice/FX/drum/master map (Daisy vs archived Maxi/Tone) |
 
 ## Quick Links (archived)
