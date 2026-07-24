@@ -119,6 +119,22 @@ describe('wasmfxstate', () => {
     expect(applywasmfxconfig(sab, 0, 'echo', 'delaytime', 'bad')).toBe(false)
   })
 
+  it('maps fx on to tone-style send presets', () => {
+    const sab = defaultwasmfxsab()
+    const senddb = (value: number) =>
+      Math.pow(10, (20 * Math.log10(value) - 35) / 20)
+    applywasmfxconfig(sab, 0, 'autofilter', 'on', '')
+    const hot = sab[WASM_FX_SEND_IDX.AUTOFILTER]
+    applywasmfxconfig(sab, 0, 'echo', 'on', '')
+    const cool = sab[WASM_FX_SEND_IDX.ECHO]
+    applywasmfxconfig(sab, 0, 'distort', 'on', '')
+    const distort = sab[WASM_FX_SEND_IDX.DISTORTION]
+    expect(hot).toBeCloseTo(senddb(50), 4)
+    expect(cool).toBeCloseTo(senddb(18), 4)
+    expect(distort).toBeCloseTo(senddb(18), 4)
+    expect(hot).toBeGreaterThan(cool)
+  })
+
   it('replays persisted voicefx state on four buses', () => {
     const sab = defaultwasmfxsab()
     replaywasmfxfromstate(sab, {
