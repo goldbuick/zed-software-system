@@ -19,19 +19,9 @@ export const PERMISSION_ROLE_KEYWORDS = ['admin', 'mod', 'player'] as const
 
 export const CHAT_HEAD_KEYWORDS = ['start', 'stop', 'profile'] as const
 
-export const CHAT_FEED_KINDS = [
-  'twitch',
-  'rss',
-  'mastodon',
-  'bluesky',
-] as const
+export const CHAT_FEED_KINDS = ['twitch', 'rss', 'mastodon', 'bluesky'] as const
 
-export const CHAT_PROFILE_KEYWORDS = [
-  'list',
-  'show',
-  'delete',
-  'save',
-] as const
+export const CHAT_PROFILE_KEYWORDS = ['list', 'show', 'delete', 'save'] as const
 
 export const WANIX_ACTIONS = [
   'vm',
@@ -47,11 +37,7 @@ export const WANIX_ACTIONS = [
 
 export const WANIX_VM_SUB = ['stop'] as const
 
-export const WANIX_REMOTE_SUB = [
-  'connect',
-  'disconnect',
-  'list',
-] as const
+export const WANIX_REMOTE_SUB = ['connect', 'disconnect', 'list'] as const
 
 export const WANIX_ZEDSYNC_SUB = ['start', 'halt', 'clear'] as const
 
@@ -69,7 +55,12 @@ export const ZNS_SUBCOMMANDS = [
 export const ZNS_IMPORT_MODES = ['code'] as const
 
 export const ZNS_CODEPAGE_LISTS = [
-  'objects', 'boards', 'loaders', 'terrains', 'palettes', 'charsets',
+  'objects',
+  'boards',
+  'loaders',
+  'terrains',
+  'palettes',
+  'charsets',
 ] as const
 
 export const CODEPAGE_NAME_LISTS = [...ZNS_CODEPAGE_LISTS]

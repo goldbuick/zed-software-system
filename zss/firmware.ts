@@ -53,10 +53,7 @@ export type COMMAND_ARG_AUTOCOMPLETE = {
   >
   /** Per-arg editor-local pools (editor only; ignored in terminal). */
   editor?: (AUTOCOMPLETE_EDITOR_SOURCE | undefined)[]
-  editorwhenfirst?: Record<
-    string,
-    (AUTOCOMPLETE_EDITOR_SOURCE | undefined)[]
-  >
+  editorwhenfirst?: Record<string, (AUTOCOMPLETE_EDITOR_SOURCE | undefined)[]>
 }
 
 export type FIRMWARE_EVENTS = {

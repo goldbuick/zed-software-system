@@ -1,5 +1,5 @@
-import * as lexer from 'zss/feature/lang/backend/typescript/lexer'
 import { resolvecompletionargcontext } from 'zss/feature/lang/backend/typescript/completioncontext'
+import * as lexer from 'zss/feature/lang/backend/typescript/lexer'
 import type { COMMAND_ARGS_SIGNATURE } from 'zss/firmware'
 import { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
@@ -13,18 +13,11 @@ import {
 } from 'zss/words/textformat'
 import { ARG_TYPE, COLOR, NAME } from 'zss/words/types'
 
-import {
-  resolveargitems,
-  type AUTO_COMPLETE_SUGGESTION,
-} from './argcomplete'
+import { type AUTO_COMPLETE_SUGGESTION, resolveargitems } from './argcomplete'
 import { type ZSS_WORD_LIST_KEY, zsswordcolor } from './colors'
 import { EDITOR_CODE_ROW } from './common'
 import type { EDITOR_COMPLETE_CONTEXT } from './editorcomplete'
 import { builtingstatnamesforcodepagetype } from './statcompletenames'
-
-export { keywordsforcommandargcomplete, type AUTO_COMPLETE_SUGGESTION } from './argcomplete'
-export type { EDITOR_COMPLETE_CONTEXT } from './editorcomplete'
-export { buildeditorcompletecontext } from './editorcomplete'
 
 const WORD_LIST_KEYS: ZSS_WORD_LIST_KEY[] = [
   'flags',

@@ -1,5 +1,4 @@
 import type { IToken } from 'chevrotain'
-
 import type { COMMAND_ARGS_SIGNATURE } from 'zss/firmware'
 import { ispresent } from 'zss/mapping/types'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
@@ -199,7 +198,7 @@ export function resolveargslot(
       return { argslot: slot, argtype, dirphase, firstarglower }
     }
 
-    const next = tryadvanceslot(words, ii, types[slot]!)
+    const next = tryadvanceslot(words, ii, types[slot])
     if (next === undefined) {
       const argtype = types[slot]
       const dirphase =

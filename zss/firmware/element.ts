@@ -770,13 +770,18 @@ export const ELEMENT_FIRMWARE = createfirmware({
     }
   },
 })
-  .command('clear', [ARG_TYPE.NAME, 'variables (set to 0)'], (chip, words) => {
-    const [names] = readargsuntilend(words, 0, ARG_TYPE.NAME)
-    for (let i = 0; i < names.length; ++i) {
-      chip.set(names[i], 0)
-    }
-    return 0
-  }, { editor: ['variables'] })
+  .command(
+    'clear',
+    [ARG_TYPE.NAME, 'variables (set to 0)'],
+    (chip, words) => {
+      const [names] = readargsuntilend(words, 0, ARG_TYPE.NAME)
+      for (let i = 0; i < names.length; ++i) {
+        chip.set(names[i], 0)
+      }
+      return 0
+    },
+    { editor: ['variables'] },
+  )
   .command(
     'set',
     [ARG_TYPE.NAME, 'variable to value; multiple words joined with spaces'],
@@ -839,16 +844,21 @@ export const ELEMENT_FIRMWARE = createfirmware({
     },
     { lists: ['kinds'] },
   )
-  .command('bind', [ARG_TYPE.NAME, 'code from named element'], (_, words) => {
-    // zed cafe simply copies the code from the given named element
-    const [name] = readargs(words, 0, [ARG_TYPE.NAME])
-    const elements = memorylistboardnamedelements(READ_CONTEXT.board, name)
-    if (ispresent(READ_CONTEXT.element) && elements.length > 0) {
-      READ_CONTEXT.element.code = pick(...elements).code ?? ''
-      memoryhaltchip(READ_CONTEXT.elementid)
-    }
-    return 0
-  }, { lists: ['objects'] })
+  .command(
+    'bind',
+    [ARG_TYPE.NAME, 'code from named element'],
+    (_, words) => {
+      // zed cafe simply copies the code from the given named element
+      const [name] = readargs(words, 0, [ARG_TYPE.NAME])
+      const elements = memorylistboardnamedelements(READ_CONTEXT.board, name)
+      if (ispresent(READ_CONTEXT.element) && elements.length > 0) {
+        READ_CONTEXT.element.code = pick(...elements).code ?? ''
+        memoryhaltchip(READ_CONTEXT.elementid)
+      }
+      return 0
+    },
+    { lists: ['objects'] },
+  )
   .command(
     'char',
     [ARG_TYPE.ANY, 'character (self or at direction)'],
@@ -1086,9 +1096,14 @@ export const ELEMENT_FIRMWARE = createfirmware({
     }
     return 0
   })
-  .command('run', [ARG_TYPE.NAME, 'object codepage of given name'], commandrun, {
-    lists: ['objects'],
-  })
+  .command(
+    'run',
+    [ARG_TYPE.NAME, 'object codepage of given name'],
+    commandrun,
+    {
+      lists: ['objects'],
+    },
+  )
   .command(
     'runwith',
     [ARG_TYPE.ANY, 'function with argument'],
@@ -1097,12 +1112,17 @@ export const ELEMENT_FIRMWARE = createfirmware({
       return commandrun(chip, words.slice(ii), arg)
     },
   )
-  .command('array', [ARG_TYPE.NAME, 'array variable'], (chip, words) => {
-    const [name, ii] = readargs(words, 0, [ARG_TYPE.NAME])
-    const [values] = readargsuntilend(words, ii, ARG_TYPE.ANY)
-    chip.set(name, values)
-    return 0
-  }, { editor: ['variables'] })
+  .command(
+    'array',
+    [ARG_TYPE.NAME, 'array variable'],
+    (chip, words) => {
+      const [name, ii] = readargs(words, 0, [ARG_TYPE.NAME])
+      const [values] = readargsuntilend(words, ii, ARG_TYPE.ANY)
+      chip.set(name, values)
+      return 0
+    },
+    { editor: ['variables'] },
+  )
   .command(
     'read',
     [

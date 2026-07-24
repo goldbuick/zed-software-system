@@ -1,10 +1,7 @@
 import { CstNode, ILexingResult, IToken } from 'chevrotain'
 import { isarray } from 'zss/mapping/types'
 
-import {
-  formatlangerror,
-  linetokensbeforefault,
-} from './formatlangerror'
+import { formatlangerror, linetokensbeforefault } from './formatlangerror'
 import { LANG_ERROR, tokenize } from './lexer'
 import { parser } from './parser'
 import { type CodeNode, visitor } from './visitor'

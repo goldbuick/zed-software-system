@@ -29,7 +29,6 @@ import {
   WANIX_ACTIONS,
   WANIX_REMOTE_SUB,
   WANIX_VM_SUB,
-  ZNS_SUBCOMMANDS,
 } from 'zss/firmware/autocompleteconstants'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'

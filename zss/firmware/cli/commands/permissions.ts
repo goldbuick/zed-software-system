@@ -9,9 +9,7 @@ import {
   zsstexttape,
 } from 'zss/feature/zsstextui'
 import { FIRMWARE } from 'zss/firmware'
-import {
-  PERMISSION_CONFIG_KEYWORDS,
-} from 'zss/firmware/autocompleteconstants'
+import { PERMISSION_CONFIG_KEYWORDS } from 'zss/firmware/autocompleteconstants'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadflags } from 'zss/memory/flags'
 import {

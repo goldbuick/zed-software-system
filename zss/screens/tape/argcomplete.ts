@@ -2,8 +2,8 @@ import type { DIR_COMPLETION_PHASE } from 'zss/feature/lang/backend/typescript/c
 import type {
   AUTOCOMPLETE_EDITOR_SOURCE,
   AUTOCOMPLETE_WORDLIST,
-  COMMAND_ARG_AUTOCOMPLETE,
   COMMAND_ARGS_SIGNATURE,
+  COMMAND_ARG_AUTOCOMPLETE,
 } from 'zss/firmware'
 import { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import { isarray, ispresent } from 'zss/mapping/types'
@@ -281,7 +281,9 @@ export type ResolveArgItemsInput = {
 }
 
 /** Priority chain: keywords → editor → lists → ARG_TYPE (dir phase) → empty. */
-export function resolveargitems(input: ResolveArgItemsInput): AUTO_COMPLETE_SUGGESTION[] {
+export function resolveargitems(
+  input: ResolveArgItemsInput,
+): AUTO_COMPLETE_SUGGESTION[] {
   const {
     words,
     meta,

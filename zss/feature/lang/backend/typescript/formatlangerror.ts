@@ -1,5 +1,4 @@
 import type { IToken } from 'chevrotain'
-
 import { NAME } from 'zss/words/types'
 
 import {
@@ -8,7 +7,7 @@ import {
   DIR_NEED_PAIR,
   DIR_NEED_SUBDIR,
 } from './completioncontext'
-import { command, newline } from './lexer'
+import { newline } from './lexer'
 
 export type FORMAT_LANG_ERROR_INPUT = {
   kind: 'lexer' | 'parser'
@@ -25,8 +24,7 @@ const MAX_MESSAGE_LEN = 120
 
 const BLOCK_COMMANDS = new Set(['if', 'while', 'repeat', 'foreach', 'try'])
 
-const DIR_HINT =
-  'expected direction (up, down, left, right, flow, by, at, ...)'
+const DIR_HINT = 'expected direction (up, down, left, right, flow, by, at, ...)'
 const COLOR_HINT = 'expected color name (red, blue, onred, ...)'
 const STMT_HINT = 'expected statement or #command'
 const VALUE_HINT = 'expected value (number, string, color, or expression)'
@@ -62,13 +60,11 @@ function rawfoundnewline(raw: string): boolean {
 }
 
 function extractfoundtext(raw: string): string | undefined {
-  const match = raw.match(/but found: '((?:\\'|[^'])*)'/)
+  const match = /but found: '((?:\\'|[^'])*)'/.exec(raw)
   if (match) {
     return match[1].replace(/\\n/g, '\n').replace(/\\'/g, "'")
   }
-  const redundant = raw.match(
-    /Redundant input, expecting EOF but found: (.+)$/,
-  )
+  const redundant = /Redundant input, expecting EOF but found: (.+)$/.exec(raw)
   if (redundant) {
     return redundant[1].trim()
   }
@@ -76,7 +72,7 @@ function extractfoundtext(raw: string): string | undefined {
 }
 
 function extractinvalidchar(raw: string): string | undefined {
-  const match = raw.match(/unexpected character: ->(.+)<-/)
+  const match = /unexpected character: ->(.+)<-/.exec(raw)
   return match?.[1]
 }
 
