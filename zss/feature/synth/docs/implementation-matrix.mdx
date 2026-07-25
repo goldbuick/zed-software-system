@@ -42,12 +42,12 @@ Enum: [`shared/sourcetype.ts`](../shared/sourcetype.ts). Dispatch: `VoiceType` i
 | `metallic` | `METALLIC_NOISE` | same + amplitude norm | same | same | Noise | same |
 | `hollow` | `HOLLOW_NOISE` | FFT hollow table | same | Error (WASM-only) | Noise (custom spectral) | `noisewave.ts` |
 | `noise` | `WHITE_NOISE` | PRNG white table | same | Error (WASM-only) | Whitenoise (custom PRNG) | `noisewave.ts` |
-| `bells` | `BELLS` | FM stack + sparkle osc | `ModalVoice` + sparkle FM | `FMSynth` + `MetalSynth` | Physical modeling + FM sparkle | cpp `processvoice()` |
+| `bells` | `BELLS` | FM stack + sparkle osc | `ModalVoice` + sparkle + `voiceenv` | `FMSynth` + `MetalSynth` | Physical modeling + FM sparkle | cpp `processvoice()` |
 | `doot` | `DOOT` | sine + pitch-decay loop | `Oscillator` + `Adsr` | `MembraneSynth` | Drum / physical (Membrane-like) | `voiceplaycode.ts` `dootvoice()` |
-| `algo0`–`algo7` | `ALGO_SYNTH` | 4× osc + 5× ADSR, 8 routings | 4× `Oscillator` + 5× `Adsr` | custom `AlgoSynth` | FM (4-op routing) | `wasmalgoplaycode.ts`, [algosynth.md](algosynth.md) |
+| `algo0`–`algo7` | `ALGO_SYNTH` | 4× osc + 5× ADSR, 8 routings | 4× `Oscillator` + 5× `Adsr`; `oscN` on FM paths | custom `AlgoSynth` | FM (4-op routing) | `wasmalgoplaycode.ts`, [algosynth.md](algosynth.md) |
 | `string` | `STRING_VOICE` (algo 0) | — (Daisy-only) | SOS ensemble (`stringmachinevoice`) | — | Subtractive string-machine | cpp `stringmachinevoice()` |
-| `pluck` | `STRING_VOICE` (algo 1) | — (Daisy-only) | `StringVoice` strike | — | Physical modeling | cpp `processvoice()` |
-| `drip` | `DRIP_VOICE` | — (Daisy-only) | `Drip` | — | Physical modeling | cpp `processvoice()` |
+| `pluck` | `STRING_VOICE` (algo 1) | — (Daisy-only) | `StringVoice` × `voiceenv` | — | Physical modeling | cpp `processvoice()` |
+| `drip` | `DRIP_VOICE` | — (Daisy-only) | `Drip` × `voiceenv` | — | Physical modeling | cpp `processvoice()` |
 | `flute`–`panpipe` | `WIND_VOICE` | — | `windvoice()` formant bank + breath burst | — | Subtractive + formants | cpp `zss_sosvoices.cpp` |
 | `piano`/`epiano` | `PIANO_VOICE` | — | `pianovoice()` + `Fm2` on epiano | — | FM + `Fm2` tine | cpp `zss_sosvoices.cpp` |
 | `timpani` | `TIMPANI_VOICE` | — | `timpanivoice()` `ModalVoice` | — | Physical modeling | cpp `zss_sosvoices.cpp` |

@@ -1,0 +1,3 @@
+---
+hint: "Bell resonator voice"
+---

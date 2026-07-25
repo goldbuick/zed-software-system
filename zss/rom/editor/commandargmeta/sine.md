@@ -1,0 +1,3 @@
+---
+hint: "Sine oscillator wave"
+---

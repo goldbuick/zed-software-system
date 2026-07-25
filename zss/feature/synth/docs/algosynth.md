@@ -4,9 +4,11 @@ title: algosynth.ts
 
 FM-style algorithmic synthesizer with 4 operators and 8 modulation algorithms.
 
+**Active runtime:** Daisy WASM (`algovoice` in `zss_voice.cpp`) implements the same 8 routings below. `#synth osc1`–`osc4` set each operator wave (including carriers after FM rewrite). `#synth algo4` is dual FM: `1→2` and `3→4`, summed as op2+op4.
+
 ## Overview
 
-`AlgoSynth` extends Tone.js `Monophonic` and implements a 4-operator FM architecture similar to classic synthesizers. Each operator has its own oscillator and envelope; operators can modulate each other or output directly based on the selected algorithm.
+Archived Tone `AlgoSynth` extends `Monophonic` with the same 4-operator FM architecture. Each operator has its own oscillator and envelope; operators modulate each other or output directly based on the selected algorithm.
 
 ## Architecture
 

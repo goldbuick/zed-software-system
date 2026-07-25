@@ -22,9 +22,10 @@ export const DEFAULT_WASM_VOICE_VOLUME_DB = 0
 
 export const DEFAULT_WASM_PLUCK = {
   structure: 0.14,
-  brightness: 0.22,
-  damping: 0.68,
-  accent: 0.48,
+  brightness: 0.38,
+  /** Below DaisySP infinite-ring cliff (>= 0.95); native caps at 0.85. */
+  damping: 0.72,
+  accent: 0.12,
 } as const
 
 /** SOS string-machine defaults (SAB slots 6–9 when STRING_VOICE algo 0). */

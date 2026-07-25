@@ -1,0 +1,3 @@
+---
+hint: "Frequency crush rate"
+---

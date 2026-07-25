@@ -1,0 +1,3 @@
+---
+hint: "Square oscillator wave"
+---

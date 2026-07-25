@@ -401,7 +401,7 @@ export function createdaisysynth(
       voicetype === SOURCE_TYPE.BOWED_VOICE ||
       voicetype === SOURCE_TYPE.GUITAR_VOICE
     const strikedetune =
-      voicetype === SOURCE_TYPE.BELLS ? detune : velocitytypes ? 0.75 : strike
+      voicetype === SOURCE_TYPE.BELLS ? detune : velocitytypes ? 1 : strike
 
     scheduler.schedule(when, () => {
       voicestate[base] = freq

@@ -6,7 +6,10 @@ import { NAME } from 'zss/words/types'
 import { applywasmalgoconfig, resetwasmalgoconfig } from './wasmalgoconfig'
 import type { WASM_ALGO_CONFIG } from './wasmalgoconfigsab'
 import { applywasmoscconfig, resetwasmoscconfig } from './wasmoscconfig'
-import type { WASM_OSC_CONFIG } from './wasmoscconfigsab'
+import {
+  DEFAULT_WASM_OSC_CONFIG,
+  type WASM_OSC_CONFIG,
+} from './wasmoscconfigsab'
 import { WASM_OSC_TYPE, parsewasmosc } from './wasmosctype'
 import {
   DEFAULT_WASM_BOWED,
@@ -260,6 +263,46 @@ function applywasmstringensembleconfig(
   }
 }
 
+/** Named / family switch: never inherit prior voice ADSR or portamento. */
+function namedvoiceswitch(
+  current: WASM_VOICE_STATE,
+  patch: {
+    type: SOURCE_TYPE
+    algo: number
+    envelope?: WASM_VOICE_ENVELOPE
+    osc?: WASM_OSC_TYPE
+    pluck?: WASM_PLUCK_PARAMS
+    stringensemble?: WASM_STRING_ENSEMBLE_PARAMS
+    wind?: WASM_WIND_PARAMS
+    piano?: WASM_PIANO_PARAMS
+    timpani?: WASM_TIMPANI_PARAMS
+    bowed?: WASM_BOWED_PARAMS
+    guitar?: WASM_GUITAR_PARAMS
+    organ?: WASM_ORGAN_PARAMS
+  },
+): WASM_VOICE_STATE {
+  return {
+    ...current,
+    ...patch,
+    envelope: patch.envelope
+      ? { ...patch.envelope }
+      : { ...DEFAULT_WASM_ENVELOPE },
+    portamento: 0,
+  }
+}
+
+function resetoscrow(oscconfig: WASM_OSC_CONFIG[], index: number) {
+  if (index < 0 || index >= oscconfig.length) {
+    return
+  }
+  oscconfig[index] = {
+    ...DEFAULT_WASM_OSC_CONFIG,
+    partials: [...DEFAULT_WASM_OSC_CONFIG.partials],
+    modenv: { ...DEFAULT_WASM_OSC_CONFIG.modenv },
+    modtype: DEFAULT_WASM_OSC_CONFIG.modtype,
+  }
+}
+
 function parsesourcetype(
   config: string,
   current: WASM_VOICE_STATE,
@@ -267,180 +310,194 @@ function parsesourcetype(
   const type = NAME(config)
   switch (type) {
     case 'retro':
-      return {
-        ...current,
+      return namedvoiceswitch(current, {
         type: SOURCE_TYPE.RETRO_NOISE,
         algo: 0,
-      }
+      })
     case 'buzz':
-      return {
-        ...current,
+      return namedvoiceswitch(current, {
         type: SOURCE_TYPE.BUZZ_NOISE,
         algo: 0,
-      }
+      })
     case 'clang':
-      return {
-        ...current,
+      return namedvoiceswitch(current, {
         type: SOURCE_TYPE.CLANG_NOISE,
         algo: 0,
-      }
+      })
     case 'metallic':
-      return {
-        ...current,
+      return namedvoiceswitch(current, {
         type: SOURCE_TYPE.METALLIC_NOISE,
         algo: 0,
-      }
+      })
     case 'noise':
-      return {
-        ...current,
+      return namedvoiceswitch(current, {
         type: SOURCE_TYPE.WHITE_NOISE,
         algo: 0,
-      }
+      })
     case 'hollow':
-      return {
-        ...current,
+      return namedvoiceswitch(current, {
         type: SOURCE_TYPE.HOLLOW_NOISE,
         algo: 0,
-      }
+      })
     case 'bells':
-      return { ...current, type: SOURCE_TYPE.BELLS, algo: 0 }
+      return namedvoiceswitch(current, {
+        type: SOURCE_TYPE.BELLS,
+        algo: 0,
+        // Tone FMSynth carrier env (voiceenv multiplies ModalVoice + sparkle)
+        envelope: { attack: 0.01, decay: 3, sustain: 0.3, release: 6 },
+      })
     case 'doot':
-      return { ...current, type: SOURCE_TYPE.DOOT, algo: 0 }
+      return namedvoiceswitch(current, { type: SOURCE_TYPE.DOOT, algo: 0 })
     case 'algo0':
-      return { ...current, type: SOURCE_TYPE.ALGO_SYNTH, algo: 0 }
+      return namedvoiceswitch(current, {
+        type: SOURCE_TYPE.ALGO_SYNTH,
+        algo: 0,
+      })
     case 'algo1':
-      return { ...current, type: SOURCE_TYPE.ALGO_SYNTH, algo: 1 }
+      return namedvoiceswitch(current, {
+        type: SOURCE_TYPE.ALGO_SYNTH,
+        algo: 1,
+      })
     case 'algo2':
-      return { ...current, type: SOURCE_TYPE.ALGO_SYNTH, algo: 2 }
+      return namedvoiceswitch(current, {
+        type: SOURCE_TYPE.ALGO_SYNTH,
+        algo: 2,
+      })
     case 'algo3':
-      return { ...current, type: SOURCE_TYPE.ALGO_SYNTH, algo: 3 }
+      return namedvoiceswitch(current, {
+        type: SOURCE_TYPE.ALGO_SYNTH,
+        algo: 3,
+      })
     case 'algo4':
-      return { ...current, type: SOURCE_TYPE.ALGO_SYNTH, algo: 4 }
+      return namedvoiceswitch(current, {
+        type: SOURCE_TYPE.ALGO_SYNTH,
+        algo: 4,
+      })
     case 'algo5':
-      return { ...current, type: SOURCE_TYPE.ALGO_SYNTH, algo: 5 }
+      return namedvoiceswitch(current, {
+        type: SOURCE_TYPE.ALGO_SYNTH,
+        algo: 5,
+      })
     case 'algo6':
-      return { ...current, type: SOURCE_TYPE.ALGO_SYNTH, algo: 6 }
+      return namedvoiceswitch(current, {
+        type: SOURCE_TYPE.ALGO_SYNTH,
+        algo: 6,
+      })
     case 'algo7':
-      return { ...current, type: SOURCE_TYPE.ALGO_SYNTH, algo: 7 }
+      return namedvoiceswitch(current, {
+        type: SOURCE_TYPE.ALGO_SYNTH,
+        algo: 7,
+      })
     case 'string':
-      return {
-        ...current,
+      return namedvoiceswitch(current, {
         type: SOURCE_TYPE.STRING_VOICE,
         algo: 0,
         stringensemble: defaultstringensemble(),
         envelope: { attack: 0.6, decay: 0.15, sustain: 0.88, release: 1.0 },
-      }
+      })
     case 'pluck':
-      return {
-        ...current,
+      return namedvoiceswitch(current, {
         type: SOURCE_TYPE.STRING_VOICE,
         algo: 1,
         pluck: defaultpluck(),
-      }
+        envelope: { attack: 0.008, decay: 0.05, sustain: 1, release: 0.35 },
+      })
     case 'drip':
-      return { ...current, type: SOURCE_TYPE.DRIP_VOICE, algo: 0 }
+      return namedvoiceswitch(current, {
+        type: SOURCE_TYPE.DRIP_VOICE,
+        algo: 0,
+      })
     case 'flute':
-      return {
-        ...current,
+      return namedvoiceswitch(current, {
         type: SOURCE_TYPE.WIND_VOICE,
         algo: 0,
         wind: winddefaults(0),
         envelope: windenvelope(0),
-      }
+      })
     case 'clarinet':
-      return {
-        ...current,
+      return namedvoiceswitch(current, {
         type: SOURCE_TYPE.WIND_VOICE,
         algo: 1,
         wind: winddefaults(1),
         envelope: windenvelope(1),
-      }
+      })
     case 'brass':
-      return {
-        ...current,
+      return namedvoiceswitch(current, {
         type: SOURCE_TYPE.WIND_VOICE,
         algo: 2,
         wind: winddefaults(2),
         envelope: windenvelope(2),
-      }
+      })
     case 'panpipe':
-      return {
-        ...current,
+      return namedvoiceswitch(current, {
         type: SOURCE_TYPE.WIND_VOICE,
         algo: 3,
         wind: winddefaults(3),
         envelope: windenvelope(3),
-      }
+      })
     case 'piano':
-      return {
-        ...current,
+      return namedvoiceswitch(current, {
         type: SOURCE_TYPE.PIANO_VOICE,
         algo: 0,
         piano: defaultpiano(),
-        envelope: { attack: 0.001, decay: 1.8, sustain: 0.25, release: 1.2 },
-      }
+        envelope: { attack: 0.001, decay: 1.8, sustain: 0.55, release: 1.2 },
+      })
     case 'epiano':
-      return {
-        ...current,
+      return namedvoiceswitch(current, {
         type: SOURCE_TYPE.PIANO_VOICE,
         algo: 1,
         piano: { spread: 0.12, hammer: 0.25, brightness: 0.65, damping: 0.6 },
-        envelope: { attack: 0.002, decay: 0.9, sustain: 0.15, release: 0.6 },
-      }
+        envelope: { attack: 0.002, decay: 0.9, sustain: 0.5, release: 0.6 },
+      })
     case 'timpani':
-      return {
-        ...current,
+      return namedvoiceswitch(current, {
         type: SOURCE_TYPE.TIMPANI_VOICE,
         algo: 0,
         timpani: defaulttimpani(),
         envelope: { attack: 0.002, decay: 0.8, sustain: 0.05, release: 0.4 },
-      }
+      })
     case 'violin':
-      return {
-        ...current,
+      return namedvoiceswitch(current, {
         type: SOURCE_TYPE.BOWED_VOICE,
         algo: 0,
         bowed: { bow: 0.2, pressure: 0.5, vib: 0.4, body: 0.55 },
         envelope: { attack: 0.2, decay: 0.25, sustain: 0.9, release: 0.6 },
-      }
+      })
     case 'viola':
-      return {
-        ...current,
+      return namedvoiceswitch(current, {
         type: SOURCE_TYPE.BOWED_VOICE,
         algo: 1,
         bowed: { bow: 0.28, pressure: 0.45, vib: 0.3, body: 0.65 },
         envelope: { attack: 0.28, decay: 0.3, sustain: 0.88, release: 0.7 },
-      }
+      })
     case 'nylon':
-      return {
-        ...current,
+      return namedvoiceswitch(current, {
         type: SOURCE_TYPE.GUITAR_VOICE,
         algo: 0,
-        guitar: { pick: 0.25, body: 0.4, damping: 0.55, position: 0.35 },
-      }
+        guitar: { pick: 0.25, body: 0.4, damping: 0.72, position: 0.35 },
+        envelope: { attack: 0.008, decay: 0.05, sustain: 1, release: 0.4 },
+      })
     case 'steel':
-      return {
-        ...current,
+      return namedvoiceswitch(current, {
         type: SOURCE_TYPE.GUITAR_VOICE,
         algo: 1,
-        guitar: { pick: 0.5, body: 0.35, damping: 0.45, position: 0.6 },
-      }
+        guitar: { pick: 0.5, body: 0.35, damping: 0.7, position: 0.6 },
+        envelope: { attack: 0.008, decay: 0.04, sustain: 1, release: 0.3 },
+      })
     case 'tonewheel':
-      return {
-        ...current,
+      return namedvoiceswitch(current, {
         type: SOURCE_TYPE.ORGAN_VOICE,
         algo: 0,
         organ: defaultorgan(),
         envelope: { attack: 0.001, decay: 0.01, sustain: 1, release: 0.05 },
-      }
+      })
     case 'drawbar':
-      return {
-        ...current,
+      return namedvoiceswitch(current, {
         type: SOURCE_TYPE.ORGAN_VOICE,
         algo: 1,
         organ: defaultorgan(),
         envelope: { attack: 0.001, decay: 0.01, sustain: 1, release: 0.05 },
-      }
+      })
     default:
       return undefined
   }
@@ -528,7 +585,7 @@ export function applywasmvoiceconfig(
       if (voice.type === SOURCE_TYPE.PIANO_VOICE) {
         return applynumericparam(voice.piano, config, value)
       }
-      return false
+      // Fall through: fat osc uses `spread` on SYNTH (piano key name collision).
     }
     if (istimpaniparamkey(config)) {
       if (voice.type === SOURCE_TYPE.TIMPANI_VOICE) {
@@ -550,9 +607,14 @@ export function applywasmvoiceconfig(
     }
     if (isorganparamkey(config)) {
       if (voice.type === SOURCE_TYPE.ORGAN_VOICE) {
-        return applynumericparam(voice.organ, config, value)
-      }
-      if (config !== 'drawbar') {
+        // '#synth drawbar' (no numeric value) is the named voice, not the param.
+        if (applynumericparam(voice.organ, config, value)) {
+          return true
+        }
+        if (config !== 'drawbar') {
+          return false
+        }
+      } else if (config !== 'drawbar') {
         return false
       }
     }
@@ -577,11 +639,25 @@ export function applywasmvoiceconfig(
 
     const osc = parsewasmosc(config)
     if (osc !== undefined) {
-      voicestate[index] = {
-        ...voicestate[index],
-        type: SOURCE_TYPE.SYNTH,
-        algo: 0,
-        osc,
+      const prev = voicestate[index]
+      const enteringsynth = prev.type !== SOURCE_TYPE.SYNTH
+      if (enteringsynth) {
+        resetoscrow(oscconfig, index)
+        voicestate[index] = {
+          ...prev,
+          type: SOURCE_TYPE.SYNTH,
+          algo: 0,
+          osc,
+          envelope: { ...DEFAULT_WASM_ENVELOPE },
+          portamento: 0,
+        }
+      } else {
+        voicestate[index] = {
+          ...prev,
+          type: SOURCE_TYPE.SYNTH,
+          algo: 0,
+          osc,
+        }
       }
       if (isarray(value) || isnumber(value)) {
         applywasmoscconfig(oscconfig, index, config, value)

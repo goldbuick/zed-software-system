@@ -157,7 +157,26 @@ float fmcarriersample(Oscillator& carrier, Oscillator& modulator, int modtype,
                       int carriertype) {
   float mod = oscmodwave(modulator, modtype, modhz) * modidx * moddepth;
   float fmh = hz + mod * hz * kFmHzScale;
-  return oscbasicwave(carrier, carriertype, fmh, kOscModWaveGain);
+  // Carrier at full amp; modulator already scaled by kOscModWaveGain in
+  // oscmodwave.
+  return oscbasicwave(carrier, carriertype, fmh, 1.f);
+}
+
+// am*/fm*/fat* enums are SINE,SQUARE,TRIANGLE,SAWTOOTH at +0..+3, but basic
+// WASM_OSC_TYPE is SQUARE=0, SINE=1, TRIANGLE=2, SAWTOOTH=3.
+static int familywavetobasic(int familywave) {
+  switch (familywave) {
+  case 0:
+    return 1; // sine
+  case 1:
+    return 0; // square
+  case 2:
+    return 2; // triangle
+  case 3:
+    return 3; // sawtooth
+  default:
+    return 0;
+  }
 }
 
 float oscpartialsynth(Oscillator& o, float hz, int count,
@@ -178,22 +197,40 @@ float oscpartialsynth(Oscillator& o, float hz, int count,
   return norm <= 0.f ? oscbasicwave(o, 1, hz, 1.f) : sum / norm;
 }
 
+static float oscshapemakeup(int shape) {
+  // WASM_OSC_TYPE basic: 0 square, 1 sine, 2 triangle, 3 sawtooth
+  if (shape == 2) {
+    return kTriangleVoiceGain;
+  }
+  if (shape == 3) {
+    return kSawtoothVoiceGain;
+  }
+  return 1.f;
+}
+
 float synthwavegain(int osc) {
-  // ONLY applies to #synth sine
+  // ONLY applies to #synth sine (not am/fm/fat sine — those match via family
+  // gain)
   if (osc == 1) {
     return kSineVoiceGain;
   }
+  if (osc == 2) {
+    return kTriangleVoiceGain;
+  }
+  if (osc == 3) {
+    return kSawtoothVoiceGain;
+  }
   // Adjust am*
   if (osc >= 10 && osc <= 13) {
-    return kAmVoiceGain;
+    return kAmVoiceGain * oscshapemakeup(familywavetobasic(osc - 10));
   }
   // Adjust fm*
   if (osc >= 20 && osc <= 23) {
-    return kFmVoiceGain;
+    return kFmVoiceGain * oscshapemakeup(familywavetobasic(osc - 20));
   }
   // Adjust fat*
   if (osc >= 30 && osc <= 33) {
-    return kFatVoiceGain;
+    return kFatVoiceGain * oscshapemakeup(familywavetobasic(osc - 30));
   }
   return 1.f;
 }
@@ -216,7 +253,6 @@ float synthsource(ZssVoice& v, int vi, float freq, bool gate, float detune,
   float width = cfg.width > 0.f ? cfg.width : 0.2f;
   float modidx = cfg.modindex > 0.f ? cfg.modindex : 2.f;
   float harm = cfg.harmonicity > 0.f ? cfg.harmonicity : 1.f;
-  float modhz = hz * (cfg.modfreq > 0.f ? cfg.modfreq : 1.f);
   int pcount =
       static_cast<int>(cfg.partialcount > 0.f ? cfg.partialcount : 0.f);
   float sig = 0.f;
@@ -239,38 +275,54 @@ float synthsource(ZssVoice& v, int vi, float freq, bool gate, float detune,
     v.synthosc.SetPw(width);
     v.synthosc.SetAmp(1.f);
     sig = v.synthosc.Process();
-  } else if (osctype == 5) // #synth pwm
+  } else if (osctype == 5) // #synth pwm — Tone PWMOscillator: LFO at modfreq
   {
+    const float modfreq = cfg.modfreq > 0.f ? cfg.modfreq : 1.f;
+    const float lfo = oscbasicwave(v.synthmod, 1, modfreq, 1.f);
+    const float pw = clampf(0.5f + 0.5f * width * lfo, 0.01f, 0.99f);
     v.synthosc.SetFreq(hz);
     v.synthosc.SetWaveform(Oscillator::WAVE_SQUARE);
-    v.synthosc.SetPw(width > 0.f ? width : 0.2f);
+    v.synthosc.SetPw(pw);
     v.synthosc.SetAmp(1.f);
     sig = v.synthosc.Process();
   } else if (osctype >= 10 && osctype <= 13) // #synth am*
   {
     float modamp = v.modenv.process(gate);
     float modwave = oscmodwave(v.synthmod, cfg.modtype, hz * harm);
-    int cartype = osctype - 10;
+    int cartype = familywavetobasic(osctype - 10);
     // Tone AMOscillator: AudioToGain(mod) → 0.5 carrier when mod crosses 0.
     sig = oscbasicwave(v.synthosc, cartype, hz, 1.f) *
           (0.5f + 0.5f * modwave * modamp);
   } else if (osctype >= 20 && osctype <= 23) // #synth fm*
   {
     float moddepth = v.modenv.process(gate);
-    int cartype =
-        osctype == 20 ? 1 : (osctype == 21 ? 0 : (osctype == 22 ? 2 : 3));
-    sig = fmcarriersample(v.synthosc, v.synthmod, cfg.modtype, hz, modhz,
+    int cartype = familywavetobasic(osctype - 20);
+    // Tone FMOscillator: modulator rate = carrier hz * harmonicity
+    const float fmmodhz = hz * harm;
+    sig = fmcarriersample(v.synthosc, v.synthmod, cfg.modtype, hz, fmmodhz,
                           modidx, moddepth, cartype);
   } else if (osctype >= 30 && osctype <= 33) // #synth fat*
   {
     int cnt = cfg.count > 1.f ? static_cast<int>(cfg.count + 0.5f) : 3;
     float spread = cfg.spread > 0.f ? cfg.spread : 20.f;
     float det = spread / 1200.f;
-    int cartype = osctype - 30;
+    int cartype = familywavetobasic(osctype - 30);
     sig = 0.f;
-    for (int fi = 0; fi < cnt; ++fi) {
-      float mul = 1.f + (fi - (cnt - 1) * 0.5f) * det;
-      sig += oscbasicwave(v.synthosc, cartype, hz * mul, 1.f);
+    if (cfg.phase != 0.f || v.voicephasestep != 0.f) {
+      v.voicephasestep += hz / g_engine.sample_rate;
+      for (int fi = 0; fi < cnt; ++fi) {
+        float mul = 1.f + (fi - (cnt - 1) * 0.5f) * det;
+        if (cartype >= 0 && cartype <= 3) {
+          sig += oscwavefromphase(cartype, v.voicephasestep * mul + cfg.phase);
+        } else {
+          sig += oscbasicwave(v.synthosc, cartype, hz * mul, 1.f);
+        }
+      }
+    } else {
+      for (int fi = 0; fi < cnt; ++fi) {
+        float mul = 1.f + (fi - (cnt - 1) * 0.5f) * det;
+        sig += oscbasicwave(v.synthosc, cartype, hz * mul, 1.f);
+      }
     }
     sig /= cnt;
   } else if (osctype >= 0 &&
@@ -285,22 +337,32 @@ float synthsource(ZssVoice& v, int vi, float freq, bool gate, float detune,
 }
 
 float dootvoice(ZssVoice& v, float freq, bool gate) {
-  if (gate && !v.gateprev) {
-    v.dootpitch = 1.f;
-  }
+  const float basehz = freq > 0.f ? freq : 110.f;
+  bool trigger = gate && !v.gateprev;
   v.gateprev = gate;
-  float hz = freq > 0.f ? freq : 110.f;
-  if (gate) {
-    v.dootpitch *= 0.9993f;
-    if (v.dootpitch < 0.15f) {
-      v.dootpitch = 0.15f;
+  // Abutting note-ons keep gate high; re-arm pitch envelope on pitch change.
+  const bool pitchstrike = gate && v.karplushzprev > 0.f &&
+                           std::fabs(basehz - v.karplushzprev) > 0.5f;
+  if (trigger || pitchstrike) {
+    // Tone MembraneSynth: phase 0 = note*octaves, phase 1 = note.
+    v.dootpitch = 0.f;
+    v.dootenv.Retrigger(true);
+  }
+  v.karplushzprev = gate ? basehz : 0.f;
+  if (gate && v.dootpitch < 1.f) {
+    const float denom =
+        std::max(1.f, kDootPitchDecaySec * g_engine.sample_rate);
+    v.dootpitch += 1.f / denom;
+    if (v.dootpitch > 1.f) {
+      v.dootpitch = 1.f;
     }
   }
-  float pitchmul = 0.15f + v.dootpitch * 0.85f;
-  v.dootosc.SetFreq(hz * pitchmul);
+  // exponentialRamp: freq = note * octaves^(1 - phase)
+  const float pitchmul = std::pow(kDootOctaves, 1.f - v.dootpitch);
+  v.dootosc.SetFreq(basehz * pitchmul);
   v.dootosc.SetWaveform(Oscillator::WAVE_SIN);
   v.dootosc.SetAmp(1.f);
-  return v.dootosc.Process() * v.dootenv.Process(gate) * 0.6f;
+  return v.dootosc.Process() * v.dootenv.Process(gate) * kDootVoiceGain;
 }
 
 float algopwave(Oscillator& o, int wavetype, float hz) {

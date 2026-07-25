@@ -204,17 +204,18 @@ const float* noiseforvoice(int noisetype) {
 NoiseMeta noisemetafor(int noisetype) {
   switch (noisetype) {
   case kBuzzNoise:
-    return {69.f, 1024.f, false, 0.3f};
+    return {69.f, 1024.f, false, 0.43f};
   case kClangNoise:
-    return {69.f, 1024.f, false, 0.4f};
+    return {69.f, 1024.f, false, 0.475f};
   case kMetallicNoise:
-    return {69.f, 1024.f, false, 0.4f};
+    return {69.f, 1024.f, false, 1.1f};
   case kHollowNoise:
-    return {96.f, 1.f, true, 1.5f};
+    return {96.f, 1.f, true, 0.45f};
   case kWhiteNoise:
-    return {69.f, 8.f, true, 1.f};
+    return {69.f, 8.f, true, 1.7f};
   default:
-    return {69.f, 1024.f, false, 0.25f};
+    // retro
+    return {69.f, 1024.f, false, 0.45f};
   }
 }
 } // namespace zss_daisy

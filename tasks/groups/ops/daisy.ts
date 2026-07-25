@@ -935,20 +935,26 @@ export async function rundaisyregensosvoicefixtures(
     async function main() {
       const handle = await startparityvite(PROJECT, REGEN_PORT)
       const browser = await launchparitybrowser()
-      const page = await browser.newPage()
-      page.setDefaultTimeout(300_000)
-      await page.goto(parityhosturl(REGEN_PORT), {
-        waitUntil: 'domcontentloaded',
-        timeout: 300000,
-      })
       const patches: Record<string, PARITY_AUDIO_METRICS> = {}
 
       try {
+        // Fresh page per patch: sequential OfflineAudioContext boots on one
+        // page go silent after the first render.
         for (const patch of SOS_VOICE_PATCHES) {
-          const chunk = await rendersospatch(page, patch.id)
-          patches[patch.id] = chunk[patch.id]
-          if (!patches[patch.id]) {
-            throw new Error(`missing metrics for ${patch.id}`)
+          const page = await browser.newPage()
+          page.setDefaultTimeout(300_000)
+          try {
+            await page.goto(parityhosturl(REGEN_PORT), {
+              waitUntil: 'domcontentloaded',
+              timeout: 300000,
+            })
+            const chunk = await rendersospatch(page, patch.id)
+            patches[patch.id] = chunk[patch.id]
+            if (!patches[patch.id]) {
+              throw new Error(`missing metrics for ${patch.id}`)
+            }
+          } finally {
+            await page.close()
           }
         }
         const payload = {
@@ -3432,27 +3438,33 @@ async function rundaisyrunsosvoicegates(ctx: TaskContext): Promise<number> {
       const fixtures = loadfixtures()
       const handle = await startparityvite(PROJECT, REGEN_PORT)
       const browser = await launchparitybrowser()
-      const page = await browser.newPage()
-      page.setDefaultTimeout(180_000)
-      await page.goto(parityhosturl(REGEN_PORT), {
-        waitUntil: 'domcontentloaded',
-        timeout: 180000,
-      })
       const failures: string[] = []
 
       try {
+        // Fresh page per patch: sequential OfflineAudioContext boots on one
+        // page go silent after the first render.
         for (const patch of SOS_VOICE_PATCHES) {
           const expected = fixtures.patches[patch.id]
           if (!expected) {
             failures.push(`${patch.id} | missing fixture entry`)
             continue
           }
-          const actual = await rendersospatch(page, patch.id)
-          const gate = evalsosvoicegate(patch.id, actual, expected)
-          if (!gate.pass) {
-            failures.push(gate.reason)
-          } else {
-            console.log(gate.reason)
+          const page = await browser.newPage()
+          page.setDefaultTimeout(180_000)
+          try {
+            await page.goto(parityhosturl(REGEN_PORT), {
+              waitUntil: 'domcontentloaded',
+              timeout: 180000,
+            })
+            const actual = await rendersospatch(page, patch.id)
+            const gate = evalsosvoicegate(patch.id, actual, expected)
+            if (!gate.pass) {
+              failures.push(gate.reason)
+            } else {
+              console.log(gate.reason)
+            }
+          } finally {
+            await page.close()
           }
         }
       } finally {

@@ -56,31 +56,42 @@ float algovoice(ZssVoice& v, int vi, float freq, bool gate, int algo,
   float op4 = raw4 * e3;
 
   if (algo == 0) {
-    op2 = algopwave(v.algoops[1], 1, hz * h2 + raw1 * mi1) * e1;
-    op3 = algopwave(v.algoops[2], 1, hz * h3 + raw2 * mi2) * e2;
-    op4 = algopwave(v.algoops[3], 1, hz + raw3 * mi3) * e3;
+    op2 = algopwave(v.algoops[1], cfg.osctype[1], hz * h2 + raw1 * mi1) * e1;
+    op3 = algopwave(v.algoops[2], cfg.osctype[2], hz * h3 + raw2 * mi2) * e2;
+    op4 = algopwave(v.algoops[3], cfg.osctype[3], hz + raw3 * mi3) * e3;
   } else if (algo == 1) {
-    op3 = algopwave(v.algoops[2], 1, hz * h3 + (raw1 + raw2) * mi2 * 0.5f) * e2;
-    op4 = algopwave(v.algoops[3], 1, hz + raw3 * mi3) * e3;
+    op3 = algopwave(v.algoops[2], cfg.osctype[2],
+                    hz * h3 + (raw1 + raw2) * mi2 * 0.5f) *
+          e2;
+    op4 = algopwave(v.algoops[3], cfg.osctype[3], hz + raw3 * mi3) * e3;
   } else if (algo == 2) {
-    op3 = algopwave(v.algoops[2], 1, hz * h3 + raw2 * mi2) * e2;
-    op4 = algopwave(v.algoops[3], 1, hz + (raw1 + raw3) * mi3 * 0.5f) * e3;
-  } else if (algo == 3) {
-    op4 = algopwave(v.algoops[3], 1, hz + (raw1 + raw2 + raw3) * mi3 * 0.33f) *
+    op3 = algopwave(v.algoops[2], cfg.osctype[2], hz * h3 + raw2 * mi2) * e2;
+    op4 = algopwave(v.algoops[3], cfg.osctype[3],
+                    hz + (raw1 + raw3) * mi3 * 0.5f) *
           e3;
+  } else if (algo == 3) {
+    op4 = algopwave(v.algoops[3], cfg.osctype[3],
+                    hz + (raw1 + raw2 + raw3) * mi3 * 0.33f) *
+          e3;
+  } else if (algo == 4) {
+    // 1→2, 3→4 → op2 + op4 (algosynth.md)
+    op2 = algopwave(v.algoops[1], cfg.osctype[1], hz * h2 + raw1 * mi1) * e1;
+    op4 = algopwave(v.algoops[3], cfg.osctype[3], hz + raw3 * mi3) * e3;
   } else if (algo == 5) {
-    op2 = algopwave(v.algoops[1], 1, hz * h2 + raw1 * mi1) * e1;
-    op3 = algopwave(v.algoops[2], 1, hz * h3 + raw1 * mi2) * e2;
-    op4 = algopwave(v.algoops[3], 1, hz + raw1 * mi3) * e3;
+    op2 = algopwave(v.algoops[1], cfg.osctype[1], hz * h2 + raw1 * mi1) * e1;
+    op3 = algopwave(v.algoops[2], cfg.osctype[2], hz * h3 + raw1 * mi2) * e2;
+    op4 = algopwave(v.algoops[3], cfg.osctype[3], hz + raw1 * mi3) * e3;
   } else if (algo == 6) {
-    op2 = algopwave(v.algoops[1], 1, hz * h2 + raw1 * mi1) * e1;
+    op2 = algopwave(v.algoops[1], cfg.osctype[1], hz * h2 + raw1 * mi1) * e1;
   }
 
   float out = op4;
   if (algo == 4) {
-    out = op2 + op4;
+    // Dual FM carriers — quieter than serial algos
+    out = (op2 + op4) * 2.2f;
   } else if (algo == 5) {
-    out = op2 + op3 + op4;
+    // Three summed carriers — louder than single-carrier algos
+    out = (op2 + op3 + op4) * 0.5f;
   } else if (algo == 6) {
     out = op2;
   } else if (algo == 7) {

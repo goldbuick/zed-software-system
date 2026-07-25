@@ -44,7 +44,7 @@ void initvoice(ZssVoice& v, float sr) {
   v.stringbowhp.SetFilterMode(OnePole::FILTER_MODE_HIGH_PASS);
   v.stringviblfo.Init(sr);
   v.stringpwmlfo.Init(sr);
-  v.drip.Init(sr, 0.01f);
+  v.drip.Init(sr, kDripDettackSec);
   v.modalvoice.Init(sr);
   v.modalvoice.SetStructure(0.5f);
   v.modalvoice.SetBrightness(0.5f);
@@ -165,12 +165,22 @@ float processvoice(int vi, float vstart[kVibratoGroups],
     v.lastenv = envout;
     out = noisevoice(v, vi, type, freq, gate, envout);
   } else if (type == kBells) {
-    float hz = detunedhz(vi, freq, detune, vfreq);
+    const float basehz = freq > 0.f ? freq : 440.f;
+    float hz = detunedhz(vi, basehz, detune, vfreq);
     if (hz <= 0.f) {
       hz = 440.f;
     }
     bool trigger = gate && !v.bellgateprev;
     v.bellgateprev = gate;
+    // Abutting note-ons keep gate high; retrigger modal on pitch change.
+    const bool pitchstrike =
+        gate && v.bellgateprev && std::fabs(basehz - v.karplushzprev) > 0.5f;
+    if (trigger || pitchstrike) {
+      trigger = true;
+      v.sparkleenv.Retrigger(true);
+      v.voiceenv.retrigger();
+    }
+    v.karplushzprev = gate ? basehz : 0.f;
     v.modalvoice.SetFreq(hz);
     v.modalvoice.SetSustain(gate);
     float body = v.modalvoice.Process(trigger);
@@ -183,8 +193,9 @@ float processvoice(int vi, float vstart[kVibratoGroups],
     v.sparklecar.SetWaveform(Oscillator::WAVE_SIN);
     v.sparklecar.SetAmp(1.f);
     float sparkle = v.sparklecar.Process() * v.sparkleenv.Process(gate);
-    out = (body + sparkle * 0.15f) * 0.35f;
-    v.lastenv = std::fabs(out);
+    float envout = v.voiceenv.process(gate);
+    out = (body + sparkle * 0.15f) * kBellsVoiceGain * envout;
+    v.lastenv = envout;
   } else if (type == kDoot) {
     out = dootvoice(v, freq, gate);
     v.lastenv = std::fabs(out);
@@ -192,7 +203,8 @@ float processvoice(int vi, float vstart[kVibratoGroups],
     out = algovoice(v, vi, freq, gate, algo, vfreq);
     v.lastenv = std::fabs(out);
   } else if (type == kStringVoice) {
-    float hz = detunedhz(vi, freq > 0.f ? freq : 440.f, 0.f, vfreq);
+    const float basehz = freq > 0.f ? freq : 440.f;
+    float hz = detunedhz(vi, basehz, 0.f, vfreq);
     bool trigger = gate && !v.stringgateprev;
     v.stringgateprev = gate;
     applystringvoicepreset(v, algo == 0 ? 0 : 1);
@@ -211,18 +223,39 @@ float processvoice(int vi, float vstart[kVibratoGroups],
     applypluckparams(v, cfg);
     v.stringvoice.SetFreq(hz);
     v.stringvoice.SetSustain(false);
-    if (trigger) {
+    // Offline note abutting keeps gate high across note-ons; retrigger on
+    // pitch. Compare base note hz (not vibrato-modulated) so LFO does not
+    // re-pluck.
+    const bool pitchstrike =
+        gate && v.stringgateprev && std::fabs(basehz - v.karplushzprev) > 0.5f;
+    if (trigger || pitchstrike) {
       v.stringvoice.Reset();
+      v.voiceenv.retrigger();
+      trigger = true;
     }
-    out = v.stringvoice.Process(trigger);
-    out *= dbtoamp(vol_db) * kStringPluckGain;
-    v.lastenv = std::fabs(out);
+    v.karplushzprev = gate ? basehz : 0.f;
+    // Amp envelope follows gate so note-off releases (Karplus alone can hang).
+    float envout = v.voiceenv.process(gate);
+    // Soft-limit after voice gain so strike crest cannot exceed ~1 into the
+    // bus.
+    out = std::tanh(v.stringvoice.Process(trigger) * envout * kStringPluckGain);
+    out *= dbtoamp(vol_db);
+    v.lastenv = envout;
     return out;
   } else if (type == kDripVoice) {
+    const float basehz = freq > 0.f ? freq : 440.f;
     bool trigger = gate && !v.dripgateprev;
     v.dripgateprev = gate;
-    out = v.drip.Process(trigger) * dbtoamp(vol_db);
-    v.lastenv = std::fabs(out);
+    const bool pitchstrike =
+        gate && v.dripgateprev && std::fabs(basehz - v.karplushzprev) > 0.5f;
+    if (trigger || pitchstrike) {
+      trigger = true;
+      v.voiceenv.retrigger();
+    }
+    v.karplushzprev = gate ? basehz : 0.f;
+    float envout = v.voiceenv.process(gate);
+    out = v.drip.Process(trigger) * envout * dbtoamp(vol_db) * kDripVoiceGain;
+    v.lastenv = envout;
     return out;
   } else if (type == kWindVoice) {
     float hz = freq > 0.f ? freq : 440.f;
@@ -230,22 +263,22 @@ float processvoice(int vi, float vstart[kVibratoGroups],
     return out * dbtoamp(vol_db);
   } else if (type == kPianoVoice) {
     float hz = freq > 0.f ? freq : 440.f;
-    float vel = detune > 0.f ? detune : 0.75f;
+    float vel = detune > 0.f ? detune : 1.f;
     out = pianovoice(v, hz, gate, algo, cfg, vel);
     return out * dbtoamp(vol_db);
   } else if (type == kTimpaniVoice) {
     float hz = freq > 0.f ? freq : 110.f;
-    float vel = detune > 0.f ? detune : 0.75f;
+    float vel = detune > 0.f ? detune : 1.f;
     out = timpanivoice(v, hz, gate, cfg, vel);
     return out * dbtoamp(vol_db);
   } else if (type == kBowedVoice) {
     float hz = freq > 0.f ? freq : 440.f;
-    float vel = detune > 0.f ? detune : 0.75f;
+    float vel = detune > 0.f ? detune : 1.f;
     out = bowedvoice(v, vi, hz, gate, algo, cfg, port, vel);
     return out * dbtoamp(vol_db);
   } else if (type == kGuitarVoice) {
     float hz = freq > 0.f ? freq : 220.f;
-    float vel = detune > 0.f ? detune : 0.75f;
+    float vel = detune > 0.f ? detune : 1.f;
     if (v.guitarpreset != algo) {
       v.guitarpreset = algo;
       v.guitarprev[0] = v.guitarprev[1] = v.guitarprev[2] = v.guitarprev[3] =

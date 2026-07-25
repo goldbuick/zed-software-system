@@ -1,0 +1,3 @@
+---
+hint: "Triangle oscillator wave"
+---

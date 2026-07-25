@@ -70,7 +70,7 @@ title: audio.ts
 
 ## Internal Helpers
 
-- **`handlesynthvoice`** — Parses voice config (volume, fx name, or partials) and calls `synthvoice`
+- **`handlesynthvoice`** — Parses voice config (volume or partials) and calls `synthvoice`
 - **`handlesynthvoicefx`** — Parses fx config/value and calls `synthvoicefx`
 - **`handleplaystr`** — Resolves play buffer from chip vars; validates it’s not a mapped word (category, collision, color, dir)
 - **`handlebgplay`** — Wraps `synthbgplay` with play string; `#bgplayon*` pass `@subdiv` quantize strings

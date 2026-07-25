@@ -46,14 +46,15 @@ static float breathlayer(ZssVoice& v, float envout, float breath) {
   return v.stringbowhp.Process(nois) * envout * breath * 0.35f;
 }
 
-static float windbreathburst(ZssVoice& v, bool trigger, float breath,
+static float windbreathburst(ZssVoice& v, bool trigger, float breathamt,
                              float envout) {
   v.sparkleenv.SetTime(ADSR_SEG_ATTACK, 0.002f);
-  v.sparkleenv.SetTime(ADSR_SEG_DECAY, 0.07f);
+  // Short decay: louder chiff via burst gain, not a longer hiss.
+  v.sparkleenv.SetTime(ADSR_SEG_DECAY, 0.045f);
   v.sparkleenv.SetSustainLevel(0.f);
-  v.sparkleenv.SetTime(ADSR_SEG_RELEASE, 0.05f);
+  v.sparkleenv.SetTime(ADSR_SEG_RELEASE, 0.04f);
   const float burstenv = v.sparkleenv.Process(trigger);
-  return breathlayer(v, burstenv * envout, breath * 1.35f);
+  return breathlayer(v, burstenv * envout, breathamt);
 }
 
 static float windformantmix(ZssVoice& v, float sig, int algo, float mix) {
@@ -157,10 +158,26 @@ float windvoice(ZssVoice& v, float hz, bool gate, int algo, int cfg) {
   v.stringlp.Process(sig);
   float out = v.stringlp.Low();
 
-  out += windbreathburst(v, trigger, breath, envout);
-  out += breathlayer(v, envout, breath * 0.65f);
+  float breathcont = kWindFluteBreathCont;
+  float breathburst = kWindFluteBreathBurst;
+  float windgain = kWindFluteGain;
+  if (algo == 1) {
+    breathcont = kWindClarinetBreathCont;
+    breathburst = kWindClarinetBreathBurst;
+    windgain = kWindClarinetGain;
+  } else if (algo == 2) {
+    breathcont = kWindBrassBreathCont;
+    breathburst = kWindBrassBreathBurst;
+    windgain = kWindBrassGain;
+  } else if (algo == 3) {
+    breathcont = kWindPanpipeBreathCont;
+    breathburst = kWindPanpipeBreathBurst;
+    windgain = kWindPanpipeGain;
+  }
+  out += windbreathburst(v, trigger, breath * breathburst, envout);
+  out += breathlayer(v, envout, breath * breathcont);
   v.lastenv = envout;
-  return out * envout * kWindVoiceGain;
+  return out * envout * windgain;
 }
 
 static float pianostretchratio(float hz) {
@@ -190,6 +207,14 @@ float pianovoice(ZssVoice& v, float hz, bool gate, int algo, int cfg,
 
   bool trigger = gate && !v.pianogateprev;
   v.pianogateprev = gate;
+  // Abutting note-ons keep gate high; retrigger hammer / epfm on pitch change.
+  const bool pitchstrike =
+      gate && v.pianogateprev && std::fabs(hz - v.karplushzprev) > 0.5f;
+  if (trigger || pitchstrike) {
+    trigger = true;
+    v.voiceenv.retrigger();
+  }
+  v.karplushzprev = gate ? hz : 0.f;
 
   float envout = v.voiceenv.process(gate) * vel;
   const float cents = spread * 12.f;
@@ -260,13 +285,17 @@ float timpanivoice(ZssVoice& v, float hz, bool gate, int cfg, float velocity) {
   const float strike = clamp01(p.p3 > 0.f ? p.p3 : 0.6f);
   const float vel = clampf(velocity, 0.1f, 1.f);
 
-  bool trigger = gate && !v.timpanigateprev;
-  if (trigger) {
-    v.timpanipitch = 1.f;
-  }
-  v.timpanigateprev = gate;
-
   hz = hz > 0.f ? hz : 110.f;
+  bool trigger = gate && !v.timpanigateprev;
+  v.timpanigateprev = gate;
+  const bool pitchstrike =
+      gate && v.timpanigateprev && std::fabs(hz - v.karplushzprev) > 0.5f;
+  if (trigger || pitchstrike) {
+    trigger = true;
+    v.timpanipitch = 1.f;
+    v.voiceenv.retrigger();
+  }
+  v.karplushzprev = gate ? hz : 0.f;
   if (gate) {
     const float bend = 0.9992f - (1.f - tension) * 0.0005f;
     v.timpanipitch *= bend;
@@ -353,8 +382,10 @@ static void applyguitarparams(ZssVoice& v, int cfg, int algo) {
 
   const float structure = 0.1f + position * 0.12f;
   const float brightness = 0.15f + position * 0.35f + (algo == 1 ? 0.12f : 0.f);
-  const float damp = 0.45f + damping * 0.4f;
-  const float accent = 0.35f + pick * 0.35f;
+  // Cap below DaisySP infinite-ring cliff (damping >= 0.95).
+  const float damp = std::min(damping, kKarplusMaxDamping);
+  // Keep strike accent modest so multi-note crests do not pump main-comp GR.
+  const float accent = 0.08f + pick * 0.12f;
 
   if (structure != v.guitarprev[0]) {
     v.stringvoice.SetStructure(structure);
@@ -386,15 +417,24 @@ float guitarvoice(ZssVoice& v, float hz, bool gate, int algo, int cfg,
   applyguitarparams(v, cfg, algo);
   v.stringvoice.SetFreq(hz);
   v.stringvoice.SetSustain(false);
-  if (trigger) {
+  // Offline note abutting keeps gate high across note-ons; retrigger on pitch.
+  const bool pitchstrike =
+      gate && v.guitargateprev && std::fabs(hz - v.karplushzprev) > 0.5f;
+  if (trigger || pitchstrike) {
     v.stringvoice.Reset();
+    v.voiceenv.retrigger();
+    trigger = true;
   }
+  v.karplushzprev = gate ? hz : 0.f;
+  // Amp envelope follows gate so note-off releases (Karplus alone can hang).
+  float envout = v.voiceenv.process(gate) * vel;
   float out = v.stringvoice.Process(trigger);
 
   v.stringbodylo.SetFreq(180.f);
   v.stringbodylo.SetRes(0.3f);
   v.stringbodylo.Process(out);
   out += v.stringbodylo.Band() * v.guitarbodymix * 0.25f;
+  out *= envout;
 
   if (trigger) {
     v.sparkleenv.SetTime(ADSR_SEG_ATTACK, 0.001f);
@@ -402,13 +442,16 @@ float guitarvoice(ZssVoice& v, float hz, bool gate, int algo, int cfg,
     v.sparkleenv.SetSustainLevel(0.f);
     v.sparkleenv.SetTime(ADSR_SEG_RELEASE, 0.02f);
     float sparkenv = v.sparkleenv.Process(true);
+    // Keep pick quieter than the string body so attack does not dwarf
+    // ring-down.
     float pick =
-        stringbownoisesample(v) * sparkenv * v.guitarpick * vel * 0.35f;
+        stringbownoisesample(v) * sparkenv * v.guitarpick * vel * 0.18f;
     out += pick;
   }
 
-  v.lastenv = std::fabs(out);
-  return out * kGuitarVoiceGain;
+  v.lastenv = envout;
+  // Soft-limit after voice gain so strike crest cannot exceed ~1 into the bus.
+  return std::tanh(out * kGuitarVoiceGain);
 }
 
 static float orgscannervib(ZssVoice& v, float hz, float leak, int harmonic) {
@@ -490,7 +533,8 @@ float organvoice(ZssVoice& v, float hz, bool gate, int algo, int cfg) {
   }
 
   v.lastenv = envout;
-  return sig * envout * kOrganVoiceGain;
+  const float organgain = algo == 1 ? kOrganVoiceGain : kOrganTonewheelGain;
+  return sig * envout * organgain;
 }
 
 } // namespace zss_daisy
