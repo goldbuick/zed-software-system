@@ -10,7 +10,6 @@ import {
   startisolateddaisydsp,
 } from 'zss/feature/synth/backend/daisy/daisyengine'
 import { createdaisysynth } from 'zss/feature/synth/backend/daisy/daisysynth'
-import { SYNTH_NAMED_TYPES } from 'zss/feature/synth/voiceconfig/validation'
 import { defaultwasmalgoconfig } from 'zss/feature/synth/backend/wasm/wasmalgoconfigsab'
 import { defaultwasmfxsab } from 'zss/feature/synth/backend/wasm/wasmfxstate'
 import {
@@ -27,6 +26,7 @@ import {
   tonenotationseconds,
 } from 'zss/feature/synth/playnotation'
 import type { SYNTH_NOTE_ENTRY } from 'zss/feature/synth/playnotation'
+import { SYNTH_NAMED_TYPES } from 'zss/feature/synth/voiceconfig/validation'
 
 const SAMPLERATE = 44100
 /** Offline replay starts at currentTime (usually 0); live uses +0.05. */
@@ -229,8 +229,7 @@ export async function rendervoicelevelmetrics(voice: string): Promise<{
   for (let i = 0; i < samples.length; i++) {
     sumsq += samples[i] * samples[i]
   }
-  const fullrms =
-    samples.length > 0 ? Math.sqrt(sumsq / samples.length) : 0
+  const fullrms = samples.length > 0 ? Math.sqrt(sumsq / samples.length) : 0
   const fullrmsdb = fullrms > 0 ? 20 * Math.log10(fullrms) : SILENT_DB
   const m = measurevoice(samples, buf.sampleRate, voice)
   return {

@@ -303,28 +303,26 @@ float synthsource(ZssVoice& v, int vi, float freq, bool gate, float detune,
                           modidx, moddepth, cartype);
   } else if (osctype >= 30 && osctype <= 33) // #synth fat*
   {
+    // Unison via one phase accumulator: φ' = hz/sr, voice i at φ*mul_i.
+    // Do NOT call Oscillator::Process() per voice — that advances phase
+    // `count` times per sample and destroys pitch/detune.
     int cnt = cfg.count > 1.f ? static_cast<int>(cfg.count + 0.5f) : 3;
+    if (cnt < 1) {
+      cnt = 1;
+    }
+    if (cnt > 8) {
+      cnt = 8;
+    }
     float spread = cfg.spread > 0.f ? cfg.spread : 20.f;
     float det = spread / 1200.f;
     int cartype = familywavetobasic(osctype - 30);
+    v.voicephasestep += hz / g_engine.sample_rate;
     sig = 0.f;
-    if (cfg.phase != 0.f || v.voicephasestep != 0.f) {
-      v.voicephasestep += hz / g_engine.sample_rate;
-      for (int fi = 0; fi < cnt; ++fi) {
-        float mul = 1.f + (fi - (cnt - 1) * 0.5f) * det;
-        if (cartype >= 0 && cartype <= 3) {
-          sig += oscwavefromphase(cartype, v.voicephasestep * mul + cfg.phase);
-        } else {
-          sig += oscbasicwave(v.synthosc, cartype, hz * mul, 1.f);
-        }
-      }
-    } else {
-      for (int fi = 0; fi < cnt; ++fi) {
-        float mul = 1.f + (fi - (cnt - 1) * 0.5f) * det;
-        sig += oscbasicwave(v.synthosc, cartype, hz * mul, 1.f);
-      }
+    for (int fi = 0; fi < cnt; ++fi) {
+      float mul = 1.f + (fi - (cnt - 1) * 0.5f) * det;
+      sig += oscwavefromphase(cartype, v.voicephasestep * mul + cfg.phase);
     }
-    sig /= cnt;
+    sig /= static_cast<float>(cnt);
   } else if (osctype >= 0 &&
              osctype <= 3) // #synth sine|square|triangle|sawtooth|custom
   {

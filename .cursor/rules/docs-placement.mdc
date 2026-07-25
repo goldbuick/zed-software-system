@@ -20,7 +20,7 @@ Product/developer docs ship at **https://zed.cafe/docs/** (Blume project under [
 
 ## Colocation + Blume mounts
 
-Keep manuals next to code under `zss/**/docs/`. Blume ingests them via symlinks under `docs-site/content/<prefix>/` (e.g. `memory` → `zss/memory/docs`). Do not mass-move module docs into `docs-site/content/`.
+Keep manuals next to code under `zss/**/docs/`. Blume ingests them via symlinks or hardlinks under `docs-site/content/<prefix>/` (e.g. `memory` → `zss/memory/docs`; `synth` → `zss/feature/synth/docs` — often the **same inode**). Edit the `zss/**/docs` path; do not maintain a second divergent copy under `docs-site/content/`. Do not mass-move module docs into `docs-site/content/`.
 
 ## Commands reference
 
