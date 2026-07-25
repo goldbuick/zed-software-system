@@ -47,22 +47,24 @@ constexpr float kPi = 3.14159265358979323846f;
 constexpr float kTwoPi = 6.28318530718f;
 constexpr float kSineVoiceGain = 1.42f;
 constexpr float kOscModWaveGain = 0.1f;
-constexpr float kAmVoiceGain = 1.f;
+constexpr float kAmVoiceGain = 2.f;
 constexpr float kFmVoiceGain = 1.f;
 constexpr float kFatVoiceGain = 1.f;
 constexpr float kFmHzScale = 1.f;
 constexpr float kAlgoOpGain = 0.31622776601683794f;
-constexpr float kAlgoOutGain = 0.18f;
-constexpr float kNoiseVoiceGain = 21.f;
-constexpr float kLfsrVoiceBoost = 2.5f;
+constexpr float kAlgoOutGain = 0.95f;
+constexpr float kNoiseVoiceGain = 7.f;
+constexpr float kLfsrVoiceBoost = 1.6f;
 constexpr float kNoiseBaseExpr = 0.19f;
-constexpr float kNoiseSoftGain = 3.f;
+constexpr float kNoiseSoftGain = 1.1f;
 constexpr float kMetallicNorm = 1.f / 22.f;
-constexpr float kMetallicAmp = 7.5f;
+constexpr float kMetallicAmp = 4.f;
 
 /** `#synth string` = detuned saws + PWM FM; pluck = Daisy StringVoice */
-constexpr float kStringMachineGain = 0.42f;
-constexpr float kStringPluckGain = 0.38f;
+constexpr float kStringMachineGain = 1.35f;
+constexpr float kStringPluckGain = 6.3f;
+/** DaisySP Karplus: damping >= 0.95 crossfades toward infinite ring. */
+constexpr float kKarplusMaxDamping = 0.85f;
 constexpr float kStringDefaultDetune = 2.f;
 constexpr float kStringDefaultPwm = 0.2f;
 constexpr float kStringDefaultVib = 2.5f;
@@ -74,12 +76,16 @@ constexpr float kStringBodyLowMix = 0.18f;
 constexpr float kStringBodyHiMix = 0.1f;
 constexpr float kStringBowNoiseMix = 0.03f;
 
-constexpr float kWindVoiceGain = 0.38f;
-constexpr float kPianoVoiceGain = 0.34f;
-constexpr float kTimpaniVoiceGain = 0.42f;
-constexpr float kBowedVoiceGain = 0.36f;
-constexpr float kGuitarVoiceGain = 0.36f;
-constexpr float kOrganVoiceGain = 0.32f;
+constexpr float kWindVoiceGain = 2.5f;
+constexpr float kPianoVoiceGain = 3.15f;
+constexpr float kTimpaniVoiceGain = 0.70f;
+constexpr float kBowedVoiceGain = 1.2f;
+constexpr float kGuitarVoiceGain = 6.65f;
+constexpr float kOrganVoiceGain = 0.65f;
+/** Tonewheel (algo 0) harmonic stack is quieter than drawbar (algo 1). */
+constexpr float kOrganTonewheelGain = 1.8f;
+constexpr float kDripVoiceGain = 16.f;
+constexpr float kDootVoiceGain = 1.15f;
 
 constexpr float kDrumTickTrim = 1.35f;
 constexpr float kDrumTweetTrim = 1.25f;
@@ -97,13 +103,14 @@ constexpr float kVoiceOutGain = 1.f;
 constexpr float kEnvDecayTauScale = 0.700f;
 constexpr float kEnvReleaseTauScale = 0.060f;
 
-/** Drive into main compressor. Quieter play vs prior 0.420; drum held so the
- * peak gate sees ~3 dB drum−play (drum stem already parks at 0 dBFS).
+/** Drive into main compressor. ~3 dB quieter than 0.238 so square does not
+ * overpower drums; drum stem unchanged.
  */
-constexpr float kPlayBusGain = 0.238f;
+constexpr float kPlayBusGain = 0.168f;
 constexpr float kDrumBusGain = 2.440f;
 /** Main fader: 20*log10(vol*0.25) + offset (see gain-levels.md). */
-constexpr float kMainFaderOffsetDb = -35.f;
+/** Master `#vol` fader offset; -41 keeps default 50 quieter than prior -35. */
+constexpr float kMainFaderOffsetDb = -41.f;
 /** TTS and bgplay share the same SAB dB law (see readttsvolume /
  * readbgplayvolume). */
 
@@ -112,7 +119,7 @@ constexpr float kScAttackSec = 0.005f;
 constexpr float kScReleaseSec = 0.06f;
 
 constexpr float kRazzleVibratoWet = 0.02f;
-constexpr float kRazzleChorusWet = 0.3f;
+constexpr float kRazzleChorusWet = 0.25f;
 constexpr float kRazzleHissGain = 0.001f;
 constexpr float kRazzleChorusBaseSec = 0.007f;
 constexpr float kRazzleChorusDepthSec = 0.007f;
@@ -121,9 +128,9 @@ constexpr float kMainCompThresholdDb = -28.f;
 constexpr float kMainCompRatio = 4.f;
 constexpr float kMainCompKneeDb = 30.f;
 constexpr float kMainCompAttackSec = 0.003f;
-constexpr float kMainCompReleaseSec = 0.15f;
+constexpr float kMainCompReleaseSec = 0.08f;
 constexpr float kMainCompGainAttackSec = 0.008f;
-constexpr float kMainCompGainReleaseSec = 0.1f;
+constexpr float kMainCompGainReleaseSec = 0.06f;
 constexpr float kMainCompMix = 0.55f;
 constexpr float kMainCompSilenceFloor = 1e-4f;
 constexpr float kMainCompSilenceDecay = 0.9995f;

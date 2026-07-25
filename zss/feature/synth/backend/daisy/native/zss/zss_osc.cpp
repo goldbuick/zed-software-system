@@ -157,7 +157,8 @@ float fmcarriersample(Oscillator& carrier, Oscillator& modulator, int modtype,
                       int carriertype) {
   float mod = oscmodwave(modulator, modtype, modhz) * modidx * moddepth;
   float fmh = hz + mod * hz * kFmHzScale;
-  return oscbasicwave(carrier, carriertype, fmh, kOscModWaveGain);
+  // Carrier at full amp; modulator already scaled by kOscModWaveGain in oscmodwave.
+  return oscbasicwave(carrier, carriertype, fmh, 1.f);
 }
 
 float oscpartialsynth(Oscillator& o, float hz, int count,
@@ -300,7 +301,7 @@ float dootvoice(ZssVoice& v, float freq, bool gate) {
   v.dootosc.SetFreq(hz * pitchmul);
   v.dootosc.SetWaveform(Oscillator::WAVE_SIN);
   v.dootosc.SetAmp(1.f);
-  return v.dootosc.Process() * v.dootenv.Process(gate) * 0.6f;
+  return v.dootosc.Process() * v.dootenv.Process(gate) * kDootVoiceGain;
 }
 
 float algopwave(Oscillator& o, int wavetype, float hz) {

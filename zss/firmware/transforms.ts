@@ -8,6 +8,7 @@ import { boardremix } from 'zss/feature/boardremix'
 import { boardrevert, boardsnapshot } from 'zss/feature/boardsnapshot'
 import { boardweave } from 'zss/feature/boardweave'
 import { createfirmware } from 'zss/firmware'
+import { PIVOT_SHEAR_KEYWORDS } from 'zss/firmware/autocompleteconstants'
 import { firmwarewaitforboard } from 'zss/firmware/boardwaitsync'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadboardbyevaldir } from 'zss/memory/boards'
@@ -282,4 +283,5 @@ export const TRANSFORM_FIRMWARE = createfirmware()
       )
       return 0
     },
+    { byposition: [[], [...PIVOT_SHEAR_KEYWORDS]] },
   )

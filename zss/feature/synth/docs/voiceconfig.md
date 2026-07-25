@@ -84,12 +84,12 @@ Portamento applies to bowed voices.
 
 ## Guitar configs (WASM only)
 
-| Config | Value | Default |
-|--------|-------|---------|
-| `pick` | 0–1 | `0.35` |
-| `body` | 0–1 | `0.38` |
-| `damping` | 0–1 | `0.5` |
-| `position` | 0–1 | `0.45` |
+| Config | Value | Default (nylon / steel select) |
+|--------|-------|--------------------------------|
+| `pick` | 0–1 | `0.25` / `0.5` |
+| `body` | 0–1 | `0.4` / `0.35` |
+| `damping` | 0–1 | `0.72` / `0.7` (native cap 0.85; DaisySP >= 0.95 = infinite ring) |
+| `position` | 0–1 | `0.35` / `0.6` |
 
 ## Organ configs (WASM only)
 
@@ -109,7 +109,7 @@ Portamento applies to bowed voices.
 | `damping` | number (0–1) | String damping |
 | `accent` | number (0–1) | Strike accent |
 
-Applies only when voice is `#synth pluck`. Defaults: `0.14`, `0.22`, `0.68`, `0.48`.
+Applies only when voice is `#synth pluck`. Defaults: `0.14`, `0.38`, `0.72`, `0.12`.
 
 ## String ensemble configs (wasmvoiceconfig.ts, WASM only, `#synth string`)
 

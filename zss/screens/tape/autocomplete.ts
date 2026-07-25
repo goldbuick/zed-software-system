@@ -3,8 +3,6 @@ import * as lexer from 'zss/feature/lang/backend/typescript/lexer'
 import type { COMMAND_ARGS_SIGNATURE } from 'zss/firmware'
 import { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
-import { romread } from 'zss/rom'
-import { romhintfrommarkdown } from 'zss/rom/romhint'
 import {
   WRITE_TEXT_CONTEXT,
   applycolortoindexes,
@@ -18,6 +16,11 @@ import { type ZSS_WORD_LIST_KEY, zsswordcolor } from './colors'
 import { EDITOR_CODE_ROW } from './common'
 import type { EDITOR_COMPLETE_CONTEXT } from './editorcomplete'
 import { builtingstatnamesforcodepagetype } from './statcompletenames'
+import {
+  argsliststring,
+  hintfromrom,
+  resolvesuggestionhint,
+} from './suggestionhints'
 
 const WORD_LIST_KEYS: ZSS_WORD_LIST_KEY[] = [
   'flags',
@@ -148,20 +151,6 @@ function tagrecordkeys(
   category: string,
 ): AUTO_COMPLETE_SUGGESTION[] {
   return Object.keys(rec).map((word) => ({ word, category }))
-}
-
-function hintfromrom(category: string, word = ''): string {
-  const rompath = word ? `editor:${category}:${word}` : `editor:${category}`
-  const rom = romread(rompath)
-  if (ispresent(rom)) {
-    return romhintfrommarkdown(rom) ?? ''
-  }
-  switch (category) {
-    case 'flags':
-      return `flag ${word}`
-    default:
-      return ''
-  }
 }
 
 function statnameprefixfromtoken(image: string): string {
@@ -433,7 +422,7 @@ function applysuggestioncolors(
   context.changed()
 }
 
-function drawhinttext(
+export function drawhinttext(
   hint: string,
   hintx: number,
   hinty: number,
@@ -454,57 +443,6 @@ function drawhinttext(
     AC_SEL_BG,
     context,
   )
-}
-
-function argsliststring(args: ARG_TYPE[]) {
-  const list = []
-  for (const arg of args) {
-    switch (arg) {
-      case ARG_TYPE.COLOR:
-        list.push('<color>')
-        break
-      case ARG_TYPE.KIND:
-        list.push('<kind>')
-        break
-      case ARG_TYPE.DIR:
-        list.push('<dir>')
-        break
-      case ARG_TYPE.NAME:
-        list.push('<name>')
-        break
-      case ARG_TYPE.NUMBER:
-        list.push('<number>')
-        break
-      case ARG_TYPE.STRING:
-        list.push('<string>')
-        break
-      case ARG_TYPE.NUMBER_OR_STRING:
-        list.push('<num|str>')
-        break
-      case ARG_TYPE.COLOR_OR_KIND:
-        list.push('<color|kind>')
-        break
-      case ARG_TYPE.MAYBE_KIND:
-        list.push('[kind]')
-        break
-      case ARG_TYPE.MAYBE_NAME:
-        list.push('[name]')
-        break
-      case ARG_TYPE.MAYBE_NUMBER:
-        list.push('[number]')
-        break
-      case ARG_TYPE.MAYBE_STRING:
-        list.push('[string]')
-        break
-      case ARG_TYPE.MAYBE_NUMBER_OR_STRING:
-        list.push('[num|str]')
-        break
-      case ARG_TYPE.ANY:
-        list.push('<any>')
-        break
-    }
-  }
-  return list.join(' ')
 }
 
 export type DrawCommandArgHintOptions = {
@@ -620,45 +558,7 @@ export function drawautocomplete(
     )
 
     if (selected) {
-      let hint = ''
-      const suggestion = autocomplete.suggestions[i]
-      switch (suggestion.category) {
-        case 'objects':
-          hint = 'object codepage'
-          break
-        case 'terrains':
-          hint = 'terrain codepage'
-          break
-        case 'boards':
-          hint = 'board codepage'
-          break
-        case 'palettes':
-          hint = 'palette codepage'
-          break
-        case 'charsets':
-          hint = 'charset codepage'
-          break
-        case 'loaders':
-          hint = 'loader codepage'
-          break
-        case 'commands': {
-          const wk = suggestion.word.toLowerCase()
-          const sig =
-            words.langcommands[wk] ??
-            words.clicommands[wk] ??
-            words.loadercommands[wk] ??
-            words.runtimecommands[wk]
-          if (isarray(sig)) {
-            const args = [...sig] as ARG_TYPE[]
-            const cmd = args.pop()
-            hint = `${argsliststring(args)} ${cmd}`
-          }
-          break
-        }
-        default:
-          hint = hintfromrom(suggestion.category, suggestion.word)
-          break
-      }
+      const hint = resolvesuggestionhint(autocomplete.suggestions[i], words)
       if (hint) {
         const hintx = rowstart + text.length
         drawhinttext(hint, hintx, y, edge.right, context)

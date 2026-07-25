@@ -446,17 +446,14 @@ export function TerminalInput({
       true,
     )
   }
-  if (autocomplete.endoflinehint && autocomplete.endoflineargs.length > 0) {
-    const hintx = computeterminalarghintx({
-      startx,
-      inputlen: inputstate.length,
-      autocomplete,
-      autocompleteactive,
-      popupleftx,
-    })
+  if (
+    !autocompleteactive &&
+    autocomplete.endoflinehint &&
+    autocomplete.endoflineargs.length > 0
+  ) {
     drawcommandarghint(
       autocomplete.endoflineargs,
-      hintx,
+      computeterminalarghintx(startx, inputstate.length),
       starty,
       edge,
       context,

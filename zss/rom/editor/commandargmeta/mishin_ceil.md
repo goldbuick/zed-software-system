@@ -1,0 +1,3 @@
+---
+hint: "Pivot Mishin ceil"
+---

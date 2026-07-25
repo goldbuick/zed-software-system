@@ -13,6 +13,7 @@ import {
   zsstexttape,
 } from 'zss/feature/zsstextui'
 import { FIRMWARE } from 'zss/firmware'
+import { CODEPAGE_NAME_LISTS } from 'zss/firmware/autocompleteconstants'
 import { ispresent } from 'zss/mapping/types'
 import {
   memoryexportbookasjson,
@@ -155,6 +156,7 @@ export function registerexportcommands(fw: FIRMWARE): FIRMWARE {
         }
         return 0
       },
+      { lists: [CODEPAGE_NAME_LISTS] },
     )
     .command('itchiopublish', ['zip file for itch.io (operator only)'], () => {
       const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)

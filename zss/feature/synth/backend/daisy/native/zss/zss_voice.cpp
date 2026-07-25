@@ -78,9 +78,11 @@ float algovoice(ZssVoice& v, int vi, float freq, bool gate, int algo,
 
   float out = op4;
   if (algo == 4) {
-    out = op2 + op4;
+    // Parallel carriers without FM stack — quieter than serial algos
+    out = (op2 + op4) * 2.2f;
   } else if (algo == 5) {
-    out = op2 + op3 + op4;
+    // Three summed carriers — louder than single-carrier algos
+    out = (op2 + op3 + op4) * 0.5f;
   } else if (algo == 6) {
     out = op2;
   } else if (algo == 7) {

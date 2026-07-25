@@ -31,6 +31,8 @@ import { showbroadcastmenu } from 'zss/feature/broadcastmenu'
 import { FIRMWARE } from 'zss/firmware'
 import {
   BRIDGE_SUBCOMMANDS,
+  BROADCAST_HEAD_KEYWORDS,
+  BROADCAST_WHIP_ALIASES,
   CHAT_FEED_KINDS,
   CHAT_HEAD_KEYWORDS,
   CHAT_PROFILE_KEYWORDS,
@@ -307,6 +309,12 @@ export function registermultiplayercommands(fw: FIRMWARE): FIRMWARE {
           bridgestreamstart(SOFTWARE, player, String(first))
         }
         return 0
+      },
+      {
+        byposition: [[...BROADCAST_HEAD_KEYWORDS]],
+        whenfirst: {
+          whip: [[], [...BROADCAST_WHIP_ALIASES]],
+        },
       },
     )
 }

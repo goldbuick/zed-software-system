@@ -221,7 +221,8 @@ float readbgplayvolume() {
 void applypluckparams(ZssVoice& v, int cfg) {
   const float structure = readctrl(cfg + 6);
   const float brightness = readctrl(cfg + 7);
-  const float damping = readctrl(cfg + 8);
+  const float damping =
+      std::min(clampf(readctrl(cfg + 8), 0.f, 1.f), kKarplusMaxDamping);
   const float accent = readctrl(cfg + 9);
   if (structure != v.pluckprev[0]) {
     v.stringvoice.SetStructure(structure);

@@ -194,6 +194,8 @@ struct ZssVoice {
   bool pianogateprev = false;
   bool timpanigateprev = false;
   bool guitargateprev = false;
+  /** Last Karplus hz while gated; pitch change retriggers when gate stays high. */
+  float karplushzprev = 0.f;
   bool organgateprev = false;
   float timpanipitch = 1.f;
   int guitarpreset = -1;

@@ -17,8 +17,14 @@ import {
 import { SOFTWARE } from 'zss/device/session'
 import { synthdebugtrace } from 'zss/feature/synth/synthdebugtrace'
 import { SYNTH_DEFAULT_WAVE } from 'zss/feature/synth/synthdefaults'
+import { SYNTH_NAMED_TYPES } from 'zss/feature/synth/voiceconfig/validation'
 import { write } from 'zss/feature/writeui'
 import { createfirmware } from 'zss/firmware'
+import {
+  FX_FIRST_ARG_KEYWORDS,
+  TTS_ENGINE_KEYWORDS,
+  TTS_FISH_MODEL_KEYWORDS,
+} from 'zss/firmware/autocompleteconstants'
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 import {
   memorymergesynthvoice,
@@ -30,7 +36,7 @@ import { mapstrcollision } from 'zss/words/collision'
 import { mapstrcolor } from 'zss/words/color'
 import { mapstrdir } from 'zss/words/dir'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
-import { ARG_TYPE, NAME, WORD } from 'zss/words/types'
+import { ARG_TYPE, WORD } from 'zss/words/types'
 
 /** Inlined desc for dynamically named audio commands (synth1–5, echo1–4, fcrush1–4, etc.). */
 const AUDIO_CMD_DESC: Record<string, string> = {
@@ -69,6 +75,41 @@ const AUDIO_CMD_DESC: Record<string, string> = {
   autowah4: 'for #tts',
 }
 
+const SYNTH_WAVE_BASES = [
+  'sine',
+  'square',
+  'triangle',
+  'sawtooth',
+  'custom',
+] as const
+
+const SYNTH_CONFIG_KEYWORDS = [
+  'restart',
+  'vol',
+  'volume',
+  'port',
+  'portamento',
+  'env',
+  'envelope',
+] as const
+
+const SYNTH_FIRST_ARG_KEYWORDS = [
+  ...SYNTH_NAMED_TYPES,
+  ...SYNTH_WAVE_BASES,
+  ...SYNTH_CONFIG_KEYWORDS,
+]
+
+const SYNTH_ARGMETA = { byposition: [[...SYNTH_FIRST_ARG_KEYWORDS]] }
+
+const FX_ARGMETA = { byposition: [[...FX_FIRST_ARG_KEYWORDS]] }
+
+const TTSENGINE_ARGMETA = {
+  byposition: [[...TTS_ENGINE_KEYWORDS]],
+  whenfirst: {
+    fish: [[], [], [...TTS_FISH_MODEL_KEYWORDS]],
+  },
+}
+
 function handlesynthvoicefx(
   player: string,
   board: string,
@@ -95,62 +136,35 @@ function handlesynthplayvoicefx(
   }
 }
 
-const isfx = [
-  'echo',
-  'reverb',
-  'autofilter',
-  'distortion',
-  'vibrato',
-  'fc',
-  'fcrush',
-  'autowah',
-]
-
 function handlesynthvoice(
   player: string,
   board: string,
   idx: number,
   words: WORD[],
 ) {
-  const [voiceorfx, ii] = readargs(words, 0, [ARG_TYPE.NUMBER_OR_STRING])
-  if (isnumber(voiceorfx)) {
-    synthvoice(SOFTWARE, player, board, idx, 'volume', voiceorfx)
-    memorymergesynthvoice(board, idx, 'volume', voiceorfx)
-  } else if (isfx.includes(NAME(voiceorfx))) {
-    const [maybeconfig, maybevalue] = readargs(words, ii, [
-      ARG_TYPE.NUMBER_OR_STRING,
-      ARG_TYPE.MAYBE_NUMBER_OR_STRING,
-    ])
-    synthvoicefx(
-      SOFTWARE,
-      player,
-      board,
-      idx,
-      voiceorfx,
-      maybeconfig,
-      maybevalue,
-    )
-    memorymergesynthvoicefx(board, idx, voiceorfx, maybeconfig, maybevalue)
+  const [voiceorconfig, ii] = readargs(words, 0, [ARG_TYPE.NUMBER_OR_STRING])
+  if (isnumber(voiceorconfig)) {
+    synthvoice(SOFTWARE, player, board, idx, 'volume', voiceorconfig)
+    memorymergesynthvoice(board, idx, 'volume', voiceorconfig)
+    return
+  }
+
+  // check for a list of numbers
+  const [configorpartials] = readargs(words, ii, [
+    ARG_TYPE.MAYBE_NUMBER_OR_STRING,
+  ])
+  if (isnumber(configorpartials)) {
+    const count = words.length - ii
+    const argtypes = new Array<ARG_TYPE>(count).fill(ARG_TYPE.NUMBER)
+    // @ts-expect-error argtypes ?
+    const partials = readargs(words, ii, argtypes).slice(0, count)
+    const maybevalue = partials.length === 1 ? partials[0] : partials
+    synthvoice(SOFTWARE, player, board, idx, voiceorconfig, maybevalue)
+    memorymergesynthvoice(board, idx, voiceorconfig, maybevalue)
   } else {
-    // check for a list of numbers
-    const [configorpartials] = readargs(words, ii, [
-      ARG_TYPE.MAYBE_NUMBER_OR_STRING,
-    ])
-    if (isnumber(configorpartials)) {
-      const count = words.length - ii
-      const argtypes = new Array<ARG_TYPE>(count).fill(ARG_TYPE.NUMBER)
-      // @ts-expect-error argtypes ?
-      const partials = readargs(words, ii, argtypes).slice(0, count)
-      const maybevalue = partials.length === 1 ? partials[0] : partials
-      synthvoice(SOFTWARE, player, board, idx, voiceorfx, maybevalue)
-      memorymergesynthvoice(board, idx, voiceorfx, maybevalue)
-    } else {
-      const [maybevalue] = readargs(words, ii, [
-        ARG_TYPE.MAYBE_NUMBER_OR_STRING,
-      ])
-      synthvoice(SOFTWARE, player, board, idx, voiceorfx, maybevalue)
-      memorymergesynthvoice(board, idx, voiceorfx, maybevalue)
-    }
+    const [maybevalue] = readargs(words, ii, [ARG_TYPE.MAYBE_NUMBER_OR_STRING])
+    synthvoice(SOFTWARE, player, board, idx, voiceorconfig, maybevalue)
+    memorymergesynthvoice(board, idx, voiceorconfig, maybevalue)
   }
 }
 
@@ -224,6 +238,7 @@ export const AUDIO_FIRMWARE = createfirmware()
       )
       return 0
     },
+    TTSENGINE_ARGMETA,
   )
   .command(
     'tts',
@@ -353,19 +368,24 @@ export const AUDIO_FIRMWARE = createfirmware()
     handlebgplay(chip, words, '@1m')
     return 0
   })
-  .command('synth', ['all 4 channels of #play synth voices'], (_, words) => {
-    // multi-voice changes only apply to #play
-    const voicewords = words.length === 0 ? [SYNTH_DEFAULT_WAVE] : words
-    for (let i = 0; i < 4; ++i) {
-      handlesynthvoice(
-        READ_CONTEXT.elementfocus,
-        READ_CONTEXT.board?.id ?? '',
-        i,
-        voicewords,
-      )
-    }
-    return 0
-  })
+  .command(
+    'synth',
+    ['all 4 channels of #play synth voices'],
+    (_, words) => {
+      // multi-voice changes only apply to #play
+      const voicewords = words.length === 0 ? [SYNTH_DEFAULT_WAVE] : words
+      for (let i = 0; i < 4; ++i) {
+        handlesynthvoice(
+          READ_CONTEXT.elementfocus,
+          READ_CONTEXT.board?.id ?? '',
+          i,
+          voicewords,
+        )
+      }
+      return 0
+    },
+    SYNTH_ARGMETA,
+  )
   .command(
     'synthrecord',
     [ARG_TYPE.MAYBE_STRING, 'played note buffer to an mp3 file'],
@@ -395,6 +415,7 @@ export const AUDIO_FIRMWARE = createfirmware()
       )
       return 0
     },
+    FX_ARGMETA,
   )
   .command(
     'fcrush',
@@ -412,6 +433,7 @@ export const AUDIO_FIRMWARE = createfirmware()
       )
       return 0
     },
+    FX_ARGMETA,
   )
   .command(
     'autofilter',
@@ -429,6 +451,7 @@ export const AUDIO_FIRMWARE = createfirmware()
       )
       return 0
     },
+    FX_ARGMETA,
   )
   .command(
     'reverb',
@@ -446,6 +469,7 @@ export const AUDIO_FIRMWARE = createfirmware()
       )
       return 0
     },
+    FX_ARGMETA,
   )
   .command(
     'distort',
@@ -463,6 +487,7 @@ export const AUDIO_FIRMWARE = createfirmware()
       )
       return 0
     },
+    FX_ARGMETA,
   )
   .command(
     'vibrato',
@@ -480,6 +505,7 @@ export const AUDIO_FIRMWARE = createfirmware()
       )
       return 0
     },
+    FX_ARGMETA,
   )
   .command(
     'autowah',
@@ -497,6 +523,7 @@ export const AUDIO_FIRMWARE = createfirmware()
       )
       return 0
     },
+    FX_ARGMETA,
   )
 
 // handle individual synth voices
@@ -509,18 +536,24 @@ for (let i = 0; i < 4; ++i) {
       handlesynthvoice(READ_CONTEXT.elementfocus, bid, i, words)
       return 0
     },
+    SYNTH_ARGMETA,
   )
 }
 
 // handle bgplay synth voices
-AUDIO_FIRMWARE.command('synth5', [AUDIO_CMD_DESC.synth5], (_, words) => {
-  // changes bgplay synth
-  for (let i = 4; i < 8; ++i) {
-    const bid = READ_CONTEXT.board?.id ?? ''
-    handlesynthvoice(READ_CONTEXT.elementfocus, bid, i, words)
-  }
-  return 0
-})
+AUDIO_FIRMWARE.command(
+  'synth5',
+  [AUDIO_CMD_DESC.synth5],
+  (_, words) => {
+    // changes bgplay synth
+    for (let i = 4; i < 8; ++i) {
+      const bid = READ_CONTEXT.board?.id ?? ''
+      handlesynthvoice(READ_CONTEXT.elementfocus, bid, i, words)
+    }
+    return 0
+  },
+  SYNTH_ARGMETA,
+)
 
 // handle synth fx configurations
 for (let i = 0; i < 4; ++i) {
@@ -538,6 +571,7 @@ for (let i = 0; i < 4; ++i) {
       handlesynthvoicefx(READ_CONTEXT.elementfocus, bid, group, 'echo', words)
       return 0
     },
+    FX_ARGMETA,
   )
     .command(
       `fcrush${idx}`,
@@ -557,6 +591,7 @@ for (let i = 0; i < 4; ++i) {
         )
         return 0
       },
+      FX_ARGMETA,
     )
     .command(
       `autofilter${idx}`,
@@ -576,6 +611,7 @@ for (let i = 0; i < 4; ++i) {
         )
         return 0
       },
+      FX_ARGMETA,
     )
     .command(
       `reverb${idx}`,
@@ -595,6 +631,7 @@ for (let i = 0; i < 4; ++i) {
         )
         return 0
       },
+      FX_ARGMETA,
     )
     .command(
       `distort${idx}`,
@@ -614,6 +651,7 @@ for (let i = 0; i < 4; ++i) {
         )
         return 0
       },
+      FX_ARGMETA,
     )
     .command(
       `vibrato${idx}`,
@@ -633,6 +671,7 @@ for (let i = 0; i < 4; ++i) {
         )
         return 0
       },
+      FX_ARGMETA,
     )
     .command(
       `autowah${idx}`,
@@ -652,5 +691,6 @@ for (let i = 0; i < 4; ++i) {
         )
         return 0
       },
+      FX_ARGMETA,
     )
 }

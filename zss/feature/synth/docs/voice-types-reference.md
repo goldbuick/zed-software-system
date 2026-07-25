@@ -232,12 +232,12 @@ Daisy WASM only. SOS Synth Secrets string-machine pad (not sampled orchestra): t
 | `env` / `envelope` | `[a, d, s, r]` | `0.6 / 0.15 / 0.88 / 1.0` | trapezoid VCA |
 | `detune` | 0–1 | `0.25` | string only; maps to 0–8¢ VCO spread |
 | `pwm` | 0–1 | `0.2` | OSC2 square-LFO FM depth (PWM emulation) |
-| `vib` | 0–1 | `0.35` | VCO1 vibrato depth (0–8¢); prefer this **or** `#synth vibrato` FX, not both |
+| `vib` | 0–1 | `0.35` | VCO1 vibrato depth (0–8¢); prefer this **or** `#vibrato` FX, not both |
 | `filter` | 0–1 | `0.5` | LP cutoff scale + filter-envelope amount |
 
 `port` / `portamento` is stored but **not applied** on the string path.
 
-Recommended FX: `#synth reverb` (~0.35–0.5); vintage units often used external chorus—optional.
+Recommended FX: `#reverb` (~0.35–0.5); vintage units often used external chorus—optional.
 
 Selecting `#synth string` resets ensemble timbre params to the defaults above.
 
@@ -254,9 +254,9 @@ Daisy WASM only. Gate-edge strike via DaisySP `StringVoice`; no Tone backend.
 | `pluck` | — | — | voice type selection |
 | `vol` / `volume` | number (dB) | `0` | effective |
 | `structure` | 0–1 | `0.14` | pluck only; rejected on other voice types |
-| `brightness` | 0–1 | `0.22` | pluck only |
-| `damping` | 0–1 | `0.68` | pluck only |
-| `accent` | 0–1 | `0.48` | pluck only |
+| `brightness` | 0–1 | `0.38` | pluck only |
+| `damping` | 0–1 | `0.72` | pluck only (native cap 0.85; DaisySP >= 0.95 = infinite ring) |
+| `accent` | 0–1 | `0.12` | pluck only |
 
 `env` / `envelope` and `port` / `portamento` are stored but **not used** by the pluck audio path (strike is gate-edge triggered, no ADSR multiply).
 
@@ -279,7 +279,7 @@ Daisy WASM only. Formant-filtered excitation + breath burst on attack + delayed 
 
 ## 8. Piano — `piano` / `epiano` (`PIANO_VOICE`)
 
-Daisy WASM only. Tricord body with stretched keyboard tuning + soundboard resonances + hammer sparkle; `epiano` uses DaisySP `Fm2` tine model. `#play` writes fixed velocity `0.75` to SAB slot `base+4`.
+Daisy WASM only. Tricord body with stretched keyboard tuning + soundboard resonances + hammer sparkle; `epiano` uses DaisySP `Fm2` tine model. `#play` writes fixed velocity `1` to SAB slot `base+4`.
 
 | Param | Value | Default (piano) |
 |-------|-------|-----------------|
@@ -320,18 +320,20 @@ Daisy WASM only. Saw + bow noise + body formants + **delayed vibrato** (~300 ms 
 
 Daisy WASM only. `StringVoice` strike + pick burst + body peak; algo 0 = nylon, 1 = steel.
 
-| Param | Value | Default |
-|-------|-------|---------|
-| `pick` | 0–1 | `0.35` |
-| `body` | 0–1 | `0.38` |
-| `damping` | 0–1 | `0.5` |
-| `position` | 0–1 | `0.45` |
+| Param | Value | Default (nylon / steel select) |
+|-------|-------|--------------------------------|
+| `pick` | 0–1 | `0.25` / `0.5` |
+| `body` | 0–1 | `0.4` / `0.35` |
+| `damping` | 0–1 | `0.72` / `0.7` (capped at 0.85; DaisySP >= 0.95 = infinite ring) |
+| `position` | 0–1 | `0.35` / `0.6` |
+
+`DEFAULT_WASM_GUITAR` pool defaults remain `0.35` / `0.38` / `0.5` / `0.45` until a voice is selected.
 
 ---
 
 ## 12. Organ — `tonewheel` / `drawbar` (`ORGAN_VOICE`)
 
-Daisy WASM only. Summed harmonic drawbars (9-level mapping on `drawbar` algo) + scanner vibrato + key click on gate rise; `tonewheel` uses fixed registration, `drawbar` uses live `drawbar` param. Leslie not modeled — use `#synth vibrato` / `#synth echo` FX.
+Daisy WASM only. Summed harmonic drawbars (9-level mapping on `drawbar` algo) + scanner vibrato + key click on gate rise; `tonewheel` uses fixed registration, `drawbar` uses live `drawbar` param. Leslie not modeled — use `#vibrato` / `#echo` FX.
 
 | Param | Value | Default |
 |-------|-------|---------|

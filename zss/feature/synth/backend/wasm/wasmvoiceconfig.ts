@@ -336,6 +336,7 @@ function parsesourcetype(
         type: SOURCE_TYPE.STRING_VOICE,
         algo: 1,
         pluck: defaultpluck(),
+        envelope: { attack: 0.008, decay: 0.05, sustain: 1, release: 0.35 },
       }
     case 'drip':
       return { ...current, type: SOURCE_TYPE.DRIP_VOICE, algo: 0 }
@@ -377,7 +378,7 @@ function parsesourcetype(
         type: SOURCE_TYPE.PIANO_VOICE,
         algo: 0,
         piano: defaultpiano(),
-        envelope: { attack: 0.001, decay: 1.8, sustain: 0.25, release: 1.2 },
+        envelope: { attack: 0.001, decay: 1.8, sustain: 0.55, release: 1.2 },
       }
     case 'epiano':
       return {
@@ -385,7 +386,7 @@ function parsesourcetype(
         type: SOURCE_TYPE.PIANO_VOICE,
         algo: 1,
         piano: { spread: 0.12, hammer: 0.25, brightness: 0.65, damping: 0.6 },
-        envelope: { attack: 0.002, decay: 0.9, sustain: 0.15, release: 0.6 },
+        envelope: { attack: 0.002, decay: 0.9, sustain: 0.5, release: 0.6 },
       }
     case 'timpani':
       return {
@@ -416,14 +417,16 @@ function parsesourcetype(
         ...current,
         type: SOURCE_TYPE.GUITAR_VOICE,
         algo: 0,
-        guitar: { pick: 0.25, body: 0.4, damping: 0.55, position: 0.35 },
+        guitar: { pick: 0.25, body: 0.4, damping: 0.72, position: 0.35 },
+        envelope: { attack: 0.008, decay: 0.05, sustain: 1, release: 0.4 },
       }
     case 'steel':
       return {
         ...current,
         type: SOURCE_TYPE.GUITAR_VOICE,
         algo: 1,
-        guitar: { pick: 0.5, body: 0.35, damping: 0.45, position: 0.6 },
+        guitar: { pick: 0.5, body: 0.35, damping: 0.7, position: 0.6 },
+        envelope: { attack: 0.008, decay: 0.04, sustain: 1, release: 0.3 },
       }
     case 'tonewheel':
       return {
@@ -550,9 +553,14 @@ export function applywasmvoiceconfig(
     }
     if (isorganparamkey(config)) {
       if (voice.type === SOURCE_TYPE.ORGAN_VOICE) {
-        return applynumericparam(voice.organ, config, value)
-      }
-      if (config !== 'drawbar') {
+        // '#synth drawbar' (no numeric value) is the named voice, not the param.
+        if (applynumericparam(voice.organ, config, value)) {
+          return true
+        }
+        if (config !== 'drawbar') {
+          return false
+        }
+      } else if (config !== 'drawbar') {
         return false
       }
     }

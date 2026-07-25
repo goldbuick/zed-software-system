@@ -95,9 +95,9 @@ describe('wasmvoiceconfig', () => {
     expect(voices[1].algo).toBe(1)
     expect(voices[1].pluck).toEqual({
       structure: 0.14,
-      brightness: 0.22,
-      damping: 0.68,
-      accent: 0.48,
+      brightness: 0.38,
+      damping: 0.72,
+      accent: 0.12,
     })
     expect(applyvoiceconfig(voices, 2, 'drip', '')).toBe(true)
     expect(voices[2].type).toBe(SOURCE_TYPE.DRIP_VOICE)
@@ -225,11 +225,29 @@ describe('wasmvoiceconfig', () => {
 
     expect(applyvoiceconfig(voices, 1, 'nylon', '')).toBe(true)
     expect(voices[1].type).toBe(SOURCE_TYPE.GUITAR_VOICE)
+    expect(voices[1].guitar).toEqual({
+      pick: 0.25,
+      body: 0.4,
+      damping: 0.72,
+      position: 0.35,
+    })
     expect(applyvoiceconfig(voices, 2, 'steel', '')).toBe(true)
     expect(voices[2].algo).toBe(1)
+    expect(voices[2].guitar).toEqual({
+      pick: 0.5,
+      body: 0.35,
+      damping: 0.7,
+      position: 0.6,
+    })
 
     expect(applyvoiceconfig(voices, 3, 'tonewheel', '')).toBe(true)
     expect(voices[3].type).toBe(SOURCE_TYPE.ORGAN_VOICE)
+    expect(voices[3].algo).toBe(0)
+    // Named voice must win over organ param when value is not numeric.
+    expect(applyvoiceconfig(voices, 3, 'drawbar', '')).toBe(true)
+    expect(voices[3].algo).toBe(1)
+    expect(applyvoiceconfig(voices, 3, 'drawbar', 0.4)).toBe(true)
+    expect(voices[3].organ.drawbar).toBe(0.4)
     expect(applyvoiceconfig(voices, 0, 'drawbar', '')).toBe(true)
     expect(voices[0].algo).toBe(1)
   })

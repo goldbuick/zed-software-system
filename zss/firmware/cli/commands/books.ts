@@ -230,6 +230,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
         }
         return 0
       },
+      { lists: [CODEPAGE_NAME_LISTS] },
     )
     .command('help', ['help scroll'], () => {
       vmrefscroll(SOFTWARE, READ_CONTEXT.elementfocus)

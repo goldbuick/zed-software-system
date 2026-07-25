@@ -353,8 +353,10 @@ static void applyguitarparams(ZssVoice& v, int cfg, int algo) {
 
   const float structure = 0.1f + position * 0.12f;
   const float brightness = 0.15f + position * 0.35f + (algo == 1 ? 0.12f : 0.f);
-  const float damp = 0.45f + damping * 0.4f;
-  const float accent = 0.35f + pick * 0.35f;
+  // Cap below DaisySP infinite-ring cliff (damping >= 0.95).
+  const float damp = std::min(damping, kKarplusMaxDamping);
+  // Keep strike accent modest so multi-note crests do not pump main-comp GR.
+  const float accent = 0.08f + pick * 0.12f;
 
   if (structure != v.guitarprev[0]) {
     v.stringvoice.SetStructure(structure);
@@ -386,15 +388,24 @@ float guitarvoice(ZssVoice& v, float hz, bool gate, int algo, int cfg,
   applyguitarparams(v, cfg, algo);
   v.stringvoice.SetFreq(hz);
   v.stringvoice.SetSustain(false);
-  if (trigger) {
+  // Offline note abutting keeps gate high across note-ons; retrigger on pitch.
+  const bool pitchstrike =
+      gate && v.guitargateprev && std::fabs(hz - v.karplushzprev) > 0.5f;
+  if (trigger || pitchstrike) {
     v.stringvoice.Reset();
+    v.voiceenv.retrigger();
+    trigger = true;
   }
+  v.karplushzprev = gate ? hz : 0.f;
+  // Amp envelope follows gate so note-off releases (Karplus alone can hang).
+  float envout = v.voiceenv.process(gate) * vel;
   float out = v.stringvoice.Process(trigger);
 
   v.stringbodylo.SetFreq(180.f);
   v.stringbodylo.SetRes(0.3f);
   v.stringbodylo.Process(out);
   out += v.stringbodylo.Band() * v.guitarbodymix * 0.25f;
+  out *= envout;
 
   if (trigger) {
     v.sparkleenv.SetTime(ADSR_SEG_ATTACK, 0.001f);
@@ -402,13 +413,15 @@ float guitarvoice(ZssVoice& v, float hz, bool gate, int algo, int cfg,
     v.sparkleenv.SetSustainLevel(0.f);
     v.sparkleenv.SetTime(ADSR_SEG_RELEASE, 0.02f);
     float sparkenv = v.sparkleenv.Process(true);
+    // Keep pick quieter than the string body so attack does not dwarf ring-down.
     float pick =
-        stringbownoisesample(v) * sparkenv * v.guitarpick * vel * 0.35f;
+        stringbownoisesample(v) * sparkenv * v.guitarpick * vel * 0.18f;
     out += pick;
   }
 
-  v.lastenv = std::fabs(out);
-  return out * kGuitarVoiceGain;
+  v.lastenv = envout;
+  // Soft-limit after voice gain so strike crest cannot exceed ~1 into the bus.
+  return std::tanh(out * kGuitarVoiceGain);
 }
 
 static float orgscannervib(ZssVoice& v, float hz, float leak, int harmonic) {
@@ -490,7 +503,8 @@ float organvoice(ZssVoice& v, float hz, bool gate, int algo, int cfg) {
   }
 
   v.lastenv = envout;
-  return sig * envout * kOrganVoiceGain;
+  const float organgain = algo == 1 ? kOrganVoiceGain : kOrganTonewheelGain;
+  return sig * envout * organgain;
 }
 
 } // namespace zss_daisy

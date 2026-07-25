@@ -1,0 +1,3 @@
+---
+hint: "Clear a flag"
+---

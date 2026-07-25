@@ -210,7 +210,11 @@ export function EditorInput({
     )
   }
 
-  if (autocomplete.endoflinehint && autocomplete.endoflineargs.length > 0) {
+  if (
+    !autocompleteactive &&
+    autocomplete.endoflinehint &&
+    autocomplete.endoflineargs.length > 0
+  ) {
     drawcommandarghint(
       autocomplete.endoflineargs,
       startx + coderowlength + 1,

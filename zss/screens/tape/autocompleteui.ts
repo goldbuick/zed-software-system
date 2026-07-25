@@ -21,27 +21,10 @@ export function applyautocompletesuggestion(
   return true
 }
 
-/**
- * X column for the end-of-line command arg hint on the terminal input line.
- * Shifts right when the suggestion popup is open so the hint does not overlap it.
- */
-export function computeterminalarghintx(args: {
-  startx: number
-  inputlen: number
-  autocomplete: AUTO_COMPLETE
-  autocompleteactive: boolean
-  /** Left edge of the autocomplete popup in screen columns (e.g. startx + wordcol - 1). */
-  popupleftx: number
-}): number {
-  let hintx = args.startx + args.inputlen + 1
-  if (
-    args.autocompleteactive &&
-    args.autocomplete.suggestions.length > 0 &&
-    args.autocomplete.maxsuggestionwordlen > 0
-  ) {
-    const popupright =
-      args.popupleftx + args.autocomplete.maxsuggestionwordlen + 2
-    hintx = Math.max(hintx, popupright + 1)
-  }
-  return hintx
+/** X column for the end-of-line command arg hint on the terminal input line. */
+export function computeterminalarghintx(
+  startx: number,
+  inputlen: number,
+): number {
+  return startx + inputlen + 1
 }
