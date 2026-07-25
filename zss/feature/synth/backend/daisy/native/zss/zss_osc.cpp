@@ -157,7 +157,8 @@ float fmcarriersample(Oscillator& carrier, Oscillator& modulator, int modtype,
                       int carriertype) {
   float mod = oscmodwave(modulator, modtype, modhz) * modidx * moddepth;
   float fmh = hz + mod * hz * kFmHzScale;
-  // Carrier at full amp; modulator already scaled by kOscModWaveGain in oscmodwave.
+  // Carrier at full amp; modulator already scaled by kOscModWaveGain in
+  // oscmodwave.
   return oscbasicwave(carrier, carriertype, fmh, 1.f);
 }
 
@@ -208,7 +209,8 @@ static float oscshapemakeup(int shape) {
 }
 
 float synthwavegain(int osc) {
-  // ONLY applies to #synth sine (not am/fm/fat sine — those match via family gain)
+  // ONLY applies to #synth sine (not am/fm/fat sine — those match via family
+  // gain)
   if (osc == 1) {
     return kSineVoiceGain;
   }
@@ -339,9 +341,8 @@ float dootvoice(ZssVoice& v, float freq, bool gate) {
   bool trigger = gate && !v.gateprev;
   v.gateprev = gate;
   // Abutting note-ons keep gate high; re-arm pitch envelope on pitch change.
-  const bool pitchstrike =
-      gate && v.karplushzprev > 0.f &&
-      std::fabs(basehz - v.karplushzprev) > 0.5f;
+  const bool pitchstrike = gate && v.karplushzprev > 0.f &&
+                           std::fabs(basehz - v.karplushzprev) > 0.5f;
   if (trigger || pitchstrike) {
     // Tone MembraneSynth: phase 0 = note*octaves, phase 1 = note.
     v.dootpitch = 0.f;

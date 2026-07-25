@@ -223,8 +223,9 @@ float processvoice(int vi, float vstart[kVibratoGroups],
     applypluckparams(v, cfg);
     v.stringvoice.SetFreq(hz);
     v.stringvoice.SetSustain(false);
-    // Offline note abutting keeps gate high across note-ons; retrigger on pitch.
-    // Compare base note hz (not vibrato-modulated) so LFO does not re-pluck.
+    // Offline note abutting keeps gate high across note-ons; retrigger on
+    // pitch. Compare base note hz (not vibrato-modulated) so LFO does not
+    // re-pluck.
     const bool pitchstrike =
         gate && v.stringgateprev && std::fabs(basehz - v.karplushzprev) > 0.5f;
     if (trigger || pitchstrike) {
@@ -235,7 +236,8 @@ float processvoice(int vi, float vstart[kVibratoGroups],
     v.karplushzprev = gate ? basehz : 0.f;
     // Amp envelope follows gate so note-off releases (Karplus alone can hang).
     float envout = v.voiceenv.process(gate);
-    // Soft-limit after voice gain so strike crest cannot exceed ~1 into the bus.
+    // Soft-limit after voice gain so strike crest cannot exceed ~1 into the
+    // bus.
     out = std::tanh(v.stringvoice.Process(trigger) * envout * kStringPluckGain);
     out *= dbtoamp(vol_db);
     v.lastenv = envout;

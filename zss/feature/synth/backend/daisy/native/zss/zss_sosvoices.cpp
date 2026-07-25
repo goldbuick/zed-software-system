@@ -442,7 +442,8 @@ float guitarvoice(ZssVoice& v, float hz, bool gate, int algo, int cfg,
     v.sparkleenv.SetSustainLevel(0.f);
     v.sparkleenv.SetTime(ADSR_SEG_RELEASE, 0.02f);
     float sparkenv = v.sparkleenv.Process(true);
-    // Keep pick quieter than the string body so attack does not dwarf ring-down.
+    // Keep pick quieter than the string body so attack does not dwarf
+    // ring-down.
     float pick =
         stringbownoisesample(v) * sparkenv * v.guitarpick * vel * 0.18f;
     out += pick;
