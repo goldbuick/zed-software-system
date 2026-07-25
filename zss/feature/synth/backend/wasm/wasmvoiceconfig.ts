@@ -340,7 +340,12 @@ function parsesourcetype(
         algo: 0,
       })
     case 'bells':
-      return namedvoiceswitch(current, { type: SOURCE_TYPE.BELLS, algo: 0 })
+      return namedvoiceswitch(current, {
+        type: SOURCE_TYPE.BELLS,
+        algo: 0,
+        // Tone FMSynth carrier env (voiceenv multiplies ModalVoice + sparkle)
+        envelope: { attack: 0.01, decay: 3, sustain: 0.3, release: 6 },
+      })
     case 'doot':
       return namedvoiceswitch(current, { type: SOURCE_TYPE.DOOT, algo: 0 })
     case 'algo0':
@@ -580,7 +585,7 @@ export function applywasmvoiceconfig(
       if (voice.type === SOURCE_TYPE.PIANO_VOICE) {
         return applynumericparam(voice.piano, config, value)
       }
-      return false
+      // Fall through: fat osc uses `spread` on SYNTH (piano key name collision).
     }
     if (istimpaniparamkey(config)) {
       if (voice.type === SOURCE_TYPE.TIMPANI_VOICE) {

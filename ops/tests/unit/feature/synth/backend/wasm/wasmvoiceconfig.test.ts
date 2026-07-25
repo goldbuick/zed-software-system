@@ -287,9 +287,9 @@ describe('wasmvoiceconfig', () => {
     expect(voices[0].type).toBe(SOURCE_TYPE.BELLS)
     expect(voices[0].envelope).toEqual({
       attack: 0.01,
-      decay: 0.01,
-      sustain: 0.5,
-      release: 0.01,
+      decay: 3,
+      sustain: 0.3,
+      release: 6,
     })
     expect(voices[0].portamento).toBe(0)
   })
@@ -330,9 +330,9 @@ describe('wasmvoiceconfig', () => {
     expect(voices[0].type).toBe(SOURCE_TYPE.BELLS)
     expect(voices[0].envelope).toEqual({
       attack: 0.01,
-      decay: 0.01,
-      sustain: 0.5,
-      release: 0.01,
+      decay: 3,
+      sustain: 0.3,
+      release: 6,
     })
   })
 
@@ -417,6 +417,39 @@ describe('wasmvoiceconfig', () => {
     expect(osc[0].modindex).toBe(8)
   })
 
+  it('maps harmonicity on fmsquare osc sab', () => {
+    const voices = defaultwasmvoicestate()
+    const osc = defaultwasmoscconfig()
+    const algo = defaultwasmalgoconfig()
+    applyvoiceconfig(voices, 0, 'fmsquare', '', osc, algo)
+    expect(applyvoiceconfig(voices, 0, 'harmonicity', 10, osc, algo)).toBe(
+      true,
+    )
+    expect(osc[0].harmonicity).toBe(10)
+  })
+
+  it('maps fat spread and phase on synth (not blocked by piano spread)', () => {
+    const voices = defaultwasmvoicestate()
+    const osc = defaultwasmoscconfig()
+    const algo = defaultwasmalgoconfig()
+    applyvoiceconfig(voices, 0, 'fatsawtooth', '', osc, algo)
+    expect(applyvoiceconfig(voices, 0, 'spread', 40, osc, algo)).toBe(true)
+    expect(osc[0].spread).toBe(40)
+    expect(applyvoiceconfig(voices, 0, 'phase', 0.25, osc, algo)).toBe(true)
+    expect(osc[0].phase).toBe(0.25)
+    expect(applyvoiceconfig(voices, 0, 'count', 5, osc, algo)).toBe(true)
+    expect(osc[0].count).toBe(5)
+  })
+
+  it('maps pwm modfreq on synth voices', () => {
+    const voices = defaultwasmvoicestate()
+    const osc = defaultwasmoscconfig()
+    const algo = defaultwasmalgoconfig()
+    applyvoiceconfig(voices, 0, 'pwm', '', osc, algo)
+    expect(applyvoiceconfig(voices, 0, 'modfreq', 3, osc, algo)).toBe(true)
+    expect(osc[0].modfreq).toBe(3)
+  })
+
   it('maps modtype and modenv on fm/am synth voices', () => {
     const voices = defaultwasmvoicestate()
     const osc = defaultwasmoscconfig()
@@ -451,6 +484,42 @@ describe('wasmvoiceconfig', () => {
       attack: 0.1,
       decay: 0.2,
       sustain: 0.3,
+      release: 0.4,
+    })
+  })
+
+  it('maps algo4 osc and modindex params', () => {
+    const voices = defaultwasmvoicestate()
+    const osc = defaultwasmoscconfig()
+    const algo = defaultwasmalgoconfig()
+    applyvoiceconfig(voices, 0, 'algo4', '', osc, algo)
+    expect(applyvoiceconfig(voices, 0, 'osc2', 'sawtooth', osc, algo)).toBe(
+      true,
+    )
+    expect(algo[0].osc2).toBe(WASM_OSC_TYPE.SAWTOOTH)
+    expect(applyvoiceconfig(voices, 0, 'modindex1', 4, osc, algo)).toBe(true)
+    expect(algo[0].modindex1).toBe(4)
+    expect(applyvoiceconfig(voices, 0, 'modindex3', 6, osc, algo)).toBe(true)
+    expect(algo[0].modindex3).toBe(6)
+  })
+
+  it('installs Tone-parity envelope on bells; env applies on drip', () => {
+    const voices = defaultwasmvoicestate()
+    applyvoiceconfig(voices, 0, 'bells', '')
+    expect(voices[0].envelope).toEqual({
+      attack: 0.01,
+      decay: 3,
+      sustain: 0.3,
+      release: 6,
+    })
+    applyvoiceconfig(voices, 0, 'drip', '')
+    expect(
+      applyvoiceconfig(voices, 0, 'env', [0.001, 0.05, 0, 0.4]),
+    ).toBe(true)
+    expect(voices[0].envelope).toEqual({
+      attack: 0.001,
+      decay: 0.05,
+      sustain: 0,
       release: 0.4,
     })
   })

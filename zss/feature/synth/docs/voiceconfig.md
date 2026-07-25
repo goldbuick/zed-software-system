@@ -25,7 +25,7 @@ Handles voice/source configuration from external API (e.g. device commands). For
 
 ## Source Type Changes
 
-Switching named voice type (or entering SYNTH from a non-SYNTH voice via a wave name) installs that destination's default ADSR and clears `portamento`. Same-SYNTH wave changes (`square` → `sawtooth`) keep the current envelope.
+Switching named voice type (or entering SYNTH from a non-SYNTH voice via a wave name) installs that destination's default ADSR and clears `portamento`. Same-SYNTH wave changes (`square` → `sawtooth`) keep the current envelope. `#synth bells` installs Tone-parity carrier env `0.01/3/0.3/6`.
 
 | Config | Source Type |
 |--------|-------------|
@@ -63,6 +63,8 @@ Switching named voice type (or entering SYNTH from a non-SYNTH voice via a wave 
 | `hammer` | 0–1 | `0.55` |
 | `brightness` | 0–1 | `0.5` |
 | `damping` | 0–1 | `0.45` |
+
+On `#synth piano` / `epiano`, `spread` is the piano unison param (0–1). On fat SYNTH waves (`fatsawtooth`, etc.), the same key name sets fat detune **cents** (default `20`).
 
 ## Timpani configs (WASM only)
 
@@ -122,7 +124,7 @@ Applies only when voice is `#synth pluck`. Defaults: `0.14`, `0.38`, `0.72`, `0.
 | `vib` | number (0–1) | VCO1 vibrato depth (0–8¢) |
 | `filter` | number (0–1) | LP cutoff scale + filter envelope |
 
-Applies only when voice is `#synth string` (algo 0). Defaults: `0.25`, `0.2`, `0.35`, `0.5`. See [voice-types-reference.md](voice-types-reference.md) §5.
+Applies only when voice is `#synth string` (algo 0). Defaults: `0.25`, `0.2`, `0.35`, `0.5`. See [voice-types-reference.md](voice-types-reference.md) §6.
 
 ## Oscillator Types (SYNTH)
 
@@ -135,14 +137,14 @@ When config is a valid oscillator type: `sine`, `square`, `triangle`, `sawtooth`
 
 | Oscillator | Config | Description |
 |------------|--------|-------------|
-| pwm | `modfreq` | Modulation frequency |
-| pulse | `width` | Pulse width |
+| pwm | `modfreq` | LFO rate for pulse-width modulation (Hz) |
+| pulse | `width` | Static pulse width |
 | sine/square/triangle/sawtooth/custom | `phase` | Phase offset |
-| am* | `harmonicity`, `modtype`, `modenv` | AM params |
-| fm* | `harmonicity`, `modindex`, `modtype`, `modenv` | FM params |
-| fat* | `count`, `phase`, `spread` | Fat oscillator params |
+| am* | `harmonicity`, `modtype`, `modenv` | AM params (`harmonicity` = modulator ratio) |
+| fm* | `harmonicity`, `modindex`, `modtype`, `modenv` | FM params; Daisy modulator Hz = note × `harmonicity` |
+| fat* | `count`, `phase`, `spread` | Unison count, phase, detune cents |
 
-## AlgoSynth Configs (algosynth.ts)
+## AlgoSynth Configs ([algosynth.md](algosynth.md))
 
 | Config | Value | Description |
 |--------|-------|-------------|
@@ -150,8 +152,10 @@ When config is a valid oscillator type: `sine`, `square`, `triangle`, `sawtooth`
 | `harmonicity1`-`3` | number | Per-operator |
 | `modindex` | number | All three mod indices |
 | `modindex1`-`3` | number | Per-operator |
-| `osc1`-`osc4` | string | Oscillator type |
+| `osc1`-`osc4` | string | Operator wave (Daisy applies on FM rewrite paths) |
 | `env1`-`env4` | [a,d,s,r] | Per-operator envelope |
+
+Voice-level `env` / `envelope` is the outer mix ADSR (`algooutenv`). See [voice-types-reference.md](voice-types-reference.md) for algo routings (`algo4` = `1→2`, `3→4` → op2+op4).
 
 ## Validation (validation.ts)
 

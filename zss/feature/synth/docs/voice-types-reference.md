@@ -84,9 +84,9 @@ Selecting any validated wave name switches voice to `SYNTH`. Names validated by 
 | **All SYNTH** | `env` / `envelope`, `port` / `portamento` | env above; port `0` | Tone reset env `0.01/0.01/0.5/0.01`; port `0` | Daisy: linear **`ZssLinearEnv`** on voice bus; AM/FM **`modenv`** uses same helper |
 | **sine/square/triangle/sawtooth/custom** | `phase` | `0` | **Tone** Oscillator: `0` |
 | **pulse** | `width` | `0.2` | **Tone** PulseOscillator: `0.2` |
-| **pwm** | `modfreq`, `modulationfrequency` | `1` | **Tone** PWMOscillator: `1` Hz (range 0.1–5) |
+| **pwm** | `modfreq`, `modulationfrequency`, `width` | modfreq `1`, width `0.2` | **Tone** / Daisy PWMOscillator: LFO at `modfreq` Hz modulates pulse width around 0.5 by `width` |
 | **am\*** | `harmonicity`, `modtype`/`modulationtype`, `modenv`/`modulationenvelope` | harm `1`, modtype `square`, modenv `0.01/0.01/1/0.5` | **Tone** AMOscillator: harm `1`, modtype `square` |
-| **fm\*** | `harmonicity`, `modindex`, `modtype`, `modenv` | harm `1`, modindex `2`, modtype `square`, modenv `0.01/0.01/1/0.5` | **Tone** FMOscillator: harm `1`, modindex `2`, modtype `square` |
+| **fm\*** | `harmonicity`, `modindex`, `modtype`, `modenv` | harm `1`, modindex `2`, modtype `square`, modenv `0.01/0.01/1/0.5` | **Tone** / Daisy FMOscillator: harm `1`, modindex `2`, modtype `square`; modulator Hz = note × `harmonicity` |
 | **fat\*** | `count`, `phase`, `spread` | count `3`, phase `0`, spread `20` | **Tone** FatOscillator class default: count `3`, spread `20`, type `sawtooth`; **`fatsine` stacks sines** (OmniOscillator suffix) |
 | **Partials** | array value or trailing numbers | partialcount `0`, 8 zeros | **Tone**: partials `[]`, partialCount `0` |
 
@@ -150,7 +150,7 @@ Default envelope: same WASM global `0.01/0.01/0.5/0.01`.
 
 | Param | Tone | WASM |
 |-------|------|------|
-| `env` / `envelope` | Yes (FMSynth carrier envelope) | Yes (drives `bellenvs` only) |
+| `env` / `envelope` | Yes (FMSynth carrier envelope) | Yes (`voiceenv` multiplies ModalVoice + sparkle) |
 | FM params | Via Tone FMSynth API, **not** exposed as `#synth` keys | **Not configurable** |
 
 ### Tone fixed at creation + reset ([source.ts](../../../../ops/archive/synth/tone/source.ts))
@@ -165,9 +165,9 @@ Default envelope: same WASM global `0.01/0.01/0.5/0.01`.
 
 Bell FM: harm `1.5`, modindex `30`, envelope init → **0.01/3/0.3/6** s. Sparkle: harm `5.1`, modindex `32`, envelope → **0.001/1.4/0/0.321** s. Output `× 0.35`.
 
-**DaisySP WASM:** body is `ModalVoice`; sparkle uses the same fixed FM stack and mix (`× 0.15`) as WASM play code.
+**DaisySP WASM:** body is `ModalVoice`; sparkle uses fixed `sparkleenv` and mix (`× 0.15`). Selecting `#synth bells` installs carrier env `0.01/3/0.3/6` on `voiceenv`.
 
-`#synth env` overrides bell carrier envelope only; sparkle envelope is **WASM-play fixed**.
+`#synth env` overrides that amp envelope; sparkle envelope stays fixed.
 
 ---
 
@@ -217,9 +217,11 @@ algorithm via `algoN` name; harmonicity1/2/3 `2`; modindex1/2/3 `1`; osc1–4 `s
 
 Use **`env1`–`env4`** for per-operator shaping; use voice-level **`env`** for an outer mix envelope on both backends.
 
+**Daisy routings** match [algosynth.md](algosynth.md) (including `algo4` = `1→2`, `3→4` → op2+op4). FM rewrite paths use each operator's `oscN` wave (not hardcoded sine).
+
 ---
 
-## 5. `string` (`STRING_VOICE` algo 0)
+## 6. `string` (`STRING_VOICE` algo 0)
 
 Daisy WASM only. SOS Synth Secrets string-machine pad (not sampled orchestra): two detuned polyBLEP saws, triangle vibrato on VCO1, square-LFO pitch mod on VCO2 (PWM emulation), slow ensemble detune LFO, key-follow LP with attack-boosted filter envelope, violin-body peaks, light bow noise.
 
@@ -243,7 +245,7 @@ Selecting `#synth string` resets ensemble timbre params to the defaults above.
 
 ---
 
-## 6. `pluck` (`STRING_VOICE` algo 1)
+## 7. `pluck` (`STRING_VOICE` algo 1)
 
 Daisy WASM only. Gate-edge strike via DaisySP `StringVoice`; no Tone backend.
 
@@ -258,13 +260,29 @@ Daisy WASM only. Gate-edge strike via DaisySP `StringVoice`; no Tone backend.
 | `damping` | 0–1 | `0.72` | pluck only (native cap 0.85; DaisySP >= 0.95 = infinite ring) |
 | `accent` | 0–1 | `0.12` | pluck only |
 
-`env` / `envelope` and `port` / `portamento` are stored but **not used** by the pluck audio path (strike is gate-edge triggered, no ADSR multiply).
+`env` / `envelope` multiplies the pluck strike (`voiceenv`). `port` / `portamento` is stored but **not applied**.
 
 Selecting `#synth pluck` resets timbre params to the defaults above.
 
 ---
 
-## 7. Wind — `flute` / `clarinet` / `brass` / `panpipe` (`WIND_VOICE`)
+## 8. `drip` (`DRIP_VOICE`)
+
+Daisy WASM only. DaisySP `Drip` struck on gate edge / pitch change (dettack `0.35` s).
+
+### User-configurable
+
+| Param | Value | Notes |
+|-------|-------|-------|
+| `drip` | — | voice type selection |
+| `vol` / `volume` | number (dB) | effective |
+| `env` / `envelope` | `[a, d, s, r]` | `voiceenv` multiplies drip output (release on note-off) |
+
+No timbre `#synth` keys beyond env/vol. Selecting `#synth drip` keeps the global default envelope unless you set `env`.
+
+---
+
+## 9. Wind — `flute` / `clarinet` / `brass` / `panpipe` (`WIND_VOICE`)
 
 Daisy WASM only. Formant-filtered excitation + breath burst on attack + delayed vibrato; algo selects waveform and formant ratios (flute saw+tri, clarinet square, brass saw with pressure-driven brightness/resonance, panpipe multi-pipe detune with amplitude rolloff).
 
@@ -277,7 +295,7 @@ Daisy WASM only. Formant-filtered excitation + breath burst on attack + delayed 
 
 ---
 
-## 8. Piano — `piano` / `epiano` (`PIANO_VOICE`)
+## 10. Piano — `piano` / `epiano` (`PIANO_VOICE`)
 
 Daisy WASM only. Tricord body with stretched keyboard tuning + soundboard resonances + hammer sparkle; `epiano` uses DaisySP `Fm2` tine model. `#play` writes fixed velocity `1` to SAB slot `base+4`.
 
@@ -288,9 +306,11 @@ Daisy WASM only. Tricord body with stretched keyboard tuning + soundboard resona
 | `brightness` | 0–1 | `0.5` |
 | `damping` | 0–1 | `0.45` |
 
+On piano voices, `spread` is unison (0–1). On fat SYNTH waves the same key is detune **cents** (see §1).
+
 ---
 
-## 9. Timpani — `timpani` (`TIMPANI_VOICE`)
+## 11. Timpani — `timpani` (`TIMPANI_VOICE`)
 
 Daisy WASM only. DaisySP `ModalVoice` membrane with pitch scoop on strike; not a `#play` drum char.
 
@@ -303,7 +323,7 @@ Daisy WASM only. DaisySP `ModalVoice` membrane with pitch scoop on strike; not a
 
 ---
 
-## 10. Bowed — `violin` / `viola` (`BOWED_VOICE`)
+## 12. Bowed — `violin` / `viola` (`BOWED_VOICE`)
 
 Daisy WASM only. Saw + bow noise + body formants + **delayed vibrato** (~300 ms after note-on). **`port` applied.**
 
@@ -316,7 +336,7 @@ Daisy WASM only. Saw + bow noise + body formants + **delayed vibrato** (~300 ms 
 
 ---
 
-## 11. Guitar — `nylon` / `steel` (`GUITAR_VOICE`)
+## 13. Guitar — `nylon` / `steel` (`GUITAR_VOICE`)
 
 Daisy WASM only. `StringVoice` strike + pick burst + body peak; algo 0 = nylon, 1 = steel.
 
@@ -331,7 +351,7 @@ Daisy WASM only. `StringVoice` strike + pick burst + body peak; algo 0 = nylon, 
 
 ---
 
-## 12. Organ — `tonewheel` / `drawbar` (`ORGAN_VOICE`)
+## 14. Organ — `tonewheel` / `drawbar` (`ORGAN_VOICE`)
 
 Daisy WASM only. Summed harmonic drawbars (9-level mapping on `drawbar` algo) + scanner vibrato + key click on gate rise; `tonewheel` uses fixed registration, `drawbar` uses live `drawbar` param. Leslie not modeled — use `#vibrato` / `#echo` FX.
 
@@ -372,11 +392,12 @@ Algo:       harmonicity | harmonicity1-3 | modindex | modindex1-3
 Pluck:      structure | brightness | damping | accent   (pluck voice only)
 String:     detune | pwm | vib | filter                 (string voice only)
 Wind:       breath | pressure | brightness | resonance  (wind voices)
-Piano:      spread | hammer | brightness | damping      (piano voices)
+Piano:      spread | hammer | brightness | damping      (piano voices; fat osc also uses spread in cents)
 Timpani:    tension | decay | tone | strike            (timpani only)
 Bowed:      bow | pressure | vib | body                (bowed voices)
 Guitar:     pick | body | damping | position            (guitar voices)
 Organ:      drawbar | click | leak | bright             (organ voices)
+Drip:       env/envelope | vol                          (drip voice; no timbre keys)
 ```
 
 ---

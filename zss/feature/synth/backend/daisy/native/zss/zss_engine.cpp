@@ -178,6 +178,7 @@ float processvoice(int vi, float vstart[kVibratoGroups],
     if (trigger || pitchstrike) {
       trigger = true;
       v.sparkleenv.Retrigger(true);
+      v.voiceenv.retrigger();
     }
     v.karplushzprev = gate ? basehz : 0.f;
     v.modalvoice.SetFreq(hz);
@@ -192,8 +193,9 @@ float processvoice(int vi, float vstart[kVibratoGroups],
     v.sparklecar.SetWaveform(Oscillator::WAVE_SIN);
     v.sparklecar.SetAmp(1.f);
     float sparkle = v.sparklecar.Process() * v.sparkleenv.Process(gate);
-    out = (body + sparkle * 0.15f) * kBellsVoiceGain;
-    v.lastenv = std::fabs(out);
+    float envout = v.voiceenv.process(gate);
+    out = (body + sparkle * 0.15f) * kBellsVoiceGain * envout;
+    v.lastenv = envout;
   } else if (type == kDoot) {
     out = dootvoice(v, freq, gate);
     v.lastenv = std::fabs(out);
@@ -246,10 +248,12 @@ float processvoice(int vi, float vstart[kVibratoGroups],
         gate && v.dripgateprev && std::fabs(basehz - v.karplushzprev) > 0.5f;
     if (trigger || pitchstrike) {
       trigger = true;
+      v.voiceenv.retrigger();
     }
     v.karplushzprev = gate ? basehz : 0.f;
-    out = v.drip.Process(trigger) * dbtoamp(vol_db) * kDripVoiceGain;
-    v.lastenv = std::fabs(out);
+    float envout = v.voiceenv.process(gate);
+    out = v.drip.Process(trigger) * envout * dbtoamp(vol_db) * kDripVoiceGain;
+    v.lastenv = envout;
     return out;
   } else if (type == kWindVoice) {
     float hz = freq > 0.f ? freq : 440.f;

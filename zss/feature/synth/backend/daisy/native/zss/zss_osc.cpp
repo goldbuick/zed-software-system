@@ -161,6 +161,23 @@ float fmcarriersample(Oscillator& carrier, Oscillator& modulator, int modtype,
   return oscbasicwave(carrier, carriertype, fmh, 1.f);
 }
 
+// am*/fm*/fat* enums are SINE,SQUARE,TRIANGLE,SAWTOOTH at +0..+3, but basic
+// WASM_OSC_TYPE is SQUARE=0, SINE=1, TRIANGLE=2, SAWTOOTH=3.
+static int familywavetobasic(int familywave) {
+  switch (familywave) {
+  case 0:
+    return 1; // sine
+  case 1:
+    return 0; // square
+  case 2:
+    return 2; // triangle
+  case 3:
+    return 3; // sawtooth
+  default:
+    return 0;
+  }
+}
+
 float oscpartialsynth(Oscillator& o, float hz, int count,
                       const float* partials) {
   int n = count > 0 ? std::min(8, count) : 0;
@@ -180,7 +197,7 @@ float oscpartialsynth(Oscillator& o, float hz, int count,
 }
 
 static float oscshapemakeup(int shape) {
-  // 0 square (ref), 1 sine (basic path only), 2 triangle, 3 sawtooth
+  // WASM_OSC_TYPE basic: 0 square, 1 sine, 2 triangle, 3 sawtooth
   if (shape == 2) {
     return kTriangleVoiceGain;
   }
@@ -203,15 +220,15 @@ float synthwavegain(int osc) {
   }
   // Adjust am*
   if (osc >= 10 && osc <= 13) {
-    return kAmVoiceGain * oscshapemakeup(osc - 10);
+    return kAmVoiceGain * oscshapemakeup(familywavetobasic(osc - 10));
   }
   // Adjust fm*
   if (osc >= 20 && osc <= 23) {
-    return kFmVoiceGain * oscshapemakeup(osc - 20);
+    return kFmVoiceGain * oscshapemakeup(familywavetobasic(osc - 20));
   }
   // Adjust fat*
   if (osc >= 30 && osc <= 33) {
-    return kFatVoiceGain * oscshapemakeup(osc - 30);
+    return kFatVoiceGain * oscshapemakeup(familywavetobasic(osc - 30));
   }
   return 1.f;
 }
@@ -234,7 +251,6 @@ float synthsource(ZssVoice& v, int vi, float freq, bool gate, float detune,
   float width = cfg.width > 0.f ? cfg.width : 0.2f;
   float modidx = cfg.modindex > 0.f ? cfg.modindex : 2.f;
   float harm = cfg.harmonicity > 0.f ? cfg.harmonicity : 1.f;
-  float modhz = hz * (cfg.modfreq > 0.f ? cfg.modfreq : 1.f);
   int pcount =
       static_cast<int>(cfg.partialcount > 0.f ? cfg.partialcount : 0.f);
   float sig = 0.f;
@@ -257,38 +273,54 @@ float synthsource(ZssVoice& v, int vi, float freq, bool gate, float detune,
     v.synthosc.SetPw(width);
     v.synthosc.SetAmp(1.f);
     sig = v.synthosc.Process();
-  } else if (osctype == 5) // #synth pwm
+  } else if (osctype == 5) // #synth pwm — Tone PWMOscillator: LFO at modfreq
   {
+    const float modfreq = cfg.modfreq > 0.f ? cfg.modfreq : 1.f;
+    const float lfo = oscbasicwave(v.synthmod, 1, modfreq, 1.f);
+    const float pw = clampf(0.5f + 0.5f * width * lfo, 0.01f, 0.99f);
     v.synthosc.SetFreq(hz);
     v.synthosc.SetWaveform(Oscillator::WAVE_SQUARE);
-    v.synthosc.SetPw(width > 0.f ? width : 0.2f);
+    v.synthosc.SetPw(pw);
     v.synthosc.SetAmp(1.f);
     sig = v.synthosc.Process();
   } else if (osctype >= 10 && osctype <= 13) // #synth am*
   {
     float modamp = v.modenv.process(gate);
     float modwave = oscmodwave(v.synthmod, cfg.modtype, hz * harm);
-    int cartype = osctype - 10;
+    int cartype = familywavetobasic(osctype - 10);
     // Tone AMOscillator: AudioToGain(mod) → 0.5 carrier when mod crosses 0.
     sig = oscbasicwave(v.synthosc, cartype, hz, 1.f) *
           (0.5f + 0.5f * modwave * modamp);
   } else if (osctype >= 20 && osctype <= 23) // #synth fm*
   {
     float moddepth = v.modenv.process(gate);
-    int cartype =
-        osctype == 20 ? 1 : (osctype == 21 ? 0 : (osctype == 22 ? 2 : 3));
-    sig = fmcarriersample(v.synthosc, v.synthmod, cfg.modtype, hz, modhz,
+    int cartype = familywavetobasic(osctype - 20);
+    // Tone FMOscillator: modulator rate = carrier hz * harmonicity
+    const float fmmodhz = hz * harm;
+    sig = fmcarriersample(v.synthosc, v.synthmod, cfg.modtype, hz, fmmodhz,
                           modidx, moddepth, cartype);
   } else if (osctype >= 30 && osctype <= 33) // #synth fat*
   {
     int cnt = cfg.count > 1.f ? static_cast<int>(cfg.count + 0.5f) : 3;
     float spread = cfg.spread > 0.f ? cfg.spread : 20.f;
     float det = spread / 1200.f;
-    int cartype = osctype - 30;
+    int cartype = familywavetobasic(osctype - 30);
     sig = 0.f;
-    for (int fi = 0; fi < cnt; ++fi) {
-      float mul = 1.f + (fi - (cnt - 1) * 0.5f) * det;
-      sig += oscbasicwave(v.synthosc, cartype, hz * mul, 1.f);
+    if (cfg.phase != 0.f || v.voicephasestep != 0.f) {
+      v.voicephasestep += hz / g_engine.sample_rate;
+      for (int fi = 0; fi < cnt; ++fi) {
+        float mul = 1.f + (fi - (cnt - 1) * 0.5f) * det;
+        if (cartype >= 0 && cartype <= 3) {
+          sig += oscwavefromphase(cartype, v.voicephasestep * mul + cfg.phase);
+        } else {
+          sig += oscbasicwave(v.synthosc, cartype, hz * mul, 1.f);
+        }
+      }
+    } else {
+      for (int fi = 0; fi < cnt; ++fi) {
+        float mul = 1.f + (fi - (cnt - 1) * 0.5f) * det;
+        sig += oscbasicwave(v.synthosc, cartype, hz * mul, 1.f);
+      }
     }
     sig /= cnt;
   } else if (osctype >= 0 &&
