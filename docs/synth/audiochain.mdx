@@ -39,9 +39,9 @@ hiss (pink noise) ───────┘
 
 - **Threshold:** -28 dB
 - **Ratio:** 4:1
-- **Attack / release:** 3 ms / 150 ms (peak envelope detector)
-- **Applied gain slew:** 8 ms attack / 100 ms release (`comp_gain_smooth`, separate from detector)
-- **Parallel mix:** 55% wet compressed / 45% dry (`kMasterCompMix`) — limits level loss vs full wet GR
+- **Attack / release:** 3 ms / 80 ms (peak envelope detector)
+- **Applied gain slew:** 8 ms attack / 60 ms release (`comp_gain_smooth`, separate from detector)
+- **Parallel mix:** 55% wet compressed / 45% dry (`kMainCompMix`) — limits level loss vs full wet GR
 - **Knee:** 30 dB (Tone `Compressor`; Daisy `compressorskneedb` in `maincomptargetgain()`)
 - **Silence guard:** When `|dry|` is below ~-80 dBFS, `comp_env` fast-decays so gain returns to unity before the next note
 - **Purpose:** Dynamics on full post-sidechain mix (ducked play + bg + TTS + drums)
@@ -51,7 +51,7 @@ hiss (pink noise) ───────┘
 ### Razzle Chain
 
 - **Vibrato:** Subtle pitch modulation (0.125 Hz, wet 0.02)
-- **Chorus:** Widening effect (7 ms base delay, wet **0.3**)
+- **Chorus:** Widening effect (7 ms base delay, wet **0.25**)
 - **Tape hiss:** Pink noise modulated by oscillator, feeds chorus input (very quiet bed)
 
 Full gain chart: [gain-levels.md](gain-levels.md).
@@ -63,7 +63,7 @@ Full gain chart: [gain-levels.md](gain-levels.md).
 | Play into sidechain | `volumetodb(20)` | `kPlayBusGain` |
 | Drums | `volumetodb(100) + 10` dB | `kDrumBusGain` (calibrate: `yarn play-drum-balance:calibrate`) |
 | bgplay / TTS | `10^((20*log10(vol)-35)/20)` | `readbgplayvolume()` / `readttsvolume()` (same law) |
-| Main fader | `volumetodb(vol × 0.25)` on `mainvolume` (offset **−35 dB**) | `readmainvolume()` (`kMainFaderOffsetDb`) |
+| Main fader | `volumetodb(vol × 0.25)` on `mainvolume` (offset **−41 dB**) | `readmainvolume()` (`kMainFaderOffsetDb`) |
 
 Boot SAB defaults: master/play fader **50**, bgplay **50**, TTS **100**.
 

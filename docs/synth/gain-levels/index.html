@@ -53,7 +53,7 @@ not a trim on the play bus into the mix. Play stem level is fixed at <code>kPlay
 <td>PLAY (0)</td>
 <td><strong>50</strong></td>
 <td><code>20*log10(vol*0.25) + kMainFaderOffsetDb</code></td>
-<td>~<strong>0.22</strong> @ offset -35</td>
+<td>~<strong>0.11</strong> @ offset -41</td>
 <td>Master after razzle</td>
 </tr>
 <tr>
@@ -96,13 +96,13 @@ not a trim on the play bus into the mix. Play stem level is fixed at <code>kPlay
 <tbody>
 <tr>
 <td><code>kMainFaderOffsetDb</code></td>
-<td><strong>-35</strong></td>
-<td>Added to play fader dB law</td>
+<td><strong>-41</strong></td>
+<td>Added to play fader dB law (~6 dB quieter than prior -35)</td>
 </tr>
 <tr>
 <td><code>kPlayBusGain</code></td>
-<td><strong>0.238</strong></td>
-<td>Fixed play stem into mix</td>
+<td><strong>0.168</strong></td>
+<td>Fixed play stem into mix (~3 dB under prior 0.238 vs drums)</td>
 </tr>
 <tr>
 <td><code>kDrumBusGain</code></td>
@@ -156,8 +156,13 @@ not a trim on the play bus into the mix. Play stem level is fixed at <code>kPlay
 </tr>
 <tr>
 <td><code>kMainCompAttackSec</code> / <code>kMainCompReleaseSec</code></td>
-<td>0.003 / 0.15</td>
-<td></td>
+<td>0.003 / 0.08</td>
+<td>faster release vs old 0.15 reduces multi-note GR hang</td>
+</tr>
+<tr>
+<td><code>kMainCompGainAttackSec</code> / <code>kMainCompGainReleaseSec</code></td>
+<td>0.008 / 0.06</td>
+<td>applied GR slew</td>
 </tr>
 <tr>
 <td><code>kRazzleVibratoWet</code></td>
@@ -166,7 +171,7 @@ not a trim on the play bus into the mix. Play stem level is fixed at <code>kPlay
 </tr>
 <tr>
 <td><code>kRazzleChorusWet</code></td>
-<td><strong>0.3</strong></td>
+<td><strong>0.25</strong></td>
 <td></td>
 </tr>
 <tr>
@@ -259,8 +264,23 @@ not a trim on the play bus into the mix. Play stem level is fixed at <code>kPlay
 <tbody>
 <tr>
 <td><code>kSineVoiceGain</code></td>
-<td>1.42</td>
+<td>1.03</td>
 <td>Sine</td>
+</tr>
+<tr>
+<td><code>kTriangleVoiceGain</code> / <code>kSawtoothVoiceGain</code></td>
+<td>1.23 / 1.28</td>
+<td>Triangle / sawtooth (+ am/fm/fat carriers)</td>
+</tr>
+<tr>
+<td><code>kAmVoiceGain</code></td>
+<td>2.0</td>
+<td>AM family makeup</td>
+</tr>
+<tr>
+<td><code>kFmVoiceGain</code></td>
+<td>1.0</td>
+<td>FM (carrier amp 1.0 in <code>fmcarriersample</code>)</td>
 </tr>
 <tr>
 <td><code>kAlgoOpGain</code></td>
@@ -269,48 +289,88 @@ not a trim on the play bus into the mix. Play stem level is fixed at <code>kPlay
 </tr>
 <tr>
 <td><code>kAlgoOutGain</code></td>
-<td>0.18</td>
+<td>0.95</td>
 <td>Algo out</td>
 </tr>
 <tr>
 <td><code>kNoiseVoiceGain</code></td>
-<td>21</td>
+<td>7</td>
 <td>Noise (with <code>kNoiseBaseExpr</code> 0.19)</td>
 </tr>
 <tr>
 <td><code>kLfsrVoiceBoost</code></td>
-<td>2.5</td>
+<td>1.6</td>
 <td>Non-soft chip</td>
 </tr>
 <tr>
-<td><code>kStringMachineGain</code> / <code>kStringPluckGain</code></td>
-<td>0.42 / 0.38</td>
-<td>String</td>
+<td><code>kNoiseSoftGain</code></td>
+<td>1.1</td>
+<td>Hollow / white soft tables</td>
 </tr>
 <tr>
-<td><code>kWindVoiceGain</code></td>
-<td>0.38</td>
-<td>Wind</td>
+<td><code>kMetallicAmp</code></td>
+<td>4</td>
+<td>Metallic table build</td>
+</tr>
+<tr>
+<td>clang expression</td>
+<td>0.475</td>
+<td><code>noisemetafor</code> (was 0.4)</td>
+</tr>
+<tr>
+<td><code>kStringMachineGain</code> / <code>kStringPluckGain</code></td>
+<td>1.35 / 6.3</td>
+<td>String (<code>tanh(x*gain)</code> crest limit; accent 0.12; pitch-retrigger)</td>
+</tr>
+<tr>
+<td><code>kKarplusMaxDamping</code></td>
+<td>0.85</td>
+<td>Cap for pluck/guitar (DaisySP &gt;= 0.95 = infinite ring); note-off also via voiceenv</td>
+</tr>
+<tr>
+<td><code>kWindFluteGain</code> / <code>kWindClarinetGain</code> / <code>kWindBrassGain</code> / <code>kWindPanpipeGain</code></td>
+<td>3.11 / 1.79 / 2.5 / 3.41</td>
+<td>Wind algos</td>
+</tr>
+<tr>
+<td><code>kWind*BreathCont</code> / <code>kWind*BreathBurst</code></td>
+<td>flute/panpipe 0.04/0.42; clarinet 0.02/0.55; brass 0.04/0.60</td>
+<td>Louder short chiff (~45 ms); light sustain air</td>
 </tr>
 <tr>
 <td><code>kPianoVoiceGain</code></td>
-<td>0.34</td>
-<td>Piano</td>
+<td>3.15</td>
+<td>Piano / epiano</td>
 </tr>
 <tr>
 <td><code>kTimpaniVoiceGain</code></td>
-<td>0.42</td>
+<td>0.70</td>
 <td>Timpani</td>
 </tr>
 <tr>
 <td><code>kBowedVoiceGain</code> / <code>kGuitarVoiceGain</code></td>
-<td>0.36</td>
-<td>Bowed / guitar</td>
+<td>1.2 / 6.65</td>
+<td>Bowed / guitar (<code>tanh</code> after gain; pitch-retrigger)</td>
 </tr>
 <tr>
-<td><code>kOrganVoiceGain</code></td>
-<td>0.32</td>
-<td>Organ</td>
+<td><code>kOrganVoiceGain</code> / <code>kOrganTonewheelGain</code></td>
+<td>0.65 / 1.8</td>
+<td>Drawbar / tonewheel (locked)</td>
+</tr>
+<tr>
+<td><code>kDripVoiceGain</code> / <code>kDootVoiceGain</code></td>
+<td>1.32 / 1.15</td>
+<td>Drip / doot</td>
+</tr>
+<tr>
+<td><code>kDripDettackSec</code></td>
+<td>0.35</td>
+<td>DaisySP drip hard-cut window</td>
+</tr>
+<tr>
+<td><code>kBellsVoiceGain</code></td>
+<td>0.49</td>
+<td>Bells mix (was 0.65)</td>
 </tr>
 <tr>
 <td><code>kDrumTickTrim</code> / <code>kDrumTweetTrim</code></td>

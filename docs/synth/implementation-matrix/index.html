@@ -100,7 +100,7 @@
 <td><code>bells</code></td>
 <td><code>BELLS</code></td>
 <td>FM stack + sparkle osc</td>
-<td><code>ModalVoice</code> + sparkle FM</td>
+<td><code>ModalVoice</code> + sparkle + <code>voiceenv</code></td>
 <td><code>FMSynth</code> + <code>MetalSynth</code></td>
 <td>Physical modeling + FM sparkle</td>
 <td>cpp <code>processvoice()</code></td>
@@ -118,7 +118,7 @@
 <td><code>algo0</code>–<code>algo7</code></td>
 <td><code>ALGO_SYNTH</code></td>
 <td>4× osc + 5× ADSR, 8 routings</td>
-<td>4× <code>Oscillator</code> + 5× <code>Adsr</code></td>
+<td>4× <code>Oscillator</code> + 5× <code>Adsr</code>; <code>oscN</code> on FM paths</td>
 <td>custom <code>AlgoSynth</code></td>
 <td>FM (4-op routing)</td>
 <td><code>wasmalgoplaycode.ts</code>, <a href="algosynth.md">algosynth.md</a></td>
@@ -136,7 +136,7 @@
 <td><code>pluck</code></td>
 <td><code>STRING_VOICE</code> (algo 1)</td>
 <td>— (Daisy-only)</td>
-<td><code>StringVoice</code> strike</td>
+<td><code>StringVoice</code> × <code>voiceenv</code></td>
 <td>—</td>
 <td>Physical modeling</td>
 <td>cpp <code>processvoice()</code></td>
@@ -145,7 +145,7 @@
 <td><code>drip</code></td>
 <td><code>DRIP_VOICE</code></td>
 <td>— (Daisy-only)</td>
-<td><code>Drip</code></td>
+<td><code>Drip</code> × <code>voiceenv</code></td>
 <td>—</td>
 <td>Physical modeling</td>
 <td>cpp <code>processvoice()</code></td>

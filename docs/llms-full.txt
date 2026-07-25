@@ -2189,7 +2189,7 @@ Source: https://zed.cafe/docs/features/code-editor-tape
 |---------|----------|-------------|---------|
 | Tape layout modes | Creator | TOP, FULL, BOTTOM, MAX — resize terminal/editor split. | `Tab / layout keys` |
 | Command autocomplete | Creator | Lexer-driven # command and word-list suggestions. | `zss/screens/tape/autocomplete.ts` |
-| Parse error messages | Creator | Chevrotain errors rewritten to short hints in editor and compile tape. | [`zss/feature/lang/docs/formatlangerror.md`](/docs/lang/formatlangerror) |
+| Parse error messages | Creator | Chevrotain errors rewritten to short hints in editor and compile tape. | [`formatlangerror`](/lang/formatlangerror) |
 | ROM command hints | Creator | Long-form help from editor:commands:<name> markdown. | `zss/screens/tape/commandarghints.ts` |
 | Collaborative editing | Both | Yjs CRDT sync with cursor/selection awareness. | `zss/device/modem.ts` |
 | Editor bookmarks | Creator | Save/run CLI lines, snippets, and URLs. | `#bookmark scroll handlers` |
@@ -2424,7 +2424,7 @@ Source: https://zed.cafe/docs/firmware/audio
 
 ## Internal Helpers
 
-- **`handlesynthvoice`** — Parses voice config (volume, fx name, or partials) and calls `synthvoice`
+- **`handlesynthvoice`** — Parses voice config (volume or partials) and calls `synthvoice`
 - **`handlesynthvoicefx`** — Parses fx config/value and calls `synthvoicefx`
 - **`handleplaystr`** — Resolves play buffer from chip vars; validates it’s not a mapped word (category, collision, color, dir)
 - **`handlebgplay`** — Wraps `synthbgplay` with play string; `#bgplayon*` pass `@subdiv` quantize strings
@@ -7890,9 +7890,11 @@ Source: https://zed.cafe/docs/synth/algosynth
 
 FM-style algorithmic synthesizer with 4 operators and 8 modulation algorithms.
 
+**Active runtime:** Daisy WASM (`algovoice` in `zss_voice.cpp`) implements the same 8 routings below. `#synth osc1`–`osc4` set each operator wave (including carriers after FM rewrite). `#synth algo4` is dual FM: `1→2` and `3→4`, summed as op2+op4.
+
 ## Overview
 
-`AlgoSynth` extends Tone.js `Monophonic` and implements a 4-operator FM architecture similar to classic synthesizers. Each operator has its own oscillator and envelope; operators can modulate each other or output directly based on the selected algorithm.
+Archived Tone `AlgoSynth` extends `Monophonic` with the same 4-operator FM architecture. Each operator has its own oscillator and envelope; operators modulate each other or output directly based on the selected algorithm.
 
 ## Architecture
 
@@ -7994,9 +7996,9 @@ hiss (pink noise) ───────┘
 
 - **Threshold:** -28 dB
 - **Ratio:** 4:1
-- **Attack / release:** 3 ms / 150 ms (peak envelope detector)
-- **Applied gain slew:** 8 ms attack / 100 ms release (`comp_gain_smooth`, separate from detector)
-- **Parallel mix:** 55% wet compressed / 45% dry (`kMasterCompMix`) — limits level loss vs full wet GR
+- **Attack / release:** 3 ms / 80 ms (peak envelope detector)
+- **Applied gain slew:** 8 ms attack / 60 ms release (`comp_gain_smooth`, separate from detector)
+- **Parallel mix:** 55% wet compressed / 45% dry (`kMainCompMix`) — limits level loss vs full wet GR
 - **Knee:** 30 dB (Tone `Compressor`; Daisy `compressorskneedb` in `maincomptargetgain()`)
 - **Silence guard:** When `|dry|` is below ~-80 dBFS, `comp_env` fast-decays so gain returns to unity before the next note
 - **Purpose:** Dynamics on full post-sidechain mix (ducked play + bg + TTS + drums)
@@ -8006,7 +8008,7 @@ hiss (pink noise) ───────┘
 ### Razzle Chain
 
 - **Vibrato:** Subtle pitch modulation (0.125 Hz, wet 0.02)
-- **Chorus:** Widening effect (7 ms base delay, wet **0.3**)
+- **Chorus:** Widening effect (7 ms base delay, wet **0.25**)
 - **Tape hiss:** Pink noise modulated by oscillator, feeds chorus input (very quiet bed)
 
 Full gain chart: [gain-levels.md](gain-levels.md).
@@ -8018,7 +8020,7 @@ Full gain chart: [gain-levels.md](gain-levels.md).
 | Play into sidechain | `volumetodb(20)` | `kPlayBusGain` |
 | Drums | `volumetodb(100) + 10` dB | `kDrumBusGain` (calibrate: `yarn play-drum-balance:calibrate`) |
 | bgplay / TTS | `10^((20*log10(vol)-35)/20)` | `readbgplayvolume()` / `readttsvolume()` (same law) |
-| Main fader | `volumetodb(vol × 0.25)` on `mainvolume` (offset **−35 dB**) | `readmainvolume()` (`kMainFaderOffsetDb`) |
+| Main fader | `volumetodb(vol × 0.25)` on `mainvolume` (offset **−41 dB**) | `readmainvolume()` (`kMainFaderOffsetDb`) |
 
 Boot SAB defaults: master/play fader **50**, bgplay **50**, TTS **100**.
 
@@ -8469,7 +8471,7 @@ Defined in [`wasmmainsab.ts`](../backend/wasm/wasmmainsab.ts). Mute floor: raw `
 
 | Control | SAB slot | Default | dB law | Linear @ default | Notes |
 |---------|----------|---------|--------|------------------|-------|
-| `#vol` / playvolume | PLAY (0) | **50** | `20*log10(vol*0.25) + kMainFaderOffsetDb` | ~**0.22** @ offset -35 | Master after razzle |
+| `#vol` / playvolume | PLAY (0) | **50** | `20*log10(vol*0.25) + kMainFaderOffsetDb` | ~**0.11** @ offset -41 | Master after razzle |
 | `#bgvol` / bgplayvolume | BGPLAY (1) | **50** | `20*log10(vol) - 35` | ~**0.89** | bgplay stem |
 | `#ttsvol` / ttsvolume | TTS (2) | **100** | same as bg | ~**1.78** | TTS sample level |
 | Voice `vol` | voice cfg | **0 dB** | `dbtoamp(vol_db)` | **1.0** | Per-voice via `#synthN` |
@@ -8482,8 +8484,8 @@ Parity-tuned values -- change only with `yarn task run ops:daisy:*:calibrate` or
 
 | Constant | Value | Controls |
 |----------|-------|----------|
-| `kMainFaderOffsetDb` | **-35** | Added to play fader dB law |
-| `kPlayBusGain` | **0.238** | Fixed play stem into mix |
+| `kMainFaderOffsetDb` | **-41** | Added to play fader dB law (~6 dB quieter than prior -35) |
+| `kPlayBusGain` | **0.168** | Fixed play stem into mix (~3 dB under prior 0.238 vs drums) |
 | `kDrumBusGain` | **2.440** | Drum stem (calibrate: `ops:daisy:play-drum-balance:calibrate`) |
 | `kVoiceOutGain` | **1.0** | Post-FX voice output |
 | `kScMakeupDb` | **24** | Sidechain makeup |
@@ -8494,9 +8496,10 @@ Parity-tuned values -- change only with `yarn task run ops:daisy:*:calibrate` or
 | `kMainCompRatio` | **4** | |
 | `kMainCompKneeDb` | **30** | |
 | `kMainCompMix` | **0.55** | Parallel GR |
-| `kMainCompAttackSec` / `kMainCompReleaseSec` | 0.003 / 0.15 | |
+| `kMainCompAttackSec` / `kMainCompReleaseSec` | 0.003 / 0.08 | faster release vs old 0.15 reduces multi-note GR hang |
+| `kMainCompGainAttackSec` / `kMainCompGainReleaseSec` | 0.008 / 0.06 | applied GR slew |
 | `kRazzleVibratoWet` | **0.02** | Post-comp bed |
-| `kRazzleChorusWet` | **0.3** | |
+| `kRazzleChorusWet` | **0.25** | |
 | `kRazzleHissGain` | **0.001** | |
 
 SAB bypass slots: COMP_BYPASS (3), SC_BYPASS (4) for offline A/B.
@@ -8527,17 +8530,28 @@ out = dry + compress( (Sigma send_i * contribution_i) * kFxReturnWetTrim )
 
 | Constant | Value | Voice / use |
 |----------|-------|-------------|
-| `kSineVoiceGain` | 1.42 | Sine |
+| `kSineVoiceGain` | 1.03 | Sine |
+| `kTriangleVoiceGain` / `kSawtoothVoiceGain` | 1.23 / 1.28 | Triangle / sawtooth (+ am/fm/fat carriers) |
+| `kAmVoiceGain` | 2.0 | AM family makeup |
+| `kFmVoiceGain` | 1.0 | FM (carrier amp 1.0 in `fmcarriersample`) |
 | `kAlgoOpGain` | ~0.316 (-10 dB) | Algo ops |
-| `kAlgoOutGain` | 0.18 | Algo out |
-| `kNoiseVoiceGain` | 21 | Noise (with `kNoiseBaseExpr` 0.19) |
-| `kLfsrVoiceBoost` | 2.5 | Non-soft chip |
-| `kStringMachineGain` / `kStringPluckGain` | 0.42 / 0.38 | String |
-| `kWindVoiceGain` | 0.38 | Wind |
-| `kPianoVoiceGain` | 0.34 | Piano |
-| `kTimpaniVoiceGain` | 0.42 | Timpani |
-| `kBowedVoiceGain` / `kGuitarVoiceGain` | 0.36 | Bowed / guitar |
-| `kOrganVoiceGain` | 0.32 | Organ |
+| `kAlgoOutGain` | 0.95 | Algo out |
+| `kNoiseVoiceGain` | 7 | Noise (with `kNoiseBaseExpr` 0.19) |
+| `kLfsrVoiceBoost` | 1.6 | Non-soft chip |
+| `kNoiseSoftGain` | 1.1 | Hollow / white soft tables |
+| `kMetallicAmp` | 4 | Metallic table build |
+| clang expression | 0.475 | `noisemetafor` (was 0.4) |
+| `kStringMachineGain` / `kStringPluckGain` | 1.35 / 6.3 | String (`tanh(x*gain)` crest limit; accent 0.12; pitch-retrigger) |
+| `kKarplusMaxDamping` | 0.85 | Cap for pluck/guitar (DaisySP >= 0.95 = infinite ring); note-off also via voiceenv |
+| `kWindFluteGain` / `kWindClarinetGain` / `kWindBrassGain` / `kWindPanpipeGain` | 3.11 / 1.79 / 2.5 / 3.41 | Wind algos |
+| `kWind*BreathCont` / `kWind*BreathBurst` | flute/panpipe 0.04/0.42; clarinet 0.02/0.55; brass 0.04/0.60 | Louder short chiff (~45 ms); light sustain air |
+| `kPianoVoiceGain` | 3.15 | Piano / epiano |
+| `kTimpaniVoiceGain` | 0.70 | Timpani |
+| `kBowedVoiceGain` / `kGuitarVoiceGain` | 1.2 / 6.65 | Bowed / guitar (`tanh` after gain; pitch-retrigger) |
+| `kOrganVoiceGain` / `kOrganTonewheelGain` | 0.65 / 1.8 | Drawbar / tonewheel (locked) |
+| `kDripVoiceGain` / `kDootVoiceGain` | 1.32 / 1.15 | Drip / doot |
+| `kDripDettackSec` | 0.35 | DaisySP drip hard-cut window |
+| `kBellsVoiceGain` | 0.49 | Bells mix (was 0.65) |
 | `kDrumTickTrim` / `kDrumTweetTrim` | 1.35 / 1.25 | Hi-hat family |
 | `kDrumGains[12]` | 0.24-0.42 | Per drum digit |
 
@@ -8610,12 +8624,12 @@ Enum: [`shared/sourcetype.ts`](../shared/sourcetype.ts). Dispatch: `VoiceType` i
 | `metallic` | `METALLIC_NOISE` | same + amplitude norm | same | same | Noise | same |
 | `hollow` | `HOLLOW_NOISE` | FFT hollow table | same | Error (WASM-only) | Noise (custom spectral) | `noisewave.ts` |
 | `noise` | `WHITE_NOISE` | PRNG white table | same | Error (WASM-only) | Whitenoise (custom PRNG) | `noisewave.ts` |
-| `bells` | `BELLS` | FM stack + sparkle osc | `ModalVoice` + sparkle FM | `FMSynth` + `MetalSynth` | Physical modeling + FM sparkle | cpp `processvoice()` |
+| `bells` | `BELLS` | FM stack + sparkle osc | `ModalVoice` + sparkle + `voiceenv` | `FMSynth` + `MetalSynth` | Physical modeling + FM sparkle | cpp `processvoice()` |
 | `doot` | `DOOT` | sine + pitch-decay loop | `Oscillator` + `Adsr` | `MembraneSynth` | Drum / physical (Membrane-like) | `voiceplaycode.ts` `dootvoice()` |
-| `algo0`–`algo7` | `ALGO_SYNTH` | 4× osc + 5× ADSR, 8 routings | 4× `Oscillator` + 5× `Adsr` | custom `AlgoSynth` | FM (4-op routing) | `wasmalgoplaycode.ts`, [algosynth.md](algosynth.md) |
+| `algo0`–`algo7` | `ALGO_SYNTH` | 4× osc + 5× ADSR, 8 routings | 4× `Oscillator` + 5× `Adsr`; `oscN` on FM paths | custom `AlgoSynth` | FM (4-op routing) | `wasmalgoplaycode.ts`, [algosynth.md](algosynth.md) |
 | `string` | `STRING_VOICE` (algo 0) | — (Daisy-only) | SOS ensemble (`stringmachinevoice`) | — | Subtractive string-machine | cpp `stringmachinevoice()` |
-| `pluck` | `STRING_VOICE` (algo 1) | — (Daisy-only) | `StringVoice` strike | — | Physical modeling | cpp `processvoice()` |
-| `drip` | `DRIP_VOICE` | — (Daisy-only) | `Drip` | — | Physical modeling | cpp `processvoice()` |
+| `pluck` | `STRING_VOICE` (algo 1) | — (Daisy-only) | `StringVoice` × `voiceenv` | — | Physical modeling | cpp `processvoice()` |
+| `drip` | `DRIP_VOICE` | — (Daisy-only) | `Drip` × `voiceenv` | — | Physical modeling | cpp `processvoice()` |
 | `flute`–`panpipe` | `WIND_VOICE` | — | `windvoice()` formant bank + breath burst | — | Subtractive + formants | cpp `zss_sosvoices.cpp` |
 | `piano`/`epiano` | `PIANO_VOICE` | — | `pianovoice()` + `Fm2` on epiano | — | FM + `Fm2` tine | cpp `zss_sosvoices.cpp` |
 | `timpani` | `TIMPANI_VOICE` | — | `timpanivoice()` `ModalVoice` | — | Physical modeling | cpp `zss_sosvoices.cpp` |
@@ -9305,7 +9319,7 @@ Config path: `#synth` → [audio.ts](../../../firmware/audio.ts) `handlesynthvoi
 | `noise` | `WHITE_NOISE` | **Error** (WASM-only message) | Yes |
 | `string` | `STRING_VOICE` (algo 0) | — | Daisy WASM only (SOS string-machine: detuned saws, OSC2 PWM FM, body peaks) |
 | `pluck` | `STRING_VOICE` (algo 1) | — | Daisy WASM only (`StringVoice`, pluck strike) |
-| `drip` | `DRIP_VOICE` | — | Daisy WASM only (`Drip`, gate-edge trigger) |
+| `drip` | `DRIP_VOICE` | — | Daisy WASM only (`Drip`, gate/pitch trigger; dettack 0.35 s) |
 | `flute` / `clarinet` / `brass` / `panpipe` | `WIND_VOICE` (algo 0–3) | — | Daisy WASM only (`windvoice`, SOS wind) |
 | `piano` / `epiano` | `PIANO_VOICE` (algo 0–1) | — | Daisy WASM only (`pianovoice`, SOS pianos) |
 | `timpani` | `TIMPANI_VOICE` | — | Daisy WASM only (`timpanivoice`, pitched membrane) |
@@ -9355,9 +9369,9 @@ Selecting any validated wave name switches voice to `SYNTH`. Names validated by 
 | **All SYNTH** | `env` / `envelope`, `port` / `portamento` | env above; port `0` | Tone reset env `0.01/0.01/0.5/0.01`; port `0` | Daisy: linear **`ZssLinearEnv`** on voice bus; AM/FM **`modenv`** uses same helper |
 | **sine/square/triangle/sawtooth/custom** | `phase` | `0` | **Tone** Oscillator: `0` |
 | **pulse** | `width` | `0.2` | **Tone** PulseOscillator: `0.2` |
-| **pwm** | `modfreq`, `modulationfrequency` | `1` | **Tone** PWMOscillator: `1` Hz (range 0.1–5) |
+| **pwm** | `modfreq`, `modulationfrequency`, `width` | modfreq `1`, width `0.2` | **Tone** / Daisy PWMOscillator: LFO at `modfreq` Hz modulates pulse width around 0.5 by `width` |
 | **am\*** | `harmonicity`, `modtype`/`modulationtype`, `modenv`/`modulationenvelope` | harm `1`, modtype `square`, modenv `0.01/0.01/1/0.5` | **Tone** AMOscillator: harm `1`, modtype `square` |
-| **fm\*** | `harmonicity`, `modindex`, `modtype`, `modenv` | harm `1`, modindex `2`, modtype `square`, modenv `0.01/0.01/1/0.5` | **Tone** FMOscillator: harm `1`, modindex `2`, modtype `square` |
+| **fm\*** | `harmonicity`, `modindex`, `modtype`, `modenv` | harm `1`, modindex `2`, modtype `square`, modenv `0.01/0.01/1/0.5` | **Tone** / Daisy FMOscillator: harm `1`, modindex `2`, modtype `square`; modulator Hz = note × `harmonicity` |
 | **fat\*** | `count`, `phase`, `spread` | count `3`, phase `0`, spread `20` | **Tone** FatOscillator class default: count `3`, spread `20`, type `sawtooth`; **`fatsine` stacks sines** (OmniOscillator suffix) |
 | **Partials** | array value or trailing numbers | partialcount `0`, 8 zeros | **Tone**: partials `[]`, partialCount `0` |
 
@@ -9421,7 +9435,7 @@ Default envelope: same WASM global `0.01/0.01/0.5/0.01`.
 
 | Param | Tone | WASM |
 |-------|------|------|
-| `env` / `envelope` | Yes (FMSynth carrier envelope) | Yes (drives `bellenvs` only) |
+| `env` / `envelope` | Yes (FMSynth carrier envelope) | Yes (`voiceenv` multiplies ModalVoice + sparkle) |
 | FM params | Via Tone FMSynth API, **not** exposed as `#synth` keys | **Not configurable** |
 
 ### Tone fixed at creation + reset ([source.ts](../../../../ops/archive/synth/tone/source.ts))
@@ -9436,9 +9450,9 @@ Default envelope: same WASM global `0.01/0.01/0.5/0.01`.
 
 Bell FM: harm `1.5`, modindex `30`, envelope init → **0.01/3/0.3/6** s. Sparkle: harm `5.1`, modindex `32`, envelope → **0.001/1.4/0/0.321** s. Output `× 0.35`.
 
-**DaisySP WASM:** body is `ModalVoice`; sparkle uses the same fixed FM stack and mix (`× 0.15`) as WASM play code.
+**DaisySP WASM:** body is `ModalVoice`; sparkle uses fixed `sparkleenv` and mix (`× 0.15`). Selecting `#synth bells` installs carrier env `0.01/3/0.3/6` on `voiceenv`.
 
-`#synth env` overrides bell carrier envelope only; sparkle envelope is **WASM-play fixed**.
+`#synth env` overrides that amp envelope; sparkle envelope stays fixed.
 
 ---
 
@@ -9453,11 +9467,11 @@ Bell FM: harm `1.5`, modindex `30`, envelope init → **0.01/3/0.3/6** s. Sparkl
 
 ### Tone defaults (MembraneSynth.getDefaults)
 
-envelope `0.001/0.4/0.01/1.4`, osc `sine`, octaves `8`, pitchDecay `0.05`. ZSS `applyreset()` for doot: full Tone snapshot, no ZSS overrides.
+envelope `0.001/0.4/0.01/1.4`, osc `sine`, octaves `10`, pitchDecay `0.05`. ZSS `applyreset()` for doot: full Tone snapshot, no ZSS overrides.
 
 ### WASM play code
 
-Init envelope → **0.001/0.4/0.01/1.4** s, pitch decay `× 0.9993`/sample while gated, output `× 0.6`. `octaves` and `pitchDecay` are **not** `#synth`-configurable on either backend.
+Init envelope → **0.001/0.4/0.01/1.4** s. Pitch matches Tone MembraneSynth: start at note×`kDootOctaves` (10), exponential ramp to note over `kDootPitchDecaySec` (0.05 s). `octaves` and `pitchDecay` are **not** `#synth`-configurable on either backend.
 
 ---
 
@@ -9471,7 +9485,7 @@ Init envelope → **0.001/0.4/0.01/1.4** s, pitch decay `× 0.9993`/sample while
 | `harmonicity1`–`3` | — | per modulator |
 | `modindex` | — | all three mod indices |
 | `modindex1`–`3` | — | per modulator |
-| `osc1`–`osc4` | — | operator wave |
+| `osc1`–`osc4` | — | operator wave (`sine`/`square`/`triangle`/`sawtooth`/`pulse`/`pwm`; not am/fm/fat) |
 | `env1`–`env4` | `envelope1`–`4` | per-operator ADSR |
 | `port` / `portamento` | — | glide |
 
@@ -9488,9 +9502,11 @@ algorithm via `algoN` name; harmonicity1/2/3 `2`; modindex1/2/3 `1`; osc1–4 `s
 
 Use **`env1`–`env4`** for per-operator shaping; use voice-level **`env`** for an outer mix envelope on both backends.
 
+**Daisy routings** match [algosynth.md](algosynth.md) (including `algo4` = `1→2`, `3→4` → op2+op4). FM rewrite paths use each operator's `oscN` wave (not hardcoded sine).
+
 ---
 
-## 5. `string` (`STRING_VOICE` algo 0)
+## 6. `string` (`STRING_VOICE` algo 0)
 
 Daisy WASM only. SOS Synth Secrets string-machine pad (not sampled orchestra): two detuned polyBLEP saws, triangle vibrato on VCO1, square-LFO pitch mod on VCO2 (PWM emulation), slow ensemble detune LFO, key-follow LP with attack-boosted filter envelope, violin-body peaks, light bow noise.
 
@@ -9503,18 +9519,18 @@ Daisy WASM only. SOS Synth Secrets string-machine pad (not sampled orchestra): t
 | `env` / `envelope` | `[a, d, s, r]` | `0.6 / 0.15 / 0.88 / 1.0` | trapezoid VCA |
 | `detune` | 0–1 | `0.25` | string only; maps to 0–8¢ VCO spread |
 | `pwm` | 0–1 | `0.2` | OSC2 square-LFO FM depth (PWM emulation) |
-| `vib` | 0–1 | `0.35` | VCO1 vibrato depth (0–8¢); prefer this **or** `#synth vibrato` FX, not both |
+| `vib` | 0–1 | `0.35` | VCO1 vibrato depth (0–8¢); prefer this **or** `#vibrato` FX, not both |
 | `filter` | 0–1 | `0.5` | LP cutoff scale + filter-envelope amount |
 
 `port` / `portamento` is stored but **not applied** on the string path.
 
-Recommended FX: `#synth reverb` (~0.35–0.5); vintage units often used external chorus—optional.
+Recommended FX: `#reverb` (~0.35–0.5); vintage units often used external chorus—optional.
 
 Selecting `#synth string` resets ensemble timbre params to the defaults above.
 
 ---
 
-## 6. `pluck` (`STRING_VOICE` algo 1)
+## 7. `pluck` (`STRING_VOICE` algo 1)
 
 Daisy WASM only. Gate-edge strike via DaisySP `StringVoice`; no Tone backend.
 
@@ -9525,17 +9541,33 @@ Daisy WASM only. Gate-edge strike via DaisySP `StringVoice`; no Tone backend.
 | `pluck` | — | — | voice type selection |
 | `vol` / `volume` | number (dB) | `0` | effective |
 | `structure` | 0–1 | `0.14` | pluck only; rejected on other voice types |
-| `brightness` | 0–1 | `0.22` | pluck only |
-| `damping` | 0–1 | `0.68` | pluck only |
-| `accent` | 0–1 | `0.48` | pluck only |
+| `brightness` | 0–1 | `0.38` | pluck only |
+| `damping` | 0–1 | `0.72` | pluck only (native cap 0.85; DaisySP >= 0.95 = infinite ring) |
+| `accent` | 0–1 | `0.12` | pluck only |
 
-`env` / `envelope` and `port` / `portamento` are stored but **not used** by the pluck audio path (strike is gate-edge triggered, no ADSR multiply).
+`env` / `envelope` multiplies the pluck strike (`voiceenv`). `port` / `portamento` is stored but **not applied**.
 
 Selecting `#synth pluck` resets timbre params to the defaults above.
 
 ---
 
-## 7. Wind — `flute` / `clarinet` / `brass` / `panpipe` (`WIND_VOICE`)
+## 8. `drip` (`DRIP_VOICE`)
+
+Daisy WASM only. DaisySP `Drip` struck on gate edge / pitch change (dettack `0.35` s).
+
+### User-configurable
+
+| Param | Value | Notes |
+|-------|-------|-------|
+| `drip` | — | voice type selection |
+| `vol` / `volume` | number (dB) | effective |
+| `env` / `envelope` | `[a, d, s, r]` | `voiceenv` multiplies drip output (release on note-off) |
+
+No timbre `#synth` keys beyond env/vol. Selecting `#synth drip` keeps the global default envelope unless you set `env`.
+
+---
+
+## 9. Wind — `flute` / `clarinet` / `brass` / `panpipe` (`WIND_VOICE`)
 
 Daisy WASM only. Formant-filtered excitation + breath burst on attack + delayed vibrato; algo selects waveform and formant ratios (flute saw+tri, clarinet square, brass saw with pressure-driven brightness/resonance, panpipe multi-pipe detune with amplitude rolloff).
 
@@ -9548,9 +9580,9 @@ Daisy WASM only. Formant-filtered excitation + breath burst on attack + delayed 
 
 ---
 
-## 8. Piano — `piano` / `epiano` (`PIANO_VOICE`)
+## 10. Piano — `piano` / `epiano` (`PIANO_VOICE`)
 
-Daisy WASM only. Tricord body with stretched keyboard tuning + soundboard resonances + hammer sparkle; `epiano` uses DaisySP `Fm2` tine model. `#play` writes fixed velocity `0.75` to SAB slot `base+4`.
+Daisy WASM only. Tricord body with stretched keyboard tuning + soundboard resonances + hammer sparkle; `epiano` uses DaisySP `Fm2` tine model. `#play` writes fixed velocity `1` to SAB slot `base+4`.
 
 | Param | Value | Default (piano) |
 |-------|-------|-----------------|
@@ -9559,9 +9591,11 @@ Daisy WASM only. Tricord body with stretched keyboard tuning + soundboard resona
 | `brightness` | 0–1 | `0.5` |
 | `damping` | 0–1 | `0.45` |
 
+On piano voices, `spread` is unison (0–1). On fat SYNTH waves the same key is detune **cents** (see §1).
+
 ---
 
-## 9. Timpani — `timpani` (`TIMPANI_VOICE`)
+## 11. Timpani — `timpani` (`TIMPANI_VOICE`)
 
 Daisy WASM only. DaisySP `ModalVoice` membrane with pitch scoop on strike; not a `#play` drum char.
 
@@ -9574,7 +9608,7 @@ Daisy WASM only. DaisySP `ModalVoice` membrane with pitch scoop on strike; not a
 
 ---
 
-## 10. Bowed — `violin` / `viola` (`BOWED_VOICE`)
+## 12. Bowed — `violin` / `viola` (`BOWED_VOICE`)
 
 Daisy WASM only. Saw + bow noise + body formants + **delayed vibrato** (~300 ms after note-on). **`port` applied.**
 
@@ -9587,22 +9621,24 @@ Daisy WASM only. Saw + bow noise + body formants + **delayed vibrato** (~300 ms 
 
 ---
 
-## 11. Guitar — `nylon` / `steel` (`GUITAR_VOICE`)
+## 13. Guitar — `nylon` / `steel` (`GUITAR_VOICE`)
 
 Daisy WASM only. `StringVoice` strike + pick burst + body peak; algo 0 = nylon, 1 = steel.
 
-| Param | Value | Default |
-|-------|-------|---------|
-| `pick` | 0–1 | `0.35` |
-| `body` | 0–1 | `0.38` |
-| `damping` | 0–1 | `0.5` |
-| `position` | 0–1 | `0.45` |
+| Param | Value | Default (nylon / steel select) |
+|-------|-------|--------------------------------|
+| `pick` | 0–1 | `0.25` / `0.5` |
+| `body` | 0–1 | `0.4` / `0.35` |
+| `damping` | 0–1 | `0.72` / `0.7` (capped at 0.85; DaisySP >= 0.95 = infinite ring) |
+| `position` | 0–1 | `0.35` / `0.6` |
+
+`DEFAULT_WASM_GUITAR` pool defaults remain `0.35` / `0.38` / `0.5` / `0.45` until a voice is selected.
 
 ---
 
-## 12. Organ — `tonewheel` / `drawbar` (`ORGAN_VOICE`)
+## 14. Organ — `tonewheel` / `drawbar` (`ORGAN_VOICE`)
 
-Daisy WASM only. Summed harmonic drawbars (9-level mapping on `drawbar` algo) + scanner vibrato + key click on gate rise; `tonewheel` uses fixed registration, `drawbar` uses live `drawbar` param. Leslie not modeled — use `#synth vibrato` / `#synth echo` FX.
+Daisy WASM only. Summed harmonic drawbars (9-level mapping on `drawbar` algo) + scanner vibrato + key click on gate rise; `tonewheel` uses fixed registration, `drawbar` uses live `drawbar` param. Leslie not modeled — use `#vibrato` / `#echo` FX.
 
 | Param | Value | Default |
 |-------|-------|---------|
@@ -9641,11 +9677,12 @@ Algo:       harmonicity | harmonicity1-3 | modindex | modindex1-3
 Pluck:      structure | brightness | damping | accent   (pluck voice only)
 String:     detune | pwm | vib | filter                 (string voice only)
 Wind:       breath | pressure | brightness | resonance  (wind voices)
-Piano:      spread | hammer | brightness | damping      (piano voices)
+Piano:      spread | hammer | brightness | damping      (piano voices; fat osc also uses spread in cents)
 Timpani:    tension | decay | tone | strike            (timpani only)
 Bowed:      bow | pressure | vib | body                (bowed voices)
 Guitar:     pick | body | damping | position            (guitar voices)
 Organ:      drawbar | click | leak | bright             (organ voices)
+Drip:       env/envelope | vol                          (drip voice; no timbre keys)
 ```
 
 ---
@@ -9704,6 +9741,8 @@ Handles voice/source configuration from external API (e.g. device commands). For
 
 ## Source Type Changes
 
+Switching named voice type (or entering SYNTH from a non-SYNTH voice via a wave name) installs that destination's default ADSR and clears `portamento`. Same-SYNTH wave changes (`square` → `sawtooth`) keep the current envelope. `#synth bells` installs Tone-parity carrier env `0.01/3/0.3/6`.
+
 | Config | Source Type |
 |--------|-------------|
 | `retro` | RETRO_NOISE |
@@ -9741,6 +9780,8 @@ Handles voice/source configuration from external API (e.g. device commands). For
 | `brightness` | 0–1 | `0.5` |
 | `damping` | 0–1 | `0.45` |
 
+On `#synth piano` / `epiano`, `spread` is the piano unison param (0–1). On fat SYNTH waves (`fatsawtooth`, etc.), the same key name sets fat detune **cents** (default `20`).
+
 ## Timpani configs (WASM only)
 
 | Config | Value | Default |
@@ -9763,12 +9804,12 @@ Portamento applies to bowed voices.
 
 ## Guitar configs (WASM only)
 
-| Config | Value | Default |
-|--------|-------|---------|
-| `pick` | 0–1 | `0.35` |
-| `body` | 0–1 | `0.38` |
-| `damping` | 0–1 | `0.5` |
-| `position` | 0–1 | `0.45` |
+| Config | Value | Default (nylon / steel select) |
+|--------|-------|--------------------------------|
+| `pick` | 0–1 | `0.25` / `0.5` |
+| `body` | 0–1 | `0.4` / `0.35` |
+| `damping` | 0–1 | `0.72` / `0.7` (native cap 0.85; DaisySP >= 0.95 = infinite ring) |
+| `position` | 0–1 | `0.35` / `0.6` |
 
 ## Organ configs (WASM only)
 
@@ -9788,7 +9829,7 @@ Portamento applies to bowed voices.
 | `damping` | number (0–1) | String damping |
 | `accent` | number (0–1) | Strike accent |
 
-Applies only when voice is `#synth pluck`. Defaults: `0.14`, `0.22`, `0.68`, `0.48`.
+Applies only when voice is `#synth pluck`. Defaults: `0.14`, `0.38`, `0.72`, `0.12`.
 
 ## String ensemble configs (wasmvoiceconfig.ts, WASM only, `#synth string`)
 
@@ -9799,7 +9840,7 @@ Applies only when voice is `#synth pluck`. Defaults: `0.14`, `0.22`, `0.68`, `0.
 | `vib` | number (0–1) | VCO1 vibrato depth (0–8¢) |
 | `filter` | number (0–1) | LP cutoff scale + filter envelope |
 
-Applies only when voice is `#synth string` (algo 0). Defaults: `0.25`, `0.2`, `0.35`, `0.5`. See [voice-types-reference.md](voice-types-reference.md) §5.
+Applies only when voice is `#synth string` (algo 0). Defaults: `0.25`, `0.2`, `0.35`, `0.5`. See [voice-types-reference.md](voice-types-reference.md) §6.
 
 ## Oscillator Types (SYNTH)
 
@@ -9812,14 +9853,14 @@ When config is a valid oscillator type: `sine`, `square`, `triangle`, `sawtooth`
 
 | Oscillator | Config | Description |
 |------------|--------|-------------|
-| pwm | `modfreq` | Modulation frequency |
-| pulse | `width` | Pulse width |
+| pwm | `modfreq` | LFO rate for pulse-width modulation (Hz) |
+| pulse | `width` | Static pulse width |
 | sine/square/triangle/sawtooth/custom | `phase` | Phase offset |
-| am* | `harmonicity`, `modtype`, `modenv` | AM params |
-| fm* | `harmonicity`, `modindex`, `modtype`, `modenv` | FM params |
-| fat* | `count`, `phase`, `spread` | Fat oscillator params |
+| am* | `harmonicity`, `modtype`, `modenv` | AM params (`harmonicity` = modulator ratio) |
+| fm* | `harmonicity`, `modindex`, `modtype`, `modenv` | FM params; Daisy modulator Hz = note × `harmonicity` |
+| fat* | `count`, `phase`, `spread` | Unison count, phase, detune cents |
 
-## AlgoSynth Configs (algosynth.ts)
+## AlgoSynth Configs ([algosynth.md](algosynth.md))
 
 | Config | Value | Description |
 |--------|-------|-------------|
@@ -9827,8 +9868,10 @@ When config is a valid oscillator type: `sine`, `square`, `triangle`, `sawtooth`
 | `harmonicity1`-`3` | number | Per-operator |
 | `modindex` | number | All three mod indices |
 | `modindex1`-`3` | number | Per-operator |
-| `osc1`-`osc4` | string | Oscillator type |
+| `osc1`-`osc4` | string | Operator wave: `sine`/`square`/`triangle`/`sawtooth`/`pulse`/`pwm` (not am/fm/fat) |
 | `env1`-`env4` | [a,d,s,r] | Per-operator envelope |
+
+Voice-level `env` / `envelope` is the outer mix ADSR (`algooutenv`). See [voice-types-reference.md](voice-types-reference.md) for algo routings (`algo4` = `1→2`, `3→4` → op2+op4).
 
 ## Validation (validation.ts)
 

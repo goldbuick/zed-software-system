@@ -28,9 +28,9 @@
 <ul>
 <li><strong>Threshold:</strong> -28 dB</li>
 <li><strong>Ratio:</strong> 4:1</li>
-<li><strong>Attack / release:</strong> 3 ms / 150 ms (peak envelope detector)</li>
-<li><strong>Applied gain slew:</strong> 8 ms attack / 100 ms release (<code>comp_gain_smooth</code>, separate from detector)</li>
-<li><strong>Parallel mix:</strong> 55% wet compressed / 45% dry (<code>kMasterCompMix</code>) — limits level loss vs full wet GR</li>
+<li><strong>Attack / release:</strong> 3 ms / 80 ms (peak envelope detector)</li>
+<li><strong>Applied gain slew:</strong> 8 ms attack / 60 ms release (<code>comp_gain_smooth</code>, separate from detector)</li>
+<li><strong>Parallel mix:</strong> 55% wet compressed / 45% dry (<code>kMainCompMix</code>) — limits level loss vs full wet GR</li>
 <li><strong>Knee:</strong> 30 dB (Tone <code>Compressor</code>; Daisy <code>compressorskneedb</code> in <code>maincomptargetgain()</code>)</li>
 <li><strong>Silence guard:</strong> When <code>|dry|</code> is below ~-80 dBFS, <code>comp_env</code> fast-decays so gain returns to unity before the next note</li>
 <li><strong>Purpose:</strong> Dynamics on full post-sidechain mix (ducked play + bg + TTS + drums)</li>
@@ -40,7 +40,7 @@
 <h3 id="razzle-chain"><a class="blume-heading-anchor" href="#razzle-chain">Razzle Chain</a></h3>
 <ul>
 <li><strong>Vibrato:</strong> Subtle pitch modulation (0.125 Hz, wet 0.02)</li>
-<li><strong>Chorus:</strong> Widening effect (7 ms base delay, wet <strong>0.3</strong>)</li>
+<li><strong>Chorus:</strong> Widening effect (7 ms base delay, wet <strong>0.25</strong>)</li>
 <li><strong>Tape hiss:</strong> Pink noise modulated by oscillator, feeds chorus input (very quiet bed)</li>
 </ul>
 <p>Full gain chart: <a href="gain-levels.md">gain-levels.md</a>.</p>
@@ -71,7 +71,7 @@
 </tr>
 <tr>
 <td>Main fader</td>
-<td><code>volumetodb(vol × 0.25)</code> on <code>mainvolume</code> (offset <strong>−35 dB</strong>)</td>
+<td><code>volumetodb(vol × 0.25)</code> on <code>mainvolume</code> (offset <strong>−41 dB</strong>)</td>
 <td><code>readmainvolume()</code> (<code>kMainFaderOffsetDb</code>)</td>
 </tr>
 </tbody>
