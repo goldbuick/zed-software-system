@@ -1,0 +1,23 @@
+---
+description: Daisy #synth config must match DSP; wave enums, shared keys, fat unison
+globs: zss/feature/synth/**/*
+alwaysApply: false
+---
+
+# Daisy synth config ↔ DSP
+
+When changing `#synth` voices, osc/algo params, or native `synthsource` / `algovoice`:
+
+## Required
+
+1. **Trace write → read** — JS/SAB apply is not enough. Confirm the sample path uses the field (`zss_osc.cpp`, `zss_voice.cpp`, `zss_engine.cpp`).
+2. **Wave enums** — Basic `WASM_OSC_TYPE` is `SQUARE=0`, `SINE=1`, `TRIANGLE=2`, `SAWTOOTH=3`. am/fm/fat families are ordered **sine, square, tri, saw** at +10/+20/+30. Never use bare `osctype - 10/20/30` as `oscbasicwave` input — use `familywavetobasic()` (or equivalent).
+3. **Shared `#synth` keys** — Type-gate by voice; on mismatch **fall through** (do not `return false` before other owners). Pattern: organ `drawbar`, piano vs fat `spread`.
+4. **Algo `osc1`–`osc4`** — Basic / pulse / pwm only (`parsealgowaveconfig`). Reject am/fm/fat (DSP cannot run those as algo ops).
+5. **Fat unison** — One phase accumulator (`φ * detune_mul` per voice). Do **not** call `Oscillator::Process()` once per unison voice on a shared osc (advances phase ~`count`× per sample).
+6. **Wiring `env`** — If DSP starts multiplying by `voiceenv`, install the voice’s product default ADSR on type switch (e.g. bells `0.01/3/0.3/6`).
+7. **Docs** — Update `zss/feature/synth/docs/` (Blume hardlinks `docs-site/content/synth/`). Rebuild: `yarn task run ops:daisy:build` + hard-refresh.
+
+## Related
+
+Skill: `.cursor/skills/daisy-synth-config/SKILL.md` · Memory: `.cursor/memory/daisy-synth-lessons.md`

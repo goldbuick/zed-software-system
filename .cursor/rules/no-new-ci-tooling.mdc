@@ -15,7 +15,7 @@ Do **not** expand CI surface area. The repo already has lint, Jest, and a fixed 
 
 ## Allowed
 
-- **Lint** — fix or extend existing ESLint / clang-format / `ops:lint` / `ops:native:lint` configs and call sites.
+- **Lint** — fix or extend existing ESLint / clang-format / `ops:lint` / `ops:native:lint` configs and call sites. Native: if `clang-format` is missing from `PATH`, set `CLANG_FORMAT` (macOS Homebrew LLVM: `/opt/homebrew/opt/llvm/bin/clang-format`) for `ops:native:lint` / `ops:native:lint:fix` — do not add new lint tasks.
 - **Jest** — add or fix tests under existing Jest setup; run via existing `ops:test` (or equivalent already-wired task).
 - **In-place fixes** — repair existing workflow steps or task handlers without adding new task ids, jobs, or tools.
 
