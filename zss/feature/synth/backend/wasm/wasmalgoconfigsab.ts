@@ -95,8 +95,17 @@ export function defaultwasmalgoconfig(): WASM_ALGO_CONFIG[] {
   }))
 }
 
+/** Algo operator waves: basic / pulse / pwm only (Daisy `algopwave` → `oscbasicwave`). */
 export function parsealgowaveconfig(value: string): WASM_OSC_TYPE | undefined {
-  return parsewasmosc(value)
+  const osc = parsewasmosc(value)
+  if (osc === undefined) {
+    return undefined
+  }
+  // Reject am*/fm*/fat* — those enums are not basic indices and used to sound like square.
+  if (osc > WASM_OSC_TYPE.PWM) {
+    return undefined
+  }
+  return osc
 }
 
 export function wasmalgoconfigtosab(config: WASM_ALGO_CONFIG[]): number[] {

@@ -200,7 +200,7 @@ Init envelope → **0.001/0.4/0.01/1.4** s. Pitch matches Tone MembraneSynth: st
 | `harmonicity1`–`3` | — | per modulator |
 | `modindex` | — | all three mod indices |
 | `modindex1`–`3` | — | per modulator |
-| `osc1`–`osc4` | — | operator wave |
+| `osc1`–`osc4` | — | operator wave (`sine`/`square`/`triangle`/`sawtooth`/`pulse`/`pwm`; not am/fm/fat) |
 | `env1`–`env4` | `envelope1`–`4` | per-operator ADSR |
 | `port` / `portamento` | — | glide |
 

@@ -152,7 +152,7 @@ When config is a valid oscillator type: `sine`, `square`, `triangle`, `sawtooth`
 | `harmonicity1`-`3` | number | Per-operator |
 | `modindex` | number | All three mod indices |
 | `modindex1`-`3` | number | Per-operator |
-| `osc1`-`osc4` | string | Operator wave (Daisy applies on FM rewrite paths) |
+| `osc1`-`osc4` | string | Operator wave: `sine`/`square`/`triangle`/`sawtooth`/`pulse`/`pwm` (not am/fm/fat) |
 | `env1`-`env4` | [a,d,s,r] | Per-operator envelope |
 
 Voice-level `env` / `envelope` is the outer mix ADSR (`algooutenv`). See [voice-types-reference.md](voice-types-reference.md) for algo routings (`algo4` = `1→2`, `3→4` → op2+op4).

@@ -503,6 +503,23 @@ describe('wasmvoiceconfig', () => {
     expect(algo[0].modindex3).toBe(6)
   })
 
+  it('rejects am/fm/fat names on algo oscN (basic waves only)', () => {
+    const voices = defaultwasmvoicestate()
+    const osc = defaultwasmoscconfig()
+    const algo = defaultwasmalgoconfig()
+    applyvoiceconfig(voices, 0, 'algo0', '', osc, algo)
+    const before = algo[0].osc1
+    expect(applyvoiceconfig(voices, 0, 'osc1', 'amsine', osc, algo)).toBe(
+      false,
+    )
+    expect(applyvoiceconfig(voices, 0, 'osc1', 'fatsquare', osc, algo)).toBe(
+      false,
+    )
+    expect(algo[0].osc1).toBe(before)
+    expect(applyvoiceconfig(voices, 0, 'osc1', 'square', osc, algo)).toBe(true)
+    expect(algo[0].osc1).toBe(WASM_OSC_TYPE.SQUARE)
+  })
+
   it('installs Tone-parity envelope on bells; env applies on drip', () => {
     const voices = defaultwasmvoicestate()
     applyvoiceconfig(voices, 0, 'bells', '')
