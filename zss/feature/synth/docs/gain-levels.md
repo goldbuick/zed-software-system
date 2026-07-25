@@ -110,8 +110,9 @@ out = dry + compress( (Sigma send_i * contribution_i) * kFxReturnWetTrim )
 
 | Constant | Value | Voice / use |
 |----------|-------|-------------|
-| `kSineVoiceGain` | 1.42 | Sine |
-| `kAmVoiceGain` | 2.0 | AM carrier makeup |
+| `kSineVoiceGain` | 1.03 | Sine |
+| `kTriangleVoiceGain` / `kSawtoothVoiceGain` | 1.23 / 1.28 | Triangle / sawtooth (+ am/fm/fat carriers) |
+| `kAmVoiceGain` | 2.0 | AM family makeup |
 | `kFmVoiceGain` | 1.0 | FM (carrier amp 1.0 in `fmcarriersample`) |
 | `kAlgoOpGain` | ~0.316 (-10 dB) | Algo ops |
 | `kAlgoOutGain` | 0.95 | Algo out |
@@ -119,15 +120,18 @@ out = dry + compress( (Sigma send_i * contribution_i) * kFxReturnWetTrim )
 | `kLfsrVoiceBoost` | 1.6 | Non-soft chip |
 | `kNoiseSoftGain` | 1.1 | Hollow / white soft tables |
 | `kMetallicAmp` | 4 | Metallic table build |
+| clang expression | 0.475 | `noisemetafor` (was 0.4) |
 | `kStringMachineGain` / `kStringPluckGain` | 1.35 / 6.3 | String (`tanh(x*gain)` crest limit; accent 0.12; pitch-retrigger) |
 | `kKarplusMaxDamping` | 0.85 | Cap for pluck/guitar (DaisySP >= 0.95 = infinite ring); note-off also via voiceenv |
-| `kWindVoiceGain` | 2.5 | Wind |
+| `kWindFluteGain` / `kWindClarinetGain` / `kWindBrassGain` / `kWindPanpipeGain` | 3.11 / 1.79 / 2.5 / 3.41 | Wind algos |
+| `kWind*BreathCont` / `kWind*BreathBurst` | flute/panpipe 0.04/0.42; clarinet 0.02/0.55; brass 0.04/0.60 | Louder short chiff (~45 ms); light sustain air |
 | `kPianoVoiceGain` | 3.15 | Piano / epiano |
 | `kTimpaniVoiceGain` | 0.70 | Timpani |
 | `kBowedVoiceGain` / `kGuitarVoiceGain` | 1.2 / 6.65 | Bowed / guitar (`tanh` after gain; pitch-retrigger) |
-| `kOrganVoiceGain` / `kOrganTonewheelGain` | 0.65 / 1.8 | Drawbar / tonewheel |
-| `kDripVoiceGain` / `kDootVoiceGain` | 16 / 1.15 | Drip / doot |
-| bells hard-code | 0.65 | `zss_engine.cpp` bells mix |
+| `kOrganVoiceGain` / `kOrganTonewheelGain` | 0.65 / 1.8 | Drawbar / tonewheel (locked) |
+| `kDripVoiceGain` / `kDootVoiceGain` | 1.32 / 1.15 | Drip / doot |
+| `kDripDettackSec` | 0.35 | DaisySP drip hard-cut window |
+| `kBellsVoiceGain` | 0.49 | Bells mix (was 0.65) |
 | `kDrumTickTrim` / `kDrumTweetTrim` | 1.35 / 1.25 | Hi-hat family |
 | `kDrumGains[12]` | 0.24-0.42 | Per drum digit |
 

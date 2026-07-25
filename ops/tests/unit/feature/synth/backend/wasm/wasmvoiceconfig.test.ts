@@ -279,14 +279,61 @@ describe('wasmvoiceconfig', () => {
     expect(voices[2].portamento).toBe(0.15)
   })
 
-  it('type changes preserve envelope and portamento', () => {
+  it('named type switch installs destination envelope and clears portamento', () => {
     const voices = defaultwasmvoicestate()
     applyvoiceconfig(voices, 0, 'envelope', [0.5, 0.5, 0.5, 0.5])
     applyvoiceconfig(voices, 0, 'portamento', 0.1)
     applyvoiceconfig(voices, 0, 'bells', '')
-    expect(voices[0].envelope.sustain).toBe(0.5)
-    expect(voices[0].portamento).toBe(0.1)
     expect(voices[0].type).toBe(SOURCE_TYPE.BELLS)
+    expect(voices[0].envelope).toEqual({
+      attack: 0.01,
+      decay: 0.01,
+      sustain: 0.5,
+      release: 0.01,
+    })
+    expect(voices[0].portamento).toBe(0)
+  })
+
+  it('flute then square restores default synth envelope', () => {
+    const voices = defaultwasmvoicestate()
+    applyvoiceconfig(voices, 0, 'flute', '')
+    expect(voices[0].envelope.attack).toBe(0.12)
+    applyvoiceconfig(voices, 0, 'square', '')
+    expect(voices[0].type).toBe(SOURCE_TYPE.SYNTH)
+    expect(voices[0].envelope).toEqual({
+      attack: 0.01,
+      decay: 0.01,
+      sustain: 0.5,
+      release: 0.01,
+    })
+    expect(voices[0].portamento).toBe(0)
+  })
+
+  it('same-synth wave change keeps user envelope', () => {
+    const voices = defaultwasmvoicestate()
+    applyvoiceconfig(voices, 0, 'square', '')
+    applyvoiceconfig(voices, 0, 'envelope', [0.2, 0.3, 0.7, 0.4])
+    applyvoiceconfig(voices, 0, 'sawtooth', '')
+    expect(voices[0].osc).toBe(WASM_OSC_TYPE.SAWTOOTH)
+    expect(voices[0].envelope).toEqual({
+      attack: 0.2,
+      decay: 0.3,
+      sustain: 0.7,
+      release: 0.4,
+    })
+  })
+
+  it('flute then bells does not keep wind envelope', () => {
+    const voices = defaultwasmvoicestate()
+    applyvoiceconfig(voices, 0, 'flute', '')
+    applyvoiceconfig(voices, 0, 'bells', '')
+    expect(voices[0].type).toBe(SOURCE_TYPE.BELLS)
+    expect(voices[0].envelope).toEqual({
+      attack: 0.01,
+      decay: 0.01,
+      sustain: 0.5,
+      release: 0.01,
+    })
   })
 
   it('maps string ensemble params on string voice only', () => {

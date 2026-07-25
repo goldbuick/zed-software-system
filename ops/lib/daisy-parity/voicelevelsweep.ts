@@ -195,7 +195,8 @@ function measurevoice(
   if (BODY_WINDOW_VOICES.has(voice)) {
     // Drip is an impulse — measure early body, not after it dies
     if (voice === 'drip') {
-      const m = windowrmsdb(samples, samplerate, noteon + 0.01, noteon + 0.18)
+      // After dettack fix: energy should remain in 0.05-0.25 s (not click-only)
+      const m = windowrmsdb(samples, samplerate, noteon + 0.05, noteon + 0.25)
       return { kind: 'body', ...m }
     }
     // Post-attack body on half-note: skip hammer/pick, before ring dies

@@ -34,7 +34,7 @@ Config path: `#synth` → [audio.ts](../../../firmware/audio.ts) `handlesynthvoi
 | `noise` | `WHITE_NOISE` | **Error** (WASM-only message) | Yes |
 | `string` | `STRING_VOICE` (algo 0) | — | Daisy WASM only (SOS string-machine: detuned saws, OSC2 PWM FM, body peaks) |
 | `pluck` | `STRING_VOICE` (algo 1) | — | Daisy WASM only (`StringVoice`, pluck strike) |
-| `drip` | `DRIP_VOICE` | — | Daisy WASM only (`Drip`, gate-edge trigger) |
+| `drip` | `DRIP_VOICE` | — | Daisy WASM only (`Drip`, gate/pitch trigger; dettack 0.35 s) |
 | `flute` / `clarinet` / `brass` / `panpipe` | `WIND_VOICE` (algo 0–3) | — | Daisy WASM only (`windvoice`, SOS wind) |
 | `piano` / `epiano` | `PIANO_VOICE` (algo 0–1) | — | Daisy WASM only (`pianovoice`, SOS pianos) |
 | `timpani` | `TIMPANI_VOICE` | — | Daisy WASM only (`timpanivoice`, pitched membrane) |
@@ -182,11 +182,11 @@ Bell FM: harm `1.5`, modindex `30`, envelope init → **0.01/3/0.3/6** s. Sparkl
 
 ### Tone defaults (MembraneSynth.getDefaults)
 
-envelope `0.001/0.4/0.01/1.4`, osc `sine`, octaves `8`, pitchDecay `0.05`. ZSS `applyreset()` for doot: full Tone snapshot, no ZSS overrides.
+envelope `0.001/0.4/0.01/1.4`, osc `sine`, octaves `10`, pitchDecay `0.05`. ZSS `applyreset()` for doot: full Tone snapshot, no ZSS overrides.
 
 ### WASM play code
 
-Init envelope → **0.001/0.4/0.01/1.4** s, pitch decay `× 0.9993`/sample while gated, output `× 0.6`. `octaves` and `pitchDecay` are **not** `#synth`-configurable on either backend.
+Init envelope → **0.001/0.4/0.01/1.4** s. Pitch matches Tone MembraneSynth: start at note×`kDootOctaves` (10), exponential ramp to note over `kDootPitchDecaySec` (0.05 s). `octaves` and `pitchDecay` are **not** `#synth`-configurable on either backend.
 
 ---
 

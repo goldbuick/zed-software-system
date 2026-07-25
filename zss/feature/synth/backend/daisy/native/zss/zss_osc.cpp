@@ -179,22 +179,39 @@ float oscpartialsynth(Oscillator& o, float hz, int count,
   return norm <= 0.f ? oscbasicwave(o, 1, hz, 1.f) : sum / norm;
 }
 
+static float oscshapemakeup(int shape) {
+  // 0 square (ref), 1 sine (basic path only), 2 triangle, 3 sawtooth
+  if (shape == 2) {
+    return kTriangleVoiceGain;
+  }
+  if (shape == 3) {
+    return kSawtoothVoiceGain;
+  }
+  return 1.f;
+}
+
 float synthwavegain(int osc) {
-  // ONLY applies to #synth sine
+  // ONLY applies to #synth sine (not am/fm/fat sine — those match via family gain)
   if (osc == 1) {
     return kSineVoiceGain;
   }
+  if (osc == 2) {
+    return kTriangleVoiceGain;
+  }
+  if (osc == 3) {
+    return kSawtoothVoiceGain;
+  }
   // Adjust am*
   if (osc >= 10 && osc <= 13) {
-    return kAmVoiceGain;
+    return kAmVoiceGain * oscshapemakeup(osc - 10);
   }
   // Adjust fm*
   if (osc >= 20 && osc <= 23) {
-    return kFmVoiceGain;
+    return kFmVoiceGain * oscshapemakeup(osc - 20);
   }
   // Adjust fat*
   if (osc >= 30 && osc <= 33) {
-    return kFatVoiceGain;
+    return kFatVoiceGain * oscshapemakeup(osc - 30);
   }
   return 1.f;
 }
@@ -286,19 +303,30 @@ float synthsource(ZssVoice& v, int vi, float freq, bool gate, float detune,
 }
 
 float dootvoice(ZssVoice& v, float freq, bool gate) {
-  if (gate && !v.gateprev) {
-    v.dootpitch = 1.f;
-  }
+  const float basehz = freq > 0.f ? freq : 110.f;
+  bool trigger = gate && !v.gateprev;
   v.gateprev = gate;
-  float hz = freq > 0.f ? freq : 110.f;
-  if (gate) {
-    v.dootpitch *= 0.9993f;
-    if (v.dootpitch < 0.15f) {
-      v.dootpitch = 0.15f;
+  // Abutting note-ons keep gate high; re-arm pitch envelope on pitch change.
+  const bool pitchstrike =
+      gate && v.karplushzprev > 0.f &&
+      std::fabs(basehz - v.karplushzprev) > 0.5f;
+  if (trigger || pitchstrike) {
+    // Tone MembraneSynth: phase 0 = note*octaves, phase 1 = note.
+    v.dootpitch = 0.f;
+    v.dootenv.Retrigger(true);
+  }
+  v.karplushzprev = gate ? basehz : 0.f;
+  if (gate && v.dootpitch < 1.f) {
+    const float denom =
+        std::max(1.f, kDootPitchDecaySec * g_engine.sample_rate);
+    v.dootpitch += 1.f / denom;
+    if (v.dootpitch > 1.f) {
+      v.dootpitch = 1.f;
     }
   }
-  float pitchmul = 0.15f + v.dootpitch * 0.85f;
-  v.dootosc.SetFreq(hz * pitchmul);
+  // exponentialRamp: freq = note * octaves^(1 - phase)
+  const float pitchmul = std::pow(kDootOctaves, 1.f - v.dootpitch);
+  v.dootosc.SetFreq(basehz * pitchmul);
   v.dootosc.SetWaveform(Oscillator::WAVE_SIN);
   v.dootosc.SetAmp(1.f);
   return v.dootosc.Process() * v.dootenv.Process(gate) * kDootVoiceGain;

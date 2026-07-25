@@ -44,7 +44,7 @@ void initvoice(ZssVoice& v, float sr) {
   v.stringbowhp.SetFilterMode(OnePole::FILTER_MODE_HIGH_PASS);
   v.stringviblfo.Init(sr);
   v.stringpwmlfo.Init(sr);
-  v.drip.Init(sr, 0.01f);
+  v.drip.Init(sr, kDripDettackSec);
   v.modalvoice.Init(sr);
   v.modalvoice.SetStructure(0.5f);
   v.modalvoice.SetBrightness(0.5f);
@@ -165,12 +165,21 @@ float processvoice(int vi, float vstart[kVibratoGroups],
     v.lastenv = envout;
     out = noisevoice(v, vi, type, freq, gate, envout);
   } else if (type == kBells) {
-    float hz = detunedhz(vi, freq, detune, vfreq);
+    const float basehz = freq > 0.f ? freq : 440.f;
+    float hz = detunedhz(vi, basehz, detune, vfreq);
     if (hz <= 0.f) {
       hz = 440.f;
     }
     bool trigger = gate && !v.bellgateprev;
     v.bellgateprev = gate;
+    // Abutting note-ons keep gate high; retrigger modal on pitch change.
+    const bool pitchstrike =
+        gate && v.bellgateprev && std::fabs(basehz - v.karplushzprev) > 0.5f;
+    if (trigger || pitchstrike) {
+      trigger = true;
+      v.sparkleenv.Retrigger(true);
+    }
+    v.karplushzprev = gate ? basehz : 0.f;
     v.modalvoice.SetFreq(hz);
     v.modalvoice.SetSustain(gate);
     float body = v.modalvoice.Process(trigger);
@@ -183,7 +192,7 @@ float processvoice(int vi, float vstart[kVibratoGroups],
     v.sparklecar.SetWaveform(Oscillator::WAVE_SIN);
     v.sparklecar.SetAmp(1.f);
     float sparkle = v.sparklecar.Process() * v.sparkleenv.Process(gate);
-    out = (body + sparkle * 0.15f) * 0.65f;
+    out = (body + sparkle * 0.15f) * kBellsVoiceGain;
     v.lastenv = std::fabs(out);
   } else if (type == kDoot) {
     out = dootvoice(v, freq, gate);
@@ -230,8 +239,15 @@ float processvoice(int vi, float vstart[kVibratoGroups],
     v.lastenv = envout;
     return out;
   } else if (type == kDripVoice) {
+    const float basehz = freq > 0.f ? freq : 440.f;
     bool trigger = gate && !v.dripgateprev;
     v.dripgateprev = gate;
+    const bool pitchstrike =
+        gate && v.dripgateprev && std::fabs(basehz - v.karplushzprev) > 0.5f;
+    if (trigger || pitchstrike) {
+      trigger = true;
+    }
+    v.karplushzprev = gate ? basehz : 0.f;
     out = v.drip.Process(trigger) * dbtoamp(vol_db) * kDripVoiceGain;
     v.lastenv = std::fabs(out);
     return out;

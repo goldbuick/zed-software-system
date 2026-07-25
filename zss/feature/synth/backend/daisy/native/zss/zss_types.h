@@ -162,6 +162,7 @@ struct ZssVoice {
   bool synthgateprev = false, gateprev = false, noiseprev = false;
   float synthschedhz = 0.f;
   float synthstriketag = 0.f;
+  /** 0..1 MembraneSynth pitch ramp phase (0 = note*octaves, 1 = note). */
   float dootpitch = 1.f;
   float noisephase = 0.f, noisesample = 0.f;
   uint32_t noiserng = 0;

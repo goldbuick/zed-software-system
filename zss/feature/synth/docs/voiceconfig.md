@@ -25,6 +25,8 @@ Handles voice/source configuration from external API (e.g. device commands). For
 
 ## Source Type Changes
 
+Switching named voice type (or entering SYNTH from a non-SYNTH voice via a wave name) installs that destination's default ADSR and clears `portamento`. Same-SYNTH wave changes (`square` → `sawtooth`) keep the current envelope.
+
 | Config | Source Type |
 |--------|-------------|
 | `retro` | RETRO_NOISE |

@@ -206,7 +206,7 @@ NoiseMeta noisemetafor(int noisetype) {
   case kBuzzNoise:
     return {69.f, 1024.f, false, 0.43f};
   case kClangNoise:
-    return {69.f, 1024.f, false, 0.4f};
+    return {69.f, 1024.f, false, 0.475f};
   case kMetallicNoise:
     return {69.f, 1024.f, false, 1.1f};
   case kHollowNoise:

@@ -45,11 +45,15 @@ constexpr int kRevCombMaxLen = 4096;
 
 constexpr float kPi = 3.14159265358979323846f;
 constexpr float kTwoPi = 6.28318530718f;
-constexpr float kSineVoiceGain = 1.42f;
+constexpr float kSineVoiceGain = 1.03f;
+/** Makeup vs square RMS for triangle / sawtooth carriers. */
+constexpr float kTriangleVoiceGain = 1.23f;
+constexpr float kSawtoothVoiceGain = 1.28f;
 constexpr float kOscModWaveGain = 0.1f;
 constexpr float kAmVoiceGain = 2.f;
 constexpr float kFmVoiceGain = 1.f;
 constexpr float kFatVoiceGain = 1.f;
+constexpr float kBellsVoiceGain = 0.49f;
 constexpr float kFmHzScale = 1.f;
 constexpr float kAlgoOpGain = 0.31622776601683794f;
 constexpr float kAlgoOutGain = 0.95f;
@@ -76,7 +80,22 @@ constexpr float kStringBodyLowMix = 0.18f;
 constexpr float kStringBodyHiMix = 0.1f;
 constexpr float kStringBowNoiseMix = 0.03f;
 
-constexpr float kWindVoiceGain = 2.5f;
+/** Wind algos: flute=0 clarinet=1 brass=2 panpipe=3 */
+constexpr float kWindFluteGain = 3.11f;
+constexpr float kWindClarinetGain = 1.79f;
+constexpr float kWindBrassGain = 2.5f;
+constexpr float kWindPanpipeGain = 3.41f;
+/** Post-LP breath: short attack chiff + optional tiny sustain air.
+ * Continuous must stay low — constant hiss under the note is wrong.
+ * Scales multiply `#synth breath`. Legacy was cont 0.65 / burst 1.35. */
+constexpr float kWindFluteBreathCont = 0.04f;
+constexpr float kWindFluteBreathBurst = 0.42f;
+constexpr float kWindClarinetBreathCont = 0.02f;
+constexpr float kWindClarinetBreathBurst = 0.55f;
+constexpr float kWindBrassBreathCont = 0.04f;
+constexpr float kWindBrassBreathBurst = 0.60f;
+constexpr float kWindPanpipeBreathCont = 0.04f;
+constexpr float kWindPanpipeBreathBurst = 0.42f;
 constexpr float kPianoVoiceGain = 3.15f;
 constexpr float kTimpaniVoiceGain = 0.70f;
 constexpr float kBowedVoiceGain = 1.2f;
@@ -84,8 +103,13 @@ constexpr float kGuitarVoiceGain = 6.65f;
 constexpr float kOrganVoiceGain = 0.65f;
 /** Tonewheel (algo 0) harmonic stack is quieter than drawbar (algo 1). */
 constexpr float kOrganTonewheelGain = 1.8f;
-constexpr float kDripVoiceGain = 16.f;
+constexpr float kDripVoiceGain = 1.32f;
+/** DaisySP Drip dettack: seconds until shake energy is forced to zero. */
+constexpr float kDripDettackSec = 0.35f;
 constexpr float kDootVoiceGain = 1.15f;
+/** Tone MembraneSynth defaults: start at note*octaves, ramp to note. */
+constexpr float kDootOctaves = 10.f;
+constexpr float kDootPitchDecaySec = 0.05f;
 
 constexpr float kDrumTickTrim = 1.35f;
 constexpr float kDrumTweetTrim = 1.25f;

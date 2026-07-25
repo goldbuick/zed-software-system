@@ -46,14 +46,15 @@ static float breathlayer(ZssVoice& v, float envout, float breath) {
   return v.stringbowhp.Process(nois) * envout * breath * 0.35f;
 }
 
-static float windbreathburst(ZssVoice& v, bool trigger, float breath,
+static float windbreathburst(ZssVoice& v, bool trigger, float breathamt,
                              float envout) {
   v.sparkleenv.SetTime(ADSR_SEG_ATTACK, 0.002f);
-  v.sparkleenv.SetTime(ADSR_SEG_DECAY, 0.07f);
+  // Short decay: louder chiff via burst gain, not a longer hiss.
+  v.sparkleenv.SetTime(ADSR_SEG_DECAY, 0.045f);
   v.sparkleenv.SetSustainLevel(0.f);
-  v.sparkleenv.SetTime(ADSR_SEG_RELEASE, 0.05f);
+  v.sparkleenv.SetTime(ADSR_SEG_RELEASE, 0.04f);
   const float burstenv = v.sparkleenv.Process(trigger);
-  return breathlayer(v, burstenv * envout, breath * 1.35f);
+  return breathlayer(v, burstenv * envout, breathamt);
 }
 
 static float windformantmix(ZssVoice& v, float sig, int algo, float mix) {
@@ -157,10 +158,26 @@ float windvoice(ZssVoice& v, float hz, bool gate, int algo, int cfg) {
   v.stringlp.Process(sig);
   float out = v.stringlp.Low();
 
-  out += windbreathburst(v, trigger, breath, envout);
-  out += breathlayer(v, envout, breath * 0.65f);
+  float breathcont = kWindFluteBreathCont;
+  float breathburst = kWindFluteBreathBurst;
+  float windgain = kWindFluteGain;
+  if (algo == 1) {
+    breathcont = kWindClarinetBreathCont;
+    breathburst = kWindClarinetBreathBurst;
+    windgain = kWindClarinetGain;
+  } else if (algo == 2) {
+    breathcont = kWindBrassBreathCont;
+    breathburst = kWindBrassBreathBurst;
+    windgain = kWindBrassGain;
+  } else if (algo == 3) {
+    breathcont = kWindPanpipeBreathCont;
+    breathburst = kWindPanpipeBreathBurst;
+    windgain = kWindPanpipeGain;
+  }
+  out += windbreathburst(v, trigger, breath * breathburst, envout);
+  out += breathlayer(v, envout, breath * breathcont);
   v.lastenv = envout;
-  return out * envout * kWindVoiceGain;
+  return out * envout * windgain;
 }
 
 static float pianostretchratio(float hz) {
@@ -190,6 +207,14 @@ float pianovoice(ZssVoice& v, float hz, bool gate, int algo, int cfg,
 
   bool trigger = gate && !v.pianogateprev;
   v.pianogateprev = gate;
+  // Abutting note-ons keep gate high; retrigger hammer / epfm on pitch change.
+  const bool pitchstrike =
+      gate && v.pianogateprev && std::fabs(hz - v.karplushzprev) > 0.5f;
+  if (trigger || pitchstrike) {
+    trigger = true;
+    v.voiceenv.retrigger();
+  }
+  v.karplushzprev = gate ? hz : 0.f;
 
   float envout = v.voiceenv.process(gate) * vel;
   const float cents = spread * 12.f;
@@ -260,13 +285,17 @@ float timpanivoice(ZssVoice& v, float hz, bool gate, int cfg, float velocity) {
   const float strike = clamp01(p.p3 > 0.f ? p.p3 : 0.6f);
   const float vel = clampf(velocity, 0.1f, 1.f);
 
-  bool trigger = gate && !v.timpanigateprev;
-  if (trigger) {
-    v.timpanipitch = 1.f;
-  }
-  v.timpanigateprev = gate;
-
   hz = hz > 0.f ? hz : 110.f;
+  bool trigger = gate && !v.timpanigateprev;
+  v.timpanigateprev = gate;
+  const bool pitchstrike =
+      gate && v.timpanigateprev && std::fabs(hz - v.karplushzprev) > 0.5f;
+  if (trigger || pitchstrike) {
+    trigger = true;
+    v.timpanipitch = 1.f;
+    v.voiceenv.retrigger();
+  }
+  v.karplushzprev = gate ? hz : 0.f;
   if (gate) {
     const float bend = 0.9992f - (1.f - tension) * 0.0005f;
     v.timpanipitch *= bend;
