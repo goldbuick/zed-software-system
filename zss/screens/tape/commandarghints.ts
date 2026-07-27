@@ -9,6 +9,29 @@ export function clearcommandromhintcache() {
   COMMAND_ROM_HINT_CACHE.clear()
 }
 
+/**
+ * Channel variants (#synth1, #echo3, #fmsquare5, #algo05) share the bare command ROM.
+ * Trailing digit 1-5 only (matches synth1-5 / FX1-4 / voice-config 1-5).
+ */
+function commandromlookupkeys(key: string): string[] {
+  const keys = [key]
+  const match = /^(.+)([1-5])$/.exec(key)
+  if (match && match[1]) {
+    keys.push(match[1])
+  }
+  return keys
+}
+
+function readcommandromhint(key: string): string {
+  for (const lookup of commandromlookupkeys(key)) {
+    const rom: MAYBE<string> = romread(`editor:commands:${lookup}`)
+    if (ispresent(rom)) {
+      return romhintfrommarkdown(rom) ?? ''
+    }
+  }
+  return ''
+}
+
 /** Longer help from `zss/rom/editor/commands/<name>.md` when present. Cached per command key. */
 export function commandromhint(commandlookup: string): string {
   if (!commandlookup) {
@@ -18,8 +41,7 @@ export function commandromhint(commandlookup: string): string {
   if (COMMAND_ROM_HINT_CACHE.has(key)) {
     return COMMAND_ROM_HINT_CACHE.get(key) ?? ''
   }
-  const rom: MAYBE<string> = romread(`editor:commands:${key}`)
-  const hint = ispresent(rom) ? (romhintfrommarkdown(rom) ?? '') : ''
+  const hint = readcommandromhint(key)
   COMMAND_ROM_HINT_CACHE.set(key, hint)
   return hint
 }

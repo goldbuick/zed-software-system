@@ -42,4 +42,36 @@ body`)
     expect(commandromhint('stat')).toBe('$DKGRAYx')
     expect(romreadmock).toHaveBeenCalledTimes(1)
   })
+
+  it('falls back to bare command ROM for channel variants 1-5', () => {
+    romreadmock.mockImplementation((path: string) => {
+      if (path === 'editor:commands:fmsquare1') {
+        return undefined
+      }
+      if (path === 'editor:commands:fmsquare') {
+        return `---
+hint: "FM square config"
+---`
+      }
+      return undefined
+    })
+    expect(commandromhint('fmsquare1')).toBe('FM square config')
+    expect(romreadmock).toHaveBeenCalledWith('editor:commands:fmsquare1')
+    expect(romreadmock).toHaveBeenCalledWith('editor:commands:fmsquare')
+  })
+
+  it('falls back for algo05 to algo0', () => {
+    romreadmock.mockImplementation((path: string) => {
+      if (path === 'editor:commands:algo05') {
+        return undefined
+      }
+      if (path === 'editor:commands:algo0') {
+        return `---
+hint: "Algo0 config"
+---`
+      }
+      return undefined
+    })
+    expect(commandromhint('algo05')).toBe('Algo0 config')
+  })
 })
