@@ -1,4 +1,5 @@
 import {
+  textformatlinehtml,
   zedtapehtml,
   zedtaperowshtml,
   zedzedlinkrowhtml,
@@ -26,41 +27,30 @@ describe('zns-zedhtml hyperlinks', () => {
     expect(html).not.toContain('!cliscroll')
   })
 
-  it('renders bare editor widgets as hotkey badge chrome without href', () => {
-    const html = zedzedlinkrowhtml('!char charedit;char', { tenantbase: '/' })
-    expect(html).toContain('> A <')
-    expect(html).toContain('char')
-    expect(html).toContain('background-color:#00aaaa')
-    expect(html).not.toContain('href=')
-    expect(html).not.toContain('!char')
+  it('omits cafe-only editor input widgets', () => {
+    expect(zedzedlinkrowhtml('!char charedit;char', { tenantbase: '/' })).toBe(
+      '',
+    )
+    expect(
+      zedzedlinkrowhtml('!char charedit hk a " A " next;char', {
+        tenantbase: '/',
+      }),
+    ).toBe('')
+    expect(
+      zedzedlinkrowhtml('!color coloredit hk c " C " next;color', {
+        tenantbase: '/',
+      }),
+    ).toBe('')
+    expect(
+      zedzedlinkrowhtml('!bg bgedit hk b " B " next;bg', { tenantbase: '/' }),
+    ).toBe('')
   })
 
-  it('renders menu editor+hk lines as badge + label without href', () => {
-    const charhtml = zedzedlinkrowhtml(
-      '!char charedit hk a " A " next;char',
-      { tenantbase: '/' },
+  it('omits flagorstat-style input hyperlinks', () => {
+    expect(zedzedlinkrowhtml('!flag text;name', { tenantbase: '/' })).toBe('')
+    expect(zedzedlinkrowhtml('!flag number;count', { tenantbase: '/' })).toBe(
+      '',
     )
-    expect(charhtml).toContain('> A <')
-    expect(charhtml).toContain('char')
-    expect(charhtml).not.toContain('href=')
-    expect(charhtml).not.toContain('!char')
-
-    const colorhtml = zedzedlinkrowhtml(
-      '!color coloredit hk c " C " next;color',
-      { tenantbase: '/' },
-    )
-    expect(colorhtml).toContain('> C <')
-    expect(colorhtml).toContain('color')
-    expect(colorhtml).not.toContain('href=')
-    expect(colorhtml).not.toContain('!color')
-
-    const bghtml = zedzedlinkrowhtml('!bg bgedit hk b " B " next;bg', {
-      tenantbase: '/',
-    })
-    expect(bghtml).toContain('> B <')
-    expect(bghtml).toContain('bg')
-    expect(bghtml).not.toContain('href=')
-    expect(bghtml).not.toContain('!bg')
   })
 
   it('alternates badge backgrounds by iseven (ltgray / dkcyan)', () => {
@@ -88,7 +78,26 @@ describe('zns-zedhtml hyperlinks', () => {
     expect(html).toContain('href="/helpmenu"')
     expect(html).not.toContain('!helpmenu')
     expect(html).not.toContain('!char')
+    expect(html).not.toContain('> A <')
     expect(html).toContain('plain')
+  })
+
+  it('zedtaperowshtml skips omitted input widgets for badge alternation', () => {
+    const html = zedtaperowshtml(
+      [
+        '!helpmenu hk 1 " 1 " next;one',
+        '!char charedit hk a " A " next;char',
+        '!cliscroll hk 2 " 2 " next;two',
+      ].join('\n'),
+      { tenantbase: '/' },
+    )
+    expect(html).not.toContain('> A <')
+    expect(html).not.toMatch(/>\s*char\s*</)
+    const bgs = [...html.matchAll(/background-color:(#[0-9a-f]+)/g)].map(
+      (m) => m[1],
+    )
+    expect(bgs[0]).toBe('#aaaaaa')
+    expect(bgs[1]).toBe('#00aaaa')
   })
 
   it('zedtaperowshtml alternates badge colors across link rows, skipping blanks', () => {
@@ -148,5 +157,46 @@ describe('zns-zedhtml hyperlinks', () => {
     expect(html).toContain('data-copy="#play d!e!fg!a!b!c+d!"')
     expect(html).toContain('Db major')
     expect(html).toContain('COPYIT')
+  })
+})
+
+describe('zns-zedhtml $meta', () => {
+  it('expands $meta to a .zns-meta span (default ctrl, client swaps cmd)', () => {
+    const html = textformatlinehtml('$white$meta+h')
+    expect(html).toContain('zns-meta')
+    expect(html).toContain('>ctrl<')
+    expect(html).toContain('+h')
+    expect(html).not.toContain('$meta')
+  })
+
+  it('does not treat $meta as a color name leftover', () => {
+    const html = textformatlinehtml('right trigger - $green$meta')
+    expect(html).toContain('zns-meta')
+    expect(html).not.toMatch(/\$meta/)
+  })
+})
+
+describe('zns-zedhtml openit+hk', () => {
+  it('renders openit with hk as badge link and strips hk from href', () => {
+    const html = zedzedlinkrowhtml(
+      '!openit https://zed.cafe/docs/firmware/cli/ hk c " C " next;CLI',
+      { tenantbase: '/', iseven: true },
+    )
+    expect(html).toContain('href="https://zed.cafe/docs/firmware/cli/"')
+    expect(html).toContain('target="_blank"')
+    expect(html).toContain('> C <')
+    expect(html).toContain('CLI')
+    expect(html).not.toContain(' hk ')
+    expect(html).not.toContain('OPENIT')
+  })
+
+  it('routes openit+hk lines through zedtaperowshtml with badges', () => {
+    const html = zedtaperowshtml(
+      '!openit https://zed.cafe/docs/firmware/loader/ hk o " O " next;LOADER\n',
+      { tenantbase: '/' },
+    )
+    expect(html).toContain('href="https://zed.cafe/docs/firmware/loader/"')
+    expect(html).toContain('> O <')
+    expect(html).toContain('LOADER')
   })
 })

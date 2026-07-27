@@ -4,21 +4,37 @@ import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import { fetchrefscrolltext } from 'zss/feature/fetchrefscrolltext'
 import { terminalwritemarkdownlines } from 'zss/feature/parse/markdownterminal'
+import { UserHotkey } from 'zss/gadget/userinput'
 import { UserInput } from 'zss/gadget/userinput.bridge'
 import { extractcontentfromargs } from 'zss/screens/inputcommon'
 import { inputcolor } from 'zss/screens/panel/common'
+import { NAME } from 'zss/words/types'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
 import { linkactionprefix, linkbegin } from './surface'
 import type { LinkWidgetProps } from './types'
 
+function findhki(words: unknown[]): number {
+  for (let i = 0; i < words.length; ++i) {
+    const w = NAME(`${words[i] ?? ''}`)
+    if (w === 'hk' || w === 'hotkey') {
+      return i
+    }
+  }
+  return -1
+}
+
 export function LinkOpenIt({ surface }: LinkWidgetProps) {
   linkbegin(surface)
   const words = surface.words
+  const hki = findhki(words)
+  const beforehk = hki >= 0 ? words.slice(0, hki) : words
+  const shortcut = hki >= 0 ? `${words[hki + 1] ?? ''}` : ''
+  const maybetext = hki >= 0 ? `${words[hki + 2] ?? ''}` : ''
 
   const invoke = useCallback(() => {
-    const [, openmethod] = words
-    const content = extractcontentfromargs(words, 2)
+    const [, openmethod] = beforehk
+    const content = extractcontentfromargs(beforehk, 2)
     const player = registerreadplayer()
     setTimeout(() => {
       switch (openmethod) {
@@ -38,14 +54,29 @@ export function LinkOpenIt({ surface }: LinkWidgetProps) {
           break
       }
     }, 100)
-  }, [words])
+  }, [beforehk])
 
   const tcolor = inputcolor(!!surface.active)
-  tokenizeandwritetextformat(
-    `${linkactionprefix(surface)}$purple$16 $yellowOPENIT ${tcolor}${surface.label}`,
-    surface.context,
-    true,
-  )
+  if (shortcut) {
+    const badge = maybetext || ` ${shortcut.toUpperCase()} `
+    const badgebg = surface.context.iseven ? '$black$onltgray' : '$black$ondkcyan'
+    tokenizeandwritetextformat(
+      `${badgebg}${badge}${tcolor}$onclear ${surface.label}`,
+      surface.context,
+      true,
+    )
+  } else {
+    tokenizeandwritetextformat(
+      `${linkactionprefix(surface)}$purple$16 $yellowOPENIT ${tcolor}${surface.label}`,
+      surface.context,
+      true,
+    )
+  }
 
-  return surface.active ? <UserInput OK_BUTTON={invoke} /> : null
+  return (
+    <>
+      {surface.active ? <UserInput OK_BUTTON={invoke} /> : null}
+      {shortcut ? <UserHotkey hotkey={shortcut}>{invoke}</UserHotkey> : null}
+    </>
+  )
 }

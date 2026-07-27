@@ -418,6 +418,10 @@ body.zns-page * {
     --zns-fs: ${ZNS_FONT_SIZE}px;
     --zns-lh: ${ZNS_CELL_H}px;
   }
+  .zns-copytoast {
+    --zns-fs: ${ZNS_FONT_SIZE}px;
+    --zns-lh: ${ZNS_CELL_H}px;
+  }
 }
 .zns-vga {
   margin: 0;
@@ -547,6 +551,44 @@ body.zns-page * {
   cursor: pointer;
 }
 .zns-copy:hover { text-decoration: underline; }
+.zns-copytoast {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  margin: 0;
+  padding: 0 1ch;
+  box-sizing: border-box;
+  --zns-fs: ${ZNS_DISPLAY_FONT_SIZE}px;
+  --zns-lh: ${ZNS_DISPLAY_LINE_HEIGHT}px;
+  height: calc(var(--zns-lh) + 2px);
+  line-height: var(--zns-lh);
+  font-family: ${ZNS_VGA_FONT};
+  font-size: var(--zns-fs);
+  letter-spacing: 0;
+  white-space: pre;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: ${v.bg};
+  border-top: 2px solid ${v.frame};
+  color: ${v.text};
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s step-end;
+}
+.zns-copytoast.is-on {
+  opacity: 1;
+}
+.zns-copytoast .zns-toast-ok {
+  color: ${v.hint};
+}
+.zns-copytoast .zns-toast-payload {
+  color: ${v.link};
+}
+.zns-copytoast .zns-toast-err {
+  color: #ff5555;
+}
 .zns-vga-scroll {
   margin-top: var(--zns-lh);
 }
@@ -564,12 +606,45 @@ function buildznsvgapage({ title, bodyhtml, scrollbody }) {
     ? `<div class="zns-vga-scroll">${scrollbody}</div>`
     : ''
   const copyscript = `<script>
-document.body.addEventListener('click',function(e){
-  var btn=e.target.closest('.zns-copy');
-  if(!btn)return;
-  var t=btn.getAttribute('data-copy')||'';
-  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t);}
-});
+(function(){
+  var ismac=navigator.userAgent.indexOf('Mac')>=0;
+  var metakey=ismac?'cmd':'ctrl';
+  document.querySelectorAll('.zns-meta').forEach(function(el){el.textContent=metakey;});
+  var toast=document.getElementById('zns-copytoast');
+  var hideTimer=0;
+  function esc(s){
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function show(html){
+    if(!toast)return;
+    toast.innerHTML=html;
+    toast.classList.add('is-on');
+    if(hideTimer)clearTimeout(hideTimer);
+    hideTimer=setTimeout(function(){
+      toast.classList.remove('is-on');
+      hideTimer=0;
+    },2500);
+  }
+  function showok(payload){
+    var cut=String(payload||'').slice(0,200);
+    show('<span class="zns-toast-ok">copied! </span><span class="zns-toast-payload">'+esc(cut)+'</span>');
+  }
+  function showerr(msg){
+    show('<span class="zns-toast-err">'+esc(msg||'clipboard write failed')+'</span>');
+  }
+  document.body.addEventListener('click',function(e){
+    var btn=e.target.closest('.zns-copy');
+    if(!btn)return;
+    var t=btn.getAttribute('data-copy')||'';
+    if(!(navigator.clipboard&&navigator.clipboard.writeText)){
+      showerr('clipboard not available');
+      return;
+    }
+    navigator.clipboard.writeText(t).then(function(){showok(t);}).catch(function(err){
+      showerr(err&&err.message?err.message:'clipboard write failed');
+    });
+  });
+})();
 </script>`
   return `<!doctype html>
 <html lang="en">
@@ -588,6 +663,7 @@ ${buildznsvgastylesheet(v.bg)}
 ${bodyhtml}
 ${scroll}
 </div>
+<div id="zns-copytoast" class="zns-copytoast" aria-live="polite"></div>
 ${copyscript}
 </body>
 </html>`
