@@ -19,7 +19,6 @@ const MEMORY = {
   software: { main: '', temp: '' },
   books: {} as Record<string, BOOK>,
   loaders: {} as Record<string, string>,
-  wanixattached: null as string | null,
 }
 
 const MEMORY_RUNNER = {
@@ -77,14 +76,6 @@ export function memoryreadtopic() {
 
 export function memorywritetopic(topic: string) {
   MEMORY.topic = topic
-}
-
-export function memoryreadwanixattached() {
-  return MEMORY.wanixattached
-}
-
-export function memorywritewanixattached(sessionkey: string | null) {
-  MEMORY.wanixattached = sessionkey
 }
 
 export function memorywritehalt(halt: boolean) {

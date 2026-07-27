@@ -71,21 +71,19 @@ export function TerminalInput() {
 Device message targets use `device:action` (optional further `:segments`). Each **segment** is `lowercaseoneword` — same as function naming.
 
 - **No `-` (kebab)** in `device.emit(...)` target strings or handler registry keys.
-- Prefer matching the `api.ts` helper name to the action segment (`vmexportzedcafe` → `vm:exportzedcafe`).
+- Prefer matching the `api.ts` helper name to the action segment (`vmloader` → `vm:loader`).
 - Emit in `zss/device/api.ts` and the owning device’s `handlers/registry.ts` key must stay in lockstep.
-- **Wanix:** all `wanixserver:*` / `wanixclient:*` emits live in `api.ts` only. Command/response pairs use the same action segment (`wanixserver:applyroom` → `wanixclient:applyroom`). Do not invent raw `postMessage` lifecycle constants for Wanix — use `wanixclient:ready`, `wanixclient:idle`, `wanixclient:exportready`.
 
 ```typescript
 // ✅ GOOD
-device.emit(player, 'vm:exportzedcafe')
-device.emit(player, 'wanixserver:binddrop')
-device.emit(player, 'wanixclient:binddrop')
-// registry: { exportzedcafe: handle…, binddrop: handle… }
+device.emit(player, 'vm:loader')
+device.emit(player, 'register:terminalopen')
+// registry: { loader: handle…, terminalopen: handle… }
 
 // ❌ BAD
-device.emit(player, 'vm:export-zedcafe')
-device.emit(player, 'wanixclient:bind-drop')
-// registry: { 'export-zedcafe': …, 'bind-drop': … }
+device.emit(player, 'vm:load-file')
+device.emit(player, 'register:terminal-open')
+// registry: { 'load-file': …, 'terminal-open': … }
 ```
 
 ## Summary
@@ -96,4 +94,4 @@ device.emit(player, 'wanixclient:bind-drop')
 | Non-const variables     | lowercaseoneword    | `playertoken`       |
 | Constants (`const`)     | UPPER_SNAKE_CASE    | `TOTAL_ROWS`       |
 | React component names   | PascalCase          | `TerminalInput`    |
-| Device message targets  | `device:lowercase`  | `vm:exportzedcafe` |
+| Device message targets  | `device:lowercase`  | `vm:loader` |

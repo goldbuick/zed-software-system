@@ -5,19 +5,11 @@ import {
   apilog,
   vmloader,
   vmreadzipfilelist,
-  wanixserverbinddrop,
-  wanixserverdrop,
   workstatus,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import {
-  readwanixbinddropdst,
-  readwanixbinddropkind,
-  readwanixbinddropperm,
-} from 'zss/device/wanixclient/wanixbindpaths'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
-import { memoryreadwanixattached } from 'zss/memory/session'
 
 import { parseansi } from './ansi'
 import { parsechr } from './chr'
@@ -29,17 +21,6 @@ import { parsezzm } from './zzm'
 import { parsebrd, parseszt, parsezzt } from './zzt'
 import { isszztworldbytes, iszztworldbytes } from './zztmagic'
 import { parsezztobj } from './zztobj'
-
-/** Wanix host drops must run on the UI thread (iframe bridge), not the VM worker. */
-export function iswanixdropfilename(filename: string): boolean {
-  const name = filename.toLowerCase()
-  return (
-    name.endsWith('.wasm') ||
-    name.endsWith('.tgz') ||
-    name.endsWith('.tar.gz') ||
-    name.endsWith('.tar')
-  )
-}
 
 export function mimetypeofbytesread(filename: string, filebytes: Uint8Array) {
   // ZZT/SZT magic is a signed int16 LE at offset 0 (−1 / −2), not a fixed 4-byte tag.
@@ -95,12 +76,6 @@ export function mapmimetype(mimetype: string, file: File | undefined) {
       return 'json'
     case 'application/zip':
       return 'zip'
-    case 'application/gzip':
-    case 'application/x-gzip':
-      if (/\.tgz$/i.test(file.name) || /\.tar\.gz$/i.test(file.name)) {
-        return 'bundle'
-      }
-      break
     case 'application/octet-stream':
       if (/.zzt$/i.test(file.name)) {
         return 'zzt'
@@ -146,10 +121,6 @@ export function mapmimetype(mimetype: string, file: File | undefined) {
         return 'gif'
       } else if (/.webp$/i.test(file.name)) {
         return 'webp'
-      } else if (/.wasm$/i.test(file.name)) {
-        return 'wasm'
-      } else if (/\.tgz$/i.test(file.name) || /\.tar\.gz$/i.test(file.name)) {
-        return 'bundle'
       }
       break
     case 'image/png':
@@ -160,8 +131,6 @@ export function mapmimetype(mimetype: string, file: File | undefined) {
       return 'gif'
     case 'image/webp':
       return 'webp'
-    case 'application/wasm':
-      return 'wasm'
     case 'application/x-zzt':
       return 'zzt'
     case 'application/x-szt':
@@ -390,34 +359,6 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
     case 'webp':
       stageimagefile(player, filetype, file)
       break
-    case 'wasm':
-      file
-        .arrayBuffer()
-        .then((arraybuffer) => {
-          wanixserverdrop(
-            SOFTWARE,
-            player,
-            file.name,
-            'wasm',
-            new Uint8Array(arraybuffer),
-          )
-        })
-        .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
-      break
-    case 'bundle':
-      file
-        .arrayBuffer()
-        .then((arraybuffer) => {
-          wanixserverdrop(
-            SOFTWARE,
-            player,
-            file.name,
-            'bundle',
-            new Uint8Array(arraybuffer),
-          )
-        })
-        .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
-      break
     default:
       if (!type) {
         file
@@ -455,32 +396,5 @@ export function parsewebfile(player: string, file: File | undefined) {
   if (!ispresent(file)) {
     return
   }
-  // .wasm / .tgz always spawn tasks (never bind-on-drop under input/).
-  if (iswanixdropfilename(file.name)) {
-    handlefiletype(player, file.type ?? '', file)
-    return
-  }
-  // Bind-on-drop uses sim MEMORY.wanixattached (synced from main via
-  // vm:wanixattach). Do not read main-thread readattachedsession() here --
-  // parsewebfile runs in the VM worker where that store is empty.
-  const sessionkey = memoryreadwanixattached()
-  if (sessionkey) {
-    file
-      .arrayBuffer()
-      .then((arraybuffer) => {
-        const label = file.name
-        const kind = readwanixbinddropkind(label)
-        const bytes = new Uint8Array(arraybuffer)
-        wanixserverbinddrop(SOFTWARE, player, sessionkey, {
-          label,
-          kind,
-          bytes,
-          dst: readwanixbinddropdst(label, kind),
-          perm: readwanixbinddropperm(label),
-        })
-      })
-      .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
-  } else {
-    handlefiletype(player, file.type ?? '', file)
-  }
+  handlefiletype(player, file.type ?? '', file)
 }

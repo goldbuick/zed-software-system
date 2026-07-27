@@ -29,11 +29,11 @@ These `$NN` tokens are ZSS text format codes (same as `drop files $26 input/`).
 
 ```typescript
 // ❌ BAD
-apilog(device, player, `wanix folder mount ok → /${dst}`)
+apilog(device, player, `folder mount ok → /${dst}`)
 apilog(device, player, `standing up room…`)
 
 // ✅ GOOD
-apilog(device, player, `wanix folder mount ok $26 /${dst}`)
+apilog(device, player, `folder mount ok $26 /${dst}`)
 apilog(device, player, `standing up room...`)
 ```
 

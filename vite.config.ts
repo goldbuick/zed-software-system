@@ -147,7 +147,6 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         input: {
           index: path.join(apppath, 'index.html'),
-          wanix: path.join(apppath, 'wanix.html'),
         },
       },
     },

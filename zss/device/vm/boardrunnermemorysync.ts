@@ -1,7 +1,6 @@
 import type { DEVICE } from 'zss/device'
 import { boardrunnerpatch } from 'zss/device/patchapi'
 import { Operation, createjsonpipe } from 'zss/feature/jsonpipe/observe'
-import { markzedcafeexportfromrootops } from 'zss/feature/wanix/wanixstateexport'
 import { ispresent } from 'zss/mapping/types'
 import { memoryrootshouldemitpath } from 'zss/memory/jsonpipefilter'
 import {
@@ -66,9 +65,6 @@ export function boardrunnermemorysync(vm: DEVICE) {
   const operations = measurestage('vm:boardrunnermemorysync', () =>
     boardrunnermemorypipe.emitdiff(root),
   )
-  if (operations.length > 0) {
-    markzedcafeexportfromrootops(operations)
-  }
   // emit patch to all board runners
   boardrunneremitpatch(vm, operations, '')
 }

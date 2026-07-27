@@ -4,7 +4,6 @@ import { vmcli } from 'zss/device/api'
 import { register } from 'zss/device/register'
 import { registersetmyplayerid } from 'zss/device/register/player'
 import { registerreadplayer } from 'zss/device/registerplayer'
-import 'zss/device/wanixclient'
 import { isclimode } from 'zss/feature/detect'
 import {
   durablehydratefromdisk,
@@ -12,7 +11,6 @@ import {
 } from 'zss/feature/durablecli'
 import { isjoin } from 'zss/feature/url'
 import { createplatform } from 'zss/platform'
-import { WanixHost } from 'zss/screens/wanix/host'
 
 import { CafeCanvas } from './cafecanvas'
 import { WebGLCheck } from './webglcheck'
@@ -50,7 +48,6 @@ async function main() {
   createRoot(frame).render(
     <WebGLCheck>
       <CafeCanvas />
-      <WanixHost />
     </WebGLCheck>,
   )
 }

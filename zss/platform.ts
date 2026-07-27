@@ -2,7 +2,6 @@ import { createdevice, parsetarget } from 'zss/device'
 import { sessionreset } from 'zss/device/api'
 import { startjoinvm } from 'zss/device/joinvm'
 import { SOFTWARE } from 'zss/device/session'
-import { postsessiontowanixiframe } from 'zss/device/wanixclient/wanixbridge'
 import { hub } from 'zss/hub'
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
@@ -145,7 +144,6 @@ export function createplatform(isstub = false, climode = false) {
         attachworkerdebugforward(platform, 'sim')
         postworkercfg(platform, { climode, session: platformsession })
       }
-      postsessiontowanixiframe(platformsession)
     } catch (err) {
       platformbooting = false
       console.error(

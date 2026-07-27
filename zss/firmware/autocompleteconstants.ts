@@ -23,24 +23,6 @@ export const CHAT_FEED_KINDS = ['twitch', 'rss', 'mastodon', 'bluesky'] as const
 
 export const CHAT_PROFILE_KEYWORDS = ['list', 'show', 'delete', 'save'] as const
 
-export const WANIX_ACTIONS = [
-  'vm',
-  'stop',
-  'remote',
-  'zedsync',
-  'menu',
-  'term',
-  'attach',
-  'detach',
-  'bridge',
-] as const
-
-export const WANIX_VM_SUB = ['stop'] as const
-
-export const WANIX_REMOTE_SUB = ['connect', 'disconnect', 'list'] as const
-
-export const WANIX_ZEDSYNC_SUB = ['start', 'halt', 'clear'] as const
-
 export const ZNS_SUBCOMMANDS = [
   'login',
   'restart',

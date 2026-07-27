@@ -1,3 +1,4 @@
+import { pipeline } from '@huggingface/transformers'
 import { RawAudio, normalizepeak, trimsilence } from './utils'
 
 const SUPERTONIC_MODEL = 'onnx-community/Supertonic-TTS-2-ONNX'
@@ -13,8 +14,8 @@ export class SupertonicTTS {
   pipeline: any
   result_audio: { text: string; audio: RawAudio }[] = []
 
-  constructor(pipeline: any) {
-    this.pipeline = pipeline
+  constructor(ttspipeline: any) {
+    this.pipeline = ttspipeline
   }
 
   static get voices(): { id: string; name: string }[] {
@@ -22,7 +23,6 @@ export class SupertonicTTS {
   }
 
   static async from_pretrained() {
-    const { pipeline } = await import('@huggingface/transformers')
     const tts = await pipeline('text-to-speech', SUPERTONIC_MODEL)
     return new SupertonicTTS(tts)
   }

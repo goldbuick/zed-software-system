@@ -43,12 +43,10 @@ Feature modules are **stateless utilities** and **domain logic** that:
 | [fetchrefscrolltext](../fetchrefscrolltext.ts) | `docs.at.zed.cafe` then ROM refscroll text |
 | [itchiopublish.md](itchiopublish.md) | itch.io publishing |
 | [synth/docs](../synth/docs/index.md) | Audio synthesis (full docs) |
-| [wanix/docs](../wanix/docs/index.md) | Wanix iframe OS, zedcafe export, zedsync |
 
 ## Submodules
 
 - **synth** — Daisy WASM synth (AudioWorklet); archived Tone.js parity refs under synth docs; see [synth/docs/index.md](../synth/docs/index.md)
-- **wanix** — Shared Wanix types/helpers; parent/iframe devices under `zss/device/wanix*`; docs [wanix/docs](../wanix/docs/index.md)
 - **tts** — Piper/Supertonic/Fish TTS in ttsspace worker; main-thread playback in `tts/client.ts`
 - **stt** — Moonshine speech recognition in sttspace worker; mic capture in `stt/speechtotext.ts`
 - **parse** — Format-specific parsers; dispatches from `parse/file.ts`

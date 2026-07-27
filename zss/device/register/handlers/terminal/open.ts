@@ -1,6 +1,5 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/types'
-import { detachwanixterm } from 'zss/device/wanixclient/wanixdisplay'
 import { synctapeactivelayout } from 'zss/feature/tapelayout'
 import { useTape, useTerminal } from 'zss/gadget/data/zustandstores'
 import { isstring } from 'zss/mapping/types'
@@ -18,8 +17,6 @@ export function handleterminalopen(_device: DEVICE, message: MESSAGE): void {
       yselect: undefined,
     })
   }
-  // Tape CLI and attach panel are mutually exclusive; opening tape wins.
-  detachwanixterm()
   useTape.setState((state) => ({
     terminalmode: 'cli',
     terminal: {

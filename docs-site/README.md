@@ -13,7 +13,7 @@ Blume static docs for **https://zed.cafe/docs/** (ZSS System Reference).
 | `content/` | Spine pages (intro, map, glossary, features, architecture) — real files |
 | `content/<prefix>/` | Symlinks into colocated `zss/**/docs` (and `ops` → `ops/docs`) |
 
-Examples: `content/lang` → `zss/feature/lang/docs`, `content/wanix` → `zss/feature/wanix/docs`, `content/device` → `zss/device/docs`.
+Examples: `content/lang` → `zss/feature/lang/docs`, `content/device` → `zss/device/docs`.
 
 Theme inspiration: [`ops/infra/net-zns-worker.js`](../ops/infra/net-zns-worker.js) VGA page (`#0000AA` field, `#55FFFF` brand, IBM EGA 8×14).
 

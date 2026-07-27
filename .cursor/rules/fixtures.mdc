@@ -26,7 +26,6 @@ All test fixture **assets** live under repo-root [`ops/fixtures/`](ops/fixtures/
 | Books (npm) | `books/` |
 | Generated training | `generated/training/` |
 | ZZT corpus | `zzt/corpus/` (`zss/` committed; `archives/`, `extracted/`, `screenshots/` gitignored) |
-| Wanix drop tests | `wanix/` (sources + zedcafe Go); built binaries at `ops/public/wanix/` |
 
 ```typescript
 // ✅ GOOD

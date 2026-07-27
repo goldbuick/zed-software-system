@@ -1,6 +1,6 @@
 import { apitoast, vmpublish } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { rundeeplinks } from 'zss/feature/deeplink'
+import { rundeeplinks } from 'zss/feature/deeplinkrun'
 import {
   storagereadznsemail,
   storagereadznsnamespace,
@@ -10,9 +10,7 @@ import {
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import {
   znslist,
-  znslogincode,
   znsnormalizepathkey,
-  znspersistlogin,
   znsread,
 } from 'zss/feature/url'
 import { write } from 'zss/feature/writeui'
@@ -307,27 +305,6 @@ export async function znsrunimportcode(
   memorywritecodepage(contentbook, codepage)
   const name = memoryreadcodepagename(codepage)
   apitoast(SOFTWARE, player, `imported $green${name} from zns [code] ${key}`)
-}
-
-export async function znsconfirmotpfromdeeplink(
-  player: string,
-  email: string,
-  code: string,
-  namespace: string,
-) {
-  write(SOFTWARE, player, zsstextline(`confirming login with $green${code}`))
-  const result = await znslogincode(email, code)
-  if (result.success && result.token) {
-    await znspersistlogin(email, namespace, result.token)
-    await showznsmenu(player)
-    return true
-  }
-  write(
-    SOFTWARE,
-    player,
-    zsstextline(`$red zns login failed: ${result.message ?? 'unknown error'}`),
-  )
-  return false
 }
 
 export async function znsrequiresession(player: string) {

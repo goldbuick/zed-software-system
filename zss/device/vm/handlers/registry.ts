@@ -21,12 +21,10 @@ import { handlecli, handleclirepeatlast } from './cli'
 import { handlecoderelease, handlecodewatch } from './codewatch'
 import { handledoot } from './doot'
 import { handleeditorbookmarkscroll } from './editorbookmarkscroll'
-import { handleexportzedcafe } from './exportzedcafe'
 import { handleflush } from './flush'
 import { handlefork } from './fork'
 import { handlehalt } from './halt'
 import { handlereadimageimport } from './imageimport'
-import { handleimportzedcafe } from './importzedcafe'
 import { handleinput } from './input'
 import { handlefindany, handleinspect } from './inspect'
 import { handlelastinputtouch } from './lastinputtouch'
@@ -46,7 +44,6 @@ import {
 import { handlesecond } from './second'
 import { handleticktock } from './ticktock'
 import { handletopic } from './topic'
-import { handlewanixattach } from './wanixattach'
 import { handlereadzipfilelist } from './zipfile'
 import { handlezsswords } from './zsswords'
 import { handlezztrandom, handlezztsearch } from './zzt'
@@ -94,9 +91,6 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   flush: handleflush,
   bookmarkscroll: handlebookmarkscroll,
   editorbookmarkscroll: handleeditorbookmarkscroll,
-  exportzedcafe: handleexportzedcafe,
-  importzedcafe: handleimportzedcafe,
-  wanixattach: handlewanixattach,
   cli: handlecli,
   clirepeatlast: handleclirepeatlast,
   restart: handlerestart,

@@ -13,7 +13,7 @@ function withinrepo(root: string, target: string): boolean {
   return target === root || target.startsWith(`${root}/`)
 }
 
-/** Resolve Blume site paths (/wanix/zedsync) against docs-site/content. */
+/** Resolve Blume site paths (/docs/...) against docs-site/content. */
 function contentcandidates(root: string, sitopath: string): string[] {
   const rel = sitopath.replace(/^\//, '')
   const base = join(root, CONTENTROOT, rel)
