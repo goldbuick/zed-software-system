@@ -1,0 +1,3 @@
+---
+hint: "Bowed bow amount"
+---

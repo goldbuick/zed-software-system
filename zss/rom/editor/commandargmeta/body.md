@@ -1,0 +1,3 @@
+---
+hint: "Body resonance amount"
+---

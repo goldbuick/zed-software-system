@@ -4,7 +4,7 @@ import {
   DEFAULT_WASM_OSC_CONFIG,
   type WASM_OSC_CONFIG,
 } from './wasmoscconfigsab'
-import { parsemodtype } from './wasmosctype'
+import { parsemodtype, parsewasmosc } from './wasmosctype'
 
 export function applywasmoscconfig(
   config: WASM_OSC_CONFIG[],
@@ -88,6 +88,11 @@ export function applywasmoscconfig(
       break
   }
 
+  // Partials only when the key is a wave name (e.g. #synth fmsquare 1 0 0 …).
+  if (parsewasmosc(key) === undefined) {
+    return false
+  }
+
   if (isarray(value)) {
     cfg.partials = value.filter((item) => isnumber(item)).slice(0, 8)
     while (cfg.partials.length < 8) {
@@ -101,10 +106,6 @@ export function applywasmoscconfig(
     cfg.partials = [value, 0, 0, 0, 0, 0, 0, 0]
     cfg.partialcount = 1
     return true
-  }
-
-  if (isstring(value)) {
-    return false
   }
 
   return false

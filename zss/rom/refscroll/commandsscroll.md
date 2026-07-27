@@ -165,9 +165,11 @@ $whiteset volume
 ## audio - synthesis
 
 #synth [config]  
-$whiteconfigure play voices  
+$whiteselect type/wave or config play voices  
 #synth1  #synth5  
-$whiteper-voice config  
+$whiteper-voice / bgplay select  
+#string / #fmsquare / #piano ...  
+$whiteconfig-only (no type select; +1-5 channels)  
 #synthrecord [filename]  
 $whiterecord output  
 #synthflush  

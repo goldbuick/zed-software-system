@@ -1,0 +1,3 @@
+---
+hint: "Piano hammer amount"
+---

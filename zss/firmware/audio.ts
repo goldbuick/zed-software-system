@@ -21,7 +21,14 @@ import { SYNTH_NAMED_TYPES } from 'zss/feature/synth/voiceconfig/validation'
 import { write } from 'zss/feature/writeui'
 import { createfirmware } from 'zss/firmware'
 import {
+  ALGO_CONFIG_KEYWORDS,
   FX_FIRST_ARG_KEYWORDS,
+  SYNTH_ALGO_OSC_WAVE_KEYWORDS,
+  SYNTH_BASIC_WAVE_KEYWORDS,
+  SYNTH_CONFIG_KEYWORDS,
+  SYNTH_NAMED_VOICE_CONFIG,
+  SYNTH_OSC_CONFIG_KEYWORDS,
+  SYNTH_WAVE_COMMAND_NAMES,
   TTS_ENGINE_KEYWORDS,
   TTS_FISH_MODEL_KEYWORDS,
 } from 'zss/firmware/autocompleteconstants'
@@ -75,31 +82,41 @@ const AUDIO_CMD_DESC: Record<string, string> = {
   autowah4: 'for #tts',
 }
 
-const SYNTH_WAVE_BASES = [
-  'sine',
-  'square',
-  'triangle',
-  'sawtooth',
-  'custom',
-] as const
-
-const SYNTH_CONFIG_KEYWORDS = [
-  'restart',
-  'vol',
-  'volume',
-  'port',
-  'portamento',
-  'env',
-  'envelope',
-] as const
-
 const SYNTH_FIRST_ARG_KEYWORDS = [
   ...SYNTH_NAMED_TYPES,
-  ...SYNTH_WAVE_BASES,
+  ...SYNTH_WAVE_COMMAND_NAMES,
   ...SYNTH_CONFIG_KEYWORDS,
 ]
 
-const SYNTH_ARGMETA = { byposition: [[...SYNTH_FIRST_ARG_KEYWORDS]] }
+const SYNTH_OSC_WHENFIRST = {
+  modtype: [[], [...SYNTH_BASIC_WAVE_KEYWORDS]],
+  modulationtype: [[], [...SYNTH_BASIC_WAVE_KEYWORDS]],
+}
+
+const SYNTH_ALGO_WHENFIRST = {
+  osc1: [[], [...SYNTH_ALGO_OSC_WAVE_KEYWORDS]],
+  osc2: [[], [...SYNTH_ALGO_OSC_WAVE_KEYWORDS]],
+  osc3: [[], [...SYNTH_ALGO_OSC_WAVE_KEYWORDS]],
+  osc4: [[], [...SYNTH_ALGO_OSC_WAVE_KEYWORDS]],
+}
+
+const SYNTH_ARGMETA = {
+  byposition: [[...SYNTH_FIRST_ARG_KEYWORDS]],
+  whenfirst: {
+    ...SYNTH_OSC_WHENFIRST,
+    ...SYNTH_ALGO_WHENFIRST,
+  },
+}
+
+const SYNTH_OSC_ARGMETA = {
+  byposition: [[...SYNTH_OSC_CONFIG_KEYWORDS]],
+  whenfirst: { ...SYNTH_OSC_WHENFIRST },
+}
+
+const SYNTH_ALGO_ARGMETA = {
+  byposition: [[...ALGO_CONFIG_KEYWORDS]],
+  whenfirst: { ...SYNTH_ALGO_WHENFIRST },
+}
 
 const FX_ARGMETA = { byposition: [[...FX_FIRST_ARG_KEYWORDS]] }
 
@@ -166,6 +183,41 @@ function handlesynthvoice(
     synthvoice(SOFTWARE, player, board, idx, voiceorconfig, maybevalue)
     memorymergesynthvoice(board, idx, voiceorconfig, maybevalue)
   }
+}
+
+/** Config-only: apply words to one or more voice indices (no-op if empty). */
+function handlesynthvoiceconfigonly(
+  player: string,
+  board: string,
+  voiceindices: number[],
+  words: WORD[],
+) {
+  if (words.length === 0) {
+    return
+  }
+  for (let i = 0; i < voiceindices.length; ++i) {
+    handlesynthvoice(player, board, voiceindices[i], words)
+  }
+}
+
+function synthvoiceindicesforchannel(channel: number): number[] {
+  if (channel === 0) {
+    return [0, 1, 2, 3]
+  }
+  if (channel === 5) {
+    return [4, 5, 6, 7]
+  }
+  return [channel - 1]
+}
+
+function voiceconfigchanneldesc(basename: string, channel: number): string {
+  if (channel === 0) {
+    return `${basename} config for all #play synth voices`
+  }
+  if (channel === 5) {
+    return `${basename} config for #bgplay synth voices`
+  }
+  return `${basename} config for synth voice ${channel}`
 }
 
 function handleplaystr(chip: CHIP, words: WORD[]) {
@@ -554,6 +606,65 @@ AUDIO_FIRMWARE.command(
   },
   SYNTH_ARGMETA,
 )
+
+function registervoiceconfigcommand(
+  basename: string,
+  argmeta: {
+    byposition: string[][]
+    whenfirst?: Record<string, unknown[][]>
+  },
+) {
+  const channels = [0, 1, 2, 3, 4, 5]
+  for (let c = 0; c < channels.length; ++c) {
+    const channel = channels[c]
+    const cmdname = channel === 0 ? basename : `${basename}${channel}`
+    AUDIO_FIRMWARE.command(
+      cmdname,
+      [
+        ARG_TYPE.NUMBER_OR_STRING,
+        ARG_TYPE.MAYBE_NUMBER_OR_STRING,
+        voiceconfigchanneldesc(basename, channel),
+      ],
+      (_, words) => {
+        const bid = READ_CONTEXT.board?.id ?? ''
+        handlesynthvoiceconfigonly(
+          READ_CONTEXT.elementfocus,
+          bid,
+          synthvoiceindicesforchannel(channel),
+          words,
+        )
+        return 0
+      },
+      argmeta,
+    )
+  }
+}
+
+// Config-only top-level commands for named voices (and channel variants 1-5).
+const namedvoicenames = Object.keys(SYNTH_NAMED_VOICE_CONFIG)
+for (let i = 0; i < namedvoicenames.length; ++i) {
+  const name = namedvoicenames[i]
+  const keywords = SYNTH_NAMED_VOICE_CONFIG[name]
+  const isalgo = name.startsWith('algo')
+  const isosc = name === 'pulse' || name === 'pwm'
+  registervoiceconfigcommand(
+    name,
+    isalgo
+      ? SYNTH_ALGO_ARGMETA
+      : isosc
+        ? SYNTH_OSC_ARGMETA
+        : { byposition: [[...keywords]] },
+  )
+}
+
+// Config-only top-level commands for osc waves (skip pulse/pwm already registered).
+for (let i = 0; i < SYNTH_WAVE_COMMAND_NAMES.length; ++i) {
+  const name = SYNTH_WAVE_COMMAND_NAMES[i]
+  if (name === 'pulse' || name === 'pwm') {
+    continue
+  }
+  registervoiceconfigcommand(name, SYNTH_OSC_ARGMETA)
+}
 
 // handle synth fx configurations
 for (let i = 0; i < 4; ++i) {

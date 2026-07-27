@@ -1,0 +1,3 @@
+---
+hint: "Guitar pick amount"
+---

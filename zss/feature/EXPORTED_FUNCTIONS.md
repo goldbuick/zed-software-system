@@ -323,7 +323,7 @@ TTS inference and engine implementations that run in the ttsspace worker.
 
 ### TTS Classes
 - `PiperTTS` - Piper TTS engine class
-- `SupertonicTTS` - Supertonic TTS engine class (Supertonic-TTS-2-ONNX)
+- `SupertonicTTS` - Supertonic TTS engine class (Supertone/supertonic-3 via onnxruntime-web)
 
 ### Utilities
 - `detectWebGPU()` - Detect WebGPU support

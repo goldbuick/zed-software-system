@@ -8,6 +8,8 @@ import {
 } from 'zss/feature/synth/backend/wasm/wasmoscconfigsab'
 import {
   WASM_OSC_TYPE,
+  familyosctobasic,
+  familywavetobasic,
   parsemodtype,
   parsewasmosc,
 } from 'zss/feature/synth/backend/wasm/wasmosctype'
@@ -36,6 +38,26 @@ describe('wasmosctype', () => {
     expect(parsewasmosc('square')).toBe(WASM_OSC_TYPE.SQUARE)
     expect(parsewasmosc('fmsquare')).toBe(WASM_OSC_TYPE.FM_SQUARE)
     expect(parsemodtype('triangle')).toBe(WASM_OSC_TYPE.TRIANGLE)
+  })
+
+  it('maps family wave index to basic (fmsquare must not become sine)', () => {
+    // Family order: sine=0 square=1. Basic order: square=0 sine=1.
+    expect(familywavetobasic(0)).toBe(WASM_OSC_TYPE.SINE)
+    expect(familywavetobasic(1)).toBe(WASM_OSC_TYPE.SQUARE)
+    expect(familywavetobasic(2)).toBe(WASM_OSC_TYPE.TRIANGLE)
+    expect(familywavetobasic(3)).toBe(WASM_OSC_TYPE.SAWTOOTH)
+    // Bare (osctype - 20) would yield sine for fmsquare — this is the regression.
+    expect(familyosctobasic(WASM_OSC_TYPE.FM_SQUARE)).toBe(
+      WASM_OSC_TYPE.SQUARE,
+    )
+    expect(familyosctobasic(WASM_OSC_TYPE.FM_SINE)).toBe(WASM_OSC_TYPE.SINE)
+    expect(familyosctobasic(WASM_OSC_TYPE.AM_SQUARE)).toBe(
+      WASM_OSC_TYPE.SQUARE,
+    )
+    expect(familyosctobasic(WASM_OSC_TYPE.FAT_SQUARE)).toBe(
+      WASM_OSC_TYPE.SQUARE,
+    )
+    expect(familyosctobasic(WASM_OSC_TYPE.SQUARE)).toBeUndefined()
   })
 
   it('defaults modtype to square for Tone AM/FM parity', () => {
@@ -73,7 +95,7 @@ describe('wasmvoiceconfig', () => {
     expect(voices[2].algo).toBe(3)
   })
 
-  it('maps string pluck and drip voice types', () => {
+  it('maps string and pluck voice types', () => {
     const voices = defaultwasmvoicestate()
     expect(applyvoiceconfig(voices, 0, 'string', '')).toBe(true)
     expect(voices[0].type).toBe(SOURCE_TYPE.STRING_VOICE)
@@ -99,9 +121,7 @@ describe('wasmvoiceconfig', () => {
       damping: 0.72,
       accent: 0.12,
     })
-    expect(applyvoiceconfig(voices, 2, 'drip', '')).toBe(true)
-    expect(voices[2].type).toBe(SOURCE_TYPE.DRIP_VOICE)
-    expect(voices[2].algo).toBe(0)
+    expect(applyvoiceconfig(voices, 2, 'drip', '')).toBe(false)
   })
 
   it('maps noise and hollow chip types', () => {
@@ -195,8 +215,12 @@ describe('wasmvoiceconfig', () => {
     expect(voices[1].algo).toBe(1)
     expect(applyvoiceconfig(voices, 2, 'brass', '')).toBe(true)
     expect(voices[2].algo).toBe(2)
-    expect(applyvoiceconfig(voices, 3, 'panpipe', '')).toBe(true)
-    expect(voices[3].algo).toBe(3)
+    expect(applyvoiceconfig(voices, 3, 'panpipe', '')).toBe(false)
+    expect(applyvoiceconfig(voices, 3, 'epiano', '')).toBe(false)
+    expect(applyvoiceconfig(voices, 3, 'timpani', '')).toBe(false)
+    expect(applyvoiceconfig(voices, 3, 'viola', '')).toBe(false)
+    expect(applyvoiceconfig(voices, 3, 'nylon', '')).toBe(false)
+    expect(applyvoiceconfig(voices, 3, 'drawbar', '')).toBe(false)
 
     expect(applyvoiceconfig(voices, 0, 'piano', '')).toBe(true)
     expect(voices[0].type).toBe(SOURCE_TYPE.PIANO_VOICE)
@@ -206,32 +230,12 @@ describe('wasmvoiceconfig', () => {
       brightness: 0.5,
       damping: 0.45,
     })
-    expect(applyvoiceconfig(voices, 1, 'epiano', '')).toBe(true)
-    expect(voices[1].algo).toBe(1)
-
-    expect(applyvoiceconfig(voices, 2, 'timpani', '')).toBe(true)
-    expect(voices[2].type).toBe(SOURCE_TYPE.TIMPANI_VOICE)
-    expect(voices[2].timpani).toEqual({
-      tension: 0.5,
-      decay: 0.55,
-      tone: 0.45,
-      strike: 0.6,
-    })
 
     expect(applyvoiceconfig(voices, 3, 'violin', '')).toBe(true)
     expect(voices[3].type).toBe(SOURCE_TYPE.BOWED_VOICE)
-    expect(applyvoiceconfig(voices, 0, 'viola', '')).toBe(true)
-    expect(voices[0].algo).toBe(1)
 
-    expect(applyvoiceconfig(voices, 1, 'nylon', '')).toBe(true)
-    expect(voices[1].type).toBe(SOURCE_TYPE.GUITAR_VOICE)
-    expect(voices[1].guitar).toEqual({
-      pick: 0.25,
-      body: 0.4,
-      damping: 0.72,
-      position: 0.35,
-    })
     expect(applyvoiceconfig(voices, 2, 'steel', '')).toBe(true)
+    expect(voices[2].type).toBe(SOURCE_TYPE.GUITAR_VOICE)
     expect(voices[2].algo).toBe(1)
     expect(voices[2].guitar).toEqual({
       pick: 0.5,
@@ -243,13 +247,9 @@ describe('wasmvoiceconfig', () => {
     expect(applyvoiceconfig(voices, 3, 'tonewheel', '')).toBe(true)
     expect(voices[3].type).toBe(SOURCE_TYPE.ORGAN_VOICE)
     expect(voices[3].algo).toBe(0)
-    // Named voice must win over organ param when value is not numeric.
-    expect(applyvoiceconfig(voices, 3, 'drawbar', '')).toBe(true)
-    expect(voices[3].algo).toBe(1)
+    // drawbar remains an organ param (not a named voice).
     expect(applyvoiceconfig(voices, 3, 'drawbar', 0.4)).toBe(true)
     expect(voices[3].organ.drawbar).toBe(0.4)
-    expect(applyvoiceconfig(voices, 0, 'drawbar', '')).toBe(true)
-    expect(voices[0].algo).toBe(1)
   })
 
   it('maps SOS timbre params into voice cfg sab slots 6-9', () => {
@@ -336,7 +336,7 @@ describe('wasmvoiceconfig', () => {
     })
   })
 
-  it('maps string ensemble params on string voice only', () => {
+  it('maps string ensemble params with dormant writes', () => {
     const voices = defaultwasmvoicestate()
     applyvoiceconfig(voices, 0, 'string', '')
     expect(applyvoiceconfig(voices, 0, 'detune', 0.3)).toBe(true)
@@ -350,10 +350,13 @@ describe('wasmvoiceconfig', () => {
       filter: 0.6,
     })
 
+    // Exclusive string keys write dormantly while on other types.
     applyvoiceconfig(voices, 1, 'pluck', '')
-    expect(applyvoiceconfig(voices, 1, 'detune', 0.3)).toBe(false)
+    expect(applyvoiceconfig(voices, 1, 'detune', 0.3)).toBe(true)
+    expect(voices[1].stringensemble.detune).toBe(0.3)
     applyvoiceconfig(voices, 2, 'square', '')
-    expect(applyvoiceconfig(voices, 2, 'pwm', 0.4)).toBe(false)
+    expect(applyvoiceconfig(voices, 2, 'pwm', 0.4)).toBe(true)
+    expect(voices[2].stringensemble.pwm).toBe(0.4)
   })
 
   it('maps string ensemble params into voice cfg sab slots 6-9', () => {
@@ -371,7 +374,7 @@ describe('wasmvoiceconfig', () => {
     expect(sab[9]).toBe(0.6)
   })
 
-  it('maps pluck timbre params on pluck voice only', () => {
+  it('maps pluck timbre params with dormant exclusive writes', () => {
     const voices = defaultwasmvoicestate()
     applyvoiceconfig(voices, 0, 'pluck', '')
     expect(applyvoiceconfig(voices, 0, 'structure', 0.2)).toBe(true)
@@ -387,9 +390,11 @@ describe('wasmvoiceconfig', () => {
     })
 
     applyvoiceconfig(voices, 1, 'square', '')
-    expect(applyvoiceconfig(voices, 1, 'structure', 0.2)).toBe(false)
+    expect(applyvoiceconfig(voices, 1, 'structure', 0.2)).toBe(true)
+    expect(voices[1].pluck.structure).toBe(0.2)
     applyvoiceconfig(voices, 2, 'string', '')
-    expect(applyvoiceconfig(voices, 2, 'structure', 0.2)).toBe(false)
+    expect(applyvoiceconfig(voices, 2, 'structure', 0.2)).toBe(true)
+    expect(voices[2].pluck.structure).toBe(0.2)
     expect(applyvoiceconfig(voices, 2, 'detune', 0.2)).toBe(true)
   })
 
@@ -520,7 +525,7 @@ describe('wasmvoiceconfig', () => {
     expect(algo[0].osc1).toBe(WASM_OSC_TYPE.SQUARE)
   })
 
-  it('installs Tone-parity envelope on bells; env applies on drip', () => {
+  it('installs Tone-parity envelope on bells; env applies on flute', () => {
     const voices = defaultwasmvoicestate()
     applyvoiceconfig(voices, 0, 'bells', '')
     expect(voices[0].envelope).toEqual({
@@ -529,7 +534,7 @@ describe('wasmvoiceconfig', () => {
       sustain: 0.3,
       release: 6,
     })
-    applyvoiceconfig(voices, 0, 'drip', '')
+    applyvoiceconfig(voices, 0, 'flute', '')
     expect(
       applyvoiceconfig(voices, 0, 'env', [0.001, 0.05, 0, 0.4]),
     ).toBe(true)
@@ -567,5 +572,114 @@ describe('wasmvoiceconfig', () => {
       expect(voices[base + 5]).toBe(WASM_OSC_TYPE.SQUARE)
     }
     expect(voices).toHaveLength(48)
+  })
+
+  it('pushes fmsquare osctype 21 onto zss_voices sab (not sine)', () => {
+    const voices = defaultwasmvoicestate()
+    const osc = defaultwasmoscconfig()
+    const algo = defaultwasmalgoconfig()
+    applyvoiceconfig(voices, 0, 'fmsquare', '', osc, algo)
+    expect(voices[0].osc).toBe(WASM_OSC_TYPE.FM_SQUARE)
+    const sab = wasmvoicestatetosab(voices, new Array(48).fill(0), 6)
+    expect(sab[5]).toBe(21)
+    expect(sab[5]).not.toBe(WASM_OSC_TYPE.SINE)
+    expect(sab[5]).not.toBe(WASM_OSC_TYPE.FM_SINE)
+  })
+
+  it('applies piano brightness after pluck key name (shared-key fallthrough)', () => {
+    const voices = defaultwasmvoicestate()
+    applyvoiceconfig(voices, 0, 'piano', '')
+    expect(applyvoiceconfig(voices, 0, 'brightness', 0.8)).toBe(true)
+    expect(voices[0].piano.brightness).toBe(0.8)
+    expect(applyvoiceconfig(voices, 0, 'damping', 0.2)).toBe(true)
+    expect(voices[0].piano.damping).toBe(0.2)
+  })
+
+  it('applies bowed pressure and vib after wind/string key names', () => {
+    const voices = defaultwasmvoicestate()
+    applyvoiceconfig(voices, 0, 'violin', '')
+    expect(applyvoiceconfig(voices, 0, 'pressure', 0.7)).toBe(true)
+    expect(voices[0].bowed.pressure).toBe(0.7)
+    expect(applyvoiceconfig(voices, 0, 'vib', 0.1)).toBe(true)
+    expect(voices[0].bowed.vib).toBe(0.1)
+  })
+
+  it('applies guitar body after bowed key name', () => {
+    const voices = defaultwasmvoicestate()
+    applyvoiceconfig(voices, 0, 'steel', '')
+    expect(applyvoiceconfig(voices, 0, 'body', 0.9)).toBe(true)
+    expect(voices[0].guitar.body).toBe(0.9)
+  })
+
+  it('writes exclusive pluck structure dormantly on piano', () => {
+    const voices = defaultwasmvoicestate()
+    applyvoiceconfig(voices, 0, 'piano', '')
+    expect(applyvoiceconfig(voices, 0, 'structure', 0.5)).toBe(true)
+    expect(voices[0].pluck.structure).toBe(0.5)
+  })
+
+  it('preserves string detune and env across type switches', () => {
+    const voices = defaultwasmvoicestate()
+    const osc = defaultwasmoscconfig()
+    const algo = defaultwasmalgoconfig()
+    applyvoiceconfig(voices, 0, 'string', '', osc, algo)
+    applyvoiceconfig(voices, 0, 'detune', 0.77, osc, algo)
+    applyvoiceconfig(voices, 0, 'env', [0.1, 0.2, 0.3, 0.4], osc, algo)
+    applyvoiceconfig(voices, 0, 'piano', '', osc, algo)
+    applyvoiceconfig(voices, 0, 'string', '', osc, algo)
+    expect(voices[0].stringensemble.detune).toBe(0.77)
+    expect(voices[0].envelope).toEqual({
+      attack: 0.1,
+      decay: 0.2,
+      sustain: 0.3,
+      release: 0.4,
+    })
+  })
+
+  it('preserves fmsquare harmonicity across type switches', () => {
+    const voices = defaultwasmvoicestate()
+    const osc = defaultwasmoscconfig()
+    const algo = defaultwasmalgoconfig()
+    applyvoiceconfig(voices, 0, 'fmsquare', '', osc, algo)
+    applyvoiceconfig(voices, 0, 'harmonicity', 11, osc, algo)
+    applyvoiceconfig(voices, 0, 'string', '', osc, algo)
+    applyvoiceconfig(voices, 0, 'fmsquare', '', osc, algo)
+    expect(osc[0].harmonicity).toBe(11)
+    expect(voices[0].osc).toBe(WASM_OSC_TYPE.FM_SQUARE)
+  })
+
+  it('restart clears envmemory and osc dormancy', () => {
+    const voices = defaultwasmvoicestate()
+    const osc = defaultwasmoscconfig()
+    const algo = defaultwasmalgoconfig()
+    applyvoiceconfig(voices, 0, 'string', '', osc, algo)
+    applyvoiceconfig(voices, 0, 'detune', 0.9, osc, algo)
+    applyvoiceconfig(voices, 0, 'harmonicity', 9, osc, algo)
+    applyvoiceconfig(voices, 0, 'restart', '', osc, algo)
+    expect(voices[0].stringensemble.detune).toBe(0.25)
+    expect(osc[0].harmonicity).toBe(DEFAULT_WASM_OSC_CONFIG.harmonicity)
+    expect(voices[0].envmemory).toEqual({})
+  })
+
+  it('maps amsquare and fatsquare to family carriers that are square', () => {
+    const voices = defaultwasmvoicestate()
+    const osc = defaultwasmoscconfig()
+    const algo = defaultwasmalgoconfig()
+    applyvoiceconfig(voices, 0, 'amsquare', '', osc, algo)
+    expect(voices[0].osc).toBe(WASM_OSC_TYPE.AM_SQUARE)
+    expect(familyosctobasic(voices[0].osc)).toBe(WASM_OSC_TYPE.SQUARE)
+    applyvoiceconfig(voices, 0, 'fatsquare', '', osc, algo)
+    expect(voices[0].osc).toBe(WASM_OSC_TYPE.FAT_SQUARE)
+    expect(familyosctobasic(voices[0].osc)).toBe(WASM_OSC_TYPE.SQUARE)
+  })
+
+  it('pwm modfreq does not write harmonicity (FM sibling trap)', () => {
+    const voices = defaultwasmvoicestate()
+    const osc = defaultwasmoscconfig()
+    const algo = defaultwasmalgoconfig()
+    applyvoiceconfig(voices, 0, 'pwm', '', osc, algo)
+    expect(applyvoiceconfig(voices, 0, 'modfreq', 7, osc, algo)).toBe(true)
+    expect(osc[0].modfreq).toBe(7)
+    expect(osc[0].harmonicity).toBe(DEFAULT_WASM_OSC_CONFIG.harmonicity)
   })
 })

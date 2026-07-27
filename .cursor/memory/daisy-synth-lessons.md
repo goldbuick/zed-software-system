@@ -2,6 +2,19 @@
 
 From 2026 config/DSP audits (FM harmonicity, fat/am wave maps, shared keys, env). Rule: `daisy-synth-config.mdc`. Skill: `daisy-synth-config`.
 
+## Before shipping synth config (confidence checklist)
+
+1. Trace **sample path**, not only SAB write (`readosccfg` / `synthsource` / SOS voice).
+2. Family am/fm/fat carriers: use `familywavetobasic` (TS: `wasmosctype.ts`, C++: `zss_osc.cpp`). Bare `osctype - 10/20/30` makes `fmsquare` sound like sine.
+3. Shared `#synth` keys: on type mismatch **fall through** (never early `return false` before other owners).
+4. FM ratio is **`harmonicity`**, never `modfreq` (PWM LFO only).
+5. Fat unison: phase-accumulator (`oscwavefromphase`), not N× `Oscillator::Process()`.
+6. After native C++: `ops:daisy:build` + hard-refresh (`DAISY_BUILD_ID`).
+7. Run: `yarn jest ops/tests/unit/feature/synth/backend/wasm/wasmvoiceconfig.test.ts ops/tests/unit/feature/synth/backend/daisy/fmsquarecarrier.test.ts --config ops/jest.config.ts --no-coverage`
+8. Ear / offline: `#synth fmsquare` vs `#synth fmsine` must differ; with `ZSS_PARITY_RENDER=1` the fmsquarecarrier offline lock asserts spectral delta.
+
+Catalog: `zss/feature/synth/docs/voice-types-reference.md` confidence matrix.
+
 ## Config write ≠ DSP read
 
 Params that write SAB but were ignored or wrong-field:
@@ -18,7 +31,7 @@ Fix at the sample owner; do not add a second “sync” path.
 
 ## Wave family enum swap
 
-Basic: square=0, sine=1. Family am/fm/fat: sine, square at +0/+1. Bare `osctype - 30` made `fatsquare` → sine. Helper: `familywavetobasic` in `zss_osc.cpp`. Same trap for AM carriers.
+Basic: square=0, sine=1. Family am/fm/fat: sine, square at +0/+1. Bare `osctype - 30` made `fatsquare` → sine. Helper: `familywavetobasic` in `zss_osc.cpp` / `wasmosctype.ts`. Same trap for AM/FM carriers (`fmsquare` → sine is the recurring ear report).
 
 ## Wrong map hides worse bug
 
@@ -26,7 +39,7 @@ Fat called `Process()` once per unison voice on one oscillator → ~`count`× ph
 
 ## Shared key gates
 
-`ispianoparamkey('spread')` + `return false` for non-piano blocked fat `#synth spread`. Fall through like organ `drawbar`. Piano spread is 0–1; fat spread is cents (default 20).
+`ispianoparamkey('spread')` + `return false` for non-piano blocked fat `#synth spread`. Same class: `brightness`/`damping`/`pressure`/`vib`/`body` must fall through. Exclusive keys (`structure`, `accent`, `breath`, `hammer`, `bow`, …) may reject. Piano spread is 0–1; fat spread is cents (default 20).
 
 ## Algo oscN
 
@@ -44,5 +57,7 @@ Selecting `#synth bells` must install Tone-parity `0.01/3/0.3/6` once `voiceenv`
 
 ## Verification habit
 
-Targeted: `yarn jest ops/tests/unit/feature/synth/backend/wasm/wasmvoiceconfig.test.ts --config ops/jest.config.ts --no-coverage`  
-Ear: `#synth fatsquare` vs `#synth fatsine`; `#synth fmsquare` + `harmonicity`; `#synth algo0` + `osc4 sawtooth`
+Targeted: `yarn jest ops/tests/unit/feature/synth/backend/wasm/wasmvoiceconfig.test.ts ops/tests/unit/feature/synth/backend/daisy/fmsquarecarrier.test.ts --config ops/jest.config.ts --no-coverage`  
+Ear: `#synth fatsquare` vs `#synth fatsine`; `#synth fmsquare` vs `#synth fmsine`; `#synth fmsquare` + `harmonicity`; `#synth algo0` + `osc4 sawtooth`
+
+TS mirror of C++ map: `familywavetobasic` / `familyosctobasic` in `wasmosctype.ts` (must match `zss_osc.cpp`).

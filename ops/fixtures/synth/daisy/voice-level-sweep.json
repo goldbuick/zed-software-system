@@ -3,26 +3,6 @@
   "toleranceDb": 3,
   "rows": [
     {
-      "voice": "panpipe",
-      "kind": "held",
-      "rmsdb": -22.082935057601837,
-      "peakdb": -12.966831954225801,
-      "fullrmsdb": -25.91545816582193,
-      "silent": false,
-      "deltadb": -2.6454496504198843,
-      "pass": true
-    },
-    {
-      "voice": "nylon",
-      "kind": "body",
-      "rmsdb": -21.9889840178968,
-      "peakdb": -13.839949705001954,
-      "fullrmsdb": -21.898418973273156,
-      "silent": false,
-      "deltadb": -2.551498610714848,
-      "pass": true
-    },
-    {
       "voice": "fatsawtooth",
       "kind": "held",
       "rmsdb": -21.921537816941026,
@@ -133,16 +113,6 @@
       "pass": true
     },
     {
-      "voice": "epiano",
-      "kind": "held",
-      "rmsdb": -20.581127987131033,
-      "peakdb": -9.617543382387723,
-      "fullrmsdb": -24.06587026596967,
-      "silent": false,
-      "deltadb": -1.1436425799490806,
-      "pass": true
-    },
-    {
       "voice": "pluck",
       "kind": "body",
       "rmsdb": -20.540401575319336,
@@ -150,16 +120,6 @@
       "fullrmsdb": -20.488596486110797,
       "silent": false,
       "deltadb": -1.1029161681373836,
-      "pass": true
-    },
-    {
-      "voice": "drip",
-      "kind": "body",
-      "rmsdb": -20.47588390352989,
-      "peakdb": 0,
-      "fullrmsdb": -24.862748921178618,
-      "silent": false,
-      "deltadb": -1.0383984963479378,
       "pass": true
     },
     {
@@ -180,16 +140,6 @@
       "fullrmsdb": -23.865704860666664,
       "silent": false,
       "deltadb": -0.7350826933920125,
-      "pass": true
-    },
-    {
-      "voice": "timpani",
-      "kind": "body",
-      "rmsdb": -20.158153986850728,
-      "peakdb": -10.070465788670864,
-      "fullrmsdb": -25.763271526519592,
-      "silent": false,
-      "deltadb": -0.7206685796687751,
       "pass": true
     },
     {
@@ -300,16 +250,6 @@
       "fullrmsdb": -23.315156980255534,
       "silent": false,
       "deltadb": -0.3487988330436096,
-      "pass": true
-    },
-    {
-      "voice": "viola",
-      "kind": "held",
-      "rmsdb": -19.77835974125174,
-      "peakdb": -11.632673238314302,
-      "fullrmsdb": -24.720892045743877,
-      "silent": false,
-      "deltadb": -0.3408743340697882,
       "pass": true
     },
     {
@@ -450,16 +390,6 @@
       "fullrmsdb": -22.167042107099814,
       "silent": false,
       "deltadb": 0.7864354654569397,
-      "pass": true
-    },
-    {
-      "voice": "drawbar",
-      "kind": "held",
-      "rmsdb": -18.44362941773075,
-      "peakdb": -10.494193135961815,
-      "fullrmsdb": -22.457966661879908,
-      "silent": false,
-      "deltadb": 0.9938559894512018,
       "pass": true
     },
     {

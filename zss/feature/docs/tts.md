@@ -11,7 +11,7 @@ title: tts/
 | [`client.ts`](../tts/client.ts) | Main-thread playback, queue, worker RPC (`ttsqueue`, `restorettsenginefromstorage`, …) |
 | [`inference.ts`](../tts/inference.ts) | Worker: `requestinfo`, `requestaudiobytes` |
 | [`engine.ts`](../tts/engine.ts) | `TTS_ENGINE`, `normalizettsengine` |
-| [`pipertts.ts`](../tts/pipertts.ts), [`supertonictts.ts`](../tts/supertonictts.ts), [`ttsfish.ts`](../tts/ttsfish.ts) | Engine implementations |
+| [`pipertts.ts`](../tts/pipertts.ts), [`supertonictts.ts`](../tts/supertonictts.ts), [`ttsfish.ts`](../tts/ttsfish.ts) | Engine implementations (Supertonic = v3 / `Supertone/supertonic-3` via onnxruntime-web) |
 | [`fishaudio.ts`](../tts/fishaudio.ts) | Fish API (worker-only via `ttsfish`) |
 | [`modelcache.ts`](../tts/modelcache.ts), [`utils.ts`](../tts/utils.ts), [`textcleaner.ts`](../tts/textcleaner.ts), [`phonemizerparser.ts`](../tts/phonemizerparser.ts) | Shared helpers |
 

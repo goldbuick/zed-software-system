@@ -7,7 +7,6 @@ import { applywasmalgoconfig, resetwasmalgoconfig } from './wasmalgoconfig'
 import type { WASM_ALGO_CONFIG } from './wasmalgoconfigsab'
 import { applywasmoscconfig, resetwasmoscconfig } from './wasmoscconfig'
 import {
-  DEFAULT_WASM_OSC_CONFIG,
   type WASM_OSC_CONFIG,
 } from './wasmoscconfigsab'
 import { WASM_OSC_TYPE, parsewasmosc } from './wasmosctype'
@@ -45,6 +44,11 @@ export type {
   WASM_ORGAN_PARAMS,
 } from './wasmvoicecfgsab'
 
+export type WASM_VOICE_ENV_SNAP = {
+  envelope: WASM_VOICE_ENVELOPE
+  portamento: number
+}
+
 export type WASM_VOICE_STATE = {
   type: SOURCE_TYPE
   algo: number
@@ -60,6 +64,8 @@ export type WASM_VOICE_STATE = {
   bowed: WASM_BOWED_PARAMS
   guitar: WASM_GUITAR_PARAMS
   organ: WASM_ORGAN_PARAMS
+  /** Per-(type, algo) ADSR/portamento memory across voice switches. */
+  envmemory: Record<string, WASM_VOICE_ENV_SNAP>
 }
 
 function defaultpluck(): WASM_PLUCK_PARAMS {
@@ -110,6 +116,7 @@ function defaultvoice(): WASM_VOICE_STATE {
     bowed: defaultbowed(),
     guitar: defaultguitar(),
     organ: defaultorgan(),
+    envmemory: {},
   }
 }
 
@@ -263,7 +270,15 @@ function applywasmstringensembleconfig(
   }
 }
 
-/** Named / family switch: never inherit prior voice ADSR or portamento. */
+/** Slot key for per-type ADSR memory (type + algo). */
+function voiceslotkey(type: SOURCE_TYPE, algo: number): string {
+  return `${type}:${algo}`
+}
+
+/**
+ * Named / family switch: preserve family blobs; snapshot/restore ADSR per slot.
+ * First visit applies patch family presets + envelope; return visit restores envmemory.
+ */
 function namedvoiceswitch(
   current: WASM_VOICE_STATE,
   patch: {
@@ -281,26 +296,78 @@ function namedvoiceswitch(
     organ?: WASM_ORGAN_PARAMS
   },
 ): WASM_VOICE_STATE {
-  return {
-    ...current,
-    ...patch,
-    envelope: patch.envelope
-      ? { ...patch.envelope }
-      : { ...DEFAULT_WASM_ENVELOPE },
-    portamento: 0,
+  const fromkey = voiceslotkey(current.type, current.algo)
+  const tokey = voiceslotkey(patch.type, patch.algo)
+  if (fromkey === tokey) {
+    if (patch.osc !== undefined) {
+      return { ...current, osc: patch.osc }
+    }
+    return current
   }
-}
 
-function resetoscrow(oscconfig: WASM_OSC_CONFIG[], index: number) {
-  if (index < 0 || index >= oscconfig.length) {
-    return
+  const returning = Object.prototype.hasOwnProperty.call(
+    current.envmemory,
+    tokey,
+  )
+  const envmemory: Record<string, WASM_VOICE_ENV_SNAP> = {
+    ...current.envmemory,
+    [fromkey]: {
+      envelope: { ...current.envelope },
+      portamento: current.portamento,
+    },
   }
-  oscconfig[index] = {
-    ...DEFAULT_WASM_OSC_CONFIG,
-    partials: [...DEFAULT_WASM_OSC_CONFIG.partials],
-    modenv: { ...DEFAULT_WASM_OSC_CONFIG.modenv },
-    modtype: DEFAULT_WASM_OSC_CONFIG.modtype,
+
+  let envelope: WASM_VOICE_ENVELOPE
+  let portamento: number
+  if (returning) {
+    const snap = current.envmemory[tokey]
+    envelope = { ...snap.envelope }
+    portamento = snap.portamento
+  } else {
+    envelope = patch.envelope
+      ? { ...patch.envelope }
+      : { ...DEFAULT_WASM_ENVELOPE }
+    portamento = 0
   }
+
+  const next: WASM_VOICE_STATE = {
+    ...current,
+    type: patch.type,
+    algo: patch.algo,
+    envelope,
+    portamento,
+    envmemory,
+  }
+  if (patch.osc !== undefined) {
+    next.osc = patch.osc
+  }
+  if (!returning) {
+    if (patch.pluck) {
+      next.pluck = { ...patch.pluck }
+    }
+    if (patch.stringensemble) {
+      next.stringensemble = { ...patch.stringensemble }
+    }
+    if (patch.wind) {
+      next.wind = { ...patch.wind }
+    }
+    if (patch.piano) {
+      next.piano = { ...patch.piano }
+    }
+    if (patch.timpani) {
+      next.timpani = { ...patch.timpani }
+    }
+    if (patch.bowed) {
+      next.bowed = { ...patch.bowed }
+    }
+    if (patch.guitar) {
+      next.guitar = { ...patch.guitar }
+    }
+    if (patch.organ) {
+      next.organ = { ...patch.organ }
+    }
+  }
+  return next
 }
 
 function parsesourcetype(
@@ -343,7 +410,6 @@ function parsesourcetype(
       return namedvoiceswitch(current, {
         type: SOURCE_TYPE.BELLS,
         algo: 0,
-        // Tone FMSynth carrier env (voiceenv multiplies ModalVoice + sparkle)
         envelope: { attack: 0.01, decay: 3, sustain: 0.3, release: 6 },
       })
     case 'doot':
@@ -402,11 +468,6 @@ function parsesourcetype(
         pluck: defaultpluck(),
         envelope: { attack: 0.008, decay: 0.05, sustain: 1, release: 0.35 },
       })
-    case 'drip':
-      return namedvoiceswitch(current, {
-        type: SOURCE_TYPE.DRIP_VOICE,
-        algo: 0,
-      })
     case 'flute':
       return namedvoiceswitch(current, {
         type: SOURCE_TYPE.WIND_VOICE,
@@ -428,13 +489,6 @@ function parsesourcetype(
         wind: winddefaults(2),
         envelope: windenvelope(2),
       })
-    case 'panpipe':
-      return namedvoiceswitch(current, {
-        type: SOURCE_TYPE.WIND_VOICE,
-        algo: 3,
-        wind: winddefaults(3),
-        envelope: windenvelope(3),
-      })
     case 'piano':
       return namedvoiceswitch(current, {
         type: SOURCE_TYPE.PIANO_VOICE,
@@ -442,40 +496,12 @@ function parsesourcetype(
         piano: defaultpiano(),
         envelope: { attack: 0.001, decay: 1.8, sustain: 0.55, release: 1.2 },
       })
-    case 'epiano':
-      return namedvoiceswitch(current, {
-        type: SOURCE_TYPE.PIANO_VOICE,
-        algo: 1,
-        piano: { spread: 0.12, hammer: 0.25, brightness: 0.65, damping: 0.6 },
-        envelope: { attack: 0.002, decay: 0.9, sustain: 0.5, release: 0.6 },
-      })
-    case 'timpani':
-      return namedvoiceswitch(current, {
-        type: SOURCE_TYPE.TIMPANI_VOICE,
-        algo: 0,
-        timpani: defaulttimpani(),
-        envelope: { attack: 0.002, decay: 0.8, sustain: 0.05, release: 0.4 },
-      })
     case 'violin':
       return namedvoiceswitch(current, {
         type: SOURCE_TYPE.BOWED_VOICE,
         algo: 0,
         bowed: { bow: 0.2, pressure: 0.5, vib: 0.4, body: 0.55 },
         envelope: { attack: 0.2, decay: 0.25, sustain: 0.9, release: 0.6 },
-      })
-    case 'viola':
-      return namedvoiceswitch(current, {
-        type: SOURCE_TYPE.BOWED_VOICE,
-        algo: 1,
-        bowed: { bow: 0.28, pressure: 0.45, vib: 0.3, body: 0.65 },
-        envelope: { attack: 0.28, decay: 0.3, sustain: 0.88, release: 0.7 },
-      })
-    case 'nylon':
-      return namedvoiceswitch(current, {
-        type: SOURCE_TYPE.GUITAR_VOICE,
-        algo: 0,
-        guitar: { pick: 0.25, body: 0.4, damping: 0.72, position: 0.35 },
-        envelope: { attack: 0.008, decay: 0.05, sustain: 1, release: 0.4 },
       })
     case 'steel':
       return namedvoiceswitch(current, {
@@ -488,13 +514,6 @@ function parsesourcetype(
       return namedvoiceswitch(current, {
         type: SOURCE_TYPE.ORGAN_VOICE,
         algo: 0,
-        organ: defaultorgan(),
-        envelope: { attack: 0.001, decay: 0.01, sustain: 1, release: 0.05 },
-      })
-    case 'drawbar':
-      return namedvoiceswitch(current, {
-        type: SOURCE_TYPE.ORGAN_VOICE,
-        algo: 1,
         organ: defaultorgan(),
         envelope: { attack: 0.001, decay: 0.01, sustain: 1, release: 0.05 },
       })
@@ -567,28 +586,52 @@ export function applywasmvoiceconfig(
       if (voice.type === SOURCE_TYPE.STRING_VOICE && voice.algo === 1) {
         return applywasmpluckconfig(voice, config, value)
       }
-      return false
+      // Exclusive pluck keys: dormant write into pluck blob.
+      if (config === 'structure' || config === 'accent') {
+        if (isnumber(value)) {
+          return applywasmpluckconfig(voice, config, value)
+        }
+        return false
+      }
     }
     if (isstringensembleparamkey(config)) {
       if (voice.type === SOURCE_TYPE.STRING_VOICE && voice.algo === 0) {
-        return applywasmstringensembleconfig(voice, config, value)
+        if (applywasmstringensembleconfig(voice, config, value)) {
+          return true
+        }
       }
-      return false
+      // Exclusive string keys: dormant numeric write; non-numeric falls through
+      // so `#synth pwm` can still select the pwm wave.
+      if (config === 'detune' || config === 'pwm' || config === 'filter') {
+        if (isnumber(value)) {
+          return applywasmstringensembleconfig(voice, config, value)
+        }
+      }
     }
     if (iswindparamkey(config)) {
       if (voice.type === SOURCE_TYPE.WIND_VOICE) {
         return applynumericparam(voice.wind, config, value)
       }
-      return false
+      if (config === 'breath' || config === 'resonance') {
+        if (isnumber(value)) {
+          return applynumericparam(voice.wind, config, value)
+        }
+        return false
+      }
     }
     if (ispianoparamkey(config)) {
       if (voice.type === SOURCE_TYPE.PIANO_VOICE) {
         return applynumericparam(voice.piano, config, value)
       }
-      // Fall through: fat osc uses `spread` on SYNTH (piano key name collision).
+      if (config === 'hammer') {
+        if (isnumber(value)) {
+          return applynumericparam(voice.piano, config, value)
+        }
+        return false
+      }
     }
     if (istimpaniparamkey(config)) {
-      if (voice.type === SOURCE_TYPE.TIMPANI_VOICE) {
+      if (isnumber(value)) {
         return applynumericparam(voice.timpani, config, value)
       }
       return false
@@ -597,34 +640,54 @@ export function applywasmvoiceconfig(
       if (voice.type === SOURCE_TYPE.BOWED_VOICE) {
         return applynumericparam(voice.bowed, config, value)
       }
-      return false
+      if (config === 'bow') {
+        if (isnumber(value)) {
+          return applynumericparam(voice.bowed, config, value)
+        }
+        return false
+      }
     }
     if (isguitarparamkey(config)) {
       if (voice.type === SOURCE_TYPE.GUITAR_VOICE) {
         return applynumericparam(voice.guitar, config, value)
       }
-      return false
-    }
-    if (isorganparamkey(config)) {
-      if (voice.type === SOURCE_TYPE.ORGAN_VOICE) {
-        // '#synth drawbar' (no numeric value) is the named voice, not the param.
-        if (applynumericparam(voice.organ, config, value)) {
-          return true
+      if (config === 'pick' || config === 'position') {
+        if (isnumber(value)) {
+          return applynumericparam(voice.guitar, config, value)
         }
-        if (config !== 'drawbar') {
-          return false
-        }
-      } else if (config !== 'drawbar') {
         return false
       }
     }
+    if (isorganparamkey(config)) {
+      if (applynumericparam(voice.organ, config, value)) {
+        return true
+      }
+      if (config !== 'drawbar') {
+        return false
+      }
+      // bare `drawbar` is no longer a voice type — reject
+      return false
+    }
+    // Osc vs algo: active family first; dormant write into the other row.
     if (voice.type === SOURCE_TYPE.ALGO_SYNTH) {
       if (applywasmalgoconfig(algoconfig, index, config, value)) {
         return true
       }
-    }
-    if (voice.type === SOURCE_TYPE.SYNTH) {
       if (applywasmoscconfig(oscconfig, index, config, value)) {
+        return true
+      }
+    } else if (voice.type === SOURCE_TYPE.SYNTH) {
+      if (applywasmoscconfig(oscconfig, index, config, value)) {
+        return true
+      }
+      if (applywasmalgoconfig(algoconfig, index, config, value)) {
+        return true
+      }
+    } else {
+      if (applywasmoscconfig(oscconfig, index, config, value)) {
+        return true
+      }
+      if (applywasmalgoconfig(algoconfig, index, config, value)) {
         return true
       }
     }
@@ -640,17 +703,14 @@ export function applywasmvoiceconfig(
     const osc = parsewasmosc(config)
     if (osc !== undefined) {
       const prev = voicestate[index]
-      const enteringsynth = prev.type !== SOURCE_TYPE.SYNTH
-      if (enteringsynth) {
-        resetoscrow(oscconfig, index)
-        voicestate[index] = {
-          ...prev,
+      if (prev.type !== SOURCE_TYPE.SYNTH) {
+        // Keep oscconfig row; restore SYNTH ADSR from envmemory when returning.
+        voicestate[index] = namedvoiceswitch(prev, {
           type: SOURCE_TYPE.SYNTH,
           algo: 0,
           osc,
           envelope: { ...DEFAULT_WASM_ENVELOPE },
-          portamento: 0,
-        }
+        })
       } else {
         voicestate[index] = {
           ...prev,

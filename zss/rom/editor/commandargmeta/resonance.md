@@ -1,0 +1,3 @@
+---
+hint: "Wind resonance amount"
+---

@@ -164,6 +164,8 @@ float fmcarriersample(Oscillator& carrier, Oscillator& modulator, int modtype,
 
 // am*/fm*/fat* enums are SINE,SQUARE,TRIANGLE,SAWTOOTH at +0..+3, but basic
 // WASM_OSC_TYPE is SQUARE=0, SINE=1, TRIANGLE=2, SAWTOOTH=3.
+// Keep identical to familywavetobasic() in wasmosctype.ts — bare osctype-20
+// makes #synth fmsquare sound like sine.
 static int familywavetobasic(int familywave) {
   switch (familywave) {
   case 0:

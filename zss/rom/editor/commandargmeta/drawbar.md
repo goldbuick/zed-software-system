@@ -1,3 +1,3 @@
 ---
-hint: "Daisy drawbar organ voice"
+hint: "Organ drawbar amount 0-1"
 ---
