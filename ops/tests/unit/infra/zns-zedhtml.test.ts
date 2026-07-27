@@ -115,4 +115,38 @@ describe('zns-zedhtml hyperlinks', () => {
     expect(html).toContain('href="/helpmenu"')
     expect(html).not.toContain('!helpmenu hk')
   })
+
+  it('renders copyit as clipboard button with payload in data-copy', () => {
+    const html = zedzedlinkrowhtml(
+      '!copyit #play cdefgab+c;$greenC major',
+      { tenantbase: '/' },
+    )
+    expect(html).toContain('class="zns-copy"')
+    expect(html).toContain('data-copy="#play cdefgab+c"')
+    expect(html).toContain('C major')
+    expect(html).toContain('COPYIT')
+    expect(html).not.toContain('!copyit')
+    expect(html).not.toContain('href=')
+  })
+
+  it('preserves spaces in quoted copyit payloads', () => {
+    const html = zedzedlinkrowhtml('!copyit "hello world";Label', {
+      tenantbase: '/',
+    })
+    expect(html).toContain('class="zns-copy"')
+    expect(html).toContain('data-copy="hello world"')
+    expect(html).toContain('Label')
+    expect(html).not.toContain('!copyit')
+  })
+
+  it('keeps bang flats inside copyit play payloads', () => {
+    const html = zedzedlinkrowhtml(
+      '!copyit #play d!e!fg!a!b!c+d!;$greenDb major',
+      { tenantbase: '/' },
+    )
+    expect(html).toContain('class="zns-copy"')
+    expect(html).toContain('data-copy="#play d!e!fg!a!b!c+d!"')
+    expect(html).toContain('Db major')
+    expect(html).toContain('COPYIT')
+  })
 })

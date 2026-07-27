@@ -1,4 +1,4 @@
-# pick a scale family
+## pick a scale family
 
 !notescalesmajor hk 1 " 1 " next;$greenPiano Major Scales
 !notescalesnaturalminor hk 2 " 2 " next;$greenPiano Minor Scales

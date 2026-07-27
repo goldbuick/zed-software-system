@@ -1,5 +1,6 @@
-$ltgrey Modes of C major (Ionian
-$ltgrey through Locrian)
+## modes of C major
+
+$whiteIonian through Locrian.
 
 !copyit #play cdefgab+c;$greenC Ionian
 !copyit #play defgabc+d;$greenD Dorian

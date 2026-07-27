@@ -1,6 +1,6 @@
-$ltgrey 12 natural minors; harmonic &
-$ltgrey melodic too on piano -
-$ltgrey pianoscales.org
+## natural minor
+
+$white12 natural minors; harmonic and melodic too on piano - pianoscales.org
 
 !copyit #play cde!fga!b!+c;$greenC natural minor
 !copyit #play c#d#ef#g#ab+c#;$greenC# natural minor

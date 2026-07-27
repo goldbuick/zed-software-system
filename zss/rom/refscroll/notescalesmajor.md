@@ -1,5 +1,6 @@
-$ltgrey Major scales - Ionian -
-$ltgrey twelve keys in all.
+## major scales
+
+$whiteIonian - twelve keys in all.
 
 !copyit #play cdefgab+c;$greenC major
 !copyit #play d!e!fg!a!b!c+d!;$greenDb major

@@ -538,7 +538,7 @@ body.zns-page * {
   font-size: inherit;
   line-height: var(--zns-lh);
   letter-spacing: 0;
-  color: ${v.link};
+  color: inherit;
   text-decoration: none;
   padding: 0;
   margin: 0;

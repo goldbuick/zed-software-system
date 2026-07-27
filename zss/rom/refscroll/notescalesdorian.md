@@ -1,5 +1,6 @@
-$ltgrey Dorian - mode 2 of major
-$ltgrey scale; 12 keys.
+## dorian
+
+$whitemode 2 of major scale; 12 keys.
 
 !copyit #play cde!fgab!+c;$greenC Dorian
 !copyit #play c#d#ef#g#a#b+c#;$greenDb Dorian

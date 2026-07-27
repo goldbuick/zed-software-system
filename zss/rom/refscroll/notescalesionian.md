@@ -1,5 +1,6 @@
-$ltgrey Ionian - same as major;
-$ltgrey first mode, 12 keys.
+## ionian
+
+$whitesame as major; first mode, 12 keys.
 
 !copyit #play cdefgab+c;$greenC Ionian
 !copyit #play d!e!fg!a!b!c+d!;$greenDb Ionian

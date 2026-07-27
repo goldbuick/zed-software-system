@@ -1,5 +1,6 @@
-$ltgrey Mixolydian - mode 5 of
-$ltgrey major scale; 12 keys.
+## mixolydian
+
+$whitemode 5 of major scale; 12 keys.
 
 !copyit #play cdefgab!+c;$greenC Mixolydian
 !copyit #play c#d#e#f#g#a#b+c#;$greenC# Mixolydian

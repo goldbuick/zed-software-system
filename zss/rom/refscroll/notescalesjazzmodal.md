@@ -1,7 +1,6 @@
-$ltgrey Jazz modal: same major
-$ltgrey pitches, new tonic each.
-$ltgrey Ionian to Locrian; see
-$ltgrey pianoscales.org jazz scales.
+## jazz modal
+
+$whitesame major pitches, new tonic each. Ionian to Locrian; see pianoscales.org jazz scales.
 
 !notescalesionian hk 1 " 1 " next;$greenIonian (12 keys)
 !notescalesdorian hk 2 " 2 " next;$greenDorian (12 keys)

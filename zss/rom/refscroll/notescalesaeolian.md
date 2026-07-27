@@ -1,5 +1,6 @@
-$ltgrey Aeolian - natural minor,
-$ltgrey mode 6; 12 keys.
+## aeolian
+
+$whitenatural minor, mode 6; 12 keys.
 
 !copyit #play cde!fga!b!+c;$greenC Aeolian
 !copyit #play c#d#ef#g#ab+c#;$greenC# Aeolian

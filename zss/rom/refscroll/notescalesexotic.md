@@ -1,5 +1,6 @@
-$ltgrey Exotic - modal & parent
-$ltgrey modes, one tonic each.
+## exotic
+
+$whitemodal and parent modes, one tonic each.
 
 !notescalesmodal hk 1 " 1 " next;$greenModes of C major (diatonic)
 !notescalesmelodicminormodal hk 2 " 2 " next;$greenModes of C melodic minor (jazz)

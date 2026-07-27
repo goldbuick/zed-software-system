@@ -1,4 +1,6 @@
-$ltgrey Major pentatonic (12 keys)
+## major pentatonic
+
+$white12 keys.
 
 !copyit #play cdega+c;$greenC major pentatonic
 !copyit #play d!e!fg!a!+d!;$greenDb major pentatonic

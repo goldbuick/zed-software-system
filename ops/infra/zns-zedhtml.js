@@ -242,12 +242,9 @@ function parsezedlinklinehtml(line) {
   const atchip = ATCHIP_RE.exec(head)
   if (atchip) {
     head = atchip[2].trimStart()
-  } else {
-    const secondbang = head.indexOf('!')
-    if (secondbang >= 0) {
-      head = head.slice(secondbang + 1)
-    }
   }
+  // HTML has no modem prefix (`chip:target!cmd`). Do not split on `!` inside
+  // the payload (e.g. copyit #play flats like d!e!f).
   return { label, words: zedlinksplittokens(head) }
 }
 
@@ -334,6 +331,11 @@ function znslinkrowinner(label, href, opts = {}) {
   return `<a class="zns-link" href="${escapehtml(href)}"${target}>${inner}</a>`
 }
 
+function znscopyrowinner(rowtape, copytext) {
+  const inner = textformatlinehtml(rowtape)
+  return `<button type="button" class="zns-copy" data-copy="${escapehtml(copytext)}">${inner}</button>`
+}
+
 function znsrowfromtape(rowtape, href, opts = {}) {
   if (href) {
     return `<div class="zns-line">${znslinkrowinner(rowtape, href, opts)}</div>`
@@ -398,8 +400,9 @@ export function zedzedlinkrowhtml(line, opts = {}) {
       return znsrowfromtape(row, zedpathhref(target, opts), opts)
     }
     case 'copyit': {
+      const content = words.filter((w) => w !== 'istargetless').join(' ')
       const row = `$purple$16 $yellowCOPYIT $cyan${label}`
-      return znsrowfromtape(row, '', opts)
+      return `<div class="zns-line">${znscopyrowinner(row, content)}</div>`
     }
     case 'viewit': {
       const content = words.filter((w) => w !== 'istargetless').join(' ')
