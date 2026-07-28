@@ -14,7 +14,9 @@ import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import {
   FOCUS_ANIM_RATE,
   initfocusifneeded,
+  snapfocustotarget,
   stepfocuswithboardtransition,
+  takeviewsizechange,
 } from 'zss/gadget/graphics/camerafocus'
 import { buildexitpreviewgroups } from 'zss/gadget/graphics/exitpreviewgroups'
 import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
@@ -128,6 +130,7 @@ export const Mode7Graphics = memo(function Mode7Graphics({
   const depthoffield = useRef<DepthOfFieldEffect>(null)
   const dofplayerworld = useRef(new Vector3())
   const dofcamworld = useRef(new Vector3())
+  const prevviewsize = useRef({ w: 0, h: 0 })
 
   const bindboardcamera = useCallback((c: PerspectiveCameraImpl | null) => {
     cameraref.current = c
@@ -193,14 +196,21 @@ export const Mode7Graphics = memo(function Mode7Graphics({
       tfocusy,
       delta,
     )
+    const viewsizechanged = takeviewsizechange(
+      prevviewsize.current,
+      viewwidth,
+      viewheight,
+    )
+    if (viewsizechanged) {
+      snapfocustotarget(userdata, tfocusx, tfocusy)
+    }
 
     const fx = (userdata.focusx + 0.5) * drawwidth
     const fy = (userdata.focusy + 0.5) * drawheight
     const targetcornerx = -fx
     const targetcornery = -fy
 
-    // handle board transition
-    if (boardtransition) {
+    if (boardtransition || viewsizechanged) {
       cornerref.current.position.set(targetcornerx, targetcornery, 0)
     }
     damp3(

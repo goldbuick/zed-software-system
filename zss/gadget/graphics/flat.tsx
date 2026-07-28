@@ -13,7 +13,9 @@ import { BOARD_INSPECTOR_Z_BUFFER } from 'zss/gadget/graphics/boardinspectorz'
 import {
   FOCUS_ANIM_RATE,
   initfocusifneeded,
+  snapfocustotarget,
   stepfocuswithboardtransition,
+  takeviewsizechange,
 } from 'zss/gadget/graphics/camerafocus'
 import { buildexitpreviewgroups } from 'zss/gadget/graphics/exitpreviewgroups'
 import {
@@ -55,6 +57,7 @@ export const FlatGraphics = memo(function FlatGraphics({
   const zoomref = useRef<Group>(null)
   const underref = useRef<Group>(null)
   const looktarget = useRef(new Vector3())
+  const prevviewsize = useRef({ w: 0, h: 0 })
 
   const bindboardcamera = useCallback((c: OrthographicCameraImpl | null) => {
     cameraref.current = c
@@ -105,6 +108,14 @@ export const FlatGraphics = memo(function FlatGraphics({
       tfocusy,
       delta,
     )
+    const viewsizechanged = takeviewsizechange(
+      prevviewsize.current,
+      viewwidth,
+      viewheight,
+    )
+    if (viewsizechanged) {
+      snapfocustotarget(userdata, tfocusx, tfocusy)
+    }
 
     const fx = (userdata.focusx + 0.5) * drawwidth
     const fy = (userdata.focusy + 0.5) * drawheight
@@ -113,8 +124,8 @@ export const FlatGraphics = memo(function FlatGraphics({
     const targetcornerx = -centerx / viewscale - fx
     const targetcornery = -centery / viewscale - fy
 
-    // handle board transition
-    if (boardtransition) {
+    // board change or framed size change: snap framing, then damp from there
+    if (boardtransition || viewsizechanged) {
       cornerref.current.position.set(targetcornerx, targetcornery, 0)
     }
     damp3(

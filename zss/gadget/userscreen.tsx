@@ -35,28 +35,26 @@ export function useScreenSize() {
   return useContext(Screensize)
 }
 
-function marginxfor(viewwidth: number, totalcols: number, cw: number) {
-  return (viewwidth - totalcols * cw) * 0.5
-}
-
-function marginyfor(viewheight: number, totalrows: number, ch: number) {
-  return (viewheight - totalrows * ch) * 0.5
-}
-
 type UserScreenProps = PropsWithChildren<any>
 
 export function UserScreen({ children }: UserScreenProps) {
   const { viewport } = useThree()
   const { width: viewwidth, height: viewheight } = viewport.getCurrentViewport()
-  const { saferows, islandscape, showtouchcontrols, sidebaropen } =
-    useDeviceData(
-      useShallow((state) => ({
-        saferows: state.saferows,
-        islandscape: state.islandscape,
-        showtouchcontrols: state.showtouchcontrols,
-        sidebaropen: state.sidebaropen,
-      })),
-    )
+  const {
+    saferows,
+    islandscape,
+    showtouchcontrols,
+    sidebaropen,
+    textcapturefocused,
+  } = useDeviceData(
+    useShallow((state) => ({
+      saferows: state.saferows,
+      islandscape: state.islandscape,
+      showtouchcontrols: state.showtouchcontrols,
+      sidebaropen: state.sidebaropen,
+      textcapturefocused: state.textcapturefocused,
+    })),
+  )
   const hassidebar = useGadgetClient(
     (state) => (state.gadget.sidebar?.length ?? 0) > 0,
   )
@@ -68,6 +66,8 @@ export function UserScreen({ children }: UserScreenProps) {
   const rrows = viewheight / ch
   const totalcols = Math.floor(rcols)
   const totalrows = Math.floor(rrows)
+  // Focus only: saferows < totalrows is often true from Safari chrome alone.
+  const keyboardopen = textcapturefocused
 
   let cols = totalcols
   let rows = totalrows
@@ -85,31 +85,42 @@ export function UserScreen({ children }: UserScreenProps) {
 
   if (showtouchcontrols) {
     if (islandscape) {
+      // Rails stay up while typing; canvas stays full height (keyboard overlays).
+      const sidecols = hassidebar ? TOUCH_SIDEBAR_COLS : 0
       leftrailcols = LANDSCAPE_TOUCH_RAIL_COLS
       rightrailcols = LANDSCAPE_TOUCH_RAIL_COLS
-      const sidecols = hassidebar ? TOUCH_SIDEBAR_COLS : 0
       cols = totalcols - leftrailcols - rightrailcols - sidecols
       insetx = leftrailcols * cw
       rightrailx = (leftrailcols + cols) * cw
       actionx = leftrailcols * cw
+      rows = totalrows
     } else {
-      dockrows = PORTRAIT_TOUCH_DOCK_ROWS
       dockcols = totalcols
       siderows = sidebaropen && hassidebar ? PORTRAIT_SIDEBAR_OVERLAY_ROWS : 0
-      gamerows = totalrows - dockrows - siderows
-      if (saferows >= 10 && saferows < gamerows + dockrows + siderows) {
-        gamerows = Math.max(10, saferows - dockrows - siderows)
+      // One row above the dock for the sidebar label; keep terminal out of it.
+      const togglerows = hassidebar && !keyboardopen ? 1 : 0
+      if (keyboardopen) {
+        // Full saferows for game; dock unmounted while typing.
+        dockrows = 0
+        gamerows = Math.max(10, saferows - siderows)
+        docky = 0
+      } else {
+        dockrows = PORTRAIT_TOUCH_DOCK_ROWS
+        gamerows = totalrows - dockrows - siderows - togglerows
+        docky = (gamerows + siderows + togglerows) * ch
       }
       rows = gamerows
-      docky = (gamerows + siderows) * ch
     }
   }
 
-  const marginx = marginxfor(viewwidth, totalcols, cw)
-  const marginy = marginyfor(viewheight, totalrows, ch)
+  // Pin char grid to top-left of the view; leftover sub-char pixels fall on
+  // the right/bottom edge instead of safe-area-like centered gutters.
+  const marginx = 0
+  const marginy = 0
 
   const touchpads = useMemo((): TOUCHPADS | null => {
-    if (!showtouchcontrols) {
+    // Portrait typing: hide pads with the dock. Landscape keeps rail pads.
+    if (!showtouchcontrols || (keyboardopen && !islandscape)) {
       return null
     }
     if (islandscape) {
@@ -131,7 +142,7 @@ export function UserScreen({ children }: UserScreenProps) {
     const sticktop = PORTRAIT_DOCK_STICK_TOP
     const stickrows = dockrows - sticktop
     const mid = Math.floor(dockcols * 0.5)
-    const sticktoppx = marginy + (gamerows + siderows + sticktop) * ch
+    const sticktoppx = marginy + docky + sticktop * ch
     return {
       move: {
         left: marginx,
@@ -148,6 +159,7 @@ export function UserScreen({ children }: UserScreenProps) {
     }
   }, [
     showtouchcontrols,
+    keyboardopen,
     islandscape,
     marginx,
     marginy,
@@ -159,8 +171,7 @@ export function UserScreen({ children }: UserScreenProps) {
     totalrows,
     dockcols,
     dockrows,
-    gamerows,
-    siderows,
+    docky,
   ])
 
   useEffect(() => {
@@ -169,6 +180,7 @@ export function UserScreen({ children }: UserScreenProps) {
       insetcols: dockcols || leftrailcols || 1,
       insetrows: dockrows || totalrows || 1,
       touchpads,
+      touchrailcols: leftrailcols,
     }))
   }, [dockcols, dockrows, leftrailcols, totalrows, touchpads])
 
@@ -217,7 +229,7 @@ export function UserScreen({ children }: UserScreenProps) {
                 </group>
               </>
             )}
-            {showtouchcontrols && !islandscape && (
+            {showtouchcontrols && !islandscape && !keyboardopen && (
               <>
                 {hassidebar && (
                   <group position={[0, docky - ch, 4]}>
@@ -231,7 +243,7 @@ export function UserScreen({ children }: UserScreenProps) {
                 )}
                 <group position={[0, docky, 3]}>
                   <TouchUI
-                    key={`dock-${dockcols}-${dockrows}`}
+                    key={`dock-${dockcols}-${dockrows}-${docky}`}
                     mode="portrait-dock"
                     width={dockcols}
                     height={dockrows}
