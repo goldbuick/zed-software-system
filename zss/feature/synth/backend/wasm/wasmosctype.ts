@@ -143,15 +143,21 @@ export function familywavetobasic(familywave: number): WASM_OSC_TYPE {
 
 /** Carrier basic wave for an am/fm/fat osctype, or undefined if not a family wave. */
 export function familyosctobasic(osctype: number): WASM_OSC_TYPE | undefined {
-  if (osctype >= WASM_OSC_TYPE.AM_SINE && osctype <= WASM_OSC_TYPE.AM_SAWTOOTH) {
+  if (
+    osctype >= (WASM_OSC_TYPE.AM_SINE as number) &&
+    osctype <= (WASM_OSC_TYPE.AM_SAWTOOTH as number)
+  ) {
     return familywavetobasic(osctype - 10)
   }
-  if (osctype >= WASM_OSC_TYPE.FM_SINE && osctype <= WASM_OSC_TYPE.FM_SAWTOOTH) {
+  if (
+    osctype >= (WASM_OSC_TYPE.FM_SINE as number) &&
+    osctype <= (WASM_OSC_TYPE.FM_SAWTOOTH as number)
+  ) {
     return familywavetobasic(osctype - 20)
   }
   if (
-    osctype >= WASM_OSC_TYPE.FAT_SINE &&
-    osctype <= WASM_OSC_TYPE.FAT_SAWTOOTH
+    osctype >= (WASM_OSC_TYPE.FAT_SINE as number) &&
+    osctype <= (WASM_OSC_TYPE.FAT_SAWTOOTH as number)
   ) {
     return familywavetobasic(osctype - 30)
   }

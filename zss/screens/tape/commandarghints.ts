@@ -16,7 +16,7 @@ export function clearcommandromhintcache() {
 function commandromlookupkeys(key: string): string[] {
   const keys = [key]
   const match = /^(.+)([1-5])$/.exec(key)
-  if (match && match[1]) {
+  if (match?.[1]) {
     keys.push(match[1])
   }
   return keys

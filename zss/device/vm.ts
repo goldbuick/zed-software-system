@@ -9,20 +9,18 @@ import { vmhandlers } from './vm/handlers/registry'
 let vm: DEVICE | undefined
 
 function ensurevm(): DEVICE {
-  if (!vm) {
-    vm = createdevice(
-      'vm',
-      ['ticktock', 'second', 'chip'],
-      (message) => {
-        if (!vm?.session(message)) {
-          return
-        }
-        const handler = vmhandlers[message.target] ?? vmdefaulthandler
-        handler(vm, message)
-      },
-      memoryreadsession(),
-    )
-  }
+  vm ??= createdevice(
+    'vm',
+    ['ticktock', 'second', 'chip'],
+    (message) => {
+      if (!vm?.session(message)) {
+        return
+      }
+      const handler = vmhandlers[message.target] ?? vmdefaulthandler
+      handler(vm, message)
+    },
+    memoryreadsession(),
+  )
   return vm
 }
 

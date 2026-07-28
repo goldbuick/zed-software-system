@@ -10,8 +10,8 @@ import {
   storagewritznstoken,
 } from 'zss/feature/storage'
 import { write } from 'zss/feature/writeui'
-import { zsstextline } from 'zss/feature/zsstextui'
 import { isvalidznsnamespacelabel } from 'zss/feature/znsloginparams'
+import { zsstextline } from 'zss/feature/zsstextui'
 import { NAME } from 'zss/words/types'
 
 import { parsewebfile } from './parse/file'

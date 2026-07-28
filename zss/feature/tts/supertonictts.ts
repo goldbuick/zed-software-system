@@ -1,4 +1,5 @@
 import { InferenceSession, Tensor, env } from 'onnxruntime-web'
+
 import { cachedfetch } from './modelcache'
 import { RawAudio, normalizepeak, trimsilence } from './utils'
 
@@ -127,7 +128,9 @@ function chunktext(text: string, maxlen = 300): string[] {
     if (!paragraph) {
       continue
     }
-    const sentences = paragraph.split(/(?<=[.!?])\s+(?=[A-Z0-9"'])|(?<=[。！？])/)
+    const sentences = paragraph.split(
+      /(?<=[.!?])\s+(?=[A-Z0-9"'])|(?<=[。！？])/,
+    )
     let current = ''
     for (const sentence of sentences) {
       const next = current ? `${current} ${sentence}` : sentence
@@ -210,7 +213,11 @@ class UnicodeProcessor {
       out = out.replace('``', '`')
     }
     out = out.replace(/\s+/g, ' ').trim()
-    if (!/[.!?;:,'"')\]}\u2026\u3002\u300d\u300f\u3011\u3009\u300b\u203a\u00bb]$/.test(out)) {
+    if (
+      !/[.!?;:,'"')\]}\u2026\u3002\u300d\u300f\u3011\u3009\u300b\u203a\u00bb]$/.test(
+        out,
+      )
+    ) {
       out += '.'
     }
     if (!AVAILABLE_LANGS.has(lang)) {
@@ -232,8 +239,7 @@ class UnicodeProcessor {
       const row = new Array(maxlen).fill(0)
       for (let j = 0; j < text.length; j++) {
         const codepoint = text.codePointAt(j) ?? 0
-        row[j] =
-          codepoint < this.indexer.length ? this.indexer[codepoint] : -1
+        row[j] = codepoint < this.indexer.length ? this.indexer[codepoint] : -1
       }
       return row
     })
@@ -263,9 +269,7 @@ function samplenoisylatent(
       for (let t = 0; t < latentlen; t++) {
         const u1 = Math.max(0.0001, Math.random())
         const u2 = Math.random()
-        row.push(
-          Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2),
-        )
+        row.push(Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2))
       }
       batch.push(row)
     }
@@ -285,9 +289,7 @@ function samplenoisylatent(
   return { xt, latentmask }
 }
 
-async function loadonnxsessions(
-  path: string,
-): Promise<InferenceSession> {
+async function loadonnxsessions(path: string): Promise<InferenceSession> {
   const response = await cachedfetch(path)
   const bytes = await response.bytes()
   const buffer = copytoarraybuffer(bytes)
@@ -304,11 +306,7 @@ async function loadvoicestyle(voice: string): Promise<STYLE_TENSORS> {
   const ttlflat = Float32Array.from(flattennumbers(style.style_ttl.data))
   const dpflat = Float32Array.from(flattennumbers(style.style_dp.data))
   return {
-    ttl: new Tensor('float32', ttlflat, [
-      1,
-      ttldims[1],
-      ttldims[2],
-    ]),
+    ttl: new Tensor('float32', ttlflat, [1, ttldims[1], ttldims[2]]),
     dp: new Tensor('float32', dpflat, [1, dpdims[1], dpdims[2]]),
   }
 }
@@ -330,8 +328,7 @@ export class SupertonicTTS {
   }
 
   static async from_pretrained() {
-    env.wasm.wasmPaths =
-      'https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/'
+    env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/'
 
     const [cfgsres, indexerres, dport, textencort, vectorestort, vocoderort] =
       await Promise.all([
@@ -416,23 +413,23 @@ export class SupertonicTTS {
     })
     const textemb = textencout.text_emb
 
-    let { xt, latentmask } = samplenoisylatent(
+    const sampled = samplenoisylatent(
       duration,
       this.cfgs.ae.sample_rate,
       this.cfgs.ae.base_chunk_size,
       this.cfgs.ttl.chunk_compress_factor,
       this.cfgs.ttl.latent_dim,
     )
+    let xt = sampled.xt
+    const { latentmask } = sampled
     const latentmasktensor = new Tensor(
       'float32',
       Float32Array.from(latentmask.flat(2)),
       [bsz, 1, latentmask[0][0].length],
     )
-    const totalsteptensor = new Tensor(
-      'float32',
-      Float32Array.from([steps]),
-      [bsz],
-    )
+    const totalsteptensor = new Tensor('float32', Float32Array.from([steps]), [
+      bsz,
+    ])
 
     for (let step = 0; step < steps; step++) {
       const currentsteptensor = new Tensor(
@@ -440,11 +437,11 @@ export class SupertonicTTS {
         Float32Array.from([step]),
         [bsz],
       )
-      const xttensor = new Tensor(
-        'float32',
-        Float32Array.from(xt.flat(2)),
-        [bsz, xt[0].length, xt[0][0].length],
-      )
+      const xttensor = new Tensor('float32', Float32Array.from(xt.flat(2)), [
+        bsz,
+        xt[0].length,
+        xt[0][0].length,
+      ])
       const vectout = await this.vectorestort.run({
         noisy_latent: xttensor,
         text_emb: textemb,
@@ -454,9 +451,7 @@ export class SupertonicTTS {
         current_step: currentsteptensor,
         total_step: totalsteptensor,
       })
-      const denoised = Array.from(
-        vectout.denoised_latent.data as Float32Array,
-      )
+      const denoised = Array.from(vectout.denoised_latent.data as Float32Array)
       const latentdim = xt[0].length
       const latentlen = xt[0][0].length
       const next: number[][][] = []
@@ -476,11 +471,11 @@ export class SupertonicTTS {
     }
 
     const vocoderout = await this.vocoderort.run({
-      latent: new Tensor(
-        'float32',
-        Float32Array.from(xt.flat(2)),
-        [bsz, xt[0].length, xt[0][0].length],
-      ),
+      latent: new Tensor('float32', Float32Array.from(xt.flat(2)), [
+        bsz,
+        xt[0].length,
+        xt[0][0].length,
+      ]),
     })
     return Float32Array.from(vocoderout.wav_tts.data as Float32Array)
   }

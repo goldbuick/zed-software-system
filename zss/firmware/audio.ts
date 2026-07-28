@@ -611,7 +611,7 @@ function registervoiceconfigcommand(
   basename: string,
   argmeta: {
     byposition: string[][]
-    whenfirst?: Record<string, unknown[][]>
+    whenfirst?: Record<string, string[][]>
   },
 ) {
   const channels = [0, 1, 2, 3, 4, 5]

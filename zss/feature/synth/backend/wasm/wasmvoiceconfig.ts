@@ -6,9 +6,7 @@ import { NAME } from 'zss/words/types'
 import { applywasmalgoconfig, resetwasmalgoconfig } from './wasmalgoconfig'
 import type { WASM_ALGO_CONFIG } from './wasmalgoconfigsab'
 import { applywasmoscconfig, resetwasmoscconfig } from './wasmoscconfig'
-import {
-  type WASM_OSC_CONFIG,
-} from './wasmoscconfigsab'
+import { type WASM_OSC_CONFIG } from './wasmoscconfigsab'
 import { WASM_OSC_TYPE, parsewasmosc } from './wasmosctype'
 import {
   DEFAULT_WASM_BOWED,

@@ -8,11 +8,7 @@ import {
   storagereadznstoken,
 } from 'zss/feature/storage'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
-import {
-  znslist,
-  znsnormalizepathkey,
-  znsread,
-} from 'zss/feature/url'
+import { znslist, znsnormalizepathkey, znsread } from 'zss/feature/url'
 import { write } from 'zss/feature/writeui'
 import {
   zssheaderlines,

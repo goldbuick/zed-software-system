@@ -187,8 +187,7 @@ export function memoryapplyelementstats(
       case 'color':
       case 'displaycolor': {
         if (isnumber(value)) {
-          // @ts-expect-error - we are doing this on purpose
-          element[key] = value
+          element[key as keyof BOARD_ELEMENT] = value
           break
         }
         if (isstring(value)) {

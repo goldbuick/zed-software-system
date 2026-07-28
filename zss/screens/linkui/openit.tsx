@@ -8,15 +8,25 @@ import { UserHotkey } from 'zss/gadget/userinput'
 import { UserInput } from 'zss/gadget/userinput.bridge'
 import { extractcontentfromargs } from 'zss/screens/inputcommon'
 import { inputcolor } from 'zss/screens/panel/common'
-import { NAME } from 'zss/words/types'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
+import { NAME } from 'zss/words/types'
 
 import { linkactionprefix, linkbegin } from './surface'
 import type { LinkWidgetProps } from './types'
 
+function wordasstring(word: unknown): string {
+  if (typeof word === 'string') {
+    return word
+  }
+  if (typeof word === 'number' || typeof word === 'boolean') {
+    return String(word)
+  }
+  return ''
+}
+
 function findhki(words: unknown[]): number {
   for (let i = 0; i < words.length; ++i) {
-    const w = NAME(`${words[i] ?? ''}`)
+    const w = NAME(wordasstring(words[i]))
     if (w === 'hk' || w === 'hotkey') {
       return i
     }
@@ -29,8 +39,8 @@ export function LinkOpenIt({ surface }: LinkWidgetProps) {
   const words = surface.words
   const hki = findhki(words)
   const beforehk = hki >= 0 ? words.slice(0, hki) : words
-  const shortcut = hki >= 0 ? `${words[hki + 1] ?? ''}` : ''
-  const maybetext = hki >= 0 ? `${words[hki + 2] ?? ''}` : ''
+  const shortcut = hki >= 0 ? wordasstring(words[hki + 1]) : ''
+  const maybetext = hki >= 0 ? wordasstring(words[hki + 2]) : ''
 
   const invoke = useCallback(() => {
     const [, openmethod] = beforehk
@@ -59,7 +69,9 @@ export function LinkOpenIt({ surface }: LinkWidgetProps) {
   const tcolor = inputcolor(!!surface.active)
   if (shortcut) {
     const badge = maybetext || ` ${shortcut.toUpperCase()} `
-    const badgebg = surface.context.iseven ? '$black$onltgray' : '$black$ondkcyan'
+    const badgebg = surface.context.iseven
+      ? '$black$onltgray'
+      : '$black$ondkcyan'
     tokenizeandwritetextformat(
       `${badgebg}${badge}${tcolor}$onclear ${surface.label}`,
       surface.context,
