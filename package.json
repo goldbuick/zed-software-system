@@ -125,6 +125,7 @@
     "ink": "^6.8.0",
     "ink-text-input": "^6.0.0",
     "json-joy": "^18.28.0",
+    "nipplejs": "1.0.4",
     "playwright": "^1.58.2"
   },
   "bin": {

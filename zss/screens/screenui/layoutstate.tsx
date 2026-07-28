@@ -52,13 +52,15 @@ export function useScreenChromeLayout(
   sethasscroll: (v: boolean) => void,
 ): ScreenChromeLayout | null {
   const screensize = useScreenSize()
-  const { islandscape, sidebaropen, showtouchcontrols } = useDeviceData(
-    useShallow((state) => ({
-      islandscape: state.islandscape,
-      sidebaropen: state.sidebaropen,
-      showtouchcontrols: state.showtouchcontrols,
-    })),
-  )
+  const { islandscape, sidebaropen, sidebarclosing, showtouchcontrols } =
+    useDeviceData(
+      useShallow((state) => ({
+        islandscape: state.islandscape,
+        sidebaropen: state.sidebaropen,
+        sidebarclosing: state.sidebarclosing,
+        showtouchcontrols: state.showtouchcontrols,
+      })),
+    )
 
   const scroll = useGadgetClient(useEqual((state) => state.gadget.scroll ?? []))
   const isscrollempty = scroll.length === 0
@@ -115,14 +117,16 @@ export function useScreenChromeLayout(
           text: sidebar,
         }
         rects.push(rect)
-      } else if (sidebaropen) {
-        // Portrait push band below game (userscreen reserved the rows).
+      } else if (sidebaropen || sidebarclosing) {
+        // Portrait: reserved band when open; overlay bottom of expanded game when closing.
         const height = PORTRAIT_SIDEBAR_OVERLAY_ROWS
         const rect = {
           name: 'sidebar',
           type: RECT_TYPE.PANEL,
           x: 0,
-          y: frame.height,
+          y: sidebaropen
+            ? frame.height
+            : frame.height - PORTRAIT_SIDEBAR_OVERLAY_ROWS,
           width: frame.width,
           height,
           text: sidebar,
@@ -163,5 +167,6 @@ export function useScreenChromeLayout(
     showtouchcontrols,
     sidebar,
     sidebaropen,
+    sidebarclosing,
   ])
 }

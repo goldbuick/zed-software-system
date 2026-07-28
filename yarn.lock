@@ -13297,6 +13297,11 @@ netmask@^2.0.2:
   resolved "https://registry.npmjs.org/netmask/-/netmask-2.0.2.tgz#8b01a07644065d536383835823bc52004ebac5e7"
   integrity sha512-dBpDMdxv9Irdq66304OLfEmQ9tbNRFnFTuZiLo+bD+r332bBmMJ8GBLXklIXXgxd3+v9+KUnZaUR5PJMa75Gsg==
 
+nipplejs@1.0.4:
+  version "1.0.4"
+  resolved "https://registry.npmjs.org/nipplejs/-/nipplejs-1.0.4.tgz#a1f84f029e825818ecf46dcd7f8e8f950045cf06"
+  integrity sha512-YtvRZDuyWQ+tOj0nUjfnZt4ZQmJVWfK9+yPmV5OXpQ4k4AkOGcSfKvSXbPNkV0ERqc4eakkBSZ7/Wyx1y6h/Sg==
+
 nlcst-to-string@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/nlcst-to-string/-/nlcst-to-string-4.0.0.tgz#05511e8461ebfb415952eb0b7e9a1a7d40471bd4"

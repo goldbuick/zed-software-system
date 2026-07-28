@@ -53,6 +53,16 @@ canvas {
   overflow: hidden;
 }
 
+.touchpad-zone {
+  position: fixed;
+  z-index: 3;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  pointer-events: auto;
+}
+
 #webgl-required {
   position: fixed;
   inset: 0;

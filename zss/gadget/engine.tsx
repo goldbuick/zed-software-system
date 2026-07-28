@@ -119,6 +119,7 @@ export function Engine() {
         showtouchcontrols,
         usemobiletextcapture,
         sidebaropen,
+        sidebarclosing: false,
       }
     })
   }, [islowrez, islandscape, showtouchcontrols, usemobiletextcapture])

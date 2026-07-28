@@ -10,6 +10,7 @@ import { SOFTWARE } from 'zss/device/session'
 import {
   TAPE_DISPLAY,
   TERMINAL_MODE,
+  useGadgetClient,
   useTape,
 } from 'zss/gadget/data/zustandstores'
 import { ShadeBoxDither } from 'zss/gadget/graphics/dither'
@@ -75,6 +76,10 @@ export function TapeComponent() {
       state.editor.open,
     ]),
   )
+  const hasboard = useGadgetClient(
+    (state) => (state.gadget.layers?.length ?? 0) > 0,
+  )
+  const effectivelayout = hasboard ? layout : TAPE_DISPLAY.FULL
 
   const wantopen = terminalmode === 'quick' || terminalopen || editoropen
 
@@ -83,7 +88,7 @@ export function TapeComponent() {
   const [held, setheld] = useState<HeldTapeGeom | null>(null)
 
   const livegeom = readtapegeom(
-    layout,
+    effectivelayout,
     screensize.cols,
     screensize.rows,
     terminalmode,

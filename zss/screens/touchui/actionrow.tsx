@@ -43,6 +43,15 @@ export function ActionRow({ x, y, pitch = 6 }: ActionRowProps) {
           registerterminalquickopen(SOFTWARE, player, '')
         }}
       />
+      <ToggleKey
+        x={x + pitch * 3}
+        y={y}
+        letters="tab"
+        onToggle={() => {
+          inputdown(0, INPUT.MENU_BUTTON)
+          inputup(0, INPUT.MENU_BUTTON)
+        }}
+      />
     </>
   )
 }

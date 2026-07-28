@@ -1,6 +1,7 @@
 import { Canvas, events } from '@react-three/fiber'
 import type { ComponentProps } from 'react'
 import type { Intersection } from 'three'
+import { TouchPadOverlay } from 'zss/screens/touchui/touchpadoverlay'
 
 import { CafeApp } from './cafeapp'
 import { ViewportSync } from './viewportsync'
@@ -33,23 +34,26 @@ const eventmanagerfactory: NonNullable<
 
 export function CafeCanvas() {
   return (
-    <Canvas
-      style={{ width: '100%', height: '100%' }}
-      dpr={1}
-      flat
-      linear
-      shadows={false}
-      gl={{
-        alpha: true,
-        stencil: false,
-        antialias: false,
-        preserveDrawingBuffer: true,
-      }}
-      events={eventmanagerfactory}
-      resize={{ debounce: { resize: 256, scroll: 50 } }}
-    >
-      <ViewportSync />
-      <CafeApp />
-    </Canvas>
+    <>
+      <Canvas
+        style={{ width: '100%', height: '100%' }}
+        dpr={1}
+        flat
+        linear
+        shadows={false}
+        gl={{
+          alpha: true,
+          stencil: false,
+          antialias: false,
+          preserveDrawingBuffer: true,
+        }}
+        events={eventmanagerfactory}
+        resize={{ debounce: { resize: 256, scroll: 50 } }}
+      >
+        <ViewportSync />
+        <CafeApp />
+      </Canvas>
+      <TouchPadOverlay />
+    </>
   )
 }
