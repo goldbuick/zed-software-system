@@ -4,14 +4,15 @@ import {
   type DEEPLINK_CONTEXT,
   type DEEPLINK_HANDLER,
   registerdeeplink,
-} from 'zss/feature/deeplink'
+} from 'zss/feature/deeplinkregistry'
 import {
   ZNS_LOGIN_CODE_PARAM,
   ZNS_LOGIN_EMAIL_PARAM,
   ZNS_LOGIN_NAMESPACE_PARAM,
   type ZNS_LOGIN_URL_PARAMS,
   readznsloginparamsfromurl,
-} from 'zss/feature/url'
+} from 'zss/feature/znsloginparams'
+import { znsconfirmotpfromdeeplink } from 'zss/firmware/cli/commands/znsotpconfirm'
 import { ispresent } from 'zss/mapping/types'
 
 const znsloginhandler: DEEPLINK_HANDLER = {
@@ -40,14 +41,16 @@ const znsloginhandler: DEEPLINK_HANDLER = {
       registerterminalopen(device, ctx.player)
     }
     if (params.email && params.namespace) {
-      const { znsconfirmotpfromdeeplink } =
-        await import('zss/firmware/cli/commands/znsmenu')
-      return znsconfirmotpfromdeeplink(
+      const ok = await znsconfirmotpfromdeeplink(
         ctx.player,
         params.email,
         params.code,
         params.namespace,
       )
+      if (ok) {
+        vmcli(device, ctx.player, '#zns')
+      }
+      return ok
     }
     vmcli(device, ctx.player, `#zns ${params.code}`)
     return true

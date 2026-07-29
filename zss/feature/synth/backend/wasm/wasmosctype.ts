@@ -119,3 +119,47 @@ export function parsemodtype(value: string): number | undefined {
       return undefined
   }
 }
+
+/**
+ * Map am/fm/fat family index (sine=0, square=1, tri=2, saw=3) to basic
+ * WASM_OSC_TYPE (square=0, sine=1, tri=2, saw=3).
+ * Must stay identical to familywavetobasic in zss_osc.cpp -- bare
+ * osctype - 10/20/30 makes fmsquare sound like sine.
+ */
+export function familywavetobasic(familywave: number): WASM_OSC_TYPE {
+  switch (familywave) {
+    case 0:
+      return WASM_OSC_TYPE.SINE
+    case 1:
+      return WASM_OSC_TYPE.SQUARE
+    case 2:
+      return WASM_OSC_TYPE.TRIANGLE
+    case 3:
+      return WASM_OSC_TYPE.SAWTOOTH
+    default:
+      return WASM_OSC_TYPE.SQUARE
+  }
+}
+
+/** Carrier basic wave for an am/fm/fat osctype, or undefined if not a family wave. */
+export function familyosctobasic(osctype: number): WASM_OSC_TYPE | undefined {
+  if (
+    osctype >= (WASM_OSC_TYPE.AM_SINE as number) &&
+    osctype <= (WASM_OSC_TYPE.AM_SAWTOOTH as number)
+  ) {
+    return familywavetobasic(osctype - 10)
+  }
+  if (
+    osctype >= (WASM_OSC_TYPE.FM_SINE as number) &&
+    osctype <= (WASM_OSC_TYPE.FM_SAWTOOTH as number)
+  ) {
+    return familywavetobasic(osctype - 20)
+  }
+  if (
+    osctype >= (WASM_OSC_TYPE.FAT_SINE as number) &&
+    osctype <= (WASM_OSC_TYPE.FAT_SAWTOOTH as number)
+  ) {
+    return familywavetobasic(osctype - 30)
+  }
+  return undefined
+}

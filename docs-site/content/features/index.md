@@ -20,4 +20,3 @@ Overview of product capabilities by domain. Each page lists features with audien
 - [Speech & TTS](/features/speech-tts)
 - [Storage & session](/features/storage-session)
 - [Terminal & CLI](/features/terminal-cli)
-- [Wanix & zedsync](/features/wanix-zedsync)

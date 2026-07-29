@@ -1,11 +1,12 @@
 import 'zss/rom/vitepopulate'
 import { debugingest } from 'zss/debugingest'
+import { started as startvm } from 'zss/device/vm'
 import { setclimode } from 'zss/feature/detect'
 import { hub } from 'zss/hub'
 import { isstring } from 'zss/mapping/types'
 import { memorywritesession } from 'zss/memory/session'
 
-// back-end devices that operate within the web worker (vm loads after config)
+// back-end devices that operate within the web worker (vm starts after config)
 import './device/clock'
 import './device/modem'
 import './perf/perfreport'
@@ -39,7 +40,5 @@ onmessage = function handleMessage(
     { runId: 'post-fix' },
     'G',
   )
-  void import('zss/device/vm').then(({ started: startvm }) => {
-    startvm()
-  })
+  startvm()
 }

@@ -19,8 +19,4 @@ Historical name "stubspace" in older docs referred to this join path; the owner 
 
 ## Diagrams
 
-See [System map](./map.mdx) for Mermaid views of the product stack (including **Wanix** as the complex-data plane), realms, tick loop, and script pipeline.
-
-## Wanix (complex data)
-
-Wanix is first-class: iframe OS + `/zedcafe/` export + optional [zedsync](/wanix/zedsync). Manuals: [`/wanix`](/wanix).
+See [System map](./map.mdx) for Mermaid views of the product stack, realms, tick loop, and script pipeline.

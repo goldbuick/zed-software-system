@@ -1,4 +1,6 @@
-$ltgrey Modes of C harmonic minor
+## harmonic minor modes
+
+$whitemodes of C harmonic minor.
 
 !copyit #play cde!fga!b+c;$greenC harmonic minor
 !copyit #play de!fga!bc+d;$greenD Locrian nat 6

@@ -64,8 +64,6 @@ const OSC_VOICES = [
 /** Decaying / one-shot: measure body window, not held sustain */
 const BODY_WINDOW_VOICES = new Set<string>([
   'pluck',
-  'drip',
-  'timpani',
   'bells',
   'metallic',
   'clang',
@@ -74,7 +72,6 @@ const BODY_WINDOW_VOICES = new Set<string>([
   'noise',
   'hollow',
   'doot',
-  'nylon',
   'steel',
 ])
 

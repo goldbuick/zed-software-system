@@ -1,18 +1,26 @@
-import { apierror, vmloader } from 'zss/device/api'
+import { vmloader } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import { enableaudio } from 'zss/device/synth'
-import {
-  applycafedroppartition,
-  capturecafedropitems,
-  resolvecafedropitems,
-} from 'zss/device/wanixclient/wanixfsadropitems'
 import {
   clearwasmcoepserviceworkers,
   ensurewasmcoep,
 } from 'zss/feature/synth/backend/wasm/coopcoep'
 import { useDeviceData } from 'zss/gadget/device'
 import { Engine } from 'zss/gadget/engine'
+
+function loadfiles(files: File[]) {
+  files.forEach((file) =>
+    vmloader(
+      SOFTWARE,
+      registerreadplayer(),
+      undefined,
+      'file',
+      `file:${file.name}`,
+      file,
+    ),
+  )
+}
 
 if (typeof window !== 'undefined') {
   if (import.meta.env.DEV) {
@@ -49,22 +57,9 @@ if (typeof window !== 'undefined') {
       return
     }
 
-    // Prevent the default behavior, so you can code your own logic.
     enableaudio()
     event.preventDefault()
-
-    // read files from clipboardData
-    const files = [...event.clipboardData.files]
-    files.forEach((file) =>
-      vmloader(
-        SOFTWARE,
-        registerreadplayer(),
-        undefined,
-        'file',
-        `file:${file.name}`,
-        file,
-      ),
-    )
+    loadfiles([...event.clipboardData.files])
   })
 
   window.addEventListener('drop', (event) => {
@@ -72,34 +67,10 @@ if (typeof window !== 'undefined') {
     event.preventDefault()
 
     const dt = event.dataTransfer
-    if (!dt) {
+    if (!dt?.files.length) {
       return
     }
-
-    // Chrome: getAsFileSystemHandle must be invoked in this tick — no await before.
-    const pending = capturecafedropitems(dt)
-    void (async () => {
-      try {
-        const partition = await resolvecafedropitems(pending)
-        await applycafedroppartition(partition, (file) => {
-          vmloader(
-            SOFTWARE,
-            registerreadplayer(),
-            undefined,
-            'file',
-            file.name,
-            file,
-          )
-        })
-      } catch (err) {
-        apierror(
-          SOFTWARE,
-          registerreadplayer(),
-          'wanix',
-          err instanceof Error ? err.message : String(err),
-        )
-      }
-    })()
+    loadfiles([...dt.files])
   })
 }
 

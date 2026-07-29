@@ -11,8 +11,9 @@ function applyviewport(store: ReturnType<typeof useStore>) {
   const innerheight = window.innerHeight
   const width = makeeven(innerwidth)
   const height = makeeven(innerheight)
+  // saferows: visible band above soft keyboard (portrait typing layout).
   const safeheight = window.visualViewport
-    ? Math.min(innerheight, window.visualViewport.height)
+    ? Math.min(innerheight, Math.floor(window.visualViewport.height))
     : innerheight
   const saferows = Math.floor(safeheight / RUNTIME.DRAW_CHAR_HEIGHT())
   useDeviceData.setState({ saferows })
@@ -28,28 +29,35 @@ export function ViewportSync() {
   const store = useStore()
 
   useLayoutEffect(() => {
-    const sync = debounce(() => {
+    const syncnow = () => {
       applyviewport(store)
-    }, 256)
+    }
+    const syncdebounced = debounce(syncnow, 256)
 
-    sync()
-    requestAnimationFrame(() => {
-      sync()
-    })
+    syncnow()
+    requestAnimationFrame(syncnow)
 
-    window.addEventListener('resize', sync)
+    // Debounce window resize; visualViewport must be immediate for keyboard.
+    window.addEventListener('resize', syncdebounced)
     if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', sync)
-      window.visualViewport.addEventListener('scroll', sync)
+      window.visualViewport.addEventListener('resize', syncnow)
+      window.visualViewport.addEventListener('scroll', syncnow)
     }
 
-    return () => {
-      sync.clear()
-      window.removeEventListener('resize', sync)
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', sync)
-        window.visualViewport.removeEventListener('scroll', sync)
+    const unsub = useDeviceData.subscribe((state, prev) => {
+      if (state.textcapturefocused !== prev.textcapturefocused) {
+        syncnow()
       }
+    })
+
+    return () => {
+      syncdebounced.clear()
+      window.removeEventListener('resize', syncdebounced)
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', syncnow)
+        window.visualViewport.removeEventListener('scroll', syncnow)
+      }
+      unsub()
     }
   }, [store])
 

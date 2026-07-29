@@ -1,10 +1,10 @@
 ## #distort on
 
-#distort <number>  
-$white 0-100, 0 is off, 100 is full volume  
-#distort distortion <number>  
-$white 0 or higher, controls strength of effect.  
-#distort oversample <2x|4x|none>  
+#distort <number>
+$white 0-100, 0 is off, 100 is full volume
+#distort distortion <number>
+$white 0 or higher, controls strength of effect.
+#distort oversample <2x|4x|none>
 $white oversample improves quality.
 
 !effectsscroll hk b " B " next;$ltgreyBack to effects

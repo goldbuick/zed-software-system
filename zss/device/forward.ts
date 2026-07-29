@@ -73,8 +73,6 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
         case 'synth':
         case 'modem':
         case 'bridge':
-        case 'wanixserver':
-        case 'wanixclient':
         case 'register':
         case 'boardrunner':
         case 'gadgetclient':

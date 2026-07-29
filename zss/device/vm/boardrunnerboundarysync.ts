@@ -3,7 +3,6 @@ import { boardrunnerpatch } from 'zss/device/patchapi'
 import { boardrunneraccessfor } from 'zss/device/vm/boardrunnermanagement'
 import type { JSON_PIPE_HANDLE, Operation } from 'zss/feature/jsonpipe/observe'
 import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
-import { markzedcafeexportfromboundaryops } from 'zss/feature/wanix/wanixstateexport'
 import { ispresent } from 'zss/mapping/types'
 import { memorycollecttickboundaries } from 'zss/memory/boardwait'
 import { memoryboundaryget, memoryboundaryset } from 'zss/memory/boundaries'
@@ -80,7 +79,6 @@ function boardrunnerboundarysyncbody(vm: DEVICE) {
       const patch = pipe.emitdiff(doc)
       if (patch.length > 0) {
         recordemitdiff('vm:boundarysync', patch.length, 1, 1)
-        markzedcafeexportfromboundaryops(id, patch)
         boardrunnerpatch(vm, player, patch, id)
       }
     }

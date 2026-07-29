@@ -1,4 +1,6 @@
-$ltgrey Minor pentatonic (12 keys)
+## minor pentatonic
+
+$white12 keys.
 
 !copyit #play ce!fgb!+c;$greenC minor pentatonic
 !copyit #play c#ef#g#b+c#;$greenC# minor pentatonic

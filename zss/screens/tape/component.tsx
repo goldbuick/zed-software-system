@@ -7,11 +7,10 @@ import {
 import { registerterminalopen } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
-import { useWanixClient } from 'zss/device/wanixclient/wanixclientstore'
-import { reattachwanixterm } from 'zss/device/wanixclient/wanixdisplay'
 import {
   TAPE_DISPLAY,
   TERMINAL_MODE,
+  useGadgetClient,
   useTape,
 } from 'zss/gadget/data/zustandstores'
 import { ShadeBoxDither } from 'zss/gadget/graphics/dither'
@@ -19,36 +18,9 @@ import { UserFocus, UserHotkey } from 'zss/gadget/userinput'
 import { useScreenSize } from 'zss/gadget/userscreen'
 import { PerfMonitorTiles } from 'zss/perf/perfmonitortiles'
 import { PanelSlide } from 'zss/screens/scroll/panelslide'
-import {
-  WanixAttachPanel,
-  readwanixattachslideactive,
-} from 'zss/screens/wanix/attachpanel'
 import { useShallow } from 'zustand/react/shallow'
 
 import { TapeLayout } from './layout'
-
-/** is-hotkey cannot parse `\`; use a raw keydown for game-only re-attach. */
-function WanixReattachHotkey() {
-  useEffect(() => {
-    function onkeydown(event: KeyboardEvent) {
-      if (!event.ctrlKey || event.key !== '\\') {
-        return
-      }
-      // Attach panel owns Ctrl+\ while open or sliding out.
-      if (
-        useWanixClient.getState().attachpanelopen ||
-        readwanixattachslideactive()
-      ) {
-        return
-      }
-      event.preventDefault()
-      reattachwanixterm()
-    }
-    document.addEventListener('keydown', onkeydown)
-    return () => document.removeEventListener('keydown', onkeydown)
-  }, [])
-  return null
-}
 
 const tapeprofileronrender: ProfilerOnRenderCallback = (
   id,
@@ -104,20 +76,19 @@ export function TapeComponent() {
       state.editor.open,
     ]),
   )
-  const attachpanelopen = useWanixClient((state) => state.attachpanelopen)
-  const attachedsessionkey = useWanixClient((state) => state.attachedsessionkey)
-  const showattach =
-    attachpanelopen && attachedsessionkey != null && !editoropen
+  const hasboard = useGadgetClient(
+    (state) => (state.gadget.layers?.length ?? 0) > 0,
+  )
+  const effectivelayout = hasboard ? layout : TAPE_DISPLAY.FULL
 
-  const wantopen =
-    !showattach && (terminalmode === 'quick' || terminalopen || editoropen)
+  const wantopen = terminalmode === 'quick' || terminalopen || editoropen
 
   const [panelactive, setpanelactive] = useState(false)
   const [shouldclose, setshouldclose] = useState(false)
   const [held, setheld] = useState<HeldTapeGeom | null>(null)
 
   const livegeom = readtapegeom(
-    layout,
+    effectivelayout,
     screensize.cols,
     screensize.rows,
     terminalmode,
@@ -155,7 +126,7 @@ export function TapeComponent() {
   }
 
   const player = registerreadplayer()
-  const showhotkeys = !showattach && !panelactive
+  const showhotkeys = !panelactive
 
   const tapebody = (
     <>
@@ -191,7 +162,6 @@ export function TapeComponent() {
   const body = (
     <>
       <PerfMonitorTiles />
-      <WanixAttachPanel />
       {panelactive ? (
         <group
           position={[
@@ -220,9 +190,6 @@ export function TapeComponent() {
           <UserHotkey hotkey="`">
             {() => registerterminalopen(SOFTWARE, player)}
           </UserHotkey>
-          {/* Only when attach is closed: same Ctrl+\ while attached was
-              re-attaching immediately after termscreen detached. */}
-          <WanixReattachHotkey />
         </>
       ) : null}
     </>

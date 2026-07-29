@@ -1,5 +1,5 @@
 jest.mock('zss/words/reader', () => ({
-  READ_CONTEXT: { words: [] },
+  READ_CONTEXT: { words: [] as unknown[] },
 }))
 
 import {
@@ -11,9 +11,11 @@ import {
   mapcolortostrcolor,
   mapstrcolor,
   mapstrcolortoattributes,
+  readcolor,
   readstrbg,
   readstrcolor,
 } from 'zss/words/color'
+import { READ_CONTEXT } from 'zss/words/reader'
 import { COLOR } from 'zss/words/types'
 
 describe('color', () => {
@@ -148,6 +150,43 @@ describe('color', () => {
       const attrs = mapstrcolortoattributes(['ONWHITE'])
       expect(attrs.bg).toBeDefined()
       expect(attrs.color).toBeUndefined()
+    })
+  })
+
+  describe('readcolor', () => {
+    afterEach(() => {
+      READ_CONTEXT.words = []
+    })
+
+    it('reads red onblue as fg and bg consts', () => {
+      READ_CONTEXT.words = ['red', 'onblue']
+      const [strcolor, next] = readcolor(0)
+      expect(strcolor).toEqual(['RED', 'ONBLUE'])
+      expect(next).toBe(2)
+      const attrs = mapstrcolortoattributes(strcolor!)
+      expect(attrs.color).toBe(COLOR.RED)
+      expect(attrs.bg).toBe(COLOR.BLUE)
+    })
+
+    it('reads fg only', () => {
+      READ_CONTEXT.words = ['red']
+      const [strcolor, next] = readcolor(0)
+      expect(strcolor).toEqual(['RED'])
+      expect(next).toBe(1)
+    })
+
+    it('reads bg only', () => {
+      READ_CONTEXT.words = ['onblue']
+      const [strcolor, next] = readcolor(0)
+      expect(strcolor).toEqual(['ONBLUE'])
+      expect(next).toBe(1)
+    })
+
+    it('ignores second fg word as bg', () => {
+      READ_CONTEXT.words = ['red', 'blue']
+      const [strcolor, next] = readcolor(0)
+      expect(strcolor).toEqual(['RED'])
+      expect(next).toBe(1)
     })
   })
 

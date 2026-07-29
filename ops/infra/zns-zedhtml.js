@@ -35,6 +35,13 @@ function stripformatcodes(text) {
       rest = rest.slice(2)
       continue
     }
+    // Cafe MetaKey ($META) -> cmd/ctrl; measure with ctrl (longer).
+    const metamatch = rest.match(/^\$meta(?![a-z])/i)
+    if (metamatch) {
+      out += 'ctrl'
+      rest = rest.slice(metamatch[0].length)
+      continue
+    }
     const nummatch = rest.match(/^\$(\d+)/)
     if (nummatch) {
       out += cp437tochar(Number(nummatch[1]))
@@ -107,6 +114,19 @@ function parsetapeparts(line) {
       rest = rest.slice(2)
       continue
     }
+    // Cafe MetaKey ($META) -> platform cmd/ctrl (client fills .zns-meta).
+    const metamatch = rest.match(/^\$meta(?![a-z])/i)
+    if (metamatch) {
+      const key = `${pennormalized(pen)}:meta`
+      const last = parts[parts.length - 1]
+      if (last && last.meta && last.key === key) {
+        last.text += 'ctrl'
+      } else {
+        parts.push({ key, pen: { ...pen }, text: 'ctrl', meta: true })
+      }
+      rest = rest.slice(metamatch[0].length)
+      continue
+    }
     const colormatch = rest.match(/^\$([a-z]+)/i)
     if (colormatch) {
       const name = matchcolorname(colormatch[1])
@@ -143,7 +163,10 @@ function rendertapepart(part) {
   if (part.pen.bg != null) {
     style += `;background-color:${fghex(part.pen.bg)}`
   }
-  const cls = part.pen.blink ? 'zns-tape-span zns-blink' : 'zns-tape-span'
+  let cls = part.pen.blink ? 'zns-tape-span zns-blink' : 'zns-tape-span'
+  if (part.meta) {
+    cls += ' zns-meta'
+  }
   if (part.pen.blink) {
     style += `;--zns-fg:${fg};--zns-bg:${bg ?? fg}`
   }
@@ -242,12 +265,9 @@ function parsezedlinklinehtml(line) {
   const atchip = ATCHIP_RE.exec(head)
   if (atchip) {
     head = atchip[2].trimStart()
-  } else {
-    const secondbang = head.indexOf('!')
-    if (secondbang >= 0) {
-      head = head.slice(secondbang + 1)
-    }
   }
+  // HTML has no modem prefix (`chip:target!cmd`). Do not split on `!` inside
+  // the payload (e.g. copyit #play flats like d!e!f).
   return { label, words: zedlinksplittokens(head) }
 }
 
@@ -274,6 +294,22 @@ const KNOWN_LINK_TYPES = new Set([
 ])
 
 const TARGETLESS_LINK_TYPES = new Set(['copyit', 'openit', 'viewit', 'runit'])
+
+/** Cafe-only input widgets; omit from ZNS HTML (no panel/editor host). */
+const INPUT_LINK_TYPES = new Set([
+  'charedit',
+  'coloredit',
+  'bgedit',
+  'text',
+  'tx',
+  'number',
+  'nm',
+  'range',
+  'rn',
+  'select',
+  'sl',
+  'zssedit',
+])
 
 /** Path keys served under tenantbase (docs.at.zed.cafe/{key}). */
 const ZNS_PATH_KEY_RE = /^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?$/i
@@ -334,6 +370,11 @@ function znslinkrowinner(label, href, opts = {}) {
   return `<a class="zns-link" href="${escapehtml(href)}"${target}>${inner}</a>`
 }
 
+function znscopyrowinner(rowtape, copytext) {
+  const inner = textformatlinehtml(rowtape)
+  return `<button type="button" class="zns-copy" data-copy="${escapehtml(copytext)}">${inner}</button>`
+}
+
 function znsrowfromtape(rowtape, href, opts = {}) {
   if (href) {
     return `<div class="zns-line">${znslinkrowinner(rowtape, href, opts)}</div>`
@@ -350,27 +391,6 @@ function hotkeybadgetext(shortcut, maybetext) {
   return maybetext || ` ${String(shortcut).toUpperCase()} `
 }
 
-/** Badge from trailing `hk`/`hotkey` args, or cafe widget defaults. */
-function editwidgetbadge(linktype, words) {
-  const defaults = {
-    charedit: ' A ',
-    coloredit: ' C ',
-    bgedit: ' B ',
-  }
-  let hki = -1
-  for (let i = 0; i < words.length; ++i) {
-    const w = namelower(words[i])
-    if (w === 'hk' || w === 'hotkey') {
-      hki = i
-      break
-    }
-  }
-  if (hki >= 0) {
-    return hotkeybadgetext(words[hki + 1] ?? '', words[hki + 2] ?? '')
-  }
-  return defaults[linktype] ?? ' ? '
-}
-
 /**
  * Render bang hyperlinks as label chrome (hotkey badge / purple bullet), not
  * raw `!cmd;label` source. Navigable scroll targets become tenant `<a href>`.
@@ -381,6 +401,9 @@ export function zedzedlinkrowhtml(line, opts = {}) {
     return `<div class="zns-line">${textformatlinehtml(line)}</div>`
   }
   const { linktype, words } = resolvelinktypeandwords(parsed.words)
+  if (INPUT_LINK_TYPES.has(linktype)) {
+    return ''
+  }
   const label = parsed.label
   const iseven = opts.iseven === true
   const badgebg = hotkeybadgebg(iseven)
@@ -398,8 +421,9 @@ export function zedzedlinkrowhtml(line, opts = {}) {
       return znsrowfromtape(row, zedpathhref(target, opts), opts)
     }
     case 'copyit': {
+      const content = words.filter((w) => w !== 'istargetless').join(' ')
       const row = `$purple$16 $yellowCOPYIT $cyan${label}`
-      return znsrowfromtape(row, '', opts)
+      return `<div class="zns-line">${znscopyrowinner(row, content)}</div>`
     }
     case 'viewit': {
       const content = words.filter((w) => w !== 'istargetless').join(' ')
@@ -412,25 +436,6 @@ export function zedzedlinkrowhtml(line, opts = {}) {
     }
     case 'runit': {
       const row = `$purple$16 $yellowRUNIT $cyan${label}`
-      return znsrowfromtape(row, '', opts)
-    }
-    case 'charedit':
-    case 'coloredit':
-    case 'bgedit': {
-      const badge = editwidgetbadge(linktype, words)
-      const row = `${badgebg}${badge}$cyan$onclear ${label}`
-      return znsrowfromtape(row, '', opts)
-    }
-    case 'text':
-    case 'tx':
-    case 'number':
-    case 'nm':
-    case 'range':
-    case 'rn':
-    case 'select':
-    case 'sl':
-    case 'zssedit': {
-      const row = `$purple$16 $cyan${label}`
       return znsrowfromtape(row, '', opts)
     }
     case 'hyperlink':
@@ -453,16 +458,23 @@ export function zedtaperowshtml(tape, opts = {}) {
       continue
     }
     if (isopenitlinkline(trimmed)) {
-      rows.push(zedopenitznslinkrowhtml(trimmed, opts))
+      const row = zedopenitznslinkrowhtml(trimmed, {
+        ...opts,
+        iseven: linkrowindex % 2 === 0,
+      })
+      rows.push(row)
+      linkrowindex += 1
       continue
     }
     if (iszedlinkline(trimmed)) {
-      rows.push(
-        zedzedlinkrowhtml(trimmed, {
-          ...opts,
-          iseven: linkrowindex % 2 === 0,
-        }),
-      )
+      const row = zedzedlinkrowhtml(trimmed, {
+        ...opts,
+        iseven: linkrowindex % 2 === 0,
+      })
+      if (!row) {
+        continue
+      }
+      rows.push(row)
       linkrowindex += 1
       continue
     }
@@ -474,13 +486,26 @@ export function zedtaperowshtml(tape, opts = {}) {
 function parseopenit(line) {
   const body = line.replace(/^!openit\s*/i, '').trim()
   const semi = body.indexOf(';')
-  if (semi === -1) {
-    return { href: body, label: body }
+  const head = (semi === -1 ? body : body.slice(0, semi)).trim()
+  const label = semi === -1 ? body : body.slice(semi + 1).trim()
+  // Optional trailing: hk <key> ["badge"] [next]
+  const hkmatch = head.match(
+    /^(.*?)\s+hk(?:ey)?\s+(\S+)(?:\s+("([^"]*)"|[^\s]+))?(?:\s+next)?\s*$/i,
+  )
+  let href = head
+  let shortcut = ''
+  let maybetext = ''
+  if (hkmatch) {
+    href = hkmatch[1].trim()
+    shortcut = hkmatch[2] ?? ''
+    if (hkmatch[4] != null && hkmatch[4] !== '') {
+      maybetext = hkmatch[4]
+    } else if (hkmatch[3] && !String(hkmatch[3]).startsWith('"')) {
+      maybetext = hkmatch[3]
+    }
   }
-  return {
-    href: body.slice(0, semi).replace(/^inline\s+/i, '').trim(),
-    label: body.slice(semi + 1).trim(),
-  }
+  href = href.replace(/^inline\s+/i, '').trim()
+  return { href, label, shortcut, maybetext }
 }
 
 export function zedopenitznslinkrowhtml(label, path, opts = {}) {
@@ -490,15 +515,29 @@ export function zedopenitznslinkrowhtml(label, path, opts = {}) {
   }
   let href = path
   let text = label
+  let shortcut = ''
+  let maybetext = ''
   if (String(label).startsWith('!openit')) {
     const parsed = parseopenit(String(label))
     href = parsed.href
     text = parsed.label
+    shortcut = parsed.shortcut
+    maybetext = parsed.maybetext
   }
   const base = opts.tenantbase ?? ''
   const url = String(href).startsWith('http') ? href : `${base}${href}`
+  const linkopts = {
+    ...opts,
+    newtab: String(url).startsWith('http') ? true : opts.newtab,
+  }
+  if (shortcut) {
+    const badgebg = hotkeybadgebg(opts.iseven === true)
+    const badge = hotkeybadgetext(shortcut, maybetext)
+    const row = `${badgebg}${badge}$cyan$onclear ${text}`
+    return znsrowfromtape(row, url, linkopts)
+  }
   const row = `$purple$16 $yellowOPENIT $white${text} `
-  return `<div class="zns-line">${znslinkrowinner(row, url, opts)}</div>`
+  return `<div class="zns-line">${znslinkrowinner(row, url, linkopts)}</div>`
 }
 
 export function zederrorlinehtml(msg, key) {

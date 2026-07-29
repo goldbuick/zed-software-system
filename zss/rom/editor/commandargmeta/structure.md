@@ -1,0 +1,3 @@
+---
+hint: "Pluck structure amount"
+---

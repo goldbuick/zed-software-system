@@ -1,5 +1,6 @@
-$ltgrey Blues hexatonic: 1 b3 4
-$ltgrey b5 5 b7 - 12 keys.
+## blues
+
+$whitehexatonic: 1 b3 4 b5 5 b7 - 12 keys.
 
 !copyit #play ce!fg!ga!+c;$greenC blues
 !copyit #play d!f!g!ga!c!+d!;$greenDb blues

@@ -1,0 +1,3 @@
+---
+hint: "Organ brightness amount"
+---

@@ -1,7 +1,6 @@
 import { workstatus } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { brickproxiedurl } from 'zss/feature/brickurl'
-import { clearqueryparams } from 'zss/feature/deeplink'
 import {
   storageclearznstoken,
   storagereadznssession,
@@ -11,6 +10,7 @@ import {
   storagewritznstoken,
 } from 'zss/feature/storage'
 import { write } from 'zss/feature/writeui'
+import { isvalidznsnamespacelabel } from 'zss/feature/znsloginparams'
 import { zsstextline } from 'zss/feature/zsstextui'
 import { NAME } from 'zss/words/types'
 
@@ -141,7 +141,7 @@ export function parsejoindestination(
       return undefined
     }
     const namespace = host.slice(0, -suffix.length)
-    if (!namespace || !ZNS_LOGIN_NAMESPACE_RE.test(namespace)) {
+    if (!namespace || !isvalidznsnamespacelabel(namespace)) {
       return undefined
     }
     const key = pathname.replace(/^\//, '').split('/')[0] ?? ''
@@ -244,66 +244,6 @@ export function ishostcontenturl(target: URL): boolean {
   }
   const hash = target.hash.replace(/^#/, '').trim()
   return hash.length > 0
-}
-
-export const ZNS_LOGIN_CODE_PARAM = 'zns-code'
-export const ZNS_LOGIN_EMAIL_PARAM = 'zns-email'
-export const ZNS_LOGIN_NAMESPACE_PARAM = 'zns-namespace'
-
-const ZNS_LOGIN_CODE_RE = /^[1-9]{6}$/
-const ZNS_LOGIN_NAMESPACE_RE = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/
-
-export type ZNS_LOGIN_URL_PARAMS = {
-  code: string
-  email?: string
-  namespace?: string
-}
-
-function readznsloginsearchparams(): URLSearchParams | undefined {
-  try {
-    return new URLSearchParams(location.search)
-  } catch {
-    return undefined
-  }
-}
-
-export function readznsloginparamsfromurl(): ZNS_LOGIN_URL_PARAMS | undefined {
-  const search = readznsloginsearchparams()
-  if (!search) {
-    return undefined
-  }
-  const code = search.get(ZNS_LOGIN_CODE_PARAM)?.trim()
-  if (!code || !ZNS_LOGIN_CODE_RE.test(code)) {
-    return undefined
-  }
-  const emailraw = search.get(ZNS_LOGIN_EMAIL_PARAM)?.trim().toLowerCase()
-  const namespaceraw = znsnormalizenamespace(
-    search.get(ZNS_LOGIN_NAMESPACE_PARAM) ?? '',
-  )
-  const params: ZNS_LOGIN_URL_PARAMS = { code }
-  if (emailraw?.includes('@')) {
-    params.email = emailraw
-  }
-  if (namespaceraw && ZNS_LOGIN_NAMESPACE_RE.test(namespaceraw)) {
-    params.namespace = namespaceraw
-  }
-  return params
-}
-
-export function readznslogincodefromurl(): string | undefined {
-  return readznsloginparamsfromurl()?.code
-}
-
-export function clearznsloginparamsfromurl(): void {
-  clearqueryparams([
-    ZNS_LOGIN_CODE_PARAM,
-    ZNS_LOGIN_EMAIL_PARAM,
-    ZNS_LOGIN_NAMESPACE_PARAM,
-  ])
-}
-
-export function clearznslogincodefromurl(): void {
-  clearznsloginparamsfromurl()
 }
 
 const ZNS_PATH_KEY_RE = /^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?$/

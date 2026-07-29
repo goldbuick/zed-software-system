@@ -26,8 +26,8 @@ export type { Foo } from './foo'
 import { foo } from './foo'
 export { foo } // ❌ still a re-export
 
-import { WANIX_ZEDCAFE_WASM_BUILD_ID } from './wanixzedcafewasmversion'
-export { WANIX_ZEDCAFE_WASM_BUILD_ID } // ❌
+import { MEMORY_LABEL } from './memorylabels'
+export { MEMORY_LABEL } // ❌
 
 import { registerreadplayer } from 'zss/device/registerplayer'
 export { registerreadplayer } // ❌ device facade
@@ -70,11 +70,11 @@ import { registerreadplayer } from 'zss/device/registerplayer'
 ```
 
 ```typescript
-// ❌ BAD — wanix convenience re-export
-export { waitwanixexportcontentready } from './wanixexportwait'
+// ❌ BAD — convenience re-export
+export { clearqueryparams } from './clearqueryparams'
 
 // ✅ GOOD
-import { waitwanixexportcontentready } from 'zss/device/wanixclient/wanixexportwait'
+import { clearqueryparams } from 'zss/feature/clearqueryparams'
 ```
 
 When a symbol must be public, export it **once** from its implementation file and import that path everywhere.

@@ -184,6 +184,20 @@ export async function requestinfo(
 }
 
 const TTS_TIMEOUT_MS = 10000
+const SUPERTONIC_TIMEOUT_MS = 60000
+
+const SUPERTONIC_VOICE_MAP: Record<string, string> = {
+  '0': 'M1',
+  '1': 'M2',
+  '2': 'M3',
+  '3': 'M4',
+  '4': 'M5',
+  '5': 'F1',
+  '6': 'F2',
+  '7': 'F3',
+  '8': 'F4',
+  '9': 'F5',
+}
 
 export async function requestaudiobytes(
   device: DEVICELIKE,
@@ -207,7 +221,7 @@ export async function requestaudiobytes(
         )
       case 'supertonic': {
         await ensuresupertonic(device, player)
-        if (!ispresent(supertonictts) || !supertonictts.pipeline) {
+        if (!ispresent(supertonictts) || !supertonictts.ready) {
           return undefined
         }
         workstatus(device, player, 'tts work')
@@ -218,8 +232,7 @@ export async function requestaudiobytes(
             timeoutid = null
           }
         }
-        const supertonicvoice =
-          { '0': 'M1', '1': 'M2', '2': 'F1', '3': 'F2' }[voice] ?? voice
+        const supertonicvoice = SUPERTONIC_VOICE_MAP[voice] ?? voice
         const synth = async (): Promise<MAYBE<ArrayBuffer>> => {
           try {
             const streamer = new TextSplitterStream()
@@ -249,7 +262,7 @@ export async function requestaudiobytes(
             cleartimeout()
             supertonictts?.clearAudio()
             resolve(undefined)
-          }, TTS_TIMEOUT_MS)
+          }, SUPERTONIC_TIMEOUT_MS)
         })
         return await Promise.race([synth(), timeoutp])
       }

@@ -1,7 +1,7 @@
 import { registerscreenshot } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
 import { SOFTWARE } from 'zss/device/session'
-import { rundeeplinks } from 'zss/feature/deeplink'
+import { rundeeplinks } from 'zss/feature/deeplinkrun'
 import {
   storagereadznsemail,
   storagereadznsnamespace,

@@ -6,10 +6,6 @@ import {
   boardrunnermemorypatch,
 } from 'zss/device/vm/boardrunnermemorysync'
 import { decodepatchwire } from 'zss/feature/jsonpipe/wire'
-import {
-  markzedcafeexportfromboundaryops,
-  markzedcafeexportfromrootops,
-} from 'zss/feature/wanix/wanixstateexport'
 import { isarray } from 'zss/mapping/types'
 
 export function handleboardrunnerpatch(vm: DEVICE, message: MESSAGE): void {
@@ -23,13 +19,10 @@ export function handleboardrunnerpatch(vm: DEVICE, message: MESSAGE): void {
   if (boundary) {
     if (!boardrunnerboundarypatch(boundary, operations)) {
       // bad patch, send a reset — boardrunnerpaint recovery deferred
-    } else {
-      markzedcafeexportfromboundaryops(boundary, operations)
     }
   } else if (!boardrunnermemorypatch(operations)) {
     // bad patch, send a reset — boardrunnerpaint recovery deferred
   } else {
-    markzedcafeexportfromrootops(operations)
     // emit patch to other board runners
     boardrunneremitpatch(vm, operations, message.player)
   }

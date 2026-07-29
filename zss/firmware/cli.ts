@@ -8,7 +8,6 @@ import { registermultiplayercommands } from 'zss/firmware/cli/commands/multiplay
 import { registerpermissionscommands } from 'zss/firmware/cli/commands/permissions'
 import { registersendcommands } from 'zss/firmware/cli/commands/send'
 import { registerstatecommands } from 'zss/firmware/cli/commands/state'
-import { registerwanixcommands } from 'zss/firmware/cli/commands/wanix'
 import { registerzztcommands } from 'zss/firmware/cli/commands/zzt'
 
 const REGISTER_COMMANDS = [
@@ -22,7 +21,6 @@ const REGISTER_COMMANDS = [
   registerpermissionscommands,
   registerinputcommands,
   registermisccommands,
-  registerwanixcommands,
 ]
 
 export const CLI_FIRMWARE = REGISTER_COMMANDS.reduce(

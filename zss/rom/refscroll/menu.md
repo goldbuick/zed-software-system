@@ -2,8 +2,9 @@
 !objectlistscroll hk 2 " 2 " next;list object elements
 !terrainlistscroll hk 3 " 3 " next;list terrain elements
 !adminscroll hk 4 " 4 " next;cpu #admin
-!cliscroll hk t " T " next;cli commands
-!commandsscroll hk d " D " next;dictionary of all commands
+!clidocscroll hk i " I " next;cli #commands
+!loaderdocscroll hk o " O " next;loader #commands
+!runtimedocscroll hk r " R " next;runtime #commands
 !char charedit hk a " A " next;char
 !color coloredit hk c " C " next;color
 !bg bgedit hk b " B " next;bg

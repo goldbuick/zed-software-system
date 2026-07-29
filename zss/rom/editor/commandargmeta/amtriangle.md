@@ -1,0 +1,3 @@
+---
+hint: "AM triangle wave"
+---

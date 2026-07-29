@@ -4,7 +4,7 @@ import { doasync } from 'zss/device/doasync'
 import { syncterminalbookmarkpins } from 'zss/device/register/helpers/bootstrap'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import type { MESSAGE } from 'zss/device/types'
-import { rundeeplinks } from 'zss/feature/deeplink'
+import { rundeeplinks } from 'zss/feature/deeplinkrun'
 import { isclimode } from 'zss/feature/detect'
 import {
   storagereadhistorybuffer,

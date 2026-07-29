@@ -1,5 +1,6 @@
-$ltgrey Lydian - mode 4 of major
-$ltgrey scale; 12 keys.
+## lydian
+
+$whitemode 4 of major scale; 12 keys.
 
 !copyit #play cdef#gab+c;$greenC Lydian
 !copyit #play d!e!fga!b!c+d!;$greenDb Lydian

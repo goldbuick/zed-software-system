@@ -1,5 +1,6 @@
-$ltgrey Locrian - mode 7 of major
-$ltgrey scale; 12 keys.
+## locrian
+
+$whitemode 7 of major scale; 12 keys.
 
 !copyit #play cd!e!fg!a!b!+c;$greenC Locrian
 !copyit #play c#def#gab+c#;$greenDb Locrian

@@ -164,34 +164,38 @@ $whiteset volume
 
 ## audio - synthesis
 
-#synth [config]  
-$whiteconfigure play voices  
-#synth1  #synth5  
-$whiteper-voice config  
-#synthrecord [filename]  
-$whiterecord output  
-#synthflush  
+#synth [config]
+$whiteselect type/wave or config play voices
+#synth1 - #synth5
+$whiteper-voice / bgplay select
+#string / #fmsquare / #piano ...
+$whiteconfig-only (no type select; +1-5 channels)
+#synthrecord [filename]
+$whiterecord output
+#synthflush
 $whiteclear synth buffer
 
 ## audio - tts
 
-#ttsengine <engine> [config]  
-$whiteset tts engine (piper, supertonic, fish)  
-#tts [voice] [phrase]  
-$whitespeak or clear queue  
-$dkgrayfish: #ttsengine fish <api_key> [s2.1-pro] then #tts <reference_id> phrase (via brick.zed.cafe)  
-#ttsqueue <voice> <phrase>  
-$whitequeue phrase  
-#ttsvol <volume>  
+#ttsengine
+$whiteno args lists engines: piper, supertonic, fish
+#ttsengine <engine> [config] [model]
+$whiteset tts engine
+#tts [voice] [phrase]
+$whitespeak, show voice info, or clear queue
+$dkgrayfish: #ttsengine fish <api_key> [s2.1-pro] then #tts <reference_id> phrase (via brick.zed.cafe)
+#ttsqueue <voice> <phrase>
+$whitequeue phrase
+#ttsvol <volume>
 $whiteset tts volume
 
 ## audio - effects
 
-#echo / #fcrush / #autofilter  
-$whitevoices 0 $26 1  
-#reverb / #distort / #vibrato / #autowah  
-$whitevoices 0 $26 1  
-#echo1-3, #reverb1-3, etc  
+#echo / #fcrush / #autofilter
+$whitevoices 0 - 1
+#reverb / #distort / #vibrato / #autowah
+$whitevoices 0 - 1
+#echo1-3, #reverb1-3, etc
 $whiteper-voice
 
 ## runtime

@@ -1,4 +1,5 @@
-import { claimdeeplink, clearqueryparams } from 'zss/feature/deeplink'
+import { clearqueryparams } from 'zss/feature/clearqueryparams'
+import { claimdeeplink } from 'zss/feature/deeplinkrun'
 
 describe('clearqueryparams', () => {
   let href = 'https://zed.cafe/?foo=bar#hash'
@@ -109,7 +110,7 @@ describe('rundeeplinks', () => {
     runcount = 0
     storage.clear()
     installbrowsermocks()
-    const { registerdeeplink } = await import('zss/feature/deeplink')
+    const { registerdeeplink } = await import('zss/feature/deeplinkregistry')
     registerdeeplink({
       id: 'test-magic',
       paramkeys: ['magic'],
@@ -130,18 +131,18 @@ describe('rundeeplinks', () => {
   })
 
   it('dispatches a matching handler and clears params', async () => {
-    const { rundeeplinks } = await import('zss/feature/deeplink')
-    const handled = await rundeeplinks({ player: 'p1', surface: 'menu' })
+    const { rundeeplinks: run } = await import('zss/feature/deeplinkrun')
+    const handled = await run({ player: 'p1', surface: 'menu' })
     expect(handled).toBe(true)
     expect(runcount).toBe(1)
     expect(new URL(href).searchParams.has('magic')).toBe(false)
   })
 
   it('does not run the handler twice for the same fingerprint', async () => {
-    const { rundeeplinks } = await import('zss/feature/deeplink')
-    await rundeeplinks({ player: 'p1', surface: 'menu' })
+    const { rundeeplinks: run } = await import('zss/feature/deeplinkrun')
+    await run({ player: 'p1', surface: 'menu' })
     href = 'https://zed.cafe/?magic=1'
-    const handled = await rundeeplinks({ player: 'p1', surface: 'cli' })
+    const handled = await run({ player: 'p1', surface: 'cli' })
     expect(handled).toBe(false)
     expect(runcount).toBe(1)
   })

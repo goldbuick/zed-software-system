@@ -2,19 +2,100 @@
 title: "Voice types, config params, and WASM vs Tone defaults"
 ---
 
-Reference catalog for all ZSS `#synth` voice types. **Origin legend:** **ZSS** = explicit in ZSS source; **Tone** = Tone.js `getDefaults()` / instrument defaults; **WASM-play** = hardcoded in generated play code, not `#synth`-settable.
+Reference catalog for all ZSS `#synth` voice types. **Daisy WASM is the active backend.** Tone columns are archive parity only.
+
+**Origin legend:** **ZSS** = explicit in ZSS source; **Tone** = Tone.js `getDefaults()` / instrument defaults; **WASM-play** = hardcoded, not `#synth`-settable.
+
+**Confidence status** (per row / family):
+
+| Status | Meaning |
+|--------|---------|
+| **Proven** | Jest and/or offline render showed write + expected sample behavior |
+| **Wired** | Code path traced write → SAB → native read → sample use |
+| **Broken** | Repro exists; owner named |
+| **N/A** | Intentionally not `#synth`-settable |
+
+SAB write alone is never Proven. See [daisy-synth-config](../../../../.cursor/rules/daisy-synth-config.mdc).
 
 See also: [fx-types-reference.md](fx-types-reference.md), [voiceconfig.md](voiceconfig.md).
+
+## Config path (trust this chain)
+
+```text
+#synth key
+  → firmware/audio.ts handlesynthvoice
+  → applywasmvoiceconfig / applywasmoscconfig / applywasmalgoconfig
+  → SAB: zss_voices | zss_voicecfg | zss_osccfg | zss_algocfg
+  → native readosccfg / readalgocfg / voicecfg
+  → processvoice sample owner (zss_osc / zss_voice / zss_sosvoices)
+```
 
 ## How voices are addressed
 
 | Command | Voice indices | Role |
 |---------|---------------|------|
-| `#synth …` | 0–3 | `#play` voices |
+| `#synth …` | 0–3 | Select / config `#play` voices |
 | `#synth1`–`#synth4` | 0–3 individually | Per play voice |
 | `#synth5 …` | 4–7 | `#bgplay` voices |
+| `#string` / `#fmsquare` / … | 0–3 | Config-only (no type select) |
+| `#string1`–`4` / `#fmsquare1`–`4` | single play index | Config-only |
+| `#string5` / `#fmsquare5` | 4–7 | Config-only bgplay |
 
-Config path: `#synth` → [audio.ts](../../../firmware/audio.ts) `handlesynthvoice` → `synthvoice` → backend `setvoiceconfig` → WASM [wasmvoiceconfig.ts](../backend/wasm/wasmvoiceconfig.ts) or Tone [voiceconfig/index.ts](../../../../ops/archive/synth/tone/voiceconfig/index.ts).
+Config path: `#synth` → [audio.ts](../../../firmware/audio.ts) `handlesynthvoice` → `synthvoice` → backend `setvoiceconfig` → WASM [wasmvoiceconfig.ts](../backend/wasm/wasmvoiceconfig.ts). Per-slot family/osc memory survives type switches until `#synth restart`.
+
+---
+
+## Confidence matrix (Daisy)
+
+### Global
+
+| Key | Default | SAB | Sample owner | Status |
+|-----|---------|-----|--------------|--------|
+| `restart` | — | resets voices+osc+algo+FX | applyreset | Proven (apply test) |
+| `vol`/`volume` | 0 dB | voicecfg slot 5 | all voices | Wired |
+| `env`/`envelope` | `0.01/0.01/0.5/0.01` (type may override) | voicecfg 0–3 | `ZssLinearEnv` / algo out / SOS | Wired |
+| `port`/`portamento` | 0 | voicecfg 4 | SYNTH, ALGO, BOWED only | Wired |
+
+### SYNTH oscillator (trap classes)
+
+| Kind | Keys | SAB | Native | Status |
+|------|------|-----|--------|--------|
+| basic | `phase` | osccfg | `oscwavewithphase` | Wired |
+| pulse | `width` | osccfg | pulse branch | Wired |
+| pwm | `width`, `modfreq` | osccfg | LFO at **modfreq** (not FM harm) | Proven (Jest: modfreq ≠ harmonicity) |
+| am* | harmonicity, modtype, modenv | osccfg | AM + **familywavetobasic** | Proven (carrier map Jest) |
+| fm* | + modindex; harm = note×ratio | osccfg | FM + **familywavetobasic**; **not modfreq** | **Proven** (`fmsquare`≠sine map + SAB 21) |
+| fat* | count, phase, spread (cents) | osccfg | phase-accumulator unison + family map | Proven (carrier map Jest) |
+
+**Enum trap (must never regress):** basic `square=0 sine=1`; family am/fm/fat at +10/+20/+30 ordered **sine, square, tri, saw**. Use `familywavetobasic` in [`wasmosctype.ts`](../backend/wasm/wasmosctype.ts) and [`zss_osc.cpp`](../backend/daisy/native/zss/zss_osc.cpp). Bare `osctype - 20` makes `#synth fmsquare` sound like sine.
+
+### Noise / bells / doot
+
+| Family | `#synth` keys | N/A | Status |
+|--------|---------------|-----|--------|
+| retro/buzz/clang/metallic/hollow/noise | type, env, vol | LFSR meta | Wired |
+| bells | env (select `0.01/3/0.3/6`), vol | FM/sparkle internals | Wired |
+| doot | env, vol | octaves, pitchDecay | Wired |
+
+### ALGO `algo0`–`algo7`
+
+harmonicity[1–3], modindex[1–3], osc1–4 (**basic/pulse/pwm only**), env1–4, outer env, port. Status: Wired (Jest rejects am/fm/fat on oscN).
+
+### SOS timbre (voicecfg slots 6–9)
+
+| Names | Keys | Select defaults | Status |
+|-------|------|-----------------|--------|
+| `string` | detune, pwm, vib, filter | 0.25/0.2/0.35/0.5; env 0.6/0.15/0.88/1 | Wired |
+| `pluck` | structure, brightness, damping, accent | 0.14/0.38/0.72/0.12 | Wired |
+| flute/clarinet/brass | breath, pressure, brightness, resonance | **per-algo** `winddefaults()` (not pool) | Wired |
+| piano | spread 0–1, hammer, brightness, damping | 0.18/0.55/0.5/0.45 | Proven (shared-key Jest) |
+| violin | bow, pressure, vib, body (+ port) | see code presets | Proven (shared-key Jest) |
+| steel | pick, body, damping, position | steel select presets | Proven (shared-key Jest) |
+| tonewheel | drawbar, click, leak, bright | 0.7/0.15/0.2/0.5; `drawbar` is param only | Wired |
+
+**Removed named types** (no longer selectable): `drip`, `panpipe`, `epiano`, `timpani`, `viola`, `nylon`, `drawbar` (as voice).
+
+**Shared-key rule:** on type mismatch, fall through to other owners. Exclusive keys may write **dormantly** into their family blob (and survive type switches).
 
 ---
 
@@ -86,7 +167,8 @@ Selecting any validated wave name switches voice to `SYNTH`. Names validated by 
 | **pulse** | `width` | `0.2` | **Tone** PulseOscillator: `0.2` |
 | **pwm** | `modfreq`, `modulationfrequency`, `width` | modfreq `1`, width `0.2` | **Tone** / Daisy PWMOscillator: LFO at `modfreq` Hz modulates pulse width around 0.5 by `width` |
 | **am\*** | `harmonicity`, `modtype`/`modulationtype`, `modenv`/`modulationenvelope` | harm `1`, modtype `square`, modenv `0.01/0.01/1/0.5` | **Tone** AMOscillator: harm `1`, modtype `square` |
-| **fm\*** | `harmonicity`, `modindex`, `modtype`, `modenv` | harm `1`, modindex `2`, modtype `square`, modenv `0.01/0.01/1/0.5` | **Tone** / Daisy FMOscillator: harm `1`, modindex `2`, modtype `square`; modulator Hz = note × `harmonicity` |
+| **fm\*** | `harmonicity`, `modindex`, `modtype`, `modenv` | harm `1`, modindex `2`, modtype `square`, modenv `0.01/0.01/1/0.5` | **Tone** / Daisy FMOscillator: harm `1`, modindex `2`, modtype `square`; modulator Hz = note × `harmonicity` (**not** `modfreq`). Carrier via `familywavetobasic` — `fmsquare` → basic square, never bare `osctype-20` |
+
 | **fat\*** | `count`, `phase`, `spread` | count `3`, phase `0`, spread `20` | **Tone** FatOscillator class default: count `3`, spread `20`, type `sawtooth`; **`fatsine` stacks sines** (OmniOscillator suffix) |
 | **Partials** | array value or trailing numbers | partialcount `0`, 8 zeros | **Tone**: partials `[]`, partialCount `0` |
 
@@ -286,12 +368,14 @@ No timbre `#synth` keys beyond env/vol. Selecting `#synth drip` keeps the global
 
 Daisy WASM only. Formant-filtered excitation + breath burst on attack + delayed vibrato; algo selects waveform and formant ratios (flute saw+tri, clarinet square, brass saw with pressure-driven brightness/resonance, panpipe multi-pipe detune with amplitude rolloff).
 
-| Param | Value | Default |
-|-------|-------|---------|
-| `breath` | 0–1 | `0.3` |
-| `pressure` | 0–1 | `0.45` |
-| `brightness` | 0–1 | `0.45` |
-| `resonance` | 0–1 | `0.15` |
+Select defaults from **`winddefaults(algo)`** (not pool `DEFAULT_WASM_WIND` `0.3/0.45/0.45/0.15`):
+
+| Param | flute | clarinet | brass | panpipe |
+|-------|-------|----------|-------|---------|
+| `breath` | 0.35 | 0.25 | 0.15 | 0.4 |
+| `pressure` | 0.4 | 0.35 | 0.65 | 0.25 |
+| `brightness` | 0.45 | 0.3 | 0.55 | 0.35 |
+| `resonance` | 0.1 | 0.2 | 0.35 | 0.08 |
 
 ---
 

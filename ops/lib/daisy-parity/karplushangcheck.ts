@@ -1,5 +1,5 @@
 /**
- * Offline check: pluck/nylon/steel body vs square, post-note-off decay, square hold stability.
+ * Offline check: pluck/steel body vs square, post-note-off decay, square hold stability.
  * Fresh page per voice (OfflineAudioContext reuse goes silent).
  */
 import {

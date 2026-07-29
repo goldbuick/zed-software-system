@@ -12,7 +12,6 @@ import {
 import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
 import { gadgetsynctick } from 'zss/device/vm/gadgetsynctick'
 import { boardrunners } from 'zss/device/vm/state'
-import { checkzedcafeexportontick } from 'zss/feature/wanix/wanixstateexport'
 import { ispresent } from 'zss/mapping/types'
 import { memorycollecttickboundaries } from 'zss/memory/boardwait'
 import { memoryreadbookplayerboards } from 'zss/memory/playermanagement'
@@ -75,7 +74,4 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
       gadgetsynctick(vm)
     })
   }
-  perfmeasure('vm:zedcafeexportcheck', () => {
-    checkzedcafeexportontick(vm)
-  })
 }

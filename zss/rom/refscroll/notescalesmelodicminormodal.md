@@ -1,5 +1,6 @@
-$ltgrey Modes of C melodic minor
-$ltgrey (jazz minor parent)
+## melodic minor modes
+
+$whitemodes of C melodic minor (jazz minor parent).
 
 !copyit #play cde!fgab+c;$greenC melodic minor
 !copyit #play de!fgabc+d;$greenD Dorian b2

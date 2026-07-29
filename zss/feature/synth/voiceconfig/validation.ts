@@ -28,20 +28,13 @@ export const SYNTH_NAMED_TYPES = [
   'algo7',
   'string',
   'pluck',
-  'drip',
   'flute',
   'clarinet',
   'brass',
-  'panpipe',
   'piano',
-  'epiano',
-  'timpani',
   'violin',
-  'viola',
-  'nylon',
   'steel',
   'tonewheel',
-  'drawbar',
 ] as const
 
 const SYNTH_NAMED_TYPE_SET = new Set<string>(SYNTH_NAMED_TYPES)

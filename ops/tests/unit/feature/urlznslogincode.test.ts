@@ -4,7 +4,7 @@ import {
   ZNS_LOGIN_NAMESPACE_PARAM,
   clearznsloginparamsfromurl,
   readznsloginparamsfromurl,
-} from 'zss/feature/url'
+} from 'zss/feature/znsloginparams'
 
 describe('readznslogincodefromurl', () => {
   let href = 'https://zed.cafe/'

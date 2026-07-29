@@ -13,11 +13,12 @@ export const PORTRAIT_SIDEBAR_OVERLAY_ROWS = 15
 /** Portrait dock rows reserved above stick plane (header + action row). */
 export const PORTRAIT_DOCK_STICK_TOP = 5
 
-/** Landscape / portrait action row: 3 keys x 5 + 2 gaps. */
-export const ACTION_ROW_WIDTH = 17
+/** Landscape / portrait action row: 4 keys x 5 + 3 gaps. */
+export const ACTION_ROW_WIDTH = 23
 
 export type TouchUIMode =
   | 'portrait-dock'
+  | 'portrait-sidebartoggle'
   | 'landscape-rail-left'
   | 'landscape-rail-right'
   | 'landscape-actions'

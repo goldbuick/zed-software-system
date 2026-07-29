@@ -1,5 +1,6 @@
-$ltgrey Phrygian - mode 3 of
-$ltgrey major scale; 12 keys.
+## phrygian
+
+$whitemode 3 of major scale; 12 keys.
 
 !copyit #play cd!e!fga!b!+c;$greenC Phrygian
 !copyit #play c#def#g#ab+c#;$greenDb Phrygian

@@ -1,0 +1,3 @@
+---
+hint: "AM sine wave"
+---

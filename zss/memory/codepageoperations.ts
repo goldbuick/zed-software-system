@@ -24,7 +24,13 @@ import {
   ispresent,
   isstring,
 } from 'zss/mapping/types'
-import { mapstrcolor } from 'zss/words/color'
+import {
+  isstrcolor,
+  mapstrcolor,
+  mapstrcolortoattributes,
+  readcolor,
+} from 'zss/words/color'
+import { READ_CONTEXT } from 'zss/words/reader'
 import { statformat, stattypestring } from 'zss/words/stats'
 import {
   CATEGORY,
@@ -179,9 +185,42 @@ export function memoryapplyelementstats(
         element[key as keyof BOARD_ELEMENT] = value
         break
       case 'color':
+      case 'displaycolor': {
+        if (isnumber(value)) {
+          element[key as keyof BOARD_ELEMENT] = value
+          break
+        }
+        if (isstring(value)) {
+          const prevwords = READ_CONTEXT.words
+          READ_CONTEXT.words = value.trim().split(/\s+/).filter(Boolean)
+          const [strcolor] = readcolor(0)
+          READ_CONTEXT.words = prevwords
+          if (isstrcolor(strcolor)) {
+            const { color, bg } = mapstrcolortoattributes(strcolor)
+            if (key === 'color') {
+              if (ispresent(color)) {
+                element.color = color
+              }
+              if (ispresent(bg)) {
+                element.bg = bg
+              }
+            } else {
+              if (ispresent(color)) {
+                element.displaycolor = color
+              }
+              if (ispresent(bg)) {
+                element.displaybg = bg
+              }
+            }
+            break
+          }
+        }
+        // @ts-expect-error - we are doing this on purpose
+        element[key] = mapstrtoconsts(value) ?? value
+        break
+      }
       case 'bg':
       case 'lightdir':
-      case 'displaycolor':
       case 'displaybg':
         // @ts-expect-error - we are doing this on purpose
         element[key] = mapstrtoconsts(value) ?? value
