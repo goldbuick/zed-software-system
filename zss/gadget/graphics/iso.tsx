@@ -1,8 +1,8 @@
 import { useFrame } from '@react-three/fiber'
 import { DepthOfField } from '@react-three/postprocessing'
-import { damp3 } from 'maath/easing'
+import { damp, damp3 } from 'maath/easing'
 import { DepthOfFieldEffect } from 'postprocessing'
-import { memo, useCallback, useRef, useState } from 'react'
+import { memo, useCallback, useLayoutEffect, useRef, useState } from 'react'
 import {
   Group,
   OrthographicCamera as OrthographicCameraImpl,
@@ -12,13 +12,29 @@ import { RUNTIME } from 'zss/config'
 import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import {
+  FOCUS_ANIM_RATE,
   initfocusifneeded,
+  isfocuspanphase,
+  readgridbias,
+  stashfocusexitsnap,
   stepfocuswithboardtransition,
 } from 'zss/gadget/graphics/camerafocus'
-import { buildexitpreviewgroups } from 'zss/gadget/graphics/exitpreviewgroups'
+import {
+  buildexitpreviewgroups,
+  gadgettoexitsnap,
+} from 'zss/gadget/graphics/exitpreviewgroups'
 import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
 import { IsoLayer } from 'zss/gadget/graphics/isolayer'
 import { maptolayerz, maxspriteslayerz } from 'zss/gadget/graphics/layerz'
+import {
+  PANVIEW_IDLE,
+  type PanView,
+  panviewequals,
+  readboardgridforrender,
+  resolvepanviewforrender,
+  setdofplayerworld,
+  syncliveboardworldoffset,
+} from 'zss/gadget/graphics/panviewsync'
 import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
 import { tickerpublishfromtickers } from 'zss/gadget/graphics/tickeranchors'
 import { useScreenSize } from 'zss/gadget/userscreen'
@@ -89,6 +105,7 @@ export const IsoGraphics = memo(function IsoGraphics({
   const zoomref = useRef<Group>(null)
   const underref = useRef<Group>(null)
   const cornerref = useRef<Group>(null)
+  const liveboardref = useRef<Group>(null)
   const cameraref = useRef<OrthographicCameraImpl>(null)
   const [boardcamera, setboardcamera] = useState<OrthographicCameraImpl | null>(
     null,
@@ -96,6 +113,9 @@ export const IsoGraphics = memo(function IsoGraphics({
   const depthoffield = useRef<DepthOfFieldEffect>(null)
   const dofplayerworld = useRef(new Vector3())
   const dofcamworld = useRef(new Vector3())
+  const [panview, setpanview] = useState<PanView>(PANVIEW_IDLE)
+  const panviewref = useRef(panview)
+  panviewref.current = panview
 
   const bindboardcamera = useCallback((c: OrthographicCameraImpl | null) => {
     cameraref.current = c
@@ -143,7 +163,7 @@ export const IsoGraphics = memo(function IsoGraphics({
       drawheight,
     )
 
-    const boardtransition = stepfocuswithboardtransition(
+    stepfocuswithboardtransition(
       userdata,
       control,
       currentboard,
@@ -151,15 +171,34 @@ export const IsoGraphics = memo(function IsoGraphics({
       tfocusy,
       delta,
     )
+    const gadgetforstash = useGadgetClient.getState().gadget
+    stashfocusexitsnap(userdata, gadgettoexitsnap(gadgetforstash))
+
+    const bias = readgridbias(userdata)
+    const panphase = isfocuspanphase(userdata)
+    const nextpanview: PanView = {
+      panphase,
+      biasdx: bias.dx,
+      biasdy: bias.dy,
+    }
+    if (!panviewequals(nextpanview, panviewref.current)) {
+      setpanview(nextpanview)
+    }
 
     const fx = (userdata.focusx! + 0.5) * drawwidth
     const fy = (userdata.focusy! + 0.5) * drawheight
+    const targetcornerx = -fx
+    const targetcornery = -fy
 
-    if (boardtransition) {
-      cornerref.current.position.set(-fx, -fy, 0)
+    if (panphase && bias.dx !== 0) {
+      cornerref.current.position.y = targetcornery
+      damp(cornerref.current.position, 'x', targetcornerx, animrate, delta)
+    } else if (panphase && bias.dy !== 0) {
+      cornerref.current.position.x = targetcornerx
+      damp(cornerref.current.position, 'y', targetcornery, animrate, delta)
+    } else {
+      damp3(cornerref.current.position, [-fx, -fy, 0], animrate, delta)
     }
-
-    damp3(cornerref.current.position, [-fx, -fy, 0], animrate, delta)
 
     // update dof (range/bokeh per zoom; focus distance tracks player in world space)
     switch (control.viewscale) {
@@ -181,16 +220,22 @@ export const IsoGraphics = memo(function IsoGraphics({
     const gadget = useGadgetClient.getState().gadget
     const gadgetlayers = gadget.layers ?? []
     const playerspritez = maxspriteslayerz(gadgetlayers, 'iso')
-    cornerref.current.updateMatrixWorld(true)
-    dofplayerworld.current.set(
-      (control.focusx + 0.5) * drawwidth,
-      (control.focusy + 0.5) * drawheight,
-      playerspritez,
-    )
-    cornerref.current.localToWorld(dofplayerworld.current)
-    cameraref.current.getWorldPosition(dofcamworld.current)
-    depthoffield.current.cocMaterial.focusDistance =
-      dofcamworld.current.distanceTo(dofplayerworld.current)
+    if (
+      depthoffield.current &&
+      setdofplayerworld(
+        dofplayerworld.current,
+        liveboardref.current,
+        control.focusx,
+        control.focusy,
+        drawwidth,
+        drawheight,
+        playerspritez,
+      )
+    ) {
+      cameraref.current.getWorldPosition(dofcamworld.current)
+      depthoffield.current.cocMaterial.focusDistance =
+        dofcamworld.current.distanceTo(dofplayerworld.current)
+    }
 
     tickerpublishfromtickers({
       tickers: gadget.tickers ?? [],
@@ -229,6 +274,10 @@ export const IsoGraphics = memo(function IsoGraphics({
       exitwest: state.gadget.exitwest,
       exitnorth: state.gadget.exitnorth,
       exitsouth: state.gadget.exitsouth,
+      exiteast2: state.gadget.exiteast2,
+      exitwest2: state.gadget.exitwest2,
+      exitnorth2: state.gadget.exitnorth2,
+      exitsouth2: state.gadget.exitsouth2,
       exitne: state.gadget.exitne,
       exitnw: state.gadget.exitnw,
       exitse: state.gadget.exitse,
@@ -238,11 +287,40 @@ export const IsoGraphics = memo(function IsoGraphics({
 
   const { gadget, layercachemap } = useGadgetClient.getState()
   const { over = [], under = [], layers = [] } = gadget
+  const camuserdata = cameraref.current?.userData ?? {}
+  const boardid = gadget.board ?? ''
+  const visualpan = resolvepanviewforrender(panview, camuserdata, boardid)
+  const rendergrid = readboardgridforrender(camuserdata, boardid)
+  useLayoutEffect(() => {
+    syncliveboardworldoffset(
+      liveboardref.current,
+      cameraref.current?.userData ?? {},
+      boardid,
+      drawwidth,
+      drawheight,
+    )
+  }, [
+    boardid,
+    rendergrid.x,
+    rendergrid.y,
+    visualpan.panphase,
+    visualpan.biasdx,
+    visualpan.biasdy,
+    drawwidth,
+    drawheight,
+  ])
   const exitpreviewgroups = buildexitpreviewgroups(
     gadget,
     layercachemap,
     drawwidth,
     drawheight,
+    {
+      boardgridx: rendergrid.x,
+      boardgridy: rendergrid.y,
+      bias: { dx: visualpan.biasdx, dy: visualpan.biasdy },
+      panphase: visualpan.panphase,
+      exitsnap: camuserdata.exitsnap,
+    },
   )
 
   const layersindex = under.length * 2 + 2
@@ -274,22 +352,24 @@ export const IsoGraphics = memo(function IsoGraphics({
               <group rotation={ISO_SCENE_ROTATION}>
                 <group ref={zoomref}>
                   <group ref={cornerref}>
-                    {layers.map((layer) => (
-                      <IsoLayer
-                        key={layer.id}
-                        id={layer.id}
-                        from="layers"
-                        z={maptolayerz(layer, 'iso')}
-                      />
-                    ))}
-                    {over.map((layer) => (
-                      <IsoLayer
-                        key={layer.id}
-                        from="over"
-                        id={layer.id}
-                        z={maptolayerz(layer, 'iso') + drawheight + 1}
-                      />
-                    ))}
+                    <group ref={liveboardref}>
+                      {layers.map((layer) => (
+                        <IsoLayer
+                          key={layer.id}
+                          id={layer.id}
+                          from="layers"
+                          z={maptolayerz(layer, 'iso')}
+                        />
+                      ))}
+                      {over.map((layer) => (
+                        <IsoLayer
+                          key={layer.id}
+                          from="over"
+                          id={layer.id}
+                          z={maptolayerz(layer, 'iso') + drawheight + 1}
+                        />
+                      ))}
+                    </group>
                     {exitpreviewgroups.map(({ key, preview, position }) =>
                       preview.layers.length > 0 ? (
                         <group key={key} position={position}>

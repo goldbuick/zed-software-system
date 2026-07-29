@@ -2,7 +2,13 @@ import { useFrame } from '@react-three/fiber'
 import { DepthOfField } from '@react-three/postprocessing'
 import { damp, damp3, dampE } from 'maath/easing'
 import { DepthOfFieldEffect } from 'postprocessing'
-import { memo, useCallback, useRef, useState } from 'react'
+import {
+  memo,
+  useCallback,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react'
 import {
   Group,
   PerspectiveCamera as PerspectiveCameraImpl,
@@ -13,11 +19,29 @@ import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { useDeviceData } from 'zss/gadget/device'
 import { DepthFog } from 'zss/gadget/fx/depthfog'
-import { dampfocus, initfocusifneeded } from 'zss/gadget/graphics/camerafocus'
-import { resolveexitpreview } from 'zss/gadget/graphics/exitpreviewresolve'
+import {
+  initfocusifneeded,
+  isfocuspanphase,
+  readgridbias,
+  stashfocusexitsnap,
+  stepfocuswithboardtransition,
+} from 'zss/gadget/graphics/camerafocus'
+import {
+  buildexitpreviewgroups,
+  gadgettoexitsnap,
+} from 'zss/gadget/graphics/exitpreviewgroups'
 import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
 import { FPVLayer } from 'zss/gadget/graphics/fpvlayer'
 import { maptolayerz, maxspriteslayerz } from 'zss/gadget/graphics/layerz'
+import {
+  PANVIEW_IDLE,
+  type PanView,
+  panviewequals,
+  readboardgridforrender,
+  resolvepanviewforrender,
+  setdofplayerworld,
+  syncliveboardworldoffset,
+} from 'zss/gadget/graphics/panviewsync'
 import { PillarwMeshes } from 'zss/gadget/graphics/pillarmeshes'
 import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
 import { tickerpublishfromtickers } from 'zss/gadget/graphics/tickeranchors'
@@ -46,6 +70,20 @@ function maptofov(viewscale: VIEWSCALE): number {
 }
 
 const FOV_MATRIX_EPS = 1e-3
+const CARDINAL_PREVIEW_KEYS = new Set([
+  'e',
+  'w',
+  'n',
+  's',
+  'de',
+  'dw',
+  'dn',
+  'ds',
+  'e2',
+  'w2',
+  'n2',
+  's2',
+])
 
 // board edge meshes
 const edgechars: number[] = []
@@ -87,6 +125,7 @@ export const FPVGraphics = memo(function FPVGraphics({
   const underref = useRef<Group>(null)
   const cameraref = useRef<PerspectiveCameraImpl>(null)
   const dofboardref = useRef<Group>(null)
+  const liveboardref = useRef<Group>(null)
   const depthoffield = useRef<DepthOfFieldEffect>(null)
   const dofplayerworld = useRef(new Vector3())
   const dofcamworld = useRef(new Vector3())
@@ -94,6 +133,9 @@ export const FPVGraphics = memo(function FPVGraphics({
   const [boardcamera, setboardcamera] = useState<PerspectiveCameraImpl | null>(
     null,
   )
+  const [panview, setpanview] = useState<PanView>(PANVIEW_IDLE)
+  const panviewref = useRef(panview)
+  panviewref.current = panview
 
   const bindboardcamera = useCallback((c: PerspectiveCameraImpl | null) => {
     cameraref.current = c
@@ -129,17 +171,23 @@ export const FPVGraphics = memo(function FPVGraphics({
       userdata.vlean = 0
     }
 
-    const fx = (userdata.focusx! + 0.5) * drawwidth
-    const fy = (userdata.focusy! + 0.5) * drawheight
+    const boardchanged = currentboard !== userdata.currentboard
+    if (boardchanged) {
+      userdata.sway = 0
+      userdata.vsway = 0
+      userdata.lean = 0
+      userdata.vlean = 0
+    }
 
     if (
-      userdata.lfocusx !== control.focusx ||
-      userdata.lfocusy !== control.focusy
+      !boardchanged &&
+      (userdata.lfocusx !== control.focusx ||
+        userdata.lfocusy !== control.focusy)
     ) {
       const swayscale = 7
       const leanscale = 0.02
-      const dx = userdata.lfocusx - control.focusx
-      const dy = userdata.lfocusy! - control.focusy
+      const dx = (userdata.lfocusx ?? control.focusx) - control.focusx
+      const dy = (userdata.lfocusy ?? control.focusy) - control.focusy
       const mappedfacing = Math.round(control.facing / (Math.PI * 0.5))
       switch (mappedfacing) {
         default:
@@ -160,12 +208,10 @@ export const FPVGraphics = memo(function FPVGraphics({
           userdata.vlean = -dy * leanscale
           break
       }
-      userdata.lfocusx = control.focusx
-      userdata.lfocusy = control.focusy
     }
 
     if (userdata.lfacing !== control.facing) {
-      let df = control.facing - userdata.lfacing!
+      let df = control.facing - (userdata.lfacing ?? control.facing)
       if (df < -Math.PI) {
         df += Math.PI * 2
       } else if (df > Math.PI) {
@@ -176,7 +222,41 @@ export const FPVGraphics = memo(function FPVGraphics({
       userdata.lfacing = control.facing
     }
 
-    damp3(positionref.current.position, [fx, -fy, cameraz], animrate, delta)
+    stepfocuswithboardtransition(
+      userdata,
+      control,
+      currentboard,
+      control.focusx,
+      control.focusy,
+      delta,
+    )
+    stashfocusexitsnap(userdata, gadgettoexitsnap(gadget))
+
+    const bias = readgridbias(userdata)
+    const panphase = isfocuspanphase(userdata)
+    const nextpanview: PanView = {
+      panphase,
+      biasdx: bias.dx,
+      biasdy: bias.dy,
+    }
+    if (!panviewequals(nextpanview, panviewref.current)) {
+      setpanview(nextpanview)
+    }
+
+    const fx = ((userdata.focusx ?? control.focusx) + 0.5) * drawwidth
+    const fy = ((userdata.focusy ?? control.focusy) + 0.5) * drawheight
+    const srange = 1.2
+
+    // Goto / non-edge: snap camera. Edge pan: damp in world space (no teleport).
+    if (boardchanged && !panphase) {
+      positionref.current.position.set(fx, -fy, cameraz)
+      const rsx = Math.sin(userdata.sway ?? 0) * srange
+      const rsy = Math.abs(Math.sin(userdata.sway ?? 0) * srange)
+      cameraref.current.position.set(rsx, 0, rsy)
+      cameraref.current.rotation.set(Math.PI * -0.49, 0, userdata.lean ?? 0)
+    } else {
+      damp3(positionref.current.position, [fx, -fy, cameraz], animrate, delta)
+    }
 
     dampE(
       tiltref.current.rotation,
@@ -192,7 +272,6 @@ export const FPVGraphics = memo(function FPVGraphics({
       delta,
     )
 
-    const srange = 1.2
     const swx = Math.sin(userdata.sway ?? 0) * srange
     const swy = Math.abs(Math.sin(userdata.sway ?? 0) * srange)
     damp3(cameraref.current.position, [swx, 0, swy], animrate, delta)
@@ -202,27 +281,6 @@ export const FPVGraphics = memo(function FPVGraphics({
 
     damp(cameraref.current.userData, 'lean', userdata.vlean ?? 0, animrateslow)
     damp(cameraref.current.userData, 'vlean', 0, animrateslow)
-
-    if (currentboard !== userdata.currentboard) {
-      userdata.sway = 0
-      userdata.vsway = 0
-      userdata.lean = 0
-      userdata.vlean = 0
-      userdata.focusx = control.focusx
-      userdata.focusy = control.focusy
-      userdata.lfocusx = userdata.focusx
-      userdata.lfocusy = userdata.focusy
-      userdata.currentboard = currentboard
-      const ffx = (userdata.focusx + 0.5) * drawwidth
-      const ffy = (userdata.focusy + 0.5) * drawheight
-      positionref.current.position.set(ffx, -ffy, cameraz)
-      const rsx = Math.sin(userdata.sway ?? 0) * srange
-      const rsy = Math.abs(Math.sin(userdata.sway ?? 0) * srange)
-      cameraref.current.position.set(rsx, 0, rsy)
-      cameraref.current.rotation.set(Math.PI * -0.49, 0, userdata.lean ?? 0)
-    } else {
-      dampfocus(userdata, control, animrate)
-    }
 
     damp(cameraref.current, 'fov', maptofov(control.viewscale), animrate, delta)
     const lpr = lastprojfovref.current
@@ -243,7 +301,7 @@ export const FPVGraphics = memo(function FPVGraphics({
     underref.current.position.y = viewheight - rheight
     underref.current.scale.setScalar(rscale)
 
-    if (depthoffield.current && dofboardref.current) {
+    if (depthoffield.current) {
       switch (control.viewscale) {
         case VIEWSCALE.NEAR:
           depthoffield.current.bokehScale = 10
@@ -261,16 +319,21 @@ export const FPVGraphics = memo(function FPVGraphics({
       }
 
       const playerspritez = maxspriteslayerz(layers, 'fpv')
-      dofboardref.current.updateMatrixWorld(true)
-      dofplayerworld.current.set(
-        (control.focusx + 0.5) * drawwidth,
-        (control.focusy + 0.5) * drawheight,
-        playerspritez,
-      )
-      dofboardref.current.localToWorld(dofplayerworld.current)
-      cameraref.current.getWorldPosition(dofcamworld.current)
-      depthoffield.current.cocMaterial.focusDistance =
-        dofcamworld.current.distanceTo(dofplayerworld.current)
+      if (
+        setdofplayerworld(
+          dofplayerworld.current,
+          liveboardref.current,
+          control.focusx,
+          control.focusy,
+          drawwidth,
+          drawheight,
+          playerspritez,
+        )
+      ) {
+        cameraref.current.getWorldPosition(dofcamworld.current)
+        depthoffield.current.cocMaterial.focusDistance =
+          dofcamworld.current.distanceTo(dofplayerworld.current)
+      }
     }
 
     if (dofboardref.current) {
@@ -299,6 +362,10 @@ export const FPVGraphics = memo(function FPVGraphics({
       exitwest: state.gadget.exitwest,
       exitnorth: state.gadget.exitnorth,
       exitsouth: state.gadget.exitsouth,
+      exiteast2: state.gadget.exiteast2,
+      exitwest2: state.gadget.exitwest2,
+      exitnorth2: state.gadget.exitnorth2,
+      exitsouth2: state.gadget.exitsouth2,
       exitne: state.gadget.exitne,
       exitnw: state.gadget.exitnw,
       exitse: state.gadget.exitse,
@@ -308,54 +375,42 @@ export const FPVGraphics = memo(function FPVGraphics({
 
   const { gadget, layercachemap } = useGadgetClient.getState()
   const { over = [], under = [], layers = [] } = gadget
-  const hasunderboard = under.length > 0
-  const east = resolveexitpreview(
-    gadget.exiteast,
+  const camuserdata = cameraref.current?.userData ?? {}
+  const boardid = gadget.board ?? ''
+  const visualpan = resolvepanviewforrender(panview, camuserdata, boardid)
+  const rendergrid = readboardgridforrender(camuserdata, boardid)
+
+  useLayoutEffect(() => {
+    syncliveboardworldoffset(
+      liveboardref.current,
+      cameraref.current?.userData ?? {},
+      boardid,
+      drawwidth,
+      drawheight,
+    )
+  }, [
+    boardid,
+    rendergrid.x,
+    rendergrid.y,
+    visualpan.panphase,
+    visualpan.biasdx,
+    visualpan.biasdy,
+    drawwidth,
+    drawheight,
+  ])
+
+  const exitpreviewgroups = buildexitpreviewgroups(
+    gadget,
     layercachemap,
-    'e',
-    hasunderboard,
-  )
-  const west = resolveexitpreview(
-    gadget.exitwest,
-    layercachemap,
-    'w',
-    hasunderboard,
-  )
-  const north = resolveexitpreview(
-    gadget.exitnorth,
-    layercachemap,
-    'n',
-    hasunderboard,
-  )
-  const south = resolveexitpreview(
-    gadget.exitsouth,
-    layercachemap,
-    's',
-    hasunderboard,
-  )
-  const ne = resolveexitpreview(
-    gadget.exitne,
-    layercachemap,
-    'ne',
-    hasunderboard,
-  )
-  const nw = resolveexitpreview(
-    gadget.exitnw,
-    layercachemap,
-    'nw',
-    hasunderboard,
-  )
-  const se = resolveexitpreview(
-    gadget.exitse,
-    layercachemap,
-    'se',
-    hasunderboard,
-  )
-  const sw = resolveexitpreview(
-    gadget.exitsw,
-    layercachemap,
-    'sw',
-    hasunderboard,
+    drawwidth,
+    drawheight,
+    {
+      boardgridx: rendergrid.x,
+      boardgridy: rendergrid.y,
+      bias: { dx: visualpan.biasdx, dy: visualpan.biasdy },
+      panphase: visualpan.panphase,
+      exitsnap: camuserdata.exitsnap,
+    },
   )
 
   const multi = over.length > 0
@@ -395,204 +450,56 @@ export const FPVGraphics = memo(function FPVGraphics({
             }
           >
             <group ref={dofboardref} position={[centerx, centery, 0]}>
-              {layers.map((layer) => (
-                <FPVLayer
-                  key={layer.id}
-                  id={layer.id}
-                  from="layers"
-                  z={maptolayerz(layer, 'fpv')}
-                  multi={multi}
-                />
-              ))}
-              {over.map((layer) => (
-                <FPVLayer
-                  key={layer.id}
-                  from="over"
-                  id={layer.id}
-                  z={maptolayerz(layer, 'fpv') + drawheight + 1}
-                  multi={multi}
-                />
-              ))}
-              <group position={[BOARD_WIDTH * drawwidth, 0, 0]}>
-                {east.layers.length > 0 ? (
-                  <>
-                    {east.layers.map((layer) => (
-                      <FPVLayer
-                        key={layer.id}
-                        id={layer.id}
-                        layers={east.layers}
-                        z={maptolayerz(layer, 'fpv')}
-                        multi={multi}
-                      />
-                    ))}
-                  </>
-                ) : (
-                  <group scale-z={2}>
-                    <PillarwMeshes
-                      width={BOARD_WIDTH}
-                      char={edgechars}
-                      color={edgecolors}
-                      bg={edgebgs}
-                    />
-                  </group>
-                )}
+              <group ref={liveboardref}>
+                {layers.map((layer) => (
+                  <FPVLayer
+                    key={layer.id}
+                    id={layer.id}
+                    from="layers"
+                    z={maptolayerz(layer, 'fpv')}
+                    multi={multi}
+                  />
+                ))}
+                {over.map((layer) => (
+                  <FPVLayer
+                    key={layer.id}
+                    from="over"
+                    id={layer.id}
+                    z={maptolayerz(layer, 'fpv') + drawheight + 1}
+                    multi={multi}
+                  />
+                ))}
               </group>
-              <group position={[BOARD_WIDTH * -drawwidth, 0, 0]}>
-                {west.layers.length > 0 ? (
-                  <>
-                    {west.layers.map((layer) => (
-                      <FPVLayer
-                        key={layer.id}
-                        id={layer.id}
-                        layers={west.layers}
-                        z={maptolayerz(layer, 'fpv')}
-                        multi={multi}
+              {exitpreviewgroups.map(({ key, preview, position }) => {
+                if (preview.layers.length > 0) {
+                  return (
+                    <group key={key} position={position}>
+                      {preview.layers.map((layer) => (
+                        <FPVLayer
+                          key={layer.id}
+                          id={layer.id}
+                          layers={preview.layers}
+                          z={maptolayerz(layer, 'fpv')}
+                          multi={multi}
+                        />
+                      ))}
+                    </group>
+                  )
+                }
+                if (CARDINAL_PREVIEW_KEYS.has(key)) {
+                  return (
+                    <group key={key} position={position} scale-z={2}>
+                      <PillarwMeshes
+                        width={BOARD_WIDTH}
+                        char={edgechars}
+                        color={edgecolors}
+                        bg={edgebgs}
                       />
-                    ))}
-                  </>
-                ) : (
-                  <group scale-z={2}>
-                    <PillarwMeshes
-                      width={BOARD_WIDTH}
-                      char={edgechars}
-                      color={edgecolors}
-                      bg={edgebgs}
-                    />
-                  </group>
-                )}
-              </group>
-              <group position={[0, BOARD_HEIGHT * -drawheight, 0]}>
-                {north.layers.length > 0 ? (
-                  <>
-                    {north.layers.map((layer) => (
-                      <FPVLayer
-                        key={layer.id}
-                        id={layer.id}
-                        layers={north.layers}
-                        z={maptolayerz(layer, 'fpv')}
-                        multi={multi}
-                      />
-                    ))}
-                  </>
-                ) : (
-                  <group scale-z={2}>
-                    <PillarwMeshes
-                      width={BOARD_WIDTH}
-                      char={edgechars}
-                      color={edgecolors}
-                      bg={edgebgs}
-                    />
-                  </group>
-                )}
-              </group>
-              <group position={[0, BOARD_HEIGHT * drawheight, 0]}>
-                {south.layers.length > 0 ? (
-                  <>
-                    {south.layers.map((layer) => (
-                      <FPVLayer
-                        key={layer.id}
-                        id={layer.id}
-                        layers={south.layers}
-                        z={maptolayerz(layer, 'fpv')}
-                        multi={multi}
-                      />
-                    ))}
-                  </>
-                ) : (
-                  <group scale-z={2}>
-                    <PillarwMeshes
-                      width={BOARD_WIDTH}
-                      char={edgechars}
-                      color={edgecolors}
-                      bg={edgebgs}
-                    />
-                  </group>
-                )}
-              </group>
-              {ne.layers.length > 0 && (
-                <group
-                  position={[
-                    BOARD_WIDTH * drawwidth,
-                    BOARD_HEIGHT * -drawheight,
-                    0,
-                  ]}
-                >
-                  <>
-                    {ne.layers.map((layer) => (
-                      <FPVLayer
-                        key={layer.id}
-                        id={layer.id}
-                        layers={ne.layers}
-                        z={maptolayerz(layer, 'fpv')}
-                        multi={multi}
-                      />
-                    ))}
-                  </>
-                </group>
-              )}
-              {nw.layers.length > 0 && (
-                <group
-                  position={[
-                    BOARD_WIDTH * -drawwidth,
-                    BOARD_HEIGHT * -drawheight,
-                    0,
-                  ]}
-                >
-                  <>
-                    {nw.layers.map((layer) => (
-                      <FPVLayer
-                        key={layer.id}
-                        id={layer.id}
-                        layers={nw.layers}
-                        z={maptolayerz(layer, 'fpv')}
-                        multi={multi}
-                      />
-                    ))}
-                  </>
-                </group>
-              )}
-              {se.layers.length > 0 && (
-                <group
-                  position={[
-                    BOARD_WIDTH * drawwidth,
-                    BOARD_HEIGHT * drawheight,
-                    0,
-                  ]}
-                >
-                  <>
-                    {se.layers.map((layer) => (
-                      <FPVLayer
-                        key={layer.id}
-                        id={layer.id}
-                        layers={se.layers}
-                        z={maptolayerz(layer, 'fpv')}
-                        multi={multi}
-                      />
-                    ))}
-                  </>
-                </group>
-              )}
-              {sw.layers.length > 0 && (
-                <group
-                  position={[
-                    BOARD_WIDTH * -drawwidth,
-                    BOARD_HEIGHT * drawheight,
-                    0,
-                  ]}
-                >
-                  <>
-                    {sw.layers.map((layer) => (
-                      <FPVLayer
-                        key={layer.id}
-                        id={layer.id}
-                        layers={sw.layers}
-                        z={maptolayerz(layer, 'fpv')}
-                        multi={multi}
-                      />
-                    ))}
-                  </>
-                </group>
-              )}
+                    </group>
+                  )
+                }
+                return null
+              })}
               <InspectorComponent z={-1.9} />
             </group>
           </RenderLayer>

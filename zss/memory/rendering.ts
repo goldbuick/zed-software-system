@@ -15,6 +15,7 @@ import { COLLISION, COLOR, DIR, NAME, PT } from 'zss/words/types'
 
 import { memoryreadobject } from './boardaccess'
 import { memorycornerexitboardids } from './boardcornerexits'
+import { memorydepth2exitboardids } from './boarddepth2exits'
 import {
   memoryboardlightingapplyobject,
   memoryboardlightingmarkplayer,
@@ -460,6 +461,10 @@ export type MEMORY_GADGET_LAYERS = {
   exitwest: string
   exitnorth: string
   exitsouth: string
+  exiteast2: string
+  exitwest2: string
+  exitnorth2: string
+  exitsouth2: string
   exitne: string
   exitnw: string
   exitse: string
@@ -556,6 +561,10 @@ function memoryreadgadgetlayersbody(
       exitwest: '',
       exitnorth: '',
       exitsouth: '',
+      exiteast2: '',
+      exitwest2: '',
+      exitnorth2: '',
+      exitsouth2: '',
       exitne: '',
       exitnw: '',
       exitse: '',
@@ -620,6 +629,7 @@ function memoryreadgadgetlayersbody(
   }
 
   const corners = memorycornerexitboardids(board)
+  const depth2 = memorydepth2exitboardids(board)
   return {
     id: id4all.join('|'),
     board: board.id,
@@ -627,6 +637,10 @@ function memoryreadgadgetlayersbody(
     exitwest: memoryreadboardbyaddress(board.exitwest ?? '')?.id ?? '',
     exitnorth: memoryreadboardbyaddress(board.exitnorth ?? '')?.id ?? '',
     exitsouth: memoryreadboardbyaddress(board.exitsouth ?? '')?.id ?? '',
+    exiteast2: depth2.exiteast2,
+    exitwest2: depth2.exitwest2,
+    exitnorth2: depth2.exitnorth2,
+    exitsouth2: depth2.exitsouth2,
     exitne: corners.exitne,
     exitnw: corners.exitnw,
     exitse: corners.exitse,

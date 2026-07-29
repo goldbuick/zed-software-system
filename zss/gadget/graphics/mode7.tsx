@@ -1,8 +1,8 @@
 import { useFrame } from '@react-three/fiber'
 import { DepthOfField } from '@react-three/postprocessing'
-import { damp3, dampE } from 'maath/easing'
+import { damp, damp3, dampE } from 'maath/easing'
 import { DepthOfFieldEffect } from 'postprocessing'
-import { memo, useCallback, useRef, useState } from 'react'
+import { memo, useCallback, useLayoutEffect, useRef, useState } from 'react'
 import {
   Group,
   PerspectiveCamera as PerspectiveCameraImpl,
@@ -14,9 +14,15 @@ import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import {
   FOCUS_ANIM_RATE,
   initfocusifneeded,
+  isfocuspanphase,
+  readgridbias,
+  stashfocusexitsnap,
   stepfocuswithboardtransition,
 } from 'zss/gadget/graphics/camerafocus'
-import { buildexitpreviewgroups } from 'zss/gadget/graphics/exitpreviewgroups'
+import {
+  buildexitpreviewgroups,
+  gadgettoexitsnap,
+} from 'zss/gadget/graphics/exitpreviewgroups'
 import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
 import { maptolayerz, maxspriteslayerz } from 'zss/gadget/graphics/layerz'
 import { Mode7Layer } from 'zss/gadget/graphics/mode7layer'
@@ -25,6 +31,15 @@ import {
   MODE7_Z_MID,
   MODE7_Z_NEAR,
 } from 'zss/gadget/graphics/mode7viewscale'
+import {
+  PANVIEW_IDLE,
+  type PanView,
+  panviewequals,
+  readboardgridforrender,
+  resolvepanviewforrender,
+  setdofplayerworld,
+  syncliveboardworldoffset,
+} from 'zss/gadget/graphics/panviewsync'
 import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
 import { tickerpublishfromtickers } from 'zss/gadget/graphics/tickeranchors'
 import { useScreenSize } from 'zss/gadget/userscreen'
@@ -121,6 +136,7 @@ export const Mode7Graphics = memo(function Mode7Graphics({
   const tiltref = useRef<Group>(null)
   const underref = useRef<Group>(null)
   const cornerref = useRef<Group>(null)
+  const liveboardref = useRef<Group>(null)
   const cameraref = useRef<PerspectiveCameraImpl>(null)
   const [boardcamera, setboardcamera] = useState<PerspectiveCameraImpl | null>(
     null,
@@ -128,6 +144,9 @@ export const Mode7Graphics = memo(function Mode7Graphics({
   const depthoffield = useRef<DepthOfFieldEffect>(null)
   const dofplayerworld = useRef(new Vector3())
   const dofcamworld = useRef(new Vector3())
+  const [panview, setpanview] = useState<PanView>(PANVIEW_IDLE)
+  const panviewref = useRef(panview)
+  panviewref.current = panview
 
   const bindboardcamera = useCallback((c: PerspectiveCameraImpl | null) => {
     cameraref.current = c
@@ -185,7 +204,7 @@ export const Mode7Graphics = memo(function Mode7Graphics({
       drawheight,
     )
 
-    const boardtransition = stepfocuswithboardtransition(
+    stepfocuswithboardtransition(
       userdata,
       control,
       currentboard,
@@ -193,22 +212,38 @@ export const Mode7Graphics = memo(function Mode7Graphics({
       tfocusy,
       delta,
     )
+    stashfocusexitsnap(userdata, gadgettoexitsnap(gadget))
+
+    const bias = readgridbias(userdata)
+    const panphase = isfocuspanphase(userdata)
+    const nextpanview: PanView = {
+      panphase,
+      biasdx: bias.dx,
+      biasdy: bias.dy,
+    }
+    if (!panviewequals(nextpanview, panviewref.current)) {
+      setpanview(nextpanview)
+    }
 
     const fx = (userdata.focusx + 0.5) * drawwidth
     const fy = (userdata.focusy + 0.5) * drawheight
     const targetcornerx = -fx
     const targetcornery = -fy
 
-    // handle board transition
-    if (boardtransition) {
-      cornerref.current.position.set(targetcornerx, targetcornery, 0)
+    if (panphase && bias.dx !== 0) {
+      cornerref.current.position.y = targetcornery
+      damp(cornerref.current.position, 'x', targetcornerx, FOCUS_ANIM_RATE, delta)
+    } else if (panphase && bias.dy !== 0) {
+      cornerref.current.position.x = targetcornerx
+      damp(cornerref.current.position, 'y', targetcornery, FOCUS_ANIM_RATE, delta)
+    } else {
+      damp3(
+        cornerref.current.position,
+        [targetcornerx, targetcornery, 0],
+        FOCUS_ANIM_RATE,
+        delta,
+      )
     }
-    damp3(
-      cornerref.current.position,
-      [targetcornerx, targetcornery, 0],
-      FOCUS_ANIM_RATE,
-      delta,
-    )
 
     // update dof (range/bokeh per zoom; focus distance tracks player in world space)
     switch (control.viewscale) {
@@ -229,16 +264,22 @@ export const Mode7Graphics = memo(function Mode7Graphics({
 
     const playerspritez = maxspriteslayerz(gadget.layers ?? [], 'mode7')
 
-    cornerref.current.updateMatrixWorld(true)
-    dofplayerworld.current.set(
-      (control.focusx + 0.5) * drawwidth,
-      (control.focusy + 0.5) * drawheight,
-      playerspritez,
-    )
-    cornerref.current.localToWorld(dofplayerworld.current)
-    cameraref.current.getWorldPosition(dofcamworld.current)
-    depthoffield.current.cocMaterial.focusDistance =
-      dofcamworld.current.distanceTo(dofplayerworld.current)
+    if (
+      depthoffield.current &&
+      setdofplayerworld(
+        dofplayerworld.current,
+        liveboardref.current,
+        control.focusx,
+        control.focusy,
+        drawwidth,
+        drawheight,
+        playerspritez,
+      )
+    ) {
+      cameraref.current.getWorldPosition(dofcamworld.current)
+      depthoffield.current.cocMaterial.focusDistance =
+        dofcamworld.current.distanceTo(dofplayerworld.current)
+    }
 
     tickerpublishfromtickers({
       tickers: gadget.tickers ?? [],
@@ -274,6 +315,10 @@ export const Mode7Graphics = memo(function Mode7Graphics({
       exitwest: state.gadget.exitwest,
       exitnorth: state.gadget.exitnorth,
       exitsouth: state.gadget.exitsouth,
+      exiteast2: state.gadget.exiteast2,
+      exitwest2: state.gadget.exitwest2,
+      exitnorth2: state.gadget.exitnorth2,
+      exitsouth2: state.gadget.exitsouth2,
       exitne: state.gadget.exitne,
       exitnw: state.gadget.exitnw,
       exitse: state.gadget.exitse,
@@ -283,11 +328,40 @@ export const Mode7Graphics = memo(function Mode7Graphics({
 
   const { gadget, layercachemap } = useGadgetClient.getState()
   const { over = [], under = [], layers = [] } = gadget
+  const camuserdata = cameraref.current?.userData ?? {}
+  const boardid = gadget.board ?? ''
+  const visualpan = resolvepanviewforrender(panview, camuserdata, boardid)
+  const rendergrid = readboardgridforrender(camuserdata, boardid)
+  useLayoutEffect(() => {
+    syncliveboardworldoffset(
+      liveboardref.current,
+      cameraref.current?.userData ?? {},
+      boardid,
+      drawwidth,
+      drawheight,
+    )
+  }, [
+    boardid,
+    rendergrid.x,
+    rendergrid.y,
+    visualpan.panphase,
+    visualpan.biasdx,
+    visualpan.biasdy,
+    drawwidth,
+    drawheight,
+  ])
   const exitpreviewgroups = buildexitpreviewgroups(
     gadget,
     layercachemap,
     drawwidth,
     drawheight,
+    {
+      boardgridx: rendergrid.x,
+      boardgridy: rendergrid.y,
+      bias: { dx: visualpan.biasdx, dy: visualpan.biasdy },
+      panphase: visualpan.panphase,
+      exitsnap: camuserdata.exitsnap,
+    },
   )
 
   const layersindex = under.length * 2 + 2
@@ -314,23 +388,25 @@ export const Mode7Graphics = memo(function Mode7Graphics({
             <group position={[centerx, centery, -1000]}>
               <group ref={tiltref}>
                 <group ref={cornerref}>
-                  {layers.map((layer) => (
-                    <Mode7Layer
-                      key={layer.id}
-                      id={layer.id}
-                      from="layers"
-                      z={maptolayerz(layer, 'mode7')}
-                    />
-                  ))}
-                  {over.map((layer) => (
-                    <Mode7Layer
-                      key={layer.id}
-                      id={layer.id}
-                      from="over"
-                      z={maptolayerz(layer, 'mode7') + drawheight * 1.75}
-                      shadowheight={1.25}
-                    />
-                  ))}
+                  <group ref={liveboardref}>
+                    {layers.map((layer) => (
+                      <Mode7Layer
+                        key={layer.id}
+                        id={layer.id}
+                        from="layers"
+                        z={maptolayerz(layer, 'mode7')}
+                      />
+                    ))}
+                    {over.map((layer) => (
+                      <Mode7Layer
+                        key={layer.id}
+                        id={layer.id}
+                        from="over"
+                        z={maptolayerz(layer, 'mode7') + drawheight * 1.75}
+                        shadowheight={1.25}
+                      />
+                    ))}
+                  </group>
                   {exitpreviewgroups.map(({ key, preview, position }) =>
                     preview.layers.length > 0 ? (
                       <group key={key} position={position}>

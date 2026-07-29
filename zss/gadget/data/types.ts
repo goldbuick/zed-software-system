@@ -280,6 +280,10 @@ export type GADGET_STATE = {
   exitwest: string
   exitnorth: string
   exitsouth: string
+  exiteast2: string
+  exitwest2: string
+  exitnorth2: string
+  exitsouth2: string
   exitne: string
   exitnw: string
   exitse: string

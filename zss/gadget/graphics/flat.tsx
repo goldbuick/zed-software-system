@@ -1,6 +1,6 @@
 import { useFrame } from '@react-three/fiber'
-import { damp3 } from 'maath/easing'
-import { memo, useCallback, useRef, useState } from 'react'
+import { damp, damp3 } from 'maath/easing'
+import { memo, useCallback, useLayoutEffect, useRef, useState } from 'react'
 import {
   Group,
   OrthographicCamera as OrthographicCameraImpl,
@@ -13,15 +13,29 @@ import { BOARD_INSPECTOR_Z_BUFFER } from 'zss/gadget/graphics/boardinspectorz'
 import {
   FOCUS_ANIM_RATE,
   initfocusifneeded,
+  isfocuspanphase,
+  readgridbias,
+  stashfocusexitsnap,
   stepfocuswithboardtransition,
 } from 'zss/gadget/graphics/camerafocus'
-import { buildexitpreviewgroups } from 'zss/gadget/graphics/exitpreviewgroups'
+import {
+  buildexitpreviewgroups,
+  gadgettoexitsnap,
+} from 'zss/gadget/graphics/exitpreviewgroups'
 import {
   flatcameradevassertboardinortho,
   flatcameratargetfocus,
 } from 'zss/gadget/graphics/flatcamerabounds'
 import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
 import { maptolayerz } from 'zss/gadget/graphics/layerz'
+import {
+  PANVIEW_IDLE,
+  type PanView,
+  panviewequals,
+  readboardgridforrender,
+  resolvepanviewforrender,
+  syncliveboardworldoffset,
+} from 'zss/gadget/graphics/panviewsync'
 import { tickerpublishfromtickers } from 'zss/gadget/graphics/tickeranchors'
 import { clamp } from 'zss/mapping/number'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
@@ -52,9 +66,13 @@ export const FlatGraphics = memo(function FlatGraphics({
     null,
   )
   const cornerref = useRef<Group>(null)
+  const liveboardref = useRef<Group>(null)
   const zoomref = useRef<Group>(null)
   const underref = useRef<Group>(null)
   const looktarget = useRef(new Vector3())
+  const [panview, setpanview] = useState<PanView>(PANVIEW_IDLE)
+  const panviewref = useRef(panview)
+  panviewref.current = panview
 
   const bindboardcamera = useCallback((c: OrthographicCameraImpl | null) => {
     cameraref.current = c
@@ -97,13 +115,32 @@ export const FlatGraphics = memo(function FlatGraphics({
       controlfocusy: control.focusy,
     })
 
-    const boardtransition = stepfocuswithboardtransition(
+    stepfocuswithboardtransition(
       userdata,
       control,
       currentboard,
       tfocusx,
       tfocusy,
       delta,
+    )
+    stashfocusexitsnap(userdata, gadgettoexitsnap(gadget))
+
+    const bias = readgridbias(userdata)
+    const panphase = isfocuspanphase(userdata)
+    const nextpanview: PanView = {
+      panphase,
+      biasdx: bias.dx,
+      biasdy: bias.dy,
+    }
+    // Schedule React commit only -- never flushSync mid-useFrame (remount race = void).
+    // Live board offset waits for useLayoutEffect after the strip mounts.
+    if (!panviewequals(nextpanview, panviewref.current)) {
+      setpanview(nextpanview)
+    }
+    const visualpan = resolvepanviewforrender(
+      panviewref.current,
+      userdata,
+      currentboard,
     )
 
     const fx = (userdata.focusx + 0.5) * drawwidth
@@ -113,16 +150,21 @@ export const FlatGraphics = memo(function FlatGraphics({
     const targetcornerx = -centerx / viewscale - fx
     const targetcornery = -centery / viewscale - fy
 
-    // handle board transition
-    if (boardtransition) {
-      cornerref.current.position.set(targetcornerx, targetcornery, 0)
+    if (visualpan.panphase && visualpan.biasdx !== 0) {
+      // Cardinal east/west: damp X only; hold Y so corner cannot drift diagonal.
+      cornerref.current.position.y = targetcornery
+      damp(cornerref.current.position, 'x', targetcornerx, FOCUS_ANIM_RATE, delta)
+    } else if (visualpan.panphase && visualpan.biasdy !== 0) {
+      cornerref.current.position.x = targetcornerx
+      damp(cornerref.current.position, 'y', targetcornery, FOCUS_ANIM_RATE, delta)
+    } else {
+      damp3(
+        cornerref.current.position,
+        [targetcornerx, targetcornery, 0],
+        FOCUS_ANIM_RATE,
+        delta,
+      )
     }
-    damp3(
-      cornerref.current.position,
-      [targetcornerx, targetcornery, 0],
-      FOCUS_ANIM_RATE,
-      delta,
-    )
 
     if (FLAT_CAMERA_ORTHO_ASSERT) {
       const boardwscaled = BOARD_WIDTH * drawwidth * viewscale
@@ -183,6 +225,10 @@ export const FlatGraphics = memo(function FlatGraphics({
   useGadgetClient((state) => state.gadget.exitwest)
   useGadgetClient((state) => state.gadget.exitnorth)
   useGadgetClient((state) => state.gadget.exitsouth)
+  useGadgetClient((state) => state.gadget.exiteast2)
+  useGadgetClient((state) => state.gadget.exitwest2)
+  useGadgetClient((state) => state.gadget.exitnorth2)
+  useGadgetClient((state) => state.gadget.exitsouth2)
   useGadgetClient((state) => state.gadget.exitne)
   useGadgetClient((state) => state.gadget.exitnw)
   useGadgetClient((state) => state.gadget.exitse)
@@ -190,11 +236,41 @@ export const FlatGraphics = memo(function FlatGraphics({
 
   const { gadget, layercachemap } = useGadgetClient.getState()
   const { over = [], under = [], layers = [] } = gadget
+  const camuserdata = cameraref.current?.userData ?? {}
+  const boardid = gadget.board ?? ''
+  const visualpan = resolvepanviewforrender(panview, camuserdata, boardid)
+  const rendergrid = readboardgridforrender(camuserdata, boardid)
+  // Live board always at path-relative world slot (no settle snap / bias offset).
+  useLayoutEffect(() => {
+    syncliveboardworldoffset(
+      liveboardref.current,
+      cameraref.current?.userData ?? {},
+      boardid,
+      drawwidth,
+      drawheight,
+    )
+  }, [
+    boardid,
+    rendergrid.x,
+    rendergrid.y,
+    visualpan.panphase,
+    visualpan.biasdx,
+    visualpan.biasdy,
+    drawwidth,
+    drawheight,
+  ])
   const exitpreviewgroups = buildexitpreviewgroups(
     gadget,
     layercachemap,
     drawwidth,
     drawheight,
+    {
+      boardgridx: rendergrid.x,
+      boardgridy: rendergrid.y,
+      bias: { dx: visualpan.biasdx, dy: visualpan.biasdy },
+      panphase: visualpan.panphase,
+      exitsnap: camuserdata.exitsnap,
+    },
   )
 
   // z of the topmost board layer (must stay in sync with FlatLayer z props below)
@@ -233,22 +309,24 @@ export const FlatGraphics = memo(function FlatGraphics({
         <group position={[centerx, centery, 0]}>
           <group ref={zoomref}>
             <group ref={cornerref}>
-              {layers.map((layer, i) => (
-                <FlatLayer
-                  key={layer.id}
-                  from="layers"
-                  id={layer.id}
-                  z={1 + i * 2}
-                />
-              ))}
-              {over.map((layer, i) => (
-                <FlatLayer
-                  key={layer.id}
-                  from="over"
-                  id={layer.id}
-                  z={1 + layers.length + i * 2}
-                />
-              ))}
+              <group ref={liveboardref}>
+                {layers.map((layer, i) => (
+                  <FlatLayer
+                    key={layer.id}
+                    from="layers"
+                    id={layer.id}
+                    z={1 + i * 2}
+                  />
+                ))}
+                {over.map((layer, i) => (
+                  <FlatLayer
+                    key={layer.id}
+                    from="over"
+                    id={layer.id}
+                    z={1 + layers.length + i * 2}
+                  />
+                ))}
+              </group>
               {exitpreviewgroups.map(({ key, preview, position }) =>
                 preview.layers.length > 0 ? (
                   <group key={key} position={position}>
