@@ -360,6 +360,7 @@ export const Mode7Graphics = memo(function Mode7Graphics({
       boardgridy: rendergrid.y,
       bias: { dx: visualpan.biasdx, dy: visualpan.biasdy },
       panphase: visualpan.panphase,
+      exitsnap: camuserdata.exitsnap,
     },
   )
 

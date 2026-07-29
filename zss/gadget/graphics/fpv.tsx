@@ -70,7 +70,20 @@ function maptofov(viewscale: VIEWSCALE): number {
 }
 
 const FOV_MATRIX_EPS = 1e-3
-const CARDINAL_PREVIEW_KEYS = new Set(['e', 'w', 'n', 's'])
+const CARDINAL_PREVIEW_KEYS = new Set([
+  'e',
+  'w',
+  'n',
+  's',
+  'de',
+  'dw',
+  'dn',
+  'ds',
+  'e2',
+  'w2',
+  'n2',
+  's2',
+])
 
 // board edge meshes
 const edgechars: number[] = []
@@ -396,6 +409,7 @@ export const FPVGraphics = memo(function FPVGraphics({
       boardgridy: rendergrid.y,
       bias: { dx: visualpan.biasdx, dy: visualpan.biasdy },
       panphase: visualpan.panphase,
+      exitsnap: camuserdata.exitsnap,
     },
   )
 

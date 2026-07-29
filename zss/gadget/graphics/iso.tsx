@@ -319,6 +319,7 @@ export const IsoGraphics = memo(function IsoGraphics({
       boardgridy: rendergrid.y,
       bias: { dx: visualpan.biasdx, dy: visualpan.biasdy },
       panphase: visualpan.panphase,
+      exitsnap: camuserdata.exitsnap,
     },
   )
 

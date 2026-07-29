@@ -40,12 +40,18 @@ export type ExitPreviewBuildOpts = {
   bias?: GridBias
   /** When true, also place depth-2 in the travel direction. */
   panphase?: boolean
+  /**
+   * Departure-board exit snapshot (stashed while steady). During panphase,
+   * union the departure 3x3 with the live 3x3 so trail boards stay until settle.
+   */
+  exitsnap?: FocusExitSnap
 }
 
 function fogdirforkey(key: string): EXIT_DIRECTION {
   switch (key) {
     case 'e':
     case 'e2':
+    case 'c':
       return 'e'
     case 'w':
     case 'w2':
@@ -69,27 +75,6 @@ function fogdirforkey(key: string): EXIT_DIRECTION {
   }
 }
 
-function pushgroup(
-  out: ExitPreviewGroup[],
-  key: string,
-  boardid: string,
-  layercachemap: Map<string, LAYER[]>,
-  hasunderboard: boolean,
-  x: number,
-  y: number,
-) {
-  out.push({
-    key,
-    preview: resolveexitpreview(
-      boardid,
-      layercachemap,
-      fogdirforkey(key),
-      hasunderboard,
-    ),
-    position: [x, y, 0],
-  })
-}
-
 function slotpos(
   gx: number,
   gy: number,
@@ -104,10 +89,15 @@ function slotpos(
   }
 }
 
+function slotkey(x: number, y: number): string {
+  return `${x},${y}`
+}
+
 /**
- * Adjacent-board exit previews at path-relative world slots (flat / mode7 / iso).
+ * Adjacent-board exit previews at path-relative world slots (flat / mode7 / iso / fpv).
  * Live board occupies (boardgridx, boardgridy); neighbors are placed around it.
- * Depth-2 is added only while panphase + travel bias is set.
+ * During panphase: union departure 3x3 (from exitsnap) + live 3x3 + depth-2;
+ * trail boards are removed only when panphase clears.
  */
 export function buildexitpreviewgroups(
   gadget: ExitBoardGadget,
@@ -123,34 +113,94 @@ export function buildexitpreviewgroups(
   const gy = opts.boardgridy ?? 0
   const w = BOARD_WIDTH * drawwidth
   const h = BOARD_HEIGHT * drawheight
-  const out: ExitPreviewGroup[] = []
+  const livex = gx * w
+  const livey = gy * h
+  const slots = new Map<string, ExitPreviewGroup>()
 
-  const place = (key: string, boardid: string, dx: number, dy: number) => {
-    const p = slotpos(gx, gy, dx, dy, w, h)
-    pushgroup(out, key, boardid, layercachemap, hasunderboard, p.x, p.y)
+  const placeslot = (
+    key: string,
+    boardid: string,
+    absx: number,
+    absy: number,
+  ) => {
+    // Live mesh occupies this slot; never draw a preview on top.
+    if (absx === livex && absy === livey) {
+      return
+    }
+    slots.set(slotkey(absx, absy), {
+      key,
+      preview: resolveexitpreview(
+        boardid,
+        layercachemap,
+        fogdirforkey(key),
+        hasunderboard,
+      ),
+      position: [absx, absy, 0],
+    })
   }
 
-  place('e', gadget.exiteast, 1, 0)
-  place('w', gadget.exitwest, -1, 0)
-  place('n', gadget.exitnorth, 0, -1)
-  place('s', gadget.exitsouth, 0, 1)
-  place('ne', gadget.exitne, 1, -1)
-  place('nw', gadget.exitnw, -1, -1)
-  place('se', gadget.exitse, 1, 1)
-  place('sw', gadget.exitsw, -1, 1)
+  const placeat = (
+    originx: number,
+    originy: number,
+    key: string,
+    boardid: string,
+    dx: number,
+    dy: number,
+  ) => {
+    const p = slotpos(originx, originy, dx, dy, w, h)
+    placeslot(key, boardid, p.x, p.y)
+  }
+
+  const placeneighbors = (
+    originx: number,
+    originy: number,
+    exits: {
+      exiteast: string
+      exitwest: string
+      exitnorth: string
+      exitsouth: string
+      exitne: string
+      exitnw: string
+      exitse: string
+      exitsw: string
+    },
+    keyprefix = '',
+  ) => {
+    placeat(originx, originy, `${keyprefix}e`, exits.exiteast, 1, 0)
+    placeat(originx, originy, `${keyprefix}w`, exits.exitwest, -1, 0)
+    placeat(originx, originy, `${keyprefix}n`, exits.exitnorth, 0, -1)
+    placeat(originx, originy, `${keyprefix}s`, exits.exitsouth, 0, 1)
+    placeat(originx, originy, `${keyprefix}ne`, exits.exitne, 1, -1)
+    placeat(originx, originy, `${keyprefix}nw`, exits.exitnw, -1, -1)
+    placeat(originx, originy, `${keyprefix}se`, exits.exitse, 1, 1)
+    placeat(originx, originy, `${keyprefix}sw`, exits.exitsw, -1, 1)
+  }
+
+  const snap = opts.exitsnap
+  const hasbias = bias.dx !== 0 || bias.dy !== 0
+  if (panphase && snap && hasbias) {
+    const departx = gx - bias.dx
+    const departy = gy - bias.dy
+    // Departure 3x3 first (trail retained until settle).
+    placeat(departx, departy, 'c', snap.board, 0, 0)
+    placeneighbors(departx, departy, snap, 'd')
+  }
+
+  // Live 3x3 overwrites overlapping slots (prefer current gadget ids).
+  placeneighbors(gx, gy, gadget)
 
   if (panphase && bias.dx === 1) {
-    place('e2', gadget.exiteast2 || gadget.exiteast, 2, 0)
+    placeat(gx, gy, 'e2', gadget.exiteast2 || gadget.exiteast, 2, 0)
   } else if (panphase && bias.dx === -1) {
-    place('w2', gadget.exitwest2 || gadget.exitwest, -2, 0)
+    placeat(gx, gy, 'w2', gadget.exitwest2 || gadget.exitwest, -2, 0)
   }
   if (panphase && bias.dy === -1) {
-    place('n2', gadget.exitnorth2 || gadget.exitnorth, 0, -2)
+    placeat(gx, gy, 'n2', gadget.exitnorth2 || gadget.exitnorth, 0, -2)
   } else if (panphase && bias.dy === 1) {
-    place('s2', gadget.exitsouth2 || gadget.exitsouth, 0, 2)
+    placeat(gx, gy, 's2', gadget.exitsouth2 || gadget.exitsouth, 0, 2)
   }
 
-  return out
+  return [...slots.values()]
 }
 
 export function gadgettoexitsnap(

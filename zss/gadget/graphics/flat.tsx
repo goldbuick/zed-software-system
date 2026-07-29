@@ -269,6 +269,7 @@ export const FlatGraphics = memo(function FlatGraphics({
       boardgridy: rendergrid.y,
       bias: { dx: visualpan.biasdx, dy: visualpan.biasdy },
       panphase: visualpan.panphase,
+      exitsnap: camuserdata.exitsnap,
     },
   )
 

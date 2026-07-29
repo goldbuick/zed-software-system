@@ -370,6 +370,62 @@ describe('buildexitpreviewgroups world slots', () => {
     const e2 = panning.find((g) => g.key === 'e2')
     expect(e2?.position[0]).toBe(3 * BOARD_WIDTH * drawwidth)
   })
+
+  it('retains departure trail during panphase until settle', () => {
+    const snap = {
+      board: 'a',
+      exiteast: 'b',
+      exitwest: 'trail-w',
+      exitnorth: 'trail-n',
+      exitsouth: 'trail-s',
+      exiteast2: '',
+      exitwest2: '',
+      exitnorth2: '',
+      exitsouth2: '',
+      exitne: '',
+      exitnw: '',
+      exitse: '',
+      exitsw: '',
+    }
+    const panning = buildexitpreviewgroups(
+      gadgetbase(),
+      emptycache,
+      drawwidth,
+      drawheight,
+      {
+        boardgridx: 1,
+        boardgridy: 0,
+        bias: { dx: 1, dy: 0 },
+        panphase: true,
+        exitsnap: snap,
+      },
+    )
+    // Departure west at gx-2 (depart origin 0, west -1)
+    const trail = panning.find((g) => g.position[0] === -BOARD_WIDTH * drawwidth)
+    expect(trail).toBeDefined()
+    expect(trail?.key).toBe('dw')
+    expect(panning.find((g) => g.key === 'e2')?.position[0]).toBe(
+      3 * BOARD_WIDTH * drawwidth,
+    )
+
+    const settled = buildexitpreviewgroups(
+      gadgetbase(),
+      emptycache,
+      drawwidth,
+      drawheight,
+      {
+        boardgridx: 1,
+        boardgridy: 0,
+        bias: { dx: 0, dy: 0 },
+        panphase: false,
+        exitsnap: snap,
+      },
+    )
+    expect(
+      settled.find((g) => g.position[0] === -BOARD_WIDTH * drawwidth),
+    ).toBeUndefined()
+    expect(settled.find((g) => g.key === 'e2')).toBeUndefined()
+  })
 })
 
 describe('boundary coord evidence (global board space)', () => {
