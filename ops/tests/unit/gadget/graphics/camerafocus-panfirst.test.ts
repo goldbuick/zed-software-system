@@ -1,27 +1,25 @@
 import {
   type FocusUserData,
   FOCUS_ANIM_RATE,
-  applypanrecenter,
   isfocuspanphase,
-  ispanrecenterpending,
+  liveboardworldoffset,
+  readboardgrid,
   readgridbias,
-  shiftcornerforpanrecenter,
   stepfocuswithboardtransition,
+  worldcellfromlocal,
 } from 'zss/gadget/graphics/camerafocus'
-import {
-  buildexitpreviewgroups,
-  type ExitPreviewBuildOpts,
-} from 'zss/gadget/graphics/exitpreviewgroups'
+import { buildexitpreviewgroups } from 'zss/gadget/graphics/exitpreviewgroups'
 import {
   biasfrompendingboardchange,
   PANVIEW_IDLE,
+  readboardgridforrender,
   resolvepanviewforrender,
 } from 'zss/gadget/graphics/panviewsync'
 import type { LAYER } from 'zss/gadget/data/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 
-describe('pan-first camerafocus', () => {
-  it('starts panphase without immediate ±board focus snap on edge exit', () => {
+describe('global board space camerafocus', () => {
+  it('bumps boardgridx on east exit and keeps focus continuous', () => {
     const userdata: FocusUserData = {
       focusx: BOARD_WIDTH - 1,
       focusy: 10,
@@ -29,6 +27,8 @@ describe('pan-first camerafocus', () => {
       lfocusy: 10,
       focussmooth: FOCUS_ANIM_RATE,
       currentboard: 'board-a',
+      boardgridx: 0,
+      boardgridy: 0,
     }
     const cornersnap = stepfocuswithboardtransition(
       userdata,
@@ -40,15 +40,16 @@ describe('pan-first camerafocus', () => {
     )
     expect(cornersnap).toBe(false)
     expect(isfocuspanphase(userdata)).toBe(true)
+    expect(readboardgrid(userdata)).toEqual({ x: 1, y: 0 })
     expect(readgridbias(userdata)).toEqual({ dx: 1, dy: 0 })
-    // Departure-frame focus kept (no immediate focus += -BOARD_WIDTH)
+    // Focus stays near prior world cell (no -BOARD remap)
     expect(userdata.focusx).toBeGreaterThan(BOARD_WIDTH - 2)
     expect(userdata.focusx).toBeLessThan(BOARD_WIDTH)
-    expect(userdata.focussmooth).toBeGreaterThan(1)
     expect(userdata.pantargetx).toBe(BOARD_WIDTH)
+    expect(userdata.focussmooth).toBeGreaterThan(1)
   })
 
-  it('recenters and clears bias after pan settles', () => {
+  it('settle clears panphase only -- focus stays in world space', () => {
     const userdata: FocusUserData = {
       focusx: BOARD_WIDTH - 1,
       focusy: 10,
@@ -56,6 +57,8 @@ describe('pan-first camerafocus', () => {
       lfocusy: 10,
       focussmooth: FOCUS_ANIM_RATE,
       currentboard: 'board-a',
+      boardgridx: 0,
+      boardgridy: 0,
     }
     stepfocuswithboardtransition(
       userdata,
@@ -65,11 +68,10 @@ describe('pan-first camerafocus', () => {
       10,
       0.016,
     )
-    // Jump near target to force settle on next step
     userdata.focusx = userdata.pantargetx
     userdata.focusy = userdata.pantargety
     userdata.focussmooth = FOCUS_ANIM_RATE
-    const cornersnap = stepfocuswithboardtransition(
+    stepfocuswithboardtransition(
       userdata,
       { focusx: 0, focusy: 10 },
       'board-b',
@@ -77,27 +79,25 @@ describe('pan-first camerafocus', () => {
       10,
       0.016,
     )
-    expect(cornersnap).toBe(false)
     expect(isfocuspanphase(userdata)).toBe(false)
-    expect(ispanrecenterpending(userdata)).toBe(true)
-    // Focus still in departure frame until layout applypanrecenter
-    expect(userdata.focusx).toBe(BOARD_WIDTH)
     expect(readgridbias(userdata)).toEqual({ dx: 0, dy: 0 })
-    expect(applypanrecenter(userdata)).toEqual({ dx: 1, dy: 0 })
-    expect(userdata.focusx).toBe(0)
-    expect(ispanrecenterpending(userdata)).toBe(false)
+    expect(readboardgrid(userdata)).toEqual({ x: 1, y: 0 })
+    // No remap: focus remains at world pantarget
+    expect(userdata.focusx).toBe(BOARD_WIDTH)
   })
 
-  it('does not start panphase on non-edge board change', () => {
+  it('resets grid and teleports focus on non-edge board change', () => {
     const userdata: FocusUserData = {
-      focusx: 20,
+      focusx: BOARD_WIDTH + 5,
       focusy: 10,
       lfocusx: 20,
       lfocusy: 10,
       focussmooth: FOCUS_ANIM_RATE,
       currentboard: 'board-a',
+      boardgridx: 2,
+      boardgridy: 1,
     }
-    const cornersnap = stepfocuswithboardtransition(
+    stepfocuswithboardtransition(
       userdata,
       { focusx: 5, focusy: 10 },
       'board-b',
@@ -105,9 +105,10 @@ describe('pan-first camerafocus', () => {
       10,
       0.016,
     )
-    expect(cornersnap).toBe(false)
     expect(isfocuspanphase(userdata)).toBe(false)
-    expect(readgridbias(userdata)).toEqual({ dx: 0, dy: 0 })
+    expect(readboardgrid(userdata)).toEqual({ x: 0, y: 0 })
+    expect(userdata.focusx).toBe(5)
+    expect(userdata.focusy).toBe(10)
   })
 
   it('east exit freezes lagged focusy (no diagonal toward control Y)', () => {
@@ -119,6 +120,8 @@ describe('pan-first camerafocus', () => {
       lfocusy: 10,
       focussmooth: FOCUS_ANIM_RATE,
       currentboard: 'board-a',
+      boardgridx: 0,
+      boardgridy: 0,
     }
     stepfocuswithboardtransition(
       userdata,
@@ -145,7 +148,7 @@ describe('pan-first camerafocus', () => {
     expect(userdata.focusx).toBeGreaterThan(BOARD_WIDTH - 1)
   })
 
-  it('north exit freezes lagged focusx (no diagonal toward control X)', () => {
+  it('north exit freezes lagged focusx and bumps boardgridy', () => {
     const laggedx = 4.3
     const userdata: FocusUserData = {
       focusx: laggedx,
@@ -154,6 +157,8 @@ describe('pan-first camerafocus', () => {
       lfocusy: 0,
       focussmooth: FOCUS_ANIM_RATE,
       currentboard: 'board-a',
+      boardgridx: 0,
+      boardgridy: 0,
     }
     stepfocuswithboardtransition(
       userdata,
@@ -164,6 +169,7 @@ describe('pan-first camerafocus', () => {
       0.016,
     )
     expect(isfocuspanphase(userdata)).toBe(true)
+    expect(readboardgrid(userdata)).toEqual({ x: 0, y: -1 })
     expect(userdata.pantargetx).toBe(laggedx)
     expect(readgridbias(userdata)).toEqual({ dx: 0, dy: -1 })
     for (let i = 0; i < 8; ++i) {
@@ -179,56 +185,16 @@ describe('pan-first camerafocus', () => {
     expect(userdata.focusx).toBe(laggedx)
   })
 
-  it('holds focus across frames until applypanrecenter after settle', () => {
-    const userdata: FocusUserData = {
-      focusx: BOARD_WIDTH - 1,
-      focusy: 10,
-      lfocusx: BOARD_WIDTH - 1,
-      lfocusy: 10,
-      focussmooth: FOCUS_ANIM_RATE,
-      currentboard: 'board-a',
-    }
-    stepfocuswithboardtransition(
-      userdata,
-      { focusx: 0, focusy: 10 },
-      'board-b',
-      0,
-      10,
-      0.016,
-    )
-    userdata.focusx = userdata.pantargetx
-    userdata.focusy = userdata.pantargety
-    userdata.focussmooth = FOCUS_ANIM_RATE
-    stepfocuswithboardtransition(
-      userdata,
-      { focusx: 0, focusy: 10 },
-      'board-b',
-      0,
-      10,
-      0.016,
-    )
-    const before = userdata.focusx
-    expect(before).toBe(BOARD_WIDTH)
-    stepfocuswithboardtransition(
-      userdata,
-      { focusx: 0, focusy: 10 },
-      'board-b',
-      0,
-      10,
-      0.016,
-    )
-    expect(userdata.focusx).toBe(before)
-    applypanrecenter(userdata)
-    expect(userdata.focusx).toBe(0)
-  })
-
-  it('shiftcornerforpanrecenter preserves lag via board delta', () => {
-    const corner = { x: 100, y: 50 }
-    shiftcornerforpanrecenter(corner, { dx: 1, dy: 0 }, 8, 14)
-    expect(corner.x).toBe(100 + BOARD_WIDTH * 8)
-    expect(corner.y).toBe(50)
-    shiftcornerforpanrecenter(corner, { dx: 0, dy: -1 }, 8, 14)
-    expect(corner.y).toBe(50 - BOARD_HEIGHT * 14)
+  it('worldcellfromlocal and liveboardworldoffset match grid slots', () => {
+    expect(worldcellfromlocal(2, -1, 3, 4)).toEqual({
+      x: 2 * BOARD_WIDTH + 3,
+      y: -1 * BOARD_HEIGHT + 4,
+    })
+    const userdata: FocusUserData = { boardgridx: 1, boardgridy: 0 }
+    expect(liveboardworldoffset(userdata, 8, 14)).toEqual({
+      x: BOARD_WIDTH * 8,
+      y: 0,
+    })
   })
 })
 
@@ -301,6 +267,17 @@ describe('panviewsync coherence', () => {
     })
   })
 
+  it('pending board change advances render grid before useFrame bump', () => {
+    const userdata: FocusUserData = {
+      currentboard: 'c',
+      exitsnap: snap,
+      panphase: false,
+      boardgridx: 0,
+      boardgridy: 0,
+    }
+    expect(readboardgridforrender(userdata, 'e')).toEqual({ x: 1, y: 0 })
+  })
+
   it('prefers active userdata pan over idle committed during enter', () => {
     const userdata: FocusUserData = {
       currentboard: 'e',
@@ -317,7 +294,7 @@ describe('panviewsync coherence', () => {
   })
 })
 
-describe('buildexitpreviewgroups depth-2', () => {
+describe('buildexitpreviewgroups world slots', () => {
   const emptycache = new Map<string, LAYER[]>()
   const drawwidth = 1
   const drawheight = 1
@@ -340,58 +317,49 @@ describe('buildexitpreviewgroups depth-2', () => {
     }
   }
 
-  it('places e2 at 2W when bias east in steady mode', () => {
+  it('places neighbors relative to boardgridx', () => {
     const groups = buildexitpreviewgroups(
       gadgetbase(),
       emptycache,
       drawwidth,
       drawheight,
-      { bias: { dx: 1, dy: 0 } },
+      { boardgridx: 1, boardgridy: 0 },
     )
-    const e2 = groups.find((g) => g.key === 'e2')
-    expect(e2).toBeDefined()
-    expect(e2?.position[0]).toBe(2 * BOARD_WIDTH * drawwidth)
+    const e = groups.find((g) => g.key === 'e')
+    const w = groups.find((g) => g.key === 'w')
+    expect(e?.position[0]).toBe(2 * BOARD_WIDTH * drawwidth)
+    expect(w?.position[0]).toBe(0)
   })
 
-  it('panphase departure window places depth-2 ahead and skips live slot', () => {
-    const opts: ExitPreviewBuildOpts = {
-      bias: { dx: 1, dy: 0 },
-      panphase: true,
-      skipliveboardpreview: true,
-      exitsnap: {
-        board: 'c',
-        exiteast: 'e',
-        exitwest: 'w',
-        exitnorth: 'n',
-        exitsouth: 's',
-        exiteast2: 'ee',
-        exitwest2: 'ww',
-        exitnorth2: 'nn',
-        exitsouth2: 'ss',
-        exitne: '',
-        exitnw: '',
-        exitse: '',
-        exitsw: '',
-      },
-    }
-    const groups = buildexitpreviewgroups(
+  it('places e2 at gx+2 only while panphase', () => {
+    const steady = buildexitpreviewgroups(
       gadgetbase(),
       emptycache,
       drawwidth,
       drawheight,
-      opts,
+      { boardgridx: 1, boardgridy: 0, bias: { dx: 1, dy: 0 } },
     )
-    expect(groups.find((g) => g.key === 'e')).toBeUndefined()
-    expect(groups.find((g) => g.key === 'c')).toBeDefined()
-    const e2 = groups.find((g) => g.key === 'e2')
-    expect(e2?.position[0]).toBe(2 * BOARD_WIDTH * drawwidth)
-    // During pan east, EE comes from current gadget.exiteast
-    expect(e2?.preview).toBeDefined()
+    expect(steady.find((g) => g.key === 'e2')).toBeUndefined()
+
+    const panning = buildexitpreviewgroups(
+      gadgetbase(),
+      emptycache,
+      drawwidth,
+      drawheight,
+      {
+        boardgridx: 1,
+        boardgridy: 0,
+        bias: { dx: 1, dy: 0 },
+        panphase: true,
+      },
+    )
+    const e2 = panning.find((g) => g.key === 'e2')
+    expect(e2?.position[0]).toBe(3 * BOARD_WIDTH * drawwidth)
   })
 })
 
-describe('boundary coord evidence (pan-first)', () => {
-  it('BC2: edge cross starts panphase without immediate focus remap', () => {
+describe('boundary coord evidence (global board space)', () => {
+  it('BC2: edge cross bumps grid without focus remap', () => {
     const userdata: FocusUserData = {
       focusx: BOARD_WIDTH - 1,
       focusy: 10,
@@ -399,6 +367,8 @@ describe('boundary coord evidence (pan-first)', () => {
       lfocusy: 10,
       focussmooth: 0.05,
       currentboard: 'board-a',
+      boardgridx: 0,
+      boardgridy: 0,
     }
     const snapped = stepfocuswithboardtransition(
       userdata,
@@ -410,9 +380,9 @@ describe('boundary coord evidence (pan-first)', () => {
     )
     expect(snapped).toBe(false)
     expect(userdata.panphase).toBe(true)
+    expect(userdata.boardgridx).toBe(1)
     expect(userdata.focusx).toBeGreaterThan(BOARD_WIDTH - 2)
     expect(userdata.focusx).toBeLessThan(BOARD_WIDTH)
-    expect(userdata.focussmooth).toBeGreaterThan(1)
   })
 
   it('BC2: non-edge board change does not start panphase', () => {
@@ -423,6 +393,8 @@ describe('boundary coord evidence (pan-first)', () => {
       lfocusy: 10,
       focussmooth: 0.05,
       currentboard: 'board-a',
+      boardgridx: 0,
+      boardgridy: 0,
     }
     const snapped = stepfocuswithboardtransition(
       userdata,
@@ -444,6 +416,8 @@ describe('boundary coord evidence (pan-first)', () => {
       lfocusy: 0,
       focussmooth: 0.05,
       currentboard: 'board-a',
+      boardgridx: 0,
+      boardgridy: 0,
     }
     stepfocuswithboardtransition(
       userdata,
@@ -455,5 +429,6 @@ describe('boundary coord evidence (pan-first)', () => {
     )
     expect(userdata.panphase).toBe(true)
     expect(readgridbias(userdata)).toEqual({ dx: 0, dy: -1 })
+    expect(readboardgrid(userdata)).toEqual({ x: 0, y: -1 })
   })
 })

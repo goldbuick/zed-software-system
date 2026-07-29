@@ -1,97 +1,75 @@
-# Design: directional board-grid pan
+# Design: directional board-grid pan (global board space)
 
-**Status:** implemented (v1) + wait-before-start/settle  
-**Goal:** Extend the existing 3×3 exit-preview grid with one extra column or row in the travel direction during edge-exit camera glides, so the pan never hits void. Build on `buildexitpreviewgroups` + `stepfocuswithboardtransition` — no new camera system.
+**Status:** implemented (global slots, no settle snap)  
+**Goal:** Edge-exit camera glides across a path-relative board grid. Boards are placed at stable world slots; board changes **add/remove** neighbor meshes. Focus stays in world cell coords — **no** focus/corner/live rebase on settle.
 
-**Sync (wait-before-start/settle):** Live-board offset and exit-preview grid share one visual `PanView` ([`panviewsync.ts`](../../zss/gadget/graphics/panviewsync.ts)). On board change, pending bias mounts the departure strip in React first; `useLayoutEffect` offsets the live board before paint. On settle, focus remap is **deferred** (`panrecenterpending`); committed panview lags until React clears the strip, then the same `useLayoutEffect` runs `applypanrecenter` + corner **delta** (not hard snap — preserves damp lag) + live to origin. **Never `flushSync` mid-`useFrame`**. Live board must not move in `useFrame` ahead of the committed strip.
+**Model:**
 
-**Default:** During a cardinal board change, render **one extra board in the travel direction** (depth-2) and **pan first** in the departure frame; only after the pan settles, snap/recenter and clear the extra edge. Do **not** always render a full 5×5. Pan motion is **cardinal only** (travel-axis damp; cross-axis frozen).
+```text
+worldfocus = boardgridx * BOARD_WIDTH + localfocusx
+live board at (boardgridx * W * dw, boardgridy * H * dh)
+neighbors at their grid slots relative to the same origin
+```
+
+On east edge exit: `boardgridx += 1`. Live content swaps to the new board **at the new slot**. Old board remains as a west preview. Settle only drops depth-2 / clears `panphase`.
+
+**Sync:** Live offset and exit-preview grid share `boardgridx/y` ([`panviewsync.ts`](../../zss/gadget/graphics/panviewsync.ts) `readboardgridforrender` includes pending edge bump before useFrame). Depth-2 via `panphase` + bias. **Never `flushSync` mid-`useFrame`**. No settle focus remap.
+
+**Default:** During a cardinal board change, render **one extra board in the travel direction** (depth-2) and glide in world space. Steady play is a 3×3. Pan motion is **cardinal only** (travel-axis damp; cross-axis frozen).
+
+`#goto` / non-edge: reset `boardgridx/y` to `0` and teleport focus to local control.
 
 ## Implementation checklist
 
-- [x] Add cardinal depth-2 exit id resolution and plumb onto `MEMORY_GADGET_LAYERS` / `GADGET_STATE`
-- [x] Track travel `GridBias` in camerafocus for the edge-glide lifetime (set on edge exit, clear when settled)
-- [x] Extend `buildexitpreviewgroups` to place ±2 board offsets when bias is non-zero
-- [x] Pass bias from flat/mode7/iso into the preview builder
-- [x] Unit tests for depth-2 positions, bias set/clear, and exit id walk
-- [x] **Pan first, then camera snap** (invert legacy snap-then-glide)
-- [x] Cardinal axis lock (no diagonal glide)
-- [x] Wait-before-start/settle (no flushSync; layout-only live offset)
-- [x] Atomic settle recenter (deferred focus remap + layout live 0 + corner snap)
+- [x] Cardinal depth-2 exit ids on gadget layers
+- [x] Path-relative `boardgridx/y` + world focus targets
+- [x] Exit previews placed by grid slots (no departure-window rebase)
+- [x] Live board always at world slot
+- [x] Cardinal axis lock
+- [x] Settle clears panphase only (no snap)
 
-## Sequencing (v1)
+## Sequencing
 
 ```text
-OLD:  board change → SNAP focus → short pan → settle
-NEW:  board change → bias + depth-2 → PAN in departure frame → SNAP/recenter + clear bias
+Steady:     3x3 around (gx, gy); focus = gx*W + local
+Edge exit:  gx += bias; live at new slot; depth-2 ahead; glide world focus
+Settle:     clear panphase / depth-2; focus unchanged
+Goto:       gx=gy=0; teleport focus to local
 ```
 
 ```text
-Wait-before-start
-  board change → React mounts departure strip → layout offsets live → paint → damp/pan
+Frame A — on A at gx=0, approaching east edge
+[ W ][ A* ][ B ]
 
-Wait-before-settle (atomic)
-  focus settled → panrecenterpending (keep departure focus)
-               → setpanview idle (strip lags via committed panview)
-               → layout: applypanrecenter + corner delta + live 0 → paint
+Frame B — crossed to B (gx=1); panphase; e2 added
+[ A  ][ B* ][ e2 ]
+        ^ focus continuous near boundary
+
+Frame C — settled; e2 removed
+[ A  ][ B* ][ E ]
 ```
-
-```text
-Frame A — visually on C, bias=+east, EE added
-[ W ][ C* ][ E ][ EE ]
-        ^ camera starts near east of C
-        ======= pan east =======>
-
-Frame B — mid pan (no origin snap yet)
-[ W ][ C  ][ E ][ EE ]
-              ^ crossing into E; EE fills far edge
-
-Frame C — pan settled; snap/recenter; clear bias
-        [ C ][ E* ][ E's east ]
-              ^ origin moved; added EE column removed
-```
-
-## What you have today (baseline)
-
-Boards are **not** co-simulated. The client draws a **3×3 visual window**: live current board at origin + up to 8 exit previews from `layercachemap` (or fog).
-
-Exit walk ([`boardcornerexits.ts`](../../zss/memory/boardcornerexits.ts) + [`boarddepth2exits.ts`](../../zss/memory/boarddepth2exits.ts) + [`rendering.ts`](../../zss/memory/rendering.ts)):
-
-- Cardinals: `board.exitnorth|south|west|east`
-- Depth-2: `exiteast2` = east board’s `exiteast`, etc.
-- Diagonals: two-step walk; disputed → `CORNER_EXIT_DISPUTED`
-
-Camera ([`camerafocus.ts`](../../zss/gadget/graphics/camerafocus.ts)):
-
-1. On cardinal edge exit: set `GridBias`, start `panphase`, keep focus in departure frame, damp **travel axis only** toward `pantarget`.
-2. Live board mesh is offset by bias during pan (layout, after strip mounts); departure-centered previews include depth-2 ahead.
-3. When focus near pantarget and smooth near `FOCUS_ANIM_RATE`: snap focus to pantarget, mark `panrecenterpending` (do not remap yet); clear panphase. Layout then remaps focus, shifts corner by board delta (keeps lag), and resets live board with strip teardown.
-
-`#goto` / non-edge moves: no panphase / no bias.
 
 ## Primary files
 
-| File | Change |
+| File | Role |
 |---|---|
-| [`zss/memory/boarddepth2exits.ts`](../../zss/memory/boarddepth2exits.ts) | Resolve cardinal depth-2 ids |
-| [`zss/memory/rendering.ts`](../../zss/memory/rendering.ts) + gadget types | Plumb `exit*2` onto gadget layers |
-| [`zss/gadget/graphics/exitpreviewgroups.ts`](../../zss/gadget/graphics/exitpreviewgroups.ts) | Place depth-2 / departure window when biased |
-| [`zss/gadget/graphics/camerafocus.ts`](../../zss/gadget/graphics/camerafocus.ts) | Pan-first then recenter; cardinal axis lock |
-| [`zss/gadget/graphics/panviewsync.ts`](../../zss/gadget/graphics/panviewsync.ts) | Pending + settle-lag visual PanView |
-| `flat.tsx` / `mode7.tsx` / `iso.tsx` | Strip + layout live offset; no flushSync |
+| [`zss/gadget/graphics/camerafocus.ts`](../../zss/gadget/graphics/camerafocus.ts) | `boardgridx/y`, world targets, cardinal glide |
+| [`zss/gadget/graphics/exitpreviewgroups.ts`](../../zss/gadget/graphics/exitpreviewgroups.ts) | World-slot previews + depth-2 while panphase |
+| [`zss/gadget/graphics/panviewsync.ts`](../../zss/gadget/graphics/panviewsync.ts) | Pending grid + live world offset |
+| `flat.tsx` / `mode7.tsx` / `iso.tsx` | Consumers |
 
-## Out of scope (still)
+## Out of scope
 
-- Anticipatory bias before the player exits
+- Persisted absolute board coordinates / shared multiplayer origin
+- Anticipatory bias before exit
 - Depth-2 diagonals
 - FPV wiring
 - Live neighbor co-sim
-- Changing playermove / exit ownership
 
 ## Success criteria
 
-- Cardinal edge exit: camera pans across a filled strip (depth-2), then recenters without void
-- No one-frame black hole at entry or settle
-- Steady play: still a 3×3 (no permanent 5×5 cost)
-- Diagonal previews unchanged unless depth-2 diagonals are added later
-- `#goto` / non-edge moves remain non-gliding
+- Cardinal edge exits: continuous world focus; settle does not remap
+- Boards appear/disappear at fixed slots; no opposite-direction settle lurch
+- Steady play: 3×3 (+ depth-2 only while `panphase`)
+- `#goto` teleports (grid reset)
+- Unit tests lock continuous world focus across one east exit

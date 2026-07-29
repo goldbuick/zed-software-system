@@ -11,6 +11,8 @@ export type LayerControl = {
 
 export type GridBias = { dx: -1 | 0 | 1; dy: -1 | 0 | 1 }
 
+export type BoardGrid = { x: number; y: number }
+
 export type FocusExitSnap = {
   board: string
   exiteast: string
@@ -37,6 +39,9 @@ export type FocusUserData = {
   lfocusy?: number
   focussmooth?: number
   currentboard?: string
+  /** Path-relative board slot (session / since last goto). */
+  boardgridx?: number
+  boardgridy?: number
   gridbiasdx?: -1 | 0 | 1
   gridbiasdy?: -1 | 0 | 1
   panphase?: boolean
@@ -44,10 +49,6 @@ export type FocusUserData = {
   pantargety?: number
   departureboard?: string
   exitsnap?: FocusExitSnap
-  /** Focus remap + corner snap deferred until layout tears down the strip. */
-  panrecenterpending?: boolean
-  panrecenterbiasdx?: -1 | 0 | 1
-  panrecenterbiasdy?: -1 | 0 | 1
   [key: string]: unknown
 }
 
@@ -68,45 +69,39 @@ export function readgridbias(userdata: FocusUserData): GridBias {
   }
 }
 
-export function isfocuspanphase(userdata: FocusUserData): boolean {
-  return userdata.panphase === true
-}
-
-export function ispanrecenterpending(userdata: FocusUserData): boolean {
-  return userdata.panrecenterpending === true
-}
-
-/**
- * Apply deferred settle remap (call from useLayoutEffect with strip teardown).
- * Returns the travel bias that was applied, or null when nothing was pending.
- * Callers should shift the corner group by +bias * BOARD * cell size (not hard
- * snap to the ideal corner) so residual damp lag is preserved optically.
- */
-export function applypanrecenter(userdata: FocusUserData): GridBias | null {
-  if (userdata.panrecenterpending !== true) {
-    return null
+export function readboardgrid(userdata: FocusUserData): BoardGrid {
+  return {
+    x: userdata.boardgridx ?? 0,
+    y: userdata.boardgridy ?? 0,
   }
-  const biasdx = userdata.panrecenterbiasdx ?? 0
-  const biasdy = userdata.panrecenterbiasdy ?? 0
-  const dx = biasdx === -1 || biasdx === 1 ? biasdx : 0
-  const dy = biasdy === -1 || biasdy === 1 ? biasdy : 0
-  userdata.focusx = (userdata.focusx ?? 0) - dx * BOARD_WIDTH
-  userdata.focusy = (userdata.focusy ?? 0) - dy * BOARD_HEIGHT
-  userdata.panrecenterpending = false
-  userdata.panrecenterbiasdx = 0
-  userdata.panrecenterbiasdy = 0
-  return { dx, dy }
 }
 
-/** Shift corner by the board delta that matches applypanrecenter (keeps lag). */
-export function shiftcornerforpanrecenter(
-  corner: { x: number; y: number },
-  bias: GridBias,
+export function worldcellfromlocal(
+  gx: number,
+  gy: number,
+  localx: number,
+  localy: number,
+): { x: number; y: number } {
+  return {
+    x: gx * BOARD_WIDTH + localx,
+    y: gy * BOARD_HEIGHT + localy,
+  }
+}
+
+export function liveboardworldoffset(
+  userdata: FocusUserData,
   drawwidth: number,
   drawheight: number,
-): void {
-  corner.x += bias.dx * BOARD_WIDTH * drawwidth
-  corner.y += bias.dy * BOARD_HEIGHT * drawheight
+): { x: number; y: number } {
+  const grid = readboardgrid(userdata)
+  return {
+    x: grid.x * BOARD_WIDTH * drawwidth,
+    y: grid.y * BOARD_HEIGHT * drawheight,
+  }
+}
+
+export function isfocuspanphase(userdata: FocusUserData): boolean {
+  return userdata.panphase === true
 }
 
 export function initfocusifneeded(
@@ -124,10 +119,11 @@ export function initfocusifneeded(
     userData.facing = control.facing
     userData.currentboard = currentboard
     userData.focussmooth = FOCUS_ANIM_RATE
+    userData.boardgridx = 0
+    userData.boardgridy = 0
     userData.gridbiasdx = 0
     userData.gridbiasdy = 0
     userData.panphase = false
-    userData.panrecenterpending = false
     return true
   }
   return false
@@ -160,17 +156,19 @@ function focusneartarget(
 }
 
 /**
- * Board change: cardinal edge exits pan first in the departure frame (with
- * GridBias / depth-2), then mark settle for layout recenter. Non-edge changes
- * skip the pan phase. Returns true only for legacy callers; pan settle snap is
- * owned by applypanrecenter in useLayoutEffect.
+ * Board change: edge exits bump boardgridx/y and glide in world cell space.
+ * Settle clears panphase/depth-2 only -- no focus remap. Non-edge (#goto)
+ * resets the path grid to origin and teleports focus to local control.
+ *
+ * tfocusx/y are local (single-board) clamped targets; world conversion is
+ * owned here via boardgridx/y.
  */
 export function stepfocuswithboardtransition(
   userdata: FocusUserData,
   control: LayerControl,
   currentboard: string,
-  tfocusx: number,
-  tfocusy: number,
+  localtfocusx: number,
+  localtfocusy: number,
   delta: number,
 ): boolean {
   if (!ispresent(userdata.lfocusx) || !ispresent(userdata.lfocusy)) {
@@ -179,6 +177,12 @@ export function stepfocuswithboardtransition(
   }
   if (!ispresent(userdata.focussmooth)) {
     userdata.focussmooth = FOCUS_ANIM_RATE
+  }
+  if (!ispresent(userdata.boardgridx)) {
+    userdata.boardgridx = 0
+  }
+  if (!ispresent(userdata.boardgridy)) {
+    userdata.boardgridy = 0
   }
 
   if (currentboard !== userdata.currentboard) {
@@ -199,8 +203,10 @@ export function stepfocuswithboardtransition(
         controly: control.focusy,
         lfocusx: userdata.lfocusx ?? -1,
         lfocusy: userdata.lfocusy ?? -1,
-        tfocusx,
-        tfocusy,
+        boardgridx: userdata.boardgridx ?? 0,
+        boardgridy: userdata.boardgridy ?? 0,
+        localtfocusx,
+        localtfocusy,
       },
       'BC2',
     )
@@ -208,43 +214,62 @@ export function stepfocuswithboardtransition(
     if (isedge) {
       const biasdx = biastogridsign(dx)
       const biasdy = biastogridsign(dy)
+      userdata.boardgridx = (userdata.boardgridx ?? 0) + biasdx
+      userdata.boardgridy = (userdata.boardgridy ?? 0) + biasdy
       userdata.gridbiasdx = biasdx
       userdata.gridbiasdy = biasdy
       userdata.panphase = true
-      userdata.panrecenterpending = false
       userdata.departureboard = prevboard ?? ''
-      // Travel axis follows dest+board; cross-axis freezes at current focus
-      // so the glide stays cardinal (no diagonal drift toward dest spawn).
       const focusx = userdata.focusx ?? control.focusx
       const focusy = userdata.focusy ?? control.focusy
+      const world = worldcellfromlocal(
+        userdata.boardgridx,
+        userdata.boardgridy,
+        localtfocusx,
+        localtfocusy,
+      )
+      // Travel axis follows dest world cell; cross-axis freezes (cardinal).
       if (biasdx !== 0) {
-        userdata.pantargetx = control.focusx + biasdx * BOARD_WIDTH
+        userdata.pantargetx = world.x
         userdata.pantargety = focusy
       } else {
         userdata.pantargetx = focusx
-        userdata.pantargety = control.focusy + biasdy * BOARD_HEIGHT
+        userdata.pantargety = world.y
       }
       userdata.focussmooth = FOCUS_GLIDE_RATE
-      // Keep focus in departure frame; do not apply immediate ±board snap.
     } else {
+      userdata.boardgridx = 0
+      userdata.boardgridy = 0
       userdata.gridbiasdx = 0
       userdata.gridbiasdy = 0
       userdata.panphase = false
-      userdata.panrecenterpending = false
       userdata.departureboard = ''
+      userdata.pantargetx = undefined
+      userdata.pantargety = undefined
+      // Teleport into local board space (#goto / non-edge).
+      userdata.focusx = localtfocusx
+      userdata.focusy = localtfocusy
+      userdata.focussmooth = FOCUS_ANIM_RATE
     }
     userdata.lfocusx = control.focusx
     userdata.lfocusy = control.focusy
   }
 
+  const grid = readboardgrid(userdata)
+  const worldsteady = worldcellfromlocal(
+    grid.x,
+    grid.y,
+    localtfocusx,
+    localtfocusy,
+  )
+
   if (userdata.panphase === true) {
     const bias = readgridbias(userdata)
-    const pantx = userdata.pantargetx ?? tfocusx
-    const panty = userdata.pantargety ?? tfocusy
+    const pantx = userdata.pantargetx ?? worldsteady.x
+    const panty = userdata.pantargety ?? worldsteady.y
     userdata.tfocusx = pantx
     userdata.tfocusy = panty
     const focussmooth = userdata.focussmooth ?? FOCUS_ANIM_RATE
-    // Damp only the travel axis; hold the cross-axis at the frozen target.
     if (bias.dx !== 0) {
       damp(userdata, 'focusx', pantx, focussmooth, delta)
       userdata.focusy = panty
@@ -264,33 +289,23 @@ export function stepfocuswithboardtransition(
     const settled = travelsettled && smooth <= FOCUS_ANIM_RATE * 1.5
 
     if (settled) {
-      // Land exactly on pantarget so remapped focus matches dest control.
       userdata.focusx = pantx
       userdata.focusy = panty
-      // Defer focus remap until layout tears down the departure strip.
-      userdata.panrecenterpending = true
-      userdata.panrecenterbiasdx = bias.dx
-      userdata.panrecenterbiasdy = bias.dy
       userdata.gridbiasdx = 0
       userdata.gridbiasdy = 0
       userdata.panphase = false
       userdata.departureboard = ''
       userdata.pantargetx = undefined
       userdata.pantargety = undefined
-      // Hold departure-frame focus until applypanrecenter.
       userdata.tfocusx = pantx
       userdata.tfocusy = panty
     }
-  } else if (userdata.panrecenterpending === true) {
-    // Hold focus until layout applies remap (do not damp across the board gap).
-    userdata.tfocusx = userdata.focusx ?? tfocusx
-    userdata.tfocusy = userdata.focusy ?? tfocusy
   } else {
-    userdata.tfocusx = tfocusx
-    userdata.tfocusy = tfocusy
+    userdata.tfocusx = worldsteady.x
+    userdata.tfocusy = worldsteady.y
     const focussmooth = userdata.focussmooth ?? FOCUS_ANIM_RATE
-    damp(userdata, 'focusx', tfocusx, focussmooth, delta)
-    damp(userdata, 'focusy', tfocusy, focussmooth, delta)
+    damp(userdata, 'focusx', worldsteady.x, focussmooth, delta)
+    damp(userdata, 'focusy', worldsteady.y, focussmooth, delta)
     damp(userdata, 'focussmooth', FOCUS_ANIM_RATE, FOCUS_GLIDE_DECAY, delta)
   }
 
@@ -309,7 +324,7 @@ export function dampfocus(
   damp(userdata, 'focusy', control.focusy, animrate, delta ?? 0.01)
 }
 
-/** Stash exit ids while steady so pan-first can rebuild the departure window. */
+/** Stash exit ids while steady so pending board-change can infer travel bias. */
 export function stashfocusexitsnap(
   userdata: FocusUserData,
   snap: FocusExitSnap,

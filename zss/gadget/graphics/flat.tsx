@@ -12,12 +12,9 @@ import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { BOARD_INSPECTOR_Z_BUFFER } from 'zss/gadget/graphics/boardinspectorz'
 import {
   FOCUS_ANIM_RATE,
-  applypanrecenter,
   initfocusifneeded,
   isfocuspanphase,
-  ispanrecenterpending,
   readgridbias,
-  shiftcornerforpanrecenter,
   stashfocusexitsnap,
   stepfocuswithboardtransition,
 } from 'zss/gadget/graphics/camerafocus'
@@ -35,8 +32,9 @@ import {
   PANVIEW_IDLE,
   type PanView,
   panviewequals,
+  readboardgridforrender,
   resolvepanviewforrender,
-  syncliveboardpanoffset,
+  syncliveboardworldoffset,
 } from 'zss/gadget/graphics/panviewsync'
 import { tickerpublishfromtickers } from 'zss/gadget/graphics/tickeranchors'
 import { clamp } from 'zss/mapping/number'
@@ -239,38 +237,22 @@ export const FlatGraphics = memo(function FlatGraphics({
   const { gadget, layercachemap } = useGadgetClient.getState()
   const { over = [], under = [], layers = [] } = gadget
   const camuserdata = cameraref.current?.userData ?? {}
-  const visualpan = resolvepanviewforrender(
-    panview,
-    camuserdata,
-    gadget.board ?? '',
-  )
-  // Wait-before-start/settle: offset live board only after the matching strip is in JSX.
-  // Atomic settle: remap focus + corner delta + live -> 0 in one layout beat.
-  // Corner shifts by board delta (preserves damp lag); do not hard-snap to ideal.
+  const boardid = gadget.board ?? ''
+  const visualpan = resolvepanviewforrender(panview, camuserdata, boardid)
+  const rendergrid = readboardgridforrender(camuserdata, boardid)
+  // Live board always at path-relative world slot (no settle snap / bias offset).
   useLayoutEffect(() => {
-    const userdata = cameraref.current?.userData
-    if (
-      userdata &&
-      !visualpan.panphase &&
-      ispanrecenterpending(userdata)
-    ) {
-      const bias = applypanrecenter(userdata)
-      if (bias && cornerref.current) {
-        shiftcornerforpanrecenter(
-          cornerref.current.position,
-          bias,
-          drawwidth,
-          drawheight,
-        )
-      }
-    }
-    syncliveboardpanoffset(
+    syncliveboardworldoffset(
       liveboardref.current,
-      visualpan,
+      cameraref.current?.userData ?? {},
+      boardid,
       drawwidth,
       drawheight,
     )
   }, [
+    boardid,
+    rendergrid.x,
+    rendergrid.y,
     visualpan.panphase,
     visualpan.biasdx,
     visualpan.biasdy,
@@ -283,10 +265,10 @@ export const FlatGraphics = memo(function FlatGraphics({
     drawwidth,
     drawheight,
     {
+      boardgridx: rendergrid.x,
+      boardgridy: rendergrid.y,
       bias: { dx: visualpan.biasdx, dy: visualpan.biasdy },
       panphase: visualpan.panphase,
-      exitsnap: camuserdata.exitsnap,
-      skipliveboardpreview: visualpan.panphase,
     },
   )
 

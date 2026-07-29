@@ -3,6 +3,7 @@ import {
   type FocusExitSnap,
   type FocusUserData,
   type GridBias,
+  readboardgrid,
   readgridbias,
 } from 'zss/gadget/graphics/camerafocus'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
@@ -51,8 +52,31 @@ export function biasfrompendingboardchange(
 }
 
 /**
- * Keep preview grid + live-board offset coherent across React commit lag.
- * - Pending board change / active userdata pan: show departure window early.
+ * Board grid for render/layout: include pending edge bump before useFrame
+ * advances boardgridx/y so live + previews sit at the dest slot immediately.
+ */
+export function readboardgridforrender(
+  userdata: FocusUserData,
+  currentboard: string,
+): { x: number; y: number } {
+  const base = readboardgrid(userdata)
+  const pending = biasfrompendingboardchange(
+    userdata.exitsnap,
+    currentboard,
+    userdata,
+  )
+  if (!pending) {
+    return base
+  }
+  return {
+    x: base.x + pending.dx,
+    y: base.y + pending.dy,
+  }
+}
+
+/**
+ * Keep depth-2 panview coherent across React commit lag.
+ * - Pending board change / active userdata pan: show depth-2 early.
  * - After settle clears userdata first: keep committed panview until React catches up.
  */
 export function resolvepanviewforrender(
@@ -89,22 +113,21 @@ export function panviewequals(a: PanView, b: PanView): boolean {
   )
 }
 
-export function syncliveboardpanoffset(
+/** Place live board at its path-relative world slot (no pan bias offset). */
+export function syncliveboardworldoffset(
   liveboard: Group | null,
-  view: PanView,
+  userdata: FocusUserData,
+  currentboard: string,
   drawwidth: number,
   drawheight: number,
 ): void {
   if (!liveboard) {
     return
   }
-  if (view.panphase) {
-    liveboard.position.set(
-      view.biasdx * BOARD_WIDTH * drawwidth,
-      view.biasdy * BOARD_HEIGHT * drawheight,
-      0,
-    )
-  } else {
-    liveboard.position.set(0, 0, 0)
-  }
+  const grid = readboardgridforrender(userdata, currentboard)
+  liveboard.position.set(
+    grid.x * BOARD_WIDTH * drawwidth,
+    grid.y * BOARD_HEIGHT * drawheight,
+    0,
+  )
 }

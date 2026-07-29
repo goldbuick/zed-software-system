@@ -1,5 +1,8 @@
 import type { GADGET_STATE, LAYER } from 'zss/gadget/data/types'
-import type { FocusExitSnap, GridBias } from 'zss/gadget/graphics/camerafocus'
+import type {
+  FocusExitSnap,
+  GridBias,
+} from 'zss/gadget/graphics/camerafocus'
 import {
   type ExitPreviewResolve,
   resolveexitpreview,
@@ -31,22 +34,18 @@ type ExitBoardGadget = Pick<
 >
 
 export type ExitPreviewBuildOpts = {
+  /** Path-relative grid of the live board. */
+  boardgridx?: number
+  boardgridy?: number
   bias?: GridBias
+  /** When true, also place depth-2 in the travel direction. */
   panphase?: boolean
-  /** Departure-board exit snapshot (from last steady frame). */
-  exitsnap?: FocusExitSnap
-  /**
-   * When panphase, live destination board is drawn at bias offset; skip
-   * placing a preview on that slot.
-   */
-  skipliveboardpreview?: boolean
 }
 
 function fogdirforkey(key: string): EXIT_DIRECTION {
   switch (key) {
     case 'e':
     case 'e2':
-    case 'c':
       return 'e'
     case 'w':
     case 'w2':
@@ -91,7 +90,25 @@ function pushgroup(
   })
 }
 
-/** Adjacent-board exit previews at fixed offsets (flat / mode7 / iso). */
+function slotpos(
+  gx: number,
+  gy: number,
+  dx: number,
+  dy: number,
+  w: number,
+  h: number,
+): { x: number; y: number } {
+  return {
+    x: (gx + dx) * w,
+    y: (gy + dy) * h,
+  }
+}
+
+/**
+ * Adjacent-board exit previews at path-relative world slots (flat / mode7 / iso).
+ * Live board occupies (boardgridx, boardgridy); neighbors are placed around it.
+ * Depth-2 is added only while panphase + travel bias is set.
+ */
 export function buildexitpreviewgroups(
   gadget: ExitBoardGadget,
   layercachemap: Map<string, LAYER[]>,
@@ -102,139 +119,37 @@ export function buildexitpreviewgroups(
   const hasunderboard = (gadget.under?.length ?? 0) > 0
   const bias = opts.bias ?? { dx: 0, dy: 0 }
   const panphase = opts.panphase === true
+  const gx = opts.boardgridx ?? 0
+  const gy = opts.boardgridy ?? 0
   const w = BOARD_WIDTH * drawwidth
   const h = BOARD_HEIGHT * drawheight
   const out: ExitPreviewGroup[] = []
 
-  if (panphase && opts.exitsnap) {
-    const snap = opts.exitsnap
-    // Departure-centered window: C at origin, neighbors from snap, depth-2 ahead
-    // from current gadget (destination board's far exit).
-    pushgroup(out, 'c', snap.board, layercachemap, hasunderboard, 0, 0)
-    pushgroup(out, 'e', snap.exiteast, layercachemap, hasunderboard, w, 0)
-    pushgroup(out, 'w', snap.exitwest, layercachemap, hasunderboard, -w, 0)
-    pushgroup(out, 'n', snap.exitnorth, layercachemap, hasunderboard, 0, -h)
-    pushgroup(out, 's', snap.exitsouth, layercachemap, hasunderboard, 0, h)
-    pushgroup(out, 'ne', snap.exitne, layercachemap, hasunderboard, w, -h)
-    pushgroup(out, 'nw', snap.exitnw, layercachemap, hasunderboard, -w, -h)
-    pushgroup(out, 'se', snap.exitse, layercachemap, hasunderboard, w, h)
-    pushgroup(out, 'sw', snap.exitsw, layercachemap, hasunderboard, -w, h)
-
-    if (opts.skipliveboardpreview) {
-      const livekey =
-        bias.dx === 1
-          ? 'e'
-          : bias.dx === -1
-            ? 'w'
-            : bias.dy === -1
-              ? 'n'
-              : bias.dy === 1
-                ? 's'
-                : ''
-      if (livekey) {
-        const i = out.findIndex((g) => g.key === livekey)
-        if (i >= 0) {
-          out.splice(i, 1)
-        }
-      }
-    }
-
-    if (bias.dx === 1) {
-      pushgroup(
-        out,
-        'e2',
-        gadget.exiteast,
-        layercachemap,
-        hasunderboard,
-        2 * w,
-        0,
-      )
-    } else if (bias.dx === -1) {
-      pushgroup(
-        out,
-        'w2',
-        gadget.exitwest,
-        layercachemap,
-        hasunderboard,
-        -2 * w,
-        0,
-      )
-    }
-    if (bias.dy === -1) {
-      pushgroup(
-        out,
-        'n2',
-        gadget.exitnorth,
-        layercachemap,
-        hasunderboard,
-        0,
-        -2 * h,
-      )
-    } else if (bias.dy === 1) {
-      pushgroup(
-        out,
-        's2',
-        gadget.exitsouth,
-        layercachemap,
-        hasunderboard,
-        0,
-        2 * h,
-      )
-    }
-    return out
+  const place = (key: string, boardid: string, dx: number, dy: number) => {
+    const p = slotpos(gx, gy, dx, dy, w, h)
+    pushgroup(out, key, boardid, layercachemap, hasunderboard, p.x, p.y)
   }
 
-  pushgroup(out, 'e', gadget.exiteast, layercachemap, hasunderboard, w, 0)
-  pushgroup(out, 'w', gadget.exitwest, layercachemap, hasunderboard, -w, 0)
-  pushgroup(out, 'n', gadget.exitnorth, layercachemap, hasunderboard, 0, -h)
-  pushgroup(out, 's', gadget.exitsouth, layercachemap, hasunderboard, 0, h)
-  pushgroup(out, 'ne', gadget.exitne, layercachemap, hasunderboard, w, -h)
-  pushgroup(out, 'nw', gadget.exitnw, layercachemap, hasunderboard, -w, -h)
-  pushgroup(out, 'se', gadget.exitse, layercachemap, hasunderboard, w, h)
-  pushgroup(out, 'sw', gadget.exitsw, layercachemap, hasunderboard, -w, h)
+  place('e', gadget.exiteast, 1, 0)
+  place('w', gadget.exitwest, -1, 0)
+  place('n', gadget.exitnorth, 0, -1)
+  place('s', gadget.exitsouth, 0, 1)
+  place('ne', gadget.exitne, 1, -1)
+  place('nw', gadget.exitnw, -1, -1)
+  place('se', gadget.exitse, 1, 1)
+  place('sw', gadget.exitsw, -1, 1)
 
-  if (bias.dx === 1) {
-    pushgroup(
-      out,
-      'e2',
-      gadget.exiteast2,
-      layercachemap,
-      hasunderboard,
-      2 * w,
-      0,
-    )
-  } else if (bias.dx === -1) {
-    pushgroup(
-      out,
-      'w2',
-      gadget.exitwest2,
-      layercachemap,
-      hasunderboard,
-      -2 * w,
-      0,
-    )
+  if (panphase && bias.dx === 1) {
+    place('e2', gadget.exiteast2 || gadget.exiteast, 2, 0)
+  } else if (panphase && bias.dx === -1) {
+    place('w2', gadget.exitwest2 || gadget.exitwest, -2, 0)
   }
-  if (bias.dy === -1) {
-    pushgroup(
-      out,
-      'n2',
-      gadget.exitnorth2,
-      layercachemap,
-      hasunderboard,
-      0,
-      -2 * h,
-    )
-  } else if (bias.dy === 1) {
-    pushgroup(
-      out,
-      's2',
-      gadget.exitsouth2,
-      layercachemap,
-      hasunderboard,
-      0,
-      2 * h,
-    )
+  if (panphase && bias.dy === -1) {
+    place('n2', gadget.exitnorth2 || gadget.exitnorth, 0, -2)
+  } else if (panphase && bias.dy === 1) {
+    place('s2', gadget.exitsouth2 || gadget.exitsouth, 0, 2)
   }
+
   return out
 }
 
@@ -257,18 +172,18 @@ export function gadgettoexitsnap(
   >,
 ): FocusExitSnap {
   return {
-    board: gadget.board,
-    exiteast: gadget.exiteast,
-    exitwest: gadget.exitwest,
-    exitnorth: gadget.exitnorth,
-    exitsouth: gadget.exitsouth,
-    exiteast2: gadget.exiteast2,
-    exitwest2: gadget.exitwest2,
-    exitnorth2: gadget.exitnorth2,
-    exitsouth2: gadget.exitsouth2,
-    exitne: gadget.exitne,
-    exitnw: gadget.exitnw,
-    exitse: gadget.exitse,
-    exitsw: gadget.exitsw,
+    board: gadget.board ?? '',
+    exiteast: gadget.exiteast ?? '',
+    exitwest: gadget.exitwest ?? '',
+    exitnorth: gadget.exitnorth ?? '',
+    exitsouth: gadget.exitsouth ?? '',
+    exiteast2: gadget.exiteast2 ?? '',
+    exitwest2: gadget.exitwest2 ?? '',
+    exitnorth2: gadget.exitnorth2 ?? '',
+    exitsouth2: gadget.exitsouth2 ?? '',
+    exitne: gadget.exitne ?? '',
+    exitnw: gadget.exitnw ?? '',
+    exitse: gadget.exitse ?? '',
+    exitsw: gadget.exitsw ?? '',
   }
 }

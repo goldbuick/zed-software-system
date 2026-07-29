@@ -1,6 +1,6 @@
 import { useFrame } from '@react-three/fiber'
 import { DepthOfField } from '@react-three/postprocessing'
-import { damp3 } from 'maath/easing'
+import { damp, damp3 } from 'maath/easing'
 import { DepthOfFieldEffect } from 'postprocessing'
 import { memo, useCallback, useLayoutEffect, useRef, useState } from 'react'
 import {
@@ -12,12 +12,10 @@ import { RUNTIME } from 'zss/config'
 import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import {
-  applypanrecenter,
+  FOCUS_ANIM_RATE,
   initfocusifneeded,
   isfocuspanphase,
-  ispanrecenterpending,
   readgridbias,
-  shiftcornerforpanrecenter,
   stashfocusexitsnap,
   stepfocuswithboardtransition,
 } from 'zss/gadget/graphics/camerafocus'
@@ -32,8 +30,9 @@ import {
   PANVIEW_IDLE,
   type PanView,
   panviewequals,
+  readboardgridforrender,
   resolvepanviewforrender,
-  syncliveboardpanoffset,
+  syncliveboardworldoffset,
 } from 'zss/gadget/graphics/panviewsync'
 import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
 import { tickerpublishfromtickers } from 'zss/gadget/graphics/tickeranchors'
@@ -187,8 +186,18 @@ export const IsoGraphics = memo(function IsoGraphics({
 
     const fx = (userdata.focusx! + 0.5) * drawwidth
     const fy = (userdata.focusy! + 0.5) * drawheight
+    const targetcornerx = -fx
+    const targetcornery = -fy
 
-    damp3(cornerref.current.position, [-fx, -fy, 0], animrate, delta)
+    if (panphase && bias.dx !== 0) {
+      cornerref.current.position.y = targetcornery
+      damp(cornerref.current.position, 'x', targetcornerx, animrate, delta)
+    } else if (panphase && bias.dy !== 0) {
+      cornerref.current.position.x = targetcornerx
+      damp(cornerref.current.position, 'y', targetcornery, animrate, delta)
+    } else {
+      damp3(cornerref.current.position, [-fx, -fy, 0], animrate, delta)
+    }
 
     // update dof (range/bokeh per zoom; focus distance tracks player in world space)
     switch (control.viewscale) {
@@ -272,35 +281,21 @@ export const IsoGraphics = memo(function IsoGraphics({
   const { gadget, layercachemap } = useGadgetClient.getState()
   const { over = [], under = [], layers = [] } = gadget
   const camuserdata = cameraref.current?.userData ?? {}
-  const visualpan = resolvepanviewforrender(
-    panview,
-    camuserdata,
-    gadget.board ?? '',
-  )
+  const boardid = gadget.board ?? ''
+  const visualpan = resolvepanviewforrender(panview, camuserdata, boardid)
+  const rendergrid = readboardgridforrender(camuserdata, boardid)
   useLayoutEffect(() => {
-    const userdata = cameraref.current?.userData
-    if (
-      userdata &&
-      !visualpan.panphase &&
-      ispanrecenterpending(userdata)
-    ) {
-      const bias = applypanrecenter(userdata)
-      if (bias && cornerref.current) {
-        shiftcornerforpanrecenter(
-          cornerref.current.position,
-          bias,
-          drawwidth,
-          drawheight,
-        )
-      }
-    }
-    syncliveboardpanoffset(
+    syncliveboardworldoffset(
       liveboardref.current,
-      visualpan,
+      cameraref.current?.userData ?? {},
+      boardid,
       drawwidth,
       drawheight,
     )
   }, [
+    boardid,
+    rendergrid.x,
+    rendergrid.y,
     visualpan.panphase,
     visualpan.biasdx,
     visualpan.biasdy,
@@ -313,10 +308,10 @@ export const IsoGraphics = memo(function IsoGraphics({
     drawwidth,
     drawheight,
     {
+      boardgridx: rendergrid.x,
+      boardgridy: rendergrid.y,
       bias: { dx: visualpan.biasdx, dy: visualpan.biasdy },
       panphase: visualpan.panphase,
-      exitsnap: camuserdata.exitsnap,
-      skipliveboardpreview: visualpan.panphase,
     },
   )
 
