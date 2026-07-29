@@ -28,12 +28,8 @@ export type DEVICE_DATA = {
   showtouchcontrols: boolean
   /** Tier A: hidden input + IME sync (strict touch-primary or ZSS_FORCE_TOUCH_UI). */
   usemobiletextcapture: boolean
-  /** Tier A capture textarea focused (soft keyboard / typing). */
-  textcapturefocused: boolean
   /** Pixel rects for DOM MOVE/SHOOT touchpads; null when touch UI is off. */
   touchpads: TOUCHPADS | null
-  /** Visible landscape rail cols reserved from the game (0 when keyboard open). */
-  touchrailcols: number
   checknumbers: string
   wordlist: string[]
   wordlistflag: string
@@ -53,9 +49,7 @@ export const useDeviceData = create<DEVICE_DATA>(() => ({
   keyboardshift: false,
   showtouchcontrols: false,
   usemobiletextcapture: false,
-  textcapturefocused: false,
   touchpads: null,
-  touchrailcols: 0,
   checknumbers: '',
   wordlist: [],
   wordlistflag: '',

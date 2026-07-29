@@ -36,14 +36,7 @@ export function CafeCanvas() {
   return (
     <>
       <Canvas
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          display: 'block',
-        }}
+        style={{ width: '100%', height: '100%' }}
         dpr={1}
         flat
         linear
@@ -55,7 +48,7 @@ export function CafeCanvas() {
           preserveDrawingBuffer: true,
         }}
         events={eventmanagerfactory}
-        resize={{ debounce: { resize: 0, scroll: 0 }, scroll: false }}
+        resize={{ debounce: { resize: 256, scroll: 50 } }}
       >
         <ViewportSync />
         <CafeApp />

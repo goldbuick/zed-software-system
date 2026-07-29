@@ -28,32 +28,6 @@ export const FOCUS_GLIDE_DECAY = 0.17
 
 const ANIMRATE = FOCUS_ANIM_RATE
 
-export type ViewSizePrev = { w: number; h: number }
-
-/** Updates prev and returns true when view width/height changed (including first sample). */
-export function takeviewsizechange(
-  prev: ViewSizePrev,
-  viewwidth: number,
-  viewheight: number,
-): boolean {
-  const changed = prev.w !== viewwidth || prev.h !== viewheight
-  prev.w = viewwidth
-  prev.h = viewheight
-  return changed
-}
-
-/** Snap damped focus to clamp targets after a view size change. */
-export function snapfocustotarget(
-  userdata: FocusUserData,
-  tfocusx: number,
-  tfocusy: number,
-): void {
-  userdata.focusx = tfocusx
-  userdata.focusy = tfocusy
-  userdata.tfocusx = tfocusx
-  userdata.tfocusy = tfocusy
-}
-
 export function initfocusifneeded(
   userData: FocusUserData,
   control: LayerControl,

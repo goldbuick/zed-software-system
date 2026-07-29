@@ -6,6 +6,7 @@ import { useDeviceData } from 'zss/gadget/device'
 import { useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
 import {
+  LANDSCAPE_TOUCH_RAIL_COLS,
   PORTRAIT_SIDEBAR_OVERLAY_ROWS,
   TOUCH_SIDEBAR_COLS,
 } from 'zss/screens/touchui/layout'
@@ -51,14 +52,13 @@ export function useScreenChromeLayout(
   sethasscroll: (v: boolean) => void,
 ): ScreenChromeLayout | null {
   const screensize = useScreenSize()
-  const { islandscape, sidebaropen, sidebarclosing, showtouchcontrols, touchrailcols } =
+  const { islandscape, sidebaropen, sidebarclosing, showtouchcontrols } =
     useDeviceData(
       useShallow((state) => ({
         islandscape: state.islandscape,
         sidebaropen: state.sidebaropen,
         sidebarclosing: state.sidebarclosing,
         showtouchcontrols: state.showtouchcontrols,
-        touchrailcols: state.touchrailcols,
       })),
     )
 
@@ -105,11 +105,12 @@ export function useScreenChromeLayout(
         frame.width -= SIDEBAR_SIZE
         rects.push(rect)
       } else if (islandscape) {
-        // Far right of screen: after game + shoot rail gap (0 when keyboard tucked rails).
+        // Far right of screen: after game + shoot rail (userscreen reserved column).
+        // Screensize is game-only; place sidebar past the right rail gap.
         const rect = {
           name: 'sidebar',
           type: RECT_TYPE.PANEL,
-          x: frame.width + touchrailcols,
+          x: frame.width + LANDSCAPE_TOUCH_RAIL_COLS,
           y: frame.y,
           width: SIDEBAR_SIZE,
           height: frame.height,
@@ -167,6 +168,5 @@ export function useScreenChromeLayout(
     sidebar,
     sidebaropen,
     sidebarclosing,
-    touchrailcols,
   ])
 }

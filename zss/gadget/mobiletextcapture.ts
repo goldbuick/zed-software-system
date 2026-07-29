@@ -7,14 +7,6 @@ let unsubkeyboard: (() => void) | undefined
 let captureel: HTMLTextAreaElement | null = null
 let storeunsub: (() => void) | undefined
 
-function oncapturefocus() {
-  useDeviceData.setState({ textcapturefocused: true })
-}
-
-function oncaptureblur() {
-  useDeviceData.setState({ textcapturefocused: false })
-}
-
 /**
  * Tier A hidden `<textarea>` for soft keyboard / IME (multi-line for editor; terminal strips
  * newlines in [`terminal/input.tsx`](zss/screens/terminal/input.tsx)). No React hooks — a second
@@ -39,8 +31,6 @@ export function bootstrapmobiletextcapture() {
     ta.setAttribute('translate', 'no')
     ta.setAttribute('aria-hidden', 'true')
     ta.tabIndex = -1
-    ta.addEventListener('focus', oncapturefocus)
-    ta.addEventListener('blur', oncaptureblur)
     document.body.appendChild(ta)
     captureel = ta
     setmobiletextelement(ta)
@@ -53,13 +43,10 @@ export function bootstrapmobiletextcapture() {
       unsubkeyboard = undefined
     }
     if (captureel) {
-      captureel.removeEventListener('focus', oncapturefocus)
-      captureel.removeEventListener('blur', oncaptureblur)
       captureel.remove()
       captureel = null
     }
     setmobiletextelement(null)
-    useDeviceData.setState({ textcapturefocused: false })
   }
 
   let last = useDeviceData.getState().usemobiletextcapture

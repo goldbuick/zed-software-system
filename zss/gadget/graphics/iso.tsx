@@ -13,9 +13,7 @@ import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import {
   initfocusifneeded,
-  snapfocustotarget,
   stepfocuswithboardtransition,
-  takeviewsizechange,
 } from 'zss/gadget/graphics/camerafocus'
 import { buildexitpreviewgroups } from 'zss/gadget/graphics/exitpreviewgroups'
 import { FlatLayer } from 'zss/gadget/graphics/flatlayer'
@@ -98,7 +96,6 @@ export const IsoGraphics = memo(function IsoGraphics({
   const depthoffield = useRef<DepthOfFieldEffect>(null)
   const dofplayerworld = useRef(new Vector3())
   const dofcamworld = useRef(new Vector3())
-  const prevviewsize = useRef({ w: 0, h: 0 })
 
   const bindboardcamera = useCallback((c: OrthographicCameraImpl | null) => {
     cameraref.current = c
@@ -154,30 +151,15 @@ export const IsoGraphics = memo(function IsoGraphics({
       tfocusy,
       delta,
     )
-    const viewsizechanged = takeviewsizechange(
-      prevviewsize.current,
-      viewwidth,
-      viewheight,
-    )
-    if (viewsizechanged) {
-      snapfocustotarget(userdata, tfocusx, tfocusy)
-    }
 
     const fx = (userdata.focusx! + 0.5) * drawwidth
     const fy = (userdata.focusy! + 0.5) * drawheight
-    const targetcornerx = -fx
-    const targetcornery = -fy
 
-    if (boardtransition || viewsizechanged) {
-      cornerref.current.position.set(targetcornerx, targetcornery, 0)
+    if (boardtransition) {
+      cornerref.current.position.set(-fx, -fy, 0)
     }
 
-    damp3(
-      cornerref.current.position,
-      [targetcornerx, targetcornery, 0],
-      animrate,
-      delta,
-    )
+    damp3(cornerref.current.position, [-fx, -fy, 0], animrate, delta)
 
     // update dof (range/bokeh per zoom; focus distance tracks player in world space)
     switch (control.viewscale) {

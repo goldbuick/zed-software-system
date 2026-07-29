@@ -6,30 +6,14 @@ import { forcer3fglresize } from 'zss/gadget/canvasrelayout'
 import { useDeviceData } from 'zss/gadget/device'
 import { makeeven } from 'zss/mapping/number'
 
-function readframebox(): { width: number; height: number } {
-  const frame = document.getElementById('frame')
-  if (frame) {
-    const rect = frame.getBoundingClientRect()
-    return {
-      width: Math.max(1, Math.floor(rect.width)),
-      height: Math.max(1, Math.floor(rect.height)),
-    }
-  }
-  return {
-    width: Math.max(1, window.innerWidth),
-    height: Math.max(1, window.innerHeight),
-  }
-}
-
 function applyviewport(store: ReturnType<typeof useStore>) {
-  // Match #frame (fixed inset 0 on the layout viewport with viewport-fit=cover).
-  const box = readframebox()
-  const width = makeeven(box.width)
-  const height = makeeven(box.height)
-  // saferows: visible band above soft keyboard (portrait typing layout only).
+  const innerwidth = window.innerWidth
+  const innerheight = window.innerHeight
+  const width = makeeven(innerwidth)
+  const height = makeeven(innerheight)
   const safeheight = window.visualViewport
-    ? Math.min(box.height, Math.floor(window.visualViewport.height))
-    : box.height
+    ? Math.min(innerheight, window.visualViewport.height)
+    : innerheight
   const saferows = Math.floor(safeheight / RUNTIME.DRAW_CHAR_HEIGHT())
   useDeviceData.setState({ saferows })
 
@@ -44,39 +28,28 @@ export function ViewportSync() {
   const store = useStore()
 
   useLayoutEffect(() => {
-    const syncnow = () => {
+    const sync = debounce(() => {
       applyviewport(store)
-    }
-    const syncdebounced = debounce(syncnow, 256)
+    }, 256)
 
-    syncnow()
-    requestAnimationFrame(syncnow)
+    sync()
+    requestAnimationFrame(() => {
+      sync()
+    })
 
-    window.addEventListener('resize', syncdebounced)
+    window.addEventListener('resize', sync)
     if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', syncnow)
-      window.visualViewport.addEventListener('scroll', syncnow)
-    }
-
-    const frame = document.getElementById('frame')
-    const ro =
-      frame && typeof ResizeObserver !== 'undefined'
-        ? new ResizeObserver(() => {
-            syncnow()
-          })
-        : undefined
-    if (frame && ro) {
-      ro.observe(frame)
+      window.visualViewport.addEventListener('resize', sync)
+      window.visualViewport.addEventListener('scroll', sync)
     }
 
     return () => {
-      syncdebounced.clear()
-      window.removeEventListener('resize', syncdebounced)
+      sync.clear()
+      window.removeEventListener('resize', sync)
       if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', syncnow)
-        window.visualViewport.removeEventListener('scroll', syncnow)
+        window.visualViewport.removeEventListener('resize', sync)
+        window.visualViewport.removeEventListener('scroll', sync)
       }
-      ro?.disconnect()
     }
   }, [store])
 
