@@ -1,4 +1,4 @@
-import type { Group } from 'three'
+import type { Group, Vector3 } from 'three'
 import {
   type FocusExitSnap,
   type FocusUserData,
@@ -130,4 +130,27 @@ export function syncliveboardworldoffset(
     grid.y * BOARD_HEIGHT * drawheight,
     0,
   )
+}
+
+/**
+ * DOF player target in world space from live-board local cell coords.
+ * Must use liveboard (not corner) after global board slots -- local focus
+ * lives on the live mesh which sits at boardgridx/y.
+ */
+export function setdofplayerworld(
+  out: Vector3,
+  liveboard: Group | null,
+  localx: number,
+  localy: number,
+  drawwidth: number,
+  drawheight: number,
+  z: number,
+): boolean {
+  if (!liveboard) {
+    return false
+  }
+  liveboard.updateMatrixWorld(true)
+  out.set((localx + 0.5) * drawwidth, (localy + 0.5) * drawheight, z)
+  liveboard.localToWorld(out)
+  return true
 }

@@ -37,6 +37,7 @@ import {
   panviewequals,
   readboardgridforrender,
   resolvepanviewforrender,
+  setdofplayerworld,
   syncliveboardworldoffset,
 } from 'zss/gadget/graphics/panviewsync'
 import { RenderLayer } from 'zss/gadget/graphics/renderlayer'
@@ -263,16 +264,22 @@ export const Mode7Graphics = memo(function Mode7Graphics({
 
     const playerspritez = maxspriteslayerz(gadget.layers ?? [], 'mode7')
 
-    cornerref.current.updateMatrixWorld(true)
-    dofplayerworld.current.set(
-      (control.focusx + 0.5) * drawwidth,
-      (control.focusy + 0.5) * drawheight,
-      playerspritez,
-    )
-    cornerref.current.localToWorld(dofplayerworld.current)
-    cameraref.current.getWorldPosition(dofcamworld.current)
-    depthoffield.current.cocMaterial.focusDistance =
-      dofcamworld.current.distanceTo(dofplayerworld.current)
+    if (
+      depthoffield.current &&
+      setdofplayerworld(
+        dofplayerworld.current,
+        liveboardref.current,
+        control.focusx,
+        control.focusy,
+        drawwidth,
+        drawheight,
+        playerspritez,
+      )
+    ) {
+      cameraref.current.getWorldPosition(dofcamworld.current)
+      depthoffield.current.cocMaterial.focusDistance =
+        dofcamworld.current.distanceTo(dofplayerworld.current)
+    }
 
     tickerpublishfromtickers({
       tickers: gadget.tickers ?? [],

@@ -14,9 +14,11 @@ import {
   PANVIEW_IDLE,
   readboardgridforrender,
   resolvepanviewforrender,
+  setdofplayerworld,
 } from 'zss/gadget/graphics/panviewsync'
 import type { LAYER } from 'zss/gadget/data/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
+import { Group, Vector3 } from 'three'
 
 describe('global board space camerafocus', () => {
   it('bumps boardgridx on east exit and keeps focus continuous', () => {
@@ -276,6 +278,18 @@ describe('panviewsync coherence', () => {
       boardgridy: 0,
     }
     expect(readboardgridforrender(userdata, 'e')).toEqual({ x: 1, y: 0 })
+  })
+
+  it('setdofplayerworld transforms local cell through liveboard offset', () => {
+    const live = new Group()
+    live.position.set(BOARD_WIDTH * 8, 0, 0)
+    live.updateMatrixWorld(true)
+    const out = new Vector3()
+    expect(setdofplayerworld(out, live, 0, 0, 8, 14, 5)).toBe(true)
+    expect(out.x).toBeCloseTo(BOARD_WIDTH * 8 + 4)
+    expect(out.y).toBeCloseTo(7)
+    expect(out.z).toBeCloseTo(5)
+    expect(setdofplayerworld(out, null, 0, 0, 8, 14, 0)).toBe(false)
   })
 
   it('prefers active userdata pan over idle committed during enter', () => {
