@@ -138,7 +138,7 @@ export const IsoGraphics = memo(function IsoGraphics({
       useGadgetClient.getState().gadget.layers ?? [],
     )
 
-    const animrate = 0.05
+    const animrate = FOCUS_ANIM_RATE
     const currentboard = useGadgetClient.getState().gadget.board
 
     // tracking state

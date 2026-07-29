@@ -3,6 +3,7 @@ import { LAYER, LAYER_TYPE } from 'zss/gadget/data/types'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
+import { recordfilterrebuild } from 'zss/perf/renderupdatestats'
 import { COLLISION } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -69,6 +70,7 @@ export function Mode7Layer({
         layer.bg,
         layer.props,
       )
+      recordfilterrebuild('mode7')
       return (
         <group key={layer.id} position={[0, 0, z]}>
           <Tiles

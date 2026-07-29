@@ -4,6 +4,7 @@ import { LAYER, LAYER_TYPE, layersreadcontrol } from 'zss/gadget/data/types'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_WIDTH } from 'zss/memory/types'
+import { recordfilterrebuild } from 'zss/perf/renderupdatestats'
 import { COLLISION } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -58,6 +59,7 @@ export function FPVLayer({
     case LAYER_TYPE.TILES: {
       const { floor, walls, water, sky, flooredge, skyedge } =
         splitlayer2fpvtiles(layer.char, layer.color, layer.bg, layer.props)
+      recordfilterrebuild('fpv')
       return (
         <>
           <group key={layer.id} position={[0, 0, z]}>
