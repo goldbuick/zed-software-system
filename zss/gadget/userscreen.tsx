@@ -9,7 +9,7 @@ import {
 } from 'react'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
-import { useDeviceData, type TOUCHPADS } from 'zss/gadget/device'
+import { type TOUCHPADS, useDeviceData } from 'zss/gadget/device'
 import { TouchUI } from 'zss/screens/touchui/component'
 import {
   ACTION_ROW_WIDTH,

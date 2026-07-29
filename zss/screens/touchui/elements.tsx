@@ -56,7 +56,7 @@ function PortraitSidebarToggle({
   )
 }
 
-function PortraitDock({ width, height }: { width: number; height: number }) {
+function PortraitDock({ width }: { width: number; height: number }) {
   const context = useWriteText()
   resettiles(context, 32, FG, BG)
 

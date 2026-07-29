@@ -1,9 +1,9 @@
 import nipplejs from 'nipplejs'
 import { useEffect, useMemo, useRef } from 'react'
 import {
-  useDeviceData,
-  type TOUCHPAD_ZONE,
   type TOUCHPADS,
+  type TOUCHPAD_ZONE,
+  useDeviceData,
 } from 'zss/gadget/device'
 import { INPUT_RATE } from 'zss/gadget/userinput'
 import { modpositive, snap } from 'zss/mapping/number'
@@ -44,10 +44,7 @@ function basesizefor(zone: TOUCHPAD_ZONE) {
   return Math.max(24, Math.floor(Math.min(zone.width, zone.height) * 0.7))
 }
 
-function buildpadlayout(
-  pads: TOUCHPADS,
-  islandscape: boolean,
-): PadLayout {
+function buildpadlayout(pads: TOUCHPADS, islandscape: boolean): PadLayout {
   const movebase = basesizefor(pads.move)
   const shootbase = basesizefor(pads.shoot)
   if (!islandscape) {
