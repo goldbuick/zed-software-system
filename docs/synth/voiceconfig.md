@@ -18,14 +18,20 @@ Handles voice/source configuration from external API (e.g. device commands). For
 
 | Config | Value | Description |
 |--------|-------|-------------|
-| `restart` | — | Applies full synth reset |
+| `restart` | — | Applies full synth reset (clears per-slot config memory) |
 | `vol` / `volume` | number | Source volume |
 | `port` / `portamento` | number (seconds) | Portamento (SYNTH, ALGO_SYNTH, BOWED_VOICE) |
 | `env` / `envelope` | [a,d,s,r] | ADSR envelope |
 
+## Config memory across type switches
+
+Per play/bgplay voice index, family blobs (`stringensemble`, `pluck`, `wind`, …) and osc/algo rows stay in memory when you change type. ADSR and portamento are snapshotted per `(type, algo)` so switching away and back restores the last settings for that voice. Exclusive keys (e.g. `detune`, `structure`) also write dormantly into their family blob. Only `#synth restart` (and boot defaults) fully clear this memory.
+
+Top-level config-only commands (`#string`, `#fmsquare`, `#piano1`, …) adjust those slots without selecting the type — use `#synth <name>` to select.
+
 ## Source Type Changes
 
-Switching named voice type (or entering SYNTH from a non-SYNTH voice via a wave name) installs that destination's default ADSR and clears `portamento`. Same-SYNTH wave changes (`square` → `sawtooth`) keep the current envelope. `#synth bells` installs Tone-parity carrier env `0.01/3/0.3/6`.
+First visit to a named type (or SYNTH via a wave name) installs that destination's default ADSR. Returning to a previously used `(type, algo)` restores the snapshotted envelope and portamento. Same-SYNTH wave changes (`square` → `sawtooth`) keep the current envelope. `#synth bells` installs Tone-parity carrier env `0.01/3/0.3/6` on first visit.
 
 | Config | Source Type |
 |--------|-------------|
@@ -38,22 +44,39 @@ Switching named voice type (or entering SYNTH from a non-SYNTH voice via a wave 
 | `algo0` - `algo7` | ALGO_SYNTH (algorithm 0-7) |
 | `string` | STRING_VOICE (algo 0, WASM only) |
 | `pluck` | STRING_VOICE (algo 1, WASM only) |
-| `drip` | DRIP_VOICE (WASM only) |
-| `flute` / `clarinet` / `brass` / `panpipe` | WIND_VOICE (algo 0–3, WASM only) |
-| `piano` / `epiano` | PIANO_VOICE (algo 0–1, WASM only) |
-| `timpani` | TIMPANI_VOICE (WASM only) |
-| `violin` / `viola` | BOWED_VOICE (algo 0–1, WASM only) |
-| `nylon` / `steel` | GUITAR_VOICE (algo 0–1, WASM only) |
-| `tonewheel` / `drawbar` | ORGAN_VOICE (algo 0–1, WASM only) |
+| `flute` / `clarinet` / `brass` | WIND_VOICE (algo 0–2, WASM only) |
+| `piano` | PIANO_VOICE (algo 0, WASM only) |
+| `violin` | BOWED_VOICE (algo 0, WASM only) |
+| `steel` | GUITAR_VOICE (algo 1, WASM only) |
+| `tonewheel` | ORGAN_VOICE (algo 0, WASM only; `drawbar` remains an organ **param**) |
 
 ## Wind configs (wasmvoiceconfig.ts, WASM only)
 
-| Config | Value | Default |
-|--------|-------|---------|
-| `breath` | 0–1 | `0.3` |
-| `pressure` | 0–1 | `0.45` |
-| `brightness` | 0–1 | `0.45` |
-| `resonance` | 0–1 | `0.15` |
+Select defaults come from **`winddefaults(algo)`**, not the pool `DEFAULT_WASM_WIND` (`0.3/0.45/0.45/0.15`).
+
+| Config | Value | flute | clarinet | brass |
+|--------|-------|-------|----------|-------|
+| `breath` | 0–1 | 0.35 | 0.25 | 0.15 |
+| `pressure` | 0–1 | 0.4 | 0.35 | 0.65 |
+| `brightness` | 0–1 | 0.45 | 0.3 | 0.55 |
+| `resonance` | 0–1 | 0.1 | 0.2 | 0.35 |
+
+## Shared `#synth` keys (fallthrough)
+
+Overlapping names must **fall through** when the current voice is not the owner (same pattern as piano `spread` vs fat `spread`). Exclusive keys may write dormantly into their family blob.
+
+| Key | Owners | Exclusive? |
+|-----|--------|------------|
+| `spread` | piano (0–1), fat (cents) | no |
+| `brightness` / `damping` | pluck, wind, piano, guitar | no |
+| `pressure` | wind, bowed | no |
+| `vib` | string, bowed | no |
+| `body` | bowed, guitar | no |
+| `structure` / `accent` | pluck only | yes (dormant ok) |
+| `breath` / `resonance` | wind only | yes (dormant ok) |
+| `hammer` | piano only | yes (dormant ok) |
+| `bow` | bowed only | yes (dormant ok) |
+| `detune` / `pwm` / `filter` | string only | yes (dormant ok; bare `pwm` still selects wave) |
 
 ## Piano configs (WASM only)
 
@@ -64,16 +87,7 @@ Switching named voice type (or entering SYNTH from a non-SYNTH voice via a wave 
 | `brightness` | 0–1 | `0.5` |
 | `damping` | 0–1 | `0.45` |
 
-On `#synth piano` / `epiano`, `spread` is the piano unison param (0–1). On fat SYNTH waves (`fatsawtooth`, etc.), the same key name sets fat detune **cents** (default `20`).
-
-## Timpani configs (WASM only)
-
-| Config | Value | Default |
-|--------|-------|---------|
-| `tension` | 0–1 | `0.5` |
-| `decay` | 0–1 | `0.55` |
-| `tone` | 0–1 | `0.45` |
-| `strike` | 0–1 | `0.6` |
+On `#synth piano`, `spread` is the piano unison param (0–1). On fat SYNTH waves (`fatsawtooth`, etc.), the same key name sets fat detune **cents** (default `20`).
 
 ## Bowed configs (WASM only)
 
@@ -86,20 +100,20 @@ On `#synth piano` / `epiano`, `spread` is the piano unison param (0–1). On fat
 
 Portamento applies to bowed voices.
 
-## Guitar configs (WASM only)
+## Guitar configs (WASM only) — `#synth steel`
 
-| Config | Value | Default (nylon / steel select) |
-|--------|-------|--------------------------------|
-| `pick` | 0–1 | `0.25` / `0.5` |
-| `body` | 0–1 | `0.4` / `0.35` |
-| `damping` | 0–1 | `0.72` / `0.7` (native cap 0.85; DaisySP >= 0.95 = infinite ring) |
-| `position` | 0–1 | `0.35` / `0.6` |
+| Config | Value | Default (steel select) |
+|--------|-------|------------------------|
+| `pick` | 0–1 | `0.5` |
+| `body` | 0–1 | `0.35` |
+| `damping` | 0–1 | `0.7` (native cap 0.85; DaisySP >= 0.95 = infinite ring) |
+| `position` | 0–1 | `0.6` |
 
-## Organ configs (WASM only)
+## Organ configs (WASM only) — `#synth tonewheel`
 
 | Config | Value | Default |
 |--------|-------|---------|
-| `drawbar` | 0–1 | `0.7` |
+| `drawbar` | 0–1 | `0.7` (param only; not a named voice) |
 | `click` | 0–1 | `0.15` |
 | `leak` | 0–1 | `0.2` |
 | `bright` | 0–1 | `0.5` |
@@ -113,7 +127,7 @@ Portamento applies to bowed voices.
 | `damping` | number (0–1) | String damping |
 | `accent` | number (0–1) | Strike accent |
 
-Applies only when voice is `#synth pluck`. Defaults: `0.14`, `0.38`, `0.72`, `0.12`.
+Defaults: `0.14`, `0.38`, `0.72`, `0.12`. Exclusive keys also write dormantly.
 
 ## String ensemble configs (wasmvoiceconfig.ts, WASM only, `#synth string`)
 
@@ -124,7 +138,7 @@ Applies only when voice is `#synth pluck`. Defaults: `0.14`, `0.38`, `0.72`, `0.
 | `vib` | number (0–1) | VCO1 vibrato depth (0–8¢) |
 | `filter` | number (0–1) | LP cutoff scale + filter envelope |
 
-Applies only when voice is `#synth string` (algo 0). Defaults: `0.25`, `0.2`, `0.35`, `0.5`. See [voice-types-reference.md](voice-types-reference.md) §6.
+Defaults: `0.25`, `0.2`, `0.35`, `0.5`. See [voice-types-reference.md](voice-types-reference.md) §6.
 
 ## Oscillator Types (SYNTH)
 

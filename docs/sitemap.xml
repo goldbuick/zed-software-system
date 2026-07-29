@@ -39,7 +39,6 @@
   <url><loc>https://zed.cafe/docs/features/speech-tts</loc></url>
   <url><loc>https://zed.cafe/docs/features/storage-session</loc></url>
   <url><loc>https://zed.cafe/docs/features/terminal-cli</loc></url>
-  <url><loc>https://zed.cafe/docs/features/wanix-zedsync</loc></url>
   <url><loc>https://zed.cafe/docs/features</loc></url>
   <url><loc>https://zed.cafe/docs/firmware/README</loc></url>
   <url><loc>https://zed.cafe/docs/firmware/audio</loc></url>
@@ -137,9 +136,6 @@
   <url><loc>https://zed.cafe/docs/synth/voicefx</loc></url>
   <url><loc>https://zed.cafe/docs/synth/worklets</loc></url>
   <url><loc>https://zed.cafe/docs/synth</loc></url>
-  <url><loc>https://zed.cafe/docs/wanix/integration</loc></url>
-  <url><loc>https://zed.cafe/docs/wanix/zedsync</loc></url>
-  <url><loc>https://zed.cafe/docs/wanix</loc></url>
   <url><loc>https://zed.cafe/docs/words/README</loc></url>
   <url><loc>https://zed.cafe/docs/words/category</loc></url>
   <url><loc>https://zed.cafe/docs/words/collision</loc></url>

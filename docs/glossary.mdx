@@ -131,30 +131,6 @@ Source: [`zss/feature/docs/itchiopublish.md`](https://github.com/goldbuick/zed-s
 
 #zztsearch / #zztrandom — browse classic ZZT worlds from museum API.
 
-### Wanix
-
-**Audience:** Both · **Related:** zedcafe export, zedsync
-
-First-class complex-data plane: browser OS (Linux v86 + WASI/gojs tasks) in a hidden `/wanix.html` iframe. Parent owns UI, CLI, and sim export; guests see `/zedcafe/`.
-
-Source: [`/wanix/integration`](/wanix/integration)
-
-### zedcafe export
-
-**Audience:** Creator · **Related:** Wanix, zedsync
-
-Live sim books mirrored into a guest-visible tree at `/zedcafe/` (or `./zedcafe/` for tasks) for findplayers, greenring, and Linux helpers.
-
-Source: [`/wanix/integration`](/wanix/integration)
-
-### zedsync
-
-**Audience:** Creator · **Related:** Wanix, zedcafe export
-
-`#wanix zedsync <path>` mirrors `zedcafe/` with a gojs-visible peer directory (FSA folder drop or `#wanix remote` 9P mount). Newer mtime wins; no merge.
-
-Source: [`/wanix/zedsync`](/wanix/zedsync)
-
 ## Multiplayer
 
 ### bridge

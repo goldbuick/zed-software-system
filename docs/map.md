@@ -1,6 +1,6 @@
 ---
 title: System map
-description: Product stack (including Wanix complex-data plane), realms and workers, tick loop, and script pipeline.
+description: Product stack, realms and workers, tick loop, and script pipeline.
 sidebar:
   order: 1
 ---
@@ -11,8 +11,6 @@ Interactive DAG replaced with Mermaid. Click through glossary terms or linked so
 
 **Audience:** Both
 
-Wanix is a **first-class** product surface: the primary integration for **complex data** outside the fantasy terminal UI. Live sim books export into a guest-visible `/zedcafe/` tree so WASI/gojs tools, Linux VM helpers, folder drops, and [zedsync](/wanix/zedsync) peers can read and write allowlisted world state. See [Wanix docs](/wanix).
-
 ```mermaid
 flowchart TB
   zedcafe["ZED Cafe (browser)"]
@@ -20,20 +18,17 @@ flowchart TB
   editor["Code editor"]
   inspector["Inspector (#gadget)"]
   display["R3F display"]
-  wanix["Wanix iframe OS"]
   engine["Engine"]
   register["register device"]
   simvm["Sim VM worker"]
   boardrunner["Boardrunner worker"]
   memory["MEMORY"]
-  zexport["zedcafe export /zedcafe/"]
   chips["CHIPs"]
   firmware["Firmware"]
   zedcafe --> tape
   zedcafe --> editor
   zedcafe --> inspector
   zedcafe --> display
-  zedcafe --> wanix
   tape --> engine
   editor --> engine
   inspector --> engine
@@ -41,12 +36,9 @@ flowchart TB
   engine --> register
   register --> simvm
   register --> boardrunner
-  register --> wanix
   simvm --> memory
   boardrunner --> memory
   memory --> chips
-  memory --> zexport
-  wanix --> zexport
   chips --> firmware
 ```
 
@@ -57,13 +49,11 @@ flowchart TB
 | **Code editor** | Edit codepages (boards, objects, terrain, loaders) with syntax help from ROM. | `zss/screens/tape/` |
 | **Inspector (#gadget)** | Built-in level editor: inspect elements, batch copy, remix, style brush. | `zss/memory/docs/inspection.md` |
 | **R3F display** | Three.js orthographic renderer for tile layers, sprites, dither, and CRT effects. | `zss/gadget/display/` |
-| **Wanix iframe OS** | First-class complex-data plane: browser OS (v86 Linux + WASI/gojs) in `/wanix.html`; parent CLI/UI, guest tools on `/zedcafe/`. | [`/wanix/integration`](/wanix/integration) |
 | **Engine** | Bootstraps createplatform(), mounts the render loop and tape UI. | `zss/gadget/engine.tsx` |
 | **register device** | Main-thread UI edge: storage, zustand stores, emits vm:* messages for user actions. | `zss/device/register.ts` |
 | **Sim VM worker** | Authoritative game logic: owns MEMORY, runs ticktock, elects boardrunners. | `zss/device/vm.ts` |
 | **Boardrunner worker** | Per-board chip simulation for the elected player on each active board. | `zss/device/boardrunner.ts` |
 | **MEMORY** | Singleton authoritative world state: books, boards, elements, session, operator. | `zss/memory/session.ts` |
-| **zedcafe export /zedcafe/** | Path-keyed JSON tree of live books for Wanix guests; import writeback into the sim worker. | [`/wanix/integration#zedcafe-export-the-core-loop`](/wanix/integration#zedcafe-export-the-core-loop) |
 | **CHIPs** | Per-element script VMs that execute compiled codepage logic each tick. | `zss/chip.ts` |
 | **Firmware** | #command vocabulary composed into CLI, LOADER, and RUNTIME drivers. | `zss/firmware/runner.ts` |
 
@@ -77,7 +67,6 @@ flowchart LR
   mgadget["gadgetclient"]
   mbridge["bridge"]
   msynth["synth"]
-  mwanix["wanixclient"]
   mmodem["modem (main)"]
   mhub["hub (main)"]
   mforward["forward (main)"]
@@ -90,7 +79,6 @@ flowchart LR
   brunner["boardrunner"]
   htts["tts (lazy)"]
   hstt["stt (lazy)"]
-  iwanix["wanixserver iframe"]
   mhub --> mforward
   mforward --> shub
   mforward --> sstub
@@ -105,9 +93,7 @@ flowchart LR
   mgadget --> mhub
   mbridge --> mhub
   msynth --> mhub
-  mwanix --> mhub
   mmodem --> mhub
-  mwanix --> iwanix
 ```
 
 | Node | Definition | Path |
@@ -116,7 +102,6 @@ flowchart LR
 | **gadgetclient** | Applies gadgetclient:paint/patch into zustand for rendering. | `zss/device/gadgetclient.ts` |
 | **bridge** | PeerJS multiplayer, fetch, streams, chat connectors. | `zss/device/bridge.ts` |
 | **synth** | Daisy WASM synth device: play, voices, FX; TTS playback routing on main thread. | `zss/device/synth.ts` |
-| **wanixclient** | Parent control plane for Wanix: room, zedcafe export/import kicks, attach, zedsync. | `zss/device/wanixclient.ts` |
 | **modem (main)** | Yjs collaborative editing sync and awareness on main thread. | `zss/device/modem.ts` |
 | **hub (main)** | Fan-out message bus; every device receives every message. | `zss/hub.ts` |
 | **forward (main)** | Bridges realms via postMessage; dedupes by message.id. | `zss/device/forward.ts` |
@@ -129,7 +114,6 @@ flowchart LR
 | **boardrunner** | Runs memorytickmain for elected board; jsonpipe boundary sync. | `zss/device/boardrunner.ts` |
 | **tts (lazy)** | On-demand Piper, Supertonic, or Fish TTS inference; spawned on first tts:* message. | `zss/device/ttsworker.ts` |
 | **stt (lazy)** | On-demand Moonshine speech-to-text; spawned on first stt:* message. | `zss/device/sttworker.ts` |
-| **wanixserver iframe** | Isolated `/wanix.html` realm: namespace, VM/tasks, term pumps, zedcafe host FS (not co-loaded with React). | `cafe/wanix.ts` |
 
 ## Tick loop
 

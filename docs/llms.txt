@@ -5,7 +5,7 @@
 ## Docs
 
 - [Introduction](https://zed.cafe/docs): Zed Cafe developer documentation — system reference for ZSS.
-- [System map](https://zed.cafe/docs/map): Product stack (including Wanix complex-data plane), realms and workers, tick loop, and script pipeline.
+- [System map](https://zed.cafe/docs/map): Product stack, realms and workers, tick loop, and script pipeline.
 - [Glossary](https://zed.cafe/docs/glossary): Terms used across Zed Cafe / ZSS — product, world model, devices, and more.
 - [Architecture](https://zed.cafe/docs/architecture): Pointer to the ZSS architecture deep dive and runtime overview.
 
@@ -25,7 +25,6 @@
 - [Speech & TTS](https://zed.cafe/docs/features/speech-tts): Speech & TTS features in Zed Cafe / ZSS.
 - [Storage & session](https://zed.cafe/docs/features/storage-session): Storage & session features in Zed Cafe / ZSS.
 - [Terminal & CLI](https://zed.cafe/docs/features/terminal-cli): Terminal & CLI features in Zed Cafe / ZSS.
-- [Wanix & zedsync](https://zed.cafe/docs/features/wanix-zedsync): First-class complex-data plane — iframe OS, zedcafe export, and peer sync.
 
 ## Device
 
@@ -175,12 +174,6 @@
 - [Voice FX Module](https://zed.cafe/docs/synth/voicefx)
 - [Voice FX types, config params, and WASM vs Tone defaults](https://zed.cafe/docs/synth/fx-types-reference)
 - [Voice types, config params, and WASM vs Tone defaults](https://zed.cafe/docs/synth/voice-types-reference)
-
-## Wanix
-
-- [Wanix](https://zed.cafe/docs/wanix): First-class complex-data plane — iframe OS, zedcafe export, tasks/VM, and zedsync.
-- [Wanix integration](https://zed.cafe/docs/wanix/integration): Browser OS iframe, zedcafe export, task/VM rooms, terminals, and message protocol.
-- [Zedsync](https://zed.cafe/docs/wanix/zedsync): Mirror zedcafe export with a peer directory via FSA drop or remote 9P (`#wanix zedsync`).
 
 ## Words
 

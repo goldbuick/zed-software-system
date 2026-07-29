@@ -7,8 +7,6 @@ sidebar:
 
 Welcome to the **ZSS System Reference** — architecture, glossary, feature overview, and colocated module manuals for [zed.cafe](https://zed.cafe/).
 
-**Wanix** is a first-class part of the product stack: the primary integration for **complex data** (guest tools, Linux VM helpers, folder peers, and [zedsync](/wanix/zedsync) against the live `/zedcafe/` export). Start with the [system map](/map) and [Wanix docs](/wanix).
-
 ## Two "docs" surfaces
 
 | Surface | URL | Audience |
@@ -20,8 +18,7 @@ ROM help under `zss/rom/` stays in the product runtime. It is not a Blume source
 
 ## Start here
 
-- [System map](/map) — product stack (includes Wanix), workers, tick, script pipeline
-- [Wanix](/wanix) — first-class complex-data plane: iframe OS, zedcafe export, zedsync
+- [System map](/map) — product stack, workers, tick, script pipeline
 - [Glossary](/glossary) — shared vocabulary
 - [Features](/features) — capability tables by domain
 - [Architecture deep dive](/architecture) — points at `zss/ARCHITECTURE.md`
@@ -38,7 +35,6 @@ Colocated under `zss/**/docs/` and mounted into this site:
 | `/synth` | `zss/feature/synth/docs` |
 | `/lang` | `zss/feature/lang/docs` |
 | `/parse` | `zss/feature/parse/docs` |
-| `/wanix` | `zss/feature/wanix/docs` |
 | `/firmware` | `zss/firmware/docs` |
 | `/gadget` | `zss/gadget/docs` |
 | `/mapping` | `zss/mapping/docs` |

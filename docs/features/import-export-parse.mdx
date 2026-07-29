@@ -11,4 +11,3 @@ description: Import / export / parse features in Zed Cafe / ZSS.
 | ZIP / OBJ / markdown | Creator | Archive and object format loaders. | `LOADER driver` |
 | MIDI import | Creator | Convert MIDI files to play notation. | `zss/feature/parse/docs/midi-import.mdx` |
 | itch.io publish | Creator | Package and publish to itch.io platform. | `#itchiopublish` |
-| Wanix / zedcafe / zedsync | Both | First-class complex-data plane (guest tools + peer dirs on live export). | [`/wanix`](/wanix) |
