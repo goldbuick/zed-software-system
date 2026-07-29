@@ -3,7 +3,7 @@
 **Status:** implemented (v1) + wait-before-start/settle  
 **Goal:** Extend the existing 3×3 exit-preview grid with one extra column or row in the travel direction during edge-exit camera glides, so the pan never hits void. Build on `buildexitpreviewgroups` + `stepfocuswithboardtransition` — no new camera system.
 
-**Sync (wait-before-start/settle):** Live-board offset and exit-preview grid share one visual `PanView` ([`panviewsync.ts`](../../zss/gadget/graphics/panviewsync.ts)). On board change, pending bias mounts the departure strip in React first; `useLayoutEffect` offsets the live board before paint. On settle, focus remap is **deferred** (`panrecenterpending`); committed panview lags until React clears the strip, then the same `useLayoutEffect` runs `applypanrecenter` + live to origin + corner snap. **Never `flushSync` mid-`useFrame`**. Live board must not move in `useFrame` ahead of the committed strip.
+**Sync (wait-before-start/settle):** Live-board offset and exit-preview grid share one visual `PanView` ([`panviewsync.ts`](../../zss/gadget/graphics/panviewsync.ts)). On board change, pending bias mounts the departure strip in React first; `useLayoutEffect` offsets the live board before paint. On settle, focus remap is **deferred** (`panrecenterpending`); committed panview lags until React clears the strip, then the same `useLayoutEffect` runs `applypanrecenter` + corner **delta** (not hard snap — preserves damp lag) + live to origin. **Never `flushSync` mid-`useFrame`**. Live board must not move in `useFrame` ahead of the committed strip.
 
 **Default:** During a cardinal board change, render **one extra board in the travel direction** (depth-2) and **pan first** in the departure frame; only after the pan settles, snap/recenter and clear the extra edge. Do **not** always render a full 5×5. Pan motion is **cardinal only** (travel-axis damp; cross-axis frozen).
 
@@ -33,7 +33,7 @@ Wait-before-start
 Wait-before-settle (atomic)
   focus settled → panrecenterpending (keep departure focus)
                → setpanview idle (strip lags via committed panview)
-               → layout: applypanrecenter + live 0 + corner snap → paint
+               → layout: applypanrecenter + corner delta + live 0 → paint
 ```
 
 ```text
@@ -65,7 +65,7 @@ Camera ([`camerafocus.ts`](../../zss/gadget/graphics/camerafocus.ts)):
 
 1. On cardinal edge exit: set `GridBias`, start `panphase`, keep focus in departure frame, damp **travel axis only** toward `pantarget`.
 2. Live board mesh is offset by bias during pan (layout, after strip mounts); departure-centered previews include depth-2 ahead.
-3. When focus near pantarget and smooth near `FOCUS_ANIM_RATE`: mark `panrecenterpending` (do not remap yet); clear panphase. Layout then remaps focus, snaps corner, and resets live board with strip teardown.
+3. When focus near pantarget and smooth near `FOCUS_ANIM_RATE`: snap focus to pantarget, mark `panrecenterpending` (do not remap yet); clear panphase. Layout then remaps focus, shifts corner by board delta (keeps lag), and resets live board with strip teardown.
 
 `#goto` / non-edge moves: no panphase / no bias.
 

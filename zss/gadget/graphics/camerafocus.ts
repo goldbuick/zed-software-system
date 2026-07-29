@@ -78,11 +78,13 @@ export function ispanrecenterpending(userdata: FocusUserData): boolean {
 
 /**
  * Apply deferred settle remap (call from useLayoutEffect with strip teardown).
- * Returns true when a pending recenter was applied.
+ * Returns the travel bias that was applied, or null when nothing was pending.
+ * Callers should shift the corner group by +bias * BOARD * cell size (not hard
+ * snap to the ideal corner) so residual damp lag is preserved optically.
  */
-export function applypanrecenter(userdata: FocusUserData): boolean {
+export function applypanrecenter(userdata: FocusUserData): GridBias | null {
   if (userdata.panrecenterpending !== true) {
-    return false
+    return null
   }
   const biasdx = userdata.panrecenterbiasdx ?? 0
   const biasdy = userdata.panrecenterbiasdy ?? 0
@@ -93,7 +95,18 @@ export function applypanrecenter(userdata: FocusUserData): boolean {
   userdata.panrecenterpending = false
   userdata.panrecenterbiasdx = 0
   userdata.panrecenterbiasdy = 0
-  return true
+  return { dx, dy }
+}
+
+/** Shift corner by the board delta that matches applypanrecenter (keeps lag). */
+export function shiftcornerforpanrecenter(
+  corner: { x: number; y: number },
+  bias: GridBias,
+  drawwidth: number,
+  drawheight: number,
+): void {
+  corner.x += bias.dx * BOARD_WIDTH * drawwidth
+  corner.y += bias.dy * BOARD_HEIGHT * drawheight
 }
 
 export function initfocusifneeded(
@@ -251,6 +264,9 @@ export function stepfocuswithboardtransition(
     const settled = travelsettled && smooth <= FOCUS_ANIM_RATE * 1.5
 
     if (settled) {
+      // Land exactly on pantarget so remapped focus matches dest control.
+      userdata.focusx = pantx
+      userdata.focusy = panty
       // Defer focus remap until layout tears down the departure strip.
       userdata.panrecenterpending = true
       userdata.panrecenterbiasdx = bias.dx
@@ -262,8 +278,8 @@ export function stepfocuswithboardtransition(
       userdata.pantargetx = undefined
       userdata.pantargety = undefined
       // Hold departure-frame focus until applypanrecenter.
-      userdata.tfocusx = fx
-      userdata.tfocusy = fy
+      userdata.tfocusx = pantx
+      userdata.tfocusy = panty
     }
   } else if (userdata.panrecenterpending === true) {
     // Hold focus until layout applies remap (do not damp across the board gap).

@@ -5,6 +5,7 @@ import {
   isfocuspanphase,
   ispanrecenterpending,
   readgridbias,
+  shiftcornerforpanrecenter,
   stepfocuswithboardtransition,
 } from 'zss/gadget/graphics/camerafocus'
 import {
@@ -82,7 +83,7 @@ describe('pan-first camerafocus', () => {
     // Focus still in departure frame until layout applypanrecenter
     expect(userdata.focusx).toBe(BOARD_WIDTH)
     expect(readgridbias(userdata)).toEqual({ dx: 0, dy: 0 })
-    expect(applypanrecenter(userdata)).toBe(true)
+    expect(applypanrecenter(userdata)).toEqual({ dx: 1, dy: 0 })
     expect(userdata.focusx).toBe(0)
     expect(ispanrecenterpending(userdata)).toBe(false)
   })
@@ -219,6 +220,15 @@ describe('pan-first camerafocus', () => {
     expect(userdata.focusx).toBe(before)
     applypanrecenter(userdata)
     expect(userdata.focusx).toBe(0)
+  })
+
+  it('shiftcornerforpanrecenter preserves lag via board delta', () => {
+    const corner = { x: 100, y: 50 }
+    shiftcornerforpanrecenter(corner, { dx: 1, dy: 0 }, 8, 14)
+    expect(corner.x).toBe(100 + BOARD_WIDTH * 8)
+    expect(corner.y).toBe(50)
+    shiftcornerforpanrecenter(corner, { dx: 0, dy: -1 }, 8, 14)
+    expect(corner.y).toBe(50 - BOARD_HEIGHT * 14)
   })
 })
 

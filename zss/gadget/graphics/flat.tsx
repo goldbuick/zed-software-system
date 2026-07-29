@@ -17,6 +17,7 @@ import {
   isfocuspanphase,
   ispanrecenterpending,
   readgridbias,
+  shiftcornerforpanrecenter,
   stashfocusexitsnap,
   stepfocuswithboardtransition,
 } from 'zss/gadget/graphics/camerafocus'
@@ -244,7 +245,8 @@ export const FlatGraphics = memo(function FlatGraphics({
     gadget.board ?? '',
   )
   // Wait-before-start/settle: offset live board only after the matching strip is in JSX.
-  // Atomic settle: remap focus + corner snap in the same layout beat as live -> 0.
+  // Atomic settle: remap focus + corner delta + live -> 0 in one layout beat.
+  // Corner shifts by board delta (preserves damp lag); do not hard-snap to ideal.
   useLayoutEffect(() => {
     const userdata = cameraref.current?.userData
     if (
@@ -252,13 +254,15 @@ export const FlatGraphics = memo(function FlatGraphics({
       !visualpan.panphase &&
       ispanrecenterpending(userdata)
     ) {
-      applypanrecenter(userdata)
-      const viewscale = zoomref.current?.scale.x ?? 1
-      const fx = ((userdata.focusx ?? 0) + 0.5) * drawwidth
-      const fy = ((userdata.focusy ?? 0) + 0.5) * drawheight
-      const targetcornerx = -centerx / viewscale - fx
-      const targetcornery = -centery / viewscale - fy
-      cornerref.current?.position.set(targetcornerx, targetcornery, 0)
+      const bias = applypanrecenter(userdata)
+      if (bias && cornerref.current) {
+        shiftcornerforpanrecenter(
+          cornerref.current.position,
+          bias,
+          drawwidth,
+          drawheight,
+        )
+      }
     }
     syncliveboardpanoffset(
       liveboardref.current,
@@ -272,8 +276,6 @@ export const FlatGraphics = memo(function FlatGraphics({
     visualpan.biasdy,
     drawwidth,
     drawheight,
-    centerx,
-    centery,
   ])
   const exitpreviewgroups = buildexitpreviewgroups(
     gadget,

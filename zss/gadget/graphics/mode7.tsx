@@ -18,6 +18,7 @@ import {
   isfocuspanphase,
   ispanrecenterpending,
   readgridbias,
+  shiftcornerforpanrecenter,
   stashfocusexitsnap,
   stepfocuswithboardtransition,
 } from 'zss/gadget/graphics/camerafocus'
@@ -327,10 +328,15 @@ export const Mode7Graphics = memo(function Mode7Graphics({
       !visualpan.panphase &&
       ispanrecenterpending(userdata)
     ) {
-      applypanrecenter(userdata)
-      const fx = ((userdata.focusx ?? 0) + 0.5) * drawwidth
-      const fy = ((userdata.focusy ?? 0) + 0.5) * drawheight
-      cornerref.current?.position.set(-fx, -fy, 0)
+      const bias = applypanrecenter(userdata)
+      if (bias && cornerref.current) {
+        shiftcornerforpanrecenter(
+          cornerref.current.position,
+          bias,
+          drawwidth,
+          drawheight,
+        )
+      }
     }
     syncliveboardpanoffset(
       liveboardref.current,
