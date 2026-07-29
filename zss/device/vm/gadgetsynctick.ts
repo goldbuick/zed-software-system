@@ -70,6 +70,10 @@ type GADGET_VOID_FALLBACK = {
   exitwest: string
   exitnorth: string
   exitsouth: string
+  exiteast2: string
+  exitwest2: string
+  exitnorth2: string
+  exitsouth2: string
   exitne: string
   exitnw: string
   exitse: string
@@ -130,6 +134,10 @@ function applyblankgadget(gadget: GADGET_STATE) {
   gadget.exitwest = ''
   gadget.exitnorth = ''
   gadget.exitsouth = ''
+  gadget.exiteast2 = ''
+  gadget.exitwest2 = ''
+  gadget.exitnorth2 = ''
+  gadget.exitsouth2 = ''
   gadget.exitne = ''
   gadget.exitnw = ''
   gadget.exitse = ''
@@ -150,6 +158,10 @@ function writegadgetfallbackcache(player: string, gadget: GADGET_STATE) {
     exitwest: gadget.exitwest,
     exitnorth: gadget.exitnorth,
     exitsouth: gadget.exitsouth,
+    exiteast2: gadget.exiteast2,
+    exitwest2: gadget.exitwest2,
+    exitnorth2: gadget.exitnorth2,
+    exitsouth2: gadget.exitsouth2,
     exitne: gadget.exitne,
     exitnw: gadget.exitnw,
     exitse: gadget.exitse,
@@ -173,6 +185,10 @@ function applygadgetfallback(
   gadget.exitwest = fallback?.exitwest ?? ''
   gadget.exitnorth = fallback?.exitnorth ?? ''
   gadget.exitsouth = fallback?.exitsouth ?? ''
+  gadget.exiteast2 = fallback?.exiteast2 ?? ''
+  gadget.exitwest2 = fallback?.exitwest2 ?? ''
+  gadget.exitnorth2 = fallback?.exitnorth2 ?? ''
+  gadget.exitsouth2 = fallback?.exitsouth2 ?? ''
   gadget.exitne = fallback?.exitne ?? ''
   gadget.exitnw = fallback?.exitnw ?? ''
   gadget.exitse = fallback?.exitse ?? ''
@@ -244,6 +260,10 @@ function gadgetsynctickbody(vm: DEVICE) {
       gadget.exitwest = gadgetlayers.exitwest
       gadget.exitnorth = gadgetlayers.exitnorth
       gadget.exitsouth = gadgetlayers.exitsouth
+      gadget.exiteast2 = gadgetlayers.exiteast2
+      gadget.exitwest2 = gadgetlayers.exitwest2
+      gadget.exitnorth2 = gadgetlayers.exitnorth2
+      gadget.exitsouth2 = gadgetlayers.exitsouth2
       gadget.exitne = gadgetlayers.exitne
       gadget.exitnw = gadgetlayers.exitnw
       gadget.exitse = gadgetlayers.exitse

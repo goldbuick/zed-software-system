@@ -89,6 +89,10 @@ enum GADGET_STATE_KEYS {
   exitnw,
   exitse,
   exitsw,
+  exiteast2,
+  exitwest2,
+  exitnorth2,
+  exitsouth2,
 }
 
 export function exportgadgetstate(
