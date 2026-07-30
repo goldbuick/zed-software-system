@@ -209,7 +209,7 @@ Chip OS / tick loop.
 
 ## gamesend.ts
 
-- **memorysendtoboards(target, message, data, boards)**, **memorysendtoelement(fromelement, toelement, label)**, **memorysendtoelements(chip, fromelement, send)**, **memorysendtolog(board, element, text)**
+- **memorysendtoboards(target, message, data, boards)**, **memorysendtoelement(fromelement, toelement, label)**, **memorysendtoelements(chip, fromelement, send)**
 
 ## loader.ts
 

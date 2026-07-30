@@ -13,4 +13,4 @@ description: Element scripting features in Zed Cafe / ZSS.
 | #lock / #unlock | Creator | Block or allow external messages during execution. | `#lock` |
 | #cycle | Creator | Set element tick rate divisor 1–255. | `#cycle` |
 | #char / #color | Creator | Set display char/color on self or at direction. | `#char` |
-| #toast / #ticker | Creator | UI toast notification or sidebar ticker text. | `#toast` |
+| #toast / #ticker | Creator | UI toast notification or floating ticker text (no terminal line). | `#toast` |

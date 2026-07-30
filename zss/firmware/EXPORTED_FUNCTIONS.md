@@ -142,7 +142,7 @@ Display commands `toast` and `ticker` are registered on **ELEMENT_FIRMWARE** in 
 | Command | Description |
 |---------|-------------|
 | `toast` | Display a toast notification message |
-| `ticker` | Set ticker text for the current element (sidebar text) |
+| `ticker` | Set floating ticker text for the current element (no chat/tape) |
 
 #### State Management
 | Command | Description |

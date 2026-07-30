@@ -1,5 +1,4 @@
 import { CHIP } from 'zss/chip'
-import { apichat } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { pttoindex } from 'zss/mapping/2d'
 import { createsid, ispid } from 'zss/mapping/guid'
@@ -17,7 +16,6 @@ import {
 import { memoryboardelementisobject } from './boardelement'
 import { memorysafedeleteelement } from './boardlifecycle'
 import { memoryreadelementstat } from './boards'
-import { memoryelementtologprefix } from './rendering'
 import { memorymessagechip } from './runtime'
 import { memoryreadbookbysoftware } from './session'
 import { memorylistboardelementsbyidnameorpts } from './spatialqueries'
@@ -274,15 +272,4 @@ export function memorysendtoelements(
       }
     }
   }
-}
-
-export function memorysendtolog(
-  board: MAYBE<string>,
-  element: MAYBE<BOARD_ELEMENT>,
-  text: string,
-) {
-  if (!ispresent(board) || !ispresent(element?.id)) {
-    return
-  }
-  apichat(SOFTWARE, board, `${memoryelementtologprefix(element)}${text}`)
 }

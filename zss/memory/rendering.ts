@@ -510,7 +510,7 @@ export function memoryelementtologprefix(element: MAYBE<BOARD_ELEMENT>) {
   return `${displayprefix}$ONCLEAR$CYAN ${withname}:$WHITE `
 }
 
-/** Ticker strip prefix only; uses @displayname when set (element then kind). Chat logs use memoryelementtologprefix. */
+/** Ticker strip prefix only; uses @displayname when set (element then kind). */
 export function memoryelementtotickerprefix(element: MAYBE<BOARD_ELEMENT>) {
   if (!ispresent(element?.id)) {
     return ''
