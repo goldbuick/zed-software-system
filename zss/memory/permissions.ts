@@ -34,6 +34,7 @@ export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
   dupewith: 'build',
   duplicate: 'build',
   duplicatewith: 'build',
+  erase: 'build',
   findany: 'build',
   gadget: 'build',
   oneof: 'build',
