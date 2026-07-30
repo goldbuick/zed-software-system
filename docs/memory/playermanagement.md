@@ -35,6 +35,7 @@ title: playermanagement.ts
 | `memorylogoutplayer(player, isendgame)` | Remove the player element, clear flags, halt the chip; on endgame preserves `deaths` / `highscore`. |
 | `memoryreadplayerboard(player)` | Resolve the board the player is currently on (via `flags.board`). |
 | `memoryreadplayeractive(player)` | True iff the player is in the mainbook activelist **and** has an element on its board. |
+| `memorypicknextactiveplayerboard()` | Next board for an active player; cycles each pid once via shuffled `withplayerboard_tracking.ids` (same pattern as `@pick shuffle`). |
 | `memoryreadbookplayeractive(book, player)` | Activelist membership for the given book. |
 | `memoryreadbookplayerboards(book)` | Returns every board (over board first when present) that has at least one active player. Used by `gadgetsynctick` and the boardrunner election loop. |
 | `memorywritebookplayerboard(book, player, board)` | Set `flags.board` and add/remove the player from the active list as needed. |

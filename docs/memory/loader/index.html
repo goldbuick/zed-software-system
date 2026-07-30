@@ -52,7 +52,7 @@
 </tbody>
 </table></div>
 <h2 id="loader-read_context-snapshot"><a class="blume-heading-anchor" href="#loader-read_context-snapshot">Loader READ_CONTEXT snapshot</a></h2>
-<p>Loaders that survive multiple ticks (<code>#idle</code>, import loops) need <code>#withboard</code> / <code>#withobject</code> targeting to persist. <a href="runtime.md"><code>memorytickloaders</code></a> calls:</p>
+<p>Loaders that survive multiple ticks (<code>#idle</code>, import loops) need <code>#withboard</code> / <code>#withplayerboard</code> / <code>#withobject</code> targeting to persist. <a href="runtime.md"><code>memorytickloaders</code></a> calls:</p>
 <ol>
 <li><code>memoryloaderreadcontextapply(id)</code> before each tick (defaults on first tick)</li>
 <li><code>memoryloaderreadcontextsave(id)</code> after each tick</li>

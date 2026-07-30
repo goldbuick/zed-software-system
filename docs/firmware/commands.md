@@ -89,6 +89,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `readjson` | JSON data |
 | `readbin` | Binary data |
 | `withboard` | To target board by id, name, or stat |
+| `withplayerboard` | Cycle active player board (tracking shuffle) |
 | `withobject` | To target object id |
 | `userinput` | User input actions (up/down/left/right/etc) |
 

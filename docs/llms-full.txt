@@ -2637,6 +2637,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `readjson` | JSON data |
 | `readbin` | Binary data |
 | `withboard` | To target board by id, name, or stat |
+| `withplayerboard` | Cycle active player board (tracking shuffle) |
 | `withobject` | To target object id |
 | `userinput` | User input actions (up/down/left/right/etc) |
 
@@ -2997,6 +2998,7 @@ Returns loader metadata based on format:
 | Command | Args | Description |
 |---------|------|-------------|
 | `withboard` | `stat` | Set READ_CONTEXT.board to board at stat; element = random pt |
+| `withplayerboard` | (none) | Cycle next active player's board via `withplayerboard_tracking` shuffle queue; element = random pt |
 | `withobject` | `id` | Set READ_CONTEXT.element to object; updates elementid, elementisplayer, elementfocus for send/chat |
 
 ### Loader context
@@ -3016,7 +3018,8 @@ Returns loader metadata based on format:
 ## Design Notes
 
 - `withobject` enables `#oneof chatuser … #withobject chatuser #goup '` patterns for chat-driven object behavior
-- `#withboard` / `#withobject` set board and object **targeting** on `READ_CONTEXT`; [`memorytickloaders`](../../memory/runtime.ts) persists those five fields per loader chip id across ticks (not whole `READ_CONTEXT`, not across separate loader invocations)
+- `#withplayerboard` picks among **active** players (activelist + object on board), cycling each pid once through a shuffled `ids` queue under `withplayerboard_tracking` (same pattern as `@pick shuffle`); then sets that player's board. Does not set player focus — use `#withobject` for that
+- `#withboard` / `#withplayerboard` / `#withobject` set board and object **targeting** on `READ_CONTEXT`; [`memorytickloaders`](../../memory/runtime.ts) persists those five fields per loader chip id across ticks (not whole `READ_CONTEXT`, not across separate loader invocations)
 - Loader context overrides runtime behavior for messaging/UI
 - `endgame` is no-op in loaders to avoid ending session during import
 
@@ -6405,7 +6408,7 @@ Source: https://zed.cafe/docs/memory/loader
 
 ## Loader READ_CONTEXT snapshot
 
-Loaders that survive multiple ticks (`#idle`, import loops) need `#withboard` / `#withobject` targeting to persist. [`memorytickloaders`](runtime.md) calls:
+Loaders that survive multiple ticks (`#idle`, import loops) need `#withboard` / `#withplayerboard` / `#withobject` targeting to persist. [`memorytickloaders`](runtime.md) calls:
 
 1. `memoryloaderreadcontextapply(id)` before each tick (defaults on first tick)
 2. `memoryloaderreadcontextsave(id)` after each tick
@@ -6451,6 +6454,7 @@ Source: https://zed.cafe/docs/memory/playermanagement
 | `memorylogoutplayer(player, isendgame)` | Remove the player element, clear flags, halt the chip; on endgame preserves `deaths` / `highscore`. |
 | `memoryreadplayerboard(player)` | Resolve the board the player is currently on (via `flags.board`). |
 | `memoryreadplayeractive(player)` | True iff the player is in the mainbook activelist **and** has an element on its board. |
+| `memorypicknextactiveplayerboard()` | Next board for an active player; cycles each pid once via shuffled `withplayerboard_tracking.ids` (same pattern as `@pick shuffle`). |
 | `memoryreadbookplayeractive(book, player)` | Activelist membership for the given book. |
 | `memoryreadbookplayerboards(book)` | Returns every board (over board first when present) that has at least one active player. Used by `gadgetsynctick` and the boardrunner election loop. |
 | `memorywritebookplayerboard(book, player, board)` | Set `flags.board` and add/remove the player from the active list as needed. |

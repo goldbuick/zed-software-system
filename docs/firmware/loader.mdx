@@ -36,6 +36,7 @@ Returns loader metadata based on format:
 | Command | Args | Description |
 |---------|------|-------------|
 | `withboard` | `stat` | Set READ_CONTEXT.board to board at stat; element = random pt |
+| `withplayerboard` | (none) | Cycle next active player's board via `withplayerboard_tracking` shuffle queue; element = random pt |
 | `withobject` | `id` | Set READ_CONTEXT.element to object; updates elementid, elementisplayer, elementfocus for send/chat |
 
 ### Loader context
@@ -55,6 +56,7 @@ Returns loader metadata based on format:
 ## Design Notes
 
 - `withobject` enables `#oneof chatuser … #withobject chatuser #goup '` patterns for chat-driven object behavior
-- `#withboard` / `#withobject` set board and object **targeting** on `READ_CONTEXT`; [`memorytickloaders`](../../memory/runtime.ts) persists those five fields per loader chip id across ticks (not whole `READ_CONTEXT`, not across separate loader invocations)
+- `#withplayerboard` picks among **active** players (activelist + object on board), cycling each pid once through a shuffled `ids` queue under `withplayerboard_tracking` (same pattern as `@pick shuffle`); then sets that player's board. Does not set player focus — use `#withobject` for that
+- `#withboard` / `#withplayerboard` / `#withobject` set board and object **targeting** on `READ_CONTEXT`; [`memorytickloaders`](../../memory/runtime.ts) persists those five fields per loader chip id across ticks (not whole `READ_CONTEXT`, not across separate loader invocations)
 - Loader context overrides runtime behavior for messaging/UI
 - `endgame` is no-op in loaders to avoid ending session during import

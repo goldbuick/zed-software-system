@@ -74,6 +74,11 @@
 <td>Set READ_CONTEXT.board to board at stat; element = random pt</td>
 </tr>
 <tr>
+<td><code>withplayerboard</code></td>
+<td>(none)</td>
+<td>Cycle next active player’s board via <code>withplayerboard_tracking</code> shuffle queue; element = random pt</td>
+</tr>
+<tr>
 <td><code>withobject</code></td>
 <td><code>id</code></td>
 <td>Set READ_CONTEXT.element to object; updates elementid, elementisplayer, elementfocus for send/chat</td>
@@ -116,7 +121,8 @@
 <h2 id="design-notes"><a class="blume-heading-anchor" href="#design-notes">Design Notes</a></h2>
 <ul>
 <li><code>withobject</code> enables <code>#oneof chatuser … #withobject chatuser #goup '</code> patterns for chat-driven object behavior</li>
-<li><code>#withboard</code> / <code>#withobject</code> set board and object <strong>targeting</strong> on <code>READ_CONTEXT</code>; <a href="../../memory/runtime.ts"><code>memorytickloaders</code></a> persists those five fields per loader chip id across ticks (not whole <code>READ_CONTEXT</code>, not across separate loader invocations)</li>
+<li><code>#withplayerboard</code> picks among <strong>active</strong> players (activelist + object on board), cycling each pid once through a shuffled <code>ids</code> queue under <code>withplayerboard_tracking</code> (same pattern as <code>@pick shuffle</code>); then sets that player’s board. Does not set player focus — use <code>#withobject</code> for that</li>
+<li><code>#withboard</code> / <code>#withplayerboard</code> / <code>#withobject</code> set board and object <strong>targeting</strong> on <code>READ_CONTEXT</code>; <a href="../../memory/runtime.ts"><code>memorytickloaders</code></a> persists those five fields per loader chip id across ticks (not whole <code>READ_CONTEXT</code>, not across separate loader invocations)</li>
 <li>Loader context overrides runtime behavior for messaging/UI</li>
 <li><code>endgame</code> is no-op in loaders to avoid ending session during import</li>
 </ul>
