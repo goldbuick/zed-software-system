@@ -19,6 +19,7 @@ import { isarray, isstring } from 'zss/mapping/types'
 const defaultpalette = loadpalettefrombytes(PALETTE)
 const defaultcharset = loadcharsetfrombytes(CHARSET)
 
+/** Applies board MEDIA layers into useMedia (board/game only — not useGadgetMedia). */
 export function MediaLayers() {
   const id = useGadgetClient((state) => state.gadget.id)
   useEffect(() => {

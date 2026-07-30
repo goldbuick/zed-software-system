@@ -25,6 +25,11 @@ function startpoll(device: DEVICE, player: string) {
       if (!delta) {
         return
       }
+      apilog(
+        device,
+        player,
+        `memoryfs poll ${delta.writes.length} writes ${delta.deletes.length} deletes`,
+      )
       device.emit(player, 'vm:memoryfsapply', {
         writes: delta.writes,
         deletes: delta.deletes,
@@ -89,6 +94,9 @@ export function handlememoryfswrite(device: DEVICE, message: MESSAGE): void {
   if (!ispresent(data) || !isarray(data.files)) {
     return
   }
+  const filecount = data.files.length
+  const deletecount = isarray(data.deletes) ? data.deletes.length : 0
+  const mode = data.full ? 'full' : 'delta'
   doasync(device, message.player, async () => {
     try {
       await memoryfsfsawritebatch({
@@ -96,6 +104,11 @@ export function handlememoryfswrite(device: DEVICE, message: MESSAGE): void {
         deletes: data.deletes,
         full: data.full,
       })
+      apilog(
+        device,
+        message.player,
+        `memoryfs disk ${filecount} files ${deletecount} deletes (${mode})`,
+      )
       startpoll(device, message.player)
     } catch (err) {
       apierror(
@@ -114,9 +127,12 @@ export function handlememoryfsstatus(device: DEVICE, message: MESSAGE): void {
     apilog(device, message.player, 'memoryfs: not attached')
     return
   }
+  const seen = st.lastseen.size
+  const stamped = st.writestamp.size
+  const polling = st.polltimer ? 'polling' : 'poll pending'
   apilog(
     device,
     message.player,
-    `memoryfs: attached $26 /${st.dropname}/memoryfs`,
+    `memoryfs: attached $26 /${st.dropname}/memoryfs (${seen} tracked, ${stamped} stamped, ${polling})`,
   )
 }

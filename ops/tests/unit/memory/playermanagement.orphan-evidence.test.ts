@@ -45,6 +45,7 @@ jest.mock('zss/device/api', () => ({
   boardrunnerlinkdead: jest.fn(),
   registerinspector: jest.fn(),
   registerloginready: jest.fn(),
+  vmloader: jest.fn(),
 }))
 
 jest.mock('zss/device/vm/boardrunnermanagement', () => ({

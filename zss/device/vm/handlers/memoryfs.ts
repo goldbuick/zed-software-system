@@ -3,6 +3,11 @@ import { apierror, apilog } from 'zss/device/api'
 import type { MESSAGE } from 'zss/device/types'
 import { memoryfsapplyops } from 'zss/feature/memoryfs/apply'
 import {
+  memoryfslog,
+  memoryfslogverbose,
+  memoryfspathsample,
+} from 'zss/feature/memoryfs/log'
+import {
   memoryfscheckontick,
   memoryfsprimshadow,
   memoryfsrunexport,
@@ -43,8 +48,30 @@ export function handlememoryfsapply(vm: DEVICE, message: MESSAGE): void {
   try {
     const result = memoryfsapplyops(writes, deletes)
     memoryfsprimshadow()
+    memoryfslog(
+      vm,
+      message.player,
+      `in ${writes.length} writes ${deletes.length} deletes applied ${result.applied} ignored ${result.ignored}`,
+    )
+    if (writes.length > 0) {
+      memoryfslogverbose(
+        vm,
+        message.player,
+        `in writes${memoryfspathsample(writes.map((w) => w.path))}`,
+      )
+    }
+    if (deletes.length > 0) {
+      memoryfslogverbose(
+        vm,
+        message.player,
+        `in deletes${memoryfspathsample(deletes)}`,
+      )
+    }
     if (result.errors.length > 0) {
       apierror(vm, message.player, 'memoryfs', result.errors[0])
+      for (let i = 1; i < result.errors.length; ++i) {
+        memoryfslogverbose(vm, message.player, `error ${result.errors[i]}`)
+      }
     }
     if (result.ignored > 0) {
       apilog(

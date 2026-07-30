@@ -19,6 +19,12 @@ jest.mock('zss/device/vm/boardrunnerpushupdates', () => ({
   boardrunnerpushupdates: jest.fn(),
 }))
 
+jest.mock('zss/device/vm/playerchatroster', () => ({
+  emitchatconnectplayer: jest.fn(),
+  emitchatdisconnectplayer: jest.fn(),
+  maybeemitplayerchatroster: jest.fn(),
+}))
+
 jest.mock('zss/memory/permissions', () => ({
   memoryistokenbanned: jest.fn(() => false),
   memorysetcommandpermissions: jest.fn(),

@@ -5,6 +5,7 @@ export const CONFIG_KEYS = [
   'scanlines',
   'voice2text',
   'loaderlogging',
+  'memoryfslogging',
   'dev',
   'gadget',
   'touchui',

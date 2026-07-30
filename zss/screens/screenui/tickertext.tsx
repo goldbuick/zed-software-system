@@ -182,6 +182,7 @@ export function ScreenUITickerText({ width, height }: ScreenUITickerTextProps) {
               char={[code]}
               color={[COLOR.WHITE]}
               bg={[COLOR.ONCLEAR]}
+              mediasource="ui"
             />
           </group>
         )

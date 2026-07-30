@@ -3,6 +3,7 @@ import { vmlogout } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
 import type { MESSAGE } from 'zss/device/types'
 import { savestate } from 'zss/device/vm/helpers'
+import { maybeemitplayerchatroster } from 'zss/device/vm/playerchatroster'
 import {
   FLUSH_RATE,
   SECOND_TIMEOUT,
@@ -30,6 +31,8 @@ export function handlesecond(vm: DEVICE, message: MESSAGE): void {
         }
       }
     }
+
+    maybeemitplayerchatroster(vm, message.player)
 
     const flushtick = incflushtick()
     if (flushtick >= FLUSH_RATE) {

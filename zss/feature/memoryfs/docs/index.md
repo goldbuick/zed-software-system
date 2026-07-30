@@ -20,8 +20,19 @@ See module README for path layout, flag owner filters (`*_chip`, `*_tracking`, �
 
 ## Commands
 
-- `#memoryfs status`
+- `#memoryfs status` — attach path, tracked file count, poll state
 - `#memoryfs detach`
+
+## Logging
+
+Tape always gets short sync summaries:
+
+- `memoryfs out N files M deletes (full|delta)` — VM export scheduled to disk
+- `memoryfs disk N files M deletes (...)` — FSA write finished
+- `memoryfs poll N writes M deletes` — external disk change detected
+- `memoryfs in N writes M deletes applied A ignored I` — applied into MEMORY
+
+Enable path samples and jsonpipe diff lines with `#admin` config **`memoryfslogging` on** (same pattern as `loaderlogging`).
 
 ## Agent skill
 

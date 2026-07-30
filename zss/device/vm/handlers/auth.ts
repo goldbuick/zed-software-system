@@ -14,6 +14,11 @@ import {
 import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
 import { handlegadgetdesync } from 'zss/device/vm/gadgetsynctick'
 import {
+  emitchatconnectplayer,
+  emitchatdisconnectplayer,
+  maybeemitplayerchatroster,
+} from 'zss/device/vm/playerchatroster'
+import {
   boardrunnerblocked,
   boardrunners,
   lastinputtime,
@@ -53,6 +58,9 @@ export function handlelogout(vm: DEVICE, message: MESSAGE): void {
     boardrunnerblocked[player] = true
   }
 
+  // Emit before logout clears flags / activelist.
+  emitchatdisconnectplayer(vm, player)
+
   // No flags.board: still tear down tracking and purge any board copies.
   // Skipping this left tracking hot and handlesecond retried vmlogout forever.
   if (!ispresent(currentboard)) {
@@ -64,6 +72,7 @@ export function handlelogout(vm: DEVICE, message: MESSAGE): void {
     )
     memorylogoutplayer(player)
     clearlogouttracking()
+    maybeemitplayerchatroster(vm, player, true)
     boardrunnerpushupdates(vm)
     return
   }
@@ -92,6 +101,7 @@ export function handlelogout(vm: DEVICE, message: MESSAGE): void {
   }
 
   clearlogouttracking()
+  maybeemitplayerchatroster(vm, player, true)
 
   if (boardrunnerassignmentvalid(currentboard.id)) {
     boardrunnerelect(currentboard.id)
@@ -148,6 +158,9 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
       const shouldloaderlogging = memoryreadconfig('loaderlogging') === 'on'
       configlog(vm, message.player, 'loaderlogging', shouldloaderlogging)
 
+      const shouldmemoryfslogging = memoryreadconfig('memoryfslogging') === 'on'
+      configlog(vm, message.player, 'memoryfslogging', shouldmemoryfslogging)
+
       const shouldhalt = memoryreadconfig('dev') === 'on'
       configlog(vm, message.player, 'dev', shouldhalt)
       memorywritehalt(shouldhalt)
@@ -196,6 +209,8 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
     apilog(vm, memoryreadoperator(), `login from ${message.player}`)
     vm.replynext(message, 'acklogin', true)
 
+    emitchatconnectplayer(vm, message.player)
+
     // always desync the gadget
     handlegadgetdesync(vm, message)
   } else {
@@ -218,6 +233,7 @@ export function handlelocal(vm: DEVICE, message: MESSAGE): void {
     lastinputtime[message.player] = Date.now()
     apilog(vm, memoryreadoperator(), `login from ${message.player}`)
     vm.replynext(message, 'acklogin', true)
+    emitchatconnectplayer(vm, message.player)
   } else {
     vm.replynext(message, 'acklogin', false)
   }

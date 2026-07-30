@@ -37,7 +37,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `bookallexport` | Entire book as JSON (operator only) |
 | `pageexport` | Code page as JSON (operator only) |
 | `itchiopublish` | Zip file for itch.io (operator only) |
-| `memoryfs` | Projected MEMORY folder sync: `status` / `detach` (operator only; Chromium folder drop) |
+| `memoryfs` | Projected MEMORY folder sync: `status` / `detach` (operator only; Chromium folder drop). Sync summaries always log to tape; path detail via `#admin` `memoryfslogging` |
 | `gadget` | Built-in inspector |
 | `findany` | Matched elements |
 | `zztsearch` | ZZT content by field and text |
@@ -172,7 +172,14 @@ All firmware commands and their descriptions. Commands are available depending o
 
 ### Bridge chat (Twitch, feeds)
 
-- **Route key:** `routekey` is the suffix for VM events `chat:message:<routekey>`, `chat:action:<routekey>`, `chat:connect:<routekey>`, and `chat:disconnect:<routekey>`. Match it to a **board address** (or other routing key your loader expects) so `vmloader` resolves chat correctly.
+- **Route key:** `routekey` is the suffix for VM loader events:
+  - `chat:message:<routekey>`
+  - `chat:action:<routekey>`
+  - `chat:connect:<routekey>`
+  - `chat:disconnect:<routekey>`
+  - `chat:roster:<routekey>` (speaker idle list; body lines are `name:seconds`, no space after the colon)
+- **Reserved routekey `player`:** in-session players (not a Twitch channel). `#text` from a player emits `chat:message:player` (not the board id). Login/logout emit `chat:connect:player` / `chat:disconnect:player` and refresh `chat:roster:player`. Match loaders with `@event ^chat:message:player`, `@event ^chat:roster:player`, etc.
+- **Twitch / feeds:** keep their own routekey (`chat:roster:mychannel`, …). Roster tracks speakers who recently messaged or acted; idle entries older than 3600s are dropped; disconnect clears the roster and emits an empty body.
 - **Twitch:** `#chat <channel>` or `#chat start twitch <channel> [routekey]` — Twurple uses ambient auth from the environment; do not commit tokens.
 - **Status:** `#bridge` or `#bridge status` prints chat slot state and IVS broadcast summary **without** secrets.
 - **Saved profiles (IndexedDB):** `#chat profile` (same as `#chat profile list`) prints profile names; `#chat profile show <name>` prints one profile (secrets redacted); `#chat profile save …` / `#chat profile delete <name>` manage them. Use `#chat start <kind> @profilename` to apply a profile.

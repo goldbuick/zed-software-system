@@ -5,24 +5,17 @@ import {
   InstancedMesh,
 } from 'three'
 import { RUNTIME } from 'zss/config'
-import { loadpalettefrombytes } from 'zss/feature/bytes'
-import { PALETTE } from 'zss/feature/palette'
-import { convertpalettetocolors } from 'zss/gadget/data/palette'
-import { palettetothreecolors } from 'zss/gadget/data/palettethree'
 import { celltorendervalue } from 'zss/gadget/display/cellvalue'
 import { lookupglyphasync } from 'zss/gadget/display/unicodeatlas'
 import {
   createunicodeoverlaymaterial,
   getunicodeoverlayquadgeometry,
 } from 'zss/gadget/display/unicodeoverlay'
+import { type TILES_MEDIA_SOURCE, useGadgetMedia } from 'zss/gadget/gadgetmedia'
 import { useMedia } from 'zss/gadget/media'
 import { noraycastmesh } from 'zss/gadget/noraycastmesh'
 import { indextox, indextoy } from 'zss/mapping/2d'
 import { recordunicodescan } from 'zss/perf/renderupdatestats'
-
-const defaultpalette = palettetothreecolors(
-  convertpalettetocolors(loadpalettefrombytes(PALETTE)),
-)
 
 type UnicodeOverlayProps = {
   width: number
@@ -33,6 +26,7 @@ type UnicodeOverlayProps = {
   /** Scale factor for glyph size (default 1). Only affects overlay chars, not grid position. */
   scale?: number
   skipraycast?: boolean
+  mediasource?: TILES_MEDIA_SOURCE
 }
 
 export function UnicodeOverlay({
@@ -43,9 +37,11 @@ export function UnicodeOverlay({
   bg,
   scale = 1,
   skipraycast = false,
+  mediasource = 'board',
 }: UnicodeOverlayProps) {
-  const mediapalette = useMedia((state) => state.palettedata)
-  const resolvedpalette = mediapalette ?? defaultpalette
+  const boardpalette = useMedia((state) => state.palettedata)
+  const uipalette = useGadgetMedia((state) => state.palettedata)
+  const resolvedpalette = mediasource === 'ui' ? uipalette : boardpalette
   const basew = RUNTIME.DRAW_CHAR_WIDTH()
   const baseh = RUNTIME.DRAW_CHAR_HEIGHT()
   const cellw = basew * scale
@@ -102,6 +98,9 @@ export function UnicodeOverlay({
   const { position, uv } = useMemo(() => getunicodeoverlayquadgeometry(), [])
 
   useLayoutEffect(() => {
+    if (!resolvedpalette) {
+      return
+    }
     materialref.current ??= createunicodeoverlaymaterial(resolvedpalette)
     materialref.current.uniforms.palette.value = resolvedpalette
     materialref.current.uniforms.cellsize.value.set(cellsize, cellsize)
