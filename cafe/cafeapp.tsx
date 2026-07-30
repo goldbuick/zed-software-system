@@ -1,4 +1,7 @@
-import { vmloader } from 'zss/device/api'
+import {
+  registermemoryfsattach,
+  vmloader,
+} from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import { enableaudio } from 'zss/device/synth'
@@ -20,6 +23,56 @@ function loadfiles(files: File[]) {
       file,
     ),
   )
+}
+
+async function partitioncafedrop(dt: DataTransfer): Promise<{
+  directories: FileSystemDirectoryHandle[]
+  files: File[]
+}> {
+  const directories: FileSystemDirectoryHandle[] = []
+  const files: File[] = []
+  const items = dt.items
+  if (items?.length) {
+    for (let i = 0; i < items.length; ++i) {
+      const item = items[i]
+      const ashandle = (
+        item as DataTransferItem & {
+          getAsFileSystemHandle?: () => Promise<FileSystemHandle | null>
+        }
+      ).getAsFileSystemHandle
+      if (typeof ashandle === 'function') {
+        try {
+          const handle = await ashandle.call(item)
+          if (handle?.kind === 'directory') {
+            directories.push(handle as FileSystemDirectoryHandle)
+            continue
+          }
+          if (handle?.kind === 'file') {
+            const file = item.getAsFile()
+            if (file) {
+              files.push(file)
+            }
+            continue
+          }
+        } catch {
+          // fall through to files list
+        }
+      }
+      if (item.kind === 'file') {
+        const file = item.getAsFile()
+        if (file) {
+          files.push(file)
+        }
+      }
+    }
+    if (directories.length > 0) {
+      return { directories, files }
+    }
+  }
+  if (dt.files?.length) {
+    return { directories, files: [...dt.files] }
+  }
+  return { directories, files }
 }
 
 if (typeof window !== 'undefined') {
@@ -67,10 +120,18 @@ if (typeof window !== 'undefined') {
     event.preventDefault()
 
     const dt = event.dataTransfer
-    if (!dt?.files.length) {
+    if (!dt) {
       return
     }
-    loadfiles([...dt.files])
+    void partitioncafedrop(dt).then(({ directories, files }) => {
+      const player = registerreadplayer()
+      for (let i = 0; i < directories.length; ++i) {
+        registermemoryfsattach(SOFTWARE, player, directories[i])
+      }
+      if (files.length > 0) {
+        loadfiles(files)
+      }
+    })
   })
 }
 

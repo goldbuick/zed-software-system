@@ -438,6 +438,23 @@ export function registernuke(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:nuke', undefined)
 }
 
+/** Main-thread only: keep FileSystemDirectoryHandle off BroadcastChannel. */
+export function registermemoryfsattach(
+  device: DEVICELIKE,
+  player: string,
+  dir: FileSystemDirectoryHandle,
+) {
+  device.emitlocal(player, 'register:memoryfsattach', dir)
+}
+
+export function registermemoryfsdetach(device: DEVICELIKE, player: string) {
+  device.emit(player, 'register:memoryfsdetach')
+}
+
+export function registermemoryfsstatus(device: DEVICELIKE, player: string) {
+  device.emit(player, 'register:memoryfsstatus')
+}
+
 export function registerperfmonitor(
   device: DEVICELIKE,
   player: string,
