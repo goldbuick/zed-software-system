@@ -12,7 +12,7 @@ import { ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
 import { memoryreadflags } from 'zss/memory/flags'
-import { memorysendtoelements, memorysendtolog } from 'zss/memory/gamesend'
+import { memorysendtoelements } from 'zss/memory/gamesend'
 import { READ_CONTEXT, readargsuntilend } from 'zss/words/reader'
 import { parsesend } from 'zss/words/send'
 import {
@@ -94,7 +94,6 @@ export function registersendcommands(fw: FIRMWARE): FIRMWARE {
       ) {
         READ_CONTEXT.element.tickertext = tickertext
         READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
-        memorysendtolog('', READ_CONTEXT.element, tickertext)
         diverted = true
       }
 
@@ -105,7 +104,6 @@ export function registersendcommands(fw: FIRMWARE): FIRMWARE {
       if (ispresent(READ_CONTEXT.element) && READ_CONTEXT.elementisplayer) {
         READ_CONTEXT.element.tickertext = ticker
         READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
-        memorysendtolog('', READ_CONTEXT.element, ticker)
         const { user } = memoryreadflags(READ_CONTEXT.elementid)
         const withuser = isstring(user) ? user : 'player'
         vmloader(

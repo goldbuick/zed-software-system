@@ -16,7 +16,7 @@ import {
 } from 'zss/gadget/data/api'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
-import { memorysendtoelements, memorysendtolog } from 'zss/memory/gamesend'
+import { memorysendtoelements } from 'zss/memory/gamesend'
 import { memoryreadboardelementruntime } from 'zss/memory/runtimeboundary'
 import { READ_CONTEXT, readargsuntilend } from 'zss/words/reader'
 import { parsesend } from 'zss/words/send'
@@ -50,8 +50,6 @@ export const RUNTIME_FIRMWARE = createfirmware({
         } else {
           READ_CONTEXT.element.tickertext = ticker
           READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
-          // log text
-          memorysendtolog(READ_CONTEXT.board?.id, READ_CONTEXT.element, ticker)
         }
       }
     } else if (queue.length > 1) {
@@ -127,7 +125,6 @@ export const RUNTIME_FIRMWARE = createfirmware({
     if (ispresent(tickertext) && ispresent(READ_CONTEXT.element)) {
       READ_CONTEXT.element.tickertext = tickertext
       READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
-      memorysendtolog(READ_CONTEXT.board?.id, READ_CONTEXT.element, tickertext)
       diverted = true
     }
 

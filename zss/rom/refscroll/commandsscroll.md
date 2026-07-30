@@ -55,11 +55,11 @@ $whiteset stat to array
 #toast text  
 $whiteshow toast notification  
 #ticker text  
-$whiteset ticker text  
+$whiteset floating ticker text (no terminal line)  
 $toast text  
 $whiteinline form on any text line  
 $ticker text  
-$whiteinline form on any text line  
+$whiteinline floating ticker on any text line (no terminal line)  
 $bonk  
 $whiteinline screen shake; line continues to render  
 $zap  

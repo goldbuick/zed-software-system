@@ -18,7 +18,7 @@ import { ispresent } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import { memoryreadobject } from 'zss/memory/boardaccess'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
-import { memorysendtoelements, memorysendtolog } from 'zss/memory/gamesend'
+import { memorysendtoelements } from 'zss/memory/gamesend'
 import { memoryloadercontent, memoryloaderformat } from 'zss/memory/loader'
 import { memorypicknextactiveplayerboard } from 'zss/memory/playermanagement'
 import { memoryreadoperator } from 'zss/memory/session'
@@ -131,7 +131,6 @@ export const LOADER_FIRMWARE = createfirmware({
     if (ispresent(tickertext) && ispresent(READ_CONTEXT.element)) {
       READ_CONTEXT.element.tickertext = tickertext
       READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
-      memorysendtolog(READ_CONTEXT.board?.id, READ_CONTEXT.element, tickertext)
       diverted = true
     }
 

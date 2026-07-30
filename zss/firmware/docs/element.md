@@ -29,7 +29,7 @@ Provides stat/variable access for the chip:
 Writes stats:
 
 - **Board** — isdark, startx/y, over, under, palette, charset, exits, timelimit, etc.
-- **Element** — color, bg, displaycolor/bg, displayname, standard stats (`displayname` affects the name shown before `#ticker` text in the gadget ticker strip only; chat/log prefix still uses the logical name)
+- **Element** — color, bg, displaycolor/bg, displayname, standard stats (`displayname` affects the name shown before `#ticker` text in the gadget ticker strip only)
 - **senderid** — Writes to element.sender
 - **Fallback** — Player flags; `user` is persisted via `storagewritevar`
 
@@ -96,7 +96,7 @@ Writes stats:
 | Command | Args | Description |
 |---------|------|-------------|
 | `toast` | text… | Show toast |
-| `ticker` | text… | Set ticker text, log |
+| `ticker` | text… | Set floating ticker text (no chat/tape) |
 
 ## Input Handling
 

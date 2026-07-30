@@ -36,7 +36,6 @@ import {
 } from 'zss/memory/boards'
 import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
 import { memoryreadflags } from 'zss/memory/flags'
-import { memorysendtolog } from 'zss/memory/gamesend'
 import { memoryhaltchip, memoryruncodepage } from 'zss/memory/runtime'
 import { memoryensureboardruntime } from 'zss/memory/runtimeboundary'
 import { memoryreadoperator } from 'zss/memory/session'
@@ -1157,8 +1156,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
     if (ispresent(READ_CONTEXT.element)) {
       READ_CONTEXT.element.tickertext = text
       READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
-      // log text
-      memorysendtolog(READ_CONTEXT.board?.id, READ_CONTEXT.element, text)
     }
     return 0
   })
