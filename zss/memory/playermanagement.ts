@@ -2,9 +2,15 @@ import { debugingest } from 'zss/debugingest'
 import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { getclimode } from 'zss/feature/detect'
-import { unique } from 'zss/mapping/array'
-import { ispid } from 'zss/mapping/guid'
-import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import { shuffle, unique } from 'zss/mapping/array'
+import { createtrackingid, ispid } from 'zss/mapping/guid'
+import {
+  MAYBE,
+  isarray,
+  isnumber,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
 import { maptonumber } from 'zss/mapping/value'
 import { COLLISION, PT } from 'zss/words/types'
 
@@ -517,4 +523,66 @@ export function memoryreadplayerboard(player: string) {
     address,
   )
   return memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(codepage)
+}
+
+const WITHPLAYERBOARD_TRACKING = 'withplayerboard'
+const TRACKING_IDS_KEY = 'ids'
+
+function memorylistactiveplayerids(): string[] {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const activelist = mainbook?.activelist ?? []
+  const out: string[] = []
+  for (let i = 0; i < activelist.length; ++i) {
+    const player = activelist[i]
+    if (memoryreadplayeractive(player)) {
+      out.push(player)
+    }
+  }
+  return out
+}
+
+/**
+ * Next board for an active player, cycling each player once via
+ * `withplayerboard_tracking.ids` shuffle queue (same pattern as @pick shuffle).
+ */
+export function memorypicknextactiveplayerboard(): MAYBE<BOARD> {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return undefined
+  }
+  const trackingflags = memoryreadbookflags(
+    mainbook,
+    createtrackingid(WITHPLAYERBOARD_TRACKING),
+  )
+  let reshuffled = false
+  for (;;) {
+    let sourceids = trackingflags[TRACKING_IDS_KEY]
+    if (!isarray(sourceids) || sourceids.length === 0) {
+      if (reshuffled) {
+        delete trackingflags[TRACKING_IDS_KEY]
+        return undefined
+      }
+      const actives = memorylistactiveplayerids()
+      if (actives.length === 0) {
+        delete trackingflags[TRACKING_IDS_KEY]
+        return undefined
+      }
+      trackingflags[TRACKING_IDS_KEY] = shuffle(actives)
+      sourceids = trackingflags[TRACKING_IDS_KEY]
+      reshuffled = true
+    }
+    const queue = sourceids as string[]
+    const first = queue.shift()
+    if (queue.length === 0) {
+      delete trackingflags[TRACKING_IDS_KEY]
+    }
+    if (!isstring(first) || !memoryreadplayeractive(first)) {
+      continue
+    }
+    const board = memoryreadplayerboard(first)
+    if (!ispresent(board)) {
+      continue
+    }
+    return board
+  }
 }

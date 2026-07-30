@@ -28,7 +28,7 @@ title: loader.ts
 
 ## Loader READ_CONTEXT snapshot
 
-Loaders that survive multiple ticks (`#idle`, import loops) need `#withboard` / `#withobject` targeting to persist. [`memorytickloaders`](runtime.md) calls:
+Loaders that survive multiple ticks (`#idle`, import loops) need `#withboard` / `#withplayerboard` / `#withobject` targeting to persist. [`memorytickloaders`](runtime.md) calls:
 
 1. `memoryloaderreadcontextapply(id)` before each tick (defaults on first tick)
 2. `memoryloaderreadcontextsave(id)` after each tick

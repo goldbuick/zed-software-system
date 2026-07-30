@@ -202,7 +202,7 @@ Chip OS / tick loop.
 ## playermanagement.ts
 
 - **memorymoveplayertoboard(book, player, board, dest)** - Authoritative move (called by [`vm:playermovetoboard`](../device/vm/handlers/playermovetoboard.ts))
-- **memoryreadbookplayeractive(book, player)**, **memoryreadplayeractive(player)**, **memoryreadplayerboard(player)**, **memoryreadbookplayerboards(book)**
+- **memoryreadbookplayeractive(book, player)**, **memoryreadplayeractive(player)**, **memoryreadplayerboard(player)**, **memoryreadbookplayerboards(book)**, **memorypicknextactiveplayerboard()**
 - **memorywritebookplayerboard(book, player, board)**
 - **memoryloginplayer(player, stickyflags)**, **memorylogoutplayer(player, isendgame)**
 - **memoryscanplayers(players)**
