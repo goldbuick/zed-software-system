@@ -23,4 +23,8 @@ See module README for path layout, flag owner filters (`*_chip`, `*_tracking`, â
 - `#memoryfs status`
 - `#memoryfs detach`
 
+## Agent skill
+
+Copy-paste Cursor / Claude skill: [agent-skill.md](agent-skill.md) (full `SKILL.md` in one fence).
+
 Related: jsonpipe syncs MEMORY to boardrunner workers â€” not this disk projection.
