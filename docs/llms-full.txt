@@ -2173,7 +2173,7 @@ Source: https://zed.cafe/docs/features/element-scripting
 | #lock / #unlock | Creator | Block or allow external messages during execution. | `#lock` |
 | #cycle | Creator | Set element tick rate divisor 1–255. | `#cycle` |
 | #char / #color | Creator | Set display char/color on self or at direction. | `#char` |
-| #toast / #ticker | Creator | UI toast notification or sidebar ticker text. | `#toast` |
+| #toast / #ticker | Creator | UI toast notification or floating ticker text (no terminal line). | `#toast` |
 
 ---
 
@@ -2829,7 +2829,7 @@ Provides stat/variable access for the chip:
 Writes stats:
 
 - **Board** — isdark, startx/y, over, under, palette, charset, exits, timelimit, etc.
-- **Element** — color, bg, displaycolor/bg, displayname, standard stats (`displayname` affects the name shown before `#ticker` text in the gadget ticker strip only; chat/log prefix still uses the logical name)
+- **Element** — color, bg, displaycolor/bg, displayname, standard stats (`displayname` affects the name shown before `#ticker` text in the gadget ticker strip only)
 - **senderid** — Writes to element.sender
 - **Fallback** — Player flags; `user` is persisted via `storagewritevar`
 
@@ -2896,7 +2896,7 @@ Writes stats:
 | Command | Args | Description |
 |---------|------|-------------|
 | `toast` | text… | Show toast |
-| `ticker` | text… | Set ticker text, log |
+| `ticker` | text… | Set floating ticker text (no chat/tape) |
 
 ## Input Handling
 
@@ -3349,7 +3349,7 @@ Source: https://zed.cafe/docs/firmware/runtime
 
 - `zss/device/api` — vmrefscroll
 - `zss/gadget/data/api` — gadgetaddcenterpadding, gadgetcheckqueue, gadgetcheckset, gadgethyperlink, gadgetstate, gadgettext
-- `zss/memory/gamesend` — memorysendtoelements, memorysendtolog
+- `zss/memory/gamesend` — memorysendtoelements
 - `zss/words/send` — parsesend
 
 ## Hooks
@@ -3363,7 +3363,7 @@ Source: https://zed.cafe/docs/firmware/runtime
 
 Processes the gadget queue for the current element:
 
-- **Single string** — If element exists: empty string clears sidebar; else sets tickertext, tickertime, logs
+- **Single string** — If element exists: empty string clears sidebar; else sets tickertext and tickertime (floating ticker only; no chat/tape)
 - **Multiple items** — If player: updates shared sidebar with padded content; else: sets scrolllock, scrollname, scroll for the focused player
 
 ## Commands
@@ -6198,7 +6198,6 @@ Source: https://zed.cafe/docs/memory/gamesend
 ## Dependencies
 
 - `zss/chip` — CHIP, senderid
-- `zss/device/api` — apichat
 - `zss/device/session` — SOFTWARE
 - `zss/mapping/*` — guid, 2d, types
 - `zss/words/*` — dir, reader, send, types
@@ -6206,7 +6205,6 @@ Source: https://zed.cafe/docs/memory/gamesend
 - `./boardelement` — memoryboardelementisobject
 - `./boardlifecycle` — memorysafedeleteelement
 - `./playermanagement` — memoryreadbookplayerboards
-- `./rendering` — memoryelementtologprefix
 - `./runtime` — memorymessagechip
 - `./spatialqueries` — memorylistboardelementsbyidnameorpts
 
@@ -6217,7 +6215,6 @@ Source: https://zed.cafe/docs/memory/gamesend
 | `memorysendtoboards` | Send message to elements on boards (target or PT) |
 | `memorysendtoelement` | Send label from element to element (touch/shot/thud/partyshot) |
 | `memorysendtoelements` | Chip sends to targetname or targetdir |
-| `memorysendtolog` | apichat with element prefix |
 
 ---
 

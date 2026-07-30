@@ -3,7 +3,7 @@
 <ul>
 <li><code>zss/device/api</code> — vmrefscroll</li>
 <li><code>zss/gadget/data/api</code> — gadgetaddcenterpadding, gadgetcheckqueue, gadgetcheckset, gadgethyperlink, gadgetstate, gadgettext</li>
-<li><code>zss/memory/gamesend</code> — memorysendtoelements, memorysendtolog</li>
+<li><code>zss/memory/gamesend</code> — memorysendtoelements</li>
 <li><code>zss/words/send</code> — parsesend</li>
 </ul>
 <h2 id="hooks"><a class="blume-heading-anchor" href="#hooks">Hooks</a></h2>
@@ -15,7 +15,7 @@
 <h3 id="aftertickchip"><a class="blume-heading-anchor" href="#aftertickchip">aftertick(chip)</a></h3>
 <p>Processes the gadget queue for the current element:</p>
 <ul>
-<li><strong>Single string</strong> — If element exists: empty string clears sidebar; else sets tickertext, tickertime, logs</li>
+<li><strong>Single string</strong> — If element exists: empty string clears sidebar; else sets tickertext and tickertime (floating ticker only; no chat/tape)</li>
 <li><strong>Multiple items</strong> — If player: updates shared sidebar with padded content; else: sets scrolllock, scrollname, scroll for the focused player</li>
 </ul>
 <h2 id="commands"><a class="blume-heading-anchor" href="#commands">Commands</a></h2>

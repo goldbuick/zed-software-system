@@ -7,7 +7,6 @@ title: gamesend.ts
 ## Dependencies
 
 - `zss/chip` — CHIP, senderid
-- `zss/device/api` — apichat
 - `zss/device/session` — SOFTWARE
 - `zss/mapping/*` — guid, 2d, types
 - `zss/words/*` — dir, reader, send, types
@@ -15,7 +14,6 @@ title: gamesend.ts
 - `./boardelement` — memoryboardelementisobject
 - `./boardlifecycle` — memorysafedeleteelement
 - `./playermanagement` — memoryreadbookplayerboards
-- `./rendering` — memoryelementtologprefix
 - `./runtime` — memorymessagechip
 - `./spatialqueries` — memorylistboardelementsbyidnameorpts
 
@@ -26,4 +24,3 @@ title: gamesend.ts
 | `memorysendtoboards` | Send message to elements on boards (target or PT) |
 | `memorysendtoelement` | Send label from element to element (touch/shot/thud/partyshot) |
 | `memorysendtoelements` | Chip sends to targetname or targetdir |
-| `memorysendtolog` | apichat with element prefix |
