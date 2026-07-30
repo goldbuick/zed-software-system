@@ -149,6 +149,7 @@
 
 - [Built-in scroll validation](https://zed.cafe/docs/ops/scroll-validation)
 - [Design: directional board-grid pan (global board space)](https://zed.cafe/docs/ops/design-directional-board-grid-pan)
+- [Design: join↔join PeerJS clique (prefer 1 hop)](https://zed.cafe/docs/ops/design-join-join-peer-clique)
 - [Firmware commands summary](https://zed.cafe/docs/ops/commands-summary)
 - [LiveKit Ingress (WHIP) → YouTube Live](https://zed.cafe/docs/ops/livekit-ingress-whip-youtube-live)
 - [Multiplayer, workers, PeerJS, and WASM runtime](https://zed.cafe/docs/ops/multiplayer-wasm-architecture)
