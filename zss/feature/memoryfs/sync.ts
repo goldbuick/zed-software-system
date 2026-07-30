@@ -1,15 +1,12 @@
 import type { DEVICELIKE } from 'zss/device/types'
+import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
 import { MEMORYFS_DEBOUNCE_MS } from 'zss/feature/memoryfs/constants'
 import {
   buildmemoryfsexportfiles,
   memoryfsorphanpaths,
 } from 'zss/feature/memoryfs/export'
-import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
 import { memoryrootshouldemitpath } from 'zss/memory/jsonpipefilter'
-import {
-  memoryreadoperator,
-  memoryreadroot,
-} from 'zss/memory/session'
+import { memoryreadoperator, memoryreadroot } from 'zss/memory/session'
 import type { BOOK } from 'zss/memory/types'
 
 const bookspipe = createjsonpipe<Record<string, BOOK>>(
@@ -56,11 +53,7 @@ export function memoryfsresetfortest() {
   memoryfsprimshadow()
 }
 
-function emitwrite(
-  device: DEVICELIKE,
-  player: string,
-  full: boolean,
-) {
+function emitwrite(device: DEVICELIKE, player: string, full: boolean) {
   if (!attached || suppressoutbound) {
     return
   }

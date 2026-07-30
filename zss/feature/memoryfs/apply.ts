@@ -1,11 +1,12 @@
 import { memoryfsshouldmirrorflagowner } from 'zss/feature/memoryfs/flagfilter'
 import { memoryfsisreadonlypath } from 'zss/feature/memoryfs/readonly'
 import {
+  type MEMORYFS_PATH_FILE,
   memoryfsparsebookidfromdirname,
   memoryfsparsepageidfromdirname,
-  type MEMORYFS_PATH_FILE,
 } from 'zss/feature/memoryfs/schema'
 import { ispresent } from 'zss/mapping/types'
+import { memorydeleteboardobject } from 'zss/memory/boardlifecycle'
 import {
   memoryclearbookcodepage,
   memoryclearbookflags,
@@ -14,7 +15,6 @@ import {
   memoryupsertcodepage,
   memorywritebookflag,
 } from 'zss/memory/bookoperations'
-import { memorydeleteboardobject } from 'zss/memory/boardlifecycle'
 import {
   memoryexportcodepageasjson,
   memoryreadcodepageruntime,
@@ -40,6 +40,10 @@ function decodejson(bytes: Uint8Array): unknown {
   return JSON.parse(decoder.decode(bytes))
 }
 
+function errmessage(err: unknown): string {
+  return err instanceof Error ? err.message : String(err)
+}
+
 function pathsegments(path: string): string[] {
   return path.split('/')
 }
@@ -60,7 +64,10 @@ function findbookbydirname(dirname: string): BOOK | undefined {
   return undefined
 }
 
-function findpageidfromdirname(book: BOOK, dirname: string): string | undefined {
+function findpageidfromdirname(
+  book: BOOK,
+  dirname: string,
+): string | undefined {
   const id = memoryfsparsepageidfromdirname(dirname)
   if (memoryreadcodepage(book, id)) {
     return id
@@ -85,7 +92,7 @@ function applyrootstats(bytes: Uint8Array, errors: string[]) {
       memorywritesoftwarebook('temp', parsed.software.temp)
     }
   } catch (err) {
-    errors.push(`root stats.json: ${err instanceof Error ? err.message : err}`)
+    errors.push(`root stats.json: ${errmessage(err)}`)
   }
 }
 
@@ -106,7 +113,7 @@ function applybookmeta(book: BOOK, bytes: Uint8Array, errors: string[]) {
       book.activelist = parsed.activelist.filter((x) => typeof x === 'string')
     }
   } catch (err) {
-    errors.push(`book stats: ${err instanceof Error ? err.message : err}`)
+    errors.push(`book stats: ${errmessage(err)}`)
   }
 }
 
@@ -132,9 +139,7 @@ function applyflagowner(
       memorywritebookflag(book, owner, key, parsed[key])
     }
   } catch (err) {
-    errors.push(
-      `flags/${owner}: ${err instanceof Error ? err.message : err}`,
-    )
+    errors.push(`flags/${owner}: ${errmessage(err)}`)
   }
 }
 
@@ -176,13 +181,9 @@ function applypagebags(
     const existing = memoryreadcodepage(book, pagekey)
     const stats = bag.stats as { id?: string; code?: string } | undefined
     const pageid =
-      typeof stats?.id === 'string'
-        ? stats.id
-        : existing?.id ?? pagekey
+      typeof stats?.id === 'string' ? stats.id : (existing?.id ?? pagekey)
     const code =
-      typeof stats?.code === 'string'
-        ? stats.code
-        : existing?.code ?? ''
+      typeof stats?.code === 'string' ? stats.code : (existing?.code ?? '')
     if (!existing && !stats) {
       continue
     }
@@ -328,7 +329,7 @@ function routewrite(
         errors.push(`unhandled page path: ${path}`)
       }
     } catch (err) {
-      errors.push(`${path}: ${err instanceof Error ? err.message : err}`)
+      errors.push(`${path}: ${errmessage(err)}`)
     }
     return
   }
@@ -379,7 +380,10 @@ function applydelete(path: string, errors: string[], ignored: { n: number }) {
       }
       return
     }
-    if (parts.length === 4 || (parts.length === 5 && parts[4] === 'stats.json')) {
+    if (
+      parts.length === 4 ||
+      (parts.length === 5 && parts[4] === 'stats.json')
+    ) {
       memoryclearbookcodepage(book, pageid)
     }
   }

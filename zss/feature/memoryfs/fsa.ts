@@ -2,8 +2,8 @@ import { MEMORYFS_DIRNAME } from 'zss/feature/memoryfs/constants'
 import { memoryfshashbytes } from 'zss/feature/memoryfs/hash'
 import { memoryfsisreadonlypath } from 'zss/feature/memoryfs/readonly'
 import {
-  isallowedmemoryfspath,
   type MEMORYFS_PATH_FILE,
+  isallowedmemoryfspath,
 } from 'zss/feature/memoryfs/schema'
 import { ispresent } from 'zss/mapping/types'
 
@@ -137,10 +137,7 @@ export async function memoryfsfsareadallowlisted(
   return out
 }
 
-export function memoryfsfsastampwrites(
-  paths: string[],
-  now = Date.now(),
-) {
+export function memoryfsfsastampwrites(paths: string[], now = Date.now()) {
   if (!state) {
     return
   }
@@ -172,7 +169,9 @@ export type MEMORYFS_POLL_DELTA = {
   deletes: string[]
 }
 
-export async function memoryfsfsapolldelta(): Promise<MEMORYFS_POLL_DELTA | undefined> {
+export async function memoryfsfsapolldelta(): Promise<
+  MEMORYFS_POLL_DELTA | undefined
+> {
   if (!state) {
     return undefined
   }

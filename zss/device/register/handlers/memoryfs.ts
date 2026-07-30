@@ -1,12 +1,12 @@
 import type { DEVICE } from 'zss/device'
-import { apilog, apierror } from 'zss/device/api'
+import { apierror, apilog } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
 import type { MESSAGE } from 'zss/device/types'
 import { MEMORYFS_DEBOUNCE_MS } from 'zss/feature/memoryfs/constants'
 import {
   memoryfsfsaattach,
-  memoryfsfsadetach,
   memoryfsfsaattached,
+  memoryfsfsadetach,
   memoryfsfsapolldelta,
   memoryfsfsareadstate,
   memoryfsfsasetpolltimer,

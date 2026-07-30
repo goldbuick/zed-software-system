@@ -103,9 +103,7 @@ export function isallowedmemoryfspath(path: string): boolean {
   return false
 }
 
-function readpathindex(
-  files: MEMORYFS_PATH_FILE[],
-): Map<string, Uint8Array> {
+function readpathindex(files: MEMORYFS_PATH_FILE[]): Map<string, Uint8Array> {
   const index = new Map<string, Uint8Array>()
   for (let i = 0; i < files.length; ++i) {
     const file = files[i]
@@ -192,7 +190,7 @@ export function assertmemoryfsexportvalid(files: MEMORYFS_PATH_FILE[]) {
 
 /** Parse book dirname `name-id` or bare `id` into id (last segment after final sid_/pid_ pattern is unreliable — id is trailing after last known prefix). */
 export function memoryfsparsebookidfromdirname(dirname: string): string {
-  const sid = dirname.match(/sid_[A-Za-z0-9_]+$/)
+  const sid = /sid_[A-Za-z0-9_]+$/.exec(dirname)
   if (sid) {
     return sid[0]
   }

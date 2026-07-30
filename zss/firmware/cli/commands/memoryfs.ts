@@ -1,7 +1,4 @@
-import {
-  registermemoryfsdetach,
-  registermemoryfsstatus,
-} from 'zss/device/api'
+import { registermemoryfsdetach, registermemoryfsstatus } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { FIRMWARE } from 'zss/firmware'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'

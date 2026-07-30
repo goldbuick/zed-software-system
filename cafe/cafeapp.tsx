@@ -1,7 +1,4 @@
-import {
-  registermemoryfsattach,
-  vmloader,
-} from 'zss/device/api'
+import { registermemoryfsattach, vmloader } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import { enableaudio } from 'zss/device/synth'

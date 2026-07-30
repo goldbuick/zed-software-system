@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import { apilog, apierror } from 'zss/device/api'
+import { apierror, apilog } from 'zss/device/api'
 import type { MESSAGE } from 'zss/device/types'
 import { memoryfsapplyops } from 'zss/feature/memoryfs/apply'
 import {
