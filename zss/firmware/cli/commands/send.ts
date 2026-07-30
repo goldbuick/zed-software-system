@@ -113,7 +113,7 @@ export function registersendcommands(fw: FIRMWARE): FIRMWARE {
           READ_CONTEXT.elementid,
           undefined,
           'text',
-          `chat:message:${READ_CONTEXT.board?.id ?? ''}`,
+          `chat:message:player`,
           `${withuser}:${ticker}`,
         )
       }

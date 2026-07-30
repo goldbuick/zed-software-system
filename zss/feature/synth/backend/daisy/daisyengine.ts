@@ -303,7 +303,12 @@ export async function ensuredaisysynthwasm(): Promise<DaisyEngine> {
 
   daisyloadinflight ??= (async () => {
     try {
-      const ctx = getunlockedaudiocontext() ?? new AudioContext()
+      const ctx = getunlockedaudiocontext()
+      if (!ctx) {
+        throw new Error(
+          'audio context not unlocked — interact with the page to unlock audio',
+        )
+      }
       await resumecontext(ctx)
       const engine = await bootdaisyoncontext(ctx)
       daisyengine = engine

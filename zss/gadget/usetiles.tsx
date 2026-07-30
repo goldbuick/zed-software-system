@@ -49,6 +49,7 @@ export function TilesRender({
         height={height}
         clippingplanes={clippingplanes}
         skipraycast={skipraycast}
+        mediasource="ui"
       />
     )
   )

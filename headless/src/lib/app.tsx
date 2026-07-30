@@ -308,6 +308,7 @@ export async function runApp(flags: RunAppFlags): Promise<void> {
     'config_scanlines',
     'config_voice2text',
     'config_loaderlogging',
+    'config_memoryfslogging',
     'config_dev',
     'config_gadget',
     'config_touchui',

@@ -185,7 +185,8 @@ DaisySP WASM backend with engine-agnostic front-end (`SynthBackend` interface). 
 - `SYNTH_VOICE_COUNT`, `SYNTH_PLAY_VOICE_COUNT`, `SYNTH_DEFAULT_WAVE` - Voice defaults
 
 ### Shared WASM helpers
-- `unlockaudiocontext()` - Create/resume shared `AudioContext` on user gesture
+- `unlockaudiocontext()` - Create/resume shared `AudioContext` on user gesture (silent buffer kick for Firefox); call on every gesture even while Daisy boot is in flight
+
 - `ensurewasmcoep()` - Register COOP/COEP service worker for SharedArrayBuffer
 
 ---

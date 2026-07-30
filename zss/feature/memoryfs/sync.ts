@@ -5,6 +5,11 @@ import {
   buildmemoryfsexportfiles,
   memoryfsorphanpaths,
 } from 'zss/feature/memoryfs/export'
+import {
+  memoryfslog,
+  memoryfslogverbose,
+  memoryfspathsample,
+} from 'zss/feature/memoryfs/log'
 import { memoryrootshouldemitpath } from 'zss/memory/jsonpipefilter'
 import { memoryreadoperator, memoryreadroot } from 'zss/memory/session'
 import type { BOOK } from 'zss/memory/types'
@@ -18,9 +23,14 @@ let debouncetimer: ReturnType<typeof setTimeout> | undefined
 let attached = false
 let suppressoutbound = false
 let lastpaths: string[] = []
+let lastexportsummary = ''
 
 export function memoryfsreadattached(): boolean {
   return attached
+}
+
+export function memoryfsreadlastexportsummary(): string {
+  return lastexportsummary
 }
 
 export function memoryfssetattached(value: boolean) {
@@ -31,6 +41,7 @@ export function memoryfssetattached(value: boolean) {
       debouncetimer = undefined
     }
     lastpaths = []
+    lastexportsummary = ''
   }
 }
 
@@ -50,6 +61,7 @@ export function memoryfsresetfortest() {
   attached = false
   suppressoutbound = false
   lastpaths = []
+  lastexportsummary = ''
   memoryfsprimshadow()
 }
 
@@ -60,6 +72,23 @@ function emitwrite(device: DEVICELIKE, player: string, full: boolean) {
   const files = buildmemoryfsexportfiles()
   const deletes = full ? [] : memoryfsorphanpaths(lastpaths, files)
   lastpaths = files.map((f) => f.path)
+  const mode = full ? 'full' : 'delta'
+  lastexportsummary = `out ${files.length} files ${deletes.length} deletes (${mode})`
+  memoryfslog(device, player, lastexportsummary)
+  if (files.length > 0) {
+    memoryfslogverbose(
+      device,
+      player,
+      `out paths${memoryfspathsample(files.map((f) => f.path))}`,
+    )
+  }
+  if (deletes.length > 0) {
+    memoryfslogverbose(
+      device,
+      player,
+      `out deletes${memoryfspathsample(deletes)}`,
+    )
+  }
   device.emit(player, 'register:memoryfswrite', {
     files,
     deletes,
@@ -97,5 +126,10 @@ export function memoryfscheckontick(device: DEVICELIKE) {
   if (operations.length === 0) {
     return
   }
+  memoryfslogverbose(
+    device,
+    memoryreadoperator(),
+    `diff ${operations.length} ops $26 schedule export`,
+  )
   memoryfsscheduleexport(device, memoryreadoperator())
 }

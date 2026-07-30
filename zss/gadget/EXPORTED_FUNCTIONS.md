@@ -113,16 +113,22 @@ Core hooks and state management utilities for tiles, dither, media, and device d
 - `TILE_DATA` - Type for tiles data store (width, height, char/color/bg arrays, render counter, changed callback)
 
 ### Media Management
-- `useMedia` - Zustand store for managing media assets (palette, charset, sprites, screen videos, mood, viewimage)
+- `useMedia` - Board/game-view media (palette, charset, sprites, screen videos, mood, viewimage); updated by MediaLayers
 - `useMedia.getState().reset()` - Resets media to default state
 - `useMedia.getState().setmood(mood)` - Sets the mood string
 - `useMedia.getState().setviewimage(viewimage)` - Sets the view image URL
 - `useMedia.getState().setpalette(palette)` - Sets the palette bitmap
 - `useMedia.getState().setcharset(charset)` - Sets the charset bitmap
 - `useMedia.getState().setscreen(peer, screen)` - Sets a screen video element for a peer
+- `useGadgetMedia` - UI chrome charset/palette (tape, panel, ticker, …); independent of board MediaLayers
+- `useGadgetMedia.getState().reset()` - Resets UI media to baked-in CHARSET/PALETTE
+- `useGadgetMedia.getState().setpalette(palette)` - Sets UI palette bitmap
+- `useGadgetMedia.getState().setcharset(charset)` - Sets UI charset bitmap
 
 ### Types
-- `MEDIA_DATA` - Type for media data store with palette, charset, sprites, screen videos, and setters
+- `MEDIA_DATA` - Type for board media data store with palette, charset, sprites, screen videos, and setters
+- `GADGET_MEDIA_DATA` - Type for UI chrome media store (palette/charset + setters)
+- `TILES_MEDIA_SOURCE` - `'board' | 'ui'` selector for Tiles / UnicodeOverlay
 
 ### Device Data
 - `useDeviceData` - Zustand store for device configuration (active, saferows, insetcols, insetrows, islowrez, islandscape, sidebaropen, keyboard modifiers, showtouchcontrols, checknumbers, wordlist)

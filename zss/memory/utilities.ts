@@ -43,6 +43,7 @@ const CONFIG_DEFAULTS: Record<string, string> = {
   scanlines: 'off',
   voice2text: 'off',
   loaderlogging: 'off',
+  memoryfslogging: 'off',
   dev: 'off',
   gadget: 'off',
   touchui: 'off',

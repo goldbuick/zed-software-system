@@ -1,27 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Plane } from 'three'
-import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/feature/bytes'
-import { CHARSET } from 'zss/feature/charset'
-import { PALETTE } from 'zss/feature/palette'
-import { convertpalettetocolors } from 'zss/gadget/data/palette'
-import { palettetothreecolors } from 'zss/gadget/data/palettethree'
 import { CHAR_HEIGHT, CHAR_WIDTH } from 'zss/gadget/data/types'
-import { createbitmaptexture } from 'zss/gadget/display/textures'
 import {
   createTilemapBufferGeometryAttributes,
   createTilemapDataTexture,
   createTilemapMaterial,
   updateTilemapDataTexture,
 } from 'zss/gadget/display/tiles'
+import { type TILES_MEDIA_SOURCE, useGadgetMedia } from 'zss/gadget/gadgetmedia'
 import { useMedia } from 'zss/gadget/media'
 import { noraycastmesh } from 'zss/gadget/noraycastmesh'
 
 import { UnicodeOverlay } from './unicodeoverlay'
-
-const defaultpalette = palettetothreecolors(
-  convertpalettetocolors(loadpalettefrombytes(PALETTE)),
-)
-const defaultcharset = createbitmaptexture(loadcharsetfrombytes(CHARSET))
 
 type TilesProps = {
   label?: string
@@ -40,6 +30,8 @@ type TilesProps = {
    * data-texture upload effect without slicing/cloning the arrays.
    */
   tilesversion?: number
+  /** board = useMedia (game); ui = useGadgetMedia (chrome). Default board. */
+  mediasource?: TILES_MEDIA_SOURCE
 }
 
 export function Tiles({
@@ -53,11 +45,14 @@ export function Tiles({
   clippingplanes,
   skipraycast = false,
   tilesversion = 0,
+  mediasource = 'board',
 }: TilesProps) {
-  const mediapalette = useMedia((state) => state.palettedata)
-  const mediacharset = useMedia((state) => state.charsetdata)
-  const palette = mediapalette ?? defaultpalette
-  const charset = mediacharset ?? defaultcharset
+  const boardpalette = useMedia((state) => state.palettedata)
+  const boardcharset = useMedia((state) => state.charsetdata)
+  const uipalette = useGadgetMedia((state) => state.palettedata)
+  const uicharset = useGadgetMedia((state) => state.charsetdata)
+  const palette = mediasource === 'ui' ? uipalette : boardpalette
+  const charset = mediasource === 'ui' ? uicharset : boardcharset
 
   const [material] = useState(() => createTilemapMaterial())
   const { width: imageWidth = 0, height: imageHeight = 0 } =
@@ -101,7 +96,7 @@ export function Tiles({
 
   // create / config material
   useEffect(() => {
-    if (width === 0 || height === 0 || !charset) {
+    if (width === 0 || height === 0 || !charset || !palette) {
       return
     }
     material.uniforms.map.value = charset
@@ -155,6 +150,7 @@ export function Tiles({
         bg={bg}
         scale={1.15}
         skipraycast={skipraycast}
+        mediasource={mediasource}
       />
     </>
   )

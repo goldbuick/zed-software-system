@@ -3,6 +3,13 @@ import { createdevice } from 'zss/device'
 import { createblueskyfeedconnector } from 'zss/device/bridge/blueskyfeedconnector'
 import type { CHAT_CONNECTOR } from 'zss/device/bridge/chatconnector'
 import {
+  chatpresenceclear,
+  chatpresenceformat,
+  chatpresencemarkemit,
+  chatpresenceshouldemit,
+  chatpresencetouch,
+} from 'zss/device/bridge/chatpresence'
+import {
   ALL_CHAT_KINDS,
   CHAT_KIND,
   normalizechatkind,
@@ -146,6 +153,16 @@ function joinurlread() {
   return joinurl
 }
 
+function emitchatroster(player: string, routekey: string, force: boolean) {
+  const nowms = Date.now()
+  if (!force && !chatpresenceshouldemit(routekey, nowms)) {
+    return
+  }
+  const body = chatpresenceformat(routekey, nowms)
+  chatpresencemarkemit(routekey, nowms)
+  vmloader(bridge, player, undefined, 'text', `chat:roster:${routekey}`, body)
+}
+
 function pushchatline(
   player: string,
   kind: CHAT_KIND,
@@ -164,6 +181,8 @@ function pushchatline(
     `${prefix}:${routekey}`,
     `${user}:${text}`,
   )
+  chatpresencetouch(routekey, user, Date.now())
+  emitchatroster(player, routekey, false)
 }
 
 function makechathandlers(
@@ -184,6 +203,7 @@ function makechathandlers(
     },
     ondisconnect: (routekey) => {
       apilog(bridge, player, 'chat disconnected')
+      chatpresenceclear(routekey)
       vmloader(
         bridge,
         player,
@@ -192,6 +212,7 @@ function makechathandlers(
         `chat:disconnect:${routekey}`,
         '',
       )
+      emitchatroster(player, routekey, true)
     },
     onmessage: (routekey, mode, user, text) =>
       pushchatline(player, kind, routekey, mode, user, text),

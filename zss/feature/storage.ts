@@ -21,6 +21,8 @@ export function storagereadconfigdefault(name: string) {
       return 'on'
     case 'loaderlogging':
       return 'off'
+    case 'memoryfslogging':
+      return 'off'
     default:
       return 'off'
   }
@@ -53,6 +55,7 @@ export async function storagereadconfigall() {
     'config_scanlines',
     'config_voice2text',
     'config_loaderlogging',
+    'config_memoryfslogging',
     'config_dev',
     'config_gadget',
     'config_touchui',

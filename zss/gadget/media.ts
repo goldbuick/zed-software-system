@@ -10,6 +10,11 @@ import { createbitmaptexture } from 'zss/gadget/display/textures'
 import { MAYBE, isequal, ispresent } from 'zss/mapping/types'
 import { create } from 'zustand'
 
+/**
+ * Board / game-view media (charset, palette, sprites, mood, …).
+ * Updated by MediaLayers from board MEDIA layers — not for UI chrome
+ * (see useGadgetMedia).
+ */
 export type MEDIA_DATA = {
   palette?: BITMAP
   mood: string

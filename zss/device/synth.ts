@@ -47,13 +47,14 @@ let enabled = false
 let backend: MAYBE<SynthBackend>
 
 export function enableaudio() {
+  // Always drive unlock/resume on the gesture turn (Firefox drops resume after awaits).
+  unlockaudiocontext()
   if (enabled || locked) {
     return
   }
 
   locked = true
   workstatus(synthdevice, registerreadplayer(), 'audio init')
-  unlockaudiocontext()
 
   void createsynthbackend()
     .then((result) => {
