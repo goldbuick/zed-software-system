@@ -168,6 +168,25 @@ export function bridgestatus(device: DEVICELIKE, player: string) {
   device.emit(player, 'bridge:status', undefined)
 }
 
+/** Host -> peers: player/peer roster for join clique. */
+export function netterminalpeerroster(
+  device: DEVICELIKE,
+  player: string,
+  entries: { player: string; peerid: string }[],
+) {
+  device.emit(player, 'netterminal:peerroster', entries)
+}
+
+/** Host sim -> peers: board runner election + player board map. */
+export function netterminalrunnmap(
+  device: DEVICELIKE,
+  player: string,
+  runners: Record<string, string>,
+  playerboards: Record<string, string>,
+) {
+  device.emit(player, 'netterminal:runnmap', [runners, playerboards])
+}
+
 export function bridgestreamstart(
   device: DEVICELIKE,
   player: string,

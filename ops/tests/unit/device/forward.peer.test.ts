@@ -44,6 +44,11 @@ describe('forward peer predicates', () => {
     expect(
       shouldforwardservertoclient(createmessage('s', 'p', 'x', 'vm:cli')),
     ).toBe(false)
+    expect(
+      shouldforwardservertoclient(
+        createmessage('s', 'p', 'x', 'netterminal:peerroster'),
+      ),
+    ).toBe(true)
   })
 
   it('shouldforwardclienttoserver allows vm and modem', () => {

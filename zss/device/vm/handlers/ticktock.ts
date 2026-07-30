@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import { boardrunnertick } from 'zss/device/api'
+import { boardrunnertick, netterminalrunnmap } from 'zss/device/api'
 import type { MESSAGE } from 'zss/device/types'
 import {
   boardrunneraccessfor,
@@ -15,11 +15,20 @@ import { memoryfsvmcheckontick } from 'zss/device/vm/handlers/memoryfs'
 import { boardrunners } from 'zss/device/vm/state'
 import { ispresent } from 'zss/mapping/types'
 import { memorycollecttickboundaries } from 'zss/memory/boardwait'
-import { memoryreadbookplayerboards } from 'zss/memory/playermanagement'
+import {
+  memoryreadbookplayerboards,
+  memoryreadplayerboard,
+} from 'zss/memory/playermanagement'
 import { memorytickloaders } from 'zss/memory/runtime'
-import { memoryreadbookbysoftware, memoryreadfrozen } from 'zss/memory/session'
+import {
+  memoryreadbookbysoftware,
+  memoryreadfrozen,
+  memoryreadoperator,
+} from 'zss/memory/session'
 import { MEMORY_LABEL } from 'zss/memory/types'
 import { perfmeasure } from 'zss/perf/ui'
+
+let lastrunnmapwire = ''
 
 export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
   void _message
@@ -52,6 +61,24 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
         // if no runner is assigned, elect a new one
         if (!boardrunners[boardid]) {
           boardrunnerelect(boardid)
+        }
+      }
+      const runners = { ...boardrunners }
+      const playerboards: Record<string, string> = {}
+      const activelist = mainbook.activelist ?? []
+      for (let i = 0; i < activelist.length; ++i) {
+        const pid = activelist[i]
+        const pboard = memoryreadplayerboard(pid)
+        if (ispresent(pboard?.id)) {
+          playerboards[pid] = pboard.id
+        }
+      }
+      const runnmapwire = JSON.stringify([runners, playerboards])
+      if (runnmapwire !== lastrunnmapwire) {
+        lastrunnmapwire = runnmapwire
+        const operator = memoryreadoperator()
+        if (operator) {
+          netterminalrunnmap(vm, operator, runners, playerboards)
         }
       }
     })
