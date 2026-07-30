@@ -2,12 +2,13 @@
 title: transforms.ts
 ---
 
-**Purpose**: Defines `TRANSFORM_FIRMWARE` — commands for board-level transformations: snapshot/revert, copy, remix, weave, and pivot. Used for level editing and procedural generation.
+**Purpose**: Defines `TRANSFORM_FIRMWARE` — commands for board-level transformations: snapshot/revert, copy, remix, erase, weave, and pivot. Used for level editing and procedural generation.
 
 ## Dependencies
 
 - `maath/misc` — degToRad
 - `zss/feature/boardcopy` — boardcopy
+- `zss/feature/boarderase` — boarderase
 - `zss/feature/boardpivot` — boardpivot
 - `zss/feature/boardremix` — boardremix
 - `zss/feature/boardsnapshot` — boardrevert, boardsnapshot
@@ -22,6 +23,7 @@ title: transforms.ts
 | `revert` | — | Revert board to last snapshot |
 | `copy` | `stat` [filter…] | Copy region from board at stat to current board |
 | `remix` | `stat` `pattersize` `mirror` [filter…] | Remix board with pattern and mirror |
+| `erase` | [filter…] | Erase matching elements (targetset / region); group names supported |
 | `weave` | `dir` [filter…] | Weave board in direction (delta from element position) |
 | `pivot` | `degrees` [filter…] | Rotate board region by degrees (converted to radians); filter targetset can be `all` / `terrain` / `object` or a **group name** (group pivot, same as weave) |
 

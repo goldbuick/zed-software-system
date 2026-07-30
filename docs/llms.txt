@@ -36,6 +36,7 @@
 ## Feature
 
 - [boardcopy.ts](https://zed.cafe/docs/feature/boardcopy)
+- [boarderase.ts](https://zed.cafe/docs/feature/boarderase)
 - [boardpivot.ts](https://zed.cafe/docs/feature/boardpivot)
 - [boardremix.ts](https://zed.cafe/docs/feature/boardremix)
 - [boardsnapshot.ts](https://zed.cafe/docs/feature/boardsnapshot)

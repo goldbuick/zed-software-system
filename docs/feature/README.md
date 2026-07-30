@@ -8,7 +8,7 @@ The feature system provides domain-specific capabilities for the Zed Software Sy
 
 Feature modules are **stateless utilities** and **domain logic** that:
 
-- **Board operations** — Copy, pivot, snapshot, remix, weave (used by `zss/firmware/transforms`)
+- **Board operations** — Copy, erase, pivot, snapshot, remix, weave (used by `zss/firmware/transforms`)
 - **Format** — Object serialization with msgpack for memory/gadget state
 - **Parse** — File format parsers (ZZT, ANSI, CHR, ZZM, markdown, etc.)
 - **tts** — Text-to-speech (Piper, Supertonic, Fish) in ttsspace worker
@@ -23,6 +23,7 @@ Feature modules are **stateless utilities** and **domain logic** that:
 | File / Folder | Purpose |
 |---------------|---------|
 | [boardcopy.md](boardcopy.md) | Copy board region, mapelementcopy |
+| [boarderase.md](boarderase.md) | Erase board elements by filter / group |
 | [boardpivot.md](boardpivot.md) | Rotate board region by degrees |
 | [boardsnapshot.md](boardsnapshot.md) | Snapshot/revert board state |
 | [boardremix.md](boardremix.md) | Wavefunction collapse remix |

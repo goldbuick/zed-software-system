@@ -1064,6 +1064,34 @@ Source: https://zed.cafe/docs/feature/boardcopy
 
 ---
 
+# boarderase.ts
+Source: https://zed.cafe/docs/feature/boarderase
+
+**Purpose**: Exports `boarderase` — delete matching board elements by filter targetset and region. Used by firmware `#erase`.
+
+## Dependencies
+
+- `zss/mapping/types` — ispresent
+- `zss/memory/boardlifecycle` — memoryreadgroup, memorysafedeleteelement
+- `zss/memory/boards` — memoryinitboard, memoryreadboardbyaddress
+- `zss/words/reader` — READ_CONTEXT
+- `zss/words/types` — PT
+
+## Exports
+
+| Function | Args | Description |
+|----------|------|-------------|
+| `boarderase` | `target`, `p1`, `p2`, `self`, `targetset` | Erase elements from `memoryreadgroup` whose cells lie in `[p1,p2]`; skips players |
+
+## Behavior
+
+- Resolves board by address; requires `READ_CONTEXT.book` for timestamp
+- Targetset matches weave/pivot (`all`, `terrain`, `object`, `self`, `others`, display name, or **group**)
+- Uses `memorysafedeleteelement` (objects marked removed; terrain cells cleared)
+- Returns `true` if at least one element was erased
+
+---
+
 # boardpivot.ts
 Source: https://zed.cafe/docs/feature/boardpivot
 
@@ -1721,7 +1749,7 @@ The feature system provides domain-specific capabilities for the Zed Software Sy
 
 Feature modules are **stateless utilities** and **domain logic** that:
 
-- **Board operations** — Copy, pivot, snapshot, remix, weave (used by `zss/firmware/transforms`)
+- **Board operations** — Copy, erase, pivot, snapshot, remix, weave (used by `zss/firmware/transforms`)
 - **Format** — Object serialization with msgpack for memory/gadget state
 - **Parse** — File format parsers (ZZT, ANSI, CHR, ZZM, markdown, etc.)
 - **tts** — Text-to-speech (Piper, Supertonic, Fish) in ttsspace worker
@@ -1736,6 +1764,7 @@ Feature modules are **stateless utilities** and **domain logic** that:
 | File / Folder | Purpose |
 |---------------|---------|
 | [boardcopy.md](boardcopy.md) | Copy board region, mapelementcopy |
+| [boarderase.md](boarderase.md) | Erase board elements by filter / group |
 | [boardpivot.md](boardpivot.md) | Rotate board region by degrees |
 | [boardsnapshot.md](boardsnapshot.md) | Snapshot/revert board state |
 | [boardremix.md](boardremix.md) | Wavefunction collapse remix |
@@ -3393,12 +3422,13 @@ Processes the gadget queue for the current element:
 # transforms.ts
 Source: https://zed.cafe/docs/firmware/transforms
 
-**Purpose**: Defines `TRANSFORM_FIRMWARE` — commands for board-level transformations: snapshot/revert, copy, remix, weave, and pivot. Used for level editing and procedural generation.
+**Purpose**: Defines `TRANSFORM_FIRMWARE` — commands for board-level transformations: snapshot/revert, copy, remix, erase, weave, and pivot. Used for level editing and procedural generation.
 
 ## Dependencies
 
 - `maath/misc` — degToRad
 - `zss/feature/boardcopy` — boardcopy
+- `zss/feature/boarderase` — boarderase
 - `zss/feature/boardpivot` — boardpivot
 - `zss/feature/boardremix` — boardremix
 - `zss/feature/boardsnapshot` — boardrevert, boardsnapshot
@@ -3413,6 +3443,7 @@ Source: https://zed.cafe/docs/firmware/transforms
 | `revert` | — | Revert board to last snapshot |
 | `copy` | `stat` [filter…] | Copy region from board at stat to current board |
 | `remix` | `stat` `pattersize` `mirror` [filter…] | Remix board with pattern and mirror |
+| `erase` | [filter…] | Erase matching elements (targetset / region); group names supported |
 | `weave` | `dir` [filter…] | Weave board in direction (delta from element position) |
 | `pivot` | `degrees` [filter…] | Rotate board region by degrees (converted to radians); filter targetset can be `all` / `terrain` / `object` or a **group name** (group pivot, same as weave) |
 
