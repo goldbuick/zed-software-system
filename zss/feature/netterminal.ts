@@ -1,5 +1,13 @@
 import Peer, { DataConnection } from 'peerjs'
-import { apierror, apilog, vmsearch, vmtopic, workstatus } from 'zss/device/api'
+import { createdevice, createmessage } from 'zss/device'
+import {
+  apierror,
+  apilog,
+  netterminalpeerroster,
+  vmsearch,
+  vmtopic,
+  workstatus,
+} from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
 import {
   createforward,
@@ -13,6 +21,13 @@ import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import type { MESSAGE } from 'zss/device/types'
 import {
+  NETTERMINAL_MAX_JOINS,
+  type PEER_ROSTER_ENTRY,
+  resolvejoinroute,
+  shoulddialpeer,
+  shouldforwardonjoinedge,
+} from 'zss/feature/netterminalpeerclique'
+import {
   decodepeerwire,
   encodepeerwire,
   netmsgtounit8,
@@ -21,7 +36,7 @@ import { storagereadnetid, storagewritenetid } from 'zss/feature/storage'
 import { znsautopublishpeer } from 'zss/feature/url'
 import { ensurezstdwasm } from 'zss/feature/zstdwasm'
 import { createinfohash } from 'zss/mapping/guid'
-import { MAYBE, ispresent } from 'zss/mapping/types'
+import { MAYBE, isarray, ispresent } from 'zss/mapping/types'
 import { recordpeerwirereceived, recordpeerwiresent } from 'zss/perf/peerwire'
 import { readplatformsessionsid } from 'zss/platform'
 
@@ -63,6 +78,36 @@ let signalreconnecttimer: ReturnType<typeof setTimeout> | undefined
 let signalreconnectverifytimer: ReturnType<typeof setTimeout> | undefined
 let signalretrytimer: ReturnType<typeof setTimeout> | undefined
 let netterminalunloadregistered = false
+
+/** peerid -> player (roster) */
+const playerbypeer: Record<string, string> = {}
+/** player -> peerid */
+const peerbyplayer: Record<string, string> = {}
+/** board -> runner player */
+const boardtorunner: Record<string, string> = {}
+/** player -> board */
+const playertoboard: Record<string, string> = {}
+/** open join-join (and host-tracked join) connections by remote peer id */
+const peerconnections = new Map<string, DataConnection>()
+/** peers we already dialed this session (avoid repeat connect storms) */
+const dialedinpeers = new Set<string>()
+
+function clearpeercliquestate() {
+  for (const key of Object.keys(playerbypeer)) {
+    delete playerbypeer[key]
+  }
+  for (const key of Object.keys(peerbyplayer)) {
+    delete peerbyplayer[key]
+  }
+  for (const key of Object.keys(boardtorunner)) {
+    delete boardtorunner[key]
+  }
+  for (const key of Object.keys(playertoboard)) {
+    delete playertoboard[key]
+  }
+  peerconnections.clear()
+  dialedinpeers.clear()
+}
 
 function netterminalclearhandshaketimer() {
   if (signalhandshaketimer !== undefined) {
@@ -133,8 +178,140 @@ function peersessionforsessionrewrite(): string {
   return SOFTWARE.session() || readplatformsessionsid()
 }
 
+function openjoinpeerset(): Set<string> {
+  const open = new Set<string>()
+  for (const [peerid, conn] of peerconnections) {
+    if (peerid !== subscribetopic && conn.open) {
+      open.add(peerid)
+    }
+  }
+  return open
+}
+
+function countopenjoins(): number {
+  let n = 0
+  for (const [peerid, conn] of peerconnections) {
+    if (peerid !== subscribetopic && conn.open) {
+      ++n
+    }
+  }
+  return n
+}
+
+function rosterentries(): PEER_ROSTER_ENTRY[] {
+  const entries: PEER_ROSTER_ENTRY[] = []
+  const seen = new Set<string>()
+  for (const player of Object.keys(peerbyplayer)) {
+    const peerid = peerbyplayer[player]
+    if (!peerid || seen.has(peerid)) {
+      continue
+    }
+    seen.add(peerid)
+    entries.push({ player, peerid })
+  }
+  return entries
+}
+
+function applyrosterentries(entries: PEER_ROSTER_ENTRY[]) {
+  for (const key of Object.keys(playerbypeer)) {
+    delete playerbypeer[key]
+  }
+  for (const key of Object.keys(peerbyplayer)) {
+    delete peerbyplayer[key]
+  }
+  for (let i = 0; i < entries.length; ++i) {
+    const entry = entries[i]
+    if (!entry?.player || !entry.peerid) {
+      continue
+    }
+    playerbypeer[entry.peerid] = entry.player
+    peerbyplayer[entry.player] = entry.peerid
+  }
+}
+
+function applyrunnmap(
+  runners: Record<string, string>,
+  playerboards: Record<string, string>,
+) {
+  for (const key of Object.keys(boardtorunner)) {
+    delete boardtorunner[key]
+  }
+  for (const key of Object.keys(playertoboard)) {
+    delete playertoboard[key]
+  }
+  for (const board of Object.keys(runners)) {
+    boardtorunner[board] = runners[board]
+  }
+  for (const pid of Object.keys(playerboards)) {
+    playertoboard[pid] = playerboards[pid]
+  }
+}
+
+function broadcastpeerroster() {
+  if (!ishost()) {
+    return
+  }
+  const player = registerreadplayer()
+  netterminalpeerroster(SOFTWARE, player, rosterentries())
+}
+
+function ensurehostselfonroster() {
+  if (!ishost()) {
+    return
+  }
+  const player = registerreadplayer()
+  const peerid = networkpeer?.id
+  if (!player || !peerid) {
+    return
+  }
+  peerbyplayer[player] = peerid
+  playerbypeer[peerid] = player
+}
+
+function ensurejoinclique() {
+  if (ishost() || !ispresent(networkpeer) || !networkpeer.open) {
+    return
+  }
+  const selfpeerid = networkpeer.id
+  if (!selfpeerid) {
+    return
+  }
+  const hostpeerid = subscribetopic
+  const player = registerreadplayer()
+  for (const peerid of Object.keys(playerbypeer)) {
+    if (peerid === selfpeerid || peerid === hostpeerid) {
+      continue
+    }
+    if (peerconnections.has(peerid) && peerconnections.get(peerid)?.open) {
+      continue
+    }
+    if (!shoulddialpeer(selfpeerid, peerid)) {
+      continue
+    }
+    if (dialedinpeers.has(peerid)) {
+      continue
+    }
+    dialedinpeers.add(peerid)
+    apilog(SOFTWARE, player, `join clique dial ${peerid}`)
+    const conn = networkpeer.connect(peerid, { reliable: true })
+    if (ispresent(conn)) {
+      handledataconnection(conn)
+    }
+  }
+}
+
+function trackpeerconnection(dataconnection: DataConnection) {
+  peerconnections.set(dataconnection.peer, dataconnection)
+}
+
+function untrackpeerconnection(peerid: string) {
+  peerconnections.delete(peerid)
+  dialedinpeers.delete(peerid)
+}
+
 function handledataconnection(dataconnection: DataConnection) {
   const player = registerreadplayer()
+  const remotepeer = dataconnection.peer
   let topicbridge: MAYBE<ReturnType<typeof createforward>>
   let bridgeopened = false
   const pendingincoming: MESSAGE[] = []
@@ -156,6 +333,17 @@ function handledataconnection(dataconnection: DataConnection) {
     }
   }
 
+  function isstarhostlink(): boolean {
+    if (ishost()) {
+      return true
+    }
+    return remotepeer === subscribetopic
+  }
+
+  function isjoinejoinlink(): boolean {
+    return !ishost() && remotepeer !== subscribetopic
+  }
+
   function hostbridge() {
     topicbridge = createforward((message) => {
       if (!ispresent(networkpeer) || !shouldforwardonpeerserver(message)) {
@@ -167,9 +355,30 @@ function handledataconnection(dataconnection: DataConnection) {
     })
   }
 
-  function joinbridge() {
+  function joinbridgestar() {
     topicbridge = createforward((message) => {
       if (!ispresent(networkpeer) || !shouldforwardonpeerclient(message)) {
+        return
+      }
+      const selfpeerid = networkpeer.id ?? ''
+      if (shouldforwardonjoinedge(message)) {
+        const route = resolvejoinroute({
+          message,
+          selfpeerid,
+          hostpeerid: subscribetopic,
+          playertopeer: peerbyplayer,
+          boardtorunner,
+          playertoboard,
+          openjoinpeers: openjoinpeerset(),
+        })
+        if (route.kind === 'local') {
+          return
+        }
+        if (route.kind === 'direct') {
+          // join-join bridge on that edge sends; XOR skip star
+          return
+        }
+        sendpeer(dataconnection, message)
         return
       }
       if (
@@ -179,8 +388,45 @@ function handledataconnection(dataconnection: DataConnection) {
         sendpeer(dataconnection, message)
       }
     })
-    // signal ready to login
     vmsearch(SOFTWARE, player)
+    // announce this join so host can build roster
+    const selfpeerid = networkpeer?.id
+    if (selfpeerid) {
+      sendpeer(
+        dataconnection,
+        createmessage(
+          peersessionforsessionrewrite(),
+          player,
+          'netterminal',
+          'netterminal:peerhello',
+          { player, peerid: selfpeerid },
+        ),
+      )
+    }
+  }
+
+  function joinbridgeedge() {
+    topicbridge = createforward((message) => {
+      if (!ispresent(networkpeer) || !shouldforwardonpeerclient(message)) {
+        return
+      }
+      if (!shouldforwardonjoinedge(message)) {
+        return
+      }
+      const selfpeerid = networkpeer.id ?? ''
+      const route = resolvejoinroute({
+        message,
+        selfpeerid,
+        hostpeerid: subscribetopic,
+        playertopeer: peerbyplayer,
+        boardtorunner,
+        playertoboard,
+        openjoinpeers: openjoinpeerset(),
+      })
+      if (route.kind === 'direct' && route.peerid === remotepeer) {
+        sendpeer(dataconnection, message)
+      }
+    })
   }
 
   async function runopen() {
@@ -193,11 +439,44 @@ function handledataconnection(dataconnection: DataConnection) {
       bridgeopened = false
       return
     }
-    apilog(SOFTWARE, player, `connection ${dataconnection.peer} open`)
+
     if (ishost()) {
+      // refuse over cap before tracking
+      if (countopenjoins() >= NETTERMINAL_MAX_JOINS) {
+        apierror(
+          SOFTWARE,
+          player,
+          'netterminal',
+          `join cap ${NETTERMINAL_MAX_JOINS} reached; refusing ${remotepeer}`,
+        )
+        dataconnection.close()
+        bridgeopened = false
+        return
+      }
+    }
+
+    // trust: join-join only if peer is on roster (or roster empty during race -- allow, host will confirm)
+    if (isjoinejoinlink()) {
+      const known = playerbypeer[remotepeer]
+      if (!known && Object.keys(playerbypeer).length > 0) {
+        // roster present but peer unknown -- drop
+        apilog(SOFTWARE, player, `join clique drop unknown peer ${remotepeer}`)
+        dataconnection.close()
+        bridgeopened = false
+        return
+      }
+    }
+
+    trackpeerconnection(dataconnection)
+    apilog(SOFTWARE, player, `connection ${remotepeer} open`)
+
+    if (ishost()) {
+      ensurehostselfonroster()
       hostbridge()
+    } else if (isstarhostlink()) {
+      joinbridgestar()
     } else {
-      joinbridge()
+      joinbridgeedge()
     }
     flushpendingincoming()
   }
@@ -210,8 +489,17 @@ function handledataconnection(dataconnection: DataConnection) {
     topicbridge?.disconnect()
     topicbridge = undefined
     pendingincoming.length = 0
+    untrackpeerconnection(remotepeer)
+    if (ishost()) {
+      const leftplayer = playerbypeer[remotepeer]
+      if (leftplayer) {
+        delete peerbyplayer[leftplayer]
+        delete playerbypeer[remotepeer]
+        broadcastpeerroster()
+      }
+    }
     if (ispresent(networkpeer)) {
-      apilog(SOFTWARE, player, `disconnection from ${dataconnection.peer}`)
+      apilog(SOFTWARE, player, `disconnection from ${remotepeer}`)
     }
   })
 
@@ -238,6 +526,21 @@ function handledataconnection(dataconnection: DataConnection) {
           ...message,
           session,
         }
+        if (ishost() && incoming.target === 'netterminal:peerhello') {
+          const data = incoming.data as MAYBE<{
+            player?: string
+            peerid?: string
+          }>
+          const helloplayer = data?.player
+          const hellopeer = data?.peerid ?? remotepeer
+          if (helloplayer && hellopeer === remotepeer) {
+            peerbyplayer[helloplayer] = hellopeer
+            playerbypeer[hellopeer] = helloplayer
+            ensurehostselfonroster()
+            broadcastpeerroster()
+          }
+          return
+        }
         deliverincoming(incoming)
       } catch (err) {
         apilog(
@@ -262,6 +565,52 @@ function handledataconnection(dataconnection: DataConnection) {
   void runopen()
 }
 
+createdevice('netterminal', [], (message) => {
+  if (!networkpeer) {
+    return
+  }
+  const player = registerreadplayer()
+  switch (message.target) {
+    case 'peerroster': {
+      const entries = message.data as MAYBE<PEER_ROSTER_ENTRY[]>
+      if (!isarray(entries)) {
+        return
+      }
+      applyrosterentries(entries)
+      apilog(
+        SOFTWARE,
+        player,
+        `peer roster ${entries.length} entr${entries.length === 1 ? 'y' : 'ies'}`,
+      )
+      ensurejoinclique()
+      break
+    }
+    case 'runnmap': {
+      const data = message.data
+      if (!isarray(data) || data.length < 2) {
+        return
+      }
+      const runners = data[0] as Record<string, string>
+      const playerboards = data[1] as Record<string, string>
+      if (
+        !runners ||
+        typeof runners !== 'object' ||
+        !playerboards ||
+        typeof playerboards !== 'object'
+      ) {
+        return
+      }
+      applyrunnmap(runners, playerboards)
+      break
+    }
+    case 'peerhello':
+      // handled on host wire path; ignore on hub
+      break
+    default:
+      break
+  }
+})
+
 function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
   const sessionserial = ++netterminalsessionserial
   const player = registerreadplayer()
@@ -271,6 +620,7 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
   let joinoutsignalconnectdone = false
 
   subscribetopic = topicpeerid
+  clearpeercliquestate()
   vmtopic(SOFTWARE, player, subscribetopic)
 
   function peerserveroptions() {
@@ -306,6 +656,7 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
     netterminalclearreconnecttimers()
     netterminalclearsignalretrytimer()
     destroyactivenetworkpeer()
+    clearpeercliquestate()
     const delay = Math.min(
       SIGNAL_RETRY_MAX_MS,
       SIGNAL_RETRY_BASE_MS * 2 ** signalretryattempt,
@@ -338,6 +689,7 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
       networkpeer.destroy()
       networkpeer = undefined
     }
+    clearpeercliquestate()
     networkpeer = new Peer(peerid, peerserveroptions())
     registernetterminalunload()
 
@@ -377,6 +729,7 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
         }
       } else {
         apilog(SOFTWARE, player, `hosting topic ${subscribetopic}`)
+        ensurehostselfonroster()
       }
       const openpeerid = networkpeer?.id
       if (openpeerid) {
@@ -443,6 +796,7 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
         case 'unavailable-id':
           netterminalclearallschedule()
           destroyactivenetworkpeer()
+          clearpeercliquestate()
           doasync(SOFTWARE, player, async () => {
             await writepeerid(() => '')
           })
@@ -509,6 +863,7 @@ export function netterminaljoin(topicpeerid: string) {
 export function netterminalhalt() {
   netterminalsessionserial += 1
   netterminalclearallschedule()
+  clearpeercliquestate()
   if (ispresent(networkpeer)) {
     networkpeer.destroy()
     networkpeer = undefined
