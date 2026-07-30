@@ -139,6 +139,8 @@ $whiteread binary (uint8, int16, etc)
 
 #withboard <stat>  
 $whiteset board context  
+#withplayerboard  
+$whitecycle active player board  
 #withobject <id>  
 $whiteset element context  
 #userinput <action>  

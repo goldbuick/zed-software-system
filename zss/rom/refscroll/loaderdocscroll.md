@@ -7,7 +7,7 @@ $whiteloader board/object context while content is coming in.
 
 $ltgreycommands and context for:
 $whitereadline / readjson / readbin
-$whitewithboard / withobject
+$whitewithboard / withplayerboard / withobject
 $whitetext, JSON, and binary loader details
 
 $ltgreyFull reference lives on zed.cafe/docs (browser), not in this scroll.

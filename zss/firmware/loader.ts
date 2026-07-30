@@ -20,6 +20,7 @@ import { memoryreadobject } from 'zss/memory/boardaccess'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import { memorysendtoelements, memorysendtolog } from 'zss/memory/gamesend'
 import { memoryloadercontent, memoryloaderformat } from 'zss/memory/loader'
+import { memorypicknextactiveplayerboard } from 'zss/memory/playermanagement'
 import { memoryreadoperator } from 'zss/memory/session'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
@@ -168,6 +169,21 @@ export const LOADER_FIRMWARE = createfirmware({
       return 0
     },
     { lists: ['boards'] },
+  )
+  .command(
+    'withplayerboard',
+    ['cycle active player board (tracking shuffle)'],
+    () => {
+      const target = memorypicknextactiveplayerboard()
+      if (ispresent(target)) {
+        READ_CONTEXT.board = target
+        READ_CONTEXT.element = {
+          x: randominteger(0, BOARD_WIDTH - 1),
+          y: randominteger(0, BOARD_HEIGHT - 1),
+        }
+      }
+      return 0
+    },
   )
   .command(
     'withobject',

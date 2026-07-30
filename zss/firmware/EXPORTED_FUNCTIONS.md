@@ -125,6 +125,7 @@ Display commands `toast` and `ticker` are registered on **ELEMENT_FIRMWARE** in 
 | Command | Description |
 |---------|-------------|
 | `withboard` | Set board context for element-centric commands |
+| `withplayerboard` | Cycle next active player's board via tracking shuffle |
 | `withobject` | Set object context by ID |
 | `userinput` | Simulate user input (up, down, left, right, shoot, ok, cancel) |
 | `endgame` | No-op (when called in loaders) |
