@@ -89,6 +89,14 @@ if (typeof window !== 'undefined') {
     { capture: true },
   )
 
+  window.addEventListener(
+    'pointerdown',
+    () => {
+      enableaudio()
+    },
+    { capture: true },
+  )
+
   window.addEventListener('click', () => {
     enableaudio()
   })
