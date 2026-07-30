@@ -1,8 +1,5 @@
 import type { GADGET_STATE, LAYER } from 'zss/gadget/data/types'
-import type {
-  FocusExitSnap,
-  GridBias,
-} from 'zss/gadget/graphics/camerafocus'
+import type { FocusExitSnap, GridBias } from 'zss/gadget/graphics/camerafocus'
 import {
   type ExitPreviewResolve,
   resolveexitpreview,

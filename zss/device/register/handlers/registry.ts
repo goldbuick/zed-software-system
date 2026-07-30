@@ -36,6 +36,12 @@ import {
   handlepublishmem,
   handlesavemem,
 } from './memory'
+import {
+  handlememoryfsattach,
+  handlememoryfsdetach,
+  handlememoryfsstatus,
+  handlememoryfswrite,
+} from './memoryfs'
 import { handleready } from './ready'
 import { handlesecond } from './second'
 import { handletoken } from './storage'
@@ -79,6 +85,10 @@ export const registerhandlers: Record<string, REGISTER_HANDLER> = {
   savemem: handlesavemem,
   forkmem: handleforkmem,
   publishmem: handlepublishmem,
+  memoryfsattach: handlememoryfsattach,
+  memoryfsdetach: handlememoryfsdetach,
+  memoryfswrite: handlememoryfswrite,
+  memoryfsstatus: handlememoryfsstatus,
   second: handlesecond,
   inspector: handleinspector,
   perfmonitor: handleperfmonitor,

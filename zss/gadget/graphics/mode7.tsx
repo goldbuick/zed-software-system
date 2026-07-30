@@ -232,10 +232,22 @@ export const Mode7Graphics = memo(function Mode7Graphics({
 
     if (panphase && bias.dx !== 0) {
       cornerref.current.position.y = targetcornery
-      damp(cornerref.current.position, 'x', targetcornerx, FOCUS_ANIM_RATE, delta)
+      damp(
+        cornerref.current.position,
+        'x',
+        targetcornerx,
+        FOCUS_ANIM_RATE,
+        delta,
+      )
     } else if (panphase && bias.dy !== 0) {
       cornerref.current.position.x = targetcornerx
-      damp(cornerref.current.position, 'y', targetcornery, FOCUS_ANIM_RATE, delta)
+      damp(
+        cornerref.current.position,
+        'y',
+        targetcornery,
+        FOCUS_ANIM_RATE,
+        delta,
+      )
     } else {
       damp3(
         cornerref.current.position,

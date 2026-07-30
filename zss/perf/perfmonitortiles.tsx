@@ -32,7 +32,7 @@ const PERF_PLATE_BG = COLOR.DKPURPLE
 const PERF_FRAME_FG = COLOR.PURPLE
 
 const PANEL_W = 38
-const PANEL_H = 22
+const PANEL_H = 25
 const REFRESH_MS = 320
 /** Rolling window for peer byte volume (past minute). */
 const PEER_VOLUME_WINDOW_MS = 60_000
@@ -48,6 +48,10 @@ type GlSnap = {
   geometries: number
   textures: number
   programs: number
+  /** Total WebGL draw calls this frame (all composers). Overlay itself adds draws. */
+  calls: number
+  triangles: number
+  points: number
 }
 
 function defaultGlSnap(): GlSnap {
@@ -56,6 +60,9 @@ function defaultGlSnap(): GlSnap {
     geometries: 0,
     textures: 0,
     programs: 0,
+    calls: 0,
+    triangles: 0,
+    points: 0,
   }
 }
 
@@ -86,9 +93,27 @@ function PerfGlCapture({ snapRef }: { snapRef: MutableRefObject<GlSnap> }) {
   const gl = useThree((s) => s.gl)
   const smoothFps = useRef(0)
 
+  // Nested composers each call render(); autoReset would wipe counts after the
+  // first pass. Disable and reset once per frame after all composers (pri 2).
+  // Note: this overlay panel itself contributes draw calls -- record baselines
+  // both with and without Ctrl+I visible when comparing GPU cost.
+  useEffect(() => {
+    const prev = gl.info.autoReset
+    gl.info.autoReset = false
+    return () => {
+      gl.info.autoReset = prev
+      gl.info.reset()
+    }
+  }, [gl])
+
   useFrame((_, dt) => {
     const instant = 1 / Math.max(dt, 1e-6)
     smoothFps.current = smoothFps.current * 0.92 + instant * 0.08
+  })
+
+  // Priority 3 runs after EffectComposerMain (priority 2): highest priority
+  // renders last. Read the accumulated frame totals, then reset for next frame.
+  useFrame(() => {
     const info = gl.info
     const m = info.memory
     snapRef.current = {
@@ -96,8 +121,13 @@ function PerfGlCapture({ snapRef }: { snapRef: MutableRefObject<GlSnap> }) {
       geometries: m.geometries,
       textures: m.textures,
       programs: info.programs?.length ?? 0,
+      calls: info.render.calls,
+      triangles: info.render.triangles,
+      points: info.render.points,
     }
-  })
+    info.reset()
+  }, 3)
+
   return null
 }
 
@@ -134,6 +164,15 @@ function PerfMonitorDraw({ glRef }: PerfMonitorDrawProps) {
     tileuploadbytes: 0,
     spriteeffectruns: 0,
     tilerenderruns: 0,
+    gadgetapplycalls: 0,
+    gadgetapplydeepcopyms: 0,
+    gadgetapplyapplyms: 0,
+    gadgetapplypatchops: 0,
+    unicodescanruns: 0,
+    unicodescanglyphs: 0,
+    filterrebuildiso: 0,
+    filterrebuildfpv: 0,
+    filterrebuildmode7: 0,
   })
 
   useEffect(() => {
@@ -214,6 +253,13 @@ function PerfMonitorDraw({ glRef }: PerfMonitorDrawProps) {
       const gl = glRef.current
       setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
       tokenizeandwritetextformat(`$yellow fps=$white${gl.fps}`, context, true)
+
+      setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
+      tokenizeandwritetextformat(
+        `$yellow draws $white${gl.calls}$yellow tris $white${gl.triangles}$yellow pts $white${gl.points}`,
+        context,
+        true,
+      )
 
       const now = performance.now()
       const peer = readpeerwiretotals()
@@ -451,12 +497,35 @@ function PerfMonitorDraw({ glRef }: PerfMonitorDrawProps) {
       let tilebRate = 0
       let spriteRate = 0
       let tilerendRate = 0
+      let gapplyCopyMs = 0
+      let gapplyApplyMs = 0
+      let gapplyOps = 0
+      let uniScanRate = 0
+      let uniGlyphRate = 0
+      let filtIso = 0
+      let filtFpv = 0
+      let filtMode7 = 0
       if (renderdt > 0.04) {
         tileupRate = (rstats.tileuploadcalls - rprev.tileuploadcalls) / renderdt
         tilebRate = (rstats.tileuploadbytes - rprev.tileuploadbytes) / renderdt
         spriteRate =
           (rstats.spriteeffectruns - rprev.spriteeffectruns) / renderdt
         tilerendRate = (rstats.tilerenderruns - rprev.tilerenderruns) / renderdt
+        gapplyCopyMs =
+          (rstats.gadgetapplydeepcopyms - rprev.gadgetapplydeepcopyms) /
+          renderdt
+        gapplyApplyMs =
+          (rstats.gadgetapplyapplyms - rprev.gadgetapplyapplyms) / renderdt
+        gapplyOps =
+          (rstats.gadgetapplypatchops - rprev.gadgetapplypatchops) / renderdt
+        uniScanRate =
+          (rstats.unicodescanruns - rprev.unicodescanruns) / renderdt
+        uniGlyphRate =
+          (rstats.unicodescanglyphs - rprev.unicodescanglyphs) / renderdt
+        filtIso = (rstats.filterrebuildiso - rprev.filterrebuildiso) / renderdt
+        filtFpv = (rstats.filterrebuildfpv - rprev.filterrebuildfpv) / renderdt
+        filtMode7 =
+          (rstats.filterrebuildmode7 - rprev.filterrebuildmode7) / renderdt
       }
       renderPrev.current = {
         t: now,
@@ -464,6 +533,15 @@ function PerfMonitorDraw({ glRef }: PerfMonitorDrawProps) {
         tileuploadbytes: rstats.tileuploadbytes,
         spriteeffectruns: rstats.spriteeffectruns,
         tilerenderruns: rstats.tilerenderruns,
+        gadgetapplycalls: rstats.gadgetapplycalls,
+        gadgetapplydeepcopyms: rstats.gadgetapplydeepcopyms,
+        gadgetapplyapplyms: rstats.gadgetapplyapplyms,
+        gadgetapplypatchops: rstats.gadgetapplypatchops,
+        unicodescanruns: rstats.unicodescanruns,
+        unicodescanglyphs: rstats.unicodescanglyphs,
+        filterrebuildiso: rstats.filterrebuildiso,
+        filterrebuildfpv: rstats.filterrebuildfpv,
+        filterrebuildmode7: rstats.filterrebuildmode7,
       }
 
       setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
@@ -475,6 +553,30 @@ function PerfMonitorDraw({ glRef }: PerfMonitorDrawProps) {
       setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
       tokenizeandwritetextformat(
         `$yellow tile r $white${tilerendRate.toFixed(1)}/s$yellow spr $white${spriteRate.toFixed(1)}/s`,
+        context,
+        true,
+      )
+      setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
+      tokenizeandwritetextformat(
+        `$yellow gapply copy $white${gapplyCopyMs.toFixed(1)}ms/s$yellow apply $white${gapplyApplyMs.toFixed(1)}ms/s`,
+        context,
+        true,
+      )
+      setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
+      tokenizeandwritetextformat(
+        `$yellow gapply ops $white${gapplyOps.toFixed(0)}/s`,
+        context,
+        true,
+      )
+      setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
+      tokenizeandwritetextformat(
+        `$yellow uni scan $white${uniScanRate.toFixed(1)}/s$yellow gly $white${uniGlyphRate.toFixed(0)}/s`,
+        context,
+        true,
+      )
+      setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
+      tokenizeandwritetextformat(
+        `$yellow filt iso $white${filtIso.toFixed(1)}$yellow fpv $white${filtFpv.toFixed(1)}$yellow m7 $white${filtMode7.toFixed(1)}/s`,
         context,
         true,
       )

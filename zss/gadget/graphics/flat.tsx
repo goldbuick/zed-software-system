@@ -153,10 +153,22 @@ export const FlatGraphics = memo(function FlatGraphics({
     if (visualpan.panphase && visualpan.biasdx !== 0) {
       // Cardinal east/west: damp X only; hold Y so corner cannot drift diagonal.
       cornerref.current.position.y = targetcornery
-      damp(cornerref.current.position, 'x', targetcornerx, FOCUS_ANIM_RATE, delta)
+      damp(
+        cornerref.current.position,
+        'x',
+        targetcornerx,
+        FOCUS_ANIM_RATE,
+        delta,
+      )
     } else if (visualpan.panphase && visualpan.biasdy !== 0) {
       cornerref.current.position.x = targetcornerx
-      damp(cornerref.current.position, 'y', targetcornery, FOCUS_ANIM_RATE, delta)
+      damp(
+        cornerref.current.position,
+        'y',
+        targetcornery,
+        FOCUS_ANIM_RATE,
+        delta,
+      )
     } else {
       damp3(
         cornerref.current.position,

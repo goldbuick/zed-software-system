@@ -15,6 +15,7 @@ Feature modules are **stateless utilities** and **domain logic** that:
 - **stt** — Speech-to-text (Moonshine ONNX) in sttspace worker
 - **ROM** — Embedded help/documentation content
 - **Synth** — Audio synthesis (see [synth/docs](../synth/docs/index.md))
+- **memoryfs** — Projected MEMORY tree via folder drop ([memoryfs/docs](../memoryfs/docs/index.md))
 - **zsstextui / writeui** — zsstext layout lines; terminal log sinks (hyperlinks, QR, copy)
 
 ## Module Index

@@ -23,7 +23,7 @@ const MEMORY = {
 
 Everything below the surface (boards, elements, codepages, flags) lives **inside `BOOK`**, plus an off-tree **boundary store** ([`boundaries.ts`](../boundaries.ts)) that holds opaque jsonpipe slices keyed by id (board id, codepage runtime id, chip id, player id, gadget id, synth id, layers id, tracking id).
 
-`memoryreadroot()` returns the live `MEMORY` object — used by [`boardrunnermemorysync`](../../device/vm/boardrunnermemorysync.ts) to ship full / incremental snapshots to the boardrunner worker via [jsonpipe](../../feature/jsonpipe/README.md).
+`memoryreadroot()` returns the live `MEMORY` object — used by [`boardrunnermemorysync`](../../device/vm/boardrunnermemorysync.ts) to ship full / incremental snapshots to the boardrunner worker via [jsonpipe](../../feature/jsonpipe/README.md). Disk projection of MEMORY (Chromium folder drop) is [`memoryfs`](../../feature/memoryfs/docs/index.md) — separate from jsonpipe.
 
 ## Where each former `index.ts` API now lives
 

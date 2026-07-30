@@ -11,6 +11,7 @@ import {
 import { setcrtcurveamp } from 'zss/gadget/fx/crtanim'
 import { setglitchpulse } from 'zss/gadget/fx/glitchpulse'
 import { deepcopy, ispresent } from 'zss/mapping/types'
+import { recordgadgetapply } from 'zss/perf/renderupdatestats'
 
 import { registerreadplayer } from './registerplayer'
 
@@ -34,9 +35,14 @@ const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
     case 'paint': {
       useGadgetClient.setState((state) => {
         // apply full snapshot
+        const applyt0 = performance.now()
         const gadget = gadgetjsonpipe.applyfullsync(message.data)
+        const applyms = performance.now() - applyt0
         // always upodate the fallback state
+        const copyt0 = performance.now()
         fallback = deepcopy(gadget)
+        const deepcopyms = performance.now() - copyt0
+        recordgadgetapply(deepcopyms, applyms, 0)
         // avoids flash of blank state between boards
         if (ismaybeblankgadgetstate(gadget)) {
           return state
@@ -67,13 +73,16 @@ const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
       }
       useGadgetClient.setState((state) => {
         // always patch against the fallback state
-        const gadget = gadgetjsonpipe.applyremote(
-          fallback,
-          decodepatchwire(message.data),
-        )
+        const patch = decodepatchwire(message.data)
+        const applyt0 = performance.now()
+        const gadget = gadgetjsonpipe.applyremote(fallback, patch)
+        const applyms = performance.now() - applyt0
         if (ispresent(gadget)) {
           // always update the fallback state
+          const copyt0 = performance.now()
           fallback = deepcopy(gadget)
+          const deepcopyms = performance.now() - copyt0
+          recordgadgetapply(deepcopyms, applyms, patch.length)
           // avoids flash of blank state between boards
           if (ismaybeblankgadgetstate(gadget)) {
             return state

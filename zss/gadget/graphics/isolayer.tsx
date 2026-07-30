@@ -4,6 +4,7 @@ import { LAYER, LAYER_TYPE } from 'zss/gadget/data/types'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
+import { recordfilterrebuild } from 'zss/perf/renderupdatestats'
 import { COLLISION, COLOR } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -79,6 +80,7 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
       color: walls.color.map((c) => (c !== 0 ? COLOR.BLACK : COLOR.ONCLEAR)),
       bg: walls.bg,
     }
+    recordfilterrebuild('iso')
     return { floor, walls, water, ground, wallscap }
   }, [tilelayer])
 

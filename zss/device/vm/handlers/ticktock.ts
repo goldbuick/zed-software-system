@@ -11,6 +11,7 @@ import {
 } from 'zss/device/vm/boardrunnermanagement'
 import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
 import { gadgetsynctick } from 'zss/device/vm/gadgetsynctick'
+import { memoryfsvmcheckontick } from 'zss/device/vm/handlers/memoryfs'
 import { boardrunners } from 'zss/device/vm/state'
 import { ispresent } from 'zss/mapping/types'
 import { memorycollecttickboundaries } from 'zss/memory/boardwait'
@@ -72,6 +73,9 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
     })
     perfmeasure('vm:gadgetsynctick', () => {
       gadgetsynctick(vm)
+    })
+    perfmeasure('vm:memoryfs', () => {
+      memoryfsvmcheckontick(vm)
     })
   }
 }

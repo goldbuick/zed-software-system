@@ -29,6 +29,11 @@ import { handleinput } from './input'
 import { handlefindany, handleinspect } from './inspect'
 import { handlelastinputtouch } from './lastinputtouch'
 import { handleloader } from './loader'
+import {
+  handlememoryfsapply,
+  handlememoryfsattached,
+  handlememoryfsdetached,
+} from './memoryfs'
 import { handleoperator } from './operator'
 import { handlepage } from './page'
 import { handleplayergotoboard } from './playergotoboard'
@@ -97,4 +102,7 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   inspect: handleinspect,
   findany: handlefindany,
   loader: handleloader,
+  memoryfsattached: handlememoryfsattached,
+  memoryfsdetached: handlememoryfsdetached,
+  memoryfsapply: handlememoryfsapply,
 }
