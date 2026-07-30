@@ -140,6 +140,11 @@
 - [types.ts](https://zed.cafe/docs/memory/types)
 - [utilities.ts](https://zed.cafe/docs/memory/utilities)
 
+## Memoryfs
+
+- [memoryfs](https://zed.cafe/docs/memoryfs): Projected MEMORY filesystem via Chromium File System Access
+- [memoryfs agent skill](https://zed.cafe/docs/memoryfs/agent-skill): Copy-paste Cursor / Claude skill for reading and writing memoryfs
+
 ## Ops
 
 - [Built-in scroll validation](https://zed.cafe/docs/ops/scroll-validation)

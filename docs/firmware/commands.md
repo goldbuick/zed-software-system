@@ -37,6 +37,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `bookallexport` | Entire book as JSON (operator only) |
 | `pageexport` | Code page as JSON (operator only) |
 | `itchiopublish` | Zip file for itch.io (operator only) |
+| `memoryfs` | Projected MEMORY folder sync: `status` / `detach` (operator only; Chromium folder drop) |
 | `gadget` | Built-in inspector |
 | `findany` | Matched elements |
 | `zztsearch` | ZZT content by field and text |
