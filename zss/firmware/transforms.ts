@@ -1,4 +1,5 @@
 import { boardcopy } from 'zss/feature/boardcopy'
+import { boarderase } from 'zss/feature/boarderase'
 import { boardpivot } from 'zss/feature/boardpivot'
 import {
   type PIVOTDISCRETIZATION,
@@ -208,6 +209,30 @@ export const TRANSFORM_FIRMWARE = createfirmware()
           mirror,
           filter.pt1,
           filter.pt2,
+          filter.targetset,
+        )
+          ? 0
+          : 1,
+      )
+      return 0
+    },
+  )
+  .command(
+    'erase',
+    ['board elements by filter (targetset / region)'],
+    (chip, words) => {
+      if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
+        chip.set('didfail', 1)
+        return 0
+      }
+      const filter = readfilter(words, 0)
+      chip.set(
+        'didfail',
+        boarderase(
+          READ_CONTEXT.board.id,
+          filter.pt1,
+          filter.pt2,
+          READ_CONTEXT.elementid,
           filter.targetset,
         )
           ? 0

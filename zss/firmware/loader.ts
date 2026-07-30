@@ -138,13 +138,17 @@ export const LOADER_FIRMWARE = createfirmware({
       return 0
     }
 
-    apichat(SOFTWARE, '', '$GREEN', text)
+    apichat(SOFTWARE, READ_CONTEXT.elementfocus, '$GREEN', text)
     return 0
   })
   .command('hyperlink', ['clickable link in scroll or log'], (chip, args) => {
     const [label, ...words] = args
     const labelstr = chip.template(maptostring(label).split(' '))
-    apichat(SOFTWARE, '', `!${chip.template(words)};${labelstr}`)
+    apichat(
+      SOFTWARE,
+      READ_CONTEXT.elementfocus,
+      `!${chip.template(words)};${labelstr}`,
+    )
     return 0
   })
   .command('readline', ['text data'], loadertext)

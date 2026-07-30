@@ -7,17 +7,14 @@ import {
   setworkstatustimer,
 } from 'zss/device/register/state'
 import type { MESSAGE } from 'zss/device/types'
-import { useGadgetClient, useTape } from 'zss/gadget/data/zustandstores'
+import { useTape } from 'zss/gadget/data/zustandstores'
 import { ispresent, isstring } from 'zss/mapping/types'
 export function handlelog(_device: DEVICE, message: MESSAGE): void {
   terminaladdlog(message)
 }
 
 export function handlechat(_device: DEVICE, message: MESSAGE): void {
-  const currentboard = useGadgetClient.getState().gadget.board
-  if (message.player === '' || message.player === currentboard) {
-    terminaladdlog(message)
-  }
+  terminaladdlog(message)
 }
 
 export function handletoast(_device: DEVICE, message: MESSAGE): void {

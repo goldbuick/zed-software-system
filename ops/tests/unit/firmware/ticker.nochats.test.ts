@@ -70,7 +70,7 @@ describe('ticker without chat', () => {
     expect(apichat).not.toHaveBeenCalled()
   })
 
-  it('player #text keeps bubble and chat:message:player without apichat', () => {
+  it('player #text keeps bubble, global tape apichat, and chat:message:player', () => {
     READ_CONTEXT.elementisplayer = true
     READ_CONTEXT.elementid = 'pid_player1'
     READ_CONTEXT.element = {
@@ -87,7 +87,11 @@ describe('ticker without chat', () => {
 
     expect(READ_CONTEXT.element?.tickertext).toBe('hello world')
     expect(READ_CONTEXT.element?.tickertime).toBe(42)
-    expect(apichat).not.toHaveBeenCalled()
+    expect(apichat).toHaveBeenCalledWith(
+      expect.anything(),
+      'pid_player1',
+      expect.stringContaining('hello world'),
+    )
     expect(vmloader).toHaveBeenCalledWith(
       expect.anything(),
       'pid_player1',

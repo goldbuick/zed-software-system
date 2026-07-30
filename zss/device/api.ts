@@ -35,8 +35,8 @@ export type TEXT_READER = {
   lines: string[]
 }
 
-export function apichat(device: DEVICELIKE, board: string, ...message: any[]) {
-  device.emit(board, 'chat', message)
+export function apichat(device: DEVICELIKE, player: string, ...message: any[]) {
+  device.emit(player, 'chat', message)
   return true
 }
 

@@ -36,7 +36,7 @@ Core messaging API for communicating with devices. These functions provide a cle
 ### Logging & Communication
 - `apierror(device, player, kind, ...message)` - Log error messages
 - `apilog(device, player, ...message)` - Log informational messages
-- `apichat(device, board, ...message)` - Send chat messages to a board
+- `apichat(device, player, ...message)` - Emit chat with speaker player; register broadcasts to all clients
 - `apitoast(device, player, toast)` - Display toast notification
 
 ### Platform

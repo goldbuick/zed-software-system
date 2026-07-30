@@ -1,4 +1,5 @@
 import {
+  apichat,
   apilog,
   apitoast,
   gadgetclientbonk,
@@ -13,6 +14,7 @@ import { maptostring } from 'zss/mapping/value'
 import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
 import { memoryreadflags } from 'zss/memory/flags'
 import { memorysendtoelements } from 'zss/memory/gamesend'
+import { memoryelementtologprefix } from 'zss/memory/rendering'
 import { READ_CONTEXT, readargsuntilend } from 'zss/words/reader'
 import { parsesend } from 'zss/words/send'
 import {
@@ -104,6 +106,11 @@ export function registersendcommands(fw: FIRMWARE): FIRMWARE {
       if (ispresent(READ_CONTEXT.element) && READ_CONTEXT.elementisplayer) {
         READ_CONTEXT.element.tickertext = ticker
         READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
+        apichat(
+          SOFTWARE,
+          READ_CONTEXT.elementid,
+          `${memoryelementtologprefix(READ_CONTEXT.element)}${ticker}`,
+        )
         const { user } = memoryreadflags(READ_CONTEXT.elementid)
         const withuser = isstring(user) ? user : 'player'
         vmloader(

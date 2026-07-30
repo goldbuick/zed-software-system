@@ -121,6 +121,8 @@ $whiterestore snapshot
 $whitecopy region from board  
 #remix <stat> <size> <mirror> [filter]  
 $whiteremix with pattern  
+#erase [filter]  
+$whiteerase by targetset / region (groups ok)  
 #weave <dir> [filter]  
 $whiteshift/wrap board  
 #pivot <degrees> [filter]  
