@@ -154,8 +154,8 @@ All firmware commands and their descriptions. Commands are available depending o
 
 | Command | Description |
 |---------|-------------|
-| `snapshot` | Board snapshot |
-| `revert` | Board to snapshot state |
+| `snapshot` | Board snapshot (host VM: `vm:boardsnapshot`) |
+| `revert` | Board to snapshot state (host VM: `vm:boardrevert`) |
 | `weave` | Board elements in direction |
 | `copy` | Region from source to current board (waits for source board hydration when different from current) |
 | `remix` | From source with pattern size and mirror to current board (same wait behavior as `copy`) |

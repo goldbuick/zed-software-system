@@ -51,6 +51,22 @@
 <td>Returns trimmed text with $ZAP removed</td>
 </tr>
 <tr>
+<td><code>hasfadeout(text)</code></td>
+<td>Boolean test for $FADEOUT directive (dither to black and stay)</td>
+</tr>
+<tr>
+<td><code>stripfadeout(text)</code></td>
+<td>Returns trimmed text with $FADEOUT removed</td>
+</tr>
+<tr>
+<td><code>hasfadein(text)</code></td>
+<td>Boolean test for $FADEIN directive (dither from black to clear)</td>
+</tr>
+<tr>
+<td><code>stripfadein(text)</code></td>
+<td>Returns trimmed text with $FADEIN removed</td>
+</tr>
+<tr>
 <td><code>createwritetextcontext</code></td>
 <td>Creates WRITE_TEXT_CONTEXT</td>
 </tr>
@@ -167,6 +183,16 @@
 <td>Zap</td>
 <td><code>$ZAP</code></td>
 <td>Glitch pulse (gadget client)</td>
+</tr>
+<tr>
+<td>Fadeout</td>
+<td><code>$FADEOUT</code></td>
+<td>Bayer dither to black and stay (gadget client)</td>
+</tr>
+<tr>
+<td>Fadein</td>
+<td><code>$FADEIN</code></td>
+<td>Bayer dither from black to clear (gadget client)</td>
 </tr>
 <tr>
 <td>MetaKey</td>

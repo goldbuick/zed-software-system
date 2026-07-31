@@ -981,6 +981,8 @@ flowchart TB
 | boardrunner | vm         | `vm:playermovetoboard`      | Boardrunner asks for player teleport       |
 | boardrunner | vm         | `vm:playergotoboard`        | Boardrunner asks host to resolve + teleport |
 | boardrunner | vm         | `vm:buildboard`             | Boardrunner asks host to create/clone board and link exits/stats |
+| boardrunner | vm         | `vm:boardsnapshot`          | Boardrunner asks host to create MAIN `zss_snapshot_*` codepage and copy board |
+| boardrunner | vm         | `vm:boardrevert`            | Boardrunner asks host to restore board from snapshot codepage |
 
 ## Device summary
 
@@ -1155,30 +1157,31 @@ Source: https://zed.cafe/docs/feature/boardremix
 # boardsnapshot.ts
 Source: https://zed.cafe/docs/feature/boardsnapshot
 
-**Purpose**: Exports `boardsnapshot` and `boardrevert` — create and restore board state snapshots. Used by firmware `snapshot` and `revert` commands.
+**Purpose**: Exports `boardsnapshot` and `boardrevert` — create and restore board state snapshots. Called from host VM handlers (`vm:boardsnapshot` / `vm:boardrevert`), not from boardrunner firmware directly.
 
 ## Dependencies
 
 - `zss/mapping/types` — ispresent
-- `zss/memory/*` — board read, book list, codepage clear
-- `zss/memory/types` — BOARD_HEIGHT, BOARD_WIDTH
+- `zss/memory/*` — board read, book list, codepage clear/ensure, MAIN software book
+- `zss/memory/types` — BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE, MEMORY_LABEL
+- `zss/words/reader` — READ_CONTEXT (MAIN book for boardcopy)
 - `./boardcopy` — boardcopy
 
 ## Exports
 
 | Function | Args | Description |
 |----------|------|-------------|
-| `boardsnapshot` | `target` | Create snapshot of board at target; stores as `zss_snapshot_{boardid}`; removes existing snapshot first |
+| `boardsnapshot` | `target` | Create snapshot of board at target; stores as `zss_snapshot_{boardid}` on MAIN; removes existing snapshot first |
 | `boardrevert` | `target` | Revert board to last snapshot |
 
 ## Snapshot Name
 
-`snapshotname(target)` returns `zss_snapshot_${target}` — used as codepage name for snapshot board.
+`snapshotname(target)` returns `NAME(\`zss_snapshot_${target}\`)` — lowercased codepage name so clear/ensure lookups match.
 
 ## Flow
 
-1. **Snapshot**: Clear existing snapshot codepage from all books → create snapshot board → `boardcopy` full region to snapshot
-2. **Revert**: Read snapshot board → `boardcopy` snapshot back to target
+1. **Snapshot**: Clear existing snapshot codepage from all books → `memoryensuresoftwarecodepage(MAIN, name, BOARD)` → `boardcopy` full region to snapshot (with MAIN as `READ_CONTEXT.book`)
+2. **Revert**: Read snapshot board → `boardcopy` snapshot back to target (same MAIN book context)
 
 ---
 
@@ -2432,7 +2435,7 @@ Source: https://zed.cafe/docs/firmware/board
 | Command | Args | Description |
 |---------|------|-------------|
 | `build` | `stat` [, `source`] | Thin emit to `vm:buildboard`. Host creates a new TEMP board (optionally clones from source). Exit\* stats set bidirectional board exits. Other standard element stats (`p1`, `group`, …) write the new id on the invoking object; arbitrary names write player flags. Missing source or element fails loud (no create/link). |
-| `goto` | `stat` [, x, y] | Thin emit to `vm:playergotoboard`. Host resolves destination (passage match / x,y / start) and teleports the player. |
+| `goto` | `stat` [, x, y] | Thin emit to `vm:playergotoboard`. Host resolves destination (passage match / x,y / start) and teleports the player. Cross-board `#goto` dither-dissolves to black then in on the local client; same-board position moves and edge exits are unchanged (edge exits keep camera pan). |
 
 Cross-board placement commands (`put`/`shoot`/`dupe`/`write`/`shove`/`push` with over/under dirs, etc.) automatically wait one tick at a time until the other board’s runtime is synced from the sim VM. `build` and `goto` run on the host VM instead of waiting on the boardrunner.
 
@@ -2733,8 +2736,8 @@ All firmware commands and their descriptions. Commands are available depending o
 
 | Command | Description |
 |---------|-------------|
-| `snapshot` | Board snapshot |
-| `revert` | Board to snapshot state |
+| `snapshot` | Board snapshot (host VM: `vm:boardsnapshot`) |
+| `revert` | Board to snapshot state (host VM: `vm:boardrevert`) |
 | `weave` | Board elements in direction |
 | `copy` | Region from source to current board (waits for source board hydration when different from current) |
 | `remix` | From source with pattern size and mirror to current board (same wait behavior as `copy`) |
@@ -3428,12 +3431,11 @@ Source: https://zed.cafe/docs/firmware/transforms
 
 ## Dependencies
 
-- `maath/misc` — degToRad
+- `zss/device/api` — vmboardsnapshot, vmboardrevert
 - `zss/feature/boardcopy` — boardcopy
 - `zss/feature/boarderase` — boarderase
 - `zss/feature/boardpivot` — boardpivot
 - `zss/feature/boardremix` — boardremix
-- `zss/feature/boardsnapshot` — boardrevert, boardsnapshot
 - `zss/feature/boardweave` — boardweave
 - `zss/memory/*` — book/codepage lookups
 
@@ -3441,8 +3443,8 @@ Source: https://zed.cafe/docs/firmware/transforms
 
 | Command | Args | Description |
 |---------|------|-------------|
-| `snapshot` | — | Create snapshot of current board state |
-| `revert` | — | Revert board to last snapshot |
+| `snapshot` | — | Thin emit to `vm:boardsnapshot`. Host creates MAIN `zss_snapshot_*` codepage and copies current board |
+| `revert` | — | Thin emit to `vm:boardrevert`. Host restores current board from snapshot codepage |
 | `copy` | `stat` [filter…] | Copy region from board at stat to current board |
 | `remix` | `stat` `pattersize` `mirror` [filter…] | Remix board with pattern and mirror |
 | `erase` | [filter…] | Erase matching elements (targetset / region); group names supported |
@@ -3465,8 +3467,9 @@ Helper that searches all books for a codepage of given type and stat/address. Us
 
 ## Implementation Notes
 
+- `snapshot` / `revert` do not create codepages on the boardrunner; they emit to the host VM (same pattern as `#build` → `vm:buildboard`)
 - `weave` uses `READ_CONTEXT.element` position for delta
-- `pivot` uses `degToRad` from maath
+- `pivot` uses degrees converted to radians
 - All commands require READ_CONTEXT.book and READ_CONTEXT.board
 
 ---
@@ -10900,6 +10903,10 @@ Source: https://zed.cafe/docs/words/textformat
 | `stripbonk(text)` | Returns trimmed text with $BONK removed |
 | `haszap(text)` | Boolean test for $ZAP directive |
 | `stripzap(text)` | Returns trimmed text with $ZAP removed |
+| `hasfadeout(text)` | Boolean test for $FADEOUT directive (dither to black and stay) |
+| `stripfadeout(text)` | Returns trimmed text with $FADEOUT removed |
+| `hasfadein(text)` | Boolean test for $FADEIN directive (dither from black to clear) |
+| `stripfadein(text)` | Returns trimmed text with $FADEIN removed |
 | `createwritetextcontext` | Creates WRITE_TEXT_CONTEXT |
 | `tokenizeandwritetextformat(text, context, shouldreset)` | Tokenize + render |
 | `tokenizeandstriptextformat(text)` | Strip formatting; return plain text |
@@ -10929,6 +10936,8 @@ Source: https://zed.cafe/docs/words/textformat
 | Toast | `$TOAST` | Toast marker |
 | Bonk | `$BONK` | Screen shake (gadget client) |
 | Zap | `$ZAP` | Glitch pulse (gadget client) |
+| Fadeout | `$FADEOUT` | Bayer dither to black and stay (gadget client) |
+| Fadein | `$FADEIN` | Bayer dither from black to clear (gadget client) |
 | MetaKey | `$META` | Platform meta key (cmd/ctrl) |
 | NumberLiteral | `$-?(\d*\.)?\d+…` | Char code (e.g. `$123`) |
 | EscapedDollar | `$$` | Literal $ |

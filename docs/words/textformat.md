@@ -26,6 +26,10 @@ title: textformat.ts
 | `stripbonk(text)` | Returns trimmed text with $BONK removed |
 | `haszap(text)` | Boolean test for $ZAP directive |
 | `stripzap(text)` | Returns trimmed text with $ZAP removed |
+| `hasfadeout(text)` | Boolean test for $FADEOUT directive (dither to black and stay) |
+| `stripfadeout(text)` | Returns trimmed text with $FADEOUT removed |
+| `hasfadein(text)` | Boolean test for $FADEIN directive (dither from black to clear) |
+| `stripfadein(text)` | Returns trimmed text with $FADEIN removed |
 | `createwritetextcontext` | Creates WRITE_TEXT_CONTEXT |
 | `tokenizeandwritetextformat(text, context, shouldreset)` | Tokenize + render |
 | `tokenizeandstriptextformat(text)` | Strip formatting; return plain text |
@@ -55,6 +59,8 @@ title: textformat.ts
 | Toast | `$TOAST` | Toast marker |
 | Bonk | `$BONK` | Screen shake (gadget client) |
 | Zap | `$ZAP` | Glitch pulse (gadget client) |
+| Fadeout | `$FADEOUT` | Bayer dither to black and stay (gadget client) |
+| Fadein | `$FADEIN` | Bayer dither from black to clear (gadget client) |
 | MetaKey | `$META` | Platform meta key (cmd/ctrl) |
 | NumberLiteral | `$-?(\d*\.)?\d+…` | Char code (e.g. `$123`) |
 | EscapedDollar | `$$` | Literal $ |

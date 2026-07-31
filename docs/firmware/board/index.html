@@ -28,7 +28,7 @@
 <tr>
 <td><code>goto</code></td>
 <td><code>stat</code> [, x, y]</td>
-<td>Thin emit to <code>vm:playergotoboard</code>. Host resolves destination (passage match / x,y / start) and teleports the player.</td>
+<td>Thin emit to <code>vm:playergotoboard</code>. Host resolves destination (passage match / x,y / start) and teleports the player. Cross-board <code>#goto</code> dither-dissolves to black then in on the local client; same-board position moves and edge exits are unchanged (edge exits keep camera pan).</td>
 </tr>
 </tbody>
 </table></div>
