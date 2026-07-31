@@ -1,9 +1,28 @@
 import { isfilenamesafeid } from 'zss/mapping/guid'
+import { memoryimportbookfromjson } from 'zss/memory/bookoperations'
+import { memoryreadcodepageruntime } from 'zss/memory/codepageoperations'
+import { memoryresetbooks } from 'zss/memory/session'
 import {
   readcoolregionsbowbookexport,
   readcoolregionsbowbooks,
 } from 'ops/lib/coolregionsbowbook'
 import { COOLREGIONSBOW_BOOK_JSON_PATH } from 'ops/lib/fixturepaths'
+
+/** First terrain cell that references the book terrainmap. */
+function findinternedcell(book: any) {
+  for (let p = 0; p < book.pages.length; ++p) {
+    const terrain = book.pages[p].board?.terrain
+    if (!Array.isArray(terrain)) {
+      continue
+    }
+    for (let i = 0; i < terrain.length; ++i) {
+      if (terrain[i] && terrain[i].dmap !== undefined) {
+        return { page: p, index: i, entry: book.terrainmap[terrain[i].dmap] }
+      }
+    }
+  }
+  return undefined
+}
 
 describe('coolregionsbow book fixture', () => {
   it('loads exported book json from repo fixtures', () => {
@@ -45,5 +64,46 @@ describe('coolregionsbow book fixture', () => {
         expect(isfilenamesafeid(owner)).toBe(true)
       }
     }
+  })
+
+  it('terrain display is deduped into the book terrainmap', () => {
+    const book = readcoolregionsbowbookexport().data as any
+    expect(book.terrainmap.length).toBeGreaterThan(0)
+
+    let interned = 0
+    for (const page of book.pages) {
+      const terrain = page.board?.terrain
+      if (!Array.isArray(terrain)) {
+        continue
+      }
+      for (const cell of terrain) {
+        if (!cell || cell.dmap === undefined) {
+          continue
+        }
+        interned += 1
+        expect(book.terrainmap[cell.dmap]).toBeDefined()
+        // interned cells must not also carry literal display stats
+        expect(cell.char).toBeUndefined()
+        expect(cell.color).toBeUndefined()
+        expect(cell.bg).toBeUndefined()
+      }
+    }
+    expect(interned).toBeGreaterThan(0)
+  })
+
+  it('restores terrain display from the table on import', () => {
+    const sample = findinternedcell(readcoolregionsbowbookexport().data as any)
+    expect(sample).toBeDefined()
+
+    const book = memoryimportbookfromjson(readcoolregionsbowbookexport().data)
+    expect(book).toBeDefined()
+    memoryresetbooks([book!])
+
+    const board = memoryreadcodepageruntime(book!.pages[sample!.page])?.board
+    const cell = board?.terrain[sample!.index]
+    expect(cell?.char).toBe(sample!.entry.char)
+    expect(cell?.color).toBe(sample!.entry.color)
+    expect(cell?.dmap).toBeUndefined()
+    memoryresetbooks([])
   })
 })

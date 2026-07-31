@@ -1,14 +1,14 @@
 import { objectKeys } from 'ts-extras'
 import { CHIP } from 'zss/chip'
-import { vmplayergotoboard } from 'zss/device/api'
+import { vmbuildboard, vmplayergotoboard } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { boardcopy, mapelementcopy } from 'zss/feature/boardcopy'
+import { mapelementcopy } from 'zss/feature/boardcopy'
 import { memorytrycontentdestination } from 'zss/feature/contenturlflow'
 import { memorytryjoindestination } from 'zss/feature/joinurlflow'
 import { createfirmware } from 'zss/firmware'
 import { firmwarewaitforboard } from 'zss/firmware/boardwaitsync'
 import { celltorendervalue } from 'zss/gadget/display/cellvalue'
-import { createsid, ispid } from 'zss/mapping/guid'
+import { ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import { deepcopy, ispresent, isstring } from 'zss/mapping/types'
 import {
@@ -29,7 +29,6 @@ import {
   memorymoveobject,
 } from 'zss/memory/boardmovement'
 import {
-  memoryreadboardbyaddress,
   memoryreadboardbyevaldir,
   memoryreadelementkind,
   memoryreadelementstat,
@@ -37,20 +36,12 @@ import {
   memorywriteelementfromkind,
 } from 'zss/memory/boards'
 import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
-import { memoryensuresoftwarecodepage } from 'zss/memory/books'
-import { memoryreadcodepagedata } from 'zss/memory/codepageoperations'
-import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
 import { memorytickobject } from 'zss/memory/runtime'
 import {
   memorylistboardelementsbykind,
   memorylistboardptsbyempty,
 } from 'zss/memory/spatialqueries'
-import {
-  BOARD_HEIGHT,
-  BOARD_WIDTH,
-  CODE_PAGE_TYPE,
-  MEMORY_LABEL,
-} from 'zss/memory/types'
+import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { mapcolortostrcolor, mapstrcolortoattributes } from 'zss/words/color'
 import { dirfrompts, ispt, ptapplydir } from 'zss/words/dir'
 import {
@@ -378,10 +369,6 @@ function commanddupe(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
   return 0
 }
 
-const p1 = { x: 0, y: 0 }
-const p2 = { x: BOARD_WIDTH - 1, y: BOARD_HEIGHT - 1 }
-const targetset = 'all'
-
 export const BOARD_FIRMWARE = createfirmware()
   .command(
     'build',
@@ -390,7 +377,7 @@ export const BOARD_FIRMWARE = createfirmware()
       ARG_TYPE.MAYBE_STRING,
       'create board and link to stat. optional source board.',
     ],
-    (chip, words) => {
+    (_chip, words) => {
       if (
         !ispresent(READ_CONTEXT.book) ||
         !ispresent(READ_CONTEXT.board) ||
@@ -399,90 +386,19 @@ export const BOARD_FIRMWARE = createfirmware()
         return 0
       }
 
-      // creates a new board from an existing one or blank, and writes the id to the given stat
+      // create/clone/link on the VM (host codepage), not the board runner
       const [stat, maybesource] = readargs(words, 0, [
         ARG_TYPE.NAME,
         ARG_TYPE.MAYBE_STRING,
       ])
-
-      const [codepage] = memoryensuresoftwarecodepage(
-        MEMORY_LABEL.TEMP,
-        createsid(),
-        CODE_PAGE_TYPE.BOARD,
+      vmbuildboard(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        READ_CONTEXT.board.id,
+        READ_CONTEXT.element.id ?? '',
+        stat,
+        isstring(maybesource) ? maybesource : undefined,
       )
-      if (!ispresent(codepage)) {
-        return 0
-      }
-
-      const createdboard =
-        memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(codepage)
-      if (!ispresent(createdboard)) {
-        return 0
-      }
-
-      // attempt to clone existing board
-      if (isstring(maybesource)) {
-        // pick+wait before read so empty stub does not fake hydration
-        const sourcepage = memorypickcodepagewithtypeandstat(
-          CODE_PAGE_TYPE.BOARD,
-          maybesource,
-        )
-        if (ispresent(sourcepage)) {
-          if (firmwarewaitforboard(sourcepage.id)) {
-            return 1
-          }
-          const sourceboard = memoryreadboardbyaddress(maybesource)
-          if (!ispresent(sourceboard)) {
-            return 0
-          }
-          boardcopy(sourceboard.id, createdboard.id, p1, p2, targetset)
-          // make sure to copy board stats as well
-          createdboard.isdark = sourceboard.isdark
-          createdboard.startx = sourceboard.startx
-          createdboard.starty = sourceboard.starty
-          createdboard.over = sourceboard.over
-          createdboard.under = sourceboard.under
-          createdboard.camera = sourceboard.camera
-          createdboard.graphics = sourceboard.graphics
-          createdboard.facing = sourceboard.facing
-          createdboard.charset = sourceboard.charset
-          createdboard.palette = sourceboard.palette
-          createdboard.timelimit = sourceboard.timelimit
-          createdboard.restartonzap = sourceboard.restartonzap
-          createdboard.maxplayershots = sourceboard.maxplayershots
-          createdboard.b1 = sourceboard.b1
-          createdboard.b2 = sourceboard.b2
-          createdboard.b3 = sourceboard.b3
-          createdboard.b4 = sourceboard.b4
-          createdboard.b5 = sourceboard.b5
-          createdboard.b6 = sourceboard.b6
-          createdboard.b7 = sourceboard.b7
-          createdboard.b8 = sourceboard.b8
-          createdboard.b9 = sourceboard.b9
-          createdboard.b10 = sourceboard.b10
-          // when building out border boards, make sure to link back
-          // to current board
-          switch (NAME(stat)) {
-            case 'exitwest':
-              createdboard.exiteast = READ_CONTEXT.board.id
-              break
-            case 'exiteast':
-              createdboard.exitwest = READ_CONTEXT.board.id
-              break
-            case 'exitnorth':
-              createdboard.exitsouth = READ_CONTEXT.board.id
-              break
-            case 'exitsouth':
-              createdboard.exitnorth = READ_CONTEXT.board.id
-              break
-            default:
-              break
-          }
-        }
-      }
-
-      // update stat with created board id
-      chip.set(stat, createdboard.id)
       return 0
     },
     {

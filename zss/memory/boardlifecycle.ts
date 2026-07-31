@@ -19,6 +19,12 @@ import {
   memorydeleteboardterrainnamed,
 } from './boardlookup'
 import { memoryreadelementstat } from './boards'
+import {
+  TERRAIN_DISPLAY,
+  TERRAIN_EXPORT_MODE,
+  memoryexportterrainelement,
+  memoryunpackterraindisplay,
+} from './boardterrainmap'
 import { memoryreadelementdisplay } from './bookoperations'
 import {
   memorydeleteboardelementruntime,
@@ -49,9 +55,15 @@ export function memorydeleteboardobject(board: MAYBE<BOARD>, id: string) {
   return false
 }
 
-export function memoryexportboard(board: MAYBE<BOARD>): MAYBE<FORMAT_OBJECT> {
+export function memoryexportboard(
+  board: MAYBE<BOARD>,
+  mode?: MAYBE<TERRAIN_EXPORT_MODE>,
+): MAYBE<FORMAT_OBJECT> {
   return formatobject(board, BOARD_KEYS, {
-    terrain: (terrain) => terrain.map(memoryexportboardelement),
+    terrain: (terrain: MAYBE<BOARD_ELEMENT>[]) =>
+      terrain.map((element) =>
+        memoryexportboardelement(memoryexportterrainelement(element, mode)),
+      ),
     objects: (elements) => {
       const objects = Object.values<BOARD_ELEMENT>(elements)
         .filter((boardelement) => !boardelement.removed)
@@ -64,7 +76,10 @@ export function memoryexportboard(board: MAYBE<BOARD>): MAYBE<FORMAT_OBJECT> {
   })
 }
 
-export function memoryexportboardasjson(board: MAYBE<BOARD>): any {
+export function memoryexportboardasjson(
+  board: MAYBE<BOARD>,
+  mode?: MAYBE<TERRAIN_EXPORT_MODE>,
+): any {
   if (!ispresent(board)) {
     return undefined
   }
@@ -73,7 +88,9 @@ export function memoryexportboardasjson(board: MAYBE<BOARD>): any {
     objects[object.id ?? ''] = memoryexportboardelementasjson(object)
   }
   return {
-    terrain: board.terrain.map(memoryexportboardelementasjson),
+    terrain: board.terrain.map((element) =>
+      memoryexportboardelementasjson(memoryexportterrainelement(element, mode)),
+    ),
     objects,
     // stats
     isdark: board.isdark,
@@ -108,6 +125,7 @@ export function memoryexportboardasjson(board: MAYBE<BOARD>): any {
 
 export function memoryimportboard(
   boardentry: MAYBE<FORMAT_OBJECT>,
+  terrainmap?: MAYBE<TERRAIN_DISPLAY[]>,
 ): MAYBE<BOARD> {
   const board = unformatobject<BOARD>(boardentry, BOARD_KEYS, {
     terrain: (terrain) => terrain.map(memoryimportboardelement),
@@ -125,6 +143,7 @@ export function memoryimportboard(
   if (!ispresent(board)) {
     return undefined
   }
+  memoryunpackterraindisplay(board, terrainmap)
   memoryensureboardruntime(board)
   return board
 }

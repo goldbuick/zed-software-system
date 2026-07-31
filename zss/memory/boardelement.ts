@@ -130,6 +130,8 @@ export function memoryexportboardelementasjson(
     displaycolor: boardelement.displaycolor,
     displaybg: boardelement.displaybg,
     displayname: boardelement.displayname,
+    // display index into BOOK terrainmap, when the export deduped
+    dmap: boardelement.dmap,
     // interaction
     item: boardelement.item,
     group: boardelement.group,

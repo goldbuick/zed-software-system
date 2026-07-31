@@ -85,7 +85,15 @@ Board / object create, delete, import/export.
 - **memorydeleteboardobject(board, id)**, **memorysafedeleteelement(board, element, timestamp)**
 - **memorywriteterrain(board, from)**, **memorywriteterrainfromkind(board, pt, kind)**
 - **memoryreadgroup(board, self, targetgroup)**
-- **memoryexportboard(board)**, **memoryexportboardasjson(board)**, **memoryimportboard(boardentry)**
+- **memoryexportboard(board, mode?)**, **memoryexportboardasjson(board, mode?)**, **memoryimportboard(boardentry, terrainmap?)**
+
+## boardterrainmap.ts
+
+Terrain display de-dupe for persisted exports (see [docs](docs/boardterrainmap.md)).
+
+- **memorycreateterrainexportmode(intern)** - absent mode = verbatim, `false` = strip kind defaults, `true` = also intern
+- **memorystripterrainkinddefaults(element)**, **memoryinternterraindisplay(element, mode)**, **memoryexportterrainelement(element, mode)**
+- **memoryunpackterraindisplay(board, terrainmap)** - expands `dmap` back into char / color / bg on import
 
 ## boardelement.ts
 
@@ -153,7 +161,7 @@ Book / codepage / flag operations.
 - **memoryensurebookcodepagewithtype(book, type, address)**
 - **memoryreadbookflag**, **memoryreadbookflags**, **memorywritebookflag**, **memoryhasbookflags**, **memoryclearbookflags**, **memoryhasbookmatch**
 - **memoryupdatebookname(book)**, **memoryupdatebooktoken(book)**
-- **memorycreatebook(pages)**, **memoryexportbook(book)**, **memoryexportbookasjson(book)**, **memoryimportbook(bookentry)**, **memoryimportbookfromjson(flat)**
+- **memorycreatebook(pages)**, **memoryexportbook(book)**, **memoryexportbookasjson(book)**, **memoryimportbook(bookentry)**, **memoryimportbookfromjson(flat)** - both exporters own the book `terrainmap` table; both importers pass it down to the boards
 
 ## codepages.ts
 
@@ -172,7 +180,7 @@ Codepage parse / runtime.
 - **memoryreadcodepagestat(codepage, stat)**, **memoryreadcodepagestats(codepage)**, **memoryreadcodepagestatdefaults(codepage)**, **memoryreadcodepagestatsfromtext(content)**, **memoryresetcodepagestats(codepage)**
 - **memorycodepagetypetostring(type)**, **memorycodepagehasmatch(codepage, type, ids)**
 - **memorycreatecodepage(code, content)**, **memoryfreecodepage(codepage)**
-- **memoryexportcodepage**, **memoryexportcodepageasjson**, **memoryimportcodepage**, **memoryimportcodepagefromjson**
+- **memoryexportcodepage(codepage, mode?)**, **memoryexportcodepageasjson(codepage, mode?)**, **memoryimportcodepage(codepage, terrainmap?)**, **memoryimportcodepagefromjson(flat, terrainmap?)**
 - **memoryexportbitmap**, **memoryimportbitmap**
 
 ## runtimeboundary.ts

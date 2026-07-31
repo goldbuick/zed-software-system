@@ -3,10 +3,7 @@ import {
   memoryreadgroup,
   memorysafedeleteelement,
 } from 'zss/memory/boardlifecycle'
-import {
-  memoryinitboard,
-  memoryreadboardbyaddress,
-} from 'zss/memory/boards'
+import { memoryinitboard, memoryreadboardbyaddress } from 'zss/memory/boards'
 import { BOARD_ELEMENT } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { PT } from 'zss/words/types'

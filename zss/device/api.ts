@@ -948,6 +948,17 @@ export function vmplayergotoboard(
   ])
 }
 
+export function vmbuildboard(
+  device: DEVICELIKE,
+  player: string,
+  boardid: string,
+  elementid: string,
+  stat: string,
+  maybesource?: string,
+) {
+  device.emit(player, 'vm:buildboard', [boardid, elementid, stat, maybesource])
+}
+
 export function vmplayertoken(
   device: DEVICELIKE,
   player: string,

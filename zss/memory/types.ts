@@ -70,6 +70,7 @@ export enum BOARD_ELEMENT_KEYS {
   p10,
   didfail,
   displayname,
+  dmap,
 }
 
 export enum BOARD_KEYS {
@@ -109,6 +110,7 @@ export enum BOOK_KEYS {
   pages,
   flags,
   token,
+  terrainmap,
 }
 
 export enum CODE_PAGE_KEYS {
@@ -242,6 +244,8 @@ export type BOARD_ELEMENT = {
   removed?: number
   // runtime only
   runtime?: string
+  // export only; terrain display index into BOOK terrainmap, expanded on import
+  dmap?: number
 }
 
 export type BOARD_ELEMENT_STAT = keyof BOARD_ELEMENT

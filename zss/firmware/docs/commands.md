@@ -128,8 +128,8 @@ All firmware commands and their descriptions. Commands are available depending o
 
 | Command | Description |
 |---------|-------------|
-| `build` | Create board and link to stat. Optional source board. |
-| `goto` | Player to board by name or address with optional x, y (waits for target board hydration on boardrunner) |
+| `build` | Create board on host VM and link to stat. Optional source board; exit\* bidirectional; standard element stats on object, else player flags. Missing source/element fails loud. |
+| `goto` | Player to board by name or address with optional x, y (resolved on host VM) |
 | `transport` | Element across board with transporter logic |
 | `shove` | Target object in direction |
 | `push` | Target object in direction ONLY if pushable |
