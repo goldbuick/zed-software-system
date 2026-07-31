@@ -57,13 +57,13 @@ export function LinkText({ surface }: LinkWidgetProps) {
 
   if (surface.layout === 'terminal') {
     tokenizeandwritetextformat(
-      `$green $20 ${tcolor}${tlabel} $green`,
+      `$green $20 ${tcolor}$onclear ${tlabel} $green`,
       surface.context,
       false,
     )
   } else {
     tokenizeandwritetextformat(
-      `${stripe} $20 ${tcolor}${tlabel} $green`,
+      `${stripe} $20 ${tcolor}$onclear ${tlabel} $green`,
       surface.context,
       false,
     )

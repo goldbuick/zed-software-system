@@ -1,18 +1,48 @@
-import React from 'react'
+import { useFrame } from '@react-three/fiber'
+import { damp } from 'maath/easing'
+import React, { useRef } from 'react'
+import type { ShaderMaterial } from 'three'
 import { RUNTIME } from 'zss/config'
 import { StaticDither } from 'zss/gadget/graphics/dither'
 import { ScrollComponent } from 'zss/screens/scroll/component'
 
 import { useScreenUILayoutContext } from './layoutstate'
 
+const SCROLL_DITHER_ALPHA = 0.14
+/** maath damp smoothTime -- seconds to approach target. */
+const SCROLL_DITHER_ANIM_RATE = 0.55
+
 export function ScreenUIScrollLayer() {
   const layout = useScreenUILayoutContext()
+  const hasscroll = layout?.hasscroll ?? false
+  const isscrollempty = layout?.isscrollempty ?? true
+  const materialref = useRef<ShaderMaterial | null>(null)
+  const targetref = useRef(0)
+  targetref.current = hasscroll && !isscrollempty ? 1 : 0
 
-  if (!layout?.hasscroll) {
+  useFrame((_, delta) => {
+    const material = materialref.current
+    if (!material?.uniforms.fade) {
+      return
+    }
+    if (!hasscroll) {
+      material.uniforms.fade.value = 0
+      return
+    }
+    damp(
+      material.uniforms.fade,
+      'value',
+      targetref.current,
+      SCROLL_DITHER_ANIM_RATE,
+      delta,
+    )
+  })
+
+  if (!hasscroll || !layout) {
     return null
   }
 
-  const { screensize, scrollrect, isscrollempty } = layout
+  const { screensize, scrollrect } = layout
 
   return (
     <React.Fragment key="scroll">
@@ -20,7 +50,9 @@ export function ScreenUIScrollLayer() {
         <StaticDither
           width={screensize.cols}
           height={screensize.rows}
-          alpha={0.14}
+          alpha={SCROLL_DITHER_ALPHA}
+          initialfade={0}
+          materialref={materialref}
         />
       </group>
       <group

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { Color, Mesh } from 'three'
+import type { Color, Mesh, ShaderMaterial } from 'three'
 import { Box2, MathUtils, Vector2 } from 'three'
 import {
   createDitherDataTexture,
@@ -16,6 +16,10 @@ type DitherProps = {
   raycast?: Mesh['raycast']
   /** Opaque dither pixel color (default black). */
   color?: Color | string
+  /** Optional handle to the dither ShaderMaterial (for per-frame fade uniforms). */
+  materialref?: React.MutableRefObject<ShaderMaterial | null>
+  /** Initial `fade` uniform (default 1). Use 0 when the parent will damp fade in. */
+  initialfade?: number
 }
 
 export function Dither({
@@ -24,8 +28,24 @@ export function Dither({
   alphas,
   raycast,
   color,
+  materialref,
+  initialfade = 1,
 }: DitherProps) {
-  const [material] = useState(() => createDitherMaterial())
+  const [material] = useState(() => {
+    const next = createDitherMaterial()
+    next.uniforms.fade.value = initialfade
+    return next
+  })
+
+  useEffect(() => {
+    if (!materialref) {
+      return
+    }
+    materialref.current = material
+    return () => {
+      materialref.current = null
+    }
+  }, [material, materialref])
 
   // create data texture
   useEffect(() => {
@@ -75,6 +95,8 @@ type StaticDitherProps = {
   alpha: number
   raycast?: Mesh['raycast']
   color?: Color | string
+  materialref?: React.MutableRefObject<ShaderMaterial | null>
+  initialfade?: number
 }
 
 export function StaticDither({
@@ -83,6 +105,8 @@ export function StaticDither({
   alpha,
   raycast,
   color,
+  materialref,
+  initialfade,
 }: StaticDitherProps) {
   const alphas = useMemo(
     () => new Array(width * height).fill(alpha),
@@ -95,6 +119,8 @@ export function StaticDither({
       alphas={alphas}
       raycast={raycast}
       color={color}
+      materialref={materialref}
+      initialfade={initialfade}
     />
   )
 }
