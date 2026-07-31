@@ -82,16 +82,19 @@ export async function memoryfindanymenu(player: string) {
   const lines = [
     `find any element(s)`,
     DIVIDER,
+    zsszedlinkline('expr1 hk 1 " 1 "', 'find 1'),
     zsszedlinkline('expr1 text', 'slot 1: any'),
+    ``,
+    zsszedlinkline('expr2 hk 2 " 2 "', 'find 2'),
     zsszedlinkline('expr2 text', 'slot 2: any'),
+    ``,
+    zsszedlinkline('expr3 hk 3 " 3 "', 'find 3'),
     zsszedlinkline('expr3 text', 'slot 3: any'),
+    ``,
+    zsszedlinkline('expr4 hk 4 " 4 "', 'find 4'),
     zsszedlinkline('expr4 text', 'slot 4: any'),
     DIVIDER,
     zsszedlinkline('clear hk c " C "', 'clear find(s)'),
-    zsszedlinkline('expr1 hk 1 " 1 "', 'find 1'),
-    zsszedlinkline('expr2 hk 2 " 2 "', 'find 2'),
-    zsszedlinkline('expr3 hk 3 " 3 "', 'find 3'),
-    zsszedlinkline('expr4 hk 4 " 4 "', 'find 4'),
   ]
   scrollwritelines(player, 'findany', zsstexttape(lines), 'findany')
 }

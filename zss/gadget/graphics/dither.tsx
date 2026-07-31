@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import type { Color, Mesh } from 'three'
 import { Box2, MathUtils, Vector2 } from 'three'
 import {
   createDitherDataTexture,
@@ -11,9 +12,19 @@ type DitherProps = {
   width: number
   height: number
   alphas: number[]
+  /** When set, forwarded to the dither mesh (e.g. `noraycastmesh`). */
+  raycast?: Mesh['raycast']
+  /** Opaque dither pixel color (default black). */
+  color?: Color | string
 }
 
-export function Dither({ width, height, alphas }: DitherProps) {
+export function Dither({
+  width,
+  height,
+  alphas,
+  raycast,
+  color,
+}: DitherProps) {
   const [material] = useState(() => createDitherMaterial())
 
   // create data texture
@@ -34,6 +45,13 @@ export function Dither({ width, height, alphas }: DitherProps) {
     // material.needsUpdate = true
   }, [material, material.uniforms.data.value, width, height, alphas])
 
+  useEffect(() => {
+    if (color === undefined) {
+      return
+    }
+    material.uniforms.color.value.set(color)
+  }, [material, color])
+
   // create buffer geo attributes
   const { position, uv } = useMemo(
     () => createTilemapBufferGeometryAttributes(width, height),
@@ -41,7 +59,7 @@ export function Dither({ width, height, alphas }: DitherProps) {
   )
 
   return (
-    <mesh>
+    <mesh raycast={raycast}>
       <primitive object={material} attach="material" />
       <bufferGeometry key={`${width}x${height}`}>
         <bufferAttribute attach="attributes-position" args={[position, 3]} />
@@ -55,14 +73,30 @@ type StaticDitherProps = {
   width: number
   height: number
   alpha: number
+  raycast?: Mesh['raycast']
+  color?: Color | string
 }
 
-export function StaticDither({ width, height, alpha }: StaticDitherProps) {
+export function StaticDither({
+  width,
+  height,
+  alpha,
+  raycast,
+  color,
+}: StaticDitherProps) {
   const alphas = useMemo(
     () => new Array(width * height).fill(alpha),
     [width, height, alpha],
   )
-  return <Dither width={width} height={height} alphas={alphas} />
+  return (
+    <Dither
+      width={width}
+      height={height}
+      alphas={alphas}
+      raycast={raycast}
+      color={color}
+    />
+  )
 }
 
 type ShadeBoxDitherProps = {
@@ -74,6 +108,8 @@ type ShadeBoxDitherProps = {
   bottom: number
   scale?: number
   alpha?: number
+  raycast?: Mesh['raycast']
+  color?: Color | string
 }
 
 const box = new Box2()
@@ -88,6 +124,8 @@ export function ShadeBoxDither({
   bottom,
   scale = 0.125,
   alpha = 0.25,
+  raycast,
+  color,
 }: ShadeBoxDitherProps) {
   const alphas = useMemo(() => {
     const values = new Array(width * height)
@@ -109,5 +147,13 @@ export function ShadeBoxDither({
     }
     return values
   }, [width, height, top, left, right, bottom, scale, alpha])
-  return <Dither width={width} height={height} alphas={alphas} />
+  return (
+    <Dither
+      width={width}
+      height={height}
+      alphas={alphas}
+      raycast={raycast}
+      color={color}
+    />
+  )
 }

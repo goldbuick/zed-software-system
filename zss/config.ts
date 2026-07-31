@@ -14,7 +14,7 @@ const DEBUG_LOG = zssjsonbool('ZSS_DEBUG_LOG')
 const FORCE_CRT_OFF = zssjsonbool('ZSS_FORCE_CRT_OFF')
 const FORCE_LOW_REZ = zssjsonbool('ZSS_FORCE_LOW_REZ')
 const FORCE_TOUCH_UI = zssjsonbool('ZSS_FORCE_TOUCH_UI')
-/** Inspector pick plane: magenta hit dot + tile-snapped wireframe box (see `InspectorSelect`). */
+/** Inspector pick plane: magenta hit dot (see `InspectorSelect`). */
 const RAYCAST_DEBUG_DOT = zssjsonbool('ZSS_DEBUG_RAYCAST_DOT')
 /** Inspector: wireframe pick sheet + colored selection quads (see `InspectorSelect`). */
 const RAYCAST_DEBUG_PICKSHEET = zssjsonbool('ZSS_DEBUG_RAYCAST_PICKSHEET')

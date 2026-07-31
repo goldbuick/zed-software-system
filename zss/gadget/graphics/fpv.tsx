@@ -20,6 +20,7 @@ import {
   stashfocusexitsnap,
   stepfocuswithboardtransition,
 } from 'zss/gadget/graphics/camerafocus'
+import { boardinspectorzfromgadgetstacks } from 'zss/gadget/graphics/boardinspectorz'
 import {
   buildexitpreviewgroups,
   gadgettoexitsnap,
@@ -406,6 +407,12 @@ export const FPVGraphics = memo(function FPVGraphics({
       exitsnap: camuserdata.exitsnap,
     },
   )
+  const inspectorz = boardinspectorzfromgadgetstacks(
+    'fpv',
+    layers,
+    over,
+    exitpreviewgroups.map((g) => g.preview.layers),
+  )
 
   const multi = over.length > 0
   const layersindex = under.length * 2 + 2
@@ -463,7 +470,7 @@ export const FPVGraphics = memo(function FPVGraphics({
                     multi={multi}
                   />
                 ))}
-                <InspectorComponent z={-1.9} />
+                <InspectorComponent z={inspectorz} />
               </group>
               {exitpreviewgroups.map(({ key, preview, position }) => {
                 if (preview.layers.length > 0) {
