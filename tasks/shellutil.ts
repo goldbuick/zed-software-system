@@ -7,10 +7,14 @@ export function taskenv(ctx: TaskContext): NodeJS.ProcessEnv {
   return { ...process.env, ...ctx.env }
 }
 
-export function requiretaskenv(ctx: TaskContext, key: string): string {
-  const value = taskenv(ctx)[key]
+export function requiretaskenv(
+  ctx: TaskContext,
+  key: string,
+  env: NodeJS.ProcessEnv = taskenv(ctx),
+): string {
+  const value = env[key]
   if (!value) {
-    console.error(`set ${key}`)
+    console.error(`set ${key} (shell or cafe/.env.local)`)
     return ''
   }
   return value

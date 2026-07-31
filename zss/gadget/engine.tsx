@@ -1,8 +1,9 @@
 import { OrthographicCamera, useDetectGPU } from '@react-three/drei'
-import { useThree } from '@react-three/fiber'
-import { Vignette } from '@react-three/postprocessing'
+import { useFrame, useThree } from '@react-three/fiber'
 import { deviceType, primaryInput } from 'detect-it'
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { damp } from 'maath/easing'
+import { VignetteEffect } from 'postprocessing'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { FORCE_TOUCH_UI, RUNTIME } from 'zss/config'
 import { doasync } from 'zss/device/doasync'
 import { registerreadplayer } from 'zss/device/registerplayer'
@@ -21,6 +22,7 @@ import { ScreenUIScrollLayer } from 'zss/screens/screenui/scrolllayer'
 import { ScreenUIScrollProvider } from 'zss/screens/screenui/scrollprovider'
 import { TapeComponent } from 'zss/screens/tape/component'
 
+import { BoardFadeOverlay } from './boardfadeoverlay'
 import { Scanlines } from './fx/scanlines'
 import { useMedia } from './media'
 import { TapeToastConnected } from './toast'
@@ -28,6 +30,35 @@ import { UserFocus } from './userinput'
 import { UserScreen } from './userscreen'
 import { TapeViewImage } from './viewimage'
 import { WorkStatusBadgeConnected } from './workstatus'
+
+const VIGNETTE_DARKNESS_LIGHT = 0.44
+const VIGNETTE_DARKNESS_DARK = 0.66
+/** maath damp smoothTime -- seconds to approach target. */
+const VIGNETTE_ANIM_RATE = 0.997
+
+function MoodVignette({ dark }: { dark: boolean }) {
+  const target = dark ? VIGNETTE_DARKNESS_DARK : VIGNETTE_DARKNESS_LIGHT
+  const targetref = useRef(target)
+  targetref.current = target
+  const effect = useMemo(
+    () =>
+      new VignetteEffect({
+        offset: 0.001,
+        darkness: target,
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot; damp drives darkness
+    [],
+  )
+  useEffect(() => () => effect.dispose(), [effect])
+  useFrame((_, delta) => {
+    const darkness = effect.uniforms.get('darkness')
+    if (!darkness) {
+      return
+    }
+    damp(darkness, 'value', targetref.current, VIGNETTE_ANIM_RATE, delta)
+  })
+  return <primitive object={effect} dispose={null} />
+}
 
 export function Engine() {
   const { mood } = useMedia()
@@ -124,8 +155,6 @@ export function Engine() {
     })
   }, [islowrez, islandscape, showtouchcontrols, usemobiletextcapture])
 
-  const vignettdarkness = mood.includes('dark') ? 0.66 : 0.44
-
   return (
     <>
       <OrthographicCamera
@@ -144,6 +173,7 @@ export function Engine() {
             <WorkStatusBadgeConnected />
             <TapeViewImage />
             <ScreenUIScrollLayer />
+            <BoardFadeOverlay />
           </ScreenUIScrollProvider>
         </UserScreen>
       </UserFocus>
@@ -152,7 +182,7 @@ export function Engine() {
           {shouldcrt && (
             <>
               {scanlines && <Scanlines />}
-              <Vignette offset={0.001} darkness={vignettdarkness} />
+              <MoodVignette dark={mood.includes('dark')} />
               <CRTShape
                 ref={crtref}
                 viewheight={viewheight}

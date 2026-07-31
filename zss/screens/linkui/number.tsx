@@ -81,13 +81,13 @@ export function LinkNumber({ surface }: LinkWidgetProps) {
 
   if (surface.layout === 'terminal') {
     tokenizeandwritetextformat(
-      `$red $29 ${tcolor}${tlabel} $green${clamped}`,
+      `$red $29 ${tcolor}$onclear ${tlabel} $green${clamped}`,
       surface.context,
       false,
     )
   } else {
     tokenizeandwritetextformat(
-      `${linkpanelstripe(surface)} $29 ${tcolor}${tlabel} $green${clamped}`,
+      `${linkpanelstripe(surface)} $29 ${tcolor}$onclear ${tlabel} $green${clamped}`,
       surface.context,
       false,
     )

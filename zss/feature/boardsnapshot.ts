@@ -1,18 +1,42 @@
 import { ispresent } from 'zss/mapping/types'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import { memoryclearbookcodepage } from 'zss/memory/bookoperations'
-import { memoryreadbooklist } from 'zss/memory/session'
-import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
+import { memoryensuresoftwarecodepage } from 'zss/memory/books'
+import { memoryreadcodepagedata } from 'zss/memory/codepageoperations'
+import {
+  memoryreadbookbysoftware,
+  memoryreadbooklist,
+} from 'zss/memory/session'
+import {
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
+  CODE_PAGE_TYPE,
+  MEMORY_LABEL,
+} from 'zss/memory/types'
+import { READ_CONTEXT } from 'zss/words/reader'
+import { NAME } from 'zss/words/types'
 
 import { boardcopy } from './boardcopy'
 
 function snapshotname(target: string) {
-  return `zss_snapshot_${target}`
+  // memory codepage name lookups compare via NAME(); keep snapshot keys lowercased
+  return NAME(`zss_snapshot_${target}`)
 }
 
 const p1 = { x: 0, y: 0 }
 const p2 = { x: BOARD_WIDTH - 1, y: BOARD_HEIGHT - 1 }
 const targetset = 'all'
+
+function withmainbook<T>(fn: () => T): T {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const prevbook = READ_CONTEXT.book
+  READ_CONTEXT.book = mainbook
+  try {
+    return fn()
+  } finally {
+    READ_CONTEXT.book = prevbook
+  }
+}
 
 export function boardsnapshot(target: string) {
   const targetboard = memoryreadboardbyaddress(target)
@@ -27,16 +51,29 @@ export function boardsnapshot(target: string) {
     memoryclearbookcodepage(list[i], name)
   }
 
-  // create snapshot board codepage
-  const snapshotboard = memoryreadboardbyaddress(name)
+  // create snapshot board codepage on MAIN (host-authoritative)
+  const [snapshotcodepage] = memoryensuresoftwarecodepage(
+    MEMORY_LABEL.MAIN,
+    name,
+    CODE_PAGE_TYPE.BOARD,
+  )
+  if (!ispresent(snapshotcodepage)) {
+    return
+  }
+
+  const snapshotboard =
+    memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(snapshotcodepage)
   if (!ispresent(snapshotboard)) {
     return
   }
 
-  // invoke copy
-  boardcopy(target, snapshotboard.id, p1, p2, targetset)
+  const copied = withmainbook(() =>
+    boardcopy(target, snapshotboard.id, p1, p2, targetset),
+  )
+  if (!copied) {
+    return
+  }
 
-  // return board
   return snapshotboard
 }
 
@@ -53,9 +90,12 @@ export function boardrevert(target: string) {
     return
   }
 
-  // invoke copy
-  boardcopy(snapshotboard.id, target, p1, p2, targetset)
+  const copied = withmainbook(() =>
+    boardcopy(snapshotboard.id, target, p1, p2, targetset),
+  )
+  if (!copied) {
+    return
+  }
 
-  // return board
   return snapshotboard
 }

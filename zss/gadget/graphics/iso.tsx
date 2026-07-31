@@ -19,6 +19,7 @@ import {
   stashfocusexitsnap,
   stepfocuswithboardtransition,
 } from 'zss/gadget/graphics/camerafocus'
+import { boardinspectorzfromgadgetstacks } from 'zss/gadget/graphics/boardinspectorz'
 import {
   buildexitpreviewgroups,
   gadgettoexitsnap,
@@ -328,6 +329,12 @@ export const IsoGraphics = memo(function IsoGraphics({
       exitsnap: camuserdata.exitsnap,
     },
   )
+  const inspectorz = boardinspectorzfromgadgetstacks(
+    'iso',
+    layers,
+    over,
+    exitpreviewgroups.map((g) => g.preview.layers),
+  )
 
   const layersindex = under.length * 2 + 2
   return (
@@ -375,7 +382,7 @@ export const IsoGraphics = memo(function IsoGraphics({
                           z={maptolayerz(layer, 'iso') + drawheight + 1}
                         />
                       ))}
-                      <InspectorComponent z={0} />
+                      <InspectorComponent z={inspectorz} />
                     </group>
                     {exitpreviewgroups.map(({ key, preview, position }) =>
                       preview.layers.length > 0 ? (

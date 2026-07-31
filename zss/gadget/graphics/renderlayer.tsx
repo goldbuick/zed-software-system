@@ -1,8 +1,16 @@
 import { useFBO } from '@react-three/drei'
-import { useThree } from '@react-three/fiber'
-import { Bloom, Glitch, Noise } from '@react-three/postprocessing'
-import { BlendFunction, CopyPass, GlitchMode, KernelSize } from 'postprocessing'
-import { Fragment, ReactNode, memo, useEffect, useState } from 'react'
+import { useFrame, useThree } from '@react-three/fiber'
+import { Glitch } from '@react-three/postprocessing'
+import { damp } from 'maath/easing'
+import {
+  BlendFunction,
+  BloomEffect,
+  CopyPass,
+  GlitchMode,
+  KernelSize,
+  NoiseEffect,
+} from 'postprocessing'
+import { ReactNode, memo, useEffect, useMemo, useRef, useState } from 'react'
 import type { Camera } from 'three'
 import { Texture, Vector2, WebGLRenderTarget } from 'three'
 import { useDeviceData } from 'zss/gadget/device'
@@ -11,6 +19,69 @@ import { EffectComposer } from 'zss/gadget/graphics/effectcomposer'
 import { useMedia } from 'zss/gadget/media'
 
 import { RenderTexture } from './rendertexture'
+
+/** maath damp smoothTime -- seconds to approach target. */
+const MOOD_FX_ANIM_RATE = 0.55
+const NOISE_OPACITY_ON = 0.5
+const BLOOM_INTENSITY_ON = 0.111
+
+function MoodNoise({ dark }: { dark: boolean }) {
+  const target = dark ? NOISE_OPACITY_ON : 0
+  const targetref = useRef(target)
+  targetref.current = target
+  const effect = useMemo(() => {
+    const noise = new NoiseEffect({
+      premultiply: true,
+      blendFunction: BlendFunction.DARKEN,
+    })
+    noise.blendMode.opacity.value = target
+    return noise
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot; damp drives opacity
+  }, [])
+  useEffect(() => () => effect.dispose(), [effect])
+  useFrame((_, delta) => {
+    damp(
+      effect.blendMode.opacity,
+      'value',
+      targetref.current,
+      MOOD_FX_ANIM_RATE,
+      delta,
+    )
+  })
+  return <primitive object={effect} dispose={null} />
+}
+
+function MoodBloom({
+  bright,
+  kernelsize,
+}: {
+  bright: boolean
+  kernelsize: KernelSize
+}) {
+  const target = bright ? BLOOM_INTENSITY_ON : 0
+  const targetref = useRef(target)
+  targetref.current = target
+  const effect = useMemo(
+    () =>
+      new BloomEffect({
+        intensity: target,
+        mipmapBlur: false,
+        luminanceThreshold: 0.5,
+        luminanceSmoothing: 0.001,
+        kernelSize: kernelsize,
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot; damp drives intensity; kernel updates below
+    [],
+  )
+  useEffect(() => () => effect.dispose(), [effect])
+  useEffect(() => {
+    effect.kernelSize = kernelsize
+  }, [effect, kernelsize])
+  useFrame((_, delta) => {
+    damp(effect, 'intensity', targetref.current, MOOD_FX_ANIM_RATE, delta)
+  })
+  return <primitive object={effect} dispose={null} />
+}
 
 type RenderToTargetProps = {
   fbo: WebGLRenderTarget<Texture>
@@ -44,26 +115,8 @@ function RenderEffects({ fbo, effects }: RenderToTargetProps) {
           ratio={0.42}
         />
       )}
-      {mood.includes('dark') && (
-        <Fragment key="dark">
-          <Noise
-            opacity={0.5}
-            premultiply // enables or disables noise premultiplication
-            blendFunction={BlendFunction.DARKEN} // blend mode
-          />
-        </Fragment>
-      )}
-      {mood.includes('bright') && (
-        <Fragment key="bright">
-          <Bloom
-            intensity={0.111}
-            mipmapBlur={false}
-            luminanceThreshold={0.5}
-            luminanceSmoothing={0.001}
-            kernelSize={bloomkernel}
-          />
-        </Fragment>
-      )}
+      <MoodNoise dark={mood.includes('dark')} />
+      <MoodBloom bright={mood.includes('bright')} kernelsize={bloomkernel} />
       {effects}
       <primitive object={copyPass} dispose={null} />
     </>
@@ -89,7 +142,6 @@ export const RenderLayer = memo(function RenderLayer({
   children,
   dprscale = 1,
 }: RenderLayerProps) {
-  const { mood } = useMedia()
   const { viewport } = useThree()
   useGlitchPulse((state) => state.glitchactive)
 
@@ -111,7 +163,6 @@ export const RenderLayer = memo(function RenderLayer({
             {children}
             {camera && (
               <EffectComposer
-                key={mood}
                 camera={camera}
                 width={viewwidth}
                 height={viewheight}

@@ -3,6 +3,8 @@ import {
   apilog,
   apitoast,
   gadgetclientbonk,
+  gadgetclientfadein,
+  gadgetclientfadeout,
   gadgetclientzap,
   vmloader,
   vmmakeitscroll,
@@ -19,10 +21,14 @@ import { READ_CONTEXT, readargsuntilend } from 'zss/words/reader'
 import { parsesend } from 'zss/words/send'
 import {
   hasbonk,
+  hasfadein,
+  hasfadeout,
   hasticker,
   hastoast,
   haszap,
   stripbonk,
+  stripfadein,
+  stripfadeout,
   stripzap,
 } from 'zss/words/textformat'
 import { ARG_TYPE, COLOR, type WORD } from 'zss/words/types'
@@ -77,6 +83,14 @@ export function registersendcommands(fw: FIRMWARE): FIRMWARE {
       if (haszap(ticker)) {
         gadgetclientzap(SOFTWARE, READ_CONTEXT.elementfocus)
         ticker = stripzap(ticker)
+      }
+      if (hasfadeout(ticker)) {
+        gadgetclientfadeout(SOFTWARE, READ_CONTEXT.elementfocus)
+        ticker = stripfadeout(ticker)
+      }
+      if (hasfadein(ticker)) {
+        gadgetclientfadein(SOFTWARE, READ_CONTEXT.elementfocus)
+        ticker = stripfadein(ticker)
       }
 
       let diverted = false

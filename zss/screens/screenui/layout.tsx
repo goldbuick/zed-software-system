@@ -9,6 +9,8 @@ import { useShallow } from 'zustand/react/shallow'
 
 import { RECT, RECT_TYPE, useScreenUILayoutContext } from './layoutstate'
 
+const SCREEN_BACKDROP_COLOR = new Color(0.076, 0.076, 0)
+
 type LayoutRectProps = {
   rect: RECT
 }
@@ -95,7 +97,7 @@ export function ScreenUILayout() {
       >
         <Rect
           visible
-          color={new Color(0.076, 0.076, 0)}
+          color={SCREEN_BACKDROP_COLOR}
           width={screensize.cols + 2}
           height={screensize.rows + 2}
         />

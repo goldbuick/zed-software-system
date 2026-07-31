@@ -54,13 +54,13 @@ export function LinkRange({ surface }: LinkWidgetProps) {
 
   if (surface.layout === 'terminal') {
     tokenizeandwritetextformat(
-      `$red $29 ${tcolor}${tlabel} `,
+      `$red $29 ${tcolor}$onclear ${tlabel} `,
       surface.context,
       false,
     )
   } else {
     tokenizeandwritetextformat(
-      `${linkpanelstripe(surface)} $29 ${tcolor}${tlabel} `,
+      `${linkpanelstripe(surface)} $29 ${tcolor}$onclear ${tlabel} `,
       surface.context,
       false,
     )

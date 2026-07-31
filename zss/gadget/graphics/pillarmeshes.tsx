@@ -5,6 +5,7 @@ import { CHAR_HEIGHT, CHAR_WIDTH } from 'zss/gadget/data/types'
 import { createBlocksMaterial } from 'zss/gadget/display/blocks'
 import { createPillarBufferGeometryAttributes } from 'zss/gadget/display/tiles'
 import { useMedia } from 'zss/gadget/media'
+import { noraycastmesh } from 'zss/gadget/noraycastmesh'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_SIZE } from 'zss/memory/types'
 import { COLOR } from 'zss/words/types'
@@ -16,6 +17,7 @@ type PillarwMeshesProps = {
   bg: number[]
   partial?: number
   limit?: number
+  skipraycast?: boolean
 }
 
 const dummy = new Object3D()
@@ -31,6 +33,7 @@ export function PillarwMeshes({
   bg,
   partial,
   limit = BOARD_SIZE,
+  skipraycast = false,
 }: PillarwMeshesProps) {
   const palette = useMedia((state) => state.palettedata)
   const charset = useMedia((state) => state.charsetdata)
@@ -115,7 +118,11 @@ export function PillarwMeshes({
   }, [meshes, char, color, bg, width, limit])
 
   return (
-    <instancedMesh ref={setmeshes} args={[undefined, undefined, limit]}>
+    <instancedMesh
+      ref={setmeshes}
+      args={[undefined, undefined, limit]}
+      raycast={skipraycast ? noraycastmesh : undefined}
+    >
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[position, 3]} />
         <bufferAttribute attach="attributes-uv" args={[uv, 2]} />

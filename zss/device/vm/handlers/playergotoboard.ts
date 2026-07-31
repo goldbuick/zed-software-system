@@ -1,8 +1,10 @@
 import type { DEVICE } from 'zss/device'
+import { gadgetclientgotofade } from 'zss/device/api'
 import type { MESSAGE } from 'zss/device/types'
 import { applyplayermovetoboard } from 'zss/device/vm/handlers/playermovetoboard'
 import { isnumber, ispresent } from 'zss/mapping/types'
 import { memoryinitboard, memoryreadboardbyaddress } from 'zss/memory/boards'
+import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import { memorylistboardelementsbykind } from 'zss/memory/spatialqueries'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import type { STR_COLOR } from 'zss/words/color'
@@ -75,6 +77,11 @@ export function handleplayergotoboard(vm: DEVICE, message: MESSAGE): void {
   const resolved = resolveplayergotodestpt(address, maybex, maybey, match)
   if (!ispresent(resolved)) {
     return
+  }
+
+  const currentboard = memoryreadplayerboard(targetplayer)
+  if (!ispresent(currentboard) || currentboard.id !== resolved.boardid) {
+    gadgetclientgotofade(vm, targetplayer)
   }
 
   applyplayermovetoboard(

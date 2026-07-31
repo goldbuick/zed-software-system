@@ -51,13 +51,13 @@ export function LinkSelect({ surface }: LinkWidgetProps) {
 
   if (surface.layout === 'terminal') {
     tokenizeandwritetextformat(
-      `$dkred ? ${tcolor}${tlabel} `,
+      `$dkred ? ${tcolor}$onclear ${tlabel} `,
       surface.context,
       false,
     )
   } else {
     tokenizeandwritetextformat(
-      `${stripe} ? ${tcolor}${tlabel} `,
+      `${stripe} ? ${tcolor}$onclear ${tlabel} `,
       surface.context,
       false,
     )
@@ -72,7 +72,7 @@ export function LinkSelect({ surface }: LinkWidgetProps) {
 
   surface.context.writefullwidth = 32
   tokenizeandwritetextformat(
-    `${stripe} $green${valuelabels[stateindex] as string}`,
+    ` ${stripe}$green${valuelabels[stateindex] as string}`,
     surface.context,
     false,
   )

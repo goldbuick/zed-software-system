@@ -9,6 +9,7 @@ import {
 import { dirname, join } from 'node:path'
 import { inflateSync } from 'node:zlib'
 
+import { mergecafeenv } from 'tasks/lib/cafeenv'
 import { requiretaskenv, spawntask, taskenv } from 'tasks/shellutil'
 
 import { def, exec, handler, shell, tasksonly } from '../../helpers'
@@ -477,7 +478,7 @@ async function runznsgridpreview(ctx: TaskContext): Promise<number> {
 const ZNS_PATH_KEY_RE = /^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?$/
 
 async function runznsdocspublish(ctx: TaskContext): Promise<number> {
-  const e = taskenv(ctx)
+  const e = mergecafeenv(ctx.root, taskenv(ctx))
   const dryrun =
     ctx.args.includes('--dry-run') ||
     ctx.args.includes('dry-run') ||
@@ -511,8 +512,8 @@ async function runznsdocspublish(ctx: TaskContext): Promise<number> {
     }
     return 0
   }
-  const email = requiretaskenv(ctx, 'ZNS_EMAIL')
-  const token = requiretaskenv(ctx, 'ZNS_TOKEN')
+  const email = requiretaskenv(ctx, 'ZNS_EMAIL', e)
+  const token = requiretaskenv(ctx, 'ZNS_TOKEN', e)
   if (!email || !token) {
     return 1
   }
@@ -1075,7 +1076,7 @@ export const OPS_DEPLOY_TASKS: TaskDef[] = [
   }),
   def('ops:zns:docs:publish', {
     description:
-      'Publish zss/rom/refscroll/*.md to docs ZNS namespace (ZNS_EMAIL + ZNS_TOKEN; --dry-run)',
+      'Publish zss/rom/refscroll/*.md to docs ZNS namespace (ZNS_EMAIL + ZNS_TOKEN from shell or cafe/.env.local; --dry-run)',
     tags: ['deploy'],
     run: handler(runznsdocspublish),
   }),

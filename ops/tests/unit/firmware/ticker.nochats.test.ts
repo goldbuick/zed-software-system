@@ -14,6 +14,8 @@ jest.mock('zss/device/api', () => ({
   apitoast: jest.fn(),
   gadgetclientbonk: jest.fn(),
   gadgetclientzap: jest.fn(),
+  gadgetclientfadeout: jest.fn(),
+  gadgetclientfadein: jest.fn(),
   vmmakeitscroll: jest.fn(),
   vmrefscroll: jest.fn(),
 }))

@@ -1,10 +1,14 @@
 import {
   hasbonk,
   hascenter,
+  hasfadein,
+  hasfadeout,
   hasticker,
   hastoast,
   haszap,
   stripbonk,
+  stripfadein,
+  stripfadeout,
   stripzap,
 } from 'zss/words/textformat'
 
@@ -116,6 +120,54 @@ describe('textformat line attributes', () => {
 
     it('handles a zap-only line by returning an empty string', () => {
       expect(stripzap('$ZAP')).toBe('')
+    })
+  })
+
+  describe('hasfadeout', () => {
+    it('detects $FADEOUT', () => {
+      expect(hasfadeout('$FADEOUT hello')).toBe(true)
+    })
+
+    it('matches case-insensitively', () => {
+      expect(hasfadeout('hi $fadeout there')).toBe(true)
+    })
+
+    it('returns false when marker is absent', () => {
+      expect(hasfadeout('plain text')).toBe(false)
+    })
+  })
+
+  describe('stripfadeout', () => {
+    it('removes $FADEOUT and trims the remainder', () => {
+      expect(stripfadeout('$FADEOUT hello world')).toBe('hello world')
+    })
+
+    it('handles a fadeout-only line by returning an empty string', () => {
+      expect(stripfadeout('$FADEOUT')).toBe('')
+    })
+  })
+
+  describe('hasfadein', () => {
+    it('detects $FADEIN', () => {
+      expect(hasfadein('$FADEIN hello')).toBe(true)
+    })
+
+    it('matches case-insensitively', () => {
+      expect(hasfadein('hi $fadein there')).toBe(true)
+    })
+
+    it('returns false when marker is absent', () => {
+      expect(hasfadein('plain text')).toBe(false)
+    })
+  })
+
+  describe('stripfadein', () => {
+    it('removes $FADEIN and trims the remainder', () => {
+      expect(stripfadein('$FADEIN hello world')).toBe('hello world')
+    })
+
+    it('handles a fadein-only line by returning an empty string', () => {
+      expect(stripfadein('$FADEIN')).toBe('')
     })
   })
 })

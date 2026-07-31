@@ -1,6 +1,8 @@
 import {
   apitoast,
   gadgetclientbonk,
+  gadgetclientfadein,
+  gadgetclientfadeout,
   gadgetclientzap,
   vmrefscroll,
 } from 'zss/device/api'
@@ -22,10 +24,14 @@ import { READ_CONTEXT, readargsuntilend } from 'zss/words/reader'
 import { parsesend } from 'zss/words/send'
 import {
   hasbonk,
+  hasfadein,
+  hasfadeout,
   hasticker,
   hastoast,
   haszap,
   stripbonk,
+  stripfadein,
+  stripfadeout,
   stripzap,
 } from 'zss/words/textformat'
 import { ARG_TYPE } from 'zss/words/types'
@@ -110,6 +116,14 @@ export const RUNTIME_FIRMWARE = createfirmware({
     if (haszap(text)) {
       gadgetclientzap(SOFTWARE, READ_CONTEXT.elementfocus)
       text = stripzap(text)
+    }
+    if (hasfadeout(text)) {
+      gadgetclientfadeout(SOFTWARE, READ_CONTEXT.elementfocus)
+      text = stripfadeout(text)
+    }
+    if (hasfadein(text)) {
+      gadgetclientfadein(SOFTWARE, READ_CONTEXT.elementfocus)
+      text = stripfadein(text)
     }
 
     let diverted = false

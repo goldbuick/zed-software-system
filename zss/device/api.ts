@@ -248,6 +248,18 @@ export function gadgetclientbonk(device: DEVICELIKE, player: string) {
   device.emit(player, 'gadgetclient:bonk', undefined)
 }
 
+export function gadgetclientfadein(device: DEVICELIKE, player: string) {
+  device.emit(player, 'gadgetclient:fadein', undefined)
+}
+
+export function gadgetclientfadeout(device: DEVICELIKE, player: string) {
+  device.emit(player, 'gadgetclient:fadeout', undefined)
+}
+
+export function gadgetclientgotofade(device: DEVICELIKE, player: string) {
+  device.emit(player, 'gadgetclient:gotofade', undefined)
+}
+
 export function gadgetclientpaint(
   device: DEVICELIKE,
   player: string,
@@ -957,6 +969,22 @@ export function vmbuildboard(
   maybesource?: string,
 ) {
   device.emit(player, 'vm:buildboard', [boardid, elementid, stat, maybesource])
+}
+
+export function vmboardsnapshot(
+  device: DEVICELIKE,
+  player: string,
+  boardid: string,
+) {
+  device.emit(player, 'vm:boardsnapshot', [boardid])
+}
+
+export function vmboardrevert(
+  device: DEVICELIKE,
+  player: string,
+  boardid: string,
+) {
+  device.emit(player, 'vm:boardrevert', [boardid])
 }
 
 export function vmplayertoken(
