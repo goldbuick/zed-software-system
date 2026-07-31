@@ -70,7 +70,7 @@ Sibling files **outside** `memoryfs/` are ignored.
 ## Read / write playbook
 
 - Prefer editing existing allowlisted JSON. Preserve `id`, `kind`, and structure.
-- **Boards:** `board/terrain.json` is an array of **1500** cells (60 wide × 25 tall). Index `i` → `x = i % 60`, `y = i / 60`. Cells are objects with `kind`, and usually `char`, `color`, `bg`.
+- **Boards:** `board/terrain.json` is an array of **1500** cells (60 wide × 25 tall). Index `i` → `x = i % 60`, `y = i / 60`. Cells are objects with `kind`; `char` / `color` / `bg` appear only when they differ from the `@terrain` kind, so an absent field means "same as kind". Adding one back overrides the kind again.
 - **Colors:** ZSS `COLOR` enum 0–15 in `zss/words/types.ts`. Field `color` is foreground; `bg` is background.
 - **Flags:** edit `flags/{owner}/stats.json` (`Record` of flag name → value). Deleting the owner folder / file clears that bag in MEMORY.
 - **Read-only:** `board/objects/{pid_*}.json` is MEMORY → disk only. External edits/deletes do **not** change MEMORY (file may be restored on next export).

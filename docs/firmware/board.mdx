@@ -20,10 +20,10 @@ title: board.ts
 
 | Command | Args | Description |
 |---------|------|-------------|
-| `build` | `stat` [, `source`] | Create new board (optionally clone from source); write ID to stat. When building border boards, links exit stats back to current board |
-| `goto` | `stat` [, x, y] | Teleport player to board by stat; optional x,y or uses board start/kind-matched element. Waits (returns 1 next tick) until the target board codepage runtime is hydrated on the boardrunner worker. |
+| `build` | `stat` [, `source`] | Thin emit to `vm:buildboard`. Host creates a new TEMP board (optionally clones from source). Exit\* stats set bidirectional board exits. Other standard element stats (`p1`, `group`, …) write the new id on the invoking object; arbitrary names write player flags. Missing source or element fails loud (no create/link). |
+| `goto` | `stat` [, x, y] | Thin emit to `vm:playergotoboard`. Host resolves destination (passage match / x,y / start) and teleports the player. |
 
-Cross-board commands (`build` with a source, `put`/`shoot`/`dupe`/`write`/`shove`/`push` with over/under dirs, etc.) automatically wait one tick at a time until the other board’s runtime is synced from the sim VM.
+Cross-board placement commands (`put`/`shoot`/`dupe`/`write`/`shove`/`push` with over/under dirs, etc.) automatically wait one tick at a time until the other board’s runtime is synced from the sim VM. `build` and `goto` run on the host VM instead of waiting on the boardrunner.
 
 ### Element Placement
 

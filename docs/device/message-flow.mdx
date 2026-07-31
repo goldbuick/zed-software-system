@@ -93,6 +93,8 @@ flowchart TB
 | boardrunner | vm         | `vm:boardrunnerpaint`       | Full boundary doc from runner → sim (pipe shadow reset) |
 | boardrunner | vm         | `vm:boardrunnerpatch`       | Boundary diff back to authoritative memory |
 | boardrunner | vm         | `vm:playermovetoboard`      | Boardrunner asks for player teleport       |
+| boardrunner | vm         | `vm:playergotoboard`        | Boardrunner asks host to resolve + teleport |
+| boardrunner | vm         | `vm:buildboard`             | Boardrunner asks host to create/clone board and link exits/stats |
 
 ## Device summary
 

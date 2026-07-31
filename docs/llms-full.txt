@@ -979,6 +979,8 @@ flowchart TB
 | boardrunner | vm         | `vm:boardrunnerpaint`       | Full boundary doc from runner → sim (pipe shadow reset) |
 | boardrunner | vm         | `vm:boardrunnerpatch`       | Boundary diff back to authoritative memory |
 | boardrunner | vm         | `vm:playermovetoboard`      | Boardrunner asks for player teleport       |
+| boardrunner | vm         | `vm:playergotoboard`        | Boardrunner asks host to resolve + teleport |
+| boardrunner | vm         | `vm:buildboard`             | Boardrunner asks host to create/clone board and link exits/stats |
 
 ## Device summary
 
@@ -2429,10 +2431,10 @@ Source: https://zed.cafe/docs/firmware/board
 
 | Command | Args | Description |
 |---------|------|-------------|
-| `build` | `stat` [, `source`] | Create new board (optionally clone from source); write ID to stat. When building border boards, links exit stats back to current board |
-| `goto` | `stat` [, x, y] | Teleport player to board by stat; optional x,y or uses board start/kind-matched element. Waits (returns 1 next tick) until the target board codepage runtime is hydrated on the boardrunner worker. |
+| `build` | `stat` [, `source`] | Thin emit to `vm:buildboard`. Host creates a new TEMP board (optionally clones from source). Exit\* stats set bidirectional board exits. Other standard element stats (`p1`, `group`, …) write the new id on the invoking object; arbitrary names write player flags. Missing source or element fails loud (no create/link). |
+| `goto` | `stat` [, x, y] | Thin emit to `vm:playergotoboard`. Host resolves destination (passage match / x,y / start) and teleports the player. |
 
-Cross-board commands (`build` with a source, `put`/`shoot`/`dupe`/`write`/`shove`/`push` with over/under dirs, etc.) automatically wait one tick at a time until the other board’s runtime is synced from the sim VM.
+Cross-board placement commands (`put`/`shoot`/`dupe`/`write`/`shove`/`push` with over/under dirs, etc.) automatically wait one tick at a time until the other board’s runtime is synced from the sim VM. `build` and `goto` run on the host VM instead of waiting on the boardrunner.
 
 ### Element Placement
 
@@ -2705,8 +2707,8 @@ All firmware commands and their descriptions. Commands are available depending o
 
 | Command | Description |
 |---------|-------------|
-| `build` | Create board and link to stat. Optional source board. |
-| `goto` | Player to board by name or address with optional x, y (waits for target board hydration on boardrunner) |
+| `build` | Create board on host VM and link to stat. Optional source board; exit\* bidirectional; standard element stats on object, else player flags. Missing source/element fails loud. |
+| `goto` | Player to board by name or address with optional x, y (resolved on host VM) |
 | `transport` | Element across board with transporter logic |
 | `shove` | Target object in direction |
 | `push` | Target object in direction ONLY if pushable |
@@ -6074,7 +6076,8 @@ Source: https://zed.cafe/docs/memory/boardelement
 |--------|-------------|
 | `memoryapplyboardelementcolor(element, strcolor)` | Set element color/bg from STR_COLOR |
 | `memoryexportboardelement` | Format for export (object vs terrain) |
-| `memoryexportboardelementasjson` | Plain JSON export for editor / wire use |
+| `memoryexportboardelementasjson` | Plain JSON export for editor / wire use; enumerates fields explicitly |
+
 | `memoryimportboardelement` | Unformat from entry |
 | `memoryboardelementisobject` | element.category === CATEGORY.ISOBJECT |
 | `memorycreateboardelement` | New element with createsid() |
@@ -6155,6 +6158,7 @@ The current `boardoperations.ts` only re-exports `memoryfreeboardelementsruntime
 | Board lookup / over / under / evaldir / init | [`boards.ts`](../boards.ts) — `memoryreadboardbyaddress`, `memoryreadoverboard`, `memoryreadunderboard`, `memoryreadboardbyevaldir`, `memoryinitboard` |
 | Direction evaluation (BY / AT / FLOW / SEEK / RND / AWAY / TOWARD / WITHIN / AWAYBY / ELEMENTS) | [`boarddirection.ts`](../boarddirection.ts) — `memoryevaldir` |
 | Board / object create, delete, import / export | [`boardlifecycle.ts`](../boardlifecycle.ts) — `memorycreateboard`, `memorycreateboardobject`, `memorycreateboardobjectfromkind`, `memorydeleteboardobject`, `memorysafedeleteelement`, `memorywriteterrain`, `memorywriteterrainfromkind`, `memoryreadgroup`, `memoryexportboard(asjson)`, `memoryimportboard` |
+| Terrain kind-default strip on export | [`boardterrainmap.ts`](../boardterrainmap.ts) — see [boardterrainmap.md](boardterrainmap.md); book / memoryfs / `#pageexport` strip; rollback snapshots stay verbatim |
 | Board run list (tick) | [`boardtick.ts`](../boardtick.ts) — `memorytickboard(board, timestamp, rundraw, drawallowforqueue?)` (bullet → player → other → ghost ordering) |
 | Visuals (over/under/charset/palette caches) | [`boardvisuals.ts`](../boardvisuals.ts) — `memoryupdateboardvisuals` |
 | Per-board / per-element transient runtime | [`runtimeboundary.ts`](../runtimeboundary.ts) |
@@ -6164,6 +6168,41 @@ The current `boardoperations.ts` only re-exports `memoryfreeboardelementsruntime
 | Lighting | [`boardlighting.ts`](../boardlighting.ts), [`lightinggeometry.ts`](../lightinggeometry.ts) |
 
 For per-function detail see [`../EXPORTED_FUNCTIONS.md`](../EXPORTED_FUNCTIONS.md).
+
+---
+
+# boardterrainmap.ts
+Source: https://zed.cafe/docs/memory/boardterrainmap
+
+**Purpose**: Strip per-cell `char` / `color` / `bg` that match the resolved kind on persisted exports, so kind defaults are not repeated on every terrain cell.
+
+## Dependencies
+
+- `zss/mapping/types` — MAYBE, ispresent
+- `./boards` — memoryreadelementkind
+- `./types` — BOARD_ELEMENT
+
+## Exports
+
+| Export | Description |
+|--------|-------------|
+| `memorystripterrainkinddefaults(element)` | Copy minus display stats equal to the kind's; same object when nothing changes |
+| `memoryexportterrainelement(element, strip?)` | Strip when `strip` is true; verbatim when absent/false |
+
+## Strip vs verbatim
+
+`strip` is optional on board / codepage export helpers:
+
+| `strip` | Callers | Result |
+|---------|---------|--------|
+| absent / false | [`boardpivot.ts`](../../feature/boardpivot.ts) rollback snapshot, memoryfs `apply.ts` prior read | verbatim |
+| `true` | `memoryexportbook`, `memoryexportbookasjson`, memoryfs [`export.ts`](../../feature/memoryfs/export.ts), `#pageexport` | kind-default display stats omitted |
+
+Verbatim exists because `memoryexportboard` / `memoryimportboard` are also used as an in-memory rollback snapshot, not just persistence. memoryfs `apply.ts` reads prior state through `memoryexportcodepageasjson` and feeds it back to the importer, so stripping there would rewrite live memory on unrelated edits.
+
+## Why stripping is display-equivalent
+
+[`memoryreadelementdisplay`](bookoperations.md) resolves `element.displaychar ?? kind.displaychar ?? element.char ?? kind.char ?? default`, and `memoryreadelementstat` resolves `element.char ?? kind.char ?? codepage stat`. Removing `element.char` when it equals `kind.char` leaves both chains at the same value, and the `displaychar` terms are untouched. Stripping only runs when `memoryreadelementkind` resolves a kind.
 
 ---
 
@@ -6522,6 +6561,7 @@ The previous `index.ts` was split into smaller files (`session.ts`, `boards.ts`,
 | [boardlookup.md](boardlookup.md) | lookup, named indexing |
 | [boardmovement.md](boardmovement.md) | Move, blocked check, cleanup |
 | [boardoperations.md](boardoperations.md) | CRUD, eval dir, tick, path |
+| [boardterrainmap.md](boardterrainmap.md) | Terrain kind-default strip for persisted exports |
 | [boardlookup.md](boardlookup.md) | lookup, named indexing |
 | [bookoperations.md](bookoperations.md) | Book/codepage CRUD, flags, display |
 | [codepageoperations.md](codepageoperations.md) | Parse, apply stats, import/export |
@@ -6871,7 +6911,7 @@ Sibling files **outside** `memoryfs/` are ignored.
 ## Read / write playbook
 
 - Prefer editing existing allowlisted JSON. Preserve `id`, `kind`, and structure.
-- **Boards:** `board/terrain.json` is an array of **1500** cells (60 wide × 25 tall). Index `i` → `x = i % 60`, `y = i / 60`. Cells are objects with `kind`, and usually `char`, `color`, `bg`.
+- **Boards:** `board/terrain.json` is an array of **1500** cells (60 wide × 25 tall). Index `i` → `x = i % 60`, `y = i / 60`. Cells are objects with `kind`; `char` / `color` / `bg` appear only when they differ from the `@terrain` kind, so an absent field means "same as kind". Adding one back overrides the kind again.
 - **Colors:** ZSS `COLOR` enum 0–15 in `zss/words/types.ts`. Field `color` is foreground; `bg` is background.
 - **Flags:** edit `flags/{owner}/stats.json` (`Record` of flag name → value). Deleting the owner folder / file clears that bag in MEMORY.
 - **Read-only:** `board/objects/{pid_*}.json` is MEMORY → disk only. External edits/deletes do **not** change MEMORY (file may be restored on next export).

@@ -123,6 +123,7 @@
 - [boardlookup.ts](https://zed.cafe/docs/memory/boardlookup)
 - [boardmovement.ts](https://zed.cafe/docs/memory/boardmovement)
 - [boardoperations.ts (and friends)](https://zed.cafe/docs/memory/boardoperations)
+- [boardterrainmap.ts](https://zed.cafe/docs/memory/boardterrainmap)
 - [bookoperations.ts](https://zed.cafe/docs/memory/bookoperations)
 - [codepageoperations.ts](https://zed.cafe/docs/memory/codepageoperations)
 - [gamesend.ts](https://zed.cafe/docs/memory/gamesend)
