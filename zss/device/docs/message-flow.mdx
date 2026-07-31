@@ -95,6 +95,8 @@ flowchart TB
 | boardrunner | vm         | `vm:playermovetoboard`      | Boardrunner asks for player teleport       |
 | boardrunner | vm         | `vm:playergotoboard`        | Boardrunner asks host to resolve + teleport |
 | boardrunner | vm         | `vm:buildboard`             | Boardrunner asks host to create/clone board and link exits/stats |
+| boardrunner | vm         | `vm:boardsnapshot`          | Boardrunner asks host to create MAIN `zss_snapshot_*` codepage and copy board |
+| boardrunner | vm         | `vm:boardrevert`            | Boardrunner asks host to restore board from snapshot codepage |
 
 ## Device summary
 

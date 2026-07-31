@@ -959,6 +959,22 @@ export function vmbuildboard(
   device.emit(player, 'vm:buildboard', [boardid, elementid, stat, maybesource])
 }
 
+export function vmboardsnapshot(
+  device: DEVICELIKE,
+  player: string,
+  boardid: string,
+) {
+  device.emit(player, 'vm:boardsnapshot', [boardid])
+}
+
+export function vmboardrevert(
+  device: DEVICELIKE,
+  player: string,
+  boardid: string,
+) {
+  device.emit(player, 'vm:boardrevert', [boardid])
+}
+
 export function vmplayertoken(
   device: DEVICELIKE,
   player: string,
