@@ -163,6 +163,7 @@ export const IsoGraphics = memo(function IsoGraphics({
       drawheight,
     )
 
+    const boardchanged = currentboard !== userdata.currentboard
     stepfocuswithboardtransition(
       userdata,
       control,
@@ -190,7 +191,10 @@ export const IsoGraphics = memo(function IsoGraphics({
     const targetcornerx = -fx
     const targetcornery = -fy
 
-    if (panphase && bias.dx !== 0) {
+    // #goto / non-edge: hard snap corner. Edge pan: damp along travel axis.
+    if (boardchanged && !panphase) {
+      cornerref.current.position.set(targetcornerx, targetcornery, 0)
+    } else if (panphase && bias.dx !== 0) {
       cornerref.current.position.y = targetcornery
       damp(cornerref.current.position, 'x', targetcornerx, animrate, delta)
     } else if (panphase && bias.dy !== 0) {
@@ -237,17 +241,19 @@ export const IsoGraphics = memo(function IsoGraphics({
         dofcamworld.current.distanceTo(dofplayerworld.current)
     }
 
-    tickerpublishfromtickers({
-      tickers: gadget.tickers ?? [],
-      layers: gadgetlayers,
-      boardgroup: cornerref.current,
-      camera: cameraref.current,
-      drawwidth,
-      drawheight,
-      cols: width,
-      rows: height,
-      boardz: playerspritez,
-    })
+    if (liveboardref.current) {
+      tickerpublishfromtickers({
+        tickers: gadget.tickers ?? [],
+        layers: gadgetlayers,
+        boardgroup: liveboardref.current,
+        camera: cameraref.current,
+        drawwidth,
+        drawheight,
+        cols: width,
+        rows: height,
+        boardz: playerspritez,
+      })
+    }
 
     // camera changes
     cameraref.current.updateProjectionMatrix()
@@ -369,6 +375,7 @@ export const IsoGraphics = memo(function IsoGraphics({
                           z={maptolayerz(layer, 'iso') + drawheight + 1}
                         />
                       ))}
+                      <InspectorComponent z={0} />
                     </group>
                     {exitpreviewgroups.map(({ key, preview, position }) =>
                       preview.layers.length > 0 ? (
@@ -384,7 +391,6 @@ export const IsoGraphics = memo(function IsoGraphics({
                         </group>
                       ) : null,
                     )}
-                    <InspectorComponent z={0} />
                   </group>
                 </group>
               </group>

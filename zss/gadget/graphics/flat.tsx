@@ -115,6 +115,7 @@ export const FlatGraphics = memo(function FlatGraphics({
       controlfocusy: control.focusy,
     })
 
+    const boardchanged = currentboard !== userdata.currentboard
     stepfocuswithboardtransition(
       userdata,
       control,
@@ -150,7 +151,10 @@ export const FlatGraphics = memo(function FlatGraphics({
     const targetcornerx = -centerx / viewscale - fx
     const targetcornery = -centery / viewscale - fy
 
-    if (visualpan.panphase && visualpan.biasdx !== 0) {
+    // #goto / non-edge: hard snap corner. Edge pan: damp along travel axis.
+    if (boardchanged && !panphase) {
+      cornerref.current.position.set(targetcornerx, targetcornery, 0)
+    } else if (visualpan.panphase && visualpan.biasdx !== 0) {
       // Cardinal east/west: damp X only; hold Y so corner cannot drift diagonal.
       cornerref.current.position.y = targetcornery
       damp(
@@ -206,16 +210,18 @@ export const FlatGraphics = memo(function FlatGraphics({
     cam.lookAt(looktarget.current)
     cam.updateMatrixWorld()
 
-    tickerpublishfromtickers({
-      tickers: gadget.tickers ?? [],
-      layers: gadget.layers ?? [],
-      boardgroup: cornerref.current,
-      camera: cam,
-      drawwidth,
-      drawheight,
-      cols: width,
-      rows: height,
-    })
+    if (liveboardref.current) {
+      tickerpublishfromtickers({
+        tickers: gadget.tickers ?? [],
+        layers: gadget.layers ?? [],
+        boardgroup: liveboardref.current,
+        camera: cam,
+        drawwidth,
+        drawheight,
+        cols: width,
+        rows: height,
+      })
+    }
 
     // under board corner inset (same framing as iso / mode7 / fpv)
     const xscale = clamp(viewwidth / boarddrawwidth, 1.0, 10.0)
@@ -338,6 +344,7 @@ export const FlatGraphics = memo(function FlatGraphics({
                     z={1 + layers.length + i * 2}
                   />
                 ))}
+                <InspectorComponent z={inspectorz} />
               </group>
               {exitpreviewgroups.map(({ key, preview, position }) =>
                 preview.layers.length > 0 ? (
@@ -353,7 +360,6 @@ export const FlatGraphics = memo(function FlatGraphics({
                   </group>
                 ) : null,
               )}
-              <InspectorComponent z={inspectorz} />
             </group>
           </group>
         </group>

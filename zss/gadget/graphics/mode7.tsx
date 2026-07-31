@@ -204,6 +204,7 @@ export const Mode7Graphics = memo(function Mode7Graphics({
       drawheight,
     )
 
+    const boardchanged = currentboard !== userdata.currentboard
     stepfocuswithboardtransition(
       userdata,
       control,
@@ -230,7 +231,10 @@ export const Mode7Graphics = memo(function Mode7Graphics({
     const targetcornerx = -fx
     const targetcornery = -fy
 
-    if (panphase && bias.dx !== 0) {
+    // #goto / non-edge: hard snap corner. Edge pan: damp along travel axis.
+    if (boardchanged && !panphase) {
+      cornerref.current.position.set(targetcornerx, targetcornery, 0)
+    } else if (panphase && bias.dx !== 0) {
       cornerref.current.position.y = targetcornery
       damp(
         cornerref.current.position,
@@ -293,17 +297,19 @@ export const Mode7Graphics = memo(function Mode7Graphics({
         dofcamworld.current.distanceTo(dofplayerworld.current)
     }
 
-    tickerpublishfromtickers({
-      tickers: gadget.tickers ?? [],
-      layers: gadget.layers ?? [],
-      boardgroup: cornerref.current,
-      camera: cameraref.current,
-      drawwidth,
-      drawheight,
-      cols: width,
-      rows: height,
-      boardz: playerspritez,
-    })
+    if (liveboardref.current) {
+      tickerpublishfromtickers({
+        tickers: gadget.tickers ?? [],
+        layers: gadget.layers ?? [],
+        boardgroup: liveboardref.current,
+        camera: cameraref.current,
+        drawwidth,
+        drawheight,
+        cols: width,
+        rows: height,
+        boardz: playerspritez,
+      })
+    }
 
     // framing
     const xscale = clamp(viewwidth / boarddrawwidth, 1.0, 10.0)
@@ -418,6 +424,7 @@ export const Mode7Graphics = memo(function Mode7Graphics({
                         shadowheight={1.25}
                       />
                     ))}
+                    <InspectorComponent z={0} />
                   </group>
                   {exitpreviewgroups.map(({ key, preview, position }) =>
                     preview.layers.length > 0 ? (
@@ -433,7 +440,6 @@ export const Mode7Graphics = memo(function Mode7Graphics({
                       </group>
                     ) : null,
                   )}
-                  <InspectorComponent z={0} />
                 </group>
               </group>
             </group>

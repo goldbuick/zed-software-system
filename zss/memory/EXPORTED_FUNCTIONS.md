@@ -85,7 +85,14 @@ Board / object create, delete, import/export.
 - **memorydeleteboardobject(board, id)**, **memorysafedeleteelement(board, element, timestamp)**
 - **memorywriteterrain(board, from)**, **memorywriteterrainfromkind(board, pt, kind)**
 - **memoryreadgroup(board, self, targetgroup)**
-- **memoryexportboard(board)**, **memoryexportboardasjson(board)**, **memoryimportboard(boardentry)**
+- **memoryexportboard(board, strip?)**, **memoryexportboardasjson(board, strip?)**, **memoryimportboard(boardentry)**
+
+## boardterrainmap.ts
+
+Terrain kind-default strip for persisted exports (see [docs](docs/boardterrainmap.md)).
+
+- **memorystripterrainkinddefaults(element)** - omit display stats equal to the resolved kind
+- **memoryexportterrainelement(element, strip?)** - strip when true; verbatim when absent/false
 
 ## boardelement.ts
 
@@ -153,7 +160,7 @@ Book / codepage / flag operations.
 - **memoryensurebookcodepagewithtype(book, type, address)**
 - **memoryreadbookflag**, **memoryreadbookflags**, **memorywritebookflag**, **memoryhasbookflags**, **memoryclearbookflags**, **memoryhasbookmatch**
 - **memoryupdatebookname(book)**, **memoryupdatebooktoken(book)**
-- **memorycreatebook(pages)**, **memoryexportbook(book)**, **memoryexportbookasjson(book)**, **memoryimportbook(bookentry)**, **memoryimportbookfromjson(flat)**
+- **memorycreatebook(pages)**, **memoryexportbook(book)**, **memoryexportbookasjson(book)**, **memoryimportbook(bookentry)**, **memoryimportbookfromjson(flat)** - both exporters strip kind-default terrain display stats
 
 ## codepages.ts
 
@@ -172,7 +179,7 @@ Codepage parse / runtime.
 - **memoryreadcodepagestat(codepage, stat)**, **memoryreadcodepagestats(codepage)**, **memoryreadcodepagestatdefaults(codepage)**, **memoryreadcodepagestatsfromtext(content)**, **memoryresetcodepagestats(codepage)**
 - **memorycodepagetypetostring(type)**, **memorycodepagehasmatch(codepage, type, ids)**
 - **memorycreatecodepage(code, content)**, **memoryfreecodepage(codepage)**
-- **memoryexportcodepage**, **memoryexportcodepageasjson**, **memoryimportcodepage**, **memoryimportcodepagefromjson**
+- **memoryexportcodepage(codepage, strip?)**, **memoryexportcodepageasjson(codepage, strip?)**, **memoryimportcodepage(codepage)**, **memoryimportcodepagefromjson(flat)**
 - **memoryexportbitmap**, **memoryimportbitmap**
 
 ## runtimeboundary.ts

@@ -39,7 +39,7 @@ export type FocusUserData = {
   lfocusy?: number
   focussmooth?: number
   currentboard?: string
-  /** Path-relative board slot (session / since last goto). */
+  /** Path-relative board slot; edge exits bump it, #goto keeps/replaces it. */
   boardgridx?: number
   boardgridy?: number
   gridbiasdx?: -1 | 0 | 1
@@ -158,7 +158,7 @@ function focusneartarget(
 /**
  * Board change: edge exits bump boardgridx/y and glide in world cell space.
  * Settle clears panphase/depth-2 only -- no focus remap. Non-edge (#goto)
- * resets the path grid to origin and teleports focus to local control.
+ * keeps the current grid slot and hard-teleports focus to that world cell.
  *
  * tfocusx/y are local (single-board) clamped targets; world conversion is
  * owned here via boardgridx/y.
@@ -238,17 +238,23 @@ export function stepfocuswithboardtransition(
       }
       userdata.focussmooth = FOCUS_GLIDE_RATE
     } else {
-      userdata.boardgridx = 0
-      userdata.boardgridy = 0
+      // Keep boardgridx/y -- destination replaces the current global slot.
       userdata.gridbiasdx = 0
       userdata.gridbiasdy = 0
       userdata.panphase = false
       userdata.departureboard = ''
       userdata.pantargetx = undefined
       userdata.pantargety = undefined
-      // Teleport into local board space (#goto / non-edge).
-      userdata.focusx = localtfocusx
-      userdata.focusy = localtfocusy
+      const world = worldcellfromlocal(
+        userdata.boardgridx ?? 0,
+        userdata.boardgridy ?? 0,
+        localtfocusx,
+        localtfocusy,
+      )
+      userdata.focusx = world.x
+      userdata.focusy = world.y
+      userdata.tfocusx = world.x
+      userdata.tfocusy = world.y
       userdata.focussmooth = FOCUS_ANIM_RATE
     }
     userdata.lfocusx = control.focusx

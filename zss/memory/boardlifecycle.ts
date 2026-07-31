@@ -19,6 +19,7 @@ import {
   memorydeleteboardterrainnamed,
 } from './boardlookup'
 import { memoryreadelementstat } from './boards'
+import { memoryexportterrainelement } from './boardterrainmap'
 import { memoryreadelementdisplay } from './bookoperations'
 import {
   memorydeleteboardelementruntime,
@@ -49,9 +50,15 @@ export function memorydeleteboardobject(board: MAYBE<BOARD>, id: string) {
   return false
 }
 
-export function memoryexportboard(board: MAYBE<BOARD>): MAYBE<FORMAT_OBJECT> {
+export function memoryexportboard(
+  board: MAYBE<BOARD>,
+  strip?: boolean,
+): MAYBE<FORMAT_OBJECT> {
   return formatobject(board, BOARD_KEYS, {
-    terrain: (terrain) => terrain.map(memoryexportboardelement),
+    terrain: (terrain: MAYBE<BOARD_ELEMENT>[]) =>
+      terrain.map((element) =>
+        memoryexportboardelement(memoryexportterrainelement(element, strip)),
+      ),
     objects: (elements) => {
       const objects = Object.values<BOARD_ELEMENT>(elements)
         .filter((boardelement) => !boardelement.removed)
@@ -64,7 +71,10 @@ export function memoryexportboard(board: MAYBE<BOARD>): MAYBE<FORMAT_OBJECT> {
   })
 }
 
-export function memoryexportboardasjson(board: MAYBE<BOARD>): any {
+export function memoryexportboardasjson(
+  board: MAYBE<BOARD>,
+  strip?: boolean,
+): any {
   if (!ispresent(board)) {
     return undefined
   }
@@ -73,7 +83,11 @@ export function memoryexportboardasjson(board: MAYBE<BOARD>): any {
     objects[object.id ?? ''] = memoryexportboardelementasjson(object)
   }
   return {
-    terrain: board.terrain.map(memoryexportboardelementasjson),
+    terrain: board.terrain.map((element) =>
+      memoryexportboardelementasjson(
+        memoryexportterrainelement(element, strip),
+      ),
+    ),
     objects,
     // stats
     isdark: board.isdark,

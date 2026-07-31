@@ -99,7 +99,8 @@ export function buildmemoryfscodepagefiles(
   book: BOOK,
   page: CODE_PAGE,
 ): MEMORYFS_PATH_FILE[] {
-  const pagejson = memoryexportcodepageasjson(page)
+  // strip kind defaults but keep literal overrides; terrain.json stays hand-editable
+  const pagejson = memoryexportcodepageasjson(page, true)
   if (pagejson === undefined) {
     return []
   }

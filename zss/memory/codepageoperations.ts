@@ -285,7 +285,10 @@ export function memoryimportbitmap(
   })
 }
 
-export function memoryexportcodepageasjson(codepage: MAYBE<CODE_PAGE>): any {
+export function memoryexportcodepageasjson(
+  codepage: MAYBE<CODE_PAGE>,
+  strip?: boolean,
+): any {
   if (!ispresent(codepage)) {
     return undefined
   }
@@ -293,7 +296,7 @@ export function memoryexportcodepageasjson(codepage: MAYBE<CODE_PAGE>): any {
   return {
     id: codepage.id,
     code: codepage.code,
-    board: memoryexportboardasjson(runtime.board),
+    board: memoryexportboardasjson(runtime.board, strip),
     object: memoryexportboardelementasjson(runtime.object),
     terrain: memoryexportboardelementasjson(runtime.terrain),
     charset: memoryexportbitmap(runtime.charset),
@@ -303,6 +306,7 @@ export function memoryexportcodepageasjson(codepage: MAYBE<CODE_PAGE>): any {
 
 export function memoryexportcodepage(
   codepage: MAYBE<CODE_PAGE>,
+  strip?: boolean,
 ): MAYBE<FORMAT_OBJECT> {
   if (!ispresent(codepage)) {
     return undefined
@@ -315,7 +319,7 @@ export function memoryexportcodepage(
     memoryreadcodepageruntime(codepage) ?? {},
   )
   return formatobject(wire, CODE_PAGE_KEYS, {
-    board: memoryexportboard,
+    board: (board) => memoryexportboard(board, strip),
     object: memoryexportboardelement,
     terrain: memoryexportboardelement,
     charset: memoryexportbitmap,
@@ -369,7 +373,7 @@ export function memoryimportcodepage(
     return undefined
   }
   const flat = unformatobject<CODE_PAGE_WIRE>(codepage, CODE_PAGE_KEYS, {
-    board: memoryimportboard,
+    board: (board) => memoryimportboard(board),
     object: memoryimportboardelement,
     terrain: memoryimportboardelement,
     charset: memoryimportbitmap,

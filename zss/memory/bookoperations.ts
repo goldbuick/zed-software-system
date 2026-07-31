@@ -145,7 +145,7 @@ export function memoryexportbookasjson(book: MAYBE<BOOK>): any {
 
   const pagesout: FORMAT_OBJECT[] = []
   for (let i = 0; i < book.pages.length; ++i) {
-    const codepage = memoryexportcodepageasjson(book.pages[i])
+    const codepage = memoryexportcodepageasjson(book.pages[i], true)
     if (ispresent(codepage)) {
       pagesout.push(codepage)
     }
@@ -173,9 +173,14 @@ export function memoryexportbook(book: MAYBE<BOOK>): MAYBE<FORMAT_OBJECT> {
   if (!ispresent(book)) {
     return undefined
   }
+  const pagesout = book.pages.map((codepage) =>
+    memoryexportcodepage(codepage, true),
+  )
+  const wire = Object.assign({}, book, {
+    pages: pagesout,
+  })
   // return a single tree
-  return formatobject(book, BOOK_KEYS, {
-    pages: (pages) => pages.map(memoryexportcodepage),
+  return formatobject(wire, BOOK_KEYS, {
     flags: (flags) => {
       const flagsout: Record<string, any> = {}
       const names = Object.keys(flags)
@@ -203,7 +208,9 @@ export function memoryimportbookfromjson(flat: any): MAYBE<BOOK> {
   const book = remapbookidsforfilenamesafety(flat)
 
   // import pages
-  const pagesout = book.pages.map(memoryimportcodepagefromjson)
+  const pagesout = book.pages.map((page: any) =>
+    memoryimportcodepagefromjson(page),
+  )
 
   // import flags
   const names = Object.keys(book.flags ?? {})
@@ -232,14 +239,16 @@ export function memoryimportbook(bookentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOOK> {
     token: string
     timestamp: number
     activelist: string[]
-    pages: CODE_PAGE[]
+    pages: MAYBE<FORMAT_OBJECT>[]
     flags: Record<string, BOOK_FLAGS>
-  }>(bookentry, BOOK_KEYS, {
-    pages: (pages) => pages.map(memoryimportcodepage),
-  })
+  }>(bookentry, BOOK_KEYS)
   if (!ispresent(flat)) {
     return undefined
   }
+
+  const pagesout = (flat.pages ?? [])
+    .map((entry) => memoryimportcodepage(entry))
+    .filter(ispresent)
 
   const flags: Record<string, string> = {}
   const flagids = Object.keys(flat.flags ?? {})
@@ -255,7 +264,7 @@ export function memoryimportbook(bookentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOOK> {
     token: flat.token,
     timestamp: flat.timestamp,
     activelist: flat.activelist ?? [],
-    pages: flat.pages,
+    pages: pagesout,
     flags,
   }
 }

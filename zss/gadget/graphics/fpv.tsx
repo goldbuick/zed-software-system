@@ -330,11 +330,11 @@ export const FPVGraphics = memo(function FPVGraphics({
       }
     }
 
-    if (dofboardref.current) {
+    if (liveboardref.current) {
       tickerpublishfromtickers({
         tickers: gadget.tickers ?? [],
         layers,
-        boardgroup: dofboardref.current,
+        boardgroup: liveboardref.current,
         camera: cameraref.current,
         drawwidth,
         drawheight,
@@ -463,6 +463,7 @@ export const FPVGraphics = memo(function FPVGraphics({
                     multi={multi}
                   />
                 ))}
+                <InspectorComponent z={-1.9} />
               </group>
               {exitpreviewgroups.map(({ key, preview, position }) => {
                 if (preview.layers.length > 0) {
@@ -494,7 +495,6 @@ export const FPVGraphics = memo(function FPVGraphics({
                 }
                 return null
               })}
-              <InspectorComponent z={-1.9} />
             </group>
           </RenderLayer>
         )}

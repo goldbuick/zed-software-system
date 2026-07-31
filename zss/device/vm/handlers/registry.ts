@@ -17,6 +17,7 @@ import { handleboardrunnerpaint } from './boardrunnerpaint'
 import { handleboardrunnerpatch } from './boardrunnerpatch'
 import { handlebookmarkscroll } from './bookmarkscroll'
 import { handlebooks } from './books'
+import { handlebuildboard } from './buildboard'
 import { handlecli, handleclirepeatlast } from './cli'
 import { handlecoderelease, handlecodewatch } from './codewatch'
 import { handledoot } from './doot'
@@ -82,6 +83,7 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   boardrunnerpatch: handleboardrunnerpatch,
   playermovetoboard: handleplayermovetoboard,
   playergotoboard: handleplayergotoboard,
+  buildboard: handlebuildboard,
   desync: handleboardrunnerdesync,
   second: handlesecond,
   makeitscroll: handlemakeitscroll,
