@@ -158,6 +158,8 @@ const TICKER_LINE = /\$TICKER/i
 const TOAST_LINE = /\$TOAST/i
 const BONK_LINE = /\$BONK/i
 const ZAP_LINE = /\$ZAP/i
+const FADEOUT_LINE = /\$FADEOUT/i
+const FADEIN_LINE = /\$FADEIN/i
 
 export function hascenter(text: string): MAYBE<string> {
   if (CENTER_LINE.test(text)) {
@@ -194,6 +196,22 @@ export function haszap(text: string): boolean {
 
 export function stripzap(text: string): string {
   return text.replace(ZAP_LINE, '').trim()
+}
+
+export function hasfadeout(text: string): boolean {
+  return FADEOUT_LINE.test(text)
+}
+
+export function stripfadeout(text: string): string {
+  return text.replace(FADEOUT_LINE, '').trim()
+}
+
+export function hasfadein(text: string): boolean {
+  return FADEIN_LINE.test(text)
+}
+
+export function stripfadein(text: string): string {
+  return text.replace(FADEIN_LINE, '').trim()
 }
 
 export function tokenize(text: string, noWhitespace = false) {

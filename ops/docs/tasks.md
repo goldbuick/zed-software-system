@@ -262,4 +262,4 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task cafe dev`).
 
 | Task | Description | Tags | Deps | Env |
 |------|-------------|------|------|-----|
-| `yarn task run ops:zns:docs:publish` | Publish zss/rom/refscroll/*.md to docs ZNS namespace (ZNS_EMAIL + ZNS_TOKEN; --dry-run) | `deploy` | — | — |
+| `yarn task run ops:zns:docs:publish` | Publish zss/rom/refscroll/*.md to docs ZNS namespace (ZNS_EMAIL + ZNS_TOKEN from shell or cafe/.env.local; --dry-run) | `deploy` | — | — |

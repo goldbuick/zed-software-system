@@ -5,6 +5,7 @@ import {
 } from 'zss/device/vm/handlers/playergotoboard'
 import { memorycreatebook } from 'zss/memory/bookoperations'
 import { memorycreatecodepage } from 'zss/memory/codepageoperations'
+import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import { memoryresetbooks } from 'zss/memory/session'
 import type { BOARD } from 'zss/memory/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
@@ -15,6 +16,14 @@ jest.mock('zss/device/vm/handlers/playermovetoboard', () => ({
   applyplayermovetoboard: (...args: unknown[]) =>
     applyplayermovetoboard(...args),
 }))
+
+jest.mock('zss/memory/playermanagement', () => {
+  const actual = jest.requireActual('zss/memory/playermanagement')
+  return {
+    ...actual,
+    memoryreadplayerboard: jest.fn(() => undefined),
+  }
+})
 
 describe('resolveplayergotodestpt', () => {
   afterEach(() => {
@@ -130,6 +139,8 @@ describe('handleplayergotoboard', () => {
   afterEach(() => {
     memoryresetbooks([])
     applyplayermovetoboard.mockClear()
+    jest.mocked(memoryreadplayerboard).mockReset()
+    jest.mocked(memoryreadplayerboard).mockReturnValue(undefined)
   })
 
   it('applies resolved dest via applyplayermovetoboard', () => {
@@ -176,6 +187,75 @@ describe('handleplayergotoboard', () => {
     )
   })
 
+  it('emits gotofade before apply on cross-board goto', () => {
+    const page = memorycreatecodepage('@board dest\n', {
+      board: {
+        id: '',
+        name: 'dest',
+        terrain: [],
+        objects: {},
+        startx: 1,
+        starty: 1,
+      },
+    })
+    const book = memorycreatebook([page])
+    book.name = 'main'
+    memoryresetbooks([book])
+    jest.mocked(memoryreadplayerboard).mockReturnValue({
+      id: 'other-board',
+    } as BOARD)
+
+    const emit = jest.fn()
+    const vm = { emit } as unknown as DEVICE
+    handleplayergotoboard(vm, {
+      player: 'runner',
+      data: ['pid_test', 'dest', undefined, undefined, undefined],
+    } as never)
+
+    expect(emit).toHaveBeenCalledWith(
+      'pid_test',
+      'gadgetclient:gotofade',
+      undefined,
+    )
+    expect(applyplayermovetoboard).toHaveBeenCalled()
+    expect(emit.mock.invocationCallOrder[0]).toBeLessThan(
+      applyplayermovetoboard.mock.invocationCallOrder[0],
+    )
+  })
+
+  it('does not emit gotofade for same-board goto', () => {
+    const page = memorycreatecodepage('@board dest\n', {
+      board: {
+        id: '',
+        name: 'dest',
+        terrain: [],
+        objects: {},
+        startx: 1,
+        starty: 1,
+      },
+    })
+    const book = memorycreatebook([page])
+    book.name = 'main'
+    memoryresetbooks([book])
+    jest.mocked(memoryreadplayerboard).mockReturnValue({
+      id: page.id,
+    } as BOARD)
+
+    const emit = jest.fn()
+    const vm = { emit } as unknown as DEVICE
+    handleplayergotoboard(vm, {
+      player: 'runner',
+      data: ['pid_test', 'dest', 2, 3, undefined],
+    } as never)
+
+    expect(emit).not.toHaveBeenCalledWith(
+      'pid_test',
+      'gadgetclient:gotofade',
+      undefined,
+    )
+    expect(applyplayermovetoboard).toHaveBeenCalled()
+  })
+
   it('does not apply when board is missing', () => {
     memoryresetbooks([])
     const vm = { emit: jest.fn() } as unknown as DEVICE
@@ -184,5 +264,6 @@ describe('handleplayergotoboard', () => {
       data: ['pid_test', 'missing', undefined, undefined, undefined],
     } as never)
     expect(applyplayermovetoboard).not.toHaveBeenCalled()
+    expect(vm.emit).not.toHaveBeenCalled()
   })
 })

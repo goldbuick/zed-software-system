@@ -248,6 +248,18 @@ export function gadgetclientbonk(device: DEVICELIKE, player: string) {
   device.emit(player, 'gadgetclient:bonk', undefined)
 }
 
+export function gadgetclientfadein(device: DEVICELIKE, player: string) {
+  device.emit(player, 'gadgetclient:fadein', undefined)
+}
+
+export function gadgetclientfadeout(device: DEVICELIKE, player: string) {
+  device.emit(player, 'gadgetclient:fadeout', undefined)
+}
+
+export function gadgetclientgotofade(device: DEVICELIKE, player: string) {
+  device.emit(player, 'gadgetclient:gotofade', undefined)
+}
+
 export function gadgetclientpaint(
   device: DEVICELIKE,
   player: string,

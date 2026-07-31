@@ -495,12 +495,13 @@ export function parsestatformat(image: string): string[] {
   return first.split(' ')
 }
 
-const DIRECTIVE_MARKER_RE = /\$(CENTER|BONK|TICKER|TOAST|ZAP)\b/gi
+const DIRECTIVE_MARKER_RE =
+  /\$(CENTER|BONK|TICKER|TOAST|ZAP|FADEOUT|FADEIN)\b/gi
 
 /**
- * Overlay ZSS_TYPE_DIRECTIVE color on $CENTER / $BONK / $TICKER / $TOAST / $ZAP
- * substrings inside a stringliteral token so they stand out from other
- * inline `$` markers (color names, flag refs, etc.) in the editor view.
+ * Overlay ZSS_TYPE_DIRECTIVE color on $CENTER / $BONK / $TICKER / $TOAST / $ZAP /
+ * $FADEOUT / $FADEIN substrings inside a stringliteral token so they stand out
+ * from other inline `$` markers (color names, flag refs, etc.) in the editor view.
  */
 function applydirectiveoverlay(
   yoffset: number,
