@@ -7,7 +7,6 @@ import {
   readmemoryfspageprefix,
 } from 'zss/feature/memoryfs/schema'
 import { ispresent } from 'zss/mapping/types'
-import { memorycreateterrainexportmode } from 'zss/memory/boardterrainmap'
 import { memoryreadbookflags } from 'zss/memory/bookoperations'
 import {
   memoryexportcodepageasjson,
@@ -100,11 +99,8 @@ export function buildmemoryfscodepagefiles(
   book: BOOK,
   page: CODE_PAGE,
 ): MEMORYFS_PATH_FILE[] {
-  // strip kind defaults but keep literal values; terrain.json stays hand-editable
-  const pagejson = memoryexportcodepageasjson(
-    page,
-    memorycreateterrainexportmode(false),
-  )
+  // strip kind defaults but keep literal overrides; terrain.json stays hand-editable
+  const pagejson = memoryexportcodepageasjson(page, true)
   if (pagejson === undefined) {
     return []
   }

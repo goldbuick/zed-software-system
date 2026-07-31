@@ -16,9 +16,13 @@ import {
   resolvepanviewforrender,
   setdofplayerworld,
 } from 'zss/gadget/graphics/panviewsync'
+import {
+  tickerboardcelllocal,
+  tickerprojectlocaltoscreentile,
+} from 'zss/gadget/graphics/tickeranchors'
 import type { LAYER } from 'zss/gadget/data/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
-import { Group, Vector3 } from 'three'
+import { Group, OrthographicCamera, Vector3 } from 'three'
 
 describe('global board space camerafocus', () => {
   it('bumps boardgridx on east exit and keeps focus continuous', () => {
@@ -88,7 +92,7 @@ describe('global board space camerafocus', () => {
     expect(userdata.focusx).toBe(BOARD_WIDTH)
   })
 
-  it('resets grid and teleports focus on non-edge board change', () => {
+  it('keeps grid and teleports focus to world cell on non-edge board change', () => {
     const userdata: FocusUserData = {
       focusx: BOARD_WIDTH + 5,
       focusy: 10,
@@ -108,9 +112,10 @@ describe('global board space camerafocus', () => {
       0.016,
     )
     expect(isfocuspanphase(userdata)).toBe(false)
-    expect(readboardgrid(userdata)).toEqual({ x: 0, y: 0 })
-    expect(userdata.focusx).toBe(5)
-    expect(userdata.focusy).toBe(10)
+    expect(readboardgrid(userdata)).toEqual({ x: 2, y: 1 })
+    const world = worldcellfromlocal(2, 1, 5, 10)
+    expect(userdata.focusx).toBe(world.x)
+    expect(userdata.focusy).toBe(world.y)
   })
 
   it('east exit freezes lagged focusy (no diagonal toward control Y)', () => {
@@ -290,6 +295,40 @@ describe('panviewsync coherence', () => {
     expect(out.y).toBeCloseTo(7)
     expect(out.z).toBeCloseTo(5)
     expect(setdofplayerworld(out, null, 0, 0, 8, 14, 0)).toBe(false)
+  })
+
+  it('ticker projection uses liveboard offset like sprites', () => {
+    const drawwidth = 8
+    const drawheight = 14
+    const cols = 60
+    const rows = 25
+    const camera = new OrthographicCamera(-1000, 1000, 1000, -1000, 0.1, 2000)
+    camera.position.set(0, 0, 1000)
+    camera.lookAt(0, 0, 0)
+    camera.updateMatrixWorld(true)
+
+    const corner = new Group()
+    const live = new Group()
+    live.position.set(BOARD_WIDTH * drawwidth, 0, 0)
+    corner.add(live)
+    corner.updateMatrixWorld(true)
+
+    const local = tickerboardcelllocal(0, 0, 0, drawwidth, drawheight)
+    const viaoffset = tickerprojectlocaltoscreentile(
+      live,
+      camera,
+      local.clone(),
+      cols,
+      rows,
+    )
+    const viaunoffset = tickerprojectlocaltoscreentile(
+      corner,
+      camera,
+      local.clone(),
+      cols,
+      rows,
+    )
+    expect(viaoffset.sx).not.toBeCloseTo(viaunoffset.sx)
   })
 
   it('prefers active userdata pan over idle committed during enter', () => {

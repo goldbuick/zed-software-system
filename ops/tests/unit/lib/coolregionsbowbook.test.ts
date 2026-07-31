@@ -8,16 +8,23 @@ import {
 } from 'ops/lib/coolregionsbowbook'
 import { COOLREGIONSBOW_BOOK_JSON_PATH } from 'ops/lib/fixturepaths'
 
-/** First terrain cell that references the book terrainmap. */
-function findinternedcell(book: any) {
+/** First terrain cell that omits display fields (kind defaults stripped). */
+function findstrippedcell(book: any) {
   for (let p = 0; p < book.pages.length; ++p) {
     const terrain = book.pages[p].board?.terrain
     if (!Array.isArray(terrain)) {
       continue
     }
     for (let i = 0; i < terrain.length; ++i) {
-      if (terrain[i] && terrain[i].dmap !== undefined) {
-        return { page: p, index: i, entry: book.terrainmap[terrain[i].dmap] }
+      const cell = terrain[i]
+      if (
+        cell &&
+        cell.kind &&
+        cell.char === undefined &&
+        cell.color === undefined &&
+        cell.bg === undefined
+      ) {
+        return { page: p, index: i, kind: cell.kind }
       }
     }
   }
@@ -66,33 +73,39 @@ describe('coolregionsbow book fixture', () => {
     }
   })
 
-  it('terrain display is deduped into the book terrainmap', () => {
+  it('has no terrainmap or dmap and strips kind-default display fields', () => {
     const book = readcoolregionsbowbookexport().data as any
-    expect(book.terrainmap.length).toBeGreaterThan(0)
+    expect(book.terrainmap).toBeUndefined()
 
-    let interned = 0
+    let stripped = 0
+    let withoverride = 0
     for (const page of book.pages) {
       const terrain = page.board?.terrain
       if (!Array.isArray(terrain)) {
         continue
       }
       for (const cell of terrain) {
-        if (!cell || cell.dmap === undefined) {
+        if (!cell) {
           continue
         }
-        interned += 1
-        expect(book.terrainmap[cell.dmap]).toBeDefined()
-        // interned cells must not also carry literal display stats
-        expect(cell.char).toBeUndefined()
-        expect(cell.color).toBeUndefined()
-        expect(cell.bg).toBeUndefined()
+        expect(cell.dmap).toBeUndefined()
+        if (
+          cell.char === undefined &&
+          cell.color === undefined &&
+          cell.bg === undefined
+        ) {
+          stripped += 1
+        } else {
+          withoverride += 1
+        }
       }
     }
-    expect(interned).toBeGreaterThan(0)
+    expect(stripped).toBeGreaterThan(0)
+    expect(withoverride).toBeGreaterThan(0)
   })
 
-  it('restores terrain display from the table on import', () => {
-    const sample = findinternedcell(readcoolregionsbowbookexport().data as any)
+  it('imports stripped cells and resolves kind display', () => {
+    const sample = findstrippedcell(readcoolregionsbowbookexport().data as any)
     expect(sample).toBeDefined()
 
     const book = memoryimportbookfromjson(readcoolregionsbowbookexport().data)
@@ -101,8 +114,7 @@ describe('coolregionsbow book fixture', () => {
 
     const board = memoryreadcodepageruntime(book!.pages[sample!.page])?.board
     const cell = board?.terrain[sample!.index]
-    expect(cell?.char).toBe(sample!.entry.char)
-    expect(cell?.color).toBe(sample!.entry.color)
+    expect(cell?.kind).toBe(sample!.kind)
     expect(cell?.dmap).toBeUndefined()
     memoryresetbooks([])
   })

@@ -7,10 +7,8 @@ import {
   memoryimportboard,
 } from 'zss/memory/boardlifecycle'
 import {
-  memorycreateterrainexportmode,
-  memoryinternterraindisplay,
+  memoryexportterrainelement,
   memorystripterrainkinddefaults,
-  memoryunpackterraindisplay,
 } from 'zss/memory/boardterrainmap'
 import { memoryreadelementkind } from 'zss/memory/boards'
 import {
@@ -128,79 +126,28 @@ describe('terrain display strip', () => {
 
     expect(memorystripterrainkinddefaults(cell)).toBe(cell)
   })
-})
 
-describe('terrain display intern', () => {
-  it('reuses one index per distinct triple', () => {
-    const mode = memorycreateterrainexportmode(true)
+  it('memoryexportterrainelement strips only when strip is true', () => {
+    makebook([])
+    const cell = makecell(0, { char: 219, color: 4, bg: 0 })
 
-    const first = memoryinternterraindisplay(makecell(0, { char: 2, color: 0 }), mode)
-    const second = memoryinternterraindisplay(makecell(1, { char: 2, color: 0 }), mode)
+    expect(memoryexportterrainelement(cell)).toBe(cell)
+    expect(memoryexportterrainelement(cell, false)).toBe(cell)
 
-    expect(first?.dmap).toBe(0)
-    expect(second?.dmap).toBe(0)
-    expect(first?.char).toBeUndefined()
-    expect(first?.color).toBeUndefined()
-    expect(mode.entries).toEqual([{ char: 2, color: 0 }])
-  })
-
-  it('separates partial triples from full ones', () => {
-    const mode = memorycreateterrainexportmode(true)
-
-    const partial = memoryinternterraindisplay(makecell(0, { char: 2 }), mode)
-    const full = memoryinternterraindisplay(makecell(1, { char: 2, color: 0 }), mode)
-
-    expect(partial?.dmap).toBe(0)
-    expect(full?.dmap).toBe(1)
-    expect(mode.entries).toEqual([{ char: 2 }, { char: 2, color: 0 }])
-  })
-
-  it('leaves cells without display stats alone', () => {
-    const mode = memorycreateterrainexportmode(true)
-    const cell = makecell(0, {})
-
-    expect(memoryinternterraindisplay(cell, mode)).toBe(cell)
-    expect(mode.entries).toEqual([])
-  })
-
-  it('does not intern when the mode is strip only', () => {
-    const mode = memorycreateterrainexportmode(false)
-    const cell = makecell(0, { char: 7 })
-
-    expect(memoryinternterraindisplay(cell, mode)).toBe(cell)
-    expect(mode.entries).toEqual([])
+    const stripped = memoryexportterrainelement(cell, true)
+    expect(stripped?.char).toBeUndefined()
+    expect(stripped?.color).toBe(4)
+    expect(stripped?.bg).toBeUndefined()
   })
 })
 
-describe('terrain display unpack', () => {
-  it('restores stats and removes dmap', () => {
-    const board = makeboard('b', [{ x: 0, y: 0, kind: 'wall', dmap: 0 }])
-
-    memoryunpackterraindisplay(board, [{ char: 4, color: 1 }])
-
-    const cell = readcells(board)[0]
-    expect(cell.char).toBe(4)
-    expect(cell.color).toBe(1)
-    expect(cell.bg).toBeUndefined()
-    expect('dmap' in cell).toBe(false)
-  })
-
-  it('is a no-op without a table', () => {
-    const board = makeboard('b', [makecell(0, { char: 9 })])
-
-    memoryunpackterraindisplay(board, undefined)
-
-    expect(readcells(board)[0].char).toBe(9)
-  })
-})
-
-describe('book export dedupe', () => {
+describe('book export strip', () => {
   afterEach(() => {
     memoryresetbooks([])
     memoryboundariesclear()
   })
 
-  it('shares one table entry across boards in the same book', () => {
+  it('strips kind-default display stats on book export', () => {
     const book = makebook([
       makeboard('one', [makecell(0, { char: 219, color: 4, bg: 0 })]),
       makeboard('two', [makecell(3, { char: 219, color: 4, bg: 0 })]),
@@ -208,25 +155,31 @@ describe('book export dedupe', () => {
 
     const exported = memoryexportbookasjson(book)
 
-    expect(exported.terrainmap).toEqual([{ color: 4 }])
+    expect(exported.terrainmap).toBeUndefined()
     const cells = exported.pages
       .filter((page: any) => ispresent(page.board))
       .map((page: any) => page.board.terrain.filter(ispresent)[0])
     expect(cells).toHaveLength(2)
-    expect(cells[0].dmap).toBe(0)
-    expect(cells[1].dmap).toBe(0)
     expect(cells[0].char).toBeUndefined()
+    expect(cells[0].color).toBe(4)
+    expect(cells[0].bg).toBeUndefined()
+    expect(cells[1].color).toBe(4)
   })
 
-  it('omits the table when nothing needs it', () => {
+  it('omits display fields when every stat matches the kind', () => {
     const book = makebook([makeboard('one', [makecell(0, WALL_KIND)])])
 
     const exported = memoryexportbookasjson(book)
+    const cell = exported.pages
+      .filter((page: any) => ispresent(page.board))
+      .map((page: any) => page.board.terrain.filter(ispresent)[0])[0]
 
-    expect(exported.terrainmap).toBeUndefined()
+    expect(cell.char).toBeUndefined()
+    expect(cell.color).toBeUndefined()
+    expect(cell.bg).toBeUndefined()
   })
 
-  it('leaves display stats verbatim when no mode is given', () => {
+  it('leaves display stats verbatim when strip is off', () => {
     makebook([])
     const board = makeboard('one', [makecell(0, { char: 219, color: 2, bg: 0 })])
 
@@ -235,26 +188,21 @@ describe('book export dedupe', () => {
     const cell = exported.terrain.filter(ispresent)[0]
     expect(cell.char).toBe(219)
     expect(cell.color).toBe(2)
-    expect(cell.dmap).toBeUndefined()
   })
 
-  it('strips but does not intern for a strip only mode', () => {
+  it('strips when strip is true on board export', () => {
     makebook([])
     const board = makeboard('one', [makecell(0, { char: 219, color: 4, bg: 0 })])
 
-    const exported = memoryexportboardasjson(
-      board,
-      memorycreateterrainexportmode(false),
-    )
+    const exported = memoryexportboardasjson(board, true)
 
     const cell = exported.terrain.filter(ispresent)[0]
     expect(cell.char).toBeUndefined()
     expect(cell.color).toBe(4)
-    expect(cell.dmap).toBeUndefined()
   })
 })
 
-describe('book dedupe round trip', () => {
+describe('book strip round trip', () => {
   afterEach(() => {
     memoryresetbooks([])
     memoryboundariesclear()
@@ -279,7 +227,7 @@ describe('book dedupe round trip', () => {
     const before = readcells(readboards(book)[0]).map(readdisplay)
 
     const exported = throughdisk(memoryexportbookasjson(book))
-    expect(exported.terrainmap.length).toBeGreaterThan(0)
+    expect(exported.terrainmap).toBeUndefined()
 
     memoryboundariesclear()
     const imported = memoryimportbookfromjson(exported)
@@ -306,9 +254,6 @@ describe('book dedupe round trip', () => {
 
     const after = readcells(readboards(imported!)[0]).map(readdisplay)
     expect(after).toEqual(before)
-    for (const cell of readcells(readboards(imported!)[0])) {
-      expect('dmap' in cell).toBe(false)
-    }
   })
 
   /** boardpivot uses the export/import pair as an in-memory rollback snapshot. */
@@ -323,37 +268,5 @@ describe('book dedupe round trip', () => {
     const restored = memoryimportboard(memoryexportboard(board))
 
     expect(readpayload(readcells(restored!))).toEqual(before)
-  })
-
-  it('imports a legacy book that has literal stats and no table', () => {
-    const book = makebook([makeroundtripboard('one')])
-    const exported = throughdisk(memoryexportbookasjson(book))
-    const before = readcells(readboards(book)[0]).map(readdisplay)
-
-    // rebuild the pre-dedupe shape: literal stats on every cell, no table
-    const legacy = throughdisk(exported)
-    delete legacy.terrainmap
-    for (const page of legacy.pages) {
-      if (!ispresent(page.board)) {
-        continue
-      }
-      page.board.terrain = page.board.terrain.map(
-        (cell: any, index: number) => {
-          if (!ispresent(cell)) {
-            return cell
-          }
-          const { dmap, ...rest } = cell
-          return ispresent(dmap) ? { ...rest, ...CELLS[index] } : cell
-        },
-      )
-    }
-
-    memoryboundariesclear()
-    const imported = memoryimportbookfromjson(legacy)
-    memoryresetbooks([imported!])
-
-    const cells = readcells(readboards(imported!)[0])
-    expect(cells.map(readdisplay)).toEqual(before)
-    expect(cells[2].char).toBe(176)
   })
 })

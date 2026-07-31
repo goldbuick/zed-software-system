@@ -4,10 +4,6 @@ import { randominteger } from 'zss/mapping/number'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { COLOR, NAME, WORD } from 'zss/words/types'
 
-import {
-  TERRAIN_DISPLAY,
-  memorycreateterrainexportmode,
-} from './boardterrainmap'
 import { remapbookidsforfilenamesafety } from './bookidremap'
 import {
   memoryboundaryalloc,
@@ -147,10 +143,9 @@ export function memoryexportbookasjson(book: MAYBE<BOOK>): any {
     return undefined
   }
 
-  const mode = memorycreateterrainexportmode(true)
   const pagesout: FORMAT_OBJECT[] = []
   for (let i = 0; i < book.pages.length; ++i) {
-    const codepage = memoryexportcodepageasjson(book.pages[i], mode)
+    const codepage = memoryexportcodepageasjson(book.pages[i], true)
     if (ispresent(codepage)) {
       pagesout.push(codepage)
     }
@@ -171,7 +166,6 @@ export function memoryexportbookasjson(book: MAYBE<BOOK>): any {
     activelist: book.activelist,
     pages: pagesout,
     flags: flagsout,
-    terrainmap: mode.entries.length ? mode.entries : undefined,
   }
 }
 
@@ -179,14 +173,11 @@ export function memoryexportbook(book: MAYBE<BOOK>): MAYBE<FORMAT_OBJECT> {
   if (!ispresent(book)) {
     return undefined
   }
-  // pages first so the shared terrain table is complete before the book is formatted
-  const mode = memorycreateterrainexportmode(true)
   const pagesout = book.pages.map((codepage) =>
-    memoryexportcodepage(codepage, mode),
+    memoryexportcodepage(codepage, true),
   )
   const wire = Object.assign({}, book, {
     pages: pagesout,
-    terrainmap: mode.entries.length ? mode.entries : undefined,
   })
   // return a single tree
   return formatobject(wire, BOOK_KEYS, {
@@ -218,7 +209,7 @@ export function memoryimportbookfromjson(flat: any): MAYBE<BOOK> {
 
   // import pages
   const pagesout = book.pages.map((page: any) =>
-    memoryimportcodepagefromjson(page, book.terrainmap),
+    memoryimportcodepagefromjson(page),
   )
 
   // import flags
@@ -242,7 +233,6 @@ export function memoryimportbookfromjson(flat: any): MAYBE<BOOK> {
 }
 
 export function memoryimportbook(bookentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOOK> {
-  // pages are left raw so the shared terrain table is read before they are imported
   const flat = unformatobject<{
     id: string
     name: string
@@ -251,14 +241,13 @@ export function memoryimportbook(bookentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOOK> {
     activelist: string[]
     pages: MAYBE<FORMAT_OBJECT>[]
     flags: Record<string, BOOK_FLAGS>
-    terrainmap?: TERRAIN_DISPLAY[]
   }>(bookentry, BOOK_KEYS)
   if (!ispresent(flat)) {
     return undefined
   }
 
   const pagesout = (flat.pages ?? [])
-    .map((entry) => memoryimportcodepage(entry, flat.terrainmap))
+    .map((entry) => memoryimportcodepage(entry))
     .filter(ispresent)
 
   const flags: Record<string, string> = {}

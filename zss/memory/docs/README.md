@@ -24,7 +24,7 @@ The previous `index.ts` was split into smaller files (`session.ts`, `boards.ts`,
 | [boardlookup.md](boardlookup.md) | lookup, named indexing |
 | [boardmovement.md](boardmovement.md) | Move, blocked check, cleanup |
 | [boardoperations.md](boardoperations.md) | CRUD, eval dir, tick, path |
-| [boardterrainmap.md](boardterrainmap.md) | Terrain display de-dupe for persisted exports |
+| [boardterrainmap.md](boardterrainmap.md) | Terrain kind-default strip for persisted exports |
 | [boardlookup.md](boardlookup.md) | lookup, named indexing |
 | [bookoperations.md](bookoperations.md) | Book/codepage CRUD, flags, display |
 | [codepageoperations.md](codepageoperations.md) | Parse, apply stats, import/export |

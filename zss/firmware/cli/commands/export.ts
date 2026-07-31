@@ -15,7 +15,6 @@ import {
 import { FIRMWARE } from 'zss/firmware'
 import { CODEPAGE_NAME_LISTS } from 'zss/firmware/autocompleteconstants'
 import { ispresent } from 'zss/mapping/types'
-import { memorycreateterrainexportmode } from 'zss/memory/boardterrainmap'
 import {
   memoryexportbookasjson,
   memorylistcodepagessorted,
@@ -151,10 +150,7 @@ export function registerexportcommands(fw: FIRMWARE): FIRMWARE {
           registerdownloadjsonfile(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
-            memoryexportcodepageasjson(
-              codepage,
-              memorycreateterrainexportmode(false),
-            ),
+            memoryexportcodepageasjson(codepage, true),
             `${memoryreadcodepagename(codepage)}.${memoryreadcodepagetypeasstring(codepage)}.json`,
           )
         }

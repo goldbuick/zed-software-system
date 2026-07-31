@@ -54,11 +54,6 @@ import {
   memoryimportboard,
 } from './boardlifecycle'
 import { memoryfreeboardelementsruntime } from './boardoperations'
-import {
-  TERRAIN_DISPLAY,
-  TERRAIN_EXPORT_MODE,
-  memoryunpackterraindisplay,
-} from './boardterrainmap'
 import { remapcodepageidsforfilenamesafety } from './bookidremap'
 import {
   memoryboundaryalloc,
@@ -292,7 +287,7 @@ export function memoryimportbitmap(
 
 export function memoryexportcodepageasjson(
   codepage: MAYBE<CODE_PAGE>,
-  mode?: MAYBE<TERRAIN_EXPORT_MODE>,
+  strip?: boolean,
 ): any {
   if (!ispresent(codepage)) {
     return undefined
@@ -301,7 +296,7 @@ export function memoryexportcodepageasjson(
   return {
     id: codepage.id,
     code: codepage.code,
-    board: memoryexportboardasjson(runtime.board, mode),
+    board: memoryexportboardasjson(runtime.board, strip),
     object: memoryexportboardelementasjson(runtime.object),
     terrain: memoryexportboardelementasjson(runtime.terrain),
     charset: memoryexportbitmap(runtime.charset),
@@ -311,7 +306,7 @@ export function memoryexportcodepageasjson(
 
 export function memoryexportcodepage(
   codepage: MAYBE<CODE_PAGE>,
-  mode?: MAYBE<TERRAIN_EXPORT_MODE>,
+  strip?: boolean,
 ): MAYBE<FORMAT_OBJECT> {
   if (!ispresent(codepage)) {
     return undefined
@@ -324,7 +319,7 @@ export function memoryexportcodepage(
     memoryreadcodepageruntime(codepage) ?? {},
   )
   return formatobject(wire, CODE_PAGE_KEYS, {
-    board: (board) => memoryexportboard(board, mode),
+    board: (board) => memoryexportboard(board, strip),
     object: memoryexportboardelement,
     terrain: memoryexportboardelement,
     charset: memoryexportbitmap,
@@ -345,7 +340,6 @@ type CODE_PAGE_WIRE = {
 
 export function memoryimportcodepagefromjson(
   flat: any,
-  terrainmap?: MAYBE<TERRAIN_DISPLAY[]>,
 ): MAYBE<CODE_PAGE> {
   if (!ispresent(flat)) {
     return undefined
@@ -357,7 +351,6 @@ export function memoryimportcodepagefromjson(
     if (!board.objects || typeof board.objects !== 'object') {
       board.objects = {}
     }
-    memoryunpackterraindisplay(page.board as BOARD, terrainmap)
   }
   memoryboundaryalloc(
     {
@@ -377,13 +370,12 @@ export function memoryimportcodepagefromjson(
 
 export function memoryimportcodepage(
   codepage: MAYBE<FORMAT_OBJECT>,
-  terrainmap?: MAYBE<TERRAIN_DISPLAY[]>,
 ): MAYBE<CODE_PAGE> {
   if (!ispresent(codepage)) {
     return undefined
   }
   const flat = unformatobject<CODE_PAGE_WIRE>(codepage, CODE_PAGE_KEYS, {
-    board: (board) => memoryimportboard(board, terrainmap),
+    board: (board) => memoryimportboard(board),
     object: memoryimportboardelement,
     terrain: memoryimportboardelement,
     charset: memoryimportbitmap,
