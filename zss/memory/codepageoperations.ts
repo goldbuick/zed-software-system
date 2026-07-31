@@ -338,9 +338,7 @@ type CODE_PAGE_WIRE = {
   palette?: BITMAP
 }
 
-export function memoryimportcodepagefromjson(
-  flat: any,
-): MAYBE<CODE_PAGE> {
+export function memoryimportcodepagefromjson(flat: any): MAYBE<CODE_PAGE> {
   if (!ispresent(flat)) {
     return undefined
   }
