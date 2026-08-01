@@ -375,7 +375,7 @@
 </tr>
 </tbody>
 </table></div>
-<p><strong>Sidechain params (Daisy):</strong> threshold −42 dB (power domain), ratio 5, attack 5 ms, release 60 ms, mix 0.75, makeup +24 dB; bg/TTS send −12 dB, drum send −28 dB. Gain applied directly to play bus (Tone worklet parity; no extra duck slew).</p>
+<p><strong>Sidechain params (Daisy):</strong> threshold −42 dB (power domain), ratio 5, attack 5 ms, release 60 ms, mix 0.50, makeup +12 dB; bg/TTS send −12 dB, drum send −28 dB. Gain applied directly to play bus (Tone worklet parity; no extra duck slew).</p>
 <p><strong>FX bus gain (Daisy):</strong> per-send linear gain from <a href="../backend/wasm/wasmfxstate.ts"><code>wasmfxstate.ts</code></a> (<code>on</code> → 50). Echo/reverb use send×wet; <strong><code>wet_sum</code></strong> × 1.4 then return compressor before <code>dry + wet_sum</code>. Offline matrix: <code>yarn level-stability:test --filter fxmatrix</code>.</p>
 <blume-mermaid class="not-prose my-6 flex justify-center overflow-x-auto" data-source="flowchart LR
   play[&quot;play bus + voice FX&quot;]

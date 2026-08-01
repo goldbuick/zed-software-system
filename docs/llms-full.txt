@@ -8247,7 +8247,7 @@ hiss (pink noise) ───────┘
 - **Threshold:** -42 dB
 - **Ratio:** 5:1
 - **Attack / release:** 5 ms / 60 ms
-- **Mix / makeup:** 0.75 / +24 dB
+- **Mix / makeup:** 0.50 / +12 dB (idle play ~2.5x; calibrate via `ops:daisy:sidechain:parity:calibrate`)
 - **Sidechain sources:** `altaction` (TTS + bgplay @ -12 dB), `drumaction` (clap+bass @ -28 dB)
 - **Purpose:** Ducks `#play` when bg/TTS/drums hit (not bg/TTS/drum buses themselves)
 - **Tone:** `SidechainCompressor` AudioWorklet — input 0 = play, input 1 = summed key bus
@@ -8749,8 +8749,8 @@ Parity-tuned values -- change only with `yarn task run ops:daisy:*:calibrate` or
 | `kPlayBusGain` | **0.168** | Fixed play stem into mix (~3 dB under prior 0.238 vs drums) |
 | `kDrumBusGain` | **2.440** | Drum stem (calibrate: `ops:daisy:play-drum-balance:calibrate`) |
 | `kVoiceOutGain` | **1.0** | Post-FX voice output |
-| `kScMakeupDb` | **24** | Sidechain makeup |
-| `kScMix` | **0.75** | Duck depth (idle play boost ~12x with makeup) |
+| `kScMakeupDb` | **12** | Sidechain makeup (calibrate: `ops:daisy:sidechain:parity:calibrate`) |
+| `kScMix` | **0.50** | Duck depth (idle play boost ~2.5x with makeup; was ~12x at 24/0.75) |
 | `kScAttackSec` / `kScReleaseSec` | 0.005 / 0.06 | Sidechain timing |
 | SC key trims | bg/tts **-12 dB**, drums **-28 dB** | Key bus only (`zss_main.cpp`) |
 | `kMainCompThresholdDb` | **-28** | Main compressor |
@@ -8931,7 +8931,7 @@ Serial wet chain (Maxi + Daisy): **fc → echo → reverb → autofilter → dis
 | DC block | Master out | — | `DcBlock` | — | `DcBlock` | **Swapped** | cpp `zss_process()` |
 | Master trim | Level staging | -2 dB trim + 22 dB makeup | Same | Tone graph gains | **-10 dB trim**, 0 makeup (no comp); play **Tone volumetodb(20)**; drum **play × 1.35** | — | [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp) |
 
-**Sidechain params (Daisy):** threshold −42 dB (power domain), ratio 5:1, attack 5 ms, release 60 ms, mix 0.75, makeup +24 dB; bg/TTS send −12 dB, drum send −28 dB. Gain applied directly to play bus (Tone worklet parity; no extra duck slew).
+**Sidechain params (Daisy):** threshold −42 dB (power domain), ratio 5:1, attack 5 ms, release 60 ms, mix 0.50, makeup +12 dB; bg/TTS send −12 dB, drum send −28 dB. Gain applied directly to play bus (Tone worklet parity; no extra duck slew).
 
 **FX bus gain (Daisy):** per-send linear gain from [`wasmfxstate.ts`](../backend/wasm/wasmfxstate.ts) (`on` → 50). Echo/reverb use send×wet; **`wet_sum`** × 1.4 then return compressor before `dry + wet_sum`. Offline matrix: `yarn level-stability:test --filter fxmatrix`.
 
@@ -9334,9 +9334,10 @@ Source: https://zed.cafe/docs/synth/record-and-mp3
 2. Snapshots voice/FX state via `wasmreplaystate.ts`
 3. Boots an isolated Daisy engine on `OfflineAudioContext`
 4. Replays ticks with offline render hooks for sample-accurate SAB updates
-5. Renders via `startRendering()` (faster than real time; live synth unaffected)
-6. Converts rendered `AudioBuffer` to MP3 via `converttomp3()`
-7. Triggers download
+5. Renders via `startRendering()` (faster than real time). Offline and live engines each own SAB channel buffers (`sabpush` / `sabseq` are scoped per `SabEngine`), so render pushes do not drive the live worklet. Tape logs `rendering audio N%` every 5% via the offline tick hook
+6. Applies **-3 dB** export headroom (`RECORD_EXPORT_TRIM_DB` / `trimaudiobufferdb`) before lamejs
+7. Converts rendered `AudioBuffer` to MP3 via `converttomp3()`
+8. Triggers download
 
 If `OfflineAudioContext` or offline worklet boot fails, `#synthrecord` surfaces an error (no real-time fallback).
 

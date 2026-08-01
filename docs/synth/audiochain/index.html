@@ -18,7 +18,7 @@
 <li><strong>Threshold:</strong> -42 dB</li>
 <li><strong>Ratio:</strong> 5:1</li>
 <li><strong>Attack / release:</strong> 5 ms / 60 ms</li>
-<li><strong>Mix / makeup:</strong> 0.75 / +24 dB</li>
+<li><strong>Mix / makeup:</strong> 0.50 / +12 dB (idle play ~2.5x; calibrate via <code>ops:daisy:sidechain:parity:calibrate</code>)</li>
 <li><strong>Sidechain sources:</strong> <code>altaction</code> (TTS + bgplay @ -12 dB), <code>drumaction</code> (clap+bass @ -28 dB)</li>
 <li><strong>Purpose:</strong> Ducks <code>#play</code> when bg/TTS/drums hit (not bg/TTS/drum buses themselves)</li>
 <li><strong>Tone:</strong> <code>SidechainCompressor</code> AudioWorklet — input 0 = play, input 1 = summed key bus</li>

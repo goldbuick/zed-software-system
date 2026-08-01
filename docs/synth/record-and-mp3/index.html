@@ -5,7 +5,8 @@
 <li>Snapshots voice/FX state via <code>wasmreplaystate.ts</code></li>
 <li>Boots an isolated Daisy engine on <code>OfflineAudioContext</code></li>
 <li>Replays ticks with offline render hooks for sample-accurate SAB updates</li>
-<li>Renders via <code>startRendering()</code> (faster than real time; live synth unaffected)</li>
+<li>Renders via <code>startRendering()</code> (faster than real time). Offline and live engines each own SAB channel buffers (<code>sabpush</code> / <code>sabseq</code> are scoped per <code>SabEngine</code>), so render pushes do not drive the live worklet. Tape logs <code>rendering audio N%</code> every 5% via the offline tick hook</li>
+<li>Applies <strong>-3 dB</strong> export headroom (<code>RECORD_EXPORT_TRIM_DB</code> / <code>trimaudiobufferdb</code>) before lamejs</li>
 <li>Converts rendered <code>AudioBuffer</code> to MP3 via <code>converttomp3()</code></li>
 <li>Triggers download</li>
 </ol>
