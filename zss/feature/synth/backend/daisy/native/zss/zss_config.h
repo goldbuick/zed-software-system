@@ -133,8 +133,9 @@ constexpr float kEnvReleaseTauScale = 0.060f;
 constexpr float kPlayBusGain = 0.168f;
 constexpr float kDrumBusGain = 2.440f;
 /** Main fader: 20*log10(vol*0.25) + offset (see gain-levels.md). */
-/** Master `#vol` fader offset; -35 is the default-50 loudness target. */
-constexpr float kMainFaderOffsetDb = -35.f;
+/** Master `#vol` fader offset; -15 is the default-50 loudness target (+20 dB vs
+ * prior -35). */
+constexpr float kMainFaderOffsetDb = -15.f;
 /** TTS and bgplay share the same SAB dB law (see readttsvolume /
  * readbgplayvolume). */
 

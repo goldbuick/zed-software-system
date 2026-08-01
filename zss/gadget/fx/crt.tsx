@@ -117,8 +117,8 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
     outputColor.rgb = blendLighten(outputColor.rgb, bright.rgb, 0.079);
     outputColor.rgb = blendDarken(outputColor.rgb, dark.rgb, 0.0666);
 
-    // apply halftones
-    outputColor.rgb = halftone(outputColor.rgb, uv.st);
+    // apply halftones (bent UV so screens track CRT warp)
+    outputColor.rgb = halftone(outputColor.rgb, bent);
   
   } else if (doot > 1.004) {
     // display shell
