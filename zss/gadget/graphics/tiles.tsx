@@ -128,11 +128,11 @@ export function Tiles({
   const drawscale = RUNTIME.DRAW_CHAR_SCALE
 
   // create buffer geo attributes
-  const { position, uv } = useMemo(
-    () => createTilemapBufferGeometryAttributes(width, height),
+  const { position, uv } = useMemo(() => {
     // drawscale: createTilemapBufferGeometryAttributes reads RUNTIME.DRAW_CHAR_*
-    [width, height, drawscale],
-  )
+    void drawscale
+    return createTilemapBufferGeometryAttributes(width, height)
+  }, [width, height, drawscale])
 
   // key forces R3F to rebuild buffer attributes when cell dims / draw scale change;
   // swapping args alone can leave a stale GPU quad after resize.

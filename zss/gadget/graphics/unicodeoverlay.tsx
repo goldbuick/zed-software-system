@@ -58,9 +58,7 @@ export function UnicodeOverlay({
 
   // Material on first paint (useState, not ref-after-layout) so InstancedMesh
   // is never mounted without a material — that made glyphs invisible until resize.
-  const [material] = useState(() =>
-    createunicodeoverlaymaterial([] as Color[]),
-  )
+  const [material] = useState(() => createunicodeoverlaymaterial([] as Color[]))
 
   // instanced mesh data
   const [meshref, setmeshref] = useState<InstancedMesh | null>(null)
@@ -100,8 +98,9 @@ export function UnicodeOverlay({
       }
     }
     recordunicodescan(char.length, list.length)
-    return list
     // tilesversion: char/color/bg are often mutated in place; identity alone is stale
+    void tilesversion
+    return list
   }, [char, color, bg, tilesversion])
 
   const { position, uv } = useMemo(() => getunicodeoverlayquadgeometry(), [])

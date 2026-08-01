@@ -11,6 +11,7 @@ import {
 import { RUNTIME } from 'zss/config'
 import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
+import { boardinspectorzfromgadgetstacks } from 'zss/gadget/graphics/boardinspectorz'
 import {
   FOCUS_ANIM_RATE,
   initfocusifneeded,
@@ -19,7 +20,6 @@ import {
   stashfocusexitsnap,
   stepfocuswithboardtransition,
 } from 'zss/gadget/graphics/camerafocus'
-import { boardinspectorzfromgadgetstacks } from 'zss/gadget/graphics/boardinspectorz'
 import {
   buildexitpreviewgroups,
   gadgettoexitsnap,

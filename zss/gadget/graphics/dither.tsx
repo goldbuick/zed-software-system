@@ -77,11 +77,11 @@ export function Dither({
   const drawscale = RUNTIME.DRAW_CHAR_SCALE
 
   // create buffer geo attributes
-  const { position, uv } = useMemo(
-    () => createTilemapBufferGeometryAttributes(width, height),
+  const { position, uv } = useMemo(() => {
     // drawscale: createTilemapBufferGeometryAttributes reads RUNTIME.DRAW_CHAR_*
-    [width, height, drawscale],
-  )
+    void drawscale
+    return createTilemapBufferGeometryAttributes(width, height)
+  }, [width, height, drawscale])
 
   return (
     <mesh raycast={raycast}>

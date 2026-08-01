@@ -35,8 +35,7 @@ function gettinysdf(): InstanceType<typeof TinySDF> {
     buffer: SDF_BUFFER,
     cutoff: 0.35,
     fontWeight: '600',
-    fontFamily:
-      '"Hiragino Sans", "Segoe UI", "Noto Sans CJK JP", sans-serif',
+    fontFamily: '"Hiragino Sans", "Segoe UI", "Noto Sans CJK JP", sans-serif',
   })
   return tinysdf
 }
