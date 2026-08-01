@@ -29,7 +29,7 @@ hiss (pink noise) ───────┘
 - **Threshold:** -42 dB
 - **Ratio:** 5:1
 - **Attack / release:** 5 ms / 60 ms
-- **Mix / makeup:** 0.75 / +24 dB
+- **Mix / makeup:** 0.50 / +12 dB (idle play ~2.5x; calibrate via `ops:daisy:sidechain:parity:calibrate`)
 - **Sidechain sources:** `altaction` (TTS + bgplay @ -12 dB), `drumaction` (clap+bass @ -28 dB)
 - **Purpose:** Ducks `#play` when bg/TTS/drums hit (not bg/TTS/drum buses themselves)
 - **Tone:** `SidechainCompressor` AudioWorklet — input 0 = play, input 1 = summed key bus
