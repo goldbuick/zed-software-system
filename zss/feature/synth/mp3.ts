@@ -5,6 +5,21 @@ import { SOFTWARE } from 'zss/device/session'
 import { write } from 'zss/feature/writeui'
 import { waitfor } from 'zss/mapping/tick'
 
+/** Headroom applied to #synthrecord PCM before lamejs encode. */
+export const RECORD_EXPORT_TRIM_DB = -3
+
+/** Scale all channels in-place by a dB gain (e.g. -3). */
+export function trimaudiobufferdb(buffer: AudioBuffer, db: number): void {
+  const gain = Math.pow(10, db / 20)
+  const channels = buffer.numberOfChannels
+  for (let c = 0; c < channels; c++) {
+    const data = buffer.getChannelData(c)
+    for (let i = 0; i < data.length; i++) {
+      data[i] *= gain
+    }
+  }
+}
+
 export async function converttomp3(buffer: AudioBuffer): Promise<Uint8Array> {
   const player = registerreadplayer()
 

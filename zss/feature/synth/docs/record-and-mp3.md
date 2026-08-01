@@ -10,9 +10,10 @@ title: "Recording & MP3 export"
 2. Snapshots voice/FX state via `wasmreplaystate.ts`
 3. Boots an isolated Daisy engine on `OfflineAudioContext`
 4. Replays ticks with offline render hooks for sample-accurate SAB updates
-5. Renders via `startRendering()` (faster than real time; live synth unaffected)
-6. Converts rendered `AudioBuffer` to MP3 via `converttomp3()`
-7. Triggers download
+5. Renders via `startRendering()` (faster than real time). Offline and live engines each own SAB channel buffers (`sabpush` / `sabseq` are scoped per `SabEngine`), so render pushes do not drive the live worklet. Tape logs `rendering audio N%` every 5% via the offline tick hook
+6. Applies **-3 dB** export headroom (`RECORD_EXPORT_TRIM_DB` / `trimaudiobufferdb`) before lamejs
+7. Converts rendered `AudioBuffer` to MP3 via `converttomp3()`
+8. Triggers download
 
 If `OfflineAudioContext` or offline worklet boot fails, `#synthrecord` surfaces an error (no real-time fallback).
 

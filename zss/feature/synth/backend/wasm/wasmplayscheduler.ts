@@ -7,10 +7,24 @@ type SCHEDULED_ITEM = {
   run: () => void
 }
 
-const OFFLINE_RENDER_QUANTUM = 128
+/** OfflineAudioContext suspend quantum (frames). Shared with note gate floor. */
+export const OFFLINE_RENDER_QUANTUM = 128
+
+export function offlinerenderquantumsec(samplerate: number): number {
+  return OFFLINE_RENDER_QUANTUM / Math.max(1, samplerate)
+}
+
+/** Ensure note-off is at least one render quantum after note-on (offline). */
+export function offlinegateendwhen(
+  when: number,
+  endwhen: number,
+  samplerate: number,
+): number {
+  return Math.max(endwhen, when + offlinerenderquantumsec(samplerate))
+}
 
 function offlinesuspendtime(ctx: OfflineAudioContext, when: number): number {
-  const quantum = OFFLINE_RENDER_QUANTUM / ctx.sampleRate
+  const quantum = offlinerenderquantumsec(ctx.sampleRate)
   return Math.floor(when / quantum) * quantum
 }
 

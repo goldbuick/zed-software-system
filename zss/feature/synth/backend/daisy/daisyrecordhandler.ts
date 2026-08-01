@@ -1,9 +1,13 @@
-import { apierror } from 'zss/device/api'
+import { apierror, workstatus } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import type { SabEngine } from 'zss/feature/synth/backend/shared/sabengine'
 import type { WASM_REPLAY_STATE } from 'zss/feature/synth/backend/wasm/wasmreplaystate'
-import { converttomp3 } from 'zss/feature/synth/mp3'
+import {
+  RECORD_EXPORT_TRIM_DB,
+  converttomp3,
+  trimaudiobufferdb,
+} from 'zss/feature/synth/mp3'
 import type { SYNTH_NOTE_ENTRY } from 'zss/feature/synth/playnotation'
 import type { RECORDING_STATE } from 'zss/feature/synth/shared/recording'
 import { write } from 'zss/feature/writeui'
@@ -60,16 +64,26 @@ export function createdaisyrecordhandler(
     void (async () => {
       try {
         write(SOFTWARE, player, 'rendering audio')
+        workstatus(SOFTWARE, player, 'render 0%')
         deps.clearschedules()
 
+        let laststep = -1
         const audiobuffer = await renderdaisyrecord(
           replay,
           offlineticks,
-          maxtime,
           duration,
+          (percent) => {
+            const step = Math.floor(percent / 5) * 5
+            if (step !== laststep) {
+              laststep = step
+              write(SOFTWARE, player, `rendering audio ${step}%`)
+              workstatus(SOFTWARE, player, `render ${step}%`)
+            }
+          },
         )
 
         write(SOFTWARE, player, 'rendering complete, exporting mp3')
+        trimaudiobufferdb(audiobuffer, RECORD_EXPORT_TRIM_DB)
         const mp3data = await converttomp3(audiobuffer)
 
         const anchor = document.createElement('a')
