@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Plane } from 'three'
+import { RUNTIME } from 'zss/config'
 import { CHAR_HEIGHT, CHAR_WIDTH } from 'zss/gadget/data/types'
 import {
   createTilemapBufferGeometryAttributes,
@@ -123,15 +124,19 @@ export function Tiles({
     material.needsUpdate = true
   }, [material, clippingplanes])
 
+  // Bake DRAW_CHAR_* into verts; must rebuild when scale flips on resize.
+  const drawscale = RUNTIME.DRAW_CHAR_SCALE
+
   // create buffer geo attributes
   const { position, uv } = useMemo(
     () => createTilemapBufferGeometryAttributes(width, height),
-    [width, height],
+    // drawscale: createTilemapBufferGeometryAttributes reads RUNTIME.DRAW_CHAR_*
+    [width, height, drawscale],
   )
 
-  // key forces R3F to rebuild buffer attributes when cell dims change;
+  // key forces R3F to rebuild buffer attributes when cell dims / draw scale change;
   // swapping args alone can leave a stale GPU quad after resize.
-  const geokey = `${width}x${height}`
+  const geokey = `${width}x${height}@${drawscale}`
 
   return (
     <>
@@ -148,7 +153,7 @@ export function Tiles({
         char={char}
         color={color}
         bg={bg}
-        scale={1.15}
+        tilesversion={tilesversion}
         skipraycast={skipraycast}
         mediasource={mediasource}
       />

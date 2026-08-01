@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Color, Mesh, ShaderMaterial } from 'three'
 import { Box2, MathUtils, Vector2 } from 'three'
+import { RUNTIME } from 'zss/config'
 import {
   createDitherDataTexture,
   createDitherMaterial,
@@ -72,16 +73,20 @@ export function Dither({
     material.uniforms.color.value.set(color)
   }, [material, color])
 
+  // Bake DRAW_CHAR_* into verts; must rebuild when scale flips on resize.
+  const drawscale = RUNTIME.DRAW_CHAR_SCALE
+
   // create buffer geo attributes
   const { position, uv } = useMemo(
     () => createTilemapBufferGeometryAttributes(width, height),
-    [width, height],
+    // drawscale: createTilemapBufferGeometryAttributes reads RUNTIME.DRAW_CHAR_*
+    [width, height, drawscale],
   )
 
   return (
     <mesh raycast={raycast}>
       <primitive object={material} attach="material" />
-      <bufferGeometry key={`${width}x${height}`}>
+      <bufferGeometry key={`${width}x${height}@${drawscale}`}>
         <bufferAttribute attach="attributes-position" args={[position, 3]} />
         <bufferAttribute attach="attributes-uv" args={[uv, 2]} />
       </bufferGeometry>

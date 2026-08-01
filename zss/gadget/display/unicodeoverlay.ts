@@ -54,7 +54,9 @@ export function createunicodeoverlaymaterial(palette: Color[]) {
       varying float vBgIndex;
       void main() {
         float d = float(texture2D(atlas, vUv).r);
-        float alpha = smoothstep(0.2, 0.5, d / 255.0);
+        float t = d / 255.0;
+        // Hard edge biased slightly fat so strokes match chunky CP437 cells.
+        float alpha = step(0.5, t);
         if (int(vBgIndex) >= ${COLOR.ONCLEAR} && alpha < 0.04) {
           discard;
         }

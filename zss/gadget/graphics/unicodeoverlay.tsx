@@ -4,6 +4,7 @@ import {
   InstancedBufferAttribute,
   InstancedMesh,
 } from 'three'
+import type { Color } from 'three'
 import { RUNTIME } from 'zss/config'
 import { celltorendervalue } from 'zss/gadget/display/cellvalue'
 import { lookupglyphasync } from 'zss/gadget/display/unicodeatlas'
@@ -25,6 +26,11 @@ type UnicodeOverlayProps = {
   bg: number[]
   /** Scale factor for glyph size (default 1). Only affects overlay chars, not grid position. */
   scale?: number
+  /**
+   * Bumped when tile arrays are mutated in place (same as Tiles `tilesversion`).
+   * Without this, cells useMemo keeps a stale empty list until remount/resize.
+   */
+  tilesversion?: number
   skipraycast?: boolean
   mediasource?: TILES_MEDIA_SOURCE
 }
@@ -36,6 +42,7 @@ export function UnicodeOverlay({
   color,
   bg,
   scale = 1,
+  tilesversion = 0,
   skipraycast = false,
   mediasource = 'board',
 }: UnicodeOverlayProps) {
@@ -46,10 +53,14 @@ export function UnicodeOverlay({
   const baseh = RUNTIME.DRAW_CHAR_HEIGHT()
   const cellw = basew * scale
   const cellh = baseh * scale
-  /** Square size so glyph fits in rect; glyph is centered in cell */
-  const cellsize = Math.min(cellw, cellh)
-  /** Fraction of cell height where baseline sits (0..1 from top) for vertical alignment */
-  const baseline_fraction = 0.8
+  /** Square size so CJK/emoji keep correct aspect; 1.1 fills more of the 8x14 cell. */
+  const cellsize = Math.min(cellw, cellh) * 1.1
+
+  // Material on first paint (useState, not ref-after-layout) so InstancedMesh
+  // is never mounted without a material — that made glyphs invisible until resize.
+  const [material] = useState(() =>
+    createunicodeoverlaymaterial([] as Color[]),
+  )
 
   // instanced mesh data
   const [meshref, setmeshref] = useState<InstancedMesh | null>(null)
@@ -62,9 +73,6 @@ export function UnicodeOverlay({
   )
   const [bgindexattr, setbgindexattr] =
     useState<InstancedBufferAttribute | null>(null)
-  const materialref = useRef<ReturnType<
-    typeof createunicodeoverlaymaterial
-  > | null>(null)
 
   // cell data
   const maxcells = width * height
@@ -93,18 +101,17 @@ export function UnicodeOverlay({
     }
     recordunicodescan(char.length, list.length)
     return list
-  }, [char, color, bg])
+    // tilesversion: char/color/bg are often mutated in place; identity alone is stale
+  }, [char, color, bg, tilesversion])
 
   const { position, uv } = useMemo(() => getunicodeoverlayquadgeometry(), [])
 
   useLayoutEffect(() => {
-    if (!resolvedpalette) {
-      return
+    if (resolvedpalette) {
+      material.uniforms.palette.value = resolvedpalette
     }
-    materialref.current ??= createunicodeoverlaymaterial(resolvedpalette)
-    materialref.current.uniforms.palette.value = resolvedpalette
-    materialref.current.uniforms.cellsize.value.set(cellsize, cellsize)
-  }, [resolvedpalette, cellsize])
+    material.uniforms.cellsize.value.set(cellsize, cellsize)
+  }, [material, resolvedpalette, cellsize])
 
   const runidref = useRef(0)
 
@@ -127,7 +134,8 @@ export function UnicodeOverlay({
         return
       }
       let n = 0
-      const cellbaseline_y = baseh * baseline_fraction
+      const halfpadx = (basew - cellsize) * 0.5
+      const halfpady = (baseh - cellsize) * 0.5
       for (let i = 0; i < cells.length; i++) {
         const slot = slots[i]
         if (!slot) {
@@ -136,10 +144,8 @@ export function UnicodeOverlay({
         const cell = cells[i]
         const cx = indextox(cell.index, width)
         const cy = indextoy(cell.index, width)
-        const halfpadx = (basew - cellsize) * 0.5
         offsetarray[n * 2] = cx * basew + halfpadx
-        offsetarray[n * 2 + 1] =
-          cy * baseh + cellbaseline_y - slot.baseline_from_top * cellsize
+        offsetarray[n * 2 + 1] = cy * baseh + halfpady
         uvarray[n * 2] = slot.slotx
         uvarray[n * 2 + 1] = slot.sloty
         colorarray[n] = cell.colori
@@ -163,7 +169,6 @@ export function UnicodeOverlay({
     basew,
     baseh,
     cellsize,
-    baseline_fraction,
     meshref,
     offsetattr,
     uvattr,
@@ -213,9 +218,7 @@ export function UnicodeOverlay({
           usage={DynamicDrawUsage}
         />
       </bufferGeometry>
-      {materialref.current && (
-        <primitive object={materialref.current} attach="material" />
-      )}
+      <primitive object={material} attach="material" />
     </instancedMesh>
   )
 }
