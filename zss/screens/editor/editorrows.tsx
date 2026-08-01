@@ -135,11 +135,15 @@ export function EditorRows({
     const prefixcells = codeunitoffsettocellindex(prefix, prefix.length)
     writeplaintext(`${prefix}${text} `, context, false)
 
-    // base index = first cell of this line in the buffer (where writeplaintext started)
-    const index = leftedge + context.y * context.width
+    // Row base + line start X (start may be < 0 when panned); clip to visible cols.
+    const rowindex = context.y * context.width
+    const leftclip = context.active.leftedge
+    const rightclip = edge.right
     clippedapplycolortoindexes(
-      index,
-      edge.right,
+      rowindex,
+      leftedge,
+      leftclip,
+      rightclip,
       0,
       prefixcells - 1,
       ZSS_TYPE_LINE,
@@ -147,19 +151,13 @@ export function EditorRows({
       context,
     )
 
-    // apply helper ranges
-    // sidebar can be 20 characters wide
-    clippedapplybgtoindexes(index, edge.right, 20, 20, COLOR.DKCYAN, context)
-    // scroll can be 40 to 50 characters wide
-    clippedapplybgtoindexes(index, edge.right, 36, 36, COLOR.DKCYAN, context)
-    clippedapplybgtoindexes(index, edge.right, 46, 46, COLOR.DKCYAN, context)
-
     // apply token colors (line = code part; prefix = line number + space)
     if (!istxtpage) {
       applycodetokencolors(
-        xoffset,
-        index,
-        edge.right,
+        rowindex,
+        leftedge,
+        leftclip,
+        rightclip,
         row.tokens ?? [],
         context,
         text,
@@ -167,26 +165,21 @@ export function EditorRows({
       )
     }
 
-    // render selection (maybestart/maybeend are offsets within code; add prefixcells for line-relative columns; xoffset includes -4 layout shift so subtract 4 so selection aligns)
+    // selection: offsets within code, relative to line start (prefix + code col)
     if (hasselection && row.start <= ii2 && row.end >= ii1) {
-      const maybestart = Math.max(row.start, ii1) - row.start - xoffset - 4
-      const maybeend = Math.min(row.end, ii2) - row.start - xoffset - 4
-
-      const right = edge.width - 3
-      const start = Math.max(0, maybestart)
-      const end = Math.min(right, maybeend)
-
-      if (start <= right && end >= 0) {
-        clippedapplycolortoindexes(
-          index,
-          edge.right,
-          prefixcells + start,
-          prefixcells + end,
-          FG_SELECTED,
-          BG_SELECTED,
-          context,
-        )
-      }
+      const maybestart = Math.max(row.start, ii1) - row.start
+      const maybeend = Math.min(row.end, ii2) - row.start
+      clippedapplycolortoindexes(
+        rowindex,
+        leftedge,
+        leftclip,
+        rightclip,
+        prefixcells + maybestart,
+        prefixcells + maybeend,
+        FG_SELECTED,
+        BG_SELECTED,
+        context,
+      )
     }
 
     // apply error and info meta
@@ -197,8 +190,10 @@ export function EditorRows({
       const msg = `${maybeperror.message}`.replaceAll('\n', ' ')
       writeplaintext(msg, context, false)
       clippedapplycolortoindexes(
-        index,
-        edge.right,
+        rowindex,
+        leftedge,
+        leftclip,
+        rightclip,
         0,
         msg.length - 1,
         COLOR.WHITE,
@@ -209,16 +204,20 @@ export function EditorRows({
       const column = prefixcells + ((maybeerror.column ?? 1) - 1)
       const length = maybeerror.length ?? 1
       clippedapplybgtoindexes(
-        index,
-        edge.right,
+        rowindex,
+        leftedge,
+        leftclip,
+        rightclip,
         0,
         prefixcells - 1,
         ZSS_TYPE_ERROR_LINE,
         context,
       )
       clippedapplybgtoindexes(
-        index,
-        edge.right,
+        rowindex,
+        leftedge,
+        leftclip,
+        rightclip,
         column,
         column + length - 1,
         ZSS_TYPE_ERROR,

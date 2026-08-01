@@ -632,47 +632,62 @@ export function applybgtoindexes(
   context.changed()
 }
 
+/**
+ * Apply fg/bg on one screen row. `p1`/`p2` are columns relative to `startx`
+ * (line start; may be negative when horizontally scrolled). Only cells whose
+ * absolute X falls in `[leftclip, rightclip]` are painted.
+ */
 export function clippedapplycolortoindexes(
-  index: number,
-  rightedge: number,
-  p1: number, // relative to index
-  p2: number, // relative to index
+  rowindex: number,
+  startx: number,
+  leftclip: number,
+  rightclip: number,
+  p1: number,
+  p2: number,
   color: number,
   bg: number,
   context: WRITE_TEXT_CONTEXT,
 ) {
-  const left = Math.min(p1, p2)
-  const right = Math.max(p1, p2)
-  // out of bounds clipping
-  if (left > rightedge || right < 0) {
+  const absleft = startx + Math.min(p1, p2)
+  const absright = startx + Math.max(p1, p2)
+  const clippedleft = Math.max(leftclip, absleft)
+  const clippedright = Math.min(rightclip, absright)
+  if (clippedleft > clippedright) {
     return
   }
-  // clip left / right
-  const clippedp1 = Math.max(0, left)
-  const clippedp2 = Math.min(rightedge, right)
-  // apply it
-  applycolortoindexes(index + clippedp1, index + clippedp2, color, bg, context)
+  applycolortoindexes(
+    rowindex + clippedleft,
+    rowindex + clippedright,
+    color,
+    bg,
+    context,
+  )
 }
 
+/** Same clipping rules as {@link clippedapplycolortoindexes}, bg only. */
 export function clippedapplybgtoindexes(
-  index: number,
-  rightedge: number,
-  p1: number, // relative to index
-  p2: number, // relative to index
+  rowindex: number,
+  startx: number,
+  leftclip: number,
+  rightclip: number,
+  p1: number,
+  p2: number,
   color: number,
   context: WRITE_TEXT_CONTEXT,
 ) {
-  const left = Math.min(p1, p2)
-  const right = Math.max(p1, p2)
-  // out of bounds clipping
-  if (left > rightedge || right < 0) {
+  const absleft = startx + Math.min(p1, p2)
+  const absright = startx + Math.max(p1, p2)
+  const clippedleft = Math.max(leftclip, absleft)
+  const clippedright = Math.min(rightclip, absright)
+  if (clippedleft > clippedright) {
     return
   }
-  // clip left / right
-  const clippedp1 = Math.max(0, left)
-  const clippedp2 = Math.min(rightedge, right)
-  // apply it
-  applybgtoindexes(index + clippedp1, index + clippedp2, color, context)
+  applybgtoindexes(
+    rowindex + clippedleft,
+    rowindex + clippedright,
+    color,
+    context,
+  )
 }
 
 export function writeplaintext(

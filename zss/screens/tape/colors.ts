@@ -504,10 +504,8 @@ const DIRECTIVE_MARKER_RE =
  * from other inline `$` markers (color names, flag refs, etc.) in the editor view.
  */
 function applydirectiveoverlay(
-  yoffset: number,
-  rightedge: number,
+  paint: (p1: number, p2: number, color: number) => void,
   token: IToken,
-  context: WRITE_TEXT_CONTEXT,
   tocell: (codeunit: number) => number,
 ) {
   const image = token.image ?? ''
@@ -520,15 +518,7 @@ function applydirectiveoverlay(
   while ((match = DIRECTIVE_MARKER_RE.exec(image)) !== null) {
     const start = tocell(tokenstart + match.index)
     const end = tocell(tokenstart + match.index + match[0].length - 1)
-    clippedapplycolortoindexes(
-      yoffset,
-      rightedge,
-      start,
-      end,
-      ZSS_TYPE_DIRECTIVE,
-      context.active.bg,
-      context,
-    )
+    paint(start, end, ZSS_TYPE_DIRECTIVE)
   }
 }
 
@@ -536,11 +526,13 @@ function applydirectiveoverlay(
  * Applies syntax highlighting for a single editor row's tokens.
  * When line is provided, token startColumn/endColumn (code-unit) are mapped to cell (grapheme) indices.
  * prefixCells is added when the tokenized line is not the full buffer line (e.g. code-only tokens with line-number prefix).
+ * `p1`/`p2` are relative to `startx` (line start column; may be negative when panned).
  */
 export function applycodetokencolors(
-  _xoffset: number,
-  yoffset: number,
-  rightedge: number,
+  rowindex: number,
+  startx: number,
+  leftclip: number,
+  rightclip: number,
   tokens: IToken[],
   context: WRITE_TEXT_CONTEXT,
   line?: string,
@@ -550,6 +542,20 @@ export function applycodetokencolors(
     ispresent(line)
       ? prefixcells + codeunitoffsettocellindex(line, codeunit)
       : codeunit
+
+  const paint = (p1: number, p2: number, color: number) => {
+    clippedapplycolortoindexes(
+      rowindex,
+      startx,
+      leftclip,
+      rightclip,
+      p1,
+      p2,
+      color,
+      context.active.bg,
+      context,
+    )
+  }
 
   for (let t = 0; t < tokens.length; ++t) {
     const token = tokens[t]
@@ -562,52 +568,20 @@ export function applycodetokencolors(
 
     // #ticker <content>: "ticker" = dkgreen, content = green
     if (token.tokenTypeIdx === lexer.command_ticker.tokenTypeIdx) {
-      const nameLen = 6 // "ticker"
-      clippedapplycolortoindexes(
-        yoffset,
-        rightedge,
-        left,
-        left + nameLen - 1,
-        ZSS_TYPE_COMMAND,
-        context.active.bg,
-        context,
-      )
-      if (left + nameLen <= right) {
-        clippedapplycolortoindexes(
-          yoffset,
-          rightedge,
-          left + nameLen,
-          right,
-          ZSS_TYPE_TEXT,
-          context.active.bg,
-          context,
-        )
+      const namelen = 6 // "ticker"
+      paint(left, left + namelen - 1, ZSS_TYPE_COMMAND)
+      if (left + namelen <= right) {
+        paint(left + namelen, right, ZSS_TYPE_TEXT)
       }
       continue
     }
 
     // #toast <content>: "toast" = dkgreen, content = green
     if (token.tokenTypeIdx === lexer.command_toast.tokenTypeIdx) {
-      const nameLen = 5 // "toast"
-      clippedapplycolortoindexes(
-        yoffset,
-        rightedge,
-        left,
-        left + nameLen - 1,
-        ZSS_TYPE_COMMAND,
-        context.active.bg,
-        context,
-      )
-      if (left + nameLen <= right) {
-        clippedapplycolortoindexes(
-          yoffset,
-          rightedge,
-          left + nameLen,
-          right,
-          ZSS_TYPE_TEXT,
-          context.active.bg,
-          context,
-        )
+      const namelen = 5 // "toast"
+      paint(left, left + namelen - 1, ZSS_TYPE_COMMAND)
+      if (left + namelen <= right) {
+        paint(left + namelen, right, ZSS_TYPE_TEXT)
       }
       continue
     }
@@ -624,15 +598,7 @@ export function applycodetokencolors(
           case STAT_TYPE.CHARSET:
           case STAT_TYPE.PALETTE:
           case STAT_TYPE.TXT:
-            clippedapplycolortoindexes(
-              yoffset,
-              rightedge,
-              left,
-              right,
-              ZSS_TYPE_STATNAME,
-              context.active.bg,
-              context,
-            )
+            paint(left, right, ZSS_TYPE_STATNAME)
             break
           case STAT_TYPE.CONST:
           case STAT_TYPE.RANGE:
@@ -649,92 +615,36 @@ export function applycodetokencolors(
             const firstcells = codeunitoffsettocellindex(first, first.length)
             // stat token image is "@" + name + " " + value; name length in cells includes leading "@"
             const statnamecells = 1 + firstcells
-            clippedapplycolortoindexes(
-              yoffset,
-              rightedge,
-              left,
-              left + statnamecells - 1,
-              ZSS_TYPE_STATNAME,
-              context.active.bg,
-              context,
-            )
+            paint(left, left + statnamecells - 1, ZSS_TYPE_STATNAME)
             if (words.length > 1) {
               // value starts after stat name and the space
-              clippedapplycolortoindexes(
-                yoffset,
-                rightedge,
-                left + statnamecells + 1,
-                right,
-                ZSS_TYPE_NUMBER,
-                context.active.bg,
-                context,
-              )
+              paint(left + statnamecells + 1, right, ZSS_TYPE_NUMBER)
             }
             break
           }
           default:
-            clippedapplycolortoindexes(
-              yoffset,
-              rightedge,
-              left,
-              right,
-              ZSS_TYPE_ERROR_LINE,
-              context.active.bg,
-              context,
-            )
+            paint(left, right, ZSS_TYPE_ERROR_LINE)
             break
         }
         break
       }
       case ZSS_TYPE_SYMBOL:
-        clippedapplycolortoindexes(
-          yoffset,
-          rightedge,
-          left,
-          right,
-          maybecolor,
-          context.active.bg,
-          context,
-        )
+        paint(left, right, maybecolor)
         break
       case ZSS_TYPE_TEXT: {
         const wordcolor = zsswordcolor(token.image ?? '')
         if (isarray(wordcolor)) {
           for (let c = 0; c < wordcolor.length; ++c) {
-            clippedapplycolortoindexes(
-              yoffset,
-              rightedge,
-              left + c,
-              right + c,
-              wordcolor[c],
-              context.active.bg,
-              context,
-            )
+            paint(left + c, right + c, wordcolor[c])
           }
         } else {
-          clippedapplycolortoindexes(
-            yoffset,
-            rightedge,
-            left,
-            right,
-            wordcolor,
-            context.active.bg,
-            context,
-          )
+          paint(left, right, wordcolor)
         }
-        applydirectiveoverlay(yoffset, rightedge, token, context, tocell)
+        applydirectiveoverlay(paint, token, tocell)
         break
       }
       default:
-        clippedapplycolortoindexes(
-          yoffset,
-          rightedge,
-          left,
-          right,
-          maybecolor,
-          context.active.bg,
-          context,
-        )
+        paint(left, right, maybecolor)
         break
     }
   }
