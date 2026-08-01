@@ -3,12 +3,30 @@ import type { SabEngine } from 'zss/feature/synth/backend/shared/sabengine'
 import { bumpsabseq, registerseqchannel, resetsabseqregistry } from './sabseq'
 import { WASM_SAB_CHANNELS } from './wasmsabchannels'
 
-const registry = new Map<string, Float64Array>()
-const registered = new Set<string>()
+type ENGINE_SAB = {
+  registry: Map<string, Float64Array>
+  registered: Set<string>
+}
+
+const byengine = new WeakMap<SabEngine, ENGINE_SAB>()
+let lastengine: SabEngine | undefined
 let writehook: ((channelid: string, view: Float64Array) => void) | undefined
 
 function canusezerosab(): boolean {
   return typeof SharedArrayBuffer !== 'undefined'
+}
+
+function getenginesab(maxi: SabEngine): ENGINE_SAB {
+  let state = byengine.get(maxi)
+  if (!state) {
+    state = {
+      registry: new Map(),
+      registered: new Set(),
+    }
+    byengine.set(maxi, state)
+  }
+  lastengine = maxi
+  return state
 }
 
 function assignview(view: Float64Array, data: number[]) {
@@ -19,10 +37,14 @@ function assignview(view: Float64Array, data: number[]) {
 }
 
 function registerchannel(maxi: SabEngine, channelid: string) {
-  if (!maxi.audioWorkletNode?.port || registered.has(channelid)) {
+  if (!maxi.audioWorkletNode?.port) {
     return
   }
-  const view = registry.get(channelid)
+  const state = getenginesab(maxi)
+  if (state.registered.has(channelid)) {
+    return
+  }
+  const view = state.registry.get(channelid)
   if (!view) {
     return
   }
@@ -32,16 +54,21 @@ function registerchannel(maxi: SabEngine, channelid: string) {
     sab: view.buffer,
     length: view.length,
   })
-  registered.add(channelid)
+  state.registered.add(channelid)
 }
 
-function ensurechannel(channelid: string, length: number): Float64Array {
-  let view = registry.get(channelid)
+function ensurechannel(
+  maxi: SabEngine,
+  channelid: string,
+  length: number,
+): Float64Array {
+  const state = getenginesab(maxi)
+  let view = state.registry.get(channelid)
   if (!view || view.length < length) {
     const sab = new SharedArrayBuffer(length * Float64Array.BYTES_PER_ELEMENT)
     view = new Float64Array(sab, 0, length)
-    registry.set(channelid, view)
-    registered.delete(channelid)
+    state.registry.set(channelid, view)
+    state.registered.delete(channelid)
   }
   return view
 }
@@ -53,7 +80,7 @@ export function initwasmsabchannels(maxi: SabEngine) {
   }
   for (let i = 0; i < WASM_SAB_CHANNELS.length; i++) {
     const ch = WASM_SAB_CHANNELS[i]
-    ensurechannel(ch.id, ch.len)
+    ensurechannel(maxi, ch.id, ch.len)
     registerchannel(maxi, ch.id)
   }
   registerseqchannel(maxi)
@@ -76,26 +103,32 @@ export function pushwasmsabvalues(
     })
     return
   }
-  const view = ensurechannel(channelid, data.length)
+  const view = ensurechannel(maxi, channelid, data.length)
   assignview(view, data)
   registerchannel(maxi, channelid)
-  bumpsabseq(channelid)
+  bumpsabseq(maxi, channelid)
   writehook?.(channelid, view)
 }
 
-/** Read a channel snapshot (tests / debug). */
-export function wasmsabsnapshot(channelid: string): number[] {
-  const view = registry.get(channelid)
+/** Read a channel snapshot (tests / debug). Optional engine; defaults to last touched. */
+export function wasmsabsnapshot(
+  channelid: string,
+  maxi?: SabEngine,
+): number[] {
+  const engine = maxi ?? lastengine
+  if (!engine) {
+    return []
+  }
+  const view = getenginesab(engine).registry.get(channelid)
   if (!view) {
     return []
   }
   return Array.from(view)
 }
 
-/** Clear main-thread SAB registry (tests). */
+/** Clear main-thread SAB registry bookkeeping (tests). */
 export function resetwasmsabregistry() {
-  registry.clear()
-  registered.clear()
+  lastengine = undefined
   writehook = undefined
   resetsabseqregistry()
 }

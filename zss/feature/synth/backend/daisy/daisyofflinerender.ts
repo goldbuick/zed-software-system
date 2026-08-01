@@ -12,8 +12,8 @@ import { createdaisysynth } from './daisysynth'
 export async function renderdaisyrecord(
   replay: WASM_REPLAY_STATE,
   offlineticks: SYNTH_NOTE_ENTRY[],
-  maxtime: number,
   durationsec: number,
+  onprogress?: (percent: number) => void,
 ): Promise<AudioBuffer> {
   if (typeof OfflineAudioContext === 'undefined') {
     throw new Error('OfflineAudioContext not available')
@@ -33,7 +33,23 @@ export async function renderdaisyrecord(
 
   const synth = createdaisysynth(engine)
   synth.applyreplay(replay)
-  synth.synthreplay(offlineticks, maxtime)
+
+  let lastpercent = -1
+  const tickhook = onprogress
+    ? (time: number) => {
+        const percent = Math.min(
+          100,
+          Math.round((time / Math.max(durationsec, 1e-6)) * 100),
+        )
+        if (percent !== lastpercent) {
+          lastpercent = percent
+          onprogress(percent)
+        }
+      }
+    : undefined
+
+  // durationsec is the rebased render length (not live AudioContext.currentTime).
+  synth.synthreplay(offlineticks, durationsec, tickhook)
   synth.prepareofflinerender()
 
   const buffer = await offlinectx.startRendering()

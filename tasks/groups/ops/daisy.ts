@@ -289,21 +289,23 @@ async function rundaisycalibratesidechainparity(
     const { execSync } = await import('node:child_process')
     const fs = (await import('node:fs')).default
     const path = (await import('node:path')).default
-    const { fileURLToPath } = await import('node:url')
-    const { SIDECHAIN_PARITY_RESULT, evalsidechainparitygate } =
-      await import('ops/lib/daisy-parity/sidechainparity')
+    const { evalsidechainparitygate } = await import(
+      'ops/lib/daisy-parity/sidechainparity'
+    )
+    type SIDECHAIN_PARITY_RESULT =
+      import('ops/lib/daisy-parity/sidechainparity').SIDECHAIN_PARITY_RESULT
     const { RENDERS_FIXTURES_DIR } = await import('ops/lib/fixturepaths')
     const { SIDECHAIN_SCENARIO_ID } =
       await import('zss/feature/synth/backend/daisy/sidechainscenario.ts')
     /**
-     * Grid-search kScMix / kScMakeupDb for sidechain duck depth + bypass gate.
+     * Grid-search kScMix / kScMakeupDb for mild duck (~4-6 dB) + bypass gate.
+     * Searches low makeup first so idle play is not ~12x hot.
      *
      * Usage:
-     *   yarn sidechain-parity:calibrate
-     *   yarn sidechain-parity:calibrate --dry-run
+     *   yarn task run ops:daisy:sidechain:parity:calibrate
+     *   yarn task run ops:daisy:sidechain:parity:calibrate --dry-run
      */
 
-    const ROOT = ctx.root
     const PROJECT = ctx.root
     const CONFIG_PATH = path.join(
       PROJECT,
@@ -362,19 +364,21 @@ async function rundaisycalibratesidechainparity(
       return data.result
     }
 
-    function score(result: SIDECHAIN_PARITY_RESULT): number {
+    /** Lower is better. Passing cells prefer low makeup then ~5 dB duck. */
+    function score(result: SIDECHAIN_PARITY_RESULT, params: SCPARAMS): number {
       const gate = evalsidechainparitygate(result)
+      const duckerr = Math.abs(result.duckon.duckdepthdb - 5)
       if (gate.pass) {
-        return 0
+        return params.makeupdb * 0.05 + params.mix * 0.5 + duckerr * 0.1
       }
-      let err = 0
+      let err = 100
       if (result.duckon.duckdepthdb < 4) {
         err += (4 - result.duckon.duckdepthdb) * 2
       }
       if (result.duckoff.duckdepthdb > 2) {
         err += (result.duckoff.duckdepthdb - 2) * 3
       }
-      err += Math.abs(onduck - 6) * 0.25
+      err += duckerr * 0.25
       return err
     }
 
@@ -388,8 +392,11 @@ async function rundaisycalibratesidechainparity(
         err: 999,
       }
 
-      for (let makeupdb = 18; makeupdb <= 30.1; makeupdb += 2) {
-        for (let mix = 0.55; mix <= 1.001; mix += 0.05) {
+      // Gentle-first among values the duck-bg-stab A/B gate can still see:
+      // makeup below ~12 leaves post-stab peaks bg-dominated (A/B ~0).
+      // Prefer lower makeup, then lower mix, targeting ~4-6 dB duck.
+      for (let makeupdb = 12; makeupdb <= 24.1; makeupdb += 3) {
+        for (let mix = 0.3; mix <= 0.751; mix += 0.05) {
           const params = { mix, makeupdb }
           console.log(
             `\n▶ kScMix=${mix.toFixed(2)} kScMakeupDb=${makeupdb.toFixed(0)}`,
@@ -415,7 +422,7 @@ async function rundaisycalibratesidechainparity(
                 abduckdepthdb: 0,
               }
             : measure()
-          const err = score(result)
+          const err = score(result, params)
           const gate = evalsidechainparitygate(result)
           console.log(
             `  A/B=${result.abduckdepthdb.toFixed(1)} ON=${result.duckon.duckdepthdb.toFixed(1)} OFF leak=${result.duckoff.duckdepthdb.toFixed(1)} err=${err.toFixed(2)} ${gate.pass ? 'PASS' : ''}`,
@@ -424,11 +431,10 @@ async function rundaisycalibratesidechainparity(
             best = { params, result, err }
           }
           if (gate.pass) {
-            best = { params, result, err }
             break
           }
         }
-        if (best.err === 0) {
+        if (best.result && evalsidechainparitygate(best.result).pass) {
           break
         }
       }
@@ -1280,6 +1286,7 @@ async function rundaisyrundaisyregression(ctx: TaskContext): Promise<number> {
 async function rundaisyrunenvparity(ctx: TaskContext): Promise<number> {
   try {
     const {
+      fs,
       path,
       readFileSync,
       writeFileSync,
@@ -1288,6 +1295,7 @@ async function rundaisyrunenvparity(ctx: TaskContext): Promise<number> {
       startparityvite,
       stopparityvite,
       withscripttimeout,
+      PLAYWRIGHT_SCENARIO_TIMEOUT_MS,
       RENDERS_FIXTURES_DIR,
     } = await loaddaisyparityruntime()
     const { ENV_PARITY_SCENARIOS } =
@@ -2846,6 +2854,7 @@ async function rundaisyrunsidechainparitygates(
 async function rundaisyrunsidechainparity(ctx: TaskContext): Promise<number> {
   try {
     const {
+      fs,
       path,
       readFileSync,
       writeFileSync,
@@ -2854,17 +2863,19 @@ async function rundaisyrunsidechainparity(ctx: TaskContext): Promise<number> {
       startparityvite,
       stopparityvite,
       withscripttimeout,
+      PLAYWRIGHT_SCENARIO_TIMEOUT_MS,
       RENDERS_FIXTURES_DIR,
     } = await loaddaisyparityruntime()
     const {
       SIDECHAIN_PARITY_PATCH_ID,
-      SIDECHAIN_PARITY_RESULT,
       analyzeduckdepth,
       analyzeduckdepthpair,
       evalsidechainparitygate,
       formatsidechainparityreport,
       metricsfromsamples,
     } = await import('ops/lib/daisy-parity/sidechainparity')
+    type SIDECHAIN_PARITY_RESULT =
+      import('ops/lib/daisy-parity/sidechainparity').SIDECHAIN_PARITY_RESULT
     const { decodewav } = await import('tasks/lib/parity/parity-wav.ts')
     const { SIDECHAIN_SCENARIO_ID } =
       await import('zss/feature/synth/backend/daisy/sidechainscenario.ts')
@@ -3569,6 +3580,7 @@ async function rundaisyrunsynthenvparitygates(
 async function rundaisyrunsynthenvparity(ctx: TaskContext): Promise<number> {
   try {
     const {
+      fs,
       path,
       readFileSync,
       writeFileSync,
@@ -3577,6 +3589,7 @@ async function rundaisyrunsynthenvparity(ctx: TaskContext): Promise<number> {
       startparityvite,
       stopparityvite,
       withscripttimeout,
+      PLAYWRIGHT_SCENARIO_TIMEOUT_MS,
       RENDERS_FIXTURES_DIR,
     } = await loaddaisyparityruntime()
     const { evalsynthenvparitygate, formatsynthenvparityreport } =

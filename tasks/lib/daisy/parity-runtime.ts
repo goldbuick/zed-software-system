@@ -17,6 +17,7 @@ export type DaisyParityRuntime = {
   startparityvite: typeof startparityvite
   stopparityvite: typeof stopparityvite
   withscripttimeout: typeof withscripttimeout
+  PLAYWRIGHT_SCENARIO_TIMEOUT_MS: number
   RENDERS_FIXTURES_DIR: string
 }
 
@@ -29,7 +30,7 @@ export async function loaddaisyparityruntime(): Promise<DaisyParityRuntime> {
     { execSync },
     { launchparitybrowser, parityhosturl },
     { startparityvite, stopparityvite },
-    { withscripttimeout },
+    { withscripttimeout, PLAYWRIGHT_SCENARIO_TIMEOUT_MS },
     { RENDERS_FIXTURES_DIR },
   ] = await Promise.all([
     import('node:fs'),
@@ -53,6 +54,7 @@ export async function loaddaisyparityruntime(): Promise<DaisyParityRuntime> {
     startparityvite,
     stopparityvite,
     withscripttimeout,
+    PLAYWRIGHT_SCENARIO_TIMEOUT_MS,
     RENDERS_FIXTURES_DIR,
   }
 }

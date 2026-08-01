@@ -1,5 +1,10 @@
 import { isofflineaudiocontext } from 'zss/feature/synth/backend/wasm/audiocontextutil'
-import { createwasmplayscheduler } from 'zss/feature/synth/backend/wasm/wasmplayscheduler'
+import {
+  OFFLINE_RENDER_QUANTUM,
+  createwasmplayscheduler,
+  offlinegateendwhen,
+  offlinerenderquantumsec,
+} from 'zss/feature/synth/backend/wasm/wasmplayscheduler'
 
 describe('isofflineaudiocontext', () => {
   it('detects OfflineAudioContext by length property', () => {
@@ -101,5 +106,40 @@ describe('wasmplayscheduler offline', () => {
     scheduler.armofflinerender()
 
     expect(suspendmock).toHaveBeenCalledTimes(1)
+  })
+
+  it('offlinegateendwhen floors short notes to one render quantum', () => {
+    const sr = 48000
+    const quantum = offlinerenderquantumsec(sr)
+    expect(OFFLINE_RENDER_QUANTUM).toBe(128)
+    expect(quantum).toBeCloseTo(128 / 48000, 8)
+    const when = 0.1
+    const shortend = when + quantum * 0.25
+    expect(offlinegateendwhen(when, shortend, sr)).toBeCloseTo(
+      when + quantum,
+      8,
+    )
+    const longend = when + 0.5
+    expect(offlinegateendwhen(when, longend, sr)).toBe(longend)
+  })
+
+  it('short note-on/off land on different suspend quanta after gate floor', () => {
+    const suspendmock = jest.fn().mockReturnValue(Promise.resolve())
+    const offlinectx = {
+      currentTime: 0,
+      sampleRate: 48000,
+      suspend: suspendmock,
+      resume: jest.fn().mockReturnValue(Promise.resolve()),
+      length: 44100,
+    }
+    const scheduler = createwasmplayscheduler({
+      audioContext: offlinectx,
+    } as any)
+    const when = 0.20534
+    const endwhen = offlinegateendwhen(when, when + 0.0001, 48000)
+    scheduler.schedule(when, () => {})
+    scheduler.schedule(endwhen, () => {})
+    scheduler.armofflinerender()
+    expect(suspendmock).toHaveBeenCalledTimes(2)
   })
 })

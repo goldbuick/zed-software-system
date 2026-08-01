@@ -168,7 +168,7 @@ export function createwasmsynth(
   }
 
   function pushallstate() {
-    resetsabseq()
+    resetsabseq(maxi)
     pushplayvoicestate()
     pushcoldvoiceconfig()
     pushfxstate()
@@ -503,7 +503,7 @@ export function createwasmsynth(
   function resyncsabs() {
     initwasmvoicesab(maxi)
     fxsab = defaultwasmfxsab()
-    resetsabseq()
+    resetsabseq(maxi)
     pushfxstate()
     pushdrumstate()
   }

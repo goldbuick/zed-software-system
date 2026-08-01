@@ -28,7 +28,10 @@ import {
   initwasmoscconfigsab,
   pushwasmoscconfigsab,
 } from 'zss/feature/synth/backend/wasm/wasmoscconfigsab'
-import { createwasmplayscheduler } from 'zss/feature/synth/backend/wasm/wasmplayscheduler'
+import {
+  createwasmplayscheduler,
+  offlinegateendwhen,
+} from 'zss/feature/synth/backend/wasm/wasmplayscheduler'
 import {
   type WASM_REPLAY_STATE,
   clonewasmreplaystate,
@@ -190,7 +193,7 @@ export function createdaisysynth(
   }
 
   function pushallstate() {
-    resetsabseq()
+    resetsabseq(maxi)
     pushplayvoicestate()
     pushcoldvoiceconfig()
     pushfxstate()
@@ -386,7 +389,15 @@ export function createdaisysynth(
     if (chan < 0 || chan >= WASM_VOICE_COUNT) {
       return
     }
-    const endwhen = when + durationsec
+    let endwhen = when + durationsec
+    // Offline suspend merges same-quantum on+off into zero gated samples.
+    if (isofflineaudiocontext(maxi.audioContext)) {
+      endwhen = offlinegateendwhen(
+        when,
+        endwhen,
+        maxi.audioContext.sampleRate,
+      )
+    }
     const freq = notetofrequency(pitch)
     const base = chan * WASM_VOICE_STRIDE
     const detune =
@@ -540,7 +551,7 @@ export function createdaisysynth(
   function resyncsabs() {
     initdaisyvoicesab(maxi)
     fxsab = defaultwasmfxsab()
-    resetsabseq()
+    resetsabseq(maxi)
     pushfxstate()
     pushdrumstate()
   }
