@@ -13,7 +13,7 @@ import {
 import { ARG_TYPE, COLOR, NAME } from 'zss/words/types'
 
 import { type AUTO_COMPLETE_SUGGESTION, resolveargitems } from './argcomplete'
-import { type ZSS_WORD_LIST_KEY, zsswordcolor } from './colors'
+import { type ZSS_WORD_LIST_KEY } from './colors'
 import { EDITOR_CODE_ROW } from './common'
 import type { EDITOR_COMPLETE_CONTEXT } from './editorcomplete'
 import { builtingstatnamesforcodepagetype } from './statcompletenames'
@@ -174,6 +174,42 @@ function tagrecordkeys(
   return Object.keys(rec).map((word) => ({ word, category }))
 }
 
+/** Book codepage names from gadget word lists (terminal `@` complete). */
+function codepagecompletenames(
+  words: GADGET_ZSS_WORDS,
+): AUTO_COMPLETE_SUGGESTION[] {
+  const lists: { key: keyof GADGET_ZSS_WORDS; category: string }[] = [
+    { key: 'objects', category: 'objects' },
+    { key: 'terrains', category: 'terrains' },
+    { key: 'boards', category: 'boards' },
+    { key: 'palettes', category: 'palettes' },
+    { key: 'charsets', category: 'charsets' },
+    { key: 'loaders', category: 'loaders' },
+  ]
+  const seen = new Set<string>()
+  const out: AUTO_COMPLETE_SUGGESTION[] = []
+  for (let i = 0; i < lists.length; ++i) {
+    const { key, category } = lists[i]
+    const list = words[key]
+    if (!isarray(list)) {
+      continue
+    }
+    for (let j = 0; j < list.length; ++j) {
+      const word = list[j]
+      if (typeof word !== 'string') {
+        continue
+      }
+      const lower = word.toLowerCase()
+      if (seen.has(lower)) {
+        continue
+      }
+      seen.add(lower)
+      out.push({ word, category })
+    }
+  }
+  return out
+}
+
 /** play/toast/ticker lexer tokens swallow args into one image; use the first word. */
 function isfreeformcommandtoken(token: {
   tokenTypeIdx?: number | undefined
@@ -222,6 +258,7 @@ function getautocompletefromtokens(
   words: GADGET_ZSS_WORDS,
   editorctx?: EDITOR_COMPLETE_CONTEXT,
   codepagetype?: string,
+  statcomplete: 'editor' | 'codepages' = 'editor',
 ): MAYBE<AUTO_COMPLETE> {
   const tokens = row.tokens
   if (!tokens?.length) {
@@ -330,6 +367,10 @@ function getautocompletefromtokens(
         if (cmdidx >= 0 && activetokenidx === cmdidx + 1) {
           prefix = tokens[cmdidx + 1].image ?? ''
           activecategory = 'commands'
+        } else if (cmdidx >= 0 && activetokenidx >= cmdidx + 2) {
+          // Command argument — leave category empty for default resolveargitems
+          prefix = NAME(token.image).toLowerCase()
+          activecategory = ''
         } else {
           prefix = NAME(token.image).toLowerCase()
           activecategory = wordcategorymap.get(prefix) ?? 'text'
@@ -392,6 +433,30 @@ function getautocompletefromtokens(
         endoflinehint = true
         const image = token.image ?? ''
         const stageinfo = resolvestatlinkstage(image, cursorinimage(token, col))
+
+        // Terminal: suggest book codepage names only (no editor type/field/stage path)
+        if (statcomplete === 'codepages') {
+          const statprefix = stageinfo.prefix || stageinfo.name
+          const items = codepagecompletenames(words)
+          const suggestions =
+            statprefix.length < 1
+              ? items.slice(0, MAX_SUGGESTIONS)
+              : filtersuggestions(statprefix, items)
+          endoflineargs = statprefix
+            ? [hintfromrom('stats', statprefix)]
+            : [hintfromrom('stats')]
+          return {
+            suggestions,
+            prefix: statprefix,
+            wordcol,
+            wordstart: row.start + wordcol + stageinfo.wordstartinimage,
+            endoflinehint,
+            endoflineargs,
+            maxsuggestionwordlen: maxsuggestionwordlength(suggestions),
+            hintcommandname: '',
+          }
+        }
+
         const firstline = row.start === 0
         const kinditems = tagwords(stageinfo.kindwords, 'stats')
 
@@ -418,7 +483,9 @@ function getautocompletefromtokens(
           const suggestions = filterkindsuggestions(stageinfo.prefix, kinditems)
           endoflineargs = stageinfo.canonical
             ? [hintfromrom('stats', stageinfo.canonical)]
-            : [hintfromrom('stats')]
+            : stageinfo.name
+              ? [hintfromrom('stats', stageinfo.name)]
+              : [hintfromrom('stats')]
           return {
             suggestions,
             prefix: stageinfo.prefix,
@@ -666,6 +733,7 @@ export function getautocomplete(
   words: GADGET_ZSS_WORDS,
   editorctx?: EDITOR_COMPLETE_CONTEXT,
   codepagetype?: string,
+  statcomplete: 'editor' | 'codepages' = 'editor',
 ): AUTO_COMPLETE {
   if (!ispresent(row)) {
     return EMPTY_AUTOCOMPLETE
@@ -677,38 +745,30 @@ export function getautocomplete(
       words,
       editorctx,
       codepagetype,
+      statcomplete,
     ) ?? EMPTY_AUTOCOMPLETE
   )
 }
 
 const AC_BG = COLOR.DKBLUE
-const AC_FG = COLOR.WHITE
+const AC_FG = COLOR.YELLOW
 const AC_SEL_BG = COLOR.BLACK
-const AC_SEL_FG = COLOR.WHITE
+const AC_SEL_FG = COLOR.YELLOW
 const AC_HINT_FG = COLOR.LTGRAY
 const AC_BORDER_HINT_FG = COLOR.GREEN
 export type AutocompleteEdge = ReturnType<typeof textformatreadedges>
 
 function applysuggestioncolors(
   bufindex: number,
-  textoffset: number,
   text: string,
-  word: string,
   fg: number,
   bg: number,
   context: WRITE_TEXT_CONTEXT,
-  wordlistcolors: Map<string, COLOR>,
 ) {
   applystrtoindex(bufindex, text, context)
   for (let c = 0; c < text.length; c++) {
-    const wordcolor = zsswordcolor(word.toLowerCase(), wordlistcolors)
-    if (!isarray(wordcolor)) {
-      const charoffset = textoffset + c
-      const ispadding = charoffset === 0 || charoffset > word.length
-      const color = ispadding ? fg : wordcolor
-      context.color[bufindex + c] = color
-      context.bg[bufindex + c] = bg
-    }
+    context.color[bufindex + c] = fg
+    context.bg[bufindex + c] = bg
   }
   context.changed()
 }
@@ -799,7 +859,6 @@ export function drawautocomplete(
   edge: AutocompleteEdge,
   context: WRITE_TEXT_CONTEXT,
   words: GADGET_ZSS_WORDS,
-  wordlistcolors: Map<string, COLOR>,
   drawabove?: boolean,
   omitselectedhint?: boolean,
 ) {
@@ -858,13 +917,10 @@ export function drawautocomplete(
     const bufindex = rowstart + y * context.width
     applysuggestioncolors(
       bufindex,
-      textoffset,
       text,
-      autocomplete.suggestions[i].word,
       selected ? AC_SEL_FG : AC_FG,
       bg,
       context,
-      wordlistcolors,
     )
 
     if (selected && !omitselectedhint) {

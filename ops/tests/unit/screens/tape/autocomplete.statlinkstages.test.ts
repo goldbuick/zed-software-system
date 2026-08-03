@@ -96,6 +96,15 @@ describe('resolvestatlinkstage', () => {
     const atnm = image.indexOf('nm') + 2
     expect(resolvestatlinkstage(image, atnm).canonical).toBe('number')
   })
+
+  it('treats @char 2 value as args, not type', () => {
+    const image = '@char 2'
+    const onvalue = image.indexOf('2')
+    const info = resolvestatlinkstage(image, onvalue + 1)
+    expect(info.stage).toBe('args')
+    expect(info.name).toBe('char')
+    expect(info.canonical).toBe('')
+  })
 })
 
 describe('getautocomplete stage-aware stat/hyperlink hints', () => {
@@ -111,6 +120,9 @@ hint: "Element parameter 1"
 ---`,
         'editor:stats:cycle': `---
 hint: "How often the object runs"
+---`,
+        'editor:stats:char': `---
+hint: "Display character code"
 ---`,
         'editor:stats:number': `---
 hint: "read number input into given stat/flag"
@@ -148,7 +160,8 @@ hint: "copies given content into the clipboard"
     expect(wordsuggested).toEqual(
       expect.arrayContaining(['number', 'range', 'copyit']),
     )
-    expect(romreadmock).toHaveBeenCalledWith('editor:stats')
+    // Empty type slot still keeps the field name hint (not bare category)
+    expect(romreadmock).toHaveBeenCalledWith('editor:stats:p1')
   })
 
   it('filters kind aliases by prefix nm', () => {
@@ -183,6 +196,15 @@ hint: "copies given content into the clipboard"
     const ac = getautocomplete(row, row.start + 1, words)
     expect(ac.endoflineargs).toEqual(['How often the object runs'])
     expect(romreadmock).toHaveBeenCalledWith('editor:stats:cycle')
+  })
+
+  it('keeps char field hint when cursor is on @char 2 value', () => {
+    const row = rowforcode('@char 2', 20)
+    const cursor = row.start + row.code.indexOf('2')
+    const ac = getautocomplete(row, cursor, words, undefined, 'object')
+    expect(ac.endoflineargs).toEqual(['Display character code'])
+    expect(romreadmock).toHaveBeenCalledWith('editor:stats:char')
+    expect(romreadmock).not.toHaveBeenCalledWith('editor:stats')
   })
 
   it('shows hyperlink:range on !gonk range', () => {

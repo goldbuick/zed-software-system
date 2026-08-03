@@ -5,6 +5,7 @@ import {
   useState,
 } from 'react'
 import { registerterminalopen } from 'zss/device/api'
+import { finisheditorclose } from 'zss/device/register/handlers/editor'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import {
@@ -66,33 +67,10 @@ function readtapegeom(
   return { top, height, cols, rows, layout, terminalmode }
 }
 
-export function TapeComponent() {
-  const screensize = useScreenSize()
-  const [layout, terminalmode, terminalopen, editoropen] = useTape(
-    useShallow((state) => [
-      state.layout,
-      state.terminalmode,
-      state.terminal.open,
-      state.editor.open,
-    ]),
-  )
-  const hasboard = useGadgetClient(
-    (state) => (state.gadget.layers?.length ?? 0) > 0,
-  )
-  const effectivelayout = hasboard ? layout : TAPE_DISPLAY.FULL
-
-  const wantopen = terminalmode === 'quick' || terminalopen || editoropen
-
+function useTapePanelSlide(wantopen: boolean, livegeom: HeldTapeGeom) {
   const [panelactive, setpanelactive] = useState(false)
   const [shouldclose, setshouldclose] = useState(false)
   const [held, setheld] = useState<HeldTapeGeom | null>(null)
-
-  const livegeom = readtapegeom(
-    effectivelayout,
-    screensize.cols,
-    screensize.rows,
-    terminalmode,
-  )
 
   useEffect(() => {
     if (wantopen) {
@@ -117,18 +95,43 @@ export function TapeComponent() {
     panelactive,
   ])
 
-  const geom = held ?? livegeom
-  const frombottom = geom.layout === TAPE_DISPLAY.BOTTOM
+  return {
+    panelactive,
+    shouldclose,
+    geom: held ?? livegeom,
+    onclosed() {
+      setpanelactive(false)
+      setshouldclose(false)
+      setheld(null)
+    },
+  }
+}
 
-  // bail on odd states
-  if (screensize.cols < 10 || screensize.rows < 10) {
+type TapeSlidePanelProps = {
+  slide: ReturnType<typeof useTapePanelSlide>
+  showeditor: boolean
+  focused: boolean
+  marginx: number
+  marginy: number
+  z: number
+  onclosed?: () => void
+}
+
+function TapeSlidePanel({
+  slide,
+  showeditor,
+  focused,
+  marginx,
+  marginy,
+  z,
+  onclosed,
+}: TapeSlidePanelProps) {
+  if (!slide.panelactive) {
     return null
   }
-
-  const player = registerreadplayer()
-  const showhotkeys = !panelactive
-
-  const tapebody = (
+  const { geom, shouldclose } = slide
+  const frombottom = geom.layout === TAPE_DISPLAY.BOTTOM
+  const body = (
     <>
       <ShadeBoxDither
         width={geom.cols}
@@ -139,50 +142,110 @@ export function TapeComponent() {
         bottom={geom.top + geom.height - 1}
         alpha={geom.terminalmode === 'quick' ? 0.666 : 0.333}
       />
-      {shouldclose ? (
-        <TapeLayout
-          terminalmode={geom.terminalmode}
-          top={geom.top}
-          width={geom.cols}
-          height={geom.height}
-        />
-      ) : (
-        <UserFocus blockhotkeys>
-          <TapeLayout
-            terminalmode={geom.terminalmode}
-            top={geom.top}
-            width={geom.cols}
-            height={geom.height}
-          />
-        </UserFocus>
-      )}
+      <TapeLayout
+        terminalmode={geom.terminalmode}
+        top={geom.top}
+        width={geom.cols}
+        height={geom.height}
+        showeditor={showeditor}
+      />
     </>
   )
+  return (
+    <group
+      position={[
+        Math.round(marginx),
+        Math.round(marginy * 0.25),
+        z,
+      ]}
+    >
+      <PanelSlide
+        shouldclose={shouldclose}
+        frombottom={frombottom}
+        onclosed={() => {
+          slide.onclosed()
+          onclosed?.()
+        }}
+      >
+        {focused ? <UserFocus blockhotkeys>{body}</UserFocus> : body}
+      </PanelSlide>
+    </group>
+  )
+}
+
+export function TapeComponent() {
+  const screensize = useScreenSize()
+  const [layout, terminalmode, terminalopen, editoropen, editorclosing] =
+    useTape(
+      useShallow((state) => [
+        state.layout,
+        state.terminalmode,
+        state.terminal.open,
+        state.editor.open,
+        state.editor.closing,
+      ]),
+    )
+  const hasboard = useGadgetClient(
+    (state) => (state.gadget.layers?.length ?? 0) > 0,
+  )
+  const effectivelayout = hasboard ? layout : TAPE_DISPLAY.FULL
+
+  // Terminal and editor each own a PanelSlide so editor open/close animates
+  // even when the terminal panel stays open underneath.
+  const wantterminal = terminalmode === 'quick' || terminalopen
+  const wanteditor = editoropen && !editorclosing
+
+  const livegeom = readtapegeom(
+    effectivelayout,
+    screensize.cols,
+    screensize.rows,
+    terminalmode,
+  )
+
+  const terminalslide = useTapePanelSlide(wantterminal, livegeom)
+  const editorslide = useTapePanelSlide(wanteditor, livegeom)
+
+  // bail on odd states
+  if (screensize.cols < 10 || screensize.rows < 10) {
+    return null
+  }
+
+  const player = registerreadplayer()
+  const anypanel = terminalslide.panelactive || editorslide.panelactive
+  const showhotkeys = !anypanel
+  // Keep focus on the topmost open panel; never focus while that panel is exiting.
+  const editorfocused =
+    editorslide.panelactive && !editorslide.shouldclose
+  const terminalfocused =
+    !editorslide.panelactive &&
+    terminalslide.panelactive &&
+    !terminalslide.shouldclose
 
   const body = (
     <>
       <PerfMonitorTiles />
-      {panelactive ? (
-        <group
-          position={[
-            Math.round(screensize.marginx),
-            Math.round(screensize.marginy * 0.25),
-            0,
-          ]}
-        >
-          <PanelSlide
-            shouldclose={shouldclose}
-            frombottom={frombottom}
-            onclosed={() => {
-              setpanelactive(false)
-              setshouldclose(false)
-              setheld(null)
-            }}
-          >
-            {tapebody}
-          </PanelSlide>
-        </group>
-      ) : showhotkeys ? (
+      <TapeSlidePanel
+        slide={terminalslide}
+        showeditor={false}
+        focused={terminalfocused}
+        marginx={screensize.marginx}
+        marginy={screensize.marginy}
+        z={0}
+      />
+      <TapeSlidePanel
+        slide={editorslide}
+        showeditor
+        focused={editorfocused}
+        marginx={screensize.marginx}
+        marginy={screensize.marginy}
+        z={1}
+        onclosed={() => {
+          if (useTape.getState().editor.closing) {
+            finisheditorclose(SOFTWARE, player)
+          }
+        }}
+      />
+      {showhotkeys ? (
         <>
           <UserHotkey hotkey="Shift+?" althotkey="/">
             {() => registerterminalopen(SOFTWARE, player)}

@@ -184,10 +184,10 @@ export function EditorComponent() {
   const ycursor = findcursorinrows(tapeeditor.cursor, rows)
   const xcursor = tapeeditor.cursor - rows[ycursor].start
 
-  const zsswordcolormap = useMemo(
-    () => buildzsswordcolors(zsswords),
-    [zsswords],
-  )
+  // Refresh global word→color map used by EditorRows applycodetokencolors.
+  useMemo(() => {
+    buildzsswordcolors(zsswords)
+  }, [zsswords])
 
   const editorctx = useMemo(
     () => (istxtpage ? undefined : buildeditorcompletecontext(rows)),
@@ -253,7 +253,6 @@ $white$meta+h$green.OPEN HELPSCROLL $blue
         {...props}
         autocomplete={autocomplete}
         autocompleteactive={autocompleteactive}
-        zsswordcolormap={zsswordcolormap}
       />
     </>
   )

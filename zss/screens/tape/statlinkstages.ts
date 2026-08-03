@@ -194,7 +194,7 @@ export function resolvestatlinkstage(
         kindwords,
       }
     }
-    // Typing a kind (or unknown second word)
+    // Typing a completed kind word
     if (fullcanonical && prefix === NAME(span.word)) {
       return {
         stage: 'typed',
@@ -204,6 +204,28 @@ export function resolvestatlinkstage(
         prefix,
         wordstartinimage: span.start,
         kindwords,
+      }
+    }
+    // Const value (e.g. @char 2) — not a kind and not a kind prefix
+    if (!fullcanonical) {
+      const lower = prefix || NAME(span.word)
+      let iskindprefix = false
+      for (let k = 0; k < kindwords.length; ++k) {
+        if (NAME(kindwords[k]).startsWith(lower)) {
+          iskindprefix = true
+          break
+        }
+      }
+      if (!iskindprefix) {
+        return {
+          stage: 'args',
+          name: NAME(name),
+          kindword: '',
+          canonical: '',
+          prefix: '',
+          wordstartinimage: spans[0].start,
+          kindwords,
+        }
       }
     }
     return {

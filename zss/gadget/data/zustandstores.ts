@@ -161,6 +161,8 @@ export const useTape = create<{
   }
   editor: {
     open: boolean
+    /** True after close requested; PanelSlide exits then clears `open`. */
+    closing: boolean
     book: string
     path: string[]
     type: string
@@ -184,6 +186,7 @@ export const useTape = create<{
   },
   editor: {
     open: false,
+    closing: false,
     book: '',
     path: [],
     type: '',
@@ -206,6 +209,7 @@ export const useTape = create<{
       },
       editor: {
         open: false,
+        closing: false,
         book: '',
         path: [],
         type: '',

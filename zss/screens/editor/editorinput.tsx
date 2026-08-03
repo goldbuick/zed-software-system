@@ -43,7 +43,7 @@ import { commandromhint } from 'zss/screens/tape/commandarghints'
 import { EDITOR_CODE_ROW } from 'zss/screens/tape/common'
 import { ismac } from 'zss/words/system'
 import { textformatreadedges } from 'zss/words/textformat'
-import { COLOR, NAME } from 'zss/words/types'
+import { NAME } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
 import {
@@ -69,7 +69,6 @@ export type EditorInputProps = {
   codepage: MAYBE<SharedTextHandle>
   autocomplete: AUTO_COMPLETE
   autocompleteactive: boolean
-  zsswordcolormap: Map<string, COLOR>
 }
 
 export function EditorInput({
@@ -81,7 +80,6 @@ export function EditorInput({
   codepage,
   autocomplete,
   autocompleteactive,
-  zsswordcolormap,
 }: EditorInputProps) {
   const context = useWriteText()
   const tapeeditor = useEditor(
@@ -209,7 +207,6 @@ export function EditorInput({
       edge,
       context,
       zsswords,
-      zsswordcolormap,
       drawabove,
     )
   }

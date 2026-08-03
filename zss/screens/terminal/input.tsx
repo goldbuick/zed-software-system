@@ -41,6 +41,7 @@ import {
   EMPTY_AUTOCOMPLETE,
   drawautocomplete,
   drawcommandarghint,
+  drawhinttext,
   getautocomplete,
 } from 'zss/screens/tape/autocomplete'
 import {
@@ -56,6 +57,7 @@ import {
 } from 'zss/screens/tape/colors'
 import { commandromhint } from 'zss/screens/tape/commandarghints'
 import { setuplogitem } from 'zss/screens/tape/common'
+import { resolvesuggestionhint } from 'zss/screens/tape/suggestionhints'
 import {
   applycolortoindexes,
   textformatreadedges,
@@ -181,10 +183,10 @@ export function TerminalInput({
   const quickterminal = terminalmode === 'quick'
   const logsrowmaxwidth = context.width - 1
 
-  const zsswordcolormap = useMemo(
-    () => buildzsswordcolors(zsswords),
-    [zsswords],
-  )
+  // Refresh global word→color map used by applycodetokencolors on the input line.
+  useMemo(() => {
+    buildzsswordcolors(zsswords)
+  }, [zsswords])
 
   const activerowindex = useMemo(
     () =>
@@ -339,6 +341,9 @@ export function TerminalInput({
       },
       tapeterminal.xcursor,
       zsswords,
+      undefined,
+      undefined,
+      'codepages',
     )
   }, [
     inputstateactive,
@@ -431,24 +436,37 @@ export function TerminalInput({
     autocompleteindex >= 0 &&
     autocomplete.suggestions.length > 0
   const startx = edge.left
-  const starty = edge.top + edge.height - 1
-  const popupleftx = startx + autocomplete.wordcol - 1
+  const popupleftx = startx + autocomplete.wordcol
   const status = computeterminalstatushintrect(edge)
   const statusedge = { ...edge, right: status.right }
   if (autocompleteactive) {
+    // py = status.y so suggestion[0] sits on status.y - 1 (above the divider)
     drawautocomplete(
       autocomplete,
       autocompleteindex,
       popupleftx,
-      starty,
+      status.y,
       edge,
       context,
       zsswords,
-      zsswordcolormap,
+      true,
       true,
     )
-  }
-  if (autocomplete.endoflinehint && autocomplete.endoflineargs.length > 0) {
+    const idx = Math.min(
+      autocompleteindex,
+      autocomplete.suggestions.length - 1,
+    )
+    const selected = autocomplete.suggestions[idx]
+    if (selected) {
+      const hint = resolvesuggestionhint(selected, zsswords)
+      if (hint) {
+        drawhinttext(hint, status.x, status.y, status.right, context)
+      }
+    }
+  } else if (
+    autocomplete.endoflinehint &&
+    autocomplete.endoflineargs.length > 0
+  ) {
     drawcommandarghint(
       autocomplete.endoflineargs,
       status.x,

@@ -76,6 +76,7 @@ describe('runterminalbookmarkclibyid', () => {
       },
       editor: {
         open: false,
+        closing: false,
         book: '',
         path: [],
         type: '',
