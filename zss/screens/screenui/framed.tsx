@@ -28,7 +28,7 @@ import { UserInput } from 'zss/gadget/userinput.bridge'
 import { UserInputMods } from 'zss/gadget/userinputtypes'
 import { ispid } from 'zss/mapping/guid'
 import { ispresent } from 'zss/mapping/types'
-import { usegadgetinputblocked } from 'zss/screens/screenui/gadgetinputblocked'
+import { useGadgetInputBlocked } from 'zss/screens/screenui/gadgetinputblocked'
 import { NAME } from 'zss/words/types'
 
 import { ScreenUITickerText } from './tickertext'
@@ -57,7 +57,7 @@ type ScreenUIFramedProps = {
 export function ScreenUIFramed({ width, height }: ScreenUIFramedProps) {
   const player = registerreadplayer()
   const inspector = useTape((state) => state.inspector)
-  const inputblocked = usegadgetinputblocked()
+  const inputblocked = useGadgetInputBlocked()
 
   // handle graphics modes
   const graphics = useGadgetClient((state) => {

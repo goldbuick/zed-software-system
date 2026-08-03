@@ -10,7 +10,7 @@ import {
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { type TOUCHPADS, useDeviceData } from 'zss/gadget/device'
-import { usegadgetinputblocked } from 'zss/screens/screenui/gadgetinputblocked'
+import { useGadgetInputBlocked } from 'zss/screens/screenui/gadgetinputblocked'
 import { TouchUI } from 'zss/screens/touchui/component'
 import {
   ACTION_ROW_WIDTH,
@@ -49,7 +49,7 @@ type UserScreenProps = PropsWithChildren<any>
 export function UserScreen({ children }: UserScreenProps) {
   const { viewport } = useThree()
   const { width: viewwidth, height: viewheight } = viewport.getCurrentViewport()
-  const inputblocked = usegadgetinputblocked()
+  const inputblocked = useGadgetInputBlocked()
   const {
     saferows,
     islandscape,

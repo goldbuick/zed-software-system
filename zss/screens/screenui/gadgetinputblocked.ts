@@ -5,7 +5,7 @@ import { useScreenUILayoutContext } from 'zss/screens/screenui/layoutstate'
  * True when the editor or gadget scroll overlay is open and should steal
  * board / sidebar pointer and framed gadget input.
  */
-export function usegadgetinputblocked(): boolean {
+export function useGadgetInputBlocked(): boolean {
   const editoropen = useTape((state) => state.editor.open)
   const scrollopen = useGadgetClient(
     (state) => (state.gadget.scroll?.length ?? 0) > 0,

@@ -7,7 +7,7 @@ import {
 } from 'zss/gadget/device'
 import { INPUT_RATE } from 'zss/gadget/userinput'
 import { modpositive, snap } from 'zss/mapping/number'
-import { usegadgetinputblocked } from 'zss/screens/screenui/gadgetinputblocked'
+import { useGadgetInputBlocked } from 'zss/screens/screenui/gadgetinputblocked'
 import { useShallow } from 'zustand/react/shallow'
 
 import { handlestickdirsmerged } from './stickinputs'
@@ -126,7 +126,7 @@ function createmanager(
  * Joystick visuals/input via nipplejs; merge path stays stickinputs.
  */
 export function TouchPadOverlay() {
-  const inputblocked = usegadgetinputblocked()
+  const inputblocked = useGadgetInputBlocked()
   const { showtouchcontrols, touchpads, islandscape } = useDeviceData(
     useShallow((state) => ({
       showtouchcontrols: state.showtouchcontrols,
