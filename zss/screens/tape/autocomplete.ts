@@ -3,11 +3,13 @@ import * as lexer from 'zss/feature/lang/backend/typescript/lexer'
 import type { COMMAND_ARGS_SIGNATURE } from 'zss/firmware'
 import { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
+import { CODE_PAGE_TYPE_STAT_KEYWORDS, iscodepagetypestatkeyword } from 'zss/words/stats'
 import {
   WRITE_TEXT_CONTEXT,
   applycolortoindexes,
   applystrtoindex,
   textformatreadedges,
+  tokenizeandwritetextformat,
 } from 'zss/words/textformat'
 import { ARG_TYPE, COLOR, NAME } from 'zss/words/types'
 
@@ -185,6 +187,23 @@ function commandnamefromnametoken(token: {
   return NAME(image).toLowerCase()
 }
 
+function firstcontenttokenidx(
+  tokens: NonNullable<EDITOR_CODE_ROW['tokens']>,
+): number {
+  for (let i = 0; i < tokens.length; i++) {
+    const tok = tokens[i]
+    const idx = tok.tokenTypeIdx
+    if (
+      idx === lexer.newline.tokenTypeIdx ||
+      idx === lexer.whitespace.tokenTypeIdx
+    ) {
+      continue
+    }
+    return i
+  }
+  return -1
+}
+
 function getautocompletefromtokens(
   row: EDITOR_CODE_ROW,
   col: number,
@@ -225,12 +244,16 @@ function getautocompletefromtokens(
     const wordcol = (token.startColumn ?? 1) - 1
     const wordstart = row.start + wordcol
 
-    // detect command token to our left and first token after it (command name)
+    // detect command token under cursor or to our left, and first token after it (command name)
     let cmdidx = -1
-    for (let i = activetokenidx - 1; i >= 0; i--) {
-      if (tokens[i].tokenTypeIdx === lexer.command.tokenTypeIdx) {
-        cmdidx = i
-        break
+    if (token.tokenTypeIdx === lexer.command.tokenTypeIdx) {
+      cmdidx = activetokenidx
+    } else {
+      for (let i = activetokenidx - 1; i >= 0; i--) {
+        if (tokens[i].tokenTypeIdx === lexer.command.tokenTypeIdx) {
+          cmdidx = i
+          break
+        }
       }
     }
 
@@ -289,7 +312,6 @@ function getautocompletefromtokens(
         activecategory = 'commands'
         prefix = token.image ?? ''
         break
-      default:
       case lexer.text.tokenTypeIdx:
       case lexer.stringliteral.tokenTypeIdx:
       case lexer.numberliteral.tokenTypeIdx:
@@ -301,6 +323,25 @@ function getautocompletefromtokens(
           activecategory = wordcategorymap.get(prefix) ?? 'text'
         }
         break
+      default:
+        // Operators (/, ?, etc.): leave category empty so #command arg
+        // hints win; line-start shortgo/shorttry is handled below.
+        if (cmdidx < 0) {
+          prefix = NAME(token.image).toLowerCase()
+          activecategory = wordcategorymap.get(prefix) ?? ''
+        }
+        break
+    }
+
+    // Movement shorthand at line start (/go, ?try) — not when inside a #command
+    if (cmdidx < 0) {
+      const firstidx = firstcontenttokenidx(tokens)
+      const first = firstidx >= 0 ? tokens[firstidx] : undefined
+      if (first?.tokenTypeIdx === lexer.divide.tokenTypeIdx) {
+        activecategory = 'shortgo'
+      } else if (first?.tokenTypeIdx === lexer.query.tokenTypeIdx) {
+        activecategory = 'shorttry'
+      }
     }
 
     switch (activecategory) {
@@ -337,28 +378,88 @@ function getautocompletefromtokens(
       }
       case 'stat': {
         endoflinehint = true
-        endoflineargs = [hintfromrom('stat')]
         const statprefix = statnameprefixfromtoken(token.image ?? '')
+        // First-line type prefix (@board …) or bare @apple ≡ @object apple
+        let stathintkey = statprefix
+        if (!iscodepagetypestatkeyword(statprefix) && row.start === 0) {
+          stathintkey = 'object'
+        }
+        endoflineargs = [hintfromrom('stats', stathintkey)]
+        // Accept must replace the name after `@`, not the `@` itself
+        const statwordstart = row.start + wordcol + 1
+        const firstline = row.start === 0
+        const typeitems = firstline
+          ? tagwords([...CODE_PAGE_TYPE_STAT_KEYWORDS], 'stats')
+          : []
         const statnames = builtingstatnamesforcodepagetype(codepagetype)
-        const items = tagwords(statnames, 'stats')
-        const suggestions = filtersuggestions(statprefix, items)
+        const fielditems = tagwords(statnames, 'stats')
+        const items = [...typeitems, ...fielditems]
+        let suggestions: AUTO_COMPLETE_SUGGESTION[]
+        if (firstline && statprefix.length < 1) {
+          // Bare `@` on first line: offer type prefixes only
+          suggestions = typeitems.slice(0, MAX_SUGGESTIONS)
+        } else {
+          suggestions = filtersuggestions(statprefix, items)
+        }
         return {
           suggestions,
           prefix: statprefix,
           wordcol,
-          wordstart,
+          wordstart: statwordstart,
           endoflinehint,
           endoflineargs,
           maxsuggestionwordlen: maxsuggestionwordlength(suggestions),
           hintcommandname: '',
         }
       }
-      case 'label':
-      case 'comment':
-      case 'hyperlink':
-      case 'hyperlinktext': {
+      case 'text': {
+        endoflinehint = true
+        endoflineargs = [hintfromrom('text')]
+        return {
+          suggestions: [],
+          prefix,
+          wordcol,
+          wordstart,
+          endoflinehint,
+          endoflineargs,
+          maxsuggestionwordlen: 0,
+          hintcommandname: '',
+        }
+      }
+      case 'shortgo':
+      case 'shorttry': {
         endoflinehint = true
         endoflineargs = [hintfromrom(activecategory)]
+        return {
+          suggestions: [],
+          prefix: '',
+          wordcol,
+          wordstart,
+          endoflinehint,
+          endoflineargs,
+          maxsuggestionwordlen: 0,
+          hintcommandname: '',
+        }
+      }
+      case 'label':
+      case 'comment':
+      case 'hyperlink': {
+        endoflinehint = true
+        endoflineargs = [hintfromrom(activecategory)]
+        return {
+          suggestions: [],
+          prefix,
+          wordcol,
+          wordstart,
+          endoflinehint,
+          endoflineargs,
+          maxsuggestionwordlen: 0,
+          hintcommandname: '',
+        }
+      }
+      case 'hyperlinktext': {
+        endoflinehint = true
+        endoflineargs = [hintfromrom('hyperlink', 'text')]
         return {
           suggestions: [],
           prefix,
@@ -439,6 +540,7 @@ const AC_FG = COLOR.WHITE
 const AC_SEL_BG = COLOR.BLACK
 const AC_SEL_FG = COLOR.WHITE
 const AC_HINT_FG = COLOR.LTGRAY
+const AC_BORDER_HINT_FG = COLOR.GREEN
 export type AutocompleteEdge = ReturnType<typeof textformatreadedges>
 
 function applysuggestioncolors(
@@ -465,27 +567,42 @@ function applysuggestioncolors(
   context.changed()
 }
 
+/** Draw status-strip / beside-popup hint; honors `$COLOR` format codes. Returns cells written. */
 export function drawhinttext(
   hint: string,
   hintx: number,
   hinty: number,
   rightbound: number,
   context: WRITE_TEXT_CONTEXT,
-) {
+  fg: number = AC_BORDER_HINT_FG,
+): number {
   if (!hint || hintx > rightbound) {
-    return
+    return 0
   }
-  const available = rightbound - hintx + 1
-  const text = hint.length > available ? hint.substring(0, available) : hint
-  const bufindex = hintx + hinty * context.width
-  applystrtoindex(bufindex, text, context)
-  applycolortoindexes(
-    bufindex,
-    bufindex + text.length - 1,
-    AC_HINT_FG,
-    AC_SEL_BG,
-    context,
-  )
+  const prevx = context.x
+  const prevy = context.y
+  const prevwrap = context.disablewrap
+  const prevactive = { ...context.active }
+
+  context.x = hintx
+  context.y = hinty
+  context.disablewrap = true
+  context.active.color = fg
+  context.active.bg = AC_SEL_BG
+  context.active.leftedge = hintx
+  context.active.rightedge = rightbound
+  context.active.topedge = hinty
+  context.active.bottomedge = hinty
+
+  tokenizeandwritetextformat(hint, context, false)
+  const written = Math.max(0, context.x - hintx)
+
+  context.x = prevx
+  context.y = prevy
+  context.disablewrap = prevwrap
+  context.active = prevactive
+  context.changed()
+  return written
 }
 
 export type DrawCommandArgHintOptions = {
@@ -513,15 +630,18 @@ export function drawcommandarghint(
   let cursor = px
   const argsStr = argsliststring(withsig as ARG_TYPE[])
   if (argsStr) {
-    drawhinttext(argsStr, cursor, py, edge.right, context)
-    cursor += argsStr.length + 1
+    const written = drawhinttext(argsStr, cursor, py, edge.right, context)
+    if (written > 0) {
+      cursor += written + 1
+    }
   }
-  drawhinttext(hint, cursor, py, edge.right, context)
-  const hintlen = Math.min(hint.length, Math.max(0, edge.right - cursor + 1))
-  cursor += hintlen > 0 ? hintlen + 1 : 0
+  const hintwritten = drawhinttext(hint, cursor, py, edge.right, context)
+  if (hintwritten > 0) {
+    cursor += hintwritten + 1
+  }
   const rom = options?.romhint?.trim()
   if (rom && cursor <= edge.right) {
-    drawhinttext(` ${rom}`, cursor, py, edge.right, context)
+    drawhinttext(rom, cursor, py, edge.right, context)
   }
 }
 
@@ -605,7 +725,7 @@ export function drawautocomplete(
       const hint = resolvesuggestionhint(autocomplete.suggestions[i], words)
       if (hint) {
         const hintx = rowstart + text.length
-        drawhinttext(hint, hintx, y, edge.right, context)
+        drawhinttext(hint, hintx, y, edge.right, context, AC_HINT_FG)
       }
     }
   }

@@ -1,5 +1,26 @@
 import { NAME, STAT_TYPE } from './types'
 
+/** First-line @stat type prefixes (@board name, @object gem, …). */
+export const CODE_PAGE_TYPE_STAT_KEYWORDS = [
+  'loader',
+  'board',
+  'object',
+  'terrain',
+  'charset',
+  'palette',
+  'txt',
+] as const
+
+export function iscodepagetypestatkeyword(word: string): boolean {
+  const lower = word.toLowerCase()
+  for (let i = 0; i < CODE_PAGE_TYPE_STAT_KEYWORDS.length; ++i) {
+    if (CODE_PAGE_TYPE_STAT_KEYWORDS[i] === lower) {
+      return true
+    }
+  }
+  return false
+}
+
 function codetypestat(type: STAT_TYPE, words: string[], values: string[]) {
   if (values.length > 0) {
     return { type, values }
@@ -13,6 +34,7 @@ export function statformat(label: string, words: string[], first = true) {
     const type = NAME(maybetype ?? '')
     switch (type) {
       default:
+        // Bare @apple is shorthand for @object apple
         return {
           type: STAT_TYPE.OBJECT,
           values: words,

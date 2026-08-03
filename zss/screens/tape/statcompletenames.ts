@@ -1,5 +1,34 @@
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
 
+/** First-line @stat type prefixes (@board name, @object gem, …). */
+export const CODE_PAGE_TYPE_STAT_KEYWORDS = [
+  'loader',
+  'board',
+  'object',
+  'terrain',
+  'charset',
+  'palette',
+  'txt',
+] as const
+
+export function iscodepagetypestatkeyword(word: string): boolean {
+  const lower = word.toLowerCase()
+  for (let i = 0; i < CODE_PAGE_TYPE_STAT_KEYWORDS.length; ++i) {
+    if (CODE_PAGE_TYPE_STAT_KEYWORDS[i] === lower) {
+      return true
+    }
+  }
+  return false
+}
+
+function indexedstatnames(prefix: string, count: number): string[] {
+  const names: string[] = []
+  for (let i = 0; i < count; ++i) {
+    names.push(`${prefix}${i}`)
+  }
+  return names
+}
+
 /** Built-in @stat names per open codepage type (from memory/types.ts field keys). */
 export function builtingstatnamesforcodepagetype(
   codetype: string | undefined,
@@ -9,6 +38,7 @@ export function builtingstatnamesforcodepagetype(
     case `${CODE_PAGE_TYPE.BOARD}`:
       return [
         'isdark',
+        'notdark',
         'startx',
         'starty',
         'over',
@@ -24,6 +54,7 @@ export function builtingstatnamesforcodepagetype(
         'exiteast',
         'timelimit',
         'restartonzap',
+        'norestartonzap',
         'maxplayershots',
         'b1',
         'b2',
@@ -52,13 +83,24 @@ export function builtingstatnamesforcodepagetype(
         'displayname',
         'light',
         'lightdir',
-        'item',
+        'isitem',
+        'notitem',
         'group',
         'party',
         'player',
-        'pushable',
-        'collision',
-        'breakable',
+        'ispushable',
+        'notpushable',
+        'iswalk',
+        'iswalking',
+        'iswalkable',
+        'isswim',
+        'isswimming',
+        'isswimable',
+        'issolid',
+        'isbullet',
+        'isghost',
+        'isbreakable',
+        'notbreakable',
         'tickertext',
         'tickertime',
         'p1',
@@ -81,14 +123,14 @@ export function builtingstatnamesforcodepagetype(
       ]
     case 'charset':
     case `${CODE_PAGE_TYPE.CHARSET}`:
-      return ['width', 'height']
+      return indexedstatnames('char', 256)
     case 'palette':
     case `${CODE_PAGE_TYPE.PALETTE}`:
-      return ['width', 'height']
+      return indexedstatnames('color', 16)
     case 'loader':
     case `${CODE_PAGE_TYPE.LOADER}`:
-      return ['name']
+      return ['event', 'format']
     default:
-      return ['name', 'type']
+      return []
   }
 }

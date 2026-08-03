@@ -33,6 +33,7 @@ const words = {
     bgplay: [ARG_TYPE.MAYBE_NAME, '#play but for sound effects'],
     toast: [...toastsig],
     ticker: ['element ticker text'],
+    clear: [ARG_TYPE.NAME, 'flag name to clear'],
   },
   flags: [],
   statsboard: [],
@@ -99,5 +100,23 @@ describe('getautocomplete free-form play/toast/ticker hints', () => {
     expect(ac.hintcommandname).toBe('toast')
     expect(ac.endoflineargs).toEqual([...toastsig])
     expect(ac.suggestions).toEqual([])
+  })
+
+  it('shows endoflinehint when cursor is on #', () => {
+    const row = rowforcode('#clear key15')
+    const ac = getautocomplete(row, 0, words)
+    expect(ac.endoflinehint).toBe(true)
+    expect(ac.hintcommandname).toBe('clear')
+    expect(ac.endoflineargs.length).toBeGreaterThan(0)
+    expect(ac.endoflineargs).toEqual([ARG_TYPE.NAME, 'flag name to clear'])
+  })
+
+  it('still shows endoflinehint when cursor is on the command name', () => {
+    const row = rowforcode('#clear key15')
+    // Cursor on "c" of clear
+    const ac = getautocomplete(row, 1, words)
+    expect(ac.endoflinehint).toBe(true)
+    expect(ac.hintcommandname).toBe('clear')
+    expect(ac.endoflineargs).toEqual([ARG_TYPE.NAME, 'flag name to clear'])
   })
 })

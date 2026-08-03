@@ -1,3 +1,3 @@
 ---
-hint: "Item interaction type"
+hint: "Item flag on the element (set with @isitem / @notitem)"
 ---
