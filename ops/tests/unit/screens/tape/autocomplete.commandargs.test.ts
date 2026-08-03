@@ -24,6 +24,12 @@ import { ARG_TYPE } from 'zss/words/types'
 const givesig = [ARG_TYPE.NAME, ARG_TYPE.ANY, 'give the value'] as const
 const takesig = [ARG_TYPE.NAME, ARG_TYPE.ANY, 'take the value'] as const
 const putsig = [ARG_TYPE.DIR, ARG_TYPE.KIND, 'put kind at direction'] as const
+const setsig = [
+  ARG_TYPE.NAME,
+  'variable to value; multiple words joined with spaces',
+] as const
+const clearsig = [ARG_TYPE.NAME, 'variables (set to 0)'] as const
+const arraysig = [ARG_TYPE.NAME, 'array variable'] as const
 
 const words = {
   langcommands: {
@@ -33,7 +39,11 @@ const words = {
   },
   clicommands: {},
   loadercommands: {},
-  runtimecommands: {},
+  runtimecommands: {
+    set: [...setsig],
+    clear: [...clearsig],
+    array: [...arraysig],
+  },
   flags: ['ammo', 'gems', 'health'],
   statsboard: [],
   statshelper: [],
@@ -56,8 +66,11 @@ const words = {
   permissionconfigs: [],
   players: [],
   commandargmeta: {
-    give: { lists: ['flags'] },
-    take: { lists: ['flags'] },
+    give: { lists: ['flags'], editor: ['variables'] },
+    take: { lists: ['flags'], editor: ['variables'] },
+    set: { lists: ['flags'], editor: ['variables'] },
+    clear: { lists: ['flags'], editor: ['variables'] },
+    array: { lists: ['flags'], editor: ['variables'] },
   },
 } satisfies GADGET_ZSS_WORDS
 
@@ -84,6 +97,18 @@ describe('command arg autocomplete (not text category)', () => {
     expect(ac.hintcommandname).toBe('give')
   })
 
+  it('yields no #give name suggestions without commandargmeta.lists', () => {
+    const { commandargmeta: _meta, ...wordswithoutmeta } = words
+    const row = rowforcode('#give am')
+    const cursor = row.code.indexOf('am') + 2
+    const ac = getautocomplete(row, cursor, {
+      ...wordswithoutmeta,
+      commandargmeta: {},
+    })
+    expect(ac.suggestions).toEqual([])
+    expect(ac.endoflineargs).toEqual([...givesig])
+  })
+
   it('suggests flags for #take ge', () => {
     const row = rowforcode('#take ge')
     const cursor = row.code.indexOf('ge') + 2
@@ -101,5 +126,32 @@ describe('command arg autocomplete (not text category)', () => {
       expect.arrayContaining(['north']),
     )
     expect(ac.endoflineargs.join(' ')).not.toContain('adds text to scroll')
+  })
+
+  it('suggests flags for #set am in terminal (lists, no editorctx)', () => {
+    const row = rowforcode('#set am')
+    const cursor = row.code.indexOf('am') + 2
+    const ac = getautocomplete(row, cursor, words)
+    expect(ac.suggestions.map((s) => s.word)).toEqual(['ammo'])
+    expect(ac.endoflineargs).toEqual([...setsig])
+  })
+
+  it('suggests editor variables for #set when editorctx is present', () => {
+    const row = rowforcode('#set am')
+    const cursor = row.code.indexOf('am') + 2
+    const ac = getautocomplete(row, cursor, words, {
+      labels: [],
+      variables: ['ammo', 'camera'],
+    })
+    expect(ac.suggestions.map((s) => s.word)).toEqual(['ammo'])
+  })
+
+  it('suggests flags for #clear he and #array he', () => {
+    for (const code of ['#clear he', '#array he'] as const) {
+      const row = rowforcode(code)
+      const cursor = row.code.indexOf('he') + 2
+      const ac = getautocomplete(row, cursor, words)
+      expect(ac.suggestions.map((s) => s.word)).toEqual(['health'])
+    }
   })
 })

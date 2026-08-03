@@ -99,6 +99,10 @@ export function handlezsswords(vm: DEVICE, message: MESSAGE): void {
       }
     }
   }
+  // Langcommands are not firmware-registered; attach autocomplete meta here.
+  // Terminal uses lists; editor uses editorctx variables when present.
+  commandargmeta.give = { lists: ['flags'], editor: ['variables'] }
+  commandargmeta.take = { lists: ['flags'], editor: ['variables'] }
   const zsswords: GADGET_ZSS_WORDS = {
     langcommands,
     clicommands,
