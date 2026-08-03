@@ -21,6 +21,57 @@ export function iscodepagetypestatkeyword(word: string): boolean {
   return false
 }
 
+/**
+ * Second-word kinds for `@name type;label` / `!target type;label` (statformat non-first).
+ * Canonical names map to themselves; aliases map to the canonical ROM key.
+ */
+export const STAT_LINK_KIND_ALIASES: Record<string, string> = {
+  number: 'number',
+  nm: 'number',
+  range: 'range',
+  rn: 'range',
+  select: 'select',
+  sl: 'select',
+  text: 'text',
+  tx: 'text',
+  hotkey: 'hotkey',
+  hk: 'hotkey',
+  copyit: 'copyit',
+  openit: 'openit',
+  viewit: 'viewit',
+  runit: 'runit',
+  zssedit: 'zssedit',
+  charedit: 'charedit',
+  coloredit: 'coloredit',
+}
+
+/** Canonical + alias spellings for type-slot autocomplete. */
+export const STAT_LINK_KIND_WORDS: string[] = Object.keys(STAT_LINK_KIND_ALIASES)
+
+/** Canonical kind names (ROM keys) in stable order. */
+export const STAT_LINK_KIND_CANONICALS: string[] = [
+  'number',
+  'range',
+  'select',
+  'text',
+  'hotkey',
+  'copyit',
+  'openit',
+  'viewit',
+  'runit',
+  'zssedit',
+  'charedit',
+  'coloredit',
+]
+
+export function canonicalstatlinkkind(word: string): string {
+  return STAT_LINK_KIND_ALIASES[NAME(word)] ?? ''
+}
+
+export function isstatlinkkind(word: string): boolean {
+  return canonicalstatlinkkind(word).length > 0
+}
+
 function codetypestat(type: STAT_TYPE, words: string[], values: string[]) {
   if (values.length > 0) {
     return { type, values }

@@ -118,6 +118,10 @@ hint: "waits until the object can move in the given direction and moves"
           return `---
 hint: "will move the object in the given direction"
 ---`
+        case 'editor:hyperlink:label-message':
+          return `---
+hint: "Label for message"
+---`
         case 'editor:hyperlink:text':
           return `---
 hint: "read text input into given stat/flag"
@@ -193,13 +197,13 @@ hint: "adds hyperlink text to scroll"
     expect(romreadmock).not.toHaveBeenCalledWith('editor:text')
   })
 
-  it('shows hyperlink/text hint on hyperlink payload', () => {
+  it('shows Label for message on hyperlink label without type', () => {
     const row = rowforcode('!menu;go there')
     const semicolon = row.code.indexOf(';')
     const ac = getautocomplete(row, semicolon, words)
     expect(ac.endoflinehint).toBe(true)
-    expect(ac.endoflineargs).toEqual(['read text input into given stat/flag'])
-    expect(romreadmock).toHaveBeenCalledWith('editor:hyperlink:text')
+    expect(ac.endoflineargs).toEqual(['Label for message'])
+    expect(romreadmock).toHaveBeenCalledWith('editor:hyperlink:label-message')
   })
 
   it('shows char field hint on later-line @char', () => {

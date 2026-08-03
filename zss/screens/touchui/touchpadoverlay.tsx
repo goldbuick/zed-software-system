@@ -7,6 +7,7 @@ import {
 } from 'zss/gadget/device'
 import { INPUT_RATE } from 'zss/gadget/userinput'
 import { modpositive, snap } from 'zss/mapping/number'
+import { usegadgetinputblocked } from 'zss/screens/screenui/gadgetinputblocked'
 import { useShallow } from 'zustand/react/shallow'
 
 import { handlestickdirsmerged } from './stickinputs'
@@ -125,6 +126,7 @@ function createmanager(
  * Joystick visuals/input via nipplejs; merge path stays stickinputs.
  */
 export function TouchPadOverlay() {
+  const inputblocked = usegadgetinputblocked()
   const { showtouchcontrols, touchpads, islandscape } = useDeviceData(
     useShallow((state) => ({
       showtouchcontrols: state.showtouchcontrols,
@@ -152,7 +154,7 @@ export function TouchPadOverlay() {
   useEffect(() => {
     const moveel = moveref.current
     const shootel = shootref.current
-    if (!showtouchcontrols || !layout || !moveel || !shootel) {
+    if (!showtouchcontrols || inputblocked || !layout || !moveel || !shootel) {
       leftsnap.current = null
       rightsnap.current = null
       leftactive.current = false
@@ -232,9 +234,9 @@ export function TouchPadOverlay() {
     }
     // layout object identity changes; padlayout encodes geometry.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- padlayout is the geometry key
-  }, [showtouchcontrols, padlayout])
+  }, [showtouchcontrols, inputblocked, padlayout])
 
-  if (!showtouchcontrols || !layout) {
+  if (!showtouchcontrols || !layout || inputblocked) {
     return null
   }
 

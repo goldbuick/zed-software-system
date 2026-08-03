@@ -41,7 +41,6 @@ import {
   EMPTY_AUTOCOMPLETE,
   drawautocomplete,
   drawcommandarghint,
-  drawhinttext,
   getautocomplete,
 } from 'zss/screens/tape/autocomplete'
 import {
@@ -57,7 +56,6 @@ import {
 } from 'zss/screens/tape/colors'
 import { commandromhint } from 'zss/screens/tape/commandarghints'
 import { setuplogitem } from 'zss/screens/tape/common'
-import { resolvesuggestionhint } from 'zss/screens/tape/suggestionhints'
 import {
   applycolortoindexes,
   textformatreadedges,
@@ -448,20 +446,9 @@ export function TerminalInput({
       zsswords,
       zsswordcolormap,
       true,
-      true,
     )
-    const idx = Math.max(0, autocompleteindex)
-    const suggestion = autocomplete.suggestions[idx]
-    if (suggestion) {
-      const hint = resolvesuggestionhint(suggestion, zsswords)
-      if (hint) {
-        drawhinttext(hint, status.x, status.y, status.right, context)
-      }
-    }
-  } else if (
-    autocomplete.endoflinehint &&
-    autocomplete.endoflineargs.length > 0
-  ) {
+  }
+  if (autocomplete.endoflinehint && autocomplete.endoflineargs.length > 0) {
     drawcommandarghint(
       autocomplete.endoflineargs,
       status.x,

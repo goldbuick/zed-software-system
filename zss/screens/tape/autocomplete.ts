@@ -6,7 +6,6 @@ import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { CODE_PAGE_TYPE_STAT_KEYWORDS, iscodepagetypestatkeyword } from 'zss/words/stats'
 import {
   WRITE_TEXT_CONTEXT,
-  applycolortoindexes,
   applystrtoindex,
   textformatreadedges,
   tokenizeandwritetextformat,
@@ -18,6 +17,10 @@ import { type ZSS_WORD_LIST_KEY, zsswordcolor } from './colors'
 import { EDITOR_CODE_ROW } from './common'
 import type { EDITOR_COMPLETE_CONTEXT } from './editorcomplete'
 import { builtingstatnamesforcodepagetype } from './statcompletenames'
+import {
+  resolvestatlinkstage,
+  statlinklabelromword,
+} from './statlinkstages'
 import {
   argsliststring,
   hintfromrom,
@@ -141,6 +144,22 @@ function filtersuggestions(
   return matches
 }
 
+/** Type-slot kinds: empty prefix lists a page in kind-table order; otherwise filter. */
+function filterkindsuggestions(
+  prefix: string,
+  items: AUTO_COMPLETE_SUGGESTION[],
+): AUTO_COMPLETE_SUGGESTION[] {
+  if (prefix.length < 1) {
+    return items.slice(0, MAX_SUGGESTIONS)
+  }
+  return filtersuggestions(prefix, items)
+}
+
+function cursorinimage(token: { startColumn?: number }, col: number): number {
+  const start = (token.startColumn ?? 1) - 1
+  return Math.max(0, col - start)
+}
+
 function tagwords(
   words: string[],
   category: string,
@@ -153,13 +172,6 @@ function tagrecordkeys(
   category: string,
 ): AUTO_COMPLETE_SUGGESTION[] {
   return Object.keys(rec).map((word) => ({ word, category }))
-}
-
-function statnameprefixfromtoken(image: string): string {
-  const trimmed = image.startsWith('@') ? image.slice(1) : image
-  const space = trimmed.indexOf(' ')
-  const name = space >= 0 ? trimmed.slice(0, space) : trimmed
-  return NAME(name)
 }
 
 /** play/toast/ticker lexer tokens swallow args into one image; use the first word. */
@@ -378,16 +390,68 @@ function getautocompletefromtokens(
       }
       case 'stat': {
         endoflinehint = true
-        const statprefix = statnameprefixfromtoken(token.image ?? '')
-        // First-line type prefix (@board …) or bare @apple ≡ @object apple
-        let stathintkey = statprefix
-        if (!iscodepagetypestatkeyword(statprefix) && row.start === 0) {
+        const image = token.image ?? ''
+        const stageinfo = resolvestatlinkstage(image, cursorinimage(token, col))
+        const firstline = row.start === 0
+        const kinditems = tagwords(stageinfo.kindwords, 'stats')
+
+        if (stageinfo.stage === 'label') {
+          endoflineargs = [
+            hintfromrom('stats', statlinklabelromword(stageinfo.canonical)),
+          ]
+          return {
+            suggestions: [],
+            prefix: '',
+            wordcol,
+            wordstart: row.start + wordcol + stageinfo.wordstartinimage,
+            endoflinehint,
+            endoflineargs,
+            maxsuggestionwordlen: 0,
+            hintcommandname: '',
+          }
+        }
+
+        if (
+          stageinfo.stage === 'type' ||
+          (stageinfo.stage === 'typed' && stageinfo.prefix.length > 0)
+        ) {
+          const suggestions = filterkindsuggestions(stageinfo.prefix, kinditems)
+          endoflineargs = stageinfo.canonical
+            ? [hintfromrom('stats', stageinfo.canonical)]
+            : [hintfromrom('stats')]
+          return {
+            suggestions,
+            prefix: stageinfo.prefix,
+            wordcol: wordcol + stageinfo.wordstartinimage,
+            wordstart: row.start + wordcol + stageinfo.wordstartinimage,
+            endoflinehint,
+            endoflineargs,
+            maxsuggestionwordlen: maxsuggestionwordlength(suggestions),
+            hintcommandname: '',
+          }
+        }
+
+        if (stageinfo.stage === 'typed' || (stageinfo.stage === 'args' && stageinfo.canonical)) {
+          endoflineargs = [hintfromrom('stats', stageinfo.canonical)]
+          return {
+            suggestions: [],
+            prefix: '',
+            wordcol,
+            wordstart: row.start + wordcol + stageinfo.wordstartinimage,
+            endoflinehint,
+            endoflineargs,
+            maxsuggestionwordlen: 0,
+            hintcommandname: '',
+          }
+        }
+
+        // name or args without kind (e.g. @cycle 1)
+        const statprefix = stageinfo.prefix || stageinfo.name
+        let stathintkey = stageinfo.name
+        if (!iscodepagetypestatkeyword(stathintkey) && firstline) {
           stathintkey = 'object'
         }
         endoflineargs = [hintfromrom('stats', stathintkey)]
-        // Accept must replace the name after `@`, not the `@` itself
-        const statwordstart = row.start + wordcol + 1
-        const firstline = row.start === 0
         const typeitems = firstline
           ? tagwords([...CODE_PAGE_TYPE_STAT_KEYWORDS], 'stats')
           : []
@@ -396,7 +460,6 @@ function getautocompletefromtokens(
         const items = [...typeitems, ...fielditems]
         let suggestions: AUTO_COMPLETE_SUGGESTION[]
         if (firstline && statprefix.length < 1) {
-          // Bare `@` on first line: offer type prefixes only
           suggestions = typeitems.slice(0, MAX_SUGGESTIONS)
         } else {
           suggestions = filtersuggestions(statprefix, items)
@@ -405,7 +468,7 @@ function getautocompletefromtokens(
           suggestions,
           prefix: statprefix,
           wordcol,
-          wordstart: statwordstart,
+          wordstart: row.start + wordcol + stageinfo.wordstartinimage,
           endoflinehint,
           endoflineargs,
           maxsuggestionwordlen: maxsuggestionwordlength(suggestions),
@@ -442,8 +505,7 @@ function getautocompletefromtokens(
         }
       }
       case 'label':
-      case 'comment':
-      case 'hyperlink': {
+      case 'comment': {
         endoflinehint = true
         endoflineargs = [hintfromrom(activecategory)]
         return {
@@ -457,9 +519,93 @@ function getautocompletefromtokens(
           hintcommandname: '',
         }
       }
+      case 'hyperlink': {
+        endoflinehint = true
+        const image = token.image ?? ''
+        const stageinfo = resolvestatlinkstage(image, cursorinimage(token, col))
+        const kinditems = tagwords(stageinfo.kindwords, 'hyperlink')
+
+        if (stageinfo.stage === 'label') {
+          // Should not happen on hyperlink token (label is hyperlinktext)
+          endoflineargs = [
+            hintfromrom('hyperlink', statlinklabelromword(stageinfo.canonical)),
+          ]
+          return {
+            suggestions: [],
+            prefix: '',
+            wordcol,
+            wordstart,
+            endoflinehint,
+            endoflineargs,
+            maxsuggestionwordlen: 0,
+            hintcommandname: '',
+          }
+        }
+
+        if (
+          stageinfo.stage === 'type' ||
+          (stageinfo.stage === 'typed' && stageinfo.prefix.length > 0)
+        ) {
+          const suggestions = filterkindsuggestions(stageinfo.prefix, kinditems)
+          endoflineargs = stageinfo.canonical
+            ? [hintfromrom('hyperlink', stageinfo.canonical)]
+            : [hintfromrom('hyperlink')]
+          return {
+            suggestions,
+            prefix: stageinfo.prefix,
+            wordcol: wordcol + stageinfo.wordstartinimage,
+            wordstart: row.start + wordcol + stageinfo.wordstartinimage,
+            endoflinehint,
+            endoflineargs,
+            maxsuggestionwordlen: maxsuggestionwordlength(suggestions),
+            hintcommandname: '',
+          }
+        }
+
+        if (stageinfo.stage === 'typed' || (stageinfo.stage === 'args' && stageinfo.canonical)) {
+          endoflineargs = [hintfromrom('hyperlink', stageinfo.canonical)]
+          return {
+            suggestions: [],
+            prefix: '',
+            wordcol,
+            wordstart: row.start + wordcol + stageinfo.wordstartinimage,
+            endoflinehint,
+            endoflineargs,
+            maxsuggestionwordlen: 0,
+            hintcommandname: '',
+          }
+        }
+
+        // target / name stage
+        endoflineargs = [hintfromrom('hyperlink')]
+        return {
+          suggestions: [],
+          prefix: stageinfo.prefix,
+          wordcol,
+          wordstart: row.start + wordcol + stageinfo.wordstartinimage,
+          endoflinehint,
+          endoflineargs,
+          maxsuggestionwordlen: 0,
+          hintcommandname: '',
+        }
+      }
       case 'hyperlinktext': {
         endoflinehint = true
-        endoflineargs = [hintfromrom('hyperlink', 'text')]
+        // Kind lives on the preceding hyperlink token
+        let priorcanonical = ''
+        for (let i = activetokenidx - 1; i >= 0; --i) {
+          if (tokens[i].tokenTypeIdx === lexer.hyperlink.tokenTypeIdx) {
+            const prior = resolvestatlinkstage(
+              tokens[i].image ?? '',
+              (tokens[i].image ?? '').length,
+            )
+            priorcanonical = prior.canonical
+            break
+          }
+        }
+        endoflineargs = [
+          hintfromrom('hyperlink', statlinklabelromword(priorcanonical)),
+        ]
         return {
           suggestions: [],
           prefix,

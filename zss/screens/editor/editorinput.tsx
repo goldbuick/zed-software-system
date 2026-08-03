@@ -34,7 +34,6 @@ import {
   AUTO_COMPLETE,
   drawautocomplete,
   drawcommandarghint,
-  drawhinttext,
 } from 'zss/screens/tape/autocomplete'
 import {
   applyautocompletesuggestion,
@@ -42,7 +41,6 @@ import {
 } from 'zss/screens/tape/autocompleteui'
 import { commandromhint } from 'zss/screens/tape/commandarghints'
 import { EDITOR_CODE_ROW } from 'zss/screens/tape/common'
-import { resolvesuggestionhint } from 'zss/screens/tape/suggestionhints'
 import { ismac } from 'zss/words/system'
 import { textformatreadedges } from 'zss/words/textformat'
 import { COLOR, NAME } from 'zss/words/types'
@@ -213,20 +211,9 @@ export function EditorInput({
       zsswords,
       zsswordcolormap,
       drawabove,
-      true,
     )
-    const idx = Math.max(0, autocompleteindex)
-    const suggestion = autocomplete.suggestions[idx]
-    if (suggestion) {
-      const hint = resolvesuggestionhint(suggestion, zsswords)
-      if (hint) {
-        drawhinttext(hint, status.x, status.y, status.right, context)
-      }
-    }
-  } else if (
-    autocomplete.endoflinehint &&
-    autocomplete.endoflineargs.length > 0
-  ) {
+  }
+  if (autocomplete.endoflinehint && autocomplete.endoflineargs.length > 0) {
     drawcommandarghint(
       autocomplete.endoflineargs,
       status.x,

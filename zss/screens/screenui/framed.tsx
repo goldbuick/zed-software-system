@@ -28,6 +28,7 @@ import { UserInput } from 'zss/gadget/userinput.bridge'
 import { UserInputMods } from 'zss/gadget/userinputtypes'
 import { ispid } from 'zss/mapping/guid'
 import { ispresent } from 'zss/mapping/types'
+import { usegadgetinputblocked } from 'zss/screens/screenui/gadgetinputblocked'
 import { NAME } from 'zss/words/types'
 
 import { ScreenUITickerText } from './tickertext'
@@ -56,6 +57,7 @@ type ScreenUIFramedProps = {
 export function ScreenUIFramed({ width, height }: ScreenUIFramedProps) {
   const player = registerreadplayer()
   const inspector = useTape((state) => state.inspector)
+  const inputblocked = usegadgetinputblocked()
 
   // handle graphics modes
   const graphics = useGadgetClient((state) => {
@@ -74,56 +76,58 @@ export function ScreenUIFramed({ width, height }: ScreenUIFramedProps) {
 
   return (
     <>
-      <UserInput
-        MOVE_LEFT={(mods) => sendinput(player, INPUT.MOVE_LEFT, mods)}
-        MOVE_RIGHT={(mods) => sendinput(player, INPUT.MOVE_RIGHT, mods)}
-        MOVE_UP={(mods) => sendinput(player, INPUT.MOVE_UP, mods)}
-        MOVE_DOWN={(mods) => sendinput(player, INPUT.MOVE_DOWN, mods)}
-        OK_BUTTON={(mods) => sendinput(player, INPUT.OK_BUTTON, mods)}
-        CANCEL_BUTTON={(mods) => sendinput(player, INPUT.CANCEL_BUTTON, mods)}
-        MENU_BUTTON={(mods) => sendinput(player, INPUT.MENU_BUTTON, mods)}
-        keydown={(event) => {
-          const key = NAME(event.key)
-          const mods = modsfromevent(event)
-          const player = registerreadplayer()
-          switch (key) {
-            case 'c':
-              registerterminalquickopen(SOFTWARE, player, '')
-              break
-            case '@':
-              registerterminalopen(SOFTWARE, player, '@')
-              break
-            case '2':
-              if (!mods.ctrl) {
+      {!inputblocked && (
+        <UserInput
+          MOVE_LEFT={(mods) => sendinput(player, INPUT.MOVE_LEFT, mods)}
+          MOVE_RIGHT={(mods) => sendinput(player, INPUT.MOVE_RIGHT, mods)}
+          MOVE_UP={(mods) => sendinput(player, INPUT.MOVE_UP, mods)}
+          MOVE_DOWN={(mods) => sendinput(player, INPUT.MOVE_DOWN, mods)}
+          OK_BUTTON={(mods) => sendinput(player, INPUT.OK_BUTTON, mods)}
+          CANCEL_BUTTON={(mods) => sendinput(player, INPUT.CANCEL_BUTTON, mods)}
+          MENU_BUTTON={(mods) => sendinput(player, INPUT.MENU_BUTTON, mods)}
+          keydown={(event) => {
+            const key = NAME(event.key)
+            const mods = modsfromevent(event)
+            const player = registerreadplayer()
+            switch (key) {
+              case 'c':
+                registerterminalquickopen(SOFTWARE, player, '')
+                break
+              case '@':
                 registerterminalopen(SOFTWARE, player, '@')
-              }
-              break
-            case '#':
-              registerterminalopen(SOFTWARE, player, '#')
-              break
-            case '3':
-              if (!mods.ctrl) {
+                break
+              case '2':
+                if (!mods.ctrl) {
+                  registerterminalopen(SOFTWARE, player, '@')
+                }
+                break
+              case '#':
                 registerterminalopen(SOFTWARE, player, '#')
-              }
-              break
-            case 'p':
-              if (mods.ctrl) {
-                vmclirepeatlast(SOFTWARE, player)
-              }
-              break
-            case 'f':
-              if (mods.ctrl && inspector) {
-                vmfindany(SOFTWARE, player)
-              }
-              break
-            case 'b':
-              if (mods.ctrl) {
-                registerbookmarkscroll(SOFTWARE, player, false)
-              }
-              break
-          }
-        }}
-      />
+                break
+              case '3':
+                if (!mods.ctrl) {
+                  registerterminalopen(SOFTWARE, player, '#')
+                }
+                break
+              case 'p':
+                if (mods.ctrl) {
+                  vmclirepeatlast(SOFTWARE, player)
+                }
+                break
+              case 'f':
+                if (mods.ctrl && inspector) {
+                  vmfindany(SOFTWARE, player)
+                }
+                break
+              case 'b':
+                if (mods.ctrl) {
+                  registerbookmarkscroll(SOFTWARE, player, false)
+                }
+                break
+            }
+          }}
+        />
+      )}
       <MediaLayers />
       {graphics === 'flat' && <FlatGraphics width={width} height={height} />}
       {graphics === 'mode7' && <Mode7Graphics width={width} height={height} />}
