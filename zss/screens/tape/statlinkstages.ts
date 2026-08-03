@@ -32,7 +32,10 @@ type WordSpan = {
   end: number
 }
 
-function payloadandlabel(image: string): { payload: string; haslabel: boolean } {
+function payloadandlabel(image: string): {
+  payload: string
+  haslabel: boolean
+} {
   const semi = image.indexOf(';')
   if (semi < 0) {
     return { payload: image, haslabel: false }
@@ -40,7 +43,10 @@ function payloadandlabel(image: string): { payload: string; haslabel: boolean } 
   return { payload: image.slice(0, semi), haslabel: true }
 }
 
-function wordspansfrompayload(payload: string, skiermarker: boolean): WordSpan[] {
+function wordspansfrompayload(
+  payload: string,
+  skiermarker: boolean,
+): WordSpan[] {
   const spans: WordSpan[] = []
   let i = skiermarker ? 1 : 0
   const len = payload.length
@@ -80,7 +86,8 @@ export function resolvestatlinkstage(
     kindword: '',
     canonical: '',
     prefix: '',
-    wordstartinimage: tokenimage.startsWith('@') || tokenimage.startsWith('!') ? 1 : 0,
+    wordstartinimage:
+      tokenimage.startsWith('@') || tokenimage.startsWith('!') ? 1 : 0,
     kindwords,
   }
 
@@ -89,7 +96,8 @@ export function resolvestatlinkstage(
   }
 
   const { payload, haslabel } = payloadandlabel(tokenimage)
-  const marker = tokenimage[0] === '@' || tokenimage[0] === '!' ? 1 : 0
+  const marker =
+    tokenimage.startsWith('@') || tokenimage.startsWith('!') ? 1 : 0
   const cursor = Math.max(0, Math.min(cursorinimage, tokenimage.length))
 
   // Label stage: cursor at/after `;`
@@ -247,7 +255,9 @@ export function resolvestatlinkstage(
       name: NAME(name),
       kindword,
       canonical: canonicalfromword,
-      prefix: span ? NAME(payload.slice(span.start, Math.min(cursor, span.end))) : '',
+      prefix: span
+        ? NAME(payload.slice(span.start, Math.min(cursor, span.end)))
+        : '',
       wordstartinimage: span?.start ?? spans[1].end + 1,
       kindwords,
     }

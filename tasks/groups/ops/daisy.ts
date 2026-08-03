@@ -289,9 +289,8 @@ async function rundaisycalibratesidechainparity(
     const { execSync } = await import('node:child_process')
     const fs = (await import('node:fs')).default
     const path = (await import('node:path')).default
-    const { evalsidechainparitygate } = await import(
-      'ops/lib/daisy-parity/sidechainparity'
-    )
+    const { evalsidechainparitygate } =
+      await import('ops/lib/daisy-parity/sidechainparity')
     type SIDECHAIN_PARITY_RESULT =
       import('ops/lib/daisy-parity/sidechainparity').SIDECHAIN_PARITY_RESULT
     const { RENDERS_FIXTURES_DIR } = await import('ops/lib/fixturepaths')

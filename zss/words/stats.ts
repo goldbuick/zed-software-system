@@ -46,7 +46,9 @@ export const STAT_LINK_KIND_ALIASES: Record<string, string> = {
 }
 
 /** Canonical + alias spellings for type-slot autocomplete. */
-export const STAT_LINK_KIND_WORDS: string[] = Object.keys(STAT_LINK_KIND_ALIASES)
+export const STAT_LINK_KIND_WORDS: string[] = Object.keys(
+  STAT_LINK_KIND_ALIASES,
+)
 
 /** Canonical kind names (ROM keys) in stable order. */
 export const STAT_LINK_KIND_CANONICALS: string[] = [

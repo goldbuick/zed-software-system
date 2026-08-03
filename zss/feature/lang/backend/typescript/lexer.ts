@@ -772,16 +772,22 @@ export function tokenize(text: string) {
     const tokens = isarray(lexResult.tokens) ? lexResult.tokens : []
     const lastToken = tokens[tokens.length - 1]
     if (lastToken && lastToken.tokenType !== newline) {
+      // positionTracking: 'full' means lexed tokens always carry end positions.
+      // Place the synthetic newline just past the last token so spans match the
+      // case where the source already ended with a newline.
+      const endoffset = lastToken.endOffset!
+      const endline = lastToken.endLine!
+      const endcolumn = lastToken.endColumn!
       lexResult.tokens.push(
         createTokenInstance(
           newline,
           '\n',
-          lastToken.startOffset,
-          lastToken.endOffset ?? NaN,
-          lastToken.startLine ?? NaN,
-          lastToken.endLine ?? NaN,
-          lastToken.startColumn ?? NaN,
-          lastToken.endColumn ?? NaN,
+          endoffset + 1,
+          endoffset + 1,
+          endline,
+          endline,
+          endcolumn + 1,
+          endcolumn + 1,
         ),
       )
     }

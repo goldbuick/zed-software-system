@@ -452,10 +452,7 @@ export function TerminalInput({
       true,
       true,
     )
-    const idx = Math.min(
-      autocompleteindex,
-      autocomplete.suggestions.length - 1,
-    )
+    const idx = Math.min(autocompleteindex, autocomplete.suggestions.length - 1)
     const selected = autocomplete.suggestions[idx]
     if (selected) {
       const hint = resolvesuggestionhint(selected, zsswords)

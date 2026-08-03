@@ -3,7 +3,10 @@ import * as lexer from 'zss/feature/lang/backend/typescript/lexer'
 import type { COMMAND_ARGS_SIGNATURE } from 'zss/firmware'
 import { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
-import { CODE_PAGE_TYPE_STAT_KEYWORDS, iscodepagetypestatkeyword } from 'zss/words/stats'
+import {
+  CODE_PAGE_TYPE_STAT_KEYWORDS,
+  iscodepagetypestatkeyword,
+} from 'zss/words/stats'
 import {
   WRITE_TEXT_CONTEXT,
   applystrtoindex,
@@ -17,10 +20,7 @@ import { type ZSS_WORD_LIST_KEY } from './colors'
 import { EDITOR_CODE_ROW } from './common'
 import type { EDITOR_COMPLETE_CONTEXT } from './editorcomplete'
 import { builtingstatnamesforcodepagetype } from './statcompletenames'
-import {
-  resolvestatlinkstage,
-  statlinklabelromword,
-} from './statlinkstages'
+import { resolvestatlinkstage, statlinklabelromword } from './statlinkstages'
 import {
   argsliststring,
   hintfromrom,
@@ -498,7 +498,10 @@ function getautocompletefromtokens(
           }
         }
 
-        if (stageinfo.stage === 'typed' || (stageinfo.stage === 'args' && stageinfo.canonical)) {
+        if (
+          stageinfo.stage === 'typed' ||
+          (stageinfo.stage === 'args' && stageinfo.canonical)
+        ) {
           endoflineargs = [hintfromrom('stats', stageinfo.canonical)]
           return {
             suggestions: [],
@@ -629,7 +632,10 @@ function getautocompletefromtokens(
           }
         }
 
-        if (stageinfo.stage === 'typed' || (stageinfo.stage === 'args' && stageinfo.canonical)) {
+        if (
+          stageinfo.stage === 'typed' ||
+          (stageinfo.stage === 'args' && stageinfo.canonical)
+        ) {
           endoflineargs = [hintfromrom('hyperlink', stageinfo.canonical)]
           return {
             suggestions: [],

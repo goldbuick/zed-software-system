@@ -152,13 +152,7 @@ function TapeSlidePanel({
     </>
   )
   return (
-    <group
-      position={[
-        Math.round(marginx),
-        Math.round(marginy * 0.25),
-        z,
-      ]}
-    >
+    <group position={[Math.round(marginx), Math.round(marginy * 0.25), z]}>
       <PanelSlide
         shouldclose={shouldclose}
         frombottom={frombottom}
@@ -214,8 +208,7 @@ export function TapeComponent() {
   const anypanel = terminalslide.panelactive || editorslide.panelactive
   const showhotkeys = !anypanel
   // Keep focus on the topmost open panel; never focus while that panel is exiting.
-  const editorfocused =
-    editorslide.panelactive && !editorslide.shouldclose
+  const editorfocused = editorslide.panelactive && !editorslide.shouldclose
   const terminalfocused =
     !editorslide.panelactive &&
     terminalslide.panelactive &&

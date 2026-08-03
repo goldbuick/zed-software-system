@@ -240,27 +240,27 @@ export function UserScreen({ children }: UserScreenProps) {
               !inputblocked &&
               !islandscape &&
               !keyboardopen && (
-              <>
-                {hassidebar && (
-                  <group position={[0, docky - ch, 4]}>
+                <>
+                  {hassidebar && (
+                    <group position={[0, docky - ch, 4]}>
+                      <TouchUI
+                        key={`sidebartoggle-${dockcols}`}
+                        mode="portrait-sidebartoggle"
+                        width={dockcols}
+                        height={1}
+                      />
+                    </group>
+                  )}
+                  <group position={[0, docky, 3]}>
                     <TouchUI
-                      key={`sidebartoggle-${dockcols}`}
-                      mode="portrait-sidebartoggle"
+                      key={`dock-${dockcols}-${dockrows}-${docky}`}
+                      mode="portrait-dock"
                       width={dockcols}
-                      height={1}
+                      height={dockrows}
                     />
                   </group>
-                )}
-                <group position={[0, docky, 3]}>
-                  <TouchUI
-                    key={`dock-${dockcols}-${dockrows}-${docky}`}
-                    mode="portrait-dock"
-                    width={dockcols}
-                    height={dockrows}
-                  />
-                </group>
-              </>
-            )}
+                </>
+              )}
           </group>
         </group>
       )}

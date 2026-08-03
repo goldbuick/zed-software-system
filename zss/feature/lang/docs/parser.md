@@ -6,8 +6,8 @@ title: parser.ts
 
 ## Dependencies
 
-- `chevrotain` — CstParser, CstNode, IToken, generateCstDts
-- `zss/config` — LANG_DEV, LANG_TYPES
+- `chevrotain` — CstParser, CstNode, IToken, IRuleConfig, ParserMethod
+- `zss/config` — LANG_DEV
 - `./lexer` — all lexer tokens
 
 ## Exports
@@ -77,7 +77,7 @@ title: parser.ts
 
 ## Parser Configuration
 
-- **maxLookahead**: 2
+- **maxLookahead**: 3
 - **recoveryEnabled**: true
 - **nodeLocationTracking**: full
 - **traceInitPerf**: LANG_DEV
@@ -85,8 +85,8 @@ title: parser.ts
 ## Internal Helpers
 
 - **`RULED`** — Wraps rules with optional tracing (LANG_DEV) and indent logging
-- **`PEEK`** — Debug helper for token inspection
+- **`PEEK`** — Debug helper for token inspection (currently a no-op stub)
 
-## LANG_TYPES
+## CST types
 
-When `LANG_TYPES` is enabled, the parser generates CST type definitions via `generateCstDts` and logs them to console (for visitortypes maintenance).
+`parser.ts` does not generate CST types at runtime. [`visitortypes.ts`](../backend/typescript/visitortypes.ts) is maintained by hand; regenerate it out-of-band with `generateCstDts(parser.getGAstProductions())` if the grammar changes shape.
