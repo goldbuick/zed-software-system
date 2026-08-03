@@ -1,3 +1,3 @@
 ---
-hint: "$DKGRAYelements that can walk, swim, or be used with #shoot"
+hint: "elements that can walk, swim, or be used with #shoot"
 ---

@@ -11,15 +11,15 @@ describe('drawhinttext', () => {
     context.color = Array(width * height).fill(COLOR.GREEN)
     context.bg = Array(width * height).fill(COLOR.BLACK)
 
-    const hint = '$DKGRAYelements that can walk'
+    const hint = '$YELLOWelements that can walk'
     const written = drawhinttext(hint, 0, 1, width - 1, context)
 
     expect(written).toBe('elements that can walk'.length)
     const row = context.char.slice(width, width + written).join('')
     expect(row).toBe('elements that can walk')
     expect(row.includes('$')).toBe(false)
-    expect(row.includes('DKGRAY')).toBe(false)
-    expect(context.color[width]).toBe(COLOR.DKGRAY)
+    expect(row.includes('YELLOW')).toBe(false)
+    expect(context.color[width]).toBe(COLOR.YELLOW)
   })
 
   it('uses default fg when hint has no format codes', () => {

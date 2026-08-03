@@ -128,10 +128,10 @@ describe('editor stats ROM coverage', () => {
 
   it('resolves parametric colorN and charN via romread', () => {
     expect(romhintfrommarkdown(romread('editor:stats:color3') ?? '')).toBe(
-      '$DKGRAYPalette RGB for color slot 3',
+      'Palette RGB for color slot 3',
     )
     expect(romhintfrommarkdown(romread('editor:stats:char12') ?? '')).toBe(
-      '$DKGRAYCharset glyph pixels for character 12',
+      'Charset glyph pixels for character 12',
     )
     expect(romread('editor:stats:color99')).toBeUndefined()
     expect(romread('editor:stats:char999')).toBeUndefined()

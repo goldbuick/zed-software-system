@@ -105,7 +105,7 @@ hint: "elements that can walk, swim, or be used with #shoot"
 hint: "creates a 60x25 space for terrain and object elements"
 ---`
         case 'editor:stats:color0':
-          return `desc;$DKGRAYPalette RGB for color slot 0`
+          return `desc;Palette RGB for color slot 0`
         case 'editor:text':
           return `---
 hint: "adds text to scroll"
@@ -226,7 +226,7 @@ hint: "adds hyperlink text to scroll"
     const row = rowforcode('@color0', 20)
     const ac = getautocomplete(row, row.start, words, undefined, 'palette')
     expect(ac.endoflinehint).toBe(true)
-    expect(ac.endoflineargs).toEqual(['$DKGRAYPalette RGB for color slot 0'])
+    expect(ac.endoflineargs).toEqual(['Palette RGB for color slot 0'])
     expect(romreadmock).toHaveBeenCalledWith('editor:stats:color0')
   })
 

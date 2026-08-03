@@ -3,10 +3,10 @@ import { romhintfrommarkdown } from 'zss/rom/romhint'
 describe('romhintfrommarkdown', () => {
   it('reads JSON-quoted hint from front matter', () => {
     const md = `---
-hint: "$DKGRAYread text"
+hint: "read text"
 ---
 `
-    expect(romhintfrommarkdown(md)).toBe('$DKGRAYread text')
+    expect(romhintfrommarkdown(md)).toBe('read text')
   })
 
   it('reads unquoted hint scalar', () => {

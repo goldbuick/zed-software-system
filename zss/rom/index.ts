@@ -9,7 +9,7 @@ function dynamicstathint(statname: string): MAYBE<string> {
   if (colormatch) {
     const idx = Number(colormatch[1])
     if (idx >= 0 && idx <= 15) {
-      return `desc;$DKGRAYPalette RGB for color slot ${idx}`
+      return `desc;Palette RGB for color slot ${idx}`
     }
     return undefined
   }
@@ -17,7 +17,7 @@ function dynamicstathint(statname: string): MAYBE<string> {
   if (charmatch) {
     const idx = Number(charmatch[1])
     if (idx >= 0 && idx <= 255) {
-      return `desc;$DKGRAYCharset glyph pixels for character ${idx}`
+      return `desc;Charset glyph pixels for character ${idx}`
     }
   }
   return undefined
@@ -39,7 +39,7 @@ export function romread(address: string): MAYBE<string> {
       switch (miss.target) {
         case 'command':
           if (miss.path.length) {
-            return `desc;$DKGRAYsends the message ${miss.path}`
+            return `desc;sends the message ${miss.path}`
           }
           break
         case 'stats': {

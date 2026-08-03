@@ -1,3 +1,3 @@
 ---
-hint: "$DKGRAYsets stat to given value"
+hint: "sets stat to given value"
 ---

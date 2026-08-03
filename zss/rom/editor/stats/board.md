@@ -1,3 +1,3 @@
 ---
-hint: "$DKGRAYcreates a 60x25 space for terrain and object elements"
+hint: "creates a 60x25 space for terrain and object elements"
 ---
