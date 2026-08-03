@@ -1,3 +1,3 @@
 ---
-hint: $DKGRAY#stat - optional line or name, then scroll body text
+hint: #stat - optional line or name, then scroll body text
 ---

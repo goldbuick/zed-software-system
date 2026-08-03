@@ -779,7 +779,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       }
       return 0
     },
-    { editor: ['variables'] },
+    { editor: ['variables'], lists: ['flags'] },
   )
   .command(
     'set',
@@ -798,7 +798,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       chip.set(name, value)
       return 0
     },
-    { editor: ['variables'] },
+    { editor: ['variables'], lists: ['flags'] },
   )
   .command(
     'become',
@@ -1032,7 +1032,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       chip.restore(maptostring(words[0]))
       return 0
     },
-    { editor: ['labels'] },
+    { editor: ['labels'], lists: ['labels'] },
   )
   .command('unlock', ['against messages from others'], (chip) => {
     chip.unlock()
@@ -1045,7 +1045,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       chip.zap(maptostring(words[0]))
       return 0
     },
-    { editor: ['labels'] },
+    { editor: ['labels'], lists: ['labels'] },
   )
   .command(
     'cycle',
@@ -1120,7 +1120,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       chip.set(name, values)
       return 0
     },
-    { editor: ['variables'] },
+    { editor: ['variables'], lists: ['flags'] },
   )
   .command(
     'read',
@@ -1142,7 +1142,10 @@ export const ELEMENT_FIRMWARE = createfirmware({
       }
       return 0
     },
-    { editor: [undefined, undefined, 'variables'] },
+    {
+      editor: [undefined, undefined, 'variables'],
+      lists: [undefined, undefined, 'flags'],
+    },
   )
   .command('toast', ['toast notification'], (_, words) => {
     const [textwords] = readargsuntilend(words, 0, ARG_TYPE.NUMBER_OR_NAME)

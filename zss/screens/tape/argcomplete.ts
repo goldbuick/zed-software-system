@@ -85,6 +85,7 @@ export function itemsfromwordlistref(
       case 'roles':
       case 'permissionconfigs':
       case 'players':
+      case 'labels':
         out.push(...tagwords(words[key], key))
         break
     }

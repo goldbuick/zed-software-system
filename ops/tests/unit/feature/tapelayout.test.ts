@@ -52,6 +52,7 @@ describe('tapelayout', () => {
         terminalmode: 'quick',
         editor: {
           open: true,
+          closing: false,
           book: '',
           path: [],
           type: '',

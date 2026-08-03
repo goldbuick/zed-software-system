@@ -4,6 +4,10 @@ vec3 halftone(vec3 texcolor, vec2 st, float frequency) {
   n += 0.05 * snoise(st * 400.0);
   n += 0.025 * snoise(st * 800.0);
 
+  // Lift midtones before CMYK so multiply-darken lands nearer the source look
+  const float prebright = 1.37;
+  texcolor = clamp(texcolor * prebright, 0.0, 1.0);
+
   // RGB -> CMYK with partial GCR
   const float gcr = 0.7;
   vec4 cmyk;

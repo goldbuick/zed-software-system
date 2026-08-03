@@ -1,8 +1,4 @@
-import {
-  TERMINAL_MODE,
-  useTape,
-  useTerminal,
-} from 'zss/gadget/data/zustandstores'
+import { TERMINAL_MODE, useTerminal } from 'zss/gadget/data/zustandstores'
 import { EditorComponent } from 'zss/screens/editor/component'
 import { TerminalComponent } from 'zss/screens/terminal/component'
 
@@ -14,6 +10,8 @@ type TapeLayoutProps = {
   top: number
   width: number
   height: number
+  /** When true, render editor; when false, terminal. Held by parent during slides. */
+  showeditor: boolean
 }
 
 export function TapeLayout({
@@ -21,10 +19,10 @@ export function TapeLayout({
   top,
   width,
   height,
+  showeditor,
 }: TapeLayoutProps) {
   const pan = useTerminal((state) => state.pan)
-  const editoropen = useTape((state) => state.editor.open)
-  if (editoropen) {
+  if (showeditor) {
     return (
       <TapeLayoutTiles
         label="editor"

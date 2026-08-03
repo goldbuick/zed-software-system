@@ -17,9 +17,9 @@ Shared pieces for the **terminal input line** and **code editor**: layout chrome
 
 3. **Drawing** — [`drawautocomplete`](autocomplete.ts) renders the popup; per-suggestion colors use an explicit **`Map<string, COLOR>`** from [`createzsswordcolormap`](colors.ts) (built when `zsswords` changes), so we do not rebuild that map on every cursor move. [`drawcommandarghint`](autocomplete.ts) renders the compact firmware signature; optional ROM prose is passed as `options.romhint`.
 
-4. **ROM help** — [`commandromhint`](commandarghints.ts) loads `editor:commands:<name>` from bundled Markdown under [`zss/rom/editor/commands/`](../../rom/editor/commands/). Selected suggestion detail uses [`resolvesuggestionhint`](suggestionhints.ts) (`editor:<category>:<word>`, including `editor:commandargmeta:<word>` for firmware keyword args). Hints use YAML front matter (`hint:`) or a legacy first line `desc;…` (see [`zss/rom/romhint.ts`](../../rom/romhint.ts)). Command ROM results are cached in a module-level `Map`. While the autocomplete popup is open and the selected suggestion has a hint, that text replaces the purple end-of-line command signature.
+4. **ROM help** — [`commandromhint`](commandarghints.ts) loads `editor:commands:<name>` from bundled Markdown under [`zss/rom/editor/commands/`](../../rom/editor/commands/). Selected suggestion detail uses [`resolvesuggestionhint`](suggestionhints.ts) (`editor:<category>:<word>`, including `editor:commandargmeta:<word>` for firmware keyword args). Hints use YAML front matter (`hint:`) or a legacy first line `desc;…` (see [`zss/rom/romhint.ts`](../../rom/romhint.ts)). Command ROM results are cached in a module-level `Map`. Command-arg and selected-suggestion prose draw on the **bottom border status strip** (editor frame bottom / terminal divider), not after the code or input line.
 
-5. **Shared UI helpers** — [`autocompleteui.ts`](autocompleteui.ts): `applyautocompletesuggestion` for Tab/accept, and `computeterminalarghintx` so the terminal’s end-of-line hint clears the autocomplete popup horizontally.
+5. **Shared UI helpers** — [`autocompleteui.ts`](autocompleteui.ts): `applyautocompletesuggestion` for Tab/accept; `computestatushintrect` (editor bottom border) and `computeterminalstatushintrect` (terminal divider above input).
 
 ## Definition of done (every `#command`)
 
@@ -37,6 +37,7 @@ Detail text prefers **many** keyword ROMs under `editor/commandargmeta/` and **f
 - [`../../../ops/tests/unit/screens/tape/argcomplete.test.ts`](../../../ops/tests/unit/screens/tape/argcomplete.test.ts) — lists, editor, and `resolveargitems` priority chain
 - [`../../../ops/tests/unit/screens/tape/editorcomplete.test.ts`](../../../ops/tests/unit/screens/tape/editorcomplete.test.ts) — label/variable scanning
 - [`../../../ops/tests/unit/screens/tape/commandarghints.test.ts`](../../../ops/tests/unit/screens/tape/commandarghints.test.ts) — `commandromhint` caching behavior
+- [`../../../ops/tests/unit/screens/tape/autocompleteui.test.ts`](../../../ops/tests/unit/screens/tape/autocompleteui.test.ts) — status-strip rect helpers
 
 ## See also
 

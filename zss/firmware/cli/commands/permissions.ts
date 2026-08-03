@@ -104,7 +104,7 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
           SOFTWARE,
           READ_CONTEXT.elementfocus,
           zsstexttape(
-            '$WHITEpermissions (list) — #access <lockdown | creative>',
+            '$WHITEpermissions (list) - #access <lockdown | creative | open>',
             `$GRAY($YELLOWyellow$GRAY = override on base preset; gray = from preset)`,
             `current config: $GREEN${currentconfig}`,
             zsstexttablelines(grouprows, ['group', 'description']),
@@ -125,7 +125,7 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
     )
     .command(
       'access',
-      [ARG_TYPE.NAME, 'base preset: lockdown or creative'],
+      [ARG_TYPE.NAME, 'base preset: lockdown, creative, or open'],
       (_, words) => {
         const [maybename] = readargs(words, 0, [ARG_TYPE.NAME])
         const configname = NAME(maybename) as PERMISSION_CONFIG_NAME
@@ -134,7 +134,7 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
             SOFTWARE,
             READ_CONTEXT.elementfocus,
             'access',
-            `config: ${configname} (use lockdown or creative)`,
+            `config: ${configname} (use lockdown, creative, or open)`,
           )
           return 0
         }

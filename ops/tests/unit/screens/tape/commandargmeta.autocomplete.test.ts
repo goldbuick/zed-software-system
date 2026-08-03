@@ -32,6 +32,7 @@ describe('resolveargitems', () => {
     roles: [],
     permissionconfigs: [],
     players: [],
+    labels: [],
     commandargmeta: {},
   }
 

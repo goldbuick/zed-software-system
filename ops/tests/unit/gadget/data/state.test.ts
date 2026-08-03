@@ -176,6 +176,7 @@ describe('state', () => {
       expect(state.terminal.pinlines).toEqual([])
       expect(state.terminal.pinids).toEqual([])
       expect(state.editor.open).toBe(false)
+      expect(state.editor.closing).toBe(false)
       expect(state.editor.book).toBe('')
       expect(state.editor.path).toEqual([])
     })
@@ -213,6 +214,7 @@ describe('state', () => {
         },
         editor: {
           open: true,
+          closing: false,
           book: 'book1',
           path: ['path1'],
           type: 'type1',
@@ -238,6 +240,7 @@ describe('state', () => {
       expect(state.terminal.pinlines).toEqual([])
       expect(state.terminal.pinids).toEqual([])
       expect(state.editor.open).toBe(false)
+      expect(state.editor.closing).toBe(false)
       expect(state.editor.book).toBe('')
       expect(state.editor.path).toEqual([])
     })

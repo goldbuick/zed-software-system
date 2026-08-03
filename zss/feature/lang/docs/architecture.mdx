@@ -222,7 +222,7 @@ flowchart LR
 ## Parsing footguns
 
 - **`new Function` / CSP** — The generator uses dynamic `Function` construction ([generator.ts](../backend/typescript/generator.ts)); treat untrusted source like any eval-capable path (CSP, validation, supply chain).
-- **`maxLookahead: 2`** — LL(2)-style limits in [parser.ts](../backend/typescript/parser.ts); some inputs may fail or parse differently than with unbounded lookahead.
+- **`maxLookahead: 3`** — LL(3)-style limits in [parser.ts](../backend/typescript/parser.ts); some inputs may fail or parse differently than with unbounded lookahead.
 - **Recovery** — Partial CST possible after errors; always check parser errors before using the tree.
 - **Statement `/`** — Token `divide` (`/`) at **statement** level is [`short_go`](../backend/typescript/parser.ts); inside `term_item` it is division. Context disambiguates.
 - **`token_expr` vs arithmetic** — First branch of `arith_expr` favors built-in token DSL over `+`/`-` term chains when both apply.

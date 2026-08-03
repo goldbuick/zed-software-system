@@ -392,11 +392,7 @@ export function createdaisysynth(
     let endwhen = when + durationsec
     // Offline suspend merges same-quantum on+off into zero gated samples.
     if (isofflineaudiocontext(maxi.audioContext)) {
-      endwhen = offlinegateendwhen(
-        when,
-        endwhen,
-        maxi.audioContext.sampleRate,
-      )
+      endwhen = offlinegateendwhen(when, endwhen, maxi.audioContext.sampleRate)
     }
     const freq = notetofrequency(pitch)
     const base = chan * WASM_VOICE_STRIDE

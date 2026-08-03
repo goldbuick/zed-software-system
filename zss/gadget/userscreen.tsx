@@ -10,6 +10,7 @@ import {
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { type TOUCHPADS, useDeviceData } from 'zss/gadget/device'
+import { useGadgetInputBlocked } from 'zss/screens/screenui/gadgetinputblocked'
 import { TouchUI } from 'zss/screens/touchui/component'
 import {
   ACTION_ROW_WIDTH,
@@ -48,6 +49,7 @@ type UserScreenProps = PropsWithChildren<any>
 export function UserScreen({ children }: UserScreenProps) {
   const { viewport } = useThree()
   const { width: viewwidth, height: viewheight } = viewport.getCurrentViewport()
+  const inputblocked = useGadgetInputBlocked()
   const {
     saferows,
     islandscape,
@@ -206,7 +208,7 @@ export function UserScreen({ children }: UserScreenProps) {
             ]}
           >
             <group position={[insetx, insety, 0]}>{children}</group>
-            {showtouchcontrols && islandscape && (
+            {showtouchcontrols && !inputblocked && islandscape && (
               <>
                 <group position={[0, 0, 3]}>
                   <TouchUI
@@ -234,28 +236,31 @@ export function UserScreen({ children }: UserScreenProps) {
                 </group>
               </>
             )}
-            {showtouchcontrols && !islandscape && !keyboardopen && (
-              <>
-                {hassidebar && (
-                  <group position={[0, docky - ch, 4]}>
+            {showtouchcontrols &&
+              !inputblocked &&
+              !islandscape &&
+              !keyboardopen && (
+                <>
+                  {hassidebar && (
+                    <group position={[0, docky - ch, 4]}>
+                      <TouchUI
+                        key={`sidebartoggle-${dockcols}`}
+                        mode="portrait-sidebartoggle"
+                        width={dockcols}
+                        height={1}
+                      />
+                    </group>
+                  )}
+                  <group position={[0, docky, 3]}>
                     <TouchUI
-                      key={`sidebartoggle-${dockcols}`}
-                      mode="portrait-sidebartoggle"
+                      key={`dock-${dockcols}-${dockrows}-${docky}`}
+                      mode="portrait-dock"
                       width={dockcols}
-                      height={1}
+                      height={dockrows}
                     />
                   </group>
-                )}
-                <group position={[0, docky, 3]}>
-                  <TouchUI
-                    key={`dock-${dockcols}-${dockrows}-${docky}`}
-                    mode="portrait-dock"
-                    width={dockcols}
-                    height={dockrows}
-                  />
-                </group>
-              </>
-            )}
+                </>
+              )}
           </group>
         </group>
       )}

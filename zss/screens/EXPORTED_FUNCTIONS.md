@@ -364,7 +364,8 @@ See **`editor/syntax-highlighting.md`** for how colored syntax highlighting is i
 ### `tape/autocompleteui.ts`
 
 - **`applyautocompletesuggestion(autocomplete, index, replaceat)`** — shared Tab/accept behavior
-- **`computeterminalarghintx({ startx, inputlen, autocomplete, autocompleteactive, popupleftx })`** — avoid overlap with suggestion popup
+- **`computestatushintrect(edge)`** — editor bottom-border status strip (`y: edge.bottom`, corner insets)
+- **`computeterminalstatushintrect(edge)`** — terminal divider status strip (`y: edge.bottom - 1`)
 
 ---
 

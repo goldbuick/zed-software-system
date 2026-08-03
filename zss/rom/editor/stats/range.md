@@ -1,3 +1,3 @@
 ---
-hint: "$DKGRAYa slider input from 1 to 9 "
+hint: "a slider input from 1 to 9 "
 ---

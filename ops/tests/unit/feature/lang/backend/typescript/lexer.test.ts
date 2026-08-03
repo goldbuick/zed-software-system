@@ -48,6 +48,32 @@ describe('lexer tokenize', () => {
     expect(r.tokens[r.tokens.length - 1].tokenType).toBe(newline)
   })
 
+  it('places the synthetic newline just past the last token, matching a real newline', () => {
+    const synthetic = tokenize('#if 1')
+    const real = tokenize('#if 1\n')
+    expect(synthetic.errors.length).toBe(0)
+    expect(real.errors.length).toBe(0)
+
+    const last = (r: { tokens: unknown[] }) =>
+      r.tokens[r.tokens.length - 1] as {
+        startOffset: number
+        endOffset?: number
+        startColumn?: number
+        endColumn?: number
+      }
+    const syntheticnewline = last(synthetic)
+    const realnewline = last(real)
+
+    expect(syntheticnewline.startOffset).toBe(realnewline.startOffset)
+    expect(syntheticnewline.endOffset).toBe(realnewline.endOffset)
+    expect(syntheticnewline.startColumn).toBe(realnewline.startColumn)
+    expect(syntheticnewline.endColumn).toBe(realnewline.endColumn)
+
+    // must not overlap the token it follows
+    const prev = synthetic.tokens[synthetic.tokens.length - 2]
+    expect(syntheticnewline.startOffset).toBeGreaterThan(prev.startOffset)
+  })
+
   it('nested tokenize restores text-match depth so outer pass still lexes text', () => {
     const outer = tokenize('hello\n')
     expect(outer.errors.length).toBe(0)

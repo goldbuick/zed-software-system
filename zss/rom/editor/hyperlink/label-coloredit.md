@@ -1,0 +1,3 @@
+---
+hint: "Label for coloredit"
+---

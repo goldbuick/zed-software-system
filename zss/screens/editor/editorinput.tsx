@@ -35,12 +35,15 @@ import {
   drawautocomplete,
   drawcommandarghint,
 } from 'zss/screens/tape/autocomplete'
-import { applyautocompletesuggestion } from 'zss/screens/tape/autocompleteui'
+import {
+  applyautocompletesuggestion,
+  computestatushintrect,
+} from 'zss/screens/tape/autocompleteui'
 import { commandromhint } from 'zss/screens/tape/commandarghints'
 import { EDITOR_CODE_ROW } from 'zss/screens/tape/common'
 import { ismac } from 'zss/words/system'
 import { textformatreadedges } from 'zss/words/textformat'
-import { COLOR, NAME } from 'zss/words/types'
+import { NAME } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
 import {
@@ -66,7 +69,6 @@ export type EditorInputProps = {
   codepage: MAYBE<SharedTextHandle>
   autocomplete: AUTO_COMPLETE
   autocompleteactive: boolean
-  zsswordcolormap: Map<string, COLOR>
 }
 
 export function EditorInput({
@@ -78,7 +80,6 @@ export function EditorInput({
   codepage,
   autocomplete,
   autocompleteactive,
-  zsswordcolormap,
 }: EditorInputProps) {
   const context = useWriteText()
   const tapeeditor = useEditor(
@@ -98,7 +99,6 @@ export function EditorInput({
   const rowsend = rows.length - 1
   const codeend = rows[rowsend].end
   const coderow = rows[ycursor]
-  const coderowlength = coderow.code.length
 
   // --- hooks ---
 
@@ -196,6 +196,8 @@ export function EditorInput({
   const drawabove = starty + suggestionslength > edge.bottom - 1
 
   const startx = edge.left - xoffset
+  const status = computestatushintrect(edge)
+  const statusedge = { ...edge, right: status.right }
   if (autocompleteactive) {
     drawautocomplete(
       autocomplete,
@@ -205,21 +207,15 @@ export function EditorInput({
       edge,
       context,
       zsswords,
-      zsswordcolormap,
       drawabove,
     )
   }
-
-  if (
-    !autocompleteactive &&
-    autocomplete.endoflinehint &&
-    autocomplete.endoflineargs.length > 0
-  ) {
+  if (autocomplete.endoflinehint && autocomplete.endoflineargs.length > 0) {
     drawcommandarghint(
       autocomplete.endoflineargs,
-      startx + coderowlength + 1,
-      starty - 1,
-      edge,
+      status.x,
+      status.y,
+      statusedge,
       context,
       {
         romhint: commandromhint(autocomplete.hintcommandname),

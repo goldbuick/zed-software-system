@@ -61,6 +61,8 @@ describe('permissions', () => {
     it('maps variant and base commands to families', () => {
       expect(memorymapcommandtofamily('access')).toBe('risk')
       expect(memorymapcommandtofamily('pageexport')).toBe('risk')
+      expect(memorymapcommandtofamily('dev')).toBe('build')
+      expect(memorymapcommandtofamily('gadget')).toBe('build')
       expect(memorymapcommandtofamily('fork')).toBe('persist')
       expect(memorymapcommandtofamily('save')).toBe('persist')
       expect(memorymapcommandtofamily('synth1')).toBe('speaker')
@@ -143,13 +145,46 @@ describe('permissions', () => {
       expect(memoryreadpermissionconfig()).toBe('lockdown')
     })
 
-    it('memoryapplypermissionconfig creative gives player build explore persist without bridge', () => {
+    it('memoryapplypermissionconfig creative gives player build explore speaker without persist or bridge', () => {
       memoryapplypermissionconfig('creative')
       const allowlistbyrole = memoryreadallowlistbyrole()
       expect(allowlistbyrole.player?.has('build')).toBe(true)
       expect(allowlistbyrole.player?.has('explore')).toBe(true)
-      expect(allowlistbyrole.player?.has('persist')).toBe(true)
+      expect(allowlistbyrole.player?.has('speaker')).toBe(true)
+      expect(allowlistbyrole.player?.has('persist')).toBe(false)
       expect(allowlistbyrole.player?.has('bridge')).toBe(false)
+    })
+
+    it('creative player can run gadget and dev; cannot save or nuke', () => {
+      memoryapplypermissionconfig('creative')
+      memorysetplayertotoken('player1', 'token-a')
+      memorysetrolefortoken('token-a', 'player')
+      expect(memorycanruncommand('player1', 'gadget')).toBe(true)
+      expect(memorycanruncommand('player1', 'dev')).toBe(true)
+      expect(memorycanruncommand('player1', 'save')).toBe(false)
+      expect(memorycanruncommand('player1', 'nuke')).toBe(false)
+    })
+
+    it('memoryapplypermissionconfig open gives all roles non-risk groups including persist', () => {
+      memoryapplypermissionconfig('open')
+      const allowlistbyrole = memoryreadallowlistbyrole()
+      expect(memoryreadpermissionconfig()).toBe('open')
+      expect(allowlistbyrole.player?.has('persist')).toBe(true)
+      expect(allowlistbyrole.player?.has('bridge')).toBe(true)
+      expect(allowlistbyrole.player?.has('roles')).toBe(true)
+      expect(allowlistbyrole.player?.has('moderation')).toBe(true)
+      expect(allowlistbyrole.player?.has('risk')).toBe(false)
+      expect(allowlistbyrole.mod?.has('roles')).toBe(true)
+      expect(allowlistbyrole.admin?.has('risk')).toBe(false)
+    })
+
+    it('open player can save and allow; cannot nuke', () => {
+      memoryapplypermissionconfig('open')
+      memorysetplayertotoken('player1', 'token-a')
+      memorysetrolefortoken('token-a', 'player')
+      expect(memorycanruncommand('player1', 'save')).toBe(true)
+      expect(memorycanruncommand('player1', 'allow')).toBe(true)
+      expect(memorycanruncommand('player1', 'nuke')).toBe(false)
     })
 
     it('hydrates empty allowlist from saved base preset', () => {

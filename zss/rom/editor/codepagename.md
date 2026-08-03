@@ -1,3 +1,3 @@
 ---
-hint: "$DKGRAYname and type of codepage"
+hint: "name and type of codepage"
 ---

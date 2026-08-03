@@ -33,6 +33,7 @@ export type AUTOCOMPLETE_WORDLIST =
   | 'roles'
   | 'permissionconfigs'
   | 'players'
+  | 'labels'
 
 export type AUTOCOMPLETE_EDITOR_SOURCE = 'labels' | 'variables'
 

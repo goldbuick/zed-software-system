@@ -30,8 +30,9 @@ const emptywords = {
   dirmods: [],
   exprs: [],
   roles: ['mod'],
-  permissionconfigs: ['creative'],
+  permissionconfigs: ['lockdown', 'creative', 'open'],
   players: ['alice'],
+  labels: [],
   commandargmeta: {},
 } satisfies GADGET_ZSS_WORDS
 
@@ -76,7 +77,7 @@ describe('resolveargitems', () => {
     const items = resolveargitems({
       words: emptywords,
       meta: {
-        byposition: [['lockdown', 'creative']],
+        byposition: [['lockdown', 'creative', 'open']],
         lists: ['objects'],
       },
       argindex: 0,
@@ -84,7 +85,7 @@ describe('resolveargitems', () => {
       maybesig: undefined,
       prefix: 'loc',
     })
-    expect(items.map((i) => i.word)).toEqual(['lockdown', 'creative'])
+    expect(items.map((i) => i.word)).toEqual(['lockdown', 'creative', 'open'])
   })
 
   it('uses editor variables when present', () => {

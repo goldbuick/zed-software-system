@@ -4,18 +4,23 @@ import type { COMMAND_ARGS_SIGNATURE } from 'zss/firmware'
 import { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import {
+  CODE_PAGE_TYPE_STAT_KEYWORDS,
+  iscodepagetypestatkeyword,
+} from 'zss/words/stats'
+import {
   WRITE_TEXT_CONTEXT,
-  applycolortoindexes,
   applystrtoindex,
   textformatreadedges,
+  tokenizeandwritetextformat,
 } from 'zss/words/textformat'
 import { ARG_TYPE, COLOR, NAME } from 'zss/words/types'
 
 import { type AUTO_COMPLETE_SUGGESTION, resolveargitems } from './argcomplete'
-import { type ZSS_WORD_LIST_KEY, zsswordcolor } from './colors'
+import { type ZSS_WORD_LIST_KEY } from './colors'
 import { EDITOR_CODE_ROW } from './common'
 import type { EDITOR_COMPLETE_CONTEXT } from './editorcomplete'
 import { builtingstatnamesforcodepagetype } from './statcompletenames'
+import { resolvestatlinkstage, statlinklabelromword } from './statlinkstages'
 import {
   argsliststring,
   hintfromrom,
@@ -38,6 +43,7 @@ const WORD_LIST_KEYS: ZSS_WORD_LIST_KEY[] = [
   'roles',
   'permissionconfigs',
   'players',
+  'labels',
 ]
 
 /**
@@ -139,6 +145,22 @@ function filtersuggestions(
   return matches
 }
 
+/** Type-slot kinds: empty prefix lists a page in kind-table order; otherwise filter. */
+function filterkindsuggestions(
+  prefix: string,
+  items: AUTO_COMPLETE_SUGGESTION[],
+): AUTO_COMPLETE_SUGGESTION[] {
+  if (prefix.length < 1) {
+    return items.slice(0, MAX_SUGGESTIONS)
+  }
+  return filtersuggestions(prefix, items)
+}
+
+function cursorinimage(token: { startColumn?: number }, col: number): number {
+  const start = (token.startColumn ?? 1) - 1
+  return Math.max(0, col - start)
+}
+
 function tagwords(
   words: string[],
   category: string,
@@ -153,11 +175,40 @@ function tagrecordkeys(
   return Object.keys(rec).map((word) => ({ word, category }))
 }
 
-function statnameprefixfromtoken(image: string): string {
-  const trimmed = image.startsWith('@') ? image.slice(1) : image
-  const space = trimmed.indexOf(' ')
-  const name = space >= 0 ? trimmed.slice(0, space) : trimmed
-  return NAME(name)
+/** Book codepage names from gadget word lists (terminal `@` complete). */
+function codepagecompletenames(
+  words: GADGET_ZSS_WORDS,
+): AUTO_COMPLETE_SUGGESTION[] {
+  const lists: { key: keyof GADGET_ZSS_WORDS; category: string }[] = [
+    { key: 'objects', category: 'objects' },
+    { key: 'terrains', category: 'terrains' },
+    { key: 'boards', category: 'boards' },
+    { key: 'palettes', category: 'palettes' },
+    { key: 'charsets', category: 'charsets' },
+    { key: 'loaders', category: 'loaders' },
+  ]
+  const seen = new Set<string>()
+  const out: AUTO_COMPLETE_SUGGESTION[] = []
+  for (let i = 0; i < lists.length; ++i) {
+    const { key, category } = lists[i]
+    const list = words[key]
+    if (!isarray(list)) {
+      continue
+    }
+    for (let j = 0; j < list.length; ++j) {
+      const word = list[j]
+      if (typeof word !== 'string') {
+        continue
+      }
+      const lower = word.toLowerCase()
+      if (seen.has(lower)) {
+        continue
+      }
+      seen.add(lower)
+      out.push({ word, category })
+    }
+  }
+  return out
 }
 
 /** play/toast/ticker lexer tokens swallow args into one image; use the first word. */
@@ -185,12 +236,30 @@ function commandnamefromnametoken(token: {
   return NAME(image).toLowerCase()
 }
 
+function firstcontenttokenidx(
+  tokens: NonNullable<EDITOR_CODE_ROW['tokens']>,
+): number {
+  for (let i = 0; i < tokens.length; i++) {
+    const tok = tokens[i]
+    const idx = tok.tokenTypeIdx
+    if (
+      idx === lexer.newline.tokenTypeIdx ||
+      idx === lexer.whitespace.tokenTypeIdx
+    ) {
+      continue
+    }
+    return i
+  }
+  return -1
+}
+
 function getautocompletefromtokens(
   row: EDITOR_CODE_ROW,
   col: number,
   words: GADGET_ZSS_WORDS,
   editorctx?: EDITOR_COMPLETE_CONTEXT,
   codepagetype?: string,
+  statcomplete: 'editor' | 'codepages' = 'editor',
 ): MAYBE<AUTO_COMPLETE> {
   const tokens = row.tokens
   if (!tokens?.length) {
@@ -225,12 +294,16 @@ function getautocompletefromtokens(
     const wordcol = (token.startColumn ?? 1) - 1
     const wordstart = row.start + wordcol
 
-    // detect command token to our left and first token after it (command name)
+    // detect command token under cursor or to our left, and first token after it (command name)
     let cmdidx = -1
-    for (let i = activetokenidx - 1; i >= 0; i--) {
-      if (tokens[i].tokenTypeIdx === lexer.command.tokenTypeIdx) {
-        cmdidx = i
-        break
+    if (token.tokenTypeIdx === lexer.command.tokenTypeIdx) {
+      cmdidx = activetokenidx
+    } else {
+      for (let i = activetokenidx - 1; i >= 0; i--) {
+        if (tokens[i].tokenTypeIdx === lexer.command.tokenTypeIdx) {
+          cmdidx = i
+          break
+        }
       }
     }
 
@@ -259,7 +332,13 @@ function getautocompletefromtokens(
         activecategory = 'stat'
         break
       case lexer.label.tokenTypeIdx:
-        activecategory = 'label'
+        // `:name` as a #command argument (e.g. #zap :touch) — not a line label
+        if (cmdidx >= 0 && activetokenidx >= cmdidx + 2) {
+          prefix = (token.image ?? '').toLowerCase()
+          activecategory = ''
+        } else {
+          activecategory = 'label'
+        }
         break
       case lexer.hyperlink.tokenTypeIdx:
         activecategory = 'hyperlink'
@@ -289,18 +368,40 @@ function getautocompletefromtokens(
         activecategory = 'commands'
         prefix = token.image ?? ''
         break
-      default:
       case lexer.text.tokenTypeIdx:
       case lexer.stringliteral.tokenTypeIdx:
       case lexer.numberliteral.tokenTypeIdx:
         if (cmdidx >= 0 && activetokenidx === cmdidx + 1) {
           prefix = tokens[cmdidx + 1].image ?? ''
           activecategory = 'commands'
+        } else if (cmdidx >= 0 && activetokenidx >= cmdidx + 2) {
+          // Command argument — leave category empty for default resolveargitems
+          prefix = NAME(token.image).toLowerCase()
+          activecategory = ''
         } else {
           prefix = NAME(token.image).toLowerCase()
           activecategory = wordcategorymap.get(prefix) ?? 'text'
         }
         break
+      default:
+        // Operators (/, ?, etc.): leave category empty so #command arg
+        // hints win; line-start shortgo/shorttry is handled below.
+        if (cmdidx < 0) {
+          prefix = NAME(token.image).toLowerCase()
+          activecategory = wordcategorymap.get(prefix) ?? ''
+        }
+        break
+    }
+
+    // Movement shorthand at line start (/go, ?try) — not when inside a #command
+    if (cmdidx < 0) {
+      const firstidx = firstcontenttokenidx(tokens)
+      const first = firstidx >= 0 ? tokens[firstidx] : undefined
+      if (first?.tokenTypeIdx === lexer.divide.tokenTypeIdx) {
+        activecategory = 'shortgo'
+      } else if (first?.tokenTypeIdx === lexer.query.tokenTypeIdx) {
+        activecategory = 'shorttry'
+      }
     }
 
     switch (activecategory) {
@@ -337,28 +438,254 @@ function getautocompletefromtokens(
       }
       case 'stat': {
         endoflinehint = true
-        endoflineargs = [hintfromrom('stat')]
-        const statprefix = statnameprefixfromtoken(token.image ?? '')
+        const image = token.image ?? ''
+        const stageinfo = resolvestatlinkstage(image, cursorinimage(token, col))
+
+        // Terminal: suggest book codepage names only (no editor type/field/stage path)
+        if (statcomplete === 'codepages') {
+          const statprefix = stageinfo.prefix || stageinfo.name
+          const items = codepagecompletenames(words)
+          const suggestions =
+            statprefix.length < 1
+              ? items.slice(0, MAX_SUGGESTIONS)
+              : filtersuggestions(statprefix, items)
+          endoflineargs = statprefix
+            ? [hintfromrom('stats', statprefix)]
+            : [hintfromrom('stats')]
+          return {
+            suggestions,
+            prefix: statprefix,
+            wordcol,
+            wordstart: row.start + wordcol + stageinfo.wordstartinimage,
+            endoflinehint,
+            endoflineargs,
+            maxsuggestionwordlen: maxsuggestionwordlength(suggestions),
+            hintcommandname: '',
+          }
+        }
+
+        const firstline = row.start === 0
+        const kinditems = tagwords(stageinfo.kindwords, 'stats')
+
+        if (stageinfo.stage === 'label') {
+          endoflineargs = [
+            hintfromrom('stats', statlinklabelromword(stageinfo.canonical)),
+          ]
+          return {
+            suggestions: [],
+            prefix: '',
+            wordcol,
+            wordstart: row.start + wordcol + stageinfo.wordstartinimage,
+            endoflinehint,
+            endoflineargs,
+            maxsuggestionwordlen: 0,
+            hintcommandname: '',
+          }
+        }
+
+        if (
+          stageinfo.stage === 'type' ||
+          (stageinfo.stage === 'typed' && stageinfo.prefix.length > 0)
+        ) {
+          const suggestions = filterkindsuggestions(stageinfo.prefix, kinditems)
+          endoflineargs = stageinfo.canonical
+            ? [hintfromrom('stats', stageinfo.canonical)]
+            : stageinfo.name
+              ? [hintfromrom('stats', stageinfo.name)]
+              : [hintfromrom('stats')]
+          return {
+            suggestions,
+            prefix: stageinfo.prefix,
+            wordcol: wordcol + stageinfo.wordstartinimage,
+            wordstart: row.start + wordcol + stageinfo.wordstartinimage,
+            endoflinehint,
+            endoflineargs,
+            maxsuggestionwordlen: maxsuggestionwordlength(suggestions),
+            hintcommandname: '',
+          }
+        }
+
+        if (
+          stageinfo.stage === 'typed' ||
+          (stageinfo.stage === 'args' && stageinfo.canonical)
+        ) {
+          endoflineargs = [hintfromrom('stats', stageinfo.canonical)]
+          return {
+            suggestions: [],
+            prefix: '',
+            wordcol,
+            wordstart: row.start + wordcol + stageinfo.wordstartinimage,
+            endoflinehint,
+            endoflineargs,
+            maxsuggestionwordlen: 0,
+            hintcommandname: '',
+          }
+        }
+
+        // name or args without kind (e.g. @cycle 1)
+        const statprefix = stageinfo.prefix || stageinfo.name
+        let stathintkey = stageinfo.name
+        if (!iscodepagetypestatkeyword(stathintkey) && firstline) {
+          stathintkey = 'object'
+        }
+        endoflineargs = [hintfromrom('stats', stathintkey)]
+        const typeitems = firstline
+          ? tagwords([...CODE_PAGE_TYPE_STAT_KEYWORDS], 'stats')
+          : []
         const statnames = builtingstatnamesforcodepagetype(codepagetype)
-        const items = tagwords(statnames, 'stats')
-        const suggestions = filtersuggestions(statprefix, items)
+        const fielditems = tagwords(statnames, 'stats')
+        const items = [...typeitems, ...fielditems]
+        let suggestions: AUTO_COMPLETE_SUGGESTION[]
+        if (firstline && statprefix.length < 1) {
+          suggestions = typeitems.slice(0, MAX_SUGGESTIONS)
+        } else {
+          suggestions = filtersuggestions(statprefix, items)
+        }
         return {
           suggestions,
           prefix: statprefix,
           wordcol,
-          wordstart,
+          wordstart: row.start + wordcol + stageinfo.wordstartinimage,
           endoflinehint,
           endoflineargs,
           maxsuggestionwordlen: maxsuggestionwordlength(suggestions),
           hintcommandname: '',
         }
       }
-      case 'label':
-      case 'comment':
-      case 'hyperlink':
-      case 'hyperlinktext': {
+      case 'text': {
+        endoflinehint = true
+        endoflineargs = [hintfromrom('text')]
+        return {
+          suggestions: [],
+          prefix,
+          wordcol,
+          wordstart,
+          endoflinehint,
+          endoflineargs,
+          maxsuggestionwordlen: 0,
+          hintcommandname: '',
+        }
+      }
+      case 'shortgo':
+      case 'shorttry': {
         endoflinehint = true
         endoflineargs = [hintfromrom(activecategory)]
+        return {
+          suggestions: [],
+          prefix: '',
+          wordcol,
+          wordstart,
+          endoflinehint,
+          endoflineargs,
+          maxsuggestionwordlen: 0,
+          hintcommandname: '',
+        }
+      }
+      case 'label':
+      case 'comment': {
+        endoflinehint = true
+        endoflineargs = [hintfromrom(activecategory)]
+        return {
+          suggestions: [],
+          prefix,
+          wordcol,
+          wordstart,
+          endoflinehint,
+          endoflineargs,
+          maxsuggestionwordlen: 0,
+          hintcommandname: '',
+        }
+      }
+      case 'hyperlink': {
+        endoflinehint = true
+        const image = token.image ?? ''
+        const stageinfo = resolvestatlinkstage(image, cursorinimage(token, col))
+        const kinditems = tagwords(stageinfo.kindwords, 'hyperlink')
+
+        if (stageinfo.stage === 'label') {
+          // Should not happen on hyperlink token (label is hyperlinktext)
+          endoflineargs = [
+            hintfromrom('hyperlink', statlinklabelromword(stageinfo.canonical)),
+          ]
+          return {
+            suggestions: [],
+            prefix: '',
+            wordcol,
+            wordstart,
+            endoflinehint,
+            endoflineargs,
+            maxsuggestionwordlen: 0,
+            hintcommandname: '',
+          }
+        }
+
+        if (
+          stageinfo.stage === 'type' ||
+          (stageinfo.stage === 'typed' && stageinfo.prefix.length > 0)
+        ) {
+          const suggestions = filterkindsuggestions(stageinfo.prefix, kinditems)
+          endoflineargs = stageinfo.canonical
+            ? [hintfromrom('hyperlink', stageinfo.canonical)]
+            : [hintfromrom('hyperlink')]
+          return {
+            suggestions,
+            prefix: stageinfo.prefix,
+            wordcol: wordcol + stageinfo.wordstartinimage,
+            wordstart: row.start + wordcol + stageinfo.wordstartinimage,
+            endoflinehint,
+            endoflineargs,
+            maxsuggestionwordlen: maxsuggestionwordlength(suggestions),
+            hintcommandname: '',
+          }
+        }
+
+        if (
+          stageinfo.stage === 'typed' ||
+          (stageinfo.stage === 'args' && stageinfo.canonical)
+        ) {
+          endoflineargs = [hintfromrom('hyperlink', stageinfo.canonical)]
+          return {
+            suggestions: [],
+            prefix: '',
+            wordcol,
+            wordstart: row.start + wordcol + stageinfo.wordstartinimage,
+            endoflinehint,
+            endoflineargs,
+            maxsuggestionwordlen: 0,
+            hintcommandname: '',
+          }
+        }
+
+        // target / name stage
+        endoflineargs = [hintfromrom('hyperlink')]
+        return {
+          suggestions: [],
+          prefix: stageinfo.prefix,
+          wordcol,
+          wordstart: row.start + wordcol + stageinfo.wordstartinimage,
+          endoflinehint,
+          endoflineargs,
+          maxsuggestionwordlen: 0,
+          hintcommandname: '',
+        }
+      }
+      case 'hyperlinktext': {
+        endoflinehint = true
+        // Kind lives on the preceding hyperlink token
+        let priorcanonical = ''
+        for (let i = activetokenidx - 1; i >= 0; --i) {
+          if (tokens[i].tokenTypeIdx === lexer.hyperlink.tokenTypeIdx) {
+            const prior = resolvestatlinkstage(
+              tokens[i].image ?? '',
+              (tokens[i].image ?? '').length,
+            )
+            priorcanonical = prior.canonical
+            break
+          }
+        }
+        endoflineargs = [
+          hintfromrom('hyperlink', statlinklabelromword(priorcanonical)),
+        ]
         return {
           suggestions: [],
           prefix,
@@ -419,6 +746,7 @@ export function getautocomplete(
   words: GADGET_ZSS_WORDS,
   editorctx?: EDITOR_COMPLETE_CONTEXT,
   codepagetype?: string,
+  statcomplete: 'editor' | 'codepages' = 'editor',
 ): AUTO_COMPLETE {
   if (!ispresent(row)) {
     return EMPTY_AUTOCOMPLETE
@@ -430,62 +758,70 @@ export function getautocomplete(
       words,
       editorctx,
       codepagetype,
+      statcomplete,
     ) ?? EMPTY_AUTOCOMPLETE
   )
 }
 
 const AC_BG = COLOR.DKBLUE
-const AC_FG = COLOR.WHITE
+const AC_FG = COLOR.YELLOW
 const AC_SEL_BG = COLOR.BLACK
-const AC_SEL_FG = COLOR.WHITE
+const AC_SEL_FG = COLOR.YELLOW
 const AC_HINT_FG = COLOR.LTGRAY
+const AC_BORDER_HINT_FG = COLOR.GREEN
 export type AutocompleteEdge = ReturnType<typeof textformatreadedges>
 
 function applysuggestioncolors(
   bufindex: number,
-  textoffset: number,
   text: string,
-  word: string,
   fg: number,
   bg: number,
   context: WRITE_TEXT_CONTEXT,
-  wordlistcolors: Map<string, COLOR>,
 ) {
   applystrtoindex(bufindex, text, context)
   for (let c = 0; c < text.length; c++) {
-    const wordcolor = zsswordcolor(word.toLowerCase(), wordlistcolors)
-    if (!isarray(wordcolor)) {
-      const charoffset = textoffset + c
-      const ispadding = charoffset === 0 || charoffset > word.length
-      const color = ispadding ? fg : wordcolor
-      context.color[bufindex + c] = color
-      context.bg[bufindex + c] = bg
-    }
+    context.color[bufindex + c] = fg
+    context.bg[bufindex + c] = bg
   }
   context.changed()
 }
 
+/** Draw status-strip / beside-popup hint; honors `$COLOR` format codes. Returns cells written. */
 export function drawhinttext(
   hint: string,
   hintx: number,
   hinty: number,
   rightbound: number,
   context: WRITE_TEXT_CONTEXT,
-) {
+  fg: number = AC_BORDER_HINT_FG,
+): number {
   if (!hint || hintx > rightbound) {
-    return
+    return 0
   }
-  const available = rightbound - hintx + 1
-  const text = hint.length > available ? hint.substring(0, available) : hint
-  const bufindex = hintx + hinty * context.width
-  applystrtoindex(bufindex, text, context)
-  applycolortoindexes(
-    bufindex,
-    bufindex + text.length - 1,
-    AC_HINT_FG,
-    AC_SEL_BG,
-    context,
-  )
+  const prevx = context.x
+  const prevy = context.y
+  const prevwrap = context.disablewrap
+  const prevactive = { ...context.active }
+
+  context.x = hintx
+  context.y = hinty
+  context.disablewrap = true
+  context.active.color = fg
+  context.active.bg = AC_SEL_BG
+  context.active.leftedge = hintx
+  context.active.rightedge = rightbound
+  context.active.topedge = hinty
+  context.active.bottomedge = hinty
+
+  tokenizeandwritetextformat(hint, context, false)
+  const written = Math.max(0, context.x - hintx)
+
+  context.x = prevx
+  context.y = prevy
+  context.disablewrap = prevwrap
+  context.active = prevactive
+  context.changed()
+  return written
 }
 
 export type DrawCommandArgHintOptions = {
@@ -494,7 +830,7 @@ export type DrawCommandArgHintOptions = {
 }
 
 /**
- * Draws the argument hint for a command (e.g. above the terminal input).
+ * Draws the argument hint for a command on the status strip (border / divider).
  * Uses the trailing hint string from the command's single signature.
  */
 export function drawcommandarghint(
@@ -513,15 +849,18 @@ export function drawcommandarghint(
   let cursor = px
   const argsStr = argsliststring(withsig as ARG_TYPE[])
   if (argsStr) {
-    drawhinttext(argsStr, cursor, py, edge.right, context)
-    cursor += argsStr.length + 1
+    const written = drawhinttext(argsStr, cursor, py, edge.right, context)
+    if (written > 0) {
+      cursor += written + 1
+    }
   }
-  drawhinttext(hint, cursor, py, edge.right, context)
-  const hintlen = Math.min(hint.length, Math.max(0, edge.right - cursor + 1))
-  cursor += hintlen > 0 ? hintlen + 1 : 0
+  const hintwritten = drawhinttext(hint, cursor, py, edge.right, context)
+  if (hintwritten > 0) {
+    cursor += hintwritten + 1
+  }
   const rom = options?.romhint?.trim()
   if (rom && cursor <= edge.right) {
-    drawhinttext(` ${rom}`, cursor, py, edge.right, context)
+    drawhinttext(rom, cursor, py, edge.right, context)
   }
 }
 
@@ -533,8 +872,8 @@ export function drawautocomplete(
   edge: AutocompleteEdge,
   context: WRITE_TEXT_CONTEXT,
   words: GADGET_ZSS_WORDS,
-  wordlistcolors: Map<string, COLOR>,
   drawabove?: boolean,
+  omitselectedhint?: boolean,
 ) {
   if (autocomplete.suggestions.length === 0) {
     return
@@ -591,20 +930,17 @@ export function drawautocomplete(
     const bufindex = rowstart + y * context.width
     applysuggestioncolors(
       bufindex,
-      textoffset,
       text,
-      autocomplete.suggestions[i].word,
       selected ? AC_SEL_FG : AC_FG,
       bg,
       context,
-      wordlistcolors,
     )
 
-    if (selected) {
+    if (selected && !omitselectedhint) {
       const hint = resolvesuggestionhint(autocomplete.suggestions[i], words)
       if (hint) {
         const hintx = rowstart + text.length
-        drawhinttext(hint, hintx, y, edge.right, context)
+        drawhinttext(hint, hintx, y, edge.right, context, AC_HINT_FG)
       }
     }
   }

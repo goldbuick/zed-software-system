@@ -90,6 +90,8 @@ export const STATS_INTERACTION = [
 ]
 
 export const STATS_BOOLEAN = [
+  'isitem',
+  'notitem',
   'ispushable',
   'notpushable',
   'iswalk',

@@ -1,6 +1,7 @@
 import { registermemoryfsdetach, registermemoryfsstatus } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { FIRMWARE } from 'zss/firmware'
+import { MEMORYFS_ACTION_KEYWORDS } from 'zss/firmware/autocompleteconstants'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE, NAME } from 'zss/words/types'
 
@@ -24,5 +25,6 @@ export function registermemoryfscommands(fw: FIRMWARE): FIRMWARE {
       }
       return 0
     },
+    { byposition: [[...MEMORYFS_ACTION_KEYWORDS]] },
   )
 }

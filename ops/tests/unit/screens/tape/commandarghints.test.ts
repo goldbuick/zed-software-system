@@ -27,19 +27,19 @@ describe('commandromhint', () => {
 
   it('caches romread result per command key', () => {
     romreadmock.mockReturnValue(`---
-hint: $DKGRAYfirst line
+hint: first line
 ---
 body`)
-    expect(commandromhint('send')).toBe('$DKGRAYfirst line')
-    expect(commandromhint('send')).toBe('$DKGRAYfirst line')
+    expect(commandromhint('send')).toBe('first line')
+    expect(commandromhint('send')).toBe('first line')
     expect(romreadmock).toHaveBeenCalledTimes(1)
     expect(romreadmock).toHaveBeenCalledWith('editor:commands:send')
   })
 
   it('normalizes cache key to lowercase', () => {
-    romreadmock.mockReturnValue('desc;$DKGRAYx')
-    expect(commandromhint('Stat')).toBe('$DKGRAYx')
-    expect(commandromhint('stat')).toBe('$DKGRAYx')
+    romreadmock.mockReturnValue('desc;x')
+    expect(commandromhint('Stat')).toBe('x')
+    expect(commandromhint('stat')).toBe('x')
     expect(romreadmock).toHaveBeenCalledTimes(1)
   })
 

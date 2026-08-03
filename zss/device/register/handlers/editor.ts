@@ -12,6 +12,7 @@ export function handleeditoropen(_device: DEVICE, message: MESSAGE): void {
     useTape.setState(() => ({
       editor: {
         open: true,
+        closing: false,
         player: message.player,
         book,
         path,
@@ -23,13 +24,31 @@ export function handleeditoropen(_device: DEVICE, message: MESSAGE): void {
   }
 }
 
-export function handleeditorclose(device: DEVICE, message: MESSAGE): void {
+/** Begin editor exit slide; `finisheditorclose` runs after PanelSlide completes. */
+export function handleeditorclose(_device: DEVICE, message: MESSAGE): void {
+  void message
+  useTape.setState((state) => {
+    if (!state.editor.open || state.editor.closing) {
+      return state
+    }
+    return {
+      editor: {
+        ...state.editor,
+        closing: true,
+      },
+    }
+  })
+}
+
+/** Clear editor state after the exit slide finishes. */
+export function finisheditorclose(device: DEVICE, player: string): void {
   useTape.setState((state) => ({
     editor: {
       ...state.editor,
       open: false,
+      closing: false,
     },
   }))
   synctapeactivelayout()
-  vmtapeeditorclose(device, message.player)
+  vmtapeeditorclose(device, player)
 }

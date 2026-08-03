@@ -1,3 +1,3 @@
 ---
-hint: "$DKGRAYread number input into given stat/flag"
+hint: "read number input into given stat/flag"
 ---

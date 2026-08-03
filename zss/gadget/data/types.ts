@@ -325,6 +325,8 @@ export type GADGET_ZSS_WORDS = {
   roles: string[]
   permissionconfigs: string[]
   players: string[]
+  /** `:label` names collected from object/loader codepages (terminal zap/restore). */
+  labels: string[]
   /** Lowercase command name → optional per-arg keyword lists / first-arg variants (from firmware). */
   commandargmeta: Record<string, COMMAND_ARG_AUTOCOMPLETE>
 }

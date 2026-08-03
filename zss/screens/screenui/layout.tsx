@@ -4,6 +4,7 @@ import { useDeviceData } from 'zss/gadget/device'
 import { Rect } from 'zss/gadget/rect'
 import { PanelComponent } from 'zss/screens/panel/component'
 import { ScreenUIFramed } from 'zss/screens/screenui/framed'
+import { useGadgetInputBlocked } from 'zss/screens/screenui/gadgetinputblocked'
 import { PanelSlide } from 'zss/screens/scroll/panelslide'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -79,6 +80,7 @@ function LayoutRect({ rect }: LayoutRectProps) {
 
 export function ScreenUILayout() {
   const layout = useScreenUILayoutContext()
+  const inputblocked = useGadgetInputBlocked()
 
   if (!layout) {
     return null
@@ -117,6 +119,15 @@ export function ScreenUILayout() {
             </group>
           )
         })}
+        {inputblocked && (
+          <Rect
+            blocking
+            visible={false}
+            width={screensize.cols}
+            height={screensize.rows}
+            z={600}
+          />
+        )}
       </group>
     </>
   )

@@ -111,10 +111,7 @@ export function pushwasmsabvalues(
 }
 
 /** Read a channel snapshot (tests / debug). Optional engine; defaults to last touched. */
-export function wasmsabsnapshot(
-  channelid: string,
-  maxi?: SabEngine,
-): number[] {
+export function wasmsabsnapshot(channelid: string, maxi?: SabEngine): number[] {
   const engine = maxi ?? lastengine
   if (!engine) {
     return []

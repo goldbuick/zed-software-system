@@ -41,6 +41,7 @@ const emptywords = {
   roles: [],
   permissionconfigs: [],
   players: [],
+  labels: [],
   commandargmeta: {},
 }
 
