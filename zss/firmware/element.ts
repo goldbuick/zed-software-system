@@ -1032,7 +1032,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       chip.restore(maptostring(words[0]))
       return 0
     },
-    { editor: ['labels'] },
+    { editor: ['labels'], lists: ['labels'] },
   )
   .command('unlock', ['against messages from others'], (chip) => {
     chip.unlock()
@@ -1045,7 +1045,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       chip.zap(maptostring(words[0]))
       return 0
     },
-    { editor: ['labels'] },
+    { editor: ['labels'], lists: ['labels'] },
   )
   .command(
     'cycle',

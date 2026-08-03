@@ -43,6 +43,7 @@ const WORD_LIST_KEYS: ZSS_WORD_LIST_KEY[] = [
   'roles',
   'permissionconfigs',
   'players',
+  'labels',
 ]
 
 /**
@@ -331,7 +332,13 @@ function getautocompletefromtokens(
         activecategory = 'stat'
         break
       case lexer.label.tokenTypeIdx:
-        activecategory = 'label'
+        // `:name` as a #command argument (e.g. #zap :touch) — not a line label
+        if (cmdidx >= 0 && activetokenidx >= cmdidx + 2) {
+          prefix = (token.image ?? '').toLowerCase()
+          activecategory = ''
+        } else {
+          activecategory = 'label'
+        }
         break
       case lexer.hyperlink.tokenTypeIdx:
         activecategory = 'hyperlink'

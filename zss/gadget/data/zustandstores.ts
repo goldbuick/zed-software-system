@@ -111,6 +111,7 @@ export const useGadgetClient = create<{
     roles: [],
     permissionconfigs: [],
     players: [],
+    labels: [],
     commandargmeta: {},
   },
 }))

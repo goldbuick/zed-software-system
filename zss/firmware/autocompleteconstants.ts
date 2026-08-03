@@ -53,9 +53,22 @@ export const CODEPAGE_NAME_LISTS = [...ZNS_CODEPAGE_LISTS]
 
 export const BRIDGE_SUBCOMMANDS = ['status'] as const
 
+export const MEMORYFS_ACTION_KEYWORDS = ['status', 'detach'] as const
+
+export const ZZTSEARCH_FIELD_KEYWORDS = [
+  'title',
+  'letter',
+  'author',
+  'genres',
+  'filename',
+  'screenshot',
+  'publish_date',
+] as const
+
 export const HTTP_METHODS = ['get', 'post', 'put', 'delete', 'patch'] as const
 
-export const FETCH_METHOD_KEYWORDS = [...HTTP_METHODS]
+/** Methods accepted by network fetchcommand (not full HTTP_METHODS). */
+export const FETCH_METHOD_KEYWORDS = ['get', 'post:json'] as const
 
 /** Shared first-arg keywords for #echo / #reverb / … (applywasmfxconfig). */
 export const FX_FIRST_ARG_KEYWORDS = [

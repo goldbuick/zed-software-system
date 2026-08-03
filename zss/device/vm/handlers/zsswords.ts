@@ -18,6 +18,7 @@ import {
 import { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import { ispresent } from 'zss/mapping/types'
 import { memoryreadcodepagename } from 'zss/memory/codepageoperations'
+import { memorycollectcodelabels } from 'zss/memory/codelabels'
 import { memorylistallcodepagewithtype } from 'zss/memory/codepages'
 import { memoryreadflags } from 'zss/memory/flags'
 import {
@@ -154,6 +155,7 @@ export function handlezsswords(vm: DEVICE, message: MESSAGE): void {
     roles: [...PERMISSION_ROLES],
     permissionconfigs: [...PERMISSION_CONFIG_NAMES],
     players: objectKeys(memoryreadplayertotoken()),
+    labels: memorycollectcodelabels(),
     commandargmeta,
     exprs: [
       'aligned',

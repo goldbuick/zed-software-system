@@ -1,6 +1,7 @@
 import { vmzztrandom, vmzztsearch } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { FIRMWARE } from 'zss/firmware'
+import { ZZTSEARCH_FIELD_KEYWORDS } from 'zss/firmware/autocompleteconstants'
 import { ispresent } from 'zss/mapping/types'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE } from 'zss/words/types'
@@ -20,6 +21,7 @@ export function registerzztcommands(fw: FIRMWARE): FIRMWARE {
         vmzztsearch(SOFTWARE, READ_CONTEXT.elementfocus, field, text)
         return 0
       },
+      { byposition: [[...ZZTSEARCH_FIELD_KEYWORDS]] },
     )
     .command('zztrandom', ['random ZZT content'], () => {
       vmzztrandom(SOFTWARE, READ_CONTEXT.elementfocus)

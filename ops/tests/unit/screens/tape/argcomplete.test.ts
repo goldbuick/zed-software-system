@@ -32,6 +32,7 @@ const emptywords = {
   roles: ['mod'],
   permissionconfigs: ['lockdown', 'creative', 'open'],
   players: ['alice'],
+  labels: [],
   commandargmeta: {},
 } satisfies GADGET_ZSS_WORDS
 

@@ -30,6 +30,29 @@ const setsig = [
 ] as const
 const clearsig = [ARG_TYPE.NAME, 'variables (set to 0)'] as const
 const arraysig = [ARG_TYPE.NAME, 'array variable'] as const
+const memoryfssig = [
+  ARG_TYPE.NAME,
+  'memoryfs status|detach (operator only)',
+] as const
+const zztsearchsig = [
+  ARG_TYPE.NAME,
+  ARG_TYPE.MAYBE_NAME,
+  'ZZT content by field and text',
+] as const
+const fetchsig = [
+  ARG_TYPE.NAME,
+  ARG_TYPE.NAME,
+  ARG_TYPE.MAYBE_STRING,
+  'URL with label, method, and optional data',
+] as const
+const fetchwithsig = [
+  ARG_TYPE.ANY,
+  ARG_TYPE.NAME,
+  ARG_TYPE.NAME,
+  ARG_TYPE.MAYBE_STRING,
+  'URL with argument, label, method, and optional data',
+] as const
+const zapsig = [ARG_TYPE.NAME, '-activate first label of given name'] as const
 
 const words = {
   langcommands: {
@@ -37,12 +60,18 @@ const words = {
     take: [...takesig],
     put: [...putsig],
   },
-  clicommands: {},
+  clicommands: {
+    memoryfs: [...memoryfssig],
+    zztsearch: [...zztsearchsig],
+  },
   loadercommands: {},
   runtimecommands: {
     set: [...setsig],
     clear: [...clearsig],
     array: [...arraysig],
+    fetch: [...fetchsig],
+    fetchwith: [...fetchwithsig],
+    zap: [...zapsig],
   },
   flags: ['ammo', 'gems', 'health'],
   statsboard: [],
@@ -65,12 +94,30 @@ const words = {
   roles: [],
   permissionconfigs: [],
   players: [],
+  labels: [':touch', ':think', ':calc'],
   commandargmeta: {
     give: { lists: ['flags'], editor: ['variables'] },
     take: { lists: ['flags'], editor: ['variables'] },
     set: { lists: ['flags'], editor: ['variables'] },
     clear: { lists: ['flags'], editor: ['variables'] },
     array: { lists: ['flags'], editor: ['variables'] },
+    memoryfs: { byposition: [['status', 'detach']] },
+    zztsearch: {
+      byposition: [
+        [
+          'title',
+          'letter',
+          'author',
+          'genres',
+          'filename',
+          'screenshot',
+          'publish_date',
+        ],
+      ],
+    },
+    fetch: { byposition: [[], [], ['get', 'post:json']] },
+    fetchwith: { byposition: [[], [], [], ['get', 'post:json']] },
+    zap: { editor: ['labels'], lists: ['labels'] },
   },
 } satisfies GADGET_ZSS_WORDS
 
@@ -153,5 +200,53 @@ describe('command arg autocomplete (not text category)', () => {
       const ac = getautocomplete(row, cursor, words)
       expect(ac.suggestions.map((s) => s.word)).toEqual(['health'])
     }
+  })
+
+  it('suggests memoryfs actions for #memoryfs st', () => {
+    const row = rowforcode('#memoryfs st')
+    const cursor = row.code.indexOf('st') + 2
+    const ac = getautocomplete(row, cursor, words)
+    expect(ac.suggestions.map((s) => s.word)).toEqual(['status'])
+  })
+
+  it('suggests zztsearch fields for #zztsearch ti', () => {
+    const row = rowforcode('#zztsearch ti')
+    const cursor = row.code.indexOf('ti') + 2
+    const ac = getautocomplete(row, cursor, words)
+    expect(ac.suggestions.map((s) => s.word)).toEqual(['title'])
+  })
+
+  it('suggests fetch methods get and post:json', () => {
+    const rowget = rowforcode('#fetch x y ge')
+    const cursorget = rowget.code.indexOf('ge') + 2
+    const acget = getautocomplete(rowget, cursorget, words)
+    expect(acget.suggestions.map((s) => s.word)).toEqual(['get'])
+
+    const rowpost = rowforcode('#fetch x y po')
+    const cursorpost = rowpost.code.indexOf('po') + 2
+    const acpost = getautocomplete(rowpost, cursorpost, words)
+    expect(acpost.suggestions.map((s) => s.word)).toEqual(['post:json'])
+
+    const rowwith = rowforcode('#fetchwith a x y ge')
+    const cursorwith = rowwith.code.indexOf('ge') + 2
+    const acwith = getautocomplete(rowwith, cursorwith, words)
+    expect(acwith.suggestions.map((s) => s.word)).toEqual(['get'])
+  })
+
+  it('suggests book labels for #zap in terminal without editorctx', () => {
+    const row = rowforcode('#zap :to')
+    const cursor = row.code.indexOf(':to') + 3
+    const ac = getautocomplete(row, cursor, words)
+    expect(ac.suggestions.map((s) => s.word)).toEqual([':touch'])
+  })
+
+  it('prefers editor labels for #zap when editorctx is present', () => {
+    const row = rowforcode('#zap :th')
+    const cursor = row.code.indexOf(':th') + 3
+    const ac = getautocomplete(row, cursor, words, {
+      labels: [':think', ':thaw'],
+      variables: [],
+    })
+    expect(ac.suggestions.map((s) => s.word)).toEqual([':thaw', ':think'])
   })
 })

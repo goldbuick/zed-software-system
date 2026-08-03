@@ -56,6 +56,7 @@ const words = {
   roles: [],
   permissionconfigs: [],
   players: [],
+  labels: [],
   commandargmeta: {},
 } satisfies GADGET_ZSS_WORDS
 
