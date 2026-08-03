@@ -49,7 +49,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `bridge` | Bridge integrations snapshot: `#bridge` or `#bridge status` (chat slots + broadcast; no secrets) (operator only) |
 | `broadcast` | Stream broadcast: `#broadcast` (platform menu), `#broadcast stop`, `#broadcast <stream-key>` (IVS low-latency), `#broadcast whip twitch <key>`, `#broadcast whip ivs <token>`, or `#broadcast whip <url> <bearer>` (operator only) |
 | `permissions` | Read-only: base preset, group legend, player→role, per-role effective commands (overrides vs preset), banned tokens |
-| `access` | Set base preset: `lockdown` or `creative` (overrides preserved) |
+| `access` | Set base preset: `lockdown`, `creative`, or `open` (overrides preserved) |
 | `allow` | Grant a permission family for a role (`admin` / `mod` / `player`); use a family name or any command that maps to that family |
 | `revoke` | Revoke a family relative to the preset for a role (or undo a prior `allow`) |
 | `role` | Assign role for a player id |

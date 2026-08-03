@@ -2262,7 +2262,7 @@ Source: https://zed.cafe/docs/features/permissions-moderation
 |---------|----------|-------------|---------|
 | 9 permission groups | Both | bridge, build, coder, explore, moderation, persist, risk, roles, speaker. | `zss/memory/permissions.ts` |
 | #permissions | Both | View current permission configuration. | `#permissions` |
-| #access lockdown/creative | Both | Apply preset permission profiles. | `#access` |
+| #access lockdown/creative/open | Both | Apply preset permission profiles. | `#access` |
 | #allow / #revoke | Both | Grant or remove command group access for roles. | `#allow` |
 | #role | Both | Assign admin/mod/player role to players. | `#role` |
 | Operator bypass | Both | Session operator skips all permission checks. | `vm:operator` |
@@ -2631,7 +2631,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `bridge` | Bridge integrations snapshot: `#bridge` or `#bridge status` (chat slots + broadcast; no secrets) (operator only) |
 | `broadcast` | Stream broadcast: `#broadcast` (platform menu), `#broadcast stop`, `#broadcast <stream-key>` (IVS low-latency), `#broadcast whip twitch <key>`, `#broadcast whip ivs <token>`, or `#broadcast whip <url> <bearer>` (operator only) |
 | `permissions` | Read-only: base preset, group legend, player→role, per-role effective commands (overrides vs preset), banned tokens |
-| `access` | Set base preset: `lockdown` or `creative` (overrides preserved) |
+| `access` | Set base preset: `lockdown`, `creative`, or `open` (overrides preserved) |
 | `allow` | Grant a permission family for a role (`admin` / `mod` / `player`); use a family name or any command that maps to that family |
 | `revoke` | Revoke a family relative to the preset for a role (or undo a prior `allow`) |
 | `role` | Assign role for a player id |
@@ -3926,15 +3926,21 @@ Source: [`zss/memory/permissions.ts`](https://github.com/goldbuick/zed-software-
 
 ### lockdown
 
-**Audience:** Both · **Related:** creative, #access
+**Audience:** Both · **Related:** creative, open, #access
 
-Permission preset restricting build, risk, and speaker commands.
+Permission preset restricting build and speaker; players get no controlled groups.
 
 ### creative
 
-**Audience:** Both · **Related:** lockdown, #access
+**Audience:** Both · **Related:** lockdown, open, #access
 
-Permission preset allowing broad build and explore for all players.
+Permission preset allowing explore, coder, build, and speaker for players (no persist, bridge, moderation, or roles).
+
+### open
+
+**Audience:** Both · **Related:** lockdown, creative, #access
+
+Permission preset granting all groups except risk to every role (persist, bridge, moderation, roles included). Risk still requires `#allow` or operator.
 
 ## Product
 
@@ -4547,7 +4553,7 @@ flowchart LR
 ## Parsing footguns
 
 - **`new Function` / CSP** — The generator uses dynamic `Function` construction ([generator.ts](../backend/typescript/generator.ts)); treat untrusted source like any eval-capable path (CSP, validation, supply chain).
-- **`maxLookahead: 2`** — LL(2)-style limits in [parser.ts](../backend/typescript/parser.ts); some inputs may fail or parse differently than with unbounded lookahead.
+- **`maxLookahead: 3`** — LL(3)-style limits in [parser.ts](../backend/typescript/parser.ts); some inputs may fail or parse differently than with unbounded lookahead.
 - **Recovery** — Partial CST possible after errors; always check parser errors before using the tree.
 - **Statement `/`** — Token `divide` (`/`) at **statement** level is [`short_go`](../backend/typescript/parser.ts); inside `term_item` it is division. Context disambiguates.
 - **`token_expr` vs arithmetic** — First branch of `arith_expr` favors built-in token DSL over `+`/`-` term chains when both apply.
@@ -4923,8 +4929,8 @@ Source: https://zed.cafe/docs/lang/parser
 
 ## Dependencies
 
-- `chevrotain` — CstParser, CstNode, IToken, generateCstDts
-- `zss/config` — LANG_DEV, LANG_TYPES
+- `chevrotain` — CstParser, CstNode, IToken, IRuleConfig, ParserMethod
+- `zss/config` — LANG_DEV
 - `./lexer` — all lexer tokens
 
 ## Exports
@@ -4994,7 +5000,7 @@ Source: https://zed.cafe/docs/lang/parser
 
 ## Parser Configuration
 
-- **maxLookahead**: 2
+- **maxLookahead**: 3
 - **recoveryEnabled**: true
 - **nodeLocationTracking**: full
 - **traceInitPerf**: LANG_DEV
@@ -5002,11 +5008,11 @@ Source: https://zed.cafe/docs/lang/parser
 ## Internal Helpers
 
 - **`RULED`** — Wraps rules with optional tracing (LANG_DEV) and indent logging
-- **`PEEK`** — Debug helper for token inspection
+- **`PEEK`** — Debug helper for token inspection (currently a no-op stub)
 
-## LANG_TYPES
+## CST types
 
-When `LANG_TYPES` is enabled, the parser generates CST type definitions via `generateCstDts` and logs them to console (for visitortypes maintenance).
+`parser.ts` does not generate CST types at runtime. [`visitortypes.ts`](../backend/typescript/visitortypes.ts) is maintained by hand; regenerate it out-of-band with `generateCstDts(parser.getGAstProductions())` if the grammar changes shape.
 
 ---
 

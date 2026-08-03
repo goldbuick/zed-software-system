@@ -269,7 +269,7 @@
 <h2 id="parsing-footguns"><a class="blume-heading-anchor" href="#parsing-footguns">Parsing footguns</a></h2>
 <ul>
 <li><strong><code>new Function</code> / CSP</strong> — The generator uses dynamic <code>Function</code> construction (<a href="../backend/typescript/generator.ts">generator.ts</a>); treat untrusted source like any eval-capable path (CSP, validation, supply chain).</li>
-<li><strong><code>maxLookahead: 2</code></strong> — LL(2)-style limits in <a href="../backend/typescript/parser.ts">parser.ts</a>; some inputs may fail or parse differently than with unbounded lookahead.</li>
+<li><strong><code>maxLookahead: 3</code></strong> — LL(3)-style limits in <a href="../backend/typescript/parser.ts">parser.ts</a>; some inputs may fail or parse differently than with unbounded lookahead.</li>
 <li><strong>Recovery</strong> — Partial CST possible after errors; always check parser errors before using the tree.</li>
 <li><strong>Statement <code>/</code></strong> — Token <code>divide</code> (<code>/</code>) at <strong>statement</strong> level is <a href="../backend/typescript/parser.ts"><code>short_go</code></a>; inside <code>term_item</code> it is division. Context disambiguates.</li>
 <li><strong><code>token_expr</code> vs arithmetic</strong> — First branch of <code>arith_expr</code> favors built-in token DSL over <code>+</code>/<code>-</code> term chains when both apply.</li>
