@@ -13,7 +13,11 @@ export const USERINPUT_ACTIONS = [
   'cancel',
 ] as const
 
-export const PERMISSION_CONFIG_KEYWORDS = ['lockdown', 'creative'] as const
+export const PERMISSION_CONFIG_KEYWORDS = [
+  'lockdown',
+  'creative',
+  'open',
+] as const
 
 export const PERMISSION_ROLE_KEYWORDS = ['admin', 'mod', 'player'] as const
 

@@ -41,11 +41,12 @@ import {
   EMPTY_AUTOCOMPLETE,
   drawautocomplete,
   drawcommandarghint,
+  drawhinttext,
   getautocomplete,
 } from 'zss/screens/tape/autocomplete'
 import {
   applyautocompletesuggestion,
-  computeterminalarghintx,
+  computeterminalstatushintrect,
 } from 'zss/screens/tape/autocompleteui'
 import {
   ZSS_CURSOR_BG,
@@ -56,6 +57,7 @@ import {
 } from 'zss/screens/tape/colors'
 import { commandromhint } from 'zss/screens/tape/commandarghints'
 import { setuplogitem } from 'zss/screens/tape/common'
+import { resolvesuggestionhint } from 'zss/screens/tape/suggestionhints'
 import {
   applycolortoindexes,
   textformatreadedges,
@@ -432,6 +434,8 @@ export function TerminalInput({
   const startx = edge.left
   const starty = edge.top + edge.height - 1
   const popupleftx = startx + autocomplete.wordcol - 1
+  const status = computeterminalstatushintrect(edge)
+  const statusedge = { ...edge, right: status.right }
   if (autocompleteactive) {
     drawautocomplete(
       autocomplete,
@@ -443,18 +447,25 @@ export function TerminalInput({
       zsswords,
       zsswordcolormap,
       true,
+      true,
     )
-  }
-  if (
-    !autocompleteactive &&
+    const idx = Math.max(0, autocompleteindex)
+    const suggestion = autocomplete.suggestions[idx]
+    if (suggestion) {
+      const hint = resolvesuggestionhint(suggestion, zsswords)
+      if (hint) {
+        drawhinttext(hint, status.x, status.y, status.right, context)
+      }
+    }
+  } else if (
     autocomplete.endoflinehint &&
     autocomplete.endoflineargs.length > 0
   ) {
     drawcommandarghint(
       autocomplete.endoflineargs,
-      computeterminalarghintx(startx, inputstate.length),
-      starty,
-      edge,
+      status.x,
+      status.y,
+      statusedge,
       context,
       {
         romhint: commandromhint(autocomplete.hintcommandname),

@@ -12,7 +12,7 @@ export const PERMISSION_CONTROLLED_GROUPS = new Map<string, string>([
   ['explore', 'boards, boardopen, goto'],
   ['moderation', 'ban and unban players'],
   ['persist', 'save sim state, share content'],
-  ['risk', 'import, nuke, publish/export, trash, operator tooling'],
+  ['risk', 'nuke, publish/export, trash, access, zns, restart'],
   ['roles', 'manage role and permission assignments'],
   ['speaker', 'play, synth, bgplay, toast, TTS'],
 ])
@@ -37,6 +37,7 @@ export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
   erase: 'build',
   findany: 'build',
   gadget: 'build',
+  dev: 'build',
   oneof: 'build',
   oneofwith: 'build',
   pivot: 'build',
@@ -82,7 +83,6 @@ export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
   bookexport: 'risk',
   bookrename: 'risk',
   booktrash: 'risk',
-  dev: 'risk',
   export: 'risk',
   itchiopublish: 'risk',
   nuke: 'risk',
@@ -195,7 +195,7 @@ function normalizetofamilyforallowlist(input: string): string {
 export const PERMISSION_ROLES: string[] = ['admin', 'mod', 'player']
 
 /** Base preset only: overrides are stored separately. */
-export const PERMISSION_CONFIG_NAMES = ['lockdown', 'creative'] as const
+export const PERMISSION_CONFIG_NAMES = ['lockdown', 'creative', 'open'] as const
 
 export type PERMISSION_CONFIG_NAME = (typeof PERMISSION_CONFIG_NAMES)[number]
 
@@ -213,9 +213,11 @@ const CREATIVE_ALLOWLIST_PLAYER: string[] = [
   'explore',
   'coder',
   'build',
-  'persist',
   'speaker',
 ]
+
+/** All groups except risk — open preset and admin defaults. */
+const OPEN_ALLOWLIST: string[] = [...DEFAULT_ALLOWLIST_ADMIN]
 
 /** Preset allowlistbyrole by base config name. */
 export const PERMISSION_PRESETS: Record<
@@ -231,6 +233,11 @@ export const PERMISSION_PRESETS: Record<
     admin: [...DEFAULT_ALLOWLIST_ADMIN],
     mod: [...CREATIVE_ALLOWLIST_MOD],
     player: [...CREATIVE_ALLOWLIST_PLAYER],
+  },
+  open: {
+    admin: [...OPEN_ALLOWLIST],
+    mod: [...OPEN_ALLOWLIST],
+    player: [...OPEN_ALLOWLIST],
   },
 }
 
@@ -350,7 +357,7 @@ function deriveoverridesfromeffective(
 }
 
 function sanitizerpermissionbase(raw: string): PERMISSION_CONFIG_NAME {
-  if (raw === 'lockdown' || raw === 'creative') {
+  if (raw === 'lockdown' || raw === 'creative' || raw === 'open') {
     return raw
   }
   return 'creative'

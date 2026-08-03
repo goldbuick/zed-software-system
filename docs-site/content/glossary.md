@@ -189,15 +189,21 @@ Source: [`zss/memory/permissions.ts`](https://github.com/goldbuick/zed-software-
 
 ### lockdown
 
-**Audience:** Both · **Related:** creative, #access
+**Audience:** Both · **Related:** creative, open, #access
 
-Permission preset restricting build, risk, and speaker commands.
+Permission preset restricting build and speaker; players get no controlled groups.
 
 ### creative
 
-**Audience:** Both · **Related:** lockdown, #access
+**Audience:** Both · **Related:** lockdown, open, #access
 
-Permission preset allowing broad build and explore for all players.
+Permission preset allowing explore, coder, build, and speaker for players (no persist, bridge, moderation, or roles).
+
+### open
+
+**Audience:** Both · **Related:** lockdown, creative, #access
+
+Permission preset granting all groups except risk to every role (persist, bridge, moderation, roles included). Risk still requires `#allow` or operator.
 
 ## Product
 

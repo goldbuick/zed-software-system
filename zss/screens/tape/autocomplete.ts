@@ -451,7 +451,7 @@ export type DrawCommandArgHintOptions = {
 }
 
 /**
- * Draws the argument hint for a command (e.g. above the terminal input).
+ * Draws the argument hint for a command on the status strip (border / divider).
  * Uses the trailing hint string from the command's single signature.
  */
 export function drawcommandarghint(
@@ -492,6 +492,7 @@ export function drawautocomplete(
   words: GADGET_ZSS_WORDS,
   wordlistcolors: Map<string, COLOR>,
   drawabove?: boolean,
+  omitselectedhint?: boolean,
 ) {
   if (autocomplete.suggestions.length === 0) {
     return
@@ -557,7 +558,7 @@ export function drawautocomplete(
       wordlistcolors,
     )
 
-    if (selected) {
+    if (selected && !omitselectedhint) {
       const hint = resolvesuggestionhint(autocomplete.suggestions[i], words)
       if (hint) {
         const hintx = rowstart + text.length
