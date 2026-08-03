@@ -6,53 +6,68 @@ import {
   WASM_SAB_SEQ_LEN,
 } from './wasmsabchannels'
 
-let seqview: Int32Array | undefined
-let seqregistered = false
+type ENGINE_SEQ = {
+  view: Int32Array
+  registered: boolean
+}
+
+const byengine = new WeakMap<SabEngine, ENGINE_SEQ>()
+let lastengine: SabEngine | undefined
 
 function canusezerosab(): boolean {
   return typeof SharedArrayBuffer !== 'undefined'
 }
 
-/** Ensure the Int32 sequence counter SAB exists on the main thread. */
-export function ensureseqchannel(): Int32Array | undefined {
+function getengineseq(maxi: SabEngine): ENGINE_SEQ | undefined {
   if (!canusezerosab()) {
     return undefined
   }
-  if (!seqview) {
+  let state = byengine.get(maxi)
+  if (!state) {
     const sab = new SharedArrayBuffer(
       WASM_SAB_SEQ_LEN * Int32Array.BYTES_PER_ELEMENT,
     )
-    seqview = new Int32Array(sab, 0, WASM_SAB_SEQ_LEN)
+    state = {
+      view: new Int32Array(sab, 0, WASM_SAB_SEQ_LEN),
+      registered: false,
+    }
+    byengine.set(maxi, state)
   }
-  return seqview
+  lastengine = maxi
+  return state
+}
+
+/** Ensure the Int32 sequence counter SAB exists for this engine. */
+export function ensureseqchannel(maxi: SabEngine): Int32Array | undefined {
+  return getengineseq(maxi)?.view
 }
 
 /** Register the seq SAB with the worklet (Int32, not Float64). */
 export function registerseqchannel(maxi: SabEngine) {
-  if (!maxi.audioWorkletNode?.port || seqregistered || !canusezerosab()) {
+  if (!maxi.audioWorkletNode?.port || !canusezerosab()) {
     return
   }
-  const view = ensureseqchannel()
-  if (!view) {
+  const state = getengineseq(maxi)
+  if (!state || state.registered) {
     return
   }
   maxi.audioWorkletNode.port.postMessage({
     zss_sab_register: 1,
     channelID: WASM_SAB_SEQ,
-    sab: view.buffer,
-    length: view.length,
+    sab: state.view.buffer,
+    length: state.view.length,
     sabkind: 'int32',
   })
-  seqregistered = true
+  state.registered = true
 }
 
 /** Bump the dirty counter for a pushed data channel. */
-export function bumpsabseq(channelid: string) {
+export function bumpsabseq(maxi: SabEngine, channelid: string) {
   const idx = WASM_SAB_SEQ_CHANNEL_TO_IDX[channelid]
   if (idx === undefined) {
     return
   }
-  const view = ensureseqchannel()
+  const view = ensureseqchannel(maxi)
   if (!view) {
     return
   }
@@ -60,8 +75,8 @@ export function bumpsabseq(channelid: string) {
 }
 
 /** Zero all seq counters (boot/resync before full state push). */
-export function resetsabseq() {
-  const view = ensureseqchannel()
+export function resetsabseq(maxi: SabEngine) {
+  const view = ensureseqchannel(maxi)
   if (!view) {
     return
   }
@@ -70,9 +85,13 @@ export function resetsabseq() {
   }
 }
 
-/** Read seq counters (tests / debug). */
-export function sabseqsnapshot(): number[] {
-  const view = ensureseqchannel()
+/** Read seq counters (tests / debug). Optional engine; defaults to last touched. */
+export function sabseqsnapshot(maxi?: SabEngine): number[] {
+  const engine = maxi ?? lastengine
+  if (!engine) {
+    return []
+  }
+  const view = ensureseqchannel(engine)
   if (!view) {
     return []
   }
@@ -83,8 +102,7 @@ export function sabseqsnapshot(): number[] {
   return out
 }
 
-/** Clear seq registry state (tests). */
+/** Clear seq registry bookkeeping (tests). WeakMap entries drop with engines. */
 export function resetsabseqregistry() {
-  seqview = undefined
-  seqregistered = false
+  lastengine = undefined
 }

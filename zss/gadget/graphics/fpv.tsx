@@ -13,6 +13,7 @@ import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { useDeviceData } from 'zss/gadget/device'
 import { DepthFog } from 'zss/gadget/fx/depthfog'
+import { boardinspectorzfromgadgetstacks } from 'zss/gadget/graphics/boardinspectorz'
 import {
   initfocusifneeded,
   isfocuspanphase,
@@ -20,7 +21,6 @@ import {
   stashfocusexitsnap,
   stepfocuswithboardtransition,
 } from 'zss/gadget/graphics/camerafocus'
-import { boardinspectorzfromgadgetstacks } from 'zss/gadget/graphics/boardinspectorz'
 import {
   buildexitpreviewgroups,
   gadgettoexitsnap,

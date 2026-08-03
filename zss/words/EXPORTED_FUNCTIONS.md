@@ -58,8 +58,8 @@
 - **applystrtoindex(p1, str, context)** - Applies a string to context starting at index p1
 - **applycolortoindexes(p1, p2, color, bg, context)** - Applies color and background to a range of indexes
 - **applybgtoindexes(p1, p2, bg, context)** - Applies background color to a range of indexes
-- **clippedapplycolortoindexes(index, rightedge, p1, p2, color, bg, context)** - Applies colors to indexes with boundary clipping
-- **clippedapplybgtoindexes(index, rightedge, p1, p2, color, context)** - Applies background color to indexes with boundary clipping
+- **clippedapplycolortoindexes(rowindex, startx, leftclip, rightclip, p1, p2, color, bg, context)** - Applies colors on one row; `p1`/`p2` relative to `startx`, clipped to `[leftclip, rightclip]`
+- **clippedapplybgtoindexes(rowindex, startx, leftclip, rightclip, p1, p2, color, context)** - Same clipping for background only
 
 ## Color Operations
 

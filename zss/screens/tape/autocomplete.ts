@@ -160,6 +160,31 @@ function statnameprefixfromtoken(image: string): string {
   return NAME(name)
 }
 
+/** play/toast/ticker lexer tokens swallow args into one image; use the first word. */
+function isfreeformcommandtoken(token: {
+  tokenTypeIdx?: number | undefined
+}): boolean {
+  const idx = token.tokenTypeIdx
+  return (
+    idx === lexer.command_play.tokenTypeIdx ||
+    idx === lexer.command_toast.tokenTypeIdx ||
+    idx === lexer.command_ticker.tokenTypeIdx
+  )
+}
+
+function commandnamefromnametoken(token: {
+  tokenTypeIdx?: number | undefined
+  image?: string
+}): string {
+  const image = token.image ?? ''
+  if (isfreeformcommandtoken(token)) {
+    const space = image.indexOf(' ')
+    const first = space >= 0 ? image.slice(0, space) : image
+    return NAME(first).toLowerCase()
+  }
+  return NAME(image).toLowerCase()
+}
+
 function getautocompletefromtokens(
   row: EDITOR_CODE_ROW,
   col: number,
@@ -210,10 +235,10 @@ function getautocompletefromtokens(
     }
 
     let endoflinehint = cmdidx >= 0
-    const maybecommand = cmdidx >= 0 ? (tokens[cmdidx + 1]?.image ?? '') : ''
-    const hintcommandname =
-      cmdidx >= 0 && maybecommand !== '' ? NAME(maybecommand).toLowerCase() : ''
-    const cmdlookup = maybecommand.toLowerCase()
+    const nametoken = cmdidx >= 0 ? tokens[cmdidx + 1] : undefined
+    const maybecommand = nametoken ? commandnamefromnametoken(nametoken) : ''
+    const hintcommandname = maybecommand
+    const cmdlookup = maybecommand
     const maybesig =
       words.langcommands[cmdlookup] ??
       words.clicommands[cmdlookup] ??
@@ -245,6 +270,12 @@ function getautocompletefromtokens(
       case lexer.comment.tokenTypeIdx:
         activecategory = 'comment'
         break
+      case lexer.command_play.tokenTypeIdx:
+      case lexer.command_toast.tokenTypeIdx:
+      case lexer.command_ticker.tokenTypeIdx:
+        // Free-form remainder; EOL hint only (no keyword popup).
+        activecategory = 'freeformcommand'
+        break
       case lexer.command_if.tokenTypeIdx:
       case lexer.command_do.tokenTypeIdx:
       case lexer.command_done.tokenTypeIdx:
@@ -273,6 +304,18 @@ function getautocompletefromtokens(
     }
 
     switch (activecategory) {
+      case 'freeformcommand': {
+        return {
+          suggestions: [],
+          prefix: '',
+          wordcol,
+          wordstart,
+          endoflinehint: true,
+          endoflineargs,
+          maxsuggestionwordlen: 0,
+          hintcommandname,
+        }
+      }
       case 'commands': {
         const items = [
           ...tagrecordkeys(words.langcommands, 'commands'),

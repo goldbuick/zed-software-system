@@ -389,11 +389,12 @@ export function TerminalInput({
   writeplaintext(inputline, context, true)
 
   if (!quickterminal) {
-    const yoffset = (context.y - 1) * context.width
+    const rowindex = (context.y - 1) * context.width
     applycodetokencolors(
+      rowindex,
       0,
-      yoffset,
-      edge.width,
+      0,
+      edge.width - 1,
       inputlinetokens,
       context,
       inputline,

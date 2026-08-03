@@ -51,7 +51,7 @@ Defined in [`wasmmainsab.ts`](../backend/wasm/wasmmainsab.ts). Mute floor: raw `
 
 | Control | SAB slot | Default | dB law | Linear @ default | Notes |
 |---------|----------|---------|--------|------------------|-------|
-| `#vol` / playvolume | PLAY (0) | **50** | `20*log10(vol*0.25) + kMainFaderOffsetDb` | ~**0.22** @ offset -35 | Master after razzle |
+| `#vol` / playvolume | PLAY (0) | **50** | `20*log10(vol*0.25) + kMainFaderOffsetDb` | ~**2.22** @ offset -15 | Master after razzle |
 | `#bgvol` / bgplayvolume | BGPLAY (1) | **50** | `20*log10(vol) - 35` | ~**0.89** | bgplay stem |
 | `#ttsvol` / ttsvolume | TTS (2) | **100** | same as bg | ~**1.78** | TTS sample level |
 | Voice `vol` | voice cfg | **0 dB** | `dbtoamp(vol_db)` | **1.0** | Per-voice via `#synthN` |
@@ -64,12 +64,12 @@ Parity-tuned values -- change only with `yarn task run ops:daisy:*:calibrate` or
 
 | Constant | Value | Controls |
 |----------|-------|----------|
-| `kMainFaderOffsetDb` | **-35** | Added to play fader dB law (default `#vol 50` ~0.22 linear) |
+| `kMainFaderOffsetDb` | **-15** | Added to play fader dB law (default `#vol 50` ~2.22 linear) |
 | `kPlayBusGain` | **0.168** | Fixed play stem into mix (~3 dB under prior 0.238 vs drums) |
 | `kDrumBusGain` | **2.440** | Drum stem (calibrate: `ops:daisy:play-drum-balance:calibrate`) |
 | `kVoiceOutGain` | **1.0** | Post-FX voice output |
-| `kScMakeupDb` | **24** | Sidechain makeup |
-| `kScMix` | **0.75** | Duck depth (idle play boost ~12x with makeup) |
+| `kScMakeupDb` | **12** | Sidechain makeup (calibrate: `ops:daisy:sidechain:parity:calibrate`) |
+| `kScMix` | **0.50** | Duck depth (idle play boost ~2.5x with makeup; was ~12x at 24/0.75) |
 | `kScAttackSec` / `kScReleaseSec` | 0.005 / 0.06 | Sidechain timing |
 | SC key trims | bg/tts **-12 dB**, drums **-28 dB** | Key bus only (`zss_main.cpp`) |
 | `kMainCompThresholdDb` | **-28** | Main compressor |

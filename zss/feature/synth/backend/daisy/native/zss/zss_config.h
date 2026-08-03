@@ -133,12 +133,13 @@ constexpr float kEnvReleaseTauScale = 0.060f;
 constexpr float kPlayBusGain = 0.168f;
 constexpr float kDrumBusGain = 2.440f;
 /** Main fader: 20*log10(vol*0.25) + offset (see gain-levels.md). */
-/** Master `#vol` fader offset; -35 is the default-50 loudness target. */
-constexpr float kMainFaderOffsetDb = -35.f;
+/** Master `#vol` fader offset; -15 is the default-50 loudness target (+20 dB vs
+ * prior -35). */
+constexpr float kMainFaderOffsetDb = -15.f;
 /** TTS and bgplay share the same SAB dB law (see readttsvolume /
  * readbgplayvolume). */
 
-constexpr float kScMakeupDb = 24.f;
+constexpr float kScMakeupDb = 12.f;
 constexpr float kScAttackSec = 0.005f;
 constexpr float kScReleaseSec = 0.06f;
 
@@ -171,7 +172,7 @@ constexpr float kFxReturnCompAttackSec = 0.002f;
 constexpr float kFxReturnCompReleaseSec = 0.08f;
 constexpr float kFxReturnWetTrim = 1.4f;
 /** Sidechain duck depth — yarn sidechain-parity:test:full */
-constexpr float kScMix = 0.75f;
+constexpr float kScMix = 0.50f;
 constexpr float kScTriggerFloor = 1e-5f;
 constexpr float kAutowahDefaultOct = 6.f;
 constexpr float kAutowahDefaultGain = 2.f;
