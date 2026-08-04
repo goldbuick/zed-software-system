@@ -9,6 +9,10 @@ import { finisheditorclose } from 'zss/device/register/handlers/editor'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import {
+  tapelayoutslotforeditor,
+  tapelayoutslotforterminal,
+} from 'zss/feature/tapelayout'
+import {
   TAPE_DISPLAY,
   TERMINAL_MODE,
   useGadgetClient,
@@ -169,10 +173,10 @@ function TapeSlidePanel({
 
 export function TapeComponent() {
   const screensize = useScreenSize()
-  const [layout, terminalmode, terminalopen, editoropen, editorclosing] =
+  const [layoutby, terminalmode, terminalopen, editoropen, editorclosing] =
     useTape(
       useShallow((state) => [
-        state.layout,
+        state.layoutby,
         state.terminalmode,
         state.terminal.open,
         state.editor.open,
@@ -182,22 +186,36 @@ export function TapeComponent() {
   const hasboard = useGadgetClient(
     (state) => (state.gadget.layers?.length ?? 0) > 0,
   )
-  const effectivelayout = hasboard ? layout : TAPE_DISPLAY.FULL
 
-  // Terminal and editor each own a PanelSlide so editor open/close animates
-  // even when the terminal panel stays open underneath.
-  const wantterminal = terminalmode === 'quick' || terminalopen
+  // Terminal and editor each own a PanelSlide with separate layoutby geoms.
+  // Hide the CLI while the editor is open (including exit slide) so it does
+  // not peek under the editor; it restores after finisheditorclose.
+  const wantterminal =
+    (terminalmode === 'quick' || terminalopen) && !editoropen
   const wanteditor = editoropen && !editorclosing
 
-  const livegeom = readtapegeom(
-    effectivelayout,
+  const terminallayout = hasboard
+    ? tapelayoutslotforterminal(layoutby, terminalmode)
+    : TAPE_DISPLAY.FULL
+  const editorlayout = hasboard
+    ? tapelayoutslotforeditor(layoutby)
+    : TAPE_DISPLAY.FULL
+
+  const terminallivegeom = readtapegeom(
+    terminallayout,
+    screensize.cols,
+    screensize.rows,
+    terminalmode,
+  )
+  const editorlivegeom = readtapegeom(
+    editorlayout,
     screensize.cols,
     screensize.rows,
     terminalmode,
   )
 
-  const terminalslide = useTapePanelSlide(wantterminal, livegeom)
-  const editorslide = useTapePanelSlide(wanteditor, livegeom)
+  const terminalslide = useTapePanelSlide(wantterminal, terminallivegeom)
+  const editorslide = useTapePanelSlide(wanteditor, editorlivegeom)
 
   // bail on odd states
   if (screensize.cols < 10 || screensize.rows < 10) {

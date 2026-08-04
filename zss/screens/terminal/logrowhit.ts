@@ -16,23 +16,13 @@ export function findterminalrowindexforcursor(args: {
   sessionlogs: string[]
   maxwidth: number
   edge: TextEdge
-  editoropen: boolean
 }): number | undefined {
-  const {
-    tapeycursor,
-    scroll,
-    pinlines,
-    sessionlogs,
-    maxwidth,
-    edge,
-    editoropen,
-  } = args
+  const { tapeycursor, scroll, pinlines, sessionlogs, maxwidth, edge } = args
   const layout = readterminallayout({
     pinlines,
     sessionlogs,
     maxwidth,
     edge,
-    editoropen,
   })
   const drawpinstarty = readstickypinstarty(
     layout.naturalpinstarty,

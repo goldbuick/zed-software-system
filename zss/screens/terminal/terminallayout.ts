@@ -3,8 +3,10 @@ import { textformatreadedges } from 'zss/words/textformat'
 
 export type TextEdge = ReturnType<typeof textformatreadedges>
 
-export function readinputreservedrows(editoropen: boolean): number {
-  return editoropen ? 0 : 2
+const INPUT_RESERVED_ROWS = 2
+
+export function readinputreservedrows(): number {
+  return INPUT_RESERVED_ROWS
 }
 
 export function readpinrowheights(
@@ -106,10 +108,9 @@ export function readterminallayout(args: {
   sessionlogs: string[]
   maxwidth: number
   edge: TextEdge
-  editoropen: boolean
 }): TerminalLayout {
-  const { pinlines, sessionlogs, maxwidth, edge, editoropen } = args
-  const inputreserved = readinputreservedrows(editoropen)
+  const { pinlines, sessionlogs, maxwidth, edge } = args
+  const inputreserved = readinputreservedrows()
   const contentbottom = edge.bottom - edge.top - inputreserved
   const pinheights = readpinrowheights(pinlines, maxwidth, edge.height)
   const pinareaheight = readpinareaheight(pinheights)

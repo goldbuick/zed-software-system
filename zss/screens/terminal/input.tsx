@@ -98,9 +98,8 @@ export function TerminalInput({
       scroll: state.scroll,
     })),
   )
-  const { editoropen, pinlines, pinids, sessionlogs } = useTape(
+  const { pinlines, pinids, sessionlogs } = useTape(
     useShallow((state) => ({
-      editoropen: state.editor.open,
       pinlines: state.terminal.pinlines,
       pinids: state.terminal.pinids,
       sessionlogs: state.terminal.logs,
@@ -197,7 +196,6 @@ export function TerminalInput({
         sessionlogs,
         maxwidth: logsrowmaxwidth,
         edge,
-        editoropen,
       }),
     [
       tapeycursor,
@@ -206,7 +204,6 @@ export function TerminalInput({
       sessionlogs,
       logsrowmaxwidth,
       edge,
-      editoropen,
     ],
   )
 

@@ -9,6 +9,8 @@ import {
   hydratetapelayoutby,
   readtapelayoutmodality,
   synctapeactivelayout,
+  tapelayoutslotforeditor,
+  tapelayoutslotforterminal,
   validatetapelayoutby,
   writetapelayoutslot,
 } from 'zss/feature/tapelayout'
@@ -132,6 +134,45 @@ describe('tapelayout', () => {
       useTape.setState({ terminalmode: 'cli' })
       synctapeactivelayout()
       expect(useTape.getState().layout).toBe(TAPE_DISPLAY.FULL)
+    })
+  })
+
+  describe('tapelayoutslotforterminal / tapelayoutslotforeditor', () => {
+    const layoutby = {
+      quick: TAPE_DISPLAY.BOTTOM,
+      cli: TAPE_DISPLAY.TOP,
+      editor: TAPE_DISPLAY.FULL,
+    }
+
+    it('picks cli or quick without using editor slot', () => {
+      expect(tapelayoutslotforterminal(layoutby, 'cli')).toBe(TAPE_DISPLAY.TOP)
+      expect(tapelayoutslotforterminal(layoutby, 'quick')).toBe(
+        TAPE_DISPLAY.BOTTOM,
+      )
+    })
+
+    it('picks editor slot independently of terminal mode', () => {
+      expect(tapelayoutslotforeditor(layoutby)).toBe(TAPE_DISPLAY.FULL)
+    })
+
+    it('keeps underlay and overlay slots diverged while editor modality is active', () => {
+      useTape.setState({
+        layoutby,
+        layout: TAPE_DISPLAY.FULL,
+        terminalmode: 'cli',
+        editor: {
+          open: true,
+          closing: false,
+          book: '',
+          path: [],
+          type: '',
+          title: '',
+        },
+      })
+      synctapeactivelayout()
+      expect(useTape.getState().layout).toBe(TAPE_DISPLAY.FULL)
+      expect(tapelayoutslotforterminal(layoutby, 'cli')).toBe(TAPE_DISPLAY.TOP)
+      expect(tapelayoutslotforeditor(layoutby)).toBe(TAPE_DISPLAY.FULL)
     })
   })
 
