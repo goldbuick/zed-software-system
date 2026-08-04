@@ -74,6 +74,9 @@ export function handlelogout(vm: DEVICE, message: MESSAGE): void {
     clearlogouttracking()
     maybeemitplayerchatroster(vm, player, true)
     boardrunnerpushupdates(vm)
+    // Same as linkdead path: re-login after endgame (needed after #restart
+    // wiped flags.board so we never dispatched boardrunner linkdead).
+    registerloginready(vm, player)
     return
   }
 
@@ -98,6 +101,7 @@ export function handlelogout(vm: DEVICE, message: MESSAGE): void {
     // No elected runner to run linkdead -- host deletes and syncs.
     memorylogoutplayer(player)
     boardrunnerpushupdates(vm)
+    registerloginready(vm, player)
   }
 
   clearlogouttracking()

@@ -31,6 +31,11 @@ export function handlelinkdead(device: DEVICE, message: MESSAGE): void {
       { player: linkdeadplayer },
       'H3',
     )
+    // Still re-login: host may have wiped flags via #restart before linkdead.
+    memorylogoutplayer(linkdeadplayer)
+    pushworkerupdates(device)
+    vmclearscroll(device, linkdeadplayer)
+    registerloginready(device, linkdeadplayer)
     return
   }
 

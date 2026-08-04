@@ -47,10 +47,7 @@ export function memoryreadelementkind(
   const runtimedata = ispresent(element)
     ? memoryensureboardelementruntime(element)
     : undefined
-  if (ispresent(runtimedata?.kinddata)) {
-    return runtimedata.kinddata
-  }
-  if (!isstring(element?.kind) || !element.kind) {
+  if (!ispresent(runtimedata) || !isstring(element?.kind) || !element.kind) {
     return undefined
   }
   const maybeobject = memorypickcodepagewithtypeandstat(
@@ -58,19 +55,34 @@ export function memoryreadelementkind(
     element.kind,
   )
   if (ispresent(maybeobject)) {
-    runtimedata!.kinddata =
+    // Reuse cache only when page.code still matches; make-it stub then editor
+    // edit used to leave boardrunner stuck on empty kinddata forever.
+    if (
+      ispresent(runtimedata.kinddata) &&
+      runtimedata.kinddata.code === maybeobject.code
+    ) {
+      return runtimedata.kinddata
+    }
+    runtimedata.kinddata =
       memoryreadcodepagedata<CODE_PAGE_TYPE.OBJECT>(maybeobject)
-    return runtimedata!.kinddata
+    return runtimedata.kinddata
   }
   const maybeterrain = memorypickcodepagewithtypeandstat(
     CODE_PAGE_TYPE.TERRAIN,
     element.kind,
   )
   if (ispresent(maybeterrain)) {
-    runtimedata!.kinddata =
+    if (
+      ispresent(runtimedata.kinddata) &&
+      runtimedata.kinddata.code === maybeterrain.code
+    ) {
+      return runtimedata.kinddata
+    }
+    runtimedata.kinddata =
       memoryreadcodepagedata<CODE_PAGE_TYPE.TERRAIN>(maybeterrain)
-    return runtimedata!.kinddata
+    return runtimedata.kinddata
   }
+  runtimedata.kinddata = undefined
   return undefined
 }
 
