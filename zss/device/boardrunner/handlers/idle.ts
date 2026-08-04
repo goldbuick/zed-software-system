@@ -8,7 +8,6 @@ import type { MESSAGE } from 'zss/device/types'
 import { isstring } from 'zss/mapping/types'
 import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {
-  memoryreadassignedboard,
   memoryreadboardrunner,
   memorywriteassignedboard,
   memorywriteoperator,

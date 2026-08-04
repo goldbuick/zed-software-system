@@ -1,7 +1,6 @@
 import {
   registernuke,
   registershare,
-  vmflush,
   vmfork,
   vmhalt,
   vmlogout,

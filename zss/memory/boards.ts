@@ -82,8 +82,8 @@ export function memoryreadelementkind(
       memoryreadcodepagedata<CODE_PAGE_TYPE.TERRAIN>(maybeterrain)
     return runtimedata.kinddata
   }
-  runtimedata.kinddata = undefined
-  return undefined
+  // No codepage yet (make-it stub / unit fixtures): keep existing kinddata.
+  return runtimedata.kinddata
 }
 
 export function memoryreadelementstat(

@@ -190,8 +190,7 @@ export function TapeComponent() {
   // Terminal and editor each own a PanelSlide with separate layoutby geoms.
   // Hide the CLI while the editor is open (including exit slide) so it does
   // not peek under the editor; it restores after finisheditorclose.
-  const wantterminal =
-    (terminalmode === 'quick' || terminalopen) && !editoropen
+  const wantterminal = (terminalmode === 'quick' || terminalopen) && !editoropen
   const wanteditor = editoropen && !editorclosing
 
   const terminallayout = hasboard
