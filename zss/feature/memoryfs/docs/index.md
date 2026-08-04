@@ -10,32 +10,34 @@ Drop a folder onto cafe to project durable MEMORY into `<folder>/memoryfs/` as a
 ## Behavior
 
 - **Attach:** create `memoryfs/`, nuclear-clear it, export current MEMORY, then live sync.
+- **Skills:** on full export, write agent skill sidecars at the **drop root** (`AGENTS.md`, `.cursor/skills/`, `.claude/skills/`) -- not inside `memoryfs/`.
 - **Write-through:** MEMORY edits debounce (~2s) to disk.
 - **Inbound:** external edits/deletes under `memoryfs/` reload into MEMORY (except read-only player object JSON).
 - **Detach:** `#memoryfs detach` stops immediately with no final flush.
 
 ## Tree
 
-See module README for path layout, flag owner filters (`*_chip`, `*_tracking`, …), and read-only `board/objects/{pid_*}.json`.
+See module README for path layout, flag owner filters (`*_chip`, `*_tracking`, ...), and read-only `board/objects/{pid_*}.json`.
 
 ## Commands
 
-- `#memoryfs status` — attach path, tracked file count, poll state
+- `#memoryfs status` -- attach path, tracked file count, poll state
 - `#memoryfs detach`
 
 ## Logging
 
 Tape always gets short sync summaries:
 
-- `memoryfs out N files M deletes (full|delta)` — VM export scheduled to disk
-- `memoryfs disk N files M deletes (...)` — FSA write finished
-- `memoryfs poll N writes M deletes` — external disk change detected
-- `memoryfs in N writes M deletes applied A ignored I` — applied into MEMORY
+- `memoryfs out N files M deletes (full|delta)` -- VM export scheduled to disk
+- `memoryfs disk N files M deletes (...)` -- FSA write finished
+- `memoryfs skills N files` -- agent skill sidecars written to drop root (full only)
+- `memoryfs poll N writes M deletes` -- external disk change detected
+- `memoryfs in N writes M deletes applied A ignored I` -- applied into MEMORY
 
 Enable path samples and jsonpipe diff lines with `#admin` config **`memoryfslogging` on** (same pattern as `loaderlogging`).
 
-## Agent skill
+## Agent skills
 
-Copy-paste Cursor / Claude skill: [agent-skill.md](agent-skill.md) (full `SKILL.md` in one fence).
+On attach/full sync, cafe emits multi-agent skills next to `memoryfs/`. Source of truth: [`skills.ts`](../skills.ts). Narrative / in-repo copies: [agent-skill.md](agent-skill.md).
 
-Related: jsonpipe syncs MEMORY to boardrunner workers — not this disk projection.
+Related: jsonpipe syncs MEMORY to boardrunner workers -- not this disk projection.

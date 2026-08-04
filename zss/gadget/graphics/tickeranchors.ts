@@ -1,9 +1,13 @@
 import type { Camera, Object3D } from 'three'
 import { Vector3 } from 'three'
-import type { TICKER_ANCHOR } from 'zss/gadget/data/tickerlayoutstore'
+import type {
+  TICKER_ANCHOR,
+  TICKER_SLOT,
+} from 'zss/gadget/data/tickerlayoutstore'
 import { useTickerLayout } from 'zss/gadget/data/tickerlayoutstore'
 import type { LAYER, SPRITE, TICKER } from 'zss/gadget/data/types'
 import { LAYER_TYPE } from 'zss/gadget/data/types'
+import { ispresent } from 'zss/mapping/types'
 
 const scratch = new Vector3()
 
@@ -110,7 +114,7 @@ export function tickerpublishfromtickers(args: {
   } = args
 
   if (tickers.length === 0) {
-    useTickerLayout.getState().setanchors({})
+    useTickerLayout.getState().setanchors({}, [])
     return
   }
 
@@ -132,12 +136,57 @@ export function tickerpublishfromtickers(args: {
       cols,
       rows,
     )
-    // quantize to stabilize slot memory against camera damping noise
+    // quantize to stabilize layout against camera damping noise
     next[ticker.id] = {
       sx: Math.round(anchor.sx * 4) / 4,
       sy: Math.round(anchor.sy * 4) / 4,
       visible: anchor.visible,
     }
   }
-  useTickerLayout.getState().setanchors(next)
+
+  const playertiles: TICKER_SLOT[] = []
+  const seenplayers = new Set<string>()
+  for (let i = 0; i < layers.length; ++i) {
+    const layer = layers[i]
+    if (layer.type !== LAYER_TYPE.SPRITES) {
+      continue
+    }
+    const sprites: SPRITE[] = layer.sprites
+    for (let s = 0; s < sprites.length; ++s) {
+      const sprite = sprites[s]
+      if (!ispresent(sprite.pid)) {
+        continue
+      }
+      tickerboardcelllocal(
+        sprite.x,
+        sprite.y,
+        boardz,
+        drawwidth,
+        drawheight,
+        local,
+      )
+      const projected = tickerprojectlocaltoscreentile(
+        boardgroup,
+        camera,
+        local,
+        cols,
+        rows,
+      )
+      if (!projected.visible) {
+        continue
+      }
+      const qx = Math.round(projected.sx * 4) / 4
+      const qy = Math.round(projected.sy * 4) / 4
+      const tilex = tickertileat(qx)
+      const tiley = tickertileat(qy)
+      const key = `${tilex},${tiley}`
+      if (seenplayers.has(key)) {
+        continue
+      }
+      seenplayers.add(key)
+      playertiles.push({ tilex, tiley })
+    }
+  }
+
+  useTickerLayout.getState().setanchors(next, playertiles)
 }
