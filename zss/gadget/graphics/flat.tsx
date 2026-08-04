@@ -362,10 +362,7 @@ export const FlatGraphics = memo(function FlatGraphics({
               </group>
               {exitpreviewgroups.map(({ key, preview, position }) =>
                 preview.layers.length > 0 ? (
-                  <group
-                    key={`${exitpreviewepoch}-${key}`}
-                    position={position}
-                  >
+                  <group key={`${exitpreviewepoch}-${key}`} position={position}>
                     {preview.layers.map((layer) => (
                       <FlatLayer
                         key={layer.id}

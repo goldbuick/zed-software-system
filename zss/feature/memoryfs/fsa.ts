@@ -5,6 +5,7 @@ import {
   type MEMORYFS_PATH_FILE,
   isallowedmemoryfspath,
 } from 'zss/feature/memoryfs/schema'
+import type { MEMORYFS_SKILL_FILE } from 'zss/feature/memoryfs/skills'
 import { ispresent } from 'zss/mapping/types'
 
 export type MEMORYFS_FSA_STATE = {
@@ -267,6 +268,23 @@ export async function memoryfsfsawritebatch(payload: {
     stamped.push(file.path)
   }
   memoryfsfsastampwrites(stamped)
+}
+
+/** Write agent skill sidecars under the drop-folder root (not syncroot / lastseen). */
+export async function memoryfsfsawritedropskills(
+  files: MEMORYFS_SKILL_FILE[],
+): Promise<void> {
+  if (!state) {
+    return
+  }
+  const { dropdir } = state
+  for (let i = 0; i < files.length; ++i) {
+    const file = files[i]
+    if (!file.path || file.path.includes('..') || file.path.startsWith('/')) {
+      continue
+    }
+    await memoryfsfsawritefile(dropdir, file.path, file.bytes)
+  }
 }
 
 export function memoryfsfsadetach() {

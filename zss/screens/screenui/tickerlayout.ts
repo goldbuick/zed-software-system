@@ -310,16 +310,19 @@ export function tickeranchorsready(
 }
 
 /**
- * Greedy vertical-stacking bubble packer with slot memory.
+ * Greedy vertical-stacking bubble packer.
  * Explicit visible:false / over-capacity speakers go to the strip lane.
  * Missing anchor keys are skipped (caller should gate with tickeranchorsready).
+ * Placement always follows the current speaker anchor (no sticky prior slots).
+ * Active speakers and player tiles are reserved so panels never cover them.
  */
 export function layouttickers(args: {
   tickers: TICKER[]
   anchors: Record<string, TICKER_ANCHOR>
   cols: number
   rows: number
-  priorslots?: Record<string, TICKER_SLOT>
+  /** Overlay tiles occupied by player sprites; never covered by bubble panels. */
+  playertiles?: TICKER_SLOT[]
   crowdedthreshold?: number
 }): TICKER_LAYOUT_RESULT {
   const {
@@ -327,7 +330,7 @@ export function layouttickers(args: {
     anchors,
     cols,
     rows,
-    priorslots = {},
+    playertiles = [],
     crowdedthreshold = TICKER_CROWDED_THRESHOLD,
   } = args
 
@@ -392,29 +395,25 @@ export function layouttickers(args: {
     })
   }
 
+  // Reserve player avatars so panels never cover them
+  for (let i = 0; i < playertiles.length; ++i) {
+    const tile = playertiles[i]
+    placed.push({
+      x: tile.tilex,
+      y: tile.tiley,
+      w: 1,
+      h: 1,
+    })
+  }
+
   for (let i = 0; i < candidates.length; ++i) {
     const { ticker, anchor, width, height, bubbletext } = candidates[i]
-    const prior = priorslots[ticker.id]
     // Same floor mapping as sx -- Math.round(N+0.5) is N+1 in JS and shifts Y by +1
     const speakery = tickertileat(anchor.sy)
 
     // Center the integer bubble on the continuous speaker x
-    const speakerx = tickertileat(anchor.sx)
-    const ownspeaker: Rect = { x: speakerx, y: speakery, w: 1, h: 1 }
-    let preferx = Math.round(anchor.sx - width * 0.5)
-    let prefery = speakery - height - 2
-
-    if (prior) {
-      const dx = Math.abs(prior.tilex + width * 0.5 - anchor.sx)
-      const dy = Math.abs(prior.tiley + height - anchor.sy)
-      const priorrect = { x: prior.tilex, y: prior.tiley, w: width, h: height }
-      const overlapspeaker = rectsoverlap(priorrect, ownspeaker)
-      // Tight dx: stale slots from earlier offset bugs must not stick
-      if (dx < 1.5 && dy < 5 && !overlapspeaker) {
-        preferx = prior.tilex
-        prefery = prior.tiley
-      }
-    }
+    const preferx = Math.round(anchor.sx - width * 0.5)
+    const prefery = speakery - height - 2
 
     const attempts: Rect[] = []
     for (let lift = 0; lift < rows; ++lift) {

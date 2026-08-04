@@ -32,10 +32,15 @@ export type TICKER_BUBBLE = {
 
 type TickerLayoutState = {
   anchors: Record<string, TICKER_ANCHOR>
+  /** Overlay tiles occupied by visible player sprites (pid). */
+  playertiles: TICKER_SLOT[]
   slots: Record<string, TICKER_SLOT>
   bubbles: TICKER_BUBBLE[]
   strip: TICKER[]
-  setanchors: (anchors: Record<string, TICKER_ANCHOR>) => void
+  setanchors: (
+    anchors: Record<string, TICKER_ANCHOR>,
+    playertiles?: TICKER_SLOT[],
+  ) => void
   setlayout: (
     bubbles: TICKER_BUBBLE[],
     strip: TICKER[],
@@ -84,6 +89,18 @@ function slotsequal(
   return true
 }
 
+function playertilesequal(a: TICKER_SLOT[], b: TICKER_SLOT[]): boolean {
+  if (a.length !== b.length) {
+    return false
+  }
+  for (let i = 0; i < a.length; ++i) {
+    if (a[i].tilex !== b[i].tilex || a[i].tiley !== b[i].tiley) {
+      return false
+    }
+  }
+  return true
+}
+
 function bubbleshallowequal(a: TICKER_BUBBLE[], b: TICKER_BUBBLE[]): boolean {
   if (a.length !== b.length) {
     return false
@@ -124,14 +141,19 @@ function stripshallowequal(a: TICKER[], b: TICKER[]): boolean {
 
 export const useTickerLayout = create<TickerLayoutState>((set, get) => ({
   anchors: {},
+  playertiles: [],
   slots: {},
   bubbles: [],
   strip: [],
-  setanchors: (anchors) => {
-    if (anchorsequal(get().anchors, anchors)) {
+  setanchors: (anchors, playertiles = []) => {
+    const prev = get()
+    if (
+      anchorsequal(prev.anchors, anchors) &&
+      playertilesequal(prev.playertiles, playertiles)
+    ) {
       return
     }
-    set({ anchors })
+    set({ anchors, playertiles })
   },
   setlayout: (bubbles, strip, slots) => {
     const prev = get()
@@ -148,12 +170,19 @@ export const useTickerLayout = create<TickerLayoutState>((set, get) => ({
     const prev = get()
     if (
       Object.keys(prev.anchors).length === 0 &&
+      prev.playertiles.length === 0 &&
       Object.keys(prev.slots).length === 0 &&
       prev.bubbles.length === 0 &&
       prev.strip.length === 0
     ) {
       return
     }
-    set({ anchors: {}, slots: {}, bubbles: [], strip: [] })
+    set({
+      anchors: {},
+      playertiles: [],
+      slots: {},
+      bubbles: [],
+      strip: [],
+    })
   },
 }))

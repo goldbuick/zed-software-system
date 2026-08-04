@@ -7,6 +7,10 @@ import {
   kebabcasememoryfsdirname,
   validatememoryfsexportpaths,
 } from 'zss/feature/memoryfs/schema'
+import {
+  MEMORYFS_SKILL_NAMES,
+  buildmemoryfsskills,
+} from 'zss/feature/memoryfs/skills'
 import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {
   memorycreatebook,
@@ -153,5 +157,34 @@ describe('memoryfs export import', () => {
     expect(playerpath).toBeDefined()
     const result = memoryfsapplyops([], [playerpath!.path])
     expect(result.ignored).toBeGreaterThan(0)
+  })
+})
+
+describe('memoryfs skills', () => {
+  const decoder = new TextDecoder()
+
+  it('emits AGENTS.md and paired cursor/claude skills with frontmatter', () => {
+    const files = buildmemoryfsskills()
+    const paths = files.map((f) => f.path)
+    expect(paths).toContain('AGENTS.md')
+    expect(files.length).toBe(1 + MEMORYFS_SKILL_NAMES.length * 2)
+    for (let i = 0; i < MEMORYFS_SKILL_NAMES.length; ++i) {
+      const name = MEMORYFS_SKILL_NAMES[i]
+      const cursor = files.find(
+        (f) => f.path === `.cursor/skills/${name}/SKILL.md`,
+      )
+      const claude = files.find(
+        (f) => f.path === `.claude/skills/${name}/SKILL.md`,
+      )
+      expect(cursor).toBeDefined()
+      expect(claude).toBeDefined()
+      expect(cursor!.bytes).toEqual(claude!.bytes)
+      const text = decoder.decode(cursor!.bytes)
+      expect(text).toMatch(/^---\n/)
+      expect(text).toContain(`name: ${name}`)
+      expect(text).toContain('description:')
+    }
+    const agents = files.find((f) => f.path === 'AGENTS.md')
+    expect(decoder.decode(agents!.bytes)).toContain('memoryfs/')
   })
 })
