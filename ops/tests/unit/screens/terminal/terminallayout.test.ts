@@ -28,7 +28,6 @@ describe('readterminallayout', () => {
       sessionlogs: ['$WHITE log'],
       maxwidth: 79,
       edge,
-      editoropen: false,
     })
     expect(layout.contentbottom).toBe(22)
     expect(layout.sessionstackbottom).toBe(22)
@@ -51,7 +50,6 @@ describe('readterminallayout', () => {
       sessionlogs: [],
       maxwidth: 79,
       edge,
-      editoropen: false,
     })
     expect(layout.naturalpinstarty).toBe(21)
     expect(readnaturalpinstarty(22, 0, 2)).toBe(21)

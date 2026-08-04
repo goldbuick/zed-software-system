@@ -7,6 +7,7 @@ import * as playermanagement from 'zss/memory/playermanagement'
 jest.mock('zss/device/api', () => ({
   apilog: jest.fn(),
   boardrunnerlinkdead: jest.fn(),
+  gadgetclientgotofade: jest.fn(),
   registerinspector: jest.fn(),
   registerloginready: jest.fn(),
 }))

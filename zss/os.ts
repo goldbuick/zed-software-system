@@ -1,4 +1,3 @@
-import { debugingest } from 'zss/debugingest'
 import { GeneratorBuild } from 'zss/feature/lang/backend/typescript/generator'
 import { compilescript } from 'zss/feature/lang/langcompileclient'
 
@@ -47,29 +46,9 @@ export function createos() {
   function build(name: string, code: string) {
     const cached = builds[code]
     if (cached) {
-      debugingest(
-        'os.ts:build',
-        'build cache hit',
-        {
-          name,
-          errors: cached.errors?.map((e) => e.message) ?? [],
-        },
-        'C',
-      )
       return cached
     }
     const result = compilescript(name, code)
-    debugingest(
-      'os.ts:build',
-      'build result',
-      {
-        name,
-        cached: !!cached,
-        errors: result.errors?.map((e) => e.message) ?? [],
-        hascode: !!result.code,
-      },
-      'C',
-    )
     builds[code] = result
     return result
   }
@@ -120,20 +99,6 @@ export function createos() {
         const result = build(name, code)
         // create chip from build
         chip = chips[id] = createchip(id, driver, result)
-
-        debugingest(
-          'os.ts:boot',
-          'chip boot',
-          {
-            id,
-            name,
-            hascode: !!result.code,
-            errors: result.errors?.map((e) => e.message) ?? [],
-            isended: chip.isended(),
-            getcase: chip.getcase(),
-          },
-          'F',
-        )
 
         // bail on errors
         if (result.errors?.length) {

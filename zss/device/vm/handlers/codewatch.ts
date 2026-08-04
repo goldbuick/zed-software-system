@@ -2,6 +2,7 @@ import type { DEVICE } from 'zss/device'
 import { vmcodeaddress } from 'zss/device/api'
 import { modemobservevaluestring } from 'zss/device/modem'
 import type { MESSAGE } from 'zss/device/types'
+import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
 import { observers, watching } from 'zss/device/vm/state'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadobject } from 'zss/memory/boardaccess'
@@ -17,7 +18,8 @@ import { memoryhaltchip } from 'zss/memory/runtime'
 import { memoryreadbookbyaddress } from 'zss/memory/session'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
 
-export function handlecodewatch(_vm: DEVICE, message: MESSAGE): void {
+export function handlecodewatch(vm: DEVICE, message: MESSAGE): void {
+  void vm
   if (!isarray(message.data)) {
     return
   }
@@ -53,7 +55,7 @@ export function handlecodewatch(_vm: DEVICE, message: MESSAGE): void {
   watching[address].add(message.player)
 }
 
-export function handlecoderelease(_vm: DEVICE, message: MESSAGE): void {
+export function handlecoderelease(vm: DEVICE, message: MESSAGE): void {
   if (!isarray(message.data)) {
     return
   }
@@ -68,6 +70,8 @@ export function handlecoderelease(_vm: DEVICE, message: MESSAGE): void {
       if (isstring(maybeobject)) {
         memoryhaltchip(maybeobject)
       }
+      // Editor closed: flush page.code to boardrunners before CLI #put / tick.
+      boardrunnerpushupdates(vm)
     }
   }
 }

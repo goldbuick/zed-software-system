@@ -24,7 +24,6 @@ import { TerminalRows } from './rows'
 
 export function TerminalComponent() {
   const player = registerreadplayer()
-  const editoropen = useTape((state) => state.editor.open)
   const terminalmode = useTape((state) => state.terminalmode)
   const pinlines = useTape((state) => state.terminal.pinlines)
   const sessionlogs = useTape((state) => state.terminal.logs)
@@ -57,9 +56,8 @@ export function TerminalComponent() {
       sessionlogs,
       maxwidth: logsrowmaxwidth,
       edge,
-      editoropen,
     })
-  }, [pinlines, sessionlogs, logsrowmaxwidth, edge, editoropen, editingkey])
+  }, [pinlines, sessionlogs, logsrowmaxwidth, edge, editingkey])
 
   const logrowtotalheight = useMemo(
     () =>
@@ -91,7 +89,7 @@ export function TerminalComponent() {
       <TapeBackPlate />
       <TapeTerminalContext.Provider value={tapecontextvalue}>
         <TerminalRows />
-        {!editoropen && voice2text !== undefined && (
+        {voice2text !== undefined && (
           <TerminalInput
             terminalmode={terminalmode}
             voice2text={voice2text}

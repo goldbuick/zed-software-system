@@ -256,8 +256,12 @@ export function gadgetclientfadeout(device: DEVICELIKE, player: string) {
   device.emit(player, 'gadgetclient:fadeout', undefined)
 }
 
-export function gadgetclientgotofade(device: DEVICELIKE, player: string) {
-  device.emit(player, 'gadgetclient:gotofade', undefined)
+export function gadgetclientgotofade(
+  device: DEVICELIKE,
+  player: string,
+  resetorigin = false,
+) {
+  device.emit(player, 'gadgetclient:gotofade', resetorigin || undefined)
 }
 
 export function gadgetclientpaint(

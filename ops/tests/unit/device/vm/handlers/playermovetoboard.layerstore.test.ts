@@ -24,10 +24,6 @@ jest.mock('zss/device/vm/boardrunnerpushupdates', () => ({
   boardrunnerpushupdates: jest.fn(),
 }))
 
-jest.mock('zss/debugingest', () => ({
-  debugingest: jest.fn(),
-}))
-
 jest.mock('zss/gadget/graphics/layerz', () => ({
   normalizelayerzvariant: jest.fn((v: string) => v || 'flat'),
 }))
@@ -97,20 +93,11 @@ const rebuiltlayers: MEMORY_GADGET_LAYERS = {
   ],
 }
 
-jest.mock('zss/memory/boardaccess', () => ({
-  memoryreadobject: jest.fn(() => ({ id: 'pid_test', x: 0, y: 12 })),
-}))
-
 jest.mock('zss/memory/gadgetlayersflags', () => ({
   memoryreadbookgadgetlayersforboard: jest.fn(() => layerstore),
 }))
 
 jest.mock('zss/memory/playermanagement', () => ({
-  memorydebugcountplayerboards: jest.fn(() => ({
-    count: 1,
-    boardids: ['board-dest'],
-    flagsboard: 'board-dest',
-  })),
   memorymoveplayertoboard: jest.fn(() => true),
   memoryreadplayerboard: jest.fn(() => destboard),
 }))
@@ -124,7 +111,6 @@ jest.mock('zss/memory/session', () => ({
   memoryreadbookbysoftware: jest.fn(() => ({ id: 'main' })),
 }))
 
-import { debugingest } from 'zss/debugingest'
 import { memoryreadbookgadgetlayersforboard } from 'zss/memory/gadgetlayersflags'
 import { memoryreadgadgetlayers } from 'zss/memory/rendering'
 
@@ -207,6 +193,5 @@ describe('playermovetoboard host layerstore rebuild', () => {
     })
     expect(aftersprite?.x).toBe(0)
     expect(aftersprite?.y).toBe(12)
-    expect(debugingest).toHaveBeenCalled()
   })
 })

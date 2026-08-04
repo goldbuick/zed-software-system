@@ -12,14 +12,6 @@ jest.mock('zss/memory/playermanagement', () => ({
   memoryreadplayerboard: jest.fn(),
 }))
 
-jest.mock('zss/memory/boardaccess', () => ({
-  memoryreadobject: jest.fn(() => ({ x: 10, y: 5, id: 'p1' })),
-}))
-
-jest.mock('zss/debugingest', () => ({
-  debugingest: jest.fn(),
-}))
-
 jest.mock('zss/memory/rendering', () => ({
   memoryreadgraphics: jest.fn(() => ({ graphics: 'iso' })),
   memoryconverttogadgetcontrollayer: jest.fn(() => ['control']),

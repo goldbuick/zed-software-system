@@ -1,5 +1,4 @@
 import 'zss/rom/vitepopulate'
-import { debugingest } from 'zss/debugingest'
 import { started as startvm } from 'zss/device/vm'
 import { setclimode } from 'zss/feature/detect'
 import { hub } from 'zss/hub'
@@ -34,11 +33,5 @@ onmessage = function handleMessage(
   hub.join(session)
   postMessage({ target: 'configack' })
 
-  debugingest(
-    'simspace.ts:started',
-    'worker starting vm',
-    { runId: 'post-fix' },
-    'G',
-  )
   startvm()
 }

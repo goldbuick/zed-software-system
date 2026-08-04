@@ -17,8 +17,8 @@ import {
 } from 'zss/firmware/runner'
 import { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import { ispresent } from 'zss/mapping/types'
-import { memoryreadcodepagename } from 'zss/memory/codepageoperations'
 import { memorycollectcodelabels } from 'zss/memory/codelabels'
+import { memoryreadcodepagename } from 'zss/memory/codepageoperations'
 import { memorylistallcodepagewithtype } from 'zss/memory/codepages'
 import { memoryreadflags } from 'zss/memory/flags'
 import {

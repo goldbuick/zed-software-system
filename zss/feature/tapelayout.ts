@@ -50,6 +50,19 @@ export function readtapelayoutmodality(): TAPE_LAYOUT_MODALITY {
   return 'cli'
 }
 
+/** Terminal underlay slot — never the editor modality (dual PanelSlide). */
+export function tapelayoutslotforterminal(
+  layoutby: TAPE_LAYOUTBY,
+  terminalmode: 'cli' | 'quick',
+): TAPE_DISPLAY {
+  return layoutby[terminalmode === 'quick' ? 'quick' : 'cli']
+}
+
+/** Editor overlay slot from layoutby. */
+export function tapelayoutslotforeditor(layoutby: TAPE_LAYOUTBY): TAPE_DISPLAY {
+  return layoutby.editor
+}
+
 /** Sync active `layout` from `layoutby` for the current modality. */
 export function synctapeactivelayout(): void {
   const { layoutby } = useTape.getState()

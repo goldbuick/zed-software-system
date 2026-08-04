@@ -24,6 +24,8 @@ type STARTBOARDFADE_OPTIONS = {
 
 let fadegeneration = 0
 let fadetimeout = 0
+/** Logout/endgame gotofade: next non-edge board change should snap grid to 0,0. */
+let resetoriginpending = false
 
 function clearfadetimer() {
   if (fadetimeout !== 0) {
@@ -183,5 +185,18 @@ export function startboardfadein() {
 export function resetboardfade() {
   fadegeneration += 1
   clearfadetimer()
+  resetoriginpending = false
   useBoardFade.setState({ alpha: 0, phase: 'idle' })
+}
+
+export function markboardfaderesetorigin() {
+  resetoriginpending = true
+}
+
+export function consumeboardfaderesetorigin(): boolean {
+  if (!resetoriginpending) {
+    return false
+  }
+  resetoriginpending = false
+  return true
 }

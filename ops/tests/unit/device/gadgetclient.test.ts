@@ -14,6 +14,7 @@ jest.mock('zss/gadget/fx/glitchpulse', () => ({
 const mockstartboardfade = jest.fn()
 const mockstartboardfadeout = jest.fn()
 const mockstartboardfadein = jest.fn()
+const mockmarkboardfaderesetorigin = jest.fn()
 const mockuseboardfadegetstate = jest.fn(() => ({
   alpha: 0,
   phase: 'idle' as const,
@@ -24,6 +25,8 @@ jest.mock('zss/gadget/fx/boardfade', () => ({
   startboardfadeout: (...args: unknown[]) => mockstartboardfadeout(...args),
   startboardfadein: (...args: unknown[]) => mockstartboardfadein(...args),
   resetboardfade: jest.fn(),
+  markboardfaderesetorigin: (...args: unknown[]) =>
+    mockmarkboardfaderesetorigin(...args),
   useBoardFade: {
     getState: () => mockuseboardfadegetstate(),
   },
@@ -127,6 +130,17 @@ describe('gadgetclient paint/patch apply', () => {
       data: undefined,
     } as MESSAGE)
     expect(mockstartboardfade).toHaveBeenCalled()
+    expect(mockmarkboardfaderesetorigin).not.toHaveBeenCalled()
+  })
+
+  it('gotofade with resetorigin marks boardfade origin reset', () => {
+    gadgethandler({
+      player: 'p1',
+      target: 'gotofade',
+      data: true,
+    } as MESSAGE)
+    expect(mockstartboardfade).toHaveBeenCalled()
+    expect(mockmarkboardfaderesetorigin).toHaveBeenCalled()
   })
 
   it('fadeout starts boardfadeout', () => {

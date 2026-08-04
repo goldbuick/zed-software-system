@@ -17,7 +17,6 @@ import { TapeTerminalActiveItem, TerminalItem } from './item'
 
 export function TerminalRows() {
   const screensize = useScreenSize()
-  const editoropen = useTape(useEqual((state) => state.editor.open))
   const pinlines = useTape(useEqual((state) => state.terminal.pinlines))
   const sessionlogs = useTape(useEqual((state) => state.terminal.logs))
   const editingkey = useLinkEditingKey()
@@ -38,9 +37,8 @@ export function TerminalRows() {
       sessionlogs,
       maxwidth: logsrowmaxwidth,
       edge,
-      editoropen,
     })
-  }, [pinlines, sessionlogs, logsrowmaxwidth, edge, editoropen, editingkey])
+  }, [pinlines, sessionlogs, logsrowmaxwidth, edge, editingkey])
 
   const drawpinstarty = useMemo(
     () =>
@@ -97,7 +95,7 @@ export function TerminalRows() {
         mergedindex,
         text,
         y,
-        !editoropen && tapeycursor >= y && tapeycursor < ybottom,
+        tapeycursor >= y && tapeycursor < ybottom,
       ] as [number, string, number, boolean]
     })
     .filter((item) => item !== null)
@@ -118,8 +116,7 @@ export function TerminalRows() {
         index,
         text,
         y,
-        !editoropen &&
-          tapeycursor >= y &&
+        tapeycursor >= y &&
           tapeycursor < ybottom &&
           tapeycursor >= pinbandbottom,
       ] as [number, string, number, boolean]

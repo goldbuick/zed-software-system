@@ -6,7 +6,7 @@ import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { DEVICE } from 'zss/device'
-import { boardrunnerlinkdead } from 'zss/device/api'
+import { boardrunnerlinkdead, registerloginready } from 'zss/device/api'
 import type { MESSAGE } from 'zss/device/types'
 import { handlelogout } from 'zss/device/vm/handlers/auth'
 import { handleboardrunnerpatch } from 'zss/device/vm/handlers/boardrunnerpatch'
@@ -43,6 +43,7 @@ jest.mock('zss/device/api', () => ({
   apierror: jest.fn(() => false),
   apilog: jest.fn(),
   boardrunnerlinkdead: jest.fn(),
+  gadgetclientgotofade: jest.fn(),
   registerinspector: jest.fn(),
   registerloginready: jest.fn(),
   vmloader: jest.fn(),
@@ -238,7 +239,7 @@ describe('player orphan evidence (no fix)', () => {
     expect(tracking[player]).toBeUndefined()
   })
 
-  it('R3b: logout with no flags.board clears tracking (H3 loop)', () => {
+  it('R3b: logout with no flags.board clears tracking and re-logins (H3 loop)', () => {
     tracking[player] = SECOND_TIMEOUT
     const vm = { emit: jest.fn(), replynext: jest.fn() } as unknown as DEVICE
     handlelogout(vm, {
@@ -262,6 +263,7 @@ describe('player orphan evidence (no fix)', () => {
 
     expect(tracking[player]).toBeUndefined()
     expect(boardrunnerlinkdead).not.toHaveBeenCalled()
+    expect(registerloginready).toHaveBeenCalledWith(vm, player)
   })
 
   it('R4: login with stranded copy can create second (H4)', () => {

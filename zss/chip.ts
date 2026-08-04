@@ -1,5 +1,4 @@
 import ErrorStackParser from 'error-stack-parser'
-import { debugingest } from 'zss/debugingest'
 import type { MESSAGE } from 'zss/device/types'
 import {
   type GeneratorBuild,
@@ -1229,17 +1228,6 @@ export function createchip(
   }
 
   const logic: MAYBE<GeneratorFunc> = build.code
-  debugingest(
-    'chip.ts:createchip',
-    'js logic path',
-    {
-      id,
-      hascode: !!build.code,
-      errors: build.errors?.length ?? 0,
-      inites: initfags.es,
-    },
-    'D',
-  )
 
   return chip
 }

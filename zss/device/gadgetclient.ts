@@ -9,6 +9,7 @@ import {
   useGadgetClient,
 } from 'zss/gadget/data/zustandstores'
 import {
+  markboardfaderesetorigin,
   resetboardfade,
   startboardfade,
   startboardfadein,
@@ -155,6 +156,9 @@ const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
     case 'gotofade': {
       awaitingboardreveal = true
       deferredgadget = undefined
+      if (message.data === true) {
+        markboardfaderesetorigin()
+      }
       startboardfade({
         onoutcomplete: () => {
           flushdeferredgadget()

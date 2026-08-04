@@ -12,11 +12,6 @@ jest.mock('zss/device/boardrunner/sync', () => ({
 jest.mock('zss/memory/playermanagement', () => ({
   memorylogoutplayer: jest.fn(),
   memoryreadplayerboard: jest.fn(),
-  memorydebugcountplayerboards: jest.fn(() => ({
-    count: 0,
-    boardids: [],
-    flagsboard: '',
-  })),
 }))
 
 jest.mock('zss/memory/session', () => ({
@@ -76,5 +71,19 @@ describe('handlelinkdead', () => {
     expect(vmclearscroll).toHaveBeenCalledWith(device, 'dead-player')
     expect(registerloginready).toHaveBeenCalledWith(device, 'dead-player')
     expect(apilog).toHaveBeenCalled()
+  })
+
+  it('still re-logins when flags.board is already gone', () => {
+    jest.mocked(memoryreadplayerboard).mockReturnValue(undefined)
+    handlelinkdead(device, {
+      player: 'host',
+      data: 'dead-player',
+    } as MESSAGE)
+
+    expect(memorylogoutplayer).toHaveBeenCalledWith('dead-player')
+    expect(pushworkerupdates).toHaveBeenCalledWith(device)
+    expect(vmclearscroll).toHaveBeenCalledWith(device, 'dead-player')
+    expect(registerloginready).toHaveBeenCalledWith(device, 'dead-player')
+    expect(boardrunneridle).not.toHaveBeenCalled()
   })
 })
