@@ -7,6 +7,8 @@ alwaysApply: true
 
 Do not change multiplayer, boundary sync, gadget projection, or host/join memory paths until runtime evidence and a repro scenario exist.
 
+Broader prove-gate / human-checkpoint rules (camera, framing, “implement the plan” vs skip manual A/B): [evidence-before-fix.mdc](evidence-before-fix.mdc).
+
 ## Required before any fix
 
 1. **Repro scenario** — document how to trigger the bug every time:
