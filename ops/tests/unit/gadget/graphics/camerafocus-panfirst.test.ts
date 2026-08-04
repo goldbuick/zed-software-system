@@ -21,6 +21,7 @@ import {
   tickerprojectlocaltoscreentile,
 } from 'zss/gadget/graphics/tickeranchors'
 import type { LAYER } from 'zss/gadget/data/types'
+import { markboardfaderesetorigin } from 'zss/gadget/fx/boardfade'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { Group, OrthographicCamera, Vector3 } from 'three'
 
@@ -539,5 +540,80 @@ describe('boundary coord evidence (global board space)', () => {
     expect(userdata.panphase).toBe(true)
     expect(readgridbias(userdata)).toEqual({ dx: 0, dy: -1 })
     expect(readboardgrid(userdata)).toEqual({ x: 0, y: -1 })
+  })
+
+  it('non-edge from void resets boardgridx/y to origin', () => {
+    const userdata: FocusUserData = {
+      focusx: 100,
+      focusy: 50,
+      lfocusx: 10,
+      lfocusy: 5,
+      focussmooth: FOCUS_ANIM_RATE,
+      currentboard: 'void',
+      boardgridx: 4,
+      boardgridy: 2,
+    }
+    stepfocuswithboardtransition(
+      userdata,
+      { focusx: 3, focusy: 7 },
+      'title-board',
+      3,
+      7,
+      0.016,
+    )
+    expect(userdata.panphase).toBe(false)
+    expect(readboardgrid(userdata)).toEqual({ x: 0, y: 0 })
+    expect(userdata.focusx).toBe(3)
+    expect(userdata.focusy).toBe(7)
+  })
+
+  it('non-edge with boardfade resetorigin snaps grid to 0,0', () => {
+    markboardfaderesetorigin()
+    const userdata: FocusUserData = {
+      focusx: 80,
+      focusy: 40,
+      lfocusx: 10,
+      lfocusy: 5,
+      focussmooth: FOCUS_ANIM_RATE,
+      currentboard: 'explored',
+      boardgridx: 3,
+      boardgridy: 1,
+    }
+    stepfocuswithboardtransition(
+      userdata,
+      { focusx: 2, focusy: 4 },
+      'title-board',
+      2,
+      4,
+      0.016,
+    )
+    expect(readboardgrid(userdata)).toEqual({ x: 0, y: 0 })
+    expect(userdata.focusx).toBe(2)
+    expect(userdata.focusy).toBe(4)
+  })
+
+  it('non-edge #goto without reset keeps boardgridx/y slot', () => {
+    const userdata: FocusUserData = {
+      focusx: 65,
+      focusy: 10,
+      lfocusx: 5,
+      lfocusy: 10,
+      focussmooth: FOCUS_ANIM_RATE,
+      currentboard: 'board-a',
+      boardgridx: 1,
+      boardgridy: 0,
+    }
+    stepfocuswithboardtransition(
+      userdata,
+      { focusx: 8, focusy: 12 },
+      'board-goto',
+      8,
+      12,
+      0.016,
+    )
+    expect(userdata.panphase).toBe(false)
+    expect(readboardgrid(userdata)).toEqual({ x: 1, y: 0 })
+    expect(userdata.focusx).toBe(BOARD_WIDTH + 8)
+    expect(userdata.focusy).toBe(12)
   })
 })

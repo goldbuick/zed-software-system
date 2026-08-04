@@ -12,11 +12,6 @@ jest.mock('zss/device/boardrunner/sync', () => ({
 jest.mock('zss/memory/playermanagement', () => ({
   memorylogoutplayer: jest.fn(),
   memoryreadplayerboard: jest.fn(),
-  memorydebugcountplayerboards: jest.fn(() => ({
-    count: 0,
-    boardids: [],
-    flagsboard: '',
-  })),
 }))
 
 jest.mock('zss/memory/session', () => ({

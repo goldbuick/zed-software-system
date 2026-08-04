@@ -43,6 +43,7 @@ jest.mock('zss/device/api', () => ({
   apierror: jest.fn(() => false),
   apilog: jest.fn(),
   boardrunnerlinkdead: jest.fn(),
+  gadgetclientgotofade: jest.fn(),
   registerinspector: jest.fn(),
   registerloginready: jest.fn(),
   vmloader: jest.fn(),

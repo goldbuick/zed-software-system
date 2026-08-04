@@ -25,7 +25,7 @@ export function registerstatecommands(fw: FIRMWARE): FIRMWARE {
       return 0
     })
     .command('save', ['and persist current state'], () => {
-      vmflush(SOFTWARE, READ_CONTEXT.elementfocus)
+      vmflushop()
       return 0
     })
     .command(
@@ -47,7 +47,6 @@ export function registerstatecommands(fw: FIRMWARE): FIRMWARE {
     })
     .command('restart', ['software, deletes all chip and player state'], () => {
       vmrestart(SOFTWARE, READ_CONTEXT.elementfocus)
-      vmflushop()
       return 0
     })
 }

@@ -1,4 +1,3 @@
-import { debugingest } from 'zss/debugingest'
 import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { getclimode } from 'zss/feature/detect'
@@ -167,22 +166,6 @@ export function memorymoveplayertoboard(
   memorywritebookflag(book, player, 'entery', dest.y)
   memorywritebookplayerboard(book, player, destboard.id)
 
-  const scan = memorydebugcountplayerboards(player)
-  debugingest(
-    'playermanagement.ts:memorymoveplayertoboard',
-    'player move board scan',
-    {
-      player,
-      sourceboardid: currentboard.id,
-      destboardid: destboard.id,
-      sourcestillhasobject: !!currentboard.objects[player],
-      count: scan.count,
-      boardids: scan.boardids,
-      flagsboard: scan.flagsboard,
-    },
-    'H1',
-  )
-
   // we did move
   return true
 }
@@ -284,20 +267,6 @@ export function memoryloginplayer(
   if (ispresent(currentboard?.objects[player])) {
     const flags = memoryreadbookflags(mainbook, player)
     Object.assign(flags, stickyflags)
-    const scan = memorydebugcountplayerboards(player)
-    debugingest(
-      'playermanagement.ts:memoryloginplayer',
-      'player login reattach',
-      {
-        player,
-        placedboardid: currentboard.id,
-        creatednew: false,
-        count: scan.count,
-        boardids: scan.boardids,
-        flagsboard: scan.flagsboard,
-      },
-      'H4',
-    )
     return true
   }
 
@@ -373,20 +342,6 @@ export function memoryloginplayer(
 
     // track current board
     memorywritebookplayerboard(mainbook, player, currentboard.id)
-    const scan = memorydebugcountplayerboards(player)
-    debugingest(
-      'playermanagement.ts:memoryloginplayer',
-      'player login created',
-      {
-        player,
-        placedboardid: currentboard.id,
-        creatednew: true,
-        count: scan.count,
-        boardids: scan.boardids,
-        flagsboard: scan.flagsboard,
-      },
-      'H4',
-    )
     return true
   }
 
@@ -412,8 +367,6 @@ export function memorylogoutplayer(player: string) {
     removelist.push(player)
   }
 
-  const board = memoryreadplayerboard(player)
-  const flagsboardbefore = board?.id ?? ''
   for (let i = 0; i < removelist.length; ++i) {
     const remove = removelist[i]
 
@@ -445,20 +398,6 @@ export function memorylogoutplayer(player: string) {
     const newflags = memoryreadbookflags(mainbook, remove)
     Object.assign(newflags, saveflags)
   }
-
-  const scan = memorydebugcountplayerboards(player)
-  debugingest(
-    'playermanagement.ts:memorylogoutplayer',
-    'player logout board scan',
-    {
-      player,
-      flagsboardbefore,
-      count: scan.count,
-      boardids: scan.boardids,
-      flagsboard: scan.flagsboard,
-    },
-    'H2',
-  )
 }
 
 export function memoryscanplayers(players: Record<string, number>) {
@@ -487,20 +426,6 @@ export function memoryscanplayers(players: Record<string, number>) {
         // ensure tracking
         if (!ispresent(players[objectid])) {
           players[objectid] = 0
-        }
-        const scan = memorydebugcountplayerboards(objectid)
-        if (scan.count > 1) {
-          debugingest(
-            'playermanagement.ts:memoryscanplayers',
-            'player on multiple boards',
-            {
-              player: objectid,
-              count: scan.count,
-              boardids: scan.boardids,
-              flagsboard: scan.flagsboard,
-            },
-            'H1',
-          )
         }
       }
     }

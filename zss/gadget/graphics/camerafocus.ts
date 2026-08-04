@@ -1,5 +1,5 @@
 import { damp } from 'maath/easing'
-import { debugingest } from 'zss/debugingest'
+import { consumeboardfaderesetorigin } from 'zss/gadget/fx/boardfade'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 
@@ -190,26 +190,6 @@ export function stepfocuswithboardtransition(
     const dx = control.focusx - (userdata.lfocusx ?? 0)
     const dy = control.focusy - (userdata.lfocusy ?? 0)
     const isedge = isedgeexitdelta(dx, dy)
-    debugingest(
-      'camerafocus.ts:stepfocuswithboardtransition',
-      'camera board transition',
-      {
-        prevboard: prevboard ?? '',
-        currentboard,
-        dx,
-        dy,
-        isedge,
-        controlx: control.focusx,
-        controly: control.focusy,
-        lfocusx: userdata.lfocusx ?? -1,
-        lfocusy: userdata.lfocusy ?? -1,
-        boardgridx: userdata.boardgridx ?? 0,
-        boardgridy: userdata.boardgridy ?? 0,
-        localtfocusx,
-        localtfocusy,
-      },
-      'BC2',
-    )
     userdata.currentboard = currentboard
     if (isedge) {
       const biasdx = biastogridsign(dx)
@@ -238,7 +218,13 @@ export function stepfocuswithboardtransition(
       }
       userdata.focussmooth = FOCUS_GLIDE_RATE
     } else {
-      // Keep boardgridx/y -- destination replaces the current global slot.
+      // Keep boardgridx/y for #goto; logout/endgame gotofade + void reset to origin.
+      const fromvoid = !prevboard || prevboard === 'void'
+      const tovoid = currentboard === 'void' || currentboard === ''
+      if (consumeboardfaderesetorigin() || fromvoid || tovoid) {
+        userdata.boardgridx = 0
+        userdata.boardgridy = 0
+      }
       userdata.gridbiasdx = 0
       userdata.gridbiasdy = 0
       userdata.panphase = false

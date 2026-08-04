@@ -1,8 +1,8 @@
-import { debugingest } from 'zss/debugingest'
 import type { DEVICE } from 'zss/device'
 import {
   apilog,
   boardrunnerlinkdead,
+  gadgetclientgotofade,
   registerinspector,
   registerloginready,
 } from 'zss/device/api'
@@ -26,6 +26,7 @@ import {
 } from 'zss/device/vm/state'
 import { sanitizeloginflags } from 'zss/feature/loginflags'
 import { ispresent, isstring } from 'zss/mapping/types'
+import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import {
   memoryistokenbanned,
   memorysetcommandpermissions,
@@ -50,50 +51,44 @@ export function handlesearch(vm: DEVICE, message: MESSAGE): void {
 
 export function handlelogout(vm: DEVICE, message: MESSAGE): void {
   const player = message.player
-  const currentboard = memoryreadplayerboard(player)
+  let currentboard = memoryreadplayerboard(player)
+
+  // Same dither as #goto; resetorigin snaps camera grid after re-login.
+  gadgetclientgotofade(vm, player, true)
 
   function clearlogouttracking() {
     delete tracking[player]
     delete lastinputtime[player]
     boardrunnerblocked[player] = true
+    maybeemitplayerchatroster(vm, player, true)
   }
 
   // Emit before logout clears flags / activelist.
   emitchatdisconnectplayer(vm, player)
 
-  // No flags.board: still tear down tracking and purge any board copies.
-  // Skipping this left tracking hot and handlesecond retried vmlogout forever.
+  // not on any board
   if (!ispresent(currentboard)) {
-    debugingest(
-      'auth.ts:handlelogout',
-      'logout no board host cleanup',
-      { player, hasrunner: false },
-      'H3',
+    // aslo scan for player in boardrunners return board id if found else undefined
+    // this is to handle the #restart -> #endgame flow
+    const maybeboardrunner = Object.keys(boardrunners).find(
+      (maybeboardid) => boardrunners[maybeboardid] === player,
     )
+    if (ispresent(maybeboardrunner)) {
+      currentboard = memoryreadboardbyaddress(maybeboardrunner)
+    }
+  }
+
+  // still not on any board
+  if (!ispresent(currentboard)) {
     memorylogoutplayer(player)
-    clearlogouttracking()
-    maybeemitplayerchatroster(vm, player, true)
     boardrunnerpushupdates(vm)
-    // Same as linkdead path: re-login after endgame (needed after #restart
-    // wiped flags.board so we never dispatched boardrunner linkdead).
     registerloginready(vm, player)
+    clearlogouttracking()
     return
   }
 
   const priorelectionrunner = boardrunners[currentboard.id]
   const hasrunner = isstring(priorelectionrunner) && !!priorelectionrunner
-
-  debugingest(
-    'auth.ts:handlelogout',
-    'logout linkdead dispatch',
-    {
-      player,
-      boardid: currentboard.id,
-      hasrunner,
-      runner: hasrunner ? priorelectionrunner : '',
-    },
-    'H3',
-  )
 
   if (hasrunner) {
     boardrunnerlinkdead(vm, priorelectionrunner, player)
@@ -105,7 +100,6 @@ export function handlelogout(vm: DEVICE, message: MESSAGE): void {
   }
 
   clearlogouttracking()
-  maybeemitplayerchatroster(vm, player, true)
 
   if (boardrunnerassignmentvalid(currentboard.id)) {
     boardrunnerelect(currentboard.id)
