@@ -148,6 +148,7 @@ export const Mode7Graphics = memo(function Mode7Graphics({
   const [panview, setpanview] = useState<PanView>(PANVIEW_IDLE)
   const panviewref = useRef(panview)
   panviewref.current = panview
+  const [exitpreviewepoch, setexitpreviewepoch] = useState(0)
 
   const bindboardcamera = useCallback((c: PerspectiveCameraImpl | null) => {
     cameraref.current = c
@@ -214,6 +215,14 @@ export const Mode7Graphics = memo(function Mode7Graphics({
       tfocusy,
       delta,
     )
+    // Keep mesh on the same clock as focus/grid (useLayoutEffect alone races endgame).
+    syncliveboardworldoffset(
+      liveboardref.current,
+      userdata,
+      currentboard,
+      drawwidth,
+      drawheight,
+    )
     stashfocusexitsnap(userdata, gadgettoexitsnap(gadget))
 
     const bias = readgridbias(userdata)
@@ -225,6 +234,9 @@ export const Mode7Graphics = memo(function Mode7Graphics({
     }
     if (!panviewequals(nextpanview, panviewref.current)) {
       setpanview(nextpanview)
+    }
+    if (boardchanged) {
+      setexitpreviewepoch((epoch) => epoch + 1)
     }
 
     const fx = (userdata.focusx + 0.5) * drawwidth
@@ -435,7 +447,10 @@ export const Mode7Graphics = memo(function Mode7Graphics({
                   </group>
                   {exitpreviewgroups.map(({ key, preview, position }) =>
                     preview.layers.length > 0 ? (
-                      <group key={key} position={position}>
+                      <group
+                        key={`${exitpreviewepoch}-${key}`}
+                        position={position}
+                      >
                         {preview.layers.map((layer) => (
                           <Mode7Layer
                             key={layer.id}

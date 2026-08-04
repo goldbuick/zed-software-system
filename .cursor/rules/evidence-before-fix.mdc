@@ -1,0 +1,53 @@
+---
+description: Require user-run manual prove gate before product bugfixes; no speculative fix loops
+alwaysApply: true
+---
+
+# Evidence before product fixes
+
+Do not ship speculative product fixes while a prove gate is open. Jest and code reading are not a substitute for the user's manual repro.
+
+Applies to camera/framing, gadget display, login/logout, board sync, and any plan that lists instrumentation or manual A/B before a fix. Complements [debug-before-memory-fix.mdc](debug-before-memory-fix.mdc) (memory/sync still needs log-pinned diagnosis).
+
+## Hard stop: human checkpoint
+
+When a plan or diagnosis includes **manual repro**, **Category A logs**, **prove-before-fix**, or **A/B steps for the user**:
+
+1. **Instrument only** (or document exact repro steps) — then **STOP**.
+2. Give the user concrete steps and what to paste back (fields, log lines, pass/fail).
+3. **Wait** for their result (confirm / falsify / still broken).
+4. Only then implement a product fix — and only at the owner the evidence named.
+
+Do **not** continue into fix todos in the same turn as instrumentation.
+
+## Prohibited
+
+- Treating “implement the plan” / “complete all todos” as permission to skip the user's manual step.
+- Marking prove / manual-A/B todos **completed** because logs or tests were added — complete them only after the user reports the gate result (or explicitly waives).
+- Declaring success from **Jest alone** when the bug is visual, framing, timing, or multiplayer.
+- Stacking a second speculative fix while the first is unproven or the user still sees the bug.
+- Replacing a failed theory with another theory and coding again without new runtime evidence.
+
+## Allowed without waiting
+
+| Action | OK? |
+|--------|-----|
+| Hypothesis + repro steps written for the user | Yes |
+| Category A / DEBUG_LOG instrumentation only | Yes — then stop |
+| Jest that documents current broken behavior (no product change) | Yes |
+| Product behavior change | **No** until user confirm or explicit waive |
+| “Likely fix” while waiting on A/B | **No** |
+
+## After the user reports
+
+- **Confirmed** — smallest fix at the logged owner; re-run the **same** A/B; success = user eyes + matching logs.
+- **Falsified** — stop that hypothesis; re-diagnose; do not ship the planned fix anyway.
+- **Still broken after a fix** — revert or isolate; gather new logs; do not pile on another guess.
+
+## Agent checklist
+
+Before any non-instrumentation edit on a bugfix:
+
+1. Is there an open prove / manual-A/B gate? → **Stop and ask** (or wait).
+2. Did the user paste log/repro outcome for this hypothesis? → If no, do not fix.
+3. Would “tests green” be my only success metric? → Insufficient; wait for user verification.

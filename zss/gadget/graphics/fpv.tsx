@@ -131,6 +131,7 @@ export const FPVGraphics = memo(function FPVGraphics({
   const [panview, setpanview] = useState<PanView>(PANVIEW_IDLE)
   const panviewref = useRef(panview)
   panviewref.current = panview
+  const [exitpreviewepoch, setexitpreviewepoch] = useState(0)
 
   const bindboardcamera = useCallback((c: PerspectiveCameraImpl | null) => {
     cameraref.current = c
@@ -225,6 +226,14 @@ export const FPVGraphics = memo(function FPVGraphics({
       control.focusy,
       delta,
     )
+    // Keep mesh on the same clock as focus/grid (useLayoutEffect alone races endgame).
+    syncliveboardworldoffset(
+      liveboardref.current,
+      userdata,
+      currentboard,
+      drawwidth,
+      drawheight,
+    )
     stashfocusexitsnap(userdata, gadgettoexitsnap(gadget))
 
     const bias = readgridbias(userdata)
@@ -236,6 +245,9 @@ export const FPVGraphics = memo(function FPVGraphics({
     }
     if (!panviewequals(nextpanview, panviewref.current)) {
       setpanview(nextpanview)
+    }
+    if (boardchanged) {
+      setexitpreviewepoch((epoch) => epoch + 1)
     }
 
     const fx = ((userdata.focusx ?? control.focusx) + 0.5) * drawwidth
@@ -475,7 +487,10 @@ export const FPVGraphics = memo(function FPVGraphics({
               {exitpreviewgroups.map(({ key, preview, position }) => {
                 if (preview.layers.length > 0) {
                   return (
-                    <group key={key} position={position}>
+                    <group
+                      key={`${exitpreviewepoch}-${key}`}
+                      position={position}
+                    >
                       {preview.layers.map((layer) => (
                         <FPVLayer
                           key={layer.id}

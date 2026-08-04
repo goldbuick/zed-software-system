@@ -73,6 +73,8 @@ export const FlatGraphics = memo(function FlatGraphics({
   const [panview, setpanview] = useState<PanView>(PANVIEW_IDLE)
   const panviewref = useRef(panview)
   panviewref.current = panview
+  // Bump when board/grid snaps in useFrame so exit-preview React nodes remount.
+  const [exitpreviewepoch, setexitpreviewepoch] = useState(0)
 
   const bindboardcamera = useCallback((c: OrthographicCameraImpl | null) => {
     cameraref.current = c
@@ -124,6 +126,14 @@ export const FlatGraphics = memo(function FlatGraphics({
       tfocusy,
       delta,
     )
+    // Keep mesh on the same clock as focus/grid (useLayoutEffect alone races endgame).
+    syncliveboardworldoffset(
+      liveboardref.current,
+      userdata,
+      currentboard,
+      drawwidth,
+      drawheight,
+    )
     stashfocusexitsnap(userdata, gadgettoexitsnap(gadget))
 
     const bias = readgridbias(userdata)
@@ -137,6 +147,10 @@ export const FlatGraphics = memo(function FlatGraphics({
     // Live board offset waits for useLayoutEffect after the strip mounts.
     if (!panviewequals(nextpanview, panviewref.current)) {
       setpanview(nextpanview)
+    }
+    if (boardchanged) {
+      // panview may already be idle while grid snapped -- force preview remount.
+      setexitpreviewepoch((epoch) => epoch + 1)
     }
     const visualpan = resolvepanviewforrender(
       panviewref.current,
@@ -348,7 +362,10 @@ export const FlatGraphics = memo(function FlatGraphics({
               </group>
               {exitpreviewgroups.map(({ key, preview, position }) =>
                 preview.layers.length > 0 ? (
-                  <group key={key} position={position}>
+                  <group
+                    key={`${exitpreviewepoch}-${key}`}
+                    position={position}
+                  >
                     {preview.layers.map((layer) => (
                       <FlatLayer
                         key={layer.id}
