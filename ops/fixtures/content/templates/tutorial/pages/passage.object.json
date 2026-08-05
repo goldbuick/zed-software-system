@@ -1,0 +1,3 @@
+{
+  "code": "@passage\n@cycle 1\n@char 240\n@p3 text\n#end\n:touch\n#bgplay tcegc#fg#df#ad#ga#eg#+c\n#goto p3"
+}

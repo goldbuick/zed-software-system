@@ -1,0 +1,3 @@
+{
+  "code": "@checkpoint\n@cycle 1\n@char 30\n@color green\n#end\n:touch\n#send tutor:through\n#toast checkpoint cleared\n#die\n"
+}

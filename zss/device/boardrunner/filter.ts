@@ -7,6 +7,7 @@ const PLAYERSCOPED_TARGETS = new Set([
   'paint',
   'patch',
   'linkdead',
+  'haltchip',
 ])
 
 export function shouldprocessboardrunnermessage(message: MESSAGE): boolean {

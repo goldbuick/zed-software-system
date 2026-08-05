@@ -1,6 +1,7 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/types'
 
+import { handlehaltchip } from './haltchip'
 import { handleidle } from './idle'
 import { handleinput } from './input'
 import { handlelinkdead } from './linkdead'
@@ -19,4 +20,5 @@ export const boardrunnerhandlers: Record<string, BOARDRUNNER_HANDLER> = {
   tick: handletick,
   paint: handlepaint,
   patch: handlepatch,
+  haltchip: handlehaltchip,
 }

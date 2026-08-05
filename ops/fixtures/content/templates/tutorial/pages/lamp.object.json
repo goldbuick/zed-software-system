@@ -1,0 +1,3 @@
+{
+  "code": "@lamp\n@cycle 1\n@char 15\n@color brown\n#end\n:light\n#color yellow\n#toast the lamp lit\n#send maker:lamplit\n#char 15\n#end\n' sync\n"
+}

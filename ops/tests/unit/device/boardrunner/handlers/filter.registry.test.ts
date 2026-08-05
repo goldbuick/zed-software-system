@@ -55,11 +55,15 @@ describe('shouldprocessboardrunnermessage', () => {
     expect(shouldprocessboardrunnermessage(makemessage('patch', 'other'))).toBe(
       false,
     )
+    expect(
+      shouldprocessboardrunnermessage(makemessage('haltchip', 'other')),
+    ).toBe(false)
   })
 
   it('allows player-scoped targets for the elected runner', () => {
     expect(shouldprocessboardrunnermessage(makemessage('tick'))).toBe(true)
     expect(shouldprocessboardrunnermessage(makemessage('idle'))).toBe(true)
+    expect(shouldprocessboardrunnermessage(makemessage('haltchip'))).toBe(true)
   })
 })
 
@@ -68,6 +72,7 @@ describe('boardrunnerhandlers registry', () => {
     expect(boardrunnerhandlers.start).toBeDefined()
     expect(boardrunnerhandlers.tick).toBeDefined()
     expect(boardrunnerhandlers.patch).toBeDefined()
+    expect(boardrunnerhandlers.haltchip).toBeDefined()
   })
 
   it('uses default handler for chip targets not in registry', () => {

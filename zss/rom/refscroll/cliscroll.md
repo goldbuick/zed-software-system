@@ -11,13 +11,13 @@ $ltgray$ondkblue$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205
 $dkblue$onblack$219$219$219$219$219$219$219$219$219$219$219$ondkblue$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$white$108$111$103$111$32$98$121$32$68$97$118$101$50
 
 # stk list
-[ZTK - ZZT Tool Kit|openit inline](https://bytes.zed.cafe/IpWRvfwy)
+!openit inline https://bytes.zed.cafe/IpWRvfwy;ZTK - ZZT Tool Kit
 
-[Simple Chat|openit inline](https://bytes.zed.cafe/qGkx05ct)
+!openit inline https://bytes.zed.cafe/IxYjb4jm;Simple Chat
 
-[TTS Nicely Queue'd|openit inline](https://bytes.zed.cafe/FaUkmz2p)
+!openit inline https://bytes.zed.cafe/FaUkmz2p;TTS Nicely Queue'd
 
-[TTS All at Once|openit inline](https://bytes.zed.cafe/gPyVmz5u)
+!openit inline https://bytes.zed.cafe/gPyVmz5u;TTS All at Once
 
-[FUN facts|openit inline](https://bytes.zed.cafe/CPvUq6xq)
+!openit inline https://bytes.zed.cafe/CPvUq6xq;FUN facts
 

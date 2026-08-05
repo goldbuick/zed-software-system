@@ -11,9 +11,6 @@ const LANG_TYPES = zssjsonbool('ZSS_DEBUG_LANG_TYPES')
 const SHOW_CODE = zssjsonbool('ZSS_DEBUG_SHOW_CODE')
 const TRACE_CODE = `${process.env.ZSS_DEBUG_TRACE_CODE ?? ''}`
 const DEBUG_LOG = zssjsonbool('ZSS_DEBUG_LOG')
-const FORCE_CRT_OFF = zssjsonbool('ZSS_FORCE_CRT_OFF')
-const FORCE_LOW_REZ = zssjsonbool('ZSS_FORCE_LOW_REZ')
-const FORCE_TOUCH_UI = zssjsonbool('ZSS_FORCE_TOUCH_UI')
 /** Inspector pick plane: magenta hit dot (see `InspectorSelect`). */
 const RAYCAST_DEBUG_DOT = zssjsonbool('ZSS_DEBUG_RAYCAST_DOT')
 /** Inspector: wireframe pick sheet + colored selection quads (see `InspectorSelect`). */
@@ -74,9 +71,6 @@ export {
   SHOW_CODE,
   TRACE_CODE,
   DEBUG_LOG,
-  FORCE_CRT_OFF,
-  FORCE_LOW_REZ,
-  FORCE_TOUCH_UI,
   RAYCAST_DEBUG_DOT,
   RAYCAST_DEBUG_PICKSHEET,
   FLAT_CAMERA_ORTHO_ASSERT,

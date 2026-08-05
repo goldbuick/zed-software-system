@@ -67,6 +67,15 @@ export function boardrunneridle(
   device.emit(player, 'boardrunner:idle', idleonboard)
 }
 
+/** Drop a cached chip on the runner that owns it so the next tick rebuilds from synced code. */
+export function boardrunnerhaltchip(
+  device: DEVICELIKE,
+  player: string,
+  id: string,
+) {
+  device.emit(player, 'boardrunner:haltchip', id)
+}
+
 export function boardrunnerinput(
   device: DEVICELIKE,
   player: string,
