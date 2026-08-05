@@ -26,7 +26,7 @@ export type DEVICE_DATA = {
   keyboardctrl: boolean
   keyboardshift: boolean
   showtouchcontrols: boolean
-  /** Tier A: hidden input + IME sync (strict touch-primary or ZSS_FORCE_TOUCH_UI). */
+  /** Tier A: hidden input + IME sync (strict touch-primary). */
   usemobiletextcapture: boolean
   /** Tier A capture textarea focused (soft keyboard / typing). */
   textcapturefocused: boolean
