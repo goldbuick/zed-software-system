@@ -4,7 +4,7 @@ import { deviceType, primaryInput } from 'detect-it'
 import { damp } from 'maath/easing'
 import { VignetteEffect } from 'postprocessing'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { FORCE_TOUCH_UI, RUNTIME } from 'zss/config'
+import { RUNTIME } from 'zss/config'
 import { doasync } from 'zss/device/doasync'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
@@ -92,7 +92,7 @@ export function Engine() {
 
   // read config
   const [forcelowrez, setforcelowrez] = useState(false)
-  const [forcetouchui, setforcetouchui] = useState(FORCE_TOUCH_UI)
+  const [forcetouchui, setforcetouchui] = useState(false)
   const [crt, setcrt] = useState(false)
   const [scanlines, setscanlines] = useState(false)
   useLayoutEffect(() => {

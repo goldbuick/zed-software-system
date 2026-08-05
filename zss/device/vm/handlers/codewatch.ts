@@ -1,9 +1,9 @@
 import type { DEVICE } from 'zss/device'
-import { vmcodeaddress } from 'zss/device/api'
+import { boardrunnerhaltchip, vmcodeaddress } from 'zss/device/api'
 import { modemobservevaluestring } from 'zss/device/modem'
 import type { MESSAGE } from 'zss/device/types'
 import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
-import { observers, watching } from 'zss/device/vm/state'
+import { boardrunners, observers, watching } from 'zss/device/vm/state'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadobject } from 'zss/memory/boardaccess'
 import { memoryreadcodepage } from 'zss/memory/bookoperations'
@@ -60,18 +60,26 @@ export function handlecoderelease(vm: DEVICE, message: MESSAGE): void {
     return
   }
   const [book, path] = message.data
-  const [, maybeobject] = path
+  const [boardcodepage, maybeobject] = path
   const address = vmcodeaddress(book, path)
   if (ispresent(watching[address])) {
     watching[address].delete(message.player)
     if (watching[address].size === 0) {
       observers[address]?.()
       observers[address] = undefined
+      const boardid = isstring(boardcodepage) ? boardcodepage : ''
+      const runner = boardid ? boardrunners[boardid] : undefined
       if (isstring(maybeobject)) {
         memoryhaltchip(maybeobject)
       }
       // Editor closed: flush page.code to boardrunners before CLI #put / tick.
       boardrunnerpushupdates(vm)
+      // Chips live on the elected runner, so the halt above is a no-op for board
+      // objects. Drop it there too -- after the flush, so the rebuild on the next
+      // tick picks up the patched code rather than re-caching the old build.
+      if (isstring(maybeobject) && isstring(runner)) {
+        boardrunnerhaltchip(vm, runner, maybeobject)
+      }
     }
   }
 }

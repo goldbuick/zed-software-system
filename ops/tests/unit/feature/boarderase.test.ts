@@ -14,9 +14,6 @@ jest.mock('zss/config', () => ({
   SHOW_CODE: false,
   TRACE_CODE: '',
   DEBUG_LOG: false,
-  FORCE_CRT_OFF: false,
-  FORCE_LOW_REZ: false,
-  FORCE_TOUCH_UI: false,
   RUNTIME: {
     YIELD_AT_COUNT: 512,
     DRAW_CHAR_SCALE: 2,

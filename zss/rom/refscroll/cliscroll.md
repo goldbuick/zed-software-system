@@ -13,7 +13,7 @@ $dkblue$onblack$219$219$219$219$219$219$219$219$219$219$219$ondkblue$219$219$219
 # stk list
 !openit inline https://bytes.zed.cafe/IpWRvfwy;ZTK - ZZT Tool Kit
 
-!openit inline https://bytes.zed.cafe/qGkx05ct;Simple Chat
+!openit inline https://bytes.zed.cafe/IxYjb4jm;Simple Chat
 
 !openit inline https://bytes.zed.cafe/FaUkmz2p;TTS Nicely Queue'd
 

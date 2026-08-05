@@ -17,9 +17,6 @@ jest.mock('zss/config', () => ({
   SHOW_CODE: false,
   TRACE_CODE: '',
   DEBUG_LOG: false,
-  FORCE_CRT_OFF: false,
-  FORCE_LOW_REZ: false,
-  FORCE_TOUCH_UI: false,
 }))
 
 jest.mock('zss/rom', () => ({

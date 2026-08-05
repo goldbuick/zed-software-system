@@ -1,0 +1,3 @@
+{
+  "code": "@gate\n@cycle 1\n@char 219\n@color red\n#end\n:open\n#color green\n#toast the gate opened\n#send tutor:gateopened\n#die\n"
+}

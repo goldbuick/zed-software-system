@@ -1,0 +1,18 @@
+{
+  "name": "tutorial",
+  "pages": [
+    "pages/player.object.json",
+    "pages/solid.terrain.json",
+    "pages/fake.terrain.json",
+    "pages/boulder.object.json",
+    "pages/passage.object.json",
+    "pages/gate.object.json",
+    "pages/checkpoint.object.json",
+    "pages/tutor.object.json",
+    "pages/maker.object.json",
+    "pages/lamp.object.json",
+    "pages/title.board.json",
+    "pages/tutorial-slice.board.json",
+    "pages/tutorial-make.board.json"
+  ]
+}
