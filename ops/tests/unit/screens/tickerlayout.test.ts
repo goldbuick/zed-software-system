@@ -183,6 +183,25 @@ describe('layouttickers', () => {
     }
   })
 
+  it('never covers reserved player tiles', () => {
+    // Without reservation, preferred placement sits above sy=15 and covers y=12
+    const result = layouttickers({
+      tickers: [{ id: 'a', text: 'hello there friend' }],
+      anchors: { a: { sx: 20, sy: 15, visible: true } },
+      playertiles: [{ tilex: 20, tiley: 12 }],
+      cols: 40,
+      rows: 25,
+    })
+    expect(result.bubbles).toHaveLength(1)
+    const bubble = result.bubbles[0]
+    const covers =
+      bubble.tilex <= 20 &&
+      bubble.tilex + bubble.width > 20 &&
+      bubble.tiley <= 12 &&
+      bubble.tiley + bubble.height > 12
+    expect(covers).toBe(false)
+  })
+
   it('pins the down-tail row below the bubble and keeps continuous anchor', () => {
     const result = layouttickers({
       tickers: [{ id: 'a', text: 'gooby: howdy there friend' }],
@@ -210,14 +229,13 @@ describe('layouttickers', () => {
     expect(result.bubbles[0].anchorsx).toBe(20.0)
   })
 
-  it('ignores prior slots that still cover the speaker', () => {
-    // Text long enough that omit-leading still leaves width covering speaker x
+  it('places above the speaker even if a covering slot would have been preferred', () => {
+    // Text long enough that omit-leading still leaves a wide bubble
     const result = layouttickers({
       tickers: [{ id: 'a', text: 'hello there friend' }],
       anchors: { a: { sx: 20, sy: 15, visible: true } },
       cols: 40,
       rows: 25,
-      priorslots: { a: { tilex: 19, tiley: 15 } },
     })
     expect(result.bubbles).toHaveLength(1)
     expect(result.bubbles[0].tiley + result.bubbles[0].height).toBeLessThan(15)
@@ -282,7 +300,7 @@ describe('layouttickers', () => {
     expect(bubble.tiley + bubble.height).toBeLessThanOrEqual(25)
   })
 
-  it('keeps prior slot when still near the anchor (slot memory)', () => {
+  it('repositions the bubble when the speaker anchor moves', () => {
     const first = layouttickers({
       tickers: [{ id: 'a', text: 'hi' }],
       anchors: { a: { sx: 20, sy: 15, visible: true } },
@@ -291,12 +309,19 @@ describe('layouttickers', () => {
     })
     const second = layouttickers({
       tickers: [{ id: 'a', text: 'hi' }],
-      anchors: { a: { sx: 20.5, sy: 15.2, visible: true } },
+      anchors: { a: { sx: 28, sy: 10, visible: true } },
       cols: 40,
       rows: 25,
-      priorslots: first.slots,
     })
-    expect(second.slots.a).toEqual(first.slots.a)
+    expect(first.bubbles).toHaveLength(1)
+    expect(second.bubbles).toHaveLength(1)
+    expect(second.slots.a).not.toEqual(first.slots.a)
+    expect(second.bubbles[0].anchorsx).toBe(28)
+    expect(second.bubbles[0].anchorsy).toBe(10)
+    // Preferred placement follows the new speaker (above, centered)
+    expect(second.bubbles[0].tilex).toBe(
+      Math.round(28 - second.bubbles[0].width * 0.5),
+    )
   })
 
   it('moves overflow past crowded threshold to the strip lane', () => {

@@ -11,7 +11,9 @@ import {
   memoryfsfsareadstate,
   memoryfsfsasetpolltimer,
   memoryfsfsawritebatch,
+  memoryfsfsawritedropskills,
 } from 'zss/feature/memoryfs/fsa'
+import { buildmemoryfsskills } from 'zss/feature/memoryfs/skills'
 import { isarray, ispresent } from 'zss/mapping/types'
 
 function startpoll(device: DEVICE, player: string) {
@@ -109,6 +111,11 @@ export function handlememoryfswrite(device: DEVICE, message: MESSAGE): void {
         message.player,
         `memoryfs disk ${filecount} files ${deletecount} deletes (${mode})`,
       )
+      if (data.full) {
+        const skills = buildmemoryfsskills()
+        await memoryfsfsawritedropskills(skills)
+        apilog(device, message.player, `memoryfs skills ${skills.length} files`)
+      }
       startpoll(device, message.player)
     } catch (err) {
       apierror(

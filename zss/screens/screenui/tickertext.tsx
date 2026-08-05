@@ -74,12 +74,13 @@ export function ScreenUITickerText({ width, height }: ScreenUITickerTextProps) {
   const store = useTiles(width, height, 0, COLOR.WHITE, COLOR.ONCLEAR)
   const tickers = useGadgetClient((state) => state.gadget.tickers)
   const anchors = useTickerLayout((state) => state.anchors)
+  const playertiles = useTickerLayout((state) => state.playertiles)
   const bubbles = useTickerLayout((state) => state.bubbles)
   const strip = useTickerLayout((state) => state.strip)
 
   useLayoutEffect(() => {
     const withtickers = tickers ?? []
-    const { slots, setlayout, clear } = useTickerLayout.getState()
+    const { setlayout, clear } = useTickerLayout.getState()
     if (withtickers.length === 0) {
       clear()
       return
@@ -93,10 +94,10 @@ export function ScreenUITickerText({ width, height }: ScreenUITickerTextProps) {
       anchors,
       cols: width,
       rows: height,
-      priorslots: slots,
+      playertiles,
     })
     setlayout(layout.bubbles, layout.strip, layout.slots)
-  }, [tickers, anchors, width, height])
+  }, [tickers, anchors, playertiles, width, height])
 
   useLayoutEffect(() => {
     const state = store.getState()
