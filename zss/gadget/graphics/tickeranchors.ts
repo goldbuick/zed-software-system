@@ -113,12 +113,13 @@ export function tickerpublishfromtickers(args: {
     boardz = 0,
   } = args
 
+  boardgroup.updateMatrixWorld(true)
+
   if (tickers.length === 0) {
     useTickerLayout.getState().setanchors({}, [])
     return
   }
 
-  boardgroup.updateMatrixWorld(true)
   const next: Record<string, TICKER_ANCHOR> = {}
   const local = new Vector3()
   for (let i = 0; i < tickers.length; ++i) {

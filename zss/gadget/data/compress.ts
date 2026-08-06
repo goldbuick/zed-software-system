@@ -6,6 +6,7 @@ import { GADGET_STATE, LAYER, SPRITE, TICKER } from './types'
 enum GADGET_TICKER_KEYS {
   id,
   text,
+  tickertime,
 }
 
 function exportticker(ticker: MAYBE<TICKER>): MAYBE<FORMAT_OBJECT> {
