@@ -12,8 +12,10 @@ export type TICKER_SLOT = {
   tiley: number
 }
 
+/** @deprecated Speech bubbles removed; type kept for transitional imports. */
 export type TICKER_TAIL_DIR = 'up' | 'down' | 'left' | 'right' | 'none'
 
+/** @deprecated Speech bubbles removed; type kept for transitional imports. */
 export type TICKER_BUBBLE = {
   id: string
   tilex: number
@@ -22,17 +24,14 @@ export type TICKER_BUBBLE = {
   height: number
   text: string
   taildir: TICKER_TAIL_DIR
-  /** Integer tile for side-of-bubble placement (row/col of the tip). */
   tailx: number
   taily: number
-  /** Continuous speaker anchor (left-edge tile coords) for sub-tile tail centering. */
   anchorsx: number
   anchorsy: number
 }
 
 type TickerLayoutState = {
   anchors: Record<string, TICKER_ANCHOR>
-  /** Overlay tiles occupied by visible player sprites (pid). */
   playertiles: TICKER_SLOT[]
   slots: Record<string, TICKER_SLOT>
   bubbles: TICKER_BUBBLE[]
@@ -132,7 +131,11 @@ function stripshallowequal(a: TICKER[], b: TICKER[]): boolean {
     return false
   }
   for (let i = 0; i < a.length; ++i) {
-    if (a[i].id !== b[i].id || a[i].text !== b[i].text) {
+    if (
+      a[i].id !== b[i].id ||
+      a[i].text !== b[i].text ||
+      a[i].tickertime !== b[i].tickertime
+    ) {
       return false
     }
   }

@@ -385,6 +385,7 @@ export function memoryconverttogadgetlayers(
       tickers.push({
         id: object.id,
         text: `${memoryelementtotickerprefix(object)}${object.tickertext}`,
+        tickertime: object.tickertime,
       })
     }
   }

@@ -266,10 +266,11 @@ export type SYNTH_STATE = {
   >
 }
 
-/** Object ticker for speech bubbles: identity + formatted text only. */
+/** Object ticker line for the under-board list: identity, text, and recency. */
 export type TICKER = {
   id: string
   text: string
+  tickertime: number
 }
 
 export type GADGET_STATE = {
