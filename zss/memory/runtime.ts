@@ -62,6 +62,10 @@ import {
 // manages chips
 const os = createos()
 
+export function memorychipispresent(id: string) {
+  return os.ids().includes(id)
+}
+
 export function memoryhaltchip(id: string) {
   // stop chip execution
   os.halt(id)

@@ -1,4 +1,5 @@
 import { CHIP } from 'zss/chip'
+import { chipmessage } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { pttoindex } from 'zss/mapping/2d'
 import { createsid, ispid } from 'zss/mapping/guid'
@@ -16,7 +17,7 @@ import {
 import { memoryboardelementisobject } from './boardelement'
 import { memorysafedeleteelement } from './boardlifecycle'
 import { memoryreadelementstat } from './boards'
-import { memorymessagechip } from './runtime'
+import { memorychipispresent, memorymessagechip } from './runtime'
 import { memoryreadbookbysoftware } from './session'
 import { memorylistboardelementsbyidnameorpts } from './spatialqueries'
 import { BOARD, BOARD_ELEMENT, BOARD_WIDTH, MEMORY_LABEL } from './types'
@@ -173,6 +174,16 @@ export function memorysendtoelement(
         { x: fromelement.x ?? 0, y: fromelement.y ?? 0 },
         BOARD_WIDTH,
       )}`
+    }
+    // Board object chips live on the elected boardrunner. Local os.message is a
+    // no-op on the sim VM (CLI), so forward via chip: when the chip is absent.
+    if (!memorychipispresent(toelement.id)) {
+      const routeplayer =
+        withplayer !== ''
+          ? withplayer
+          : (READ_CONTEXT.elementfocus ?? fromelement.id ?? '')
+      chipmessage(SOFTWARE, routeplayer, toelement.id, withlabel, [])
+      return
     }
     memorymessagechip({
       id: createsid(),
