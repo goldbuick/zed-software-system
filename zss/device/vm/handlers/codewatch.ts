@@ -1,6 +1,6 @@
 import type { DEVICE } from 'zss/device'
 import { boardrunnerhaltchip, vmcodeaddress } from 'zss/device/api'
-import { modemobservevaluestring } from 'zss/device/modem'
+import { modemreadtextsync } from 'zss/device/modem'
 import type { MESSAGE } from 'zss/device/types'
 import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
 import { boardrunners, observers, watching } from 'zss/device/vm/state'
@@ -18,6 +18,36 @@ import { memoryhaltchip } from 'zss/memory/runtime'
 import { memoryreadbookbyaddress } from 'zss/memory/session'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
 
+function applymodemcodetomemory(
+  book: string,
+  path: unknown,
+  value: string,
+): void {
+  if (!isarray(path)) {
+    return
+  }
+  const [codepage, maybeobject] = path
+  const contentbook = memoryreadbookbyaddress(book)
+  const content = memoryreadcodepage(contentbook, codepage)
+  if (!ispresent(content)) {
+    return
+  }
+  if (
+    memoryreadcodepagetype(content) === CODE_PAGE_TYPE.BOARD &&
+    ispresent(maybeobject)
+  ) {
+    const board = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(content)
+    const object = memoryreadobject(board, maybeobject)
+    if (ispresent(object)) {
+      object.code = value
+      memoryapplyelementstats(memoryreadcodepagestatsfromtext(value), object)
+    }
+    return
+  }
+  content.code = value
+  memoryresetcodepagestats(content)
+}
+
 export function handlecodewatch(vm: DEVICE, message: MESSAGE): void {
   void vm
   if (!isarray(message.data)) {
@@ -25,32 +55,7 @@ export function handlecodewatch(vm: DEVICE, message: MESSAGE): void {
   }
   const [book, path] = message.data
   const address = vmcodeaddress(book, path)
-  if (!ispresent(observers[address])) {
-    observers[address] = modemobservevaluestring(address, (value) => {
-      const [codepage, maybeobject] = path
-      const contentbook = memoryreadbookbyaddress(book)
-      const content = memoryreadcodepage(contentbook, codepage)
-      if (ispresent(content)) {
-        if (
-          memoryreadcodepagetype(content) === CODE_PAGE_TYPE.BOARD &&
-          ispresent(maybeobject)
-        ) {
-          const board = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(content)
-          const object = memoryreadobject(board, maybeobject)
-          if (ispresent(object)) {
-            object.code = value
-            memoryapplyelementstats(
-              memoryreadcodepagestatsfromtext(value),
-              object,
-            )
-          }
-        } else {
-          content.code = value
-          memoryresetcodepagestats(content)
-        }
-      }
-    })
-  }
+  // Typing stays in the modem buffer; MEMORY is applied on last coderelease.
   watching[address] = watching[address] ?? new Set()
   watching[address].add(message.player)
 }
@@ -65,6 +70,7 @@ export function handlecoderelease(vm: DEVICE, message: MESSAGE): void {
   if (ispresent(watching[address])) {
     watching[address].delete(message.player)
     if (watching[address].size === 0) {
+      applymodemcodetomemory(book, path, modemreadtextsync(address))
       observers[address]?.()
       observers[address] = undefined
       const boardid = isstring(boardcodepage) ? boardcodepage : ''
