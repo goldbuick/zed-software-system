@@ -231,7 +231,7 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task cafe dev`).
 
 | Task | Description | Tags | Deps | Env |
 |------|-------------|------|------|-----|
-| `yarn task run ops:lint` | Import guards, dependency-cruiser, ESLint, and tsc --noEmit | `ci` | — | — |
+| `yarn task run ops:lint` | Import guards, then parallel depcruise + ESLint + tsc --noEmit; --fix runs eslint --fix only | `ci` | — | — |
 | `yarn task run ops:lint:imports` | Guard zss/ and cafe/ for no ../ imports, re-exports, or known barrel files | `ci` | — | — |
 
 

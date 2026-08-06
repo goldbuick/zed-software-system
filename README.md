@@ -21,7 +21,7 @@ All workflows run through the task CLI. Full index: [ops/docs/tasks.md](ops/docs
 |--------|----------------|
 | `yarn task run cafe:dev` | Install deps, then start the Vite dev server at **https://localhost:7777** (binds `0.0.0.0`). |
 | `yarn task run ops:test` | Run the Jest suite (120s per-test timeout). |
-| `yarn task run ops:lint` | Dependency-cruiser, ESLint, and `tsc --noEmit`. |
+| `yarn task run ops:lint` | Import guards, then parallel depcruise, ESLint, and `tsc --noEmit`. Pass `--fix` (also `yarn task ops lint --fix`) for eslint autofix only. |
 | `yarn task run ops:native:lint` | clang-format check on first-party C++ (requires LLVM clang-format 18+). |
 | `yarn task run ops:docs:check-links` | Check relative links in tracked `*.md` files. |
 | `yarn task list` | List all tasks by group. |
