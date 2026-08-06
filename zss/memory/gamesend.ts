@@ -179,7 +179,9 @@ export function memorysendtoelement(
     // no-op on the sim VM (CLI), so forward via chip: when the chip is absent.
     if (!memorychipispresent(toelement.id)) {
       const routeplayer =
-        withplayer || READ_CONTEXT.elementfocus || fromelement.id || ''
+        withplayer !== ''
+          ? withplayer
+          : (READ_CONTEXT.elementfocus ?? fromelement.id ?? '')
       chipmessage(SOFTWARE, routeplayer, toelement.id, withlabel, [])
       return
     }
