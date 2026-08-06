@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import path from 'node:path'
 
+import { hasflag } from 'tasks/lib/cliargv'
 import { checkrg, runjest, spawntask } from 'tasks/shellutil'
 
 import { def, exec, handler, shell } from '../../helpers'
@@ -65,6 +66,17 @@ function runlintimports(ctx: TaskContext): number {
 }
 
 function runapplint(ctx: TaskContext): number {
+  if (hasflag(ctx.args, '--fix')) {
+    return spawntask(
+      'sh',
+      [
+        '-c',
+        "eslint . --ext ts,tsx --fix --report-unused-disable-directives --max-warnings 0 && eslint 'ops/infra/net-*-worker.js' --fix --report-unused-disable-directives --max-warnings 0",
+      ],
+      ctx,
+      { inherit: true },
+    )
+  }
   const importresult = runlintimports(ctx)
   if (importresult !== 0) {
     return importresult
@@ -73,7 +85,19 @@ function runapplint(ctx: TaskContext): number {
     'sh',
     [
       '-c',
-      "depcruise zss/simspace.ts zss/boardrunnerspace.ts zss/sttspace.ts zss/ttsspace.ts --validate --config ops/depcruise.cjs && eslint . --ext ts,tsx --fix --report-unused-disable-directives --max-warnings 0 && eslint 'ops/infra/net-*-worker.js' --fix --report-unused-disable-directives --max-warnings 0 && tsc --noEmit",
+      [
+        'fail=0',
+        'depcruise zss/simspace.ts zss/boardrunnerspace.ts zss/sttspace.ts zss/ttsspace.ts --validate --config ops/depcruise.cjs &',
+        'p1=$!',
+        "( eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0 && eslint 'ops/infra/net-*-worker.js' --report-unused-disable-directives --max-warnings 0 ) &",
+        'p2=$!',
+        'tsc --noEmit &',
+        'p3=$!',
+        'wait $p1 || fail=1',
+        'wait $p2 || fail=1',
+        'wait $p3 || fail=1',
+        'exit $fail',
+      ].join('\n'),
     ],
     ctx,
     { inherit: true },
@@ -157,7 +181,8 @@ export const OPS_TEST_TASKS: TaskDef[] = [
     run: handler(runlintimports),
   }),
   def('ops:lint', {
-    description: 'Import guards, dependency-cruiser, ESLint, and tsc --noEmit',
+    description:
+      'Import guards, then parallel depcruise + ESLint + tsc --noEmit; --fix runs eslint --fix only',
     tags: ['ci'],
     run: handler(runapplint),
   }),

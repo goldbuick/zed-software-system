@@ -34,6 +34,21 @@ function insertsubtree(root: Subtree, segments: string[], task: TaskDef) {
   insertsubtree(child, rest, task)
 }
 
+function collectflagargs(args: Record<string, unknown>): string[] {
+  const extraargs: string[] = []
+  for (const [key, value] of Object.entries(args)) {
+    if (key === '_' || key === 'id') {
+      continue
+    }
+    if (value === true) {
+      extraargs.push(`--${key}`)
+    } else if (typeof value === 'string' && value.length > 0) {
+      extraargs.push(`--${key}`, value)
+    }
+  }
+  return extraargs
+}
+
 function subtreecommand(
   name: string,
   meta: { description?: string },
@@ -55,16 +70,19 @@ function subtreecommand(
 
   for (const task of subtree.tasks) {
     const leafname = task.id.split(':').pop() ?? task.id
+    const leafrun = async ({ args }: { args: Record<string, unknown> }) => {
+      const positionals = (args._ as string[] | undefined) ?? []
+      const extraargs = [...positionals, ...collectflagargs(args)]
+      const code = await runtask(task.id, extraargs)
+      process.exit(code)
+    }
     if (subcommands[leafname]) {
       subcommands[`_${leafname}`] = defineCommand({
         meta: {
           name: `_${leafname}`,
           description: `${task.description} (${task.id})`,
         },
-        async run() {
-          const code = await runtask(task.id)
-          process.exit(code)
-        },
+        run: leafrun,
       })
     } else {
       subcommands[leafname] = defineCommand({
@@ -72,10 +90,7 @@ function subtreecommand(
           name: leafname,
           description: task.description,
         },
-        async run() {
-          const code = await runtask(task.id)
-          process.exit(code)
-        },
+        run: leafrun,
       })
     }
   }
@@ -100,7 +115,10 @@ function subtreecommand(
         console.error(`unknown task: ${id}`)
         process.exit(1)
       }
-      const code = await runtask(id)
+      const code = await runtask(
+        id,
+        collectflagargs(args as Record<string, unknown>),
+      )
       process.exit(code)
     },
   })
@@ -195,18 +213,10 @@ const runcmd = defineCommand({
   },
   async run({ args }) {
     const positionals = (args._ as string[] | undefined) ?? []
-    const extraargs = positionals.slice(1)
-    // citty claims unknown --flags on args; forward them to task handlers
-    for (const [key, value] of Object.entries(args)) {
-      if (key === '_' || key === 'id') {
-        continue
-      }
-      if (value === true) {
-        extraargs.push(`--${key}`)
-      } else if (typeof value === 'string' && value.length > 0) {
-        extraargs.push(`--${key}`, value)
-      }
-    }
+    const extraargs = [
+      ...positionals.slice(1),
+      ...collectflagargs(args as Record<string, unknown>),
+    ]
     const code = await runtask(args.id, extraargs)
     process.exit(code)
   },
