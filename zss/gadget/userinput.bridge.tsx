@@ -49,28 +49,6 @@ export function UserInput(events: UserInputProps) {
       bridges[key] = bridge as (...args: any[]) => void
       bus.on(key, bridge)
     }
-    // Pad UI aliases: A confirms, B cancels when UI listens for OK/CANCEL
-    // but does not wire BUTTON_A/B itself (avoids dual-queue into the game).
-    const okaalias = (...args: unknown[]) => {
-      if (propsref.current.BUTTON_A) {
-        return
-      }
-      const fn = propsref.current.OK_BUTTON
-      if (typeof fn === 'function') {
-        ;(fn as (...args: unknown[]) => void)(...args)
-      }
-    }
-    const cancelalias = (...args: unknown[]) => {
-      if (propsref.current.BUTTON_B) {
-        return
-      }
-      const fn = propsref.current.CANCEL_BUTTON
-      if (typeof fn === 'function') {
-        ;(fn as (...args: unknown[]) => void)(...args)
-      }
-    }
-    bus.on('BUTTON_A', okaalias)
-    bus.on('BUTTON_B', cancelalias)
     return () => {
       for (let i = 0; i < USERINPUT_BRIDGE_KEYS.length; ++i) {
         const key = USERINPUT_BRIDGE_KEYS[i]
@@ -79,8 +57,6 @@ export function UserInput(events: UserInputProps) {
           bus.off(key, bridge)
         }
       }
-      bus.off('BUTTON_A', okaalias)
-      bus.off('BUTTON_B', cancelalias)
     }
   }, [context])
 
