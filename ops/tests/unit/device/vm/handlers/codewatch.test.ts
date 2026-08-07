@@ -18,8 +18,17 @@ jest.mock('zss/device/api', () => ({
   boardrunnerhaltchip: jest.fn(),
 }))
 
+const observecallbacks = new Map<string, (value: string) => void>()
+
 jest.mock('zss/device/modem', () => ({
-  modemreadtextsync: jest.fn(),
+  modemobservevaluestring: jest.fn(
+    (address: string, callback: (value: string) => void) => {
+      observecallbacks.set(address, callback)
+      return () => {
+        observecallbacks.delete(address)
+      }
+    },
+  ),
 }))
 
 jest.mock('zss/device/vm/boardrunnerpushupdates', () => ({
@@ -51,21 +60,22 @@ jest.mock('zss/memory/session', () => ({
 }))
 
 import type { DEVICE } from 'zss/device'
-import { boardrunnerhaltchip } from 'zss/device/api'
-import { modemreadtextsync } from 'zss/device/modem'
+import { boardrunnerhaltchip, vmcodeaddress } from 'zss/device/api'
+import { modemobservevaluestring } from 'zss/device/modem'
 import type { MESSAGE } from 'zss/device/types'
 import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
 import {
   handlecoderelease,
   handlecodewatch,
 } from 'zss/device/vm/handlers/codewatch'
-import { boardrunners, watching } from 'zss/device/vm/state'
+import { boardrunners, observers, watching } from 'zss/device/vm/state'
 import { memoryreadobject } from 'zss/memory/boardaccess'
 import { memoryreadcodepage } from 'zss/memory/bookoperations'
 import {
   memoryapplyelementstats,
   memoryreadcodepagedata,
   memoryreadcodepagetype,
+  memoryresetcodepagestats,
 } from 'zss/memory/codepageoperations'
 import { memoryhaltchip } from 'zss/memory/runtime'
 import { memoryreadbookbyaddress } from 'zss/memory/session'
@@ -74,10 +84,12 @@ import { CODE_PAGE_TYPE } from 'zss/memory/types'
 describe('codewatch handlers', () => {
   const vm = {} as DEVICE
   const book = 'book-1'
-  const path = ['board-page', 'obj-1']
+  const objectpath = ['board-page', 'obj-1']
+  const pagepath = ['player-page']
   const object = { code: 'old' }
+  const page = { code: 'oldpage' }
 
-  function msg(player: string): MESSAGE {
+  function watchmsg(player: string, path: string[]): MESSAGE {
     return {
       session: '',
       player,
@@ -88,55 +100,116 @@ describe('codewatch handlers', () => {
     }
   }
 
+  function releasemsg(player: string, path: string[], code: string): MESSAGE {
+    return {
+      session: '',
+      player,
+      id: 'id',
+      sender: '',
+      target: 'coderelease',
+      data: [book, path, code],
+    }
+  }
+
   beforeEach(() => {
     for (const key of Object.keys(watching)) {
       delete watching[key]
     }
+    for (const key of Object.keys(observers)) {
+      delete observers[key]
+    }
     for (const key of Object.keys(boardrunners)) {
       delete boardrunners[key]
     }
+    observecallbacks.clear()
     boardrunners['board-page'] = 'runner-1'
-    jest.mocked(modemreadtextsync).mockReset()
+    jest.mocked(modemobservevaluestring).mockClear()
     jest.mocked(boardrunnerpushupdates).mockClear()
     jest.mocked(boardrunnerhaltchip).mockClear()
     jest.mocked(memoryhaltchip).mockClear()
     jest.mocked(memoryapplyelementstats).mockClear()
+    jest.mocked(memoryresetcodepagestats).mockClear()
     jest.mocked(memoryreadbookbyaddress).mockReturnValue({} as never)
-    jest.mocked(memoryreadcodepage).mockReturnValue({ code: 'page' } as never)
-    jest
-      .mocked(memoryreadcodepagetype)
-      .mockReturnValue(CODE_PAGE_TYPE.BOARD)
     jest.mocked(memoryreadcodepagedata).mockReturnValue({} as never)
     jest.mocked(memoryreadobject).mockReturnValue(object as never)
     object.code = 'old'
+    page.code = 'oldpage'
   })
 
-  it('handlecodewatch does not write MEMORY while typing', () => {
-    handlecodewatch(vm, msg('p1'))
-    expect(object.code).toBe('old')
-    expect(modemreadtextsync).not.toHaveBeenCalled()
+  describe('board object element (deferred)', () => {
+    beforeEach(() => {
+      jest.mocked(memoryreadcodepage).mockReturnValue({ code: 'page' } as never)
+      jest
+        .mocked(memoryreadcodepagetype)
+        .mockReturnValue(CODE_PAGE_TYPE.BOARD)
+    })
+
+    it('does not write MEMORY or observe while typing', () => {
+      handlecodewatch(vm, watchmsg('p1', objectpath))
+      expect(object.code).toBe('old')
+      expect(modemobservevaluestring).not.toHaveBeenCalled()
+    })
+
+    it('applies payload code once on last watcher', () => {
+      handlecodewatch(vm, watchmsg('p1', objectpath))
+      handlecoderelease(vm, releasemsg('p1', objectpath, '@obj\n#end'))
+      expect(object.code).toBe('@obj\n#end')
+      expect(memoryapplyelementstats).toHaveBeenCalled()
+      expect(memoryhaltchip).toHaveBeenCalledWith('obj-1')
+      expect(boardrunnerpushupdates).toHaveBeenCalledWith(vm)
+      expect(boardrunnerhaltchip).toHaveBeenCalledWith(vm, 'runner-1', 'obj-1')
+    })
+
+    it('waits until the last watcher leaves', () => {
+      handlecodewatch(vm, watchmsg('p1', objectpath))
+      handlecodewatch(vm, watchmsg('p2', objectpath))
+      handlecoderelease(vm, releasemsg('p1', objectpath, 'final'))
+      expect(object.code).toBe('old')
+      handlecoderelease(vm, releasemsg('p2', objectpath, 'final'))
+      expect(object.code).toBe('final')
+    })
+
+    it('ignores messages without a code string payload', () => {
+      handlecodewatch(vm, watchmsg('p1', objectpath))
+      handlecoderelease(vm, {
+        ...watchmsg('p1', objectpath),
+        target: 'coderelease',
+        data: [book, objectpath],
+      })
+      expect(object.code).toBe('old')
+      expect(watching[vmcodeaddress(book, objectpath)]?.has('p1')).toBe(true)
+    })
   })
 
-  it('handlecoderelease applies modem text once on last watcher', () => {
-    jest.mocked(modemreadtextsync).mockReturnValue('@obj\n#end')
-    handlecodewatch(vm, msg('p1'))
-    handlecoderelease(vm, { ...msg('p1'), target: 'coderelease' })
-    expect(modemreadtextsync).toHaveBeenCalledTimes(1)
-    expect(object.code).toBe('@obj\n#end')
-    expect(memoryapplyelementstats).toHaveBeenCalled()
-    expect(memoryhaltchip).toHaveBeenCalledWith('obj-1')
-    expect(boardrunnerpushupdates).toHaveBeenCalledWith(vm)
-    expect(boardrunnerhaltchip).toHaveBeenCalledWith(vm, 'runner-1', 'obj-1')
-  })
+  describe('codepage (live)', () => {
+    beforeEach(() => {
+      jest.mocked(memoryreadcodepage).mockReturnValue(page as never)
+      jest
+        .mocked(memoryreadcodepagetype)
+        .mockReturnValue(CODE_PAGE_TYPE.OBJECT)
+    })
 
-  it('handlecoderelease waits until the last watcher leaves', () => {
-    jest.mocked(modemreadtextsync).mockReturnValue('final')
-    handlecodewatch(vm, msg('p1'))
-    handlecodewatch(vm, msg('p2'))
-    handlecoderelease(vm, { ...msg('p1'), target: 'coderelease' })
-    expect(modemreadtextsync).not.toHaveBeenCalled()
-    expect(object.code).toBe('old')
-    handlecoderelease(vm, { ...msg('p2'), target: 'coderelease' })
-    expect(object.code).toBe('final')
+    it('registers modem observe and writes MEMORY while typing', () => {
+      handlecodewatch(vm, watchmsg('p1', pagepath))
+      const address = vmcodeaddress(book, pagepath)
+      expect(modemobservevaluestring).toHaveBeenCalledWith(
+        address,
+        expect.any(Function),
+      )
+      observecallbacks.get(address)?.('@player\n#end')
+      expect(page.code).toBe('@player\n#end')
+      expect(memoryresetcodepagestats).toHaveBeenCalled()
+    })
+
+    it('does not re-apply payload on release; clears observer', () => {
+      handlecodewatch(vm, watchmsg('p1', pagepath))
+      const address = vmcodeaddress(book, pagepath)
+      observecallbacks.get(address)?.('synced')
+      page.code = 'synced'
+      handlecoderelease(vm, releasemsg('p1', pagepath, 'ignored-payload'))
+      expect(page.code).toBe('synced')
+      expect(observers[address]).toBeUndefined()
+      expect(boardrunnerpushupdates).toHaveBeenCalledWith(vm)
+    })
   })
 })
